@@ -13,15 +13,17 @@ void Node::begin() {
 
 void Node::update() {
     _levelInput.update();
-    _behavior.update(_levelInput.smoothed());
+    _behavior.update(_levelInput.energy());
 
+    
+
+
+    // DEBUG
     digitalWrite(_ledPin, _behavior.isActive() ? HIGH : LOW);
-
     float raw = _levelInput.raw()/4095.0f;
     float energy = _levelInput.energy()/300.0f;
     float smooth = _levelInput.smoothed()/300.0f;
     float activity=_behavior.activity();
-    // DEBUG
     Serial.print("r:");
     Serial.print(raw);
     Serial.print(" e:");

@@ -1,13 +1,17 @@
 #include "ResonantBehavior.h"
 
 void ResonantBehavior::update(float inputLevel) {
+
+
     const float exciteGain = 0.1f;
+    const float impulseGain = 0.3f;
     const float decay = 0.90f;
-    const float sig_threshold = 50.0f;   // important
+    const float sig_threshold = 80.0f;   // important
 
     // only excite on meaningful input
     if (inputLevel > sig_threshold) {
-        _activity += inputLevel * exciteGain;
+       // _activity += inputLevel * exciteGain; // amplitude derived impulse calcualtion
+        _activity += impulseGain;
     }
 
     // decay always

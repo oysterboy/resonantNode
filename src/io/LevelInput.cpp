@@ -32,7 +32,7 @@ void LevelInput::update() {
     _energy = e;
 
     // smoothing
-    _smoothed = _smoothed * 0.8f + _energy * 0.2f;
+    _smoothed = _smoothed * 0.5f + _energy * 0.5f;
 }
 
 int LevelInput::raw() const {

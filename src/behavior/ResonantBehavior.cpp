@@ -1,28 +1,75 @@
 #include "ResonantBehavior.h"
 
-void ResonantBehavior::update(float inputLevel) {
+/*
+BEHAVIOR
 
+- signal → activity (as before)
+- + state machine (Idle / Heard / Chirping / Cooldown)
+- emits ACTION: start chirp
+*/
 
-    const float exciteGain = 0.1f;
-    const float impulseGain = 0.3f;
-    const float decay = 0.90f;
-    const float sig_threshold = 80.0f;   // important
+void ResonantBehavior::update(float inputLevel, unsigned long now) {
 
-    // only excite on meaningful input
-    if (inputLevel > sig_threshold) {
-       // _activity += inputLevel * exciteGain; // amplitude derived impulse calcualtion
-        _activity += impulseGain;
+    _startChirp = false;
+
+    // --- signal → activity (UNCHANGED LOGIC) ---
+    if (inputLevel > _sig_threshold) {
+        _activity += _impulseGain;
+        _lastHeardMs = now;
     }
 
-    // decay always
-    _activity*= decay;
+    _activity *= _decay;
 
-    // clamp
-    if (_activity > 1.0f) {
-        _activity = 1.0f;
+    if (_activity > 1.0f) _activity = 1.0f;
+    if (_activity < 0.001f) _activity = 0.0f;
+
+
+    // --- state machine ---
+    switch (_state) {
+
+        case State::Idle:
+            if (isActive()) { // isActive means ' has Heard (sth. rewuired)'
+                _heardStartMs = now;
+                _state = State::Heard;
+            }
+            else if (now - max(_lastHeardMs, _lastChirpMs) > _idleTimeoutMs) {
+                _startChirp = true;
+                _lastChirpMs = now;
+                _state = State::Chirping;
+            }
+            break;
+
+        case State::Heard:
+            // wait, then respond
+            if (now - _heardStartMs > _heardDelayMs) {
+            _startChirp = true;
+            _lastChirpMs = now;
+            _state = State::Chirping;
+            }
+            break;
+
+        case State::Chirping:
+            // wait for actuator to finish ( externally called)
+            break;
+
+        case State::Cooldown:
+            if (now - _cooldownStartMs > _cooldownMs) {
+                _state = State::Idle;
+            }
+            break;
     }
-    if (_activity < 0.001f) {
-        _activity = 0.0f;
+}
+
+// --- outputs ---
+
+bool ResonantBehavior::shouldStartChirp() {
+    return _startChirp;
+}
+
+void ResonantBehavior::notifyChirpFinished(unsigned long now) {
+    if (_state == State::Chirping) {
+        _cooldownStartMs = now;
+        _state = State::Cooldown;
     }
 }
 
@@ -31,5 +78,5 @@ float ResonantBehavior::activity() const {
 }
 
 bool ResonantBehavior::isActive() const {
-    return _activity > 0.3f;
+    return _activity > _act_threshold;
 }

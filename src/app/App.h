@@ -1,12 +1,13 @@
 #pragma once
 
-#include "node/Node.h"
+#include "../node/node.h"
 
 class App {
 public:
-    void setup();
+    App();
+    void begin();
     void update();
 
 private:
-    Node node;
+    Node _node;
 };

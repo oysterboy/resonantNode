@@ -1,14 +1,20 @@
 #pragma once
 
-#include "hal/Board.h"
-#include "behavior/ButtonLedbehavior.h"
+#include "../hal/AnalogInHal.h"
+#include "../io/LevelInput.h"
+#include "../behavior/ResonantBehavior.h"
 
 class Node {
 public:
-    void setup();
+    Node(int inputPin, int ledPin);
+
+    void begin();
     void update();
 
 private:
-    Board board;
-    ButtonLedbehavior buttonLed;
+    int _ledPin;
+
+    AnalogInHal _analogIn;
+    LevelInput _levelInput;
+    ResonantBehavior _behavior;
 };

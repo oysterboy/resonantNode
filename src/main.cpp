@@ -4,9 +4,11 @@
 App app;
 
 void setup() {
-    app.setup();
+    Serial.begin(115200);
+    app.begin();
 }
 
 void loop() {
     app.update();
+    delay(10);
 }

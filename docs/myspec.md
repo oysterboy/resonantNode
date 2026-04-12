@@ -1,3 +1,17 @@
+## Status
+
+- [x] Behavior owns state machine
+- [x] Chirp waveform isolated in IO
+- [x] Node reduced to thin glue
+- [x] Chirp lifecycle feedback made explicit (IO -> Node -> Behavior)
+- [~] Parameter grouping (basic, may refine)
+- [~] Comments aligned (improved, ongoing)
+- [x] Debug system added in Node (event mode + plotter-friendly value mode)
+
+Notes:
+- Lifecycle feedback is now explicit via the IO interface (no implicit edge tracking in Node)
+- No change to behavior logic
+
 # Resonant Node Refactor Spec (Current Branch)
 
 ## Goal

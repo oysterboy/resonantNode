@@ -8,9 +8,13 @@
 /*
 Node
 
-- glue between input, behavior, and output
-- forwards lifecycle events
+- updates input, behavior, and output
+- forwards action requests and lifecycle events
 - owns debug output
+
+Does NOT:
+- implement state logic
+- generate waveforms
 */
 
 class Node {

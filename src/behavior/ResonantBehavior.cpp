@@ -3,9 +3,13 @@
 /*
 Behavior
 
-- turns signal energy into activity
-- advances the state machine
-- emits chirp requests
+- interprets input into activity
+- owns the response state machine
+- decides when to request a chirp
+
+Does NOT:
+- emit waveforms
+- know hardware details
 */
 
 void ResonantBehavior::update(float inputLevel, unsigned long now) {

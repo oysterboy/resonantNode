@@ -4,9 +4,13 @@
 /*
 IO
 
-- concrete output device
+- concrete chirp output device
 - owns waveform emission
 - reports output lifecycle
+
+Does NOT:
+- decide when to chirp
+- own behavior logic
 */
 
 class ChirpOutput {

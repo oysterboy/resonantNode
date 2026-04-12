@@ -5,8 +5,9 @@
 - [x] Node reduced to thin glue
 - [x] Chirp lifecycle feedback made explicit (IO -> Node -> Behavior)
 - [~] Parameter grouping (basic, may refine)
-- [~] Comments aligned (improved, ongoing)
+- [x] Comments aligned with architecture
 - [x] Debug system added in Node (event mode + plotter-friendly value mode)
+- [x] Behavior state exposed for debug (`stateName()` / `stateCode()`)
 
 Notes:
 - Lifecycle feedback is now explicit via the IO interface (no implicit edge tracking in Node)
@@ -20,10 +21,10 @@ Refine the current chirp-listening node without changing the overall architectur
 
 Keep:
 
-- HAL → raw hardware primitives
-- IO → concrete device logic
-- Behavior → state machine / decision logic
-- Node → wiring / orchestration
+- HAL -> raw hardware primitives
+- IO -> concrete device logic
+- Behavior -> state machine / decision logic
+- Node -> wiring / orchestration
 
 Fix:
 
@@ -32,8 +33,8 @@ Fix:
 3. **Comments should reflect the architectural thinking**
 4. **Add structured debug output (event + value modes)**
 
-Do **not** redesign signal processing right now.  
-Do **not** introduce new DSP logic.  
+Do **not** redesign signal processing right now.
+Do **not** introduce new DSP logic.
 Do **not** change overall behavior model unless required for lifecycle fix.
 
 ---
@@ -104,34 +105,40 @@ Must NOT contain:
 
 ---
 
-# Problem 1: Behavior ↔ IO lifecycle coupling
+# Problem 1: Behavior <-> IO lifecycle coupling
 
-## Current issue
+## Previous issue
 
-Behavior enters `Chirping` but does not know when chirp finishes without Node detecting it.
+Behavior entered `Chirping` but did not know when chirp output had finished without Node detecting it indirectly.
 
-Temporary solution:
+Previous temporary solution:
 - `_chirpWasActive` in Node
 - edge detection
 - `notifyChirpFinished()`
 
-## Required fix
+## Implemented fix
 
-Make lifecycle explicit.
+Lifecycle is now explicit.
 
-### IO should expose:
+### IO exposes:
 
 - `start()`
 - `update()`
 - `isActive()`
-- optionally: `finished()`
+- `finished()`
 
-### Behavior should expose:
+### Behavior exposes:
 
 - `shouldStartChirp()`
 - `notifyChirpFinished(unsigned long now)`
 
-### Node should:
+### Node:
+
+- forwards chirp start requests to IO
+- consumes explicit chirp completion from IO
+- forwards chirp-finished events to Behavior
+
+### Current flow:
 
 ```cpp
 if (_behavior.shouldStartChirp()) {
@@ -140,6 +147,7 @@ if (_behavior.shouldStartChirp()) {
 
 _chirpOutput.update();
 
-if (chirp finished) {
+if (_chirpOutput.finished()) {
     _behavior.notifyChirpFinished(now);
 }
+```

@@ -2,11 +2,11 @@
 #include <Arduino.h>
 
 /*
-IO / DEVICE
+IO
 
-Implements SOUND output using ESP32 LEDC.
-Behavior decides WHEN to chirp.
-This class decides HOW the chirp is physically emitted.
+- concrete output device
+- owns waveform emission
+- reports output lifecycle
 */
 
 class ChirpOutput {
@@ -17,11 +17,13 @@ public:
     void start();
     void update();
     bool isActive() const;
+    bool finished();
 
 private:
     int _pin;
     const int _channel = 0;
     bool _active = false;
+    bool _finished = false;
     int _phase = 0;
     unsigned long _phaseStartMs = 0;
 

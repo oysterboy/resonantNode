@@ -13,6 +13,7 @@ void ChirpOutput::begin() {
 void ChirpOutput::start() {
     if (_active) return;
 
+    _finished = false;
     _active = true;
     _phase = 0;
     _phaseStartMs = millis();
@@ -62,6 +63,7 @@ void ChirpOutput::update() {
             if (elapsed >= 8) {
                 ledcWriteTone(_channel, 0);
                 _active = false;
+                _finished = true;
             }
             break;
     }
@@ -69,4 +71,10 @@ void ChirpOutput::update() {
 
 bool ChirpOutput::isActive() const {
     return _active;
+}
+
+bool ChirpOutput::finished() {
+    const bool wasFinished = _finished;
+    _finished = false;
+    return wasFinished;
 }

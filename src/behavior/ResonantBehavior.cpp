@@ -1,18 +1,18 @@
 #include "ResonantBehavior.h"
 
 /*
-BEHAVIOR
+Behavior
 
-- signal → activity (as before)
-- + state machine (Idle / Heard / Chirping / Cooldown)
-- emits ACTION: start chirp
+- turns signal energy into activity
+- advances the state machine
+- emits chirp requests
 */
 
 void ResonantBehavior::update(float inputLevel, unsigned long now) {
 
     _startChirp = false;
 
-    // --- signal → activity (UNCHANGED LOGIC) ---
+    // --- signal -> activity ---
     if (inputLevel > _sig_threshold) {
         _activity += _impulseGain;
         _lastHeardMs = now;
@@ -28,7 +28,7 @@ void ResonantBehavior::update(float inputLevel, unsigned long now) {
     switch (_state) {
 
         case State::Idle:
-            if (isActive()) { // isActive means ' has Heard (sth. rewuired)'
+            if (isActive()) {
                 _heardStartMs = now;
                 _state = State::Heard;
             }
@@ -49,7 +49,7 @@ void ResonantBehavior::update(float inputLevel, unsigned long now) {
             break;
 
         case State::Chirping:
-            // wait for actuator to finish ( externally called)
+            // wait for explicit chirp-finished feedback
             break;
 
         case State::Cooldown:

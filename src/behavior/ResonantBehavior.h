@@ -21,6 +21,8 @@ public:
     // state output (for debug / LED)
     float activity() const;
     bool isActive() const;
+    const char* stateName() const;
+    int stateCode() const; // 0=Idle, 1=Heard, 2=Chirping, 3=Cooldown
 
     // ACTION request (SOUND resource)
     bool shouldStartChirp();
@@ -49,12 +51,12 @@ private:
     unsigned long _cooldownStartMs = 0;
 
     // --- signal parameters ---
-    const float _sig_threshold = 80.0f;   // signal threshold
+    const float _signalThreshold = 80.0f;   // signal threshold
     const float _impulseGain = 0.3f;
     const float _decay = 0.90f;
 
     // --- activity parameters ---
-    const float _act_threshold = 0.3f;   // activity threshold
+    const float _activityThreshold = 0.3f;   // activity threshold
 
     // --- timing parameters ---
     const unsigned long _heardDelayMs = 200; // time to wait with response

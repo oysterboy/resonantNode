@@ -13,7 +13,7 @@ void ResonantBehavior::update(float inputLevel, unsigned long now) {
     _startChirp = false;
 
     // --- signal -> activity ---
-    if (inputLevel > _sig_threshold) {
+    if (inputLevel > _signalThreshold) {
         _activity += _impulseGain;
         _lastHeardMs = now;
     }
@@ -78,5 +78,35 @@ float ResonantBehavior::activity() const {
 }
 
 bool ResonantBehavior::isActive() const {
-    return _activity > _act_threshold;
+    return _activity > _activityThreshold;
+}
+
+const char* ResonantBehavior::stateName() const {
+    switch (_state) {
+        case State::Idle:
+            return "Idle";
+        case State::Heard:
+            return "Heard";
+        case State::Chirping:
+            return "Chirping";
+        case State::Cooldown:
+            return "Cooldown";
+    }
+
+    return "Unknown";
+}
+
+int ResonantBehavior::stateCode() const {
+    switch (_state) {
+        case State::Idle:
+            return 0;
+        case State::Heard:
+            return 1;
+        case State::Chirping:
+            return 2;
+        case State::Cooldown:
+            return 3;
+    }
+
+    return -1;
 }

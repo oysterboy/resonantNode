@@ -21,10 +21,18 @@ public:
     void update();
 
 private:
+    void printEvent(const char* event);
+    void printPlotValues(unsigned long now);
+
     int _ledPin;
 
     AnalogInHal _analogIn;
     LevelInput _levelInput;
     ResonantBehavior _behavior;
     ChirpOutput _chirpOutput;
+
+    bool _debugEvents = false;
+    bool _debugPlot = true;
+    unsigned long _lastDebugPrintMs = 0;
+    const unsigned long _debugIntervalMs = 100;
 };

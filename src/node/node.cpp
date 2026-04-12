@@ -20,37 +20,53 @@ void Node::update() {
     _behavior.update(_levelInput.energy(), now);
 
     if (_behavior.shouldStartChirp()) {
-        Serial.println("NODE: chirp start");
+        printEvent("chirp_start");
         _chirpOutput.start();
     }
 
     _chirpOutput.update();
 
     if (_chirpOutput.finished()) {
-        Serial.println("NODE: chirp finished");
+        printEvent("chirp_finished");
         _behavior.notifyChirpFinished(now);
     }
 
     digitalWrite(_ledPin, _chirpOutput.isActive() ? HIGH : LOW);
 
-    // Value debug
-    float raw = _levelInput.raw() / 4095.0f;
-    float energy = _levelInput.energy() / 300.0f;
-    float smooth = _levelInput.smoothed() / 300.0f;
-    float activity = _behavior.activity();
+    printPlotValues(now);
+}
 
-    (void)raw;
-    (void)energy;
-    (void)smooth;
-    (void)activity;
-/*
-    Serial.print("r:");
-    Serial.print(raw);
-    Serial.print(" e:");
-    Serial.print(energy);
-    Serial.print(" s:");
-    Serial.print(smooth);
-    Serial.print(" act:");
-    Serial.println(activity);
-*/
+void Node::printEvent(const char* event) {
+    if (!_debugEvents) return;
+
+    Serial.print("EVT ");
+    Serial.println(event);
+}
+
+void Node::printPlotValues(unsigned long now) {
+    if (!_debugPlot) return;
+    if (now < 1000) return;
+    if (now - _lastDebugPrintMs < _debugIntervalMs) return;
+
+    _lastDebugPrintMs = now;
+
+    const float raw = _levelInput.raw() / 4095.0f;
+    const float energy = _levelInput.energy() / 300.0f;
+    const float smooth = _levelInput.smoothed() / 300.0f;
+    const float activity = _behavior.activity();
+    const int state = _behavior.stateCode();
+    const int chirp = _chirpOutput.isActive() ? 1 : 0;
+
+    Serial.print("raw:");
+    Serial.print(raw, 3);
+    Serial.print(" energy:");
+    Serial.print(energy, 3);
+    Serial.print(" smooth:");
+    Serial.print(smooth, 3);
+    Serial.print(" activity:");
+    Serial.print(activity, 3);
+    Serial.print(" state:");
+    Serial.print(state);
+    Serial.print(" chirp:");
+    Serial.println(chirp);
 }

@@ -22,7 +22,7 @@ public:
     float activity() const;
     bool isActive() const;
     const char* stateName() const;
-    int stateCode() const; // 0=Idle, 1=Heard, 2=Chirping, 3=Cooldown
+    int stateCode() const;
 
     // ACTION request (SOUND resource)
     bool shouldStartChirp();
@@ -59,9 +59,9 @@ private:
     const float _activityThreshold = 0.3f;   // activity threshold
 
     // --- timing parameters ---
-    const unsigned long _heardDelayMs = 200; // time to wait with response
-    const unsigned long _cooldownMs = 500;
-    const unsigned long _idleTimeoutMs = 5000;
+    const unsigned long _heardDelayMs = 200; // wait to respond after activity 
+    const unsigned long _cooldownMs = 500; // time  unsreponsive after own activity
+    const unsigned long _idleTimeoutMs = 5000; // selfactivate aft this timeout
 
     // --- action latch ---
     bool _startChirp = false;

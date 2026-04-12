@@ -50,7 +50,7 @@ void Node::printPlotValues(unsigned long now) {
 
     _lastDebugPrintMs = now;
 
-    const float raw = _levelInput.raw() / 4095.0f;
+    const float raw = _levelInput.centeredRaw() / 300.0f;
     const float energy = _levelInput.energy() / 300.0f;
     const float smooth = _levelInput.smoothed() / 300.0f;
     const float activity = _behavior.activity();

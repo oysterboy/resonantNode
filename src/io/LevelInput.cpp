@@ -16,8 +16,8 @@ void LevelInput::begin() {
 
 void LevelInput::update() {
     _raw = _input.readRaw();
-    //Remove baseline
-    int e = abs(_raw - (int)_baseline);
+    _centeredRaw = _raw - (int)_baseline;
+    int e = abs(_centeredRaw);
 
     // baseline follows only quiet state
     if (e < 40) {
@@ -37,6 +37,10 @@ void LevelInput::update() {
 
 int LevelInput::raw() const {
     return _raw;
+}
+
+int LevelInput::centeredRaw() const {
+    return _centeredRaw;
 }
 
 int LevelInput::energy() const {

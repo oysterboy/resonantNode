@@ -10,14 +10,15 @@
 - [x] Behavior state exposed for debug (`stateName()` / `stateCode()`)
 
 Notes:
-- Lifecycle feedback is now explicit via the IO interface (no implicit edge tracking in Node)
-- No change to behavior logic
+- Lifecycle feedback is explicit via the IO interface
+- Behavior logic remains unchanged
+- Debug defaults are plotter-friendly (`_debugPlot = true`, `_debugEvents = false`)
 
-# Resonant Node Refactor Spec (Current Branch)
+# Resonant Node Refactor Spec
 
 ## Goal
 
-Refine the current chirp-listening node without changing the overall architecture.
+Keep refining the chirp-listening node without changing the overall architecture.
 
 Keep:
 
@@ -26,16 +27,15 @@ Keep:
 - Behavior -> state machine / decision logic
 - Node -> wiring / orchestration
 
-Fix:
+Current focus:
 
-1. **Behavior currently depends on IO lifecycle indirectly**
-2. **Parameters should be grouped and explicit**
-3. **Comments should reflect the architectural thinking**
-4. **Add structured debug output (event + value modes)**
+1. **Parameters should be grouped and explicit**
 
-Do **not** redesign signal processing right now.
-Do **not** introduce new DSP logic.
-Do **not** change overall behavior model unless required for lifecycle fix.
+Do not:
+
+- redesign signal processing
+- introduce new DSP logic
+- change behavior logic unless explicitly required
 
 ---
 
@@ -105,49 +105,17 @@ Must NOT contain:
 
 ---
 
-# Problem 1: Behavior <-> IO lifecycle coupling
+# Next Steps
 
-## Previous issue
+## Parameter cleanup
 
-Behavior entered `Chirping` but did not know when chirp output had finished without Node detecting it indirectly.
+Continue improving parameter clarity while keeping logic unchanged.
 
-Previous temporary solution:
-- `_chirpWasActive` in Node
-- edge detection
-- `notifyChirpFinished()`
+Priorities:
+- keep grouped headings clear
+- prefer readable names over abbreviations
+- keep timing and threshold intent obvious
+- avoid introducing a large config struct in this pass
 
-## Implemented fix
-
-Lifecycle is now explicit.
-
-### IO exposes:
-
-- `start()`
-- `update()`
-- `isActive()`
-- `finished()`
-
-### Behavior exposes:
-
-- `shouldStartChirp()`
-- `notifyChirpFinished(unsigned long now)`
-
-### Node:
-
-- forwards chirp start requests to IO
-- consumes explicit chirp completion from IO
-- forwards chirp-finished events to Behavior
-
-### Current flow:
-
-```cpp
-if (_behavior.shouldStartChirp()) {
-    _chirpOutput.start();
-}
-
-_chirpOutput.update();
-
-if (_chirpOutput.finished()) {
-    _behavior.notifyChirpFinished(now);
-}
-```
+Possible follow-up:
+- decide later whether parameters should become externally configurable

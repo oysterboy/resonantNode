@@ -10,5 +10,6 @@ void setup() {
 
 void loop() {
     app.update();
-    delay(10);
+    // Keep the loop responsive enough that burst edges are not quantized too coarsely.
+    delay(1);
 }

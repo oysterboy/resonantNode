@@ -5,7 +5,7 @@
 Behavior
 
 - owns the state machine
-- reacts to current-stage activity detection
+- reacts to current transient detection
 - decides when to chirp
 
 Does NOT:
@@ -17,7 +17,11 @@ Does NOT:
 class ResonantBehavior {
 public:
     // main update (now time-aware)
-    void update(bool activityPresent, float activityLevel, unsigned long now);
+    void update(bool transientDetected, float transientStrength, unsigned long now);
+
+    void setWaitAfterTransientMs(unsigned long value);
+    void setRefractoryAfterEmitMs(unsigned long value);
+    void setIdleTimeoutMs(unsigned long value);
 
     // state output (for debug / LED)
     float activity() const;
@@ -27,6 +31,7 @@ public:
 
     // ACTION request (SOUND resource)
     bool shouldStartChirp();
+    const char* chirpRequestSourceName() const;
 
     // Event handling
     void notifyChirpFinished(unsigned long now);
@@ -35,7 +40,7 @@ private:
     // --- state machine ---
     enum class State {
         Idle,
-        Heard,
+        TransientSeen,
         Chirping,
         Refractory
     };
@@ -47,15 +52,23 @@ private:
 
     // --- timing state ---
     unsigned long _lastEmitMs = 0;
-    unsigned long _lastHeardMs = 0;
-    unsigned long _heardStartedMs = 0;
+    unsigned long _lastTransientMs = 0;
+    unsigned long _transientStartedMs = 0;
     unsigned long _refractoryStartedMs = 0;
 
     // --- timing parameters ---
-    const unsigned long _waitAfterHeardMs = 300; // Delay before responding after activity is heard.
-    const unsigned long _refractoryAfterEmitMs = 1000; // Ignore follow-up activity for a short time after a chirp finishes.
-    const unsigned long _idleTimeoutMs = 6000; // Self-trigger if nothing has been heard or emitted for this long.
+    unsigned long _waitAfterTransientMs = 300; // Delay before responding after a transient is seen.
+    unsigned long _refractoryAfterEmitMs = 1000; // Ignore follow-up activity for a short time after a chirp finishes.
+    unsigned long _idleTimeoutMs = 10000; // Self-trigger if nothing has been seen or emitted for this long.
 
     // --- action latch ---
     bool _chirpRequested = false;
+
+    enum class ChirpRequestSource {
+        None,
+        Transient,
+        Idle
+    };
+
+    ChirpRequestSource _chirpRequestSource = ChirpRequestSource::None;
 };

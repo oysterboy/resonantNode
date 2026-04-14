@@ -17,7 +17,7 @@ void Node::update() {
     const unsigned long now = millis();
 
     _levelInput.update();
-    _behavior.update(_levelInput.energy(), now);
+    _behavior.update(_levelInput.activityPresent(), _levelInput.activityLevel(), now);
 
     if (_behavior.shouldStartChirp()) {
         printEvent("chirp_start");
@@ -50,19 +50,19 @@ void Node::printPlotValues(unsigned long now) {
 
     _lastDebugPrintMs = now;
 
-    const float raw = _levelInput.centeredRaw() / 300.0f;
-    const float energy = _levelInput.energy() / 300.0f;
-    const float smooth = _levelInput.smoothed() / 300.0f;
+    const float centeredSignal = _levelInput.centeredSignal() / 300.0f;
+    const float signalMagnitude = _levelInput.signalMagnitude() / 300.0f;
+    const float smoothedSignalMagnitude = _levelInput.smoothedSignalMagnitude() / 300.0f;
     const float activity = _behavior.activity();
     const int state = _behavior.stateCode();
     const int chirp = _chirpOutput.isActive() ? 1 : 0;
 
-    Serial.print("raw:");
-    Serial.print(raw, 3);
-    Serial.print(" energy:");
-    Serial.print(energy, 3);
+    Serial.print("centered:");
+    Serial.print(centeredSignal, 3);
+    Serial.print(" magnitude:");
+    Serial.print(signalMagnitude, 3);
     Serial.print(" smooth:");
-    Serial.print(smooth, 3);
+    Serial.print(smoothedSignalMagnitude, 3);
     Serial.print(" activity:");
     Serial.print(activity, 3);
     Serial.print(" state:");

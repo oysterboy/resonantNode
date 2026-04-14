@@ -5,18 +5,19 @@
 Behavior
 
 - owns the state machine
-- interprets input signal
+- reacts to current-stage activity detection
 - decides when to chirp
 
 Does NOT:
 - know hardware details
 - generate waveforms
+- derive first-stage detection from raw signal math
 */
 
 class ResonantBehavior {
 public:
     // main update (now time-aware)
-    void update(float inputLevel, unsigned long now);
+    void update(bool activityPresent, float activityLevel, unsigned long now);
 
     // state output (for debug / LED)
     float activity() const;
@@ -36,33 +37,25 @@ private:
         Idle,
         Heard,
         Chirping,
-        Cooldown
+        Refractory
     };
 
     State _state = State::Idle;
 
-    // --- signal interpretation ---
-    float _activity = 0.0f;
+    // --- behavior state ---
+    float _activityLevel = 0.0f;
 
     // --- timing state ---
-    unsigned long _lastChirpMs = 0;
+    unsigned long _lastEmitMs = 0;
     unsigned long _lastHeardMs = 0;
-    unsigned long _heardStartMs = 0;
-    unsigned long _cooldownStartMs = 0;
-
-    // --- signal parameters ---
-    const float _signalThreshold = 80.0f;   // signal threshold
-    const float _impulseGain = 0.3f;
-    const float _decay = 0.90f;
-
-    // --- activity parameters ---
-    const float _activityThreshold = 0.3f;   // activity threshold
+    unsigned long _heardStartedMs = 0;
+    unsigned long _refractoryStartedMs = 0;
 
     // --- timing parameters ---
-    const unsigned long _heardDelayMs = 200; // wait to respond after activity 
-    const unsigned long _cooldownMs = 500; // time  unsreponsive after own activity
-    const unsigned long _idleTimeoutMs = 5000; // selfactivate aft this timeout
+    const unsigned long _waitAfterHeardMs = 300; // Delay before responding after activity is heard.
+    const unsigned long _refractoryAfterEmitMs = 1000; // Ignore follow-up activity for a short time after a chirp finishes.
+    const unsigned long _idleTimeoutMs = 6000; // Self-trigger if nothing has been heard or emitted for this long.
 
     // --- action latch ---
-    bool _startChirp = false;
+    bool _chirpRequested = false;
 };

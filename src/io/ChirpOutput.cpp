@@ -36,7 +36,7 @@ void ChirpOutput::update() {
             break;
 
         case 1:
-            if (elapsed >= 12) {
+            if (elapsed >= 15) {
                 ledcWriteTone(_channel, kToneHz);
                 _phase = 2;
                 _phaseStartMs = now;
@@ -52,7 +52,7 @@ void ChirpOutput::update() {
             break;
 
         case 3:
-            if (elapsed >= 12) {
+            if (elapsed >= 15) {
                 ledcWriteTone(_channel, kToneHz);
                 _phase = 4;
                 _phaseStartMs = now;

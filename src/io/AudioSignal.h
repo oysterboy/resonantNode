@@ -1,5 +1,5 @@
 #pragma once
-#include "hal/AnalogInHal.h"
+#include "hal/AudioSource.h"
 
 /*
 IO
@@ -15,7 +15,7 @@ Does NOT:
 
 class AudioSignal {
 public:
-    explicit AudioSignal(AnalogInHal& input);
+    explicit AudioSignal(AudioSource& source);
 
     void begin();
     void update();
@@ -30,7 +30,7 @@ public:
     int smoothedSignalMagnitude() const;
 
 private:
-    AnalogInHal& _input;
+    AudioSource& _source;
 
     int _rawSignal = 0;
     int _centeredSignal = 0;

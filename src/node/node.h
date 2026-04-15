@@ -1,6 +1,7 @@
 #pragma once
 
-#include "../hal/AnalogInHal.h"
+#include "../hal/AudioSourceAnalog.h"
+#include "../hal/AudioSourceI2S.h"
 #include "../io/AudioSignal.h"
 #include "../io/AudioOnsetDetector.h"
 #include "../io/ChirpOutput.h"
@@ -20,7 +21,12 @@ Does NOT:
 
 class Node {
 public:
-    Node(int inputPin, int ledPin, int chirpPin);
+    enum class AudioSourceKind {
+        Analog,
+        I2S
+    };
+
+    Node(int inputPin, int ledPin, int chirpPin, AudioSourceKind sourceKind = AudioSourceKind::Analog);
 
     void begin();
     void update();
@@ -33,7 +39,9 @@ private:
 
     int _ledPin;
 
-    AnalogInHal _analogIn;
+    AudioSourceAnalog _analogSource;
+    AudioSourceI2S _i2sSource;
+    AudioSource& _audioSource;
     AudioSignal _audioSignal;
     AudioOnsetDetector _audioOnsetDetector;
     ResonantBehavior _behavior;

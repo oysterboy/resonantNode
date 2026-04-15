@@ -1,30 +1,30 @@
-# Changelog Since `33eaeea`
+# Changelog Since `3e64a2b`
 
-This branch refines the sound-reactive path from raw ADC input to transient-based behavior.
+This branch extends the audio input path with a source abstraction and an I2S-ready implementation path.
 
 ## Summary
 
-- Replaced the older `LevelInput` path with a dedicated `AudioSignal` + `AudioOnsetDetector` pipeline.
-- Shifted behavior decisions to transient-driven detection instead of onset-driven detection.
-- Tuned the detector to reject ambient noise and stabilize peak closure timing.
-- Reduced serial/debug noise so testing focuses on accepted transient events.
+- Added a stable `AudioSource` abstraction so the rest of the pipeline can stay sample-based.
+- Added `AudioSourceAnalog` and `AudioSourceI2S` as interchangeable source implementations.
+- Kept `AudioSignal`, `AudioOnsetDetector`, and behavior logic unchanged while the input seam was refactored.
+- Wired `Node` to select a source implementation at construction time.
 
 ## Notable Changes
 
-- Added `src/io/AudioSignal.*` for baseline tracking, smoothing, and magnitude extraction.
-- Added `src/io/AudioOnsetDetector.*` for peak detection, hysteresis, release debounce, duration checks, and peak-strength filtering.
-- Updated `src/behavior/ResonantBehavior.*` to react to transient events only.
-- Updated `src/node/node.cpp` and `src/node/node.h` to wire the new detection flow and expose tuning parameters.
-- Disabled chirp output and LED activity during detector calibration so self-feedback does not confuse the sweep.
+- Added `src/hal/AudioSource.h` as the shared acquisition contract.
+- Added `src/hal/AudioSourceAnalog.*` to wrap the existing ADC-backed path.
+- Added `src/hal/AudioSourceI2S.*` to prepare the digital mic path behind the same public API.
+- Updated `src/io/AudioSignal.*` to depend on `AudioSource` instead of the concrete ADC wrapper.
+- Updated `src/node/node.cpp` and `src/node/node.h` to choose the source implementation and begin acquisition before signal shaping.
+- Kept `AudioOnsetDetector` naming and behavior intact so the refactor stays mechanical.
 
 ## Calibration Notes
 
-- The detector now reports accepted transients with timestamp, duration, and strength.
-- Minimum transient peak strength was raised to suppress ambient noise crossings.
-- The transient release threshold was made explicit so burst closure can be tuned directly.
-- The current configuration is tuned for cleaner acceptance during the 10 ms to 200 ms sweep, but the measured acoustic duration is still a noisy proxy for the original drive length.
+- The current branch still uses the analog source by default.
+- The I2S source is wired in but not selected by default yet.
+- The public source contract remains `begin()` plus `readSample()`, which keeps downstream code stable.
 
 ## Documentation
 
 - Updated `docs/myspec.md` to reflect the current IO / detection / behavior split.
-
+- Updated `docs/refactor-spec.md` to define the next-step `AudioSourceI2S` work.

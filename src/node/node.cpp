@@ -1,10 +1,14 @@
 #include "node.h"
 #include <Arduino.h>
 
-Node::Node(int inputPin, int ledPin, int chirpPin)
+Node::Node(int inputPin, int ledPin, int chirpPin, AudioSourceKind sourceKind)
     : _ledPin(ledPin),
-      _analogIn(inputPin),
-      _audioSignal(_analogIn),
+      _analogSource(inputPin),
+      _i2sSource(14, 27, 35),
+      _audioSource(sourceKind == AudioSourceKind::I2S
+                       ? static_cast<AudioSource&>(_i2sSource)
+                       : static_cast<AudioSource&>(_analogSource)),
+      _audioSignal(_audioSource),
       _audioOnsetDetector(_audioSignal),
       _chirpOutput(chirpPin) {}
 
@@ -12,6 +16,8 @@ void Node::begin() {
     pinMode(_ledPin, OUTPUT);
     digitalWrite(_ledPin, LOW);
     configureParameters();
+    // The chosen source owns raw acquisition; AudioSignal only shapes samples.
+    _audioSource.begin();
     _audioSignal.begin();
     _audioOnsetDetector.begin();
     _chirpOutput.begin();
@@ -27,7 +33,7 @@ void Node::begin() {
 }
 
 void Node::configureParameters() {
-    // Signal conditioning keeps the ADC baseline from drifting during quiet periods.
+    // Signal conditioning keeps the baseline from drifting during quiet periods.
     _audioSignal.setBaselineTrackingQuietThreshold(40);
     _audioSignal.setSmoothingFactor(0.5f);
     _audioSignal.setBaselineUpdateFactor(0.005f);
@@ -44,7 +50,7 @@ void Node::configureParameters() {
     _audioOnsetDetector.setMinTransientPeakStrength(180.0f);
 
     _behavior.setWaitAfterTransientMs(500);
-    _behavior.setRefractoryAfterEmitMs(500 );
+    _behavior.setRefractoryAfterEmitMs(500);
     _behavior.setIdleTimeoutMs(10000);
 }
 

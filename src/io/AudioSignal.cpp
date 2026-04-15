@@ -1,13 +1,13 @@
 #include "io/AudioSignal.h"
 #include <Arduino.h>
 
-AudioSignal::AudioSignal(AnalogInHal& input)
-    : _input(input) {}
+AudioSignal::AudioSignal(AudioSource& source)
+    : _source(source) {}
 
 void AudioSignal::begin() {
     long sum = 0;
     for (int i = 0; i < 200; i++) {
-        sum += _input.readRaw();
+        sum += _source.readSample();
         delay(2);
     }
     _baseline = sum / 200.0f;
@@ -15,7 +15,7 @@ void AudioSignal::begin() {
 }
 
 void AudioSignal::update() {
-    _rawSignal = _input.readRaw();
+    _rawSignal = _source.readSample();
     _centeredSignal = _rawSignal - (int)_baseline;
     int magnitude = abs(_centeredSignal);
 

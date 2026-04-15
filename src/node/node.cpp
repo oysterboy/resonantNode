@@ -39,12 +39,12 @@ void Node::configureParameters() {
     _audioOnsetDetector.setCooldownAfterOnsetMs(50);
     // Debounce the release edge so one burst is not split by tiny level dips.
     _audioOnsetDetector.setReleaseDebounceMs(20);
-    _audioOnsetDetector.setMinTransientDurationMs(40);
-    _audioOnsetDetector.setMaxTransientDurationMs(220);
+    _audioOnsetDetector.setMinTransientDurationMs(50);
+    _audioOnsetDetector.setMaxTransientDurationMs(190);
     _audioOnsetDetector.setMinTransientPeakStrength(180.0f);
 
     _behavior.setWaitAfterTransientMs(500);
-    _behavior.setRefractoryAfterEmitMs(1500);
+    _behavior.setRefractoryAfterEmitMs(500 );
     _behavior.setIdleTimeoutMs(10000);
 }
 
@@ -52,6 +52,7 @@ void Node::update() {
     const unsigned long now = millis();
     const unsigned long nowUs = micros();
     const unsigned long coreLoopUs = nowUs - _loopStartMicros;
+    const bool selfChirpSuppressed = now < _selfChirpIgnoreUntilMs;
 
     if (_coreLoopSamples == 0 || coreLoopUs < _coreLoopUsMin) {
         _coreLoopUsMin = coreLoopUs;
@@ -65,25 +66,40 @@ void Node::update() {
     // Update input first, then detection, then behavior, so each layer sees the
     // latest state from the layer below it.
     _audioSignal.update();
-    _audioOnsetDetector.update(now);
+
+    if (selfChirpSuppressed) {
+        if (!_selfChirpIgnoreArmed) {
+            _audioOnsetDetector.begin();
+            _selfChirpIgnoreArmed = true;
+        }
+    } else {
+        if (_selfChirpIgnoreArmed) {
+            _audioOnsetDetector.begin();
+            _selfChirpIgnoreArmed = false;
+        }
+
+        _audioOnsetDetector.update(now);
+    }
+
     updateDebugLatches(now);
-    _behavior.update(_audioOnsetDetector.transientDetected(), _audioOnsetDetector.transientStrength(), now);
+
+    const bool transientDetected = selfChirpSuppressed ? false : _audioOnsetDetector.transientDetected();
+    const float transientStrength = selfChirpSuppressed ? 0.0f : _audioOnsetDetector.transientStrength();
+    _behavior.update(transientDetected, transientStrength, now);
 
     if (_behavior.shouldStartChirp()) {
-     //   Serial.print("EVT chirp_start_");
-     //   Serial.println(_behavior.chirpRequestSourceName());
-      //  _chirpOutput.start();
+        _chirpOutput.start();
+        _selfChirpIgnoreUntilMs = now + kSelfChirpIgnoreMs;
+        _selfChirpIgnoreArmed = false;
     }
 
     _chirpOutput.update();
 
     if (_chirpOutput.finished()) {
-     //   printEvent("chirp_finished");
-      //  _behavior.notifyChirpFinished(now);
+        _behavior.notifyChirpFinished(now);
     }
 
-    // Keep the status LED off while output is disabled for detector testing.
-    digitalWrite(_ledPin, LOW);
+    digitalWrite(_ledPin, _chirpOutput.isActive() ? HIGH : LOW);
 
     printPlotValues(now);
 
@@ -117,6 +133,9 @@ void Node::updateDebugLatches(unsigned long now) {
     }
 
     if (_audioOnsetDetector.transientDetected()) {
+        if (now < _selfChirpIgnoreUntilMs) {
+            return;
+        }
         // Keep the transient pulse visible long enough to read in the serial plot.
         _debugTransientVisibleUntilMs = now + _debugPulseHoldMs;
         _debugTransientStrength = _audioOnsetDetector.transientStrength();
@@ -168,6 +187,8 @@ void Node::printPlotValues(unsigned long now) {
     Serial.print(transientStrength, 3);
     Serial.print(" transientMs:");
     Serial.print(transientDurationMs);
+    Serial.print(" selfChirpIgnore:");
+    Serial.print(now < _selfChirpIgnoreUntilMs ? 1 : 0);
     Serial.print(" coreUs:");
     Serial.print(coreLoopAvgUs);
     Serial.print("/");

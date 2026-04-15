@@ -15,7 +15,6 @@ void ChirpOutput::start() {
 
     _finished = false;
     _active = true;
-    _phase = 0;
     _phaseStartMs = millis();
     ledcWriteTone(_channel, kToneHz);
 }
@@ -26,6 +25,16 @@ void ChirpOutput::update() {
     const unsigned long now = millis();
     const unsigned long elapsed = now - _phaseStartMs;
 
+    // Temporary experiment: emit one continuous 100 ms beep to stress the
+    // transient detector before we go back to burst-capture tuning.
+    if (elapsed >= 100) {
+        ledcWriteTone(_channel, 0);
+        _active = false;
+        _finished = true;
+    }
+
+    // Original multi-phase chirp, kept here for easy restoration later.
+    /*
     switch (_phase) {
         case 0:
             if (elapsed >= 8) {
@@ -67,6 +76,7 @@ void ChirpOutput::update() {
             }
             break;
     }
+    */
 }
 
 bool ChirpOutput::isActive() const {

@@ -59,4 +59,7 @@ private:
     float _debugOnsetStrength = 0.0f;
     float _debugTransientStrength = 0.0f;
     const unsigned long _debugPulseHoldMs = 150;
+    unsigned long _selfChirpIgnoreUntilMs = 0;
+    bool _selfChirpIgnoreArmed = false;
+    static constexpr unsigned long kSelfChirpIgnoreMs = 250;
 };

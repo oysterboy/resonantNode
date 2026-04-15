@@ -69,8 +69,6 @@ void AudioOnsetDetector::update(unsigned long now) {
         const bool accepted = durationAccepted && strengthAccepted;
 
         if (accepted) {
-            // Only print accepted transients so the serial log stays focused on
-            // the events that survive both the duration and strength filters.
             Serial.print("EVT transient t=");
             Serial.print(now);
             Serial.print(" dur=");
@@ -81,6 +79,27 @@ void AudioOnsetDetector::update(unsigned long now) {
             _transientDetected = true;
             _transientStrength = _peakStrength;
             _transientDurationMs = peakDurationMs;
+        } else {
+            Serial.print("EVT transient_rejected t=");
+            Serial.print(now);
+            Serial.print(" dur=");
+            Serial.print(peakDurationMs);
+            Serial.print(" strength=");
+            Serial.print(_peakStrength);
+            Serial.print(" reason=");
+
+            bool wroteReason = false;
+            if (!durationAccepted) {
+                Serial.print("duration");
+                wroteReason = true;
+            }
+            if (!strengthAccepted) {
+                if (wroteReason) {
+                    Serial.print(",");
+                }
+                Serial.print("strength");
+            }
+            Serial.println();
         }
 
         _peakActive = false;

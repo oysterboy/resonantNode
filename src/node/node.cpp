@@ -4,7 +4,7 @@
 Node::Node(int inputPin, int ledPin, int chirpPin, AudioSourceKind sourceKind)
     : _ledPin(ledPin),
       _analogSource(inputPin),
-      _i2sSource(14, 27, 35),
+      _i2sSource(14, 27, 33, 16000, 32),
       _audioSource(sourceKind == AudioSourceKind::I2S
                        ? static_cast<AudioSource&>(_i2sSource)
                        : static_cast<AudioSource&>(_analogSource)),
@@ -16,20 +16,13 @@ void Node::begin() {
     pinMode(_ledPin, OUTPUT);
     digitalWrite(_ledPin, LOW);
     configureParameters();
-    // The chosen source owns raw acquisition; AudioSignal only shapes samples.
     _audioSource.begin();
     _audioSignal.begin();
     _audioOnsetDetector.begin();
     _chirpOutput.begin();
-    _loopStartMicros = micros();
-    _coreLoopUsMin = 0;
-    _coreLoopUsMax = 0;
-    _coreLoopUsSum = 0;
-    _coreLoopSamples = 0;
-    _fullLoopUsMin = 0;
-    _fullLoopUsMax = 0;
-    _fullLoopUsSum = 0;
-    _fullLoopSamples = 0;
+    _debug.markLoopStart(micros());
+    _debug.begin();
+    _lastBehaviorStateCode = _behavior.stateCode();
 }
 
 void Node::configureParameters() {
@@ -38,12 +31,14 @@ void Node::configureParameters() {
     _audioSignal.setSmoothingFactor(0.5f);
     _audioSignal.setBaselineUpdateFactor(0.005f);
 
-    // The transient window is intentionally wider while we tune the detector
-    // against real acoustic tests.
+    /*
+    Legacy analog-mic tuning:
+    Keep these old values for boards that still use the analog mic on GPIO34.
+    Uncomment this block to restore the previous detector behavior.
+
     _audioOnsetDetector.setOnsetDetectionThreshold(75.0f);
     _audioOnsetDetector.setOnsetReleaseThreshold(68.0f);
     _audioOnsetDetector.setCooldownAfterOnsetMs(50);
-    // Debounce the release edge so one burst is not split by tiny level dips.
     _audioOnsetDetector.setReleaseDebounceMs(20);
     _audioOnsetDetector.setMinTransientDurationMs(50);
     _audioOnsetDetector.setMaxTransientDurationMs(190);
@@ -52,22 +47,32 @@ void Node::configureParameters() {
     _behavior.setWaitAfterTransientMs(500);
     _behavior.setRefractoryAfterEmitMs(500);
     _behavior.setIdleTimeoutMs(10000);
+    */
+
+    // Current I2S / external-mic tuning.
+    // The transient window is intentionally wider while we tune the detector
+    // against real acoustic tests.
+    _audioOnsetDetector.setOnsetDetectionThreshold(50.0f);
+    _audioOnsetDetector.setOnsetReleaseThreshold(43.0f);
+    _audioOnsetDetector.setCooldownAfterOnsetMs(50);
+    // Debounce the release edge so one burst is not split by tiny level dips.
+    _audioOnsetDetector.setReleaseDebounceMs(20);
+    _audioOnsetDetector.setMinTransientDurationMs(50);
+    _audioOnsetDetector.setMaxTransientDurationMs(190);
+    _audioOnsetDetector.setMinTransientPeakStrength(60.0f);
+
+    _behavior.setWaitAfterTransientMs(2000);
+    _behavior.setRefractoryAfterEmitMs(500);
+    // Keep idle chirps out of the way during external mic tests.
+    _behavior.setIdleTimeoutMs(10000);
 }
 
 void Node::update() {
     const unsigned long now = millis();
     const unsigned long nowUs = micros();
-    const unsigned long coreLoopUs = nowUs - _loopStartMicros;
     const bool selfChirpSuppressed = now < _selfChirpIgnoreUntilMs;
 
-    if (_coreLoopSamples == 0 || coreLoopUs < _coreLoopUsMin) {
-        _coreLoopUsMin = coreLoopUs;
-    }
-    if (coreLoopUs > _coreLoopUsMax) {
-        _coreLoopUsMax = coreLoopUs;
-    }
-    _coreLoopUsSum += coreLoopUs;
-    _coreLoopSamples++;
+    _debug.noteCoreLoopUs(nowUs);
 
     // Update input first, then detection, then behavior, so each layer sees the
     // latest state from the layer below it.
@@ -87,13 +92,25 @@ void Node::update() {
         _audioOnsetDetector.update(now);
     }
 
-    updateDebugLatches(now);
+    _debug.observeOnset(now, _audioOnsetDetector.onsetDetected(), _audioOnsetDetector.onsetStrength());
+    _debug.observeTransient(now, _audioOnsetDetector.transientDetected(), _audioOnsetDetector.transientStrength(), selfChirpSuppressed);
 
     const bool transientDetected = selfChirpSuppressed ? false : _audioOnsetDetector.transientDetected();
     const float transientStrength = selfChirpSuppressed ? 0.0f : _audioOnsetDetector.transientStrength();
     _behavior.update(transientDetected, transientStrength, now);
 
+    const int behaviorStateCode = _behavior.stateCode();
+    // Keep the serial log focused on transient accept/reject and chirp start events.
+    // if (behaviorStateCode != _lastBehaviorStateCode) {
+    //     Serial.print("EVT state=");
+    //     Serial.println(_behavior.stateName());
+    //     _lastBehaviorStateCode = behaviorStateCode;
+    // }
+
     if (_behavior.shouldStartChirp()) {
+        Serial.print("EVT chirp_started source=");
+        Serial.println(_behavior.chirpRequestSourceName());
+        _ledFlashUntilMs = now + kLedFlashHoldMs;
         _chirpOutput.start();
         _selfChirpIgnoreUntilMs = now + kSelfChirpIgnoreMs;
         _selfChirpIgnoreArmed = false;
@@ -103,121 +120,16 @@ void Node::update() {
 
     if (_chirpOutput.finished()) {
         _behavior.notifyChirpFinished(now);
-    }
-
-    digitalWrite(_ledPin, _chirpOutput.isActive() ? HIGH : LOW);
-
-    printPlotValues(now);
-
-    const unsigned long endUs = micros();
-    const unsigned long fullLoopUs = endUs - _loopStartMicros;
-
-    if (_fullLoopSamples == 0 || fullLoopUs < _fullLoopUsMin) {
-        _fullLoopUsMin = fullLoopUs;
-    }
-    if (fullLoopUs > _fullLoopUsMax) {
-        _fullLoopUsMax = fullLoopUs;
-    }
-    _fullLoopUsSum += fullLoopUs;
-    _fullLoopSamples++;
-
-    _loopStartMicros = endUs;
-}
-
-void Node::printEvent(const char* event) {
-    if (!_debugEvents) return;
-
-    Serial.print("EVT ");
-    Serial.println(event);
-}
-
-void Node::updateDebugLatches(unsigned long now) {
-    if (_audioOnsetDetector.onsetDetected()) {
-        // Keep the latest onset visible long enough to read in the serial plot.
-        _debugOnsetVisibleUntilMs = now + _debugPulseHoldMs;
-        _debugOnsetStrength = _audioOnsetDetector.onsetStrength();
-    }
-
-    if (_audioOnsetDetector.transientDetected()) {
-        if (now < _selfChirpIgnoreUntilMs) {
-            return;
+        // Keep the detector muted a bit longer so the chirp tail and speaker/mic
+        // ring-down do not get misread as a new transient.
+        const unsigned long tailIgnoreUntilMs = now + kSelfChirpTailIgnoreMs;
+        if (tailIgnoreUntilMs > _selfChirpIgnoreUntilMs) {
+            _selfChirpIgnoreUntilMs = tailIgnoreUntilMs;
         }
-        // Keep the transient pulse visible long enough to read in the serial plot.
-        _debugTransientVisibleUntilMs = now + _debugPulseHoldMs;
-        _debugTransientStrength = _audioOnsetDetector.transientStrength();
     }
 
-    if (now >= _debugOnsetVisibleUntilMs) {
-        _debugOnsetStrength = 0.0f;
-    }
+    const bool ledShouldBeOn = behaviorStateCode != 0 || now < _ledFlashUntilMs;
+    digitalWrite(_ledPin, ledShouldBeOn ? HIGH : LOW);
 
-    if (now >= _debugTransientVisibleUntilMs) {
-        _debugTransientStrength = 0.0f;
-    }
-}
-
-void Node::printPlotValues(unsigned long now) {
-    if (!_debugPlot) return;
-    if (now < 1000) return;
-    if (now - _lastDebugPrintMs < _debugIntervalMs) return;
-
-    _lastDebugPrintMs = now;
-
-    const float centeredSignal = _audioSignal.centeredSignal() / 300.0f;
-    const float signalMagnitude = _audioSignal.signalMagnitude() / 300.0f;
-    const float smoothedSignalMagnitude = _audioSignal.smoothedSignalMagnitude() / 300.0f;
-    const float onsetStrength = _debugOnsetStrength / 300.0f;
-    const float transientStrength = _debugTransientStrength / 300.0f;
-    // These latches keep the debug pulses visible long enough to read in the plot.
-    const int onsetPulse = now < _debugOnsetVisibleUntilMs ? 1 : 0;
-    const int transientPulse = now < _debugTransientVisibleUntilMs ? 1 : 0;
-    const unsigned long transientDurationMs = _audioOnsetDetector.transientDurationMs();
-    const unsigned long coreLoopAvgUs = _coreLoopSamples > 0 ? (_coreLoopUsSum / _coreLoopSamples) : 0;
-    const unsigned long fullLoopAvgUs = _fullLoopSamples > 0 ? (_fullLoopUsSum / _fullLoopSamples) : 0;
-    const int state = _behavior.stateCode();
-    const int chirp = _chirpOutput.isActive() ? 1 : 0;
-
-    Serial.print("centered:");
-    Serial.print(centeredSignal, 3);
-    Serial.print(" magnitude:");
-    Serial.print(signalMagnitude, 3);
-    Serial.print(" smooth:");
-    Serial.print(smoothedSignalMagnitude, 3);
-    Serial.print(" onsetPulse:");
-    Serial.print(onsetPulse);
-    Serial.print(" onset:");
-    Serial.print(onsetStrength, 3);
-    Serial.print(" transientPulse:");
-    Serial.print(transientPulse);
-    Serial.print(" transient:");
-    Serial.print(transientStrength, 3);
-    Serial.print(" transientMs:");
-    Serial.print(transientDurationMs);
-    Serial.print(" selfChirpIgnore:");
-    Serial.print(now < _selfChirpIgnoreUntilMs ? 1 : 0);
-    Serial.print(" coreUs:");
-    Serial.print(coreLoopAvgUs);
-    Serial.print("/");
-    Serial.print(_coreLoopUsMin);
-    Serial.print("/");
-    Serial.print(_coreLoopUsMax);
-    Serial.print(" fullUs:");
-    Serial.print(fullLoopAvgUs);
-    Serial.print("/");
-    Serial.print(_fullLoopUsMin);
-    Serial.print("/");
-    Serial.print(_fullLoopUsMax);
-    Serial.print(" state:");
-    Serial.print(state);
-    Serial.print(" chirp:");
-    Serial.println(chirp);
-
-    _coreLoopUsMin = 0;
-    _coreLoopUsMax = 0;
-    _coreLoopUsSum = 0;
-    _coreLoopSamples = 0;
-    _fullLoopUsMin = 0;
-    _fullLoopUsMax = 0;
-    _fullLoopUsSum = 0;
-    _fullLoopSamples = 0;
+    _debug.endLoop(micros());
 }

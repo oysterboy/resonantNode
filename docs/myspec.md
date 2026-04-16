@@ -74,3 +74,13 @@ src/
 
 Keep HAL dumb, IO semantic, Signal technical, Behavior meaningful, Node orchestrating.
 
+---
+
+## 8. Behavior Routing
+
+- Behavior is a feature of the node.
+- A node may contain a behavior or operate without one.
+- Behavior shall produce intent, not hardware access.
+- Node shall route behavior intent to IO or hardware execution.
+- The node orchestration code should remain stable across different behavior implementations.
+- Hardware-specific actions belong in IO or HAL, not in behavior logic.

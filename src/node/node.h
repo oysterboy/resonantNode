@@ -6,6 +6,7 @@
 #include "../io/AudioOnsetDetector.h"
 #include "../io/ChirpOutput.h"
 #include "../behavior/ResonantBehavior.h"
+#include "node_debug.h"
 
 /*
 Node
@@ -33,9 +34,6 @@ public:
 
 private:
     void configureParameters();
-    void printEvent(const char* event);
-    void printPlotValues(unsigned long now);
-    void updateDebugLatches(unsigned long now);
 
     int _ledPin;
 
@@ -47,27 +45,12 @@ private:
     ResonantBehavior _behavior;
     ChirpOutput _chirpOutput;
 
-
-//debug
-    bool _debugEvents = false;
-    bool _debugPlot = false;
-    unsigned long _lastDebugPrintMs = 0;
-    const unsigned long _debugIntervalMs = 100;
-    unsigned long _loopStartMicros = 0;
-    unsigned long _coreLoopUsMin = 0;
-    unsigned long _coreLoopUsMax = 0;
-    unsigned long _coreLoopUsSum = 0;
-    unsigned long _coreLoopSamples = 0;
-    unsigned long _fullLoopUsMin = 0;
-    unsigned long _fullLoopUsMax = 0;
-    unsigned long _fullLoopUsSum = 0;
-    unsigned long _fullLoopSamples = 0;
-    unsigned long _debugOnsetVisibleUntilMs = 0;
-    unsigned long _debugTransientVisibleUntilMs = 0;
-    float _debugOnsetStrength = 0.0f;
-    float _debugTransientStrength = 0.0f;
-    const unsigned long _debugPulseHoldMs = 150;
+    NodeDebug _debug;
+    int _lastBehaviorStateCode = -1;
     unsigned long _selfChirpIgnoreUntilMs = 0;
+    unsigned long _ledFlashUntilMs = 0;
     bool _selfChirpIgnoreArmed = false;
     static constexpr unsigned long kSelfChirpIgnoreMs = 250;
+    static constexpr unsigned long kSelfChirpTailIgnoreMs = 3000;
+    static constexpr unsigned long kLedFlashHoldMs = 200;
 };

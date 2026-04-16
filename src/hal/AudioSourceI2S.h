@@ -4,7 +4,7 @@
 
 class AudioSourceI2S : public AudioSource {
 public:
-    AudioSourceI2S(int sckPin, int fsPin, int dataInPin, int sampleRate = 16000, int bitsPerSample = 16);
+    AudioSourceI2S(int sckPin, int fsPin, int dataInPin, int sampleRate = 16000, int bitsPerSample = 32);
 
     void begin() override;
     int readSample() override;

@@ -2,6 +2,16 @@
 ## Sample Now, Stream Later
 ### Next step for the audio source abstraction
 
+## Fix steps
+
+Before proceeding to additional source or signal refactors, the behavior boundary shall be tightened as follows:
+
+1. Self-chirp suppression policy shall be removed from `Node`.
+2. `Node` shall be limited to orchestration, wiring, and output control.
+3. Timing rules for response suppression shall reside in `ResonantBehavior` or in a dedicated behavior-adjacent policy object.
+4. Debug latches may remain in `Node` provided they do not influence behavior decisions.
+5. Further source or signal refactors shall proceed only after the behavior boundary is clarified and stabilized.
+
 ## Goal
 
 Extend the current audio input path so the system can support both:

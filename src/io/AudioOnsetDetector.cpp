@@ -69,7 +69,7 @@ void AudioOnsetDetector::update(unsigned long now) {
         const bool accepted = durationAccepted && strengthAccepted;
 
         if (accepted) {
-            Serial.print("EVT transient t=");
+            Serial.print("EVT transient accepted t=");
             Serial.print(now);
             Serial.print(" dur=");
             Serial.print(peakDurationMs);
@@ -80,7 +80,7 @@ void AudioOnsetDetector::update(unsigned long now) {
             _transientStrength = _peakStrength;
             _transientDurationMs = peakDurationMs;
         } else {
-            Serial.print("EVT transient_rejected t=");
+            Serial.print("EVT transient rejected t=");
             Serial.print(now);
             Serial.print(" dur=");
             Serial.print(peakDurationMs);

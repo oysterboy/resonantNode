@@ -22,6 +22,7 @@ public:
     explicit AudioOnsetDetector(AudioSignal& audioSignal);
 
     void begin();
+    void resetState();
     void update(unsigned long now);
 
     void setOnsetDetectionThreshold(float value);
@@ -53,6 +54,9 @@ private:
     unsigned long _peakStartedMs = 0;
     unsigned long _releaseCandidateStartedMs = 0;
     float _peakStrength = 0.0f;
+    unsigned long _lastStatsPrintMs = 0;
+    unsigned long _statsStartMs = 0;
+    unsigned long _peakAcceptedCount = 0;
 
     //parameters
     float _onsetDetectionThreshold = 75.0f; // Minimum signal magnitude required to count as an onset.
@@ -62,4 +66,6 @@ private:
     unsigned long _minTransientDurationMs = 0; // Ignore peaks that are too short to be meaningful.
     unsigned long _maxTransientDurationMs = 120; // Reject peaks that last too long to count as transients.
     float _minTransientPeakStrength = 0.0f; // Ignore weak peaks that are likely ambient noise.
+    unsigned long _statsPrintIntervalMs = 10000; // Report cumulative detector success once every 10 seconds.
+    unsigned long _expectedTransientPeriodMs = 2000; // Rough cadence we expect from the external source.
 };

@@ -25,6 +25,9 @@ This branch extends the audio input path with a source abstraction and an I2S-re
 - Added `src/node/node_debug.*` to own debug latches, loop timing stats, and serial plot formatting.
 - Kept `AudioOnsetDetector` naming and behavior intact so the refactor stays mechanical.
 - Added self-chirp suppression around the chirp tail so the MEMS mic is less likely to retrigger on ring-down.
+- Moved chirp emit-frequency setup into `Node::configureParameters()` so the node owns its output tuning.
+- Switched the LED feedback to three transient pulses, full-bright emit, 70% self-ignore, and 50% refractory.
+- Added throttled peak-start / peak-open debug logging to `AudioOnsetDetector` for transient troubleshooting.
 
 ## Calibration Notes
 

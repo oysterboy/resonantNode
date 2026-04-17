@@ -1,5 +1,7 @@
 #pragma once
 
+#include <stdint.h>
+
 #include "../hal/AudioSourceAnalog.h"
 #include "../hal/AudioSourceI2S.h"
 #include "../io/AudioSignal.h"
@@ -27,7 +29,10 @@ public:
         I2S
     };
 
-    Node(int inputPin, int ledPin, int chirpPin, AudioSourceKind sourceKind = AudioSourceKind::Analog);
+    Node(int inputPin,
+         int ledPin,
+         int chirpPin,
+         AudioSourceKind sourceKind = AudioSourceKind::Analog);
 
     void begin();
     void update();
@@ -48,9 +53,22 @@ private:
     NodeDebug _debug;
     int _lastBehaviorStateCode = -1;
     unsigned long _selfChirpIgnoreUntilMs = 0;
-    unsigned long _ledFlashUntilMs = 0;
+    unsigned long _ledTransientPulseStartMs = 0;
     bool _selfChirpIgnoreArmed = false;
-    static constexpr unsigned long kSelfChirpIgnoreMs = 250;
-    static constexpr unsigned long kSelfChirpTailIgnoreMs = 3000;
-    static constexpr unsigned long kLedFlashHoldMs = 200;
+    static constexpr unsigned long kSelfChirpIgnoreMs = 500;
+    static constexpr unsigned long kSelfChirpTailIgnoreMs = 1000;
+
+
+
+    static constexpr unsigned long kLedTransientPulseOnMs = 30;
+    static constexpr unsigned long kLedTransientPulseOffMs = 30;
+    static constexpr unsigned long kLedTransientPulseCount = 3;
+    static constexpr unsigned long kLedTransientPulseCycleMs = kLedTransientPulseOnMs + kLedTransientPulseOffMs;
+    static constexpr uint8_t kLedBrightnessFull = 255;
+    static constexpr uint8_t kLedBrightnessSelfIgnore = 179;
+    static constexpr uint8_t kLedBrightnessRefractory = 128;
+    static constexpr uint8_t kLedBrightnessOff = 0;
+    static constexpr uint8_t kLedPwmChannel = 1;
+    static constexpr uint8_t kLedPwmResolutionBits = 8;
+    static constexpr uint32_t kLedPwmFrequencyHz = 5000;
 };

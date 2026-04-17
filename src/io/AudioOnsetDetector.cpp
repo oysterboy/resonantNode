@@ -5,6 +5,13 @@ AudioOnsetDetector::AudioOnsetDetector(AudioSignal& audioSignal)
     : _audioSignal(audioSignal) {}
 
 void AudioOnsetDetector::begin() {
+    resetState();
+    _statsStartMs = millis();
+    _lastStatsPrintMs = 0;
+    _peakAcceptedCount = 0;
+}
+
+void AudioOnsetDetector::resetState() {
     _onsetDetected = false;
     _onsetStrength = 0.0f;
     _lastOnsetMs = 0;
@@ -76,36 +83,34 @@ void AudioOnsetDetector::update(unsigned long now) {
             Serial.print(" strength=");
             Serial.println(_peakStrength);
 
+            _peakAcceptedCount++;
             _transientDetected = true;
             _transientStrength = _peakStrength;
             _transientDurationMs = peakDurationMs;
-        } else {
-            Serial.print("EVT transient rejected t=");
-            Serial.print(now);
-            Serial.print(" dur=");
-            Serial.print(peakDurationMs);
-            Serial.print(" strength=");
-            Serial.print(_peakStrength);
-            Serial.print(" reason=");
-
-            bool wroteReason = false;
-            if (!durationAccepted) {
-                Serial.print("duration");
-                wroteReason = true;
-            }
-            if (!strengthAccepted) {
-                if (wroteReason) {
-                    Serial.print(",");
-                }
-                Serial.print("strength");
-            }
-            Serial.println();
         }
 
         _peakActive = false;
         _peakStartedMs = 0;
         _releaseCandidateStartedMs = 0;
         _peakStrength = 0.0f;
+    }
+
+    if (_lastStatsPrintMs == 0 || now - _lastStatsPrintMs >= _statsPrintIntervalMs) {
+        const unsigned long elapsedMs = now - _statsStartMs;
+        const unsigned long expectedCount = (elapsedMs + (_expectedTransientPeriodMs / 2)) / _expectedTransientPeriodMs;
+        const unsigned long successRate = expectedCount > 0 ? ((_peakAcceptedCount * 100UL) / expectedCount) : 0;
+
+        Serial.print("EVT transient success t=");
+        Serial.print(now);
+        Serial.print(" accepted=");
+        Serial.print(_peakAcceptedCount);
+        Serial.print(" expected=");
+        Serial.print(expectedCount);
+        Serial.print(" success=");
+        Serial.print(successRate);
+        Serial.println("%");
+
+        _lastStatsPrintMs = now;
     }
 }
 

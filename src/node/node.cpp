@@ -1,6 +1,10 @@
 #include "node.h"
 #include <Arduino.h>
 
+#ifndef CHIRP_FREQUENCY_HZ
+#define CHIRP_FREQUENCY_HZ 2400
+#endif
+
 Node::Node(int inputPin, int ledPin, int chirpPin, AudioSourceKind sourceKind)
     : _ledPin(ledPin),
       _analogSource(inputPin),
@@ -13,8 +17,9 @@ Node::Node(int inputPin, int ledPin, int chirpPin, AudioSourceKind sourceKind)
       _chirpOutput(chirpPin) {}
 
 void Node::begin() {
-    pinMode(_ledPin, OUTPUT);
-    digitalWrite(_ledPin, LOW);
+    ledcSetup(kLedPwmChannel, kLedPwmFrequencyHz, kLedPwmResolutionBits);
+    ledcAttachPin(_ledPin, kLedPwmChannel);
+    ledcWrite(kLedPwmChannel, kLedBrightnessOff);
     configureParameters();
     _audioSource.begin();
     _audioSignal.begin();
@@ -23,6 +28,7 @@ void Node::begin() {
     _debug.markLoopStart(micros());
     _debug.begin();
     _lastBehaviorStateCode = _behavior.stateCode();
+    _ledTransientPulseStartMs = 0;
 }
 
 void Node::configureParameters() {
@@ -31,40 +37,46 @@ void Node::configureParameters() {
     _audioSignal.setSmoothingFactor(0.5f);
     _audioSignal.setBaselineUpdateFactor(0.005f);
 
+    // Chirp tone is configured here so the node owns its output tuning.
+    // The fallback/default frequency is defined by CHIRP_FREQUENCY_HZ.
+    _chirpOutput.setToneHz(2000);
+
     /*
     Legacy analog-mic tuning:
     Keep these old values for boards that still use the analog mic on GPIO34.
     Uncomment this block to restore the previous detector behavior.
 
-    _audioOnsetDetector.setOnsetDetectionThreshold(75.0f);
-    _audioOnsetDetector.setOnsetReleaseThreshold(68.0f);
-    _audioOnsetDetector.setCooldownAfterOnsetMs(50);
-    _audioOnsetDetector.setReleaseDebounceMs(20);
-    _audioOnsetDetector.setMinTransientDurationMs(50);
-    _audioOnsetDetector.setMaxTransientDurationMs(190);
-    _audioOnsetDetector.setMinTransientPeakStrength(180.0f);
+    _audioOnsetDetector.setOnsetDetectionThreshold(75.0f); // Require a stronger edge for the noisier analog mic.
+    _audioOnsetDetector.setOnsetReleaseThreshold(68.0f); // Let the peak settle quickly, but not too close to attack.
+    _audioOnsetDetector.setCooldownAfterOnsetMs(50); // Avoid double-firing on the same burst.
+    _audioOnsetDetector.setReleaseDebounceMs(20); // Ignore tiny dips that split one burst into two.
+    _audioOnsetDetector.setMinTransientDurationMs(50); // Reject clicks that are too short to be a real transient.
+    _audioOnsetDetector.setMaxTransientDurationMs(190); // Reject long blobs that look more like background noise.
+    _audioOnsetDetector.setMinTransientPeakStrength(180.0f); // Keep weak ambient crossings out.
 
-    _behavior.setWaitAfterTransientMs(500);
-    _behavior.setRefractoryAfterEmitMs(500);
-    _behavior.setIdleTimeoutMs(10000);
+    _behavior.setWaitAfterTransientMs(500); // Respond sooner on the analog mic path.
+    _behavior.setRefractoryAfterEmitMs(500); // Give the system a short recovery window after emit.
+    _behavior.setIdleTimeoutMs(10000); // Still allow an idle self-trigger if nothing happens for a while.
     */
 
     // Current I2S / external-mic tuning.
+    // These are the live detector values for the MEMS mic path, set here in Node.
     // The transient window is intentionally wider while we tune the detector
     // against real acoustic tests.
-    _audioOnsetDetector.setOnsetDetectionThreshold(50.0f);
-    _audioOnsetDetector.setOnsetReleaseThreshold(43.0f);
-    _audioOnsetDetector.setCooldownAfterOnsetMs(50);
-    // Debounce the release edge so one burst is not split by tiny level dips.
-    _audioOnsetDetector.setReleaseDebounceMs(20);
-    _audioOnsetDetector.setMinTransientDurationMs(50);
-    _audioOnsetDetector.setMaxTransientDurationMs(190);
-    _audioOnsetDetector.setMinTransientPeakStrength(60.0f);
+    _audioOnsetDetector.setOnsetDetectionThreshold(22.0f); // Attack threshold for the current mic path.
+    _audioOnsetDetector.setOnsetReleaseThreshold(18.0f); // Release threshold just below attack to close the peak cleanly.
+    _audioOnsetDetector.setCooldownAfterOnsetMs(50); // Set here to keep one burst from firing twice.
+    _audioOnsetDetector.setReleaseDebounceMs(30); // Set here to ignore tiny dips between samples.
+    _audioOnsetDetector.setMinTransientDurationMs(40); // Set here to reject clicks that are too short.
+    _audioOnsetDetector.setMaxTransientDurationMs(190); // Set here to reject slow non-burst envelopes.
+    _audioOnsetDetector.setMinTransientPeakStrength(25.0f); // Set here to keep weak ambient crossings out.
 
-    _behavior.setWaitAfterTransientMs(2000);
-    _behavior.setRefractoryAfterEmitMs(500);
-    // Keep idle chirps out of the way during external mic tests.
-    _behavior.setIdleTimeoutMs(10000);
+    _behavior.setWaitAfterTransientMs(100); // Set here for the post-transient wait before emit.
+    _behavior.setRefractoryAfterEmitMs(500); // Set here for the post-emit refractory holdoff.
+    _behavior.setIdleTimeoutMs(10000); // Set here for the idle self-trigger timeout.
+
+    // Self-ignore timing is not tuned here.
+    // It is defined in node.h as kSelfChirpIgnoreMs and kSelfChirpTailIgnoreMs.
 }
 
 void Node::update() {
@@ -78,26 +90,31 @@ void Node::update() {
     // latest state from the layer below it.
     _audioSignal.update();
 
+    const bool onsetDetected = selfChirpSuppressed ? false : _audioOnsetDetector.onsetDetected();
     if (selfChirpSuppressed) {
         if (!_selfChirpIgnoreArmed) {
-            _audioOnsetDetector.begin();
+            _audioOnsetDetector.resetState();
             _selfChirpIgnoreArmed = true;
         }
     } else {
         if (_selfChirpIgnoreArmed) {
-            _audioOnsetDetector.begin();
+            _audioOnsetDetector.resetState();
             _selfChirpIgnoreArmed = false;
         }
 
         _audioOnsetDetector.update(now);
     }
 
-    _debug.observeOnset(now, _audioOnsetDetector.onsetDetected(), _audioOnsetDetector.onsetStrength());
+    _debug.observeOnset(now, onsetDetected, _audioOnsetDetector.onsetStrength());
     _debug.observeTransient(now, _audioOnsetDetector.transientDetected(), _audioOnsetDetector.transientStrength(), selfChirpSuppressed);
 
     const bool transientDetected = selfChirpSuppressed ? false : _audioOnsetDetector.transientDetected();
     const float transientStrength = selfChirpSuppressed ? 0.0f : _audioOnsetDetector.transientStrength();
     _behavior.update(transientDetected, transientStrength, now);
+
+    if (transientDetected) {
+        _ledTransientPulseStartMs = now;
+    }
 
     const int behaviorStateCode = _behavior.stateCode();
     // Keep the serial log focused on transient accept/reject and chirp start events.
@@ -110,7 +127,6 @@ void Node::update() {
     if (_behavior.shouldStartChirp()) {
         Serial.print("EVT chirp_started source=");
         Serial.println(_behavior.chirpRequestSourceName());
-        _ledFlashUntilMs = now + kLedFlashHoldMs;
         _chirpOutput.start();
         _selfChirpIgnoreUntilMs = now + kSelfChirpIgnoreMs;
         _selfChirpIgnoreArmed = false;
@@ -128,8 +144,24 @@ void Node::update() {
         }
     }
 
-    const bool ledShouldBeOn = behaviorStateCode != 0 || now < _ledFlashUntilMs;
-    digitalWrite(_ledPin, ledShouldBeOn ? HIGH : LOW);
+    uint8_t ledDuty = kLedBrightnessOff;
+    if (_chirpOutput.isActive()) {
+        ledDuty = kLedBrightnessFull;
+    } else if (_ledTransientPulseStartMs != 0) {
+        const unsigned long pulseElapsedMs = now - _ledTransientPulseStartMs;
+        const unsigned long pulseWindowMs = kLedTransientPulseCycleMs * kLedTransientPulseCount;
+        if (pulseElapsedMs < pulseWindowMs) {
+            const unsigned long pulsePhaseMs = pulseElapsedMs % kLedTransientPulseCycleMs;
+            ledDuty = pulsePhaseMs < kLedTransientPulseOnMs ? kLedBrightnessFull : kLedBrightnessOff;
+        } else {
+            _ledTransientPulseStartMs = 0;
+        }
+    } else if (selfChirpSuppressed) {
+        ledDuty = kLedBrightnessSelfIgnore;
+    } else if (behaviorStateCode == 3) {
+        ledDuty = kLedBrightnessRefractory;
+    }
+    ledcWrite(kLedPwmChannel, ledDuty);
 
     _debug.endLoop(micros());
 }

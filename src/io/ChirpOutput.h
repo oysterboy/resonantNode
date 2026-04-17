@@ -15,9 +15,10 @@ Does NOT:
 
 class ChirpOutput {
 public:
-    explicit ChirpOutput(int pin);
+    explicit ChirpOutput(int pin, uint32_t toneHz = 2400);
 
     void begin();
+    void setToneHz(uint32_t toneHz);
     void start();
     void update();
     bool isActive() const;
@@ -31,6 +32,6 @@ private:
     int _phase = 0;
     unsigned long _phaseStartMs = 0;
 
-    static constexpr uint32_t kToneHz = 2400;
+    uint32_t _toneHz;
     static constexpr uint8_t kResolutionBits = 8;
 };

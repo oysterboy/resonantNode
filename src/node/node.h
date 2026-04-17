@@ -56,6 +56,11 @@ private:
 
     NodeDebug _debug;
     int _lastBehaviorStateCode = -1;
+    unsigned long _lastI2SSignalLogMs = 0;
+    int _i2sSignalMin = 0;
+    int _i2sSignalMax = 0;
+    int _i2sCenteredMin = 0;
+    int _i2sCenteredMax = 0;
     unsigned long _selfChirpIgnoreUntilMs = 0;
     unsigned long _ledTransientPulseStartMs = 0;
     bool _selfChirpIgnoreArmed = false;

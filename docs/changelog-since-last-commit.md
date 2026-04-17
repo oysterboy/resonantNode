@@ -30,6 +30,11 @@ This branch extends the audio input path with a source abstraction and an I2S-re
 - Added throttled peak-start / peak-open debug logging to `AudioOnsetDetector` for transient troubleshooting.
 - Rolled the app back to `AudioSourceKind::Analog` after the MEMS path stayed far off target.
 - Split `Node::configureParameters()` into shared, analog, and I2S branches so source switching does not change behavior timing.
+- Added a throttled I2S-only signal log in `Node` for raw, centered, magnitude, and smoothed values.
+- Added per-second I2S min/max raw and centered ranges to help inspect MEMS signal swing.
+- Made `baselineTrackingQuietThreshold` source-specific: analog stays at `40`, I2S uses `25`.
+- Lowered the I2S quiet gate again to `20` so more MEMS swing reaches the detector.
+- Retuned the I2S detector thresholds upward a bit to reduce duplicate and extra transient accepts.
 
 ## Calibration Notes
 

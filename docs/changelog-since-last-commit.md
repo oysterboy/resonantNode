@@ -35,6 +35,7 @@ This branch extends the audio input path with a source abstraction and an I2S-re
 - Made `baselineTrackingQuietThreshold` source-specific: analog stays at `40`, I2S uses `25`.
 - Lowered the I2S quiet gate again to `20` so more MEMS swing reaches the detector.
 - Retuned the I2S detector thresholds upward a bit to reduce duplicate and extra transient accepts.
+- Made idle chirps use a three-beep pattern while transient chirps stay single-beep.
 
 ## Calibration Notes
 

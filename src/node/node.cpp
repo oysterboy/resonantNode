@@ -184,7 +184,8 @@ void Node::update() {
     if (_behavior.shouldStartChirp()) {
         Serial.print("EVT chirp_started source=");
         Serial.println(_behavior.chirpRequestSourceName());
-        _chirpOutput.start();
+        const bool triplePattern = _behavior.chirpRequestSourceName()[0] == 'i';
+        _chirpOutput.start(triplePattern ? ChirpOutput::ChirpPattern::Triple : ChirpOutput::ChirpPattern::Single);
         _selfChirpIgnoreUntilMs = now + kSelfChirpIgnoreMs;
         _selfChirpIgnoreArmed = false;
     }

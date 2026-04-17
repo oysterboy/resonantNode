@@ -15,11 +15,13 @@ void ChirpOutput::setToneHz(uint32_t toneHz) {
     _toneHz = toneHz;
 }
 
-void ChirpOutput::start() {
+void ChirpOutput::start(ChirpPattern pattern) {
     if (_active) return;
 
     _finished = false;
     _active = true;
+    _phase = 0;
+    _beepCount = (pattern == ChirpPattern::Triple) ? 3 : 1;
     _phaseStartMs = millis();
     ledcWriteTone(_channel, _toneHz);
 }
@@ -30,27 +32,22 @@ void ChirpOutput::update() {
     const unsigned long now = millis();
     const unsigned long elapsed = now - _phaseStartMs;
 
-    // Temporary experiment: emit one continuous 100 ms beep to stress the
-    // transient detector before we go back to burst-capture tuning.
-    if (elapsed >= 100) {
-        ledcWriteTone(_channel, 0);
-        _active = false;
-        _finished = true;
-    }
-
-    // Original multi-phase chirp, kept here for easy restoration later.
-    /*
     switch (_phase) {
         case 0:
-            if (elapsed >= 8) {
+            if (elapsed >= kChirpOnMs) {
                 ledcWriteTone(_channel, 0);
-                _phase = 1;
+                if (_beepCount == 1) {
+                    _active = false;
+                    _finished = true;
+                } else {
+                    _phase = 1;
+                }
                 _phaseStartMs = now;
             }
             break;
 
         case 1:
-            if (elapsed >= 15) {
+            if (elapsed >= kChirpPauseMs) {
                 ledcWriteTone(_channel, _toneHz);
                 _phase = 2;
                 _phaseStartMs = now;
@@ -58,7 +55,7 @@ void ChirpOutput::update() {
             break;
 
         case 2:
-            if (elapsed >= 8) {
+            if (elapsed >= kChirpOnMs) {
                 ledcWriteTone(_channel, 0);
                 _phase = 3;
                 _phaseStartMs = now;
@@ -66,7 +63,7 @@ void ChirpOutput::update() {
             break;
 
         case 3:
-            if (elapsed >= 15) {
+            if (elapsed >= kChirpPauseMs) {
                 ledcWriteTone(_channel, _toneHz);
                 _phase = 4;
                 _phaseStartMs = now;
@@ -74,14 +71,20 @@ void ChirpOutput::update() {
             break;
 
         case 4:
-            if (elapsed >= 8) {
+            if (elapsed >= kChirpOnMs) {
                 ledcWriteTone(_channel, 0);
+                _phase = 5;
+                _phaseStartMs = now;
+            }
+            break;
+
+        case 5:
+            if (elapsed >= kChirpPauseMs) {
                 _active = false;
                 _finished = true;
             }
             break;
     }
-    */
 }
 
 bool ChirpOutput::isActive() const {

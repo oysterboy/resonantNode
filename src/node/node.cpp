@@ -9,6 +9,7 @@ Node::Node(int inputPin, int ledPin, int chirpPin, AudioSourceKind sourceKind)
     : _ledPin(ledPin),
       _analogSource(inputPin),
       _i2sSource(14, 27, 33, 16000, 32),
+      _sourceKind(sourceKind),
       _audioSource(sourceKind == AudioSourceKind::I2S
                        ? static_cast<AudioSource&>(_i2sSource)
                        : static_cast<AudioSource&>(_analogSource)),
@@ -41,39 +42,35 @@ void Node::configureParameters() {
     // The fallback/default frequency is defined by CHIRP_FREQUENCY_HZ.
     _chirpOutput.setToneHz(2000);
 
-    /*
-    Legacy analog-mic tuning:
-    Keep these old values for boards that still use the analog mic on GPIO34.
-    Uncomment this block to restore the previous detector behavior.
+    if (_sourceKind == AudioSourceKind::I2S) {
+        // Current I2S / external-mic tuning.
+        // These values are intentionally softer than the analog path because the
+        // MEMS mic sees a different envelope and tends to surface shorter peaks.
+        _audioOnsetDetector.setOnsetDetectionThreshold(15.0f); // Catch much weaker edges from the MEMS mic.
+        _audioOnsetDetector.setOnsetReleaseThreshold(12.0f); // Keep release close enough to close the peak cleanly.
+        _audioOnsetDetector.setCooldownAfterOnsetMs(50); // Prevent multiple onset hits on one burst.
+        _audioOnsetDetector.setReleaseDebounceMs(10); // Ignore tiny dips so one burst stays one burst.
+        _audioOnsetDetector.setMinTransientDurationMs(30); // Reject very short clicks and ADC noise.
+        _audioOnsetDetector.setMaxTransientDurationMs(190); // Reject slow envelopes that are not burst-like.
+        _audioOnsetDetector.setMinTransientPeakStrength(20.0f); // Keep weak ambient crossings below acceptance.
 
-    _audioOnsetDetector.setOnsetDetectionThreshold(75.0f); // Require a stronger edge for the noisier analog mic.
-    _audioOnsetDetector.setOnsetReleaseThreshold(68.0f); // Let the peak settle quickly, but not too close to attack.
-    _audioOnsetDetector.setCooldownAfterOnsetMs(50); // Avoid double-firing on the same burst.
-    _audioOnsetDetector.setReleaseDebounceMs(20); // Ignore tiny dips that split one burst into two.
-    _audioOnsetDetector.setMinTransientDurationMs(50); // Reject clicks that are too short to be a real transient.
-    _audioOnsetDetector.setMaxTransientDurationMs(190); // Reject long blobs that look more like background noise.
-    _audioOnsetDetector.setMinTransientPeakStrength(180.0f); // Keep weak ambient crossings out.
+        _behavior.setWaitAfterTransientMs(300); // React quickly after a valid transient.
+        _behavior.setRefractoryAfterEmitMs(500); // Hold a short post-emit recovery state.
+        _behavior.setIdleTimeoutMs(10000); // Let idle chirps happen only after a long quiet stretch.
+    } else {
+        // Legacy analog-mic tuning.
+        _audioOnsetDetector.setOnsetDetectionThreshold(75.0f); // Require a stronger edge for the noisier analog mic.
+        _audioOnsetDetector.setOnsetReleaseThreshold(68.0f); // Let the peak settle quickly, but not too close to attack.
+        _audioOnsetDetector.setCooldownAfterOnsetMs(50); // Avoid double-firing on the same burst.
+        _audioOnsetDetector.setReleaseDebounceMs(20); // Ignore tiny dips that split one burst into two.
+        _audioOnsetDetector.setMinTransientDurationMs(50); // Reject clicks that are too short to be a real transient.
+        _audioOnsetDetector.setMaxTransientDurationMs(190); // Reject long blobs that look more like background noise.
+        _audioOnsetDetector.setMinTransientPeakStrength(180.0f); // Keep weak ambient crossings out.
 
-    _behavior.setWaitAfterTransientMs(500); // Respond sooner on the analog mic path.
-    _behavior.setRefractoryAfterEmitMs(500); // Give the system a short recovery window after emit.
-    _behavior.setIdleTimeoutMs(10000); // Still allow an idle self-trigger if nothing happens for a while.
-    */
-
-    // Current I2S / external-mic tuning.
-    // These are the live detector values for the MEMS mic path, set here in Node.
-    // The transient window is intentionally wider while we tune the detector
-    // against real acoustic tests.
-    _audioOnsetDetector.setOnsetDetectionThreshold(22.0f); // Attack threshold for the current mic path.
-    _audioOnsetDetector.setOnsetReleaseThreshold(18.0f); // Release threshold just below attack to close the peak cleanly.
-    _audioOnsetDetector.setCooldownAfterOnsetMs(50); // Set here to keep one burst from firing twice.
-    _audioOnsetDetector.setReleaseDebounceMs(30); // Set here to ignore tiny dips between samples.
-    _audioOnsetDetector.setMinTransientDurationMs(40); // Set here to reject clicks that are too short.
-    _audioOnsetDetector.setMaxTransientDurationMs(190); // Set here to reject slow non-burst envelopes.
-    _audioOnsetDetector.setMinTransientPeakStrength(25.0f); // Set here to keep weak ambient crossings out.
-
-    _behavior.setWaitAfterTransientMs(100); // Set here for the post-transient wait before emit.
-    _behavior.setRefractoryAfterEmitMs(500); // Set here for the post-emit refractory holdoff.
-    _behavior.setIdleTimeoutMs(10000); // Set here for the idle self-trigger timeout.
+        _behavior.setWaitAfterTransientMs(500); // Respond sooner on the analog mic path.
+        _behavior.setRefractoryAfterEmitMs(500); // Give the system a short recovery window after emit.
+        _behavior.setIdleTimeoutMs(10000); // Still allow an idle self-trigger if nothing happens for a while.
+    }
 
     // Self-ignore timing is not tuned here.
     // It is defined in node.h as kSelfChirpIgnoreMs and kSelfChirpTailIgnoreMs.
@@ -90,7 +87,6 @@ void Node::update() {
     // latest state from the layer below it.
     _audioSignal.update();
 
-    const bool onsetDetected = selfChirpSuppressed ? false : _audioOnsetDetector.onsetDetected();
     if (selfChirpSuppressed) {
         if (!_selfChirpIgnoreArmed) {
             _audioOnsetDetector.resetState();
@@ -105,6 +101,7 @@ void Node::update() {
         _audioOnsetDetector.update(now);
     }
 
+    const bool onsetDetected = selfChirpSuppressed ? false : _audioOnsetDetector.onsetDetected();
     _debug.observeOnset(now, onsetDetected, _audioOnsetDetector.onsetStrength());
     _debug.observeTransient(now, _audioOnsetDetector.transientDetected(), _audioOnsetDetector.transientStrength(), selfChirpSuppressed);
 

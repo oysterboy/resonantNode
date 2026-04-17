@@ -45,6 +45,7 @@ private:
     AudioSourceAnalog _analogSource;
     AudioSourceI2S _i2sSource;
     AudioSource& _audioSource;
+    AudioSourceKind _sourceKind;
     AudioSignal _audioSignal;
     AudioOnsetDetector _audioOnsetDetector;
     ResonantBehavior _behavior;
@@ -56,7 +57,7 @@ private:
     unsigned long _ledTransientPulseStartMs = 0;
     bool _selfChirpIgnoreArmed = false;
     static constexpr unsigned long kSelfChirpIgnoreMs = 500;
-    static constexpr unsigned long kSelfChirpTailIgnoreMs = 1000;
+    static constexpr unsigned long kSelfChirpTailIgnoreMs = 500;
 
 
 

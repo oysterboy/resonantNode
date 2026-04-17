@@ -39,6 +39,9 @@ public:
 
 private:
     void configureParameters();
+    void configureSharedParameters();
+    void configureAnalogParameters();
+    void configureI2SParameters();
 
     int _ledPin;
 
@@ -58,8 +61,6 @@ private:
     bool _selfChirpIgnoreArmed = false;
     static constexpr unsigned long kSelfChirpIgnoreMs = 500;
     static constexpr unsigned long kSelfChirpTailIgnoreMs = 500;
-
-
 
     static constexpr unsigned long kLedTransientPulseOnMs = 30;
     static constexpr unsigned long kLedTransientPulseOffMs = 30;

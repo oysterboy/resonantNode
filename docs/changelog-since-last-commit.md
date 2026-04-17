@@ -29,6 +29,7 @@ This branch extends the audio input path with a source abstraction and an I2S-re
 - Switched the LED feedback to three transient pulses, full-bright emit, 70% self-ignore, and 50% refractory.
 - Added throttled peak-start / peak-open debug logging to `AudioOnsetDetector` for transient troubleshooting.
 - Rolled the app back to `AudioSourceKind::Analog` after the MEMS path stayed far off target.
+- Split `Node::configureParameters()` into shared, analog, and I2S branches so source switching does not change behavior timing.
 
 ## Calibration Notes
 

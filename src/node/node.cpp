@@ -33,6 +33,19 @@ void Node::begin() {
 }
 
 void Node::configureParameters() {
+    configureSharedParameters();
+
+    if (_sourceKind == AudioSourceKind::I2S) {
+        configureI2SParameters();
+    } else {
+        configureAnalogParameters();
+    }
+
+    // Self-ignore timing is not tuned here.
+    // It is defined in node.h as kSelfChirpIgnoreMs and kSelfChirpTailIgnoreMs.
+}
+
+void Node::configureSharedParameters() {
     // Signal conditioning keeps the baseline from drifting during quiet periods.
     _audioSignal.setBaselineTrackingQuietThreshold(40);
     _audioSignal.setSmoothingFactor(0.5f);
@@ -41,39 +54,38 @@ void Node::configureParameters() {
     // Chirp tone is configured here so the node owns its output tuning.
     // The fallback/default frequency is defined by CHIRP_FREQUENCY_HZ.
     _chirpOutput.setToneHz(2000);
+}
 
-    if (_sourceKind == AudioSourceKind::I2S) {
-        // Current I2S / external-mic tuning.
-        // These values are intentionally softer than the analog path because the
-        // MEMS mic sees a different envelope and tends to surface shorter peaks.
-        _audioOnsetDetector.setOnsetDetectionThreshold(15.0f); // Catch much weaker edges from the MEMS mic.
-        _audioOnsetDetector.setOnsetReleaseThreshold(12.0f); // Keep release close enough to close the peak cleanly.
-        _audioOnsetDetector.setCooldownAfterOnsetMs(50); // Prevent multiple onset hits on one burst.
-        _audioOnsetDetector.setReleaseDebounceMs(10); // Ignore tiny dips so one burst stays one burst.
-        _audioOnsetDetector.setMinTransientDurationMs(30); // Reject very short clicks and ADC noise.
-        _audioOnsetDetector.setMaxTransientDurationMs(190); // Reject slow envelopes that are not burst-like.
-        _audioOnsetDetector.setMinTransientPeakStrength(20.0f); // Keep weak ambient crossings below acceptance.
+void Node::configureAnalogParameters() {
+    // Legacy analog-mic tuning.
+    _audioOnsetDetector.setOnsetDetectionThreshold(75.0f); // Require a stronger edge for the noisier analog mic.
+    _audioOnsetDetector.setOnsetReleaseThreshold(68.0f); // Let the peak settle quickly, but not too close to attack.
+    _audioOnsetDetector.setCooldownAfterOnsetMs(50); // Avoid double-firing on the same burst.
+    _audioOnsetDetector.setReleaseDebounceMs(20); // Ignore tiny dips that split one burst into two.
+    _audioOnsetDetector.setMinTransientDurationMs(50); // Reject clicks that are too short to be a real transient.
+    _audioOnsetDetector.setMaxTransientDurationMs(190); // Reject long blobs that look more like background noise.
+    _audioOnsetDetector.setMinTransientPeakStrength(180.0f); // Keep weak ambient crossings out.
 
-        _behavior.setWaitAfterTransientMs(300); // React quickly after a valid transient.
-        _behavior.setRefractoryAfterEmitMs(500); // Hold a short post-emit recovery state.
-        _behavior.setIdleTimeoutMs(10000); // Let idle chirps happen only after a long quiet stretch.
-    } else {
-        // Legacy analog-mic tuning.
-        _audioOnsetDetector.setOnsetDetectionThreshold(75.0f); // Require a stronger edge for the noisier analog mic.
-        _audioOnsetDetector.setOnsetReleaseThreshold(68.0f); // Let the peak settle quickly, but not too close to attack.
-        _audioOnsetDetector.setCooldownAfterOnsetMs(50); // Avoid double-firing on the same burst.
-        _audioOnsetDetector.setReleaseDebounceMs(20); // Ignore tiny dips that split one burst into two.
-        _audioOnsetDetector.setMinTransientDurationMs(50); // Reject clicks that are too short to be a real transient.
-        _audioOnsetDetector.setMaxTransientDurationMs(190); // Reject long blobs that look more like background noise.
-        _audioOnsetDetector.setMinTransientPeakStrength(180.0f); // Keep weak ambient crossings out.
+    _behavior.setWaitAfterTransientMs(500); // Shared response timing: wait after a transient before emit.
+    _behavior.setRefractoryAfterEmitMs(500); // Shared response timing: post-emit holdoff.
+    _behavior.setIdleTimeoutMs(10000); // Shared response timing: idle self-trigger timeout.
+}
 
-        _behavior.setWaitAfterTransientMs(500); // Respond sooner on the analog mic path.
-        _behavior.setRefractoryAfterEmitMs(500); // Give the system a short recovery window after emit.
-        _behavior.setIdleTimeoutMs(10000); // Still allow an idle self-trigger if nothing happens for a while.
-    }
+void Node::configureI2SParameters() {
+    // Current I2S / external-mic tuning.
+    // These values are intentionally softer than the analog path because the
+    // MEMS mic sees a different envelope and tends to surface shorter peaks.
+    _audioOnsetDetector.setOnsetDetectionThreshold(15.0f); // Catch much weaker edges from the MEMS mic.
+    _audioOnsetDetector.setOnsetReleaseThreshold(12.0f); // Keep release close enough to close the peak cleanly.
+    _audioOnsetDetector.setCooldownAfterOnsetMs(50); // Prevent multiple onset hits on one burst.
+    _audioOnsetDetector.setReleaseDebounceMs(10); // Ignore tiny dips so one burst stays one burst.
+    _audioOnsetDetector.setMinTransientDurationMs(30); // Reject very short clicks and ADC noise.
+    _audioOnsetDetector.setMaxTransientDurationMs(190); // Reject slow envelopes that are not burst-like.
+    _audioOnsetDetector.setMinTransientPeakStrength(20.0f); // Keep weak ambient crossings below acceptance.
 
-    // Self-ignore timing is not tuned here.
-    // It is defined in node.h as kSelfChirpIgnoreMs and kSelfChirpTailIgnoreMs.
+    _behavior.setWaitAfterTransientMs(500); // Shared response timing: wait after a transient before emit.
+    _behavior.setRefractoryAfterEmitMs(500); // Shared response timing: post-emit holdoff.
+    _behavior.setIdleTimeoutMs(10000); // Shared response timing: idle self-trigger timeout.
 }
 
 void Node::update() {

@@ -35,7 +35,7 @@ void ResonantBehavior::update(bool transientDetected, float transientStrength, u
             else if (now - max(_lastTransientMs, _lastEmitMs) > _idleTimeoutMs) {
                 _chirpRequested = true;
                 _chirpRequestSource = ChirpRequestSource::Idle;
-                _chirpPattern = ChirpOutput::ChirpPattern::Triple;
+                _chirpPattern = ChirpOutput::ChirpPattern::Single;
                 _lastEmitMs = now;
                 _state = State::Chirping;
             }

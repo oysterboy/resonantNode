@@ -15,13 +15,19 @@ void ChirpOutput::setToneHz(uint32_t toneHz) {
     _toneHz = toneHz;
 }
 
+void ChirpOutput::setTiming(unsigned long chirpOnMs, unsigned long chirpPauseMs) {
+    _chirpOnMs = chirpOnMs;
+    _chirpPauseMs = chirpPauseMs;
+}
+
 void ChirpOutput::start(ChirpPattern pattern) {
     if (_active) return;
 
     _finished = false;
     _active = true;
     _phase = 0;
-    _beepCount = (pattern == ChirpPattern::Triple) ? 3 : 1;
+    (void)pattern;
+    _beepCount = 1;
     _phaseStartMs = millis();
     ledcWriteTone(_channel, _toneHz);
 }
@@ -34,54 +40,11 @@ void ChirpOutput::update() {
 
     switch (_phase) {
         case 0:
-            if (elapsed >= kChirpOnMs) {
+            if (elapsed >= _chirpOnMs) {
                 ledcWriteTone(_channel, 0);
-                if (_beepCount == 1) {
-                    _active = false;
-                    _finished = true;
-                } else {
-                    _phase = 1;
-                }
-                _phaseStartMs = now;
-            }
-            break;
-
-        case 1:
-            if (elapsed >= kChirpPauseMs) {
-                ledcWriteTone(_channel, _toneHz);
-                _phase = 2;
-                _phaseStartMs = now;
-            }
-            break;
-
-        case 2:
-            if (elapsed >= kChirpOnMs) {
-                ledcWriteTone(_channel, 0);
-                _phase = 3;
-                _phaseStartMs = now;
-            }
-            break;
-
-        case 3:
-            if (elapsed >= kChirpPauseMs) {
-                ledcWriteTone(_channel, _toneHz);
-                _phase = 4;
-                _phaseStartMs = now;
-            }
-            break;
-
-        case 4:
-            if (elapsed >= kChirpOnMs) {
-                ledcWriteTone(_channel, 0);
-                _phase = 5;
-                _phaseStartMs = now;
-            }
-            break;
-
-        case 5:
-            if (elapsed >= kChirpPauseMs) {
                 _active = false;
                 _finished = true;
+                _phaseStartMs = now;
             }
             break;
     }

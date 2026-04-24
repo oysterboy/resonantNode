@@ -2,12 +2,12 @@
 
 #include <stdint.h>
 
-#include "../hal/AudioSourceAnalog.h"
-#include "../hal/AudioSourceI2S.h"
-#include "../io/AudioSignal.h"
-#include "../io/AudioOnsetDetector.h"
-#include "../io/ChirpOutput.h"
-#include "../behavior/ResonantBehavior.h"
+#include "../../hal/AudioSourceAnalog.h"
+#include "../../hal/AudioSourceI2S.h"
+#include "../../io/AudioSignal.h"
+#include "../../io/AudioOnsetDetector.h"
+#include "../../io/ChirpOutput.h"
+#include "../../behavior/ResonantBehavior.h"
 #include "node_debug.h"
 
 /*

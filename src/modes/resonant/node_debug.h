@@ -2,7 +2,7 @@
 
 #include <stdint.h>
 
-#include "../io/ChirpOutput.h"
+#include "../../io/ChirpOutput.h"
 
 class AudioSignal;
 class AudioOnsetDetector;

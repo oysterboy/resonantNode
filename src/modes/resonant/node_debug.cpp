@@ -1,9 +1,9 @@
 #include "node_debug.h"
 
-#include "../behavior/ResonantBehavior.h"
-#include "../io/AudioOnsetDetector.h"
-#include "../io/AudioSignal.h"
-#include "../io/ChirpOutput.h"
+#include "../../behavior/ResonantBehavior.h"
+#include "../../io/AudioOnsetDetector.h"
+#include "../../io/AudioSignal.h"
+#include "../../io/ChirpOutput.h"
 
 #include <Arduino.h>
 

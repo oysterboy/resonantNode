@@ -1,7 +1,20 @@
 #include <Arduino.h>
-#include "app/App.h"
 
-App app;
+#if defined(ANALYZER_MODE)
+#include "modes/analyzer/AnalyzerApp.h"
+#elif defined(EMITTER_MODE)
+#include "modes/emitter/EmitterApp.h"
+#else
+#include "modes/resonant/node.h"
+#endif
+
+#if defined(ANALYZER_MODE)
+AnalyzerApp app;
+#elif defined(EMITTER_MODE)
+EmitterApp app;
+#else
+Node app(34, 2, 25, Node::AudioSourceKind::I2S);
+#endif
 
 void setup() {
     Serial.begin(115200);

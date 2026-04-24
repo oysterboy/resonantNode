@@ -167,6 +167,8 @@ AudioSource
 Requirements:
 - no hidden coupling to Behavior required
 - easy to reuse detector chain standalone
+- support observe-only analysis first
+- allow later compare-with-emitter analysis without changing the detector chain
 
 No full implementation required yet.
 
@@ -178,6 +180,10 @@ Ensure future compatibility:
 
 - external chirp trigger (Serial2)
 - no dependency from detector to emitter
+- emitter can live as its own mode on separate hardware
+- analyzer may later control emitter and compare measured vs expected response
+- current emitter behavior is a single-beep placeholder
+- richer chirp profiles are future work
 
 No implementation required.
 

@@ -11,6 +11,11 @@ IO
 Does NOT:
 - decide when to chirp
 - own behavior logic
+
+Current placeholder:
+- single beep output
+- duration and tone remain configurable
+- richer chirp shapes are future work
 */
 
 class ChirpOutput {
@@ -24,6 +29,7 @@ public:
 
     void begin();
     void setToneHz(uint32_t toneHz);
+    void setTiming(unsigned long chirpOnMs, unsigned long chirpPauseMs);
     void start(ChirpPattern pattern = ChirpPattern::Single);
     void update();
     bool isActive() const;
@@ -40,6 +46,6 @@ private:
 
     uint32_t _toneHz;
     static constexpr uint8_t kResolutionBits = 8;
-    static constexpr unsigned long kChirpOnMs = 100;
-    static constexpr unsigned long kChirpPauseMs = 150;
+    unsigned long _chirpOnMs = 100;
+    unsigned long _chirpPauseMs = 150;
 };

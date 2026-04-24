@@ -139,6 +139,11 @@ readSample() per update
 
 - split AudioOnset / AudioTransient
 - Analyzer mode
+- Analyzer observe-only mode
+- Analyzer control-plus-compare mode
+- Emitter mode on separate hardware
+- Current emitter output is a single-beep placeholder
+- Future chirp profiles can replace the placeholder without changing analyzer/emitter messaging
 - Test-Emitter
 - window-based processing
 - param/OTA system

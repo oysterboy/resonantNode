@@ -1,58 +1,57 @@
-# Changelog Since `3e64a2b`
+# Changed Since `69588d3`
 
-This branch extends the audio input path with a source abstraction and an I2S-ready implementation path.
+This file is a per-commit changelog.
 
-## Biggest Factor
+For each new commit, replace the commit hash in the heading and keep exactly one complete section for that commit.
 
-- Added the MEMS mic path and tuned the detector around it.
+## Commit `69588d3`
 
-## Summary
+### Summary
 
-- Added a stable `AudioSource` abstraction so the rest of the pipeline can stay sample-based.
-- Added `AudioSourceAnalog` and `AudioSourceI2S` as interchangeable source implementations.
-- Kept `AudioSignal`, `AudioOnsetDetector`, and behavior logic unchanged while the input seam was refactored.
-- Wired `Node` to select a source implementation at construction time.
-- Extracted debug and plot-state tracking into `src/node/node_debug.*` so `Node` stays focused on orchestration.
-- Updated the detector/logging path for the MEMS mic so accepted and rejected transients are visible.
-- Refactored `AudioOnsetDetector` internally into explicit onset and transient stages without changing its public API.
+- Refined `AudioOnsetDetector` into explicit onset and transient stages without changing its public API.
 - Moved chirp pattern selection and self-chirp suppression timing into `ResonantBehavior`.
 - Moved LED output timing, transient pulse handling, I2S telemetry, and chirp event logging into `NodeDebug`.
-- Trimmed `Node` down toward glue-only orchestration so it forwards state without owning output policy.
+- Trimmed `Node` toward glue-only orchestration so it forwards state without owning output policy.
+- Rewrote the architecture specs to use plain ASCII arrows and clearer `Node` ownership wording.
+- Added a standalone `AnalyzerApp` path that runs `AudioSource -> AudioSignal -> AudioOnsetDetector` without `Node`, `Behavior`, or `ChirpOutput`.
+- Flattened the top-level app wrapper so `main.cpp` now directly selects and owns either `Node` or `AnalyzerApp`.
+- Moved runtime modes into explicit `src/modes/resonant/` and `src/modes/analyzer/` folders so mode entry points are siblings.
+- Added an `EmitterApp` mode that listens on `Serial2` and drives `ChirpOutput` with requested frequency and duration.
+- Simplified the current chirp output to a single-beep placeholder so compare mode can stay volatile until a richer chirp profile is needed.
 
-## Notable Changes
+### Notable Changes
 
-- Added `src/hal/AudioSource.h` as the shared acquisition contract.
-- Added `src/hal/AudioSourceAnalog.*` to wrap the existing ADC-backed path.
-- Added `src/hal/AudioSourceI2S.*` to prepare the digital mic path behind the same public API.
-- Updated `src/io/AudioSignal.*` to depend on `AudioSource` instead of the concrete ADC wrapper.
-- Updated `src/node/node.cpp` and `src/node/node.h` to choose the source implementation and begin acquisition before signal shaping.
-- Added `src/node/node_debug.*` to own debug latches, loop timing stats, and serial plot formatting.
-- Kept `AudioOnsetDetector` naming and behavior intact so the refactor stays mechanical.
-- Added self-chirp suppression around the chirp tail so the MEMS mic is less likely to retrigger on ring-down.
-- Moved chirp emit-frequency setup into `Node::configureParameters()` so the node owns its output tuning.
-- Switched the LED feedback to three transient pulses, full-bright emit, 70% self-ignore, and 50% refractory.
-- Added throttled peak-start / peak-open debug logging to `AudioOnsetDetector` for transient troubleshooting.
-- Rolled the app back to `AudioSourceKind::Analog` after the MEMS path stayed far off target.
-- Split `Node::configureParameters()` into shared, analog, and I2S branches so source switching does not change behavior timing.
-- Added a throttled I2S-only signal log in `Node` for raw, centered, magnitude, and smoothed values.
-- Added per-second I2S min/max raw and centered ranges to help inspect MEMS signal swing.
-- Made `baselineTrackingQuietThreshold` source-specific: analog stays at `40`, I2S uses `25`.
-- Lowered the I2S quiet gate again to `20` so more MEMS swing reaches the detector.
-- Retuned the I2S detector thresholds upward a bit to reduce duplicate and extra transient accepts.
-- Made idle chirps use a three-beep pattern while transient chirps stay single-beep.
-- Added behavior-owned chirp pattern selection so `Node` no longer infers output shape from request source text.
-- Moved chirp start / finish event printing out of `Node` and into `NodeDebug`.
-- Reduced `Node` to orchestration, source updates, detector updates, behavior updates, output updates, and debug forwarding.
+- `src/io/AudioOnsetDetector.h`
+- `src/io/AudioOnsetDetector.cpp`
+- `src/behavior/ResonantBehavior.h`
+- `src/behavior/ResonantBehavior.cpp`
+- `src/node/node.h`
+- `src/node/node.cpp`
+- `src/node/node_debug.h`
+- `src/node/node_debug.cpp`
+- `src/modes/resonant/node.h`
+- `src/modes/resonant/node.cpp`
+- `src/modes/resonant/node_debug.h`
+- `src/modes/resonant/node_debug.cpp`
+- `src/modes/analyzer/AnalyzerApp.h`
+- `src/modes/analyzer/AnalyzerApp.cpp`
+- `src/modes/emitter/EmitterApp.h`
+- `src/modes/emitter/EmitterApp.cpp`
+- `src/main.cpp`
+- `docs/myspec.md`
+- `docs/refactor-spec.md`
 
-## Calibration Notes
+### Verification
 
-- The current branch still uses the analog source by default.
-- The I2S source is wired in and selected for the current MEMS mic setup.
-- The public source contract remains `begin()` plus `readSample()`, which keeps downstream code stable.
-- The firmware now keeps suppression timing in behavior and LED timing in debug, which makes the analyzer path easier to isolate later.
+- `platformio run`
 
-## Documentation
+### Notes
 
-- Updated `docs/myspec.md` to reflect the current IO / detection / behavior split.
-- Updated `docs/refactor-spec.md` to define the next-step `AudioSourceI2S` work.
-- Rewrote both spec files to use plain ASCII arrows and clarified `Node` as orchestration rather than signal-path logic.
+- This section is complete for commit `69588d3`.
+- Future commits should add their own new `## Commit <hash>` section and remove or replace older sections as needed.
+
+### Next Commit Rule
+
+- Use the next commit hash in the file heading.
+- Keep one complete changelog section per commit.
+- Include the same headings each time: `Summary`, `Notable Changes`, `Verification`, and `Notes`.

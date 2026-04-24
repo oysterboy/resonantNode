@@ -1,18 +1,19 @@
 #include "ChirpOutput.h"
 #include <Arduino.h>
 
-ChirpOutput::ChirpOutput(int pin, uint32_t toneHz)
-    : _pin(pin),
+ChirpOutput::ChirpOutput(ToneOutput& toneOutput, uint32_t toneHz)
+    : _toneOutput(toneOutput),
       _toneHz(toneHz) {}
 
 void ChirpOutput::begin() {
-    ledcSetup(_channel, _toneHz, kResolutionBits);
-    ledcAttachPin(_pin, _channel);
-    ledcWriteTone(_channel, 0);
+    _toneOutput.begin();
+    _toneOutput.setToneHz(_toneHz);
+    _toneOutput.toneOff();
 }
 
 void ChirpOutput::setToneHz(uint32_t toneHz) {
     _toneHz = toneHz;
+    _toneOutput.setToneHz(_toneHz);
 }
 
 void ChirpOutput::setTiming(unsigned long chirpOnMs, unsigned long chirpPauseMs) {
@@ -29,7 +30,8 @@ void ChirpOutput::start(ChirpPattern pattern) {
     (void)pattern;
     _beepCount = 1;
     _phaseStartMs = millis();
-    ledcWriteTone(_channel, _toneHz);
+    _toneOutput.setToneHz(_toneHz);
+    _toneOutput.toneOn();
 }
 
 void ChirpOutput::update() {
@@ -41,7 +43,7 @@ void ChirpOutput::update() {
     switch (_phase) {
         case 0:
             if (elapsed >= _chirpOnMs) {
-                ledcWriteTone(_channel, 0);
+                _toneOutput.toneOff();
                 _active = false;
                 _finished = true;
                 _phaseStartMs = now;

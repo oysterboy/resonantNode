@@ -4,6 +4,7 @@
 
 #include "../../hal/AudioSourceAnalog.h"
 #include "../../hal/AudioSourceI2S.h"
+#include "../../hal/PiezoToneOutput.h"
 #include "../../io/AudioSignal.h"
 #include "../../io/AudioOnsetDetector.h"
 #include "../../io/ChirpOutput.h"
@@ -52,6 +53,7 @@ private:
     AudioSignal _audioSignal;
     AudioOnsetDetector _audioOnsetDetector;
     ResonantBehavior _behavior;
+    PiezoToneOutput _toneOutput;
     ChirpOutput _chirpOutput;
 
     NodeDebug _debug;

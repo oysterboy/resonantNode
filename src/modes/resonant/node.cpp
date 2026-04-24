@@ -15,7 +15,8 @@ Node::Node(int inputPin, int ledPin, int chirpPin, AudioSourceKind sourceKind)
                        : static_cast<AudioSource&>(_analogSource)),
       _audioSignal(_audioSource),
       _audioOnsetDetector(_audioSignal),
-      _chirpOutput(chirpPin) {}
+      _toneOutput(chirpPin),
+      _chirpOutput(_toneOutput) {}
 
 void Node::begin() {
     configureParameters();

@@ -19,7 +19,8 @@ EmitterApp::EmitterApp(int outputPin, int rxPin, int txPin, unsigned long baudRa
       _rxPin(rxPin),
       _txPin(txPin),
       _baudRate(baudRate),
-      _chirpOutput(outputPin) {}
+      _toneOutput(outputPin),
+      _chirpOutput(_toneOutput) {}
 
 void EmitterApp::begin() {
     Serial2.begin(_baudRate, SERIAL_8N1, _rxPin, _txPin);

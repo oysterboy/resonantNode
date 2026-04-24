@@ -1,45 +1,30 @@
-# Changed Since `69588d3`
+# Changed Since `8632015`
 
 This file is a per-commit changelog.
 
 For each new commit, replace the commit hash in the heading and keep exactly one complete section for that commit.
 
-## Commit `69588d3`
+## Commit `8632015`
 
 ### Summary
 
-- Refined `AudioOnsetDetector` into explicit onset and transient stages without changing its public API.
-- Moved chirp pattern selection and self-chirp suppression timing into `ResonantBehavior`.
-- Moved LED output timing, transient pulse handling, I2S telemetry, and chirp event logging into `NodeDebug`.
-- Trimmed `Node` toward glue-only orchestration so it forwards state without owning output policy.
-- Rewrote the architecture specs to use plain ASCII arrows and clearer `Node` ownership wording.
-- Added a standalone `AnalyzerApp` path that runs `AudioSource -> AudioSignal -> AudioOnsetDetector` without `Node`, `Behavior`, or `ChirpOutput`.
-- Flattened the top-level app wrapper so `main.cpp` now directly selects and owns either `Node` or `AnalyzerApp`.
-- Moved runtime modes into explicit `src/modes/resonant/` and `src/modes/analyzer/` folders so mode entry points are siblings.
-- Added an `EmitterApp` mode that listens on `Serial2` and drives `ChirpOutput` with requested frequency and duration.
-- Simplified the current chirp output to a single-beep placeholder so compare mode can stay volatile until a richer chirp profile is needed.
+- Split chirp output into timing/policy and a reusable tone-output HAL.
+- Added a concrete piezo tone backend that drives the current GPIO piezo hardware.
+- Kept `ChirpOutput` as the sequencing layer so higher-level code still starts and stops chirps the same way.
+- Wired both the resonant node mode and the emitter mode through the shared tone backend.
+- Left sample-style output backends for DAC and I2S as a future step.
 
 ### Notable Changes
 
-- `src/io/AudioOnsetDetector.h`
-- `src/io/AudioOnsetDetector.cpp`
-- `src/behavior/ResonantBehavior.h`
-- `src/behavior/ResonantBehavior.cpp`
-- `src/node/node.h`
-- `src/node/node.cpp`
-- `src/node/node_debug.h`
-- `src/node/node_debug.cpp`
+- `src/hal/ToneOutput.h`
+- `src/hal/PiezoToneOutput.h`
+- `src/hal/PiezoToneOutput.cpp`
+- `src/io/ChirpOutput.h`
+- `src/io/ChirpOutput.cpp`
 - `src/modes/resonant/node.h`
 - `src/modes/resonant/node.cpp`
-- `src/modes/resonant/node_debug.h`
-- `src/modes/resonant/node_debug.cpp`
-- `src/modes/analyzer/AnalyzerApp.h`
-- `src/modes/analyzer/AnalyzerApp.cpp`
 - `src/modes/emitter/EmitterApp.h`
 - `src/modes/emitter/EmitterApp.cpp`
-- `src/main.cpp`
-- `docs/myspec.md`
-- `docs/refactor-spec.md`
 
 ### Verification
 
@@ -47,11 +32,11 @@ For each new commit, replace the commit hash in the heading and keep exactly one
 
 ### Notes
 
-- This section is complete for commit `69588d3`.
-- Future commits should add their own new `## Commit <hash>` section and remove or replace older sections as needed.
+- This section describes the current uncommitted work since `8632015`.
+- Sample-style output backends for DAC and I2S are intentionally deferred.
 
 ### Next Commit Rule
 
-- Use the next commit hash in the file heading.
+- After the next commit, replace the hash in the file heading with that new commit hash.
 - Keep one complete changelog section per commit.
 - Include the same headings each time: `Summary`, `Notable Changes`, `Verification`, and `Notes`.

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "../../hal/PiezoToneOutput.h"
 #include "../../io/ChirpOutput.h"
 
 class EmitterApp {
@@ -25,6 +26,7 @@ private:
     int _rxPin;
     int _txPin;
     unsigned long _baudRate;
+    PiezoToneOutput _toneOutput;
     ChirpOutput _chirpOutput;
     char _lineBuffer[96];
     size_t _lineLength = 0;

@@ -1,6 +1,8 @@
 #pragma once
 #include <Arduino.h>
 
+#include "../hal/ToneOutput.h"
+
 /*
 IO
 
@@ -25,7 +27,7 @@ public:
         Triple
     };
 
-    explicit ChirpOutput(int pin, uint32_t toneHz = 2400);
+    explicit ChirpOutput(ToneOutput& toneOutput, uint32_t toneHz = 2400);
 
     void begin();
     void setToneHz(uint32_t toneHz);
@@ -36,8 +38,7 @@ public:
     bool finished();
 
 private:
-    int _pin;
-    const int _channel = 0;
+    ToneOutput& _toneOutput;
     bool _active = false;
     bool _finished = false;
     int _phase = 0;
@@ -45,7 +46,6 @@ private:
     unsigned long _phaseStartMs = 0;
 
     uint32_t _toneHz;
-    static constexpr uint8_t kResolutionBits = 8;
     unsigned long _chirpOnMs = 100;
     unsigned long _chirpPauseMs = 150;
 };

@@ -14,6 +14,10 @@ This branch extends the audio input path with a source abstraction and an I2S-re
 - Wired `Node` to select a source implementation at construction time.
 - Extracted debug and plot-state tracking into `src/node/node_debug.*` so `Node` stays focused on orchestration.
 - Updated the detector/logging path for the MEMS mic so accepted and rejected transients are visible.
+- Refactored `AudioOnsetDetector` internally into explicit onset and transient stages without changing its public API.
+- Moved chirp pattern selection and self-chirp suppression timing into `ResonantBehavior`.
+- Moved LED output timing, transient pulse handling, I2S telemetry, and chirp event logging into `NodeDebug`.
+- Trimmed `Node` down toward glue-only orchestration so it forwards state without owning output policy.
 
 ## Notable Changes
 
@@ -36,14 +40,19 @@ This branch extends the audio input path with a source abstraction and an I2S-re
 - Lowered the I2S quiet gate again to `20` so more MEMS swing reaches the detector.
 - Retuned the I2S detector thresholds upward a bit to reduce duplicate and extra transient accepts.
 - Made idle chirps use a three-beep pattern while transient chirps stay single-beep.
+- Added behavior-owned chirp pattern selection so `Node` no longer infers output shape from request source text.
+- Moved chirp start / finish event printing out of `Node` and into `NodeDebug`.
+- Reduced `Node` to orchestration, source updates, detector updates, behavior updates, output updates, and debug forwarding.
 
 ## Calibration Notes
 
 - The current branch still uses the analog source by default.
 - The I2S source is wired in and selected for the current MEMS mic setup.
 - The public source contract remains `begin()` plus `readSample()`, which keeps downstream code stable.
+- The firmware now keeps suppression timing in behavior and LED timing in debug, which makes the analyzer path easier to isolate later.
 
 ## Documentation
 
 - Updated `docs/myspec.md` to reflect the current IO / detection / behavior split.
 - Updated `docs/refactor-spec.md` to define the next-step `AudioSourceI2S` work.
+- Rewrote both spec files to use plain ASCII arrows and clarified `Node` as orchestration rather than signal-path logic.

@@ -1,13 +1,16 @@
 #pragma once
 
+#include <stdint.h>
+
+#include "../io/ChirpOutput.h"
+
 class AudioSignal;
 class AudioOnsetDetector;
 class ResonantBehavior;
-class ChirpOutput;
 
 class NodeDebug {
 public:
-    void begin();
+    void begin(int ledPin);
 
     void markLoopStart(unsigned long nowUs);
     void endLoop(unsigned long nowUs);
@@ -17,6 +20,13 @@ public:
 
     void observeOnset(unsigned long now, bool onsetDetected, float onsetStrength);
     void observeTransient(unsigned long now, bool transientDetected, float transientStrength, bool suppressed);
+    void observeI2SSignal(unsigned long now, const AudioSignal& audioSignal);
+    void observeChirpStarted(unsigned long now, const char* sourceName, ChirpOutput::ChirpPattern pattern);
+    void observeChirpFinished(unsigned long now);
+    void updateLed(unsigned long now,
+                   const ResonantBehavior& behavior,
+                   const ChirpOutput& chirpOutput,
+                   bool selfChirpSuppressed);
 
     void printPlotValues(unsigned long now,
                          const AudioSignal& audioSignal,
@@ -26,10 +36,19 @@ public:
                          bool selfChirpSuppressed);
 
 private:
+    void updatePulse(unsigned long now,
+                     bool detected,
+                     float strength,
+                     unsigned long& visibleUntilMs,
+                     float& storedStrength);
+
+    // Debug mode toggles.
     bool _debugEvents = false;
     bool _debugPlot = false;
     unsigned long _lastDebugPrintMs = 0;
     const unsigned long _debugIntervalMs = 100;
+
+    // Loop timing.
     unsigned long _loopStartMicros = 0;
     unsigned long _coreLoopUsMin = 0;
     unsigned long _coreLoopUsMax = 0;
@@ -39,9 +58,36 @@ private:
     unsigned long _fullLoopUsMax = 0;
     unsigned long _fullLoopUsSum = 0;
     unsigned long _fullLoopSamples = 0;
+
+    // Event pulses.
     unsigned long _debugOnsetVisibleUntilMs = 0;
     unsigned long _debugTransientVisibleUntilMs = 0;
     float _debugOnsetStrength = 0.0f;
     float _debugTransientStrength = 0.0f;
     const unsigned long _debugPulseHoldMs = 150;
+    unsigned long _debugChirpVisibleUntilMs = 0;
+    const unsigned long _debugChirpEventHoldMs = 150;
+
+    // I2S signal stats.
+    unsigned long _lastI2SSignalLogMs = 0;
+    int _i2sSignalMin = 0;
+    int _i2sSignalMax = 0;
+    int _i2sCenteredMin = 0;
+    int _i2sCenteredMax = 0;
+    const unsigned long _i2sSignalLogIntervalMs = 1000;
+
+    // LED output.
+    int _ledPin = -1;
+    unsigned long _ledTransientPulseStartMs = 0;
+    static constexpr unsigned long kLedTransientPulseOnMs = 30;
+    static constexpr unsigned long kLedTransientPulseOffMs = 30;
+    static constexpr unsigned long kLedTransientPulseCount = 3;
+    static constexpr unsigned long kLedTransientPulseCycleMs = kLedTransientPulseOnMs + kLedTransientPulseOffMs;
+    static constexpr uint8_t kLedBrightnessFull = 255;
+    static constexpr uint8_t kLedBrightnessSelfIgnore = 179;
+    static constexpr uint8_t kLedBrightnessRefractory = 128;
+    static constexpr uint8_t kLedBrightnessOff = 0;
+    static constexpr uint8_t kLedPwmChannel = 1;
+    static constexpr uint8_t kLedPwmResolutionBits = 8;
+    static constexpr uint32_t kLedPwmFrequencyHz = 5000;
 };

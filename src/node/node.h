@@ -55,27 +55,4 @@ private:
     ChirpOutput _chirpOutput;
 
     NodeDebug _debug;
-    int _lastBehaviorStateCode = -1;
-    unsigned long _lastI2SSignalLogMs = 0;
-    int _i2sSignalMin = 0;
-    int _i2sSignalMax = 0;
-    int _i2sCenteredMin = 0;
-    int _i2sCenteredMax = 0;
-    unsigned long _selfChirpIgnoreUntilMs = 0;
-    unsigned long _ledTransientPulseStartMs = 0;
-    bool _selfChirpIgnoreArmed = false;
-    static constexpr unsigned long kSelfChirpIgnoreMs = 500;
-    static constexpr unsigned long kSelfChirpTailIgnoreMs = 500;
-
-    static constexpr unsigned long kLedTransientPulseOnMs = 30;
-    static constexpr unsigned long kLedTransientPulseOffMs = 30;
-    static constexpr unsigned long kLedTransientPulseCount = 3;
-    static constexpr unsigned long kLedTransientPulseCycleMs = kLedTransientPulseOnMs + kLedTransientPulseOffMs;
-    static constexpr uint8_t kLedBrightnessFull = 255;
-    static constexpr uint8_t kLedBrightnessSelfIgnore = 179;
-    static constexpr uint8_t kLedBrightnessRefractory = 128;
-    static constexpr uint8_t kLedBrightnessOff = 0;
-    static constexpr uint8_t kLedPwmChannel = 1;
-    static constexpr uint8_t kLedPwmResolutionBits = 8;
-    static constexpr uint32_t kLedPwmFrequencyHz = 5000;
 };

@@ -15,6 +15,7 @@ Does NOT:
 void ResonantBehavior::update(bool transientDetected, float transientStrength, unsigned long now) {
     _chirpRequested = false;
     _chirpRequestSource = ChirpRequestSource::None;
+    _chirpPattern = ChirpOutput::ChirpPattern::Single;
     _activityLevel = transientStrength;
 
     // Track the last transient time so idle-triggered chirps do not fire while
@@ -34,6 +35,7 @@ void ResonantBehavior::update(bool transientDetected, float transientStrength, u
             else if (now - max(_lastTransientMs, _lastEmitMs) > _idleTimeoutMs) {
                 _chirpRequested = true;
                 _chirpRequestSource = ChirpRequestSource::Idle;
+                _chirpPattern = ChirpOutput::ChirpPattern::Triple;
                 _lastEmitMs = now;
                 _state = State::Chirping;
             }
@@ -44,6 +46,7 @@ void ResonantBehavior::update(bool transientDetected, float transientStrength, u
             if (now - _transientStartedMs > _waitAfterTransientMs) {
                 _chirpRequested = true;
                 _chirpRequestSource = ChirpRequestSource::Transient;
+                _chirpPattern = ChirpOutput::ChirpPattern::Single;
                 _lastEmitMs = now;
                 _state = State::Chirping;
             }
@@ -80,10 +83,30 @@ const char* ResonantBehavior::chirpRequestSourceName() const {
     return "unknown";
 }
 
+ChirpOutput::ChirpPattern ResonantBehavior::chirpPattern() const {
+    return _chirpPattern;
+}
+
+bool ResonantBehavior::selfChirpSuppressed(unsigned long now) const {
+    return now < _selfChirpSuppressUntilMs;
+}
+
+void ResonantBehavior::notifyChirpStarted(unsigned long now) {
+    const unsigned long suppressUntilMs = now + _selfChirpIgnoreMs;
+    if (suppressUntilMs > _selfChirpSuppressUntilMs) {
+        _selfChirpSuppressUntilMs = suppressUntilMs;
+    }
+}
+
 void ResonantBehavior::notifyChirpFinished(unsigned long now) {
     if (_state == State::Chirping) {
         _refractoryStartedMs = now;
         _state = State::Refractory;
+
+        const unsigned long suppressUntilMs = now + _selfChirpTailIgnoreMs;
+        if (suppressUntilMs > _selfChirpSuppressUntilMs) {
+            _selfChirpSuppressUntilMs = suppressUntilMs;
+        }
     }
 }
 

@@ -40,13 +40,22 @@ public:
     unsigned long transientDurationMs() const;
 
 private:
+    void updateOnsetStage(unsigned long now, float signalMagnitude, bool aboveAttackThreshold, bool onsetCooldownElapsed);
+    void updateTransientStage(unsigned long now, float signalMagnitude, bool aboveReleaseThreshold);
+    void printTransientStatsIfDue(unsigned long now);
+
     AudioSignal& _audioSignal;
 
+    // ONSET STAGE
     bool _onsetDetected = false;
     float _onsetStrength = 0.0f;
     unsigned long _lastOnsetMs = 0;
 
-    //runtimes vars
+    float _onsetDetectionThreshold = 75.0f; // Minimum signal magnitude required to count as an onset.
+    float _onsetReleaseThreshold = 67.5f; // Hysteresis prevents short dips from ending a peak too early.
+    unsigned long _cooldownAfterOnsetMs = 500; // Merge repeated threshold crossings from one acoustic event.
+
+    // TRANSIENT STAGE
     bool _transientDetected = false;
     float _transientStrength = 0.0f;
     unsigned long _transientDurationMs = 0;
@@ -54,18 +63,16 @@ private:
     unsigned long _peakStartedMs = 0;
     unsigned long _releaseCandidateStartedMs = 0;
     float _peakStrength = 0.0f;
-    unsigned long _lastStatsPrintMs = 0;
-    unsigned long _statsStartMs = 0;
-    unsigned long _peakAcceptedCount = 0;
 
-    //parameters
-    float _onsetDetectionThreshold = 75.0f; // Minimum signal magnitude required to count as an onset.
-    float _onsetReleaseThreshold = 67.5f; // Hysteresis prevents short dips from ending a peak too early.
-    unsigned long _cooldownAfterOnsetMs = 500; // Merge repeated threshold crossings from one acoustic event.
-    unsigned long _releaseDebounceMs = 20; // Require a short sustained drop before closing the peak.
     unsigned long _minTransientDurationMs = 0; // Ignore peaks that are too short to be meaningful.
     unsigned long _maxTransientDurationMs = 120; // Reject peaks that last too long to count as transients.
     float _minTransientPeakStrength = 0.0f; // Ignore weak peaks that are likely ambient noise.
+    unsigned long _releaseDebounceMs = 20; // Require a short sustained drop before closing the peak.
+
+    // Detector stats / diagnostics.
+    unsigned long _lastStatsPrintMs = 0;
+    unsigned long _statsStartMs = 0;
+    unsigned long _peakAcceptedCount = 0;
     unsigned long _statsPrintIntervalMs = 10000; // Report cumulative detector success once every 10 seconds.
     unsigned long _expectedTransientPeriodMs = 2000; // Rough cadence we expect from the external source.
 };

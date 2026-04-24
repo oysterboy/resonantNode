@@ -7,7 +7,7 @@
 
 #include <Arduino.h>
 
-void NodeDebug::begin() {
+void NodeDebug::begin(int ledPin) {
     _lastDebugPrintMs = 0;
     _loopStartMicros = 0;
     resetLoopStats();
@@ -15,6 +15,18 @@ void NodeDebug::begin() {
     _debugTransientVisibleUntilMs = 0;
     _debugOnsetStrength = 0.0f;
     _debugTransientStrength = 0.0f;
+    _debugChirpVisibleUntilMs = 0;
+    _lastI2SSignalLogMs = 0;
+    _i2sSignalMin = 0;
+    _i2sSignalMax = 0;
+    _i2sCenteredMin = 0;
+    _i2sCenteredMax = 0;
+    _ledPin = ledPin;
+    _ledTransientPulseStartMs = 0;
+
+    ledcSetup(kLedPwmChannel, kLedPwmFrequencyHz, kLedPwmResolutionBits);
+    ledcAttachPin(_ledPin, kLedPwmChannel);
+    ledcWrite(kLedPwmChannel, kLedBrightnessOff);
 }
 
 void NodeDebug::markLoopStart(unsigned long nowUs) {
@@ -23,6 +35,21 @@ void NodeDebug::markLoopStart(unsigned long nowUs) {
 
 unsigned long NodeDebug::loopStartMicros() const {
     return _loopStartMicros;
+}
+
+void NodeDebug::updatePulse(unsigned long now,
+                            bool detected,
+                            float strength,
+                            unsigned long& visibleUntilMs,
+                            float& storedStrength) {
+    if (detected) {
+        visibleUntilMs = now + _debugPulseHoldMs;
+        storedStrength = strength;
+    }
+
+    if (now >= visibleUntilMs) {
+        storedStrength = 0.0f;
+    }
 }
 
 void NodeDebug::resetLoopStats() {
@@ -65,25 +92,108 @@ void NodeDebug::endLoop(unsigned long nowUs) {
 }
 
 void NodeDebug::observeOnset(unsigned long now, bool onsetDetected, float onsetStrength) {
-    if (onsetDetected) {
-        _debugOnsetVisibleUntilMs = now + _debugPulseHoldMs;
-        _debugOnsetStrength = onsetStrength;
-    }
-
-    if (now >= _debugOnsetVisibleUntilMs) {
-        _debugOnsetStrength = 0.0f;
-    }
+    updatePulse(now, onsetDetected, onsetStrength, _debugOnsetVisibleUntilMs, _debugOnsetStrength);
 }
 
 void NodeDebug::observeTransient(unsigned long now, bool transientDetected, float transientStrength, bool suppressed) {
-    if (transientDetected && !suppressed) {
-        _debugTransientVisibleUntilMs = now + _debugPulseHoldMs;
-        _debugTransientStrength = transientStrength;
+    if (suppressed) {
+        if (now >= _debugTransientVisibleUntilMs) {
+            _debugTransientStrength = 0.0f;
+        }
+        return;
     }
 
-    if (now >= _debugTransientVisibleUntilMs) {
-        _debugTransientStrength = 0.0f;
+    if (transientDetected) {
+        _ledTransientPulseStartMs = now;
     }
+
+    updatePulse(now, transientDetected, transientStrength, _debugTransientVisibleUntilMs, _debugTransientStrength);
+}
+
+void NodeDebug::observeI2SSignal(unsigned long now, const AudioSignal& audioSignal) {
+    const int rawSignal = audioSignal.rawSignal();
+    const int centeredSignal = audioSignal.centeredSignal();
+
+    if (_lastI2SSignalLogMs == 0) {
+        _i2sSignalMin = rawSignal;
+        _i2sSignalMax = rawSignal;
+        _i2sCenteredMin = centeredSignal;
+        _i2sCenteredMax = centeredSignal;
+    } else {
+        if (rawSignal < _i2sSignalMin) _i2sSignalMin = rawSignal;
+        if (rawSignal > _i2sSignalMax) _i2sSignalMax = rawSignal;
+        if (centeredSignal < _i2sCenteredMin) _i2sCenteredMin = centeredSignal;
+        if (centeredSignal > _i2sCenteredMax) _i2sCenteredMax = centeredSignal;
+    }
+
+    if (_lastI2SSignalLogMs != 0 && now - _lastI2SSignalLogMs < _i2sSignalLogIntervalMs) {
+        return;
+    }
+
+    Serial.print("I2S signal t=");
+    Serial.print(now);
+    Serial.print(" raw=");
+    Serial.print(rawSignal);
+    Serial.print(" rawMin=");
+    Serial.print(_i2sSignalMin);
+    Serial.print(" rawMax=");
+    Serial.print(_i2sSignalMax);
+    Serial.print(" centered=");
+    Serial.print(centeredSignal);
+    Serial.print(" centeredMin=");
+    Serial.print(_i2sCenteredMin);
+    Serial.print(" centeredMax=");
+    Serial.print(_i2sCenteredMax);
+    Serial.print(" magnitude=");
+    Serial.print(audioSignal.signalMagnitude(), 3);
+    Serial.print(" smooth=");
+    Serial.println(audioSignal.smoothedSignalMagnitude(), 3);
+
+    _lastI2SSignalLogMs = now;
+    _i2sSignalMin = rawSignal;
+    _i2sSignalMax = rawSignal;
+    _i2sCenteredMin = centeredSignal;
+    _i2sCenteredMax = centeredSignal;
+}
+
+void NodeDebug::observeChirpStarted(unsigned long now, const char* sourceName, ChirpOutput::ChirpPattern pattern) {
+    _debugChirpVisibleUntilMs = now + _debugChirpEventHoldMs;
+    Serial.print("EVT chirp_started source=");
+    Serial.print(sourceName);
+    Serial.print(" pattern=");
+    Serial.println(pattern == ChirpOutput::ChirpPattern::Triple ? "triple" : "single");
+}
+
+void NodeDebug::observeChirpFinished(unsigned long now) {
+    if (now >= _debugChirpVisibleUntilMs) {
+        _debugChirpVisibleUntilMs = now + _debugChirpEventHoldMs;
+    }
+    Serial.println("EVT chirp_finished");
+}
+
+void NodeDebug::updateLed(unsigned long now,
+                          const ResonantBehavior& behavior,
+                          const ChirpOutput& chirpOutput,
+                          bool selfChirpSuppressed) {
+    uint8_t ledDuty = kLedBrightnessOff;
+    if (chirpOutput.isActive()) {
+        ledDuty = kLedBrightnessFull;
+    } else if (_ledTransientPulseStartMs != 0) {
+        const unsigned long pulseElapsedMs = now - _ledTransientPulseStartMs;
+        const unsigned long pulseWindowMs = kLedTransientPulseCycleMs * kLedTransientPulseCount;
+        if (pulseElapsedMs < pulseWindowMs) {
+            const unsigned long pulsePhaseMs = pulseElapsedMs % kLedTransientPulseCycleMs;
+            ledDuty = pulsePhaseMs < kLedTransientPulseOnMs ? kLedBrightnessFull : kLedBrightnessOff;
+        } else {
+            _ledTransientPulseStartMs = 0;
+        }
+    } else if (selfChirpSuppressed) {
+        ledDuty = kLedBrightnessSelfIgnore;
+    } else if (behavior.stateCode() == 3) {
+        ledDuty = kLedBrightnessRefractory;
+    }
+
+    ledcWrite(kLedPwmChannel, ledDuty);
 }
 
 void NodeDebug::printPlotValues(unsigned long now,

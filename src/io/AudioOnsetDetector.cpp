@@ -37,6 +37,16 @@ void AudioOnsetDetector::update(unsigned long now) {
     const bool aboveReleaseThreshold = signalMagnitude > _onsetReleaseThreshold;
     const bool onsetCooldownElapsed = now - _lastOnsetMs >= _cooldownAfterOnsetMs;
 
+    // ONSET STAGE
+    updateOnsetStage(now, signalMagnitude, aboveAttackThreshold, onsetCooldownElapsed);
+
+    // TRANSIENT STAGE
+    updateTransientStage(now, signalMagnitude, aboveReleaseThreshold);
+
+    printTransientStatsIfDue(now);
+}
+
+void AudioOnsetDetector::updateOnsetStage(unsigned long now, float signalMagnitude, bool aboveAttackThreshold, bool onsetCooldownElapsed) {
     // Use raw magnitude for the edge so short bursts are not delayed by smoothing.
     // The separate release threshold keeps the peak stable when the signal wobbles near the edge.
     if (aboveAttackThreshold && !_peakActive && onsetCooldownElapsed) {
@@ -48,7 +58,9 @@ void AudioOnsetDetector::update(unsigned long now) {
         _onsetStrength = signalMagnitude;
         _lastOnsetMs = now;
     }
+}
 
+void AudioOnsetDetector::updateTransientStage(unsigned long now, float signalMagnitude, bool aboveReleaseThreshold) {
     if (_peakActive && signalMagnitude > _peakStrength) {
         _peakStrength = signalMagnitude;
     }
@@ -94,7 +106,9 @@ void AudioOnsetDetector::update(unsigned long now) {
         _releaseCandidateStartedMs = 0;
         _peakStrength = 0.0f;
     }
+}
 
+void AudioOnsetDetector::printTransientStatsIfDue(unsigned long now) {
     if (_lastStatsPrintMs == 0 || now - _lastStatsPrintMs >= _statsPrintIntervalMs) {
         const unsigned long elapsedMs = now - _statsStartMs;
         const unsigned long expectedCount = (elapsedMs + (_expectedTransientPeriodMs / 2)) / _expectedTransientPeriodMs;

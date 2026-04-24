@@ -1,6 +1,8 @@
 #pragma once
 #include <Arduino.h>
 
+#include "../io/ChirpOutput.h"
+
 /*
 Behavior
 
@@ -32,8 +34,12 @@ public:
     // ACTION request (SOUND resource)
     bool shouldStartChirp();
     const char* chirpRequestSourceName() const;
+    ChirpOutput::ChirpPattern chirpPattern() const;
+
+    bool selfChirpSuppressed(unsigned long now) const;
 
     // Event handling
+    void notifyChirpStarted(unsigned long now);
     void notifyChirpFinished(unsigned long now);
 
 private:
@@ -55,11 +61,14 @@ private:
     unsigned long _lastTransientMs = 0;
     unsigned long _transientStartedMs = 0;
     unsigned long _refractoryStartedMs = 0;
+    unsigned long _selfChirpSuppressUntilMs = 0;
 
     // --- timing parameters ---
     unsigned long _waitAfterTransientMs = 300; // Delay before responding after a transient is seen.
     unsigned long _refractoryAfterEmitMs = 1000; // Ignore follow-up activity for a short time after a chirp finishes.
     unsigned long _idleTimeoutMs = 10000; // Self-trigger if nothing has been seen or emitted for this long.
+    unsigned long _selfChirpIgnoreMs = 500; // Suppress detector response while the node's chirp is active.
+    unsigned long _selfChirpTailIgnoreMs = 500; // Keep suppressing briefly after chirp finish for ring-down.
 
     // --- action latch ---
     bool _chirpRequested = false;
@@ -71,4 +80,5 @@ private:
     };
 
     ChirpRequestSource _chirpRequestSource = ChirpRequestSource::None;
+    ChirpOutput::ChirpPattern _chirpPattern = ChirpOutput::ChirpPattern::Single;
 };

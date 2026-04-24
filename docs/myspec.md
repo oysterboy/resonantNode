@@ -1,86 +1,150 @@
 # ResonantNode Firmware Architecture
-Version: draft v0.2  
-Status: working architecture for current ESP32 proto, aligned with later VEKTOR integration
+Version: current snapshot
+Status: implemented architecture for current ESP32 prototype
 
 ---
 
-## 1. Purpose
+## STRICT vs VOLATILE
 
-This document defines the firmware architecture for a **ResonantNode**.
+### STRICT
+These parts reflect current code reality and should stay aligned closely with the implementation.
 
-A ResonantNode is a local sound-reactive node with:
-
-- sound input
-- sound output
-- local signal processing
-- local behavior
-- optional later connection to VEKTOR
-
-This architecture separates:
-
-- hardware access
-- semantic I/O wrappers
-- signal/features
-- behavior logic
-- node orchestration
+### VOLATILE
+These parts describe intended evolution or planned features.
 
 ---
 
-## 2. Layer Overview
+## 1. Purpose  [STRICT]
 
-1. HAL  
-2. IO  
-3. Signal / Detection  
-4. Behavior  
-5. Node  
+Defines current firmware architecture for a ResonantNode.
 
 ---
 
-## 3. Data Flow
+## 2. Current Layer Overview  [STRICT]
 
-HAL -> IO -> Signal/Detection -> Behavior -> IO -> HAL
-
----
-
-## 4. Execution Loop
-
-1. update input  
-2. update signal  
-3. update detectors  
-4. update behavior  
-5. update output  
+1. AudioSource
+2. AudioSignal
+3. AudioOnsetDetector
+4. ResonantBehavior
+5. ChirpOutput
+6. Node
+7. NodeDebug
 
 ---
 
-## 5. Core Principle
+## 3. Current Data Flow  [STRICT]
 
-- Features first (level, transient, etc.)
-- Meaning later (behavior decides)
+AudioSource -> AudioSignal -> AudioOnsetDetector -> ResonantBehavior -> ChirpOutput
 
----
-
-## 6. Structure
-
-src/
-  hal/
-  io/
-  signal/
-  behaviors/
-  nodes/
+Node orchestrates this pipeline and forwards lifecycle/debug handling around it.
 
 ---
 
-## 7. Summary
+## 4. Execution Loop  [STRICT]
 
-Keep HAL dumb, IO semantic, Signal technical, Behavior meaningful, Node orchestrating.
+1. read sample
+2. update signal
+3. update detector
+4. update behavior
+5. update output
+6. lifecycle feedback
+7. debug
 
 ---
 
-## 8. Behavior Routing
+## 5. AudioSource  [STRICT]
 
-- Behavior is a feature of the node.
-- A node may contain a behavior or operate without one.
-- Behavior shall produce intent, not hardware access.
-- Node shall route behavior intent to IO or hardware execution.
-- The node orchestration code should remain stable across different behavior implementations.
-- Hardware-specific actions belong in IO or HAL, not in behavior logic.
+begin()
+readSample()
+
+Implementations:
+- AudioSourceAnalog
+- AudioSourceI2S
+
+---
+
+## 6. AudioSignal  [STRICT]
+
+- baseline
+- centered
+- magnitude
+- smoothing
+
+Outputs:
+- rawSignal()
+- centeredSignal()
+- signalMagnitude()
+- smoothedSignalMagnitude()
+
+---
+
+## 7. AudioOnsetDetector  [STRICT]
+
+Currently handles:
+- onset detection
+- transient-like validation
+
+Outputs:
+- onsetDetected()
+- onsetStrength()
+- transientDetected()
+- transientStrength()
+- transientDurationMs()
+
+---
+
+## 8. ResonantBehavior  [STRICT]
+
+- state machine
+- timing
+- chirp decision
+
+Consumes:
+- transientDetected
+- transientStrength
+
+---
+
+## 9. ChirpOutput  [STRICT]
+
+- waveform execution
+- lifecycle
+
+---
+
+## 10. Node  [STRICT]
+
+- orchestrates pipeline
+- lifecycle forwarding
+- debug coordination
+- temporary param ownership
+
+---
+
+## 11. NodeDebug  [STRICT]
+
+- value output
+- event output
+- timing
+
+---
+
+## 12. Sample Model  [STRICT]
+
+readSample() per update
+
+---
+
+## 13. Future Directions  [VOLATILE]
+
+- split AudioOnset / AudioTransient
+- Analyzer mode
+- Test-Emitter
+- window-based processing
+- param/OTA system
+
+---
+
+## 14. Summary  [STRICT]
+
+AudioSource -> AudioSignal -> AudioOnsetDetector -> ResonantBehavior -> ChirpOutput

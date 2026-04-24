@@ -1,201 +1,229 @@
-# Refactor Spec: AudioSourceI2S
-## Sample Now, Stream Later
-### Next step for the audio source abstraction
-
-## Fix steps
-
-Before proceeding to additional source or signal refactors, the behavior boundary shall be tightened as follows:
-
-1. Self-chirp suppression policy shall be removed from `Node`.
-2. `Node` shall be limited to orchestration, wiring, and output control.
-3. Timing rules for response suppression shall reside in `ResonantBehavior` or in a dedicated behavior-adjacent policy object.
-4. Debug latches may remain in `Node` provided they do not influence behavior decisions.
-5. Further source or signal refactors shall proceed only after the behavior boundary is clarified and stabilized.
+# Refactor Spec
+## Align to Current Architecture + Prepare Onset/Transient Split + Analyzer
 
 ## Goal
 
-Extend the current audio input path so the system can support both:
+Refactor the current codebase to:
 
-- current analog mic input
-- future digital MEMS / I2S mic input
+1. Align explicitly with current architecture:
+   AudioSource -> AudioSignal -> AudioOnsetDetector -> ResonantBehavior -> ChirpOutput
 
-without changing downstream behavior logic.
+2. Prepare clean future split:
+   AudioOnset + AudioTransient (without breaking current behavior)
 
-This refactor should keep the current `AudioSource` contract sample-based for now and prepare the codebase for a later stream or window API.
+3. Prepare codebase for Analyzer / Test-Emitter integration
 
-## Current contract
+---
 
-The source layer currently behaves like this:
+## STRICT vs VOLATILE
 
-`AudioSource::readSample()`
+### STRICT
+Must reflect current working system and not break behavior.
 
-This means:
+### VOLATILE
+Prepares next steps (onset/transient split, analyzer).
 
-- one call returns one sample
-- `AudioSignal` consumes one sample at a time
-- downstream detection and behavior stay unchanged
+---
 
-## Next step
+## 1. Keep current pipeline intact [STRICT]
 
-Add `AudioSourceI2S` as a new implementation of `AudioSource`.
+Do NOT break:
 
-The I2S implementation may:
+AudioSource
+-> AudioSignal
+-> AudioOnsetDetector
+-> ResonantBehavior
+-> ChirpOutput
+-> Node
 
-- read from a hardware buffer internally
-- average or reduce buffered values into one returned sample
-- keep the public contract unchanged for now
+System must:
+- compile
+- behave as before
 
-## Later step
+---
 
-After the I2S source exists and is stable, introduce a stream or frame-based API.
+## 2. Refactor AudioOnsetDetector internally [STRICT -> VOLATILE boundary]
 
-That future API should allow:
+Current state:
+AudioOnsetDetector handles:
+- onset detection
+- transient qualification
 
-- windowed reads
-- buffered processing
-- richer signal analysis
+### Task
 
-Do not implement that now.
+Refactor internally into two conceptual sections:
 
-## Architectural intent
+#### Onset stage (internal)
+- threshold
+- cooldown
 
-### HAL / Source
+#### Transient stage (internal)
+- duration tracking
+- release threshold
+- debounce
+- peak strength validation
 
-Owns raw acquisition only.
+Do NOT yet split into two files unless trivial.
 
-Examples:
+Add comments marking:
 
-- ADC-backed source now
-- I2S-backed source later
+// ONSET STAGE
+// TRANSIENT STAGE
 
-### AudioSignal
+---
 
-Keeps sample-based signal conditioning:
+## 3. Prepare future class split [VOLATILE]
 
-- baseline
+Structure code so it can later become:
+
+AudioOnset
+AudioTransient
+
+WITHOUT changing interfaces elsewhere.
+
+Requirements:
+- isolate onset variables
+- isolate transient variables
+- avoid cross-dependencies
+
+---
+
+## 4. Keep AudioSignal pure [STRICT]
+
+Ensure AudioSignal only:
+- processes continuous signal
+- no event detection logic
+
+---
+
+## 5. Keep Behavior semantic [STRICT]
+
+ResonantBehavior should only consume:
+- transientDetected
+- transientStrength
+
+Do NOT move signal math into behavior.
+
+---
+
+## 6. Keep Node mostly glue [STRICT]
+
+Node responsibilities:
+- update chain
+- lifecycle forwarding
+- debug coordination
+
+Allowed temporary:
+- param presets
+- LED debug
+- self-chirp suppression
+
+Do NOT add:
+- detection logic
+- waveform logic
+
+---
+
+## 7. AudioSource contract [STRICT]
+
+Must remain:
+
+begin()
+readSample()
+
+Do NOT add:
+- window methods
+- streaming APIs
+
+---
+
+## 8. Debug stabilization [STRICT]
+
+Ensure debug still outputs:
+
+Value mode:
+- raw
 - magnitude
-- smoothing
+- smoothed
+- onset strength
+- transient strength
 
-### AudioOnsetDetector
+Event mode:
+- transient pulses
+- chirp start/stop
 
-Keeps transient / onset detection.
+---
 
-### Behavior
+## 9. Analyzer preparation [VOLATILE]
 
-Keeps state and response logic.
+Prepare codebase for:
 
-### Node
+Analyzer app using:
 
-Orchestrates updates and wiring only.
+AudioSource
+-> AudioSignal
+-> AudioOnsetDetector
 
-## AudioSource contract
+Requirements:
+- no hidden coupling to Behavior required
+- easy to reuse detector chain standalone
 
-`AudioSource` is the shared acquisition abstraction for the current pipeline.
+No full implementation required yet.
 
-Its public contract stays minimal and stable:
+---
 
-- `begin()`
-- `readSample()`
+## 10. Test-Emitter compatibility [VOLATILE]
 
-That allows `AudioSignal` and `Node` to use different source implementations interchangeably.
+Ensure future compatibility:
 
-### Rule
+- external chirp trigger (Serial2)
+- no dependency from detector to emitter
 
-- shared public contract: stable
-- internal implementation: source-specific
+No implementation required.
 
-That means:
+---
 
-- `AudioSourceAnalog` may implement sampling via ADC
-- `AudioSourceI2S` may implement sampling via I2S, buffering, averaging, or other internal mechanisms
+## 11. Parameter grouping [STRICT]
 
-As long as both provide the same public contract, they remain interchangeable in the existing pipeline.
+Group constants clearly inside classes:
 
-### Important constraint
+AudioSignal
+AudioOnsetDetector
+ResonantBehavior
+ChirpOutput
 
-If `AudioSourceI2S` appears to need additional public methods, then one of two things is true:
+No global config system.
 
-1. the methods are implementation-specific and should remain private
-2. the system is ready for a later, separate abstraction, such as window or buffer input, which should be introduced explicitly rather than leaked into the current `AudioSource` contract
+---
 
-### Current design principle
+## 12. Implementation steps
 
-For the current stage:
+1. review AudioOnsetDetector
+2. mark onset vs transient logic
+3. clean variable grouping
+4. ensure behavior inputs unchanged
+5. verify debug outputs
+6. confirm build + runtime unchanged
 
-- `AudioSource` stays stable
-- subclasses may differ internally
-- subclasses must not require different public methods for the current sample-based pipeline
+---
 
-## Refactor target
+## 13. Success criteria
 
-Current:
+- compiles
+- behavior unchanged
+- detector logic clearer internally
+- future split possible
+- Analyzer path unblocked
 
-`AudioSourceAnalog -> AudioSignal`
-
-Next:
-
-`AudioSourceAnalog`
-`AudioSourceI2S`
-`-> AudioSignal`
-
-Later:
-
-`AudioSourceStream`
-or
-`AudioFrameSource`
-`-> AudioSignal` or a new stream-oriented signal stage
-
-## Implementation notes
-
-### 1. AudioSource interface
-
-Keep the existing interface stable:
-
-```cpp
-class AudioSource {
-public:
-    virtual ~AudioSource() = default;
-    virtual void begin() = 0;
-    virtual int readSample() = 0;
-};
-```
-
-### 2. AudioSourceI2S
-
-Add a new implementation for digital MEMS / I2S input.
-
-It may internally:
-
-- fill a DMA or software buffer
-- convert the buffer into one sample value
-- expose only `readSample()` for now
-
-### 3. AudioSignal
-
-Keep `AudioSignal` sample-based.
-
-Do not change its external behavior in this refactor.
-
-### 4. Node
-
-Keep `Node` wiring simple:
-
-- create the chosen source
-- pass it into `AudioSignal`
-- leave detection and behavior unchanged
-
-## Result
-
-The codebase should support:
-
-- `AudioSourceAnalog -> AudioSignal -> AudioOnsetDetector -> Behavior`
-- `AudioSourceI2S -> AudioSignal -> AudioOnsetDetector -> Behavior`
-
-while preserving the current one-sample contract.
+---
 
 ## Summary
 
-Add `AudioSourceI2S` next.
-Keep the public source contract sample-based.
-Use internal buffering or averaging only inside the I2S implementation.
-Defer stream or window APIs to a later refactor.
+This refactor:
+
+- does NOT redesign behavior
+- does NOT introduce new features
+- makes detector architecture explicit internally
+- prepares clean next step:
+
+AudioSignal -> AudioOnset -> AudioTransient -> Behavior

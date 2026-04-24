@@ -18,23 +18,13 @@ Node::Node(int inputPin, int ledPin, int chirpPin, AudioSourceKind sourceKind)
       _chirpOutput(chirpPin) {}
 
 void Node::begin() {
-    ledcSetup(kLedPwmChannel, kLedPwmFrequencyHz, kLedPwmResolutionBits);
-    ledcAttachPin(_ledPin, kLedPwmChannel);
-    ledcWrite(kLedPwmChannel, kLedBrightnessOff);
     configureParameters();
     _audioSource.begin();
     _audioSignal.begin();
     _audioOnsetDetector.begin();
     _chirpOutput.begin();
+    _debug.begin(_ledPin);
     _debug.markLoopStart(micros());
-    _debug.begin();
-    _lastBehaviorStateCode = _behavior.stateCode();
-    _lastI2SSignalLogMs = 0;
-    _i2sSignalMin = 0;
-    _i2sSignalMax = 0;
-    _i2sCenteredMin = 0;
-    _i2sCenteredMax = 0;
-    _ledTransientPulseStartMs = 0;
 }
 
 void Node::configureParameters() {
@@ -45,9 +35,6 @@ void Node::configureParameters() {
     } else {
         configureAnalogParameters();
     }
-
-    // Self-ignore timing is not tuned here.
-    // It is defined in node.h as kSelfChirpIgnoreMs and kSelfChirpTailIgnoreMs.
 }
 
 void Node::configureSharedParameters() {
@@ -97,7 +84,7 @@ void Node::configureI2SParameters() {
 void Node::update() {
     const unsigned long now = millis();
     const unsigned long nowUs = micros();
-    const bool selfChirpSuppressed = now < _selfChirpIgnoreUntilMs;
+    const bool selfChirpSuppressed = _behavior.selfChirpSuppressed(now);
 
     _debug.noteCoreLoopUs(nowUs);
 
@@ -106,58 +93,12 @@ void Node::update() {
     _audioSignal.update();
 
     if (_sourceKind == AudioSourceKind::I2S) {
-        const int rawSignal = _audioSignal.rawSignal();
-        const int centeredSignal = _audioSignal.centeredSignal();
-        if (_lastI2SSignalLogMs == 0) {
-            _i2sSignalMin = rawSignal;
-            _i2sSignalMax = rawSignal;
-            _i2sCenteredMin = centeredSignal;
-            _i2sCenteredMax = centeredSignal;
-        } else {
-            if (rawSignal < _i2sSignalMin) _i2sSignalMin = rawSignal;
-            if (rawSignal > _i2sSignalMax) _i2sSignalMax = rawSignal;
-            if (centeredSignal < _i2sCenteredMin) _i2sCenteredMin = centeredSignal;
-            if (centeredSignal > _i2sCenteredMax) _i2sCenteredMax = centeredSignal;
-        }
-    }
-
-    if (_sourceKind == AudioSourceKind::I2S && (_lastI2SSignalLogMs == 0 || now - _lastI2SSignalLogMs >= 1000)) {
-        Serial.print("I2S signal t=");
-        Serial.print(now);
-        Serial.print(" raw=");
-        Serial.print(_audioSignal.rawSignal());
-        Serial.print(" rawMin=");
-        Serial.print(_i2sSignalMin);
-        Serial.print(" rawMax=");
-        Serial.print(_i2sSignalMax);
-        Serial.print(" centered=");
-        Serial.print(_audioSignal.centeredSignal());
-        Serial.print(" centeredMin=");
-        Serial.print(_i2sCenteredMin);
-        Serial.print(" centeredMax=");
-        Serial.print(_i2sCenteredMax);
-        Serial.print(" magnitude=");
-        Serial.print(_audioSignal.signalMagnitude());
-        Serial.print(" smooth=");
-        Serial.println(_audioSignal.smoothedSignalMagnitude());
-        _lastI2SSignalLogMs = now;
-        _i2sSignalMin = _audioSignal.rawSignal();
-        _i2sSignalMax = _audioSignal.rawSignal();
-        _i2sCenteredMin = _audioSignal.centeredSignal();
-        _i2sCenteredMax = _audioSignal.centeredSignal();
+        _debug.observeI2SSignal(now, _audioSignal);
     }
 
     if (selfChirpSuppressed) {
-        if (!_selfChirpIgnoreArmed) {
-            _audioOnsetDetector.resetState();
-            _selfChirpIgnoreArmed = true;
-        }
+        _audioOnsetDetector.resetState();
     } else {
-        if (_selfChirpIgnoreArmed) {
-            _audioOnsetDetector.resetState();
-            _selfChirpIgnoreArmed = false;
-        }
-
         _audioOnsetDetector.update(now);
     }
 
@@ -169,57 +110,22 @@ void Node::update() {
     const float transientStrength = selfChirpSuppressed ? 0.0f : _audioOnsetDetector.transientStrength();
     _behavior.update(transientDetected, transientStrength, now);
 
-    if (transientDetected) {
-        _ledTransientPulseStartMs = now;
-    }
-
-    const int behaviorStateCode = _behavior.stateCode();
-    // Keep the serial log focused on transient accept/reject and chirp start events.
-    // if (behaviorStateCode != _lastBehaviorStateCode) {
-    //     Serial.print("EVT state=");
-    //     Serial.println(_behavior.stateName());
-    //     _lastBehaviorStateCode = behaviorStateCode;
-    // }
-
     if (_behavior.shouldStartChirp()) {
-        Serial.print("EVT chirp_started source=");
-        Serial.println(_behavior.chirpRequestSourceName());
-        const bool triplePattern = _behavior.chirpRequestSourceName()[0] == 'i';
-        _chirpOutput.start(triplePattern ? ChirpOutput::ChirpPattern::Triple : ChirpOutput::ChirpPattern::Single);
-        _selfChirpIgnoreUntilMs = now + kSelfChirpIgnoreMs;
-        _selfChirpIgnoreArmed = false;
+        const auto chirpPattern = _behavior.chirpPattern();
+        const char* sourceName = _behavior.chirpRequestSourceName();
+        _debug.observeChirpStarted(now, sourceName, chirpPattern);
+        _chirpOutput.start(chirpPattern);
+        _behavior.notifyChirpStarted(now);
     }
 
     _chirpOutput.update();
 
     if (_chirpOutput.finished()) {
         _behavior.notifyChirpFinished(now);
-        // Keep the detector muted a bit longer so the chirp tail and speaker/mic
-        // ring-down do not get misread as a new transient.
-        const unsigned long tailIgnoreUntilMs = now + kSelfChirpTailIgnoreMs;
-        if (tailIgnoreUntilMs > _selfChirpIgnoreUntilMs) {
-            _selfChirpIgnoreUntilMs = tailIgnoreUntilMs;
-        }
+        _debug.observeChirpFinished(now);
     }
 
-    uint8_t ledDuty = kLedBrightnessOff;
-    if (_chirpOutput.isActive()) {
-        ledDuty = kLedBrightnessFull;
-    } else if (_ledTransientPulseStartMs != 0) {
-        const unsigned long pulseElapsedMs = now - _ledTransientPulseStartMs;
-        const unsigned long pulseWindowMs = kLedTransientPulseCycleMs * kLedTransientPulseCount;
-        if (pulseElapsedMs < pulseWindowMs) {
-            const unsigned long pulsePhaseMs = pulseElapsedMs % kLedTransientPulseCycleMs;
-            ledDuty = pulsePhaseMs < kLedTransientPulseOnMs ? kLedBrightnessFull : kLedBrightnessOff;
-        } else {
-            _ledTransientPulseStartMs = 0;
-        }
-    } else if (selfChirpSuppressed) {
-        ledDuty = kLedBrightnessSelfIgnore;
-    } else if (behaviorStateCode == 3) {
-        ledDuty = kLedBrightnessRefractory;
-    }
-    ledcWrite(kLedPwmChannel, ledDuty);
+    _debug.updateLed(now, _behavior, _chirpOutput, selfChirpSuppressed);
 
     _debug.endLoop(micros());
 }

@@ -1,5 +1,9 @@
 #include <Arduino.h>
 
+// Select exactly one runtime mode at compile time:
+// - ANALYZER_MODE for signal analysis
+// - EMITTER_MODE for the standalone output device
+// - default for the resonant node sketch
 #if defined(ANALYZER_MODE)
 #include "modes/analyzer/AnalyzerApp.h"
 #elif defined(EMITTER_MODE)
@@ -11,7 +15,7 @@
 #if defined(ANALYZER_MODE)
 AnalyzerApp app;
 #elif defined(EMITTER_MODE)
-EmitterApp app;
+EmitterApp app(25, 26, 16, 17, 115200);
 #else
 Node app(34, 2, 25, Node::AudioSourceKind::I2S);
 #endif

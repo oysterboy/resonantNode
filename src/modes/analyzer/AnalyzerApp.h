@@ -4,6 +4,7 @@
 
 #include "../../hal/AudioSourceAnalog.h"
 #include "../../hal/AudioSourceI2S.h"
+#include "../../io/AudioFrequencyDetector.h"
 #include "../../io/AudioOnsetDetector.h"
 #include "../../io/AudioSignal.h"
 #include "../../hal/AudioSource.h"
@@ -15,10 +16,16 @@ public:
         I2S
     };
 
+    enum class DetectorKind {
+        Amplitude,
+        Frequency
+    };
+
     AnalyzerApp(int inputPin = 34, AudioSourceKind sourceKind = AudioSourceKind::I2S);
 
     void begin();
     void update();
+    unsigned long loopDelayMs() const;
 
 private:
     struct SequenceTest {
@@ -147,16 +154,53 @@ private:
     void configureSharedParameters();
     void configureAnalogParameters();
     void configureI2SParameters();
+    void configureAmplitudeDetector();
+    void configureFrequencyDetector();
     void beginEmitterControl();
     void pollUsbConsole();
     void pollEmitterSerial();
     void handleUsbLine(const char* line);
     void sendEmitterCommand(const char* command);
+    void setDetectorKind(DetectorKind kind);
+    void resetDetectorState();
+    bool detectorOnsetDetected() const;
+    float detectorOnsetStrength() const;
+    bool detectorTransientDetected() const;
+    float detectorTransientStrength() const;
+    unsigned long detectorTransientDurationMs() const;
+    float detectorFrequencyScore() const;
+    float detectorFrequencyTargetPower() const;
+    float detectorFrequencyNeighborPower() const;
+    float detectorFrequencyTotalEnergy() const;
+    float detectorFrequencySpectralContrast() const;
+    float detectorFrequencyBinSpacingHz() const;
+    float detectorOnsetDetectionThreshold() const;
+    float detectorOnsetReleaseThreshold() const;
+    unsigned long detectorCooldownAfterOnsetMs() const;
+    unsigned long detectorMinTransientDurationMs() const;
+    unsigned long detectorMaxTransientDurationMs() const;
+    float detectorMinTransientPeakStrength() const;
+    unsigned long detectorReleaseDebounceMs() const;
+    unsigned long detectorTargetFrequencyHz() const;
+    unsigned long detectorSampleRateHz() const;
+    unsigned long detectorWindowSizeSamples() const;
+    void setDetectorOnsetDetectionThreshold(float value);
+    void setDetectorOnsetReleaseThreshold(float value);
+    void setDetectorCooldownAfterOnsetMs(unsigned long value);
+    void setDetectorMinTransientDurationMs(unsigned long value);
+    void setDetectorMaxTransientDurationMs(unsigned long value);
+    void setDetectorMinTransientPeakStrength(float value);
+    void setDetectorReleaseDebounceMs(unsigned long value);
+    void setDetectorTargetFrequencyHz(unsigned long value);
+    void setDetectorSampleRateHz(unsigned long value);
+    void setDetectorWindowSizeSamples(unsigned long value);
+    const char* detectorKindName() const;
     void startBaseSession(unsigned long durationMs, bool quiet = false);
     void stopBaseSession();
     void updateBaseSession(unsigned long now);
     void printBaseSummary() const;
     void printBaseHints() const;
+    void printFrequencyDebugSummary(const char* prefix) const;
     void startSequenceTest(unsigned long totalTrials, unsigned long periodMs, unsigned long windowEndOffsetMs, unsigned long toneHz, unsigned long durationMs, bool quiet = false, bool showDetails = true);
     void stopSequenceTest();
     void updateSequenceTest(unsigned long now);
@@ -194,8 +238,10 @@ private:
     AudioSourceI2S _i2sSource;
     AudioSource& _audioSource;
     AudioSourceKind _sourceKind;
+    DetectorKind _detectorKind = DetectorKind::Amplitude;
     AudioSignal _audioSignal;
     AudioOnsetDetector _audioOnsetDetector;
+    AudioFrequencyDetector _audioFrequencyDetector;
     unsigned long _controlBaudRate = 115200;
     int _controlRxPin = 16;
     int _controlTxPin = 17;

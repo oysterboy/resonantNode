@@ -76,7 +76,8 @@ AnalyzerApp::AnalyzerApp(int inputPin, AudioSourceKind sourceKind)
                        ? static_cast<AudioSource&>(_i2sSource)
                        : static_cast<AudioSource&>(_analogSource)),
       _audioSignal(_audioSource),
-      _audioOnsetDetector(_audioSignal) {}
+      _audioOnsetDetector(_audioSignal),
+      _audioFrequencyDetector(_audioSignal) {}
 
 void AnalyzerApp::begin() {
     beginEmitterControl();
@@ -95,6 +96,8 @@ void AnalyzerApp::begin() {
     _audioSignal.begin();
     _audioOnsetDetector.begin();
     _audioOnsetDetector.setDiagnosticsEnabled(false);
+    _audioFrequencyDetector.begin();
+    _audioFrequencyDetector.setDiagnosticsEnabled(false);
     _lastPrintMs = 0;
     _usbLineLength = 0;
     _usbLineBuffer[0] = '\0';
@@ -105,7 +108,7 @@ void AnalyzerApp::begin() {
     _controlClaimAtMs = millis();
 
     Serial.println("EVT analyzer_ready");
-    Serial.println("EVT analyzer_help type='HELP', 'BASE', 'TEST', 'SEQ', 'CAP', 'TUNE', 'VAL', 'VAL OFF'");
+    Serial.println("EVT analyzer_help type='HELP', 'BASE', 'TEST', 'SEQ', 'CAP', 'TUNE', 'DET AMP', 'DET FREQ', 'VAL', 'VAL OFF'");
 }
 
 void AnalyzerApp::configureParameters() {
@@ -116,6 +119,42 @@ void AnalyzerApp::configureParameters() {
     } else {
         configureAnalogParameters();
     }
+
+    configureFrequencyDetector();
+    configureAmplitudeDetector();
+}
+
+void AnalyzerApp::configureAmplitudeDetector() {
+    if (_sourceKind == AudioSourceKind::I2S) {
+        _audioOnsetDetector.setOnsetDetectionThreshold(20.0f);
+        _audioOnsetDetector.setOnsetReleaseThreshold(16.0f);
+        _audioOnsetDetector.setCooldownAfterOnsetMs(50);
+        _audioOnsetDetector.setReleaseDebounceMs(15);
+        _audioOnsetDetector.setMinTransientDurationMs(40);
+        _audioOnsetDetector.setMaxTransientDurationMs(190);
+        _audioOnsetDetector.setMinTransientPeakStrength(35.0f);
+    } else {
+        _audioOnsetDetector.setOnsetDetectionThreshold(75.0f);
+        _audioOnsetDetector.setOnsetReleaseThreshold(68.0f);
+        _audioOnsetDetector.setCooldownAfterOnsetMs(50);
+        _audioOnsetDetector.setReleaseDebounceMs(20);
+        _audioOnsetDetector.setMinTransientDurationMs(50);
+        _audioOnsetDetector.setMaxTransientDurationMs(190);
+        _audioOnsetDetector.setMinTransientPeakStrength(180.0f);
+    }
+}
+
+void AnalyzerApp::configureFrequencyDetector() {
+    _audioFrequencyDetector.setTargetFrequencyHz(3200);
+    _audioFrequencyDetector.setSampleRateHz(_sourceKind == AudioSourceKind::I2S ? 16000 : 8000);
+    _audioFrequencyDetector.setWindowSizeSamples(64);
+    _audioFrequencyDetector.setOnsetDetectionThreshold(120.0f);
+    _audioFrequencyDetector.setOnsetReleaseThreshold(90.0f);
+    _audioFrequencyDetector.setCooldownAfterOnsetMs(50);
+    _audioFrequencyDetector.setReleaseDebounceMs(15);
+    _audioFrequencyDetector.setMinTransientDurationMs(40);
+    _audioFrequencyDetector.setMaxTransientDurationMs(190);
+    _audioFrequencyDetector.setMinTransientPeakStrength(120.0f);
 }
 
 void AnalyzerApp::configureSharedParameters() {
@@ -150,11 +189,12 @@ void AnalyzerApp::update() {
 
     _audioSignal.update();
     _audioOnsetDetector.update(now);
+    _audioFrequencyDetector.update(now);
 
-    if (_audioOnsetDetector.onsetDetected()) {
+    if (detectorOnsetDetected()) {
         _valOnsetLatchedUntilMs = now + 250;
     }
-    if (_audioOnsetDetector.transientDetected()) {
+    if (detectorTransientDetected()) {
         _valTransientLatchedUntilMs = now + 250;
     }
 
@@ -166,7 +206,7 @@ void AnalyzerApp::update() {
         _controlClaimSent = true;
         _controlClaimPending = false;
     }
-    if (_sequenceTest.active && _audioOnsetDetector.transientDetected()) {
+    if (_sequenceTest.active && detectorTransientDetected()) {
         handleSequenceTransient(now);
     }
     updateSequenceTest(now);
@@ -175,6 +215,176 @@ void AnalyzerApp::update() {
     if (_valMode) {
         printValueFrame(now);
     }
+}
+
+unsigned long AnalyzerApp::loopDelayMs() const {
+    return _detectorKind == DetectorKind::Frequency ? 0UL : 1UL;
+}
+
+void AnalyzerApp::setDetectorKind(DetectorKind kind) {
+    _detectorKind = kind;
+    resetDetectorState();
+}
+
+void AnalyzerApp::resetDetectorState() {
+    _audioOnsetDetector.resetState();
+    _audioFrequencyDetector.resetState();
+}
+
+bool AnalyzerApp::detectorOnsetDetected() const {
+    return _detectorKind == DetectorKind::Frequency ? _audioFrequencyDetector.onsetDetected() : _audioOnsetDetector.onsetDetected();
+}
+
+float AnalyzerApp::detectorOnsetStrength() const {
+    return _detectorKind == DetectorKind::Frequency ? _audioFrequencyDetector.onsetStrength() : _audioOnsetDetector.onsetStrength();
+}
+
+bool AnalyzerApp::detectorTransientDetected() const {
+    return _detectorKind == DetectorKind::Frequency ? _audioFrequencyDetector.transientDetected() : _audioOnsetDetector.transientDetected();
+}
+
+float AnalyzerApp::detectorTransientStrength() const {
+    return _detectorKind == DetectorKind::Frequency ? _audioFrequencyDetector.transientStrength() : _audioOnsetDetector.transientStrength();
+}
+
+unsigned long AnalyzerApp::detectorTransientDurationMs() const {
+    return _detectorKind == DetectorKind::Frequency ? _audioFrequencyDetector.transientDurationMs() : _audioOnsetDetector.transientDurationMs();
+}
+
+float AnalyzerApp::detectorFrequencyScore() const {
+    return _detectorKind == DetectorKind::Frequency ? _audioFrequencyDetector.lastFrequencyScore() : 0.0f;
+}
+
+float AnalyzerApp::detectorFrequencyTargetPower() const {
+    return _detectorKind == DetectorKind::Frequency ? _audioFrequencyDetector.lastTargetPower() : 0.0f;
+}
+
+float AnalyzerApp::detectorFrequencyNeighborPower() const {
+    return _detectorKind == DetectorKind::Frequency ? _audioFrequencyDetector.lastNeighborPower() : 0.0f;
+}
+
+float AnalyzerApp::detectorFrequencyTotalEnergy() const {
+    return _detectorKind == DetectorKind::Frequency ? _audioFrequencyDetector.lastTotalEnergy() : 0.0f;
+}
+
+float AnalyzerApp::detectorFrequencySpectralContrast() const {
+    return _detectorKind == DetectorKind::Frequency ? _audioFrequencyDetector.lastSpectralContrast() : 0.0f;
+}
+
+float AnalyzerApp::detectorFrequencyBinSpacingHz() const {
+    return _detectorKind == DetectorKind::Frequency ? _audioFrequencyDetector.frequencyBinSpacingHz() : 0.0f;
+}
+
+float AnalyzerApp::detectorOnsetDetectionThreshold() const {
+    return _detectorKind == DetectorKind::Frequency ? _audioFrequencyDetector.onsetDetectionThreshold() : _audioOnsetDetector.onsetDetectionThreshold();
+}
+
+float AnalyzerApp::detectorOnsetReleaseThreshold() const {
+    return _detectorKind == DetectorKind::Frequency ? _audioFrequencyDetector.onsetReleaseThreshold() : _audioOnsetDetector.onsetReleaseThreshold();
+}
+
+unsigned long AnalyzerApp::detectorCooldownAfterOnsetMs() const {
+    return _detectorKind == DetectorKind::Frequency ? _audioFrequencyDetector.cooldownAfterOnsetMs() : _audioOnsetDetector.cooldownAfterOnsetMs();
+}
+
+unsigned long AnalyzerApp::detectorMinTransientDurationMs() const {
+    return _detectorKind == DetectorKind::Frequency ? _audioFrequencyDetector.minTransientDurationMs() : _audioOnsetDetector.minTransientDurationMs();
+}
+
+unsigned long AnalyzerApp::detectorMaxTransientDurationMs() const {
+    return _detectorKind == DetectorKind::Frequency ? _audioFrequencyDetector.maxTransientDurationMs() : _audioOnsetDetector.maxTransientDurationMs();
+}
+
+float AnalyzerApp::detectorMinTransientPeakStrength() const {
+    return _detectorKind == DetectorKind::Frequency ? _audioFrequencyDetector.minTransientPeakStrength() : _audioOnsetDetector.minTransientPeakStrength();
+}
+
+unsigned long AnalyzerApp::detectorReleaseDebounceMs() const {
+    return _detectorKind == DetectorKind::Frequency ? _audioFrequencyDetector.releaseDebounceMs() : _audioOnsetDetector.releaseDebounceMs();
+}
+
+unsigned long AnalyzerApp::detectorTargetFrequencyHz() const {
+    return _detectorKind == DetectorKind::Frequency ? _audioFrequencyDetector.targetFrequencyHz() : 0UL;
+}
+
+unsigned long AnalyzerApp::detectorSampleRateHz() const {
+    return _detectorKind == DetectorKind::Frequency ? _audioFrequencyDetector.sampleRateHz() : 0UL;
+}
+
+unsigned long AnalyzerApp::detectorWindowSizeSamples() const {
+    return _detectorKind == DetectorKind::Frequency ? _audioFrequencyDetector.windowSizeSamples() : 0UL;
+}
+
+void AnalyzerApp::setDetectorOnsetDetectionThreshold(float value) {
+    if (_detectorKind == DetectorKind::Frequency) {
+        _audioFrequencyDetector.setOnsetDetectionThreshold(value);
+    } else {
+        _audioOnsetDetector.setOnsetDetectionThreshold(value);
+    }
+}
+
+void AnalyzerApp::setDetectorOnsetReleaseThreshold(float value) {
+    if (_detectorKind == DetectorKind::Frequency) {
+        _audioFrequencyDetector.setOnsetReleaseThreshold(value);
+    } else {
+        _audioOnsetDetector.setOnsetReleaseThreshold(value);
+    }
+}
+
+void AnalyzerApp::setDetectorCooldownAfterOnsetMs(unsigned long value) {
+    if (_detectorKind == DetectorKind::Frequency) {
+        _audioFrequencyDetector.setCooldownAfterOnsetMs(value);
+    } else {
+        _audioOnsetDetector.setCooldownAfterOnsetMs(value);
+    }
+}
+
+void AnalyzerApp::setDetectorMinTransientDurationMs(unsigned long value) {
+    if (_detectorKind == DetectorKind::Frequency) {
+        _audioFrequencyDetector.setMinTransientDurationMs(value);
+    } else {
+        _audioOnsetDetector.setMinTransientDurationMs(value);
+    }
+}
+
+void AnalyzerApp::setDetectorMaxTransientDurationMs(unsigned long value) {
+    if (_detectorKind == DetectorKind::Frequency) {
+        _audioFrequencyDetector.setMaxTransientDurationMs(value);
+    } else {
+        _audioOnsetDetector.setMaxTransientDurationMs(value);
+    }
+}
+
+void AnalyzerApp::setDetectorMinTransientPeakStrength(float value) {
+    if (_detectorKind == DetectorKind::Frequency) {
+        _audioFrequencyDetector.setMinTransientPeakStrength(value);
+    } else {
+        _audioOnsetDetector.setMinTransientPeakStrength(value);
+    }
+}
+
+void AnalyzerApp::setDetectorReleaseDebounceMs(unsigned long value) {
+    if (_detectorKind == DetectorKind::Frequency) {
+        _audioFrequencyDetector.setReleaseDebounceMs(value);
+    } else {
+        _audioOnsetDetector.setReleaseDebounceMs(value);
+    }
+}
+
+void AnalyzerApp::setDetectorTargetFrequencyHz(unsigned long value) {
+    _audioFrequencyDetector.setTargetFrequencyHz(value);
+}
+
+void AnalyzerApp::setDetectorSampleRateHz(unsigned long value) {
+    _audioFrequencyDetector.setSampleRateHz(value);
+}
+
+void AnalyzerApp::setDetectorWindowSizeSamples(unsigned long value) {
+    _audioFrequencyDetector.setWindowSizeSamples(value);
+}
+
+const char* AnalyzerApp::detectorKindName() const {
+    return _detectorKind == DetectorKind::Frequency ? "FREQ" : "AMP";
 }
 
 void AnalyzerApp::startBaseSession(unsigned long durationMs, bool quiet) {
@@ -206,7 +416,7 @@ void AnalyzerApp::startBaseSession(unsigned long durationMs, bool quiet) {
     sendEmitterCommand("MODE REMOTE");
     delay(100);
     _audioSignal.rebase();
-    _audioOnsetDetector.resetState();
+    resetDetectorState();
 
     Serial.print("BASE start dur_ms=");
     Serial.println(durationMs);
@@ -378,8 +588,45 @@ void AnalyzerApp::handleUsbLine(const char* line) {
         Serial.println("CMD: CAP stop");
         Serial.println("CMD: TUNE start=48 stop=84 step=4 releaseStart=4 releaseStop=20 releaseStep=4 durationStart=10 durationStop=32 durationStep=4");
         Serial.println("CMD: TUNE stop");
+        Serial.println("CMD: DET AMP");
+        Serial.println("CMD: DET FREQ");
         Serial.println("CMD: VAL");
         Serial.println("CMD: VAL OFF");
+        return;
+    }
+
+    if (startsWithTokenIgnoreCase(line, "DET")) {
+        if (_valMode) {
+            return;
+        }
+        char buffer[48];
+        strncpy(buffer, line, sizeof(buffer));
+        buffer[sizeof(buffer) - 1] = '\0';
+
+        char* savePtr = nullptr;
+        char* token = strtok_r(buffer, " ", &savePtr);
+        token = token != nullptr ? strtok_r(nullptr, " ", &savePtr) : nullptr;
+
+        if (token == nullptr) {
+            Serial.print("DET mode=");
+            Serial.println(detectorKindName());
+            return;
+        }
+
+        if (equalsIgnoreCase(token, "AMP")) {
+            setDetectorKind(DetectorKind::Amplitude);
+            Serial.println("DET mode=AMP");
+            return;
+        }
+
+        if (equalsIgnoreCase(token, "FREQ")) {
+            setDetectorKind(DetectorKind::Frequency);
+            Serial.println("DET mode=FREQ");
+            return;
+        }
+
+        Serial.print("EVT analyzer_unknown_det token=");
+        Serial.println(token);
         return;
     }
 
@@ -640,7 +887,9 @@ void AnalyzerApp::printValueModeBanner() const {
         return;
     }
     Serial.print("EVT analyzer_val on source=");
-    Serial.println(_sourceKind == AudioSourceKind::I2S ? "I2S" : "Analog");
+    Serial.print(_sourceKind == AudioSourceKind::I2S ? "I2S" : "Analog");
+    Serial.print(" detector=");
+    Serial.println(detectorKindName());
     printDetectionParameters();
 }
 
@@ -690,7 +939,7 @@ void AnalyzerApp::startSequenceTest(unsigned long totalTrials, unsigned long per
     sendEmitterCommand("MODE REMOTE");
     delay(100);
     _audioSignal.rebase();
-    _audioOnsetDetector.resetState();
+    resetDetectorState();
 
     if (_sequenceTest.showDetails) {
         Serial.print("SEQ start: tries=");
@@ -763,7 +1012,7 @@ void AnalyzerApp::startCaptureSession(unsigned long totalTrials, unsigned long p
     sendEmitterCommand("MODE REMOTE");
     delay(100);
     _audioSignal.rebase();
-    _audioOnsetDetector.resetState();
+    resetDetectorState();
 
     Serial.print("CAP start tries=");
     Serial.print(totalTrials);
@@ -1038,17 +1287,17 @@ void AnalyzerApp::handleSequenceTransient(unsigned long now) {
             Serial.print(" t=");
             Serial.print(now);
             Serial.print(" strength=");
-            Serial.print(_audioOnsetDetector.transientStrength(), 3);
+            Serial.print(detectorTransientStrength(), 3);
             Serial.print(" dur=");
-            Serial.println(_audioOnsetDetector.transientDurationMs());
+            Serial.println(detectorTransientDurationMs());
         }
         return;
     }
 
     _sequenceTest.currentTrialHit = true;
     _sequenceTest.hits++;
-    _sequenceTest.totalHitStrengthScaled += static_cast<unsigned long>(_audioOnsetDetector.transientStrength() * 100.0f);
-    _sequenceTest.totalHitDurationMs += _audioOnsetDetector.transientDurationMs();
+    _sequenceTest.totalHitStrengthScaled += static_cast<unsigned long>(detectorTransientStrength() * 100.0f);
+    _sequenceTest.totalHitDurationMs += detectorTransientDurationMs();
 
     if (_sequenceTest.quiet) {
         if (!_sequenceTest.progressLineStarted) {
@@ -1061,9 +1310,9 @@ void AnalyzerApp::handleSequenceTransient(unsigned long now) {
         Serial.print("SEQ hit trial=");
         Serial.print(_sequenceTest.currentTrial);
         Serial.print(" s=");
-        Serial.print(_audioOnsetDetector.transientStrength(), 1);
+        Serial.print(detectorTransientStrength(), 1);
         Serial.print(" d=");
-        Serial.println(_audioOnsetDetector.transientDurationMs());
+        Serial.println(detectorTransientDurationMs());
     }
 }
 
@@ -1121,9 +1370,9 @@ void AnalyzerApp::startTuneSession(unsigned long startMinStrength, unsigned long
     _tuneSession.stage = TuneSession::Stage::MinStrength;
     _tuneSession.stageCandidateStep = stepMinStrength == 0 ? 5 : stepMinStrength;
 
-    const unsigned long currentStrength = static_cast<unsigned long>(_audioOnsetDetector.minTransientPeakStrength());
-    const unsigned long currentRelease = _audioOnsetDetector.releaseDebounceMs();
-    const unsigned long currentDuration = _audioOnsetDetector.minTransientDurationMs();
+    const unsigned long currentStrength = static_cast<unsigned long>(detectorMinTransientPeakStrength());
+    const unsigned long currentRelease = detectorReleaseDebounceMs();
+    const unsigned long currentDuration = detectorMinTransientDurationMs();
 
     if (startMinStrength == 0 && stopMinStrength == 0) {
         startMinStrength = currentStrength > 40 ? currentStrength - 40 : 4;
@@ -1278,19 +1527,19 @@ void AnalyzerApp::startNextTuneCandidate(unsigned long now) {
     }
     switch (_tuneSession.stage) {
         case TuneSession::Stage::MinStrength:
-            _audioOnsetDetector.setMinTransientPeakStrength(static_cast<float>(_tuneSession.currentCandidateValue));
-            _audioOnsetDetector.setReleaseDebounceMs(_tuneSession.currentReleaseDebounce);
-            _audioOnsetDetector.setMinTransientDurationMs(_tuneSession.currentMinDuration);
+            setDetectorMinTransientPeakStrength(static_cast<float>(_tuneSession.currentCandidateValue));
+            setDetectorReleaseDebounceMs(_tuneSession.currentReleaseDebounce);
+            setDetectorMinTransientDurationMs(_tuneSession.currentMinDuration);
             break;
         case TuneSession::Stage::ReleaseDebounce:
-            _audioOnsetDetector.setMinTransientPeakStrength(static_cast<float>(_tuneSession.bestMinStrength));
-            _audioOnsetDetector.setReleaseDebounceMs(_tuneSession.currentCandidateValue);
-            _audioOnsetDetector.setMinTransientDurationMs(_tuneSession.bestMinDuration);
+            setDetectorMinTransientPeakStrength(static_cast<float>(_tuneSession.bestMinStrength));
+            setDetectorReleaseDebounceMs(_tuneSession.currentCandidateValue);
+            setDetectorMinTransientDurationMs(_tuneSession.bestMinDuration);
             break;
         case TuneSession::Stage::MinDuration:
-            _audioOnsetDetector.setMinTransientPeakStrength(static_cast<float>(_tuneSession.bestMinStrength));
-            _audioOnsetDetector.setReleaseDebounceMs(_tuneSession.bestReleaseDebounce);
-            _audioOnsetDetector.setMinTransientDurationMs(_tuneSession.currentCandidateValue);
+            setDetectorMinTransientPeakStrength(static_cast<float>(_tuneSession.bestMinStrength));
+            setDetectorReleaseDebounceMs(_tuneSession.bestReleaseDebounce);
+            setDetectorMinTransientDurationMs(_tuneSession.currentCandidateValue);
             break;
     }
 
@@ -1481,18 +1730,29 @@ void AnalyzerApp::printDetectionParameters() const {
     if (_valMode) {
         return;
     }
-    Serial.print("SEQ det onset=");
-    Serial.print(_audioOnsetDetector.onsetDetectionThreshold(), 1);
+    Serial.print("SEQ det mode=");
+    Serial.print(detectorKindName());
+    Serial.print(" onset=");
+    Serial.print(detectorOnsetDetectionThreshold(), 1);
     Serial.print(" release=");
-    Serial.print(_audioOnsetDetector.onsetReleaseThreshold(), 1);
+    Serial.print(detectorOnsetReleaseThreshold(), 1);
     Serial.print(" cooldown=");
-    Serial.print(_audioOnsetDetector.cooldownAfterOnsetMs());
+    Serial.print(detectorCooldownAfterOnsetMs());
     Serial.print(" minMs=");
-    Serial.print(_audioOnsetDetector.minTransientDurationMs());
+    Serial.print(detectorMinTransientDurationMs());
     Serial.print(" maxMs=");
-    Serial.print(_audioOnsetDetector.maxTransientDurationMs());
+    Serial.print(detectorMaxTransientDurationMs());
     Serial.print(" minStrength=");
-    Serial.println(_audioOnsetDetector.minTransientPeakStrength(), 1);
+    Serial.print(detectorMinTransientPeakStrength(), 1);
+    if (_detectorKind == DetectorKind::Frequency) {
+        Serial.print(" targetHz=");
+        Serial.print(detectorTargetFrequencyHz());
+        Serial.print(" sampleRate=");
+        Serial.print(detectorSampleRateHz());
+        Serial.print(" window=");
+        Serial.print(detectorWindowSizeSamples());
+    }
+    Serial.println();
 }
 
 void AnalyzerApp::printTransientAcceptedDebug(unsigned long now, float strength, unsigned long durationMs) const {
@@ -1512,7 +1772,7 @@ void AnalyzerApp::printTransientStatsDebug(unsigned long now) const {
         return;
     }
     const unsigned long elapsedMs = now - _sequenceTest.startedAtMs;
-    const unsigned long expectedCount = (elapsedMs + (_audioOnsetDetector.cooldownAfterOnsetMs() / 2)) / _audioOnsetDetector.cooldownAfterOnsetMs();
+    const unsigned long expectedCount = (elapsedMs + (detectorCooldownAfterOnsetMs() / 2)) / detectorCooldownAfterOnsetMs();
     const unsigned long successRate = expectedCount > 0 ? ((_sequenceTest.hits * 100UL) / expectedCount) : 0;
 
     Serial.print("DET transient stats t=");
@@ -1651,6 +1911,7 @@ void AnalyzerApp::printBaseSummary() const {
     Serial.print(deltaSwing, 1);
     Serial.print(" quiet_delta_peak=");
     Serial.println(deltaQuietPeak, 1);
+    printFrequencyDebugSummary("BASE");
     printBaseHints();
 }
 
@@ -1703,6 +1964,7 @@ void AnalyzerApp::printCaptureSummary() const {
     Serial.print(quietDeltaAvg, 1);
     Serial.print(" delta_peak=");
     Serial.println(_captureSession.quietDeltaMax, 1);
+    printFrequencyDebugSummary("CAP");
     printCaptureHints();
 }
 
@@ -1727,14 +1989,34 @@ void AnalyzerApp::printCaptureHints() const {
     Serial.println(quietNoisePeak, 1);
 }
 
+void AnalyzerApp::printFrequencyDebugSummary(const char* prefix) const {
+    if (_detectorKind != DetectorKind::Frequency) {
+        return;
+    }
+
+    Serial.print(prefix);
+    Serial.print(" freq: score=");
+    Serial.print(detectorFrequencyScore(), 1);
+    Serial.print(" target_power=");
+    Serial.print(detectorFrequencyTargetPower(), 1);
+    Serial.print(" neighbor_power=");
+    Serial.print(detectorFrequencyNeighborPower(), 1);
+    Serial.print(" contrast=");
+    Serial.print(detectorFrequencySpectralContrast(), 2);
+    Serial.print(" energy=");
+    Serial.print(detectorFrequencyTotalEnergy(), 1);
+    Serial.print(" bin_spacing_hz=");
+    Serial.println(detectorFrequencyBinSpacingHz(), 1);
+}
+
 void AnalyzerApp::printValueFrame(unsigned long now) const {
     if (_lastPrintMs != 0 && now - _lastPrintMs < kPrintIntervalMs) {
         return;
     }
 
     _lastPrintMs = now;
-    const bool onsetVisible = _audioOnsetDetector.onsetDetected() || now < _valOnsetLatchedUntilMs;
-    const bool transientVisible = _audioOnsetDetector.transientDetected() || now < _valTransientLatchedUntilMs;
+    const bool onsetVisible = detectorOnsetDetected() || now < _valOnsetLatchedUntilMs;
+    const bool transientVisible = detectorTransientDetected() || now < _valTransientLatchedUntilMs;
 
     Serial.print("raw:");
     Serial.print(_audioSignal.rawSignal());

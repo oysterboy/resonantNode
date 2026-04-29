@@ -28,5 +28,9 @@ void setup() {
 void loop() {
     app.update();
     // Keep the loop responsive enough that burst edges are not quantized too coarsely.
+#if defined(ANALYZER_MODE)
+    delay(app.loopDelayMs());
+#else
     delay(1);
+#endif
 }

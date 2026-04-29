@@ -37,6 +37,7 @@ private:
     void handleSweepCommand(const char* line);
     void startChirp(unsigned long toneHz, unsigned long durationMs);
     void setMode(EmitterMode mode);
+    void claimExternalControl();
     void configureAuto(unsigned long intervalMs, unsigned long toneHz, unsigned long durationMs);
     void configureSweep(unsigned long startHz, unsigned long stopHz, unsigned long stepHz, unsigned long durationMs, unsigned long pauseMs);
     void advanceSweep(unsigned long now);

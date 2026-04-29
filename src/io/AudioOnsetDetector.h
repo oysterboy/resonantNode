@@ -32,12 +32,20 @@ public:
     void setMaxTransientDurationMs(unsigned long value);
     void setMinTransientPeakStrength(float value);
     void setReleaseDebounceMs(unsigned long value);
+    void setDiagnosticsEnabled(bool enabled);
 
     bool onsetDetected() const;
     float onsetStrength() const;
     bool transientDetected() const;
     float transientStrength() const;
     unsigned long transientDurationMs() const;
+    float onsetDetectionThreshold() const;
+    float onsetReleaseThreshold() const;
+    unsigned long cooldownAfterOnsetMs() const;
+    unsigned long minTransientDurationMs() const;
+    unsigned long maxTransientDurationMs() const;
+    float minTransientPeakStrength() const;
+    unsigned long releaseDebounceMs() const;
 
 private:
     void updateOnsetStage(unsigned long now, float signalMagnitude, bool aboveAttackThreshold, bool onsetCooldownElapsed);
@@ -75,4 +83,5 @@ private:
     unsigned long _peakAcceptedCount = 0;
     unsigned long _statsPrintIntervalMs = 10000; // Report cumulative detector success once every 10 seconds.
     unsigned long _expectedTransientPeriodMs = 2000; // Rough cadence we expect from the external source.
+    bool _diagnosticsEnabled = true;
 };

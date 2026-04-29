@@ -16,6 +16,10 @@ const char* findValue(const char* token) {
 char* nextToken(char*& savePtr) {
     return strtok_r(nullptr, " ", &savePtr);
 }
+
+void sendControlAck(const char* line) {
+    Serial2.println(line);
+}
 }
 
 EmitterApp::EmitterApp(int outputPin, int rxPin, int txPin, unsigned long baudRate)
@@ -50,6 +54,7 @@ void EmitterApp::begin() {
     Serial.print(_autoToneHz);
     Serial.print(" dur_ms=");
     Serial.println(_autoDurationMs);
+
 }
 
 void EmitterApp::update() {
@@ -107,11 +112,13 @@ void EmitterApp::handleLine(const char* line) {
     }
 
     if (strcmp(token, "CHIRP") == 0) {
+        claimExternalControl();
         handleChirpCommand(line);
         return;
     }
 
     if (strcmp(token, "AUTO") == 0 || strcmp(token, "REMOTE") == 0 || strcmp(token, "REMOTE_CONTROL") == 0 || strcmp(token, "MODE") == 0 || strcmp(token, "SWEEP") == 0) {
+        claimExternalControl();
         handleModeCommand(line);
     }
 }
@@ -178,18 +185,28 @@ void EmitterApp::handleModeCommand(const char* line) {
             token = nextToken(savePtr);
         }
 
+        _chirpOutput.stop();
         configureAuto(intervalMs, toneHz, durationMs);
         setMode(EmitterMode::Auto);
         _nextAutoChirpAtMs = millis();
-        Serial.print("EVT emitter_mode mode=");
-        Serial.println(modeName());
+        char modeLine[96];
+        snprintf(modeLine,
+                 sizeof(modeLine),
+                 "OK MODE %s interval=%lu freq=%lu dur=%lu",
+                 modeName(),
+                 _autoIntervalMs,
+                 _autoToneHz,
+                 _autoDurationMs);
+        sendControlAck(modeLine);
         return;
     }
 
     if (strcmp(token, "REMOTE") == 0 || strcmp(token, "REMOTE_CONTROL") == 0) {
+        _chirpOutput.stop();
         setMode(EmitterMode::RemoteControl);
-        Serial.print("EVT emitter_mode mode=");
-        Serial.println(modeName());
+        char modeLine[96];
+        snprintf(modeLine, sizeof(modeLine), "OK MODE %s", modeName());
+        sendControlAck(modeLine);
     }
 }
 
@@ -223,13 +240,26 @@ void EmitterApp::handleSweepCommand(const char* line) {
     }
 
     configureSweep(startHz, stopHz, stepHz, durationMs, pauseMs);
+    _chirpOutput.stop();
     setMode(EmitterMode::Sweep);
     _nextSweepStepAtMs = millis();
-    Serial.print("EVT emitter_mode mode=");
-    Serial.println(modeName());
+    char modeLine[128];
+    snprintf(modeLine,
+             sizeof(modeLine),
+             "OK MODE %s start=%lu stop=%lu step=%lu dur=%lu pause=%lu",
+             modeName(),
+             _sweepStartHz,
+             _sweepStopHz,
+             _sweepStepHz,
+             _sweepDurationMs,
+             _sweepPauseMs);
+    sendControlAck(modeLine);
 }
 
 void EmitterApp::startChirp(unsigned long toneHz, unsigned long durationMs) {
+    if (_chirpOutput.isActive()) {
+        _chirpOutput.stop();
+    }
     _chirpOutput.setToneHz(static_cast<uint32_t>(toneHz));
     _chirpOutput.setTiming(durationMs, 0);
     _chirpOutput.start();
@@ -237,15 +267,28 @@ void EmitterApp::startChirp(unsigned long toneHz, unsigned long durationMs) {
         _nextAutoChirpAtMs = millis() + _autoIntervalMs;
     }
 
-    Serial.print("EVT emitter_chirp_started freq=");
-    Serial.print(toneHz);
-    Serial.print(" dur=");
-    Serial.print(durationMs);
-    Serial.println(" pattern=single");
+    char chirpLine[128];
+    snprintf(chirpLine,
+             sizeof(chirpLine),
+             "OK CHIRP freq=%lu dur=%lu",
+             toneHz,
+             durationMs);
+    sendControlAck(chirpLine);
 }
 
 void EmitterApp::setMode(EmitterMode mode) {
     _mode = mode;
+}
+
+void EmitterApp::claimExternalControl() {
+    if (_mode == EmitterMode::RemoteControl) {
+        return;
+    }
+
+    _chirpOutput.stop();
+    _nextAutoChirpAtMs = millis();
+    _nextSweepStepAtMs = millis();
+    setMode(EmitterMode::RemoteControl);
 }
 
 void EmitterApp::configureAuto(unsigned long intervalMs, unsigned long toneHz, unsigned long durationMs) {

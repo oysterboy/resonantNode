@@ -6,6 +6,9 @@
 #endif
 
 Node::Node(int inputPin, int ledPin, int chirpPin, AudioSourceKind sourceKind)
+    : Node(inputPin, ledPin, chirpPin, -1, sourceKind) {}
+
+Node::Node(int inputPin, int ledPin, int chirpPin, int chirpBtlPin, AudioSourceKind sourceKind)
     : _ledPin(ledPin),
       _analogSource(inputPin),
       _i2sSource(14, 27, 33, 16000, 32),
@@ -16,7 +19,10 @@ Node::Node(int inputPin, int ledPin, int chirpPin, AudioSourceKind sourceKind)
       _audioSignal(_audioSource),
       _audioOnsetDetector(_audioSignal),
       _toneOutput(chirpPin),
-      _chirpOutput(_toneOutput) {}
+      _toneOutputBTL(chirpPin, chirpBtlPin),
+      _chirpOutput(chirpBtlPin >= 0
+                       ? static_cast<ToneOutput&>(_toneOutputBTL)
+                       : static_cast<ToneOutput&>(_toneOutput)) {}
 
 void Node::begin() {
     configureParameters();

@@ -88,13 +88,6 @@ void AudioOnsetDetector::updateTransientStage(unsigned long now, float signalMag
         const bool accepted = durationAccepted && strengthAccepted;
 
         if (accepted) {
-            Serial.print("EVT transient accepted t=");
-            Serial.print(now);
-            Serial.print(" dur=");
-            Serial.print(peakDurationMs);
-            Serial.print(" strength=");
-            Serial.println(_peakStrength);
-
             _peakAcceptedCount++;
             _transientDetected = true;
             _transientStrength = _peakStrength;
@@ -109,6 +102,10 @@ void AudioOnsetDetector::updateTransientStage(unsigned long now, float signalMag
 }
 
 void AudioOnsetDetector::printTransientStatsIfDue(unsigned long now) {
+    if (!_diagnosticsEnabled) {
+        return;
+    }
+
     if (_lastStatsPrintMs == 0 || now - _lastStatsPrintMs >= _statsPrintIntervalMs) {
         const unsigned long elapsedMs = now - _statsStartMs;
         const unsigned long expectedCount = (elapsedMs + (_expectedTransientPeriodMs / 2)) / _expectedTransientPeriodMs;
@@ -148,6 +145,34 @@ unsigned long AudioOnsetDetector::transientDurationMs() const {
     return _transientDurationMs;
 }
 
+float AudioOnsetDetector::onsetDetectionThreshold() const {
+    return _onsetDetectionThreshold;
+}
+
+float AudioOnsetDetector::onsetReleaseThreshold() const {
+    return _onsetReleaseThreshold;
+}
+
+unsigned long AudioOnsetDetector::cooldownAfterOnsetMs() const {
+    return _cooldownAfterOnsetMs;
+}
+
+unsigned long AudioOnsetDetector::minTransientDurationMs() const {
+    return _minTransientDurationMs;
+}
+
+unsigned long AudioOnsetDetector::maxTransientDurationMs() const {
+    return _maxTransientDurationMs;
+}
+
+float AudioOnsetDetector::minTransientPeakStrength() const {
+    return _minTransientPeakStrength;
+}
+
+unsigned long AudioOnsetDetector::releaseDebounceMs() const {
+    return _releaseDebounceMs;
+}
+
 void AudioOnsetDetector::setOnsetDetectionThreshold(float value) {
     _onsetDetectionThreshold = value;
 }
@@ -178,4 +203,8 @@ void AudioOnsetDetector::setMaxTransientDurationMs(unsigned long value) {
 void AudioOnsetDetector::setMinTransientPeakStrength(float value) {
     // Set a floor above the ambient noise peaks we want to ignore.
     _minTransientPeakStrength = value;
+}
+
+void AudioOnsetDetector::setDiagnosticsEnabled(bool enabled) {
+    _diagnosticsEnabled = enabled;
 }

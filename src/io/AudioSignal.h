@@ -18,6 +18,7 @@ public:
     explicit AudioSignal(AudioSource& source);
 
     void begin();
+    void rebase();
     void update();
 
     void setBaselineTrackingQuietThreshold(int value);
@@ -25,6 +26,7 @@ public:
     void setBaselineUpdateFactor(float value);
 
     int rawSignal() const;
+    float baseline() const;
     int centeredSignal() const;
     int signalMagnitude() const;
     int smoothedSignalMagnitude() const;

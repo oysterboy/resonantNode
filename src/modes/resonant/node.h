@@ -4,6 +4,7 @@
 
 #include "../../hal/AudioSourceAnalog.h"
 #include "../../hal/AudioSourceI2S.h"
+#include "../../hal/PiezoToneOutputBTL.h"
 #include "../../hal/PiezoToneOutput.h"
 #include "../../io/AudioSignal.h"
 #include "../../io/AudioOnsetDetector.h"
@@ -34,6 +35,11 @@ public:
          int ledPin,
          int chirpPin,
          AudioSourceKind sourceKind = AudioSourceKind::Analog);
+    Node(int inputPin,
+         int ledPin,
+         int chirpPin,
+         int chirpBtlPin,
+         AudioSourceKind sourceKind = AudioSourceKind::Analog);
 
     void begin();
     void update();
@@ -54,6 +60,7 @@ private:
     AudioOnsetDetector _audioOnsetDetector;
     ResonantBehavior _behavior;
     PiezoToneOutput _toneOutput;
+    PiezoToneOutputBTL _toneOutputBTL;
     ChirpOutput _chirpOutput;
 
     NodeDebug _debug;

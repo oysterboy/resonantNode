@@ -34,6 +34,14 @@ void ChirpOutput::start(ChirpPattern pattern) {
     _toneOutput.toneOn();
 }
 
+void ChirpOutput::stop() {
+    _toneOutput.toneOff();
+    _active = false;
+    _finished = false;
+    _phase = 0;
+    _phaseStartMs = millis();
+}
+
 void ChirpOutput::update() {
     if (!_active) return;
 

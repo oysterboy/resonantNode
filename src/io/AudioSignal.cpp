@@ -5,6 +5,10 @@ AudioSignal::AudioSignal(AudioSource& source)
     : _source(source) {}
 
 void AudioSignal::begin() {
+    rebase();
+}
+
+void AudioSignal::rebase() {
     long sum = 0;
     for (int i = 0; i < 200; i++) {
         sum += _source.readSample();
@@ -12,6 +16,9 @@ void AudioSignal::begin() {
     }
     _baseline = sum / 200.0f;
     _smoothedSignalMagnitude = 0.0f;
+    _rawSignal = 0;
+    _centeredSignal = 0;
+    _signalMagnitude = 0;
 }
 
 void AudioSignal::update() {
@@ -49,6 +56,10 @@ void AudioSignal::setBaselineUpdateFactor(float value) {
 
 int AudioSignal::rawSignal() const {
     return _rawSignal;
+}
+
+float AudioSignal::baseline() const {
+    return _baseline;
 }
 
 int AudioSignal::centeredSignal() const {

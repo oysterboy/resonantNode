@@ -8,7 +8,8 @@ public:
     explicit AudioSourceAnalog(int pin);
 
     void begin() override;
-    int readSample() override;
+    bool available() override;
+    bool readSample(int& sample, uint32_t& sampleTimeUs) override;
 
 private:
     AnalogInHal _analogIn;

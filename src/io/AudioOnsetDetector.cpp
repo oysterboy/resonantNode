@@ -1,66 +1,78 @@
 #include "io/AudioOnsetDetector.h"
 #include <Arduino.h>
 
-AudioOnsetDetector::AudioOnsetDetector(AudioSignal& audioSignal)
-    : _audioSignal(audioSignal) {}
+AudioOnsetDetector::AudioOnsetDetector() = default;
 
 void AudioOnsetDetector::begin() {
     resetState();
-    _statsStartMs = millis();
-    _lastStatsPrintMs = 0;
+    _statsStartUs = micros();
+    _lastStatsPrintUs = 0;
     _peakAcceptedCount = 0;
 }
 
 void AudioOnsetDetector::resetState() {
     _onsetDetected = false;
     _onsetStrength = 0.0f;
-    _lastOnsetMs = 0;
+    _lastOnsetUs = 0;
+    _lastOnsetRejectReason = OnsetRejectReason::None;
 
     _transientDetected = false;
     _transientStrength = 0.0f;
     _transientDurationMs = 0;
+    _lastTransientRejectReason = TransientRejectReason::None;
+    _lastTransientRejectedDurationMs = 0;
+    _lastTransientRejectedStrength = 0.0f;
     _peakActive = false;
-    _peakStartedMs = 0;
-    _releaseCandidateStartedMs = 0;
+    _peakStartedUs = 0;
+    _releaseCandidateStartedUs = 0;
     _peakStrength = 0.0f;
 }
 
-void AudioOnsetDetector::update(unsigned long now) {
+void AudioOnsetDetector::update(float signalMagnitude, uint32_t sampleTimeUs) {
+    const unsigned long nowUs = sampleTimeUs;
+    const unsigned long nowMs = nowUs / 1000UL;
     _onsetDetected = false;
     _onsetStrength = 0.0f;
 
     _transientDetected = false;
     _transientStrength = 0.0f;
 
-    const float signalMagnitude = _audioSignal.signalMagnitude();
     const bool aboveAttackThreshold = signalMagnitude > _onsetDetectionThreshold;
     const bool aboveReleaseThreshold = signalMagnitude > _onsetReleaseThreshold;
-    const bool onsetCooldownElapsed = now - _lastOnsetMs >= _cooldownAfterOnsetMs;
+    const unsigned long cooldownAfterOnsetUs = _cooldownAfterOnsetMs * 1000UL;
+    const bool onsetCooldownElapsed = nowUs - _lastOnsetUs >= cooldownAfterOnsetUs;
 
     // ONSET STAGE
-    updateOnsetStage(now, signalMagnitude, aboveAttackThreshold, onsetCooldownElapsed);
+    updateOnsetStage(nowUs, signalMagnitude, aboveAttackThreshold, onsetCooldownElapsed);
 
     // TRANSIENT STAGE
-    updateTransientStage(now, signalMagnitude, aboveReleaseThreshold);
+    updateTransientStage(nowUs, signalMagnitude, aboveReleaseThreshold);
 
-    printTransientStatsIfDue(now);
+    printTransientStatsIfDue(nowUs);
 }
 
-void AudioOnsetDetector::updateOnsetStage(unsigned long now, float signalMagnitude, bool aboveAttackThreshold, bool onsetCooldownElapsed) {
+void AudioOnsetDetector::updateOnsetStage(unsigned long nowUs, float signalMagnitude, bool aboveAttackThreshold, bool onsetCooldownElapsed) {
     // Use raw magnitude for the edge so short bursts are not delayed by smoothing.
     // The separate release threshold keeps the peak stable when the signal wobbles near the edge.
     if (aboveAttackThreshold && !_peakActive && onsetCooldownElapsed) {
         _peakActive = true;
-        _peakStartedMs = now;
+        _peakStartedUs = nowUs;
         _peakStrength = signalMagnitude;
 
         _onsetDetected = true;
         _onsetStrength = signalMagnitude;
-        _lastOnsetMs = now;
+        _lastOnsetUs = nowUs;
+        _lastOnsetRejectReason = OnsetRejectReason::None;
+    } else if (!aboveAttackThreshold) {
+        _lastOnsetRejectReason = OnsetRejectReason::BelowThreshold;
+    } else if (_peakActive) {
+        _lastOnsetRejectReason = OnsetRejectReason::PeakActive;
+    } else if (!onsetCooldownElapsed) {
+        _lastOnsetRejectReason = OnsetRejectReason::CooldownActive;
     }
 }
 
-void AudioOnsetDetector::updateTransientStage(unsigned long now, float signalMagnitude, bool aboveReleaseThreshold) {
+void AudioOnsetDetector::updateTransientStage(unsigned long nowUs, float signalMagnitude, bool aboveReleaseThreshold) {
     if (_peakActive && signalMagnitude > _peakStrength) {
         _peakStrength = signalMagnitude;
     }
@@ -69,19 +81,22 @@ void AudioOnsetDetector::updateTransientStage(unsigned long now, float signalMag
     // chopped into multiple timing buckets by ADC/loop quantization.
     if (_peakActive) {
         if (!aboveReleaseThreshold) {
-            if (_releaseCandidateStartedMs == 0) {
-                _releaseCandidateStartedMs = now;
+            if (_releaseCandidateStartedUs == 0) {
+                _releaseCandidateStartedUs = nowUs;
             }
         } else {
-            _releaseCandidateStartedMs = 0;
+            _releaseCandidateStartedUs = 0;
         }
     }
 
     // Close the peak only after the signal has stayed below the release
     // threshold for long enough to count as a real end of burst.
-    if (_peakActive && _releaseCandidateStartedMs != 0 && now - _releaseCandidateStartedMs >= _releaseDebounceMs) {
-        const unsigned long peakDurationMs = now - _peakStartedMs;
-        const bool durationAccepted = peakDurationMs >= _minTransientDurationMs && peakDurationMs <= _maxTransientDurationMs;
+    const unsigned long releaseDebounceUs = _releaseDebounceMs * 1000UL;
+    if (_peakActive && _releaseCandidateStartedUs != 0 && nowUs - _releaseCandidateStartedUs >= releaseDebounceUs) {
+        const unsigned long peakDurationUs = nowUs - _peakStartedUs;
+        const unsigned long minTransientDurationUs = _minTransientDurationMs * 1000UL;
+        const unsigned long maxTransientDurationUs = _maxTransientDurationMs * 1000UL;
+        const bool durationAccepted = peakDurationUs >= minTransientDurationUs && peakDurationUs <= maxTransientDurationUs;
         // Duration alone is not enough: weak ambient crossings can still last
         // long enough to look valid, so require a minimum peak strength too.
         const bool strengthAccepted = _peakStrength >= _minTransientPeakStrength;
@@ -91,28 +106,43 @@ void AudioOnsetDetector::updateTransientStage(unsigned long now, float signalMag
             _peakAcceptedCount++;
             _transientDetected = true;
             _transientStrength = _peakStrength;
-            _transientDurationMs = peakDurationMs;
+            _transientDurationMs = peakDurationUs / 1000UL;
+            _lastTransientRejectReason = TransientRejectReason::None;
+            _lastTransientRejectedDurationMs = 0;
+            _lastTransientRejectedStrength = 0.0f;
+        } else {
+            _lastTransientRejectedDurationMs = peakDurationUs / 1000UL;
+            _lastTransientRejectedStrength = _peakStrength;
+            if (!durationAccepted) {
+                _lastTransientRejectReason = peakDurationUs < minTransientDurationUs
+                                                ? TransientRejectReason::DurationTooShort
+                                                : TransientRejectReason::DurationTooLong;
+            } else if (!strengthAccepted) {
+                _lastTransientRejectReason = TransientRejectReason::StrengthTooLow;
+            } else {
+                _lastTransientRejectReason = TransientRejectReason::None;
+            }
         }
 
         _peakActive = false;
-        _peakStartedMs = 0;
-        _releaseCandidateStartedMs = 0;
+        _peakStartedUs = 0;
+        _releaseCandidateStartedUs = 0;
         _peakStrength = 0.0f;
     }
 }
 
-void AudioOnsetDetector::printTransientStatsIfDue(unsigned long now) {
+void AudioOnsetDetector::printTransientStatsIfDue(unsigned long nowUs) {
     if (!_diagnosticsEnabled) {
         return;
     }
 
-    if (_lastStatsPrintMs == 0 || now - _lastStatsPrintMs >= _statsPrintIntervalMs) {
-        const unsigned long elapsedMs = now - _statsStartMs;
+    if (_lastStatsPrintUs == 0 || nowUs - _lastStatsPrintUs >= _statsPrintIntervalMs * 1000UL) {
+        const unsigned long elapsedMs = (nowUs - _statsStartUs) / 1000UL;
         const unsigned long expectedCount = (elapsedMs + (_expectedTransientPeriodMs / 2)) / _expectedTransientPeriodMs;
         const unsigned long successRate = expectedCount > 0 ? ((_peakAcceptedCount * 100UL) / expectedCount) : 0;
 
         Serial.print("EVT transient success t=");
-        Serial.print(now);
+        Serial.print(nowUs / 1000UL);
         Serial.print(" accepted=");
         Serial.print(_peakAcceptedCount);
         Serial.print(" expected=");
@@ -121,7 +151,7 @@ void AudioOnsetDetector::printTransientStatsIfDue(unsigned long now) {
         Serial.print(successRate);
         Serial.println("%");
 
-        _lastStatsPrintMs = now;
+        _lastStatsPrintUs = nowUs;
     }
 }
 
@@ -131,6 +161,21 @@ bool AudioOnsetDetector::onsetDetected() const {
 
 float AudioOnsetDetector::onsetStrength() const {
     return _onsetStrength;
+}
+
+const char* AudioOnsetDetector::lastOnsetRejectReasonName() const {
+    switch (_lastOnsetRejectReason) {
+        case OnsetRejectReason::None:
+            return "none";
+        case OnsetRejectReason::BelowThreshold:
+            return "below_threshold";
+        case OnsetRejectReason::CooldownActive:
+            return "cooldown_active";
+        case OnsetRejectReason::PeakActive:
+            return "peak_active";
+    }
+
+    return "none";
 }
 
 bool AudioOnsetDetector::transientDetected() const {
@@ -143,6 +188,35 @@ float AudioOnsetDetector::transientStrength() const {
 
 unsigned long AudioOnsetDetector::transientDurationMs() const {
     return _transientDurationMs;
+}
+
+bool AudioOnsetDetector::peakActive() const {
+    return _peakActive;
+}
+
+const char* AudioOnsetDetector::lastTransientRejectReasonName() const {
+    switch (_lastTransientRejectReason) {
+        case TransientRejectReason::None:
+            return "none";
+        case TransientRejectReason::DurationTooShort:
+            return "duration_too_short";
+        case TransientRejectReason::DurationTooLong:
+            return "duration_too_long";
+        case TransientRejectReason::StrengthTooLow:
+            return "strength_too_low";
+        case TransientRejectReason::PeakStillActive:
+            return "peak_still_active";
+    }
+
+    return "none";
+}
+
+unsigned long AudioOnsetDetector::lastTransientRejectedDurationMs() const {
+    return _lastTransientRejectedDurationMs;
+}
+
+float AudioOnsetDetector::lastTransientRejectedStrength() const {
+    return _lastTransientRejectedStrength;
 }
 
 float AudioOnsetDetector::onsetDetectionThreshold() const {

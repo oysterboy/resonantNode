@@ -1,109 +1,185 @@
 # ResonantNode Firmware Architecture
 Version: current snapshot
-Status: implemented architecture for the current ESP32 prototype
+Status: implemented multi-runtime architecture
 
 ---
 
 ## STRICT vs VOLATILE
 
 ### STRICT
-These parts reflect current code reality and should stay aligned closely with the implementation.
+Reflects current code reality. Keep aligned with implementation.
 
 ### VOLATILE
-These parts describe intended evolution or planned features.
+Future direction, experimental feature, or planned refactor.
 
 ---
 
-## 1. Purpose [STRICT]
+## 1. Current Runtime Modes [STRICT]
 
-Defines the current firmware architecture for the project.
+The firmware now supports multiple runtime modes:
 
----
+```text
+modes/resonant
+modes/analyzer
+modes/emitter
+```
 
-## 2. Current Layer Overview [STRICT]
+### resonant
+Autonomous node runtime.
 
-1. `AudioSource`
-2. `AudioSignal`
-3. `AudioOnsetDetector`
-4. `ResonantBehavior`
-5. `ChirpOutput`
-6. `ToneOutput`
-7. `Node`
-8. `NodeDebug`
-9. `AnalyzerApp`
-10. `EmitterApp`
+Uses:
+- AudioSource
+- AudioSignal
+- AudioOnsetDetector
+- ResonantBehavior
+- ChirpOutput
 
----
+### analyzer
+Measurement / test runtime.
 
-## 3. Current Runtime Modes [STRICT]
+Uses:
+- AudioSource
+- AudioSignal
+- AudioOnsetDetector
+- optional AudioFrequencyDetector
 
-The current top-level runtime modes are:
+Purpose:
+- observe real signal path
+- log values/events
+- control external emitter
 
-- resonant node mode
-- analyzer mode
-- emitter mode
+### emitter
+Controlled output runtime.
 
-`main.cpp` selects the mode at compile time.
+Uses:
+- ChirpOutput
+- ToneOutput / piezo output HAL
 
----
-
-## 4. Current Data Flow [STRICT]
-
-Resonant mode:
-
-AudioSource -> AudioSignal -> AudioOnsetDetector -> ResonantBehavior -> ChirpOutput -> ToneOutput
-
-Analyzer mode:
-
-AudioSource -> AudioSignal -> AudioOnsetDetector
-
-Emitter mode:
-
-Serial2 control -> ChirpOutput -> ToneOutput
+Purpose:
+- emit known test chirps
+- provide repeatable signal for Analyzer
 
 ---
 
-## 5. AudioSource [STRICT]
+## 2. Current Core Pipeline [STRICT]
 
-Current contract:
+```text
+AudioSource
+→ AudioSignal
+→ AudioOnsetDetector
+→ ResonantBehavior
+→ ChirpOutput
+```
 
+Node/runtime updates and connects these stages.
+
+---
+
+## 3. Output Pipeline [STRICT]
+
+```text
+ChirpOutput
+→ ToneOutput
+→ PiezoToneOutput / PiezoToneOutputBTL
+```
+
+### ChirpOutput
+Owns:
+- chirp pattern
+- click timing
+- chirp lifecycle
+
+### ToneOutput / PiezoToneOutput
+Owns:
+- PWM / BTL hardware output
+- tone generation primitive
+
+ChirpOutput decides waveform structure.  
+ToneOutput implements electrical output.
+
+---
+
+## 4. AudioSource [STRICT]
+
+Provides raw audio samples.
+
+Public contract:
 - `begin()`
 - `readSample()`
 
 Implementations:
-
 - `AudioSourceAnalog`
 - `AudioSourceI2S`
 
+Current model:
+```text
+sample-based
+```
+
+Future model:
+```text
+window / stream capable
+```
+
+but not required yet.
+
 ---
 
-## 6. AudioSignal [STRICT]
+## 5. AudioSignal [STRICT]
+
+Owns continuous signal interpretation.
 
 Responsibilities:
-
 - baseline tracking
 - centered signal
 - magnitude
 - smoothing
 
 Outputs:
-
 - `rawSignal()`
 - `centeredSignal()`
 - `signalMagnitude()`
 - `smoothedSignalMagnitude()`
 
+AudioSignal does not detect events.
+
 ---
 
-## 7. AudioOnsetDetector [STRICT]
+## 6. AudioOnsetDetector [STRICT]
 
-Responsibilities:
+Current detector layer.
 
-- onset detection
-- transient validation
+Despite the name, it currently contains two conceptual stages:
 
-Outputs:
+```text
+onset stage
+→ transient qualification stage
+```
 
+### Onset stage
+Detects:
+- threshold crossing
+- onset strength
+- onset cooldown
+
+Answers:
+```text
+did something begin?
+```
+
+### Transient stage
+Qualifies:
+- peak duration
+- release threshold
+- release debounce
+- peak strength
+
+Answers:
+```text
+did a short event occur?
+```
+
+Current outputs:
 - `onsetDetected()`
 - `onsetStrength()`
 - `transientDetected()`
@@ -112,142 +188,318 @@ Outputs:
 
 ---
 
-## 8. ResonantBehavior [STRICT]
+## 7. Future Detector Split [VOLATILE]
 
-Responsibilities:
+Current combined detector may later split into:
 
-- state machine
-- timing
-- chirp decision
+```text
+AudioOnsetDetector
+→ AudioTransientDetector
+```
+
+Reason:
+- onset = start moment
+- transient = qualified short-lived event
+
+Do not split until the benefit is clear.
+
+Current implementation may keep both inside `AudioOnsetDetector`.
+
+---
+
+## 8. AudioFrequencyDetector [VOLATILE]
+
+`AudioFrequencyDetector` exists as an experimental / optional feature detector.
+
+It should be treated as parallel to onset/transient detection:
+
+```text
+AudioSignal
+  ├─ AudioOnsetDetector
+  └─ AudioFrequencyDetector
+```
+
+It should not decide chirp validity on its own.
+
+Future use:
+```text
+transient evidence + frequency evidence → ChirpQualifier
+```
+
+Frequency detection is a feature, not the full detector.
+
+---
+
+## 9. ResonantBehavior [STRICT]
+
+Owns autonomous behavior.
 
 Consumes:
-
 - `transientDetected`
 - `transientStrength`
 
----
-
-## 9. ChirpOutput [STRICT]
-
 Responsibilities:
+- state machine
+- wait after transient
+- chirp request
+- refractory after emit
+- idle chirp timing
+- self-chirp suppression
 
-- chirp timing
-- sequencing
-- lifecycle
-
-Current output behavior:
-
-- single-beep placeholder
-
----
-
-## 10. ToneOutput [STRICT]
-
-Responsibilities:
-
-- shared tone-style hardware output
-
-Implementations:
-
-- `PiezoToneOutput`
-- `PiezoToneOutputBTL`
+Does not:
+- compute signal features
+- generate waveforms
+- know hardware details
 
 ---
 
-## 11. Node [STRICT]
+## 10. ChirpOutput [STRICT]
+
+Owns chirp action execution.
 
 Responsibilities:
+- pattern timing
+- chirp lifecycle
+- `start()`
+- `update()`
+- `isActive()`
+- `finished()`
 
-- orchestrate the resonant pipeline
-- forward lifecycle events
+Does not decide when to chirp.
+
+---
+
+## 11. Node / Runtime Role [STRICT]
+
+Runtime modes orchestrate components.
+
+Responsibilities:
+- construct components
+- update pipeline in order
+- forward detector outputs to behavior
+- forward behavior action requests to output
+- forward output lifecycle back to behavior
 - coordinate debug
 
----
-
-## 12. NodeDebug [STRICT]
-
-Responsibilities:
-
-- value output
-- event output
-- timing
-- LED output
+Runtime modes may temporarily own:
+- parameter presets
+- debug selection
+- source/output configuration
 
 ---
 
-## 13. AnalyzerApp [STRICT]
+## 12. Analyzer / Emitter Test Architecture [STRICT]
 
-Responsibilities:
+Analyzer and Emitter are implemented runtime modes.
 
-- observe-only signal-chain analysis
-- print detector measurements
+### Analyzer
+Purpose:
+- observe current input/detector chain
+- measure detection quality
+- compare onset vs transient timing
+- control emitter
 
-Does not depend on:
+### Emitter
+Purpose:
+- emit repeatable chirps
+- support controlled tests
 
-- `ResonantBehavior`
-- `ChirpOutput`
-- `Node`
+Current direction:
+```text
+Analyzer --Serial2--> Emitter
+```
 
----
-
-## 14. EmitterApp [STRICT]
-
-Responsibilities:
-
-- receive serial control messages
-- trigger chirp output
-
-Current note:
-
-- output is a single-beep placeholder
-
----
-
-## 15. Next Implementation Steps [VOLATILE]
-
-### 15.1 Parameter grouping cleanup
-
-- keep tuning grouped inside the owning classes
-- reduce duplicated tuning blocks between modes where practical
-- avoid introducing a global config system
-
-### 15.2 Analyzer compare mode
-
-- allow analyzer to send control messages to a separate emitter mode
-- compare measured response against expected response
-- keep detector math out of analyzer control logic
-
-### 15.3 Emitter protocol evolution
-
-- keep the current single-beep placeholder working
-- evolve the serial control protocol
-- support richer chirp profiles later
-- keep analyzer/emitter messaging small and stable
-
-### 15.4 Output backends
-
-- keep tone-style GPIO piezo output working
-- keep BTL piezo output working
-- add sample-style output later if DAC or I2S becomes the target
-- do not force DAC/I2S into the tone-output interface
-
-### 15.5 Future detector split
-
-- consider splitting `AudioOnsetDetector` into `AudioOnset` and `AudioTransient`
-- only split files if it stays simple and preserves the current public API
-
-### 15.6 Other deferred work
-
-- test-emitter compatibility
-- window-based processing
-- param / OTA system
+Analyzer should measure:
+- trial start
+- command sent
+- onset detected
+- transient accepted
+- false/late detections
 
 ---
 
-## 16. Summary [STRICT]
+## 13. Toward Real Sound Detection [VOLATILE]
 
-The current architecture is:
+Current detector is event-based, not full sound classification.
 
-AudioSource -> AudioSignal -> AudioOnsetDetector -> ResonantBehavior -> ChirpOutput -> ToneOutput
+Future sound detection path:
 
-with separate `AnalyzerApp` and `EmitterApp` runtime modes alongside the resonant node mode.
+```text
+sample
+→ window
+→ features
+→ pattern detection
+→ evaluation / qualifier
+→ behavior
+```
+
+### 13.1 Windowing
+Move from single sample updates toward short analysis windows.
+
+Possible window sizes:
+- short windows for onsets
+- longer windows for frequency / texture
+
+Windowing enables:
+- RMS energy
+- spectral features
+- robust onset estimates
+- band-energy estimates
+
+### 13.2 Feature extraction
+Possible features:
+- energy / RMS
+- onset strength
+- transient duration
+- peak strength
+- zero-crossing rate
+- band energy
+- frequency confidence
+- spectral centroid / bandwidth
+
+Feature detectors should stay independent.
+
+### 13.3 Pattern detection
+Detect structures over time:
+
+```text
+onset cluster
+transient cluster
+burst timing
+click count
+gap ranges
+```
+
+This is the path toward chirp detection.
+
+### 13.4 Evaluation / Qualifier
+Future `ChirpQualifier` or `SoundEventEvaluator` combines features.
+
+It decides:
+
+```text
+NONE
+VALID_CHIRP
+AMBIGUOUS
+INVALID
+```
+
+Inputs may include:
+- onset cluster
+- transient timing
+- frequency/band confidence
+- event density
+- quiet window
+- duration constraints
+
+Qualifier owns classification.  
+Behavior owns response.
+
+---
+
+## 14. Future Chirp Detection Architecture [VOLATILE]
+
+Future intended chain:
+
+```text
+AudioSignal
+  ├─ AudioOnsetDetector
+  ├─ AudioTransientDetector
+  └─ AudioFrequencyDetector
+        ↓
+ChirpQualifier / SoundEventEvaluator
+        ↓
+ResonantBehavior
+```
+
+Principle:
+- detectors extract features
+- qualifier evaluates pattern
+- behavior decides response
+
+---
+
+## 15. Parameter Ownership [STRICT + VOLATILE]
+
+Current params are grouped locally by class.
+
+### AudioSignal
+- baseline tracking
+- smoothing
+- signal scaling
+
+### AudioOnsetDetector
+- onset threshold
+- release threshold
+- cooldown
+- transient duration min/max
+- release debounce
+- peak strength threshold
+
+### AudioFrequencyDetector [VOLATILE]
+- target frequency
+- tolerance / band
+- threshold
+- window size
+
+### ResonantBehavior
+- wait after transient
+- refractory after emit
+- idle timeout
+- self-chirp suppression
+
+### ChirpOutput
+- click duration
+- gap duration
+- pattern
+- carrier frequency
+
+Future:
+- expose params via setParam / OTA
+- do not centralize prematurely
+
+---
+
+## 16. Summary
+
+Current implemented architecture:
+
+```text
+AudioSource
+→ AudioSignal
+→ AudioOnsetDetector
+→ ResonantBehavior
+→ ChirpOutput
+```
+
+Current runtime modes:
+
+```text
+resonant
+analyzer
+emitter
+```
+
+Current detector reality:
+
+```text
+AudioOnsetDetector = onset + transient qualification
+```
+
+Future sound detection path:
+
+```text
+windowing
+→ features
+→ pattern detection
+→ evaluation
+```
+
+Core rule:
+
+```text
+detectors extract features
+qualifier evaluates meaning
+behavior decides response
+runtime executes
+```

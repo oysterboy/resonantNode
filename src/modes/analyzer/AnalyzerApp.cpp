@@ -4,6 +4,8 @@
 #include <string.h>
 
 namespace {
+constexpr int kMaxSamplesPerLoop = 128;
+
 bool startsWithToken(const char* line, const char* token) {
     return strncmp(line, token, strlen(token)) == 0;
 }
@@ -40,6 +42,7 @@ bool waitForEmitterAck(const char* expectedPrefix, unsigned long timeoutMs) {
     char line[96];
     size_t lineLength = 0;
 
+    // Wait synchronously for the emitter to acknowledge remote mode.
     while (millis() - startMs < timeoutMs) {
         while (Serial2.available() > 0) {
             const char c = static_cast<char>(Serial2.read());
@@ -67,6 +70,10 @@ bool waitForEmitterAck(const char* expectedPrefix, unsigned long timeoutMs) {
 }
 }
 
+// -----------------------------------------------------------------------------
+// Construction and setup
+// -----------------------------------------------------------------------------
+
 AnalyzerApp::AnalyzerApp(int inputPin, AudioSourceKind sourceKind)
     : _inputPin(inputPin),
       _analogSource(inputPin),
@@ -76,17 +83,18 @@ AnalyzerApp::AnalyzerApp(int inputPin, AudioSourceKind sourceKind)
                        ? static_cast<AudioSource&>(_i2sSource)
                        : static_cast<AudioSource&>(_analogSource)),
       _audioSignal(_audioSource),
-      _audioOnsetDetector(_audioSignal),
-      _audioFrequencyDetector(_audioSignal) {}
+      _audioOnsetDetector() {}
 
 void AnalyzerApp::begin() {
     beginEmitterControl();
+    const unsigned long controlClaimSendMs = millis();
     sendEmitterCommand("MODE REMOTE");
     const bool emitterAcked = waitForEmitterAck("OK MODE REMOTE", 1500);
     if (!emitterAcked) {
         Serial.println("EVT analyzer_control_claim timeout");
     } else {
-        Serial.println("EVT analyzer_control_claim acked");
+        Serial.print("EVT analyzer_control_claim acked_ms=");
+        Serial.println(millis() - controlClaimSendMs);
     }
 
     delay(500);
@@ -96,8 +104,6 @@ void AnalyzerApp::begin() {
     _audioSignal.begin();
     _audioOnsetDetector.begin();
     _audioOnsetDetector.setDiagnosticsEnabled(false);
-    _audioFrequencyDetector.begin();
-    _audioFrequencyDetector.setDiagnosticsEnabled(false);
     _lastPrintMs = 0;
     _usbLineLength = 0;
     _usbLineBuffer[0] = '\0';
@@ -108,7 +114,7 @@ void AnalyzerApp::begin() {
     _controlClaimAtMs = millis();
 
     Serial.println("EVT analyzer_ready");
-    Serial.println("EVT analyzer_help type='HELP', 'BASE', 'TEST', 'SEQ', 'CAP', 'TUNE', 'DET AMP', 'DET FREQ', 'VAL', 'VAL OFF'");
+    Serial.println("EVT analyzer_help type='HELP', 'BASE', 'TEST', 'SEQ', 'CAP', 'DET AMP', 'VAL', 'VAL OFF'");
 }
 
 void AnalyzerApp::configureParameters() {
@@ -119,42 +125,6 @@ void AnalyzerApp::configureParameters() {
     } else {
         configureAnalogParameters();
     }
-
-    configureFrequencyDetector();
-    configureAmplitudeDetector();
-}
-
-void AnalyzerApp::configureAmplitudeDetector() {
-    if (_sourceKind == AudioSourceKind::I2S) {
-        _audioOnsetDetector.setOnsetDetectionThreshold(20.0f);
-        _audioOnsetDetector.setOnsetReleaseThreshold(16.0f);
-        _audioOnsetDetector.setCooldownAfterOnsetMs(50);
-        _audioOnsetDetector.setReleaseDebounceMs(15);
-        _audioOnsetDetector.setMinTransientDurationMs(40);
-        _audioOnsetDetector.setMaxTransientDurationMs(190);
-        _audioOnsetDetector.setMinTransientPeakStrength(35.0f);
-    } else {
-        _audioOnsetDetector.setOnsetDetectionThreshold(75.0f);
-        _audioOnsetDetector.setOnsetReleaseThreshold(68.0f);
-        _audioOnsetDetector.setCooldownAfterOnsetMs(50);
-        _audioOnsetDetector.setReleaseDebounceMs(20);
-        _audioOnsetDetector.setMinTransientDurationMs(50);
-        _audioOnsetDetector.setMaxTransientDurationMs(190);
-        _audioOnsetDetector.setMinTransientPeakStrength(180.0f);
-    }
-}
-
-void AnalyzerApp::configureFrequencyDetector() {
-    _audioFrequencyDetector.setTargetFrequencyHz(3200);
-    _audioFrequencyDetector.setSampleRateHz(_sourceKind == AudioSourceKind::I2S ? 16000 : 8000);
-    _audioFrequencyDetector.setWindowSizeSamples(64);
-    _audioFrequencyDetector.setOnsetDetectionThreshold(120.0f);
-    _audioFrequencyDetector.setOnsetReleaseThreshold(90.0f);
-    _audioFrequencyDetector.setCooldownAfterOnsetMs(50);
-    _audioFrequencyDetector.setReleaseDebounceMs(15);
-    _audioFrequencyDetector.setMinTransientDurationMs(40);
-    _audioFrequencyDetector.setMaxTransientDurationMs(190);
-    _audioFrequencyDetector.setMinTransientPeakStrength(120.0f);
 }
 
 void AnalyzerApp::configureSharedParameters() {
@@ -164,38 +134,96 @@ void AnalyzerApp::configureSharedParameters() {
 
 void AnalyzerApp::configureAnalogParameters() {
     _audioSignal.setBaselineTrackingQuietThreshold(40);
-    _audioOnsetDetector.setOnsetDetectionThreshold(75.0f);
-    _audioOnsetDetector.setOnsetReleaseThreshold(68.0f);
-    _audioOnsetDetector.setCooldownAfterOnsetMs(50);
-    _audioOnsetDetector.setReleaseDebounceMs(20);
-    _audioOnsetDetector.setMinTransientDurationMs(50);
-    _audioOnsetDetector.setMaxTransientDurationMs(190);
-    _audioOnsetDetector.setMinTransientPeakStrength(180.0f);
+    _audioOnsetDetector.setOnsetDetectionThreshold(36.0f);
+    _audioOnsetDetector.setOnsetReleaseThreshold(26.0f);
+    _audioOnsetDetector.setCooldownAfterOnsetMs(300);
+    _audioOnsetDetector.setReleaseDebounceMs(30);
+    _audioOnsetDetector.setMinTransientDurationMs(60);
+    _audioOnsetDetector.setMaxTransientDurationMs(240);
+    _audioOnsetDetector.setMinTransientPeakStrength(40.0f);
 }
 
 void AnalyzerApp::configureI2SParameters() {
     _audioSignal.setBaselineTrackingQuietThreshold(20);
-    _audioOnsetDetector.setOnsetDetectionThreshold(20.0f);
-    _audioOnsetDetector.setOnsetReleaseThreshold(16.0f);
-    _audioOnsetDetector.setCooldownAfterOnsetMs(50);
-    _audioOnsetDetector.setReleaseDebounceMs(15);
-    _audioOnsetDetector.setMinTransientDurationMs(40);
-    _audioOnsetDetector.setMaxTransientDurationMs(190);
-    _audioOnsetDetector.setMinTransientPeakStrength(35.0f);
+    _audioOnsetDetector.setOnsetDetectionThreshold(36.0f);
+    _audioOnsetDetector.setOnsetReleaseThreshold(26.0f);
+    _audioOnsetDetector.setCooldownAfterOnsetMs(300);
+    _audioOnsetDetector.setReleaseDebounceMs(30);
+    _audioOnsetDetector.setMinTransientDurationMs(60);
+    _audioOnsetDetector.setMaxTransientDurationMs(240);
+    _audioOnsetDetector.setMinTransientPeakStrength(40.0f);
 }
+
+// -----------------------------------------------------------------------------
+// Main runtime loop
+// -----------------------------------------------------------------------------
 
 void AnalyzerApp::update() {
     const unsigned long now = millis();
 
-    _audioSignal.update();
-    _audioOnsetDetector.update(now);
-    _audioFrequencyDetector.update(now);
-
-    if (detectorOnsetDetected()) {
-        _valOnsetLatchedUntilMs = now + 250;
+    if (_sequenceTest.active && _sequenceTest.currentTrial > 0 && !_audioSource.available()) {
+        _sequenceTest.emptySourceLoops++;
     }
-    if (detectorTransientDetected()) {
-        _valTransientLatchedUntilMs = now + 250;
+
+    int processedSamples = 0;
+    while (processedSamples < kMaxSamplesPerLoop && _audioSource.available()) {
+        int sample = 0;
+        uint32_t sampleTimeUs = 0;
+        if (!_audioSource.readSample(sample, sampleTimeUs)) {
+            break;
+        }
+        const unsigned long sampleTimeMs = sampleTimeUs / 1000UL;
+        _audioSignal.update(sample, sampleTimeUs);
+        _audioOnsetDetector.update(static_cast<float>(_audioSignal.signalMagnitude()), sampleTimeUs);
+
+        // Keep the VAL view visible long enough for short transients to be human-readable.
+        if (detectorOnsetDetected()) {
+            _valOnsetLatchedUntilMs = sampleTimeMs + 250;
+        }
+        if (detectorTransientDetected()) {
+            _valTransientLatchedUntilMs = sampleTimeMs + 250;
+        }
+        if (_sequenceTest.active && _sequenceTest.currentTrial > 0) {
+            if (detectorOnsetDetected()) {
+                _sequenceTest.currentTrialDiagnostics.onsetSeen = true;
+                if (_sequenceTest.currentTrialDiagnostics.firstOnsetMs == 0) {
+                    _sequenceTest.currentTrialDiagnostics.firstOnsetMs = sampleTimeMs;
+                }
+                _sequenceTest.currentTrialDiagnostics.lastOnsetMs = sampleTimeMs;
+                if (_sequenceTest.currentTrialOnsetDetectedMs == 0) {
+                    _sequenceTest.currentTrialOnsetDetectedMs = sampleTimeMs;
+                }
+            } else {
+                const char* onsetRejectReason = detectorOnsetRejectReasonName();
+                if (strcmp(onsetRejectReason, "below_threshold") == 0) {
+                    _sequenceTest.currentTrialDiagnostics.onsetRejectBelowThreshold++;
+                } else if (strcmp(onsetRejectReason, "peak_active") == 0) {
+                    _sequenceTest.currentTrialDiagnostics.onsetRejectPeakActive++;
+                } else if (strcmp(onsetRejectReason, "cooldown_active") == 0) {
+                    _sequenceTest.currentTrialDiagnostics.onsetRejectCooldown++;
+                } else if (strcmp(onsetRejectReason, "none") != 0) {
+                    _sequenceTest.currentTrialDiagnostics.onsetRejectOther++;
+                }
+
+                if (strcmp(onsetRejectReason, "none") != 0) {
+                    if (_sequenceTest.currentTrialDiagnostics.firstOnsetRejectMs == 0) {
+                        _sequenceTest.currentTrialDiagnostics.firstOnsetRejectMs = sampleTimeMs;
+                    }
+                    _sequenceTest.currentTrialDiagnostics.lastOnsetRejectMs = sampleTimeMs;
+                }
+            }
+        }
+
+        if (_sequenceTest.active && detectorTransientDetected()) {
+            handleSequenceTransient(sampleTimeMs);
+        }
+
+        processedSamples++;
+    }
+
+    _sequenceTest.samplesProcessed += static_cast<unsigned long>(processedSamples);
+    if (static_cast<unsigned long>(processedSamples) > _sequenceTest.maxSamplesPerLoop) {
+        _sequenceTest.maxSamplesPerLoop = static_cast<unsigned long>(processedSamples);
     }
 
     pollUsbConsole();
@@ -206,185 +234,115 @@ void AnalyzerApp::update() {
         _controlClaimSent = true;
         _controlClaimPending = false;
     }
-    if (_sequenceTest.active && detectorTransientDetected()) {
-        handleSequenceTransient(now);
-    }
     updateSequenceTest(now);
     updateCaptureSession(now);
-    updateTuneSession(now);
     if (_valMode) {
         printValueFrame(now);
     }
 }
 
 unsigned long AnalyzerApp::loopDelayMs() const {
-    return _detectorKind == DetectorKind::Frequency ? 0UL : 1UL;
-}
-
-void AnalyzerApp::setDetectorKind(DetectorKind kind) {
-    _detectorKind = kind;
-    resetDetectorState();
+    return 0UL;
 }
 
 void AnalyzerApp::resetDetectorState() {
     _audioOnsetDetector.resetState();
-    _audioFrequencyDetector.resetState();
 }
 
 bool AnalyzerApp::detectorOnsetDetected() const {
-    return _detectorKind == DetectorKind::Frequency ? _audioFrequencyDetector.onsetDetected() : _audioOnsetDetector.onsetDetected();
+    return _audioOnsetDetector.onsetDetected();
 }
 
 float AnalyzerApp::detectorOnsetStrength() const {
-    return _detectorKind == DetectorKind::Frequency ? _audioFrequencyDetector.onsetStrength() : _audioOnsetDetector.onsetStrength();
+    return _audioOnsetDetector.onsetStrength();
 }
 
 bool AnalyzerApp::detectorTransientDetected() const {
-    return _detectorKind == DetectorKind::Frequency ? _audioFrequencyDetector.transientDetected() : _audioOnsetDetector.transientDetected();
+    return _audioOnsetDetector.transientDetected();
 }
 
 float AnalyzerApp::detectorTransientStrength() const {
-    return _detectorKind == DetectorKind::Frequency ? _audioFrequencyDetector.transientStrength() : _audioOnsetDetector.transientStrength();
+    return _audioOnsetDetector.transientStrength();
 }
 
 unsigned long AnalyzerApp::detectorTransientDurationMs() const {
-    return _detectorKind == DetectorKind::Frequency ? _audioFrequencyDetector.transientDurationMs() : _audioOnsetDetector.transientDurationMs();
+    return _audioOnsetDetector.transientDurationMs();
 }
 
-float AnalyzerApp::detectorFrequencyScore() const {
-    return _detectorKind == DetectorKind::Frequency ? _audioFrequencyDetector.lastFrequencyScore() : 0.0f;
+bool AnalyzerApp::detectorTransientPeakActive() const {
+    return _audioOnsetDetector.peakActive();
 }
 
-float AnalyzerApp::detectorFrequencyTargetPower() const {
-    return _detectorKind == DetectorKind::Frequency ? _audioFrequencyDetector.lastTargetPower() : 0.0f;
+const char* AnalyzerApp::detectorOnsetRejectReasonName() const {
+    return _audioOnsetDetector.lastOnsetRejectReasonName();
 }
 
-float AnalyzerApp::detectorFrequencyNeighborPower() const {
-    return _detectorKind == DetectorKind::Frequency ? _audioFrequencyDetector.lastNeighborPower() : 0.0f;
+const char* AnalyzerApp::detectorTransientRejectReasonName() const {
+    return _audioOnsetDetector.lastTransientRejectReasonName();
 }
 
-float AnalyzerApp::detectorFrequencyTotalEnergy() const {
-    return _detectorKind == DetectorKind::Frequency ? _audioFrequencyDetector.lastTotalEnergy() : 0.0f;
+unsigned long AnalyzerApp::detectorTransientRejectedDurationMs() const {
+    return _audioOnsetDetector.lastTransientRejectedDurationMs();
 }
 
-float AnalyzerApp::detectorFrequencySpectralContrast() const {
-    return _detectorKind == DetectorKind::Frequency ? _audioFrequencyDetector.lastSpectralContrast() : 0.0f;
-}
-
-float AnalyzerApp::detectorFrequencyBinSpacingHz() const {
-    return _detectorKind == DetectorKind::Frequency ? _audioFrequencyDetector.frequencyBinSpacingHz() : 0.0f;
+float AnalyzerApp::detectorTransientRejectedStrength() const {
+    return _audioOnsetDetector.lastTransientRejectedStrength();
 }
 
 float AnalyzerApp::detectorOnsetDetectionThreshold() const {
-    return _detectorKind == DetectorKind::Frequency ? _audioFrequencyDetector.onsetDetectionThreshold() : _audioOnsetDetector.onsetDetectionThreshold();
+    return _audioOnsetDetector.onsetDetectionThreshold();
 }
 
 float AnalyzerApp::detectorOnsetReleaseThreshold() const {
-    return _detectorKind == DetectorKind::Frequency ? _audioFrequencyDetector.onsetReleaseThreshold() : _audioOnsetDetector.onsetReleaseThreshold();
+    return _audioOnsetDetector.onsetReleaseThreshold();
 }
 
 unsigned long AnalyzerApp::detectorCooldownAfterOnsetMs() const {
-    return _detectorKind == DetectorKind::Frequency ? _audioFrequencyDetector.cooldownAfterOnsetMs() : _audioOnsetDetector.cooldownAfterOnsetMs();
+    return _audioOnsetDetector.cooldownAfterOnsetMs();
 }
 
 unsigned long AnalyzerApp::detectorMinTransientDurationMs() const {
-    return _detectorKind == DetectorKind::Frequency ? _audioFrequencyDetector.minTransientDurationMs() : _audioOnsetDetector.minTransientDurationMs();
+    return _audioOnsetDetector.minTransientDurationMs();
 }
 
 unsigned long AnalyzerApp::detectorMaxTransientDurationMs() const {
-    return _detectorKind == DetectorKind::Frequency ? _audioFrequencyDetector.maxTransientDurationMs() : _audioOnsetDetector.maxTransientDurationMs();
+    return _audioOnsetDetector.maxTransientDurationMs();
 }
 
 float AnalyzerApp::detectorMinTransientPeakStrength() const {
-    return _detectorKind == DetectorKind::Frequency ? _audioFrequencyDetector.minTransientPeakStrength() : _audioOnsetDetector.minTransientPeakStrength();
+    return _audioOnsetDetector.minTransientPeakStrength();
 }
 
 unsigned long AnalyzerApp::detectorReleaseDebounceMs() const {
-    return _detectorKind == DetectorKind::Frequency ? _audioFrequencyDetector.releaseDebounceMs() : _audioOnsetDetector.releaseDebounceMs();
-}
-
-unsigned long AnalyzerApp::detectorTargetFrequencyHz() const {
-    return _detectorKind == DetectorKind::Frequency ? _audioFrequencyDetector.targetFrequencyHz() : 0UL;
-}
-
-unsigned long AnalyzerApp::detectorSampleRateHz() const {
-    return _detectorKind == DetectorKind::Frequency ? _audioFrequencyDetector.sampleRateHz() : 0UL;
-}
-
-unsigned long AnalyzerApp::detectorWindowSizeSamples() const {
-    return _detectorKind == DetectorKind::Frequency ? _audioFrequencyDetector.windowSizeSamples() : 0UL;
+    return _audioOnsetDetector.releaseDebounceMs();
 }
 
 void AnalyzerApp::setDetectorOnsetDetectionThreshold(float value) {
-    if (_detectorKind == DetectorKind::Frequency) {
-        _audioFrequencyDetector.setOnsetDetectionThreshold(value);
-    } else {
-        _audioOnsetDetector.setOnsetDetectionThreshold(value);
-    }
+    _audioOnsetDetector.setOnsetDetectionThreshold(value);
 }
 
 void AnalyzerApp::setDetectorOnsetReleaseThreshold(float value) {
-    if (_detectorKind == DetectorKind::Frequency) {
-        _audioFrequencyDetector.setOnsetReleaseThreshold(value);
-    } else {
-        _audioOnsetDetector.setOnsetReleaseThreshold(value);
-    }
+    _audioOnsetDetector.setOnsetReleaseThreshold(value);
 }
 
 void AnalyzerApp::setDetectorCooldownAfterOnsetMs(unsigned long value) {
-    if (_detectorKind == DetectorKind::Frequency) {
-        _audioFrequencyDetector.setCooldownAfterOnsetMs(value);
-    } else {
-        _audioOnsetDetector.setCooldownAfterOnsetMs(value);
-    }
+    _audioOnsetDetector.setCooldownAfterOnsetMs(value);
 }
 
 void AnalyzerApp::setDetectorMinTransientDurationMs(unsigned long value) {
-    if (_detectorKind == DetectorKind::Frequency) {
-        _audioFrequencyDetector.setMinTransientDurationMs(value);
-    } else {
-        _audioOnsetDetector.setMinTransientDurationMs(value);
-    }
+    _audioOnsetDetector.setMinTransientDurationMs(value);
 }
 
 void AnalyzerApp::setDetectorMaxTransientDurationMs(unsigned long value) {
-    if (_detectorKind == DetectorKind::Frequency) {
-        _audioFrequencyDetector.setMaxTransientDurationMs(value);
-    } else {
-        _audioOnsetDetector.setMaxTransientDurationMs(value);
-    }
+    _audioOnsetDetector.setMaxTransientDurationMs(value);
 }
 
 void AnalyzerApp::setDetectorMinTransientPeakStrength(float value) {
-    if (_detectorKind == DetectorKind::Frequency) {
-        _audioFrequencyDetector.setMinTransientPeakStrength(value);
-    } else {
-        _audioOnsetDetector.setMinTransientPeakStrength(value);
-    }
+    _audioOnsetDetector.setMinTransientPeakStrength(value);
 }
 
 void AnalyzerApp::setDetectorReleaseDebounceMs(unsigned long value) {
-    if (_detectorKind == DetectorKind::Frequency) {
-        _audioFrequencyDetector.setReleaseDebounceMs(value);
-    } else {
-        _audioOnsetDetector.setReleaseDebounceMs(value);
-    }
-}
-
-void AnalyzerApp::setDetectorTargetFrequencyHz(unsigned long value) {
-    _audioFrequencyDetector.setTargetFrequencyHz(value);
-}
-
-void AnalyzerApp::setDetectorSampleRateHz(unsigned long value) {
-    _audioFrequencyDetector.setSampleRateHz(value);
-}
-
-void AnalyzerApp::setDetectorWindowSizeSamples(unsigned long value) {
-    _audioFrequencyDetector.setWindowSizeSamples(value);
-}
-
-const char* AnalyzerApp::detectorKindName() const {
-    return _detectorKind == DetectorKind::Frequency ? "FREQ" : "AMP";
+    _audioOnsetDetector.setReleaseDebounceMs(value);
 }
 
 void AnalyzerApp::startBaseSession(unsigned long durationMs, bool quiet) {
@@ -394,9 +352,8 @@ void AnalyzerApp::startBaseSession(unsigned long durationMs, bool quiet) {
 
     stopSequenceTest();
     stopCaptureSession();
-    stopTuneSession();
-
     _baseSession.active = true;
+    _baseSession.quiet = quiet;
     _baseSession.durationMs = durationMs;
     _baseSession.startedAtMs = millis();
     _baseSession.lastStatusPrintMs = _baseSession.startedAtMs;
@@ -411,7 +368,6 @@ void AnalyzerApp::startBaseSession(unsigned long durationMs, bool quiet) {
     _baseSession.baselineSum = 0.0f;
     _baseSession.baselineMin = 0.0f;
     _baseSession.baselineMax = 0.0f;
-    _baseSession.quiet = quiet;
 
     sendEmitterCommand("MODE REMOTE");
     delay(100);
@@ -522,6 +478,10 @@ void AnalyzerApp::beginEmitterControl() {
     Serial.println("EVT analyzer_control_claim scheduled");
 }
 
+// -----------------------------------------------------------------------------
+// Console and emitter I/O
+// -----------------------------------------------------------------------------
+
 void AnalyzerApp::pollUsbConsole() {
     while (Serial.available() > 0) {
         const char c = static_cast<char>(Serial.read());
@@ -553,6 +513,7 @@ void AnalyzerApp::pollEmitterSerial() {
 
         if (c == '\n') {
             _emitterLineBuffer[_emitterLineLength] = '\0';
+            // Expected acknowledgements are suppressed so the console stays readable.
             if (_emitterLineLength > 0
                 && !_valMode
                 && !startsWithTokenIgnoreCase(_emitterLineBuffer, "OK CHIRP")
@@ -570,6 +531,10 @@ void AnalyzerApp::pollEmitterSerial() {
     }
 }
 
+// -----------------------------------------------------------------------------
+// Command parsing
+// -----------------------------------------------------------------------------
+
 void AnalyzerApp::handleUsbLine(const char* line) {
     if (equalsIgnoreCase(line, "HELP")) {
         if (_valMode) {
@@ -586,47 +551,8 @@ void AnalyzerApp::handleUsbLine(const char* line) {
         Serial.println("CMD: SEQ stop");
         Serial.println("CMD: CAP");
         Serial.println("CMD: CAP stop");
-        Serial.println("CMD: TUNE start=48 stop=84 step=4 releaseStart=4 releaseStop=20 releaseStep=4 durationStart=10 durationStop=32 durationStep=4");
-        Serial.println("CMD: TUNE stop");
-        Serial.println("CMD: DET AMP");
-        Serial.println("CMD: DET FREQ");
         Serial.println("CMD: VAL");
         Serial.println("CMD: VAL OFF");
-        return;
-    }
-
-    if (startsWithTokenIgnoreCase(line, "DET")) {
-        if (_valMode) {
-            return;
-        }
-        char buffer[48];
-        strncpy(buffer, line, sizeof(buffer));
-        buffer[sizeof(buffer) - 1] = '\0';
-
-        char* savePtr = nullptr;
-        char* token = strtok_r(buffer, " ", &savePtr);
-        token = token != nullptr ? strtok_r(nullptr, " ", &savePtr) : nullptr;
-
-        if (token == nullptr) {
-            Serial.print("DET mode=");
-            Serial.println(detectorKindName());
-            return;
-        }
-
-        if (equalsIgnoreCase(token, "AMP")) {
-            setDetectorKind(DetectorKind::Amplitude);
-            Serial.println("DET mode=AMP");
-            return;
-        }
-
-        if (equalsIgnoreCase(token, "FREQ")) {
-            setDetectorKind(DetectorKind::Frequency);
-            Serial.println("DET mode=FREQ");
-            return;
-        }
-
-        Serial.print("EVT analyzer_unknown_det token=");
-        Serial.println(token);
         return;
     }
 
@@ -768,90 +694,6 @@ void AnalyzerApp::handleUsbLine(const char* line) {
         return;
     }
 
-    if (startsWithTokenIgnoreCase(line, "TUNE")) {
-        if (_valMode) {
-            return;
-        }
-        char buffer[96];
-        strncpy(buffer, line, sizeof(buffer));
-        buffer[sizeof(buffer) - 1] = '\0';
-
-        char* savePtr = nullptr;
-        char* token = strtok_r(buffer, " ", &savePtr);
-        token = token != nullptr ? strtok_r(nullptr, " ", &savePtr) : nullptr;
-
-        if (token != nullptr && equalsIgnoreCase(token, "stop")) {
-            if (_tuneSession.active) {
-                printTuneSummary();
-            }
-            stopTuneSession();
-            Serial.println("TUNE stopped");
-            return;
-        }
-
-        unsigned long startMinStrength = 0;
-        unsigned long stopMinStrength = 0;
-        unsigned long stepMinStrength = 5;
-        unsigned long startReleaseDebounce = 0;
-        unsigned long stopReleaseDebounce = 0;
-        unsigned long stepReleaseDebounce = 0;
-        unsigned long startMinDuration = 0;
-        unsigned long stopMinDuration = 0;
-        unsigned long stepMinDuration = 0;
-        unsigned long tries = 20;
-        unsigned long periodMs = 2500;
-        unsigned long windowEndOffsetMs = 2200;
-        unsigned long toneHz = 3200;
-        unsigned long durationMs = 100;
-
-        while (token != nullptr) {
-            if (startsWithTokenIgnoreCase(token, "start=")) {
-                startMinStrength = strtoul(token + 6, nullptr, 10);
-            } else if (startsWithTokenIgnoreCase(token, "stop=")) {
-                stopMinStrength = strtoul(token + 5, nullptr, 10);
-            } else if (startsWithTokenIgnoreCase(token, "step=")) {
-                stepMinStrength = strtoul(token + 5, nullptr, 10);
-            } else if (startsWithTokenIgnoreCase(token, "releaseStart=")) {
-                startReleaseDebounce = strtoul(token + 13, nullptr, 10);
-            } else if (startsWithTokenIgnoreCase(token, "releaseStop=")) {
-                stopReleaseDebounce = strtoul(token + 12, nullptr, 10);
-            } else if (startsWithTokenIgnoreCase(token, "releaseStep=")) {
-                stepReleaseDebounce = strtoul(token + 12, nullptr, 10);
-            } else if (startsWithTokenIgnoreCase(token, "durationStart=")) {
-                startMinDuration = strtoul(token + 14, nullptr, 10);
-            } else if (startsWithTokenIgnoreCase(token, "durationStop=")) {
-                stopMinDuration = strtoul(token + 13, nullptr, 10);
-            } else if (startsWithTokenIgnoreCase(token, "durationStep=")) {
-                stepMinDuration = strtoul(token + 13, nullptr, 10);
-            } else if (startsWithTokenIgnoreCase(token, "tries=")) {
-                tries = strtoul(token + 6, nullptr, 10);
-            } else if (startsWithTokenIgnoreCase(token, "period=")) {
-                periodMs = strtoul(token + 7, nullptr, 10);
-            } else if (startsWithTokenIgnoreCase(token, "window=")) {
-                windowEndOffsetMs = strtoul(token + 7, nullptr, 10);
-            } else if (startsWithTokenIgnoreCase(token, "freq=")) {
-                toneHz = strtoul(token + 5, nullptr, 10);
-            } else if (startsWithTokenIgnoreCase(token, "dur=")) {
-                durationMs = strtoul(token + 4, nullptr, 10);
-            }
-            token = strtok_r(nullptr, " ", &savePtr);
-        }
-
-        startTuneSession(startMinStrength, stopMinStrength, stepMinStrength,
-                         startReleaseDebounce, stopReleaseDebounce, stepReleaseDebounce,
-                         startMinDuration, stopMinDuration, stepMinDuration,
-                         tries, periodMs, windowEndOffsetMs, toneHz, durationMs);
-        return;
-    }
-
-    if (equalsIgnoreCase(line, "Z")) {
-        if (_valMode) {
-            return;
-        }
-        startTuneSession(0, 0, 5, 0, 0, 0, 0, 0, 0, 20, 2500, 2200, 3200, 100);
-        return;
-    }
-
     if (equalsIgnoreCase(line, "VAL") || equalsIgnoreCase(line, "VAL ON") || equalsIgnoreCase(line, "VERBOSE ON")) {
         _valMode = true;
         return;
@@ -888,10 +730,13 @@ void AnalyzerApp::printValueModeBanner() const {
     }
     Serial.print("EVT analyzer_val on source=");
     Serial.print(_sourceKind == AudioSourceKind::I2S ? "I2S" : "Analog");
-    Serial.print(" detector=");
-    Serial.println(detectorKindName());
+    Serial.println(" detector=AMP");
     printDetectionParameters();
 }
+
+// -----------------------------------------------------------------------------
+// Sequence test, capture, and tuning sessions
+// -----------------------------------------------------------------------------
 
 void AnalyzerApp::startSequenceTest(unsigned long totalTrials, unsigned long periodMs, unsigned long windowEndOffsetMs, unsigned long toneHz, unsigned long durationMs, bool quiet, bool showDetails) {
     if (_valMode) {
@@ -911,6 +756,9 @@ void AnalyzerApp::startSequenceTest(unsigned long totalTrials, unsigned long per
     }
 
     _sequenceTest.active = true;
+    _sequenceTest.quiet = quiet;
+    _sequenceTest.showDetails = showDetails;
+    _sequenceTest.progressLineStarted = false;
     _sequenceTest.totalTrials = totalTrials;
     _sequenceTest.periodMs = periodMs;
     _sequenceTest.windowStartOffsetMs = 0;
@@ -920,33 +768,71 @@ void AnalyzerApp::startSequenceTest(unsigned long totalTrials, unsigned long per
     _sequenceTest.startedAtMs = millis();
     _sequenceTest.nextTriggerAtMs = _sequenceTest.startedAtMs;
     _sequenceTest.currentTrial = 0;
+    _sequenceTest.currentTrialScheduledAtMs = 0;
     _sequenceTest.currentTrialStartMs = 0;
     _sequenceTest.currentTrialEndMs = 0;
+    _sequenceTest.currentTrialOnsetDetectedMs = 0;
+    _sequenceTest.currentTrialTransientDetectedMs = 0;
     _sequenceTest.currentTrialHit = false;
     _sequenceTest.currentTrialFinalized = false;
     _sequenceTest.currentTrialUnexpected = 0;
+    _sequenceTest.currentTrialDiagnostics = {};
     _sequenceTest.hits = 0;
+    _sequenceTest.expectedHits = 0;
+    _sequenceTest.lateHits = 0;
+    _sequenceTest.earlyHits = 0;
     _sequenceTest.misses = 0;
     _sequenceTest.unexpected = 0;
     _sequenceTest.duplicates = 0;
+    _sequenceTest.samplesProcessed = 0;
+    _sequenceTest.maxSamplesPerLoop = 0;
+    _sequenceTest.emptySourceLoops = 0;
     _sequenceTest.totalHitStrengthScaled = 0;
     _sequenceTest.totalHitDurationMs = 0;
-    _sequenceTest.lastStatusPrintMs = _sequenceTest.startedAtMs;
-    _sequenceTest.quiet = quiet;
-    _sequenceTest.progressLineStarted = false;
-    _sequenceTest.showDetails = showDetails;
 
+    // Rebase before the first trial so every run starts from the quiet floor.
+    const unsigned long sequenceClaimSendMs = millis();
     sendEmitterCommand("MODE REMOTE");
+    const bool sequenceClaimAcked = waitForEmitterAck("OK MODE REMOTE", 1500);
+    const unsigned long sequenceClaimAckMs = millis();
+    if (_sequenceTest.showDetails && !_sequenceTest.quiet) {
+        Serial.print("SEQ remote claim: send=");
+        Serial.print(sequenceClaimSendMs);
+        Serial.print("ms ack=");
+        Serial.print(sequenceClaimAckMs);
+        Serial.print("ms wait=");
+        Serial.print(sequenceClaimAckMs - sequenceClaimSendMs);
+        Serial.print("ms status=");
+        Serial.println(sequenceClaimAcked ? "ok" : "timeout");
+    }
+
+    const unsigned long sequenceRebaseStartMs = millis();
     delay(100);
     _audioSignal.rebase();
+    if (_sequenceTest.showDetails && !_sequenceTest.quiet) {
+        Serial.print("SEQ rebase: start=");
+        Serial.print(sequenceRebaseStartMs);
+        Serial.print("ms end=");
+        Serial.print(millis());
+        Serial.print("ms elapsed=");
+        Serial.print(millis() - sequenceRebaseStartMs);
+        Serial.println("ms");
+    }
     resetDetectorState();
 
     if (_sequenceTest.showDetails) {
-        Serial.print("SEQ start: tries=");
+        Serial.print("SEQ start source=");
+        Serial.print(_sourceKind == AudioSourceKind::I2S ? "I2S" : "Analog");
+        Serial.print(" detector=AMP");
+        Serial.print(" quiet=");
+        Serial.print(_sequenceTest.quiet ? 1 : 0);
+        Serial.print(" tries=");
         Serial.print(totalTrials);
         Serial.print(" period_ms=");
         Serial.print(periodMs);
-        Serial.print(" window_ms=");
+        Serial.print(" window_start_ms=");
+        Serial.print(_sequenceTest.windowStartOffsetMs);
+        Serial.print(" window_end_ms=");
         Serial.print(windowEndOffsetMs);
         Serial.print(" freq_hz=");
         Serial.print(toneHz);
@@ -974,9 +860,9 @@ void AnalyzerApp::startCaptureSession(unsigned long totalTrials, unsigned long p
     }
 
     stopSequenceTest();
-    stopTuneSession();
 
     _captureSession.active = true;
+    _captureSession.quiet = quiet;
     _captureSession.totalTrials = totalTrials;
     _captureSession.periodMs = periodMs;
     _captureSession.windowStartOffsetMs = 0;
@@ -1007,11 +893,35 @@ void AnalyzerApp::startCaptureSession(unsigned long totalTrials, unsigned long p
     _captureSession.bestRawSwing = 0;
     _captureSession.bestDeltaSwing = 0.0f;
     _captureSession.lastStatusPrintMs = _captureSession.startedAtMs;
-    _captureSession.quiet = quiet;
 
+    // Capture uses the same emitter hand-off and rebase step as sequence mode.
+    const unsigned long captureClaimSendMs = millis();
     sendEmitterCommand("MODE REMOTE");
+    const bool captureClaimAcked = waitForEmitterAck("OK MODE REMOTE", 1500);
+    const unsigned long captureClaimAckMs = millis();
+    if (!_captureSession.quiet) {
+        Serial.print("CAP remote claim: send=");
+        Serial.print(captureClaimSendMs);
+        Serial.print("ms ack=");
+        Serial.print(captureClaimAckMs);
+        Serial.print("ms wait=");
+        Serial.print(captureClaimAckMs - captureClaimSendMs);
+        Serial.print("ms status=");
+        Serial.println(captureClaimAcked ? "ok" : "timeout");
+    }
+
+    const unsigned long captureRebaseStartMs = millis();
     delay(100);
     _audioSignal.rebase();
+    if (!_captureSession.quiet) {
+        Serial.print("CAP rebase: start=");
+        Serial.print(captureRebaseStartMs);
+        Serial.print("ms end=");
+        Serial.print(millis());
+        Serial.print("ms elapsed=");
+        Serial.print(millis() - captureRebaseStartMs);
+        Serial.println("ms");
+    }
     resetDetectorState();
 
     Serial.print("CAP start tries=");
@@ -1219,22 +1129,22 @@ void AnalyzerApp::updateSequenceTest(unsigned long now) {
         return;
     }
 
-    if (!_sequenceTest.quiet && now - _sequenceTest.lastStatusPrintMs >= 30000UL) {
-        printSequenceStatus(now);
-        _sequenceTest.lastStatusPrintMs = now;
-    }
-
     if (_sequenceTest.currentTrial >= _sequenceTest.totalTrials) {
         return;
     }
 
     const unsigned long trialNumber = _sequenceTest.currentTrial + 1;
+    const unsigned long scheduledAtMs = _sequenceTest.nextTriggerAtMs;
     _sequenceTest.currentTrial = trialNumber;
+    _sequenceTest.currentTrialScheduledAtMs = scheduledAtMs;
     _sequenceTest.currentTrialStartMs = now;
     _sequenceTest.currentTrialEndMs = now + _sequenceTest.windowEndOffsetMs;
+    _sequenceTest.currentTrialOnsetDetectedMs = 0;
+    _sequenceTest.currentTrialTransientDetectedMs = 0;
     _sequenceTest.currentTrialHit = false;
     _sequenceTest.currentTrialFinalized = false;
     _sequenceTest.currentTrialUnexpected = 0;
+    _sequenceTest.currentTrialDiagnostics = {};
     _sequenceTest.nextTriggerAtMs = now + _sequenceTest.periodMs;
 
     char command[64];
@@ -1242,9 +1152,16 @@ void AnalyzerApp::updateSequenceTest(unsigned long now) {
     sendEmitterCommand(command);
 
     if (!_sequenceTest.quiet) {
+        Serial.println();
         Serial.print("SEQ trial=");
         Serial.print(trialNumber);
-        Serial.println(" started");
+        Serial.print(" start chirp_sent=");
+        Serial.print(now);
+        Serial.print("ms late=");
+        Serial.print(now - scheduledAtMs);
+        Serial.print("ms window_end=");
+        Serial.print(_sequenceTest.currentTrialEndMs);
+        Serial.println("ms");
     }
 }
 
@@ -1273,31 +1190,48 @@ void AnalyzerApp::handleSequenceTransient(unsigned long now) {
         return;
     }
 
+    _sequenceTest.currentTrialDiagnostics.onsetSeen = true;
+    if (_sequenceTest.currentTrialDiagnostics.firstOnsetMs == 0) {
+        _sequenceTest.currentTrialDiagnostics.firstOnsetMs = now;
+    }
+    _sequenceTest.currentTrialDiagnostics.lastOnsetMs = now;
+    if (_sequenceTest.currentTrialOnsetDetectedMs == 0) {
+        _sequenceTest.currentTrialOnsetDetectedMs = now;
+    }
+
     if (_sequenceTest.currentTrialHit) {
         _sequenceTest.duplicates++;
+        _sequenceTest.currentTrialDiagnostics.duplicateCount++;
         if (_sequenceTest.quiet) {
             if (!_sequenceTest.progressLineStarted) {
                 _sequenceTest.progressLineStarted = true;
             }
             Serial.print('x');
         }
-        if (!_sequenceTest.quiet) {
-            Serial.print("SEQ duplicate trial=");
-            Serial.print(_sequenceTest.currentTrial);
-            Serial.print(" t=");
-            Serial.print(now);
-            Serial.print(" strength=");
-            Serial.print(detectorTransientStrength(), 3);
-            Serial.print(" dur=");
-            Serial.println(detectorTransientDurationMs());
-        }
         return;
     }
 
+    _sequenceTest.currentTrialDiagnostics.transientAccepted = true;
+    _sequenceTest.currentTrialDiagnostics.acceptedTransientMs = now;
+    _sequenceTest.currentTrialDiagnostics.acceptedTransientStrength = detectorTransientStrength();
+    _sequenceTest.currentTrialDiagnostics.acceptedTransientDurationMs = detectorTransientDurationMs();
+    _sequenceTest.currentTrialDiagnostics.lastTransientRejectReason = AudioOnsetDetector::TransientRejectReason::None;
+    _sequenceTest.currentTrialDiagnostics.lastRejectStrength = 0.0f;
+    _sequenceTest.currentTrialDiagnostics.lastRejectDurationMs = 0;
+    _sequenceTest.currentTrialTransientDetectedMs = now;
+
     _sequenceTest.currentTrialHit = true;
     _sequenceTest.hits++;
-    _sequenceTest.totalHitStrengthScaled += static_cast<unsigned long>(detectorTransientStrength() * 100.0f);
-    _sequenceTest.totalHitDurationMs += detectorTransientDurationMs();
+    const unsigned long hitDt = now - _sequenceTest.currentTrialStartMs;
+    if (hitDt < 100UL) {
+        _sequenceTest.earlyHits++;
+    } else if (hitDt > 300UL) {
+        _sequenceTest.lateHits++;
+    } else {
+        _sequenceTest.expectedHits++;
+    }
+    _sequenceTest.totalHitStrengthScaled += static_cast<unsigned long>(_sequenceTest.currentTrialDiagnostics.acceptedTransientStrength * 100.0f);
+    _sequenceTest.totalHitDurationMs += _sequenceTest.currentTrialDiagnostics.acceptedTransientDurationMs;
 
     if (_sequenceTest.quiet) {
         if (!_sequenceTest.progressLineStarted) {
@@ -1306,14 +1240,6 @@ void AnalyzerApp::handleSequenceTransient(unsigned long now) {
         Serial.print('|');
     }
 
-    if (!_sequenceTest.quiet) {
-        Serial.print("SEQ hit trial=");
-        Serial.print(_sequenceTest.currentTrial);
-        Serial.print(" s=");
-        Serial.print(detectorTransientStrength(), 1);
-        Serial.print(" d=");
-        Serial.println(detectorTransientDurationMs());
-    }
 }
 
 void AnalyzerApp::finalizeSequenceTrial(unsigned long now) {
@@ -1328,6 +1254,23 @@ void AnalyzerApp::finalizeSequenceTrial(unsigned long now) {
         return;
     }
 
+    auto& diagnostics = _sequenceTest.currentTrialDiagnostics;
+    diagnostics.peakActiveAtEnd = detectorTransientPeakActive();
+    const char* transientRejectReason = detectorTransientRejectReasonName();
+    if (strcmp(transientRejectReason, "duration_too_short") == 0) {
+        diagnostics.lastTransientRejectReason = AudioOnsetDetector::TransientRejectReason::DurationTooShort;
+    } else if (strcmp(transientRejectReason, "duration_too_long") == 0) {
+        diagnostics.lastTransientRejectReason = AudioOnsetDetector::TransientRejectReason::DurationTooLong;
+    } else if (strcmp(transientRejectReason, "strength_too_low") == 0) {
+        diagnostics.lastTransientRejectReason = AudioOnsetDetector::TransientRejectReason::StrengthTooLow;
+    } else if (strcmp(transientRejectReason, "peak_still_active") == 0) {
+        diagnostics.lastTransientRejectReason = AudioOnsetDetector::TransientRejectReason::PeakStillActive;
+    } else {
+        diagnostics.lastTransientRejectReason = AudioOnsetDetector::TransientRejectReason::None;
+    }
+    diagnostics.lastRejectDurationMs = detectorTransientRejectedDurationMs();
+    diagnostics.lastRejectStrength = detectorTransientRejectedStrength();
+
     if (!_sequenceTest.currentTrialHit) {
         _sequenceTest.misses++;
         if (_sequenceTest.quiet) {
@@ -1339,9 +1282,70 @@ void AnalyzerApp::finalizeSequenceTrial(unsigned long now) {
         if (!_sequenceTest.quiet) {
             Serial.print("SEQ miss trial=");
             Serial.print(_sequenceTest.currentTrial);
-            Serial.print(" t=");
-            Serial.println(now);
+            const bool onlyBelowThreshold = diagnostics.onsetRejectBelowThreshold > 0
+                                            && diagnostics.onsetRejectPeakActive == 0
+                                            && diagnostics.onsetRejectCooldown == 0
+                                            && diagnostics.onsetRejectOther == 0;
+            if (!diagnostics.onsetSeen && onlyBelowThreshold) {
+                Serial.print(" quiet onset_seen=0 reject=none");
+            } else {
+                Serial.print(" onset_seen=");
+                Serial.print(diagnostics.onsetSeen ? 1 : 0);
+                Serial.print(" onset_dt=");
+                if (diagnostics.onsetSeen && diagnostics.firstOnsetMs != 0) {
+                    Serial.print(diagnostics.firstOnsetMs - _sequenceTest.currentTrialStartMs);
+                } else {
+                    Serial.print("-1");
+                }
+                Serial.print(" transient_dt=-1");
+                if (diagnostics.peakActiveAtEnd) {
+                    Serial.print(" blocked peak_active=1");
+                }
+                Serial.print(" reject=");
+                Serial.print(transientRejectReason);
+                if (diagnostics.lastRejectDurationMs > 0) {
+                    Serial.print(" reject_dur=");
+                    Serial.print(diagnostics.lastRejectDurationMs);
+                    Serial.print("ms reject_strength=");
+                    Serial.print(diagnostics.lastRejectStrength, 1);
+                }
+                Serial.print(" onset_rejects=");
+                printSequenceOnsetRejectCounts(diagnostics);
+            }
+            Serial.println();
         }
+    } else if (!_sequenceTest.quiet) {
+        Serial.print("SEQ trial=");
+        Serial.print(_sequenceTest.currentTrial);
+        Serial.print(" hit onset_dt=");
+        if (diagnostics.onsetSeen && diagnostics.firstOnsetMs != 0) {
+            Serial.print(diagnostics.firstOnsetMs - _sequenceTest.currentTrialStartMs);
+        } else {
+            Serial.print("-1");
+        }
+        Serial.print(" transient=");
+        if (diagnostics.acceptedTransientMs != 0) {
+            Serial.print(diagnostics.acceptedTransientMs - _sequenceTest.currentTrialStartMs);
+        } else {
+            Serial.print("-1");
+        }
+        const unsigned long hitDt = diagnostics.acceptedTransientMs != 0
+                                         ? diagnostics.acceptedTransientMs - _sequenceTest.currentTrialStartMs
+                                         : 0;
+        Serial.print(" class=");
+        if (hitDt < 100UL) {
+            Serial.print("early");
+        } else if (hitDt > 300UL) {
+            Serial.print("late");
+        } else {
+            Serial.print("expected");
+        }
+        Serial.print(" strength=");
+        Serial.print(diagnostics.acceptedTransientStrength, 1);
+        Serial.print(" dur=");
+        Serial.print(diagnostics.acceptedTransientDurationMs);
+        Serial.print("ms duplicates=");
+        Serial.println(diagnostics.duplicateCount);
     }
 
     _sequenceTest.currentTrialFinalized = true;
@@ -1355,375 +1359,29 @@ void AnalyzerApp::finalizeSequenceTrial(unsigned long now) {
     }
 }
 
-void AnalyzerApp::startTuneSession(unsigned long startMinStrength, unsigned long stopMinStrength, unsigned long stepMinStrength,
-                                   unsigned long startReleaseDebounce, unsigned long stopReleaseDebounce, unsigned long stepReleaseDebounce,
-                                   unsigned long startMinDuration, unsigned long stopMinDuration, unsigned long stepMinDuration,
-                                   unsigned long tries, unsigned long periodMs, unsigned long windowEndOffsetMs, unsigned long toneHz, unsigned long durationMs) {
-    if (_valMode) {
-        return;
-    }
-    stopSequenceTest();
-    stopTuneSession();
+void AnalyzerApp::printSequenceOnsetRejectCounts(const SequenceTest::TrialDiagnostics& diagnostics) const {
+    Serial.print("{");
+    bool first = true;
 
-    _tuneSession.active = true;
-    _tuneSession.waitingForSequenceResult = false;
-    _tuneSession.stage = TuneSession::Stage::MinStrength;
-    _tuneSession.stageCandidateStep = stepMinStrength == 0 ? 5 : stepMinStrength;
-
-    const unsigned long currentStrength = static_cast<unsigned long>(detectorMinTransientPeakStrength());
-    const unsigned long currentRelease = detectorReleaseDebounceMs();
-    const unsigned long currentDuration = detectorMinTransientDurationMs();
-
-    if (startMinStrength == 0 && stopMinStrength == 0) {
-        startMinStrength = currentStrength > 40 ? currentStrength - 40 : 4;
-        stopMinStrength = currentStrength + 40;
-    }
-    if (startMinStrength == 0) {
-        startMinStrength = 4;
-    }
-    if (stopMinStrength == 0) {
-        stopMinStrength = startMinStrength + 40;
-    }
-    if (stopMinStrength < startMinStrength) {
-        unsigned long tmp = startMinStrength;
-        startMinStrength = stopMinStrength;
-        stopMinStrength = tmp;
-    }
-    if (stepMinStrength == 0) {
-        stepMinStrength = 5;
-    }
-
-    _tuneSession.stageCandidateStart = startMinStrength;
-    _tuneSession.stageCandidateStop = stopMinStrength;
-    if (_tuneSession.stageCandidateStop < _tuneSession.stageCandidateStart) {
-        unsigned long tmp = _tuneSession.stageCandidateStart;
-        _tuneSession.stageCandidateStart = _tuneSession.stageCandidateStop;
-        _tuneSession.stageCandidateStop = tmp;
-    }
-    _tuneSession.currentCandidateValue = _tuneSession.stageCandidateStart;
-    _tuneSession.currentMinStrength = currentStrength;
-    _tuneSession.currentReleaseDebounce = currentRelease;
-    _tuneSession.currentMinDuration = currentDuration;
-    _tuneSession.bestMinStrength = currentStrength;
-    _tuneSession.bestReleaseDebounce = currentRelease;
-    _tuneSession.bestMinDuration = currentDuration;
-    _tuneSession.bestSuccessRate = 0;
-    _tuneSession.bestHits = 0;
-    _tuneSession.bestMisses = 0;
-    _tuneSession.bestUnexpected = 0;
-    _tuneSession.bestDuplicates = 0;
-    _tuneSession.tries = tries;
-    _tuneSession.periodMs = periodMs;
-    _tuneSession.windowEndOffsetMs = windowEndOffsetMs;
-    _tuneSession.toneHz = toneHz;
-    _tuneSession.durationMs = durationMs;
-    if (startReleaseDebounce == 0 && stopReleaseDebounce == 0) {
-        startReleaseDebounce = currentRelease > 12 ? currentRelease - 12 : 4;
-        stopReleaseDebounce = currentRelease + 18;
-    }
-    if (startReleaseDebounce == 0) {
-        startReleaseDebounce = 4;
-    }
-    if (stopReleaseDebounce == 0) {
-        stopReleaseDebounce = startReleaseDebounce + 18;
-    }
-    if (stepReleaseDebounce == 0) {
-        stepReleaseDebounce = stepMinStrength > 4 ? stepMinStrength / 2 : 2;
-    }
-    if (stepReleaseDebounce == 0) {
-        stepReleaseDebounce = 2;
-    }
-    if (stopReleaseDebounce < startReleaseDebounce) {
-        unsigned long tmp = startReleaseDebounce;
-        startReleaseDebounce = stopReleaseDebounce;
-        stopReleaseDebounce = tmp;
-    }
-
-    if (startMinDuration == 0 && stopMinDuration == 0) {
-        startMinDuration = currentDuration > 20 ? currentDuration / 2 : 10;
-        stopMinDuration = currentDuration + 80;
-    }
-    if (startMinDuration == 0) {
-        startMinDuration = 10;
-    }
-    if (stopMinDuration == 0) {
-        stopMinDuration = startMinDuration + 80;
-    }
-    if (stepMinDuration == 0) {
-        stepMinDuration = stepMinStrength > 6 ? stepMinStrength / 2 : 4;
-    }
-    if (stepMinDuration == 0) {
-        stepMinDuration = 4;
-    }
-    if (stopMinDuration < startMinDuration) {
-        unsigned long tmp = startMinDuration;
-        startMinDuration = stopMinDuration;
-        stopMinDuration = tmp;
-    }
-
-    _tuneSession.stage2Min = startReleaseDebounce;
-    _tuneSession.stage2Max = stopReleaseDebounce;
-    _tuneSession.stage2Step = stepReleaseDebounce;
-    _tuneSession.stage3Min = startMinDuration;
-    _tuneSession.stage3Max = stopMinDuration;
-    _tuneSession.stage3Step = stepMinDuration;
-    _tuneSession.stageCandidateIndex = 0;
-    _tuneSession.stageTotalCandidates = ((_tuneSession.stageCandidateStop - _tuneSession.stageCandidateStart) / _tuneSession.stageCandidateStep) + 1;
-
-    Serial.print("TUNE start: minStrength=");
-    Serial.print(_tuneSession.stageCandidateStart);
-    Serial.print("..");
-    Serial.print(_tuneSession.stageCandidateStop);
-    Serial.print(" step=");
-    Serial.print(_tuneSession.stageCandidateStep);
-    Serial.print(" tries=");
-    Serial.print(tries);
-    Serial.print(" period_ms=");
-    Serial.print(periodMs);
-    Serial.print(" window_ms=");
-    Serial.print(windowEndOffsetMs);
-    Serial.print(" freq_hz=");
-    Serial.print(toneHz);
-    Serial.print(" dur_ms=");
-    Serial.println(durationMs);
-    printDetectionParameters();
-
-    startNextTuneCandidate(millis());
-}
-
-void AnalyzerApp::stopTuneSession() {
-    _tuneSession.active = false;
-    _tuneSession.waitingForSequenceResult = false;
-}
-
-void AnalyzerApp::updateTuneSession(unsigned long now) {
-    if (_valMode) {
-        return;
-    }
-    if (!_tuneSession.active) {
-        return;
-    }
-
-    if (_tuneSession.waitingForSequenceResult) {
-        if (_sequenceTest.active) {
+    auto printCount = [&](const char* label, unsigned long count) {
+        if (count == 0) {
             return;
         }
-
-        recordTuneCandidateResult();
-
-        if (advanceTuneStage()) {
-            startNextTuneCandidate(now);
-            return;
+        if (!first) {
+            Serial.print(", ");
         }
+        Serial.print(label);
+        Serial.print(":");
+        Serial.print(count);
+        first = false;
+    };
 
-        _tuneSession.active = false;
-        printTuneSummary();
-    }
-}
+    printCount("below_threshold", diagnostics.onsetRejectBelowThreshold);
+    printCount("peak_active", diagnostics.onsetRejectPeakActive);
+    printCount("cooldown_active", diagnostics.onsetRejectCooldown);
+    printCount("other", diagnostics.onsetRejectOther);
 
-void AnalyzerApp::startNextTuneCandidate(unsigned long now) {
-    if (_valMode) {
-        return;
-    }
-    switch (_tuneSession.stage) {
-        case TuneSession::Stage::MinStrength:
-            setDetectorMinTransientPeakStrength(static_cast<float>(_tuneSession.currentCandidateValue));
-            setDetectorReleaseDebounceMs(_tuneSession.currentReleaseDebounce);
-            setDetectorMinTransientDurationMs(_tuneSession.currentMinDuration);
-            break;
-        case TuneSession::Stage::ReleaseDebounce:
-            setDetectorMinTransientPeakStrength(static_cast<float>(_tuneSession.bestMinStrength));
-            setDetectorReleaseDebounceMs(_tuneSession.currentCandidateValue);
-            setDetectorMinTransientDurationMs(_tuneSession.bestMinDuration);
-            break;
-        case TuneSession::Stage::MinDuration:
-            setDetectorMinTransientPeakStrength(static_cast<float>(_tuneSession.bestMinStrength));
-            setDetectorReleaseDebounceMs(_tuneSession.bestReleaseDebounce);
-            setDetectorMinTransientDurationMs(_tuneSession.currentCandidateValue);
-            break;
-    }
-
-    _tuneSession.stageCandidateIndex++;
-
-    Serial.print("TUNE ");
-    Serial.print(_tuneSession.stageCandidateIndex);
-    Serial.print("/");
-    Serial.print(_tuneSession.stageTotalCandidates);
-    Serial.print(" ");
-    switch (_tuneSession.stage) {
-        case TuneSession::Stage::MinStrength:
-            Serial.print("minStrength=");
-            Serial.println(_tuneSession.currentCandidateValue);
-            break;
-        case TuneSession::Stage::ReleaseDebounce:
-            Serial.print("releaseDebounce=");
-            Serial.println(_tuneSession.currentCandidateValue);
-            break;
-        case TuneSession::Stage::MinDuration:
-            Serial.print("minDuration=");
-            Serial.println(_tuneSession.currentCandidateValue);
-            break;
-    }
-
-    startSequenceTest(_tuneSession.tries,
-                      _tuneSession.periodMs,
-                      _tuneSession.windowEndOffsetMs,
-                      _tuneSession.toneHz,
-                      _tuneSession.durationMs,
-                      true,
-                      false);
-
-    _tuneSession.waitingForSequenceResult = true;
-}
-
-void AnalyzerApp::recordTuneCandidateResult() {
-    if (_valMode) {
-        return;
-    }
-    const unsigned long hits = _sequenceTest.hits;
-    const unsigned long misses = _sequenceTest.misses;
-    const unsigned long unexpected = _sequenceTest.unexpected;
-    const unsigned long duplicates = _sequenceTest.duplicates;
-    const unsigned long successRate = _sequenceTest.totalTrials > 0 ? ((hits * 100UL) / _sequenceTest.totalTrials) : 0;
-
-    const bool better = successRate > _tuneSession.bestSuccessRate
-                        || (successRate == _tuneSession.bestSuccessRate && duplicates < _tuneSession.bestDuplicates)
-                        || (successRate == _tuneSession.bestSuccessRate && duplicates == _tuneSession.bestDuplicates && unexpected < _tuneSession.bestUnexpected);
-
-    if (better) {
-        _tuneSession.bestSuccessRate = successRate;
-        if (_tuneSession.stage == TuneSession::Stage::MinStrength) {
-            _tuneSession.bestMinStrength = _tuneSession.currentCandidateValue;
-        } else if (_tuneSession.stage == TuneSession::Stage::ReleaseDebounce) {
-            _tuneSession.bestReleaseDebounce = _tuneSession.currentCandidateValue;
-        } else if (_tuneSession.stage == TuneSession::Stage::MinDuration) {
-            _tuneSession.bestMinDuration = _tuneSession.currentCandidateValue;
-        }
-        _tuneSession.bestHits = hits;
-        _tuneSession.bestMisses = misses;
-        _tuneSession.bestUnexpected = unexpected;
-        _tuneSession.bestDuplicates = duplicates;
-    }
-}
-
-bool AnalyzerApp::advanceTuneStage() {
-    if (_valMode) {
-        return false;
-    }
-    if (_tuneSession.stage == TuneSession::Stage::MinStrength) {
-        if (_tuneSession.currentCandidateValue + _tuneSession.stageCandidateStep <= _tuneSession.stageCandidateStop) {
-            _tuneSession.currentCandidateValue += _tuneSession.stageCandidateStep;
-            return true;
-        }
-
-        printTuneStageSummary();
-        _tuneSession.stage = TuneSession::Stage::ReleaseDebounce;
-        _tuneSession.stageCandidateStart = _tuneSession.stage2Min;
-        _tuneSession.stageCandidateStop = _tuneSession.stage2Max;
-        _tuneSession.stageCandidateStep = _tuneSession.stage2Step;
-        _tuneSession.currentCandidateValue = _tuneSession.stageCandidateStart;
-        _tuneSession.stageCandidateIndex = 0;
-        _tuneSession.stageTotalCandidates = ((_tuneSession.stageCandidateStop - _tuneSession.stageCandidateStart) / _tuneSession.stageCandidateStep) + 1;
-        _tuneSession.bestSuccessRate = 0;
-        _tuneSession.bestHits = 0;
-        _tuneSession.bestMisses = 0;
-        _tuneSession.bestUnexpected = 0;
-        _tuneSession.bestDuplicates = 0;
-        return true;
-    }
-
-    if (_tuneSession.stage == TuneSession::Stage::ReleaseDebounce) {
-        if (_tuneSession.currentCandidateValue + _tuneSession.stageCandidateStep <= _tuneSession.stageCandidateStop) {
-            _tuneSession.currentCandidateValue += _tuneSession.stageCandidateStep;
-            return true;
-        }
-
-        printTuneStageSummary();
-        _tuneSession.stage = TuneSession::Stage::MinDuration;
-        _tuneSession.stageCandidateStart = _tuneSession.stage3Min;
-        _tuneSession.stageCandidateStop = _tuneSession.stage3Max;
-        _tuneSession.stageCandidateStep = _tuneSession.stage3Step;
-        _tuneSession.currentCandidateValue = _tuneSession.stageCandidateStart;
-        _tuneSession.stageCandidateIndex = 0;
-        _tuneSession.stageTotalCandidates = ((_tuneSession.stageCandidateStop - _tuneSession.stageCandidateStart) / _tuneSession.stageCandidateStep) + 1;
-        _tuneSession.bestSuccessRate = 0;
-        _tuneSession.bestHits = 0;
-        _tuneSession.bestMisses = 0;
-        _tuneSession.bestUnexpected = 0;
-        _tuneSession.bestDuplicates = 0;
-        return true;
-    }
-
-    if (_tuneSession.stage == TuneSession::Stage::MinDuration) {
-        if (_tuneSession.currentCandidateValue + _tuneSession.stageCandidateStep <= _tuneSession.stageCandidateStop) {
-            _tuneSession.currentCandidateValue += _tuneSession.stageCandidateStep;
-            return true;
-        }
-
-        printTuneStageSummary();
-        return false;
-    }
-
-    return false;
-}
-
-void AnalyzerApp::printTuneStageSummary() const {
-    if (_valMode) {
-        return;
-    }
-    Serial.print("TUNE stage ");
-    switch (_tuneSession.stage) {
-        case TuneSession::Stage::MinStrength:
-            Serial.print("minStrength");
-            Serial.print(" best=");
-            Serial.print(_tuneSession.bestMinStrength);
-            break;
-        case TuneSession::Stage::ReleaseDebounce:
-            Serial.print("releaseDebounce");
-            Serial.print(" best=");
-            Serial.print(_tuneSession.bestReleaseDebounce);
-            break;
-        case TuneSession::Stage::MinDuration:
-            Serial.print("minDuration");
-            Serial.print(" best=");
-            Serial.print(_tuneSession.bestMinDuration);
-            break;
-    }
-    Serial.print(" success=");
-    Serial.print(_tuneSession.bestSuccessRate);
-    Serial.println("%");
-    Serial.print("  false_events=");
-    Serial.print(_tuneSession.bestUnexpected);
-    Serial.print("+");
-    Serial.print(_tuneSession.bestDuplicates);
-    Serial.print(" (unexpected+duplicates) hits=");
-    Serial.print(_tuneSession.bestHits);
-    Serial.print(" misses=");
-    Serial.println(_tuneSession.bestMisses);
-}
-
-void AnalyzerApp::printTuneSummary() const {
-    if (_valMode) {
-        return;
-    }
-    Serial.println("TUNE done:");
-    Serial.print("  minStrength=");
-    Serial.println(_tuneSession.bestMinStrength);
-    Serial.print("  releaseDebounce=");
-    Serial.println(_tuneSession.bestReleaseDebounce);
-    Serial.print("  minDuration=");
-    Serial.println(_tuneSession.bestMinDuration);
-    Serial.print("  success=");
-    Serial.print(_tuneSession.bestSuccessRate);
-    Serial.println("%");
-    Serial.print("  false_events=");
-    Serial.print(_tuneSession.bestUnexpected);
-    Serial.print("+");
-    Serial.print(_tuneSession.bestDuplicates);
-    Serial.print(" (unexpected+duplicates) hits=");
-    Serial.print(_tuneSession.bestHits);
-    Serial.print(" misses=");
-    Serial.println(_tuneSession.bestMisses);
+    Serial.print("}");
 }
 
 void AnalyzerApp::printDetectionParameters() const {
@@ -1731,7 +1389,7 @@ void AnalyzerApp::printDetectionParameters() const {
         return;
     }
     Serial.print("SEQ det mode=");
-    Serial.print(detectorKindName());
+    Serial.print("AMP");
     Serial.print(" onset=");
     Serial.print(detectorOnsetDetectionThreshold(), 1);
     Serial.print(" release=");
@@ -1744,14 +1402,6 @@ void AnalyzerApp::printDetectionParameters() const {
     Serial.print(detectorMaxTransientDurationMs());
     Serial.print(" minStrength=");
     Serial.print(detectorMinTransientPeakStrength(), 1);
-    if (_detectorKind == DetectorKind::Frequency) {
-        Serial.print(" targetHz=");
-        Serial.print(detectorTargetFrequencyHz());
-        Serial.print(" sampleRate=");
-        Serial.print(detectorSampleRateHz());
-        Serial.print(" window=");
-        Serial.print(detectorWindowSizeSamples());
-    }
     Serial.println();
 }
 
@@ -1786,69 +1436,46 @@ void AnalyzerApp::printTransientStatsDebug(unsigned long now) const {
     Serial.println("%");
 }
 
-void AnalyzerApp::printSequenceStatus(unsigned long now) const {
-    if (_valMode) {
-        return;
-    }
-    const unsigned long total = _sequenceTest.totalTrials;
-    const unsigned long elapsedMs = now - _sequenceTest.startedAtMs;
-    const unsigned long completed = _sequenceTest.hits + _sequenceTest.misses;
-    const unsigned long successRate = total > 0 ? ((_sequenceTest.hits * 100UL) / total) : 0;
-    const unsigned long avgStrength = _sequenceTest.hits > 0 ? _sequenceTest.totalHitStrengthScaled / _sequenceTest.hits : 0;
-    const unsigned long avgDuration = _sequenceTest.hits > 0 ? _sequenceTest.totalHitDurationMs / _sequenceTest.hits : 0;
-
-    Serial.print("SEQ status t=");
-    Serial.print(now);
-    Serial.print(" elapsed_ms=");
-    Serial.print(elapsedMs);
-    Serial.print(" completed=");
-    Serial.print(completed);
-    Serial.print("/");
-    Serial.print(total);
-    Serial.print(" hits=");
-    Serial.print(_sequenceTest.hits);
-    Serial.print(" misses=");
-    Serial.print(_sequenceTest.misses);
-    Serial.print(" unexpected=");
-    Serial.print(_sequenceTest.unexpected);
-    Serial.print(" duplicates=");
-    Serial.print(_sequenceTest.duplicates);
-    Serial.print(" success=");
-    Serial.print(successRate);
-    Serial.print("% avg_strength=");
-    Serial.print(avgStrength / 100.0f, 2);
-    Serial.print(" avg_dur=");
-    Serial.println(avgDuration);
-}
-
 void AnalyzerApp::printSequenceSummary() const {
     if (_valMode) {
         return;
     }
     const unsigned long total = _sequenceTest.totalTrials;
-    const unsigned long completed = _sequenceTest.hits + _sequenceTest.misses;
-    const unsigned long successRate = total > 0 ? ((_sequenceTest.hits * 100UL) / total) : 0;
-    const float avgStrength = _sequenceTest.hits > 0 ? (static_cast<float>(_sequenceTest.totalHitStrengthScaled) / 100.0f) / static_cast<float>(_sequenceTest.hits) : 0.0f;
-    const float avgDuration = _sequenceTest.hits > 0 ? static_cast<float>(_sequenceTest.totalHitDurationMs) / static_cast<float>(_sequenceTest.hits) : 0.0f;
+    const unsigned long completed = _sequenceTest.expectedHits + _sequenceTest.lateHits + _sequenceTest.earlyHits + _sequenceTest.misses;
+    const unsigned long primaryHits = _sequenceTest.expectedHits + _sequenceTest.lateHits + _sequenceTest.earlyHits;
+    const float primaryAvgStrength = primaryHits > 0 ? (static_cast<float>(_sequenceTest.totalHitStrengthScaled) / 100.0f) / static_cast<float>(primaryHits) : 0.0f;
+    const float primaryAvgDuration = primaryHits > 0 ? static_cast<float>(_sequenceTest.totalHitDurationMs) / static_cast<float>(primaryHits) : 0.0f;
 
     Serial.print("SEQ done: tries=");
     Serial.print(total);
     Serial.print(" completed=");
     Serial.print(completed);
-    Serial.print(" hits=");
-    Serial.print(_sequenceTest.hits);
+    Serial.print(" expected_hits=");
+    Serial.print(_sequenceTest.expectedHits);
+    Serial.print(" late_hits=");
+    Serial.print(_sequenceTest.lateHits);
+    Serial.print(" early_hits=");
+    Serial.print(_sequenceTest.earlyHits);
     Serial.print(" misses=");
     Serial.print(_sequenceTest.misses);
     Serial.print(" unexpected=");
     Serial.print(_sequenceTest.unexpected);
     Serial.print(" duplicates=");
     Serial.print(_sequenceTest.duplicates);
-    Serial.print(" success=");
-    Serial.print(successRate);
-    Serial.print("% avg_strength=");
-    Serial.print(avgStrength, 3);
-    Serial.print(" avg_dur=");
-    Serial.print(avgDuration, 3);
+    Serial.print(" samples=");
+    Serial.print(_sequenceTest.samplesProcessed);
+    Serial.print(" max_loop_samples=");
+    Serial.print(_sequenceTest.maxSamplesPerLoop);
+    Serial.print(" empty_source_loops=");
+    Serial.print(_sequenceTest.emptySourceLoops);
+    Serial.print(" source_dropped=");
+    Serial.print(_audioSource.droppedSamples());
+    Serial.print(" source_buffer_max=");
+    Serial.print(_audioSource.bufferedSamplesMax());
+    Serial.print(" primary_avg_strength=");
+    Serial.print(primaryAvgStrength, 3);
+    Serial.print(" primary_avg_dur=");
+    Serial.print(primaryAvgDuration, 3);
     Serial.println(" ms");
     if (_sequenceTest.showDetails) {
         printDetectionParameters();
@@ -1911,7 +1538,6 @@ void AnalyzerApp::printBaseSummary() const {
     Serial.print(deltaSwing, 1);
     Serial.print(" quiet_delta_peak=");
     Serial.println(deltaQuietPeak, 1);
-    printFrequencyDebugSummary("BASE");
     printBaseHints();
 }
 
@@ -1964,7 +1590,6 @@ void AnalyzerApp::printCaptureSummary() const {
     Serial.print(quietDeltaAvg, 1);
     Serial.print(" delta_peak=");
     Serial.println(_captureSession.quietDeltaMax, 1);
-    printFrequencyDebugSummary("CAP");
     printCaptureHints();
 }
 
@@ -1987,26 +1612,6 @@ void AnalyzerApp::printCaptureHints() const {
     Serial.print(quietRawAvg);
     Serial.print(" quiet_delta_peak=");
     Serial.println(quietNoisePeak, 1);
-}
-
-void AnalyzerApp::printFrequencyDebugSummary(const char* prefix) const {
-    if (_detectorKind != DetectorKind::Frequency) {
-        return;
-    }
-
-    Serial.print(prefix);
-    Serial.print(" freq: score=");
-    Serial.print(detectorFrequencyScore(), 1);
-    Serial.print(" target_power=");
-    Serial.print(detectorFrequencyTargetPower(), 1);
-    Serial.print(" neighbor_power=");
-    Serial.print(detectorFrequencyNeighborPower(), 1);
-    Serial.print(" contrast=");
-    Serial.print(detectorFrequencySpectralContrast(), 2);
-    Serial.print(" energy=");
-    Serial.print(detectorFrequencyTotalEnergy(), 1);
-    Serial.print(" bin_spacing_hz=");
-    Serial.println(detectorFrequencyBinSpacingHz(), 1);
 }
 
 void AnalyzerApp::printValueFrame(unsigned long now) const {

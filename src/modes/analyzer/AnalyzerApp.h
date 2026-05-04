@@ -61,6 +61,7 @@ private:
         unsigned long windowEndOffsetMs = 2200;
         unsigned long toneHz = 3200;
         unsigned long durationMs = 100;
+        char setupLabel[48] = TEST_SETUP_LABEL;
 
         unsigned long startedAtMs = 0;
         unsigned long nextTriggerAtMs = 0;
@@ -73,6 +74,8 @@ private:
         bool currentTrialHit = false;
         bool currentTrialFinalized = false;
         unsigned long currentTrialUnexpected = 0;
+        bool trialHadAudioOverflow = false;
+        unsigned long trialOverflowCountAtStart = 0;
         TrialDiagnostics currentTrialDiagnostics;
 
         unsigned long hits = 0;
@@ -82,6 +85,7 @@ private:
         unsigned long misses = 0;
         unsigned long unexpected = 0;
         unsigned long duplicates = 0;
+        unsigned long invalidAudio = 0;
         unsigned long samplesProcessed = 0;
         unsigned long maxSamplesPerLoop = 0;
         unsigned long emptySourceLoops = 0;
@@ -191,7 +195,7 @@ private:
     void updateBaseSession(unsigned long now);
     void printBaseSummary() const;
     void printBaseHints() const;
-    void startSequenceTest(unsigned long totalTrials, unsigned long periodMs, unsigned long windowEndOffsetMs, unsigned long toneHz, unsigned long durationMs, bool quiet = false, bool showDetails = true);
+    void startSequenceTest(unsigned long totalTrials, unsigned long periodMs, unsigned long windowEndOffsetMs, unsigned long toneHz, unsigned long durationMs, bool quiet = false, bool showDetails = true, const char* setupLabel = nullptr);
     void stopSequenceTest();
     void updateSequenceTest(unsigned long now);
     void handleSequenceTransient(unsigned long now);
@@ -203,12 +207,16 @@ private:
     void updateCaptureQuietStats(unsigned long now);
     void updateCaptureTrial(unsigned long now);
     void finalizeCaptureTrial(unsigned long now);
+    void printAudioSourceSummary() const;
+    void printSignalSummary() const;
     void printCaptureHints() const;
     void printDetectionParameters() const;
     void printTransientAcceptedDebug(unsigned long now, float strength, unsigned long durationMs) const;
     void printTransientStatsDebug(unsigned long now) const;
     void printSequenceOnsetRejectCounts(const SequenceTest::TrialDiagnostics& diagnostics) const;
+    void printSequenceTrialResult(unsigned long trialNumber, const char* result, long dtMs, long durMs, float strength, bool audioOverflow, unsigned long duplicateCount) const;
     void printSequenceSummary() const;
+    void handleSequenceCandidate(const DetectorCandidate& candidate);
     void printValueFrame(unsigned long now) const;
     void printValueModeBanner() const;
 

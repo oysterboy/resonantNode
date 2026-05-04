@@ -1,5 +1,6 @@
 #include "AudioSourceI2S.h"
 #include <I2S.h>
+#include <string.h>
 
 namespace {
 int normalizeToAdcScale(int32_t rawSample) {
@@ -21,11 +22,8 @@ AudioSourceI2S::AudioSourceI2S(int sckPin, int fsPin, int dataInPin, int sampleR
 
 void AudioSourceI2S::begin() {
     // Keep the public contract sample-based even though I2S may buffer internally.
+    resetStats();
     _started = false;
-    _bufferStart = 0;
-    _bufferCount = 0;
-    _droppedSamples = 0;
-    _maxBufferedSamples = 0;
     _samplePeriodUs = _sampleRate > 0 ? static_cast<uint32_t>(1000000UL / static_cast<uint32_t>(_sampleRate)) : 0;
 
     I2S.end();
@@ -35,22 +33,39 @@ void AudioSourceI2S::begin() {
 }
 
 bool AudioSourceI2S::available() {
-    refillBuffer();
-    return _bufferCount > 0;
+    return _blockCursor < _blockCount || refillBlock();
 }
 
 bool AudioSourceI2S::readSample(int& sample, uint32_t& sampleTimeUs) {
-    refillBuffer();
-    if (_bufferCount == 0) {
+    if (_blockCursor >= _blockCount && !refillBlock()) {
         return false;
     }
 
-    const BufferedSample frame = _buffer[_bufferStart];
-    _bufferStart = (_bufferStart + 1) % kBufferCapacity;
-    --_bufferCount;
+    if (_blockCursor >= _blockCount) {
+        return false;
+    }
 
-    sample = frame.sample;
-    sampleTimeUs = frame.sampleTimeUs;
+    const size_t index = _blockCursor++;
+    sample = static_cast<int>(_blockSamples[index]);
+    sampleTimeUs = _blockApproxStartMicros + static_cast<uint32_t>(index * _samplePeriodUs);
+    return true;
+}
+
+bool AudioSourceI2S::readBlock(AudioBlock& block) {
+    if (_blockCursor >= _blockCount && !refillBlock()) {
+        return false;
+    }
+
+    if (_blockCursor >= _blockCount) {
+        return false;
+    }
+
+    block.samples = _blockSamples + _blockCursor;
+    block.sampleCount = static_cast<uint16_t>(_blockCount - _blockCursor);
+    block.startSampleIndex = _blockStartSampleIndex + _blockCursor;
+    block.approxStartMicros = _blockApproxStartMicros + static_cast<uint32_t>(_blockCursor * _samplePeriodUs);
+    block.overflowBeforeBlock = _blockOverflowBeforeBlock;
+    _blockCursor = _blockCount;
     return true;
 }
 
@@ -62,48 +77,132 @@ unsigned long AudioSourceI2S::bufferedSamplesMax() const {
     return static_cast<unsigned long>(_maxBufferedSamples);
 }
 
-void AudioSourceI2S::refillBuffer() {
+uint32_t AudioSourceI2S::sampleRateHz() const {
+    return static_cast<uint32_t>(_sampleRate);
+}
+
+uint32_t AudioSourceI2S::samplePeriodUs() const {
+    return _samplePeriodUs;
+}
+
+const AudioSourceStats& AudioSourceI2S::stats() const {
+    return _stats;
+}
+
+void AudioSourceI2S::resetStats() {
+    _blockCursor = 0;
+    _blockCount = 0;
+    _blockStartSampleIndex = 0;
+    _blockApproxStartMicros = 0;
+    _blockOverflowBeforeBlock = false;
+    _droppedSamples = 0;
+    _maxBufferedSamples = 0;
+    _stats = {};
+}
+
+void AudioSourceI2S::recordReadAttempt(int requestedBytes, int bytesRead, bool readError) {
+    _stats.reads++;
+    if (bytesRead < 0) {
+        bytesRead = 0;
+    }
+
+    _stats.readBytes += static_cast<uint32_t>(bytesRead);
+    if (static_cast<uint32_t>(bytesRead) > _stats.maxReadBytes) {
+        _stats.maxReadBytes = static_cast<uint32_t>(bytesRead);
+    }
+
+    if (bytesRead == 0) {
+        _stats.zeroReads++;
+        _stats.noSampleLoops++;
+    } else {
+        if (requestedBytes > 0 && bytesRead < requestedBytes) {
+            _stats.shortReads++;
+        }
+    }
+
+    if (readError) {
+        _stats.readErrors++;
+    }
+}
+
+bool AudioSourceI2S::refillBlock() {
     if (!_started) {
-        return;
+        recordReadAttempt(0, 0, true);
+        return false;
     }
 
     const int bytesPerSample = _bitsPerSample / 8;
     if (bytesPerSample <= 0) {
-        return;
+        recordReadAttempt(0, 0, true);
+        return false;
     }
 
-    int hardwareSamples = I2S.available() / bytesPerSample;
-    if (hardwareSamples <= 0) {
-        return;
+    const int availableBytes = I2S.available();
+    if (availableBytes <= 0) {
+        recordReadAttempt(0, 0, false);
+        return false;
     }
 
-    int rawSamples[kRefillBatchSize];
-    int chunkCount = 0;
-    while (hardwareSamples > 0 && chunkCount < static_cast<int>(kRefillBatchSize)) {
-        rawSamples[chunkCount++] = I2S.read();
-        --hardwareSamples;
+    int requestedBytes = availableBytes;
+    const int maxBatchBytes = static_cast<int>(kRefillBatchSize) * bytesPerSample;
+    if (requestedBytes > maxBatchBytes) {
+        requestedBytes = maxBatchBytes;
+    }
+    requestedBytes -= requestedBytes % bytesPerSample;
+    if (requestedBytes <= 0) {
+        recordReadAttempt(0, 0, false);
+        return false;
     }
 
+    uint8_t rawBytes[kRefillBatchSize * sizeof(int32_t)] = {};
+    const int bytesRead = I2S.read(rawBytes, static_cast<size_t>(requestedBytes));
+    const uint32_t samplesRead = bytesRead > 0 ? static_cast<uint32_t>(bytesRead / bytesPerSample) : 0;
+    recordReadAttempt(requestedBytes, bytesRead, bytesRead <= 0);
+    if (bytesRead <= 0) {
+        return false;
+    }
+
+    const size_t fullSamplesRead = static_cast<size_t>(bytesRead) / static_cast<size_t>(bytesPerSample);
     const uint32_t fillEndUs = micros();
-    for (int i = 0; i < chunkCount; ++i) {
-        const uint32_t sampleTimeUs = fillEndUs - static_cast<uint32_t>((chunkCount - 1 - i) * _samplePeriodUs);
-        const int sample = normalizeToAdcScale(rawSamples[i]);
-        pushSample(sample, sampleTimeUs);
-    }
-}
+    const size_t sampleBytes = static_cast<size_t>(bytesPerSample);
+    const size_t samplesToProcess = fullSamplesRead;
+    _blockCount = 0;
+    _blockCursor = 0;
+    _blockStartSampleIndex = _stats.totalSamplesRead;
+    _blockApproxStartMicros = fillEndUs;
+    _blockOverflowBeforeBlock = _droppedSamples > 0;
+    for (size_t i = 0; i < samplesToProcess; ++i) {
+        int rawSample = 0;
+        const uint8_t* samplePtr = rawBytes + (i * sampleBytes);
+        if (bytesPerSample == 4) {
+            int32_t sample32 = 0;
+            memcpy(&sample32, samplePtr, sizeof(sample32));
+            rawSample = sample32;
+        } else if (bytesPerSample == 2) {
+            int16_t sample16 = 0;
+            memcpy(&sample16, samplePtr, sizeof(sample16));
+            rawSample = sample16;
+        } else if (bytesPerSample == 1) {
+            int8_t sample8 = 0;
+            memcpy(&sample8, samplePtr, sizeof(sample8));
+            rawSample = sample8;
+        } else {
+            memcpy(&rawSample, samplePtr, sampleBytes);
+        }
 
-void AudioSourceI2S::pushSample(int sample, uint32_t sampleTimeUs) {
-    if (_bufferCount == kBufferCapacity) {
-        _bufferStart = (_bufferStart + 1) % kBufferCapacity;
-        --_bufferCount;
-        ++_droppedSamples;
+        const uint32_t sampleTimeUs = fillEndUs - static_cast<uint32_t>((samplesToProcess - 1 - i) * _samplePeriodUs);
+        const int sample = normalizeToAdcScale(rawSample);
+        if (i < kRefillBatchSize) {
+            _blockSamples[i] = sample;
+            _blockCount++;
+            if (_blockCount > _maxBufferedSamples) {
+                _maxBufferedSamples = _blockCount;
+            }
+        } else {
+            ++_droppedSamples;
+            _stats.overflowCount++;
+        }
     }
-
-    const size_t writeIndex = (_bufferStart + _bufferCount) % kBufferCapacity;
-    _buffer[writeIndex].sample = sample;
-    _buffer[writeIndex].sampleTimeUs = sampleTimeUs;
-    ++_bufferCount;
-    if (_bufferCount > _maxBufferedSamples) {
-        _maxBufferedSamples = _bufferCount;
-    }
+    _stats.totalSamplesRead += static_cast<uint64_t>(samplesRead);
+    return _blockCount > 0;
 }

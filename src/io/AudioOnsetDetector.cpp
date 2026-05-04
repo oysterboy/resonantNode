@@ -132,7 +132,7 @@ void AudioOnsetDetector::updateTransientStage(unsigned long nowUs, float signalM
 }
 
 void AudioOnsetDetector::printTransientStatsIfDue(unsigned long nowUs) {
-    if (!_diagnosticsEnabled) {
+    if (!_diagnosticsEnabled || !AUDIO_VERBOSE_DEBUG) {
         return;
     }
 

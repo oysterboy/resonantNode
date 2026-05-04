@@ -31,6 +31,7 @@ Node::Node(int inputPin, int ledPin, int chirpPin, int chirpBtlPin, AudioSourceK
 void Node::begin() {
     configureParameters();
     _audioSource.begin();
+    _audioSource.resetStats();
     _audioSignal.begin();
     _audioOnsetDetector.begin();
     _chirpOutput.begin();
@@ -101,31 +102,62 @@ void Node::update() {
         _audioOnsetDetector.resetState();
     }
     int processedSamples = 0;
-    while (processedSamples < kMaxSamplesPerLoop && _audioSource.available()) {
-        int sample = 0;
-        uint32_t sampleTimeUs = 0;
-        if (!_audioSource.readSample(sample, sampleTimeUs)) {
-            break;
+    bool sawI2SSample = false;
+    if (_sourceKind == AudioSourceKind::I2S) {
+        AudioBlock block;
+        while (processedSamples < kMaxSamplesPerLoop && _i2sSource.readBlock(block)) {
+            if (block.sampleCount == 0 || block.samples == nullptr) {
+                break;
+            }
+
+            for (uint16_t i = 0; i < block.sampleCount && processedSamples < kMaxSamplesPerLoop; ++i) {
+                const uint32_t sampleTimeUs = block.approxStartMicros + static_cast<uint32_t>(static_cast<uint32_t>(i) * _i2sSource.samplePeriodUs());
+                const int sample = static_cast<int>(block.samples[i]);
+                _audioSignal.update(sample, sampleTimeUs);
+                sawI2SSample = true;
+
+                if (!selfChirpSuppressed) {
+                    _audioOnsetDetector.update(static_cast<float>(_audioSignal.signalMagnitude()), sampleTimeUs);
+                }
+
+                const bool onsetDetected = selfChirpSuppressed ? false : _audioOnsetDetector.onsetDetected();
+                _debug.observeOnset(now, onsetDetected, _audioOnsetDetector.onsetStrength());
+                _debug.observeTransient(now, _audioOnsetDetector.transientDetected(), _audioOnsetDetector.transientStrength(), selfChirpSuppressed);
+
+                const bool transientDetected = selfChirpSuppressed ? false : _audioOnsetDetector.transientDetected();
+                const float transientStrength = selfChirpSuppressed ? 0.0f : _audioOnsetDetector.transientStrength();
+                _behavior.update(transientDetected, transientStrength, now);
+
+                processedSamples++;
+            }
         }
-        _audioSignal.update(sample, sampleTimeUs);
+    } else {
+        while (processedSamples < kMaxSamplesPerLoop && _audioSource.available()) {
+            int sample = 0;
+            uint32_t sampleTimeUs = 0;
+            if (!_audioSource.readSample(sample, sampleTimeUs)) {
+                break;
+            }
+            _audioSignal.update(sample, sampleTimeUs);
 
-        if (_sourceKind == AudioSourceKind::I2S) {
-            _debug.observeI2SSignal(now, _audioSignal);
+            if (!selfChirpSuppressed) {
+                _audioOnsetDetector.update(static_cast<float>(_audioSignal.signalMagnitude()), sampleTimeUs);
+            }
+
+            const bool onsetDetected = selfChirpSuppressed ? false : _audioOnsetDetector.onsetDetected();
+            _debug.observeOnset(now, onsetDetected, _audioOnsetDetector.onsetStrength());
+            _debug.observeTransient(now, _audioOnsetDetector.transientDetected(), _audioOnsetDetector.transientStrength(), selfChirpSuppressed);
+
+            const bool transientDetected = selfChirpSuppressed ? false : _audioOnsetDetector.transientDetected();
+            const float transientStrength = selfChirpSuppressed ? 0.0f : _audioOnsetDetector.transientStrength();
+            _behavior.update(transientDetected, transientStrength, now);
+
+            processedSamples++;
         }
+    }
 
-        if (!selfChirpSuppressed) {
-            _audioOnsetDetector.update(static_cast<float>(_audioSignal.signalMagnitude()), sampleTimeUs);
-        }
-
-        const bool onsetDetected = selfChirpSuppressed ? false : _audioOnsetDetector.onsetDetected();
-        _debug.observeOnset(now, onsetDetected, _audioOnsetDetector.onsetStrength());
-        _debug.observeTransient(now, _audioOnsetDetector.transientDetected(), _audioOnsetDetector.transientStrength(), selfChirpSuppressed);
-
-        const bool transientDetected = selfChirpSuppressed ? false : _audioOnsetDetector.transientDetected();
-        const float transientStrength = selfChirpSuppressed ? 0.0f : _audioOnsetDetector.transientStrength();
-        _behavior.update(transientDetected, transientStrength, now);
-
-        processedSamples++;
+    if (_sourceKind == AudioSourceKind::I2S && sawI2SSample) {
+        _debug.observeI2SSignal(now, _audioSignal);
     }
 
     if (_behavior.shouldStartChirp()) {

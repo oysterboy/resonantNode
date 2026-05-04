@@ -188,7 +188,7 @@ void AudioFrequencyDetector::updateTransientStage(unsigned long now, float score
 }
 
 void AudioFrequencyDetector::printTransientStatsIfDue(unsigned long now) {
-    if (!_diagnosticsEnabled) {
+    if (!_diagnosticsEnabled || !AUDIO_VERBOSE_DEBUG) {
         return;
     }
 

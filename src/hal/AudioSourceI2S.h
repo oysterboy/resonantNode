@@ -12,17 +12,17 @@ public:
     void begin() override;
     bool available() override;
     bool readSample(int& sample, uint32_t& sampleTimeUs) override;
+    bool readBlock(AudioBlock& block) override;
     unsigned long droppedSamples() const override;
     unsigned long bufferedSamplesMax() const override;
+    uint32_t sampleRateHz() const override;
+    const AudioSourceStats& stats() const override;
+    void resetStats() override;
+    uint32_t samplePeriodUs() const;
 
 private:
-    struct BufferedSample {
-        int sample = 0;
-        uint32_t sampleTimeUs = 0;
-    };
-
-    void refillBuffer();
-    void pushSample(int sample, uint32_t sampleTimeUs);
+    bool refillBlock();
+    void recordReadAttempt(int requestedBytes, int bytesRead, bool readError);
 
     int _sckPin;
     int _fsPin;
@@ -30,12 +30,15 @@ private:
     int _sampleRate;
     int _bitsPerSample;
     bool _started = false;
-    static constexpr size_t kBufferCapacity = 256;
     static constexpr size_t kRefillBatchSize = 32;
-    BufferedSample _buffer[kBufferCapacity];
-    size_t _bufferStart = 0;
-    size_t _bufferCount = 0;
+    int32_t _blockSamples[kRefillBatchSize] = {};
+    size_t _blockCount = 0;
+    size_t _blockCursor = 0;
+    uint64_t _blockStartSampleIndex = 0;
+    uint32_t _blockApproxStartMicros = 0;
+    bool _blockOverflowBeforeBlock = false;
     unsigned long _droppedSamples = 0;
     size_t _maxBufferedSamples = 0;
     uint32_t _samplePeriodUs = 0;
+    AudioSourceStats _stats;
 };

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "io/AudioSignal.h"
+#include "../AudioDebugConfig.h"
 
 /*
 IO
@@ -100,7 +101,7 @@ private:
     unsigned long _peakAcceptedCount = 0;
     unsigned long _statsPrintIntervalMs = 10000;
     unsigned long _expectedTransientPeriodMs = 2000;
-    bool _diagnosticsEnabled = true;
+    bool _diagnosticsEnabled = AUDIO_VERBOSE_DEBUG;
     float _lastFrequencyScore = 0.0f;
     float _lastTargetPower = 0.0f;
     float _lastNeighborPower = 0.0f;

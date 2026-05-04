@@ -10,6 +10,14 @@
 - The repository now treats `docs/myspec.md` as the stable architecture source of truth and keeps it out of per-pass task tracking.
 - Analyzer `SEQ` logs now separate trial start, detection timing, and hit acceptance more clearly for humans.
 - `docs/current-pass.md` now includes live `Done` and `In Progress` status sections.
+- I2S sampling now carries explicit `AudioBlock` timing metadata, including block start sample index and approximate block start time.
+- `AudioSignal` now processes I2S blocks directly while preserving the existing detector behavior.
+- SEQ handling now keeps duplicate candidates as count-only events instead of letting them create or finalize trial results.
+- SEQ runs now accept a manual `test=` label, with `default` as the fallback when no label is provided.
+- SEQ now waits briefly before trial 1 so the first trigger does not race detector settle time.
+- Loop-stress testing hooks were added for timing validation without changing detector thresholds.
+- Current semi-stable tuning values are now documented in code and tracked here: onset=36, release=26, cooldown=300 ms, release debounce=30 ms, transient duration=60..240 ms, min strength=40, with baseline quiet thresholds of 40 for analog and 20 for I2S.
+- SEQ currently uses a 500 ms warm-up before trial 1, and loop-stress validation defaults to `TEST_LOOP_DELAY_MS=20` unless overridden.
 - The analyzer sequence-output pass is complete and `docs/current-pass.md` was cleared down to a finished state.
 - Analyzer `SEQ` duplicate detections are now labeled explicitly.
 - Analyzer `SEQ` onset logging now prints each detector onset event directly so the analyzer view matches the detector more closely.
@@ -29,12 +37,23 @@
 - Analyzer AMP detector presets are now frozen at onset=36, release=26, cooldown=300, minMs=60, maxMs=240, minStrength=40.
 - Analyzer `SEQ` now classifies accepted hits as early, expected, or late and reports those buckets in the final summary.
 - Resonant behavior now uses the same frozen audio-signal and onset-detector parameters as analyzer.
+- `AudioSourceI2S` now tracks per-run read health counters and analyzer summaries print an `AUDIO summary` section.
+- `AudioSourceI2S` now emits reusable `AudioBlock` metadata for each non-empty I2S refill and `AudioSignal` can process blocks directly.
+
+### Fixed
+- AudioSource stats now reset at session start, after rebase, so summaries reflect the active run instead of setup reads.
+- `AUDIO stats reset` is printed once per analyzer session and not inside the audio-critical loop.
+- I2S block timing metadata now flows through reusable source-owned storage instead of temporary stack pointers.
+- Trial 1 no longer misses as often because SEQ now has a short warm-up delay before the first trigger.
+- Duplicate candidates no longer alter trial outcome selection.
+- Sampling and SEQ behavior are more stable under load because timing-critical work is less likely to be disrupted by logging and loop delay.
 
 ### Notes
 - `docs/myspec.md` was intentionally left unchanged in this pass.
 - `docs/current-pass.md` was trimmed to a short task brief for the analyzer diagnostics pass.
 - The `SEQ` output format was tightened without changing detector logic.
 - The current pass has been closed out.
+- Pass 3 adds block metadata without changing detector thresholds or RTOS/task architecture.
 
 ---
 

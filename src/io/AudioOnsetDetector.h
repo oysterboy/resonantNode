@@ -2,6 +2,8 @@
 
 #include <stdint.h>
 
+#include "../AudioDebugConfig.h"
+
 /*
 IO
 
@@ -105,5 +107,5 @@ private:
     unsigned long _peakAcceptedCount = 0;
     unsigned long _statsPrintIntervalMs = 10000; // Report cumulative detector success once every 10 seconds.
     unsigned long _expectedTransientPeriodMs = 2000; // Rough cadence we expect from the external source.
-    bool _diagnosticsEnabled = true;
+    bool _diagnosticsEnabled = AUDIO_VERBOSE_DEBUG;
 };

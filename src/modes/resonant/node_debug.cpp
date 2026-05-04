@@ -1,6 +1,7 @@
 #include "node_debug.h"
 
 #include "../../behavior/ResonantBehavior.h"
+#include "../../AudioDebugConfig.h"
 #include "../../io/AudioOnsetDetector.h"
 #include "../../io/AudioSignal.h"
 #include "../../io/ChirpOutput.h"
@@ -111,6 +112,10 @@ void NodeDebug::observeTransient(unsigned long now, bool transientDetected, floa
 }
 
 void NodeDebug::observeI2SSignal(unsigned long now, const AudioSignal& audioSignal) {
+    if (!AUDIO_VERBOSE_DEBUG || !_debugEvents) {
+        return;
+    }
+
     const int rawSignal = audioSignal.rawSignal();
     const int centeredSignal = audioSignal.centeredSignal();
 
@@ -157,6 +162,10 @@ void NodeDebug::observeI2SSignal(unsigned long now, const AudioSignal& audioSign
 }
 
 void NodeDebug::observeChirpStarted(unsigned long now, const char* sourceName, ChirpOutput::ChirpPattern pattern) {
+    if (!AUDIO_VERBOSE_DEBUG || !_debugEvents) {
+        return;
+    }
+
     _debugChirpVisibleUntilMs = now + _debugChirpEventHoldMs;
     Serial.print("EVT chirp_started source=");
     Serial.print(sourceName);
@@ -165,6 +174,10 @@ void NodeDebug::observeChirpStarted(unsigned long now, const char* sourceName, C
 }
 
 void NodeDebug::observeChirpFinished(unsigned long now) {
+    if (!AUDIO_VERBOSE_DEBUG || !_debugEvents) {
+        return;
+    }
+
     if (now >= _debugChirpVisibleUntilMs) {
         _debugChirpVisibleUntilMs = now + _debugChirpEventHoldMs;
     }

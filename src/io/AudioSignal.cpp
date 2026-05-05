@@ -4,10 +4,12 @@
 AudioSignal::AudioSignal(AudioSource& source)
     : _source(source) {}
 
-void AudioSignal::begin() {
+void AudioSignal::begin(bool doRebase) {
     resetStats();
     _detector.begin();
-    rebase();
+    if (doRebase) {
+        rebase();
+    }
 }
 
 void AudioSignal::rebase() {
@@ -92,6 +94,9 @@ void AudioSignal::processBlock(const AudioBlock& block) {
             _candidateReleaseMicrosApprox = sampleTimeUs;
             _candidateOnsetMillisApprox = sampleTimeMsApprox;
             _candidateReleaseMillisApprox = sampleTimeMsApprox;
+            _candidateOnsetStrength = static_cast<float>(_signalMagnitude);
+            _candidateReleaseStrength = static_cast<float>(_signalMagnitude);
+            _candidateAmbientBaseline = _baseline;
             _candidatePeakStrength = static_cast<float>(_signalMagnitude);
         }
 
@@ -141,20 +146,24 @@ void AudioSignal::finalizeCandidate(uint64_t releaseSample, uint32_t releaseMicr
         return;
     }
 
-    _candidateReleaseSample = releaseSample;
-    _candidateReleaseMicrosApprox = releaseMicrosApprox;
-    _candidateReleaseMillisApprox = releaseMillisApprox;
+        _candidateReleaseSample = releaseSample;
+        _candidateReleaseMicrosApprox = releaseMicrosApprox;
+        _candidateReleaseMillisApprox = releaseMillisApprox;
+        _candidateReleaseStrength = static_cast<float>(_signalMagnitude);
 
-    DetectorCandidate candidate;
-    candidate.onsetSample = _candidateOnsetSample;
-    candidate.peakSample = _candidatePeakSample;
-    candidate.releaseSample = _candidateReleaseSample;
-    candidate.onsetMicrosApprox = _candidateOnsetMicrosApprox;
-    candidate.releaseMicrosApprox = _candidateReleaseMicrosApprox;
-    candidate.onsetMillisApprox = _candidateOnsetMillisApprox;
-    candidate.releaseMillisApprox = _candidateReleaseMillisApprox;
-    candidate.peakStrength = _candidatePeakStrength;
-    candidate.audioOverflowDuringCandidate = _candidateHadOverflow;
+        DetectorCandidate candidate;
+        candidate.onsetSample = _candidateOnsetSample;
+        candidate.peakSample = _candidatePeakSample;
+        candidate.releaseSample = _candidateReleaseSample;
+        candidate.onsetMicrosApprox = _candidateOnsetMicrosApprox;
+        candidate.releaseMicrosApprox = _candidateReleaseMicrosApprox;
+        candidate.onsetMillisApprox = _candidateOnsetMillisApprox;
+        candidate.releaseMillisApprox = _candidateReleaseMillisApprox;
+        candidate.onsetStrength = _candidateOnsetStrength;
+        candidate.peakStrength = _candidatePeakStrength;
+        candidate.releaseStrength = _candidateReleaseStrength;
+        candidate.ambientBaseline = _candidateAmbientBaseline;
+        candidate.audioOverflowDuringCandidate = _candidateHadOverflow;
 
     if (candidate.releaseSample >= candidate.onsetSample) {
         const uint32_t sampleRateHz = _source.sampleRateHz();
@@ -181,6 +190,9 @@ void AudioSignal::finalizeCandidate(uint64_t releaseSample, uint32_t releaseMicr
     _candidateOnsetMillisApprox = 0;
     _candidateReleaseMillisApprox = 0;
     _candidatePeakStrength = 0.0f;
+    _candidateOnsetStrength = 0.0f;
+    _candidateReleaseStrength = 0.0f;
+    _candidateAmbientBaseline = 0.0f;
 }
 
 bool AudioSignal::pushCandidate(const DetectorCandidate& candidate) {
@@ -346,6 +358,18 @@ float AudioSignal::lastTransientRejectedStrength() const {
     return _detector.lastTransientRejectedStrength();
 }
 
+unsigned long AudioSignal::transientRejectedDurationTooShortCount() const {
+    return _detector.transientRejectedDurationTooShortCount();
+}
+
+unsigned long AudioSignal::transientRejectedDurationTooLongCount() const {
+    return _detector.transientRejectedDurationTooLongCount();
+}
+
+unsigned long AudioSignal::transientRejectedStrengthTooLowCount() const {
+    return _detector.transientRejectedStrengthTooLowCount();
+}
+
 const AudioSignalStats& AudioSignal::stats() const {
     return _stats;
 }
@@ -380,6 +404,9 @@ void AudioSignal::resetStats() {
     _candidateOnsetMillisApprox = 0;
     _candidateReleaseMillisApprox = 0;
     _candidatePeakStrength = 0.0f;
+    _candidateOnsetStrength = 0.0f;
+    _candidateReleaseStrength = 0.0f;
+    _candidateAmbientBaseline = 0.0f;
     _lastBlock = {};
     _lastBlockStartSample = 0;
     _lastBlockSampleCount = 0;
@@ -396,4 +423,7 @@ void AudioSignal::resetDetectorState() {
     _candidateOnsetMicrosApprox = 0;
     _candidateReleaseMicrosApprox = 0;
     _candidatePeakStrength = 0.0f;
+    _candidateOnsetStrength = 0.0f;
+    _candidateReleaseStrength = 0.0f;
+    _candidateAmbientBaseline = 0.0f;
 }

@@ -10,7 +10,16 @@ class ResonantBehavior;
 
 class NodeDebug {
 public:
+    enum class DebugMode {
+        Off,
+        Events,
+        Plot,
+    };
+
     void begin(int ledPin);
+    void setDebugMode(DebugMode mode);
+    DebugMode debugMode() const;
+    const char* debugModeName() const;
 
     void markLoopStart(unsigned long nowUs);
     void endLoop(unsigned long nowUs);
@@ -20,6 +29,10 @@ public:
 
     void observeOnset(unsigned long now, bool onsetDetected, float onsetStrength);
     void observeTransient(unsigned long now, bool transientDetected, float transientStrength, bool suppressed);
+    void observeBehaviorGate(unsigned long now,
+                             const ResonantBehavior& behavior,
+                             bool transientDetected,
+                             bool selfChirpSuppressed);
     void observeI2SSignal(unsigned long now, const AudioSignal& audioSignal);
     void observeChirpStarted(unsigned long now, const char* sourceName, ChirpOutput::ChirpPattern pattern);
     void observeChirpFinished(unsigned long now);
@@ -36,15 +49,17 @@ public:
                          bool selfChirpSuppressed);
 
 private:
+    bool eventsEnabled() const;
+    bool plotEnabled() const;
+
     void updatePulse(unsigned long now,
                      bool detected,
                      float strength,
                      unsigned long& visibleUntilMs,
                      float& storedStrength);
 
-    // Debug mode toggles.
-    bool _debugEvents = false;
-    bool _debugPlot = false;
+    // Debug mode selection.
+    DebugMode _debugMode = DebugMode::Events;
     unsigned long _lastDebugPrintMs = 0;
     const unsigned long _debugIntervalMs = 100;
 

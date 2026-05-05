@@ -8,6 +8,35 @@
 
 #include <Arduino.h>
 
+void NodeDebug::setDebugMode(DebugMode mode) {
+    _debugMode = mode;
+}
+
+NodeDebug::DebugMode NodeDebug::debugMode() const {
+    return _debugMode;
+}
+
+const char* NodeDebug::debugModeName() const {
+    switch (_debugMode) {
+        case DebugMode::Off:
+            return "off";
+        case DebugMode::Events:
+            return "events";
+        case DebugMode::Plot:
+            return "plot";
+    }
+
+    return "unknown";
+}
+
+bool NodeDebug::eventsEnabled() const {
+    return _debugMode == DebugMode::Events;
+}
+
+bool NodeDebug::plotEnabled() const {
+    return _debugMode == DebugMode::Plot;
+}
+
 void NodeDebug::begin(int ledPin) {
     _lastDebugPrintMs = 0;
     _loopStartMicros = 0;
@@ -25,9 +54,8 @@ void NodeDebug::begin(int ledPin) {
     _ledPin = ledPin;
     _ledTransientPulseStartMs = 0;
 
-    ledcSetup(kLedPwmChannel, kLedPwmFrequencyHz, kLedPwmResolutionBits);
-    ledcAttachPin(_ledPin, kLedPwmChannel);
-    ledcWrite(kLedPwmChannel, kLedBrightnessOff);
+    pinMode(_ledPin, OUTPUT);
+    digitalWrite(_ledPin, LOW);
 }
 
 void NodeDebug::markLoopStart(unsigned long nowUs) {
@@ -107,12 +135,54 @@ void NodeDebug::observeTransient(unsigned long now, bool transientDetected, floa
     if (transientDetected) {
         _ledTransientPulseStartMs = now;
     }
-
     updatePulse(now, transientDetected, transientStrength, _debugTransientVisibleUntilMs, _debugTransientStrength);
 }
 
+void NodeDebug::observeBehaviorGate(unsigned long now,
+                                    const ResonantBehavior& behavior,
+                                    bool transientDetected,
+                                    bool selfChirpSuppressed) {
+    if (!AUDIO_VERBOSE_DEBUG || !eventsEnabled()) {
+        return;
+    }
+
+    const unsigned long waitRemainingMs = behavior.waitRemainingMs(now);
+    const unsigned long refractoryRemainingMs = behavior.refractoryRemainingMs(now);
+    const unsigned long selfIgnoreRemainingMs = behavior.selfChirpIgnoreRemainingMs(now);
+    const int state = behavior.stateCode();
+
+    const bool gateActive = transientDetected || selfChirpSuppressed || waitRemainingMs > 0 || refractoryRemainingMs > 0 || selfIgnoreRemainingMs > 0;
+    if (!gateActive) {
+        return;
+    }
+
+    const char* reason = "idle";
+    if (selfIgnoreRemainingMs > 0) {
+        reason = "self_ignore";
+    } else if (state == 1 && waitRemainingMs > 0) {
+        reason = "wait";
+    } else if (state == 3 && refractoryRemainingMs > 0) {
+        reason = "refractory";
+    } else if (transientDetected) {
+        reason = "transient";
+    }
+
+    Serial.print("RB gate state=");
+    Serial.print(behavior.stateName());
+    Serial.print(" reason=");
+    Serial.print(reason);
+    Serial.print(" transient=");
+    Serial.print(transientDetected ? 1 : 0);
+    Serial.print(" waitMs=");
+    Serial.print(waitRemainingMs);
+    Serial.print(" selfIgnoreMs=");
+    Serial.print(selfIgnoreRemainingMs);
+    Serial.print(" refractoryMs=");
+    Serial.println(refractoryRemainingMs);
+}
+
 void NodeDebug::observeI2SSignal(unsigned long now, const AudioSignal& audioSignal) {
-    if (!AUDIO_VERBOSE_DEBUG || !_debugEvents) {
+    if (!AUDIO_VERBOSE_DEBUG || !eventsEnabled()) {
         return;
     }
 
@@ -162,7 +232,7 @@ void NodeDebug::observeI2SSignal(unsigned long now, const AudioSignal& audioSign
 }
 
 void NodeDebug::observeChirpStarted(unsigned long now, const char* sourceName, ChirpOutput::ChirpPattern pattern) {
-    if (!AUDIO_VERBOSE_DEBUG || !_debugEvents) {
+    if (!AUDIO_VERBOSE_DEBUG || !eventsEnabled()) {
         return;
     }
 
@@ -170,11 +240,21 @@ void NodeDebug::observeChirpStarted(unsigned long now, const char* sourceName, C
     Serial.print("EVT chirp_started source=");
     Serial.print(sourceName);
     Serial.print(" pattern=");
-    Serial.println(pattern == ChirpOutput::ChirpPattern::Triple ? "triple" : "single");
+    switch (pattern) {
+        case ChirpOutput::ChirpPattern::Single:
+            Serial.println("single");
+            break;
+        case ChirpOutput::ChirpPattern::Triple:
+            Serial.println("triple");
+            break;
+        case ChirpOutput::ChirpPattern::Idle:
+            Serial.println("idle");
+            break;
+    }
 }
 
 void NodeDebug::observeChirpFinished(unsigned long now) {
-    if (!AUDIO_VERBOSE_DEBUG || !_debugEvents) {
+    if (!AUDIO_VERBOSE_DEBUG || !eventsEnabled()) {
         return;
     }
 
@@ -188,25 +268,18 @@ void NodeDebug::updateLed(unsigned long now,
                           const ResonantBehavior& behavior,
                           const ChirpOutput& chirpOutput,
                           bool selfChirpSuppressed) {
-    uint8_t ledDuty = kLedBrightnessOff;
-    if (chirpOutput.isActive()) {
-        ledDuty = kLedBrightnessFull;
-    } else if (_ledTransientPulseStartMs != 0) {
-        const unsigned long pulseElapsedMs = now - _ledTransientPulseStartMs;
-        const unsigned long pulseWindowMs = kLedTransientPulseCycleMs * kLedTransientPulseCount;
-        if (pulseElapsedMs < pulseWindowMs) {
-            const unsigned long pulsePhaseMs = pulseElapsedMs % kLedTransientPulseCycleMs;
-            ledDuty = pulsePhaseMs < kLedTransientPulseOnMs ? kLedBrightnessFull : kLedBrightnessOff;
-        } else {
-            _ledTransientPulseStartMs = 0;
+    bool ledOn = chirpOutput.isActive();
+
+    if (!ledOn && !selfChirpSuppressed && _ledTransientPulseStartMs != 0) {
+        const unsigned long elapsedMs = now - _ledTransientPulseStartMs;
+        const unsigned long pulseIndex = elapsedMs / kLedTransientPulseCycleMs;
+        if (pulseIndex < kLedTransientPulseCount) {
+            const unsigned long phaseMs = elapsedMs % kLedTransientPulseCycleMs;
+            ledOn = phaseMs < kLedTransientPulseOnMs;
         }
-    } else if (selfChirpSuppressed) {
-        ledDuty = kLedBrightnessSelfIgnore;
-    } else if (behavior.stateCode() == 3) {
-        ledDuty = kLedBrightnessRefractory;
     }
 
-    ledcWrite(kLedPwmChannel, ledDuty);
+    digitalWrite(_ledPin, ledOn ? HIGH : LOW);
 }
 
 void NodeDebug::printPlotValues(unsigned long now,
@@ -215,7 +288,7 @@ void NodeDebug::printPlotValues(unsigned long now,
                                const ResonantBehavior& behavior,
                                const ChirpOutput& chirpOutput,
                                bool selfChirpSuppressed) {
-    if (!_debugPlot) return;
+    if (!plotEnabled()) return;
     if (now < 1000) return;
     if (now - _lastDebugPrintMs < _debugIntervalMs) return;
 

@@ -117,6 +117,11 @@ Receives samples, does not acquire them.
 update(sample, sampleTimeUs)
 ```
 
+Current implementation note:
+- In the I2S path, `AudioSignal` currently owns the active AMP detector.
+- `_audioOnsetDetector` is not the detector used by the I2S runtime path yet.
+- Treat `_audioOnsetDetector` as the analog compatibility detector until the split is cleaned up.
+
 Responsibilities:
 - baseline
 - magnitude

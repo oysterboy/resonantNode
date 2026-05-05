@@ -23,7 +23,10 @@ struct DetectorCandidate {
     uint32_t onsetMillisApprox = 0;
     uint32_t releaseMillisApprox = 0;
 
+    float onsetStrength = 0.0f;
     float peakStrength = 0.0f;
+    float releaseStrength = 0.0f;
+    float ambientBaseline = 0.0f;
     uint32_t durationMs = 0;
 
     bool audioOverflowDuringCandidate = false;
@@ -47,7 +50,7 @@ class AudioSignal {
 public:
     explicit AudioSignal(AudioSource& source);
 
-    void begin();
+    void begin(bool doRebase = true);
     void rebase();
     void update(int sample, uint32_t sampleTimeUs);
     void processBlock(const AudioBlock& block);
@@ -91,6 +94,9 @@ public:
     const char* lastTransientRejectReasonName() const;
     unsigned long lastTransientRejectedDurationMs() const;
     float lastTransientRejectedStrength() const;
+    unsigned long transientRejectedDurationTooShortCount() const;
+    unsigned long transientRejectedDurationTooLongCount() const;
+    unsigned long transientRejectedStrengthTooLowCount() const;
     const AudioSignalStats& stats() const;
     bool popCandidate(DetectorCandidate& candidate);
     bool candidateAvailable() const;
@@ -130,6 +136,9 @@ private:
     uint32_t _candidateOnsetMillisApprox = 0;
     uint32_t _candidateReleaseMillisApprox = 0;
     float _candidatePeakStrength = 0.0f;
+    float _candidateOnsetStrength = 0.0f;
+    float _candidateReleaseStrength = 0.0f;
+    float _candidateAmbientBaseline = 0.0f;
 
     // Tuning knobs for baseline tracking and smoothing.
     int _baselineTrackingQuietThreshold = 40;

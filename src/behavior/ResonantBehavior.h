@@ -18,6 +18,7 @@ Does NOT:
 
 class ResonantBehavior {
 public:
+    void resetState();
     // main update (now time-aware)
     void update(bool transientDetected, float transientStrength, unsigned long now);
 
@@ -30,6 +31,9 @@ public:
     bool isActive() const;
     const char* stateName() const;
     int stateCode() const;
+    unsigned long waitRemainingMs(unsigned long now) const;
+    unsigned long refractoryRemainingMs(unsigned long now) const;
+    unsigned long selfChirpIgnoreRemainingMs(unsigned long now) const;
 
     // ACTION request (SOUND resource)
     bool shouldStartChirp();
@@ -64,8 +68,8 @@ private:
     unsigned long _selfChirpSuppressUntilMs = 0;
 
     // --- timing parameters ---
-    unsigned long _waitAfterTransientMs = 300; // Delay before responding after a transient is seen.
-    unsigned long _refractoryAfterEmitMs = 1000; // Ignore follow-up activity for a short time after a chirp finishes.
+    unsigned long _waitAfterTransientMs = 800; // Delay before responding after a transient is seen.
+    unsigned long _refractoryAfterEmitMs = 200; // Ignore follow-up activity for a short time after a chirp finishes.
     unsigned long _idleTimeoutMs = 10000; // Self-trigger if nothing has been seen or emitted for this long.
     unsigned long _selfChirpIgnoreMs = 500; // Suppress detector response while the node's chirp is active.
     unsigned long _selfChirpTailIgnoreMs = 500; // Keep suppressing briefly after chirp finish for ring-down.

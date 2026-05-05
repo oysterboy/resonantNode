@@ -1,7 +1,9 @@
 #pragma once
 
 #include <stdint.h>
+#include <stddef.h>
 
+#include "../../behavior/ResonantBehavior.h"
 #include "../../hal/AudioSourceAnalog.h"
 #include "../../hal/AudioSourceI2S.h"
 #include "../../hal/PiezoToneOutputBTL.h"
@@ -45,10 +47,33 @@ public:
     void update();
 
 private:
+    enum class RBBaselineState {
+        Boot,
+        ListenForQuiet,
+        Rebase,
+        Settle,
+        Active,
+        FailedNoQuiet,
+    };
+
     void configureParameters();
     void configureSharedParameters();
     void configureAnalogParameters();
     void configureI2SParameters();
+    void startRbQuietBaseline();
+    void resetRbCounters();
+    void resetDetectionState();
+    void performRbRebase();
+    void updateRbBaselineState(unsigned long now);
+    bool rbOutputsEnabled() const;
+    const char* rbBaselineStateName() const;
+    void pollSerialCommands();
+    void handleSerialLine(const char* line);
+    void handleDebugCommand(const char* line);
+    void logCandidate(const DetectorCandidate& candidate, unsigned long candidateNumber, long gapMs, const char* action, const char* stateName, const char* gateName);
+    void printRbSummary() const;
+    void printRbSignalSummary() const;
+    void printRbDetectorSummary() const;
 
     int _ledPin;
 
@@ -64,4 +89,21 @@ private:
     ChirpOutput _chirpOutput;
 
     NodeDebug _debug;
+
+    char _serialLineBuffer[96] = {};
+    size_t _serialLineLength = 0;
+    unsigned long _rbCandidateCount = 0;
+    unsigned long _rbActionCount = 0;
+    unsigned long _rbOverflowCandidates = 0;
+    unsigned long _rbLastCandidateMs = 0;
+    bool _rbHaveLastCandidateMs = false;
+    unsigned long _rbStrengthSumScaled = 0;
+    unsigned long _rbDurationSumMs = 0;
+    bool _rbDetectOnly = false;
+    bool _wasSelfChirpSuppressed = false;
+    RBBaselineState _rbBaselineState = RBBaselineState::Boot;
+    unsigned long _rbBaselineStateStartedMs = 0;
+    unsigned long _rbBaselineQuietSinceMs = 0;
+    unsigned long _rbBaselineLastLogMs = 0;
+    unsigned long _rbBaselineSettleUntilMs = 0;
 };

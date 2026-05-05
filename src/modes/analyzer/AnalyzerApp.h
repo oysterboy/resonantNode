@@ -24,6 +24,24 @@ public:
 private:
     // Per-session state bundles keep the long-running modes readable and isolated.
     struct SequenceTest {
+        static constexpr size_t kMaxTrialCandidates = 16;
+        static constexpr size_t kMaxDuplicateDts = 8;
+
+        enum class CandidateOrigin {
+            PreWindow,
+            InWindow,
+            PostWindow,
+        };
+
+        struct CandidateSample {
+            unsigned long candidateMs = 0;
+            long dtFromTriggerMs = 0;
+            long dtFromTrialStartMs = 0;
+            unsigned long durationMs = 0;
+            float strength = 0.0f;
+            CandidateOrigin origin = CandidateOrigin::InWindow;
+        };
+
         struct TrialDiagnostics {
             bool onsetSeen = false;
             bool transientAccepted = false;
@@ -33,6 +51,40 @@ private:
             unsigned long acceptedTransientMs = 0;
             float acceptedTransientStrength = 0.0f;
             unsigned long acceptedTransientDurationMs = 0;
+            float acceptedTransientOnsetStrength = 0.0f;
+            float acceptedTransientReleaseStrength = 0.0f;
+            float acceptedAmbientBaseline = 0.0f;
+
+            unsigned long rawCandidateCount = 0;
+            unsigned long candidatePreWindowCount = 0;
+            unsigned long candidateInWindowCount = 0;
+            unsigned long candidatePostWindowCount = 0;
+            CandidateSample candidates[kMaxTrialCandidates] = {};
+            unsigned long candidateCount = 0;
+            unsigned long candidateOverflowCount = 0;
+            unsigned long firstCandidateMs = 0;
+            bool bestCandidateValid = false;
+            long bestCandidateDtFromTriggerMs = 0;
+            unsigned long bestCandidateDurationMs = 0;
+            float bestCandidateStrength = 0.0f;
+            CandidateOrigin bestCandidateOrigin = CandidateOrigin::InWindow;
+
+            unsigned long ambientBaselineSamples = 0;
+            float ambientBaselineSum = 0.0f;
+            float ambientBaselineMin = 0.0f;
+            float ambientBaselineMax = 0.0f;
+            int maxSignalLevel = 0;
+
+            unsigned long transientRejectTooShortCount = 0;
+            unsigned long transientRejectTooLongCount = 0;
+            unsigned long transientRejectWeakCount = 0;
+            AudioOnsetDetector::TransientRejectReason strongestRejectReason = AudioOnsetDetector::TransientRejectReason::None;
+            long strongestRejectDtFromTriggerMs = -1;
+            unsigned long strongestRejectDurationMs = 0;
+            float strongestRejectStrength = 0.0f;
+
+            unsigned long duplicateDts[kMaxDuplicateDts] = {};
+            unsigned long duplicateDtCount = 0;
 
             unsigned long duplicateCount = 0;
 
@@ -76,7 +128,11 @@ private:
         unsigned long currentTrialUnexpected = 0;
         bool trialHadAudioOverflow = false;
         unsigned long trialOverflowCountAtStart = 0;
+        unsigned long trialTransientRejectTooShortCountAtStart = 0;
+        unsigned long trialTransientRejectTooLongCountAtStart = 0;
+        unsigned long trialTransientRejectWeakCountAtStart = 0;
         TrialDiagnostics currentTrialDiagnostics;
+        unsigned long debugLevel = 1;
 
         unsigned long hits = 0;
         unsigned long expectedHits = 0;
@@ -195,7 +251,7 @@ private:
     void updateBaseSession(unsigned long now);
     void printBaseSummary() const;
     void printBaseHints() const;
-    void startSequenceTest(unsigned long totalTrials, unsigned long periodMs, unsigned long windowEndOffsetMs, unsigned long toneHz, unsigned long durationMs, bool quiet = false, bool showDetails = true, const char* setupLabel = nullptr);
+    void startSequenceTest(unsigned long totalTrials, unsigned long periodMs, unsigned long windowEndOffsetMs, unsigned long toneHz, unsigned long durationMs, bool quiet = false, bool showDetails = true, const char* setupLabel = nullptr, unsigned long debugLevel = 1);
     void stopSequenceTest();
     void updateSequenceTest(unsigned long now);
     void handleSequenceTransient(unsigned long now);
@@ -213,10 +269,14 @@ private:
     void printDetectionParameters() const;
     void printTransientAcceptedDebug(unsigned long now, float strength, unsigned long durationMs) const;
     void printTransientStatsDebug(unsigned long now) const;
-    void printSequenceOnsetRejectCounts(const SequenceTest::TrialDiagnostics& diagnostics) const;
-    void printSequenceTrialResult(unsigned long trialNumber, const char* result, long dtMs, long durMs, float strength, bool audioOverflow, unsigned long duplicateCount) const;
+    void printSequenceTrialDebug(unsigned long trialNumber, const char* result, const SequenceTest::TrialDiagnostics& diagnostics) const;
+    void printSequenceTrialResult(unsigned long trialNumber, const char* result, long dtMs, long durMs, float strength, bool audioOverflow, unsigned long duplicateCount, const SequenceTest::TrialDiagnostics& diagnostics) const;
     void printSequenceSummary() const;
     void handleSequenceCandidate(const DetectorCandidate& candidate);
+    void updateSequenceAmbientStats();
+    void noteSequenceTransientReject(unsigned long eventMs);
+    void noteSequenceTransientRejectReason(unsigned long eventMs, const char* reasonName, unsigned long durationMs, float strength);
+    const char* sequenceTrialClassificationName(const char* result, long dtMs, long durMs, const SequenceTest::TrialDiagnostics& diagnostics) const;
     void printValueFrame(unsigned long now) const;
     void printValueModeBanner() const;
 

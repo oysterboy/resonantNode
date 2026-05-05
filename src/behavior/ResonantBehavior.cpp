@@ -35,7 +35,7 @@ void ResonantBehavior::update(bool transientDetected, float transientStrength, u
             else if (now - max(_lastTransientMs, _lastEmitMs) > _idleTimeoutMs) {
                 _chirpRequested = true;
                 _chirpRequestSource = ChirpRequestSource::Idle;
-                _chirpPattern = ChirpOutput::ChirpPattern::Single;
+                _chirpPattern = ChirpOutput::ChirpPattern::Idle;
                 _lastEmitMs = now;
                 _state = State::Chirping;
             }
@@ -62,6 +62,19 @@ void ResonantBehavior::update(bool transientDetected, float transientStrength, u
             }
             break;
     }
+}
+
+void ResonantBehavior::resetState() {
+    _state = State::Idle;
+    _activityLevel = 0.0f;
+    _lastEmitMs = 0;
+    _lastTransientMs = 0;
+    _transientStartedMs = 0;
+    _refractoryStartedMs = 0;
+    _selfChirpSuppressUntilMs = 0;
+    _chirpRequested = false;
+    _chirpRequestSource = ChirpRequestSource::None;
+    _chirpPattern = ChirpOutput::ChirpPattern::Single;
 }
 
 // --- outputs ---
@@ -116,6 +129,35 @@ float ResonantBehavior::activity() const {
 
 bool ResonantBehavior::isActive() const {
     return _activityLevel > 0.0f;
+}
+
+unsigned long ResonantBehavior::waitRemainingMs(unsigned long now) const {
+    if (_state != State::TransientSeen) {
+        return 0;
+    }
+    if (now <= _transientStartedMs) {
+        return _waitAfterTransientMs;
+    }
+    const unsigned long elapsed = now - _transientStartedMs;
+    return elapsed >= _waitAfterTransientMs ? 0 : _waitAfterTransientMs - elapsed;
+}
+
+unsigned long ResonantBehavior::refractoryRemainingMs(unsigned long now) const {
+    if (_state != State::Refractory) {
+        return 0;
+    }
+    if (now <= _refractoryStartedMs) {
+        return _refractoryAfterEmitMs;
+    }
+    const unsigned long elapsed = now - _refractoryStartedMs;
+    return elapsed >= _refractoryAfterEmitMs ? 0 : _refractoryAfterEmitMs - elapsed;
+}
+
+unsigned long ResonantBehavior::selfChirpIgnoreRemainingMs(unsigned long now) const {
+    if (now >= _selfChirpSuppressUntilMs) {
+        return 0;
+    }
+    return _selfChirpSuppressUntilMs - now;
 }
 
 void ResonantBehavior::setWaitAfterTransientMs(unsigned long value) {

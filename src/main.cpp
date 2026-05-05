@@ -17,7 +17,7 @@ AnalyzerApp app;
 #elif defined(EMITTER_MODE)
 EmitterApp app(25, 26, 16, 17, 115200);
 #else
-Node app(34, 2, 25, Node::AudioSourceKind::I2S);
+Node app(34, 2, 25, 26, Node::AudioSourceKind::I2S);
 #endif
 
 void setup() {

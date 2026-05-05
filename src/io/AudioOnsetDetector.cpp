@@ -117,8 +117,14 @@ void AudioOnsetDetector::updateTransientStage(unsigned long nowUs, float signalM
                 _lastTransientRejectReason = peakDurationUs < minTransientDurationUs
                                                 ? TransientRejectReason::DurationTooShort
                                                 : TransientRejectReason::DurationTooLong;
+                if (_lastTransientRejectReason == TransientRejectReason::DurationTooShort) {
+                    _transientRejectedDurationTooShortCount++;
+                } else {
+                    _transientRejectedDurationTooLongCount++;
+                }
             } else if (!strengthAccepted) {
                 _lastTransientRejectReason = TransientRejectReason::StrengthTooLow;
+                _transientRejectedStrengthTooLowCount++;
             } else {
                 _lastTransientRejectReason = TransientRejectReason::None;
             }
@@ -217,6 +223,18 @@ unsigned long AudioOnsetDetector::lastTransientRejectedDurationMs() const {
 
 float AudioOnsetDetector::lastTransientRejectedStrength() const {
     return _lastTransientRejectedStrength;
+}
+
+unsigned long AudioOnsetDetector::transientRejectedDurationTooShortCount() const {
+    return _transientRejectedDurationTooShortCount;
+}
+
+unsigned long AudioOnsetDetector::transientRejectedDurationTooLongCount() const {
+    return _transientRejectedDurationTooLongCount;
+}
+
+unsigned long AudioOnsetDetector::transientRejectedStrengthTooLowCount() const {
+    return _transientRejectedStrengthTooLowCount;
 }
 
 float AudioOnsetDetector::onsetDetectionThreshold() const {

@@ -61,6 +61,9 @@ public:
     const char* lastTransientRejectReasonName() const;
     unsigned long lastTransientRejectedDurationMs() const;
     float lastTransientRejectedStrength() const;
+    unsigned long transientRejectedDurationTooShortCount() const;
+    unsigned long transientRejectedDurationTooLongCount() const;
+    unsigned long transientRejectedStrengthTooLowCount() const;
     float onsetDetectionThreshold() const;
     float onsetReleaseThreshold() const;
     unsigned long cooldownAfterOnsetMs() const;
@@ -91,6 +94,9 @@ private:
     TransientRejectReason _lastTransientRejectReason = TransientRejectReason::None;
     unsigned long _lastTransientRejectedDurationMs = 0;
     float _lastTransientRejectedStrength = 0.0f;
+    unsigned long _transientRejectedDurationTooShortCount = 0;
+    unsigned long _transientRejectedDurationTooLongCount = 0;
+    unsigned long _transientRejectedStrengthTooLowCount = 0;
     bool _peakActive = false;
     unsigned long _peakStartedUs = 0;
     unsigned long _releaseCandidateStartedUs = 0;

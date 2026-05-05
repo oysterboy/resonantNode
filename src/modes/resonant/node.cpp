@@ -1,5 +1,6 @@
 #include "node.h"
 #include <Arduino.h>
+#include <string.h>
 
 #ifndef CHIRP_FREQUENCY_HZ
 #define CHIRP_FREQUENCY_HZ 2400
@@ -7,6 +8,66 @@
 
 namespace {
 constexpr int kMaxSamplesPerLoop = 128;
+constexpr int kRbStartupQuietThreshold = 20;
+constexpr unsigned long kRbStartupQuietHoldMs = 1000;
+constexpr unsigned long kRbStartupBaselineTimeoutMs = 8000;
+constexpr unsigned long kRbPostRebaseSettleMs = 500;
+
+bool startsWithTokenIgnoreCase(const char* line, const char* token) {
+    while (*token != '\0') {
+        if (*line == '\0') {
+            return false;
+        }
+        if (toupper(static_cast<unsigned char>(*line)) != toupper(static_cast<unsigned char>(*token))) {
+            return false;
+        }
+        ++line;
+        ++token;
+    }
+
+    return true;
+}
+
+bool equalsIgnoreCase(const char* a, const char* b) {
+    while (*a != '\0' && *b != '\0') {
+        if (toupper(static_cast<unsigned char>(*a)) != toupper(static_cast<unsigned char>(*b))) {
+            return false;
+        }
+        ++a;
+        ++b;
+    }
+
+    return *a == '\0' && *b == '\0';
+}
+
+const char* behaviorGateName(const ResonantBehavior& behavior, unsigned long now, bool transientDetected, bool selfChirpSuppressed) {
+    if (selfChirpSuppressed) {
+        return "self_ignore";
+    }
+    if (behavior.refractoryRemainingMs(now) > 0) {
+        return "refractory";
+    }
+    if (behavior.waitRemainingMs(now) > 0) {
+        return "wait";
+    }
+    if (transientDetected) {
+        return "transient";
+    }
+    return behavior.stateCode() == 0 ? "idle" : behavior.stateName();
+}
+
+const char* chirpPatternName(ChirpOutput::ChirpPattern pattern) {
+    switch (pattern) {
+        case ChirpOutput::ChirpPattern::Single:
+            return "single";
+        case ChirpOutput::ChirpPattern::Triple:
+            return "triple";
+        case ChirpOutput::ChirpPattern::Idle:
+            return "idle";
+    }
+
+    return "unknown";
+}
 }
 
 Node::Node(int inputPin, int ledPin, int chirpPin, AudioSourceKind sourceKind)
@@ -31,12 +92,164 @@ Node::Node(int inputPin, int ledPin, int chirpPin, int chirpBtlPin, AudioSourceK
 void Node::begin() {
     configureParameters();
     _audioSource.begin();
-    _audioSource.resetStats();
-    _audioSignal.begin();
+    _audioSignal.begin(false);
     _audioOnsetDetector.begin();
+    _behavior.resetState();
+    resetDetectionState();
+    _audioSignal.resetStats();
+    _audioSource.resetStats();
+    resetRbCounters();
+    _rbDetectOnly = false;
+    _rbBaselineState = _sourceKind == AudioSourceKind::I2S ? RBBaselineState::ListenForQuiet : RBBaselineState::Active;
+    _rbBaselineStateStartedMs = millis();
+    _rbBaselineQuietSinceMs = 0;
+    _rbBaselineLastLogMs = 0;
+    _rbBaselineSettleUntilMs = 0;
     _chirpOutput.begin();
     _debug.begin(_ledPin);
     _debug.markLoopStart(micros());
+    _serialLineLength = 0;
+    _serialLineBuffer[0] = '\0';
+
+    if (_sourceKind == AudioSourceKind::I2S) {
+        Serial.print("RB det mode=AMP onset=");
+        Serial.print(_audioSignal.onsetDetectionThreshold(), 1);
+        Serial.print(" release=");
+        Serial.print(_audioSignal.onsetReleaseThreshold(), 1);
+        Serial.print(" cooldown=");
+        Serial.print(_audioSignal.cooldownAfterOnsetMs());
+        Serial.print(" minMs=");
+        Serial.print(_audioSignal.minTransientDurationMs());
+        Serial.print(" maxMs=");
+        Serial.print(_audioSignal.maxTransientDurationMs());
+        Serial.print(" minStrength=");
+        Serial.println(_audioSignal.minTransientPeakStrength(), 1);
+        Serial.print("RB startup baseline=");
+        Serial.println(rbBaselineStateName());
+    }
+}
+
+void Node::startRbQuietBaseline() {
+    if (_sourceKind != AudioSourceKind::I2S) {
+        performRbRebase();
+        return;
+    }
+    _rbBaselineState = RBBaselineState::ListenForQuiet;
+    _rbBaselineStateStartedMs = millis();
+    _rbBaselineQuietSinceMs = 0;
+    _rbBaselineLastLogMs = 0;
+    _rbBaselineSettleUntilMs = 0;
+}
+
+void Node::resetRbCounters() {
+    _rbCandidateCount = 0;
+    _rbActionCount = 0;
+    _rbOverflowCandidates = 0;
+    _rbLastCandidateMs = 0;
+    _rbHaveLastCandidateMs = false;
+    _rbStrengthSumScaled = 0;
+    _rbDurationSumMs = 0;
+}
+
+void Node::resetDetectionState() {
+    _audioSignal.resetDetectorState();
+    _audioOnsetDetector.resetState();
+    _wasSelfChirpSuppressed = false;
+}
+
+void Node::performRbRebase() {
+    _audioSignal.rebase();
+    _behavior.resetState();
+    resetDetectionState();
+    _audioSignal.resetStats();
+    _audioSource.resetStats();
+    resetRbCounters();
+}
+
+bool Node::rbOutputsEnabled() const {
+    return _sourceKind != AudioSourceKind::I2S
+        || _rbBaselineState == RBBaselineState::Active
+        || _rbBaselineState == RBBaselineState::FailedNoQuiet;
+}
+
+const char* Node::rbBaselineStateName() const {
+    switch (_rbBaselineState) {
+        case RBBaselineState::Boot:
+            return "BOOT";
+        case RBBaselineState::ListenForQuiet:
+            return "LISTEN_FOR_QUIET";
+        case RBBaselineState::Rebase:
+            return "REBASE";
+        case RBBaselineState::Settle:
+            return "SETTLE";
+        case RBBaselineState::Active:
+            return "ACTIVE";
+        case RBBaselineState::FailedNoQuiet:
+            return "FAILED_NO_QUIET";
+    }
+    return "UNKNOWN";
+}
+
+void Node::updateRbBaselineState(unsigned long now) {
+    if (_sourceKind != AudioSourceKind::I2S) {
+        return;
+    }
+
+    switch (_rbBaselineState) {
+        case RBBaselineState::Boot:
+            startRbQuietBaseline();
+            break;
+
+        case RBBaselineState::ListenForQuiet: {
+            const float smooth = static_cast<float>(_audioSignal.smoothedSignalMagnitude());
+            const bool quietNow = smooth < static_cast<float>(kRbStartupQuietThreshold);
+            if (quietNow) {
+                if (_rbBaselineQuietSinceMs == 0) {
+                    _rbBaselineQuietSinceMs = now;
+                }
+                const unsigned long quietMs = now - _rbBaselineQuietSinceMs;
+                if (quietMs >= kRbStartupQuietHoldMs) {
+                    _rbBaselineState = RBBaselineState::Rebase;
+                    performRbRebase();
+                    _rbBaselineState = RBBaselineState::Settle;
+                    _rbBaselineSettleUntilMs = now + kRbPostRebaseSettleMs;
+                    Serial.print("RB rebase done quietMs=");
+                    Serial.print(quietMs);
+                    Serial.print(" baseline=");
+                    Serial.print(_audioSignal.baseline(), 1);
+                    Serial.print(" smooth=");
+                    Serial.println(_audioSignal.smoothedSignalMagnitude());
+                } else if (_rbBaselineLastLogMs == 0 || now - _rbBaselineLastLogMs >= 1000) {
+                    _rbBaselineLastLogMs = now;
+                    Serial.print("RB rebase waiting smooth=");
+                    Serial.print(smooth, 1);
+                    Serial.print(" quietMs=");
+                    Serial.println(quietMs);
+                }
+            } else {
+                _rbBaselineQuietSinceMs = 0;
+                if (now - _rbBaselineStateStartedMs >= kRbStartupBaselineTimeoutMs) {
+                    _rbBaselineState = RBBaselineState::FailedNoQuiet;
+                    Serial.print("RB rebase skipped reason=no_quiet smooth=");
+                    Serial.println(smooth, 1);
+                }
+            }
+        } break;
+
+        case RBBaselineState::Rebase:
+            break;
+
+        case RBBaselineState::Settle:
+            if (now >= _rbBaselineSettleUntilMs) {
+                _rbBaselineState = RBBaselineState::Active;
+                Serial.println("RB baseline active");
+            }
+            break;
+
+        case RBBaselineState::Active:
+        case RBBaselineState::FailedNoQuiet:
+            break;
+    }
 }
 
 void Node::configureParameters() {
@@ -56,7 +269,7 @@ void Node::configureSharedParameters() {
 
     // Chirp tone is configured here so the node owns its output tuning.
     // The fallback/default frequency is defined by CHIRP_FREQUENCY_HZ.
-    _chirpOutput.setToneHz(2000);
+    _chirpOutput.setToneHz(3200);
 }
 
 void Node::configureAnalogParameters() {
@@ -69,13 +282,21 @@ void Node::configureAnalogParameters() {
     _audioOnsetDetector.setMaxTransientDurationMs(240);
     _audioOnsetDetector.setMinTransientPeakStrength(40.0f);
 
-    _behavior.setWaitAfterTransientMs(500); // Shared response timing: wait after a transient before emit.
-    _behavior.setRefractoryAfterEmitMs(500); // Shared response timing: post-emit holdoff.
-    _behavior.setIdleTimeoutMs(10000); // Shared response timing: idle self-trigger timeout.
+    _behavior.setWaitAfterTransientMs(0); // Shared response timing: respond immediately after a transient.
+    _behavior.setRefractoryAfterEmitMs(0); // Shared response timing: no post-emit holdoff.
+    _behavior.setIdleTimeoutMs(10000); // Idle self-trigger timeout.
 }
 
 void Node::configureI2SParameters() {
     _audioSignal.setBaselineTrackingQuietThreshold(20);
+    _audioSignal.setOnsetDetectionThreshold(36.0f);
+    _audioSignal.setOnsetReleaseThreshold(26.0f);
+    _audioSignal.setCooldownAfterOnsetMs(300);
+    _audioSignal.setReleaseDebounceMs(30);
+    _audioSignal.setMinTransientDurationMs(60);
+    _audioSignal.setMaxTransientDurationMs(240);
+    _audioSignal.setMinTransientPeakStrength(40.0f);
+
     _audioOnsetDetector.setOnsetDetectionThreshold(36.0f);
     _audioOnsetDetector.setOnsetReleaseThreshold(26.0f);
     _audioOnsetDetector.setCooldownAfterOnsetMs(300);
@@ -84,25 +305,29 @@ void Node::configureI2SParameters() {
     _audioOnsetDetector.setMaxTransientDurationMs(240);
     _audioOnsetDetector.setMinTransientPeakStrength(40.0f);
 
-    _behavior.setWaitAfterTransientMs(500); // Shared response timing: wait after a transient before emit.
-    _behavior.setRefractoryAfterEmitMs(500); // Shared response timing: post-emit holdoff.
-    _behavior.setIdleTimeoutMs(10000); // Shared response timing: idle self-trigger timeout.
+    _behavior.setWaitAfterTransientMs(500); // Shared response timing: respond immediately after a transient.
+    _behavior.setRefractoryAfterEmitMs(0); // Shared response timing: no post-emit holdoff.
+    _behavior.setIdleTimeoutMs(10000); // Idle self-trigger timeout.
 }
 
 void Node::update() {
     const unsigned long now = millis();
     const unsigned long nowUs = micros();
+    updateRbBaselineState(now);
+    const bool rbOutputsEnabledNow = rbOutputsEnabled();
     const bool selfChirpSuppressed = _behavior.selfChirpSuppressed(now);
+    _wasSelfChirpSuppressed = selfChirpSuppressed;
 
     _debug.noteCoreLoopUs(nowUs);
+    pollSerialCommands();
 
     // Update input first, then detection, then behavior, so each layer sees the
     // latest state from the layer below it.
-    if (selfChirpSuppressed) {
-        _audioOnsetDetector.resetState();
-    }
     int processedSamples = 0;
     bool sawI2SSample = false;
+    bool sawRbCandidateThisLoop = false;
+    bool transientDetectedThisLoop = false;
+    float transientStrengthThisLoop = 0.0f;
     if (_sourceKind == AudioSourceKind::I2S) {
         AudioBlock block;
         while (processedSamples < kMaxSamplesPerLoop && _i2sSource.readBlock(block)) {
@@ -110,25 +335,57 @@ void Node::update() {
                 break;
             }
 
-            for (uint16_t i = 0; i < block.sampleCount && processedSamples < kMaxSamplesPerLoop; ++i) {
-                const uint32_t sampleTimeUs = block.approxStartMicros + static_cast<uint32_t>(static_cast<uint32_t>(i) * _i2sSource.samplePeriodUs());
-                const int sample = static_cast<int>(block.samples[i]);
-                _audioSignal.update(sample, sampleTimeUs);
-                sawI2SSample = true;
+            _audioSignal.processBlock(block);
+            sawI2SSample = true;
 
-                if (!selfChirpSuppressed) {
-                    _audioOnsetDetector.update(static_cast<float>(_audioSignal.signalMagnitude()), sampleTimeUs);
+            DetectorCandidate candidate;
+            while (_audioSignal.popCandidate(candidate)) {
+                sawRbCandidateThisLoop = true;
+                const unsigned long candidateMs = candidate.releaseMillisApprox != 0 ? candidate.releaseMillisApprox : candidate.onsetMillisApprox;
+                long gapMs = -1;
+                if (_rbHaveLastCandidateMs && candidateMs >= _rbLastCandidateMs) {
+                    gapMs = static_cast<long>(candidateMs - _rbLastCandidateMs);
                 }
 
-                const bool onsetDetected = selfChirpSuppressed ? false : _audioOnsetDetector.onsetDetected();
-                _debug.observeOnset(now, onsetDetected, _audioOnsetDetector.onsetStrength());
-                _debug.observeTransient(now, _audioOnsetDetector.transientDetected(), _audioOnsetDetector.transientStrength(), selfChirpSuppressed);
+                if (rbOutputsEnabledNow && !selfChirpSuppressed && !_rbDetectOnly) {
+                    _debug.observeOnset(now, true, candidate.peakStrength);
+                    _debug.observeTransient(now, true, candidate.peakStrength, false);
+                    transientDetectedThisLoop = true;
+                    if (candidate.peakStrength > transientStrengthThisLoop) {
+                        transientStrengthThisLoop = candidate.peakStrength;
+                    }
+                }
 
-                const bool transientDetected = selfChirpSuppressed ? false : _audioOnsetDetector.transientDetected();
-                const float transientStrength = selfChirpSuppressed ? 0.0f : _audioOnsetDetector.transientStrength();
-                _behavior.update(transientDetected, transientStrength, now);
+                const char* action = "none";
+                if (rbOutputsEnabledNow && !_rbDetectOnly && _behavior.shouldStartChirp()) {
+                    action = "emit";
+                } else {
+                    const int stateCode = _behavior.stateCode();
+                    if (stateCode == 1) {
+                        action = "respond";
+                    } else if (stateCode == 2 || stateCode == 3) {
+                        action = "other";
+                    }
+                }
 
-                processedSamples++;
+                logCandidate(candidate, _rbCandidateCount + 1, gapMs, action, _behavior.stateName(), behaviorGateName(_behavior, now, transientDetectedThisLoop, selfChirpSuppressed));
+
+                ++_rbCandidateCount;
+                if (candidate.audioOverflowDuringCandidate) {
+                    ++_rbOverflowCandidates;
+                }
+                if (action[0] != 'n') {
+                    ++_rbActionCount;
+                }
+                _rbStrengthSumScaled += static_cast<unsigned long>(candidate.peakStrength * 100.0f);
+                _rbDurationSumMs += candidate.durationMs;
+                _rbHaveLastCandidateMs = true;
+                _rbLastCandidateMs = candidateMs;
+            }
+
+            processedSamples += static_cast<int>(block.sampleCount);
+            if (processedSamples > kMaxSamplesPerLoop) {
+                processedSamples = kMaxSamplesPerLoop;
             }
         }
     } else {
@@ -140,7 +397,7 @@ void Node::update() {
             }
             _audioSignal.update(sample, sampleTimeUs);
 
-            if (!selfChirpSuppressed) {
+            if (rbOutputsEnabledNow && !selfChirpSuppressed) {
                 _audioOnsetDetector.update(static_cast<float>(_audioSignal.signalMagnitude()), sampleTimeUs);
             }
 
@@ -150,22 +407,76 @@ void Node::update() {
 
             const bool transientDetected = selfChirpSuppressed ? false : _audioOnsetDetector.transientDetected();
             const float transientStrength = selfChirpSuppressed ? 0.0f : _audioOnsetDetector.transientStrength();
-            _behavior.update(transientDetected, transientStrength, now);
+            if (rbOutputsEnabledNow && !_rbDetectOnly) {
+                _behavior.update(transientDetected, transientStrength, now);
+            }
+            _debug.observeBehaviorGate(now, _behavior, transientDetected, selfChirpSuppressed);
+
+            DetectorCandidate candidate;
+            while (_audioSignal.popCandidate(candidate)) {
+                long gapMs = -1;
+                const unsigned long candidateMs = candidate.releaseMillisApprox != 0 ? candidate.releaseMillisApprox : candidate.onsetMillisApprox;
+                if (_rbHaveLastCandidateMs && candidateMs >= _rbLastCandidateMs) {
+                    gapMs = static_cast<long>(candidateMs - _rbLastCandidateMs);
+                }
+
+                const char* action = "none";
+                if (rbOutputsEnabledNow && !_rbDetectOnly && _behavior.shouldStartChirp()) {
+                    action = "emit";
+                } else {
+                    const int stateCode = _behavior.stateCode();
+                    if (stateCode == 1) {
+                        action = "respond";
+                    } else if (stateCode == 3) {
+                        action = "other";
+                    }
+                }
+
+                logCandidate(candidate, _rbCandidateCount + 1, gapMs, action, _behavior.stateName(), behaviorGateName(_behavior, now, transientDetected, selfChirpSuppressed));
+
+                ++_rbCandidateCount;
+                if (candidate.audioOverflowDuringCandidate) {
+                    ++_rbOverflowCandidates;
+                }
+                if (action[0] != 'n') {
+                    ++_rbActionCount;
+                }
+                _rbStrengthSumScaled += static_cast<unsigned long>(candidate.peakStrength * 100.0f);
+                _rbDurationSumMs += candidate.durationMs;
+                _rbHaveLastCandidateMs = true;
+                _rbLastCandidateMs = candidateMs;
+            }
 
             processedSamples++;
         }
+    }
+
+    if (_sourceKind == AudioSourceKind::I2S) {
+        if (rbOutputsEnabledNow && !_rbDetectOnly) {
+            _behavior.update(transientDetectedThisLoop, transientStrengthThisLoop, now);
+        }
+        _debug.observeBehaviorGate(now, _behavior, transientDetectedThisLoop, selfChirpSuppressed);
     }
 
     if (_sourceKind == AudioSourceKind::I2S && sawI2SSample) {
         _debug.observeI2SSignal(now, _audioSignal);
     }
 
-    if (_behavior.shouldStartChirp()) {
+    if (rbOutputsEnabledNow && !_rbDetectOnly && _behavior.shouldStartChirp()) {
         const auto chirpPattern = _behavior.chirpPattern();
         const char* sourceName = _behavior.chirpRequestSourceName();
+        Serial.print("RB emit accepted source=");
+        Serial.print(sourceName);
+        Serial.print(" state=");
+        Serial.print(_behavior.stateName());
+        Serial.print(" gate=");
+        Serial.print(behaviorGateName(_behavior, now, transientDetectedThisLoop, selfChirpSuppressed));
+        Serial.print(" pattern=");
+        Serial.println(chirpPatternName(chirpPattern));
         _debug.observeChirpStarted(now, sourceName, chirpPattern);
         _chirpOutput.start(chirpPattern);
         _behavior.notifyChirpStarted(now);
+        ++_rbActionCount;
     }
 
     _chirpOutput.update();
@@ -178,4 +489,180 @@ void Node::update() {
     _debug.updateLed(now, _behavior, _chirpOutput, selfChirpSuppressed);
 
     _debug.endLoop(micros());
+}
+
+void Node::pollSerialCommands() {
+    while (Serial.available() > 0) {
+        const char c = static_cast<char>(Serial.read());
+        if (c == '\r') {
+            continue;
+        }
+        if (c == '\n') {
+            _serialLineBuffer[_serialLineLength] = '\0';
+            if (_serialLineLength > 0) {
+                handleSerialLine(_serialLineBuffer);
+            }
+            _serialLineLength = 0;
+            continue;
+        }
+        if (_serialLineLength < sizeof(_serialLineBuffer) - 1) {
+            _serialLineBuffer[_serialLineLength++] = c;
+        }
+    }
+}
+
+void Node::handleSerialLine(const char* line) {
+    if (startsWithTokenIgnoreCase(line, "RB rebase force")) {
+        _rbBaselineState = RBBaselineState::Rebase;
+        performRbRebase();
+        _rbBaselineState = RBBaselineState::Settle;
+        _rbBaselineSettleUntilMs = millis() + kRbPostRebaseSettleMs;
+        Serial.println("RB rebase forced");
+        return;
+    }
+    if (startsWithTokenIgnoreCase(line, "RB rebase")) {
+        if (_sourceKind == AudioSourceKind::I2S) {
+            startRbQuietBaseline();
+            Serial.println("RB rebase requested quiet-gated");
+        } else {
+            performRbRebase();
+            Serial.println("RB rebase done");
+        }
+        return;
+    }
+    if (startsWithTokenIgnoreCase(line, "RB detectonly")) {
+        const char* mode = line + 13;
+        while (*mode == ' ') {
+            ++mode;
+        }
+        if (equalsIgnoreCase(mode, "on")) {
+            _rbDetectOnly = true;
+            Serial.println("RB detectonly=on");
+        } else if (equalsIgnoreCase(mode, "off")) {
+            _rbDetectOnly = false;
+            Serial.println("RB detectonly=off");
+        } else {
+            Serial.print("RB detectonly=");
+            Serial.println(_rbDetectOnly ? "on" : "off");
+        }
+        return;
+    }
+    if (equalsIgnoreCase(line, "RB summary") || equalsIgnoreCase(line, "RB stop")) {
+        printRbSummary();
+        return;
+    }
+    if (startsWithTokenIgnoreCase(line, "RB debug")) {
+        handleDebugCommand(line);
+        return;
+    }
+}
+
+void Node::handleDebugCommand(const char* line) {
+    const char* mode = line + 8;
+    while (*mode == ' ') {
+        ++mode;
+    }
+
+    if (equalsIgnoreCase(mode, "off")) {
+        _debug.setDebugMode(NodeDebug::DebugMode::Off);
+    } else if (equalsIgnoreCase(mode, "events")) {
+        _debug.setDebugMode(NodeDebug::DebugMode::Events);
+    } else if (equalsIgnoreCase(mode, "plot")) {
+        _debug.setDebugMode(NodeDebug::DebugMode::Plot);
+    } else {
+        Serial.print("RB debug mode=");
+        Serial.print(_debug.debugModeName());
+        Serial.println(" (use off|events|plot)");
+        return;
+    }
+
+    Serial.print("RB debug mode=");
+    Serial.println(_debug.debugModeName());
+}
+
+void Node::logCandidate(const DetectorCandidate& candidate, unsigned long candidateNumber, long gapMs, const char* action, const char* stateName, const char* gateName) {
+    Serial.print("RB candidate n=");
+    Serial.print(candidateNumber);
+    Serial.print(" gap=");
+    if (gapMs >= 0) {
+        Serial.print(gapMs);
+        Serial.print("ms");
+    } else {
+        Serial.print("-");
+    }
+    Serial.print(" dur=");
+    Serial.print(candidate.durationMs);
+    Serial.print("ms strength=");
+    Serial.print(candidate.peakStrength, 1);
+    Serial.print(" audio=");
+    Serial.print(candidate.audioOverflowDuringCandidate ? "overflow" : "ok");
+    Serial.print(" action=");
+    Serial.print(action);
+    Serial.print(" state=");
+    Serial.print(stateName);
+    Serial.print(" gate=");
+    Serial.println(gateName);
+}
+
+void Node::printRbSummary() const {
+    const float avgStrength = _rbCandidateCount > 0 ? (static_cast<float>(_rbStrengthSumScaled) / 100.0f) / static_cast<float>(_rbCandidateCount) : 0.0f;
+    const float avgDuration = _rbCandidateCount > 0 ? static_cast<float>(_rbDurationSumMs) / static_cast<float>(_rbCandidateCount) : 0.0f;
+    const AudioSignalStats& stats = _audioSignal.stats();
+
+    Serial.print("RB summary: candidates=");
+    Serial.print(_rbCandidateCount);
+    Serial.print(" actions=");
+    Serial.print(_rbActionCount);
+    Serial.print(" overflowCandidates=");
+    Serial.print(_rbOverflowCandidates);
+    Serial.print(" candidateDrops=");
+    Serial.print(stats.candidatesDropped);
+    Serial.print(" avg_strength=");
+    Serial.print(avgStrength, 1);
+    Serial.print(" avg_duration=");
+    Serial.print(avgDuration, 1);
+    Serial.print("ms detectOnly=");
+    Serial.println(_rbDetectOnly ? 1 : 0);
+    Serial.print("RB baseline state=");
+    Serial.println(rbBaselineStateName());
+
+    printRbSignalSummary();
+    printRbDetectorSummary();
+}
+
+void Node::printRbSignalSummary() const {
+    Serial.print("RB signal baseline=");
+    Serial.print(_audioSignal.baseline(), 1);
+    Serial.print(" mag=");
+    Serial.print(_audioSignal.signalMagnitude());
+    Serial.print(" smooth=");
+    Serial.println(_audioSignal.smoothedSignalMagnitude());
+}
+
+void Node::printRbDetectorSummary() const {
+    Serial.print("RB det mode=AMP onset=");
+    Serial.print(_audioSignal.onsetDetectionThreshold(), 1);
+    Serial.print(" release=");
+    Serial.print(_audioSignal.onsetReleaseThreshold(), 1);
+    Serial.print(" cooldown=");
+    Serial.print(_audioSignal.cooldownAfterOnsetMs());
+    Serial.print(" minMs=");
+    Serial.print(_audioSignal.minTransientDurationMs());
+    Serial.print(" maxMs=");
+    Serial.print(_audioSignal.maxTransientDurationMs());
+    Serial.print(" minStrength=");
+    Serial.println(_audioSignal.minTransientPeakStrength(), 1);
+
+    Serial.print("RB det: tooShort=");
+    Serial.print(_audioSignal.transientRejectedDurationTooShortCount());
+    Serial.print(" tooLong=");
+    Serial.print(_audioSignal.transientRejectedDurationTooLongCount());
+    Serial.print(" weak=");
+    Serial.print(_audioSignal.transientRejectedStrengthTooLowCount());
+    Serial.print(" lastReject=");
+    Serial.print(_audioSignal.lastTransientRejectReasonName());
+    Serial.print(" lastRejectDur=");
+    Serial.print(_audioSignal.lastTransientRejectedDurationMs());
+    Serial.print(" lastRejectStrength=");
+    Serial.println(_audioSignal.lastTransientRejectedStrength(), 1);
 }

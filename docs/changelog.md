@@ -39,6 +39,8 @@
 - Resonant behavior now uses the same frozen audio-signal and onset-detector parameters as analyzer.
 - `AudioSourceI2S` now tracks per-run read health counters and analyzer summaries print an `AUDIO summary` section.
 - `AudioSourceI2S` now emits reusable `AudioBlock` metadata for each non-empty I2S refill and `AudioSignal` can process blocks directly.
+- Diagnosis: event packaging is in the wrong layer.
+- Decision: keep it for now, consume candidates in Analyzer, and move packaging out in a later dedicated pass.
 
 ### Fixed
 - AudioSource stats now reset at session start, after rebase, so summaries reflect the active run instead of setup reads.
@@ -47,6 +49,15 @@
 - Trial 1 no longer misses as often because SEQ now has a short warm-up delay before the first trigger.
 - Duplicate candidates no longer alter trial outcome selection.
 - Sampling and SEQ behavior are more stable under load because timing-critical work is less likely to be disrupted by logging and loop delay.
+
+### Known Issues
+- `AudioSignal` still packages events, which is the wrong abstraction.
+- There is still some architecture drift between the intended pipeline and the current runtime split.
+- Resonant detection is usable, but still underperforming a bit.
+- Detection is still somewhat noise dependent.
+- The physical setup still has high directionality, so placement matters more than it should.
+- `AudioSignal::update(...)` is leftover migration code and should go away in a later pass.
+- TODO/spec note: `AudioSignal` currently owns the AMP detector in the I2S path; `_audioOnsetDetector` is not active there.
 
 ### Notes
 - `docs/myspec.md` was intentionally left unchanged in this pass.

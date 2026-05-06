@@ -12,7 +12,31 @@ Does NOT:
 - interpret raw signal input
 */
 
-void ResonantBehavior::update(bool transientDetected, float transientStrength, unsigned long now) {
+void ResonantBehavior::handlePatternResult(const DetectionPipeline::PatternResult& result, unsigned long now) {
+    if (!result.valid) {
+        return;
+    }
+
+    if (result.type != DetectionPipeline::PatternType::ValidTransient) {
+        return;
+    }
+
+    _pendingTransientDetected = true;
+    if (result.candidate.peakStrength > _pendingTransientStrength) {
+        _pendingTransientStrength = result.candidate.peakStrength;
+    }
+    _pendingTransientMs = result.candidate.acceptedMs != 0 ? result.candidate.acceptedMs : now;
+}
+
+void ResonantBehavior::update(unsigned long now) {
+    const bool transientDetected = _pendingTransientDetected;
+    const float transientStrength = _pendingTransientStrength;
+    const unsigned long transientMs = _pendingTransientMs;
+
+    _pendingTransientDetected = false;
+    _pendingTransientStrength = 0.0f;
+    _pendingTransientMs = 0;
+
     _chirpRequested = false;
     _chirpRequestSource = ChirpRequestSource::None;
     _chirpPattern = ChirpOutput::ChirpPattern::Single;
@@ -21,7 +45,7 @@ void ResonantBehavior::update(bool transientDetected, float transientStrength, u
     // Track the last transient time so idle-triggered chirps do not fire while
     // the node is still hearing bursts.
     if (transientDetected) {
-        _lastTransientMs = now;
+        _lastTransientMs = transientMs != 0 ? transientMs : now;
     }
 
     // --- state machine ---
@@ -67,6 +91,9 @@ void ResonantBehavior::update(bool transientDetected, float transientStrength, u
 void ResonantBehavior::resetState() {
     _state = State::Idle;
     _activityLevel = 0.0f;
+    _pendingTransientDetected = false;
+    _pendingTransientStrength = 0.0f;
+    _pendingTransientMs = 0;
     _lastEmitMs = 0;
     _lastTransientMs = 0;
     _transientStartedMs = 0;
@@ -75,6 +102,13 @@ void ResonantBehavior::resetState() {
     _chirpRequested = false;
     _chirpRequestSource = ChirpRequestSource::None;
     _chirpPattern = ChirpOutput::ChirpPattern::Single;
+}
+
+void ResonantBehavior::update(bool transientDetected, float transientStrength, unsigned long now) {
+    _pendingTransientDetected = transientDetected;
+    _pendingTransientStrength = transientStrength;
+    _pendingTransientMs = now;
+    update(now);
 }
 
 // --- outputs ---

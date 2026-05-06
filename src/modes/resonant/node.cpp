@@ -2,6 +2,8 @@
 #include <Arduino.h>
 #include <string.h>
 
+#include "../../detection/DetectionPipeline.h"
+
 #ifndef CHIRP_FREQUENCY_HZ
 #define CHIRP_FREQUENCY_HZ 2400
 #endif
@@ -325,9 +327,7 @@ void Node::update() {
     // latest state from the layer below it.
     int processedSamples = 0;
     bool sawI2SSample = false;
-    bool sawRbCandidateThisLoop = false;
-    bool transientDetectedThisLoop = false;
-    float transientStrengthThisLoop = 0.0f;
+    bool sawPatternThisLoop = false;
     if (_sourceKind == AudioSourceKind::I2S) {
         AudioBlock block;
         while (processedSamples < kMaxSamplesPerLoop && _i2sSource.readBlock(block)) {
@@ -340,35 +340,35 @@ void Node::update() {
 
             DetectorCandidate candidate;
             while (_audioSignal.popCandidate(candidate)) {
-                sawRbCandidateThisLoop = true;
-                const unsigned long candidateMs = candidate.releaseMillisApprox != 0 ? candidate.releaseMillisApprox : candidate.onsetMillisApprox;
+                DetectionPipeline::PatternResult patternResult;
+                const bool patternValid = DetectionPipeline::processDetectorCandidate(candidate, patternResult);
+                // Do not let self-heard candidates arm behavior while chirp suppression is active.
+                if (patternValid && !selfChirpSuppressed) {
+                    sawPatternThisLoop = true;
+                    _behavior.handlePatternResult(patternResult, now);
+                }
+
+                const unsigned long candidateMs = patternResult.candidate.heardAtMs;
                 long gapMs = -1;
                 if (_rbHaveLastCandidateMs && candidateMs >= _rbLastCandidateMs) {
                     gapMs = static_cast<long>(candidateMs - _rbLastCandidateMs);
                 }
 
-                if (rbOutputsEnabledNow && !selfChirpSuppressed && !_rbDetectOnly) {
-                    _debug.observeOnset(now, true, candidate.peakStrength);
-                    _debug.observeTransient(now, true, candidate.peakStrength, false);
-                    transientDetectedThisLoop = true;
-                    if (candidate.peakStrength > transientStrengthThisLoop) {
-                        transientStrengthThisLoop = candidate.peakStrength;
-                    }
+                if (rbOutputsEnabledNow && !selfChirpSuppressed) {
+                    _debug.observeOnset(now, true, patternResult.candidate.peakStrength);
+                    _debug.observeTransient(now, true, patternResult.candidate.peakStrength, false);
                 }
 
-                const char* action = "none";
-                if (rbOutputsEnabledNow && !_rbDetectOnly && _behavior.shouldStartChirp()) {
-                    action = "emit";
-                } else {
-                    const int stateCode = _behavior.stateCode();
-                    if (stateCode == 1) {
-                        action = "respond";
-                    } else if (stateCode == 2 || stateCode == 3) {
-                        action = "other";
-                    }
+                const char* action = "queued";
+                if (!patternValid) {
+                    action = "invalid";
+                } else if (selfChirpSuppressed) {
+                    action = "self_ignore";
+                } else if (_rbDetectOnly) {
+                    action = "detectonly";
                 }
 
-                logCandidate(candidate, _rbCandidateCount + 1, gapMs, action, _behavior.stateName(), behaviorGateName(_behavior, now, transientDetectedThisLoop, selfChirpSuppressed));
+                logCandidate(candidate, patternResult, _rbCandidateCount + 1, gapMs, action, _behavior.stateName(), behaviorGateName(_behavior, now, sawPatternThisLoop, selfChirpSuppressed));
 
                 ++_rbCandidateCount;
                 if (candidate.audioOverflowDuringCandidate) {
@@ -405,34 +405,32 @@ void Node::update() {
             _debug.observeOnset(now, onsetDetected, _audioOnsetDetector.onsetStrength());
             _debug.observeTransient(now, _audioOnsetDetector.transientDetected(), _audioOnsetDetector.transientStrength(), selfChirpSuppressed);
 
-            const bool transientDetected = selfChirpSuppressed ? false : _audioOnsetDetector.transientDetected();
-            const float transientStrength = selfChirpSuppressed ? 0.0f : _audioOnsetDetector.transientStrength();
-            if (rbOutputsEnabledNow && !_rbDetectOnly) {
-                _behavior.update(transientDetected, transientStrength, now);
-            }
-            _debug.observeBehaviorGate(now, _behavior, transientDetected, selfChirpSuppressed);
-
             DetectorCandidate candidate;
             while (_audioSignal.popCandidate(candidate)) {
+                DetectionPipeline::PatternResult patternResult;
+                const bool patternValid = DetectionPipeline::processDetectorCandidate(candidate, patternResult);
+                // Do not let self-heard candidates arm behavior while chirp suppression is active.
+                if (patternValid && !selfChirpSuppressed) {
+                    sawPatternThisLoop = true;
+                    _behavior.handlePatternResult(patternResult, now);
+                }
+
+                const unsigned long candidateMs = patternResult.candidate.heardAtMs;
                 long gapMs = -1;
-                const unsigned long candidateMs = candidate.releaseMillisApprox != 0 ? candidate.releaseMillisApprox : candidate.onsetMillisApprox;
                 if (_rbHaveLastCandidateMs && candidateMs >= _rbLastCandidateMs) {
                     gapMs = static_cast<long>(candidateMs - _rbLastCandidateMs);
                 }
 
-                const char* action = "none";
-                if (rbOutputsEnabledNow && !_rbDetectOnly && _behavior.shouldStartChirp()) {
-                    action = "emit";
-                } else {
-                    const int stateCode = _behavior.stateCode();
-                    if (stateCode == 1) {
-                        action = "respond";
-                    } else if (stateCode == 3) {
-                        action = "other";
-                    }
+                const char* action = "queued";
+                if (!patternValid) {
+                    action = "invalid";
+                } else if (selfChirpSuppressed) {
+                    action = "self_ignore";
+                } else if (_rbDetectOnly) {
+                    action = "detectonly";
                 }
 
-                logCandidate(candidate, _rbCandidateCount + 1, gapMs, action, _behavior.stateName(), behaviorGateName(_behavior, now, transientDetected, selfChirpSuppressed));
+                logCandidate(candidate, patternResult, _rbCandidateCount + 1, gapMs, action, _behavior.stateName(), behaviorGateName(_behavior, now, sawPatternThisLoop, selfChirpSuppressed));
 
                 ++_rbCandidateCount;
                 if (candidate.audioOverflowDuringCandidate) {
@@ -451,12 +449,10 @@ void Node::update() {
         }
     }
 
-    if (_sourceKind == AudioSourceKind::I2S) {
-        if (rbOutputsEnabledNow && !_rbDetectOnly) {
-            _behavior.update(transientDetectedThisLoop, transientStrengthThisLoop, now);
-        }
-        _debug.observeBehaviorGate(now, _behavior, transientDetectedThisLoop, selfChirpSuppressed);
+    if (rbOutputsEnabledNow && !_rbDetectOnly) {
+        _behavior.update(now);
     }
+    _debug.observeBehaviorGate(now, _behavior, sawPatternThisLoop, selfChirpSuppressed);
 
     if (_sourceKind == AudioSourceKind::I2S && sawI2SSample) {
         _debug.observeI2SSignal(now, _audioSignal);
@@ -470,7 +466,7 @@ void Node::update() {
         Serial.print(" state=");
         Serial.print(_behavior.stateName());
         Serial.print(" gate=");
-        Serial.print(behaviorGateName(_behavior, now, transientDetectedThisLoop, selfChirpSuppressed));
+        Serial.print(behaviorGateName(_behavior, now, sawPatternThisLoop, selfChirpSuppressed));
         Serial.print(" pattern=");
         Serial.println(chirpPatternName(chirpPattern));
         _debug.observeChirpStarted(now, sourceName, chirpPattern);
@@ -580,7 +576,7 @@ void Node::handleDebugCommand(const char* line) {
     Serial.println(_debug.debugModeName());
 }
 
-void Node::logCandidate(const DetectorCandidate& candidate, unsigned long candidateNumber, long gapMs, const char* action, const char* stateName, const char* gateName) {
+void Node::logCandidate(const DetectorCandidate& candidate, const DetectionPipeline::PatternResult& patternResult, unsigned long candidateNumber, long gapMs, const char* action, const char* stateName, const char* gateName) {
     Serial.print("RB candidate n=");
     Serial.print(candidateNumber);
     Serial.print(" gap=");
@@ -596,6 +592,12 @@ void Node::logCandidate(const DetectorCandidate& candidate, unsigned long candid
     Serial.print(candidate.peakStrength, 1);
     Serial.print(" audio=");
     Serial.print(candidate.audioOverflowDuringCandidate ? "overflow" : "ok");
+    Serial.print(" pattern=");
+    Serial.print(DetectionPipeline::patternTypeName(patternResult.type));
+    Serial.print(" reason=");
+    Serial.print(DetectionPipeline::patternReasonName(patternResult.reasonCode));
+    Serial.print(" valid=");
+    Serial.print(patternResult.valid ? 1 : 0);
     Serial.print(" action=");
     Serial.print(action);
     Serial.print(" state=");

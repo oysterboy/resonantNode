@@ -6,6 +6,7 @@
 #include "../../behavior/ResonantBehavior.h"
 #include "../../hal/AudioSourceAnalog.h"
 #include "../../hal/AudioSourceI2S.h"
+#include "../../detection/DetectionPipeline.h"
 #include "../../hal/PiezoToneOutputBTL.h"
 #include "../../hal/PiezoToneOutput.h"
 #include "../../io/AudioSignal.h"
@@ -70,7 +71,7 @@ private:
     void pollSerialCommands();
     void handleSerialLine(const char* line);
     void handleDebugCommand(const char* line);
-    void logCandidate(const DetectorCandidate& candidate, unsigned long candidateNumber, long gapMs, const char* action, const char* stateName, const char* gateName);
+    void logCandidate(const DetectorCandidate& candidate, const DetectionPipeline::PatternResult& patternResult, unsigned long candidateNumber, long gapMs, const char* action, const char* stateName, const char* gateName);
     void printRbSummary() const;
     void printRbSignalSummary() const;
     void printRbDetectorSummary() const;

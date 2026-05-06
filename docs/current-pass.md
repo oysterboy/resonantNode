@@ -1,9 +1,16 @@
-Task: Pass B — Shared DetectionPipeline scaffold
+Task: Pass D — Candidate / pattern validity parity
 
 Context:
-This is Pass B of the current ResonantNode refactor.
+This is Pass D of the current ResonantNode refactor.
 
-Pass A should have confirmed Analyzer as the trusted reference path for current AMP/transient detection.
+Pass A:
+Analyzer was checked as the trusted reference path for current AMP/transient detection.
+
+Pass B:
+A shared DetectionPipeline scaffold was introduced.
+
+Pass C:
+Resonant mode was moved toward the same candidate → DetectionPipeline → PatternResult path as Analyzer, and signal/debug terminology was clarified.
 
 Current refactor scope:
 Introduce a shared detection/classification pipeline scaffold used by both Analyzer and Resonant mode, while keeping the current AMP/transient detector parameters frozen.
@@ -14,14 +21,35 @@ DetectorCandidate
 → PatternResult
 → Analyzer SEQ or ResonantBehavior
 
-Spec principle:
-The architecture separates low-level detection from classification and behavior. Detection reports candidates. Pattern detection/classification turns candidates into pattern results. Behavior consumes behavior-facing pattern results, not raw transient booleans. Analyzer remains a measurement path. The shared pipeline should keep Analyzer and Resonant aligned.
+Pass D goal:
+Make candidate validity and pattern validity explicit, consistent, and shared.
 
-Important:
-Pass B creates the shared scaffold only.
-It should not change detector behavior.
-It should not refactor ResonantBehavior yet.
-It should not implement advanced chirp/frequency logic.
+The code should no longer contain hidden or duplicated validity decisions spread across:
+- AudioSignal / detector drain
+- DetectionPipeline
+- Analyzer SEQ
+- Resonant node glue
+- ResonantBehavior
+
+Spec principle:
+Detection transforms feature streams into low-level acoustic candidates.
+Classification transforms candidates into meaningful acoustic events.
+Analyzer may classify strictly for measurement.
+Runtime behavior may consume simpler behavior-facing PatternResult values.
+Detection should not decide behavior.
+
+Important constraints:
+- Do not tune detector parameters.
+- Do not change AudioOnsetDetector thresholds.
+- Do not change AudioSignal candidate generation unless absolutely required for exposing existing validity facts.
+- Do not implement advanced chirp grouping.
+- Do not implement frequency matching.
+- Do not implement family matching.
+- Do not implement overlap/dominance handling.
+- Do not implement VEKTOR transport, OSC, hub integration, or resource registry.
+- Keep DetectionPipeline simple.
+- Avoid broad rewrites.
+- Do not redesign behavior logic beyond validity handling.
 
 Frozen AMP detector baseline:
 onsetThreshold = 36.0
@@ -32,117 +60,224 @@ minTransientDurationMs = 60
 maxTransientDurationMs = 240
 minTransientPeakStrength = 40.0
 
-Goal:
-Add the minimal shared DetectionPipeline layer that converts existing DetectorCandidate objects into PatternResult objects, while keeping the first implementation simple/pass-through.
+Core distinction to enforce:
 
-Required new concepts:
+1. DetectorCandidate validity
 
-1. PatternCandidate
-A normalized candidate object created from DetectorCandidate.
+Question:
+Was this a detector-level accepted transient-like event?
 
-For now it can mostly copy fields from DetectorCandidate:
+This belongs near:
+- AudioSignal
+- AudioOnsetDetector
+- DetectorCandidate
+- candidate queue / drain
+
+Possible detector-level facts:
+- accepted / rejected
 - startMs
-- acceptedMs / heardAtMs
+- acceptedMs
+- endMs
 - durationMs
-- strength / peakStrength
-- overflow flag if available
-- source validity / reject reason if available
+- peakStrength
+- release reason
+- reject reason
+- overflow
+- blocked / peak active
+- duration too short
+- duration too long
+- strength too low
+- quiet / no onset
 
-Do not add full chirp grouping yet.
+2. PatternResult validity
 
-2. PatternType
-Minimal enum, for example:
+Question:
+Is this a usable classified acoustic event for Analyzer or Behavior?
+
+This belongs near:
+- DetectionPipeline
+- PatternCandidate
+- PatternResult
+- SimpleTransientPatternDetector
+
+Possible pattern-level results:
 - None
 - ValidTransient
 - Invalid
 - Ambiguous
 
-Do not add full chirp/frequency family taxonomy yet unless very lightweight placeholders are useful.
+Later pattern types may include ValidChirp, ValidTone, Noise, etc., but do not implement those now unless already present as harmless placeholders.
 
-3. PatternResult
-Behavior/analyzer-facing classification result.
+3. Analyzer SEQ trial classification
 
-Suggested fields:
-- PatternType type
-- heardAtMs
-- durationMs
-- strength
-- confidence
-- reason / reasonCode
-- maybe source candidate timing fields for logging
+Question:
+How does this PatternResult relate to the controlled test trigger?
 
-4. DetectionPipeline
-A shared class/function that takes DetectorCandidate and outputs PatternResult.
+This belongs only in Analyzer SEQ.
 
-Suggested shape:
-bool DetectionPipeline::processDetectorCandidate(
-    const DetectorCandidate& in,
-    PatternResult& out
-);
+Analyzer may classify:
+- expected
+- early
+- late
+- duplicate
+- miss
+- unexpected
 
-First implementation:
-- accepts current valid DetectorCandidate
-- wraps it as PatternCandidate
-- classifies it as PatternType::ValidTransient
-- preserves timing, duration, strength, and reason fields for Analyzer logging
-- returns false or PatternType::Invalid for invalid/rejected candidates if those are passed through
+Important:
+expected / early / late / duplicate / miss are measurement classifications, not general runtime PatternTypes.
 
-5. SimpleTransientPatternDetector
-Optional if clean:
-A tiny internal classifier used by DetectionPipeline.
+4. Runtime behavior validity
+
+Question:
+Should behavior treat this PatternResult as a valid heard event, ignore it, or block response?
+
+This belongs in ResonantBehavior or a small behavior-facing adapter.
+
+Runtime behavior should not need to know:
+- exact detector reject internals
+- SEQ trial category
+- raw sample / amp-level details
+
+Implementation target:
+
+1. Audit current validity logic
+
+Search for all places where the code decides that a detection/candidate/event is:
+- valid
+- invalid
+- accepted
+- rejected
+- early
+- late
+- duplicate
+- miss
+- ignored
+- unexpected
+- transientDetected
+- should respond
+- should emit
+
+Identify which layer each decision belongs to:
+- detector-level
+- pattern-level
+- analyzer SEQ-level
+- behavior-level
+
+2. Centralize detector-to-pattern validity in DetectionPipeline
+
+DetectionPipeline should be the single shared place where a DetectorCandidate becomes a PatternResult.
 
 For now:
-DetectorCandidate / PatternCandidate valid enough
+- accepted DetectorCandidate → PatternResult::ValidTransient
+- rejected/invalid DetectorCandidate → PatternResult::Invalid or false/no result
+- unclear candidate → PatternResult::Ambiguous if needed
+
+Preserve reason fields.
+
+Do not let Analyzer and Resonant each invent their own DetectorCandidate → valid-heard-event logic.
+
+3. Keep Analyzer SEQ strict but downstream
+
+Analyzer SEQ should consume PatternResult, then classify trial outcome.
+
+Correct:
+DetectorCandidate
+→ DetectionPipeline
 → PatternResult::ValidTransient
+→ SEQ classifies expected / early / late / duplicate
 
-Constraints:
-- Do not tune detector parameters.
-- Do not alter AudioOnsetDetector thresholds.
-- Do not alter AudioSignal candidate generation.
-- Do not refactor ResonantBehavior yet.
-- Do not change autonomous behavior yet.
-- Do not implement chirp grouping.
-- Do not implement frequency matching.
-- Do not implement family matching.
-- Do not implement overlap/dominance logic.
-- Do not implement VEKTOR resources, OSC, hub, or registry.
-- Keep Analyzer’s SEQ classification behavior intact.
+Wrong:
+DetectorCandidate
+→ Analyzer-only validity rule
+→ expected / late
+while Resonant uses a different validity rule
 
-Integration target for Pass B:
-Analyzer should be able to send each DetectorCandidate through DetectionPipeline and receive a PatternResult, while still preserving its existing SEQ expected/early/late/duplicate/miss classification.
+4. Keep runtime behavior simpler than Analyzer
 
-Important distinction:
-DetectionPipeline classifies the acoustic pattern minimally:
-DetectorCandidate → PatternResult::ValidTransient
+Runtime behavior should consume only behavior-relevant validity.
 
-Analyzer SEQ still classifies the trial result:
-PatternResult timing vs test trigger → expected / early / late / duplicate / miss
+For now:
+- PatternResult::ValidTransient may become validHeardEvent
+- PatternResult::Invalid should be ignored
+- PatternResult::Ambiguous should probably be ignored or logged
 
-So do not remove SEQ logic.
-Just make SEQ consume PatternResult instead of raw DetectorCandidate where practical.
+Behavior should not consume Analyzer-only categories:
+- expected
+- early
+- late
+- duplicate
+- miss
+
+Those are test measurements, not behavior semantics.
+
+5. Clarify reason codes
+
+If reason strings/enums exist, make them clear enough for logging.
+
+Suggested distinction:
+
+DetectorRejectReason:
+- None
+- Quiet
+- NoOnset
+- DurationTooShort
+- DurationTooLong
+- StrengthTooLow
+- PeakActive
+- Cooldown
+- Overflow
+- Unknown
+
+PatternReason:
+- FromAcceptedTransient
+- DetectorRejected
+- InsufficientEvidence
+- AmbiguousEvidence
+- UnsupportedPattern
+- Unknown
+
+Do not overbuild if the current code only needs a smaller set.
+
+6. Logging
+
+Logs should make clear:
+- DetectorCandidate accepted/rejected and why
+- PatternResult type and reason
+- Analyzer SEQ category, if in Analyzer
+- Behavior handling decision, if in Resonant
+
+Avoid conflating:
+- detector validity
+- pattern validity
+- analyzer trial classification
+- behavior blocking
 
 Expected output:
-1. Concise Pass B implementation summary.
-2. Files added/changed.
-3. Exact scaffold types added.
-4. Evidence that detector baseline is unchanged.
-5. Evidence that Analyzer still reports expected / early / late / duplicate / miss.
-6. Notes on any fields that could not be mapped cleanly.
-7. Whether Pass C can begin.
+1. Concise Pass D implementation summary.
+2. Files changed.
+3. List of validity decisions found and where they now live.
+4. DetectorCandidate validity model.
+5. PatternResult validity model.
+6. Analyzer SEQ classification model.
+7. Runtime behavior validity model.
+8. Evidence that Analyzer and Resonant share the same DetectorCandidate → PatternResult validity path.
+9. Evidence detector baseline is unchanged.
+10. Notes on any temporary compatibility shims.
+11. Whether Pass E can begin.
 
 Acceptance checklist:
-[ ] New shared DetectionPipeline scaffold exists.
-[ ] PatternCandidate exists.
-[ ] PatternResult exists.
-[ ] PatternType exists.
-[ ] DetectorCandidate can be converted to PatternCandidate / PatternResult.
-[ ] Initial classifier is simple/pass-through ValidTransient logic.
-[ ] Analyzer uses DetectionPipeline before SEQ classification, or has a clearly prepared integration point.
-[ ] Analyzer SEQ still reports expected / early / late / duplicate / miss.
+[ ] Validity logic has been audited.
+[ ] Detector-level validity is distinct from pattern-level validity.
+[ ] Analyzer SEQ categories remain Analyzer-only.
+[ ] Runtime behavior does not consume expected/early/late/duplicate/miss as behavior semantics.
+[ ] DetectionPipeline owns shared DetectorCandidate → PatternResult validity.
+[ ] Analyzer and Resonant do not duplicate candidate validity interpretation.
+[ ] PatternResult preserves enough reason/timing/strength data for logs.
+[ ] Rejected/invalid/ambiguous cases are represented clearly enough.
 [ ] Detector parameters remain unchanged.
 [ ] AudioSignal / AudioOnsetDetector candidate generation remains unchanged.
-[ ] ResonantBehavior is not refactored yet.
-[ ] No advanced chirp/frequency/overlap logic is implemented.
+[ ] No advanced chirp/frequency/overlap logic is added.
+[ ] Logs distinguish detector validity, pattern validity, Analyzer SEQ result, and behavior handling.
 
 Definition of done:
-Pass B is done when the shared DetectionPipeline scaffold exists, Analyzer can use or is minimally wired to use PatternResult without changing detection behavior, and the code is ready for Pass C: Resonant drain + pipeline parity.
+Pass D is done when candidate validity and pattern validity are explicit, Analyzer and Resonant share the same DetectorCandidate → PatternResult interpretation, Analyzer-only trial classifications remain separate from runtime behavior semantics, and logs can show where a detection was accepted, rejected, classified, ignored, or used.

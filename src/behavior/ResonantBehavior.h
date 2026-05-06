@@ -1,6 +1,7 @@
 #pragma once
 #include <Arduino.h>
 
+#include "../detection/DetectionPipeline.h"
 #include "../io/ChirpOutput.h"
 
 /*
@@ -19,7 +20,9 @@ Does NOT:
 class ResonantBehavior {
 public:
     void resetState();
-    // main update (now time-aware)
+    void handlePatternResult(const DetectionPipeline::PatternResult& result, unsigned long now);
+    void update(unsigned long now);
+    // Transitional shim kept only for compatibility with older call sites.
     void update(bool transientDetected, float transientStrength, unsigned long now);
 
     void setWaitAfterTransientMs(unsigned long value);
@@ -59,6 +62,9 @@ private:
 
     // --- behavior state ---
     float _activityLevel = 0.0f;
+    bool _pendingTransientDetected = false;
+    float _pendingTransientStrength = 0.0f;
+    unsigned long _pendingTransientMs = 0;
 
     // --- timing state ---
     unsigned long _lastEmitMs = 0;

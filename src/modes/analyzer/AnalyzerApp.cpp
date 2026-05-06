@@ -4,6 +4,7 @@
 #include <string.h>
 
 #include "../../AudioDebugConfig.h"
+#include "../../detection/DetectionPipeline.h"
 
 namespace {
 constexpr int kMaxSamplesPerLoop = 128;
@@ -183,17 +184,20 @@ void AnalyzerApp::update() {
 
             DetectorCandidate candidate;
             while (_audioSignal.popCandidate(candidate)) {
+                DetectionPipeline::PatternResult patternResult;
+                if (!DetectionPipeline::processDetectorCandidate(candidate, patternResult)) {
+                    continue;
+                }
+
                 if (_valMode) {
-                    if (candidate.onsetMicrosApprox > 0) {
-                        _valOnsetLatchedUntilMs = (candidate.onsetMicrosApprox / 1000UL) + 250UL;
-                    }
-                    if (candidate.releaseMicrosApprox > 0) {
-                        _valTransientLatchedUntilMs = (candidate.releaseMicrosApprox / 1000UL) + 250UL;
+                    if (patternResult.valid) {
+                        _valOnsetLatchedUntilMs = (patternResult.candidate.startMs) + 250UL;
+                        _valTransientLatchedUntilMs = (patternResult.candidate.startMs) + 250UL;
                     }
                 }
 
                 if (_sequenceTest.active) {
-                    handleSequenceCandidate(candidate);
+                    handleSequenceCandidate(patternResult);
                 }
             }
 
@@ -502,13 +506,13 @@ void AnalyzerApp::updateBaseSession(unsigned long now) {
         Serial.print(now - _baseSession.startedAtMs);
         Serial.print(" samples=");
         Serial.print(_baseSession.samples);
-        Serial.print(" raw_avg=");
+        Serial.print(" rawSample_avg=");
         Serial.print(avgRaw);
-        Serial.print(" raw_peak=");
+        Serial.print(" rawSample_peak=");
         Serial.print(_baseSession.rawMax);
-        Serial.print(" delta_avg=");
+        Serial.print(" centeredSample_avg=");
         Serial.print(avgDelta, 1);
-        Serial.print(" delta_max=");
+        Serial.print(" centeredSample_max=");
         Serial.print(_baseSession.deltaMax, 1);
         Serial.print(" baseline_avg=");
         Serial.print(avgBaseline, 1);
@@ -1181,17 +1185,17 @@ void AnalyzerApp::finalizeCaptureTrial(unsigned long now) {
     Serial.print(_captureSession.currentTrial);
     Serial.print(" t=");
     Serial.print(now);
-    Serial.print(" rawMin=");
+    Serial.print(" rawSample_min=");
     Serial.print(_captureSession.currentRawMin);
-    Serial.print(" rawMax=");
+    Serial.print(" rawSample_max=");
     Serial.print(_captureSession.currentRawMax);
-    Serial.print(" rawSwing=");
+    Serial.print(" rawSample_swing=");
     Serial.print(rawSwing);
-    Serial.print(" deltaMin=");
+    Serial.print(" centeredSample_min=");
     Serial.print(_captureSession.currentDeltaMin, 1);
-    Serial.print(" deltaMax=");
+    Serial.print(" centeredSample_max=");
     Serial.print(_captureSession.currentDeltaMax, 1);
-    Serial.print(" deltaSwing=");
+    Serial.print(" centeredSample_swing=");
     Serial.println(deltaSwing, 1);
 
     _captureSession.currentTrialFinalized = true;
@@ -1418,7 +1422,7 @@ const char* AnalyzerApp::sequenceTrialClassificationName(const char* result, lon
     return "expected_clean";
 }
 
-void AnalyzerApp::handleSequenceCandidate(const DetectorCandidate& candidate) {
+void AnalyzerApp::handleSequenceCandidate(const DetectionPipeline::PatternResult& patternResult) {
     if (_valMode) {
         return;
     }
@@ -1430,18 +1434,20 @@ void AnalyzerApp::handleSequenceCandidate(const DetectorCandidate& candidate) {
     auto& diagnostics = _sequenceTest.currentTrialDiagnostics;
     diagnostics.rawCandidateCount++;
 
+    const auto& candidate = patternResult.candidate;
+    const unsigned long candidateIdx = diagnostics.rawCandidateCount;
+    const unsigned long onsetMs = candidate.startMs;
+    const long dtFromTriggerMs = static_cast<long>(onsetMs) - static_cast<long>(_sequenceTest.currentTrialStartMs);
+    const long dtFromTrialStartMs = static_cast<long>(onsetMs) - static_cast<long>(_sequenceTest.currentTrialScheduledAtMs);
+
     const bool overflowSeenNow = candidate.audioOverflowDuringCandidate
                                  || _audioSource.stats().overflowCount != _sequenceTest.trialOverflowCountAtStart;
     if (overflowSeenNow) {
         _sequenceTest.trialHadAudioOverflow = true;
     }
 
-    const unsigned long onsetMs = candidate.onsetMillisApprox != 0 ? candidate.onsetMillisApprox : candidate.onsetMicrosApprox / 1000UL;
-    const unsigned long releaseMs = candidate.releaseMillisApprox != 0 ? candidate.releaseMillisApprox : candidate.releaseMicrosApprox / 1000UL;
-    const long dtFromTriggerMs = static_cast<long>(releaseMs) - static_cast<long>(_sequenceTest.currentTrialStartMs);
-    const long dtFromTrialStartMs = static_cast<long>(releaseMs) - static_cast<long>(_sequenceTest.currentTrialScheduledAtMs);
-    const bool preWindow = releaseMs < _sequenceTest.currentTrialStartMs + _sequenceTest.windowStartOffsetMs;
-    const bool postWindow = releaseMs > _sequenceTest.currentTrialEndMs;
+    const bool preWindow = onsetMs < _sequenceTest.currentTrialStartMs + _sequenceTest.windowStartOffsetMs;
+    const bool postWindow = onsetMs > _sequenceTest.currentTrialEndMs;
     const bool inWindow = !preWindow && !postWindow;
 
     const SequenceTest::CandidateOrigin origin = preWindow
@@ -1451,12 +1457,12 @@ void AnalyzerApp::handleSequenceCandidate(const DetectorCandidate& candidate) {
             : SequenceTest::CandidateOrigin::InWindow;
 
     if (diagnostics.firstCandidateMs == 0) {
-        diagnostics.firstCandidateMs = releaseMs;
+        diagnostics.firstCandidateMs = onsetMs;
     }
 
     if (diagnostics.candidateCount < SequenceTest::kMaxTrialCandidates) {
         auto& entry = diagnostics.candidates[diagnostics.candidateCount++];
-        entry.candidateMs = releaseMs;
+        entry.candidateMs = onsetMs;
         entry.dtFromTriggerMs = dtFromTriggerMs;
         entry.dtFromTrialStartMs = dtFromTrialStartMs;
         entry.durationMs = candidate.durationMs;
@@ -1482,6 +1488,36 @@ void AnalyzerApp::handleSequenceCandidate(const DetectorCandidate& candidate) {
         diagnostics.bestCandidateOrigin = origin;
     }
 
+    if (_sequenceTest.debugLevel >= 2 && !_sequenceTest.quiet) {
+        Serial.print("DET_CAND trial=");
+        Serial.print(_sequenceTest.currentTrial);
+        Serial.print(" idx=");
+        Serial.print(candidateIdx);
+        Serial.print(" onset_ms=");
+        Serial.print(onsetMs);
+        Serial.print(" onset_dt_ms=");
+        Serial.print(dtFromTriggerMs);
+        Serial.print(" dur=");
+        Serial.print(candidate.durationMs);
+        Serial.print(" strength=");
+        Serial.print(candidate.peakStrength, 1);
+        Serial.println(" source=detector");
+
+        Serial.print("PAT_CAND trial=");
+        Serial.print(_sequenceTest.currentTrial);
+        Serial.print(" idx=");
+        Serial.print(candidateIdx);
+        Serial.print(" onset_ms=");
+        Serial.print(onsetMs);
+        Serial.print(" onset_dt_ms=");
+        Serial.print(dtFromTriggerMs);
+        Serial.print(" dur=");
+        Serial.print(candidate.durationMs);
+        Serial.print(" strength=");
+        Serial.print(candidate.peakStrength, 1);
+        Serial.println(" source=pattern");
+    }
+
     if (!inWindow) {
         if (!_sequenceTest.trialHadAudioOverflow) {
             _sequenceTest.unexpected++;
@@ -1502,15 +1538,15 @@ void AnalyzerApp::handleSequenceCandidate(const DetectorCandidate& candidate) {
     if (_sequenceTest.currentTrialHit) {
         _sequenceTest.currentTrialDiagnostics.duplicateCount++;
         if (_sequenceTest.currentTrialDiagnostics.duplicateDtCount < SequenceTest::kMaxDuplicateDts) {
-            _sequenceTest.currentTrialDiagnostics.duplicateDts[_sequenceTest.currentTrialDiagnostics.duplicateDtCount++] = releaseMs >= _sequenceTest.currentTrialTransientDetectedMs
-                ? releaseMs - _sequenceTest.currentTrialTransientDetectedMs
+            _sequenceTest.currentTrialDiagnostics.duplicateDts[_sequenceTest.currentTrialDiagnostics.duplicateDtCount++] = onsetMs >= _sequenceTest.currentTrialTransientDetectedMs
+                ? onsetMs - _sequenceTest.currentTrialTransientDetectedMs
                 : 0;
         }
         return;
     }
 
     _sequenceTest.currentTrialDiagnostics.transientAccepted = true;
-    _sequenceTest.currentTrialDiagnostics.acceptedTransientMs = releaseMs;
+    _sequenceTest.currentTrialDiagnostics.acceptedTransientMs = onsetMs;
     _sequenceTest.currentTrialDiagnostics.acceptedTransientOnsetStrength = candidate.onsetStrength;
     _sequenceTest.currentTrialDiagnostics.acceptedTransientStrength = candidate.peakStrength;
     _sequenceTest.currentTrialDiagnostics.acceptedTransientDurationMs = candidate.durationMs;
@@ -1519,9 +1555,24 @@ void AnalyzerApp::handleSequenceCandidate(const DetectorCandidate& candidate) {
     _sequenceTest.currentTrialDiagnostics.lastTransientRejectReason = AudioOnsetDetector::TransientRejectReason::None;
     _sequenceTest.currentTrialDiagnostics.lastRejectStrength = 0.0f;
     _sequenceTest.currentTrialDiagnostics.lastRejectDurationMs = 0;
-    _sequenceTest.currentTrialTransientDetectedMs = releaseMs;
+    _sequenceTest.currentTrialTransientDetectedMs = onsetMs;
 
     _sequenceTest.currentTrialHit = true;
+
+    if (_sequenceTest.debugLevel >= 2 && !_sequenceTest.quiet) {
+        Serial.print("PAT_RESULT trial=");
+        Serial.print(_sequenceTest.currentTrial);
+        Serial.print(" primary_idx=");
+        Serial.print(candidateIdx);
+        Serial.print(" onset_dt_ms=");
+        Serial.print(dtFromTriggerMs);
+        Serial.print(" dur=");
+        Serial.print(candidate.durationMs);
+        Serial.print(" strength=");
+        Serial.print(candidate.peakStrength, 1);
+        Serial.print(" reason=");
+        Serial.println(DetectionPipeline::patternReasonName(patternResult.reasonCode));
+    }
 }
 
 void AnalyzerApp::finalizeSequenceTrial(unsigned long now) {
@@ -1666,7 +1717,7 @@ void AnalyzerApp::printSequenceTrialDebug(unsigned long trialNumber, const char*
     Serial.print(result);
     Serial.print(" class=");
     Serial.print(classification);
-    Serial.print(" raw_candidates=");
+    Serial.print(" detector_candidates=");
     Serial.print(diagnostics.rawCandidateCount);
     Serial.print(" accepted=");
     Serial.print(diagnostics.transientAccepted ? 1 : 0);
@@ -1807,7 +1858,7 @@ void AnalyzerApp::printSequenceTrialDebug(unsigned long trialNumber, const char*
             Serial.print(i);
             Serial.print("] origin=");
             Serial.print(originName);
-            Serial.print(" dt=");
+            Serial.print(" onset_dt_ms=");
             Serial.print(entry.dtFromTriggerMs);
             Serial.print(" dur=");
             Serial.print(entry.durationMs);
@@ -1834,7 +1885,7 @@ void AnalyzerApp::printSequenceTrialResult(unsigned long trialNumber, const char
     Serial.print(result);
     Serial.print(" class=");
     Serial.print(classification);
-    Serial.print(" dt=");
+    Serial.print(" onset_dt_ms=");
     if (dtMs >= 0) {
         Serial.print(dtMs);
         Serial.print("ms");
@@ -1988,21 +2039,21 @@ void AnalyzerApp::printBaseSummary() const {
         Serial.print(" ignored_raw=");
         Serial.print(_baseSession.ignoredRawSamples);
     }
-    Serial.print(" raw_avg=");
+    Serial.print(" rawSample_avg=");
     Serial.print(rawAvg);
-    Serial.print(" raw_min=");
+    Serial.print(" rawSample_min=");
     Serial.print(_baseSession.rawMin);
-    Serial.print(" raw_max=");
+    Serial.print(" rawSample_max=");
     Serial.print(_baseSession.rawMax);
-    Serial.print(" raw_swing=");
+    Serial.print(" rawSample_swing=");
     Serial.print(rawSwing);
-    Serial.print(" delta_avg=");
+    Serial.print(" centeredSample_avg=");
     Serial.print(deltaAvg, 1);
-    Serial.print(" delta_min=");
+    Serial.print(" centeredSample_min=");
     Serial.print(_baseSession.deltaMin, 1);
-    Serial.print(" delta_max=");
+    Serial.print(" centeredSample_max=");
     Serial.print(_baseSession.deltaMax, 1);
-    Serial.print(" delta_swing=");
+    Serial.print(" centeredSample_swing=");
     Serial.print(deltaSwing, 1);
     Serial.print(" baseline_avg=");
     Serial.print(baselineAvg, 1);
@@ -2012,19 +2063,19 @@ void AnalyzerApp::printBaseSummary() const {
     Serial.print(_baseSession.baselineMax, 1);
     Serial.print(" baseline_drift=");
     Serial.println(baselineDrift, 1);
-    Serial.print("BASE quiet: quiet_raw_min=");
+    Serial.print("BASE quiet: quiet_rawSample_min=");
     Serial.print(_baseSession.rawMin);
-    Serial.print(" quiet_raw_max=");
+    Serial.print(" quiet_rawSample_max=");
     Serial.print(_baseSession.rawMax);
-    Serial.print(" quiet_raw_swing=");
+    Serial.print(" quiet_rawSample_swing=");
     Serial.print(rawSwing);
-    Serial.print(" quiet_delta_min=");
+    Serial.print(" quiet_centeredSample_min=");
     Serial.print(_baseSession.deltaMin, 1);
-    Serial.print(" quiet_delta_max=");
+    Serial.print(" quiet_centeredSample_max=");
     Serial.print(_baseSession.deltaMax, 1);
-    Serial.print(" quiet_delta_swing=");
+    Serial.print(" quiet_centeredSample_swing=");
     Serial.print(deltaSwing, 1);
-    Serial.print(" quiet_delta_peak=");
+    Serial.print(" quiet_centeredSample_peak=");
     Serial.println(deltaQuietPeak, 1);
     printBaseHints();
     printAudioSourceSummary();
@@ -2039,11 +2090,11 @@ void AnalyzerApp::printBaseHints() const {
     const unsigned long suggestedAttack = static_cast<unsigned long>(quietNoisePeak) + 10;
     const unsigned long suggestedRelease = suggestedAttack > 6 ? suggestedAttack - 6 : suggestedAttack;
 
-    Serial.print("BASE hints: quiet_raw_peak=");
+    Serial.print("BASE hints: quiet_rawSample_peak=");
     Serial.print(_baseSession.rawMax);
-    Serial.print(" quiet_delta_max=");
+    Serial.print(" quiet_centeredSample_max=");
     Serial.print(_baseSession.deltaMax, 1);
-    Serial.print(" quiet_delta_peak=");
+    Serial.print(" quiet_centeredSample_peak=");
     Serial.print(quietNoisePeak, 1);
     Serial.print(" suggested_minStrength=");
     Serial.print(suggestedMinStrength);
@@ -2064,21 +2115,21 @@ void AnalyzerApp::printCaptureSummary() const {
     Serial.print(_captureSession.totalTrials);
     Serial.print(" completed=");
     Serial.print(completed);
-    Serial.print(" avg_raw_swing=");
+    Serial.print(" avg_rawSample_swing=");
     Serial.print(avgRawSwing, 1);
-    Serial.print(" avg_delta_swing=");
+    Serial.print(" avg_centeredSample_swing=");
     Serial.print(avgDeltaSwing, 1);
-    Serial.print(" best_raw_swing=");
+    Serial.print(" best_rawSample_swing=");
     Serial.print(_captureSession.bestRawSwing);
-    Serial.print(" best_delta_swing=");
+    Serial.print(" best_centeredSample_swing=");
     Serial.println(_captureSession.bestDeltaSwing, 1);
-    Serial.print("CAP quiet: raw_avg=");
+    Serial.print("CAP quiet: rawSample_avg=");
     Serial.print(quietRawAvg);
-    Serial.print(" raw_peak=");
+    Serial.print(" rawSample_peak=");
     Serial.print(_captureSession.quietRawMax);
-    Serial.print(" delta_avg=");
+    Serial.print(" centeredSample_avg=");
     Serial.print(quietDeltaAvg, 1);
-    Serial.print(" delta_peak=");
+    Serial.print(" centeredSample_peak=");
     Serial.println(_captureSession.quietDeltaMax, 1);
     printCaptureHints();
     printAudioSourceSummary();
@@ -2100,9 +2151,9 @@ void AnalyzerApp::printCaptureHints() const {
     Serial.print(suggestedAttack);
     Serial.print(" suggested_release=");
     Serial.print(suggestedRelease);
-    Serial.print(" quiet_raw_avg=");
+    Serial.print(" quiet_rawSample_avg=");
     Serial.print(quietRawAvg);
-    Serial.print(" quiet_delta_peak=");
+    Serial.print(" quiet_centeredSample_peak=");
     Serial.println(quietNoisePeak, 1);
 }
 
@@ -2159,22 +2210,20 @@ void AnalyzerApp::printValueFrame(unsigned long now) const {
     const bool onsetVisible = detectorOnsetDetected() || now < _valOnsetLatchedUntilMs;
     const bool transientVisible = detectorTransientDetected() || now < _valTransientLatchedUntilMs;
 
-    Serial.print("raw:");
+    // Compact frame: source sample, centered sample, detector level, and smoothing.
+    Serial.print("rawSample:");
     Serial.print(_audioSignal.rawSignal());
     Serial.print('\t');
     Serial.print("baseline:");
     Serial.print(static_cast<int>(_audioSignal.baseline()));
     Serial.print('\t');
-    Serial.print("centered:");
+    Serial.print("centeredSample:");
     Serial.print(_audioSignal.centeredSignal());
     Serial.print('\t');
-    Serial.print("delta:");
-    Serial.print(_audioSignal.centeredSignal());
-    Serial.print('\t');
-    Serial.print("magnitude:");
+    Serial.print("signalLevel:");
     Serial.print(_audioSignal.signalMagnitude());
     Serial.print('\t');
-    Serial.print("smooth:");
+    Serial.print("smoothedLevel:");
     Serial.print(static_cast<int>(_audioSignal.smoothedSignalMagnitude()));
     Serial.print('\t');
     Serial.print("onset:");

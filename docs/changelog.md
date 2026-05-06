@@ -2,11 +2,19 @@
 
 ## Changelog Rules
 
-- Record every commit in a dated and named section.
+- Record every commit in a dated and named section (including commit id)
+- Keep `Unreleased` as the staging area for notes that will move into the next commit section.
+- When committing, move any `Unreleased` note into the dated and named commit section.
 - Keep `Known Issues` as a live rollover list.
 - When a new commit lands, recheck each known issue and move it to `Fixed` if it is resolved.
 - Leave only unresolved items in `Known Issues`.
 - Keep this file historical and factual; use `docs/current-pass.md` for active work.
+
+## Unreleased
+
+### Notes
+- Analyzer parity work is staged: onset/start-based DET/PAT candidate logs are in place, while SEQ verdict timing still uses the older accepted/release clock for comparison.
+- The current pass is verifying candidate-field parity and trial ordering without changing detector parameters or hardware assumptions.
 
 ## 2026-05-06 - Pass A: Analyzer reference / parity check
 

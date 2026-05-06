@@ -1404,6 +1404,9 @@ const char* AnalyzerApp::sequenceTrialClassificationName(const char* result, lon
     if (strcmp(result, "late") == 0) {
         return "late";
     }
+    if (strcmp(result, "early") == 0) {
+        return "expected";
+    }
     if (strcmp(result, "miss") == 0) {
         switch (diagnostics.strongestRejectReason) {
             case AudioOnsetDetector::TransientRejectReason::DurationTooLong:
@@ -1625,10 +1628,7 @@ void AnalyzerApp::finalizeSequenceTrial(unsigned long now) {
         dtMs = static_cast<long>(diagnostics.acceptedTransientMs - _sequenceTest.currentTrialStartMs);
         durMs = static_cast<long>(diagnostics.acceptedTransientDurationMs);
         strength = diagnostics.acceptedTransientStrength;
-        if (dtMs < 100L) {
-            result = "early";
-            _sequenceTest.earlyHits++;
-        } else if (dtMs > 300L) {
+        if (dtMs > 300L) {
             result = "late";
             _sequenceTest.lateHits++;
         } else {
@@ -1650,7 +1650,6 @@ void AnalyzerApp::finalizeSequenceTrial(unsigned long now) {
         const bool shouldPrintDebug =
             strcmp(result, "miss") == 0 ||
             strcmp(result, "late") == 0 ||
-            strcmp(result, "early") == 0 ||
             strcmp(result, "unexpected") == 0 ||
             diagnostics.duplicateCount > 0 ||
             (strcmp(result, "expected") == 0 && (acceptedDtMs > 200 || diagnostics.acceptedTransientDurationMs > 180));
@@ -1698,14 +1697,13 @@ void AnalyzerApp::printSequenceTrialDebug(unsigned long trialNumber, const char*
 
     const bool isMiss = strcmp(result, "miss") == 0;
     const bool isLate = strcmp(result, "late") == 0;
-    const bool isEarly = strcmp(result, "early") == 0;
     const bool isUnexpected = strcmp(result, "unexpected") == 0;
     const bool hasDuplicates = diagnostics.duplicateCount > 0;
     const bool expectedDtSlow = strcmp(result, "expected") == 0 && acceptedDtMs > 200;
     const bool expectedDurLong = strcmp(result, "expected") == 0 && diagnostics.acceptedTransientDurationMs > 180;
     const unsigned long totalRejects = diagnostics.transientRejectTooShortCount + diagnostics.transientRejectTooLongCount + diagnostics.transientRejectWeakCount;
 
-    if (!(isMiss || isLate || isEarly || isUnexpected || hasDuplicates || expectedDtSlow || expectedDurLong)) {
+    if (!(isMiss || isLate || isUnexpected || hasDuplicates || expectedDtSlow || expectedDurLong)) {
         return;
     }
 
@@ -1797,7 +1795,7 @@ void AnalyzerApp::printSequenceTrialDebug(unsigned long trialNumber, const char*
     }
     Serial.println("}");
 
-    if (isMiss || isLate || isEarly || isUnexpected || hasDuplicates || expectedDtSlow || expectedDurLong) {
+    if (isMiss || isLate || isUnexpected || hasDuplicates || expectedDtSlow || expectedDurLong) {
         Serial.print("  issues=[");
         bool firstIssue = true;
         auto printIssue = [&](const char* label) {
@@ -1812,9 +1810,6 @@ void AnalyzerApp::printSequenceTrialDebug(unsigned long trialNumber, const char*
         }
         if (isLate) {
             printIssue("late");
-        }
-        if (isEarly) {
-            printIssue("early");
         }
         if (isUnexpected) {
             printIssue("unexpected");
@@ -1862,6 +1857,12 @@ void AnalyzerApp::printSequenceTrialDebug(unsigned long trialNumber, const char*
             Serial.print(entry.dtFromTriggerMs);
             Serial.print(" dur=");
             Serial.print(entry.durationMs);
+            Serial.print(" end_dt_ms=");
+            if (entry.dtFromTriggerMs >= 0) {
+                Serial.print(entry.dtFromTriggerMs + static_cast<long>(entry.durationMs));
+            } else {
+                Serial.print("-");
+            }
             Serial.print(" strength=");
             Serial.println(entry.strength, 1);
         }
@@ -1895,6 +1896,13 @@ void AnalyzerApp::printSequenceTrialResult(unsigned long trialNumber, const char
     Serial.print(" dur=");
     if (durMs >= 0) {
         Serial.print(durMs);
+        Serial.print("ms");
+    } else {
+        Serial.print("-");
+    }
+    Serial.print(" end_dt_ms=");
+    if (dtMs >= 0 && durMs >= 0) {
+        Serial.print(dtMs + durMs);
         Serial.print("ms");
     } else {
         Serial.print("-");

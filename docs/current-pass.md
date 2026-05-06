@@ -3,6 +3,11 @@ Task: Pass D — Candidate / pattern validity parity
 Context:
 This is Pass D of the current ResonantNode refactor.
 
+Status:
+- D1.1 is done: SEQ now classifies by `onset_dt_ms`, logs `end_dt_ms` separately, and keeps DET/PAT parity logs unchanged.
+- `early` now folds into `expected` on the onset-based baseline.
+- D2-D5 remain for the shared validity cleanup.
+
 Pass A:
 Analyzer was checked as the trusted reference path for current AMP/transient detection.
 
@@ -23,6 +28,12 @@ DetectorCandidate
 
 Pass D goal:
 Make candidate validity and pattern validity explicit, consistent, and shared.
+
+Current focus:
+- D2: centralize DetectorCandidate -> PatternResult validity in DetectionPipeline.
+- D3: keep Analyzer SEQ classification downstream and measurement-only.
+- D4: keep runtime behavior simpler than Analyzer.
+- D5: clarify shared reason codes and logging.
 
 The code should no longer contain hidden or duplicated validity decisions spread across:
 - AudioSignal / detector drain

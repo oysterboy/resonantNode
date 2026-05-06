@@ -138,7 +138,6 @@ private:
         unsigned long hits = 0;
         unsigned long expectedHits = 0;
         unsigned long lateHits = 0;
-        unsigned long earlyHits = 0;
         unsigned long misses = 0;
         unsigned long unexpected = 0;
         unsigned long duplicates = 0;

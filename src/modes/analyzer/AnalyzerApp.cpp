@@ -858,7 +858,6 @@ void AnalyzerApp::startSequenceTest(unsigned long totalTrials, unsigned long per
     _sequenceTest.hits = 0;
     _sequenceTest.expectedHits = 0;
     _sequenceTest.lateHits = 0;
-    _sequenceTest.earlyHits = 0;
     _sequenceTest.misses = 0;
     _sequenceTest.unexpected = 0;
     _sequenceTest.duplicates = 0;
@@ -1404,9 +1403,6 @@ const char* AnalyzerApp::sequenceTrialClassificationName(const char* result, lon
     if (strcmp(result, "late") == 0) {
         return "late";
     }
-    if (strcmp(result, "early") == 0) {
-        return "expected";
-    }
     if (strcmp(result, "miss") == 0) {
         switch (diagnostics.strongestRejectReason) {
             case AudioOnsetDetector::TransientRejectReason::DurationTooLong:
@@ -1502,6 +1498,13 @@ void AnalyzerApp::handleSequenceCandidate(const DetectionPipeline::PatternResult
         Serial.print(dtFromTriggerMs);
         Serial.print(" dur=");
         Serial.print(candidate.durationMs);
+        Serial.print(" end_dt_ms=");
+        if (dtFromTriggerMs >= 0) {
+            Serial.print(dtFromTriggerMs + static_cast<long>(candidate.durationMs));
+            Serial.print("ms");
+        } else {
+            Serial.print("-");
+        }
         Serial.print(" strength=");
         Serial.print(candidate.peakStrength, 1);
         Serial.println(" source=detector");
@@ -1516,6 +1519,13 @@ void AnalyzerApp::handleSequenceCandidate(const DetectionPipeline::PatternResult
         Serial.print(dtFromTriggerMs);
         Serial.print(" dur=");
         Serial.print(candidate.durationMs);
+        Serial.print(" end_dt_ms=");
+        if (dtFromTriggerMs >= 0) {
+            Serial.print(dtFromTriggerMs + static_cast<long>(candidate.durationMs));
+            Serial.print("ms");
+        } else {
+            Serial.print("-");
+        }
         Serial.print(" strength=");
         Serial.print(candidate.peakStrength, 1);
         Serial.println(" source=pattern");
@@ -1571,6 +1581,13 @@ void AnalyzerApp::handleSequenceCandidate(const DetectionPipeline::PatternResult
         Serial.print(dtFromTriggerMs);
         Serial.print(" dur=");
         Serial.print(candidate.durationMs);
+        Serial.print(" end_dt_ms=");
+        if (dtFromTriggerMs >= 0) {
+            Serial.print(dtFromTriggerMs + static_cast<long>(candidate.durationMs));
+            Serial.print("ms");
+        } else {
+            Serial.print("-");
+        }
         Serial.print(" strength=");
         Serial.print(candidate.peakStrength, 1);
         Serial.print(" reason=");
@@ -1787,6 +1804,13 @@ void AnalyzerApp::printSequenceTrialDebug(unsigned long trialNumber, const char*
     } else {
         Serial.print("-");
     }
+    Serial.print(",end_dt:");
+    if (diagnostics.bestCandidateValid && diagnostics.bestCandidateDtFromTriggerMs >= 0) {
+        Serial.print(diagnostics.bestCandidateDtFromTriggerMs + static_cast<long>(diagnostics.bestCandidateDurationMs));
+        Serial.print("ms");
+    } else {
+        Serial.print("-");
+    }
     Serial.print(",strength:");
     if (diagnostics.bestCandidateValid) {
         Serial.print(diagnostics.bestCandidateStrength, 1);
@@ -1860,6 +1884,7 @@ void AnalyzerApp::printSequenceTrialDebug(unsigned long trialNumber, const char*
             Serial.print(" end_dt_ms=");
             if (entry.dtFromTriggerMs >= 0) {
                 Serial.print(entry.dtFromTriggerMs + static_cast<long>(entry.durationMs));
+                Serial.print("ms");
             } else {
                 Serial.print("-");
             }
@@ -1979,7 +2004,7 @@ void AnalyzerApp::printSequenceSummary() const {
         return;
     }
     const unsigned long total = _sequenceTest.totalTrials;
-    const unsigned long validPrimary = _sequenceTest.expectedHits + _sequenceTest.lateHits + _sequenceTest.earlyHits;
+    const unsigned long validPrimary = _sequenceTest.expectedHits + _sequenceTest.lateHits;
     const unsigned long completed = validPrimary + _sequenceTest.misses + _sequenceTest.invalidAudio;
     const unsigned long primaryHits = validPrimary;
     const float primaryAvgStrength = primaryHits > 0 ? (static_cast<float>(_sequenceTest.totalHitStrengthScaled) / 100.0f) / static_cast<float>(primaryHits) : 0.0f;
@@ -1997,8 +2022,6 @@ void AnalyzerApp::printSequenceSummary() const {
     Serial.print(_sequenceTest.expectedHits);
     Serial.print(" late_hits=");
     Serial.print(_sequenceTest.lateHits);
-    Serial.print(" early_hits=");
-    Serial.print(_sequenceTest.earlyHits);
     Serial.print(" misses=");
     Serial.print(_sequenceTest.misses);
     Serial.print(" unexpected=");

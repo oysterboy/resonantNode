@@ -13,7 +13,7 @@ enum class PatternType {
 
 enum class PatternReasonCode {
     None,
-    AcceptedTransient,
+    FromAcceptedTransient,
     DetectorRejected,
     AmbiguousEvidence,
     UnsupportedPattern,
@@ -45,6 +45,10 @@ struct PatternResult {
     bool valid = false;
 };
 
+inline bool isDetectorCandidateAccepted(const DetectorCandidate& in) {
+    return in.durationMs > 0 || in.peakStrength > 0.0f || in.releaseMillisApprox != 0;
+}
+
 inline PatternCandidate makePatternCandidate(const DetectorCandidate& in) {
     PatternCandidate out;
     out.onsetSample = in.onsetSample;
@@ -66,8 +70,7 @@ inline bool processDetectorCandidate(const DetectorCandidate& in, PatternResult&
     out = {};
     out.candidate = makePatternCandidate(in);
 
-    const bool validCandidate = in.durationMs > 0 || in.peakStrength > 0.0f || in.releaseMillisApprox != 0;
-    if (!validCandidate) {
+    if (!isDetectorCandidateAccepted(in)) {
         out.type = PatternType::Invalid;
         out.reasonCode = PatternReasonCode::DetectorRejected;
         out.confidence = 0.0f;
@@ -76,7 +79,7 @@ inline bool processDetectorCandidate(const DetectorCandidate& in, PatternResult&
     }
 
     out.type = PatternType::ValidTransient;
-    out.reasonCode = PatternReasonCode::AcceptedTransient;
+    out.reasonCode = PatternReasonCode::FromAcceptedTransient;
     out.confidence = 1.0f;
     out.valid = true;
     return true;
@@ -101,8 +104,8 @@ inline const char* patternReasonName(PatternReasonCode code) {
     switch (code) {
         case PatternReasonCode::None:
             return "none";
-        case PatternReasonCode::AcceptedTransient:
-            return "accepted_transient";
+        case PatternReasonCode::FromAcceptedTransient:
+            return "from_accepted_transient";
         case PatternReasonCode::DetectorRejected:
             return "detector_rejected";
         case PatternReasonCode::AmbiguousEvidence:

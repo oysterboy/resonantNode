@@ -588,7 +588,14 @@ void Node::logCandidate(const DetectorCandidate& candidate, const DetectionPipel
     }
     Serial.print(" dur=");
     Serial.print(candidate.durationMs);
-    Serial.print("ms strength=");
+    Serial.print(" end_dt_ms=");
+    if (candidate.onsetMillisApprox > 0) {
+        Serial.print(candidate.onsetMillisApprox + candidate.durationMs);
+        Serial.print("ms");
+    } else {
+        Serial.print("-");
+    }
+    Serial.print(" strength=");
     Serial.print(candidate.peakStrength, 1);
     Serial.print(" audio=");
     Serial.print(candidate.audioOverflowDuringCandidate ? "overflow" : "ok");

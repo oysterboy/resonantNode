@@ -9,6 +9,7 @@
 #include "../../detection/DetectionPipeline.h"
 #include "../../hal/PiezoToneOutputBTL.h"
 #include "../../hal/PiezoToneOutput.h"
+#include "../../io/AudioFrequencyDetector.h"
 #include "../../io/AudioSignal.h"
 #include "../../io/AudioOnsetDetector.h"
 #include "../../io/ChirpOutput.h"
@@ -79,7 +80,8 @@ private:
     void handleLogCommand(const char* line);
     bool rbShouldLogDetail() const;
     const char* rbLogModeName() const;
-    void logCandidate(const DetectorCandidate& candidate, const DetectionPipeline::PatternResult& patternResult, unsigned long candidateNumber, long gapMs, unsigned long queueDepthBeforeDrain, unsigned long behaviorLagMs, const char* action, const char* stateName, const char* gateName);
+    DetectionPipeline::FrequencyEvidence captureFrequencyEvidence() const;
+    void logCandidate(const DetectorCandidate& candidate, const DetectionPipeline::PatternResult& patternResult, unsigned long candidateNumber, long gapMs, unsigned long queueDepthBeforeDrain, unsigned long behaviorLagMs, const char* candidateClass, const char* action, const char* stateName, const char* gateName);
     void printRbSummary() const;
     void printRbSignalSummary() const;
     void printRbDetectorSummary() const;
@@ -92,6 +94,7 @@ private:
     AudioSource& _audioSource;
     AudioSourceKind _sourceKind;
     AudioSignal _audioSignal;
+    AudioFrequencyDetector _audioFrequencyDetector;
     AudioOnsetDetector _audioOnsetDetector;
     ResonantBehavior _behavior;
     PiezoToneOutput _toneOutput;
@@ -110,7 +113,7 @@ private:
     unsigned long _rbStrengthSumScaled = 0;
     unsigned long _rbDurationSumMs = 0;
     bool _rbDetectOnly = false;
-    RbLogMode _rbLogMode = RbLogMode::Full;
+    RbLogMode _rbLogMode = RbLogMode::Minimal;
     bool _wasSelfChirpSuppressed = false;
     unsigned long _rbLastWouldEmitHeardMs = 0;
     ResonantBehavior::BehaviorDecision _rbLastWouldEmitDecision = ResonantBehavior::BehaviorDecision::None;

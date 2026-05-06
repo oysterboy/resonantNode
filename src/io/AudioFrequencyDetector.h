@@ -34,6 +34,7 @@ public:
     void setSampleRateHz(unsigned long value);
     void setWindowSizeSamples(unsigned long value);
     void setDiagnosticsEnabled(bool enabled);
+    void observeCenteredSample(int centeredSample);
 
     bool onsetDetected() const;
     float onsetStrength() const;

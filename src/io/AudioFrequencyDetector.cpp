@@ -45,7 +45,21 @@ void AudioFrequencyDetector::update(unsigned long now) {
     _transientDetected = false;
     _transientStrength = 0.0f;
 
-    pushSample(_audioSignal.centeredSignal());
+    observeCenteredSample(_audioSignal.centeredSignal());
+    if (_sampleCount >= _windowSizeSamples) {
+        const float score = _lastFrequencyScore;
+        const bool aboveAttackThreshold = score > _onsetDetectionThreshold;
+        const bool aboveReleaseThreshold = score > _onsetReleaseThreshold;
+        const bool onsetCooldownElapsed = now - _lastOnsetMs >= _cooldownAfterOnsetMs;
+
+        updateOnsetStage(now, score, aboveAttackThreshold, onsetCooldownElapsed);
+        updateTransientStage(now, score, aboveReleaseThreshold);
+        printTransientStatsIfDue(now);
+    }
+}
+
+void AudioFrequencyDetector::observeCenteredSample(int centeredSample) {
+    pushSample(centeredSample);
     if (_sampleCount < _windowSizeSamples) {
         _lastFrequencyScore = 0.0f;
         _lastTargetPower = 0.0f;
@@ -55,14 +69,7 @@ void AudioFrequencyDetector::update(unsigned long now) {
         return;
     }
 
-    const float score = computeFrequencyScore();
-    const bool aboveAttackThreshold = score > _onsetDetectionThreshold;
-    const bool aboveReleaseThreshold = score > _onsetReleaseThreshold;
-    const bool onsetCooldownElapsed = now - _lastOnsetMs >= _cooldownAfterOnsetMs;
-
-    updateOnsetStage(now, score, aboveAttackThreshold, onsetCooldownElapsed);
-    updateTransientStage(now, score, aboveReleaseThreshold);
-    printTransientStatsIfDue(now);
+    computeFrequencyScore();
 }
 
 void AudioFrequencyDetector::pushSample(int sample) {

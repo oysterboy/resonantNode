@@ -10,6 +10,28 @@
 - Leave only unresolved items in `Known Issues`.
 - Keep this file historical and factual; use `docs/current-pass.md` for active work.
 
+## 2026-05-06 - H2: Frequency Evidence Observer
+
+### Changed
+- `AudioFrequencyDetector` is now sampled alongside the existing transient flow in Analyzer and Resonant.
+- `PatternResult` can carry attached frequency evidence snapshots without changing validity, type, or behavior.
+- Analyzer and Resonant candidate logs now include the inert frequency fields where they already print pattern details.
+
+### Notes
+- H2 is observation-only and does not change the detector or behavior rules.
+- Commit id pending until this snapshot is committed.
+
+## 2026-05-06 - H1: Pattern Evidence Scaffold
+
+### Changed
+- `DetectionPipeline` now carries inert transient and frequency evidence fields alongside the existing flat candidate data.
+- `PatternCandidate` mirrors accepted detector data into `candidate.transient`, while frequency evidence remains default-inactive.
+- Analyzer and Resonant candidate logs now include the inert evidence fields where they already print pattern details.
+
+### Notes
+- H1 is architecture-only and does not change behavior.
+- Commit id pending until this snapshot is committed.
+
 ## 2026-05-06 - Refactor: DetectorPipeline Baseline
 
 ### Changed

@@ -78,6 +78,163 @@ bool waitForEmitterAck(const char* expectedPrefix, unsigned long timeoutMs) {
 
     return false;
 }
+
+const char* h3SequenceCandidateClassFromResult(const char* result) {
+    if (strcmp(result, "expected") == 0) {
+        return "expected_primary";
+    }
+    if (strcmp(result, "duplicate") == 0) {
+        return "duplicate";
+    }
+    if (strcmp(result, "late") == 0) {
+        return "late";
+    }
+    if (strcmp(result, "self_suppressed") == 0) {
+        return "self_suppressed";
+    }
+    return "unexpected_noise";
+}
+
+const char* h3SequenceCandidateClass(bool duplicateCandidate, bool inWindow, long dtFromTriggerMs) {
+    if (duplicateCandidate) {
+        return "duplicate";
+    }
+    if (!inWindow) {
+        return "unexpected_noise";
+    }
+    if (dtFromTriggerMs >= kLateOnsetMinMs) {
+        return "late";
+    }
+    return "expected_primary";
+}
+
+void printH3FrequencyEvidenceFields(const DetectionPipeline::PatternResult& patternResult,
+                                    const DetectionPipeline::FrequencyEvidence& frequencyEvidence,
+                                    const char* candidateClass,
+                                    long transientAgeOrDtMs,
+                                    unsigned long referenceMs) {
+    Serial.print(" candidate_class=");
+    Serial.print(candidateClass);
+    Serial.print(" pattern_valid=");
+    Serial.print(patternResult.valid ? 1 : 0);
+    Serial.print(" pattern_type=");
+    Serial.print(DetectionPipeline::patternTypeName(patternResult.type));
+    Serial.print(" pattern_reason=");
+    Serial.print(DetectionPipeline::patternReasonName(patternResult.reasonCode));
+    Serial.print(" transient_duration_ms=");
+    Serial.print(patternResult.candidate.durationMs);
+    Serial.print(" transient_peak_strength=");
+    Serial.print(patternResult.candidate.peakStrength, 1);
+    Serial.print(" transient_age_or_dt_ms=");
+    if (transientAgeOrDtMs >= 0) {
+        Serial.print(transientAgeOrDtMs);
+        Serial.print("ms");
+    } else {
+        Serial.print("-");
+    }
+    Serial.print(" freq_present=");
+    Serial.print(frequencyEvidence.present ? 1 : 0);
+    Serial.print(" freq_matched=");
+    Serial.print(frequencyEvidence.matched ? 1 : 0);
+    Serial.print(" freq_score=");
+    Serial.print(frequencyEvidence.score, 1);
+    Serial.print(" freq_conf=");
+    Serial.print(frequencyEvidence.confidence, 1);
+    Serial.print(" freq_target_hz=");
+    Serial.print(frequencyEvidence.targetHz);
+    Serial.print(" freq_target_power=");
+    Serial.print(frequencyEvidence.targetPower, 1);
+    Serial.print(" freq_neighbor_power=");
+    Serial.print(frequencyEvidence.neighborPower, 1);
+    Serial.print(" freq_total_energy=");
+    Serial.print(frequencyEvidence.totalEnergy, 1);
+    Serial.print(" freq_contrast=");
+    Serial.print(frequencyEvidence.spectralContrast, 2);
+    Serial.print(" freq_observed_at_ms=");
+    Serial.print(frequencyEvidence.observedAtMs);
+    Serial.print(" freq_age_ms=");
+    if (frequencyEvidence.observedAtMs > 0 && referenceMs >= frequencyEvidence.observedAtMs) {
+        Serial.print(referenceMs - frequencyEvidence.observedAtMs);
+        Serial.print("ms");
+    } else {
+        Serial.print("-");
+    }
+    Serial.print(" freq_valid_window=");
+    Serial.print(frequencyEvidence.validWindow ? 1 : 0);
+}
+
+void printH3SequenceRoleFields(const char* role,
+                               long dtMs,
+                               long durMs,
+                               float strength,
+                               const DetectionPipeline::FrequencyEvidence& freq,
+                               unsigned long observedAtMs,
+                               unsigned long referenceMs,
+                               const char* reason,
+                               long deltaFromPrimaryMs) {
+    Serial.print(" ");
+    Serial.print(role);
+    Serial.print("_dt_ms=");
+    if (dtMs >= 0) {
+        Serial.print(dtMs);
+        Serial.print("ms");
+    } else {
+        Serial.print("-");
+    }
+    Serial.print(" ");
+    Serial.print(role);
+    Serial.print("_dur_ms=");
+    if (durMs >= 0) {
+        Serial.print(durMs);
+        Serial.print("ms");
+    } else {
+        Serial.print("-");
+    }
+    Serial.print(" ");
+    Serial.print(role);
+    Serial.print("_strength=");
+    Serial.print(strength, 1);
+    Serial.print(" ");
+    Serial.print(role);
+    Serial.print("_freq_score=");
+    Serial.print(freq.score, 1);
+    Serial.print(" ");
+    Serial.print(role);
+    Serial.print("_freq_contrast=");
+    Serial.print(freq.spectralContrast, 2);
+    Serial.print(" ");
+    Serial.print(role);
+    Serial.print("_freq_present=");
+    Serial.print(freq.present ? 1 : 0);
+    Serial.print(" ");
+    Serial.print(role);
+    Serial.print("_freq_observed_at_ms=");
+    Serial.print(observedAtMs);
+    Serial.print(" ");
+    Serial.print(role);
+    Serial.print("_freq_age_ms=");
+    if (observedAtMs > 0 && referenceMs >= observedAtMs) {
+        Serial.print(referenceMs - observedAtMs);
+        Serial.print("ms");
+    } else {
+        Serial.print("-");
+    }
+    Serial.print(" ");
+    Serial.print(role);
+    Serial.print("_freq_valid_window=");
+    Serial.print(freq.validWindow ? 1 : 0);
+    if (role != nullptr && strcmp(role, "duplicate") == 0) {
+        Serial.print(" duplicate_delta_from_primary_ms=");
+        if (deltaFromPrimaryMs >= 0) {
+            Serial.print(deltaFromPrimaryMs);
+            Serial.print("ms");
+        } else {
+            Serial.print("-");
+        }
+        Serial.print(" duplicate_reason=");
+        Serial.print(reason != nullptr ? reason : "none");
+    }
+}
 }
 
 // -----------------------------------------------------------------------------
@@ -93,6 +250,7 @@ AnalyzerApp::AnalyzerApp(int inputPin, AudioSourceKind sourceKind)
                        ? static_cast<AudioSource&>(_i2sSource)
                        : static_cast<AudioSource&>(_analogSource)),
       _audioSignal(_audioSource),
+      _audioFrequencyDetector(_audioSignal),
       _audioOnsetDetector() {}
 
 void AnalyzerApp::begin() {
@@ -112,6 +270,8 @@ void AnalyzerApp::begin() {
     configureParameters();
     _audioSource.begin();
     _audioSignal.begin();
+    _audioFrequencyDetector.begin();
+    _audioFrequencyDetector.setDiagnosticsEnabled(false);
     _audioOnsetDetector.begin();
     _audioSignal.setDiagnosticsEnabled(AUDIO_VERBOSE_DEBUG);
     _audioOnsetDetector.setDiagnosticsEnabled(AUDIO_VERBOSE_DEBUG);
@@ -147,7 +307,7 @@ void AnalyzerApp::configureAnalogParameters() {
     _audioSignal.setBaselineTrackingQuietThreshold(40);
     setDetectorOnsetDetectionThreshold(36.0f);
     setDetectorOnsetReleaseThreshold(26.0f);
-    setDetectorCooldownAfterOnsetMs(25);
+    setDetectorCooldownAfterOnsetMs(100);
     setDetectorReleaseDebounceMs(30);
     setDetectorMinTransientDurationMs(60);
     setDetectorMaxTransientDurationMs(240);
@@ -158,7 +318,7 @@ void AnalyzerApp::configureI2SParameters() {
     _audioSignal.setBaselineTrackingQuietThreshold(20);
     setDetectorOnsetDetectionThreshold(36.0f);
     setDetectorOnsetReleaseThreshold(26.0f);
-    setDetectorCooldownAfterOnsetMs(25);
+    setDetectorCooldownAfterOnsetMs(100);
     setDetectorReleaseDebounceMs(30);
     setDetectorMinTransientDurationMs(60);
     setDetectorMaxTransientDurationMs(240);
@@ -185,6 +345,10 @@ void AnalyzerApp::update() {
             }
 
             _audioSignal.processBlock(block);
+            for (uint16_t i = 0; i < block.sampleCount; ++i) {
+                const int centeredSample = static_cast<int>(block.samples[i] - _audioSignal.baseline());
+                _audioFrequencyDetector.observeCenteredSample(centeredSample);
+            }
             updateSequenceAmbientStats();
             noteSequenceTransientReject(_audioSignal.sampleTimeUs() / 1000UL);
             const unsigned long queueDepthBeforeDrain = static_cast<unsigned long>(_audioSignal.candidateQueueDepth());
@@ -192,7 +356,8 @@ void AnalyzerApp::update() {
             DetectorCandidate candidate;
             while (_audioSignal.popCandidate(candidate)) {
                 DetectionPipeline::PatternResult patternResult;
-                if (!DetectionPipeline::processDetectorCandidate(candidate, patternResult, now)) {
+                const auto frequencyEvidence = captureFrequencyEvidence();
+                if (!DetectionPipeline::processDetectorCandidate(candidate, patternResult, now, &frequencyEvidence)) {
                     continue;
                 }
 
@@ -222,6 +387,7 @@ void AnalyzerApp::update() {
             }
             const unsigned long sampleTimeMs = sampleTimeUs / 1000UL;
             _audioSignal.update(sample, sampleTimeUs);
+            _audioFrequencyDetector.observeCenteredSample(_audioSignal.centeredSignal());
             _audioOnsetDetector.update(static_cast<float>(_audioSignal.signalMagnitude()), sampleTimeUs);
             updateSequenceAmbientStats();
 
@@ -1279,6 +1445,9 @@ void AnalyzerApp::handleSequenceTransient(unsigned long now) {
         _sequenceTest.currentTrialUnexpected++;
         return;
     }
+    if (_sequenceTest.currentTrialFinalized) {
+        return;
+    }
 
     const bool inWindow = now >= _sequenceTest.currentTrialStartMs + _sequenceTest.windowStartOffsetMs && now <= _sequenceTest.currentTrialEndMs;
     if (!inWindow) {
@@ -1297,6 +1466,19 @@ void AnalyzerApp::handleSequenceTransient(unsigned long now) {
     }
 
     if (_sequenceTest.currentTrialHit) {
+        if (_sequenceTest.currentTrialDiagnostics.duplicateCount == 0) {
+            _sequenceTest.currentTrialDiagnostics.duplicateTransientMs = now;
+            _sequenceTest.currentTrialDiagnostics.duplicateTransientStrength = detectorTransientStrength();
+            _sequenceTest.currentTrialDiagnostics.duplicateTransientDurationMs = detectorTransientDurationMs();
+            _sequenceTest.currentTrialDiagnostics.duplicateFrequencyEvidence = captureFrequencyEvidence();
+            _sequenceTest.currentTrialDiagnostics.duplicateFrequencyProcessedAtMs = now;
+            _sequenceTest.currentTrialDiagnostics.duplicateDeltaFromPrimaryMs = _sequenceTest.currentTrialDiagnostics.transientAccepted
+                ? static_cast<long>(now) - static_cast<long>(_sequenceTest.currentTrialDiagnostics.acceptedTransientMs)
+                : 0;
+            _sequenceTest.currentTrialDiagnostics.duplicateOriginWindow = true;
+            strncpy(_sequenceTest.currentTrialDiagnostics.duplicateReason, "duplicate_after_primary", sizeof(_sequenceTest.currentTrialDiagnostics.duplicateReason) - 1);
+            _sequenceTest.currentTrialDiagnostics.duplicateReason[sizeof(_sequenceTest.currentTrialDiagnostics.duplicateReason) - 1] = '\0';
+        }
         _sequenceTest.currentTrialDiagnostics.duplicateCount++;
         if (_sequenceTest.currentTrialDiagnostics.duplicateDtCount < SequenceTest::kMaxDuplicateDts) {
             _sequenceTest.currentTrialDiagnostics.duplicateDts[_sequenceTest.currentTrialDiagnostics.duplicateDtCount++] = now >= _sequenceTest.currentTrialTransientDetectedMs
@@ -1350,6 +1532,25 @@ void AnalyzerApp::updateSequenceAmbientStats() {
 
     diagnostics.ambientBaselineSamples++;
     diagnostics.ambientBaselineSum += baseline;
+}
+
+DetectionPipeline::FrequencyEvidence AnalyzerApp::captureFrequencyEvidence() const {
+    DetectionPipeline::FrequencyEvidence evidence;
+    evidence.observedAtMs = millis();
+    const float totalEnergy = _audioFrequencyDetector.lastTotalEnergy();
+    const bool present = totalEnergy > 0.0f;
+
+    evidence.present = present;
+    evidence.matched = false;
+    evidence.targetHz = present ? _audioFrequencyDetector.targetFrequencyHz() : 0;
+    evidence.score = _audioFrequencyDetector.lastFrequencyScore();
+    evidence.confidence = 0.0f;
+    evidence.targetPower = _audioFrequencyDetector.lastTargetPower();
+    evidence.neighborPower = _audioFrequencyDetector.lastNeighborPower();
+    evidence.totalEnergy = totalEnergy;
+    evidence.spectralContrast = _audioFrequencyDetector.lastSpectralContrast();
+    evidence.validWindow = present;
+    return evidence;
 }
 
 void AnalyzerApp::noteSequenceTransientReject(unsigned long eventMs) {
@@ -1467,6 +1668,8 @@ void AnalyzerApp::handleSequenceCandidate(const DetectionPipeline::PatternResult
     const bool preWindow = onsetMs < _sequenceTest.currentTrialStartMs + _sequenceTest.windowStartOffsetMs;
     const bool postWindow = onsetMs > _sequenceTest.currentTrialEndMs;
     const bool inWindow = !preWindow && !postWindow;
+    const bool duplicateCandidate = _sequenceTest.currentTrialHit && inWindow;
+    const char* candidateClass = h3SequenceCandidateClass(duplicateCandidate, inWindow, dtFromTriggerMs);
 
     const SequenceTest::CandidateOrigin origin = preWindow
         ? SequenceTest::CandidateOrigin::PreWindow
@@ -1537,6 +1740,21 @@ void AnalyzerApp::handleSequenceCandidate(const DetectionPipeline::PatternResult
         Serial.print(queueDepthBeforeDrain);
         Serial.print(" strength=");
         Serial.print(candidate.peakStrength, 1);
+        Serial.print(" transient_present=");
+        Serial.print(patternResult.candidate.transient.present ? 1 : 0);
+        Serial.print(" freq_present=");
+        Serial.print(patternResult.candidate.frequency.present ? 1 : 0);
+        Serial.print(" freq_matched=");
+        Serial.print(patternResult.candidate.frequency.matched ? 1 : 0);
+        Serial.print(" freq_score=");
+        Serial.print(patternResult.candidate.frequency.score, 1);
+        Serial.print(" freq_conf=");
+        Serial.print(patternResult.candidate.frequency.confidence, 1);
+        Serial.print(" freq_target_hz=");
+        Serial.print(patternResult.candidate.frequency.targetHz);
+        Serial.print(" freq_contrast=");
+        Serial.print(patternResult.candidate.frequency.spectralContrast, 1);
+        printH3FrequencyEvidenceFields(patternResult, patternResult.candidate.frequency, candidateClass, dtFromTriggerMs, patternResult.processedAtMs);
         Serial.println(" source=detector");
 
         Serial.print("PAT_CAND trial=");
@@ -1569,6 +1787,21 @@ void AnalyzerApp::handleSequenceCandidate(const DetectionPipeline::PatternResult
         Serial.print(queueDepthBeforeDrain);
         Serial.print(" strength=");
         Serial.print(candidate.peakStrength, 1);
+        Serial.print(" transient_present=");
+        Serial.print(patternResult.candidate.transient.present ? 1 : 0);
+        Serial.print(" freq_present=");
+        Serial.print(patternResult.candidate.frequency.present ? 1 : 0);
+        Serial.print(" freq_matched=");
+        Serial.print(patternResult.candidate.frequency.matched ? 1 : 0);
+        Serial.print(" freq_score=");
+        Serial.print(patternResult.candidate.frequency.score, 1);
+        Serial.print(" freq_conf=");
+        Serial.print(patternResult.candidate.frequency.confidence, 1);
+        Serial.print(" freq_target_hz=");
+        Serial.print(patternResult.candidate.frequency.targetHz);
+        Serial.print(" freq_contrast=");
+        Serial.print(patternResult.candidate.frequency.spectralContrast, 1);
+        printH3FrequencyEvidenceFields(patternResult, patternResult.candidate.frequency, candidateClass, dtFromTriggerMs, patternResult.processedAtMs);
         Serial.println(" source=pattern");
     }
 
@@ -1590,6 +1823,18 @@ void AnalyzerApp::handleSequenceCandidate(const DetectionPipeline::PatternResult
     }
 
     if (_sequenceTest.currentTrialHit) {
+        if (diagnostics.duplicateCount == 0) {
+            diagnostics.duplicateTransientMs = onsetMs;
+            diagnostics.duplicateTransientStrength = candidate.peakStrength;
+            diagnostics.duplicateTransientDurationMs = candidate.durationMs;
+            diagnostics.duplicateFrequencyEvidence = patternResult.candidate.frequency;
+            diagnostics.duplicateFrequencyProcessedAtMs = patternResult.processedAtMs;
+            diagnostics.duplicateDeltaFromPrimaryMs = diagnostics.transientAccepted
+                ? static_cast<long>(onsetMs) - static_cast<long>(diagnostics.acceptedTransientMs)
+                : 0;
+            strncpy(diagnostics.duplicateReason, "duplicate_after_primary", sizeof(diagnostics.duplicateReason) - 1);
+            diagnostics.duplicateReason[sizeof(diagnostics.duplicateReason) - 1] = '\0';
+        }
         _sequenceTest.currentTrialDiagnostics.duplicateCount++;
         if (_sequenceTest.currentTrialDiagnostics.duplicateDtCount < SequenceTest::kMaxDuplicateDts) {
             _sequenceTest.currentTrialDiagnostics.duplicateDts[_sequenceTest.currentTrialDiagnostics.duplicateDtCount++] = onsetMs >= _sequenceTest.currentTrialTransientDetectedMs
@@ -1606,6 +1851,8 @@ void AnalyzerApp::handleSequenceCandidate(const DetectionPipeline::PatternResult
     _sequenceTest.currentTrialDiagnostics.acceptedTransientDurationMs = candidate.durationMs;
     _sequenceTest.currentTrialDiagnostics.acceptedTransientReleaseStrength = candidate.releaseStrength;
     _sequenceTest.currentTrialDiagnostics.acceptedAmbientBaseline = candidate.ambientBaseline;
+    _sequenceTest.currentTrialDiagnostics.acceptedFrequencyEvidence = patternResult.candidate.frequency;
+    _sequenceTest.currentTrialDiagnostics.acceptedFrequencyProcessedAtMs = patternResult.processedAtMs;
     _sequenceTest.currentTrialDiagnostics.lastTransientRejectReason = AudioOnsetDetector::TransientRejectReason::None;
     _sequenceTest.currentTrialDiagnostics.lastRejectStrength = 0.0f;
     _sequenceTest.currentTrialDiagnostics.lastRejectDurationMs = 0;
@@ -1642,8 +1889,24 @@ void AnalyzerApp::handleSequenceCandidate(const DetectionPipeline::PatternResult
         Serial.print(queueDepthBeforeDrain);
         Serial.print(" strength=");
         Serial.print(candidate.peakStrength, 1);
+        Serial.print(" transient_present=");
+        Serial.print(patternResult.candidate.transient.present ? 1 : 0);
+        Serial.print(" freq_present=");
+        Serial.print(patternResult.candidate.frequency.present ? 1 : 0);
+        Serial.print(" freq_matched=");
+        Serial.print(patternResult.candidate.frequency.matched ? 1 : 0);
+        Serial.print(" freq_score=");
+        Serial.print(patternResult.candidate.frequency.score, 1);
+        Serial.print(" freq_conf=");
+        Serial.print(patternResult.candidate.frequency.confidence, 1);
+        Serial.print(" freq_target_hz=");
+        Serial.print(patternResult.candidate.frequency.targetHz);
+        Serial.print(" freq_contrast=");
+        Serial.print(patternResult.candidate.frequency.spectralContrast, 1);
         Serial.print(" reason=");
-        Serial.println(DetectionPipeline::patternReasonName(patternResult.reasonCode));
+        Serial.print(DetectionPipeline::patternReasonName(patternResult.reasonCode));
+        printH3FrequencyEvidenceFields(patternResult, patternResult.candidate.frequency, candidateClass, dtFromTriggerMs, patternResult.processedAtMs);
+        Serial.println();
     }
 }
 
@@ -1726,6 +1989,8 @@ void AnalyzerApp::finalizeSequenceTrial(unsigned long now) {
             printSequenceTrialDebug(_sequenceTest.currentTrial, result, diagnostics);
         }
     }
+
+    Serial.flush();
     _sequenceTest.currentTrialFinalized = true;
 
     if (_sequenceTest.currentTrial >= _sequenceTest.totalTrials) {
@@ -1778,12 +2043,72 @@ void AnalyzerApp::printSequenceTrialDebug(unsigned long trialNumber, const char*
 
     const char* classification = sequenceTrialClassificationName(result, acceptedDtMs, diagnostics.acceptedTransientDurationMs, diagnostics);
 
+    const char* candidateClass = h3SequenceCandidateClassFromResult(result);
+    const auto& freq = diagnostics.acceptedFrequencyEvidence;
+    const bool validPattern = strcmp(result, "miss") != 0 && strcmp(result, "invalid_audio") != 0;
+    const unsigned long freqAgeMs = freq.observedAtMs > 0 && diagnostics.acceptedFrequencyProcessedAtMs >= freq.observedAtMs
+        ? diagnostics.acceptedFrequencyProcessedAtMs - freq.observedAtMs
+        : 0;
+
     Serial.print("SEQ debug trial=");
     Serial.print(trialNumber);
     Serial.print(" result=");
     Serial.print(result);
     Serial.print(" class=");
     Serial.print(classification);
+    Serial.print(" candidate_class=");
+    Serial.print(candidateClass);
+    Serial.print(" pattern_valid=");
+    Serial.print(validPattern ? 1 : 0);
+    Serial.print(" pattern_type=");
+    Serial.print(validPattern ? "valid_transient" : "invalid");
+    Serial.print(" pattern_reason=");
+    Serial.print(validPattern ? "from_accepted_transient" : "detector_rejected");
+    Serial.print(" transient_duration_ms=");
+    Serial.print(diagnostics.acceptedTransientDurationMs);
+    Serial.print(" transient_peak_strength=");
+    Serial.print(diagnostics.acceptedTransientStrength, 1);
+    Serial.print(" transient_age_or_dt_ms=");
+    if (diagnostics.transientAccepted && diagnostics.acceptedTransientMs >= _sequenceTest.currentTrialStartMs) {
+        Serial.print(static_cast<long>(diagnostics.acceptedTransientMs) - static_cast<long>(_sequenceTest.currentTrialStartMs));
+        Serial.print("ms");
+    } else {
+        Serial.print("-");
+    }
+    Serial.print(" freq_present=");
+    Serial.print(freq.present ? 1 : 0);
+    Serial.print(" freq_matched=");
+    Serial.print(freq.matched ? 1 : 0);
+    Serial.print(" freq_score=");
+    Serial.print(freq.score, 1);
+    Serial.print(" freq_conf=");
+    Serial.print(freq.confidence, 1);
+    Serial.print(" freq_target_hz=");
+    Serial.print(freq.targetHz);
+    Serial.print(" freq_target_power=");
+    Serial.print(freq.targetPower, 1);
+    Serial.print(" freq_neighbor_power=");
+    Serial.print(freq.neighborPower, 1);
+    Serial.print(" freq_total_energy=");
+    Serial.print(freq.totalEnergy, 1);
+    Serial.print(" freq_contrast=");
+    Serial.print(freq.spectralContrast, 2);
+    Serial.print(" freq_observed_at_ms=");
+    Serial.print(freq.observedAtMs);
+    Serial.print(" freq_age_ms=");
+    Serial.print(freqAgeMs);
+    Serial.print("ms");
+    Serial.print(" freq_valid_window=");
+    Serial.print(freq.validWindow ? 1 : 0);
+    printH3SequenceRoleFields("primary", acceptedDtMs, static_cast<long>(diagnostics.acceptedTransientDurationMs), diagnostics.acceptedTransientStrength, freq, freq.observedAtMs, diagnostics.acceptedFrequencyProcessedAtMs, "none", 0);
+    printH3SequenceRoleFields("duplicate", diagnostics.duplicateCount > 0 ? static_cast<long>(diagnostics.duplicateTransientMs >= _sequenceTest.currentTrialStartMs ? diagnostics.duplicateTransientMs - _sequenceTest.currentTrialStartMs : 0) : -1,
+                              diagnostics.duplicateCount > 0 ? static_cast<long>(diagnostics.duplicateTransientDurationMs) : -1,
+                              diagnostics.duplicateCount > 0 ? diagnostics.duplicateTransientStrength : 0.0f,
+                              diagnostics.duplicateCount > 0 ? diagnostics.duplicateFrequencyEvidence : DetectionPipeline::FrequencyEvidence{},
+                              diagnostics.duplicateCount > 0 ? diagnostics.duplicateFrequencyProcessedAtMs : 0,
+                              diagnostics.duplicateCount > 0 ? diagnostics.duplicateFrequencyProcessedAtMs : 0,
+                              diagnostics.duplicateCount > 0 ? diagnostics.duplicateReason : "none",
+                              diagnostics.duplicateDeltaFromPrimaryMs);
     Serial.print(" detector_candidates=");
     Serial.print(diagnostics.rawCandidateCount);
     Serial.print(" accepted=");
@@ -1952,6 +2277,12 @@ void AnalyzerApp::printSequenceTrialResult(unsigned long trialNumber, const char
     }
 
     const char* classification = sequenceTrialClassificationName(result, dtMs, durMs, diagnostics);
+    const char* candidateClass = h3SequenceCandidateClassFromResult(result);
+    const auto& freq = diagnostics.acceptedFrequencyEvidence;
+    const bool validPattern = strcmp(result, "miss") != 0 && strcmp(result, "invalid_audio") != 0;
+    const unsigned long freqAgeMs = freq.observedAtMs > 0 && diagnostics.acceptedFrequencyProcessedAtMs >= freq.observedAtMs
+        ? diagnostics.acceptedFrequencyProcessedAtMs - freq.observedAtMs
+        : 0;
 
     Serial.print("SEQ trial=");
     Serial.print(trialNumber);
@@ -1963,6 +2294,128 @@ void AnalyzerApp::printSequenceTrialResult(unsigned long trialNumber, const char
     Serial.print(result);
     Serial.print(" class=");
     Serial.print(classification);
+    Serial.print(" candidate_class=");
+    Serial.print(candidateClass);
+    Serial.print(" pattern_valid=");
+    Serial.print(validPattern ? 1 : 0);
+    Serial.print(" pattern_type=");
+    Serial.print(validPattern ? "valid_transient" : "invalid");
+    Serial.print(" pattern_reason=");
+    Serial.print(validPattern ? "from_accepted_transient" : "detector_rejected");
+    Serial.print(" transient_duration_ms=");
+    Serial.print(durMs >= 0 ? durMs : 0);
+    Serial.print(" transient_peak_strength=");
+    Serial.print(strength, 1);
+    Serial.print(" transient_age_or_dt_ms=");
+    if (dtMs >= 0) {
+        Serial.print(dtMs);
+        Serial.print("ms");
+    } else {
+        Serial.print("-");
+    }
+    Serial.print(" freq_present=");
+    Serial.print(freq.present ? 1 : 0);
+    Serial.print(" freq_matched=");
+    Serial.print(freq.matched ? 1 : 0);
+    Serial.print(" freq_score=");
+    Serial.print(freq.score, 1);
+    Serial.print(" freq_conf=");
+    Serial.print(freq.confidence, 1);
+    Serial.print(" freq_target_hz=");
+    Serial.print(freq.targetHz);
+    Serial.print(" freq_target_power=");
+    Serial.print(freq.targetPower, 1);
+    Serial.print(" freq_neighbor_power=");
+    Serial.print(freq.neighborPower, 1);
+    Serial.print(" freq_total_energy=");
+    Serial.print(freq.totalEnergy, 1);
+    Serial.print(" freq_contrast=");
+    Serial.print(freq.spectralContrast, 2);
+    Serial.print(" freq_observed_at_ms=");
+    Serial.print(freq.observedAtMs);
+    Serial.print(" freq_age_ms=");
+    Serial.print(freqAgeMs);
+    Serial.print("ms");
+    Serial.print(" freq_valid_window=");
+    Serial.print(freq.validWindow ? 1 : 0);
+    printH3SequenceRoleFields(
+        "primary",
+        dtMs,
+        durMs,
+        strength,
+        freq,
+        freq.observedAtMs,
+        diagnostics.acceptedFrequencyProcessedAtMs,
+        "none",
+        0);
+
+    printH3SequenceRoleFields(
+        "duplicate",
+        diagnostics.duplicateCount > 0 ? static_cast<long>(diagnostics.duplicateTransientMs) - static_cast<long>(_sequenceTest.currentTrialStartMs) : -1,
+        diagnostics.duplicateCount > 0 ? static_cast<long>(diagnostics.duplicateTransientDurationMs) : -1,
+        diagnostics.duplicateCount > 0 ? diagnostics.duplicateTransientStrength : 0.0f,
+        diagnostics.duplicateCount > 0 ? diagnostics.duplicateFrequencyEvidence : DetectionPipeline::FrequencyEvidence{},
+        diagnostics.duplicateCount > 0 ? diagnostics.duplicateFrequencyEvidence.observedAtMs : 0,
+        diagnostics.duplicateCount > 0 ? diagnostics.duplicateFrequencyProcessedAtMs : 0,
+        diagnostics.duplicateCount > 0 ? diagnostics.duplicateReason : "none",
+        diagnostics.duplicateDeltaFromPrimaryMs);
+    const long primaryEndDtMs = dtMs >= 0 && durMs >= 0 ? dtMs + durMs : -1;
+    const long duplicateDtMs = diagnostics.duplicateCount > 0
+        ? static_cast<long>(diagnostics.duplicateTransientMs) - static_cast<long>(_sequenceTest.currentTrialStartMs)
+        : -1;
+    const long duplicateEndDtMs = duplicateDtMs >= 0 && diagnostics.duplicateTransientDurationMs > 0
+        ? duplicateDtMs + static_cast<long>(diagnostics.duplicateTransientDurationMs)
+        : -1;
+    Serial.print(" primary_end_dt_ms=");
+    if (primaryEndDtMs >= 0) {
+        Serial.print(primaryEndDtMs);
+        Serial.print("ms");
+    } else {
+        Serial.print("-");
+    }
+    Serial.print(" duplicate_count=");
+    Serial.print(diagnostics.duplicateCount);
+    Serial.print(" duplicate_1_dt_ms=");
+    if (duplicateDtMs >= 0) {
+        Serial.print(duplicateDtMs);
+        Serial.print("ms");
+    } else {
+        Serial.print("-");
+    }
+    Serial.print(" duplicate_1_dur_ms=");
+    if (diagnostics.duplicateCount > 0) {
+        Serial.print(diagnostics.duplicateTransientDurationMs);
+        Serial.print("ms");
+    } else {
+        Serial.print("-");
+    }
+    Serial.print(" duplicate_1_end_dt_ms=");
+    if (duplicateEndDtMs >= 0) {
+        Serial.print(duplicateEndDtMs);
+        Serial.print("ms");
+    } else {
+        Serial.print("-");
+    }
+    Serial.print(" duplicate_1_strength=");
+    Serial.print(diagnostics.duplicateCount > 0 ? diagnostics.duplicateTransientStrength : 0.0f, 1);
+    Serial.print(" duplicate_delta_from_primary_start_ms=");
+    if (diagnostics.duplicateCount > 0) {
+        Serial.print(diagnostics.duplicateDeltaFromPrimaryMs);
+        Serial.print("ms");
+    } else {
+        Serial.print("-");
+    }
+    Serial.print(" duplicate_delta_from_primary_end_ms=");
+    if (primaryEndDtMs >= 0 && duplicateEndDtMs >= 0) {
+        Serial.print(duplicateEndDtMs - primaryEndDtMs);
+        Serial.print("ms");
+    } else {
+        Serial.print("-");
+    }
+    Serial.print(" duplicate_origin_window=");
+    Serial.print(diagnostics.duplicateOriginWindow ? 1 : 0);
+    Serial.print(" duplicate_reason=");
+    Serial.print(diagnostics.duplicateCount > 0 ? diagnostics.duplicateReason : "none");
     Serial.print(" onset_dt_ms=");
     if (dtMs >= 0) {
         Serial.print(dtMs);

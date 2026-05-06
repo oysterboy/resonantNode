@@ -19,6 +19,43 @@ enum class PatternReasonCode {
     UnsupportedPattern,
 };
 
+struct TransientEvidence {
+    bool present = false;
+
+    uint64_t onsetSample = 0;
+    uint64_t peakSample = 0;
+    uint64_t releaseSample = 0;
+
+    unsigned long startMs = 0;
+    unsigned long heardAtMs = 0;
+    unsigned long acceptedMs = 0;
+    unsigned long durationMs = 0;
+
+    float onsetStrength = 0.0f;
+    float peakStrength = 0.0f;
+    float releaseStrength = 0.0f;
+    float ambientBaseline = 0.0f;
+
+    bool audioOverflowDuringCandidate = false;
+};
+
+struct FrequencyEvidence {
+    bool present = false;
+    bool matched = false;
+
+    unsigned long targetHz = 0;
+    unsigned long observedAtMs = 0;
+
+    float score = 0.0f;
+    float confidence = 0.0f;
+
+    float targetPower = 0.0f;
+    float neighborPower = 0.0f;
+    float totalEnergy = 0.0f;
+    float spectralContrast = 0.0f;
+    bool validWindow = false;
+};
+
 struct PatternCandidate {
     uint64_t onsetSample = 0;
     uint64_t peakSample = 0;
@@ -35,6 +72,9 @@ struct PatternCandidate {
     float ambientBaseline = 0.0f;
 
     bool audioOverflowDuringCandidate = false;
+
+    TransientEvidence transient;
+    FrequencyEvidence frequency;
 };
 
 struct PatternResult {
@@ -64,6 +104,20 @@ inline PatternCandidate makePatternCandidate(const DetectorCandidate& in) {
     out.releaseStrength = in.releaseStrength;
     out.ambientBaseline = in.ambientBaseline;
     out.audioOverflowDuringCandidate = in.audioOverflowDuringCandidate;
+    out.transient.present = isDetectorCandidateAccepted(in);
+    out.transient.onsetSample = in.onsetSample;
+    out.transient.peakSample = in.peakSample;
+    out.transient.releaseSample = in.releaseSample;
+    out.transient.startMs = in.onsetMillisApprox;
+    out.transient.heardAtMs = in.releaseMillisApprox != 0 ? in.releaseMillisApprox : in.onsetMillisApprox;
+    out.transient.acceptedMs = out.transient.heardAtMs;
+    out.transient.durationMs = in.durationMs;
+    out.transient.onsetStrength = in.onsetStrength;
+    out.transient.peakStrength = in.peakStrength;
+    out.transient.releaseStrength = in.releaseStrength;
+    out.transient.ambientBaseline = in.ambientBaseline;
+    out.transient.audioOverflowDuringCandidate = in.audioOverflowDuringCandidate;
+    out.frequency = {};
     return out;
 }
 
@@ -85,6 +139,14 @@ inline bool processDetectorCandidate(const DetectorCandidate& in, PatternResult&
     out.confidence = 1.0f;
     out.valid = true;
     return true;
+}
+
+inline bool processDetectorCandidate(const DetectorCandidate& in, PatternResult& out, unsigned long processedAtMs, const FrequencyEvidence* frequencyEvidence) {
+    const bool accepted = processDetectorCandidate(in, out, processedAtMs);
+    if (frequencyEvidence != nullptr) {
+        out.candidate.frequency = *frequencyEvidence;
+    }
+    return accepted;
 }
 
 inline const char* patternTypeName(PatternType type) {

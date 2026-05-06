@@ -4,6 +4,7 @@
 
 #include "../../hal/AudioSourceAnalog.h"
 #include "../../hal/AudioSourceI2S.h"
+#include "../../io/AudioFrequencyDetector.h"
 #include "../../io/AudioOnsetDetector.h"
 #include "../../io/AudioSignal.h"
 #include "../../detection/DetectionPipeline.h"
@@ -55,6 +56,16 @@ private:
             float acceptedTransientOnsetStrength = 0.0f;
             float acceptedTransientReleaseStrength = 0.0f;
             float acceptedAmbientBaseline = 0.0f;
+            DetectionPipeline::FrequencyEvidence acceptedFrequencyEvidence = {};
+            unsigned long acceptedFrequencyProcessedAtMs = 0;
+            unsigned long duplicateTransientMs = 0;
+            float duplicateTransientStrength = 0.0f;
+            unsigned long duplicateTransientDurationMs = 0;
+            DetectionPipeline::FrequencyEvidence duplicateFrequencyEvidence = {};
+            unsigned long duplicateFrequencyProcessedAtMs = 0;
+            long duplicateDeltaFromPrimaryMs = 0;
+            bool duplicateOriginWindow = false;
+            char duplicateReason[32] = "none";
 
             unsigned long rawCandidateCount = 0;
             unsigned long candidatePreWindowCount = 0;
@@ -274,6 +285,7 @@ private:
     void printSequenceSummary() const;
     void handleSequenceCandidate(const DetectionPipeline::PatternResult& patternResult, unsigned long queueDepthBeforeDrain);
     void updateSequenceAmbientStats();
+    DetectionPipeline::FrequencyEvidence captureFrequencyEvidence() const;
     void noteSequenceTransientReject(unsigned long eventMs);
     void noteSequenceTransientRejectReason(unsigned long eventMs, const char* reasonName, unsigned long durationMs, float strength);
     const char* sequenceTrialClassificationName(const char* result, long dtMs, long durMs, const SequenceTest::TrialDiagnostics& diagnostics) const;
@@ -287,6 +299,7 @@ private:
     AudioSource& _audioSource;
     AudioSourceKind _sourceKind;
     AudioSignal _audioSignal;
+    AudioFrequencyDetector _audioFrequencyDetector;
     AudioOnsetDetector _audioOnsetDetector;
 
     // Console and emitter control.

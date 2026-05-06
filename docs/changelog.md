@@ -10,13 +10,16 @@
 - Leave only unresolved items in `Known Issues`.
 - Keep this file historical and factual; use `docs/current-pass.md` for active work.
 
-## Unreleased
+## 2026-05-06 - Refactor: DetectorPipeline Baseline
+
+### Changed
+- Pass G is complete in code: autonomous Resonant behavior is back on the `PatternResult` path, detection-only remains a safe fallback, behavior decisions are explainable, and the serial interface now has a minimal logging mode.
+- The shared pipeline still carries `processedAtMs`, `AudioSignal` exposes candidate queue depth, and Analyzer/Resonant logs show processing lag and queue depth alongside the existing onset/duration parity fields.
+- The frozen AMP cooldown remains `25 ms` in both Analyzer and Resonant setup.
 
 ### Notes
-- Pass F is complete in code: Resonant behavior now reports explicit decision and block reasons, detection-only is explicit, and valid `PatternResult`s are no longer silent.
-- The shared pipeline now carries `processedAtMs`, `AudioSignal` exposes candidate queue depth, and Analyzer/Resonant logs now show processing lag and queue depth alongside the existing onset/duration parity fields.
-- The frozen AMP cooldown is now `25 ms` in both Analyzer and Resonant setup.
-- Fold this into the next dated commit section when you commit the Pass F snapshot.
+- This snapshot closes Pass G and folds the finished state into the dated history.
+- The next commit should carry this section forward with the commit id.
 
 ## 2026-05-06 - Pass A: Analyzer reference / parity check
 

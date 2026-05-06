@@ -34,6 +34,11 @@ public:
         I2S
     };
 
+    enum class RbLogMode {
+        Full,
+        Minimal,
+    };
+
     Node(int inputPin,
          int ledPin,
          int chirpPin,
@@ -71,6 +76,9 @@ private:
     void pollSerialCommands();
     void handleSerialLine(const char* line);
     void handleDebugCommand(const char* line);
+    void handleLogCommand(const char* line);
+    bool rbShouldLogDetail() const;
+    const char* rbLogModeName() const;
     void logCandidate(const DetectorCandidate& candidate, const DetectionPipeline::PatternResult& patternResult, unsigned long candidateNumber, long gapMs, unsigned long queueDepthBeforeDrain, unsigned long behaviorLagMs, const char* action, const char* stateName, const char* gateName);
     void printRbSummary() const;
     void printRbSignalSummary() const;
@@ -102,7 +110,10 @@ private:
     unsigned long _rbStrengthSumScaled = 0;
     unsigned long _rbDurationSumMs = 0;
     bool _rbDetectOnly = false;
+    RbLogMode _rbLogMode = RbLogMode::Full;
     bool _wasSelfChirpSuppressed = false;
+    unsigned long _rbLastWouldEmitHeardMs = 0;
+    ResonantBehavior::BehaviorDecision _rbLastWouldEmitDecision = ResonantBehavior::BehaviorDecision::None;
     RBBaselineState _rbBaselineState = RBBaselineState::Boot;
     unsigned long _rbBaselineStateStartedMs = 0;
     unsigned long _rbBaselineQuietSinceMs = 0;

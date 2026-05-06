@@ -389,6 +389,10 @@ bool AudioSignal::candidateAvailable() const {
     return _candidateCount > 0;
 }
 
+size_t AudioSignal::candidateQueueDepth() const {
+    return _candidateCount;
+}
+
 void AudioSignal::resetStats() {
     _stats = {};
     _candidateQueue[0] = {};

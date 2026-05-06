@@ -1,13 +1,7 @@
-Task: Pass D — Candidate / pattern validity parity
+Task: Pass E — Timing / lag logging
 
 Context:
-This is Pass D of the current ResonantNode refactor.
-
-Status:
-- Pass D is complete.
-- SEQ now classifies by `onset_dt_ms`, logs `end_dt_ms` separately, and keeps DET/PAT parity logs unchanged.
-- `early` now folds into `expected` on the onset-based baseline.
-- Detector-to-pattern validity is centralized, reason codes are shared, and Resonant behavior stays simpler than Analyzer.
+This is Pass E of the current ResonantNode refactor.
 
 Pass A:
 Analyzer was checked as the trusted reference path for current AMP/transient detection.
@@ -18,6 +12,9 @@ A shared DetectionPipeline scaffold was introduced.
 Pass C:
 Resonant mode was moved toward the same candidate → DetectionPipeline → PatternResult path as Analyzer, and signal/debug terminology was clarified.
 
+Pass D:
+Candidate validity and pattern validity were made explicit and shared.
+
 Current refactor scope:
 Introduce a shared detection/classification pipeline scaffold used by both Analyzer and Resonant mode, while keeping the current AMP/transient detector parameters frozen.
 
@@ -27,44 +24,31 @@ DetectorCandidate
 → PatternResult
 → Analyzer SEQ or ResonantBehavior
 
-Pass D goal:
-Make candidate validity and pattern validity explicit, consistent, and shared.
-
-Result:
-- D2: centralized `DetectorCandidate -> PatternResult` validity in `DetectionPipeline`.
-- D3: kept Analyzer SEQ classification downstream and measurement-only.
-- D4: kept runtime behavior simpler than Analyzer.
-- D5: clarified shared reason codes and logging.
-
-Pass E:
-- Ready to begin.
-
-The code should no longer contain hidden or duplicated validity decisions spread across:
-- AudioSignal / detector drain
-- DetectionPipeline
-- Analyzer SEQ
-- Resonant node glue
-- ResonantBehavior
+Pass E goal:
+Expose timing, lag, backlog, and queue/candidate delay clearly enough to diagnose whether bad reactions come from:
+- audio input buffering
+- detector timing
+- candidate queue backlog
+- DetectionPipeline timing
+- Analyzer SEQ classification timing
+- Resonant behavior timing
+- output busy/refractory timing
 
 Spec principle:
-Detection transforms feature streams into low-level acoustic candidates.
-Classification transforms candidates into meaningful acoustic events.
-Analyzer may classify strictly for measurement.
-Runtime behavior may consume simpler behavior-facing PatternResult values.
-Detection should not decide behavior.
+Timing must be explicit. Detection timing, behavior timing, and analyzer timing should be separated. Detection should report candidates/events; behavior decides output later. Analyzer measures detection quality and may log more detail than runtime behavior. :contentReference[oaicite:0]{index=0}
 
 Important constraints:
 - Do not tune detector parameters.
 - Do not change AudioOnsetDetector thresholds.
-- Do not change AudioSignal candidate generation unless absolutely required for exposing existing validity facts.
+- Do not change AudioSignal candidate generation unless absolutely required to expose existing timing facts.
 - Do not implement advanced chirp grouping.
 - Do not implement frequency matching.
 - Do not implement family matching.
 - Do not implement overlap/dominance handling.
 - Do not implement VEKTOR transport, OSC, hub integration, or resource registry.
-- Keep DetectionPipeline simple.
-- Avoid broad rewrites.
-- Do not redesign behavior logic beyond validity handling.
+- Do not redesign behavior logic.
+- Keep DetectionPipeline simple/pass-through.
+- This is a logging/diagnostic pass, not a behavior-fix pass.
 
 Frozen AMP detector baseline:
 onsetThreshold = 36.0
@@ -75,224 +59,204 @@ minTransientDurationMs = 60
 maxTransientDurationMs = 240
 minTransientPeakStrength = 40.0
 
-Core distinction to enforce:
+Core timing layers to distinguish:
 
-1. DetectorCandidate validity
-
-Question:
-Was this a detector-level accepted transient-like event?
-
-This belongs near:
-- AudioSignal
-- AudioOnsetDetector
-- DetectorCandidate
-- candidate queue / drain
-
-Possible detector-level facts:
-- accepted / rejected
-- startMs
-- acceptedMs
-- endMs
-- durationMs
-- peakStrength
-- release reason
-- reject reason
-- overflow
-- blocked / peak active
-- duration too short
-- duration too long
-- strength too low
-- quiet / no onset
-
-2. PatternResult validity
+1. Audio/source timing
 
 Question:
-Is this a usable classified acoustic event for Analyzer or Behavior?
+When did the audio block/sample enter processing?
 
-This belongs near:
-- DetectionPipeline
-- PatternCandidate
-- PatternResult
-- SimpleTransientPatternDetector
+Useful facts:
+- source block/sample timestamp if available
+- processing loop now
+- blocks processed per loop
+- samples processed per loop
+- audio overflows/drops if available
+- audio backlog if available
 
-Possible pattern-level results:
-- None
-- ValidTransient
-- Invalid
-- Ambiguous
-
-Later pattern types may include ValidChirp, ValidTone, Noise, etc., but do not implement those now unless already present as harmless placeholders.
-
-3. Analyzer SEQ trial classification
+2. DetectorCandidate timing
 
 Question:
-How does this PatternResult relate to the controlled test trigger?
+When did the detector think the event started, become accepted, and end?
 
-This belongs only in Analyzer SEQ.
+Useful facts:
+- candidate.startMs
+- candidate.acceptedMs / heardAtMs
+- candidate.endMs if available
+- candidate.durationMs
+- candidate.peakStrength
+- candidate.release/reject reason
+- candidate.overflow flag if available
+- candidate queue depth / dropped candidate count if available
 
-Analyzer may classify:
-- expected
-- early
-- late
-- duplicate
-- miss
-- unexpected
-
-Important:
-expected / early / late / duplicate / miss are measurement classifications, not general runtime PatternTypes.
-
-4. Runtime behavior validity
+3. DetectionPipeline / PatternResult timing
 
 Question:
-Should behavior treat this PatternResult as a valid heard event, ignore it, or block response?
+When was the candidate converted into a PatternResult, and what timing did the result preserve?
 
-This belongs in ResonantBehavior or a small behavior-facing adapter.
+Useful facts:
+- pattern.heardAtMs
+- pattern.processedAtMs / pipelineNowMs if useful
+- pattern.durationMs
+- pattern.strength
+- pattern.type
+- pattern.reason
+- candidate→pattern delay if meaningful
 
-Runtime behavior should not need to know:
-- exact detector reject internals
-- SEQ trial category
-- raw sample / amp-level details
+4. Analyzer SEQ timing
+
+Question:
+How does PatternResult timing relate to the controlled test trigger?
+
+Useful facts:
+- lastEmitCommandMs / triggerMs
+- dt = pattern.heardAtMs - triggerMs
+- expected / early / late / duplicate / miss classification
+- detection window start/end
+- trial timeout
+- duplicate timing
+- miss category
+
+5. Resonant behavior timing
+
+Question:
+Given a PatternResult, why did behavior respond or not respond?
+
+Useful facts:
+- pattern received time
+- behavior update now
+- lastHeardMs
+- lastEmitMs
+- waitAfterHeardUntil
+- refractoryUntil
+- ignoreAfterEmitUntil / self-suppression window
+- outputBusy
+- detectOnly / listenOnly state if present
+- planned emit time if behavior schedules delayed response
+
+Pass E should not need to solve all behavior block reasons yet.
+That is Pass F.
+But Pass E should expose the timing values needed for Pass F.
 
 Implementation target:
 
-1. Audit current validity logic
+1. Audit existing timing logs
 
-Search for all places where the code decides that a detection/candidate/event is:
-- valid
-- invalid
-- accepted
-- rejected
-- early
-- late
-- duplicate
-- miss
-- ignored
-- unexpected
-- transientDetected
-- should respond
-- should emit
+Find current logs for:
+- Analyzer SEQ trial timing
+- DetectorCandidate timing
+- PatternResult timing
+- Resonant behavior update timing
+- output timing
+- CAP / BASE / debug summaries from Pass C
 
-Identify which layer each decision belongs to:
-- detector-level
-- pattern-level
-- analyzer SEQ-level
-- behavior-level
+Identify:
+- useful existing timing values
+- missing timing values
+- ambiguous timing labels
+- places where loop now is confused with candidate event time
 
-2. Centralize detector-to-pattern validity in DetectionPipeline
+2. Add minimal timing fields if missing
 
-DetectionPipeline should be the single shared place where a DetectorCandidate becomes a PatternResult.
+If PatternResult does not already preserve enough timing, add fields such as:
+- heardAtMs
+- durationMs
+- processedAtMs, optional
+- sourceStartMs / candidateStartMs, optional
+- sourceAcceptedMs / candidateAcceptedMs, optional
 
-For now:
-- accepted DetectorCandidate → PatternResult::ValidTransient
-- rejected/invalid DetectorCandidate → PatternResult::Invalid or false/no result
-- unclear candidate → PatternResult::Ambiguous if needed
+Prefer preserving DetectorCandidate timing into PatternResult rather than recomputing it in Analyzer or Behavior.
 
-Preserve reason fields.
+Do not overbuild timestamps that cannot be measured reliably.
 
-Do not let Analyzer and Resonant each invent their own DetectorCandidate → valid-heard-event logic.
+3. Add shared timing log helper if useful
 
-3. Keep Analyzer SEQ strict but downstream
+Optional but preferred:
+Add a small debug helper/function that prints candidate → pattern timing consistently in Analyzer and Resonant.
 
-Analyzer SEQ should consume PatternResult, then classify trial outcome.
+Example conceptual log:
 
-Correct:
-DetectorCandidate
-→ DetectionPipeline
-→ PatternResult::ValidTransient
-→ SEQ classifies expected / early / late / duplicate
+CAND start=12345 accept=12490 dur=145 str=58.2 ovf=0
+PATT type=ValidTransient heard=12490 proc=12496 lag=6 reason=FromAcceptedTransient
 
-Wrong:
-DetectorCandidate
-→ Analyzer-only validity rule
-→ expected / late
-while Resonant uses a different validity rule
+Do not spam raw sample logs.
 
-4. Keep runtime behavior simpler than Analyzer
+4. Analyzer timing output
 
-Runtime behavior should consume only behavior-relevant validity.
+Ensure Analyzer can show:
+- trigger/emit command time
+- PatternResult heardAtMs
+- dt from trigger
+- SEQ category
+- duplicate timing
+- miss reason/category
+- overflow/backlog if available
 
-For now:
-- PatternResult::ValidTransient may become validHeardEvent
-- PatternResult::Invalid should be ignored
-- PatternResult::Ambiguous should probably be ignored or logged
+Analyzer should still classify:
+expected / early / late / duplicate / miss
 
-Behavior should not consume Analyzer-only categories:
-- expected
-- early
-- late
-- duplicate
-- miss
+5. Resonant timing output
 
-Those are test measurements, not behavior semantics.
+Ensure Resonant can show:
+- PatternResult received
+- pattern.heardAtMs
+- behavior update now
+- delta between heardAtMs and behavior update
+- output busy or relevant timing gate if already available
+- whether behavior consumed/ignored the result
 
-5. Clarify reason codes
+Do not fully implement behavior blocking reason taxonomy here unless it is already trivial.
+Pass F will formalize block reasons.
 
-If reason strings/enums exist, make them clear enough for logging.
+6. Queue/backlog visibility
 
-Suggested distinction:
+If AudioSignal has a candidate queue:
+- expose queue depth where cheap
+- expose dropped/overflow count where cheap
+- log when candidate queue overflows
+- avoid one-candidate-per-loop hidden backlog
 
-DetectorRejectReason:
-- None
-- Quiet
-- NoOnset
-- DurationTooShort
-- DurationTooLong
-- StrengthTooLow
-- PeakActive
-- Cooldown
-- Overflow
-- Unknown
+If audio block/input overflow is available:
+- include it in summaries or candidate logs
 
-PatternReason:
-- FromAcceptedTransient
-- DetectorRejected
-- InsufficientEvidence
-- AmbiguousEvidence
-- UnsupportedPattern
-- Unknown
+If not available:
+- explicitly report that overflow/backlog visibility is not available yet.
 
-Do not overbuild if the current code only needs a smaller set.
+7. Timing semantics
 
-6. Logging
+Make sure code comments/log labels distinguish:
+- event time: when candidate happened / was accepted
+- processing time: when loop handled it
+- trigger time: when Analyzer emitted command
+- behavior time: when behavior updated or decided
 
-Logs should make clear:
-- DetectorCandidate accepted/rejected and why
-- PatternResult type and reason
-- Analyzer SEQ category, if in Analyzer
-- Behavior handling decision, if in Resonant
-
-Avoid conflating:
-- detector validity
-- pattern validity
-- analyzer trial classification
-- behavior blocking
+Avoid using one generic “now” in logs without context.
 
 Expected output:
-1. Concise Pass D implementation summary.
+1. Concise Pass E implementation summary.
 2. Files changed.
-3. List of validity decisions found and where they now live.
-4. DetectorCandidate validity model.
-5. PatternResult validity model.
-6. Analyzer SEQ classification model.
-7. Runtime behavior validity model.
-8. Evidence that Analyzer and Resonant share the same DetectorCandidate → PatternResult validity path.
-9. Evidence detector baseline is unchanged.
-10. Notes on any temporary compatibility shims.
-11. Whether Pass E can begin.
+3. Timing fields added or clarified.
+4. Existing timing logs audited.
+5. New/changed Analyzer timing logs.
+6. New/changed Resonant timing logs.
+7. Queue/backlog/overflow visibility status.
+8. Evidence that detector baseline is unchanged.
+9. Notes on missing timing facts that cannot currently be measured.
+10. Whether Pass F can begin.
 
 Acceptance checklist:
-[ ] Validity logic has been audited.
-[ ] Detector-level validity is distinct from pattern-level validity.
-[ ] Analyzer SEQ categories remain Analyzer-only.
-[ ] Runtime behavior does not consume expected/early/late/duplicate/miss as behavior semantics.
-[ ] DetectionPipeline owns shared DetectorCandidate → PatternResult validity.
-[ ] Analyzer and Resonant do not duplicate candidate validity interpretation.
-[ ] PatternResult preserves enough reason/timing/strength data for logs.
-[ ] Rejected/invalid/ambiguous cases are represented clearly enough.
+[ ] DetectorCandidate timing is visible or preserved.
+[ ] PatternResult timing is visible or preserved.
+[ ] Analyzer logs dt from trigger to PatternResult heardAtMs.
+[ ] Analyzer still reports expected / early / late / duplicate / miss.
+[ ] Resonant logs delta between PatternResult heardAtMs and behavior handling/update where practical.
+[ ] Candidate queue/backlog/overflow visibility is available, or explicitly marked unavailable.
+[ ] Event time, processing time, trigger time, and behavior time are not conflated.
+[ ] Logs can help distinguish input buffering, detector delay, queue backlog, pipeline delay, SEQ timing, and behavior timing.
 [ ] Detector parameters remain unchanged.
-[ ] AudioSignal / AudioOnsetDetector candidate generation remains unchanged.
+[ ] AudioSignal / AudioOnsetDetector candidate generation remains unchanged unless only exposing existing timing facts.
 [ ] No advanced chirp/frequency/overlap logic is added.
-[ ] Logs distinguish detector validity, pattern validity, Analyzer SEQ result, and behavior handling.
+[ ] No behavior redesign is included.
 
 Definition of done:
-Pass D is done when candidate validity and pattern validity are explicit, Analyzer and Resonant share the same DetectorCandidate → PatternResult interpretation, Analyzer-only trial classifications remain separate from runtime behavior semantics, and logs can show where a detection was accepted, rejected, classified, ignored, or used.
+Pass E is done when Analyzer and Resonant logs expose enough timing and lag facts to diagnose whether delayed, missed, duplicate, or false reactions are caused by input buffering, detector timing, candidate queue backlog, pipeline handling, Analyzer trial classification, or behavior timing.

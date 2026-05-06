@@ -71,7 +71,7 @@ private:
     void pollSerialCommands();
     void handleSerialLine(const char* line);
     void handleDebugCommand(const char* line);
-    void logCandidate(const DetectorCandidate& candidate, const DetectionPipeline::PatternResult& patternResult, unsigned long candidateNumber, long gapMs, const char* action, const char* stateName, const char* gateName);
+    void logCandidate(const DetectorCandidate& candidate, const DetectionPipeline::PatternResult& patternResult, unsigned long candidateNumber, long gapMs, unsigned long queueDepthBeforeDrain, unsigned long behaviorLagMs, const char* action, const char* stateName, const char* gateName);
     void printRbSummary() const;
     void printRbSignalSummary() const;
     void printRbDetectorSummary() const;

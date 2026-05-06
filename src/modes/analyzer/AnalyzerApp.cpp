@@ -9,6 +9,12 @@
 namespace {
 constexpr int kMaxSamplesPerLoop = 128;
 constexpr unsigned long kSequenceWarmupMs = 500;
+constexpr long kLateOnsetMinMs = 200L;
+constexpr long kCleanDurationMinMs = 80L;
+constexpr long kCleanDurationMaxMs = 180L;
+constexpr long kSmearedDurationMinMs = 181L;
+constexpr long kSmearedDurationMaxMs = 240L;
+constexpr long kTooLongDurationMinMs = 241L;
 
 bool startsWithToken(const char* line, const char* token) {
     return strncmp(line, token, strlen(token)) == 0;
@@ -141,7 +147,7 @@ void AnalyzerApp::configureAnalogParameters() {
     _audioSignal.setBaselineTrackingQuietThreshold(40);
     setDetectorOnsetDetectionThreshold(36.0f);
     setDetectorOnsetReleaseThreshold(26.0f);
-    setDetectorCooldownAfterOnsetMs(300);
+    setDetectorCooldownAfterOnsetMs(0);
     setDetectorReleaseDebounceMs(30);
     setDetectorMinTransientDurationMs(60);
     setDetectorMaxTransientDurationMs(240);
@@ -152,7 +158,7 @@ void AnalyzerApp::configureI2SParameters() {
     _audioSignal.setBaselineTrackingQuietThreshold(20);
     setDetectorOnsetDetectionThreshold(36.0f);
     setDetectorOnsetReleaseThreshold(26.0f);
-    setDetectorCooldownAfterOnsetMs(300);
+    setDetectorCooldownAfterOnsetMs(0);
     setDetectorReleaseDebounceMs(30);
     setDetectorMinTransientDurationMs(60);
     setDetectorMaxTransientDurationMs(240);
@@ -181,11 +187,12 @@ void AnalyzerApp::update() {
             _audioSignal.processBlock(block);
             updateSequenceAmbientStats();
             noteSequenceTransientReject(_audioSignal.sampleTimeUs() / 1000UL);
+            const unsigned long queueDepthBeforeDrain = static_cast<unsigned long>(_audioSignal.candidateQueueDepth());
 
             DetectorCandidate candidate;
             while (_audioSignal.popCandidate(candidate)) {
                 DetectionPipeline::PatternResult patternResult;
-                if (!DetectionPipeline::processDetectorCandidate(candidate, patternResult)) {
+                if (!DetectionPipeline::processDetectorCandidate(candidate, patternResult, now)) {
                     continue;
                 }
 
@@ -197,7 +204,7 @@ void AnalyzerApp::update() {
                 }
 
                 if (_sequenceTest.active) {
-                    handleSequenceCandidate(patternResult);
+                    handleSequenceCandidate(patternResult, queueDepthBeforeDrain);
                 }
             }
 
@@ -1415,13 +1422,22 @@ const char* AnalyzerApp::sequenceTrialClassificationName(const char* result, lon
                 return "miss_no_onset";
         }
     }
-    if (dtMs >= 180L || durMs >= 170L) {
+    if (dtMs >= kLateOnsetMinMs) {
+        return "late";
+    }
+    if (durMs >= kTooLongDurationMinMs) {
+        return "expected_too_long";
+    }
+    if (durMs >= kSmearedDurationMinMs && durMs <= kSmearedDurationMaxMs) {
         return "expected_smeared";
+    }
+    if (durMs >= kCleanDurationMinMs && durMs <= kCleanDurationMaxMs) {
+        return "expected_clean";
     }
     return "expected_clean";
 }
 
-void AnalyzerApp::handleSequenceCandidate(const DetectionPipeline::PatternResult& patternResult) {
+void AnalyzerApp::handleSequenceCandidate(const DetectionPipeline::PatternResult& patternResult, unsigned long queueDepthBeforeDrain) {
     if (_valMode) {
         return;
     }
@@ -1438,6 +1454,9 @@ void AnalyzerApp::handleSequenceCandidate(const DetectionPipeline::PatternResult
     const unsigned long onsetMs = candidate.startMs;
     const long dtFromTriggerMs = static_cast<long>(onsetMs) - static_cast<long>(_sequenceTest.currentTrialStartMs);
     const long dtFromTrialStartMs = static_cast<long>(onsetMs) - static_cast<long>(_sequenceTest.currentTrialScheduledAtMs);
+    const long processLagMs = patternResult.processedAtMs >= onsetMs
+        ? static_cast<long>(patternResult.processedAtMs - onsetMs)
+        : -1;
 
     const bool overflowSeenNow = candidate.audioOverflowDuringCandidate
                                  || _audioSource.stats().overflowCount != _sequenceTest.trialOverflowCountAtStart;
@@ -1505,6 +1524,17 @@ void AnalyzerApp::handleSequenceCandidate(const DetectionPipeline::PatternResult
         } else {
             Serial.print("-");
         }
+        Serial.print(" processed_at_ms=");
+        Serial.print(patternResult.processedAtMs);
+        Serial.print(" process_lag_ms=");
+        if (processLagMs >= 0) {
+            Serial.print(processLagMs);
+            Serial.print("ms");
+        } else {
+            Serial.print("-");
+        }
+        Serial.print(" queue_before=");
+        Serial.print(queueDepthBeforeDrain);
         Serial.print(" strength=");
         Serial.print(candidate.peakStrength, 1);
         Serial.println(" source=detector");
@@ -1526,6 +1556,17 @@ void AnalyzerApp::handleSequenceCandidate(const DetectionPipeline::PatternResult
         } else {
             Serial.print("-");
         }
+        Serial.print(" processed_at_ms=");
+        Serial.print(patternResult.processedAtMs);
+        Serial.print(" process_lag_ms=");
+        if (processLagMs >= 0) {
+            Serial.print(processLagMs);
+            Serial.print("ms");
+        } else {
+            Serial.print("-");
+        }
+        Serial.print(" queue_before=");
+        Serial.print(queueDepthBeforeDrain);
         Serial.print(" strength=");
         Serial.print(candidate.peakStrength, 1);
         Serial.println(" source=pattern");
@@ -1588,6 +1629,17 @@ void AnalyzerApp::handleSequenceCandidate(const DetectionPipeline::PatternResult
         } else {
             Serial.print("-");
         }
+        Serial.print(" processed_at_ms=");
+        Serial.print(patternResult.processedAtMs);
+        Serial.print(" process_lag_ms=");
+        if (processLagMs >= 0) {
+            Serial.print(processLagMs);
+            Serial.print("ms");
+        } else {
+            Serial.print("-");
+        }
+        Serial.print(" queue_before=");
+        Serial.print(queueDepthBeforeDrain);
         Serial.print(" strength=");
         Serial.print(candidate.peakStrength, 1);
         Serial.print(" reason=");
@@ -1645,7 +1697,7 @@ void AnalyzerApp::finalizeSequenceTrial(unsigned long now) {
         dtMs = static_cast<long>(diagnostics.acceptedTransientMs - _sequenceTest.currentTrialStartMs);
         durMs = static_cast<long>(diagnostics.acceptedTransientDurationMs);
         strength = diagnostics.acceptedTransientStrength;
-        if (dtMs > 300L) {
+        if (dtMs >= kLateOnsetMinMs) {
             result = "late";
             _sequenceTest.lateHits++;
         } else {
@@ -1661,15 +1713,15 @@ void AnalyzerApp::finalizeSequenceTrial(unsigned long now) {
     _sequenceTest.duplicates += diagnostics.duplicateCount;
     printSequenceTrialResult(_sequenceTest.currentTrial, result, dtMs, durMs, strength, invalidAudioTrial, diagnostics.duplicateCount, diagnostics);
     if (strcmp(result, "invalid_audio") != 0) {
-        const long acceptedDtMs = diagnostics.transientAccepted
-            ? static_cast<long>(diagnostics.acceptedTransientMs) - static_cast<long>(_sequenceTest.currentTrialStartMs)
-            : -1;
+            const long acceptedDtMs = diagnostics.transientAccepted
+        ? static_cast<long>(diagnostics.acceptedTransientMs) - static_cast<long>(_sequenceTest.currentTrialStartMs)
+        : -1;
         const bool shouldPrintDebug =
             strcmp(result, "miss") == 0 ||
             strcmp(result, "late") == 0 ||
             strcmp(result, "unexpected") == 0 ||
             diagnostics.duplicateCount > 0 ||
-            (strcmp(result, "expected") == 0 && (acceptedDtMs > 200 || diagnostics.acceptedTransientDurationMs > 180));
+            (strcmp(result, "expected") == 0 && (acceptedDtMs >= kLateOnsetMinMs || diagnostics.acceptedTransientDurationMs >= kSmearedDurationMinMs));
         if (shouldPrintDebug) {
             printSequenceTrialDebug(_sequenceTest.currentTrial, result, diagnostics);
         }
@@ -1716,8 +1768,8 @@ void AnalyzerApp::printSequenceTrialDebug(unsigned long trialNumber, const char*
     const bool isLate = strcmp(result, "late") == 0;
     const bool isUnexpected = strcmp(result, "unexpected") == 0;
     const bool hasDuplicates = diagnostics.duplicateCount > 0;
-    const bool expectedDtSlow = strcmp(result, "expected") == 0 && acceptedDtMs > 200;
-    const bool expectedDurLong = strcmp(result, "expected") == 0 && diagnostics.acceptedTransientDurationMs > 180;
+    const bool expectedDtSlow = strcmp(result, "expected") == 0 && acceptedDtMs >= kLateOnsetMinMs;
+    const bool expectedDurLong = strcmp(result, "expected") == 0 && diagnostics.acceptedTransientDurationMs >= kSmearedDurationMinMs;
     const unsigned long totalRejects = diagnostics.transientRejectTooShortCount + diagnostics.transientRejectTooLongCount + diagnostics.transientRejectWeakCount;
 
     if (!(isMiss || isLate || isUnexpected || hasDuplicates || expectedDtSlow || expectedDurLong)) {

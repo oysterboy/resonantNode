@@ -100,6 +100,7 @@ public:
     const AudioSignalStats& stats() const;
     bool popCandidate(DetectorCandidate& candidate);
     bool candidateAvailable() const;
+    size_t candidateQueueDepth() const;
     void resetStats();
     void resetDetectorState();
 

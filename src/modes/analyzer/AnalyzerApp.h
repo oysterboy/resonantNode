@@ -272,7 +272,7 @@ private:
     void printSequenceTrialDebug(unsigned long trialNumber, const char* result, const SequenceTest::TrialDiagnostics& diagnostics) const;
     void printSequenceTrialResult(unsigned long trialNumber, const char* result, long dtMs, long durMs, float strength, bool audioOverflow, unsigned long duplicateCount, const SequenceTest::TrialDiagnostics& diagnostics) const;
     void printSequenceSummary() const;
-    void handleSequenceCandidate(const DetectionPipeline::PatternResult& patternResult);
+    void handleSequenceCandidate(const DetectionPipeline::PatternResult& patternResult, unsigned long queueDepthBeforeDrain);
     void updateSequenceAmbientStats();
     void noteSequenceTransientReject(unsigned long eventMs);
     void noteSequenceTransientRejectReason(unsigned long eventMs, const char* reasonName, unsigned long durationMs, float strength);

@@ -13,8 +13,9 @@
 ## Unreleased
 
 ### Notes
-- Pass D is complete in code: candidate validity is centralized, reason codes are shared, and Analyzer SEQ timing now distinguishes onset timing from duration while keeping DET/PAT parity logs intact.
-- Fold this into the next dated commit section when you commit the refactor snapshot.
+- Pass F is complete in code: the shared pipeline now carries `processedAtMs`, `AudioSignal` exposes candidate queue depth, and Analyzer/Resonant logs now show processing lag and queue depth alongside the existing onset/duration parity fields.
+- The frozen AMP cooldown is now `0 ms` in both Analyzer and Resonant setup.
+- Fold this into the next dated commit section when you commit the Pass F snapshot.
 
 ## 2026-05-06 - Pass A: Analyzer reference / parity check
 

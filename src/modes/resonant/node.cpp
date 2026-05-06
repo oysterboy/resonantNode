@@ -278,7 +278,7 @@ void Node::configureAnalogParameters() {
     _audioSignal.setBaselineTrackingQuietThreshold(40);
     _audioOnsetDetector.setOnsetDetectionThreshold(36.0f);
     _audioOnsetDetector.setOnsetReleaseThreshold(26.0f);
-    _audioOnsetDetector.setCooldownAfterOnsetMs(300);
+    _audioOnsetDetector.setCooldownAfterOnsetMs(0);
     _audioOnsetDetector.setReleaseDebounceMs(30);
     _audioOnsetDetector.setMinTransientDurationMs(60);
     _audioOnsetDetector.setMaxTransientDurationMs(240);
@@ -293,7 +293,7 @@ void Node::configureI2SParameters() {
     _audioSignal.setBaselineTrackingQuietThreshold(20);
     _audioSignal.setOnsetDetectionThreshold(36.0f);
     _audioSignal.setOnsetReleaseThreshold(26.0f);
-    _audioSignal.setCooldownAfterOnsetMs(300);
+    _audioSignal.setCooldownAfterOnsetMs(0);
     _audioSignal.setReleaseDebounceMs(30);
     _audioSignal.setMinTransientDurationMs(60);
     _audioSignal.setMaxTransientDurationMs(240);
@@ -301,7 +301,7 @@ void Node::configureI2SParameters() {
 
     _audioOnsetDetector.setOnsetDetectionThreshold(36.0f);
     _audioOnsetDetector.setOnsetReleaseThreshold(26.0f);
-    _audioOnsetDetector.setCooldownAfterOnsetMs(300);
+    _audioOnsetDetector.setCooldownAfterOnsetMs(0);
     _audioOnsetDetector.setReleaseDebounceMs(30);
     _audioOnsetDetector.setMinTransientDurationMs(60);
     _audioOnsetDetector.setMaxTransientDurationMs(240);
@@ -337,11 +337,12 @@ void Node::update() {
 
             _audioSignal.processBlock(block);
             sawI2SSample = true;
+            const unsigned long queueDepthBeforeDrain = static_cast<unsigned long>(_audioSignal.candidateQueueDepth());
 
             DetectorCandidate candidate;
             while (_audioSignal.popCandidate(candidate)) {
                 DetectionPipeline::PatternResult patternResult;
-                const bool patternValid = DetectionPipeline::processDetectorCandidate(candidate, patternResult);
+                const bool patternValid = DetectionPipeline::processDetectorCandidate(candidate, patternResult, now);
                 // Do not let self-heard candidates arm behavior while chirp suppression is active.
                 if (patternValid && !selfChirpSuppressed) {
                     sawPatternThisLoop = true;
@@ -353,6 +354,7 @@ void Node::update() {
                 if (_rbHaveLastCandidateMs && candidateMs >= _rbLastCandidateMs) {
                     gapMs = static_cast<long>(candidateMs - _rbLastCandidateMs);
                 }
+                const unsigned long behaviorLagMs = now >= patternResult.processedAtMs ? now - patternResult.processedAtMs : 0;
 
                 if (rbOutputsEnabledNow && !selfChirpSuppressed) {
                     _debug.observeOnset(now, true, patternResult.candidate.peakStrength);
@@ -368,7 +370,7 @@ void Node::update() {
                     action = "detectonly";
                 }
 
-                logCandidate(candidate, patternResult, _rbCandidateCount + 1, gapMs, action, _behavior.stateName(), behaviorGateName(_behavior, now, sawPatternThisLoop, selfChirpSuppressed));
+                logCandidate(candidate, patternResult, _rbCandidateCount + 1, gapMs, queueDepthBeforeDrain, behaviorLagMs, action, _behavior.stateName(), behaviorGateName(_behavior, now, sawPatternThisLoop, selfChirpSuppressed));
 
                 ++_rbCandidateCount;
                 if (candidate.audioOverflowDuringCandidate) {
@@ -404,11 +406,12 @@ void Node::update() {
             const bool onsetDetected = selfChirpSuppressed ? false : _audioOnsetDetector.onsetDetected();
             _debug.observeOnset(now, onsetDetected, _audioOnsetDetector.onsetStrength());
             _debug.observeTransient(now, _audioOnsetDetector.transientDetected(), _audioOnsetDetector.transientStrength(), selfChirpSuppressed);
+            const unsigned long queueDepthBeforeDrain = static_cast<unsigned long>(_audioSignal.candidateQueueDepth());
 
             DetectorCandidate candidate;
             while (_audioSignal.popCandidate(candidate)) {
                 DetectionPipeline::PatternResult patternResult;
-                const bool patternValid = DetectionPipeline::processDetectorCandidate(candidate, patternResult);
+                const bool patternValid = DetectionPipeline::processDetectorCandidate(candidate, patternResult, now);
                 // Do not let self-heard candidates arm behavior while chirp suppression is active.
                 if (patternValid && !selfChirpSuppressed) {
                     sawPatternThisLoop = true;
@@ -420,6 +423,7 @@ void Node::update() {
                 if (_rbHaveLastCandidateMs && candidateMs >= _rbLastCandidateMs) {
                     gapMs = static_cast<long>(candidateMs - _rbLastCandidateMs);
                 }
+                const unsigned long behaviorLagMs = now >= patternResult.processedAtMs ? now - patternResult.processedAtMs : 0;
 
                 const char* action = "queued";
                 if (!patternValid) {
@@ -430,7 +434,7 @@ void Node::update() {
                     action = "detectonly";
                 }
 
-                logCandidate(candidate, patternResult, _rbCandidateCount + 1, gapMs, action, _behavior.stateName(), behaviorGateName(_behavior, now, sawPatternThisLoop, selfChirpSuppressed));
+                logCandidate(candidate, patternResult, _rbCandidateCount + 1, gapMs, queueDepthBeforeDrain, behaviorLagMs, action, _behavior.stateName(), behaviorGateName(_behavior, now, sawPatternThisLoop, selfChirpSuppressed));
 
                 ++_rbCandidateCount;
                 if (candidate.audioOverflowDuringCandidate) {
@@ -576,7 +580,7 @@ void Node::handleDebugCommand(const char* line) {
     Serial.println(_debug.debugModeName());
 }
 
-void Node::logCandidate(const DetectorCandidate& candidate, const DetectionPipeline::PatternResult& patternResult, unsigned long candidateNumber, long gapMs, const char* action, const char* stateName, const char* gateName) {
+void Node::logCandidate(const DetectorCandidate& candidate, const DetectionPipeline::PatternResult& patternResult, unsigned long candidateNumber, long gapMs, unsigned long queueDepthBeforeDrain, unsigned long behaviorLagMs, const char* action, const char* stateName, const char* gateName) {
     Serial.print("RB candidate n=");
     Serial.print(candidateNumber);
     Serial.print(" gap=");
@@ -595,6 +599,19 @@ void Node::logCandidate(const DetectorCandidate& candidate, const DetectionPipel
     } else {
         Serial.print("-");
     }
+    Serial.print(" processed_at_ms=");
+    Serial.print(patternResult.processedAtMs);
+    Serial.print(" process_lag_ms=");
+    if (patternResult.processedAtMs >= candidate.onsetMillisApprox) {
+        Serial.print(patternResult.processedAtMs - candidate.onsetMillisApprox);
+        Serial.print("ms");
+    } else {
+        Serial.print("-");
+    }
+    Serial.print(" behavior_lag_ms=");
+    Serial.print(behaviorLagMs);
+    Serial.print(" queue_before=");
+    Serial.print(queueDepthBeforeDrain);
     Serial.print(" strength=");
     Serial.print(candidate.peakStrength, 1);
     Serial.print(" audio=");

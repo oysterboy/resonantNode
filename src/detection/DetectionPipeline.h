@@ -41,6 +41,7 @@ struct PatternResult {
     PatternType type = PatternType::None;
     PatternReasonCode reasonCode = PatternReasonCode::None;
     float confidence = 0.0f;
+    unsigned long processedAtMs = 0;
     PatternCandidate candidate = {};
     bool valid = false;
 };
@@ -66,9 +67,10 @@ inline PatternCandidate makePatternCandidate(const DetectorCandidate& in) {
     return out;
 }
 
-inline bool processDetectorCandidate(const DetectorCandidate& in, PatternResult& out) {
+inline bool processDetectorCandidate(const DetectorCandidate& in, PatternResult& out, unsigned long processedAtMs) {
     out = {};
     out.candidate = makePatternCandidate(in);
+    out.processedAtMs = processedAtMs;
 
     if (!isDetectorCandidateAccepted(in)) {
         out.type = PatternType::Invalid;

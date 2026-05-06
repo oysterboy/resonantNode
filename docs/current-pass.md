@@ -1,133 +1,148 @@
-We are doing A–G Resonant stabilizing refactor Pass B: Resonant drain parity.
-
-Goal:
-Make Resonant mode use the same AudioSource → AudioSignal → DetectionPipeline → Behavior drain order as Analyzer.
+Task: Pass B — Shared DetectionPipeline scaffold
 
 Context:
-Analyzer path is now the reference.
-AudioSource produces AudioBlock.
-AudioSignal / AMP produces AmpCandidate.
-DetectionPipeline wraps/enriches AmpCandidate into ChirpCandidate.
-SEQ consumes ChirpCandidate in Analyzer mode.
+This is Pass B of the current ResonantNode refactor.
 
-Now Resonant mode must consume the same ChirpCandidate path, not bypass it.
+Pass A should have confirmed Analyzer as the trusted reference path for current AMP/transient detection.
 
-Target Resonant loop order:
+Current refactor scope:
+Introduce a shared detection/classification pipeline scaffold used by both Analyzer and Resonant mode, while keeping the current AMP/transient detector parameters frozen.
 
-audioSource.update();
+Target flow:
+DetectorCandidate
+→ PatternCandidate
+→ PatternResult
+→ Analyzer SEQ or ResonantBehavior
 
-while (audioSource.hasBlock()) {
-  audioSignal.processBlock(audioSource.popBlock());
-}
+Spec principle:
+The architecture separates low-level detection from classification and behavior. Detection reports candidates. Pattern detection/classification turns candidates into pattern results. Behavior consumes behavior-facing pattern results, not raw transient booleans. Analyzer remains a measurement path. The shared pipeline should keep Analyzer and Resonant aligned.
 
-while (audioSignal.hasAmpCandidate()) {
-  detectionPipeline.handleAmpCandidate(audioSignal.popAmpCandidate());
-}
+Important:
+Pass B creates the shared scaffold only.
+It should not change detector behavior.
+It should not refactor ResonantBehavior yet.
+It should not implement advanced chirp/frequency logic.
 
-while (detectionPipeline.hasChirpCandidate()) {
-  resonantBehavior.handleCandidate(detectionPipeline.popChirpCandidate());
-}
+Frozen AMP detector baseline:
+onsetThreshold = 36.0
+releaseThreshold = 26.0
+cooldownMs = 300
+releaseDebounceMs = 30
+minTransientDurationMs = 60
+maxTransientDurationMs = 240
+minTransientPeakStrength = 40.0
 
-resonantBehavior.update();
-logger.update();
+Goal:
+Add the minimal shared DetectionPipeline layer that converts existing DetectorCandidate objects into PatternResult objects, while keeping the first implementation simple/pass-through.
 
-Tasks:
+Required new concepts:
 
-1. Locate the Resonant mode update/loop function.
+1. PatternCandidate
+A normalized candidate object created from DetectorCandidate.
 
-2. Compare it against Analyzer loop order.
+For now it can mostly copy fields from DetectorCandidate:
+- startMs
+- acceptedMs / heardAtMs
+- durationMs
+- strength / peakStrength
+- overflow flag if available
+- source validity / reject reason if available
 
-Analyzer order should be treated as the reference:
-- AudioSource first
-- process all AudioBlocks
-- process all AmpCandidates through DetectionPipeline
-- process all ChirpCandidates
-- behavior/control update after candidate drain
-- logging last
+Do not add full chirp grouping yet.
 
-3. Replace any old direct path:
+2. PatternType
+Minimal enum, for example:
+- None
+- ValidTransient
+- Invalid
+- Ambiguous
 
-AudioSignal → ResonantBehavior
+Do not add full chirp/frequency family taxonomy yet unless very lightweight placeholders are useful.
 
-with:
+3. PatternResult
+Behavior/analyzer-facing classification result.
 
-AudioSignal → DetectionPipeline → ResonantBehavior
+Suggested fields:
+- PatternType type
+- heardAtMs
+- durationMs
+- strength
+- confidence
+- reason / reasonCode
+- maybe source candidate timing fields for logging
 
-4. Ensure ResonantBehavior consumes ChirpCandidate.
+4. DetectionPipeline
+A shared class/function that takes DetectorCandidate and outputs PatternResult.
 
-If ResonantBehavior still expects the old candidate type, either:
-- update it to accept ChirpCandidate, preferred
-- or add a temporary adapter using candidate.amp fields
+Suggested shape:
+bool DetectionPipeline::processDetectorCandidate(
+    const DetectorCandidate& in,
+    PatternResult& out
+);
 
-Use:
-candidate.amp.durationMs
-candidate.amp.peakStrength
-candidate.amp.onsetSample
-candidate.amp.releaseSample
-candidate.amp.audioOverflowDuringCandidate
+First implementation:
+- accepts current valid DetectorCandidate
+- wraps it as PatternCandidate
+- classifies it as PatternType::ValidTransient
+- preserves timing, duration, strength, and reason fields for Analyzer logging
+- returns false or PatternType::Invalid for invalid/rejected candidates if those are passed through
 
-5. Drain all available candidates.
+5. SimpleTransientPatternDetector
+Optional if clean:
+A tiny internal classifier used by DetectionPipeline.
 
-Do not do:
+For now:
+DetectorCandidate / PatternCandidate valid enough
+→ PatternResult::ValidTransient
 
-if (hasCandidate()) handleOne();
+Constraints:
+- Do not tune detector parameters.
+- Do not alter AudioOnsetDetector thresholds.
+- Do not alter AudioSignal candidate generation.
+- Do not refactor ResonantBehavior yet.
+- Do not change autonomous behavior yet.
+- Do not implement chirp grouping.
+- Do not implement frequency matching.
+- Do not implement family matching.
+- Do not implement overlap/dominance logic.
+- Do not implement VEKTOR resources, OSC, hub, or registry.
+- Keep Analyzer’s SEQ classification behavior intact.
 
-Do:
+Integration target for Pass B:
+Analyzer should be able to send each DetectorCandidate through DetectionPipeline and receive a PatternResult, while still preserving its existing SEQ expected/early/late/duplicate/miss classification.
 
-while (hasCandidate()) handleAll();
+Important distinction:
+DetectionPipeline classifies the acoustic pattern minimally:
+DetectorCandidate → PatternResult::ValidTransient
 
-6. Keep logging last.
+Analyzer SEQ still classifies the trial result:
+PatternResult timing vs test trigger → expected / early / late / duplicate / miss
 
-Allowed per-candidate compact log:
+So do not remove SEQ logic.
+Just make SEQ consume PatternResult instead of raw DetectorCandidate where practical.
 
-RB candidate n=<n> gap=<ms> dur=<ms> strength=<f> freq=<unchecked|ok|reject> audio=<ok|overflow> action=<...>
+Expected output:
+1. Concise Pass B implementation summary.
+2. Files added/changed.
+3. Exact scaffold types added.
+4. Evidence that detector baseline is unchanged.
+5. Evidence that Analyzer still reports expected / early / late / duplicate / miss.
+6. Notes on any fields that could not be mapped cleanly.
+7. Whether Pass C can begin.
 
-Do not print inside:
-- AudioSource loop
-- AudioSignal sample processing
-- DetectionPipeline critical path
+Acceptance checklist:
+[ ] New shared DetectionPipeline scaffold exists.
+[ ] PatternCandidate exists.
+[ ] PatternResult exists.
+[ ] PatternType exists.
+[ ] DetectorCandidate can be converted to PatternCandidate / PatternResult.
+[ ] Initial classifier is simple/pass-through ValidTransient logic.
+[ ] Analyzer uses DetectionPipeline before SEQ classification, or has a clearly prepared integration point.
+[ ] Analyzer SEQ still reports expected / early / late / duplicate / miss.
+[ ] Detector parameters remain unchanged.
+[ ] AudioSignal / AudioOnsetDetector candidate generation remains unchanged.
+[ ] ResonantBehavior is not refactored yet.
+[ ] No advanced chirp/frequency/overlap logic is implemented.
 
-7. Add or keep summaries:
-
-RB summary:
-candidates=...
-actions=...
-overflowCandidates=...
-avg_strength=...
-avg_duration=...
-
-PIPELINE summary:
-ampIn=...
-chirpOut=...
-chirpDropped=...
-freqChecked=...
-freqRejected=...
-
-AUDIO summary:
-...
-
-SIGNAL summary:
-...
-
-8. Do not change behavior rules yet.
-
-Do not tune:
-- AMP thresholds
-- min/max duration
-- strength threshold
-- cooldown/refractory
-- behavior timing
-- frequency settings
-
-This pass is only drain parity.
-
-Acceptance:
-- Resonant mode compiles.
-- Resonant mode uses DetectionPipeline.
-- ResonantBehavior receives ChirpCandidate or compatible adapter.
-- All AudioBlocks are drained before behavior update.
-- All AmpCandidates are drained into DetectionPipeline.
-- All ChirpCandidates are drained into ResonantBehavior.
-- Logger runs last.
-- No one-candidate-per-loop backlog.
-- No new verbose logs in audio-critical path.
+Definition of done:
+Pass B is done when the shared DetectionPipeline scaffold exists, Analyzer can use or is minimally wired to use PatternResult without changing detection behavior, and the code is ready for Pass C: Resonant drain + pipeline parity.

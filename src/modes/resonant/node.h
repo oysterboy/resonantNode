@@ -75,6 +75,7 @@ private:
     void printRbSummary() const;
     void printRbSignalSummary() const;
     void printRbDetectorSummary() const;
+    void printRbBehaviorSummary() const;
 
     int _ledPin;
 

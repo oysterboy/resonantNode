@@ -12,20 +12,86 @@ Does NOT:
 - interpret raw signal input
 */
 
-void ResonantBehavior::handlePatternResult(const DetectionPipeline::PatternResult& result, unsigned long now) {
+ResonantBehavior::BehaviorDecision ResonantBehavior::handlePatternResult(const DetectionPipeline::PatternResult& result, unsigned long now) {
+    _patternsReceived++;
+    _lastPatternType = result.type;
+    _lastPatternHeardAtMs = result.candidate.heardAtMs != 0 ? result.candidate.heardAtMs : result.candidate.startMs;
+    _lastDecisionMs = now;
+    _wouldEmit = false;
+    _outputBusy = _state == State::Chirping;
+
     if (!result.valid) {
-        return;
+        if (result.type == DetectionPipeline::PatternType::Ambiguous) {
+            _lastDecision = BehaviorDecision::IgnoredAmbiguousPattern;
+            _lastBlockReason = BehaviorDecision::IgnoredAmbiguousPattern;
+            _patternsIgnoredAmbiguous++;
+            return _lastDecision;
+        }
+
+        _lastDecision = BehaviorDecision::IgnoredInvalidPattern;
+        _lastBlockReason = BehaviorDecision::IgnoredInvalidPattern;
+        _patternsIgnoredInvalid++;
+        return _lastDecision;
     }
 
     if (result.type != DetectionPipeline::PatternType::ValidTransient) {
-        return;
+        _lastDecision = BehaviorDecision::IgnoredAmbiguousPattern;
+        _lastBlockReason = BehaviorDecision::IgnoredAmbiguousPattern;
+        _patternsIgnoredAmbiguous++;
+        return _lastDecision;
     }
 
-    _pendingTransientDetected = true;
-    if (result.candidate.peakStrength > _pendingTransientStrength) {
-        _pendingTransientStrength = result.candidate.peakStrength;
+    if (_detectionOnly) {
+        _lastDecision = BehaviorDecision::DetectionOnly;
+        _lastBlockReason = BehaviorDecision::DetectionOnly;
+        _pendingTransientDetected = true;
+        if (result.candidate.peakStrength > _pendingTransientStrength) {
+            _pendingTransientStrength = result.candidate.peakStrength;
+        }
+        _pendingTransientMs = result.candidate.acceptedMs != 0 ? result.candidate.acceptedMs : now;
+        _lastPatternHeardAtMs = _pendingTransientMs;
+        _transientStartedMs = now;
+        _state = State::TransientSeen;
+        _waitUntilMs = now + _waitAfterTransientMs;
+    } else if (_state == State::Chirping) {
+        _lastDecision = BehaviorDecision::OutputBusy;
+        _lastBlockReason = BehaviorDecision::OutputBusy;
+        _blockedOutputBusy++;
+    } else if (_state == State::Refractory) {
+        _lastDecision = BehaviorDecision::RefractoryAfterEmit;
+        _lastBlockReason = BehaviorDecision::RefractoryAfterEmit;
+        _blockedRefractory++;
+    } else if (_state == State::TransientSeen) {
+        _lastDecision = BehaviorDecision::AlreadyScheduled;
+        _lastBlockReason = BehaviorDecision::AlreadyScheduled;
+        _blockedWaiting++;
+    } else if (selfChirpSuppressed(now)) {
+        _lastDecision = BehaviorDecision::SelfSuppressed;
+        _lastBlockReason = BehaviorDecision::SelfSuppressed;
+        _blockedSelfSuppressed++;
+    } else {
+        _lastDecision = BehaviorDecision::ConsumedPattern;
+        _lastBlockReason = BehaviorDecision::None;
+        _pendingTransientDetected = true;
+        if (result.candidate.peakStrength > _pendingTransientStrength) {
+            _pendingTransientStrength = result.candidate.peakStrength;
+        }
+        _pendingTransientMs = result.candidate.acceptedMs != 0 ? result.candidate.acceptedMs : now;
+        _lastPatternHeardAtMs = _pendingTransientMs;
+        _transientStartedMs = now;
+        _state = State::TransientSeen;
+        _waitUntilMs = now + _waitAfterTransientMs;
     }
-    _pendingTransientMs = result.candidate.acceptedMs != 0 ? result.candidate.acceptedMs : now;
+
+    if (_lastDecision == BehaviorDecision::DetectionOnly
+        || _lastDecision == BehaviorDecision::OutputBusy
+        || _lastDecision == BehaviorDecision::RefractoryAfterEmit
+        || _lastDecision == BehaviorDecision::AlreadyScheduled
+        || _lastDecision == BehaviorDecision::SelfSuppressed) {
+        _lastPatternHeardAtMs = _pendingTransientMs != 0 ? _pendingTransientMs : _lastPatternHeardAtMs;
+    }
+
+    return _lastDecision;
 }
 
 void ResonantBehavior::update(unsigned long now) {
@@ -41,11 +107,12 @@ void ResonantBehavior::update(unsigned long now) {
     _chirpRequestSource = ChirpRequestSource::None;
     _chirpPattern = ChirpOutput::ChirpPattern::Single;
     _activityLevel = transientStrength;
+    _outputBusy = _state == State::Chirping;
 
     // Track the last transient time so idle-triggered chirps do not fire while
     // the node is still hearing bursts.
     if (transientDetected) {
-        _lastTransientMs = transientMs != 0 ? transientMs : now;
+     	_lastTransientMs = transientMs != 0 ? transientMs : now;
     }
 
     // --- state machine ---
@@ -55,32 +122,54 @@ void ResonantBehavior::update(unsigned long now) {
             if (transientDetected) {
                 _transientStartedMs = now;
                 _state = State::TransientSeen;
+                _waitUntilMs = now + _waitAfterTransientMs;
             }
             else if (now - max(_lastTransientMs, _lastEmitMs) > _idleTimeoutMs) {
-                _chirpRequested = true;
-                _chirpRequestSource = ChirpRequestSource::Idle;
-                _chirpPattern = ChirpOutput::ChirpPattern::Idle;
-                _lastEmitMs = now;
-                _state = State::Chirping;
+                _wouldEmit = true;
+                _lastDecision = _detectionOnly ? BehaviorDecision::DetectionOnly : BehaviorDecision::WouldEmit;
+                _lastBlockReason = _detectionOnly ? BehaviorDecision::DetectionOnly : BehaviorDecision::None;
+                if (_detectionOnly) {
+                    _blockedDetectionOnly++;
+                } else {
+                    _chirpRequested = true;
+                    _chirpRequestSource = ChirpRequestSource::Idle;
+                    _chirpPattern = ChirpOutput::ChirpPattern::Idle;
+                    _lastEmitMs = now;
+                    _outputBusy = true;
+                    _state = State::Chirping;
+                    _wouldEmitCount++;
+                }
             }
             break;
 
         case State::TransientSeen:
             // Wait after the transient settles, then respond.
-            if (now - _transientStartedMs > _waitAfterTransientMs) {
-                _chirpRequested = true;
-                _chirpRequestSource = ChirpRequestSource::Transient;
-                _chirpPattern = ChirpOutput::ChirpPattern::Single;
-                _lastEmitMs = now;
-                _state = State::Chirping;
+            if (now >= _waitUntilMs) {
+                _wouldEmit = true;
+                _lastDecision = _detectionOnly ? BehaviorDecision::DetectionOnly : BehaviorDecision::WouldEmit;
+                _lastBlockReason = _detectionOnly ? BehaviorDecision::DetectionOnly : BehaviorDecision::None;
+                if (_detectionOnly) {
+                    _blockedDetectionOnly++;
+                    _state = State::Idle;
+                } else {
+                    _chirpRequested = true;
+                    _chirpRequestSource = ChirpRequestSource::Transient;
+                    _chirpPattern = ChirpOutput::ChirpPattern::Single;
+                    _lastEmitMs = now;
+                    _outputBusy = true;
+                    _state = State::Chirping;
+                    _wouldEmitCount++;
+                }
             }
             break;
 
         case State::Chirping:
             // wait for explicit chirp-finished feedback
+            _outputBusy = true;
             break;
 
         case State::Refractory:
+            _outputBusy = false;
             if (now - _refractoryStartedMs > _refractoryAfterEmitMs) {
                 _state = State::Idle;
             }
@@ -99,9 +188,30 @@ void ResonantBehavior::resetState() {
     _transientStartedMs = 0;
     _refractoryStartedMs = 0;
     _selfChirpSuppressUntilMs = 0;
+    _waitUntilMs = 0;
+    _refractoryUntilMs = 0;
+    _ignoreOwnEmitUntilMs = 0;
+    _lastPatternType = DetectionPipeline::PatternType::None;
+    _lastPatternHeardAtMs = 0;
+    _lastDecisionMs = 0;
+    _lastDecision = BehaviorDecision::None;
+    _lastBlockReason = BehaviorDecision::None;
+    _detectionOnly = false;
+    _wouldEmit = false;
+    _outputBusy = false;
     _chirpRequested = false;
     _chirpRequestSource = ChirpRequestSource::None;
     _chirpPattern = ChirpOutput::ChirpPattern::Single;
+    _patternsReceived = 0;
+    _patternsIgnoredInvalid = 0;
+    _patternsIgnoredAmbiguous = 0;
+    _blockedDetectionOnly = 0;
+    _blockedOutputBusy = 0;
+    _blockedRefractory = 0;
+    _blockedWaiting = 0;
+    _blockedSelfSuppressed = 0;
+    _wouldEmitCount = 0;
+    _emittedCount = 0;
 }
 
 void ResonantBehavior::update(bool transientDetected, float transientStrength, unsigned long now) {
@@ -111,10 +221,14 @@ void ResonantBehavior::update(bool transientDetected, float transientStrength, u
     update(now);
 }
 
+void ResonantBehavior::setDetectionOnly(bool value) {
+    _detectionOnly = value;
+}
+
 // --- outputs ---
 
 bool ResonantBehavior::shouldStartChirp() {
-    return _chirpRequested;
+    return _chirpRequested && !_detectionOnly;
 }
 
 const char* ResonantBehavior::chirpRequestSourceName() const {
@@ -143,12 +257,20 @@ void ResonantBehavior::notifyChirpStarted(unsigned long now) {
     if (suppressUntilMs > _selfChirpSuppressUntilMs) {
         _selfChirpSuppressUntilMs = suppressUntilMs;
     }
+    _ignoreOwnEmitUntilMs = suppressUntilMs;
+    _outputBusy = true;
+    _lastDecision = BehaviorDecision::Emitted;
+    _lastBlockReason = BehaviorDecision::None;
+    _emittedCount++;
 }
 
 void ResonantBehavior::notifyChirpFinished(unsigned long now) {
     if (_state == State::Chirping) {
         _refractoryStartedMs = now;
+        _refractoryUntilMs = now + _refractoryAfterEmitMs;
+        _ignoreOwnEmitUntilMs = now + _selfChirpTailIgnoreMs;
         _state = State::Refractory;
+        _outputBusy = false;
 
         const unsigned long suppressUntilMs = now + _selfChirpTailIgnoreMs;
         if (suppressUntilMs > _selfChirpSuppressUntilMs) {
@@ -169,22 +291,20 @@ unsigned long ResonantBehavior::waitRemainingMs(unsigned long now) const {
     if (_state != State::TransientSeen) {
         return 0;
     }
-    if (now <= _transientStartedMs) {
-        return _waitAfterTransientMs;
+    if (now <= _waitUntilMs) {
+        return _waitUntilMs - now;
     }
-    const unsigned long elapsed = now - _transientStartedMs;
-    return elapsed >= _waitAfterTransientMs ? 0 : _waitAfterTransientMs - elapsed;
+    return 0;
 }
 
 unsigned long ResonantBehavior::refractoryRemainingMs(unsigned long now) const {
     if (_state != State::Refractory) {
         return 0;
     }
-    if (now <= _refractoryStartedMs) {
-        return _refractoryAfterEmitMs;
+    if (now <= _refractoryUntilMs) {
+        return _refractoryUntilMs - now;
     }
-    const unsigned long elapsed = now - _refractoryStartedMs;
-    return elapsed >= _refractoryAfterEmitMs ? 0 : _refractoryAfterEmitMs - elapsed;
+    return 0;
 }
 
 unsigned long ResonantBehavior::selfChirpIgnoreRemainingMs(unsigned long now) const {
@@ -192,6 +312,147 @@ unsigned long ResonantBehavior::selfChirpIgnoreRemainingMs(unsigned long now) co
         return 0;
     }
     return _selfChirpSuppressUntilMs - now;
+}
+
+bool ResonantBehavior::detectionOnly() const {
+    return _detectionOnly;
+}
+
+bool ResonantBehavior::outputBusy() const {
+    return _outputBusy;
+}
+
+bool ResonantBehavior::takeWouldEmit() {
+    const bool result = _wouldEmit;
+    _wouldEmit = false;
+    return result;
+}
+
+ResonantBehavior::BehaviorDecision ResonantBehavior::lastDecision() const {
+    return _lastDecision;
+}
+
+ResonantBehavior::BehaviorDecision ResonantBehavior::lastBlockReason() const {
+    return _lastBlockReason;
+}
+
+const char* ResonantBehavior::lastDecisionName() const {
+    return behaviorDecisionName(_lastDecision);
+}
+
+const char* ResonantBehavior::lastBlockReasonName() const {
+    return behaviorDecisionName(_lastBlockReason);
+}
+
+DetectionPipeline::PatternType ResonantBehavior::lastPatternType() const {
+    return _lastPatternType;
+}
+
+const char* ResonantBehavior::lastPatternTypeName() const {
+    return DetectionPipeline::patternTypeName(_lastPatternType);
+}
+
+unsigned long ResonantBehavior::lastHeardMs() const {
+    return _lastPatternHeardAtMs;
+}
+
+unsigned long ResonantBehavior::lastEmitMs() const {
+    return _lastEmitMs;
+}
+
+unsigned long ResonantBehavior::waitUntilMs() const {
+    return _waitUntilMs;
+}
+
+unsigned long ResonantBehavior::refractoryUntilMs() const {
+    return _refractoryUntilMs;
+}
+
+unsigned long ResonantBehavior::ignoreOwnEmitUntilMs() const {
+    return _ignoreOwnEmitUntilMs;
+}
+
+unsigned long ResonantBehavior::patternsReceived() const {
+    return _patternsReceived;
+}
+
+unsigned long ResonantBehavior::patternsIgnoredInvalid() const {
+    return _patternsIgnoredInvalid;
+}
+
+unsigned long ResonantBehavior::patternsIgnoredAmbiguous() const {
+    return _patternsIgnoredAmbiguous;
+}
+
+unsigned long ResonantBehavior::blockedDetectionOnly() const {
+    return _blockedDetectionOnly;
+}
+
+unsigned long ResonantBehavior::blockedOutputBusy() const {
+    return _blockedOutputBusy;
+}
+
+unsigned long ResonantBehavior::blockedRefractory() const {
+    return _blockedRefractory;
+}
+
+unsigned long ResonantBehavior::blockedWaiting() const {
+    return _blockedWaiting;
+}
+
+unsigned long ResonantBehavior::blockedSelfSuppressed() const {
+    return _blockedSelfSuppressed;
+}
+
+unsigned long ResonantBehavior::wouldEmitCount() const {
+    return _wouldEmitCount;
+}
+
+unsigned long ResonantBehavior::emittedCount() const {
+    return _emittedCount;
+}
+
+const char* ResonantBehavior::behaviorDecisionName(BehaviorDecision decision) {
+    switch (decision) {
+        case BehaviorDecision::None:
+            return "none";
+        case BehaviorDecision::ConsumedPattern:
+            return "consumed_pattern";
+        case BehaviorDecision::IgnoredInvalidPattern:
+            return "ignored_invalid_pattern";
+        case BehaviorDecision::IgnoredAmbiguousPattern:
+            return "ignored_ambiguous_pattern";
+        case BehaviorDecision::DetectionOnly:
+            return "detection_only";
+        case BehaviorDecision::ListenOnly:
+            return "listen_only";
+        case BehaviorDecision::Disabled:
+            return "disabled";
+        case BehaviorDecision::OutputBusy:
+            return "output_busy";
+        case BehaviorDecision::WaitingAfterHeard:
+            return "waiting_after_heard";
+        case BehaviorDecision::RefractoryAfterEmit:
+            return "refractory_after_emit";
+        case BehaviorDecision::IgnoreAfterOwnEmit:
+            return "ignore_after_own_emit";
+        case BehaviorDecision::CooldownAfterDetect:
+            return "cooldown_after_detect";
+        case BehaviorDecision::SelfSuppressed:
+            return "self_suppressed";
+        case BehaviorDecision::AlreadyScheduled:
+            return "already_scheduled";
+        case BehaviorDecision::ResponseProbabilitySkipped:
+            return "response_probability_skipped";
+        case BehaviorDecision::Emitted:
+            return "emitted";
+        case BehaviorDecision::WouldEmit:
+            return "would_emit";
+        case BehaviorDecision::UnknownBlocked:
+            return "unknown_blocked";
+    }
+
+    return "unknown";
 }
 
 void ResonantBehavior::setWaitAfterTransientMs(unsigned long value) {

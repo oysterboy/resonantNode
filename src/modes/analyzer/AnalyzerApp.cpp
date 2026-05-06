@@ -147,7 +147,7 @@ void AnalyzerApp::configureAnalogParameters() {
     _audioSignal.setBaselineTrackingQuietThreshold(40);
     setDetectorOnsetDetectionThreshold(36.0f);
     setDetectorOnsetReleaseThreshold(26.0f);
-    setDetectorCooldownAfterOnsetMs(0);
+    setDetectorCooldownAfterOnsetMs(25);
     setDetectorReleaseDebounceMs(30);
     setDetectorMinTransientDurationMs(60);
     setDetectorMaxTransientDurationMs(240);
@@ -158,7 +158,7 @@ void AnalyzerApp::configureI2SParameters() {
     _audioSignal.setBaselineTrackingQuietThreshold(20);
     setDetectorOnsetDetectionThreshold(36.0f);
     setDetectorOnsetReleaseThreshold(26.0f);
-    setDetectorCooldownAfterOnsetMs(0);
+    setDetectorCooldownAfterOnsetMs(25);
     setDetectorReleaseDebounceMs(30);
     setDetectorMinTransientDurationMs(60);
     setDetectorMaxTransientDurationMs(240);

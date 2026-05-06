@@ -19,12 +19,34 @@ Does NOT:
 
 class ResonantBehavior {
 public:
+    enum class BehaviorDecision {
+        None,
+        ConsumedPattern,
+        IgnoredInvalidPattern,
+        IgnoredAmbiguousPattern,
+        DetectionOnly,
+        ListenOnly,
+        Disabled,
+        OutputBusy,
+        WaitingAfterHeard,
+        RefractoryAfterEmit,
+        IgnoreAfterOwnEmit,
+        CooldownAfterDetect,
+        SelfSuppressed,
+        AlreadyScheduled,
+        ResponseProbabilitySkipped,
+        Emitted,
+        WouldEmit,
+        UnknownBlocked,
+    };
+
     void resetState();
-    void handlePatternResult(const DetectionPipeline::PatternResult& result, unsigned long now);
+    BehaviorDecision handlePatternResult(const DetectionPipeline::PatternResult& result, unsigned long now);
     void update(unsigned long now);
     // Transitional shim kept only for compatibility with older call sites.
     void update(bool transientDetected, float transientStrength, unsigned long now);
 
+    void setDetectionOnly(bool value);
     void setWaitAfterTransientMs(unsigned long value);
     void setRefractoryAfterEmitMs(unsigned long value);
     void setIdleTimeoutMs(unsigned long value);
@@ -37,6 +59,30 @@ public:
     unsigned long waitRemainingMs(unsigned long now) const;
     unsigned long refractoryRemainingMs(unsigned long now) const;
     unsigned long selfChirpIgnoreRemainingMs(unsigned long now) const;
+    bool detectionOnly() const;
+    bool outputBusy() const;
+    bool takeWouldEmit();
+    BehaviorDecision lastDecision() const;
+    BehaviorDecision lastBlockReason() const;
+    const char* lastDecisionName() const;
+    const char* lastBlockReasonName() const;
+    DetectionPipeline::PatternType lastPatternType() const;
+    const char* lastPatternTypeName() const;
+    unsigned long lastHeardMs() const;
+    unsigned long lastEmitMs() const;
+    unsigned long waitUntilMs() const;
+    unsigned long refractoryUntilMs() const;
+    unsigned long ignoreOwnEmitUntilMs() const;
+    unsigned long patternsReceived() const;
+    unsigned long patternsIgnoredInvalid() const;
+    unsigned long patternsIgnoredAmbiguous() const;
+    unsigned long blockedDetectionOnly() const;
+    unsigned long blockedOutputBusy() const;
+    unsigned long blockedRefractory() const;
+    unsigned long blockedWaiting() const;
+    unsigned long blockedSelfSuppressed() const;
+    unsigned long wouldEmitCount() const;
+    unsigned long emittedCount() const;
 
     // ACTION request (SOUND resource)
     bool shouldStartChirp();
@@ -72,6 +118,17 @@ private:
     unsigned long _transientStartedMs = 0;
     unsigned long _refractoryStartedMs = 0;
     unsigned long _selfChirpSuppressUntilMs = 0;
+    unsigned long _waitUntilMs = 0;
+    unsigned long _refractoryUntilMs = 0;
+    unsigned long _ignoreOwnEmitUntilMs = 0;
+    DetectionPipeline::PatternType _lastPatternType = DetectionPipeline::PatternType::None;
+    unsigned long _lastPatternHeardAtMs = 0;
+    unsigned long _lastDecisionMs = 0;
+    BehaviorDecision _lastDecision = BehaviorDecision::None;
+    BehaviorDecision _lastBlockReason = BehaviorDecision::None;
+    bool _detectionOnly = false;
+    bool _wouldEmit = false;
+    bool _outputBusy = false;
 
     // --- timing parameters ---
     unsigned long _waitAfterTransientMs = 800; // Delay before responding after a transient is seen.
@@ -91,4 +148,18 @@ private:
 
     ChirpRequestSource _chirpRequestSource = ChirpRequestSource::None;
     ChirpOutput::ChirpPattern _chirpPattern = ChirpOutput::ChirpPattern::Single;
+
+    // --- counters ---
+    unsigned long _patternsReceived = 0;
+    unsigned long _patternsIgnoredInvalid = 0;
+    unsigned long _patternsIgnoredAmbiguous = 0;
+    unsigned long _blockedDetectionOnly = 0;
+    unsigned long _blockedOutputBusy = 0;
+    unsigned long _blockedRefractory = 0;
+    unsigned long _blockedWaiting = 0;
+    unsigned long _blockedSelfSuppressed = 0;
+    unsigned long _wouldEmitCount = 0;
+    unsigned long _emittedCount = 0;
+
+    static const char* behaviorDecisionName(BehaviorDecision decision);
 };

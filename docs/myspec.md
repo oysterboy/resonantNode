@@ -477,6 +477,284 @@ Frequency evidence is secondary and should be used as supporting evidence or a q
 
 This principle applies specifically to chirp-style detection. Other future pattern types may treat spectral evidence as more central.
 
+### 10.5.1 Flexible Pattern Detection Pipeline
+
+The classification layer should support a flexible pattern detection pipeline.
+
+A candidate should not be hard-wired to one fixed interpretation. Instead, the same candidate may be evaluated by one or more pattern detectors.
+
+General model:
+
+```text
+AudioSignal
+→ Feature Detectors
+→ Candidate Builder
+→ Pattern Detector(s)
+→ Pattern Result(s)
+→ Pattern Selector / Resolver
+→ Behavior
+```
+
+This extends the simpler model:
+
+```text
+AudioSignal
+→ Feature Detectors
+→ Candidate Builder
+→ Pattern Detector
+→ Pattern Result
+→ Behavior
+```
+
+The resolver can remain optional in the current implementation.
+
+---
+
+## Purpose
+
+The flexible pattern detection pipeline supports two use cases:
+
+1. **Runtime multi-pattern detection**
+
+   A node may evaluate several possible sound patterns during the same runtime.
+
+   Example:
+
+   ```text
+   Candidate A → ChirpPattern       → VALID_CHIRP
+   Candidate B → TonalBeepPattern   → VALID_TONE
+   Candidate C → NoiseBurstPattern  → INVALID / NOISE
+   ```
+
+   This allows the node to distinguish different kinds of acoustic events:
+
+   ```text
+   this was a chirp
+   this was a beep
+   this was noise
+   this was ambiguous
+   ```
+
+2. **Variant-based pattern configuration**
+
+   A firmware variant may use the same pipeline shape but enable only one or a small set of pattern detectors.
+
+   Example:
+
+   ```text
+   ResonantNode_ChirpOnly
+   ResonantNode_BeepOnly
+   ResonantNode_NoiseBurst
+   ResonantNode_DebugAllPatterns
+   ```
+
+   This keeps the architecture reusable without requiring every runtime to detect every possible pattern.
+
+---
+
+## Pattern Detector Interface
+
+Pattern detectors should share a common conceptual interface.
+
+```text
+PatternDetector
+  input:  Candidate + associated feature evidence
+  output: PatternResult
+```
+
+A pattern detector should answer:
+
+```text
+Does this candidate match my pattern?
+How strongly?
+With what confidence?
+With what qualifiers?
+```
+
+Possible pattern detectors:
+
+```text
+ChirpPatternDetector
+TonalBeepPatternDetector
+NoiseBurstPatternDetector
+ClickPatternDetector
+```
+
+Pattern detectors should not directly trigger behavior or sound output.
+
+They evaluate candidates and return pattern results.
+
+---
+
+## Pattern Result
+
+Each pattern detector outputs a `PatternResult`.
+
+A `PatternResult` may contain:
+
+```text
+patternType
+validity
+confidence
+score
+startTime
+endTime
+duration
+qualifiers
+rejectReason
+sourceCandidateId
+```
+
+Example result types:
+
+```text
+NONE
+VALID_CHIRP
+VALID_TONE
+VALID_NOISE_BURST
+VALID_CLICK
+AMBIGUOUS
+INVALID
+```
+
+Behavior consumes `PatternResult`, not raw detector flags.
+
+---
+
+## Pattern Selector / Resolver
+
+If multiple pattern detectors evaluate the same candidate, a resolver may choose the most useful interpretation.
+
+Possible resolver strategies:
+
+```text
+take highest confidence
+prefer configured pattern family
+prefer temporal match over spectral match
+mark close scores as AMBIGUOUS
+emit multiple results if behavior supports it
+```
+
+For the current implementation, this can remain simple.
+
+Initial strategy:
+
+```text
+if one valid result:
+    use that result
+
+if multiple valid results:
+    choose highest confidence or mark AMBIGUOUS
+
+if no valid result:
+    ignore or report INVALID
+```
+
+The resolver is an architectural placeholder. It does not need to become complex in the current refactor.
+
+---
+
+## Configuration
+
+The active pattern detectors should be configurable.
+
+Possible configuration levels:
+
+```text
+compile-time firmware variant
+runtime mode
+behavior profile
+VEKTOR parameter later
+```
+
+Initial implementation may use compile-time or local configuration only.
+
+VEKTOR exposure can be added later.
+
+Example:
+
+```text
+enabledPatterns = CHIRP
+enabledPatterns = CHIRP + TONE
+enabledPatterns = DEBUG_ALL
+```
+
+---
+
+## Current Implementation Boundary
+
+The current refactor should scaffold the flexible pipeline shape, but it does not need to implement full multi-pattern detection yet.
+
+Current target:
+
+```text
+DetectorCandidate
+→ PatternCandidate
+→ PatternResult
+→ ResonantBehavior
+```
+
+The first implementation may be pass-through:
+
+```text
+valid transient candidate
+→ simple PatternResult
+→ behavior-facing result
+```
+
+Later versions can add:
+
+```text
+frequency matching
+chirp grouping
+multi-pattern detection
+overlap handling
+pattern resolver
+family matching
+dense-field ambiguity
+```
+
+This keeps Analyzer and Resonant behavior aligned while avoiding premature complexity.
+
+---
+
+## Stability Markers
+
+### Stable
+
+```text
+Pattern detectors are separate from feature detectors.
+Behavior consumes PatternResult.
+The pipeline should allow multiple pattern detectors later.
+```
+
+### Current
+
+```text
+Scaffold DetectorCandidate → PatternCandidate → PatternResult.
+Keep internals simple/pass-through.
+Keep current AMP/transient detector parameters frozen.
+```
+
+### Later / Volatile
+
+```text
+frequency matching
+overlap dominance
+multi-pattern runtime arbitration
+family matching
+dense-field ambiguity
+VEKTOR pattern configuration
+```
+
+---
+
+## Spec Rule
+
+The current ResonantNode may only use one simple pattern detector, but the pipeline must not assume that only one pattern type can ever exist.
+
+
+
 ### 10.6 Frequency Association [VOLATILE]
 
 Frequency evidence must be associated with the same candidate time window.
@@ -1324,7 +1602,7 @@ Current AMP detector baseline:
 ```text
 onsetThreshold = 36.0
 releaseThreshold = 26.0
-cooldownMs = 300
+cooldownMs = 0-100 ms
 releaseDebounceMs = 30
 minTransientDurationMs = 60
 maxTransientDurationMs = 240

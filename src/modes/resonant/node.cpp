@@ -191,6 +191,8 @@ void Node::begin() {
         Serial.print(_audioSignal.onsetReleaseThreshold(), 1);
         Serial.print(" cooldown=");
         Serial.print(_audioSignal.cooldownAfterOnsetMs());
+        Serial.print(" releaseDebounce=");
+        Serial.print(_audioSignal.releaseDebounceMs());
         Serial.print(" minMs=");
         Serial.print(_audioSignal.minTransientDurationMs());
         Serial.print(" maxMs=");
@@ -349,7 +351,7 @@ void Node::configureAnalogParameters() {
     _audioSignal.setBaselineTrackingQuietThreshold(40);
     _audioOnsetDetector.setOnsetDetectionThreshold(36.0f);
     _audioOnsetDetector.setOnsetReleaseThreshold(26.0f);
-    _audioOnsetDetector.setCooldownAfterOnsetMs(100);
+    _audioOnsetDetector.setCooldownAfterOnsetMs(300);
     _audioOnsetDetector.setReleaseDebounceMs(30);
     _audioOnsetDetector.setMinTransientDurationMs(60);
     _audioOnsetDetector.setMaxTransientDurationMs(240);
@@ -364,7 +366,7 @@ void Node::configureI2SParameters() {
     _audioSignal.setBaselineTrackingQuietThreshold(20);
     _audioSignal.setOnsetDetectionThreshold(36.0f);
     _audioSignal.setOnsetReleaseThreshold(26.0f);
-    _audioSignal.setCooldownAfterOnsetMs(100);
+    _audioSignal.setCooldownAfterOnsetMs(300);
     _audioSignal.setReleaseDebounceMs(30);
     _audioSignal.setMinTransientDurationMs(60);
     _audioSignal.setMaxTransientDurationMs(240);
@@ -372,7 +374,7 @@ void Node::configureI2SParameters() {
 
     _audioOnsetDetector.setOnsetDetectionThreshold(36.0f);
     _audioOnsetDetector.setOnsetReleaseThreshold(26.0f);
-    _audioOnsetDetector.setCooldownAfterOnsetMs(100);
+    _audioOnsetDetector.setCooldownAfterOnsetMs(300);
     _audioOnsetDetector.setReleaseDebounceMs(30);
     _audioOnsetDetector.setMinTransientDurationMs(60);
     _audioOnsetDetector.setMaxTransientDurationMs(240);
@@ -975,6 +977,8 @@ void Node::printRbDetectorSummary() const {
     Serial.print(_audioSignal.onsetReleaseThreshold(), 1);
     Serial.print(" cooldown=");
     Serial.print(_audioSignal.cooldownAfterOnsetMs());
+    Serial.print(" releaseDebounce=");
+    Serial.print(_audioSignal.releaseDebounceMs());
     Serial.print(" minMs=");
     Serial.print(_audioSignal.minTransientDurationMs());
     Serial.print(" maxMs=");

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stddef.h>
+#include <stdint.h>
 
 #include "../../hal/AudioSourceAnalog.h"
 #include "../../hal/AudioSourceI2S.h"
@@ -12,6 +13,19 @@
 
 class AnalyzerApp {
 public:
+    enum AnalyzerLogFlags : uint32_t {
+        ANALYZER_LOG_NONE = 0,
+        ANALYZER_LOG_SUMMARY = 1u << 0,
+        ANALYZER_LOG_TRIAL = 1u << 1,
+        ANALYZER_LOG_CANDIDATE = 1u << 2,
+        ANALYZER_LOG_FREQ_CLASS = 1u << 3,
+        ANALYZER_LOG_RAW_DEBUG = 1u << 4,
+    };
+
+    static constexpr uint32_t DEFAULT_ANALYZER_LOG_FLAGS =
+        ANALYZER_LOG_SUMMARY |
+        ANALYZER_LOG_TRIAL;
+
     enum class AudioSourceKind {
         Analog,
         I2S
@@ -28,7 +42,6 @@ private:
     struct SequenceTest {
         static constexpr size_t kMaxTrialCandidates = 16;
         static constexpr size_t kMaxDuplicateDts = 8;
-
         enum class CandidateOrigin {
             PreWindow,
             InWindow,
@@ -118,7 +131,6 @@ private:
         bool quiet = false;
         bool showDetails = true;
         bool progressLineStarted = false;
-
         unsigned long totalTrials = 100;
         unsigned long periodMs = 2500;
         unsigned long windowStartOffsetMs = 0;
@@ -126,6 +138,33 @@ private:
         unsigned long toneHz = 3200;
         unsigned long durationMs = 100;
         char setupLabel[48] = TEST_SETUP_LABEL;
+
+        bool sampleDumpEnabled = false;
+        unsigned long sampleDumpFirstTrials = 2;
+        unsigned long sampleDumpEveryNth = 0;
+        unsigned long sampleDumpLeadMs = 50;
+        unsigned long sampleDumpTailMs = 800;
+        unsigned long sampleDumpStepMs = 1;
+        unsigned long sampleDumpMaxRows = 5000;
+        bool sampleDumpWarned = false;
+        bool sampleDumpSelectedForTrial = false;
+        bool sampleDumpCapturing = false;
+        unsigned long sampleDumpCurrentTrial = 0;
+        unsigned long sampleDumpTriggerMs = 0;
+        unsigned long sampleDumpTriggerSampleMs = 0;
+        unsigned long sampleDumpCaptureStartMs = 0;
+        unsigned long sampleDumpCaptureEndMs = 0;
+        unsigned long sampleDumpNextEmitMs = 0;
+        static constexpr size_t kMaxSampleHistory = 256;
+        static constexpr size_t kMaxSampleRows = 2048;
+        CurveSnapshot sampleHistory[kMaxSampleHistory] = {};
+        size_t sampleHistoryStart = 0;
+        size_t sampleHistoryCount = 0;
+        unsigned long sampleHistoryLastMs = 0;
+        bool sampleHistoryHasPending = false;
+        CurveSnapshot sampleHistoryPending = {};
+        CurveSnapshot sampleRows[kMaxSampleRows] = {};
+        size_t sampleRowCount = 0;
 
         unsigned long startedAtMs = 0;
         unsigned long nextTriggerAtMs = 0;
@@ -144,7 +183,7 @@ private:
         unsigned long trialTransientRejectTooLongCountAtStart = 0;
         unsigned long trialTransientRejectWeakCountAtStart = 0;
         TrialDiagnostics currentTrialDiagnostics;
-        unsigned long debugLevel = 1;
+        uint32_t logFlags = DEFAULT_ANALYZER_LOG_FLAGS;
 
         unsigned long hits = 0;
         unsigned long expectedHits = 0;
@@ -262,7 +301,7 @@ private:
     void updateBaseSession(unsigned long now);
     void printBaseSummary() const;
     void printBaseHints() const;
-    void startSequenceTest(unsigned long totalTrials, unsigned long periodMs, unsigned long windowEndOffsetMs, unsigned long toneHz, unsigned long durationMs, bool quiet = false, bool showDetails = true, const char* setupLabel = nullptr, unsigned long debugLevel = 1);
+    void startSequenceTest(unsigned long totalTrials, unsigned long periodMs, unsigned long windowEndOffsetMs, unsigned long toneHz, unsigned long durationMs, bool quiet = false, bool showDetails = true, const char* setupLabel = nullptr, uint32_t logFlags = DEFAULT_ANALYZER_LOG_FLAGS, bool sampleDumpEnabled = false, unsigned long sampleDumpFirstTrials = 2, unsigned long sampleDumpEveryNth = 0, unsigned long sampleDumpLeadMs = 50, unsigned long sampleDumpTailMs = 800, unsigned long sampleDumpStepMs = 1, unsigned long sampleDumpMaxRows = 5000);
     void stopSequenceTest();
     void updateSequenceTest(unsigned long now);
     void handleSequenceTransient(unsigned long now);
@@ -285,6 +324,14 @@ private:
     void printSequenceSummary() const;
     void handleSequenceCandidate(const DetectionPipeline::PatternResult& patternResult, unsigned long queueDepthBeforeDrain);
     void updateSequenceAmbientStats();
+    void beginSequenceSampleDump(unsigned long trialNumber);
+    void clearSequenceSampleDump();
+    void recordSequenceSample(const CurveSnapshot& snapshot);
+    void flushSequenceSampleHistory(unsigned long currentSampleMs);
+    void printSequenceSampleDump(unsigned long trialNumber) const;
+    bool sequenceSampleDumpSelected(unsigned long trialNumber) const;
+    unsigned long sequenceSampleDumpEstimatedRows(unsigned long selectedTrials) const;
+    static void sequenceCurveSampleCallback(const CurveSnapshot& snapshot, void* context);
     DetectionPipeline::FrequencyEvidence captureFrequencyEvidence() const;
     void noteSequenceTransientReject(unsigned long eventMs);
     void noteSequenceTransientRejectReason(unsigned long eventMs, const char* reasonName, unsigned long durationMs, float strength);

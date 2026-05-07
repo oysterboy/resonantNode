@@ -45,6 +45,7 @@ void AudioSignal::update(int sample, uint32_t sampleTimeUs) {
     processSample(sample, sampleTimeUs, sampleIndex, 0, false);
     _stats.samplesProcessed++;
     _detector.update(static_cast<float>(_signalMagnitude), sampleTimeUs);
+    emitCurveSample(sampleTimeUs);
 }
 
 void AudioSignal::processBlock(const AudioBlock& block) {
@@ -83,6 +84,7 @@ void AudioSignal::processBlock(const AudioBlock& block) {
         processSample(static_cast<int>(block.samples[i]), sampleTimeUs, sampleIndex, sampleRateHz, block.overflowBeforeBlock);
         _stats.samplesProcessed++;
         _detector.update(static_cast<float>(_signalMagnitude), sampleTimeUs);
+        emitCurveSample(sampleTimeUs);
 
         if (_detector.onsetDetected()) {
             _candidateActive = true;
@@ -250,6 +252,11 @@ void AudioSignal::setDiagnosticsEnabled(bool enabled) {
     _detector.setDiagnosticsEnabled(enabled);
 }
 
+void AudioSignal::setCurveSampleCallback(CurveSampleCallback callback, void* context) {
+    _curveSampleCallback = callback;
+    _curveSampleCallbackContext = context;
+}
+
 float AudioSignal::onsetDetectionThreshold() const {
     return _detector.onsetDetectionThreshold();
 }
@@ -340,6 +347,24 @@ unsigned long AudioSignal::transientDurationMs() const {
 
 bool AudioSignal::peakActive() const {
     return _detector.peakActive();
+}
+
+float AudioSignal::peakStrength() const {
+    return _detector.peakStrength();
+}
+
+void AudioSignal::emitCurveSample(uint32_t sampleTimeUs) {
+    if (_curveSampleCallback == nullptr) {
+        return;
+    }
+
+    CurveSnapshot snapshot;
+    snapshot.sampleMs = sampleTimeUs / 1000UL;
+    snapshot.current = abs(_centeredSignal);
+    snapshot.env = static_cast<int>(_smoothedSignalMagnitude);
+    snapshot.peak = _detector.peakStrength();
+    snapshot.open = _detector.peakActive();
+    _curveSampleCallback(snapshot, _curveSampleCallbackContext);
 }
 
 const char* AudioSignal::lastOnsetRejectReasonName() const {

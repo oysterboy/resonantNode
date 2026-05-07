@@ -1,46 +1,30 @@
-# Current Pass
-
-# Codex Pass Notes — H3 Frequency Evidence Classification Logging
+# Codex Pass Notes — H3a Analyzer Log Modes
 
 ## Goal
 
-Keep logging frequency evidence, but compare it by candidate class.
+Introduce selectable Analyzer log modes before expanding frequency classification logs.
 
-H3 is an **observability and calibration pass**.
+The Analyzer currently mixes several responsibilities in one output stream:
 
-It must not change behavior.
+```text
+test runner
+detector verifier
+classification system
+frequency evidence logger
+debug console
+```
+
+H3a separates output by purpose so future H3/H4 tests are readable and grep-/CSV-friendly.
+
+This is an **observability architecture pass**.
+
+It must not change detector behavior, Analyzer classification logic, or ResonantBehavior.
 
 ---
 
-## Current H2 Conclusion
+## Why This Pass Exists
 
-Frequency evidence is available and temporally attached to accepted transient candidates.
-
-However:
-
-```text
-freq_score = observational feature
-freq_matched = not behavior-relevant yet
-PatternResult validity = still transient-based
-Behavior gating = not allowed yet
-```
-
-Current finding:
-
-```text
-Frequency evidence is also present during late, noisy, duplicate, or self-related hits.
-It does not yet distinguish expected hits from duplicates clearly.
-```
-
-Therefore H3 should classify and log frequency evidence by candidate category.
-
----
-
-## H3 Scope
-
-### Implement now
-
-Add class-aware frequency logging for:
+Upcoming work needs clean data for:
 
 ```text
 expected_primary
@@ -50,46 +34,369 @@ self_suppressed
 unexpected_noise
 ```
 
-For each candidate/result, log the existing frequency evidence together with the candidate class.
+and later:
+
+```text
+SEQ frequency sweeps
+candidate-local frequency windows
+frequency quality flags
+```
+
+Without log modes, those outputs will be buried in detector spam.
+
+The goal is not “more logs”.
+
+The goal is:
+
+```text
+select the kind of evidence being inspected
+```
+
+---
+
+## H3a Scope
+
+### Implement now
+
+Add semantic Analyzer log modes / flags for:
+
+```text
+summary
+trial
+candidate
+freq_class
+raw_debug
+```
+
+Allow combinations, for example:
+
+```text
+summary + trial
+summary + freq_class
+candidate + raw_debug
+freq_class only
+```
 
 ### Do not implement yet
 
 ```text
-do not gate behavior by frequency
-do not reject candidates by frequency
-do not promote freq_matched to decision logic
-do not create ValidTone behavior
-do not create ValidChirp behavior
+do not add new frequency classification logic
+do not add SEQ frequency sweeps
+do not change detector thresholds
 do not change PatternResult validity
-do not change ResonantBehavior response rules
-do not tune detector parameters
+do not change Analyzer classification decisions
+do not change ResonantBehavior
+do not add frequency gating
 ```
 
 ---
 
-## Target Question
+## Recommended Design
 
-H3 should make it possible to answer:
+Use bit flags, not a single enum, because combinations are useful.
 
-```text
-Does frequency evidence separate useful expected hits from bad/ambiguous hits?
+Example:
+
+```cpp
+enum AnalyzerLogFlags : uint32_t {
+    ANALYZER_LOG_NONE       = 0,
+    ANALYZER_LOG_SUMMARY    = 1 << 0,
+    ANALYZER_LOG_TRIAL      = 1 << 1,
+    ANALYZER_LOG_CANDIDATE  = 1 << 2,
+    ANALYZER_LOG_FREQ_CLASS = 1 << 3,
+    ANALYZER_LOG_RAW_DEBUG  = 1 << 4,
+};
 ```
 
-Specifically:
+Helper:
+
+```cpp
+inline bool analyzerLogEnabled(uint32_t flags, AnalyzerLogFlags flag) {
+    return (flags & static_cast<uint32_t>(flag)) != 0;
+}
+```
+
+If plain C-style constants are easier in the current codebase, that is fine.
+
+Keep names stable and readable.
+
+---
+
+## Suggested Default
+
+Default Analyzer output should remain readable:
 
 ```text
-expected_primary:      does freq_score look strong and stable?
-duplicate:             does freq_score look similar or different?
-late:                  does freq_score fall off or stay high?
-self_suppressed:       does own emission create misleading freq evidence?
-unexpected_noise:      does random/noisy activity also produce freq evidence?
+summary + trial
+```
+
+Recommended default flags:
+
+```cpp
+static constexpr uint32_t DEFAULT_ANALYZER_LOG_FLAGS =
+    ANALYZER_LOG_SUMMARY |
+    ANALYZER_LOG_TRIAL;
+```
+
+For H3 frequency comparison later:
+
+```text
+summary + freq_class
+```
+
+For clean export-style analysis:
+
+```text
+freq_class only
+```
+
+For detector debugging:
+
+```text
+summary + candidate + raw_debug
 ```
 
 ---
 
-## Candidate Classes to Compare
+## Modes
 
-Use these exact class labels in logs if possible:
+## 1. Summary Mode
+
+Purpose:
+
+```text
+quick regression check after a run
+```
+
+Output one compact summary line after a run or sequence block.
+
+Example:
+
+```text
+SEQ_SUMMARY trials=100 expected=63 late=17 early=1 misses=19 duplicates=35 unexpected=11 avg_strength=59.4 avg_dur=161.0
+```
+
+This mode should stay on by default.
+
+---
+
+## 2. Trial Mode
+
+Purpose:
+
+```text
+normal tuning and per-trial overview
+```
+
+Output one compact line per trial.
+
+Example:
+
+```text
+SEQ_TRIAL trial=42 result=expected dt_ms=154 dur_ms=132 strength=58.0 duplicates=1 late=0
+```
+
+This mode should stay on by default.
+
+---
+
+## 3. Candidate Mode
+
+Purpose:
+
+```text
+understand detector candidates and Analyzer classification
+```
+
+Output one line per accepted/rejected/classified candidate.
+
+Example:
+
+```text
+SEQ_CAND trial=42 class=expected_primary valid=1 type=ValidTransient reason=FromAcceptedTransient dt_ms=154 dur_ms=132 strength=58.0
+```
+
+This mode should be off by default.
+
+---
+
+## 4. Frequency Class Mode
+
+Purpose:
+
+```text
+compare frequency evidence by candidate class
+```
+
+Output one line per classified candidate/result with frequency fields.
+
+Example:
+
+```text
+SEQ_FREQ_CLASS trial=42 class=expected_primary valid=1 type=ValidTransient reason=FromAcceptedTransient dt_ms=154 dur_ms=132 strength=58.0 freq_present=1 freq_match=0 freq_hz=1800 freq_score=0.63 freq_conf=0.42 freq_contrast=0.31 freq_age_ms=12 freq_valid_window=1
+```
+
+This mode should be off by default for normal use.
+
+It will become the main output mode for H3b.
+
+---
+
+## 5. Raw Debug Mode
+
+Purpose:
+
+```text
+inspect noisy detector internals when something breaks
+```
+
+Examples:
+
+```text
+SEQ_RAW onset_seen=1
+SEQ_RAW below_threshold_count=27
+SEQ_RAW duration_too_short dur_ms=31
+SEQ_RAW duration_too_long dur_ms=318
+SEQ_RAW blocked_peak_active=1
+SEQ_RAW release_debounce=1
+```
+
+This mode must be off by default.
+
+Do not allow raw debug logs to appear in clean frequency classification output unless explicitly enabled.
+
+---
+
+## Config / Control
+
+Use the simplest configuration mechanism that fits the current codebase.
+
+Acceptable options:
+
+### Option A — Compile-time constant
+
+```cpp
+static constexpr uint32_t ANALYZER_LOG_FLAGS =
+    ANALYZER_LOG_SUMMARY |
+    ANALYZER_LOG_TRIAL;
+```
+
+This is enough for H3a if runtime commands would complicate the pass.
+
+### Option B — Serial command / runtime param
+
+If there is already a parameter or command system, optionally allow:
+
+```text
+log summary
+log trial
+log candidate
+log freq_class
+log raw
+log default
+log quiet
+```
+
+But do not build a large command system just for H3a.
+
+Recommendation:
+
+```text
+start with compile-time flags
+add runtime switching later if useful
+```
+
+---
+
+## Helper Functions
+
+Create small helper functions instead of scattering `Serial.print()` checks everywhere.
+
+Example shape:
+
+```cpp
+void logSeqSummary(...);
+void logSeqTrial(...);
+void logSeqCandidate(...);
+void logSeqFreqClass(...);
+void logSeqRawDebug(...);
+```
+
+Each helper should first check the active log flags.
+
+Example:
+
+```cpp
+void logSeqTrial(...) {
+    if (!analyzerLogEnabled(activeAnalyzerLogFlags, ANALYZER_LOG_TRIAL)) {
+        return;
+    }
+
+    Serial.print("SEQ_TRIAL ");
+    // key=value fields
+}
+```
+
+Goal:
+
+```text
+Analyzer logic stays readable.
+Log mode checks are centralized.
+```
+
+---
+
+## Prefixes
+
+Use stable prefixes so output can be filtered easily:
+
+```text
+SEQ_SUMMARY
+SEQ_TRIAL
+SEQ_CAND
+SEQ_FREQ_CLASS
+SEQ_RAW
+```
+
+Do not change these casually once introduced.
+
+---
+
+## Field Style
+
+Use key-value logs:
+
+```text
+key=value key=value key=value
+```
+
+Avoid prose.
+
+Good:
+
+```text
+SEQ_TRIAL trial=42 result=expected dt_ms=154 dur_ms=132 strength=58.0
+```
+
+Bad:
+
+```text
+Trial 42 was expected and had a duration of 132 ms
+```
+
+Reason:
+
+```text
+key-value logs are grep-friendly and CSV-convertible
+```
+
+---
+
+## Relationship to H3b
+
+H3a only creates the logging structure.
+
+H3b will use `SEQ_FREQ_CLASS` for:
 
 ```text
 expected_primary
@@ -99,252 +406,30 @@ self_suppressed
 unexpected_noise
 ```
 
-Meaning:
-
-### `expected_primary`
-
-A valid candidate in the expected time window for the currently triggered chirp.
-
-Typical analyzer meaning:
-
-```text
-candidate accepted within expected window
-not duplicate
-not late
-not self-suppressed
-```
-
-### `duplicate`
-
-A second or later candidate associated with the same emitted/test chirp.
-
-Typical meaning:
-
-```text
-another accepted candidate after a primary hit
-within duplicate tracking window
-```
-
-### `late`
-
-A candidate that arrives after the expected window.
-
-Typical meaning:
-
-```text
-accepted transient exists
-but timing is later than expected classification window
-```
-
-### `self_suppressed`
-
-A candidate/result that occurs while the node is suppressing or ignoring self-hearing.
-
-Typical meaning:
-
-```text
-candidate is detected during own-emission ignore/refractory/self-suppression window
-```
-
-If current code does not emit a full PatternResult for this case, log a compact self-suppressed frequency observation at the existing suppression log point.
-
-### `unexpected_noise`
-
-A candidate that is accepted or observed outside an active expected chirp/test context.
-
-Typical meaning:
-
-```text
-candidate not tied to an active trigger/trial
-candidate likely ambient, noisy, unrelated, or spontaneous
-```
+H3a may create the prefix and helper, but it does not need to fully populate all H3b frequency comparison classes yet.
 
 ---
 
-## Required Log Fields
+## Relationship to H4 SEQ Frequency Sweep
 
-For every candidate class log, include:
-
-```text
-candidate_class
-pattern_valid
-pattern_type
-pattern_reason
-transient_duration_ms
-transient_peak_strength
-transient_age_or_dt_ms
-freq_present
-freq_matched
-freq_score
-freq_conf
-freq_target_hz
-freq_target_power
-freq_neighbor_power
-freq_total_energy
-freq_contrast
-freq_observed_at_ms
-freq_age_ms
-freq_valid_window
-```
-
-If some fields are not available yet, keep them as zero/default but keep the key names stable.
-
----
-
-## Suggested Compact Log Format
-
-Use one line per candidate/result:
+Later H4 will likely add logs such as:
 
 ```text
-FREQ_CLASS class=expected_primary valid=1 type=ValidTransient reason=FromAcceptedTransient dt_ms=156 dur_ms=132 peak=58.2 freq_present=1 freq_match=0 freq_hz=1800 freq_score=0.63 freq_conf=0.42 freq_contrast=0.31 freq_age_ms=12 freq_valid_window=1
+SEQ_FREQ_SWEEP
 ```
 
-Duplicate example:
+or extend `SEQ_FREQ_CLASS` with:
 
 ```text
-FREQ_CLASS class=duplicate valid=1 type=ValidTransient reason=FromAcceptedTransient dt_ms=238 dur_ms=148 peak=51.7 freq_present=1 freq_match=0 freq_hz=1800 freq_score=0.61 freq_conf=0.40 freq_contrast=0.28 freq_age_ms=18 freq_valid_window=1
+emit_hz
+emit_duration_ms
+trial_interval_ms
+sweep_index
 ```
 
-Late example:
+H3a should make this easy by keeping log helpers and mode flags modular.
 
-```text
-FREQ_CLASS class=late valid=1 type=ValidTransient reason=FromAcceptedTransient dt_ms=412 dur_ms=171 peak=46.5 freq_present=1 freq_match=0 freq_hz=1800 freq_score=0.55 freq_conf=0.34 freq_contrast=0.20 freq_age_ms=24 freq_valid_window=1
-```
-
-Self-suppressed example:
-
-```text
-FREQ_CLASS class=self_suppressed valid=0 type=Suppressed reason=SelfSuppression dt_ms=34 dur_ms=0 peak=0.0 freq_present=1 freq_match=0 freq_hz=1800 freq_score=0.72 freq_conf=0.49 freq_contrast=0.35 freq_age_ms=8 freq_valid_window=1
-```
-
-Unexpected/noise example:
-
-```text
-FREQ_CLASS class=unexpected_noise valid=1 type=ValidTransient reason=UnexpectedCandidate dt_ms=0 dur_ms=189 peak=44.1 freq_present=1 freq_match=0 freq_hz=1800 freq_score=0.57 freq_conf=0.31 freq_contrast=0.22 freq_age_ms=16 freq_valid_window=1
-```
-
----
-
-## Analyzer Integration
-
-Analyzer classification is the primary target for H3.
-
-Where the analyzer currently decides:
-
-```text
-expected
-early
-late
-duplicate
-miss
-unexpected
-```
-
-add the `candidate_class` mapping:
-
-```text
-expected  → expected_primary
-duplicate → duplicate
-late      → late
-unexpected → unexpected_noise
-```
-
-If `early` is currently separate, either:
-
-```text
-map early to unexpected_noise
-```
-
-or, if useful and already present:
-
-```text
-class=early
-```
-
-But the required comparison classes for H3 are the five listed above.
-
-Do not change analyzer classification logic.  
-Only add frequency fields to the classification logs.
-
----
-
-## Resonant Integration
-
-In Resonant mode, add class-aware frequency logging where possible:
-
-```text
-normal accepted candidate → expected_primary or accepted
-duplicate / blocked candidate → duplicate or self_suppressed
-candidate during own chirp / refractory → self_suppressed
-unexpected ambient candidate → unexpected_noise
-```
-
-If exact classification is not available in Resonant yet, keep it conservative:
-
-```text
-class=accepted
-class=self_suppressed
-class=unexpected_noise
-```
-
-Do not invent false precision.
-
-Behavior must still respond only as before.
-
----
-
-## PatternResult Rules
-
-Do not change these:
-
-```text
-accepted transient → PatternType::ValidTransient
-rejected detector candidate → PatternType::Invalid
-frequency evidence does not affect valid/type/reason/confidence
-```
-
-Do not introduce behavior-facing:
-
-```text
-ValidTone
-ValidChirp
-FrequencyMatched
-FrequencyMismatch
-```
-
-unless they are completely unused and inert. Prefer not to add them in H3.
-
----
-
-## Data Use After H3
-
-After running H3 logs, compare frequency values by class:
-
-```text
-expected_primary vs duplicate
-expected_primary vs late
-expected_primary vs self_suppressed
-expected_primary vs unexpected_noise
-```
-
-Useful rough metrics:
-
-```text
-average freq_score by class
-average freq_conf by class
-average freq_contrast by class
-percentage freq_present by class
-percentage freq_valid_window by class
-score ranges / overlap by class
-```
-
-Frequency becomes a candidate for gating only if:
-
-```text
-expected_primary clearly separates from duplicate/late/self_suppressed/unexpected_noise
-```
-
-If values overlap strongly, frequency remains logging/calibration only.
+Do not implement sweep mode in H3a.
 
 ---
 
@@ -354,54 +439,50 @@ If values overlap strongly, frequency remains logging/calibration only.
 
 ```text
 Analyzer builds
-Resonant builds
+Resonant builds if shared headers are touched
 ```
 
-### Logs
+### Default readability
 
-Logs contain stable class labels:
+Default output should still show:
 
 ```text
-expected_primary
-duplicate
-late
-self_suppressed
-unexpected_noise
+SEQ_SUMMARY
+SEQ_TRIAL
 ```
 
-Logs contain frequency fields for each class.
+and should not show raw debug spam.
 
-### Behavior
+### Mode isolation
 
-No change:
+With only frequency-class mode enabled later, output should be possible without raw debug noise.
+
+### No behavior change
+
+These must remain unchanged:
 
 ```text
-ValidTransient still drives behavior
-freq_score does not suppress behavior
-freq_matched does not suppress behavior
-frequency-only activity does not trigger behavior
+DetectorCandidate creation
+PatternResult validity
+Analyzer timing classification
+SEQ trial logic
+ResonantBehavior response logic
 ```
-
-### Analysis Value
-
-After one run, it should be possible to group logs by `candidate_class` and compare frequency evidence.
 
 ---
 
 ## Explicit Non-Goals
 
 ```text
+do not tune detector params
+do not change AudioSignal math
+do not change AudioFrequencyDetector behavior
+do not change candidate classification logic
 do not make frequency required
-do not gate behavior by freq_score
-do not use freq_matched for PatternResult validity
-do not reject duplicate/late/noise candidates based on frequency
-do not tune AMP detector params
-do not tune AudioFrequencyDetector params unless purely fixing a bug
-do not add family matching
-do not add chirp grouping
-do not add overlap/dominance resolver
-do not change refractory/wait behavior
-do not expose frequency params through VEKTOR
+do not add behavior gating
+do not add ValidTone or ValidChirp behavior
+do not add SEQ frequency sweep yet
+do not add candidate-local frequency windows yet
 ```
 
 ---
@@ -409,13 +490,13 @@ do not expose frequency params through VEKTOR
 ## Commit Message Suggestion
 
 ```text
-H3 log frequency evidence by candidate class
+H3a add analyzer log modes
 ```
 
 or:
 
 ```text
-Add class-aware frequency evidence logging
+Add semantic Analyzer logging flags
 ```
 
 ---
@@ -423,35 +504,24 @@ Add class-aware frequency evidence logging
 ## Compact Codex Instruction
 
 ```text
-Implement Pass H3: Frequency Evidence Classification Logging.
+Implement Pass H3a: Analyzer Log Modes.
 
-Keep the current H2 architecture: frequency evidence is attached to PatternCandidate / PatternResult, but does not affect validity, type, reason, confidence, Analyzer classification, or ResonantBehavior.
+Add semantic Analyzer log flags/modes so Analyzer output can be selected by purpose. Required modes are: summary, trial, candidate, freq_class, raw_debug. Prefer bit flags so modes can be combined.
 
-Add class-aware logging so frequency evidence can be compared by candidate class. Required class labels are: expected_primary, duplicate, late, self_suppressed, unexpected_noise.
+Default output should remain readable and include summary + trial only. Raw debug must be off by default.
 
-In Analyzer, map existing classifications to these labels where possible:
-expected -> expected_primary
-duplicate -> duplicate
-late -> late
-unexpected/noise -> unexpected_noise
-self-hearing / own-emission suppression -> self_suppressed if available.
+Use stable log prefixes:
+SEQ_SUMMARY
+SEQ_TRIAL
+SEQ_CAND
+SEQ_FREQ_CLASS
+SEQ_RAW
 
-For each candidate/result classification log, include candidate_class plus the current frequency fields: freq_present, freq_matched, freq_score, freq_conf, freq_target_hz, freq_target_power, freq_neighbor_power, freq_total_energy, freq_contrast, freq_observed_at_ms, freq_age_ms, freq_valid_window. Keep missing values as defaults but keep key names stable.
+Use key-value log fields, not prose.
 
-In Resonant mode, add conservative class-aware logs only where the class is known. Do not invent precision. At minimum, log accepted, self_suppressed, and unexpected/noise cases if those are available.
+Create small log helper functions where practical so Analyzer logic does not become cluttered with Serial.print checks.
 
-Do not change behavior. Do not make frequency required. Do not introduce ValidTone or ValidChirp behavior. Do not tune detector parameters. Do not change wait/refractory behavior.
+Do not change detector behavior, PatternResult validity, Analyzer classification logic, SEQ timing, ResonantBehavior, frequency evidence semantics, or detector parameters.
+
+Do not implement frequency classification comparison or SEQ frequency sweep yet. This pass only creates the logging mode structure that H3b and H4 will use.
 ```
-
-
-H1 is complete:
-- `DetectionPipeline` carries inert transient and frequency evidence scaffolding.
-- Existing behavior is unchanged.
-- Frequency evidence is inert.
-
-H2 is complete:
-- Frequency evidence is now captured and attached to pattern results.
-- Analyzer and Resonant both snapshot the latest frequency observation.
-- Frequency evidence remains observation-only and does not affect validity, type, or behavior.
-
-

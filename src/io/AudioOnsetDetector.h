@@ -58,6 +58,7 @@ public:
     float transientStrength() const;
     unsigned long transientDurationMs() const;
     bool peakActive() const;
+    float peakStrength() const;
     const char* lastTransientRejectReasonName() const;
     unsigned long lastTransientRejectedDurationMs() const;
     float lastTransientRejectedStrength() const;

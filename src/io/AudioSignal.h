@@ -13,6 +13,14 @@ struct AudioSignalStats {
     uint32_t candidatesDropped = 0;
 };
 
+struct CurveSnapshot {
+    unsigned long sampleMs = 0;
+    int current = 0;
+    int env = 0;
+    float peak = 0.0f;
+    bool open = false;
+};
+
 struct DetectorCandidate {
     uint64_t onsetSample = 0;
     uint64_t peakSample = 0;
@@ -66,6 +74,8 @@ public:
     void setMaxTransientDurationMs(unsigned long value);
     void setMinTransientPeakStrength(float value);
     void setDiagnosticsEnabled(bool enabled);
+    using CurveSampleCallback = void (*)(const CurveSnapshot& snapshot, void* context);
+    void setCurveSampleCallback(CurveSampleCallback callback, void* context);
     float onsetDetectionThreshold() const;
     float onsetReleaseThreshold() const;
     unsigned long cooldownAfterOnsetMs() const;
@@ -90,6 +100,7 @@ public:
     float transientStrength() const;
     unsigned long transientDurationMs() const;
     bool peakActive() const;
+    float peakStrength() const;
     const char* lastOnsetRejectReasonName() const;
     const char* lastTransientRejectReasonName() const;
     unsigned long lastTransientRejectedDurationMs() const;
@@ -110,6 +121,7 @@ private:
     void processSample(int sample, uint32_t sampleTimeUs, uint64_t sampleIndex, uint32_t sampleRateHz, bool blockOverflow);
     void finalizeCandidate(uint64_t releaseSample, uint32_t releaseMicrosApprox, uint32_t releaseMillisApprox);
     bool pushCandidate(const DetectorCandidate& candidate);
+    void emitCurveSample(uint32_t sampleTimeUs);
 
     int _rawSignal = 0;
     int _centeredSignal = 0;
@@ -145,4 +157,6 @@ private:
     int _baselineTrackingQuietThreshold = 40;
     float _smoothingFactor = 0.5f;
     float _baselineUpdateFactor = 0.005f;
+    CurveSampleCallback _curveSampleCallback = nullptr;
+    void* _curveSampleCallbackContext = nullptr;
 };

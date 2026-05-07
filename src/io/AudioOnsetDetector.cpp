@@ -200,6 +200,10 @@ bool AudioOnsetDetector::peakActive() const {
     return _peakActive;
 }
 
+float AudioOnsetDetector::peakStrength() const {
+    return _peakStrength;
+}
+
 const char* AudioOnsetDetector::lastTransientRejectReasonName() const {
     switch (_lastTransientRejectReason) {
         case TransientRejectReason::None:

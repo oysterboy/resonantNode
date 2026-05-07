@@ -29,7 +29,17 @@ void AudioSourceI2S::begin() {
     I2S.end();
     I2S.setAllPins(_sckPin, _fsPin, _dataInPin, I2S_PIN_NO_CHANGE, I2S_PIN_NO_CHANGE);
     const int beginResult = I2S.begin(I2S_PHILIPS_MODE, _sampleRate, _bitsPerSample);
-    _started = beginResult != 0;
+    if (beginResult != 0) {
+        // Force mono at the source so the RX stream does not expose the inactive slot as alternating zeros.
+        const esp_err_t monoResult = esp_i2s::i2s_set_clk(
+            static_cast<esp_i2s::i2s_port_t>(0),
+            static_cast<uint32_t>(_sampleRate),
+            static_cast<esp_i2s::i2s_bits_per_sample_t>(_bitsPerSample),
+            esp_i2s::I2S_CHANNEL_MONO);
+        _started = monoResult == ESP_OK;
+    } else {
+        _started = false;
+    }
 }
 
 bool AudioSourceI2S::available() {
@@ -48,6 +58,39 @@ bool AudioSourceI2S::readSample(int& sample, uint32_t& sampleTimeUs) {
     const size_t index = _blockCursor++;
     sample = static_cast<int>(_blockSamples[index]);
     sampleTimeUs = _blockApproxStartMicros + static_cast<uint32_t>(index * _samplePeriodUs);
+    return true;
+}
+
+bool AudioSourceI2S::readRawSample(int& sample, uint32_t& sampleTimeUs) {
+    if (!_started) {
+        recordReadAttempt(0, 0, true);
+        return false;
+    }
+
+    const int bytesPerSample = _bitsPerSample / 8;
+    if (bytesPerSample <= 0) {
+        recordReadAttempt(0, 0, true);
+        return false;
+    }
+
+    const int availableBytes = I2S.available();
+    if (availableBytes < bytesPerSample) {
+        recordReadAttempt(0, 0, false);
+        return false;
+    }
+
+    uint8_t rawBytes[sizeof(int32_t)] = {};
+    const int bytesRead = I2S.read(rawBytes, static_cast<size_t>(bytesPerSample));
+    recordReadAttempt(bytesPerSample, bytesRead, bytesRead <= 0);
+    if (bytesRead < bytesPerSample) {
+        return false;
+    }
+
+    int32_t rawSample = 0;
+    memcpy(&rawSample, rawBytes, static_cast<size_t>(bytesPerSample));
+    sample = static_cast<int>(rawSample);
+    sampleTimeUs = micros();
+    _stats.totalSamplesRead += 1;
     return true;
 }
 

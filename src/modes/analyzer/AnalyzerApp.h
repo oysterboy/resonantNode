@@ -313,6 +313,7 @@ private:
     void updateCaptureQuietStats(unsigned long now);
     void updateCaptureTrial(unsigned long now);
     void finalizeCaptureTrial(unsigned long now);
+    void runRawTrigger(unsigned long toneHz, unsigned long durationMs, unsigned long postMs, unsigned long preMs, unsigned long decim, bool dumpChunks, bool dumpBinary);
     void printAudioSourceSummary() const;
     void printSignalSummary() const;
     void printCaptureHints() const;
@@ -370,6 +371,7 @@ private:
     BaseSession _baseSession;
     SequenceTest _sequenceTest;
     CaptureSession _captureSession;
+    unsigned long _rawCaptureSequenceId = 0;
 
     // Print throttling for the VAL view.
     mutable unsigned long _lastPrintMs = 0;

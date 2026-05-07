@@ -16,3 +16,7 @@ bool AudioSourceAnalog::readSample(int& sample, uint32_t& sampleTimeUs) {
     sampleTimeUs = micros();
     return true;
 }
+
+bool AudioSourceAnalog::readRawSample(int& sample, uint32_t& sampleTimeUs) {
+    return readSample(sample, sampleTimeUs);
+}

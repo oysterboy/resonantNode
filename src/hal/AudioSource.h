@@ -33,6 +33,7 @@ public:
     virtual void begin() = 0;
     virtual bool available() = 0;
     virtual bool readSample(int& sample, uint32_t& sampleTimeUs) = 0;
+    virtual bool readRawSample(int& sample, uint32_t& sampleTimeUs) { return readSample(sample, sampleTimeUs); }
     virtual bool readBlock(AudioBlock& block) { (void)block; return false; }
     virtual unsigned long droppedSamples() const { return 0; }
     virtual unsigned long bufferedSamplesMax() const { return 0; }

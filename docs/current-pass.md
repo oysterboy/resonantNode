@@ -1,89 +1,370 @@
-# Task: Fix I2S MEMS raw sample unpacking / slot selection
+# ResonantNode Refactor Plan — Raw-History Frequency Diagnostic Pass
 
-Context:
-We added RAW dump modes for ResonantNode / Analyzer. Current full CSV RAW dump shows a perfect alternating pattern:
+Current implementation goal:
 
-- 16000 sample rows, indices continuous
-- Every odd index has `raw=0, abs=0`
-- Even indices contain the actual signal, with a few natural zeros
-- `dropped=0` in the latest chunk dump
-- Chunk mode confirms the 100 ms chirp is captured, but full RAW sample output is not valid continuous mono PCM yet
+Add frequency evidence for the current tonal-click / short-beep problem without disturbing the working AMP/transient detector baseline.
 
-Diagnosis:
-The I2S input path is probably dumping two slots/channels while only one slot contains MEMS data:
+This is a diagnostic-first pass.
+
+Behavior must remain unchanged.
+
+---
+
+## Goal
+
+Answer the current technical question:
 
 ```text
-active slot, empty zero slot, active slot, empty zero slot...
+Does a useful target-frequency signal appear near the accepted AMP/transient candidate?
+```
 
-This is likely an I2S slot/channel unpacking issue, not an acoustic/detector issue.
+Do this without:
 
-Goal:
-Fix the I2S audio input path so all downstream code receives contiguous mono samples from the active MEMS slot only.
+```text
+retuning the AMP/transient detector
+rewriting AudioSignal completely
+making frequency evidence control behavior
+building full parallel candidate correlation
+implementing chirp grouping
+```
 
-Do not tune detector parameters.
+---
 
-Do not change behavior logic.
+## Strategy
 
-Do not change the AMP detector thresholds.
+Use the current AMP/transient candidate as the practical event window.
 
-Requirements
-Find the actual I2S read/unpack path used by Analyzer RAW dump and normal analyzer/detector processing.
-Confirm whether the code currently treats stereo/slot data as sequential mono samples.
-Introduce explicit MEMS slot handling:
-selectable slot: left, right, auto
-default can be auto
-auto mode should inspect a short buffer and choose the slot with higher RMS / mean_abs
-log the selected slot
-Ensure the exported mono sample stream is contiguous:
-output sample index 0 = selected slot frame 0
-output sample index 1 = selected slot frame 1
-output sample index 2 = selected slot frame 2
-no empty/padding slot rows
-Preserve sample rate semantics:
-sr=16000 should mean 16000 mono samples per second after slot selection
-samples=16000 should mean 1 second of mono audio, not 8000 real samples plus 8000 zero slots
-Add / keep RAW validation stats:
-zero_count
-odd_zero_count
-even_zero_count
-positive_count
-negative_count
-min
-max
-mean_abs
-rms
-selected slot info
-Update RAW_BEGIN or RAW_INFO to include selected slot and source format, e.g.:
-RAW_INFO i2s_slot_mode=auto selected_slot=left slot_width=32 valid_bits=24 shift=...
-Rerun success criteria:
-full RAW dump has 16000 rows
-indices continuous
-dropped=0
-odd indices are not all zero anymore
-raw contains both positive and negative values
-main chirp still appears around expected timing
-chunk mode still works
-Important constraints
-Keep current AMP/transient detector params frozen.
-Do not “fix” this by just skipping odd samples inside the dump layer if the normal detector path still sees alternating zeros.
-The correction must happen at the shared audio input / sample unpacking layer used by both RAW dump and detector processing.
-Avoid hardcoding only one MEMS model. The fix should tolerate left/right slot differences via config or auto-detection.
-Keep changes minimal and localized.
-Useful current observations
+Add a firmware-owned raw / centered sample history.
 
-Previous full CSV dump:
+On candidate drain, look back into that history and measure frequency evidence over one or more candidate-aligned windows.
 
-every odd sample row was exactly zero
-even rows carried signal
-signal max_abs around 802–904 depending on run
-main 100 ms beep visible around 20–120 ms after trigger
-latest chunk dump reported dropped=0
-chunk_samples=800 at sr=16000 means 50 ms chunks
-late energy around 350–650 ms was visible in chunk mode, but precise acoustic interpretation is blocked until the raw mono stream is fixed
-Output expected from Codex
-Identify the files/functions involved in I2S read/unpack.
-Explain the current bug briefly.
-Patch the code.
-Add diagnostic logging.
-State how to test with RAW full and RAW chunks.
-Do not refactor unrelated architecture.
+```text
+AMP / transient candidate
+→ RawSampleHistory lookup
+→ candidate-window frequency measurement
+→ PatternCandidate
+→ PatternResult
+→ logging only
+```
+
+---
+
+## Pass 1 — Stabilize AudioSignal Boundary
+
+Keep current AMP/transient behavior frozen.
+
+Do only small cleanup.
+
+Tasks:
+
+```text
+preserve current candidate behavior
+ensure candidates carry reliable sample indices
+ensure candidate start / peak / end timing is logged clearly
+add comments marking AudioSignal detector ownership as transitional
+do not add frequency logic directly into AudioSignal
+```
+
+Do not yet extract:
+
+```text
+AmpEnvelopeStream
+OnsetDetector
+TransientDetector
+CandidateBuilder
+```
+
+Rationale:
+
+```text
+AudioSignal currently contains the first AMP/transient implementation.
+That is transitional, but it is also the current working baseline.
+Do not disturb it before frequency diagnostics are understood.
+```
+
+---
+
+## Pass 2 — Add RawSampleHistory
+
+Introduce a firmware-owned ring buffer.
+
+```text
+RawSampleHistory
+- stores centered analysis samples
+- stores sampleIndex
+- keeps about 500 ms of history
+- reports whether a requested window is still available
+```
+
+Feed it from the same processing path that currently sees centered samples.
+
+Do not use I2S/DMA buffers as candidate history.
+
+Architecture:
+
+```text
+I2S / DMA
+→ AudioSourceI2S
+→ AudioBlock
+→ AudioSignal
+→ RawSampleHistory
+→ CandidateWindowAnalyzer
+```
+
+Recommended initial size:
+
+```text
+RAW_HISTORY_MS = 500
+```
+
+At 16 kHz with 16-bit centered samples:
+
+```text
+500 ms = 8000 samples ≈ 16 KB
+```
+
+History lookup must be explicit:
+
+```text
+historyAvailable = true / false
+```
+
+If a requested window is no longer available, log it and do not silently analyze the wrong samples.
+
+---
+
+## Pass 3 — Candidate-Window Frequency Measurement
+
+On candidate drain:
+
+```text
+DetectorCandidate
+→ start / peak / end sample indices
+→ RawSampleHistory lookup
+→ window selection
+→ frequency measurement
+→ FrequencyWindowFeature
+```
+
+Suggested windows:
+
+```text
+early window:
+    candidate onset → onset + 100 ms
+
+peak window:
+    around candidate peak, e.g. peak ± 40 ms
+
+full window:
+    candidate start → candidate end
+```
+
+First implementation may use only:
+
+```text
+early window
+```
+
+Frequency feature should be attached to `PatternCandidate`, not consumed directly by behavior.
+
+Possible fields:
+
+```text
+freqEarly.available
+freqEarly.windowStartSample
+freqEarly.windowEndSample
+freqEarly.targetHz
+freqEarly.targetEnergy
+freqEarly.neighborEnergy
+freqEarly.contrast
+freqEarly.score
+freqEarly.confidence
+```
+
+Use existing frequency math where possible, but do not rely on the live rolling `freqMatchNow` state as proof for a past candidate.
+
+---
+
+## Pass 4 — Logging Only
+
+Log enough to compare AMP candidate facts and frequency-window facts.
+
+Suggested log fields:
+
+```text
+candidateId
+candidate start / peak / end time
+candidate start / peak / end sample
+candidate duration
+candidate peakStrength
+candidate avgStrength
+historyAvailable
+
+freqEarly.available
+freqEarly.score
+freqEarly.targetEnergy
+freqEarly.contrast
+freqEarly.windowStart
+freqEarly.windowEnd
+
+existing live frequency snapshot
+early-vs-live contrast
+```
+
+Do not change:
+
+```text
+PatternResult.valid
+PatternResult.type
+ResonantBehavior decisions
+output timing
+refractory logic
+```
+
+This pass is evidence collection only.
+
+---
+
+## Pass 5 — Evaluate
+
+Use Analyzer / Detection-only runs.
+
+Check:
+
+```text
+Do expected hits show stronger early frequency evidence?
+Do late hits show weaker or shifted frequency evidence?
+Do duplicate candidates have different frequency evidence?
+Does early window perform better than full window?
+Is target frequency evidence stable across distance / placement?
+Is the frequency score robust enough to become classifier input later?
+```
+
+Useful comparisons:
+
+```text
+expected vs late
+expected vs duplicate
+expected vs miss
+early window vs full window
+raw candidate strength vs freq score
+live frequency snapshot vs candidate-window frequency
+```
+
+---
+
+## Pass 6 — Classifier Integration Later
+
+Only after logs show useful separation, allow frequency evidence to affect classification.
+
+Possible later move:
+
+```text
+PatternCandidate
++ freqEarly
+→ PatternDetector
+→ VALID_TONE / VALID_TRANSIENT / INVALID / AMBIGUOUS
+```
+
+Behavior still should not read raw frequency evidence.
+
+Behavior should only consume `PatternResult`.
+
+---
+
+## Later Refactor — Reusable Stream Detectors
+
+After the diagnostic pass, refactor toward reusable stream detectors.
+
+Target architecture:
+
+```text
+AudioSignal
+→ AmpEnvelopeStream
+→ OnsetDetector
+→ TransientDetector
+→ AmpCandidate
+```
+
+```text
+AudioSignal
+→ FrequencyBandStream / TargetBandEnvelope
+→ OnsetDetector
+→ TransientDetector
+→ FreqTransientCandidate
+```
+
+This is the cleaner later path for tonal clicks / short beeps.
+
+Important principle:
+
+```text
+OnsetDetector and TransientDetector should operate on scalar evidence streams.
+They should not be amplitude-only.
+```
+
+Each stream uses its own parameter profile:
+
+```text
+amp.onsetThreshold
+amp.releaseThreshold
+amp.minDurationMs
+amp.maxDurationMs
+
+freq.onsetThreshold
+freq.releaseThreshold
+freq.minDurationMs
+freq.maxDurationMs
+```
+
+This pass should wait until the raw-history diagnostic pass has clarified what frequency evidence is actually useful.
+
+---
+
+## Later / Volatile
+
+Keep these out of the current pass:
+
+```text
+full AudioSignal decomposition
+parallel candidate correlation
+frequency-first runtime behavior
+chirp grouping
+multi-pattern resolver
+family matching
+dense-field ambiguity
+behavior changes based on frequency evidence
+VEKTOR exposure of pattern configuration
+```
+
+---
+
+## Current Decision
+
+```text
+A now:
+    AMP/transient candidate + raw-history frequency measurement.
+
+C later:
+    reusable transient detection over FrequencyBandStream.
+
+B later/volatile:
+    parallel AmpCandidate + FreqCandidate correlation.
+```
+
+Tradeoff summary:
+
+```text
+A = most RAM, least architecture disruption
+B = most bookkeeping, highest premature-abstraction risk
+C = best long-term stream architecture, more refactor cost
+```
+
+Recommended sequence:
+
+```text
+A now
+C next
+B later if needed
+```
+

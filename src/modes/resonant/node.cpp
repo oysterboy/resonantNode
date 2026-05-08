@@ -422,6 +422,7 @@ void Node::update() {
                 DetectionPipeline::PatternResult patternResult;
                 const auto liveFrequencyEvidence = captureFrequencyEvidence();
                 DetectionPipeline::FrequencyEvidence frequencyEvidence = liveFrequencyEvidence;
+                DetectionPipeline::FrequencyEvidence fullFrequencyEvidence = liveFrequencyEvidence;
                 DetectionPipeline::measureCandidateWindowFrequency(
                     _audioSignal,
                     candidate,
@@ -429,7 +430,16 @@ void Node::update() {
                     _audioFrequencyDetector.targetFrequencyHz(),
                     now,
                     frequencyEvidence);
+                DetectionPipeline::measureCandidateWindowFrequency(
+                    _audioSignal,
+                    candidate,
+                    _audioSource.sampleRateHz() > 0 ? _audioSource.sampleRateHz() : 16000UL,
+                    _audioFrequencyDetector.targetFrequencyHz(),
+                    now,
+                    fullFrequencyEvidence,
+                    candidate.durationMs);
                 const bool patternValid = DetectionPipeline::processDetectorCandidate(candidate, patternResult, now, &frequencyEvidence);
+                patternResult.candidate.frequencyFull = fullFrequencyEvidence;
                 const auto behaviorDecision = _behavior.handlePatternResult(patternResult, now);
 
                 if (patternValid && behaviorDecision == ResonantBehavior::BehaviorDecision::ConsumedPattern) {
@@ -528,6 +538,7 @@ void Node::update() {
                 DetectionPipeline::PatternResult patternResult;
                 const auto liveFrequencyEvidence = captureFrequencyEvidence();
                 DetectionPipeline::FrequencyEvidence frequencyEvidence = liveFrequencyEvidence;
+                DetectionPipeline::FrequencyEvidence fullFrequencyEvidence = liveFrequencyEvidence;
                 DetectionPipeline::measureCandidateWindowFrequency(
                     _audioSignal,
                     candidate,
@@ -535,7 +546,16 @@ void Node::update() {
                     _audioFrequencyDetector.targetFrequencyHz(),
                     now,
                     frequencyEvidence);
+                DetectionPipeline::measureCandidateWindowFrequency(
+                    _audioSignal,
+                    candidate,
+                    _audioSource.sampleRateHz() > 0 ? _audioSource.sampleRateHz() : 16000UL,
+                    _audioFrequencyDetector.targetFrequencyHz(),
+                    now,
+                    fullFrequencyEvidence,
+                    candidate.durationMs);
                 const bool patternValid = DetectionPipeline::processDetectorCandidate(candidate, patternResult, now, &frequencyEvidence);
+                patternResult.candidate.frequencyFull = fullFrequencyEvidence;
                 const auto behaviorDecision = _behavior.handlePatternResult(patternResult, now);
 
                 if (patternValid && behaviorDecision == ResonantBehavior::BehaviorDecision::ConsumedPattern) {
@@ -906,43 +926,29 @@ void Node::logCandidate(const DetectorCandidate& candidate, const DetectionPipel
     }
     Serial.print(" freq_valid_window=");
     Serial.print(patternResult.candidate.frequency.validWindow ? 1 : 0);
-    Serial.print(" freqEarly_available=");
+    Serial.print(" freqEarly[avail=");
     Serial.print(patternResult.candidate.frequency.windowAvailable ? 1 : 0);
-    Serial.print(" freqEarly_window_start_sample=");
-    Serial.print(patternResult.candidate.frequency.windowStartSample);
-    Serial.print(" freqEarly_window_end_sample=");
-    Serial.print(patternResult.candidate.frequency.windowEndSample);
-    Serial.print(" freqEarly_window_samples=");
-    Serial.print(patternResult.candidate.frequency.windowSampleCount);
-    Serial.print(" freqEarly_score=");
+    Serial.print(" score=");
     Serial.print(patternResult.candidate.frequency.score, 1);
-    Serial.print(" freqEarly_target_power=");
-    Serial.print(patternResult.candidate.frequency.targetPower, 1);
-    Serial.print(" freqEarly_neighbor_power=");
-    Serial.print(patternResult.candidate.frequency.neighborPower, 1);
-    Serial.print(" freqEarly_total_energy=");
-    Serial.print(patternResult.candidate.frequency.totalEnergy, 1);
-    Serial.print(" freqEarly_contrast=");
+    Serial.print(" target=");
+    Serial.print(patternResult.candidate.frequency.targetHz);
+    Serial.print(" contrast=");
     Serial.print(patternResult.candidate.frequency.spectralContrast, 2);
-    Serial.print(" freq_window_available=");
-    Serial.print(patternResult.candidate.frequency.windowAvailable ? 1 : 0);
-    Serial.print(" freq_window_start_sample=");
-    Serial.print(patternResult.candidate.frequency.windowStartSample);
-    Serial.print(" freq_window_end_sample=");
-    Serial.print(patternResult.candidate.frequency.windowEndSample);
-    Serial.print(" freq_window_samples=");
+    Serial.print(" win=");
     Serial.print(patternResult.candidate.frequency.windowSampleCount);
+    Serial.print("]");
     if (liveFrequencyEvidence != nullptr) {
-        Serial.print(" live_freq_present=");
+        Serial.print(" liveFreq[avail=");
         Serial.print(liveFrequencyEvidence->present ? 1 : 0);
-        Serial.print(" live_freq_score=");
+        Serial.print(" score=");
         Serial.print(liveFrequencyEvidence->score, 1);
-        Serial.print(" live_freq_target_hz=");
+        Serial.print(" target=");
         Serial.print(liveFrequencyEvidence->targetHz);
-        Serial.print(" live_freq_contrast=");
+        Serial.print(" contrast=");
         Serial.print(liveFrequencyEvidence->spectralContrast, 2);
-        Serial.print(" live_freq_observed_at_ms=");
+        Serial.print(" obs=");
         Serial.print(liveFrequencyEvidence->observedAtMs);
+        Serial.print("]");
     }
     Serial.print(" reason=");
     Serial.print(DetectionPipeline::patternReasonName(patternResult.reasonCode));

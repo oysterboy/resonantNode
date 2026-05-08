@@ -57,6 +57,32 @@ private:
             CandidateOrigin origin = CandidateOrigin::InWindow;
         };
 
+        struct TrialReport {
+            unsigned long trialNumber = 0;
+            unsigned long startMs = 0;
+            unsigned long endMs = 0;
+            long dtMs = -1;
+            long durMs = -1;
+            float strength = 0.0f;
+            unsigned long duplicates = 0;
+
+            bool bestCandidateValid = false;
+            unsigned long bestCandidateDtFromTriggerMs = 0;
+            unsigned long bestCandidateDurationMs = 0;
+            float bestCandidateStrength = 0.0f;
+            CandidateOrigin bestCandidateOrigin = CandidateOrigin::InWindow;
+            unsigned long candidateCount = 0;
+            unsigned long candidateOverflowCount = 0;
+            unsigned long candidatePreWindowCount = 0;
+            unsigned long candidateInWindowCount = 0;
+            unsigned long candidatePostWindowCount = 0;
+
+            DetectionPipeline::FrequencyEvidence freqEarly = {};
+            DetectionPipeline::FrequencyEvidence freqFull = {};
+
+            char result[16] = {};
+        };
+
         struct TrialDiagnostics {
             bool onsetSeen = false;
             bool transientAccepted = false;
@@ -70,11 +96,13 @@ private:
             float acceptedTransientReleaseStrength = 0.0f;
             float acceptedAmbientBaseline = 0.0f;
             DetectionPipeline::FrequencyEvidence acceptedFrequencyEvidence = {};
+            DetectionPipeline::FrequencyEvidence acceptedFrequencyEvidenceFull = {};
             unsigned long acceptedFrequencyProcessedAtMs = 0;
             unsigned long duplicateTransientMs = 0;
             float duplicateTransientStrength = 0.0f;
             unsigned long duplicateTransientDurationMs = 0;
             DetectionPipeline::FrequencyEvidence duplicateFrequencyEvidence = {};
+            DetectionPipeline::FrequencyEvidence duplicateFrequencyEvidenceFull = {};
             unsigned long duplicateFrequencyProcessedAtMs = 0;
             long duplicateDeltaFromPrimaryMs = 0;
             bool duplicateOriginWindow = false;
@@ -157,6 +185,7 @@ private:
         unsigned long sampleDumpNextEmitMs = 0;
         static constexpr size_t kMaxSampleHistory = 256;
         static constexpr size_t kMaxSampleRows = 2048;
+        static constexpr size_t kMaxTrialReports = 128;
         CurveSnapshot sampleHistory[kMaxSampleHistory] = {};
         size_t sampleHistoryStart = 0;
         size_t sampleHistoryCount = 0;
@@ -165,6 +194,9 @@ private:
         CurveSnapshot sampleHistoryPending = {};
         CurveSnapshot sampleRows[kMaxSampleRows] = {};
         size_t sampleRowCount = 0;
+        mutable TrialReport* trialReports = nullptr;
+        mutable size_t trialReportCapacity = 0;
+        mutable size_t trialReportCount = 0;
 
         unsigned long startedAtMs = 0;
         unsigned long nextTriggerAtMs = 0;
@@ -321,7 +353,9 @@ private:
     void printTransientAcceptedDebug(unsigned long now, float strength, unsigned long durationMs) const;
     void printTransientStatsDebug(unsigned long now) const;
     void printSequenceTrialDebug(unsigned long trialNumber, const char* result, const SequenceTest::TrialDiagnostics& diagnostics) const;
+    void printSequenceTrialReports() const;
     void printSequenceTrialResult(unsigned long trialNumber, const char* result, long dtMs, long durMs, float strength, bool audioOverflow, unsigned long duplicateCount, const SequenceTest::TrialDiagnostics& diagnostics) const;
+    void printSequenceFinalOutput() const;
     void printSequenceSummary() const;
     void handleSequenceCandidate(const DetectionPipeline::PatternResult& patternResult, unsigned long queueDepthBeforeDrain, const DetectionPipeline::FrequencyEvidence* liveFrequencyEvidence = nullptr);
     void updateSequenceAmbientStats();

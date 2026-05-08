@@ -3,12 +3,33 @@
 ## Changelog Rules
 
 - Record every commit in a dated and named section (including commit id)
-- Keep `Unreleased` as the staging area for notes that will move into the next commit section.
-- When committing, move any `Unreleased` note into the dated and named commit section.
+- Keep `Changes Since Last Commit` as the staging area for notes that will move into the next commit section.
+- When committing, move any `Changes Since Last Commit` note into the dated and named commit section.
 - Keep `Known Issues` as a live rollover list.
 - When a new commit lands, recheck each known issue and move it to `Fixed` if it is resolved.
 - Leave only unresolved items in `Known Issues`.
 - Keep this file historical and factual; use `docs/current-pass.md` for active work.
+
+## Changes Since Last Commit
+
+### Changed
+- Pass 1 stabilized `AudioSignal` ownership comments around the transient detector boundary without changing detector behavior.
+- Pass 2 added a bounded centered-sample history to `AudioSignal` and exposed readback helpers for candidate-window analysis.
+- Pass 3 added a candidate-window frequency probe over the raw history and threaded it into Analyzer and Resonant.
+- Pass 4 made the early-window result explicit in logs as `freqEarly_*` alongside the live rolling frequency snapshot.
+- The sequence log vocabulary now uses `report` for the end-of-seq verbose dump and `liveraw` for noisy live diagnostics, with older aliases still accepted for compatibility.
+- `SEQ stop` now flushes the stored per-trial verbose report before shutdown, so the full comparison dump is available both at natural completion and manual stop.
+- The compact `SEQ_TRIAL` line now includes `freqEarly`, `freqFull`, and `full_ratio` so the early-vs-full comparison stays visible during live runs.
+- Analyzer and Resonant candidate logs now include `onset_sample`, `peak_sample`, `release_sample`, and `peak_ms` so timing diagnostics use one vocabulary.
+- Analyzer `SEQ help` now lists the accepted `SEQ` inputs and the main output fields in serial form.
+
+### Verification
+- `platformio run -e esp32dev-analyzer`
+
+### Notes
+- This section is the rolling staging area for notes since the last commit.
+- After the next commit, move these notes under that commit's dated heading and update the commit id.
+- The current pass work remains log-only; behavior and `PatternResult.valid` are unchanged.
 
 ## 2026-05-06 - H2: Frequency Evidence Observer
 

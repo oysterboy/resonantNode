@@ -79,6 +79,7 @@ struct PatternCandidate {
 
     TransientEvidence transient;
     FrequencyEvidence frequency;
+    FrequencyEvidence frequencyFull;
 };
 
 struct PatternResult {

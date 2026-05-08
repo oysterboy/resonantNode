@@ -47,12 +47,14 @@ public:
     void update(bool transientDetected, float transientStrength, unsigned long now);
 
     void setDetectionOnly(bool value);
+    void setRequireTonalForBehavior(bool value);
     void setWaitAfterTransientMs(unsigned long value);
     void setRefractoryAfterEmitMs(unsigned long value);
     void setIdleTimeoutMs(unsigned long value);
     unsigned long waitAfterTransientMs() const;
     unsigned long refractoryAfterEmitMs() const;
     unsigned long idleTimeoutMs() const;
+    bool requireTonalForBehavior() const;
 
     // state output (for debug / LED)
     float activity() const;
@@ -130,6 +132,7 @@ private:
     BehaviorDecision _lastDecision = BehaviorDecision::None;
     BehaviorDecision _lastBlockReason = BehaviorDecision::None;
     bool _detectionOnly = false;
+    bool _requireTonalForBehavior = false;
     bool _wouldEmit = false;
     bool _outputBusy = false;
 

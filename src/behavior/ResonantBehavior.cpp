@@ -20,7 +20,7 @@ ResonantBehavior::BehaviorDecision ResonantBehavior::handlePatternResult(const D
     _wouldEmit = false;
     _outputBusy = _state == State::Chirping;
 
-    if (!result.valid) {
+    if (!result.candidateValid) {
         if (result.type == DetectionPipeline::PatternType::Ambiguous) {
             _lastDecision = BehaviorDecision::IgnoredAmbiguousPattern;
             _lastBlockReason = BehaviorDecision::IgnoredAmbiguousPattern;
@@ -34,10 +34,16 @@ ResonantBehavior::BehaviorDecision ResonantBehavior::handlePatternResult(const D
         return _lastDecision;
     }
 
-    if (result.type != DetectionPipeline::PatternType::ValidTransient) {
+    if (result.type == DetectionPipeline::PatternType::Ambiguous) {
         _lastDecision = BehaviorDecision::IgnoredAmbiguousPattern;
         _lastBlockReason = BehaviorDecision::IgnoredAmbiguousPattern;
         _patternsIgnoredAmbiguous++;
+        return _lastDecision;
+    }
+
+    if (_requireTonalForBehavior && !result.behaviorEligible) {
+        _lastDecision = BehaviorDecision::UnknownBlocked;
+        _lastBlockReason = BehaviorDecision::UnknownBlocked;
         return _lastDecision;
     }
 
@@ -197,6 +203,7 @@ void ResonantBehavior::resetState() {
     _lastDecision = BehaviorDecision::None;
     _lastBlockReason = BehaviorDecision::None;
     _detectionOnly = false;
+    _requireTonalForBehavior = false;
     _wouldEmit = false;
     _outputBusy = false;
     _chirpRequested = false;
@@ -223,6 +230,10 @@ void ResonantBehavior::update(bool transientDetected, float transientStrength, u
 
 void ResonantBehavior::setDetectionOnly(bool value) {
     _detectionOnly = value;
+}
+
+void ResonantBehavior::setRequireTonalForBehavior(bool value) {
+    _requireTonalForBehavior = value;
 }
 
 // --- outputs ---
@@ -316,6 +327,10 @@ unsigned long ResonantBehavior::selfChirpIgnoreRemainingMs(unsigned long now) co
 
 bool ResonantBehavior::detectionOnly() const {
     return _detectionOnly;
+}
+
+bool ResonantBehavior::requireTonalForBehavior() const {
+    return _requireTonalForBehavior;
 }
 
 bool ResonantBehavior::outputBusy() const {

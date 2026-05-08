@@ -1,370 +1,630 @@
-# ResonantNode Refactor Plan — Raw-History Frequency Diagnostic Pass
-
-Current implementation goal:
-
-Add frequency evidence for the current tonal-click / short-beep problem without disturbing the working AMP/transient detector baseline.
-
-This is a diagnostic-first pass.
-
-Behavior must remain unchanged.
-
----
+# Pass 6 — Classifier Integration Refactor Plan
 
 ## Goal
 
-Answer the current technical question:
+Move frequency validation from logging-only diagnostics into the shared classification layer.
 
-```text
-Does a useful target-frequency signal appear near the accepted AMP/transient candidate?
-```
+The frequency knobs already exist:
 
-Do this without:
+- `freqScore = 50000`
+- `freqContrast = 20.0`
 
-```text
-retuning the AMP/transient detector
-rewriting AudioSignal completely
-making frequency evidence control behavior
-building full parallel candidate correlation
-implementing chirp grouping
-```
+Defined in:
+
+- `src/detection/FrequencyEvidenceEvaluation.h`
+
+Accepted in:
+
+- `AnalyzerApp.cpp`
+- `node.cpp`
+
+Status:
+
+- `PatternResult` classification already uses `freqScore` and `freqContrast`.
+- Analyzer now tracks classifier-level counts separately from the old AMP counters.
+- ResonantBehavior can require tonal validity at runtime with `RB BEHAV requireTonal=1`.
+- Both `esp32dev` and `esp32dev-analyzer` compile cleanly with the current changes.
 
 ---
 
-## Strategy
+## Core Rule
 
-Use the current AMP/transient candidate as the practical event window.
+Do not integrate frequency validation into the low-level AMP/transient detector.
 
-Add a firmware-owned raw / centered sample history.
-
-On candidate drain, look back into that history and measure frequency evidence over one or more candidate-aligned windows.
+Keep this separation:
 
 ```text
-AMP / transient candidate
-→ RawSampleHistory lookup
-→ candidate-window frequency measurement
-→ PatternCandidate
+AMP / transient detector
+→ DetectorCandidate
+→ FrequencyEvidence
+→ PatternClassifier
 → PatternResult
-→ logging only
+→ Analyzer / ResonantBehavior
+```
+
+The detector answers:
+
+```text
+Was there a transient candidate?
+```
+
+The classifier answers:
+
+```text
+What kind of candidate is this?
 ```
 
 ---
 
-## Pass 1 — Stabilize AudioSignal Boundary (Complete)
+## Non-Goals
 
-Keep current AMP/transient behavior frozen.
+Do not:
 
-Do only small cleanup.
+- tune AMP thresholds
+- change onset / release thresholds
+- change cooldown
+- change min/max transient duration
+- change `minStrength`
+- change the frequency probe algorithm
+- implement FFT
+- implement full chirp grouping
+- implement family matching
+- implement overlap dominance
+- remove transient-first path
+- hide rejected/weak candidates from logs
 
-Tasks:
+---
+
+## Desired Result
+
+A candidate should no longer be only:
 
 ```text
-preserve current candidate behavior
-ensure candidates carry reliable sample indices
-ensure candidate start / peak / end timing is logged clearly
-add comments marking AudioSignal detector ownership as transitional
-do not add frequency logic directly into AudioSignal
+accepted transient
 ```
 
-Do not yet extract:
+It should become something like:
 
 ```text
-AmpEnvelopeStream
-OnsetDetector
-TransientDetector
-CandidateBuilder
+candidateValid = true
+tonalValid = true
+behaviorEligible = true
+patternType = valid_tonal_chirp
+reason = freq_score_and_contrast_ok
 ```
 
-Rationale:
+or:
 
 ```text
-AudioSignal currently contains the first AMP/transient implementation.
-That is transitional, but it is also the current working baseline.
-Do not disturb it before frequency diagnostics are understood.
+candidateValid = true
+tonalValid = false
+behaviorEligible = false
+patternType = transient_only
+reason = freq_score_and_contrast_too_low
+```
+
+Important distinction:
+
+```text
+candidate rejected
+```
+
+is not the same as:
+
+```text
+candidate exists but is not tonal-valid
+```
+
+Duplicates and residual acoustic activity should remain visible in logs.
+
+---
+
+## Step 1 — Centralize Frequency Threshold Evaluation DONE
+
+Add one central place where frequency evidence is evaluated against tuning.
+
+Avoid duplicating this logic in multiple log callsites.
+Avoid duplicating it  for Analyser and node/Resonantbehavior 
+
+Suggested struct:
+
+```cpp
+struct FrequencyEvidence {
+    bool present = false;
+    bool validWindow = false;
+
+    float score = 0.0f;
+    float contrast = 0.0f;
+
+    float targetHz = 0.0f;
+    float targetPower = 0.0f;
+    float neighborPower = 0.0f;
+    float totalEnergy = 0.0f;
+
+    uint32_t observedAtMs = 0;
+    uint32_t ageMs = 0;
+
+    bool scoreOk = false;
+    bool contrastOk = false;
+    bool matched = false;
+
+    PatternRejectReason reason = PatternRejectReason::None;
+};
+```
+
+Evaluation rule:
+
+```cpp
+scoreOk = score >= tuning.freqScore;
+contrastOk = contrast >= tuning.freqContrast;
+matched = present && validWindow && scoreOk && contrastOk;
+```
+
+Reason logic:
+
+```cpp
+if (!present) reason = NoFrequencyEvidence;
+else if (!validWindow) reason = FrequencyWindowInvalid;
+else if (!scoreOk && !contrastOk) reason = FrequencyScoreAndContrastTooLow;
+else if (!scoreOk) reason = FrequencyScoreTooLow;
+else if (!contrastOk) reason = FrequencyContrastTooLow;
+else reason = None;
 ```
 
 ---
 
-## Pass 2 — Add RawSampleHistory (Complete)
+## Step 2 — Add Explicit Pattern Reasons DONE
 
-Introduce a firmware-owned ring buffer.
+Use enum internally.  
+Stringify only for logs.
 
-```text
-RawSampleHistory
-- stores centered analysis samples
-- stores sampleIndex
-- keeps about 500 ms of history
-- reports whether a requested window is still available
+Suggested enum:
+
+```cpp
+enum class PatternRejectReason {
+    None,
+
+    NoCandidate,
+
+    NoFrequencyEvidence,
+    FrequencyWindowInvalid,
+    FrequencyScoreTooLow,
+    FrequencyContrastTooLow,
+    FrequencyScoreAndContrastTooLow,
+
+    TransientOnly,
+    DuplicateAfterPrimary,
+    UnexpectedTiming,
+    UnexpectedNoise
+};
 ```
 
-Feed it from the same processing path that currently sees centered samples.
-
-Do not use I2S/DMA buffers as candidate history.
-
-Architecture:
+Suggested log strings:
 
 ```text
-I2S / DMA
-→ AudioSourceI2S
-→ AudioBlock
-→ AudioSignal
-→ RawSampleHistory
-→ CandidateWindowAnalyzer
+none
+no_candidate
+no_frequency_evidence
+frequency_window_invalid
+freq_score_too_low
+freq_contrast_too_low
+freq_score_and_contrast_too_low
+transient_only
+duplicate_after_primary
+unexpected_timing
+unexpected_noise
 ```
-
-Recommended initial size:
-
-```text
-RAW_HISTORY_MS = 500
-```
-
-At 16 kHz with 16-bit centered samples:
-
-```text
-500 ms = 8000 samples ≈ 16 KB
-```
-
-History lookup must be explicit:
-
-```text
-historyAvailable = true / false
-```
-
-If a requested window is no longer available, log it and do not silently analyze the wrong samples.
 
 ---
 
-## Pass 3 — Candidate-Window Frequency Measurement (Complete)
+## Step 3 — Extend PatternResult DONE
 
-On candidate drain:
+PatternResult should expose separate facts:
 
-```text
-DetectorCandidate
-→ start / peak / end sample indices
-→ RawSampleHistory lookup
-→ window selection
-→ frequency measurement
-→ FrequencyWindowFeature
+```cpp
+struct PatternResult {
+    bool candidateValid = false;      // AMP/transient candidate exists
+    bool tonalValid = false;          // frequency evidence passed thresholds
+    bool behaviorEligible = false;    // allowed to trigger behavior
+
+    PatternType type = PatternType::None;
+    PatternRejectReason reason = PatternRejectReason::None;
+
+    DetectorCandidate candidate;
+    FrequencyEvidence freq;
+};
 ```
 
-Suggested windows:
+Suggested PatternType:
 
-```text
-early window:
-    candidate onset → onset + 100 ms
+```cpp
+enum class PatternType {
+    None,
 
-peak window (not implemented):
-    around candidate peak, e.g. peak ± 40 ms
+    ValidTransient,
+    ValidTonalChirp,
 
-full window (not implemented):
-    candidate start → candidate end
+    TransientOnly,
+    FrequencyWeak,
+
+    DuplicateAfterPrimary,
+    UnexpectedNoise
+};
 ```
 
-First implementation may use only:
+Classification rule:
 
 ```text
-early window
+candidateValid = accepted AMP/transient candidate
+tonalValid = frequency evidence matched thresholds
+behaviorEligible = candidateValid && tonalValid
 ```
 
-Frequency feature should be attached to `PatternCandidate`, not consumed directly by behavior.
-
-Possible fields:
-
-```text
-freqEarly.available
-freqEarly.windowStartSample
-freqEarly.windowEndSample
-freqEarly.targetHz
-freqEarly.targetEnergy
-freqEarly.neighborEnergy
-freqEarly.contrast
-freqEarly.score
-freqEarly.confidence
-```
-
-Use existing frequency math where possible, but do not rely on the live rolling `freqMatchNow` state as proof for a past candidate.
+For now, avoid making `patternValid` ambiguous.  
+Prefer explicit flags.
 
 ---
 
-## Pass 4 — Logging Only (Complete)
+## Step 4 — Classifier Logic DONE
 
-Log enough to compare AMP candidate facts and frequency-window facts.
+Pseudo-flow:
 
-Suggested log fields:
+```cpp
+PatternResult classifyCandidate(
+    const DetectorCandidate& candidate,
+    const FrequencyEvidence& freq,
+    const ClassifierTuning& tuning
+) {
+    PatternResult result;
 
-```text
-candidateId
-candidate start / peak / end time
-candidate start / peak / end sample
-candidate duration
-candidate peakStrength
-candidate avgStrength
-historyAvailable
+    result.candidate = candidate;
+    result.freq = evaluateFrequency(freq, tuning);
 
-freqEarly.available
-freqEarly.score
-freqEarly.targetEnergy
-freqEarly.contrast
-freqEarly.windowStart
-freqEarly.windowEnd
+    result.candidateValid = candidate.accepted;
 
-existing live frequency snapshot
-early-vs-live contrast
+    if (!result.candidateValid) {
+        result.type = PatternType::None;
+        result.reason = PatternRejectReason::NoCandidate;
+        return result;
+    }
+
+    result.tonalValid = result.freq.matched;
+
+    if (result.tonalValid) {
+        result.type = PatternType::ValidTonalChirp;
+        result.reason = PatternRejectReason::None;
+        result.behaviorEligible = true;
+    } else {
+        result.type = PatternType::TransientOnly;
+        result.reason = result.freq.reason;
+        result.behaviorEligible = false;
+    }
+
+    return result;
+}
 ```
 
-Do not change:
-
-```text
-PatternResult.valid
-PatternResult.type
-ResonantBehavior decisions
-output timing
-refractory logic
-```
-
-This pass is evidence collection only.
+Important: this should happen after candidate extraction, not inside the AMP detector.
 
 ---
 
-## Pass 5 — Evaluate
+## Step 5 — Fix Frequency Logging Semantics DONE
 
-Use Analyzer / Detection-only runs.
+Current problem:
+
+```text
+freq_present=1
+freq_matched=0
+freq_conf=0.0
+freq_score=700000
+freq_contrast=1200
+```
+
+Status:
+
+- Implemented in `AnalyzerApp.cpp` and `node.cpp`.
+- The candidate headline logs now print the classified `patternResult.freq` snapshot, so `freq_matched`, `freq_conf`, and related fields line up with the classifier result instead of the raw detector-only struct.
+- Both `esp32dev` and `esp32dev-analyzer` compile cleanly with this change.
+
+After this pass, strong primary candidates should log:
+
+```text
+freq_present=1
+freq_valid_window=1
+freq_score=700000
+freq_contrast=1200
+freq_score_ok=1
+freq_contrast_ok=1
+freq_matched=1
+pattern_type=valid_tonal_chirp
+behavior_eligible=1
+```
+
+Weak duplicates should log:
+
+```text
+freq_present=1
+freq_valid_window=1
+freq_score=0.3
+freq_contrast=1.6
+freq_score_ok=0
+freq_contrast_ok=0
+freq_matched=0
+pattern_type=transient_only
+pattern_reason=freq_score_and_contrast_too_low
+behavior_eligible=0
+```
+
+---
+
+## Step 6 — Analyzer Integration DONE - NEEDS TESTING
+
+Analyzer / SEQ should continue to preserve old AMP-based metrics:
+
+```text
+expected_hits
+late_hits
+misses
+unexpected
+duplicates
+valid_primary
+```
+
+Add classifier-level counters separately:
+
+```text
+tonal_expected
+transient_only_expected
+tonal_duplicates
+non_tonal_duplicates
+tonal_unexpected
+non_tonal_unexpected
+
+freq_reject_score
+freq_reject_contrast
+freq_reject_both
+freq_reject_no_evidence
+freq_reject_invalid_window
+```
+
+Suggested output:
+
+```text
+SEQ_SUMMARY ...
+SEQ_CLASS_SUMMARY tonal_expected=...
+                  transient_only_expected=...
+                  tonal_duplicates=...
+                  non_tonal_duplicates=...
+                  freq_reject_score=...
+                  freq_reject_contrast=...
+                  freq_reject_both=...
+```
+
+This keeps old test results comparable while adding classifier validation.
+
+---
+
+## Step 7 — ResonantBehavior Integration
+
+Do not immediately make behavior depend permanently on tonal validity.
+
+Add a switch:
+
+```cpp
+bool requireTonalForBehavior = false;
+```
+
+or runtime param:
+
+```text
+requireTonal=0/1
+```
+
+Default for first test:
+
+```text
+requireTonal=0
+```
+
+Status:
+
+- `RB BEHAV requireTonal=0/1` is implemented.
+- When `requireTonal=1`, blocked candidates log `RB_BLOCK reason=...` with the classifier reject reason.
+
+Expected behavior:
+
+```text
+requireTonal=0:
+  RB behaves as before, but logs tonal classification.
+
+requireTonal=1:
+  RB only reacts to candidates with behaviorEligible=true.
+```
+
+Blocked candidates should log explicit reasons:
+
+```text
+RB_BLOCK reason=freq_score_too_low
+RB_BLOCK reason=freq_contrast_too_low
+RB_BLOCK reason=freq_score_and_contrast_too_low
+RB_BLOCK reason=transient_only
+```
+
+---
+
+## Step 8 — Test Order
+
+### 1. Compile only
 
 Check:
 
 ```text
-Do expected hits show stronger early frequency evidence?
-Do late hits show weaker or shifted frequency evidence?
-Do duplicate candidates have different frequency evidence?
-Does early window perform better than full window?
-Is target frequency evidence stable across distance / placement?
-Is the frequency score robust enough to become classifier input later?
+AnalyzerApp.cpp
+node.cpp
+shared classifier files
 ```
 
-Useful comparisons:
+No behavior change expected yet.
+
+---
+
+### 2. Analyzer run, 20 trials
+
+Look for:
 
 ```text
-expected vs late
-expected vs duplicate
-expected vs miss
-early window vs full window
-raw candidate strength vs freq score
-live frequency snapshot vs candidate-window frequency
+strong primaries:
+  freq_matched=1
+  tonalValid=1
+  behaviorEligible=1
+
+duplicates:
+  freq_matched=0
+  tonalValid=0
+  behaviorEligible=0
 ```
 
 ---
 
-## Pass 6 — Classifier Integration Later
+### 3. Analyzer run, 100 trials
 
-Only after logs show useful separation, allow frequency evidence to affect classification.
-
-Possible later move:
+Compare old counters:
 
 ```text
-PatternCandidate
-+ freqEarly
-→ PatternDetector
-→ VALID_TONE / VALID_TRANSIENT / INVALID / AMBIGUOUS
+expected_hits
+late_hits
+misses
+unexpected
+duplicates
 ```
 
-Behavior still should not read raw frequency evidence.
-
-Behavior should only consume `PatternResult`.
-
----
-
-## Later Refactor — Reusable Stream Detectors
-
-After the diagnostic pass, refactor toward reusable stream detectors.
-
-Target architecture:
+Then inspect new counters:
 
 ```text
-AudioSignal
-→ AmpEnvelopeStream
-→ OnsetDetector
-→ TransientDetector
-→ AmpCandidate
+tonal_expected
+non_tonal_duplicates
+freq_reject_*
 ```
 
-```text
-AudioSignal
-→ FrequencyBandStream / TargetBandEnvelope
-→ OnsetDetector
-→ TransientDetector
-→ FreqTransientCandidate
-```
-
-This is the cleaner later path for tonal clicks / short beeps.
-
-Important principle:
+Expected result:
 
 ```text
-OnsetDetector and TransientDetector should operate on scalar evidence streams.
-They should not be amplitude-only.
-```
-
-Each stream uses its own parameter profile:
-
-```text
-amp.onsetThreshold
-amp.releaseThreshold
-amp.minDurationMs
-amp.maxDurationMs
-
-freq.onsetThreshold
-freq.releaseThreshold
-freq.minDurationMs
-freq.maxDurationMs
-```
-
-This pass should wait until the raw-history diagnostic pass has clarified what frequency evidence is actually useful.
-
----
-
-## Later / Volatile
-
-Keep these out of the current pass:
-
-```text
-full AudioSignal decomposition
-parallel candidate correlation
-frequency-first runtime behavior
-chirp grouping
-multi-pattern resolver
-family matching
-dense-field ambiguity
-behavior changes based on frequency evidence
-VEKTOR exposure of pattern configuration
+Most expected primaries should be tonal.
+Most duplicates should be non-tonal.
 ```
 
 ---
 
-## Current Decision
+### 4. RB with `requireTonal=0`
+
+Goal: behavior parity.
+
+Expected:
 
 ```text
-A now:
-    AMP/transient candidate + raw-history frequency measurement.
-
-C later:
-    reusable transient detection over FrequencyBandStream.
-
-B later/volatile:
-    parallel AmpCandidate + FreqCandidate correlation.
+RB still reacts similarly to before.
+Logs show tonal classification but do not block behavior.
 ```
 
-Tradeoff summary:
+---
+
+### 5. RB with `requireTonal=1`
+
+Goal: behavior gating test.
+
+Expected:
 
 ```text
-A = most RAM, least architecture disruption
-B = most bookkeeping, highest premature-abstraction risk
-C = best long-term stream architecture, more refactor cost
+Real 3200 Hz chirps can trigger behavior.
+Duplicates / residual amplitude events are blocked.
+Blocked events include readable reasons.
 ```
 
-Recommended sequence:
+---
+
+## Acceptance Criteria
+
+Pass 6 is successful when:
+
+1. `freqScore` and `freqContrast` are used by classifier logic.
+2. Strong real primaries produce:
 
 ```text
-A now
-C next
-B later if needed
+freq_matched=1
+tonalValid=1
 ```
 
+3. Weak duplicates/noise produce:
+
+```text
+freq_matched=0
+tonalValid=0
+```
+
+4. PatternResult exposes:
+
+```text
+candidateValid
+tonalValid
+behaviorEligible
+reason
+```
+
+5. Analyzer keeps old AMP/SEQ counters.
+6. Analyzer adds classifier counters.
+7. RB can optionally require tonal validity.
+8. RB logs explicit block reasons.
+9. AMP/transient detector behavior remains unchanged.
+
+---
+
+## Risk Notes
+
+Main risk:
+
+```text
+Accidentally turning this into a detector refactor.
+```
+
+Avoid by keeping frequency validation after candidate extraction.
+
+Second risk:
+
+```text
+Making candidates disappear from logs.
+```
+
+Avoid by keeping non-tonal candidates visible as classified candidates.
+
+Third risk:
+
+```text
+Breaking comparability with previous SEQ runs.
+```
+
+Avoid by keeping old SEQ counters and adding new classifier counters separately.
+
+---
+
+## Estimated Effort
+
+Best case:
+
+```text
+2–4 hours
+```
+
+Realistic:
+
+```text
+4–8 hours
+```
+
+If shared classifier paths are messy:
+
+```text
+1–2 days
+```
+
+The likely time sink is not the threshold logic itself.  
+It is keeping Analyzer, RB, logs, and PatternResult semantics aligned.

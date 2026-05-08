@@ -7,7 +7,7 @@
 #include "../../hal/AudioSourceAnalog.h"
 #include "../../hal/AudioSourceI2S.h"
 #include "../../detection/DetectionPipeline.h"
-#include "../../detection/FrequencyLoggingTuning.h"
+#include "../../detection/FrequencyEvidenceEvaluation.h"
 #include "../../hal/PiezoToneOutputBTL.h"
 #include "../../hal/PiezoToneOutput.h"
 #include "../../io/AudioFrequencyDetector.h"
@@ -97,7 +97,7 @@ private:
     AudioSignal _audioSignal;
     AudioFrequencyDetector _audioFrequencyDetector;
     AudioOnsetDetector _audioOnsetDetector;
-    FrequencyLoggingTuning::Values _frequencyLoggingTuning = {};
+    FrequencyEvidenceEvaluation::Values _frequencyEvidenceTuning = {};
     ResonantBehavior _behavior;
     PiezoToneOutput _toneOutput;
     PiezoToneOutputBTL _toneOutputBTL;

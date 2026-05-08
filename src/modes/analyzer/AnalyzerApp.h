@@ -9,7 +9,7 @@
 #include "../../io/AudioOnsetDetector.h"
 #include "../../io/AudioSignal.h"
 #include "../../detection/DetectionPipeline.h"
-#include "../../detection/FrequencyLoggingTuning.h"
+#include "../../detection/FrequencyEvidenceEvaluation.h"
 #include "../../hal/AudioSource.h"
 
 class AnalyzerApp {
@@ -243,6 +243,18 @@ private:
         unsigned long emptySourceLoops = 0;
         unsigned long totalHitStrengthScaled = 0;
         unsigned long totalHitDurationMs = 0;
+
+        unsigned long tonalExpected = 0;
+        unsigned long transientOnlyExpected = 0;
+        unsigned long tonalDuplicates = 0;
+        unsigned long nonTonalDuplicates = 0;
+        unsigned long tonalUnexpected = 0;
+        unsigned long nonTonalUnexpected = 0;
+        unsigned long freqRejectScore = 0;
+        unsigned long freqRejectContrast = 0;
+        unsigned long freqRejectBoth = 0;
+        unsigned long freqRejectNoEvidence = 0;
+        unsigned long freqRejectInvalidWindow = 0;
     };
 
     struct CaptureSession {
@@ -371,6 +383,7 @@ private:
     void printSequenceTrialResult(unsigned long trialNumber, const char* result, long dtMs, long durMs, float strength, bool audioOverflow, unsigned long duplicateCount, const SequenceTest::TrialDiagnostics& diagnostics) const;
     void printSequenceFinalOutput() const;
     void printSequenceSummary() const;
+    void recordSequenceClassifierOutcome(const DetectionPipeline::PatternResult& patternResult, bool duplicateCandidate, bool unexpectedCandidate);
     void handleSequenceCandidate(const DetectionPipeline::PatternResult& patternResult, unsigned long queueDepthBeforeDrain, const DetectionPipeline::FrequencyEvidence* liveFrequencyEvidence = nullptr);
     void updateSequenceAmbientStats();
     void beginSequenceSampleDump(unsigned long trialNumber);
@@ -397,7 +410,7 @@ private:
     AudioSignal _audioSignal;
     AudioFrequencyDetector _audioFrequencyDetector;
     AudioOnsetDetector _audioOnsetDetector;
-    FrequencyLoggingTuning::Values _frequencyLoggingTuning = {};
+    FrequencyEvidenceEvaluation::Values _frequencyEvidenceTuning = {};
 
     // Console and emitter control.
     unsigned long _controlBaudRate = 115200;

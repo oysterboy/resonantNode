@@ -3,7 +3,7 @@
 #include <string.h>
 
 #include "../../detection/DetectorParameters.h"
-#include "../../detection/FrequencyLoggingTuning.h"
+#include "../../detection/FrequencyEvidenceEvaluation.h"
 #include "../../detection/DetectionPipeline.h"
 #include "../../detection/FrequencyWindowProbe.h"
 
@@ -86,9 +86,11 @@ const char* h3RbCandidateClassName(const DetectionPipeline::PatternResult& patte
 
 void printH3FrequencyEvidenceFields(const DetectionPipeline::PatternResult& patternResult,
                                     const DetectionPipeline::FrequencyEvidence& frequencyEvidence,
+                                    const FrequencyEvidenceEvaluation::Values& tuning,
                                     const char* candidateClass,
                                     long transientAgeOrDtMs,
                                     unsigned long referenceMs) {
+    const auto frequencyEval = FrequencyEvidenceEvaluation::evaluate(frequencyEvidence, tuning);
     Serial.print(" candidate_class=");
     Serial.print(candidateClass);
     Serial.print(" pattern_valid=");
@@ -97,6 +99,14 @@ void printH3FrequencyEvidenceFields(const DetectionPipeline::PatternResult& patt
     Serial.print(DetectionPipeline::patternTypeName(patternResult.type));
     Serial.print(" pattern_reason=");
     Serial.print(DetectionPipeline::patternReasonName(patternResult.reasonCode));
+    Serial.print(" candidate_valid=");
+    Serial.print(patternResult.candidateValid ? 1 : 0);
+    Serial.print(" tonal_valid=");
+    Serial.print(patternResult.tonalValid ? 1 : 0);
+    Serial.print(" behavior_eligible=");
+    Serial.print(patternResult.behaviorEligible ? 1 : 0);
+    Serial.print(" reject_reason=");
+    Serial.print(DetectionPipeline::patternRejectReasonName(patternResult.rejectReason));
     Serial.print(" transient_duration_ms=");
     Serial.print(patternResult.candidate.durationMs);
     Serial.print(" transient_peak_strength=");
@@ -112,6 +122,10 @@ void printH3FrequencyEvidenceFields(const DetectionPipeline::PatternResult& patt
     Serial.print(frequencyEvidence.present ? 1 : 0);
     Serial.print(" freq_matched=");
     Serial.print(frequencyEvidence.matched ? 1 : 0);
+    Serial.print(" freq_score_ok=");
+    Serial.print(frequencyEval.scoreOk ? 1 : 0);
+    Serial.print(" freq_contrast_ok=");
+    Serial.print(frequencyEval.contrastOk ? 1 : 0);
     Serial.print(" freq_score=");
     Serial.print(frequencyEvidence.score, 1);
     Serial.print(" freq_conf=");
@@ -137,6 +151,8 @@ void printH3FrequencyEvidenceFields(const DetectionPipeline::PatternResult& patt
     }
     Serial.print(" freq_valid_window=");
     Serial.print(frequencyEvidence.validWindow ? 1 : 0);
+    Serial.print(" freq_eval_reason=");
+    Serial.print(FrequencyEvidenceEvaluation::reasonName(frequencyEval.reason));
 }
 }
 
@@ -442,10 +458,25 @@ void Node::update() {
                     candidate.durationMs);
                 const bool patternValid = DetectionPipeline::processDetectorCandidate(candidate, patternResult, now, &frequencyEvidence);
                 patternResult.candidate.frequencyFull = fullFrequencyEvidence;
+                FrequencyEvidenceEvaluation::classifyPatternResult(patternResult, _frequencyEvidenceTuning);
                 const auto behaviorDecision = _behavior.handlePatternResult(patternResult, now);
+                const char* candidateClass = h3RbCandidateClassName(patternResult, behaviorDecision, selfChirpSuppressed);
 
                 if (patternValid && behaviorDecision == ResonantBehavior::BehaviorDecision::ConsumedPattern) {
                     sawPatternThisLoop = true;
+                }
+
+                if (_behavior.requireTonalForBehavior() && patternResult.candidateValid && !patternResult.behaviorEligible) {
+                    Serial.print("RB_BLOCK reason=");
+                    Serial.print(DetectionPipeline::patternRejectReasonName(patternResult.rejectReason));
+                    Serial.print(" pattern=");
+                    Serial.print(DetectionPipeline::patternTypeName(patternResult.type));
+                    Serial.print(" candidate_class=");
+                    Serial.print(candidateClass);
+                    Serial.print(" heard=");
+                    Serial.print(patternResult.candidate.heardAtMs);
+                    Serial.print(" now=");
+                    Serial.println(now);
                 }
 
                 if (rbShouldLogDetail()) {
@@ -489,10 +520,11 @@ void Node::update() {
                     action = "invalid";
                 } else if (selfChirpSuppressed) {
                     action = "self_ignore";
+                } else if (_behavior.requireTonalForBehavior() && patternResult.candidateValid && !patternResult.behaviorEligible) {
+                    action = "blocked";
                 } else if (_rbDetectOnly) {
                     action = "detectonly";
                 }
-                const char* candidateClass = h3RbCandidateClassName(patternResult, behaviorDecision, selfChirpSuppressed);
 
                 if (rbShouldLogDetail()) {
                     logCandidate(candidate, patternResult, &liveFrequencyEvidence, _rbCandidateCount + 1, gapMs, queueDepthBeforeDrain, behaviorLagMs, candidateClass, action, _behavior.stateName(), behaviorGateName(_behavior, now, sawPatternThisLoop, selfChirpSuppressed));
@@ -558,10 +590,25 @@ void Node::update() {
                     candidate.durationMs);
                 const bool patternValid = DetectionPipeline::processDetectorCandidate(candidate, patternResult, now, &frequencyEvidence);
                 patternResult.candidate.frequencyFull = fullFrequencyEvidence;
+                FrequencyEvidenceEvaluation::classifyPatternResult(patternResult, _frequencyEvidenceTuning);
                 const auto behaviorDecision = _behavior.handlePatternResult(patternResult, now);
+                const char* candidateClass = h3RbCandidateClassName(patternResult, behaviorDecision, selfChirpSuppressed);
 
                 if (patternValid && behaviorDecision == ResonantBehavior::BehaviorDecision::ConsumedPattern) {
                     sawPatternThisLoop = true;
+                }
+
+                if (_behavior.requireTonalForBehavior() && patternResult.candidateValid && !patternResult.behaviorEligible) {
+                    Serial.print("RB_BLOCK reason=");
+                    Serial.print(DetectionPipeline::patternRejectReasonName(patternResult.rejectReason));
+                    Serial.print(" pattern=");
+                    Serial.print(DetectionPipeline::patternTypeName(patternResult.type));
+                    Serial.print(" candidate_class=");
+                    Serial.print(candidateClass);
+                    Serial.print(" heard=");
+                    Serial.print(patternResult.candidate.heardAtMs);
+                    Serial.print(" now=");
+                    Serial.println(now);
                 }
 
                 if (rbShouldLogDetail()) {
@@ -600,10 +647,11 @@ void Node::update() {
                     action = "invalid";
                 } else if (selfChirpSuppressed) {
                     action = "self_ignore";
+                } else if (_behavior.requireTonalForBehavior() && patternResult.candidateValid && !patternResult.behaviorEligible) {
+                    action = "blocked";
                 } else if (_rbDetectOnly) {
                     action = "detectonly";
                 }
-                const char* candidateClass = h3RbCandidateClassName(patternResult, behaviorDecision, selfChirpSuppressed);
 
                 if (rbShouldLogDetail()) {
                     logCandidate(candidate, patternResult, &liveFrequencyEvidence, _rbCandidateCount + 1, gapMs, queueDepthBeforeDrain, behaviorLagMs, candidateClass, action, _behavior.stateName(), behaviorGateName(_behavior, now, sawPatternThisLoop, selfChirpSuppressed));
@@ -725,7 +773,7 @@ void Node::pollSerialCommands() {
 void Node::handleSerialLine(const char* line) {
     if (equalsIgnoreCase(line, "RB help")) {
         Serial.println("RB CMD: RB PARAM onset=30 release=20 cooldown=50 releaseDebounce=10 minMs=90 maxMs=240 minStrength=40.0 freqScore=50000 freqContrast=20.0");
-        Serial.println("RB CMD: RB BEHAV wait=0 refractory=0 idle=10000");
+        Serial.println("RB CMD: RB BEHAV wait=0 refractory=0 idle=10000 requireTonal=0");
         Serial.println("RB CMD: RB rebase");
         Serial.println("RB CMD: RB rebase force");
         Serial.println("RB CMD: RB detectonly on|off");
@@ -750,16 +798,16 @@ void Node::handleSerialLine(const char* line) {
         }
 
         DetectorParameters::Values params = DetectorParameters::capture(_audioSignal);
-        FrequencyLoggingTuning::Values freqTuning = _frequencyLoggingTuning;
+        FrequencyEvidenceEvaluation::Values freqTuning = _frequencyEvidenceTuning;
 
         while ((token = strtok_r(nullptr, " ", &savePtr)) != nullptr) {
             DetectorParameters::parseToken(token, params);
-            FrequencyLoggingTuning::parseToken(token, freqTuning);
+            FrequencyEvidenceEvaluation::parseToken(token, freqTuning);
         }
 
         DetectorParameters::apply(params, _audioSignal);
         DetectorParameters::apply(params, _audioOnsetDetector);
-        _frequencyLoggingTuning = freqTuning;
+        _frequencyEvidenceTuning = freqTuning;
 
         Serial.print("RB PARAM onset=");
         Serial.print(_audioSignal.onsetDetectionThreshold(), 1);
@@ -776,9 +824,9 @@ void Node::handleSerialLine(const char* line) {
         Serial.print(" minStrength=");
         Serial.print(_audioSignal.minTransientPeakStrength(), 1);
         Serial.print(" freqScore=");
-        Serial.print(_frequencyLoggingTuning.scoreMin, 0);
+        Serial.print(_frequencyEvidenceTuning.scoreMin, 0);
         Serial.print(" freqContrast=");
-        Serial.println(_frequencyLoggingTuning.contrastMin, 1);
+        Serial.println(_frequencyEvidenceTuning.contrastMin, 1);
         return;
     }
     if (startsWithTokenIgnoreCase(line, "RB BEHAV")) {
@@ -791,13 +839,14 @@ void Node::handleSerialLine(const char* line) {
         token = token != nullptr ? strtok_r(nullptr, " ", &savePtr) : nullptr;
 
         if (token == nullptr || !equalsIgnoreCase(token, "BEHAV")) {
-            Serial.println("RB BEHAV usage=RB BEHAV wait=0 refractory=0 idle=10000");
+            Serial.println("RB BEHAV usage=RB BEHAV wait=0 refractory=0 idle=10000 requireTonal=0");
             return;
         }
 
         unsigned long waitAfterTransientMs = _behavior.waitAfterTransientMs();
         unsigned long refractoryAfterEmitMs = _behavior.refractoryAfterEmitMs();
         unsigned long idleTimeoutMs = _behavior.idleTimeoutMs();
+        bool requireTonalForBehavior = _behavior.requireTonalForBehavior();
 
         while ((token = strtok_r(nullptr, " ", &savePtr)) != nullptr) {
             if (startsWithTokenIgnoreCase(token, "wait=") || startsWithTokenIgnoreCase(token, "waitMs=")) {
@@ -809,19 +858,25 @@ void Node::handleSerialLine(const char* line) {
             } else if (startsWithTokenIgnoreCase(token, "idle=") || startsWithTokenIgnoreCase(token, "idleMs=") || startsWithTokenIgnoreCase(token, "idleTimeoutMs=")) {
                 const char* value = token + (startsWithTokenIgnoreCase(token, "idleTimeoutMs=") ? 14 : startsWithTokenIgnoreCase(token, "idleMs=") ? 7 : 5);
                 idleTimeoutMs = strtoul(value, nullptr, 10);
+            } else if (startsWithTokenIgnoreCase(token, "requireTonal=") || startsWithTokenIgnoreCase(token, "requireTonalForBehavior=")) {
+                const char* value = token + (startsWithTokenIgnoreCase(token, "requireTonalForBehavior=") ? 24 : 13);
+                requireTonalForBehavior = equalsIgnoreCase(value, "1") || equalsIgnoreCase(value, "on") || equalsIgnoreCase(value, "true");
             }
         }
 
         _behavior.setWaitAfterTransientMs(waitAfterTransientMs);
         _behavior.setRefractoryAfterEmitMs(refractoryAfterEmitMs);
         _behavior.setIdleTimeoutMs(idleTimeoutMs);
+        _behavior.setRequireTonalForBehavior(requireTonalForBehavior);
 
         Serial.print("RB BEHAV wait=");
         Serial.print(_behavior.waitAfterTransientMs());
         Serial.print(" refractory=");
         Serial.print(_behavior.refractoryAfterEmitMs());
         Serial.print(" idle=");
-        Serial.println(_behavior.idleTimeoutMs());
+        Serial.print(_behavior.idleTimeoutMs());
+        Serial.print(" requireTonal=");
+        Serial.println(_behavior.requireTonalForBehavior() ? 1 : 0);
         return;
     }
     if (startsWithTokenIgnoreCase(line, "RB rebase force")) {
@@ -998,50 +1053,65 @@ void Node::logCandidate(const DetectorCandidate& candidate, const DetectionPipel
     Serial.print(DetectionPipeline::patternTypeName(patternResult.type));
     Serial.print(" candidate_class=");
     Serial.print(candidateClass);
+    Serial.print(" candidate_valid=");
+    Serial.print(patternResult.candidateValid ? 1 : 0);
+    Serial.print(" tonal_valid=");
+    Serial.print(patternResult.tonalValid ? 1 : 0);
+    Serial.print(" behavior_eligible=");
+    Serial.print(patternResult.behaviorEligible ? 1 : 0);
+    Serial.print(" reject_reason=");
+    Serial.print(DetectionPipeline::patternRejectReasonName(patternResult.rejectReason));
     Serial.print(" transient_present=");
     Serial.print(patternResult.candidate.transient.present ? 1 : 0);
     Serial.print(" freq_present=");
-    Serial.print(patternResult.candidate.frequency.present ? 1 : 0);
+    Serial.print(patternResult.freq.present ? 1 : 0);
     Serial.print(" freq_matched=");
-    Serial.print(patternResult.candidate.frequency.matched ? 1 : 0);
+    Serial.print(patternResult.freq.matched ? 1 : 0);
+    const auto freqEval = FrequencyEvidenceEvaluation::evaluate(patternResult.freq, _frequencyEvidenceTuning);
+    Serial.print(" freq_score_ok=");
+    Serial.print(freqEval.scoreOk ? 1 : 0);
+    Serial.print(" freq_contrast_ok=");
+    Serial.print(freqEval.contrastOk ? 1 : 0);
     Serial.print(" freq_score=");
-    Serial.print(patternResult.candidate.frequency.score, 1);
+    Serial.print(patternResult.freq.score, 1);
     Serial.print(" freq_conf=");
-    Serial.print(patternResult.candidate.frequency.confidence, 1);
+    Serial.print(patternResult.freq.confidence, 1);
     Serial.print(" freq_target_hz=");
-    Serial.print(patternResult.candidate.frequency.targetHz);
+    Serial.print(patternResult.freq.targetHz);
     Serial.print(" freq_target_power=");
-    Serial.print(patternResult.candidate.frequency.targetPower, 1);
+    Serial.print(patternResult.freq.targetPower, 1);
     Serial.print(" freq_neighbor_power=");
-    Serial.print(patternResult.candidate.frequency.neighborPower, 1);
+    Serial.print(patternResult.freq.neighborPower, 1);
     Serial.print(" freq_total_energy=");
-    Serial.print(patternResult.candidate.frequency.totalEnergy, 1);
+    Serial.print(patternResult.freq.totalEnergy, 1);
     Serial.print(" freq_contrast=");
-    Serial.print(patternResult.candidate.frequency.spectralContrast, 1);
+    Serial.print(patternResult.freq.spectralContrast, 1);
     Serial.print(" freq_observed_at_ms=");
-    Serial.print(patternResult.candidate.frequency.observedAtMs);
+    Serial.print(patternResult.freq.observedAtMs);
     Serial.print(" freq_age_ms=");
-    if (patternResult.candidate.frequency.observedAtMs > 0 && patternResult.processedAtMs >= patternResult.candidate.frequency.observedAtMs) {
-        Serial.print(patternResult.processedAtMs - patternResult.candidate.frequency.observedAtMs);
+    if (patternResult.freq.observedAtMs > 0 && patternResult.processedAtMs >= patternResult.freq.observedAtMs) {
+        Serial.print(patternResult.processedAtMs - patternResult.freq.observedAtMs);
         Serial.print("ms");
     } else {
         Serial.print("-");
     }
     Serial.print(" freq_valid_window=");
-    Serial.print(patternResult.candidate.frequency.validWindow ? 1 : 0);
+    Serial.print(patternResult.freq.validWindow ? 1 : 0);
+    Serial.print(" freq_eval_reason=");
+    Serial.print(FrequencyEvidenceEvaluation::reasonName(freqEval.reason));
     Serial.print(" freqEarly[avail=");
-    Serial.print(patternResult.candidate.frequency.windowAvailable ? 1 : 0);
+    Serial.print(patternResult.freq.windowAvailable ? 1 : 0);
     Serial.print(" score=");
-    Serial.print(patternResult.candidate.frequency.score, 1);
+    Serial.print(patternResult.freq.score, 1);
     Serial.print(" target=");
-    Serial.print(patternResult.candidate.frequency.targetHz);
+    Serial.print(patternResult.freq.targetHz);
     Serial.print(" contrast=");
-    Serial.print(patternResult.candidate.frequency.spectralContrast, 2);
+    Serial.print(patternResult.freq.spectralContrast, 2);
     Serial.print(" win=");
-    Serial.print(patternResult.candidate.frequency.windowSampleCount);
+    Serial.print(patternResult.freq.windowSampleCount);
     Serial.print("]");
     char freqFailReason[96];
-    FrequencyLoggingTuning::buildFailReason(patternResult.candidate.frequency, _frequencyLoggingTuning, freqFailReason, sizeof(freqFailReason));
+    FrequencyEvidenceEvaluation::buildFailReason(patternResult.freq, _frequencyEvidenceTuning, freqFailReason, sizeof(freqFailReason));
     if (strcmp(freqFailReason, "none") != 0) {
         Serial.print(" freq_fail_reason=");
         Serial.print(freqFailReason);
@@ -1089,7 +1159,9 @@ void Node::printRbSummary() const {
     Serial.print(" avg_duration=");
     Serial.print(avgDuration, 1);
     Serial.print("ms detectOnly=");
-    Serial.println(_rbDetectOnly ? 1 : 0);
+    Serial.print(_rbDetectOnly ? 1 : 0);
+    Serial.print(" requireTonal=");
+    Serial.println(_behavior.requireTonalForBehavior() ? 1 : 0);
     Serial.print("RB baseline state=");
     Serial.println(rbBaselineStateName());
     Serial.print("RB log mode=");
@@ -1103,6 +1175,8 @@ void Node::printRbSummary() const {
 void Node::printRbBehaviorSummary() const {
     Serial.print("RB behavior detectOnly=");
     Serial.print(_behavior.detectionOnly() ? 1 : 0);
+    Serial.print(" requireTonal=");
+    Serial.print(_behavior.requireTonalForBehavior() ? 1 : 0);
     Serial.print(" wait=");
     Serial.print(_behavior.waitAfterTransientMs());
     Serial.print(" refractory=");

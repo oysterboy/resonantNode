@@ -10,7 +10,7 @@ Stable-ish baseline: SEQ / AMP + freqEarly
 
 ### RB
 - `RB PARAM onset=30 release=20 cooldown=50 releaseDebounce=10 minMs=90 maxMs=240 minStrength=40.0 freqScore=50000 freqContrast=20.0`
-- `RB BEHAV wait=0 refractory=0 idle=10000`
+- `RB BEHAV wait=0 refractory=0 idle=10000 requireTonal=0`
 - `RB summary`
 - `RB detectonly on|off`
 - `RB log off|minimal|full`

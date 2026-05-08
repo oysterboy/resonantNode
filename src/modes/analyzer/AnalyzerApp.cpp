@@ -7,7 +7,7 @@
 #include "../../AudioDebugConfig.h"
 #include "../../detection/DetectionPipeline.h"
 #include "../../detection/DetectorParameters.h"
-#include "../../detection/FrequencyLoggingTuning.h"
+#include "../../detection/FrequencyEvidenceEvaluation.h"
 #include "../../detection/FrequencyWindowProbe.h"
 
 namespace {
@@ -59,10 +59,10 @@ bool analyzerLogEnabled(uint32_t flags, AnalyzerApp::AnalyzerLogFlags flag) {
 }
 
 void buildFrequencyFailReason(const DetectionPipeline::FrequencyEvidence& evidence,
-                              const FrequencyLoggingTuning::Values& tuning,
+                              const FrequencyEvidenceEvaluation::Values& tuning,
                               char* out,
                               size_t outSize) {
-    FrequencyLoggingTuning::buildFailReason(evidence, tuning, out, outSize);
+    FrequencyEvidenceEvaluation::buildFailReason(evidence, tuning, out, outSize);
 }
 
 int16_t rawCaptureSampleToInt16(int sample) {
@@ -252,9 +252,11 @@ const char* sequenceTrialDurationClass(long durMs) {
 void printH3FrequencyEvidenceFields(const DetectionPipeline::PatternResult& patternResult,
                                     const DetectionPipeline::FrequencyEvidence& frequencyEvidence,
                                     const DetectionPipeline::FrequencyEvidence* liveFrequencyEvidence,
+                                    const FrequencyEvidenceEvaluation::Values& tuning,
                                     const char* candidateClass,
                                     long transientAgeOrDtMs,
                                     unsigned long referenceMs) {
+    const auto frequencyEval = FrequencyEvidenceEvaluation::evaluate(frequencyEvidence, tuning);
     Serial.print(" candidate_class=");
     Serial.print(candidateClass);
     Serial.print(" pattern_valid=");
@@ -263,6 +265,14 @@ void printH3FrequencyEvidenceFields(const DetectionPipeline::PatternResult& patt
     Serial.print(DetectionPipeline::patternTypeName(patternResult.type));
     Serial.print(" pattern_reason=");
     Serial.print(DetectionPipeline::patternReasonName(patternResult.reasonCode));
+    Serial.print(" candidate_valid=");
+    Serial.print(patternResult.candidateValid ? 1 : 0);
+    Serial.print(" tonal_valid=");
+    Serial.print(patternResult.tonalValid ? 1 : 0);
+    Serial.print(" behavior_eligible=");
+    Serial.print(patternResult.behaviorEligible ? 1 : 0);
+    Serial.print(" reject_reason=");
+    Serial.print(DetectionPipeline::patternRejectReasonName(patternResult.rejectReason));
     Serial.print(" transient_duration_ms=");
     Serial.print(patternResult.candidate.durationMs);
     Serial.print(" transient_peak_strength=");
@@ -275,13 +285,17 @@ void printH3FrequencyEvidenceFields(const DetectionPipeline::PatternResult& patt
         Serial.print("-");
     }
     Serial.print(" freq_present=");
-    Serial.print(frequencyEvidence.present ? 1 : 0);
+    Serial.print(patternResult.freq.present ? 1 : 0);
     Serial.print(" freq_matched=");
-    Serial.print(frequencyEvidence.matched ? 1 : 0);
+    Serial.print(patternResult.freq.matched ? 1 : 0);
+    Serial.print(" freq_score_ok=");
+    Serial.print(frequencyEval.scoreOk ? 1 : 0);
+    Serial.print(" freq_contrast_ok=");
+    Serial.print(frequencyEval.contrastOk ? 1 : 0);
     Serial.print(" freq_score=");
-    Serial.print(frequencyEvidence.score, 1);
+    Serial.print(patternResult.freq.score, 1);
     Serial.print(" freq_conf=");
-    Serial.print(frequencyEvidence.confidence, 1);
+    Serial.print(patternResult.freq.confidence, 1);
     Serial.print(" freq_target_hz=");
     Serial.print(frequencyEvidence.targetHz);
     Serial.print(" freq_target_power=");
@@ -291,18 +305,20 @@ void printH3FrequencyEvidenceFields(const DetectionPipeline::PatternResult& patt
     Serial.print(" freq_total_energy=");
     Serial.print(frequencyEvidence.totalEnergy, 1);
     Serial.print(" freq_contrast=");
-    Serial.print(frequencyEvidence.spectralContrast, 2);
+    Serial.print(patternResult.freq.spectralContrast, 2);
     Serial.print(" freq_observed_at_ms=");
-    Serial.print(frequencyEvidence.observedAtMs);
+    Serial.print(patternResult.freq.observedAtMs);
     Serial.print(" freq_age_ms=");
-    if (frequencyEvidence.observedAtMs > 0 && referenceMs >= frequencyEvidence.observedAtMs) {
-        Serial.print(referenceMs - frequencyEvidence.observedAtMs);
+    if (patternResult.freq.observedAtMs > 0 && referenceMs >= patternResult.freq.observedAtMs) {
+        Serial.print(referenceMs - patternResult.freq.observedAtMs);
         Serial.print("ms");
     } else {
         Serial.print("-");
     }
     Serial.print(" freq_valid_window=");
-    Serial.print(frequencyEvidence.validWindow ? 1 : 0);
+    Serial.print(patternResult.freq.validWindow ? 1 : 0);
+    Serial.print(" freq_eval_reason=");
+    Serial.print(FrequencyEvidenceEvaluation::reasonName(frequencyEval.reason));
     Serial.print(" freqEarly[avail=");
     Serial.print(frequencyEvidence.windowAvailable ? 1 : 0);
     Serial.print(" score=");
@@ -545,6 +561,7 @@ void AnalyzerApp::update() {
                     continue;
                 }
                 patternResult.candidate.frequencyFull = fullFrequencyEvidence;
+                FrequencyEvidenceEvaluation::classifyPatternResult(patternResult, _frequencyEvidenceTuning);
 
                 if (_valMode) {
                     if (patternResult.valid) {
@@ -984,16 +1001,16 @@ void AnalyzerApp::handleUsbLine(const char* line) {
         char* savePtr = nullptr;
         char* token = strtok_r(buffer, " ", &savePtr);
         DetectorParameters::Values params = DetectorParameters::capture(_audioSignal);
-        FrequencyLoggingTuning::Values freqTuning = _frequencyLoggingTuning;
+        FrequencyEvidenceEvaluation::Values freqTuning = _frequencyEvidenceTuning;
 
         while ((token = strtok_r(nullptr, " ", &savePtr)) != nullptr) {
             DetectorParameters::parseToken(token, params);
-            FrequencyLoggingTuning::parseToken(token, freqTuning);
+            FrequencyEvidenceEvaluation::parseToken(token, freqTuning);
         }
 
         DetectorParameters::apply(params, _audioSignal);
         DetectorParameters::apply(params, _audioOnsetDetector);
-        _frequencyLoggingTuning = freqTuning;
+        _frequencyEvidenceTuning = freqTuning;
 
         Serial.print("PARAM onset=");
         Serial.print(detectorOnsetDetectionThreshold(), 1);
@@ -1010,9 +1027,9 @@ void AnalyzerApp::handleUsbLine(const char* line) {
         Serial.print(" minStrength=");
         Serial.print(detectorMinTransientPeakStrength(), 1);
         Serial.print(" freqScore=");
-        Serial.print(_frequencyLoggingTuning.scoreMin, 0);
+        Serial.print(_frequencyEvidenceTuning.scoreMin, 0);
         Serial.print(" freqContrast=");
-        Serial.println(_frequencyLoggingTuning.contrastMin, 1);
+        Serial.println(_frequencyEvidenceTuning.contrastMin, 1);
         return;
     }
 
@@ -1674,6 +1691,17 @@ void AnalyzerApp::startSequenceTest(unsigned long totalTrials, unsigned long per
     _sequenceTest.emptySourceLoops = 0;
     _sequenceTest.totalHitStrengthScaled = 0;
     _sequenceTest.totalHitDurationMs = 0;
+    _sequenceTest.tonalExpected = 0;
+    _sequenceTest.transientOnlyExpected = 0;
+    _sequenceTest.tonalDuplicates = 0;
+    _sequenceTest.nonTonalDuplicates = 0;
+    _sequenceTest.tonalUnexpected = 0;
+    _sequenceTest.nonTonalUnexpected = 0;
+    _sequenceTest.freqRejectScore = 0;
+    _sequenceTest.freqRejectContrast = 0;
+    _sequenceTest.freqRejectBoth = 0;
+    _sequenceTest.freqRejectNoEvidence = 0;
+    _sequenceTest.freqRejectInvalidWindow = 0;
 
     // Rebase before the first trial so every run starts from the quiet floor.
     const unsigned long sequenceClaimSendMs = millis();
@@ -2471,6 +2499,54 @@ const char* AnalyzerApp::sequenceTrialClassificationName(const char* result, lon
     return "expected_clean";
 }
 
+void AnalyzerApp::recordSequenceClassifierOutcome(const DetectionPipeline::PatternResult& patternResult, bool duplicateCandidate, bool unexpectedCandidate) {
+    if (_valMode || !patternResult.candidateValid) {
+        return;
+    }
+
+    const auto freqEval = FrequencyEvidenceEvaluation::evaluate(patternResult.freq, _frequencyEvidenceTuning);
+
+    if (unexpectedCandidate) {
+        if (patternResult.tonalValid) {
+            ++_sequenceTest.tonalUnexpected;
+        } else {
+            ++_sequenceTest.nonTonalUnexpected;
+        }
+    } else if (duplicateCandidate) {
+        if (patternResult.tonalValid) {
+            ++_sequenceTest.tonalDuplicates;
+        } else {
+            ++_sequenceTest.nonTonalDuplicates;
+        }
+    } else {
+        if (patternResult.tonalValid) {
+            ++_sequenceTest.tonalExpected;
+        } else {
+            ++_sequenceTest.transientOnlyExpected;
+        }
+    }
+
+    switch (freqEval.reason) {
+        case FrequencyEvidenceEvaluation::Reason::None:
+            break;
+        case FrequencyEvidenceEvaluation::Reason::NoEvidence:
+            ++_sequenceTest.freqRejectNoEvidence;
+            break;
+        case FrequencyEvidenceEvaluation::Reason::InvalidWindow:
+            ++_sequenceTest.freqRejectInvalidWindow;
+            break;
+        case FrequencyEvidenceEvaluation::Reason::ScoreTooLow:
+            ++_sequenceTest.freqRejectScore;
+            break;
+        case FrequencyEvidenceEvaluation::Reason::ContrastTooLow:
+            ++_sequenceTest.freqRejectContrast;
+            break;
+        case FrequencyEvidenceEvaluation::Reason::ScoreAndContrastTooLow:
+            ++_sequenceTest.freqRejectBoth;
+            break;
+    }
+}
+
 void AnalyzerApp::handleSequenceCandidate(const DetectionPipeline::PatternResult& patternResult, unsigned long queueDepthBeforeDrain, const DetectionPipeline::FrequencyEvidence* liveFrequencyEvidence) {
     if (_valMode) {
         return;
@@ -2534,6 +2610,8 @@ void AnalyzerApp::handleSequenceCandidate(const DetectionPipeline::PatternResult
         diagnostics.candidatePostWindowCount++;
     }
 
+    recordSequenceClassifierOutcome(patternResult, duplicateCandidate, !inWindow);
+
     if (!diagnostics.bestCandidateValid || candidate.peakStrength > diagnostics.bestCandidateStrength) {
         diagnostics.bestCandidateValid = true;
         diagnostics.bestCandidateDtFromTriggerMs = dtFromTriggerMs;
@@ -2588,18 +2666,18 @@ void AnalyzerApp::handleSequenceCandidate(const DetectionPipeline::PatternResult
         Serial.print(" transient_present=");
         Serial.print(patternResult.candidate.transient.present ? 1 : 0);
         Serial.print(" freq_present=");
-        Serial.print(patternResult.candidate.frequency.present ? 1 : 0);
+        Serial.print(patternResult.freq.present ? 1 : 0);
         Serial.print(" freq_matched=");
-        Serial.print(patternResult.candidate.frequency.matched ? 1 : 0);
+        Serial.print(patternResult.freq.matched ? 1 : 0);
         Serial.print(" freq_score=");
-        Serial.print(patternResult.candidate.frequency.score, 1);
+        Serial.print(patternResult.freq.score, 1);
         Serial.print(" freq_conf=");
-        Serial.print(patternResult.candidate.frequency.confidence, 1);
+        Serial.print(patternResult.freq.confidence, 1);
         Serial.print(" freq_target_hz=");
-        Serial.print(patternResult.candidate.frequency.targetHz);
+        Serial.print(patternResult.freq.targetHz);
         Serial.print(" freq_contrast=");
-        Serial.print(patternResult.candidate.frequency.spectralContrast, 1);
-        printH3FrequencyEvidenceFields(patternResult, patternResult.candidate.frequency, liveFrequencyEvidence, candidateClass, dtFromTriggerMs, patternResult.processedAtMs);
+        Serial.print(patternResult.freq.spectralContrast, 1);
+        printH3FrequencyEvidenceFields(patternResult, patternResult.freq, liveFrequencyEvidence, _frequencyEvidenceTuning, candidateClass, dtFromTriggerMs, patternResult.processedAtMs);
         Serial.println(" source=detector");
 
         Serial.print("SEQ_CAND role=pattern trial=");
@@ -2643,18 +2721,18 @@ void AnalyzerApp::handleSequenceCandidate(const DetectionPipeline::PatternResult
         Serial.print(" transient_present=");
         Serial.print(patternResult.candidate.transient.present ? 1 : 0);
         Serial.print(" freq_present=");
-        Serial.print(patternResult.candidate.frequency.present ? 1 : 0);
+        Serial.print(patternResult.freq.present ? 1 : 0);
         Serial.print(" freq_matched=");
-        Serial.print(patternResult.candidate.frequency.matched ? 1 : 0);
+        Serial.print(patternResult.freq.matched ? 1 : 0);
         Serial.print(" freq_score=");
-        Serial.print(patternResult.candidate.frequency.score, 1);
+        Serial.print(patternResult.freq.score, 1);
         Serial.print(" freq_conf=");
-        Serial.print(patternResult.candidate.frequency.confidence, 1);
+        Serial.print(patternResult.freq.confidence, 1);
         Serial.print(" freq_target_hz=");
-        Serial.print(patternResult.candidate.frequency.targetHz);
+        Serial.print(patternResult.freq.targetHz);
         Serial.print(" freq_contrast=");
-        Serial.print(patternResult.candidate.frequency.spectralContrast, 1);
-        printH3FrequencyEvidenceFields(patternResult, patternResult.candidate.frequency, liveFrequencyEvidence, candidateClass, dtFromTriggerMs, patternResult.processedAtMs);
+        Serial.print(patternResult.freq.spectralContrast, 1);
+        printH3FrequencyEvidenceFields(patternResult, patternResult.freq, liveFrequencyEvidence, _frequencyEvidenceTuning, candidateClass, dtFromTriggerMs, patternResult.processedAtMs);
         Serial.println(" source=pattern");
     }
 
@@ -2680,8 +2758,8 @@ void AnalyzerApp::handleSequenceCandidate(const DetectionPipeline::PatternResult
             diagnostics.duplicateTransientMs = onsetMs;
             diagnostics.duplicateTransientStrength = candidate.peakStrength;
             diagnostics.duplicateTransientDurationMs = candidate.durationMs;
-            diagnostics.duplicateFrequencyEvidence = patternResult.candidate.frequency;
-            diagnostics.duplicateFrequencyEvidenceFull = patternResult.candidate.frequencyFull;
+            diagnostics.duplicateFrequencyEvidence = patternResult.freq;
+            diagnostics.duplicateFrequencyEvidenceFull = patternResult.freqFull;
             diagnostics.duplicateFrequencyProcessedAtMs = patternResult.processedAtMs;
             diagnostics.duplicateDeltaFromPrimaryMs = diagnostics.transientAccepted
                 ? static_cast<long>(onsetMs) - static_cast<long>(diagnostics.acceptedTransientMs)
@@ -2705,8 +2783,8 @@ void AnalyzerApp::handleSequenceCandidate(const DetectionPipeline::PatternResult
     _sequenceTest.currentTrialDiagnostics.acceptedTransientDurationMs = candidate.durationMs;
     _sequenceTest.currentTrialDiagnostics.acceptedTransientReleaseStrength = candidate.releaseStrength;
     _sequenceTest.currentTrialDiagnostics.acceptedAmbientBaseline = candidate.ambientBaseline;
-    _sequenceTest.currentTrialDiagnostics.acceptedFrequencyEvidence = patternResult.candidate.frequency;
-    _sequenceTest.currentTrialDiagnostics.acceptedFrequencyEvidenceFull = patternResult.candidate.frequencyFull;
+    _sequenceTest.currentTrialDiagnostics.acceptedFrequencyEvidence = patternResult.freq;
+    _sequenceTest.currentTrialDiagnostics.acceptedFrequencyEvidenceFull = patternResult.freqFull;
     _sequenceTest.currentTrialDiagnostics.acceptedFrequencyProcessedAtMs = patternResult.processedAtMs;
     _sequenceTest.currentTrialDiagnostics.lastTransientRejectReason = AudioOnsetDetector::TransientRejectReason::None;
     _sequenceTest.currentTrialDiagnostics.lastRejectStrength = 0.0f;
@@ -2761,20 +2839,20 @@ void AnalyzerApp::handleSequenceCandidate(const DetectionPipeline::PatternResult
         Serial.print(" transient_present=");
         Serial.print(patternResult.candidate.transient.present ? 1 : 0);
         Serial.print(" freq_present=");
-        Serial.print(patternResult.candidate.frequency.present ? 1 : 0);
+        Serial.print(patternResult.freq.present ? 1 : 0);
         Serial.print(" freq_matched=");
-        Serial.print(patternResult.candidate.frequency.matched ? 1 : 0);
+        Serial.print(patternResult.freq.matched ? 1 : 0);
         Serial.print(" freq_score=");
-        Serial.print(patternResult.candidate.frequency.score, 1);
+        Serial.print(patternResult.freq.score, 1);
         Serial.print(" freq_conf=");
-        Serial.print(patternResult.candidate.frequency.confidence, 1);
+        Serial.print(patternResult.freq.confidence, 1);
         Serial.print(" freq_target_hz=");
-        Serial.print(patternResult.candidate.frequency.targetHz);
+        Serial.print(patternResult.freq.targetHz);
         Serial.print(" freq_contrast=");
-        Serial.print(patternResult.candidate.frequency.spectralContrast, 1);
+        Serial.print(patternResult.freq.spectralContrast, 1);
         Serial.print(" reason=");
         Serial.print(DetectionPipeline::patternReasonName(patternResult.reasonCode));
-        printH3FrequencyEvidenceFields(patternResult, patternResult.candidate.frequency, liveFrequencyEvidence, candidateClass, dtFromTriggerMs, patternResult.processedAtMs);
+        printH3FrequencyEvidenceFields(patternResult, patternResult.freq, liveFrequencyEvidence, _frequencyEvidenceTuning, candidateClass, dtFromTriggerMs, patternResult.processedAtMs);
         Serial.println();
     }
 }
@@ -2903,6 +2981,7 @@ void AnalyzerApp::printSequenceTrialDebug(unsigned long trialNumber, const char*
     const char* candidateClass = h3SequenceCandidateClassFromResult(result);
     const auto& freq = diagnostics.acceptedFrequencyEvidence;
     const bool validPattern = strcmp(result, "miss") != 0 && strcmp(result, "invalid_audio") != 0;
+    const auto freqEval = FrequencyEvidenceEvaluation::evaluate(freq, _frequencyEvidenceTuning);
     const unsigned long freqAgeMs = freq.observedAtMs > 0 && diagnostics.acceptedFrequencyProcessedAtMs >= freq.observedAtMs
         ? diagnostics.acceptedFrequencyProcessedAtMs - freq.observedAtMs
         : 0;
@@ -2918,9 +2997,17 @@ void AnalyzerApp::printSequenceTrialDebug(unsigned long trialNumber, const char*
     Serial.print(" pattern_valid=");
     Serial.print(validPattern ? 1 : 0);
     Serial.print(" pattern_type=");
-    Serial.print(validPattern ? "valid_transient" : "invalid");
+    Serial.print(validPattern ? (freqEval.matched ? "valid_tonal_chirp" : "transient_only") : "invalid");
     Serial.print(" pattern_reason=");
-    Serial.print(validPattern ? "from_accepted_transient" : "detector_rejected");
+    Serial.print(validPattern ? FrequencyEvidenceEvaluation::reasonName(freqEval.reason) : "detector_rejected");
+    Serial.print(" candidate_valid=");
+    Serial.print(validPattern ? 1 : 0);
+    Serial.print(" tonal_valid=");
+    Serial.print(freqEval.matched ? 1 : 0);
+    Serial.print(" behavior_eligible=");
+    Serial.print(validPattern && freqEval.matched ? 1 : 0);
+    Serial.print(" reject_reason=");
+    Serial.print(validPattern ? DetectionPipeline::patternRejectReasonName(FrequencyEvidenceEvaluation::rejectReasonFromEvaluation(freqEval.reason)) : "no_candidate");
     Serial.print(" transient_duration_ms=");
     Serial.print(diagnostics.acceptedTransientDurationMs);
     Serial.print(" transient_peak_strength=");
@@ -2936,6 +3023,10 @@ void AnalyzerApp::printSequenceTrialDebug(unsigned long trialNumber, const char*
     Serial.print(freq.present ? 1 : 0);
     Serial.print(" freq_matched=");
     Serial.print(freq.matched ? 1 : 0);
+    Serial.print(" freq_score_ok=");
+    Serial.print(freqEval.scoreOk ? 1 : 0);
+    Serial.print(" freq_contrast_ok=");
+    Serial.print(freqEval.contrastOk ? 1 : 0);
     Serial.print(" freq_score=");
     Serial.print(freq.score, 1);
     Serial.print(" freq_conf=");
@@ -2957,6 +3048,8 @@ void AnalyzerApp::printSequenceTrialDebug(unsigned long trialNumber, const char*
     Serial.print("ms");
     Serial.print(" freq_valid_window=");
     Serial.print(freq.validWindow ? 1 : 0);
+    Serial.print(" freq_eval_reason=");
+    Serial.print(FrequencyEvidenceEvaluation::reasonName(freqEval.reason));
     printH3SequenceRoleFields("primary", acceptedDtMs, static_cast<long>(diagnostics.acceptedTransientDurationMs), diagnostics.acceptedTransientStrength, freq, freq.observedAtMs, diagnostics.acceptedFrequencyProcessedAtMs, "none", 0);
     printH3SequenceRoleFields("duplicate", diagnostics.duplicateCount > 0 ? static_cast<long>(diagnostics.duplicateTransientMs >= _sequenceTest.currentTrialStartMs ? diagnostics.duplicateTransientMs - _sequenceTest.currentTrialStartMs : 0) : -1,
                               diagnostics.duplicateCount > 0 ? static_cast<long>(diagnostics.duplicateTransientDurationMs) : -1,
@@ -3274,14 +3367,14 @@ void AnalyzerApp::printSequenceTrialReports() const {
         Serial.print("]");
         char freqFailReason[96];
         if (report.freqEarly.present) {
-            buildFrequencyFailReason(report.freqEarly, _frequencyLoggingTuning, freqFailReason, sizeof(freqFailReason));
+            buildFrequencyFailReason(report.freqEarly, _frequencyEvidenceTuning, freqFailReason, sizeof(freqFailReason));
             if (strcmp(freqFailReason, "none") != 0) {
                 Serial.print(" freq_fail_reason_primary=");
                 Serial.print(freqFailReason);
             }
         }
         if (report.duplicateFreqEarly.present) {
-            buildFrequencyFailReason(report.duplicateFreqEarly, _frequencyLoggingTuning, freqFailReason, sizeof(freqFailReason));
+            buildFrequencyFailReason(report.duplicateFreqEarly, _frequencyEvidenceTuning, freqFailReason, sizeof(freqFailReason));
             if (strcmp(freqFailReason, "none") != 0) {
                 Serial.print(" freq_fail_reason_duplicate=");
                 Serial.print(freqFailReason);
@@ -3377,7 +3470,7 @@ void AnalyzerApp::printSequenceTrialResult(unsigned long trialNumber, const char
     }
     if (diagnostics.transientAccepted && diagnostics.acceptedFrequencyEvidence.present) {
         char freqFailReason[96];
-        buildFrequencyFailReason(diagnostics.acceptedFrequencyEvidence, _frequencyLoggingTuning, freqFailReason, sizeof(freqFailReason));
+        buildFrequencyFailReason(diagnostics.acceptedFrequencyEvidence, _frequencyEvidenceTuning, freqFailReason, sizeof(freqFailReason));
         if (strcmp(freqFailReason, "none") != 0) {
             Serial.print(" freq_fail_reason_primary=");
             Serial.print(freqFailReason);
@@ -3394,7 +3487,7 @@ void AnalyzerApp::printSequenceTrialResult(unsigned long trialNumber, const char
     }
     if (diagnostics.duplicateCount > 0 && diagnostics.duplicateFrequencyEvidence.present) {
         char freqFailReason[96];
-        buildFrequencyFailReason(diagnostics.duplicateFrequencyEvidence, _frequencyLoggingTuning, freqFailReason, sizeof(freqFailReason));
+        buildFrequencyFailReason(diagnostics.duplicateFrequencyEvidence, _frequencyEvidenceTuning, freqFailReason, sizeof(freqFailReason));
         if (strcmp(freqFailReason, "none") != 0) {
             Serial.print(" freq_fail_reason_duplicate=");
             Serial.print(freqFailReason);
@@ -3601,6 +3694,28 @@ void AnalyzerApp::printSequenceSummary() const {
     Serial.print(" primary_avg_dur=");
     Serial.print(primaryAvgDuration, 3);
     Serial.println(" ms");
+    Serial.print("SEQ_CLASS_SUMMARY tonal_expected=");
+    Serial.print(_sequenceTest.tonalExpected);
+    Serial.print(" transient_only_expected=");
+    Serial.print(_sequenceTest.transientOnlyExpected);
+    Serial.print(" tonal_duplicates=");
+    Serial.print(_sequenceTest.tonalDuplicates);
+    Serial.print(" non_tonal_duplicates=");
+    Serial.print(_sequenceTest.nonTonalDuplicates);
+    Serial.print(" tonal_unexpected=");
+    Serial.print(_sequenceTest.tonalUnexpected);
+    Serial.print(" non_tonal_unexpected=");
+    Serial.print(_sequenceTest.nonTonalUnexpected);
+    Serial.print(" freq_reject_score=");
+    Serial.print(_sequenceTest.freqRejectScore);
+    Serial.print(" freq_reject_contrast=");
+    Serial.print(_sequenceTest.freqRejectContrast);
+    Serial.print(" freq_reject_both=");
+    Serial.print(_sequenceTest.freqRejectBoth);
+    Serial.print(" freq_reject_no_evidence=");
+    Serial.print(_sequenceTest.freqRejectNoEvidence);
+    Serial.print(" freq_reject_invalid_window=");
+    Serial.println(_sequenceTest.freqRejectInvalidWindow);
     if (_sequenceTest.showDetails) {
         printDetectionParameters();
     }

@@ -65,6 +65,15 @@ private:
             long durMs = -1;
             float strength = 0.0f;
             unsigned long duplicates = 0;
+            bool onsetSeen = false;
+            unsigned long maxEnv = 0;
+            float maxStrengthEst = 0.0f;
+            unsigned long transientRejectTooShortCount = 0;
+            unsigned long transientRejectTooLongCount = 0;
+            unsigned long transientRejectWeakCount = 0;
+            unsigned long onsetRejectPeakActiveCount = 0;
+            unsigned long onsetRejectCooldownCount = 0;
+            unsigned long onsetRejectOtherCount = 0;
 
             bool bestCandidateValid = false;
             unsigned long bestCandidateDtFromTriggerMs = 0;

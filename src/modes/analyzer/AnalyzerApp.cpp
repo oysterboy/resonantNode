@@ -3161,6 +3161,42 @@ void AnalyzerApp::printSequenceTrialReports() const {
         Serial.print(",post:");
         Serial.print(report.candidatePostWindowCount);
         Serial.print("}");
+        Serial.print(" miss_reason=");
+        if (strcmp(report.result, "miss") == 0) {
+            Serial.print(report.candidateCount == 0 ? "no_candidate" : "candidate_rejected");
+        } else if (strcmp(report.result, "invalid_audio") == 0) {
+            Serial.print("invalid_audio");
+        } else if (strcmp(report.result, "unexpected") == 0) {
+            Serial.print("unexpected");
+        } else {
+            Serial.print("none");
+        }
+        Serial.print(" max_env=");
+        Serial.print(report.maxEnv);
+        Serial.print(" max_strength_est=");
+        Serial.print(report.maxStrengthEst, 1);
+        Serial.print(" onset_seen=");
+        Serial.print(report.onsetSeen ? 1 : 0);
+        const unsigned long reportBlockedRejects =
+            report.onsetRejectPeakActiveCount +
+            report.onsetRejectCooldownCount +
+            report.onsetRejectOtherCount;
+        const unsigned long reportTotalRejects =
+            report.transientRejectTooShortCount +
+            report.transientRejectTooLongCount +
+            report.transientRejectWeakCount +
+            reportBlockedRejects;
+        Serial.print(" rejects=");
+        Serial.print(reportTotalRejects);
+        Serial.print(" reject_counts={too_short:");
+        Serial.print(report.transientRejectTooShortCount);
+        Serial.print(",too_long:");
+        Serial.print(report.transientRejectTooLongCount);
+        Serial.print(",below_strength:");
+        Serial.print(report.transientRejectWeakCount);
+        Serial.print(",blocked:");
+        Serial.print(reportBlockedRejects);
+        Serial.print("}");
         Serial.print(" freqEarly[avail=");
         Serial.print(report.freqEarly.windowAvailable ? 1 : 0);
         Serial.print(" score=");
@@ -3270,6 +3306,24 @@ void AnalyzerApp::printSequenceTrialResult(unsigned long trialNumber, const char
             report.durMs = durMs;
             report.strength = strength;
             report.duplicates = duplicateCount;
+            report.onsetSeen = diagnostics.onsetSeen;
+            report.maxEnv = diagnostics.maxSignalLevel;
+            report.maxStrengthEst = diagnostics.strongestRejectStrength;
+            if (diagnostics.transientAccepted && diagnostics.acceptedTransientStrength > report.maxStrengthEst) {
+                report.maxStrengthEst = diagnostics.acceptedTransientStrength;
+            }
+            if (diagnostics.duplicateCount > 0 && diagnostics.duplicateTransientStrength > report.maxStrengthEst) {
+                report.maxStrengthEst = diagnostics.duplicateTransientStrength;
+            }
+            if (diagnostics.bestCandidateStrength > report.maxStrengthEst) {
+                report.maxStrengthEst = diagnostics.bestCandidateStrength;
+            }
+            report.transientRejectTooShortCount = diagnostics.transientRejectTooShortCount;
+            report.transientRejectTooLongCount = diagnostics.transientRejectTooLongCount;
+            report.transientRejectWeakCount = diagnostics.transientRejectWeakCount;
+            report.onsetRejectPeakActiveCount = diagnostics.onsetRejectPeakActive;
+            report.onsetRejectCooldownCount = diagnostics.onsetRejectCooldown;
+            report.onsetRejectOtherCount = diagnostics.onsetRejectOther;
             report.bestCandidateDtFromTriggerMs = diagnostics.bestCandidateDtFromTriggerMs >= 0 ? static_cast<unsigned long>(diagnostics.bestCandidateDtFromTriggerMs) : 0UL;
             report.bestCandidateDurationMs = diagnostics.bestCandidateDurationMs;
             report.bestCandidateStrength = diagnostics.bestCandidateStrength;

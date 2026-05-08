@@ -10,6 +10,47 @@
 - Leave only unresolved items in `Known Issues`.
 - Keep this file historical and factual; use `docs/current-pass.md` for active work.
 
+## What that means in practice
+
+- The project has moved from a sampling-only Resonant baseline to a shared detector pipeline with richer evidence tracking.
+- Analyzer and Resonant now start from the same detector defaults, and both can be tuned at runtime instead of staying frozen.
+- Frequency analysis is now visible in SEQ logs as diagnostic evidence, with early-window and full-window views side by side.
+- The serial output is more readable now: misses, duplicates, reject reasons, and end-of-run summaries are all easier to scan.
+- Resonant behavior tuning is separated from detector tuning, so the mode-specific knobs stay clearer.
+
+## 2026-05-08 - Stabilize AMP detection (43912aa)
+
+### Changed
+- Analyzer and Resonant now share the same detector baseline defaults at onset=30 and release=20.
+- `PARAM` now sets detector tuning in Analyzer, and `RB PARAM` does the same in Resonant.
+- `RB BEHAV` now carries the RB-only behavior timing knobs, separate from detector tuning.
+- Frequency logging tuning is now configurable through `freqScore` and `freqContrast`, but still does not affect candidate acceptance.
+- Sequence verbose output now carries compact per-trial diagnostics for miss reasons, reject breakdowns, and frequency evidence.
+- Verbose candidate logging now includes explicit frequency fail reasons such as `freqContrast too low` and `freq score too low`.
+
+### Verification
+- `platformio run -e esp32dev-analyzer`
+
+### Notes
+- Frequency detection results are logged for comparison only and are not used for acceptance yet.
+- The tuned parameters are meant to restore relatively reliable detection after the I2S stream fixes.
+- Commit id `43912aa`.
+
+## Commit History Since Resonant Sampling Baseline
+
+## 2026-05-08 - FREQ logging safety backup (d3e6a24)
+
+### Changed
+- The per-trial verbose `SEQ` report now records `miss_reason`, `max_env`, `max_strength_est`, `onset_seen`, and reject counters.
+- The verbose end-of-run dump now prints compact reject totals for `too_short`, `too_long`, `below_strength`, and `blocked`.
+- Trial snapshots now preserve the strongest observed estimate across accepted, duplicate, and rejected paths so the end report can show a useful peak.
+
+### Verification
+- `platformio run -e esp32dev-analyzer`
+
+### Notes
+- This commit is log-only; behavior remains unchanged.
+
 ## 2026-05-08 - Rename sequence logging and add end reports (2addd1b)
 
 ### Changed

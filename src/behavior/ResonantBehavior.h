@@ -50,6 +50,9 @@ public:
     void setWaitAfterTransientMs(unsigned long value);
     void setRefractoryAfterEmitMs(unsigned long value);
     void setIdleTimeoutMs(unsigned long value);
+    unsigned long waitAfterTransientMs() const;
+    unsigned long refractoryAfterEmitMs() const;
+    unsigned long idleTimeoutMs() const;
 
     // state output (for debug / LED)
     float activity() const;

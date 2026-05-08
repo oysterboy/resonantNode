@@ -467,6 +467,18 @@ void ResonantBehavior::setIdleTimeoutMs(unsigned long value) {
     _idleTimeoutMs = value;
 }
 
+unsigned long ResonantBehavior::waitAfterTransientMs() const {
+    return _waitAfterTransientMs;
+}
+
+unsigned long ResonantBehavior::refractoryAfterEmitMs() const {
+    return _refractoryAfterEmitMs;
+}
+
+unsigned long ResonantBehavior::idleTimeoutMs() const {
+    return _idleTimeoutMs;
+}
+
 const char* ResonantBehavior::stateName() const {
     switch (_state) {
         case State::Idle:

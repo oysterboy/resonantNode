@@ -9,6 +9,7 @@
 #include "../../io/AudioOnsetDetector.h"
 #include "../../io/AudioSignal.h"
 #include "../../detection/DetectionPipeline.h"
+#include "../../detection/FrequencyLoggingTuning.h"
 #include "../../hal/AudioSource.h"
 
 class AnalyzerApp {
@@ -88,6 +89,10 @@ private:
 
             DetectionPipeline::FrequencyEvidence freqEarly = {};
             DetectionPipeline::FrequencyEvidence freqFull = {};
+            DetectionPipeline::FrequencyEvidence duplicateFreqEarly = {};
+            DetectionPipeline::FrequencyEvidence duplicateFreqFull = {};
+            long duplicateDurMs = -1;
+            float duplicateStrength = 0.0f;
 
             char result[16] = {};
         };
@@ -392,6 +397,7 @@ private:
     AudioSignal _audioSignal;
     AudioFrequencyDetector _audioFrequencyDetector;
     AudioOnsetDetector _audioOnsetDetector;
+    FrequencyLoggingTuning::Values _frequencyLoggingTuning = {};
 
     // Console and emitter control.
     unsigned long _controlBaudRate = 115200;

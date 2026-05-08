@@ -2,6 +2,8 @@
 #include <Arduino.h>
 #include <string.h>
 
+#include "../../detection/DetectorParameters.h"
+#include "../../detection/FrequencyLoggingTuning.h"
 #include "../../detection/DetectionPipeline.h"
 #include "../../detection/FrequencyWindowProbe.h"
 
@@ -350,8 +352,8 @@ void Node::configureSharedParameters() {
 
 void Node::configureAnalogParameters() {
     _audioSignal.setBaselineTrackingQuietThreshold(40);
-    _audioOnsetDetector.setOnsetDetectionThreshold(36.0f);
-    _audioOnsetDetector.setOnsetReleaseThreshold(26.0f);
+    _audioOnsetDetector.setOnsetDetectionThreshold(30.0f);
+    _audioOnsetDetector.setOnsetReleaseThreshold(20.0f);
     _audioOnsetDetector.setCooldownAfterOnsetMs(300);
     _audioOnsetDetector.setReleaseDebounceMs(30);
     _audioOnsetDetector.setMinTransientDurationMs(60);
@@ -365,16 +367,16 @@ void Node::configureAnalogParameters() {
 
 void Node::configureI2SParameters() {
     _audioSignal.setBaselineTrackingQuietThreshold(20);
-    _audioSignal.setOnsetDetectionThreshold(36.0f);
-    _audioSignal.setOnsetReleaseThreshold(26.0f);
+    _audioSignal.setOnsetDetectionThreshold(30.0f);
+    _audioSignal.setOnsetReleaseThreshold(20.0f);
     _audioSignal.setCooldownAfterOnsetMs(300);
     _audioSignal.setReleaseDebounceMs(30);
     _audioSignal.setMinTransientDurationMs(60);
     _audioSignal.setMaxTransientDurationMs(240);
     _audioSignal.setMinTransientPeakStrength(40.0f);
 
-    _audioOnsetDetector.setOnsetDetectionThreshold(36.0f);
-    _audioOnsetDetector.setOnsetReleaseThreshold(26.0f);
+    _audioOnsetDetector.setOnsetDetectionThreshold(30.0f);
+    _audioOnsetDetector.setOnsetReleaseThreshold(20.0f);
     _audioOnsetDetector.setCooldownAfterOnsetMs(300);
     _audioOnsetDetector.setReleaseDebounceMs(30);
     _audioOnsetDetector.setMinTransientDurationMs(60);
@@ -721,6 +723,107 @@ void Node::pollSerialCommands() {
 }
 
 void Node::handleSerialLine(const char* line) {
+    if (equalsIgnoreCase(line, "RB help")) {
+        Serial.println("RB CMD: RB PARAM onset=30 release=20 cooldown=50 releaseDebounce=10 minMs=90 maxMs=240 minStrength=40.0 freqScore=50000 freqContrast=20.0");
+        Serial.println("RB CMD: RB BEHAV wait=0 refractory=0 idle=10000");
+        Serial.println("RB CMD: RB rebase");
+        Serial.println("RB CMD: RB rebase force");
+        Serial.println("RB CMD: RB detectonly on|off");
+        Serial.println("RB CMD: RB log off|minimal|full");
+        Serial.println("RB CMD: RB debug off|events|plot");
+        Serial.println("RB CMD: RB summary");
+        Serial.println("RB CMD: RB stop");
+        return;
+    }
+    if (startsWithTokenIgnoreCase(line, "RB PARAM")) {
+        char buffer[96];
+        strncpy(buffer, line, sizeof(buffer));
+        buffer[sizeof(buffer) - 1] = '\0';
+
+        char* savePtr = nullptr;
+        char* token = strtok_r(buffer, " ", &savePtr);
+        token = token != nullptr ? strtok_r(nullptr, " ", &savePtr) : nullptr;
+
+        if (token == nullptr || !equalsIgnoreCase(token, "PARAM")) {
+            Serial.println("RB PARAM usage=RB PARAM onset=30 release=20 cooldown=50 releaseDebounce=10 minMs=90 maxMs=240 minStrength=40.0 freqScore=50000 freqContrast=20.0");
+            return;
+        }
+
+        DetectorParameters::Values params = DetectorParameters::capture(_audioSignal);
+        FrequencyLoggingTuning::Values freqTuning = _frequencyLoggingTuning;
+
+        while ((token = strtok_r(nullptr, " ", &savePtr)) != nullptr) {
+            DetectorParameters::parseToken(token, params);
+            FrequencyLoggingTuning::parseToken(token, freqTuning);
+        }
+
+        DetectorParameters::apply(params, _audioSignal);
+        DetectorParameters::apply(params, _audioOnsetDetector);
+        _frequencyLoggingTuning = freqTuning;
+
+        Serial.print("RB PARAM onset=");
+        Serial.print(_audioSignal.onsetDetectionThreshold(), 1);
+        Serial.print(" release=");
+        Serial.print(_audioSignal.onsetReleaseThreshold(), 1);
+        Serial.print(" cooldown=");
+        Serial.print(_audioSignal.cooldownAfterOnsetMs());
+        Serial.print(" releaseDebounce=");
+        Serial.print(_audioSignal.releaseDebounceMs());
+        Serial.print(" minMs=");
+        Serial.print(_audioSignal.minTransientDurationMs());
+        Serial.print(" maxMs=");
+        Serial.print(_audioSignal.maxTransientDurationMs());
+        Serial.print(" minStrength=");
+        Serial.print(_audioSignal.minTransientPeakStrength(), 1);
+        Serial.print(" freqScore=");
+        Serial.print(_frequencyLoggingTuning.scoreMin, 0);
+        Serial.print(" freqContrast=");
+        Serial.println(_frequencyLoggingTuning.contrastMin, 1);
+        return;
+    }
+    if (startsWithTokenIgnoreCase(line, "RB BEHAV")) {
+        char buffer[96];
+        strncpy(buffer, line, sizeof(buffer));
+        buffer[sizeof(buffer) - 1] = '\0';
+
+        char* savePtr = nullptr;
+        char* token = strtok_r(buffer, " ", &savePtr);
+        token = token != nullptr ? strtok_r(nullptr, " ", &savePtr) : nullptr;
+
+        if (token == nullptr || !equalsIgnoreCase(token, "BEHAV")) {
+            Serial.println("RB BEHAV usage=RB BEHAV wait=0 refractory=0 idle=10000");
+            return;
+        }
+
+        unsigned long waitAfterTransientMs = _behavior.waitAfterTransientMs();
+        unsigned long refractoryAfterEmitMs = _behavior.refractoryAfterEmitMs();
+        unsigned long idleTimeoutMs = _behavior.idleTimeoutMs();
+
+        while ((token = strtok_r(nullptr, " ", &savePtr)) != nullptr) {
+            if (startsWithTokenIgnoreCase(token, "wait=") || startsWithTokenIgnoreCase(token, "waitMs=")) {
+                const char* value = token + (startsWithTokenIgnoreCase(token, "waitMs=") ? 7 : 5);
+                waitAfterTransientMs = strtoul(value, nullptr, 10);
+            } else if (startsWithTokenIgnoreCase(token, "refractory=") || startsWithTokenIgnoreCase(token, "refractoryMs=")) {
+                const char* value = token + (startsWithTokenIgnoreCase(token, "refractoryMs=") ? 13 : 11);
+                refractoryAfterEmitMs = strtoul(value, nullptr, 10);
+            } else if (startsWithTokenIgnoreCase(token, "idle=") || startsWithTokenIgnoreCase(token, "idleMs=") || startsWithTokenIgnoreCase(token, "idleTimeoutMs=")) {
+                const char* value = token + (startsWithTokenIgnoreCase(token, "idleTimeoutMs=") ? 14 : startsWithTokenIgnoreCase(token, "idleMs=") ? 7 : 5);
+                idleTimeoutMs = strtoul(value, nullptr, 10);
+            }
+        }
+
+        _behavior.setWaitAfterTransientMs(waitAfterTransientMs);
+        _behavior.setRefractoryAfterEmitMs(refractoryAfterEmitMs);
+        _behavior.setIdleTimeoutMs(idleTimeoutMs);
+
+        Serial.print("RB BEHAV wait=");
+        Serial.print(_behavior.waitAfterTransientMs());
+        Serial.print(" refractory=");
+        Serial.print(_behavior.refractoryAfterEmitMs());
+        Serial.print(" idle=");
+        Serial.println(_behavior.idleTimeoutMs());
+        return;
+    }
     if (startsWithTokenIgnoreCase(line, "RB rebase force")) {
         _rbBaselineState = RBBaselineState::Rebase;
         performRbRebase();
@@ -937,6 +1040,12 @@ void Node::logCandidate(const DetectorCandidate& candidate, const DetectionPipel
     Serial.print(" win=");
     Serial.print(patternResult.candidate.frequency.windowSampleCount);
     Serial.print("]");
+    char freqFailReason[96];
+    FrequencyLoggingTuning::buildFailReason(patternResult.candidate.frequency, _frequencyLoggingTuning, freqFailReason, sizeof(freqFailReason));
+    if (strcmp(freqFailReason, "none") != 0) {
+        Serial.print(" freq_fail_reason=");
+        Serial.print(freqFailReason);
+    }
     if (liveFrequencyEvidence != nullptr) {
         Serial.print(" liveFreq[avail=");
         Serial.print(liveFrequencyEvidence->present ? 1 : 0);
@@ -994,6 +1103,12 @@ void Node::printRbSummary() const {
 void Node::printRbBehaviorSummary() const {
     Serial.print("RB behavior detectOnly=");
     Serial.print(_behavior.detectionOnly() ? 1 : 0);
+    Serial.print(" wait=");
+    Serial.print(_behavior.waitAfterTransientMs());
+    Serial.print(" refractory=");
+    Serial.print(_behavior.refractoryAfterEmitMs());
+    Serial.print(" idle=");
+    Serial.print(_behavior.idleTimeoutMs());
     Serial.print(" lastDecision=");
     Serial.print(_behavior.lastDecisionName());
     Serial.print(" lastBlock=");

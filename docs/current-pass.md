@@ -49,7 +49,7 @@ AMP / transient candidate
 
 ---
 
-## Pass 1 — Stabilize AudioSignal Boundary
+## Pass 1 — Stabilize AudioSignal Boundary (Complete)
 
 Keep current AMP/transient behavior frozen.
 
@@ -84,7 +84,7 @@ Do not disturb it before frequency diagnostics are understood.
 
 ---
 
-## Pass 2 — Add RawSampleHistory
+## Pass 2 — Add RawSampleHistory (Complete)
 
 Introduce a firmware-owned ring buffer.
 
@@ -133,7 +133,7 @@ If a requested window is no longer available, log it and do not silently analyze
 
 ---
 
-## Pass 3 — Candidate-Window Frequency Measurement
+## Pass 3 — Candidate-Window Frequency Measurement (Complete)
 
 On candidate drain:
 
@@ -152,10 +152,10 @@ Suggested windows:
 early window:
     candidate onset → onset + 100 ms
 
-peak window:
+peak window (not implemented):
     around candidate peak, e.g. peak ± 40 ms
 
-full window:
+full window (not implemented):
     candidate start → candidate end
 ```
 
@@ -185,7 +185,7 @@ Use existing frequency math where possible, but do not rely on the live rolling 
 
 ---
 
-## Pass 4 — Logging Only
+## Pass 4 — Logging Only (Complete)
 
 Log enough to compare AMP candidate facts and frequency-window facts.
 

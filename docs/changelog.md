@@ -10,7 +10,7 @@
 - Leave only unresolved items in `Known Issues`.
 - Keep this file historical and factual; use `docs/current-pass.md` for active work.
 
-## Changes Since Last Commit
+## 2026-05-08 - Rename sequence logging and add end reports (2addd1b)
 
 ### Changed
 - Pass 1 stabilized `AudioSignal` ownership comments around the transient detector boundary without changing detector behavior.
@@ -27,9 +27,7 @@
 - `platformio run -e esp32dev-analyzer`
 
 ### Notes
-- This section is the rolling staging area for notes since the last commit.
-- After the next commit, move these notes under that commit's dated heading and update the commit id.
-- The current pass work remains log-only; behavior and `PatternResult.valid` are unchanged.
+- This commit is log-only; behavior and `PatternResult.valid` are unchanged.
 
 ## 2026-05-06 - H2: Frequency Evidence Observer
 

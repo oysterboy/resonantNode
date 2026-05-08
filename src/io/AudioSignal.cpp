@@ -121,6 +121,7 @@ void AudioSignal::processSample(int sample, uint32_t sampleTimeUs, uint64_t samp
     _rawSignal = sample;
     _sampleTimeUs = sampleTimeUs;
     _centeredSignal = _rawSignal - (int)_baseline;
+    _rawSampleHistory.push(sampleIndex, _centeredSignal);
     int magnitude = abs(_centeredSignal);
 
     // Only let the baseline drift while the signal still looks quiet.
@@ -148,24 +149,26 @@ void AudioSignal::finalizeCandidate(uint64_t releaseSample, uint32_t releaseMicr
         return;
     }
 
-        _candidateReleaseSample = releaseSample;
-        _candidateReleaseMicrosApprox = releaseMicrosApprox;
-        _candidateReleaseMillisApprox = releaseMillisApprox;
-        _candidateReleaseStrength = static_cast<float>(_signalMagnitude);
+    // Candidate timing comes from the same sample stream that drives the detector.
+    // Keep these fields as the stable AMP/transient baseline for the current pass.
+    _candidateReleaseSample = releaseSample;
+    _candidateReleaseMicrosApprox = releaseMicrosApprox;
+    _candidateReleaseMillisApprox = releaseMillisApprox;
+    _candidateReleaseStrength = static_cast<float>(_signalMagnitude);
 
-        DetectorCandidate candidate;
-        candidate.onsetSample = _candidateOnsetSample;
-        candidate.peakSample = _candidatePeakSample;
-        candidate.releaseSample = _candidateReleaseSample;
-        candidate.onsetMicrosApprox = _candidateOnsetMicrosApprox;
-        candidate.releaseMicrosApprox = _candidateReleaseMicrosApprox;
-        candidate.onsetMillisApprox = _candidateOnsetMillisApprox;
-        candidate.releaseMillisApprox = _candidateReleaseMillisApprox;
-        candidate.onsetStrength = _candidateOnsetStrength;
-        candidate.peakStrength = _candidatePeakStrength;
-        candidate.releaseStrength = _candidateReleaseStrength;
-        candidate.ambientBaseline = _candidateAmbientBaseline;
-        candidate.audioOverflowDuringCandidate = _candidateHadOverflow;
+    DetectorCandidate candidate;
+    candidate.onsetSample = _candidateOnsetSample;
+    candidate.peakSample = _candidatePeakSample;
+    candidate.releaseSample = _candidateReleaseSample;
+    candidate.onsetMicrosApprox = _candidateOnsetMicrosApprox;
+    candidate.releaseMicrosApprox = _candidateReleaseMicrosApprox;
+    candidate.onsetMillisApprox = _candidateOnsetMillisApprox;
+    candidate.releaseMillisApprox = _candidateReleaseMillisApprox;
+    candidate.onsetStrength = _candidateOnsetStrength;
+    candidate.peakStrength = _candidatePeakStrength;
+    candidate.releaseStrength = _candidateReleaseStrength;
+    candidate.ambientBaseline = _candidateAmbientBaseline;
+    candidate.audioOverflowDuringCandidate = _candidateHadOverflow;
 
     if (candidate.releaseSample >= candidate.onsetSample) {
         const uint32_t sampleRateHz = _source.sampleRateHz();
@@ -399,6 +402,30 @@ const AudioSignalStats& AudioSignal::stats() const {
     return _stats;
 }
 
+bool AudioSignal::rawSampleHistoryAvailable(uint64_t startSampleIndex, uint64_t endSampleIndex) const {
+    return _rawSampleHistory.hasWindow(startSampleIndex, endSampleIndex);
+}
+
+size_t AudioSignal::copyRawSampleHistory(uint64_t startSampleIndex, uint64_t endSampleIndex, int16_t* outSamples, size_t outCapacity) const {
+    return _rawSampleHistory.copyWindow(startSampleIndex, endSampleIndex, outSamples, outCapacity);
+}
+
+uint64_t AudioSignal::rawSampleHistoryStartSampleIndex() const {
+    return _rawSampleHistory.oldestSampleIndex();
+}
+
+uint64_t AudioSignal::rawSampleHistoryEndSampleIndex() const {
+    return _rawSampleHistory.newestSampleIndex();
+}
+
+size_t AudioSignal::rawSampleHistorySampleCount() const {
+    return _rawSampleHistory.sampleCount();
+}
+
+size_t AudioSignal::rawSampleHistoryCapacity() const {
+    return RawSampleHistory::kCapacity;
+}
+
 bool AudioSignal::popCandidate(DetectorCandidate& candidate) {
     if (_candidateCount == 0) {
         return false;
@@ -420,6 +447,7 @@ size_t AudioSignal::candidateQueueDepth() const {
 
 void AudioSignal::resetStats() {
     _stats = {};
+    _rawSampleHistory.reset();
     _candidateQueue[0] = {};
     _candidateReadIndex = 0;
     _candidateCount = 0;
@@ -444,6 +472,7 @@ void AudioSignal::resetStats() {
 
 void AudioSignal::resetDetectorState() {
     _detector.resetState();
+    _rawSampleHistory.reset();
     _candidateActive = false;
     _candidateHadOverflow = false;
     _candidateOnsetSample = 0;

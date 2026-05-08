@@ -40,6 +40,91 @@ struct DetectorCandidate {
     bool audioOverflowDuringCandidate = false;
 };
 
+struct RawSampleHistory {
+    static constexpr size_t kCapacity = 8000; // 500 ms at 16 kHz.
+
+    void reset() {
+        _oldestSampleIndex = 0;
+        _writeIndex = 0;
+        _sampleCount = 0;
+        for (size_t i = 0; i < kCapacity; ++i) {
+            _centeredSamples[i] = 0;
+        }
+    }
+
+    void push(uint64_t sampleIndex, int centeredSample) {
+        if (_sampleCount == 0) {
+            _oldestSampleIndex = sampleIndex;
+        } else if (_sampleCount == kCapacity) {
+            ++_oldestSampleIndex;
+        }
+
+        if (centeredSample > 32767) {
+            centeredSample = 32767;
+        } else if (centeredSample < -32768) {
+            centeredSample = -32768;
+        }
+
+        _centeredSamples[_writeIndex] = static_cast<int16_t>(centeredSample);
+        _writeIndex = (_writeIndex + 1) % kCapacity;
+        if (_sampleCount < kCapacity) {
+            ++_sampleCount;
+        }
+    }
+
+    bool hasWindow(uint64_t startSampleIndex, uint64_t endSampleIndex) const {
+        if (_sampleCount == 0 || endSampleIndex < startSampleIndex) {
+            return false;
+        }
+
+        const uint64_t newestSampleIndex = _oldestSampleIndex + static_cast<uint64_t>(_sampleCount - 1);
+        return startSampleIndex >= _oldestSampleIndex && endSampleIndex <= newestSampleIndex;
+    }
+
+    size_t copyWindow(uint64_t startSampleIndex, uint64_t endSampleIndex, int16_t* outSamples, size_t outCapacity) const {
+        if (outSamples == nullptr || outCapacity == 0 || !hasWindow(startSampleIndex, endSampleIndex)) {
+            return 0;
+        }
+
+        const size_t sampleCount = static_cast<size_t>(endSampleIndex - startSampleIndex + 1ULL);
+        if (sampleCount > outCapacity) {
+            return 0;
+        }
+
+        const size_t oldestBufferIndex = _sampleCount == kCapacity ? _writeIndex : 0;
+        const size_t startOffset = static_cast<size_t>(startSampleIndex - _oldestSampleIndex);
+        size_t bufferIndex = (oldestBufferIndex + startOffset) % kCapacity;
+        for (size_t i = 0; i < sampleCount; ++i) {
+            outSamples[i] = _centeredSamples[bufferIndex];
+            bufferIndex = (bufferIndex + 1) % kCapacity;
+        }
+
+        return sampleCount;
+    }
+
+    uint64_t oldestSampleIndex() const {
+        return _oldestSampleIndex;
+    }
+
+    uint64_t newestSampleIndex() const {
+        if (_sampleCount == 0) {
+            return 0;
+        }
+
+        return _oldestSampleIndex + static_cast<uint64_t>(_sampleCount - 1);
+    }
+
+    size_t sampleCount() const {
+        return _sampleCount;
+    }
+
+private:
+    int16_t _centeredSamples[kCapacity] = {};
+    uint64_t _oldestSampleIndex = 0;
+    size_t _writeIndex = 0;
+    size_t _sampleCount = 0;
+};
+
 /*
 AudioSignal
 
@@ -47,6 +132,7 @@ Owns the continuous signal interpretation layer:
 - receives raw samples from the source
 - tracks a slow baseline for the quiet floor
 - exposes centered and smoothed values for detectors
+- keeps bounded centered sample history for later candidate-window analysis
 
 Does not:
 - decide when the node should chirp
@@ -109,6 +195,12 @@ public:
     unsigned long transientRejectedDurationTooLongCount() const;
     unsigned long transientRejectedStrengthTooLowCount() const;
     const AudioSignalStats& stats() const;
+    bool rawSampleHistoryAvailable(uint64_t startSampleIndex, uint64_t endSampleIndex) const;
+    size_t copyRawSampleHistory(uint64_t startSampleIndex, uint64_t endSampleIndex, int16_t* outSamples, size_t outCapacity) const;
+    uint64_t rawSampleHistoryStartSampleIndex() const;
+    uint64_t rawSampleHistoryEndSampleIndex() const;
+    size_t rawSampleHistorySampleCount() const;
+    size_t rawSampleHistoryCapacity() const;
     bool popCandidate(DetectorCandidate& candidate);
     bool candidateAvailable() const;
     size_t candidateQueueDepth() const;
@@ -133,8 +225,11 @@ private:
     uint64_t _lastBlockStartSample = 0;
     uint16_t _lastBlockSampleCount = 0;
     uint32_t _lastBlockApproxStartMicros = 0;
+    // Transitional ownership: AudioSignal currently owns the first AMP/transient detector.
+    // Keep this baseline stable while the raw-history / candidate-window refactor is clarified.
     AudioOnsetDetector _detector;
     AudioSignalStats _stats;
+    RawSampleHistory _rawSampleHistory;
     static constexpr size_t kCandidateQueueCapacity = 8;
     DetectorCandidate _candidateQueue[kCandidateQueueCapacity] = {};
     size_t _candidateReadIndex = 0;

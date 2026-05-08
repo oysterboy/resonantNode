@@ -81,7 +81,7 @@ private:
     bool rbShouldLogDetail() const;
     const char* rbLogModeName() const;
     DetectionPipeline::FrequencyEvidence captureFrequencyEvidence() const;
-    void logCandidate(const DetectorCandidate& candidate, const DetectionPipeline::PatternResult& patternResult, unsigned long candidateNumber, long gapMs, unsigned long queueDepthBeforeDrain, unsigned long behaviorLagMs, const char* candidateClass, const char* action, const char* stateName, const char* gateName);
+    void logCandidate(const DetectorCandidate& candidate, const DetectionPipeline::PatternResult& patternResult, const DetectionPipeline::FrequencyEvidence* liveFrequencyEvidence, unsigned long candidateNumber, long gapMs, unsigned long queueDepthBeforeDrain, unsigned long behaviorLagMs, const char* candidateClass, const char* action, const char* stateName, const char* gateName);
     void printRbSummary() const;
     void printRbSignalSummary() const;
     void printRbDetectorSummary() const;

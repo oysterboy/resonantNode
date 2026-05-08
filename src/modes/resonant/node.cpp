@@ -3,6 +3,7 @@
 #include <string.h>
 
 #include "../../detection/DetectionPipeline.h"
+#include "../../detection/FrequencyWindowProbe.h"
 
 #ifndef CHIRP_FREQUENCY_HZ
 #define CHIRP_FREQUENCY_HZ 2400
@@ -419,7 +420,15 @@ void Node::update() {
             DetectorCandidate candidate;
             while (_audioSignal.popCandidate(candidate)) {
                 DetectionPipeline::PatternResult patternResult;
-                const auto frequencyEvidence = captureFrequencyEvidence();
+                const auto liveFrequencyEvidence = captureFrequencyEvidence();
+                DetectionPipeline::FrequencyEvidence frequencyEvidence = liveFrequencyEvidence;
+                DetectionPipeline::measureCandidateWindowFrequency(
+                    _audioSignal,
+                    candidate,
+                    _audioSource.sampleRateHz() > 0 ? _audioSource.sampleRateHz() : 16000UL,
+                    _audioFrequencyDetector.targetFrequencyHz(),
+                    now,
+                    frequencyEvidence);
                 const bool patternValid = DetectionPipeline::processDetectorCandidate(candidate, patternResult, now, &frequencyEvidence);
                 const auto behaviorDecision = _behavior.handlePatternResult(patternResult, now);
 
@@ -474,7 +483,7 @@ void Node::update() {
                 const char* candidateClass = h3RbCandidateClassName(patternResult, behaviorDecision, selfChirpSuppressed);
 
                 if (rbShouldLogDetail()) {
-                    logCandidate(candidate, patternResult, _rbCandidateCount + 1, gapMs, queueDepthBeforeDrain, behaviorLagMs, candidateClass, action, _behavior.stateName(), behaviorGateName(_behavior, now, sawPatternThisLoop, selfChirpSuppressed));
+                    logCandidate(candidate, patternResult, &liveFrequencyEvidence, _rbCandidateCount + 1, gapMs, queueDepthBeforeDrain, behaviorLagMs, candidateClass, action, _behavior.stateName(), behaviorGateName(_behavior, now, sawPatternThisLoop, selfChirpSuppressed));
                 }
 
                 ++_rbCandidateCount;
@@ -517,7 +526,15 @@ void Node::update() {
             DetectorCandidate candidate;
             while (_audioSignal.popCandidate(candidate)) {
                 DetectionPipeline::PatternResult patternResult;
-                const auto frequencyEvidence = captureFrequencyEvidence();
+                const auto liveFrequencyEvidence = captureFrequencyEvidence();
+                DetectionPipeline::FrequencyEvidence frequencyEvidence = liveFrequencyEvidence;
+                DetectionPipeline::measureCandidateWindowFrequency(
+                    _audioSignal,
+                    candidate,
+                    _audioSource.sampleRateHz() > 0 ? _audioSource.sampleRateHz() : 16000UL,
+                    _audioFrequencyDetector.targetFrequencyHz(),
+                    now,
+                    frequencyEvidence);
                 const bool patternValid = DetectionPipeline::processDetectorCandidate(candidate, patternResult, now, &frequencyEvidence);
                 const auto behaviorDecision = _behavior.handlePatternResult(patternResult, now);
 
@@ -567,7 +584,7 @@ void Node::update() {
                 const char* candidateClass = h3RbCandidateClassName(patternResult, behaviorDecision, selfChirpSuppressed);
 
                 if (rbShouldLogDetail()) {
-                    logCandidate(candidate, patternResult, _rbCandidateCount + 1, gapMs, queueDepthBeforeDrain, behaviorLagMs, candidateClass, action, _behavior.stateName(), behaviorGateName(_behavior, now, sawPatternThisLoop, selfChirpSuppressed));
+                    logCandidate(candidate, patternResult, &liveFrequencyEvidence, _rbCandidateCount + 1, gapMs, queueDepthBeforeDrain, behaviorLagMs, candidateClass, action, _behavior.stateName(), behaviorGateName(_behavior, now, sawPatternThisLoop, selfChirpSuppressed));
                 }
 
                 ++_rbCandidateCount;
@@ -806,7 +823,11 @@ DetectionPipeline::FrequencyEvidence Node::captureFrequencyEvidence() const {
     return evidence;
 }
 
-void Node::logCandidate(const DetectorCandidate& candidate, const DetectionPipeline::PatternResult& patternResult, unsigned long candidateNumber, long gapMs, unsigned long queueDepthBeforeDrain, unsigned long behaviorLagMs, const char* candidateClass, const char* action, const char* stateName, const char* gateName) {
+void Node::logCandidate(const DetectorCandidate& candidate, const DetectionPipeline::PatternResult& patternResult, const DetectionPipeline::FrequencyEvidence* liveFrequencyEvidence, unsigned long candidateNumber, long gapMs, unsigned long queueDepthBeforeDrain, unsigned long behaviorLagMs, const char* candidateClass, const char* action, const char* stateName, const char* gateName) {
+    const uint32_t sampleRateHz = _audioSource.sampleRateHz() > 0 ? _audioSource.sampleRateHz() : 16000UL;
+    const unsigned long peakOffsetMs = candidate.peakSample >= candidate.onsetSample
+        ? static_cast<unsigned long>(((candidate.peakSample - candidate.onsetSample) * 1000ULL) / static_cast<uint64_t>(sampleRateHz))
+        : 0UL;
     Serial.print("RB candidate n=");
     Serial.print(candidateNumber);
     Serial.print(" gap=");
@@ -818,6 +839,12 @@ void Node::logCandidate(const DetectorCandidate& candidate, const DetectionPipel
     }
     Serial.print(" dur=");
     Serial.print(candidate.durationMs);
+    Serial.print(" onset_sample=");
+    Serial.print(candidate.onsetSample);
+    Serial.print(" peak_sample=");
+    Serial.print(candidate.peakSample);
+    Serial.print(" release_sample=");
+    Serial.print(candidate.releaseSample);
     Serial.print(" end_dt_ms=");
     if (candidate.onsetMillisApprox > 0) {
         Serial.print(candidate.onsetMillisApprox + candidate.durationMs);
@@ -825,6 +852,8 @@ void Node::logCandidate(const DetectorCandidate& candidate, const DetectionPipel
     } else {
         Serial.print("-");
     }
+    Serial.print(" peak_ms=");
+    Serial.print(candidate.onsetMillisApprox + peakOffsetMs);
     Serial.print(" processed_at_ms=");
     Serial.print(patternResult.processedAtMs);
     Serial.print(" process_lag_ms=");
@@ -877,6 +906,44 @@ void Node::logCandidate(const DetectorCandidate& candidate, const DetectionPipel
     }
     Serial.print(" freq_valid_window=");
     Serial.print(patternResult.candidate.frequency.validWindow ? 1 : 0);
+    Serial.print(" freqEarly_available=");
+    Serial.print(patternResult.candidate.frequency.windowAvailable ? 1 : 0);
+    Serial.print(" freqEarly_window_start_sample=");
+    Serial.print(patternResult.candidate.frequency.windowStartSample);
+    Serial.print(" freqEarly_window_end_sample=");
+    Serial.print(patternResult.candidate.frequency.windowEndSample);
+    Serial.print(" freqEarly_window_samples=");
+    Serial.print(patternResult.candidate.frequency.windowSampleCount);
+    Serial.print(" freqEarly_score=");
+    Serial.print(patternResult.candidate.frequency.score, 1);
+    Serial.print(" freqEarly_target_power=");
+    Serial.print(patternResult.candidate.frequency.targetPower, 1);
+    Serial.print(" freqEarly_neighbor_power=");
+    Serial.print(patternResult.candidate.frequency.neighborPower, 1);
+    Serial.print(" freqEarly_total_energy=");
+    Serial.print(patternResult.candidate.frequency.totalEnergy, 1);
+    Serial.print(" freqEarly_contrast=");
+    Serial.print(patternResult.candidate.frequency.spectralContrast, 2);
+    Serial.print(" freq_window_available=");
+    Serial.print(patternResult.candidate.frequency.windowAvailable ? 1 : 0);
+    Serial.print(" freq_window_start_sample=");
+    Serial.print(patternResult.candidate.frequency.windowStartSample);
+    Serial.print(" freq_window_end_sample=");
+    Serial.print(patternResult.candidate.frequency.windowEndSample);
+    Serial.print(" freq_window_samples=");
+    Serial.print(patternResult.candidate.frequency.windowSampleCount);
+    if (liveFrequencyEvidence != nullptr) {
+        Serial.print(" live_freq_present=");
+        Serial.print(liveFrequencyEvidence->present ? 1 : 0);
+        Serial.print(" live_freq_score=");
+        Serial.print(liveFrequencyEvidence->score, 1);
+        Serial.print(" live_freq_target_hz=");
+        Serial.print(liveFrequencyEvidence->targetHz);
+        Serial.print(" live_freq_contrast=");
+        Serial.print(liveFrequencyEvidence->spectralContrast, 2);
+        Serial.print(" live_freq_observed_at_ms=");
+        Serial.print(liveFrequencyEvidence->observedAtMs);
+    }
     Serial.print(" reason=");
     Serial.print(DetectionPipeline::patternReasonName(patternResult.reasonCode));
     Serial.print(" valid=");

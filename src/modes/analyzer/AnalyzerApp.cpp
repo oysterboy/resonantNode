@@ -5,6 +5,7 @@
 
 #include "../../AudioDebugConfig.h"
 #include "../../detection/DetectionPipeline.h"
+#include "../../detection/FrequencyWindowProbe.h"
 
 namespace {
 constexpr int kMaxSamplesPerLoop = 128;
@@ -150,6 +151,18 @@ uint32_t analyzerLogFlagsFromToken(const char* token) {
     return flags;
 }
 
+void printSequenceHelp() {
+    Serial.println("CMD: SEQ help");
+    Serial.println("CMD: SEQ");
+    Serial.println("CMD: SEQ stop");
+    Serial.println("SEQ IN: start [tries=N] [period=MS] [window=MS] [freq=HZ] [dur=MS] [test=LABEL]");
+    Serial.println("SEQ IN: [log=default|none|quiet|summary+trial+candidate+freq_class+raw]");
+    Serial.println("SEQ IN: [debug=0|1|2] [dumpSamples=0|1] [curveFormat=off|samples]");
+    Serial.println("SEQ IN: [sampleFirst=N] [sampleEvery=N] [sampleLead=MS] [sampleTail=MS] [sampleStep=MS] [sampleMax=N]");
+    Serial.println("SEQ OUT: SEQ start / SEQ running / SEQ_CAND / SEQ_FREQ_CLASS / SEQ_RAW / SEQ_TRIAL / SEQ_SUMMARY");
+    Serial.println("SEQ OUT: candidate fields include onset_sample peak_sample release_sample peak_ms dur end_dt_ms freq_*");
+}
+
 bool waitForEmitterAck(const char* expectedPrefix, unsigned long timeoutMs) {
     const unsigned long startMs = millis();
     char line[96];
@@ -213,6 +226,7 @@ const char* h3SequenceCandidateClass(bool duplicateCandidate, bool inWindow, lon
 
 void printH3FrequencyEvidenceFields(const DetectionPipeline::PatternResult& patternResult,
                                     const DetectionPipeline::FrequencyEvidence& frequencyEvidence,
+                                    const DetectionPipeline::FrequencyEvidence* liveFrequencyEvidence,
                                     const char* candidateClass,
                                     long transientAgeOrDtMs,
                                     unsigned long referenceMs) {
@@ -264,6 +278,44 @@ void printH3FrequencyEvidenceFields(const DetectionPipeline::PatternResult& patt
     }
     Serial.print(" freq_valid_window=");
     Serial.print(frequencyEvidence.validWindow ? 1 : 0);
+    Serial.print(" freqEarly_available=");
+    Serial.print(frequencyEvidence.windowAvailable ? 1 : 0);
+    Serial.print(" freqEarly_window_start_sample=");
+    Serial.print(frequencyEvidence.windowStartSample);
+    Serial.print(" freqEarly_window_end_sample=");
+    Serial.print(frequencyEvidence.windowEndSample);
+    Serial.print(" freqEarly_window_samples=");
+    Serial.print(frequencyEvidence.windowSampleCount);
+    Serial.print(" freqEarly_score=");
+    Serial.print(frequencyEvidence.score, 1);
+    Serial.print(" freqEarly_target_power=");
+    Serial.print(frequencyEvidence.targetPower, 1);
+    Serial.print(" freqEarly_neighbor_power=");
+    Serial.print(frequencyEvidence.neighborPower, 1);
+    Serial.print(" freqEarly_total_energy=");
+    Serial.print(frequencyEvidence.totalEnergy, 1);
+    Serial.print(" freqEarly_contrast=");
+    Serial.print(frequencyEvidence.spectralContrast, 2);
+    Serial.print(" freq_window_available=");
+    Serial.print(frequencyEvidence.windowAvailable ? 1 : 0);
+    Serial.print(" freq_window_start_sample=");
+    Serial.print(frequencyEvidence.windowStartSample);
+    Serial.print(" freq_window_end_sample=");
+    Serial.print(frequencyEvidence.windowEndSample);
+    Serial.print(" freq_window_samples=");
+    Serial.print(frequencyEvidence.windowSampleCount);
+    if (liveFrequencyEvidence != nullptr) {
+        Serial.print(" live_freq_present=");
+        Serial.print(liveFrequencyEvidence->present ? 1 : 0);
+        Serial.print(" live_freq_score=");
+        Serial.print(liveFrequencyEvidence->score, 1);
+        Serial.print(" live_freq_target_hz=");
+        Serial.print(liveFrequencyEvidence->targetHz);
+        Serial.print(" live_freq_contrast=");
+        Serial.print(liveFrequencyEvidence->spectralContrast, 2);
+        Serial.print(" live_freq_observed_at_ms=");
+        Serial.print(liveFrequencyEvidence->observedAtMs);
+    }
 }
 
 void printH3SequenceRoleFields(const char* role,
@@ -460,7 +512,15 @@ void AnalyzerApp::update() {
             DetectorCandidate candidate;
             while (_audioSignal.popCandidate(candidate)) {
                 DetectionPipeline::PatternResult patternResult;
-                const auto frequencyEvidence = captureFrequencyEvidence();
+                const auto liveFrequencyEvidence = captureFrequencyEvidence();
+                DetectionPipeline::FrequencyEvidence frequencyEvidence = liveFrequencyEvidence;
+                DetectionPipeline::measureCandidateWindowFrequency(
+                    _audioSignal,
+                    candidate,
+                    _audioSource.sampleRateHz() > 0 ? _audioSource.sampleRateHz() : 16000UL,
+                    _audioFrequencyDetector.targetFrequencyHz(),
+                    now,
+                    frequencyEvidence);
                 if (!DetectionPipeline::processDetectorCandidate(candidate, patternResult, now, &frequencyEvidence)) {
                     continue;
                 }
@@ -473,7 +533,7 @@ void AnalyzerApp::update() {
                 }
 
                 if (_sequenceTest.active) {
-                    handleSequenceCandidate(patternResult, queueDepthBeforeDrain);
+                    handleSequenceCandidate(patternResult, queueDepthBeforeDrain, &liveFrequencyEvidence);
                 }
             }
 
@@ -885,6 +945,7 @@ void AnalyzerApp::handleUsbLine(const char* line) {
         Serial.println("CMD: TEST");
         Serial.println("CMD: raw trigger f=2400 dur=100 post=1000 dump=bin");
         Serial.println("CMD: SEQ");
+        Serial.println("CMD: SEQ help");
         Serial.println("CMD: SEQ stop");
         Serial.println("CMD: CAP");
         Serial.println("CMD: CAP stop");
@@ -997,6 +1058,11 @@ void AnalyzerApp::handleUsbLine(const char* line) {
         char* savePtr = nullptr;
         char* token = strtok_r(buffer, " ", &savePtr);
         token = token != nullptr ? strtok_r(nullptr, " ", &savePtr) : nullptr;
+
+        if (token != nullptr && (equalsIgnoreCase(token, "help") || equalsIgnoreCase(token, "?"))) {
+            printSequenceHelp();
+            return;
+        }
 
         if (token != nullptr && equalsIgnoreCase(token, "stop")) {
             if (_sequenceTest.active) {
@@ -2317,7 +2383,7 @@ const char* AnalyzerApp::sequenceTrialClassificationName(const char* result, lon
     return "expected_clean";
 }
 
-void AnalyzerApp::handleSequenceCandidate(const DetectionPipeline::PatternResult& patternResult, unsigned long queueDepthBeforeDrain) {
+void AnalyzerApp::handleSequenceCandidate(const DetectionPipeline::PatternResult& patternResult, unsigned long queueDepthBeforeDrain, const DetectionPipeline::FrequencyEvidence* liveFrequencyEvidence) {
     if (_valMode) {
         return;
     }
@@ -2389,14 +2455,26 @@ void AnalyzerApp::handleSequenceCandidate(const DetectionPipeline::PatternResult
     }
 
     if (analyzerLogEnabled(_sequenceTest.logFlags, AnalyzerApp::ANALYZER_LOG_CANDIDATE) && !_sequenceTest.quiet) {
+        const uint32_t sampleRateHz = _audioSource.sampleRateHz() > 0 ? _audioSource.sampleRateHz() : 16000UL;
+        const unsigned long peakOffsetMs = candidate.peakSample >= candidate.onsetSample
+            ? static_cast<unsigned long>(((candidate.peakSample - candidate.onsetSample) * 1000ULL) / static_cast<uint64_t>(sampleRateHz))
+            : 0UL;
         Serial.print("SEQ_CAND role=detector trial=");
         Serial.print(_sequenceTest.currentTrial);
         Serial.print(" idx=");
         Serial.print(candidateIdx);
         Serial.print(" onset_ms=");
         Serial.print(onsetMs);
+        Serial.print(" onset_sample=");
+        Serial.print(candidate.onsetSample);
+        Serial.print(" peak_sample=");
+        Serial.print(candidate.peakSample);
+        Serial.print(" release_sample=");
+        Serial.print(candidate.releaseSample);
         Serial.print(" onset_dt_ms=");
         Serial.print(dtFromTriggerMs);
+        Serial.print(" peak_ms=");
+        Serial.print(candidate.startMs + peakOffsetMs);
         Serial.print(" dur=");
         Serial.print(candidate.durationMs);
         Serial.print(" end_dt_ms=");
@@ -2433,7 +2511,7 @@ void AnalyzerApp::handleSequenceCandidate(const DetectionPipeline::PatternResult
         Serial.print(patternResult.candidate.frequency.targetHz);
         Serial.print(" freq_contrast=");
         Serial.print(patternResult.candidate.frequency.spectralContrast, 1);
-        printH3FrequencyEvidenceFields(patternResult, patternResult.candidate.frequency, candidateClass, dtFromTriggerMs, patternResult.processedAtMs);
+        printH3FrequencyEvidenceFields(patternResult, patternResult.candidate.frequency, liveFrequencyEvidence, candidateClass, dtFromTriggerMs, patternResult.processedAtMs);
         Serial.println(" source=detector");
 
         Serial.print("SEQ_CAND role=pattern trial=");
@@ -2442,8 +2520,16 @@ void AnalyzerApp::handleSequenceCandidate(const DetectionPipeline::PatternResult
         Serial.print(candidateIdx);
         Serial.print(" onset_ms=");
         Serial.print(onsetMs);
+        Serial.print(" onset_sample=");
+        Serial.print(candidate.onsetSample);
+        Serial.print(" peak_sample=");
+        Serial.print(candidate.peakSample);
+        Serial.print(" release_sample=");
+        Serial.print(candidate.releaseSample);
         Serial.print(" onset_dt_ms=");
         Serial.print(dtFromTriggerMs);
+        Serial.print(" peak_ms=");
+        Serial.print(candidate.startMs + peakOffsetMs);
         Serial.print(" dur=");
         Serial.print(candidate.durationMs);
         Serial.print(" end_dt_ms=");
@@ -2480,7 +2566,7 @@ void AnalyzerApp::handleSequenceCandidate(const DetectionPipeline::PatternResult
         Serial.print(patternResult.candidate.frequency.targetHz);
         Serial.print(" freq_contrast=");
         Serial.print(patternResult.candidate.frequency.spectralContrast, 1);
-        printH3FrequencyEvidenceFields(patternResult, patternResult.candidate.frequency, candidateClass, dtFromTriggerMs, patternResult.processedAtMs);
+        printH3FrequencyEvidenceFields(patternResult, patternResult.candidate.frequency, liveFrequencyEvidence, candidateClass, dtFromTriggerMs, patternResult.processedAtMs);
         Serial.println(" source=pattern");
     }
 
@@ -2540,12 +2626,26 @@ void AnalyzerApp::handleSequenceCandidate(const DetectionPipeline::PatternResult
     _sequenceTest.currentTrialHit = true;
 
     if (analyzerLogEnabled(_sequenceTest.logFlags, AnalyzerApp::ANALYZER_LOG_CANDIDATE) && !_sequenceTest.quiet) {
+        const uint32_t sampleRateHz = _audioSource.sampleRateHz() > 0 ? _audioSource.sampleRateHz() : 16000UL;
+        const unsigned long peakOffsetMs = candidate.peakSample >= candidate.onsetSample
+            ? static_cast<unsigned long>(((candidate.peakSample - candidate.onsetSample) * 1000ULL) / static_cast<uint64_t>(sampleRateHz))
+            : 0UL;
         Serial.print("SEQ_CAND role=result trial=");
         Serial.print(_sequenceTest.currentTrial);
         Serial.print(" primary_idx=");
         Serial.print(candidateIdx);
+        Serial.print(" onset_ms=");
+        Serial.print(candidate.startMs);
+        Serial.print(" onset_sample=");
+        Serial.print(candidate.onsetSample);
+        Serial.print(" peak_sample=");
+        Serial.print(candidate.peakSample);
+        Serial.print(" release_sample=");
+        Serial.print(candidate.releaseSample);
         Serial.print(" onset_dt_ms=");
         Serial.print(dtFromTriggerMs);
+        Serial.print(" peak_ms=");
+        Serial.print(candidate.startMs + peakOffsetMs);
         Serial.print(" dur=");
         Serial.print(candidate.durationMs);
         Serial.print(" end_dt_ms=");
@@ -2584,7 +2684,7 @@ void AnalyzerApp::handleSequenceCandidate(const DetectionPipeline::PatternResult
         Serial.print(patternResult.candidate.frequency.spectralContrast, 1);
         Serial.print(" reason=");
         Serial.print(DetectionPipeline::patternReasonName(patternResult.reasonCode));
-        printH3FrequencyEvidenceFields(patternResult, patternResult.candidate.frequency, candidateClass, dtFromTriggerMs, patternResult.processedAtMs);
+        printH3FrequencyEvidenceFields(patternResult, patternResult.candidate.frequency, liveFrequencyEvidence, candidateClass, dtFromTriggerMs, patternResult.processedAtMs);
         Serial.println();
     }
 }
@@ -2966,10 +3066,45 @@ void AnalyzerApp::printSequenceTrialResult(unsigned long trialNumber, const char
         return;
     }
 
+    const DetectionPipeline::FrequencyEvidence* trialFrequency = nullptr;
+    if (diagnostics.transientAccepted) {
+        trialFrequency = &diagnostics.acceptedFrequencyEvidence;
+    } else if (diagnostics.duplicateCount > 0) {
+        trialFrequency = &diagnostics.duplicateFrequencyEvidence;
+    }
+
+    Serial.println();
+    Serial.print("SEQ_TRIAL_BEGIN trial=");
+    Serial.print(trialNumber);
+    Serial.print(" start_ms=");
+    Serial.print(_sequenceTest.currentTrialStartMs);
+    Serial.print(" end_ms=");
+    Serial.print(_sequenceTest.currentTrialEndMs);
+    Serial.print(" freq_hz=");
+    Serial.print(_sequenceTest.toneHz);
+    Serial.print(" dur_ms=");
+    Serial.print(_sequenceTest.durationMs);
+    Serial.print(" window_ms=");
+    Serial.print(_sequenceTest.windowEndOffsetMs);
+    Serial.println();
+
     Serial.print("SEQ_TRIAL trial=");
     Serial.print(trialNumber);
     Serial.print(" result=");
     Serial.print(result);
+    if (trialFrequency != nullptr) {
+        Serial.print(" freqEarly[avail=");
+        Serial.print(trialFrequency->windowAvailable ? 1 : 0);
+        Serial.print(" score=");
+        Serial.print(trialFrequency->score, 1);
+        Serial.print(" target=");
+        Serial.print(trialFrequency->targetHz);
+        Serial.print(" contrast=");
+        Serial.print(trialFrequency->spectralContrast, 2);
+        Serial.print(" win=");
+        Serial.print(trialFrequency->windowSampleCount);
+        Serial.print("]");
+    }
     Serial.print(" dt_ms=");
     if (dtMs >= 0) {
         Serial.print(dtMs);

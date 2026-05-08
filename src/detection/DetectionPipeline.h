@@ -45,6 +45,10 @@ struct FrequencyEvidence {
 
     unsigned long targetHz = 0;
     unsigned long observedAtMs = 0;
+    uint64_t windowStartSample = 0;
+    uint64_t windowEndSample = 0;
+    unsigned long windowSampleCount = 0;
+    bool windowAvailable = false;
 
     float score = 0.0f;
     float confidence = 0.0f;

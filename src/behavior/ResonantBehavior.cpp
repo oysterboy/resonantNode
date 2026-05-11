@@ -1,16 +1,80 @@
 #include "ResonantBehavior.h"
 
 /*
-Behavior
+ResonantBehavior
 
-- owns the response state machine
-- decides when to request a chirp
+Owns the local reaction state machine for the Resonant node.
+
+Responsibilities:
+- consume PatternResult objects from the detection/classification layer
+- decide whether a pattern should trigger a chirp
+- track wait, refractory, idle, and self-suppression timing
+- expose behavior state and decision metadata for debug / analyzer output
+- request chirps, but never emit audio directly
 
 Does NOT:
-- emit waveforms
-- know hardware details
-- interpret raw signal input
+- read raw audio samples
+- perform signal detection or classification
+- own hardware output implementation
+- decide detector thresholds or feature extraction logic
+
+File structure:
+- lifecycle: resetState(), update(bool...), handlePatternResult(), update(now)
+- configuration: detection flags and timing setters/getters
+- output / hooks: chirp requests, suppression gates, chirp lifecycle hooks
+- inspection: state, counters, timestamps, and decision names
+
+Timing roles:
+- waitAfterTransientMs: delay before responding to a heard event
+- refractoryAfterEmitMs: post-emit holdoff after chirp finish
+- behavior suppression: block reactions to our own active chirp
+- own-emit detection suppression: detection/analyzer-side tail window for ring-down
 */
+
+void ResonantBehavior::resetState() {
+    _state = State::Idle;
+    _activityLevel = 0.0f;
+    _pendingTransientDetected = false;
+    _pendingTransientStrength = 0.0f;
+    _pendingTransientMs = 0;
+    _lastEmitMs = 0;
+    _lastTransientMs = 0;
+    _transientStartedMs = 0;
+    _refractoryStartedMs = 0;
+    _behaviorSuppressUntilMs = 0;
+    _waitUntilMs = 0;
+    _refractoryUntilMs = 0;
+    _ownEmitDetectionSuppressUntilMs = 0;
+    _lastPatternType = DetectionPipeline::PatternType::None;
+    _lastPatternHeardAtMs = 0;
+    _lastDecisionMs = 0;
+    _lastDecision = BehaviorDecision::None;
+    _lastBlockReason = BehaviorDecision::None;
+    _detectionOnly = false;
+    _requireTonalForBehavior = false;
+    _wouldEmit = false;
+    _outputBusy = false;
+    _chirpRequested = false;
+    _chirpRequestSource = ChirpRequestSource::None;
+    _chirpPattern = ChirpOutput::ChirpPattern::Single;
+    _patternsReceived = 0;
+    _patternsIgnoredInvalid = 0;
+    _patternsIgnoredAmbiguous = 0;
+    _blockedDetectionOnly = 0;
+    _blockedOutputBusy = 0;
+    _blockedRefractory = 0;
+    _blockedWaiting = 0;
+    _blockedSelfSuppressed = 0;
+    _wouldEmitCount = 0;
+    _emittedCount = 0;
+}
+
+void ResonantBehavior::update(bool transientDetected, float transientStrength, unsigned long now) {
+    _pendingTransientDetected = transientDetected;
+    _pendingTransientStrength = transientStrength;
+    _pendingTransientMs = now;
+    update(now);
+}
 
 ResonantBehavior::BehaviorDecision ResonantBehavior::handlePatternResult(const DetectionPipeline::PatternResult& result, unsigned long now) {
     _patternsReceived++;
@@ -183,57 +247,40 @@ void ResonantBehavior::update(unsigned long now) {
     }
 }
 
-void ResonantBehavior::resetState() {
-    _state = State::Idle;
-    _activityLevel = 0.0f;
-    _pendingTransientDetected = false;
-    _pendingTransientStrength = 0.0f;
-    _pendingTransientMs = 0;
-    _lastEmitMs = 0;
-    _lastTransientMs = 0;
-    _transientStartedMs = 0;
-    _refractoryStartedMs = 0;
-    _behaviorSuppressUntilMs = 0;
-    _waitUntilMs = 0;
-    _refractoryUntilMs = 0;
-    _ownEmitDetectionSuppressUntilMs = 0;
-    _lastPatternType = DetectionPipeline::PatternType::None;
-    _lastPatternHeardAtMs = 0;
-    _lastDecisionMs = 0;
-    _lastDecision = BehaviorDecision::None;
-    _lastBlockReason = BehaviorDecision::None;
-    _detectionOnly = false;
-    _requireTonalForBehavior = false;
-    _wouldEmit = false;
-    _outputBusy = false;
-    _chirpRequested = false;
-    _chirpRequestSource = ChirpRequestSource::None;
-    _chirpPattern = ChirpOutput::ChirpPattern::Single;
-    _patternsReceived = 0;
-    _patternsIgnoredInvalid = 0;
-    _patternsIgnoredAmbiguous = 0;
-    _blockedDetectionOnly = 0;
-    _blockedOutputBusy = 0;
-    _blockedRefractory = 0;
-    _blockedWaiting = 0;
-    _blockedSelfSuppressed = 0;
-    _wouldEmitCount = 0;
-    _emittedCount = 0;
-}
-
-void ResonantBehavior::update(bool transientDetected, float transientStrength, unsigned long now) {
-    _pendingTransientDetected = transientDetected;
-    _pendingTransientStrength = transientStrength;
-    _pendingTransientMs = now;
-    update(now);
-}
-
 void ResonantBehavior::setDetectionOnly(bool value) {
     _detectionOnly = value;
 }
 
 void ResonantBehavior::setRequireTonalForBehavior(bool value) {
     _requireTonalForBehavior = value;
+}
+
+void ResonantBehavior::setWaitAfterTransientMs(unsigned long value) {
+    _waitAfterTransientMs = value;
+}
+
+void ResonantBehavior::setRefractoryAfterEmitMs(unsigned long value) {
+    _refractoryAfterEmitMs = value;
+}
+
+void ResonantBehavior::setIdleTimeoutMs(unsigned long value) {
+    _idleTimeoutMs = value;
+}
+
+unsigned long ResonantBehavior::waitAfterTransientMs() const {
+    return _waitAfterTransientMs;
+}
+
+unsigned long ResonantBehavior::refractoryAfterEmitMs() const {
+    return _refractoryAfterEmitMs;
+}
+
+unsigned long ResonantBehavior::idleTimeoutMs() const {
+    return _idleTimeoutMs;
+}
+
+bool ResonantBehavior::requireTonalForBehavior() const {
+    return _requireTonalForBehavior;
 }
 
 // --- outputs ---
@@ -327,10 +374,6 @@ unsigned long ResonantBehavior::behaviorSuppressRemainingMs(unsigned long now) c
 
 bool ResonantBehavior::detectionOnly() const {
     return _detectionOnly;
-}
-
-bool ResonantBehavior::requireTonalForBehavior() const {
-    return _requireTonalForBehavior;
 }
 
 bool ResonantBehavior::outputBusy() const {
@@ -427,6 +470,36 @@ unsigned long ResonantBehavior::emittedCount() const {
     return _emittedCount;
 }
 
+const char* ResonantBehavior::stateName() const {
+    switch (_state) {
+        case State::Idle:
+            return "Idle";
+        case State::TransientSeen:
+            return "TransientSeen";
+        case State::Chirping:
+            return "Chirping";
+        case State::Refractory:
+            return "Refractory";
+    }
+
+    return "Unknown";
+}
+
+int ResonantBehavior::stateCode() const {
+    switch (_state) {
+        case State::Idle:
+            return 0;
+        case State::TransientSeen:
+            return 1;
+        case State::Chirping:
+            return 2;
+        case State::Refractory:
+            return 3;
+    }
+
+    return -1;
+}
+
 const char* ResonantBehavior::behaviorDecisionName(BehaviorDecision decision) {
     switch (decision) {
         case BehaviorDecision::None:
@@ -468,58 +541,4 @@ const char* ResonantBehavior::behaviorDecisionName(BehaviorDecision decision) {
     }
 
     return "unknown";
-}
-
-void ResonantBehavior::setWaitAfterTransientMs(unsigned long value) {
-    _waitAfterTransientMs = value;
-}
-
-void ResonantBehavior::setRefractoryAfterEmitMs(unsigned long value) {
-    _refractoryAfterEmitMs = value;
-}
-
-void ResonantBehavior::setIdleTimeoutMs(unsigned long value) {
-    _idleTimeoutMs = value;
-}
-
-unsigned long ResonantBehavior::waitAfterTransientMs() const {
-    return _waitAfterTransientMs;
-}
-
-unsigned long ResonantBehavior::refractoryAfterEmitMs() const {
-    return _refractoryAfterEmitMs;
-}
-
-unsigned long ResonantBehavior::idleTimeoutMs() const {
-    return _idleTimeoutMs;
-}
-
-const char* ResonantBehavior::stateName() const {
-    switch (_state) {
-        case State::Idle:
-            return "Idle";
-        case State::TransientSeen:
-            return "TransientSeen";
-        case State::Chirping:
-            return "Chirping";
-        case State::Refractory:
-            return "Refractory";
-    }
-
-    return "Unknown";
-}
-
-int ResonantBehavior::stateCode() const {
-    switch (_state) {
-        case State::Idle:
-            return 0;
-        case State::TransientSeen:
-            return 1;
-        case State::Chirping:
-            return 2;
-        case State::Refractory:
-            return 3;
-    }
-
-    return -1;
 }

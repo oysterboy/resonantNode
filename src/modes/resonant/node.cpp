@@ -11,6 +11,36 @@
 #define CHIRP_FREQUENCY_HZ 2400
 #endif
 
+/*
+Node
+
+Owns orchestration for the Resonant node.
+
+Responsibilities:
+- wire hardware sources and outputs
+- feed audio into signal and detection layers
+- pass PatternResult objects into ResonantBehavior
+- start and finish chirps when behavior requests them
+- manage startup baseline state for the I2S path
+- handle serial commands, logging, and summary reporting
+
+Does NOT:
+- implement the behavior state machine
+- classify patterns
+- generate waveforms
+- own detector thresholds as core behavior logic
+
+File structure:
+- local helpers and constants
+- constructors
+- lifecycle
+- baseline / startup
+- parameter setup
+- main update loop
+- serial command handling
+- logging and summary helpers
+*/
+
 namespace {
 constexpr int kMaxSamplesPerLoop = 128;
 constexpr int kRbStartupQuietThreshold = 20;
@@ -156,6 +186,8 @@ void printH3FrequencyEvidenceFields(const DetectionPipeline::PatternResult& patt
 }
 }
 
+// --- constructors ---
+
 Node::Node(int inputPin, int ledPin, int chirpPin, AudioSourceKind sourceKind)
     : Node(inputPin, ledPin, chirpPin, -1, sourceKind) {}
 
@@ -175,6 +207,8 @@ Node::Node(int inputPin, int ledPin, int chirpPin, int chirpBtlPin, AudioSourceK
       _chirpOutput(chirpBtlPin >= 0
                        ? static_cast<ToneOutput&>(_toneOutputBTL)
                        : static_cast<ToneOutput&>(_toneOutput)) {}
+
+// --- lifecycle ---
 
 void Node::begin() {
     configureParameters();
@@ -259,6 +293,8 @@ void Node::performRbRebase() {
     _audioSource.resetStats();
     resetRbCounters();
 }
+
+// --- baseline / startup ---
 
 bool Node::rbOutputsEnabled() const {
     return _sourceKind != AudioSourceKind::I2S
@@ -346,6 +382,8 @@ void Node::updateRbBaselineState(unsigned long now) {
     }
 }
 
+// --- parameter setup ---
+
 void Node::configureParameters() {
     configureSharedParameters();
 
@@ -403,6 +441,8 @@ void Node::configureI2SParameters() {
     _behavior.setRefractoryAfterEmitMs(0); // Shared response timing: no post-emit holdoff; this usually dominates any own-emit tail window unless that tail is longer.
     _behavior.setIdleTimeoutMs(10000); // Idle self-trigger timeout.
 }
+
+// --- main update loop ---
 
 void Node::update() {
     const unsigned long now = millis();
@@ -750,6 +790,8 @@ void Node::update() {
     _debug.endLoop(micros());
 }
 
+// --- serial command handling ---
+
 void Node::pollSerialCommands() {
     while (Serial.available() > 0) {
         const char c = static_cast<char>(Serial.read());
@@ -769,6 +811,8 @@ void Node::pollSerialCommands() {
         }
     }
 }
+
+// --- command handlers ---
 
 void Node::handleSerialLine(const char* line) {
     if (equalsIgnoreCase(line, "RB help")) {
@@ -973,6 +1017,8 @@ void Node::handleLogCommand(const char* line) {
     Serial.print("RB log mode=");
     Serial.println(rbLogModeName());
 }
+
+// --- logging / summaries ---
 
 bool Node::rbShouldLogDetail() const {
     return _rbLogMode == RbLogMode::Full;

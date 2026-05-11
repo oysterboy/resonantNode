@@ -3,11 +3,10 @@
 #include <stdint.h>
 #include <stddef.h>
 
-#include "../../behavior/ResonantBehavior.h"
-#include "../../hal/AudioSourceAnalog.h"
-#include "../../hal/AudioSourceI2S.h"
 #include "../../detection/DetectionPipeline.h"
 #include "../../detection/FrequencyEvidenceEvaluation.h"
+#include "../../hal/AudioSourceAnalog.h"
+#include "../../hal/AudioSourceI2S.h"
 #include "../../hal/PiezoToneOutputBTL.h"
 #include "../../hal/PiezoToneOutput.h"
 #include "../../io/AudioFrequencyDetector.h"
@@ -20,13 +19,31 @@
 /*
 Node
 
-- updates input, behavior, and output
-- forwards action requests and lifecycle events
-- owns debug output
+Owns orchestration for the Resonant node.
+
+Responsibilities:
+- wire hardware sources and outputs
+- feed audio into signal and detection layers
+- pass PatternResult objects into ResonantBehavior
+- start and finish chirps when behavior requests them
+- manage startup baseline state for the I2S path
+- handle serial commands, logging, and summary reporting
 
 Does NOT:
-- implement state logic
+- implement the behavior state machine
+- classify patterns
 - generate waveforms
+- own detector thresholds as core behavior logic
+
+File structure:
+- enums and construction
+- hardware / signal / behavior members
+- logging and runtime counters
+- baseline and startup state
+- lifecycle / parameter setup
+- loop orchestration
+- serial command handling
+- logging / summary helpers
 */
 
 class Node {
@@ -88,23 +105,25 @@ private:
     void printRbDetectorSummary() const;
     void printRbBehaviorSummary() const;
 
+    // Hardware wiring.
     int _ledPin;
-
     AudioSourceAnalog _analogSource;
     AudioSourceI2S _i2sSource;
     AudioSource& _audioSource;
     AudioSourceKind _sourceKind;
+    PiezoToneOutput _toneOutput;
+    PiezoToneOutputBTL _toneOutputBTL;
+    ChirpOutput _chirpOutput;
+
+    // Signal / detection / behavior pipeline.
     AudioSignal _audioSignal;
     AudioFrequencyDetector _audioFrequencyDetector;
     AudioOnsetDetector _audioOnsetDetector;
     FrequencyEvidenceEvaluation::Values _frequencyEvidenceTuning = {};
     ResonantBehavior _behavior;
-    PiezoToneOutput _toneOutput;
-    PiezoToneOutputBTL _toneOutputBTL;
-    ChirpOutput _chirpOutput;
 
+    // Debug / logging support.
     NodeDebug _debug;
-
     char _serialLineBuffer[96] = {};
     size_t _serialLineLength = 0;
     unsigned long _rbCandidateCount = 0;
@@ -119,6 +138,8 @@ private:
     bool _wasSelfChirpSuppressed = false;
     unsigned long _rbLastWouldEmitHeardMs = 0;
     ResonantBehavior::BehaviorDecision _rbLastWouldEmitDecision = ResonantBehavior::BehaviorDecision::None;
+
+    // Baseline / startup state.
     RBBaselineState _rbBaselineState = RBBaselineState::Boot;
     unsigned long _rbBaselineStateStartedMs = 0;
     unsigned long _rbBaselineQuietSinceMs = 0;

@@ -12,6 +12,32 @@
 #include "../../detection/FrequencyEvidenceEvaluation.h"
 #include "../../hal/AudioSource.h"
 
+/*
+AnalyzerApp
+
+Owns the analyzer-mode orchestration layer for the Resonant project.
+
+Responsibilities:
+- wire up the chosen audio source and detector chain
+- run base calibration, capture, and sequence-test sessions
+- manage detector parameters and control-claim handshakes
+- collect candidate, frequency, and timing diagnostics
+- print runtime summaries and debug output for analyzer workflows
+
+Does NOT:
+- implement the detector algorithms themselves
+- own the audio signal processing primitives
+- make resonance behavior decisions
+
+File structure:
+- public mode lifecycle
+- session state bundles
+- setup and control helpers
+- detector parameter helpers
+- session/capture/sequence workflows
+- reporting and debug output
+- runtime state
+*/
 class AnalyzerApp {
 public:
     enum AnalyzerLogFlags : uint32_t {
@@ -39,7 +65,69 @@ public:
     unsigned long loopDelayMs() const;
 
 private:
-    // Per-session state bundles keep the long-running modes readable and isolated.
+    // Session state bundles, ordered from lighter calibration state to the most specialized sequence-test state.
+    struct BaseSession {
+        bool active = false;
+        bool quiet = false;
+
+        unsigned long durationMs = 10000;
+        unsigned long startedAtMs = 0;
+        unsigned long lastStatusPrintMs = 0;
+
+        unsigned long ignoredRawSamples = 0;
+        unsigned long samples = 0;
+        unsigned long rawSum = 0;
+        int rawMin = 0;
+        int rawMax = 0;
+
+        float deltaSum = 0.0f;
+        float deltaMin = 0.0f;
+        float deltaMax = 0.0f;
+        float baselineSum = 0.0f;
+        float baselineMin = 0.0f;
+        float baselineMax = 0.0f;
+    };
+
+    struct CaptureSession {
+        bool active = false;
+        bool quiet = false;
+
+        unsigned long totalTrials = 20;
+        unsigned long periodMs = 2500;
+        unsigned long windowStartOffsetMs = 0;
+        unsigned long windowEndOffsetMs = 500;
+        unsigned long toneHz = 3200;
+        unsigned long durationMs = 100;
+
+        unsigned long startedAtMs = 0;
+        unsigned long nextTriggerAtMs = 0;
+        unsigned long currentTrial = 0;
+        unsigned long currentTrialStartMs = 0;
+        unsigned long currentTrialEndMs = 0;
+        bool currentTrialFinalized = false;
+
+        int currentRawMin = 0;
+        int currentRawMax = 0;
+        float currentDeltaMin = 0.0f;
+        float currentDeltaMax = 0.0f;
+
+        int quietRawMin = 0;
+        int quietRawMax = 0;
+        unsigned long quietRawSum = 0;
+        unsigned long quietRawSamples = 0;
+        float quietDeltaMin = 0.0f;
+        float quietDeltaMax = 0.0f;
+        float quietDeltaSum = 0.0f;
+        unsigned long quietDeltaSamples = 0;
+
+        unsigned long completed = 0;
+        unsigned long totalRawSwing = 0;
+        float totalDeltaSwing = 0.0f;
+        int bestRawSwing = 0;
+        float bestDeltaSwing = 0.0f;
+        unsigned long lastStatusPrintMs = 0;
+    };
+
     struct SequenceTest {
         static constexpr size_t kMaxTrialCandidates = 16;
         static constexpr size_t kMaxDuplicateDts = 8;
@@ -49,6 +137,7 @@ private:
             PostWindow,
         };
 
+        // Per-trial candidate snapshots and reports.
         struct CandidateSample {
             unsigned long candidateMs = 0;
             long dtFromTriggerMs = 0;
@@ -97,6 +186,7 @@ private:
             char result[16] = {};
         };
 
+        // Live per-trial diagnostics and rejection bookkeeping.
         struct TrialDiagnostics {
             bool onsetSeen = false;
             bool transientAccepted = false;
@@ -169,6 +259,7 @@ private:
             bool peakActiveAtEnd = false;
         };
 
+        // Sequence-test configuration and execution state.
         bool active = false;
         bool quiet = false;
         bool showDetails = true;
@@ -212,6 +303,7 @@ private:
         mutable size_t trialReportCapacity = 0;
         mutable size_t trialReportCount = 0;
 
+        // Trial scheduling and aggregate results.
         unsigned long startedAtMs = 0;
         unsigned long nextTriggerAtMs = 0;
         unsigned long currentTrial = 0;
@@ -257,69 +349,7 @@ private:
         unsigned long freqRejectInvalidWindow = 0;
     };
 
-    struct CaptureSession {
-        bool active = false;
-        bool quiet = false;
-
-        unsigned long totalTrials = 20;
-        unsigned long periodMs = 2500;
-        unsigned long windowStartOffsetMs = 0;
-        unsigned long windowEndOffsetMs = 500;
-        unsigned long toneHz = 3200;
-        unsigned long durationMs = 100;
-
-        unsigned long startedAtMs = 0;
-        unsigned long nextTriggerAtMs = 0;
-        unsigned long currentTrial = 0;
-        unsigned long currentTrialStartMs = 0;
-        unsigned long currentTrialEndMs = 0;
-        bool currentTrialFinalized = false;
-
-        int currentRawMin = 0;
-        int currentRawMax = 0;
-        float currentDeltaMin = 0.0f;
-        float currentDeltaMax = 0.0f;
-
-        int quietRawMin = 0;
-        int quietRawMax = 0;
-        unsigned long quietRawSum = 0;
-        unsigned long quietRawSamples = 0;
-        float quietDeltaMin = 0.0f;
-        float quietDeltaMax = 0.0f;
-        float quietDeltaSum = 0.0f;
-        unsigned long quietDeltaSamples = 0;
-
-        unsigned long completed = 0;
-        unsigned long totalRawSwing = 0;
-        float totalDeltaSwing = 0.0f;
-        int bestRawSwing = 0;
-        float bestDeltaSwing = 0.0f;
-        unsigned long lastStatusPrintMs = 0;
-    };
-
-    struct BaseSession {
-        bool active = false;
-        bool quiet = false;
-
-        unsigned long durationMs = 10000;
-        unsigned long startedAtMs = 0;
-        unsigned long lastStatusPrintMs = 0;
-
-        unsigned long ignoredRawSamples = 0;
-        unsigned long samples = 0;
-        unsigned long rawSum = 0;
-        int rawMin = 0;
-        int rawMax = 0;
-
-        float deltaSum = 0.0f;
-        float deltaMin = 0.0f;
-        float deltaMax = 0.0f;
-        float baselineSum = 0.0f;
-        float baselineMin = 0.0f;
-        float baselineMax = 0.0f;
-    };
-
-    // Setup and control helpers.
+    // Setup, control, and detector configuration helpers.
     void configureParameters();
     void configureSharedParameters();
     void configureAnalogParameters();
@@ -330,6 +360,8 @@ private:
     void handleUsbLine(const char* line);
     void sendEmitterCommand(const char* command);
     void resetDetectorState();
+
+    // Detector state inspection and tuning helpers.
     bool detectorOnsetDetected() const;
     float detectorOnsetStrength() const;
     bool detectorTransientDetected() const;
@@ -354,11 +386,15 @@ private:
     void setDetectorMaxTransientDurationMs(unsigned long value);
     void setDetectorMinTransientPeakStrength(float value);
     void setDetectorReleaseDebounceMs(unsigned long value);
+
+    // Session lifecycle helpers.
     void startBaseSession(unsigned long durationMs, bool quiet = false);
     void stopBaseSession();
     void updateBaseSession(unsigned long now);
     void printBaseSummary() const;
     void printBaseHints() const;
+
+    // Sequence-test workflows.
     void startSequenceTest(unsigned long totalTrials, unsigned long periodMs, unsigned long windowEndOffsetMs, unsigned long toneHz, unsigned long durationMs, bool quiet = false, bool showDetails = true, const char* setupLabel = nullptr, uint32_t logFlags = DEFAULT_ANALYZER_LOG_FLAGS, bool sampleDumpEnabled = false, unsigned long sampleDumpFirstTrials = 2, unsigned long sampleDumpEveryNth = 0, unsigned long sampleDumpLeadMs = 50, unsigned long sampleDumpTailMs = 800, unsigned long sampleDumpStepMs = 1, unsigned long sampleDumpMaxRows = 5000);
     void stopSequenceTest();
     void updateSequenceTest(unsigned long now);
@@ -386,6 +422,8 @@ private:
     void recordSequenceClassifierOutcome(const DetectionPipeline::PatternResult& patternResult, bool duplicateCandidate, bool unexpectedCandidate);
     void handleSequenceCandidate(const DetectionPipeline::PatternResult& patternResult, unsigned long queueDepthBeforeDrain, const DetectionPipeline::FrequencyEvidence* liveFrequencyEvidence = nullptr);
     void updateSequenceAmbientStats();
+
+    // Sequence sample capture helpers.
     void beginSequenceSampleDump(unsigned long trialNumber);
     void clearSequenceSampleDump();
     void recordSequenceSample(const CurveSnapshot& snapshot);
@@ -398,6 +436,8 @@ private:
     void noteSequenceTransientReject(unsigned long eventMs);
     void noteSequenceTransientRejectReason(unsigned long eventMs, const char* reasonName, unsigned long durationMs, float strength);
     const char* sequenceTrialClassificationName(const char* result, long dtMs, long durMs, const SequenceTest::TrialDiagnostics& diagnostics) const;
+
+    // Miscellaneous output helpers.
     void printValueFrame(unsigned long now) const;
     void printValueModeBanner() const;
 

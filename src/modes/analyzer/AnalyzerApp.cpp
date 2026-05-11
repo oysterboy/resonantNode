@@ -10,6 +10,20 @@
 #include "../../detection/FrequencyEvidenceEvaluation.h"
 #include "../../detection/FrequencyWindowProbe.h"
 
+/*
+AnalyzerApp
+
+This file owns analyzer-mode orchestration, not the detector internals.
+
+File structure:
+- local utility helpers
+- construction and setup
+- runtime loop and detector state
+- console and emitter control
+- raw-trigger and value-mode helpers
+- sequence, capture, and base sessions
+- diagnostics and summary output
+*/
 namespace {
 constexpr int kMaxSamplesPerLoop = 128;
 constexpr unsigned long kSequenceWarmupMs = 500;
@@ -509,7 +523,7 @@ void AnalyzerApp::configureI2SParameters() {
 }
 
 // -----------------------------------------------------------------------------
-// Main runtime loop
+// Runtime loop and detector state
 // -----------------------------------------------------------------------------
 
 void AnalyzerApp::update() {
@@ -913,7 +927,7 @@ void AnalyzerApp::beginEmitterControl() {
 }
 
 // -----------------------------------------------------------------------------
-// Console and emitter I/O
+// Console and emitter control
 // -----------------------------------------------------------------------------
 
 void AnalyzerApp::pollUsbConsole() {
@@ -1298,6 +1312,10 @@ void AnalyzerApp::sendEmitterCommand(const char* command) {
     Serial2.println(command);
 }
 
+// -----------------------------------------------------------------------------
+// Raw trigger and value-mode helpers
+// -----------------------------------------------------------------------------
+
 void AnalyzerApp::runRawTrigger(unsigned long toneHz, unsigned long durationMs, unsigned long postMs, unsigned long preMs, unsigned long decim, bool dumpChunks, bool dumpBinary) {
     if (_valMode) {
         return;
@@ -1576,7 +1594,7 @@ void AnalyzerApp::printValueModeBanner() const {
 }
 
 // -----------------------------------------------------------------------------
-// Sequence test, capture, and tuning sessions
+// Sequence, capture, and base sessions
 // -----------------------------------------------------------------------------
 
 void AnalyzerApp::startSequenceTest(unsigned long totalTrials, unsigned long periodMs, unsigned long windowEndOffsetMs, unsigned long toneHz, unsigned long durationMs, bool quiet, bool showDetails, const char* setupLabel, uint32_t logFlags, bool sampleDumpEnabled, unsigned long sampleDumpFirstTrials, unsigned long sampleDumpEveryNth, unsigned long sampleDumpLeadMs, unsigned long sampleDumpTailMs, unsigned long sampleDumpStepMs, unsigned long sampleDumpMaxRows) {

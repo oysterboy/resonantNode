@@ -1158,7 +1158,9 @@ It can reuse the same onset/transient detector logic as the amplitude path, with
 
 This is an implementation strategy inside the shared Detection / Pattern Pipeline.
 
-For tonal clicks / short beeps, this is likely the cleaner later implementation path after the raw-history diagnostic pass.
+For the current tonal click / short beep path, the practical target is still a tonal transient, not a full chirp.
+That means the current implementation should stay conceptually closer to `ValidTonalTransient` than to an expanding chirp taxonomy.
+The raw-history diagnostic pass can still support that target.
 
 ##### Temporal-First Chirp Detection
 

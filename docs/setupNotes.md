@@ -126,6 +126,6 @@ Do not use a high contrast threshold.
 Some valid expected hits had freqEarly contrast only around 7-8.
 
 Good working meaning:
-- high freqEarly = confident tonal chirp
+- high freqEarly = confident tonal transient
 - low freqEarly + duplicate/late timing = reject/suppress
 - low freqEarly + expected timing = suspicious, but not an automatic hard fail yet

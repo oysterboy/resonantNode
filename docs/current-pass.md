@@ -248,7 +248,7 @@ enum class PatternType {
     None,
 
     ValidTransient,
-    ValidTonalChirp,
+    ValidTonalTransient,
 
     TransientOnly,
     FrequencyWeak,
@@ -268,6 +268,11 @@ behaviorEligible = candidateValid && tonalValid
 
 For now, avoid making `patternValid` ambiguous.  
 Prefer explicit flags.
+
+Conceptual target:
+- use `ValidTonalTransient` for the current tonal click/beep path
+- do not expand `ValidTonalChirp` unless the sound is truly a chirp
+- keep the code rename for a later pass if needed, but keep the concept aligned now
 
 ---
 
@@ -297,7 +302,7 @@ PatternResult classifyCandidate(
     result.tonalValid = result.freq.matched;
 
     if (result.tonalValid) {
-        result.type = PatternType::ValidTonalChirp;
+        result.type = PatternType::ValidTonalTransient;
         result.reason = PatternRejectReason::None;
         result.behaviorEligible = true;
     } else {
@@ -342,7 +347,7 @@ freq_contrast=1200
 freq_score_ok=1
 freq_contrast_ok=1
 freq_matched=1
-pattern_type=valid_tonal_chirp
+pattern_type=valid_tonal_transient
 behavior_eligible=1
 ```
 
@@ -541,7 +546,7 @@ Goal: behavior gating test.
 Expected:
 
 ```text
-Real 3200 Hz chirps can trigger behavior.
+Real 3200 Hz tonal transients can trigger behavior.
 Duplicates / residual amplitude events are blocked.
 Blocked events include readable reasons.
 ```

@@ -15,6 +15,20 @@
 ### Notes
 - Pass 6 notes have been moved into the dated entry below.
 
+## 2026-05-11 - Rename chirp wording to transient wording
+
+### Changed
+- Renamed the tonal classifier target from `ValidTonalChirp` to `ValidTonalTransient` in the shared pipeline and classifier logic.
+- Updated Analyzer runtime logs to print `valid_tonal_transient` for the current tonal click/beep path.
+- Aligned the current-pass, spec, and setup notes wording to describe the current path as a tonal transient instead of a chirp.
+- Kept runtime behavior unchanged.
+
+### Verification
+- `platformio run`
+
+### Notes
+- Commit id pending until this rename is committed.
+
 ## 2026-05-11 - Cleaned test candidate wording and baseline notes
 
 ### Changed
@@ -27,7 +41,7 @@
 - `platformio run`
 
 ### Notes
-- Commit id pending until this cleanup is committed.
+- Commit id `db7db99`.
 
 ## 2026-05-11 - Readability cleanup: mark legacy shims and placeholders
 

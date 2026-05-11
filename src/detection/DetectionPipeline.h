@@ -31,7 +31,7 @@ namespace DetectionPipeline {
 enum class PatternType {
     None,
     ValidTransient,
-    ValidTonalChirp,
+    ValidTonalTransient,
     TransientOnly,
     FrequencyWeak,
     DuplicateAfterPrimary,
@@ -228,8 +228,8 @@ inline const char* patternTypeName(PatternType type) {
             return "none";
         case PatternType::ValidTransient:
             return "valid_transient";
-        case PatternType::ValidTonalChirp:
-            return "valid_tonal_chirp";
+        case PatternType::ValidTonalTransient:
+            return "valid_tonal_transient";
         case PatternType::TransientOnly:
             return "transient_only";
         case PatternType::FrequencyWeak:

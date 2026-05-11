@@ -3015,7 +3015,7 @@ void AnalyzerApp::printSequenceTrialDebug(unsigned long trialNumber, const char*
     Serial.print(" pattern_valid=");
     Serial.print(validPattern ? 1 : 0);
     Serial.print(" pattern_type=");
-    Serial.print(validPattern ? (freqEval.matched ? "valid_tonal_chirp" : "transient_only") : "invalid");
+    Serial.print(validPattern ? (freqEval.matched ? "valid_tonal_transient" : "transient_only") : "invalid");
     Serial.print(" pattern_reason=");
     Serial.print(validPattern ? FrequencyEvidenceEvaluation::reasonName(freqEval.reason) : "detector_rejected");
     Serial.print(" candidate_valid=");

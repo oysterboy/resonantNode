@@ -154,7 +154,7 @@ inline void classifyPatternResult(DetectionPipeline::PatternResult& result, cons
     result.valid = true;
     result.reasonCode = DetectionPipeline::PatternReasonCode::FromAcceptedTransient;
     result.type = result.tonalValid
-        ? DetectionPipeline::PatternType::ValidTonalChirp
+        ? DetectionPipeline::PatternType::ValidTonalTransient
         : DetectionPipeline::PatternType::TransientOnly;
 }
 

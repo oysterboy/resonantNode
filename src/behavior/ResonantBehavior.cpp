@@ -71,7 +71,7 @@ ResonantBehavior::BehaviorDecision ResonantBehavior::handlePatternResult(const D
         _lastDecision = BehaviorDecision::AlreadyScheduled;
         _lastBlockReason = BehaviorDecision::AlreadyScheduled;
         _blockedWaiting++;
-    } else if (selfChirpSuppressed(now)) {
+    } else if (behaviorSuppressed(now)) {
         _lastDecision = BehaviorDecision::SelfSuppressed;
         _lastBlockReason = BehaviorDecision::SelfSuppressed;
         _blockedSelfSuppressed++;
@@ -193,10 +193,10 @@ void ResonantBehavior::resetState() {
     _lastTransientMs = 0;
     _transientStartedMs = 0;
     _refractoryStartedMs = 0;
-    _selfChirpSuppressUntilMs = 0;
+    _behaviorSuppressUntilMs = 0;
     _waitUntilMs = 0;
     _refractoryUntilMs = 0;
-    _ignoreOwnEmitUntilMs = 0;
+    _ownEmitDetectionSuppressUntilMs = 0;
     _lastPatternType = DetectionPipeline::PatternType::None;
     _lastPatternHeardAtMs = 0;
     _lastDecisionMs = 0;
@@ -259,16 +259,16 @@ ChirpOutput::ChirpPattern ResonantBehavior::chirpPattern() const {
     return _chirpPattern;
 }
 
-bool ResonantBehavior::selfChirpSuppressed(unsigned long now) const {
-    return now < _selfChirpSuppressUntilMs;
+bool ResonantBehavior::behaviorSuppressed(unsigned long now) const {
+    return now < _behaviorSuppressUntilMs;
 }
 
 void ResonantBehavior::notifyChirpStarted(unsigned long now) {
     const unsigned long suppressUntilMs = now + _selfChirpIgnoreMs;
-    if (suppressUntilMs > _selfChirpSuppressUntilMs) {
-        _selfChirpSuppressUntilMs = suppressUntilMs;
+    if (suppressUntilMs > _behaviorSuppressUntilMs) {
+        _behaviorSuppressUntilMs = suppressUntilMs;
     }
-    _ignoreOwnEmitUntilMs = suppressUntilMs;
+    _ownEmitDetectionSuppressUntilMs = suppressUntilMs;
     _outputBusy = true;
     _lastDecision = BehaviorDecision::Emitted;
     _lastBlockReason = BehaviorDecision::None;
@@ -279,13 +279,13 @@ void ResonantBehavior::notifyChirpFinished(unsigned long now) {
     if (_state == State::Chirping) {
         _refractoryStartedMs = now;
         _refractoryUntilMs = now + _refractoryAfterEmitMs;
-        _ignoreOwnEmitUntilMs = now + _selfChirpTailIgnoreMs;
+        _ownEmitDetectionSuppressUntilMs = now + _detectionSuppressTailMsOwnEmit;
         _state = State::Refractory;
         _outputBusy = false;
 
-        const unsigned long suppressUntilMs = now + _selfChirpTailIgnoreMs;
-        if (suppressUntilMs > _selfChirpSuppressUntilMs) {
-            _selfChirpSuppressUntilMs = suppressUntilMs;
+        const unsigned long suppressUntilMs = now + _detectionSuppressTailMsOwnEmit;
+        if (suppressUntilMs > _behaviorSuppressUntilMs) {
+            _behaviorSuppressUntilMs = suppressUntilMs;
         }
     }
 }
@@ -318,11 +318,11 @@ unsigned long ResonantBehavior::refractoryRemainingMs(unsigned long now) const {
     return 0;
 }
 
-unsigned long ResonantBehavior::selfChirpIgnoreRemainingMs(unsigned long now) const {
-    if (now >= _selfChirpSuppressUntilMs) {
+unsigned long ResonantBehavior::behaviorSuppressRemainingMs(unsigned long now) const {
+    if (now >= _behaviorSuppressUntilMs) {
         return 0;
     }
-    return _selfChirpSuppressUntilMs - now;
+    return _behaviorSuppressUntilMs - now;
 }
 
 bool ResonantBehavior::detectionOnly() const {
@@ -383,8 +383,8 @@ unsigned long ResonantBehavior::refractoryUntilMs() const {
     return _refractoryUntilMs;
 }
 
-unsigned long ResonantBehavior::ignoreOwnEmitUntilMs() const {
-    return _ignoreOwnEmitUntilMs;
+unsigned long ResonantBehavior::ownEmitDetectionSuppressUntilMs() const {
+    return _ownEmitDetectionSuppressUntilMs;
 }
 
 unsigned long ResonantBehavior::patternsReceived() const {

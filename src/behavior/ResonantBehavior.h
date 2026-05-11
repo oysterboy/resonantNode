@@ -63,7 +63,7 @@ public:
     int stateCode() const;
     unsigned long waitRemainingMs(unsigned long now) const;
     unsigned long refractoryRemainingMs(unsigned long now) const;
-    unsigned long selfChirpIgnoreRemainingMs(unsigned long now) const;
+    unsigned long behaviorSuppressRemainingMs(unsigned long now) const;
     bool detectionOnly() const;
     bool outputBusy() const;
     bool takeWouldEmit();
@@ -77,7 +77,7 @@ public:
     unsigned long lastEmitMs() const;
     unsigned long waitUntilMs() const;
     unsigned long refractoryUntilMs() const;
-    unsigned long ignoreOwnEmitUntilMs() const;
+    unsigned long ownEmitDetectionSuppressUntilMs() const;
     unsigned long patternsReceived() const;
     unsigned long patternsIgnoredInvalid() const;
     unsigned long patternsIgnoredAmbiguous() const;
@@ -94,7 +94,7 @@ public:
     const char* chirpRequestSourceName() const;
     ChirpOutput::ChirpPattern chirpPattern() const;
 
-    bool selfChirpSuppressed(unsigned long now) const;
+    bool behaviorSuppressed(unsigned long now) const;
 
     // Event handling
     void notifyChirpStarted(unsigned long now);
@@ -122,10 +122,10 @@ private:
     unsigned long _lastTransientMs = 0;
     unsigned long _transientStartedMs = 0;
     unsigned long _refractoryStartedMs = 0;
-    unsigned long _selfChirpSuppressUntilMs = 0;
+    unsigned long _behaviorSuppressUntilMs = 0;
     unsigned long _waitUntilMs = 0;
     unsigned long _refractoryUntilMs = 0;
-    unsigned long _ignoreOwnEmitUntilMs = 0;
+    unsigned long _ownEmitDetectionSuppressUntilMs = 0;
     DetectionPipeline::PatternType _lastPatternType = DetectionPipeline::PatternType::None;
     unsigned long _lastPatternHeardAtMs = 0;
     unsigned long _lastDecisionMs = 0;
@@ -140,8 +140,8 @@ private:
     unsigned long _waitAfterTransientMs = 800; // Delay before responding after a transient is seen.
     unsigned long _refractoryAfterEmitMs = 200; // Ignore follow-up activity for a short time after a chirp finishes.
     unsigned long _idleTimeoutMs = 10000; // Self-trigger if nothing has been seen or emitted for this long.
-    unsigned long _selfChirpIgnoreMs = 500; // Suppress detector response while the node's chirp is active.
-    unsigned long _selfChirpTailIgnoreMs = 500; // Keep suppressing briefly after chirp finish for ring-down.
+    unsigned long _selfChirpIgnoreMs = 500; // Behavior-level suppression while the node's chirp is active.
+    unsigned long _detectionSuppressTailMsOwnEmit = 500; // Detector/analyzer suppression while ring-down settles; mostly future-facing unless it outlasts refractory.
 
     // --- action latch ---
     bool _chirpRequested = false;

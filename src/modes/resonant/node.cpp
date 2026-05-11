@@ -377,7 +377,7 @@ void Node::configureAnalogParameters() {
     _audioOnsetDetector.setMinTransientPeakStrength(40.0f);
 
     _behavior.setWaitAfterTransientMs(0); // Shared response timing: respond immediately after a transient.
-    _behavior.setRefractoryAfterEmitMs(0); // Shared response timing: no post-emit holdoff.
+    _behavior.setRefractoryAfterEmitMs(0); // Shared response timing: no post-emit holdoff; this usually dominates any own-emit tail window unless that tail is longer.
     _behavior.setIdleTimeoutMs(10000); // Idle self-trigger timeout.
 }
 
@@ -399,8 +399,8 @@ void Node::configureI2SParameters() {
     _audioOnsetDetector.setMaxTransientDurationMs(240);
     _audioOnsetDetector.setMinTransientPeakStrength(40.0f);
 
-    _behavior.setWaitAfterTransientMs(500); // Shared response timing: respond immediately after a transient.
-    _behavior.setRefractoryAfterEmitMs(0); // Shared response timing: no post-emit holdoff.
+    _behavior.setWaitAfterTransientMs(500); // Shared response timing: respond after the transient settles.
+    _behavior.setRefractoryAfterEmitMs(0); // Shared response timing: no post-emit holdoff; this usually dominates any own-emit tail window unless that tail is longer.
     _behavior.setIdleTimeoutMs(10000); // Idle self-trigger timeout.
 }
 
@@ -409,7 +409,7 @@ void Node::update() {
     const unsigned long nowUs = micros();
     updateRbBaselineState(now);
     const bool rbOutputsEnabledNow = rbOutputsEnabled();
-    const bool selfChirpSuppressed = _behavior.selfChirpSuppressed(now);
+    const bool selfChirpSuppressed = _behavior.behaviorSuppressed(now);
     _wasSelfChirpSuppressed = selfChirpSuppressed;
 
     _debug.noteCoreLoopUs(nowUs);
@@ -494,8 +494,8 @@ void Node::update() {
                     Serial.print(_behavior.waitRemainingMs(now));
                     Serial.print(" refractoryMs=");
                     Serial.print(_behavior.refractoryRemainingMs(now));
-                    Serial.print(" selfIgnoreMs=");
-                    Serial.print(_behavior.selfChirpIgnoreRemainingMs(now));
+                    Serial.print(" behaviorSuppressMs=");
+                    Serial.print(_behavior.behaviorSuppressRemainingMs(now));
                     Serial.print(" detectionOnly=");
                     Serial.print(_behavior.detectionOnly() ? 1 : 0);
                     Serial.print(" outputBusy=");
@@ -626,8 +626,8 @@ void Node::update() {
                     Serial.print(_behavior.waitRemainingMs(now));
                     Serial.print(" refractoryMs=");
                     Serial.print(_behavior.refractoryRemainingMs(now));
-                    Serial.print(" selfIgnoreMs=");
-                    Serial.print(_behavior.selfChirpIgnoreRemainingMs(now));
+                    Serial.print(" behaviorSuppressMs=");
+                    Serial.print(_behavior.behaviorSuppressRemainingMs(now));
                     Serial.print(" detectionOnly=");
                     Serial.print(_behavior.detectionOnly() ? 1 : 0);
                     Serial.print(" outputBusy=");
@@ -696,8 +696,8 @@ void Node::update() {
         Serial.print(_behavior.waitRemainingMs(now));
         Serial.print(" refractoryMs=");
         Serial.print(_behavior.refractoryRemainingMs(now));
-        Serial.print(" selfIgnoreMs=");
-        Serial.print(_behavior.selfChirpIgnoreRemainingMs(now));
+        Serial.print(" behaviorSuppressMs=");
+        Serial.print(_behavior.behaviorSuppressRemainingMs(now));
         Serial.print(" detectionOnly=");
         Serial.print(_behavior.detectionOnly() ? 1 : 0);
         Serial.print(" outputBusy=");
@@ -1197,8 +1197,8 @@ void Node::printRbBehaviorSummary() const {
     Serial.print(_behavior.waitUntilMs());
     Serial.print(" refractoryUntilMs=");
     Serial.print(_behavior.refractoryUntilMs());
-    Serial.print(" ignoreOwnEmitUntilMs=");
-    Serial.print(_behavior.ignoreOwnEmitUntilMs());
+    Serial.print(" ownEmitDetectionSuppressUntilMs=");
+    Serial.print(_behavior.ownEmitDetectionSuppressUntilMs());
     Serial.print(" outputBusy=");
     Serial.print(_behavior.outputBusy() ? 1 : 0);
     Serial.print(" patternsReceived=");

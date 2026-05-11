@@ -14,7 +14,7 @@ Does NOT:
 - decide when to chirp
 - own behavior logic
 
-Current placeholder:
+Legacy placeholder:
 - multiple beep patterns for transient and idle responses
 - duration and tone remain configurable
 */

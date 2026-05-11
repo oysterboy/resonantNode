@@ -15,6 +15,64 @@
 ### Notes
 - Pass 6 notes have been moved into the dated entry below.
 
+## 2026-05-11 - Readability cleanup: mark legacy shims and placeholders
+
+### Changed
+- Marked the old `ResonantBehavior` bool-based update path as a legacy shim.
+- Marked the surviving single-sample `AudioSignal::update(...)` path as a legacy entry point from the block-processing migration.
+- Marked the `AudioSignal` detector ownership bridge and `ChirpOutput` placeholder section as legacy so the remaining transitional code is explicit.
+- Kept runtime behavior unchanged.
+
+### Verification
+- `platformio run`
+
+### Notes
+- Commit id pending until this cleanup is committed.
+
+## 2026-05-11 - Clarify shared signal and detector boundaries (41f3509)
+
+### Changed
+- Added module-level comments to the shared signal, onset, and frequency detector headers so their ownership boundaries are explicit.
+- Added section markers to `AudioSignal.cpp`, `AudioOnsetDetector.cpp`, and `AudioFrequencyDetector.cpp` to make the runtime flow easier to scan.
+- Added a shared module comment to `AudioDebugConfig.h` to clarify that it supplies cross-mode debug and test defaults.
+- Kept the detector and signal behavior unchanged.
+
+### Verification
+- `platformio run`
+
+## 2026-05-11 - Analyzer structure cleanup first (e76f755)
+
+### Changed
+- Added a module-level comment block to `AnalyzerApp.h` and `AnalyzerApp.cpp` describing analyzer responsibilities and file structure.
+- Reordered analyzer session state and helper declarations so the file reads more like the runtime flow.
+- Added section markers for setup, runtime, sessions, raw trigger handling, and reporting.
+- Kept analyzer behavior unchanged.
+
+### Verification
+- `platformio run`
+
+## 2026-05-11 - Refine node and behavior file structure (d636d11)
+
+### Changed
+- Reordered `ResonantBehavior` members and helpers into lifecycle, configuration, output, and inspection sections.
+- Added file-structure comments to `ResonantBehavior.cpp`, `node.h`, and `node.cpp`.
+- Grouped node members and helpers by runtime responsibility so the Resonant path is easier to scan.
+- Kept runtime behavior unchanged.
+
+### Verification
+- `platformio run`
+
+## 2026-05-11 - Clarify self suppression timing (485b7ec)
+
+### Changed
+- Clarified the Resonant self-suppression state split between behavior-level gating and detection-side suppression timing.
+- Renamed the detection-side suppression window to make its detector/pipeline scope explicit.
+- Added comments to explain that the tail window only changes outcome when it outlasts the refractory window.
+- Kept the underlying suppression behavior unchanged.
+
+### Verification
+- `platformio run`
+
 ## 2026-05-08 - Pass 6: Classifier integration refactor
 
 ### Changed
@@ -34,7 +92,7 @@
 - `platformio run -e esp32dev-analyzer`
 
 ### Notes
-- Commit id pending until this pass is committed.
+- Commit id `bfe10a7`.
 
 ## 2026-05-08 - Stabilize AMP detection (21f43bd)
 

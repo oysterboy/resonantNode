@@ -43,7 +43,7 @@ public:
     void resetState();
     BehaviorDecision handlePatternResult(const DetectionPipeline::PatternResult& result, unsigned long now);
     void update(unsigned long now);
-    // Transitional shim kept only for compatibility with older call sites.
+    // Legacy shim: kept only for compatibility with older call sites that still feed raw transient flags.
     void update(bool transientDetected, float transientStrength, unsigned long now);
 
     void setDetectionOnly(bool value);
@@ -113,6 +113,7 @@ private:
 
     // --- behavior state ---
     float _activityLevel = 0.0f;
+    // Legacy compatibility state for the old bool-based update shim.
     bool _pendingTransientDetected = false;
     float _pendingTransientStrength = 0.0f;
     unsigned long _pendingTransientMs = 0;

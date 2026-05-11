@@ -1,5 +1,14 @@
 Stable-ish baseline: SEQ / AMP + freqEarly
 
+## Current Implementation
+
+What the code actually does today:
+
+- AMP/transient candidate defines the event window.
+- Raw history provides candidate-window frequency evidence.
+- `FrequencyEvidenceEvaluation` classifies tonal validity.
+- Behavior may optionally require tonal validity, but that is a runtime behavior gate, not the detector baseline.
+
 ## Quick Commands
 
 ### SEQ
@@ -42,13 +51,19 @@ Stable-ish baseline: SEQ / AMP + freqEarly
 ## Frequency Qualifier
 
 Current candidate rule:
-- `freqEarly_score >= 100000`
+- `freqEarly_score >= 50000`
 - `freqEarly_contrast >= 5`
 
 Recommended role:
 - AMP = primary detector
 - freqEarly = weak post-qualifier / duplicate + late-noise suppressor
 - freqFull = diagnostic only for now
+
+Implementation note:
+- `freqEarly` comes from the candidate-window frequency measurement over raw sample history.
+- `freqFull` is still diagnostic-only in the current setup notes and logs.
+- Tonal validity is decided by `FrequencyEvidenceEvaluation`, not by the AMP detector itself.
+- `requireTonal=0/1` is a behavior gate in RB, not a detector baseline change.
 
 ## Baseline Performance
 
@@ -83,7 +98,7 @@ Removing alternating zero/value samples likely changed the honesty of measured s
 
 ## Main Observations
 
-- 36/26 remains a good strict reference detector.
+- 30/20 remains a good strict reference detector.
 - 30/20 is now the better working baseline for far-field tests.
 - 30/20 improves 65-67 cm substantially without duplicate explosion.
 - It did not create obvious late/noise chaos in recent runs.

@@ -48,6 +48,12 @@ The detector answers:
 Was there a transient candidate?
 ```
 
+Current implementation:
+- AMP/transient candidate defines the event window.
+- Raw history provides candidate-window frequency evidence.
+- `FrequencyEvidenceEvaluation` classifies tonal validity.
+- Behavior may optionally require tonal validity, but this is a runtime behavior gate, not the detector baseline.
+
 The classifier answers:
 
 ```text

@@ -15,6 +15,20 @@
 ### Notes
 - Pass 6 notes have been moved into the dated entry below.
 
+## 2026-05-11 - Cleaned test candidate wording and baseline notes
+
+### Changed
+- Added explicit current-implementation wording to `docs/setupNotes.md`, `docs/current-pass.md`, and `docs/myspec.md` describing the AMP/transient event window and candidate-window frequency classification flow.
+- Aligned the setup notes and analyzer help text to the intended `onset=30 release=20` baseline.
+- Updated the setup notes to treat `freqEarly_score >= 50000` and `freqEarly_contrast >= 5` as the intended early-frequency rule.
+- Kept runtime behavior unchanged.
+
+### Verification
+- `platformio run`
+
+### Notes
+- Commit id pending until this cleanup is committed.
+
 ## 2026-05-11 - Readability cleanup: mark legacy shims and placeholders
 
 ### Changed
@@ -27,7 +41,7 @@
 - `platformio run`
 
 ### Notes
-- Commit id pending until this cleanup is committed.
+- Commit id `5e7f4ef`.
 
 ## 2026-05-11 - Clarify shared signal and detector boundaries (41f3509)
 

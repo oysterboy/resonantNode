@@ -269,6 +269,12 @@ Transient detection and frequency detection are first concrete implementations i
 They are not the scaffold itself.
 ```
 
+Current implementation:
+- AMP/transient candidate defines the event window.
+- Raw history provides candidate-window frequency evidence.
+- `FrequencyEvidenceEvaluation` classifies tonal validity.
+- Behavior may optionally require tonal validity, but this is a runtime behavior gate, not the detector baseline.
+
 The current implementation may remain simple and pass-through while the architecture is prepared for additional evidence paths.
 
 ---

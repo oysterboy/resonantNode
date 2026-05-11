@@ -55,4 +55,7 @@ private:
     unsigned long _chirpPauseMs = 150;
     unsigned long _tripleChirpOnMs = 100;
     unsigned long _tripleChirpPauseMs = 12;
+    unsigned long _idleChirpOnMs = 500;
+    unsigned long _idleChirpPauseMs = 200;
+    uint32_t _idleFirstPulseToneHz = 2000;
 };

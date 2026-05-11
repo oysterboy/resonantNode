@@ -29,6 +29,7 @@ public:
 
     void observeOnset(unsigned long now, bool onsetDetected, float onsetStrength);
     void observeTransient(unsigned long now, bool transientDetected, float transientStrength, bool suppressed);
+    void observePatternPulse(unsigned long now, bool fullPulse);
     void observeBehaviorGate(unsigned long now,
                              const ResonantBehavior& behavior,
                              bool transientDetected,
@@ -93,7 +94,8 @@ private:
 
     // LED output.
     int _ledPin = -1;
-    unsigned long _ledTransientPulseStartMs = 0;
+    unsigned long _ledPatternPulseStartMs = 0;
+    unsigned long _ledPatternPulseCount = 0;
     static constexpr unsigned long kLedTransientPulseOnMs = 30;
     static constexpr unsigned long kLedTransientPulseOffMs = 30;
     static constexpr unsigned long kLedTransientPulseCount = 3;

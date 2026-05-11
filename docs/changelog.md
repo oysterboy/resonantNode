@@ -14,6 +14,11 @@
 
 ### Notes
 - Pass 6 notes have been moved into the dated entry below.
+- ResonantBehavior now defaults `requireTonalForBehavior` to `true`, and the RB help/setup notes were aligned to the new default.
+- ResonantBehavior idle timeout now defaults to `30000`, and the RB help/setup notes were aligned to the new value.
+- Idle chirps now use one `500 ms` pulse at `2000 Hz`, a `200 ms` gap, then the normal default pulse.
+- Resonant node setup now uses the same `30000` ms idle timeout instead of overriding it back to `10000`.
+- RB LED now gives a short blink for accepted-but-not-consumed candidates and the full pulse train only for candidates the behavior actually consumes.
 
 ## 2026-05-11 - Rename chirp wording to transient wording
 
@@ -27,7 +32,7 @@
 - `platformio run`
 
 ### Notes
-- Commit id pending until this rename is committed.
+- Commit id `d2a5358`.
 
 ## 2026-05-11 - Cleaned test candidate wording and baseline notes
 

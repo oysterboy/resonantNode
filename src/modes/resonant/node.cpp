@@ -416,7 +416,7 @@ void Node::configureAnalogParameters() {
 
     _behavior.setWaitAfterTransientMs(0); // Shared response timing: respond immediately after a transient.
     _behavior.setRefractoryAfterEmitMs(0); // Shared response timing: no post-emit holdoff; this usually dominates any own-emit tail window unless that tail is longer.
-    _behavior.setIdleTimeoutMs(10000); // Idle self-trigger timeout.
+    _behavior.setIdleTimeoutMs(30000); // Idle self-trigger timeout.
 }
 
 void Node::configureI2SParameters() {
@@ -439,7 +439,7 @@ void Node::configureI2SParameters() {
 
     _behavior.setWaitAfterTransientMs(500); // Shared response timing: respond after the transient settles.
     _behavior.setRefractoryAfterEmitMs(0); // Shared response timing: no post-emit holdoff; this usually dominates any own-emit tail window unless that tail is longer.
-    _behavior.setIdleTimeoutMs(10000); // Idle self-trigger timeout.
+    _behavior.setIdleTimeoutMs(30000); // Idle self-trigger timeout.
 }
 
 // --- main update loop ---
@@ -550,11 +550,6 @@ void Node::update() {
                 }
                 const unsigned long behaviorLagMs = now >= patternResult.processedAtMs ? now - patternResult.processedAtMs : 0;
 
-                if (rbOutputsEnabledNow && !selfChirpSuppressed) {
-                    _debug.observeOnset(now, true, patternResult.candidate.peakStrength);
-                    _debug.observeTransient(now, true, patternResult.candidate.peakStrength, false);
-                }
-
                 const char* action = "queued";
                 if (!patternValid) {
                     action = "invalid";
@@ -564,6 +559,10 @@ void Node::update() {
                     action = "blocked";
                 } else if (_rbDetectOnly) {
                     action = "detectonly";
+                }
+
+                if (rbOutputsEnabledNow && patternResult.candidateValid) {
+                    _debug.observePatternPulse(now, behaviorDecision == ResonantBehavior::BehaviorDecision::ConsumedPattern);
                 }
 
                 if (rbShouldLogDetail()) {
@@ -604,7 +603,6 @@ void Node::update() {
 
             const bool onsetDetected = selfChirpSuppressed ? false : _audioOnsetDetector.onsetDetected();
             _debug.observeOnset(now, onsetDetected, _audioOnsetDetector.onsetStrength());
-            _debug.observeTransient(now, _audioOnsetDetector.transientDetected(), _audioOnsetDetector.transientStrength(), selfChirpSuppressed);
             const unsigned long queueDepthBeforeDrain = static_cast<unsigned long>(_audioSignal.candidateQueueDepth());
 
             DetectorCandidate candidate;
@@ -817,7 +815,7 @@ void Node::pollSerialCommands() {
 void Node::handleSerialLine(const char* line) {
     if (equalsIgnoreCase(line, "RB help")) {
         Serial.println("RB CMD: RB PARAM onset=30 release=20 cooldown=50 releaseDebounce=10 minMs=90 maxMs=240 minStrength=40.0 freqScore=50000 freqContrast=20.0");
-        Serial.println("RB CMD: RB BEHAV wait=0 refractory=0 idle=10000 requireTonal=0");
+        Serial.println("RB CMD: RB BEHAV wait=0 refractory=0 idle=30000 requireTonal=1");
         Serial.println("RB CMD: RB rebase");
         Serial.println("RB CMD: RB rebase force");
         Serial.println("RB CMD: RB detectonly on|off");
@@ -883,7 +881,7 @@ void Node::handleSerialLine(const char* line) {
         token = token != nullptr ? strtok_r(nullptr, " ", &savePtr) : nullptr;
 
         if (token == nullptr || !equalsIgnoreCase(token, "BEHAV")) {
-            Serial.println("RB BEHAV usage=RB BEHAV wait=0 refractory=0 idle=10000 requireTonal=0");
+            Serial.println("RB BEHAV usage=RB BEHAV wait=0 refractory=0 idle=30000 requireTonal=1");
             return;
         }
 

@@ -51,7 +51,7 @@ void ResonantBehavior::resetState() {
     _lastDecision = BehaviorDecision::None;
     _lastBlockReason = BehaviorDecision::None;
     _detectionOnly = false;
-    _requireTonalForBehavior = false;
+    _requireTonalForBehavior = true;
     _wouldEmit = false;
     _outputBusy = false;
     _chirpRequested = false;

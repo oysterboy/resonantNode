@@ -33,16 +33,20 @@ void ChirpOutput::start(ChirpPattern pattern) {
         _activeChirpOnMs = _tripleChirpOnMs;
         _activeChirpPauseMs = _tripleChirpPauseMs;
     } else if (pattern == ChirpPattern::Idle) {
-        _beepCount = 4;
-        _activeChirpOnMs = _chirpOnMs;
-        _activeChirpPauseMs = _tripleChirpPauseMs;
+        _beepCount = 2;
+        _activeChirpOnMs = _idleChirpOnMs;
+        _activeChirpPauseMs = _idleChirpPauseMs;
     } else {
         _beepCount = 1;
         _activeChirpOnMs = _chirpOnMs;
         _activeChirpPauseMs = _chirpPauseMs;
     }
     _phaseStartMs = millis();
-    _toneOutput.setToneHz(_toneHz);
+    if (pattern == ChirpPattern::Idle) {
+        _toneOutput.setToneHz(_idleFirstPulseToneHz);
+    } else {
+        _toneOutput.setToneHz(_toneHz);
+    }
     _toneOutput.toneOn();
 }
 
@@ -65,9 +69,19 @@ void ChirpOutput::update() {
         case 0:
             if (elapsed >= _activeChirpOnMs) {
                 _toneOutput.toneOff();
-                if (_beepCount > 1) {
+                if (_activePattern == ChirpPattern::Idle) {
+                    if (_beepCount > 1) {
+                        --_beepCount;
+                        _phase = 1;
+                        _phaseStartMs = now;
+                    } else {
+                        _active = false;
+                        _finished = true;
+                        _phaseStartMs = now;
+                    }
+                } else if (_beepCount > 1) {
                     --_beepCount;
-                    _phase = (_activePattern == ChirpPattern::Idle && _beepCount == 1) ? 2 : 1;
+                    _phase = 1;
                     _phaseStartMs = now;
                 } else {
                     _active = false;
@@ -81,7 +95,12 @@ void ChirpOutput::update() {
             if (elapsed >= _activeChirpPauseMs) {
                 _phase = 0;
                 _phaseStartMs = now;
-                _toneOutput.setToneHz(_toneHz);
+                if (_activePattern == ChirpPattern::Idle && _beepCount == 1) {
+                    _toneOutput.setToneHz(_toneHz);
+                    _activeChirpOnMs = _chirpOnMs;
+                } else {
+                    _toneOutput.setToneHz(_toneHz);
+                }
                 _toneOutput.toneOn();
             }
             break;

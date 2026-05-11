@@ -431,10 +431,10 @@ or runtime param:
 requireTonal=0/1
 ```
 
-Default for first test:
+Default for current test:
 
 ```text
-requireTonal=0
+requireTonal=1
 ```
 
 Status:

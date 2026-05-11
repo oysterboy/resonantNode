@@ -52,7 +52,8 @@ void NodeDebug::begin(int ledPin) {
     _i2sCenteredMin = 0;
     _i2sCenteredMax = 0;
     _ledPin = ledPin;
-    _ledTransientPulseStartMs = 0;
+    _ledPatternPulseStartMs = 0;
+    _ledPatternPulseCount = 0;
 
     pinMode(_ledPin, OUTPUT);
     digitalWrite(_ledPin, LOW);
@@ -132,10 +133,12 @@ void NodeDebug::observeTransient(unsigned long now, bool transientDetected, floa
         return;
     }
 
-    if (transientDetected) {
-        _ledTransientPulseStartMs = now;
-    }
     updatePulse(now, transientDetected, transientStrength, _debugTransientVisibleUntilMs, _debugTransientStrength);
+}
+
+void NodeDebug::observePatternPulse(unsigned long now, bool fullPulse) {
+    _ledPatternPulseStartMs = now;
+    _ledPatternPulseCount = fullPulse ? kLedTransientPulseCount : 1;
 }
 
 void NodeDebug::observeBehaviorGate(unsigned long now,
@@ -268,12 +271,14 @@ void NodeDebug::updateLed(unsigned long now,
                           const ResonantBehavior& behavior,
                           const ChirpOutput& chirpOutput,
                           bool selfChirpSuppressed) {
+    (void)behavior;
+    (void)selfChirpSuppressed;
     bool ledOn = chirpOutput.isActive();
 
-    if (!ledOn && !selfChirpSuppressed && _ledTransientPulseStartMs != 0) {
-        const unsigned long elapsedMs = now - _ledTransientPulseStartMs;
+    if (!ledOn && _ledPatternPulseStartMs != 0) {
+        const unsigned long elapsedMs = now - _ledPatternPulseStartMs;
         const unsigned long pulseIndex = elapsedMs / kLedTransientPulseCycleMs;
-        if (pulseIndex < kLedTransientPulseCount) {
+        if (pulseIndex < _ledPatternPulseCount) {
             const unsigned long phaseMs = elapsedMs % kLedTransientPulseCycleMs;
             ledOn = phaseMs < kLedTransientPulseOnMs;
         }

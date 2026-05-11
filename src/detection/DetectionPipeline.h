@@ -2,8 +2,32 @@
 
 #include "../io/AudioSignal.h"
 
+/*
+DetectionPipeline
+
+Owns the lightweight pattern-shaping layer between detector output and
+behavior-level decisions.
+
+Responsibilities:
+- translate detector candidates into pattern candidates/results
+- carry transient and frequency evidence through the pipeline
+- classify pattern type and rejection reason strings for logging/debugging
+
+Does NOT:
+- read audio directly
+- own detector thresholds or tuning policy
+- decide behavior timing or output actions
+
+File structure:
+- classification enums
+- evidence and candidate payloads
+- pattern result container
+- detector-candidate helpers
+- name helpers for debug output
+*/
 namespace DetectionPipeline {
 
+// Classification tags used by behavior, logging, and analyzer summaries.
 enum class PatternType {
     None,
     ValidTransient,
@@ -38,6 +62,7 @@ enum class PatternRejectReason {
     UnexpectedNoise,
 };
 
+// Raw detector evidence captured for transient-trigger analysis.
 struct TransientEvidence {
     bool present = false;
 
@@ -58,6 +83,7 @@ struct TransientEvidence {
     bool audioOverflowDuringCandidate = false;
 };
 
+// Frequency evidence carried alongside a candidate for tonal classification.
 struct FrequencyEvidence {
     bool present = false;
     bool matched = false;
@@ -79,6 +105,7 @@ struct FrequencyEvidence {
     bool validWindow = false;
 };
 
+// Combined detector candidate payload passed through the pipeline.
 struct PatternCandidate {
     uint64_t onsetSample = 0;
     uint64_t peakSample = 0;
@@ -101,6 +128,7 @@ struct PatternCandidate {
     FrequencyEvidence frequencyFull;
 };
 
+// Final pipeline result consumed by behavior and analyzer reporting.
 struct PatternResult {
     PatternType type = PatternType::None;
     PatternReasonCode reasonCode = PatternReasonCode::None;
@@ -116,10 +144,12 @@ struct PatternResult {
     bool valid = false;
 };
 
+// Build a candidate only when the detector produced meaningful evidence.
 inline bool isDetectorCandidateAccepted(const DetectorCandidate& in) {
     return in.durationMs > 0 || in.peakStrength > 0.0f || in.releaseMillisApprox != 0;
 }
 
+// Copy detector output into the pipeline candidate container.
 inline PatternCandidate makePatternCandidate(const DetectorCandidate& in) {
     PatternCandidate out;
     out.onsetSample = in.onsetSample;
@@ -151,6 +181,7 @@ inline PatternCandidate makePatternCandidate(const DetectorCandidate& in) {
     return out;
 }
 
+// Initialize a pattern result from a detector candidate and optional frequency evidence.
 inline bool processDetectorCandidate(const DetectorCandidate& in, PatternResult& out, unsigned long processedAtMs) {
     out = {};
     out.candidate = makePatternCandidate(in);
@@ -181,6 +212,7 @@ inline bool processDetectorCandidate(const DetectorCandidate& in, PatternResult&
     return true;
 }
 
+// Convenience overload that attaches early frequency evidence to the candidate payload.
 inline bool processDetectorCandidate(const DetectorCandidate& in, PatternResult& out, unsigned long processedAtMs, const FrequencyEvidence* frequencyEvidence) {
     const bool accepted = processDetectorCandidate(in, out, processedAtMs);
     if (frequencyEvidence != nullptr) {
@@ -189,6 +221,7 @@ inline bool processDetectorCandidate(const DetectorCandidate& in, PatternResult&
     return accepted;
 }
 
+// String helpers for compact debug/log output.
 inline const char* patternTypeName(PatternType type) {
     switch (type) {
         case PatternType::None:

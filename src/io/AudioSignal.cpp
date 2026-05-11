@@ -1,6 +1,10 @@
 #include "io/AudioSignal.h"
 #include <Arduino.h>
 
+// -----------------------------------------------------------------------------
+// Construction and lifecycle
+// -----------------------------------------------------------------------------
+
 AudioSignal::AudioSignal(AudioSource& source)
     : _source(source) {}
 
@@ -31,6 +35,10 @@ void AudioSignal::rebase() {
     _centeredSignal = 0;
     _signalMagnitude = 0;
 }
+
+// -----------------------------------------------------------------------------
+// Sample and block processing
+// -----------------------------------------------------------------------------
 
 void AudioSignal::update(int sample, uint32_t sampleTimeUs) {
     _lastBlock.samples = nullptr;
@@ -211,6 +219,10 @@ bool AudioSignal::pushCandidate(const DetectorCandidate& candidate) {
     return true;
 }
 
+// -----------------------------------------------------------------------------
+// Configuration and detector tuning
+// -----------------------------------------------------------------------------
+
 void AudioSignal::setBaselineTrackingQuietThreshold(int value) {
     _baselineTrackingQuietThreshold = value;
 }
@@ -259,6 +271,10 @@ void AudioSignal::setCurveSampleCallback(CurveSampleCallback callback, void* con
     _curveSampleCallback = callback;
     _curveSampleCallbackContext = context;
 }
+
+// -----------------------------------------------------------------------------
+// Detector and signal accessors
+// -----------------------------------------------------------------------------
 
 float AudioSignal::onsetDetectionThreshold() const {
     return _detector.onsetDetectionThreshold();
@@ -397,6 +413,10 @@ unsigned long AudioSignal::transientRejectedDurationTooLongCount() const {
 unsigned long AudioSignal::transientRejectedStrengthTooLowCount() const {
     return _detector.transientRejectedStrengthTooLowCount();
 }
+
+// -----------------------------------------------------------------------------
+// History, queue, and reset helpers
+// -----------------------------------------------------------------------------
 
 const AudioSignalStats& AudioSignal::stats() const {
     return _stats;

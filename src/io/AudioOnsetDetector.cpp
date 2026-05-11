@@ -1,6 +1,10 @@
 #include "io/AudioOnsetDetector.h"
 #include <Arduino.h>
 
+// -----------------------------------------------------------------------------
+// Lifecycle
+// -----------------------------------------------------------------------------
+
 AudioOnsetDetector::AudioOnsetDetector() = default;
 
 void AudioOnsetDetector::begin() {
@@ -27,6 +31,10 @@ void AudioOnsetDetector::resetState() {
     _releaseCandidateStartedUs = 0;
     _peakStrength = 0.0f;
 }
+
+// -----------------------------------------------------------------------------
+// Runtime update
+// -----------------------------------------------------------------------------
 
 void AudioOnsetDetector::update(float signalMagnitude, uint32_t sampleTimeUs) {
     const unsigned long nowUs = sampleTimeUs;
@@ -71,6 +79,10 @@ void AudioOnsetDetector::updateOnsetStage(unsigned long nowUs, float signalMagni
         _lastOnsetRejectReason = OnsetRejectReason::CooldownActive;
     }
 }
+
+// -----------------------------------------------------------------------------
+// Onset and transient stages
+// -----------------------------------------------------------------------------
 
 void AudioOnsetDetector::updateTransientStage(unsigned long nowUs, float signalMagnitude, bool aboveReleaseThreshold) {
     if (_peakActive && signalMagnitude > _peakStrength) {
@@ -137,6 +149,10 @@ void AudioOnsetDetector::updateTransientStage(unsigned long nowUs, float signalM
     }
 }
 
+// -----------------------------------------------------------------------------
+// Diagnostics
+// -----------------------------------------------------------------------------
+
 void AudioOnsetDetector::printTransientStatsIfDue(unsigned long nowUs) {
     if (!_diagnosticsEnabled || !AUDIO_VERBOSE_DEBUG) {
         return;
@@ -160,6 +176,10 @@ void AudioOnsetDetector::printTransientStatsIfDue(unsigned long nowUs) {
         _lastStatsPrintUs = nowUs;
     }
 }
+
+// -----------------------------------------------------------------------------
+// Inspection
+// -----------------------------------------------------------------------------
 
 bool AudioOnsetDetector::onsetDetected() const {
     return _onsetDetected;

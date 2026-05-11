@@ -1,13 +1,26 @@
 #pragma once
 
-// Shared switch for audio-path verbosity.
-// Keep this false by default so timing-critical paths stay quiet unless a
-// developer explicitly opts back in.
+/*
+AudioDebugConfig
+
+Shared debug and test defaults used across analyzer, detector, and resonant
+mode code.
+
+Responsibilities:
+- gate verbose audio-path diagnostics
+- provide optional loop-stress knobs for validation runs
+- supply a default setup label for run banners
+
+Does NOT:
+- own runtime behavior
+- select a mode
+- change detector tuning on its own
+*/
+
 #ifndef AUDIO_VERBOSE_DEBUG
 #define AUDIO_VERBOSE_DEBUG 0
 #endif
 
-// Optional loop-stress knobs for validation runs.
 #ifndef TEST_LOOP_DELAY_MS
 #define TEST_LOOP_DELAY_MS 0
 #endif
@@ -16,7 +29,6 @@
 #define TEST_LOG_STRESS 0
 #endif
 
-// Manual physical-setup label for run banners.
 #ifndef TEST_SETUP_LABEL
 #define TEST_SETUP_LABEL "default"
 #endif

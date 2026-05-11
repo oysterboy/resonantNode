@@ -3,6 +3,10 @@
 #include <Arduino.h>
 #include <math.h>
 
+// -----------------------------------------------------------------------------
+// Lifecycle
+// -----------------------------------------------------------------------------
+
 AudioFrequencyDetector::AudioFrequencyDetector(AudioSignal& audioSignal)
     : _audioSignal(audioSignal) {}
 
@@ -38,6 +42,10 @@ void AudioFrequencyDetector::resetState() {
     }
 }
 
+// -----------------------------------------------------------------------------
+// Runtime update and sample window management
+// -----------------------------------------------------------------------------
+
 void AudioFrequencyDetector::update(unsigned long now) {
     _onsetDetected = false;
     _onsetStrength = 0.0f;
@@ -71,6 +79,10 @@ void AudioFrequencyDetector::observeCenteredSample(int centeredSample) {
 
     computeFrequencyScore();
 }
+
+// -----------------------------------------------------------------------------
+// Frequency score helpers
+// -----------------------------------------------------------------------------
 
 void AudioFrequencyDetector::pushSample(int sample) {
     if (_windowSizeSamples == 0) {
@@ -147,6 +159,10 @@ float AudioFrequencyDetector::computeFrequencyScore() {
     return normalized;
 }
 
+// -----------------------------------------------------------------------------
+// Onset and transient stages
+// -----------------------------------------------------------------------------
+
 void AudioFrequencyDetector::updateOnsetStage(unsigned long now, float score, bool aboveAttackThreshold, bool onsetCooldownElapsed) {
     if (aboveAttackThreshold && !_peakActive && onsetCooldownElapsed) {
         _peakActive = true;
@@ -194,6 +210,10 @@ void AudioFrequencyDetector::updateTransientStage(unsigned long now, float score
     }
 }
 
+// -----------------------------------------------------------------------------
+// Diagnostics
+// -----------------------------------------------------------------------------
+
 void AudioFrequencyDetector::printTransientStatsIfDue(unsigned long now) {
     if (!_diagnosticsEnabled || !AUDIO_VERBOSE_DEBUG) {
         return;
@@ -226,6 +246,10 @@ void AudioFrequencyDetector::printTransientStatsIfDue(unsigned long now) {
         _lastStatsPrintMs = now;
     }
 }
+
+// -----------------------------------------------------------------------------
+// Inspection and tuning
+// -----------------------------------------------------------------------------
 
 bool AudioFrequencyDetector::onsetDetected() const {
     return _onsetDetected;

@@ -4,15 +4,25 @@
 #include "../AudioDebugConfig.h"
 
 /*
-IO
+AudioFrequencyDetector
 
-- owns narrow-band frequency detection around a configured tone
-- derives one-shot onset events from the recent audio sample stream
-- qualifies tone bursts as transient events after measuring score duration
+Owns the narrow-band frequency detector around a configured tone.
+
+Responsibilities:
+- measure tone presence from the recent audio sample stream
+- derive onset and transient-style events from frequency score changes
+- keep the rolling sample window and score diagnostics needed by the analyzer
 
 Does NOT:
 - decide when the node should chirp
 - own behavior state transitions
+
+File structure:
+- public lifecycle / tuning / inspection
+- onset stage state
+- transient stage state
+- frequency-score configuration
+- diagnostics and sample window state
 */
 
 class AudioFrequencyDetector {

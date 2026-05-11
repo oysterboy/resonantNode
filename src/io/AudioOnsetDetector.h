@@ -5,18 +5,26 @@
 #include "../AudioDebugConfig.h"
 
 /*
-IO
+AudioOnsetDetector
 
-- owns current onset and transient-like detection
-- derives one-shot onset events from continuous audio signal data
-- qualifies peaks as transient events after measuring their duration range
+Owns the first-stage amplitude-based onset and transient detector.
 
-Path:
-split in Onset and TRansient Detection later.
+Responsibilities:
+- derive one-shot onset events from continuous audio signal data
+- hold a peak open until release conditions are stable
+- qualify peaks as transient events after measuring duration and strength
 
 Does NOT:
 - decide when the node should chirp
 - own behavior state transitions
+- own frequency-based classification
+
+File structure:
+- rejection enums
+- public lifecycle / tuning / inspection
+- onset stage state
+- transient stage state
+- detector stats and diagnostics
 */
 
 class AudioOnsetDetector {

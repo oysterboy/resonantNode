@@ -436,7 +436,7 @@ void Node::configureSharedParameters() {
 
 void Node::configureAnalogParameters() {
     _audioSignal.setBaselineTrackingQuietThreshold(40);
-    _audioOnsetDetector.setOnsetDetectionThreshold(30.0f);
+    _audioOnsetDetector.setOnsetDetectionThreshold(23.0f);
     _audioOnsetDetector.setOnsetReleaseThreshold(20.0f);
     _audioOnsetDetector.setCooldownAfterOnsetMs(300);
     _audioOnsetDetector.setReleaseDebounceMs(30);
@@ -456,9 +456,9 @@ void Node::configureAnalogParameters() {
 void Node::configureI2SParameters() {
     _audioSignal.setBaselineTrackingQuietThreshold(20);
 
-    _audioOnsetDetector.setOnsetDetectionThreshold(25.0f);
-    _audioOnsetDetector.setOnsetReleaseThreshold(21.0f);
-    _audioOnsetDetector.setCooldownAfterOnsetMs(300);
+    _audioOnsetDetector.setOnsetDetectionThreshold(23.0f);
+    _audioOnsetDetector.setOnsetReleaseThreshold(20.0f);
+    _audioOnsetDetector.setCooldownAfterOnsetMs(10);
     _audioOnsetDetector.setReleaseDebounceMs(30);
     _audioOnsetDetector.setMinTransientDurationMs(60);
     _audioOnsetDetector.setMaxTransientDurationMs(240);
@@ -775,7 +775,7 @@ void Node::pollSerialCommands() {
 
 void Node::handleSerialLine(const char* line) {
     if (equalsIgnoreCase(line, "RB help")) {
-        Serial.println("RB CMD: RB PARAM onset=30 release=20 cooldown=50 releaseDebounce=10 minMs=90 maxMs=240 minStrength=40.0 freqScore=50000 freqContrast=20.0");
+        Serial.println("RB CMD: RB PARAM onset=23 release=20 cooldown=50 releaseDebounce=10 minMs=90 maxMs=240 minStrength=40.0 freqScore=50000 freqContrast=20.0");
         Serial.println("RB CMD: RB BEHAV wait=100 refractory=0 idleTimeout=20000 idleTimeoutVariation=10000 idleBlockedAfterHeard=3000 idleBlockedAfterOwnEmit=5000 requireTonal=1");
         Serial.println("RB CMD: RB rebase");
         Serial.println("RB CMD: RB rebase force");
@@ -796,7 +796,7 @@ void Node::handleSerialLine(const char* line) {
         token = token != nullptr ? strtok_r(nullptr, " ", &savePtr) : nullptr;
 
         if (token == nullptr || !equalsIgnoreCase(token, "PARAM")) {
-            Serial.println("RB PARAM usage=RB PARAM onset=30 release=20 cooldown=50 releaseDebounce=10 minMs=90 maxMs=240 minStrength=40.0 freqScore=50000 freqContrast=20.0");
+            Serial.println("RB PARAM usage=RB PARAM onset=23 release=20 cooldown=50 releaseDebounce=10 minMs=90 maxMs=240 minStrength=40.0 freqScore=50000 freqContrast=20.0");
             return;
         }
 

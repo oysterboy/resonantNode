@@ -117,8 +117,6 @@ ResonantBehavior::BehaviorDecision ResonantBehavior::handlePatternResult(const D
         return _lastDecision;
     }
 
-    scheduleNextIdle(now);
-
     if (_requireTonalForBehavior && !result.behaviorEligible) {
         _lastDecision = BehaviorDecision::UnknownBlocked;
         _lastBlockReason = BehaviorDecision::UnknownBlocked;
@@ -165,6 +163,7 @@ ResonantBehavior::BehaviorDecision ResonantBehavior::handlePatternResult(const D
         _transientStartedMs = now;
         _state = State::TransientSeen;
         _waitUntilMs = now + _waitAfterTransientMs;
+        scheduleNextIdle(now);
     }
 
     if (_lastDecision == BehaviorDecision::DetectionOnly

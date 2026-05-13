@@ -12,3 +12,20 @@ RB timing change:
 RB log note:
 
 - `RB log minimal` is accepted and behaves like `RB log off` for live output.
+
+Detector ownership note:
+
+- `AudioOnsetDetector` is now owned by the node / analyzer layer instead of `AudioSignal`.
+- `AudioSignal` keeps the signal conditioning and candidate packaging path, but it now uses an injected detector.
+
+Detector tuning note:
+
+- previous: `onset = 30`
+- previous: `release = 20`
+- current: `onset = 23`
+- current: `release = 20`
+
+Baseline note:
+
+- current baseline: `5 nodes`
+- status: `work in progress`

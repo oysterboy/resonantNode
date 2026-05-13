@@ -26,6 +26,9 @@
 - Split detector ownership so `AudioSignal` now uses an injected `AudioOnsetDetector` instead of owning the onset detector internally.
 - Kept `AudioSignal` responsible for signal conditioning and candidate packaging, while `AudioOnsetDetector` remains the detector owner in the node and analyzer layers.
 - Kept RB response timing at `wait=100 ms` and self-chirp suppression at `200 ms`, and exposed idle timing as `idleTimeout`, `idleTimeoutVariation`, `idleBlockedAfterHeard`, and `idleBlockedAfterOwnEmit`.
+- Updated the detector baseline defaults to onset=23 and release=20 in both RB and Analyzer runtime setup/help text.
+- Current baseline remains the 5-node work-in-progress setup.
+- Idle rescheduling now follows the same accepted-response gate as an actual chirp response, instead of resetting on any valid candidate.
 
 ### Verification
 - `platformio run -e esp32dev`

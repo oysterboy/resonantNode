@@ -21,10 +21,10 @@ What the code actually does today:
 - `SEQ start tries=100 test=70cm log=summary+trial+candidate+report`
 - `SEQ OBS start period=2000 window=2000 freq=3200 dur=100 log=full`
 - `SEQ help`
-- `PARAM onset=30 release=20 cooldown=50 releaseDebounce=10 minMs=90 maxMs=240 minStrength=40.0 freqScore=50000 freqContrast=20.0`
+- `PARAM onset=23 release=20 cooldown=50 releaseDebounce=10 minMs=90 maxMs=240 minStrength=40.0 freqScore=50000 freqContrast=20.0`
 
 ### RB
-- `RB PARAM onset=30 release=20 cooldown=50 releaseDebounce=10 minMs=90 maxMs=240 minStrength=40.0 freqScore=50000 freqContrast=20.0`
+- `RB PARAM onset=23 release=20 cooldown=50 releaseDebounce=10 minMs=90 maxMs=240 minStrength=40.0 freqScore=50000 freqContrast=20.0`
 - `RB BEHAV wait=100 refractory=0 idleTimeout=20000 idleTimeoutVariation=10000 idleBlockedAfterHeard=3000 idleBlockedAfterOwnEmit=5000 requireTonal=1`
 - `RB summary`
 - `RB detectonly on|off`
@@ -37,7 +37,7 @@ What the code actually does today:
 ## Current Settings
 
 ### AMP detector
-- onset = 30
+- onset = 23
 - release = 20
 - cooldown = 50 ms
 - releaseDebounce = 10 ms

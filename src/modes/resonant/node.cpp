@@ -8,7 +8,7 @@
 #include "../../detection/FrequencyWindowProbe.h"
 
 #ifndef CHIRP_FREQUENCY_HZ
-#define CHIRP_FREQUENCY_HZ 2400
+#define CHIRP_FREQUENCY_HZ 3200
 #endif
 
 /*
@@ -112,6 +112,28 @@ const char* h3RbCandidateClassName(const DetectionPipeline::PatternResult& patte
         return "unexpected_noise";
     }
     return "expected_primary";
+}
+
+void logCandidateSummary(unsigned long candidateNumber, const DetectorCandidate& candidate, const DetectionPipeline::PatternResult& patternResult) {
+    Serial.print("RB CAND candidate=");
+    Serial.print(candidateNumber);
+    Serial.print(' ');
+    if (patternResult.candidateValid) {
+        Serial.print("ACCEPT");
+    } else {
+        Serial.print("REJECT");
+        Serial.print(" reason=");
+        Serial.print(DetectionPipeline::patternRejectReasonName(patternResult.rejectReason));
+    }
+    Serial.print(" dur=");
+    Serial.print(candidate.durationMs);
+    Serial.print(" strength=");
+    Serial.print(candidate.peakStrength, 1);
+    Serial.print(" pattern=");
+    Serial.print(DetectionPipeline::patternTypeName(patternResult.type));
+    Serial.print(" class=");
+    Serial.print(patternResult.candidateValid ? "valid" : "invalid");
+    Serial.println();
 }
 
 void printH3FrequencyEvidenceFields(const DetectionPipeline::PatternResult& patternResult,
@@ -222,6 +244,8 @@ void Node::begin() {
     _audioSignal.resetStats();
     _audioSource.resetStats();
     resetRbCounters();
+    _rbLastLoggedOnsetRejectCount = 0;
+    _rbLastLoggedTransientRejectCount = 0;
     _rbDetectOnly = false;
     _rbBaselineState = _sourceKind == AudioSourceKind::I2S ? RBBaselineState::ListenForQuiet : RBBaselineState::Active;
     _rbBaselineStateStartedMs = millis();
@@ -283,6 +307,8 @@ void Node::resetDetectionState() {
     _audioSignal.resetDetectorState();
     _audioOnsetDetector.resetState();
     _wasSelfChirpSuppressed = false;
+    _rbLastLoggedOnsetRejectCount = 0;
+    _rbLastLoggedTransientRejectCount = 0;
 }
 
 void Node::performRbRebase() {
@@ -292,6 +318,8 @@ void Node::performRbRebase() {
     _audioSignal.resetStats();
     _audioSource.resetStats();
     resetRbCounters();
+    _rbLastLoggedOnsetRejectCount = 0;
+    _rbLastLoggedTransientRejectCount = 0;
 }
 
 // --- baseline / startup ---
@@ -506,43 +534,6 @@ void Node::update() {
                     sawPatternThisLoop = true;
                 }
 
-                if (_behavior.requireTonalForBehavior() && patternResult.candidateValid && !patternResult.behaviorEligible) {
-                    Serial.print("RB_BLOCK reason=");
-                    Serial.print(DetectionPipeline::patternRejectReasonName(patternResult.rejectReason));
-                    Serial.print(" pattern=");
-                    Serial.print(DetectionPipeline::patternTypeName(patternResult.type));
-                    Serial.print(" candidate_class=");
-                    Serial.print(candidateClass);
-                    Serial.print(" heard=");
-                    Serial.print(patternResult.candidate.heardAtMs);
-                    Serial.print(" now=");
-                    Serial.println(now);
-                }
-
-                if (rbShouldLogDetail()) {
-                    Serial.print("BEH pattern=");
-                    Serial.print(DetectionPipeline::patternTypeName(patternResult.type));
-                    Serial.print(" heard=");
-                    Serial.print(patternResult.candidate.heardAtMs);
-                    Serial.print(" now=");
-                    Serial.print(now);
-                    Serial.print(" decision=");
-                    Serial.print(_behavior.lastDecisionName());
-                    Serial.print(" block=");
-                    Serial.print(_behavior.lastBlockReasonName());
-                    Serial.print(" waitMs=");
-                    Serial.print(_behavior.waitRemainingMs(now));
-                    Serial.print(" refractoryMs=");
-                    Serial.print(_behavior.refractoryRemainingMs(now));
-                    Serial.print(" behaviorSuppressMs=");
-                    Serial.print(_behavior.behaviorSuppressRemainingMs(now));
-                    Serial.print(" detectionOnly=");
-                    Serial.print(_behavior.detectionOnly() ? 1 : 0);
-                    Serial.print(" outputBusy=");
-                    Serial.print(_behavior.outputBusy() ? 1 : 0);
-                    Serial.println();
-                }
-
                 const unsigned long candidateMs = patternResult.candidate.heardAtMs;
                 long gapMs = -1;
                 if (_rbHaveLastCandidateMs && candidateMs >= _rbLastCandidateMs) {
@@ -562,11 +553,15 @@ void Node::update() {
                 }
 
                 if (rbOutputsEnabledNow && patternResult.candidateValid) {
-                    _debug.observePatternPulse(now, behaviorDecision == ResonantBehavior::BehaviorDecision::ConsumedPattern);
+                    _debug.observePatternPulse(now,
+                                               behaviorDecision == ResonantBehavior::BehaviorDecision::ConsumedPattern,
+                                               patternResult.tonalValid);
                 }
 
-                if (rbShouldLogDetail()) {
-                    logCandidate(candidate, patternResult, &liveFrequencyEvidence, _rbCandidateCount + 1, gapMs, queueDepthBeforeDrain, behaviorLagMs, candidateClass, action, _behavior.stateName(), behaviorGateName(_behavior, now, sawPatternThisLoop, selfChirpSuppressed));
+                if (_rbDetectOnly && rbShouldLogDetail()) {
+                    _debug.observePatternPulse(now, patternResult.candidateValid, patternResult.tonalValid);
+                } else if (rbShouldLogDetail()) {
+                    logCandidateSummary(_rbCandidateCount + 1, candidate, patternResult);
                 }
 
                 ++_rbCandidateCount;
@@ -636,43 +631,6 @@ void Node::update() {
                     sawPatternThisLoop = true;
                 }
 
-                if (_behavior.requireTonalForBehavior() && patternResult.candidateValid && !patternResult.behaviorEligible) {
-                    Serial.print("RB_BLOCK reason=");
-                    Serial.print(DetectionPipeline::patternRejectReasonName(patternResult.rejectReason));
-                    Serial.print(" pattern=");
-                    Serial.print(DetectionPipeline::patternTypeName(patternResult.type));
-                    Serial.print(" candidate_class=");
-                    Serial.print(candidateClass);
-                    Serial.print(" heard=");
-                    Serial.print(patternResult.candidate.heardAtMs);
-                    Serial.print(" now=");
-                    Serial.println(now);
-                }
-
-                if (rbShouldLogDetail()) {
-                    Serial.print("BEH pattern=");
-                    Serial.print(DetectionPipeline::patternTypeName(patternResult.type));
-                    Serial.print(" heard=");
-                    Serial.print(patternResult.candidate.heardAtMs);
-                    Serial.print(" now=");
-                    Serial.print(now);
-                    Serial.print(" decision=");
-                    Serial.print(_behavior.lastDecisionName());
-                    Serial.print(" block=");
-                    Serial.print(_behavior.lastBlockReasonName());
-                    Serial.print(" waitMs=");
-                    Serial.print(_behavior.waitRemainingMs(now));
-                    Serial.print(" refractoryMs=");
-                    Serial.print(_behavior.refractoryRemainingMs(now));
-                    Serial.print(" behaviorSuppressMs=");
-                    Serial.print(_behavior.behaviorSuppressRemainingMs(now));
-                    Serial.print(" detectionOnly=");
-                    Serial.print(_behavior.detectionOnly() ? 1 : 0);
-                    Serial.print(" outputBusy=");
-                    Serial.print(_behavior.outputBusy() ? 1 : 0);
-                    Serial.println();
-                }
-
                 const unsigned long candidateMs = patternResult.candidate.heardAtMs;
                 long gapMs = -1;
                 if (_rbHaveLastCandidateMs && candidateMs >= _rbLastCandidateMs) {
@@ -691,8 +649,10 @@ void Node::update() {
                     action = "detectonly";
                 }
 
-                if (rbShouldLogDetail()) {
-                    logCandidate(candidate, patternResult, &liveFrequencyEvidence, _rbCandidateCount + 1, gapMs, queueDepthBeforeDrain, behaviorLagMs, candidateClass, action, _behavior.stateName(), behaviorGateName(_behavior, now, sawPatternThisLoop, selfChirpSuppressed));
+                if (_rbDetectOnly && rbShouldLogDetail()) {
+                    _debug.observePatternPulse(now, patternResult.candidateValid, patternResult.tonalValid);
+                } else if (rbShouldLogDetail()) {
+                    logCandidateSummary(_rbCandidateCount + 1, candidate, patternResult);
                 }
 
                 ++_rbCandidateCount;
@@ -754,22 +714,24 @@ void Node::update() {
     if (rbOutputsEnabledNow && !_rbDetectOnly && _behavior.shouldStartChirp()) {
         const auto chirpPattern = _behavior.chirpPattern();
         const char* sourceName = _behavior.chirpRequestSourceName();
-        Serial.print("BEH emit start now=");
-        Serial.print(now);
-        Serial.print(" source=");
-        Serial.print(sourceName);
-        Serial.print(" state=");
-        Serial.print(_behavior.stateName());
-        Serial.print(" pattern=");
-        Serial.println(chirpPatternName(chirpPattern));
-        Serial.print("RB emit accepted source=");
-        Serial.print(sourceName);
-        Serial.print(" state=");
-        Serial.print(_behavior.stateName());
-        Serial.print(" gate=");
-        Serial.print(behaviorGateName(_behavior, now, sawPatternThisLoop, selfChirpSuppressed));
-        Serial.print(" pattern=");
-        Serial.println(chirpPatternName(chirpPattern));
+        if (rbShouldLogDetail()) {
+            Serial.print("BEH emit start now=");
+            Serial.print(now);
+            Serial.print(" source=");
+            Serial.print(sourceName);
+            Serial.print(" state=");
+            Serial.print(_behavior.stateName());
+            Serial.print(" pattern=");
+            Serial.println(chirpPatternName(chirpPattern));
+            Serial.print("RB emit accepted source=");
+            Serial.print(sourceName);
+            Serial.print(" state=");
+            Serial.print(_behavior.stateName());
+            Serial.print(" gate=");
+            Serial.print(behaviorGateName(_behavior, now, sawPatternThisLoop, selfChirpSuppressed));
+            Serial.print(" pattern=");
+            Serial.println(chirpPatternName(chirpPattern));
+        }
         _debug.observeChirpStarted(now, sourceName, chirpPattern);
         _chirpOutput.start(chirpPattern);
         _behavior.notifyChirpStarted(now);
@@ -1023,7 +985,7 @@ bool Node::rbShouldLogDetail() const {
 }
 
 const char* Node::rbLogModeName() const {
-    return _rbLogMode == RbLogMode::Full ? "full" : "minimal";
+    return _rbLogMode == RbLogMode::Full ? "full" : "off";
 }
 
 DetectionPipeline::FrequencyEvidence Node::captureFrequencyEvidence() const {

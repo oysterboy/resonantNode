@@ -133,6 +133,8 @@ private:
     bool _rbHaveLastCandidateMs = false;
     unsigned long _rbStrengthSumScaled = 0;
     unsigned long _rbDurationSumMs = 0;
+    unsigned long _rbLastLoggedOnsetRejectCount = 0;
+    unsigned long _rbLastLoggedTransientRejectCount = 0;
     bool _rbDetectOnly = false;
     RbLogMode _rbLogMode = RbLogMode::Minimal;
     bool _wasSelfChirpSuppressed = false;

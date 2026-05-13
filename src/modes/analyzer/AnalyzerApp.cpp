@@ -181,11 +181,13 @@ void printSequenceHelp() {
     Serial.println("CMD: SEQ");
     Serial.println("CMD: SEQ stop");
     Serial.println("SEQ IN: start [tries=N] [period=MS] [window=MS] [freq=HZ] [dur=MS] [test=LABEL]");
+    Serial.println("SEQ IN: OBS start [tries=N] [period=2000] [window=1800] [freq=HZ] [dur=MS] [test=LABEL]");
     Serial.println("SEQ IN: [log=default|none|quiet|summary+trial+candidate+report+liveraw]");
     Serial.println("SEQ IN: [debug=0|1|2] [dumpSamples=0|1] [curveFormat=off|samples]");
     Serial.println("SEQ IN: [sampleFirst=N] [sampleEvery=N] [sampleLead=MS] [sampleTail=MS] [sampleStep=MS] [sampleMax=N]");
     Serial.println("SEQ OUT: SEQ start / SEQ running / SEQ_CAND / SEQ_REPORT / SEQ_TRIAL / SEQ_SUMMARY");
     Serial.println("SEQ OUT: candidate fields include onset_sample peak_sample release_sample peak_ms dur end_dt_ms freq_*");
+    Serial.println("SEQ OBS: passive observe mode for an already-running external emitter");
     Serial.println("SEQ PARAM: freqScore=50000 freqContrast=20.0");
 }
 
@@ -451,17 +453,6 @@ AnalyzerApp::AnalyzerApp(int inputPin, AudioSourceKind sourceKind)
 
 void AnalyzerApp::begin() {
     beginEmitterControl();
-    const unsigned long controlClaimSendMs = millis();
-    sendEmitterCommand("MODE REMOTE");
-    const bool emitterAcked = waitForEmitterAck("OK MODE REMOTE", 1500);
-    if (!emitterAcked) {
-        Serial.println("EVT analyzer_control_claim timeout");
-    } else {
-        Serial.print("EVT analyzer_control_claim acked_ms=");
-        Serial.println(millis() - controlClaimSendMs);
-    }
-
-    delay(500);
 
     configureParameters();
     _audioSource.begin();
@@ -478,11 +469,11 @@ void AnalyzerApp::begin() {
     _emitterLineLength = 0;
     _emitterLineBuffer[0] = '\0';
     _controlClaimPending = false;
-    _controlClaimSent = true;
-    _controlClaimAtMs = millis();
+    _controlClaimSent = false;
+    _controlClaimAtMs = 0;
 
     Serial.println("EVT analyzer_ready");
-    Serial.println("EVT analyzer_help type='HELP', 'BASE', 'PARAM onset=30.0 release=20.0 cooldown=50 releaseDebounce=10 minMs=90 maxMs=240 minStrength=40.0 freqScore=50000 freqContrast=20.0', 'TEST', 'RAW trigger f=2400 dur=100 post=1000 dump=bin', 'SEQ log=default|summary+trial|candidate|freq_class|raw dumpSamples=1 curveFormat=samples', 'CAP', 'DET AMP', 'VAL', 'VAL OFF'");
+    Serial.println("EVT analyzer_help type='HELP', 'BASE', 'PARAM onset=30.0 release=20.0 cooldown=50 releaseDebounce=10 minMs=90 maxMs=240 minStrength=40.0 freqScore=50000 freqContrast=20.0', 'TEST', 'RAW trigger f=3200 dur=100 post=1000 dump=bin', 'SEQ log=default|summary+trial|candidate|freq_class|raw dumpSamples=1 curveFormat=samples', 'CAP', 'DET AMP', 'VAL', 'VAL OFF'");
 }
 
 void AnalyzerApp::configureParameters() {
@@ -996,7 +987,7 @@ void AnalyzerApp::handleUsbLine(const char* line) {
         Serial.println("CMD: EMIT MODE AUTO interval=2000 freq=3200 dur=100");
         Serial.println("CMD: EMIT SWEEP start=3000 stop=3500 step=100 dur=80 pause=1000");
         Serial.println("CMD: TEST");
-        Serial.println("CMD: raw trigger f=2400 dur=100 post=1000 dump=bin");
+        Serial.println("CMD: raw trigger f=3200 dur=100 post=1000 dump=bin");
         Serial.println("CMD: SEQ");
         Serial.println("CMD: SEQ help");
         Serial.println("CMD: SEQ stop");
@@ -1106,11 +1097,11 @@ void AnalyzerApp::handleUsbLine(const char* line) {
         token = token != nullptr ? strtok_r(nullptr, " ", &savePtr) : nullptr;
 
         if (token == nullptr || !equalsIgnoreCase(token, "trigger")) {
-            Serial.println("RAW_ERR usage=raw trigger f=2400 dur=100 post=1000");
+            Serial.println("RAW_ERR usage=raw trigger f=3200 dur=100 post=1000");
             return;
         }
 
-        unsigned long toneHz = 2400;
+        unsigned long toneHz = 3200;
         unsigned long durationMs = 100;
         unsigned long postMs = 1000;
         unsigned long preMs = 0;
@@ -1152,6 +1143,12 @@ void AnalyzerApp::handleUsbLine(const char* line) {
         char* token = strtok_r(buffer, " ", &savePtr);
         token = token != nullptr ? strtok_r(nullptr, " ", &savePtr) : nullptr;
 
+        bool externalEmitter = false;
+        if (token != nullptr && (equalsIgnoreCase(token, "obs") || equalsIgnoreCase(token, "observe") || equalsIgnoreCase(token, "passive"))) {
+            externalEmitter = true;
+            token = strtok_r(nullptr, " ", &savePtr);
+        }
+
         if (token != nullptr && (equalsIgnoreCase(token, "help") || equalsIgnoreCase(token, "?"))) {
             printSequenceHelp();
             return;
@@ -1167,8 +1164,8 @@ void AnalyzerApp::handleUsbLine(const char* line) {
         }
 
         unsigned long totalTrials = 100;
-        unsigned long periodMs = 2500;
-        unsigned long windowEndOffsetMs = 2200;
+        unsigned long periodMs = externalEmitter ? 2000 : 2500;
+        unsigned long windowEndOffsetMs = externalEmitter ? 2000 : 2200;
         unsigned long toneHz = 3200;
         unsigned long durationMs = 100;
         uint32_t logFlags = AnalyzerApp::DEFAULT_ANALYZER_LOG_FLAGS;
@@ -1232,7 +1229,7 @@ void AnalyzerApp::handleUsbLine(const char* line) {
             token = strtok_r(nullptr, " ", &savePtr);
         }
 
-        startSequenceTest(totalTrials, periodMs, windowEndOffsetMs, toneHz, durationMs, false, true, setupLabel, logFlags, sampleDumpEnabled, sampleDumpFirstTrials, sampleDumpEveryNth, sampleDumpLeadMs, sampleDumpTailMs, sampleDumpStepMs, sampleDumpMaxRows);
+        startSequenceTest(totalTrials, periodMs, windowEndOffsetMs, toneHz, durationMs, false, true, setupLabel, logFlags, sampleDumpEnabled, sampleDumpFirstTrials, sampleDumpEveryNth, sampleDumpLeadMs, sampleDumpTailMs, sampleDumpStepMs, sampleDumpMaxRows, externalEmitter);
         return;
     }
 
@@ -1597,7 +1594,7 @@ void AnalyzerApp::printValueModeBanner() const {
 // Sequence, capture, and base sessions
 // -----------------------------------------------------------------------------
 
-void AnalyzerApp::startSequenceTest(unsigned long totalTrials, unsigned long periodMs, unsigned long windowEndOffsetMs, unsigned long toneHz, unsigned long durationMs, bool quiet, bool showDetails, const char* setupLabel, uint32_t logFlags, bool sampleDumpEnabled, unsigned long sampleDumpFirstTrials, unsigned long sampleDumpEveryNth, unsigned long sampleDumpLeadMs, unsigned long sampleDumpTailMs, unsigned long sampleDumpStepMs, unsigned long sampleDumpMaxRows) {
+void AnalyzerApp::startSequenceTest(unsigned long totalTrials, unsigned long periodMs, unsigned long windowEndOffsetMs, unsigned long toneHz, unsigned long durationMs, bool quiet, bool showDetails, const char* setupLabel, uint32_t logFlags, bool sampleDumpEnabled, unsigned long sampleDumpFirstTrials, unsigned long sampleDumpEveryNth, unsigned long sampleDumpLeadMs, unsigned long sampleDumpTailMs, unsigned long sampleDumpStepMs, unsigned long sampleDumpMaxRows, bool externalEmitter) {
     if (_valMode) {
         return;
     }
@@ -1619,6 +1616,9 @@ void AnalyzerApp::startSequenceTest(unsigned long totalTrials, unsigned long per
     if (sampleDumpTailMs < sampleDumpLeadMs) {
         sampleDumpTailMs = sampleDumpLeadMs;
     }
+    if (externalEmitter) {
+        windowEndOffsetMs = periodMs;
+    }
 
     free(_sequenceTest.trialReports);
     _sequenceTest.trialReports = nullptr;
@@ -1628,6 +1628,7 @@ void AnalyzerApp::startSequenceTest(unsigned long totalTrials, unsigned long per
     _sequenceTest.active = true;
     _sequenceTest.quiet = quiet;
     _sequenceTest.showDetails = showDetails;
+    _sequenceTest.externalEmitter = externalEmitter;
     _sequenceTest.progressLineStarted = false;
     _sequenceTest.logFlags = logFlags;
     _sequenceTest.totalTrials = totalTrials;
@@ -1721,20 +1722,22 @@ void AnalyzerApp::startSequenceTest(unsigned long totalTrials, unsigned long per
     _sequenceTest.freqRejectNoEvidence = 0;
     _sequenceTest.freqRejectInvalidWindow = 0;
 
-    // Rebase before the first trial so every run starts from the quiet floor.
-    const unsigned long sequenceClaimSendMs = millis();
-    sendEmitterCommand("MODE REMOTE");
-    const bool sequenceClaimAcked = waitForEmitterAck("OK MODE REMOTE", 1500);
-    const unsigned long sequenceClaimAckMs = millis();
-    if (_sequenceTest.showDetails && !_sequenceTest.quiet) {
-        Serial.print("SEQ remote claim: send=");
-        Serial.print(sequenceClaimSendMs);
-        Serial.print("ms ack=");
-        Serial.print(sequenceClaimAckMs);
-        Serial.print("ms wait=");
-        Serial.print(sequenceClaimAckMs - sequenceClaimSendMs);
-        Serial.print("ms status=");
-        Serial.println(sequenceClaimAcked ? "ok" : "timeout");
+    if (!_sequenceTest.externalEmitter) {
+        // Rebase before the first trial so every run starts from the quiet floor.
+        const unsigned long sequenceClaimSendMs = millis();
+        sendEmitterCommand("MODE REMOTE");
+        const bool sequenceClaimAcked = waitForEmitterAck("OK MODE REMOTE", 1500);
+        const unsigned long sequenceClaimAckMs = millis();
+        if (_sequenceTest.showDetails && !_sequenceTest.quiet) {
+            Serial.print("SEQ remote claim: send=");
+            Serial.print(sequenceClaimSendMs);
+            Serial.print("ms ack=");
+            Serial.print(sequenceClaimAckMs);
+            Serial.print("ms wait=");
+            Serial.print(sequenceClaimAckMs - sequenceClaimSendMs);
+            Serial.print("ms status=");
+            Serial.println(sequenceClaimAcked ? "ok" : "timeout");
+        }
     }
 
     const unsigned long sequenceRebaseStartMs = millis();
@@ -1767,6 +1770,8 @@ void AnalyzerApp::startSequenceTest(unsigned long totalTrials, unsigned long per
         Serial.print("SEQ start source=");
         Serial.print(_sourceKind == AudioSourceKind::I2S ? "I2S" : "Analog");
         Serial.print(" detector=AMP");
+        Serial.print(" mode=");
+        Serial.print(_sequenceTest.externalEmitter ? "OBS" : "SEQ");
         Serial.print(" test=");
         Serial.print(_sequenceTest.setupLabel);
         Serial.print(" warmup_ms=");
@@ -1791,7 +1796,7 @@ void AnalyzerApp::startSequenceTest(unsigned long totalTrials, unsigned long per
         Serial.println(durationMs);
         printDetectionParameters();
         if (!_sequenceTest.quiet) {
-            Serial.println("SEQ running");
+            Serial.println(_sequenceTest.externalEmitter ? "OBS running" : "SEQ running");
         }
     }
 }
@@ -2118,9 +2123,11 @@ void AnalyzerApp::updateSequenceTest(unsigned long now) {
 
     beginSequenceSampleDump(trialNumber);
 
-    char command[64];
-    snprintf(command, sizeof(command), "CHIRP freq=%lu dur=%lu", _sequenceTest.toneHz, _sequenceTest.durationMs);
-    sendEmitterCommand(command);
+    if (!_sequenceTest.externalEmitter) {
+        char command[64];
+        snprintf(command, sizeof(command), "CHIRP freq=%lu dur=%lu", _sequenceTest.toneHz, _sequenceTest.durationMs);
+        sendEmitterCommand(command);
+    }
 }
 
 void AnalyzerApp::handleSequenceTransient(unsigned long now) {
@@ -2592,9 +2599,9 @@ void AnalyzerApp::handleSequenceCandidate(const DetectionPipeline::PatternResult
         _sequenceTest.trialHadAudioOverflow = true;
     }
 
-    const bool preWindow = onsetMs < _sequenceTest.currentTrialStartMs + _sequenceTest.windowStartOffsetMs;
-    const bool postWindow = onsetMs > _sequenceTest.currentTrialEndMs;
-    const bool inWindow = !preWindow && !postWindow;
+    const bool preWindow = !_sequenceTest.externalEmitter && onsetMs < _sequenceTest.currentTrialStartMs + _sequenceTest.windowStartOffsetMs;
+    const bool postWindow = !_sequenceTest.externalEmitter && onsetMs > _sequenceTest.currentTrialEndMs;
+    const bool inWindow = _sequenceTest.externalEmitter || (!preWindow && !postWindow);
     const bool duplicateCandidate = _sequenceTest.currentTrialHit && inWindow;
     const char* candidateClass = h3SequenceCandidateClass(duplicateCandidate, inWindow, dtFromTriggerMs);
 

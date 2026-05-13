@@ -70,6 +70,8 @@ public:
     const char* lastTransientRejectReasonName() const;
     unsigned long lastTransientRejectedDurationMs() const;
     float lastTransientRejectedStrength() const;
+    unsigned long onsetRejectedCount() const;
+    unsigned long transientRejectedCount() const;
     unsigned long transientRejectedDurationTooShortCount() const;
     unsigned long transientRejectedDurationTooLongCount() const;
     unsigned long transientRejectedStrengthTooLowCount() const;
@@ -110,6 +112,8 @@ private:
     unsigned long _peakStartedUs = 0;
     unsigned long _releaseCandidateStartedUs = 0;
     float _peakStrength = 0.0f;
+    unsigned long _onsetRejectedCount = 0;
+    unsigned long _transientRejectedCount = 0;
 
     unsigned long _minTransientDurationMs = 0; // Ignore peaks that are too short to be meaningful.
     unsigned long _maxTransientDurationMs = 120; // Reject peaks that last too long to count as transients.

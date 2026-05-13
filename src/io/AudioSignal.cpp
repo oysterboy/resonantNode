@@ -402,6 +402,14 @@ float AudioSignal::lastTransientRejectedStrength() const {
     return _detector.lastTransientRejectedStrength();
 }
 
+unsigned long AudioSignal::onsetRejectedCount() const {
+    return _detector.onsetRejectedCount();
+}
+
+unsigned long AudioSignal::transientRejectedCount() const {
+    return _detector.transientRejectedCount();
+}
+
 unsigned long AudioSignal::transientRejectedDurationTooShortCount() const {
     return _detector.transientRejectedDurationTooShortCount();
 }

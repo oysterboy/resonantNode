@@ -192,6 +192,8 @@ public:
     const char* lastTransientRejectReasonName() const;
     unsigned long lastTransientRejectedDurationMs() const;
     float lastTransientRejectedStrength() const;
+    unsigned long onsetRejectedCount() const;
+    unsigned long transientRejectedCount() const;
     unsigned long transientRejectedDurationTooShortCount() const;
     unsigned long transientRejectedDurationTooLongCount() const;
     unsigned long transientRejectedStrengthTooLowCount() const;

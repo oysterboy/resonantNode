@@ -29,7 +29,7 @@ public:
 
     void observeOnset(unsigned long now, bool onsetDetected, float onsetStrength);
     void observeTransient(unsigned long now, bool transientDetected, float transientStrength, bool suppressed);
-    void observePatternPulse(unsigned long now, bool fullPulse);
+    void observePatternPulse(unsigned long now, bool fullPulse, bool tonalValid);
     void observeBehaviorGate(unsigned long now,
                              const ResonantBehavior& behavior,
                              bool transientDetected,
@@ -96,15 +96,17 @@ private:
     int _ledPin = -1;
     unsigned long _ledPatternPulseStartMs = 0;
     unsigned long _ledPatternPulseCount = 0;
+    uint8_t _ledPatternPulseBrightness = 0;
     static constexpr unsigned long kLedTransientPulseOnMs = 30;
     static constexpr unsigned long kLedTransientPulseOffMs = 30;
     static constexpr unsigned long kLedTransientPulseCount = 3;
     static constexpr unsigned long kLedTransientPulseCycleMs = kLedTransientPulseOnMs + kLedTransientPulseOffMs;
     static constexpr uint8_t kLedBrightnessFull = 255;
+    static constexpr uint8_t kLedBrightnessHalf = 128;
     static constexpr uint8_t kLedBrightnessSelfIgnore = 179;
     static constexpr uint8_t kLedBrightnessRefractory = 128;
     static constexpr uint8_t kLedBrightnessOff = 0;
-    static constexpr uint8_t kLedPwmChannel = 1;
+    static constexpr uint8_t kLedPwmChannel = 2;
     static constexpr uint8_t kLedPwmResolutionBits = 8;
     static constexpr uint32_t kLedPwmFrequencyHz = 5000;
 };

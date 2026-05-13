@@ -18,5 +18,5 @@ private:
     int _invertedPin;
     uint8_t _channel;
     uint8_t _resolutionBits;
-    uint32_t _toneHz = 2400;
+    uint32_t _toneHz = 3200;
 };

@@ -179,6 +179,21 @@ void ResonantBehavior::update(unsigned long now) {
     _activityLevel = transientStrength;
     _outputBusy = _state == State::Chirping;
 
+    if (_detectionOnly) {
+        _state = State::Idle;
+        _wouldEmit = false;
+        _outputBusy = false;
+        _chirpRequested = false;
+        _chirpRequestSource = ChirpRequestSource::None;
+        _chirpPattern = ChirpOutput::ChirpPattern::Single;
+        _lastDecision = transientDetected ? BehaviorDecision::DetectionOnly : BehaviorDecision::ListenOnly;
+        _lastBlockReason = _lastDecision;
+        if (transientDetected) {
+            _lastTransientMs = transientMs != 0 ? transientMs : now;
+        }
+        return;
+    }
+
     // Track the last transient time so idle-triggered chirps do not fire while
     // the node is still hearing bursts.
     if (transientDetected) {
@@ -311,7 +326,7 @@ bool ResonantBehavior::behaviorSuppressed(unsigned long now) const {
 }
 
 void ResonantBehavior::notifyChirpStarted(unsigned long now) {
-    const unsigned long suppressUntilMs = now + _selfChirpIgnoreMs;
+    const unsigned long suppressUntilMs = now + _behaviorSuppressSelfChirpMs;
     if (suppressUntilMs > _behaviorSuppressUntilMs) {
         _behaviorSuppressUntilMs = suppressUntilMs;
     }

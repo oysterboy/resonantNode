@@ -27,7 +27,7 @@ public:
         Idle
     };
 
-    explicit ChirpOutput(ToneOutput& toneOutput, uint32_t toneHz = 2400);
+    explicit ChirpOutput(ToneOutput& toneOutput, uint32_t toneHz = 3200);
 
     void begin();
     void setToneHz(uint32_t toneHz);

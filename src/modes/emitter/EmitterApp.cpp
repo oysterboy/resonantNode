@@ -128,7 +128,7 @@ void EmitterApp::handleChirpCommand(const char* line) {
     strncpy(buffer, line, sizeof(buffer));
     buffer[sizeof(buffer) - 1] = '\0';
 
-    unsigned long toneHz = 2400;
+    unsigned long toneHz = 3200;
     unsigned long durationMs = 100;
     char* savePtr = nullptr;
     char* token = strtok_r(buffer, " ", &savePtr);

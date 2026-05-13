@@ -54,9 +54,12 @@ void NodeDebug::begin(int ledPin) {
     _ledPin = ledPin;
     _ledPatternPulseStartMs = 0;
     _ledPatternPulseCount = 0;
+    _ledPatternPulseBrightness = kLedBrightnessOff;
 
     pinMode(_ledPin, OUTPUT);
-    digitalWrite(_ledPin, LOW);
+    ledcSetup(kLedPwmChannel, kLedPwmFrequencyHz, kLedPwmResolutionBits);
+    ledcAttachPin(_ledPin, kLedPwmChannel);
+    ledcWrite(kLedPwmChannel, kLedBrightnessOff);
 }
 
 void NodeDebug::markLoopStart(unsigned long nowUs) {
@@ -136,9 +139,10 @@ void NodeDebug::observeTransient(unsigned long now, bool transientDetected, floa
     updatePulse(now, transientDetected, transientStrength, _debugTransientVisibleUntilMs, _debugTransientStrength);
 }
 
-void NodeDebug::observePatternPulse(unsigned long now, bool fullPulse) {
+void NodeDebug::observePatternPulse(unsigned long now, bool fullPulse, bool tonalValid) {
     _ledPatternPulseStartMs = now;
     _ledPatternPulseCount = fullPulse ? kLedTransientPulseCount : 1;
+    _ledPatternPulseBrightness = tonalValid ? kLedBrightnessFull : kLedBrightnessHalf;
 }
 
 void NodeDebug::observeBehaviorGate(unsigned long now,
@@ -273,18 +277,20 @@ void NodeDebug::updateLed(unsigned long now,
                           bool selfChirpSuppressed) {
     (void)behavior;
     (void)selfChirpSuppressed;
-    bool ledOn = chirpOutput.isActive();
+    uint8_t ledBrightness = chirpOutput.isActive() ? kLedBrightnessFull : kLedBrightnessOff;
 
-    if (!ledOn && _ledPatternPulseStartMs != 0) {
+    if (ledBrightness == kLedBrightnessOff && _ledPatternPulseStartMs != 0) {
         const unsigned long elapsedMs = now - _ledPatternPulseStartMs;
         const unsigned long pulseIndex = elapsedMs / kLedTransientPulseCycleMs;
         if (pulseIndex < _ledPatternPulseCount) {
             const unsigned long phaseMs = elapsedMs % kLedTransientPulseCycleMs;
-            ledOn = phaseMs < kLedTransientPulseOnMs;
+            if (phaseMs < kLedTransientPulseOnMs) {
+                ledBrightness = _ledPatternPulseBrightness;
+            }
         }
     }
 
-    digitalWrite(_ledPin, ledOn ? HIGH : LOW);
+    ledcWrite(kLedPwmChannel, ledBrightness);
 }
 
 void NodeDebug::printPlotValues(unsigned long now,
@@ -330,7 +336,7 @@ void NodeDebug::printPlotValues(unsigned long now,
     Serial.print(transientStrength, 3);
     Serial.print(" transientMs:");
     Serial.print(transientDurationMs);
-    Serial.print(" selfChirpIgnore:");
+    Serial.print(" behaviorSuppressSelfChirp:");
     Serial.print(selfChirpSuppressed ? 1 : 0);
     Serial.print(" coreUs:");
     Serial.print(coreLoopAvgUs);

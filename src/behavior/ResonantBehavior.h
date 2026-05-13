@@ -141,7 +141,7 @@ private:
     unsigned long _waitAfterTransientMs = 800; // Delay before responding after a transient is seen.
     unsigned long _refractoryAfterEmitMs = 200; // Ignore follow-up activity for a short time after a chirp finishes.
     unsigned long _idleTimeoutMs = 30000; // Self-trigger if nothing has been seen or emitted for this long.
-    unsigned long _selfChirpIgnoreMs = 500; // Behavior-level suppression while the node's chirp is active.
+    unsigned long _behaviorSuppressSelfChirpMs = 500; // Behavior-level suppression while the node's chirp is active.
     unsigned long _detectionSuppressTailMsOwnEmit = 0; // Detector/analyzer suppression tail after our own emit.
 
     // --- action latch ---

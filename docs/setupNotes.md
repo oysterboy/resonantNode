@@ -10,14 +10,17 @@ What the code actually does today:
 - Behavior may optionally require tonal validity, but that is a runtime behavior gate, not the detector baseline.
 - RB currently uses a `30000 ms` idle timeout, `requireTonal=1`, `refractory=0`, and `wait=0` on the analog path.
 - RB currently uses a `500 ms` wait after transient on the I2S path, `idle=30000`, and `requireTonal=1`.
-- Own-emit detection/analyzer tail suppression is `0 ms`, while behavior-level self chirp suppression stays at `500 ms`.
-- In RB, accepted candidates blink the LED once when blocked/ignored, and use the full pulse train only when the behavior actually consumes the pattern and waits to emit.
+- RB logging defaults to `off` on boot, and `RB log full` now stays compact so it does not flood the timing loop.
+- Own-emit detection/analyzer tail suppression is `0 ms`, while `behaviorSuppressSelfChirp` stays at `500 ms`.
+- In RB detect-only mode, tonal-valid hits pulse the LED at full brightness, transient-only hits pulse at 50% brightness, and normal RB LED behavior is unchanged.
+- Analyzer now has a passive `SEQ OBS` mode for observing an already-running external emitter without sending chirps or claiming control.
 
 ## Quick Commands
 
 ### SEQ
 - `SEQ start tries=100 test=70cm log=full`
 - `SEQ start tries=100 test=70cm log=summary+trial+candidate+report`
+- `SEQ OBS start period=2000 window=2000 freq=3200 dur=100 log=full`
 - `SEQ help`
 - `PARAM onset=30 release=20 cooldown=50 releaseDebounce=10 minMs=90 maxMs=240 minStrength=40.0 freqScore=50000 freqContrast=20.0`
 
@@ -48,6 +51,7 @@ What the code actually does today:
 - duration = 100 ms
 - SEQ period = 2500 ms
 - loopDelayMs = 0
+- Passive observe period = 2000 ms
 
 ### RB Behavior
 - waitAfterTransient = 0 ms on analog
@@ -55,8 +59,9 @@ What the code actually does today:
 - refractoryAfterEmit = 0 ms
 - idleTimeout = 30000 ms
 - requireTonal = on
-- selfChirpIgnore = 500 ms
+- behaviorSuppressSelfChirp = 500 ms
 - detectionSuppressTailMsOwnEmit = 0 ms
+- RB log default = off
 
 ## Useful Distance Range
 
@@ -81,6 +86,7 @@ Implementation note:
 - `freqFull` is still diagnostic-only in the current setup notes and logs.
 - Tonal validity is decided by `FrequencyEvidenceEvaluation`, not by the AMP detector itself.
 - `requireTonal=0/1` is a behavior gate in RB, not a detector baseline change.
+- `SEQ OBS` uses the same candidate reporting machinery as normal SEQ, but treats the whole session as in-window for an already-running external emitter.
 
 ## Baseline Performance
 

@@ -30,6 +30,8 @@ void AudioOnsetDetector::resetState() {
     _peakStartedUs = 0;
     _releaseCandidateStartedUs = 0;
     _peakStrength = 0.0f;
+    _onsetRejectedCount = 0;
+    _transientRejectedCount = 0;
 }
 
 // -----------------------------------------------------------------------------
@@ -75,8 +77,10 @@ void AudioOnsetDetector::updateOnsetStage(unsigned long nowUs, float signalMagni
         _lastOnsetRejectReason = OnsetRejectReason::BelowThreshold;
     } else if (_peakActive) {
         _lastOnsetRejectReason = OnsetRejectReason::PeakActive;
+        _onsetRejectedCount++;
     } else if (!onsetCooldownElapsed) {
         _lastOnsetRejectReason = OnsetRejectReason::CooldownActive;
+        _onsetRejectedCount++;
     }
 }
 
@@ -125,6 +129,7 @@ void AudioOnsetDetector::updateTransientStage(unsigned long nowUs, float signalM
         } else {
             _lastTransientRejectedDurationMs = peakDurationUs / 1000UL;
             _lastTransientRejectedStrength = _peakStrength;
+            _transientRejectedCount++;
             if (!durationAccepted) {
                 _lastTransientRejectReason = peakDurationUs < minTransientDurationUs
                                                 ? TransientRejectReason::DurationTooShort
@@ -247,6 +252,14 @@ unsigned long AudioOnsetDetector::lastTransientRejectedDurationMs() const {
 
 float AudioOnsetDetector::lastTransientRejectedStrength() const {
     return _lastTransientRejectedStrength;
+}
+
+unsigned long AudioOnsetDetector::onsetRejectedCount() const {
+    return _onsetRejectedCount;
+}
+
+unsigned long AudioOnsetDetector::transientRejectedCount() const {
+    return _transientRejectedCount;
 }
 
 unsigned long AudioOnsetDetector::transientRejectedDurationTooShortCount() const {

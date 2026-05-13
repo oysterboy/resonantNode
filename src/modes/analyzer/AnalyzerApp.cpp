@@ -447,9 +447,9 @@ AnalyzerApp::AnalyzerApp(int inputPin, AudioSourceKind sourceKind)
       _audioSource(sourceKind == AudioSourceKind::I2S
                        ? static_cast<AudioSource&>(_i2sSource)
                        : static_cast<AudioSource&>(_analogSource)),
-      _audioSignal(_audioSource),
-      _audioFrequencyDetector(_audioSignal),
-      _audioOnsetDetector() {}
+      _audioOnsetDetector(),
+      _audioSignal(_audioSource, _audioOnsetDetector),
+      _audioFrequencyDetector(_audioSignal) {}
 
 void AnalyzerApp::begin() {
     beginEmitterControl();
@@ -460,7 +460,6 @@ void AnalyzerApp::begin() {
     _audioSignal.setCurveSampleCallback(&AnalyzerApp::sequenceCurveSampleCallback, this);
     _audioFrequencyDetector.begin();
     _audioFrequencyDetector.setDiagnosticsEnabled(false);
-    _audioOnsetDetector.begin();
     _audioSignal.setDiagnosticsEnabled(AUDIO_VERBOSE_DEBUG);
     _audioOnsetDetector.setDiagnosticsEnabled(AUDIO_VERBOSE_DEBUG);
     _lastPrintMs = 0;
@@ -595,7 +594,6 @@ void AnalyzerApp::update() {
             const unsigned long sampleTimeMs = sampleTimeUs / 1000UL;
             _audioSignal.update(sample, sampleTimeUs);
             _audioFrequencyDetector.observeCenteredSample(_audioSignal.centeredSignal());
-            _audioOnsetDetector.update(static_cast<float>(_audioSignal.signalMagnitude()), sampleTimeUs);
             updateSequenceAmbientStats();
 
             if (detectorOnsetDetected()) {
@@ -675,109 +673,101 @@ unsigned long AnalyzerApp::loopDelayMs() const {
 
 void AnalyzerApp::resetDetectorState() {
     _audioSignal.resetDetectorState();
-    _audioOnsetDetector.resetState();
 }
 
 bool AnalyzerApp::detectorOnsetDetected() const {
-    return _sourceKind == AudioSourceKind::I2S ? _audioSignal.onsetDetected() : _audioOnsetDetector.onsetDetected();
+    return _audioOnsetDetector.onsetDetected();
 }
 
 float AnalyzerApp::detectorOnsetStrength() const {
-    return _sourceKind == AudioSourceKind::I2S ? _audioSignal.onsetStrength() : _audioOnsetDetector.onsetStrength();
+    return _audioOnsetDetector.onsetStrength();
 }
 
 bool AnalyzerApp::detectorTransientDetected() const {
-    return _sourceKind == AudioSourceKind::I2S ? _audioSignal.transientDetected() : _audioOnsetDetector.transientDetected();
+    return _audioOnsetDetector.transientDetected();
 }
 
 float AnalyzerApp::detectorTransientStrength() const {
-    return _sourceKind == AudioSourceKind::I2S ? _audioSignal.transientStrength() : _audioOnsetDetector.transientStrength();
+    return _audioOnsetDetector.transientStrength();
 }
 
 unsigned long AnalyzerApp::detectorTransientDurationMs() const {
-    return _sourceKind == AudioSourceKind::I2S ? _audioSignal.transientDurationMs() : _audioOnsetDetector.transientDurationMs();
+    return _audioOnsetDetector.transientDurationMs();
 }
 
 bool AnalyzerApp::detectorTransientPeakActive() const {
-    return _sourceKind == AudioSourceKind::I2S ? _audioSignal.peakActive() : _audioOnsetDetector.peakActive();
+    return _audioOnsetDetector.peakActive();
 }
 
 const char* AnalyzerApp::detectorOnsetRejectReasonName() const {
-    return _sourceKind == AudioSourceKind::I2S ? _audioSignal.lastOnsetRejectReasonName() : _audioOnsetDetector.lastOnsetRejectReasonName();
+    return _audioOnsetDetector.lastOnsetRejectReasonName();
 }
 
 const char* AnalyzerApp::detectorTransientRejectReasonName() const {
-    return _sourceKind == AudioSourceKind::I2S ? _audioSignal.lastTransientRejectReasonName() : _audioOnsetDetector.lastTransientRejectReasonName();
+    return _audioOnsetDetector.lastTransientRejectReasonName();
 }
 
 unsigned long AnalyzerApp::detectorTransientRejectedDurationMs() const {
-    return _sourceKind == AudioSourceKind::I2S ? _audioSignal.lastTransientRejectedDurationMs() : _audioOnsetDetector.lastTransientRejectedDurationMs();
+    return _audioOnsetDetector.lastTransientRejectedDurationMs();
 }
 
 float AnalyzerApp::detectorTransientRejectedStrength() const {
-    return _sourceKind == AudioSourceKind::I2S ? _audioSignal.lastTransientRejectedStrength() : _audioOnsetDetector.lastTransientRejectedStrength();
+    return _audioOnsetDetector.lastTransientRejectedStrength();
 }
 
 float AnalyzerApp::detectorOnsetDetectionThreshold() const {
-    return _sourceKind == AudioSourceKind::I2S ? _audioSignal.onsetDetectionThreshold() : _audioOnsetDetector.onsetDetectionThreshold();
+    return _audioOnsetDetector.onsetDetectionThreshold();
 }
 
 float AnalyzerApp::detectorOnsetReleaseThreshold() const {
-    return _sourceKind == AudioSourceKind::I2S ? _audioSignal.onsetReleaseThreshold() : _audioOnsetDetector.onsetReleaseThreshold();
+    return _audioOnsetDetector.onsetReleaseThreshold();
 }
 
 unsigned long AnalyzerApp::detectorCooldownAfterOnsetMs() const {
-    return _sourceKind == AudioSourceKind::I2S ? _audioSignal.cooldownAfterOnsetMs() : _audioOnsetDetector.cooldownAfterOnsetMs();
+    return _audioOnsetDetector.cooldownAfterOnsetMs();
 }
 
 unsigned long AnalyzerApp::detectorMinTransientDurationMs() const {
-    return _sourceKind == AudioSourceKind::I2S ? _audioSignal.minTransientDurationMs() : _audioOnsetDetector.minTransientDurationMs();
+    return _audioOnsetDetector.minTransientDurationMs();
 }
 
 unsigned long AnalyzerApp::detectorMaxTransientDurationMs() const {
-    return _sourceKind == AudioSourceKind::I2S ? _audioSignal.maxTransientDurationMs() : _audioOnsetDetector.maxTransientDurationMs();
+    return _audioOnsetDetector.maxTransientDurationMs();
 }
 
 float AnalyzerApp::detectorMinTransientPeakStrength() const {
-    return _sourceKind == AudioSourceKind::I2S ? _audioSignal.minTransientPeakStrength() : _audioOnsetDetector.minTransientPeakStrength();
+    return _audioOnsetDetector.minTransientPeakStrength();
 }
 
 unsigned long AnalyzerApp::detectorReleaseDebounceMs() const {
-    return _sourceKind == AudioSourceKind::I2S ? _audioSignal.releaseDebounceMs() : _audioOnsetDetector.releaseDebounceMs();
+    return _audioOnsetDetector.releaseDebounceMs();
 }
 
 void AnalyzerApp::setDetectorOnsetDetectionThreshold(float value) {
-    _audioSignal.setOnsetDetectionThreshold(value);
     _audioOnsetDetector.setOnsetDetectionThreshold(value);
 }
 
 void AnalyzerApp::setDetectorOnsetReleaseThreshold(float value) {
-    _audioSignal.setOnsetReleaseThreshold(value);
     _audioOnsetDetector.setOnsetReleaseThreshold(value);
 }
 
 void AnalyzerApp::setDetectorCooldownAfterOnsetMs(unsigned long value) {
-    _audioSignal.setCooldownAfterOnsetMs(value);
     _audioOnsetDetector.setCooldownAfterOnsetMs(value);
 }
 
 void AnalyzerApp::setDetectorMinTransientDurationMs(unsigned long value) {
-    _audioSignal.setMinTransientDurationMs(value);
     _audioOnsetDetector.setMinTransientDurationMs(value);
 }
 
 void AnalyzerApp::setDetectorMaxTransientDurationMs(unsigned long value) {
-    _audioSignal.setMaxTransientDurationMs(value);
     _audioOnsetDetector.setMaxTransientDurationMs(value);
 }
 
 void AnalyzerApp::setDetectorMinTransientPeakStrength(float value) {
-    _audioSignal.setMinTransientPeakStrength(value);
     _audioOnsetDetector.setMinTransientPeakStrength(value);
 }
 
 void AnalyzerApp::setDetectorReleaseDebounceMs(unsigned long value) {
-    _audioSignal.setReleaseDebounceMs(value);
     _audioOnsetDetector.setReleaseDebounceMs(value);
 }
 

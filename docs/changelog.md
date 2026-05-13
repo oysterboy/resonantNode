@@ -12,19 +12,23 @@
 
 ## Changes Since Last Commit
 
-### Notes
-- Pass 6 notes have been moved into the dated entry below.
-- Project defaults are now normalized to `3200 Hz` across the build settings and runtime fallbacks, while the resonant first idle chirp still starts at `2000 Hz`.
-- ResonantBehavior now defaults `requireTonalForBehavior` to `true`, and the RB help/setup notes were aligned to the new default.
-- ResonantBehavior idle timeout now defaults to `30000`, and the RB help/setup notes were aligned to the new value.
-- Idle chirps now use one `500 ms` pulse at `2000 Hz`, a `200 ms` gap, then the normal default pulse.
-- Resonant node setup now uses the same `30000` ms idle timeout instead of overriding it back to `10000`.
-- RB boot logging now stays silent by default, with `RB log off` reporting the silent mode and `RB log full` reduced to compact candidate summaries so it does not fight the timing loop.
-- RB detect-only mode is listen-only: it suppresses chirps, idle self-triggering, and response work while still reporting detector candidates.
-- RB detect-only LED pulses now stay at full brightness for tonal-valid hits and drop to 50% brightness for transient-only hits; normal RB LED behavior is unchanged.
-- Analyzer sequence testing now has a passive `SEQ OBS` mode for an already-running external emitter, with no emitter claim, no chirp output, and a full 2000 ms observe window that does not depend on phase.
-- `SEQ stop` still ends both normal `SEQ` and passive `SEQ OBS`.
-- RB help/setup notes and analyzer command text were updated to match the current runtime defaults.
+## 2026-05-13 - Detector ownership and RB timing cleanup
+
+### Changed
+- Normalized project defaults to `3200 Hz` across the build settings and runtime fallbacks while keeping the resonant first idle chirp at `2000 Hz`.
+- Kept `ResonantBehavior` on `requireTonalForBehavior = true` and aligned the RB help/setup notes with that default.
+- Moved RB idle timing to a `30000 ms` default and kept the startup idle chirp at `500 ms` / `2000 Hz` / `200 ms` gap.
+- Kept RB boot logging silent by default and trimmed `RB log full` down to compact candidate summaries so logging stays out of the timing loop.
+- Kept RB detect-only listen-only, with chirp suppression, idle suppression, and response suppression while still reporting detector candidates.
+- Kept RB detect-only LED pulses at full brightness for tonal-valid hits and 50% brightness for transient-only hits.
+- Added passive `SEQ OBS` for an already-running external emitter, with no emitter claim, no chirp output, and a full `2000 ms` observe window.
+- Kept `SEQ stop` as the shared stop command for both normal `SEQ` and passive `SEQ OBS`.
+- Split detector ownership so `AudioSignal` now uses an injected `AudioOnsetDetector` instead of owning the onset detector internally.
+- Kept `AudioSignal` responsible for signal conditioning and candidate packaging, while `AudioOnsetDetector` remains the detector owner in the node and analyzer layers.
+- Kept RB response timing at `wait=100 ms` and self-chirp suppression at `200 ms`, and exposed idle timing as `idleTimeout`, `idleTimeoutVariation`, `idleBlockedAfterHeard`, and `idleBlockedAfterOwnEmit`.
+
+### Verification
+- `platformio run -e esp32dev`
 
 ## 2026-05-11 - Rename chirp wording to transient wording
 

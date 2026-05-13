@@ -2,6 +2,8 @@
 #include <Arduino.h>
 #include <string.h>
 
+#include <esp_system.h>
+
 #include "../../detection/DetectorParameters.h"
 #include "../../detection/FrequencyEvidenceEvaluation.h"
 #include "../../detection/DetectionPipeline.h"
@@ -221,9 +223,9 @@ Node::Node(int inputPin, int ledPin, int chirpPin, int chirpBtlPin, AudioSourceK
       _audioSource(sourceKind == AudioSourceKind::I2S
                        ? static_cast<AudioSource&>(_i2sSource)
                        : static_cast<AudioSource&>(_analogSource)),
-      _audioSignal(_audioSource),
-      _audioFrequencyDetector(_audioSignal),
       _audioOnsetDetector(),
+      _audioSignal(_audioSource, _audioOnsetDetector),
+      _audioFrequencyDetector(_audioSignal),
       _toneOutput(chirpPin),
       _toneOutputBTL(chirpPin, chirpBtlPin),
       _chirpOutput(chirpBtlPin >= 0
@@ -233,12 +235,12 @@ Node::Node(int inputPin, int ledPin, int chirpPin, int chirpBtlPin, AudioSourceK
 // --- lifecycle ---
 
 void Node::begin() {
+    randomSeed(esp_random() ^ millis());
     configureParameters();
     _audioSource.begin();
     _audioSignal.begin(false);
     _audioFrequencyDetector.begin();
     _audioFrequencyDetector.setDiagnosticsEnabled(false);
-    _audioOnsetDetector.begin();
     _behavior.resetState();
     resetDetectionState();
     _audioSignal.resetStats();
@@ -257,6 +259,7 @@ void Node::begin() {
     _rbLastWouldEmitDecision = ResonantBehavior::BehaviorDecision::None;
     _chirpOutput.begin();
     _debug.begin(_ledPin);
+    _behavior.seedIdleSchedule(millis());
     _debug.markLoopStart(micros());
     _serialLineLength = 0;
     _serialLineBuffer[0] = '\0';
@@ -305,7 +308,6 @@ void Node::resetRbCounters() {
 
 void Node::resetDetectionState() {
     _audioSignal.resetDetectorState();
-    _audioOnsetDetector.resetState();
     _wasSelfChirpSuppressed = false;
     _rbLastLoggedOnsetRejectCount = 0;
     _rbLastLoggedTransientRejectCount = 0;
@@ -442,32 +444,33 @@ void Node::configureAnalogParameters() {
     _audioOnsetDetector.setMaxTransientDurationMs(240);
     _audioOnsetDetector.setMinTransientPeakStrength(40.0f);
 
-    _behavior.setWaitAfterTransientMs(0); // Shared response timing: respond immediately after a transient.
+    _behavior.setWaitAfterTransientMs(100); // Shared response timing: give the transient a short settle window.
     _behavior.setRefractoryAfterEmitMs(0); // Shared response timing: no post-emit holdoff; this usually dominates any own-emit tail window unless that tail is longer.
-    _behavior.setIdleTimeoutMs(30000); // Idle self-trigger timeout.
+    _behavior.setIdleTimeoutMs(20000); // Idle self-trigger target.
+    _behavior.setIdleTimeVariationMs(10000); // Idle self-trigger spread.
+    _behavior.setIdleBlockedAfterHeardMs(3000);
+    _behavior.setIdleBlockedAfterOwnEmitMs(5000);
+    _behavior.setIdleEnabled(true);
 }
 
 void Node::configureI2SParameters() {
     _audioSignal.setBaselineTrackingQuietThreshold(20);
-    _audioSignal.setOnsetDetectionThreshold(30.0f);
-    _audioSignal.setOnsetReleaseThreshold(20.0f);
-    _audioSignal.setCooldownAfterOnsetMs(300);
-    _audioSignal.setReleaseDebounceMs(30);
-    _audioSignal.setMinTransientDurationMs(60);
-    _audioSignal.setMaxTransientDurationMs(240);
-    _audioSignal.setMinTransientPeakStrength(40.0f);
 
-    _audioOnsetDetector.setOnsetDetectionThreshold(30.0f);
-    _audioOnsetDetector.setOnsetReleaseThreshold(20.0f);
+    _audioOnsetDetector.setOnsetDetectionThreshold(25.0f);
+    _audioOnsetDetector.setOnsetReleaseThreshold(21.0f);
     _audioOnsetDetector.setCooldownAfterOnsetMs(300);
     _audioOnsetDetector.setReleaseDebounceMs(30);
     _audioOnsetDetector.setMinTransientDurationMs(60);
     _audioOnsetDetector.setMaxTransientDurationMs(240);
     _audioOnsetDetector.setMinTransientPeakStrength(40.0f);
 
-    _behavior.setWaitAfterTransientMs(500); // Shared response timing: respond after the transient settles.
+    _behavior.setWaitAfterTransientMs(100); // Shared response timing: give the transient a short settle window.
     _behavior.setRefractoryAfterEmitMs(0); // Shared response timing: no post-emit holdoff; this usually dominates any own-emit tail window unless that tail is longer.
-    _behavior.setIdleTimeoutMs(30000); // Idle self-trigger timeout.
+    _behavior.setIdleTimeoutMs(20000); // Idle self-trigger target.
+    _behavior.setIdleTimeVariationMs(10000); // Idle self-trigger spread.
+    _behavior.setIdleBlockedAfterHeardMs(5000);
+    _behavior.setIdleBlockedAfterOwnEmitMs(5000);
+    _behavior.setIdleEnabled(true);
 }
 
 // --- main update loop ---
@@ -591,10 +594,6 @@ void Node::update() {
             }
             _audioSignal.update(sample, sampleTimeUs);
             _audioFrequencyDetector.observeCenteredSample(_audioSignal.centeredSignal());
-
-            if (rbOutputsEnabledNow && !selfChirpSuppressed) {
-                _audioOnsetDetector.update(static_cast<float>(_audioSignal.signalMagnitude()), sampleTimeUs);
-            }
 
             const bool onsetDetected = selfChirpSuppressed ? false : _audioOnsetDetector.onsetDetected();
             _debug.observeOnset(now, onsetDetected, _audioOnsetDetector.onsetStrength());
@@ -777,7 +776,7 @@ void Node::pollSerialCommands() {
 void Node::handleSerialLine(const char* line) {
     if (equalsIgnoreCase(line, "RB help")) {
         Serial.println("RB CMD: RB PARAM onset=30 release=20 cooldown=50 releaseDebounce=10 minMs=90 maxMs=240 minStrength=40.0 freqScore=50000 freqContrast=20.0");
-        Serial.println("RB CMD: RB BEHAV wait=0 refractory=0 idle=30000 requireTonal=1");
+        Serial.println("RB CMD: RB BEHAV wait=100 refractory=0 idleTimeout=20000 idleTimeoutVariation=10000 idleBlockedAfterHeard=3000 idleBlockedAfterOwnEmit=5000 requireTonal=1");
         Serial.println("RB CMD: RB rebase");
         Serial.println("RB CMD: RB rebase force");
         Serial.println("RB CMD: RB detectonly on|off");
@@ -843,14 +842,18 @@ void Node::handleSerialLine(const char* line) {
         token = token != nullptr ? strtok_r(nullptr, " ", &savePtr) : nullptr;
 
         if (token == nullptr || !equalsIgnoreCase(token, "BEHAV")) {
-            Serial.println("RB BEHAV usage=RB BEHAV wait=0 refractory=0 idle=30000 requireTonal=1");
+            Serial.println("RB BEHAV usage=RB BEHAV wait=100 refractory=0 idleTimeout=20000 idleTimeoutVariation=10000 idleBlockedAfterHeard=3000 idleBlockedAfterOwnEmit=5000 requireTonal=1");
             return;
         }
 
         unsigned long waitAfterTransientMs = _behavior.waitAfterTransientMs();
         unsigned long refractoryAfterEmitMs = _behavior.refractoryAfterEmitMs();
         unsigned long idleTimeoutMs = _behavior.idleTimeoutMs();
+        unsigned long idleTimeoutVariationMs = _behavior.idleTimeVariationMs();
+        unsigned long idleBlockedAfterHeardMs = _behavior.idleBlockedAfterHeardMs();
+        unsigned long idleBlockedAfterOwnEmitMs = _behavior.idleBlockedAfterOwnEmitMs();
         bool requireTonalForBehavior = _behavior.requireTonalForBehavior();
+        bool idleEnabled = _behavior.idleEnabled();
 
         while ((token = strtok_r(nullptr, " ", &savePtr)) != nullptr) {
             if (startsWithTokenIgnoreCase(token, "wait=") || startsWithTokenIgnoreCase(token, "waitMs=")) {
@@ -859,9 +862,21 @@ void Node::handleSerialLine(const char* line) {
             } else if (startsWithTokenIgnoreCase(token, "refractory=") || startsWithTokenIgnoreCase(token, "refractoryMs=")) {
                 const char* value = token + (startsWithTokenIgnoreCase(token, "refractoryMs=") ? 13 : 11);
                 refractoryAfterEmitMs = strtoul(value, nullptr, 10);
-            } else if (startsWithTokenIgnoreCase(token, "idle=") || startsWithTokenIgnoreCase(token, "idleMs=") || startsWithTokenIgnoreCase(token, "idleTimeoutMs=")) {
-                const char* value = token + (startsWithTokenIgnoreCase(token, "idleTimeoutMs=") ? 14 : startsWithTokenIgnoreCase(token, "idleMs=") ? 7 : 5);
+            } else if (startsWithTokenIgnoreCase(token, "idleTimeout=") || startsWithTokenIgnoreCase(token, "idle=") || startsWithTokenIgnoreCase(token, "idleMs=") || startsWithTokenIgnoreCase(token, "idleTimeoutMs=")) {
+                const char* value = token + (startsWithTokenIgnoreCase(token, "idleTimeoutMs=") ? 14 : startsWithTokenIgnoreCase(token, "idleMs=") ? 7 : startsWithTokenIgnoreCase(token, "idleTimeout=") ? 12 : 5);
                 idleTimeoutMs = strtoul(value, nullptr, 10);
+            } else if (startsWithTokenIgnoreCase(token, "idleTimeoutVariation=") || startsWithTokenIgnoreCase(token, "idleVar=") || startsWithTokenIgnoreCase(token, "idleVariation=")) {
+                const char* value = token + (startsWithTokenIgnoreCase(token, "idleTimeoutVariation=") ? 21 : startsWithTokenIgnoreCase(token, "idleVariation=") ? 14 : 8);
+                idleTimeoutVariationMs = strtoul(value, nullptr, 10);
+            } else if (startsWithTokenIgnoreCase(token, "idleBlockedAfterHeard=") || startsWithTokenIgnoreCase(token, "idleBlockedHeardMs=")) {
+                const char* value = token + (startsWithTokenIgnoreCase(token, "idleBlockedAfterHeard=") ? 22 : 19);
+                idleBlockedAfterHeardMs = strtoul(value, nullptr, 10);
+            } else if (startsWithTokenIgnoreCase(token, "idleBlockedAfterOwnEmit=") || startsWithTokenIgnoreCase(token, "idleBlockedOwnEmitMs=")) {
+                const char* value = token + (startsWithTokenIgnoreCase(token, "idleBlockedAfterOwnEmit=") ? 24 : 21);
+                idleBlockedAfterOwnEmitMs = strtoul(value, nullptr, 10);
+            } else if (startsWithTokenIgnoreCase(token, "idleEnabled=")) {
+                const char* value = token + 12;
+                idleEnabled = equalsIgnoreCase(value, "1") || equalsIgnoreCase(value, "on") || equalsIgnoreCase(value, "true");
             } else if (startsWithTokenIgnoreCase(token, "requireTonal=") || startsWithTokenIgnoreCase(token, "requireTonalForBehavior=")) {
                 const char* value = token + (startsWithTokenIgnoreCase(token, "requireTonalForBehavior=") ? 24 : 13);
                 requireTonalForBehavior = equalsIgnoreCase(value, "1") || equalsIgnoreCase(value, "on") || equalsIgnoreCase(value, "true");
@@ -871,14 +886,26 @@ void Node::handleSerialLine(const char* line) {
         _behavior.setWaitAfterTransientMs(waitAfterTransientMs);
         _behavior.setRefractoryAfterEmitMs(refractoryAfterEmitMs);
         _behavior.setIdleTimeoutMs(idleTimeoutMs);
+        _behavior.setIdleTimeVariationMs(idleTimeoutVariationMs);
+        _behavior.setIdleBlockedAfterHeardMs(idleBlockedAfterHeardMs);
+        _behavior.setIdleBlockedAfterOwnEmitMs(idleBlockedAfterOwnEmitMs);
+        _behavior.setIdleEnabled(idleEnabled);
         _behavior.setRequireTonalForBehavior(requireTonalForBehavior);
 
         Serial.print("RB BEHAV wait=");
         Serial.print(_behavior.waitAfterTransientMs());
         Serial.print(" refractory=");
         Serial.print(_behavior.refractoryAfterEmitMs());
-        Serial.print(" idle=");
+        Serial.print(" idleTimeout=");
         Serial.print(_behavior.idleTimeoutMs());
+        Serial.print(" idleTimeoutVariation=");
+        Serial.print(_behavior.idleTimeVariationMs());
+        Serial.print(" idleBlockedHeard=");
+        Serial.print(_behavior.idleBlockedAfterHeardMs());
+        Serial.print(" idleBlockedOwnEmit=");
+        Serial.print(_behavior.idleBlockedAfterOwnEmitMs());
+        Serial.print(" idleEnabled=");
+        Serial.print(_behavior.idleEnabled() ? 1 : 0);
         Serial.print(" requireTonal=");
         Serial.println(_behavior.requireTonalForBehavior() ? 1 : 0);
         return;
@@ -1187,8 +1214,16 @@ void Node::printRbBehaviorSummary() const {
     Serial.print(_behavior.waitAfterTransientMs());
     Serial.print(" refractory=");
     Serial.print(_behavior.refractoryAfterEmitMs());
-    Serial.print(" idle=");
+    Serial.print(" idleTimeout=");
     Serial.print(_behavior.idleTimeoutMs());
+    Serial.print(" idleTimeoutVariation=");
+    Serial.print(_behavior.idleTimeVariationMs());
+    Serial.print(" idleBlockedHeard=");
+    Serial.print(_behavior.idleBlockedAfterHeardMs());
+    Serial.print(" idleBlockedOwnEmit=");
+    Serial.print(_behavior.idleBlockedAfterOwnEmitMs());
+    Serial.print(" idleEnabled=");
+    Serial.print(_behavior.idleEnabled() ? 1 : 0);
     Serial.print(" lastDecision=");
     Serial.print(_behavior.lastDecisionName());
     Serial.print(" lastBlock=");

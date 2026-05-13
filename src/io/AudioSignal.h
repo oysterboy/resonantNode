@@ -142,7 +142,7 @@ Does not:
 
 class AudioSignal {
 public:
-    explicit AudioSignal(AudioSource& source);
+    AudioSignal(AudioSource& source, AudioOnsetDetector& detector);
 
     void begin(bool doRebase = true);
     void rebase();
@@ -212,6 +212,7 @@ public:
 
 private:
     AudioSource& _source;
+    AudioOnsetDetector& _detector;
 
     void processSample(int sample, uint32_t sampleTimeUs, uint64_t sampleIndex, uint32_t sampleRateHz, bool blockOverflow);
     void finalizeCandidate(uint64_t releaseSample, uint32_t releaseMicrosApprox, uint32_t releaseMillisApprox);
@@ -228,9 +229,6 @@ private:
     uint64_t _lastBlockStartSample = 0;
     uint16_t _lastBlockSampleCount = 0;
     uint32_t _lastBlockApproxStartMicros = 0;
-    // Legacy bridge: AudioSignal currently owns the first AMP/transient detector.
-    // Keep this baseline stable while the raw-history / candidate-window refactor is clarified.
-    AudioOnsetDetector _detector;
     AudioSignalStats _stats;
     RawSampleHistory _rawSampleHistory;
     static constexpr size_t kCandidateQueueCapacity = 8;

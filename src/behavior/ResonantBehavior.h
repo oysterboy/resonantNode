@@ -45,14 +45,25 @@ public:
     void update(unsigned long now);
     // Legacy shim: kept only for compatibility with older call sites that still feed raw transient flags.
     void update(bool transientDetected, float transientStrength, unsigned long now);
+    void seedIdleSchedule(unsigned long now);
 
     void setDetectionOnly(bool value);
     void setRequireTonalForBehavior(bool value);
     void setWaitAfterTransientMs(unsigned long value);
     void setRefractoryAfterEmitMs(unsigned long value);
+    void setIdleTimeMs(unsigned long value);
+    void setIdleTimeVariationMs(unsigned long value);
+    void setIdleBlockedAfterHeardMs(unsigned long value);
+    void setIdleBlockedAfterOwnEmitMs(unsigned long value);
+    void setIdleEnabled(bool value);
     void setIdleTimeoutMs(unsigned long value);
     unsigned long waitAfterTransientMs() const;
     unsigned long refractoryAfterEmitMs() const;
+    unsigned long idleTimeMs() const;
+    unsigned long idleTimeVariationMs() const;
+    unsigned long idleBlockedAfterHeardMs() const;
+    unsigned long idleBlockedAfterOwnEmitMs() const;
+    bool idleEnabled() const;
     unsigned long idleTimeoutMs() const;
     bool requireTonalForBehavior() const;
 
@@ -138,11 +149,16 @@ private:
     bool _outputBusy = false;
 
     // --- timing parameters ---
-    unsigned long _waitAfterTransientMs = 800; // Delay before responding after a transient is seen.
+    unsigned long _waitAfterTransientMs = 100; // Delay before responding after a transient is seen.
     unsigned long _refractoryAfterEmitMs = 200; // Ignore follow-up activity for a short time after a chirp finishes.
-    unsigned long _idleTimeoutMs = 30000; // Self-trigger if nothing has been seen or emitted for this long.
-    unsigned long _behaviorSuppressSelfChirpMs = 500; // Behavior-level suppression while the node's chirp is active.
+    unsigned long _behaviorSuppressSelfChirpMs = 200; // Behavior-level suppression while the node's chirp is active.
     unsigned long _detectionSuppressTailMsOwnEmit = 0; // Detector/analyzer suppression tail after our own emit.
+    unsigned long _nextIdleAtMs = 0;
+    unsigned long _idleTimeMs = 20000;
+    unsigned long _idleTimeVariationMs = 10000;
+    unsigned long _idleBlockedAfterHeardMs = 3000;
+    unsigned long _idleBlockedAfterOwnEmitMs = 5000;
+    bool _idleEnabled = true;
 
     // --- action latch ---
     bool _chirpRequested = false;
@@ -169,4 +185,8 @@ private:
     unsigned long _emittedCount = 0;
 
     static const char* behaviorDecisionName(BehaviorDecision decision);
+    void scheduleNextIdle(unsigned long now);
+    bool canIdle(unsigned long now) const;
+    unsigned long idleMinMs() const;
+    unsigned long idleMaxMs() const;
 };

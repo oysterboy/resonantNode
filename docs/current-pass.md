@@ -1,641 +1,232 @@
-# Pass 6 — Classifier Integration Refactor Plan
+# Codex Refactor Task — ResonantBehavior Idle / Response Timing
 
 ## Goal
 
-Move frequency validation from logging-only diagnostics into the shared classification layer.
+Refactor behavior logic to prevent synchronized idle chirps and make idle trigger timing probabilistic, while preserving the current detection pipeline and leaving the transient response path alone.
 
-The frequency knobs already exist:
+Current working baseline:
 
-- `freqScore = 50000`
-- `freqContrast = 20.0`
+```txt
+5 nodes
+~1 m circle
+neighbor-specific pickup
+frequency matching works
+behaviorSuppressSelfChirp = 200 ms is enough
+waitAfterTransient = 100 ms
+```
 
-Defined in:
+## Do not change
 
-- `src/detection/FrequencyEvidenceEvaluation.h`
+- Audio input / MEMS code
+- BTL output code
+- frequency matching
+- detector internals
+- detector API
+- signal pipeline
 
-Accepted in:
+Keep:
 
-- `AnalyzerApp.cpp`
-- `node.cpp`
+```txt
+AudioSignal → Detector → Behavior
+```
 
-Status:
-
-- `PatternResult` classification already uses `freqScore` and `freqContrast`.
-- Analyzer now tracks classifier-level counts separately from the old AMP counters.
-- ResonantBehavior can require tonal validity at runtime with `RB BEHAV requireTonal=1`.
-- Both `esp32dev` and `esp32dev-analyzer` compile cleanly with the current changes.
+Behavior consumes detector events only.
 
 ---
 
-## Core Rule
+## Add / organize behavior params
 
-Do not integrate frequency validation into the low-level AMP/transient detector.
-
-Keep this separation:
-
-```text
-AMP / transient detector
-→ DetectorCandidate
-→ FrequencyEvidence
-→ PatternClassifier
-→ PatternResult
-→ Analyzer / ResonantBehavior
-```
-
-The detector answers:
-
-```text
-Was there a transient candidate?
-```
-
-Current implementation:
-- AMP/transient candidate defines the event window.
-- Raw history provides candidate-window frequency evidence.
-- `FrequencyEvidenceEvaluation` classifies tonal validity.
-- Behavior may optionally require tonal validity, but this is a runtime behavior gate, not the detector baseline.
-
-The classifier answers:
-
-```text
-What kind of candidate is this?
-```
-
----
-
-## Non-Goals
-
-Do not:
-
-- tune AMP thresholds
-- change onset / release thresholds
-- change cooldown
-- change min/max transient duration
-- change `minStrength`
-- change the frequency probe algorithm
-- implement FFT
-- implement full chirp grouping
-- implement family matching
-- implement overlap dominance
-- remove transient-first path
-- hide rejected/weak candidates from logs
-
----
-
-## Desired Result
-
-A candidate should no longer be only:
-
-```text
-accepted transient
-```
-
-It should become something like:
-
-```text
-candidateValid = true
-tonalValid = true
-behaviorEligible = true
-patternType = valid_tonal_chirp
-reason = freq_score_and_contrast_ok
-```
-
-or:
-
-```text
-candidateValid = true
-tonalValid = false
-behaviorEligible = false
-patternType = transient_only
-reason = freq_score_and_contrast_too_low
-```
-
-Important distinction:
-
-```text
-candidate rejected
-```
-
-is not the same as:
-
-```text
-candidate exists but is not tonal-valid
-```
-
-Duplicates and residual acoustic activity should remain visible in logs.
-
----
-
-## Step 1 — Centralize Frequency Threshold Evaluation DONE
-
-Add one central place where frequency evidence is evaluated against tuning.
-
-Avoid duplicating this logic in multiple log callsites.
-Avoid duplicating it  for Analyser and node/Resonantbehavior 
-
-Suggested struct:
+Add these params if missing:
 
 ```cpp
-struct FrequencyEvidence {
-    bool present = false;
-    bool validWindow = false;
+bool idleEnabled = true;
 
-    float score = 0.0f;
-    float contrast = 0.0f;
+uint8_t idleChirpCount = 3;
+uint16_t idleChirpMs = 100;
+uint16_t idleGapMs = 100;
 
-    float targetHz = 0.0f;
-    float targetPower = 0.0f;
-    float neighborPower = 0.0f;
-    float totalEnergy = 0.0f;
+uint32_t idleMinMs = 10000;
+uint32_t idleMaxMs = 30000;
 
-    uint32_t observedAtMs = 0;
-    uint32_t ageMs = 0;
+uint32_t idleBlockedAfterHeardMs = 3000;
+uint32_t idleBlockedAfterOwnEmitMs = 5000;
 
-    bool scoreOk = false;
-    bool contrastOk = false;
-    bool matched = false;
+uint8_t responseProbabilityPct = 75;
+uint16_t responseRefractoryMs = 700;
 
-    PatternRejectReason reason = PatternRejectReason::None;
-};
-```
-
-Evaluation rule:
-
-```cpp
-scoreOk = score >= tuning.freqScore;
-contrastOk = contrast >= tuning.freqContrast;
-matched = present && validWindow && scoreOk && contrastOk;
-```
-
-Reason logic:
-
-```cpp
-if (!present) reason = NoFrequencyEvidence;
-else if (!validWindow) reason = FrequencyWindowInvalid;
-else if (!scoreOk && !contrastOk) reason = FrequencyScoreAndContrastTooLow;
-else if (!scoreOk) reason = FrequencyScoreTooLow;
-else if (!contrastOk) reason = FrequencyContrastTooLow;
-else reason = None;
+uint16_t waitAfterTransientMs = 100;
+uint16_t behaviorSuppressSelfChirpMs = 150;
 ```
 
 ---
 
-## Step 2 — Add Explicit Pattern Reasons DONE
-
-Use enum internally.  
-Stringify only for logs.
-
-Suggested enum:
+## Add behavior state
 
 ```cpp
-enum class PatternRejectReason {
-    None,
+uint32_t nextIdleAtMs = 0;
+uint32_t lastHeardAtMs = 0;
+uint32_t lastOwnEmitAtMs = 0;
+uint32_t lastResponseAtMs = 0;
 
-    NoCandidate,
-
-    NoFrequencyEvidence,
-    FrequencyWindowInvalid,
-    FrequencyScoreTooLow,
-    FrequencyContrastTooLow,
-    FrequencyScoreAndContrastTooLow,
-
-    TransientOnly,
-    DuplicateAfterPrimary,
-    UnexpectedTiming,
-    UnexpectedNoise
-};
-```
-
-Suggested log strings:
-
-```text
-none
-no_candidate
-no_frequency_evidence
-frequency_window_invalid
-freq_score_too_low
-freq_contrast_too_low
-freq_score_and_contrast_too_low
-transient_only
-duplicate_after_primary
-unexpected_timing
-unexpected_noise
+bool pendingResponse = false;
+uint32_t pendingResponseAtMs = 0;
 ```
 
 ---
 
-## Step 3 — Extend PatternResult DONE
+## Random seed
 
-PatternResult should expose separate facts:
-
-```cpp
-struct PatternResult {
-    bool candidateValid = false;      // AMP/transient candidate exists
-    bool tonalValid = false;          // frequency evidence passed thresholds
-    bool behaviorEligible = false;    // allowed to trigger behavior
-
-    PatternType type = PatternType::None;
-    PatternRejectReason reason = PatternRejectReason::None;
-
-    DetectorCandidate candidate;
-    FrequencyEvidence freq;
-};
-```
-
-Suggested PatternType:
+Seed once during setup:
 
 ```cpp
-enum class PatternType {
-    None,
-
-    ValidTransient,
-    ValidTonalTransient,
-
-    TransientOnly,
-    FrequencyWeak,
-
-    DuplicateAfterPrimary,
-    UnexpectedNoise
-};
+randomSeed(esp_random() ^ millis() ^ (uint32_t(nodeId) * 7919UL));
 ```
-
-Classification rule:
-
-```text
-candidateValid = accepted AMP/transient candidate
-tonalValid = frequency evidence matched thresholds
-behaviorEligible = candidateValid && tonalValid
-```
-
-For now, avoid making `patternValid` ambiguous.  
-Prefer explicit flags.
-
-Conceptual target:
-- use `ValidTonalTransient` for the current tonal click/beep path
-- do not expand `ValidTonalChirp` unless the sound is truly a chirp
-- keep the code rename for a later pass if needed, but keep the concept aligned now
 
 ---
 
-## Step 4 — Classifier Logic DONE
+## Idle scheduling rule
 
-Pseudo-flow:
+Add helper:
 
 ```cpp
-PatternResult classifyCandidate(
-    const DetectorCandidate& candidate,
-    const FrequencyEvidence& freq,
-    const ClassifierTuning& tuning
-) {
-    PatternResult result;
-
-    result.candidate = candidate;
-    result.freq = evaluateFrequency(freq, tuning);
-
-    result.candidateValid = candidate.accepted;
-
-    if (!result.candidateValid) {
-        result.type = PatternType::None;
-        result.reason = PatternRejectReason::NoCandidate;
-        return result;
-    }
-
-    result.tonalValid = result.freq.matched;
-
-    if (result.tonalValid) {
-        result.type = PatternType::ValidTonalTransient;
-        result.reason = PatternRejectReason::None;
-        result.behaviorEligible = true;
-    } else {
-        result.type = PatternType::TransientOnly;
-        result.reason = result.freq.reason;
-        result.behaviorEligible = false;
-    }
-
-    return result;
+void scheduleNextIdle(uint32_t now) {
+  nextIdleAtMs = now + random(idleMinMs, idleMaxMs + 1);
 }
 ```
 
-Important: this should happen after candidate extraction, not inside the AMP detector.
+Call it:
+- once on behavior start
+- after every own emit
+- after every heard transient
+
+Key rule:
+
+```txt
+Every heard transient and every own emit reschedules idle randomly.
+```
+
+This breaks synchronized idle chirps.
 
 ---
 
-## Step 5 — Fix Frequency Logging Semantics DONE
+## On valid transient
 
-Current problem:
-
-```text
-freq_present=1
-freq_matched=0
-freq_conf=0.0
-freq_score=700000
-freq_contrast=1200
-```
-
-Status:
-
-- Implemented in `AnalyzerApp.cpp` and `node.cpp`.
-- The candidate headline logs now print the classified `patternResult.freq` snapshot, so `freq_matched`, `freq_conf`, and related fields line up with the classifier result instead of the raw detector-only struct.
-- Both `esp32dev` and `esp32dev-analyzer` compile cleanly with this change.
-
-After this pass, strong primary candidates should log:
-
-```text
-freq_present=1
-freq_valid_window=1
-freq_score=700000
-freq_contrast=1200
-freq_score_ok=1
-freq_contrast_ok=1
-freq_matched=1
-pattern_type=valid_tonal_transient
-behavior_eligible=1
-```
-
-Weak duplicates should log:
-
-```text
-freq_present=1
-freq_valid_window=1
-freq_score=0.3
-freq_contrast=1.6
-freq_score_ok=0
-freq_contrast_ok=0
-freq_matched=0
-pattern_type=transient_only
-pattern_reason=freq_score_and_contrast_too_low
-behavior_eligible=0
-```
-
----
-
-## Step 6 — Analyzer Integration DONE - NEEDS TESTING
-
-Analyzer / SEQ should continue to preserve old AMP-based metrics:
-
-```text
-expected_hits
-late_hits
-misses
-unexpected
-duplicates
-valid_primary
-```
-
-Add classifier-level counters separately:
-
-```text
-tonal_expected
-transient_only_expected
-tonal_duplicates
-non_tonal_duplicates
-tonal_unexpected
-non_tonal_unexpected
-
-freq_reject_score
-freq_reject_contrast
-freq_reject_both
-freq_reject_no_evidence
-freq_reject_invalid_window
-```
-
-Suggested output:
-
-```text
-SEQ_SUMMARY ...
-SEQ_CLASS_SUMMARY tonal_expected=...
-                  transient_only_expected=...
-                  tonal_duplicates=...
-                  non_tonal_duplicates=...
-                  freq_reject_score=...
-                  freq_reject_contrast=...
-                  freq_reject_both=...
-```
-
-This keeps old test results comparable while adding classifier validation.
-
----
-
-## Step 7 — ResonantBehavior Integration
-
-Do not immediately make behavior depend permanently on tonal validity.
-
-Add a switch:
+When detector reports a valid event:
 
 ```cpp
-bool requireTonalForBehavior = false;
+lastHeardAtMs = now;
+scheduleNextIdle(now);
 ```
 
-or runtime param:
+Then decide probabilistic response:
 
-```text
-requireTonal=0/1
+```cpp
+if (now - lastResponseAtMs < responseRefractoryMs) return;
+if (now - lastOwnEmitAtMs < behaviorSuppressSelfChirpMs) return;
+
+if (random(100) < responseProbabilityPct) {
+  pendingResponse = true;
+  pendingResponseAtMs = now + waitAfterTransientMs;
+}
 ```
 
-Default for current test:
+Do not emit immediately unless current architecture already requires it.
 
-```text
-requireTonal=1
+---
+
+## In behavior update
+
+Handle pending response:
+
+```cpp
+if (pendingResponse && now >= pendingResponseAtMs) {
+  pendingResponse = false;
+
+  if (now - lastResponseAtMs >= responseRefractoryMs &&
+      now - lastOwnEmitAtMs >= behaviorSuppressSelfChirpMs) {
+    emitResponseChirp();
+  }
+}
 ```
 
-Status:
+Then call idle check.
 
-- `RB BEHAV requireTonal=0/1` is implemented.
-- When `requireTonal=1`, blocked candidates log `RB_BLOCK reason=...` with the classifier reject reason.
+---
 
-Expected behavior:
+## Idle check
 
-```text
-requireTonal=0:
-  RB behaves as before, but logs tonal classification.
-
-requireTonal=1:
-  RB only reacts to candidates with behaviorEligible=true.
+```cpp
+bool canIdle(uint32_t now) {
+  if (!idleEnabled) return false;
+  if (now < nextIdleAtMs) return false;
+  if (now - lastHeardAtMs < idleBlockedAfterHeardMs) return false;
+  if (now - lastOwnEmitAtMs < idleBlockedAfterOwnEmitMs) return false;
+  return true;
+}
 ```
 
-Blocked candidates should log explicit reasons:
+If `canIdle(now)`:
 
-```text
-RB_BLOCK reason=freq_score_too_low
-RB_BLOCK reason=freq_contrast_too_low
-RB_BLOCK reason=freq_score_and_contrast_too_low
-RB_BLOCK reason=transient_only
+```cpp
+emitIdleTriplet();
+scheduleNextIdle(now);
 ```
 
 ---
 
-## Step 8 — Test Order
+## Emit response
 
-### 1. Compile only
+```cpp
+void emitResponseChirp() {
+  soundOutput.chirp(100); // or existing response chirp param
+  uint32_t now = millis();
 
-Check:
-
-```text
-AnalyzerApp.cpp
-node.cpp
-shared classifier files
-```
-
-No behavior change expected yet.
-
----
-
-### 2. Analyzer run, 20 trials
-
-Look for:
-
-```text
-strong primaries:
-  freq_matched=1
-  tonalValid=1
-  behaviorEligible=1
-
-duplicates:
-  freq_matched=0
-  tonalValid=0
-  behaviorEligible=0
+  lastOwnEmitAtMs = now;
+  lastResponseAtMs = now;
+  scheduleNextIdle(now);
+}
 ```
 
 ---
 
-### 3. Analyzer run, 100 trials
+## Emit idle
 
-Compare old counters:
+Idle = 3 chirps:
 
-```text
-expected_hits
-late_hits
-misses
-unexpected
-duplicates
+```cpp
+void emitIdleTriplet() {
+  for (uint8_t i = 0; i < idleChirpCount; i++) {
+    soundOutput.chirp(idleChirpMs);
+    delay(idleGapMs); // acceptable for now
+  }
+
+  uint32_t now = millis();
+  lastOwnEmitAtMs = now;
+  scheduleNextIdle(now);
+}
 ```
 
-Then inspect new counters:
-
-```text
-tonal_expected
-non_tonal_duplicates
-freq_reject_*
-```
-
-Expected result:
-
-```text
-Most expected primaries should be tonal.
-Most duplicates should be non-tonal.
-```
+Non-blocking version can come later.
 
 ---
 
-### 4. RB with `requireTonal=0`
+## Success criteria
 
-Goal: behavior parity.
-
-Expected:
-
-```text
-RB still reacts similarly to before.
-Logs show tonal classification but do not block behavior.
-```
+- 5 nodes no longer idle almost in sync
+- idle only appears when field is quiet
+- response still happens reliably
+- no increase in self-triggering
+- current neighbor-specific pickup remains intact
 
 ---
 
-### 5. RB with `requireTonal=1`
+## Do not over-refactor
 
-Goal: behavior gating test.
+This is a behavior-only change.
 
-Expected:
-
-```text
-Real 3200 Hz tonal transients can trigger behavior.
-Duplicates / residual amplitude events are blocked.
-Blocked events include readable reasons.
-```
-
----
-
-## Acceptance Criteria
-
-Pass 6 is successful when:
-
-1. `freqScore` and `freqContrast` are used by classifier logic.
-2. Strong real primaries produce:
-
-```text
-freq_matched=1
-tonalValid=1
-```
-
-3. Weak duplicates/noise produce:
-
-```text
-freq_matched=0
-tonalValid=0
-```
-
-4. PatternResult exposes:
-
-```text
-candidateValid
-tonalValid
-behaviorEligible
-reason
-```
-
-5. Analyzer keeps old AMP/SEQ counters.
-6. Analyzer adds classifier counters.
-7. RB can optionally require tonal validity.
-8. RB logs explicit block reasons.
-9. AMP/transient detector behavior remains unchanged.
-
----
-
-## Risk Notes
-
-Main risk:
-
-```text
-Accidentally turning this into a detector refactor.
-```
-
-Avoid by keeping frequency validation after candidate extraction.
-
-Second risk:
-
-```text
-Making candidates disappear from logs.
-```
-
-Avoid by keeping non-tonal candidates visible as classified candidates.
-
-Third risk:
-
-```text
-Breaking comparability with previous SEQ runs.
-```
-
-Avoid by keeping old SEQ counters and adding new classifier counters separately.
-
----
-
-## Estimated Effort
-
-Best case:
-
-```text
-2–4 hours
-```
-
-Realistic:
-
-```text
-4–8 hours
-```
-
-If shared classifier paths are messy:
-
-```text
-1–2 days
-```
-
-The likely time sink is not the threshold logic itself.  
-It is keeping Analyzer, RB, logs, and PatternResult semantics aligned.
+Avoid:
+- detector changes
+- signal changes
+- output driver changes
+- new architecture layers
+- full activity model for now

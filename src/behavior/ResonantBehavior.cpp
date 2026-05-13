@@ -31,6 +31,17 @@ Timing roles:
 - own-emit detection suppression: detection/analyzer-side tail window for ring-down
 */
 
+namespace {
+unsigned long randomIdleDelayMs(unsigned long minMs, unsigned long maxMs) {
+    if (maxMs <= minMs) {
+        return minMs;
+    }
+
+    const unsigned long spanMs = maxMs - minMs + 1;
+    return minMs + static_cast<unsigned long>(random(static_cast<long>(spanMs)));
+}
+}
+
 void ResonantBehavior::resetState() {
     _state = State::Idle;
     _activityLevel = 0.0f;
@@ -67,6 +78,7 @@ void ResonantBehavior::resetState() {
     _blockedSelfSuppressed = 0;
     _wouldEmitCount = 0;
     _emittedCount = 0;
+    _nextIdleAtMs = 0;
 }
 
 void ResonantBehavior::update(bool transientDetected, float transientStrength, unsigned long now) {
@@ -104,6 +116,8 @@ ResonantBehavior::BehaviorDecision ResonantBehavior::handlePatternResult(const D
         _patternsIgnoredAmbiguous++;
         return _lastDecision;
     }
+
+    scheduleNextIdle(now);
 
     if (_requireTonalForBehavior && !result.behaviorEligible) {
         _lastDecision = BehaviorDecision::UnknownBlocked;
@@ -194,6 +208,10 @@ void ResonantBehavior::update(unsigned long now) {
         return;
     }
 
+    if (_nextIdleAtMs == 0) {
+        scheduleNextIdle(now);
+    }
+
     // Track the last transient time so idle-triggered chirps do not fire while
     // the node is still hearing bursts.
     if (transientDetected) {
@@ -209,7 +227,7 @@ void ResonantBehavior::update(unsigned long now) {
                 _state = State::TransientSeen;
                 _waitUntilMs = now + _waitAfterTransientMs;
             }
-            else if (now - max(_lastTransientMs, _lastEmitMs) > _idleTimeoutMs) {
+            else if (canIdle(now)) {
                 _wouldEmit = true;
                 _lastDecision = _detectionOnly ? BehaviorDecision::DetectionOnly : BehaviorDecision::WouldEmit;
                 _lastBlockReason = _detectionOnly ? BehaviorDecision::DetectionOnly : BehaviorDecision::None;
@@ -223,6 +241,7 @@ void ResonantBehavior::update(unsigned long now) {
                     _outputBusy = true;
                     _state = State::Chirping;
                     _wouldEmitCount++;
+                    scheduleNextIdle(now);
                 }
             }
             break;
@@ -278,8 +297,32 @@ void ResonantBehavior::setRefractoryAfterEmitMs(unsigned long value) {
     _refractoryAfterEmitMs = value;
 }
 
+void ResonantBehavior::setIdleTimeMs(unsigned long value) {
+    _idleTimeMs = value;
+}
+
+void ResonantBehavior::setIdleTimeVariationMs(unsigned long value) {
+    _idleTimeVariationMs = value;
+}
+
+void ResonantBehavior::setIdleBlockedAfterHeardMs(unsigned long value) {
+    _idleBlockedAfterHeardMs = value;
+}
+
+void ResonantBehavior::setIdleBlockedAfterOwnEmitMs(unsigned long value) {
+    _idleBlockedAfterOwnEmitMs = value;
+}
+
+void ResonantBehavior::setIdleEnabled(bool value) {
+    _idleEnabled = value;
+}
+
 void ResonantBehavior::setIdleTimeoutMs(unsigned long value) {
-    _idleTimeoutMs = value;
+    setIdleTimeMs(value);
+}
+
+void ResonantBehavior::seedIdleSchedule(unsigned long now) {
+    scheduleNextIdle(now);
 }
 
 unsigned long ResonantBehavior::waitAfterTransientMs() const {
@@ -291,7 +334,27 @@ unsigned long ResonantBehavior::refractoryAfterEmitMs() const {
 }
 
 unsigned long ResonantBehavior::idleTimeoutMs() const {
-    return _idleTimeoutMs;
+    return _idleTimeMs;
+}
+
+unsigned long ResonantBehavior::idleTimeMs() const {
+    return _idleTimeMs;
+}
+
+unsigned long ResonantBehavior::idleTimeVariationMs() const {
+    return _idleTimeVariationMs;
+}
+
+unsigned long ResonantBehavior::idleBlockedAfterHeardMs() const {
+    return _idleBlockedAfterHeardMs;
+}
+
+unsigned long ResonantBehavior::idleBlockedAfterOwnEmitMs() const {
+    return _idleBlockedAfterOwnEmitMs;
+}
+
+bool ResonantBehavior::idleEnabled() const {
+    return _idleEnabled;
 }
 
 bool ResonantBehavior::requireTonalForBehavior() const {
@@ -326,6 +389,7 @@ bool ResonantBehavior::behaviorSuppressed(unsigned long now) const {
 }
 
 void ResonantBehavior::notifyChirpStarted(unsigned long now) {
+    scheduleNextIdle(now);
     const unsigned long suppressUntilMs = now + _behaviorSuppressSelfChirpMs;
     if (suppressUntilMs > _behaviorSuppressUntilMs) {
         _behaviorSuppressUntilMs = suppressUntilMs;
@@ -556,4 +620,35 @@ const char* ResonantBehavior::behaviorDecisionName(BehaviorDecision decision) {
     }
 
     return "unknown";
+}
+
+void ResonantBehavior::scheduleNextIdle(unsigned long now) {
+    _nextIdleAtMs = now + randomIdleDelayMs(idleMinMs(), idleMaxMs());
+}
+
+bool ResonantBehavior::canIdle(unsigned long now) const {
+    if (!_idleEnabled) {
+        return false;
+    }
+    if (_nextIdleAtMs != 0 && now < _nextIdleAtMs) {
+        return false;
+    }
+    if (now - _lastTransientMs < _idleBlockedAfterHeardMs) {
+        return false;
+    }
+    if (now - _lastEmitMs < _idleBlockedAfterOwnEmitMs) {
+        return false;
+    }
+    return true;
+}
+
+unsigned long ResonantBehavior::idleMinMs() const {
+    if (_idleTimeVariationMs >= _idleTimeMs) {
+        return 0;
+    }
+    return _idleTimeMs - _idleTimeVariationMs;
+}
+
+unsigned long ResonantBehavior::idleMaxMs() const {
+    return _idleTimeMs + _idleTimeVariationMs;
 }

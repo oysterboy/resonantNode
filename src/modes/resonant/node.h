@@ -116,9 +116,9 @@ private:
     ChirpOutput _chirpOutput;
 
     // Signal / detection / behavior pipeline.
+    AudioOnsetDetector _audioOnsetDetector;
     AudioSignal _audioSignal;
     AudioFrequencyDetector _audioFrequencyDetector;
-    AudioOnsetDetector _audioOnsetDetector;
     FrequencyEvidenceEvaluation::Values _frequencyEvidenceTuning = {};
     ResonantBehavior _behavior;
 

@@ -8,10 +8,9 @@ What the code actually does today:
 - Raw history provides candidate-window frequency evidence.
 - `FrequencyEvidenceEvaluation` classifies tonal validity.
 - Behavior may optionally require tonal validity, but that is a runtime behavior gate, not the detector baseline.
-- RB currently uses a `30000 ms` idle timeout, `requireTonal=1`, `refractory=0`, and `wait=0` on the analog path.
-- RB currently uses a `500 ms` wait after transient on the I2S path, `idle=30000`, and `requireTonal=1`.
+- RB currently uses `wait=100 ms`, `refractory=0`, `idleTimeout=20000 ms`, `idleTimeoutVariation=10000 ms`, `idleBlockedAfterHeard=3000 ms`, and `idleBlockedAfterOwnEmit=5000 ms` on both the analog and I2S paths.
 - RB logging defaults to `off` on boot, and `RB log full` now stays compact so it does not flood the timing loop.
-- Own-emit detection/analyzer tail suppression is `0 ms`, while `behaviorSuppressSelfChirp` stays at `500 ms`.
+- Own-emit detection/analyzer tail suppression is `0 ms`, while `behaviorSuppressSelfChirp` stays at `200 ms`.
 - In RB detect-only mode, tonal-valid hits pulse the LED at full brightness, transient-only hits pulse at 50% brightness, and normal RB LED behavior is unchanged.
 - Analyzer now has a passive `SEQ OBS` mode for observing an already-running external emitter without sending chirps or claiming control.
 
@@ -26,7 +25,7 @@ What the code actually does today:
 
 ### RB
 - `RB PARAM onset=30 release=20 cooldown=50 releaseDebounce=10 minMs=90 maxMs=240 minStrength=40.0 freqScore=50000 freqContrast=20.0`
-- `RB BEHAV wait=0 refractory=0 idle=30000 requireTonal=1`
+- `RB BEHAV wait=100 refractory=0 idleTimeout=20000 idleTimeoutVariation=10000 idleBlockedAfterHeard=3000 idleBlockedAfterOwnEmit=5000 requireTonal=1`
 - `RB summary`
 - `RB detectonly on|off`
 - `RB log off|minimal|full`
@@ -54,12 +53,14 @@ What the code actually does today:
 - Passive observe period = 2000 ms
 
 ### RB Behavior
-- waitAfterTransient = 0 ms on analog
-- waitAfterTransient = 500 ms on I2S
+- waitAfterTransient = 100 ms on analog and I2S
 - refractoryAfterEmit = 0 ms
-- idleTimeout = 30000 ms
+- idleTimeout = 20000 ms
+- idleTimeoutVariation = 10000 ms
+- idleBlockedAfterHeard = 3000 ms
+- idleBlockedAfterOwnEmit = 5000 ms
 - requireTonal = on
-- behaviorSuppressSelfChirp = 500 ms
+- behaviorSuppressSelfChirp = 200 ms
 - detectionSuppressTailMsOwnEmit = 0 ms
 - RB log default = off
 

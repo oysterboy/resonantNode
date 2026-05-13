@@ -5,8 +5,9 @@
 // Construction and lifecycle
 // -----------------------------------------------------------------------------
 
-AudioSignal::AudioSignal(AudioSource& source)
-    : _source(source) {}
+AudioSignal::AudioSignal(AudioSource& source, AudioOnsetDetector& detector)
+    : _source(source),
+      _detector(detector) {}
 
 void AudioSignal::begin(bool doRebase) {
     resetStats();

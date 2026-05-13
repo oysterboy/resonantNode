@@ -448,9 +448,9 @@ private:
     AudioSourceI2S _i2sSource;
     AudioSource& _audioSource;
     AudioSourceKind _sourceKind;
+    AudioOnsetDetector _audioOnsetDetector;
     AudioSignal _audioSignal;
     AudioFrequencyDetector _audioFrequencyDetector;
-    AudioOnsetDetector _audioOnsetDetector;
     FrequencyEvidenceEvaluation::Values _frequencyEvidenceTuning = {};
 
     // Console and emitter control.

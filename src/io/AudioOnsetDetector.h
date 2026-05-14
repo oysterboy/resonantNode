@@ -8,6 +8,7 @@
 AudioOnsetDetector
 
 Owns the first-stage amplitude-based onset and transient detector.
+This is a concrete detector implementation, not the architecture boundary.
 
 Responsibilities:
 - derive one-shot onset events from continuous audio signal data
@@ -15,7 +16,7 @@ Responsibilities:
 - qualify peaks as transient events after measuring duration and strength
 
 Does NOT:
-- decide when the node should chirp
+- decide behavior or output timing
 - own behavior state transitions
 - own frequency-based classification
 

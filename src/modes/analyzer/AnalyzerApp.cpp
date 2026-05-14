@@ -346,6 +346,28 @@ void printH3FrequencyEvidenceFields(const DetectionPipeline::PatternResult& patt
     Serial.print(" win=");
     Serial.print(frequencyEvidence.windowSampleCount);
     Serial.print("]");
+    const auto freqFullEval = FrequencyEvidenceEvaluation::evaluate(patternResult.freqFull, tuning);
+    Serial.print(" freqFull[avail=");
+    Serial.print(patternResult.freqFull.present ? 1 : 0);
+    Serial.print(" score=");
+    Serial.print(patternResult.freqFull.score, 1);
+    Serial.print(" target=");
+    Serial.print(patternResult.freqFull.targetHz);
+    Serial.print(" contrast=");
+    Serial.print(patternResult.freqFull.spectralContrast, 2);
+    Serial.print(" win=");
+    Serial.print(patternResult.freqFull.windowSampleCount);
+    Serial.print(" matched=");
+    Serial.print(freqFullEval.matched ? 1 : 0);
+    Serial.print(" reason=");
+    Serial.print(FrequencyEvidenceEvaluation::reasonName(freqFullEval.reason));
+    Serial.print("]");
+    char freqFullFailReason[96];
+    FrequencyEvidenceEvaluation::buildFailReason(patternResult.freqFull, tuning, freqFullFailReason, sizeof(freqFullFailReason));
+    if (strcmp(freqFullFailReason, "none") != 0) {
+        Serial.print(" freqFull_fail_reason=");
+        Serial.print(freqFullFailReason);
+    }
     if (liveFrequencyEvidence != nullptr) {
         Serial.print(" liveFreq[avail=");
         Serial.print(liveFrequencyEvidence->present ? 1 : 0);
@@ -3065,6 +3087,28 @@ void AnalyzerApp::printSequenceTrialDebug(unsigned long trialNumber, const char*
     Serial.print(freq.validWindow ? 1 : 0);
     Serial.print(" freq_eval_reason=");
     Serial.print(FrequencyEvidenceEvaluation::reasonName(freqEval.reason));
+    const auto& freqFull = diagnostics.acceptedFrequencyEvidenceFull;
+    const auto freqFullEval = FrequencyEvidenceEvaluation::evaluate(freqFull, _frequencyEvidenceTuning);
+    Serial.print(" freqFull[avail=");
+    Serial.print(freqFull.present ? 1 : 0);
+    Serial.print(" score=");
+    Serial.print(freqFull.score, 1);
+    Serial.print(" contrast=");
+    Serial.print(freqFull.spectralContrast, 2);
+    Serial.print(" win=");
+    Serial.print(freqFull.windowSampleCount);
+    Serial.print(" matched=");
+    Serial.print(freqFullEval.matched ? 1 : 0);
+    Serial.print(" reason=");
+    Serial.print(FrequencyEvidenceEvaluation::reasonName(freqFullEval.reason));
+    Serial.print("]");
+    Serial.print(" accepted_freqFull_age_ms=");
+    if (freqFull.observedAtMs > 0 && diagnostics.acceptedFrequencyProcessedAtMs >= freqFull.observedAtMs) {
+        Serial.print(diagnostics.acceptedFrequencyProcessedAtMs - freqFull.observedAtMs);
+        Serial.print("ms");
+    } else {
+        Serial.print("-");
+    }
     printH3SequenceRoleFields("primary", acceptedDtMs, static_cast<long>(diagnostics.acceptedTransientDurationMs), diagnostics.acceptedTransientStrength, freq, freq.observedAtMs, diagnostics.acceptedFrequencyProcessedAtMs, "none", 0);
     printH3SequenceRoleFields("duplicate", diagnostics.duplicateCount > 0 ? static_cast<long>(diagnostics.duplicateTransientMs >= _sequenceTest.currentTrialStartMs ? diagnostics.duplicateTransientMs - _sequenceTest.currentTrialStartMs : 0) : -1,
                               diagnostics.duplicateCount > 0 ? static_cast<long>(diagnostics.duplicateTransientDurationMs) : -1,

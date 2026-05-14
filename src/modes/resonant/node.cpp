@@ -1149,6 +1149,28 @@ void Node::logCandidate(const DetectorCandidate& candidate, const DetectionPipel
         Serial.print(" freq_fail_reason=");
         Serial.print(freqFailReason);
     }
+    const auto freqFullEval = FrequencyEvidenceEvaluation::evaluate(patternResult.freqFull, _frequencyEvidenceTuning);
+    Serial.print(" freqFull[avail=");
+    Serial.print(patternResult.freqFull.present ? 1 : 0);
+    Serial.print(" score=");
+    Serial.print(patternResult.freqFull.score, 1);
+    Serial.print(" target=");
+    Serial.print(patternResult.freqFull.targetHz);
+    Serial.print(" contrast=");
+    Serial.print(patternResult.freqFull.spectralContrast, 2);
+    Serial.print(" win=");
+    Serial.print(patternResult.freqFull.windowSampleCount);
+    Serial.print(" matched=");
+    Serial.print(freqFullEval.matched ? 1 : 0);
+    Serial.print(" reason=");
+    Serial.print(FrequencyEvidenceEvaluation::reasonName(freqFullEval.reason));
+    Serial.print("]");
+    char freqFullFailReason[96];
+    FrequencyEvidenceEvaluation::buildFailReason(patternResult.freqFull, _frequencyEvidenceTuning, freqFullFailReason, sizeof(freqFullFailReason));
+    if (strcmp(freqFullFailReason, "none") != 0) {
+        Serial.print(" freqFull_fail_reason=");
+        Serial.print(freqFullFailReason);
+    }
     if (liveFrequencyEvidence != nullptr) {
         Serial.print(" liveFreq[avail=");
         Serial.print(liveFrequencyEvidence->present ? 1 : 0);

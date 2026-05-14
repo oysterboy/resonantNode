@@ -7,7 +7,7 @@ Owns the local reaction state machine for the Resonant node.
 
 Responsibilities:
 - consume PatternResult objects from the detection/classification layer
-- decide whether a pattern should trigger a chirp
+- decide whether a pattern should trigger sound output
 - track wait, refractory, idle, and self-suppression timing
 - expose behavior state and decision metadata for debug / analyzer output
 - request chirps, but never emit audio directly

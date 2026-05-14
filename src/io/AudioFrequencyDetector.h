@@ -7,6 +7,7 @@
 AudioFrequencyDetector
 
 Owns the narrow-band frequency detector around a configured tone.
+This is a concrete detector implementation, not the architecture boundary.
 
 Responsibilities:
 - measure tone presence from the recent audio sample stream
@@ -14,7 +15,7 @@ Responsibilities:
 - keep the rolling sample window and score diagnostics needed by the analyzer
 
 Does NOT:
-- decide when the node should chirp
+- decide behavior or output timing
 - own behavior state transitions
 
 File structure:

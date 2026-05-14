@@ -8,8 +8,8 @@
 Behavior
 
 - owns the state machine
-- reacts to current transient detection
-- decides when to chirp
+- reacts to PatternResult inputs
+- decides when to request sound output
 
 Does NOT:
 - know hardware details
@@ -44,6 +44,7 @@ public:
     BehaviorDecision handlePatternResult(const DetectionPipeline::PatternResult& result, unsigned long now);
     void update(unsigned long now);
     // Legacy shim: kept only for compatibility with older call sites that still feed raw transient flags.
+    // The architecture contract is PatternResult-driven.
     void update(bool transientDetected, float transientStrength, unsigned long now);
     void seedIdleSchedule(unsigned long now);
 

@@ -12,6 +12,8 @@
 
 ## Changes Since Last Commit
 
+- Added side-by-side early/full frequency evidence logging in the resonant and analyzer candidate summaries to make tonal validity failures easier to inspect without changing detector behavior.
+- Kept the current AMP/transient A-path and `requireTonal` gating unchanged while improving the visibility of candidate-window retrospective checks.
 - Normalized `docs/current-pass.md` Phase 0 so it uses `myspec.md` as the authority for roadmap wording and current architecture vocabulary.
 - Updated `src/io/AudioSignal.h` comments to describe the current signal / candidate assembly role instead of a detector wrapper.
 - Updated `src/detection/DetectionPipeline.h` comments to call out detector candidates as transitional payloads inside the pattern pipeline.

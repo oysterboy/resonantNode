@@ -210,6 +210,152 @@ ResonantBehavior
 
 These modules sit inside the broader reusable VEKTOR Node architecture.
 
+### 6.1 Shared Scaffold vs Acoustic Pattern Implementations
+
+ResonantNode should distinguish between the shared firmware scaffold and acoustic pattern implementations.
+
+The current tonal-transient implementation must not define the whole ResonantNode architecture.
+
+Shared firmware scaffold:
+
+```text
+HAL
+SoundInput
+AudioSignal
+RawSampleHistory
+SoundOutput
+Timing
+Parameters
+Commands
+State / Events
+DetectionPipeline contracts
+Analyzer support
+Behavior boundary
+```
+
+Implementation-specific acoustic strategies may define:
+
+```text
+active evidence streams
+candidate builders
+pattern detectors
+thresholds
+classifier rules
+pattern result semantics
+behavior mapping
+analyzer scoring rules
+```
+
+Examples of possible acoustic pattern implementations:
+
+```text
+TonalTransient
+PulsedChirp
+ContinuousTonalChirp
+GlassChime
+WoodBlock
+WhiteNoiseRoom
+```
+
+These should be treated as pattern/profile implementations inside the firmware scaffold, not as separate firmware architectures.
+
+### 6.2 Composition Over Inheritance
+
+Implementation-specific acoustic strategies should be composed from shared firmware objects and small strategy modules.
+
+The architecture should prefer composition over inheritance.
+
+Shared objects provide common infrastructure:
+
+```text
+SoundInput
+AudioSignal
+RawSampleHistory
+SoundOutput
+Timing
+Parameters
+Commands
+State / Events
+DetectionPipeline contracts
+Analyzer support
+```
+
+Pattern profiles select and compose implementation-specific modules:
+
+```text
+evidence extractors
+candidate builders
+pattern detectors
+thresholds
+classifier rules
+behavior mapping
+analyzer scoring
+```
+
+Avoid an inheritance-heavy model such as:
+
+```cpp
+class TonalTransientNode : public ResonantNode
+class PulsedChirpNode : public ResonantNode
+class GlassChimeNode : public ResonantNode
+```
+
+Prefer explicit composition:
+
+```cpp
+class ResonantNodeApp {
+    SoundInput soundInput;
+    AudioSignal audioSignal;
+    RawSampleHistory rawHistory;
+    SoundOutput soundOutput;
+    ResonantBehavior behavior;
+    PatternProfile profile;
+};
+```
+
+A tonal-transient profile may compose:
+
+```text
+TonalTransientProfile
+-> AmpTransientDetector
+-> FrequencyWindowProbe
+-> TonalTransientPatternDetector
+-> TonalTransientParams
+```
+
+A later pulsed-chirp profile may compose:
+
+```text
+PulsedChirpProfile
+-> TonalPulseDetector
+-> ChirpGroupBuilder
+-> PulsedChirpPatternDetector
+-> PulsedChirpParams
+```
+
+Small interfaces may be used where modules need to be interchangeable.
+
+Possible interfaces:
+
+```text
+PatternProfile
+PatternDetector
+CandidateBuilder
+EvidenceExtractor
+```
+
+But these interfaces should stay shallow.
+
+Ownership, update order, and lifecycle should remain explicit.
+
+Principle:
+
+```text
+Shared architecture = objects and contracts.
+Implementation-specific behavior = profile modules composed from those objects.
+Do not create one subclassed node architecture per acoustic pattern.
+```
+
 
 ## 7. Audio System
 
@@ -1431,6 +1577,113 @@ Important rule:
 ```text
 Behavior consumes PatternResult, not raw detector flags.
 ```
+
+---
+
+### 7.5 Acoustic Field State / Stream
+
+ResonantNode should distinguish between pattern events and broader acoustic field conditions.
+
+`PatternResult` represents a meaningful detected acoustic event.
+
+`AcousticFieldState` represents the current or recent condition of the acoustic environment.
+
+These are different inputs to behavior.
+
+```text
+PatternResult:
+    What meaningful event happened?
+
+AcousticFieldState:
+    What is the surrounding acoustic field like?
+```
+
+Behavior may consume both:
+
+```text
+PatternResult
++ AcousticFieldState
++ local timers
++ parameters
+-> behavior decision
+```
+
+Acoustic field state helps behavior make contextual decisions that are not tied to one specific detected pattern.
+
+Examples:
+
+```text
+stay quiet when the field is busy
+avoid responding during chatter
+self-initiate only after enough quiet
+suppress response during dense activity
+adapt waiting time based on recent activity
+detect whether the room is idle, active, or saturated
+```
+
+Pattern detection asks:
+
+```text
+Did this candidate match a known pattern?
+```
+
+Acoustic field state asks:
+
+```text
+How active, quiet, dense, or noisy is the local acoustic environment?
+```
+
+Do not force field context into fake pattern results.
+
+Bad:
+
+```text
+PatternResult = BUSY_ROOM
+PatternResult = CHATTER
+PatternResult = QUIET
+```
+
+Better:
+
+```text
+PatternResult = VALID_TONAL_TRANSIENT
+
+AcousticFieldState:
+    fieldActivity = busy
+    recentEventDensity = high
+    ambientLevel = elevated
+```
+
+A minimal `AcousticFieldState` may contain:
+
+```text
+ambientLevel
+activityLevel
+recentCandidateCount
+recentValidPatternCount
+recentRejectedCount
+quietMs
+busyMs
+isQuiet
+isBusy
+isChattery
+lastActivityTime
+```
+
+First implementation should be simple:
+
+```text
+ambientLevel
+activityAverage
+candidateCountLastWindow
+quietMs
+isQuiet
+isBusy
+```
+
+The field state should not directly trigger output.
+
+Behavior decides response.
 
 ---
 ## 9. Sound Output

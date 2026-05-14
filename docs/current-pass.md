@@ -1,232 +1,535 @@
-# Codex Refactor Task — ResonantBehavior Idle / Response Timing
+# ResonantNode Roadmap - Audio / Detection Architecture
 
-## Goal
+Scope: this roadmap is for the local ResonantNode firmware.
 
-Refactor behavior logic to prevent synchronized idle chirps and make idle trigger timing probabilistic, while preserving the current detection pipeline and leaving the transient response path alone.
+It is not a full VEKTOR-system roadmap.
 
-Current working baseline:
+Out of scope here:
 
-```txt
-5 nodes
-~1 m circle
-neighbor-specific pickup
-frequency matching works
-behaviorSuppressSelfChirp = 200 ms is enough
-waitAfterTransient = 100 ms
+```text
+hub scheduling
+host OSC API
+transport bindings
+full field protocol
+multi-node snapshot logic
+complete resource registry
 ```
 
-## Do not change
+This roadmap sequences implementation so the firmware can evolve from the current tonal-transient implementation toward reusable acoustic pattern profiles without turning the current detector into the whole architecture.
 
-- Audio input / MEMS code
-- BTL output code
-- frequency matching
-- detector internals
-- detector API
-- signal pipeline
-
-Keep:
-
-```txt
-AudioSignal → Detector → Behavior
-```
-
-Behavior consumes detector events only.
+When roadmap wording is ambiguous, `myspec.md` is the authority.
 
 ---
 
-## Add / organize behavior params
+## Roadmap Principle
 
-Add these params if missing:
+Do not roadmap all possible acoustic intelligence at once.
 
-```cpp
-bool idleEnabled = true;
+Roadmap the smallest stable path from current tonal transient detection toward reusable acoustic pattern profiles.
 
-uint8_t idleChirpCount = 3;
-uint16_t idleChirpMs = 100;
-uint16_t idleGapMs = 100;
+Current direction:
 
-uint32_t idleMinMs = 10000;
-uint32_t idleMaxMs = 30000;
-
-uint32_t idleBlockedAfterHeardMs = 3000;
-uint32_t idleBlockedAfterOwnEmitMs = 5000;
-
-uint8_t responseProbabilityPct = 75;
-uint16_t responseRefractoryMs = 700;
-
-uint16_t waitAfterTransientMs = 100;
-uint16_t behaviorSuppressSelfChirpMs = 150;
+```text
+stabilize current tonal transient path
+-> clean detector boundaries
+-> add frequency-first transient detection
+-> add simple acoustic field state
+-> introduce pattern profiles by composition
+-> add pulsed chirp
+-> later add other acoustic families
 ```
 
 ---
 
-## Add behavior state
+## Phase 0 - Architecture Language Freeze
 
-```cpp
-uint32_t nextIdleAtMs = 0;
-uint32_t lastHeardAtMs = 0;
-uint32_t lastOwnEmitAtMs = 0;
-uint32_t lastResponseAtMs = 0;
+Goal:
 
-bool pendingResponse = false;
-uint32_t pendingResponseAtMs = 0;
+```text
+Stop naming and responsibility drift before more code is added.
+```
+
+Authority:
+
+```text
+When roadmap wording is ambiguous, defer to myspec.md.
+```
+
+Define current terms using the myspec vocabulary:
+
+```text
+Current implementation:
+    TonalTransient / TonalPulse, not Chirp.
+
+PatternResult:
+    event meaning.
+
+AcousticFieldState:
+    acoustic context.
+
+PatternProfile:
+    composition-level bundle for an implementation-specific acoustic detection strategy, with behavior mapping.
+
+AudioSignal:
+    currently still contains signal material, raw history, and transitional candidate assembly.
+```
+
+Update current-pass documentation with the actual current flow:
+
+```text
+AudioSignal
+-> Feature Evidence
+-> Candidate / PatternCandidate
+-> PatternResult
+-> ResonantBehavior
+```
+
+If the code still uses a lower-level detector-emitted candidate internally, treat that as a transitional implementation detail under Candidate, not as a separate architecture layer.
+
+Avoid reverting to the older mental model:
+
+```text
+AudioSignal
+-> Detector
+-> Behavior
+```
+
+Current rule:
+
+```text
+Behavior consumes PatternResult, not raw detector flags or live feature states.
+```
+
+Deliverable:
+
+```text
+docs/current-pass.md or equivalent reflects the current architecture vocabulary.
 ```
 
 ---
 
-## Random seed
+## Phase 1 - Stabilize Current TonalTransient A-Path
 
-Seed once during setup:
+Goal:
 
-```cpp
-randomSeed(esp_random() ^ millis() ^ (uint32_t(nodeId) * 7919UL));
+```text
+Make the current working path reliable and inspectable.
+```
+
+Current path:
+
+```text
+AMP / transient candidate
+-> RawSampleHistory
+-> candidate-window frequency measurement
+-> ValidTonalTransient / TransientOnly / Invalid
+-> Behavior
+```
+
+Tasks:
+
+```text
+keep AMP/transient baseline frozen
+keep RawSampleHistory
+keep FrequencyWindowProbe
+improve logs around early/full frequency evidence
+confirm behavior with requireTonal = off / on
+avoid adding more detector logic into AudioSignal
+avoid relying on AudioFrequencyDetector transient flags for behavior
+```
+
+This phase validates the low-risk diagnostic path:
+
+```text
+AMP candidate defines the event window.
+Raw history provides candidate-window frequency evidence.
+```
+
+Deliverable:
+
+```text
+Known-good TonalTransient prototype.
 ```
 
 ---
 
-## Idle scheduling rule
+## Phase 2 - Detector Cleanup / Reusable Scalar Detector
 
-Add helper:
+Goal:
 
-```cpp
-void scheduleNextIdle(uint32_t now) {
-  nextIdleAtMs = now + random(idleMinMs, idleMaxMs + 1);
-}
+```text
+Clarify what "detector" means before adding more detection paths.
 ```
 
-Call it:
-- once on behavior start
-- after every own emit
-- after every heard transient
+Current issue:
 
-Key rule:
+```text
+AudioOnsetDetector:
+    mostly reusable scalar transient detector,
+    but still audio / amplitude specific in naming and usage.
 
-```txt
-Every heard transient and every own emit reschedules idle randomly.
+AudioFrequencyDetector:
+    frequency stream extractor
+    + duplicate onset/transient logic.
+
+AudioSignal:
+    signal material
+    + raw history
+    + candidate assembly.
 ```
 
-This breaks synchronized idle chirps.
+Target concepts:
 
----
+```text
+StreamExtractor:
+    produces scalar / evidence stream
 
-## On valid transient
+ScalarTransientDetector:
+    detects onset / release / transient over any scalar stream
 
-When detector reports a valid event:
+CandidateBuilder:
+    turns detector facts into candidate objects
 
-```cpp
-lastHeardAtMs = now;
-scheduleNextIdle(now);
+PatternDetector:
+    turns PatternCandidate into PatternResult
 ```
 
-Then decide probabilistic response:
+Suggested steps:
 
-```cpp
-if (now - lastResponseAtMs < responseRefractoryMs) return;
-if (now - lastOwnEmitAtMs < behaviorSuppressSelfChirpMs) return;
-
-if (random(100) < responseProbabilityPct) {
-  pendingResponse = true;
-  pendingResponseAtMs = now + waitAfterTransientMs;
-}
+```text
+2.1 Rename/comment current detector roles.
+2.2 Extract or define ScalarTransientDetector from AudioOnsetDetector.
+2.3 Keep AudioSignal candidate assembly for now.
+2.4 Later move AmpCandidateBuilder out of AudioSignal.
+2.5 Reduce AudioFrequencyDetector to FrequencyBandStreamExtractor,
+    or mark its transient logic as prototype only.
 ```
-
-Do not emit immediately unless current architecture already requires it.
-
----
-
-## In behavior update
-
-Handle pending response:
-
-```cpp
-if (pendingResponse && now >= pendingResponseAtMs) {
-  pendingResponse = false;
-
-  if (now - lastResponseAtMs >= responseRefractoryMs &&
-      now - lastOwnEmitAtMs >= behaviorSuppressSelfChirpMs) {
-    emitResponseChirp();
-  }
-}
-```
-
-Then call idle check.
-
----
-
-## Idle check
-
-```cpp
-bool canIdle(uint32_t now) {
-  if (!idleEnabled) return false;
-  if (now < nextIdleAtMs) return false;
-  if (now - lastHeardAtMs < idleBlockedAfterHeardMs) return false;
-  if (now - lastOwnEmitAtMs < idleBlockedAfterOwnEmitMs) return false;
-  return true;
-}
-```
-
-If `canIdle(now)`:
-
-```cpp
-emitIdleTriplet();
-scheduleNextIdle(now);
-```
-
----
-
-## Emit response
-
-```cpp
-void emitResponseChirp() {
-  soundOutput.chirp(100); // or existing response chirp param
-  uint32_t now = millis();
-
-  lastOwnEmitAtMs = now;
-  lastResponseAtMs = now;
-  scheduleNextIdle(now);
-}
-```
-
----
-
-## Emit idle
-
-Idle = 3 chirps:
-
-```cpp
-void emitIdleTriplet() {
-  for (uint8_t i = 0; i < idleChirpCount; i++) {
-    soundOutput.chirp(idleChirpMs);
-    delay(idleGapMs); // acceptable for now
-  }
-
-  uint32_t now = millis();
-  lastOwnEmitAtMs = now;
-  scheduleNextIdle(now);
-}
-```
-
-Non-blocking version can come later.
-
----
-
-## Success criteria
-
-- 5 nodes no longer idle almost in sync
-- idle only appears when field is quiet
-- response still happens reliably
-- no increase in self-triggering
-- current neighbor-specific pickup remains intact
-
----
-
-## Do not over-refactor
-
-This is a behavior-only change.
 
 Avoid:
-- detector changes
-- signal changes
-- output driver changes
-- new architecture layers
-- full activity model for now
+
+```text
+full AudioSignal rewrite
+adding more custom transient logic to AudioFrequencyDetector
+routing frequency detector flags directly to behavior
+```
+
+Deliverable:
+
+```text
+Reusable scalar onset/transient detection concept ready for AMP and frequency streams.
+```
+
+---
+
+## Phase 3 - Frequency-First Transient Detection
+
+Goal:
+
+```text
+Detect tonal beep/click events directly from a frequency-band evidence stream.
+```
+
+This is the C path:
+
+```text
+AudioSignal
+-> FrequencyBandStream / TargetBandEnvelope
+-> OnsetDetector
+-> TransientDetector
+-> FreqTransientCandidate
+-> PatternCandidate
+-> PatternResult
+```
+
+Reason:
+
+For tonal beeps/clicks, the target-band stream may be cleaner than broadband amplitude.
+
+It may suppress:
+
+```text
+room reflections
+mechanical body noise
+tail energy
+broadband clicks
+off-band artifacts
+```
+
+Initial use:
+
+```text
+FreqTransientCandidate = diagnostic / analyzer comparison
+```
+
+Compare against the current A-path:
+
+```text
+AMP candidate exists?
+FreqTransient exists?
+FreqTransient timing?
+FreqTransient score?
+Which one catches expected beeps better?
+Which one reduces late hits / duplicates?
+```
+
+Do not immediately make behavior depend on frequency-first candidates.
+
+Suggested sequence:
+
+```text
+3.1 Produce target-band / contrast stream.
+3.2 Feed it into reusable ScalarTransientDetector.
+3.3 Emit FreqTransientCandidate.
+3.4 Log and compare against AmpCandidate.
+3.5 Only later allow PatternResult to prefer or require frequency-first detection.
+```
+
+Deliverable:
+
+```text
+Frequency-first transient detection compared against AMP-first A-path.
+```
+
+---
+
+## Phase 4 - AcousticFieldState v0
+
+Goal:
+
+```text
+Add acoustic context without confusing it with PatternResult.
+```
+
+Difference:
+
+```text
+PatternResult:
+    What event happened?
+
+AcousticFieldState:
+    What is the surrounding acoustic field like?
+```
+
+First version should be simple:
+
+```text
+ambientLevel
+activityAverage
+candidateCountLastWindow
+quietMs
+isQuiet
+isBusy
+```
+
+Behavior may later use it for:
+
+```text
+suppress response when field is busy
+allow idle emit only after quiet
+adapt wait / refractory
+reduce response probability during dense activity
+```
+
+Do not create fake pattern results like:
+
+```text
+BUSY_ROOM
+CHATTER
+QUIET
+```
+
+These belong to `AcousticFieldState`, not `PatternResult`.
+
+Deliverable:
+
+```text
+Compact acoustic context summary available for logs and later behavior input.
+```
+
+---
+
+## Phase 5 - PatternProfile Structure
+
+Goal:
+
+```text
+Prevent the current TonalTransient implementation from becoming the whole architecture.
+```
+
+Introduce a lightweight profile concept by composition, not inheritance.
+
+Shared firmware scaffold:
+
+```text
+SoundInput
+AudioSignal
+RawSampleHistory
+SoundOutput
+Timing
+Parameters
+Commands
+State / Events
+DetectionPipeline contracts
+Analyzer support
+Behavior boundary
+```
+
+Profile-specific:
+
+```text
+evidence extractors
+candidate builders
+pattern detectors
+thresholds
+classifier rules
+behavior mapping
+analyzer scoring
+```
+
+Avoid:
+
+```cpp
+class TonalTransientNode : public ResonantNode
+class PulsedChirpNode : public ResonantNode
+class GlassChimeNode : public ResonantNode
+```
+
+Prefer:
+
+```text
+ResonantNodeApp
++ PatternProfile
++ shared objects
+```
+
+First real profile:
+
+```text
+TonalTransientProfile
+```
+
+Deliverable:
+
+```text
+Current tonal transient logic is named and bounded as one implementation profile.
+```
+
+---
+
+## Phase 6 - PulsedChirpProfile
+
+Goal:
+
+```text
+Add first real multi-event acoustic pattern family.
+```
+
+Detection model:
+
+```text
+single tonal pulse = event candidate
+pulsed chirp = temporal pattern over multiple tonal pulse candidates
+```
+
+Pipeline:
+
+```text
+TonalPulseCandidate(s)
+-> ChirpGroupBuilder
+-> PulsedChirpPatternDetector
+-> PatternResult
+```
+
+Pulsed chirp evaluation may use:
+
+```text
+pulse count
+inter-pulse gaps
+gap consistency
+total span
+per-pulse duration
+per-pulse confidence
+frequency-group consistency
+optional frequency movement across pulses
+```
+
+Do not treat pulsed chirp as one transient.
+
+Do not call current tonal transient a chirp.
+
+Deliverable:
+
+```text
+First grouped-event PatternProfile.
+```
+
+---
+
+## Phase 7 - Later Acoustic Families
+
+Keep later / volatile:
+
+```text
+continuous tonal chirp trajectory detection
+glass chime spectral / decay profile
+woodblock / knock profile
+white-noise room profile
+parallel candidate correlation
+dense-field ambiguity
+family matching
+VEKTOR pattern configuration
+```
+
+These are valid future profiles or capabilities, but they should not block stabilizing the current firmware.
+
+---
+
+## Roadmap Table
+
+| Phase | Name | Main goal | Avoid |
+|---|---|---|---|
+| 0 | Architecture language freeze | stop naming drift | new abstractions before docs catch up |
+| 1 | TonalTransient A-path stabilization | reliable current path | behavior changes from unvalidated evidence |
+| 2 | Detector cleanup | reusable scalar detector concept | full rewrite of AudioSignal |
+| 3 | Frequency-first transient detection | detect beeps on target-band stream | routing freq flags directly to behavior |
+| 4 | AcousticFieldState v0 | context input: quiet/busy/activity | fake PatternResults like BUSY_ROOM |
+| 5 | PatternProfile structure | composition-based implementation profiles | subclass-per-pattern |
+| 6 | PulsedChirpProfile | first grouped-event pattern | calling single tonal transients "chirps" |
+| 7 | Later profiles | glass/chime/noise/etc. | overgeneralizing now |
+
+---
+
+## Current Decision Summary
+
+```text
+A now:
+    AMP/transient candidate + raw-history frequency measurement.
+
+C next:
+    reusable transient detection over FrequencyBandStream.
+
+B later/volatile:
+    parallel AmpCandidate + FreqCandidate correlation.
+```
+
+Tradeoff summary:
+
+```text
+A = most RAM, least architecture disruption
+B = most bookkeeping, highest premature-abstraction risk
+C = best long-term stream architecture, more refactor cost
+```
+
+Recommended sequence:
+
+```text
+A now
+C next
+B later if needed
+```
+
+One-line roadmap:
+
+```text
+Stabilize the current TonalTransient implementation, clean detector boundaries just enough, add frequency-first transient detection, add simple acoustic field context, then introduce PatternProfiles by composition before adding pulsed chirp or other acoustic families.
+```

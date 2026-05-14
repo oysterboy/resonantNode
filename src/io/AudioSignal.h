@@ -128,7 +128,7 @@ private:
 /*
 AudioSignal
 
-Owns the continuous signal interpretation layer and the current AMP/transient detector wrapper:
+Owns the continuous signal interpretation layer and the current signal / candidate assembly layer:
 - receives raw samples from the source
 - tracks a slow baseline for the quiet floor
 - exposes centered and smoothed values for detectors
@@ -136,7 +136,7 @@ Owns the continuous signal interpretation layer and the current AMP/transient de
 
 Does not:
 - decide when the node should chirp
-- detect explicit transients
+- own pattern meaning
 - own higher-level behavior or pattern-classification decisions
 */
 

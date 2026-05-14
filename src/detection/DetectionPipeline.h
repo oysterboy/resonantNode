@@ -12,6 +12,7 @@ Responsibilities:
 - translate detector candidates into pattern candidates/results
 - carry transient and frequency evidence through the pipeline
 - classify pattern type and rejection reason strings for logging/debugging
+- keep detector-emitted candidates as a transitional payload type, not a new architecture layer
 
 Does NOT:
 - read audio directly

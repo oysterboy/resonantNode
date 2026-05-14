@@ -12,6 +12,10 @@
 
 ## Changes Since Last Commit
 
+- Normalized `docs/current-pass.md` Phase 0 so it uses `myspec.md` as the authority for roadmap wording and current architecture vocabulary.
+- Updated `src/io/AudioSignal.h` comments to describe the current signal / candidate assembly role instead of a detector wrapper.
+- Updated `src/detection/DetectionPipeline.h` comments to call out detector candidates as transitional payloads inside the pattern pipeline.
+
 ## 2026-05-13 - Detector ownership and RB timing cleanup
 
 ### Changed

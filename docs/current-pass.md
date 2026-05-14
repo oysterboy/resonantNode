@@ -62,10 +62,10 @@ Current implementation:
     TonalTransient / TonalPulse, not Chirp.
 
 PatternResult:
-    event meaning.
+    behavior-facing event meaning.
 
 AcousticFieldState:
-    acoustic context.
+    acoustic context separate from PatternResult.
 
 PatternProfile:
     composition-level bundle for an implementation-specific acoustic detection strategy, with behavior mapping.

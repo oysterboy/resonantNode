@@ -191,7 +191,7 @@ FrequencyBandStreamExtractor:
     derives a frequency-band evidence stream from raw samples
 
 ScalarTransientDetector:
-    detects onset / release / transient over any scalar stream
+    shared onset / release / transient core for any scalar stream
 
 CandidateBuilder:
     turns detector facts into candidate objects
@@ -241,13 +241,58 @@ Note:
 ```text
 Do not rename the public detector / candidate classes yet.
 Pass 3 should prove the stream architecture first; renames (also see pass 2) can wait until the shape is stable.
+ScalarTransientDetector is the shared core we use to reduce duplicated transient logic in the wrappers, not a new permanent public detector layer.
+```
+
+Pass 3 fix scope:
+
+```text
+Keep FrequencyBandStreamExtractor as-is.
+liveFreq remains the live 64-sample rolling frequency stream.
+Keep probe64 as diagnostic-only.
+
+Primary goal:
+Make live frequency detection measurable as a future frequency-first path.
+
+Do NOT turn retrospective scanning into the detector.
+Do NOT use retrospective scan results for candidate_valid, tonal_valid, behavior_eligible, PatternResult validity, or behavior decisions.
+
+Add a diagnostic-only live-frequency gate:
+- track first_seen, peak, release, score, contrast, and hold duration
+- use live-only thresholds, separate from retrospective freqEarly/freqFull tuning
+- keep AMP behavior unchanged
+- keep probe64 diagnostic-only
+
+The live-frequency proof result is:
+- liveFreq can independently produce a timestamped event
+- retrospective qualification stays diagnostic-only
+- the next step is to shape a stable FrequencyCandidate from the live stream
+```
+
+Expected output:
+SEQ should clearly compare:
+AMP candidate timing
+liveFreq first/best timing
+retrospective best 64-sample probe timing
+
+Phase 3 outcome:
+
+```text
+Live frequency eventing is proven.
+Next: stabilize the live FrequencyCandidate shape and keep AMP only as the comparison baseline.
+```
+
+Decision rule:
+If liveFreq has stable threshold crossings near AMP onset/peak, continue toward a causal frequency-first detector.
+If retrospective best matches liveFreq but old freqEarly/freqFull fails, old candidate-window summary is too broad/wrong.
+If liveFreq and retrospective 64-sample scan disagree, inspect buffer mapping, sample indexing, Goertzel/bin config, and neighbor-band calculation.
 ```
 
 This is the C path:
 
 ```text
 AudioSignal
--> FrequencyBandStream / TargetBandEnvelope
+-> FrequencyBandStreamExtractor / TargetBandEnvelope
 -> OnsetDetector
 -> TransientDetector
 -> FreqTransientCandidate
@@ -258,6 +303,7 @@ AudioSignal
 Reason:
 
 For tonal beeps/clicks, the target-band stream may be cleaner than broadband amplitude.
+This stream is live and separate from `FrequencyWindowProbe`, which remains a retrospective candidate-window helper.
 
 It may suppress:
 
@@ -312,7 +358,27 @@ Deliverable:
 ```text
 Frequency-first transient detection compared against AMP-first A-path.
 ```
+---
 
+## Phase 3B - 
+
+Use the comparison from phase 3  only until you can answer:
+Can liveFreq independently produce a stable timestamped event?
+
+Then retire most of the comparison scaffolding.
+
+Next target should be:
+
+FrequencyCandidate {
+  first_cross_ms
+  peak_ms
+  peak_score
+  peak_contrast
+  duration_or_hold_ms
+  release_ms
+}
+
+Then compare that to AMP only for validation.
 ---
 
 ## Phase 4 - AcousticFieldState v0

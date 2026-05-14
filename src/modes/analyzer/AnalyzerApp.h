@@ -199,15 +199,29 @@ private:
             float acceptedTransientOnsetStrength = 0.0f;
             float acceptedTransientReleaseStrength = 0.0f;
             float acceptedAmbientBaseline = 0.0f;
+            uint64_t acceptedTransientOnsetSample = 0;
+            uint64_t acceptedTransientPeakSample = 0;
+            uint64_t acceptedTransientReleaseSample = 0;
+            unsigned long acceptedTransientPeakMs = 0;
+            unsigned long acceptedTransientReleaseMs = 0;
             DetectionPipeline::FrequencyEvidence acceptedFrequencyEvidence = {};
             DetectionPipeline::FrequencyEvidence acceptedFrequencyEvidenceFull = {};
             unsigned long acceptedFrequencyProcessedAtMs = 0;
+            DetectionPipeline::FrequencyEvidence acceptedParityProbe64 = {};
+            unsigned long acceptedParityProbe64ProcessedAtMs = 0;
             unsigned long duplicateTransientMs = 0;
             float duplicateTransientStrength = 0.0f;
             unsigned long duplicateTransientDurationMs = 0;
+            uint64_t duplicateTransientOnsetSample = 0;
+            uint64_t duplicateTransientPeakSample = 0;
+            uint64_t duplicateTransientReleaseSample = 0;
+            unsigned long duplicateTransientPeakMs = 0;
+            unsigned long duplicateTransientReleaseMs = 0;
             DetectionPipeline::FrequencyEvidence duplicateFrequencyEvidence = {};
             DetectionPipeline::FrequencyEvidence duplicateFrequencyEvidenceFull = {};
             unsigned long duplicateFrequencyProcessedAtMs = 0;
+            DetectionPipeline::FrequencyEvidence duplicateParityProbe64 = {};
+            unsigned long duplicateParityProbe64ProcessedAtMs = 0;
             long duplicateDeltaFromPrimaryMs = 0;
             bool duplicateOriginWindow = false;
             char duplicateReason[32] = "none";
@@ -259,11 +273,52 @@ private:
             bool peakActiveAtEnd = false;
         };
 
+        struct LiveFrequencyDiagnostics {
+            bool present = false;
+            bool liveFrequencyOnly = false;
+            bool firstThresholdCrossingSeen = false;
+            bool wouldProduceCandidate = false;
+            bool candidateActive = false;
+            bool candidateEmitted = false;
+            bool candidateClosed = false;
+            unsigned long firstThresholdCrossingMs = 0;
+            uint64_t firstThresholdCrossingSample = 0;
+            unsigned long candidateFirstSeenMs = 0;
+            uint64_t candidateFirstSeenSample = 0;
+            unsigned long candidatePeakMs = 0;
+            uint64_t candidatePeakSample = 0;
+            unsigned long candidateReleaseMs = 0;
+            uint64_t candidateReleaseSample = 0;
+            unsigned long candidateHoldWindows = 0;
+            unsigned long candidateHoldMs = 0;
+            unsigned long candidateLastMatchedMs = 0;
+            float thresholdScore = 0.0f;
+            float thresholdContrast = 0.0f;
+            bool readyOk = false;
+            bool bestScoreOk = false;
+            bool bestContrastOk = false;
+            bool gateOpen = false;
+            float candidatePeakScore = 0.0f;
+            float candidatePeakContrast = 0.0f;
+            unsigned long candidatePeakWindowSampleCount = 0;
+            unsigned long bestObservedAtMs = 0;
+            uint64_t bestObservedSample = 0;
+            float bestScore = 0.0f;
+            float bestContrast = 0.0f;
+            unsigned long bestWindowSampleCount = 0;
+            DetectionPipeline::FrequencyEvidence bestEvidence = {};
+            DetectionPipeline::FrequencyEvidence candidateEvidence = {};
+            char candidateState[16] = "none";
+            char suppressReason[48] = "none";
+            char wouldCandidateReason[48] = "none";
+        };
+
         // Sequence-test configuration and execution state.
         bool active = false;
         bool quiet = false;
         bool showDetails = true;
         bool externalEmitter = false;
+        bool liveFrequencyOnly = false;
         bool progressLineStarted = false;
         unsigned long totalTrials = 100;
         unsigned long periodMs = 2500;
@@ -336,6 +391,7 @@ private:
         unsigned long emptySourceLoops = 0;
         unsigned long totalHitStrengthScaled = 0;
         unsigned long totalHitDurationMs = 0;
+        LiveFrequencyDiagnostics liveFrequency;
 
         unsigned long tonalExpected = 0;
         unsigned long transientOnlyExpected = 0;
@@ -396,10 +452,11 @@ private:
     void printBaseHints() const;
 
     // Sequence-test workflows.
-    void startSequenceTest(unsigned long totalTrials, unsigned long periodMs, unsigned long windowEndOffsetMs, unsigned long toneHz, unsigned long durationMs, bool quiet = false, bool showDetails = true, const char* setupLabel = nullptr, uint32_t logFlags = DEFAULT_ANALYZER_LOG_FLAGS, bool sampleDumpEnabled = false, unsigned long sampleDumpFirstTrials = 2, unsigned long sampleDumpEveryNth = 0, unsigned long sampleDumpLeadMs = 50, unsigned long sampleDumpTailMs = 800, unsigned long sampleDumpStepMs = 1, unsigned long sampleDumpMaxRows = 5000, bool externalEmitter = false);
+    void startSequenceTest(unsigned long totalTrials, unsigned long periodMs, unsigned long windowEndOffsetMs, unsigned long toneHz, unsigned long durationMs, bool quiet = false, bool showDetails = true, const char* setupLabel = nullptr, uint32_t logFlags = DEFAULT_ANALYZER_LOG_FLAGS, bool sampleDumpEnabled = false, unsigned long sampleDumpFirstTrials = 2, unsigned long sampleDumpEveryNth = 0, unsigned long sampleDumpLeadMs = 50, unsigned long sampleDumpTailMs = 800, unsigned long sampleDumpStepMs = 1, unsigned long sampleDumpMaxRows = 5000, bool liveFrequencyOnly = false, bool externalEmitter = false);
     void stopSequenceTest();
     void updateSequenceTest(unsigned long now);
     void handleSequenceTransient(unsigned long now);
+    void updateSequenceLiveFrequencyDiagnostics(unsigned long now);
     void finalizeSequenceTrial(unsigned long now);
     void printCaptureSummary() const;
     void startCaptureSession(unsigned long totalTrials, unsigned long periodMs, unsigned long windowEndOffsetMs, unsigned long toneHz, unsigned long durationMs, bool quiet = false);
@@ -422,6 +479,7 @@ private:
     void printSequenceSummary() const;
     void recordSequenceClassifierOutcome(const DetectionPipeline::PatternResult& patternResult, bool duplicateCandidate, bool unexpectedCandidate);
     void handleSequenceCandidate(const DetectionPipeline::PatternResult& patternResult, unsigned long queueDepthBeforeDrain, const DetectionPipeline::FrequencyEvidence* liveFrequencyEvidence = nullptr);
+    DetectionPipeline::FrequencyEvidence scanSequenceFrequencyParity64(const DetectionPipeline::PatternCandidate& patternCandidate, unsigned long observedAtMs) const;
     void updateSequenceAmbientStats();
 
     // Sequence sample capture helpers.
@@ -475,6 +533,7 @@ private:
     SequenceTest _sequenceTest;
     CaptureSession _captureSession;
     unsigned long _rawCaptureSequenceId = 0;
+    FrequencyEvidenceEvaluation::Values _liveFrequencyEvidenceTuning = {};
 
     // Print throttling for the VAL view.
     mutable unsigned long _lastPrintMs = 0;

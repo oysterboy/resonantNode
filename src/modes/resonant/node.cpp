@@ -1018,12 +1018,14 @@ const char* Node::rbLogModeName() const {
 DetectionPipeline::FrequencyEvidence Node::captureFrequencyEvidence() const {
     DetectionPipeline::FrequencyEvidence evidence;
     evidence.observedAtMs = millis();
+    const bool present = _audioFrequencyDetector.streamWindowReady();
     const float totalEnergy = _audioFrequencyDetector.lastTotalEnergy();
-    const bool present = totalEnergy > 0.0f;
 
     evidence.present = present;
     evidence.matched = false;
     evidence.targetHz = present ? _audioFrequencyDetector.targetFrequencyHz() : 0;
+    evidence.windowSampleCount = _audioFrequencyDetector.streamSampleCount();
+    evidence.windowAvailable = present;
     evidence.score = _audioFrequencyDetector.lastFrequencyScore();
     evidence.confidence = 0.0f;
     evidence.targetPower = _audioFrequencyDetector.lastTargetPower();
@@ -1174,6 +1176,10 @@ void Node::logCandidate(const DetectorCandidate& candidate, const DetectionPipel
     if (liveFrequencyEvidence != nullptr) {
         Serial.print(" liveFreq[avail=");
         Serial.print(liveFrequencyEvidence->present ? 1 : 0);
+        Serial.print(" ready=");
+        Serial.print(liveFrequencyEvidence->windowAvailable ? 1 : 0);
+        Serial.print(" samples=");
+        Serial.print(liveFrequencyEvidence->windowSampleCount);
         Serial.print(" score=");
         Serial.print(liveFrequencyEvidence->score, 1);
         Serial.print(" target=");

@@ -9,7 +9,7 @@ Owns the lightweight pattern-shaping layer between detector output and
 behavior-level decisions.
 
 Responsibilities:
-- translate detector candidates into pattern candidates/results
+- translate detector candidates from stream-extractor/detector stages into pattern candidates/results
 - carry transient and frequency evidence through the pipeline
 - classify pattern type and rejection reason strings for logging/debugging
 - keep detector-emitted candidates as a transitional payload type, not a new architecture layer

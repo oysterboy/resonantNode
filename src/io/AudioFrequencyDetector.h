@@ -1,29 +1,32 @@
 #pragma once
 
 #include "io/AudioSignal.h"
+#include "FrequencyBandStreamExtractor.h"
+#include "ScalarTransientDetector.h"
 #include "../AudioDebugConfig.h"
 
 /*
 AudioFrequencyDetector
 
-Owns the narrow-band frequency detector around a configured tone.
-This is a concrete detector implementation, not the architecture boundary.
+Owns the narrow-band frequency stream facade around a live frequency-band
+stream extractor and the reusable ScalarTransientDetector core.
 
 Responsibilities:
-- measure tone presence from the recent audio sample stream
-- derive onset and transient-style events from frequency score changes
-- keep the rolling sample window and score diagnostics needed by the analyzer
+- route centered samples into the frequency-band stream extractor
+- forward the stream score into the scalar transient core
+- expose live frequency diagnostics needed by the analyzer
 
 Does NOT:
 - decide behavior or output timing
 - own behavior state transitions
+- own the scalar transient implementation core
+- own retrospective candidate-window probing
+- own the architecture contract for StreamExtractor / ScalarTransientDetector
 
 File structure:
 - public lifecycle / tuning / inspection
-- onset stage state
-- transient stage state
-- frequency-score configuration
-- diagnostics and sample window state
+- extractor bridge
+- core detector bridge
 */
 
 class AudioFrequencyDetector {
@@ -68,60 +71,11 @@ public:
     unsigned long targetFrequencyHz() const;
     unsigned long sampleRateHz() const;
     unsigned long windowSizeSamples() const;
+    unsigned long streamSampleCount() const;
+    bool streamWindowReady() const;
 
 private:
-    void updateOnsetStage(unsigned long now, float score, bool aboveAttackThreshold, bool onsetCooldownElapsed);
-    void updateTransientStage(unsigned long now, float score, bool aboveReleaseThreshold);
-    void printTransientStatsIfDue(unsigned long now);
-    float computeFrequencyScore();
-    float computeGoertzelPowerAtFrequency(float frequencyHz) const;
-    void pushSample(int sample);
-
     AudioSignal& _audioSignal;
-
-    // ONSET STAGE
-    bool _onsetDetected = false;
-    float _onsetStrength = 0.0f;
-    unsigned long _lastOnsetMs = 0;
-
-    float _onsetDetectionThreshold = 120.0f;
-    float _onsetReleaseThreshold = 90.0f;
-    unsigned long _cooldownAfterOnsetMs = 500;
-
-    // TRANSIENT STAGE
-    bool _transientDetected = false;
-    float _transientStrength = 0.0f;
-    unsigned long _transientDurationMs = 0;
-    bool _peakActive = false;
-    unsigned long _peakStartedMs = 0;
-    unsigned long _releaseCandidateStartedMs = 0;
-    float _peakStrength = 0.0f;
-
-    unsigned long _minTransientDurationMs = 0;
-    unsigned long _maxTransientDurationMs = 120;
-    float _minTransientPeakStrength = 0.0f;
-    unsigned long _releaseDebounceMs = 20;
-
-    // Frequency score configuration.
-    unsigned long _targetFrequencyHz = 3200;
-    unsigned long _sampleRateHz = 16000;
-    unsigned long _windowSizeSamples = 64;
-
-    // Detector stats / diagnostics.
-    unsigned long _lastStatsPrintMs = 0;
-    unsigned long _statsStartMs = 0;
-    unsigned long _peakAcceptedCount = 0;
-    unsigned long _statsPrintIntervalMs = 10000;
-    unsigned long _expectedTransientPeriodMs = 2000;
-    bool _diagnosticsEnabled = AUDIO_VERBOSE_DEBUG;
-    float _lastFrequencyScore = 0.0f;
-    float _lastTargetPower = 0.0f;
-    float _lastNeighborPower = 0.0f;
-    float _lastTotalEnergy = 0.0f;
-    float _lastSpectralContrast = 0.0f;
-
-    static constexpr unsigned long kMaxWindowSizeSamples = 128;
-    int _sampleBuffer[kMaxWindowSizeSamples] = {};
-    unsigned long _sampleCount = 0;
-    unsigned long _sampleWriteIndex = 0;
+    FrequencyBandStreamExtractor _streamExtractor;
+    ScalarTransientDetector _transientDetector;
 };

@@ -131,6 +131,7 @@ inline void classifyPatternResult(DetectionPipeline::PatternResult& result, cons
     if (!result.candidateValid) {
         result.freq = result.candidate.frequency;
         result.freqFull = result.candidate.frequencyFull;
+        result.source = DetectionPipeline::PatternSource::ComparisonOnly;
         result.type = DetectionPipeline::PatternType::Invalid;
         result.reasonCode = DetectionPipeline::PatternReasonCode::DetectorRejected;
         result.rejectReason = DetectionPipeline::PatternRejectReason::NoCandidate;
@@ -148,6 +149,9 @@ inline void classifyPatternResult(DetectionPipeline::PatternResult& result, cons
     result.freq.score = eval.score;
     result.freq.spectralContrast = eval.contrast;
     result.freqFull = result.candidate.frequencyFull;
+    result.source = eval.matched
+        ? DetectionPipeline::PatternSource::FrequencyPrimary
+        : DetectionPipeline::PatternSource::AmpFallback;
     result.tonalValid = eval.matched;
     result.behaviorEligible = result.candidateValid && result.tonalValid;
     result.rejectReason = rejectReasonFromEvaluation(eval.reason);

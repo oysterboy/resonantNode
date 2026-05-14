@@ -360,25 +360,313 @@ Frequency-first transient detection compared against AMP-first A-path.
 ```
 ---
 
-## Phase 3B - 
+## Phase 3B - Successful
 
-Use the comparison from phase 3  only until you can answer:
-Can liveFreq independently produce a stable timestamped event?
+Goal:
 
-Then retire most of the comparison scaffolding.
+```text
+Live frequency eventing is proven and stable enough to treat as a FrequencyCandidate shape.
+```
 
-Next target should be:
+Keep:
 
+```text
+AMP behavior unchanged
+probe64 diagnostic-only
+FrequencyWindowProbe retrospective-only
+AMP path as comparison baseline only
+```
+
+Stable live candidate shape:
+
+```text
 FrequencyCandidate {
   first_cross_ms
   peak_ms
+  release_ms
+  duration_or_hold_ms
   peak_score
   peak_contrast
-  duration_or_hold_ms
-  release_ms
+  valid
+  reject_reason
 }
+```
 
-Then compare that to AMP only for validation.
+Deliverable:
+
+```text
+One compact SEQ log comparing FrequencyCandidate timing to AMP timing.
+```
+
+After this pass:
+
+```text
+do targeted pass 2 cleanup
+keep ScalarTransientDetector as shared internal core
+clarify AudioFrequencyDetector as the live frequency stream owner
+remove or quarantine duplicated transient logic
+```
+
+Recommended tests:
+
+```text
+1. SEQ 100 trials, same physical setup
+   Check: freq_valid rate, peak timing, duration/hold, reject reasons.
+
+2. Compare FREQ vs AMP
+   Check: freq_peak near AMP peak, not mostly late/tail.
+
+3. Distance ladder
+   30 / 50 / 70 cm
+   Check: candidate stability and score/contrast ranges.
+
+4. No-sound / quiet test
+   Check: no false FrequencyCandidate spam.
+
+5. Behavior unchanged test
+   Check: behavior still follows old AMP/TonalTransient path, not FrequencyCandidate.
+```
+---
+
+## Phase 3C - Cleanup & Promote FrequencyCandidate to Primary Candidate Path
+
+Context:
+Phase 3B proved that liveFreq can independently produce stable timestamped frequency events across tested distances.
+AMP is distance/placement fragile.
+FrequencyCandidate should now become the primary tonal event candidate source.
+
+Goal:
+Make the live frequency path the primary source for tonal transient / tonal pulse PatternResults.
+
+Core architecture rule:
+Behavior consumes PatternResult only.
+Behavior must not consume FrequencyCandidate, raw liveFreq flags, or detector flags directly.
+
+Target flow:
+liveFreq / FrequencyBandStreamExtractor
+-> FrequencyCandidate
+-> PatternCandidate
+-> PatternResult{type=valid_tonal_transient}
+-> ResonantBehavior
+
+Keep:
+- AMP path available as comparison / fallback.
+- probe64 diagnostic-only.
+- freqEarly / freqFull / FrequencyWindowProbe retrospective diagnostic-only.
+- AudioSignal transitional for now.
+- Existing behavior policy unchanged.
+
+Do not:
+- route FrequencyCandidate directly to behavior
+- use probe64 to create candidates
+- use freqEarly/freqFull as primary validity source
+- require both AMP and FREQ to be valid
+- implement complex Amp/Freq correlation
+- rewrite all of AudioSignal
+- move all candidate assembly out of AudioSignal
+- introduce PatternProfile
+- change behavior probability / idle policy
+- hide behavior changes inside this refactor
+
+FrequencyCandidate shape:
+Use this or equivalent:
+
+struct FrequencyCandidate {
+  bool valid;
+  const char* rejectReason;
+
+  uint32_t firstCrossMs;
+  uint32_t peakMs;
+  uint32_t releaseMs;
+
+  uint16_t durationOrHoldMs;
+
+  float peakScore;
+  float peakContrast;
+};
+
+Primary / fallback policy:
+Primary:
+    valid FrequencyCandidate
+
+Fallback:
+    valid AMP candidate with retrospective tonal qualification
+
+Conflict:
+    prefer FrequencyCandidate timing
+    log AMP/FREQ delta
+
+PatternResult source labels:
+Logs should clearly show one of:
+
+source=frequency_primary
+source=amp_fallback
+source=comparison_only
+
+Compact comparison log:
+Include:
+
+FREQ:
+    valid
+    firstCrossMs
+    peakMs
+    releaseMs
+    durationOrHoldMs
+    peakScore
+    peakContrast
+    rejectReason
+
+AMP:
+    present
+    onsetMs
+    peakMs
+    releaseMs
+    durationMs
+    strength
+
+DELTA:
+    freqPeakMinusAmpPeakMs
+
+Phase 2 cleanup inside 3C:
+Only do targeted, low-risk naming cleanup.
+
+Allowed:
+- comments
+- log labels
+- aliases
+- low-risk internal helper renames
+- mark old transient logic as prototype/deprecated where appropriate
+
+Clarify these roles in comments/docs/logs:
+
+AudioFrequencyDetector:
+    current role is frequency-band stream extraction plus prototype event gating.
+
+FrequencyBandStreamExtractor:
+    target role is live scalar/spectral evidence stream producer.
+
+FrequencyCandidate:
+    timestamped event candidate from live frequency evidence.
+
+AmpCandidate:
+    amplitude-envelope comparison/fallback candidate.
+
+ScalarTransientDetector:
+    shared onset/release/transient core for scalar streams.
+
+Important re Phase 2 items 2.4 / 2.5:
+Do not fully execute 2.4 or 2.5 inside this pass unless the change is trivial and low-risk.
+
+For 2.4:
+Keep AMP candidate assembly where it currently lives for now.
+Clarify it as AMP fallback/comparison.
+After Phase 3C passes, AmpCandidateBuilder may be extracted from AudioSignal.
+
+For 2.5:
+Do not perform a broad rename from AudioFrequencyDetector to FrequencyBandStreamExtractor yet.
+In this pass, only clarify roles with comments, aliases, and log labels.
+Mark duplicated transient logic as prototype/deprecated if appropriate.
+After Phase 3C passes, reduce AudioFrequencyDetector toward:
+
+    FrequencyBandStreamExtractor
+    + FrequencyCandidateBuilder / live frequency gate
+
+Acceptance criteria:
+- FrequencyCandidate can produce the primary PatternResult path.
+- AMP can still produce fallback PatternResults if frequency is absent.
+- Behavior still receives only PatternResult.
+- Logs clearly show frequency_primary vs amp_fallback.
+- probe64 / freqEarly / freqFull remain diagnostic-only.
+- No duplicate candidate spike appears.
+- No behavior policy change is introduced.
+
+After implementation, run:
+1. SEQ 100 at 50cm.
+2. SEQ spot check at 70cm or 90cm.
+3. Quiet/no-sound test.
+
+Expected:
+- 50cm: frequency_primary dominates, no duplicate spike.
+- 70/90cm: frequency_primary recovers events AMP would miss.
+- quie
+
+
+---
+## Implement Phase 3D: Candidate Builder Extraction / Detection Ownership Cleanup.
+
+Goal:
+Clean the detection architecture now that Phase 3C proved frequency-primary detection.
+
+Main architecture target:
+AudioSignal should become signal/history owner, not candidate owner.
+
+Target ownership:
+- AudioSignal:
+    raw samples
+    baseline / centered signal
+    RawSampleHistory
+    latest block/sample metadata
+    no long-term candidate assembly
+
+- AmpCandidateBuilder:
+    owns old AMP onset/transient candidate state
+    uses amplitude envelope / AudioOnsetDetector / ScalarTransientDetector path
+    produces AmpCandidate for fallback/comparison
+
+- FrequencyBandStreamExtractor:
+    owns live frequency evidence stream only
+
+- FrequencyCandidateBuilder:
+    owns live frequency event state
+    produces FrequencyCandidate as primary tonal candidate source
+
+- DetectionPipeline / PatternDetector:
+    converts FrequencyCandidate or AmpCandidate into PatternCandidate / PatternResult
+
+- ResonantBehavior:
+    continues consuming PatternResult only
+
+Do:
+1. Move FrequencyCandidate type out of AnalyzerApp into shared detection code.
+2. Create FrequencyCandidateBuilder or FrequencyCandidateSource.
+3. Move live frequency candidate creation out of AnalyzerApp / diagnostic-local state.
+4. Extract AMP candidate assembly from AudioSignal into AmpCandidateBuilder if feasible in this pass.
+5. If full AMP extraction is too large, at least create AmpCandidateBuilder and move the active candidate-state variables/methods there.
+6. Reduce AudioSignal to signal material + raw history + block/sample access.
+7. Reduce AudioFrequencyDetector toward:
+       FrequencyBandStreamExtractor
+       + FrequencyCandidateBuilder
+   Do not keep AudioFrequencyDetector as the long-term conceptual owner.
+8. Make PatternResult source reflect actual candidate origin:
+       source=frequency_primary when built from FrequencyCandidate
+       source=amp_fallback when built from AmpCandidate
+       source=comparison_only for diagnostics only
+9. Keep probe64 / freqEarly / freqFull diagnostic-only.
+
+Do not:
+- add AcousticFieldState yet
+- change behavior probability
+- change idle policy
+- route FrequencyCandidate directly to behavior
+- require AMP and FREQ correlation
+- tune thresholds
+- remove AMP fallback
+- rewrite unrelated modes
+
+Acceptance:
+- AudioSignal no longer owns primary candidate assembly.
+- FrequencyCandidate is a shared architecture object, not analyzer-local.
+- FrequencyCandidateBuilder creates the primary candidate.
+- AMP fallback/comparison still works.
+- ResonantBehavior still receives PatternResult only.
+- Logs clearly show actual source origin.
+- No duplicate spike.
+- Quiet false events do not increase.
+
+Validation:
+1. SEQ 40–50 at 50cm.
+2. SEQ 40–50 at 90cm.
+3. Quiet 30–60s.
 ---
 
 ## Phase 4 - AcousticFieldState v0
@@ -595,7 +883,7 @@ A now:
     AMP/transient candidate + raw-history frequency measurement.
 
 C next:
-    reusable transient detection over FrequencyBandStream.
+    promote FrequencyCandidate to the primary tonal event candidate path.
 
 B later/volatile:
     parallel AmpCandidate + FreqCandidate correlation.
@@ -613,7 +901,7 @@ Recommended sequence:
 
 ```text
 A now
-C next
+3C next
 B later if needed
 ```
 

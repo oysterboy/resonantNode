@@ -274,6 +274,23 @@ private:
         };
 
         struct LiveFrequencyDiagnostics {
+            struct FrequencyCandidate {
+                bool present = false;
+                bool valid = false;
+                unsigned long firstCrossMs = 0;
+                uint64_t firstCrossSample = 0;
+                unsigned long peakMs = 0;
+                uint64_t peakSample = 0;
+                unsigned long releaseMs = 0;
+                uint64_t releaseSample = 0;
+                unsigned long durationOrHoldMs = 0;
+                unsigned long holdWindows = 0;
+                float peakScore = 0.0f;
+                float peakContrast = 0.0f;
+                unsigned long peakWindowSampleCount = 0;
+                char rejectReason[48] = "none";
+            };
+
             bool present = false;
             bool liveFrequencyOnly = false;
             bool firstThresholdCrossingSeen = false;
@@ -281,6 +298,7 @@ private:
             bool candidateActive = false;
             bool candidateEmitted = false;
             bool candidateClosed = false;
+            unsigned long candidateRefractoryUntilMs = 0;
             unsigned long firstThresholdCrossingMs = 0;
             uint64_t firstThresholdCrossingSample = 0;
             unsigned long candidateFirstSeenMs = 0;
@@ -311,6 +329,7 @@ private:
             char candidateState[16] = "none";
             char suppressReason[48] = "none";
             char wouldCandidateReason[48] = "none";
+            FrequencyCandidate frequencyCandidate = {};
         };
 
         // Sequence-test configuration and execution state.

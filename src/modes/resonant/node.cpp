@@ -133,6 +133,8 @@ void logCandidateSummary(unsigned long candidateNumber, const DetectorCandidate&
     Serial.print(candidate.peakStrength, 1);
     Serial.print(" pattern=");
     Serial.print(DetectionPipeline::patternTypeName(patternResult.type));
+    Serial.print(" source=");
+    Serial.print(DetectionPipeline::patternSourceName(patternResult.source));
     Serial.print(" class=");
     Serial.print(patternResult.candidateValid ? "valid" : "invalid");
     Serial.println();
@@ -1086,6 +1088,8 @@ void Node::logCandidate(const DetectorCandidate& candidate, const DetectionPipel
     Serial.print(candidate.audioOverflowDuringCandidate ? "overflow" : "ok");
     Serial.print(" pattern=");
     Serial.print(DetectionPipeline::patternTypeName(patternResult.type));
+    Serial.print(" source=");
+    Serial.print(DetectionPipeline::patternSourceName(patternResult.source));
     Serial.print(" candidate_class=");
     Serial.print(candidateClass);
     Serial.print(" candidate_valid=");

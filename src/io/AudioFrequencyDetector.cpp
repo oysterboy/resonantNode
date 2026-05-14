@@ -12,6 +12,15 @@ AudioFrequencyDetector::AudioFrequencyDetector(AudioSignal& audioSignal)
     _streamExtractor.setSampleRateHz(16000);
     _streamExtractor.setWindowSizeSamples(64);
     _transientDetector.setDiagnosticsLabel("EVT freq");
+    // Frequency scores live on a very different scale than the amplitude path,
+    // so keep the scalar detector tuned for the frequency stream by default.
+    _transientDetector.setOnsetDetectionThreshold(10000.0f);
+    _transientDetector.setOnsetReleaseThreshold(9000.0f);
+    _transientDetector.setCooldownAfterOnsetMs(300);
+    _transientDetector.setMinTransientDurationMs(50);
+    _transientDetector.setMaxTransientDurationMs(500);
+    _transientDetector.setMinTransientPeakStrength(10000.0f);
+    _transientDetector.setReleaseDebounceMs(20);
 }
 
 void AudioFrequencyDetector::begin() {

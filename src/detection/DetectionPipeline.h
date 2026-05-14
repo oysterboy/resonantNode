@@ -49,6 +49,12 @@ enum class PatternReasonCode {
     UnsupportedPattern,
 };
 
+enum class PatternSource {
+    ComparisonOnly,
+    AmpFallback,
+    FrequencyPrimary,
+};
+
 enum class PatternRejectReason {
     None,
     NoCandidate,
@@ -134,6 +140,7 @@ struct PatternResult {
     PatternType type = PatternType::None;
     PatternReasonCode reasonCode = PatternReasonCode::None;
     PatternRejectReason rejectReason = PatternRejectReason::None;
+    PatternSource source = PatternSource::ComparisonOnly;
     float confidence = 0.0f;
     unsigned long processedAtMs = 0;
     PatternCandidate candidate = {};
@@ -185,6 +192,7 @@ inline PatternCandidate makePatternCandidate(const DetectorCandidate& in) {
 // Initialize a pattern result from a detector candidate and optional frequency evidence.
 inline bool processDetectorCandidate(const DetectorCandidate& in, PatternResult& out, unsigned long processedAtMs) {
     out = {};
+    out.source = PatternSource::ComparisonOnly;
     out.candidate = makePatternCandidate(in);
     out.freq = out.candidate.frequency;
     out.freqFull = out.candidate.frequencyFull;
@@ -220,6 +228,19 @@ inline bool processDetectorCandidate(const DetectorCandidate& in, PatternResult&
         out.candidate.frequency = *frequencyEvidence;
     }
     return accepted;
+}
+
+inline const char* patternSourceName(PatternSource source) {
+    switch (source) {
+        case PatternSource::ComparisonOnly:
+            return "comparison_only";
+        case PatternSource::AmpFallback:
+            return "amp_fallback";
+        case PatternSource::FrequencyPrimary:
+            return "frequency_primary";
+    }
+
+    return "unknown";
 }
 
 // String helpers for compact debug/log output.

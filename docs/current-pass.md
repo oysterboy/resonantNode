@@ -165,7 +165,7 @@ Current issue:
 
 ```text
 AudioOnsetDetector:
-    mostly reusable scalar transient detector,
+    amplitude-envelope / scalar stream extractor plus transient detector,
     but still audio / amplitude specific in naming and usage.
 
 AudioFrequencyDetector:
@@ -183,6 +183,12 @@ Target concepts:
 ```text
 StreamExtractor:
     produces scalar / evidence stream
+
+AmpEnvelopeStreamExtractor:
+    derives an amplitude-envelope stream from raw samples
+
+FrequencyBandStreamExtractor:
+    derives a frequency-band evidence stream from raw samples
 
 ScalarTransientDetector:
     detects onset / release / transient over any scalar stream
@@ -203,6 +209,7 @@ Suggested steps:
 2.4 Later move AmpCandidateBuilder out of AudioSignal.
 2.5 Reduce AudioFrequencyDetector to FrequencyBandStreamExtractor,
     or mark its transient logic as prototype only.
+2.6 Keep the amplitude side conceptually parallel: raw samples -> AmpEnvelopeStreamExtractor -> ScalarTransientDetector.
 ```
 
 Avoid:
@@ -216,7 +223,7 @@ routing frequency detector flags directly to behavior
 Deliverable:
 
 ```text
-Reusable scalar onset/transient detection concept ready for AMP and frequency streams.
+Reusable scalar onset/transient detection concept ready for amplitude-envelope and frequency streams.
 ```
 
 ---
@@ -227,6 +234,13 @@ Goal:
 
 ```text
 Detect tonal beep/click events directly from a frequency-band evidence stream.
+```
+
+Note:
+
+```text
+Do not rename the public detector / candidate classes yet.
+Pass 3 should prove the stream architecture first; renames (also see pass 2) can wait until the shape is stable.
 ```
 
 This is the C path:
@@ -282,6 +296,15 @@ Suggested sequence:
 3.3 Emit FreqTransientCandidate.
 3.4 Log and compare against AmpCandidate.
 3.5 Only later allow PatternResult to prefer or require frequency-first detection.
+```
+
+Note for pass 2 cleanup:
+
+```text
+These are still pass 2 items, but pass 3 is the checkpoint that tells us when they are safe to do.
+2.4 Move AmpCandidateBuilder out of AudioSignal only after pass 3 has proven the stream split is stable and candidate assembly no longer changes shape.
+2.5 Reduce AudioFrequencyDetector to FrequencyBandStreamExtractor only after the pass 3 comparison path is stable enough that its transient logic is clearly duplicative.
+2.6 Keep the amplitude side conceptually parallel: raw samples -> AmpEnvelopeStreamExtractor -> ScalarTransientDetector.
 ```
 
 Deliverable:

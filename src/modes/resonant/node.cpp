@@ -1217,6 +1217,12 @@ void Node::processRoadmapFrame(const AudioSignalFrame& frame,
             Serial.print(detection::patternTypeName(patternResult.type));
             Serial.print(" source=");
             Serial.print(detection::patternSourceName(patternResult.source));
+            Serial.print(" fieldQuiet=");
+            Serial.print(_detection.fieldState().quiet ? 1 : 0);
+            Serial.print(" fieldActive=");
+            Serial.print(_detection.fieldState().active ? 1 : 0);
+            Serial.print(" fieldDense=");
+            Serial.print(_detection.fieldState().dense ? 1 : 0);
             Serial.print(" eligible=");
             Serial.print(patternResult.behaviorEligible ? 1 : 0);
             Serial.print(" decision=");

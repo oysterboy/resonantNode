@@ -1,488 +1,296 @@
-# Codex Pass — Section H: Profile Proof Set
+# Codex Pass — Section I: Behavior Boundary
 
-Version: Detection Roadmap v0.3 — Pass H  
-Scope: Prove a small set of useful detection/behavior profiles before introducing the full `DetectionProfile` layer
+Version: Detection Roadmap v0.3 — Pass I  
+Scope: Keep behavior separated from detection internals
 
 ---
 
 ## Goal
 
-Use the shared detection architecture to prove **2–3 focused profile variants**, without expanding into many unrelated detection chains.
-
-This pass should not implement white-noise, woodblock, object-like detection, or a large external profile system.
-
-The goal is to prove that the existing pipeline can support different profile compositions:
+Stabilize the behavior boundary so behavior consumes only:
 
 ```text
-FeatureExtractors
-→ FeatureStreams / FeatureHistory
-→ SignalEmitters / SignalDetectors
-→ SignalInspector / InspectionRules
-→ PatternAssembler
-→ PatternRules
-→ FieldStateConfig
+PatternResult + FieldState
+
+Behavior must not consume:
+
+raw AudioSignal
+FeatureStreams
+SignalCandidates
+InspectedSignals
+PatternCandidates
+detector internals
+inspector internals
+
+This pass should verify and clean the boundary between detection and behavior, not change detection logic.
+
+Roadmap Section I items
+Ensure Behavior consumes only PatternResult + FieldState
+Remove direct behavior access to signal candidates
+Remove direct behavior access to feature streams
+Keep response probability / suppression / waiting in Behavior
+Keep pattern meaning in PatternRules
+Keep field condition in FieldState
+1. Ensure Behavior consumes only PatternResult + FieldState
+Target
+
+Behavior input should be structurally limited to:
+
+PatternResult pattern;
+FieldState field;
+
+or a wrapper like:
+
+struct BehaviorInput {
+  PatternResult pattern;
+  FieldState field;
+  uint32_t nowMs;
+};
+
+Use the existing project style.
+
+Correct
+DetectionRuntime
+→ PatternResult + FieldState
 → Behavior
-```
+Wrong
+Behavior reads SignalCandidate
+Behavior reads InspectedSignal
+Behavior reads FeatureStream
+Behavior asks FrequencyMatchDetector for state
+2. Remove direct behavior access to signal candidates
+Target
+
+Search behavior code for direct use of:
 
-Current proof profiles:
-
-```text
-FreqAmp
-AmpState
-Chirp
-```
-
----
-
-## Roadmap Section H items
-
-54. Keep AMP-first as reference baseline  
-55. Define `FreqAmpProfile`  
-56. Define `AmpStateProfile`  
-57. Define `ChirpProfile` as the first real pattern profile  
-58. Verify profile switching in code  
-59. Park white-noise / woodblock / object-like chains
-
----
-
-## 1. Keep AMP-first as reference baseline
-
-### Target
-
-Keep the old AMP-first behavior only as a reference / analyzer comparison until the new profile-based AMP path proves itself.
-
-Do not make legacy AMP the future architecture.
-
-Preferred future AMP path:
-
-```text
-AmpSignalEmitter
-→ TransientDetector
-→ SignalCandidate
-→ SignalInspector
-→ InspectedSignal
-→ PatternAssembler
-→ PatternRules
-→ PatternResult
-→ Behavior + FieldState
-```
-
-### Boundary
-
-Legacy AMP may remain:
-
-```text
-analyzer/reference
-temporary fallback
-debug comparison
-```
-
-Legacy AMP should not remain:
-
-```text
-main behavior path
-parallel architecture
-special-case detector pipeline
-```
-
----
-
-## 2. Define `FreqAmpProfile`
-
-### Purpose
-
-`FreqAmpProfile` is the current main baseline profile.
-
-It proves:
-
-```text
-frequency-first signal detection
-+ AMP locality inspection
-+ near/mid/far pattern interpretation
-```
-
-### Target composition
-
-```text
-SignalEmitter:
-FrequencySignalEmitter
-
-SignalDetector:
-FrequencyMatchDetector
-
-SignalInspector / InspectionRules:
-AddFrequencyFacts
-AddAmpStats
-AddAmpLocality
-AddDuplicateRisk if already present
-
-PatternAssembler:
-single-signal pulse assembler for now
-
-PatternRules:
-tonal pulse with locality
-
-FieldStateConfig:
-basic field activity / quiet / busy if available
-```
-
-### Expected pattern results
-
-Examples:
-
-```text
-TonalPulseNear
-TonalPulseMid
-TonalPulseFar
-TonalPulseUnknownLocality
-Rejected / Residual
-```
-
-or equivalent current enum/field structure.
-
-### Boundary
-
-`FrequencyMatchDetector` must not own AMP locality.
-
-Correct:
-
-```text
-FrequencyMatchDetector
-→ SignalCandidate
-
-SignalInspector
-→ AMP support / locality
-
-PatternRules
-→ near/mid/far pattern meaning
-```
-
----
-
-## 3. Define `AmpStateProfile`
-
-### Purpose
-
-`AmpStateProfile` proves a different architectural axis:
-
-```text
-simple AMP signal detection
-+ FieldState-driven behavior
-```
-
-This is more useful than a pure `FreqOnly` profile because it proves:
-
-```text
-Behavior consumes PatternResult + FieldState
-```
-
-without reading signal internals directly.
-
-### Target composition
-
-```text
-SignalEmitter:
-AmpSignalEmitter
-
-SignalDetector:
-TransientDetector
-
-SignalInspector / InspectionRules:
-AddAmpStats
-AddDuplicateRisk
-AddBasicTimingFacts
-
-PatternAssembler:
-single-signal pulse assembler
-
-PatternRules:
-simple AMP pulse / activity pulse
-
-FieldStateConfig:
-quiet / busy / activity / density windows
-
-Behavior:
-uses FieldState strongly for response probability / suppression / self-initiation
-```
-
-### Expected pattern results
-
-Examples:
-
-```text
-AmpPulse
-ActivityPulse
-Rejected / Residual
-```
-
-or current equivalent.
-
-### Boundary
-
-Behavior may react differently based on FieldState.
-
-Behavior must not read:
-
-```text
 SignalCandidate
 InspectedSignal
-raw FeatureStream
-```
+SignalKind
+SignalSource
+FrequencyMatchDetector internals
+AmpSignalEmitter internals
+
+If behavior needs that information, it should be represented in:
+
+PatternResult
+
+or:
+
+FieldState
+
+Examples:
+
+near / far
+→ PatternResult.locality
+
+busy / quiet
+→ FieldState
+
+recent density
+→ FieldState
+
+valid chirp / tonal pulse
+→ PatternResult.kind
+3. Remove direct behavior access to feature streams
+Target
+
+Behavior should not read:
+
+ampEnv
+targetFreqEnv
+ambientFloor
+FeatureHistory
+ScalarWindow
+RawWindow
+
+If behavior needs acoustic context, route it through:
+
+FieldState
+
+If behavior needs detected meaning, route it through:
+
+PatternResult
+Correct
+FieldState.isQuiet
+FieldState.isBusy
+FieldState.activity
+FieldState.density
+Wrong
+Behavior computes isQuiet from ampEnv
+Behavior counts recent SignalCandidates
+Behavior checks raw frequency scores
+4. Keep response probability / suppression / waiting in Behavior
+Target
+
+Behavior owns reaction strategy.
+
+Keep behavior-level decisions in behavior:
+
+response probability
+suppression
+waiting
+self-initiation
+refractory behavior
+cooldown after response
+idle response
+whether to emit
+
+Detection should not decide:
+
+should this node respond?
+should this node stay silent?
+should this node self-initiate?
+
+Detection provides:
+
+PatternResult
+FieldState
+
+Behavior decides:
+
+action / no action
+probability
+timing
+suppression
+output request
+5. Keep pattern meaning in PatternRules
+Target
+
+Behavior should not reinterpret raw evidence.
 
 Correct:
 
-```text
-BehaviorInput = PatternResult + FieldState
-```
-
----
-
-## 4. Define `ChirpProfile` as the first real pattern profile
-
-### Purpose
-
-`ChirpProfile` proves the first actual multi-signal pattern layer.
-
-It should be the first profile where `PatternAssembler` does more than one-signal assembly.
-
-It proves:
-
-```text
-InspectedSignals
-→ PatternAssembler
-→ multi-signal PatternCandidates
-→ PatternRules
-→ PatternResults
-```
-
-### Target composition
-
-Likely uses the same signal layer as `FreqAmpProfile` at first:
-
-```text
-SignalEmitter:
-FrequencySignalEmitter, optionally AMP support through inspection
-
-SignalDetector:
-FrequencyMatchDetector
-
-SignalInspector / InspectionRules:
-frequency facts
-AMP locality
-basic timing
-duplicate risk
-
-PatternAssembler:
-pulse sequence / chirp candidate assembler
-
 PatternRules:
-one-pulse / three-pulse / validChirp / invalidChirp / wrongTiming / tooDense
+  PatternCandidate → PatternResult(kind = TonalPulseNear)
 
-FieldStateConfig:
-activity / chatter / quiet-busy if useful
-```
+Behavior:
+  if PatternResult.kind == TonalPulseNear and FieldState.isBusy == false
+  then maybe respond
 
-### Important limit
+Wrong:
 
-Do not make `ChirpProfile` too large in this pass.
+Behavior:
+  if frequencyConfidence > X and ampSupport > Y
+  then this is a near tonal pulse
 
-It can start with minimal pulse grouping:
+If behavior needs a distinction, add it to PatternResult.
 
-```text
-recent accepted pulse-like InspectedSignals
-→ PatternCandidate(kind = PulseSequence)
-```
+6. Keep field condition in FieldState
+Target
 
-Full artistic behavior can come later.
+Behavior may use field condition, but should not compute it ad hoc.
 
----
+Correct:
 
-## 5. Verify profile switching in code
+Behavior reads FieldState.isQuiet
+Behavior reads FieldState.activity
+Behavior reads FieldState.density
 
-### Target
+Wrong:
 
-There should be a simple way to select which proof profile is active.
+Behavior scans recent signals
+Behavior computes recent candidate density
+Behavior reads FeatureHistory
 
-Keep it simple.
+If behavior needs new field context, add it to:
 
-Acceptable options:
+FieldStateTracker / FieldStateConfig / FieldState
 
-```text
-compile-time constant
-enum in code
-simple runtime mode variable
-serial command if already convenient
-```
+not behavior internals.
 
-Avoid:
+7. Use AmpStateProfile to prove the boundary
+Target
 
-```text
-JSON/YAML profile config
-dynamic plugin registry
-external profile files
-reflection-based rule maps
-```
+AmpStateProfile should prove:
 
-### Suggested enum
+simple PatternResult
++ FieldState
+→ behavior variation
 
-```cpp
-enum class DetectionProfileKind {
-  FreqAmp,
-  AmpState,
-  Chirp
-};
-```
+without behavior reading AMP internals.
 
-or project-equivalent.
+Example:
 
-### Required behavior
+PatternResult.kind = AmpPulse
+FieldState.isQuiet = true
+→ behavior may self-initiate / respond
 
-Switching profile should change composition, not require editing detection internals.
+PatternResult.kind = AmpPulse
+FieldState.isBusy = true
+→ behavior suppresses or lowers probability
 
-For now, this may be a factory-style switch:
+This proves FieldState-driven behavior while keeping the detection boundary clean.
 
-```cpp
-makeFreqAmpProfile()
-makeAmpStateProfile()
-makeChirpProfile()
-```
+8. Logging requirements
 
-or a simple runtime setup function.
+Behavior logs should show decisions in terms of:
 
----
+PatternResult
+FieldState
+BehaviorDecision
 
-## 6. Park white-noise / woodblock / object-like chains
+Useful fields:
 
-### Target
-
-Do not implement future chains in this pass.
-
-Parked profiles:
-
-```text
-WhiteNoiseRoomProfile
-WoodBlockProfile
-ObjectHitProfile
-ChimeProfile
-```
-
-These remain useful future proof, but they are not current implementation targets.
-
-### Reason
-
-The current goal is not broad feature coverage.
-
-The current goal is:
-
-```text
-prove DetectionProfile composition
-with a small set of meaningful profiles
-```
-
----
-
-## 7. Relationship to Section J
-
-Section H is the proof set.
-
-Section J will formalize the `DetectionProfile` architecture.
-
-This pass may introduce preliminary factories or selection points, but should not overbuild the final profile system.
-
-Recommended distinction:
-
-```text
-H:
-prove 2–3 profiles can work
-
-J:
-formalize DetectionProfile as highest-level composition item
-```
-
----
-
-## 8. Logging requirements
-
-Add enough logging to know which profile is active and what it produces.
-
-Useful profile log fields:
-
-```text
-PROFILE
-activeProfile=FreqAmp/AmpState/Chirp
-enabledEmitters=...
-patternAssembler=...
-fieldStateConfig=...
-```
-
-Useful runtime trace:
-
-```text
-SIGNAL
-INSPECTED
-PATTERN_CANDIDATE
-PATTERN_RESULT
-FIELD_STATE
 BEHAVIOR
-```
+patternKind
+patternValid
+patternLocality
+fieldQuiet
+fieldBusy
+fieldActivity
+fieldDensity
+decision
+blockReason
+probability
+cooldown
 
-Avoid noisy per-loop profile logs.
+Avoid behavior logs that reference:
 
-Log profile selection on startup or when profile changes.
-
----
-
-## 9. Success criteria
+SignalCandidate
+InspectedSignal
+raw feature values
+detector internals
+9. Success criteria
 
 After this pass:
 
-```text
-FreqAmp profile exists or is clearly represented in code.
+Behavior consumes PatternResult + FieldState only.
 
-AmpState profile exists or is clearly represented in code.
+Behavior does not access SignalCandidate, InspectedSignal, PatternCandidate, FeatureStream, FeatureHistory, or detector internals.
 
-Chirp profile is scaffolded as the first real pattern profile, even if minimal.
+Pattern meaning remains in PatternRules.
 
-There is a simple way to select active profile.
+Field condition remains in FieldState.
 
-Profiles can vary signal emitters, inspection rules, pattern assembler, pattern rules, and field-state config at least in principle.
+Response probability, suppression, waiting, self-initiation, and cooldown remain in Behavior.
 
-White-noise / woodblock / object-like chains remain parked.
+AmpStateProfile demonstrates FieldState-driven behavior without violating boundaries.
 
-Behavior still consumes PatternResult + FieldState.
-
-No profile bypasses SignalInspector / PatternAssembler / PatternRules.
-```
+Logs explain behavior decisions using PatternResult + FieldState.
 
 Current status:
 
 ```text
-FreqAmp and AmpState are implemented as code-defined profile presets.
+Behavior now consumes PatternResult + FieldState on the roadmap path.
 
-Chirp is scaffolded and selectable as the first multi-signal proof profile.
+Behavior stays away from SignalCandidate, InspectedSignal, PatternCandidate, and feature-stream internals.
 
-Profile switching works through code / serial command, without external profile config.
+Response timing and suppression still live in Behavior.
 
-Legacy AMP stays as the reference baseline and comparison path.
+AmpStateProfile now has a real FieldState effect through the idle/active boundary.
 ```
-
----
-
-## 10. Do not do in this pass
+10. Do not do in this pass
 
 Do not:
 
-```text
-implement white-noise detection
-implement woodblock / object detection
-introduce external profile config
-build a plugin registry
-remove legacy AMP unless the removal gate is already satisfied
+rewrite DetectionRuntime
 rewrite FrequencyMatchDetector
-move AMP locality into FrequencyMatchDetector
-move field-state logic into PatternRules
-move behavior logic into detection
+introduce external config
+implement white-noise detection
+implement woodblock/object detection
 perform heavy threshold tuning
-```
+move pattern meaning into Behavior
+move behavior decisions into PatternRules
+move field-state computation into Behavior
 
-This pass is only about proving a small set of useful profile variants.
+This pass is behavior-boundary stabilization only.

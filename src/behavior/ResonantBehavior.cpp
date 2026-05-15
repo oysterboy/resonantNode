@@ -652,6 +652,9 @@ bool ResonantBehavior::canIdle(unsigned long now) const {
     if (!_idleEnabled) {
         return false;
     }
+    if (_lastFieldState.active || _lastFieldState.dense) {
+        return false;
+    }
     if (_nextIdleAtMs != 0 && now < _nextIdleAtMs) {
         return false;
     }

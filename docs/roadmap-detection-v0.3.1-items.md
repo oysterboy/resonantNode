@@ -153,21 +153,21 @@ The active analyzer and RB consumers now use the direct pattern types; only comp
 
 59. **Park white-noise / woodblock / object-like chains** - Implemented. These chains remain explicitly parked for future work and are not current targets.
 
-## I. Behavior boundary
+## I. [DONE]Behavior boundary
 
-60. **Ensure Behavior consumes only `PatternResult + FieldState`** — Keep behavior input clean.
+60. **Ensure Behavior consumes only `PatternResult + FieldState`** — Implemented. The roadmap path calls the field-aware Behavior overload, and the boundary stays on the pattern/field side.
 
-61. **Remove direct behavior access to signal candidates** — No behavior decisions from raw `SignalCandidates`.
+61. **Remove direct behavior access to signal candidates** — Implemented. Behavior does not read raw `SignalCandidate`, `InspectedSignal`, or `PatternCandidate` internals.
 
-62. **Remove direct behavior access to feature streams** — Feature facts must pass through detection or field-state layers.
+62. **Remove direct behavior access to feature streams** — Implemented. Feature facts stay in detection / field-state layers, not in Behavior.
 
-63. **Keep response probability / suppression / waiting in Behavior** — Behavior owns reaction strategy.
+63. **Keep response probability / suppression / waiting in Behavior** — Implemented. Behavior still owns the reaction strategy and timing gates.
 
-64. **Keep pattern meaning in `PatternRules`** — PatternRules decide what was detected.
+64. **Keep pattern meaning in `PatternRules`** — Implemented. PatternRules still decide what the candidate means.
 
-65. **Keep field condition in `FieldState`** — FieldState summarizes context, not meaning.
+65. **Keep field condition in `FieldState`** — Implemented. FieldState now carries the context Behavior uses, including the idle/active boundary.
 
-661. **Use `AmpStateProfile` to prove the boundary** — Behavior reacts differently based on `FieldState`, without reading AMP internals directly.
+66. **Use `AmpStateProfile` to prove the boundary** — Implemented. The AmpState profile now has a real field-state effect on behavior.
 
 ## J. DetectionProfile composition
 

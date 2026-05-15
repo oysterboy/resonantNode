@@ -109,6 +109,25 @@ const char* detectionProfileKindName(detection::DetectionProfileKind kind) {
     return detection::detectionProfileName(kind);
 }
 
+void printProfileComposition(const detection::DetectionProfile& profile) {
+    Serial.print(" features=");
+    Serial.print(detection::profileFeatureSetName(profile.featureSet));
+    Serial.print(" emitters=");
+    Serial.print(detection::profileSignalEmitterName(profile.signalEmitter));
+    Serial.print(" detectors=");
+    Serial.print(detection::profileSignalDetectorName(profile.signalDetector));
+    Serial.print(" inspectorRules=");
+    Serial.print(detection::profileInspectionRulesName(profile.inspectionRules));
+    Serial.print(" patternAssembler=");
+    Serial.print(detection::profilePatternAssemblerName(profile.patternAssembler));
+    Serial.print(" patternRules=");
+    Serial.print(detection::profilePatternRulesName(profile.patternRules));
+    Serial.print(" fieldStateConfig=");
+    Serial.print(profile.fieldStateConfig.signalWindowMs);
+    Serial.print("/");
+    Serial.print(profile.fieldStateConfig.patternWindowMs);
+}
+
 bool detectionModeFromName(const char* name, Node::DetectionMode& outMode) {
     if (equalsIgnoreCase(name, "legacy") || equalsIgnoreCase(name, "amp") || equalsIgnoreCase(name, "amplegacy")) {
         outMode = Node::DetectionMode::AmpLegacy;
@@ -322,10 +341,7 @@ void Node::begin() {
     Serial.print(profileName());
     Serial.print(" detect=");
     Serial.print(detectionModeName());
-    Serial.print(" fieldWindowMs=");
-    Serial.print(activeProfile().fieldStateConfig.signalWindowMs);
-    Serial.print("/");
-    Serial.print(activeProfile().fieldStateConfig.patternWindowMs);
+    printProfileComposition(activeProfile());
     Serial.print(" active=");
     Serial.println(activeProfile().ampEnabled ? "amp" : "none");
 
@@ -1020,10 +1036,7 @@ void Node::handleProfileCommand(const char* line) {
         Serial.print(profileName());
         Serial.print(" detect=");
         Serial.print(detectionModeName());
-        Serial.print(" fieldWindowMs=");
-        Serial.print(activeProfile().fieldStateConfig.signalWindowMs);
-        Serial.print("/");
-        Serial.print(activeProfile().fieldStateConfig.patternWindowMs);
+        printProfileComposition(activeProfile());
         Serial.print(" emitters=");
         Serial.print(activeProfile().ampEnabled ? "amp" : "none");
         Serial.println(activeProfile().useRoadmapDetection ? "+roadmap" : "+legacy");

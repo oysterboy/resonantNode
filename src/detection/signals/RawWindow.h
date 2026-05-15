@@ -46,14 +46,22 @@ inline bool captureRawWindowStats(
         return false;
     }
 
-    int16_t* samples = static_cast<int16_t*>(malloc(requestedSamples * sizeof(int16_t)));
-    if (samples == nullptr) {
-        return false;
+    // Reuse one scratch buffer instead of allocating on every candidate.
+    // This keeps SEQ runs from churning the heap while still avoiding stack pressure.
+    static int16_t* samples = nullptr;
+    static size_t samplesCapacity = 0;
+    if (requestedSamples > samplesCapacity) {
+        const size_t newCapacity = requestedSamples;
+        int16_t* resized = static_cast<int16_t*>(realloc(samples, newCapacity * sizeof(int16_t)));
+        if (resized == nullptr) {
+            return false;
+        }
+        samples = resized;
+        samplesCapacity = newCapacity;
     }
 
     const size_t copiedSamples = audioSignal.copyRawSampleHistory(startSample, endSample, samples, requestedSamples);
     if (copiedSamples == 0) {
-        free(samples);
         return false;
     }
 
@@ -66,8 +74,6 @@ inline bool captureRawWindowStats(
             peakMagnitude = magnitude;
         }
     }
-
-    free(samples);
 
     out.sampleCount = copiedSamples;
     out.averageMagnitude = copiedSamples > 0 ? sumMagnitude / static_cast<float>(copiedSamples) : 0.0f;

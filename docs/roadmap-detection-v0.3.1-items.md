@@ -1,4 +1,4 @@
-# Detection Roadmap Items v0.3.1
+﻿# Detection Roadmap Items v0.3.1
 
 Status: accepted high-level item list
 Scope: from immediate cleanup/stabilization to larger DetectionProfile architecture
@@ -171,34 +171,33 @@ The active analyzer and RB consumers now use the direct pattern types; only comp
 
 ## J. DetectionProfile composition
 
-662. **Introduce code-defined detection profile factories** — Compose profiles in code, not external config.
+66. **Introduce code-defined detection profile factories** — Implemented. Profiles are built in code through `makeFreqAmpProfile()`, `makeAmpStateProfile()`, and `makeChirpProfile()`.
 
-67. **Define `FreqAmpProfile`** — Main current baseline: frequency match plus AMP locality inspection.
+67. **Define `FreqAmpProfile`** — Implemented. The baseline profile now names its feature set, emitters, detectors, inspection rules, pattern assembler, pattern rules, and field-state config.
 
-68. **Define `AmpStateProfile`** — AMP transient profile that proves FieldState-driven behavior.
+68. **Define `AmpStateProfile`** — Implemented. The AMP/profile variant is selectable and carries its own field-state and behavior composition.
 
-69. **Define `ChirpProfile`** — First actual pattern profile using multi-signal PatternAssembler.
+69. **Define `ChirpProfile`** — Implemented. Chirp is selectable as the first multi-signal proof profile and is tagged as the chirp-sequence composition.
 
-70. **Let profiles select feature extractors** — Profile chooses measured signal facts.
+70. **Let profiles select feature extractors** — Implemented. Profiles now carry a feature-set selection in code.
 
-71. **Let profiles select signal emitters and signal detectors** — Profile chooses signal sources and detector types.
+71. **Let profiles select signal emitters and signal detectors** — Implemented. Profiles now carry emitter and detector selections in code.
 
-72. **Let profiles select inspection rules** — Profile chooses signal evidence checks.
+72. **Let profiles select inspection rules** — Implemented. Profiles now carry their inspection rule set in code.
 
-73. **Let profiles select pattern assembler** — Profile chooses one-signal or multi-signal grouping.
+73. **Let profiles select pattern assembler** — Implemented. Profiles now carry single-pulse versus chirp-sequence assembler selection.
 
-74. **Let profiles select pattern rules** — Profile chooses pattern interpretation.
+74. **Let profiles select pattern rules** — Implemented. Profiles now carry tonal, AMP-activity, or chirp-sequence pattern rule selection.
 
-75. **Let profiles select field-state config** — Profile chooses acoustic context summaries.
+75. **Let profiles select field-state config** — Implemented. Profiles now carry profile-specific field-state windows and thresholds.
 
-76. **Support profile selection at compile-time or simple runtime mode** — Keep switching simple.
+76. **Support profile selection at compile-time or simple runtime mode** — Implemented. The node selects profiles through a simple runtime serial command.
 
-77. **Avoid external profile configuration** — No JSON/YAML/profile registry yet.
+77. **Avoid external profile configuration** — Implemented. No JSON/YAML/profile registry is used.
 
-78. **Park `WhiteNoiseRoomProfile` and `WoodBlockProfile`** — Keep as future proof, not current implementation.
+78. **Park `WhiteNoiseRoomProfile` and `WoodBlockProfile`** — Implemented. Those future chains remain parked.
 
-79. **Use `DetectionProfile` as highest-level composition item** — `DetectionStrategy` remains optional narrower chain term.
-
+79. **Use `DetectionProfile` as highest-level composition item** — Implemented. `DetectionProfile` is now the top-level code-defined profile object for Resonant.
 
 ##  K. Documentation / Spec Alignment
 

@@ -256,16 +256,19 @@ bool evaluateRoadmapSignalCandidateImpl(const detection::SignalCandidate& signal
                                         bool traceStages) {
     static detection::SignalInspector* inspector = nullptr;
     static detection::PatternAssembler* assembler = nullptr;
+    static detection::FeatureHistory* featureHistory = nullptr;
     if (inspector == nullptr) {
         inspector = new detection::SignalInspector();
     }
     if (assembler == nullptr) {
         assembler = new detection::PatternAssembler();
     }
+    if (featureHistory == nullptr) {
+        featureHistory = new detection::FeatureHistory();
+    }
     detection::PatternRules rules;
     detection::RawWindowStats rawWindow = {};
     const detection::RawWindowStats* rawWindowPtr = nullptr;
-    detection::FeatureHistory featureHistory = {};
     const detection::FeatureHistory* featureHistoryPtr = nullptr;
 
     if (audioSignal != nullptr && signal.present && signal.startSample != 0 && signal.releaseSample >= signal.startSample) {
@@ -280,17 +283,18 @@ bool evaluateRoadmapSignalCandidateImpl(const detection::SignalCandidate& signal
         const unsigned long endMs = signal.endMs != 0 ? signal.endMs : (signal.releaseMs != 0 ? signal.releaseMs : peakMs);
         const float baseline = rawWindowPtr != nullptr ? rawWindowPtr->baseline : signal.ampBaseline;
         const float ampPeak = rawWindowPtr != nullptr ? rawWindowPtr->peakMagnitude : signal.ampLevel;
-        featureHistory.record(detection::FeatureStreamId::AmpEnvelope, startMs, baseline);
-        featureHistory.record(detection::FeatureStreamId::AmpEnvelope, peakMs, ampPeak);
-        featureHistory.record(detection::FeatureStreamId::AmpEnvelope, endMs, baseline);
-        featureHistory.record(detection::FeatureStreamId::AmbientFloor, startMs, baseline);
-        featureHistory.record(detection::FeatureStreamId::AmbientFloor, peakMs, baseline);
-        featureHistory.record(detection::FeatureStreamId::AmbientFloor, endMs, baseline);
+        featureHistory->reset();
+        featureHistory->record(detection::FeatureStreamId::AmpEnvelope, startMs, baseline);
+        featureHistory->record(detection::FeatureStreamId::AmpEnvelope, peakMs, ampPeak);
+        featureHistory->record(detection::FeatureStreamId::AmpEnvelope, endMs, baseline);
+        featureHistory->record(detection::FeatureStreamId::AmbientFloor, startMs, baseline);
+        featureHistory->record(detection::FeatureStreamId::AmbientFloor, peakMs, baseline);
+        featureHistory->record(detection::FeatureStreamId::AmbientFloor, endMs, baseline);
         if (signal.frequency.present) {
-            featureHistory.record(detection::FeatureStreamId::FrequencyScore, peakMs, signal.frequency.score);
-            featureHistory.record(detection::FeatureStreamId::FrequencyContrast, peakMs, signal.frequency.spectralContrast);
+            featureHistory->record(detection::FeatureStreamId::FrequencyScore, peakMs, signal.frequency.score);
+            featureHistory->record(detection::FeatureStreamId::FrequencyContrast, peakMs, signal.frequency.spectralContrast);
         }
-        featureHistoryPtr = &featureHistory;
+        featureHistoryPtr = featureHistory;
     }
 
     inspector->reset();

@@ -1,5 +1,7 @@
 #pragma once
 
+#include <strings.h>
+
 #include "field/FieldState.h"
 
 namespace detection {
@@ -10,8 +12,47 @@ enum class DetectionProfileKind {
     Chirp,
 };
 
+enum class ProfileFeatureSetKind {
+    FreqAmp,
+    AmpState,
+    Chirp,
+};
+
+enum class ProfileSignalEmitterKind {
+    Frequency,
+    Amp,
+};
+
+enum class ProfileSignalDetectorKind {
+    FrequencyMatch,
+    Transient,
+};
+
+enum class ProfileInspectionRulesKind {
+    FreqAmp,
+    AmpState,
+    Chirp,
+};
+
+enum class ProfilePatternAssemblerKind {
+    SinglePulse,
+    ChirpSequence,
+};
+
+enum class ProfilePatternRulesKind {
+    TonalLocality,
+    AmpActivity,
+    ChirpSequence,
+};
+
 struct DetectionProfile {
     DetectionProfileKind kind = DetectionProfileKind::FreqAmp;
+    ProfileFeatureSetKind featureSet = ProfileFeatureSetKind::FreqAmp;
+    ProfileSignalEmitterKind signalEmitter = ProfileSignalEmitterKind::Frequency;
+    ProfileSignalDetectorKind signalDetector = ProfileSignalDetectorKind::FrequencyMatch;
+    ProfileInspectionRulesKind inspectionRules = ProfileInspectionRulesKind::FreqAmp;
+    ProfilePatternAssemblerKind patternAssembler = ProfilePatternAssemblerKind::SinglePulse;
+    ProfilePatternRulesKind patternRules = ProfilePatternRulesKind::TonalLocality;
     bool useRoadmapDetection = true;
     bool useRoadmapFrequencyOnly = false;
     bool ampEnabled = true;
@@ -41,6 +82,72 @@ inline const char* detectionProfileName(DetectionProfileKind kind) {
     return "unknown";
 }
 
+inline const char* profileFeatureSetName(ProfileFeatureSetKind kind) {
+    switch (kind) {
+        case ProfileFeatureSetKind::FreqAmp:
+            return "FreqAmp";
+        case ProfileFeatureSetKind::AmpState:
+            return "AmpState";
+        case ProfileFeatureSetKind::Chirp:
+            return "Chirp";
+    }
+    return "unknown";
+}
+
+inline const char* profileSignalEmitterName(ProfileSignalEmitterKind kind) {
+    switch (kind) {
+        case ProfileSignalEmitterKind::Frequency:
+            return "FrequencySignalEmitter";
+        case ProfileSignalEmitterKind::Amp:
+            return "AmpSignalEmitter";
+    }
+    return "unknown";
+}
+
+inline const char* profileSignalDetectorName(ProfileSignalDetectorKind kind) {
+    switch (kind) {
+        case ProfileSignalDetectorKind::FrequencyMatch:
+            return "FrequencyMatchDetector";
+        case ProfileSignalDetectorKind::Transient:
+            return "TransientDetector";
+    }
+    return "unknown";
+}
+
+inline const char* profileInspectionRulesName(ProfileInspectionRulesKind kind) {
+    switch (kind) {
+        case ProfileInspectionRulesKind::FreqAmp:
+            return "FreqAmpRules";
+        case ProfileInspectionRulesKind::AmpState:
+            return "AmpStateRules";
+        case ProfileInspectionRulesKind::Chirp:
+            return "ChirpRules";
+    }
+    return "unknown";
+}
+
+inline const char* profilePatternAssemblerName(ProfilePatternAssemblerKind kind) {
+    switch (kind) {
+        case ProfilePatternAssemblerKind::SinglePulse:
+            return "SinglePulse";
+        case ProfilePatternAssemblerKind::ChirpSequence:
+            return "ChirpSequence";
+    }
+    return "unknown";
+}
+
+inline const char* profilePatternRulesName(ProfilePatternRulesKind kind) {
+    switch (kind) {
+        case ProfilePatternRulesKind::TonalLocality:
+            return "TonalLocality";
+        case ProfilePatternRulesKind::AmpActivity:
+            return "AmpActivity";
+        case ProfilePatternRulesKind::ChirpSequence:
+            return "ChirpSequence";
+    }
+    return "unknown";
+}
+
 inline bool detectionProfileKindFromName(const char* name, DetectionProfileKind& outKind) {
     if (name == nullptr) {
         return false;
@@ -65,6 +172,12 @@ inline bool detectionProfileKindFromName(const char* name, DetectionProfileKind&
 inline DetectionProfile makeFreqAmpProfile() {
     DetectionProfile profile;
     profile.kind = DetectionProfileKind::FreqAmp;
+    profile.featureSet = ProfileFeatureSetKind::FreqAmp;
+    profile.signalEmitter = ProfileSignalEmitterKind::Frequency;
+    profile.signalDetector = ProfileSignalDetectorKind::FrequencyMatch;
+    profile.inspectionRules = ProfileInspectionRulesKind::FreqAmp;
+    profile.patternAssembler = ProfilePatternAssemblerKind::SinglePulse;
+    profile.patternRules = ProfilePatternRulesKind::TonalLocality;
     profile.useRoadmapDetection = true;
     profile.useRoadmapFrequencyOnly = false;
     profile.ampEnabled = true;
@@ -90,6 +203,12 @@ inline DetectionProfile makeFreqAmpProfile() {
 inline DetectionProfile makeAmpStateProfile() {
     DetectionProfile profile = makeFreqAmpProfile();
     profile.kind = DetectionProfileKind::AmpState;
+    profile.featureSet = ProfileFeatureSetKind::AmpState;
+    profile.signalEmitter = ProfileSignalEmitterKind::Amp;
+    profile.signalDetector = ProfileSignalDetectorKind::Transient;
+    profile.inspectionRules = ProfileInspectionRulesKind::AmpState;
+    profile.patternAssembler = ProfilePatternAssemblerKind::SinglePulse;
+    profile.patternRules = ProfilePatternRulesKind::AmpActivity;
     profile.useRoadmapDetection = false;
     profile.useRoadmapFrequencyOnly = false;
     profile.ampEnabled = true;
@@ -112,6 +231,12 @@ inline DetectionProfile makeAmpStateProfile() {
 inline DetectionProfile makeChirpProfile() {
     DetectionProfile profile = makeFreqAmpProfile();
     profile.kind = DetectionProfileKind::Chirp;
+    profile.featureSet = ProfileFeatureSetKind::Chirp;
+    profile.signalEmitter = ProfileSignalEmitterKind::Frequency;
+    profile.signalDetector = ProfileSignalDetectorKind::FrequencyMatch;
+    profile.inspectionRules = ProfileInspectionRulesKind::Chirp;
+    profile.patternAssembler = ProfilePatternAssemblerKind::ChirpSequence;
+    profile.patternRules = ProfilePatternRulesKind::ChirpSequence;
     profile.useRoadmapDetection = true;
     profile.useRoadmapFrequencyOnly = false;
     profile.ampEnabled = true;

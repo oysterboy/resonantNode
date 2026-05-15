@@ -560,87 +560,12 @@ void Node::update() {
                 if (usesRoadmapDetection()) {
                     processRoadmapFrame(frame, now, selfChirpSuppressed, sawPatternThisLoop);
                 } else {
-                    _audioOnsetDetector.update(static_cast<float>(frame.level), frame.sampleTimeUs);
-                    _ampCandidateBuilder.observeSample(frame, _audioOnsetDetector);
+                    processLegacyAmpFrame(frame, now, selfChirpSuppressed, sawPatternThisLoop);
                 }
             }
             sawI2SSample = true;
             if (!usesRoadmapDetection()) {
-                const unsigned long queueDepthBeforeDrain = static_cast<unsigned long>(_ampCandidateBuilder.candidateQueueDepth());
-
-                DetectorCandidate candidate;
-                while (_ampCandidateBuilder.popCandidate(candidate)) {
-                    DetectionPipeline::PatternResult patternResult;
-                    const auto liveFrequencyEvidence = captureFrequencyEvidence();
-                    DetectionPipeline::FrequencyEvidence frequencyEvidence = liveFrequencyEvidence;
-                    DetectionPipeline::FrequencyEvidence fullFrequencyEvidence = liveFrequencyEvidence;
-                    DetectionPipeline::measureCandidateWindowFrequency(
-                        _audioSignal,
-                        candidate,
-                        _audioSource.sampleRateHz() > 0 ? _audioSource.sampleRateHz() : 16000UL,
-                        _freqTransientDetector.targetFrequencyHz(),
-                        now,
-                        frequencyEvidence);
-                    DetectionPipeline::measureCandidateWindowFrequency(
-                        _audioSignal,
-                        candidate,
-                        _audioSource.sampleRateHz() > 0 ? _audioSource.sampleRateHz() : 16000UL,
-                        _freqTransientDetector.targetFrequencyHz(),
-                        now,
-                        fullFrequencyEvidence,
-                        candidate.durationMs);
-                    const bool patternValid = DetectionPipeline::processDetectorCandidate(candidate, patternResult, now, &frequencyEvidence);
-                    patternResult.candidate.frequencyFull = fullFrequencyEvidence;
-                    FrequencyEvidenceEvaluation::classifyPatternResult(patternResult, _frequencyEvidenceTuning);
-                    const auto behaviorDecision = _behavior.handlePatternResult(patternResult, now);
-                    const char* candidateClass = h3RbCandidateClassName(patternResult, behaviorDecision, selfChirpSuppressed);
-
-                    if (patternValid && behaviorDecision == ResonantBehavior::BehaviorDecision::ConsumedPattern) {
-                        sawPatternThisLoop = true;
-                    }
-
-                    const unsigned long candidateMs = patternResult.candidate.heardAtMs;
-                    long gapMs = -1;
-                    if (_rbHaveLastCandidateMs && candidateMs >= _rbLastCandidateMs) {
-                        gapMs = static_cast<long>(candidateMs - _rbLastCandidateMs);
-                    }
-                    const unsigned long behaviorLagMs = now >= patternResult.processedAtMs ? now - patternResult.processedAtMs : 0;
-
-                    const char* action = "queued";
-                    if (!patternValid) {
-                        action = "invalid";
-                    } else if (selfChirpSuppressed) {
-                        action = "self_ignore";
-                    } else if (_behavior.requireTonalForBehavior() && patternResult.candidateValid && !patternResult.behaviorEligible) {
-                        action = "blocked";
-                    } else if (_rbDetectOnly) {
-                        action = "detectonly";
-                    }
-
-                    if (rbOutputsEnabledNow && patternResult.candidateValid) {
-                        _debug.observePatternPulse(now,
-                                                   behaviorDecision == ResonantBehavior::BehaviorDecision::ConsumedPattern,
-                                                   patternResult.tonalValid);
-                    }
-
-                    if (_rbDetectOnly && rbShouldLogDetail()) {
-                        _debug.observePatternPulse(now, patternResult.candidateValid, patternResult.tonalValid);
-                    } else if (rbShouldLogDetail()) {
-                        logCandidateSummary(_rbCandidateCount + 1, candidate, patternResult);
-                    }
-
-                    ++_rbCandidateCount;
-                    if (candidate.audioOverflowDuringCandidate) {
-                        ++_rbOverflowCandidates;
-                    }
-                    if (action[0] != 'n') {
-                        ++_rbActionCount;
-                    }
-                    _rbStrengthSumScaled += static_cast<unsigned long>(candidate.peakStrength * 100.0f);
-                    _rbDurationSumMs += candidate.durationMs;
-                    _rbHaveLastCandidateMs = true;
-                    _rbLastCandidateMs = candidateMs;
-                }
+                drainLegacyAmpCandidates(now, selfChirpSuppressed, sawPatternThisLoop);
             }
 
             processedSamples += static_cast<int>(block.sampleCount);
@@ -665,78 +590,10 @@ void Node::update() {
             }
 
             _audioOnsetDetector.update(static_cast<float>(frame.level), frame.sampleTimeUs);
-            _ampCandidateBuilder.observeSample(frame, _audioOnsetDetector);
+            processLegacyAmpFrame(frame, now, selfChirpSuppressed, sawPatternThisLoop);
             const bool onsetDetected = selfChirpSuppressed ? false : _audioOnsetDetector.onsetDetected();
             _debug.observeOnset(now, onsetDetected, _audioOnsetDetector.onsetStrength());
-            const unsigned long queueDepthBeforeDrain = static_cast<unsigned long>(_ampCandidateBuilder.candidateQueueDepth());
-
-            DetectorCandidate candidate;
-            while (_ampCandidateBuilder.popCandidate(candidate)) {
-                DetectionPipeline::PatternResult patternResult;
-                const auto liveFrequencyEvidence = captureFrequencyEvidence();
-                DetectionPipeline::FrequencyEvidence frequencyEvidence = liveFrequencyEvidence;
-                DetectionPipeline::FrequencyEvidence fullFrequencyEvidence = liveFrequencyEvidence;
-                DetectionPipeline::measureCandidateWindowFrequency(
-                    _audioSignal,
-                    candidate,
-                    _audioSource.sampleRateHz() > 0 ? _audioSource.sampleRateHz() : 16000UL,
-                    _freqTransientDetector.targetFrequencyHz(),
-                    now,
-                    frequencyEvidence);
-                DetectionPipeline::measureCandidateWindowFrequency(
-                    _audioSignal,
-                    candidate,
-                    _audioSource.sampleRateHz() > 0 ? _audioSource.sampleRateHz() : 16000UL,
-                    _freqTransientDetector.targetFrequencyHz(),
-                    now,
-                    fullFrequencyEvidence,
-                    candidate.durationMs);
-                const bool patternValid = DetectionPipeline::processDetectorCandidate(candidate, patternResult, now, &frequencyEvidence);
-                patternResult.candidate.frequencyFull = fullFrequencyEvidence;
-                FrequencyEvidenceEvaluation::classifyPatternResult(patternResult, _frequencyEvidenceTuning);
-                const auto behaviorDecision = _behavior.handlePatternResult(patternResult, now);
-                const char* candidateClass = h3RbCandidateClassName(patternResult, behaviorDecision, selfChirpSuppressed);
-
-                if (patternValid && behaviorDecision == ResonantBehavior::BehaviorDecision::ConsumedPattern) {
-                    sawPatternThisLoop = true;
-                }
-
-                const unsigned long candidateMs = patternResult.candidate.heardAtMs;
-                long gapMs = -1;
-                if (_rbHaveLastCandidateMs && candidateMs >= _rbLastCandidateMs) {
-                    gapMs = static_cast<long>(candidateMs - _rbLastCandidateMs);
-                }
-                const unsigned long behaviorLagMs = now >= patternResult.processedAtMs ? now - patternResult.processedAtMs : 0;
-
-                const char* action = "queued";
-                if (!patternValid) {
-                    action = "invalid";
-                } else if (selfChirpSuppressed) {
-                    action = "self_ignore";
-                } else if (_behavior.requireTonalForBehavior() && patternResult.candidateValid && !patternResult.behaviorEligible) {
-                    action = "blocked";
-                } else if (_rbDetectOnly) {
-                    action = "detectonly";
-                }
-
-                if (_rbDetectOnly && rbShouldLogDetail()) {
-                    _debug.observePatternPulse(now, patternResult.candidateValid, patternResult.tonalValid);
-                } else if (rbShouldLogDetail()) {
-                    logCandidateSummary(_rbCandidateCount + 1, candidate, patternResult);
-                }
-
-                ++_rbCandidateCount;
-                if (candidate.audioOverflowDuringCandidate) {
-                    ++_rbOverflowCandidates;
-                }
-                if (action[0] != 'n') {
-                    ++_rbActionCount;
-                }
-                _rbStrengthSumScaled += static_cast<unsigned long>(candidate.peakStrength * 100.0f);
-                _rbDurationSumMs += candidate.durationMs;
-                _rbHaveLastCandidateMs = true;
-                _rbLastCandidateMs = candidateMs;
-            }
+            drainLegacyAmpCandidates(now, selfChirpSuppressed, sawPatternThisLoop);
 
             processedSamples++;
         }
@@ -1136,6 +993,97 @@ bool Node::roadmapFrequencyOnly() const {
 void Node::syncDetectionRuntimeMode() {
     _detection.setAmpEnabled(!roadmapFrequencyOnly());
     _detection.setFrequencyTuning(_frequencyEvidenceTuning);
+}
+
+void Node::processLegacyAmpFrame(const AudioSignalFrame& frame,
+                                 unsigned long now,
+                                 bool selfChirpSuppressed,
+                                 bool& sawPatternThisLoop) {
+    (void)now;
+    (void)selfChirpSuppressed;
+    (void)sawPatternThisLoop;
+    _ampCandidateBuilder.observeSample(frame, _audioOnsetDetector);
+}
+
+void Node::drainLegacyAmpCandidates(unsigned long now,
+                                    bool selfChirpSuppressed,
+                                    bool& sawPatternThisLoop) {
+    const bool observePatternPulseWhenValid = _sourceKind == AudioSourceKind::I2S && rbOutputsEnabled();
+    const unsigned long queueDepthBeforeDrain = static_cast<unsigned long>(_ampCandidateBuilder.candidateQueueDepth());
+
+    DetectorCandidate candidate;
+    while (_ampCandidateBuilder.popCandidate(candidate)) {
+        DetectionPipeline::PatternResult patternResult;
+        const auto liveFrequencyEvidence = captureFrequencyEvidence();
+        DetectionPipeline::FrequencyEvidence frequencyEvidence = liveFrequencyEvidence;
+        DetectionPipeline::FrequencyEvidence fullFrequencyEvidence = liveFrequencyEvidence;
+        DetectionPipeline::measureCandidateWindowFrequency(
+            _audioSignal,
+            candidate,
+            _audioSource.sampleRateHz() > 0 ? _audioSource.sampleRateHz() : 16000UL,
+            _freqTransientDetector.targetFrequencyHz(),
+            now,
+            frequencyEvidence);
+        DetectionPipeline::measureCandidateWindowFrequency(
+            _audioSignal,
+            candidate,
+            _audioSource.sampleRateHz() > 0 ? _audioSource.sampleRateHz() : 16000UL,
+            _freqTransientDetector.targetFrequencyHz(),
+            now,
+            fullFrequencyEvidence,
+            candidate.durationMs);
+        const bool patternValid = DetectionPipeline::processDetectorCandidate(candidate, patternResult, now, &frequencyEvidence);
+        patternResult.candidate.frequencyFull = fullFrequencyEvidence;
+        FrequencyEvidenceEvaluation::classifyPatternResult(patternResult, _frequencyEvidenceTuning);
+        const auto behaviorDecision = _behavior.handlePatternResult(patternResult, now);
+        const char* candidateClass = h3RbCandidateClassName(patternResult, behaviorDecision, selfChirpSuppressed);
+
+        if (patternValid && behaviorDecision == ResonantBehavior::BehaviorDecision::ConsumedPattern) {
+            sawPatternThisLoop = true;
+        }
+
+        const unsigned long candidateMs = patternResult.candidate.heardAtMs;
+        long gapMs = -1;
+        if (_rbHaveLastCandidateMs && candidateMs >= _rbLastCandidateMs) {
+            gapMs = static_cast<long>(candidateMs - _rbLastCandidateMs);
+        }
+        const unsigned long behaviorLagMs = now >= patternResult.processedAtMs ? now - patternResult.processedAtMs : 0;
+
+        const char* action = "queued";
+        if (!patternValid) {
+            action = "invalid";
+        } else if (selfChirpSuppressed) {
+            action = "self_ignore";
+        } else if (_behavior.requireTonalForBehavior() && patternResult.candidateValid && !patternResult.behaviorEligible) {
+            action = "blocked";
+        } else if (_rbDetectOnly) {
+            action = "detectonly";
+        }
+
+        if (observePatternPulseWhenValid && patternResult.candidateValid) {
+            _debug.observePatternPulse(now,
+                                       behaviorDecision == ResonantBehavior::BehaviorDecision::ConsumedPattern,
+                                       patternResult.tonalValid);
+        }
+
+        if (_rbDetectOnly && rbShouldLogDetail()) {
+            _debug.observePatternPulse(now, patternResult.candidateValid, patternResult.tonalValid);
+        } else if (rbShouldLogDetail()) {
+            logCandidateSummary(_rbCandidateCount + 1, candidate, patternResult);
+        }
+
+        ++_rbCandidateCount;
+        if (candidate.audioOverflowDuringCandidate) {
+            ++_rbOverflowCandidates;
+        }
+        if (action[0] != 'n') {
+            ++_rbActionCount;
+        }
+        _rbStrengthSumScaled += static_cast<unsigned long>(candidate.peakStrength * 100.0f);
+        _rbDurationSumMs += candidate.durationMs;
+        _rbHaveLastCandidateMs = true;
+        _rbLastCandidateMs = candidateMs;
+    }
 }
 
 void Node::processRoadmapFrame(const AudioSignalFrame& frame,

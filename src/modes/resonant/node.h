@@ -112,6 +112,8 @@ private:
     bool usesRoadmapDetection() const;
     bool roadmapFrequencyOnly() const;
     void syncDetectionRuntimeMode();
+    void processLegacyAmpFrame(const AudioSignalFrame& frame, unsigned long now, bool selfChirpSuppressed, bool& sawPatternThisLoop);
+    void drainLegacyAmpCandidates(unsigned long now, bool selfChirpSuppressed, bool& sawPatternThisLoop);
     void processRoadmapFrame(const AudioSignalFrame& frame, unsigned long now, bool selfChirpSuppressed, bool& sawPatternThisLoop);
     DetectionPipeline::FrequencyEvidence captureFrequencyEvidence() const;
     void logCandidate(const DetectorCandidate& candidate, const DetectionPipeline::PatternResult& patternResult, const DetectionPipeline::FrequencyEvidence* liveFrequencyEvidence, unsigned long candidateNumber, long gapMs, unsigned long queueDepthBeforeDrain, unsigned long behaviorLagMs, const char* candidateClass, const char* action, const char* stateName, const char* gateName);
@@ -133,6 +135,7 @@ private:
     // Signal / detection / behavior pipeline.
     AmpTransientDetector _audioOnsetDetector;
     AudioSignal _audioSignal;
+    // Legacy AMP path only. Roadmap detection flows through DetectionRuntime.
     AmpCandidateBuilder _ampCandidateBuilder;
     FreqTransientDetector _freqTransientDetector;
     detection::DetectionRuntime _detection;

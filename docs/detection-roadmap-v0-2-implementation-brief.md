@@ -1,5 +1,8 @@
 # Detection Roadmap v0.2 — Implementation Brief
 
+This brief is the architecture source of truth for the next detection refactor passes.
+Future passes should align with this document unless it is explicitly updated.
+
 ## Stable target flow
 
 AudioSignal
@@ -91,6 +94,9 @@ while (detection.popPatternResult(result)) {
     behavior.handlePatternResult(result, now);
 }
 
+
+
+
 ## Acceptance
 
 - Project compiles after each pass.
@@ -98,3 +104,35 @@ while (detection.popPatternResult(result)) {
 - RoadmapFrequencyFirst mode exists.
 - ResonantBehavior receives PatternResult from DetectionRuntime.
 - AMP-first logic is no longer the only way to create PatternResult.
+
+
+## Anti-Wrapper Rule
+
+Wrappers are allowed as temporary migration seams, but they are not considered final architecture by themselves.
+
+A wrapper is only acceptable if one of these is true:
+
+1. it completely hides the old implementation detail from higher layers, or
+2. it is followed by a cleanup pass that removes the old direct-use path.
+
+After `DetectionRuntime` integration, `Node` must no longer directly use `AmpCandidateBuilder` or `FrequencyCandidateBuilder` for behavior-path detection.
+
+Old detectors/builders may remain as low-level internals, but they must not remain parallel public paths that bypass the roadmap pipeline.
+
+
+---
+
+## Final Cleanup Acceptance
+
+The refactor is not complete if the new roadmap classes merely wrap old code while `Node` still uses the old path directly.
+
+Final detection cleanup requires:
+
+- roadmap path is the default path
+- `Node` talks to `DetectionRuntime` for detection
+- `DetectionRuntime` emits `PatternResults`
+- `SignalEmitters` hide candidate builders from `Node`
+- `PatternResult` construction is not done in `Node`
+- old direct candidate-builder use is isolated to legacy/debug paths or removed
+- docs describe which old classes remain as low-level internals
+

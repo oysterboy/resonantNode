@@ -1,4 +1,4 @@
-# Codex Task: Detection Roadmap v0.2 — Pass 2: Split Roadmap Detection Types
+# Codex Task: Detection Roadmap v0.2 — Pass 5: Add PatternAssembler
 
 Use `docs/detection-roadmap-v0-2-implementation-brief.md` as the architecture source of truth.
 
@@ -6,165 +6,336 @@ Use `docs/detection-roadmap-v0-2-implementation-brief.md` as the architecture so
 
 Detection architecture only.
 
-Create roadmap type files, but do not change runtime behavior.
+Add the explicit PatternAssembler layer.
+
+This pass should create the pattern assembly layer, but it must not change runtime behavior yet.
 
 ## Goal
 
-Make the core roadmap objects real as separate type files:
+Create `PatternAssembler`, which converts:
 
-- SignalCandidate
-- InspectedSignal
-- PatternCandidate
-- PatternResult
+```txt
+InspectedSignal(s)
+→ PatternCandidate(s)
+```
 
-This pass is mostly structural. Existing behavior must remain unchanged.
+Important: `SignalInspector` accepts/rejects signals, but it does **not** create patterns.
+
+`PatternAssembler` is the separate stage that turns accepted inspected signals into pattern candidates.
+
+For now, this may be a simple scaffold:
+
+```txt
+one accepted InspectedSignal
+→ one PatternCandidate
+```
+
+Later, this is where multi-signal grouping, chirp grouping, burst grouping, overlap handling, and one-signal-to-multiple-pattern-candidates logic will live.
+
+---
 
 ## Add Files
 
 Create:
 
 ```txt
-src/detection/signals/SignalCandidate.h
+src/detection/patterns/PatternAssembler.h
+src/detection/patterns/PatternAssembler.cpp
+```
+
+Create directories if needed.
+
+---
+
+## Existing Types
+
+Use the types created in previous passes:
+
+```txt
 src/detection/signals/InspectedSignal.h
 src/detection/patterns/PatternCandidate.h
-src/detection/patterns/PatternResult.h
+```
 
-Create directories if they do not exist.
+`PatternCandidate.h` may currently be a compatibility alias to:
 
-Requirements
-1. Add SignalCandidate
+```cpp
+DetectionPipeline::PatternCandidate
+```
 
-Create src/detection/signals/SignalCandidate.h.
+That is okay for this pass.
 
-It should define:
+Use the actual namespace introduced in earlier passes, likely:
 
+```cpp
+namespace detection
+```
+
+---
+
+## API
+
+Create a class with this shape:
+
+```cpp
 #pragma once
 
-#include <Arduino.h>
-#include "../DetectionPipeline.h"
+#include "../signals/InspectedSignal.h"
+#include "PatternCandidate.h"
 
 namespace detection {
 
-enum class SignalKind {
-    None,
-    AmpTransient,
-    FrequencyTransient
-};
+class PatternAssembler {
+public:
+    void reset();
 
-enum class SignalSource {
-    None,
-    Amp,
-    Frequency
-};
+    void acceptSignal(const InspectedSignal& signal);
 
-struct SignalCandidate {
-    SignalKind kind = SignalKind::None;
-    SignalSource source = SignalSource::None;
+    bool popPatternCandidate(PatternCandidate& out);
 
-    bool present = false;
-    bool valid = false;
+private:
+    static constexpr size_t kQueueCapacity = 8;
 
-    uint64_t startSample = 0;
-    uint64_t peakSample = 0;
-    uint64_t releaseSample = 0;
+    bool pushPatternCandidate(const PatternCandidate& candidate);
 
-    unsigned long startMs = 0;
-    unsigned long peakMs = 0;
-    unsigned long releaseMs = 0;
-    unsigned long durationMs = 0;
-
-    float strength = 0.0f;
-    float score = 0.0f;
-    float contrast = 0.0f;
-
-    DetectionPipeline::TransientEvidence transient = {};
-    DetectionPipeline::FrequencyEvidence frequency = {};
+    PatternCandidate _queue[kQueueCapacity] = {};
+    size_t _readIndex = 0;
+    size_t _count = 0;
 };
 
 } // namespace detection
+```
 
-If the include path needs adjustment for the current project structure, adjust it minimally.
+If the project avoids `size_t` without includes, include:
 
-2. Add InspectedSignal
+```cpp
+#include <stddef.h>
+```
 
-Create src/detection/signals/InspectedSignal.h.
+---
 
-It should define:
+## Assembly Rules
 
-#pragma once
+### Common Rule
 
-#include "SignalCandidate.h"
+Only accepted signals may become pattern candidates.
 
-namespace detection {
+```txt
+if signal.accepted == false:
+  ignore for now
+```
 
-enum class SignalDecision {
-    None,
-    Accepted,
-    Rejected
-};
+Rejected signals are not assembled into PatternCandidates in this pass.
 
-struct InspectedSignal {
-    SignalCandidate signal = {};
-    SignalDecision decision = SignalDecision::None;
+Later they may feed FieldState or diagnostics, but not now.
 
-    bool accepted = false;
-    bool rejected = false;
+---
 
-    const char* reason = "none";
-};
+### Frequency Signal Rule
 
-} // namespace detection
-3. Add PatternCandidate wrapper/header
+For:
 
-Create src/detection/patterns/PatternCandidate.h.
+```cpp
+SignalKind::FrequencyTransient
+```
 
-For now, keep compatibility with the existing DetectionPipeline::PatternCandidate.
+Create a PatternCandidate with:
 
-#pragma once
+```txt
+source information from the frequency signal
+frequency evidence copied from the signal
+timing copied from the signal
+duration copied from the signal
+score / contrast preserved through frequency evidence where possible
+```
 
-#include "../DetectionPipeline.h"
+Map fields as best as possible to the existing `DetectionPipeline::PatternCandidate`.
 
-namespace detection {
+Suggested mapping:
 
-using PatternCandidate = DetectionPipeline::PatternCandidate;
+```txt
+candidate.startMs        = signal.signal.startMs
+candidate.heardAtMs      = signal.signal.releaseMs != 0 ? signal.signal.releaseMs : signal.signal.peakMs
+candidate.acceptedMs     = candidate.heardAtMs
+candidate.durationMs     = signal.signal.durationMs
 
-} // namespace detection
-4. Add PatternResult wrapper/header
+candidate.onsetSample    = signal.signal.startSample
+candidate.peakSample     = signal.signal.peakSample
+candidate.releaseSample  = signal.signal.releaseSample
 
-Create src/detection/patterns/PatternResult.h.
+candidate.peakStrength   = signal.signal.score
+candidate.onsetStrength  = signal.signal.contrast
+candidate.releaseStrength = signal.signal.contrast
 
-For now, keep compatibility with the existing DetectionPipeline::PatternResult.
+candidate.frequency      = signal.signal.frequency
+candidate.frequencyFull  = signal.signal.frequency
+candidate.transient.present = false
+```
 
-#pragma once
+This is a bridge mapping. Do not redesign all candidate fields in this pass.
 
-#include "../DetectionPipeline.h"
+Add a comment that frequency score/contrast are temporarily mapped into legacy strength fields only for compatibility with existing `PatternCandidate`.
 
-namespace detection {
+---
 
-using PatternResult = DetectionPipeline::PatternResult;
+### AMP Signal Rule
 
-} // namespace detection
-Constraints
+For:
+
+```cpp
+SignalKind::AmpTransient
+```
+
+Create a PatternCandidate with:
+
+```txt
+transient evidence copied from the signal
+timing copied from the signal
+duration copied from the signal
+strength copied from the signal
+frequency evidence copied if present
+```
+
+Suggested mapping:
+
+```txt
+candidate.startMs        = signal.signal.startMs
+candidate.heardAtMs      = signal.signal.releaseMs != 0 ? signal.signal.releaseMs : signal.signal.startMs
+candidate.acceptedMs     = candidate.heardAtMs
+candidate.durationMs     = signal.signal.durationMs
+
+candidate.onsetSample    = signal.signal.startSample
+candidate.peakSample     = signal.signal.peakSample
+candidate.releaseSample  = signal.signal.releaseSample
+
+candidate.onsetStrength  = signal.signal.transient.onsetStrength
+candidate.peakStrength   = signal.signal.strength
+candidate.releaseStrength = signal.signal.transient.releaseStrength
+candidate.ambientBaseline = signal.signal.transient.ambientBaseline
+
+candidate.transient      = signal.signal.transient
+candidate.frequency      = signal.signal.frequency
+```
+
+If some fields do not exist in the actual structs, adapt minimally.
+
+---
+
+### Unsupported Signal Kind
+
+If the signal kind is unsupported:
+
+```txt
+ignore it for now
+```
+
+Do not emit invalid PatternCandidates in this pass unless the existing code style strongly prefers explicit invalid candidates.
+
+---
+
+## Queue Behavior
+
+Use a small fixed-size queue.
+
+If full:
+
+```txt
+drop the new PatternCandidate
+```
+
+or use existing project convention.
+
+Do not allocate dynamically.
+
+---
+
+## Important Architecture Rule
+
+`PatternAssembler` must not:
+
+- inspect raw audio
+- run detector thresholds
+- accept/reject SignalCandidates
+- evaluate PatternRules
+- create PatternResults
+- call ResonantBehavior
+- know about Node
+- know about output/chirp behavior
+
+It only assembles accepted `InspectedSignal` objects into `PatternCandidate` objects.
+
+---
+
+## Anti-Wrapper Rule
+
+This assembler may initially map into the existing `DetectionPipeline::PatternCandidate` compatibility type.
+
+That is acceptable for this pass.
+
+But do not add another parallel pattern path that bypasses the roadmap flow.
+
+The intended flow is:
+
+```txt
+SignalCandidate
+→ SignalInspector
+→ InspectedSignal
+→ PatternAssembler
+→ PatternCandidate
+```
+
+not:
+
+```txt
+Node
+→ old candidate helper
+→ PatternCandidate
+```
+
+---
+
+## Constraints
 
 Do not:
 
-change Node
-change ResonantBehavior
-change Analyzer behavior
-move existing structs out of DetectionPipeline.h
-remove existing DetectionPipeline types
-tune thresholds
-add DetectionRuntime
-add SignalInspector
-add SignalEmitters
-add PatternAssembler
-add PatternRules
-add DetectionStrategy/Profile
-rename existing classes
-Acceptance Criteria
-New files exist.
-Project compiles.
-No runtime behavior changed.
-Existing code paths remain untouched.
+- change `Node`
+- change `ResonantBehavior`
+- change Analyzer runtime behavior
+- change current detection behavior
+- remove old candidate builders
+- move existing structs out of `DetectionPipeline.h`
+- tune thresholds
+- add `DetectionRuntime`
+- add `PatternRules`
+- add DetectionStrategy/Profile
+- rename existing detector classes
+- implement complex chirp grouping
+- implement overlap dominance
+- implement family matching
+- implement FieldState
 
-This pass should be boring: just new files, aliases, compile check.
+---
+
+## Compatibility Notes
+
+If previous passes used a different namespace than `detection`, follow the existing namespace.
+
+If `PatternCandidate` is currently only an alias, keep it as an alias.
+
+If mapping from `SignalCandidate` to `PatternCandidate` is awkward because existing fields are legacy/transient-oriented, use conservative bridge mapping and document it with comments.
+
+Do not redesign the existing `PatternCandidate` payload in this pass.
+
+---
+
+## Acceptance Criteria
+
+- `PatternAssembler.h/.cpp` exist.
+- `PatternAssembler::reset()` compiles.
+- `PatternAssembler::acceptSignal(...)` compiles.
+- `PatternAssembler::popPatternCandidate(...)` compiles.
+- Accepted frequency `InspectedSignal` can be converted into a `PatternCandidate`.
+- Accepted AMP `InspectedSignal` can be converted into a `PatternCandidate`.
+- Rejected signals are ignored.
+- No runtime behavior changed.
+- Existing Node path is untouched.
+- Project compiles.

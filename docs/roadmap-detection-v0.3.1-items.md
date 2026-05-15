@@ -60,7 +60,7 @@ Partial
 
 The inspection facts now live in `SignalInspector`, but the separate `FrequencyEvidenceEvaluator` module has not been split out yet.
 
-## D. Inspection mechanic
+## D. [PARTIALLY DONE] Inspection mechanic
 
 23. **Generalize `SignalInspector`**
 Implemented
@@ -87,16 +87,16 @@ Implemented
 29. **Add broadband / tonal-rejection inspection rules later**
 Open
 
-## E. Pattern layer
+## E. [PARTIALLY DONE] Pattern layer
 
 30. **Stabilize `PatternCandidate` as its own structure** - Partial. Pattern candidates now carry explicit pattern kind and stable payload fields, but the legacy compatibility shape is still in place.
 31. **Stabilize `PatternResult` as meaning-bearing output** - Partial. Pattern results now carry explicit pattern kind and stable meaning fields, but the legacy compatibility shape is still in place.
 32. **Keep `PatternRules` as the only pattern interpretation layer** - Implemented. Detectors, emitters, and inspectors stay out of pattern meaning.
 33. **Add single-signal pulse pattern assembly** - Implemented. The current assembler emits explicit single-pulse candidates from accepted inspected signals.
-34. **Add multi-signal chirp / burst pattern assembly** - Open. Grouping multiple inspected signals into pulse/burst/chirp candidates is still future work.
-35. **Allow one `InspectedSignal` to belong to multiple `PatternCandidates`** - Open. Overlapping interpretations are not yet emitted.
-36. **Add pulse-count / timing validation** - Open. Chirp and burst timing/count validation is still future work.
-37. **Add residual / invalid / too-dense pattern handling** - Partial. Invalid/rejected and residual-style outcomes exist, but full too-dense/chirp handling is not yet complete.
+34. **Add multi-signal chirp / burst pattern assembly** - Partial. The assembler now emits a conservative two-signal `PulseSequence` candidate for nearby accepted frequency matches, but full chirp/burst grouping is still future work.
+35. **Allow one `InspectedSignal` to belong to multiple `PatternCandidates`** - Implemented. The same accepted signal can now contribute to its single-pulse candidate and to a conservative sequence candidate.
+36. **Add pulse-count / timing validation** - Partial. Pulse/timing metadata is scaffolded and now influences sequence validation, but fuller chirp/burst validation is still future work.
+37. **Add residual / invalid / too-dense pattern handling** - Partial. Invalid/rejected, residual, and too-dense/invalid-chirp outcomes now exist in the rules, but the handling is still conservative.
 
 ## F. Field state
 
@@ -142,16 +142,23 @@ Open
 
 ## I. Behavior boundary
 
-60. **Ensure Behavior consumes only `PatternResult + FieldState`** - Behavior should not read intermediate detection objects.
-61. **Remove direct behavior access to signal candidates** - `SignalCandidate` stays inside detection diagnostics and pipeline stages.
-62. **Remove direct behavior access to feature streams** - Feature streams are detection inputs, not behavior inputs.
-63. **Keep response probability / suppression / waiting in Behavior** - Artistic reaction logic belongs in behavior, not detection.
-64. **Keep pattern meaning in `PatternRules`** - Detection decides what was heard before behavior decides what to do.
-65. **Keep field condition in `FieldState`** - Acoustic context is summarized separately from pattern meaning.
+60. **Ensure Behavior consumes only `PatternResult + FieldState`** — Keep behavior input clean.
+
+61. **Remove direct behavior access to signal candidates** — No behavior decisions from raw `SignalCandidates`.
+
+62. **Remove direct behavior access to feature streams** — Feature facts must pass through detection or field-state layers.
+
+63. **Keep response probability / suppression / waiting in Behavior** — Behavior owns reaction strategy.
+
+64. **Keep pattern meaning in `PatternRules`** — PatternRules decide what was detected.
+
+65. **Keep field condition in `FieldState`** — FieldState summarizes context, not meaning.
+
+661. **Use `AmpStateProfile` to prove the boundary** — Behavior reacts differently based on `FieldState`, without reading AMP internals directly.
 
 ## J. DetectionProfile composition
 
-66. **Introduce code-defined detection profile factories** — Compose profiles in code, not external config.
+662. **Introduce code-defined detection profile factories** — Compose profiles in code, not external config.
 
 67. **Define `FreqAmpProfile`** — Main current baseline: frequency match plus AMP locality inspection.
 
@@ -178,4 +185,3 @@ Open
 78. **Park `WhiteNoiseRoomProfile` and `WoodBlockProfile`** — Keep as future proof, not current implementation.
 
 79. **Use `DetectionProfile` as highest-level composition item** — `DetectionStrategy` remains optional narrower chain term.
-

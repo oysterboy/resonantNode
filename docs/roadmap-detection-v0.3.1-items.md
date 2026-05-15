@@ -117,16 +117,16 @@ Invalid/rejected, residual, and too-dense/invalid-chirp outcomes now exist in th
 Pattern payloads now live in dedicated pattern headers, with `DetectionPipeline.h` reduced to a thin compatibility bridge and `DetectionPipelineCompat.h` holding the helper conversions.
 The active analyzer and RB consumers now use the direct pattern types; only compat helpers still live behind the old bridge namespace.
 
-## F. Field state
+## F. [MOSTLY DONE] Field state
 
-38. **Stabilize `FieldState`** - Keep acoustic context as runtime state separate from patterns and feature streams.
-39. **Stabilize `FieldStateTracker`** - Use shared infrastructure to compute field state over time.
-40. **Add `FieldStateConfig`** - Let the active profile choose which field metrics are tracked.
-41. **Track ambient / activity / density windows** - Add basic field summaries over configurable time windows.
-42. **Track quiet / busy state** - Provide behavior with simple field condition flags.
-43. **Track chatter / recent activity** - Summarize dense or repetitive field activity for behavior decisions.
-44. **Keep `FieldState` out of `PatternRules`** - Pattern classification must not depend on field-state behavior context.
-45. **Let Behavior consume `PatternResult + FieldState`** - Behavior combines detected meaning with acoustic context.
+38. **Stabilize `FieldState`** - Implemented. `FieldState` now exists as the shared runtime acoustic-context summary.
+39. **Stabilize `FieldStateTracker`** - Implemented. The tracker updates field state over time and is owned by `DetectionRuntime`.
+40. **Add `FieldStateConfig`** - Implemented. The tracker now has a small config object for its windows and thresholds.
+41. **Track ambient / activity / density windows** - Implemented. The tracker maintains rolling counts and simple activity/density summaries.
+42. **Track quiet / busy state** - Implemented. Quiet/active/dense flags are present in `FieldState` and updated by the tracker.
+43. **Track chatter / recent activity** - Partial. Recent activity is summarized by counts/activity/density, but there is no explicit chatter field yet.
+44. **Keep `FieldState` out of `PatternRules`** - Implemented. Pattern classification stays separate from field-state context.
+45. **Let Behavior consume `PatternResult + FieldState`** - Implemented. The roadmap RB path now passes `FieldState` into Behavior alongside `PatternResult`.
 
 ## G. Feature stream architecture
 

@@ -22,6 +22,7 @@ public:
 
     void setFrequencyTuning(const FrequencyEvidenceEvaluation::Values& tuning);
     void setAmpEnabled(bool enabled);
+    void setFieldStateConfig(const FieldStateConfig& config);
 
     void observeFrame(
         const AudioSignalFrame& frame,

@@ -9,6 +9,9 @@ namespace detection {
 
 class FieldStateTracker {
 public:
+    void setConfig(const FieldStateConfig& config);
+    const FieldStateConfig& config() const;
+
     void reset();
 
     void update(unsigned long nowMs);
@@ -33,14 +36,15 @@ public:
 private:
     void recompute(unsigned long nowMs);
 
+    FieldStateConfig _config = {};
     FieldState _state = {};
-    unsigned long _windowMs = 5000;
 
     unsigned long _signalCountInWindow = 0;
     unsigned long _acceptedSignalCountInWindow = 0;
     unsigned long _patternCountInWindow = 0;
 
-    unsigned long _lastWindowResetMs = 0;
+    unsigned long _signalWindowStartMs = 0;
+    unsigned long _patternWindowStartMs = 0;
 };
 
 } // namespace detection

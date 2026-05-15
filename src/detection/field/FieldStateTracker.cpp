@@ -2,22 +2,37 @@
 
 namespace detection {
 
+void FieldStateTracker::setConfig(const FieldStateConfig& config) {
+    _config = config;
+}
+
+const FieldStateConfig& FieldStateTracker::config() const {
+    return _config;
+}
+
 void FieldStateTracker::reset() {
     _state = {};
     _signalCountInWindow = 0;
     _acceptedSignalCountInWindow = 0;
     _patternCountInWindow = 0;
-    _lastWindowResetMs = 0;
+    _signalWindowStartMs = 0;
+    _patternWindowStartMs = 0;
 }
 
 void FieldStateTracker::update(unsigned long nowMs) {
-    if (_lastWindowResetMs == 0) {
-        _lastWindowResetMs = nowMs;
-    } else if (nowMs >= _lastWindowResetMs && nowMs - _lastWindowResetMs >= _windowMs) {
+    if (_signalWindowStartMs == 0) {
+        _signalWindowStartMs = nowMs;
+    } else if (nowMs >= _signalWindowStartMs && nowMs - _signalWindowStartMs >= _config.signalWindowMs) {
         _signalCountInWindow = 0;
         _acceptedSignalCountInWindow = 0;
+        _signalWindowStartMs = nowMs;
+    }
+
+    if (_patternWindowStartMs == 0) {
+        _patternWindowStartMs = nowMs;
+    } else if (nowMs >= _patternWindowStartMs && nowMs - _patternWindowStartMs >= _config.patternWindowMs) {
         _patternCountInWindow = 0;
-        _lastWindowResetMs = nowMs;
+        _patternWindowStartMs = nowMs;
     }
 
     recompute(nowMs);
@@ -56,12 +71,21 @@ void FieldStateTracker::recompute(unsigned long nowMs) {
     _state.recentSignalCount = _signalCountInWindow;
     _state.recentAcceptedSignalCount = _acceptedSignalCountInWindow;
     _state.recentPatternCount = _patternCountInWindow;
-    _state.quiet = _signalCountInWindow == 0;
+    _state.quiet = _signalCountInWindow <= _config.quietSignalCountThreshold;
     _state.active = _signalCountInWindow > 0;
-    _state.dense = _signalCountInWindow >= 8;
-    _state.activity = _signalCountInWindow == 0 ? 0.0f : (_signalCountInWindow >= 8 ? 1.0f : static_cast<float>(_signalCountInWindow) / 8.0f);
-    _state.density = _patternCountInWindow == 0 ? 0.0f : (_patternCountInWindow >= 8 ? 1.0f : static_cast<float>(_patternCountInWindow) / 8.0f);
-    _state.noiseFloor = _signalCountInWindow == 0 ? 0.0f : static_cast<float>(_signalCountInWindow) / static_cast<float>(_windowMs);
+    _state.dense = _signalCountInWindow >= _config.denseSignalCountThreshold;
+    _state.activity = _signalCountInWindow == 0
+        ? 0.0f
+        : (_signalCountInWindow >= _config.busySignalCountThreshold
+            ? 1.0f
+            : static_cast<float>(_signalCountInWindow) / static_cast<float>(_config.busySignalCountThreshold));
+    _state.density = _patternCountInWindow == 0
+        ? 0.0f
+        : (_patternCountInWindow >= _config.denseSignalCountThreshold
+            ? 1.0f
+            : static_cast<float>(_patternCountInWindow) / static_cast<float>(_config.denseSignalCountThreshold));
+    _state.noiseFloor = _signalCountInWindow == 0 ? 0.0f : static_cast<float>(_signalCountInWindow) / static_cast<float>(_config.signalWindowMs);
+    _state.avgAmbientLevel = _state.noiseFloor;
 }
 
 } // namespace detection

@@ -96,6 +96,7 @@ void ResonantBehavior::resetState() {
     _wouldEmitCount = 0;
     _emittedCount = 0;
     _nextIdleAtMs = 0;
+    _lastFieldState = {};
 }
 
 void ResonantBehavior::update(bool transientDetected, float transientStrength, unsigned long now) {
@@ -103,6 +104,11 @@ void ResonantBehavior::update(bool transientDetected, float transientStrength, u
     _pendingTransientStrength = transientStrength;
     _pendingTransientMs = now;
     update(now);
+}
+
+ResonantBehavior::BehaviorDecision ResonantBehavior::handlePatternResult(const detection::PatternResult& result, const detection::FieldState& field, unsigned long now) {
+    _lastFieldState = field;
+    return handlePatternResult(result, now);
 }
 
 ResonantBehavior::BehaviorDecision ResonantBehavior::handlePatternResult(const detection::PatternResult& result, unsigned long now) {

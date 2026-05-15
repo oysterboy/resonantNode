@@ -993,6 +993,7 @@ bool Node::roadmapFrequencyOnly() const {
 void Node::syncDetectionRuntimeMode() {
     _detection.setAmpEnabled(!roadmapFrequencyOnly());
     _detection.setFrequencyTuning(_frequencyEvidenceTuning);
+    _detection.setFieldStateConfig(detection::FieldStateConfig{});
 }
 
 void Node::processLegacyAmpFrame(const AudioSignalFrame& frame,
@@ -1098,7 +1099,7 @@ void Node::processRoadmapFrame(const AudioSignalFrame& frame,
     bool emittedPattern = false;
     while (_detection.popPatternResult(patternResult)) {
         emittedPattern = true;
-        const auto behaviorDecision = _behavior.handlePatternResult(patternResult, now);
+        const auto behaviorDecision = _behavior.handlePatternResult(patternResult, _detection.fieldState(), now);
         if (behaviorDecision == ResonantBehavior::BehaviorDecision::ConsumedPattern) {
             sawPatternThisLoop = true;
         }

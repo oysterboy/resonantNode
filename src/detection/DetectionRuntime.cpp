@@ -27,6 +27,10 @@ void DetectionRuntime::setAmpEnabled(bool enabled) {
     }
 }
 
+void DetectionRuntime::setFieldStateConfig(const FieldStateConfig& config) {
+    _fieldStateTracker.setConfig(config);
+}
+
 void DetectionRuntime::observeFrame(
     const AudioSignalFrame& frame,
     const FrequencyEvidence& frequencyEvidence,

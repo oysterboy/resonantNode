@@ -4,7 +4,20 @@
 
 namespace detection {
 
+struct FieldStateConfig {
+    unsigned long signalWindowMs = 5000;
+    unsigned long patternWindowMs = 5000;
+
+    unsigned long busySignalCountThreshold = 4;
+    unsigned long denseSignalCountThreshold = 8;
+    unsigned long quietSignalCountThreshold = 0;
+
+    float quietActivityThreshold = 0.0f;
+    float busyActivityThreshold = 0.5f;
+};
+
 struct FieldState {
+    float avgAmbientLevel = 0.0f;
     float activity = 0.0f;
     float density = 0.0f;
     float noiseFloor = 0.0f;

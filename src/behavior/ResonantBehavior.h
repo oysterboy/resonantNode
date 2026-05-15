@@ -1,6 +1,7 @@
 #pragma once
 #include <Arduino.h>
 
+#include "../detection/field/FieldState.h"
 #include "../detection/patterns/PatternPayload.h"
 #include "../io/ChirpOutput.h"
 
@@ -42,6 +43,7 @@ public:
 
     void resetState();
     BehaviorDecision handlePatternResult(const detection::PatternResult& result, unsigned long now);
+    BehaviorDecision handlePatternResult(const detection::PatternResult& result, const detection::FieldState& field, unsigned long now);
     void update(unsigned long now);
     // Legacy shim: kept only for compatibility with older call sites that still feed raw transient flags.
     // The architecture contract is PatternResult-driven.
@@ -125,6 +127,7 @@ private:
 
     // --- behavior state ---
     float _activityLevel = 0.0f;
+    detection::FieldState _lastFieldState = {};
     // Legacy compatibility state for the old bool-based update shim.
     bool _pendingTransientDetected = false;
     float _pendingTransientStrength = 0.0f;

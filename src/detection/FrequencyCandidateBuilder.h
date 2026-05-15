@@ -5,19 +5,16 @@
 #include "DetectionPipeline.h"
 #include "FrequencyCandidate.h"
 #include "FrequencyEvidenceEvaluation.h"
-#include "../io/AudioSignal.h"
 #include "signals/ScalarSignalEmitter.h"
 
 /*
 FrequencyCandidateBuilder
 
-Legacy/comparison-only for Analyzer until the roadmap path fully migrates.
-The roadmap frequency signal path should use ScalarTransientDetector via FrequencySignalEmitter.
+Legacy/comparison-only for Analyzer.
+Roadmap behavior detection flows through DetectionRuntime and FrequencyMatchDetector.
 
-Owns the live frequency candidate state and the transition from frequency
+Owns the live frequency comparison state and the transition from frequency
 evidence into a timestamped FrequencyCandidate record.
-
-This is the long-term primary tonal candidate owner for the FREQ path.
 
 Responsibilities:
 - observe live frequency evidence from the frequency stream path

@@ -9,6 +9,10 @@
 #include "../../detection/DetectorParameters.h"
 #include "../../detection/FrequencyEvidenceEvaluation.h"
 #include "../../detection/FrequencyWindowProbe.h"
+#include "../../detection/patterns/PatternAssembler.h"
+#include "../../detection/patterns/PatternRules.h"
+#include "../../detection/signals/SignalCandidate.h"
+#include "../../detection/signals/SignalInspector.h"
 
 /*
 AnalyzerApp
@@ -108,10 +112,61 @@ const char* sequenceFrequencyCandidateSourceName(bool frequencyValid, bool ampAc
     if (frequencyValid) {
         return "frequency_primary";
     }
-    if (ampAccepted) {
-        return "amp_fallback";
-    }
     return "comparison_only";
+}
+
+detection::SignalCandidate makeRoadmapFrequencySignalCandidate(const FrequencyMatchDetector& liveFrequency) {
+    detection::SignalCandidate signal = {};
+    signal.kind = detection::SignalKind::FrequencyTransient;
+    signal.source = detection::SignalSource::Frequency;
+    signal.present = liveFrequency.present;
+    signal.valid = liveFrequency.frequencyCandidate.valid;
+    signal.startSample = liveFrequency.frequencyCandidate.firstCrossSample;
+    signal.peakSample = liveFrequency.frequencyCandidate.peakSample;
+    signal.releaseSample = liveFrequency.frequencyCandidate.releaseSample;
+    signal.startMs = liveFrequency.frequencyCandidate.firstCrossMs;
+    signal.peakMs = liveFrequency.frequencyCandidate.peakMs;
+    signal.releaseMs = liveFrequency.frequencyCandidate.releaseMs;
+    signal.durationMs = liveFrequency.frequencyCandidate.durationOrHoldMs;
+    signal.score = liveFrequency.frequencyCandidate.peakScore;
+    signal.contrast = liveFrequency.frequencyCandidate.peakContrast;
+    signal.frequency = liveFrequency.candidateEvidence.present ? liveFrequency.candidateEvidence : liveFrequency.bestEvidence;
+    return signal;
+}
+
+bool evaluateRoadmapSignalCandidateImpl(const detection::SignalCandidate& signal,
+                                        const FrequencyEvidenceEvaluation::Values& tuning,
+                                        DetectionPipeline::PatternResult& outResult) {
+    detection::SignalInspector inspector;
+    detection::PatternAssembler assembler;
+    detection::PatternRules rules;
+
+    assembler.reset();
+    const detection::InspectedSignal inspected = inspector.inspect(signal, tuning);
+    assembler.acceptSignal(inspected);
+
+    detection::PatternCandidate candidate = {};
+    if (!assembler.popPatternCandidate(candidate)) {
+        outResult = {};
+        outResult.candidate.frequency = signal.frequency;
+        outResult.candidate.frequencyFull = signal.frequency;
+        outResult.candidate.transient.present = signal.present;
+        outResult.candidate.transient.durationMs = signal.durationMs;
+        outResult.freq = signal.frequency;
+        outResult.freqFull = signal.frequency;
+        outResult.valid = false;
+        outResult.candidateValid = false;
+        outResult.tonalValid = false;
+        outResult.behaviorEligible = false;
+        outResult.source = DetectionPipeline::PatternSource::ComparisonOnly;
+        outResult.type = DetectionPipeline::PatternType::Invalid;
+        outResult.reasonCode = DetectionPipeline::PatternReasonCode::DetectorRejected;
+        outResult.rejectReason = DetectionPipeline::PatternRejectReason::NoCandidate;
+        return false;
+    }
+
+    outResult = rules.evaluate(candidate, signal.releaseMs != 0 ? signal.releaseMs : signal.peakMs, tuning);
+    return true;
 }
 
 int16_t rawCaptureSampleToInt16(int sample) {
@@ -3103,6 +3158,10 @@ void AnalyzerApp::finalizeSequenceTrial(unsigned long now) {
     }
 }
 
+bool AnalyzerApp::evaluateRoadmapSignalCandidate(const detection::SignalCandidate& signal, DetectionPipeline::PatternResult& outResult) const {
+    return evaluateRoadmapSignalCandidateImpl(signal, _frequencyEvidenceTuning, outResult);
+}
+
 void AnalyzerApp::printSequenceTrialDebug(unsigned long trialNumber, const char* result, const SequenceTest::TrialDiagnostics& diagnostics) const {
     if (_valMode) {
         return;
@@ -3151,6 +3210,9 @@ void AnalyzerApp::printSequenceTrialDebug(unsigned long trialNumber, const char*
     const auto& freq = diagnostics.acceptedFrequencyEvidence;
     const bool validPattern = strcmp(result, "miss") != 0 && strcmp(result, "invalid_audio") != 0;
     const auto freqEval = FrequencyEvidenceEvaluation::evaluate(freq, _frequencyEvidenceTuning);
+    const auto roadmapFrequencySignal = makeRoadmapFrequencySignalCandidate(_sequenceTest.liveFrequency);
+    DetectionPipeline::PatternResult roadmapFrequencyResult = {};
+    const bool roadmapFrequencyEvaluated = evaluateRoadmapSignalCandidate(roadmapFrequencySignal, roadmapFrequencyResult);
     const unsigned long freqAgeMs = freq.observedAtMs > 0 && diagnostics.acceptedFrequencyProcessedAtMs >= freq.observedAtMs
         ? diagnostics.acceptedFrequencyProcessedAtMs - freq.observedAtMs
         : 0;
@@ -3166,17 +3228,27 @@ void AnalyzerApp::printSequenceTrialDebug(unsigned long trialNumber, const char*
     Serial.print(" pattern_valid=");
     Serial.print(validPattern ? 1 : 0);
     Serial.print(" pattern_type=");
-    Serial.print(validPattern ? (freqEval.matched ? "valid_tonal_transient" : "transient_only") : "invalid");
+    Serial.print(validPattern
+        ? (roadmapFrequencyEvaluated && roadmapFrequencyResult.valid
+               ? DetectionPipeline::patternTypeName(roadmapFrequencyResult.type)
+               : "transient_only")
+        : "invalid");
     Serial.print(" pattern_reason=");
-    Serial.print(validPattern ? FrequencyEvidenceEvaluation::reasonName(freqEval.reason) : "detector_rejected");
+    Serial.print(validPattern
+        ? (roadmapFrequencyEvaluated && roadmapFrequencyResult.valid
+               ? DetectionPipeline::patternReasonName(roadmapFrequencyResult.reasonCode)
+               : "detector_rejected")
+        : "detector_rejected");
     Serial.print(" candidate_valid=");
-    Serial.print(validPattern ? 1 : 0);
+    Serial.print(validPattern && roadmapFrequencyEvaluated && roadmapFrequencyResult.candidateValid ? 1 : 0);
     Serial.print(" tonal_valid=");
-    Serial.print(freqEval.matched ? 1 : 0);
+    Serial.print(roadmapFrequencyEvaluated && roadmapFrequencyResult.valid && roadmapFrequencyResult.tonalValid ? 1 : 0);
     Serial.print(" behavior_eligible=");
-    Serial.print(validPattern && freqEval.matched ? 1 : 0);
+    Serial.print(roadmapFrequencyEvaluated && roadmapFrequencyResult.behaviorEligible ? 1 : 0);
     Serial.print(" reject_reason=");
-    Serial.print(validPattern ? DetectionPipeline::patternRejectReasonName(FrequencyEvidenceEvaluation::rejectReasonFromEvaluation(freqEval.reason)) : "no_candidate");
+    Serial.print(roadmapFrequencyEvaluated && roadmapFrequencyResult.valid
+        ? DetectionPipeline::patternRejectReasonName(roadmapFrequencyResult.rejectReason)
+        : "no_candidate");
     Serial.print(" transient_duration_ms=");
     Serial.print(diagnostics.acceptedTransientDurationMs);
     Serial.print(" transient_peak_strength=");
@@ -3191,7 +3263,7 @@ void AnalyzerApp::printSequenceTrialDebug(unsigned long trialNumber, const char*
     Serial.print(" freq_present=");
     Serial.print(freq.present ? 1 : 0);
     Serial.print(" freq_matched=");
-    Serial.print(freq.matched ? 1 : 0);
+    Serial.print(roadmapFrequencyEvaluated && roadmapFrequencyResult.valid && roadmapFrequencyResult.tonalValid ? 1 : 0);
     Serial.print(" freq_score_ok=");
     Serial.print(freqEval.scoreOk ? 1 : 0);
     Serial.print(" freq_contrast_ok=");
@@ -3218,13 +3290,17 @@ void AnalyzerApp::printSequenceTrialDebug(unsigned long trialNumber, const char*
     Serial.print(" freq_valid_window=");
     Serial.print(freq.validWindow ? 1 : 0);
     Serial.print(" freq_eval_reason=");
-    Serial.print(FrequencyEvidenceEvaluation::reasonName(freqEval.reason));
+    Serial.print(roadmapFrequencyEvaluated && roadmapFrequencyResult.valid
+        ? DetectionPipeline::patternRejectReasonName(roadmapFrequencyResult.rejectReason)
+        : FrequencyEvidenceEvaluation::reasonName(freqEval.reason));
     Serial.print(" freq[score=");
     Serial.print(freq.score, 1);
     Serial.print(" contrast=");
     Serial.print(freq.spectralContrast, 2);
     Serial.print(" source=");
-    Serial.print(freq.present ? (freqEval.matched ? "frequency_primary" : "amp_fallback") : "comparison_only");
+    Serial.print(roadmapFrequencyEvaluated && roadmapFrequencyResult.valid
+        ? DetectionPipeline::patternSourceName(roadmapFrequencyResult.source)
+        : "comparison_only");
     Serial.print("] amp[dur=");
     Serial.print(diagnostics.acceptedTransientDurationMs);
     Serial.print(" strength=");
@@ -3464,7 +3540,7 @@ void AnalyzerApp::printSequenceTrialReports() const {
         Serial.print("valid=");
         Serial.print(freq.present ? 1 : 0);
         Serial.print(" source=");
-        Serial.print(freq.present ? (freq.matched ? "frequency_primary" : "amp_fallback") : "comparison_only");
+        Serial.print(freq.present ? "frequency_primary" : "comparison_only");
         Serial.print(" first_ms=");
         Serial.print(freq.observedAtMs);
         Serial.print(" peak_ms=");
@@ -3478,7 +3554,7 @@ void AnalyzerApp::printSequenceTrialReports() const {
         Serial.print(" contrast=");
         Serial.print(freq.spectralContrast, 2);
         Serial.print(" reject=");
-        Serial.print(freq.present ? (freq.matched ? "none" : FrequencyEvidenceEvaluation::reasonName(FrequencyEvidenceEvaluation::evaluate(freq, _frequencyEvidenceTuning).reason)) : "comparison_only");
+        Serial.print(freq.present ? "none" : "comparison_only");
         Serial.print("]");
         if (hasAmp) {
             Serial.print(" amp[dur=");
@@ -3556,11 +3632,14 @@ void AnalyzerApp::printSequenceTrialResult(unsigned long trialNumber, const char
         ? diagnostics.acceptedTransientReleaseMs
         : diagnostics.duplicateCount > 0 ? diagnostics.duplicateTransientReleaseMs : 0UL;
     const auto& freqCand = _sequenceTest.liveFrequency.frequencyCandidate;
+    const auto roadmapFrequencySignal = makeRoadmapFrequencySignalCandidate(_sequenceTest.liveFrequency);
+    DetectionPipeline::PatternResult roadmapFrequencyResult = {};
+    const bool roadmapFrequencyEvaluated = evaluateRoadmapSignalCandidate(roadmapFrequencySignal, roadmapFrequencyResult);
     Serial.print(" freqCand[");
     Serial.print("valid=");
     Serial.print(freqCand.valid ? 1 : 0);
     Serial.print(" source=");
-    Serial.print(sequenceFrequencyCandidateSourceName(freqCand.valid, diagnostics.transientAccepted));
+    Serial.print(freqCand.valid ? "frequency_primary" : "comparison_only");
     Serial.print(" first_ms=");
     Serial.print(freqCand.firstCrossMs);
     Serial.print(" peak_ms=");
@@ -3620,6 +3699,10 @@ void AnalyzerApp::printSequenceTrialResult(unsigned long trialNumber, const char
     Serial.print(_sequenceTest.liveFrequency.candidatePeakScore, 1);
     Serial.print(" proposer_contrast=");
     Serial.print(_sequenceTest.liveFrequency.candidatePeakContrast, 2);
+    Serial.print(" proposer_source=");
+    Serial.print(_sequenceTest.liveFrequency.frequencyCandidate.valid ? "frequency_primary" : "comparison_only");
+    Serial.print(" proposer_reject=");
+    Serial.print(_sequenceTest.liveFrequency.frequencyCandidate.valid ? "none" : _sequenceTest.liveFrequency.suppressReason);
     Serial.print(" window_present=");
     Serial.print(hasWindowEvidence ? 1 : 0);
     Serial.print(" window_reason=");
@@ -3670,16 +3753,22 @@ void AnalyzerApp::printSequenceTrialResult(unsigned long trialNumber, const char
         const long freqPeakMinusAmpPeakMs = freqCand.valid
             ? static_cast<long>(freqPeakMs) - static_cast<long>(ampPeakMs)
             : 0L;
-        Serial.print(" ampCand[present=1 onset_ms=");
-        Serial.print(ampOnsetMs);
-        Serial.print(" peak_ms=");
-        Serial.print(ampPeakMs);
-        Serial.print(" release_ms=");
-        Serial.print(ampReleaseMs);
-        Serial.print(" dur_ms=");
-        Serial.print(diagnostics.transientAccepted ? diagnostics.acceptedTransientDurationMs : diagnostics.duplicateTransientDurationMs);
-        Serial.print(" strength=");
-        Serial.print(diagnostics.transientAccepted ? diagnostics.acceptedTransientStrength : diagnostics.duplicateTransientStrength, 1);
+        Serial.print(" ampCand[present=");
+        Serial.print(roadmapFrequencyEvaluated && roadmapFrequencyResult.valid && roadmapFrequencyResult.source == DetectionPipeline::PatternSource::FrequencyPrimary
+            ? 0
+            : 1);
+        if (!(roadmapFrequencyEvaluated && roadmapFrequencyResult.valid && roadmapFrequencyResult.source == DetectionPipeline::PatternSource::FrequencyPrimary)) {
+            Serial.print(" onset_ms=");
+            Serial.print(ampOnsetMs);
+            Serial.print(" peak_ms=");
+            Serial.print(ampPeakMs);
+            Serial.print(" release_ms=");
+            Serial.print(ampReleaseMs);
+            Serial.print(" dur_ms=");
+            Serial.print(diagnostics.transientAccepted ? diagnostics.acceptedTransientDurationMs : diagnostics.duplicateTransientDurationMs);
+            Serial.print(" strength=");
+            Serial.print(diagnostics.transientAccepted ? diagnostics.acceptedTransientStrength : diagnostics.duplicateTransientStrength, 1);
+        }
         Serial.print("]");
         Serial.print(" cmp[freqPeakMinusAmpPeakMs=");
         if (freqCand.valid) {

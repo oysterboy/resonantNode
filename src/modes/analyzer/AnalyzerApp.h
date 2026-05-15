@@ -12,6 +12,7 @@
 #include "../../detection/FrequencyMatchDetector.h"
 #include "../../detection/FrequencyEvidenceEvaluation.h"
 #include "../../detection/FreqTransientDetector.h"
+#include "../../detection/signals/SignalCandidate.h"
 #include "../../hal/AudioSource.h"
 
 /*
@@ -442,6 +443,7 @@ private:
     void printSequenceSummary() const;
     void recordSequenceClassifierOutcome(const DetectionPipeline::PatternResult& patternResult, bool duplicateCandidate, bool unexpectedCandidate);
     void handleSequenceCandidate(const DetectionPipeline::PatternResult& patternResult, unsigned long queueDepthBeforeDrain, const DetectionPipeline::FrequencyEvidence* liveFrequencyEvidence = nullptr);
+    bool evaluateRoadmapSignalCandidate(const detection::SignalCandidate& signal, DetectionPipeline::PatternResult& outResult) const;
     DetectionPipeline::FrequencyEvidence scanSequenceFrequencyParity64(const DetectionPipeline::PatternCandidate& patternCandidate, unsigned long observedAtMs) const;
     void updateSequenceAmbientStats();
 

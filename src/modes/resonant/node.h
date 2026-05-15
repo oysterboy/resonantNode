@@ -4,6 +4,7 @@
 #include <stddef.h>
 
 #include "../../detection/DetectionPipeline.h"
+#include "../../detection/DetectionRuntime.h"
 #include "../../detection/FrequencyEvidenceEvaluation.h"
 #include "../../hal/AudioSourceAnalog.h"
 #include "../../hal/AudioSourceI2S.h"
@@ -108,6 +109,10 @@ private:
     const char* rbLogModeName() const;
     const char* detectionModeName() const;
     bool setDetectionModeFromName(const char* name);
+    bool usesRoadmapDetection() const;
+    bool roadmapFrequencyOnly() const;
+    void syncDetectionRuntimeMode();
+    void processRoadmapFrame(const AudioSignalFrame& frame, unsigned long now, bool selfChirpSuppressed, bool& sawPatternThisLoop);
     DetectionPipeline::FrequencyEvidence captureFrequencyEvidence() const;
     void logCandidate(const DetectorCandidate& candidate, const DetectionPipeline::PatternResult& patternResult, const DetectionPipeline::FrequencyEvidence* liveFrequencyEvidence, unsigned long candidateNumber, long gapMs, unsigned long queueDepthBeforeDrain, unsigned long behaviorLagMs, const char* candidateClass, const char* action, const char* stateName, const char* gateName);
     void printRbSummary() const;
@@ -130,6 +135,7 @@ private:
     AudioSignal _audioSignal;
     AmpCandidateBuilder _ampCandidateBuilder;
     FreqTransientDetector _freqTransientDetector;
+    detection::DetectionRuntime _detection;
     FrequencyEvidenceEvaluation::Values _frequencyEvidenceTuning = {};
     ResonantBehavior _behavior;
 

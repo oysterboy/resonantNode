@@ -3573,15 +3573,104 @@ void AnalyzerApp::printSequenceTrialResult(unsigned long trialNumber, const char
     Serial.print(freqCand.peakScore, 1);
     Serial.print(" contrast=");
     Serial.print(freqCand.peakContrast, 2);
-    Serial.print(" reject=");
-    Serial.print(freqCand.rejectReason);
+    Serial.print(" candidate_reject=");
+    Serial.print(freqCand.valid ? "none" : freqCand.rejectReason);
+    Serial.print(" next_suppress=");
+    Serial.print(_sequenceTest.liveFrequency.suppressReason);
+    Serial.print("]");
+    const DetectionPipeline::FrequencyEvidence* windowEarlyEvidence = nullptr;
+    const DetectionPipeline::FrequencyEvidence* windowFullEvidence = nullptr;
+    if (diagnostics.transientAccepted) {
+        windowEarlyEvidence = &diagnostics.acceptedFrequencyEvidence;
+        windowFullEvidence = &diagnostics.acceptedFrequencyEvidenceFull;
+    } else if (diagnostics.duplicateCount > 0) {
+        windowEarlyEvidence = &diagnostics.duplicateFrequencyEvidence;
+        windowFullEvidence = &diagnostics.duplicateFrequencyEvidenceFull;
+    }
+    const bool hasWindowEvidence = windowEarlyEvidence != nullptr && windowFullEvidence != nullptr;
+    const FrequencyEvidenceEvaluation::Evaluation windowEarlyEval = hasWindowEvidence
+        ? FrequencyEvidenceEvaluation::evaluate(*windowEarlyEvidence, _frequencyEvidenceTuning)
+        : FrequencyEvidenceEvaluation::Evaluation{};
+    const FrequencyEvidenceEvaluation::Evaluation windowFullEval = hasWindowEvidence
+        ? FrequencyEvidenceEvaluation::evaluate(*windowFullEvidence, _frequencyEvidenceTuning)
+        : FrequencyEvidenceEvaluation::Evaluation{};
+    Serial.print(" freqCompare[proposer_state=");
+    Serial.print(_sequenceTest.liveFrequency.candidateState);
+    Serial.print(" proposer_valid=");
+    Serial.print(_sequenceTest.liveFrequency.frequencyCandidate.valid ? 1 : 0);
+    Serial.print(" proposer_matched=");
+    Serial.print(_sequenceTest.liveFrequency.wouldProduceCandidate ? 1 : 0);
+    Serial.print(" proposer_ready=");
+    Serial.print(_sequenceTest.liveFrequency.readyOk ? 1 : 0);
+    Serial.print(" proposer_gate=");
+    Serial.print(_sequenceTest.liveFrequency.gateOpen ? 1 : 0);
+    Serial.print(" proposer_suppress=");
+    Serial.print(_sequenceTest.liveFrequency.suppressReason);
+    Serial.print(" proposer_would=");
+    Serial.print(_sequenceTest.liveFrequency.wouldCandidateReason);
+    Serial.print(" proposer_first_ms=");
+    Serial.print(_sequenceTest.liveFrequency.candidateFirstSeenMs);
+    Serial.print(" proposer_peak_ms=");
+    Serial.print(_sequenceTest.liveFrequency.candidatePeakMs);
+    Serial.print(" proposer_release_ms=");
+    Serial.print(_sequenceTest.liveFrequency.candidateReleaseMs);
+    Serial.print(" proposer_hold_ms=");
+    Serial.print(_sequenceTest.liveFrequency.candidateHoldMs);
+    Serial.print(" proposer_score=");
+    Serial.print(_sequenceTest.liveFrequency.candidatePeakScore, 1);
+    Serial.print(" proposer_contrast=");
+    Serial.print(_sequenceTest.liveFrequency.candidatePeakContrast, 2);
+    Serial.print(" window_present=");
+    Serial.print(hasWindowEvidence ? 1 : 0);
+    Serial.print(" window_reason=");
+    if (hasWindowEvidence) {
+        Serial.print("none");
+    } else {
+        Serial.print("not_measured");
+    }
+    Serial.print(" windowEarly_score=");
+    Serial.print(hasWindowEvidence ? windowEarlyEval.score : 0.0f, 1);
+    Serial.print(" windowEarly_contrast=");
+    Serial.print(hasWindowEvidence ? windowEarlyEval.contrast : 0.0f, 2);
+    Serial.print(" windowEarly_matched=");
+    Serial.print(hasWindowEvidence && windowEarlyEval.matched ? 1 : 0);
+    Serial.print(" windowFull_score=");
+    Serial.print(hasWindowEvidence ? windowFullEval.score : 0.0f, 1);
+    Serial.print(" windowFull_contrast=");
+    Serial.print(hasWindowEvidence ? windowFullEval.contrast : 0.0f, 2);
+    Serial.print(" windowFull_matched=");
+    Serial.print(hasWindowEvidence && windowFullEval.matched ? 1 : 0);
+    Serial.print(" windowEarly_obs_ms=");
+    Serial.print(hasWindowEvidence ? windowEarlyEvidence->observedAtMs : 0UL);
+    Serial.print(" windowFull_obs_ms=");
+    Serial.print(hasWindowEvidence ? windowFullEvidence->observedAtMs : 0UL);
+    Serial.print("]");
+    Serial.print(" sourceCand[present=");
+    Serial.print(freqCand.firstCrossMs != 0 || freqCand.peakMs != 0 || freqCand.releaseMs != 0 || freqCand.durationOrHoldMs != 0 || freqCand.valid ? 1 : 0);
+    Serial.print(" source=frequency");
+    Serial.print(" first_ms=");
+    Serial.print(freqCand.firstCrossMs);
+    Serial.print(" peak_ms=");
+    Serial.print(freqCand.peakMs);
+    Serial.print(" release_ms=");
+    Serial.print(freqCand.releaseMs);
+    Serial.print(" dur_or_hold_ms=");
+    Serial.print(freqCand.durationOrHoldMs);
+    Serial.print(" score=");
+    Serial.print(freqCand.peakScore, 1);
+    Serial.print(" contrast=");
+    Serial.print(freqCand.peakContrast, 2);
+    Serial.print(" candidate_reject=");
+    Serial.print(freqCand.valid ? "none" : freqCand.rejectReason);
+    Serial.print(" next_suppress=");
+    Serial.print(_sequenceTest.liveFrequency.suppressReason);
     Serial.print("]");
     if (cmpHasAmp) {
         const unsigned long freqPeakMs = freqCand.valid ? freqCand.peakMs : 0UL;
         const long freqPeakMinusAmpPeakMs = freqCand.valid
             ? static_cast<long>(freqPeakMs) - static_cast<long>(ampPeakMs)
             : 0L;
-        Serial.print(" ampCand[onset_ms=");
+        Serial.print(" ampCand[present=1 onset_ms=");
         Serial.print(ampOnsetMs);
         Serial.print(" peak_ms=");
         Serial.print(ampPeakMs);
@@ -3591,7 +3680,8 @@ void AnalyzerApp::printSequenceTrialResult(unsigned long trialNumber, const char
         Serial.print(diagnostics.transientAccepted ? diagnostics.acceptedTransientDurationMs : diagnostics.duplicateTransientDurationMs);
         Serial.print(" strength=");
         Serial.print(diagnostics.transientAccepted ? diagnostics.acceptedTransientStrength : diagnostics.duplicateTransientStrength, 1);
-        Serial.print("] cmp[freqPeakMinusAmpPeakMs=");
+        Serial.print("]");
+        Serial.print(" cmp[freqPeakMinusAmpPeakMs=");
         if (freqCand.valid) {
             Serial.print(freqPeakMinusAmpPeakMs);
             Serial.print("ms");
@@ -3599,6 +3689,8 @@ void AnalyzerApp::printSequenceTrialResult(unsigned long trialNumber, const char
             Serial.print("-");
         }
         Serial.print("]");
+    } else {
+        Serial.print(" ampCand[present=0]");
     }
     Serial.println();
 

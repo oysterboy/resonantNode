@@ -8,6 +8,7 @@ void DetectionRuntime::reset() {
     _ampEmitter.reset();
     _frequencyEmitter.reset();
     _patternAssembler.reset();
+    _ampEnabled = true;
     _resultQueue[0] = {};
     _resultReadIndex = 0;
     _resultCount = 0;
@@ -15,6 +16,13 @@ void DetectionRuntime::reset() {
 
 void DetectionRuntime::setFrequencyTuning(const FrequencyEvidenceEvaluation::Values& tuning) {
     _frequencyTuning = tuning;
+}
+
+void DetectionRuntime::setAmpEnabled(bool enabled) {
+    _ampEnabled = enabled;
+    if (!_ampEnabled) {
+        _ampEmitter.reset();
+    }
 }
 
 void DetectionRuntime::observeFrame(
@@ -27,7 +35,9 @@ void DetectionRuntime::observeFrame(
     }
 
     _frequencyEmitter.observeFrame(frame, frequencyEvidence, _frequencyTuning);
-    _ampEmitter.observeFrame(frame);
+    if (_ampEnabled) {
+        _ampEmitter.observeFrame(frame);
+    }
 
     drainSignalEmitters(nowMs);
     drainPatternAssembler(nowMs);
@@ -42,6 +52,10 @@ bool DetectionRuntime::popPatternResult(PatternResult& out) {
     _resultReadIndex = (_resultReadIndex + 1) % kResultQueueCapacity;
     --_resultCount;
     return true;
+}
+
+const FrequencySignalEmitter& DetectionRuntime::frequencyEmitter() const {
+    return _frequencyEmitter;
 }
 
 void DetectionRuntime::drainSignalEmitters(unsigned long nowMs) {

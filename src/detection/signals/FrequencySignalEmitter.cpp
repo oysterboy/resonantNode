@@ -93,4 +93,8 @@ bool FrequencySignalEmitter::popSignalCandidate(SignalCandidate& out) {
     return true;
 }
 
+const FrequencyMatchDetector& FrequencySignalEmitter::detector() const {
+    return _detector;
+}
+
 } // namespace detection

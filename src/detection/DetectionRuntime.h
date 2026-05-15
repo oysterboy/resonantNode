@@ -20,6 +20,7 @@ public:
     void reset();
 
     void setFrequencyTuning(const FrequencyEvidenceEvaluation::Values& tuning);
+    void setAmpEnabled(bool enabled);
 
     void observeFrame(
         const AudioSignalFrame& frame,
@@ -28,6 +29,7 @@ public:
     );
 
     bool popPatternResult(PatternResult& out);
+    const FrequencySignalEmitter& frequencyEmitter() const;
 
 private:
     static constexpr size_t kResultQueueCapacity = 8;
@@ -37,6 +39,7 @@ private:
     bool pushPatternResult(const PatternResult& result);
 
     FrequencyEvidenceEvaluation::Values _frequencyTuning = {};
+    bool _ampEnabled = true;
 
     AmpSignalEmitter _ampEmitter;
     FrequencySignalEmitter _frequencyEmitter;

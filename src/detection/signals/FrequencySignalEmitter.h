@@ -23,6 +23,7 @@ public:
     );
 
     bool popSignalCandidate(SignalCandidate& out);
+    const FrequencyMatchDetector& detector() const;
 
 private:
     void applyFrequencyTuning(const FrequencyEvidenceEvaluation::Values& frequencyTuning);

@@ -4,7 +4,9 @@ namespace detection {
 
 namespace {
 
-void fillAmpCandidate(SignalCandidate& candidate, const AudioSignalFrame& frame) {
+} // namespace
+
+void AmpSignalEmitter::fillAmpCandidate(SignalCandidate& candidate, const AudioSignalFrame& frame) {
     candidate.kind = SignalKind::AmpTransient;
     candidate.source = SignalSource::Amp;
     candidate.valid = candidate.durationMs > 0 || candidate.strength > 0.0f || candidate.releaseMs != 0;
@@ -23,8 +25,6 @@ void fillAmpCandidate(SignalCandidate& candidate, const AudioSignalFrame& frame)
     candidate.transient.ambientBaseline = frame.baseline;
     candidate.transient.audioOverflowDuringCandidate = frame.overflowDuringBlock;
 }
-
-} // namespace
 
 AmpSignalEmitter::AmpSignalEmitter() = default;
 

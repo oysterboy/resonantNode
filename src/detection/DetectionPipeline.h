@@ -25,6 +25,12 @@ File structure:
 - pattern result container
 - detector-candidate helpers
 - name helpers for debug output
+
+Roadmap v0.3 note:
+- this header still carries a few compatibility helpers for legacy and
+  analyzer comparison paths
+- new roadmap interpretation should prefer the dedicated signal/pattern
+  layer headers where practical
 */
 namespace DetectionPipeline {
 
@@ -297,11 +303,11 @@ inline const char* patternRejectReasonName(PatternRejectReason reason) {
         case PatternRejectReason::FrequencyWindowInvalid:
             return "frequency_window_invalid";
         case PatternRejectReason::FrequencyScoreTooLow:
-            return "freq_score_too_low";
+            return "score_too_low";
         case PatternRejectReason::FrequencyContrastTooLow:
-            return "freq_contrast_too_low";
+            return "contrast_too_low";
         case PatternRejectReason::FrequencyScoreAndContrastTooLow:
-            return "freq_score_and_contrast_too_low";
+            return "score_and_contrast_too_low";
         case PatternRejectReason::TransientOnly:
             return "transient_only";
         case PatternRejectReason::DuplicateAfterPrimary:

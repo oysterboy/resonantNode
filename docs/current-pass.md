@@ -1,4 +1,4 @@
-# Codex Task: Detection Roadmap v0.3 — Pass 13: Remove / Isolate Legacy Detection Path
+# Codex Task: Detection Roadmap v0.3 — Pass 14: Naming / File Cleanup
 
 Use `docs/detection-roadmap-v0-2-implementation-brief.md` as the architecture source of truth, but apply the updated Roadmap v0.3 naming/rule corrections from the latest refactor notes.
 
@@ -6,15 +6,18 @@ Use `docs/detection-roadmap-v0-2-implementation-brief.md` as the architecture so
 
 Detection architecture cleanup.
 
-This pass isolates or removes old direct detection paths after the roadmap path is working.
+This pass cleans names, file ownership, stale labels, compatibility aliases, and misplaced helpers after the roadmap pipeline is working.
 
-Do not perform broad naming/file cleanup here. That is Pass 14.
+Do not change detector behavior.
+Do not tune thresholds.
+Do not refactor behavior.
+Do not remove Analyzer functionality.
 
 ---
 
 ## Precondition
 
-Before this pass, the normal RB path should be:
+Before this pass, the main roadmap path should already exist:
 
 ```txt
 Node
@@ -27,217 +30,338 @@ Node
 → ResonantBehavior
 ```
 
-`RoadmapFrequencyFirst` should be the default or preferred RB mode.
+`RoadmapFrequencyFirst` should be the normal/default RB path.
 
-`AmpLegacy` may still exist as rollback/comparison.
+Analyzer/RB parity should mostly work.
 
-Analyzer should still run.
+Legacy AMP mode may still exist.
+
+If Pass 13 legacy isolation has not been completed yet, do not delete legacy code broadly in this pass. Only rename/isolate where safe.
 
 ---
 
 ## Goal
 
-Ensure the old direct detection path no longer pollutes the normal roadmap behavior path.
+Make the codebase read like the roadmap architecture.
 
-In roadmap modes, `Node` must not manually do:
-
-```txt
-old candidate builder
-→ manual evidence attachment
-→ manual PatternCandidate construction
-→ manual PatternResult classification
-→ ResonantBehavior
-```
-
-The only allowed normal detection route is:
+Preferred names:
 
 ```txt
-DetectionRuntime
-→ PatternResult
-→ ResonantBehavior
+Feature / stream layer:
+- FrequencyBandStreamExtractor
+- FeatureHistory
+- ScalarWindow
+
+Signal layer:
+- SignalCandidate
+- InspectedSignal
+- SignalInspector
+- AmpSignalEmitter
+- FrequencySignalEmitter
+
+Detector layer:
+- ScalarTransientDetector
+- AmpTransientDetector
+- FrequencyMatchDetector or FrequencySignalDetector, if already used
+- FreqTransientDetector only if it still accurately describes the implementation
+
+Pattern layer:
+- PatternAssembler
+- PatternCandidate
+- PatternRules
+- PatternResult
+
+Runtime:
+- DetectionRuntime
+
+Context:
+- FieldState
+- FieldStateTracker
 ```
 
 ---
 
-## Main Rule
+## Roadmap v0.3 Naming Rules
 
-Old classes may remain only if they are clearly one of these:
+Use these conceptual names consistently:
 
 ```txt
-1. private internals of new roadmap layers
-2. explicit AmpLegacy / debug / comparison path
-3. Analyzer-only measurement/comparison path
-4. low-level detector/extractor implementation still used by the roadmap path
+SignalCandidate:
+  proposed low-level event
+
+InspectedSignal:
+  accepted/rejected/annotated signal
+
+PatternCandidate:
+  one or more inspected signals assembled into a possible pattern
+
+PatternResult:
+  behavior-facing interpretation of a pattern
+
+FrequencyMatchDetector:
+  signal-level live frequency matcher/proposer, if this name exists in the code
+
+FrequencyEvidenceEvaluator:
+  retrospective/window evidence evaluator, not a candidate proposer
+
+PatternRules:
+  PatternCandidate → PatternResult interpretation
 ```
 
-Old classes must not remain as parallel public paths that bypass `DetectionRuntime`.
+Avoid ambiguous names:
+
+```txt
+freqScore
+bestScore
+candidate
+result
+builder
+processor
+```
+
+unless the file/function context makes the source clear.
+
+Prefer explicit fields/log names:
+
+```txt
+liveFreqScore
+liveFreqContrast
+proposerScore
+proposerContrast
+windowEarlyScore
+windowEarlyContrast
+windowFullScore
+windowFullContrast
+```
 
 ---
 
 ## Cleanup Targets
 
-### 1. Node roadmap path
+### 1. DetectionPipeline.h
 
-Audit `src/modes/resonant/Node` / `node.cpp`.
+`DetectionPipeline.h` may still contain too many unrelated responsibilities.
 
-In `RoadmapFrequencyFirst` and `RoadmapFrequencyOnly`, Node must not directly call:
+Clean it gradually.
 
-```txt
-AmpCandidateBuilder
-FrequencyCandidateBuilder
-DetectionPipeline::processDetectorCandidate(...)
-FrequencyEvidenceEvaluation::classifyPatternResult(...)
-manual PatternCandidate construction
-manual PatternResult construction
-```
-
-These may remain only under:
+Target direction:
 
 ```txt
-DetectionMode::AmpLegacy
+DetectionPipeline.h
+  should not be a dumping ground for all structs/helpers.
+
+Type ownership should move to:
+- signals/SignalCandidate.h
+- signals/InspectedSignal.h
+- patterns/PatternCandidate.h
+- patterns/PatternResult.h
+- patterns/PatternRules.h
+- field/FieldState.h
 ```
 
-or clearly named legacy helpers.
+Allowed in this pass:
+
+```txt
+- add comments marking legacy compatibility types
+- move trivial name helpers if safe
+- remove duplicate includes if safe
+- reduce stale comments
+```
+
+Do not perform a risky large type move if it would destabilize compile.
 
 ---
 
-### 2. Isolate AmpLegacy
+### 2. Legacy helpers
 
-If `AmpLegacy` remains, isolate it.
+Identify old direct helpers that are no longer the normal roadmap path.
 
-Preferred structure:
-
-```cpp
-void Node::processLegacyAmpDetection(...);
-void Node::processRoadmapDetection(...);
-```
-
-or equivalent.
-
-The goal is readability:
-
-```txt
-legacy path is obviously legacy
-roadmap path is obviously DetectionRuntime
-```
-
-Avoid interleaving old and new logic in one large branch.
-
----
-
-### 3. Direct old helpers
-
-Find old direct helper calls that should not be used in roadmap mode.
-
-Examples:
+Examples may include:
 
 ```txt
 DetectionPipeline::processDetectorCandidate(...)
 FrequencyEvidenceEvaluation::classifyPatternResult(...)
-measureCandidateWindowFrequency(...)
-legacy candidate-to-result conversion helpers
+old candidate-to-result helpers in Node or Analyzer
 ```
 
 Do one of:
 
 ```txt
-- move call behind legacy-only branch
-- move call into PatternRules if still needed for roadmap interpretation
-- mark as Analyzer comparison only
-- remove only if unused and compile-safe
+- move behind PatternRules if still needed
+- mark as legacy/compatibility
+- restrict to AmpLegacy / Analyzer comparison paths
+- remove only if there are no callers
 ```
 
-Do not delete risky code if Analyzer or legacy mode still depends on it.
+Do not leave comments suggesting these are the preferred roadmap path.
 
 ---
 
-### 4. Candidate builders
+### 3. Candidate builders
 
-Clarify usage of:
+Clarify status of older builders:
 
 ```txt
 AmpCandidateBuilder
 FrequencyCandidateBuilder
 ```
 
-Allowed:
+Allowed final meanings:
 
 ```txt
 AmpCandidateBuilder:
-  - used by AmpLegacy
-  - or private internal of AmpSignalEmitter if applicable
+  legacy AMP path only, or private internal of AmpSignalEmitter
 
 FrequencyCandidateBuilder:
-  - Analyzer legacy/comparison only
-  - or removed from roadmap behavior path
+  legacy/analyzer comparison only, or removed from roadmap behavior path
 ```
 
 Not allowed:
 
 ```txt
-Node roadmap mode directly uses either builder for behavior-path detection.
+Node roadmap mode directly uses old candidate builders for behavior-path detection.
 ```
 
-If retained, add comments:
+If old builders remain, add comments:
+
+```txt
+// Legacy / compatibility path.
+// Roadmap behavior path should use DetectionRuntime.
+```
+
+---
+
+### 4. Frequency naming
+
+Ensure live proposer and retrospective evidence names are distinct.
+
+Good:
+
+```txt
+FrequencyMatchDetector
+liveFreqScore
+liveFreqContrast
+proposerScore
+proposerContrast
+```
+
+Good for retrospective/window measurement:
+
+```txt
+FrequencyEvidenceEvaluator
+windowEarlyScore
+windowEarlyContrast
+windowFullScore
+windowFullContrast
+```
+
+Bad:
+
+```txt
+freqScore
+bestScore
+score
+```
+
+when unclear whether it is live or windowed.
+
+---
+
+### 5. Analyzer SEQ labels
+
+Clean stale source labels.
+
+For valid frequency-primary hits, these should agree:
+
+```txt
+SEQ_FREQ_CAND source=frequency_primary
+SEQ_TRIAL freqCand source=frequency_primary
+SEQ_TRIAL freqCompare proposer_source=frequency_primary
+SEQ_REPORT freq source=frequency_primary
+```
+
+Use:
+
+```txt
+comparison_only
+```
+
+only when evidence was not the primary candidate and exists only for diagnostics.
+
+Use:
+
+```txt
+amp_fallback
+```
+
+only when AMP was truly the primary/fallback candidate.
+
+Do not label frequency-derived compatibility candidates as:
+
+```txt
+ampCand
+```
+
+If it is not a real AMP candidate, use:
+
+```txt
+sourceCand
+compatCand
+```
+
+or omit it.
+
+---
+
+### 6. Rejection reason labels
+
+Make rejection names semantic and stable.
+
+Good:
+
+```txt
+none
+duration_too_short
+duration_too_long
+score_too_low
+contrast_too_low
+score_and_contrast_too_low
+no_evidence
+invalid_window
+comparison_only
+unsupported_signal_kind
+```
+
+Avoid misleading use of:
+
+```txt
+refractory
+```
+
+as a candidate rejection reason when it only describes next suppression state.
+
+Use separate fields:
+
+```txt
+candidate_reject=duration_too_short
+next_suppress=refractory
+```
+
+---
+
+### 7. File structure comments
+
+Add short architecture comments at the top of key files if helpful.
+
+Example:
 
 ```cpp
-// Legacy/comparison path only.
-// Roadmap behavior detection should flow through DetectionRuntime.
+// Roadmap v0.3:
+// SignalInspector converts SignalCandidate -> InspectedSignal.
+// It does not assemble patterns or evaluate PatternResults.
 ```
 
----
-
-### 5. Analyzer
-
-Do not remove Analyzer functionality.
-
-Analyzer may keep legacy/comparison paths if useful for diagnostics.
-
-But comments should distinguish:
-
-```txt
-Analyzer measurement/comparison path
-```
-
-from:
-
-```txt
-roadmap interpretation path
-```
-
-Analyzer should not be treated as the reason to keep old code mixed into Node.
-
----
-
-## Optional Removal
-
-Remove old unused files/classes only if all are true:
-
-```txt
-- no references remain
-- compile remains clean
-- Analyzer does not need them
-- AmpLegacy does not need them
-- removal is small and obvious
-```
-
-If unsure, do not delete. Mark as legacy/comparison and isolate.
-
-This pass is primarily about **isolation**, not aggressive deletion.
-
----
-
-## Anti-Wrapper Rule
-
-Do not leave wrappers that merely add new names while old direct paths still run the show.
-
-Acceptance requires:
-
-```txt
-Roadmap modes use DetectionRuntime.
-Old direct candidate-builder path does not run in roadmap modes.
-Legacy code is explicit and isolated.
-```
+Use comments sparingly. Do not add noisy documentation everywhere.
 
 ---
 
@@ -249,34 +373,52 @@ Legacy code is explicit and isolated.
 - do not change ResonantBehavior behavior
 - do not change output/chirp behavior
 - do not remove Analyzer SEQ functionality
-- do not remove AmpLegacy unless it is explicitly safe and small
-- do not perform broad naming/file cleanup
+- do not remove AmpLegacy unless Pass 13 already explicitly isolated it and removal is safe
+- do not perform broad rewrites
 - do not add DetectionStrategy/Profile
-- do not add new FieldState behavior
+- do not add complex FieldState behavior
 - do not implement overlap dominance
 - do not implement family matching
-- do not change public serial commands except help text if needed
+- do not change public serial commands unless only renaming help text for clarity
+
+---
+
+## Safe Cleanup Priority
+
+Do in this order:
+
+```txt
+1. Clean log/source labels.
+2. Clean misleading comments.
+3. Mark legacy helpers clearly.
+4. Remove unused compatibility aliases only if compile-safe.
+5. Rename local helper functions only if low-risk.
+6. Avoid large file moves unless trivial.
+```
+
+If a rename touches many files, prefer adding a clear TODO instead of doing it in this pass.
 
 ---
 
 ## Acceptance Criteria
 
 - Project compiles.
+- Runtime behavior is unchanged.
 - `RoadmapFrequencyFirst` still works.
-- `RoadmapFrequencyOnly` still works if present.
-- `AmpLegacy` still works if retained.
-- In roadmap modes, Node uses `DetectionRuntime` for detection.
-- In roadmap modes, Node does not directly drain old candidate builders for behavior-path detection.
-- In roadmap modes, Node does not manually build/classify PatternResults.
-- Old direct detection path is isolated behind `AmpLegacy`, Analyzer comparison, or private internals.
-- Remaining legacy helpers/classes are clearly commented as legacy/comparison/internal.
-- Runtime behavior is unchanged except for cleanup of unreachable/duplicate legacy paths.
+- `AmpLegacy` still works if still present.
+- Analyzer SEQ still runs.
+- Valid frequency-primary candidates are consistently labeled `frequency_primary`.
+- `comparison_only` is not used for primary roadmap frequency candidates.
+- `ampCand` is not used for frequency-derived compatibility output.
+- Candidate rejection reasons distinguish actual rejection from next suppression state.
+- Remaining legacy classes/helpers are clearly marked as legacy/compatibility/internal.
+- Code names and comments better match Roadmap v0.3.
 
 ---
 
 ## Post-Pass Smoke Tests
 
-Run RB default:
+Run RB:
 
 ```txt
 RB DETECT
@@ -288,38 +430,11 @@ Expected:
 
 ```txt
 default mode is RoadmapFrequencyFirst
-DetectionRuntime emits PatternResults
-frequency-primary behavior-eligible results appear
+PatternResults still appear
+behavior-eligible frequency-primary results still appear
 ```
 
-Run frequency-only:
-
-```txt
-RB DETECT mode=freqonly
-RB detectonly on
-```
-
-Expected:
-
-```txt
-frequency path works
-AMP does not create behavior-path PatternResults
-```
-
-Run legacy if retained:
-
-```txt
-RB DETECT mode=legacy
-RB detectonly on
-```
-
-Expected:
-
-```txt
-legacy path still available
-```
-
-Run Analyzer quick check:
+Run Analyzer:
 
 ```txt
 SEQ 70cm
@@ -328,22 +443,26 @@ SEQ 70cm
 Expected:
 
 ```txt
-SEQ still runs
-SEQ reports source/reject semantics correctly
+SEQ_TRIAL and SEQ_REPORT agree on source/reject semantics
+no obvious regression in expected/miss/duplicate classification
+```
+
+Optional quick legacy check:
+
+```txt
+RB DETECT mode=legacy
+```
+
+Expected:
+
+```txt
+legacy mode still available if not removed by Pass 13
 ```
 
 ---
 
-## Notes for Pass 14
+## Notes
 
-Pass 14 will handle naming/file cleanup:
+This is a cleanup pass, not an architecture expansion pass.
 
-```txt
-- stale labels
-- comments
-- compatibility aliases
-- misleading file/class names
-- source/reject log cleanup
-```
-
-Do not overload Pass 13 with broad renaming.
+If large unresolved legacy paths remain, do not hide them with wrappers. Mark them clearly and leave deletion for the explicit legacy cleanup pass.

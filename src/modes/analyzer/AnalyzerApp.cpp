@@ -108,7 +108,7 @@ const char* liveFrequencyGateReason(bool readyOk, const FrequencyEvidenceEvaluat
     return "none";
 }
 
-const char* sequenceFrequencyCandidateSourceName(bool frequencyValid, bool ampAccepted) {
+const char* sequenceFrequencyCandidateSourceName(bool frequencyValid) {
     if (frequencyValid) {
         return "frequency_primary";
     }
@@ -3042,7 +3042,7 @@ void AnalyzerApp::finalizeSequenceTrial(unsigned long now) {
             Serial.print(" legacy_comparison=0");
             Serial.print(" state=closed");
             Serial.print(" source=");
-            Serial.print(sequenceFrequencyCandidateSourceName(live.frequencyCandidate.valid, live.frequencyCandidate.valid ? false : diagnostics.transientAccepted));
+            Serial.print(sequenceFrequencyCandidateSourceName(live.frequencyCandidate.valid));
             Serial.print(" first_seen_ms=");
             Serial.print(live.candidateFirstSeenMs);
             Serial.print(" first_seen_sample=");
@@ -3293,25 +3293,26 @@ void AnalyzerApp::printSequenceTrialDebug(unsigned long trialNumber, const char*
     Serial.print(roadmapFrequencyEvaluated && roadmapFrequencyResult.valid
         ? DetectionPipeline::patternRejectReasonName(roadmapFrequencyResult.rejectReason)
         : FrequencyEvidenceEvaluation::reasonName(freqEval.reason));
-    Serial.print(" freq[score=");
-    Serial.print(freq.score, 1);
-    Serial.print(" contrast=");
-    Serial.print(freq.spectralContrast, 2);
+    Serial.print(" compatCand[present=");
+    Serial.print(freq.present ? 1 : 0);
     Serial.print(" source=");
     Serial.print(roadmapFrequencyEvaluated && roadmapFrequencyResult.valid
         ? DetectionPipeline::patternSourceName(roadmapFrequencyResult.source)
         : "comparison_only");
-    Serial.print("] amp[dur=");
-    Serial.print(diagnostics.acceptedTransientDurationMs);
+    Serial.print(" first_ms=");
+    Serial.print(diagnostics.transientAccepted ? diagnostics.acceptedTransientMs : diagnostics.duplicateTransientMs);
+    Serial.print(" peak_ms=");
+    Serial.print(diagnostics.transientAccepted ? diagnostics.acceptedTransientPeakMs : diagnostics.duplicateTransientPeakMs);
+    Serial.print(" release_ms=");
+    Serial.print(diagnostics.transientAccepted ? diagnostics.acceptedTransientReleaseMs : diagnostics.duplicateTransientReleaseMs);
+    Serial.print(" dur_ms=");
+    Serial.print(diagnostics.transientAccepted ? diagnostics.acceptedTransientDurationMs : diagnostics.duplicateTransientDurationMs);
     Serial.print(" strength=");
-    Serial.print(diagnostics.acceptedTransientStrength, 1);
-    Serial.print("] cmp[freqMinusAmpMs=");
-    if (diagnostics.transientAccepted && freq.present) {
-        Serial.print(static_cast<long>(freq.observedAtMs) - static_cast<long>(diagnostics.acceptedTransientPeakMs));
-        Serial.print("ms");
-    } else {
-        Serial.print("-");
-    }
+    Serial.print(diagnostics.transientAccepted ? diagnostics.acceptedTransientStrength : diagnostics.duplicateTransientStrength, 1);
+    Serial.print(" candidate_reject=");
+    Serial.print(diagnostics.transientAccepted ? "none" : strongestRejectReasonName);
+    Serial.print(" next_suppress=");
+    Serial.print(_sequenceTest.liveFrequency.suppressReason);
     Serial.print("]");
     if (diagnostics.duplicateCount > 0) {
         Serial.print(" dup[dur=");
@@ -3635,22 +3636,22 @@ void AnalyzerApp::printSequenceTrialResult(unsigned long trialNumber, const char
     const auto roadmapFrequencySignal = makeRoadmapFrequencySignalCandidate(_sequenceTest.liveFrequency);
     DetectionPipeline::PatternResult roadmapFrequencyResult = {};
     const bool roadmapFrequencyEvaluated = evaluateRoadmapSignalCandidate(roadmapFrequencySignal, roadmapFrequencyResult);
-    Serial.print(" freqCand[");
+    Serial.print(" proposerCand[");
     Serial.print("valid=");
     Serial.print(freqCand.valid ? 1 : 0);
     Serial.print(" source=");
-    Serial.print(freqCand.valid ? "frequency_primary" : "comparison_only");
-    Serial.print(" first_ms=");
+    Serial.print(sequenceFrequencyCandidateSourceName(freqCand.valid));
+    Serial.print(" proposer_first_ms=");
     Serial.print(freqCand.firstCrossMs);
-    Serial.print(" peak_ms=");
+    Serial.print(" proposer_peak_ms=");
     Serial.print(freqCand.peakMs);
-    Serial.print(" release_ms=");
+    Serial.print(" proposer_release_ms=");
     Serial.print(freqCand.releaseMs);
-    Serial.print(" dur_or_hold_ms=");
+    Serial.print(" proposer_hold_ms=");
     Serial.print(freqCand.durationOrHoldMs);
-    Serial.print(" score=");
+    Serial.print(" proposer_score=");
     Serial.print(freqCand.peakScore, 1);
-    Serial.print(" contrast=");
+    Serial.print(" proposer_contrast=");
     Serial.print(freqCand.peakContrast, 2);
     Serial.print(" candidate_reject=");
     Serial.print(freqCand.valid ? "none" : freqCand.rejectReason);

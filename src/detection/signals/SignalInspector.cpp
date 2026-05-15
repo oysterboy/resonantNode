@@ -4,6 +4,27 @@
 namespace {
 
 constexpr unsigned long kDuplicateRiskWindowMs = 150;
+constexpr unsigned long kFeatureHistoryPaddingMs = 20;
+
+detection::AmpSupportClass classifyAmpSupportFromMetrics(float lift, float normalized, bool hasEvidence) {
+    if (!hasEvidence) {
+        return detection::AmpSupportClass::Unknown;
+    }
+
+    if (lift >= 1200.0f || normalized >= 0.60f) {
+        return detection::AmpSupportClass::Strong;
+    }
+
+    if (lift >= 500.0f || normalized >= 0.25f) {
+        return detection::AmpSupportClass::Medium;
+    }
+
+    if (lift >= 120.0f || normalized > 0.0f) {
+        return detection::AmpSupportClass::Weak;
+    }
+
+    return detection::AmpSupportClass::None;
+}
 
 void setRejected(detection::InspectedSignal& out, detection::SignalRejectReason reason) {
     out.decision = detection::SignalDecision::Rejected;
@@ -24,11 +45,16 @@ void SignalInspector::reset() {
     _lastAcceptedFrequencyMs = 0;
 }
 
-void SignalInspector::annotateAcceptedSignal(InspectedSignal& out, const SignalCandidate& candidate, const RawWindowStats* rawWindow) const {
+void SignalInspector::annotateAcceptedSignal(
+    InspectedSignal& out,
+    const SignalCandidate& candidate,
+    const FeatureHistory* featureHistory,
+    const RawWindowStats* rawWindow
+) const {
     out.duplicateRisk = false;
     out.duplicateRiskScore = 0.0f;
     annotateDuplicateRisk(out, candidate);
-    annotateAmpSupportAndLocality(out, candidate, rawWindow);
+    annotateAmpSupportAndLocality(out, candidate, featureHistory, rawWindow);
     out.signal.confidence = out.confidence;
     out.signal.signalConfidence = out.signalConfidence;
     out.signal.frequencyConfidence = out.frequencyConfidence;
@@ -78,25 +104,46 @@ void SignalInspector::annotateDuplicateRisk(InspectedSignal& out, const SignalCa
     *lastAcceptedMs = acceptedMs;
 }
 
-void SignalInspector::annotateAmpSupportAndLocality(InspectedSignal& out, const SignalCandidate& candidate, const RawWindowStats* rawWindow) const {
+void SignalInspector::annotateAmpSupportAndLocality(
+    InspectedSignal& out,
+    const SignalCandidate& candidate,
+    const FeatureHistory* featureHistory,
+    const RawWindowStats* rawWindow
+) const {
     const SignalWindowStats window = evaluateSignalWindow(candidate);
+    const unsigned long startMs = candidate.startMs > kFeatureHistoryPaddingMs ? candidate.startMs - kFeatureHistoryPaddingMs : 0UL;
+    const unsigned long endMs = candidate.endMs != 0
+        ? candidate.endMs + kFeatureHistoryPaddingMs
+        : (candidate.releaseMs != 0 ? candidate.releaseMs + kFeatureHistoryPaddingMs : candidate.peakMs + kFeatureHistoryPaddingMs);
+
+    if (featureHistory != nullptr) {
+        const ScalarWindow ampWindow = featureHistory->getWindow(FeatureStreamId::AmpEnvelope, startMs, endMs);
+        if (ampWindow.valid) {
+            const ScalarWindow floorWindow = featureHistory->getWindow(FeatureStreamId::AmbientFloor, startMs, endMs);
+            const float baseline = floorWindow.valid ? floorWindow.mean : candidate.ampBaseline;
+            const float lift = ampWindow.peak - baseline;
+            const float normalized = baseline > 0.0f ? lift / baseline : lift;
+            out.ampSupport = classifyAmpSupportFromMetrics(lift, normalized, true);
+            out.locality = classifyLocality(out.ampSupport);
+            return;
+        }
+    }
+
     const bool useRawWindow = rawWindow != nullptr && rawWindow->present && rawWindow->valid;
-    const AmpSupportClass support = useRawWindow
-        ? (rawWindow->lift >= 1200.0f || rawWindow->normalized >= 0.60f
-            ? AmpSupportClass::Strong
-            : rawWindow->lift >= 500.0f || rawWindow->normalized >= 0.25f
-                ? AmpSupportClass::Medium
-                : rawWindow->lift >= 120.0f || rawWindow->normalized > 0.0f
-                    ? AmpSupportClass::Weak
-                    : AmpSupportClass::None)
-        : classifyAmpSupport(window);
-    out.ampSupport = support;
+    if (useRawWindow) {
+        out.ampSupport = classifyAmpSupportFromMetrics(rawWindow->lift, rawWindow->normalized, true);
+        out.locality = classifyLocality(out.ampSupport);
+        return;
+    }
+
+    out.ampSupport = classifyAmpSupport(window);
     out.locality = classifyLocality(out.ampSupport);
 }
 
-InspectedSignal SignalInspector::inspect(
+InspectedSignal SignalInspector::inspectImpl(
     const SignalCandidate& candidate,
     const FrequencyEvidenceEvaluation::Values& frequencyTuning,
+    const FeatureHistory* featureHistory,
     const RawWindowStats* rawWindow
 ) const {
     if (!candidate.present) {
@@ -118,9 +165,9 @@ InspectedSignal SignalInspector::inspect(
 
     switch (candidate.kind) {
         case SignalKind::AmpTransient:
-            return inspectAmp(candidate, rawWindow);
+            return inspectAmp(candidate, featureHistory, rawWindow);
         case SignalKind::FrequencyMatch:
-            return inspectFrequency(candidate, frequencyTuning, rawWindow);
+            return inspectFrequency(candidate, frequencyTuning, featureHistory, rawWindow);
         case SignalKind::None:
         default: {
             InspectedSignal out;
@@ -133,9 +180,27 @@ InspectedSignal SignalInspector::inspect(
     }
 }
 
+InspectedSignal SignalInspector::inspect(
+    const SignalCandidate& candidate,
+    const FrequencyEvidenceEvaluation::Values& frequencyTuning,
+    const RawWindowStats* rawWindow
+) const {
+    return inspectImpl(candidate, frequencyTuning, nullptr, rawWindow);
+}
+
+InspectedSignal SignalInspector::inspectWithHistory(
+    const SignalCandidate& candidate,
+    const FrequencyEvidenceEvaluation::Values& frequencyTuning,
+    const FeatureHistory* featureHistory,
+    const RawWindowStats* rawWindow
+) const {
+    return inspectImpl(candidate, frequencyTuning, featureHistory, rawWindow);
+}
+
 InspectedSignal SignalInspector::inspectFrequency(
     const SignalCandidate& candidate,
     const FrequencyEvidenceEvaluation::Values& frequencyTuning,
+    const FeatureHistory* featureHistory,
     const RawWindowStats* rawWindow
 ) const {
     InspectedSignal out;
@@ -165,12 +230,13 @@ InspectedSignal SignalInspector::inspectFrequency(
     out.signalConfidence = 1.0f;
     out.frequencyConfidence = frequencyRule.confidence;
     out.confidence = out.signalConfidence;
-    annotateAcceptedSignal(out, candidate, rawWindow);
+    annotateAcceptedSignal(out, candidate, featureHistory, rawWindow);
     return out;
 }
 
 InspectedSignal SignalInspector::inspectAmp(
     const SignalCandidate& candidate,
+    const FeatureHistory* featureHistory,
     const RawWindowStats* rawWindow
 ) const {
     InspectedSignal out;
@@ -195,7 +261,7 @@ InspectedSignal SignalInspector::inspectAmp(
     out.signalConfidence = 1.0f;
     out.frequencyConfidence = 0.0f;
     out.confidence = out.signalConfidence;
-    annotateAcceptedSignal(out, candidate, rawWindow);
+    annotateAcceptedSignal(out, candidate, featureHistory, rawWindow);
     return out;
 }
 

@@ -10,6 +10,8 @@
 #include "patterns/PatternRules.h"
 #include "patterns/PatternPayload.h"
 #include "field/FieldStateTracker.h"
+#include "features/FeatureExtractor.h"
+#include "features/FeatureHistory.h"
 #include "FrequencyEvidenceEvaluation.h"
 
 namespace detection {
@@ -33,6 +35,7 @@ public:
     bool popPatternResult(PatternResult& out);
     const FrequencySignalEmitter& frequencyEmitter() const;
     const FieldState& fieldState() const;
+    const FeatureHistory& featureHistory() const;
 
 private:
     static constexpr size_t kResultQueueCapacity = 8;
@@ -50,6 +53,7 @@ private:
     PatternAssembler _patternAssembler;
     PatternRules _patternRules;
     FieldStateTracker _fieldStateTracker;
+    FeatureHistory _featureHistory;
 
     PatternResult _resultQueue[kResultQueueCapacity] = {};
     size_t _resultReadIndex = 0;

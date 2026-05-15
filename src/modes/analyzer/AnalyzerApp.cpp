@@ -9,6 +9,7 @@
 #include "../../detection/DetectorParameters.h"
 #include "../../detection/FrequencyEvidenceEvaluation.h"
 #include "../../detection/FrequencyWindowProbe.h"
+#include "../../detection/features/FeatureHistory.h"
 #include "../../detection/signals/RawWindow.h"
 #include "../../detection/patterns/PatternAssembler.h"
 #include "../../detection/patterns/PatternNames.h"
@@ -264,6 +265,8 @@ bool evaluateRoadmapSignalCandidateImpl(const detection::SignalCandidate& signal
     detection::PatternRules rules;
     detection::RawWindowStats rawWindow = {};
     const detection::RawWindowStats* rawWindowPtr = nullptr;
+    detection::FeatureHistory featureHistory = {};
+    const detection::FeatureHistory* featureHistoryPtr = nullptr;
 
     if (audioSignal != nullptr && signal.present && signal.startSample != 0 && signal.releaseSample >= signal.startSample) {
         if (detection::captureRawWindowStats(*audioSignal, signal.startSample, signal.releaseSample, signal.ampBaseline, rawWindow)) {
@@ -271,9 +274,28 @@ bool evaluateRoadmapSignalCandidateImpl(const detection::SignalCandidate& signal
         }
     }
 
+    if (signal.present) {
+        const unsigned long startMs = signal.startMs;
+        const unsigned long peakMs = signal.peakMs != 0 ? signal.peakMs : startMs;
+        const unsigned long endMs = signal.endMs != 0 ? signal.endMs : (signal.releaseMs != 0 ? signal.releaseMs : peakMs);
+        const float baseline = rawWindowPtr != nullptr ? rawWindowPtr->baseline : signal.ampBaseline;
+        const float ampPeak = rawWindowPtr != nullptr ? rawWindowPtr->peakMagnitude : signal.ampLevel;
+        featureHistory.record(detection::FeatureStreamId::AmpEnvelope, startMs, baseline);
+        featureHistory.record(detection::FeatureStreamId::AmpEnvelope, peakMs, ampPeak);
+        featureHistory.record(detection::FeatureStreamId::AmpEnvelope, endMs, baseline);
+        featureHistory.record(detection::FeatureStreamId::AmbientFloor, startMs, baseline);
+        featureHistory.record(detection::FeatureStreamId::AmbientFloor, peakMs, baseline);
+        featureHistory.record(detection::FeatureStreamId::AmbientFloor, endMs, baseline);
+        if (signal.frequency.present) {
+            featureHistory.record(detection::FeatureStreamId::FrequencyScore, peakMs, signal.frequency.score);
+            featureHistory.record(detection::FeatureStreamId::FrequencyContrast, peakMs, signal.frequency.spectralContrast);
+        }
+        featureHistoryPtr = &featureHistory;
+    }
+
     inspector->reset();
     assembler->reset();
-    const detection::InspectedSignal inspected = inspector->inspect(signal, tuning, rawWindowPtr);
+    const detection::InspectedSignal inspected = inspector->inspectWithHistory(signal, tuning, featureHistoryPtr, rawWindowPtr);
     if (traceStages) {
         Serial.print("SEQ_TRACE stage=SIGNAL signal=");
         Serial.print(signal.present ? 1 : 0);
@@ -339,7 +361,7 @@ bool evaluateRoadmapSignalCandidateImpl(const detection::SignalCandidate& signal
         Serial.print(" duplicate_risk_score=");
         Serial.print(inspected.duplicateRiskScore, 2);
         Serial.print(" window_source=");
-        Serial.print(rawWindowPtr != nullptr ? "raw" : "snapshot");
+        Serial.print(featureHistoryPtr != nullptr ? (rawWindowPtr != nullptr ? "history+raw" : "history") : (rawWindowPtr != nullptr ? "raw" : "snapshot"));
         Serial.println();
     }
     assembler->acceptSignal(inspected);

@@ -10,6 +10,7 @@ void DetectionRuntime::reset() {
     _signalInspector.reset();
     _patternAssembler.reset();
     _fieldStateTracker.reset();
+    _featureHistory.reset();
     _ampEnabled = true;
     _resultQueue[0] = {};
     _resultReadIndex = 0;
@@ -41,6 +42,9 @@ void DetectionRuntime::observeFrame(
         return;
     }
 
+    FeatureExtractor::observeFrame(frame, _featureHistory);
+    FeatureExtractor::observeFrequencyEvidence(frequencyEvidence, nowMs, _featureHistory);
+
     _frequencyEmitter.observeFrame(frame, frequencyEvidence, _frequencyTuning);
     if (_ampEnabled) {
         _ampEmitter.observeFrame(frame);
@@ -69,19 +73,23 @@ const FieldState& DetectionRuntime::fieldState() const {
     return _fieldStateTracker.state();
 }
 
+const FeatureHistory& DetectionRuntime::featureHistory() const {
+    return _featureHistory;
+}
+
 void DetectionRuntime::drainSignalEmitters(unsigned long nowMs) {
     SignalCandidate candidate;
 
     while (_frequencyEmitter.popSignalCandidate(candidate)) {
         _fieldStateTracker.observeSignalCandidate(candidate, nowMs);
-        const InspectedSignal inspected = _signalInspector.inspect(candidate, _frequencyTuning);
+        const InspectedSignal inspected = _signalInspector.inspectWithHistory(candidate, _frequencyTuning, &_featureHistory);
         _fieldStateTracker.observeInspectedSignal(inspected, nowMs);
         _patternAssembler.acceptSignal(inspected);
     }
 
     while (_ampEmitter.popSignalCandidate(candidate)) {
         _fieldStateTracker.observeSignalCandidate(candidate, nowMs);
-        const InspectedSignal inspected = _signalInspector.inspect(candidate, _frequencyTuning);
+        const InspectedSignal inspected = _signalInspector.inspectWithHistory(candidate, _frequencyTuning, &_featureHistory);
         _fieldStateTracker.observeInspectedSignal(inspected, nowMs);
         _patternAssembler.acceptSignal(inspected);
     }

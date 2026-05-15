@@ -128,16 +128,16 @@ The active analyzer and RB consumers now use the direct pattern types; only comp
 44. **Keep `FieldState` out of `PatternRules`** - Implemented. Pattern classification stays separate from field-state context.
 45. **Let Behavior consume `PatternResult + FieldState`** - Implemented. The roadmap RB path now passes `FieldState` into Behavior alongside `PatternResult`.
 
-## G. Feature stream architecture
+## G. [MOSTLY DONE] Feature stream architecture
 
-46. **Stabilize `FeatureExtractor`** - Define extractors as the layer that measures raw audio into reusable streams.
-47. **Stabilize `FeatureStream`** - Treat streams as measurable signal facts over time, not meaning.
-48. **Stabilize `FeatureHistory`** - Store recent feature values for retrospective scalar windows.
-49. **Promote frequently used raw-window evaluations into feature streams** - Move repeated raw checks into continuous streams where useful.
-50. **Promote Goertzel frequency match support into feature-stream form where useful** - Use continuous target-frequency streams when they help detection or inspection.
-51. **Add broadband / noise feature streams** - Prepare for white-noise and broadband detection chains.
-52. **Add band-energy feature streams** - Support later tonal/noisy balance and object-like detection.
-53. **Add derived feature streams only when candidate creation needs them** - Avoid premature feature mixing before signal emission.
+46. **Stabilize `FeatureExtractor`** - Implemented. Extractors now record frame and frequency facts into reusable feature streams.
+47. **Stabilize `FeatureStream`** - Implemented. Streams are treated as time-stamped signal facts, not meaning.
+48. **Stabilize `FeatureHistory`** - Implemented. Recent feature values are stored in bounded history for scalar windows.
+49. **Promote frequently used raw-window evaluations into feature streams** - Implemented. AMP locality now prefers retrospective history when available.
+50. **Promote Goertzel frequency match support into feature-stream form where useful** - Implemented. Frequency score / contrast are recorded as streams.
+51. **Add broadband / noise feature streams** - Open. Still parked for a future profile.
+52. **Add band-energy feature streams** - Open. Still parked for a future profile.
+53. **Add derived feature streams only when candidate creation needs them** - Implemented. No derived feature streams were added yet.
 
 ## H. Profile proof set
 

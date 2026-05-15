@@ -16,15 +16,12 @@ void FrequencySignalEmitter::reset() {
     _hasPending = false;
     _peakEvidence = {};
     _pending = {};
-    _scalarEmitter.reset();
+    _lastEmittedReleaseMs = 0;
+    _detector.resetState();
 }
 
-void FrequencySignalEmitter::applyFrequencyScalarTuning(const FrequencyEvidenceEvaluation::Values& frequencyTuning) {
-    _scalarEmitter.setOnsetDetectionThreshold(frequencyTuning.scoreMin);
-    _scalarEmitter.setOnsetReleaseThreshold(frequencyTuning.scoreMin);
-    _scalarEmitter.setCooldownAfterOnsetMs(kFrequencyCooldownAfterOnsetMs);
-    _scalarEmitter.setReleaseDebounceMs(kFrequencyReleaseDebounceMs);
-    _scalarEmitter.setMinTransientDurationMs(kFrequencyMinTransientDurationMs);
+void FrequencySignalEmitter::applyFrequencyTuning(const FrequencyEvidenceEvaluation::Values& frequencyTuning) {
+    (void)frequencyTuning;
 }
 
 void FrequencySignalEmitter::observeFrame(
@@ -36,37 +33,53 @@ void FrequencySignalEmitter::observeFrame(
         return;
     }
 
-    applyFrequencyScalarTuning(frequencyTuning);
+    applyFrequencyTuning(frequencyTuning);
 
-    const float scalarInput = evidence.present ? evidence.score : 0.0f;
-    _scalarEmitter.observe(frame, scalarInput);
+    _detector.update(
+        evidence,
+        frame.sampleTimeMs,
+        frame.sampleIndex,
+        frequencyTuning,
+        kFrequencyReleaseDebounceMs,
+        kFrequencyCooldownAfterOnsetMs,
+        kFrequencyMinTransientDurationMs);
 
-    if (_scalarEmitter.onsetDetected()) {
+    if (_detector.candidateActive && (!_peakEvidence.present
+        || evidence.spectralContrast > _peakEvidence.spectralContrast
+        || (evidence.spectralContrast == _peakEvidence.spectralContrast && evidence.score > _peakEvidence.score))) {
         _peakEvidence = evidence;
     }
 
-    if (_scalarEmitter.candidateActive() && evidence.score >= _peakEvidence.score) {
-        _peakEvidence = evidence;
-    }
-
-    if (_scalarEmitter.transientDetected()) {
+    if (_detector.candidateEmitted && _detector.candidateReleaseMs != _lastEmittedReleaseMs) {
         SignalCandidate candidate;
-        if (_scalarEmitter.consumeCandidate(frame, SignalKind::FrequencyTransient, SignalSource::Frequency, candidate)) {
-            candidate.score = _peakEvidence.score;
-            candidate.strength = _peakEvidence.score; // Score is the closest meaningful strength proxy for frequency candidates.
-            candidate.contrast = _peakEvidence.spectralContrast;
-            candidate.frequency = _peakEvidence;
-            candidate.frequency.present = true;
-            candidate.frequency.matched = _peakEvidence.present && _peakEvidence.validWindow;
-            candidate.frequency.observedAtMs = frame.sampleTimeMs;
-            candidate.frequency.windowAvailable = _peakEvidence.windowAvailable;
-            candidate.frequency.validWindow = _peakEvidence.validWindow;
-            candidate.frequency.targetHz = _peakEvidence.targetHz;
-            candidate.transient.present = false;
+        candidate.kind = SignalKind::FrequencyTransient;
+        candidate.source = SignalSource::Frequency;
+        candidate.present = true;
+        candidate.valid = _detector.frequencyCandidate.valid;
+        candidate.startSample = _detector.frequencyCandidate.firstCrossSample;
+        candidate.peakSample = _detector.frequencyCandidate.peakSample;
+        candidate.releaseSample = _detector.frequencyCandidate.releaseSample;
+        candidate.startMs = _detector.frequencyCandidate.firstCrossMs;
+        candidate.peakMs = _detector.frequencyCandidate.peakMs;
+        candidate.releaseMs = _detector.frequencyCandidate.releaseMs;
+        candidate.durationMs = _detector.frequencyCandidate.durationOrHoldMs;
+        candidate.strength = _detector.frequencyCandidate.peakScore;
+        candidate.score = _detector.frequencyCandidate.peakScore;
+        candidate.contrast = _detector.frequencyCandidate.peakContrast;
+        candidate.frequency = _peakEvidence;
+        candidate.frequency.present = true;
+        candidate.frequency.matched = _detector.frequencyCandidate.valid;
+        candidate.frequency.observedAtMs = frame.sampleTimeMs;
+        candidate.frequency.windowAvailable = _detector.readyOk;
+        candidate.frequency.validWindow = _detector.readyOk;
+        candidate.frequency.targetHz = _peakEvidence.targetHz;
+        candidate.transient.present = false;
+        if (candidate.valid) {
             _pending = candidate;
             _hasPending = true;
-            _peakEvidence = {};
         }
+        _lastEmittedReleaseMs = _detector.candidateReleaseMs;
+        _peakEvidence = {};
     }
 }
 

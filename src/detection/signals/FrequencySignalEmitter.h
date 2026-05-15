@@ -3,13 +3,13 @@
 #include "SignalCandidate.h"
 #include "../FrequencyEvidenceEvaluation.h"
 #include "../../io/AudioSignal.h"
-#include "ScalarSignalEmitter.h"
+#include "../FrequencyMatchDetector.h"
 
 namespace detection {
 
 // Roadmap adapter for the target frequency stream.
-// Long-term, frequency open/peak/release mechanics reuse ScalarSignalEmitter
-// on the target frequency feature stream instead of duplicating lifecycle logic.
+// Frequency lifecycle now lives in FrequencyMatchDetector and uses matched
+// frequency windows rather than forcing the path through scalar timing.
 class FrequencySignalEmitter {
 public:
     FrequencySignalEmitter();
@@ -25,12 +25,13 @@ public:
     bool popSignalCandidate(SignalCandidate& out);
 
 private:
-    void applyFrequencyScalarTuning(const FrequencyEvidenceEvaluation::Values& frequencyTuning);
+    void applyFrequencyTuning(const FrequencyEvidenceEvaluation::Values& frequencyTuning);
 
     bool _hasPending = false;
     DetectionPipeline::FrequencyEvidence _peakEvidence = {};
-    ScalarSignalEmitter _scalarEmitter = {};
+    FrequencyMatchDetector _detector = {};
     SignalCandidate _pending = {};
+    unsigned long _lastEmittedReleaseMs = 0;
 };
 
 } // namespace detection

@@ -5,22 +5,15 @@
 #include "DetectionPipeline.h"
 #include "FrequencyCandidate.h"
 #include "FrequencyEvidenceEvaluation.h"
-#include "../io/AudioSignal.h"
-#include "signals/ScalarSignalEmitter.h"
 
 /*
-FrequencyCandidateBuilder
+FrequencyMatchDetector
 
-Legacy/comparison-only for Analyzer until the roadmap path fully migrates.
-The roadmap frequency signal path should use ScalarTransientDetector via FrequencySignalEmitter.
-
-Owns the live frequency candidate state and the transition from frequency
-evidence into a timestamped FrequencyCandidate record.
-
-This is the long-term primary tonal candidate owner for the FREQ path.
+Owns the live frequency evidence-window lifecycle and the transition from
+frequency evidence into a timestamped FrequencyCandidate record.
 
 Responsibilities:
-- observe live frequency evidence from the frequency stream path
+- observe live frequency evidence windows from the frequency stream path
 - track threshold crossings, hold/release, and peak timing
 - expose compact live diagnostics for Analyzer / Resonant logging
 
@@ -30,7 +23,7 @@ Does NOT:
 - own AMP candidate state
 - own retrospective probe64 / freqEarly / freqFull comparisons
 */
-class FrequencyCandidateBuilder {
+class FrequencyMatchDetector {
 public:
     bool present = false;
     bool liveFrequencyOnly = false;
@@ -81,7 +74,4 @@ public:
                 unsigned long releaseDebounceMs,
                 unsigned long cooldownAfterOnsetMs,
                 unsigned long minTransientDurationMs);
-
-private:
-    detection::ScalarSignalEmitter _scalarEmitter = {};
 };

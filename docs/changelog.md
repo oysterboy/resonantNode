@@ -354,3 +354,13 @@
 
 ### Commit
 - `3bb0694`
+
+## 2026-05-15 - Detection RF 5.3 frequency match rollback
+
+### Changed
+- Restored the frequency-side roadmap path to a dedicated frequency evidence detector instead of forcing it through the shared scalar transient lifecycle.
+- Split the primary SEQ frequency path onto `FrequencyMatchDetector` with explicit `emitter=frequency` and `detector=frequency_evidence` logging.
+- Kept `FrequencyCandidateBuilder` as legacy/comparison support rather than the primary SEQ frequency path.
+
+### Verification
+- `platformio run -e esp32dev-analyzer`

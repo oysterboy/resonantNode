@@ -104,8 +104,14 @@ const char* liveFrequencyGateReason(bool readyOk, const FrequencyEvidenceEvaluat
     return "none";
 }
 
-const char* liveFrequencyCandidateSourceName(bool valid) {
-    return valid ? "frequency_primary" : "comparison_only";
+const char* sequenceFrequencyCandidateSourceName(bool frequencyValid, bool ampAccepted) {
+    if (frequencyValid) {
+        return "frequency_primary";
+    }
+    if (ampAccepted) {
+        return "amp_fallback";
+    }
+    return "comparison_only";
 }
 
 int16_t rawCaptureSampleToInt16(int sample) {
@@ -2976,9 +2982,12 @@ void AnalyzerApp::finalizeSequenceTrial(unsigned long now) {
         if (analyzerLogEnabled(_sequenceTest.logFlags, AnalyzerApp::ANALYZER_LOG_TRIAL)) {
             Serial.print("SEQ_FREQ_CAND trial=");
             Serial.print(_sequenceTest.currentTrial);
-            Serial.print(" emitter=legacy_builder");
-            Serial.print(" legacy_freq_builder=1");
+            Serial.print(" emitter=frequency");
+            Serial.print(" detector=frequency_evidence");
+            Serial.print(" legacy_comparison=0");
             Serial.print(" state=closed");
+            Serial.print(" source=");
+            Serial.print(sequenceFrequencyCandidateSourceName(live.frequencyCandidate.valid, live.frequencyCandidate.valid ? false : diagnostics.transientAccepted));
             Serial.print(" first_seen_ms=");
             Serial.print(live.candidateFirstSeenMs);
             Serial.print(" first_seen_sample=");
@@ -3551,7 +3560,7 @@ void AnalyzerApp::printSequenceTrialResult(unsigned long trialNumber, const char
     Serial.print("valid=");
     Serial.print(freqCand.valid ? 1 : 0);
     Serial.print(" source=");
-    Serial.print(liveFrequencyCandidateSourceName(freqCand.valid));
+    Serial.print(sequenceFrequencyCandidateSourceName(freqCand.valid, diagnostics.transientAccepted));
     Serial.print(" first_ms=");
     Serial.print(freqCand.firstCrossMs);
     Serial.print(" peak_ms=");

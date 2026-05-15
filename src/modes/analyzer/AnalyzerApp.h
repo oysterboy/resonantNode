@@ -9,7 +9,7 @@
 #include "../../io/AudioSignal.h"
 #include "../../detection/AmpCandidateBuilder.h"
 #include "../../detection/DetectionPipeline.h"
-#include "../../detection/FrequencyCandidateBuilder.h"
+#include "../../detection/FrequencyMatchDetector.h"
 #include "../../detection/FrequencyEvidenceEvaluation.h"
 #include "../../detection/FreqTransientDetector.h"
 #include "../../hal/AudioSource.h"
@@ -353,11 +353,8 @@ private:
         unsigned long emptySourceLoops = 0;
         unsigned long totalHitStrengthScaled = 0;
         unsigned long totalHitDurationMs = 0;
-        // TODO Detection cleanup:
-        // Replace or internally refactor FrequencyCandidateBuilder so the frequency stream
-        // uses ScalarTransientDetector for open/peak/release/cooldown mechanics, matching
-        // the AMP scalar path.
-        FrequencyCandidateBuilder liveFrequency;
+        // Frequency path uses a dedicated frequency-evidence detector.
+        FrequencyMatchDetector liveFrequency;
 
         unsigned long tonalExpected = 0;
         unsigned long transientOnlyExpected = 0;

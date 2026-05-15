@@ -1,8 +1,8 @@
-#include "FrequencyCandidateBuilder.h"
+#include "FrequencyMatchDetector.h"
 
 #include <string.h>
 
-void FrequencyCandidateBuilder::resetState() {
+void FrequencyMatchDetector::resetState() {
     *this = {};
     thresholdScore = 0.0f;
     thresholdContrast = 0.0f;
@@ -13,10 +13,9 @@ void FrequencyCandidateBuilder::resetState() {
     suppressReason[sizeof(suppressReason) - 1] = '\0';
     strncpy(wouldCandidateReason, "none", sizeof(wouldCandidateReason) - 1);
     wouldCandidateReason[sizeof(wouldCandidateReason) - 1] = '\0';
-    _scalarEmitter.reset();
 }
 
-void FrequencyCandidateBuilder::update(const DetectionPipeline::FrequencyEvidence& evidence,
+void FrequencyMatchDetector::update(const DetectionPipeline::FrequencyEvidence& evidence,
                                        unsigned long now,
                                        uint64_t currentSample,
                                        const FrequencyEvidenceEvaluation::Values& tuning,
@@ -35,20 +34,6 @@ void FrequencyCandidateBuilder::update(const DetectionPipeline::FrequencyEvidenc
 
     present = evidence.present;
     frequencyCandidate.present = evidence.present;
-
-    AudioSignalFrame frame = {};
-    frame.sampleIndex = currentSample;
-    frame.sampleTimeUs = now * 1000UL;
-    frame.sampleTimeMs = now;
-    frame.valid = evidence.present;
-    frame.level = static_cast<int>(evidence.score);
-
-    _scalarEmitter.setOnsetDetectionThreshold(tuning.scoreMin);
-    _scalarEmitter.setOnsetReleaseThreshold(tuning.scoreMin);
-    _scalarEmitter.setCooldownAfterOnsetMs(cooldownAfterOnsetMs);
-    _scalarEmitter.setReleaseDebounceMs(releaseDebounceMs);
-    _scalarEmitter.setMinTransientDurationMs(minTransientDurationMs);
-    _scalarEmitter.observe(frame, evidence.present ? evidence.score : 0.0f);
 
     if (evidence.present) {
         if (!firstThresholdCrossingSeen && liveFreqEval.matched) {
@@ -69,46 +54,65 @@ void FrequencyCandidateBuilder::update(const DetectionPipeline::FrequencyEvidenc
                 goto live_freq_update_best;
             }
             candidateLastMatchedMs = now;
-            candidateActive = _scalarEmitter.candidateActive();
-            candidateClosed = false;
-            candidateEmitted = false;
-            candidateFirstSeenMs = _scalarEmitter.candidateFirstSeenMs();
-            candidateFirstSeenSample = _scalarEmitter.candidateFirstSeenSample();
-            candidatePeakMs = _scalarEmitter.candidatePeakMs();
-            candidatePeakSample = _scalarEmitter.candidatePeakSample();
-            candidateHoldWindows = _scalarEmitter.candidateHoldWindows();
-            candidateHoldMs = candidateFirstSeenMs > 0 && candidatePeakMs >= candidateFirstSeenMs
-                ? candidatePeakMs - candidateFirstSeenMs
-                : 0UL;
-            candidatePeakScore = evidence.score;
-            candidatePeakContrast = evidence.spectralContrast;
-            candidatePeakWindowSampleCount = evidence.windowSampleCount;
-            candidateEvidence = evidence;
-            frequencyCandidate.valid = false;
-            frequencyCandidate.firstCrossMs = candidateFirstSeenMs;
-            frequencyCandidate.firstCrossSample = candidateFirstSeenSample;
-            frequencyCandidate.peakMs = candidatePeakMs;
-            frequencyCandidate.peakSample = candidatePeakSample;
-            frequencyCandidate.releaseMs = 0;
-            frequencyCandidate.releaseSample = 0;
-            frequencyCandidate.durationOrHoldMs = candidateHoldMs;
-            frequencyCandidate.holdWindows = candidateHoldWindows;
-            frequencyCandidate.peakScore = candidatePeakScore;
-            frequencyCandidate.peakContrast = candidatePeakContrast;
-            frequencyCandidate.peakWindowSampleCount = candidatePeakWindowSampleCount;
-            strncpy(frequencyCandidate.rejectReason, "none", sizeof(frequencyCandidate.rejectReason) - 1);
-            frequencyCandidate.rejectReason[sizeof(frequencyCandidate.rejectReason) - 1] = '\0';
-            strncpy(candidateState, "open", sizeof(candidateState) - 1);
-            candidateState[sizeof(candidateState) - 1] = '\0';
+            if (!candidateActive) {
+                candidateActive = true;
+                candidateClosed = false;
+                candidateEmitted = false;
+                candidateFirstSeenMs = now;
+                candidateFirstSeenSample = currentSample;
+                candidatePeakMs = now;
+                candidatePeakSample = currentSample;
+                candidatePeakScore = evidence.score;
+                candidatePeakContrast = evidence.spectralContrast;
+                candidatePeakWindowSampleCount = evidence.windowSampleCount;
+                candidateHoldWindows = 1;
+                candidateHoldMs = 0;
+                candidateEvidence = evidence;
+                frequencyCandidate.valid = false;
+                frequencyCandidate.firstCrossMs = now;
+                frequencyCandidate.firstCrossSample = currentSample;
+                frequencyCandidate.peakMs = now;
+                frequencyCandidate.peakSample = currentSample;
+                frequencyCandidate.releaseMs = 0;
+                frequencyCandidate.releaseSample = 0;
+                frequencyCandidate.durationOrHoldMs = 0;
+                frequencyCandidate.holdWindows = 1;
+                frequencyCandidate.peakScore = evidence.score;
+                frequencyCandidate.peakContrast = evidence.spectralContrast;
+                frequencyCandidate.peakWindowSampleCount = evidence.windowSampleCount;
+                strncpy(frequencyCandidate.rejectReason, "none", sizeof(frequencyCandidate.rejectReason) - 1);
+                frequencyCandidate.rejectReason[sizeof(frequencyCandidate.rejectReason) - 1] = '\0';
+                strncpy(candidateState, "open", sizeof(candidateState) - 1);
+                candidateState[sizeof(candidateState) - 1] = '\0';
+            } else {
+                candidateHoldWindows++;
+                candidateHoldMs = now >= candidateFirstSeenMs ? now - candidateFirstSeenMs : 0UL;
+                if (evidence.spectralContrast > candidatePeakContrast
+                    || (evidence.spectralContrast == candidatePeakContrast && evidence.score > candidatePeakScore)) {
+                    candidatePeakMs = now;
+                    candidatePeakSample = currentSample;
+                    candidatePeakScore = evidence.score;
+                    candidatePeakContrast = evidence.spectralContrast;
+                    candidatePeakWindowSampleCount = evidence.windowSampleCount;
+                    candidateEvidence = evidence;
+                    frequencyCandidate.peakMs = now;
+                    frequencyCandidate.peakSample = currentSample;
+                    frequencyCandidate.peakScore = evidence.score;
+                    frequencyCandidate.peakContrast = evidence.spectralContrast;
+                    frequencyCandidate.peakWindowSampleCount = evidence.windowSampleCount;
+                }
+                frequencyCandidate.holdWindows = candidateHoldWindows;
+                frequencyCandidate.durationOrHoldMs = candidateHoldMs;
+            }
         } else if (candidateActive && candidateLastMatchedMs > 0) {
             if (now >= candidateLastMatchedMs + releaseDebounceMs) {
                 candidateActive = false;
                 candidateClosed = true;
-                candidateReleaseMs = _scalarEmitter.candidateReleaseObservedMs() > 0
-                    ? _scalarEmitter.candidateReleaseObservedMs()
-                    : candidateLastMatchedMs;
+                candidateReleaseMs = candidateLastMatchedMs;
                 candidateReleaseSample = currentSample;
-                candidateHoldMs = _scalarEmitter.transientDurationMs();
+                candidateHoldMs = candidateReleaseMs >= candidateFirstSeenMs
+                    ? candidateReleaseMs - candidateFirstSeenMs
+                    : 0UL;
                 candidateState[0] = '\0';
                 const bool holdOk = candidateHoldMs >= minTransientDurationMs;
                 const char* closeState = holdOk ? "closed" : "rejected";
@@ -141,33 +145,6 @@ live_freq_update_best:
 
         if (liveFreqEval.matched) {
             wouldProduceCandidate = true;
-        }
-    }
-
-    if (_scalarEmitter.transientDetected()) {
-        candidateClosed = true;
-        candidateEmitted = true;
-        candidateActive = false;
-        candidateReleaseMs = _scalarEmitter.candidateReleaseObservedMs();
-        candidateReleaseSample = _scalarEmitter.candidateReleaseSample();
-        candidateHoldMs = _scalarEmitter.transientDurationMs();
-        if (candidateHoldMs >= minTransientDurationMs) {
-            frequencyCandidate.valid = true;
-            strncpy(candidateState, "closed", sizeof(candidateState) - 1);
-            candidateState[sizeof(candidateState) - 1] = '\0';
-            candidateRefractoryUntilMs = now + cooldownAfterOnsetMs;
-            frequencyCandidate.releaseMs = candidateReleaseMs;
-            frequencyCandidate.releaseSample = candidateReleaseSample;
-            frequencyCandidate.durationOrHoldMs = candidateHoldMs;
-            frequencyCandidate.holdWindows = candidateHoldWindows;
-            strncpy(frequencyCandidate.rejectReason, "none", sizeof(frequencyCandidate.rejectReason) - 1);
-            frequencyCandidate.rejectReason[sizeof(frequencyCandidate.rejectReason) - 1] = '\0';
-        } else {
-            frequencyCandidate.valid = false;
-            strncpy(candidateState, "rejected", sizeof(candidateState) - 1);
-            candidateState[sizeof(candidateState) - 1] = '\0';
-            strncpy(frequencyCandidate.rejectReason, "too_short", sizeof(frequencyCandidate.rejectReason) - 1);
-            frequencyCandidate.rejectReason[sizeof(frequencyCandidate.rejectReason) - 1] = '\0';
         }
     }
 

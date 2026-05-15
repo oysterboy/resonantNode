@@ -41,7 +41,7 @@ InspectedSignal SignalInspector::inspect(
     switch (candidate.kind) {
         case SignalKind::AmpTransient:
             return inspectAmp(candidate);
-        case SignalKind::FrequencyTransient:
+        case SignalKind::FrequencyMatch:
             return inspectFrequency(candidate, frequencyTuning);
         case SignalKind::None:
         default: {

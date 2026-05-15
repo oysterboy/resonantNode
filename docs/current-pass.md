@@ -1,230 +1,360 @@
-# Codex Task: Detection Roadmap v0.3 — Pass 14.1: Further File Cleanup Suggestions
-
-Use `docs/detection-roadmap-v0-2-implementation-brief.md` as the architecture source of truth, but apply the updated Roadmap v0.3 naming/rule corrections from the latest refactor notes.
-
-## Scope
-
-Detection file organization cleanup only.
-
-This is a cautious follow-up to Pass 13 / Pass 14.
-
-Do not change runtime behavior.
-Do not tune thresholds.
-Do not remove Analyzer functionality.
-Do not refactor behavior.
-
----
+# Codex Pass — Section B: Signal Layer Completion
 
 ## Goal
 
-Review the detection-related files and propose / apply only low-risk file cleanup that makes the code structure match Roadmap v0.3.
+Complete the signal layer so all signal-level outputs are structurally consistent, explainable, and ready for later inspection, pattern assembly, and behavior separation.
 
-The target structure is:
+This pass should **not** change the larger detection architecture.
 
-```txt
-src/detection/
+Do not introduce `DetectionProfile` yet.
 
-  signals/
-    SignalCandidate.h
-    InspectedSignal.h
-    SignalInspector.h/.cpp
-    AmpSignalEmitter.h/.cpp
-    FrequencySignalEmitter.h/.cpp
+Do not rewrite `FrequencyMatchDetector`.
 
-  patterns/
-    PatternCandidate.h
-    PatternResult.h
-    PatternAssembler.h/.cpp
-    PatternRules.h/.cpp
-
-  field/
-    FieldState.h
-    FieldStateTracker.h/.cpp
-
-  DetectionRuntime.h/.cpp
-
-  low-level detectors / extractors:
-    ScalarTransientDetector.h/.cpp
-    AmpTransientDetector.h/.cpp
-    FrequencyBandStreamExtractor.h/.cpp
-    FrequencyMatchDetector.h/.cpp or equivalent
-    FrequencyWindowProbe.h/.cpp if still used
-```
+Do not move pattern meaning into the signal layer.
 
 ---
 
-## Cleanup Candidates
+## Context
 
-### 1. DetectionPipeline.h
+Section A is structurally landed but still has cleanup edges.
 
-Check whether `DetectionPipeline.h` still contains too many unrelated types/helpers.
+The current pipeline target is:
 
-Allowed low-risk cleanup:
+```text
+SignalEmitter
+→ SignalDetector
+→ SignalCandidate
+→ SignalInspector
+→ InspectedSignal
+→ PatternAssembler
+→ PatternCandidate
+→ PatternRules
+→ PatternResult
 
-```txt
-- mark old structs/helpers as compatibility/legacy
-- move comments to point to new owners
-- remove unused includes
-- remove dead declarations only if no references remain
-```
+Section B focuses only on the signal layer:
 
-Do not do risky type moves unless compile impact is clearly small.
+SignalCandidate
+→ SignalInspector
+→ InspectedSignal
+Roadmap Section B items
+Stabilize SignalCandidate structure
+Stabilize InspectedSignal structure
+Add signal acceptance / rejection reasons
+Add duration / strength / confidence fields
+Add duplicate-risk annotation
+Add source tags and detector provenance consistently
+Support multiple SignalDetector implementations under one signal layer
+1. Stabilize SignalCandidate
+Target
 
----
+SignalCandidate is the common low-level candidate emitted by all signal emitters.
 
-### 2. Old candidate builders
+It should represent:
 
-Review:
+Something signal-like may have happened around t.
 
-```txt
-AmpCandidateBuilder
-FrequencyCandidateBuilder
-```
+It must not represent:
 
-Classify each as one of:
+valid chirp
+near tonal pulse
+far tonal pulse
+behavior trigger
+Required fields
 
-```txt
-- private internal of a SignalEmitter
-- AmpLegacy-only
-- Analyzer comparison-only
-- unused/removable
-```
+Ensure SignalCandidate consistently supports:
 
-If unused/removable:
+SignalSource source;
+SignalKind kind;
 
-```txt
-remove only if compile-safe
-```
+uint32_t startMs;
+uint32_t peakMs;
+uint32_t endMs;
 
-If retained:
+float strength;
+float confidence;
 
-```cpp
-// Legacy/comparison path.
-// Roadmap behavior detection flows through DetectionRuntime.
-```
+SignalDetectorKind detectorKind;
 
----
+Use existing field names if already present. Do not rename everything unless needed.
 
-### 3. Frequency files
+Source / kind examples
 
-Review names and ownership:
+Preferred:
 
-```txt
-FreqTransientDetector
+SignalSource::Amp
+SignalSource::TargetFrequency
+SignalSource::Broadband // later
+
+SignalKind::AmpTransient
+SignalKind::FrequencyMatch
+SignalKind::BroadbandTransient // later
+
+Avoid:
+
+FrequencyTransient
+
+where the active frequency detector is now FrequencyMatchDetector.
+
+2. Stabilize InspectedSignal
+Target
+
+InspectedSignal is the result of signal-level inspection.
+
+It may be:
+
+accepted
+rejected
+weak
+duplicate-risk
+annotated
+
+It is still not a pattern.
+
+It must not represent:
+
+valid chirp
+noise burst
+nearTonalPulse
+PatternResult
+Required fields
+
+Add or normalize fields like:
+
+SignalCandidate candidate;
+
+bool accepted;
+SignalRejectReason rejectReason;
+
+float durationMs;
+float strength;
+float confidence;
+
+AmpSupportClass ampSupport;
+LocalityClass locality;
+
+bool duplicateRisk;
+float duplicateRiskScore;
+
+If some fields are premature, add enums / placeholders and default them safely.
+
+3. Add signal acceptance / rejection reasons
+Target
+
+Rejections should be explainable at signal stage.
+
+Create or stabilize:
+
+enum class SignalRejectReason {
+  None,
+  TooShort,
+  TooLong,
+  TooWeak,
+  BelowThreshold,
+  DuplicateRisk,
+  Cooldown,
+  MissingFrequencyEvidence,
+  MissingAmpSupport,
+  InvalidTiming,
+  Unknown
+};
+
+Use only the reasons currently needed. Do not overfit all future cases.
+
+Rule
+
+SignalInspector decides signal acceptance/rejection.
+
+PatternRules should not rediscover basic signal acceptance.
+
+4. Add duration / strength / confidence fields
+Target
+
+Every inspected signal should expose basic comparable facts:
+
+duration
+strength
+confidence
+
+These should be available regardless of whether the source is AMP or frequency.
+
+Examples:
+
+durationMs = endMs - startMs;
+strength = candidate.strength;
+confidence = computed or defaulted;
+
+Do not invent complex scoring yet.
+
+Use conservative defaults:
+
+confidence = 1.0f for accepted known-good candidates
+confidence = 0.0f for rejected candidates
+
+or preserve existing confidence if already available.
+
+5. Add duplicate-risk annotation
+Target
+
+Duplicate risk belongs to signal inspection, not pattern meaning.
+
+Add fields:
+
+bool duplicateRisk;
+float duplicateRiskScore;
+
+or equivalent.
+
+Initial implementation can be simple:
+
+mark duplicateRisk if candidate occurs too soon after previous accepted signal from same source
+
+Do not block all duplicates unless existing behavior already does so.
+
+This pass may only annotate duplicate risk; later PatternRules or Behavior can decide how to use it.
+
+6. Add source tags and detector provenance consistently
+Target
+
+Every SignalCandidate / InspectedSignal should preserve:
+
+which source produced it
+which detector produced it
+which signal kind it represents
+
+Example:
+
+source = SignalSource::TargetFrequency
+kind = SignalKind::FrequencyMatch
+detectorKind = SignalDetectorKind::FrequencyMatch
+
+For AMP:
+
+source = SignalSource::Amp
+kind = SignalKind::AmpTransient
+detectorKind = SignalDetectorKind::Transient
+
+This is important for logs, Analyzer, and later DetectionProfile work.
+
+7. Support multiple SignalDetector implementations
+Target
+
+The signal layer must not assume that every signal comes from TransientDetector.
+
+Current implementations:
+
+TransientDetector
 FrequencyMatchDetector
-FrequencyBandStreamExtractor
-FrequencyEvidenceEvaluation
-FrequencyWindowProbe
-FrequencyCandidateBuilder
-```
 
-Preferred meanings:
+Future possible implementations:
 
-```txt
-FrequencyBandStreamExtractor:
-  feature extraction / frequency stream
+DipDetector
+PlateauDetector
+ThresholdCrossingDetector
 
-FrequencyMatchDetector:
-  live signal-level frequency proposer, if this class exists
+Add or stabilize:
 
-FrequencyEvidenceEvaluation / FrequencyEvidenceEvaluator:
-  retrospective/window/evidence evaluation, not primary candidate lifecycle
+enum class SignalDetectorKind {
+  Transient,
+  FrequencyMatch,
+  Dip,
+  Plateau,
+  ThresholdCrossing,
+  Unknown
+};
 
-FrequencyWindowProbe:
-  windowed diagnostics / retrospective evidence
+Do not implement future detectors now.
 
-FrequencyCandidateBuilder:
-  legacy/comparison only, unless still intentionally used internally
-```
+Only make the type system ready.
 
-Add comments where the role is not obvious.
+8. Logging requirements
 
-Do not rename a class if many references would change. Prefer comments/TODOs unless rename is tiny.
+Update logs enough to inspect signal-stage correctness.
 
----
+Preferred stage labels:
 
-### 4. Analyzer labels
+SIGNAL
+INSPECTED
 
-Ensure no stale report labels remain:
+A useful signal log should show:
 
-```txt
-source=comparison_only
-reject=comparison_only
-ampCand strength=<frequency score>
-```
+source
+kind
+detectorKind
+startMs
+peakMs
+endMs
+durationMs
+strength
+confidence
 
-Use:
+A useful inspected log should show:
 
-```txt
-frequency_primary
-comparison_only
-amp_fallback
-sourceCand
-compatCand
-ampCand only for real AMP
-```
+accepted
+rejectReason
+ampSupport
+locality
+duplicateRisk
+confidence
 
----
+Do not create noisy per-loop logs. Log candidate-level events only.
 
-### 5. Include cleanup
+9. Boundaries to preserve
 
-Remove unused includes only if obvious.
+Do not let SignalInspector emit PatternCandidate.
 
-Do not reorganize include order broadly.
+Correct:
 
----
+SignalCandidate
+→ SignalInspector
+→ InspectedSignal
+→ PatternAssembler
 
-### 6. Folder cleanup
+Do not let SignalInspector emit PatternResult.
 
-If files are already under roadmap folders, keep them there.
+Correct:
 
-If an old file clearly belongs under `signals/`, `patterns/`, or `field/`, move only if:
+PatternRules
+→ PatternResult
 
-```txt
-- includes are easy to update
-- references are few
-- compile remains clean
-```
+Do not let Behavior consume SignalCandidate or InspectedSignal.
 
-Otherwise add a TODO comment and leave movement for a later manual cleanup.
+Correct:
 
----
+Behavior consumes PatternResult + FieldState
+10. Success criteria
 
-## Do Not
+After this pass:
 
-- do not change runtime behavior
-- do not change thresholds
-- do not change candidate lifecycle
-- do not change PatternRules semantics
-- do not refactor ResonantBehavior
-- do not remove Analyzer diagnostics
-- do not remove legacy mode unless already unused and compile-safe
-- do not perform broad renames
-- do not add new architecture features
+SignalCandidate has stable source/kind/timing/strength/provenance fields.
 
----
+InspectedSignal has stable acceptance/rejection/facts fields.
 
-## Acceptance Criteria
+FrequencyMatch is used instead of FrequencyTransient where applicable.
 
-- Project compiles.
-- RoadmapFrequencyFirst still works.
-- Analyzer SEQ still runs.
-- Remaining legacy files/classes are clearly marked.
-- No old direct behavior path is reintroduced.
-- File roles are clearer.
-- No runtime behavior changed.
+SignalRejectReason exists and is used by SignalInspector.
 
----
+Duration, strength, confidence are consistently available.
 
-## Output Request
+Duplicate risk can be annotated.
 
-At the end, provide a short cleanup summary:
+AMP and frequency candidates both use the same signal-layer structures.
 
-```txt
-Removed:
-Moved:
-Renamed:
-Marked legacy:
-Left intentionally:
-Follow-up recommended:
-```
+TransientDetector and FrequencyMatchDetector both fit under SignalDetectorKind.
+
+PatternAssembler remains the first stage that creates PatternCandidates.
+
+PatternRules remain the first stage that creates PatternResults.
+11. Do not do in this pass
+
+Do not:
+
+introduce DetectionProfile
+introduce external config
+rewrite FrequencyMatchDetector
+implement chirp grouping
+implement white-noise detection
+implement new detectors
+move behavior logic
+change output sound behavior unless required for compile fixes
+
+This pass is signal-layer stabilization only.

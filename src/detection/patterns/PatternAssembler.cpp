@@ -8,7 +8,7 @@ DetectionPipeline::PatternCandidate makePatternCandidateFromSignal(const detecti
 
     const detection::SignalCandidate& source = signal.signal;
     switch (source.kind) {
-        case detection::SignalKind::FrequencyTransient:
+        case detection::SignalKind::FrequencyMatch:
             candidate.onsetSample = source.startSample;
             candidate.peakSample = source.peakSample;
             candidate.releaseSample = source.releaseSample;
@@ -72,7 +72,7 @@ void PatternAssembler::acceptSignal(const InspectedSignal& signal) {
 
     switch (signal.signal.kind) {
         case SignalKind::AmpTransient:
-        case SignalKind::FrequencyTransient:
+        case SignalKind::FrequencyMatch:
             if (signal.signal.valid) {
                 const PatternCandidate candidate = makePatternCandidateFromSignal(signal);
                 if (candidate.transient.present || candidate.frequency.present || candidate.durationMs > 0 || candidate.peakStrength != 0.0f || candidate.onsetStrength != 0.0f) {

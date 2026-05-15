@@ -52,7 +52,7 @@ void FrequencySignalEmitter::observeFrame(
 
     if (_detector.candidateEmitted && _detector.candidateReleaseMs != _lastEmittedReleaseMs) {
         SignalCandidate candidate;
-        candidate.kind = SignalKind::FrequencyTransient;
+        candidate.kind = SignalKind::FrequencyMatch;
         candidate.source = SignalSource::Frequency;
         candidate.present = true;
         candidate.valid = _detector.frequencyCandidate.valid;

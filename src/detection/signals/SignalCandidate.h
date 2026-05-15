@@ -9,7 +9,7 @@ namespace detection {
 enum class SignalKind {
     None,
     AmpTransient,
-    FrequencyTransient
+    FrequencyMatch
 };
 
 enum class SignalSource {

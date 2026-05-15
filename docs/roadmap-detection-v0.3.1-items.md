@@ -6,7 +6,7 @@ Note: each item has a one-line implementation note only.
 
 ---
 
-## A. Immediate cleanup / stabilization
+## A. [DONE] Immediate cleanup / stabilization / 
 
 1. **Make `DetectionRuntime` the main Resonant detection path**
    Implemented. Resonant roadmap modes now route through `DetectionRuntime`; legacy AMP remains isolated behind `AmpLegacy`.

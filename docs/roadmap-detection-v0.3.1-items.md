@@ -62,13 +62,30 @@ The inspection facts now live in `SignalInspector`, but the separate `FrequencyE
 
 ## D. Inspection mechanic
 
-23. **Generalize `SignalInspector`** - Make it the shared inspection stage for all signal sources.
-24. **Introduce reusable `InspectionRule`** - Express AMP, frequency, locality, tail, and rejection checks as reusable rules.
-25. **Introduce window evaluators** - Centralize stats and evidence extraction from windows.
-26. **Use `ScalarWindow` from `FeatureHistory` as preferred inspection path** - Prefer stored feature-stream history for normal retrospective inspection.
-27. **Keep `RawWindow` from `AudioHistory` as fallback / advanced path** - Keep raw-window evaluation for expensive, transitional, or debug-only checks.
-28. **Reuse the same inspection mechanic for AMP-first and frequency-first** - Primary source changes, inspection mechanic stays the same.
-29. **Add broadband / tonal-rejection inspection rules later** - Prepare the same mechanic for white-noise and broadband chains.
+23. **Generalize `SignalInspector`**
+Implemented
+
+24. **Introduce reusable `InspectionRule`**
+Implemented
+
+25. **Introduce window evaluators**
+Implemented
+
+26. **Use `ScalarWindow` from `FeatureHistory` as preferred inspection path**
+Partial
+
+The inspection layer now has reusable rules and window stats, but it still uses the current candidate-relative snapshot instead of a formal `FeatureHistory` / `ScalarWindow` pipeline.
+
+27. **Keep `RawWindow` from `AudioHistory` as fallback / advanced path**
+Partial
+
+The raw-window fallback exists as a practical candidate-relative helper for Analyzer inspection, but it is not yet generalized through a shared `FeatureHistory` / `AudioHistory` inspection context in runtime paths.
+
+28. **Reuse the same inspection mechanic for AMP-first and frequency-first**
+Implemented
+
+29. **Add broadband / tonal-rejection inspection rules later**
+Open
 
 ## E. Pattern layer
 

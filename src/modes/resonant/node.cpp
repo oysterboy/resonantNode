@@ -1187,29 +1187,6 @@ void Node::processRoadmapFrame(const AudioSignalFrame& frame,
         }
     }
 
-    if (rbShouldLogDetail() && !emittedPattern) {
-        const auto& freqDetector = _detection.frequencyEmitter().detector();
-        Serial.print("RB ROADMAP freq state=");
-        Serial.print(freqDetector.candidateState);
-        Serial.print(" suppress=");
-        Serial.print(freqDetector.suppressReason);
-        Serial.print(" would=");
-        Serial.print(freqDetector.wouldCandidateReason);
-        Serial.print(" present=");
-        Serial.print(freqDetector.present ? 1 : 0);
-        Serial.print(" matched=");
-        Serial.print(freqDetector.wouldProduceCandidate ? 1 : 0);
-        Serial.print(" ready=");
-        Serial.print(freqDetector.readyOk ? 1 : 0);
-        Serial.print(" gate=");
-        Serial.print(freqDetector.gateOpen ? 1 : 0);
-        Serial.print(" bestScore=");
-        Serial.print(freqDetector.bestScore, 1);
-        Serial.print(" bestContrast=");
-        Serial.print(freqDetector.bestContrast, 2);
-        Serial.print(" mode=");
-        Serial.println(detectionModeName());
-    }
 }
 
 // --- logging / summaries ---

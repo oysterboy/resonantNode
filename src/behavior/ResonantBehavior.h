@@ -152,7 +152,7 @@ private:
     // --- timing parameters ---
     unsigned long _waitAfterTransientMs = 100; // Delay before responding after a transient is seen.
     unsigned long _refractoryAfterEmitMs = 200; // Ignore follow-up activity for a short time after a chirp finishes.
-    unsigned long _behaviorSuppressSelfChirpMs = 200; // Behavior-level suppression while the node's chirp is active.
+    unsigned long _behaviorSuppressSelfChirpMs = 250; // Behavior-level suppression while the node's chirp is active.
     unsigned long _detectionSuppressTailMsOwnEmit = 0; // Detector/analyzer suppression tail after our own emit.
     unsigned long _nextIdleAtMs = 0;
     unsigned long _idleTimeMs = 20000;

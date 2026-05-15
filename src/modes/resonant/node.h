@@ -154,7 +154,7 @@ private:
     unsigned long _rbLastLoggedTransientRejectCount = 0;
     bool _rbDetectOnly = false;
     RbLogMode _rbLogMode = RbLogMode::Minimal;
-    DetectionMode _detectionMode = DetectionMode::AmpLegacy;
+    DetectionMode _detectionMode = DetectionMode::RoadmapFrequencyFirst;
     bool _wasSelfChirpSuppressed = false;
     unsigned long _rbLastWouldEmitHeardMs = 0;
     ResonantBehavior::BehaviorDecision _rbLastWouldEmitDecision = ResonantBehavior::BehaviorDecision::None;

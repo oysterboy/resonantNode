@@ -86,6 +86,7 @@ PatternResult PatternRules::evaluateFrequencyPattern(
     result.rejectReason = DetectionPipeline::PatternRejectReason::None;
     result.confidence = 1.0f;
 
+    // Compatibility classification only. Signal acceptance already happened in SignalInspector.
     FrequencyEvidenceEvaluation::classifyPatternResult(result, frequencyTuning);
     result.confidence = result.tonalValid ? 1.0f : 0.0f;
     result.valid = true;
@@ -115,6 +116,7 @@ PatternResult PatternRules::evaluateAmpPattern(
     result.reasonCode = DetectionPipeline::PatternReasonCode::FromAcceptedTransient;
     result.confidence = 0.5f;
 
+    // Compatibility classification only. Signal acceptance already happened in SignalInspector.
     FrequencyEvidenceEvaluation::classifyPatternResult(result, frequencyTuning);
     if (!candidate.frequency.present) {
         result.rejectReason = DetectionPipeline::PatternRejectReason::TransientOnly;

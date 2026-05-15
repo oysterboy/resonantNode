@@ -115,10 +115,117 @@ const char* sequenceFrequencyCandidateSourceName(bool frequencyValid) {
     return "comparison_only";
 }
 
+const char* signalKindName(detection::SignalKind kind) {
+    switch (kind) {
+        case detection::SignalKind::AmpTransient:
+            return "amp_transient";
+        case detection::SignalKind::FrequencyMatch:
+            return "frequency_match";
+        case detection::SignalKind::BroadbandTransient:
+            return "broadband_transient";
+        case detection::SignalKind::None:
+        default:
+            return "none";
+    }
+}
+
+const char* signalSourceName(detection::SignalSource source) {
+    switch (source) {
+        case detection::SignalSource::Amp:
+            return "amp";
+        case detection::SignalSource::Frequency:
+            return "frequency";
+        case detection::SignalSource::Broadband:
+            return "broadband";
+        case detection::SignalSource::None:
+        default:
+            return "none";
+    }
+}
+
+const char* signalDetectorKindName(detection::SignalDetectorKind kind) {
+    switch (kind) {
+        case detection::SignalDetectorKind::Transient:
+            return "transient";
+        case detection::SignalDetectorKind::FrequencyMatch:
+            return "frequency_match";
+        case detection::SignalDetectorKind::Dip:
+            return "dip";
+        case detection::SignalDetectorKind::Plateau:
+            return "plateau";
+        case detection::SignalDetectorKind::ThresholdCrossing:
+            return "threshold_crossing";
+        case detection::SignalDetectorKind::Unknown:
+        default:
+            return "unknown";
+    }
+}
+
+const char* signalRejectReasonName(detection::SignalRejectReason reason) {
+    switch (reason) {
+        case detection::SignalRejectReason::None:
+            return "none";
+        case detection::SignalRejectReason::TooShort:
+            return "too_short";
+        case detection::SignalRejectReason::TooLong:
+            return "too_long";
+        case detection::SignalRejectReason::TooWeak:
+            return "too_weak";
+        case detection::SignalRejectReason::BelowThreshold:
+            return "below_threshold";
+        case detection::SignalRejectReason::DuplicateRisk:
+            return "duplicate_risk";
+        case detection::SignalRejectReason::Cooldown:
+            return "cooldown";
+        case detection::SignalRejectReason::MissingFrequencyEvidence:
+            return "missing_frequency_evidence";
+        case detection::SignalRejectReason::MissingAmpSupport:
+            return "missing_amp_support";
+        case detection::SignalRejectReason::InvalidTiming:
+            return "invalid_timing";
+        case detection::SignalRejectReason::UnsupportedKind:
+            return "unsupported_kind";
+        case detection::SignalRejectReason::Unknown:
+        default:
+            return "unknown";
+    }
+}
+
+const char* ampSupportName(detection::AmpSupportClass value) {
+    switch (value) {
+        case detection::AmpSupportClass::None:
+            return "none";
+        case detection::AmpSupportClass::Weak:
+            return "weak";
+        case detection::AmpSupportClass::Medium:
+            return "medium";
+        case detection::AmpSupportClass::Strong:
+            return "strong";
+        case detection::AmpSupportClass::Unknown:
+        default:
+            return "unknown";
+    }
+}
+
+const char* localityName(detection::LocalityClass value) {
+    switch (value) {
+        case detection::LocalityClass::Near:
+            return "near";
+        case detection::LocalityClass::Mid:
+            return "mid";
+        case detection::LocalityClass::Far:
+            return "far";
+        case detection::LocalityClass::Unknown:
+        default:
+            return "unknown";
+    }
+}
+
 detection::SignalCandidate makeRoadmapFrequencySignalCandidate(const FrequencyMatchDetector& liveFrequency) {
     detection::SignalCandidate signal = {};
     signal.kind = detection::SignalKind::FrequencyMatch;
     signal.source = detection::SignalSource::Frequency;
+    signal.detectorKind = detection::SignalDetectorKind::FrequencyMatch;
     signal.present = liveFrequency.present;
     signal.valid = liveFrequency.frequencyCandidate.valid;
     signal.startSample = liveFrequency.frequencyCandidate.firstCrossSample;
@@ -127,9 +234,11 @@ detection::SignalCandidate makeRoadmapFrequencySignalCandidate(const FrequencyMa
     signal.startMs = liveFrequency.frequencyCandidate.firstCrossMs;
     signal.peakMs = liveFrequency.frequencyCandidate.peakMs;
     signal.releaseMs = liveFrequency.frequencyCandidate.releaseMs;
+    signal.endMs = signal.releaseMs;
     signal.durationMs = liveFrequency.frequencyCandidate.durationOrHoldMs;
     signal.score = liveFrequency.frequencyCandidate.peakScore;
     signal.contrast = liveFrequency.frequencyCandidate.peakContrast;
+    signal.confidence = signal.valid ? 1.0f : 0.0f;
     signal.frequency = liveFrequency.candidateEvidence.present ? liveFrequency.candidateEvidence : liveFrequency.bestEvidence;
     return signal;
 }
@@ -148,17 +257,25 @@ bool evaluateRoadmapSignalCandidateImpl(const detection::SignalCandidate& signal
         Serial.print("SEQ_TRACE stage=SIGNAL signal=");
         Serial.print(signal.present ? 1 : 0);
         Serial.print(" kind=");
-        Serial.print(signal.kind == detection::SignalKind::AmpTransient ? "amp_transient"
-            : signal.kind == detection::SignalKind::FrequencyMatch ? "frequency_match"
-            : "none");
+        Serial.print(signalKindName(signal.kind));
         Serial.print(" source=");
-        Serial.print(signal.source == detection::SignalSource::Amp ? "amp"
-            : signal.source == detection::SignalSource::Frequency ? "frequency"
-            : "none");
+        Serial.print(signalSourceName(signal.source));
+        Serial.print(" detector=");
+        Serial.print(signalDetectorKindName(signal.detectorKind));
+        Serial.print(" start_ms=");
+        Serial.print(signal.startMs);
+        Serial.print(" peak_ms=");
+        Serial.print(signal.peakMs);
+        Serial.print(" end_ms=");
+        Serial.print(signal.endMs);
+        Serial.print(" duration_ms=");
+        Serial.print(signal.durationMs);
         Serial.print(" score=");
         Serial.print(signal.score, 1);
         Serial.print(" contrast=");
         Serial.print(signal.contrast, 2);
+        Serial.print(" confidence=");
+        Serial.print(signal.confidence, 2);
         Serial.println();
     }
     if (traceStages) {
@@ -166,12 +283,24 @@ bool evaluateRoadmapSignalCandidateImpl(const detection::SignalCandidate& signal
         Serial.print(inspected.accepted ? 1 : 0);
         Serial.print(" rejected=");
         Serial.print(inspected.rejected ? 1 : 0);
-        Serial.print(" reason=");
-        Serial.print(inspected.reason);
+        Serial.print(" reject_reason=");
+        Serial.print(signalRejectReasonName(inspected.rejectReason));
+        Serial.print(" duration_ms=");
+        Serial.print(inspected.durationMs);
+        Serial.print(" strength=");
+        Serial.print(inspected.strength, 1);
+        Serial.print(" confidence=");
+        Serial.print(inspected.confidence, 2);
         Serial.print(" source=");
-        Serial.print(inspected.signal.source == detection::SignalSource::Amp ? "amp"
-            : inspected.signal.source == detection::SignalSource::Frequency ? "frequency"
-            : "none");
+        Serial.print(signalSourceName(inspected.signal.source));
+        Serial.print(" amp_support=");
+        Serial.print(ampSupportName(inspected.ampSupport));
+        Serial.print(" locality=");
+        Serial.print(localityName(inspected.locality));
+        Serial.print(" duplicate_risk=");
+        Serial.print(inspected.duplicateRisk ? 1 : 0);
+        Serial.print(" duplicate_risk_score=");
+        Serial.print(inspected.duplicateRiskScore, 2);
         Serial.println();
     }
     assembler.acceptSignal(inspected);

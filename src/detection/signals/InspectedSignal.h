@@ -10,6 +10,36 @@ enum class SignalDecision {
     Rejected
 };
 
+enum class SignalRejectReason {
+    None,
+    TooShort,
+    TooLong,
+    TooWeak,
+    BelowThreshold,
+    DuplicateRisk,
+    Cooldown,
+    MissingFrequencyEvidence,
+    MissingAmpSupport,
+    InvalidTiming,
+    UnsupportedKind,
+    Unknown
+};
+
+enum class AmpSupportClass {
+    Unknown,
+    None,
+    Weak,
+    Medium,
+    Strong
+};
+
+enum class LocalityClass {
+    Unknown,
+    Near,
+    Mid,
+    Far
+};
+
 struct InspectedSignal {
     SignalCandidate signal = {};
     SignalDecision decision = SignalDecision::None;
@@ -17,7 +47,14 @@ struct InspectedSignal {
     bool accepted = false;
     bool rejected = false;
 
-    const char* reason = "none";
+    SignalRejectReason rejectReason = SignalRejectReason::None;
+    unsigned long durationMs = 0;
+    float strength = 0.0f;
+    float confidence = 0.0f;
+    AmpSupportClass ampSupport = AmpSupportClass::Unknown;
+    LocalityClass locality = LocalityClass::Unknown;
+    bool duplicateRisk = false;
+    float duplicateRiskScore = 0.0f;
 };
 
 } // namespace detection

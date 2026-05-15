@@ -9,8 +9,11 @@ namespace {
 void AmpSignalEmitter::fillAmpCandidate(SignalCandidate& candidate, const AudioSignalFrame& frame) {
     candidate.kind = SignalKind::AmpTransient;
     candidate.source = SignalSource::Amp;
+    candidate.detectorKind = SignalDetectorKind::Transient;
     candidate.valid = candidate.durationMs > 0 || candidate.strength > 0.0f || candidate.releaseMs != 0;
     // No explicit peak timestamp exists on the legacy AMP candidate, so peakMs stays at the default.
+    candidate.endMs = candidate.releaseMs;
+    candidate.confidence = candidate.valid ? 1.0f : 0.0f;
     candidate.transient.present = true;
     candidate.transient.onsetSample = candidate.startSample;
     candidate.transient.peakSample = candidate.peakSample;

@@ -193,6 +193,9 @@ bool ScalarSignalEmitter::consumeCandidate(const AudioSignalFrame& frame,
     out = {};
     out.kind = kind;
     out.source = source;
+    out.detectorKind = kind == SignalKind::FrequencyMatch
+        ? SignalDetectorKind::FrequencyMatch
+        : SignalDetectorKind::Transient;
     out.present = true;
     out.startSample = _candidateFirstSeenSample;
     out.peakSample = _candidatePeakSample;
@@ -200,10 +203,12 @@ bool ScalarSignalEmitter::consumeCandidate(const AudioSignalFrame& frame,
     out.startMs = _candidateFirstSeenMs;
     out.peakMs = _candidatePeakMs;
     out.releaseMs = _releaseObserved ? _candidateReleaseObservedMs : frame.sampleTimeMs;
+    out.endMs = out.releaseMs;
     out.durationMs = out.releaseMs >= out.startMs ? out.releaseMs - out.startMs : 0UL;
     out.strength = _candidatePeakStrength;
     out.score = _candidatePeakStrength;
     out.contrast = 0.0f;
+    out.confidence = 1.0f;
     out.transient.present = true;
     out.transient.onsetSample = _candidateFirstSeenSample;
     out.transient.peakSample = _candidatePeakSample;

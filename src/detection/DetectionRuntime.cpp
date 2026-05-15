@@ -7,6 +7,7 @@ DetectionRuntime::DetectionRuntime() = default;
 void DetectionRuntime::reset() {
     _ampEmitter.reset();
     _frequencyEmitter.reset();
+    _signalInspector.reset();
     _patternAssembler.reset();
     _fieldStateTracker.reset();
     _ampEnabled = true;

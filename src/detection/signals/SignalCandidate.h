@@ -9,13 +9,24 @@ namespace detection {
 enum class SignalKind {
     None,
     AmpTransient,
-    FrequencyMatch
+    FrequencyMatch,
+    BroadbandTransient
 };
 
 enum class SignalSource {
     None,
     Amp,
-    Frequency
+    Frequency,
+    Broadband
+};
+
+enum class SignalDetectorKind {
+    Unknown,
+    Transient,
+    FrequencyMatch,
+    Dip,
+    Plateau,
+    ThresholdCrossing
 };
 
 struct SignalCandidate {
@@ -24,6 +35,7 @@ struct SignalCandidate {
 
     bool present = false;
     bool valid = false;
+    SignalDetectorKind detectorKind = SignalDetectorKind::Unknown;
 
     uint64_t startSample = 0;
     uint64_t peakSample = 0;
@@ -32,11 +44,13 @@ struct SignalCandidate {
     unsigned long startMs = 0;
     unsigned long peakMs = 0;
     unsigned long releaseMs = 0;
+    unsigned long endMs = 0;
     unsigned long durationMs = 0;
 
     float strength = 0.0f;
     float score = 0.0f;
     float contrast = 0.0f;
+    float confidence = 0.0f;
 
     DetectionPipeline::TransientEvidence transient = {};
     DetectionPipeline::FrequencyEvidence frequency = {};

@@ -54,6 +54,7 @@ void FrequencySignalEmitter::observeFrame(
         SignalCandidate candidate;
         candidate.kind = SignalKind::FrequencyMatch;
         candidate.source = SignalSource::Frequency;
+        candidate.detectorKind = SignalDetectorKind::FrequencyMatch;
         candidate.present = true;
         candidate.valid = _detector.frequencyCandidate.valid;
         candidate.startSample = _detector.frequencyCandidate.firstCrossSample;
@@ -62,10 +63,12 @@ void FrequencySignalEmitter::observeFrame(
         candidate.startMs = _detector.frequencyCandidate.firstCrossMs;
         candidate.peakMs = _detector.frequencyCandidate.peakMs;
         candidate.releaseMs = _detector.frequencyCandidate.releaseMs;
+        candidate.endMs = candidate.releaseMs;
         candidate.durationMs = _detector.frequencyCandidate.durationOrHoldMs;
         candidate.strength = _detector.frequencyCandidate.peakScore;
         candidate.score = _detector.frequencyCandidate.peakScore;
         candidate.contrast = _detector.frequencyCandidate.peakContrast;
+        candidate.confidence = candidate.valid ? 1.0f : 0.0f;
         candidate.frequency = _peakEvidence;
         candidate.frequency.present = true;
         candidate.frequency.matched = _detector.frequencyCandidate.valid;

@@ -364,3 +364,15 @@
 
 ### Verification
 - `platformio run -e esp32dev-analyzer`
+
+## 2026-05-15 - Detection RF 7 runtime orchestration
+
+### Added
+- Added `DetectionRuntime` as the roadmap orchestration layer for emitters, inspection, assembly, and pattern rules.
+- Added the pass-6 `PatternRules` layer to interpret `PatternCandidate` into `PatternResult`.
+
+### Changed
+- Wired the runtime pipeline in frequency-first order while leaving the existing `Node` path untouched.
+
+### Verification
+- `platformio run -e esp32dev-analyzer`

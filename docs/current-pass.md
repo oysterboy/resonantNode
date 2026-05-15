@@ -1,288 +1,351 @@
-# Codex Pass 5.3 — Restore Frequency Evidence Detector, Stop Forcing Frequency Through Scalar
+# Codex Task: Detection Roadmap v0.3 — Pass 7: Add DetectionRuntime
 
-## Context
+Use `docs/detection-roadmap-v0-2-implementation-brief.md` as the architecture source of truth, but apply the updated Roadmap v0.3 naming/rule corrections from the latest refactor notes.
 
-We discovered an architecture drift in the detection refactor.
+## Scope
 
-The old frequency path was not a scalar transient detector.
+Detection architecture only.
 
-Old behavior:
+Add the `DetectionRuntime` orchestration layer.
+
+This pass should create the runtime pipeline object, but it should not replace the current `Node` detection path yet.
+
+## Goal
+
+Create `DetectionRuntime`, which wires the roadmap detection layers:
 
 ```txt
-FrequencyCandidateBuilder
-= frequency lifecycle state machine
-= consumes frequency evidence windows
-= opens/stays open/closes based on matched frequency evidence
-= tracks best evidence by contrast/score
-= closes from lastMatched + releaseDebounce
-
-Current drift:
-
-targetFreqEvidence.score
-→ ScalarTransientDetector
-→ scalar timing candidate
-
-This loses important frequency semantics:
-
-contrast is no longer lifecycle input
-matched-window lifecycle is lost
-close timing is driven by scalar release, not last matched frequency evidence
-best evidence is not selected the same way
-SEQ hit rate degraded
-
-We accept having a second detector type.
-
-Goal
-
-Restore the old frequency behavior/exactness as a proper second detector type, while keeping the new roadmap architecture after candidate proposal.
-
-Target architecture:
-
-AMP path:
-ampEnv
-→ ScalarTransientDetector
-→ SignalCandidate(source=amp)
-
-Frequency path:
-targetFreqEvidence
-→ FrequencyMatchDetector
-→ SignalCandidate(source=frequency_primary)
-
-Shared path:
-SignalCandidate
+SignalEmitters
 → SignalInspector
-→ InspectedSignal
 → PatternAssembler
-→ PatternResult
-Core Rule
+→ PatternRules
+→ PatternResult queue
+```
 
-Do not force frequency detection through ScalarTransientDetector.
+`DetectionRuntime` is the future owner of the detection path used by `Node`.
 
-Use this corrected architecture rule:
+Roadmap v0.3 rule:
 
-SignalCandidate shape is shared.
-SignalDetector input shape may differ by detector type.
+```txt
+FeatureExtractors measure.
+SignalDetectors / SignalEmitters propose SignalCandidates.
+SignalInspector accepts/rejects/annotates SignalCandidates into InspectedSignals.
+PatternAssembler creates PatternCandidates.
+PatternRules interpret PatternCandidates into PatternResults.
+Behavior consumes PatternResults.
+```
+
+---
+
+## Add Files
+
+Create:
+
+```txt
+src/detection/DetectionRuntime.h
+src/detection/DetectionRuntime.cpp
+```
+
+Create directories if needed.
+
+---
+
+## Existing Layers
+
+Use the layers created in earlier passes:
+
+```txt
+src/detection/signals/AmpSignalEmitter.h
+src/detection/signals/FrequencySignalEmitter.h
+src/detection/signals/SignalInspector.h
+src/detection/patterns/PatternAssembler.h
+src/detection/patterns/PatternRules.h
+src/detection/patterns/PatternResult.h
+```
+
+Use existing project types:
+
+```txt
+AudioSignalFrame
+DetectionPipeline::FrequencyEvidence
+FrequencyEvidenceEvaluation::Values
+```
+
+If the names differ slightly, adapt minimally to the current code.
+
+---
+
+## API
+
+Create a class with this general shape:
+
+```cpp
+#pragma once
+
+#include <stddef.h>
+
+#include "signals/AmpSignalEmitter.h"
+#include "signals/FrequencySignalEmitter.h"
+#include "signals/SignalInspector.h"
+#include "patterns/PatternAssembler.h"
+#include "patterns/PatternRules.h"
+#include "patterns/PatternResult.h"
+#include "FrequencyEvidenceEvaluation.h"
+
+struct AudioSignalFrame;
+
+namespace detection {
+
+class DetectionRuntime {
+public:
+    DetectionRuntime();
+
+    void reset();
+
+    void setFrequencyTuning(const FrequencyEvidenceEvaluation::Values& tuning);
+
+    void observeFrame(
+        const AudioSignalFrame& frame,
+        const DetectionPipeline::FrequencyEvidence& frequencyEvidence,
+        unsigned long nowMs
+    );
+
+    bool popPatternResult(PatternResult& out);
+
+private:
+    static constexpr size_t kResultQueueCapacity = 8;
+
+    bool pushPatternResult(const PatternResult& result);
+
+    FrequencyEvidenceEvaluation::Values _frequencyTuning = {};
+
+    AmpSignalEmitter _ampEmitter;
+    FrequencySignalEmitter _frequencyEmitter;
+    SignalInspector _signalInspector;
+    PatternAssembler _patternAssembler;
+    PatternRules _patternRules;
+
+    PatternResult _resultQueue[kResultQueueCapacity] = {};
+    size_t _resultReadIndex = 0;
+    size_t _resultCount = 0;
+};
+
+} // namespace detection
+```
+
+If `PatternResult` is an alias to `DetectionPipeline::PatternResult`, this is fine.
+
+If previous passes used a different namespace than `detection`, follow the existing namespace.
+
+---
+
+## Internal Processing Order
+
+`observeFrame(...)` should perform the roadmap chain, in this order:
+
+```txt
+1. feed frame/evidence to FrequencySignalEmitter
+2. feed frame/evidence to AmpSignalEmitter
+3. drain frequency SignalCandidates first
+4. inspect frequency SignalCandidates
+5. pass accepted InspectedSignals to PatternAssembler
+6. drain AMP SignalCandidates second
+7. inspect AMP SignalCandidates
+8. pass accepted InspectedSignals to PatternAssembler
+9. drain PatternCandidates
+10. evaluate PatternCandidates with PatternRules
+11. queue PatternResults
+```
+
+The frequency-first priority is important.
+
+---
+
+## Runtime Behavior
+
+This pass should add the runtime class, but it should not yet replace the current direct `Node` path.
 
 So:
 
-ScalarTransientDetector consumes scalar samples.
-FrequencyMatchDetector consumes frequency evidence windows.
-Important Non-Goal
+```txt
+DetectionRuntime exists and compiles.
+Node behavior remains unchanged.
+```
 
-Do not rewrite the old frequency detector from scratch.
+Do not integrate `DetectionRuntime` into `Node` yet, except for includes if absolutely required by compile structure.
 
-This is a conservative refactor:
+Integration happens in the next pass.
 
-FrequencyCandidateBuilder
-→ FrequencyMatchDetector
+---
 
-Preserve old behavior as much as possible.
+## Frequency-First Rule
 
-Tasks
-1. Create / rename detector
+Frequency candidates should be processed before AMP candidates.
 
-Refactor the old frequency builder role into:
+Desired priority:
 
-FrequencyMatchDetector
-
-Preferred files:
-
-src/detection/FrequencyMatchDetector.h
-src/detection/FrequencyMatchDetector.cpp
-
-Acceptable during migration:
-
-FrequencyCandidateBuilder remains internally,
-but is wrapped/adapted by FrequencyMatchDetector.
-
-But final public role should be detector-like, not “builder” language.
-
-2. Define frequency evidence input
-
-The detector should not consume a plain float.
-
-Use or create a struct close to:
-
-struct FrequencyEvidence {
-    uint32_t ms;
-    uint32_t sample;
-    float score;
-    float contrast;
-    bool matched;
-};
-
-If the current code already has an equivalent evidence struct, reuse it.
-
-Do not over-expand this yet.
-
-Optional fields only if already available and useful:
-
-float targetHz;
-float targetEnergy;
-float neighborEnergy;
-3. Preserve old lifecycle semantics
-
-The new FrequencyMatchDetector must preserve old FrequencyCandidateBuilder behavior:
-
-open when matching frequency evidence starts
-stay open while matching evidence continues
-update candidateLastMatchedMs on each matched evidence window
-track firstSeenMs / firstSeenSample
-track peakMs / peakSample
-track best score and contrast
-choose best evidence by contrast first, then score
-close after candidateLastMatchedMs + releaseDebounce
-duration = releaseMs - firstSeenMs
-reject too_short / too_long / refractory / score / contrast as before
-emit one candidate when closed/ready
-
-Important:
-
-releaseMs should represent the old matched-window lifecycle close point,
-not the later scalar-detector observation point.
-4. Output new SignalCandidate shape
-
-The detector may preserve old internals, but its output must adapt to the new roadmap candidate type.
-
-Map old frequency candidate output to SignalCandidate or the current equivalent:
-
-source = frequency_primary
-firstMs = firstSeenMs
-peakMs = peakMs
-releaseMs = releaseMs
-durationMs = duration
-strength = score or selected strength field
-contrast = contrast as evidence payload
-rejectReason = old reject reason
-emitter/detector = frequency_evidence
-
-If SignalCandidate does not yet support contrast, add a generic evidence/metadata field only if simple.
-
-Do not add PatternCandidate logic here.
-
-5. Update FrequencySignalEmitter
-
-FrequencySignalEmitter should no longer feed evidence.score into ScalarTransientDetector.
-
-Instead:
-
+```txt
 FrequencySignalEmitter
-→ receives / builds FrequencyEvidence windows
-→ feeds FrequencyMatchDetector
-→ emits SignalCandidate(source=frequency_primary)
+→ SignalInspector
+→ PatternAssembler
+→ PatternRules
+→ PatternResult
 
-Keep FrequencySignalEmitter as the source adapter/composer.
+then AMP fallback/support/comparison
+```
 
-Keep detector lifecycle inside FrequencyMatchDetector.
+AMP remains useful as fallback/comparison, but frequency-first is the first real roadmap path.
 
-6. Keep ScalarTransientDetector unchanged for AMP
+---
 
-Do not damage the AMP path.
+## Anti-Wrapper Rule
 
-ScalarTransientDetector remains valid for:
+`DetectionRuntime` must be the future owner of the detection path.
 
-ampEnv
-broadbandEnv later
-simple scalar envelope transients
+SignalEmitters may still wrap or adapt existing internals, but higher layers should target:
 
-Allowed:
+```txt
+DetectionRuntime
+```
 
-AmpSignalEmitter uses ScalarTransientDetector
-FrequencySignalEmitter uses FrequencyMatchDetector
+not:
 
-This is now intended, not asymmetry.
+```txt
+AmpCandidateBuilder
+FrequencyCandidateBuilder
+old direct Node candidate conversion
+```
 
-7. Fix SEQ routing clarity
+This pass may leave current Node usage intact temporarily.
 
-SEQ must make the primary path obvious.
+The next Node integration pass must remove direct behavior-path use from Node in roadmap mode.
 
-For frequency candidates, logs should say:
+---
 
-emitter=frequency
-detector=frequency_evidence
-legacy_freq_builder=0
-source=frequency_primary
+## Queue Behavior
 
-If old FrequencyCandidateBuilder still exists as compatibility internals, do not log it as the active emitter.
+Use a small fixed-size result queue.
 
-If an explicit legacy comparison remains, log it separately:
+If the queue is full:
 
-legacy_comparison=1
+```txt
+drop the new PatternResult
+```
 
-But primary SEQ candidate must not say:
+or follow the existing project convention.
 
-emitter=legacy_builder
-legacy_freq_builder=1
+Do not allocate dynamically.
 
-unless it truly is still old comparison-only output.
+---
 
-8. SEQ report cleanup
+## Reset Behavior
 
-The current logs often say:
+`reset()` should reset:
 
-source=amp_fallback
-reject=freq_score_too_low
+```txt
+AmpSignalEmitter
+FrequencySignalEmitter
+PatternAssembler
+result queue
+```
 
-Make report semantics clear:
+`SignalInspector` and `PatternRules` may not need reset if stateless.
 
-If AMP is the accepted primary: say source=amp / fallback=amp.
-If frequency evidence is accepted primary: say source=frequency_primary.
-If frequency was only comparison/evidence but not accepted: say that explicitly.
-Do not make the accepted path ambiguous.
-9. Do not tune parameters
+---
 
-Do not change frozen params:
+## Tuning Behavior
 
-onset=30.0
-release=20.0
-cooldown=50
-releaseDebounce=10
-minMs=90
-maxMs=240
-minStrength=40.0
+`setFrequencyTuning(...)` should store the tuning values used by:
 
-If FrequencyMatchDetector has its own old params, preserve old values.
+```txt
+SignalInspector
+PatternRules
+```
 
-This pass is architecture/parity, not tuning.
+Do not invent new tuning parameters in this pass.
 
-Expected Result
+Do not tune thresholds.
 
-After this pass, run SEQ at 70cm.
+---
 
-Expected signs of success:
+## Boundary Rules
 
-frequency path no longer goes through ScalarTransientDetector
-SEQ logs detector=frequency_evidence for frequency candidates
-hit rate should move back toward old frequency-builder baseline
-duration distribution should look closer to old matched-window lifecycle
-no new duplicates / late hits
-candidate source is unambiguous
+`DetectionRuntime` may:
 
-Old reference target:
+```txt
+- coordinate detection layer order
+- own signal emitters
+- own inspector
+- own assembler
+- own pattern rules
+- queue PatternResults
+```
 
-before refactor 70cm:
-expected_hits ≈ 95/100
-misses ≈ 5
-avg duration ≈ 102 ms
-durations heavily around ~96 ms
-duplicates = 0
-late_hits = 0
+`DetectionRuntime` must not:
 
-Recent bad reference:
+```txt
+- call ResonantBehavior
+- know about chirp output
+- know about LED pulse state
+- own behavior timing
+- own serial commands
+- perform raw audio reads
+- tune thresholds
+- implement DetectionStrategy/Profile
+```
 
-05_04:
-expected_hits = 86/100
-misses = 14
-logs still show emitter=legacy_builder / amp_fallback ambiguity
-Acceptance Criteria
+`Node` will later feed frames into `DetectionRuntime`.
 
-Pass 5.3 is acceptable if:
+---
 
-frequency detection is no longer forced through scalar input
-FrequencyMatchDetector or equivalent exists
-it consumes frequency evidence windows, not just score
-old matched-window lifecycle semantics are preserved
-ScalarTransientDetector remains generic and scalar-only
-AMP and frequency emit the same SignalCandidate shape
-SEQ primary path logs are unambiguous
-no threshold tuning was performed
+## Constraints
+
+Do not:
+
+- change Node runtime behavior
+- change ResonantBehavior
+- change Analyzer runtime behavior
+- change output behavior
+- tune thresholds
+- add DetectionStrategy/Profile
+- add FieldState
+- implement complex pattern grouping
+- implement overlap dominance
+- implement family matching
+- remove legacy code
+- remove old Node path yet
+
+---
+
+## Acceptance Criteria
+
+- `DetectionRuntime.h/.cpp` exist.
+- `DetectionRuntime::reset()` compiles.
+- `DetectionRuntime::setFrequencyTuning(...)` compiles.
+- `DetectionRuntime::observeFrame(...)` compiles.
+- `DetectionRuntime::popPatternResult(...)` compiles.
+- `DetectionRuntime` wires SignalEmitters → SignalInspector → PatternAssembler → PatternRules.
+- Frequency candidates are processed before AMP candidates.
+- PatternResults can be queued and popped.
+- No runtime behavior changed.
+- Existing Node path is untouched.
+- Project compiles.
+
+---
+
+## Notes for Next Pass
+
+The next pass should add the detection mode switch and/or integrate `DetectionRuntime` into Resonant `Node`.
+
+Target future Node roadmap mode:
+
+```cpp
+_detection.observeFrame(frame, frequencyEvidence, nowMs);
+
+DetectionPipeline::PatternResult result;
+while (_detection.popPatternResult(result)) {
+    _behavior.handlePatternResult(result, nowMs);
+}
+```
+
+Do not implement that Node integration in this pass unless explicitly requested.

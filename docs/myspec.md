@@ -1,4 +1,4 @@
-# ResonantNode Architecture Spec v0.2
+# ResonantNode Architecture Spec v0.2.1
 
 ## 1. Purpose
 
@@ -200,10 +200,18 @@ The following modules are specific to the acoustic Resonanzraum application.
 
 ```text
 AudioSignal
-FeatureDetector
-TransientDetector
-CandidateBuilder
-PatternClassifier
+SignalCandidate
+SignalInspector
+InspectedSignal
+PatternCandidate
+PatternRules
+DetectionRuntime
+ScalarTransientDetector
+AmpTransientDetector
+FrequencyMatchDetector
+FrequencyBandStreamExtractor
+FrequencyWindowProbe
+FieldStateTracker
 SoundOutput
 ResonantBehavior
 ```
@@ -223,12 +231,17 @@ HAL
 SoundInput
 AudioSignal
 RawSampleHistory
+DetectionRuntime
+SignalEmitters
+SignalInspector
+PatternAssembler
+PatternRules
+FieldStateTracker
 SoundOutput
 Timing
 Parameters
 Commands
 State / Events
-DetectionPipeline contracts
 Analyzer support
 Behavior boundary
 ```
@@ -237,8 +250,8 @@ Implementation-specific acoustic strategies may define:
 
 ```text
 active evidence streams
-candidate builders
-pattern detectors
+candidate sources
+source-specific detectors
 thresholds
 classifier rules
 pattern result semantics
@@ -271,12 +284,17 @@ Shared objects provide common infrastructure:
 SoundInput
 AudioSignal
 RawSampleHistory
+DetectionRuntime
+SignalEmitters
+SignalInspector
+PatternAssembler
+PatternRules
+FieldStateTracker
 SoundOutput
 Timing
 Parameters
 Commands
 State / Events
-DetectionPipeline contracts
 Analyzer support
 ```
 
@@ -284,8 +302,10 @@ Pattern profiles select and compose implementation-specific modules:
 
 ```text
 evidence extractors
-candidate builders
-pattern detectors
+candidate sources
+signal inspectors
+pattern assemblers
+pattern rules
 thresholds
 classifier rules
 behavior mapping
@@ -357,9 +377,9 @@ Do not create one subclassed node architecture per acoustic pattern.
 ```
 
 
-## 7. Audio System
+## 7. Audio Input / Pattern System
 
-The Audio System owns the local acoustic input path of ResonantNode.
+The Audio Input / Pattern System owns the local acoustic input and pattern-detection path of ResonantNode.
 
 It connects:
 
@@ -367,8 +387,10 @@ It connects:
 SoundInput
 → AudioSignal
 → Feature Evidence
-→ Candidate / PatternCandidate
-→ PatternResult
+→ SignalCandidates
+→ InspectedSignals
+→ PatternCandidates
+→ PatternResults
 → ResonantBehavior
 
 ```
@@ -399,7 +421,9 @@ The stable audio detection contract is:
 ```text
 AudioSignal
 → Feature Evidence
-→ Candidate / PatternCandidate
+→ SignalCandidate
+→ InspectedSignal
+→ PatternCandidate
 → PatternResult
 → Behavior
 ```
@@ -411,17 +435,218 @@ Important distinction:
 ```text
 The scaffold is the detection / pattern architecture.
 
-Transient detection and frequency detection are first concrete implementations inside that scaffold.
+Transient detection, frequency detection, signal inspection, pattern assembly, and pattern rules are first concrete implementations inside that scaffold.
 They are not the scaffold itself.
 ```
 
-Current implementation:
-- AMP/transient candidate defines the event window.
-- Raw history provides candidate-window frequency evidence.
-- `FrequencyEvidenceEvaluation` classifies tonal validity.
-- Behavior may optionally require tonal validity, but this is a runtime behavior gate, not the detector baseline.
+### Landed Detection Runtime Flow
 
-The current implementation may remain simple and pass-through while the architecture is prepared for additional evidence paths.
+The compact architectural contract remains:
+
+```text
+FeatureStreams
+→ Candidates / PatternCandidates
+→ PatternResults
+→ Behavior
+```
+
+The landed runtime flow is:
+
+```text
+FeatureStreams
+→ SignalEmitters / CandidateSources
+→ SignalCandidates
+→ SignalInspector
+→ InspectedSignals
+→ PatternAssembler
+→ PatternCandidates
+→ PatternRules
+→ PatternResults
+→ Behavior
+```
+
+`FieldStateTracker` observes the detection flow in parallel:
+
+```text
+SignalCandidates
++ InspectedSignals
++ PatternResults
+→ FieldStateTracker
+→ FieldState
+```
+
+This keeps event meaning and acoustic context separate.
+
+`PatternResult` represents a detected event meaning.
+
+`FieldState` summarizes the surrounding acoustic context.
+
+### Detection Runtime Roles
+
+The current code separates detection runtime responsibilities into several small stages.
+
+`FeatureStream`
+
+A time-varying measurement derived from the audio signal.
+
+Examples:
+
+```text
+amplitude level / envelope
+frequency score
+spectral contrast
+target-band evidence
+```
+
+`SignalEmitter` / `CandidateSource`
+
+Connects one feature stream or evidence source to candidate emission.
+
+It produces `SignalCandidate` objects.
+
+Examples:
+
+```text
+AmpSignalEmitter
+FrequencySignalEmitter
+```
+
+`SignalCandidate`
+
+A low-level candidate emitted by one evidence path.
+
+Examples:
+
+```text
+AmpTransient
+FrequencyTransient
+```
+
+It carries source identity, timing, strength/score, and attached evidence.
+
+`SignalInspector`
+
+Accepts or rejects `SignalCandidate`s before pattern assembly.
+
+It performs signal-level validation, not pattern-level meaning.
+
+Examples:
+
+```text
+reject invalid duration
+reject missing frequency evidence
+reject weak frequency score / contrast
+accept usable amp transient
+```
+
+`InspectedSignal`
+
+A signal candidate plus the inspection decision.
+
+It is the handoff object between signal-level detection and pattern assembly.
+
+`PatternAssembler`
+
+Turns accepted `InspectedSignal`s into `PatternCandidate`s.
+
+Current implementation is simple and mostly one-signal-to-one-pattern-candidate.
+
+Later implementations may group several inspected signals.
+
+`PatternRules`
+
+Interprets `PatternCandidate`s and emits `PatternResult`s.
+
+Pattern rules are applied after signal inspection and candidate assembly.
+
+Low-level detectors do not apply pattern rules.
+
+`DetectionRuntime`
+
+Owns the runtime wiring of emitters, inspector, assembler, pattern rules, field tracker, and result queue.
+
+It is the current composition layer for the detection path.
+
+### Detection Runtime and Future DetectionStrategy
+
+`DetectionRuntime` is the current landed composition layer for detection.
+
+It wires together:
+
+```text
+AmpSignalEmitter
+FrequencySignalEmitter
+SignalInspector
+PatternAssembler
+PatternRules
+FieldStateTracker
+PatternResult queue
+```
+
+A future `DetectionStrategy` may make this wiring profile-specific.
+
+For now, `DetectionRuntime` should be treated as the concrete runtime implementation of the current default detection strategy.
+
+A future `DetectionStrategy` may select:
+
+```text
+enabled feature streams
+candidate sources
+signal inspection rules
+candidate enrichment rules
+active PatternRules
+emitted PatternResult vocabulary
+field-state interpretation
+```
+
+The stable rule remains:
+
+```text
+low-level detectors and signal emitters do not apply PatternRules.
+PatternRules belong after SignalInspector and PatternAssembler.
+```
+
+### Detector Layer Status
+
+The current detector layer contains both shared mechanics and source-specific facades.
+
+`ScalarTransientDetector`
+
+Reusable scalar-stream onset / transient state machine.
+
+It detects scalar changes over time.
+
+It does not know whether the scalar came from amplitude, frequency, broadband energy, or another feature stream.
+
+`AmpTransientDetector`
+
+Amplitude-specific facade around `ScalarTransientDetector`.
+
+It applies the scalar transient mechanics to the amplitude / level stream.
+
+`FrequencyBandStreamExtractor`
+
+Live frequency-band evidence stream extractor.
+
+It computes rolling frequency score, target power, neighbor power, total energy, and spectral contrast.
+
+It does not own behavior, pattern meaning, or candidate assembly.
+
+`FrequencyMatchDetector`
+
+Frequency-specific lifecycle detector used by the current frequency candidate path.
+
+It preserves frequency-specific candidate behavior and old frequency matching exactness.
+
+This is source-specific detector logic, not a generic PatternRuleSet.
+
+`FrequencyWindowProbe`
+
+Retrospective candidate-window frequency measurement over raw sample history.
+
+It is used to enrich an existing candidate with candidate-aligned frequency evidence.
+
+It is not the live frequency stream.
 
 ---
 
@@ -548,12 +773,14 @@ General chain:
 
 ```text
 AudioSignal
-→ Feature Detectors
-→ Feature Evidence
-→ Candidate Builder
-→ PatternCandidate
-→ Pattern Detector(s)
-→ Pattern Result(s)
+→ Feature Detectors / SignalEmitters
+→ Feature Evidence / SignalCandidates
+→ SignalInspector
+→ InspectedSignals
+→ PatternAssembler
+→ PatternCandidates
+→ PatternRules / Pattern Detector(s)
+→ Pattern Results
 → optional Pattern Selector / Resolver
 → Behavior
 ```
@@ -567,141 +794,62 @@ Feature Evidence
 → Behavior
 ```
 
-The current AMP/transient detector path is one concrete implementation inside this scaffold.
+The current implementation includes AMP and frequency candidate sources inside this scaffold.
 
-Frequency matching is another possible evidence path inside the same scaffold.
+AMP/transient detection, frequency matching, signal inspection, and pattern rules are concrete implementations inside the scaffold.
 
 Neither path should become structurally privileged just because it is implemented first.
 
 ---
 
-#### 7.3.1 Feature Evidence
+#### 7.3.1 FeatureStreams and SignalEmitters
 
-Feature evidence is measurable information extracted from the audio signal.
+A `FeatureStream` is a time-varying measurement derived from the audio signal.
 
 Examples:
 
 ```text
-level evidence
-onset evidence
-transient evidence
-duration evidence
-release evidence
-frequency-band evidence
-spectral contrast evidence
-broadband energy evidence
-temporal spacing evidence
-gap consistency evidence
+amplitude level / envelope
+frequency score
+spectral contrast
+target-band evidence
+broadband energy
+activity estimate
 ```
 
-Feature evidence does not decide behavior.
+A `SignalEmitter` or `CandidateSource` connects one feature stream or evidence source to candidate emission.
 
-Feature evidence does not decide final pattern meaning.
+It produces `SignalCandidate` objects.
 
-It only provides material for candidate building and pattern evaluation.
+Examples:
+
+```text
+AmpSignalEmitter
+FrequencySignalEmitter
+```
+
+Signal emitters do not decide pattern meaning.
+
+They only turn feature-stream activity or source-specific detector output into source-tagged signal candidates.
 
 ---
 
-#### 7.3.2 Feature Detectors
+#### 7.3.2 SignalCandidates and Signal Inspection
 
-Feature detectors extract simple evidence from the audio signal.
+A `SignalCandidate` is a low-level candidate emitted by one evidence path.
 
-Possible feature detectors:
-
-```text
-OnsetDetector
-TransientDetector
-FrequencyFeatureDetector
-BroadbandEnergyDetector
-ClickActivityDetector
-```
-
-Current first concrete detectors may include:
+Examples:
 
 ```text
-AMP / onset detector
-AMP / transient detector
-frequency-band detector
+AmpTransient
+FrequencyTransient
 ```
 
-Feature detectors should not decide whether something is a chirp, beep, valid signal, or behavior trigger.
-
-They only produce evidence.
-
-Example ownership:
-
-```text
-OnsetDetector:
-    onset time
-    onset strength
-    threshold facts
-
-TransientDetector:
-    release time
-    duration
-    peak strength
-    close reason
-    rejection reason
-
-FrequencyFeatureDetector:
-    target-band energy
-    neighbor-band energy
-    contrast
-    score
-    match confidence
-```
-
-This keeps the architecture open for different evidence paths.
-
----
-
-#### 7.3.3 Candidate Builder
-
-The CandidateBuilder turns low-level evidence into candidate objects.
-
-It may:
-
-```text
-open a candidate on onset or other evidence
-extend an existing candidate with nearby evidence
-track onset count
-track gaps between evidence events
-track total span
-track duration
-track peak strength
-track average strength
-close candidates after inactivity
-reject candidates that violate constraints
-keep multiple overlapping candidates if needed later
-```
-
-The CandidateBuilder does not decide final pattern meaning.
-
-It answers:
-
-```text
-What possible sound event is forming here?
-```
-
-A candidate may come from one evidence path or several evidence paths.
-
-Candidates may be produced by different strategies:
-
-```text
-amplitude-first
-frequency-first
-temporal-grouping-first
-broadband-energy-first
-combined / resolver-based
-```
-
-These are implementation strategies, not separate architecture rules.
-
-A candidate may include:
+A `SignalCandidate` may contain:
 
 ```text
 candidateId
-source detector / source evidence
+source
 start time
 accepted time
 end time
@@ -709,39 +857,70 @@ duration
 start sample
 end sample
 peak time
-peak strength
-average strength
-validity flags
-rejection reason
-close reason
+strength / score
+frequency evidence
+validity facts
+rejection facts
 overflow flag
 ```
 
-A `DetectorCandidate` may be a low-level candidate emitted by a concrete detector.
+`SignalInspector` accepts or rejects `SignalCandidate`s before pattern assembly.
 
-A `PatternCandidate` is the behavior-facing or classifier-facing candidate object assembled for pattern evaluation.
+It performs signal-level validation, not pattern-level meaning.
 
-Current target shape:
+Examples:
 
 ```text
-DetectorCandidate / FeatureEvidence
+reject invalid duration
+reject missing frequency evidence
+reject weak frequency score / contrast
+accept usable amp transient
+```
+
+`InspectedSignal` is the handoff object between signal-level detection and pattern assembly.
+
+It contains the original signal candidate plus the inspection decision and inspection facts.
+
+---
+
+#### 7.3.3 Pattern Assembly and PatternRules
+
+`PatternAssembler` turns accepted `InspectedSignal`s into `PatternCandidate`s.
+
+Current implementation is simple and mostly one-signal-to-one-pattern-candidate.
+
+Later implementations may group several inspected signals.
+
+A `PatternCandidate` is the classifier-facing object used for pattern interpretation.
+
+It may include:
+
+```text
+source signal(s)
+start time
+end time
+duration
+source evidence
+candidate/window-level features
+inspection facts
+validity / rejection facts
+```
+
+`PatternRules` interpret `PatternCandidate`s and emit `PatternResult`s.
+
+Pattern rules are applied only after signal inspection and pattern assembly.
+
+Low-level detectors and signal emitters do not apply `PatternRules`.
+
+```text
+SignalCandidate
+→ SignalInspector
+→ InspectedSignal
+→ PatternAssembler
 → PatternCandidate
+→ PatternRules
 → PatternResult
-→ ResonantBehavior
 ```
-
-The first implementation may remain pass-through:
-
-```text
-valid transient candidate
-→ simple PatternCandidate
-→ simple PatternResult
-→ behavior-facing result
-```
-
-But this does not make transient detection the architecture.
-
-It is only the first concrete implementation.
 
 ---
 
@@ -915,53 +1094,29 @@ raw sample history:
 
 ---
 
-#### 7.3.5 Pattern Detectors
-
-Pattern detectors evaluate candidates according to pattern-specific rules.
-
-Different pattern detectors may use different evidence paths.
-
-##### Reusable Stream Detectors
+#### 7.3.5 Reusable Stream Detectors and PatternRules
 
 Onset and transient detection should not be tied to amplitude only.
 
-They should operate on scalar evidence streams.
+Reusable scalar detectors operate on scalar evidence streams.
 
 Examples:
 
 ```text
 AmpEnvelopeStream
--> OnsetDetector
--> TransientDetector
--> AmpCandidate
+-> ScalarTransientDetector
+-> AmpTransient SignalCandidate
 ```
 
 ```text
 FrequencyBandStream / TargetBandEnvelope
--> OnsetDetector
--> TransientDetector
--> FreqTransientCandidate
+-> ScalarTransientDetector or source-specific FrequencyMatchDetector
+-> FrequencyTransient SignalCandidate
 ```
 
-This means the same detector logic can be chained differently depending on the input stream.
+This means detector mechanics can be chained differently depending on the input stream.
 
-The frequency path does not require a separate "frequency transient detector" with duplicated logic. It should reuse the generic onset/transient detector concept with a frequency-specific parameter profile.
-
-Examples:
-
-```text
-amp.onsetThreshold
-amp.releaseThreshold
-amp.minDurationMs
-amp.maxDurationMs
-
-freq.onsetThreshold
-freq.releaseThreshold
-freq.minDurationMs
-freq.maxDurationMs
-```
-
-The produced candidate should carry its source:
+The produced signal candidate must carry its source:
 
 ```text
 candidate.source = AMP
@@ -971,63 +1126,47 @@ candidate.source = BROADBAND
 
 The detector should not decide pattern meaning.
 
-It only turns a scalar evidence stream into an evidence candidate.
+It only turns a scalar stream or source-specific evidence path into a signal candidate.
 
-This is the preferred later direction for tonal-click detection.
+Pattern meaning belongs to `PatternRules`, after inspection and assembly.
 
-The current low-risk pass may still use AMP/transient candidates plus raw-history frequency measurement first.
-
-Possible pattern detectors:
+Possible pattern rule sets:
 
 ```text
-TransientPatternDetector
-TonalBeepPatternDetector
-ChirpPatternDetector
-ClickPatternDetector
-NoiseBurstPatternDetector
+TonalTransientRules
+TonalBeepRules
+ChirpRules
+ClickRules
+NoiseBurstRules
 ```
 
-Pattern detectors share a common conceptual interface:
+A pattern rule set should answer:
 
 ```text
-PatternDetector
-  input:  Candidate / PatternCandidate + associated feature evidence
-  output: PatternResult
-```
-
-A pattern detector should answer:
-
-```text
-Does this candidate match my pattern?
+Does this PatternCandidate match my pattern?
 How strongly?
 With what confidence?
 With what qualifiers?
-```
-
-Pattern detectors also answer:
-
-```text
-What kind of sound event is this?
 Should it be valid, invalid, ambiguous, or ignored?
 ```
 
-Pattern detectors do not directly trigger behavior or sound output.
+Pattern rules do not directly trigger behavior or sound output.
 
-They evaluate candidates and return `PatternResult`.
+They evaluate `PatternCandidate`s and return `PatternResult`s.
 
 Example pattern strategies:
 
 ```text
 TonalBeepPattern:
-    one onset
-    + sustained frequency evidence
+    one tonal transient
+    + sustained or candidate-window frequency evidence
     + approximate duration
 
-ChirpPattern:
-    multiple onsets
+PulsedChirpPattern:
+    multiple tonal pulse candidates
     + gap consistency
     + short total span
-    + optional frequency evidence
+    + optional frequency-group consistency
 
 NoiseBurstPattern:
     broadband energy
@@ -1046,24 +1185,25 @@ These examples are possible implementations, not architectural rules.
 
 #### 7.3.6 Multi-Path / Resolver Mechanics
 
-The classification layer may evaluate one candidate through one or more pattern detectors.
+The detection / pattern layer may evaluate one pattern candidate through one or more rule sets.
 
 General model:
 
 ```text
-Feature Evidence
-→ Candidate / PatternCandidate
-→ Pattern Detector(s)
-→ Pattern Result(s)
-→ Pattern Selector / Resolver
+InspectedSignal(s)
+→ PatternAssembler
+→ PatternCandidate
+→ PatternRule(s)
+→ PatternResult(s)
+→ optional Pattern Selector / Resolver
 → Behavior
 ```
 
-A candidate should not be hard-wired to one fixed interpretation.
+A pattern candidate should not be hard-wired to one fixed interpretation.
 
-The same candidate may be evaluated by one or more pattern detectors.
+The same candidate may be evaluated by one or more pattern rules.
 
-The resolver may:
+A resolver may:
 
 ```text
 choose the strongest result
@@ -1089,13 +1229,13 @@ if no valid result:
 
 The resolver is optional in the current implementation.
 
-It is an architectural placeholder and should not become complex before basic evidence and candidate handling are stable.
+It is an architectural placeholder and should not become complex before signal inspection, pattern assembly, and current pattern rules are stable.
 
 ---
 
 #### 7.3.7 Pattern Configuration
 
-The active pattern detectors should be configurable.
+The active pattern rules and detection strategy wiring should be configurable.
 
 Possible configuration levels:
 
@@ -1120,7 +1260,7 @@ enabledPatterns = CHIRP + TONE
 enabledPatterns = DEBUG_ALL
 ```
 
-Configuration should select which evidence paths and pattern detectors are active.
+Configuration should select which feature streams, signal emitters, inspection rules, pattern assemblers, and pattern rules are active.
 
 Configuration should not change the behavior contract.
 
@@ -1130,78 +1270,92 @@ Behavior should still consume `PatternResult`.
 
 #### 7.3.8 Current Implementation Boundary
 
-The current implementation instantiates the generic Detection / Pattern Pipeline with first concrete evidence paths.
-
-Current concrete evidence paths:
+The current implementation has two candidate-producing evidence paths:
 
 ```text
-AMP / transient evidence
-frequency-band evidence
+AMP path:
+    AudioSignal / frame level
+    -> AmpSignalEmitter
+    -> ScalarSignalEmitter / ScalarTransientDetector mechanics
+    -> AmpTransient SignalCandidate
+
+Frequency path:
+    frequency evidence stream
+    -> FrequencySignalEmitter
+    -> FrequencyMatchDetector
+    -> FrequencyTransient SignalCandidate
 ```
 
-The existing AMP/transient detector baseline remains unchanged.
-
-Frequency-band evidence may be added as another evidence path.
-
-Both should feed the generic scaffold:
+Accepted signal candidates are inspected and assembled:
 
 ```text
-DetectorCandidate / FeatureEvidence
-→ PatternCandidate
-→ PatternResult
-→ ResonantBehavior
+SignalCandidate
+-> SignalInspector
+-> InspectedSignal
+-> PatternAssembler
+-> PatternCandidate
+-> PatternRules
+-> PatternResult
 ```
 
-This does not make transient detection or frequency detection the architecture itself.
-
-They are first implementations inside the architecture.
-
-Current implementation target:
+The current pattern vocabulary includes:
 
 ```text
-DetectorCandidate
-→ PatternCandidate
-→ PatternResult
-→ ResonantBehavior
+ValidTonalTransient
+TransientOnly
+Invalid
+Ambiguous / future
 ```
 
-Current practical rule:
-
-```text
-Keep AMP/transient detection stable.
-Add additional evidence paths without behavior coupling.
-Keep first PatternResult path simple/pass-through.
-```
-
-This keeps Analyzer and Resonant behavior aligned while avoiding premature complexity.
-
-#### Current Tonal-Click Strategy
-
-For the current tonal-click problem, the first implementation should use AMP/transient candidates as the practical event window and add candidate-window frequency measurement from raw sample history.
-
-This is a low-risk diagnostic step and does not redefine the architecture.
+The current implementation still supports candidate-window frequency enrichment through raw sample history:
 
 ```text
 AMP / transient candidate
-→ raw sample history
-→ candidate-window frequency measurement
-→ PatternCandidate
-→ PatternResult
+-> RawSampleHistory
+-> FrequencyWindowProbe
+-> candidate-aligned frequency evidence
 ```
 
-The preferred later direction is reusable onset/transient detection over scalar evidence streams, including narrow frequency-band streams.
+This remains useful for diagnostics and comparison.
 
-Full parallel candidate correlation should remain later / volatile until single-path evidence and candidate-window diagnostics are understood.
+Frequency-first detection is now partially landed as a separate signal path, but it is not yet a full profile-level strategy system.
+
+Full candidate correlation and pulsed chirp grouping remain later.
+
+#### Current Tonal-Click Strategy
+
+For the current tonal-click / short-beep problem, the implementation is a mixed landed state:
+
+```text
+AMP path:
+    amplitude / level evidence
+    -> AmpSignalEmitter
+    -> AmpTransient SignalCandidate
+
+Frequency path:
+    frequency evidence stream
+    -> FrequencySignalEmitter
+    -> FrequencyMatchDetector
+    -> FrequencyTransient SignalCandidate
+
+Retrospective frequency feature path:
+    AMP / transient candidate
+    -> RawSampleHistory
+    -> FrequencyWindowProbe
+    -> candidate-aligned frequency evidence
+```
+
+This is still conceptually a tonal transient / tonal pulse target, not a full chirp target.
 
 Current priority:
 
 ```text
-more evidence first
-classification later
-behavior last
+stabilize the landed AMP and frequency candidate paths
+keep PatternResult as the behavior-facing contract
+do not promote candidate correlation or pulsed chirp grouping yet
 ```
 
-Behavior should remain unchanged until frequency evidence has been validated by logging and analyzer/detection-only runs.
+Behavior should consume `PatternResult`, not raw frequency evidence or detector flags.
 
 ---
 
@@ -1394,72 +1548,42 @@ These relation facts are not final behavior decisions.
 
 For the current firmware pass, full candidate correlation should remain later / volatile. The lower-risk path is AMP/transient candidate windows plus raw-history frequency measurement.
 
-##### Future Detection Architecture [Volatile]
-
-Possible later structure:
-
-```text
-AudioSignal
-  ├─ AudioOnsetDetector
-  ├─ AudioTransientDetector
-  └─ FrequencyBandStreamExtractor
-        ↓
-GroupDetector
-        ↓
-PatternDetector
-        ↓
-ResonantBehavior
-```
-
-This is an architectural direction, not a required immediate implementation target.
-
-The principle remains:
-
-```text
-Feature detectors extract evidence.
-Group / Candidate Builder builds candidates.
-Pattern detectors evaluate candidates.
-Behavior decides response.
-```
-
----
-
 #### 7.3.10 Stability Markers
 
 Stable:
 
 ```text
 Detection is not a single fixed pipeline.
-The scaffold is Feature Evidence / Evidence Streams → Candidate / PatternCandidate → PatternResult → Behavior.
-Transient and frequency detection are implementations inside the scaffold.
-Feature detectors are separate from pattern detectors.
+The landed flow uses SignalCandidates, InspectedSignals, PatternCandidates, PatternRules, and PatternResults.
 Behavior consumes PatternResult.
 Multiple evidence paths and pattern detectors must remain possible.
 Streams and candidate/window features must not be conflated.
+Low-level detectors do not apply PatternRules.
+PatternRules belong after signal inspection and pattern assembly.
+FieldState is separate acoustic context.
 ```
 
 Current:
 
 ```text
-Use current AMP/transient evidence path.
-Keep detector baseline frozen.
-Add raw sample history for candidate-window diagnostics.
-Add frequency evidence without behavior coupling.
-Keep first PatternResult path simple/pass-through.
-Analyzer and Resonant should consume the same PatternResult contract.
+DetectionRuntime wires the current detection path.
+AmpSignalEmitter and FrequencySignalEmitter are active candidate sources.
+ScalarTransientDetector is the reusable scalar transient core.
+FrequencyMatchDetector preserves source-specific frequency lifecycle behavior.
+FrequencyWindowProbe provides raw-history candidate-window frequency evidence.
+PatternRules produce ValidTonalTransient / TransientOnly / Invalid.
+FieldStateTracker provides simple acoustic context.
 ```
 
 Later / Volatile:
 
 ```text
-reusable stream detectors over frequency-band streams
-frequency-first transient detection
-parallel candidate correlation
-frequency-first detection
-chirp grouping
-multi-pattern runtime arbitration
-overlap dominance
-family matching
+profile-specific DetectionStrategy
+full PatternProfile composition
+candidate correlation
+pulsed chirp grouping
+continuous chirp trajectory
+glass chime / decay pattern
 dense-field ambiguity
 VEKTOR pattern configuration
 ```
@@ -1505,30 +1629,25 @@ sourceEvidence
 ambiguity state
 ```
 
-Possible result types:
+Current primary pattern types:
 
 ```text
-NONE
-VALID_TRANSIENT
-VALID_CHIRP
-VALID_TONE
-VALID_CLICK
-VALID_NOISE_BURST
-AMBIGUOUS
-INVALID
+ValidTonalTransient
+TransientOnly
+Invalid
+Ambiguous / future
 ```
 
-Example event or pattern meanings may include:
+`ValidTonalTransient` means a tonal transient / tonal pulse candidate.
 
 ```text
-unknownSound
-validTransient
-chirp
-beep
-burst
-myFamilyChirp
-foreignChirp
-noise
+It does not mean pulsed chirp or continuous chirp.
+```
+
+Pulsed chirp requires temporal grouping over multiple tonal pulse candidates.
+
+```text
+Continuous tonal chirp requires frequency trajectory analysis inside one event window.
 ```
 
 Runtime behavior may only need a reduced interpretation:
@@ -1567,8 +1686,6 @@ candidate validity
 source evidence
 qualifiers
 ```
-
-Pattern detection assigns candidate meaning.
 
 Behavior decides whether and how to respond.
 
@@ -1646,44 +1763,48 @@ PatternResult = QUIET
 Better:
 
 ```text
-PatternResult = VALID_TONAL_TRANSIENT
+PatternResult = ValidTonalTransient
 
-AcousticFieldState:
+FieldState:
     fieldActivity = busy
     recentEventDensity = high
     ambientLevel = elevated
 ```
 
-A minimal `AcousticFieldState` may contain:
+The current `FieldStateTracker` observes:
 
 ```text
-ambientLevel
-activityLevel
-recentCandidateCount
-recentValidPatternCount
-recentRejectedCount
-quietMs
-busyMs
-isQuiet
-isBusy
-isChattery
-lastActivityTime
+SignalCandidate
+InspectedSignal
+PatternResult
 ```
 
-First implementation should be simple:
+It produces a simple `FieldState` summary.
+
+Current fields include:
 
 ```text
-ambientLevel
-activityAverage
-candidateCountLastWindow
-quietMs
-isQuiet
-isBusy
+activity
+density
+noiseFloor
+recentSignalCount
+recentAcceptedSignalCount
+recentPatternCount
+quiet
+active
+dense
+lastSignalMs
+lastInspectedSignalMs
+lastPatternMs
 ```
 
-The field state should not directly trigger output.
+This is intentionally simple.
 
-Behavior decides response.
+It is not pattern classification.
+
+It should not directly trigger output.
+
+Behavior may later consume `FieldState` as context.
 
 ---
 ## 9. Sound Output
@@ -1738,13 +1859,14 @@ Behavior should not care which output hardware path is active.
 
 Behavior governs how the node reacts over time.
 
-Behavior consumes classified acoustic events and internal state.
+Behavior consumes `PatternResult`, `FieldState`, local timers, current node state, parameters, and external commands.
 
 Behavior may produce sound output actions, state changes, or VEKTOR events.
 
 ```text
 Behavior input:
-- classified sound events
+- PatternResults
+- FieldState / acoustic context
 - local timers
 - current node state
 - parameters
@@ -1757,21 +1879,27 @@ Behavior output:
 - events
 ```
 
-Behavior owns meaning and reaction logic.
+Behavior owns meaning-to-action policy.
+
+Detection and pattern rules decide what was detected.
+
+FieldState summarizes acoustic context.
+
+Behavior decides whether and how to react.
 
 Example behavior rules:
 
 ```text
-if valid chirp heard:
+if valid tonal transient heard and behavior is enabled:
     wait
-    emit response chirp
+    emit response chirp or pulse
     enter refractory
 
-if too much activity:
-    stay quiet
+if field is too busy:
+    stay quiet or reduce response probability
 
-if idle too long:
-    emit occasional chirp
+if idle too long and field is quiet:
+    emit occasional chirp or pulse
 
 if externally disabled:
     listen only
@@ -2341,50 +2469,7 @@ SensorNode
 
 ---
 
-## 24. Refactor Target
-
-The codebase should move toward this dependency direction:
-
-```text
-HAL
-↓
-Resources
-↓
-Signal / Domain Processing
-↓
-Detection / Classification
-↓
-Behavior
-↓
-VEKTOR Interface / Analyzer / Debug
-```
-
-Avoid reverse dependencies.
-
-Bad:
-
-```text
-Detector directly controls speaker.
-Behavior reads raw I2S buffer.
-VEKTOR command modifies random globals.
-Analyzer changes detector internals directly.
-```
-
-Better:
-
-```text
-Detector emits candidates.
-Classifier emits classified events.
-Behavior consumes classified events.
-SoundOutput owns emitting.
-Parameters are applied through defined setters.
-Analyzer observes public detector/classifier results.
-VEKTOR commands call defined command handlers.
-```
-
----
-
-## 25. Current Practical Refactor Passes
+## 24. Current Practical Refactor Passes
 
 Recommended refactor passes against this architecture:
 
@@ -2422,7 +2507,7 @@ G:
 
 ---
 
-## 26. Current Detection Baseline
+## 25. Current Detection Baseline
 
 Current working baseline should be treated as frozen unless a test pass explicitly changes it.
 
@@ -2455,7 +2540,7 @@ Improve classification, logging, physical setup, and architecture separation.
 
 ---
 
-## 27. Design Rules
+## 26. Design Rules
 
 ### Rule 1: Detection does not decide behavior
 
@@ -2506,7 +2591,7 @@ The behavior module pattern is generic.
 
 ---
 
-## 28. Open Questions
+## 27. Open Questions
 
 For later versions:
 
@@ -2532,7 +2617,7 @@ How should future multi-resource nodes combine behaviors?
 
 ---
 
-## 29. Minimal v0.1 Implementation Target
+## 28. Minimal v0.1 Implementation Target
 
 A minimal v0.1 ResonantNode should support:
 
@@ -2567,7 +2652,7 @@ all future resource profiles
 
 ---
 
-## 30. One-Sentence Definition
+## 29. One-Sentence Definition
 
 ```text
 ResonantNode is an autonomous VEKTOR-compatible acoustic node firmware that detects, classifies, and reacts to sound locally, while serving as the first reusable firmware architecture for future VEKTOR nodes.

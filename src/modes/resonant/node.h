@@ -4,6 +4,7 @@
 #include <stddef.h>
 
 #include "../../detection/DetectionRuntime.h"
+#include "../../detection/DetectionProfile.h"
 #include "../../detection/FrequencyEvidenceEvaluation.h"
 #include "../../hal/AudioSourceAnalog.h"
 #include "../../hal/AudioSourceI2S.h"
@@ -108,12 +109,16 @@ private:
     void handleDebugCommand(const char* line);
     void handleLogCommand(const char* line);
     void handleDetectCommand(const char* line);
+    void handleProfileCommand(const char* line);
     bool rbShouldLogDetail() const;
     const char* rbLogModeName() const;
     const char* detectionModeName() const;
     bool setDetectionModeFromName(const char* name);
+    bool setProfileFromName(const char* name);
+    const char* profileName() const;
     bool usesRoadmapDetection() const;
     bool roadmapFrequencyOnly() const;
+    const detection::DetectionProfile& activeProfile() const;
     void syncDetectionRuntimeMode();
     void processLegacyAmpFrame(const AudioSignalFrame& frame, unsigned long now, bool selfChirpSuppressed, bool& sawPatternThisLoop);
     void drainLegacyAmpCandidates(unsigned long now, bool selfChirpSuppressed, bool& sawPatternThisLoop);
@@ -160,6 +165,7 @@ private:
     unsigned long _rbLastLoggedTransientRejectCount = 0;
     bool _rbDetectOnly = false;
     RbLogMode _rbLogMode = RbLogMode::Minimal;
+    detection::DetectionProfileKind _profileKind = detection::DetectionProfileKind::FreqAmp;
     DetectionMode _detectionMode = DetectionMode::RoadmapFrequencyFirst;
     bool _wasSelfChirpSuppressed = false;
     unsigned long _rbLastWouldEmitHeardMs = 0;

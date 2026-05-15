@@ -139,25 +139,19 @@ The active analyzer and RB consumers now use the direct pattern types; only comp
 52. **Add band-energy feature streams** - Open. Still parked for a future profile.
 53. **Add derived feature streams only when candidate creation needs them** - Implemented. No derived feature streams were added yet.
 
-## H. Profile proof set
+## H. [MOSTLY DONE] Profile proof set
 
-54. **Keep AMP-first as reference baseline** — Preserve old comparison path until the profile-based AMP path is stable.
+54. **Keep AMP-first as reference baseline** - Implemented. The old AMP-first path remains only as analyzer/reference comparison while the profile-based path takes over main behavior.
 
-55. **Define `FreqAmpProfile`** — FrequencyMatch detection plus AMP locality inspection.
+55. **Define `FreqAmpProfile`** - Implemented. `FreqAmp` exists as the current baseline profile with frequency-first detection, AMP locality inspection, and profile-driven runtime settings.
 
-56. **Define `AmpStateProfile`** — AMP transient detection with behavior influenced by FieldState.
+56. **Define `AmpStateProfile`** - Implemented. `AmpState` exists as a profile preset that keeps AMP transient detection and field-state-driven behavior together.
 
-57. **Define `ChirpProfile` as the first real pattern profile** — Multi-signal pulse grouping through PatternAssembler.
+57. **Define `ChirpProfile` as the first real pattern profile** - Implemented. `Chirp` is scaffolded and selectable as the first multi-signal proof profile, kept intentionally minimal.
 
-58. **Verify profile switching in code** — Confirm the active profile can be selected without changing detection internals.
+58. **Verify profile switching in code** - Implemented. The node accepts `RB PROFILE name=freqamp|ampstate|chirp` and applies the selected profile in code.
 
-59. **Park white-noise / woodblock / object-like chains** — Keep them as future ideas, not current implementation targets.
-54. **Keep AMP-first as reference baseline** - Preserve it for comparison and analyzer continuity.
-55. **Stabilize frequency-first chain** - Keep the working frequency-first path but route it through roadmap boundaries.
-56. **Add white-noise / broadband chain** - Detect broadband/noise bursts and reject tonal leaks.
-57. **Add chirp / pulse-pattern chain** - Assemble inspected pulses into chirp and burst pattern candidates.
-58. **Add object-like hit chain** - Prepare for hit/knock/resonant-body detection.
-59. **Park white-noise / woodblock / object-like chains** — Keep them as future ideas, not current implementation targets.
+59. **Park white-noise / woodblock / object-like chains** - Implemented. These chains remain explicitly parked for future work and are not current targets.
 
 ## I. Behavior boundary
 
@@ -204,3 +198,46 @@ The active analyzer and RB consumers now use the direct pattern types; only comp
 78. **Park `WhiteNoiseRoomProfile` and `WoodBlockProfile`** — Keep as future proof, not current implementation.
 
 79. **Use `DetectionProfile` as highest-level composition item** — `DetectionStrategy` remains optional narrower chain term.
+
+
+##  K. Documentation / Spec Alignment
+
+80. **Update Detection Roadmap v0.3 overview** — Reflect the current signal-vs-pattern pipeline and profile-proof scope.
+
+81. **Update Architecture Spec detection section** — Align architecture spec with implemented names and boundaries.
+
+82. **Document stable naming set** — Record current terms: FeatureExtractor, SignalEmitter, SignalDetector, SignalInspector, PatternAssembler, PatternRules, FieldState, DetectionProfile.
+
+83. **Document signal-vs-pattern split** — Explain SignalCandidate → InspectedSignal → PatternCandidate → PatternResult.
+
+84. **Document FrequencyMatchDetector boundary** — Clarify that it owns frequency lifecycle, not locality, pattern meaning, or behavior.
+
+85. **Document AMP locality inspection** — Explain how AMP support/locality is added during SignalInspector inspection.
+
+86. **Document FeatureHistory / ScalarWindow usage** — Describe retrospective window inspection and when RawWindow remains valid.
+
+87. **Document FieldState boundary** — Clarify FieldState is acoustic context, not feature stream and not pattern result.
+
+88. **Document PatternAssembler role** — Explain trivial one-signal assembly now and multi-signal chirp assembly later.
+
+89. **Document PatternRules role** — Clarify PatternRules interpret PatternCandidates only after signal inspection and assembly.
+
+90. **Document behavior input boundary** — State Behavior consumes only PatternResult + FieldState.
+
+91. **Document current proof profiles** — Describe FreqAmpProfile, AmpStateProfile, and ChirpProfile.
+
+92. **Document parked profiles / future chains** — Keep WhiteNoiseRoom, WoodBlock, object-like detection as future, not current target.
+
+93. **Document legacy AMP status** — State whether legacy AMP is active, isolated, archived, or removed.
+
+94. **Add implementation-status table** — Mark A–H as done/partial/open based on code state.
+
+95. **Add file/module map** — Map roadmap concepts to actual source files.
+
+96. **Add logging guide** — Define expected SIGNAL / INSPECTED / PATTERN_CANDIDATE / PATTERN_RESULT / FIELD_STATE logs.
+
+97. **Add testing / smoke-check guide** — Define quick checks for frequency-first, AMP locality, FieldState, and profile switching.
+
+98. **Add Codex pass index** — Link or list pass notes A–H and future J.
+
+99. **Freeze v0.3 docs before DetectionProfile work** — Use docs as reference before starting profile composition refactor.

@@ -1,492 +1,488 @@
-# Codex Pass — Section G: Feature Stream Architecture
+# Codex Pass — Section H: Profile Proof Set
 
-Version: Detection Roadmap v0.3 — Pass G  
-Scope: FeatureExtractor / FeatureStream / FeatureHistory stabilization
+Version: Detection Roadmap v0.3 — Pass H  
+Scope: Prove a small set of useful detection/behavior profiles before introducing the full `DetectionProfile` layer
 
 ---
 
 ## Goal
 
-Stabilize the feature stream layer enough to support the current profiles and inspection mechanics without overbuilding future detection chains.
+Use the shared detection architecture to prove **2–3 focused profile variants**, without expanding into many unrelated detection chains.
 
-This pass should make the signal-measurement layer clearer:
+This pass should not implement white-noise, woodblock, object-like detection, or a large external profile system.
+
+The goal is to prove that the existing pipeline can support different profile compositions:
 
 ```text
-AudioSignal
-→ FeatureExtractors
-→ FeatureStreams
-→ FeatureHistory
-→ ScalarWindow
+FeatureExtractors
+→ FeatureStreams / FeatureHistory
+→ SignalEmitters / SignalDetectors
 → SignalInspector / InspectionRules
+→ PatternAssembler
+→ PatternRules
+→ FieldStateConfig
+→ Behavior
 ```
 
-Focus on what is needed now:
+Current proof profiles:
 
 ```text
-AMP feature history for locality inspection
-frequency evidence support for current frequency-first path
-clean FeatureStream / FeatureHistory boundaries
-```
-
-Do **not** implement white-noise, woodblock, object detection, or broad feature-library expansion yet.
-
-Current status:
-
-```text
-FeatureExtractor / FeatureStream / FeatureHistory scaffolding is landed.
-AMP locality now prefers retrospective feature history when available.
-RawWindow remains available as a fallback.
-broadband / band-energy streams are still parked.
+FreqAmp
+AmpState
+Chirp
 ```
 
 ---
 
-## Roadmap Section G items
+## Roadmap Section H items
 
-46. Stabilize `FeatureExtractor`  
-47. Stabilize `FeatureStream`  
-48. Stabilize `FeatureHistory`  
-49. Support AMP feature history for locality inspection  
-50. Support frequency evidence needed by current profiles  
-51. Promote RawWindow evaluations only when repeatedly needed  
-52. Keep broadband / band-energy streams parked  
-53. Add derived streams only when candidate creation truly needs them
+54. Keep AMP-first as reference baseline  
+55. Define `FreqAmpProfile`  
+56. Define `AmpStateProfile`  
+57. Define `ChirpProfile` as the first real pattern profile  
+58. Verify profile switching in code  
+59. Park white-noise / woodblock / object-like chains
 
 ---
 
-## 1. Stabilize `FeatureExtractor`
+## 1. Keep AMP-first as reference baseline
 
 ### Target
 
-A `FeatureExtractor` converts raw audio or frame data into a named `FeatureStream`.
+Keep the old AMP-first behavior only as a reference / analyzer comparison until the new profile-based AMP path proves itself.
 
-It measures signal facts.
+Do not make legacy AMP the future architecture.
 
-It does not:
+Preferred future AMP path:
 
 ```text
-emit SignalCandidate
-inspect candidates
-assemble patterns
-interpret PatternResults
-drive Behavior
+AmpSignalEmitter
+→ TransientDetector
+→ SignalCandidate
+→ SignalInspector
+→ InspectedSignal
+→ PatternAssembler
+→ PatternRules
+→ PatternResult
+→ Behavior + FieldState
 ```
+
+### Boundary
+
+Legacy AMP may remain:
+
+```text
+analyzer/reference
+temporary fallback
+debug comparison
+```
+
+Legacy AMP should not remain:
+
+```text
+main behavior path
+parallel architecture
+special-case detector pipeline
+```
+
+---
+
+## 2. Define `FreqAmpProfile`
+
+### Purpose
+
+`FreqAmpProfile` is the current main baseline profile.
+
+It proves:
+
+```text
+frequency-first signal detection
++ AMP locality inspection
++ near/mid/far pattern interpretation
+```
+
+### Target composition
+
+```text
+SignalEmitter:
+FrequencySignalEmitter
+
+SignalDetector:
+FrequencyMatchDetector
+
+SignalInspector / InspectionRules:
+AddFrequencyFacts
+AddAmpStats
+AddAmpLocality
+AddDuplicateRisk if already present
+
+PatternAssembler:
+single-signal pulse assembler for now
+
+PatternRules:
+tonal pulse with locality
+
+FieldStateConfig:
+basic field activity / quiet / busy if available
+```
+
+### Expected pattern results
 
 Examples:
 
 ```text
-AmpEnvelopeExtractor
-GoertzelTargetEnergyExtractor
-BroadbandEnergyExtractor later
-BandEnergyExtractor later
+TonalPulseNear
+TonalPulseMid
+TonalPulseFar
+TonalPulseUnknownLocality
+Rejected / Residual
 ```
 
-For this pass, do not add broad future extractors unless already present.
+or equivalent current enum/field structure.
 
-### Minimum useful result
+### Boundary
 
-Make the current AMP and frequency measurement paths easier to identify as feature extraction, even if they are still embedded in existing code.
-
-Preferred boundary:
-
-```text
-Audio input / frame
-→ FeatureExtractor
-→ FeatureStream sample
-→ FeatureHistory
-```
-
----
-
-## 2. Stabilize `FeatureStream`
-
-### Target
-
-A `FeatureStream` is a named measured signal fact over time.
-
-Examples:
-
-```text
-ampEnv
-targetFreqEnv
-ambientFloor
-```
-
-Future parked examples:
-
-```text
-broadbandEnv
-noiseEnv
-bandEnergy[]
-derivedHitEnv
-```
-
-A stream should have:
-
-```cpp
-FeatureStreamId id;
-float value;
-uint32_t timeMs;
-```
-
-or the project-equivalent representation.
-
-Do not make FeatureStream carry pattern meaning.
+`FrequencyMatchDetector` must not own AMP locality.
 
 Correct:
 
 ```text
-targetFreqEnv = target-frequency energy / score over time
-```
+FrequencyMatchDetector
+→ SignalCandidate
 
-Wrong:
+SignalInspector
+→ AMP support / locality
 
-```text
-targetFreqEnv = valid chirp
+PatternRules
+→ near/mid/far pattern meaning
 ```
 
 ---
 
-## 3. Stabilize `FeatureHistory`
+## 3. Define `AmpStateProfile`
 
-### Target
+### Purpose
 
-`FeatureHistory` stores recent feature-stream samples so inspection can request retrospective windows.
-
-It supports:
+`AmpStateProfile` proves a different architectural axis:
 
 ```text
-SignalCandidate
-→ SignalInspector
-→ ScalarWindow from FeatureHistory
-→ WindowEvaluator
-→ InspectedSignal facts
+simple AMP signal detection
++ FieldState-driven behavior
 ```
 
-Minimum API shape:
-
-```cpp
-ScalarWindow getWindow(
-  FeatureStreamId stream,
-  uint32_t startMs,
-  uint32_t endMs
-);
-```
-
-or an equivalent project-compatible form.
-
-The implementation can be simple:
+This is more useful than a pure `FreqOnly` profile because it proves:
 
 ```text
-small ring buffer per feature stream
-fixed-size arrays
-no heap allocation if project avoids it
+Behavior consumes PatternResult + FieldState
 ```
 
-Do not overbuild a generic time-series database.
+without reading signal internals directly.
 
----
-
-## 4. Stabilize `ScalarWindow`
-
-### Target
-
-A `ScalarWindow` is a time slice from one scalar feature stream.
-
-It should be generic.
-
-Do not create separate types like:
+### Target composition
 
 ```text
-AmpWindow
-FreqWindow
-NoiseWindow
+SignalEmitter:
+AmpSignalEmitter
+
+SignalDetector:
+TransientDetector
+
+SignalInspector / InspectionRules:
+AddAmpStats
+AddDuplicateRisk
+AddBasicTimingFacts
+
+PatternAssembler:
+single-signal pulse assembler
+
+PatternRules:
+simple AMP pulse / activity pulse
+
+FieldStateConfig:
+quiet / busy / activity / density windows
+
+Behavior:
+uses FieldState strongly for response probability / suppression / self-initiation
 ```
 
-A useful `ScalarWindow` should support basic evaluation:
+### Expected pattern results
+
+Examples:
 
 ```text
-min
-max / peak
-mean
-first
-last
-rise
-duration above threshold
-peak time
-sample count
+AmpPulse
+ActivityPulse
+Rejected / Residual
 ```
 
-If basic evaluator code already exists from Pass D, reuse it.
-
----
-
-## 5. Support AMP feature history for locality inspection
-
-### Target
-
-Frequency-first AMP locality inspection should use retrospective AMP evidence instead of a single snapshot where practical.
-
-Flow:
-
-```text
-FrequencyMatch SignalCandidate
-→ SignalInspector
-→ request ScalarWindow(ampEnv, candidate-relative window)
-→ evaluate amp support
-→ InspectedSignal.ampSupportClass
-→ InspectedSignal.localityClass
-```
-
-This is the most important practical reason for Pass G.
-
-### Requirements
-
-Ensure there is a usable AMP stream/history path:
-
-```text
-ampEnv samples
-→ FeatureHistory
-→ ScalarWindow
-```
-
-Window should be candidate-relative:
-
-```text
-candidate start - small pre padding
-→ candidate end + small post padding
-```
-
-or another simple, documented window.
+or current equivalent.
 
 ### Boundary
 
-Do not compute locality in:
+Behavior may react differently based on FieldState.
+
+Behavior must not read:
 
 ```text
+SignalCandidate
+InspectedSignal
+raw FeatureStream
+```
+
+Correct:
+
+```text
+BehaviorInput = PatternResult + FieldState
+```
+
+---
+
+## 4. Define `ChirpProfile` as the first real pattern profile
+
+### Purpose
+
+`ChirpProfile` proves the first actual multi-signal pattern layer.
+
+It should be the first profile where `PatternAssembler` does more than one-signal assembly.
+
+It proves:
+
+```text
+InspectedSignals
+→ PatternAssembler
+→ multi-signal PatternCandidates
+→ PatternRules
+→ PatternResults
+```
+
+### Target composition
+
+Likely uses the same signal layer as `FreqAmpProfile` at first:
+
+```text
+SignalEmitter:
+FrequencySignalEmitter, optionally AMP support through inspection
+
+SignalDetector:
 FrequencyMatchDetector
-PatternRules
-Behavior
+
+SignalInspector / InspectionRules:
+frequency facts
+AMP locality
+basic timing
+duplicate risk
+
+PatternAssembler:
+pulse sequence / chirp candidate assembler
+
+PatternRules:
+one-pulse / three-pulse / validChirp / invalidChirp / wrongTiming / tooDense
+
+FieldStateConfig:
+activity / chatter / quiet-busy if useful
 ```
 
-Correct owner:
+### Important limit
+
+Do not make `ChirpProfile` too large in this pass.
+
+It can start with minimal pulse grouping:
 
 ```text
-SignalInspector / InspectionRule using FeatureHistory
+recent accepted pulse-like InspectedSignals
+→ PatternCandidate(kind = PulseSequence)
 ```
+
+Full artistic behavior can come later.
 
 ---
 
-## 6. Support frequency evidence needed by current profiles
+## 5. Verify profile switching in code
 
 ### Target
 
-Keep the current working frequency-first path intact.
+There should be a simple way to select which proof profile is active.
 
-The roadmap accepts:
+Keep it simple.
 
-```text
-FrequencySignalEmitter
-→ FrequencyMatchDetector
-→ SignalCandidate
-```
-
-Frequency-first does **not** have to be forced into:
+Acceptable options:
 
 ```text
-targetFreqEnv
-→ TransientDetector
+compile-time constant
+enum in code
+simple runtime mode variable
+serial command if already convenient
 ```
 
-### Current rule
-
-`FrequencyMatchDetector` may own frequency-specific candidate lifecycle:
+Avoid:
 
 ```text
-matched window
-last matched time
-score / contrast evidence selection
-frequency-specific release
-frequency-specific refractory
+JSON/YAML profile config
+dynamic plugin registry
+external profile files
+reflection-based rule maps
 ```
 
-Feature stream support should not break that.
+### Suggested enum
 
-### What to clarify
-
-If useful, expose frequency evidence as a feature stream or inspected fact:
-
-```text
-targetFreqScore
-targetFreqContrast
-frequencyConfidence
+```cpp
+enum class DetectionProfileKind {
+  FreqAmp,
+  AmpState,
+  Chirp
+};
 ```
 
-But do not rewrite the detector just to fit a generic stream model.
+or project-equivalent.
+
+### Required behavior
+
+Switching profile should change composition, not require editing detection internals.
+
+For now, this may be a factory-style switch:
+
+```cpp
+makeFreqAmpProfile()
+makeAmpStateProfile()
+makeChirpProfile()
+```
+
+or a simple runtime setup function.
 
 ---
 
-## 7. Promote RawWindow evaluations only when repeatedly needed
+## 6. Park white-noise / woodblock / object-like chains
 
 ### Target
 
-`RawWindow` remains valid for advanced or transitional checks.
+Do not implement future chains in this pass.
 
-Use `RawWindow` for:
-
-```text
-expensive analysis
-debug capture
-experimental evaluation
-features only needed after a candidate
-current raw-window Goertzel checks if still present
-```
-
-Promote to `FeatureStream` only when:
+Parked profiles:
 
 ```text
-the value is needed often
-the value is reused across strategies
-the value is used as a primary signal source
-the value is useful for multiple inspection rules
+WhiteNoiseRoomProfile
+WoodBlockProfile
+ObjectHitProfile
+ChimeProfile
 ```
 
-Do not promote every one-off raw evaluation.
+These remain useful future proof, but they are not current implementation targets.
+
+### Reason
+
+The current goal is not broad feature coverage.
+
+The current goal is:
+
+```text
+prove DetectionProfile composition
+with a small set of meaningful profiles
+```
 
 ---
 
-## 8. Keep broadband / band-energy streams parked
+## 7. Relationship to Section J
 
-### Target
+Section H is the proof set.
 
-Do not implement future feature streams just because the architecture can support them.
+Section J will formalize the `DetectionProfile` architecture.
 
-Park for later:
+This pass may introduce preliminary factories or selection points, but should not overbuild the final profile system.
 
-```text
-broadbandEnv
-noiseEnv
-bandEnergy[]
-spectralContrast
-decayTail
-attackSharpness
-```
-
-Only add them when a real profile requires them.
-
-Current near-term profiles are:
+Recommended distinction:
 
 ```text
-FreqAmpProfile
-AmpStateProfile
-ChirpProfile
-```
+H:
+prove 2–3 profiles can work
 
-These do not require full broadband / object feature work yet.
+J:
+formalize DetectionProfile as highest-level composition item
+```
 
 ---
 
-## 9. Add derived streams only when candidate creation truly needs them
+## 8. Logging requirements
 
-### Target
+Add enough logging to know which profile is active and what it produces.
 
-Derived streams are allowed, but should not be the first solution.
-
-Examples later:
+Useful profile log fields:
 
 ```text
-weighted targetFreq + amp locality stream
-broadband minus tonal dominance
-attack strength from amp + high band
+PROFILE
+activeProfile=FreqAmp/AmpState/Chirp
+enabledEmitters=...
+patternAssembler=...
+fieldStateConfig=...
 ```
 
-For now, prefer:
+Useful runtime trace:
 
 ```text
-primary SignalCandidate
-→ retrospective inspection
-→ PatternRules interpretation
+SIGNAL
+INSPECTED
+PATTERN_CANDIDATE
+PATTERN_RESULT
+FIELD_STATE
+BEHAVIOR
 ```
 
-Only add a derived stream if candidate creation itself genuinely needs a combined signal.
+Avoid noisy per-loop profile logs.
+
+Log profile selection on startup or when profile changes.
 
 ---
 
-## 10. Logging requirements
-
-Add minimal debug output for feature history only when useful.
-
-Avoid per-sample spam.
-
-Useful logs:
-
-```text
-FEATURE_HISTORY status
-stream id
-sample count
-latest value
-window request start/end
-window sample count
-window peak / mean
-```
-
-For AMP locality inspection, useful inspected log fields:
-
-```text
-ampWindowPeak
-ampWindowMean
-ampSupportClass
-localityClass
-```
-
-Keep logs candidate-level or summary-level.
-
----
-
-## 11. Success criteria
+## 9. Success criteria
 
 After this pass:
 
 ```text
-FeatureExtractor / FeatureStream / FeatureHistory concepts are clear in code.
+FreqAmp profile exists or is clearly represented in code.
 
-AMP feature history is available for retrospective locality inspection.
+AmpState profile exists or is clearly represented in code.
 
-SignalInspector can request a ScalarWindow for AMP evidence.
+Chirp profile is scaffolded as the first real pattern profile, even if minimal.
 
-ScalarWindow is generic and not AMP/FREQ-specific.
+There is a simple way to select active profile.
 
-RawWindow remains available as fallback / advanced path.
+Profiles can vary signal emitters, inspection rules, pattern assembler, pattern rules, and field-state config at least in principle.
 
-FrequencyMatchDetector remains working and is not forced into TransientDetector.
+White-noise / woodblock / object-like chains remain parked.
 
-No unnecessary broadband / object feature streams are implemented.
+Behavior still consumes PatternResult + FieldState.
 
-No derived feature streams are added unless directly needed.
+No profile bypasses SignalInspector / PatternAssembler / PatternRules.
+```
 
-Behavior still consumes PatternResult + FieldState only.
+Current status:
 
-PatternRules still do not use FieldState.
+```text
+FreqAmp and AmpState are implemented as code-defined profile presets.
+
+Chirp is scaffolded and selectable as the first multi-signal proof profile.
+
+Profile switching works through code / serial command, without external profile config.
+
+Legacy AMP stays as the reference baseline and comparison path.
 ```
 
 ---
 
-## 12. Do not do in this pass
+## 10. Do not do in this pass
 
 Do not:
 
 ```text
-introduce DetectionProfile
-introduce external config
-remove legacy AMP
-rewrite FrequencyMatchDetector
-force frequency-first into TransientDetector
 implement white-noise detection
 implement woodblock / object detection
-implement full chirp grouping
-add many unused feature streams
-move behavior logic
+introduce external profile config
+build a plugin registry
+remove legacy AMP unless the removal gate is already satisfied
+rewrite FrequencyMatchDetector
+move AMP locality into FrequencyMatchDetector
+move field-state logic into PatternRules
+move behavior logic into detection
 perform heavy threshold tuning
 ```
 
-This pass is feature-stream architecture stabilization only.
+This pass is only about proving a small set of useful profile variants.

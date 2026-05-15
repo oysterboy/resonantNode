@@ -2,7 +2,7 @@
 
 #include <stdint.h>
 
-#include "../ScalarTransientDetector.h"
+#include "../detectors/ScalarTransientDetector.h"
 #include "../../io/AudioSignal.h"
 #include "SignalCandidate.h"
 

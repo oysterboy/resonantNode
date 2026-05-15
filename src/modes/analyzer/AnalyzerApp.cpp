@@ -5,17 +5,16 @@
 #include <string.h>
 
 #include "../../AudioDebugConfig.h"
-#include "../../detection/DetectionPipelineCompat.h"
 #include "../../detection/DetectorParameters.h"
-#include "../../detection/FrequencyEvidenceEvaluation.h"
-#include "../../detection/FrequencyWindowProbe.h"
+#include "../../detection/inspector/FrequencyEvidenceEvaluation.h"
+#include "../../detection/inspector/FrequencyWindowProbe.h"
 #include "../../detection/features/FeatureHistory.h"
 #include "../../detection/signals/RawWindow.h"
 #include "../../detection/patterns/PatternAssembler.h"
 #include "../../detection/patterns/PatternNames.h"
 #include "../../detection/patterns/PatternRules.h"
 #include "../../detection/signals/SignalCandidate.h"
-#include "../../detection/signals/SignalInspector.h"
+#include "../../detection/inspector/SignalInspector.h"
 
 /*
 AnalyzerApp
@@ -231,22 +230,105 @@ detection::SignalCandidate makeRoadmapFrequencySignalCandidate(const FrequencyMa
     signal.detectorKind = detection::SignalDetectorKind::FrequencyMatch;
     signal.present = liveFrequency.present;
     signal.valid = liveFrequency.frequencyCandidate.valid;
-    signal.startSample = liveFrequency.frequencyCandidate.firstCrossSample;
+    signal.startSample = liveFrequency.frequencyCandidate.startSample;
     signal.peakSample = liveFrequency.frequencyCandidate.peakSample;
     signal.releaseSample = liveFrequency.frequencyCandidate.releaseSample;
-    signal.startMs = liveFrequency.frequencyCandidate.firstCrossMs;
+    signal.startMs = liveFrequency.frequencyCandidate.startMs;
     signal.peakMs = liveFrequency.frequencyCandidate.peakMs;
     signal.releaseMs = liveFrequency.frequencyCandidate.releaseMs;
     signal.endMs = signal.releaseMs;
-    signal.durationMs = liveFrequency.frequencyCandidate.durationOrHoldMs;
-    signal.score = liveFrequency.frequencyCandidate.peakScore;
-    signal.contrast = liveFrequency.frequencyCandidate.peakContrast;
+    signal.durationMs = liveFrequency.frequencyCandidate.durationMs;
+    signal.strength = liveFrequency.frequencyCandidate.strength;
+    signal.score = liveFrequency.frequencyCandidate.score;
+    signal.contrast = liveFrequency.frequencyCandidate.contrast;
     signal.confidence = signal.valid ? 1.0f : 0.0f;
     signal.signalConfidence = signal.confidence;
     signal.frequencyConfidence = signal.valid ? 1.0f : 0.0f;
     signal.ampEvidencePresent = false;
     signal.frequency = liveFrequency.candidateEvidence.present ? liveFrequency.candidateEvidence : liveFrequency.bestEvidence;
     return signal;
+}
+
+bool isRoadmapDetectorCandidateAccepted(const DetectorCandidate& in) {
+    return in.durationMs > 0 || in.peakStrength > 0.0f || in.releaseMillisApprox != 0;
+}
+
+detection::PatternCandidate makeRoadmapPatternCandidate(const DetectorCandidate& in) {
+    detection::PatternCandidate out;
+    out.kind = detection::PatternCandidateKind::SinglePulse;
+    out.lineageId = static_cast<uint32_t>(in.onsetSample & 0xFFFFFFFFu);
+    out.primarySlotIndex = 0;
+    out.onsetSample = in.onsetSample;
+    out.peakSample = in.peakSample;
+    out.releaseSample = in.releaseSample;
+    out.startMs = in.onsetMillisApprox;
+    out.heardAtMs = in.releaseMillisApprox != 0 ? in.releaseMillisApprox : in.onsetMillisApprox;
+    out.acceptedMs = out.heardAtMs;
+    out.durationMs = in.durationMs;
+    out.onsetStrength = in.onsetStrength;
+    out.peakStrength = in.peakStrength;
+    out.releaseStrength = in.releaseStrength;
+    out.ambientBaseline = in.ambientBaseline;
+    out.audioOverflowDuringCandidate = in.audioOverflowDuringCandidate;
+    out.transient.present = isRoadmapDetectorCandidateAccepted(in);
+    out.transient.onsetSample = in.onsetSample;
+    out.transient.peakSample = in.peakSample;
+    out.transient.releaseSample = in.releaseSample;
+    out.transient.startMs = in.onsetMillisApprox;
+    out.transient.heardAtMs = in.releaseMillisApprox != 0 ? in.releaseMillisApprox : in.onsetMillisApprox;
+    out.transient.acceptedMs = out.transient.heardAtMs;
+    out.transient.durationMs = in.durationMs;
+    out.transient.onsetStrength = in.onsetStrength;
+    out.transient.peakStrength = in.peakStrength;
+    out.transient.releaseStrength = in.releaseStrength;
+    out.transient.ambientBaseline = in.ambientBaseline;
+    out.transient.audioOverflowDuringCandidate = in.audioOverflowDuringCandidate;
+    out.frequency = {};
+    out.frequencyFull = {};
+    return out;
+}
+
+bool processRoadmapDetectorCandidate(const DetectorCandidate& in,
+                                     detection::PatternResult& out,
+                                     unsigned long processedAtMs,
+                                     const detection::FrequencyEvidence* frequencyEvidence) {
+    out = {};
+    out.source = detection::PatternSource::ComparisonOnly;
+    out.kind = detection::PatternResultKind::Rejected;
+    out.lineageId = static_cast<uint32_t>(in.onsetSample & 0xFFFFFFFFu);
+    out.primarySlotIndex = 0;
+    out.candidate = makeRoadmapPatternCandidate(in);
+    out.freq = out.candidate.frequency;
+    out.freqFull = out.candidate.frequencyFull;
+    out.processedAtMs = processedAtMs;
+
+    if (frequencyEvidence != nullptr) {
+        out.candidate.frequency = *frequencyEvidence;
+    }
+
+    if (!isRoadmapDetectorCandidateAccepted(in)) {
+        out.kind = detection::PatternResultKind::Rejected;
+        out.type = detection::PatternType::Invalid;
+        out.reasonCode = detection::PatternReasonCode::DetectorRejected;
+        out.rejectReason = detection::PatternRejectReason::NoCandidate;
+        out.confidence = 0.0f;
+        out.candidateValid = false;
+        out.tonalValid = false;
+        out.behaviorEligible = false;
+        out.valid = false;
+        return false;
+    }
+
+    out.type = detection::PatternType::ValidTransient;
+    out.kind = detection::PatternResultKind::Residual;
+    out.reasonCode = detection::PatternReasonCode::FromAcceptedTransient;
+    out.rejectReason = detection::PatternRejectReason::None;
+    out.confidence = 1.0f;
+    out.candidateValid = true;
+    out.tonalValid = false;
+    out.behaviorEligible = false;
+    out.valid = true;
+    return true;
 }
 
 bool evaluateRoadmapSignalCandidateImpl(const detection::SignalCandidate& signal,
@@ -752,7 +834,7 @@ AnalyzerApp::AnalyzerApp(int inputPin, AudioSourceKind sourceKind)
                        : static_cast<AudioSource&>(_analogSource)),
       _audioOnsetDetector(),
       _audioSignal(_audioSource),
-      _freqTransientDetector() {
+      _freqBandStream() {
     _liveFrequencyEvidenceTuning.scoreMin = 10000.0f;
     _liveFrequencyEvidenceTuning.contrastMin = 50.0f;
 }
@@ -766,7 +848,7 @@ void AnalyzerApp::begin() {
     _audioSignal.setCurveSampleCallback(&AnalyzerApp::sequenceCurveSampleCallback, this);
     _ampCandidateBuilder.resetState();
     _audioOnsetDetector.begin();
-    _freqTransientDetector.resetState();
+    _freqBandStream.resetState();
     _audioOnsetDetector.setDiagnosticsEnabled(AUDIO_VERBOSE_DEBUG);
     _lastPrintMs = 0;
     _usbLineLength = 0;
@@ -852,7 +934,7 @@ void AnalyzerApp::update() {
                 _audioSignal.update(static_cast<int>(block.samples[i]), sampleTimeUs, frame);
                 frame.sampleTimeMs = sampleTimeMsApprox;
                 _ampCandidateBuilder.observeSample(frame, _audioOnsetDetector);
-                _freqTransientDetector.observeCenteredSample(frame.centeredSample);
+                _freqBandStream.observeCenteredSample(frame.centeredSample);
             }
             updateSequenceAmbientStats();
             if (!_sequenceTest.liveFrequencyOnly) {
@@ -865,22 +947,22 @@ void AnalyzerApp::update() {
                     const auto liveFrequencyEvidence = captureFrequencyEvidence();
                     detection::FrequencyEvidence frequencyEvidence = liveFrequencyEvidence;
                     detection::FrequencyEvidence fullFrequencyEvidence = liveFrequencyEvidence;
-                    DetectionPipeline::measureCandidateWindowFrequency(
+                    detection::measureCandidateWindowFrequency(
                         _audioSignal,
                         candidate,
                         _audioSource.sampleRateHz() > 0 ? _audioSource.sampleRateHz() : 16000UL,
-                        _freqTransientDetector.targetFrequencyHz(),
+                        _freqBandStream.targetFrequencyHz(),
                         now,
                         frequencyEvidence);
-                    DetectionPipeline::measureCandidateWindowFrequency(
+                    detection::measureCandidateWindowFrequency(
                         _audioSignal,
                         candidate,
                         _audioSource.sampleRateHz() > 0 ? _audioSource.sampleRateHz() : 16000UL,
-                        _freqTransientDetector.targetFrequencyHz(),
+                        _freqBandStream.targetFrequencyHz(),
                         now,
                         fullFrequencyEvidence,
                         candidate.durationMs);
-                    if (!DetectionPipeline::processDetectorCandidate(candidate, patternResult, now, &frequencyEvidence)) {
+                    if (!processRoadmapDetectorCandidate(candidate, patternResult, now, &frequencyEvidence)) {
                         continue;
                     }
                     patternResult.candidate.frequencyFull = fullFrequencyEvidence;
@@ -916,7 +998,7 @@ void AnalyzerApp::update() {
             _audioSignal.update(sample, sampleTimeUs, frame);
             frame.sampleTimeMs = sampleTimeMs;
             _ampCandidateBuilder.observeSample(frame, _audioOnsetDetector);
-            _freqTransientDetector.observeCenteredSample(frame.centeredSample);
+            _freqBandStream.observeCenteredSample(frame.centeredSample);
             updateSequenceAmbientStats();
 
             if (!_sequenceTest.liveFrequencyOnly) {
@@ -2784,20 +2866,20 @@ void AnalyzerApp::sequenceCurveSampleCallback(const CurveSnapshot& snapshot, voi
 detection::FrequencyEvidence AnalyzerApp::captureFrequencyEvidence() const {
     detection::FrequencyEvidence evidence;
     evidence.observedAtMs = millis();
-    const bool present = _freqTransientDetector.windowReady();
-    const float totalEnergy = _freqTransientDetector.lastTotalEnergy();
+    const bool present = _freqBandStream.windowReady();
+    const float totalEnergy = _freqBandStream.lastTotalEnergy();
 
     evidence.present = present;
     evidence.matched = false;
-    evidence.targetHz = present ? _freqTransientDetector.targetFrequencyHz() : 0;
-    evidence.windowSampleCount = _freqTransientDetector.sampleCount();
+    evidence.targetHz = present ? _freqBandStream.targetFrequencyHz() : 0;
+    evidence.windowSampleCount = _freqBandStream.sampleCount();
     evidence.windowAvailable = present;
-    evidence.score = _freqTransientDetector.lastFrequencyScore();
+    evidence.score = _freqBandStream.lastFrequencyScore();
     evidence.confidence = 0.0f;
-    evidence.targetPower = _freqTransientDetector.lastTargetPower();
-    evidence.neighborPower = _freqTransientDetector.lastNeighborPower();
+    evidence.targetPower = _freqBandStream.lastTargetPower();
+    evidence.neighborPower = _freqBandStream.lastNeighborPower();
     evidence.totalEnergy = totalEnergy;
-    evidence.spectralContrast = _freqTransientDetector.lastSpectralContrast();
+    evidence.spectralContrast = _freqBandStream.lastSpectralContrast();
     evidence.validWindow = present;
     return evidence;
 }
@@ -2818,10 +2900,10 @@ detection::FrequencyEvidence AnalyzerApp::scanSequenceFrequencyParity64(const de
     detectorCandidate.audioOverflowDuringCandidate = patternCandidate.audioOverflowDuringCandidate;
 
     const unsigned long sampleRateHz = _audioSource.sampleRateHz() > 0 ? _audioSource.sampleRateHz() : 16000UL;
-    if (DetectionPipeline::measureCandidateWindowFrequencyParityScan64(_audioSignal,
+    if (detection::measureCandidateWindowFrequencyParityScan64(_audioSignal,
                                                                        detectorCandidate,
                                                                        sampleRateHz,
-                                                                       _freqTransientDetector.targetFrequencyHz(),
+                                                                       _freqBandStream.targetFrequencyHz(),
                                                                        observedAtMs,
                                                                        evidence,
                                                                        64UL)) {
@@ -3932,19 +4014,19 @@ void AnalyzerApp::printSequenceTrialResult(unsigned long trialNumber, const char
     Serial.print(" source=");
     Serial.print(sequenceFrequencyCandidateSourceName(freqCand.valid));
     Serial.print(" proposer_first_ms=");
-    Serial.print(freqCand.firstCrossMs);
+    Serial.print(freqCand.startMs);
     Serial.print(" proposer_peak_ms=");
     Serial.print(freqCand.peakMs);
     Serial.print(" proposer_release_ms=");
     Serial.print(freqCand.releaseMs);
     Serial.print(" proposer_hold_ms=");
-    Serial.print(freqCand.durationOrHoldMs);
+    Serial.print(freqCand.durationMs);
     Serial.print(" proposer_score=");
-    Serial.print(freqCand.peakScore, 1);
+    Serial.print(freqCand.score, 1);
     Serial.print(" proposer_contrast=");
-    Serial.print(freqCand.peakContrast, 2);
+    Serial.print(freqCand.contrast, 2);
     Serial.print(" candidate_reject=");
-    Serial.print(freqCand.valid ? "none" : freqCand.rejectReason);
+    Serial.print(freqCand.valid ? "none" : _sequenceTest.liveFrequency.suppressReason);
     Serial.print(" next_suppress=");
     Serial.print(_sequenceTest.liveFrequency.suppressReason);
     Serial.print("]");
@@ -4020,22 +4102,22 @@ void AnalyzerApp::printSequenceTrialResult(unsigned long trialNumber, const char
     Serial.print(hasWindowEvidence ? windowFullEvidence->observedAtMs : 0UL);
     Serial.print("]");
     Serial.print(" sourceCand[present=");
-    Serial.print(freqCand.firstCrossMs != 0 || freqCand.peakMs != 0 || freqCand.releaseMs != 0 || freqCand.durationOrHoldMs != 0 || freqCand.valid ? 1 : 0);
+    Serial.print(freqCand.startMs != 0 || freqCand.peakMs != 0 || freqCand.releaseMs != 0 || freqCand.durationMs != 0 || freqCand.valid ? 1 : 0);
     Serial.print(" source=frequency");
     Serial.print(" first_ms=");
-    Serial.print(freqCand.firstCrossMs);
+    Serial.print(freqCand.startMs);
     Serial.print(" peak_ms=");
     Serial.print(freqCand.peakMs);
     Serial.print(" release_ms=");
     Serial.print(freqCand.releaseMs);
     Serial.print(" dur_or_hold_ms=");
-    Serial.print(freqCand.durationOrHoldMs);
+    Serial.print(freqCand.durationMs);
     Serial.print(" score=");
-    Serial.print(freqCand.peakScore, 1);
+    Serial.print(freqCand.score, 1);
     Serial.print(" contrast=");
-    Serial.print(freqCand.peakContrast, 2);
+    Serial.print(freqCand.contrast, 2);
     Serial.print(" candidate_reject=");
-    Serial.print(freqCand.valid ? "none" : freqCand.rejectReason);
+    Serial.print(freqCand.valid ? "none" : _sequenceTest.liveFrequency.suppressReason);
     Serial.print(" next_suppress=");
     Serial.print(_sequenceTest.liveFrequency.suppressReason);
     Serial.print("]");

@@ -16,7 +16,7 @@ void FrequencyCandidateBuilder::resetState() {
     _scalarEmitter.reset();
 }
 
-void FrequencyCandidateBuilder::update(const DetectionPipeline::FrequencyEvidence& evidence,
+void FrequencyCandidateBuilder::update(const detection::FrequencyEvidence& evidence,
                                        unsigned long now,
                                        uint64_t currentSample,
                                        const FrequencyEvidenceEvaluation::Values& tuning,
@@ -35,6 +35,9 @@ void FrequencyCandidateBuilder::update(const DetectionPipeline::FrequencyEvidenc
 
     present = evidence.present;
     frequencyCandidate.present = evidence.present;
+    frequencyCandidate.kind = detection::SignalKind::FrequencyMatch;
+    frequencyCandidate.source = detection::SignalSource::Frequency;
+    frequencyCandidate.detectorKind = detection::SignalDetectorKind::FrequencyMatch;
 
     AudioSignalFrame frame = {};
     frame.sampleIndex = currentSample;
@@ -59,8 +62,6 @@ void FrequencyCandidateBuilder::update(const DetectionPipeline::FrequencyEvidenc
 
         if (liveFreqEval.matched) {
             if (now < candidateRefractoryUntilMs) {
-                strncpy(frequencyCandidate.rejectReason, "refractory", sizeof(frequencyCandidate.rejectReason) - 1);
-                frequencyCandidate.rejectReason[sizeof(frequencyCandidate.rejectReason) - 1] = '\0';
                 strncpy(suppressReason, "refractory", sizeof(suppressReason) - 1);
                 suppressReason[sizeof(suppressReason) - 1] = '\0';
                 wouldProduceCandidate = false;
@@ -85,19 +86,21 @@ void FrequencyCandidateBuilder::update(const DetectionPipeline::FrequencyEvidenc
             candidatePeakWindowSampleCount = evidence.windowSampleCount;
             candidateEvidence = evidence;
             frequencyCandidate.valid = false;
-            frequencyCandidate.firstCrossMs = candidateFirstSeenMs;
-            frequencyCandidate.firstCrossSample = candidateFirstSeenSample;
+            frequencyCandidate.startMs = candidateFirstSeenMs;
+            frequencyCandidate.startSample = candidateFirstSeenSample;
             frequencyCandidate.peakMs = candidatePeakMs;
             frequencyCandidate.peakSample = candidatePeakSample;
             frequencyCandidate.releaseMs = 0;
             frequencyCandidate.releaseSample = 0;
-            frequencyCandidate.durationOrHoldMs = candidateHoldMs;
-            frequencyCandidate.holdWindows = candidateHoldWindows;
-            frequencyCandidate.peakScore = candidatePeakScore;
-            frequencyCandidate.peakContrast = candidatePeakContrast;
-            frequencyCandidate.peakWindowSampleCount = candidatePeakWindowSampleCount;
-            strncpy(frequencyCandidate.rejectReason, "none", sizeof(frequencyCandidate.rejectReason) - 1);
-            frequencyCandidate.rejectReason[sizeof(frequencyCandidate.rejectReason) - 1] = '\0';
+            frequencyCandidate.endMs = 0;
+            frequencyCandidate.durationMs = candidateHoldMs;
+            frequencyCandidate.candidateHoldWindows = candidateHoldWindows;
+            frequencyCandidate.strength = candidatePeakScore;
+            frequencyCandidate.score = candidatePeakScore;
+            frequencyCandidate.contrast = candidatePeakContrast;
+            frequencyCandidate.confidence = 0.0f;
+            frequencyCandidate.signalConfidence = 0.0f;
+            frequencyCandidate.frequencyConfidence = 0.0f;
             strncpy(candidateState, "open", sizeof(candidateState) - 1);
             candidateState[sizeof(candidateState) - 1] = '\0';
         } else if (candidateActive && candidateLastMatchedMs > 0) {
@@ -119,10 +122,12 @@ void FrequencyCandidateBuilder::update(const DetectionPipeline::FrequencyEvidenc
                 frequencyCandidate.valid = holdOk;
                 frequencyCandidate.releaseMs = candidateReleaseMs;
                 frequencyCandidate.releaseSample = candidateReleaseSample;
-                frequencyCandidate.durationOrHoldMs = candidateHoldMs;
-                frequencyCandidate.holdWindows = candidateHoldWindows;
-                strncpy(frequencyCandidate.rejectReason, holdOk ? "none" : "too_short", sizeof(frequencyCandidate.rejectReason) - 1);
-                frequencyCandidate.rejectReason[sizeof(frequencyCandidate.rejectReason) - 1] = '\0';
+                frequencyCandidate.endMs = candidateReleaseMs;
+                frequencyCandidate.durationMs = candidateHoldMs;
+                frequencyCandidate.candidateHoldWindows = candidateHoldWindows;
+                frequencyCandidate.confidence = holdOk ? 1.0f : 0.0f;
+                frequencyCandidate.signalConfidence = frequencyCandidate.confidence;
+                frequencyCandidate.frequencyConfidence = frequencyCandidate.confidence;
             }
         }
 
@@ -158,16 +163,19 @@ live_freq_update_best:
             candidateRefractoryUntilMs = now + cooldownAfterOnsetMs;
             frequencyCandidate.releaseMs = candidateReleaseMs;
             frequencyCandidate.releaseSample = candidateReleaseSample;
-            frequencyCandidate.durationOrHoldMs = candidateHoldMs;
-            frequencyCandidate.holdWindows = candidateHoldWindows;
-            strncpy(frequencyCandidate.rejectReason, "none", sizeof(frequencyCandidate.rejectReason) - 1);
-            frequencyCandidate.rejectReason[sizeof(frequencyCandidate.rejectReason) - 1] = '\0';
+            frequencyCandidate.endMs = candidateReleaseMs;
+            frequencyCandidate.durationMs = candidateHoldMs;
+            frequencyCandidate.candidateHoldWindows = candidateHoldWindows;
+            frequencyCandidate.confidence = 1.0f;
+            frequencyCandidate.signalConfidence = 1.0f;
+            frequencyCandidate.frequencyConfidence = 1.0f;
         } else {
             frequencyCandidate.valid = false;
             strncpy(candidateState, "rejected", sizeof(candidateState) - 1);
             candidateState[sizeof(candidateState) - 1] = '\0';
-            strncpy(frequencyCandidate.rejectReason, "too_short", sizeof(frequencyCandidate.rejectReason) - 1);
-            frequencyCandidate.rejectReason[sizeof(frequencyCandidate.rejectReason) - 1] = '\0';
+            frequencyCandidate.confidence = 0.0f;
+            frequencyCandidate.signalConfidence = 0.0f;
+            frequencyCandidate.frequencyConfidence = 0.0f;
         }
     }
 

@@ -2,15 +2,15 @@
 
 #include <stdint.h>
 
-#include "FrequencyCandidate.h"
-#include "FrequencyEvidenceEvaluation.h"
-#include "patterns/PatternPayload.h"
+#include "../inspector/FrequencyEvidenceEvaluation.h"
+#include "../patterns/PatternPayload.h"
+#include "../signals/SignalCandidate.h"
 
 /*
 FrequencyMatchDetector
 
 Owns the live frequency proposer lifecycle and the transition from frequency
-evidence into a timestamped FrequencyCandidate record.
+evidence into a timestamped SignalCandidate record.
 
 Responsibilities:
 - observe live frequency evidence windows from the frequency stream path
@@ -63,7 +63,7 @@ public:
     char candidateState[16] = "none";
     char suppressReason[48] = "none";
     char wouldCandidateReason[48] = "none";
-    FrequencyCandidate frequencyCandidate = {};
+    detection::SignalCandidate frequencyCandidate = {};
 
     void resetState();
 

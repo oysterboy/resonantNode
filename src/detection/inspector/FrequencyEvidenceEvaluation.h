@@ -5,7 +5,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "patterns/PatternPayload.h"
+#include "../patterns/PatternPayload.h"
 
 namespace FrequencyEvidenceEvaluation {
 

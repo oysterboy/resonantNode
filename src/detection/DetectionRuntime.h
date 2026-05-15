@@ -5,14 +5,14 @@
 #include "../io/AudioSignal.h"
 #include "signals/AmpSignalEmitter.h"
 #include "signals/FrequencySignalEmitter.h"
-#include "signals/SignalInspector.h"
+#include "inspector/SignalInspector.h"
 #include "patterns/PatternAssembler.h"
 #include "patterns/PatternRules.h"
 #include "patterns/PatternPayload.h"
 #include "field/FieldStateTracker.h"
 #include "features/FeatureExtractor.h"
 #include "features/FeatureHistory.h"
-#include "FrequencyEvidenceEvaluation.h"
+#include "inspector/FrequencyEvidenceEvaluation.h"
 
 namespace detection {
 

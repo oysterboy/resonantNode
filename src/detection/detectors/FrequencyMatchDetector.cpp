@@ -34,6 +34,9 @@ void FrequencyMatchDetector::update(const detection::FrequencyEvidence& evidence
 
     present = evidence.present;
     frequencyCandidate.present = evidence.present;
+    frequencyCandidate.kind = detection::SignalKind::FrequencyMatch;
+    frequencyCandidate.source = detection::SignalSource::Frequency;
+    frequencyCandidate.detectorKind = detection::SignalDetectorKind::FrequencyMatch;
 
     if (evidence.present) {
         if (!firstThresholdCrossingSeen && liveFreqEval.matched) {
@@ -44,8 +47,6 @@ void FrequencyMatchDetector::update(const detection::FrequencyEvidence& evidence
 
         if (liveFreqEval.matched) {
             if (now < candidateRefractoryUntilMs) {
-                strncpy(frequencyCandidate.rejectReason, "refractory", sizeof(frequencyCandidate.rejectReason) - 1);
-                frequencyCandidate.rejectReason[sizeof(frequencyCandidate.rejectReason) - 1] = '\0';
                 strncpy(suppressReason, "refractory", sizeof(suppressReason) - 1);
                 suppressReason[sizeof(suppressReason) - 1] = '\0';
                 wouldProduceCandidate = false;
@@ -69,19 +70,21 @@ void FrequencyMatchDetector::update(const detection::FrequencyEvidence& evidence
                 candidateHoldMs = 0;
                 candidateEvidence = evidence;
                 frequencyCandidate.valid = false;
-                frequencyCandidate.firstCrossMs = now;
-                frequencyCandidate.firstCrossSample = currentSample;
+                frequencyCandidate.startMs = now;
+                frequencyCandidate.startSample = currentSample;
                 frequencyCandidate.peakMs = now;
                 frequencyCandidate.peakSample = currentSample;
                 frequencyCandidate.releaseMs = 0;
                 frequencyCandidate.releaseSample = 0;
-                frequencyCandidate.durationOrHoldMs = 0;
-                frequencyCandidate.holdWindows = 1;
-                frequencyCandidate.peakScore = evidence.score;
-                frequencyCandidate.peakContrast = evidence.spectralContrast;
-                frequencyCandidate.peakWindowSampleCount = evidence.windowSampleCount;
-                strncpy(frequencyCandidate.rejectReason, "none", sizeof(frequencyCandidate.rejectReason) - 1);
-                frequencyCandidate.rejectReason[sizeof(frequencyCandidate.rejectReason) - 1] = '\0';
+                frequencyCandidate.endMs = 0;
+                frequencyCandidate.durationMs = 0;
+                frequencyCandidate.candidateHoldWindows = 1;
+                frequencyCandidate.strength = evidence.score;
+                frequencyCandidate.score = evidence.score;
+                frequencyCandidate.contrast = evidence.spectralContrast;
+                frequencyCandidate.confidence = 0.0f;
+                frequencyCandidate.signalConfidence = 0.0f;
+                frequencyCandidate.frequencyConfidence = 0.0f;
                 strncpy(candidateState, "open", sizeof(candidateState) - 1);
                 candidateState[sizeof(candidateState) - 1] = '\0';
             } else {
@@ -97,12 +100,12 @@ void FrequencyMatchDetector::update(const detection::FrequencyEvidence& evidence
                     candidateEvidence = evidence;
                     frequencyCandidate.peakMs = now;
                     frequencyCandidate.peakSample = currentSample;
-                    frequencyCandidate.peakScore = evidence.score;
-                    frequencyCandidate.peakContrast = evidence.spectralContrast;
-                    frequencyCandidate.peakWindowSampleCount = evidence.windowSampleCount;
+                    frequencyCandidate.strength = evidence.score;
+                    frequencyCandidate.score = evidence.score;
+                    frequencyCandidate.contrast = evidence.spectralContrast;
                 }
-                frequencyCandidate.holdWindows = candidateHoldWindows;
-                frequencyCandidate.durationOrHoldMs = candidateHoldMs;
+                frequencyCandidate.candidateHoldWindows = candidateHoldWindows;
+                frequencyCandidate.durationMs = candidateHoldMs;
             }
         } else if (candidateActive && candidateLastMatchedMs > 0) {
             if (now >= candidateLastMatchedMs + releaseDebounceMs) {
@@ -123,10 +126,12 @@ void FrequencyMatchDetector::update(const detection::FrequencyEvidence& evidence
                 frequencyCandidate.valid = holdOk;
                 frequencyCandidate.releaseMs = candidateReleaseMs;
                 frequencyCandidate.releaseSample = candidateReleaseSample;
-                frequencyCandidate.durationOrHoldMs = candidateHoldMs;
-                frequencyCandidate.holdWindows = candidateHoldWindows;
-                strncpy(frequencyCandidate.rejectReason, holdOk ? "none" : "too_short", sizeof(frequencyCandidate.rejectReason) - 1);
-                frequencyCandidate.rejectReason[sizeof(frequencyCandidate.rejectReason) - 1] = '\0';
+                frequencyCandidate.endMs = candidateReleaseMs;
+                frequencyCandidate.durationMs = candidateHoldMs;
+                frequencyCandidate.candidateHoldWindows = candidateHoldWindows;
+                frequencyCandidate.confidence = holdOk ? 1.0f : 0.0f;
+                frequencyCandidate.signalConfidence = frequencyCandidate.confidence;
+                frequencyCandidate.frequencyConfidence = frequencyCandidate.confidence;
             }
         }
 

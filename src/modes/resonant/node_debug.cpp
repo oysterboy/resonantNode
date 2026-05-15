@@ -2,7 +2,7 @@
 
 #include "../../behavior/ResonantBehavior.h"
 #include "../../AudioDebugConfig.h"
-#include "../../detection/AmpTransientDetector.h"
+#include "../../detection/detectors/AmpTransientDetector.h"
 #include "../../io/AudioSignal.h"
 #include "../../io/ChirpOutput.h"
 

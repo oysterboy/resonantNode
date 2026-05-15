@@ -2,10 +2,10 @@
 
 #include <stdint.h>
 
-#include "../DetectionPipeline.h"
-#include "../FrequencyCandidate.h"
-#include "../FrequencyEvidenceEvaluation.h"
+#include "../inspector/FrequencyEvidenceEvaluation.h"
+#include "../patterns/PatternPayload.h"
 #include "../signals/ScalarSignalEmitter.h"
+#include "../signals/SignalCandidate.h"
 
 /*
 FrequencyCandidateBuilder
@@ -14,7 +14,7 @@ Legacy/comparison-only for Analyzer.
 Roadmap behavior detection flows through DetectionRuntime and FrequencyMatchDetector.
 
 Owns the live frequency comparison state and the transition from frequency
-evidence into a timestamped FrequencyCandidate record.
+evidence into a timestamped SignalCandidate record.
 
 Responsibilities:
 - observe live frequency evidence from the frequency stream path
@@ -62,16 +62,16 @@ public:
     float bestScore = 0.0f;
     float bestContrast = 0.0f;
     unsigned long bestWindowSampleCount = 0;
-    DetectionPipeline::FrequencyEvidence bestEvidence = {};
-    DetectionPipeline::FrequencyEvidence candidateEvidence = {};
+    detection::FrequencyEvidence bestEvidence = {};
+    detection::FrequencyEvidence candidateEvidence = {};
     char candidateState[16] = "none";
     char suppressReason[48] = "none";
     char wouldCandidateReason[48] = "none";
-    FrequencyCandidate frequencyCandidate = {};
+    detection::SignalCandidate frequencyCandidate = {};
 
     void resetState();
 
-    void update(const DetectionPipeline::FrequencyEvidence& evidence,
+    void update(const detection::FrequencyEvidence& evidence,
                 unsigned long now,
                 uint64_t currentSample,
                 const FrequencyEvidenceEvaluation::Values& tuning,

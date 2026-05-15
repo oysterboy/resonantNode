@@ -1,6 +1,6 @@
 #pragma once
 
-#include "InspectedSignal.h"
+#include "../signals/InspectedSignal.h"
 
 namespace detection {
 

@@ -71,6 +71,7 @@ void FieldStateTracker::recompute(unsigned long nowMs) {
     _state.recentSignalCount = _signalCountInWindow;
     _state.recentAcceptedSignalCount = _acceptedSignalCountInWindow;
     _state.recentPatternCount = _patternCountInWindow;
+    _state.chatter = _signalCountInWindow;
     _state.quiet = _signalCountInWindow <= _config.quietSignalCountThreshold;
     _state.active = _signalCountInWindow > 0;
     _state.dense = _signalCountInWindow >= _config.denseSignalCountThreshold;

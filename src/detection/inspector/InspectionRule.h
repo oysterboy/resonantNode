@@ -1,8 +1,8 @@
 #pragma once
 
-#include "SignalCandidate.h"
+#include "../signals/SignalCandidate.h"
 #include "SignalWindowEvaluator.h"
-#include "../FrequencyEvidenceEvaluation.h"
+#include "FrequencyEvidenceEvaluation.h"
 
 namespace detection {
 

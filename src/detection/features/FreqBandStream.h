@@ -3,7 +3,7 @@
 #include <stdint.h>
 
 /*
-FrequencyBandStreamExtractor
+FreqBandStream
 
 Owns the rolling narrow-band frequency evidence stream for a configured tone.
 This is the live stream layer, not the retrospective candidate-window probe.
@@ -19,7 +19,7 @@ Does NOT:
 - own candidate assembly
 - own retrospective candidate-window probing
 */
-class FrequencyBandStreamExtractor {
+class FreqBandStream {
 public:
     void resetState();
 

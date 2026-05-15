@@ -2,7 +2,7 @@
 
 #include <stdint.h>
 
-#include "../AudioDebugConfig.h"
+#include "../../AudioDebugConfig.h"
 
 /*
 ScalarTransientDetector

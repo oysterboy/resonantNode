@@ -205,11 +205,13 @@ SignalInspector
 InspectedSignal
 PatternCandidate
 PatternRules
+Detectors
+Inspector
 DetectionRuntime
 ScalarTransientDetector
 AmpTransientDetector
 FrequencyMatchDetector
-FrequencyBandStreamExtractor
+FreqBandStream
 FrequencyWindowProbe
 FieldStateTracker
 SoundOutput
@@ -624,7 +626,7 @@ Amplitude-specific facade around `ScalarTransientDetector`.
 
 It applies the scalar transient mechanics to the amplitude / level stream.
 
-`FrequencyBandStreamExtractor`
+`FreqBandStream`
 
 Live frequency-band evidence stream extractor.
 
@@ -2768,8 +2770,10 @@ They are code-defined and selected through the current profile mechanism.
 Current roadmap concepts map to these source areas:
 
 ```text
-Feature history and retrospective windows -> src/detection/features/*
+Feature history, streams, and retrospective windows -> src/detection/features/*
 Signal emission and inspection -> src/detection/signals/*
+Detectors -> src/detection/detectors/*
+Inspection and probe helpers -> src/detection/inspector/*
 Pattern payloads and interpretation -> src/detection/patterns/*
 Field state tracking -> src/detection/field/*
 Detection profile composition -> src/detection/DetectionProfile.h

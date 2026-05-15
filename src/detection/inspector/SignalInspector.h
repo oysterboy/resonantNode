@@ -1,9 +1,9 @@
 #pragma once
 
-#include "InspectedSignal.h"
-#include "RawWindow.h"
+#include "../signals/InspectedSignal.h"
+#include "../signals/RawWindow.h"
 #include "../features/FeatureHistory.h"
-#include "../FrequencyEvidenceEvaluation.h"
+#include "FrequencyEvidenceEvaluation.h"
 
 namespace detection {
 

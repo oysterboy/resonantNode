@@ -5,9 +5,8 @@
 #include <esp_system.h>
 
 #include "../../detection/DetectorParameters.h"
-#include "../../detection/FrequencyEvidenceEvaluation.h"
-#include "../../detection/DetectionPipelineCompat.h"
-#include "../../detection/FrequencyWindowProbe.h"
+#include "../../detection/inspector/FrequencyEvidenceEvaluation.h"
+#include "../../detection/inspector/FrequencyWindowProbe.h"
 #include "../../detection/patterns/PatternNames.h"
 
 #ifndef CHIRP_FREQUENCY_HZ
@@ -174,6 +173,88 @@ const char* chirpPatternName(ChirpOutput::ChirpPattern pattern) {
     return "unknown";
 }
 
+bool isRoadmapDetectorCandidateAccepted(const DetectorCandidate& in) {
+    return in.durationMs > 0 || in.peakStrength > 0.0f || in.releaseMillisApprox != 0;
+}
+
+detection::PatternCandidate makeRoadmapPatternCandidate(const DetectorCandidate& in) {
+    detection::PatternCandidate out;
+    out.kind = detection::PatternCandidateKind::SinglePulse;
+    out.lineageId = static_cast<uint32_t>(in.onsetSample & 0xFFFFFFFFu);
+    out.primarySlotIndex = 0;
+    out.onsetSample = in.onsetSample;
+    out.peakSample = in.peakSample;
+    out.releaseSample = in.releaseSample;
+    out.startMs = in.onsetMillisApprox;
+    out.heardAtMs = in.releaseMillisApprox != 0 ? in.releaseMillisApprox : in.onsetMillisApprox;
+    out.acceptedMs = out.heardAtMs;
+    out.durationMs = in.durationMs;
+    out.onsetStrength = in.onsetStrength;
+    out.peakStrength = in.peakStrength;
+    out.releaseStrength = in.releaseStrength;
+    out.ambientBaseline = in.ambientBaseline;
+    out.audioOverflowDuringCandidate = in.audioOverflowDuringCandidate;
+    out.transient.present = isRoadmapDetectorCandidateAccepted(in);
+    out.transient.onsetSample = in.onsetSample;
+    out.transient.peakSample = in.peakSample;
+    out.transient.releaseSample = in.releaseSample;
+    out.transient.startMs = in.onsetMillisApprox;
+    out.transient.heardAtMs = in.releaseMillisApprox != 0 ? in.releaseMillisApprox : in.onsetMillisApprox;
+    out.transient.acceptedMs = out.transient.heardAtMs;
+    out.transient.durationMs = in.durationMs;
+    out.transient.onsetStrength = in.onsetStrength;
+    out.transient.peakStrength = in.peakStrength;
+    out.transient.releaseStrength = in.releaseStrength;
+    out.transient.ambientBaseline = in.ambientBaseline;
+    out.transient.audioOverflowDuringCandidate = in.audioOverflowDuringCandidate;
+    out.frequency = {};
+    out.frequencyFull = {};
+    return out;
+}
+
+bool processRoadmapDetectorCandidate(const DetectorCandidate& in,
+                                     detection::PatternResult& out,
+                                     unsigned long processedAtMs,
+                                     const detection::FrequencyEvidence* frequencyEvidence) {
+    out = {};
+    out.source = detection::PatternSource::ComparisonOnly;
+    out.kind = detection::PatternResultKind::Rejected;
+    out.lineageId = static_cast<uint32_t>(in.onsetSample & 0xFFFFFFFFu);
+    out.primarySlotIndex = 0;
+    out.candidate = makeRoadmapPatternCandidate(in);
+    out.freq = out.candidate.frequency;
+    out.freqFull = out.candidate.frequencyFull;
+    out.processedAtMs = processedAtMs;
+
+    if (frequencyEvidence != nullptr) {
+        out.candidate.frequency = *frequencyEvidence;
+    }
+
+    if (!isRoadmapDetectorCandidateAccepted(in)) {
+        out.kind = detection::PatternResultKind::Rejected;
+        out.type = detection::PatternType::Invalid;
+        out.reasonCode = detection::PatternReasonCode::DetectorRejected;
+        out.rejectReason = detection::PatternRejectReason::NoCandidate;
+        out.confidence = 0.0f;
+        out.candidateValid = false;
+        out.tonalValid = false;
+        out.behaviorEligible = false;
+        out.valid = false;
+        return false;
+    }
+
+    out.type = detection::PatternType::ValidTransient;
+    out.kind = detection::PatternResultKind::Residual;
+    out.reasonCode = detection::PatternReasonCode::FromAcceptedTransient;
+    out.rejectReason = detection::PatternRejectReason::None;
+    out.confidence = 1.0f;
+    out.candidateValid = true;
+    out.tonalValid = false;
+    out.behaviorEligible = false;
+    out.valid = true;
+    return true;
+}
+
 const char* h3RbCandidateClassName(const detection::PatternResult& patternResult, ResonantBehavior::BehaviorDecision behaviorDecision, bool selfChirpSuppressed) {
     if (selfChirpSuppressed || behaviorDecision == ResonantBehavior::BehaviorDecision::SelfSuppressed) {
         return "self_suppressed";
@@ -295,7 +376,7 @@ Node::Node(int inputPin, int ledPin, int chirpPin, int chirpBtlPin, AudioSourceK
                        : static_cast<AudioSource&>(_analogSource)),
       _audioOnsetDetector(),
       _audioSignal(_audioSource),
-      _freqTransientDetector(),
+      _freqBandStream(),
       _toneOutput(chirpPin),
       _toneOutputBTL(chirpPin, chirpBtlPin),
       _chirpOutput(chirpBtlPin >= 0
@@ -311,7 +392,7 @@ void Node::begin() {
     _audioSignal.begin(false);
     _ampCandidateBuilder.resetState();
     _audioOnsetDetector.begin();
-    _freqTransientDetector.resetState();
+    _freqBandStream.resetState();
     _detection.reset();
     syncDetectionRuntimeMode();
     _behavior.resetState();
@@ -599,7 +680,7 @@ void Node::update() {
                 AudioSignalFrame frame;
                 _audioSignal.update(static_cast<int>(block.samples[i]), sampleTimeUs, frame);
                 frame.sampleTimeMs = sampleTimeMsApprox;
-                _freqTransientDetector.observeCenteredSample(frame.centeredSample);
+                _freqBandStream.observeCenteredSample(frame.centeredSample);
                 if (usesRoadmapDetection()) {
                     processRoadmapFrame(frame, now, selfChirpSuppressed, sawPatternThisLoop);
                 } else {
@@ -625,7 +706,7 @@ void Node::update() {
             }
             AudioSignalFrame frame;
             _audioSignal.update(sample, sampleTimeUs, frame);
-            _freqTransientDetector.observeCenteredSample(frame.centeredSample);
+            _freqBandStream.observeCenteredSample(frame.centeredSample);
             if (usesRoadmapDetection()) {
                 processRoadmapFrame(frame, now, selfChirpSuppressed, sawPatternThisLoop);
                 ++processedSamples;
@@ -1127,22 +1208,22 @@ void Node::drainLegacyAmpCandidates(unsigned long now,
         const auto liveFrequencyEvidence = captureFrequencyEvidence();
         detection::FrequencyEvidence frequencyEvidence = liveFrequencyEvidence;
         detection::FrequencyEvidence fullFrequencyEvidence = liveFrequencyEvidence;
-        DetectionPipeline::measureCandidateWindowFrequency(
+        detection::measureCandidateWindowFrequency(
             _audioSignal,
             candidate,
             _audioSource.sampleRateHz() > 0 ? _audioSource.sampleRateHz() : 16000UL,
-            _freqTransientDetector.targetFrequencyHz(),
+            _freqBandStream.targetFrequencyHz(),
             now,
             frequencyEvidence);
-        DetectionPipeline::measureCandidateWindowFrequency(
+        detection::measureCandidateWindowFrequency(
             _audioSignal,
             candidate,
             _audioSource.sampleRateHz() > 0 ? _audioSource.sampleRateHz() : 16000UL,
-            _freqTransientDetector.targetFrequencyHz(),
+            _freqBandStream.targetFrequencyHz(),
             now,
             fullFrequencyEvidence,
             candidate.durationMs);
-        const bool patternValid = DetectionPipeline::processDetectorCandidate(candidate, patternResult, now, &frequencyEvidence);
+        const bool patternValid = processRoadmapDetectorCandidate(candidate, patternResult, now, &frequencyEvidence);
         patternResult.candidate.frequencyFull = fullFrequencyEvidence;
         FrequencyEvidenceEvaluation::classifyPatternResult(patternResult, _frequencyEvidenceTuning);
         const auto behaviorDecision = _behavior.handlePatternResult(patternResult, now);
@@ -1266,20 +1347,20 @@ const char* Node::rbLogModeName() const {
 detection::FrequencyEvidence Node::captureFrequencyEvidence() const {
     detection::FrequencyEvidence evidence;
     evidence.observedAtMs = millis();
-    const bool present = _freqTransientDetector.windowReady();
-    const float totalEnergy = _freqTransientDetector.lastTotalEnergy();
+    const bool present = _freqBandStream.windowReady();
+    const float totalEnergy = _freqBandStream.lastTotalEnergy();
 
     evidence.present = present;
     evidence.matched = false;
-    evidence.targetHz = present ? _freqTransientDetector.targetFrequencyHz() : 0;
-    evidence.windowSampleCount = _freqTransientDetector.sampleCount();
+    evidence.targetHz = present ? _freqBandStream.targetFrequencyHz() : 0;
+    evidence.windowSampleCount = _freqBandStream.sampleCount();
     evidence.windowAvailable = present;
-    evidence.score = _freqTransientDetector.lastFrequencyScore();
+    evidence.score = _freqBandStream.lastFrequencyScore();
     evidence.confidence = 0.0f;
-    evidence.targetPower = _freqTransientDetector.lastTargetPower();
-    evidence.neighborPower = _freqTransientDetector.lastNeighborPower();
+    evidence.targetPower = _freqBandStream.lastTargetPower();
+    evidence.neighborPower = _freqBandStream.lastNeighborPower();
     evidence.totalEnergy = totalEnergy;
-    evidence.spectralContrast = _freqTransientDetector.lastSpectralContrast();
+    evidence.spectralContrast = _freqBandStream.lastSpectralContrast();
     evidence.validWindow = present;
     return evidence;
 }

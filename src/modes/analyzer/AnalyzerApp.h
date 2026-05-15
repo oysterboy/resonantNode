@@ -5,12 +5,12 @@
 
 #include "../../hal/AudioSourceAnalog.h"
 #include "../../hal/AudioSourceI2S.h"
-#include "../../detection/AmpTransientDetector.h"
+#include "../../detection/detectors/AmpTransientDetector.h"
 #include "../../io/AudioSignal.h"
 #include "../../detection/legacy/AmpCandidateBuilder.h"
-#include "../../detection/FrequencyMatchDetector.h"
-#include "../../detection/FrequencyEvidenceEvaluation.h"
-#include "../../detection/FreqTransientDetector.h"
+#include "../../detection/detectors/FrequencyMatchDetector.h"
+#include "../../detection/inspector/FrequencyEvidenceEvaluation.h"
+#include "../../detection/features/FreqBandStream.h"
 #include "../../detection/patterns/PatternPayload.h"
 #include "../../detection/signals/SignalCandidate.h"
 #include "../../hal/AudioSource.h"
@@ -478,7 +478,7 @@ private:
     AmpTransientDetector _audioOnsetDetector;
     AudioSignal _audioSignal;
     AmpCandidateBuilder _ampCandidateBuilder;
-    FreqTransientDetector _freqTransientDetector;
+    FreqBandStream _freqBandStream;
     FrequencyEvidenceEvaluation::Values _frequencyEvidenceTuning = {};
 
     // Console and emitter control.

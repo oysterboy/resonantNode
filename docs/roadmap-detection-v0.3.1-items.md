@@ -35,7 +35,7 @@ Note: each item has a one-line implementation note only.
 14. **Add source tags and detector provenance consistently** - Preserve whether a signal came from AMP, frequency, broadband, or later sources.
 15. **Support multiple `SignalDetector` implementations under one signal layer** - Keep `TransientDetector`, `FrequencyMatchDetector`, and future detectors behind the same role.
 
-## C. [MOSTLY DONE]Frequency-first refinement
+## C. [MOSTLY DONE] Frequency-first refinement
 
 16. **Add AMP locality inspection for frequency-first candidates**
 Implemented
@@ -56,9 +56,9 @@ Implemented
 Implemented
 
 22. **Keep frequency evidence evaluation separate from frequency detection**
-Partial
+Implemented
 
-The inspection facts now live in `SignalInspector`, but the separate `FrequencyEvidenceEvaluator` module has not been split out yet.
+Frequency evidence evaluation now lives in its own module and is used by `SignalInspector` and the analyzer path without being owned by `FrequencyMatchDetector`.
 
 ## D. [PARTIALLY DONE] Inspection mechanic
 
@@ -72,14 +72,14 @@ Implemented
 Implemented
 
 26. **Use `ScalarWindow` from `FeatureHistory` as preferred inspection path**
-Partial
+Implemented
 
-The inspection layer now has reusable rules and window stats, but it still uses the current candidate-relative snapshot instead of a formal `FeatureHistory` / `ScalarWindow` pipeline.
+The runtime and analyzer inspection paths now use `FeatureHistory`-backed inspection, and `SignalInspector` reads retrospective windows through `ScalarWindow`.
 
 27. **Keep `RawWindow` from `AudioHistory` as fallback / advanced path**
-Partial
+Implemented
 
-The raw-window fallback exists as a practical candidate-relative helper for Analyzer inspection, but it is not yet generalized through a shared `FeatureHistory` / `AudioHistory` inspection context in runtime paths.
+`RawWindow` remains the fallback path when retrospective history is not available, while `FeatureHistory` now serves as the preferred inspection path.
 
 28. **Reuse the same inspection mechanic for AMP-first and frequency-first**
 Implemented
@@ -114,8 +114,8 @@ Partial.
 Invalid/rejected, residual, and too-dense/invalid-chirp outcomes now exist in the rules, but the handling is still conservative.
 
 371. **E2 - Split** - 
-Pattern payloads now live in dedicated pattern headers, with `DetectionPipeline.h` reduced to a thin compatibility bridge and `DetectionPipelineCompat.h` holding the helper conversions.
-The active analyzer and RB consumers now use the direct pattern types; only compat helpers still live behind the old bridge namespace.
+Pattern payloads now live in dedicated pattern headers.
+The active analyzer and RB consumers now use the direct pattern types, and the old compatibility bridge has been retired.
 
 ## F. [MOSTLY DONE] Field state
 
@@ -169,7 +169,7 @@ The active analyzer and RB consumers now use the direct pattern types; only comp
 
 66. **Use `AmpStateProfile` to prove the boundary** — Implemented. The AmpState profile now has a real field-state effect on behavior.
 
-## J. DetectionProfile composition
+## J. [DONE] DetectionProfile composition
 
 66. **Introduce code-defined detection profile factories** — Implemented. Profiles are built in code through `makeFreqAmpProfile()`, `makeAmpStateProfile()`, and `makeChirpProfile()`.
 
@@ -199,7 +199,7 @@ The active analyzer and RB consumers now use the direct pattern types; only comp
 
 79. **Use `DetectionProfile` as highest-level composition item** — Implemented. `DetectionProfile` is now the top-level code-defined profile object for Resonant.
 
-##  K. Documentation / Spec Alignment
+##  K. [DONE] Documentation / Spec Alignment
 
 80. **Update Detection Roadmap v0.3 overview** — Implemented. The roadmap and current-pass docs now reflect the signal-vs-pattern pipeline and the profile-proof scope.
 
@@ -241,7 +241,7 @@ The active analyzer and RB consumers now use the direct pattern types; only comp
 
 99. **Freeze v0.3 docs before DetectionProfile work** — Use docs as reference before starting profile composition refactor.
 
-## L. Roadmap Notes
+## L. [NOTES] Roadmap Notes
 
 91. **Current proof profiles** — `FreqAmpProfile`, `AmpStateProfile`, and `ChirpProfile` are the current proof set. The detailed mapping lives in `docs/myspec.md`.
 

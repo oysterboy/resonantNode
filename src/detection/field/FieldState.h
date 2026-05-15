@@ -21,6 +21,7 @@ struct FieldState {
     float activity = 0.0f;
     float density = 0.0f;
     float noiseFloor = 0.0f;
+    unsigned long chatter = 0;
 
     unsigned long lastSignalMs = 0;
     unsigned long lastInspectedSignalMs = 0;

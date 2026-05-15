@@ -29,14 +29,14 @@ float computeGoertzelPower(const int16_t* samples, size_t sampleCount, unsigned 
 
 } // namespace
 
-namespace DetectionPipeline {
+namespace detection {
 
 bool measureCandidateWindowFrequency(const AudioSignal& audioSignal,
                                      const DetectorCandidate& candidate,
                                      unsigned long sampleRateHz,
                                      unsigned long targetFrequencyHz,
                                      unsigned long observedAtMs,
-                                     detection::FrequencyEvidence& out,
+                                     FrequencyEvidence& out,
                                      unsigned long maxWindowMs) {
     out = {};
     out.observedAtMs = observedAtMs;
@@ -135,7 +135,7 @@ bool measureCandidateWindowFrequencyParityScan64(const AudioSignal& audioSignal,
                                                  unsigned long sampleRateHz,
                                                  unsigned long targetFrequencyHz,
                                                  unsigned long observedAtMs,
-                                                 detection::FrequencyEvidence& out,
+                                                 FrequencyEvidence& out,
                                                  unsigned long windowSampleCount) {
     out = {};
     out.observedAtMs = observedAtMs;
@@ -244,4 +244,4 @@ bool measureCandidateWindowFrequencyParityScan64(const AudioSignal& audioSignal,
     return true;
 }
 
-} // namespace DetectionPipeline
+} // namespace detection

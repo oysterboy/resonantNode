@@ -5,15 +5,15 @@
 
 #include "../../detection/DetectionRuntime.h"
 #include "../../detection/DetectionProfile.h"
-#include "../../detection/FrequencyEvidenceEvaluation.h"
+#include "../../detection/inspector/FrequencyEvidenceEvaluation.h"
 #include "../../hal/AudioSourceAnalog.h"
 #include "../../hal/AudioSourceI2S.h"
 #include "../../hal/PiezoToneOutputBTL.h"
 #include "../../hal/PiezoToneOutput.h"
 #include "../../io/AudioSignal.h"
-#include "../../detection/AmpTransientDetector.h"
+#include "../../detection/detectors/AmpTransientDetector.h"
 #include "../../detection/legacy/AmpCandidateBuilder.h"
-#include "../../detection/FreqTransientDetector.h"
+#include "../../detection/features/FreqBandStream.h"
 #include "../../io/ChirpOutput.h"
 #include "../../behavior/ResonantBehavior.h"
 #include "../../detection/patterns/PatternPayload.h"
@@ -145,7 +145,7 @@ private:
     AudioSignal _audioSignal;
     // Legacy AMP path only. Roadmap detection flows through DetectionRuntime.
     AmpCandidateBuilder _ampCandidateBuilder;
-    FreqTransientDetector _freqTransientDetector;
+    FreqBandStream _freqBandStream;
     detection::DetectionRuntime _detection;
     FrequencyEvidenceEvaluation::Values _frequencyEvidenceTuning = {};
     ResonantBehavior _behavior;

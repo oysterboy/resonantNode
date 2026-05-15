@@ -1,9 +1,9 @@
-#include "FrequencyBandStreamExtractor.h"
+#include "FreqBandStream.h"
 
 #include <Arduino.h>
 #include <math.h>
 
-void FrequencyBandStreamExtractor::resetState() {
+void FreqBandStream::resetState() {
     _sampleCount = 0;
     _sampleWriteIndex = 0;
     _lastFrequencyScore = 0.0f;
@@ -16,15 +16,15 @@ void FrequencyBandStreamExtractor::resetState() {
     }
 }
 
-void FrequencyBandStreamExtractor::setTargetFrequencyHz(unsigned long value) {
+void FreqBandStream::setTargetFrequencyHz(unsigned long value) {
     _targetFrequencyHz = value;
 }
 
-void FrequencyBandStreamExtractor::setSampleRateHz(unsigned long value) {
+void FreqBandStream::setSampleRateHz(unsigned long value) {
     _sampleRateHz = value == 0 ? 1 : value;
 }
 
-void FrequencyBandStreamExtractor::setWindowSizeSamples(unsigned long value) {
+void FreqBandStream::setWindowSizeSamples(unsigned long value) {
     if (value == 0) {
         value = 1;
     }
@@ -34,7 +34,7 @@ void FrequencyBandStreamExtractor::setWindowSizeSamples(unsigned long value) {
     _windowSizeSamples = value;
 }
 
-void FrequencyBandStreamExtractor::observeCenteredSample(int centeredSample) {
+void FreqBandStream::observeCenteredSample(int centeredSample) {
     pushSample(centeredSample);
     if (_sampleCount < _windowSizeSamples) {
         _lastFrequencyScore = 0.0f;
@@ -48,7 +48,7 @@ void FrequencyBandStreamExtractor::observeCenteredSample(int centeredSample) {
     computeFrequencyScore();
 }
 
-void FrequencyBandStreamExtractor::pushSample(int sample) {
+void FreqBandStream::pushSample(int sample) {
     if (_windowSizeSamples == 0) {
         return;
     }
@@ -60,7 +60,7 @@ void FrequencyBandStreamExtractor::pushSample(int sample) {
     }
 }
 
-float FrequencyBandStreamExtractor::computeGoertzelPowerAtFrequency(float frequencyHz) const {
+float FreqBandStream::computeGoertzelPowerAtFrequency(float frequencyHz) const {
     if (_windowSizeSamples == 0 || _sampleCount < _windowSizeSamples) {
         return 0.0f;
     }
@@ -84,7 +84,7 @@ float FrequencyBandStreamExtractor::computeGoertzelPowerAtFrequency(float freque
     return sPrev2 * sPrev2 + sPrev * sPrev - coeff * sPrev * sPrev2;
 }
 
-float FrequencyBandStreamExtractor::computeFrequencyScore() {
+float FreqBandStream::computeFrequencyScore() {
     if (_windowSizeSamples == 0 || _sampleCount < _windowSizeSamples) {
         _lastFrequencyScore = 0.0f;
         _lastTargetPower = 0.0f;
@@ -123,49 +123,49 @@ float FrequencyBandStreamExtractor::computeFrequencyScore() {
     return normalized;
 }
 
-float FrequencyBandStreamExtractor::lastFrequencyScore() const {
+float FreqBandStream::lastFrequencyScore() const {
     return _lastFrequencyScore;
 }
 
-float FrequencyBandStreamExtractor::lastTargetPower() const {
+float FreqBandStream::lastTargetPower() const {
     return _lastTargetPower;
 }
 
-float FrequencyBandStreamExtractor::lastNeighborPower() const {
+float FreqBandStream::lastNeighborPower() const {
     return _lastNeighborPower;
 }
 
-float FrequencyBandStreamExtractor::lastTotalEnergy() const {
+float FreqBandStream::lastTotalEnergy() const {
     return _lastTotalEnergy;
 }
 
-float FrequencyBandStreamExtractor::lastSpectralContrast() const {
+float FreqBandStream::lastSpectralContrast() const {
     return _lastSpectralContrast;
 }
 
-float FrequencyBandStreamExtractor::frequencyBinSpacingHz() const {
+float FreqBandStream::frequencyBinSpacingHz() const {
     if (_windowSizeSamples == 0) {
         return 0.0f;
     }
     return static_cast<float>(_sampleRateHz) / static_cast<float>(_windowSizeSamples);
 }
 
-unsigned long FrequencyBandStreamExtractor::targetFrequencyHz() const {
+unsigned long FreqBandStream::targetFrequencyHz() const {
     return _targetFrequencyHz;
 }
 
-unsigned long FrequencyBandStreamExtractor::sampleRateHz() const {
+unsigned long FreqBandStream::sampleRateHz() const {
     return _sampleRateHz;
 }
 
-unsigned long FrequencyBandStreamExtractor::windowSizeSamples() const {
+unsigned long FreqBandStream::windowSizeSamples() const {
     return _windowSizeSamples;
 }
 
-unsigned long FrequencyBandStreamExtractor::sampleCount() const {
+unsigned long FreqBandStream::sampleCount() const {
     return _sampleCount;
 }
 
-bool FrequencyBandStreamExtractor::windowReady() const {
+bool FreqBandStream::windowReady() const {
     return _sampleCount >= _windowSizeSamples && _windowSizeSamples > 0;
 }

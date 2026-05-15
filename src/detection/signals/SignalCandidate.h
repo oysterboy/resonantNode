@@ -46,6 +46,7 @@ struct SignalCandidate {
     unsigned long releaseMs = 0;
     unsigned long endMs = 0;
     unsigned long durationMs = 0;
+    unsigned long candidateHoldWindows = 0;
 
     float strength = 0.0f;
     float score = 0.0f;

@@ -25,7 +25,7 @@ Note: each item has a one-line implementation note only.
 
 8. **Clean Analyzer / debug logs around signal -> inspected signal -> pattern result** - Implemented. Logs now show the new layer boundaries more clearly.
 
-## B. Signal layer completion
+## B. [DONE] Signal layer completion
 
 9. **Stabilize `SignalCandidate` structure** - Define stable timing, source, detector, and basic strength fields.
 10. **Stabilize `InspectedSignal` structure** - Define stable accepted/rejected/annotated signal-level output.
@@ -35,15 +35,30 @@ Note: each item has a one-line implementation note only.
 14. **Add source tags and detector provenance consistently** - Preserve whether a signal came from AMP, frequency, broadband, or later sources.
 15. **Support multiple `SignalDetector` implementations under one signal layer** - Keep `TransientDetector`, `FrequencyMatchDetector`, and future detectors behind the same role.
 
-## C. Frequency-first refinement
+## C. [MOSTLY DONE]Frequency-first refinement
 
-16. **Add AMP locality inspection for frequency-first candidates** - Inspect `ampEnv` around frequency matches to recover near/far behavior.
-17. **Add `ampSupportClass`** - Classify AMP evidence as strong, medium, weak, none, or unknown.
-18. **Add `localityClass`** - Translate AMP support into near, mid, far, or unknown locality.
-19. **Separate frequency match confidence from physical locality** - Keep "valid target tone" distinct from "near physical neighbor."
-20. **Add near / mid / far interpretation in pattern rules** - Let `PatternRules` produce locality-aware pattern results.
-21. **Keep frequency lifecycle inside `FrequencyMatchDetector`** - Matched-window timing, release, and frequency-specific refractory stay in the detector.
-22. **Keep frequency evidence evaluation separate from frequency detection** - Use `FrequencyEvidenceEvaluator` only for inspection facts, not candidate emission.
+16. **Add AMP locality inspection for frequency-first candidates**
+Implemented
+
+17. **Add `ampSupportClass`**
+Implemented
+
+18. **Add `localityClass`**
+Implemented
+
+19. **Separate frequency match confidence from physical locality**
+Implemented
+
+20. **Add near / mid / far interpretation in pattern rules**
+Implemented
+
+21. **Keep frequency lifecycle inside `FrequencyMatchDetector`**
+Implemented
+
+22. **Keep frequency evidence evaluation separate from frequency detection**
+Partial
+
+The inspection facts now live in `SignalInspector`, but the separate `FrequencyEvidenceEvaluator` module has not been split out yet.
 
 ## D. Inspection mechanic
 

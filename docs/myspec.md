@@ -2658,3 +2658,108 @@ all future resource profiles
 ResonantNode is an autonomous VEKTOR-compatible acoustic node firmware that detects, classifies, and reacts to sound locally, while serving as the first reusable firmware architecture for future VEKTOR nodes.
 ```
 
+---
+
+## 30. Detection Architecture Terms
+
+The current detection stack uses a stable naming set:
+
+```text
+FeatureExtractor
+FeatureStream
+FeatureHistory
+SignalEmitter
+SignalDetector
+SignalInspector
+PatternAssembler
+PatternRules
+FieldState
+DetectionProfile
+```
+
+### 30.1 Signal vs Pattern Split
+
+Detection moves through a clear meaning chain:
+
+```text
+SignalCandidate -> InspectedSignal -> PatternCandidate -> PatternResult
+```
+
+The signal layer records measured evidence.
+The pattern layer interprets that evidence into pattern meaning.
+
+### 30.2 FrequencyMatchDetector Boundary
+
+`FrequencyMatchDetector` owns only the frequency candidate lifecycle.
+
+It does not own:
+
+- AMP locality
+- pattern meaning
+- pattern assembly
+- behavior decisions
+
+### 30.3 AMP Locality Inspection
+
+`SignalInspector` may add AMP support and locality during inspection.
+
+It may use retrospective feature history or raw-window fallback when available.
+
+### 30.4 FeatureHistory and ScalarWindow
+
+`FeatureHistory` keeps bounded retrospective feature samples.
+`ScalarWindow` summarizes a selected interval of those samples.
+
+`RawWindow` remains valid as a fallback when retrospective history is not available.
+
+### 30.5 FieldState Boundary
+
+`FieldState` is acoustic context.
+
+It is not:
+
+- a feature stream
+- a pattern result
+- a pattern meaning layer
+
+It summarizes quiet, busy, density, and recent activity conditions.
+
+### 30.6 PatternAssembler Role
+
+`PatternAssembler` groups inspected signals into pattern candidates.
+
+It currently supports simple one-signal assembly and can later grow into multi-signal chirp grouping.
+
+### 30.7 PatternRules Role
+
+`PatternRules` interprets `PatternCandidate` into `PatternResult`.
+
+It does not inspect raw signals directly.
+
+### 30.8 Behavior Input Boundary
+
+Behavior consumes only:
+
+```text
+PatternResult + FieldState
+```
+
+Behavior does not consume:
+
+- `SignalCandidate`
+- `InspectedSignal`
+- `FeatureStream`
+- detector internals
+
+### 30.9 Current Proof Profiles
+
+The current proof profiles are:
+
+```text
+FreqAmpProfile
+AmpStateProfile
+ChirpProfile
+```
+
+They are code-defined and selected through the current profile mechanism.
+

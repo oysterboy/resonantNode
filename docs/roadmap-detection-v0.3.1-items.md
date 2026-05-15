@@ -201,27 +201,27 @@ The active analyzer and RB consumers now use the direct pattern types; only comp
 
 ##  K. Documentation / Spec Alignment
 
-80. **Update Detection Roadmap v0.3 overview** — Reflect the current signal-vs-pattern pipeline and profile-proof scope.
+80. **Update Detection Roadmap v0.3 overview** — Implemented. The roadmap and current-pass docs now reflect the signal-vs-pattern pipeline and the profile-proof scope.
 
-81. **Update Architecture Spec detection section** — Align architecture spec with implemented names and boundaries.
+81. **Update Architecture Spec detection section** — Implemented. `docs/myspec.md` now documents the implemented detection names and boundaries.
 
-82. **Document stable naming set** — Record current terms: FeatureExtractor, SignalEmitter, SignalDetector, SignalInspector, PatternAssembler, PatternRules, FieldState, DetectionProfile.
+82. **Document stable naming set** — Implemented. The current naming set is now recorded in `docs/myspec.md`.
 
-83. **Document signal-vs-pattern split** — Explain SignalCandidate → InspectedSignal → PatternCandidate → PatternResult.
+83. **Document signal-vs-pattern split** — Implemented. `SignalCandidate → InspectedSignal → PatternCandidate → PatternResult` is now documented in `docs/myspec.md`.
 
-84. **Document FrequencyMatchDetector boundary** — Clarify that it owns frequency lifecycle, not locality, pattern meaning, or behavior.
+84. **Document FrequencyMatchDetector boundary** — Implemented. The frequency lifecycle boundary is now documented in `docs/myspec.md`.
 
-85. **Document AMP locality inspection** — Explain how AMP support/locality is added during SignalInspector inspection.
+85. **Document AMP locality inspection** — Implemented. The inspector’s AMP support/locality role is now documented in `docs/myspec.md`.
 
-86. **Document FeatureHistory / ScalarWindow usage** — Describe retrospective window inspection and when RawWindow remains valid.
+86. **Document FeatureHistory / ScalarWindow usage** — Implemented. Retrospective history and scalar-window usage are now documented in `docs/myspec.md`.
 
-87. **Document FieldState boundary** — Clarify FieldState is acoustic context, not feature stream and not pattern result.
+87. **Document FieldState boundary** — Implemented. `FieldState` is now documented as acoustic context in `docs/myspec.md`.
 
-88. **Document PatternAssembler role** — Explain trivial one-signal assembly now and multi-signal chirp assembly later.
+88. **Document PatternAssembler role** — Implemented. The single-signal-to-chirp assembly boundary is now documented in `docs/myspec.md`.
 
-89. **Document PatternRules role** — Clarify PatternRules interpret PatternCandidates only after signal inspection and assembly.
+89. **Document PatternRules role** — Implemented. `PatternRules` interpretation boundaries are now documented in `docs/myspec.md`.
 
-90. **Document behavior input boundary** — State Behavior consumes only PatternResult + FieldState.
+90. **Document behavior input boundary** — Implemented. `Behavior` consuming only `PatternResult + FieldState` is now documented in `docs/myspec.md`.
 
 91. **Document current proof profiles** — Describe FreqAmpProfile, AmpStateProfile, and ChirpProfile.
 

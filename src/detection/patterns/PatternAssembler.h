@@ -4,7 +4,7 @@
 #include <stdint.h>
 
 #include "../signals/InspectedSignal.h"
-#include "PatternCandidate.h"
+#include "PatternPayload.h"
 
 namespace detection {
 

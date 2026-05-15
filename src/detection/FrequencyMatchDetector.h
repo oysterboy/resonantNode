@@ -2,9 +2,9 @@
 
 #include <stdint.h>
 
-#include "DetectionPipeline.h"
 #include "FrequencyCandidate.h"
 #include "FrequencyEvidenceEvaluation.h"
+#include "patterns/PatternPayload.h"
 
 /*
 FrequencyMatchDetector
@@ -58,8 +58,8 @@ public:
     float bestScore = 0.0f;
     float bestContrast = 0.0f;
     unsigned long bestWindowSampleCount = 0;
-    DetectionPipeline::FrequencyEvidence bestEvidence = {};
-    DetectionPipeline::FrequencyEvidence candidateEvidence = {};
+    detection::FrequencyEvidence bestEvidence = {};
+    detection::FrequencyEvidence candidateEvidence = {};
     char candidateState[16] = "none";
     char suppressReason[48] = "none";
     char wouldCandidateReason[48] = "none";
@@ -67,7 +67,7 @@ public:
 
     void resetState();
 
-    void update(const DetectionPipeline::FrequencyEvidence& evidence,
+    void update(const detection::FrequencyEvidence& evidence,
                 unsigned long now,
                 uint64_t currentSample,
                 const FrequencyEvidenceEvaluation::Values& tuning,

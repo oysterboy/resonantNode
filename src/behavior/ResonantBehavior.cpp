@@ -40,6 +40,23 @@ unsigned long randomIdleDelayMs(unsigned long minMs, unsigned long maxMs) {
     const unsigned long spanMs = maxMs - minMs + 1;
     return minMs + static_cast<unsigned long>(random(static_cast<long>(spanMs)));
 }
+
+const char* patternTypeName(detection::PatternType type) {
+    switch (type) {
+        case detection::PatternType::None:
+            return "none";
+        case detection::PatternType::TransientOnly:
+            return "transient_only";
+        case detection::PatternType::ValidTonalTransient:
+            return "valid_tonal_transient";
+        case detection::PatternType::Invalid:
+            return "invalid";
+        case detection::PatternType::Ambiguous:
+            return "ambiguous";
+    }
+
+    return "unknown";
+}
 }
 
 void ResonantBehavior::resetState() {
@@ -56,7 +73,7 @@ void ResonantBehavior::resetState() {
     _waitUntilMs = 0;
     _refractoryUntilMs = 0;
     _ownEmitDetectionSuppressUntilMs = 0;
-    _lastPatternType = DetectionPipeline::PatternType::None;
+    _lastPatternType = detection::PatternType::None;
     _lastPatternHeardAtMs = 0;
     _lastDecisionMs = 0;
     _lastDecision = BehaviorDecision::None;
@@ -88,7 +105,7 @@ void ResonantBehavior::update(bool transientDetected, float transientStrength, u
     update(now);
 }
 
-ResonantBehavior::BehaviorDecision ResonantBehavior::handlePatternResult(const DetectionPipeline::PatternResult& result, unsigned long now) {
+ResonantBehavior::BehaviorDecision ResonantBehavior::handlePatternResult(const detection::PatternResult& result, unsigned long now) {
     _patternsReceived++;
     _lastPatternType = result.type;
     _lastPatternHeardAtMs = result.candidate.heardAtMs != 0 ? result.candidate.heardAtMs : result.candidate.startMs;
@@ -97,7 +114,7 @@ ResonantBehavior::BehaviorDecision ResonantBehavior::handlePatternResult(const D
     _outputBusy = _state == State::Chirping;
 
     if (!result.candidateValid) {
-        if (result.type == DetectionPipeline::PatternType::Ambiguous) {
+        if (result.type == detection::PatternType::Ambiguous) {
             _lastDecision = BehaviorDecision::IgnoredAmbiguousPattern;
             _lastBlockReason = BehaviorDecision::IgnoredAmbiguousPattern;
             _patternsIgnoredAmbiguous++;
@@ -110,7 +127,7 @@ ResonantBehavior::BehaviorDecision ResonantBehavior::handlePatternResult(const D
         return _lastDecision;
     }
 
-    if (result.type == DetectionPipeline::PatternType::Ambiguous) {
+    if (result.type == detection::PatternType::Ambiguous) {
         _lastDecision = BehaviorDecision::IgnoredAmbiguousPattern;
         _lastBlockReason = BehaviorDecision::IgnoredAmbiguousPattern;
         _patternsIgnoredAmbiguous++;
@@ -480,12 +497,12 @@ const char* ResonantBehavior::lastBlockReasonName() const {
     return behaviorDecisionName(_lastBlockReason);
 }
 
-DetectionPipeline::PatternType ResonantBehavior::lastPatternType() const {
+detection::PatternType ResonantBehavior::lastPatternType() const {
     return _lastPatternType;
 }
 
 const char* ResonantBehavior::lastPatternTypeName() const {
-    return DetectionPipeline::patternTypeName(_lastPatternType);
+    return patternTypeName(_lastPatternType);
 }
 
 unsigned long ResonantBehavior::lastHeardMs() const {

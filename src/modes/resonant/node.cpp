@@ -6,8 +6,9 @@
 
 #include "../../detection/DetectorParameters.h"
 #include "../../detection/FrequencyEvidenceEvaluation.h"
-#include "../../detection/DetectionPipeline.h"
+#include "../../detection/DetectionPipelineCompat.h"
 #include "../../detection/FrequencyWindowProbe.h"
+#include "../../detection/patterns/PatternNames.h"
 
 #ifndef CHIRP_FREQUENCY_HZ
 #define CHIRP_FREQUENCY_HZ 3200
@@ -139,7 +140,7 @@ const char* chirpPatternName(ChirpOutput::ChirpPattern pattern) {
     return "unknown";
 }
 
-const char* h3RbCandidateClassName(const DetectionPipeline::PatternResult& patternResult, ResonantBehavior::BehaviorDecision behaviorDecision, bool selfChirpSuppressed) {
+const char* h3RbCandidateClassName(const detection::PatternResult& patternResult, ResonantBehavior::BehaviorDecision behaviorDecision, bool selfChirpSuppressed) {
     if (selfChirpSuppressed || behaviorDecision == ResonantBehavior::BehaviorDecision::SelfSuppressed) {
         return "self_suppressed";
     }
@@ -149,7 +150,7 @@ const char* h3RbCandidateClassName(const DetectionPipeline::PatternResult& patte
     return "expected_primary";
 }
 
-void logCandidateSummary(unsigned long candidateNumber, const DetectorCandidate& candidate, const DetectionPipeline::PatternResult& patternResult) {
+void logCandidateSummary(unsigned long candidateNumber, const DetectorCandidate& candidate, const detection::PatternResult& patternResult) {
     Serial.print("RB CAND candidate=");
     Serial.print(candidateNumber);
     Serial.print(' ');
@@ -158,23 +159,23 @@ void logCandidateSummary(unsigned long candidateNumber, const DetectorCandidate&
     } else {
         Serial.print("REJECT");
         Serial.print(" reason=");
-        Serial.print(DetectionPipeline::patternRejectReasonName(patternResult.rejectReason));
+        Serial.print(detection::patternRejectReasonName(patternResult.rejectReason));
     }
     Serial.print(" dur=");
     Serial.print(candidate.durationMs);
     Serial.print(" strength=");
     Serial.print(candidate.peakStrength, 1);
     Serial.print(" pattern=");
-    Serial.print(DetectionPipeline::patternTypeName(patternResult.type));
+    Serial.print(detection::patternTypeName(patternResult.type));
     Serial.print(" source=");
-    Serial.print(DetectionPipeline::patternSourceName(patternResult.source));
+    Serial.print(detection::patternSourceName(patternResult.source));
     Serial.print(" class=");
     Serial.print(patternResult.candidateValid ? "valid" : "invalid");
     Serial.println();
 }
 
-void printH3FrequencyEvidenceFields(const DetectionPipeline::PatternResult& patternResult,
-                                    const DetectionPipeline::FrequencyEvidence& frequencyEvidence,
+void printH3FrequencyEvidenceFields(const detection::PatternResult& patternResult,
+                                    const detection::FrequencyEvidence& frequencyEvidence,
                                     const FrequencyEvidenceEvaluation::Values& tuning,
                                     const char* candidateClass,
                                     long transientAgeOrDtMs,
@@ -185,9 +186,9 @@ void printH3FrequencyEvidenceFields(const DetectionPipeline::PatternResult& patt
     Serial.print(" pattern_valid=");
     Serial.print(patternResult.valid ? 1 : 0);
     Serial.print(" pattern_type=");
-    Serial.print(DetectionPipeline::patternTypeName(patternResult.type));
+    Serial.print(detection::patternTypeName(patternResult.type));
     Serial.print(" pattern_reason=");
-    Serial.print(DetectionPipeline::patternReasonName(patternResult.reasonCode));
+    Serial.print(detection::patternReasonName(patternResult.reasonCode));
     Serial.print(" candidate_valid=");
     Serial.print(patternResult.candidateValid ? 1 : 0);
     Serial.print(" tonal_valid=");
@@ -195,7 +196,7 @@ void printH3FrequencyEvidenceFields(const DetectionPipeline::PatternResult& patt
     Serial.print(" behavior_eligible=");
     Serial.print(patternResult.behaviorEligible ? 1 : 0);
     Serial.print(" reject_reason=");
-    Serial.print(DetectionPipeline::patternRejectReasonName(patternResult.rejectReason));
+    Serial.print(detection::patternRejectReasonName(patternResult.rejectReason));
     Serial.print(" transient_duration_ms=");
     Serial.print(patternResult.candidate.durationMs);
     Serial.print(" transient_peak_strength=");
@@ -1013,10 +1014,10 @@ void Node::drainLegacyAmpCandidates(unsigned long now,
 
     DetectorCandidate candidate;
     while (_ampCandidateBuilder.popCandidate(candidate)) {
-        DetectionPipeline::PatternResult patternResult;
+        detection::PatternResult patternResult;
         const auto liveFrequencyEvidence = captureFrequencyEvidence();
-        DetectionPipeline::FrequencyEvidence frequencyEvidence = liveFrequencyEvidence;
-        DetectionPipeline::FrequencyEvidence fullFrequencyEvidence = liveFrequencyEvidence;
+        detection::FrequencyEvidence frequencyEvidence = liveFrequencyEvidence;
+        detection::FrequencyEvidence fullFrequencyEvidence = liveFrequencyEvidence;
         DetectionPipeline::measureCandidateWindowFrequency(
             _audioSignal,
             candidate,
@@ -1093,7 +1094,7 @@ void Node::processRoadmapFrame(const AudioSignalFrame& frame,
     const auto liveFrequencyEvidence = captureFrequencyEvidence();
     _detection.observeFrame(frame, liveFrequencyEvidence, frame.sampleTimeMs);
 
-    DetectionPipeline::PatternResult patternResult;
+    detection::PatternResult patternResult;
     bool emittedPattern = false;
     while (_detection.popPatternResult(patternResult)) {
         emittedPattern = true;
@@ -1117,9 +1118,9 @@ void Node::processRoadmapFrame(const AudioSignalFrame& frame,
 
         if (rbShouldLogDetail()) {
             Serial.print("RB ROADMAP pattern=");
-            Serial.print(DetectionPipeline::patternTypeName(patternResult.type));
+            Serial.print(detection::patternTypeName(patternResult.type));
             Serial.print(" source=");
-            Serial.print(DetectionPipeline::patternSourceName(patternResult.source));
+            Serial.print(detection::patternSourceName(patternResult.source));
             Serial.print(" eligible=");
             Serial.print(patternResult.behaviorEligible ? 1 : 0);
             Serial.print(" decision=");
@@ -1147,8 +1148,8 @@ const char* Node::rbLogModeName() const {
     return _rbLogMode == RbLogMode::Full ? "full" : "off";
 }
 
-DetectionPipeline::FrequencyEvidence Node::captureFrequencyEvidence() const {
-    DetectionPipeline::FrequencyEvidence evidence;
+detection::FrequencyEvidence Node::captureFrequencyEvidence() const {
+    detection::FrequencyEvidence evidence;
     evidence.observedAtMs = millis();
     const bool present = _freqTransientDetector.windowReady();
     const float totalEnergy = _freqTransientDetector.lastTotalEnergy();
@@ -1168,7 +1169,7 @@ DetectionPipeline::FrequencyEvidence Node::captureFrequencyEvidence() const {
     return evidence;
 }
 
-void Node::logCandidate(const DetectorCandidate& candidate, const DetectionPipeline::PatternResult& patternResult, const DetectionPipeline::FrequencyEvidence* liveFrequencyEvidence, unsigned long candidateNumber, long gapMs, unsigned long queueDepthBeforeDrain, unsigned long behaviorLagMs, const char* candidateClass, const char* action, const char* stateName, const char* gateName) {
+void Node::logCandidate(const DetectorCandidate& candidate, const detection::PatternResult& patternResult, const detection::FrequencyEvidence* liveFrequencyEvidence, unsigned long candidateNumber, long gapMs, unsigned long queueDepthBeforeDrain, unsigned long behaviorLagMs, const char* candidateClass, const char* action, const char* stateName, const char* gateName) {
     const uint32_t sampleRateHz = _audioSource.sampleRateHz() > 0 ? _audioSource.sampleRateHz() : 16000UL;
     const unsigned long peakOffsetMs = candidate.peakSample >= candidate.onsetSample
         ? static_cast<unsigned long>(((candidate.peakSample - candidate.onsetSample) * 1000ULL) / static_cast<uint64_t>(sampleRateHz))
@@ -1217,9 +1218,9 @@ void Node::logCandidate(const DetectorCandidate& candidate, const DetectionPipel
     Serial.print(" audio=");
     Serial.print(candidate.audioOverflowDuringCandidate ? "overflow" : "ok");
     Serial.print(" pattern=");
-    Serial.print(DetectionPipeline::patternTypeName(patternResult.type));
+    Serial.print(detection::patternTypeName(patternResult.type));
     Serial.print(" source=");
-    Serial.print(DetectionPipeline::patternSourceName(patternResult.source));
+    Serial.print(detection::patternSourceName(patternResult.source));
     Serial.print(" candidate_class=");
     Serial.print(candidateClass);
     Serial.print(" candidate_valid=");
@@ -1229,7 +1230,7 @@ void Node::logCandidate(const DetectorCandidate& candidate, const DetectionPipel
     Serial.print(" behavior_eligible=");
     Serial.print(patternResult.behaviorEligible ? 1 : 0);
     Serial.print(" reject_reason=");
-    Serial.print(DetectionPipeline::patternRejectReasonName(patternResult.rejectReason));
+    Serial.print(detection::patternRejectReasonName(patternResult.rejectReason));
     Serial.print(" transient_present=");
     Serial.print(patternResult.candidate.transient.present ? 1 : 0);
     Serial.print(" freq_present=");
@@ -1286,7 +1287,7 @@ void Node::logCandidate(const DetectorCandidate& candidate, const DetectionPipel
         Serial.print("]");
     }
     Serial.print(" reason=");
-    Serial.print(DetectionPipeline::patternReasonName(patternResult.reasonCode));
+    Serial.print(detection::patternReasonName(patternResult.reasonCode));
     Serial.print(" valid=");
     Serial.print(patternResult.valid ? 1 : 0);
     Serial.print(" action=");

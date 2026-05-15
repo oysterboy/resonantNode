@@ -5,7 +5,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "DetectionPipeline.h"
+#include "patterns/PatternPayload.h"
 
 namespace FrequencyEvidenceEvaluation {
 
@@ -74,26 +74,26 @@ inline const char* reasonName(Reason reason) {
     return "unknown";
 }
 
-inline DetectionPipeline::PatternRejectReason rejectReasonFromEvaluation(Reason reason) {
+inline detection::PatternRejectReason rejectReasonFromEvaluation(Reason reason) {
     switch (reason) {
         case Reason::None:
-            return DetectionPipeline::PatternRejectReason::None;
+            return detection::PatternRejectReason::None;
         case Reason::NoEvidence:
-            return DetectionPipeline::PatternRejectReason::NoFrequencyEvidence;
+            return detection::PatternRejectReason::NoFrequencyEvidence;
         case Reason::InvalidWindow:
-            return DetectionPipeline::PatternRejectReason::FrequencyWindowInvalid;
+            return detection::PatternRejectReason::FrequencyWindowInvalid;
         case Reason::ScoreTooLow:
-            return DetectionPipeline::PatternRejectReason::FrequencyScoreTooLow;
+            return detection::PatternRejectReason::FrequencyScoreTooLow;
         case Reason::ContrastTooLow:
-            return DetectionPipeline::PatternRejectReason::FrequencyContrastTooLow;
+            return detection::PatternRejectReason::FrequencyContrastTooLow;
         case Reason::ScoreAndContrastTooLow:
-            return DetectionPipeline::PatternRejectReason::FrequencyScoreAndContrastTooLow;
+            return detection::PatternRejectReason::FrequencyScoreAndContrastTooLow;
     }
 
-    return DetectionPipeline::PatternRejectReason::UnexpectedNoise;
+    return detection::PatternRejectReason::UnexpectedNoise;
 }
 
-inline Evaluation evaluate(const DetectionPipeline::FrequencyEvidence& evidence, const Values& values) {
+inline Evaluation evaluate(const detection::FrequencyEvidence& evidence, const Values& values) {
     Evaluation out;
     out.present = evidence.present;
     out.validWindow = evidence.validWindow;
@@ -123,18 +123,18 @@ inline Evaluation evaluate(const DetectionPipeline::FrequencyEvidence& evidence,
     return out;
 }
 
-inline bool passes(const DetectionPipeline::FrequencyEvidence& evidence, const Values& values) {
+inline bool passes(const detection::FrequencyEvidence& evidence, const Values& values) {
     return evaluate(evidence, values).matched;
 }
 
-inline void classifyPatternResult(DetectionPipeline::PatternResult& result, const Values& frequencyTuning) {
+inline void classifyPatternResult(detection::PatternResult& result, const Values& frequencyTuning) {
     if (!result.candidateValid) {
         result.freq = result.candidate.frequency;
         result.freqFull = result.candidate.frequencyFull;
-        result.source = DetectionPipeline::PatternSource::ComparisonOnly;
-        result.type = DetectionPipeline::PatternType::Invalid;
-        result.reasonCode = DetectionPipeline::PatternReasonCode::DetectorRejected;
-        result.rejectReason = DetectionPipeline::PatternRejectReason::NoCandidate;
+        result.source = detection::PatternSource::ComparisonOnly;
+        result.type = detection::PatternType::Invalid;
+        result.reasonCode = detection::PatternReasonCode::DetectorRejected;
+        result.rejectReason = detection::PatternRejectReason::NoCandidate;
         result.tonalValid = false;
         result.behaviorEligible = false;
         result.valid = false;
@@ -150,23 +150,23 @@ inline void classifyPatternResult(DetectionPipeline::PatternResult& result, cons
     result.freq.spectralContrast = eval.contrast;
     result.freqFull = result.candidate.frequencyFull;
     result.source = eval.matched
-        ? DetectionPipeline::PatternSource::FrequencyPrimary
-        : DetectionPipeline::PatternSource::AmpFallback;
+        ? detection::PatternSource::FrequencyPrimary
+        : detection::PatternSource::AmpFallback;
     result.tonalValid = eval.matched;
     result.behaviorEligible = result.candidateValid && result.tonalValid;
     result.rejectReason = rejectReasonFromEvaluation(eval.reason);
     result.valid = true;
-    result.reasonCode = DetectionPipeline::PatternReasonCode::FromAcceptedTransient;
+    result.reasonCode = detection::PatternReasonCode::FromAcceptedTransient;
     result.type = result.tonalValid
-        ? DetectionPipeline::PatternType::ValidTonalTransient
-        : DetectionPipeline::PatternType::TransientOnly;
+        ? detection::PatternType::ValidTonalTransient
+        : detection::PatternType::TransientOnly;
 }
 
-inline void classifyPatternResult(DetectionPipeline::PatternResult& result, const ClassifierTuning& tuning) {
+inline void classifyPatternResult(detection::PatternResult& result, const ClassifierTuning& tuning) {
     classifyPatternResult(result, tuning.frequency);
 }
 
-inline void buildFailReason(const DetectionPipeline::FrequencyEvidence& evidence,
+inline void buildFailReason(const detection::FrequencyEvidence& evidence,
                             const Values& values,
                             char* out,
                             size_t outSize) {

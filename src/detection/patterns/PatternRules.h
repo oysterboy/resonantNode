@@ -1,7 +1,6 @@
 #pragma once
 
-#include "PatternCandidate.h"
-#include "PatternResult.h"
+#include "PatternPayload.h"
 #include "../FrequencyEvidenceEvaluation.h"
 
 namespace detection {

@@ -2,7 +2,7 @@
 
 #include "../signals/SignalCandidate.h"
 #include "../signals/InspectedSignal.h"
-#include "../patterns/PatternResult.h"
+#include "../patterns/PatternPayload.h"
 #include "FieldState.h"
 
 namespace detection {

@@ -1,7 +1,7 @@
 #pragma once
 #include <Arduino.h>
 
-#include "../detection/DetectionPipeline.h"
+#include "../detection/patterns/PatternPayload.h"
 #include "../io/ChirpOutput.h"
 
 /*
@@ -41,7 +41,7 @@ public:
     };
 
     void resetState();
-    BehaviorDecision handlePatternResult(const DetectionPipeline::PatternResult& result, unsigned long now);
+    BehaviorDecision handlePatternResult(const detection::PatternResult& result, unsigned long now);
     void update(unsigned long now);
     // Legacy shim: kept only for compatibility with older call sites that still feed raw transient flags.
     // The architecture contract is PatternResult-driven.
@@ -83,7 +83,7 @@ public:
     BehaviorDecision lastBlockReason() const;
     const char* lastDecisionName() const;
     const char* lastBlockReasonName() const;
-    DetectionPipeline::PatternType lastPatternType() const;
+    detection::PatternType lastPatternType() const;
     const char* lastPatternTypeName() const;
     unsigned long lastHeardMs() const;
     unsigned long lastEmitMs() const;
@@ -139,7 +139,7 @@ private:
     unsigned long _waitUntilMs = 0;
     unsigned long _refractoryUntilMs = 0;
     unsigned long _ownEmitDetectionSuppressUntilMs = 0;
-    DetectionPipeline::PatternType _lastPatternType = DetectionPipeline::PatternType::None;
+    detection::PatternType _lastPatternType = detection::PatternType::None;
     unsigned long _lastPatternHeardAtMs = 0;
     unsigned long _lastDecisionMs = 0;
     BehaviorDecision _lastDecision = BehaviorDecision::None;

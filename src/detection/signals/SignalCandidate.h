@@ -2,7 +2,7 @@
 
 #include <Arduino.h>
 
-#include "../DetectionPipeline.h"
+#include "../patterns/PatternTypes.h"
 
 namespace detection {
 
@@ -56,13 +56,13 @@ struct SignalCandidate {
     float ampLevel = 0.0f;
     float ampBaseline = 0.0f;
     bool ampEvidencePresent = false;
-    DetectionPipeline::AmpSupportClass ampSupport = DetectionPipeline::AmpSupportClass::Unknown;
-    DetectionPipeline::LocalityClass locality = DetectionPipeline::LocalityClass::Unknown;
+    AmpSupportClass ampSupport = AmpSupportClass::Unknown;
+    LocalityClass locality = LocalityClass::Unknown;
     bool duplicateRisk = false;
     float duplicateRiskScore = 0.0f;
 
-    DetectionPipeline::TransientEvidence transient = {};
-    DetectionPipeline::FrequencyEvidence frequency = {};
+    TransientEvidence transient = {};
+    FrequencyEvidence frequency = {};
 };
 
 } // namespace detection

@@ -15,10 +15,10 @@ void FrequencyMatchDetector::resetState() {
     wouldCandidateReason[sizeof(wouldCandidateReason) - 1] = '\0';
 }
 
-void FrequencyMatchDetector::update(const DetectionPipeline::FrequencyEvidence& evidence,
-                                       unsigned long now,
-                                       uint64_t currentSample,
-                                       const FrequencyEvidenceEvaluation::Values& tuning,
+void FrequencyMatchDetector::update(const detection::FrequencyEvidence& evidence,
+                                    unsigned long now,
+                                    uint64_t currentSample,
+                                    const FrequencyEvidenceEvaluation::Values& tuning,
                                        unsigned long releaseDebounceMs,
                                        unsigned long cooldownAfterOnsetMs,
                                        unsigned long minTransientDurationMs) {

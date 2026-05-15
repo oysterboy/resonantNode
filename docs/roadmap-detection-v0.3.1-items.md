@@ -89,14 +89,33 @@ Open
 
 ## E. [PARTIALLY DONE] Pattern layer
 
-30. **Stabilize `PatternCandidate` as its own structure** - Partial. Pattern candidates now carry explicit pattern kind and stable payload fields, but the legacy compatibility shape is still in place.
-31. **Stabilize `PatternResult` as meaning-bearing output** - Partial. Pattern results now carry explicit pattern kind and stable meaning fields, but the legacy compatibility shape is still in place.
-32. **Keep `PatternRules` as the only pattern interpretation layer** - Implemented. Detectors, emitters, and inspectors stay out of pattern meaning.
-33. **Add single-signal pulse pattern assembly** - Implemented. The current assembler emits explicit single-pulse candidates from accepted inspected signals.
-34. **Add multi-signal chirp / burst pattern assembly** - Partial. The assembler now emits a conservative two-signal `PulseSequence` candidate for nearby accepted frequency matches, but full chirp/burst grouping is still future work.
-35. **Allow one `InspectedSignal` to belong to multiple `PatternCandidates`** - Implemented. The same accepted signal can now contribute to its single-pulse candidate and to a conservative sequence candidate.
-36. **Add pulse-count / timing validation** - Partial. Pulse/timing metadata is scaffolded and now influences sequence validation, but fuller chirp/burst validation is still future work.
-37. **Add residual / invalid / too-dense pattern handling** - Partial. Invalid/rejected, residual, and too-dense/invalid-chirp outcomes now exist in the rules, but the handling is still conservative.
+30. **Stabilize `PatternCandidate` as its own structure** - 
+Implemented. 
+Pattern candidates now live in dedicated pattern headers with explicit pattern kind and stable payload fields.
+31. **Stabilize `PatternResult` as meaning-bearing output** - Implemented. 
+Pattern results now live in dedicated pattern headers with explicit pattern kind and stable meaning fields.
+32. **Keep `PatternRules` as the only pattern interpretation layer** - 
+Implemented. 
+Detectors, emitters, and inspectors stay out of pattern meaning.
+33. **Add single-signal pulse pattern assembly** - 
+Implemented. 
+The current assembler emits explicit single-pulse candidates from accepted inspected signals.
+34. **Add multi-signal chirp / burst pattern assembly** - 
+Partial. 
+The assembler now emits a conservative two-signal `PulseSequence` candidate for nearby accepted frequency matches, but full chirp/burst grouping is still future work.
+35. **Allow one `InspectedSignal` to belong to multiple `PatternCandidates`** - 
+Implemented. 
+The same accepted signal can now contribute to its single-pulse candidate and to a conservative sequence candidate.
+36. **Add pulse-count / timing validation** - 
+Partial. 
+Pulse/timing metadata is scaffolded and now influences sequence validation, but fuller chirp/burst validation is still future work.
+37. **Add residual / invalid / too-dense pattern handling** - 
+Partial. 
+Invalid/rejected, residual, and too-dense/invalid-chirp outcomes now exist in the rules, but the handling is still conservative.
+
+371. **E2 - Split** - 
+Pattern payloads now live in dedicated pattern headers, with `DetectionPipeline.h` reduced to a thin compatibility bridge and `DetectionPipelineCompat.h` holding the helper conversions.
+The active analyzer and RB consumers now use the direct pattern types; only compat helpers still live behind the old bridge namespace.
 
 ## F. Field state
 

@@ -4,12 +4,15 @@ namespace {
 
 constexpr unsigned long kSequenceGapMs = 250UL;
 
-DetectionPipeline::PatternCandidate makePatternCandidateFromSignal(const detection::InspectedSignal& signal) {
-    DetectionPipeline::PatternCandidate candidate = {};
+using PatternCandidate = detection::PatternCandidate;
+using PatternCandidateKind = detection::PatternCandidateKind;
+
+PatternCandidate makePatternCandidateFromSignal(const detection::InspectedSignal& signal) {
+    PatternCandidate candidate = {};
     candidate.transient = {};
 
     const detection::SignalCandidate& source = signal.signal;
-    candidate.kind = DetectionPipeline::PatternCandidateKind::SinglePulse;
+    candidate.kind = PatternCandidateKind::SinglePulse;
     candidate.lineageId = static_cast<uint32_t>(source.startSample & 0xFFFFFFFFu);
     candidate.primarySlotIndex = 0;
     candidate.signalCount = 1;
@@ -89,19 +92,19 @@ DetectionPipeline::PatternCandidate makePatternCandidateFromSignal(const detecti
 
         case detection::SignalKind::None:
         default:
-            candidate.kind = DetectionPipeline::PatternCandidateKind::Unknown;
+            candidate.kind = PatternCandidateKind::Unknown;
             break;
     }
 
     return candidate;
 }
 
-DetectionPipeline::PatternCandidate makePulseSequenceCandidate(
+PatternCandidate makePulseSequenceCandidate(
     const detection::InspectedSignal& first,
     const detection::InspectedSignal& second
 ) {
-    DetectionPipeline::PatternCandidate candidate = {};
-    candidate.kind = DetectionPipeline::PatternCandidateKind::PulseSequence;
+    PatternCandidate candidate = {};
+    candidate.kind = PatternCandidateKind::PulseSequence;
     candidate.lineageId = static_cast<uint32_t>(first.signal.startSample & 0xFFFFFFFFu) ^
                            (static_cast<uint32_t>(second.signal.startSample & 0xFFFFFFFFu) << 1);
     candidate.primarySlotIndex = 0;

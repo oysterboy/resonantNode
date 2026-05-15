@@ -1,5 +1,6 @@
 #pragma once
 
+#include "../patterns/PatternTypes.h"
 #include "SignalCandidate.h"
 
 namespace detection {
@@ -24,9 +25,6 @@ enum class SignalRejectReason {
     UnsupportedKind,
     Unknown
 };
-
-using AmpSupportClass = DetectionPipeline::AmpSupportClass;
-using LocalityClass = DetectionPipeline::LocalityClass;
 
 struct InspectedSignal {
     SignalCandidate signal = {};

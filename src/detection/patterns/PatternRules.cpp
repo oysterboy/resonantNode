@@ -1,51 +1,52 @@
 #include "PatternRules.h"
 
 namespace {
+using namespace detection;
 
-DetectionPipeline::LocalityClass localityFromAmpSupport(DetectionPipeline::AmpSupportClass support) {
+LocalityClass localityFromAmpSupport(AmpSupportClass support) {
     switch (support) {
-        case DetectionPipeline::AmpSupportClass::Strong:
-            return DetectionPipeline::LocalityClass::Near;
-        case DetectionPipeline::AmpSupportClass::Medium:
-            return DetectionPipeline::LocalityClass::Mid;
-        case DetectionPipeline::AmpSupportClass::Weak:
-        case DetectionPipeline::AmpSupportClass::None:
-            return DetectionPipeline::LocalityClass::Far;
-        case DetectionPipeline::AmpSupportClass::Unknown:
+        case AmpSupportClass::Strong:
+            return LocalityClass::Near;
+        case AmpSupportClass::Medium:
+            return LocalityClass::Mid;
+        case AmpSupportClass::Weak:
+        case AmpSupportClass::None:
+            return LocalityClass::Far;
+        case AmpSupportClass::Unknown:
         default:
-            return DetectionPipeline::LocalityClass::Unknown;
+            return LocalityClass::Unknown;
     }
 }
 
-DetectionPipeline::PatternResultKind tonalKindFromLocality(DetectionPipeline::LocalityClass locality) {
+PatternResultKind tonalKindFromLocality(LocalityClass locality) {
     switch (locality) {
-        case DetectionPipeline::LocalityClass::Near:
-            return DetectionPipeline::PatternResultKind::TonalPulseNear;
-        case DetectionPipeline::LocalityClass::Mid:
-            return DetectionPipeline::PatternResultKind::TonalPulseMid;
-        case DetectionPipeline::LocalityClass::Far:
-            return DetectionPipeline::PatternResultKind::TonalPulseFar;
-        case DetectionPipeline::LocalityClass::Unknown:
+        case LocalityClass::Near:
+            return PatternResultKind::TonalPulseNear;
+        case LocalityClass::Mid:
+            return PatternResultKind::TonalPulseMid;
+        case LocalityClass::Far:
+            return PatternResultKind::TonalPulseFar;
+        case LocalityClass::Unknown:
         default:
-            return DetectionPipeline::PatternResultKind::TonalPulse;
+            return PatternResultKind::TonalPulse;
     }
 }
 
-DetectionPipeline::PatternResultKind resultKindFromCandidate(const DetectionPipeline::PatternCandidate& candidate) {
-    if (candidate.kind == DetectionPipeline::PatternCandidateKind::PulseSequence || candidate.signalCount > 1 || candidate.pulseCount > 1) {
+PatternResultKind resultKindFromCandidate(const PatternCandidate& candidate) {
+    if (candidate.kind == PatternCandidateKind::PulseSequence || candidate.signalCount > 1 || candidate.pulseCount > 1) {
         if (candidate.maxGapMs > 0 && candidate.maxGapMs < 20UL) {
-            return DetectionPipeline::PatternResultKind::TooDense;
+            return PatternResultKind::TooDense;
         }
         if (candidate.maxGapMs > 0 && candidate.maxGapMs > 250UL) {
-            return DetectionPipeline::PatternResultKind::InvalidChirp;
+            return PatternResultKind::InvalidChirp;
         }
-        return DetectionPipeline::PatternResultKind::ValidChirp;
+        return PatternResultKind::ValidChirp;
     }
 
     return tonalKindFromLocality(candidate.locality);
 }
 
-bool hasTransientEvidence(const DetectionPipeline::PatternCandidate& candidate) {
+bool hasTransientEvidence(const PatternCandidate& candidate) {
     return candidate.transient.present ||
            candidate.durationMs > 0 ||
            candidate.peakStrength > 0.0f ||
@@ -53,13 +54,13 @@ bool hasTransientEvidence(const DetectionPipeline::PatternCandidate& candidate) 
            candidate.releaseStrength > 0.0f;
 }
 
-bool hasFrequencyEvidence(const DetectionPipeline::PatternCandidate& candidate) {
+bool hasFrequencyEvidence(const PatternCandidate& candidate) {
     return candidate.frequency.present || candidate.frequencyFull.present;
 }
 
-DetectionPipeline::PatternResult makeInvalidResult(const DetectionPipeline::PatternCandidate& candidate,
-                                                  unsigned long nowMs) {
-    DetectionPipeline::PatternResult result = {};
+PatternResult makeInvalidResult(const PatternCandidate& candidate,
+                                unsigned long nowMs) {
+    PatternResult result = {};
     result.candidate = candidate;
     if (!result.candidate.frequency.present && result.candidate.frequencyFull.present) {
         result.candidate.frequency = result.candidate.frequencyFull;
@@ -70,8 +71,8 @@ DetectionPipeline::PatternResult makeInvalidResult(const DetectionPipeline::Patt
     result.freq = candidate.frequency;
     result.freqFull = candidate.frequencyFull;
     result.processedAtMs = nowMs;
-    result.type = DetectionPipeline::PatternType::Invalid;
-    result.kind = DetectionPipeline::PatternResultKind::Rejected;
+    result.type = PatternType::Invalid;
+    result.kind = PatternResultKind::Rejected;
     result.lineageId = candidate.lineageId;
     result.primarySlotIndex = candidate.primarySlotIndex;
     result.signalCount = candidate.signalCount;
@@ -80,14 +81,14 @@ DetectionPipeline::PatternResult makeInvalidResult(const DetectionPipeline::Patt
     result.lastPulseMs = candidate.lastPulseMs;
     result.minGapMs = candidate.minGapMs;
     result.maxGapMs = candidate.maxGapMs;
-    result.reasonCode = DetectionPipeline::PatternReasonCode::DetectorRejected;
-    result.rejectReason = DetectionPipeline::PatternRejectReason::NoCandidate;
-    result.source = DetectionPipeline::PatternSource::ComparisonOnly;
+    result.reasonCode = PatternReasonCode::DetectorRejected;
+    result.rejectReason = PatternRejectReason::NoCandidate;
+    result.source = PatternSource::ComparisonOnly;
     result.confidence = 0.0f;
     result.signalConfidence = 0.0f;
     result.frequencyConfidence = 0.0f;
-    result.ampSupport = DetectionPipeline::AmpSupportClass::Unknown;
-    result.locality = DetectionPipeline::LocalityClass::Unknown;
+    result.ampSupport = AmpSupportClass::Unknown;
+    result.locality = LocalityClass::Unknown;
     result.duplicateRisk = false;
     result.duplicateRiskScore = 0.0f;
     result.candidateValid = false;
@@ -146,15 +147,15 @@ PatternResult PatternRules::evaluateFrequencyPattern(
     result.tonalValid = true;
     result.behaviorEligible = true;
     result.valid = true;
-    result.source = DetectionPipeline::PatternSource::FrequencyPrimary;
-    result.type = DetectionPipeline::PatternType::ValidTonalTransient;
+    result.source = PatternSource::FrequencyPrimary;
+    result.type = PatternType::ValidTonalTransient;
     result.kind = resultKindFromCandidate(candidate);
-    result.reasonCode = DetectionPipeline::PatternReasonCode::FromAcceptedTransient;
-    result.rejectReason = DetectionPipeline::PatternRejectReason::None;
+    result.reasonCode = PatternReasonCode::FromAcceptedTransient;
+    result.rejectReason = PatternRejectReason::None;
     result.signalConfidence = candidate.signalConfidence > 0.0f ? candidate.signalConfidence : 1.0f;
     result.frequencyConfidence = candidate.frequencyConfidence;
     result.ampSupport = candidate.ampSupport;
-    result.locality = candidate.locality != DetectionPipeline::LocalityClass::Unknown
+    result.locality = candidate.locality != LocalityClass::Unknown
         ? candidate.locality
         : localityFromAmpSupport(candidate.ampSupport);
     result.duplicateRisk = candidate.duplicateRisk;
@@ -165,18 +166,18 @@ PatternResult PatternRules::evaluateFrequencyPattern(
     FrequencyEvidenceEvaluation::classifyPatternResult(result, frequencyTuning);
     result.confidence = result.tonalValid ? 1.0f : 0.0f;
     result.valid = true;
-    if (result.kind == DetectionPipeline::PatternResultKind::TooDense) {
-        result.type = DetectionPipeline::PatternType::Ambiguous;
+    if (result.kind == PatternResultKind::TooDense) {
+        result.type = PatternType::Ambiguous;
         result.behaviorEligible = false;
         result.tonalValid = false;
         result.valid = false;
-        result.rejectReason = DetectionPipeline::PatternRejectReason::UnexpectedTiming;
-    } else if (result.kind == DetectionPipeline::PatternResultKind::InvalidChirp) {
-        result.type = DetectionPipeline::PatternType::Invalid;
+        result.rejectReason = PatternRejectReason::UnexpectedTiming;
+    } else if (result.kind == PatternResultKind::InvalidChirp) {
+        result.type = PatternType::Invalid;
         result.behaviorEligible = false;
         result.tonalValid = false;
         result.valid = false;
-        result.rejectReason = DetectionPipeline::PatternRejectReason::UnexpectedTiming;
+        result.rejectReason = PatternRejectReason::UnexpectedTiming;
     }
     return result;
 }
@@ -207,14 +208,14 @@ PatternResult PatternRules::evaluateAmpPattern(
     result.tonalValid = false;
     result.behaviorEligible = false;
     result.valid = true;
-    result.source = DetectionPipeline::PatternSource::AmpFallback;
-    result.type = DetectionPipeline::PatternType::TransientOnly;
+    result.source = PatternSource::AmpFallback;
+    result.type = PatternType::TransientOnly;
     result.kind = resultKindFromCandidate(candidate);
-    result.reasonCode = DetectionPipeline::PatternReasonCode::FromAcceptedTransient;
+    result.reasonCode = PatternReasonCode::FromAcceptedTransient;
     result.signalConfidence = candidate.signalConfidence > 0.0f ? candidate.signalConfidence : 0.5f;
     result.frequencyConfidence = candidate.frequencyConfidence;
     result.ampSupport = candidate.ampSupport;
-    result.locality = candidate.locality != DetectionPipeline::LocalityClass::Unknown
+    result.locality = candidate.locality != LocalityClass::Unknown
         ? candidate.locality
         : localityFromAmpSupport(candidate.ampSupport);
     result.duplicateRisk = candidate.duplicateRisk;
@@ -224,22 +225,22 @@ PatternResult PatternRules::evaluateAmpPattern(
     // Compatibility classification only. Signal acceptance already happened in SignalInspector.
     FrequencyEvidenceEvaluation::classifyPatternResult(result, frequencyTuning);
     if (!candidate.frequency.present) {
-        result.rejectReason = DetectionPipeline::PatternRejectReason::TransientOnly;
+        result.rejectReason = PatternRejectReason::TransientOnly;
     }
     result.tonalValid = false;
     result.behaviorEligible = false;
     result.valid = true;
     result.confidence = result.signalConfidence;
-    if (result.kind == DetectionPipeline::PatternResultKind::TooDense) {
-        result.type = DetectionPipeline::PatternType::Ambiguous;
+    if (result.kind == PatternResultKind::TooDense) {
+        result.type = PatternType::Ambiguous;
         result.behaviorEligible = false;
         result.valid = false;
-        result.rejectReason = DetectionPipeline::PatternRejectReason::UnexpectedTiming;
-    } else if (result.kind == DetectionPipeline::PatternResultKind::InvalidChirp) {
-        result.type = DetectionPipeline::PatternType::Invalid;
+        result.rejectReason = PatternRejectReason::UnexpectedTiming;
+    } else if (result.kind == PatternResultKind::InvalidChirp) {
+        result.type = PatternType::Invalid;
         result.behaviorEligible = false;
         result.valid = false;
-        result.rejectReason = DetectionPipeline::PatternRejectReason::UnexpectedTiming;
+        result.rejectReason = PatternRejectReason::UnexpectedTiming;
     }
     return result;
 }

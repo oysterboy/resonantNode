@@ -36,7 +36,7 @@ bool measureCandidateWindowFrequency(const AudioSignal& audioSignal,
                                      unsigned long sampleRateHz,
                                      unsigned long targetFrequencyHz,
                                      unsigned long observedAtMs,
-                                     FrequencyEvidence& out,
+                                     detection::FrequencyEvidence& out,
                                      unsigned long maxWindowMs) {
     out = {};
     out.observedAtMs = observedAtMs;
@@ -135,7 +135,7 @@ bool measureCandidateWindowFrequencyParityScan64(const AudioSignal& audioSignal,
                                                  unsigned long sampleRateHz,
                                                  unsigned long targetFrequencyHz,
                                                  unsigned long observedAtMs,
-                                                 FrequencyEvidence& out,
+                                                 detection::FrequencyEvidence& out,
                                                  unsigned long windowSampleCount) {
     out = {};
     out.observedAtMs = observedAtMs;

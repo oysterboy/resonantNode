@@ -8,7 +8,7 @@
 #include "signals/SignalInspector.h"
 #include "patterns/PatternAssembler.h"
 #include "patterns/PatternRules.h"
-#include "patterns/PatternResult.h"
+#include "patterns/PatternPayload.h"
 #include "field/FieldStateTracker.h"
 #include "FrequencyEvidenceEvaluation.h"
 
@@ -25,7 +25,7 @@ public:
 
     void observeFrame(
         const AudioSignalFrame& frame,
-        const DetectionPipeline::FrequencyEvidence& frequencyEvidence,
+        const FrequencyEvidence& frequencyEvidence,
         unsigned long nowMs
     );
 

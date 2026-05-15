@@ -26,7 +26,7 @@ void FrequencySignalEmitter::applyFrequencyTuning(const FrequencyEvidenceEvaluat
 
 void FrequencySignalEmitter::observeFrame(
     const AudioSignalFrame& frame,
-    const DetectionPipeline::FrequencyEvidence& evidence,
+    const detection::FrequencyEvidence& evidence,
     const FrequencyEvidenceEvaluation::Values& frequencyTuning
 ) {
     if (!frame.valid) {

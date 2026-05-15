@@ -8,10 +8,10 @@
 #include "../../detection/AmpTransientDetector.h"
 #include "../../io/AudioSignal.h"
 #include "../../detection/legacy/AmpCandidateBuilder.h"
-#include "../../detection/DetectionPipeline.h"
 #include "../../detection/FrequencyMatchDetector.h"
 #include "../../detection/FrequencyEvidenceEvaluation.h"
 #include "../../detection/FreqTransientDetector.h"
+#include "../../detection/patterns/PatternPayload.h"
 #include "../../detection/signals/SignalCandidate.h"
 #include "../../hal/AudioSource.h"
 
@@ -43,6 +43,10 @@ File structure:
 */
 class AnalyzerApp {
 public:
+    using FrequencyEvidence = detection::FrequencyEvidence;
+    using PatternCandidate = detection::PatternCandidate;
+    using PatternResult = detection::PatternResult;
+
     enum AnalyzerLogFlags : uint32_t {
         ANALYZER_LOG_NONE = 0,
         ANALYZER_LOG_SUMMARY = 1u << 0,
@@ -179,10 +183,10 @@ private:
             unsigned long candidateInWindowCount = 0;
             unsigned long candidatePostWindowCount = 0;
 
-            DetectionPipeline::FrequencyEvidence freqEarly = {};
-            DetectionPipeline::FrequencyEvidence freqFull = {};
-            DetectionPipeline::FrequencyEvidence duplicateFreqEarly = {};
-            DetectionPipeline::FrequencyEvidence duplicateFreqFull = {};
+            FrequencyEvidence freqEarly = {};
+            FrequencyEvidence freqFull = {};
+            FrequencyEvidence duplicateFreqEarly = {};
+            FrequencyEvidence duplicateFreqFull = {};
             long duplicateDurMs = -1;
             float duplicateStrength = 0.0f;
 
@@ -207,10 +211,10 @@ private:
             uint64_t acceptedTransientReleaseSample = 0;
             unsigned long acceptedTransientPeakMs = 0;
             unsigned long acceptedTransientReleaseMs = 0;
-            DetectionPipeline::FrequencyEvidence acceptedFrequencyEvidence = {};
-            DetectionPipeline::FrequencyEvidence acceptedFrequencyEvidenceFull = {};
+            FrequencyEvidence acceptedFrequencyEvidence = {};
+            FrequencyEvidence acceptedFrequencyEvidenceFull = {};
             unsigned long acceptedFrequencyProcessedAtMs = 0;
-            DetectionPipeline::FrequencyEvidence acceptedParityProbe64 = {};
+            FrequencyEvidence acceptedParityProbe64 = {};
             unsigned long acceptedParityProbe64ProcessedAtMs = 0;
             unsigned long duplicateTransientMs = 0;
             float duplicateTransientStrength = 0.0f;
@@ -220,10 +224,10 @@ private:
             uint64_t duplicateTransientReleaseSample = 0;
             unsigned long duplicateTransientPeakMs = 0;
             unsigned long duplicateTransientReleaseMs = 0;
-            DetectionPipeline::FrequencyEvidence duplicateFrequencyEvidence = {};
-            DetectionPipeline::FrequencyEvidence duplicateFrequencyEvidenceFull = {};
+            FrequencyEvidence duplicateFrequencyEvidence = {};
+            FrequencyEvidence duplicateFrequencyEvidenceFull = {};
             unsigned long duplicateFrequencyProcessedAtMs = 0;
-            DetectionPipeline::FrequencyEvidence duplicateParityProbe64 = {};
+            FrequencyEvidence duplicateParityProbe64 = {};
             unsigned long duplicateParityProbe64ProcessedAtMs = 0;
             long duplicateDeltaFromPrimaryMs = 0;
             bool duplicateOriginWindow = false;
@@ -441,10 +445,10 @@ private:
     void printSequenceTrialResult(unsigned long trialNumber, const char* result, long dtMs, long durMs, float strength, bool audioOverflow, unsigned long duplicateCount, const SequenceTest::TrialDiagnostics& diagnostics) const;
     void printSequenceFinalOutput() const;
     void printSequenceSummary() const;
-    void recordSequenceClassifierOutcome(const DetectionPipeline::PatternResult& patternResult, bool duplicateCandidate, bool unexpectedCandidate);
-    void handleSequenceCandidate(const DetectionPipeline::PatternResult& patternResult, unsigned long queueDepthBeforeDrain, const DetectionPipeline::FrequencyEvidence* liveFrequencyEvidence = nullptr);
-    bool evaluateRoadmapSignalCandidate(const detection::SignalCandidate& signal, DetectionPipeline::PatternResult& outResult) const;
-    DetectionPipeline::FrequencyEvidence scanSequenceFrequencyParity64(const DetectionPipeline::PatternCandidate& patternCandidate, unsigned long observedAtMs) const;
+    void recordSequenceClassifierOutcome(const PatternResult& patternResult, bool duplicateCandidate, bool unexpectedCandidate);
+    void handleSequenceCandidate(const PatternResult& patternResult, unsigned long queueDepthBeforeDrain, const FrequencyEvidence* liveFrequencyEvidence = nullptr);
+    bool evaluateRoadmapSignalCandidate(const detection::SignalCandidate& signal, PatternResult& outResult) const;
+    FrequencyEvidence scanSequenceFrequencyParity64(const PatternCandidate& patternCandidate, unsigned long observedAtMs) const;
     void updateSequenceAmbientStats();
 
     // Sequence sample capture helpers.
@@ -456,7 +460,7 @@ private:
     bool sequenceSampleDumpSelected(unsigned long trialNumber) const;
     unsigned long sequenceSampleDumpEstimatedRows(unsigned long selectedTrials) const;
     static void sequenceCurveSampleCallback(const CurveSnapshot& snapshot, void* context);
-    DetectionPipeline::FrequencyEvidence captureFrequencyEvidence() const;
+    FrequencyEvidence captureFrequencyEvidence() const;
     void noteSequenceTransientReject(unsigned long eventMs);
     void noteSequenceTransientRejectReason(unsigned long eventMs, const char* reasonName, unsigned long durationMs, float strength);
     const char* sequenceTrialClassificationName(const char* result, long dtMs, long durMs, const SequenceTest::TrialDiagnostics& diagnostics) const;

@@ -3,7 +3,6 @@
 #include <stdint.h>
 #include <stddef.h>
 
-#include "../../detection/DetectionPipeline.h"
 #include "../../detection/DetectionRuntime.h"
 #include "../../detection/FrequencyEvidenceEvaluation.h"
 #include "../../hal/AudioSourceAnalog.h"
@@ -16,6 +15,7 @@
 #include "../../detection/FreqTransientDetector.h"
 #include "../../io/ChirpOutput.h"
 #include "../../behavior/ResonantBehavior.h"
+#include "../../detection/patterns/PatternPayload.h"
 #include "node_debug.h"
 
 /*
@@ -50,6 +50,9 @@ File structure:
 
 class Node {
 public:
+    using FrequencyEvidence = detection::FrequencyEvidence;
+    using PatternResult = detection::PatternResult;
+
     enum class DetectionMode {
         AmpLegacy,
         RoadmapFrequencyFirst,
@@ -115,8 +118,8 @@ private:
     void processLegacyAmpFrame(const AudioSignalFrame& frame, unsigned long now, bool selfChirpSuppressed, bool& sawPatternThisLoop);
     void drainLegacyAmpCandidates(unsigned long now, bool selfChirpSuppressed, bool& sawPatternThisLoop);
     void processRoadmapFrame(const AudioSignalFrame& frame, unsigned long now, bool selfChirpSuppressed, bool& sawPatternThisLoop);
-    DetectionPipeline::FrequencyEvidence captureFrequencyEvidence() const;
-    void logCandidate(const DetectorCandidate& candidate, const DetectionPipeline::PatternResult& patternResult, const DetectionPipeline::FrequencyEvidence* liveFrequencyEvidence, unsigned long candidateNumber, long gapMs, unsigned long queueDepthBeforeDrain, unsigned long behaviorLagMs, const char* candidateClass, const char* action, const char* stateName, const char* gateName);
+    FrequencyEvidence captureFrequencyEvidence() const;
+    void logCandidate(const DetectorCandidate& candidate, const PatternResult& patternResult, const FrequencyEvidence* liveFrequencyEvidence, unsigned long candidateNumber, long gapMs, unsigned long queueDepthBeforeDrain, unsigned long behaviorLagMs, const char* candidateClass, const char* action, const char* stateName, const char* gateName);
     void printRbSummary() const;
     void printRbSignalSummary() const;
     void printRbDetectorSummary() const;

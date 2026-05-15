@@ -1,15 +1,18 @@
 #pragma once
 
-#include "DetectionPipeline.h"
+#include "../io/AudioSignal.h"
+#include "patterns/PatternPayload.h"
 
 namespace DetectionPipeline {
+
+using FrequencyEvidence = detection::FrequencyEvidence;
 
 bool measureCandidateWindowFrequency(const AudioSignal& audioSignal,
                                      const DetectorCandidate& candidate,
                                      unsigned long sampleRateHz,
                                      unsigned long targetFrequencyHz,
                                      unsigned long observedAtMs,
-                                     FrequencyEvidence& out,
+                                     detection::FrequencyEvidence& out,
                                      unsigned long maxWindowMs = 100UL);
 
 bool measureCandidateWindowFrequencyParityScan64(const AudioSignal& audioSignal,
@@ -17,7 +20,7 @@ bool measureCandidateWindowFrequencyParityScan64(const AudioSignal& audioSignal,
                                                  unsigned long sampleRateHz,
                                                  unsigned long targetFrequencyHz,
                                                  unsigned long observedAtMs,
-                                                 FrequencyEvidence& out,
+                                                 detection::FrequencyEvidence& out,
                                                  unsigned long windowSampleCount = 64UL);
 
 } // namespace DetectionPipeline

@@ -18,7 +18,7 @@ public:
 
     void observeFrame(
         const AudioSignalFrame& frame,
-        const DetectionPipeline::FrequencyEvidence& evidence,
+        const detection::FrequencyEvidence& evidence,
         const FrequencyEvidenceEvaluation::Values& frequencyTuning
     );
 
@@ -29,7 +29,7 @@ private:
     void applyFrequencyTuning(const FrequencyEvidenceEvaluation::Values& frequencyTuning);
 
     bool _hasPending = false;
-    DetectionPipeline::FrequencyEvidence _peakEvidence = {};
+    detection::FrequencyEvidence _peakEvidence = {};
     FrequencyMatchDetector _detector = {};
     SignalCandidate _pending = {};
     unsigned long _lastEmittedReleaseMs = 0;

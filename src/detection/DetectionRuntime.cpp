@@ -29,7 +29,7 @@ void DetectionRuntime::setAmpEnabled(bool enabled) {
 
 void DetectionRuntime::observeFrame(
     const AudioSignalFrame& frame,
-    const DetectionPipeline::FrequencyEvidence& frequencyEvidence,
+    const FrequencyEvidence& frequencyEvidence,
     unsigned long nowMs
 ) {
     _fieldStateTracker.update(nowMs);

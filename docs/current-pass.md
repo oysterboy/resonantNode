@@ -148,13 +148,15 @@ These are **not** required for “stable enough”:
 ## Practical gate
 
 Proceed with the hard split when all are true:
+seq
 
-- [ ] Build succeeds.
-- [ ] One frequency-first run produces the full stage log sequence.
-- [ ] Behavior still reacts through `PatternResult`.
-- [ ] Legacy AMP is not needed for main behavior.
-- [ ] `PatternAssembler` and `PatternRules` are the only pattern-stage owners.
-- [ ] Moving the types mostly requires imports/adapters, not re-deciding pipeline behavior.
+- [x] Build succeeds.
+- [x ] One frequency-first run produces the full stage log sequence.
+- [x ] Behavior still reacts through `PatternResult`.
+- [ x] Legacy AMP is not needed for main behavior.
+- [- ] `PatternAssembler` and `PatternRules` are the only pattern-stage owners.
+yes, but compatibility payloads still live in DetectionPipeline.h
+- [x ] Moving the types mostly requires imports/adapters, not re-deciding pipeline behavior.
 
 ---
 

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "InspectedSignal.h"
+#include "RawWindow.h"
 #include "../FrequencyEvidenceEvaluation.h"
 
 namespace detection {
@@ -11,20 +12,24 @@ public:
 
     InspectedSignal inspect(
         const SignalCandidate& candidate,
-        const FrequencyEvidenceEvaluation::Values& frequencyTuning
+        const FrequencyEvidenceEvaluation::Values& frequencyTuning,
+        const RawWindowStats* rawWindow = nullptr
     ) const;
 
 private:
-    void annotateAcceptedSignal(InspectedSignal& out, const SignalCandidate& candidate) const;
+    void annotateAcceptedSignal(InspectedSignal& out, const SignalCandidate& candidate, const RawWindowStats* rawWindow) const;
     void annotateDuplicateRisk(InspectedSignal& out, const SignalCandidate& candidate) const;
+    void annotateAmpSupportAndLocality(InspectedSignal& out, const SignalCandidate& candidate, const RawWindowStats* rawWindow) const;
 
     InspectedSignal inspectFrequency(
         const SignalCandidate& candidate,
-        const FrequencyEvidenceEvaluation::Values& frequencyTuning
+        const FrequencyEvidenceEvaluation::Values& frequencyTuning,
+        const RawWindowStats* rawWindow
     ) const;
 
     InspectedSignal inspectAmp(
-        const SignalCandidate& candidate
+        const SignalCandidate& candidate,
+        const RawWindowStats* rawWindow
     ) const;
 
     mutable unsigned long _lastAcceptedAmpMs = 0;

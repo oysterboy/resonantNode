@@ -1,16 +1,9 @@
 #include "SignalInspector.h"
+#include "InspectionRule.h"
 
 namespace {
 
 constexpr unsigned long kDuplicateRiskWindowMs = 150;
-
-bool hasUsefulAmpEvidence(const detection::SignalCandidate& candidate) {
-    return candidate.transient.present || candidate.durationMs > 0 || candidate.strength > 0.0f;
-}
-
-bool durationLooksValid(unsigned long durationMs) {
-    return durationMs > 0;
-}
 
 void setRejected(detection::InspectedSignal& out, detection::SignalRejectReason reason) {
     out.decision = detection::SignalDecision::Rejected;
@@ -18,6 +11,8 @@ void setRejected(detection::InspectedSignal& out, detection::SignalRejectReason 
     out.rejected = true;
     out.rejectReason = reason;
     out.confidence = 0.0f;
+    out.signalConfidence = 0.0f;
+    out.frequencyConfidence = 0.0f;
 }
 
 } // namespace
@@ -29,10 +24,19 @@ void SignalInspector::reset() {
     _lastAcceptedFrequencyMs = 0;
 }
 
-void SignalInspector::annotateAcceptedSignal(InspectedSignal& out, const SignalCandidate& candidate) const {
+void SignalInspector::annotateAcceptedSignal(InspectedSignal& out, const SignalCandidate& candidate, const RawWindowStats* rawWindow) const {
     out.duplicateRisk = false;
     out.duplicateRiskScore = 0.0f;
     annotateDuplicateRisk(out, candidate);
+    annotateAmpSupportAndLocality(out, candidate, rawWindow);
+    out.signal.confidence = out.confidence;
+    out.signal.signalConfidence = out.signalConfidence;
+    out.signal.frequencyConfidence = out.frequencyConfidence;
+    out.signal.ampEvidencePresent = candidate.ampEvidencePresent;
+    out.signal.ampSupport = out.ampSupport;
+    out.signal.locality = out.locality;
+    out.signal.duplicateRisk = out.duplicateRisk;
+    out.signal.duplicateRiskScore = out.duplicateRiskScore;
 }
 
 void SignalInspector::annotateDuplicateRisk(InspectedSignal& out, const SignalCandidate& candidate) const {
@@ -74,9 +78,26 @@ void SignalInspector::annotateDuplicateRisk(InspectedSignal& out, const SignalCa
     *lastAcceptedMs = acceptedMs;
 }
 
+void SignalInspector::annotateAmpSupportAndLocality(InspectedSignal& out, const SignalCandidate& candidate, const RawWindowStats* rawWindow) const {
+    const SignalWindowStats window = evaluateSignalWindow(candidate);
+    const bool useRawWindow = rawWindow != nullptr && rawWindow->present && rawWindow->valid;
+    const AmpSupportClass support = useRawWindow
+        ? (rawWindow->lift >= 1200.0f || rawWindow->normalized >= 0.60f
+            ? AmpSupportClass::Strong
+            : rawWindow->lift >= 500.0f || rawWindow->normalized >= 0.25f
+                ? AmpSupportClass::Medium
+                : rawWindow->lift >= 120.0f || rawWindow->normalized > 0.0f
+                    ? AmpSupportClass::Weak
+                    : AmpSupportClass::None)
+        : classifyAmpSupport(window);
+    out.ampSupport = support;
+    out.locality = classifyLocality(out.ampSupport);
+}
+
 InspectedSignal SignalInspector::inspect(
     const SignalCandidate& candidate,
-    const FrequencyEvidenceEvaluation::Values& frequencyTuning
+    const FrequencyEvidenceEvaluation::Values& frequencyTuning,
+    const RawWindowStats* rawWindow
 ) const {
     if (!candidate.present) {
         InspectedSignal out;
@@ -97,9 +118,9 @@ InspectedSignal SignalInspector::inspect(
 
     switch (candidate.kind) {
         case SignalKind::AmpTransient:
-            return inspectAmp(candidate);
+            return inspectAmp(candidate, rawWindow);
         case SignalKind::FrequencyMatch:
-            return inspectFrequency(candidate, frequencyTuning);
+            return inspectFrequency(candidate, frequencyTuning, rawWindow);
         case SignalKind::None:
         default: {
             InspectedSignal out;
@@ -114,44 +135,26 @@ InspectedSignal SignalInspector::inspect(
 
 InspectedSignal SignalInspector::inspectFrequency(
     const SignalCandidate& candidate,
-    const FrequencyEvidenceEvaluation::Values& frequencyTuning
+    const FrequencyEvidenceEvaluation::Values& frequencyTuning,
+    const RawWindowStats* rawWindow
 ) const {
     InspectedSignal out;
     out.signal = candidate;
     out.durationMs = candidate.durationMs;
     out.strength = candidate.strength;
     out.confidence = 0.0f;
+    out.signalConfidence = 0.0f;
+    out.frequencyConfidence = 0.0f;
 
-    const auto eval = FrequencyEvidenceEvaluation::evaluate(candidate.frequency, frequencyTuning);
-    const bool durationValid = durationLooksValid(candidate.durationMs);
-
-    if (!candidate.frequency.present) {
-        setRejected(out, SignalRejectReason::MissingFrequencyEvidence);
+    const InspectionRuleResult durationRule = evaluateDurationRule(candidate.durationMs);
+    if (!durationRule.passed) {
+        setRejected(out, durationRule.rejectReason);
         return out;
     }
 
-    if (!candidate.frequency.validWindow || !eval.validWindow) {
-        setRejected(out, SignalRejectReason::InvalidTiming);
-        return out;
-    }
-
-    if (!durationValid) {
-        setRejected(out, SignalRejectReason::TooShort);
-        return out;
-    }
-
-    if (!eval.scoreOk && !eval.contrastOk) {
-        setRejected(out, SignalRejectReason::BelowThreshold);
-        return out;
-    }
-
-    if (!eval.scoreOk) {
-        setRejected(out, SignalRejectReason::BelowThreshold);
-        return out;
-    }
-
-    if (!eval.contrastOk) {
-        setRejected(out, SignalRejectReason::BelowThreshold);
+    const InspectionRuleResult frequencyRule = evaluateFrequencyRule(candidate, frequencyTuning);
+    if (!frequencyRule.passed) {
+        setRejected(out, frequencyRule.rejectReason);
         return out;
     }
 
@@ -159,29 +162,29 @@ InspectedSignal SignalInspector::inspectFrequency(
     out.accepted = true;
     out.rejected = false;
     out.rejectReason = SignalRejectReason::None;
-    out.confidence = 1.0f;
-    out.ampSupport = AmpSupportClass::Unknown;
-    out.locality = LocalityClass::Unknown;
-    annotateAcceptedSignal(out, candidate);
+    out.signalConfidence = 1.0f;
+    out.frequencyConfidence = frequencyRule.confidence;
+    out.confidence = out.signalConfidence;
+    annotateAcceptedSignal(out, candidate, rawWindow);
     return out;
 }
 
 InspectedSignal SignalInspector::inspectAmp(
-    const SignalCandidate& candidate
+    const SignalCandidate& candidate,
+    const RawWindowStats* rawWindow
 ) const {
     InspectedSignal out;
     out.signal = candidate;
     out.durationMs = candidate.durationMs;
     out.strength = candidate.strength;
     out.confidence = 0.0f;
+    out.signalConfidence = 0.0f;
+    out.frequencyConfidence = 0.0f;
 
-    if (!hasUsefulAmpEvidence(candidate)) {
-        setRejected(out, SignalRejectReason::MissingAmpSupport);
-        return out;
-    }
-
-    if (!durationLooksValid(candidate.durationMs)) {
-        setRejected(out, SignalRejectReason::TooShort);
+    const SignalWindowStats window = evaluateSignalWindow(candidate);
+    const InspectionRuleResult ampRule = evaluateAmpRule(window);
+    if (!ampRule.passed) {
+        setRejected(out, ampRule.rejectReason);
         return out;
     }
 
@@ -189,10 +192,10 @@ InspectedSignal SignalInspector::inspectAmp(
     out.accepted = true;
     out.rejected = false;
     out.rejectReason = SignalRejectReason::None;
-    out.confidence = 1.0f;
-    out.ampSupport = AmpSupportClass::Strong;
-    out.locality = LocalityClass::Unknown;
-    annotateAcceptedSignal(out, candidate);
+    out.signalConfidence = 1.0f;
+    out.frequencyConfidence = 0.0f;
+    out.confidence = out.signalConfidence;
+    annotateAcceptedSignal(out, candidate, rawWindow);
     return out;
 }
 

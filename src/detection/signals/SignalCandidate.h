@@ -51,6 +51,15 @@ struct SignalCandidate {
     float score = 0.0f;
     float contrast = 0.0f;
     float confidence = 0.0f;
+    float signalConfidence = 0.0f;
+    float frequencyConfidence = 0.0f;
+    float ampLevel = 0.0f;
+    float ampBaseline = 0.0f;
+    bool ampEvidencePresent = false;
+    DetectionPipeline::AmpSupportClass ampSupport = DetectionPipeline::AmpSupportClass::Unknown;
+    DetectionPipeline::LocalityClass locality = DetectionPipeline::LocalityClass::Unknown;
+    bool duplicateRisk = false;
+    float duplicateRiskScore = 0.0f;
 
     DetectionPipeline::TransientEvidence transient = {};
     DetectionPipeline::FrequencyEvidence frequency = {};

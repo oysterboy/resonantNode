@@ -69,6 +69,13 @@ void FrequencySignalEmitter::observeFrame(
         candidate.score = _detector.frequencyCandidate.peakScore;
         candidate.contrast = _detector.frequencyCandidate.peakContrast;
         candidate.confidence = candidate.valid ? 1.0f : 0.0f;
+        candidate.signalConfidence = candidate.confidence;
+        candidate.frequencyConfidence = candidate.valid
+            ? 1.0f
+            : ((_detector.bestScoreOk || _detector.bestContrastOk) ? 0.5f : 0.0f);
+        candidate.ampEvidencePresent = true;
+        candidate.ampLevel = static_cast<float>(frame.level);
+        candidate.ampBaseline = frame.baseline;
         candidate.frequency = _peakEvidence;
         candidate.frequency.present = true;
         candidate.frequency.matched = _detector.frequencyCandidate.valid;

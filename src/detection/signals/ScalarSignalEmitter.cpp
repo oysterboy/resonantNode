@@ -209,6 +209,11 @@ bool ScalarSignalEmitter::consumeCandidate(const AudioSignalFrame& frame,
     out.score = _candidatePeakStrength;
     out.contrast = 0.0f;
     out.confidence = 1.0f;
+    out.signalConfidence = 1.0f;
+    out.frequencyConfidence = kind == SignalKind::FrequencyMatch ? 1.0f : 0.0f;
+    out.ampEvidencePresent = true;
+    out.ampLevel = static_cast<float>(frame.level);
+    out.ampBaseline = frame.baseline;
     out.transient.present = true;
     out.transient.onsetSample = _candidateFirstSeenSample;
     out.transient.peakSample = _candidatePeakSample;

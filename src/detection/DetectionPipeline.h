@@ -1,166 +1,44 @@
 #pragma once
 
 #include "../io/AudioSignal.h"
+#include "patterns/PatternCandidate.h"
+#include "patterns/PatternResult.h"
 
 /*
 DetectionPipeline
 
-Owns the lightweight pattern-shaping layer between detector output and
+Owns the lightweight compatibility layer between detector output and
 behavior-level decisions.
 
 Responsibilities:
 - translate detector candidates from stream-extractor/detector stages into pattern candidates/results
 - carry transient and frequency evidence through the pipeline
 - classify pattern type and rejection reason strings for logging/debugging
-- keep detector-emitted candidates as a transitional payload type, not a new architecture layer
+- keep the compatibility aliases for legacy and analyzer paths
 
 Does NOT:
 - read audio directly
 - own detector thresholds or tuning policy
 - decide behavior timing or output actions
 
-File structure:
-- classification enums
-- evidence and candidate payloads
-- pattern result container
-- detector-candidate helpers
-- name helpers for debug output
-
 Roadmap v0.3 note:
-- this header still carries a few compatibility helpers for legacy and
-  analyzer comparison paths
-- new roadmap interpretation should prefer the dedicated signal/pattern
-  layer headers where practical
+- canonical pattern payloads now live in the dedicated pattern headers
+- this header keeps the compatibility namespace, helper functions, and legacy aliases
 */
 namespace DetectionPipeline {
 
-// Classification tags used by behavior, logging, and analyzer summaries.
-// Some string helpers remain compatibility-facing for legacy / SEQ diagnostics.
-enum class PatternType {
-    None,
-    ValidTransient,
-    ValidTonalTransient,
-    TransientOnly,
-    FrequencyWeak,
-    DuplicateAfterPrimary,
-    UnexpectedNoise,
-    Invalid,
-    Ambiguous,
-};
-
-enum class PatternReasonCode {
-    None,
-    FromAcceptedTransient,
-    DetectorRejected,
-    AmbiguousEvidence,
-    UnsupportedPattern,
-};
-
-enum class PatternSource {
-    ComparisonOnly,
-    AmpFallback,
-    FrequencyPrimary,
-};
-
-enum class PatternRejectReason {
-    None,
-    NoCandidate,
-    NoFrequencyEvidence,
-    FrequencyWindowInvalid,
-    FrequencyScoreTooLow,
-    FrequencyContrastTooLow,
-    FrequencyScoreAndContrastTooLow,
-    TransientOnly,
-    DuplicateAfterPrimary,
-    UnexpectedTiming,
-    UnexpectedNoise,
-};
-
-// Raw detector evidence captured for transient-trigger analysis.
-// This remains a compatibility payload for legacy and analyzer paths.
-struct TransientEvidence {
-    bool present = false;
-
-    uint64_t onsetSample = 0;
-    uint64_t peakSample = 0;
-    uint64_t releaseSample = 0;
-
-    unsigned long startMs = 0;
-    unsigned long heardAtMs = 0;
-    unsigned long acceptedMs = 0;
-    unsigned long durationMs = 0;
-
-    float onsetStrength = 0.0f;
-    float peakStrength = 0.0f;
-    float releaseStrength = 0.0f;
-    float ambientBaseline = 0.0f;
-
-    bool audioOverflowDuringCandidate = false;
-};
-
-// Frequency evidence carried alongside a candidate for tonal classification.
-// Roadmap code prefers the dedicated signal / pattern layers, but this
-// container stays here as the transitional compatibility payload.
-struct FrequencyEvidence {
-    bool present = false;
-    bool matched = false;
-
-    unsigned long targetHz = 0;
-    unsigned long observedAtMs = 0;
-    uint64_t windowStartSample = 0;
-    uint64_t windowEndSample = 0;
-    unsigned long windowSampleCount = 0;
-    bool windowAvailable = false;
-
-    float score = 0.0f;
-    float confidence = 0.0f;
-
-    float targetPower = 0.0f;
-    float neighborPower = 0.0f;
-    float totalEnergy = 0.0f;
-    float spectralContrast = 0.0f;
-    bool validWindow = false;
-};
-
-// Combined detector candidate payload passed through the pipeline.
-struct PatternCandidate {
-    uint64_t onsetSample = 0;
-    uint64_t peakSample = 0;
-    uint64_t releaseSample = 0;
-
-    unsigned long startMs = 0;
-    unsigned long heardAtMs = 0;
-    unsigned long acceptedMs = 0;
-    unsigned long durationMs = 0;
-
-    float onsetStrength = 0.0f;
-    float peakStrength = 0.0f;
-    float releaseStrength = 0.0f;
-    float ambientBaseline = 0.0f;
-
-    bool audioOverflowDuringCandidate = false;
-
-    TransientEvidence transient;
-    FrequencyEvidence frequency;
-    FrequencyEvidence frequencyFull;
-};
-
-// Final pipeline result consumed by behavior and analyzer reporting.
-struct PatternResult {
-    PatternType type = PatternType::None;
-    PatternReasonCode reasonCode = PatternReasonCode::None;
-    PatternRejectReason rejectReason = PatternRejectReason::None;
-    PatternSource source = PatternSource::ComparisonOnly;
-    float confidence = 0.0f;
-    unsigned long processedAtMs = 0;
-    PatternCandidate candidate = {};
-    FrequencyEvidence freq = {};
-    FrequencyEvidence freqFull = {};
-    bool candidateValid = false;
-    bool tonalValid = false;
-    bool behaviorEligible = false;
-    bool valid = false;
-};
+using detection::AmpSupportClass;
+using detection::FrequencyEvidence;
+using detection::LocalityClass;
+using detection::PatternCandidate;
+using detection::PatternCandidateKind;
+using detection::PatternReasonCode;
+using detection::PatternRejectReason;
+using detection::PatternResult;
+using detection::PatternResultKind;
+using detection::PatternSource;
+using detection::PatternType;
+using detection::TransientEvidence;
 
 // Build a candidate only when the detector produced meaningful evidence.
 inline bool isDetectorCandidateAccepted(const DetectorCandidate& in) {
@@ -170,6 +48,9 @@ inline bool isDetectorCandidateAccepted(const DetectorCandidate& in) {
 // Copy detector output into the pipeline candidate container.
 inline PatternCandidate makePatternCandidate(const DetectorCandidate& in) {
     PatternCandidate out;
+    out.kind = PatternCandidateKind::SinglePulse;
+    out.lineageId = static_cast<uint32_t>(in.onsetSample & 0xFFFFFFFFu);
+    out.primarySlotIndex = 0;
     out.onsetSample = in.onsetSample;
     out.peakSample = in.peakSample;
     out.releaseSample = in.releaseSample;
@@ -203,12 +84,16 @@ inline PatternCandidate makePatternCandidate(const DetectorCandidate& in) {
 inline bool processDetectorCandidate(const DetectorCandidate& in, PatternResult& out, unsigned long processedAtMs) {
     out = {};
     out.source = PatternSource::ComparisonOnly;
+    out.kind = PatternResultKind::Rejected;
+    out.lineageId = static_cast<uint32_t>(in.onsetSample & 0xFFFFFFFFu);
+    out.primarySlotIndex = 0;
     out.candidate = makePatternCandidate(in);
     out.freq = out.candidate.frequency;
     out.freqFull = out.candidate.frequencyFull;
     out.processedAtMs = processedAtMs;
 
     if (!isDetectorCandidateAccepted(in)) {
+        out.kind = PatternResultKind::Rejected;
         out.type = PatternType::Invalid;
         out.reasonCode = PatternReasonCode::DetectorRejected;
         out.rejectReason = PatternRejectReason::NoCandidate;
@@ -221,6 +106,7 @@ inline bool processDetectorCandidate(const DetectorCandidate& in, PatternResult&
     }
 
     out.type = PatternType::ValidTransient;
+    out.kind = PatternResultKind::Residual;
     out.reasonCode = PatternReasonCode::FromAcceptedTransient;
     out.rejectReason = PatternRejectReason::None;
     out.confidence = 1.0f;
@@ -253,7 +139,51 @@ inline const char* patternSourceName(PatternSource source) {
     return "unknown";
 }
 
+inline const char* patternCandidateKindName(PatternCandidateKind kind) {
+    switch (kind) {
+        case PatternCandidateKind::Unknown:
+            return "unknown";
+        case PatternCandidateKind::SinglePulse:
+            return "single_pulse";
+        case PatternCandidateKind::PulseSequence:
+            return "pulse_sequence";
+        case PatternCandidateKind::NoiseBurst:
+            return "noise_burst";
+        case PatternCandidateKind::ObjectHit:
+            return "object_hit";
+    }
+
+    return "unknown";
+}
+
 // String helpers for compact debug/log output.
+inline const char* patternResultKindName(PatternResultKind kind) {
+    switch (kind) {
+        case PatternResultKind::Unknown:
+            return "unknown";
+        case PatternResultKind::TonalPulse:
+            return "tonal_pulse";
+        case PatternResultKind::TonalPulseNear:
+            return "tonal_pulse_near";
+        case PatternResultKind::TonalPulseMid:
+            return "tonal_pulse_mid";
+        case PatternResultKind::TonalPulseFar:
+            return "tonal_pulse_far";
+        case PatternResultKind::ValidChirp:
+            return "valid_chirp";
+        case PatternResultKind::InvalidChirp:
+            return "invalid_chirp";
+        case PatternResultKind::TooDense:
+            return "too_dense";
+        case PatternResultKind::Residual:
+            return "residual";
+        case PatternResultKind::Rejected:
+            return "rejected";
+    }
+
+    return "unknown";
+}
+
 inline const char* patternTypeName(PatternType type) {
     switch (type) {
         case PatternType::None:

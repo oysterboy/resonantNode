@@ -9,6 +9,7 @@
 #include "../../detection/DetectorParameters.h"
 #include "../../detection/FrequencyEvidenceEvaluation.h"
 #include "../../detection/FrequencyWindowProbe.h"
+#include "../../detection/signals/RawWindow.h"
 #include "../../detection/patterns/PatternAssembler.h"
 #include "../../detection/patterns/PatternRules.h"
 #include "../../detection/signals/SignalCandidate.h"
@@ -239,20 +240,39 @@ detection::SignalCandidate makeRoadmapFrequencySignalCandidate(const FrequencyMa
     signal.score = liveFrequency.frequencyCandidate.peakScore;
     signal.contrast = liveFrequency.frequencyCandidate.peakContrast;
     signal.confidence = signal.valid ? 1.0f : 0.0f;
+    signal.signalConfidence = signal.confidence;
+    signal.frequencyConfidence = signal.valid ? 1.0f : 0.0f;
+    signal.ampEvidencePresent = false;
     signal.frequency = liveFrequency.candidateEvidence.present ? liveFrequency.candidateEvidence : liveFrequency.bestEvidence;
     return signal;
 }
 
 bool evaluateRoadmapSignalCandidateImpl(const detection::SignalCandidate& signal,
                                         const FrequencyEvidenceEvaluation::Values& tuning,
+                                        const AudioSignal* audioSignal,
                                         DetectionPipeline::PatternResult& outResult,
                                         bool traceStages) {
-    detection::SignalInspector inspector;
-    detection::PatternAssembler assembler;
+    static detection::SignalInspector* inspector = nullptr;
+    static detection::PatternAssembler* assembler = nullptr;
+    if (inspector == nullptr) {
+        inspector = new detection::SignalInspector();
+    }
+    if (assembler == nullptr) {
+        assembler = new detection::PatternAssembler();
+    }
     detection::PatternRules rules;
+    detection::RawWindowStats rawWindow = {};
+    const detection::RawWindowStats* rawWindowPtr = nullptr;
 
-    assembler.reset();
-    const detection::InspectedSignal inspected = inspector.inspect(signal, tuning);
+    if (audioSignal != nullptr && signal.present && signal.startSample != 0 && signal.releaseSample >= signal.startSample) {
+        if (detection::captureRawWindowStats(*audioSignal, signal.startSample, signal.releaseSample, signal.ampBaseline, rawWindow)) {
+            rawWindowPtr = &rawWindow;
+        }
+    }
+
+    inspector->reset();
+    assembler->reset();
+    const detection::InspectedSignal inspected = inspector->inspect(signal, tuning, rawWindowPtr);
     if (traceStages) {
         Serial.print("SEQ_TRACE stage=SIGNAL signal=");
         Serial.print(signal.present ? 1 : 0);
@@ -274,8 +294,20 @@ bool evaluateRoadmapSignalCandidateImpl(const detection::SignalCandidate& signal
         Serial.print(signal.score, 1);
         Serial.print(" contrast=");
         Serial.print(signal.contrast, 2);
+        Serial.print(" signal_confidence=");
+        Serial.print(signal.signalConfidence, 2);
+        Serial.print(" freq_confidence=");
+        Serial.print(signal.frequencyConfidence, 2);
         Serial.print(" confidence=");
         Serial.print(signal.confidence, 2);
+        Serial.print(" amp_evidence=");
+        Serial.print(signal.ampEvidencePresent ? 1 : 0);
+        Serial.print(" amp_level=");
+        Serial.print(signal.ampLevel, 1);
+        Serial.print(" amp_baseline=");
+        Serial.print(signal.ampBaseline, 1);
+        Serial.print(" raw_window=");
+        Serial.print(rawWindowPtr != nullptr ? 1 : 0);
         Serial.println();
     }
     if (traceStages) {
@@ -289,6 +321,10 @@ bool evaluateRoadmapSignalCandidateImpl(const detection::SignalCandidate& signal
         Serial.print(inspected.durationMs);
         Serial.print(" strength=");
         Serial.print(inspected.strength, 1);
+        Serial.print(" signal_confidence=");
+        Serial.print(inspected.signalConfidence, 2);
+        Serial.print(" frequency_confidence=");
+        Serial.print(inspected.frequencyConfidence, 2);
         Serial.print(" confidence=");
         Serial.print(inspected.confidence, 2);
         Serial.print(" source=");
@@ -301,12 +337,14 @@ bool evaluateRoadmapSignalCandidateImpl(const detection::SignalCandidate& signal
         Serial.print(inspected.duplicateRisk ? 1 : 0);
         Serial.print(" duplicate_risk_score=");
         Serial.print(inspected.duplicateRiskScore, 2);
+        Serial.print(" window_source=");
+        Serial.print(rawWindowPtr != nullptr ? "raw" : "snapshot");
         Serial.println();
     }
-    assembler.acceptSignal(inspected);
+    assembler->acceptSignal(inspected);
 
     detection::PatternCandidate candidate = {};
-    if (!assembler.popPatternCandidate(candidate)) {
+    if (!assembler->popPatternCandidate(candidate)) {
         if (traceStages) {
             Serial.println("SEQ_TRACE stage=PATTERN_CANDIDATE present=0");
         }
@@ -334,20 +372,60 @@ bool evaluateRoadmapSignalCandidateImpl(const detection::SignalCandidate& signal
     if (traceStages) {
         Serial.print("SEQ_TRACE stage=PATTERN_CANDIDATE present=1 source=");
         Serial.print(candidate.frequency.present ? "frequency" : candidate.transient.present ? "amp" : "none");
+        Serial.print(" kind=");
+        Serial.print(DetectionPipeline::patternCandidateKindName(candidate.kind));
+        Serial.print(" signal_count=");
+        Serial.print(candidate.signalCount);
+        Serial.print(" pulse_count=");
+        Serial.print(candidate.pulseCount);
+        Serial.print(" first_pulse_ms=");
+        Serial.print(candidate.firstPulseMs);
+        Serial.print(" last_pulse_ms=");
+        Serial.print(candidate.lastPulseMs);
         Serial.print(" duration_ms=");
         Serial.print(candidate.durationMs);
+        Serial.print(" amp_support=");
+        Serial.print(ampSupportName(candidate.ampSupport));
+        Serial.print(" locality=");
+        Serial.print(localityName(candidate.locality));
+        Serial.print(" signal_confidence=");
+        Serial.print(candidate.signalConfidence, 2);
+        Serial.print(" frequency_confidence=");
+        Serial.print(candidate.frequencyConfidence, 2);
+        Serial.print(" window_source=");
+        Serial.print(rawWindowPtr != nullptr ? "raw" : "snapshot");
         Serial.println();
     }
     outResult = rules.evaluate(candidate, signal.releaseMs != 0 ? signal.releaseMs : signal.peakMs, tuning);
     if (traceStages) {
         Serial.print("SEQ_TRACE stage=PATTERN_RESULT valid=");
         Serial.print(outResult.valid ? 1 : 0);
+        Serial.print(" kind=");
+        Serial.print(DetectionPipeline::patternResultKindName(outResult.kind));
+        Serial.print(" signal_count=");
+        Serial.print(outResult.signalCount);
+        Serial.print(" pulse_count=");
+        Serial.print(outResult.pulseCount);
+        Serial.print(" first_pulse_ms=");
+        Serial.print(outResult.firstPulseMs);
+        Serial.print(" last_pulse_ms=");
+        Serial.print(outResult.lastPulseMs);
         Serial.print(" type=");
         Serial.print(DetectionPipeline::patternTypeName(outResult.type));
         Serial.print(" source=");
         Serial.print(DetectionPipeline::patternSourceName(outResult.source));
         Serial.print(" reject=");
         Serial.print(DetectionPipeline::patternRejectReasonName(outResult.rejectReason));
+        Serial.print(" locality=");
+        Serial.print(localityName(outResult.locality));
+        Serial.print(" amp_support=");
+        Serial.print(ampSupportName(outResult.ampSupport));
+        Serial.print(" signal_confidence=");
+        Serial.print(outResult.signalConfidence, 2);
+        Serial.print(" frequency_confidence=");
+        Serial.print(outResult.frequencyConfidence, 2);
+        Serial.print(" window_source=");
+        Serial.print(rawWindowPtr != nullptr ? "raw" : "snapshot");
         Serial.println();
     }
     return true;
@@ -3343,8 +3421,8 @@ void AnalyzerApp::finalizeSequenceTrial(unsigned long now) {
 }
 
 bool AnalyzerApp::evaluateRoadmapSignalCandidate(const detection::SignalCandidate& signal, DetectionPipeline::PatternResult& outResult) const {
-    return evaluateRoadmapSignalCandidateImpl(signal, _frequencyEvidenceTuning, outResult,
-                                             analyzerLogEnabled(_sequenceTest.logFlags, AnalyzerApp::ANALYZER_LOG_RAW_DEBUG));
+    return evaluateRoadmapSignalCandidateImpl(signal, _frequencyEvidenceTuning, &_audioSignal, outResult,
+                                               analyzerLogEnabled(_sequenceTest.logFlags, AnalyzerApp::ANALYZER_LOG_RAW_DEBUG));
 }
 
 void AnalyzerApp::printSequenceTrialDebug(unsigned long trialNumber, const char* result, const SequenceTest::TrialDiagnostics& diagnostics) const {
@@ -4184,7 +4262,6 @@ void AnalyzerApp::printSequenceFinalOutput() const {
     if (_valMode) {
         return;
     }
-    printSequenceTrialReports();
     printSequenceSummary();
 }
 

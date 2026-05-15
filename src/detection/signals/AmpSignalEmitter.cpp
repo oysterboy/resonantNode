@@ -14,6 +14,11 @@ void AmpSignalEmitter::fillAmpCandidate(SignalCandidate& candidate, const AudioS
     // No explicit peak timestamp exists on the legacy AMP candidate, so peakMs stays at the default.
     candidate.endMs = candidate.releaseMs;
     candidate.confidence = candidate.valid ? 1.0f : 0.0f;
+    candidate.signalConfidence = candidate.confidence;
+    candidate.frequencyConfidence = 0.0f;
+    candidate.ampEvidencePresent = true;
+    candidate.ampLevel = static_cast<float>(frame.level);
+    candidate.ampBaseline = frame.baseline;
     candidate.transient.present = true;
     candidate.transient.onsetSample = candidate.startSample;
     candidate.transient.peakSample = candidate.peakSample;

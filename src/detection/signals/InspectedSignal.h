@@ -25,20 +25,8 @@ enum class SignalRejectReason {
     Unknown
 };
 
-enum class AmpSupportClass {
-    Unknown,
-    None,
-    Weak,
-    Medium,
-    Strong
-};
-
-enum class LocalityClass {
-    Unknown,
-    Near,
-    Mid,
-    Far
-};
+using AmpSupportClass = DetectionPipeline::AmpSupportClass;
+using LocalityClass = DetectionPipeline::LocalityClass;
 
 struct InspectedSignal {
     SignalCandidate signal = {};
@@ -51,6 +39,8 @@ struct InspectedSignal {
     unsigned long durationMs = 0;
     float strength = 0.0f;
     float confidence = 0.0f;
+    float signalConfidence = 0.0f;
+    float frequencyConfidence = 0.0f;
     AmpSupportClass ampSupport = AmpSupportClass::Unknown;
     LocalityClass locality = LocalityClass::Unknown;
     bool duplicateRisk = false;

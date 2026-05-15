@@ -150,7 +150,7 @@ private:
     bool _outputBusy = false;
 
     // --- timing parameters ---
-    unsigned long _waitAfterTransientMs = 100; // Delay before responding after a transient is seen.
+    unsigned long _waitAfterTransientMs = 500; // Delay before responding after a transient is seen.
     unsigned long _refractoryAfterEmitMs = 200; // Ignore follow-up activity for a short time after a chirp finishes.
     unsigned long _behaviorSuppressSelfChirpMs = 250; // Behavior-level suppression while the node's chirp is active.
     unsigned long _detectionSuppressTailMsOwnEmit = 0; // Detector/analyzer suppression tail after our own emit.

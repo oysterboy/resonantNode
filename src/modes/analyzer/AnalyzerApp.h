@@ -5,11 +5,13 @@
 
 #include "../../hal/AudioSourceAnalog.h"
 #include "../../hal/AudioSourceI2S.h"
-#include "../../io/AudioFrequencyDetector.h"
-#include "../../io/AudioOnsetDetector.h"
+#include "../../detection/AmpTransientDetector.h"
 #include "../../io/AudioSignal.h"
+#include "../../detection/AmpCandidateBuilder.h"
 #include "../../detection/DetectionPipeline.h"
+#include "../../detection/FrequencyCandidateBuilder.h"
 #include "../../detection/FrequencyEvidenceEvaluation.h"
+#include "../../detection/FreqTransientDetector.h"
 #include "../../hal/AudioSource.h"
 
 /*
@@ -249,7 +251,7 @@ private:
             unsigned long transientRejectTooShortCount = 0;
             unsigned long transientRejectTooLongCount = 0;
             unsigned long transientRejectWeakCount = 0;
-            AudioOnsetDetector::TransientRejectReason strongestRejectReason = AudioOnsetDetector::TransientRejectReason::None;
+            AmpTransientDetector::TransientRejectReason strongestRejectReason = AmpTransientDetector::TransientRejectReason::None;
             long strongestRejectDtFromTriggerMs = -1;
             unsigned long strongestRejectDurationMs = 0;
             float strongestRejectStrength = 0.0f;
@@ -267,69 +269,10 @@ private:
             unsigned long firstOnsetRejectMs = 0;
             unsigned long lastOnsetRejectMs = 0;
 
-            AudioOnsetDetector::TransientRejectReason lastTransientRejectReason = AudioOnsetDetector::TransientRejectReason::None;
+            AmpTransientDetector::TransientRejectReason lastTransientRejectReason = AmpTransientDetector::TransientRejectReason::None;
             float lastRejectStrength = 0.0f;
             unsigned long lastRejectDurationMs = 0;
             bool peakActiveAtEnd = false;
-        };
-
-        struct LiveFrequencyDiagnostics {
-            struct FrequencyCandidate {
-                bool present = false;
-                bool valid = false;
-                unsigned long firstCrossMs = 0;
-                uint64_t firstCrossSample = 0;
-                unsigned long peakMs = 0;
-                uint64_t peakSample = 0;
-                unsigned long releaseMs = 0;
-                uint64_t releaseSample = 0;
-                unsigned long durationOrHoldMs = 0;
-                unsigned long holdWindows = 0;
-                float peakScore = 0.0f;
-                float peakContrast = 0.0f;
-                unsigned long peakWindowSampleCount = 0;
-                char rejectReason[48] = "none";
-            };
-
-            bool present = false;
-            bool liveFrequencyOnly = false;
-            bool firstThresholdCrossingSeen = false;
-            bool wouldProduceCandidate = false;
-            bool candidateActive = false;
-            bool candidateEmitted = false;
-            bool candidateClosed = false;
-            unsigned long candidateRefractoryUntilMs = 0;
-            unsigned long firstThresholdCrossingMs = 0;
-            uint64_t firstThresholdCrossingSample = 0;
-            unsigned long candidateFirstSeenMs = 0;
-            uint64_t candidateFirstSeenSample = 0;
-            unsigned long candidatePeakMs = 0;
-            uint64_t candidatePeakSample = 0;
-            unsigned long candidateReleaseMs = 0;
-            uint64_t candidateReleaseSample = 0;
-            unsigned long candidateHoldWindows = 0;
-            unsigned long candidateHoldMs = 0;
-            unsigned long candidateLastMatchedMs = 0;
-            float thresholdScore = 0.0f;
-            float thresholdContrast = 0.0f;
-            bool readyOk = false;
-            bool bestScoreOk = false;
-            bool bestContrastOk = false;
-            bool gateOpen = false;
-            float candidatePeakScore = 0.0f;
-            float candidatePeakContrast = 0.0f;
-            unsigned long candidatePeakWindowSampleCount = 0;
-            unsigned long bestObservedAtMs = 0;
-            uint64_t bestObservedSample = 0;
-            float bestScore = 0.0f;
-            float bestContrast = 0.0f;
-            unsigned long bestWindowSampleCount = 0;
-            DetectionPipeline::FrequencyEvidence bestEvidence = {};
-            DetectionPipeline::FrequencyEvidence candidateEvidence = {};
-            char candidateState[16] = "none";
-            char suppressReason[48] = "none";
-            char wouldCandidateReason[48] = "none";
-            FrequencyCandidate frequencyCandidate = {};
         };
 
         // Sequence-test configuration and execution state.
@@ -410,7 +353,7 @@ private:
         unsigned long emptySourceLoops = 0;
         unsigned long totalHitStrengthScaled = 0;
         unsigned long totalHitDurationMs = 0;
-        LiveFrequencyDiagnostics liveFrequency;
+        FrequencyCandidateBuilder liveFrequency;
 
         unsigned long tonalExpected = 0;
         unsigned long transientOnlyExpected = 0;
@@ -525,9 +468,10 @@ private:
     AudioSourceI2S _i2sSource;
     AudioSource& _audioSource;
     AudioSourceKind _sourceKind;
-    AudioOnsetDetector _audioOnsetDetector;
+    AmpTransientDetector _audioOnsetDetector;
     AudioSignal _audioSignal;
-    AudioFrequencyDetector _audioFrequencyDetector;
+    AmpCandidateBuilder _ampCandidateBuilder;
+    FreqTransientDetector _freqTransientDetector;
     FrequencyEvidenceEvaluation::Values _frequencyEvidenceTuning = {};
 
     // Console and emitter control.

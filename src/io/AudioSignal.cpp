@@ -1,17 +1,16 @@
 #include "io/AudioSignal.h"
+
 #include <Arduino.h>
 
 // -----------------------------------------------------------------------------
 // Construction and lifecycle
 // -----------------------------------------------------------------------------
 
-AudioSignal::AudioSignal(AudioSource& source, AudioOnsetDetector& detector)
-    : _source(source),
-      _detector(detector) {}
+AudioSignal::AudioSignal(AudioSource& source)
+    : _source(source) {}
 
 void AudioSignal::begin(bool doRebase) {
     resetStats();
-    _detector.begin();
     if (doRebase) {
         rebase();
     }
@@ -29,32 +28,37 @@ void AudioSignal::rebase() {
             delay(1);
         }
     }
-    // Seed the baseline from a short quiet window so the first update is stable.
+
     _baseline = sum / 200.0f;
     _smoothedSignalMagnitude = 0.0f;
     _rawSignal = 0;
     _centeredSignal = 0;
     _signalMagnitude = 0;
+    _latestFrame = {};
 }
 
 // -----------------------------------------------------------------------------
 // Sample and block processing
 // -----------------------------------------------------------------------------
 
-void AudioSignal::update(int sample, uint32_t sampleTimeUs) {
+bool AudioSignal::update(int sample, uint32_t sampleTimeUs, AudioSignalFrame& outFrame) {
     _lastBlock.samples = nullptr;
     _lastBlock.sampleCount = 1;
-    _lastBlock.startSampleIndex = 0;
+    const uint64_t sampleIndex = _stats.samplesProcessed;
+    _lastBlock.startSampleIndex = sampleIndex;
     _lastBlock.approxStartMicros = sampleTimeUs;
     _lastBlock.overflowBeforeBlock = false;
-    _lastBlockStartSample = 0;
+    _lastBlockStartSample = sampleIndex;
     _lastBlockSampleCount = 1;
     _lastBlockApproxStartMicros = sampleTimeUs;
-    const uint64_t sampleIndex = _stats.samplesProcessed;
+
     processSample(sample, sampleTimeUs, sampleIndex, 0, false);
+    _stats.blocksProcessed++;
     _stats.samplesProcessed++;
-    _detector.update(static_cast<float>(_signalMagnitude), sampleTimeUs);
+
+    emitFrame(outFrame, sampleIndex, sampleTimeUs, sampleTimeUs / 1000UL, _source.sampleRateHz(), false);
     emitCurveSample(sampleTimeUs);
+    return true;
 }
 
 void AudioSignal::processBlock(const AudioBlock& block) {
@@ -92,60 +96,26 @@ void AudioSignal::processBlock(const AudioBlock& block) {
         const uint32_t sampleTimeMsApprox = approxBlockSampleMicros / 1000UL;
         processSample(static_cast<int>(block.samples[i]), sampleTimeUs, sampleIndex, sampleRateHz, block.overflowBeforeBlock);
         _stats.samplesProcessed++;
-        _detector.update(static_cast<float>(_signalMagnitude), sampleTimeUs);
+        emitFrame(_latestFrame, sampleIndex, sampleTimeUs, sampleTimeMsApprox, sampleRateHz, block.overflowBeforeBlock);
         emitCurveSample(sampleTimeUs);
-
-        if (_detector.onsetDetected()) {
-            _candidateActive = true;
-            _candidateHadOverflow = block.overflowBeforeBlock;
-            _candidateOnsetSample = sampleIndex;
-            _candidatePeakSample = sampleIndex;
-            _candidateReleaseSample = sampleIndex;
-            _candidateOnsetMicrosApprox = sampleTimeUs;
-            _candidateReleaseMicrosApprox = sampleTimeUs;
-            _candidateOnsetMillisApprox = sampleTimeMsApprox;
-            _candidateReleaseMillisApprox = sampleTimeMsApprox;
-            _candidateOnsetStrength = static_cast<float>(_signalMagnitude);
-            _candidateReleaseStrength = static_cast<float>(_signalMagnitude);
-            _candidateAmbientBaseline = _baseline;
-            _candidatePeakStrength = static_cast<float>(_signalMagnitude);
-        }
-
-        if (_candidateActive && static_cast<float>(_signalMagnitude) > _candidatePeakStrength) {
-            _candidatePeakStrength = static_cast<float>(_signalMagnitude);
-            _candidatePeakSample = sampleIndex;
-        }
-
-        if (_candidateActive) {
-            _candidateHadOverflow = _candidateHadOverflow || block.overflowBeforeBlock;
-        }
-
-        if (_detector.transientDetected() && _candidateActive) {
-            finalizeCandidate(sampleIndex, sampleTimeUs, sampleTimeMsApprox);
-        }
     }
 }
 
 void AudioSignal::processSample(int sample, uint32_t sampleTimeUs, uint64_t sampleIndex, uint32_t sampleRateHz, bool blockOverflow) {
     _rawSignal = sample;
     _sampleTimeUs = sampleTimeUs;
-    _centeredSignal = _rawSignal - (int)_baseline;
+    _centeredSignal = _rawSignal - static_cast<int>(_baseline);
     _rawSampleHistory.push(sampleIndex, _centeredSignal);
-    int magnitude = abs(_centeredSignal);
 
-    // Only let the baseline drift while the signal still looks quiet.
+    int magnitude = abs(_centeredSignal);
     if (magnitude < _baselineTrackingQuietThreshold) {
         _baseline = _baseline * (1.0f - _baselineUpdateFactor) + _rawSignal * _baselineUpdateFactor;
     }
-
-    // Quiet samples are gated away so downstream detectors work on real activity.
     if (magnitude < _baselineTrackingQuietThreshold) {
         magnitude = 0;
     }
 
     _signalMagnitude = magnitude;
-
-    // Smooth the gate output so display/debug code is easier to read.
     _smoothedSignalMagnitude = _smoothedSignalMagnitude * (1.0f - _smoothingFactor) + _signalMagnitude * _smoothingFactor;
 
     (void)sampleIndex;
@@ -153,75 +123,8 @@ void AudioSignal::processSample(int sample, uint32_t sampleTimeUs, uint64_t samp
     (void)blockOverflow;
 }
 
-void AudioSignal::finalizeCandidate(uint64_t releaseSample, uint32_t releaseMicrosApprox, uint32_t releaseMillisApprox) {
-    if (!_candidateActive) {
-        return;
-    }
-
-    // Candidate timing comes from the same sample stream that drives the detector.
-    // Keep these fields as the stable AMP/transient baseline for the current pass.
-    _candidateReleaseSample = releaseSample;
-    _candidateReleaseMicrosApprox = releaseMicrosApprox;
-    _candidateReleaseMillisApprox = releaseMillisApprox;
-    _candidateReleaseStrength = static_cast<float>(_signalMagnitude);
-
-    DetectorCandidate candidate;
-    candidate.onsetSample = _candidateOnsetSample;
-    candidate.peakSample = _candidatePeakSample;
-    candidate.releaseSample = _candidateReleaseSample;
-    candidate.onsetMicrosApprox = _candidateOnsetMicrosApprox;
-    candidate.releaseMicrosApprox = _candidateReleaseMicrosApprox;
-    candidate.onsetMillisApprox = _candidateOnsetMillisApprox;
-    candidate.releaseMillisApprox = _candidateReleaseMillisApprox;
-    candidate.onsetStrength = _candidateOnsetStrength;
-    candidate.peakStrength = _candidatePeakStrength;
-    candidate.releaseStrength = _candidateReleaseStrength;
-    candidate.ambientBaseline = _candidateAmbientBaseline;
-    candidate.audioOverflowDuringCandidate = _candidateHadOverflow;
-
-    if (candidate.releaseSample >= candidate.onsetSample) {
-        const uint32_t sampleRateHz = _source.sampleRateHz();
-        if (sampleRateHz > 0) {
-            const uint64_t durationSamples = candidate.releaseSample - candidate.onsetSample;
-            candidate.durationMs = static_cast<uint32_t>((durationSamples * 1000ULL) / static_cast<uint64_t>(sampleRateHz));
-        }
-        if (!pushCandidate(candidate)) {
-            _stats.candidatesDropped++;
-        } else {
-            _stats.candidatesEmitted++;
-        }
-    } else {
-        _stats.candidatesDropped++;
-    }
-
-    _candidateActive = false;
-    _candidateHadOverflow = false;
-    _candidateOnsetSample = 0;
-    _candidatePeakSample = 0;
-    _candidateReleaseSample = 0;
-    _candidateOnsetMicrosApprox = 0;
-    _candidateReleaseMicrosApprox = 0;
-    _candidateOnsetMillisApprox = 0;
-    _candidateReleaseMillisApprox = 0;
-    _candidatePeakStrength = 0.0f;
-    _candidateOnsetStrength = 0.0f;
-    _candidateReleaseStrength = 0.0f;
-    _candidateAmbientBaseline = 0.0f;
-}
-
-bool AudioSignal::pushCandidate(const DetectorCandidate& candidate) {
-    if (_candidateCount == kCandidateQueueCapacity) {
-        return false;
-    }
-
-    const size_t writeIndex = (_candidateReadIndex + _candidateCount) % kCandidateQueueCapacity;
-    _candidateQueue[writeIndex] = candidate;
-    ++_candidateCount;
-    return true;
-}
-
 // -----------------------------------------------------------------------------
-// Configuration and detector tuning
+// Configuration
 // -----------------------------------------------------------------------------
 
 void AudioSignal::setBaselineTrackingQuietThreshold(int value) {
@@ -236,74 +139,14 @@ void AudioSignal::setBaselineUpdateFactor(float value) {
     _baselineUpdateFactor = value;
 }
 
-void AudioSignal::setOnsetDetectionThreshold(float value) {
-    _detector.setOnsetDetectionThreshold(value);
-}
-
-void AudioSignal::setOnsetReleaseThreshold(float value) {
-    _detector.setOnsetReleaseThreshold(value);
-}
-
-void AudioSignal::setCooldownAfterOnsetMs(unsigned long value) {
-    _detector.setCooldownAfterOnsetMs(value);
-}
-
-void AudioSignal::setReleaseDebounceMs(unsigned long value) {
-    _detector.setReleaseDebounceMs(value);
-}
-
-void AudioSignal::setMinTransientDurationMs(unsigned long value) {
-    _detector.setMinTransientDurationMs(value);
-}
-
-void AudioSignal::setMaxTransientDurationMs(unsigned long value) {
-    _detector.setMaxTransientDurationMs(value);
-}
-
-void AudioSignal::setMinTransientPeakStrength(float value) {
-    _detector.setMinTransientPeakStrength(value);
-}
-
-void AudioSignal::setDiagnosticsEnabled(bool enabled) {
-    _detector.setDiagnosticsEnabled(enabled);
-}
-
 void AudioSignal::setCurveSampleCallback(CurveSampleCallback callback, void* context) {
     _curveSampleCallback = callback;
     _curveSampleCallbackContext = context;
 }
 
 // -----------------------------------------------------------------------------
-// Detector and signal accessors
+// Accessors
 // -----------------------------------------------------------------------------
-
-float AudioSignal::onsetDetectionThreshold() const {
-    return _detector.onsetDetectionThreshold();
-}
-
-float AudioSignal::onsetReleaseThreshold() const {
-    return _detector.onsetReleaseThreshold();
-}
-
-unsigned long AudioSignal::cooldownAfterOnsetMs() const {
-    return _detector.cooldownAfterOnsetMs();
-}
-
-unsigned long AudioSignal::releaseDebounceMs() const {
-    return _detector.releaseDebounceMs();
-}
-
-unsigned long AudioSignal::minTransientDurationMs() const {
-    return _detector.minTransientDurationMs();
-}
-
-unsigned long AudioSignal::maxTransientDurationMs() const {
-    return _detector.maxTransientDurationMs();
-}
-
-float AudioSignal::minTransientPeakStrength() const {
-    return _detector.minTransientPeakStrength();
-}
 
 int AudioSignal::rawSignal() const {
     return _rawSignal;
@@ -322,11 +165,15 @@ int AudioSignal::signalMagnitude() const {
 }
 
 int AudioSignal::smoothedSignalMagnitude() const {
-    return (int)_smoothedSignalMagnitude;
+    return static_cast<int>(_smoothedSignalMagnitude);
 }
 
 uint32_t AudioSignal::sampleTimeUs() const {
     return _sampleTimeUs;
+}
+
+const AudioSignalFrame& AudioSignal::latestFrame() const {
+    return _latestFrame;
 }
 
 const AudioBlock& AudioSignal::lastBlock() const {
@@ -345,34 +192,6 @@ uint32_t AudioSignal::lastBlockApproxStartMicros() const {
     return _lastBlockApproxStartMicros;
 }
 
-bool AudioSignal::onsetDetected() const {
-    return _detector.onsetDetected();
-}
-
-float AudioSignal::onsetStrength() const {
-    return _detector.onsetStrength();
-}
-
-bool AudioSignal::transientDetected() const {
-    return _detector.transientDetected();
-}
-
-float AudioSignal::transientStrength() const {
-    return _detector.transientStrength();
-}
-
-unsigned long AudioSignal::transientDurationMs() const {
-    return _detector.transientDurationMs();
-}
-
-bool AudioSignal::peakActive() const {
-    return _detector.peakActive();
-}
-
-float AudioSignal::peakStrength() const {
-    return _detector.peakStrength();
-}
-
 void AudioSignal::emitCurveSample(uint32_t sampleTimeUs) {
     if (_curveSampleCallback == nullptr) {
         return;
@@ -382,49 +201,30 @@ void AudioSignal::emitCurveSample(uint32_t sampleTimeUs) {
     snapshot.sampleMs = sampleTimeUs / 1000UL;
     snapshot.current = abs(_centeredSignal);
     snapshot.env = static_cast<int>(_smoothedSignalMagnitude);
-    snapshot.peak = _detector.peakStrength();
-    snapshot.open = _detector.peakActive();
+    snapshot.peak = _smoothedSignalMagnitude;
+    snapshot.open = _signalMagnitude > 0;
     _curveSampleCallback(snapshot, _curveSampleCallbackContext);
 }
 
-const char* AudioSignal::lastOnsetRejectReasonName() const {
-    return _detector.lastOnsetRejectReasonName();
-}
-
-const char* AudioSignal::lastTransientRejectReasonName() const {
-    return _detector.lastTransientRejectReasonName();
-}
-
-unsigned long AudioSignal::lastTransientRejectedDurationMs() const {
-    return _detector.lastTransientRejectedDurationMs();
-}
-
-float AudioSignal::lastTransientRejectedStrength() const {
-    return _detector.lastTransientRejectedStrength();
-}
-
-unsigned long AudioSignal::onsetRejectedCount() const {
-    return _detector.onsetRejectedCount();
-}
-
-unsigned long AudioSignal::transientRejectedCount() const {
-    return _detector.transientRejectedCount();
-}
-
-unsigned long AudioSignal::transientRejectedDurationTooShortCount() const {
-    return _detector.transientRejectedDurationTooShortCount();
-}
-
-unsigned long AudioSignal::transientRejectedDurationTooLongCount() const {
-    return _detector.transientRejectedDurationTooLongCount();
-}
-
-unsigned long AudioSignal::transientRejectedStrengthTooLowCount() const {
-    return _detector.transientRejectedStrengthTooLowCount();
+void AudioSignal::emitFrame(AudioSignalFrame& outFrame, uint64_t sampleIndex, uint32_t sampleTimeUs, uint32_t sampleTimeMs, unsigned long sampleRateHz, bool blockOverflow) {
+    outFrame = {};
+    outFrame.sampleIndex = sampleIndex;
+    outFrame.sampleTimeUs = sampleTimeUs;
+    outFrame.sampleTimeMs = sampleTimeMs;
+    outFrame.sampleRateHz = sampleRateHz;
+    outFrame.rawSample = _rawSignal;
+    outFrame.centeredSample = _centeredSignal;
+    outFrame.level = _signalMagnitude;
+    outFrame.smoothedLevel = static_cast<int>(_smoothedSignalMagnitude);
+    outFrame.baseline = _baseline;
+    outFrame.valid = true;
+    outFrame.rawHistoryReady = _rawSampleHistory.sampleCount() > 0;
+    outFrame.overflowDuringBlock = blockOverflow;
+    _latestFrame = outFrame;
 }
 
 // -----------------------------------------------------------------------------
-// History, queue, and reset helpers
+// History and reset helpers
 // -----------------------------------------------------------------------------
 
 const AudioSignalStats& AudioSignal::stats() const {
@@ -455,62 +255,17 @@ size_t AudioSignal::rawSampleHistoryCapacity() const {
     return RawSampleHistory::kCapacity;
 }
 
-bool AudioSignal::popCandidate(DetectorCandidate& candidate) {
-    if (_candidateCount == 0) {
-        return false;
-    }
-
-    candidate = _candidateQueue[_candidateReadIndex];
-    _candidateReadIndex = (_candidateReadIndex + 1) % kCandidateQueueCapacity;
-    --_candidateCount;
-    return true;
-}
-
-bool AudioSignal::candidateAvailable() const {
-    return _candidateCount > 0;
-}
-
-size_t AudioSignal::candidateQueueDepth() const {
-    return _candidateCount;
-}
-
 void AudioSignal::resetStats() {
     _stats = {};
     _rawSampleHistory.reset();
-    _candidateQueue[0] = {};
-    _candidateReadIndex = 0;
-    _candidateCount = 0;
-    _candidateActive = false;
-    _candidateHadOverflow = false;
-    _candidateOnsetSample = 0;
-    _candidatePeakSample = 0;
-    _candidateReleaseSample = 0;
-    _candidateOnsetMicrosApprox = 0;
-    _candidateReleaseMicrosApprox = 0;
-    _candidateOnsetMillisApprox = 0;
-    _candidateReleaseMillisApprox = 0;
-    _candidatePeakStrength = 0.0f;
-    _candidateOnsetStrength = 0.0f;
-    _candidateReleaseStrength = 0.0f;
-    _candidateAmbientBaseline = 0.0f;
     _lastBlock = {};
     _lastBlockStartSample = 0;
     _lastBlockSampleCount = 0;
     _lastBlockApproxStartMicros = 0;
+    _latestFrame = {};
 }
 
-void AudioSignal::resetDetectorState() {
-    _detector.resetState();
+void AudioSignal::resetSignalState() {
     _rawSampleHistory.reset();
-    _candidateActive = false;
-    _candidateHadOverflow = false;
-    _candidateOnsetSample = 0;
-    _candidatePeakSample = 0;
-    _candidateReleaseSample = 0;
-    _candidateOnsetMicrosApprox = 0;
-    _candidateReleaseMicrosApprox = 0;
-    _candidatePeakStrength = 0.0f;
-    _candidateOnsetStrength = 0.0f;
-    _candidateReleaseStrength = 0.0f;
-    _candidateAmbientBaseline = 0.0f;
+    _latestFrame = {};
 }

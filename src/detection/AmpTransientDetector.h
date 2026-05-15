@@ -5,7 +5,7 @@
 #include "ScalarTransientDetector.h"
 
 /*
-AudioOnsetDetector
+AmpTransientDetector
 
 Owns the first-stage amplitude-envelope / scalar-stream facade around the
 reusable ScalarTransientDetector core.
@@ -28,12 +28,12 @@ File structure:
 - core detector bridge
 */
 
-class AudioOnsetDetector {
+class AmpTransientDetector {
 public:
     using TransientRejectReason = ScalarTransientDetector::TransientRejectReason;
     using OnsetRejectReason = ScalarTransientDetector::OnsetRejectReason;
 
-    AudioOnsetDetector();
+    AmpTransientDetector();
 
     void begin();
     void resetState();

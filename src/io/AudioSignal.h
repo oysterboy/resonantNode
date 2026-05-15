@@ -4,13 +4,10 @@
 #include <stdint.h>
 
 #include "hal/AudioSource.h"
-#include "AudioOnsetDetector.h"
 
 struct AudioSignalStats {
     uint32_t blocksProcessed = 0;
     uint64_t samplesProcessed = 0;
-    uint32_t candidatesEmitted = 0;
-    uint32_t candidatesDropped = 0;
 };
 
 struct CurveSnapshot {
@@ -19,6 +16,21 @@ struct CurveSnapshot {
     int env = 0;
     float peak = 0.0f;
     bool open = false;
+};
+
+struct AudioSignalFrame {
+    uint64_t sampleIndex = 0;
+    uint32_t sampleTimeUs = 0;
+    uint32_t sampleTimeMs = 0;
+    unsigned long sampleRateHz = 0;
+    int rawSample = 0;
+    int centeredSample = 0;
+    int level = 0;
+    int smoothedLevel = 0;
+    float baseline = 0.0f;
+    bool valid = false;
+    bool rawHistoryReady = false;
+    bool overflowDuringBlock = false;
 };
 
 struct DetectorCandidate {
@@ -128,48 +140,33 @@ private:
 /*
 AudioSignal
 
-Owns the continuous signal interpretation layer and the current signal / candidate assembly layer:
+Owns the neutral signal interpretation layer and the signal/history state:
 - receives raw samples from the source
 - tracks a slow baseline for the quiet floor
-- exposes centered and smoothed values for detectors
-- keeps bounded centered sample history for later candidate-window analysis
+- exposes neutral sample frames and smoothed values for downstream consumers
+- keeps bounded centered sample history for downstream evidence builders
 
 Does not:
 - decide when the node should chirp
 - own pattern meaning
 - own higher-level behavior or pattern-classification decisions
+- own candidate queues or candidate validity policy
 */
 
 class AudioSignal {
 public:
-    AudioSignal(AudioSource& source, AudioOnsetDetector& detector);
+    AudioSignal(AudioSource& source);
 
     void begin(bool doRebase = true);
     void rebase();
-    // Legacy single-sample entry point kept during the block-processing migration.
-    void update(int sample, uint32_t sampleTimeUs);
+    bool update(int sample, uint32_t sampleTimeUs, AudioSignalFrame& outFrame);
     void processBlock(const AudioBlock& block);
 
     void setBaselineTrackingQuietThreshold(int value);
     void setSmoothingFactor(float value);
     void setBaselineUpdateFactor(float value);
-    void setOnsetDetectionThreshold(float value);
-    void setOnsetReleaseThreshold(float value);
-    void setCooldownAfterOnsetMs(unsigned long value);
-    void setReleaseDebounceMs(unsigned long value);
-    void setMinTransientDurationMs(unsigned long value);
-    void setMaxTransientDurationMs(unsigned long value);
-    void setMinTransientPeakStrength(float value);
-    void setDiagnosticsEnabled(bool enabled);
     using CurveSampleCallback = void (*)(const CurveSnapshot& snapshot, void* context);
     void setCurveSampleCallback(CurveSampleCallback callback, void* context);
-    float onsetDetectionThreshold() const;
-    float onsetReleaseThreshold() const;
-    unsigned long cooldownAfterOnsetMs() const;
-    unsigned long releaseDebounceMs() const;
-    unsigned long minTransientDurationMs() const;
-    unsigned long maxTransientDurationMs() const;
-    float minTransientPeakStrength() const;
 
     int rawSignal() const;
     float baseline() const;
@@ -177,26 +174,11 @@ public:
     int signalMagnitude() const;
     int smoothedSignalMagnitude() const;
     uint32_t sampleTimeUs() const;
+    const AudioSignalFrame& latestFrame() const;
     const AudioBlock& lastBlock() const;
     uint64_t lastBlockStartSample() const;
     uint16_t lastBlockSampleCount() const;
     uint32_t lastBlockApproxStartMicros() const;
-    bool onsetDetected() const;
-    float onsetStrength() const;
-    bool transientDetected() const;
-    float transientStrength() const;
-    unsigned long transientDurationMs() const;
-    bool peakActive() const;
-    float peakStrength() const;
-    const char* lastOnsetRejectReasonName() const;
-    const char* lastTransientRejectReasonName() const;
-    unsigned long lastTransientRejectedDurationMs() const;
-    float lastTransientRejectedStrength() const;
-    unsigned long onsetRejectedCount() const;
-    unsigned long transientRejectedCount() const;
-    unsigned long transientRejectedDurationTooShortCount() const;
-    unsigned long transientRejectedDurationTooLongCount() const;
-    unsigned long transientRejectedStrengthTooLowCount() const;
     const AudioSignalStats& stats() const;
     bool rawSampleHistoryAvailable(uint64_t startSampleIndex, uint64_t endSampleIndex) const;
     size_t copyRawSampleHistory(uint64_t startSampleIndex, uint64_t endSampleIndex, int16_t* outSamples, size_t outCapacity) const;
@@ -204,19 +186,14 @@ public:
     uint64_t rawSampleHistoryEndSampleIndex() const;
     size_t rawSampleHistorySampleCount() const;
     size_t rawSampleHistoryCapacity() const;
-    bool popCandidate(DetectorCandidate& candidate);
-    bool candidateAvailable() const;
-    size_t candidateQueueDepth() const;
     void resetStats();
-    void resetDetectorState();
+    void resetSignalState();
 
 private:
     AudioSource& _source;
-    AudioOnsetDetector& _detector;
 
     void processSample(int sample, uint32_t sampleTimeUs, uint64_t sampleIndex, uint32_t sampleRateHz, bool blockOverflow);
-    void finalizeCandidate(uint64_t releaseSample, uint32_t releaseMicrosApprox, uint32_t releaseMillisApprox);
-    bool pushCandidate(const DetectorCandidate& candidate);
+    void emitFrame(AudioSignalFrame& outFrame, uint64_t sampleIndex, uint32_t sampleTimeUs, uint32_t sampleTimeMs, unsigned long sampleRateHz, bool blockOverflow);
     void emitCurveSample(uint32_t sampleTimeUs);
 
     int _rawSignal = 0;
@@ -225,29 +202,13 @@ private:
     uint32_t _sampleTimeUs = 0;
     float _baseline = 2000.0f;
     float _smoothedSignalMagnitude = 0.0f;
+    AudioSignalFrame _latestFrame;
     AudioBlock _lastBlock;
     uint64_t _lastBlockStartSample = 0;
     uint16_t _lastBlockSampleCount = 0;
     uint32_t _lastBlockApproxStartMicros = 0;
     AudioSignalStats _stats;
     RawSampleHistory _rawSampleHistory;
-    static constexpr size_t kCandidateQueueCapacity = 8;
-    DetectorCandidate _candidateQueue[kCandidateQueueCapacity] = {};
-    size_t _candidateReadIndex = 0;
-    size_t _candidateCount = 0;
-    bool _candidateActive = false;
-    bool _candidateHadOverflow = false;
-    uint64_t _candidateOnsetSample = 0;
-    uint64_t _candidatePeakSample = 0;
-    uint64_t _candidateReleaseSample = 0;
-    uint32_t _candidateOnsetMicrosApprox = 0;
-    uint32_t _candidateReleaseMicrosApprox = 0;
-    uint32_t _candidateOnsetMillisApprox = 0;
-    uint32_t _candidateReleaseMillisApprox = 0;
-    float _candidatePeakStrength = 0.0f;
-    float _candidateOnsetStrength = 0.0f;
-    float _candidateReleaseStrength = 0.0f;
-    float _candidateAmbientBaseline = 0.0f;
 
     // Tuning knobs for baseline tracking and smoothing.
     int _baselineTrackingQuietThreshold = 40;

@@ -9,9 +9,10 @@
 #include "../../hal/AudioSourceI2S.h"
 #include "../../hal/PiezoToneOutputBTL.h"
 #include "../../hal/PiezoToneOutput.h"
-#include "../../io/AudioFrequencyDetector.h"
 #include "../../io/AudioSignal.h"
-#include "../../io/AudioOnsetDetector.h"
+#include "../../detection/AmpTransientDetector.h"
+#include "../../detection/AmpCandidateBuilder.h"
+#include "../../detection/FreqTransientDetector.h"
 #include "../../io/ChirpOutput.h"
 #include "../../behavior/ResonantBehavior.h"
 #include "node_debug.h"
@@ -116,9 +117,10 @@ private:
     ChirpOutput _chirpOutput;
 
     // Signal / detection / behavior pipeline.
-    AudioOnsetDetector _audioOnsetDetector;
+    AmpTransientDetector _audioOnsetDetector;
     AudioSignal _audioSignal;
-    AudioFrequencyDetector _audioFrequencyDetector;
+    AmpCandidateBuilder _ampCandidateBuilder;
+    FreqTransientDetector _freqTransientDetector;
     FrequencyEvidenceEvaluation::Values _frequencyEvidenceTuning = {};
     ResonantBehavior _behavior;
 

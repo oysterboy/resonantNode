@@ -1402,7 +1402,7 @@ Possible later structure:
 AudioSignal
   ├─ AudioOnsetDetector
   ├─ AudioTransientDetector
-  └─ AudioFrequencyDetector
+  └─ FrequencyBandStreamExtractor
         ↓
 GroupDetector
         ↓

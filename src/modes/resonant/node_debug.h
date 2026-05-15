@@ -5,7 +5,7 @@
 #include "../../io/ChirpOutput.h"
 
 class AudioSignal;
-class AudioOnsetDetector;
+class AmpTransientDetector;
 class ResonantBehavior;
 
 class NodeDebug {
@@ -44,7 +44,7 @@ public:
 
     void printPlotValues(unsigned long now,
                          const AudioSignal& audioSignal,
-                         const AudioOnsetDetector& audioOnsetDetector,
+                         const AmpTransientDetector& audioOnsetDetector,
                          const ResonantBehavior& behavior,
                          const ChirpOutput& chirpOutput,
                          bool selfChirpSuppressed);

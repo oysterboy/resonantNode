@@ -49,6 +49,9 @@ constexpr int kRbStartupQuietThreshold = 20;
 constexpr unsigned long kRbStartupQuietHoldMs = 1000;
 constexpr unsigned long kRbStartupBaselineTimeoutMs = 8000;
 constexpr unsigned long kRbPostRebaseSettleMs = 500;
+constexpr unsigned long kLiveFrequencyReleaseDebounceMs = 20UL;
+constexpr unsigned long kLiveFrequencyCooldownAfterOnsetMs = 300UL;
+constexpr unsigned long kLiveFrequencyMinTransientDurationMs = 50UL;
 
 bool startsWithTokenIgnoreCase(const char* line, const char* token) {
     while (*token != '\0') {
@@ -226,8 +229,8 @@ Node::Node(int inputPin, int ledPin, int chirpPin, int chirpBtlPin, AudioSourceK
                        ? static_cast<AudioSource&>(_i2sSource)
                        : static_cast<AudioSource&>(_analogSource)),
       _audioOnsetDetector(),
-      _audioSignal(_audioSource, _audioOnsetDetector),
-      _audioFrequencyDetector(_audioSignal),
+      _audioSignal(_audioSource),
+      _freqTransientDetector(),
       _toneOutput(chirpPin),
       _toneOutputBTL(chirpPin, chirpBtlPin),
       _chirpOutput(chirpBtlPin >= 0
@@ -241,8 +244,9 @@ void Node::begin() {
     configureParameters();
     _audioSource.begin();
     _audioSignal.begin(false);
-    _audioFrequencyDetector.begin();
-    _audioFrequencyDetector.setDiagnosticsEnabled(false);
+    _ampCandidateBuilder.resetState();
+    _audioOnsetDetector.begin();
+    _freqTransientDetector.resetState();
     _behavior.resetState();
     resetDetectionState();
     _audioSignal.resetStats();
@@ -268,19 +272,19 @@ void Node::begin() {
 
     if (_sourceKind == AudioSourceKind::I2S) {
         Serial.print("RB det mode=AMP onset=");
-        Serial.print(_audioSignal.onsetDetectionThreshold(), 1);
+        Serial.print(_audioOnsetDetector.onsetDetectionThreshold(), 1);
         Serial.print(" release=");
-        Serial.print(_audioSignal.onsetReleaseThreshold(), 1);
+        Serial.print(_audioOnsetDetector.onsetReleaseThreshold(), 1);
         Serial.print(" cooldown=");
-        Serial.print(_audioSignal.cooldownAfterOnsetMs());
+        Serial.print(_audioOnsetDetector.cooldownAfterOnsetMs());
         Serial.print(" releaseDebounce=");
-        Serial.print(_audioSignal.releaseDebounceMs());
+        Serial.print(_audioOnsetDetector.releaseDebounceMs());
         Serial.print(" minMs=");
-        Serial.print(_audioSignal.minTransientDurationMs());
+        Serial.print(_audioOnsetDetector.minTransientDurationMs());
         Serial.print(" maxMs=");
-        Serial.print(_audioSignal.maxTransientDurationMs());
+        Serial.print(_audioOnsetDetector.maxTransientDurationMs());
         Serial.print(" minStrength=");
-        Serial.println(_audioSignal.minTransientPeakStrength(), 1);
+        Serial.println(_audioOnsetDetector.minTransientPeakStrength(), 1);
         Serial.print("RB startup baseline=");
         Serial.println(rbBaselineStateName());
     }
@@ -309,7 +313,8 @@ void Node::resetRbCounters() {
 }
 
 void Node::resetDetectionState() {
-    _audioSignal.resetDetectorState();
+    _audioSignal.resetSignalState();
+    _ampCandidateBuilder.resetState();
     _wasSelfChirpSuppressed = false;
     _rbLastLoggedOnsetRejectCount = 0;
     _rbLastLoggedTransientRejectCount = 0;
@@ -500,16 +505,28 @@ void Node::update() {
                 break;
             }
 
-            _audioSignal.processBlock(block);
+            const uint32_t sampleRateHz = _audioSource.sampleRateHz() > 0 ? _audioSource.sampleRateHz() : 16000UL;
+            const uint32_t samplePeriodUs = sampleRateHz > 0 ? static_cast<uint32_t>(1000000UL / sampleRateHz) : 0;
             for (uint16_t i = 0; i < block.sampleCount; ++i) {
-                const int centeredSample = static_cast<int>(block.samples[i] - _audioSignal.baseline());
-                _audioFrequencyDetector.observeCenteredSample(centeredSample);
+                const uint64_t sampleIndex = block.startSampleIndex + static_cast<uint64_t>(i);
+                const uint32_t sampleTimeUs = sampleRateHz > 0
+                    ? static_cast<uint32_t>((sampleIndex * 1000000ULL) / static_cast<uint64_t>(sampleRateHz))
+                    : block.approxStartMicros;
+                const uint32_t approxBlockSampleMicros = samplePeriodUs > 0
+                    ? block.approxStartMicros + static_cast<uint32_t>(static_cast<uint32_t>(i) * samplePeriodUs)
+                    : block.approxStartMicros;
+                const uint32_t sampleTimeMsApprox = approxBlockSampleMicros / 1000UL;
+                AudioSignalFrame frame;
+                _audioSignal.update(static_cast<int>(block.samples[i]), sampleTimeUs, frame);
+                frame.sampleTimeMs = sampleTimeMsApprox;
+                _ampCandidateBuilder.observeSample(frame, _audioOnsetDetector);
+                _freqTransientDetector.observeCenteredSample(frame.centeredSample);
             }
             sawI2SSample = true;
-            const unsigned long queueDepthBeforeDrain = static_cast<unsigned long>(_audioSignal.candidateQueueDepth());
+            const unsigned long queueDepthBeforeDrain = static_cast<unsigned long>(_ampCandidateBuilder.candidateQueueDepth());
 
             DetectorCandidate candidate;
-            while (_audioSignal.popCandidate(candidate)) {
+            while (_ampCandidateBuilder.popCandidate(candidate)) {
                 DetectionPipeline::PatternResult patternResult;
                 const auto liveFrequencyEvidence = captureFrequencyEvidence();
                 DetectionPipeline::FrequencyEvidence frequencyEvidence = liveFrequencyEvidence;
@@ -518,14 +535,14 @@ void Node::update() {
                     _audioSignal,
                     candidate,
                     _audioSource.sampleRateHz() > 0 ? _audioSource.sampleRateHz() : 16000UL,
-                    _audioFrequencyDetector.targetFrequencyHz(),
+                    _freqTransientDetector.targetFrequencyHz(),
                     now,
                     frequencyEvidence);
                 DetectionPipeline::measureCandidateWindowFrequency(
                     _audioSignal,
                     candidate,
                     _audioSource.sampleRateHz() > 0 ? _audioSource.sampleRateHz() : 16000UL,
-                    _audioFrequencyDetector.targetFrequencyHz(),
+                    _freqTransientDetector.targetFrequencyHz(),
                     now,
                     fullFrequencyEvidence,
                     candidate.durationMs);
@@ -594,15 +611,17 @@ void Node::update() {
             if (!_audioSource.readSample(sample, sampleTimeUs)) {
                 break;
             }
-            _audioSignal.update(sample, sampleTimeUs);
-            _audioFrequencyDetector.observeCenteredSample(_audioSignal.centeredSignal());
+            AudioSignalFrame frame;
+            _audioSignal.update(sample, sampleTimeUs, frame);
+            _ampCandidateBuilder.observeSample(frame, _audioOnsetDetector);
+            _freqTransientDetector.observeCenteredSample(frame.centeredSample);
 
             const bool onsetDetected = selfChirpSuppressed ? false : _audioOnsetDetector.onsetDetected();
             _debug.observeOnset(now, onsetDetected, _audioOnsetDetector.onsetStrength());
-            const unsigned long queueDepthBeforeDrain = static_cast<unsigned long>(_audioSignal.candidateQueueDepth());
+            const unsigned long queueDepthBeforeDrain = static_cast<unsigned long>(_ampCandidateBuilder.candidateQueueDepth());
 
             DetectorCandidate candidate;
-            while (_audioSignal.popCandidate(candidate)) {
+            while (_ampCandidateBuilder.popCandidate(candidate)) {
                 DetectionPipeline::PatternResult patternResult;
                 const auto liveFrequencyEvidence = captureFrequencyEvidence();
                 DetectionPipeline::FrequencyEvidence frequencyEvidence = liveFrequencyEvidence;
@@ -611,14 +630,14 @@ void Node::update() {
                     _audioSignal,
                     candidate,
                     _audioSource.sampleRateHz() > 0 ? _audioSource.sampleRateHz() : 16000UL,
-                    _audioFrequencyDetector.targetFrequencyHz(),
+                    _freqTransientDetector.targetFrequencyHz(),
                     now,
                     frequencyEvidence);
                 DetectionPipeline::measureCandidateWindowFrequency(
                     _audioSignal,
                     candidate,
                     _audioSource.sampleRateHz() > 0 ? _audioSource.sampleRateHz() : 16000UL,
-                    _audioFrequencyDetector.targetFrequencyHz(),
+                    _freqTransientDetector.targetFrequencyHz(),
                     now,
                     fullFrequencyEvidence,
                     candidate.durationMs);
@@ -802,7 +821,7 @@ void Node::handleSerialLine(const char* line) {
             return;
         }
 
-        DetectorParameters::Values params = DetectorParameters::capture(_audioSignal);
+        DetectorParameters::Values params = DetectorParameters::capture(_audioOnsetDetector);
         FrequencyEvidenceEvaluation::Values freqTuning = _frequencyEvidenceTuning;
 
         while ((token = strtok_r(nullptr, " ", &savePtr)) != nullptr) {
@@ -810,24 +829,23 @@ void Node::handleSerialLine(const char* line) {
             FrequencyEvidenceEvaluation::parseToken(token, freqTuning);
         }
 
-        DetectorParameters::apply(params, _audioSignal);
         DetectorParameters::apply(params, _audioOnsetDetector);
         _frequencyEvidenceTuning = freqTuning;
 
         Serial.print("RB PARAM onset=");
-        Serial.print(_audioSignal.onsetDetectionThreshold(), 1);
+        Serial.print(_audioOnsetDetector.onsetDetectionThreshold(), 1);
         Serial.print(" release=");
-        Serial.print(_audioSignal.onsetReleaseThreshold(), 1);
+        Serial.print(_audioOnsetDetector.onsetReleaseThreshold(), 1);
         Serial.print(" cooldown=");
-        Serial.print(_audioSignal.cooldownAfterOnsetMs());
+        Serial.print(_audioOnsetDetector.cooldownAfterOnsetMs());
         Serial.print(" releaseDebounce=");
-        Serial.print(_audioSignal.releaseDebounceMs());
+        Serial.print(_audioOnsetDetector.releaseDebounceMs());
         Serial.print(" minMs=");
-        Serial.print(_audioSignal.minTransientDurationMs());
+        Serial.print(_audioOnsetDetector.minTransientDurationMs());
         Serial.print(" maxMs=");
-        Serial.print(_audioSignal.maxTransientDurationMs());
+        Serial.print(_audioOnsetDetector.maxTransientDurationMs());
         Serial.print(" minStrength=");
-        Serial.print(_audioSignal.minTransientPeakStrength(), 1);
+        Serial.print(_audioOnsetDetector.minTransientPeakStrength(), 1);
         Serial.print(" freqScore=");
         Serial.print(_frequencyEvidenceTuning.scoreMin, 0);
         Serial.print(" freqContrast=");
@@ -1020,20 +1038,20 @@ const char* Node::rbLogModeName() const {
 DetectionPipeline::FrequencyEvidence Node::captureFrequencyEvidence() const {
     DetectionPipeline::FrequencyEvidence evidence;
     evidence.observedAtMs = millis();
-    const bool present = _audioFrequencyDetector.streamWindowReady();
-    const float totalEnergy = _audioFrequencyDetector.lastTotalEnergy();
+    const bool present = _freqTransientDetector.windowReady();
+    const float totalEnergy = _freqTransientDetector.lastTotalEnergy();
 
     evidence.present = present;
     evidence.matched = false;
-    evidence.targetHz = present ? _audioFrequencyDetector.targetFrequencyHz() : 0;
-    evidence.windowSampleCount = _audioFrequencyDetector.streamSampleCount();
+    evidence.targetHz = present ? _freqTransientDetector.targetFrequencyHz() : 0;
+    evidence.windowSampleCount = _freqTransientDetector.sampleCount();
     evidence.windowAvailable = present;
-    evidence.score = _audioFrequencyDetector.lastFrequencyScore();
+    evidence.score = _freqTransientDetector.lastFrequencyScore();
     evidence.confidence = 0.0f;
-    evidence.targetPower = _audioFrequencyDetector.lastTargetPower();
-    evidence.neighborPower = _audioFrequencyDetector.lastNeighborPower();
+    evidence.targetPower = _freqTransientDetector.lastTargetPower();
+    evidence.neighborPower = _freqTransientDetector.lastNeighborPower();
     evidence.totalEnergy = totalEnergy;
-    evidence.spectralContrast = _audioFrequencyDetector.lastSpectralContrast();
+    evidence.spectralContrast = _freqTransientDetector.lastSpectralContrast();
     evidence.validWindow = present;
     return evidence;
 }
@@ -1138,45 +1156,6 @@ void Node::logCandidate(const DetectorCandidate& candidate, const DetectionPipel
     Serial.print(patternResult.freq.validWindow ? 1 : 0);
     Serial.print(" freq_eval_reason=");
     Serial.print(FrequencyEvidenceEvaluation::reasonName(freqEval.reason));
-    Serial.print(" freqEarly[avail=");
-    Serial.print(patternResult.freq.windowAvailable ? 1 : 0);
-    Serial.print(" score=");
-    Serial.print(patternResult.freq.score, 1);
-    Serial.print(" target=");
-    Serial.print(patternResult.freq.targetHz);
-    Serial.print(" contrast=");
-    Serial.print(patternResult.freq.spectralContrast, 2);
-    Serial.print(" win=");
-    Serial.print(patternResult.freq.windowSampleCount);
-    Serial.print("]");
-    char freqFailReason[96];
-    FrequencyEvidenceEvaluation::buildFailReason(patternResult.freq, _frequencyEvidenceTuning, freqFailReason, sizeof(freqFailReason));
-    if (strcmp(freqFailReason, "none") != 0) {
-        Serial.print(" freq_fail_reason=");
-        Serial.print(freqFailReason);
-    }
-    const auto freqFullEval = FrequencyEvidenceEvaluation::evaluate(patternResult.freqFull, _frequencyEvidenceTuning);
-    Serial.print(" freqFull[avail=");
-    Serial.print(patternResult.freqFull.present ? 1 : 0);
-    Serial.print(" score=");
-    Serial.print(patternResult.freqFull.score, 1);
-    Serial.print(" target=");
-    Serial.print(patternResult.freqFull.targetHz);
-    Serial.print(" contrast=");
-    Serial.print(patternResult.freqFull.spectralContrast, 2);
-    Serial.print(" win=");
-    Serial.print(patternResult.freqFull.windowSampleCount);
-    Serial.print(" matched=");
-    Serial.print(freqFullEval.matched ? 1 : 0);
-    Serial.print(" reason=");
-    Serial.print(FrequencyEvidenceEvaluation::reasonName(freqFullEval.reason));
-    Serial.print("]");
-    char freqFullFailReason[96];
-    FrequencyEvidenceEvaluation::buildFailReason(patternResult.freqFull, _frequencyEvidenceTuning, freqFullFailReason, sizeof(freqFullFailReason));
-    if (strcmp(freqFullFailReason, "none") != 0) {
-        Serial.print(" freqFull_fail_reason=");
-        Serial.print(freqFullFailReason);
-    }
     if (liveFrequencyEvidence != nullptr) {
         Serial.print(" liveFreq[avail=");
         Serial.print(liveFrequencyEvidence->present ? 1 : 0);
@@ -1217,8 +1196,6 @@ void Node::printRbSummary() const {
     Serial.print(_rbActionCount);
     Serial.print(" overflowCandidates=");
     Serial.print(_rbOverflowCandidates);
-    Serial.print(" candidateDrops=");
-    Serial.print(stats.candidatesDropped);
     Serial.print(" avg_strength=");
     Serial.print(avgStrength, 1);
     Serial.print(" avg_duration=");
@@ -1307,30 +1284,30 @@ void Node::printRbSignalSummary() const {
 
 void Node::printRbDetectorSummary() const {
     Serial.print("RB det mode=AMP onset=");
-    Serial.print(_audioSignal.onsetDetectionThreshold(), 1);
+    Serial.print(_audioOnsetDetector.onsetDetectionThreshold(), 1);
     Serial.print(" release=");
-    Serial.print(_audioSignal.onsetReleaseThreshold(), 1);
+    Serial.print(_audioOnsetDetector.onsetReleaseThreshold(), 1);
     Serial.print(" cooldown=");
-    Serial.print(_audioSignal.cooldownAfterOnsetMs());
+    Serial.print(_audioOnsetDetector.cooldownAfterOnsetMs());
     Serial.print(" releaseDebounce=");
-    Serial.print(_audioSignal.releaseDebounceMs());
+    Serial.print(_audioOnsetDetector.releaseDebounceMs());
     Serial.print(" minMs=");
-    Serial.print(_audioSignal.minTransientDurationMs());
+    Serial.print(_audioOnsetDetector.minTransientDurationMs());
     Serial.print(" maxMs=");
-    Serial.print(_audioSignal.maxTransientDurationMs());
+    Serial.print(_audioOnsetDetector.maxTransientDurationMs());
     Serial.print(" minStrength=");
-    Serial.println(_audioSignal.minTransientPeakStrength(), 1);
+    Serial.println(_audioOnsetDetector.minTransientPeakStrength(), 1);
 
     Serial.print("RB det: tooShort=");
-    Serial.print(_audioSignal.transientRejectedDurationTooShortCount());
+    Serial.print(_audioOnsetDetector.transientRejectedDurationTooShortCount());
     Serial.print(" tooLong=");
-    Serial.print(_audioSignal.transientRejectedDurationTooLongCount());
+    Serial.print(_audioOnsetDetector.transientRejectedDurationTooLongCount());
     Serial.print(" weak=");
-    Serial.print(_audioSignal.transientRejectedStrengthTooLowCount());
+    Serial.print(_audioOnsetDetector.transientRejectedStrengthTooLowCount());
     Serial.print(" lastReject=");
-    Serial.print(_audioSignal.lastTransientRejectReasonName());
+    Serial.print(_audioOnsetDetector.lastTransientRejectReasonName());
     Serial.print(" lastRejectDur=");
-    Serial.print(_audioSignal.lastTransientRejectedDurationMs());
+    Serial.print(_audioOnsetDetector.lastTransientRejectedDurationMs());
     Serial.print(" lastRejectStrength=");
-    Serial.println(_audioSignal.lastTransientRejectedStrength(), 1);
+    Serial.println(_audioOnsetDetector.lastTransientRejectedStrength(), 1);
 }

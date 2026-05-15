@@ -2,7 +2,7 @@
 
 #include "../../behavior/ResonantBehavior.h"
 #include "../../AudioDebugConfig.h"
-#include "../../io/AudioOnsetDetector.h"
+#include "../../detection/AmpTransientDetector.h"
 #include "../../io/AudioSignal.h"
 #include "../../io/ChirpOutput.h"
 
@@ -295,7 +295,7 @@ void NodeDebug::updateLed(unsigned long now,
 
 void NodeDebug::printPlotValues(unsigned long now,
                                const AudioSignal& audioSignal,
-                               const AudioOnsetDetector& audioOnsetDetector,
+                               const AmpTransientDetector& audioOnsetDetector,
                                const ResonantBehavior& behavior,
                                const ChirpOutput& chirpOutput,
                                bool selfChirpSuppressed) {

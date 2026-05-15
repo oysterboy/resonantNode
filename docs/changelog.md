@@ -376,3 +376,16 @@
 
 ### Verification
 - `platformio run -e esp32dev-analyzer`
+
+## 2026-05-15 - Detection RF 8 detection mode seam
+
+### Added
+- Added `DetectionMode` to Resonant `Node` with `AmpLegacy`, `RoadmapFrequencyFirst`, and `RoadmapFrequencyOnly`.
+- Added `RB DETECT` commands for querying and selecting the detection mode.
+
+### Changed
+- Added `detectMode=` to `RB summary` output so the active detection mode is visible at runtime.
+- Kept the active runtime path on `AmpLegacy` while preparing the seam for future `DetectionRuntime` integration.
+
+### Verification
+- `platformio run -e esp32dev`

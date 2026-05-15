@@ -49,6 +49,12 @@ File structure:
 
 class Node {
 public:
+    enum class DetectionMode {
+        AmpLegacy,
+        RoadmapFrequencyFirst,
+        RoadmapFrequencyOnly,
+    };
+
     enum class AudioSourceKind {
         Analog,
         I2S
@@ -97,8 +103,11 @@ private:
     void handleSerialLine(const char* line);
     void handleDebugCommand(const char* line);
     void handleLogCommand(const char* line);
+    void handleDetectCommand(const char* line);
     bool rbShouldLogDetail() const;
     const char* rbLogModeName() const;
+    const char* detectionModeName() const;
+    bool setDetectionModeFromName(const char* name);
     DetectionPipeline::FrequencyEvidence captureFrequencyEvidence() const;
     void logCandidate(const DetectorCandidate& candidate, const DetectionPipeline::PatternResult& patternResult, const DetectionPipeline::FrequencyEvidence* liveFrequencyEvidence, unsigned long candidateNumber, long gapMs, unsigned long queueDepthBeforeDrain, unsigned long behaviorLagMs, const char* candidateClass, const char* action, const char* stateName, const char* gateName);
     void printRbSummary() const;
@@ -139,6 +148,7 @@ private:
     unsigned long _rbLastLoggedTransientRejectCount = 0;
     bool _rbDetectOnly = false;
     RbLogMode _rbLogMode = RbLogMode::Minimal;
+    DetectionMode _detectionMode = DetectionMode::AmpLegacy;
     bool _wasSelfChirpSuppressed = false;
     unsigned long _rbLastWouldEmitHeardMs = 0;
     ResonantBehavior::BehaviorDecision _rbLastWouldEmitDecision = ResonantBehavior::BehaviorDecision::None;

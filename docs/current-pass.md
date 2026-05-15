@@ -1,300 +1,221 @@
-# Codex Task: Detection Roadmap v0.3 — Pass 7: Add DetectionRuntime
+# Codex Task: Detection Roadmap v0.3 — Pass 8: Add Detection Mode Switch
 
 Use `docs/detection-roadmap-v0-2-implementation-brief.md` as the architecture source of truth, but apply the updated Roadmap v0.3 naming/rule corrections from the latest refactor notes.
 
 ## Scope
 
-Detection architecture only.
+Resonant Node detection integration scaffold.
 
-Add the `DetectionRuntime` orchestration layer.
+Add a detection mode switch, but do not fully replace the current Node detection path yet.
 
-This pass should create the runtime pipeline object, but it should not replace the current `Node` detection path yet.
+This pass prepares Node so the next pass can integrate `DetectionRuntime` safely.
 
 ## Goal
 
-Create `DetectionRuntime`, which wires the roadmap detection layers:
+Add an explicit RB detection mode enum and serial command so we can switch between:
 
 ```txt
-SignalEmitters
-→ SignalInspector
-→ PatternAssembler
-→ PatternRules
-→ PatternResult queue
+AmpLegacy
+RoadmapFrequencyFirst
+RoadmapFrequencyOnly
 ```
 
-`DetectionRuntime` is the future owner of the detection path used by `Node`.
-
-Roadmap v0.3 rule:
-
-```txt
-FeatureExtractors measure.
-SignalDetectors / SignalEmitters propose SignalCandidates.
-SignalInspector accepts/rejects/annotates SignalCandidates into InspectedSignals.
-PatternAssembler creates PatternCandidates.
-PatternRules interpret PatternCandidates into PatternResults.
-Behavior consumes PatternResults.
-```
+The purpose is to compare old and new detection paths without reflashing.
 
 ---
 
-## Add Files
+## Detection Modes
 
-Create:
-
-```txt
-src/detection/DetectionRuntime.h
-src/detection/DetectionRuntime.cpp
-```
-
-Create directories if needed.
-
----
-
-## Existing Layers
-
-Use the layers created in earlier passes:
-
-```txt
-src/detection/signals/AmpSignalEmitter.h
-src/detection/signals/FrequencySignalEmitter.h
-src/detection/signals/SignalInspector.h
-src/detection/patterns/PatternAssembler.h
-src/detection/patterns/PatternRules.h
-src/detection/patterns/PatternResult.h
-```
-
-Use existing project types:
-
-```txt
-AudioSignalFrame
-DetectionPipeline::FrequencyEvidence
-FrequencyEvidenceEvaluation::Values
-```
-
-If the names differ slightly, adapt minimally to the current code.
-
----
-
-## API
-
-Create a class with this general shape:
+Add:
 
 ```cpp
-#pragma once
-
-#include <stddef.h>
-
-#include "signals/AmpSignalEmitter.h"
-#include "signals/FrequencySignalEmitter.h"
-#include "signals/SignalInspector.h"
-#include "patterns/PatternAssembler.h"
-#include "patterns/PatternRules.h"
-#include "patterns/PatternResult.h"
-#include "FrequencyEvidenceEvaluation.h"
-
-struct AudioSignalFrame;
-
-namespace detection {
-
-class DetectionRuntime {
-public:
-    DetectionRuntime();
-
-    void reset();
-
-    void setFrequencyTuning(const FrequencyEvidenceEvaluation::Values& tuning);
-
-    void observeFrame(
-        const AudioSignalFrame& frame,
-        const DetectionPipeline::FrequencyEvidence& frequencyEvidence,
-        unsigned long nowMs
-    );
-
-    bool popPatternResult(PatternResult& out);
-
-private:
-    static constexpr size_t kResultQueueCapacity = 8;
-
-    bool pushPatternResult(const PatternResult& result);
-
-    FrequencyEvidenceEvaluation::Values _frequencyTuning = {};
-
-    AmpSignalEmitter _ampEmitter;
-    FrequencySignalEmitter _frequencyEmitter;
-    SignalInspector _signalInspector;
-    PatternAssembler _patternAssembler;
-    PatternRules _patternRules;
-
-    PatternResult _resultQueue[kResultQueueCapacity] = {};
-    size_t _resultReadIndex = 0;
-    size_t _resultCount = 0;
+enum class DetectionMode {
+    AmpLegacy,
+    RoadmapFrequencyFirst,
+    RoadmapFrequencyOnly
 };
-
-} // namespace detection
 ```
 
-If `PatternResult` is an alias to `DetectionPipeline::PatternResult`, this is fine.
+Preferred location:
 
-If previous passes used a different namespace than `detection`, follow the existing namespace.
+```txt
+src/modes/resonant/node.h
+```
+
+Use a private member:
+
+```cpp
+DetectionMode _detectionMode = DetectionMode::AmpLegacy;
+```
+
+For this pass, keep the default as `AmpLegacy`.
+
+The next integration pass may switch default later.
 
 ---
 
-## Internal Processing Order
-
-`observeFrame(...)` should perform the roadmap chain, in this order:
+## Meaning
 
 ```txt
-1. feed frame/evidence to FrequencySignalEmitter
-2. feed frame/evidence to AmpSignalEmitter
-3. drain frequency SignalCandidates first
-4. inspect frequency SignalCandidates
-5. pass accepted InspectedSignals to PatternAssembler
-6. drain AMP SignalCandidates second
-7. inspect AMP SignalCandidates
-8. pass accepted InspectedSignals to PatternAssembler
-9. drain PatternCandidates
-10. evaluate PatternCandidates with PatternRules
-11. queue PatternResults
+AmpLegacy:
+  old current AMP-first path
+  current behavior remains unchanged
+
+RoadmapFrequencyFirst:
+  future DetectionRuntime path
+  frequency candidates preferred
+  AMP candidates allowed as fallback/support/comparison
+
+RoadmapFrequencyOnly:
+  future DetectionRuntime path
+  AMP ignored for behavior
+  AMP may still be used for diagnostics later
 ```
 
-The frequency-first priority is important.
+In this pass, `RoadmapFrequencyFirst` and `RoadmapFrequencyOnly` may be accepted as modes but should not yet change detection behavior unless DetectionRuntime integration is already trivial and safe.
+
+Prefer no runtime behavior change in this pass.
 
 ---
 
-## Runtime Behavior
+## Serial Command
 
-This pass should add the runtime class, but it should not yet replace the current direct `Node` path.
-
-So:
+Add a command to `Node::handleSerialLine(...)`:
 
 ```txt
-DetectionRuntime exists and compiles.
-Node behavior remains unchanged.
+RB DETECT mode=legacy
+RB DETECT mode=freq
+RB DETECT mode=freqonly
 ```
 
-Do not integrate `DetectionRuntime` into `Node` yet, except for includes if absolutely required by compile structure.
+Also allow a status query:
 
-Integration happens in the next pass.
+```txt
+RB DETECT
+```
+
+Suggested outputs:
+
+```txt
+RB DETECT mode=legacy
+RB DETECT mode=freq
+RB DETECT mode=freqonly
+```
+
+Add to `RB help` output:
+
+```txt
+RB CMD: RB DETECT mode=legacy|freq|freqonly
+```
 
 ---
 
-## Frequency-First Rule
+## Helper Functions
 
-Frequency candidates should be processed before AMP candidates.
+Add small helper methods if useful:
 
-Desired priority:
-
-```txt
-FrequencySignalEmitter
-→ SignalInspector
-→ PatternAssembler
-→ PatternRules
-→ PatternResult
-
-then AMP fallback/support/comparison
+```cpp
+const char* detectionModeName() const;
+bool setDetectionModeFromName(const char* name);
 ```
 
-AMP remains useful as fallback/comparison, but frequency-first is the first real roadmap path.
+or static free helpers in `node.cpp`.
+
+Accepted mode strings:
+
+```txt
+legacy
+amp
+ampLegacy
+freq
+frequency
+roadmap
+freqfirst
+frequencyfirst
+freqonly
+frequencyonly
+```
+
+Map:
+
+```txt
+legacy / amp / ampLegacy
+→ AmpLegacy
+
+freq / frequency / roadmap / freqfirst / frequencyfirst
+→ RoadmapFrequencyFirst
+
+freqonly / frequencyonly
+→ RoadmapFrequencyOnly
+```
+
+Keep parsing simple and consistent with existing command parsing style.
+
+---
+
+## Behavior in This Pass
+
+This pass should not yet route frames through `DetectionRuntime`.
+
+It should only add:
+
+```txt
+- enum
+- member state
+- serial command
+- help output
+- summary output if useful
+```
+
+Runtime detection should remain the same in all modes for now unless an earlier implementation already supports `DetectionRuntime` safely.
+
+If modes do not change runtime yet, add a comment:
+
+```txt
+DetectionRuntime integration happens in the next pass.
+For now, detection mode is stored and reported, but AmpLegacy remains the active runtime path.
+```
+
+---
+
+## Optional Summary Output
+
+If `RB summary` prints current config, add:
+
+```txt
+detectMode=<name>
+```
+
+Example:
+
+```txt
+RB SUMMARY ... detectMode=legacy
+```
+
+Do this only if it is simple and consistent with existing summary formatting.
 
 ---
 
 ## Anti-Wrapper Rule
 
-`DetectionRuntime` must be the future owner of the detection path.
+This pass does not clean old direct detection usage yet.
 
-SignalEmitters may still wrap or adapt existing internals, but higher layers should target:
+But it creates the control seam for the cleanup.
+
+Next pass should make:
+
+```txt
+RoadmapFrequencyFirst
+RoadmapFrequencyOnly
+```
+
+route through:
 
 ```txt
 DetectionRuntime
 ```
 
-not:
-
-```txt
-AmpCandidateBuilder
-FrequencyCandidateBuilder
-old direct Node candidate conversion
-```
-
-This pass may leave current Node usage intact temporarily.
-
-The next Node integration pass must remove direct behavior-path use from Node in roadmap mode.
-
----
-
-## Queue Behavior
-
-Use a small fixed-size result queue.
-
-If the queue is full:
-
-```txt
-drop the new PatternResult
-```
-
-or follow the existing project convention.
-
-Do not allocate dynamically.
-
----
-
-## Reset Behavior
-
-`reset()` should reset:
-
-```txt
-AmpSignalEmitter
-FrequencySignalEmitter
-PatternAssembler
-result queue
-```
-
-`SignalInspector` and `PatternRules` may not need reset if stateless.
-
----
-
-## Tuning Behavior
-
-`setFrequencyTuning(...)` should store the tuning values used by:
-
-```txt
-SignalInspector
-PatternRules
-```
-
-Do not invent new tuning parameters in this pass.
-
-Do not tune thresholds.
-
----
-
-## Boundary Rules
-
-`DetectionRuntime` may:
-
-```txt
-- coordinate detection layer order
-- own signal emitters
-- own inspector
-- own assembler
-- own pattern rules
-- queue PatternResults
-```
-
-`DetectionRuntime` must not:
-
-```txt
-- call ResonantBehavior
-- know about chirp output
-- know about LED pulse state
-- own behavior timing
-- own serial commands
-- perform raw audio reads
-- tune thresholds
-- implement DetectionStrategy/Profile
-```
-
-`Node` will later feed frames into `DetectionRuntime`.
+and should ensure that `Node` no longer directly uses candidate builders for roadmap behavior-path detection.
 
 ---
 
@@ -302,42 +223,42 @@ Do not tune thresholds.
 
 Do not:
 
-- change Node runtime behavior
+- change current default runtime behavior
 - change ResonantBehavior
 - change Analyzer runtime behavior
 - change output behavior
 - tune thresholds
+- remove legacy code
+- remove candidate builders
+- refactor PatternRules
+- refactor PatternAssembler
 - add DetectionStrategy/Profile
 - add FieldState
 - implement complex pattern grouping
-- implement overlap dominance
-- implement family matching
-- remove legacy code
-- remove old Node path yet
+- make roadmap mode default yet
 
 ---
 
 ## Acceptance Criteria
 
-- `DetectionRuntime.h/.cpp` exist.
-- `DetectionRuntime::reset()` compiles.
-- `DetectionRuntime::setFrequencyTuning(...)` compiles.
-- `DetectionRuntime::observeFrame(...)` compiles.
-- `DetectionRuntime::popPatternResult(...)` compiles.
-- `DetectionRuntime` wires SignalEmitters → SignalInspector → PatternAssembler → PatternRules.
-- Frequency candidates are processed before AMP candidates.
-- PatternResults can be queued and popped.
-- No runtime behavior changed.
-- Existing Node path is untouched.
+- `DetectionMode` enum exists.
+- Node stores current detection mode.
+- Default mode remains `AmpLegacy`.
+- `RB DETECT mode=legacy` works.
+- `RB DETECT mode=freq` works.
+- `RB DETECT mode=freqonly` works.
+- `RB DETECT` reports current mode.
+- `RB help` includes the command.
+- Runtime behavior remains unchanged.
 - Project compiles.
 
 ---
 
 ## Notes for Next Pass
 
-The next pass should add the detection mode switch and/or integrate `DetectionRuntime` into Resonant `Node`.
+Next pass should integrate `DetectionRuntime` into Node.
 
-Target future Node roadmap mode:
+Target future roadmap-mode flow:
 
 ```cpp
 _detection.observeFrame(frame, frequencyEvidence, nowMs);
@@ -348,4 +269,4 @@ while (_detection.popPatternResult(result)) {
 }
 ```
 
-Do not implement that Node integration in this pass unless explicitly requested.
+In roadmap modes, Node should stop manually building PatternResults from old candidate builders.

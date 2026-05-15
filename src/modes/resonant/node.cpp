@@ -80,6 +80,36 @@ bool equalsIgnoreCase(const char* a, const char* b) {
     return *a == '\0' && *b == '\0';
 }
 
+const char* detectionModeName(Node::DetectionMode mode) {
+    switch (mode) {
+        case Node::DetectionMode::AmpLegacy:
+            return "legacy";
+        case Node::DetectionMode::RoadmapFrequencyFirst:
+            return "freq";
+        case Node::DetectionMode::RoadmapFrequencyOnly:
+            return "freqonly";
+    }
+
+    return "unknown";
+}
+
+bool detectionModeFromName(const char* name, Node::DetectionMode& outMode) {
+    if (equalsIgnoreCase(name, "legacy") || equalsIgnoreCase(name, "amp") || equalsIgnoreCase(name, "amplegacy")) {
+        outMode = Node::DetectionMode::AmpLegacy;
+        return true;
+    }
+    if (equalsIgnoreCase(name, "freq") || equalsIgnoreCase(name, "frequency") || equalsIgnoreCase(name, "roadmap")
+        || equalsIgnoreCase(name, "freqfirst") || equalsIgnoreCase(name, "frequencyfirst")) {
+        outMode = Node::DetectionMode::RoadmapFrequencyFirst;
+        return true;
+    }
+    if (equalsIgnoreCase(name, "freqonly") || equalsIgnoreCase(name, "frequencyonly")) {
+        outMode = Node::DetectionMode::RoadmapFrequencyOnly;
+        return true;
+    }
+    return false;
+}
+
 const char* behaviorGateName(const ResonantBehavior& behavior, unsigned long now, bool transientDetected, bool selfChirpSuppressed) {
     if (selfChirpSuppressed) {
         return "self_ignore";
@@ -798,6 +828,7 @@ void Node::handleSerialLine(const char* line) {
     if (equalsIgnoreCase(line, "RB help")) {
         Serial.println("RB CMD: RB PARAM onset=23 release=20 cooldown=50 releaseDebounce=10 minMs=90 maxMs=240 minStrength=40.0 freqScore=50000 freqContrast=20.0");
         Serial.println("RB CMD: RB BEHAV wait=100 refractory=0 idleTimeout=20000 idleTimeoutVariation=10000 idleBlockedAfterHeard=3000 idleBlockedAfterOwnEmit=5000 requireTonal=1");
+        Serial.println("RB CMD: RB DETECT mode=legacy|freq|freqonly");
         Serial.println("RB CMD: RB rebase");
         Serial.println("RB CMD: RB rebase force");
         Serial.println("RB CMD: RB detectonly on|off");
@@ -805,6 +836,10 @@ void Node::handleSerialLine(const char* line) {
         Serial.println("RB CMD: RB debug off|events|plot");
         Serial.println("RB CMD: RB summary");
         Serial.println("RB CMD: RB stop");
+        return;
+    }
+    if (startsWithTokenIgnoreCase(line, "RB DETECT")) {
+        handleDetectCommand(line);
         return;
     }
     if (startsWithTokenIgnoreCase(line, "RB PARAM")) {
@@ -1025,6 +1060,48 @@ void Node::handleLogCommand(const char* line) {
     Serial.println(rbLogModeName());
 }
 
+void Node::handleDetectCommand(const char* line) {
+    const char* mode = line + 9;
+    while (*mode == ' ') {
+        ++mode;
+    }
+
+    if (*mode == '\0') {
+        Serial.print("RB DETECT mode=");
+        Serial.println(detectionModeName());
+        return;
+    }
+
+    if (startsWithTokenIgnoreCase(mode, "mode=")) {
+        mode += 5;
+        DetectionMode parsed = _detectionMode;
+        if (detectionModeFromName(mode, parsed)) {
+            _detectionMode = parsed;
+            Serial.print("RB DETECT mode=");
+            Serial.println(detectionModeName());
+        } else {
+            Serial.println("RB DETECT usage=mode=legacy|freq|freqonly");
+        }
+        return;
+    }
+
+    Serial.println("RB DETECT usage=mode=legacy|freq|freqonly");
+}
+
+const char* Node::detectionModeName() const {
+    return ::detectionModeName(_detectionMode);
+}
+
+bool Node::setDetectionModeFromName(const char* name) {
+    DetectionMode parsed = _detectionMode;
+    if (!detectionModeFromName(name, parsed)) {
+        return false;
+    }
+
+    _detectionMode = parsed;
+    return true;
+}
+
 // --- logging / summaries ---
 
 bool Node::rbShouldLogDetail() const {
@@ -1202,6 +1279,8 @@ void Node::printRbSummary() const {
     Serial.print(avgDuration, 1);
     Serial.print("ms detectOnly=");
     Serial.print(_rbDetectOnly ? 1 : 0);
+    Serial.print(" detectMode=");
+    Serial.print(detectionModeName());
     Serial.print(" requireTonal=");
     Serial.println(_behavior.requireTonalForBehavior() ? 1 : 0);
     Serial.print("RB baseline state=");

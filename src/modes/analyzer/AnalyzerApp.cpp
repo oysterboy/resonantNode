@@ -2976,6 +2976,8 @@ void AnalyzerApp::finalizeSequenceTrial(unsigned long now) {
         if (analyzerLogEnabled(_sequenceTest.logFlags, AnalyzerApp::ANALYZER_LOG_TRIAL)) {
             Serial.print("SEQ_FREQ_CAND trial=");
             Serial.print(_sequenceTest.currentTrial);
+            Serial.print(" emitter=legacy_builder");
+            Serial.print(" legacy_freq_builder=1");
             Serial.print(" state=closed");
             Serial.print(" first_seen_ms=");
             Serial.print(live.candidateFirstSeenMs);

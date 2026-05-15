@@ -1,209 +1,319 @@
-# Codex Task: Detection Roadmap v0.2 — Pass 5.1: Use ScalarTransientDetector for Frequency Signal Candidates
+# Codex Pass: 5.2 Restore FrequencyCandidateBuilder Timing Semantics in Shared ScalarSignalEmitter
 
-Use `docs/detection-roadmap-v0-2-implementation-brief.md` as the architecture source of truth.
+## Context
 
-## Scope
+We are implementing the Detection Roadmap v0.2.
 
-Detection architecture cleanup.
+Current intended architecture:
 
-We are already past Pass 5.
+FeatureExtractors  
+→ FeatureStreams / FeatureHistory  
+→ SignalEmitters use SignalDetectors to propose SignalCandidates  
+→ SignalInspector accepts/rejects/annotates InspectedSignals  
+→ PatternAssembler creates PatternCandidates  
+→ PatternRules emit PatternResults  
+→ Behavior consumes PatternResults + FieldState
 
-This pass removes the architectural asymmetry between AMP and frequency candidate generation.
+Important rule:
 
-## Goal
+> Primary source changes; inspection mechanic stays the same.
 
-Make the frequency SignalEmitter use the existing shared scalar transient core:
+So AMP and frequency should not have different candidate lifecycle mechanics anymore.
+
+## Problem
+
+After the refactor, the new frequency path uses `ScalarTransientDetector::transientDetected()` and finalizes a candidate using the current frame time as release time.
+
+This changed behavior compared to the old `FrequencyCandidateBuilder`.
+
+Old frequency builder behavior preserved a richer lifecycle:
+
+- first seen
+- peak
+- release
+- duration / hold windows
+- score
+- contrast
+- reject reason
+- readiness / candidate closed state
+
+The new Scalar path seems to close only after release debounce has elapsed. This likely shifts release timing later and changes duration distribution.
+
+Observed SEQ difference at ~70cm:
+
+- before refactor: expected hits ~95/100, duration heavily around ~96ms
+- after refactor: expected hits ~92/100, more durations around 120–136ms
+- no late/duplicate explosion, but candidate timing drift is visible
+
+Goal is parity, not tuning.
+
+Do not change detector thresholds yet.
+
+Current frozen params:
 
 ```txt
+onset=30.0
+release=20.0
+cooldown=50
+releaseDebounce=10
+minMs=90
+maxMs=240
+minStrength=40.0
+Goal
+
+Change the shared scalar signal-emitter path so that it preserves the old FrequencyCandidateBuilder timing semantics as closely as possible.
+
+This should happen in the shared scalar candidate lifecycle mechanic, not in a frequency-only special class.
+
+Target shape:
+
 ScalarTransientDetector
+  = generic threshold/transient state machine
 
-The clean target is:
+ScalarSignalEmitter
+  = generic scalar candidate lifecycle owner:
+    firstSeenMs
+    peakMs
+    releaseMs
+    durationMs
+    holdWindows or equivalent active-window count
+    strength
+    reject reason
+    source name
 
-AMP:
+Amp / Frequency
+  = configured sources using the same ScalarSignalEmitter mechanic
+Important Architecture Constraint
+
+Do NOT move frequency-specific logic into ScalarTransientDetector.
+
+ScalarTransientDetector must stay generic:
+
+no frequency vocabulary
+no contrast-specific logic
+no PatternCandidate logic
+no SEQ reporting logic
+no source-specific behavior
+
+Do NOT create a special FrequencySignalEmitter clone of the old FrequencyCandidateBuilder.
+
+Instead:
+
+Extract the reusable lifecycle semantics from FrequencyCandidateBuilder
+into the shared ScalarSignalEmitter mechanic.
+
+Temporary thin wrappers/factories are acceptable:
+
+AmpSignalEmitter.cpp
+  → configures ScalarSignalEmitter for ampEnv
+
+FrequencySignalEmitter.cpp
+  → configures ScalarSignalEmitter for targetFreqEnv
+
+But wrappers must not contain divergent candidate lifecycle logic.
+
+Tasks
+1. Inspect old FrequencyCandidateBuilder behavior
+
+Find the old candidate lifecycle logic, especially:
+
+when first_seen_ms is assigned
+how peak_ms and peak score are tracked
+how release_ms is assigned
+how duration is calculated
+how hold windows are counted
+how reject reasons are assigned
+when a candidate becomes ready/closed
+how too-short / refractory / score / contrast rejects are represented
+
+Use this as the parity reference.
+
+2. Inspect current Scalar path
+
+Inspect:
+
+ScalarTransientDetector.cpp
+current ScalarSignalEmitter if it exists
+AmpSignalEmitter.cpp
+FrequencySignalEmitter.cpp
+AnalyzerApp.cpp SEQ plumbing
+
+Find where current frequency candidates are finalized from:
+
+ScalarTransientDetector::transientDetected()
+
+and where release time is set from current frame time.
+
+3. Move reusable lifecycle tracking into ScalarSignalEmitter
+
+Update or create ScalarSignalEmitter so it owns candidate lifecycle tracking around ScalarTransientDetector.
+
+It should track, generically:
+
+firstSeenMs
+peakMs
+releaseMs
+durationMs
+holdWindows
+peakStrength
+currentStrength
+rejectReason
+source
+
+The scalar emitter should be able to emit candidates for different scalar streams:
+
 ampEnv
-→ AmpTransientDetector
-→ ScalarTransientDetector
-→ AmpSignalEmitter
-→ SignalCandidate
+targetFreqEnv
+broadbandEnv // later
 
-Frequency:
-targetFreqEnv / frequency score stream
-→ ScalarTransientDetector
-→ FrequencySignalEmitter
-→ SignalCandidate
+Frequency and AMP should use the same lifecycle mechanism.
 
-FrequencyBandStreamExtractor should remain as the frequency feature extractor.
+4. Restore old release/duration semantics
 
-FrequencyCandidateBuilder should no longer be used by the roadmap frequency behavior path.
+Do not simply set releaseMs = now when transientDetected() becomes true.
 
-Current Problem
+Instead, preserve the old builder-style release semantics as closely as possible.
 
-Current AMP path already uses the shared scalar transient detector:
+Expected behavior:
 
-AmpTransientDetector
-→ ScalarTransientDetector
+firstSeenMs marks the first active/onset moment
+peakMs marks the frame/window with highest scalar value
+releaseMs reflects the actual release/close point according to old builder semantics, not an extra-late observation point after debounce
+durationMs = releaseMs - firstSeenMs
+duration distribution should remain comparable to old builder output
 
-Current frequency path still uses separate candidate lifecycle logic:
+If exact old behavior cannot be reproduced without changing ScalarTransientDetector, add the minimal generic detector-facing accessors/events needed, such as:
 
-FreqTransientDetector
-→ FrequencyBandStreamExtractor
-→ FrequencyCandidateBuilder
+onsetStarted()
+releaseObserved()
+candidateClosed()
+candidateRejected()
 
-That creates duplicated candidate mechanics.
+or equivalent.
 
-This pass should remove that asymmetry for the roadmap path.
+Keep those generic.
 
-Keep
+5. Keep ScalarTransientDetector generic
 
-Keep:
+Allowed changes:
 
-FrequencyBandStreamExtractor
-FreqTransientDetector, if it is only a thin wrapper around FrequencyBandStreamExtractor
-ScalarTransientDetector
-AmpTransientDetector
-AmpSignalEmitter
-FrequencySignalEmitter
+expose generic lifecycle state/events if needed
+expose last onset/release/peak timing if already conceptually generic
+improve naming around active/closed/rejected state
 
-FrequencyBandStreamExtractor is still needed to measure:
+Not allowed:
 
-target power
-neighbor power
-total energy
-frequency score
-spectral contrast
-Remove / Bypass From Roadmap Path
+add frequency-specific fields
+add contrast-specific decisions
+add PatternCandidate logic
+add SEQ-specific behavior
+add source names inside detector
+6. Make AMP and frequency use the same scalar emitter mechanic
 
-FrequencyCandidateBuilder should no longer be used by FrequencySignalEmitter for the roadmap path.
+After the change:
 
-Allowed options:
+AMP path:
+ampEnv → ScalarSignalEmitter → ScalarTransientDetector → SignalCandidate(source=amp)
 
-Preferred
+Frequency path:
+targetFreqEnv → ScalarSignalEmitter → ScalarTransientDetector → SignalCandidate(source=frequency_primary)
 
-Remove FrequencyCandidateBuilder usage from FrequencySignalEmitter.
+If AmpSignalEmitter and FrequencySignalEmitter remain, they should only configure source name, stream input, params, and optional feature labels.
 
-Acceptable if Analyzer still depends on it
+They should not implement different lifecycle timing.
 
-Keep FrequencyCandidateBuilder only for Analyzer legacy/comparison code, but do not use it in the roadmap DetectionRuntime path.
+7. Clean up Analyzer SEQ comparison path
 
-Add comments marking it as legacy/comparison-only.
+Analyzer SEQ must not silently mix old FrequencyCandidateBuilder output with new roadmap emitter output.
 
-FrequencySignalEmitter Target
+Do one of these:
 
-FrequencySignalEmitter should own or use a ScalarTransientDetector instance for the target frequency feature stream.
+Preferred:
 
-Suggested internal members:
+route SEQ frequency candidate reporting through the new scalar emitter path
 
-FreqTransientDetector _frequencyStream;
-ScalarTransientDetector _scalarDetector;
+Acceptable during migration:
 
-or, if FreqTransientDetector is owned outside:
+keep old builder only as explicit comparison output
+log it clearly as legacy comparison
+ensure primary SEQ result says whether candidate came from:
+scalar_emitter
+legacy_frequency_builder
+amp_fallback
 
-ScalarTransientDetector _scalarDetector;
+Do not let old and new paths be ambiguous.
 
-Do not duplicate open/close/peak/release/cooldown logic manually.
+8. Logging requirements
 
-Feature Value
+Update logs so this is obvious:
 
-Use the frequency stream output as the scalar detector input.
+For each emitted SignalCandidate / SEQ candidate, log:
 
-Preferred scalar value:
+source=
+emitter=
+first_ms=
+peak_ms=
+release_ms=
+duration_ms=
+strength=
+reject=
 
-frequency score
+If legacy builder is still present, log:
 
-Keep contrast as supporting evidence, not the scalar gate, unless existing tuning clearly uses contrast as the more stable primary gate.
+legacy_freq_builder=1
 
-For now:
+or equivalent.
 
-ScalarTransientDetector input value = frequency score
-SignalCandidate.score = frequency score
-SignalCandidate.contrast = spectral contrast
-SignalCandidate.frequency = captured FrequencyEvidence
+If using new scalar emitter, log:
 
-The SignalInspector should still check both:
+emitter=scalar
+Non-goals
 
-score >= freqScore threshold
-contrast >= freqContrast threshold
+Do not tune thresholds.
 
-So the scalar detector proposes candidates from score activity, while inspector validates score + contrast.
+Do not change:
 
-Parameter Mapping
+onset
+release
+cooldown
+releaseDebounce
+minMs
+maxMs
+minStrength
 
-Map frequency parameters into scalar detector parameters conservatively.
+Do not implement:
 
-Use existing constants where available:
+PatternAssembler
+PatternRules changes
+FieldState changes
+Behavior changes
+frequency-family matching
+overlap dominance
+acoustic profile system
+full DetectionStrategy/Profile cleanup
 
-kLiveFrequencyReleaseDebounceMs
-kLiveFrequencyCooldownAfterOnsetMs
-kLiveFrequencyMinTransientDurationMs
+This is a parity/correction pass only.
 
-For thresholds:
+Expected Result
 
-onset threshold  = frequencyTuning.scoreMin
-release threshold = a conservative release threshold based on scoreMin
+After this pass, rerun SEQ at ~70cm with frozen params.
 
-If no separate release threshold exists for frequency, use one of:
+Expected signs of success:
 
-releaseThreshold = frequencyTuning.scoreMin
-
-or:
-
-releaseThreshold = frequencyTuning.scoreMin * 0.7
-
-Prefer exact scoreMin first if you want no new tuning behavior.
-
-Do not introduce new tuning parameters unless necessary.
-
-SignalCandidate Mapping
-
-When the scalar detector emits a frequency transient candidate, create:
-
-SignalCandidate.kind = SignalKind::FrequencyTransient
-SignalCandidate.source = SignalSource::Frequency
-SignalCandidate.present = true
-SignalCandidate.valid = true
-SignalCandidate.startSample = scalar candidate onset sample
-SignalCandidate.peakSample = scalar candidate peak sample
-SignalCandidate.releaseSample = scalar candidate release sample
-SignalCandidate.startMs = scalar candidate onset ms
-SignalCandidate.peakMs = scalar candidate peak ms
-SignalCandidate.releaseMs = scalar candidate release ms
-SignalCandidate.durationMs = scalar candidate duration
-SignalCandidate.score = peak frequency score
-SignalCandidate.contrast = peak spectral contrast
-SignalCandidate.frequency = peak/live FrequencyEvidence
-
-If ScalarTransientDetector does not currently expose enough timing fields, add minimal accessors or use the same candidate-building pattern already used by AmpCandidateBuilder.
-
-Do not expose internal detector state broadly.
-
-Analyzer Impact
-
-Do not rewrite Analyzer fully in this pass.
-
-If Analyzer currently uses FrequencyCandidateBuilder, leave it working.
-
-But add a comment:
-
-Analyzer frequency candidate builder is legacy/comparison until Analyzer is migrated
-to the shared FrequencySignalEmitter / SignalInspector / PatternRules path.
-
-The roadmap behavior path should use the scalar-based frequency signal emitter.
-
-Do Not
-do not change ResonantBehavior
-do not change behavior timing
-do not tune thresholds broadly
-do not remove FrequencyBandStreamExtractor
-do not remove Analyzer functionality
-do not add DetectionStrategy/Profile
-do not add FieldState
-do not implement complex pattern grouping
-do not rewrite Node broadly in this pass
+expected_hits near previous baseline, ideally ~95/100
+misses not increased
+duplicates remain 0 or near 0
+late_hits remain 0
+duration distribution moves back toward old ~96ms-heavy shape
+release/duration no longer shifted longer by the new close observation timing
+SEQ logs clearly identify scalar emitter vs legacy builder path
 Acceptance Criteria
-Project compiles.
-FrequencySignalEmitter no longer depends on FrequencyCandidateBuilder for the roadmap path.
-Frequency signal candidate lifecycle uses ScalarTransientDetector.
-FrequencyBandStreamExtractor remains the feature extractor.
-AMP and frequency now share scalar transient mechanics.
-Existing Analyzer code still compiles.
-Runtime behavior is not intentionally changed except for the internal frequency candidate generation path.
+
+Pass is acceptable if:
+
+ScalarTransientDetector remains generic
+reusable candidate lifecycle semantics live in ScalarSignalEmitter or equivalent shared scalar emitter mechanic
+AMP and frequency no longer have divergent lifecycle logic
+frequency candidate timing matches old FrequencyCandidateBuilder behavior more closely
+Analyzer SEQ output is not mixing old/new paths ambiguously
+no parameter tuning was performed

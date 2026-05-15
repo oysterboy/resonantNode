@@ -26,6 +26,7 @@ void ScalarTransientDetector::resetState() {
     _peakActive = false;
     _peakStartedUs = 0;
     _releaseCandidateStartedUs = 0;
+    _releaseObservedUs = 0;
     _peakStrength = 0.0f;
     _onsetRejectedCount = 0;
     _transientRejectedCount = 0;
@@ -83,9 +84,11 @@ void ScalarTransientDetector::updateTransientStage(unsigned long nowUs, float si
         if (!aboveReleaseThreshold) {
             if (_releaseCandidateStartedUs == 0) {
                 _releaseCandidateStartedUs = nowUs;
+                _releaseObservedUs = nowUs;
             }
         } else {
             _releaseCandidateStartedUs = 0;
+            _releaseObservedUs = 0;
         }
     }
 
@@ -93,7 +96,8 @@ void ScalarTransientDetector::updateTransientStage(unsigned long nowUs, float si
     // threshold for long enough to count as a real end of burst.
     const unsigned long releaseDebounceUs = _releaseDebounceMs * 1000UL;
     if (_peakActive && _releaseCandidateStartedUs != 0 && nowUs - _releaseCandidateStartedUs >= releaseDebounceUs) {
-        const unsigned long peakDurationUs = nowUs - _peakStartedUs;
+        const unsigned long releaseObservedUs = _releaseObservedUs != 0 ? _releaseObservedUs : nowUs;
+        const unsigned long peakDurationUs = releaseObservedUs - _peakStartedUs;
         const unsigned long minTransientDurationUs = _minTransientDurationMs * 1000UL;
         const unsigned long maxTransientDurationUs = _maxTransientDurationMs * 1000UL;
         const bool durationAccepted = peakDurationUs >= minTransientDurationUs && peakDurationUs <= maxTransientDurationUs;
@@ -134,6 +138,7 @@ void ScalarTransientDetector::updateTransientStage(unsigned long nowUs, float si
         _peakActive = false;
         _peakStartedUs = 0;
         _releaseCandidateStartedUs = 0;
+        _releaseObservedUs = 0;
         _peakStrength = 0.0f;
     }
 }
@@ -206,8 +211,24 @@ bool ScalarTransientDetector::peakActive() const {
     return _peakActive;
 }
 
+bool ScalarTransientDetector::releaseObserved() const {
+    return _releaseCandidateStartedUs != 0;
+}
+
 float ScalarTransientDetector::peakStrength() const {
     return _peakStrength;
+}
+
+unsigned long ScalarTransientDetector::onsetStartedUs() const {
+    return _peakStartedUs;
+}
+
+unsigned long ScalarTransientDetector::peakStartedUs() const {
+    return _peakStartedUs;
+}
+
+unsigned long ScalarTransientDetector::releaseObservedUs() const {
+    return _releaseObservedUs;
 }
 
 const char* ScalarTransientDetector::lastTransientRejectReasonName() const {

@@ -27,6 +27,18 @@
 - Kept `ScalarTransientDetector` as the shared transient core underneath `AmpTransientDetector`, while the live frequency path now uses `FreqTransientDetector` over `FrequencyBandStreamExtractor`.
 - Promoted the cleaned live frequency candidate path into the normal Analyzer SEQ handoff so a valid `FrequencyCandidate` can now finalize a trial result when AMP has not already accepted it.
 
+## 2026-05-15 - Detection RF 5.2: shared scalar lifecycle parity
+
+### Changed
+- Added a shared `ScalarSignalEmitter` helper so AMP and frequency now share the scalar candidate lifecycle instead of keeping separate wrapper-local timing logic.
+- Extended `ScalarTransientDetector` with generic release-observation timing so candidate duration is based on the release-observed point instead of the later debounce close.
+- Rewired `AmpSignalEmitter` and `FrequencySignalEmitter` to use the shared scalar emitter path.
+- Marked Analyzer SEQ frequency-candidate logging as legacy comparison output so the builder path is no longer ambiguous in logs.
+- Kept `AmpTransientDetector` as the legacy AMP facade.
+
+### Verification
+- `platformio run`
+
 ## 2026-05-13 - Detector ownership and RB timing cleanup
 
 ### Changed

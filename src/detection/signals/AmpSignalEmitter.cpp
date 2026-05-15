@@ -1,42 +1,27 @@
 #include "AmpSignalEmitter.h"
 
-#include "../AmpCandidateBuilder.h"
-#include "../AmpTransientDetector.h"
-
 namespace detection {
 
 namespace {
 
-SignalCandidate toSignalCandidate(const AmpCandidate& candidate) {
-    SignalCandidate out;
-    out.kind = SignalKind::AmpTransient;
-    out.source = SignalSource::Amp;
-    out.present = true;
-    out.valid = candidate.durationMs > 0 || candidate.peakStrength > 0.0f || candidate.releaseMillisApprox != 0;
-    out.startSample = candidate.onsetSample;
-    out.peakSample = candidate.peakSample;
-    out.releaseSample = candidate.releaseSample;
-    out.startMs = candidate.onsetMillisApprox;
-    out.releaseMs = candidate.releaseMillisApprox;
-    out.durationMs = candidate.durationMs;
-    out.strength = candidate.peakStrength;
-    out.score = 0.0f;
-    out.contrast = 0.0f;
+void fillAmpCandidate(SignalCandidate& candidate, const AudioSignalFrame& frame) {
+    candidate.kind = SignalKind::AmpTransient;
+    candidate.source = SignalSource::Amp;
+    candidate.valid = candidate.durationMs > 0 || candidate.strength > 0.0f || candidate.releaseMs != 0;
     // No explicit peak timestamp exists on the legacy AMP candidate, so peakMs stays at the default.
-    out.transient.present = true;
-    out.transient.onsetSample = candidate.onsetSample;
-    out.transient.peakSample = candidate.peakSample;
-    out.transient.releaseSample = candidate.releaseSample;
-    out.transient.startMs = candidate.onsetMillisApprox;
-    out.transient.heardAtMs = candidate.onsetMillisApprox;
-    out.transient.acceptedMs = candidate.onsetMillisApprox;
-    out.transient.durationMs = candidate.durationMs;
-    out.transient.onsetStrength = candidate.onsetStrength;
-    out.transient.peakStrength = candidate.peakStrength;
-    out.transient.releaseStrength = candidate.releaseStrength;
-    out.transient.ambientBaseline = candidate.ambientBaseline;
-    out.transient.audioOverflowDuringCandidate = candidate.audioOverflowDuringCandidate;
-    return out;
+    candidate.transient.present = true;
+    candidate.transient.onsetSample = candidate.startSample;
+    candidate.transient.peakSample = candidate.peakSample;
+    candidate.transient.releaseSample = candidate.releaseSample;
+    candidate.transient.startMs = candidate.startMs;
+    candidate.transient.heardAtMs = candidate.startMs;
+    candidate.transient.acceptedMs = candidate.startMs;
+    candidate.transient.durationMs = candidate.durationMs;
+    candidate.transient.onsetStrength = candidate.strength;
+    candidate.transient.peakStrength = candidate.strength;
+    candidate.transient.releaseStrength = static_cast<float>(frame.level);
+    candidate.transient.ambientBaseline = frame.baseline;
+    candidate.transient.audioOverflowDuringCandidate = frame.overflowDuringBlock;
 }
 
 } // namespace
@@ -46,23 +31,20 @@ AmpSignalEmitter::AmpSignalEmitter() = default;
 void AmpSignalEmitter::reset() {
     _hasPending = false;
     _pending = {};
+    _scalarEmitter.reset();
 }
 
-void AmpSignalEmitter::observeFrame(
-    const AudioSignalFrame& frame,
-    AmpTransientDetector& detector,
-    AmpCandidateBuilder& builder
-) {
-    builder.observeSample(frame, detector);
+void AmpSignalEmitter::observeFrame(const AudioSignalFrame& frame) {
+    _scalarEmitter.observe(frame, static_cast<float>(frame.level));
 
-    AmpCandidate candidate;
-    bool sawCandidate = false;
-    while (builder.popCandidate(candidate)) {
-        _pending = toSignalCandidate(candidate);
-        sawCandidate = true;
+    if (_scalarEmitter.transientDetected()) {
+        SignalCandidate candidate;
+        if (_scalarEmitter.consumeCandidate(frame, SignalKind::AmpTransient, SignalSource::Amp, candidate)) {
+            fillAmpCandidate(candidate, frame);
+            _pending = candidate;
+            _hasPending = true;
+        }
     }
-
-    _hasPending = sawCandidate;
 }
 
 bool AmpSignalEmitter::popSignalCandidate(SignalCandidate& out) {

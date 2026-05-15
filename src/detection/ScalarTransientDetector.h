@@ -62,7 +62,11 @@ public:
     float transientStrength() const;
     unsigned long transientDurationMs() const;
     bool peakActive() const;
+    bool releaseObserved() const;
     float peakStrength() const;
+    unsigned long onsetStartedUs() const;
+    unsigned long peakStartedUs() const;
+    unsigned long releaseObservedUs() const;
     const char* lastTransientRejectReasonName() const;
     unsigned long lastTransientRejectedDurationMs() const;
     float lastTransientRejectedStrength() const;
@@ -107,6 +111,7 @@ private:
     bool _peakActive = false;
     unsigned long _peakStartedUs = 0;
     unsigned long _releaseCandidateStartedUs = 0;
+    unsigned long _releaseObservedUs = 0;
     float _peakStrength = 0.0f;
     unsigned long _onsetRejectedCount = 0;
     unsigned long _transientRejectedCount = 0;

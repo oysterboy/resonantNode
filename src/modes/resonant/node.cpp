@@ -589,7 +589,6 @@ void Node::update() {
                 continue;
             }
 
-            _audioOnsetDetector.update(static_cast<float>(frame.level), frame.sampleTimeUs);
             processLegacyAmpFrame(frame, now, selfChirpSuppressed, sawPatternThisLoop);
             const bool onsetDetected = selfChirpSuppressed ? false : _audioOnsetDetector.onsetDetected();
             _debug.observeOnset(now, onsetDetected, _audioOnsetDetector.onsetStrength());
@@ -1002,6 +1001,7 @@ void Node::processLegacyAmpFrame(const AudioSignalFrame& frame,
     (void)now;
     (void)selfChirpSuppressed;
     (void)sawPatternThisLoop;
+    _audioOnsetDetector.update(static_cast<float>(frame.level), frame.sampleTimeUs);
     _ampCandidateBuilder.observeSample(frame, _audioOnsetDetector);
 }
 

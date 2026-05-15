@@ -12,11 +12,20 @@
 
 ## Changes Since Last Commit
 
+- Clarified Pass 2 docs/comments so the amplitude path and frequency path are both framed as stream-extractor plus scalar-transient-detector concepts.
+- Renamed `AudioOnsetDetector` to `AmpTransientDetector`, updated its include paths, and kept the AMP-side facade comment aligned with the new name.
+- Added `FreqTransientDetector` as the public FREQ-side facade and kept `FrequencyBandStreamExtractor` as its live evidence engine.
+- Kept runtime behavior unchanged while refining the current-pass wording around the AMP/FREQ ownership pair.
 - Added side-by-side early/full frequency evidence logging in the resonant and analyzer candidate summaries to make tonal validity failures easier to inspect without changing detector behavior.
 - Kept the current AMP/transient A-path and `requireTonal` gating unchanged while improving the visibility of candidate-window retrospective checks.
 - Normalized `docs/current-pass.md` Phase 0 so it uses `myspec.md` as the authority for roadmap wording and current architecture vocabulary.
 - Updated `src/io/AudioSignal.h` comments to describe the current signal / candidate assembly role instead of a detector wrapper.
 - Updated `src/detection/DetectionPipeline.h` comments to call out detector candidates as transitional payloads inside the pattern pipeline.
+- Added shared `FrequencyCandidate` and `FrequencyCandidateBuilder` types, moved live frequency candidate state out of Analyzer, and introduced a neutral `AudioSignalFrame` snapshot boundary.
+- Extracted `AmpCandidateBuilder` so AMP candidate state no longer lives inside `AudioSignal`.
+- Reduced `AudioSignal` to signal/history ownership and renamed its reset helper to `resetSignalState`.
+- Kept `ScalarTransientDetector` as the shared transient core underneath `AmpTransientDetector`, while the live frequency path now uses `FreqTransientDetector` over `FrequencyBandStreamExtractor`.
+- Promoted the cleaned live frequency candidate path into the normal Analyzer SEQ handoff so a valid `FrequencyCandidate` can now finalize a trial result when AMP has not already accepted it.
 
 ## 2026-05-13 - Detector ownership and RB timing cleanup
 

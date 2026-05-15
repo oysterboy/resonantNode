@@ -16,7 +16,7 @@ Does NOT:
 - decide behavior or output timing
 - own AMP candidate state
 - own candidate source policy
-- own retrospective probe64 / freqEarly / freqFull comparisons
+- own retrospective window comparisons or candidate lifecycle
 */
 class FreqTransientDetector {
 public:

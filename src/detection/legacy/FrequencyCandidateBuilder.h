@@ -2,10 +2,10 @@
 
 #include <stdint.h>
 
-#include "DetectionPipeline.h"
-#include "FrequencyCandidate.h"
-#include "FrequencyEvidenceEvaluation.h"
-#include "signals/ScalarSignalEmitter.h"
+#include "../DetectionPipeline.h"
+#include "../FrequencyCandidate.h"
+#include "../FrequencyEvidenceEvaluation.h"
+#include "../signals/ScalarSignalEmitter.h"
 
 /*
 FrequencyCandidateBuilder

@@ -2,8 +2,8 @@
 
 #include <stddef.h>
 
-#include "../io/AudioSignal.h"
-#include "AmpTransientDetector.h"
+#include "../../io/AudioSignal.h"
+#include "../AmpTransientDetector.h"
 
 using AmpCandidate = DetectorCandidate;
 

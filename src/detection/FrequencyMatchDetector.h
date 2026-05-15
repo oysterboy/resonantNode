@@ -9,8 +9,8 @@
 /*
 FrequencyMatchDetector
 
-Owns the live frequency evidence-window lifecycle and the transition from
-frequency evidence into a timestamped FrequencyCandidate record.
+Owns the live frequency proposer lifecycle and the transition from frequency
+evidence into a timestamped FrequencyCandidate record.
 
 Responsibilities:
 - observe live frequency evidence windows from the frequency stream path
@@ -21,7 +21,7 @@ Does NOT:
 - read audio directly
 - own behavior decisions
 - own AMP candidate state
-- own retrospective probe64 / freqEarly / freqFull comparisons
+- own retrospective window-probe comparisons
 */
 class FrequencyMatchDetector {
 public:

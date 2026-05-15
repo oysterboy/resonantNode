@@ -7,7 +7,7 @@
 #include "../../hal/AudioSourceI2S.h"
 #include "../../detection/AmpTransientDetector.h"
 #include "../../io/AudioSignal.h"
-#include "../../detection/AmpCandidateBuilder.h"
+#include "../../detection/legacy/AmpCandidateBuilder.h"
 #include "../../detection/DetectionPipeline.h"
 #include "../../detection/FrequencyMatchDetector.h"
 #include "../../detection/FrequencyEvidenceEvaluation.h"

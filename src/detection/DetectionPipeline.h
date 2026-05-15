@@ -35,6 +35,7 @@ Roadmap v0.3 note:
 namespace DetectionPipeline {
 
 // Classification tags used by behavior, logging, and analyzer summaries.
+// Some string helpers remain compatibility-facing for legacy / SEQ diagnostics.
 enum class PatternType {
     None,
     ValidTransient,
@@ -76,6 +77,7 @@ enum class PatternRejectReason {
 };
 
 // Raw detector evidence captured for transient-trigger analysis.
+// This remains a compatibility payload for legacy and analyzer paths.
 struct TransientEvidence {
     bool present = false;
 
@@ -97,6 +99,8 @@ struct TransientEvidence {
 };
 
 // Frequency evidence carried alongside a candidate for tonal classification.
+// Roadmap code prefers the dedicated signal / pattern layers, but this
+// container stays here as the transitional compatibility payload.
 struct FrequencyEvidence {
     bool present = false;
     bool matched = false;

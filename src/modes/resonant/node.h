@@ -12,7 +12,7 @@
 #include "../../hal/PiezoToneOutput.h"
 #include "../../io/AudioSignal.h"
 #include "../../detection/AmpTransientDetector.h"
-#include "../../detection/AmpCandidateBuilder.h"
+#include "../../detection/legacy/AmpCandidateBuilder.h"
 #include "../../detection/FreqTransientDetector.h"
 #include "../../io/ChirpOutput.h"
 #include "../../behavior/ResonantBehavior.h"

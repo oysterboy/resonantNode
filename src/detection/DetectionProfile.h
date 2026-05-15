@@ -53,8 +53,8 @@ struct DetectionProfile {
     ProfileInspectionRulesKind inspectionRules = ProfileInspectionRulesKind::FreqAmp;
     ProfilePatternAssemblerKind patternAssembler = ProfilePatternAssemblerKind::SinglePulse;
     ProfilePatternRulesKind patternRules = ProfilePatternRulesKind::TonalLocality;
-    bool useRoadmapDetection = true;
-    bool useRoadmapFrequencyOnly = false;
+    bool useLegacyPath = false;
+    bool frequencyOnly = false;
     bool ampEnabled = true;
     bool detectionOnly = false;
     bool requireTonalForBehavior = true;
@@ -178,8 +178,8 @@ inline DetectionProfile makeFreqAmpProfile() {
     profile.inspectionRules = ProfileInspectionRulesKind::FreqAmp;
     profile.patternAssembler = ProfilePatternAssemblerKind::SinglePulse;
     profile.patternRules = ProfilePatternRulesKind::TonalLocality;
-    profile.useRoadmapDetection = true;
-    profile.useRoadmapFrequencyOnly = false;
+    profile.useLegacyPath = false;
+    profile.frequencyOnly = false;
     profile.ampEnabled = true;
     profile.detectionOnly = false;
     profile.requireTonalForBehavior = true;
@@ -209,8 +209,8 @@ inline DetectionProfile makeAmpStateProfile() {
     profile.inspectionRules = ProfileInspectionRulesKind::AmpState;
     profile.patternAssembler = ProfilePatternAssemblerKind::SinglePulse;
     profile.patternRules = ProfilePatternRulesKind::AmpActivity;
-    profile.useRoadmapDetection = false;
-    profile.useRoadmapFrequencyOnly = false;
+    profile.useLegacyPath = true;
+    profile.frequencyOnly = false;
     profile.ampEnabled = true;
     profile.detectionOnly = false;
     profile.requireTonalForBehavior = false;
@@ -237,8 +237,8 @@ inline DetectionProfile makeChirpProfile() {
     profile.inspectionRules = ProfileInspectionRulesKind::Chirp;
     profile.patternAssembler = ProfilePatternAssemblerKind::ChirpSequence;
     profile.patternRules = ProfilePatternRulesKind::ChirpSequence;
-    profile.useRoadmapDetection = true;
-    profile.useRoadmapFrequencyOnly = false;
+    profile.useLegacyPath = false;
+    profile.frequencyOnly = false;
     profile.ampEnabled = true;
     profile.detectionOnly = false;
     profile.requireTonalForBehavior = true;

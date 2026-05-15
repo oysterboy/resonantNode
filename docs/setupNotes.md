@@ -215,3 +215,35 @@ Quick checks for the current detection setup:
 
 - Confirm `INSPECTED` lines still include AMP support and locality fields.
 - Confirm the frequency-first path still reports locality without behavior reading signal internals.
+
+## DetectionProfile Cheat Sheet
+
+`DetectionProfile` is the code-defined composition object for Resonant.
+
+It chooses:
+
+- `kind` - profile name: `FreqAmp`, `AmpState`, or `Chirp`
+- `featureSet` - which feature bundle the profile wants
+- `signalEmitter` - which signal source is active
+- `signalDetector` - which detector class is expected
+- `inspectionRules` - which inspection preset runs before pattern assembly
+- `patternAssembler` - how inspected signals are grouped
+- `patternRules` - how grouped candidates become a final result
+- `useLegacyPath` / `frequencyOnly` - which detection path is enabled
+- `ampEnabled` - whether AMP support participates
+- `detectionOnly` - whether behavior is suppressed
+- `requireTonalForBehavior` - whether tonal validity is required before behavior acts
+- `idleEnabled` - whether idle behavior is active
+- `waitAfterTransientMs`, `refractoryAfterEmitMs`, `idleTimeoutMs`, `idleTimeVariationMs`, `idleBlockedAfterHeardMs`, `idleBlockedAfterOwnEmitMs` - behavior timing knobs
+- `fieldStateConfig` - quiet / busy / dense / chatter window thresholds
+
+Current presets:
+
+- `FreqAmp` - sharp frequency-first baseline with AMP locality support
+- `AmpState` - legacy AMP/transient reference profile
+- `Chirp` - the proof-set profile for chirp sequence composition
+
+Where to read more:
+
+- [docs/myspec.md](/c:/Users/malte/Documents/PlatformIO/Projects/ESP32_learn01/docs/myspec.md)
+- [src/detection/DetectionProfile.h](/c:/Users/malte/Documents/PlatformIO/Projects/ESP32_learn01/src/detection/DetectionProfile.h)

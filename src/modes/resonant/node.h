@@ -55,9 +55,9 @@ public:
     using PatternResult = detection::PatternResult;
 
     enum class DetectionMode {
-        AmpLegacy,
-        RoadmapFrequencyFirst,
-        RoadmapFrequencyOnly,
+        LegacyPath,
+        ModernFrequencyFirst,
+        ModernFrequencyOnly,
     };
 
     enum class AudioSourceKind {
@@ -116,13 +116,13 @@ private:
     bool setDetectionModeFromName(const char* name);
     bool setProfileFromName(const char* name);
     const char* profileName() const;
-    bool usesRoadmapDetection() const;
-    bool roadmapFrequencyOnly() const;
+    bool usesLegacyPath() const;
+    bool usesFrequencyOnly() const;
     const detection::DetectionProfile& activeProfile() const;
     void syncDetectionRuntimeMode();
     void processLegacyAmpFrame(const AudioSignalFrame& frame, unsigned long now, bool selfChirpSuppressed, bool& sawPatternThisLoop);
     void drainLegacyAmpCandidates(unsigned long now, bool selfChirpSuppressed, bool& sawPatternThisLoop);
-    void processRoadmapFrame(const AudioSignalFrame& frame, unsigned long now, bool selfChirpSuppressed, bool& sawPatternThisLoop);
+    void processModernFrame(const AudioSignalFrame& frame, unsigned long now, bool selfChirpSuppressed, bool& sawPatternThisLoop);
     FrequencyEvidence captureFrequencyEvidence() const;
     void logCandidate(const DetectorCandidate& candidate, const PatternResult& patternResult, const FrequencyEvidence* liveFrequencyEvidence, unsigned long candidateNumber, long gapMs, unsigned long queueDepthBeforeDrain, unsigned long behaviorLagMs, const char* candidateClass, const char* action, const char* stateName, const char* gateName);
     void printRbSummary() const;
@@ -166,7 +166,7 @@ private:
     bool _rbDetectOnly = false;
     RbLogMode _rbLogMode = RbLogMode::Minimal;
     detection::DetectionProfileKind _profileKind = detection::DetectionProfileKind::FreqAmp;
-    DetectionMode _detectionMode = DetectionMode::RoadmapFrequencyFirst;
+    DetectionMode _detectionMode = DetectionMode::ModernFrequencyFirst;
     bool _wasSelfChirpSuppressed = false;
     unsigned long _rbLastWouldEmitHeardMs = 0;
     ResonantBehavior::BehaviorDecision _rbLastWouldEmitDecision = ResonantBehavior::BehaviorDecision::None;

@@ -82,11 +82,11 @@ bool equalsIgnoreCase(const char* a, const char* b) {
 
 const char* detectionModeName(Node::DetectionMode mode) {
     switch (mode) {
-        case Node::DetectionMode::AmpLegacy:
+        case Node::DetectionMode::LegacyPath:
             return "legacy";
-        case Node::DetectionMode::RoadmapFrequencyFirst:
+        case Node::DetectionMode::ModernFrequencyFirst:
             return "freq";
-        case Node::DetectionMode::RoadmapFrequencyOnly:
+        case Node::DetectionMode::ModernFrequencyOnly:
             return "freqonly";
     }
 
@@ -96,11 +96,11 @@ const char* detectionModeName(Node::DetectionMode mode) {
 Node::DetectionMode detectionModeForProfileKind(detection::DetectionProfileKind kind) {
     switch (kind) {
         case detection::DetectionProfileKind::AmpState:
-            return Node::DetectionMode::AmpLegacy;
+            return Node::DetectionMode::LegacyPath;
         case detection::DetectionProfileKind::Chirp:
         case detection::DetectionProfileKind::FreqAmp:
         default:
-            return Node::DetectionMode::RoadmapFrequencyFirst;
+            return Node::DetectionMode::ModernFrequencyFirst;
     }
 }
 
@@ -129,16 +129,17 @@ void printProfileComposition(const detection::DetectionProfile& profile) {
 
 bool detectionModeFromName(const char* name, Node::DetectionMode& outMode) {
     if (equalsIgnoreCase(name, "legacy") || equalsIgnoreCase(name, "amp") || equalsIgnoreCase(name, "amplegacy")) {
-        outMode = Node::DetectionMode::AmpLegacy;
+        outMode = Node::DetectionMode::LegacyPath;
         return true;
     }
-    if (equalsIgnoreCase(name, "freq") || equalsIgnoreCase(name, "frequency") || equalsIgnoreCase(name, "roadmap")
-        || equalsIgnoreCase(name, "freqfirst") || equalsIgnoreCase(name, "frequencyfirst")) {
-        outMode = Node::DetectionMode::RoadmapFrequencyFirst;
+    if (equalsIgnoreCase(name, "freq") || equalsIgnoreCase(name, "frequency")
+        || equalsIgnoreCase(name, "modern") || equalsIgnoreCase(name, "freqfirst")
+        || equalsIgnoreCase(name, "frequencyfirst")) {
+        outMode = Node::DetectionMode::ModernFrequencyFirst;
         return true;
     }
     if (equalsIgnoreCase(name, "freqonly") || equalsIgnoreCase(name, "frequencyonly")) {
-        outMode = Node::DetectionMode::RoadmapFrequencyOnly;
+        outMode = Node::DetectionMode::ModernFrequencyOnly;
         return true;
     }
     return false;
@@ -681,14 +682,14 @@ void Node::update() {
                 _audioSignal.update(static_cast<int>(block.samples[i]), sampleTimeUs, frame);
                 frame.sampleTimeMs = sampleTimeMsApprox;
                 _freqBandStream.observeCenteredSample(frame.centeredSample);
-                if (usesRoadmapDetection()) {
-                    processRoadmapFrame(frame, now, selfChirpSuppressed, sawPatternThisLoop);
-                } else {
+                if (usesLegacyPath()) {
                     processLegacyAmpFrame(frame, now, selfChirpSuppressed, sawPatternThisLoop);
+                } else {
+                    processModernFrame(frame, now, selfChirpSuppressed, sawPatternThisLoop);
                 }
             }
             sawI2SSample = true;
-            if (!usesRoadmapDetection()) {
+            if (usesLegacyPath()) {
                 drainLegacyAmpCandidates(now, selfChirpSuppressed, sawPatternThisLoop);
             }
 
@@ -707,13 +708,13 @@ void Node::update() {
             AudioSignalFrame frame;
             _audioSignal.update(sample, sampleTimeUs, frame);
             _freqBandStream.observeCenteredSample(frame.centeredSample);
-            if (usesRoadmapDetection()) {
-                processRoadmapFrame(frame, now, selfChirpSuppressed, sawPatternThisLoop);
+            if (usesLegacyPath()) {
+                processLegacyAmpFrame(frame, now, selfChirpSuppressed, sawPatternThisLoop);
                 ++processedSamples;
                 continue;
             }
 
-            processLegacyAmpFrame(frame, now, selfChirpSuppressed, sawPatternThisLoop);
+            processModernFrame(frame, now, selfChirpSuppressed, sawPatternThisLoop);
             const bool onsetDetected = selfChirpSuppressed ? false : _audioOnsetDetector.onsetDetected();
             _debug.observeOnset(now, onsetDetected, _audioOnsetDetector.onsetStrength());
             drainLegacyAmpCandidates(now, selfChirpSuppressed, sawPatternThisLoop);
@@ -1120,7 +1121,7 @@ void Node::handleProfileCommand(const char* line) {
         printProfileComposition(activeProfile());
         Serial.print(" emitters=");
         Serial.print(activeProfile().ampEnabled ? "amp" : "none");
-        Serial.println(activeProfile().useRoadmapDetection ? "+roadmap" : "+legacy");
+        Serial.println(activeProfile().useLegacyPath ? "+legacy" : "+modern");
     } else {
         Serial.println("RB PROFILE usage=name=freqamp|ampstate|chirp");
     }
@@ -1156,12 +1157,12 @@ const char* Node::profileName() const {
     return detectionProfileKindName(_profileKind);
 }
 
-bool Node::usesRoadmapDetection() const {
-    return _detectionMode != DetectionMode::AmpLegacy;
+bool Node::usesLegacyPath() const {
+    return _detectionMode == DetectionMode::LegacyPath;
 }
 
-bool Node::roadmapFrequencyOnly() const {
-    return _detectionMode == DetectionMode::RoadmapFrequencyOnly;
+bool Node::usesFrequencyOnly() const {
+    return _detectionMode == DetectionMode::ModernFrequencyOnly;
 }
 
 const detection::DetectionProfile& Node::activeProfile() const {
@@ -1170,7 +1171,7 @@ const detection::DetectionProfile& Node::activeProfile() const {
 
 void Node::syncDetectionRuntimeMode() {
     const detection::DetectionProfile& profile = activeProfile();
-    _detection.setAmpEnabled(profile.ampEnabled && !roadmapFrequencyOnly());
+    _detection.setAmpEnabled(profile.ampEnabled && !usesFrequencyOnly());
     _detection.setFrequencyTuning(_frequencyEvidenceTuning);
     _detection.setFieldStateConfig(profile.fieldStateConfig);
 
@@ -1277,10 +1278,10 @@ void Node::drainLegacyAmpCandidates(unsigned long now,
     }
 }
 
-void Node::processRoadmapFrame(const AudioSignalFrame& frame,
-                               unsigned long now,
-                               bool selfChirpSuppressed,
-                               bool& sawPatternThisLoop) {
+void Node::processModernFrame(const AudioSignalFrame& frame,
+                              unsigned long now,
+                              bool selfChirpSuppressed,
+                              bool& sawPatternThisLoop) {
     const auto liveFrequencyEvidence = captureFrequencyEvidence();
     _detection.observeFrame(frame, liveFrequencyEvidence, frame.sampleTimeMs);
 

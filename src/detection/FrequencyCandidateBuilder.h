@@ -9,6 +9,9 @@
 /*
 FrequencyCandidateBuilder
 
+Legacy/comparison-only for Analyzer until the roadmap path fully migrates.
+The roadmap frequency signal path should use ScalarTransientDetector via FrequencySignalEmitter.
+
 Owns the live frequency candidate state and the transition from frequency
 evidence into a timestamped FrequencyCandidate record.
 

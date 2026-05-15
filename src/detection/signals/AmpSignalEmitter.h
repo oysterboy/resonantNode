@@ -8,6 +8,8 @@ class AmpTransientDetector;
 
 namespace detection {
 
+// Roadmap adapter for the AMP scalar path.
+// Scalar transient mechanics already live in ScalarTransientDetector via AmpTransientDetector.
 class AmpSignalEmitter {
 public:
     AmpSignalEmitter();

@@ -353,6 +353,10 @@ private:
         unsigned long emptySourceLoops = 0;
         unsigned long totalHitStrengthScaled = 0;
         unsigned long totalHitDurationMs = 0;
+        // TODO Detection cleanup:
+        // Replace or internally refactor FrequencyCandidateBuilder so the frequency stream
+        // uses ScalarTransientDetector for open/peak/release/cooldown mechanics, matching
+        // the AMP scalar path.
         FrequencyCandidateBuilder liveFrequency;
 
         unsigned long tonalExpected = 0;

@@ -1,341 +1,209 @@
-# Codex Task: Detection Roadmap v0.2 — Pass 5: Add PatternAssembler
+# Codex Task: Detection Roadmap v0.2 — Pass 5.1: Use ScalarTransientDetector for Frequency Signal Candidates
 
 Use `docs/detection-roadmap-v0-2-implementation-brief.md` as the architecture source of truth.
 
 ## Scope
 
-Detection architecture only.
+Detection architecture cleanup.
 
-Add the explicit PatternAssembler layer.
+We are already past Pass 5.
 
-This pass should create the pattern assembly layer, but it must not change runtime behavior yet.
+This pass removes the architectural asymmetry between AMP and frequency candidate generation.
 
 ## Goal
 
-Create `PatternAssembler`, which converts:
+Make the frequency SignalEmitter use the existing shared scalar transient core:
 
 ```txt
-InspectedSignal(s)
-→ PatternCandidate(s)
-```
+ScalarTransientDetector
 
-Important: `SignalInspector` accepts/rejects signals, but it does **not** create patterns.
+The clean target is:
 
-`PatternAssembler` is the separate stage that turns accepted inspected signals into pattern candidates.
+AMP:
+ampEnv
+→ AmpTransientDetector
+→ ScalarTransientDetector
+→ AmpSignalEmitter
+→ SignalCandidate
 
-For now, this may be a simple scaffold:
+Frequency:
+targetFreqEnv / frequency score stream
+→ ScalarTransientDetector
+→ FrequencySignalEmitter
+→ SignalCandidate
 
-```txt
-one accepted InspectedSignal
-→ one PatternCandidate
-```
+FrequencyBandStreamExtractor should remain as the frequency feature extractor.
 
-Later, this is where multi-signal grouping, chirp grouping, burst grouping, overlap handling, and one-signal-to-multiple-pattern-candidates logic will live.
+FrequencyCandidateBuilder should no longer be used by the roadmap frequency behavior path.
 
----
+Current Problem
 
-## Add Files
+Current AMP path already uses the shared scalar transient detector:
 
-Create:
+AmpTransientDetector
+→ ScalarTransientDetector
 
-```txt
-src/detection/patterns/PatternAssembler.h
-src/detection/patterns/PatternAssembler.cpp
-```
+Current frequency path still uses separate candidate lifecycle logic:
 
-Create directories if needed.
+FreqTransientDetector
+→ FrequencyBandStreamExtractor
+→ FrequencyCandidateBuilder
 
----
+That creates duplicated candidate mechanics.
 
-## Existing Types
+This pass should remove that asymmetry for the roadmap path.
 
-Use the types created in previous passes:
+Keep
 
-```txt
-src/detection/signals/InspectedSignal.h
-src/detection/patterns/PatternCandidate.h
-```
+Keep:
 
-`PatternCandidate.h` may currently be a compatibility alias to:
+FrequencyBandStreamExtractor
+FreqTransientDetector, if it is only a thin wrapper around FrequencyBandStreamExtractor
+ScalarTransientDetector
+AmpTransientDetector
+AmpSignalEmitter
+FrequencySignalEmitter
 
-```cpp
-DetectionPipeline::PatternCandidate
-```
+FrequencyBandStreamExtractor is still needed to measure:
 
-That is okay for this pass.
+target power
+neighbor power
+total energy
+frequency score
+spectral contrast
+Remove / Bypass From Roadmap Path
 
-Use the actual namespace introduced in earlier passes, likely:
+FrequencyCandidateBuilder should no longer be used by FrequencySignalEmitter for the roadmap path.
 
-```cpp
-namespace detection
-```
+Allowed options:
 
----
+Preferred
 
-## API
+Remove FrequencyCandidateBuilder usage from FrequencySignalEmitter.
 
-Create a class with this shape:
+Acceptable if Analyzer still depends on it
 
-```cpp
-#pragma once
+Keep FrequencyCandidateBuilder only for Analyzer legacy/comparison code, but do not use it in the roadmap DetectionRuntime path.
 
-#include "../signals/InspectedSignal.h"
-#include "PatternCandidate.h"
+Add comments marking it as legacy/comparison-only.
 
-namespace detection {
+FrequencySignalEmitter Target
 
-class PatternAssembler {
-public:
-    void reset();
+FrequencySignalEmitter should own or use a ScalarTransientDetector instance for the target frequency feature stream.
 
-    void acceptSignal(const InspectedSignal& signal);
+Suggested internal members:
 
-    bool popPatternCandidate(PatternCandidate& out);
+FreqTransientDetector _frequencyStream;
+ScalarTransientDetector _scalarDetector;
 
-private:
-    static constexpr size_t kQueueCapacity = 8;
+or, if FreqTransientDetector is owned outside:
 
-    bool pushPatternCandidate(const PatternCandidate& candidate);
+ScalarTransientDetector _scalarDetector;
 
-    PatternCandidate _queue[kQueueCapacity] = {};
-    size_t _readIndex = 0;
-    size_t _count = 0;
-};
+Do not duplicate open/close/peak/release/cooldown logic manually.
 
-} // namespace detection
-```
+Feature Value
 
-If the project avoids `size_t` without includes, include:
+Use the frequency stream output as the scalar detector input.
 
-```cpp
-#include <stddef.h>
-```
+Preferred scalar value:
 
----
+frequency score
 
-## Assembly Rules
+Keep contrast as supporting evidence, not the scalar gate, unless existing tuning clearly uses contrast as the more stable primary gate.
 
-### Common Rule
+For now:
 
-Only accepted signals may become pattern candidates.
+ScalarTransientDetector input value = frequency score
+SignalCandidate.score = frequency score
+SignalCandidate.contrast = spectral contrast
+SignalCandidate.frequency = captured FrequencyEvidence
 
-```txt
-if signal.accepted == false:
-  ignore for now
-```
+The SignalInspector should still check both:
 
-Rejected signals are not assembled into PatternCandidates in this pass.
+score >= freqScore threshold
+contrast >= freqContrast threshold
 
-Later they may feed FieldState or diagnostics, but not now.
+So the scalar detector proposes candidates from score activity, while inspector validates score + contrast.
 
----
+Parameter Mapping
 
-### Frequency Signal Rule
+Map frequency parameters into scalar detector parameters conservatively.
 
-For:
+Use existing constants where available:
 
-```cpp
-SignalKind::FrequencyTransient
-```
+kLiveFrequencyReleaseDebounceMs
+kLiveFrequencyCooldownAfterOnsetMs
+kLiveFrequencyMinTransientDurationMs
 
-Create a PatternCandidate with:
+For thresholds:
 
-```txt
-source information from the frequency signal
-frequency evidence copied from the signal
-timing copied from the signal
-duration copied from the signal
-score / contrast preserved through frequency evidence where possible
-```
+onset threshold  = frequencyTuning.scoreMin
+release threshold = a conservative release threshold based on scoreMin
 
-Map fields as best as possible to the existing `DetectionPipeline::PatternCandidate`.
+If no separate release threshold exists for frequency, use one of:
 
-Suggested mapping:
+releaseThreshold = frequencyTuning.scoreMin
 
-```txt
-candidate.startMs        = signal.signal.startMs
-candidate.heardAtMs      = signal.signal.releaseMs != 0 ? signal.signal.releaseMs : signal.signal.peakMs
-candidate.acceptedMs     = candidate.heardAtMs
-candidate.durationMs     = signal.signal.durationMs
+or:
 
-candidate.onsetSample    = signal.signal.startSample
-candidate.peakSample     = signal.signal.peakSample
-candidate.releaseSample  = signal.signal.releaseSample
+releaseThreshold = frequencyTuning.scoreMin * 0.7
 
-candidate.peakStrength   = signal.signal.score
-candidate.onsetStrength  = signal.signal.contrast
-candidate.releaseStrength = signal.signal.contrast
+Prefer exact scoreMin first if you want no new tuning behavior.
 
-candidate.frequency      = signal.signal.frequency
-candidate.frequencyFull  = signal.signal.frequency
-candidate.transient.present = false
-```
+Do not introduce new tuning parameters unless necessary.
 
-This is a bridge mapping. Do not redesign all candidate fields in this pass.
+SignalCandidate Mapping
 
-Add a comment that frequency score/contrast are temporarily mapped into legacy strength fields only for compatibility with existing `PatternCandidate`.
+When the scalar detector emits a frequency transient candidate, create:
 
----
+SignalCandidate.kind = SignalKind::FrequencyTransient
+SignalCandidate.source = SignalSource::Frequency
+SignalCandidate.present = true
+SignalCandidate.valid = true
+SignalCandidate.startSample = scalar candidate onset sample
+SignalCandidate.peakSample = scalar candidate peak sample
+SignalCandidate.releaseSample = scalar candidate release sample
+SignalCandidate.startMs = scalar candidate onset ms
+SignalCandidate.peakMs = scalar candidate peak ms
+SignalCandidate.releaseMs = scalar candidate release ms
+SignalCandidate.durationMs = scalar candidate duration
+SignalCandidate.score = peak frequency score
+SignalCandidate.contrast = peak spectral contrast
+SignalCandidate.frequency = peak/live FrequencyEvidence
 
-### AMP Signal Rule
+If ScalarTransientDetector does not currently expose enough timing fields, add minimal accessors or use the same candidate-building pattern already used by AmpCandidateBuilder.
 
-For:
+Do not expose internal detector state broadly.
 
-```cpp
-SignalKind::AmpTransient
-```
+Analyzer Impact
 
-Create a PatternCandidate with:
+Do not rewrite Analyzer fully in this pass.
 
-```txt
-transient evidence copied from the signal
-timing copied from the signal
-duration copied from the signal
-strength copied from the signal
-frequency evidence copied if present
-```
+If Analyzer currently uses FrequencyCandidateBuilder, leave it working.
 
-Suggested mapping:
+But add a comment:
 
-```txt
-candidate.startMs        = signal.signal.startMs
-candidate.heardAtMs      = signal.signal.releaseMs != 0 ? signal.signal.releaseMs : signal.signal.startMs
-candidate.acceptedMs     = candidate.heardAtMs
-candidate.durationMs     = signal.signal.durationMs
+Analyzer frequency candidate builder is legacy/comparison until Analyzer is migrated
+to the shared FrequencySignalEmitter / SignalInspector / PatternRules path.
 
-candidate.onsetSample    = signal.signal.startSample
-candidate.peakSample     = signal.signal.peakSample
-candidate.releaseSample  = signal.signal.releaseSample
+The roadmap behavior path should use the scalar-based frequency signal emitter.
 
-candidate.onsetStrength  = signal.signal.transient.onsetStrength
-candidate.peakStrength   = signal.signal.strength
-candidate.releaseStrength = signal.signal.transient.releaseStrength
-candidate.ambientBaseline = signal.signal.transient.ambientBaseline
-
-candidate.transient      = signal.signal.transient
-candidate.frequency      = signal.signal.frequency
-```
-
-If some fields do not exist in the actual structs, adapt minimally.
-
----
-
-### Unsupported Signal Kind
-
-If the signal kind is unsupported:
-
-```txt
-ignore it for now
-```
-
-Do not emit invalid PatternCandidates in this pass unless the existing code style strongly prefers explicit invalid candidates.
-
----
-
-## Queue Behavior
-
-Use a small fixed-size queue.
-
-If full:
-
-```txt
-drop the new PatternCandidate
-```
-
-or use existing project convention.
-
-Do not allocate dynamically.
-
----
-
-## Important Architecture Rule
-
-`PatternAssembler` must not:
-
-- inspect raw audio
-- run detector thresholds
-- accept/reject SignalCandidates
-- evaluate PatternRules
-- create PatternResults
-- call ResonantBehavior
-- know about Node
-- know about output/chirp behavior
-
-It only assembles accepted `InspectedSignal` objects into `PatternCandidate` objects.
-
----
-
-## Anti-Wrapper Rule
-
-This assembler may initially map into the existing `DetectionPipeline::PatternCandidate` compatibility type.
-
-That is acceptable for this pass.
-
-But do not add another parallel pattern path that bypasses the roadmap flow.
-
-The intended flow is:
-
-```txt
-SignalCandidate
-→ SignalInspector
-→ InspectedSignal
-→ PatternAssembler
-→ PatternCandidate
-```
-
-not:
-
-```txt
-Node
-→ old candidate helper
-→ PatternCandidate
-```
-
----
-
-## Constraints
-
-Do not:
-
-- change `Node`
-- change `ResonantBehavior`
-- change Analyzer runtime behavior
-- change current detection behavior
-- remove old candidate builders
-- move existing structs out of `DetectionPipeline.h`
-- tune thresholds
-- add `DetectionRuntime`
-- add `PatternRules`
-- add DetectionStrategy/Profile
-- rename existing detector classes
-- implement complex chirp grouping
-- implement overlap dominance
-- implement family matching
-- implement FieldState
-
----
-
-## Compatibility Notes
-
-If previous passes used a different namespace than `detection`, follow the existing namespace.
-
-If `PatternCandidate` is currently only an alias, keep it as an alias.
-
-If mapping from `SignalCandidate` to `PatternCandidate` is awkward because existing fields are legacy/transient-oriented, use conservative bridge mapping and document it with comments.
-
-Do not redesign the existing `PatternCandidate` payload in this pass.
-
----
-
-## Acceptance Criteria
-
-- `PatternAssembler.h/.cpp` exist.
-- `PatternAssembler::reset()` compiles.
-- `PatternAssembler::acceptSignal(...)` compiles.
-- `PatternAssembler::popPatternCandidate(...)` compiles.
-- Accepted frequency `InspectedSignal` can be converted into a `PatternCandidate`.
-- Accepted AMP `InspectedSignal` can be converted into a `PatternCandidate`.
-- Rejected signals are ignored.
-- No runtime behavior changed.
-- Existing Node path is untouched.
-- Project compiles.
+Do Not
+do not change ResonantBehavior
+do not change behavior timing
+do not tune thresholds broadly
+do not remove FrequencyBandStreamExtractor
+do not remove Analyzer functionality
+do not add DetectionStrategy/Profile
+do not add FieldState
+do not implement complex pattern grouping
+do not rewrite Node broadly in this pass
+Acceptance Criteria
+Project compiles.
+FrequencySignalEmitter no longer depends on FrequencyCandidateBuilder for the roadmap path.
+Frequency signal candidate lifecycle uses ScalarTransientDetector.
+FrequencyBandStreamExtractor remains the feature extractor.
+AMP and frequency now share scalar transient mechanics.
+Existing Analyzer code still compiles.
+Runtime behavior is not intentionally changed except for the internal frequency candidate generation path.

@@ -89,14 +89,14 @@ Open
 
 ## E. Pattern layer
 
-30. **Stabilize `PatternCandidate` as its own structure** - Move away from legacy aliases toward a real pattern-level object.
-31. **Stabilize `PatternResult` as meaning-bearing output** - Keep this as the only detection output consumed by behavior.
-32. **Keep `PatternRules` as the only pattern interpretation layer** - Ensure detectors, emitters, and inspectors do not decide pattern meaning.
-33. **Add single-signal pulse pattern assembly** - Keep the current trivial assembler as an explicit first pattern assembly mode.
-34. **Add multi-signal chirp / burst pattern assembly** - Group multiple inspected signals into pulse/burst/chirp candidates.
-35. **Allow one `InspectedSignal` to belong to multiple `PatternCandidates`** - Support overlapping interpretations such as one-pulse and three-pulse candidates.
-36. **Add pulse-count / timing validation** - Validate chirp and burst candidates by inter-pulse timing and count.
-37. **Add residual / invalid / too-dense pattern handling** - Preserve explainable non-matching pattern outcomes.
+30. **Stabilize `PatternCandidate` as its own structure** - Partial. Pattern candidates now carry explicit pattern kind and stable payload fields, but the legacy compatibility shape is still in place.
+31. **Stabilize `PatternResult` as meaning-bearing output** - Partial. Pattern results now carry explicit pattern kind and stable meaning fields, but the legacy compatibility shape is still in place.
+32. **Keep `PatternRules` as the only pattern interpretation layer** - Implemented. Detectors, emitters, and inspectors stay out of pattern meaning.
+33. **Add single-signal pulse pattern assembly** - Implemented. The current assembler emits explicit single-pulse candidates from accepted inspected signals.
+34. **Add multi-signal chirp / burst pattern assembly** - Open. Grouping multiple inspected signals into pulse/burst/chirp candidates is still future work.
+35. **Allow one `InspectedSignal` to belong to multiple `PatternCandidates`** - Open. Overlapping interpretations are not yet emitted.
+36. **Add pulse-count / timing validation** - Open. Chirp and burst timing/count validation is still future work.
+37. **Add residual / invalid / too-dense pattern handling** - Partial. Invalid/rejected and residual-style outcomes exist, but full too-dense/chirp handling is not yet complete.
 
 ## F. Field state
 
@@ -120,14 +120,25 @@ Open
 52. **Add band-energy feature streams** - Support later tonal/noisy balance and object-like detection.
 53. **Add derived feature streams only when candidate creation needs them** - Avoid premature feature mixing before signal emission.
 
-## H. Additional detection chains
+## H. Profile proof set
 
+54. **Keep AMP-first as reference baseline** — Preserve old comparison path until the profile-based AMP path is stable.
+
+55. **Define `FreqAmpProfile`** — FrequencyMatch detection plus AMP locality inspection.
+
+56. **Define `AmpStateProfile`** — AMP transient detection with behavior influenced by FieldState.
+
+57. **Define `ChirpProfile` as the first real pattern profile** — Multi-signal pulse grouping through PatternAssembler.
+
+58. **Verify profile switching in code** — Confirm the active profile can be selected without changing detection internals.
+
+59. **Park white-noise / woodblock / object-like chains** — Keep them as future ideas, not current implementation targets.
 54. **Keep AMP-first as reference baseline** - Preserve it for comparison and analyzer continuity.
 55. **Stabilize frequency-first chain** - Keep the working frequency-first path but route it through roadmap boundaries.
 56. **Add white-noise / broadband chain** - Detect broadband/noise bursts and reject tonal leaks.
 57. **Add chirp / pulse-pattern chain** - Assemble inspected pulses into chirp and burst pattern candidates.
 58. **Add object-like hit chain** - Prepare for hit/knock/resonant-body detection.
-59. **Add woodblock / chime / resonant-body pattern classes later** - Extend object detection only after the signal/pattern architecture is stable.
+59. **Park white-noise / woodblock / object-like chains** — Keep them as future ideas, not current implementation targets.
 
 ## I. Behavior boundary
 
@@ -138,19 +149,33 @@ Open
 64. **Keep pattern meaning in `PatternRules`** - Detection decides what was heard before behavior decides what to do.
 65. **Keep field condition in `FieldState`** - Acoustic context is summarized separately from pattern meaning.
 
-## J. Detection Profile / strategy level
+## J. DetectionProfile composition
 
-66. **Introduce code-defined detection profile factories** - Compose profiles in code before considering runtime external config.
-67. **Define first profile: `ChirpField`** - Make the current resonant chirp behavior the first explicit profile.
-68. **Define `ChirpField` frequency-first profile** - Treat the current working frequency-first path as a concrete profile variant.
-69. **Define optional `ChirpField` AMP-first reference profile** - Keep AMP-first as a comparable reference configuration.
-70. **Define later profile: `WhiteNoiseRoom`** - Add a broadband/noise-oriented profile after the current chain is stable.
-71. **Define later profile: `WoodBlock`** - Add an object-hit profile only after pattern assembly and inspection are mature.
-72. **Let profiles select feature extractors** - Profiles choose which measurements exist.
-73. **Let profiles select signal emitters and signal detectors** - Profiles choose which streams propose signals and how.
-74. **Let profiles select inspection rules** - Profiles choose how candidates are accepted, rejected, and annotated.
-75. **Let profiles select pattern assembler** - Profiles choose whether assembly is trivial, chirp-based, object-based, or mixed.
-76. **Let profiles select pattern rules** - Profiles choose how pattern candidates become meaning-bearing results.
-77. **Let profiles select field-state config** - Profiles choose which acoustic context metrics are tracked.
-78. **Keep profiles code-defined, not external runtime config** - Avoid JSON/YAML/plugin overengineering for now.
-79. **Use `DetectionProfile` as the highest-level composition item** - Treat `DetectionStrategy` as an optional narrower term for detection-chain wiring inside a profile.
+66. **Introduce code-defined detection profile factories** — Compose profiles in code, not external config.
+
+67. **Define `FreqAmpProfile`** — Main current baseline: frequency match plus AMP locality inspection.
+
+68. **Define `AmpStateProfile`** — AMP transient profile that proves FieldState-driven behavior.
+
+69. **Define `ChirpProfile`** — First actual pattern profile using multi-signal PatternAssembler.
+
+70. **Let profiles select feature extractors** — Profile chooses measured signal facts.
+
+71. **Let profiles select signal emitters and signal detectors** — Profile chooses signal sources and detector types.
+
+72. **Let profiles select inspection rules** — Profile chooses signal evidence checks.
+
+73. **Let profiles select pattern assembler** — Profile chooses one-signal or multi-signal grouping.
+
+74. **Let profiles select pattern rules** — Profile chooses pattern interpretation.
+
+75. **Let profiles select field-state config** — Profile chooses acoustic context summaries.
+
+76. **Support profile selection at compile-time or simple runtime mode** — Keep switching simple.
+
+77. **Avoid external profile configuration** — No JSON/YAML/profile registry yet.
+
+78. **Park `WhiteNoiseRoomProfile` and `WoodBlockProfile`** — Keep as future proof, not current implementation.
+
+79. **Use `DetectionProfile` as highest-level composition item** — `DetectionStrategy` remains optional narrower chain term.
+

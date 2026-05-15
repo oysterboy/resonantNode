@@ -124,7 +124,7 @@ The active analyzer and RB consumers now use the direct pattern types; only comp
 40. **Add `FieldStateConfig`** - Implemented. The tracker now has a small config object for its windows and thresholds.
 41. **Track ambient / activity / density windows** - Implemented. The tracker maintains rolling counts and simple activity/density summaries.
 42. **Track quiet / busy state** - Implemented. Quiet/active/dense flags are present in `FieldState` and updated by the tracker.
-43. **Track chatter / recent activity** - Partial. Recent activity is summarized by counts/activity/density, but there is no explicit chatter field yet.
+43. **Track chatter / recent activity** - Implemented. `FieldState` now carries an explicit chatter value alongside the existing recent-activity counts.
 44. **Keep `FieldState` out of `PatternRules`** - Implemented. Pattern classification stays separate from field-state context.
 45. **Let Behavior consume `PatternResult + FieldState`** - Implemented. The roadmap RB path now passes `FieldState` into Behavior alongside `PatternResult`.
 
@@ -223,20 +223,28 @@ The active analyzer and RB consumers now use the direct pattern types; only comp
 
 90. **Document behavior input boundary** — Implemented. `Behavior` consuming only `PatternResult + FieldState` is now documented in `docs/myspec.md`.
 
-91. **Document current proof profiles** — Describe FreqAmpProfile, AmpStateProfile, and ChirpProfile.
+91. **Document current proof profiles** — See the notes section at the end of this file.
 
-92. **Document parked profiles / future chains** — Keep WhiteNoiseRoom, WoodBlock, object-like detection as future, not current target.
+92. **Document parked profiles / future chains** — See the notes section at the end of this file.
 
-93. **Document legacy AMP status** — State whether legacy AMP is active, isolated, archived, or removed.
+93. **Document legacy AMP removal note** — See the notes section at the end of this file.
 
 94. **Add implementation-status table** — Mark A–H as done/partial/open based on code state.
 
-95. **Add file/module map** — Map roadmap concepts to actual source files.
+95. **Add file/module map** — Implemented. `docs/myspec.md` now maps the roadmap concepts to the current source areas.
 
-96. **Add logging guide** — Define expected SIGNAL / INSPECTED / PATTERN_CANDIDATE / PATTERN_RESULT / FIELD_STATE logs.
+96. **Add logging guide** — Implemented. The expected signal / inspected / pattern / field-state / profile logs are now documented in `docs/setupNotes.md`.
 
-97. **Add testing / smoke-check guide** — Define quick checks for frequency-first, AMP locality, FieldState, and profile switching.
+97. **Add testing / smoke-check guide** — Implemented. The quick build, profile-switch, frequency-first, FieldState, and AMP locality checks are now documented in `docs/setupNotes.md`.
 
 98. **Add Codex pass index** — Link or list pass notes A–H and future J.
 
 99. **Freeze v0.3 docs before DetectionProfile work** — Use docs as reference before starting profile composition refactor.
+
+## L. Roadmap Notes
+
+91. **Current proof profiles** — `FreqAmpProfile`, `AmpStateProfile`, and `ChirpProfile` are the current proof set. The detailed mapping lives in `docs/myspec.md`.
+
+92. **Parked profiles / future chains** — `WhiteNoiseRoom`, `WoodBlock`, and object-like detection stay future-only and are not current targets.
+
+93. **Legacy AMP removal note** — Legacy AMP remains only as a temporary compatibility path for now and should be removed later once the roadmap path no longer needs it.

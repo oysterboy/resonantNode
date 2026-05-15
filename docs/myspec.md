@@ -2722,7 +2722,7 @@ It is not:
 - a pattern result
 - a pattern meaning layer
 
-It summarizes quiet, busy, density, and recent activity conditions.
+It summarizes quiet, busy, density, chatter, and recent activity conditions.
 
 ### 30.6 PatternAssembler Role
 
@@ -2762,4 +2762,20 @@ ChirpProfile
 ```
 
 They are code-defined and selected through the current profile mechanism.
+
+### 30.10 File / Module Map
+
+Current roadmap concepts map to these source areas:
+
+```text
+Feature history and retrospective windows -> src/detection/features/*
+Signal emission and inspection -> src/detection/signals/*
+Pattern payloads and interpretation -> src/detection/patterns/*
+Field state tracking -> src/detection/field/*
+Detection profile composition -> src/detection/DetectionProfile.h
+Roadmap node orchestration -> src/modes/resonant/*
+Analyzer proof and SEQ tracing -> src/modes/analyzer/*
+```
+
+This map is intentionally narrow and reflects the current implemented split, not every future VEKTOR concept.
 

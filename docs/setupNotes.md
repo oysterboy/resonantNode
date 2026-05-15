@@ -153,3 +153,65 @@ Good working meaning:
 - high freqEarly = confident tonal transient
 - low freqEarly + duplicate/late timing = reject/suppress
 - low freqEarly + expected timing = suspicious, but not an automatic hard fail yet
+
+## Logging Guide
+
+Current stable log families:
+
+- `SIGNAL` - raw signal candidate facts
+- `INSPECTED` - inspection result and locality/support annotations
+- `PATTERN_CANDIDATE` - pattern assembly output
+- `PATTERN_RESULT` - pattern meaning and final pattern classification
+- `FIELD_STATE` - acoustic context summary from `FieldStateTracker`
+- `BEHAVIOR` - behavior decision, blocking reason, and reaction timing
+- `PROFILE` - profile composition and active profile switch output
+
+Expected relationship:
+
+```text
+SIGNAL -> INSPECTED -> PATTERN_CANDIDATE -> PATTERN_RESULT -> BEHAVIOR
+```
+
+Notes:
+
+- `SIGNAL` and `INSPECTED` should stay focused on evidence.
+- `PATTERN_CANDIDATE` and `PATTERN_RESULT` should stay focused on meaning.
+- `FIELD_STATE` should describe acoustic context, not pattern meaning.
+- `PROFILE` should print on startup or profile switch, not every loop.
+
+## Testing / Smoke-Check Guide
+
+Quick checks for the current detection setup:
+
+### Build
+
+- `platformio run -e esp32dev`
+- `platformio run -e esp32dev-analyzer`
+
+### Profile switching
+
+- Start RB and confirm the boot log prints the active profile and its composition.
+- Send `RB PROFILE name=freqamp`.
+- Send `RB PROFILE name=ampstate`.
+- Send `RB PROFILE name=chirp`.
+- Confirm each reply prints the new profile and component metadata.
+
+### Frequency-first sanity
+
+- Run a short SEQ pass.
+- Confirm the stage trace still shows:
+  - `SEQ_TRACE stage=SIGNAL`
+  - `SEQ_TRACE stage=INSPECTED`
+  - `SEQ_TRACE stage=PATTERN_CANDIDATE`
+  - `SEQ_TRACE stage=PATTERN_RESULT`
+- Confirm the report still lands once, cleanly.
+
+### Field-state sanity
+
+- Confirm `FIELD_STATE` logs show quiet / active / dense style context.
+- Confirm behavior decisions still reference `PatternResult + FieldState`.
+
+### AMP locality sanity
+
+- Confirm `INSPECTED` lines still include AMP support and locality fields.
+- Confirm the frequency-first path still reports locality without behavior reading signal internals.

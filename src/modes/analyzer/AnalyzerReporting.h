@@ -130,6 +130,8 @@ struct AnalyzerPatternObservation {
     unsigned int involvedSignals = 0;
 };
 
+// Keep Analyzer-specific for now; later shared AudioReporting may reuse the
+// snapshot-style observation vocabulary without pulling in classification logic.
 struct AnalyzerSignalObservation {
     unsigned int total = 0;
     unsigned int accepted = 0;
@@ -176,6 +178,16 @@ struct AnalyzerClassification {
 struct AnalyzerProfileDetail {
     const char* namespaceName = "none";
     const char* summary = "";
+
+    float freqScore = 0.0f;
+    float freqContrast = 0.0f;
+
+    float ampLevel = 0.0f;
+    float ampBase = 0.0f;
+    float ampLift = 0.0f;
+    float ampNorm = 0.0f;
+
+    const char* ampLocality = "unknown";
 };
 
 struct AnalyzerDebugSummary {

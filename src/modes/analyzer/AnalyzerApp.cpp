@@ -717,7 +717,7 @@ void printSequenceHelp() {
     Serial.println("CMD: SEQ stop");
     Serial.println("SEQ IN: start [tries=N] [period=MS] [window=MS] [freq=HZ] [dur=MS] [test=LABEL]");
     Serial.println("SEQ IN: OBS start [tries=N] [period=2000] [window=1800] [freq=HZ] [dur=MS] [test=LABEL]");
-    Serial.println("SEQ IN: [liveFreqOnly=1|freqOnly=1|mode=livefreq]");
+    Serial.println("SEQ IN: [profile=freqamp|ampstate|chirp] [liveFreqOnly=1|freqOnly=1|mode=livefreq]");
     Serial.println("SEQ IN: [log=default|none|quiet|summary|summary+trial|trialbrief|candidate|report|explain]");
     Serial.println("SEQ IN: stable summary=log=summary; legacy aliases=raw|raw_debug|liveraw|freq_class|trialbrief");
     Serial.println("SEQ IN: [debug=0|1|2] [dumpSamples=0|1] [curveFormat=off|samples]");
@@ -726,6 +726,7 @@ void printSequenceHelp() {
     Serial.println("SEQ OUT: legacy explain = SEQ_EXPLAIN_LEGACY_*");
     Serial.println("SEQ OUT: candidate fields include onset_sample peak_sample release_sample peak_ms dur end_dt_ms freq_*");
     Serial.println("SEQ OBS: passive observe mode for an already-running external emitter");
+    Serial.println("SEQ PROFILE: profile=freqamp|ampstate|chirp");
     Serial.println("SEQ PARAM: freqScore=50000 freqContrast=20.0");
 }
 
@@ -1667,6 +1668,7 @@ void AnalyzerApp::handleUsbLine(const char* line) {
         unsigned long sampleDumpTailMs = 800;
         unsigned long sampleDumpStepMs = 1;
         unsigned long sampleDumpMaxRows = 5000;
+        detection::DetectionProfileKind profileKind = detection::DetectionProfileKind::FreqAmp;
         bool liveFrequencyOnly = false;
         bool legacyExplainOutput = false;
 
@@ -1706,6 +1708,12 @@ void AnalyzerApp::handleUsbLine(const char* line) {
                 sampleDumpStepMs = strtoul(token + 11, nullptr, 10);
             } else if (startsWithTokenIgnoreCase(token, "sampleMax=")) {
                 sampleDumpMaxRows = strtoul(token + 10, nullptr, 10);
+            } else if (startsWithTokenIgnoreCase(token, "profile=")) {
+                const char* value = token + 8;
+                if (!detection::detectionProfileKindFromName(value, profileKind)) {
+                    Serial.print("SEQ_VERBOSE_WARN reason=unknown_profile value=");
+                    Serial.println(value);
+                }
             } else if (equalsIgnoreCase(token, "livefreq") || equalsIgnoreCase(token, "freqonly")) {
                 liveFrequencyOnly = true;
             } else if (startsWithTokenIgnoreCase(token, "liveFreqOnly=") || startsWithTokenIgnoreCase(token, "freqOnly=")) {
@@ -1715,6 +1723,8 @@ void AnalyzerApp::handleUsbLine(const char* line) {
                 const char* value = token + 5;
                 if (equalsIgnoreCase(value, "livefreq") || equalsIgnoreCase(value, "freqonly")) {
                     liveFrequencyOnly = true;
+                } else if (detection::detectionProfileKindFromName(value, profileKind)) {
+                    // profile selection is now explicit for Analyzer runs.
                 }
             } else if (equalsIgnoreCase(token, "log")) {
                 token = strtok_r(nullptr, " ", &savePtr);
@@ -1733,7 +1743,7 @@ void AnalyzerApp::handleUsbLine(const char* line) {
             token = strtok_r(nullptr, " ", &savePtr);
         }
 
-        startSequenceTest(totalTrials, periodMs, windowEndOffsetMs, toneHz, durationMs, false, true, setupLabel, logFlags, sampleDumpEnabled, sampleDumpFirstTrials, sampleDumpEveryNth, sampleDumpLeadMs, sampleDumpTailMs, sampleDumpStepMs, sampleDumpMaxRows, liveFrequencyOnly, externalEmitter, legacyExplainOutput);
+        startSequenceTest(totalTrials, periodMs, windowEndOffsetMs, toneHz, durationMs, false, true, setupLabel, logFlags, sampleDumpEnabled, sampleDumpFirstTrials, sampleDumpEveryNth, sampleDumpLeadMs, sampleDumpTailMs, sampleDumpStepMs, sampleDumpMaxRows, profileKind, liveFrequencyOnly, externalEmitter, legacyExplainOutput);
         return;
     }
 
@@ -2098,7 +2108,7 @@ void AnalyzerApp::printValueModeBanner() const {
 // Sequence, capture, and base sessions
 // -----------------------------------------------------------------------------
 
-void AnalyzerApp::startSequenceTest(unsigned long totalTrials, unsigned long periodMs, unsigned long windowEndOffsetMs, unsigned long toneHz, unsigned long durationMs, bool quiet, bool showDetails, const char* setupLabel, uint32_t logFlags, bool sampleDumpEnabled, unsigned long sampleDumpFirstTrials, unsigned long sampleDumpEveryNth, unsigned long sampleDumpLeadMs, unsigned long sampleDumpTailMs, unsigned long sampleDumpStepMs, unsigned long sampleDumpMaxRows, bool liveFrequencyOnly, bool externalEmitter, bool legacyExplainOutput) {
+void AnalyzerApp::startSequenceTest(unsigned long totalTrials, unsigned long periodMs, unsigned long windowEndOffsetMs, unsigned long toneHz, unsigned long durationMs, bool quiet, bool showDetails, const char* setupLabel, uint32_t logFlags, bool sampleDumpEnabled, unsigned long sampleDumpFirstTrials, unsigned long sampleDumpEveryNth, unsigned long sampleDumpLeadMs, unsigned long sampleDumpTailMs, unsigned long sampleDumpStepMs, unsigned long sampleDumpMaxRows, detection::DetectionProfileKind profileKind, bool liveFrequencyOnly, bool externalEmitter, bool legacyExplainOutput) {
     if (_valMode) {
         return;
     }
@@ -2137,6 +2147,7 @@ void AnalyzerApp::startSequenceTest(unsigned long totalTrials, unsigned long per
     _sequenceTest.quiet = quiet;
     _sequenceTest.showDetails = showDetails;
     _sequenceTest.externalEmitter = externalEmitter;
+    _sequenceTest.profileKind = profileKind;
     _sequenceTest.liveFrequencyOnly = liveFrequencyOnly;
     _sequenceTest.legacyExplainOutput = legacyExplainOutput;
     _sequenceTest.progressLineStarted = false;
@@ -2293,6 +2304,8 @@ void AnalyzerApp::startSequenceTest(unsigned long totalTrials, unsigned long per
         Serial.print("SEQ start source=");
         Serial.print(_sourceKind == AudioSourceKind::I2S ? "I2S" : "Analog");
         Serial.print(" detector=AMP");
+        Serial.print(" profile=");
+        Serial.print(detection::detectionProfileName(_sequenceTest.profileKind));
         Serial.print(" mode=");
         if (_sequenceTest.liveFrequencyOnly) {
             Serial.print("LIVEFREQ");
@@ -3849,10 +3862,37 @@ static size_t analyzerReasonIndex(AnalyzerReason value) {
 }
 
 const char* AnalyzerApp::activeAnalyzerProfileName() const {
-    if (_sequenceTest.liveFrequencyOnly) {
-        return "FreqAmpLiveOnly";
+    return detection::detectionProfileName(_sequenceTest.profileKind);
+}
+
+const char* analyzerProfileDetailNamespace(detection::DetectionProfileKind profileKind, bool liveFrequencyOnly) {
+    if (liveFrequencyOnly) {
+        return "freq_amp_live";
     }
-    return "FreqAmp";
+    switch (profileKind) {
+        case detection::DetectionProfileKind::AmpState:
+            return "amp_state";
+        case detection::DetectionProfileKind::Chirp:
+            return "chirp";
+        case detection::DetectionProfileKind::FreqAmp:
+        default:
+            return "freq_amp";
+    }
+}
+
+const char* analyzerProfileDetailSummary(detection::DetectionProfileKind profileKind, bool liveFrequencyOnly) {
+    if (liveFrequencyOnly) {
+        return "generic live-frequency profile view";
+    }
+    switch (profileKind) {
+        case detection::DetectionProfileKind::AmpState:
+            return "amp-state profile view";
+        case detection::DetectionProfileKind::Chirp:
+            return "chirp profile view";
+        case detection::DetectionProfileKind::FreqAmp:
+        default:
+            return "generic freq-amp profile view";
+    }
 }
 
 bool AnalyzerApp::sequenceLegacyReportEnabled() const {
@@ -3884,7 +3924,6 @@ AnalyzerReport AnalyzerApp::buildSequenceAnalyzerReport(unsigned long trialNumbe
     report.expected.patternType = _sequenceTest.liveFrequencyOnly ? "live_frequency" : "sequence_trial";
     report.expected.expectedSource = _sequenceTest.externalEmitter ? "external" : "local";
 
-    const bool hasCapturedPattern = diagnostics.acceptedPatternCaptured && diagnostics.acceptedSignalCandidate.present;
     const detection::PatternResult& capturedPatternResult = diagnostics.acceptedPatternResult;
     const detection::InspectedSignal& capturedInspectedSignal = diagnostics.acceptedInspectedSignal;
     const detection::SignalCandidate& capturedSignalCandidate = diagnostics.acceptedSignalCandidate;
@@ -3909,15 +3948,20 @@ AnalyzerReport AnalyzerApp::buildSequenceAnalyzerReport(unsigned long trialNumbe
     report.classification.reason = analyzerReasonFromSequenceOutcome(result, dtMs, diagnostics.rawCandidateCount, diagnostics.strongestRejectReason, audioOverflow);
     report.classification.dtMs = dtMs;
     report.classification.confidence = capturedPatternAvailable ? capturedPatternResult.confidence : (diagnostics.transientAccepted ? 1.0f : 0.0f);
-
-    report.primaryPattern.type = capturedPatternAvailable ? detection::patternTypeName(capturedPatternResult.type) : "unknown";
-    report.primaryPattern.accepted = capturedPatternAvailable ? capturedPatternResult.valid : (report.classification.result == AnalyzerResult::Expected || report.classification.result == AnalyzerResult::Late);
-    report.primaryPattern.confidence = capturedPatternAvailable ? capturedPatternResult.confidence : (diagnostics.acceptedFrequencyEvidence.present ? diagnostics.acceptedFrequencyEvidence.confidence : 0.0f);
-    report.primaryPattern.dtMs = dtMs;
-    report.primaryPattern.locality = capturedPatternAvailable ? localityName(capturedPatternResult.locality) : "unknown";
-    report.primaryPattern.sourceClass = capturedPatternAvailable ? detection::patternSourceName(capturedPatternResult.source) : (diagnostics.acceptedFrequencyEvidence.present ? "frequency" : "unknown");
-    report.primaryPattern.reason = capturedPatternAvailable ? detection::patternReasonName(capturedPatternResult.reasonCode) : analyzerReasonName(report.classification.reason);
-    report.primaryPattern.involvedSignals = capturedPatternAvailable ? capturedPatternResult.signalCount : diagnostics.rawCandidateCount;
+    {
+        // Generic pattern mapping stays local to the report builder so top-level
+        // output does not need profile-specific detector knowledge elsewhere.
+        AnalyzerPatternObservation pattern = {};
+        pattern.type = capturedPatternAvailable ? detection::patternTypeName(capturedPatternResult.type) : "unknown";
+        pattern.accepted = capturedPatternAvailable ? capturedPatternResult.valid : (report.classification.result == AnalyzerResult::Expected || report.classification.result == AnalyzerResult::Late);
+        pattern.confidence = capturedPatternAvailable ? capturedPatternResult.confidence : (diagnostics.acceptedFrequencyEvidence.present ? diagnostics.acceptedFrequencyEvidence.confidence : 0.0f);
+        pattern.dtMs = report.classification.dtMs;
+        pattern.locality = capturedPatternAvailable ? localityName(capturedPatternResult.locality) : "unknown";
+        pattern.sourceClass = capturedPatternAvailable ? detection::patternSourceName(capturedPatternResult.source) : (diagnostics.acceptedFrequencyEvidence.present ? "frequency" : "unknown");
+        pattern.reason = capturedPatternAvailable ? detection::patternReasonName(capturedPatternResult.reasonCode) : analyzerReasonName(report.classification.reason);
+        pattern.involvedSignals = capturedPatternAvailable ? capturedPatternResult.signalCount : diagnostics.rawCandidateCount;
+        report.primaryPattern = pattern;
+    }
 
     report.signals.total = diagnostics.rawCandidateCount;
     report.signals.accepted = capturedPatternAvailable ? (capturedInspectedSignal.accepted ? 1U : 0U) : (diagnostics.transientAccepted ? 1U : 0U);
@@ -3948,8 +3992,17 @@ AnalyzerReport AnalyzerApp::buildSequenceAnalyzerReport(unsigned long trialNumbe
     report.field.recentValidPatterns = diagnostics.transientAccepted ? 1U : 0U;
     report.field.recentRejects = diagnostics.rawCandidateCount > report.field.recentValidPatterns ? diagnostics.rawCandidateCount - report.field.recentValidPatterns : 0U;
 
-    report.profileDetail.namespaceName = "analyzer.legacy_seq";
-    report.profileDetail.summary = "mapped from finalized sequence diagnostics";
+    report.profileDetail.namespaceName = analyzerProfileDetailNamespace(_sequenceTest.profileKind, _sequenceTest.liveFrequencyOnly);
+    report.profileDetail.summary = analyzerProfileDetailSummary(_sequenceTest.profileKind, _sequenceTest.liveFrequencyOnly);
+    report.profileDetail.freqScore = capturedPatternAvailable ? capturedPatternResult.freq.score : diagnostics.acceptedFrequencyEvidence.score;
+    report.profileDetail.freqContrast = capturedPatternAvailable ? capturedPatternResult.freq.spectralContrast : diagnostics.acceptedFrequencyEvidence.spectralContrast;
+    report.profileDetail.ampLevel = report.signals.primaryStrength;
+    report.profileDetail.ampBase = diagnostics.acceptedAmbientBaseline;
+    report.profileDetail.ampLift = report.profileDetail.ampLevel - report.profileDetail.ampBase;
+    report.profileDetail.ampNorm = report.profileDetail.ampBase > 0.0f
+        ? report.profileDetail.ampLift / report.profileDetail.ampBase
+        : report.profileDetail.ampLift;
+    report.profileDetail.ampLocality = report.primaryPattern.locality;
 
     report.debug.signals = diagnostics.rawCandidateCount;
     report.debug.inspected = diagnostics.rawCandidateCount;
@@ -4125,6 +4178,26 @@ void AnalyzerApp::printSequenceExplain(const AnalyzerReport& report) const {
     Serial.print(report.primaryPattern.involvedSignals);
     Serial.println();
 
+    Serial.print("SEQ_EXPLAIN_PROFILE_DETAIL ns=");
+    Serial.print(report.profileDetail.namespaceName != nullptr ? report.profileDetail.namespaceName : "none");
+    Serial.print(" summary=");
+    Serial.print(report.profileDetail.summary != nullptr ? report.profileDetail.summary : "");
+    Serial.print(" freq_score=");
+    Serial.print(report.profileDetail.freqScore, 1);
+    Serial.print(" freq_contrast=");
+    Serial.print(report.profileDetail.freqContrast, 2);
+    Serial.print(" amp_level=");
+    Serial.print(report.profileDetail.ampLevel, 1);
+    Serial.print(" amp_base=");
+    Serial.print(report.profileDetail.ampBase, 1);
+    Serial.print(" amp_lift=");
+    Serial.print(report.profileDetail.ampLift, 1);
+    Serial.print(" amp_norm=");
+    Serial.print(report.profileDetail.ampNorm, 2);
+    Serial.print(" amp_locality=");
+    Serial.print(report.profileDetail.ampLocality != nullptr ? report.profileDetail.ampLocality : "unknown");
+    Serial.println();
+
     Serial.print("SEQ_EXPLAIN_DUPLICATES count=");
     Serial.print(report.debug.duplicates);
     Serial.print(" duplicate_risk=");
@@ -4141,12 +4214,6 @@ void AnalyzerApp::printSequenceExplain(const AnalyzerReport& report) const {
     Serial.print(report.field.recentValidPatterns);
     Serial.print(" recent_rejects=");
     Serial.print(report.field.recentRejects);
-    Serial.println();
-
-    Serial.print("SEQ_EXPLAIN_PROFILE_DETAIL ns=");
-    Serial.print(report.profileDetail.namespaceName != nullptr ? report.profileDetail.namespaceName : "none");
-    Serial.print(" summary=");
-    Serial.print(report.profileDetail.summary != nullptr ? report.profileDetail.summary : "");
     Serial.println();
 
     Serial.print("SEQ_EXPLAIN_CLASSIFICATION result=");

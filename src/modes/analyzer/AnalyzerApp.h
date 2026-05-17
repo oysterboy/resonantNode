@@ -6,6 +6,7 @@
 #include "../../hal/AudioSourceAnalog.h"
 #include "../../hal/AudioSourceI2S.h"
 #include "../../detection/detectors/AmpTransientDetector.h"
+#include "../../detection/DetectionProfile.h"
 #include "../../io/AudioSignal.h"
 #include "../../detection/legacy/AmpCandidateBuilder.h"
 #include "../../detection/detectors/FrequencyMatchDetector.h"
@@ -300,6 +301,7 @@ private:
         bool quiet = false;
         bool showDetails = true;
         bool externalEmitter = false;
+        detection::DetectionProfileKind profileKind = detection::DetectionProfileKind::FreqAmp;
         bool liveFrequencyOnly = false;
         bool legacyExplainOutput = false;
         bool progressLineStarted = false;
@@ -442,7 +444,7 @@ private:
     void printBaseHints() const;
 
     // Sequence-test workflows.
-    void startSequenceTest(unsigned long totalTrials, unsigned long periodMs, unsigned long windowEndOffsetMs, unsigned long toneHz, unsigned long durationMs, bool quiet = false, bool showDetails = true, const char* setupLabel = nullptr, uint32_t logFlags = DEFAULT_ANALYZER_LOG_FLAGS, bool sampleDumpEnabled = false, unsigned long sampleDumpFirstTrials = 2, unsigned long sampleDumpEveryNth = 0, unsigned long sampleDumpLeadMs = 50, unsigned long sampleDumpTailMs = 800, unsigned long sampleDumpStepMs = 1, unsigned long sampleDumpMaxRows = 5000, bool liveFrequencyOnly = false, bool externalEmitter = false, bool legacyExplainOutput = false);
+    void startSequenceTest(unsigned long totalTrials, unsigned long periodMs, unsigned long windowEndOffsetMs, unsigned long toneHz, unsigned long durationMs, bool quiet = false, bool showDetails = true, const char* setupLabel = nullptr, uint32_t logFlags = DEFAULT_ANALYZER_LOG_FLAGS, bool sampleDumpEnabled = false, unsigned long sampleDumpFirstTrials = 2, unsigned long sampleDumpEveryNth = 0, unsigned long sampleDumpLeadMs = 50, unsigned long sampleDumpTailMs = 800, unsigned long sampleDumpStepMs = 1, unsigned long sampleDumpMaxRows = 5000, detection::DetectionProfileKind profileKind = detection::DetectionProfileKind::FreqAmp, bool liveFrequencyOnly = false, bool externalEmitter = false, bool legacyExplainOutput = false);
     void stopSequenceTest();
     void updateSequenceTest(unsigned long now);
     void handleSequenceTransient(unsigned long now);

@@ -187,6 +187,9 @@ struct AnalyzerDebugSummary {
     unsigned int duplicates = 0;
     unsigned int unexpected = 0;
 
+    bool artifactCaptured = false;
+    bool artifactFallback = false;
+
     const char* mainRejectReason = "none";
 };
 

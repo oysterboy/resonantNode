@@ -222,6 +222,10 @@ private:
             unsigned long acceptedFrequencyProcessedAtMs = 0;
             FrequencyEvidence acceptedParityProbe64 = {};
             unsigned long acceptedParityProbe64ProcessedAtMs = 0;
+            detection::SignalCandidate acceptedSignalCandidate = {};
+            detection::PatternResult acceptedPatternResult = {};
+            detection::InspectedSignal acceptedInspectedSignal = {};
+            bool acceptedPatternCaptured = false;
             unsigned long duplicateTransientMs = 0;
             float duplicateTransientStrength = 0.0f;
             unsigned long duplicateTransientDurationMs = 0;
@@ -292,6 +296,7 @@ private:
         bool showDetails = true;
         bool externalEmitter = false;
         bool liveFrequencyOnly = false;
+        bool legacyExplainOutput = false;
         bool progressLineStarted = false;
         unsigned long totalTrials = 100;
         unsigned long periodMs = 2500;
@@ -426,7 +431,7 @@ private:
     void printBaseHints() const;
 
     // Sequence-test workflows.
-    void startSequenceTest(unsigned long totalTrials, unsigned long periodMs, unsigned long windowEndOffsetMs, unsigned long toneHz, unsigned long durationMs, bool quiet = false, bool showDetails = true, const char* setupLabel = nullptr, uint32_t logFlags = DEFAULT_ANALYZER_LOG_FLAGS, bool sampleDumpEnabled = false, unsigned long sampleDumpFirstTrials = 2, unsigned long sampleDumpEveryNth = 0, unsigned long sampleDumpLeadMs = 50, unsigned long sampleDumpTailMs = 800, unsigned long sampleDumpStepMs = 1, unsigned long sampleDumpMaxRows = 5000, bool liveFrequencyOnly = false, bool externalEmitter = false);
+    void startSequenceTest(unsigned long totalTrials, unsigned long periodMs, unsigned long windowEndOffsetMs, unsigned long toneHz, unsigned long durationMs, bool quiet = false, bool showDetails = true, const char* setupLabel = nullptr, uint32_t logFlags = DEFAULT_ANALYZER_LOG_FLAGS, bool sampleDumpEnabled = false, unsigned long sampleDumpFirstTrials = 2, unsigned long sampleDumpEveryNth = 0, unsigned long sampleDumpLeadMs = 50, unsigned long sampleDumpTailMs = 800, unsigned long sampleDumpStepMs = 1, unsigned long sampleDumpMaxRows = 5000, bool liveFrequencyOnly = false, bool externalEmitter = false, bool legacyExplainOutput = false);
     void stopSequenceTest();
     void updateSequenceTest(unsigned long now);
     void handleSequenceTransient(unsigned long now);
@@ -447,6 +452,7 @@ private:
     void printTransientAcceptedDebug(unsigned long now, float strength, unsigned long durationMs) const;
     void printTransientStatsDebug(unsigned long now) const;
     void printSequenceExplainLegacy(unsigned long trialNumber, const char* result, const SequenceTest::TrialDiagnostics& diagnostics) const;
+    void printSequenceExplain(const AnalyzerReport& report) const;
     void printSequenceLegacyReports() const;
     void printSequenceTrialResult(unsigned long trialNumber, const char* result, long dtMs, long durMs, float strength, bool audioOverflow, unsigned long duplicateCount, const SequenceTest::TrialDiagnostics& diagnostics) const;
     void printSequenceTrialResult(const AnalyzerReport& report) const;

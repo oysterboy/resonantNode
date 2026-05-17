@@ -289,6 +289,45 @@ detection::PatternCandidate makeRoadmapPatternCandidate(const DetectorCandidate&
     return out;
 }
 
+detection::SignalCandidate makeRoadmapSignalCandidateFromPatternResult(const detection::PatternResult& patternResult) {
+    detection::SignalCandidate out;
+    out.present = true;
+    out.valid = patternResult.valid;
+    out.kind = patternResult.source == detection::PatternSource::FrequencyPrimary
+        ? detection::SignalKind::FrequencyMatch
+        : detection::SignalKind::AmpTransient;
+    out.source = patternResult.source == detection::PatternSource::FrequencyPrimary
+        ? detection::SignalSource::Frequency
+        : detection::SignalSource::Amp;
+    out.detectorKind = patternResult.source == detection::PatternSource::FrequencyPrimary
+        ? detection::SignalDetectorKind::FrequencyMatch
+        : detection::SignalDetectorKind::Transient;
+    out.startSample = patternResult.candidate.onsetSample;
+    out.peakSample = patternResult.candidate.peakSample;
+    out.releaseSample = patternResult.candidate.releaseSample;
+    out.startMs = patternResult.candidate.startMs;
+    out.peakMs = patternResult.candidate.heardAtMs;
+    out.releaseMs = patternResult.candidate.acceptedMs;
+    out.endMs = patternResult.candidate.acceptedMs;
+    out.durationMs = patternResult.candidate.durationMs;
+    out.strength = patternResult.candidate.peakStrength;
+    out.score = patternResult.freq.score;
+    out.contrast = patternResult.freq.spectralContrast;
+    out.confidence = patternResult.confidence;
+    out.signalConfidence = patternResult.signalConfidence;
+    out.frequencyConfidence = patternResult.frequencyConfidence;
+    out.ampLevel = patternResult.candidate.peakStrength;
+    out.ampBaseline = patternResult.candidate.ambientBaseline;
+    out.ampEvidencePresent = true;
+    out.ampSupport = patternResult.candidate.ampSupport;
+    out.locality = patternResult.candidate.locality;
+    out.duplicateRisk = patternResult.duplicateRisk;
+    out.duplicateRiskScore = patternResult.duplicateRiskScore;
+    out.transient = patternResult.candidate.transient;
+    out.frequency = patternResult.freq;
+    return out;
+}
+
 bool processRoadmapDetectorCandidate(const DetectorCandidate& in,
                                      detection::PatternResult& out,
                                      unsigned long processedAtMs,
@@ -647,6 +686,31 @@ uint32_t analyzerLogFlagsFromToken(const char* token) {
     return flags;
 }
 
+bool analyzerLogTokenUsesLegacyExplain(const char* token) {
+    if (token == nullptr || *token == '\0') {
+        return false;
+    }
+
+    if (equalsIgnoreCase(token, "raw") || equalsIgnoreCase(token, "raw_debug") || equalsIgnoreCase(token, "liveraw")) {
+        return true;
+    }
+
+    char buffer[64];
+    strncpy(buffer, token, sizeof(buffer));
+    buffer[sizeof(buffer) - 1] = '\0';
+
+    char* savePtr = nullptr;
+    char* part = strtok_r(buffer, ",+|", &savePtr);
+    while (part != nullptr) {
+        if (equalsIgnoreCase(part, "raw") || equalsIgnoreCase(part, "raw_debug") || equalsIgnoreCase(part, "liveraw")) {
+            return true;
+        }
+        part = strtok_r(nullptr, ",+|", &savePtr);
+    }
+
+    return false;
+}
+
 void printSequenceHelp() {
     Serial.println("CMD: SEQ help");
     Serial.println("CMD: SEQ");
@@ -658,7 +722,8 @@ void printSequenceHelp() {
     Serial.println("SEQ IN: legacy aliases=raw|raw_debug|liveraw|freq_class|trialbrief");
     Serial.println("SEQ IN: [debug=0|1|2] [dumpSamples=0|1] [curveFormat=off|samples]");
     Serial.println("SEQ IN: [sampleFirst=N] [sampleEvery=N] [sampleLead=MS] [sampleTail=MS] [sampleStep=MS] [sampleMax=N]");
-    Serial.println("SEQ OUT: SEQ start / SEQ running / SEQ_CAND / SEQ_REPORT / SEQ_TRIAL / SEQ_SUMMARY");
+    Serial.println("SEQ OUT: SEQ start / SEQ running / SEQ_CAND / SEQ_REPORT / SEQ_TRIAL / SEQ_EXPLAIN / SEQ_SUMMARY");
+    Serial.println("SEQ OUT: legacy explain = SEQ_EXPLAIN_LEGACY_*");
     Serial.println("SEQ OUT: candidate fields include onset_sample peak_sample release_sample peak_ms dur end_dt_ms freq_*");
     Serial.println("SEQ OBS: passive observe mode for an already-running external emitter");
     Serial.println("SEQ PARAM: freqScore=50000 freqContrast=20.0");
@@ -1603,6 +1668,7 @@ void AnalyzerApp::handleUsbLine(const char* line) {
         unsigned long sampleDumpStepMs = 1;
         unsigned long sampleDumpMaxRows = 5000;
         bool liveFrequencyOnly = false;
+        bool legacyExplainOutput = false;
 
         while (token != nullptr) {
             if (equalsIgnoreCase(token, "start")) {
@@ -1654,6 +1720,7 @@ void AnalyzerApp::handleUsbLine(const char* line) {
                 token = strtok_r(nullptr, " ", &savePtr);
                 if (token != nullptr) {
                     logFlags = analyzerLogFlagsFromToken(token);
+                    legacyExplainOutput = analyzerLogTokenUsesLegacyExplain(token);
                     token = strtok_r(nullptr, " ", &savePtr);
                     continue;
                 }
@@ -1661,11 +1728,12 @@ void AnalyzerApp::handleUsbLine(const char* line) {
                 logFlags = analyzerLogFlagsFromLevel(strtoul(token + 6, nullptr, 10));
             } else if (startsWithTokenIgnoreCase(token, "log=")) {
                 logFlags = analyzerLogFlagsFromToken(token + 4);
+                legacyExplainOutput = analyzerLogTokenUsesLegacyExplain(token + 4);
             }
             token = strtok_r(nullptr, " ", &savePtr);
         }
 
-        startSequenceTest(totalTrials, periodMs, windowEndOffsetMs, toneHz, durationMs, false, true, setupLabel, logFlags, sampleDumpEnabled, sampleDumpFirstTrials, sampleDumpEveryNth, sampleDumpLeadMs, sampleDumpTailMs, sampleDumpStepMs, sampleDumpMaxRows, liveFrequencyOnly, externalEmitter);
+        startSequenceTest(totalTrials, periodMs, windowEndOffsetMs, toneHz, durationMs, false, true, setupLabel, logFlags, sampleDumpEnabled, sampleDumpFirstTrials, sampleDumpEveryNth, sampleDumpLeadMs, sampleDumpTailMs, sampleDumpStepMs, sampleDumpMaxRows, liveFrequencyOnly, externalEmitter, legacyExplainOutput);
         return;
     }
 
@@ -2030,7 +2098,7 @@ void AnalyzerApp::printValueModeBanner() const {
 // Sequence, capture, and base sessions
 // -----------------------------------------------------------------------------
 
-void AnalyzerApp::startSequenceTest(unsigned long totalTrials, unsigned long periodMs, unsigned long windowEndOffsetMs, unsigned long toneHz, unsigned long durationMs, bool quiet, bool showDetails, const char* setupLabel, uint32_t logFlags, bool sampleDumpEnabled, unsigned long sampleDumpFirstTrials, unsigned long sampleDumpEveryNth, unsigned long sampleDumpLeadMs, unsigned long sampleDumpTailMs, unsigned long sampleDumpStepMs, unsigned long sampleDumpMaxRows, bool liveFrequencyOnly, bool externalEmitter) {
+void AnalyzerApp::startSequenceTest(unsigned long totalTrials, unsigned long periodMs, unsigned long windowEndOffsetMs, unsigned long toneHz, unsigned long durationMs, bool quiet, bool showDetails, const char* setupLabel, uint32_t logFlags, bool sampleDumpEnabled, unsigned long sampleDumpFirstTrials, unsigned long sampleDumpEveryNth, unsigned long sampleDumpLeadMs, unsigned long sampleDumpTailMs, unsigned long sampleDumpStepMs, unsigned long sampleDumpMaxRows, bool liveFrequencyOnly, bool externalEmitter, bool legacyExplainOutput) {
     if (_valMode) {
         return;
     }
@@ -2066,6 +2134,7 @@ void AnalyzerApp::startSequenceTest(unsigned long totalTrials, unsigned long per
     _sequenceTest.showDetails = showDetails;
     _sequenceTest.externalEmitter = externalEmitter;
     _sequenceTest.liveFrequencyOnly = liveFrequencyOnly;
+    _sequenceTest.legacyExplainOutput = legacyExplainOutput;
     _sequenceTest.progressLineStarted = false;
     _sequenceTest.logFlags = logFlags;
     _sequenceTest.totalTrials = totalTrials;
@@ -3333,6 +3402,20 @@ void AnalyzerApp::handleSequenceCandidate(const detection::PatternResult& patter
     _sequenceTest.currentTrialDiagnostics.acceptedFrequencyProcessedAtMs = patternResult.processedAtMs;
     _sequenceTest.currentTrialDiagnostics.acceptedParityProbe64 = scanSequenceFrequencyParity64(patternResult.candidate, patternResult.processedAtMs);
     _sequenceTest.currentTrialDiagnostics.acceptedParityProbe64ProcessedAtMs = patternResult.processedAtMs;
+    _sequenceTest.currentTrialDiagnostics.acceptedSignalCandidate = makeRoadmapSignalCandidateFromPatternResult(patternResult);
+    _sequenceTest.currentTrialDiagnostics.acceptedPatternResult = patternResult;
+    _sequenceTest.currentTrialDiagnostics.acceptedInspectedSignal = {};
+    _sequenceTest.currentTrialDiagnostics.acceptedPatternCaptured = false;
+    {
+        detection::PatternResult actualPatternResult = patternResult;
+        detection::InspectedSignal actualInspectedSignal = {};
+        const bool actualPatternCaptured = evaluateRoadmapSignalCandidateImpl(_sequenceTest.currentTrialDiagnostics.acceptedSignalCandidate, _frequencyEvidenceTuning, _sequenceFeatureHistory, actualPatternResult, &actualInspectedSignal, false);
+        if (actualPatternCaptured) {
+            _sequenceTest.currentTrialDiagnostics.acceptedPatternResult = actualPatternResult;
+            _sequenceTest.currentTrialDiagnostics.acceptedInspectedSignal = actualInspectedSignal;
+            _sequenceTest.currentTrialDiagnostics.acceptedPatternCaptured = true;
+        }
+    }
     _sequenceTest.currentTrialDiagnostics.lastTransientRejectReason = AmpTransientDetector::TransientRejectReason::None;
     _sequenceTest.currentTrialDiagnostics.lastRejectStrength = 0.0f;
     _sequenceTest.currentTrialDiagnostics.lastRejectDurationMs = 0;
@@ -3553,6 +3636,12 @@ void AnalyzerApp::finalizeSequenceTrial(unsigned long now) {
     } else {
         printSequenceTrialResult(finalizedReport);
     }
+    if (analyzerLogEnabled(_sequenceTest.logFlags, AnalyzerApp::ANALYZER_LOG_EXPLAIN)) {
+        printSequenceExplain(finalizedReport);
+        if (_sequenceTest.legacyExplainOutput) {
+            printSequenceExplainLegacy(_sequenceTest.currentTrial, result, diagnostics);
+        }
+    }
 
     Serial.flush();
     _sequenceTest.currentTrialFinalized = true;
@@ -3688,38 +3777,47 @@ AnalyzerReport AnalyzerApp::buildSequenceAnalyzerReport(unsigned long trialNumbe
     report.expected.patternType = _sequenceTest.liveFrequencyOnly ? "live_frequency" : "sequence_trial";
     report.expected.expectedSource = _sequenceTest.externalEmitter ? "external" : "local";
 
+    const bool hasCapturedPattern = diagnostics.acceptedPatternCaptured && diagnostics.acceptedSignalCandidate.present;
+    const detection::PatternResult& capturedPatternResult = diagnostics.acceptedPatternResult;
+    const detection::InspectedSignal& capturedInspectedSignal = diagnostics.acceptedInspectedSignal;
+    const detection::SignalCandidate& capturedSignalCandidate = diagnostics.acceptedSignalCandidate;
+
     report.classification.result = analyzerResultFromSequenceOutcome(result);
     report.classification.reason = analyzerReasonFromSequenceOutcome(result, dtMs, diagnostics.rawCandidateCount, diagnostics.strongestRejectReason, audioOverflow);
     report.classification.dtMs = dtMs;
-    report.classification.confidence = diagnostics.transientAccepted ? 1.0f : 0.0f;
+    report.classification.confidence = hasCapturedPattern ? capturedPatternResult.confidence : (diagnostics.transientAccepted ? 1.0f : 0.0f);
 
-    report.primaryPattern.type = "unknown";
-    report.primaryPattern.accepted = report.classification.result == AnalyzerResult::Expected || report.classification.result == AnalyzerResult::Late;
-    report.primaryPattern.confidence = diagnostics.acceptedFrequencyEvidence.present ? diagnostics.acceptedFrequencyEvidence.confidence : 0.0f;
+    report.primaryPattern.type = hasCapturedPattern ? detection::patternTypeName(capturedPatternResult.type) : "unknown";
+    report.primaryPattern.accepted = hasCapturedPattern ? capturedPatternResult.valid : (report.classification.result == AnalyzerResult::Expected || report.classification.result == AnalyzerResult::Late);
+    report.primaryPattern.confidence = hasCapturedPattern ? capturedPatternResult.confidence : (diagnostics.acceptedFrequencyEvidence.present ? diagnostics.acceptedFrequencyEvidence.confidence : 0.0f);
     report.primaryPattern.dtMs = dtMs;
-    report.primaryPattern.locality = "unknown";
-    report.primaryPattern.sourceClass = diagnostics.acceptedFrequencyEvidence.present ? "frequency" : "unknown";
-    report.primaryPattern.reason = analyzerReasonName(report.classification.reason);
-    report.primaryPattern.involvedSignals = diagnostics.rawCandidateCount;
+    report.primaryPattern.locality = hasCapturedPattern ? localityName(capturedPatternResult.locality) : "unknown";
+    report.primaryPattern.sourceClass = hasCapturedPattern ? detection::patternSourceName(capturedPatternResult.source) : (diagnostics.acceptedFrequencyEvidence.present ? "frequency" : "unknown");
+    report.primaryPattern.reason = hasCapturedPattern ? detection::patternReasonName(capturedPatternResult.reasonCode) : analyzerReasonName(report.classification.reason);
+    report.primaryPattern.involvedSignals = hasCapturedPattern ? capturedPatternResult.signalCount : diagnostics.rawCandidateCount;
 
     report.signals.total = diagnostics.rawCandidateCount;
-    report.signals.accepted = diagnostics.transientAccepted ? 1U : 0U;
+    report.signals.accepted = hasCapturedPattern ? (capturedInspectedSignal.accepted ? 1U : 0U) : (diagnostics.transientAccepted ? 1U : 0U);
     report.signals.rejected = diagnostics.rawCandidateCount > report.signals.accepted ? diagnostics.rawCandidateCount - report.signals.accepted : 0U;
-    report.signals.primarySource = diagnostics.acceptedFrequencyEvidence.present ? "frequency" : "unknown";
+    report.signals.primarySource = hasCapturedPattern ? signalSourceName(capturedSignalCandidate.source) : (diagnostics.acceptedFrequencyEvidence.present ? "frequency" : "unknown");
     report.signals.primaryDtMs = dtMs;
     report.signals.primaryDurationMs = durMs >= 0 ? static_cast<unsigned long>(durMs) : 0UL;
     report.signals.primaryStrength = strength;
-    report.signals.primaryConfidence = diagnostics.acceptedFrequencyEvidence.present ? diagnostics.acceptedFrequencyEvidence.confidence : 0.0f;
-    report.signals.mainRejectReason = diagnostics.transientAccepted ? "none" : analyzerReasonName(report.classification.reason);
+    report.signals.primaryConfidence = hasCapturedPattern ? capturedPatternResult.confidence : (diagnostics.acceptedFrequencyEvidence.present ? diagnostics.acceptedFrequencyEvidence.confidence : 0.0f);
+    report.signals.mainRejectReason = hasCapturedPattern
+        ? (capturedInspectedSignal.rejected ? signalRejectReasonName(capturedInspectedSignal.rejectReason) : "none")
+        : (diagnostics.transientAccepted ? "none" : analyzerReasonName(report.classification.reason));
     report.signals.duplicateRisk = duplicateCount > 0;
 
     report.inspection.inspected = diagnostics.rawCandidateCount;
-    report.inspection.accepted = diagnostics.transientAccepted ? 1U : 0U;
+    report.inspection.accepted = report.signals.accepted;
     report.inspection.rejected = diagnostics.rawCandidateCount > report.inspection.accepted ? diagnostics.rawCandidateCount - report.inspection.accepted : 0U;
-    report.inspection.primaryEvidence = diagnostics.acceptedFrequencyEvidence.present ? "frequency" : "none";
-    report.inspection.locality = "unknown";
-    report.inspection.supportClass = diagnostics.acceptedFrequencyEvidence.present ? "supported" : "unsupported";
-    report.inspection.mainRejectReason = analyzerReasonName(report.classification.reason);
+    report.inspection.primaryEvidence = hasCapturedPattern ? signalSourceName(capturedInspectedSignal.signal.source) : (diagnostics.acceptedFrequencyEvidence.present ? "frequency" : "none");
+    report.inspection.locality = hasCapturedPattern ? localityName(capturedInspectedSignal.locality) : "unknown";
+    report.inspection.supportClass = hasCapturedPattern ? ampSupportName(capturedInspectedSignal.ampSupport) : (diagnostics.acceptedFrequencyEvidence.present ? "supported" : "unsupported");
+    report.inspection.mainRejectReason = hasCapturedPattern
+        ? (capturedInspectedSignal.rejected ? signalRejectReasonName(capturedInspectedSignal.rejectReason) : "none")
+        : analyzerReasonName(report.classification.reason);
 
     report.field.state = "unknown";
     report.field.activity = 0.0f;
@@ -3736,7 +3834,11 @@ AnalyzerReport AnalyzerApp::buildSequenceAnalyzerReport(unsigned long trialNumbe
     report.debug.rejects = report.signals.rejected;
     report.debug.duplicates = duplicateCount;
     report.debug.unexpected = strcmp(result, "unexpected") == 0 ? 1U : 0U;
-    report.debug.mainRejectReason = analyzerReasonName(report.classification.reason);
+    report.debug.artifactCaptured = hasCapturedPattern;
+    report.debug.artifactFallback = !hasCapturedPattern;
+    report.debug.mainRejectReason = hasCapturedPattern
+        ? (capturedInspectedSignal.rejected ? signalRejectReasonName(capturedInspectedSignal.rejectReason) : "none")
+        : analyzerReasonName(report.classification.reason);
 
     return report;
 }
@@ -3754,6 +3856,8 @@ void AnalyzerApp::printSequenceTrialResult(const AnalyzerReport& report) const {
     Serial.print(report.context.trial);
     Serial.print(" profile=");
     Serial.print(report.context.profile != nullptr ? report.context.profile : "unknown");
+    Serial.print(" artifact=");
+    Serial.print(report.debug.artifactCaptured ? "captured" : "fallback_summary");
     Serial.print(" result=");
     Serial.print(analyzerResultName(report.classification.result));
     Serial.print(" pattern=");
@@ -3779,6 +3883,167 @@ void AnalyzerApp::printSequenceTrialResult(const AnalyzerReport& report) const {
     Serial.print(report.debug.duplicates);
     Serial.print(" candidates=");
     Serial.print(report.signals.total);
+    Serial.println();
+}
+
+void AnalyzerApp::printSequenceExplain(const AnalyzerReport& report) const {
+    if (_valMode) {
+        return;
+    }
+    if (!analyzerLogEnabled(_sequenceTest.logFlags, AnalyzerApp::ANALYZER_LOG_EXPLAIN)) {
+        return;
+    }
+
+    const auto printMs = [](long value) {
+        if (value >= 0) {
+            Serial.print(value);
+            Serial.print("ms");
+        } else {
+            Serial.print("-1ms");
+        }
+    };
+    const auto printUnsignedMs = [](unsigned long value) {
+        Serial.print(value);
+        Serial.print("ms");
+    };
+
+    Serial.println();
+    Serial.print("SEQ_EXPLAIN trial=");
+    Serial.print(report.context.trial);
+    Serial.print(" profile=");
+    Serial.print(report.context.profile != nullptr ? report.context.profile : "unknown");
+    Serial.print(" artifact=");
+    Serial.print(report.debug.artifactCaptured ? "captured" : "fallback_summary");
+    Serial.print(" result=");
+    Serial.print(analyzerResultName(report.classification.result));
+    Serial.print(" reason=");
+    Serial.print(analyzerReasonName(report.classification.reason));
+    Serial.print(" mode=");
+    Serial.print(report.context.mode != nullptr ? report.context.mode : "SEQ");
+    Serial.print(" trigger=");
+    Serial.print(report.context.trigger != nullptr ? report.context.trigger : "none");
+    Serial.print(" target=");
+    Serial.print(report.context.target != nullptr ? report.context.target : "none");
+    Serial.println();
+
+    Serial.print("SEQ_EXPLAIN_EXPECTED pattern=");
+    Serial.print(report.expected.patternType != nullptr ? report.expected.patternType : "none");
+    Serial.print(" window=");
+    printUnsignedMs(report.expected.windowStartMs);
+    Serial.print("-");
+    printUnsignedMs(report.expected.windowEndMs);
+    Serial.print(" target=");
+    Serial.print(report.context.target != nullptr ? report.context.target : "none");
+    Serial.print(" source=");
+    Serial.print(report.expected.expectedSource != nullptr ? report.expected.expectedSource : "none");
+    Serial.print(" trigger_ms=");
+    printUnsignedMs(report.expected.triggerMs);
+    Serial.println();
+
+    Serial.print("SEQ_EXPLAIN_SIGNAL total=");
+    Serial.print(report.signals.total);
+    Serial.print(" accepted=");
+    Serial.print(report.signals.accepted);
+    Serial.print(" rejected=");
+    Serial.print(report.signals.rejected);
+    Serial.print(" primary_source=");
+    Serial.print(report.signals.primarySource != nullptr ? report.signals.primarySource : "none");
+    Serial.print(" primary_dt=");
+    printMs(report.signals.primaryDtMs);
+    Serial.print(" primary_dur=");
+    printUnsignedMs(report.signals.primaryDurationMs);
+    Serial.print(" primary_strength=");
+    Serial.print(report.signals.primaryStrength, 1);
+    Serial.print(" confidence=");
+    Serial.print(report.signals.primaryConfidence, 2);
+    Serial.print(" main_reject=");
+    Serial.print(report.signals.mainRejectReason != nullptr ? report.signals.mainRejectReason : "none");
+    Serial.print(" duplicate_risk=");
+    Serial.print(report.signals.duplicateRisk ? 1 : 0);
+    Serial.println();
+
+    Serial.print("SEQ_EXPLAIN_INSPECTION inspected=");
+    Serial.print(report.inspection.inspected);
+    Serial.print(" accepted=");
+    Serial.print(report.inspection.accepted);
+    Serial.print(" rejected=");
+    Serial.print(report.inspection.rejected);
+    Serial.print(" evidence=");
+    Serial.print(report.inspection.primaryEvidence != nullptr ? report.inspection.primaryEvidence : "none");
+    Serial.print(" locality=");
+    Serial.print(report.inspection.locality != nullptr ? report.inspection.locality : "unknown");
+    Serial.print(" support=");
+    Serial.print(report.inspection.supportClass != nullptr ? report.inspection.supportClass : "unknown");
+    Serial.print(" main_reject=");
+    Serial.print(report.inspection.mainRejectReason != nullptr ? report.inspection.mainRejectReason : "none");
+    Serial.println();
+
+    Serial.print("SEQ_EXPLAIN_PATTERN type=");
+    Serial.print(report.primaryPattern.type != nullptr ? report.primaryPattern.type : "none");
+    Serial.print(" accepted=");
+    Serial.print(report.primaryPattern.accepted ? 1 : 0);
+    Serial.print(" dt=");
+    printMs(report.primaryPattern.dtMs);
+    Serial.print(" confidence=");
+    Serial.print(report.primaryPattern.confidence, 2);
+    Serial.print(" locality=");
+    Serial.print(report.primaryPattern.locality != nullptr ? report.primaryPattern.locality : "unknown");
+    Serial.print(" source=");
+    Serial.print(report.primaryPattern.sourceClass != nullptr ? report.primaryPattern.sourceClass : "unknown");
+    Serial.print(" reason=");
+    Serial.print(report.primaryPattern.reason != nullptr ? report.primaryPattern.reason : "none");
+    Serial.print(" signals=");
+    Serial.print(report.primaryPattern.involvedSignals);
+    Serial.println();
+
+    Serial.print("SEQ_EXPLAIN_DUPLICATES count=");
+    Serial.print(report.debug.duplicates);
+    Serial.print(" duplicate_risk=");
+    Serial.print(report.signals.duplicateRisk ? 1 : 0);
+    Serial.println();
+
+    Serial.print("SEQ_EXPLAIN_FIELD state=");
+    Serial.print(report.field.state != nullptr ? report.field.state : "unknown");
+    Serial.print(" activity=");
+    Serial.print(report.field.activity, 2);
+    Serial.print(" density=");
+    Serial.print(report.field.density, 2);
+    Serial.print(" recent_valid=");
+    Serial.print(report.field.recentValidPatterns);
+    Serial.print(" recent_rejects=");
+    Serial.print(report.field.recentRejects);
+    Serial.println();
+
+    Serial.print("SEQ_EXPLAIN_PROFILE_DETAIL ns=");
+    Serial.print(report.profileDetail.namespaceName != nullptr ? report.profileDetail.namespaceName : "none");
+    Serial.print(" summary=");
+    Serial.print(report.profileDetail.summary != nullptr ? report.profileDetail.summary : "");
+    Serial.println();
+
+    Serial.print("SEQ_EXPLAIN_CLASSIFICATION result=");
+    Serial.print(analyzerResultName(report.classification.result));
+    Serial.print(" reason=");
+    Serial.print(analyzerReasonName(report.classification.reason));
+    Serial.print(" dt=");
+    printMs(report.classification.dtMs);
+    Serial.print(" confidence=");
+    Serial.print(report.classification.confidence, 2);
+    Serial.println();
+
+    Serial.print("SEQ_EXPLAIN_DEBUG signals=");
+    Serial.print(report.debug.signals);
+    Serial.print(" inspected=");
+    Serial.print(report.debug.inspected);
+    Serial.print(" patterns=");
+    Serial.print(report.debug.patterns);
+    Serial.print(" rejects=");
+    Serial.print(report.debug.rejects);
+    Serial.print(" duplicates=");
+    Serial.print(report.debug.duplicates);
+    Serial.print(" unexpected=");
+    Serial.print(report.debug.unexpected);
+    Serial.print(" main_reject=");
+    Serial.print(report.debug.mainRejectReason != nullptr ? report.debug.mainRejectReason : "none");
     Serial.println();
 }
 
@@ -3839,7 +4104,7 @@ void AnalyzerApp::printSequenceExplainLegacy(unsigned long trialNumber, const ch
         ? diagnostics.acceptedFrequencyProcessedAtMs - freq.observedAtMs
         : 0;
 
-    Serial.print("SEQ_FREQ_CLASS trial=");
+    Serial.print("SEQ_EXPLAIN_LEGACY_FREQ_CLASS trial=");
     Serial.print(trialNumber);
     Serial.print(" result=");
     Serial.print(result);
@@ -3956,7 +4221,7 @@ void AnalyzerApp::printSequenceExplainLegacy(unsigned long trialNumber, const ch
         return;
     }
 
-    Serial.print("SEQ_RAW timing trial_start_ms=");
+    Serial.print("SEQ_EXPLAIN_LEGACY timing trial_start_ms=");
     Serial.print(_sequenceTest.currentTrialScheduledAtMs);
     Serial.print(" trigger_sent_ms=");
     Serial.print(_sequenceTest.currentTrialStartMs);
@@ -3975,7 +4240,7 @@ void AnalyzerApp::printSequenceExplainLegacy(unsigned long trialNumber, const ch
     Serial.print(" max_signal_level=");
     Serial.println(diagnostics.maxSignalLevel);
 
-    Serial.print("SEQ_RAW origin_counts={pre_window:");
+    Serial.print("SEQ_EXPLAIN_LEGACY origin_counts={pre_window:");
     Serial.print(diagnostics.candidatePreWindowCount);
     Serial.print(",in_window:");
     Serial.print(diagnostics.candidateInWindowCount);
@@ -3983,7 +4248,7 @@ void AnalyzerApp::printSequenceExplainLegacy(unsigned long trialNumber, const ch
     Serial.print(diagnostics.candidatePostWindowCount);
     Serial.println("}");
 
-    Serial.print("SEQ_RAW rejects={too_short:");
+    Serial.print("SEQ_EXPLAIN_LEGACY rejects={too_short:");
     Serial.print(diagnostics.transientRejectTooShortCount);
     Serial.print(",too_long:");
     Serial.print(diagnostics.transientRejectTooLongCount);
@@ -3991,7 +4256,7 @@ void AnalyzerApp::printSequenceExplainLegacy(unsigned long trialNumber, const ch
     Serial.print(diagnostics.transientRejectWeakCount);
     Serial.println("}");
 
-    Serial.print("SEQ_RAW strongest_reject={reason:");
+    Serial.print("SEQ_EXPLAIN_LEGACY strongest_reject={reason:");
     if (totalRejects > 0) {
         Serial.print(strongestRejectReasonName);
         Serial.print(",dt:");
@@ -4009,7 +4274,7 @@ void AnalyzerApp::printSequenceExplainLegacy(unsigned long trialNumber, const ch
     }
     Serial.println("}");
 
-    Serial.print("SEQ_RAW best_candidate={dt:");
+    Serial.print("SEQ_EXPLAIN_LEGACY best_candidate={dt:");
     if (diagnostics.bestCandidateValid) {
         Serial.print(diagnostics.bestCandidateDtFromTriggerMs);
     } else {
@@ -4037,7 +4302,7 @@ void AnalyzerApp::printSequenceExplainLegacy(unsigned long trialNumber, const ch
     Serial.println("}");
 
     if (isMiss || isLate || isUnexpected || hasDuplicates || expectedDtSlow || expectedDurLong) {
-        Serial.print("SEQ_RAW issues=[");
+        Serial.print("SEQ_EXPLAIN_LEGACY issues=[");
         bool firstIssue = true;
         auto printIssue = [&](const char* label) {
             if (!firstIssue) {
@@ -4068,7 +4333,7 @@ void AnalyzerApp::printSequenceExplainLegacy(unsigned long trialNumber, const ch
     }
 
     if (analyzerLogEnabled(_sequenceTest.logFlags, AnalyzerApp::ANALYZER_LOG_EXPLAIN)) {
-        Serial.print("SEQ_RAW duplicate_dts=[");
+        Serial.print("SEQ_EXPLAIN_LEGACY duplicate_dts=[");
         for (unsigned long i = 0; i < diagnostics.duplicateDtCount; ++i) {
             if (i > 0) {
                 Serial.print(",");
@@ -4090,7 +4355,7 @@ void AnalyzerApp::printSequenceExplainLegacy(unsigned long trialNumber, const ch
                     originName = "post_window";
                     break;
             }
-            Serial.print("SEQ_RAW candidate[");
+            Serial.print("SEQ_EXPLAIN_LEGACY candidate[");
             Serial.print(i);
             Serial.print("] origin=");
             Serial.print(originName);

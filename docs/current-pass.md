@@ -1,80 +1,78 @@
-# Analyzer Refactor — Pass C: Build AnalyzerReport from Current Trial
+# Analyzer Refactor — Pass D: New Default SEQ_TRIAL
 
 **Project:** ResonantNode / Resonanzraum  
 **Area:** Detection Refactor / Analyzer  
-**Pass:** C  
-**Goal:** Create an `AnalyzerReport` during SEQ trial finalization by mapping the current Analyzer trial data into the new stable reporting model.
+**Pass:** D  
+**Goal:** Make the default per-trial SEQ output print from `AnalyzerReport` as a compact, stable `SEQ_TRIAL` line.
 
-Status: Pass C is complete. The next active pass is Pass D.
+Status: Pass D is complete. The next active pass is Pass E.
 
 ---
 
 ## 0. Context
 
-Pass A quarantines legacy output modes and clarifies `SEQ_EXPLAIN` versus actual RAW sample capture.
-
-Pass B adds:
+Previous passes:
 
 ```txt
-AnalyzerReporting.h
-AnalyzerResult
-AnalyzerReason
-AnalyzerReport
-AnalyzerRunContext
-AnalyzerPatternObservation
-AnalyzerSignalObservation
-AnalyzerInspectionObservation
-AnalyzerFieldObservation
-AnalyzerClassification
-AnalyzerProfileDetail
-AnalyzerDebugSummary
+Pass A — Legacy output quarantine
+Pass B — AnalyzerReporting skeleton
+Pass C — Build AnalyzerReport from current trial
 ```
 
-Pass C should start **using** those structs, but it should not yet replace the visible output format.
+After Pass C, each finalized SEQ trial should produce an `AnalyzerReport` internally.
+
+Pass D should make that report visible as the new default `SEQ_TRIAL`.
+
+This is the first pass that intentionally changes the default SEQ trial output.
 
 ---
 
 ## 1. Core intent
 
-Create a bridge from the current Analyzer code to the future reporting model.
-
-Current Analyzer still computes trial results using existing `SequenceTest` state and diagnostics.
-
-Pass C should add a builder/helper that creates:
+Replace the old default trial line with a compact, stable report line based on:
 
 ```txt
-AnalyzerReport
+AnalyzerReport.context
+AnalyzerReport.classification
+AnalyzerReport.primaryPattern
+AnalyzerReport.field
+AnalyzerReport.debug
 ```
 
-from the currently available data.
-
-This report will later drive:
+The new default output should answer:
 
 ```txt
-Pass D — new default SEQ_TRIAL
-Pass E — SEQ_EXPLAIN
-Pass F — SEQ_SUMMARY cleanup
+Which trial?
+Which profile?
+What was the result?
+What pattern was produced?
+When did it occur?
+How confident was it?
+What locality/source class?
+What field state?
+Why was it classified that way?
+Were there duplicates/candidates?
 ```
 
 ---
 
 ## 2. Non-goals
 
-Do not change detection behavior.
+Do not rewrite detection logic.
 
 Do not change thresholds.
 
-Do not change classification behavior.
-
-Do not replace visible `SEQ_TRIAL` output yet.
+Do not change trial classification logic beyond using the `AnalyzerReport` mapping from Pass C.
 
 Do not remove legacy output.
 
+Do not rewrite `SEQ_EXPLAIN`.
+
+Do not rebuild `SEQ_SUMMARY`.
+
 Do not touch actual RAW sample capture.
 
-Do not introduce `AudioReporting.h` yet.
-
-Do not refactor Runtime Behavior.
+Do not introduce `AudioReporting.h`.
 
 ---
 
@@ -88,548 +86,428 @@ src/modes/analyzer/AnalyzerApp.cpp
 src/modes/analyzer/AnalyzerReporting.h
 ```
 
-Likely relevant current areas:
+Likely relevant functions:
 
 ```txt
 AnalyzerApp::finalizeSequenceTrial(...)
 AnalyzerApp::printSequenceTrialResult(...)
 AnalyzerApp::printSequenceTrialDebug(...)
+AnalyzerApp::printSequenceTrialReports(...)
 AnalyzerApp::printSequenceSummary(...)
-SequenceTest::TrialDiagnostics
-SequenceTest::TrialReport
-evaluateRoadmapSignalCandidate(...)
-evaluateRoadmapSignalCandidateImpl(...)
 ```
 
-Also inspect, but avoid changing unless necessary:
+Also check any log-mode parsing introduced/changed in Pass A.
+
+---
+
+## 4. Desired new default line
+
+Target format:
 
 ```txt
-src/detection/patterns/PatternResult.h
-src/detection/signals/SignalCandidate.h
-src/detection/signals/InspectedSignal.h
-src/detection/field/FieldState.h
+SEQ_TRIAL trial=17 profile=FreqAmp result=expected pattern=neighbor_chirp dt=24ms confidence=0.82 locality=near source=freq_amp field=quiet reason=valid_pattern_in_expected_window dup=0 candidates=1
+```
+
+Minimum acceptable format:
+
+```txt
+SEQ_TRIAL trial=17 profile=FreqAmp result=expected pattern=neighbor_chirp dt=24ms confidence=0.82 reason=valid_pattern_in_expected_window dup=0 candidates=1
+```
+
+If some fields are unknown, print explicit stable placeholders:
+
+```txt
+locality=unknown
+source=unknown
+field=unknown
+pattern=none
+dt=-1ms
+confidence=0.00
+```
+
+Do not omit core fields just because they are unknown.
+
+Stable field order is important.
+
+Recommended field order:
+
+```txt
+SEQ_TRIAL
+trial
+profile
+result
+pattern
+dt
+confidence
+locality
+source
+field
+reason
+dup
+candidates
 ```
 
 ---
 
-## 4. Add builder function declaration
+## 5. Add print function for AnalyzerReport
 
-Add a private helper to `AnalyzerApp`.
-
-Suggested declaration in `AnalyzerApp.h`:
+Add or replace with:
 
 ```cpp
-AnalyzerReport buildSequenceAnalyzerReport(
-    unsigned long trialNumber,
-    const char* legacyResult,
-    long dtMs,
-    long durMs,
-    float strength,
-    bool audioInvalid,
-    unsigned int duplicateCount,
-    const SequenceTest::TrialDiagnostics& diagnostics
-) const;
+void AnalyzerApp::printSequenceTrialResult(const AnalyzerReport& report) const;
 ```
 
-Adjust parameter types to match existing code.
+If the current function signature is widely used, add a new function first:
 
-If the current finalized trial data is already bundled differently, adapt the signature.
+```cpp
+void AnalyzerApp::printSequenceTrialResultV1(const AnalyzerReport& report) const;
+```
 
-The important point:
+Then route default output to the new function.
+
+Avoid keeping the old long formatting in the default path.
+
+---
+
+## 6. Use canonical names
+
+Use helpers from `AnalyzerReporting.h`:
+
+```cpp
+analyzerResultName(report.classification.result)
+analyzerReasonName(report.classification.reason)
+```
+
+Do not print legacy result strings as the canonical result.
+
+Bad:
 
 ```txt
-The builder should consume existing finalized trial facts.
-It should not recompute detection.
+result=hit
+```
+
+Good:
+
+```txt
+result=expected
+reason=valid_pattern_in_expected_window
 ```
 
 ---
 
-## 5. Add active profile helper
+## 7. Route from finalizeSequenceTrial
 
-Add a simple helper:
-
-```cpp
-const char* activeAnalyzerProfileName() const;
-```
-
-Initial implementation may return a fixed or mode-derived value:
-
-```txt
-FreqAmp
-FreqAmpLiveOnly
-AmpTransient
-unknown
-```
-
-Use the best available current distinction.
-
-Do not implement full profile switching in this pass.
-
-Minimum acceptable:
+In `finalizeSequenceTrial(...)`, after Pass C builder:
 
 ```cpp
-const char* AnalyzerApp::activeAnalyzerProfileName() const {
-    return "FreqAmp";
+AnalyzerReport report = buildSequenceAnalyzerReport(...);
+```
+
+use that report for default trial output.
+
+Conceptual flow:
+
+```cpp
+AnalyzerReport report = buildSequenceAnalyzerReport(...);
+
+if (shouldPrintDefaultTrialLine) {
+    printSequenceTrialResult(report);
 }
 ```
 
-Only use `"unknown"` if there is genuinely no reliable current profile name.
+Keep legacy output calls behind their existing modes or Pass A legacy/explain wrappers.
 
 ---
 
-## 6. Map legacy result to AnalyzerResult
+## 8. Keep legacy output accessible
 
-In the builder, map current result strings or states into the new enum.
-
-Expected first mapping:
+Old detailed outputs should remain available through:
 
 ```txt
-"expected"      → AnalyzerResult::Expected
-"late"          → AnalyzerResult::Late
-"miss"          → AnalyzerResult::Miss
-"unexpected"    → AnalyzerResult::Unexpected
-"invalid_audio" → AnalyzerResult::InvalidAudio
+log=explain
+legacy aliases: raw, raw_debug, liveraw
+legacy/report modes if still present
 ```
 
-If current code has no string but uses booleans/counters, map those.
+The old long diagnostic trial line should not be the default anymore.
 
-If duplicate is currently a separate count, do not necessarily replace the primary result with `Duplicate`.
+If there was a special `trialbrief` mode, map it to the new compact `SEQ_TRIAL` where practical.
+
+If `trialbrief` must remain for compatibility, mark it as legacy and keep it separate from default.
+
+---
+
+## 9. What to move out of default SEQ_TRIAL
+
+The default `SEQ_TRIAL` should not include large diagnostic payloads such as:
+
+```txt
+freqEarly
+freqFull
+freqCompare
+expected_primary{...}
+proposerCand
+ampCand
+best_candidate
+reject lists
+origin counts
+duplicate dt lists
+detailed AMP metrics
+detailed Goertzel scores
+```
+
+Those belong in:
+
+```txt
+SEQ_EXPLAIN
+legacy debug output
+profile detail output
+later optional detail flags
+```
+
+It is acceptable to include one or two compact profile facts only if already stable, but prefer keeping default simple.
+
+---
+
+## 10. Candidate and duplicate fields
+
+Default line should include compact counts:
+
+```txt
+dup=0
+candidates=1
+```
+
+Potential mapping:
+
+```txt
+dup = report.debug.duplicates
+candidates = report.signals.total
+```
+
+If signal/candidate distinction is currently approximate, use the best available report field from Pass C.
+
+Do not print full duplicate lists in default output.
+
+Full duplicate detail belongs in `SEQ_EXPLAIN`.
+
+---
+
+## 11. Pattern field
+
+Print:
+
+```txt
+pattern=<report.primaryPattern.type>
+```
+
+Examples:
+
+```txt
+pattern=neighbor_chirp
+pattern=amp_transient
+pattern=chirp_candidate
+pattern=none
+pattern=unknown
+```
+
+Do not use profile-specific struct names.
+
+Do not print raw enum integers.
+
+If the type is not mapped yet, use:
+
+```txt
+pattern=unknown
+```
+
+and leave a TODO in the builder, not the print function.
+
+---
+
+## 12. Locality/source/field fields
+
+Print:
+
+```txt
+locality=<report.primaryPattern.locality>
+source=<report.primaryPattern.sourceClass>
+field=<report.field.state>
+```
+
+Use stable placeholders:
+
+```txt
+unknown
+none
+```
+
+Do not omit these if the field exists in `AnalyzerReport`.
+
+---
+
+## 13. Confidence formatting
+
+Use a stable numeric format.
 
 Recommended:
 
 ```txt
-Primary result remains expected/late/miss/etc.
-duplicateCount is stored in debug.duplicates.
-Reason may become DuplicatePatternAfterPrimary only if duplicate is the main classification.
+confidence=0.82
 ```
 
-For now:
+or, if current project avoids fixed decimals:
 
 ```txt
-duplicateCount > 0 → report.debug.duplicates = duplicateCount
+confidence=0.820
 ```
 
-Pass F/G can refine duplicate classification later.
+Pick one and keep it stable.
 
----
+Avoid noisy precision:
 
-## 7. Map AnalyzerReason
+```txt
+confidence=0.82394827
+```
 
-Add a helper if useful:
+Recommended for Arduino `Serial.print`:
 
 ```cpp
-AnalyzerReason inferAnalyzerReason(
-    AnalyzerResult result,
-    const SequenceTest::TrialDiagnostics& diagnostics,
-    unsigned int duplicateCount
-);
+Serial.print(report.primaryPattern.confidence, 2);
 ```
 
-Initial mapping:
-
-```txt
-Expected
-→ ValidPatternInExpectedWindow
-
-Late
-→ ValidPatternAfterWindow
-
-Miss + no candidates/signals
-→ NoSignalCandidate
-
-Miss + candidates/signals/rejections present
-→ SignalSeenButRejected or PatternCandidateRejected
-
-Unexpected
-→ UnexpectedValidPatternWithoutTrigger
-
-InvalidAudio
-→ InvalidAudio
-
-Duplicate as main classification, if used
-→ DuplicatePatternAfterPrimary
-
-Unknown
-→ Unknown
-```
-
-Keep this conservative.
-
-If unsure between `SignalSeenButRejected` and `PatternCandidateRejected`, prefer:
-
-```txt
-SignalSeenButRejected
-```
-
-unless the current diagnostics clearly show a pattern candidate was rejected.
-
----
-
-## 8. Fill AnalyzerRunContext
-
-Populate:
-
-```txt
-profileName
-trial
-mode
-targetHz
-expectedPattern
-expectedWindowStartMs
-expectedWindowEndMs
-nowMs
-```
-
-Suggested defaults:
-
-```txt
-mode = "SEQ"
-expectedPattern = "neighbor_chirp" or "chirp" if that is the current SEQ target
-targetHz = current target frequency if available
-expected window = current SEQ timing window if available
-nowMs = millis() or current finalization time
-```
-
-If fields are not easily available yet, use safe defaults from `AnalyzerReporting.h`.
-
-Do not add new global state just to fill these fields.
-
----
-
-## 9. Fill AnalyzerClassification
-
-Populate:
+or:
 
 ```cpp
-report.classification.result = mappedResult;
-report.classification.reason = inferredReason;
-report.classification.dtMs = dtMs;
-report.classification.confidence = report.primaryPattern.confidence;
+Serial.print(report.classification.confidence, 2);
 ```
 
-If confidence is not available yet:
+Prefer primary pattern confidence if available.
+
+If no confidence exists:
 
 ```txt
-confidence = 0.0f
+confidence=0.00
 ```
-
-Do not invent confidence.
 
 ---
 
-## 10. Fill AnalyzerPatternObservation
+## 14. Result and reason examples
 
-Use the best current source.
-
-Preferred source:
+Expected:
 
 ```txt
-current PatternResult from evaluateRoadmapSignalCandidate(...)
+SEQ_TRIAL trial=1 profile=FreqAmp result=expected pattern=neighbor_chirp dt=26ms confidence=0.84 locality=near source=frequency field=unknown reason=valid_pattern_in_expected_window dup=0 candidates=1
 ```
 
-Useful fields from `PatternResult` may include:
+Late:
 
 ```txt
-valid / accepted
-type
-kind
-reasonCode
-rejectReason
-confidence
-locality
-ampSupport
-source
-behaviorEligible
-tonalValid
-candidateValid
+SEQ_TRIAL trial=2 profile=FreqAmp result=late pattern=neighbor_chirp dt=312ms confidence=0.77 locality=mid source=frequency field=unknown reason=valid_pattern_after_window dup=0 candidates=1
 ```
 
-Add a small local helper if useful:
+Miss:
+
+```txt
+SEQ_TRIAL trial=3 profile=FreqAmp result=miss pattern=none dt=-1ms confidence=0.00 locality=unknown source=unknown field=unknown reason=no_signal_candidate dup=0 candidates=0
+```
+
+Rejected:
+
+```txt
+SEQ_TRIAL trial=4 profile=FreqAmp result=rejected pattern=none dt=42ms confidence=0.00 locality=unknown source=frequency field=unknown reason=signal_seen_but_rejected dup=0 candidates=1
+```
+
+Unexpected:
+
+```txt
+SEQ_TRIAL trial=5 profile=FreqAmp result=unexpected pattern=neighbor_chirp dt=18ms confidence=0.80 locality=near source=frequency field=unknown reason=unexpected_valid_pattern_without_trigger dup=0 candidates=1
+```
+
+Duplicate:
+
+```txt
+SEQ_TRIAL trial=6 profile=FreqAmp result=expected pattern=neighbor_chirp dt=24ms confidence=0.82 locality=near source=frequency field=unknown reason=valid_pattern_in_expected_window dup=1 candidates=2
+```
+
+---
+
+## 15. Preserve summaries for now
+
+Do not rewrite `SEQ_SUMMARY` in Pass D.
+
+If the summary currently depends on old counters, leave it as-is.
+
+Pass F will clean summary output.
+
+---
+
+## 16. Preserve explain/debug for now
+
+Do not complete `SEQ_EXPLAIN` in Pass D.
+
+If Pass A already added `log=explain`, keep it working.
+
+If old raw/debug output still prints `SEQ_RAW`, this is acceptable for Pass D, as long as it is not the default.
+
+Pass E will convert this more fully.
+
+---
+
+## 17. Optional transition: old default behind legacy flag
+
+If useful, preserve old default output under a legacy mode such as:
+
+```txt
+log=legacy_trial
+```
+
+or:
+
+```txt
+log=full
+```
+
+But do not keep both old and new default lines active at the same time.
+
+Avoid duplicate trial lines unless explicitly requested by a legacy/debug mode.
+
+---
+
+## 18. Update comments
+
+Near the new print function, add:
 
 ```cpp
-AnalyzerPatternObservation makeAnalyzerPatternObservation(
-    const detection::PatternResult& pattern,
-    long dtMs
-);
+// Stable compact SEQ trial output.
+// This is the default Analyzer trial line and should remain profile-comparable.
+// Detailed candidate/inspection/duplicate information belongs in SEQ_EXPLAIN.
 ```
 
-Initial mapping should be generic:
-
-```txt
-type        = pattern type/kind name if available, otherwise "unknown" or "none"
-accepted    = pattern valid/accepted
-confidence  = pattern confidence
-dtMs        = trial dt
-locality    = pattern locality name if available, otherwise "unknown"
-sourceClass = pattern source name if available, otherwise "unknown"
-reason      = pattern reason/reject reason if available, otherwise "none"
-```
-
-If no PatternResult is available in the current path yet:
-
-```txt
-type = "none"
-accepted = result == Expected or result == Late or result == Unexpected
-confidence = 0.0
-dtMs = dtMs
-reason = analyzerReasonName(report.classification.reason)
-```
-
-But prefer using the existing roadmap PatternResult where possible.
-
----
-
-## 11. Fill AnalyzerSignalObservation
-
-Populate from `SequenceTest::TrialDiagnostics` if available.
-
-Suggested fields:
-
-```txt
-total
-accepted
-rejected
-primarySource
-primaryDtMs
-primaryDurationMs
-primaryStrength
-primaryConfidence
-mainRejectReason
-duplicateRisk
-```
-
-Safe initial mapping:
-
-```txt
-total = diagnostics.candidateCount or candidate count equivalent
-accepted = 1 if primary valid candidate exists, else 0
-rejected = total - accepted if safe
-primaryDtMs = dtMs
-primaryDurationMs = durMs
-primaryStrength = strength
-duplicateRisk = duplicateCount > 0
-```
-
-If the current diagnostics do not clearly distinguish signal/candidate/pattern, use the closest existing candidate counts and document this with a comment.
-
----
-
-## 12. Fill AnalyzerInspectionObservation
-
-Populate minimal fields.
-
-Suggested first mapping:
-
-```txt
-inspected = diagnostics.candidateCount or inspected count if available
-accepted = 1 if pattern accepted
-rejected = inspected - accepted if safe
-primaryEvidence = "freq_amp" / "amp" / "frequency" / "unknown"
-locality = same as primaryPattern.locality
-supportClass = current amp/frequency support class if available
-mainRejectReason = inferred reject reason if any
-```
-
-If not available:
-
-```txt
-primaryEvidence = "unknown"
-locality = "unknown"
-supportClass = "unknown"
-mainRejectReason = "none"
-```
-
-Do not overfit this pass to current FreqAmp internals.
-
----
-
-## 13. Fill AnalyzerFieldObservation
-
-If current Analyzer has no FieldState available, leave defaults:
-
-```txt
-state = "unknown"
-activity = 0.0
-density = 0.0
-recentValidPatterns = 0
-recentRejects = 0
-```
-
-Do not invent a FieldState bridge in this pass.
-
-If FieldState is available cheaply and cleanly, map:
-
-```txt
-quiet / active / busy / dense
-activity
-density
-recent valid patterns
-recent rejects
-```
-
-But this is optional.
-
----
-
-## 14. Fill AnalyzerProfileDetail
-
-Keep this minimal.
-
-If Pass B used string-only `AnalyzerProfileDetail`:
-
-```txt
-namespaceName = "freq_amp" or "none"
-summary = ""
-```
-
-If detailed fields exist:
-
-```txt
-freqScore
-freqContrast
-ampLevel
-ampBase
-ampLift
-ampNorm
-ampLocality
-```
-
-populate only when already available in diagnostics.
-
-Do not add expensive computation.
-
-Do not widen the report model for profile-specific details in this pass.
-
----
-
-## 15. Fill AnalyzerDebugSummary
-
-Populate:
-
-```txt
-signals
-inspected
-patterns
-rejects
-duplicates
-unexpected
-mainRejectReason
-```
-
-Safe initial mapping:
-
-```txt
-signals = report.signals.total
-inspected = report.inspection.inspected
-patterns = report.primaryPattern.accepted ? 1 : 0
-rejects = report.signals.rejected + report.inspection.rejected if safe
-duplicates = duplicateCount
-unexpected = result == Unexpected ? 1 : 0
-mainRejectReason = analyzerReasonName(report.classification.reason) if rejected/miss
-```
-
-Keep it simple.
-
----
-
-## 16. Store or expose the report
-
-Preferred minimal step:
-
-```txt
-Build the AnalyzerReport in finalizeSequenceTrial().
-Use it only for internal validation or optional debug for now.
-Do not replace visible output yet.
-```
-
-Options:
-
-### Option A — Local only
-
-Create report locally in `finalizeSequenceTrial()` and do not store it.
-
-This is acceptable if Pass D will immediately use it.
-
-### Option B — Store last report
-
-Add:
+Near old trial printing code, if retained:
 
 ```cpp
-AnalyzerReport lastAnalyzerReport;
+// Legacy detailed trial output.
+// Kept temporarily for comparison; do not extend this path.
 ```
-
-to Analyzer app state if useful.
-
-### Option C — Store per trial
-
-Only do this if current code already stores per-trial reports and it is easy.
-
-Do not introduce complex allocation in Pass C.
-
-Recommendation:
-
-```txt
-Use local report first, then pass it to output in Pass D.
-```
-
-If the compiler complains about unused variables, add a temporary guarded debug or `(void)report;`.
-
----
-
-## 17. Add comments for transitional mapping
-
-Add a comment near the builder:
-
-```cpp
-// Transitional bridge:
-// This maps the existing SequenceTest diagnostics and legacy result classification
-// into the new AnalyzerReport shape. Later passes will make SEQ_TRIAL,
-// SEQ_EXPLAIN, and SEQ_SUMMARY print from AnalyzerReport directly.
-```
-
-Add comments where signal/inspection fields are approximate:
-
-```cpp
-// Current Analyzer diagnostics do not yet distinguish all signal/inspection layers.
-// This field is mapped from existing candidate counts until the pipeline exposes
-// a dedicated debug snapshot.
-```
-
----
-
-## 18. Do not change visible output yet
-
-Pass C should compile and run with the same user-visible output as before.
-
-If absolutely necessary to test, add a temporary disabled block:
-
-```cpp
-#if 0
-printAnalyzerReportDebug(report);
-#endif
-```
-
-But do not leave noisy new output enabled.
-
-Pass D owns visible `SEQ_TRIAL` changes.
 
 ---
 
 ## 19. Success criteria
 
-Pass C is successful if:
+Pass D is successful if:
 
 ```txt
 Code compiles.
 SEQ tests still run.
-Visible SEQ output is unchanged or only trivially unchanged.
+Default per-trial output uses the new compact SEQ_TRIAL format.
+SEQ_TRIAL is printed from AnalyzerReport.
+Every SEQ_TRIAL includes profile, result, reason, pattern, dt, confidence, duplicate count, and candidate count.
+Old long trial/debug output is not printed by default.
+Legacy/explain output is still accessible.
+SEQ_SUMMARY still works as before.
 Actual RAW trigger/sample capture is untouched.
-AnalyzerReport is built from finalized trial data.
-AnalyzerResult and AnalyzerReason are populated.
-Profile name is populated at least minimally.
-Primary PatternObservation is populated from PatternResult where available.
-Duplicate count is represented in DebugSummary.
-No thresholds or detection behavior changed.
+No detection thresholds or classification behavior changed.
 ```
 
 ---
@@ -637,39 +515,35 @@ No thresholds or detection behavior changed.
 ## 20. Quick implementation checklist
 
 ```txt
-[x] Include AnalyzerReporting.h in AnalyzerApp.
-[x] Add activeAnalyzerProfileName().
-[x] Add buildSequenceAnalyzerReport(...).
-[x] Map legacy result → AnalyzerResult.
-[x] Infer AnalyzerReason conservatively.
-[x] Fill RunContext.
-[x] Fill Classification.
-[x] Fill PatternObservation.
-[x] Fill SignalObservation with current diagnostics.
-[x] Fill InspectionObservation minimally.
-[x] Leave FieldObservation unknown unless already available.
-[x] Fill DebugSummary.
-[x] Build report in finalizeSequenceTrial().
-[x] Do not change default output yet.
+[x] Locate current printSequenceTrialResult path.
+[x] Add/replace printSequenceTrialResult(const AnalyzerReport& report).
+[x] Use analyzerResultName().
+[x] Use analyzerReasonName().
+[x] Print stable field order.
+[x] Print unknown placeholders instead of omitting core fields.
+[x] Route default finalizeSequenceTrial output through AnalyzerReport print.
+[x] Move old long trial output behind legacy/explain/full mode if needed.
+[x] Ensure no duplicate default trial lines.
 [x] Compile.
-[x] Run/compile-check one short SEQ path.
-[x] Confirm RAW trigger path untouched.
+[x] Run one short SEQ test.
+[x] Check expected/miss/late line shapes if possible.
+[x] Confirm RAW trigger code untouched.
 ```
 
 ---
 
-## 21. Expected final state of Pass C
+## 21. Expected final state of Pass D
 
-After this pass, the Analyzer still behaves the same externally, but internally it now has a stable report object:
+After this pass:
 
 ```txt
-AnalyzerReport
+SEQ_TRIAL = compact truth
 ```
 
-created from each finalized SEQ trial.
+The Analyzer now has a stable default output format.
 
-This prepares Pass D:
+Detailed diagnostic output is still legacy/transitional, preparing Pass E:
 
 ```txt
-Print the new compact default SEQ_TRIAL from AnalyzerReport.
+SEQ_EXPLAIN = why/how
 ```

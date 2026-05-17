@@ -449,6 +449,7 @@ private:
     void printSequenceExplainLegacy(unsigned long trialNumber, const char* result, const SequenceTest::TrialDiagnostics& diagnostics) const;
     void printSequenceLegacyReports() const;
     void printSequenceTrialResult(unsigned long trialNumber, const char* result, long dtMs, long durMs, float strength, bool audioOverflow, unsigned long duplicateCount, const SequenceTest::TrialDiagnostics& diagnostics) const;
+    void printSequenceTrialResult(const AnalyzerReport& report) const;
     void printSequenceFinalOutput() const;
     void printSequenceSummary() const;
     const char* activeAnalyzerProfileName() const;

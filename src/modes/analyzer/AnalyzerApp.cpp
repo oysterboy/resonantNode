@@ -3545,10 +3545,14 @@ void AnalyzerApp::finalizeSequenceTrial(unsigned long now) {
 
     _sequenceTest.duplicates += diagnostics.duplicateCount;
     const AnalyzerReport finalizedReport = buildSequenceAnalyzerReport(_sequenceTest.currentTrial, result, dtMs, durMs, strength, invalidAudioTrial, diagnostics.duplicateCount, diagnostics);
-    (void)finalizedReport;
+    const bool briefTrial = analyzerLogEnabled(_sequenceTest.logFlags, AnalyzerApp::ANALYZER_LOG_TRIAL_BRIEF);
     flushSequenceSampleHistory(now + 1UL);
     printSequenceSampleDump(_sequenceTest.currentTrial);
-    printSequenceTrialResult(_sequenceTest.currentTrial, result, dtMs, durMs, strength, invalidAudioTrial, diagnostics.duplicateCount, diagnostics);
+    if (briefTrial) {
+        printSequenceTrialResult(_sequenceTest.currentTrial, result, dtMs, durMs, strength, invalidAudioTrial, diagnostics.duplicateCount, diagnostics);
+    } else {
+        printSequenceTrialResult(finalizedReport);
+    }
 
     Serial.flush();
     _sequenceTest.currentTrialFinalized = true;
@@ -3689,19 +3693,19 @@ AnalyzerReport AnalyzerApp::buildSequenceAnalyzerReport(unsigned long trialNumbe
     report.classification.dtMs = dtMs;
     report.classification.confidence = diagnostics.transientAccepted ? 1.0f : 0.0f;
 
-    report.primaryPattern.type = result != nullptr ? result : "unknown";
+    report.primaryPattern.type = "unknown";
     report.primaryPattern.accepted = report.classification.result == AnalyzerResult::Expected || report.classification.result == AnalyzerResult::Late;
     report.primaryPattern.confidence = diagnostics.acceptedFrequencyEvidence.present ? diagnostics.acceptedFrequencyEvidence.confidence : 0.0f;
     report.primaryPattern.dtMs = dtMs;
     report.primaryPattern.locality = "unknown";
-    report.primaryPattern.sourceClass = diagnostics.acceptedFrequencyEvidence.present ? "frequency_primary" : "comparison_only";
+    report.primaryPattern.sourceClass = diagnostics.acceptedFrequencyEvidence.present ? "frequency" : "unknown";
     report.primaryPattern.reason = analyzerReasonName(report.classification.reason);
     report.primaryPattern.involvedSignals = diagnostics.rawCandidateCount;
 
     report.signals.total = diagnostics.rawCandidateCount;
     report.signals.accepted = diagnostics.transientAccepted ? 1U : 0U;
     report.signals.rejected = diagnostics.rawCandidateCount > report.signals.accepted ? diagnostics.rawCandidateCount - report.signals.accepted : 0U;
-    report.signals.primarySource = diagnostics.acceptedFrequencyEvidence.present ? "frequency_primary" : "comparison_only";
+    report.signals.primarySource = diagnostics.acceptedFrequencyEvidence.present ? "frequency" : "unknown";
     report.signals.primaryDtMs = dtMs;
     report.signals.primaryDurationMs = durMs >= 0 ? static_cast<unsigned long>(durMs) : 0UL;
     report.signals.primaryStrength = strength;
@@ -3735,6 +3739,47 @@ AnalyzerReport AnalyzerApp::buildSequenceAnalyzerReport(unsigned long trialNumbe
     report.debug.mainRejectReason = analyzerReasonName(report.classification.reason);
 
     return report;
+}
+
+void AnalyzerApp::printSequenceTrialResult(const AnalyzerReport& report) const {
+    if (_valMode) {
+        return;
+    }
+    if (!analyzerLogEnabled(_sequenceTest.logFlags, AnalyzerApp::ANALYZER_LOG_TRIAL)) {
+        return;
+    }
+
+    Serial.println();
+    Serial.print("SEQ_TRIAL trial=");
+    Serial.print(report.context.trial);
+    Serial.print(" profile=");
+    Serial.print(report.context.profile != nullptr ? report.context.profile : "unknown");
+    Serial.print(" result=");
+    Serial.print(analyzerResultName(report.classification.result));
+    Serial.print(" pattern=");
+    Serial.print(report.primaryPattern.type != nullptr ? report.primaryPattern.type : "unknown");
+    Serial.print(" dt=");
+    if (report.classification.dtMs >= 0) {
+        Serial.print(report.classification.dtMs);
+        Serial.print("ms");
+    } else {
+        Serial.print("-1ms");
+    }
+    Serial.print(" confidence=");
+    Serial.print(report.primaryPattern.confidence, 2);
+    Serial.print(" locality=");
+    Serial.print(report.primaryPattern.locality != nullptr ? report.primaryPattern.locality : "unknown");
+    Serial.print(" source=");
+    Serial.print(report.primaryPattern.sourceClass != nullptr ? report.primaryPattern.sourceClass : "unknown");
+    Serial.print(" field=");
+    Serial.print(report.field.state != nullptr ? report.field.state : "unknown");
+    Serial.print(" reason=");
+    Serial.print(analyzerReasonName(report.classification.reason));
+    Serial.print(" dup=");
+    Serial.print(report.debug.duplicates);
+    Serial.print(" candidates=");
+    Serial.print(report.signals.total);
+    Serial.println();
 }
 
 // Legacy explain/debug dump retained for Pass A quarantine.

@@ -400,6 +400,18 @@ private:
         unsigned long freqRejectBoth = 0;
         unsigned long freqRejectNoEvidence = 0;
         unsigned long freqRejectInvalidWindow = 0;
+
+        unsigned long parityCompared = 0;
+        unsigned long parityMatched = 0;
+        unsigned long parityMissingActual = 0;
+        unsigned long parityMissingRecheck = 0;
+        unsigned long parityAcceptedMismatch = 0;
+        unsigned long parityTypeMismatch = 0;
+        unsigned long parityLocalityMismatch = 0;
+        unsigned long paritySourceMismatch = 0;
+        unsigned long parityReasonMismatch = 0;
+        unsigned long parityTimingMismatch = 0;
+        unsigned long parityConfidenceMismatch = 0;
     };
 
     // Setup, control, and detector configuration helpers.

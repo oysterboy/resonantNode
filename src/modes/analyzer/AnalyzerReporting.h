@@ -207,6 +207,20 @@ struct AnalyzerDebugSummary {
     const char* pipelineSource = "actual_pipeline";
     bool pipelineFallback = false;
     const char* mainRejectReason = "none";
+
+    bool parityCompared = false;
+    bool parityMatch = true;
+    bool parityAcceptedMatch = true;
+    bool parityTypeMatch = true;
+    bool parityLocalityMatch = true;
+    bool paritySourceMatch = true;
+    bool parityReasonMatch = true;
+    bool parityTimingClose = true;
+    bool parityConfidenceClose = true;
+    float parityConfidenceDelta = 0.0f;
+    long parityTimingDeltaMs = 0;
+    const char* parityReason = "none";
+    const char* paritySummary = "none";
 };
 
 struct AnalyzerSummary {

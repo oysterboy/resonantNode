@@ -3559,6 +3559,84 @@ void AnalyzerApp::handleSequenceCandidate(const detection::PatternResult& patter
     }
 }
 
+namespace {
+
+struct PatternResultParity {
+    bool compared = false;
+    bool match = true;
+    bool acceptedMatch = true;
+    bool typeMatch = true;
+    bool localityMatch = true;
+    bool sourceMatch = true;
+    bool reasonMatch = true;
+    bool timingClose = true;
+    bool confidenceClose = true;
+    float confidenceDelta = 0.0f;
+    long timingDeltaMs = 0;
+    const char* summary = "none";
+    const char* reason = "none";
+};
+
+static PatternResultParity comparePatternResultsForAnalyzer(
+    const detection::PatternResult& actual,
+    const detection::PatternResult& rechecked,
+    long actualDtMs,
+    long recheckedDtMs
+) {
+    PatternResultParity parity = {};
+    parity.compared = true;
+    parity.acceptedMatch = actual.valid == rechecked.valid;
+    parity.typeMatch = actual.type == rechecked.type;
+    parity.localityMatch = actual.locality == rechecked.locality;
+    parity.sourceMatch = actual.source == rechecked.source;
+    parity.reasonMatch = actual.reasonCode == rechecked.reasonCode;
+    parity.timingDeltaMs = actualDtMs - recheckedDtMs;
+    if (parity.timingDeltaMs < 0) {
+        parity.timingDeltaMs = -parity.timingDeltaMs;
+    }
+    parity.timingClose = parity.timingDeltaMs <= 25;
+    parity.confidenceDelta = fabsf(actual.confidence - rechecked.confidence);
+    parity.confidenceClose = parity.confidenceDelta <= 0.10f;
+
+    parity.match = parity.acceptedMatch &&
+        parity.typeMatch &&
+        parity.localityMatch &&
+        parity.sourceMatch &&
+        parity.reasonMatch &&
+        parity.timingClose &&
+        parity.confidenceClose;
+
+    if (parity.match) {
+        parity.summary = "none";
+    } else {
+        char summary[96];
+        summary[0] = '\0';
+        auto appendSummary = [&](const char* tag) {
+            if (summary[0] != '\0') {
+                strncat(summary, ",", sizeof(summary) - strlen(summary) - 1);
+            }
+            strncat(summary, tag, sizeof(summary) - strlen(summary) - 1);
+        };
+        if (!parity.acceptedMatch) appendSummary("accepted_mismatch");
+        if (!parity.typeMatch) appendSummary("type_mismatch");
+        if (!parity.localityMatch) appendSummary("locality_mismatch");
+        if (!parity.sourceMatch) appendSummary("source_mismatch");
+        if (!parity.reasonMatch) appendSummary("reason_mismatch");
+        if (!parity.timingClose) appendSummary("timing_mismatch");
+        if (!parity.confidenceClose) appendSummary("confidence_mismatch");
+        if (summary[0] == '\0') {
+            appendSummary("unknown_mismatch");
+        }
+        static char summaryStorage[96];
+        strncpy(summaryStorage, summary, sizeof(summaryStorage) - 1);
+        summaryStorage[sizeof(summaryStorage) - 1] = '\0';
+        parity.summary = summaryStorage;
+    }
+    return parity;
+}
+
+} // namespace
+
 void AnalyzerApp::finalizeSequenceTrial(unsigned long now) {
     if (_valMode) {
         return;
@@ -3703,7 +3781,127 @@ void AnalyzerApp::finalizeSequenceTrial(unsigned long now) {
     }
 
     _sequenceTest.duplicates += diagnostics.duplicateCount;
-    const AnalyzerReport finalizedReport = buildSequenceAnalyzerReport(_sequenceTest.currentTrial, result, dtMs, durMs, strength, invalidAudioTrial, diagnostics.duplicateCount, diagnostics);
+    AnalyzerReport finalizedReport = buildSequenceAnalyzerReport(_sequenceTest.currentTrial, result, dtMs, durMs, strength, invalidAudioTrial, diagnostics.duplicateCount, diagnostics);
+    if (finalizedReport.debug.parityCompared) {
+        ++_sequenceTest.parityCompared;
+        if (finalizedReport.debug.parityMatch) {
+            ++_sequenceTest.parityMatched;
+        } else {
+            ++_sequenceTest.parityAcceptedMismatch;
+            if (!finalizedReport.debug.parityTypeMatch) {
+                ++_sequenceTest.parityTypeMismatch;
+            }
+            if (!finalizedReport.debug.parityLocalityMatch) {
+                ++_sequenceTest.parityLocalityMismatch;
+            }
+            if (!finalizedReport.debug.paritySourceMatch) {
+                ++_sequenceTest.paritySourceMismatch;
+            }
+            if (!finalizedReport.debug.parityReasonMatch) {
+                ++_sequenceTest.parityReasonMismatch;
+            }
+            if (!finalizedReport.debug.parityTimingClose) {
+                ++_sequenceTest.parityTimingMismatch;
+            }
+            if (!finalizedReport.debug.parityConfidenceClose) {
+                ++_sequenceTest.parityConfidenceMismatch;
+            }
+        }
+    } else if (finalizedReport.debug.parityReason != nullptr) {
+        if (strcmp(finalizedReport.debug.parityReason, "missing_actual_pipeline_result") == 0) {
+            ++_sequenceTest.parityMissingActual;
+        } else if (strcmp(finalizedReport.debug.parityReason, "missing_recheck") == 0) {
+            detection::SignalCandidate legacyTrialSignal = {};
+            if (diagnostics.transientAccepted) {
+                legacyTrialSignal.kind = detection::SignalKind::FrequencyMatch;
+                legacyTrialSignal.source = detection::SignalSource::Frequency;
+                legacyTrialSignal.detectorKind = detection::SignalDetectorKind::FrequencyMatch;
+                legacyTrialSignal.present = true;
+                legacyTrialSignal.valid = true;
+                legacyTrialSignal.startSample = diagnostics.acceptedTransientOnsetSample;
+                legacyTrialSignal.peakSample = diagnostics.acceptedTransientPeakSample;
+                legacyTrialSignal.releaseSample = diagnostics.acceptedTransientReleaseSample;
+                legacyTrialSignal.startMs = diagnostics.acceptedTransientMs;
+                legacyTrialSignal.peakMs = diagnostics.acceptedTransientPeakMs != 0 ? diagnostics.acceptedTransientPeakMs : diagnostics.acceptedTransientMs;
+                legacyTrialSignal.releaseMs = diagnostics.acceptedTransientReleaseMs != 0 ? diagnostics.acceptedTransientReleaseMs : legacyTrialSignal.peakMs;
+                legacyTrialSignal.endMs = legacyTrialSignal.releaseMs;
+                legacyTrialSignal.durationMs = diagnostics.acceptedTransientDurationMs;
+                legacyTrialSignal.strength = diagnostics.acceptedTransientStrength;
+                legacyTrialSignal.score = diagnostics.acceptedFrequencyEvidence.present ? diagnostics.acceptedFrequencyEvidence.score : diagnostics.acceptedTransientStrength;
+                legacyTrialSignal.contrast = diagnostics.acceptedFrequencyEvidence.present ? diagnostics.acceptedFrequencyEvidence.spectralContrast : 0.0f;
+                legacyTrialSignal.confidence = diagnostics.acceptedFrequencyEvidence.present && diagnostics.acceptedFrequencyEvidence.matched ? 1.0f : 0.0f;
+                legacyTrialSignal.signalConfidence = legacyTrialSignal.confidence;
+                legacyTrialSignal.frequencyConfidence = legacyTrialSignal.confidence;
+                legacyTrialSignal.ampLevel = diagnostics.acceptedTransientStrength;
+                legacyTrialSignal.ampBaseline = diagnostics.acceptedAmbientBaseline;
+                legacyTrialSignal.ampEvidencePresent = true;
+                legacyTrialSignal.frequency = diagnostics.acceptedFrequencyEvidence;
+                legacyTrialSignal.frequency.present = true;
+                legacyTrialSignal.frequency.observedAtMs = diagnostics.acceptedFrequencyProcessedAtMs;
+            }
+
+            detection::PatternResult legacyRecheckPattern = {};
+            detection::InspectedSignal legacyRecheckInspected = {};
+            const bool legacyRecheckAvailable = legacyTrialSignal.present
+                && evaluateRoadmapSignalCandidate(legacyTrialSignal, legacyRecheckPattern, &legacyRecheckInspected);
+            if (legacyRecheckAvailable && diagnostics.runtimePatternCaptured) {
+                const long actualDtMs = diagnostics.runtimePatternResult.candidate.startMs >= _sequenceTest.currentTrialStartMs
+                    ? static_cast<long>(diagnostics.runtimePatternResult.candidate.startMs - _sequenceTest.currentTrialStartMs)
+                    : -1;
+                const long recheckedDtMs = legacyRecheckPattern.candidate.startMs >= _sequenceTest.currentTrialStartMs
+                    ? static_cast<long>(legacyRecheckPattern.candidate.startMs - _sequenceTest.currentTrialStartMs)
+                    : -1;
+                const auto parity = comparePatternResultsForAnalyzer(
+                    diagnostics.runtimePatternResult,
+                    legacyRecheckPattern,
+                    actualDtMs,
+                    recheckedDtMs);
+                finalizedReport.debug.parityCompared = parity.compared;
+                finalizedReport.debug.parityMatch = parity.match;
+                finalizedReport.debug.parityAcceptedMatch = parity.acceptedMatch;
+                finalizedReport.debug.parityTypeMatch = parity.typeMatch;
+                finalizedReport.debug.parityLocalityMatch = parity.localityMatch;
+                finalizedReport.debug.paritySourceMatch = parity.sourceMatch;
+                finalizedReport.debug.parityReasonMatch = parity.reasonMatch;
+                finalizedReport.debug.parityTimingClose = parity.timingClose;
+                finalizedReport.debug.parityConfidenceClose = parity.confidenceClose;
+                finalizedReport.debug.parityConfidenceDelta = parity.confidenceDelta;
+                finalizedReport.debug.parityTimingDeltaMs = parity.timingDeltaMs;
+                finalizedReport.debug.paritySummary = parity.summary;
+                finalizedReport.debug.parityReason = parity.reason;
+                ++_sequenceTest.parityCompared;
+                if (parity.match) {
+                    ++_sequenceTest.parityMatched;
+                } else {
+                    ++_sequenceTest.parityAcceptedMismatch;
+                    if (!parity.typeMatch) {
+                        ++_sequenceTest.parityTypeMismatch;
+                    }
+                    if (!parity.localityMatch) {
+                        ++_sequenceTest.parityLocalityMismatch;
+                    }
+                    if (!parity.sourceMatch) {
+                        ++_sequenceTest.paritySourceMismatch;
+                    }
+                    if (!parity.reasonMatch) {
+                        ++_sequenceTest.parityReasonMismatch;
+                    }
+                    if (!parity.timingClose) {
+                        ++_sequenceTest.parityTimingMismatch;
+                    }
+                    if (!parity.confidenceClose) {
+                        ++_sequenceTest.parityConfidenceMismatch;
+                    }
+                }
+            } else if (diagnostics.runtimePatternCaptured) {
+                finalizedReport.debug.parityReason = "missing_recheck";
+                ++_sequenceTest.parityMissingRecheck;
+            } else {
+                finalizedReport.debug.parityReason = "missing_actual_pipeline_result";
+                ++_sequenceTest.parityMissingActual;
+            }
+        }
+    }
     const bool briefTrial = analyzerLogEnabled(_sequenceTest.logFlags, AnalyzerApp::ANALYZER_LOG_TRIAL_BRIEF);
     flushSequenceSampleHistory(now + 1UL);
     printSequenceSampleDump(_sequenceTest.currentTrial);
@@ -4096,6 +4294,37 @@ AnalyzerReport AnalyzerApp::buildSequenceAnalyzerReport(unsigned long trialNumbe
         ? (capturedInspectedSignal.rejected ? signalRejectReasonName(capturedInspectedSignal.rejectReason) : "none")
         : analyzerReasonName(report.classification.reason);
 
+    if (diagnostics.runtimePatternCaptured && diagnostics.acceptedPatternCaptured) {
+        const long actualDtMs = diagnostics.runtimePatternResult.candidate.startMs >= _sequenceTest.currentTrialStartMs
+            ? static_cast<long>(diagnostics.runtimePatternResult.candidate.startMs - _sequenceTest.currentTrialStartMs)
+            : -1;
+        const long recheckedDtMs = diagnostics.acceptedPatternResult.candidate.startMs >= _sequenceTest.currentTrialStartMs
+            ? static_cast<long>(diagnostics.acceptedPatternResult.candidate.startMs - _sequenceTest.currentTrialStartMs)
+            : -1;
+        const PatternResultParity parity = comparePatternResultsForAnalyzer(
+            diagnostics.runtimePatternResult,
+            diagnostics.acceptedPatternResult,
+            actualDtMs,
+            recheckedDtMs);
+        report.debug.parityCompared = parity.compared;
+        report.debug.parityMatch = parity.match;
+        report.debug.parityAcceptedMatch = parity.acceptedMatch;
+        report.debug.parityTypeMatch = parity.typeMatch;
+        report.debug.parityLocalityMatch = parity.localityMatch;
+        report.debug.paritySourceMatch = parity.sourceMatch;
+        report.debug.parityReasonMatch = parity.reasonMatch;
+        report.debug.parityTimingClose = parity.timingClose;
+        report.debug.parityConfidenceClose = parity.confidenceClose;
+        report.debug.parityConfidenceDelta = parity.confidenceDelta;
+        report.debug.parityTimingDeltaMs = parity.timingDeltaMs;
+        report.debug.paritySummary = parity.summary;
+        report.debug.parityReason = parity.reason;
+    } else if (!diagnostics.runtimePatternCaptured) {
+        report.debug.parityReason = "missing_actual_pipeline_result";
+    } else if (!diagnostics.acceptedPatternCaptured) {
+        report.debug.parityReason = "missing_recheck";
+    }
+
     return report;
 }
 
@@ -4280,6 +4509,34 @@ void AnalyzerApp::printSequenceExplain(const AnalyzerReport& report) const {
     Serial.print(report.debug.pipelineSource != nullptr ? report.debug.pipelineSource : "unknown");
     Serial.print(" fallback=");
     Serial.print(report.debug.pipelineFallback ? 1 : 0);
+    Serial.println();
+
+    Serial.print("SEQ_EXPLAIN_PARITY compared=");
+    Serial.print(report.debug.parityCompared ? 1 : 0);
+    if (report.debug.parityCompared) {
+        Serial.print(" match=");
+        Serial.print(report.debug.parityMatch ? 1 : 0);
+        Serial.print(" accepted=");
+        Serial.print(report.debug.parityAcceptedMatch ? 1 : 0);
+        Serial.print(" type=");
+        Serial.print(report.debug.parityTypeMatch ? 1 : 0);
+        Serial.print(" locality=");
+        Serial.print(report.debug.parityLocalityMatch ? 1 : 0);
+        Serial.print(" source=");
+        Serial.print(report.debug.paritySourceMatch ? 1 : 0);
+        Serial.print(" reason=");
+        Serial.print(report.debug.parityReasonMatch ? 1 : 0);
+        Serial.print(" confidence_delta=");
+        Serial.print(report.debug.parityConfidenceDelta, 2);
+        Serial.print(" timing_delta=");
+        Serial.print(report.debug.parityTimingDeltaMs);
+        Serial.print("ms");
+        Serial.print(" summary=");
+        Serial.print(report.debug.paritySummary != nullptr ? report.debug.paritySummary : "none");
+    } else {
+        Serial.print(" reason=");
+        Serial.print(report.debug.parityReason != nullptr ? report.debug.parityReason : "none");
+    }
     Serial.println();
 
     Serial.print("SEQ_EXPLAIN_DUPLICATES count=");
@@ -5417,6 +5674,34 @@ void AnalyzerApp::printSequenceSummary() const {
     Serial.print(_sequenceTest.freqRejectNoEvidence);
     Serial.print(" freq_reject_invalid_window=");
     Serial.println(_sequenceTest.freqRejectInvalidWindow);
+    if (_sequenceTest.parityCompared > 0 || _sequenceTest.parityMissingActual > 0 || _sequenceTest.parityMissingRecheck > 0) {
+        Serial.print("SEQ_PARITY_SUMMARY compared=");
+        Serial.print(_sequenceTest.parityCompared);
+        Serial.print(" match=");
+        Serial.print(_sequenceTest.parityMatched);
+        Serial.print(" mismatch=");
+        Serial.print(_sequenceTest.parityCompared > _sequenceTest.parityMatched
+            ? _sequenceTest.parityCompared - _sequenceTest.parityMatched
+            : 0UL);
+        Serial.print(" missing_actual=");
+        Serial.print(_sequenceTest.parityMissingActual);
+        Serial.print(" missing_recheck=");
+        Serial.print(_sequenceTest.parityMissingRecheck);
+        Serial.print(" accepted_mismatch=");
+        Serial.print(_sequenceTest.parityAcceptedMismatch);
+        Serial.print(" type_mismatch=");
+        Serial.print(_sequenceTest.parityTypeMismatch);
+        Serial.print(" locality_mismatch=");
+        Serial.print(_sequenceTest.parityLocalityMismatch);
+        Serial.print(" source_mismatch=");
+        Serial.print(_sequenceTest.paritySourceMismatch);
+        Serial.print(" reason_mismatch=");
+        Serial.print(_sequenceTest.parityReasonMismatch);
+        Serial.print(" timing_mismatch=");
+        Serial.print(_sequenceTest.parityTimingMismatch);
+        Serial.print(" confidence_mismatch=");
+        Serial.println(_sequenceTest.parityConfidenceMismatch);
+    }
     if (_sequenceTest.showDetails) {
         printDetectionParameters();
     }

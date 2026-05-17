@@ -1,76 +1,110 @@
-# Codex Pass - Section K: Documentation / Spec Alignment
+# Current Pass
 
-Version: Detection Roadmap v0.3 - Pass K
-Scope: Align the docs with the implemented detection and profile boundaries.
+## End Target
 
----
+The analyzer end target is the roadmap in `docs/analyzer-roadmap-v0.1.md`.
 
-## Goal
+That roadmap says the analyzer should become a stable report layer over `DetectionProfile`, with:
 
-Document the current detection vocabulary and profile-proof boundary.
+- `SEQ_TRIAL` as compact truth
+- `SEQ_EXPLAIN` as why/how detail
+- `SEQ_SUMMARY` as run comparison
+- raw sample capture kept separate from normal SEQ output
 
-Current code now establishes:
+## Working List
 
-```text
-FeatureExtractor / FeatureStream / FeatureHistory
-SignalEmitter / SignalDetector / SignalInspector
-PatternAssembler / PatternRules
-FieldState
-DetectionProfile
-```
+The itemized pass sequence lives in `docs/analyzer-refactor-pass-overview-v0.1.md`.
 
-Current boundary:
+Use that file as the ordered implementation path:
 
-```text
-SignalCandidate -> InspectedSignal -> PatternCandidate -> PatternResult
-Behavior consumes PatternResult + FieldState
-FrequencyMatchDetector owns frequency lifecycle only
-SignalInspector can add AMP locality and history-backed evidence
-PatternAssembler owns signal grouping
-PatternRules own pattern meaning
-DetectionProfile owns profile composition
-```
+- Pass 0: freeze current outputs
+- Pass A: quarantine legacy output
+- Pass B: add the AnalyzerReporting skeleton
+- Pass C: build `AnalyzerReport` from the current trial
+- Pass D: make the new default `SEQ_TRIAL`
+- Pass E: add `SEQ_EXPLAIN`
+- Pass F: clean up `SEQ_SUMMARY`
+- Pass G: separate legacy report storage
+- Pass H: harden profile switching
+- Pass I: optional shared audio reporting extraction
+- Pass J: remove legacy outputs after the new ones are stable
 
-Current proof profiles:
+## Completed Baseline
 
-```text
-FreqAmpProfile
-AmpStateProfile
-ChirpProfile
-```
+Pass 0 is done.
 
-Do not add external JSON/YAML profile config.
-Do not add a plugin registry.
-Do not add new detection behavior in this pass.
+The frozen baseline lives in `docs/log_refactorpasses/analyser_oldbaseline.md`.
 
----
+Goal:
 
-## K Checklist
+- capture representative current Analyzer output before more refactor work lands
+- keep the existing output vocabulary intact while the baseline is frozen
+- make later changes easy to compare against known-good logs
 
-- [x] Update the detection roadmap overview to reflect the current signal-vs-pattern pipeline and profile-proof scope.
-- [x] Update the architecture spec detection section with the implemented names and boundaries.
-- [x] Document the stable naming set.
-- [x] Document the signal-vs-pattern split.
-- [x] Document the `FrequencyMatchDetector` boundary.
-- [x] Document AMP locality inspection.
-- [x] Document `FeatureHistory` / `ScalarWindow` usage.
-- [x] Document the `FieldState` boundary.
-- [x] Document the `PatternAssembler` role.
-- [x] Document the `PatternRules` role.
-- [x] Document the behavior input boundary.
-- [x] Document current proof profiles in more detail.
+What to capture:
 
-The current proof profiles are:
+- default `SEQ`
+- `trialbrief`
+- `summary+trial`
+- `full`
+- `raw`
+- `debug=2`
+- `RAW trigger`
+- `tries=10 debug=2`
 
-- `FreqAmpProfile`: frequency-first baseline with AMP locality inspection.
-- `AmpStateProfile`: AMP/transient profile that proves the field-state boundary.
-- `ChirpProfile`: the first multi-signal proof profile, selectable in code.
+What this pass should not do:
 
-## Test Notes
+- do not rename the runtime report lines yet
+- do not remove legacy aliases yet
+- do not change detector behavior while the baseline is being recorded
 
-The docs match the current code if:
+## Current Pass
 
-- `DetectionProfile` is the top-level code-defined profile object.
-- `FreqAmp`, `AmpState`, and `Chirp` are selectable.
-- `Behavior` still consumes `PatternResult + FieldState`.
-- `FrequencyMatchDetector` still owns only frequency candidate lifecycle.
+Pass A is now the live working step.
+
+Goal:
+
+- quarantine old SEQ raw/report/freq-class/trialbrief/long-trial outputs behind explicit legacy or explain wrappers
+- keep backwards aliases for now
+- clarify help text without touching `RAW trigger`
+
+What this pass should not do:
+
+- do not change the underlying detection behavior
+- do not remove the legacy outputs yet
+- do not jump ahead to `AnalyzerReporting` or `SEQ_TRIAL` restructuring
+
+## Context
+
+The current Analyzer code already has the old and new vocabulary mixed together in places.
+
+Keep the work framed around the stable layer split:
+
+- detection produces evidence
+- pattern logic produces meaning
+- analyzer reports trial-level truth
+
+## Files Likely Involved
+
+- `docs/analyzer-roadmap-v0.1.md`
+- `docs/analyzer-refactor-pass-overview-v0.1.md`
+- `docs/log_refactorpasses/analyser_oldbaseline.md`
+- `docs/changelog.md`
+- `src/modes/analyzer/AnalyzerApp.cpp`
+
+## Implementation Steps
+
+1. Read the roadmap and the overview before changing anything else.
+2. Keep the baseline log file as the comparison point.
+3. Quarantine legacy output paths behind explicit wrappers or labels.
+4. Preserve the existing aliases while the new wording lands.
+5. Keep the pass small and factual.
+
+## Verification
+
+- Manual serial smoke run of the listed SEQ and RAW commands
+- `platformio run -e esp32dev-analyzer`
+
+## Changelog Instruction
+
+If code or help text changes in this pass, add a concise factual entry to `docs/changelog.md` under `Changes Since Last Commit`.

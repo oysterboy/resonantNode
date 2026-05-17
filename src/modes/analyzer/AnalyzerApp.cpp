@@ -1022,6 +1022,16 @@ void AnalyzerApp::update() {
                 _audioOnsetDetector.update(static_cast<float>(frame.level), frame.sampleTimeUs);
                 _ampCandidateBuilder.observeSample(frame, _audioOnsetDetector);
                 _freqBandStream.observeCenteredSample(frame.centeredSample);
+                if (_sequenceTest.active && _sequenceTest.currentTrial > 0 && _detection != nullptr) {
+                    const detection::FrequencyEvidence runtimeFrequencyEvidence = captureFrequencyEvidence();
+                    _detection->observeFrame(frame, runtimeFrequencyEvidence, sampleTimeMsApprox);
+                    detection::PatternResult runtimePatternResult;
+                    while (_detection->popPatternResult(runtimePatternResult)) {
+                        _sequenceTest.currentTrialDiagnostics.runtimePatternResult = runtimePatternResult;
+                        _sequenceTest.currentTrialDiagnostics.runtimePatternCaptured = true;
+                    }
+                    _sequenceTest.currentTrialDiagnostics.runtimeFieldState = _detection->fieldState();
+                }
             }
             updateSequenceAmbientStats();
             if (!_sequenceTest.liveFrequencyOnly) {
@@ -1091,6 +1101,16 @@ void AnalyzerApp::update() {
             _ampCandidateBuilder.observeSample(frame, _audioOnsetDetector);
             _freqBandStream.observeCenteredSample(frame.centeredSample);
             updateSequenceAmbientStats();
+            if (_sequenceTest.active && _sequenceTest.currentTrial > 0 && _detection != nullptr) {
+                const detection::FrequencyEvidence runtimeFrequencyEvidence = captureFrequencyEvidence();
+                _detection->observeFrame(frame, runtimeFrequencyEvidence, sampleTimeMs);
+                detection::PatternResult runtimePatternResult;
+                while (_detection->popPatternResult(runtimePatternResult)) {
+                    _sequenceTest.currentTrialDiagnostics.runtimePatternResult = runtimePatternResult;
+                    _sequenceTest.currentTrialDiagnostics.runtimePatternCaptured = true;
+                }
+                _sequenceTest.currentTrialDiagnostics.runtimeFieldState = _detection->fieldState();
+            }
 
             if (!_sequenceTest.liveFrequencyOnly) {
                 if (detectorOnsetDetected()) {
@@ -2168,6 +2188,15 @@ void AnalyzerApp::startSequenceTest(unsigned long totalTrials, unsigned long per
     _sequenceTest.sampleDumpWarned = false;
     clearSequenceSampleDump();
 
+    if (_detection == nullptr) {
+        _detection = new detection::DetectionRuntime();
+    }
+    _detection->reset();
+    _detection->setFrequencyTuning(_frequencyEvidenceTuning);
+    const detection::DetectionProfile& selectedProfile = detection::detectionProfileForKind(_sequenceTest.profileKind);
+    _detection->setAmpEnabled(selectedProfile.ampEnabled && !_sequenceTest.liveFrequencyOnly);
+    _detection->setFieldStateConfig(selectedProfile.fieldStateConfig);
+
     const bool wantLegacyReports = sequenceLegacyReportEnabled();
     const bool wantSummaryReports =
         analyzerLogEnabled(logFlags, AnalyzerApp::ANALYZER_LOG_SUMMARY);
@@ -2665,6 +2694,9 @@ void AnalyzerApp::updateSequenceTest(unsigned long now) {
     _sequenceTest.trialTransientRejectWeakCountAtStart = _audioOnsetDetector.transientRejectedStrengthTooLowCount();
     _sequenceTest.currentTrialDiagnostics = {};
     _sequenceTest.currentTrialDiagnostics.acceptedAmbientBaseline = _audioSignal.baseline();
+    _sequenceTest.currentTrialDiagnostics.runtimePatternCaptured = false;
+    _sequenceTest.currentTrialDiagnostics.runtimePatternResult = {};
+    _sequenceTest.currentTrialDiagnostics.runtimeFieldState = {};
     _sequenceTest.currentTrialDiagnostics.strongestRejectReason = AmpTransientDetector::TransientRejectReason::None;
     _sequenceTest.currentTrialDiagnostics.strongestRejectDtFromTriggerMs = -1;
     _sequenceTest.currentTrialDiagnostics.strongestRejectDurationMs = 0;
@@ -3441,9 +3473,19 @@ void AnalyzerApp::handleSequenceCandidate(const detection::PatternResult& patter
     _sequenceTest.currentTrialDiagnostics.acceptedInspectedSignal = {};
     _sequenceTest.currentTrialDiagnostics.acceptedPatternCaptured = false;
     {
+        // Transitional fallback:
+        // Analyzer still re-evaluates the candidate only when the actual pipeline
+        // PatternResult is not available. Pass J compares both paths; Pass K removes
+        // this fallback once parity is proven.
         detection::PatternResult actualPatternResult = patternResult;
         detection::InspectedSignal actualInspectedSignal = {};
-        const bool actualPatternCaptured = evaluateRoadmapSignalCandidateImpl(_sequenceTest.currentTrialDiagnostics.acceptedSignalCandidate, _frequencyEvidenceTuning, _sequenceFeatureHistory, actualPatternResult, &actualInspectedSignal, false);
+        const bool actualPatternCaptured = evaluateRoadmapSignalCandidateImpl(
+            _sequenceTest.currentTrialDiagnostics.acceptedSignalCandidate,
+            _frequencyEvidenceTuning,
+            _sequenceFeatureHistory,
+            actualPatternResult,
+            &actualInspectedSignal,
+            false);
         _sequenceTest.currentTrialDiagnostics.acceptedInspectedSignal = actualInspectedSignal;
         if (actualPatternCaptured) {
             _sequenceTest.currentTrialDiagnostics.acceptedPatternResult = actualPatternResult;
@@ -3925,12 +3967,21 @@ AnalyzerReport AnalyzerApp::buildSequenceAnalyzerReport(unsigned long trialNumbe
     report.expected.expectedSource = _sequenceTest.externalEmitter ? "external" : "local";
 
     const detection::PatternResult& capturedPatternResult = diagnostics.acceptedPatternResult;
+    const detection::PatternResult& runtimePatternResult = diagnostics.runtimePatternCaptured
+        ? diagnostics.runtimePatternResult
+        : diagnostics.acceptedPatternResult;
     const detection::InspectedSignal& capturedInspectedSignal = diagnostics.acceptedInspectedSignal;
     const detection::SignalCandidate& capturedSignalCandidate = diagnostics.acceptedSignalCandidate;
-    const bool capturedPatternAvailable = diagnostics.acceptedPatternCaptured && capturedSignalCandidate.present;
+    const bool capturedPatternAvailable = diagnostics.runtimePatternCaptured || (diagnostics.acceptedPatternCaptured && capturedSignalCandidate.present);
     const auto artifactReason = [&]() -> const char* {
+        if (diagnostics.runtimePatternCaptured) {
+            return "captured_from_runtime_pipeline";
+        }
+        if (diagnostics.acceptedPatternCaptured) {
+            return "captured_from_analyzer_recheck";
+        }
         if (!diagnostics.acceptedSignalCandidate.present) {
-            return "missing_signal_candidate";
+            return "missing_pipeline_result";
         }
         if (!diagnostics.acceptedPatternCaptured) {
             if (diagnostics.acceptedInspectedSignal.rejected) {
@@ -3947,30 +3998,32 @@ AnalyzerReport AnalyzerApp::buildSequenceAnalyzerReport(unsigned long trialNumbe
     report.classification.result = analyzerResultFromSequenceOutcome(result);
     report.classification.reason = analyzerReasonFromSequenceOutcome(result, dtMs, diagnostics.rawCandidateCount, diagnostics.strongestRejectReason, audioOverflow);
     report.classification.dtMs = dtMs;
-    report.classification.confidence = capturedPatternAvailable ? capturedPatternResult.confidence : (diagnostics.transientAccepted ? 1.0f : 0.0f);
+    report.classification.confidence = capturedPatternAvailable ? runtimePatternResult.confidence : (diagnostics.transientAccepted ? 1.0f : 0.0f);
     {
         // Generic pattern mapping stays local to the report builder so top-level
         // output does not need profile-specific detector knowledge elsewhere.
         AnalyzerPatternObservation pattern = {};
-        pattern.type = capturedPatternAvailable ? detection::patternTypeName(capturedPatternResult.type) : "unknown";
-        pattern.accepted = capturedPatternAvailable ? capturedPatternResult.valid : (report.classification.result == AnalyzerResult::Expected || report.classification.result == AnalyzerResult::Late);
-        pattern.confidence = capturedPatternAvailable ? capturedPatternResult.confidence : (diagnostics.acceptedFrequencyEvidence.present ? diagnostics.acceptedFrequencyEvidence.confidence : 0.0f);
+        pattern.type = capturedPatternAvailable ? detection::patternTypeName(runtimePatternResult.type) : "unknown";
+        pattern.accepted = capturedPatternAvailable ? runtimePatternResult.valid : (report.classification.result == AnalyzerResult::Expected || report.classification.result == AnalyzerResult::Late);
+        pattern.confidence = capturedPatternAvailable ? runtimePatternResult.confidence : (diagnostics.acceptedFrequencyEvidence.present ? diagnostics.acceptedFrequencyEvidence.confidence : 0.0f);
         pattern.dtMs = report.classification.dtMs;
-        pattern.locality = capturedPatternAvailable ? localityName(capturedPatternResult.locality) : "unknown";
-        pattern.sourceClass = capturedPatternAvailable ? detection::patternSourceName(capturedPatternResult.source) : (diagnostics.acceptedFrequencyEvidence.present ? "frequency" : "unknown");
-        pattern.reason = capturedPatternAvailable ? detection::patternReasonName(capturedPatternResult.reasonCode) : analyzerReasonName(report.classification.reason);
-        pattern.involvedSignals = capturedPatternAvailable ? capturedPatternResult.signalCount : diagnostics.rawCandidateCount;
+        pattern.locality = capturedPatternAvailable ? localityName(runtimePatternResult.locality) : "unknown";
+        pattern.sourceClass = capturedPatternAvailable ? detection::patternSourceName(runtimePatternResult.source) : (diagnostics.acceptedFrequencyEvidence.present ? "frequency" : "unknown");
+        pattern.reason = capturedPatternAvailable ? detection::patternReasonName(runtimePatternResult.reasonCode) : analyzerReasonName(report.classification.reason);
+        pattern.involvedSignals = capturedPatternAvailable ? runtimePatternResult.signalCount : diagnostics.rawCandidateCount;
         report.primaryPattern = pattern;
     }
 
     report.signals.total = diagnostics.rawCandidateCount;
-    report.signals.accepted = capturedPatternAvailable ? (capturedInspectedSignal.accepted ? 1U : 0U) : (diagnostics.transientAccepted ? 1U : 0U);
+    report.signals.accepted = capturedPatternAvailable ? (runtimePatternResult.valid ? 1U : 0U) : (diagnostics.transientAccepted ? 1U : 0U);
     report.signals.rejected = diagnostics.rawCandidateCount > report.signals.accepted ? diagnostics.rawCandidateCount - report.signals.accepted : 0U;
-    report.signals.primarySource = capturedPatternAvailable ? signalSourceName(capturedSignalCandidate.source) : (diagnostics.acceptedFrequencyEvidence.present ? "frequency" : "unknown");
+    report.signals.primarySource = capturedPatternAvailable
+        ? (capturedSignalCandidate.present ? signalSourceName(capturedSignalCandidate.source) : detection::patternSourceName(runtimePatternResult.source))
+        : (diagnostics.acceptedFrequencyEvidence.present ? "frequency" : "unknown");
     report.signals.primaryDtMs = dtMs;
     report.signals.primaryDurationMs = durMs >= 0 ? static_cast<unsigned long>(durMs) : 0UL;
     report.signals.primaryStrength = strength;
-    report.signals.primaryConfidence = capturedPatternAvailable ? capturedPatternResult.confidence : (diagnostics.acceptedFrequencyEvidence.present ? diagnostics.acceptedFrequencyEvidence.confidence : 0.0f);
+    report.signals.primaryConfidence = capturedPatternAvailable ? runtimePatternResult.confidence : (diagnostics.acceptedFrequencyEvidence.present ? diagnostics.acceptedFrequencyEvidence.confidence : 0.0f);
     report.signals.mainRejectReason = capturedPatternAvailable
         ? (capturedInspectedSignal.rejected ? signalRejectReasonName(capturedInspectedSignal.rejectReason) : "none")
         : (diagnostics.transientAccepted ? "none" : analyzerReasonName(report.classification.reason));
@@ -3979,23 +4032,44 @@ AnalyzerReport AnalyzerApp::buildSequenceAnalyzerReport(unsigned long trialNumbe
     report.inspection.inspected = diagnostics.rawCandidateCount;
     report.inspection.accepted = report.signals.accepted;
     report.inspection.rejected = diagnostics.rawCandidateCount > report.inspection.accepted ? diagnostics.rawCandidateCount - report.inspection.accepted : 0U;
-    report.inspection.primaryEvidence = capturedPatternAvailable ? signalSourceName(capturedInspectedSignal.signal.source) : (diagnostics.acceptedFrequencyEvidence.present ? "frequency" : "none");
-    report.inspection.locality = capturedPatternAvailable ? localityName(capturedInspectedSignal.locality) : "unknown";
-    report.inspection.supportClass = capturedPatternAvailable ? ampSupportName(capturedInspectedSignal.ampSupport) : (diagnostics.acceptedFrequencyEvidence.present ? "supported" : "unsupported");
-    report.inspection.mainRejectReason = capturedPatternAvailable
-        ? (capturedInspectedSignal.rejected ? signalRejectReasonName(capturedInspectedSignal.rejectReason) : "none")
-        : analyzerReasonName(report.classification.reason);
+    if (diagnostics.runtimePatternCaptured) {
+        report.inspection.primaryEvidence = detection::patternSourceName(runtimePatternResult.source);
+        report.inspection.locality = localityName(runtimePatternResult.locality);
+        report.inspection.supportClass = ampSupportName(runtimePatternResult.ampSupport);
+        report.inspection.mainRejectReason = runtimePatternResult.valid ? "none" : detection::patternRejectReasonName(runtimePatternResult.rejectReason);
+    } else if (capturedPatternAvailable) {
+        report.inspection.primaryEvidence = signalSourceName(capturedInspectedSignal.signal.source);
+        report.inspection.locality = localityName(capturedInspectedSignal.locality);
+        report.inspection.supportClass = ampSupportName(capturedInspectedSignal.ampSupport);
+        report.inspection.mainRejectReason = capturedInspectedSignal.rejected ? signalRejectReasonName(capturedInspectedSignal.rejectReason) : "none";
+    } else {
+        report.inspection.primaryEvidence = diagnostics.acceptedFrequencyEvidence.present ? "frequency" : "none";
+        report.inspection.locality = "unknown";
+        report.inspection.supportClass = diagnostics.acceptedFrequencyEvidence.present ? "supported" : "unsupported";
+        report.inspection.mainRejectReason = analyzerReasonName(report.classification.reason);
+    }
 
-    report.field.state = "unknown";
-    report.field.activity = 0.0f;
-    report.field.density = 0.0f;
-    report.field.recentValidPatterns = diagnostics.transientAccepted ? 1U : 0U;
-    report.field.recentRejects = diagnostics.rawCandidateCount > report.field.recentValidPatterns ? diagnostics.rawCandidateCount - report.field.recentValidPatterns : 0U;
+    if (diagnostics.runtimePatternCaptured) {
+        const detection::FieldState& runtimeFieldState = diagnostics.runtimeFieldState;
+        report.field.state = runtimeFieldState.dense ? "dense" : (runtimeFieldState.active ? (runtimeFieldState.quiet ? "quiet" : "active") : "unknown");
+        report.field.activity = runtimeFieldState.activity;
+        report.field.density = runtimeFieldState.density;
+        report.field.recentValidPatterns = runtimeFieldState.recentPatternCount;
+        report.field.recentRejects = runtimeFieldState.recentSignalCount > runtimeFieldState.recentPatternCount
+            ? runtimeFieldState.recentSignalCount - runtimeFieldState.recentPatternCount
+            : 0U;
+    } else {
+        report.field.state = "unknown";
+        report.field.activity = 0.0f;
+        report.field.density = 0.0f;
+        report.field.recentValidPatterns = diagnostics.transientAccepted ? 1U : 0U;
+        report.field.recentRejects = diagnostics.rawCandidateCount > report.field.recentValidPatterns ? diagnostics.rawCandidateCount - report.field.recentValidPatterns : 0U;
+    }
 
     report.profileDetail.namespaceName = analyzerProfileDetailNamespace(_sequenceTest.profileKind, _sequenceTest.liveFrequencyOnly);
     report.profileDetail.summary = analyzerProfileDetailSummary(_sequenceTest.profileKind, _sequenceTest.liveFrequencyOnly);
-    report.profileDetail.freqScore = capturedPatternAvailable ? capturedPatternResult.freq.score : diagnostics.acceptedFrequencyEvidence.score;
-    report.profileDetail.freqContrast = capturedPatternAvailable ? capturedPatternResult.freq.spectralContrast : diagnostics.acceptedFrequencyEvidence.spectralContrast;
+    report.profileDetail.freqScore = capturedPatternAvailable ? runtimePatternResult.freq.score : diagnostics.acceptedFrequencyEvidence.score;
+    report.profileDetail.freqContrast = capturedPatternAvailable ? runtimePatternResult.freq.spectralContrast : diagnostics.acceptedFrequencyEvidence.spectralContrast;
     report.profileDetail.ampLevel = report.signals.primaryStrength;
     report.profileDetail.ampBase = diagnostics.acceptedAmbientBaseline;
     report.profileDetail.ampLift = report.profileDetail.ampLevel - report.profileDetail.ampBase;
@@ -4014,6 +4088,10 @@ AnalyzerReport AnalyzerApp::buildSequenceAnalyzerReport(unsigned long trialNumbe
     report.debug.artifactFallback = !capturedPatternAvailable;
     report.debug.artifactState = capturedPatternAvailable ? "CAPTURED" : "FALLBACK_SUMMARY";
     report.debug.artifactReason = artifactReason;
+    report.debug.pipelineSource = diagnostics.runtimePatternCaptured
+        ? "actual_pipeline"
+        : (diagnostics.acceptedPatternCaptured ? "analyzer_recheck" : "summary_fallback");
+    report.debug.pipelineFallback = !diagnostics.runtimePatternCaptured;
     report.debug.mainRejectReason = capturedPatternAvailable
         ? (capturedInspectedSignal.rejected ? signalRejectReasonName(capturedInspectedSignal.rejectReason) : "none")
         : analyzerReasonName(report.classification.reason);
@@ -4196,6 +4274,12 @@ void AnalyzerApp::printSequenceExplain(const AnalyzerReport& report) const {
     Serial.print(report.profileDetail.ampNorm, 2);
     Serial.print(" amp_locality=");
     Serial.print(report.profileDetail.ampLocality != nullptr ? report.profileDetail.ampLocality : "unknown");
+    Serial.println();
+
+    Serial.print("SEQ_EXPLAIN_PIPELINE_SOURCE source=");
+    Serial.print(report.debug.pipelineSource != nullptr ? report.debug.pipelineSource : "unknown");
+    Serial.print(" fallback=");
+    Serial.print(report.debug.pipelineFallback ? 1 : 0);
     Serial.println();
 
     Serial.print("SEQ_EXPLAIN_DUPLICATES count=");

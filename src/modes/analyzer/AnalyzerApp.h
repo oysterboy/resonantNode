@@ -9,6 +9,7 @@
 #include "../../detection/DetectionProfile.h"
 #include "../../io/AudioSignal.h"
 #include "../../detection/legacy/AmpCandidateBuilder.h"
+#include "../../detection/DetectionRuntime.h"
 #include "../../detection/detectors/FrequencyMatchDetector.h"
 #include "../../detection/inspector/FrequencyEvidenceEvaluation.h"
 #include "../../detection/signals/InspectedSignal.h"
@@ -232,6 +233,9 @@ private:
             detection::PatternResult acceptedPatternResult = {};
             detection::InspectedSignal acceptedInspectedSignal = {};
             bool acceptedPatternCaptured = false;
+            detection::PatternResult runtimePatternResult = {};
+            detection::FieldState runtimeFieldState = {};
+            bool runtimePatternCaptured = false;
             unsigned long duplicateTransientMs = 0;
             float duplicateTransientStrength = 0.0f;
             unsigned long duplicateTransientDurationMs = 0;
@@ -510,6 +514,7 @@ private:
     AudioSourceKind _sourceKind;
     AmpTransientDetector _audioOnsetDetector;
     AudioSignal _audioSignal;
+    detection::DetectionRuntime* _detection = nullptr;
     AmpCandidateBuilder _ampCandidateBuilder;
     FreqBandStream _freqBandStream;
     detection::FeatureHistory* _sequenceFeatureHistory = nullptr;

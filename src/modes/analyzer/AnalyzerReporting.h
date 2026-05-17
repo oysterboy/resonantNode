@@ -204,6 +204,8 @@ struct AnalyzerDebugSummary {
 
     const char* artifactState = "CAPTURED";
     const char* artifactReason = "none";
+    const char* pipelineSource = "actual_pipeline";
+    bool pipelineFallback = false;
     const char* mainRejectReason = "none";
 };
 

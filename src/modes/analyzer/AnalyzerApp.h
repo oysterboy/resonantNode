@@ -16,6 +16,7 @@
 #include "../../detection/patterns/PatternPayload.h"
 #include "../../detection/signals/SignalCandidate.h"
 #include "../../hal/AudioSource.h"
+#include "AnalyzerReporting.h"
 
 /*
 AnalyzerApp

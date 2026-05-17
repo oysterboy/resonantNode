@@ -909,6 +909,14 @@ behavior/
   BehaviorReporting.h
 ```
 
+Current file plan:
+
+```txt
+src/modes/analyzer/AnalyzerReporting.h     now
+src/detection/AudioReporting.h             later shared layer
+src/behavior/BehaviorReporting.h           later RB layer
+```
+
 Or later:
 
 ```txt

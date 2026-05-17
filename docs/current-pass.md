@@ -1,469 +1,592 @@
-# Analyzer Refactor — Pass A: Legacy Output Quarantine
+# Analyzer Refactor — Pass B: AnalyzerReporting Skeleton
 
 **Project:** ResonantNode / Resonanzraum  
 **Area:** Detection Refactor / Analyzer  
-**Pass:** A  
-**Goal:** Quarantine legacy Analyzer/SEQ output paths so later refactor passes can introduce the new `AnalyzerReport`, `SEQ_TRIAL`, `SEQ_EXPLAIN`, and `SEQ_SUMMARY` structure safely.
+**Pass:** B  
+**Goal:** Introduce the stable Analyzer reporting vocabulary and minimal report structs without changing detection behavior or current output behavior.
+
+Status: Pass B is complete. The next active pass is Pass C.
 
 ---
 
 ## 0. Context
 
-The Analyzer currently mixes several responsibilities:
+Pass A quarantines legacy Analyzer/SEQ output and introduces the preferred `SEQ_EXPLAIN` naming.
+
+Pass B adds the new Analyzer reporting model that later passes will use for:
 
 ```txt
-trial orchestration
-trial classification
-compact trial output
-long diagnostic output
-legacy raw/debug SEQ output
-frequency class summaries
-candidate reports
-actual RAW sample capture command path
+SEQ_TRIAL
+SEQ_EXPLAIN
+SEQ_SUMMARY
+profile-comparable reporting
+legacy output removal
 ```
 
-Pass 0 baseline capture is complete and preserved in `docs/log_refactorpasses/analyser_oldbaseline.md`.
+This pass should be structural only.
 
-This pass should **not** rewrite Analyzer classification yet.
+Do not rewrite trial classification yet.
 
-This pass should make legacy output modes explicit, isolated, and easy to remove later.
+Do not replace existing output yet.
 
 ---
 
 ## 1. Core intent
 
-Do a containment pass.
+Add a small, stable Analyzer reporting layer.
 
-Do **not** delete legacy output yet.
-
-Do **not** change detection behavior.
-
-Do **not** change trial classification behavior.
-
-Do **not** change actual RAW sample capture.
-
-Instead:
+The Analyzer should start moving toward this conceptual shape:
 
 ```txt
-mark old SEQ debug/report outputs as legacy
-add a preferred "explain" naming path
-keep old aliases working
-clarify command/help text
-wrap old output functions so later passes can replace them cleanly
+RunContext
+ExpectedEvent
+PatternObservation
+SignalObservation
+InspectionObservation
+FieldObservation
+AnalyzerClassification
+ProfileDetail
+DebugSummary
+AnalyzerReport
+```
+
+But Pass B only needs a minimal useful skeleton.
+
+---
+
+## 2. Files to add
+
+Add:
+
+```txt
+src/modes/analyzer/AnalyzerReporting.h
+```
+
+Optional only if needed:
+
+```txt
+src/modes/analyzer/AnalyzerReporting.cpp
+```
+
+Prefer header-only name helpers if that matches the current code style.
+
+Do not move large Analyzer logic into this file yet.
+
+Final file plan:
+
+```txt
+src/modes/analyzer/AnalyzerReporting.h     now
+src/detection/AudioReporting.h             later shared layer
+src/behavior/BehaviorReporting.h           later RB layer
 ```
 
 ---
 
-## 2. Important naming rule
+## 3. Files to inspect
 
-There are two different things that must stay disambiguated:
-
-```txt
-RAW_SAMPLE_CAPTURE
-Actual sample/buffer/RMS/envelope dump.
-Separate command/path.
-Not part of SEQ reporting.
-
-SEQ_EXPLAIN
-Detailed candidate/duplicate/inspection/pattern/classification explanation.
-Replaces the old "raw" SEQ debug concept.
-Part of SEQ reporting.
-```
-
-Do not call detailed SEQ explanation mode “raw” in new user-facing help text.
-
-Old `raw` aliases may remain for backwards compatibility, but internally they should be treated as legacy aliases for explain/debug output.
-
----
-
-## 3. Files to inspect first
-
-Start with:
+Inspect:
 
 ```txt
 src/modes/analyzer/AnalyzerApp.h
 src/modes/analyzer/AnalyzerApp.cpp
 ```
 
-Likely relevant functions / areas:
+Also inspect current detection result structs if needed:
 
 ```txt
-AnalyzerApp::handleCommand(...)
-AnalyzerApp::runSequenceTest(...)
-AnalyzerApp::finalizeSequenceTrial(...)
-AnalyzerApp::printSequenceTrialResult(...)
-AnalyzerApp::printSequenceTrialDebug(...)
-AnalyzerApp::printSequenceTrialReports(...)
-AnalyzerApp::printSequenceSummary(...)
-AnalyzerApp::runRawTrigger(...)
-SequenceTest::TrialDiagnostics
-SequenceTest::TrialReport
-AnalyzerLogMode / log-mode parsing
+src/detection/patterns/PatternResult.h
+src/detection/signals/SignalCandidate.h
+src/detection/signals/InspectedSignal.h
+src/detection/field/FieldState.h
 ```
 
-Also inspect any help/command text in `AnalyzerApp.cpp`.
+But do not refactor those files in this pass unless required for include correctness.
 
 ---
 
-## 4. Outputs to quarantine
+## 4. Add AnalyzerResult
 
-Treat these as legacy or transitional output families:
-
-```txt
-SEQ_RAW
-SEQ_REPORT
-SEQ_FREQ_CLASS
-SEQ_TRACE
-trialbrief-style SEQ_TRIAL
-old long diagnostic SEQ_TRIAL
-SequenceTest::TrialReport
-ANALYZER_LOG_RAW_DEBUG naming
-ANALYZER_LOG_FREQ_CLASS naming
-```
-
-Do not remove them yet.
-
-Make them easier to find and easier to remove later.
-
----
-
-## 5. Outputs to preserve unchanged
-
-Do not break:
-
-```txt
-RAW trigger / actual raw sample capture
-RAW_BEGIN
-RAW_INFO
-RAW_ERR
-RAW_END
-base analyzer session output
-capture session output
-validation output
-detection parameter output
-```
-
-Actual raw sample dumping is intentionally separate from the SEQ roadmap.
-
----
-
-## 6. Implementation tasks
-
-### Task A1 — Add explicit legacy/explain naming
-
-If an enum or flag currently has a value like:
+Add:
 
 ```cpp
-ANALYZER_LOG_RAW_DEBUG
+enum class AnalyzerResult {
+    Expected,
+    Early,
+    Late,
+    Miss,
+    Duplicate,
+    Unexpected,
+    Rejected,
+    Ambiguous,
+    TooDense,
+    InvalidAudio,
+    Unknown
+};
 ```
 
-do not necessarily remove it immediately.
-
-Prefer one of these safe approaches:
-
-### Option 1 — Add new value and keep old alias
-
-```cpp
-ANALYZER_LOG_EXPLAIN
-ANALYZER_LOG_LEGACY_RAW_DEBUG
-```
-
-Map old `raw`/`raw_debug` command tokens to the legacy/explain path.
-
-### Option 2 — Keep existing enum but document it as legacy
-
-If renaming is too invasive, add comments and wrapper functions clearly marking the mode as legacy.
-
-Example intent:
-
-```cpp
-// Legacy: this is not actual raw sample capture.
-// It is old SEQ candidate/debug output.
-// New code should use SEQ_EXPLAIN naming.
-ANALYZER_LOG_RAW_DEBUG
-```
-
-Preferred user-facing name:
+Notes:
 
 ```txt
-explain
+Expected     = valid PatternResult inside expected window
+Early        = valid PatternResult before expected window
+Late         = valid PatternResult after expected window
+Miss         = no usable signal/pattern for expected event
+Duplicate    = duplicate candidate/pattern after primary
+Unexpected   = valid PatternResult without expected trigger
+Rejected     = signal/pattern candidate existed but was rejected
+Ambiguous    = multiple competing interpretations
+TooDense     = field too dense/noisy for clean classification
+InvalidAudio = audio overflow/invalid input path
+Unknown      = temporary fallback during migration
 ```
 
-Backwards-compatible aliases:
-
-```txt
-raw
-raw_debug
-liveraw
-```
-
-These aliases should still work for now.
+`Unknown` is useful during migration.
 
 ---
 
-### Task A2 — Update command/help text
+## 5. Add AnalyzerReason
 
-Update SEQ help text so the preferred modes are clear.
-
-Preferred language:
-
-```txt
-SEQ log modes:
-  trial     compact per-trial result
-  explain   detailed candidate/inspection/pattern explanation
-  summary   aggregate run summary
-  legacy    old diagnostic/report output, transitional
-```
-
-If old aliases are mentioned, mark them as aliases:
-
-```txt
-legacy aliases: raw, raw_debug, liveraw, report, freq_class, trialbrief
-```
-
-Do not present `raw` as the recommended SEQ debug mode.
-
-Mention actual raw capture separately, if help text includes it:
-
-```txt
-RAW trigger is a separate sample-capture command and is not SEQ_EXPLAIN.
-```
-
----
-
-### Task A3 — Wrap legacy output functions
-
-If current functions directly print old output, wrap them with names that reveal their status.
-
-Suggested wrappers:
+Add:
 
 ```cpp
-void printSequenceExplainLegacy(...);
-void printSequenceLegacyReport(...);
-void printSequenceLegacyFrequencyClass(...);
-void printSequenceLegacyTrace(...);
+enum class AnalyzerReason {
+    None,
+    ValidPatternInExpectedWindow,
+    ValidPatternBeforeWindow,
+    ValidPatternAfterWindow,
+    NoSignalCandidate,
+    SignalSeenButRejected,
+    InspectionFailed,
+    PatternCandidateRejected,
+    MultipleValidPatterns,
+    MultipleCompetingPatterns,
+    FieldTooDense,
+    UnexpectedValidPatternWithoutTrigger,
+    DuplicatePatternAfterPrimary,
+    InvalidAudio,
+    Unknown
+};
 ```
 
-or, if keeping methods in `AnalyzerApp`:
+Notes:
+
+```txt
+None    = no reason assigned yet
+Unknown = temporary migration fallback
+```
+
+Keep reason vocabulary stable and explicit.
+
+Do not encode profile-specific detail in `AnalyzerReason`.
+
+Profile-specific facts belong later in `ProfileDetail`.
+
+---
+
+## 6. Add name helpers
+
+Add helpers:
 
 ```cpp
-void AnalyzerApp::printSequenceExplainLegacy(...);
-void AnalyzerApp::printSequenceLegacyReports(...);
-void AnalyzerApp::printSequenceLegacyFrequencyClass(...);
+const char* analyzerResultName(AnalyzerResult value);
+const char* analyzerReasonName(AnalyzerReason value);
 ```
 
-The goal is not a perfect file split yet.
-
-The goal is that later passes can clearly replace:
-
-```txt
-legacy explain output
-legacy report output
-legacy frequency classification output
-```
-
-without hunting through the whole Analyzer.
-
----
-
-### Task A4 — Keep old output strings if needed
-
-This pass does not require changing every printed line.
-
-It is acceptable if old lines still print:
-
-```txt
-SEQ_RAW
-SEQ_REPORT
-SEQ_FREQ_CLASS
-```
-
-as long as:
-
-```txt
-the mode is quarantined
-the user-facing preferred mode is "explain"
-the code comments mark old names as legacy
-later replacement is easy
-```
-
-If low-risk, you may start adding new prefixes:
-
-```txt
-SEQ_EXPLAIN
-SEQ_EXPLAIN_SIGNAL
-SEQ_EXPLAIN_INSPECTION
-SEQ_EXPLAIN_PATTERN
-SEQ_EXPLAIN_DUPLICATES
-SEQ_EXPLAIN_CLASSIFICATION
-```
-
-But do not do a full formatting rewrite in Pass A.
-
----
-
-### Task A5 — Do not rewrite classification
-
-Do not change logic for:
+Return lowercase, log-safe names:
 
 ```txt
 expected
+early
 late
 miss
-unexpected
 duplicate
+unexpected
+rejected
+ambiguous
+too_dense
 invalid_audio
+unknown
 ```
 
-Do not change thresholds.
-
-Do not change detection acceptance/rejection.
-
-Do not change candidate timing logic.
-
-Only route and label output modes.
-
----
-
-### Task A6 — Do not touch actual RAW sample capture
-
-Functions such as:
+and:
 
 ```txt
-runRawTrigger(...)
-RAW_BEGIN
-RAW_INFO
-RAW_ERR
-RAW_END
+none
+valid_pattern_in_expected_window
+valid_pattern_before_window
+valid_pattern_after_window
+no_signal_candidate
+signal_seen_but_rejected
+inspection_failed
+pattern_candidate_rejected
+multiple_valid_patterns
+multiple_competing_patterns
+field_too_dense
+unexpected_valid_pattern_without_trigger
+duplicate_pattern_after_primary
+invalid_audio
+unknown
 ```
 
-must remain functionally unchanged.
-
-Only help text may clarify that this is actual raw sample capture and separate from SEQ explain/debug.
+These strings should become the canonical log names.
 
 ---
 
-## 7. Suggested code comments
+## 7. Add AnalyzerRunContext
 
-Add a clear comment near the log-mode enum or parser:
+Add a minimal context struct:
 
 ```cpp
-// Terminology note:
-// "RAW" sample capture is a separate command/path that dumps actual audio samples.
-// The old SEQ "raw" mode is not raw sample capture; it is legacy candidate/debug output.
-// New SEQ diagnostics should use the "explain" naming.
+struct AnalyzerRunContext {
+    const char* profileName = "unknown";
+    unsigned long trial = 0;
+    unsigned long nowMs = 0;
+
+    const char* mode = "SEQ";
+    const char* expectedPattern = "unknown";
+
+    unsigned long targetHz = 0;
+    long expectedWindowStartMs = -1;
+    long expectedWindowEndMs = -1;
+};
 ```
 
-Add a clear comment near old report structs if present:
+Notes:
+
+```txt
+profileName is mandatory later, but "unknown" is acceptable during migration.
+trial should be filled for SEQ.
+targetHz is useful for FreqAmp/Frequency profiles.
+expected window is signed so -1 can mean unset.
+```
+
+---
+
+## 8. Add PatternObservation
+
+Add a generic Analyzer-side view of the primary PatternResult:
 
 ```cpp
-// Legacy report storage used by old SEQ_REPORT / diagnostic output.
-// New Analyzer reporting should move toward AnalyzerReport in later passes.
+struct AnalyzerPatternObservation {
+    const char* type = "none";
+    bool accepted = false;
+
+    float confidence = 0.0f;
+    long dtMs = -1;
+
+    const char* locality = "unknown";
+    const char* sourceClass = "unknown";
+    const char* reason = "none";
+
+    unsigned int involvedSignals = 0;
+};
+```
+
+Notes:
+
+```txt
+This is not a new PatternResult implementation.
+It is an Analyzer report view over whichever PatternResult the selected DetectionProfile produced.
+```
+
+Do not hardcode FreqAmp-only fields here.
+
+---
+
+## 9. Add SignalObservation
+
+Add a compact signal summary:
+
+```cpp
+struct AnalyzerSignalObservation {
+    unsigned int total = 0;
+    unsigned int accepted = 0;
+    unsigned int rejected = 0;
+
+    const char* primarySource = "none";
+    long primaryDtMs = -1;
+    unsigned long primaryDurationMs = 0;
+    float primaryStrength = 0.0f;
+    float primaryConfidence = 0.0f;
+
+    const char* mainRejectReason = "none";
+    bool duplicateRisk = false;
+};
+```
+
+Notes:
+
+```txt
+This is for SEQ_EXPLAIN and debugging.
+It should not dominate default SEQ_TRIAL.
 ```
 
 ---
 
-## 8. Non-goals
+## 10. Add InspectionObservation
 
-Do not implement these in Pass A:
+Add a generic inspection summary:
 
-```txt
-AnalyzerReport
-AnalyzerResult enum
-AnalyzerReason enum
-new compact SEQ_TRIAL
-new SEQ_SUMMARY
-new profile detail namespaces
-AudioReporting.h
-BehaviorReporting.h
-PatternResult generic view refactor
-removal of TrialReport
-removal of old output modes
+```cpp
+struct AnalyzerInspectionObservation {
+    unsigned int inspected = 0;
+    unsigned int accepted = 0;
+    unsigned int rejected = 0;
+
+    const char* primaryEvidence = "none";
+    const char* locality = "unknown";
+    const char* supportClass = "unknown";
+    const char* mainRejectReason = "none";
+};
 ```
 
-These belong to later passes.
-
----
-
-## 9. Expected behavior after Pass A
-
-Existing commands should still work.
-
-Old debug output should still be available through aliases.
-
-Preferred user-facing mode should now be:
+Notes:
 
 ```txt
-log=explain
-```
-
-Old names should be treated as legacy aliases:
-
-```txt
-log=raw
-log=raw_debug
-log=liveraw
-```
-
-Actual raw capture should still be separate:
-
-```txt
-RAW trigger ...
+This is intentionally generic.
+Detailed freq/amp values will go into ProfileDetail in later passes.
 ```
 
 ---
 
-## 10. Success criteria
+## 11. Add FieldObservation
 
-Pass A is successful if:
+Add:
+
+```cpp
+struct AnalyzerFieldObservation {
+    const char* state = "unknown";
+    float activity = 0.0f;
+    float density = 0.0f;
+
+    unsigned int recentValidPatterns = 0;
+    unsigned int recentRejects = 0;
+};
+```
+
+Notes:
+
+```txt
+FieldState may not be available yet in current Analyzer code.
+Keep default "unknown" acceptable.
+```
+
+---
+
+## 12. Add AnalyzerClassification
+
+Add:
+
+```cpp
+struct AnalyzerClassification {
+    AnalyzerResult result = AnalyzerResult::Unknown;
+    AnalyzerReason reason = AnalyzerReason::Unknown;
+
+    long dtMs = -1;
+    float confidence = 0.0f;
+};
+```
+
+This is the stable classification layer used later by `SEQ_TRIAL` and `SEQ_SUMMARY`.
+
+---
+
+## 13. Add ProfileDetail placeholder
+
+Add a small placeholder for profile-specific detail.
+
+Keep it simple.
+
+Option A — string-only summary:
+
+```cpp
+struct AnalyzerProfileDetail {
+    const char* namespaceName = "none";
+    const char* summary = "";
+};
+```
+
+Option B — simple common detail fields:
+
+```cpp
+struct AnalyzerProfileDetail {
+    const char* namespaceName = "none";
+
+    float freqScore = 0.0f;
+    float freqContrast = 0.0f;
+
+    float ampLevel = 0.0f;
+    float ampBase = 0.0f;
+    float ampLift = 0.0f;
+    float ampNorm = 0.0f;
+
+    const char* ampLocality = "unknown";
+};
+```
+
+Prefer Option A if avoiding profile-specific fields in the skeleton.
+
+Prefer Option B if current Analyzer already prints these values everywhere and it helps the next pass.
+
+If unsure, choose Option A now and add detailed namespaces in Pass E.
+
+---
+
+## 14. Add DebugSummary
+
+Add:
+
+```cpp
+struct AnalyzerDebugSummary {
+    unsigned int signals = 0;
+    unsigned int inspected = 0;
+    unsigned int patterns = 0;
+
+    unsigned int rejects = 0;
+    unsigned int duplicates = 0;
+    unsigned int unexpected = 0;
+
+    const char* mainRejectReason = "none";
+};
+```
+
+This supports later `SEQ_EXPLAIN` and `SEQ_SUMMARY`.
+
+---
+
+## 15. Add AnalyzerReport
+
+Add:
+
+```cpp
+struct AnalyzerReport {
+    AnalyzerRunContext context;
+
+    AnalyzerPatternObservation primaryPattern;
+    AnalyzerSignalObservation signals;
+    AnalyzerInspectionObservation inspection;
+    AnalyzerFieldObservation field;
+
+    AnalyzerClassification classification;
+    AnalyzerProfileDetail profileDetail;
+    AnalyzerDebugSummary debug;
+};
+```
+
+Keep this as a plain data struct.
+
+Do not add heavy behavior.
+
+Do not add dependencies on `AnalyzerApp`.
+
+---
+
+## 16. Include integration
+
+In `AnalyzerApp.h` or `AnalyzerApp.cpp`, include:
+
+```cpp
+#include "modes/analyzer/AnalyzerReporting.h"
+```
+
+or relative include according to current project style.
+
+At the end of Pass B, it is acceptable if `AnalyzerReport` is not yet used.
+
+However, prefer adding a small compile-time sanity usage if warnings require it.
+
+Example:
+
+```cpp
+// No runtime use yet. Pass C will build AnalyzerReport from finalized trials.
+```
+
+---
+
+## 17. Optional helper: empty report factory
+
+Optional:
+
+```cpp
+inline AnalyzerReport makeEmptyAnalyzerReport() {
+    return AnalyzerReport{};
+}
+```
+
+Only add this if useful.
+
+Do not add builder logic in Pass B.
+
+Builder logic belongs to Pass C.
+
+---
+
+## 18. Non-goals
+
+Do not implement these in Pass B:
+
+```txt
+new SEQ_TRIAL output
+SEQ_EXPLAIN formatting
+SEQ_SUMMARY rebuild
+classification rewrite
+PatternResult mapping
+profile switching
+legacy output removal
+TrialReport removal
+AudioReporting extraction
+BehaviorReporting
+RAW sample capture changes
+```
+
+---
+
+## 19. Success criteria
+
+Pass B is successful if:
 
 ```txt
 Code compiles.
-SEQ tests still run.
-Actual RAW trigger/sample capture still works.
-Old raw/debug SEQ output still works via alias.
-New preferred "explain" naming exists.
-Help text no longer implies SEQ raw debug equals actual raw sample capture.
-Legacy output functions/paths are easier to find and remove later.
+AnalyzerReporting.h exists.
+AnalyzerResult and AnalyzerReason exist.
+Canonical name helpers exist.
+AnalyzerReport skeleton exists.
+AnalyzerApp can include the new header.
 No detection behavior changes.
-No threshold/classification changes.
+No SEQ output behavior changes required.
+No RAW trigger changes.
 ```
 
 ---
 
-## 11. Recommended final state of Pass A
+## 20. Recommended quick checks
 
-After this pass, the codebase should communicate:
+After implementation:
 
 ```txt
-SEQ_TRIAL / SEQ_SUMMARY / SEQ_EXPLAIN are the future.
-SEQ raw/report/freq-class/trialbrief are legacy transitional outputs.
-RAW sample capture is a separate diagnostic command.
+[x] Build / compile.
+[x] Confirm AnalyzerApp includes the new header without circular include problems.
+[x] Confirm old SEQ command still compiles.
+[x] Confirm actual RAW trigger code was not modified.
+[x] Grep for AnalyzerResult / AnalyzerReason to confirm they only appear in new skeleton unless small compile integration was needed.
 ```
 
-This creates the safe foundation for Pass B:
+---
+
+## 21. Expected final state of Pass B
+
+The codebase now has a stable target structure for Analyzer reporting:
 
 ```txt
-AnalyzerReporting skeleton
 AnalyzerResult
 AnalyzerReason
-minimal AnalyzerReport
+AnalyzerReport
 ```
 
----
+But old output and old classification still run as before.
 
-## 12. Quick implementation checklist
+This prepares Pass C:
 
 ```txt
-[x] Inspect AnalyzerApp log-mode enum/parser.
-[x] Add or alias preferred "explain" mode.
-[x] Keep old raw/liveraw/raw_debug aliases.
-[x] Update help text.
-[x] Add terminology comments for RAW vs SEQ_EXPLAIN.
-[x] Wrap or rename old output helpers as legacy/explain helpers.
-[x] Ensure actual RAW trigger path is untouched.
-[x] Compile.
-[ ] Run one short SEQ test with default output.
-[ ] Run one SEQ test with explain/raw alias output.
-[ ] Run or at least compile-check RAW trigger path.
+Build AnalyzerReport from current finalized trial data.
 ```

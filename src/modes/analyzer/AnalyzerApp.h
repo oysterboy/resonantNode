@@ -10,7 +10,9 @@
 #include "../../detection/legacy/AmpCandidateBuilder.h"
 #include "../../detection/detectors/FrequencyMatchDetector.h"
 #include "../../detection/inspector/FrequencyEvidenceEvaluation.h"
+#include "../../detection/signals/InspectedSignal.h"
 #include "../../detection/features/FreqBandStream.h"
+#include "../../detection/features/FeatureHistory.h"
 #include "../../detection/patterns/PatternPayload.h"
 #include "../../detection/signals/SignalCandidate.h"
 #include "../../hal/AudioSource.h"
@@ -54,6 +56,7 @@ public:
         ANALYZER_LOG_CANDIDATE = 1u << 2,
         ANALYZER_LOG_FREQ_CLASS = 1u << 3,
         ANALYZER_LOG_RAW_DEBUG = 1u << 4,
+        ANALYZER_LOG_TRIAL_BRIEF = 1u << 5,
     };
 
     static constexpr uint32_t DEFAULT_ANALYZER_LOG_FLAGS =
@@ -447,7 +450,11 @@ private:
     void printSequenceSummary() const;
     void recordSequenceClassifierOutcome(const PatternResult& patternResult, bool duplicateCandidate, bool unexpectedCandidate);
     void handleSequenceCandidate(const PatternResult& patternResult, unsigned long queueDepthBeforeDrain, const FrequencyEvidence* liveFrequencyEvidence = nullptr);
-    bool evaluateRoadmapSignalCandidate(const detection::SignalCandidate& signal, PatternResult& outResult) const;
+    bool evaluateRoadmapSignalCandidate(
+        const detection::SignalCandidate& signal,
+        PatternResult& outResult,
+        detection::InspectedSignal* outInspected = nullptr
+    ) const;
     FrequencyEvidence scanSequenceFrequencyParity64(const PatternCandidate& patternCandidate, unsigned long observedAtMs) const;
     void updateSequenceAmbientStats();
 
@@ -479,6 +486,7 @@ private:
     AudioSignal _audioSignal;
     AmpCandidateBuilder _ampCandidateBuilder;
     FreqBandStream _freqBandStream;
+    detection::FeatureHistory* _sequenceFeatureHistory = nullptr;
     FrequencyEvidenceEvaluation::Values _frequencyEvidenceTuning = {};
 
     // Console and emitter control.

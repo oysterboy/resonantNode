@@ -10,7 +10,7 @@ namespace detection {
 
 class FeatureHistory {
 public:
-    static constexpr size_t kMaxSamplesPerStream = 128;
+    static constexpr size_t kMaxSamplesPerStream = 512;
     static constexpr size_t kStreamCount = static_cast<size_t>(FeatureStreamId::FrequencyContrast) + 1U;
 
     void reset();

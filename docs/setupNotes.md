@@ -23,6 +23,17 @@ What the code actually does today:
 - `SEQ help`
 - `PARAM onset=23 release=20 cooldown=50 releaseDebounce=10 minMs=90 maxMs=240 minStrength=40.0 freqScore=50000 freqContrast=20.0`
 
+### SEQ log sweep
+- `SEQ log=default`
+- `SEQ log=trialbrief`
+- `SEQ log=summary+trial`
+- `SEQ log=full`
+- `SEQ log=raw`
+- `SEQ debug=2`
+- `RAW trigger`
+- `SEQ tries=10 debug=2`
+- Use `RAW trigger` as a separate low-level capture command; it is not part of the SEQ session grammar.
+
 ### RB
 - `RB PARAM onset=23 release=20 cooldown=50 releaseDebounce=10 minMs=90 maxMs=240 minStrength=40.0 freqScore=50000 freqContrast=20.0`
 - `RB BEHAV wait=100 refractory=0 idleTimeout=20000 idleTimeoutVariation=10000 idleBlockedAfterHeard=3000 idleBlockedAfterOwnEmit=5000 requireTonal=1`

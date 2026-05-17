@@ -190,13 +190,13 @@ inline DetectionProfile makeFreqAmpProfile() {
     profile.idleTimeVariationMs = 10000;
     profile.idleBlockedAfterHeardMs = 3000;
     profile.idleBlockedAfterOwnEmitMs = 5000;
-    profile.fieldStateConfig.signalWindowMs = 5000;
-    profile.fieldStateConfig.patternWindowMs = 5000;
-    profile.fieldStateConfig.busySignalCountThreshold = 4;
-    profile.fieldStateConfig.denseSignalCountThreshold = 8;
+    profile.fieldStateConfig.signalWindowMs = 3500;
+    profile.fieldStateConfig.patternWindowMs = 3500;
+    profile.fieldStateConfig.busySignalCountThreshold = 3;
+    profile.fieldStateConfig.denseSignalCountThreshold = 6;
     profile.fieldStateConfig.quietSignalCountThreshold = 0;
     profile.fieldStateConfig.quietActivityThreshold = 0.0f;
-    profile.fieldStateConfig.busyActivityThreshold = 0.5f;
+    profile.fieldStateConfig.busyActivityThreshold = 0.4f;
     return profile;
 }
 

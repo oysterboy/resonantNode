@@ -13,7 +13,10 @@ size_t FeatureHistory::streamIndex(FeatureStreamId stream) {
 
 void FeatureHistory::reset() {
     for (size_t i = 0; i < kStreamCount; ++i) {
-        _streams[i] = {};
+        StreamBuffer& buffer = _streams[i];
+        buffer.sampleCount = 0;
+        buffer.writeIndex = 0;
+        memset(buffer.samples, 0, sizeof(buffer.samples));
     }
 }
 
@@ -36,6 +39,18 @@ void FeatureHistory::record(FeatureStreamId id, unsigned long timeMs, float valu
     if (!isSupportedStream(id)) {
         return;
     }
+
+    StreamBuffer& buffer = _streams[streamIndex(id)];
+    if (buffer.sampleCount > 0) {
+        const size_t latestIndex = (buffer.writeIndex + kMaxSamplesPerStream - 1U) % kMaxSamplesPerStream;
+        FeatureStream& latest = buffer.samples[latestIndex];
+        if (latest.timeMs == timeMs) {
+            latest.id = id;
+            latest.value = value;
+            return;
+        }
+    }
+
     FeatureStream sample;
     sample.id = id;
     sample.timeMs = timeMs;

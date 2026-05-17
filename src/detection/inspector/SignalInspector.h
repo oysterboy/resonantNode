@@ -28,34 +28,29 @@ private:
     void annotateAcceptedSignal(
         InspectedSignal& out,
         const SignalCandidate& candidate,
-        const FeatureHistory* featureHistory,
-        const RawWindowStats* rawWindow
+        const FeatureHistory* featureHistory
     ) const;
     void annotateDuplicateRisk(InspectedSignal& out, const SignalCandidate& candidate) const;
     void annotateAmpSupportAndLocality(
         InspectedSignal& out,
         const SignalCandidate& candidate,
-        const FeatureHistory* featureHistory,
-        const RawWindowStats* rawWindow
+        const FeatureHistory* featureHistory
     ) const;
     InspectedSignal inspectImpl(
         const SignalCandidate& candidate,
         const FrequencyEvidenceEvaluation::Values& frequencyTuning,
-        const FeatureHistory* featureHistory,
-        const RawWindowStats* rawWindow
+        const FeatureHistory* featureHistory
     ) const;
 
     InspectedSignal inspectFrequency(
         const SignalCandidate& candidate,
         const FrequencyEvidenceEvaluation::Values& frequencyTuning,
-        const FeatureHistory* featureHistory,
-        const RawWindowStats* rawWindow
+        const FeatureHistory* featureHistory
     ) const;
 
     InspectedSignal inspectAmp(
         const SignalCandidate& candidate,
-        const FeatureHistory* featureHistory,
-        const RawWindowStats* rawWindow
+        const FeatureHistory* featureHistory
     ) const;
 
     mutable unsigned long _lastAcceptedAmpMs = 0;

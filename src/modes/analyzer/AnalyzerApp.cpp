@@ -8,6 +8,7 @@
 #include "../../detection/DetectorParameters.h"
 #include "../../detection/inspector/FrequencyEvidenceEvaluation.h"
 #include "../../detection/inspector/FrequencyWindowProbe.h"
+#include "../../detection/features/FeatureExtractor.h"
 #include "../../detection/features/FeatureHistory.h"
 #include "../../detection/signals/RawWindow.h"
 #include "../../detection/patterns/PatternAssembler.h"
@@ -333,56 +334,50 @@ bool processRoadmapDetectorCandidate(const DetectorCandidate& in,
 
 bool evaluateRoadmapSignalCandidateImpl(const detection::SignalCandidate& signal,
                                         const FrequencyEvidenceEvaluation::Values& tuning,
-                                        const AudioSignal* audioSignal,
+                                        const detection::FeatureHistory* featureHistory,
                                         detection::PatternResult& outResult,
+                                        detection::InspectedSignal* outInspected,
                                         bool traceStages) {
     static detection::SignalInspector* inspector = nullptr;
     static detection::PatternAssembler* assembler = nullptr;
-    static detection::FeatureHistory* featureHistory = nullptr;
     if (inspector == nullptr) {
         inspector = new detection::SignalInspector();
     }
     if (assembler == nullptr) {
         assembler = new detection::PatternAssembler();
     }
-    if (featureHistory == nullptr) {
-        featureHistory = new detection::FeatureHistory();
-    }
     detection::PatternRules rules;
-    detection::RawWindowStats rawWindow = {};
-    const detection::RawWindowStats* rawWindowPtr = nullptr;
-    const detection::FeatureHistory* featureHistoryPtr = nullptr;
-
-    if (audioSignal != nullptr && signal.present && signal.startSample != 0 && signal.releaseSample >= signal.startSample) {
-        if (detection::captureRawWindowStats(*audioSignal, signal.startSample, signal.releaseSample, signal.ampBaseline, rawWindow)) {
-            rawWindowPtr = &rawWindow;
-        }
-    }
-
-    if (signal.present) {
-        const unsigned long startMs = signal.startMs;
-        const unsigned long peakMs = signal.peakMs != 0 ? signal.peakMs : startMs;
-        const unsigned long endMs = signal.endMs != 0 ? signal.endMs : (signal.releaseMs != 0 ? signal.releaseMs : peakMs);
-        const float baseline = rawWindowPtr != nullptr ? rawWindowPtr->baseline : signal.ampBaseline;
-        const float ampPeak = rawWindowPtr != nullptr ? rawWindowPtr->peakMagnitude : signal.ampLevel;
-        featureHistory->reset();
-        featureHistory->record(detection::FeatureStreamId::AmpEnvelope, startMs, baseline);
-        featureHistory->record(detection::FeatureStreamId::AmpEnvelope, peakMs, ampPeak);
-        featureHistory->record(detection::FeatureStreamId::AmpEnvelope, endMs, baseline);
-        featureHistory->record(detection::FeatureStreamId::AmbientFloor, startMs, baseline);
-        featureHistory->record(detection::FeatureStreamId::AmbientFloor, peakMs, baseline);
-        featureHistory->record(detection::FeatureStreamId::AmbientFloor, endMs, baseline);
-        if (signal.frequency.present) {
-            featureHistory->record(detection::FeatureStreamId::FrequencyScore, peakMs, signal.frequency.score);
-            featureHistory->record(detection::FeatureStreamId::FrequencyContrast, peakMs, signal.frequency.spectralContrast);
-        }
-        featureHistoryPtr = featureHistory;
-    }
 
     inspector->reset();
     assembler->reset();
-    const detection::InspectedSignal inspected = inspector->inspectWithHistory(signal, tuning, featureHistoryPtr, rawWindowPtr);
+    const detection::InspectedSignal inspected = inspector->inspectWithHistory(signal, tuning, featureHistory, nullptr);
+    if (outInspected != nullptr) {
+        *outInspected = inspected;
+    }
     if (traceStages) {
+        const unsigned long probeStartMs = signal.startMs > 20UL ? signal.startMs - 20UL : 0UL;
+        const unsigned long probeEndMs = signal.endMs != 0
+            ? signal.endMs + 20UL
+            : (signal.releaseMs != 0 ? signal.releaseMs + 20UL : signal.peakMs + 20UL);
+        const size_t ampSampleCount = featureHistory != nullptr
+            ? featureHistory->sampleCount(detection::FeatureStreamId::AmpEnvelope)
+            : 0U;
+        const size_t floorSampleCount = featureHistory != nullptr
+            ? featureHistory->sampleCount(detection::FeatureStreamId::AmbientFloor)
+            : 0U;
+        const unsigned long ampLatestMs = featureHistory != nullptr
+            ? featureHistory->latestTimeMs(detection::FeatureStreamId::AmpEnvelope)
+            : 0UL;
+        const unsigned long floorLatestMs = featureHistory != nullptr
+            ? featureHistory->latestTimeMs(detection::FeatureStreamId::AmbientFloor)
+            : 0UL;
+        const detection::ScalarWindow ampWindow = featureHistory != nullptr
+            ? featureHistory->getWindow(detection::FeatureStreamId::AmpEnvelope, probeStartMs, probeEndMs)
+            : detection::ScalarWindow{};
+        const detection::ScalarWindow floorWindow = featureHistory != nullptr
+            ? featureHistory->getWindow(detection::FeatureStreamId::AmbientFloor, probeStartMs, probeEndMs)
+            : detection::ScalarWindow{};
+
         Serial.print("SEQ_TRACE stage=SIGNAL signal=");
         Serial.print(signal.present ? 1 : 0);
         Serial.print(" kind=");
@@ -416,7 +411,19 @@ bool evaluateRoadmapSignalCandidateImpl(const detection::SignalCandidate& signal
         Serial.print(" amp_baseline=");
         Serial.print(signal.ampBaseline, 1);
         Serial.print(" raw_window=");
-        Serial.print(rawWindowPtr != nullptr ? 1 : 0);
+        Serial.print(0);
+        Serial.print(" feature_history_amp_samples=");
+        Serial.print(ampSampleCount);
+        Serial.print(" feature_history_floor_samples=");
+        Serial.print(floorSampleCount);
+        Serial.print(" feature_history_amp_latest_ms=");
+        Serial.print(ampLatestMs);
+        Serial.print(" feature_history_floor_latest_ms=");
+        Serial.print(floorLatestMs);
+        Serial.print(" amp_window_valid=");
+        Serial.print(ampWindow.valid ? 1 : 0);
+        Serial.print(" floor_window_valid=");
+        Serial.print(floorWindow.valid ? 1 : 0);
         Serial.println();
     }
     if (traceStages) {
@@ -447,7 +454,7 @@ bool evaluateRoadmapSignalCandidateImpl(const detection::SignalCandidate& signal
         Serial.print(" duplicate_risk_score=");
         Serial.print(inspected.duplicateRiskScore, 2);
         Serial.print(" window_source=");
-        Serial.print(featureHistoryPtr != nullptr ? (rawWindowPtr != nullptr ? "history+raw" : "history") : (rawWindowPtr != nullptr ? "raw" : "snapshot"));
+        Serial.print(featureHistory != nullptr ? "history" : "snapshot");
         Serial.println();
     }
     assembler->acceptSignal(inspected);
@@ -502,7 +509,7 @@ bool evaluateRoadmapSignalCandidateImpl(const detection::SignalCandidate& signal
         Serial.print(" frequency_confidence=");
         Serial.print(candidate.frequencyConfidence, 2);
         Serial.print(" window_source=");
-        Serial.print(rawWindowPtr != nullptr ? "raw" : "snapshot");
+        Serial.print(featureHistory != nullptr ? "history" : "snapshot");
         Serial.println();
     }
     outResult = rules.evaluate(candidate, signal.releaseMs != 0 ? signal.releaseMs : signal.peakMs, tuning);
@@ -534,7 +541,7 @@ bool evaluateRoadmapSignalCandidateImpl(const detection::SignalCandidate& signal
         Serial.print(" frequency_confidence=");
         Serial.print(outResult.frequencyConfidence, 2);
         Serial.print(" window_source=");
-        Serial.print(rawWindowPtr != nullptr ? "raw" : "snapshot");
+        Serial.print(featureHistory != nullptr ? "history" : "snapshot");
         Serial.println();
     }
     return true;
@@ -620,6 +627,9 @@ uint32_t analyzerLogFlagsFromToken(const char* token) {
             flags |= AnalyzerApp::ANALYZER_LOG_FREQ_CLASS;
         } else if (equalsIgnoreCase(part, "liveraw") || equalsIgnoreCase(part, "raw_debug") || equalsIgnoreCase(part, "raw")) {
             flags |= AnalyzerApp::ANALYZER_LOG_RAW_DEBUG;
+        } else if (equalsIgnoreCase(part, "trialbrief") || equalsIgnoreCase(part, "triallite") || equalsIgnoreCase(part, "brief")) {
+            flags |= AnalyzerApp::ANALYZER_LOG_TRIAL;
+            flags |= AnalyzerApp::ANALYZER_LOG_TRIAL_BRIEF;
         } else if (equalsIgnoreCase(part, "default")) {
             flags |= AnalyzerApp::DEFAULT_ANALYZER_LOG_FLAGS;
         } else if (equalsIgnoreCase(part, "full")) {
@@ -644,7 +654,7 @@ void printSequenceHelp() {
     Serial.println("SEQ IN: start [tries=N] [period=MS] [window=MS] [freq=HZ] [dur=MS] [test=LABEL]");
     Serial.println("SEQ IN: OBS start [tries=N] [period=2000] [window=1800] [freq=HZ] [dur=MS] [test=LABEL]");
     Serial.println("SEQ IN: [liveFreqOnly=1|freqOnly=1|mode=livefreq]");
-    Serial.println("SEQ IN: [log=default|none|quiet|summary+trial+candidate+report+liveraw]");
+    Serial.println("SEQ IN: [log=default|none|quiet|summary+trial+trialbrief+candidate+report+liveraw]");
     Serial.println("SEQ IN: [debug=0|1|2] [dumpSamples=0|1] [curveFormat=off|samples]");
     Serial.println("SEQ IN: [sampleFirst=N] [sampleEvery=N] [sampleLead=MS] [sampleTail=MS] [sampleStep=MS] [sampleMax=N]");
     Serial.println("SEQ OUT: SEQ start / SEQ running / SEQ_CAND / SEQ_REPORT / SEQ_TRIAL / SEQ_SUMMARY");
@@ -835,6 +845,8 @@ AnalyzerApp::AnalyzerApp(int inputPin, AudioSourceKind sourceKind)
       _audioOnsetDetector(),
       _audioSignal(_audioSource),
       _freqBandStream() {
+    _frequencyEvidenceTuning.scoreMin = 10000.0f;
+    _frequencyEvidenceTuning.contrastMin = 20.0f;
     _liveFrequencyEvidenceTuning.scoreMin = 10000.0f;
     _liveFrequencyEvidenceTuning.contrastMin = 50.0f;
 }
@@ -849,6 +861,10 @@ void AnalyzerApp::begin() {
     _ampCandidateBuilder.resetState();
     _audioOnsetDetector.begin();
     _freqBandStream.resetState();
+    if (_sequenceFeatureHistory == nullptr) {
+        _sequenceFeatureHistory = new detection::FeatureHistory();
+    }
+    _sequenceFeatureHistory->reset();
     _audioOnsetDetector.setDiagnosticsEnabled(AUDIO_VERBOSE_DEBUG);
     _lastPrintMs = 0;
     _usbLineLength = 0;
@@ -860,7 +876,7 @@ void AnalyzerApp::begin() {
     _controlClaimAtMs = 0;
 
     Serial.println("EVT analyzer_ready");
-    Serial.println("EVT analyzer_help type='HELP', 'BASE', 'PARAM onset=23.0 release=20.0 cooldown=50 releaseDebounce=10 minMs=90 maxMs=240 minStrength=40.0 freqScore=50000 freqContrast=20.0', 'TEST', 'RAW trigger f=3200 dur=100 post=1000 dump=bin', 'SEQ log=default|summary+trial|candidate|freq_class|raw dumpSamples=1 curveFormat=samples', 'CAP', 'DET AMP', 'VAL', 'VAL OFF'");
+    Serial.println("EVT analyzer_help type='HELP', 'BASE', 'PARAM onset=23.0 release=20.0 cooldown=50 releaseDebounce=10 minMs=90 maxMs=240 minStrength=40.0 freqScore=10000 freqContrast=20.0', 'TEST', 'RAW trigger f=3200 dur=100 post=1000 dump=bin', 'SEQ log=default|summary+trial|trialbrief|candidate|freq_class|raw dumpSamples=1 curveFormat=samples', 'CAP', 'DET AMP', 'VAL', 'VAL OFF'");
 }
 
 void AnalyzerApp::configureParameters() {
@@ -933,6 +949,10 @@ void AnalyzerApp::update() {
                 AudioSignalFrame frame;
                 _audioSignal.update(static_cast<int>(block.samples[i]), sampleTimeUs, frame);
                 frame.sampleTimeMs = sampleTimeMsApprox;
+                if (_sequenceFeatureHistory != nullptr) {
+                    detection::FeatureExtractor::observeFrame(frame, *_sequenceFeatureHistory);
+                }
+                _audioOnsetDetector.update(static_cast<float>(frame.level), frame.sampleTimeUs);
                 _ampCandidateBuilder.observeSample(frame, _audioOnsetDetector);
                 _freqBandStream.observeCenteredSample(frame.centeredSample);
             }
@@ -997,6 +1017,10 @@ void AnalyzerApp::update() {
             AudioSignalFrame frame;
             _audioSignal.update(sample, sampleTimeUs, frame);
             frame.sampleTimeMs = sampleTimeMs;
+            if (_sequenceFeatureHistory != nullptr) {
+                detection::FeatureExtractor::observeFrame(frame, *_sequenceFeatureHistory);
+            }
+            _audioOnsetDetector.update(static_cast<float>(frame.level), frame.sampleTimeUs);
             _ampCandidateBuilder.observeSample(frame, _audioOnsetDetector);
             _freqBandStream.observeCenteredSample(frame.centeredSample);
             updateSequenceAmbientStats();
@@ -1081,6 +1105,9 @@ unsigned long AnalyzerApp::loopDelayMs() const {
 void AnalyzerApp::resetDetectorState() {
     _audioSignal.resetSignalState();
     _ampCandidateBuilder.resetState();
+    if (_sequenceFeatureHistory != nullptr) {
+        _sequenceFeatureHistory->reset();
+    }
 }
 
 bool AnalyzerApp::detectorOnsetDetected() const {
@@ -1379,7 +1406,7 @@ void AnalyzerApp::handleUsbLine(const char* line) {
         }
         Serial.println("CMD: BASE dur=10000 quiet");
         Serial.println("CMD: BASE stop");
-        Serial.println("CMD: PARAM onset=23.0 release=20.0 cooldown=50 releaseDebounce=10 minMs=90 maxMs=240 minStrength=40.0 freqScore=50000 freqContrast=20.0");
+        Serial.println("CMD: PARAM onset=23.0 release=20.0 cooldown=50 releaseDebounce=10 minMs=90 maxMs=240 minStrength=40.0 freqScore=10000 freqContrast=20.0");
         Serial.println("CMD: EMIT CHIRP freq=3200 dur=100");
         Serial.println("CMD: EMIT MODE REMOTE");
         Serial.println("CMD: EMIT MODE AUTO interval=2000 freq=3200 dur=100");
@@ -3529,8 +3556,8 @@ void AnalyzerApp::finalizeSequenceTrial(unsigned long now) {
     }
 }
 
-bool AnalyzerApp::evaluateRoadmapSignalCandidate(const detection::SignalCandidate& signal, detection::PatternResult& outResult) const {
-    return evaluateRoadmapSignalCandidateImpl(signal, _frequencyEvidenceTuning, &_audioSignal, outResult,
+bool AnalyzerApp::evaluateRoadmapSignalCandidate(const detection::SignalCandidate& signal, detection::PatternResult& outResult, detection::InspectedSignal* outInspected) const {
+    return evaluateRoadmapSignalCandidateImpl(signal, _frequencyEvidenceTuning, _sequenceFeatureHistory, outResult, outInspected,
                                                analyzerLogEnabled(_sequenceTest.logFlags, AnalyzerApp::ANALYZER_LOG_RAW_DEBUG));
 }
 
@@ -3584,7 +3611,8 @@ void AnalyzerApp::printSequenceTrialDebug(unsigned long trialNumber, const char*
     const auto freqEval = FrequencyEvidenceEvaluation::evaluate(freq, _frequencyEvidenceTuning);
     const auto roadmapFrequencySignal = makeRoadmapFrequencySignalCandidate(_sequenceTest.liveFrequency);
     detection::PatternResult roadmapFrequencyResult = {};
-    const bool roadmapFrequencyEvaluated = evaluateRoadmapSignalCandidate(roadmapFrequencySignal, roadmapFrequencyResult);
+    detection::InspectedSignal roadmapFrequencyInspected = {};
+    const bool roadmapFrequencyEvaluated = evaluateRoadmapSignalCandidate(roadmapFrequencySignal, roadmapFrequencyResult, &roadmapFrequencyInspected);
     const unsigned long freqAgeMs = freq.observedAtMs > 0 && diagnostics.acceptedFrequencyProcessedAtMs >= freq.observedAtMs
         ? diagnostics.acceptedFrequencyProcessedAtMs - freq.observedAtMs
         : 0;
@@ -3957,6 +3985,123 @@ void AnalyzerApp::printSequenceTrialResult(unsigned long trialNumber, const char
         return;
     }
 
+    const auto buildTrialSignal = [&]() {
+        if (!diagnostics.transientAccepted) {
+            return makeRoadmapFrequencySignalCandidate(_sequenceTest.liveFrequency);
+        }
+
+        detection::SignalCandidate signal = {};
+        signal.kind = detection::SignalKind::FrequencyMatch;
+        signal.source = detection::SignalSource::Frequency;
+        signal.detectorKind = detection::SignalDetectorKind::FrequencyMatch;
+        signal.present = true;
+        signal.valid = true;
+        signal.startSample = diagnostics.acceptedTransientOnsetSample;
+        signal.peakSample = diagnostics.acceptedTransientPeakSample;
+        signal.releaseSample = diagnostics.acceptedTransientReleaseSample;
+        signal.startMs = diagnostics.acceptedTransientMs;
+        signal.peakMs = diagnostics.acceptedTransientPeakMs != 0 ? diagnostics.acceptedTransientPeakMs : diagnostics.acceptedTransientMs;
+        signal.releaseMs = diagnostics.acceptedTransientReleaseMs != 0 ? diagnostics.acceptedTransientReleaseMs : signal.peakMs;
+        signal.endMs = signal.releaseMs;
+        signal.durationMs = diagnostics.acceptedTransientDurationMs;
+        signal.strength = diagnostics.acceptedTransientStrength;
+        signal.score = diagnostics.acceptedFrequencyEvidence.present ? diagnostics.acceptedFrequencyEvidence.score : diagnostics.acceptedTransientStrength;
+        signal.contrast = diagnostics.acceptedFrequencyEvidence.present ? diagnostics.acceptedFrequencyEvidence.spectralContrast : 0.0f;
+        signal.confidence = diagnostics.acceptedFrequencyEvidence.present && diagnostics.acceptedFrequencyEvidence.matched ? 1.0f : 0.0f;
+        signal.signalConfidence = signal.confidence;
+        signal.frequencyConfidence = signal.confidence;
+        signal.ampLevel = diagnostics.acceptedTransientStrength;
+        signal.ampBaseline = diagnostics.acceptedAmbientBaseline;
+        signal.ampEvidencePresent = true;
+        signal.frequency = diagnostics.acceptedFrequencyEvidence;
+        signal.frequency.present = true;
+        signal.frequency.observedAtMs = diagnostics.acceptedFrequencyProcessedAtMs;
+        return signal;
+    };
+
+    const detection::SignalCandidate trialSignal = buildTrialSignal();
+    detection::PatternResult trialResult = {};
+    detection::InspectedSignal trialInspected = {};
+    const bool trialEvaluated = evaluateRoadmapSignalCandidate(trialSignal, trialResult, &trialInspected);
+    const unsigned long probeStartMs = trialSignal.startMs > 20UL ? trialSignal.startMs - 20UL : 0UL;
+    const unsigned long probeEndMs = trialSignal.endMs != 0
+        ? trialSignal.endMs + 20UL
+        : (trialSignal.releaseMs != 0 ? trialSignal.releaseMs + 20UL : trialSignal.peakMs + 20UL);
+    const size_t ampSampleCount = _sequenceFeatureHistory != nullptr
+        ? _sequenceFeatureHistory->sampleCount(detection::FeatureStreamId::AmpEnvelope)
+        : 0U;
+    const size_t floorSampleCount = _sequenceFeatureHistory != nullptr
+        ? _sequenceFeatureHistory->sampleCount(detection::FeatureStreamId::AmbientFloor)
+        : 0U;
+    const unsigned long ampLatestMs = _sequenceFeatureHistory != nullptr
+        ? _sequenceFeatureHistory->latestTimeMs(detection::FeatureStreamId::AmpEnvelope)
+        : 0UL;
+    const unsigned long floorLatestMs = _sequenceFeatureHistory != nullptr
+        ? _sequenceFeatureHistory->latestTimeMs(detection::FeatureStreamId::AmbientFloor)
+        : 0UL;
+    const detection::ScalarWindow ampWindow = _sequenceFeatureHistory != nullptr
+        ? _sequenceFeatureHistory->getWindow(detection::FeatureStreamId::AmpEnvelope, probeStartMs, probeEndMs)
+        : detection::ScalarWindow{};
+    const detection::ScalarWindow floorWindow = _sequenceFeatureHistory != nullptr
+        ? _sequenceFeatureHistory->getWindow(detection::FeatureStreamId::AmbientFloor, probeStartMs, probeEndMs)
+        : detection::ScalarWindow{};
+
+    const bool briefTrial = analyzerLogEnabled(_sequenceTest.logFlags, AnalyzerApp::ANALYZER_LOG_TRIAL_BRIEF);
+    if (briefTrial) {
+        const bool accepted = strcmp(result, "expected") == 0 || strcmp(result, "late") == 0;
+        const float freqScore = trialEvaluated ? trialResult.freq.score : (diagnostics.transientAccepted ? diagnostics.acceptedTransientStrength : _sequenceTest.liveFrequency.frequencyCandidate.score);
+        const float freqContrast = trialEvaluated ? trialResult.freq.spectralContrast : (diagnostics.transientAccepted ? diagnostics.acceptedFrequencyEvidence.spectralContrast : _sequenceTest.liveFrequency.candidatePeakContrast);
+        const char* ampSupport = trialEvaluated ? ampSupportName(trialResult.ampSupport) : "Unknown";
+        const char* locality = trialEvaluated ? localityName(trialResult.locality) : "Unknown";
+        const float ampPeak = trialEvaluated ? trialInspected.signal.ampLevel : trialSignal.ampLevel;
+        const float ampBaseline = trialEvaluated ? trialInspected.signal.ampBaseline : trialSignal.ampBaseline;
+        const float ampLift = ampPeak - ampBaseline;
+        const float ampNorm = ampBaseline > 0.0f ? ampLift / ampBaseline : ampLift;
+
+        Serial.println();
+        Serial.print("SEQ_TRIAL trial=");
+        Serial.print(trialNumber);
+        Serial.print(" accept=");
+        Serial.print(accepted ? 1 : 0);
+        Serial.print(" dur=");
+        if (durMs >= 0) {
+            Serial.print(durMs);
+            Serial.print("ms");
+        } else {
+            Serial.print("-");
+        }
+        Serial.print(" freq_score=");
+        Serial.print(freqScore, 1);
+        Serial.print(" freq_contrast=");
+        Serial.print(freqContrast, 2);
+        Serial.print(" amp_support=");
+        Serial.print(ampSupport);
+        Serial.print(" locality=");
+        Serial.print(locality);
+        Serial.print(" amp_peak=");
+        Serial.print(ampPeak, 1);
+        Serial.print(" amp_base=");
+        Serial.print(ampBaseline, 1);
+        Serial.print(" amp_lift=");
+        Serial.print(ampLift, 1);
+        Serial.print(" amp_norm=");
+        Serial.print(ampNorm, 3);
+        Serial.print(" amp_hist=");
+        Serial.print(ampSampleCount);
+        Serial.print("/");
+        Serial.print(floorSampleCount);
+        Serial.print(" amp_latest_ms=");
+        Serial.print(ampLatestMs);
+        Serial.print("/");
+        Serial.print(floorLatestMs);
+        Serial.print(" amp_window=");
+        Serial.print(ampWindow.valid ? 1 : 0);
+        Serial.print("/");
+        Serial.print(floorWindow.valid ? 1 : 0);
+        Serial.println();
+        return;
+    }
+
     Serial.println();
     Serial.print("SEQ_TRIAL trial=");
     Serial.print(trialNumber);
@@ -3980,6 +4125,10 @@ void AnalyzerApp::printSequenceTrialResult(unsigned long trialNumber, const char
     Serial.print(sequenceTrialDurationClass(durMs));
     Serial.print(" strength=");
     Serial.print(strength, 1);
+    Serial.print(" freq_score=");
+    Serial.print(trialEvaluated ? trialResult.freq.score : (diagnostics.transientAccepted ? diagnostics.acceptedTransientStrength : _sequenceTest.liveFrequency.frequencyCandidate.score), 1);
+    Serial.print(" freq_contrast=");
+    Serial.print(trialEvaluated ? trialResult.freq.spectralContrast : (diagnostics.transientAccepted ? diagnostics.acceptedFrequencyEvidence.spectralContrast : _sequenceTest.liveFrequency.candidatePeakContrast), 2);
     Serial.print(" dup=");
     Serial.print(duplicateCount);
     Serial.print(" candidates=");
@@ -4005,9 +4154,6 @@ void AnalyzerApp::printSequenceTrialResult(unsigned long trialNumber, const char
         ? diagnostics.acceptedTransientReleaseMs
         : diagnostics.duplicateCount > 0 ? diagnostics.duplicateTransientReleaseMs : 0UL;
     const auto& freqCand = _sequenceTest.liveFrequency.frequencyCandidate;
-    const auto roadmapFrequencySignal = makeRoadmapFrequencySignalCandidate(_sequenceTest.liveFrequency);
-    detection::PatternResult roadmapFrequencyResult = {};
-    const bool roadmapFrequencyEvaluated = evaluateRoadmapSignalCandidate(roadmapFrequencySignal, roadmapFrequencyResult);
     Serial.print(" proposerCand[");
     Serial.print("valid=");
     Serial.print(freqCand.valid ? 1 : 0);
@@ -4046,6 +4192,7 @@ void AnalyzerApp::printSequenceTrialResult(unsigned long trialNumber, const char
     const FrequencyEvidenceEvaluation::Evaluation windowFullEval = hasWindowEvidence
         ? FrequencyEvidenceEvaluation::evaluate(*windowFullEvidence, _frequencyEvidenceTuning)
         : FrequencyEvidenceEvaluation::Evaluation{};
+    const bool ampCandPresent = cmpHasAmp;
     Serial.print(" freqCompare[proposer_state=");
     Serial.print(_sequenceTest.liveFrequency.candidateState);
     Serial.print(" proposer_valid=");
@@ -4102,35 +4249,33 @@ void AnalyzerApp::printSequenceTrialResult(unsigned long trialNumber, const char
     Serial.print(hasWindowEvidence ? windowFullEvidence->observedAtMs : 0UL);
     Serial.print("]");
     Serial.print(" sourceCand[present=");
-    Serial.print(freqCand.startMs != 0 || freqCand.peakMs != 0 || freqCand.releaseMs != 0 || freqCand.durationMs != 0 || freqCand.valid ? 1 : 0);
+    Serial.print(trialSignal.present ? 1 : 0);
     Serial.print(" source=frequency");
     Serial.print(" first_ms=");
-    Serial.print(freqCand.startMs);
+    Serial.print(trialSignal.startMs);
     Serial.print(" peak_ms=");
-    Serial.print(freqCand.peakMs);
+    Serial.print(trialSignal.peakMs);
     Serial.print(" release_ms=");
-    Serial.print(freqCand.releaseMs);
+    Serial.print(trialSignal.releaseMs);
     Serial.print(" dur_or_hold_ms=");
-    Serial.print(freqCand.durationMs);
+    Serial.print(trialSignal.durationMs);
     Serial.print(" score=");
-    Serial.print(freqCand.score, 1);
+    Serial.print(trialSignal.score, 1);
     Serial.print(" contrast=");
-    Serial.print(freqCand.contrast, 2);
+    Serial.print(trialSignal.contrast, 2);
     Serial.print(" candidate_reject=");
-    Serial.print(freqCand.valid ? "none" : _sequenceTest.liveFrequency.suppressReason);
+    Serial.print(trialSignal.valid ? "none" : _sequenceTest.liveFrequency.suppressReason);
     Serial.print(" next_suppress=");
     Serial.print(_sequenceTest.liveFrequency.suppressReason);
     Serial.print("]");
     if (cmpHasAmp) {
-        const unsigned long freqPeakMs = freqCand.valid ? freqCand.peakMs : 0UL;
-        const long freqPeakMinusAmpPeakMs = freqCand.valid
+        const unsigned long freqPeakMs = trialSignal.valid ? trialSignal.peakMs : 0UL;
+        const long freqPeakMinusAmpPeakMs = trialSignal.valid
             ? static_cast<long>(freqPeakMs) - static_cast<long>(ampPeakMs)
             : 0L;
         Serial.print(" ampCand[present=");
-        Serial.print(roadmapFrequencyEvaluated && roadmapFrequencyResult.valid && roadmapFrequencyResult.source == detection::PatternSource::FrequencyPrimary
-            ? 0
-            : 1);
-        if (!(roadmapFrequencyEvaluated && roadmapFrequencyResult.valid && roadmapFrequencyResult.source == detection::PatternSource::FrequencyPrimary)) {
+        Serial.print(1);
+        if (ampCandPresent) {
             Serial.print(" onset_ms=");
             Serial.print(ampOnsetMs);
             Serial.print(" peak_ms=");
@@ -4143,8 +4288,19 @@ void AnalyzerApp::printSequenceTrialResult(unsigned long trialNumber, const char
             Serial.print(diagnostics.transientAccepted ? diagnostics.acceptedTransientStrength : diagnostics.duplicateTransientStrength, 1);
         }
         Serial.print("]");
+        Serial.print(" amp_peak=");
+        Serial.print(trialSignal.ampLevel, 1);
+        Serial.print(" amp_base=");
+        Serial.print(trialSignal.ampBaseline, 1);
+        Serial.print(" amp_lift=");
+        Serial.print(trialSignal.ampLevel - trialSignal.ampBaseline, 1);
+        Serial.print(" amp_norm=");
+        const float ampNorm = trialSignal.ampBaseline > 0.0f
+            ? (trialSignal.ampLevel - trialSignal.ampBaseline) / trialSignal.ampBaseline
+            : (trialSignal.ampLevel - trialSignal.ampBaseline);
+        Serial.print(ampNorm, 3);
         Serial.print(" cmp[freqPeakMinusAmpPeakMs=");
-        if (freqCand.valid) {
+        if (trialSignal.valid) {
             Serial.print(freqPeakMinusAmpPeakMs);
             Serial.print("ms");
         } else {

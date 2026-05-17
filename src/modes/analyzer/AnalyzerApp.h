@@ -160,6 +160,8 @@ private:
             CandidateOrigin origin = CandidateOrigin::InWindow;
         };
 
+        // Legacy per-trial report storage for old SEQ_REPORT / diagnostic output.
+        // New Analyzer output should use AnalyzerReport instead.
         struct TrialReport {
             unsigned long trialNumber = 0;
             unsigned long startMs = 0;
@@ -336,6 +338,12 @@ private:
         CurveSnapshot sampleHistoryPending = {};
         CurveSnapshot sampleRows[kMaxSampleRows] = {};
         size_t sampleRowCount = 0;
+        AnalyzerReport* analyzerReports = nullptr;
+        mutable size_t analyzerReportCapacity = 0;
+        mutable size_t analyzerReportCount = 0;
+        // Legacy report storage used by old SEQ_REPORT / diagnostic output.
+        // New Analyzer output should use AnalyzerReport instead.
+        // Keep only while legacy report mode is still supported.
         mutable TrialReport* trialReports = nullptr;
         mutable size_t trialReportCapacity = 0;
         mutable size_t trialReportCount = 0;
@@ -461,6 +469,7 @@ private:
     void printSequenceTrialResult(const AnalyzerReport& report) const;
     void printSequenceFinalOutput() const;
     void printSequenceSummary() const;
+    bool sequenceLegacyReportEnabled() const;
     const char* activeAnalyzerProfileName() const;
     AnalyzerReport buildSequenceAnalyzerReport(unsigned long trialNumber, const char* result, long dtMs, long durMs, float strength, bool audioOverflow, unsigned long duplicateCount, const SequenceTest::TrialDiagnostics& diagnostics) const;
     void recordSequenceClassifierOutcome(const PatternResult& patternResult, bool duplicateCandidate, bool unexpectedCandidate);

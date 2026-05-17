@@ -190,6 +190,8 @@ struct AnalyzerDebugSummary {
     bool artifactCaptured = false;
     bool artifactFallback = false;
 
+    const char* artifactState = "CAPTURED";
+    const char* artifactReason = "none";
     const char* mainRejectReason = "none";
 };
 

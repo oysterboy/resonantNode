@@ -970,6 +970,14 @@ Do not share Analyzer classification logic.
 Do not share Behavior decision logic.
 ```
 
+## Embedded memory constraint
+
+Analyzer reporting may be richer, but should still avoid large persistent buffers. Prefer local `AnalyzerReport` creation, immediate printing, and compact summary counters.
+
+Runtime Behavior reporting must be minimal and non-owning. It should consume `PatternResult` / `FieldState` for decisions and optionally emit a compact decision line, but must not store Analyzer-style reports or debug histories.
+
+Shared reporting, if introduced, must contain only lightweight views and enums, not copied histories, arrays, or string-heavy diagnostic payloads.
+
 Recommended order:
 
 ```txt

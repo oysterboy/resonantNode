@@ -196,6 +196,9 @@ private:
             long duplicateDurMs = -1;
             float duplicateStrength = 0.0f;
 
+            AnalyzerReport analyzerReport = {};
+            bool analyzerReportCaptured = false;
+
             char result[16] = {};
         };
 

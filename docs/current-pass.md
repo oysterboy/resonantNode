@@ -1,9 +1,10 @@
-# Analyzer Refactor — Pass E: SEQ_EXPLAIN
+# Analyzer Refactor — Pass F: SEQ_SUMMARY Cleanup
 
 **Project:** ResonantNode / Resonanzraum  
 **Area:** Detection Refactor / Analyzer  
-**Pass:** E  
-**Goal:** Convert the old detailed SEQ “raw/debug” output concept into a clear `SEQ_EXPLAIN` mode that explains why a trial was classified as expected, miss, late, rejected, duplicate, unexpected, etc.
+**Pass:** F  
+**Goal:** Rebuild `SEQ_SUMMARY` around the stable Analyzer result/reason vocabulary so runs become profile-comparable.
+Status: Pass F is complete. The next active pass is Pass G.
 
 ---
 
@@ -16,58 +17,63 @@ Pass A — Legacy output quarantine
 Pass B — AnalyzerReporting skeleton
 Pass C — Build AnalyzerReport from current trial
 Pass D — New compact default SEQ_TRIAL
+Pass E — SEQ_EXPLAIN
 ```
 
-After Pass D:
+After Pass E:
 
 ```txt
 SEQ_TRIAL = compact truth
-```
-
-Pass E adds the detailed explanation layer:
-
-```txt
 SEQ_EXPLAIN = why/how
 ```
 
-This pass replaces the old conceptual role of “raw SEQ debug” with a better name and structure.
-
-Important:
+Pass F should make:
 
 ```txt
-SEQ_EXPLAIN is not actual raw sample capture.
-Actual RAW sample capture remains a separate command/path.
+SEQ_SUMMARY = run comparison
 ```
+
+The summary should no longer be primarily a collection of profile-specific counters or legacy frequency-class details.
 
 ---
 
 ## 1. Core intent
 
-Create a readable, structured explanation output for a trial.
-
-`SEQ_EXPLAIN` should show:
+`SEQ_SUMMARY` should aggregate stable Analyzer classifications:
 
 ```txt
-expected event
-signals / candidates
-inspection evidence
-pattern result
-duplicates
-field context
-final classification
-reason
+expected
+early
+late
+miss
+duplicate
+unexpected
+rejected
+ambiguous
+too_dense
+invalid_audio
 ```
 
-It should help answer:
+and stable reasons:
 
 ```txt
-Why did this trial become expected?
-Why did this trial become miss?
-Did the system see no signal?
-Did it see a signal but reject it?
-Was the pattern late?
-Were there duplicates?
-Was there a candidate, but inspection or pattern rules rejected it?
+valid_pattern_in_expected_window
+no_signal_candidate
+signal_seen_but_rejected
+inspection_failed
+pattern_candidate_rejected
+duplicate_pattern_after_primary
+...
+```
+
+The summary should be useful for comparing:
+
+```txt
+distance tests
+parameter changes
+profile changes
+geometry/orientation changes
+firmware revisions
 ```
 
 ---
@@ -78,11 +84,9 @@ Do not change detection behavior.
 
 Do not change thresholds.
 
-Do not change trial classification behavior.
+Do not change trial classification rules unless a direct mapping bug from Pass C is found.
 
-Do not rewrite `SEQ_SUMMARY`.
-
-Do not remove legacy output yet unless it is safely replaced.
+Do not remove legacy summaries yet unless they are fully quarantined.
 
 Do not touch actual RAW sample capture.
 
@@ -102,618 +106,432 @@ src/modes/analyzer/AnalyzerApp.cpp
 src/modes/analyzer/AnalyzerReporting.h
 ```
 
-Likely relevant functions:
+Likely relevant areas:
 
 ```txt
-AnalyzerApp::printSequenceTrialDebug(...)
-AnalyzerApp::printSequenceTrialResult(...)
-AnalyzerApp::printSequenceTrialReports(...)
-AnalyzerApp::finalizeSequenceTrial(...)
-AnalyzerApp::buildSequenceAnalyzerReport(...)
-```
-
-Likely relevant current output families:
-
-```txt
-SEQ_RAW
-SEQ_REPORT
-SEQ_FREQ_CLASS
-SEQ_TRACE
-candidate lists
-duplicate dt lists
-strongest reject
-best candidate
-origin counts
-freq class summary
+AnalyzerApp::printSequenceSummary(...)
+SequenceTest counters
+SequenceTest::TrialDiagnostics
+SequenceTest::TrialReport
+AnalyzerReport creation from Pass C
+existing summary counters:
+  expectedHits
+  lateHits
+  misses
+  unexpected
+  duplicates
+  invalidAudio
+  tonalExpected
+  transientOnlyExpected
+  freqReject*
 ```
 
 ---
 
-## 4. New preferred mode
+## 4. Desired new summary shape
 
-Preferred user-facing mode:
+Target line:
 
 ```txt
-log=explain
+SEQ_SUMMARY profile=FreqAmp trials=100 expected=73 early=2 late=8 miss=12 duplicate=5 unexpected=3 rejected=7 ambiguous=0 too_dense=0 invalid_audio=0 avg_dt=31ms avg_dur=121ms avg_confidence=0.79 duplicate_rate=0.05 unexpected_rate=0.03 main_miss_reason=no_signal_candidate main_reject_reason=inspection_failed
 ```
 
-Legacy aliases may remain:
+Minimum acceptable:
 
 ```txt
-log=raw
-log=raw_debug
-log=liveraw
+SEQ_SUMMARY profile=FreqAmp trials=100 expected=73 early=0 late=8 miss=12 duplicate=5 unexpected=3 rejected=0 ambiguous=0 too_dense=0 invalid_audio=0 avg_dt=31ms avg_confidence=0.79
 ```
 
-But they should internally route to the explain/legacy explain path.
+Stable field order is important.
 
-Do not advertise `raw` as the preferred SEQ debug mode.
-
----
-
-## 5. Desired SEQ_EXPLAIN shape
-
-A single trial explanation may be multiline.
-
-Recommended structure:
+Recommended order:
 
 ```txt
-SEQ_EXPLAIN trial=17 profile=FreqAmp result=expected reason=valid_pattern_in_expected_window
-SEQ_EXPLAIN_EXPECTED pattern=neighbor_chirp window=20-250ms target=3200Hz
-SEQ_EXPLAIN_SIGNAL total=2 accepted=1 rejected=1 primary_source=FrequencyMatch primary_dt=24ms primary_dur=126ms primary_strength=61.0 confidence=0.88 main_reject=none
-SEQ_EXPLAIN_INSPECTION inspected=2 accepted=1 rejected=1 evidence=freq_amp locality=near support=medium main_reject=none
-SEQ_EXPLAIN_PATTERN type=neighbor_chirp accepted=1 dt=24ms confidence=0.82 locality=near source=frequency reason=freq_match_with_amp_support
-SEQ_EXPLAIN_DUPLICATES count=1 first_dt=312ms reason=duplicate_pattern_after_primary
-SEQ_EXPLAIN_FIELD state=quiet activity=0.00 density=0.00 recent_valid=0 recent_rejects=1
-SEQ_EXPLAIN_CLASSIFICATION result=expected reason=valid_pattern_in_expected_window dt=24ms confidence=0.82
-```
-
-Minimum acceptable first version:
-
-```txt
-SEQ_EXPLAIN trial=17 profile=FreqAmp result=expected reason=valid_pattern_in_expected_window
-SEQ_EXPLAIN_PATTERN type=neighbor_chirp accepted=1 dt=24ms confidence=0.82 locality=near source=frequency
-SEQ_EXPLAIN_DEBUG signals=2 inspected=2 patterns=1 rejects=1 duplicates=1 unexpected=0 main_reject=none
+SEQ_SUMMARY
+profile
+trials
+expected
+early
+late
+miss
+duplicate
+unexpected
+rejected
+ambiguous
+too_dense
+invalid_audio
+avg_dt
+avg_dur
+avg_confidence
+duplicate_rate
+unexpected_rate
+main_miss_reason
+main_reject_reason
 ```
 
 ---
 
-## 6. Add print function
+## 5. Add summary data structure if useful
 
-Add or replace with:
+If current counters are scattered, add a small Analyzer-specific summary struct.
 
-```cpp
-void AnalyzerApp::printSequenceExplain(const AnalyzerReport& report) const;
+Suggested location:
+
+```txt
+src/modes/analyzer/AnalyzerReporting.h
 ```
 
-If old detailed diagnostics are still needed, add a second internal function:
+Possible struct:
 
 ```cpp
-void AnalyzerApp::printSequenceExplainLegacy(...);
+struct AnalyzerSummary {
+    const char* profileName = "unknown";
+
+    unsigned int trials = 0;
+    unsigned int expected = 0;
+    unsigned int early = 0;
+    unsigned int late = 0;
+    unsigned int miss = 0;
+    unsigned int duplicate = 0;
+    unsigned int unexpected = 0;
+    unsigned int rejected = 0;
+    unsigned int ambiguous = 0;
+    unsigned int tooDense = 0;
+    unsigned int invalidAudio = 0;
+
+    float avgDtMs = 0.0f;
+    float avgDurationMs = 0.0f;
+    float avgConfidence = 0.0f;
+
+    float duplicateRate = 0.0f;
+    float unexpectedRate = 0.0f;
+
+    AnalyzerReason mainMissReason = AnalyzerReason::None;
+    AnalyzerReason mainRejectReason = AnalyzerReason::None;
+};
 ```
 
-Recommended pattern:
-
-```cpp
-void AnalyzerApp::printSequenceExplain(const AnalyzerReport& report) const {
-    // Print new structured explanation from AnalyzerReport.
-}
-
-void AnalyzerApp::printSequenceExplainLegacy(...) const {
-    // Transitional legacy candidate/debug dump.
-    // Kept only until report fields cover everything needed.
-}
-```
-
-Keep old detailed output accessible only under legacy/explain mode, never default.
+If adding this is too much, keep summary counters in `AnalyzerApp` for now, but print the stable field names.
 
 ---
 
-## 7. Route log mode to SEQ_EXPLAIN
+## 6. Count from AnalyzerReport where possible
 
-In the SEQ log-mode handling:
-
-```txt
-log=explain
-```
-
-should call:
-
-```cpp
-printSequenceExplain(report);
-```
-
-Legacy aliases:
+Preferred source for counts:
 
 ```txt
-log=raw
-log=raw_debug
-log=liveraw
+AnalyzerReport.classification.result
+AnalyzerReport.classification.reason
+AnalyzerReport.debug.duplicates
+AnalyzerReport.primaryPattern.confidence
+AnalyzerReport.classification.dtMs
 ```
 
-may call:
+If reports are not stored per trial yet, use the same mapping used in Pass C and update summary counters when each trial finalizes.
 
-```cpp
-printSequenceExplain(report);
-```
+Do not rely on legacy result strings as the long-term summary source.
 
-or, temporarily:
+---
 
-```cpp
-printSequenceExplain(report);
-printSequenceExplainLegacy(...);
-```
+## 7. Result count mapping
 
-If both are printed, make legacy output explicitly marked:
+Use `AnalyzerResult` as the canonical result vocabulary.
+
+Mapping:
 
 ```txt
-SEQ_LEGACY_RAW ...
+AnalyzerResult::Expected     → expected
+AnalyzerResult::Early        → early
+AnalyzerResult::Late         → late
+AnalyzerResult::Miss         → miss
+AnalyzerResult::Duplicate    → duplicate
+AnalyzerResult::Unexpected   → unexpected
+AnalyzerResult::Rejected     → rejected
+AnalyzerResult::Ambiguous    → ambiguous
+AnalyzerResult::TooDense     → too_dense
+AnalyzerResult::InvalidAudio → invalid_audio
+```
+
+If duplicate remains a secondary count rather than primary result, count it from:
+
+```txt
+report.debug.duplicates > 0
+```
+
+Recommended for now:
+
+```txt
+Primary result stays expected/late/miss/etc.
+duplicate count is counted independently.
+```
+
+This avoids hiding “expected but duplicated” cases.
+
+---
+
+## 8. Reason counts
+
+Add reason counts only if simple.
+
+Minimum reason summary:
+
+```txt
+main_miss_reason=<reason>
+main_reject_reason=<reason>
+```
+
+Better if easy:
+
+```txt
+SEQ_REASON_COUNTS profile=FreqAmp no_signal_candidate=12 signal_seen_but_rejected=8 inspection_failed=5 pattern_candidate_rejected=2 duplicate_pattern_after_primary=5
+```
+
+Do not overbuild a generic map if memory constraints are annoying.
+
+Since reason vocabulary is fixed, an array indexed by enum is acceptable if safe.
+
+---
+
+## 9. Average dt
+
+Only include valid dt values.
+
+Recommended:
+
+```txt
+avg_dt = average classification.dtMs over trials with dtMs >= 0
+```
+
+Do not include miss dt = -1 in average.
+
+If no valid dt exists:
+
+```txt
+avg_dt=-1ms
 ```
 
 or:
 
 ```txt
-SEQ_EXPLAIN_LEGACY ...
+avg_dt=0ms valid_dt_count=0
 ```
 
-Avoid silently printing old `SEQ_RAW` blocks without context.
-
----
-
-## 8. Use AnalyzerReport first
-
-`SEQ_EXPLAIN` should primarily print from:
+Prefer explicit:
 
 ```txt
-AnalyzerReport.context
-AnalyzerReport.classification
-AnalyzerReport.primaryPattern
-AnalyzerReport.signals
-AnalyzerReport.inspection
-AnalyzerReport.field
-AnalyzerReport.profileDetail
-AnalyzerReport.debug
-```
-
-Do not make `SEQ_EXPLAIN` depend directly on detector internals unless the information is not yet available in `AnalyzerReport`.
-
-If legacy details are still needed, add TODO comments:
-
-```cpp
-// TODO: Move this field into AnalyzerReport / DebugSummary and remove legacy access.
+avg_dt=-1ms
 ```
 
 ---
 
-## 9. Expected section
+## 10. Average duration
 
-Print expected/test context from:
+Use existing duration values if already tracked.
+
+If duration is not represented in `AnalyzerReport`, either:
 
 ```txt
-AnalyzerReport.context
+keep old avg duration counter temporarily
 ```
 
-Fields:
+or omit `avg_dur` until available.
+
+Do not recompute duration by digging into detector internals.
+
+If printed, keep stable name:
 
 ```txt
-trial
-profile
-expectedPattern
-targetHz
-expectedWindowStartMs
-expectedWindowEndMs
-```
-
-Example:
-
-```txt
-SEQ_EXPLAIN_EXPECTED pattern=neighbor_chirp window=20-250ms target=3200Hz
-```
-
-If unavailable:
-
-```txt
-pattern=unknown
-window=-1--1ms
-target=0Hz
-```
-
-Use stable placeholders.
-
----
-
-## 10. Signal section
-
-Print from:
-
-```txt
-AnalyzerReport.signals
-```
-
-Fields:
-
-```txt
-total
-accepted
-rejected
-primarySource
-primaryDtMs
-primaryDurationMs
-primaryStrength
-primaryConfidence
-mainRejectReason
-duplicateRisk
-```
-
-Example:
-
-```txt
-SEQ_EXPLAIN_SIGNAL total=2 accepted=1 rejected=1 primary_source=FrequencyMatch primary_dt=24ms primary_dur=126ms primary_strength=61.0 confidence=0.88 main_reject=none duplicate_risk=1
-```
-
-If current report fields are approximate, still print them with stable names.
-
-Do not print long candidate arrays here yet unless necessary.
-
-Candidate arrays can remain in legacy explain output.
-
----
-
-## 11. Inspection section
-
-Print from:
-
-```txt
-AnalyzerReport.inspection
-```
-
-Fields:
-
-```txt
-inspected
-accepted
-rejected
-primaryEvidence
-locality
-supportClass
-mainRejectReason
-```
-
-Example:
-
-```txt
-SEQ_EXPLAIN_INSPECTION inspected=2 accepted=1 rejected=1 evidence=freq_amp locality=near support=medium main_reject=none
-```
-
-Profile-specific numeric evidence can be printed in a profile detail section.
-
----
-
-## 12. Pattern section
-
-Print from:
-
-```txt
-AnalyzerReport.primaryPattern
-```
-
-Fields:
-
-```txt
-type
-accepted
-dtMs
-confidence
-locality
-sourceClass
-reason
-involvedSignals
-```
-
-Example:
-
-```txt
-SEQ_EXPLAIN_PATTERN type=neighbor_chirp accepted=1 dt=24ms confidence=0.82 locality=near source=frequency reason=freq_match_with_amp_support signals=1
-```
-
-For miss:
-
-```txt
-SEQ_EXPLAIN_PATTERN type=none accepted=0 dt=-1ms confidence=0.00 locality=unknown source=unknown reason=no_signal_candidate signals=0
+avg_dur=121ms
 ```
 
 ---
 
-## 13. Duplicate section
-
-Print from:
-
-```txt
-AnalyzerReport.debug.duplicates
-AnalyzerReport.signals.duplicateRisk
-```
-
-Minimum:
-
-```txt
-SEQ_EXPLAIN_DUPLICATES count=1 duplicate_risk=1
-```
-
-If first duplicate dt is not yet part of `AnalyzerReport`, either omit it or print it from legacy only under a legacy line.
-
-Do not print long duplicate lists in the main explain section unless they are already summarized.
-
-Possible legacy detail line:
-
-```txt
-SEQ_EXPLAIN_LEGACY_DUPLICATE_DTS values=312,487
-```
-
----
-
-## 14. Field section
-
-Print from:
-
-```txt
-AnalyzerReport.field
-```
-
-Fields:
-
-```txt
-state
-activity
-density
-recentValidPatterns
-recentRejects
-```
-
-Example:
-
-```txt
-SEQ_EXPLAIN_FIELD state=quiet activity=0.00 density=0.00 recent_valid=0 recent_rejects=1
-```
-
-If FieldState is not available yet:
-
-```txt
-SEQ_EXPLAIN_FIELD state=unknown activity=0.00 density=0.00 recent_valid=0 recent_rejects=0
-```
-
----
-
-## 15. Profile detail section
-
-Print profile details only if available.
-
-Example:
-
-```txt
-SEQ_EXPLAIN_PROFILE_DETAIL ns=freq_amp freq_score=482000 freq_contrast=1320 amp_level=61.0 amp_base=42.0 amp_lift=19.0 amp_norm=0.45 amp_locality=near
-```
-
-If Pass B/C used a minimal string-only profile detail:
-
-```txt
-SEQ_EXPLAIN_PROFILE_DETAIL ns=freq_amp summary=""
-```
-
-Do not force detailed profile fields if they are not already in `AnalyzerReport`.
-
-Do not add lots of profile-specific fields to top-level explain lines.
-
----
-
-## 16. Classification section
-
-Always print final classification.
+## 11. Average confidence
 
 Use:
 
 ```txt
-AnalyzerReport.classification
+report.classification.confidence
 ```
 
-Example:
+or:
 
 ```txt
-SEQ_EXPLAIN_CLASSIFICATION result=expected reason=valid_pattern_in_expected_window dt=24ms confidence=0.82
+report.primaryPattern.confidence
 ```
 
-For miss:
+only when confidence > 0 or pattern accepted, depending on current mapping.
+
+Recommended:
 
 ```txt
-SEQ_EXPLAIN_CLASSIFICATION result=miss reason=no_signal_candidate dt=-1ms confidence=0.00
+avg_confidence = average confidence across valid accepted PatternResults
 ```
 
-This is the key line that connects explanation to compact `SEQ_TRIAL`.
-
----
-
-## 17. Debug summary section
-
-Print from:
+If no confidence available:
 
 ```txt
-AnalyzerReport.debug
-```
-
-Example:
-
-```txt
-SEQ_EXPLAIN_DEBUG signals=2 inspected=2 patterns=1 rejects=1 duplicates=1 unexpected=0 main_reject=none
-```
-
-This should replace much of the old origin-count/reject-count style output.
-
-Legacy detailed count lines may remain temporarily under legacy labels.
-
----
-
-## 18. Keep old candidate arrays as legacy detail
-
-If current old debug mode prints useful detailed candidate arrays, keep them temporarily but clearly label them as legacy.
-
-Examples:
-
-```txt
-SEQ_EXPLAIN_LEGACY_CANDIDATE i=0 ...
-SEQ_EXPLAIN_LEGACY_CANDIDATE i=1 ...
-SEQ_EXPLAIN_LEGACY_REJECT ...
-SEQ_EXPLAIN_LEGACY_FREQ_CLASS ...
-```
-
-or keep old prefixes temporarily, but only under explain/legacy mode:
-
-```txt
-SEQ_RAW candidate[0] ...
-```
-
-Preferred direction is to rename old detailed arrays to `SEQ_EXPLAIN_LEGACY_*`.
-
-Do not spend too much time perfectly formatting legacy arrays in this pass.
-
-The main goal is a new stable explain shell.
-
----
-
-## 19. Do not pollute default SEQ_TRIAL
-
-Pass D made default `SEQ_TRIAL` compact.
-
-Pass E must not add detailed explain output to default mode.
-
-Only print `SEQ_EXPLAIN` when explicitly requested by log mode or debug setting.
-
----
-
-## 20. Help text update
-
-Update help text so users understand:
-
-```txt
-log=trial      compact per-trial output
-log=explain    detailed trial explanation
-log=summary    aggregate summary
-```
-
-Legacy note:
-
-```txt
-legacy aliases for explain/debug: raw, raw_debug, liveraw
-```
-
-Raw sample note:
-
-```txt
-RAW trigger is separate actual sample capture, not SEQ_EXPLAIN.
+avg_confidence=0.00
 ```
 
 ---
 
-## 21. Examples by result type
+## 12. Legacy class summaries
 
-Expected:
+Current code may print legacy summaries like:
 
 ```txt
-SEQ_EXPLAIN trial=1 profile=FreqAmp result=expected reason=valid_pattern_in_expected_window
-SEQ_EXPLAIN_PATTERN type=neighbor_chirp accepted=1 dt=26ms confidence=0.84 locality=near source=frequency reason=freq_match_with_amp_support signals=1
-SEQ_EXPLAIN_CLASSIFICATION result=expected reason=valid_pattern_in_expected_window dt=26ms confidence=0.84
+SEQ_CLASS_SUMMARY
+freq_reject_score
+freq_reject_contrast
+freq_reject_both
+tonalExpected
+transientOnlyExpected
 ```
 
-Miss with no candidate:
+Do not make these the primary `SEQ_SUMMARY`.
+
+Options:
+
+### Preferred
+
+Move these under legacy/explain mode:
 
 ```txt
-SEQ_EXPLAIN trial=2 profile=FreqAmp result=miss reason=no_signal_candidate
-SEQ_EXPLAIN_SIGNAL total=0 accepted=0 rejected=0 primary_source=none primary_dt=-1ms primary_dur=0ms primary_strength=0.0 confidence=0.00 main_reject=none duplicate_risk=0
-SEQ_EXPLAIN_PATTERN type=none accepted=0 dt=-1ms confidence=0.00 locality=unknown source=unknown reason=no_signal_candidate signals=0
-SEQ_EXPLAIN_CLASSIFICATION result=miss reason=no_signal_candidate dt=-1ms confidence=0.00
+SEQ_LEGACY_CLASS_SUMMARY ...
 ```
 
-Rejected:
+### Acceptable transitional
+
+Keep them after the new `SEQ_SUMMARY`, but mark clearly:
 
 ```txt
-SEQ_EXPLAIN trial=3 profile=FreqAmp result=rejected reason=signal_seen_but_rejected
-SEQ_EXPLAIN_SIGNAL total=1 accepted=0 rejected=1 primary_source=FrequencyMatch primary_dt=38ms primary_dur=42ms primary_strength=22.0 confidence=0.30 main_reject=duration_too_short duplicate_risk=0
-SEQ_EXPLAIN_INSPECTION inspected=1 accepted=0 rejected=1 evidence=freq_amp locality=unknown support=weak main_reject=duration_too_short
-SEQ_EXPLAIN_PATTERN type=none accepted=0 dt=38ms confidence=0.00 locality=unknown source=frequency reason=signal_seen_but_rejected signals=1
-SEQ_EXPLAIN_CLASSIFICATION result=rejected reason=signal_seen_but_rejected dt=38ms confidence=0.00
+SEQ_LEGACY_CLASS_SUMMARY ...
 ```
 
-Duplicate:
+Do not remove useful legacy counters yet unless replacement is complete.
+
+---
+
+## 13. Profile name
+
+Every summary must include:
 
 ```txt
-SEQ_EXPLAIN trial=4 profile=FreqAmp result=expected reason=valid_pattern_in_expected_window
-SEQ_EXPLAIN_PATTERN type=neighbor_chirp accepted=1 dt=24ms confidence=0.82 locality=near source=frequency reason=freq_match_with_amp_support signals=1
-SEQ_EXPLAIN_DUPLICATES count=1 duplicate_risk=1
-SEQ_EXPLAIN_CLASSIFICATION result=expected reason=valid_pattern_in_expected_window dt=24ms confidence=0.82
+profile=<name>
+```
+
+Use:
+
+```cpp
+activeAnalyzerProfileName()
+```
+
+from earlier passes.
+
+If profile name is still approximate, use the same value as `SEQ_TRIAL`.
+
+---
+
+## 14. Optional reason-count line
+
+If implemented, use stable prefix:
+
+```txt
+SEQ_REASON_COUNTS profile=FreqAmp valid_pattern_in_expected_window=73 no_signal_candidate=12 signal_seen_but_rejected=8 valid_pattern_after_window=8 duplicate_pattern_after_primary=5
+```
+
+This is better than cramming too many reason counts into `SEQ_SUMMARY`.
+
+Keep one line per summary.
+
+---
+
+## 15. Optional profile-detail summary
+
+If current profile-specific counters are valuable, print them separately:
+
+```txt
+SEQ_PROFILE_SUMMARY profile=FreqAmp tonal_expected=61 transient_only_expected=12 freq_reject_score=3 freq_reject_contrast=4 freq_reject_both=1
+```
+
+This keeps generic summary clean.
+
+Do not put profile-specific counters into the main `SEQ_SUMMARY`.
+
+---
+
+## 16. Help text update
+
+Update help text so:
+
+```txt
+log=summary
+```
+
+means stable summary.
+
+If legacy summaries exist, mark them:
+
+```txt
+legacy profile/class summaries may appear under log=legacy or log=explain.
 ```
 
 ---
 
-## 22. Success criteria
+## 17. Success criteria
 
-Pass E is successful if:
+Pass F is successful if:
 
 ```txt
 Code compiles.
-SEQ default trial output remains compact.
-log=explain produces structured SEQ_EXPLAIN output.
-Old raw/debug aliases still work or route to explain.
+SEQ tests still run.
+SEQ_TRIAL remains compact.
+SEQ_EXPLAIN still works.
+SEQ_SUMMARY prints stable result vocabulary.
+SEQ_SUMMARY includes profile name.
+SEQ_SUMMARY is suitable for comparing profiles/settings/distances.
+Legacy class/frequency summaries are no longer the primary summary.
 Actual RAW trigger/sample capture is untouched.
-SEQ_EXPLAIN includes at least classification, pattern, signal/debug summary, duplicates, and reason.
-Detailed legacy candidate/debug output is no longer confused with actual raw sample capture.
 No detection thresholds or behavior changed.
 ```
 
 ---
 
-## 23. Quick implementation checklist
+## 18. Quick implementation checklist
 
 ```txt
-[x] Locate current detailed debug/raw SEQ output.
-[x] Add printSequenceExplain(const AnalyzerReport& report).
-[x] Route log=explain to printSequenceExplain().
-[x] Keep raw/raw_debug/liveraw as legacy aliases.
-[x] Print expected/context line.
-[x] Print signal line.
-[x] Print inspection line.
-[x] Print pattern line.
-[x] Print duplicate line.
-[x] Print field line.
-[x] Print classification line.
-[x] Print debug summary line.
-[x] Mark fallback explain output explicitly.
-[x] Keep old candidate arrays only under legacy/explain mode.
+[x] Locate current printSequenceSummary().
+[x] Decide whether to add AnalyzerSummary struct.
+[x] Aggregate AnalyzerResult counts.
+[x] Aggregate duplicate count.
+[x] Add avg_dt from valid dt values.
+[x] Add avg_confidence if available.
+[x] Include profile name.
+[x] Add main miss/reject reason if simple.
+[x] Move legacy class/freq summaries behind legacy/profile summary prefix.
 [x] Update help text.
 [x] Compile.
-[x] Run one short SEQ with log=explain.
-[ ] Run one short SEQ with default log.
-[ ] Confirm RAW trigger path untouched.
+[x] Run short SEQ test.
+[x] Confirm default SEQ_TRIAL unchanged from Pass D.
+[x] Confirm log=explain still works.
+[x] Confirm RAW trigger path untouched.
 ```
 
 ---
 
-## 24. Expected final state of Pass E
+## 19. Expected final state of Pass F
 
 After this pass:
 
 ```txt
 SEQ_TRIAL = compact truth
 SEQ_EXPLAIN = why/how
+SEQ_SUMMARY = run comparison
 ```
 
-Old “raw SEQ debug” is conceptually replaced by `SEQ_EXPLAIN`.
-
-Actual raw sample capture remains separate:
+This prepares Pass G:
 
 ```txt
-RAW_SAMPLE_CAPTURE = separate diagnostic command only
-```
-
-This prepares Pass F:
-
-```txt
-Clean up SEQ_SUMMARY around stable Analyzer result/reason vocabulary.
+Separate legacy report storage so old TrialReport / SEQ_REPORT paths can be removed later.
 ```

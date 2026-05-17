@@ -193,6 +193,32 @@ struct AnalyzerDebugSummary {
     const char* mainRejectReason = "none";
 };
 
+struct AnalyzerSummary {
+    const char* profileName = "unknown";
+
+    unsigned int trials = 0;
+    unsigned int expected = 0;
+    unsigned int early = 0;
+    unsigned int late = 0;
+    unsigned int miss = 0;
+    unsigned int duplicate = 0;
+    unsigned int unexpected = 0;
+    unsigned int rejected = 0;
+    unsigned int ambiguous = 0;
+    unsigned int tooDense = 0;
+    unsigned int invalidAudio = 0;
+
+    float avgDtMs = -1.0f;
+    float avgDurationMs = -1.0f;
+    float avgConfidence = 0.0f;
+
+    float duplicateRate = 0.0f;
+    float unexpectedRate = 0.0f;
+
+    AnalyzerReason mainMissReason = AnalyzerReason::None;
+    AnalyzerReason mainRejectReason = AnalyzerReason::None;
+};
+
 struct AnalyzerReport {
     AnalyzerRunContext context;
     AnalyzerExpectedEvent expected;

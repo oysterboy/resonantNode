@@ -112,6 +112,17 @@ void SignalInspector::annotateAmpSupportAndLocality(
     const unsigned long endMs = candidate.endMs != 0
         ? candidate.endMs + kFeatureHistoryPaddingMs
         : (candidate.releaseMs != 0 ? candidate.releaseMs + kFeatureHistoryPaddingMs : candidate.peakMs + kFeatureHistoryPaddingMs);
+    auto& ampEvidence = out.ampWindow;
+    ampEvidence.available = false;
+    ampEvidence.observedOnly = true;
+    ampEvidence.windowStartMs = -20;
+    ampEvidence.windowEndMs = 120;
+    ampEvidence.peak = 0.0f;
+    ampEvidence.baseline = 0.0f;
+    ampEvidence.lift = 0.0f;
+    ampEvidence.norm = 0.0f;
+    ampEvidence.supportClass = AmpSupportClass::Unknown;
+    ampEvidence.localityClass = LocalityClass::Unknown;
 
     if (featureHistory == nullptr) {
         out.signal.ampLevel = 0.0f;
@@ -146,6 +157,13 @@ void SignalInspector::annotateAmpSupportAndLocality(
     out.signal.ampBaseline = baseline;
     out.ampSupport = classifyAmpSupportFromMetrics(lift, normalized, true);
     out.locality = classifyLocality(out.ampSupport);
+    out.ampWindow.available = true;
+    out.ampWindow.peak = ampWindow.peak;
+    out.ampWindow.baseline = baseline;
+    out.ampWindow.lift = lift;
+    out.ampWindow.norm = normalized;
+    out.ampWindow.supportClass = out.ampSupport;
+    out.ampWindow.localityClass = out.locality;
 }
 
 InspectedSignal SignalInspector::inspectImpl(

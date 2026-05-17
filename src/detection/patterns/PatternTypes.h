@@ -45,6 +45,24 @@ enum class LocalityClass {
     Far,
 };
 
+// Observation-only retrospective AMP window evidence for a candidate.
+// This stays lightweight and is carried through PatternResult for reporting.
+struct AmpWindowEvidence {
+    bool available = false;
+    bool observedOnly = true;
+
+    int16_t windowStartMs = -20;
+    int16_t windowEndMs = 120;
+
+    float peak = 0.0f;
+    float baseline = 0.0f;
+    float lift = 0.0f;
+    float norm = 0.0f;
+
+    AmpSupportClass supportClass = AmpSupportClass::Unknown;
+    LocalityClass localityClass = LocalityClass::Unknown;
+};
+
 enum class PatternRejectReason {
     None,
     NoCandidate,

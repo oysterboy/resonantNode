@@ -3,7 +3,7 @@
 #include <string.h>
 
 void FrequencyCandidateBuilder::resetState() {
-    *this = {};
+    memset(this, 0, sizeof(*this));
     thresholdScore = 0.0f;
     thresholdContrast = 0.0f;
     candidateState[0] = '\0';

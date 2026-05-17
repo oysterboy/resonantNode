@@ -62,6 +62,8 @@ public:
         ANALYZER_LOG_EXPLAIN = 1u << 4,
         ANALYZER_LOG_RAW_DEBUG = ANALYZER_LOG_EXPLAIN,
         ANALYZER_LOG_TRIAL_BRIEF = 1u << 5,
+        ANALYZER_LOG_CUSTOM = 1u << 6,
+        ANALYZER_LOG_AMP_WINDOW = ANALYZER_LOG_CUSTOM,
     };
 
     static constexpr uint32_t DEFAULT_ANALYZER_LOG_FLAGS =
@@ -482,6 +484,7 @@ private:
     void printTransientStatsDebug(unsigned long now) const;
     void printSequenceExplainLegacy(unsigned long trialNumber, const char* result, const SequenceTest::TrialDiagnostics& diagnostics) const;
     void printSequenceExplain(const AnalyzerReport& report) const;
+    void printSequenceAmpWindow(const AnalyzerReport& report) const;
     void printSequenceLegacyReports() const;
     void printSequenceTrialResult(unsigned long trialNumber, const char* result, long dtMs, long durMs, float strength, bool audioOverflow, unsigned long duplicateCount, const SequenceTest::TrialDiagnostics& diagnostics) const;
     void printSequenceTrialResult(const AnalyzerReport& report) const;

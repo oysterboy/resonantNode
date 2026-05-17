@@ -18,6 +18,7 @@ struct PatternResult {
     float frequencyConfidence = 0.0f;
     AmpSupportClass ampSupport = AmpSupportClass::Unknown;
     LocalityClass locality = LocalityClass::Unknown;
+    AmpWindowEvidence ampWindow = {};
     bool duplicateRisk = false;
     float duplicateRiskScore = 0.0f;
     unsigned long processedAtMs = 0;

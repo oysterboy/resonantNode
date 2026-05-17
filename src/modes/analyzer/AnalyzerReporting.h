@@ -175,6 +175,22 @@ struct AnalyzerClassification {
     float confidence = 0.0f;
 };
 
+struct AnalyzerAmpWindowObservation {
+    bool available = false;
+    bool observedOnly = true;
+
+    int16_t windowStartMs = -20;
+    int16_t windowEndMs = 120;
+
+    float peak = 0.0f;
+    float baseline = 0.0f;
+    float lift = 0.0f;
+    float norm = 0.0f;
+
+    const char* supportClass = "unknown";
+    const char* localityClass = "unknown";
+};
+
 struct AnalyzerProfileDetail {
     const char* namespaceName = "none";
     const char* summary = "";
@@ -188,6 +204,7 @@ struct AnalyzerProfileDetail {
     float ampNorm = 0.0f;
 
     const char* ampLocality = "unknown";
+    AnalyzerAmpWindowObservation ampWindow;
 };
 
 struct AnalyzerDebugSummary {

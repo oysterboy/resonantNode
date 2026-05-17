@@ -321,6 +321,7 @@ detection::SignalCandidate makeRoadmapSignalCandidateFromPatternResult(const det
     out.ampEvidencePresent = true;
     out.ampSupport = patternResult.candidate.ampSupport;
     out.locality = patternResult.candidate.locality;
+    out.ampWindow = patternResult.ampWindow;
     out.duplicateRisk = patternResult.duplicateRisk;
     out.duplicateRiskScore = patternResult.duplicateRiskScore;
     out.transient = patternResult.candidate.transient;
@@ -666,6 +667,8 @@ uint32_t analyzerLogFlagsFromToken(const char* token) {
             flags |= AnalyzerApp::ANALYZER_LOG_FREQ_CLASS;
         } else if (equalsIgnoreCase(part, "explain") || equalsIgnoreCase(part, "liveraw") || equalsIgnoreCase(part, "raw_debug") || equalsIgnoreCase(part, "raw")) {
             flags |= AnalyzerApp::ANALYZER_LOG_EXPLAIN;
+        } else if (equalsIgnoreCase(part, "custom") || equalsIgnoreCase(part, "ampwindow") || equalsIgnoreCase(part, "amp_window") || equalsIgnoreCase(part, "window")) {
+            flags |= AnalyzerApp::ANALYZER_LOG_CUSTOM;
         } else if (equalsIgnoreCase(part, "trialbrief") || equalsIgnoreCase(part, "triallite") || equalsIgnoreCase(part, "brief")) {
             flags |= AnalyzerApp::ANALYZER_LOG_TRIAL;
             flags |= AnalyzerApp::ANALYZER_LOG_TRIAL_BRIEF;
@@ -718,11 +721,11 @@ void printSequenceHelp() {
     Serial.println("SEQ IN: start [tries=N] [period=MS] [window=MS] [freq=HZ] [dur=MS] [test=LABEL]");
     Serial.println("SEQ IN: OBS start [tries=N] [period=2000] [window=1800] [freq=HZ] [dur=MS] [test=LABEL]");
     Serial.println("SEQ IN: [profile=freqamp|ampstate|chirp] [liveFreqOnly=1|freqOnly=1|mode=livefreq]");
-    Serial.println("SEQ IN: [log=default|none|quiet|summary|summary+trial|trialbrief|candidate|report|explain]");
+    Serial.println("SEQ IN: [log=default|none|quiet|summary|summary+trial|trialbrief|candidate|report|explain|custom|ampwindow]");
     Serial.println("SEQ IN: stable summary=log=summary; legacy aliases=raw|raw_debug|liveraw|freq_class|trialbrief");
     Serial.println("SEQ IN: [debug=0|1|2] [dumpSamples=0|1] [curveFormat=off|samples]");
     Serial.println("SEQ IN: [sampleFirst=N] [sampleEvery=N] [sampleLead=MS] [sampleTail=MS] [sampleStep=MS] [sampleMax=N]");
-    Serial.println("SEQ OUT: SEQ start / SEQ running / SEQ_CAND / SEQ_REPORT / SEQ_TRIAL / SEQ_EXPLAIN / SEQ_SUMMARY");
+    Serial.println("SEQ OUT: SEQ start / SEQ running / SEQ_CAND / SEQ_REPORT / SEQ_TRIAL / SEQ_EXPLAIN / SEQ_CUSTOM / SEQ_SUMMARY");
     Serial.println("SEQ OUT: legacy explain = SEQ_EXPLAIN_LEGACY_*");
     Serial.println("SEQ OUT: candidate fields include onset_sample peak_sample release_sample peak_ms dur end_dt_ms freq_*");
     Serial.println("SEQ OBS: passive observe mode for an already-running external emitter");
@@ -943,7 +946,7 @@ void AnalyzerApp::begin() {
     _controlClaimAtMs = 0;
 
     Serial.println("EVT analyzer_ready");
-    Serial.println("EVT analyzer_help type='HELP', 'BASE', 'PARAM onset=23.0 release=20.0 cooldown=50 releaseDebounce=10 minMs=90 maxMs=240 minStrength=40.0 freqScore=10000 freqContrast=20.0', 'TEST', 'RAW trigger f=3200 dur=100 post=1000 dump=bin', 'SEQ log=default|summary|summary+trial|trialbrief|candidate|freq_class|explain dumpSamples=1 curveFormat=samples', 'CAP', 'DET AMP', 'VAL', 'VAL OFF'");
+    Serial.println("EVT analyzer_help type='HELP', 'BASE', 'PARAM onset=23.0 release=20.0 cooldown=50 releaseDebounce=10 minMs=90 maxMs=240 minStrength=40.0 freqScore=10000 freqContrast=20.0', 'TEST', 'RAW trigger f=3200 dur=100 post=1000 dump=bin', 'SEQ log=default|summary|summary+trial|trialbrief|candidate|freq_class|explain|custom|ampwindow dumpSamples=1 curveFormat=samples', 'CAP', 'DET AMP', 'VAL', 'VAL OFF'");
 }
 
 void AnalyzerApp::configureParameters() {
@@ -1680,6 +1683,7 @@ void AnalyzerApp::handleUsbLine(const char* line) {
         unsigned long toneHz = 3200;
         unsigned long durationMs = 100;
         uint32_t logFlags = AnalyzerApp::DEFAULT_ANALYZER_LOG_FLAGS;
+        bool customLogRequested = false;
         const char* setupLabel = nullptr;
         bool sampleDumpEnabled = false;
         unsigned long sampleDumpFirstTrials = 2;
@@ -1759,8 +1763,13 @@ void AnalyzerApp::handleUsbLine(const char* line) {
             } else if (startsWithTokenIgnoreCase(token, "log=")) {
                 logFlags = analyzerLogFlagsFromToken(token + 4);
                 legacyExplainOutput = analyzerLogTokenUsesLegacyExplain(token + 4);
+                customLogRequested = analyzerLogEnabled(logFlags, AnalyzerApp::ANALYZER_LOG_CUSTOM);
             }
             token = strtok_r(nullptr, " ", &savePtr);
+        }
+
+        if (customLogRequested) {
+            logFlags = AnalyzerApp::ANALYZER_LOG_CUSTOM;
         }
 
         startSequenceTest(totalTrials, periodMs, windowEndOffsetMs, toneHz, durationMs, false, true, setupLabel, logFlags, sampleDumpEnabled, sampleDumpFirstTrials, sampleDumpEveryNth, sampleDumpLeadMs, sampleDumpTailMs, sampleDumpStepMs, sampleDumpMaxRows, profileKind, liveFrequencyOnly, externalEmitter, legacyExplainOutput);
@@ -3812,6 +3821,9 @@ void AnalyzerApp::finalizeSequenceTrial(unsigned long now) {
             printSequenceExplainLegacy(_sequenceTest.currentTrial, result, diagnostics);
         }
     }
+    if (analyzerLogEnabled(_sequenceTest.logFlags, AnalyzerApp::ANALYZER_LOG_CUSTOM)) {
+        printSequenceAmpWindow(finalizedReport);
+    }
 
     if (_sequenceTest.trialReports != nullptr) {
         const size_t reportIndex = static_cast<size_t>(_sequenceTest.currentTrial - 1UL);
@@ -4171,6 +4183,19 @@ AnalyzerReport AnalyzerApp::buildSequenceAnalyzerReport(unsigned long trialNumbe
         ? report.profileDetail.ampLift / report.profileDetail.ampBase
         : report.profileDetail.ampLift;
     report.profileDetail.ampLocality = report.primaryPattern.locality;
+    const detection::AmpWindowEvidence& ampWindowEvidence = diagnostics.runtimePatternCaptured
+        ? runtimePatternResult.ampWindow
+        : (diagnostics.acceptedPatternCaptured ? diagnostics.acceptedPatternResult.ampWindow : diagnostics.acceptedInspectedSignal.ampWindow);
+    report.profileDetail.ampWindow.available = ampWindowEvidence.available;
+    report.profileDetail.ampWindow.observedOnly = ampWindowEvidence.observedOnly;
+    report.profileDetail.ampWindow.windowStartMs = ampWindowEvidence.windowStartMs;
+    report.profileDetail.ampWindow.windowEndMs = ampWindowEvidence.windowEndMs;
+    report.profileDetail.ampWindow.peak = ampWindowEvidence.peak;
+    report.profileDetail.ampWindow.baseline = ampWindowEvidence.baseline;
+    report.profileDetail.ampWindow.lift = ampWindowEvidence.lift;
+    report.profileDetail.ampWindow.norm = ampWindowEvidence.norm;
+    report.profileDetail.ampWindow.supportClass = ampSupportName(ampWindowEvidence.supportClass);
+    report.profileDetail.ampWindow.localityClass = localityName(ampWindowEvidence.localityClass);
 
     report.debug.signals = diagnostics.rawCandidateCount;
     report.debug.inspected = diagnostics.rawCandidateCount;
@@ -4228,6 +4253,9 @@ void AnalyzerApp::printSequenceTrialResult(const AnalyzerReport& report) const {
     if (_valMode) {
         return;
     }
+    if (_sequenceTest.logFlags == AnalyzerApp::ANALYZER_LOG_CUSTOM) {
+        return;
+    }
     if (!analyzerLogEnabled(_sequenceTest.logFlags, AnalyzerApp::ANALYZER_LOG_TRIAL)) {
         return;
     }
@@ -4271,6 +4299,9 @@ void AnalyzerApp::printSequenceTrialResult(const AnalyzerReport& report) const {
 
 void AnalyzerApp::printSequenceExplain(const AnalyzerReport& report) const {
     if (_valMode) {
+        return;
+    }
+    if (_sequenceTest.logFlags == AnalyzerApp::ANALYZER_LOG_CUSTOM) {
         return;
     }
     if (!analyzerLogEnabled(_sequenceTest.logFlags, AnalyzerApp::ANALYZER_LOG_EXPLAIN)) {
@@ -4400,6 +4431,34 @@ void AnalyzerApp::printSequenceExplain(const AnalyzerReport& report) const {
     Serial.print(" amp_locality=");
     Serial.print(report.profileDetail.ampLocality != nullptr ? report.profileDetail.ampLocality : "unknown");
     Serial.println();
+
+    Serial.print("SEQ_AMP_WINDOW trial=");
+    Serial.print(report.context.trial);
+    Serial.print(" profile=");
+    Serial.print(report.context.profile != nullptr ? report.context.profile : "unknown");
+    Serial.print(" dt=");
+    printMs(report.primaryPattern.dtMs);
+    Serial.print(" win=");
+    Serial.print(static_cast<long>(report.profileDetail.ampWindow.windowStartMs));
+    Serial.print("..");
+    Serial.print(static_cast<long>(report.profileDetail.ampWindow.windowEndMs));
+    Serial.print("ms");
+    Serial.print(" peak=");
+    Serial.print(report.profileDetail.ampWindow.peak, 1);
+    Serial.print(" base=");
+    Serial.print(report.profileDetail.ampWindow.baseline, 1);
+    Serial.print(" lift=");
+    Serial.print(report.profileDetail.ampWindow.lift, 1);
+    Serial.print(" norm=");
+    Serial.print(report.profileDetail.ampWindow.norm, 2);
+    Serial.print(" support=");
+    Serial.print(report.profileDetail.ampWindow.supportClass != nullptr ? report.profileDetail.ampWindow.supportClass : "unknown");
+    Serial.print(" locality=");
+    Serial.print(report.profileDetail.ampWindow.localityClass != nullptr ? report.profileDetail.ampWindow.localityClass : "unknown");
+    Serial.print(" mode=");
+    Serial.print(report.profileDetail.ampWindow.observedOnly ? "observe" : "active");
+    Serial.print(" available=");
+    Serial.println(report.profileDetail.ampWindow.available ? 1 : 0);
 
     Serial.print("SEQ_EXPLAIN_PIPELINE_SOURCE source=");
     Serial.print(report.debug.pipelineSource != nullptr ? report.debug.pipelineSource : "unknown");
@@ -4812,8 +4871,58 @@ void AnalyzerApp::printSequenceExplainLegacy(unsigned long trialNumber, const ch
     }
 }
 
+void AnalyzerApp::printSequenceAmpWindow(const AnalyzerReport& report) const {
+    if (_valMode) {
+        return;
+    }
+    if (!analyzerLogEnabled(_sequenceTest.logFlags, AnalyzerApp::ANALYZER_LOG_CUSTOM)) {
+        return;
+    }
+
+    const auto printMs = [](long value) {
+        if (value >= 0) {
+            Serial.print(value);
+            Serial.print("ms");
+        } else {
+            Serial.print("-1ms");
+        }
+    };
+
+    Serial.println();
+    Serial.print("SEQ_CUSTOM trial=");
+    Serial.print(report.context.trial);
+    Serial.print(" profile=");
+    Serial.print(report.context.profile != nullptr ? report.context.profile : "unknown");
+    Serial.print(" dt=");
+    printMs(report.primaryPattern.dtMs);
+    Serial.print(" win=");
+    Serial.print(static_cast<long>(report.profileDetail.ampWindow.windowStartMs));
+    Serial.print("..");
+    Serial.print(static_cast<long>(report.profileDetail.ampWindow.windowEndMs));
+    Serial.print("ms");
+    Serial.print(" peak=");
+    Serial.print(report.profileDetail.ampWindow.peak, 1);
+    Serial.print(" base=");
+    Serial.print(report.profileDetail.ampWindow.baseline, 1);
+    Serial.print(" lift=");
+    Serial.print(report.profileDetail.ampWindow.lift, 1);
+    Serial.print(" norm=");
+    Serial.print(report.profileDetail.ampWindow.norm, 2);
+    Serial.print(" support=");
+    Serial.print(report.profileDetail.ampWindow.supportClass != nullptr ? report.profileDetail.ampWindow.supportClass : "unknown");
+    Serial.print(" locality=");
+    Serial.print(report.profileDetail.ampWindow.localityClass != nullptr ? report.profileDetail.ampWindow.localityClass : "unknown");
+    Serial.print(" mode=");
+    Serial.print(report.profileDetail.ampWindow.observedOnly ? "observe" : "active");
+    Serial.print(" available=");
+    Serial.println(report.profileDetail.ampWindow.available ? 1 : 0);
+}
+
 void AnalyzerApp::printSequenceLegacyReports() const {
     if (_valMode) {
+        return;
+    }
+    if (_sequenceTest.logFlags == AnalyzerApp::ANALYZER_LOG_CUSTOM) {
         return;
     }
     if (!sequenceLegacyReportEnabled()) {
@@ -4901,6 +5010,9 @@ void AnalyzerApp::printSequenceLegacyReports() const {
 
 void AnalyzerApp::printSequenceTrialResult(unsigned long trialNumber, const char* result, long dtMs, long durMs, float strength, bool audioOverflow, unsigned long duplicateCount, const SequenceTest::TrialDiagnostics& diagnostics) const {
     if (_valMode) {
+        return;
+    }
+    if (_sequenceTest.logFlags == AnalyzerApp::ANALYZER_LOG_CUSTOM) {
         return;
     }
     if (!analyzerLogEnabled(_sequenceTest.logFlags, AnalyzerApp::ANALYZER_LOG_TRIAL)) {
@@ -5294,6 +5406,9 @@ void AnalyzerApp::printTransientStatsDebug(unsigned long now) const {
 
 void AnalyzerApp::printSequenceSummary() const {
     if (_valMode) {
+        return;
+    }
+    if (_sequenceTest.logFlags == AnalyzerApp::ANALYZER_LOG_CUSTOM) {
         return;
     }
     const bool verboseTrialReports = sequenceLegacyReportEnabled();

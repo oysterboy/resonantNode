@@ -89,6 +89,7 @@ PatternResult makeInvalidResult(const PatternCandidate& candidate,
     result.frequencyConfidence = 0.0f;
     result.ampSupport = AmpSupportClass::Unknown;
     result.locality = LocalityClass::Unknown;
+    result.ampWindow = candidate.ampWindow;
     result.duplicateRisk = false;
     result.duplicateRiskScore = 0.0f;
     result.candidateValid = false;
@@ -158,6 +159,7 @@ PatternResult PatternRules::evaluateFrequencyPattern(
     result.locality = candidate.locality != LocalityClass::Unknown
         ? candidate.locality
         : localityFromAmpSupport(candidate.ampSupport);
+    result.ampWindow = candidate.ampWindow;
     result.duplicateRisk = candidate.duplicateRisk;
     result.duplicateRiskScore = candidate.duplicateRiskScore;
     result.confidence = result.signalConfidence;
@@ -218,6 +220,7 @@ PatternResult PatternRules::evaluateAmpPattern(
     result.locality = candidate.locality != LocalityClass::Unknown
         ? candidate.locality
         : localityFromAmpSupport(candidate.ampSupport);
+    result.ampWindow = candidate.ampWindow;
     result.duplicateRisk = candidate.duplicateRisk;
     result.duplicateRiskScore = candidate.duplicateRiskScore;
     result.confidence = result.signalConfidence;

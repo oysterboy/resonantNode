@@ -55,7 +55,9 @@ public:
         ANALYZER_LOG_TRIAL = 1u << 1,
         ANALYZER_LOG_CANDIDATE = 1u << 2,
         ANALYZER_LOG_FREQ_CLASS = 1u << 3,
-        ANALYZER_LOG_RAW_DEBUG = 1u << 4,
+        // Preferred name for the legacy SEQ raw/debug explanation path.
+        ANALYZER_LOG_EXPLAIN = 1u << 4,
+        ANALYZER_LOG_RAW_DEBUG = ANALYZER_LOG_EXPLAIN,
         ANALYZER_LOG_TRIAL_BRIEF = 1u << 5,
     };
 
@@ -443,8 +445,8 @@ private:
     void printDetectionParameters() const;
     void printTransientAcceptedDebug(unsigned long now, float strength, unsigned long durationMs) const;
     void printTransientStatsDebug(unsigned long now) const;
-    void printSequenceTrialDebug(unsigned long trialNumber, const char* result, const SequenceTest::TrialDiagnostics& diagnostics) const;
-    void printSequenceTrialReports() const;
+    void printSequenceExplainLegacy(unsigned long trialNumber, const char* result, const SequenceTest::TrialDiagnostics& diagnostics) const;
+    void printSequenceLegacyReports() const;
     void printSequenceTrialResult(unsigned long trialNumber, const char* result, long dtMs, long durMs, float strength, bool audioOverflow, unsigned long duplicateCount, const SequenceTest::TrialDiagnostics& diagnostics) const;
     void printSequenceFinalOutput() const;
     void printSequenceSummary() const;

@@ -587,7 +587,7 @@ uint32_t analyzerLogFlagsFromLevel(unsigned long level) {
            AnalyzerApp::ANALYZER_LOG_TRIAL |
            AnalyzerApp::ANALYZER_LOG_CANDIDATE |
            AnalyzerApp::ANALYZER_LOG_FREQ_CLASS |
-           AnalyzerApp::ANALYZER_LOG_RAW_DEBUG;
+           AnalyzerApp::ANALYZER_LOG_EXPLAIN;
 }
 
 uint32_t analyzerLogFlagsFromToken(const char* token) {
@@ -606,7 +606,7 @@ uint32_t analyzerLogFlagsFromToken(const char* token) {
                AnalyzerApp::ANALYZER_LOG_TRIAL |
                AnalyzerApp::ANALYZER_LOG_CANDIDATE |
                AnalyzerApp::ANALYZER_LOG_FREQ_CLASS |
-               AnalyzerApp::ANALYZER_LOG_RAW_DEBUG;
+               AnalyzerApp::ANALYZER_LOG_EXPLAIN;
     }
 
     char buffer[64];
@@ -625,8 +625,8 @@ uint32_t analyzerLogFlagsFromToken(const char* token) {
             flags |= AnalyzerApp::ANALYZER_LOG_CANDIDATE;
         } else if (equalsIgnoreCase(part, "report") || equalsIgnoreCase(part, "freq_class") || equalsIgnoreCase(part, "freq")) {
             flags |= AnalyzerApp::ANALYZER_LOG_FREQ_CLASS;
-        } else if (equalsIgnoreCase(part, "liveraw") || equalsIgnoreCase(part, "raw_debug") || equalsIgnoreCase(part, "raw")) {
-            flags |= AnalyzerApp::ANALYZER_LOG_RAW_DEBUG;
+        } else if (equalsIgnoreCase(part, "explain") || equalsIgnoreCase(part, "liveraw") || equalsIgnoreCase(part, "raw_debug") || equalsIgnoreCase(part, "raw")) {
+            flags |= AnalyzerApp::ANALYZER_LOG_EXPLAIN;
         } else if (equalsIgnoreCase(part, "trialbrief") || equalsIgnoreCase(part, "triallite") || equalsIgnoreCase(part, "brief")) {
             flags |= AnalyzerApp::ANALYZER_LOG_TRIAL;
             flags |= AnalyzerApp::ANALYZER_LOG_TRIAL_BRIEF;
@@ -637,7 +637,7 @@ uint32_t analyzerLogFlagsFromToken(const char* token) {
                      AnalyzerApp::ANALYZER_LOG_TRIAL |
                      AnalyzerApp::ANALYZER_LOG_CANDIDATE |
                      AnalyzerApp::ANALYZER_LOG_FREQ_CLASS |
-                     AnalyzerApp::ANALYZER_LOG_RAW_DEBUG;
+                     AnalyzerApp::ANALYZER_LOG_EXPLAIN;
         } else if (equalsIgnoreCase(part, "quiet") || equalsIgnoreCase(part, "none")) {
             flags = AnalyzerApp::ANALYZER_LOG_NONE;
         }
@@ -654,7 +654,8 @@ void printSequenceHelp() {
     Serial.println("SEQ IN: start [tries=N] [period=MS] [window=MS] [freq=HZ] [dur=MS] [test=LABEL]");
     Serial.println("SEQ IN: OBS start [tries=N] [period=2000] [window=1800] [freq=HZ] [dur=MS] [test=LABEL]");
     Serial.println("SEQ IN: [liveFreqOnly=1|freqOnly=1|mode=livefreq]");
-    Serial.println("SEQ IN: [log=default|none|quiet|summary+trial+trialbrief+candidate+report+liveraw]");
+    Serial.println("SEQ IN: [log=default|none|quiet|summary+trial+trialbrief+candidate+report+explain]");
+    Serial.println("SEQ IN: legacy aliases=raw|raw_debug|liveraw|freq_class|trialbrief");
     Serial.println("SEQ IN: [debug=0|1|2] [dumpSamples=0|1] [curveFormat=off|samples]");
     Serial.println("SEQ IN: [sampleFirst=N] [sampleEvery=N] [sampleLead=MS] [sampleTail=MS] [sampleStep=MS] [sampleMax=N]");
     Serial.println("SEQ OUT: SEQ start / SEQ running / SEQ_CAND / SEQ_REPORT / SEQ_TRIAL / SEQ_SUMMARY");
@@ -876,7 +877,7 @@ void AnalyzerApp::begin() {
     _controlClaimAtMs = 0;
 
     Serial.println("EVT analyzer_ready");
-    Serial.println("EVT analyzer_help type='HELP', 'BASE', 'PARAM onset=23.0 release=20.0 cooldown=50 releaseDebounce=10 minMs=90 maxMs=240 minStrength=40.0 freqScore=10000 freqContrast=20.0', 'TEST', 'RAW trigger f=3200 dur=100 post=1000 dump=bin', 'SEQ log=default|summary+trial|trialbrief|candidate|freq_class|raw dumpSamples=1 curveFormat=samples', 'CAP', 'DET AMP', 'VAL', 'VAL OFF'");
+    Serial.println("EVT analyzer_help type='HELP', 'BASE', 'PARAM onset=23.0 release=20.0 cooldown=50 releaseDebounce=10 minMs=90 maxMs=240 minStrength=40.0 freqScore=10000 freqContrast=20.0', 'TEST', 'RAW trigger f=3200 dur=100 post=1000 dump=bin', 'SEQ log=default|summary+trial|trialbrief|candidate|freq_class|explain dumpSamples=1 curveFormat=samples', 'CAP', 'DET AMP', 'VAL', 'VAL OFF'");
 }
 
 void AnalyzerApp::configureParameters() {
@@ -2085,7 +2086,7 @@ void AnalyzerApp::startSequenceTest(unsigned long totalTrials, unsigned long per
 
     const bool wantVerboseTrialReports =
         analyzerLogEnabled(logFlags, AnalyzerApp::ANALYZER_LOG_FREQ_CLASS) ||
-        analyzerLogEnabled(logFlags, AnalyzerApp::ANALYZER_LOG_RAW_DEBUG);
+        analyzerLogEnabled(logFlags, AnalyzerApp::ANALYZER_LOG_EXPLAIN);
     if (wantVerboseTrialReports) {
         const size_t desiredCapacity = static_cast<size_t>(totalTrials < SequenceTest::kMaxTrialReports ? totalTrials : SequenceTest::kMaxTrialReports);
         if (desiredCapacity > 0) {
@@ -3558,10 +3559,11 @@ void AnalyzerApp::finalizeSequenceTrial(unsigned long now) {
 
 bool AnalyzerApp::evaluateRoadmapSignalCandidate(const detection::SignalCandidate& signal, detection::PatternResult& outResult, detection::InspectedSignal* outInspected) const {
     return evaluateRoadmapSignalCandidateImpl(signal, _frequencyEvidenceTuning, _sequenceFeatureHistory, outResult, outInspected,
-                                               analyzerLogEnabled(_sequenceTest.logFlags, AnalyzerApp::ANALYZER_LOG_RAW_DEBUG));
+                                               analyzerLogEnabled(_sequenceTest.logFlags, AnalyzerApp::ANALYZER_LOG_EXPLAIN));
 }
 
-void AnalyzerApp::printSequenceTrialDebug(unsigned long trialNumber, const char* result, const SequenceTest::TrialDiagnostics& diagnostics) const {
+// Legacy explain/debug dump retained for Pass A quarantine.
+void AnalyzerApp::printSequenceExplainLegacy(unsigned long trialNumber, const char* result, const SequenceTest::TrialDiagnostics& diagnostics) const {
     if (_valMode) {
         return;
     }
@@ -3730,7 +3732,7 @@ void AnalyzerApp::printSequenceTrialDebug(unsigned long trialNumber, const char*
     Serial.print(" duplicates=");
     Serial.println(diagnostics.duplicateCount);
 
-    if (!analyzerLogEnabled(_sequenceTest.logFlags, AnalyzerApp::ANALYZER_LOG_RAW_DEBUG)) {
+    if (!analyzerLogEnabled(_sequenceTest.logFlags, AnalyzerApp::ANALYZER_LOG_EXPLAIN)) {
         return;
     }
 
@@ -3845,7 +3847,7 @@ void AnalyzerApp::printSequenceTrialDebug(unsigned long trialNumber, const char*
         Serial.println("]");
     }
 
-    if (analyzerLogEnabled(_sequenceTest.logFlags, AnalyzerApp::ANALYZER_LOG_RAW_DEBUG)) {
+    if (analyzerLogEnabled(_sequenceTest.logFlags, AnalyzerApp::ANALYZER_LOG_EXPLAIN)) {
         Serial.print("SEQ_RAW duplicate_dts=[");
         for (unsigned long i = 0; i < diagnostics.duplicateDtCount; ++i) {
             if (i > 0) {
@@ -3889,13 +3891,13 @@ void AnalyzerApp::printSequenceTrialDebug(unsigned long trialNumber, const char*
     }
 }
 
-void AnalyzerApp::printSequenceTrialReports() const {
+void AnalyzerApp::printSequenceLegacyReports() const {
     if (_valMode) {
         return;
     }
     const bool reportEnabled = analyzerLogEnabled(_sequenceTest.logFlags, AnalyzerApp::ANALYZER_LOG_FREQ_CLASS);
-    const bool liveRawEnabled = analyzerLogEnabled(_sequenceTest.logFlags, AnalyzerApp::ANALYZER_LOG_RAW_DEBUG);
-    if (!reportEnabled && !liveRawEnabled) {
+    const bool liveExplainEnabled = analyzerLogEnabled(_sequenceTest.logFlags, AnalyzerApp::ANALYZER_LOG_EXPLAIN);
+    if (!reportEnabled && !liveExplainEnabled) {
         return;
     }
     if (_sequenceTest.trialReports == nullptr || _sequenceTest.trialReportCount == 0) {
@@ -4441,13 +4443,13 @@ void AnalyzerApp::printSequenceSummary() const {
     }
     const bool verboseTrialReports =
         analyzerLogEnabled(_sequenceTest.logFlags, AnalyzerApp::ANALYZER_LOG_FREQ_CLASS) ||
-        analyzerLogEnabled(_sequenceTest.logFlags, AnalyzerApp::ANALYZER_LOG_RAW_DEBUG);
+        analyzerLogEnabled(_sequenceTest.logFlags, AnalyzerApp::ANALYZER_LOG_EXPLAIN);
     const bool summaryEnabled = analyzerLogEnabled(_sequenceTest.logFlags, AnalyzerApp::ANALYZER_LOG_SUMMARY);
     if (!verboseTrialReports && !summaryEnabled) {
         return;
     }
     if (verboseTrialReports) {
-        printSequenceTrialReports();
+        printSequenceLegacyReports();
     }
     if (!summaryEnabled) {
         return;

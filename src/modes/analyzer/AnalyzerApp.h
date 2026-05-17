@@ -451,6 +451,8 @@ private:
     void printSequenceTrialResult(unsigned long trialNumber, const char* result, long dtMs, long durMs, float strength, bool audioOverflow, unsigned long duplicateCount, const SequenceTest::TrialDiagnostics& diagnostics) const;
     void printSequenceFinalOutput() const;
     void printSequenceSummary() const;
+    const char* activeAnalyzerProfileName() const;
+    AnalyzerReport buildSequenceAnalyzerReport(unsigned long trialNumber, const char* result, long dtMs, long durMs, float strength, bool audioOverflow, unsigned long duplicateCount, const SequenceTest::TrialDiagnostics& diagnostics) const;
     void recordSequenceClassifierOutcome(const PatternResult& patternResult, bool duplicateCandidate, bool unexpectedCandidate);
     void handleSequenceCandidate(const PatternResult& patternResult, unsigned long queueDepthBeforeDrain, const FrequencyEvidence* liveFrequencyEvidence = nullptr);
     bool evaluateRoadmapSignalCandidate(

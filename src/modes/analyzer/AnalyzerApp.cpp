@@ -3544,6 +3544,8 @@ void AnalyzerApp::finalizeSequenceTrial(unsigned long now) {
     }
 
     _sequenceTest.duplicates += diagnostics.duplicateCount;
+    const AnalyzerReport finalizedReport = buildSequenceAnalyzerReport(_sequenceTest.currentTrial, result, dtMs, durMs, strength, invalidAudioTrial, diagnostics.duplicateCount, diagnostics);
+    (void)finalizedReport;
     flushSequenceSampleHistory(now + 1UL);
     printSequenceSampleDump(_sequenceTest.currentTrial);
     printSequenceTrialResult(_sequenceTest.currentTrial, result, dtMs, durMs, strength, invalidAudioTrial, diagnostics.duplicateCount, diagnostics);
@@ -3560,6 +3562,179 @@ void AnalyzerApp::finalizeSequenceTrial(unsigned long now) {
 bool AnalyzerApp::evaluateRoadmapSignalCandidate(const detection::SignalCandidate& signal, detection::PatternResult& outResult, detection::InspectedSignal* outInspected) const {
     return evaluateRoadmapSignalCandidateImpl(signal, _frequencyEvidenceTuning, _sequenceFeatureHistory, outResult, outInspected,
                                                analyzerLogEnabled(_sequenceTest.logFlags, AnalyzerApp::ANALYZER_LOG_EXPLAIN));
+}
+
+static AnalyzerResult analyzerResultFromSequenceOutcome(const char* result) {
+    if (result == nullptr) {
+        return AnalyzerResult::Unknown;
+    }
+    if (strcmp(result, "expected") == 0) {
+        return AnalyzerResult::Expected;
+    }
+    if (strcmp(result, "late") == 0) {
+        return AnalyzerResult::Late;
+    }
+    if (strcmp(result, "miss") == 0) {
+        return AnalyzerResult::Miss;
+    }
+    if (strcmp(result, "duplicate") == 0) {
+        return AnalyzerResult::Duplicate;
+    }
+    if (strcmp(result, "unexpected") == 0) {
+        return AnalyzerResult::Unexpected;
+    }
+    if (strcmp(result, "rejected") == 0) {
+        return AnalyzerResult::Rejected;
+    }
+    if (strcmp(result, "ambiguous") == 0) {
+        return AnalyzerResult::Ambiguous;
+    }
+    if (strcmp(result, "too_dense") == 0) {
+        return AnalyzerResult::TooDense;
+    }
+    if (strcmp(result, "invalid_audio") == 0) {
+        return AnalyzerResult::InvalidAudio;
+    }
+    return AnalyzerResult::Unknown;
+}
+
+static AnalyzerReason analyzerReasonFromSequenceOutcome(const char* result,
+                                                       long dtMs,
+                                                       unsigned long rawCandidateCount,
+                                                       AmpTransientDetector::TransientRejectReason strongestRejectReason,
+                                                       bool audioOverflow) {
+    if (audioOverflow) {
+        return AnalyzerReason::InvalidAudio;
+    }
+    if (result == nullptr) {
+        return AnalyzerReason::Unknown;
+    }
+    if (strcmp(result, "expected") == 0) {
+        return AnalyzerReason::ValidPatternInExpectedWindow;
+    }
+    if (strcmp(result, "late") == 0) {
+        return AnalyzerReason::ValidPatternAfterWindow;
+    }
+    if (strcmp(result, "unexpected") == 0) {
+        return AnalyzerReason::UnexpectedValidPatternWithoutTrigger;
+    }
+    if (strcmp(result, "duplicate") == 0) {
+        return AnalyzerReason::DuplicatePatternAfterPrimary;
+    }
+    if (strcmp(result, "invalid_audio") == 0) {
+        return AnalyzerReason::InvalidAudio;
+    }
+    if (strcmp(result, "miss") == 0) {
+        if (rawCandidateCount == 0) {
+            return AnalyzerReason::NoSignalCandidate;
+        }
+        switch (strongestRejectReason) {
+            case AmpTransientDetector::TransientRejectReason::DurationTooShort:
+            case AmpTransientDetector::TransientRejectReason::DurationTooLong:
+            case AmpTransientDetector::TransientRejectReason::StrengthTooLow:
+                return AnalyzerReason::SignalSeenButRejected;
+            case AmpTransientDetector::TransientRejectReason::PeakStillActive:
+                return AnalyzerReason::InspectionFailed;
+            case AmpTransientDetector::TransientRejectReason::None:
+            default:
+                break;
+        }
+        return dtMs >= 0 ? AnalyzerReason::PatternCandidateRejected : AnalyzerReason::NoSignalCandidate;
+    }
+    if (strcmp(result, "rejected") == 0) {
+        return AnalyzerReason::PatternCandidateRejected;
+    }
+    if (strcmp(result, "ambiguous") == 0) {
+        return AnalyzerReason::MultipleCompetingPatterns;
+    }
+    if (strcmp(result, "too_dense") == 0) {
+        return AnalyzerReason::FieldTooDense;
+    }
+    return AnalyzerReason::Unknown;
+}
+
+const char* AnalyzerApp::activeAnalyzerProfileName() const {
+    if (_sequenceTest.liveFrequencyOnly) {
+        return "FreqAmpLiveOnly";
+    }
+    return "FreqAmp";
+}
+
+AnalyzerReport AnalyzerApp::buildSequenceAnalyzerReport(unsigned long trialNumber,
+                                                     const char* result,
+                                                     long dtMs,
+                                                     long durMs,
+                                                     float strength,
+                                                     bool audioOverflow,
+                                                     unsigned long duplicateCount,
+                                                     const SequenceTest::TrialDiagnostics& diagnostics) const {
+    AnalyzerReport report = makeEmptyAnalyzerReport();
+
+    report.context.profile = activeAnalyzerProfileName();
+    report.context.mode = _sequenceTest.externalEmitter ? "OBS" : (_sequenceTest.liveFrequencyOnly ? "LIVEFREQ" : "SEQ");
+    report.context.trial = trialNumber;
+    report.context.trigger = _sequenceTest.externalEmitter ? "observe" : "chirp";
+    report.context.target = _sequenceTest.liveFrequencyOnly ? "livefreq" : "tone";
+    report.context.timestampMs = _sequenceTest.currentTrialEndMs;
+    report.context.build = "pass-c";
+
+    report.expected.triggerMs = _sequenceTest.currentTrialStartMs;
+    report.expected.windowStartMs = _sequenceTest.currentTrialStartMs;
+    report.expected.windowEndMs = _sequenceTest.currentTrialEndMs;
+    report.expected.patternType = _sequenceTest.liveFrequencyOnly ? "live_frequency" : "sequence_trial";
+    report.expected.expectedSource = _sequenceTest.externalEmitter ? "external" : "local";
+
+    report.classification.result = analyzerResultFromSequenceOutcome(result);
+    report.classification.reason = analyzerReasonFromSequenceOutcome(result, dtMs, diagnostics.rawCandidateCount, diagnostics.strongestRejectReason, audioOverflow);
+    report.classification.dtMs = dtMs;
+    report.classification.confidence = diagnostics.transientAccepted ? 1.0f : 0.0f;
+
+    report.primaryPattern.type = result != nullptr ? result : "unknown";
+    report.primaryPattern.accepted = report.classification.result == AnalyzerResult::Expected || report.classification.result == AnalyzerResult::Late;
+    report.primaryPattern.confidence = diagnostics.acceptedFrequencyEvidence.present ? diagnostics.acceptedFrequencyEvidence.confidence : 0.0f;
+    report.primaryPattern.dtMs = dtMs;
+    report.primaryPattern.locality = "unknown";
+    report.primaryPattern.sourceClass = diagnostics.acceptedFrequencyEvidence.present ? "frequency_primary" : "comparison_only";
+    report.primaryPattern.reason = analyzerReasonName(report.classification.reason);
+    report.primaryPattern.involvedSignals = diagnostics.rawCandidateCount;
+
+    report.signals.total = diagnostics.rawCandidateCount;
+    report.signals.accepted = diagnostics.transientAccepted ? 1U : 0U;
+    report.signals.rejected = diagnostics.rawCandidateCount > report.signals.accepted ? diagnostics.rawCandidateCount - report.signals.accepted : 0U;
+    report.signals.primarySource = diagnostics.acceptedFrequencyEvidence.present ? "frequency_primary" : "comparison_only";
+    report.signals.primaryDtMs = dtMs;
+    report.signals.primaryDurationMs = durMs >= 0 ? static_cast<unsigned long>(durMs) : 0UL;
+    report.signals.primaryStrength = strength;
+    report.signals.primaryConfidence = diagnostics.acceptedFrequencyEvidence.present ? diagnostics.acceptedFrequencyEvidence.confidence : 0.0f;
+    report.signals.mainRejectReason = diagnostics.transientAccepted ? "none" : analyzerReasonName(report.classification.reason);
+    report.signals.duplicateRisk = duplicateCount > 0;
+
+    report.inspection.inspected = diagnostics.rawCandidateCount;
+    report.inspection.accepted = diagnostics.transientAccepted ? 1U : 0U;
+    report.inspection.rejected = diagnostics.rawCandidateCount > report.inspection.accepted ? diagnostics.rawCandidateCount - report.inspection.accepted : 0U;
+    report.inspection.primaryEvidence = diagnostics.acceptedFrequencyEvidence.present ? "frequency" : "none";
+    report.inspection.locality = "unknown";
+    report.inspection.supportClass = diagnostics.acceptedFrequencyEvidence.present ? "supported" : "unsupported";
+    report.inspection.mainRejectReason = analyzerReasonName(report.classification.reason);
+
+    report.field.state = "unknown";
+    report.field.activity = 0.0f;
+    report.field.density = 0.0f;
+    report.field.recentValidPatterns = diagnostics.transientAccepted ? 1U : 0U;
+    report.field.recentRejects = diagnostics.rawCandidateCount > report.field.recentValidPatterns ? diagnostics.rawCandidateCount - report.field.recentValidPatterns : 0U;
+
+    report.profileDetail.namespaceName = "analyzer.legacy_seq";
+    report.profileDetail.summary = "mapped from finalized sequence diagnostics";
+
+    report.debug.signals = diagnostics.rawCandidateCount;
+    report.debug.inspected = diagnostics.rawCandidateCount;
+    report.debug.patterns = diagnostics.transientAccepted ? 1U : 0U;
+    report.debug.rejects = report.signals.rejected;
+    report.debug.duplicates = duplicateCount;
+    report.debug.unexpected = strcmp(result, "unexpected") == 0 ? 1U : 0U;
+    report.debug.mainRejectReason = analyzerReasonName(report.classification.reason);
+
+    return report;
 }
 
 // Legacy explain/debug dump retained for Pass A quarantine.

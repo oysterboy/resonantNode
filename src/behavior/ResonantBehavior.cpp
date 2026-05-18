@@ -99,6 +99,18 @@ void ResonantBehavior::resetState() {
     _lastFieldState = {};
 }
 
+void ResonantBehavior::configure(const BehaviorProfile& profile) {
+    setWaitAfterTransientMs(profile.waitAfterTransientMs);
+    setRefractoryAfterEmitMs(profile.refractoryAfterEmitMs);
+    setIdleTimeoutMs(profile.idleTimeoutMs);
+    setIdleTimeVariationMs(profile.idleTimeVariationMs);
+    setIdleBlockedAfterHeardMs(profile.idleBlockedAfterHeardMs);
+    setIdleBlockedAfterOwnEmitMs(profile.idleBlockedAfterOwnEmitMs);
+    setIdleEnabled(profile.idleEnabled);
+    setRequireTonalForBehavior(profile.requireTonalForBehavior);
+    setDetectionOnly(profile.detectionOnly);
+}
+
 void ResonantBehavior::update(bool transientDetected, float transientStrength, unsigned long now) {
     _pendingTransientDetected = transientDetected;
     _pendingTransientStrength = transientStrength;

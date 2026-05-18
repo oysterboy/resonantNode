@@ -6,6 +6,7 @@
 #include "../../detection/DetectionRuntime.h"
 #include "../../detection/DetectionProfile.h"
 #include "../../detection/inspector/FrequencyEvidenceEvaluation.h"
+#include "../../behavior/BehaviorProfile.h"
 #include "../../hal/AudioSourceAnalog.h"
 #include "../../hal/AudioSourceI2S.h"
 #include "../../hal/PiezoToneOutputBTL.h"
@@ -118,8 +119,9 @@ private:
     const char* profileName() const;
     bool usesLegacyPath() const;
     bool usesFrequencyOnly() const;
-    const detection::DetectionProfile& activeProfile() const;
-    void syncDetectionRuntimeMode();
+    const detection::DetectionProfile& activeDetectionProfile() const;
+    const BehaviorProfile& activeBehaviorProfile() const;
+    void applyActiveProfiles();
     void processLegacyAmpFrame(const AudioSignalFrame& frame, unsigned long now, bool selfChirpSuppressed, bool& sawPatternThisLoop);
     void drainLegacyAmpCandidates(unsigned long now, bool selfChirpSuppressed, bool& sawPatternThisLoop);
     void processModernFrame(const AudioSignalFrame& frame, unsigned long now, bool selfChirpSuppressed, bool& sawPatternThisLoop);

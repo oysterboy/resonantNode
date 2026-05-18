@@ -57,18 +57,8 @@ struct DetectionProfile {
     bool useLegacyPath = false;
     bool frequencyOnly = false;
     bool ampEnabled = true;
-    bool detectionOnly = false;
-    bool requireTonalForBehavior = true;
-    bool idleEnabled = true;
 
     InspectionConfig inspectionConfig = defaultInspectionConfig();
-
-    unsigned long waitAfterTransientMs = 100;
-    unsigned long refractoryAfterEmitMs = 0;
-    unsigned long idleTimeoutMs = 20000;
-    unsigned long idleTimeVariationMs = 10000;
-    unsigned long idleBlockedAfterHeardMs = 3000;
-    unsigned long idleBlockedAfterOwnEmitMs = 5000;
 
     FieldStateConfig fieldStateConfig = {};
 };
@@ -188,17 +178,6 @@ inline DetectionProfile makeFreqAmpProfile() {
     profile.useLegacyPath = false;
     profile.frequencyOnly = false;
     profile.ampEnabled = true;
-    profile.detectionOnly = false;
-    profile.requireTonalForBehavior = true;
-    profile.idleEnabled = true;
-
-    // Timing defaults.
-    profile.waitAfterTransientMs = 100;
-    profile.refractoryAfterEmitMs = 0;
-    profile.idleTimeoutMs = 20000;
-    profile.idleTimeVariationMs = 10000;
-    profile.idleBlockedAfterHeardMs = 3000;
-    profile.idleBlockedAfterOwnEmitMs = 5000;
 
     // Inspector configuration.
     profile.inspectionConfig = defaultInspectionConfig(); // shared defaults from PatternTypes.h
@@ -230,15 +209,6 @@ inline DetectionProfile makeAmpStateProfile() {
     profile.useLegacyPath = true;
     profile.frequencyOnly = false;
     profile.ampEnabled = true;
-    profile.detectionOnly = false;
-    profile.requireTonalForBehavior = false;
-
-    // Timing defaults.
-    profile.waitAfterTransientMs = 500;
-    profile.idleTimeoutMs = 15000;
-    profile.idleTimeVariationMs = 6000;
-    profile.idleBlockedAfterHeardMs = 1500;
-    profile.idleBlockedAfterOwnEmitMs = 3000;
 
     // Inspector configuration.
     profile.inspectionConfig = defaultInspectionConfig();
@@ -271,16 +241,6 @@ inline DetectionProfile makeChirpProfile() {
     profile.useLegacyPath = false;
     profile.frequencyOnly = false;
     profile.ampEnabled = true;
-    profile.detectionOnly = false;
-    profile.requireTonalForBehavior = true;
-
-    // Timing defaults.
-    profile.waitAfterTransientMs = 100;
-    profile.refractoryAfterEmitMs = 0;
-    profile.idleTimeoutMs = 20000;
-    profile.idleTimeVariationMs = 10000;
-    profile.idleBlockedAfterHeardMs = 3000;
-    profile.idleBlockedAfterOwnEmitMs = 5000;
 
     // Inspector configuration.
     profile.inspectionConfig = defaultInspectionConfig();

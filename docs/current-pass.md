@@ -1,713 +1,310 @@
-# Detection Refactor Pass K — Inspector Config + AMP Support Analyzer Output
+# Refactor Pass - Split BehaviorProfile from DetectionProfile
 
-Version: Detection Roadmap v0.3 — Pass K  
-Scope: Simplify AMP support handling, make SignalInspector configuration explicit, add profile-owned inspection config, and update Analyzer output
+Status: complete.
 
----
+Implemented:
+- `DetectionProfile` now carries detection-only config.
+- `BehaviorProfile` exists in `src/behavior/BehaviorProfile.h`.
+- `ResonantBehavior::configure(const BehaviorProfile&)` applies behavior defaults.
+- `Node` now applies active detection and behavior profiles together via `applyActiveProfiles()`.
+- The project builds successfully after the split.
 
 ## Goal
 
-Refactor the AMP support / inspection setup so it is simpler, profile-configurable, and consistently reported.
+Move behavior-owned defaults out of `DetectionProfile` and into a new `BehaviorProfile`.
 
-Primary decisions:
+Keep this pass small.
 
-```text
-Remove legacy distance labels.
-Use AmpSupportClass directly.
-Centralize AMP support classification.
-Configure SignalInspector through simple InspectionConfig.
-Let DetectionProfile provide that InspectionConfig.
-Reflect amp_support in Analyzer output.
-```
+Do **not** introduce a combined `ResonantProfile` / `ResonantNodeProfile` yet.
 
-This pass replaces the earlier Analyzer-only framing.
+## Current problem
 
-The focus is now:
+`DetectionProfile` currently mixes two responsibilities:
 
 ```text
 DetectionProfile
-→ InspectionConfig
-→ SignalInspector
-→ InspectedSignal.ampSupport
-→ PatternRules / PatternResult
-→ Analyzer output
+  detection config
+  behavior defaults
 ```
 
----
+But behavior fields such as idle timing, wait timing, and `requireTonalForBehavior` belong to the behavior layer.
 
-## Why this pass exists
-
-The current code has two related problems:
+## Target shape for this pass
 
 ```text
-1. AMP support classification is more complex than needed.
-2. AMP support thresholds are duplicated in more than one place.
+detection/DetectionProfile.h
+  DetectionProfile
+  detection-only config
+
+behavior/BehaviorProfile.h
+  BehaviorProfile
+  behavior defaults
+
+Node
+  selects active DetectionProfile
+  selects active BehaviorProfile
+  applies both
 ```
 
-The architecture does not need spatial labels right now.
+## 1. Keep DetectionProfile in detection
 
-AMP evidence should be reported as what it actually is:
+Keep `DetectionProfile` in:
 
 ```text
-strong / medium / weak / none / unknown AMP support
+src/detection/DetectionProfile.h
 ```
 
-not as a spatial distance claim.
-
----
-
-## Current issue
-
-Current code likely has AMP support logic in places such as:
-
-```text
-SignalInspector.cpp
-SignalWindowEvaluator.h
-Analyzer output / logs
-PatternRules / PatternResult fields
-```
-
-The previous model used both:
-
-```text
-AmpSupportClass
-legacy distance labels
-```
-
-This pass removes legacy distance labels from the active path and makes `AmpSupportClass` the inspected fact.
-
----
-
-## Target flow
-
-```text
-DetectionProfile
-→ InspectionConfig
-→ SignalInspector
-→ InspectionRules / WindowEvaluators
-→ InspectedSignal.ampSupport
-→ PatternAssembler
-→ PatternCandidate.ampSupport
-→ PatternRules
-→ PatternResult.ampSupport
-→ Analyzer output
-```
-
-Boundary:
-
-```text
-FrequencyMatchDetector creates SignalCandidate.
-SignalInspector evaluates AMP support.
-PatternRules interpret PatternCandidate.
-Analyzer reports the result.
-Behavior consumes PatternResult + FieldState.
-```
-
----
-
-## 1. Remove legacy distance labels
-
-### Target
-
-Remove legacy distance labels from the active detection/analyzer path.
-
-Remove or replace fields such as:
+It should keep detection-facing fields only, for example:
 
 ```cpp
-AmpSupportClass ampSupport;
+DetectionProfileKind kind;
+
+ProfileFeatureSetKind featureSet;
+ProfileSignalEmitterKind signalEmitter;
+ProfileSignalDetectorKind signalDetector;
+ProfileInspectionRulesKind inspectionRules;
+ProfilePatternAssemblerKind patternAssembler;
+ProfilePatternRulesKind patternRules;
+
+InspectionConfig inspectionConfig;
+FieldStateConfig fieldStateConfig;
+
+bool ampEnabled;
+bool useLegacyPath; // keep only if still needed for legacy migration
 ```
 
-from active structs where present:
-
-```text
-SignalCandidate
-InspectedSignal
-PatternCandidate
-PatternResult
-Analyzer output
-logs
-```
-
-Replace with:
+Remove these behavior fields from `DetectionProfile`:
 
 ```cpp
-AmpSupportClass ampSupport;
+bool detectionOnly;
+bool requireTonalForBehavior;
+bool idleEnabled;
+
+unsigned long waitAfterTransientMs;
+unsigned long refractoryAfterEmitMs;
+unsigned long idleTimeoutMs;
+unsigned long idleTimeVariationMs;
+unsigned long idleBlockedAfterHeardMs;
+unsigned long idleBlockedAfterOwnEmitMs;
 ```
 
-### Remove mapping logic
+## 2. Add BehaviorProfile
 
-Remove mapping logic like:
+Create:
 
 ```text
-Strong  → Near
-Medium  → Mid
-Weak    → Far
-None    → Far / Unknown
+src/behavior/BehaviorProfile.h
 ```
 
-Do not keep legacy distance labels under another name.
-
-### Accepted remaining usage
-
-Temporary compatibility aliases are acceptable only if needed to compile, but they should not appear in the active Analyzer output or new profile configuration.
-
----
-
-## 2. Keep `AmpSupportClass` as the primary inspected fact
-
-### Target enum
-
-Use or normalize:
+with:
 
 ```cpp
-enum class AmpSupportClass {
-  Unknown,
-  None,
-  Weak,
-  Medium,
-  Strong
+#pragma once
+
+struct BehaviorProfile {
+    bool detectionOnly = false;
+    bool requireTonalForBehavior = true;
+    bool idleEnabled = true;
+
+    unsigned long waitAfterTransientMs = 100;
+    unsigned long refractoryAfterEmitMs = 0;
+    unsigned long idleTimeoutMs = 20000;
+    unsigned long idleTimeVariationMs = 10000;
+    unsigned long idleBlockedAfterHeardMs = 3000;
+    unsigned long idleBlockedAfterOwnEmitMs = 5000;
 };
 ```
 
-Existing enum order may remain if already established.
+## 3. Add ResonantBehavior::configure()
 
-### Meaning
-
-```text
-Strong:
-AMP clearly supports the signal.
-
-Medium:
-AMP support exists but is moderate.
-
-Weak:
-AMP support exists but is weak / indirect.
-
-None:
-No meaningful AMP support found.
-
-Unknown:
-AMP support was not evaluated or evidence was unavailable.
-```
-
-### Documentation wording
-
-Use:
-
-```text
-AMP support indicates physical amplitude support for a detected signal.
-It may correlate with local strength but is not a reliable distance measurement.
-```
-
-Avoid:
-
-```text
-Strong does not imply distance.
-Weak does not imply distance.
-```
-
----
-
-## 3. Centralize AMP support classification
-
-### Target
-
-There should be one shared AMP support classifier.
-
-Both of these should use the same classifier:
-
-```text
-ScalarWindow AMP evaluation
-snapshot / fallback AMP evaluation
-```
-
-Do not duplicate thresholds in:
-
-```text
-SignalInspector.cpp
-SignalWindowEvaluator.h
-```
-
-or equivalent files.
-
-### Suggested config
+In `ResonantBehavior`, add:
 
 ```cpp
-struct AmpSupportConfig {
-  float strongLift;
-  float strongNorm;
-
-  float mediumLift;
-  float mediumNorm;
-
-  float weakLift;
-  float weakNorm;
-};
+void configure(const BehaviorProfile& profile);
 ```
 
-### Suggested helper
+Implementation:
 
 ```cpp
-AmpSupportClass classifyAmpSupport(
-  float ampLift,
-  float ampNormalized,
-  const AmpSupportConfig& config
-);
+void ResonantBehavior::configure(const BehaviorProfile& profile) {
+    setWaitAfterTransientMs(profile.waitAfterTransientMs);
+    setRefractoryAfterEmitMs(profile.refractoryAfterEmitMs);
+    setIdleTimeoutMs(profile.idleTimeoutMs);
+    setIdleTimeVariationMs(profile.idleTimeVariationMs);
+    setIdleBlockedAfterHeardMs(profile.idleBlockedAfterHeardMs);
+    setIdleBlockedAfterOwnEmitMs(profile.idleBlockedAfterOwnEmitMs);
+    setIdleEnabled(profile.idleEnabled);
+    setRequireTonalForBehavior(profile.requireTonalForBehavior);
+    setDetectionOnly(profile.detectionOnly);
+}
 ```
 
-Preferred name:
+Keep the existing individual setters for now.
 
-```text
-AmpSupportClassifier
-```
+## 4. Add activeBehaviorProfile() in Node
 
-or, if style prefers functions:
+Where Node currently selects an active `DetectionProfile`, also select a matching `BehaviorProfile`.
 
-```text
-classifyAmpSupport(...)
-```
-
-### Initial default values
-
-Use the existing thresholds as defaults.
-
-Do not tune thresholds in this pass.
-
----
-
-## 4. Add simple `InspectionConfig`
-
-### Target
-
-Make inspector setup explicit and simple.
-
-Add a small config object used by `SignalInspector`.
-
-Suggested shape:
+Add:
 
 ```cpp
-struct InspectionConfig {
-  AmpSupportConfig ampSupport;
-
-  uint32_t ampWindowPreMs;
-  uint32_t ampWindowPostMs;
-
-  bool enableAmpSupportInspection;
-  bool enableDuplicateRiskInspection;
-};
+DetectionProfile Node::activeDetectionProfile() const;
+BehaviorProfile Node::activeBehaviorProfile() const;
 ```
 
-Keep this minimal.
-
-Do not introduce dynamic rule registry or external config.
-
-### Ownership
-
-`InspectionConfig` configures how `SignalInspector` inspects signals.
-
-It should not configure:
-
-```text
-PatternRules
-Behavior
-FrequencyMatchDetector lifecycle
-FieldState thresholds
-```
-
----
-
-## 5. Configure `SignalInspector` through `InspectionConfig`
-
-### Target
-
-`SignalInspector` should receive or hold an `InspectionConfig`.
-
-Possible API:
-
-```cpp
-void SignalInspector::configure(const InspectionConfig& config);
-```
-
-or:
-
-```cpp
-SignalInspector inspector(config);
-```
-
-or:
-
-```cpp
-SignalInspector::SignalInspector(const InspectionConfig& config);
-```
-
-Use the existing project style.
-
-### Required behavior
-
-When inspecting a frequency-first signal:
-
-```text
-FrequencyMatch SignalCandidate
-→ SignalInspector
-→ AMP ScalarWindow or fallback AMP snapshot
-→ AmpSupportClassifier using InspectionConfig.ampSupport
-→ InspectedSignal.ampSupport
-```
-
-### Boundary
-
-Do not compute AMP support in:
-
-```text
-FrequencyMatchDetector
-PatternRules
-Behavior
-Analyzer
-```
-
-Analyzer only reports the result.
-
----
-
-## 6. Add `InspectionConfig` to `DetectionProfile`
-
-### Target
-
-Each `DetectionProfile` should provide the inspector config.
+`activeBehaviorProfile()` can switch on the same current profile/mode enum as detection.
 
 Example:
 
 ```cpp
-struct DetectionProfile {
-  DetectionProfileKind kind;
-  const char* name;
+BehaviorProfile Node::activeBehaviorProfile() const {
+    BehaviorProfile profile;
 
-  InspectionConfig inspectionConfig;
-  FieldStateConfig fieldStateConfig;
+    switch (_activeDetectionProfileKind) {
+        case DetectionProfileKind::FreqAmp:
+            profile.detectionOnly = false;
+            profile.requireTonalForBehavior = true;
+            profile.idleEnabled = true;
+            break;
 
-  // other existing profile choices...
-};
-```
+        case DetectionProfileKind::FrequencyOnly:
+            profile.detectionOnly = false;
+            profile.requireTonalForBehavior = true;
+            profile.idleEnabled = true;
+            break;
 
-### Profile examples
+        case DetectionProfileKind::Amp:
+        default:
+            profile.detectionOnly = false;
+            profile.requireTonalForBehavior = false;
+            profile.idleEnabled = true;
+            break;
+    }
 
-#### `FreqAmpProfile`
-
-```text
-enableAmpSupportInspection = true
-ampWindowPreMs / ampWindowPostMs configured for frequency candidates
-AmpSupportConfig uses default thresholds initially
-```
-
-#### `AmpStateProfile`
-
-```text
-enableAmpSupportInspection may be true or minimal
-duplicate risk / basic AMP stats may be active
-```
-
-#### `ChirpProfile`
-
-```text
-may reuse FreqAmp inspection config initially
-```
-
-### Important
-
-Profile owns config.
-
-Inspector applies config.
-
-PatternRules consumes inspected facts.
-
----
-
-## 7. Keep configuration code-defined
-
-### Target
-
-Config is code-defined through profile factories.
-
-Do not add:
-
-```text
-JSON config
-YAML config
-runtime profile files
-dynamic plugin registry
-external threshold files
-```
-
-Simple factory example:
-
-```cpp
-DetectionProfile makeFreqAmpProfile() {
-  DetectionProfile p;
-  p.kind = DetectionProfileKind::FreqAmp;
-  p.name = "FreqAmp";
-
-  p.inspectionConfig.enableAmpSupportInspection = true;
-  p.inspectionConfig.ampSupport = defaultAmpSupportConfig();
-  p.inspectionConfig.ampWindowPreMs = 20;
-  p.inspectionConfig.ampWindowPostMs = 120;
-
-  return p;
+    return profile;
 }
 ```
 
-Exact names may differ.
+Use the same default timing values as before.
 
----
+## 5. Rename syncDetectionRuntimeMode()
 
-## 8. Update `PatternRules` to consume `ampSupport` directly
-
-### Target
-
-`PatternRules` should use:
-
-```text
-PatternCandidate.ampSupport
-```
-
-not:
-
-```text
-PatternCandidate.ampSupport
-```
-
-Preferred result shape:
+Rename:
 
 ```cpp
-PatternResult.kind = PatternResultKind::TonalPulse;
-PatternResult.ampSupport = AmpSupportClass::Strong;
+syncDetectionRuntimeMode()
 ```
 
-rather than:
-
-```text
-Legacy distance-label variants
-```
-
-If old result kinds exist, keep minimal compatibility only if needed, but do not expand them.
-
-### Boundary
-
-PatternRules may interpret `ampSupport`.
-
-PatternRules should not recompute AMP support from raw metrics.
-
----
-
-## 9. Update `PatternResult`
-
-### Target
-
-Ensure `PatternResult` can carry AMP support as a field.
-
-Suggested:
+to:
 
 ```cpp
-struct PatternResult {
-  PatternResultKind kind;
-  bool valid;
-  float confidence;
-  AmpSupportClass ampSupport;
-  PatternRejectReason rejectReason;
-};
+applyActiveProfiles()
 ```
 
-Use existing project structure where possible.
+Update all call sites.
 
-### Preferred output vocabulary
+The renamed method should apply both configs:
 
-Prefer:
+```cpp
+void Node::applyActiveProfiles() {
+    const DetectionProfile detectionProfile = activeDetectionProfile();
+    const BehaviorProfile behaviorProfile = activeBehaviorProfile();
+
+    // Detection runtime config.
+    _detection.setAmpEnabled(detectionProfile.ampEnabled && !usesFrequencyOnly());
+    _detection.setFrequencyTuning(_frequencyEvidenceTuning);
+    _detection.setInspectionConfig(detectionProfile.inspectionConfig);
+    _detection.setFieldStateConfig(detectionProfile.fieldStateConfig);
+    _detection.setProfileName(detectionProfileName(detectionProfile.kind));
+
+    // Behavior config.
+    _behavior.configure(behaviorProfile);
+}
+```
+
+Keep existing detection runtime setters for now.
+
+Do not introduce `DetectionRuntime::configure()` in this pass unless it already exists.
+
+## 6. Analyzer
+
+Analyzer should use only `DetectionProfile`.
+
+If Analyzer currently reads any removed behavior fields, remove that dependency unless the analyzer explicitly tests behavior.
+
+Behavior fields to remove from Analyzer dependency:
+
+```cpp
+detectionOnly
+requireTonalForBehavior
+idleEnabled
+waitAfterTransientMs
+refractoryAfterEmitMs
+idleTimeoutMs
+idleTimeVariationMs
+idleBlockedAfterHeardMs
+idleBlockedAfterOwnEmitMs
+```
+
+## Do not change in this pass
+
+Do not introduce `ResonantProfile`.
+
+Do not introduce `ResonantNodeProfile`.
+
+Do not tune detection thresholds.
+
+Do not change PatternResult semantics.
+
+Do not remove legacy files.
+
+Do not rename `requireTonalForBehavior`.
+
+Do not change default behavior timing values.
+
+Do not change behavior state-machine logic.
+
+Do not change Analyzer report formats unless required by removed dependencies.
+
+## Success criteria
+
+Build passes.
+
+Runtime behavior is unchanged.
+
+`DetectionProfile` no longer contains behavior params.
+
+`BehaviorProfile` exists in the behavior folder.
+
+`ResonantBehavior` has one behavior config entry point:
+
+```cpp
+_behavior.configure(behaviorProfile);
+```
+
+Node applies both profiles in one place:
+
+```cpp
+applyActiveProfiles();
+```
+
+Analyzer depends only on detection profile.
+
+## Architectural note
+
+This pass creates the clean split:
 
 ```text
-kind=TonalPulse amp_support=Strong
+DetectionProfile -> DetectionRuntime
+BehaviorProfile  -> ResonantBehavior
 ```
 
-over:
+A later pass may add an app/profile composition layer:
 
 ```text
-kind=TonalPulse with amp_support=Strong
+ResonantNodeProfile
+  DetectionProfile detection
+  BehaviorProfile behavior
 ```
 
-This keeps pattern kind and AMP evidence separate.
-
----
-
-## 10. Update Analyzer output
-
-### Target
-
-Analyzer should report AMP support directly.
-
-Use:
-
-```text
-amp_support=strong|medium|weak|none|unknown
-```
-
-Do not report:
-
-```text
-legacy distance labels
-```
-
-### Compact trial output
-
-Suggested fields:
-
-```text
-trial=...
-profile=...
-result=...
-pattern=...
-source=...
-dt=...
-confidence=...
-amp_support=...
-reason=...
-field=...
-```
-
-### Explain output
-
-Suggested shape:
-
-```text
-signal{...}
-inspection{amp_support=... amp_peak=... amp_lift=... amp_norm=...}
-pattern{kind=... amp_support=...}
-field{quiet=... busy=... density=...}
-classification{result=... reason=...}
-```
-
-### AMP metrics
-
-Include numeric AMP metrics when useful:
-
-```text
-amp_peak
-amp_mean
-amp_lift
-amp_norm
-amp_window_status
-```
-
-But avoid flooding compact output.
-
----
-
-## 11. Update logs around AMP inspection
-
-### Target
-
-Use clean AMP support vocabulary in stage logs.
-
-Recommended `INSPECTED` fields:
-
-```text
-source=...
-kind=...
-accepted=...
-reason=...
-amp_support=Strong/Medium/Weak/None/Unknown
-amp_peak=...
-amp_mean=...
-amp_lift=...
-amp_norm=...
-amp_window=valid/invalid/fallback
-```
-
-Recommended `PATTERN_RESULT` fields:
-
-```text
-kind=...
-valid=...
-confidence=...
-amp_support=...
-reason=...
-```
-
-Avoid:
-
-```text
-legacy distance labels
-```
-
----
-
-## 12. Update code comments / docs touched by this pass
-
-### Target
-
-Update comments around AMP inspection, classifier, profile config, Analyzer output.
-
-Use:
-
-```text
-AMP support is an inspected amplitude-support class.
-It should not be treated as an exact distance classifier.
-```
-
-Avoid:
-
-```text
-legacy distance labels
-```
-
-unless explicitly discussing removed legacy terminology.
-
----
-
-## 13. Success criteria
-
-After this pass:
-
-```text
-Legacy distance labels are removed from the active detection/analyzer path.
-
-AmpSupportClass is the primary AMP inspection output.
-
-AMP support classification logic exists in one shared place.
-
-SignalInspector is configured via InspectionConfig.
-
-DetectionProfile provides InspectionConfig.
-
-FreqAmpProfile can configure AMP support inspection.
-
-ScalarWindow AMP evaluation and snapshot fallback use the same classifier.
-
-PatternRules consumes ampSupport directly.
-
-PatternResult carries ampSupport or equivalent.
-
-Analyzer output reports amp_support, not legacy distance labels.
-
-Logs no longer imply AMP is a precise distance classifier.
-
-FrequencyMatchDetector remains unchanged in responsibility.
-```
-
----
-
-## 14. Do not do in this pass
-
-Do not:
-
-```text
-tune AMP thresholds
-rewrite FrequencyMatchDetector
-move AMP support into FrequencyMatchDetector
-move AMP support evaluation into PatternRules
-introduce legacy distance labels under a different name
-remove legacy AMP
-implement chirp grouping
-implement white-noise/object detection
-change behavior strategy unless compile requires field rename
-introduce external profile config
-```
-
-This pass is inspector configuration + AMP support simplification + Analyzer output alignment.
+That later composition layer is explicitly out of scope for this pass.

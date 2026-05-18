@@ -104,6 +104,31 @@ Node::DetectionMode detectionModeForProfileKind(detection::DetectionProfileKind 
     }
 }
 
+BehaviorProfile makeFreqAmpBehaviorProfile() {
+    BehaviorProfile profile;
+    profile.detectionOnly = false;
+    profile.requireTonalForBehavior = true;
+    profile.idleEnabled = true;
+    profile.waitAfterTransientMs = 100;
+    profile.refractoryAfterEmitMs = 0;
+    profile.idleTimeoutMs = 20000;
+    profile.idleTimeVariationMs = 10000;
+    profile.idleBlockedAfterHeardMs = 3000;
+    profile.idleBlockedAfterOwnEmitMs = 5000;
+    return profile;
+}
+
+BehaviorProfile makeAmpStateBehaviorProfile() {
+    BehaviorProfile profile = makeFreqAmpBehaviorProfile();
+    profile.requireTonalForBehavior = false;
+    profile.waitAfterTransientMs = 500;
+    profile.idleTimeoutMs = 15000;
+    profile.idleTimeVariationMs = 6000;
+    profile.idleBlockedAfterHeardMs = 1500;
+    profile.idleBlockedAfterOwnEmitMs = 3000;
+    return profile;
+}
+
 const char* detectionProfileKindName(detection::DetectionProfileKind kind) {
     return detection::detectionProfileName(kind);
 }
@@ -371,7 +396,7 @@ Node::Node(int inputPin, int ledPin, int chirpPin, int chirpBtlPin, AudioSourceK
     : _ledPin(ledPin),
       _analogSource(inputPin),
       _i2sSource(14, 27, 33, 16000, 32),
-      _sourceKind(sourceKind),
+    _sourceKind(sourceKind),
       _audioSource(sourceKind == AudioSourceKind::I2S
                        ? static_cast<AudioSource&>(_i2sSource)
                        : static_cast<AudioSource&>(_analogSource)),
@@ -395,7 +420,7 @@ void Node::begin() {
     _audioOnsetDetector.begin();
     _freqBandStream.resetState();
     _detection.reset();
-    syncDetectionRuntimeMode();
+    applyActiveProfiles();
     _behavior.resetState();
     resetDetectionState();
     _audioSignal.resetStats();
@@ -423,9 +448,9 @@ void Node::begin() {
     Serial.print(profileName());
     Serial.print(" detect=");
     Serial.print(detectionModeName());
-    printProfileComposition(activeProfile());
+    printProfileComposition(activeDetectionProfile());
     Serial.print(" active=");
-    Serial.println(activeProfile().ampEnabled ? "amp" : "none");
+    Serial.println(activeDetectionProfile().ampEnabled ? "amp" : "none");
 
     if (_sourceKind == AudioSourceKind::I2S) {
         Serial.print("RB det mode=AMP onset=");
@@ -474,7 +499,7 @@ void Node::resetDetectionState() {
     _audioOnsetDetector.resetState();
     _ampCandidateBuilder.resetState();
     _detection.reset();
-    syncDetectionRuntimeMode();
+    applyActiveProfiles();
     _wasSelfChirpSuppressed = false;
     _rbLastLoggedOnsetRejectCount = 0;
     _rbLastLoggedTransientRejectCount = 0;
@@ -612,14 +637,6 @@ void Node::configureAnalogParameters() {
     _audioOnsetDetector.setMinTransientDurationMs(60);
     _audioOnsetDetector.setMaxTransientDurationMs(240);
     _audioOnsetDetector.setMinTransientPeakStrength(40.0f);
-
-    _behavior.setWaitAfterTransientMs(100); // Shared response timing: give the transient a short settle window.
-    _behavior.setRefractoryAfterEmitMs(0); // Shared response timing: no post-emit holdoff; this usually dominates any own-emit tail window unless that tail is longer.
-    _behavior.setIdleTimeoutMs(20000); // Idle self-trigger target.
-    _behavior.setIdleTimeVariationMs(10000); // Idle self-trigger spread.
-    _behavior.setIdleBlockedAfterHeardMs(3000);
-    _behavior.setIdleBlockedAfterOwnEmitMs(5000);
-    _behavior.setIdleEnabled(true);
 }
 
 void Node::configureI2SParameters() {
@@ -630,16 +647,9 @@ void Node::configureI2SParameters() {
     _audioOnsetDetector.setCooldownAfterOnsetMs(10);
     _audioOnsetDetector.setReleaseDebounceMs(30);
     _audioOnsetDetector.setMinTransientDurationMs(60);
-    _audioOnsetDetector.setMaxTransientDurationMs(240);
-    _audioOnsetDetector.setMinTransientPeakStrength(40.0f);
-
-    _behavior.setWaitAfterTransientMs(100); // Shared response timing: give the transient a short settle window.
-    _behavior.setRefractoryAfterEmitMs(0); // Shared response timing: no post-emit holdoff; this usually dominates any own-emit tail window unless that tail is longer.
-    _behavior.setIdleTimeoutMs(20000); // Idle self-trigger target.
-    _behavior.setIdleTimeVariationMs(10000); // Idle self-trigger spread.
-    _behavior.setIdleBlockedAfterHeardMs(5000);
-    _behavior.setIdleBlockedAfterOwnEmitMs(5000);
-    _behavior.setIdleEnabled(true);
+        _audioOnsetDetector.setMaxTransientDurationMs(240);
+        _audioOnsetDetector.setMinTransientPeakStrength(40.0f);
+    // Behavior timing comes from the active profiles via applyActiveProfiles().
 }
 
 // --- main update loop ---
@@ -873,7 +883,7 @@ void Node::handleSerialLine(const char* line) {
         DetectorParameters::apply(params, _audioOnsetDetector);
         _frequencyEvidenceTuning = freqTuning;
         _detection.setFrequencyTuning(_frequencyEvidenceTuning);
-        syncDetectionRuntimeMode();
+        applyActiveProfiles();
 
         Serial.print("RB PARAM onset=");
         Serial.print(_audioOnsetDetector.onsetDetectionThreshold(), 1);
@@ -1085,7 +1095,7 @@ void Node::handleDetectCommand(const char* line) {
         DetectionMode parsed = _detectionMode;
         if (detectionModeFromName(mode, parsed)) {
             _detectionMode = parsed;
-            syncDetectionRuntimeMode();
+            applyActiveProfiles();
             Serial.print("RB DETECT mode=");
             Serial.println(detectionModeName());
         } else {
@@ -1118,10 +1128,10 @@ void Node::handleProfileCommand(const char* line) {
         Serial.print(profileName());
         Serial.print(" detect=");
         Serial.print(detectionModeName());
-        printProfileComposition(activeProfile());
+        printProfileComposition(activeDetectionProfile());
         Serial.print(" emitters=");
-        Serial.print(activeProfile().ampEnabled ? "amp" : "none");
-        Serial.println(activeProfile().useLegacyPath ? "+legacy" : "+modern");
+        Serial.print(activeDetectionProfile().ampEnabled ? "amp" : "none");
+        Serial.println(activeDetectionProfile().useLegacyPath ? "+legacy" : "+modern");
     } else {
         Serial.println("RB PROFILE usage=name=freqamp|ampstate|chirp");
     }
@@ -1149,7 +1159,7 @@ bool Node::setProfileFromName(const char* name) {
 
     _profileKind = parsed;
     _detectionMode = detectionModeForProfileKind(_profileKind);
-    syncDetectionRuntimeMode();
+    applyActiveProfiles();
     return true;
 }
 
@@ -1165,26 +1175,35 @@ bool Node::usesFrequencyOnly() const {
     return _detectionMode == DetectionMode::ModernFrequencyOnly;
 }
 
-const detection::DetectionProfile& Node::activeProfile() const {
+const detection::DetectionProfile& Node::activeDetectionProfile() const {
     return detection::detectionProfileForKind(_profileKind);
 }
 
-void Node::syncDetectionRuntimeMode() {
-    const detection::DetectionProfile& profile = activeProfile();
-    _detection.setAmpEnabled(profile.ampEnabled && !usesFrequencyOnly());
-    _detection.setFrequencyTuning(_frequencyEvidenceTuning);
-    _detection.setInspectionConfig(profile.inspectionConfig);
-    _detection.setFieldStateConfig(profile.fieldStateConfig);
+const BehaviorProfile& Node::activeBehaviorProfile() const {
+    static const BehaviorProfile kFreqAmpProfile = makeFreqAmpBehaviorProfile();
+    static const BehaviorProfile kAmpStateProfile = makeAmpStateBehaviorProfile();
 
-    _behavior.setWaitAfterTransientMs(profile.waitAfterTransientMs);
-    _behavior.setRefractoryAfterEmitMs(profile.refractoryAfterEmitMs);
-    _behavior.setIdleTimeoutMs(profile.idleTimeoutMs);
-    _behavior.setIdleTimeVariationMs(profile.idleTimeVariationMs);
-    _behavior.setIdleBlockedAfterHeardMs(profile.idleBlockedAfterHeardMs);
-    _behavior.setIdleBlockedAfterOwnEmitMs(profile.idleBlockedAfterOwnEmitMs);
-    _behavior.setIdleEnabled(profile.idleEnabled);
-    _behavior.setRequireTonalForBehavior(profile.requireTonalForBehavior);
-    _behavior.setDetectionOnly(profile.detectionOnly);
+    switch (_profileKind) {
+        case detection::DetectionProfileKind::AmpState:
+            return kAmpStateProfile;
+        case detection::DetectionProfileKind::Chirp:
+        case detection::DetectionProfileKind::FreqAmp:
+        default:
+            return kFreqAmpProfile;
+    }
+}
+
+void Node::applyActiveProfiles() {
+    const detection::DetectionProfile& detectionProfile = activeDetectionProfile();
+    const BehaviorProfile& behaviorProfile = activeBehaviorProfile();
+
+    _detection.setAmpEnabled(detectionProfile.ampEnabled && !usesFrequencyOnly());
+    _detection.setFrequencyTuning(_frequencyEvidenceTuning);
+    _detection.setInspectionConfig(detectionProfile.inspectionConfig);
+    _detection.setFieldStateConfig(detectionProfile.fieldStateConfig);
+    _detection.setProfileName(detection::detectionProfileName(detectionProfile.kind));
+
+    _behavior.configure(behaviorProfile);
 }
 
 void Node::processLegacyAmpFrame(const AudioSignalFrame& frame,

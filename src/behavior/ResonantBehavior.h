@@ -1,6 +1,7 @@
 #pragma once
 #include <Arduino.h>
 
+#include "BehaviorProfile.h"
 #include "../detection/field/FieldState.h"
 #include "../detection/patterns/PatternPayload.h"
 #include "../io/ChirpOutput.h"
@@ -42,6 +43,7 @@ public:
     };
 
     void resetState();
+    void configure(const BehaviorProfile& profile);
     BehaviorDecision handlePatternResult(const detection::PatternResult& result, unsigned long now);
     BehaviorDecision handlePatternResult(const detection::PatternResult& result, const detection::FieldState& field, unsigned long now);
     void update(unsigned long now);

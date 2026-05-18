@@ -1,119 +1,101 @@
-# Analyzer / Detection Refactor — Pass L: FrequencyFirst AmpWindow Observation
+# Analyzer Refactor — Pass I rerun: Actual Pipeline Result Handoff
 
 **Project:** ResonantNode / Resonanzraum  
-**Area:** Detection Refactor / FrequencyFirst + AMP evidence  
-**Pass:** L  
-**Goal:** Add observe-only AMP window evidence to FrequencyFirst candidates so Analyzer can report whether the AMP window makes sense before it is used as an acceptance/rejection gate, with a generic `SEQ_CUSTOM` printer line for the observation.
+**Area:** Detection Refactor / Analyzer / DetectionRuntime Boundary  
+**Pass:** I revisited  
+**Goal:** Make the Analyzer consume actual DetectionRuntime pipeline results instead of relying on Analyzer-side re-evaluation as the primary source of pattern meaning.
 
 ---
 
 ## 0. Context
 
-After Pass K, the normal Analyzer path should consume actual DetectionRuntime `PatternResult` data instead of re-evaluating candidates inside Analyzer.
-
-Next goal:
+Previous passes A–H cleaned the Analyzer reporting surface:
 
 ```txt
-Run FrequencyFirst + AmpWindow.
-Observe what the AMP window sees.
-Decide later whether AMP window can be used to include near/loud events only.
+SEQ_TRIAL = compact truth
+SEQ_EXPLAIN = why/how
+SEQ_SUMMARY = run comparison
+legacy output = quarantined
+profile reporting = stable
 ```
 
-This pass is **observation only**.
-
-Do not use AMP window as a hard gate yet.
-
----
-
-## Current Status
-
-We are in the middle of Pass L.
-
-Done so far:
+But the data source may still be transitional:
 
 ```txt
-AmpWindow evidence is threaded through PatternResult / Analyzer profile detail.
-SEQ_CUSTOM exists as the generic observation line.
-SEQ_TRIAL stays stable.
+handleSequenceCandidate()
+→ live candidate enters Analyzer bookkeeping
+→ evaluateRoadmapSignalCandidateImpl()
+→ Analyzer reconstructs inspected/pattern result from current feature history
 ```
 
-Known / suspected issue:
+This pass starts correcting that boundary.
+
+Target:
 
 ```txt
-The custom line is printing, but the AmpWindow payload is still empty for the current live SEQ runs.
-Suspected cause: the retrospective FeatureHistory window is not yielding usable amp evidence at the candidate timestamp, or the candidate timing is not aligned with the stored window yet.
+DetectionRuntime produces SignalCandidate / InspectedSignal / PatternResult / FieldState.
+Analyzer consumes those actual pipeline results.
+Analyzer only classifies trial timing/result.
 ```
 
-Current next step:
+Rule:
 
 ```txt
-Trace why AmpWindowEvidence.available stays false and why peak/base/lift/norm remain zero.
+Detection owns meaning.
+Analyzer owns measurement/classification.
 ```
 
 ---
 
 ## 1. Core intent
 
-Current desired detection shape:
+Expose or hand off the actual result produced by the detection pipeline at the time it happens.
+
+Analyzer should receive or be able to read:
 
 ```txt
-FrequencyFirst proposes the candidate.
-AmpWindow evaluates retrospective amplitude evidence around that candidate.
-PatternResult carries/ exposes the AmpWindow evidence.
-Analyzer reports the AmpWindow evidence clearly, either through `SEQ_EXPLAIN` or the generic `SEQ_CUSTOM` line.
-PatternRules do not yet reject/accept based on AmpWindow.
+PatternResult
+optional SignalCandidate / InspectedSignal debug snapshot
+FieldState
+profile name
+timing information
 ```
 
-Target question:
+without rerunning:
 
 ```txt
-When FrequencyFirst finds a candidate, what does the AMP window around that candidate look like?
+evaluateRoadmapSignalCandidateImpl()
 ```
 
-Not yet:
-
-```txt
-Should this candidate be accepted/rejected based on AMP window?
-```
+as the primary interpretation path.
 
 ---
 
 ## 2. Non-goals
 
-Do not tune thresholds.
+Do not remove `evaluateRoadmapSignalCandidateImpl()` yet.
 
-Do not add behavior/RB changes.
+Do not change detection thresholds.
 
-Do not use AMP window as a gate.
+Do not change detector behavior.
 
-Do not reject far/weak events yet.
+Do not change pattern rules.
 
-Do not change FrequencyFirst acceptance logic except for attaching evidence.
+Do not change behavior/RB logic.
 
-Do not change `SEQ_TRIAL` top-level format unless a compact optional field already exists.
+Do not rewrite SEQ output format.
+
+Do not remove legacy output.
 
 Do not touch actual RAW sample capture.
 
-Do not introduce shared `AudioReporting.h`.
-
-Do not add large persistent buffers or per-trial arrays.
+Do not introduce a large generic reporting framework.
 
 ---
 
 ## 3. Files to inspect
 
-Detection / frequency path:
-
-```txt
-src/detection/DetectionRuntime.*
-src/detection/DetectionProfile.h
-src/detection/signals/*
-src/detection/patterns/*
-src/detection/patterns/PatternResult.h
-src/audio/*
-```
-
-Analyzer reporting:
+Analyzer side:
 
 ```txt
 src/modes/analyzer/AnalyzerApp.h
@@ -121,328 +103,384 @@ src/modes/analyzer/AnalyzerApp.cpp
 src/modes/analyzer/AnalyzerReporting.h
 ```
 
+Detection side:
+
+```txt
+src/detection/DetectionRuntime.*
+src/detection/DetectionProfile.h
+src/detection/patterns/PatternResult.h
+src/detection/patterns/*
+src/detection/signals/SignalCandidate.h
+src/detection/signals/InspectedSignal.h
+src/detection/signals/*
+src/detection/field/FieldState.h
+```
+
 Search for:
 
 ```txt
-FrequencyFirst
-FrequencyMatch
-FrequencyMatchDetector
-Goertzel
-targetFreq
-FeatureHistory
-ScalarWindow
-amp
-amplitude
+handleSequenceCandidate
+evaluateRoadmapSignalCandidateImpl
+evaluateRoadmapSignalCandidate
 PatternResult
-ProfileDetail
-SEQ_EXPLAIN_PROFILE_DETAIL
+InspectedSignal
+SignalCandidate
+DetectionRuntime::update
+fieldState
+profile
 ```
 
 ---
 
-## 4. Add AmpWindow evidence structure
+## 4. Identify current live handoff point
 
-Add a small, fixed-size evidence struct.
-
-Preferred location:
+Find where the live candidate currently enters Analyzer trial bookkeeping:
 
 ```txt
-detection profile / pattern result detail area
+handleSequenceCandidate(...)
 ```
 
-or wherever profile-specific evidence currently lives.
+Document what this function currently receives:
 
-Suggested struct:
+```txt
+timing
+duration
+strength
+candidate/source flags
+frequency facts
+amp facts
+raw/transient facts
+```
+
+Then identify what is missing compared to the target:
+
+```txt
+actual PatternResult
+actual InspectedSignal
+pattern accepted/rejected reason
+confidence
+locality/source class
+FieldState snapshot
+```
+
+Add a code comment if helpful:
 
 ```cpp
-struct AmpWindowEvidence {
-    bool available = false;
+// Current transitional handoff: Analyzer receives a live candidate-like event,
+// not the actual PatternResult produced by DetectionRuntime.
+```
 
-    int16_t windowStartMs = 0;
-    int16_t windowEndMs = 0;
+---
 
-    float peak = 0.0f;
-    float baseline = 0.0f;
-    float lift = 0.0f;
-    float norm = 0.0f;
+## 5. Add a pipeline result handoff struct
 
-    const char* supportClass = "unknown";  // none / weak / medium / strong
-    const char* localityClass = "unknown"; // far / mid / near / unknown
+Add a small boundary struct if no suitable one exists.
 
-    bool observedOnly = true;
+Possible location:
+
+```txt
+src/detection/DetectionRuntime.h
+```
+
+or, if you want to keep Analyzer-specific dependency out of detection:
+
+```txt
+src/detection/DetectionPipelineSnapshot.h
+```
+
+Suggested minimal struct:
+
+```cpp
+struct DetectionPipelineResult {
+    bool hasPattern = false;
+    detection::PatternResult pattern;
+
+    bool hasSignal = false;
+    detection::SignalCandidate signal;
+
+    bool hasInspectedSignal = false;
+    detection::InspectedSignal inspectedSignal;
+
+    bool hasField = false;
+    detection::FieldState field;
+
+    const char* profileName = "unknown";
+    unsigned long timestampMs = 0;
 };
 ```
 
-If strings are too expensive, use small enums internally and convert to strings only when printing.
+Adjust namespaces/types to match the current codebase.
 
-Do not allocate arrays.
+If copying large structs is too expensive, use references/pointers or a compact snapshot instead.
 
-Do not store raw samples.
-
----
-
-## 5. Window definition
-
-For each accepted or proposed FrequencyFirst candidate, evaluate an AMP window around candidate time.
-
-Start with conservative defaults:
-
-```txt
-amp_window = -20ms .. +120ms relative to frequency candidate onset
-```
-
-If current timing makes this unsuitable, choose the closest already used window.
-
-The window should be retrospective/feature-history based, not raw sample capture.
-
-Preferred source:
-
-```txt
-FeatureHistory / scalar amplitude stream
-```
-
-Fallback only if needed:
-
-```txt
-current AMP envelope values already available near candidate
-```
-
-Do not create RAW sample dependency.
+Keep it simple and low-risk.
 
 ---
 
-## 6. Evidence fields
+## 6. Prefer snapshot over ownership transfer
 
-Compute and expose:
+This should be an observational handoff.
 
-```txt
-amp_peak
-amp_baseline
-amp_lift = amp_peak - amp_baseline
-amp_norm
-amp_support_class
-locality_class
-window start/end
-```
+DetectionRuntime remains owner of detection processing.
 
-Definitions may reuse existing AMP/locality code if available.
+Analyzer observes a snapshot.
 
-If classification bands are not stable yet, use provisional labels:
+Avoid making Analyzer mutate detection state.
+
+Preferred semantics:
 
 ```txt
-support=none|weak|medium|strong|unknown
-locality=far|mid|near|unknown
+DetectionRuntime produces result.
+Analyzer receives const snapshot.
+Analyzer classifies trial.
 ```
 
-But mark them as observation only.
+Avoid:
+
+```txt
+Analyzer asks DetectionRuntime to re-run detection.
+Analyzer modifies PatternResult.
+Analyzer owns PatternResult lifecycle.
+```
 
 ---
 
-## 7. No gating yet
+## 7. Expose latest result from DetectionRuntime
+
+Choose the least invasive path.
+
+Options:
+
+### Option A — Callback/event handoff
+
+DetectionRuntime calls Analyzer or a listener when a PatternResult is produced.
+
+Example concept:
+
+```cpp
+onPatternResult(const DetectionPipelineResult& result);
+```
+
+Use only if the architecture already supports callbacks or event sinks.
+
+### Option B — Poll latest result
+
+DetectionRuntime stores the latest result:
+
+```cpp
+bool hasLatestPipelineResult() const;
+const DetectionPipelineResult& latestPipelineResult() const;
+```
+
+Analyzer reads it during/after candidate handling.
+
+This is often lower risk.
+
+### Option C — Pass result through existing handleSequenceCandidate
+
+Extend the existing handoff function to include the result:
+
+```cpp
+handleSequenceCandidate(..., const DetectionPipelineResult* pipelineResult)
+```
+
+Use this only if the call chain is easy to update.
+
+---
+
+## 8. Recommended first implementation
+
+Prefer a minimal snapshot/polling approach unless current architecture clearly favors events.
+
+Suggested first target:
+
+```txt
+DetectionRuntime stores latest PatternResult snapshot.
+Analyzer can retrieve it when the candidate/trial finalizes.
+```
+
+This avoids major call-chain rewrites.
+
+---
+
+## 9. Build AnalyzerReport from actual PatternResult when available
+
+Update the Pass C builder path so it prefers the actual pipeline result:
+
+```txt
+if actual pipeline PatternResult is available:
+    fill AnalyzerPatternObservation from actual PatternResult
+else:
+    fallback to evaluateRoadmapSignalCandidateImpl()
+```
 
 Important:
 
 ```txt
-FrequencyFirst candidate result must not be rejected because amp_support is weak/none in this pass.
+Fallback remains for now.
+Pass J will compare both.
+Pass K will remove fallback after parity is proven.
 ```
 
-Pattern result should remain based on existing FrequencyFirst logic.
+Add a clear source marker in comments or report detail:
 
-AmpWindow evidence is attached as profile detail only.
-
-In code comments:
-
-```cpp
-// Observation-only AMP window evidence.
-// Do not use this as an acceptance/rejection gate in Pass L.
+```txt
+pattern_source=actual_pipeline
+pattern_source=analyzer_recheck
 ```
 
-If current PatternRules already use AMP support as gate, add a mode/flag for observe-only or clearly avoid changing that behavior in this pass.
+If there is already `AnalyzerProfileDetail`, add a temporary detail field or debug string if useful.
 
 ---
 
-## 8. Attach evidence to PatternResult / profile detail
+## 10. Preserve existing output format
 
-Make the AMP window evidence available to Analyzer.
+Do not change `SEQ_TRIAL`, `SEQ_EXPLAIN`, or `SEQ_SUMMARY` field order in this pass.
 
-Preferred:
+Only change the data source behind `AnalyzerReport.primaryPattern` when actual pipeline result is available.
 
-```txt
-PatternResult detail / profile detail contains AmpWindowEvidence.
-```
+Visible output should stay structurally stable.
 
-Analyzer should be able to print it in:
+Optional debug addition only under `SEQ_EXPLAIN`:
 
 ```txt
-SEQ_EXPLAIN_PROFILE_DETAIL
-```
-
-Do not add lots of AMP fields to default `SEQ_TRIAL`.
-
----
-
-## 9. Analyzer output
-
-Add an explain/detail line.
-
-Preferred line:
-
-```txt
-SEQ_CUSTOM trial=17 profile=FrequencyFirst dt=24ms win=-20..120ms peak=71.0 base=42.0 lift=29.0 norm=0.69 support=strong locality=near mode=observe
-```
-
-Alternative inside profile detail:
-
-```txt
-SEQ_EXPLAIN_PROFILE_DETAIL ns=freq_amp_window freq_score=482000 freq_contrast=1320 amp_win=-20..120ms amp_peak=71.0 amp_base=42.0 amp_lift=29.0 amp_norm=0.69 amp_support=strong locality=near mode=observe
-```
-
-Minimum acceptable:
-
-```txt
-SEQ_CUSTOM trial=17 win=-20..120ms peak=71.0 base=42.0 lift=29.0 norm=0.69 support=strong locality=near mode=observe
-```
-
-Only print in:
-
-```txt
-log=explain
-```
-
-or explicit profile-detail/debug mode.
-
-Do not spam default `SEQ_TRIAL`.
-
----
-
-## 10. Optional compact SEQ_TRIAL field
-
-Only if already easy and stable, add one compact field:
-
-```txt
-amp_support=strong
+SEQ_EXPLAIN_PIPELINE_SOURCE source=actual_pipeline fallback=0
 ```
 
 or:
 
 ```txt
-amp_locality=near
+SEQ_EXPLAIN_PIPELINE_SOURCE source=analyzer_recheck fallback=1
 ```
 
-But this is optional.
+Do not add this to default `SEQ_TRIAL`.
 
-Preferred for Pass L:
+---
+
+## 11. FieldState handoff
+
+If DetectionRuntime already has `FieldState`, include it in the snapshot.
+
+Analyzer can fill:
 
 ```txt
-Keep default SEQ_TRIAL stable and put AMP detail in SEQ_EXPLAIN.
+AnalyzerFieldObservation
+```
+
+from actual FieldState.
+
+If not readily available, leave:
+
+```txt
+field=unknown
+```
+
+Do not block Pass I on FieldState.
+
+PatternResult handoff is the priority.
+
+---
+
+## 12. Signal/inspection debug handoff
+
+If the detection pipeline already exposes:
+
+```txt
+SignalCandidate
+InspectedSignal
+inspection reject reason
+signal source
+```
+
+include them in the snapshot.
+
+If not, skip or leave `hasSignal=false`, `hasInspectedSignal=false`.
+
+Do not recreate a large debug framework in this pass.
+
+---
+
+## 13. Transitional comments
+
+Add a comment near the fallback:
+
+```cpp
+// Transitional fallback:
+// Analyzer still re-evaluates the candidate only when the actual pipeline
+// PatternResult is not available. Pass J compares both paths; Pass K removes
+// this fallback once parity is proven.
+```
+
+Add a comment near the new handoff:
+
+```cpp
+// Actual pipeline handoff:
+// DetectionRuntime owns candidate inspection and pattern interpretation.
+// Analyzer consumes this result for trial classification.
 ```
 
 ---
 
-## 11. Observation runs this should support
+## 14. Success criteria
 
-The resulting logs should help compare:
-
-```txt
-30cm
-50cm
-70cm
-90cm
-different mic orientations
-different body/cup setups
-quiet vs noisy room
-```
-
-Questions to answer from logs:
-
-```txt
-Do near/loud events produce consistently higher amp_lift?
-Do far/quiet events produce lower amp_lift?
-Is amp_base stable?
-Does the window catch the main hit or mostly tail/reflection?
-Does amp_norm separate near/mid/far better than peak?
-Are misses frequency misses or AMP evidence failures?
-```
-
----
-
-## 12. Memory constraints
-
-Keep this lean.
-
-Do not store per-trial AMP windows.
-
-Do not store raw samples.
-
-Do not copy FeatureHistory into Analyzer.
-
-Preferred pattern:
-
-```txt
-compute AmpWindowEvidence when candidate/pattern is produced
-attach compact evidence to PatternResult/profile detail
-print immediately in Analyzer explain
-update no large buffers
-```
-
-This matters especially because RB/runtime should not inherit Analyzer-style heavy diagnostics later.
-
----
-
-## 13. Success criteria
-
-Pass L is successful if:
+Pass I is successful if:
 
 ```txt
 Code compiles.
-FrequencyFirst candidates still work.
-AMP window evidence is computed for FrequencyFirst candidates.
-AMP window evidence is visible in `SEQ_EXPLAIN` or the generic `SEQ_CUSTOM` line.
-AMP window is observe-only and does not gate/reject candidates.
-SEQ_TRIAL remains stable.
-SEQ_SUMMARY remains stable.
-Actual RAW sample capture is untouched.
-No behavior/RB changes.
-No large persistent buffers are added.
+DetectionRuntime exposes or delivers an actual PatternResult snapshot.
+AnalyzerReport uses actual pipeline PatternResult when available.
+Analyzer-side re-evaluation remains only as fallback.
+SEQ_TRIAL format remains unchanged.
+SEQ_EXPLAIN format remains unchanged except optional source line.
+SEQ_SUMMARY format remains unchanged.
+Actual RAW trigger/sample capture is untouched.
+No detection thresholds or behavior changed.
 ```
 
 ---
 
-## 14. Quick checklist
+## 15. Quick implementation checklist
 
 ```txt
-[ ] Find FrequencyFirst/FrequencyMatch candidate path.
-[ ] Identify amplitude feature stream/history source.
-[ ] Add compact AmpWindowEvidence.
-[ ] Evaluate window around candidate time.
-[ ] Compute peak/base/lift/norm.
-[ ] Add provisional support/locality labels.
-[ ] Attach evidence to PatternResult/profile detail.
-[ ] Print `SEQ_CUSTOM` or `SEQ_EXPLAIN_PROFILE_DETAIL` line.
-[ ] Ensure mode=observe.
-[ ] Ensure no acceptance/rejection gate is added.
+[ ] Find current handleSequenceCandidate handoff.
+[ ] Find where DetectionRuntime produces PatternResult.
+[ ] Add minimal DetectionPipelineResult or equivalent snapshot.
+[ ] Expose latest result or pass it through existing handoff.
+[ ] Add source marker: actual_pipeline vs analyzer_recheck.
+[ ] Update AnalyzerReport builder to prefer actual PatternResult.
+[ ] Keep evaluateRoadmapSignalCandidateImpl fallback.
+[ ] Leave SEQ output shapes unchanged.
 [ ] Compile.
-[ ] Run short SEQ explain test.
-[ ] Confirm default SEQ_TRIAL shape unchanged.
-[ ] Confirm RAW sample capture untouched.
+[ ] Run short SEQ default.
+[ ] Run short SEQ explain.
+[ ] Confirm actual RAW trigger path untouched.
 ```
 
 ---
 
-## 15. Expected final state
+## 16. Expected final state of Pass I
 
 After this pass:
 
 ```txt
-FrequencyFirst proposes.
-AmpWindow observes.
-Analyzer reports.
-No gating yet.
+Analyzer can consume actual DetectionRuntime PatternResult.
+Analyzer-side re-evaluation still exists as fallback.
 ```
 
-Next possible pass:
+This prepares Pass J:
 
 ```txt
-Pass M — AmpWindow band calibration / classification.
-Pass N — AmpWindow gating in PatternRules for near/loud inclusion.
+Compare actual pipeline result against Analyzer-side re-check for parity.
+```
+
+---
+
+## 17. Status
+
+Pass I is now revisited and validated on-device.
+
+Current active pass:
+
+```txt
+Pass J: Re-evaluation Parity Check
 ```

@@ -25,6 +25,33 @@ Do not use AMP window as a hard gate yet.
 
 ---
 
+## Current Status
+
+We are in the middle of Pass L.
+
+Done so far:
+
+```txt
+AmpWindow evidence is threaded through PatternResult / Analyzer profile detail.
+SEQ_CUSTOM exists as the generic observation line.
+SEQ_TRIAL stays stable.
+```
+
+Known / suspected issue:
+
+```txt
+The custom line is printing, but the AmpWindow payload is still empty for the current live SEQ runs.
+Suspected cause: the retrospective FeatureHistory window is not yielding usable amp evidence at the candidate timestamp, or the candidate timing is not aligned with the stored window yet.
+```
+
+Current next step:
+
+```txt
+Trace why AmpWindowEvidence.available stays false and why peak/base/lift/norm remain zero.
+```
+
+---
+
 ## 1. Core intent
 
 Current desired detection shape:

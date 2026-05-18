@@ -40,7 +40,6 @@ struct InspectedSignal {
     float signalConfidence = 0.0f;
     float frequencyConfidence = 0.0f;
     AmpSupportClass ampSupport = AmpSupportClass::Unknown;
-    LocalityClass locality = LocalityClass::Unknown;
     AmpWindowEvidence ampWindow = {};
     bool duplicateRisk = false;
     float duplicateRiskScore = 0.0f;

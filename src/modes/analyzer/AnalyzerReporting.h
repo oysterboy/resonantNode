@@ -126,7 +126,7 @@ struct AnalyzerPatternObservation {
     float confidence = 0.0f;
     long dtMs = -1;
 
-    const char* locality = "unknown";
+    const char* ampSupport = "unknown";
     const char* sourceClass = "unknown";
     const char* reason = "none";
 
@@ -156,7 +156,7 @@ struct AnalyzerInspectionObservation {
     unsigned int rejected = 0;
 
     const char* primaryEvidence = "none";
-    const char* locality = "unknown";
+    const char* ampSupport = "unknown";
     const char* supportClass = "unknown";
     const char* mainRejectReason = "none";
 };
@@ -181,6 +181,7 @@ struct AnalyzerClassification {
 struct AnalyzerAmpWindowObservation {
     bool available = false;
     bool observedOnly = true;
+    const char* supportBasis = "peak";
     const char* note = "none";
 
     int16_t windowStartMs = -20;
@@ -189,10 +190,8 @@ struct AnalyzerAmpWindowObservation {
     float peak = 0.0f;
     float baseline = 0.0f;
     float lift = 0.0f;
-    float norm = 0.0f;
 
     const char* supportClass = "unknown";
-    const char* localityClass = "unknown";
 };
 
 struct AnalyzerProfileDetail {
@@ -205,9 +204,8 @@ struct AnalyzerProfileDetail {
     float ampLevel = 0.0f;
     float ampBase = 0.0f;
     float ampLift = 0.0f;
-    float ampNorm = 0.0f;
 
-    const char* ampLocality = "unknown";
+    const char* ampSupport = "unknown";
     AnalyzerAmpWindowObservation ampWindow;
 };
 
@@ -233,7 +231,6 @@ struct AnalyzerDebugSummary {
     bool parityMatch = true;
     bool parityAcceptedMatch = true;
     bool parityTypeMatch = true;
-    bool parityLocalityMatch = true;
     bool paritySourceMatch = true;
     bool parityReasonMatch = true;
     bool parityTimingClose = true;
@@ -248,6 +245,7 @@ struct AnalyzerSummary {
     const char* profileName = "unknown";
 
     unsigned int trials = 0;
+    unsigned int completed = 0;
     unsigned int expected = 0;
     unsigned int early = 0;
     unsigned int late = 0;

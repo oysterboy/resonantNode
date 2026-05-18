@@ -58,7 +58,6 @@ struct SignalCandidate {
     float ampBaseline = 0.0f;
     bool ampEvidencePresent = false;
     AmpSupportClass ampSupport = AmpSupportClass::Unknown;
-    LocalityClass locality = LocalityClass::Unknown;
     AmpWindowEvidence ampWindow = {};
     bool duplicateRisk = false;
     float duplicateRiskScore = 0.0f;

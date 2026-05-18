@@ -210,20 +210,6 @@ const char* ampSupportName(detection::AmpSupportClass value) {
     }
 }
 
-const char* localityName(detection::LocalityClass value) {
-    switch (value) {
-        case detection::LocalityClass::Near:
-            return "near";
-        case detection::LocalityClass::Mid:
-            return "mid";
-        case detection::LocalityClass::Far:
-            return "far";
-        case detection::LocalityClass::Unknown:
-        default:
-            return "unknown";
-    }
-}
-
 detection::SignalCandidate makeModernFrequencySignalCandidate(const FrequencyMatchDetector& liveFrequency) {
     detection::SignalCandidate signal = {};
     signal.kind = detection::SignalKind::FrequencyMatch;
@@ -321,7 +307,6 @@ detection::SignalCandidate makeModernSignalCandidateFromPatternResult(const dete
     out.ampBaseline = patternResult.candidate.ambientBaseline;
     out.ampEvidencePresent = true;
     out.ampSupport = patternResult.candidate.ampSupport;
-    out.locality = patternResult.candidate.locality;
     out.ampWindow = patternResult.ampWindow;
     out.duplicateRisk = patternResult.duplicateRisk;
     out.duplicateRiskScore = patternResult.duplicateRiskScore;
@@ -488,8 +473,6 @@ bool evaluateModernSignalCandidateImpl(const detection::SignalCandidate& signal,
         Serial.print(signalSourceName(inspected.signal.source));
         Serial.print(" amp_support=");
         Serial.print(ampSupportName(inspected.ampSupport));
-        Serial.print(" locality=");
-        Serial.print(localityName(inspected.locality));
         Serial.print(" duplicate_risk=");
         Serial.print(inspected.duplicateRisk ? 1 : 0);
         Serial.print(" duplicate_risk_score=");
@@ -543,8 +526,6 @@ bool evaluateModernSignalCandidateImpl(const detection::SignalCandidate& signal,
         Serial.print(candidate.durationMs);
         Serial.print(" amp_support=");
         Serial.print(ampSupportName(candidate.ampSupport));
-        Serial.print(" locality=");
-        Serial.print(localityName(candidate.locality));
         Serial.print(" signal_confidence=");
         Serial.print(candidate.signalConfidence, 2);
         Serial.print(" frequency_confidence=");
@@ -573,8 +554,6 @@ bool evaluateModernSignalCandidateImpl(const detection::SignalCandidate& signal,
         Serial.print(detection::patternSourceName(outResult.source));
         Serial.print(" reject=");
         Serial.print(detection::patternRejectReasonName(outResult.rejectReason));
-        Serial.print(" locality=");
-        Serial.print(localityName(outResult.locality));
         Serial.print(" amp_support=");
         Serial.print(ampSupportName(outResult.ampSupport));
         Serial.print(" signal_confidence=");
@@ -2265,6 +2244,7 @@ void AnalyzerApp::startSequenceTest(unsigned long totalTrials, unsigned long per
     _detection->setFrequencyTuning(_frequencyEvidenceTuning);
     const detection::DetectionProfile& selectedProfile = detection::detectionProfileForKind(_sequenceTest.profileKind);
     _detection->setAmpEnabled(selectedProfile.ampEnabled && !_sequenceTest.liveFrequencyOnly);
+    _detection->setInspectionConfig(selectedProfile.inspectionConfig);
     _detection->setFieldStateConfig(selectedProfile.fieldStateConfig);
     _detection->setProfileName(detection::detectionProfileName(selectedProfile.kind));
 
@@ -3621,7 +3601,6 @@ struct PatternResultParity {
     bool match = true;
     bool acceptedMatch = true;
     bool typeMatch = true;
-    bool localityMatch = true;
     bool sourceMatch = true;
     bool reasonMatch = true;
     bool timingClose = true;
@@ -3642,7 +3621,6 @@ static PatternResultParity comparePatternResultsForAnalyzer(
     parity.compared = true;
     parity.acceptedMatch = actual.valid == rechecked.valid;
     parity.typeMatch = actual.type == rechecked.type;
-    parity.localityMatch = actual.locality == rechecked.locality;
     parity.sourceMatch = actual.source == rechecked.source;
     parity.reasonMatch = actual.reasonCode == rechecked.reasonCode;
     parity.timingDeltaMs = actualDtMs - recheckedDtMs;
@@ -3655,7 +3633,6 @@ static PatternResultParity comparePatternResultsForAnalyzer(
 
     parity.match = parity.acceptedMatch &&
         parity.typeMatch &&
-        parity.localityMatch &&
         parity.sourceMatch &&
         parity.reasonMatch &&
         parity.timingClose &&
@@ -3674,7 +3651,6 @@ static PatternResultParity comparePatternResultsForAnalyzer(
         };
         if (!parity.acceptedMatch) appendSummary("accepted_mismatch");
         if (!parity.typeMatch) appendSummary("type_mismatch");
-        if (!parity.localityMatch) appendSummary("locality_mismatch");
         if (!parity.sourceMatch) appendSummary("source_mismatch");
         if (!parity.reasonMatch) appendSummary("reason_mismatch");
         if (!parity.timingClose) appendSummary("timing_mismatch");
@@ -3835,9 +3811,6 @@ void AnalyzerApp::finalizeSequenceTrial(unsigned long now) {
                 ++_sequenceTest.parityAcceptedMismatch;
                 if (!finalizedReport.debug.parityTypeMatch) {
                     ++_sequenceTest.parityTypeMismatch;
-                }
-                if (!finalizedReport.debug.parityLocalityMatch) {
-                    ++_sequenceTest.parityLocalityMismatch;
                 }
                 if (!finalizedReport.debug.paritySourceMatch) {
                     ++_sequenceTest.paritySourceMismatch;
@@ -4161,7 +4134,7 @@ AnalyzerReport AnalyzerApp::buildSequenceAnalyzerReport(unsigned long trialNumbe
             : false;
         pattern.confidence = actualPipelineAvailable && runtimePatternResult != nullptr ? runtimePatternResult->confidence : 0.0f;
         pattern.dtMs = report.classification.dtMs;
-        pattern.locality = actualPipelineAvailable && runtimePatternResult != nullptr ? localityName(runtimePatternResult->locality) : "unknown";
+        pattern.ampSupport = actualPipelineAvailable && runtimePatternResult != nullptr ? ampSupportName(runtimePatternResult->ampSupport) : "unknown";
         pattern.sourceClass = actualPipelineAvailable && runtimePatternResult != nullptr ? detection::patternSourceName(runtimePatternResult->source) : "unknown";
         pattern.reason = actualPipelineAvailable && runtimePatternResult != nullptr ? detection::patternReasonName(runtimePatternResult->reasonCode) : analyzerReasonName(report.classification.reason);
         pattern.involvedSignals = actualPipelineAvailable && runtimePatternResult != nullptr ? runtimePatternResult->signalCount : 0U;
@@ -4188,12 +4161,12 @@ AnalyzerReport AnalyzerApp::buildSequenceAnalyzerReport(unsigned long trialNumbe
     report.inspection.rejected = diagnostics.rawCandidateCount > report.inspection.accepted ? diagnostics.rawCandidateCount - report.inspection.accepted : 0U;
     if (actualPipelineAvailable && runtimeInspectedSignal != nullptr && runtimeInspectedSignal->signal.present) {
         report.inspection.primaryEvidence = signalSourceName(runtimeInspectedSignal->signal.source);
-        report.inspection.locality = localityName(runtimeInspectedSignal->locality);
+        report.inspection.ampSupport = ampSupportName(runtimeInspectedSignal->ampSupport);
         report.inspection.supportClass = ampSupportName(runtimeInspectedSignal->ampSupport);
         report.inspection.mainRejectReason = runtimeInspectedSignal->rejected ? signalRejectReasonName(runtimeInspectedSignal->rejectReason) : "none";
     } else {
         report.inspection.primaryEvidence = "none";
-        report.inspection.locality = "unknown";
+        report.inspection.ampSupport = "unknown";
         report.inspection.supportClass = "unsupported";
         report.inspection.mainRejectReason = analyzerReasonName(report.classification.reason);
     }
@@ -4221,10 +4194,7 @@ AnalyzerReport AnalyzerApp::buildSequenceAnalyzerReport(unsigned long trialNumbe
     report.profileDetail.ampLevel = report.signals.primaryStrength;
     report.profileDetail.ampBase = diagnostics.acceptedAmbientBaseline;
     report.profileDetail.ampLift = report.profileDetail.ampLevel - report.profileDetail.ampBase;
-    report.profileDetail.ampNorm = report.profileDetail.ampBase > 0.0f
-        ? report.profileDetail.ampLift / report.profileDetail.ampBase
-        : report.profileDetail.ampLift;
-    report.profileDetail.ampLocality = report.primaryPattern.locality;
+    report.profileDetail.ampSupport = report.primaryPattern.ampSupport;
     const detection::AmpWindowEvidence ampWindowEvidence = actualPipelineAvailable && runtimeInspectedSignal != nullptr
         ? runtimeInspectedSignal->ampWindow
         : detection::AmpWindowEvidence{};
@@ -4238,9 +4208,7 @@ AnalyzerReport AnalyzerApp::buildSequenceAnalyzerReport(unsigned long trialNumbe
     report.profileDetail.ampWindow.peak = ampWindowEvidence.peak;
     report.profileDetail.ampWindow.baseline = ampWindowEvidence.baseline;
     report.profileDetail.ampWindow.lift = ampWindowEvidence.lift;
-    report.profileDetail.ampWindow.norm = ampWindowEvidence.norm;
     report.profileDetail.ampWindow.supportClass = ampSupportName(ampWindowEvidence.supportClass);
-    report.profileDetail.ampWindow.localityClass = localityName(ampWindowEvidence.localityClass);
 
     report.debug.signals = diagnostics.rawCandidateCount;
     report.debug.inspected = diagnostics.rawCandidateCount;
@@ -4274,7 +4242,6 @@ AnalyzerReport AnalyzerApp::buildSequenceAnalyzerReport(unsigned long trialNumbe
         report.debug.parityMatch = parity.match;
         report.debug.parityAcceptedMatch = parity.acceptedMatch;
         report.debug.parityTypeMatch = parity.typeMatch;
-        report.debug.parityLocalityMatch = parity.localityMatch;
         report.debug.paritySourceMatch = parity.sourceMatch;
         report.debug.parityReasonMatch = parity.reasonMatch;
         report.debug.parityTimingClose = parity.timingClose;
@@ -4317,12 +4284,12 @@ void AnalyzerApp::printSequenceTrialResult(const AnalyzerReport& report) const {
     Serial.print(report.primaryPattern.type != nullptr ? report.primaryPattern.type : "unknown");
     Serial.print(" profile=");
     Serial.print(report.context.profile != nullptr ? report.context.profile : "unknown");
-    Serial.print(" confidence=");
-    Serial.print(report.primaryPattern.confidence, 2);
-    Serial.print(" locality=");
-    Serial.print(report.primaryPattern.locality != nullptr ? report.primaryPattern.locality : "unknown");
     Serial.print(" source=");
     Serial.print(report.primaryPattern.sourceClass != nullptr ? report.primaryPattern.sourceClass : "unknown");
+    Serial.print(" confidence=");
+    Serial.print(report.primaryPattern.confidence, 2);
+    Serial.print(" amp_support=");
+    Serial.print(report.primaryPattern.ampSupport != nullptr ? report.primaryPattern.ampSupport : "unknown");
     Serial.print(" field=");
     Serial.print(report.field.state != nullptr ? report.field.state : "unknown");
     Serial.print(" reason=");
@@ -4361,6 +4328,8 @@ void AnalyzerApp::printSequenceExplain(const AnalyzerReport& report) const {
     Serial.println();
     Serial.print("SEQ_EXPLAIN trial=");
     Serial.print(report.context.trial);
+    Serial.print(" result=");
+    Serial.print(analyzerResultName(report.classification.result));
     Serial.print(" pattern=");
     Serial.print(report.primaryPattern.type != nullptr ? report.primaryPattern.type : "unknown");
     Serial.print(" dt=");
@@ -4370,16 +4339,16 @@ void AnalyzerApp::printSequenceExplain(const AnalyzerReport& report) const {
     } else {
         Serial.print("-1ms");
     }
+    Serial.print(" profile=");
+    Serial.print(report.context.profile != nullptr ? report.context.profile : "unknown");
+    Serial.print(" source=");
+    Serial.print(report.primaryPattern.sourceClass != nullptr ? report.primaryPattern.sourceClass : "unknown");
     Serial.print(" confidence=");
     Serial.print(report.primaryPattern.confidence, 2);
+    Serial.print(" amp_support=");
+    Serial.print(report.primaryPattern.ampSupport != nullptr ? report.primaryPattern.ampSupport : "unknown");
     Serial.print(" reason=");
     Serial.print(analyzerReasonName(report.classification.reason));
-    Serial.print(" mode=");
-    Serial.print(report.context.mode != nullptr ? report.context.mode : "SEQ");
-    Serial.print(" trigger=");
-    Serial.print(report.context.trigger != nullptr ? report.context.trigger : "none");
-    Serial.print(" target=");
-    Serial.print(report.context.target != nullptr ? report.context.target : "none");
     Serial.println();
 
     Serial.print("SEQ_AMP_WINDOW trial=");
@@ -4393,20 +4362,14 @@ void AnalyzerApp::printSequenceExplain(const AnalyzerReport& report) const {
     Serial.print("ms");
     Serial.print(" available=");
     Serial.print(report.profileDetail.ampWindow.available ? 1 : 0);
-    Serial.print(" support=");
+    Serial.print(" amp_support=");
     Serial.print(report.profileDetail.ampWindow.supportClass != nullptr ? report.profileDetail.ampWindow.supportClass : "unknown");
-    Serial.print(" locality=");
-    Serial.print(report.profileDetail.ampWindow.localityClass != nullptr ? report.profileDetail.ampWindow.localityClass : "unknown");
     Serial.print(" peak=");
     Serial.print(report.profileDetail.ampWindow.peak, 1);
-    Serial.print(" base=");
+    Serial.print(" floor=");
     Serial.print(report.profileDetail.ampWindow.baseline, 1);
     Serial.print(" lift=");
     Serial.print(report.profileDetail.ampWindow.lift, 1);
-    Serial.print(" norm=");
-    Serial.print(report.profileDetail.ampWindow.norm, 2);
-    Serial.print(" mode=");
-    Serial.print(report.profileDetail.ampWindow.observedOnly ? "observe" : "active");
     Serial.print(" note=");
     Serial.println(report.profileDetail.ampWindow.note != nullptr ? report.profileDetail.ampWindow.note : "none");
 
@@ -4477,10 +4440,8 @@ void AnalyzerApp::printSequenceExplain(const AnalyzerReport& report) const {
         Serial.print(report.inspection.rejected);
         Serial.print(" evidence=");
         Serial.print(report.inspection.primaryEvidence != nullptr ? report.inspection.primaryEvidence : "none");
-        Serial.print(" locality=");
-        Serial.print(report.inspection.locality != nullptr ? report.inspection.locality : "unknown");
-        Serial.print(" support=");
-        Serial.print(report.inspection.supportClass != nullptr ? report.inspection.supportClass : "unknown");
+        Serial.print(" amp_support=");
+        Serial.print(report.inspection.ampSupport != nullptr ? report.inspection.ampSupport : "unknown");
         Serial.print(" main_reject=");
         Serial.print(report.inspection.mainRejectReason != nullptr ? report.inspection.mainRejectReason : "none");
         Serial.println();
@@ -4493,8 +4454,8 @@ void AnalyzerApp::printSequenceExplain(const AnalyzerReport& report) const {
         printMs(report.primaryPattern.dtMs);
         Serial.print(" confidence=");
         Serial.print(report.primaryPattern.confidence, 2);
-        Serial.print(" locality=");
-        Serial.print(report.primaryPattern.locality != nullptr ? report.primaryPattern.locality : "unknown");
+        Serial.print(" amp_support=");
+        Serial.print(report.primaryPattern.ampSupport != nullptr ? report.primaryPattern.ampSupport : "unknown");
         Serial.print(" source=");
         Serial.print(report.primaryPattern.sourceClass != nullptr ? report.primaryPattern.sourceClass : "unknown");
         Serial.print(" reason=");
@@ -4517,10 +4478,8 @@ void AnalyzerApp::printSequenceExplain(const AnalyzerReport& report) const {
         Serial.print(report.profileDetail.ampBase, 1);
         Serial.print(" amp_lift=");
         Serial.print(report.profileDetail.ampLift, 1);
-        Serial.print(" amp_norm=");
-        Serial.print(report.profileDetail.ampNorm, 2);
-        Serial.print(" amp_locality=");
-        Serial.print(report.profileDetail.ampLocality != nullptr ? report.profileDetail.ampLocality : "unknown");
+        Serial.print(" amp_support=");
+        Serial.print(report.profileDetail.ampSupport != nullptr ? report.profileDetail.ampSupport : "unknown");
         Serial.println();
 
         Serial.print("SEQ_EXPLAIN_PIPELINE_SOURCE source=");
@@ -4539,8 +4498,6 @@ void AnalyzerApp::printSequenceExplain(const AnalyzerReport& report) const {
                 Serial.print(report.debug.parityAcceptedMatch ? 1 : 0);
                 Serial.print(" type=");
                 Serial.print(report.debug.parityTypeMatch ? 1 : 0);
-                Serial.print(" locality=");
-                Serial.print(report.debug.parityLocalityMatch ? 1 : 0);
                 Serial.print(" source=");
                 Serial.print(report.debug.paritySourceMatch ? 1 : 0);
                 Serial.print(" reason=");
@@ -4568,17 +4525,17 @@ void AnalyzerApp::printSequenceExplain(const AnalyzerReport& report) const {
 
     printSequenceAmpWindow(report);
 
-    Serial.print("SEQ_EXPLAIN_DEBUG signals=");
+    Serial.print("SEQ_EXPLAIN_DEBUG raw_candidates=");
     Serial.print(report.debug.signals);
-    Serial.print(" inspected=");
+    Serial.print(" inspected_candidates=");
     Serial.print(report.debug.inspected);
-    Serial.print(" patterns=");
+    Serial.print(" accepted_patterns=");
     Serial.print(report.debug.patterns);
     Serial.print(" rejects=");
     Serial.print(report.debug.rejects);
-    Serial.print(" duplicates=");
+    Serial.print(" duplicate_hits=");
     Serial.print(report.debug.duplicates);
-    Serial.print(" unexpected=");
+    Serial.print(" unexpected_hits=");
     Serial.print(report.debug.unexpected);
     Serial.print(" main_reject=");
     Serial.print(report.debug.mainRejectReason != nullptr ? report.debug.mainRejectReason : "none");
@@ -4945,20 +4902,14 @@ void AnalyzerApp::printSequenceAmpWindow(const AnalyzerReport& report) const {
     Serial.print("ms");
     Serial.print(" available=");
     Serial.print(report.profileDetail.ampWindow.available ? 1 : 0);
-    Serial.print(" support=");
+    Serial.print(" amp_support=");
     Serial.print(report.profileDetail.ampWindow.supportClass != nullptr ? report.profileDetail.ampWindow.supportClass : "unknown");
-    Serial.print(" locality=");
-    Serial.print(report.profileDetail.ampWindow.localityClass != nullptr ? report.profileDetail.ampWindow.localityClass : "unknown");
     Serial.print(" peak=");
     Serial.print(report.profileDetail.ampWindow.peak, 1);
-    Serial.print(" base=");
+    Serial.print(" floor=");
     Serial.print(report.profileDetail.ampWindow.baseline, 1);
     Serial.print(" lift=");
     Serial.print(report.profileDetail.ampWindow.lift, 1);
-    Serial.print(" norm=");
-    Serial.print(report.profileDetail.ampWindow.norm, 2);
-    Serial.print(" mode=");
-    Serial.print(report.profileDetail.ampWindow.observedOnly ? "observe" : "active");
     Serial.print(" note=");
     Serial.println(report.profileDetail.ampWindow.note != nullptr ? report.profileDetail.ampWindow.note : "none");
 }
@@ -5131,11 +5082,9 @@ void AnalyzerApp::printSequenceTrialResult(unsigned long trialNumber, const char
         const float freqScore = trialEvaluated ? trialResult.freq.score : (diagnostics.transientAccepted ? diagnostics.acceptedTransientStrength : _sequenceTest.liveFrequency.frequencyCandidate.score);
         const float freqContrast = trialEvaluated ? trialResult.freq.spectralContrast : (diagnostics.transientAccepted ? diagnostics.acceptedFrequencyEvidence.spectralContrast : _sequenceTest.liveFrequency.candidatePeakContrast);
         const char* ampSupport = trialEvaluated ? ampSupportName(trialResult.ampSupport) : "Unknown";
-        const char* locality = trialEvaluated ? localityName(trialResult.locality) : "Unknown";
         const float ampPeak = trialEvaluated ? trialInspected.signal.ampLevel : trialSignal.ampLevel;
         const float ampBaseline = trialEvaluated ? trialInspected.signal.ampBaseline : trialSignal.ampBaseline;
         const float ampLift = ampPeak - ampBaseline;
-        const float ampNorm = ampBaseline > 0.0f ? ampLift / ampBaseline : ampLift;
 
         Serial.println();
         Serial.print("SEQ_TRIAL trial=");
@@ -5155,16 +5104,12 @@ void AnalyzerApp::printSequenceTrialResult(unsigned long trialNumber, const char
         Serial.print(freqContrast, 2);
         Serial.print(" amp_support=");
         Serial.print(ampSupport);
-        Serial.print(" locality=");
-        Serial.print(locality);
         Serial.print(" amp_peak=");
         Serial.print(ampPeak, 1);
-        Serial.print(" amp_base=");
+        Serial.print(" diagnostic_floor=");
         Serial.print(ampBaseline, 1);
         Serial.print(" amp_lift=");
         Serial.print(ampLift, 1);
-        Serial.print(" amp_norm=");
-        Serial.print(ampNorm, 3);
         Serial.print(" amp_hist=");
         Serial.print(ampSampleCount);
         Serial.print("/");
@@ -5373,11 +5318,6 @@ void AnalyzerApp::printSequenceTrialResult(unsigned long trialNumber, const char
         Serial.print(trialSignal.ampBaseline, 1);
         Serial.print(" amp_lift=");
         Serial.print(trialSignal.ampLevel - trialSignal.ampBaseline, 1);
-        Serial.print(" amp_norm=");
-        const float ampNorm = trialSignal.ampBaseline > 0.0f
-            ? (trialSignal.ampLevel - trialSignal.ampBaseline) / trialSignal.ampBaseline
-            : (trialSignal.ampLevel - trialSignal.ampBaseline);
-        Serial.print(ampNorm, 3);
         Serial.print(" cmp[freqPeakMinusAmpPeakMs=");
         if (trialSignal.valid) {
             Serial.print(freqPeakMinusAmpPeakMs);
@@ -5480,10 +5420,8 @@ void AnalyzerApp::printSequenceSummary() const {
     unsigned long durSumMs = 0;
     unsigned long durCount = 0;
     float confidenceSum = 0.0f;
-    unsigned long confidenceCount = 0;
     bool capturedSummaryAvailable = false;
-    unsigned int capturedTrialCount = 0;
-    unsigned int fallbackTrialCount = 0;
+    unsigned int completedTrialCount = 0;
 
     if (_sequenceTest.deprecatedAnalyzerReports != nullptr) {
         const size_t limit = _sequenceTest.deprecatedAnalyzerReportCount < _sequenceTest.deprecatedAnalyzerReportCapacity
@@ -5491,12 +5429,11 @@ void AnalyzerApp::printSequenceSummary() const {
             : _sequenceTest.deprecatedAnalyzerReportCapacity;
         for (size_t i = 0; i < limit; ++i) {
             capturedSummaryAvailable = true;
+            ++completedTrialCount;
 
             const AnalyzerReport& report = _sequenceTest.deprecatedAnalyzerReports[i];
             if (report.debug.artifactCaptured) {
-                ++capturedTrialCount;
-            } else {
-                ++fallbackTrialCount;
+                // capturedSummaryAvailable already tells us these reports came from stored runtime output.
             }
             switch (report.classification.result) {
                 case AnalyzerResult::Expected:
@@ -5548,10 +5485,7 @@ void AnalyzerApp::printSequenceSummary() const {
             const float reportConfidence = report.primaryPattern.confidence > 0.0f
                 ? report.primaryPattern.confidence
                 : report.classification.confidence;
-            if (report.primaryPattern.accepted && reportConfidence > 0.0f) {
-                confidenceSum += reportConfidence;
-                ++confidenceCount;
-            }
+            confidenceSum += reportConfidence;
 
             const size_t reasonIndex = analyzerReasonIndex(report.classification.reason);
             if (reasonIndex < reasonCount) {
@@ -5581,15 +5515,21 @@ void AnalyzerApp::printSequenceSummary() const {
         summary.avgDtMs = -1.0f;
         summary.avgDurationMs = -1.0f;
         summary.avgConfidence = 0.0f;
-        summary.duplicateRate = summary.trials > 0 ? static_cast<float>(summary.duplicate) / static_cast<float>(summary.trials) : 0.0f;
-        summary.unexpectedRate = summary.trials > 0 ? static_cast<float>(summary.unexpected) / static_cast<float>(summary.trials) : 0.0f;
-        fallbackTrialCount = summary.trials;
+        summary.completed = _sequenceTest.currentTrial;
+        summary.duplicateRate = summary.completed > 0 ? static_cast<float>(summary.duplicate) / static_cast<float>(summary.completed) : 0.0f;
+        summary.unexpectedRate = summary.completed > 0 ? static_cast<float>(summary.unexpected) / static_cast<float>(summary.completed) : 0.0f;
+        completedTrialCount = summary.completed;
     } else {
         summary.avgDtMs = dtCount > 0 ? static_cast<float>(dtSumMs) / static_cast<float>(dtCount) : -1.0f;
         summary.avgDurationMs = durCount > 0 ? static_cast<float>(durSumMs) / static_cast<float>(durCount) : -1.0f;
-        summary.avgConfidence = confidenceCount > 0 ? confidenceSum / static_cast<float>(confidenceCount) : 0.0f;
-        summary.duplicateRate = static_cast<float>(summary.duplicate) / static_cast<float>(summary.trials);
-        summary.unexpectedRate = static_cast<float>(summary.unexpected) / static_cast<float>(summary.trials);
+        summary.completed = completedTrialCount;
+        summary.avgConfidence = summary.completed > 0 ? confidenceSum / static_cast<float>(summary.completed) : 0.0f;
+        summary.duplicateRate = summary.completed > 0 ? static_cast<float>(summary.duplicate) / static_cast<float>(summary.completed) : 0.0f;
+        summary.unexpectedRate = summary.completed > 0 ? static_cast<float>(summary.unexpected) / static_cast<float>(summary.completed) : 0.0f;
+    }
+
+    if (summary.completed == 0) {
+        summary.completed = capturedSummaryAvailable ? completedTrialCount : _sequenceTest.currentTrial;
     }
 
     auto selectMaxReason = [&](const unsigned int* counts, AnalyzerReason fallback) {
@@ -5614,6 +5554,8 @@ void AnalyzerApp::printSequenceSummary() const {
     Serial.print(summary.profileName != nullptr ? summary.profileName : "unknown");
     Serial.print(" trials=");
     Serial.print(summary.trials);
+    Serial.print(" completed=");
+    Serial.print(summary.completed);
     Serial.print(" expected=");
     Serial.print(summary.expected);
     Serial.print(" early=");

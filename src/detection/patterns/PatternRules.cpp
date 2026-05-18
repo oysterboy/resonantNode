@@ -3,35 +3,6 @@
 namespace {
 using namespace detection;
 
-LocalityClass localityFromAmpSupport(AmpSupportClass support) {
-    switch (support) {
-        case AmpSupportClass::Strong:
-            return LocalityClass::Near;
-        case AmpSupportClass::Medium:
-            return LocalityClass::Mid;
-        case AmpSupportClass::Weak:
-        case AmpSupportClass::None:
-            return LocalityClass::Far;
-        case AmpSupportClass::Unknown:
-        default:
-            return LocalityClass::Unknown;
-    }
-}
-
-PatternResultKind tonalKindFromLocality(LocalityClass locality) {
-    switch (locality) {
-        case LocalityClass::Near:
-            return PatternResultKind::TonalPulseNear;
-        case LocalityClass::Mid:
-            return PatternResultKind::TonalPulseMid;
-        case LocalityClass::Far:
-            return PatternResultKind::TonalPulseFar;
-        case LocalityClass::Unknown:
-        default:
-            return PatternResultKind::TonalPulse;
-    }
-}
-
 PatternResultKind resultKindFromCandidate(const PatternCandidate& candidate) {
     if (candidate.kind == PatternCandidateKind::PulseSequence || candidate.signalCount > 1 || candidate.pulseCount > 1) {
         if (candidate.maxGapMs > 0 && candidate.maxGapMs < 20UL) {
@@ -43,7 +14,7 @@ PatternResultKind resultKindFromCandidate(const PatternCandidate& candidate) {
         return PatternResultKind::ValidChirp;
     }
 
-    return tonalKindFromLocality(candidate.locality);
+    return PatternResultKind::TonalPulse;
 }
 
 bool hasTransientEvidence(const PatternCandidate& candidate) {
@@ -88,7 +59,6 @@ PatternResult makeInvalidResult(const PatternCandidate& candidate,
     result.signalConfidence = 0.0f;
     result.frequencyConfidence = 0.0f;
     result.ampSupport = AmpSupportClass::Unknown;
-    result.locality = LocalityClass::Unknown;
     result.ampWindow = candidate.ampWindow;
     result.duplicateRisk = false;
     result.duplicateRiskScore = 0.0f;
@@ -156,9 +126,6 @@ PatternResult PatternRules::evaluateFrequencyPattern(
     result.signalConfidence = candidate.signalConfidence > 0.0f ? candidate.signalConfidence : 1.0f;
     result.frequencyConfidence = candidate.frequencyConfidence;
     result.ampSupport = candidate.ampSupport;
-    result.locality = candidate.locality != LocalityClass::Unknown
-        ? candidate.locality
-        : localityFromAmpSupport(candidate.ampSupport);
     result.ampWindow = candidate.ampWindow;
     result.duplicateRisk = candidate.duplicateRisk;
     result.duplicateRiskScore = candidate.duplicateRiskScore;
@@ -217,9 +184,6 @@ PatternResult PatternRules::evaluateAmpPattern(
     result.signalConfidence = candidate.signalConfidence > 0.0f ? candidate.signalConfidence : 0.5f;
     result.frequencyConfidence = candidate.frequencyConfidence;
     result.ampSupport = candidate.ampSupport;
-    result.locality = candidate.locality != LocalityClass::Unknown
-        ? candidate.locality
-        : localityFromAmpSupport(candidate.ampSupport);
     result.ampWindow = candidate.ampWindow;
     result.duplicateRisk = candidate.duplicateRisk;
     result.duplicateRiskScore = candidate.duplicateRiskScore;

@@ -8,6 +8,7 @@ void DetectionRuntime::reset() {
     _ampEmitter.reset();
     _frequencyEmitter.reset();
     _signalInspector.reset();
+    _signalInspector.configure(_inspectionConfig);
     _patternAssembler.reset();
     _fieldStateTracker.reset();
     _featureHistory.reset();
@@ -24,6 +25,11 @@ void DetectionRuntime::reset() {
 
 void DetectionRuntime::setFrequencyTuning(const FrequencyEvidenceEvaluation::Values& tuning) {
     _frequencyTuning = tuning;
+}
+
+void DetectionRuntime::setInspectionConfig(const InspectionConfig& config) {
+    _inspectionConfig = config;
+    _signalInspector.configure(_inspectionConfig);
 }
 
 void DetectionRuntime::setAmpEnabled(bool enabled) {

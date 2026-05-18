@@ -1173,6 +1173,7 @@ void Node::syncDetectionRuntimeMode() {
     const detection::DetectionProfile& profile = activeProfile();
     _detection.setAmpEnabled(profile.ampEnabled && !usesFrequencyOnly());
     _detection.setFrequencyTuning(_frequencyEvidenceTuning);
+    _detection.setInspectionConfig(profile.inspectionConfig);
     _detection.setFieldStateConfig(profile.fieldStateConfig);
 
     _behavior.setWaitAfterTransientMs(profile.waitAfterTransientMs);

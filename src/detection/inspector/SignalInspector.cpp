@@ -4,29 +4,6 @@
 namespace {
 
 constexpr unsigned long kDuplicateRiskWindowMs = 150;
-constexpr unsigned long kFeatureHistoryPaddingMs = 20;
-constexpr int16_t kAmpWindowStartMs = -20;
-constexpr int16_t kAmpWindowEndMs = 120;
-
-detection::AmpSupportClass classifyAmpSupportFromMetrics(float lift, float normalized, bool hasEvidence) {
-    if (!hasEvidence) {
-        return detection::AmpSupportClass::Unknown;
-    }
-
-    if (lift >= 1200.0f || normalized >= 0.60f) {
-        return detection::AmpSupportClass::Strong;
-    }
-
-    if (lift >= 500.0f || normalized >= 0.25f) {
-        return detection::AmpSupportClass::Medium;
-    }
-
-    if (lift >= 120.0f || normalized > 0.0f) {
-        return detection::AmpSupportClass::Weak;
-    }
-
-    return detection::AmpSupportClass::None;
-}
 
 void setRejected(detection::InspectedSignal& out, detection::SignalRejectReason reason) {
     out.decision = detection::SignalDecision::Rejected;
@@ -42,28 +19,26 @@ void fillAmpWindowObservation(
     detection::InspectedSignal& out,
     const detection::SignalCandidate& candidate,
     float peak,
-    float baseline,
-    bool available
+    float floor,
+    bool available,
+    const detection::InspectionConfig& config
 ) {
-    const float lift = peak - baseline;
-    const float normalized = baseline > 0.0f ? lift / baseline : lift;
+    const float lift = peak - floor;
 
     out.signal.ampLevel = peak;
-    out.signal.ampBaseline = baseline;
-    out.ampSupport = classifyAmpSupportFromMetrics(lift, normalized, available);
-    out.locality = classifyLocality(out.ampSupport);
+    out.signal.ampBaseline = floor;
+    out.ampSupport = available ? classifyAmpSupport(peak, available, config.ampSupport) : detection::AmpSupportClass::Unknown;
 
     auto& ampEvidence = out.ampWindow;
     ampEvidence.available = available;
     ampEvidence.observedOnly = true;
-    ampEvidence.windowStartMs = kAmpWindowStartMs;
-    ampEvidence.windowEndMs = kAmpWindowEndMs;
+    ampEvidence.supportBasis = "peak";
+    ampEvidence.windowStartMs = static_cast<int16_t>(-static_cast<int32_t>(config.ampWindowPreMs));
+    ampEvidence.windowEndMs = static_cast<int16_t>(config.ampWindowPostMs);
     ampEvidence.peak = peak;
-    ampEvidence.baseline = baseline;
+    ampEvidence.baseline = floor;
     ampEvidence.lift = lift;
-    ampEvidence.norm = normalized;
     ampEvidence.supportClass = out.ampSupport;
-    ampEvidence.localityClass = out.locality;
 
     (void)candidate;
 }
@@ -71,6 +46,10 @@ void fillAmpWindowObservation(
 } // namespace
 
 namespace detection {
+
+void SignalInspector::configure(const InspectionConfig& config) {
+    _config = config;
+}
 
 void SignalInspector::reset() {
     _lastAcceptedAmpMs = 0;
@@ -91,12 +70,15 @@ void SignalInspector::annotateAcceptedSignal(
     out.signal.frequencyConfidence = out.frequencyConfidence;
     out.signal.ampEvidencePresent = candidate.ampEvidencePresent;
     out.signal.ampSupport = out.ampSupport;
-    out.signal.locality = out.locality;
     out.signal.duplicateRisk = out.duplicateRisk;
     out.signal.duplicateRiskScore = out.duplicateRiskScore;
 }
 
 void SignalInspector::annotateDuplicateRisk(InspectedSignal& out, const SignalCandidate& candidate) const {
+    if (!_config.enableDuplicateRiskInspection) {
+        return;
+    }
+
     const unsigned long acceptedMs = candidate.releaseMs != 0 ? candidate.releaseMs
                                                               : (candidate.endMs != 0 ? candidate.endMs
                                                                                      : candidate.peakMs);
@@ -140,29 +122,27 @@ void SignalInspector::annotateAmpSupportAndLocality(
     const SignalCandidate& candidate,
     const FeatureHistory* featureHistory
 ) const {
-    const unsigned long startMs = candidate.startMs > kFeatureHistoryPaddingMs ? candidate.startMs - kFeatureHistoryPaddingMs : 0UL;
+    const unsigned long startMs = candidate.startMs > _config.ampWindowPreMs ? candidate.startMs - _config.ampWindowPreMs : 0UL;
     const unsigned long endMs = candidate.endMs != 0
-        ? candidate.endMs + kFeatureHistoryPaddingMs
-        : (candidate.releaseMs != 0 ? candidate.releaseMs + kFeatureHistoryPaddingMs : candidate.peakMs + kFeatureHistoryPaddingMs);
+        ? candidate.endMs + _config.ampWindowPostMs
+        : (candidate.releaseMs != 0 ? candidate.releaseMs + _config.ampWindowPostMs : candidate.peakMs + _config.ampWindowPostMs);
     auto& ampEvidence = out.ampWindow;
     ampEvidence.available = false;
     ampEvidence.observedOnly = true;
-    ampEvidence.windowStartMs = kAmpWindowStartMs;
-    ampEvidence.windowEndMs = kAmpWindowEndMs;
+    ampEvidence.windowStartMs = static_cast<int16_t>(-static_cast<int32_t>(_config.ampWindowPreMs));
+    ampEvidence.windowEndMs = static_cast<int16_t>(_config.ampWindowPostMs);
     ampEvidence.peak = 0.0f;
     ampEvidence.baseline = 0.0f;
     ampEvidence.lift = 0.0f;
-    ampEvidence.norm = 0.0f;
+    ampEvidence.supportBasis = "peak";
     ampEvidence.supportClass = AmpSupportClass::Unknown;
-    ampEvidence.localityClass = LocalityClass::Unknown;
 
-    if (featureHistory != nullptr) {
+    if (_config.enableAmpSupportInspection && featureHistory != nullptr) {
         const ScalarWindow ampWindow = featureHistory->getWindow(FeatureStreamId::AmpEnvelope, startMs, endMs);
-        const ScalarWindow floorWindow = featureHistory->getWindow(FeatureStreamId::AmbientFloor, startMs, endMs);
-        if (ampWindow.valid && floorWindow.valid) {
-            const float baseline = floorWindow.mean;
+        if (ampWindow.valid) {
+            const float floor = ampWindow.mean;
             const float peak = ampWindow.peak;
-            fillAmpWindowObservation(out, candidate, peak, baseline, true);
+            fillAmpWindowObservation(out, candidate, peak, floor, true, _config);
             return;
         }
     }
@@ -171,12 +151,11 @@ void SignalInspector::annotateAmpSupportAndLocality(
         out.signal.ampLevel = 0.0f;
         out.signal.ampBaseline = 0.0f;
         out.ampSupport = AmpSupportClass::Unknown;
-        out.locality = classifyLocality(out.ampSupport);
         return;
     }
 
     // Observation-only AMP snapshot fallback for live FrequencyFirst candidates.
-    fillAmpWindowObservation(out, candidate, candidate.ampLevel, candidate.ampBaseline, true);
+    fillAmpWindowObservation(out, candidate, candidate.ampLevel, 0.0f, true, _config);
 }
 
 InspectedSignal SignalInspector::inspectImpl(

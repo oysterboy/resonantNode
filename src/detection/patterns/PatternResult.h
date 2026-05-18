@@ -5,7 +5,9 @@
 
 namespace detection {
 
+// PatternResult is the rule-level summary used by runtime and analyzer reports.
 struct PatternResult {
+    // Rule output and classification.
     PatternResultKind kind = PatternResultKind::Unknown;
     uint32_t lineageId = 0;
     uint8_t primarySlotIndex = 0;
@@ -17,10 +19,11 @@ struct PatternResult {
     float signalConfidence = 0.0f;
     float frequencyConfidence = 0.0f;
     AmpSupportClass ampSupport = AmpSupportClass::Unknown;
-    LocalityClass locality = LocalityClass::Unknown;
     AmpWindowEvidence ampWindow = {};
     bool duplicateRisk = false;
     float duplicateRiskScore = 0.0f;
+
+    // Provenance and timing summary.
     unsigned long processedAtMs = 0;
     uint8_t signalCount = 0;
     uint8_t pulseCount = 0;
@@ -28,6 +31,8 @@ struct PatternResult {
     unsigned long lastPulseMs = 0;
     unsigned long minGapMs = 0;
     unsigned long maxGapMs = 0;
+
+    // Transitional payloads carried through for compatibility and reporting.
     PatternCandidate candidate = {};
     FrequencyEvidence freq = {};
     FrequencyEvidence freqFull = {};

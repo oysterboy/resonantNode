@@ -1,5 +1,6 @@
 #pragma once
 
+#include "../DetectionProfile.h"
 #include "../signals/InspectedSignal.h"
 #include "../signals/RawWindow.h"
 #include "../features/FeatureHistory.h"
@@ -9,6 +10,7 @@ namespace detection {
 
 class SignalInspector {
 public:
+    void configure(const InspectionConfig& config);
     void reset();
 
     InspectedSignal inspect(
@@ -55,6 +57,7 @@ private:
 
     mutable unsigned long _lastAcceptedAmpMs = 0;
     mutable unsigned long _lastAcceptedFrequencyMs = 0;
+    InspectionConfig _config = defaultInspectionConfig();
 };
 
 } // namespace detection

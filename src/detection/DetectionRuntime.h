@@ -43,6 +43,7 @@ public:
     void reset();
 
     void setFrequencyTuning(const FrequencyEvidenceEvaluation::Values& tuning);
+    void setInspectionConfig(const InspectionConfig& config);
     void setAmpEnabled(bool enabled);
     void setFieldStateConfig(const FieldStateConfig& config);
     void setProfileName(const char* profileName);
@@ -74,6 +75,7 @@ private:
     );
 
     FrequencyEvidenceEvaluation::Values _frequencyTuning = {};
+    InspectionConfig _inspectionConfig = defaultInspectionConfig();
     bool _ampEnabled = true;
     const char* _profileName = "unknown";
 

@@ -1,5 +1,42 @@
 # Lab Notes
 
+## 2026-05-18 18:25:30
+
+Detection Profile 'Frequency + Amp Inspection' works with these values:
+
+```txt
+profile:
+  detectionOnly = false
+  requireTonalForBehavior = true
+  ampEnabled = true
+  useLegacyPath = false
+  frequencyOnly = false
+  waitAfterTransientMs = 100
+  refractoryAfterEmitMs = 0
+  idleTimeoutMs = 20000
+  idleTimeVariationMs = 10000
+  idleBlockedAfterHeardMs = 3000
+  idleBlockedAfterOwnEmitMs = 5000
+
+window:
+  ampWindowPreMs = 20
+  ampWindowPostMs = 120
+  enableAmpSupportInspection = true
+  enableDuplicateRiskInspection = true
+  strongPeakThreshold = 70.0
+  mediumPeakThreshold = 40.0
+  weakPeakThreshold = 20.0
+
+detection tuning:
+  onsetDetectionThreshold = 23.0
+  onsetReleaseThreshold = 20.0
+  cooldownAfterOnsetMs = 300
+  releaseDebounceMs = 30
+  minTransientDurationMs = 60
+  maxTransientDurationMs = 240
+  minTransientPeakStrength = 40.0
+```
+
 ## 2026-05-15
 
 # Detection Refactor Baseline - Pass 0

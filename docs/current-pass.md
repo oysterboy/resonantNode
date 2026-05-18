@@ -1,604 +1,713 @@
-# Analyzer Refactor — Pass M: Human-Readable Output Cleanup for FrequencyFirst + AmpWindow
+# Detection Refactor Pass K — Inspector Config + AMP Support Analyzer Output
 
-**Project:** ResonantNode / Resonanzraum  
-**Area:** Analyzer / Detection reporting  
-**Pass:** M  
-**Goal:** Reorder and simplify Analyzer output so FrequencyFirst + AmpWindow observation is easier to read by humans, now that fallback/legacy comparison is no longer used.
+Version: Detection Roadmap v0.3 — Pass K  
+Scope: Simplify AMP support handling, make SignalInspector configuration explicit, add profile-owned inspection config, and update Analyzer output
 
 ---
 
-## 0. Context
+## Goal
 
-Current logs show that the reporting structure works:
+Refactor the AMP support / inspection setup so it is simpler, profile-configurable, and consistently reported.
 
-```txt
-actual pipeline result is captured
-fallback is off
-Frequency candidate evidence exists
-AmpWindow evidence is available
-SEQ_AMP_WINDOW reports inspector-side data
+Primary decisions:
+
+```text
+Remove legacy distance labels.
+Use AmpSupportClass directly.
+Centralize AMP support classification.
+Configure SignalInspector through simple InspectionConfig.
+Let DetectionProfile provide that InspectionConfig.
+Reflect amp_support in Analyzer output.
 ```
 
-But the output is hard to read because it mixes:
+This pass replaces the earlier Analyzer-only framing.
 
-```txt
-trial classification
-pipeline artifact plumbing
-frequency candidate detail
-AMP-window evidence
-profile detail duplication
-debug accounting
-sample-level DSP fields
-legacy comparison fields
-```
+The focus is now:
 
-This pass should make the serial output easier to scan during real test runs.
-
-Current experiment goal:
-
-```txt
-FrequencyFirst proposes.
-AmpWindow observes.
-Analyzer reports what the AMP window sees.
-No AMP gating yet.
+```text
+DetectionProfile
+→ InspectionConfig
+→ SignalInspector
+→ InspectedSignal.ampSupport
+→ PatternRules / PatternResult
+→ Analyzer output
 ```
 
 ---
 
-## 1. Core intent
+## Why this pass exists
 
-Make the output tell this story in order:
+The current code has two related problems:
 
-```txt
-1. What happened in the trial?
-2. What frequency candidate/evidence caused it?
-3. What did the AMP window see around that candidate?
-4. What was the field/classification/debug context?
+```text
+1. AMP support classification is more complex than needed.
+2. AMP support thresholds are duplicated in more than one place.
 ```
 
-Preferred human scan order:
+The architecture does not need spatial labels right now.
 
-```txt
-SEQ_TRIAL
-SEQ_FREQ_CAND
-SEQ_AMP_WINDOW
-SEQ_EXPLAIN_FIELD
-SEQ_EXPLAIN_CLASSIFICATION
-SEQ_SUMMARY
+AMP evidence should be reported as what it actually is:
+
+```text
+strong / medium / weak / none / unknown AMP support
 ```
 
-Keep more verbose / legacy / DSP fields available only under explicit full/debug/trace modes.
+not as a spatial distance claim.
 
 ---
 
-## 2. Non-goals
+## Current issue
 
-Do not change detection behavior.
+Current code likely has AMP support logic in places such as:
 
-Do not change thresholds.
+```text
+SignalInspector.cpp
+SignalWindowEvaluator.h
+Analyzer output / logs
+PatternRules / PatternResult fields
+```
 
-Do not add AMP-window gating.
+The previous model used both:
 
-Do not change FrequencyFirst acceptance.
+```text
+AmpSupportClass
+legacy distance labels
+```
 
-Do not change PatternRules.
-
-Do not touch actual RAW sample capture.
-
-Do not reintroduce fallback comparison output.
-
-Do not add large buffers or per-trial stored reports.
-
-This is output formatting / visibility cleanup only.
+This pass removes legacy distance labels from the active path and makes `AmpSupportClass` the inspected fact.
 
 ---
 
-## 3. Files to inspect
+## Target flow
 
-Start with:
-
-```txt
-src/modes/analyzer/AnalyzerApp.h
-src/modes/analyzer/AnalyzerApp.cpp
-src/modes/analyzer/AnalyzerReporting.h
+```text
+DetectionProfile
+→ InspectionConfig
+→ SignalInspector
+→ InspectionRules / WindowEvaluators
+→ InspectedSignal.ampSupport
+→ PatternAssembler
+→ PatternCandidate.ampSupport
+→ PatternRules
+→ PatternResult.ampSupport
+→ Analyzer output
 ```
 
-Search for:
+Boundary:
 
-```txt
-SEQ_TRIAL
-SEQ_EXPLAIN
-SEQ_FREQ_CAND
-SEQ_AMP_WINDOW
-SEQ_EXPLAIN_PROFILE_DETAIL
-SEQ_EXPLAIN_SIGNAL
-SEQ_EXPLAIN_INSPECTION
-SEQ_EXPLAIN_PIPELINE_SOURCE
-SEQ_REASON_COUNTS
-SEQ_LEGACY_PROFILE_SUMMARY
-artifact_state
-artifact_reason
-legacy_comparison
-first_seen_sample
-peak_sample
-window_samples
-hold_windows
+```text
+FrequencyMatchDetector creates SignalCandidate.
+SignalInspector evaluates AMP support.
+PatternRules interpret PatternCandidate.
+Analyzer reports the result.
+Behavior consumes PatternResult + FieldState.
 ```
 
 ---
 
-## 4. Default SEQ_TRIAL cleanup
+## 1. Remove legacy distance labels
 
-Current `SEQ_TRIAL` may include pipeline plumbing:
+### Target
 
-```txt
-artifact_state=CAPTURED
-artifact_reason=captured_from_runtime_pipeline
+Remove legacy distance labels from the active detection/analyzer path.
+
+Remove or replace fields such as:
+
+```cpp
+AmpSupportClass ampSupport;
 ```
 
-Remove these from default `SEQ_TRIAL`.
+from active structs where present:
 
-They are no longer useful in the normal line once fallback is gone.
-
-Keep pipeline/source status only in explicit explain/debug mode if needed.
-
-### Preferred default line
-
-```txt
-SEQ_TRIAL trial=1 result=expected dt=57ms pattern=valid_tonal_transient profile=FreqAmp confidence=1.00 locality=far field=active reason=valid_pattern_in_expected_window dup=0 candidates=1
+```text
+SignalCandidate
+InspectedSignal
+PatternCandidate
+PatternResult
+Analyzer output
+logs
 ```
 
-### Acceptable with source
+Replace with:
 
-If still useful for current validation:
-
-```txt
-SEQ_TRIAL trial=1 result=expected dt=57ms pattern=valid_tonal_transient profile=FreqAmp source=frequency_primary confidence=1.00 locality=far field=active reason=valid_pattern_in_expected_window dup=0 candidates=1
+```cpp
+AmpSupportClass ampSupport;
 ```
 
-Recommended field order:
+### Remove mapping logic
 
-```txt
-trial
-result
-dt
-pattern
-profile
-source
-confidence
-locality
-field
-reason
-dup
-candidates
+Remove mapping logic like:
+
+```text
+Strong  → Near
+Medium  → Mid
+Weak    → Far
+None    → Far / Unknown
+```
+
+Do not keep legacy distance labels under another name.
+
+### Accepted remaining usage
+
+Temporary compatibility aliases are acceptable only if needed to compile, but they should not appear in the active Analyzer output or new profile configuration.
+
+---
+
+## 2. Keep `AmpSupportClass` as the primary inspected fact
+
+### Target enum
+
+Use or normalize:
+
+```cpp
+enum class AmpSupportClass {
+  Unknown,
+  None,
+  Weak,
+  Medium,
+  Strong
+};
+```
+
+Existing enum order may remain if already established.
+
+### Meaning
+
+```text
+Strong:
+AMP clearly supports the signal.
+
+Medium:
+AMP support exists but is moderate.
+
+Weak:
+AMP support exists but is weak / indirect.
+
+None:
+No meaningful AMP support found.
+
+Unknown:
+AMP support was not evaluated or evidence was unavailable.
+```
+
+### Documentation wording
+
+Use:
+
+```text
+AMP support indicates physical amplitude support for a detected signal.
+It may correlate with local strength but is not a reliable distance measurement.
+```
+
+Avoid:
+
+```text
+Strong does not imply distance.
+Weak does not imply distance.
 ```
 
 ---
 
-## 5. Remove fallback/plumbing noise from normal output
+## 3. Centralize AMP support classification
 
-Since fallback is not being used, remove or hide these from normal/explain output:
+### Target
 
-```txt
-artifact_state
-artifact_reason
-legacy_comparison=0
-SEQ_EXPLAIN_PIPELINE_SOURCE source=actual_pipeline fallback=0
+There should be one shared AMP support classifier.
+
+Both of these should use the same classifier:
+
+```text
+ScalarWindow AMP evaluation
+snapshot / fallback AMP evaluation
 ```
 
-If pipeline source is still useful, replace with a short line only under full/debug:
+Do not duplicate thresholds in:
 
-```txt
-SEQ_PIPELINE trial=1 source=actual_pipeline fallback=0
+```text
+SignalInspector.cpp
+SignalWindowEvaluator.h
 ```
 
-Do not print this in normal explain unless explicitly requested.
+or equivalent files.
+
+### Suggested config
+
+```cpp
+struct AmpSupportConfig {
+  float strongLift;
+  float strongNorm;
+
+  float mediumLift;
+  float mediumNorm;
+
+  float weakLift;
+  float weakNorm;
+};
+```
+
+### Suggested helper
+
+```cpp
+AmpSupportClass classifyAmpSupport(
+  float ampLift,
+  float ampNormalized,
+  const AmpSupportConfig& config
+);
+```
+
+Preferred name:
+
+```text
+AmpSupportClassifier
+```
+
+or, if style prefers functions:
+
+```text
+classifyAmpSupport(...)
+```
+
+### Initial default values
+
+Use the existing thresholds as defaults.
+
+Do not tune thresholds in this pass.
 
 ---
 
-## 6. Make SEQ_FREQ_CAND human-readable
+## 4. Add simple `InspectionConfig`
 
-Current frequency candidate lines may include sample-level details:
+### Target
 
-```txt
-first_seen_sample
-peak_sample
-release_sample
-window_samples
-hold_windows
-legacy_comparison
+Make inspector setup explicit and simple.
+
+Add a small config object used by `SignalInspector`.
+
+Suggested shape:
+
+```cpp
+struct InspectionConfig {
+  AmpSupportConfig ampSupport;
+
+  uint32_t ampWindowPreMs;
+  uint32_t ampWindowPostMs;
+
+  bool enableAmpSupportInspection;
+  bool enableDuplicateRiskInspection;
+};
 ```
 
-For normal explain, prefer millisecond fields.
+Keep this minimal.
 
-### Preferred line
+Do not introduce dynamic rule registry or external config.
 
-```txt
-SEQ_FREQ_CAND trial=1 state=closed source=frequency_primary first_seen=26ms peak=82ms release=124ms dur=113ms score=31524.6 contrast=17729.25 ready=1
-```
+### Ownership
 
-Keep out of normal explain:
+`InspectionConfig` configures how `SignalInspector` inspects signals.
 
-```txt
-first_seen_sample
-peak_sample
-release_sample
-window_samples
-hold_windows
-legacy_comparison
-```
+It should not configure:
 
-Move sample-level fields to explicit DSP/trace output, e.g.:
-
-```txt
-SEQ_FREQ_CAND_TRACE ...
-```
-
-or only print under:
-
-```txt
-log=trace
-log=dsp
-log=full
-```
-
----
-
-## 7. Make SEQ_AMP_WINDOW the primary AMP evidence line
-
-For the current experiment, `SEQ_AMP_WINDOW` is the most important evidence line.
-
-Move it directly after `SEQ_FREQ_CAND`.
-
-### Preferred order
-
-```txt
-SEQ_AMP_WINDOW trial=1 dt=26ms win=-20..120ms available=1 support=none locality=far peak=79.0 base=2037.3 lift=-1958.3 norm=-0.96 mode=observe note=inspector_seen
-```
-
-Recommended field order:
-
-```txt
-trial
-dt
-win
-available
-support
-locality
-peak
-base
-lift
-norm
-mode
-note/reason
-```
-
-Reason:
-
-```txt
-First show whether the window is usable.
-Then show support/locality.
-Then show numbers.
-```
-
-Keep:
-
-```txt
-mode=observe
-```
-
-Do not use:
-
-```txt
-mode=active
-```
-
-unless there is a separate field like:
-
-```txt
-gate=0
-```
-
-Preferred:
-
-```txt
-mode=observe
-gate=0
+```text
+PatternRules
+Behavior
+FrequencyMatchDetector lifecycle
+FieldState thresholds
 ```
 
 ---
 
-## 8. Remove or hide SEQ_EXPLAIN_PROFILE_DETAIL in normal explain
+## 5. Configure `SignalInspector` through `InspectionConfig`
 
-Current profile detail can duplicate and confuse AMP information.
+### Target
 
-Example problem:
+`SignalInspector` should receive or hold an `InspectionConfig`.
 
-```txt
-SEQ_EXPLAIN_PROFILE_DETAIL ... amp_level=29985.3 amp_base=2032.6 amp_lift=27952.8 ...
-SEQ_AMP_WINDOW ... peak=86.0 base=2052.6 lift=-1966.6 ...
+Possible API:
+
+```cpp
+void SignalInspector::configure(const InspectionConfig& config);
 ```
 
-This looks contradictory because the two lines use AMP-ish names for different things.
+or:
 
-For the current AmpWindow experiment:
-
-```txt
-Do not print SEQ_EXPLAIN_PROFILE_DETAIL in normal explain.
+```cpp
+SignalInspector inspector(config);
 ```
 
-Options:
+or:
 
-### Preferred
-
-Hide it unless:
-
-```txt
-log=full
-log=profile
-log=trace
+```cpp
+SignalInspector::SignalInspector(const InspectionConfig& config);
 ```
 
-### Alternative
+Use the existing project style.
 
-Rename fields so they are not confused with AmpWindow:
+### Required behavior
 
-```txt
-freq_amp_snapshot_level
-freq_amp_snapshot_base
-freq_amp_snapshot_lift
+When inspecting a frequency-first signal:
+
+```text
+FrequencyMatch SignalCandidate
+→ SignalInspector
+→ AMP ScalarWindow or fallback AMP snapshot
+→ AmpSupportClassifier using InspectionConfig.ampSupport
+→ InspectedSignal.ampSupport
 ```
 
-But preferred is to omit the line from normal explain.
+### Boundary
 
-`SEQ_AMP_WINDOW` should be the only normal AMP-window evidence line.
+Do not compute AMP support in:
+
+```text
+FrequencyMatchDetector
+PatternRules
+Behavior
+Analyzer
+```
+
+Analyzer only reports the result.
 
 ---
 
-## 9. Simplify SEQ_EXPLAIN_SIGNAL and SEQ_EXPLAIN_INSPECTION
+## 6. Add `InspectionConfig` to `DetectionProfile`
 
-Current lines can look contradictory:
+### Target
 
-```txt
-SEQ_EXPLAIN_SIGNAL total=0 accepted=1 ...
-SEQ_EXPLAIN_INSPECTION inspected=0 accepted=1 ...
+Each `DetectionProfile` should provide the inspector config.
+
+Example:
+
+```cpp
+struct DetectionProfile {
+  DetectionProfileKind kind;
+  const char* name;
+
+  InspectionConfig inspectionConfig;
+  FieldStateConfig fieldStateConfig;
+
+  // other existing profile choices...
+};
 ```
 
-Until count semantics are fixed, avoid printing these in normal explain.
+### Profile examples
 
-Options:
+#### `FreqAmpProfile`
 
-### Preferred
-
-Hide both lines from normal explain.
-
-### Alternative
-
-Replace with compact non-count form:
-
-```txt
-SEQ_SIGNAL trial=1 source=frequency dt=60ms dur=90ms strength=29985.3 confidence=1.00
+```text
+enableAmpSupportInspection = true
+ampWindowPreMs / ampWindowPostMs configured for frequency candidates
+AmpSupportConfig uses default thresholds initially
 ```
 
-Only print total/accepted/rejected counts when their semantics are correct.
+#### `AmpStateProfile`
 
-Detailed counts may remain under:
+```text
+enableAmpSupportInspection may be true or minimal
+duplicate risk / basic AMP stats may be active
+```
 
-```txt
-log=full
-log=debug
+#### `ChirpProfile`
+
+```text
+may reuse FreqAmp inspection config initially
+```
+
+### Important
+
+Profile owns config.
+
+Inspector applies config.
+
+PatternRules consumes inspected facts.
+
+---
+
+## 7. Keep configuration code-defined
+
+### Target
+
+Config is code-defined through profile factories.
+
+Do not add:
+
+```text
+JSON config
+YAML config
+runtime profile files
+dynamic plugin registry
+external threshold files
+```
+
+Simple factory example:
+
+```cpp
+DetectionProfile makeFreqAmpProfile() {
+  DetectionProfile p;
+  p.kind = DetectionProfileKind::FreqAmp;
+  p.name = "FreqAmp";
+
+  p.inspectionConfig.enableAmpSupportInspection = true;
+  p.inspectionConfig.ampSupport = defaultAmpSupportConfig();
+  p.inspectionConfig.ampWindowPreMs = 20;
+  p.inspectionConfig.ampWindowPostMs = 120;
+
+  return p;
+}
+```
+
+Exact names may differ.
+
+---
+
+## 8. Update `PatternRules` to consume `ampSupport` directly
+
+### Target
+
+`PatternRules` should use:
+
+```text
+PatternCandidate.ampSupport
+```
+
+not:
+
+```text
+PatternCandidate.ampSupport
+```
+
+Preferred result shape:
+
+```cpp
+PatternResult.kind = PatternResultKind::TonalPulse;
+PatternResult.ampSupport = AmpSupportClass::Strong;
+```
+
+rather than:
+
+```text
+Legacy distance-label variants
+```
+
+If old result kinds exist, keep minimal compatibility only if needed, but do not expand them.
+
+### Boundary
+
+PatternRules may interpret `ampSupport`.
+
+PatternRules should not recompute AMP support from raw metrics.
+
+---
+
+## 9. Update `PatternResult`
+
+### Target
+
+Ensure `PatternResult` can carry AMP support as a field.
+
+Suggested:
+
+```cpp
+struct PatternResult {
+  PatternResultKind kind;
+  bool valid;
+  float confidence;
+  AmpSupportClass ampSupport;
+  PatternRejectReason rejectReason;
+};
+```
+
+Use existing project structure where possible.
+
+### Preferred output vocabulary
+
+Prefer:
+
+```text
+kind=TonalPulse amp_support=Strong
+```
+
+over:
+
+```text
+kind=TonalPulse with amp_support=Strong
+```
+
+This keeps pattern kind and AMP evidence separate.
+
+---
+
+## 10. Update Analyzer output
+
+### Target
+
+Analyzer should report AMP support directly.
+
+Use:
+
+```text
+amp_support=strong|medium|weak|none|unknown
+```
+
+Do not report:
+
+```text
+legacy distance labels
+```
+
+### Compact trial output
+
+Suggested fields:
+
+```text
+trial=...
+profile=...
+result=...
+pattern=...
+source=...
+dt=...
+confidence=...
+amp_support=...
+reason=...
+field=...
+```
+
+### Explain output
+
+Suggested shape:
+
+```text
+signal{...}
+inspection{amp_support=... amp_peak=... amp_lift=... amp_norm=...}
+pattern{kind=... amp_support=...}
+field{quiet=... busy=... density=...}
+classification{result=... reason=...}
+```
+
+### AMP metrics
+
+Include numeric AMP metrics when useful:
+
+```text
+amp_peak
+amp_mean
+amp_lift
+amp_norm
+amp_window_status
+```
+
+But avoid flooding compact output.
+
+---
+
+## 11. Update logs around AMP inspection
+
+### Target
+
+Use clean AMP support vocabulary in stage logs.
+
+Recommended `INSPECTED` fields:
+
+```text
+source=...
+kind=...
+accepted=...
+reason=...
+amp_support=Strong/Medium/Weak/None/Unknown
+amp_peak=...
+amp_mean=...
+amp_lift=...
+amp_norm=...
+amp_window=valid/invalid/fallback
+```
+
+Recommended `PATTERN_RESULT` fields:
+
+```text
+kind=...
+valid=...
+confidence=...
+amp_support=...
+reason=...
+```
+
+Avoid:
+
+```text
+legacy distance labels
 ```
 
 ---
 
-## 10. Keep field and classification lines
+## 12. Update code comments / docs touched by this pass
 
-Keep these in explain output:
+### Target
 
-```txt
-SEQ_EXPLAIN_FIELD
-SEQ_EXPLAIN_CLASSIFICATION
+Update comments around AMP inspection, classifier, profile config, Analyzer output.
+
+Use:
+
+```text
+AMP support is an inspected amplitude-support class.
+It should not be treated as an exact distance classifier.
 ```
 
-But they should appear after frequency + AMP evidence.
+Avoid:
 
-Preferred order:
-
-```txt
-SEQ_EXPLAIN_FIELD state=active activity=0.67 density=0.17 recent_valid=1 recent_rejects=1
-SEQ_EXPLAIN_CLASSIFICATION result=expected reason=valid_pattern_in_expected_window dt=26ms confidence=1.00
+```text
+legacy distance labels
 ```
 
-Debug counters are optional.
-
-If printed, keep them last:
-
-```txt
-SEQ_EXPLAIN_DEBUG signals=1 inspected=1 patterns=1 rejects=0 duplicates=0 unexpected=0
-```
-
-Omit `main_reject=none` unless there is a real reject.
+unless explicitly discussing removed legacy terminology.
 
 ---
 
-## 11. Hide empty all-zero reason/profile summaries
+## 13. Success criteria
 
-Do not print lines like this in normal output when all counts are zero:
+After this pass:
 
-```txt
-SEQ_REASON_COUNTS ... valid_pattern_in_expected_window=0 ... invalid_audio=0
-```
+```text
+Legacy distance labels are removed from the active detection/analyzer path.
 
-Only print `SEQ_REASON_COUNTS` when at least one count is nonzero, or under explicit full/debug mode.
+AmpSupportClass is the primary AMP inspection output.
 
-Same for:
+AMP support classification logic exists in one shared place.
 
-```txt
-SEQ_LEGACY_PROFILE_SUMMARY
-```
+SignalInspector is configured via InspectionConfig.
 
-Hide unless explicitly requested.
+DetectionProfile provides InspectionConfig.
 
----
+FreqAmpProfile can configure AMP support inspection.
 
-## 12. Analyzer report allocation warning
+ScalarWindow AMP evaluation and snapshot fallback use the same classifier.
 
-Current logs show:
+PatternRules consumes ampSupport directly.
 
-```txt
-SEQ_VERBOSE_WARN reason=analyzer_report_alloc_failed requested=100 reports
-```
+PatternResult carries ampSupport or equivalent.
 
-This is useful but noisy.
+Analyzer output reports amp_support, not legacy distance labels.
 
-Keep the warning, but make sure it is printed once per run, not repeatedly.
+Logs no longer imply AMP is a precise distance classifier.
 
-If report allocation is not needed for normal streaming output, prefer local immediate-print reports and compact summary counters.
-
-Do not add more persistent report storage in this pass.
-
----
-
-## 13. Recommended normal explain output shape
-
-For one trial:
-
-```txt
-SEQ_EXPLAIN trial=1 result=expected dt=26ms pattern=valid_tonal_transient profile=FreqAmp reason=valid_pattern_in_expected_window
-SEQ_FREQ_CAND trial=1 state=closed source=frequency_primary first_seen=26ms peak=82ms release=124ms dur=113ms score=31524.6 contrast=17729.25 ready=1
-SEQ_AMP_WINDOW trial=1 dt=26ms win=-20..120ms available=1 support=none locality=far peak=79.0 base=2037.3 lift=-1958.3 norm=-0.96 mode=observe note=inspector_seen
-SEQ_EXPLAIN_FIELD state=active activity=0.67 density=0.17 recent_valid=1 recent_rejects=1
-SEQ_EXPLAIN_CLASSIFICATION result=expected reason=valid_pattern_in_expected_window dt=26ms confidence=1.00
-```
-
-Optional last line:
-
-```txt
-SEQ_EXPLAIN_DEBUG signals=1 inspected=1 patterns=1 rejects=0 duplicates=0 unexpected=0
+FrequencyMatchDetector remains unchanged in responsibility.
 ```
 
 ---
 
-## 14. Recommended normal trial output shape
+## 14. Do not do in this pass
 
-For compact trial runs:
+Do not:
 
-```txt
-SEQ_TRIAL trial=1 result=expected dt=57ms pattern=valid_tonal_transient profile=FreqAmp confidence=1.00 locality=far field=active reason=valid_pattern_in_expected_window dup=0 candidates=1
+```text
+tune AMP thresholds
+rewrite FrequencyMatchDetector
+move AMP support into FrequencyMatchDetector
+move AMP support evaluation into PatternRules
+introduce legacy distance labels under a different name
+remove legacy AMP
+implement chirp grouping
+implement white-noise/object detection
+change behavior strategy unless compile requires field rename
+introduce external profile config
 ```
 
-No artifact fields.
-
-No pipeline fallback fields.
-
-No profile detail fields.
-
-No sample indices.
-
----
-
-## 15. Output mode split
-
-Use modes approximately like this:
-
-### Normal / trial
-
-```txt
-SEQ_TRIAL
-SEQ_SUMMARY
-```
-
-### Explain
-
-```txt
-SEQ_EXPLAIN
-SEQ_FREQ_CAND
-SEQ_AMP_WINDOW
-SEQ_EXPLAIN_FIELD
-SEQ_EXPLAIN_CLASSIFICATION
-optional SEQ_EXPLAIN_DEBUG
-```
-
-### Full / debug
-
-```txt
-SEQ_EXPLAIN_SIGNAL
-SEQ_EXPLAIN_INSPECTION
-SEQ_EXPLAIN_PROFILE_DETAIL
-SEQ_REASON_COUNTS
-SEQ_LEGACY_PROFILE_SUMMARY
-SEQ_PIPELINE
-```
-
-### Trace / DSP
-
-```txt
-sample indices
-window_samples
-hold_windows
-raw frequency-candidate internals
-```
-
----
-
-## 16. Success criteria
-
-Pass M is successful if:
-
-```txt
-Code compiles.
-SEQ_TRIAL is shorter and starts with result/timing/pattern.
-artifact_state/artifact_reason are gone from default SEQ_TRIAL.
-legacy_comparison=0 is gone from normal output.
-SEQ_AMP_WINDOW appears directly after frequency evidence in explain mode.
-SEQ_AMP_WINDOW field order is easier to scan: available/support/locality before numbers.
-SEQ_EXPLAIN_PROFILE_DETAIL is hidden from normal explain or renamed to avoid AMP confusion.
-SEQ_EXPLAIN_SIGNAL/INSPECTION count lines are hidden or simplified if counts are contradictory.
-All-zero SEQ_REASON_COUNTS are hidden from normal output.
-Actual RAW sample capture is untouched.
-No detection behavior, thresholds, or gating changed.
-```
-
----
-
-## 17. Quick checklist
-
-```txt
-[ ] Reorder SEQ_TRIAL fields.
-[ ] Remove artifact_state/artifact_reason from default SEQ_TRIAL.
-[ ] Hide fallback/pipeline source line from normal explain.
-[ ] Remove legacy_comparison=0 from normal SEQ_FREQ_CAND.
-[ ] Remove sample indices from normal SEQ_FREQ_CAND.
-[ ] Keep sample indices only in trace/full mode.
-[ ] Reorder SEQ_AMP_WINDOW fields.
-[ ] Ensure SEQ_AMP_WINDOW uses mode=observe and/or gate=0.
-[ ] Hide SEQ_EXPLAIN_PROFILE_DETAIL from normal explain.
-[ ] Hide or simplify SEQ_EXPLAIN_SIGNAL/INSPECTION count lines.
-[ ] Keep SEQ_EXPLAIN_FIELD and SEQ_EXPLAIN_CLASSIFICATION.
-[ ] Hide all-zero SEQ_REASON_COUNTS from normal output.
-[ ] Compile.
-[ ] Run short SEQ trial mode.
-[ ] Run short SEQ explain mode.
-[ ] Confirm RAW trigger path untouched.
-```
-
----
-
-## 18. Expected final state
-
-After this pass, the serial output should answer the current experiment question quickly:
-
-```txt
-Frequency found it.
-When did it find it?
-What did the AMP window around it see?
-Does that look useful for near/loud gating later?
-```
-
-AmpWindow remains observe-only.
-
-Future pass:
-
-```txt
-AmpWindow calibration / band interpretation
-```
+This pass is inspector configuration + AMP support simplification + Analyzer output alignment.

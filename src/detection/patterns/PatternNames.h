@@ -40,12 +40,6 @@ inline const char* patternResultKindName(PatternResultKind kind) {
             return "unknown";
         case PatternResultKind::TonalPulse:
             return "tonal_pulse";
-        case PatternResultKind::TonalPulseNear:
-            return "tonal_pulse_near";
-        case PatternResultKind::TonalPulseMid:
-            return "tonal_pulse_mid";
-        case PatternResultKind::TonalPulseFar:
-            return "tonal_pulse_far";
         case PatternResultKind::ValidChirp:
             return "valid_chirp";
         case PatternResultKind::InvalidChirp:

@@ -3,6 +3,7 @@
 #include <strings.h>
 
 #include "field/FieldState.h"
+#include "patterns/PatternTypes.h"
 
 namespace detection {
 
@@ -59,6 +60,8 @@ struct DetectionProfile {
     bool detectionOnly = false;
     bool requireTonalForBehavior = true;
     bool idleEnabled = true;
+
+    InspectionConfig inspectionConfig = defaultInspectionConfig();
 
     unsigned long waitAfterTransientMs = 100;
     unsigned long refractoryAfterEmitMs = 0;
@@ -171,6 +174,8 @@ inline bool detectionProfileKindFromName(const char* name, DetectionProfileKind&
 
 inline DetectionProfile makeFreqAmpProfile() {
     DetectionProfile profile;
+
+    // Identity and signal routing.
     profile.kind = DetectionProfileKind::FreqAmp;
     profile.featureSet = ProfileFeatureSetKind::FreqAmp;
     profile.signalEmitter = ProfileSignalEmitterKind::Frequency;
@@ -178,18 +183,27 @@ inline DetectionProfile makeFreqAmpProfile() {
     profile.inspectionRules = ProfileInspectionRulesKind::FreqAmp;
     profile.patternAssembler = ProfilePatternAssemblerKind::SinglePulse;
     profile.patternRules = ProfilePatternRulesKind::TonalLocality;
+
+    // Runtime behavior.
     profile.useLegacyPath = false;
     profile.frequencyOnly = false;
     profile.ampEnabled = true;
     profile.detectionOnly = false;
     profile.requireTonalForBehavior = true;
     profile.idleEnabled = true;
+
+    // Timing defaults.
     profile.waitAfterTransientMs = 100;
     profile.refractoryAfterEmitMs = 0;
     profile.idleTimeoutMs = 20000;
     profile.idleTimeVariationMs = 10000;
     profile.idleBlockedAfterHeardMs = 3000;
     profile.idleBlockedAfterOwnEmitMs = 5000;
+
+    // Inspector configuration.
+    profile.inspectionConfig = defaultInspectionConfig(); // shared defaults from PatternTypes.h
+
+    // Field-state windowing.
     profile.fieldStateConfig.signalWindowMs = 3500;
     profile.fieldStateConfig.patternWindowMs = 3500;
     profile.fieldStateConfig.busySignalCountThreshold = 3;
@@ -202,6 +216,8 @@ inline DetectionProfile makeFreqAmpProfile() {
 
 inline DetectionProfile makeAmpStateProfile() {
     DetectionProfile profile = makeFreqAmpProfile();
+
+    // Identity and signal routing.
     profile.kind = DetectionProfileKind::AmpState;
     profile.featureSet = ProfileFeatureSetKind::AmpState;
     profile.signalEmitter = ProfileSignalEmitterKind::Amp;
@@ -209,16 +225,27 @@ inline DetectionProfile makeAmpStateProfile() {
     profile.inspectionRules = ProfileInspectionRulesKind::AmpState;
     profile.patternAssembler = ProfilePatternAssemblerKind::SinglePulse;
     profile.patternRules = ProfilePatternRulesKind::AmpActivity;
+
+    // Runtime behavior.
     profile.useLegacyPath = true;
     profile.frequencyOnly = false;
     profile.ampEnabled = true;
     profile.detectionOnly = false;
     profile.requireTonalForBehavior = false;
+
+    // Timing defaults.
     profile.waitAfterTransientMs = 500;
     profile.idleTimeoutMs = 15000;
     profile.idleTimeVariationMs = 6000;
     profile.idleBlockedAfterHeardMs = 1500;
     profile.idleBlockedAfterOwnEmitMs = 3000;
+
+    // Inspector configuration.
+    profile.inspectionConfig = defaultInspectionConfig();
+    profile.inspectionConfig.ampWindowPreMs = 20;
+    profile.inspectionConfig.ampWindowPostMs = 120;
+
+    // Field-state windowing.
     profile.fieldStateConfig.signalWindowMs = 2500;
     profile.fieldStateConfig.patternWindowMs = 2500;
     profile.fieldStateConfig.busySignalCountThreshold = 3;
@@ -230,6 +257,8 @@ inline DetectionProfile makeAmpStateProfile() {
 
 inline DetectionProfile makeChirpProfile() {
     DetectionProfile profile = makeFreqAmpProfile();
+
+    // Identity and signal routing.
     profile.kind = DetectionProfileKind::Chirp;
     profile.featureSet = ProfileFeatureSetKind::Chirp;
     profile.signalEmitter = ProfileSignalEmitterKind::Frequency;
@@ -237,17 +266,28 @@ inline DetectionProfile makeChirpProfile() {
     profile.inspectionRules = ProfileInspectionRulesKind::Chirp;
     profile.patternAssembler = ProfilePatternAssemblerKind::ChirpSequence;
     profile.patternRules = ProfilePatternRulesKind::ChirpSequence;
+
+    // Runtime behavior.
     profile.useLegacyPath = false;
     profile.frequencyOnly = false;
     profile.ampEnabled = true;
     profile.detectionOnly = false;
     profile.requireTonalForBehavior = true;
+
+    // Timing defaults.
     profile.waitAfterTransientMs = 100;
     profile.refractoryAfterEmitMs = 0;
     profile.idleTimeoutMs = 20000;
     profile.idleTimeVariationMs = 10000;
     profile.idleBlockedAfterHeardMs = 3000;
     profile.idleBlockedAfterOwnEmitMs = 5000;
+
+    // Inspector configuration.
+    profile.inspectionConfig = defaultInspectionConfig();
+    profile.inspectionConfig.ampWindowPreMs = 20;
+    profile.inspectionConfig.ampWindowPostMs = 120;
+
+    // Field-state windowing.
     profile.fieldStateConfig.signalWindowMs = 4000;
     profile.fieldStateConfig.patternWindowMs = 4000;
     profile.fieldStateConfig.busySignalCountThreshold = 3;

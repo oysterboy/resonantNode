@@ -34,7 +34,6 @@ PatternCandidate makePatternCandidateFromSignal(const detection::InspectedSignal
             candidate.signalConfidence = source.signalConfidence;
             candidate.frequencyConfidence = source.frequencyConfidence;
             candidate.ampSupport = source.ampSupport;
-            candidate.locality = source.locality;
             candidate.ampWindow = source.ampWindow;
             candidate.duplicateRisk = source.duplicateRisk;
             candidate.duplicateRiskScore = source.duplicateRiskScore;
@@ -71,7 +70,6 @@ PatternCandidate makePatternCandidateFromSignal(const detection::InspectedSignal
             candidate.signalConfidence = source.signalConfidence;
             candidate.frequencyConfidence = source.frequencyConfidence;
             candidate.ampSupport = source.ampSupport;
-            candidate.locality = source.locality;
             candidate.ampWindow = source.ampWindow;
             candidate.duplicateRisk = source.duplicateRisk;
             candidate.duplicateRiskScore = source.duplicateRiskScore;
@@ -126,7 +124,6 @@ PatternCandidate makePulseSequenceCandidate(
     candidate.signalConfidence = (first.signalConfidence + second.signalConfidence) * 0.5f;
     candidate.frequencyConfidence = (first.frequencyConfidence + second.frequencyConfidence) * 0.5f;
     candidate.ampSupport = first.ampSupport;
-    candidate.locality = first.locality;
     candidate.ampWindow = first.ampWindow;
     candidate.duplicateRisk = first.duplicateRisk || second.duplicateRisk;
     candidate.duplicateRiskScore = (first.duplicateRiskScore + second.duplicateRiskScore) * 0.5f;

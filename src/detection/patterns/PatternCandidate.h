@@ -4,7 +4,9 @@
 
 namespace detection {
 
+// Candidate data is assembled before the rules layer decides the final result.
 struct PatternCandidate {
+    // Core sequence summary.
     PatternCandidateKind kind = PatternCandidateKind::Unknown;
     uint32_t lineageId = 0;
     uint8_t primarySlotIndex = 0;
@@ -15,6 +17,7 @@ struct PatternCandidate {
     unsigned long minGapMs = 0;
     unsigned long maxGapMs = 0;
 
+    // Per-slot signal snapshots for multi-signal candidates.
     struct SignalSlot {
         uint8_t kindTag = 0;
         uint8_t sourceTag = 0;
@@ -32,6 +35,7 @@ struct PatternCandidate {
     uint8_t signalSlotCount = 0;
     SignalSlot signalSlots[kMaxSignalSlots] = {};
 
+    // Timing and strength for the chosen candidate.
     uint64_t onsetSample = 0;
     uint64_t peakSample = 0;
     uint64_t releaseSample = 0;
@@ -48,7 +52,6 @@ struct PatternCandidate {
     float signalConfidence = 0.0f;
     float frequencyConfidence = 0.0f;
     AmpSupportClass ampSupport = AmpSupportClass::Unknown;
-    LocalityClass locality = LocalityClass::Unknown;
     AmpWindowEvidence ampWindow = {};
     bool duplicateRisk = false;
     float duplicateRiskScore = 0.0f;
@@ -56,6 +59,7 @@ struct PatternCandidate {
 
     bool audioOverflowDuringCandidate = false;
 
+    // Transitional evidence payloads retained for compatibility.
     TransientEvidence transient;
     FrequencyEvidence frequency;
     FrequencyEvidence frequencyFull;

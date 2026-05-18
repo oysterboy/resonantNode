@@ -164,10 +164,8 @@ PatternCandidate makePulseSequenceCandidate(
 namespace detection {
 
 void PatternAssembler::reset() {
-    _queue[0] = {};
     _readIndex = 0;
     _count = 0;
-    _recentSignals[0] = {};
     _recentSignalReadIndex = 0;
     _recentSignalCount = 0;
 }

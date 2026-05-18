@@ -178,6 +178,7 @@ struct AnalyzerClassification {
 struct AnalyzerAmpWindowObservation {
     bool available = false;
     bool observedOnly = true;
+    const char* note = "none";
 
     int16_t windowStartMs = -20;
     int16_t windowEndMs = 120;

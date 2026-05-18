@@ -3,16 +3,51 @@
 #include <string.h>
 
 void FrequencyCandidateBuilder::resetState() {
-    memset(this, 0, sizeof(*this));
+    present = false;
+    liveFrequencyOnly = false;
+    firstThresholdCrossingSeen = false;
+    wouldProduceCandidate = false;
+    candidateActive = false;
+    candidateEmitted = false;
+    candidateClosed = false;
+    candidateRefractoryUntilMs = 0;
+    firstThresholdCrossingMs = 0;
+    firstThresholdCrossingSample = 0;
+    candidateFirstSeenMs = 0;
+    candidateFirstSeenSample = 0;
+    candidatePeakMs = 0;
+    candidatePeakSample = 0;
+    candidateReleaseMs = 0;
+    candidateReleaseSample = 0;
+    candidateHoldWindows = 0;
+    candidateHoldMs = 0;
+    candidateLastMatchedMs = 0;
     thresholdScore = 0.0f;
     thresholdContrast = 0.0f;
-    candidateState[0] = '\0';
+    readyOk = false;
+    bestScoreOk = false;
+    bestContrastOk = false;
+    gateOpen = false;
+    candidatePeakScore = 0.0f;
+    candidatePeakContrast = 0.0f;
+    candidatePeakWindowSampleCount = 0;
+    bestObservedAtMs = 0;
+    bestObservedSample = 0;
+    bestScore = 0.0f;
+    bestContrast = 0.0f;
+    bestWindowSampleCount = 0;
+    memset(&bestEvidence, 0, sizeof(bestEvidence));
+    memset(&candidateEvidence, 0, sizeof(candidateEvidence));
+    memset(candidateState, 0, sizeof(candidateState));
     strncpy(candidateState, "none", sizeof(candidateState) - 1);
     candidateState[sizeof(candidateState) - 1] = '\0';
+    memset(suppressReason, 0, sizeof(suppressReason));
     strncpy(suppressReason, "none", sizeof(suppressReason) - 1);
     suppressReason[sizeof(suppressReason) - 1] = '\0';
+    memset(wouldCandidateReason, 0, sizeof(wouldCandidateReason));
     strncpy(wouldCandidateReason, "none", sizeof(wouldCandidateReason) - 1);
     wouldCandidateReason[sizeof(wouldCandidateReason) - 1] = '\0';
+    memset(&frequencyCandidate, 0, sizeof(frequencyCandidate));
     _scalarEmitter.reset();
 }
 

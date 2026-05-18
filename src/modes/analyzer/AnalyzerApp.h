@@ -416,12 +416,38 @@ private:
         unsigned long parityConfidenceMismatch = 0;
     };
 
+    struct PendingSequenceStart {
+        bool active = false;
+        unsigned long totalTrials = 0;
+        unsigned long periodMs = 0;
+        unsigned long windowEndOffsetMs = 0;
+        unsigned long toneHz = 0;
+        unsigned long durationMs = 0;
+        bool quiet = false;
+        bool showDetails = false;
+        const char* setupLabel = nullptr;
+        uint32_t logFlags = 0;
+        bool sampleDumpEnabled = false;
+        unsigned long sampleDumpFirstTrials = 0;
+        unsigned long sampleDumpEveryNth = 0;
+        unsigned long sampleDumpLeadMs = 0;
+        unsigned long sampleDumpTailMs = 0;
+        unsigned long sampleDumpStepMs = 0;
+        unsigned long sampleDumpMaxRows = 0;
+        detection::DetectionProfileKind profileKind = detection::DetectionProfileKind::FreqAmp;
+        bool liveFrequencyOnly = false;
+        bool externalEmitter = false;
+        bool legacyExplainOutput = false;
+        char setupLabelStorage[96] = {};
+    };
+
     // Setup, control, and detector configuration helpers.
     void configureParameters();
     void configureSharedParameters();
     void configureAnalogParameters();
     void configureI2SParameters();
     void beginEmitterControl();
+    void processPendingSequenceStart();
     void pollUsbConsole();
     void pollEmitterSerial();
     void handleUsbLine(const char* line);
@@ -534,6 +560,7 @@ private:
     FreqBandStream _freqBandStream;
     detection::FeatureHistory* _sequenceFeatureHistory = nullptr;
     FrequencyEvidenceEvaluation::Values _frequencyEvidenceTuning = {};
+    PendingSequenceStart _pendingSequenceStart = {};
 
     // Console and emitter control.
     unsigned long _controlBaudRate = 115200;

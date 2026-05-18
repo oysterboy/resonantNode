@@ -9,12 +9,32 @@
 #include "patterns/PatternAssembler.h"
 #include "patterns/PatternRules.h"
 #include "patterns/PatternPayload.h"
+#include "signals/SignalCandidate.h"
+#include "signals/InspectedSignal.h"
 #include "field/FieldStateTracker.h"
+#include "field/FieldState.h"
 #include "features/FeatureExtractor.h"
 #include "features/FeatureHistory.h"
 #include "inspector/FrequencyEvidenceEvaluation.h"
 
 namespace detection {
+
+struct DetectionPipelineResult {
+    bool hasPattern = false;
+    PatternResult pattern = {};
+
+    bool hasSignal = false;
+    SignalCandidate signal = {};
+
+    bool hasInspectedSignal = false;
+    InspectedSignal inspectedSignal = {};
+
+    bool hasField = false;
+    FieldState field = {};
+
+    const char* profileName = "unknown";
+    unsigned long timestampMs = 0;
+};
 
 class DetectionRuntime {
 public:
@@ -25,6 +45,7 @@ public:
     void setFrequencyTuning(const FrequencyEvidenceEvaluation::Values& tuning);
     void setAmpEnabled(bool enabled);
     void setFieldStateConfig(const FieldStateConfig& config);
+    void setProfileName(const char* profileName);
 
     void observeFrame(
         const AudioSignalFrame& frame,
@@ -33,6 +54,8 @@ public:
     );
 
     bool popPatternResult(PatternResult& out);
+    bool hasLatestPipelineResult() const;
+    const DetectionPipelineResult& latestPipelineResult() const;
     const FrequencySignalEmitter& frequencyEmitter() const;
     const FieldState& fieldState() const;
     const FeatureHistory& featureHistory() const;
@@ -43,9 +66,16 @@ private:
     void drainSignalEmitters(unsigned long nowMs);
     void drainPatternAssembler(unsigned long nowMs);
     bool pushPatternResult(const PatternResult& result);
+    void capturePipelineResult(
+        const PatternResult& result,
+        const SignalCandidate* signal,
+        const InspectedSignal* inspectedSignal,
+        unsigned long nowMs
+    );
 
     FrequencyEvidenceEvaluation::Values _frequencyTuning = {};
     bool _ampEnabled = true;
+    const char* _profileName = "unknown";
 
     AmpSignalEmitter _ampEmitter;
     FrequencySignalEmitter _frequencyEmitter;
@@ -58,6 +88,11 @@ private:
     PatternResult _resultQueue[kResultQueueCapacity] = {};
     size_t _resultReadIndex = 0;
     size_t _resultCount = 0;
+
+    DetectionPipelineResult _latestPipelineResult = {};
+    bool _hasLatestPipelineResult = false;
+    SignalCandidate _lastSignalCandidate = {};
+    InspectedSignal _lastInspectedSignal = {};
 };
 
 } // namespace detection

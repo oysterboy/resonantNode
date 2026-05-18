@@ -12,9 +12,14 @@ void DetectionRuntime::reset() {
     _fieldStateTracker.reset();
     _featureHistory.reset();
     _ampEnabled = true;
+    _profileName = "unknown";
     _resultQueue[0] = {};
     _resultReadIndex = 0;
     _resultCount = 0;
+    _latestPipelineResult = {};
+    _hasLatestPipelineResult = false;
+    _lastSignalCandidate = {};
+    _lastInspectedSignal = {};
 }
 
 void DetectionRuntime::setFrequencyTuning(const FrequencyEvidenceEvaluation::Values& tuning) {
@@ -30,6 +35,10 @@ void DetectionRuntime::setAmpEnabled(bool enabled) {
 
 void DetectionRuntime::setFieldStateConfig(const FieldStateConfig& config) {
     _fieldStateTracker.setConfig(config);
+}
+
+void DetectionRuntime::setProfileName(const char* profileName) {
+    _profileName = profileName != nullptr ? profileName : "unknown";
 }
 
 void DetectionRuntime::observeFrame(
@@ -65,6 +74,14 @@ bool DetectionRuntime::popPatternResult(PatternResult& out) {
     return true;
 }
 
+bool DetectionRuntime::hasLatestPipelineResult() const {
+    return _hasLatestPipelineResult;
+}
+
+const DetectionPipelineResult& DetectionRuntime::latestPipelineResult() const {
+    return _latestPipelineResult;
+}
+
 const FrequencySignalEmitter& DetectionRuntime::frequencyEmitter() const {
     return _frequencyEmitter;
 }
@@ -84,6 +101,8 @@ void DetectionRuntime::drainSignalEmitters(unsigned long nowMs) {
         _fieldStateTracker.observeSignalCandidate(candidate, nowMs);
         const InspectedSignal inspected = _signalInspector.inspectWithHistory(candidate, _frequencyTuning, &_featureHistory);
         _fieldStateTracker.observeInspectedSignal(inspected, nowMs);
+        _lastSignalCandidate = candidate;
+        _lastInspectedSignal = inspected;
         _patternAssembler.acceptSignal(inspected);
     }
 
@@ -91,6 +110,8 @@ void DetectionRuntime::drainSignalEmitters(unsigned long nowMs) {
         _fieldStateTracker.observeSignalCandidate(candidate, nowMs);
         const InspectedSignal inspected = _signalInspector.inspectWithHistory(candidate, _frequencyTuning, &_featureHistory);
         _fieldStateTracker.observeInspectedSignal(inspected, nowMs);
+        _lastSignalCandidate = candidate;
+        _lastInspectedSignal = inspected;
         _patternAssembler.acceptSignal(inspected);
     }
 
@@ -102,6 +123,7 @@ void DetectionRuntime::drainPatternAssembler(unsigned long nowMs) {
     while (_patternAssembler.popPatternCandidate(candidate)) {
         const PatternResult result = _patternRules.evaluate(candidate, nowMs, _frequencyTuning);
         _fieldStateTracker.observePatternResult(result, nowMs);
+        capturePipelineResult(result, &_lastSignalCandidate, &_lastInspectedSignal, nowMs);
         pushPatternResult(result);
     }
 }
@@ -115,6 +137,30 @@ bool DetectionRuntime::pushPatternResult(const PatternResult& result) {
     _resultQueue[writeIndex] = result;
     ++_resultCount;
     return true;
+}
+
+void DetectionRuntime::capturePipelineResult(
+    const PatternResult& result,
+    const SignalCandidate* signal,
+    const InspectedSignal* inspectedSignal,
+    unsigned long nowMs
+) {
+    _latestPipelineResult = {};
+    _latestPipelineResult.hasPattern = true;
+    _latestPipelineResult.pattern = result;
+    _latestPipelineResult.hasSignal = signal != nullptr && signal->present;
+    if (_latestPipelineResult.hasSignal && signal != nullptr) {
+        _latestPipelineResult.signal = *signal;
+    }
+    _latestPipelineResult.hasInspectedSignal = inspectedSignal != nullptr && inspectedSignal->signal.present;
+    if (_latestPipelineResult.hasInspectedSignal && inspectedSignal != nullptr) {
+        _latestPipelineResult.inspectedSignal = *inspectedSignal;
+    }
+    _latestPipelineResult.hasField = true;
+    _latestPipelineResult.field = _fieldStateTracker.state();
+    _latestPipelineResult.profileName = _profileName;
+    _latestPipelineResult.timestampMs = nowMs;
+    _hasLatestPipelineResult = true;
 }
 
 } // namespace detection

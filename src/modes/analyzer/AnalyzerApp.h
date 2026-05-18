@@ -202,8 +202,8 @@ private:
             long duplicateDurMs = -1;
             float duplicateStrength = 0.0f;
 
-            AnalyzerReport analyzerReport = {};
-            bool analyzerReportCaptured = false;
+            AnalyzerReport deprecatedAnalyzerReport = {};
+            bool deprecatedAnalyzerReportCaptured = false;
 
             char result[16] = {};
         };
@@ -231,10 +231,10 @@ private:
             unsigned long acceptedFrequencyProcessedAtMs = 0;
             FrequencyEvidence acceptedParityProbe64 = {};
             unsigned long acceptedParityProbe64ProcessedAtMs = 0;
-            detection::SignalCandidate acceptedSignalCandidate = {};
-            detection::PatternResult acceptedPatternResult = {};
-            detection::InspectedSignal acceptedInspectedSignal = {};
-            bool acceptedPatternCaptured = false;
+            detection::SignalCandidate deprecatedAcceptedSignalCandidate = {};
+            detection::PatternResult deprecatedAcceptedPatternResult = {};
+            detection::InspectedSignal deprecatedAcceptedInspectedSignal = {};
+            bool deprecatedAcceptedPatternCaptured = false;
             detection::PatternResult runtimePatternResult = {};
             detection::FieldState runtimeFieldState = {};
             bool runtimePatternCaptured = false;
@@ -346,15 +346,15 @@ private:
         CurveSnapshot sampleHistoryPending = {};
         CurveSnapshot sampleRows[kMaxSampleRows] = {};
         size_t sampleRowCount = 0;
-        AnalyzerReport* analyzerReports = nullptr;
-        mutable size_t analyzerReportCapacity = 0;
-        mutable size_t analyzerReportCount = 0;
+        AnalyzerReport* deprecatedAnalyzerReports = nullptr;
+        mutable size_t deprecatedAnalyzerReportCapacity = 0;
+        mutable size_t deprecatedAnalyzerReportCount = 0;
         // Legacy report storage used by old SEQ_REPORT / diagnostic output.
         // New Analyzer output should use AnalyzerReport instead.
         // Keep only while legacy report mode is still supported.
-        mutable TrialReport* trialReports = nullptr;
-        mutable size_t trialReportCapacity = 0;
-        mutable size_t trialReportCount = 0;
+        mutable TrialReport* deprecatedTrialReports = nullptr;
+        mutable size_t deprecatedTrialReportCapacity = 0;
+        mutable size_t deprecatedTrialReportCount = 0;
 
         // Trial scheduling and aggregate results.
         unsigned long startedAtMs = 0;
@@ -521,7 +521,8 @@ private:
     AnalyzerReport buildSequenceAnalyzerReport(unsigned long trialNumber, const char* result, long dtMs, long durMs, float strength, bool audioOverflow, unsigned long duplicateCount, const SequenceTest::TrialDiagnostics& diagnostics) const;
     void recordSequenceClassifierOutcome(const PatternResult& patternResult, bool duplicateCandidate, bool unexpectedCandidate);
     void handleSequenceCandidate(const PatternResult& patternResult, unsigned long queueDepthBeforeDrain, const FrequencyEvidence* liveFrequencyEvidence = nullptr);
-    bool evaluateRoadmapSignalCandidate(
+    // Legacy debug fallback only; not used in the normal Analyzer reporting path.
+    bool evaluateModernSignalCandidate(
         const detection::SignalCandidate& signal,
         PatternResult& outResult,
         detection::InspectedSignal* outInspected = nullptr

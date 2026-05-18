@@ -143,7 +143,7 @@ private:
     // Signal / detection / behavior pipeline.
     AmpTransientDetector _audioOnsetDetector;
     AudioSignal _audioSignal;
-    // Legacy AMP path only. Roadmap detection flows through DetectionRuntime.
+    // Legacy AMP path only. Modern detection flows through DetectionRuntime.
     AmpCandidateBuilder _ampCandidateBuilder;
     FreqBandStream _freqBandStream;
     detection::DetectionRuntime _detection;

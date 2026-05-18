@@ -174,11 +174,11 @@ const char* chirpPatternName(ChirpOutput::ChirpPattern pattern) {
     return "unknown";
 }
 
-bool isRoadmapDetectorCandidateAccepted(const DetectorCandidate& in) {
+bool isModernDetectorCandidateAccepted(const DetectorCandidate& in) {
     return in.durationMs > 0 || in.peakStrength > 0.0f || in.releaseMillisApprox != 0;
 }
 
-detection::PatternCandidate makeRoadmapPatternCandidate(const DetectorCandidate& in) {
+detection::PatternCandidate makeModernPatternCandidate(const DetectorCandidate& in) {
     detection::PatternCandidate out;
     out.kind = detection::PatternCandidateKind::SinglePulse;
     out.lineageId = static_cast<uint32_t>(in.onsetSample & 0xFFFFFFFFu);
@@ -195,7 +195,7 @@ detection::PatternCandidate makeRoadmapPatternCandidate(const DetectorCandidate&
     out.releaseStrength = in.releaseStrength;
     out.ambientBaseline = in.ambientBaseline;
     out.audioOverflowDuringCandidate = in.audioOverflowDuringCandidate;
-    out.transient.present = isRoadmapDetectorCandidateAccepted(in);
+    out.transient.present = isModernDetectorCandidateAccepted(in);
     out.transient.onsetSample = in.onsetSample;
     out.transient.peakSample = in.peakSample;
     out.transient.releaseSample = in.releaseSample;
@@ -213,7 +213,7 @@ detection::PatternCandidate makeRoadmapPatternCandidate(const DetectorCandidate&
     return out;
 }
 
-bool processRoadmapDetectorCandidate(const DetectorCandidate& in,
+bool processModernDetectorCandidate(const DetectorCandidate& in,
                                      detection::PatternResult& out,
                                      unsigned long processedAtMs,
                                      const detection::FrequencyEvidence* frequencyEvidence) {
@@ -222,7 +222,7 @@ bool processRoadmapDetectorCandidate(const DetectorCandidate& in,
     out.kind = detection::PatternResultKind::Rejected;
     out.lineageId = static_cast<uint32_t>(in.onsetSample & 0xFFFFFFFFu);
     out.primarySlotIndex = 0;
-    out.candidate = makeRoadmapPatternCandidate(in);
+    out.candidate = makeModernPatternCandidate(in);
     out.freq = out.candidate.frequency;
     out.freqFull = out.candidate.frequencyFull;
     out.processedAtMs = processedAtMs;
@@ -231,7 +231,7 @@ bool processRoadmapDetectorCandidate(const DetectorCandidate& in,
         out.candidate.frequency = *frequencyEvidence;
     }
 
-    if (!isRoadmapDetectorCandidateAccepted(in)) {
+    if (!isModernDetectorCandidateAccepted(in)) {
         out.kind = detection::PatternResultKind::Rejected;
         out.type = detection::PatternType::Invalid;
         out.reasonCode = detection::PatternReasonCode::DetectorRejected;
@@ -1224,7 +1224,7 @@ void Node::drainLegacyAmpCandidates(unsigned long now,
             now,
             fullFrequencyEvidence,
             candidate.durationMs);
-        const bool patternValid = processRoadmapDetectorCandidate(candidate, patternResult, now, &frequencyEvidence);
+        const bool patternValid = processModernDetectorCandidate(candidate, patternResult, now, &frequencyEvidence);
         patternResult.candidate.frequencyFull = fullFrequencyEvidence;
         FrequencyEvidenceEvaluation::classifyPatternResult(patternResult, _frequencyEvidenceTuning);
         const auto behaviorDecision = _behavior.handlePatternResult(patternResult, now);

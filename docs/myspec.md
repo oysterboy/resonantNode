@@ -2767,7 +2767,7 @@ They are code-defined and selected through the current profile mechanism.
 
 ### 30.10 File / Module Map
 
-Current roadmap concepts map to these source areas:
+Current modern concepts map to these source areas:
 
 ```text
 Feature history, streams, and retrospective windows -> src/detection/features/*
@@ -2777,7 +2777,7 @@ Inspection and probe helpers -> src/detection/inspector/*
 Pattern payloads and interpretation -> src/detection/patterns/*
 Field state tracking -> src/detection/field/*
 Detection profile composition -> src/detection/DetectionProfile.h
-Roadmap node orchestration -> src/modes/resonant/*
+Modern node orchestration -> src/modes/resonant/*
 Analyzer proof and SEQ tracing -> src/modes/analyzer/*
 ```
 

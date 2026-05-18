@@ -224,7 +224,7 @@ const char* localityName(detection::LocalityClass value) {
     }
 }
 
-detection::SignalCandidate makeRoadmapFrequencySignalCandidate(const FrequencyMatchDetector& liveFrequency) {
+detection::SignalCandidate makeModernFrequencySignalCandidate(const FrequencyMatchDetector& liveFrequency) {
     detection::SignalCandidate signal = {};
     signal.kind = detection::SignalKind::FrequencyMatch;
     signal.source = detection::SignalSource::Frequency;
@@ -251,11 +251,11 @@ detection::SignalCandidate makeRoadmapFrequencySignalCandidate(const FrequencyMa
     return signal;
 }
 
-bool isRoadmapDetectorCandidateAccepted(const DetectorCandidate& in) {
+bool isModernDetectorCandidateAccepted(const DetectorCandidate& in) {
     return in.durationMs > 0 || in.peakStrength > 0.0f || in.releaseMillisApprox != 0;
 }
 
-detection::PatternCandidate makeRoadmapPatternCandidate(const DetectorCandidate& in) {
+detection::PatternCandidate makeModernPatternCandidate(const DetectorCandidate& in) {
     detection::PatternCandidate out;
     out.kind = detection::PatternCandidateKind::SinglePulse;
     out.lineageId = static_cast<uint32_t>(in.onsetSample & 0xFFFFFFFFu);
@@ -272,7 +272,7 @@ detection::PatternCandidate makeRoadmapPatternCandidate(const DetectorCandidate&
     out.releaseStrength = in.releaseStrength;
     out.ambientBaseline = in.ambientBaseline;
     out.audioOverflowDuringCandidate = in.audioOverflowDuringCandidate;
-    out.transient.present = isRoadmapDetectorCandidateAccepted(in);
+    out.transient.present = isModernDetectorCandidateAccepted(in);
     out.transient.onsetSample = in.onsetSample;
     out.transient.peakSample = in.peakSample;
     out.transient.releaseSample = in.releaseSample;
@@ -290,7 +290,7 @@ detection::PatternCandidate makeRoadmapPatternCandidate(const DetectorCandidate&
     return out;
 }
 
-detection::SignalCandidate makeRoadmapSignalCandidateFromPatternResult(const detection::PatternResult& patternResult) {
+detection::SignalCandidate makeModernSignalCandidateFromPatternResult(const detection::PatternResult& patternResult) {
     detection::SignalCandidate out;
     out.present = true;
     out.valid = patternResult.valid;
@@ -330,7 +330,7 @@ detection::SignalCandidate makeRoadmapSignalCandidateFromPatternResult(const det
     return out;
 }
 
-bool processRoadmapDetectorCandidate(const DetectorCandidate& in,
+bool processModernDetectorCandidate(const DetectorCandidate& in,
                                      detection::PatternResult& out,
                                      unsigned long processedAtMs,
                                      const detection::FrequencyEvidence* frequencyEvidence) {
@@ -339,7 +339,7 @@ bool processRoadmapDetectorCandidate(const DetectorCandidate& in,
     out.kind = detection::PatternResultKind::Rejected;
     out.lineageId = static_cast<uint32_t>(in.onsetSample & 0xFFFFFFFFu);
     out.primarySlotIndex = 0;
-    out.candidate = makeRoadmapPatternCandidate(in);
+    out.candidate = makeModernPatternCandidate(in);
     out.freq = out.candidate.frequency;
     out.freqFull = out.candidate.frequencyFull;
     out.processedAtMs = processedAtMs;
@@ -348,7 +348,7 @@ bool processRoadmapDetectorCandidate(const DetectorCandidate& in,
         out.candidate.frequency = *frequencyEvidence;
     }
 
-    if (!isRoadmapDetectorCandidateAccepted(in)) {
+    if (!isModernDetectorCandidateAccepted(in)) {
         out.kind = detection::PatternResultKind::Rejected;
         out.type = detection::PatternType::Invalid;
         out.reasonCode = detection::PatternReasonCode::DetectorRejected;
@@ -373,7 +373,7 @@ bool processRoadmapDetectorCandidate(const DetectorCandidate& in,
     return true;
 }
 
-bool evaluateRoadmapSignalCandidateImpl(const detection::SignalCandidate& signal,
+bool evaluateModernSignalCandidateImpl(const detection::SignalCandidate& signal,
                                         const FrequencyEvidenceEvaluation::Values& tuning,
                                         const detection::FeatureHistory* featureHistory,
                                         detection::PatternResult& outResult,
@@ -1063,7 +1063,7 @@ void AnalyzerApp::update() {
                         now,
                         fullFrequencyEvidence,
                         candidate.durationMs);
-                    if (!processRoadmapDetectorCandidate(candidate, patternResult, now, &frequencyEvidence)) {
+                    if (!processModernDetectorCandidate(candidate, patternResult, now, &frequencyEvidence)) {
                         continue;
                     }
                     patternResult.candidate.frequencyFull = fullFrequencyEvidence;
@@ -2224,14 +2224,14 @@ void AnalyzerApp::startSequenceTest(unsigned long totalTrials, unsigned long per
         windowEndOffsetMs = periodMs;
     }
 
-    free(_sequenceTest.analyzerReports);
-    _sequenceTest.analyzerReports = nullptr;
-    _sequenceTest.analyzerReportCapacity = 0;
-    _sequenceTest.analyzerReportCount = 0;
-    free(_sequenceTest.trialReports);
-    _sequenceTest.trialReports = nullptr;
-    _sequenceTest.trialReportCapacity = 0;
-    _sequenceTest.trialReportCount = 0;
+    free(_sequenceTest.deprecatedAnalyzerReports);
+    _sequenceTest.deprecatedAnalyzerReports = nullptr;
+    _sequenceTest.deprecatedAnalyzerReportCapacity = 0;
+    _sequenceTest.deprecatedAnalyzerReportCount = 0;
+    free(_sequenceTest.deprecatedTrialReports);
+    _sequenceTest.deprecatedTrialReports = nullptr;
+    _sequenceTest.deprecatedTrialReportCapacity = 0;
+    _sequenceTest.deprecatedTrialReportCount = 0;
 
     _sequenceTest.active = true;
     _sequenceTest.quiet = quiet;
@@ -2274,9 +2274,9 @@ void AnalyzerApp::startSequenceTest(unsigned long totalTrials, unsigned long per
     if (wantSummaryReports || wantLegacyReports) {
         const size_t desiredCapacity = static_cast<size_t>(totalTrials < SequenceTest::kMaxTrialReports ? totalTrials : SequenceTest::kMaxTrialReports);
         if (desiredCapacity > 0) {
-            _sequenceTest.analyzerReports = static_cast<AnalyzerReport*>(calloc(desiredCapacity, sizeof(AnalyzerReport)));
-            if (_sequenceTest.analyzerReports != nullptr) {
-                _sequenceTest.analyzerReportCapacity = desiredCapacity;
+            _sequenceTest.deprecatedAnalyzerReports = static_cast<AnalyzerReport*>(calloc(desiredCapacity, sizeof(AnalyzerReport)));
+            if (_sequenceTest.deprecatedAnalyzerReports != nullptr) {
+                _sequenceTest.deprecatedAnalyzerReportCapacity = desiredCapacity;
             } else {
                 Serial.print("SEQ_VERBOSE_WARN reason=analyzer_report_alloc_failed requested=");
                 Serial.print(desiredCapacity);
@@ -2287,9 +2287,9 @@ void AnalyzerApp::startSequenceTest(unsigned long totalTrials, unsigned long per
     if (wantLegacyReports) {
         const size_t desiredCapacity = static_cast<size_t>(totalTrials < SequenceTest::kMaxTrialReports ? totalTrials : SequenceTest::kMaxTrialReports);
         if (desiredCapacity > 0) {
-            _sequenceTest.trialReports = static_cast<SequenceTest::TrialReport*>(calloc(desiredCapacity, sizeof(SequenceTest::TrialReport)));
-            if (_sequenceTest.trialReports != nullptr) {
-                _sequenceTest.trialReportCapacity = desiredCapacity;
+            _sequenceTest.deprecatedTrialReports = static_cast<SequenceTest::TrialReport*>(calloc(desiredCapacity, sizeof(SequenceTest::TrialReport)));
+            if (_sequenceTest.deprecatedTrialReports != nullptr) {
+                _sequenceTest.deprecatedTrialReportCapacity = desiredCapacity;
             } else {
                 Serial.print("SEQ_VERBOSE_WARN reason=trial_report_alloc_failed requested=");
                 Serial.print(desiredCapacity);
@@ -2709,14 +2709,14 @@ void AnalyzerApp::finalizeCaptureTrial(unsigned long now) {
 void AnalyzerApp::stopSequenceTest() {
     _sequenceTest.active = false;
     _sequenceTest.sampleDumpCapturing = false;
-    free(_sequenceTest.analyzerReports);
-    _sequenceTest.analyzerReports = nullptr;
-    _sequenceTest.analyzerReportCapacity = 0;
-    _sequenceTest.analyzerReportCount = 0;
-    free(_sequenceTest.trialReports);
-    _sequenceTest.trialReports = nullptr;
-    _sequenceTest.trialReportCapacity = 0;
-    _sequenceTest.trialReportCount = 0;
+    free(_sequenceTest.deprecatedAnalyzerReports);
+    _sequenceTest.deprecatedAnalyzerReports = nullptr;
+    _sequenceTest.deprecatedAnalyzerReportCapacity = 0;
+    _sequenceTest.deprecatedAnalyzerReportCount = 0;
+    free(_sequenceTest.deprecatedTrialReports);
+    _sequenceTest.deprecatedTrialReports = nullptr;
+    _sequenceTest.deprecatedTrialReportCapacity = 0;
+    _sequenceTest.deprecatedTrialReportCount = 0;
 }
 
 void AnalyzerApp::updateSequenceTest(unsigned long now) {
@@ -3539,16 +3539,10 @@ void AnalyzerApp::handleSequenceCandidate(const detection::PatternResult& patter
     _sequenceTest.currentTrialDiagnostics.acceptedFrequencyProcessedAtMs = patternResult.processedAtMs;
     _sequenceTest.currentTrialDiagnostics.acceptedParityProbe64 = scanSequenceFrequencyParity64(patternResult.candidate, patternResult.processedAtMs);
     _sequenceTest.currentTrialDiagnostics.acceptedParityProbe64ProcessedAtMs = patternResult.processedAtMs;
-    _sequenceTest.currentTrialDiagnostics.acceptedSignalCandidate = makeRoadmapSignalCandidateFromPatternResult(patternResult);
-    detection::PatternResult recheckedPatternResult = {};
-    detection::InspectedSignal recheckedInspectedSignal = {};
-    const bool recheckedPatternCaptured = evaluateRoadmapSignalCandidate(
-        _sequenceTest.currentTrialDiagnostics.acceptedSignalCandidate,
-        recheckedPatternResult,
-        &recheckedInspectedSignal);
-    _sequenceTest.currentTrialDiagnostics.acceptedPatternResult = recheckedPatternResult;
-    _sequenceTest.currentTrialDiagnostics.acceptedInspectedSignal = recheckedInspectedSignal;
-    _sequenceTest.currentTrialDiagnostics.acceptedPatternCaptured = recheckedPatternCaptured;
+            _sequenceTest.currentTrialDiagnostics.deprecatedAcceptedSignalCandidate = makeModernSignalCandidateFromPatternResult(patternResult);
+    // Legacy analyzer-side recheck removed from the normal path.
+    // DetectionRuntime owns the PatternResult handed to the analyzer now.
+    _sequenceTest.currentTrialDiagnostics.deprecatedAcceptedPatternCaptured = false;
     _sequenceTest.currentTrialDiagnostics.lastTransientRejectReason = AmpTransientDetector::TransientRejectReason::None;
     _sequenceTest.currentTrialDiagnostics.lastRejectStrength = 0.0f;
     _sequenceTest.currentTrialDiagnostics.lastRejectDurationMs = 0;
@@ -3618,7 +3612,9 @@ void AnalyzerApp::handleSequenceCandidate(const detection::PatternResult& patter
 
 namespace {
 
-static constexpr bool kAnalyzerEnableRecheckParity = true;
+// Legacy parity check for Pass J validation only.
+// Keep disabled in the normal runtime path now that Pass K trusts runtime output.
+static constexpr bool kAnalyzerEnableRecheckParity = false;
 
 struct PatternResultParity {
     bool compared = false;
@@ -3893,10 +3889,10 @@ void AnalyzerApp::finalizeSequenceTrial(unsigned long now) {
         printSequenceAmpWindow(finalizedReport);
     }
 
-    if (_sequenceTest.trialReports != nullptr) {
+    if (_sequenceTest.deprecatedTrialReports != nullptr) {
         const size_t reportIndex = static_cast<size_t>(_sequenceTest.currentTrial - 1UL);
-        if (reportIndex < _sequenceTest.trialReportCapacity) {
-            auto& storedReport = _sequenceTest.trialReports[reportIndex];
+        if (reportIndex < _sequenceTest.deprecatedTrialReportCapacity) {
+            auto& storedReport = _sequenceTest.deprecatedTrialReports[reportIndex];
             storedReport.trialNumber = _sequenceTest.currentTrial;
             storedReport.startMs = _sequenceTest.currentTrialStartMs;
             storedReport.endMs = _sequenceTest.currentTrialEndMs;
@@ -3951,21 +3947,21 @@ void AnalyzerApp::finalizeSequenceTrial(unsigned long now) {
             }
             strncpy(storedReport.result, result, sizeof(storedReport.result));
             storedReport.result[sizeof(storedReport.result) - 1] = '\0';
-            storedReport.analyzerReport = finalizedReport;
-            storedReport.analyzerReportCaptured = true;
+            storedReport.deprecatedAnalyzerReport = finalizedReport;
+            storedReport.deprecatedAnalyzerReportCaptured = true;
             const size_t storedCount = reportIndex + 1UL;
-            if (storedCount > _sequenceTest.trialReportCount) {
-                _sequenceTest.trialReportCount = storedCount;
+            if (storedCount > _sequenceTest.deprecatedTrialReportCount) {
+                _sequenceTest.deprecatedTrialReportCount = storedCount;
             }
         }
     }
-    if (_sequenceTest.analyzerReports != nullptr) {
+    if (_sequenceTest.deprecatedAnalyzerReports != nullptr) {
         const size_t reportIndex = static_cast<size_t>(_sequenceTest.currentTrial - 1UL);
-        if (reportIndex < _sequenceTest.analyzerReportCapacity) {
-            _sequenceTest.analyzerReports[reportIndex] = finalizedReport;
+        if (reportIndex < _sequenceTest.deprecatedAnalyzerReportCapacity) {
+            _sequenceTest.deprecatedAnalyzerReports[reportIndex] = finalizedReport;
             const size_t storedCount = reportIndex + 1UL;
-            if (storedCount > _sequenceTest.analyzerReportCount) {
-                _sequenceTest.analyzerReportCount = storedCount;
+            if (storedCount > _sequenceTest.deprecatedAnalyzerReportCount) {
+                _sequenceTest.deprecatedAnalyzerReportCount = storedCount;
             }
         }
     }
@@ -3979,8 +3975,9 @@ void AnalyzerApp::finalizeSequenceTrial(unsigned long now) {
     }
 }
 
-bool AnalyzerApp::evaluateRoadmapSignalCandidate(const detection::SignalCandidate& signal, detection::PatternResult& outResult, detection::InspectedSignal* outInspected) const {
-    return evaluateRoadmapSignalCandidateImpl(signal, _frequencyEvidenceTuning, _sequenceFeatureHistory, outResult, outInspected,
+// Legacy debug fallback only; not used in the normal Analyzer reporting path.
+bool AnalyzerApp::evaluateModernSignalCandidate(const detection::SignalCandidate& signal, detection::PatternResult& outResult, detection::InspectedSignal* outInspected) const {
+    return evaluateModernSignalCandidateImpl(signal, _frequencyEvidenceTuning, _sequenceFeatureHistory, outResult, outInspected,
                                                analyzerLogEnabled(_sequenceTest.logFlags, AnalyzerApp::ANALYZER_LOG_EXPLAIN));
 }
 
@@ -4117,9 +4114,9 @@ bool AnalyzerApp::sequenceLegacyReportEnabled() const {
 }
 
 AnalyzerReport AnalyzerApp::buildSequenceAnalyzerReport(unsigned long trialNumber,
-                                                     const char* result,
-                                                     long dtMs,
-                                                     long durMs,
+                                                        const char* result,
+                                                        long dtMs,
+                                                        long durMs,
                                                      float strength,
                                                      bool audioOverflow,
                                                      unsigned long duplicateCount,
@@ -4140,121 +4137,97 @@ AnalyzerReport AnalyzerApp::buildSequenceAnalyzerReport(unsigned long trialNumbe
     report.expected.patternType = _sequenceTest.liveFrequencyOnly ? "live_frequency" : "sequence_trial";
     report.expected.expectedSource = _sequenceTest.externalEmitter ? "external" : "local";
 
-    const detection::SignalCandidate& capturedSignalCandidate = diagnostics.acceptedSignalCandidate;
     const detection::DetectionPipelineResult* pipelineResult = _detection != nullptr && _detection->hasLatestPipelineResult()
         ? &_detection->latestPipelineResult()
         : nullptr;
-    const detection::PatternResult& runtimePatternResult = pipelineResult != nullptr && pipelineResult->hasPattern
-        ? pipelineResult->pattern
-        : (diagnostics.runtimePatternCaptured
-            ? diagnostics.runtimePatternResult
-            : diagnostics.acceptedPatternResult);
-    const detection::InspectedSignal& runtimeInspectedSignal = pipelineResult != nullptr && pipelineResult->hasInspectedSignal
-        ? pipelineResult->inspectedSignal
-        : diagnostics.acceptedInspectedSignal;
-    const detection::FieldState& runtimeFieldState = pipelineResult != nullptr && pipelineResult->hasField
-        ? pipelineResult->field
-        : diagnostics.runtimeFieldState;
     const bool actualPipelineAvailable = pipelineResult != nullptr && pipelineResult->hasPattern;
-    const bool capturedPatternAvailable = actualPipelineAvailable || diagnostics.runtimePatternCaptured || (diagnostics.acceptedPatternCaptured && capturedSignalCandidate.present);
+    const detection::PatternResult* runtimePatternResult = actualPipelineAvailable ? &pipelineResult->pattern : nullptr;
+    const detection::InspectedSignal* runtimeInspectedSignal = actualPipelineAvailable && pipelineResult->hasInspectedSignal
+        ? &pipelineResult->inspectedSignal
+        : nullptr;
+    const detection::FieldState* runtimeFieldState = actualPipelineAvailable && pipelineResult->hasField
+        ? &pipelineResult->field
+        : nullptr;
     const auto artifactReason = [&]() -> const char* {
         if (actualPipelineAvailable) {
             return "captured_from_runtime_pipeline";
         }
-        if (diagnostics.acceptedPatternCaptured) {
-            return "captured_from_analyzer_recheck";
-        }
-        if (!diagnostics.acceptedSignalCandidate.present) {
-            return "missing_pipeline_result";
-        }
-        if (!diagnostics.acceptedPatternCaptured) {
-            if (diagnostics.acceptedInspectedSignal.rejected) {
-                return signalRejectReasonName(diagnostics.acceptedInspectedSignal.rejectReason);
-            }
-            if (!diagnostics.acceptedInspectedSignal.signal.present) {
-                return "missing_inspected_signal";
-            }
-            return "assembler_no_pattern_candidate";
-        }
-        return "captured_from_real_candidate";
+        return "missing_pipeline_result";
     }();
 
     report.classification.result = analyzerResultFromSequenceOutcome(result);
-    report.classification.reason = analyzerReasonFromSequenceOutcome(result, dtMs, diagnostics.rawCandidateCount, diagnostics.strongestRejectReason, audioOverflow);
+    report.classification.reason = actualPipelineAvailable
+        ? analyzerReasonFromSequenceOutcome(result, dtMs, diagnostics.rawCandidateCount, diagnostics.strongestRejectReason, audioOverflow)
+        : AnalyzerReason::MissingPipelineResult;
     report.classification.dtMs = dtMs;
-    report.classification.confidence = capturedPatternAvailable ? runtimePatternResult.confidence : (diagnostics.transientAccepted ? 1.0f : 0.0f);
+    report.classification.confidence = actualPipelineAvailable && runtimePatternResult != nullptr ? runtimePatternResult->confidence : 0.0f;
     {
-        // Generic pattern mapping stays local to the report builder so top-level
-        // output does not need profile-specific detector knowledge elsewhere.
+        // Analyzer consumes the PatternResult produced by DetectionRuntime.
+        // Analyzer does not re-run signal inspection or pattern interpretation.
         AnalyzerPatternObservation pattern = {};
-        pattern.type = capturedPatternAvailable ? detection::patternTypeName(runtimePatternResult.type) : "unknown";
-        pattern.accepted = capturedPatternAvailable ? runtimePatternResult.valid : (report.classification.result == AnalyzerResult::Expected || report.classification.result == AnalyzerResult::Late);
-        pattern.confidence = capturedPatternAvailable ? runtimePatternResult.confidence : (diagnostics.acceptedFrequencyEvidence.present ? diagnostics.acceptedFrequencyEvidence.confidence : 0.0f);
+        pattern.type = actualPipelineAvailable && runtimePatternResult != nullptr ? detection::patternTypeName(runtimePatternResult->type) : "unknown";
+        pattern.accepted = actualPipelineAvailable && runtimePatternResult != nullptr
+            ? runtimePatternResult->valid
+            : false;
+        pattern.confidence = actualPipelineAvailable && runtimePatternResult != nullptr ? runtimePatternResult->confidence : 0.0f;
         pattern.dtMs = report.classification.dtMs;
-        pattern.locality = capturedPatternAvailable ? localityName(runtimePatternResult.locality) : "unknown";
-        pattern.sourceClass = capturedPatternAvailable ? detection::patternSourceName(runtimePatternResult.source) : (diagnostics.acceptedFrequencyEvidence.present ? "frequency" : "unknown");
-        pattern.reason = capturedPatternAvailable ? detection::patternReasonName(runtimePatternResult.reasonCode) : analyzerReasonName(report.classification.reason);
-        pattern.involvedSignals = capturedPatternAvailable ? runtimePatternResult.signalCount : diagnostics.rawCandidateCount;
+        pattern.locality = actualPipelineAvailable && runtimePatternResult != nullptr ? localityName(runtimePatternResult->locality) : "unknown";
+        pattern.sourceClass = actualPipelineAvailable && runtimePatternResult != nullptr ? detection::patternSourceName(runtimePatternResult->source) : "unknown";
+        pattern.reason = actualPipelineAvailable && runtimePatternResult != nullptr ? detection::patternReasonName(runtimePatternResult->reasonCode) : analyzerReasonName(report.classification.reason);
+        pattern.involvedSignals = actualPipelineAvailable && runtimePatternResult != nullptr ? runtimePatternResult->signalCount : 0U;
         report.primaryPattern = pattern;
     }
 
     report.signals.total = diagnostics.rawCandidateCount;
-    report.signals.accepted = capturedPatternAvailable ? (runtimePatternResult.valid ? 1U : 0U) : (diagnostics.transientAccepted ? 1U : 0U);
+    report.signals.accepted = actualPipelineAvailable && runtimePatternResult != nullptr && runtimePatternResult->valid ? 1U : 0U;
     report.signals.rejected = diagnostics.rawCandidateCount > report.signals.accepted ? diagnostics.rawCandidateCount - report.signals.accepted : 0U;
-    report.signals.primarySource = capturedPatternAvailable
-        ? (actualPipelineAvailable && runtimeInspectedSignal.signal.present
-            ? signalSourceName(runtimeInspectedSignal.signal.source)
-            : detection::patternSourceName(runtimePatternResult.source))
-        : (diagnostics.acceptedFrequencyEvidence.present ? "frequency" : "unknown");
+    report.signals.primarySource = actualPipelineAvailable && runtimeInspectedSignal != nullptr && runtimeInspectedSignal->signal.present
+        ? signalSourceName(runtimeInspectedSignal->signal.source)
+        : "unknown";
     report.signals.primaryDtMs = dtMs;
     report.signals.primaryDurationMs = durMs >= 0 ? static_cast<unsigned long>(durMs) : 0UL;
     report.signals.primaryStrength = strength;
-    report.signals.primaryConfidence = capturedPatternAvailable ? runtimePatternResult.confidence : (diagnostics.acceptedFrequencyEvidence.present ? diagnostics.acceptedFrequencyEvidence.confidence : 0.0f);
-    report.signals.mainRejectReason = capturedPatternAvailable
-        ? (runtimeInspectedSignal.rejected ? signalRejectReasonName(runtimeInspectedSignal.rejectReason) : "none")
-        : (diagnostics.transientAccepted ? "none" : analyzerReasonName(report.classification.reason));
+    report.signals.primaryConfidence = actualPipelineAvailable && runtimePatternResult != nullptr ? runtimePatternResult->confidence : 0.0f;
+    report.signals.mainRejectReason = actualPipelineAvailable && runtimeInspectedSignal != nullptr
+        ? (runtimeInspectedSignal->rejected ? signalRejectReasonName(runtimeInspectedSignal->rejectReason) : "none")
+        : analyzerReasonName(report.classification.reason);
     report.signals.duplicateRisk = duplicateCount > 0;
 
     report.inspection.inspected = diagnostics.rawCandidateCount;
     report.inspection.accepted = report.signals.accepted;
     report.inspection.rejected = diagnostics.rawCandidateCount > report.inspection.accepted ? diagnostics.rawCandidateCount - report.inspection.accepted : 0U;
-    if (actualPipelineAvailable) {
-        report.inspection.primaryEvidence = signalSourceName(runtimeInspectedSignal.signal.source);
-        report.inspection.locality = localityName(runtimeInspectedSignal.locality);
-        report.inspection.supportClass = ampSupportName(runtimeInspectedSignal.ampSupport);
-        report.inspection.mainRejectReason = runtimeInspectedSignal.rejected ? signalRejectReasonName(runtimeInspectedSignal.rejectReason) : "none";
-    } else if (capturedPatternAvailable) {
-        report.inspection.primaryEvidence = signalSourceName(runtimeInspectedSignal.signal.source);
-        report.inspection.locality = localityName(runtimeInspectedSignal.locality);
-        report.inspection.supportClass = ampSupportName(runtimeInspectedSignal.ampSupport);
-        report.inspection.mainRejectReason = runtimeInspectedSignal.rejected ? signalRejectReasonName(runtimeInspectedSignal.rejectReason) : "none";
+    if (actualPipelineAvailable && runtimeInspectedSignal != nullptr && runtimeInspectedSignal->signal.present) {
+        report.inspection.primaryEvidence = signalSourceName(runtimeInspectedSignal->signal.source);
+        report.inspection.locality = localityName(runtimeInspectedSignal->locality);
+        report.inspection.supportClass = ampSupportName(runtimeInspectedSignal->ampSupport);
+        report.inspection.mainRejectReason = runtimeInspectedSignal->rejected ? signalRejectReasonName(runtimeInspectedSignal->rejectReason) : "none";
     } else {
-        report.inspection.primaryEvidence = diagnostics.acceptedFrequencyEvidence.present ? "frequency" : "none";
+        report.inspection.primaryEvidence = "none";
         report.inspection.locality = "unknown";
-        report.inspection.supportClass = diagnostics.acceptedFrequencyEvidence.present ? "supported" : "unsupported";
+        report.inspection.supportClass = "unsupported";
         report.inspection.mainRejectReason = analyzerReasonName(report.classification.reason);
     }
 
-    if (actualPipelineAvailable) {
-        report.field.state = runtimeFieldState.dense ? "dense" : (runtimeFieldState.active ? (runtimeFieldState.quiet ? "quiet" : "active") : "unknown");
-        report.field.activity = runtimeFieldState.activity;
-        report.field.density = runtimeFieldState.density;
-        report.field.recentValidPatterns = runtimeFieldState.recentPatternCount;
-        report.field.recentRejects = runtimeFieldState.recentSignalCount > runtimeFieldState.recentPatternCount
-            ? runtimeFieldState.recentSignalCount - runtimeFieldState.recentPatternCount
+    if (actualPipelineAvailable && runtimeFieldState != nullptr) {
+        report.field.state = runtimeFieldState->dense ? "dense" : (runtimeFieldState->active ? (runtimeFieldState->quiet ? "quiet" : "active") : "unknown");
+        report.field.activity = runtimeFieldState->activity;
+        report.field.density = runtimeFieldState->density;
+        report.field.recentValidPatterns = runtimeFieldState->recentPatternCount;
+        report.field.recentRejects = runtimeFieldState->recentSignalCount > runtimeFieldState->recentPatternCount
+            ? runtimeFieldState->recentSignalCount - runtimeFieldState->recentPatternCount
             : 0U;
     } else {
         report.field.state = "unknown";
         report.field.activity = 0.0f;
         report.field.density = 0.0f;
-        report.field.recentValidPatterns = diagnostics.transientAccepted ? 1U : 0U;
-        report.field.recentRejects = diagnostics.rawCandidateCount > report.field.recentValidPatterns ? diagnostics.rawCandidateCount - report.field.recentValidPatterns : 0U;
+        report.field.recentValidPatterns = 0U;
+        report.field.recentRejects = diagnostics.rawCandidateCount;
     }
 
     report.profileDetail.namespaceName = analyzerProfileDetailNamespace(_sequenceTest.profileKind, _sequenceTest.liveFrequencyOnly);
     report.profileDetail.summary = analyzerProfileDetailSummary(_sequenceTest.profileKind, _sequenceTest.liveFrequencyOnly);
-    report.profileDetail.freqScore = capturedPatternAvailable ? runtimePatternResult.freq.score : diagnostics.acceptedFrequencyEvidence.score;
-    report.profileDetail.freqContrast = capturedPatternAvailable ? runtimePatternResult.freq.spectralContrast : diagnostics.acceptedFrequencyEvidence.spectralContrast;
+    report.profileDetail.freqScore = actualPipelineAvailable && runtimePatternResult != nullptr ? runtimePatternResult->freq.score : 0.0f;
+    report.profileDetail.freqContrast = actualPipelineAvailable && runtimePatternResult != nullptr ? runtimePatternResult->freq.spectralContrast : 0.0f;
     report.profileDetail.ampLevel = report.signals.primaryStrength;
     report.profileDetail.ampBase = diagnostics.acceptedAmbientBaseline;
     report.profileDetail.ampLift = report.profileDetail.ampLevel - report.profileDetail.ampBase;
@@ -4262,16 +4235,14 @@ AnalyzerReport AnalyzerApp::buildSequenceAnalyzerReport(unsigned long trialNumbe
         ? report.profileDetail.ampLift / report.profileDetail.ampBase
         : report.profileDetail.ampLift;
     report.profileDetail.ampLocality = report.primaryPattern.locality;
-    const detection::AmpWindowEvidence ampWindowEvidence = actualPipelineAvailable
-        ? runtimeInspectedSignal.ampWindow
-        : (diagnostics.acceptedInspectedSignal.ampWindow.available
-            ? diagnostics.acceptedInspectedSignal.ampWindow
-            : runtimePatternResult.ampWindow);
+    const detection::AmpWindowEvidence ampWindowEvidence = actualPipelineAvailable && runtimeInspectedSignal != nullptr
+        ? runtimeInspectedSignal->ampWindow
+        : detection::AmpWindowEvidence{};
     report.profileDetail.ampWindow.available = ampWindowEvidence.available;
     report.profileDetail.ampWindow.observedOnly = ampWindowEvidence.observedOnly;
     report.profileDetail.ampWindow.note = ampWindowEvidence.available
         ? "inspector_seen"
-        : (runtimeInspectedSignal.signal.present ? "inspector_no_amp_window" : "inspector_missing_signal");
+        : (actualPipelineAvailable ? "inspector_no_amp_window" : "missing_pipeline_result");
     report.profileDetail.ampWindow.windowStartMs = ampWindowEvidence.windowStartMs;
     report.profileDetail.ampWindow.windowEndMs = ampWindowEvidence.windowEndMs;
     report.profileDetail.ampWindow.peak = ampWindowEvidence.peak;
@@ -4287,28 +4258,26 @@ AnalyzerReport AnalyzerApp::buildSequenceAnalyzerReport(unsigned long trialNumbe
     report.debug.rejects = report.signals.rejected;
     report.debug.duplicates = duplicateCount;
     report.debug.unexpected = strcmp(result, "unexpected") == 0 ? 1U : 0U;
-    report.debug.artifactCaptured = capturedPatternAvailable;
-    report.debug.artifactFallback = !capturedPatternAvailable;
-    report.debug.artifactState = actualPipelineAvailable ? "CAPTURED" : "FALLBACK_SUMMARY";
+    report.debug.artifactCaptured = actualPipelineAvailable;
+    report.debug.artifactFallback = !actualPipelineAvailable;
+    report.debug.artifactState = actualPipelineAvailable ? "CAPTURED" : "MISSING_PIPELINE";
     report.debug.artifactReason = artifactReason;
-    report.debug.pipelineSource = actualPipelineAvailable
-        ? "actual_pipeline"
-        : (diagnostics.acceptedPatternCaptured ? "analyzer_recheck" : "summary_fallback");
+    report.debug.pipelineSource = actualPipelineAvailable ? "actual_pipeline" : "missing_runtime_pipeline";
     report.debug.pipelineFallback = !actualPipelineAvailable;
-    report.debug.mainRejectReason = capturedPatternAvailable
-        ? (runtimeInspectedSignal.rejected ? signalRejectReasonName(runtimeInspectedSignal.rejectReason) : "none")
+    report.debug.mainRejectReason = actualPipelineAvailable && runtimeInspectedSignal != nullptr
+        ? (runtimeInspectedSignal->rejected ? signalRejectReasonName(runtimeInspectedSignal->rejectReason) : "none")
         : analyzerReasonName(report.classification.reason);
 
-    if (actualPipelineAvailable && diagnostics.acceptedPatternCaptured) {
+    if (kAnalyzerEnableRecheckParity && actualPipelineAvailable && diagnostics.deprecatedAcceptedPatternCaptured) {
         const long actualDtMs = diagnostics.runtimePatternResult.candidate.startMs >= _sequenceTest.currentTrialStartMs
             ? static_cast<long>(diagnostics.runtimePatternResult.candidate.startMs - _sequenceTest.currentTrialStartMs)
             : -1;
-        const long recheckedDtMs = diagnostics.acceptedPatternResult.candidate.startMs >= _sequenceTest.currentTrialStartMs
-            ? static_cast<long>(diagnostics.acceptedPatternResult.candidate.startMs - _sequenceTest.currentTrialStartMs)
+        const long recheckedDtMs = diagnostics.deprecatedAcceptedPatternResult.candidate.startMs >= _sequenceTest.currentTrialStartMs
+            ? static_cast<long>(diagnostics.deprecatedAcceptedPatternResult.candidate.startMs - _sequenceTest.currentTrialStartMs)
             : -1;
         const PatternResultParity parity = comparePatternResultsForAnalyzer(
             diagnostics.runtimePatternResult,
-            diagnostics.acceptedPatternResult,
+            diagnostics.deprecatedAcceptedPatternResult,
             actualDtMs,
             recheckedDtMs);
         report.debug.parityCompared = parity.compared;
@@ -4324,10 +4293,8 @@ AnalyzerReport AnalyzerApp::buildSequenceAnalyzerReport(unsigned long trialNumbe
         report.debug.parityTimingDeltaMs = parity.timingDeltaMs;
         report.debug.paritySummary = parity.summary;
         report.debug.parityReason = parity.reason;
-    } else if (!diagnostics.runtimePatternCaptured) {
+    } else if (!actualPipelineAvailable) {
         report.debug.parityReason = "missing_actual_pipeline_result";
-    } else if (!diagnostics.acceptedPatternCaptured) {
-        report.debug.parityReason = "missing_recheck";
     }
 
     return report;
@@ -4676,10 +4643,10 @@ void AnalyzerApp::printSequenceExplainLegacy(unsigned long trialNumber, const ch
     const auto& freq = diagnostics.acceptedFrequencyEvidence;
     const bool validPattern = strcmp(result, "miss") != 0 && strcmp(result, "invalid_audio") != 0;
     const auto freqEval = FrequencyEvidenceEvaluation::evaluate(freq, _frequencyEvidenceTuning);
-    const auto roadmapFrequencySignal = makeRoadmapFrequencySignalCandidate(_sequenceTest.liveFrequency);
-    detection::PatternResult roadmapFrequencyResult = {};
-    detection::InspectedSignal roadmapFrequencyInspected = {};
-    const bool roadmapFrequencyEvaluated = evaluateRoadmapSignalCandidate(roadmapFrequencySignal, roadmapFrequencyResult, &roadmapFrequencyInspected);
+    const auto modernFrequencySignal = makeModernFrequencySignalCandidate(_sequenceTest.liveFrequency);
+    detection::PatternResult modernFrequencyResult = {};
+    detection::InspectedSignal modernFrequencyInspected = {};
+    const bool modernFrequencyEvaluated = evaluateModernSignalCandidate(modernFrequencySignal, modernFrequencyResult, &modernFrequencyInspected);
     const unsigned long freqAgeMs = freq.observedAtMs > 0 && diagnostics.acceptedFrequencyProcessedAtMs >= freq.observedAtMs
         ? diagnostics.acceptedFrequencyProcessedAtMs - freq.observedAtMs
         : 0;
@@ -4697,25 +4664,25 @@ void AnalyzerApp::printSequenceExplainLegacy(unsigned long trialNumber, const ch
     Serial.print(validPattern ? 1 : 0);
     Serial.print(" pattern_type=");
     Serial.print(validPattern
-        ? (roadmapFrequencyEvaluated && roadmapFrequencyResult.valid
-               ? detection::patternTypeName(roadmapFrequencyResult.type)
+        ? (modernFrequencyEvaluated && modernFrequencyResult.valid
+               ? detection::patternTypeName(modernFrequencyResult.type)
                : "transient_only")
         : "invalid");
     Serial.print(" pattern_reason=");
     Serial.print(validPattern
-        ? (roadmapFrequencyEvaluated && roadmapFrequencyResult.valid
-               ? detection::patternReasonName(roadmapFrequencyResult.reasonCode)
+        ? (modernFrequencyEvaluated && modernFrequencyResult.valid
+               ? detection::patternReasonName(modernFrequencyResult.reasonCode)
                : "detector_rejected")
         : "detector_rejected");
     Serial.print(" candidate_valid=");
-    Serial.print(validPattern && roadmapFrequencyEvaluated && roadmapFrequencyResult.candidateValid ? 1 : 0);
+    Serial.print(validPattern && modernFrequencyEvaluated && modernFrequencyResult.candidateValid ? 1 : 0);
     Serial.print(" tonal_valid=");
-    Serial.print(roadmapFrequencyEvaluated && roadmapFrequencyResult.valid && roadmapFrequencyResult.tonalValid ? 1 : 0);
+    Serial.print(modernFrequencyEvaluated && modernFrequencyResult.valid && modernFrequencyResult.tonalValid ? 1 : 0);
     Serial.print(" behavior_eligible=");
-    Serial.print(roadmapFrequencyEvaluated && roadmapFrequencyResult.behaviorEligible ? 1 : 0);
+    Serial.print(modernFrequencyEvaluated && modernFrequencyResult.behaviorEligible ? 1 : 0);
     Serial.print(" reject_reason=");
-    Serial.print(roadmapFrequencyEvaluated && roadmapFrequencyResult.valid
-        ? detection::patternRejectReasonName(roadmapFrequencyResult.rejectReason)
+    Serial.print(modernFrequencyEvaluated && modernFrequencyResult.valid
+        ? detection::patternRejectReasonName(modernFrequencyResult.rejectReason)
         : "no_candidate");
     Serial.print(" transient_duration_ms=");
     Serial.print(diagnostics.acceptedTransientDurationMs);
@@ -4731,7 +4698,7 @@ void AnalyzerApp::printSequenceExplainLegacy(unsigned long trialNumber, const ch
     Serial.print(" freq_present=");
     Serial.print(freq.present ? 1 : 0);
     Serial.print(" freq_matched=");
-    Serial.print(roadmapFrequencyEvaluated && roadmapFrequencyResult.valid && roadmapFrequencyResult.tonalValid ? 1 : 0);
+    Serial.print(modernFrequencyEvaluated && modernFrequencyResult.valid && modernFrequencyResult.tonalValid ? 1 : 0);
     Serial.print(" freq_score_ok=");
     Serial.print(freqEval.scoreOk ? 1 : 0);
     Serial.print(" freq_contrast_ok=");
@@ -4758,14 +4725,14 @@ void AnalyzerApp::printSequenceExplainLegacy(unsigned long trialNumber, const ch
     Serial.print(" freq_valid_window=");
     Serial.print(freq.validWindow ? 1 : 0);
     Serial.print(" freq_eval_reason=");
-    Serial.print(roadmapFrequencyEvaluated && roadmapFrequencyResult.valid
-        ? detection::patternRejectReasonName(roadmapFrequencyResult.rejectReason)
+    Serial.print(modernFrequencyEvaluated && modernFrequencyResult.valid
+        ? detection::patternRejectReasonName(modernFrequencyResult.rejectReason)
         : FrequencyEvidenceEvaluation::reasonName(freqEval.reason));
     Serial.print(" compatCand[present=");
     Serial.print(freq.present ? 1 : 0);
     Serial.print(" source=");
-    Serial.print(roadmapFrequencyEvaluated && roadmapFrequencyResult.valid
-        ? detection::patternSourceName(roadmapFrequencyResult.source)
+    Serial.print(modernFrequencyEvaluated && modernFrequencyResult.valid
+        ? detection::patternSourceName(modernFrequencyResult.source)
         : "comparison_only");
     Serial.print(" first_ms=");
     Serial.print(diagnostics.transientAccepted ? diagnostics.acceptedTransientMs : diagnostics.duplicateTransientMs);
@@ -5016,13 +4983,13 @@ void AnalyzerApp::printSequenceLegacyReports() const {
     if (!sequenceLegacyReportEnabled()) {
         return;
     }
-    if (_sequenceTest.trialReports == nullptr || _sequenceTest.trialReportCount == 0) {
+    if (_sequenceTest.deprecatedTrialReports == nullptr || _sequenceTest.deprecatedTrialReportCount == 0) {
         return;
     }
 
     Serial.println("SEQ_REPORT_BEGIN");
-    for (size_t i = 0; i < _sequenceTest.trialReportCount && i < _sequenceTest.trialReportCapacity; ++i) {
-        const auto& report = _sequenceTest.trialReports[i];
+    for (size_t i = 0; i < _sequenceTest.deprecatedTrialReportCount && i < _sequenceTest.deprecatedTrialReportCapacity; ++i) {
+        const auto& report = _sequenceTest.deprecatedTrialReports[i];
         const char* candidateClass = h3SequenceCandidateClassFromResult(report.result);
         const auto& freq = report.freqEarly;
         const bool hasAmp = report.durMs >= 0 || report.strength > 0.0f;
@@ -5109,7 +5076,7 @@ void AnalyzerApp::printSequenceTrialResult(unsigned long trialNumber, const char
 
     const auto buildTrialSignal = [&]() {
         if (!diagnostics.transientAccepted) {
-            return makeRoadmapFrequencySignalCandidate(_sequenceTest.liveFrequency);
+            return makeModernFrequencySignalCandidate(_sequenceTest.liveFrequency);
         }
 
         detection::SignalCandidate signal = {};
@@ -5144,7 +5111,7 @@ void AnalyzerApp::printSequenceTrialResult(unsigned long trialNumber, const char
     const detection::SignalCandidate trialSignal = buildTrialSignal();
     detection::PatternResult trialResult = {};
     detection::InspectedSignal trialInspected = {};
-    const bool trialEvaluated = evaluateRoadmapSignalCandidate(trialSignal, trialResult, &trialInspected);
+    const bool trialEvaluated = evaluateModernSignalCandidate(trialSignal, trialResult, &trialInspected);
     const unsigned long probeStartMs = trialSignal.startMs > 20UL ? trialSignal.startMs - 20UL : 0UL;
     const unsigned long probeEndMs = trialSignal.endMs != 0
         ? trialSignal.endMs + 20UL
@@ -5528,14 +5495,14 @@ void AnalyzerApp::printSequenceSummary() const {
     unsigned int capturedTrialCount = 0;
     unsigned int fallbackTrialCount = 0;
 
-    if (_sequenceTest.analyzerReports != nullptr) {
-        const size_t limit = _sequenceTest.analyzerReportCount < _sequenceTest.analyzerReportCapacity
-            ? _sequenceTest.analyzerReportCount
-            : _sequenceTest.analyzerReportCapacity;
+    if (_sequenceTest.deprecatedAnalyzerReports != nullptr) {
+        const size_t limit = _sequenceTest.deprecatedAnalyzerReportCount < _sequenceTest.deprecatedAnalyzerReportCapacity
+            ? _sequenceTest.deprecatedAnalyzerReportCount
+            : _sequenceTest.deprecatedAnalyzerReportCapacity;
         for (size_t i = 0; i < limit; ++i) {
             capturedSummaryAvailable = true;
 
-            const AnalyzerReport& report = _sequenceTest.analyzerReports[i];
+            const AnalyzerReport& report = _sequenceTest.deprecatedAnalyzerReports[i];
             if (report.debug.artifactCaptured) {
                 ++capturedTrialCount;
             } else {
@@ -5659,11 +5626,11 @@ void AnalyzerApp::printSequenceSummary() const {
     if (summary.trials == 0) {
         Serial.print("NONE");
     } else if (!capturedSummaryAvailable) {
-        Serial.print("FALLBACK_LEGACY");
+        Serial.print("MISSING_RUNTIME");
     } else if (fallbackTrialCount == 0) {
         Serial.print("CAPTURED");
     } else if (capturedTrialCount == 0) {
-        Serial.print("FALLBACK_SUMMARY");
+        Serial.print("MIXED_RUNTIME");
     } else {
         Serial.print("MIXED");
     }
@@ -5724,11 +5691,11 @@ void AnalyzerApp::printSequenceSummary() const {
     if (summary.trials == 0) {
         Serial.print("NONE");
     } else if (!capturedSummaryAvailable) {
-        Serial.print("FALLBACK_LEGACY");
+        Serial.print("MISSING_RUNTIME");
     } else if (fallbackTrialCount == 0) {
         Serial.print("CAPTURED");
     } else if (capturedTrialCount == 0) {
-        Serial.print("FALLBACK_SUMMARY");
+        Serial.print("MIXED_RUNTIME");
     } else {
         Serial.print("MIXED");
     }

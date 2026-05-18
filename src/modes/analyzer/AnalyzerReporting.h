@@ -21,6 +21,7 @@ enum class AnalyzerReason {
     ValidPatternInExpectedWindow,
     ValidPatternBeforeWindow,
     ValidPatternAfterWindow,
+    MissingPipelineResult,
     NoSignalCandidate,
     SignalSeenButRejected,
     InspectionFailed,
@@ -72,6 +73,8 @@ inline const char* analyzerReasonName(AnalyzerReason value) {
             return "valid_pattern_before_window";
         case AnalyzerReason::ValidPatternAfterWindow:
             return "valid_pattern_after_window";
+        case AnalyzerReason::MissingPipelineResult:
+            return "missing_pipeline_result";
         case AnalyzerReason::NoSignalCandidate:
             return "no_signal_candidate";
         case AnalyzerReason::SignalSeenButRejected:

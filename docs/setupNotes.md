@@ -18,14 +18,14 @@ What the code actually does today:
 
 ### SEQ
 - `SEQ start tries=100 test=70cm log=full`
-- `SEQ start tries=100 test=70cm log=summary+trial+candidate+report`
+- `SEQ start tries=100 test=70cm log=summary+trial+candidate`
 - `SEQ OBS start period=2000 window=2000 freq=3200 dur=100 log=full`
 - `SEQ help`
 - `PARAM onset=23 release=20 cooldown=50 releaseDebounce=10 minMs=90 maxMs=240 minStrength=40.0 freqScore=50000 freqContrast=20.0`
 
 ### SEQ log sweep
 - `SEQ log=default`
-- `SEQ log=trialbrief`
+- `SEQ log=trial`
 - `SEQ log=summary+trial`
 - `SEQ log=full`
 - `SEQ log=raw`
@@ -215,7 +215,7 @@ Quick checks for the current detection setup:
   - `SEQ_TRACE stage=INSPECTED`
   - `SEQ_TRACE stage=PATTERN_CANDIDATE`
   - `SEQ_TRACE stage=PATTERN_RESULT`
-- Confirm the report still lands once, cleanly.
+- Confirm the `SEQ_TRIAL` output still lands once, cleanly.
 
 ### Field-state sanity
 
@@ -233,14 +233,14 @@ Quick checks for the current detection setup:
 
 It chooses:
 
-- `kind` - profile name: `FreqAmp`, `AmpState`, or `Chirp`
+- `kind` - profile name: `FreqAmp` or `Chirp`
 - `featureSet` - which feature bundle the profile wants
 - `signalEmitter` - which signal source is active
 - `signalDetector` - which detector class is expected
 - `inspectionRules` - which inspection preset runs before pattern assembly
 - `patternAssembler` - how inspected signals are grouped
 - `patternRules` - how grouped candidates become a final result
-- `useLegacyPath` / `frequencyOnly` - which detection path is enabled
+- `frequencyOnly` - which detection path is enabled
 - `ampEnabled` - whether AMP support participates
 - `detectionOnly` - whether behavior is suppressed
 - `requireTonalForBehavior` - whether tonal validity is required before behavior acts
@@ -251,7 +251,6 @@ It chooses:
 Current presets:
 
 - `FreqAmp` - sharp frequency-first baseline with AMP locality support
-- `AmpState` - legacy AMP/transient reference profile
 - `Chirp` - the proof-set profile for chirp sequence composition
 
 Where to read more:

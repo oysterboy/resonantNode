@@ -633,6 +633,35 @@ If removed, also clean old debug fields connected to onset/transient reject reas
 
 ---
 
+# Pass 11 — Clean stale legacy mentions from docs
+
+Update the active setup notes and live task brief so they match the codebase after Pass 10.
+
+## Update `docs/setupNotes.md`
+
+Remove or rewrite mentions of:
+
+```txt
+AmpState
+useLegacyPath
+trialbrief
+report alias
+old SEQ_REPORT wording
+```
+
+Keep the notes focused on the remaining supported paths:
+
+```txt
+FreqAmp
+Chirp
+SEQ_TRIAL
+SEQ_EXPLAIN
+SEQ_SUMMARY
+RAW trigger / RAW_SAMPLE_CAPTURE
+```
+
+---
+
 # Updated deletion list
 
 ```txt

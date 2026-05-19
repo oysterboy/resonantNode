@@ -157,50 +157,6 @@ private:
             CandidateOrigin origin = CandidateOrigin::InWindow;
         };
 
-        // Legacy per-trial report storage for old SEQ_REPORT / diagnostic output.
-        // New Analyzer output should use AnalyzerReport instead.
-        struct TrialReport {
-            unsigned long trialNumber = 0;
-            unsigned long startMs = 0;
-            unsigned long endMs = 0;
-            long dtMs = -1;
-            long durMs = -1;
-            float strength = 0.0f;
-            unsigned long duplicates = 0;
-            bool onsetSeen = false;
-            unsigned long maxEnv = 0;
-            float maxStrengthEst = 0.0f;
-            unsigned long transientRejectTooShortCount = 0;
-            unsigned long transientRejectTooLongCount = 0;
-            unsigned long transientRejectWeakCount = 0;
-            unsigned long onsetRejectPeakActiveCount = 0;
-            unsigned long onsetRejectCooldownCount = 0;
-            unsigned long onsetRejectOtherCount = 0;
-
-            bool bestCandidateValid = false;
-            unsigned long bestCandidateDtFromTriggerMs = 0;
-            unsigned long bestCandidateDurationMs = 0;
-            float bestCandidateStrength = 0.0f;
-            CandidateOrigin bestCandidateOrigin = CandidateOrigin::InWindow;
-            unsigned long candidateCount = 0;
-            unsigned long candidateOverflowCount = 0;
-            unsigned long candidatePreWindowCount = 0;
-            unsigned long candidateInWindowCount = 0;
-            unsigned long candidatePostWindowCount = 0;
-
-            FrequencyEvidence freqEarly = {};
-            FrequencyEvidence freqFull = {};
-            FrequencyEvidence duplicateFreqEarly = {};
-            FrequencyEvidence duplicateFreqFull = {};
-            long duplicateDurMs = -1;
-            float duplicateStrength = 0.0f;
-
-            AnalyzerReport deprecatedAnalyzerReport = {};
-            bool deprecatedAnalyzerReportCaptured = false;
-
-            char result[16] = {};
-        };
-
         // Live per-trial diagnostics and rejection bookkeeping.
         struct TrialDiagnostics {
             bool onsetSeen = false;
@@ -302,7 +258,6 @@ private:
         bool externalEmitter = false;
         detection::DetectionProfileKind profileKind = detection::DetectionProfileKind::FreqAmp;
         bool liveFrequencyOnly = false;
-        bool legacyExplainOutput = false;
         bool progressLineStarted = false;
         unsigned long totalTrials = 100;
         unsigned long periodMs = 2500;
@@ -342,12 +297,6 @@ private:
         AnalyzerReport* deprecatedAnalyzerReports = nullptr;
         mutable size_t deprecatedAnalyzerReportCapacity = 0;
         mutable size_t deprecatedAnalyzerReportCount = 0;
-        // Legacy report storage used by old SEQ_REPORT / diagnostic output.
-        // New Analyzer output should use AnalyzerReport instead.
-        // Keep only while legacy report mode is still supported.
-        mutable TrialReport* deprecatedTrialReports = nullptr;
-        mutable size_t deprecatedTrialReportCapacity = 0;
-        mutable size_t deprecatedTrialReportCount = 0;
 
         // Trial scheduling and aggregate results.
         unsigned long startedAtMs = 0;
@@ -430,7 +379,6 @@ private:
         detection::DetectionProfileKind profileKind = detection::DetectionProfileKind::FreqAmp;
         bool liveFrequencyOnly = false;
         bool externalEmitter = false;
-        bool legacyExplainOutput = false;
         char setupLabelStorage[96] = {};
     };
 
@@ -480,7 +428,7 @@ private:
     void printBaseHints() const;
 
     // Sequence-test workflows.
-    void startSequenceTest(unsigned long totalTrials, unsigned long periodMs, unsigned long windowEndOffsetMs, unsigned long toneHz, unsigned long durationMs, bool quiet = false, bool showDetails = true, const char* setupLabel = nullptr, uint32_t logFlags = DEFAULT_ANALYZER_LOG_FLAGS, bool sampleDumpEnabled = false, unsigned long sampleDumpFirstTrials = 2, unsigned long sampleDumpEveryNth = 0, unsigned long sampleDumpLeadMs = 50, unsigned long sampleDumpTailMs = 800, unsigned long sampleDumpStepMs = 1, unsigned long sampleDumpMaxRows = 5000, detection::DetectionProfileKind profileKind = detection::DetectionProfileKind::FreqAmp, bool liveFrequencyOnly = false, bool externalEmitter = false, bool legacyExplainOutput = false);
+    void startSequenceTest(unsigned long totalTrials, unsigned long periodMs, unsigned long windowEndOffsetMs, unsigned long toneHz, unsigned long durationMs, bool quiet = false, bool showDetails = true, const char* setupLabel = nullptr, uint32_t logFlags = DEFAULT_ANALYZER_LOG_FLAGS, bool sampleDumpEnabled = false, unsigned long sampleDumpFirstTrials = 2, unsigned long sampleDumpEveryNth = 0, unsigned long sampleDumpLeadMs = 50, unsigned long sampleDumpTailMs = 800, unsigned long sampleDumpStepMs = 1, unsigned long sampleDumpMaxRows = 5000, detection::DetectionProfileKind profileKind = detection::DetectionProfileKind::FreqAmp, bool liveFrequencyOnly = false, bool externalEmitter = false);
     void stopSequenceTest();
     void updateSequenceTest(unsigned long now);
     void handleSequenceTransient(unsigned long now);
@@ -500,15 +448,12 @@ private:
     void printDetectionParameters() const;
     void printTransientAcceptedDebug(unsigned long now, float strength, unsigned long durationMs) const;
     void printTransientStatsDebug(unsigned long now) const;
-    void printSequenceExplainLegacy(unsigned long trialNumber, const char* result, const SequenceTest::TrialDiagnostics& diagnostics) const;
     void printSequenceExplain(const AnalyzerReport& report) const;
     void printSequenceAmpWindow(const AnalyzerReport& report) const;
-    void printSequenceLegacyReports() const;
     void printSequenceTrialResult(unsigned long trialNumber, const char* result, long dtMs, long durMs, float strength, bool audioOverflow, unsigned long duplicateCount, const SequenceTest::TrialDiagnostics& diagnostics) const;
     void printSequenceTrialResult(const AnalyzerReport& report) const;
     void printSequenceFinalOutput() const;
     void printSequenceSummary() const;
-    bool sequenceLegacyReportEnabled() const;
     const char* activeAnalyzerProfileName() const;
     AnalyzerReport buildSequenceAnalyzerReport(unsigned long trialNumber, const char* result, long dtMs, long durMs, float strength, bool audioOverflow, unsigned long duplicateCount, const SequenceTest::TrialDiagnostics& diagnostics) const;
     void recordSequenceClassifierOutcome(const PatternResult& patternResult, bool duplicateCandidate, bool unexpectedCandidate);

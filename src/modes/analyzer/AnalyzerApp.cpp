@@ -663,10 +663,6 @@ uint32_t analyzerLogFlagsFromToken(const char* token) {
     return flags;
 }
 
-bool analyzerLogTokenUsesLegacyExplain(const char* token) {
-    return false;
-}
-
 void printSequenceHelp() {
     Serial.println("CMD: SEQ help");
     Serial.println("CMD: SEQ");
@@ -1502,8 +1498,6 @@ void AnalyzerApp::handleUsbLine(const char* line) {
         unsigned long sampleDumpMaxRows = 5000;
         detection::DetectionProfileKind profileKind = detection::DetectionProfileKind::FreqAmp;
         bool liveFrequencyOnly = false;
-        bool legacyExplainOutput = false;
-
         while (token != nullptr) {
             if (equalsIgnoreCase(token, "start")) {
                 // Optional human-friendly token; no-op.
@@ -1562,7 +1556,6 @@ void AnalyzerApp::handleUsbLine(const char* line) {
                 token = strtok_r(nullptr, " ", &savePtr);
                 if (token != nullptr) {
                     logFlags = analyzerLogFlagsFromToken(token);
-                    legacyExplainOutput = analyzerLogTokenUsesLegacyExplain(token);
                     token = strtok_r(nullptr, " ", &savePtr);
                     continue;
                 }
@@ -1570,7 +1563,6 @@ void AnalyzerApp::handleUsbLine(const char* line) {
                 logFlags = analyzerLogFlagsFromLevel(strtoul(token + 6, nullptr, 10));
             } else if (startsWithTokenIgnoreCase(token, "log=")) {
                 logFlags = analyzerLogFlagsFromToken(token + 4);
-                legacyExplainOutput = analyzerLogTokenUsesLegacyExplain(token + 4);
                 customLogRequested = analyzerLogEnabled(logFlags, AnalyzerApp::ANALYZER_LOG_CUSTOM);
             }
             token = strtok_r(nullptr, " ", &savePtr);
@@ -1600,7 +1592,6 @@ void AnalyzerApp::handleUsbLine(const char* line) {
         pending.profileKind = profileKind;
         pending.liveFrequencyOnly = liveFrequencyOnly;
         pending.externalEmitter = externalEmitter;
-        pending.legacyExplainOutput = legacyExplainOutput;
         if (setupLabel != nullptr && setupLabel[0] != '\0') {
             strncpy(pending.setupLabelStorage, setupLabel, sizeof(pending.setupLabelStorage));
             pending.setupLabelStorage[sizeof(pending.setupLabelStorage) - 1] = '\0';
@@ -1995,11 +1986,10 @@ void AnalyzerApp::processPendingSequenceStart() {
         pending.sampleDumpMaxRows,
         pending.profileKind,
         pending.liveFrequencyOnly,
-        pending.externalEmitter,
-        pending.legacyExplainOutput);
+        pending.externalEmitter);
 }
 
-void AnalyzerApp::startSequenceTest(unsigned long totalTrials, unsigned long periodMs, unsigned long windowEndOffsetMs, unsigned long toneHz, unsigned long durationMs, bool quiet, bool showDetails, const char* setupLabel, uint32_t logFlags, bool sampleDumpEnabled, unsigned long sampleDumpFirstTrials, unsigned long sampleDumpEveryNth, unsigned long sampleDumpLeadMs, unsigned long sampleDumpTailMs, unsigned long sampleDumpStepMs, unsigned long sampleDumpMaxRows, detection::DetectionProfileKind profileKind, bool liveFrequencyOnly, bool externalEmitter, bool legacyExplainOutput) {
+void AnalyzerApp::startSequenceTest(unsigned long totalTrials, unsigned long periodMs, unsigned long windowEndOffsetMs, unsigned long toneHz, unsigned long durationMs, bool quiet, bool showDetails, const char* setupLabel, uint32_t logFlags, bool sampleDumpEnabled, unsigned long sampleDumpFirstTrials, unsigned long sampleDumpEveryNth, unsigned long sampleDumpLeadMs, unsigned long sampleDumpTailMs, unsigned long sampleDumpStepMs, unsigned long sampleDumpMaxRows, detection::DetectionProfileKind profileKind, bool liveFrequencyOnly, bool externalEmitter) {
     if (_valMode) {
         return;
     }
@@ -2029,10 +2019,6 @@ void AnalyzerApp::startSequenceTest(unsigned long totalTrials, unsigned long per
     _sequenceTest.deprecatedAnalyzerReports = nullptr;
     _sequenceTest.deprecatedAnalyzerReportCapacity = 0;
     _sequenceTest.deprecatedAnalyzerReportCount = 0;
-    free(_sequenceTest.deprecatedTrialReports);
-    _sequenceTest.deprecatedTrialReports = nullptr;
-    _sequenceTest.deprecatedTrialReportCapacity = 0;
-    _sequenceTest.deprecatedTrialReportCount = 0;
 
     _sequenceTest.active = true;
     _sequenceTest.quiet = quiet;
@@ -2040,7 +2026,6 @@ void AnalyzerApp::startSequenceTest(unsigned long totalTrials, unsigned long per
     _sequenceTest.externalEmitter = externalEmitter;
     _sequenceTest.profileKind = profileKind;
     _sequenceTest.liveFrequencyOnly = liveFrequencyOnly;
-    _sequenceTest.legacyExplainOutput = legacyExplainOutput;
     _sequenceTest.progressLineStarted = false;
     _sequenceTest.logFlags = logFlags;
     _sequenceTest.totalTrials = totalTrials;
@@ -2070,10 +2055,9 @@ void AnalyzerApp::startSequenceTest(unsigned long totalTrials, unsigned long per
     _detection->setFieldStateConfig(selectedProfile.fieldStateConfig);
     _detection->setProfileName(detection::detectionProfileName(selectedProfile.kind));
 
-    const bool wantLegacyReports = sequenceLegacyReportEnabled();
     const bool wantSummaryReports =
         analyzerLogEnabled(logFlags, AnalyzerApp::ANALYZER_LOG_SUMMARY);
-    if (wantSummaryReports || wantLegacyReports) {
+    if (wantSummaryReports) {
         const size_t desiredCapacity = static_cast<size_t>(totalTrials < SequenceTest::kMaxTrialReports ? totalTrials : SequenceTest::kMaxTrialReports);
         if (desiredCapacity > 0) {
             _sequenceTest.deprecatedAnalyzerReports = static_cast<AnalyzerReport*>(calloc(desiredCapacity, sizeof(AnalyzerReport)));
@@ -2081,19 +2065,6 @@ void AnalyzerApp::startSequenceTest(unsigned long totalTrials, unsigned long per
                 _sequenceTest.deprecatedAnalyzerReportCapacity = desiredCapacity;
             } else {
                 Serial.print("SEQ_VERBOSE_WARN reason=analyzer_report_alloc_failed requested=");
-                Serial.print(desiredCapacity);
-                Serial.println(" reports");
-            }
-        }
-    }
-    if (wantLegacyReports) {
-        const size_t desiredCapacity = static_cast<size_t>(totalTrials < SequenceTest::kMaxTrialReports ? totalTrials : SequenceTest::kMaxTrialReports);
-        if (desiredCapacity > 0) {
-            _sequenceTest.deprecatedTrialReports = static_cast<SequenceTest::TrialReport*>(calloc(desiredCapacity, sizeof(SequenceTest::TrialReport)));
-            if (_sequenceTest.deprecatedTrialReports != nullptr) {
-                _sequenceTest.deprecatedTrialReportCapacity = desiredCapacity;
-            } else {
-                Serial.print("SEQ_VERBOSE_WARN reason=trial_report_alloc_failed requested=");
                 Serial.print(desiredCapacity);
                 Serial.println(" reports");
             }
@@ -2515,10 +2486,6 @@ void AnalyzerApp::stopSequenceTest() {
     _sequenceTest.deprecatedAnalyzerReports = nullptr;
     _sequenceTest.deprecatedAnalyzerReportCapacity = 0;
     _sequenceTest.deprecatedAnalyzerReportCount = 0;
-    free(_sequenceTest.deprecatedTrialReports);
-    _sequenceTest.deprecatedTrialReports = nullptr;
-    _sequenceTest.deprecatedTrialReportCapacity = 0;
-    _sequenceTest.deprecatedTrialReportCount = 0;
 }
 
 void AnalyzerApp::updateSequenceTest(unsigned long now) {
@@ -3665,80 +3632,10 @@ void AnalyzerApp::finalizeSequenceTrial(unsigned long now) {
     }
     if (analyzerLogEnabled(_sequenceTest.logFlags, AnalyzerApp::ANALYZER_LOG_EXPLAIN)) {
         printSequenceExplain(finalizedReport);
-        if (_sequenceTest.legacyExplainOutput) {
-            printSequenceExplainLegacy(_sequenceTest.currentTrial, result, diagnostics);
-        }
     }
     if (analyzerLogEnabled(_sequenceTest.logFlags, AnalyzerApp::ANALYZER_LOG_CUSTOM) &&
         !analyzerLogEnabled(_sequenceTest.logFlags, AnalyzerApp::ANALYZER_LOG_EXPLAIN)) {
         printSequenceAmpWindow(finalizedReport);
-    }
-
-    if (_sequenceTest.deprecatedTrialReports != nullptr) {
-        const size_t reportIndex = static_cast<size_t>(_sequenceTest.currentTrial - 1UL);
-        if (reportIndex < _sequenceTest.deprecatedTrialReportCapacity) {
-            auto& storedReport = _sequenceTest.deprecatedTrialReports[reportIndex];
-            storedReport.trialNumber = _sequenceTest.currentTrial;
-            storedReport.startMs = _sequenceTest.currentTrialStartMs;
-            storedReport.endMs = _sequenceTest.currentTrialEndMs;
-            storedReport.dtMs = dtMs;
-            storedReport.durMs = durMs;
-            storedReport.strength = strength;
-            storedReport.duplicates = diagnostics.duplicateCount;
-            storedReport.onsetSeen = diagnostics.onsetSeen;
-            storedReport.maxEnv = diagnostics.maxSignalLevel;
-            storedReport.maxStrengthEst = diagnostics.strongestRejectStrength;
-            if (diagnostics.transientAccepted && diagnostics.acceptedTransientStrength > storedReport.maxStrengthEst) {
-                storedReport.maxStrengthEst = diagnostics.acceptedTransientStrength;
-            }
-            if (diagnostics.duplicateCount > 0 && diagnostics.duplicateTransientStrength > storedReport.maxStrengthEst) {
-                storedReport.maxStrengthEst = diagnostics.duplicateTransientStrength;
-            }
-            if (diagnostics.bestCandidateStrength > storedReport.maxStrengthEst) {
-                storedReport.maxStrengthEst = diagnostics.bestCandidateStrength;
-            }
-            storedReport.transientRejectTooShortCount = diagnostics.transientRejectTooShortCount;
-            storedReport.transientRejectTooLongCount = diagnostics.transientRejectTooLongCount;
-            storedReport.transientRejectWeakCount = diagnostics.transientRejectWeakCount;
-            storedReport.onsetRejectPeakActiveCount = diagnostics.onsetRejectPeakActive;
-            storedReport.onsetRejectCooldownCount = diagnostics.onsetRejectCooldown;
-            storedReport.onsetRejectOtherCount = diagnostics.onsetRejectOther;
-            storedReport.bestCandidateDtFromTriggerMs = diagnostics.bestCandidateDtFromTriggerMs >= 0 ? static_cast<unsigned long>(diagnostics.bestCandidateDtFromTriggerMs) : 0UL;
-            storedReport.bestCandidateDurationMs = diagnostics.bestCandidateDurationMs;
-            storedReport.bestCandidateStrength = diagnostics.bestCandidateStrength;
-            storedReport.bestCandidateValid = diagnostics.bestCandidateValid;
-            storedReport.bestCandidateOrigin = diagnostics.bestCandidateOrigin;
-            storedReport.candidateCount = diagnostics.candidateCount;
-            storedReport.candidateOverflowCount = diagnostics.candidateOverflowCount;
-            storedReport.candidatePreWindowCount = diagnostics.candidatePreWindowCount;
-            storedReport.candidateInWindowCount = diagnostics.candidateInWindowCount;
-            storedReport.candidatePostWindowCount = diagnostics.candidatePostWindowCount;
-            storedReport.freqEarly = {};
-            storedReport.freqFull = {};
-            storedReport.duplicateFreqEarly = {};
-            storedReport.duplicateFreqFull = {};
-            if (diagnostics.transientAccepted) {
-                storedReport.freqEarly = diagnostics.acceptedFrequencyEvidence;
-                storedReport.freqFull = diagnostics.acceptedFrequencyEvidenceFull;
-            } else if (diagnostics.duplicateCount > 0) {
-                storedReport.freqEarly = diagnostics.duplicateFrequencyEvidence;
-                storedReport.freqFull = diagnostics.duplicateFrequencyEvidenceFull;
-            }
-            if (diagnostics.duplicateCount > 0) {
-                storedReport.duplicateFreqEarly = diagnostics.duplicateFrequencyEvidence;
-                storedReport.duplicateFreqFull = diagnostics.duplicateFrequencyEvidenceFull;
-                storedReport.duplicateDurMs = static_cast<long>(diagnostics.duplicateTransientDurationMs);
-                storedReport.duplicateStrength = diagnostics.duplicateTransientStrength;
-            }
-            strncpy(storedReport.result, result, sizeof(storedReport.result));
-            storedReport.result[sizeof(storedReport.result) - 1] = '\0';
-            storedReport.deprecatedAnalyzerReport = finalizedReport;
-            storedReport.deprecatedAnalyzerReportCaptured = true;
-            const size_t storedCount = reportIndex + 1UL;
-            if (storedCount > _sequenceTest.deprecatedTrialReportCount) {
-                _sequenceTest.deprecatedTrialReportCount = storedCount;
-            }
-        }
     }
     if (_sequenceTest.deprecatedAnalyzerReports != nullptr) {
         const size_t reportIndex = static_cast<size_t>(_sequenceTest.currentTrial - 1UL);
@@ -3887,11 +3784,6 @@ const char* analyzerProfileDetailSummary(detection::DetectionProfileKind profile
         default:
             return "generic freq-amp profile view";
     }
-}
-
-bool AnalyzerApp::sequenceLegacyReportEnabled() const {
-    return analyzerLogEnabled(_sequenceTest.logFlags, AnalyzerApp::ANALYZER_LOG_FREQ_CLASS) ||
-           (_sequenceTest.legacyExplainOutput && analyzerLogEnabled(_sequenceTest.logFlags, AnalyzerApp::ANALYZER_LOG_EXPLAIN));
 }
 
 AnalyzerReport AnalyzerApp::buildSequenceAnalyzerReport(unsigned long trialNumber,
@@ -4360,336 +4252,6 @@ void AnalyzerApp::printSequenceExplain(const AnalyzerReport& report) const {
     Serial.println();
 }
 
-// Legacy explain/debug dump retained for Pass A quarantine.
-void AnalyzerApp::printSequenceExplainLegacy(unsigned long trialNumber, const char* result, const SequenceTest::TrialDiagnostics& diagnostics) const {
-    if (_valMode) {
-        return;
-    }
-
-    const long acceptedDtMs = diagnostics.transientAccepted
-        ? static_cast<long>(diagnostics.acceptedTransientMs) - static_cast<long>(_sequenceTest.currentTrialStartMs)
-        : -1;
-    const float ambientBaselineAvg = diagnostics.ambientBaselineSamples > 0
-        ? diagnostics.ambientBaselineSum / static_cast<float>(diagnostics.ambientBaselineSamples)
-        : 0.0f;
-    const char* strongestRejectReasonName = "none";
-    switch (diagnostics.strongestRejectReason) {
-        case AmpTransientDetector::TransientRejectReason::None:
-            strongestRejectReasonName = "none";
-            break;
-        case AmpTransientDetector::TransientRejectReason::DurationTooShort:
-            strongestRejectReasonName = "too_short";
-            break;
-        case AmpTransientDetector::TransientRejectReason::DurationTooLong:
-            strongestRejectReasonName = "too_long";
-            break;
-        case AmpTransientDetector::TransientRejectReason::StrengthTooLow:
-            strongestRejectReasonName = "weak";
-            break;
-        case AmpTransientDetector::TransientRejectReason::PeakStillActive:
-            strongestRejectReasonName = "peak_active";
-            break;
-    }
-
-    const bool isMiss = strcmp(result, "miss") == 0;
-    const bool isLate = strcmp(result, "late") == 0;
-    const bool isUnexpected = strcmp(result, "unexpected") == 0;
-    const bool hasDuplicates = diagnostics.duplicateCount > 0;
-    const bool expectedDtSlow = strcmp(result, "expected") == 0 && acceptedDtMs >= kLateOnsetMinMs;
-    const bool expectedDurLong = strcmp(result, "expected") == 0 && diagnostics.acceptedTransientDurationMs >= kSmearedDurationMinMs;
-    const unsigned long totalRejects = diagnostics.transientRejectTooShortCount + diagnostics.transientRejectTooLongCount + diagnostics.transientRejectWeakCount;
-
-    if (!(isMiss || isLate || isUnexpected || hasDuplicates || expectedDtSlow || expectedDurLong)) {
-        return;
-    }
-
-    const char* classification = sequenceTrialClassificationName(result, acceptedDtMs, diagnostics.acceptedTransientDurationMs, diagnostics);
-
-    const char* candidateClass = h3SequenceCandidateClassFromResult(result);
-    const auto& freq = diagnostics.acceptedFrequencyEvidence;
-    const bool validPattern = strcmp(result, "miss") != 0 && strcmp(result, "invalid_audio") != 0;
-    const auto freqEval = FrequencyEvidenceEvaluation::evaluate(freq, _frequencyEvidenceTuning);
-    const auto modernFrequencySignal = makeModernFrequencySignalCandidate(_sequenceTest.liveFrequency);
-    detection::PatternResult modernFrequencyResult = {};
-    detection::InspectedSignal modernFrequencyInspected = {};
-    const bool modernFrequencyEvaluated = evaluateModernSignalCandidate(modernFrequencySignal, modernFrequencyResult, &modernFrequencyInspected);
-    const unsigned long freqAgeMs = freq.observedAtMs > 0 && diagnostics.acceptedFrequencyProcessedAtMs >= freq.observedAtMs
-        ? diagnostics.acceptedFrequencyProcessedAtMs - freq.observedAtMs
-        : 0;
-
-    Serial.print("SEQ_EXPLAIN_LEGACY_FREQ_CLASS trial=");
-    Serial.print(trialNumber);
-    Serial.print(" artifact_state=LEGACY_DIAGNOSTICS");
-    Serial.print(" result=");
-    Serial.print(result);
-    Serial.print(" class=");
-    Serial.print(classification);
-    Serial.print(" candidate_class=");
-    Serial.print(candidateClass);
-    Serial.print(" pattern_valid=");
-    Serial.print(validPattern ? 1 : 0);
-    Serial.print(" pattern_type=");
-    Serial.print(validPattern
-        ? (modernFrequencyEvaluated && modernFrequencyResult.valid
-               ? detection::patternTypeName(modernFrequencyResult.type)
-               : "transient_only")
-        : "invalid");
-    Serial.print(" pattern_reason=");
-    Serial.print(validPattern
-        ? (modernFrequencyEvaluated && modernFrequencyResult.valid
-               ? detection::patternReasonName(modernFrequencyResult.reasonCode)
-               : "detector_rejected")
-        : "detector_rejected");
-    Serial.print(" candidate_valid=");
-    Serial.print(validPattern && modernFrequencyEvaluated && modernFrequencyResult.candidateValid ? 1 : 0);
-    Serial.print(" tonal_valid=");
-    Serial.print(modernFrequencyEvaluated && modernFrequencyResult.valid && modernFrequencyResult.tonalValid ? 1 : 0);
-    Serial.print(" behavior_eligible=");
-    Serial.print(modernFrequencyEvaluated && modernFrequencyResult.behaviorEligible ? 1 : 0);
-    Serial.print(" reject_reason=");
-    Serial.print(modernFrequencyEvaluated && modernFrequencyResult.valid
-        ? detection::patternRejectReasonName(modernFrequencyResult.rejectReason)
-        : "no_candidate");
-    Serial.print(" transient_duration_ms=");
-    Serial.print(diagnostics.acceptedTransientDurationMs);
-    Serial.print(" transient_peak_strength=");
-    Serial.print(diagnostics.acceptedTransientStrength, 1);
-    Serial.print(" transient_age_or_dt_ms=");
-    if (diagnostics.transientAccepted && diagnostics.acceptedTransientMs >= _sequenceTest.currentTrialStartMs) {
-        Serial.print(static_cast<long>(diagnostics.acceptedTransientMs) - static_cast<long>(_sequenceTest.currentTrialStartMs));
-        Serial.print("ms");
-    } else {
-        Serial.print("-");
-    }
-    Serial.print(" freq_present=");
-    Serial.print(freq.present ? 1 : 0);
-    Serial.print(" freq_matched=");
-    Serial.print(modernFrequencyEvaluated && modernFrequencyResult.valid && modernFrequencyResult.tonalValid ? 1 : 0);
-    Serial.print(" freq_score_ok=");
-    Serial.print(freqEval.scoreOk ? 1 : 0);
-    Serial.print(" freq_contrast_ok=");
-    Serial.print(freqEval.contrastOk ? 1 : 0);
-    Serial.print(" freq_score=");
-    Serial.print(freq.score, 1);
-    Serial.print(" freq_conf=");
-    Serial.print(freq.confidence, 1);
-    Serial.print(" freq_target_hz=");
-    Serial.print(freq.targetHz);
-    Serial.print(" freq_target_power=");
-    Serial.print(freq.targetPower, 1);
-    Serial.print(" freq_neighbor_power=");
-    Serial.print(freq.neighborPower, 1);
-    Serial.print(" freq_total_energy=");
-    Serial.print(freq.totalEnergy, 1);
-    Serial.print(" freq_contrast=");
-    Serial.print(freq.spectralContrast, 2);
-    Serial.print(" freq_observed_at_ms=");
-    Serial.print(freq.observedAtMs);
-    Serial.print(" freq_age_ms=");
-    Serial.print(freqAgeMs);
-    Serial.print("ms");
-    Serial.print(" freq_valid_window=");
-    Serial.print(freq.validWindow ? 1 : 0);
-    Serial.print(" freq_eval_reason=");
-    Serial.print(modernFrequencyEvaluated && modernFrequencyResult.valid
-        ? detection::patternRejectReasonName(modernFrequencyResult.rejectReason)
-        : FrequencyEvidenceEvaluation::reasonName(freqEval.reason));
-    Serial.print(" compatCand[present=");
-    Serial.print(freq.present ? 1 : 0);
-    Serial.print(" source=");
-    Serial.print(modernFrequencyEvaluated && modernFrequencyResult.valid
-        ? detection::patternSourceName(modernFrequencyResult.source)
-        : "comparison_only");
-    Serial.print(" first_ms=");
-    Serial.print(diagnostics.transientAccepted ? diagnostics.acceptedTransientMs : diagnostics.duplicateTransientMs);
-    Serial.print(" peak_ms=");
-    Serial.print(diagnostics.transientAccepted ? diagnostics.acceptedTransientPeakMs : diagnostics.duplicateTransientPeakMs);
-    Serial.print(" release_ms=");
-    Serial.print(diagnostics.transientAccepted ? diagnostics.acceptedTransientReleaseMs : diagnostics.duplicateTransientReleaseMs);
-    Serial.print(" dur_ms=");
-    Serial.print(diagnostics.transientAccepted ? diagnostics.acceptedTransientDurationMs : diagnostics.duplicateTransientDurationMs);
-    Serial.print(" strength=");
-    Serial.print(diagnostics.transientAccepted ? diagnostics.acceptedTransientStrength : diagnostics.duplicateTransientStrength, 1);
-    Serial.print(" candidate_reject=");
-    Serial.print(diagnostics.transientAccepted ? "none" : strongestRejectReasonName);
-    Serial.print(" next_suppress=");
-    Serial.print(_sequenceTest.liveFrequency.suppressReason);
-    Serial.print("]");
-    if (diagnostics.duplicateCount > 0) {
-        Serial.print(" dup[dur=");
-        Serial.print(diagnostics.duplicateTransientDurationMs);
-        Serial.print(" strength=");
-        Serial.print(diagnostics.duplicateTransientStrength, 1);
-        Serial.print(" delta_ms=");
-        Serial.print(diagnostics.duplicateDeltaFromPrimaryMs);
-        Serial.print("]");
-    }
-    Serial.print(" detector_candidates=");
-    Serial.print(diagnostics.rawCandidateCount);
-    Serial.print(" accepted=");
-    Serial.print(diagnostics.transientAccepted ? 1 : 0);
-    Serial.print(" duplicates=");
-    Serial.println(diagnostics.duplicateCount);
-
-    if (!analyzerLogEnabled(_sequenceTest.logFlags, AnalyzerApp::ANALYZER_LOG_EXPLAIN)) {
-        return;
-    }
-
-    Serial.print("SEQ_EXPLAIN_LEGACY timing trial_start_ms=");
-    Serial.print(_sequenceTest.currentTrialScheduledAtMs);
-    Serial.print(" trigger_sent_ms=");
-    Serial.print(_sequenceTest.currentTrialStartMs);
-    Serial.print(" first_candidate_ms=");
-    if (diagnostics.firstCandidateMs > 0) {
-        Serial.print(diagnostics.firstCandidateMs);
-    } else {
-        Serial.print("-");
-    }
-    Serial.print(" ambient_baseline_avg=");
-    Serial.print(ambientBaselineAvg, 1);
-    Serial.print(" ambient_baseline_min=");
-    Serial.print(diagnostics.ambientBaselineSamples > 0 ? diagnostics.ambientBaselineMin : 0.0f, 1);
-    Serial.print(" ambient_baseline_max=");
-    Serial.print(diagnostics.ambientBaselineSamples > 0 ? diagnostics.ambientBaselineMax : 0.0f, 1);
-    Serial.print(" max_signal_level=");
-    Serial.println(diagnostics.maxSignalLevel);
-
-    Serial.print("SEQ_EXPLAIN_LEGACY origin_counts={pre_window:");
-    Serial.print(diagnostics.candidatePreWindowCount);
-    Serial.print(",in_window:");
-    Serial.print(diagnostics.candidateInWindowCount);
-    Serial.print(",post_window:");
-    Serial.print(diagnostics.candidatePostWindowCount);
-    Serial.println("}");
-
-    Serial.print("SEQ_EXPLAIN_LEGACY rejects={too_short:");
-    Serial.print(diagnostics.transientRejectTooShortCount);
-    Serial.print(",too_long:");
-    Serial.print(diagnostics.transientRejectTooLongCount);
-    Serial.print(",weak:");
-    Serial.print(diagnostics.transientRejectWeakCount);
-    Serial.println("}");
-
-    Serial.print("SEQ_EXPLAIN_LEGACY strongest_reject={reason:");
-    if (totalRejects > 0) {
-        Serial.print(strongestRejectReasonName);
-        Serial.print(",dt:");
-        if (diagnostics.strongestRejectDtFromTriggerMs >= 0) {
-            Serial.print(diagnostics.strongestRejectDtFromTriggerMs);
-        } else {
-            Serial.print("-");
-        }
-        Serial.print(",dur:");
-        Serial.print(diagnostics.strongestRejectDurationMs);
-        Serial.print(",strength:");
-        Serial.print(diagnostics.strongestRejectStrength, 1);
-    } else {
-        Serial.print("none,dt:-,dur:0,strength:0.0");
-    }
-    Serial.println("}");
-
-    Serial.print("SEQ_EXPLAIN_LEGACY best_candidate={dt:");
-    if (diagnostics.bestCandidateValid) {
-        Serial.print(diagnostics.bestCandidateDtFromTriggerMs);
-    } else {
-        Serial.print("-");
-    }
-    Serial.print(",dur:");
-    if (diagnostics.bestCandidateValid) {
-        Serial.print(diagnostics.bestCandidateDurationMs);
-    } else {
-        Serial.print("-");
-    }
-    Serial.print(",end_dt:");
-    if (diagnostics.bestCandidateValid && diagnostics.bestCandidateDtFromTriggerMs >= 0) {
-        Serial.print(diagnostics.bestCandidateDtFromTriggerMs + static_cast<long>(diagnostics.bestCandidateDurationMs));
-        Serial.print("ms");
-    } else {
-        Serial.print("-");
-    }
-    Serial.print(",strength:");
-    if (diagnostics.bestCandidateValid) {
-        Serial.print(diagnostics.bestCandidateStrength, 1);
-    } else {
-        Serial.print("0");
-    }
-    Serial.println("}");
-
-    if (isMiss || isLate || isUnexpected || hasDuplicates || expectedDtSlow || expectedDurLong) {
-        Serial.print("SEQ_EXPLAIN_LEGACY issues=[");
-        bool firstIssue = true;
-        auto printIssue = [&](const char* label) {
-            if (!firstIssue) {
-                Serial.print(",");
-            }
-            Serial.print(label);
-            firstIssue = false;
-        };
-        if (isMiss) {
-            printIssue("miss");
-        }
-        if (isLate) {
-            printIssue("late");
-        }
-        if (isUnexpected) {
-            printIssue("unexpected");
-        }
-        if (hasDuplicates) {
-            printIssue("duplicates");
-        }
-        if (expectedDtSlow) {
-            printIssue("expected_dt_gt_200ms");
-        }
-        if (expectedDurLong) {
-            printIssue("expected_dur_gt_180ms");
-        }
-        Serial.println("]");
-    }
-
-    if (analyzerLogEnabled(_sequenceTest.logFlags, AnalyzerApp::ANALYZER_LOG_EXPLAIN)) {
-        Serial.print("SEQ_EXPLAIN_LEGACY duplicate_dts=[");
-        for (unsigned long i = 0; i < diagnostics.duplicateDtCount; ++i) {
-            if (i > 0) {
-                Serial.print(",");
-            }
-            Serial.print(diagnostics.duplicateDts[i]);
-        }
-        Serial.println("]");
-        for (unsigned long i = 0; i < diagnostics.candidateCount; ++i) {
-            const auto& entry = diagnostics.candidates[i];
-            const char* originName = "in_window";
-            switch (entry.origin) {
-                case SequenceTest::CandidateOrigin::PreWindow:
-                    originName = "pre_window";
-                    break;
-                case SequenceTest::CandidateOrigin::InWindow:
-                    originName = "in_window";
-                    break;
-                case SequenceTest::CandidateOrigin::PostWindow:
-                    originName = "post_window";
-                    break;
-            }
-            Serial.print("SEQ_EXPLAIN_LEGACY candidate[");
-            Serial.print(i);
-            Serial.print("] origin=");
-            Serial.print(originName);
-            Serial.print(" onset_dt_ms=");
-            Serial.print(entry.dtFromTriggerMs);
-            Serial.print(" dur=");
-            Serial.print(entry.durationMs);
-            Serial.print(" end_dt_ms=");
-            if (entry.dtFromTriggerMs >= 0) {
-                Serial.print(entry.dtFromTriggerMs + static_cast<long>(entry.durationMs));
-                Serial.print("ms");
-            } else {
-                Serial.print("-");
-            }
-            Serial.print(" strength=");
-            Serial.println(entry.strength, 1);
-        }
-    }
-}
-
 void AnalyzerApp::printSequenceAmpWindow(const AnalyzerReport& report) const {
     if (_valMode) {
         return;
@@ -4730,96 +4292,6 @@ void AnalyzerApp::printSequenceAmpWindow(const AnalyzerReport& report) const {
     Serial.print(report.profileDetail.ampWindow.lift, 1);
     Serial.print(" note=");
     Serial.println(report.profileDetail.ampWindow.note != nullptr ? report.profileDetail.ampWindow.note : "none");
-}
-
-void AnalyzerApp::printSequenceLegacyReports() const {
-    if (_valMode) {
-        return;
-    }
-    if (_sequenceTest.logFlags == AnalyzerApp::ANALYZER_LOG_CUSTOM) {
-        return;
-    }
-    if (!sequenceLegacyReportEnabled()) {
-        return;
-    }
-    if (_sequenceTest.deprecatedTrialReports == nullptr || _sequenceTest.deprecatedTrialReportCount == 0) {
-        return;
-    }
-
-    Serial.println("SEQ_REPORT_BEGIN");
-    for (size_t i = 0; i < _sequenceTest.deprecatedTrialReportCount && i < _sequenceTest.deprecatedTrialReportCapacity; ++i) {
-        const auto& report = _sequenceTest.deprecatedTrialReports[i];
-        const char* candidateClass = h3SequenceCandidateClassFromResult(report.result);
-        const auto& freq = report.freqEarly;
-        const bool hasAmp = report.durMs >= 0 || report.strength > 0.0f;
-        const bool cmpHasFreq = freq.present;
-        const unsigned long freqPeakMinusAmpPeakMs = cmpHasFreq && report.bestCandidateValid
-            ? (freq.observedAtMs >= report.startMs ? static_cast<unsigned long>(freq.observedAtMs - report.startMs) : 0UL)
-            : 0UL;
-
-        Serial.print("SEQ_REPORT trial=");
-        Serial.print(report.trialNumber);
-        Serial.print(" artifact_state=LEGACY_DIAGNOSTICS");
-        Serial.print(" result=");
-        Serial.print(report.result);
-        Serial.print(" candidate_class=");
-        Serial.print(candidateClass);
-        Serial.print(" start_ms=");
-        Serial.print(report.startMs);
-        Serial.print(" end_ms=");
-        Serial.print(report.endMs);
-        Serial.print(" dt_ms=");
-        if (report.dtMs >= 0) {
-            Serial.print(report.dtMs);
-            Serial.print("ms");
-        } else {
-            Serial.print("-");
-        }
-        Serial.print(" dur_ms=");
-        if (report.durMs >= 0) {
-            Serial.print(report.durMs);
-            Serial.print("ms");
-        } else {
-            Serial.print("-");
-        }
-        Serial.print(" freq[");
-        Serial.print("valid=");
-        Serial.print(freq.present ? 1 : 0);
-        Serial.print(" source=");
-        Serial.print(freq.present ? "frequency_primary" : "comparison_only");
-        Serial.print(" first_ms=");
-        Serial.print(freq.observedAtMs);
-        Serial.print(" peak_ms=");
-        Serial.print(freq.observedAtMs);
-        Serial.print(" release_ms=");
-        Serial.print(freq.observedAtMs);
-        Serial.print(" dur_or_hold_ms=");
-        Serial.print(freq.present ? report.durMs : -1);
-        Serial.print(" score=");
-        Serial.print(freq.score, 1);
-        Serial.print(" contrast=");
-        Serial.print(freq.spectralContrast, 2);
-        Serial.print(" reject=");
-        Serial.print(freq.present ? "none" : "comparison_only");
-        Serial.print("]");
-        if (hasAmp) {
-            Serial.print(" amp[dur=");
-            Serial.print(report.durMs >= 0 ? report.durMs : 0);
-            Serial.print(" strength=");
-            Serial.print(report.strength, 1);
-            Serial.print("]");
-        }
-        Serial.print(" cmp[freqPeakMinusAmpPeakMs=");
-        if (cmpHasFreq && hasAmp) {
-            Serial.print(freqPeakMinusAmpPeakMs);
-            Serial.print("ms");
-        } else {
-            Serial.print("-");
-        }
-        Serial.print("]");
-        Serial.println();
-    }
-    Serial.println("SEQ_REPORT_END");
 }
 
 void AnalyzerApp::printSequenceTrialResult(unsigned long trialNumber, const char* result, long dtMs, long durMs, float strength, bool audioOverflow, unsigned long duplicateCount, const SequenceTest::TrialDiagnostics& diagnostics) const {
@@ -5214,14 +4686,7 @@ void AnalyzerApp::printSequenceSummary() const {
     if (_sequenceTest.logFlags == AnalyzerApp::ANALYZER_LOG_CUSTOM) {
         return;
     }
-    const bool verboseTrialReports = sequenceLegacyReportEnabled();
     const bool summaryEnabled = analyzerLogEnabled(_sequenceTest.logFlags, AnalyzerApp::ANALYZER_LOG_SUMMARY);
-    if (!verboseTrialReports && !summaryEnabled) {
-        return;
-    }
-    if (verboseTrialReports) {
-        printSequenceLegacyReports();
-    }
     if (!summaryEnabled) {
         return;
     }

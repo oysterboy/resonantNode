@@ -54,12 +54,6 @@ public:
     using FrequencyEvidence = detection::FrequencyEvidence;
     using PatternResult = detection::PatternResult;
 
-    enum class DetectionMode {
-        LegacyPath,
-        ModernFrequencyFirst,
-        ModernFrequencyOnly,
-    };
-
     enum class RbLogMode {
         Full,
         Minimal,
@@ -98,12 +92,8 @@ private:
     void handleProfileCommand(const char* line);
     bool rbShouldLogDetail() const;
     const char* rbLogModeName() const;
-    const char* detectionModeName() const;
-    bool setDetectionModeFromName(const char* name);
     bool setProfileFromName(const char* name);
     const char* profileName() const;
-    bool usesLegacyPath() const;
-    bool usesFrequencyOnly() const;
     const detection::DetectionProfile& activeDetectionProfile() const;
     const BehaviorProfile& activeBehaviorProfile() const;
     void applyActiveProfiles();
@@ -151,7 +141,6 @@ private:
     bool _rbDetectOnly = false;
     RbLogMode _rbLogMode = RbLogMode::Minimal;
     detection::DetectionProfileKind _profileKind = detection::DetectionProfileKind::FreqAmp;
-    DetectionMode _detectionMode = DetectionMode::ModernFrequencyFirst;
     bool _wasSelfChirpSuppressed = false;
     unsigned long _rbLastWouldEmitHeardMs = 0;
     ResonantBehavior::BehaviorDecision _rbLastWouldEmitDecision = ResonantBehavior::BehaviorDecision::None;

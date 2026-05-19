@@ -80,30 +80,6 @@ bool equalsIgnoreCase(const char* a, const char* b) {
     return *a == '\0' && *b == '\0';
 }
 
-const char* detectionModeName(Node::DetectionMode mode) {
-    switch (mode) {
-        case Node::DetectionMode::LegacyPath:
-            return "legacy";
-        case Node::DetectionMode::ModernFrequencyFirst:
-            return "freq";
-        case Node::DetectionMode::ModernFrequencyOnly:
-            return "freqonly";
-    }
-
-    return "unknown";
-}
-
-Node::DetectionMode detectionModeForProfileKind(detection::DetectionProfileKind kind) {
-    switch (kind) {
-        case detection::DetectionProfileKind::AmpState:
-            return Node::DetectionMode::LegacyPath;
-        case detection::DetectionProfileKind::Chirp:
-        case detection::DetectionProfileKind::FreqAmp:
-        default:
-            return Node::DetectionMode::ModernFrequencyFirst;
-    }
-}
-
 BehaviorProfile makeFreqAmpBehaviorProfile() {
     BehaviorProfile profile;
     profile.detectionOnly = false;
@@ -150,24 +126,6 @@ void printProfileComposition(const detection::DetectionProfile& profile) {
     Serial.print(profile.fieldStateConfig.signalWindowMs);
     Serial.print("/");
     Serial.print(profile.fieldStateConfig.patternWindowMs);
-}
-
-bool detectionModeFromName(const char* name, Node::DetectionMode& outMode) {
-    if (equalsIgnoreCase(name, "legacy") || equalsIgnoreCase(name, "amp") || equalsIgnoreCase(name, "amplegacy")) {
-        outMode = Node::DetectionMode::LegacyPath;
-        return true;
-    }
-    if (equalsIgnoreCase(name, "freq") || equalsIgnoreCase(name, "frequency")
-        || equalsIgnoreCase(name, "modern") || equalsIgnoreCase(name, "freqfirst")
-        || equalsIgnoreCase(name, "frequencyfirst")) {
-        outMode = Node::DetectionMode::ModernFrequencyFirst;
-        return true;
-    }
-    if (equalsIgnoreCase(name, "freqonly") || equalsIgnoreCase(name, "frequencyonly")) {
-        outMode = Node::DetectionMode::ModernFrequencyOnly;
-        return true;
-    }
-    return false;
 }
 
 const char* behaviorGateName(const ResonantBehavior& behavior, unsigned long now, bool transientDetected, bool selfChirpSuppressed) {
@@ -439,8 +397,6 @@ void Node::begin() {
 
     Serial.print("RB PROFILE name=");
     Serial.print(profileName());
-    Serial.print(" detect=");
-    Serial.print(detectionModeName());
     printProfileComposition(activeDetectionProfile());
     Serial.print(" active=");
     Serial.println(activeDetectionProfile().ampEnabled ? "amp" : "none");
@@ -657,14 +613,14 @@ void Node::update() {
             _audioSignal.update(static_cast<int>(block.samples[i]), sampleTimeUs, frame);
             frame.sampleTimeMs = sampleTimeMsApprox;
             _freqBandStream.observeCenteredSample(frame.centeredSample);
-            if (usesLegacyPath()) {
+            if (activeDetectionProfile().useLegacyPath) {
                 processLegacyAmpFrame(frame, now, selfChirpSuppressed, sawPatternThisLoop);
             } else {
                 processModernFrame(frame, now, selfChirpSuppressed, sawPatternThisLoop);
             }
         }
         sawI2SSample = true;
-        if (usesLegacyPath()) {
+        if (activeDetectionProfile().useLegacyPath) {
             drainLegacyAmpCandidates(now, selfChirpSuppressed, sawPatternThisLoop);
         }
 
@@ -780,7 +736,7 @@ void Node::handleSerialLine(const char* line) {
     if (equalsIgnoreCase(line, "RB help")) {
         Serial.println("RB CMD: RB PARAM onset=23 release=20 cooldown=50 releaseDebounce=10 minMs=90 maxMs=240 minStrength=40.0 freqScore=10000 freqContrast=50.0");
         Serial.println("RB CMD: RB BEHAV wait=100 refractory=0 idleTimeout=20000 idleTimeoutVariation=10000 idleBlockedAfterHeard=3000 idleBlockedAfterOwnEmit=5000 requireTonal=1");
-        Serial.println("RB CMD: RB DETECT mode=legacy|freq|freqonly");
+        Serial.println("RB CMD: RB DETECT removed; use RB PROFILE");
         Serial.println("RB CMD: RB PROFILE name=freqamp|ampstate|chirp");
         Serial.println("RB CMD: RB rebase");
         Serial.println("RB CMD: RB rebase force");
@@ -1015,32 +971,8 @@ void Node::handleLogCommand(const char* line) {
 }
 
 void Node::handleDetectCommand(const char* line) {
-    const char* mode = line + 9;
-    while (*mode == ' ') {
-        ++mode;
-    }
-
-    if (*mode == '\0') {
-        Serial.print("RB DETECT mode=");
-        Serial.println(detectionModeName());
-        return;
-    }
-
-    if (startsWithTokenIgnoreCase(mode, "mode=")) {
-        mode += 5;
-        DetectionMode parsed = _detectionMode;
-        if (detectionModeFromName(mode, parsed)) {
-            _detectionMode = parsed;
-            applyActiveProfiles();
-            Serial.print("RB DETECT mode=");
-            Serial.println(detectionModeName());
-        } else {
-            Serial.println("RB DETECT usage=mode=legacy|freq|freqonly");
-        }
-        return;
-    }
-
-    Serial.println("RB DETECT usage=mode=legacy|freq|freqonly");
+    (void)line;
+    Serial.println("RB DETECT removed; use RB PROFILE");
 }
 
 void Node::handleProfileCommand(const char* line) {
@@ -1062,29 +994,13 @@ void Node::handleProfileCommand(const char* line) {
     if (setProfileFromName(name)) {
         Serial.print("RB PROFILE name=");
         Serial.print(profileName());
-        Serial.print(" detect=");
-        Serial.print(detectionModeName());
         printProfileComposition(activeDetectionProfile());
         Serial.print(" emitters=");
         Serial.print(activeDetectionProfile().ampEnabled ? "amp" : "none");
-        Serial.println(activeDetectionProfile().useLegacyPath ? "+legacy" : "+modern");
+        Serial.println(activeDetectionProfile().frequencyOnly ? "+freqonly" : "+full");
     } else {
         Serial.println("RB PROFILE usage=name=freqamp|ampstate|chirp");
     }
-}
-
-const char* Node::detectionModeName() const {
-    return ::detectionModeName(_detectionMode);
-}
-
-bool Node::setDetectionModeFromName(const char* name) {
-    DetectionMode parsed = _detectionMode;
-    if (!detectionModeFromName(name, parsed)) {
-        return false;
-    }
-
-    _detectionMode = parsed;
-    return true;
 }
 
 bool Node::setProfileFromName(const char* name) {
@@ -1094,21 +1010,12 @@ bool Node::setProfileFromName(const char* name) {
     }
 
     _profileKind = parsed;
-    _detectionMode = detectionModeForProfileKind(_profileKind);
     applyActiveProfiles();
     return true;
 }
 
 const char* Node::profileName() const {
     return detectionProfileKindName(_profileKind);
-}
-
-bool Node::usesLegacyPath() const {
-    return _detectionMode == DetectionMode::LegacyPath;
-}
-
-bool Node::usesFrequencyOnly() const {
-    return _detectionMode == DetectionMode::ModernFrequencyOnly;
 }
 
 const detection::DetectionProfile& Node::activeDetectionProfile() const {
@@ -1133,7 +1040,7 @@ void Node::applyActiveProfiles() {
     const detection::DetectionProfile& detectionProfile = activeDetectionProfile();
     const BehaviorProfile& behaviorProfile = activeBehaviorProfile();
 
-    _detection.setAmpEnabled(detectionProfile.ampEnabled && !usesFrequencyOnly());
+    _detection.setAmpEnabled(detectionProfile.ampEnabled && !detectionProfile.frequencyOnly);
     _detection.setFrequencyTuning(_frequencyEvidenceTuning);
     _detection.setInspectionConfig(detectionProfile.inspectionConfig);
     _detection.setFieldStateConfig(detectionProfile.fieldStateConfig);
@@ -1280,8 +1187,8 @@ void Node::processModernFrame(const AudioSignalFrame& frame,
             Serial.print(_behavior.lastDecisionName());
             Serial.print(" valid=");
             Serial.print(patternResult.valid ? 1 : 0);
-            Serial.print(" mode=");
-            Serial.println(detectionModeName());
+            Serial.print(" profile=");
+            Serial.println(profileName());
         }
 
         if (_rbDetectOnly) {
@@ -1468,8 +1375,8 @@ void Node::printRbSummary() const {
     Serial.print(avgDuration, 1);
     Serial.print("ms detectOnly=");
     Serial.print(_rbDetectOnly ? 1 : 0);
-    Serial.print(" detectMode=");
-    Serial.print(detectionModeName());
+    Serial.print(" profile=");
+    Serial.print(profileName());
     Serial.print(" requireTonal=");
     Serial.println(_behavior.requireTonalForBehavior() ? 1 : 0);
     Serial.print("RB baseline state=");

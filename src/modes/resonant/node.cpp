@@ -494,7 +494,7 @@ void Node::update() {
             _audioSignal.update(static_cast<int>(block.samples[i]), sampleTimeUs, frame);
             frame.sampleTimeMs = sampleTimeMsApprox;
             _freqBandStream.observeCenteredSample(frame.centeredSample);
-            processModernFrame(frame, now, selfChirpSuppressed, sawPatternThisLoop);
+            processDetectionFrame(frame, now, selfChirpSuppressed, sawPatternThisLoop);
         }
         sawI2SSample = true;
 
@@ -920,7 +920,7 @@ void Node::applyActiveProfiles() {
     _behavior.configure(behaviorProfile);
 }
 
-void Node::processModernFrame(const AudioSignalFrame& frame,
+void Node::processDetectionFrame(const AudioSignalFrame& frame,
                               unsigned long now,
                               bool selfChirpSuppressed,
                               bool& sawPatternThisLoop) {
@@ -950,7 +950,7 @@ void Node::processModernFrame(const AudioSignalFrame& frame,
         _rbLastCandidateMs = patternResult.candidate.heardAtMs;
 
         if (rbShouldLogDetail()) {
-            Serial.print("RB ROADMAP pattern=");
+            Serial.print("RB pattern=");
             Serial.print(detection::patternTypeName(patternResult.type));
             Serial.print(" source=");
             Serial.print(detection::patternSourceName(patternResult.source));

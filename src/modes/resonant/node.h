@@ -96,7 +96,7 @@ private:
     const detection::DetectionProfile& activeDetectionProfile() const;
     const BehaviorProfile& activeBehaviorProfile() const;
     void applyActiveProfiles();
-    void processModernFrame(const AudioSignalFrame& frame, unsigned long now, bool selfChirpSuppressed, bool& sawPatternThisLoop);
+    void processDetectionFrame(const AudioSignalFrame& frame, unsigned long now, bool selfChirpSuppressed, bool& sawPatternThisLoop);
     FrequencyEvidence captureFrequencyEvidence() const;
     void printRbSummary() const;
     void printRbSignalSummary() const;

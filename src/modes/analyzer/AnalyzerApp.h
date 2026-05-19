@@ -7,7 +7,6 @@
 #include "../../detection/detectors/AmpTransientDetector.h"
 #include "../../detection/DetectionProfile.h"
 #include "../../io/AudioSignal.h"
-#include "../../detection/legacy/AmpCandidateBuilder.h"
 #include "../../detection/DetectionRuntime.h"
 #include "../../detection/detectors/FrequencyMatchDetector.h"
 #include "../../detection/inspector/FrequencyEvidenceEvaluation.h"
@@ -545,10 +544,9 @@ private:
     int _inputPin;
     AudioSourceI2S _i2sSource;
     AudioSource& _audioSource;
-    AmpTransientDetector _audioOnsetDetector;
     AudioSignal _audioSignal;
+    AmpTransientDetector _audioOnsetDetector;
     detection::DetectionRuntime* _detection = nullptr;
-    AmpCandidateBuilder _ampCandidateBuilder;
     FreqBandStream _freqBandStream;
     detection::FeatureHistory* _sequenceFeatureHistory = nullptr;
     FrequencyEvidenceEvaluation::Values _frequencyEvidenceTuning = {};

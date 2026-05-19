@@ -904,7 +904,6 @@ void AnalyzerApp::begin() {
     _audioSource.begin();
     _audioSignal.begin();
     _audioSignal.setCurveSampleCallback(&AnalyzerApp::sequenceCurveSampleCallback, this);
-    _ampCandidateBuilder.resetState();
     _audioOnsetDetector.begin();
     _freqBandStream.resetState();
     if (_sequenceFeatureHistory == nullptr) {
@@ -978,7 +977,6 @@ void AnalyzerApp::update() {
                 detection::FeatureExtractor::observeFrame(frame, *_sequenceFeatureHistory);
             }
             _audioOnsetDetector.update(static_cast<float>(frame.level), frame.sampleTimeUs);
-            _ampCandidateBuilder.observeSample(frame, _audioOnsetDetector);
             _freqBandStream.observeCenteredSample(frame.centeredSample);
             if (_sequenceTest.active && _sequenceTest.currentTrial > 0 && _detection != nullptr) {
                 const detection::FrequencyEvidence runtimeFrequencyEvidence = captureFrequencyEvidence();
@@ -987,54 +985,14 @@ void AnalyzerApp::update() {
                 while (_detection->popPatternResult(runtimePatternResult)) {
                     _sequenceTest.currentTrialDiagnostics.runtimePatternResult = runtimePatternResult;
                     _sequenceTest.currentTrialDiagnostics.runtimePatternCaptured = true;
+                    _sequenceTest.currentTrialDiagnostics.runtimeFieldState = _detection->fieldState();
+                    if (!_sequenceTest.liveFrequencyOnly) {
+                        handleSequenceCandidate(runtimePatternResult, 0, &runtimeFrequencyEvidence);
+                    }
                 }
-                _sequenceTest.currentTrialDiagnostics.runtimeFieldState = _detection->fieldState();
             }
         }
         updateSequenceAmbientStats();
-        if (!_sequenceTest.liveFrequencyOnly) {
-            noteSequenceTransientReject(_audioSignal.sampleTimeUs() / 1000UL);
-            const unsigned long queueDepthBeforeDrain = static_cast<unsigned long>(_ampCandidateBuilder.candidateQueueDepth());
-
-            DetectorCandidate candidate;
-            while (_ampCandidateBuilder.popCandidate(candidate)) {
-                detection::PatternResult patternResult;
-                const auto liveFrequencyEvidence = captureFrequencyEvidence();
-                detection::FrequencyEvidence frequencyEvidence = liveFrequencyEvidence;
-                detection::FrequencyEvidence fullFrequencyEvidence = liveFrequencyEvidence;
-                detection::measureCandidateWindowFrequency(
-                    _audioSignal,
-                    candidate,
-                    _audioSource.sampleRateHz() > 0 ? _audioSource.sampleRateHz() : 16000UL,
-                    _freqBandStream.targetFrequencyHz(),
-                    now,
-                    frequencyEvidence);
-                detection::measureCandidateWindowFrequency(
-                    _audioSignal,
-                    candidate,
-                    _audioSource.sampleRateHz() > 0 ? _audioSource.sampleRateHz() : 16000UL,
-                    _freqBandStream.targetFrequencyHz(),
-                    now,
-                    fullFrequencyEvidence,
-                    candidate.durationMs);
-                if (!processModernDetectorCandidate(candidate, patternResult, now, &frequencyEvidence)) {
-                    continue;
-                }
-                patternResult.candidate.frequencyFull = fullFrequencyEvidence;
-                FrequencyEvidenceEvaluation::classifyPatternResult(patternResult, _frequencyEvidenceTuning);
-
-                if (_valMode) {
-                    if (patternResult.valid) {
-                        _valOnsetLatchedUntilMs = (patternResult.candidate.startMs) + 250UL;
-                        _valTransientLatchedUntilMs = (patternResult.candidate.startMs) + 250UL;
-                    }
-                }
-
-                if (_sequenceTest.active) {
-                    handleSequenceCandidate(patternResult, queueDepthBeforeDrain, &liveFrequencyEvidence);
-                }
-            }
-        }
 
         processedSamples += static_cast<int>(block.sampleCount);
         if (processedSamples > kMaxSamplesPerLoop) {
@@ -1073,7 +1031,6 @@ unsigned long AnalyzerApp::loopDelayMs() const {
 
 void AnalyzerApp::resetDetectorState() {
     _audioSignal.resetSignalState();
-    _ampCandidateBuilder.resetState();
     if (_sequenceFeatureHistory != nullptr) {
         _sequenceFeatureHistory->reset();
     }

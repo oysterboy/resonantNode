@@ -7,7 +7,6 @@
 #include "../../detection/DetectionProfile.h"
 #include "../../detection/inspector/FrequencyEvidenceEvaluation.h"
 #include "../../behavior/BehaviorProfile.h"
-#include "../../hal/AudioSourceAnalog.h"
 #include "../../hal/AudioSourceI2S.h"
 #include "../../hal/PiezoToneOutputBTL.h"
 #include "../../hal/PiezoToneOutput.h"
@@ -61,25 +60,12 @@ public:
         ModernFrequencyOnly,
     };
 
-    enum class AudioSourceKind {
-        Analog,
-        I2S
-    };
-
     enum class RbLogMode {
         Full,
         Minimal,
     };
 
-    Node(int inputPin,
-         int ledPin,
-         int chirpPin,
-         AudioSourceKind sourceKind = AudioSourceKind::Analog);
-    Node(int inputPin,
-         int ledPin,
-         int chirpPin,
-         int chirpBtlPin,
-         AudioSourceKind sourceKind = AudioSourceKind::Analog);
+    Node(int inputPin, int ledPin, int chirpPin, int chirpBtlPin);
 
     void begin();
     void update();
@@ -96,7 +82,6 @@ private:
 
     void configureParameters();
     void configureSharedParameters();
-    void configureAnalogParameters();
     void configureI2SParameters();
     void startRbQuietBaseline();
     void resetRbCounters();
@@ -134,10 +119,8 @@ private:
 
     // Hardware wiring.
     int _ledPin;
-    AudioSourceAnalog _analogSource;
     AudioSourceI2S _i2sSource;
     AudioSource& _audioSource;
-    AudioSourceKind _sourceKind;
     PiezoToneOutput _toneOutput;
     PiezoToneOutputBTL _toneOutputBTL;
     ChirpOutput _chirpOutput;

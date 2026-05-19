@@ -3,7 +3,6 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#include "../../hal/AudioSourceAnalog.h"
 #include "../../hal/AudioSourceI2S.h"
 #include "../../detection/detectors/AmpTransientDetector.h"
 #include "../../detection/DetectionProfile.h"
@@ -70,12 +69,7 @@ public:
         ANALYZER_LOG_SUMMARY |
         ANALYZER_LOG_TRIAL;
 
-    enum class AudioSourceKind {
-        Analog,
-        I2S
-    };
-
-    AnalyzerApp(int inputPin = 34, AudioSourceKind sourceKind = AudioSourceKind::I2S);
+    AnalyzerApp(int inputPin = 34);
 
     void begin();
     void update();
@@ -444,7 +438,6 @@ private:
     // Setup, control, and detector configuration helpers.
     void configureParameters();
     void configureSharedParameters();
-    void configureAnalogParameters();
     void configureI2SParameters();
     void beginEmitterControl();
     void processPendingSequenceStart();
@@ -550,10 +543,8 @@ private:
 
     // Hardware and signal chain.
     int _inputPin;
-    AudioSourceAnalog _analogSource;
     AudioSourceI2S _i2sSource;
     AudioSource& _audioSource;
-    AudioSourceKind _sourceKind;
     AmpTransientDetector _audioOnsetDetector;
     AudioSignal _audioSignal;
     detection::DetectionRuntime* _detection = nullptr;

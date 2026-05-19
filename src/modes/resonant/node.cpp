@@ -389,17 +389,10 @@ void printH3FrequencyEvidenceFields(const detection::PatternResult& patternResul
 
 // --- constructors ---
 
-Node::Node(int inputPin, int ledPin, int chirpPin, AudioSourceKind sourceKind)
-    : Node(inputPin, ledPin, chirpPin, -1, sourceKind) {}
-
-Node::Node(int inputPin, int ledPin, int chirpPin, int chirpBtlPin, AudioSourceKind sourceKind)
+Node::Node(int inputPin, int ledPin, int chirpPin, int chirpBtlPin)
     : _ledPin(ledPin),
-      _analogSource(inputPin),
       _i2sSource(14, 27, 33, 16000, 32),
-    _sourceKind(sourceKind),
-      _audioSource(sourceKind == AudioSourceKind::I2S
-                       ? static_cast<AudioSource&>(_i2sSource)
-                       : static_cast<AudioSource&>(_analogSource)),
+      _audioSource(_i2sSource),
       _audioOnsetDetector(),
       _audioSignal(_audioSource),
       _freqBandStream(),
@@ -429,7 +422,7 @@ void Node::begin() {
     _rbLastLoggedOnsetRejectCount = 0;
     _rbLastLoggedTransientRejectCount = 0;
     _rbDetectOnly = false;
-    _rbBaselineState = _sourceKind == AudioSourceKind::I2S ? RBBaselineState::ListenForQuiet : RBBaselineState::Active;
+    _rbBaselineState = RBBaselineState::ListenForQuiet;
     _rbBaselineStateStartedMs = millis();
     _rbBaselineQuietSinceMs = 0;
     _rbBaselineLastLogMs = 0;
@@ -452,31 +445,25 @@ void Node::begin() {
     Serial.print(" active=");
     Serial.println(activeDetectionProfile().ampEnabled ? "amp" : "none");
 
-    if (_sourceKind == AudioSourceKind::I2S) {
-        Serial.print("RB det mode=AMP onset=");
-        Serial.print(_audioOnsetDetector.onsetDetectionThreshold(), 1);
-        Serial.print(" release=");
-        Serial.print(_audioOnsetDetector.onsetReleaseThreshold(), 1);
-        Serial.print(" cooldown=");
-        Serial.print(_audioOnsetDetector.cooldownAfterOnsetMs());
-        Serial.print(" releaseDebounce=");
-        Serial.print(_audioOnsetDetector.releaseDebounceMs());
-        Serial.print(" minMs=");
-        Serial.print(_audioOnsetDetector.minTransientDurationMs());
-        Serial.print(" maxMs=");
-        Serial.print(_audioOnsetDetector.maxTransientDurationMs());
-        Serial.print(" minStrength=");
-        Serial.println(_audioOnsetDetector.minTransientPeakStrength(), 1);
-        Serial.print("RB startup baseline=");
-        Serial.println(rbBaselineStateName());
-    }
+    Serial.print("RB det mode=AMP onset=");
+    Serial.print(_audioOnsetDetector.onsetDetectionThreshold(), 1);
+    Serial.print(" release=");
+    Serial.print(_audioOnsetDetector.onsetReleaseThreshold(), 1);
+    Serial.print(" cooldown=");
+    Serial.print(_audioOnsetDetector.cooldownAfterOnsetMs());
+    Serial.print(" releaseDebounce=");
+    Serial.print(_audioOnsetDetector.releaseDebounceMs());
+    Serial.print(" minMs=");
+    Serial.print(_audioOnsetDetector.minTransientDurationMs());
+    Serial.print(" maxMs=");
+    Serial.print(_audioOnsetDetector.maxTransientDurationMs());
+    Serial.print(" minStrength=");
+    Serial.println(_audioOnsetDetector.minTransientPeakStrength(), 1);
+    Serial.print("RB startup baseline=");
+    Serial.println(rbBaselineStateName());
 }
 
 void Node::startRbQuietBaseline() {
-    if (_sourceKind != AudioSourceKind::I2S) {
-        performRbRebase();
-        return;
-    }
     _rbBaselineState = RBBaselineState::ListenForQuiet;
     _rbBaselineStateStartedMs = millis();
     _rbBaselineQuietSinceMs = 0;
@@ -519,8 +506,7 @@ void Node::performRbRebase() {
 // --- baseline / startup ---
 
 bool Node::rbOutputsEnabled() const {
-    return _sourceKind != AudioSourceKind::I2S
-        || _rbBaselineState == RBBaselineState::Active
+    return _rbBaselineState == RBBaselineState::Active
         || _rbBaselineState == RBBaselineState::FailedNoQuiet;
 }
 
@@ -543,10 +529,6 @@ const char* Node::rbBaselineStateName() const {
 }
 
 void Node::updateRbBaselineState(unsigned long now) {
-    if (_sourceKind != AudioSourceKind::I2S) {
-        return;
-    }
-
     switch (_rbBaselineState) {
         case RBBaselineState::Boot:
             startRbQuietBaseline();
@@ -608,12 +590,7 @@ void Node::updateRbBaselineState(unsigned long now) {
 
 void Node::configureParameters() {
     configureSharedParameters();
-
-    if (_sourceKind == AudioSourceKind::I2S) {
-        configureI2SParameters();
-    } else {
-        configureAnalogParameters();
-    }
+    configureI2SParameters();
 }
 
 void Node::configureSharedParameters() {
@@ -626,17 +603,6 @@ void Node::configureSharedParameters() {
     // Chirp tone is configured here so the node owns its output tuning.
     // The fallback/default frequency is defined by CHIRP_FREQUENCY_HZ.
     _chirpOutput.setToneHz(3200);
-}
-
-void Node::configureAnalogParameters() {
-    _audioSignal.setBaselineTrackingQuietThreshold(40);
-    _audioOnsetDetector.setOnsetDetectionThreshold(23.0f);
-    _audioOnsetDetector.setOnsetReleaseThreshold(20.0f);
-    _audioOnsetDetector.setCooldownAfterOnsetMs(300);
-    _audioOnsetDetector.setReleaseDebounceMs(30);
-    _audioOnsetDetector.setMinTransientDurationMs(60);
-    _audioOnsetDetector.setMaxTransientDurationMs(240);
-    _audioOnsetDetector.setMinTransientPeakStrength(40.0f);
 }
 
 void Node::configureI2SParameters() {
@@ -670,66 +636,41 @@ void Node::update() {
     int processedSamples = 0;
     bool sawI2SSample = false;
     bool sawPatternThisLoop = false;
-    if (_sourceKind == AudioSourceKind::I2S) {
-        AudioBlock block;
-        while (processedSamples < kMaxSamplesPerLoop && _i2sSource.readBlock(block)) {
-            if (block.sampleCount == 0 || block.samples == nullptr) {
-                break;
-            }
-
-            const uint32_t sampleRateHz = _audioSource.sampleRateHz() > 0 ? _audioSource.sampleRateHz() : 16000UL;
-            const uint32_t samplePeriodUs = sampleRateHz > 0 ? static_cast<uint32_t>(1000000UL / sampleRateHz) : 0;
-            for (uint16_t i = 0; i < block.sampleCount; ++i) {
-                const uint64_t sampleIndex = block.startSampleIndex + static_cast<uint64_t>(i);
-                const uint32_t sampleTimeUs = sampleRateHz > 0
-                    ? static_cast<uint32_t>((sampleIndex * 1000000ULL) / static_cast<uint64_t>(sampleRateHz))
-                    : block.approxStartMicros;
-                const uint32_t approxBlockSampleMicros = samplePeriodUs > 0
-                    ? block.approxStartMicros + static_cast<uint32_t>(static_cast<uint32_t>(i) * samplePeriodUs)
-                    : block.approxStartMicros;
-                const uint32_t sampleTimeMsApprox = approxBlockSampleMicros / 1000UL;
-                AudioSignalFrame frame;
-                _audioSignal.update(static_cast<int>(block.samples[i]), sampleTimeUs, frame);
-                frame.sampleTimeMs = sampleTimeMsApprox;
-                _freqBandStream.observeCenteredSample(frame.centeredSample);
-                if (usesLegacyPath()) {
-                    processLegacyAmpFrame(frame, now, selfChirpSuppressed, sawPatternThisLoop);
-                } else {
-                    processModernFrame(frame, now, selfChirpSuppressed, sawPatternThisLoop);
-                }
-            }
-            sawI2SSample = true;
-            if (usesLegacyPath()) {
-                drainLegacyAmpCandidates(now, selfChirpSuppressed, sawPatternThisLoop);
-            }
-
-            processedSamples += static_cast<int>(block.sampleCount);
-            if (processedSamples > kMaxSamplesPerLoop) {
-                processedSamples = kMaxSamplesPerLoop;
-            }
+    AudioBlock block;
+    while (processedSamples < kMaxSamplesPerLoop && _i2sSource.readBlock(block)) {
+        if (block.sampleCount == 0 || block.samples == nullptr) {
+            break;
         }
-    } else {
-        while (processedSamples < kMaxSamplesPerLoop && _audioSource.available()) {
-            int sample = 0;
-            uint32_t sampleTimeUs = 0;
-            if (!_audioSource.readSample(sample, sampleTimeUs)) {
-                break;
-            }
+
+        const uint32_t sampleRateHz = _audioSource.sampleRateHz() > 0 ? _audioSource.sampleRateHz() : 16000UL;
+        const uint32_t samplePeriodUs = sampleRateHz > 0 ? static_cast<uint32_t>(1000000UL / sampleRateHz) : 0;
+        for (uint16_t i = 0; i < block.sampleCount; ++i) {
+            const uint64_t sampleIndex = block.startSampleIndex + static_cast<uint64_t>(i);
+            const uint32_t sampleTimeUs = sampleRateHz > 0
+                ? static_cast<uint32_t>((sampleIndex * 1000000ULL) / static_cast<uint64_t>(sampleRateHz))
+                : block.approxStartMicros;
+            const uint32_t approxBlockSampleMicros = samplePeriodUs > 0
+                ? block.approxStartMicros + static_cast<uint32_t>(static_cast<uint32_t>(i) * samplePeriodUs)
+                : block.approxStartMicros;
+            const uint32_t sampleTimeMsApprox = approxBlockSampleMicros / 1000UL;
             AudioSignalFrame frame;
-            _audioSignal.update(sample, sampleTimeUs, frame);
+            _audioSignal.update(static_cast<int>(block.samples[i]), sampleTimeUs, frame);
+            frame.sampleTimeMs = sampleTimeMsApprox;
             _freqBandStream.observeCenteredSample(frame.centeredSample);
             if (usesLegacyPath()) {
                 processLegacyAmpFrame(frame, now, selfChirpSuppressed, sawPatternThisLoop);
-                ++processedSamples;
-                continue;
+            } else {
+                processModernFrame(frame, now, selfChirpSuppressed, sawPatternThisLoop);
             }
-
-            processModernFrame(frame, now, selfChirpSuppressed, sawPatternThisLoop);
-            const bool onsetDetected = selfChirpSuppressed ? false : _audioOnsetDetector.onsetDetected();
-            _debug.observeOnset(now, onsetDetected, _audioOnsetDetector.onsetStrength());
+        }
+        sawI2SSample = true;
+        if (usesLegacyPath()) {
             drainLegacyAmpCandidates(now, selfChirpSuppressed, sawPatternThisLoop);
+        }
 
-            processedSamples++;
+        processedSamples += static_cast<int>(block.sampleCount);
+        if (processedSamples > kMaxSamplesPerLoop) {
+            processedSamples = kMaxSamplesPerLoop;
         }
     }
 
@@ -768,7 +709,7 @@ void Node::update() {
     }
     _debug.observeBehaviorGate(now, _behavior, sawPatternThisLoop, selfChirpSuppressed);
 
-    if (_sourceKind == AudioSourceKind::I2S && sawI2SSample) {
+    if (sawI2SSample) {
         _debug.observeI2SSignal(now, _audioSignal);
     }
 
@@ -992,13 +933,8 @@ void Node::handleSerialLine(const char* line) {
         return;
     }
     if (startsWithTokenIgnoreCase(line, "RB rebase")) {
-        if (_sourceKind == AudioSourceKind::I2S) {
-            startRbQuietBaseline();
-            Serial.println("RB rebase requested quiet-gated");
-        } else {
-            performRbRebase();
-            Serial.println("RB rebase done");
-        }
+        startRbQuietBaseline();
+        Serial.println("RB rebase requested quiet-gated");
         return;
     }
     if (startsWithTokenIgnoreCase(line, "RB detectonly")) {
@@ -1220,7 +1156,7 @@ void Node::processLegacyAmpFrame(const AudioSignalFrame& frame,
 void Node::drainLegacyAmpCandidates(unsigned long now,
                                     bool selfChirpSuppressed,
                                     bool& sawPatternThisLoop) {
-    const bool observePatternPulseWhenValid = _sourceKind == AudioSourceKind::I2S && rbOutputsEnabled();
+    const bool observePatternPulseWhenValid = rbOutputsEnabled();
     const unsigned long queueDepthBeforeDrain = static_cast<unsigned long>(_ampCandidateBuilder.candidateQueueDepth());
 
     DetectorCandidate candidate;

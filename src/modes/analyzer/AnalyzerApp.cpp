@@ -884,14 +884,10 @@ void printH3FrequencyEvidenceFields(const detection::PatternResult& patternResul
 // Construction and setup
 // -----------------------------------------------------------------------------
 
-AnalyzerApp::AnalyzerApp(int inputPin, AudioSourceKind sourceKind)
+AnalyzerApp::AnalyzerApp(int inputPin)
     : _inputPin(inputPin),
-      _analogSource(inputPin),
       _i2sSource(14, 27, 33, 16000, 32),
-      _sourceKind(sourceKind),
-      _audioSource(sourceKind == AudioSourceKind::I2S
-                       ? static_cast<AudioSource&>(_i2sSource)
-                       : static_cast<AudioSource&>(_analogSource)),
+      _audioSource(_i2sSource),
       _audioOnsetDetector(),
       _audioSignal(_audioSource),
       _freqBandStream() {
@@ -931,28 +927,12 @@ void AnalyzerApp::begin() {
 
 void AnalyzerApp::configureParameters() {
     configureSharedParameters();
-
-    if (_sourceKind == AudioSourceKind::I2S) {
-        configureI2SParameters();
-    } else {
-        configureAnalogParameters();
-    }
+    configureI2SParameters();
 }
 
 void AnalyzerApp::configureSharedParameters() {
     _audioSignal.setSmoothingFactor(0.5f);
     _audioSignal.setBaselineUpdateFactor(0.005f);
-}
-
-void AnalyzerApp::configureAnalogParameters() {
-    _audioSignal.setBaselineTrackingQuietThreshold(40);
-    setDetectorOnsetDetectionThreshold(30.0f);
-    setDetectorOnsetReleaseThreshold(20.0f);
-    setDetectorCooldownAfterOnsetMs(50);
-    setDetectorReleaseDebounceMs(10);
-    setDetectorMinTransientDurationMs(90);
-    setDetectorMaxTransientDurationMs(240);
-    setDetectorMinTransientPeakStrength(40.0f);
 }
 
 void AnalyzerApp::configureI2SParameters() {
@@ -973,120 +953,36 @@ void AnalyzerApp::configureI2SParameters() {
 void AnalyzerApp::update() {
     const unsigned long now = millis();
 
-    if (_sequenceTest.active && _sequenceTest.currentTrial > 0 && _sourceKind == AudioSourceKind::Analog && !_audioSource.available()) {
-        _sequenceTest.emptySourceLoops++;
-    }
-
     int processedSamples = 0;
-    if (_sourceKind == AudioSourceKind::I2S) {
-        AudioBlock block;
-        while (processedSamples < kMaxSamplesPerLoop && _i2sSource.readBlock(block)) {
-            if (block.sampleCount == 0 || block.samples == nullptr) {
-                break;
-            }
-
-            const uint32_t sampleRateHz = _audioSource.sampleRateHz() > 0 ? _audioSource.sampleRateHz() : 16000UL;
-            const uint32_t samplePeriodUs = sampleRateHz > 0 ? static_cast<uint32_t>(1000000UL / sampleRateHz) : 0;
-            for (uint16_t i = 0; i < block.sampleCount; ++i) {
-                const uint64_t sampleIndex = block.startSampleIndex + static_cast<uint64_t>(i);
-                const uint32_t sampleTimeUs = sampleRateHz > 0
-                    ? static_cast<uint32_t>((sampleIndex * 1000000ULL) / static_cast<uint64_t>(sampleRateHz))
-                    : block.approxStartMicros;
-                const uint32_t approxBlockSampleMicros = samplePeriodUs > 0
-                    ? block.approxStartMicros + static_cast<uint32_t>(static_cast<uint32_t>(i) * samplePeriodUs)
-                    : block.approxStartMicros;
-                const uint32_t sampleTimeMsApprox = approxBlockSampleMicros / 1000UL;
-                AudioSignalFrame frame;
-                _audioSignal.update(static_cast<int>(block.samples[i]), sampleTimeUs, frame);
-                frame.sampleTimeMs = sampleTimeMsApprox;
-                if (_sequenceFeatureHistory != nullptr) {
-                    detection::FeatureExtractor::observeFrame(frame, *_sequenceFeatureHistory);
-                }
-                _audioOnsetDetector.update(static_cast<float>(frame.level), frame.sampleTimeUs);
-                _ampCandidateBuilder.observeSample(frame, _audioOnsetDetector);
-                _freqBandStream.observeCenteredSample(frame.centeredSample);
-                if (_sequenceTest.active && _sequenceTest.currentTrial > 0 && _detection != nullptr) {
-                    const detection::FrequencyEvidence runtimeFrequencyEvidence = captureFrequencyEvidence();
-                    _detection->observeFrame(frame, runtimeFrequencyEvidence, sampleTimeMsApprox);
-                    detection::PatternResult runtimePatternResult;
-                    while (_detection->popPatternResult(runtimePatternResult)) {
-                        _sequenceTest.currentTrialDiagnostics.runtimePatternResult = runtimePatternResult;
-                        _sequenceTest.currentTrialDiagnostics.runtimePatternCaptured = true;
-                    }
-                    _sequenceTest.currentTrialDiagnostics.runtimeFieldState = _detection->fieldState();
-                }
-            }
-            updateSequenceAmbientStats();
-            if (!_sequenceTest.liveFrequencyOnly) {
-                noteSequenceTransientReject(_audioSignal.sampleTimeUs() / 1000UL);
-                const unsigned long queueDepthBeforeDrain = static_cast<unsigned long>(_ampCandidateBuilder.candidateQueueDepth());
-
-                DetectorCandidate candidate;
-                while (_ampCandidateBuilder.popCandidate(candidate)) {
-                    detection::PatternResult patternResult;
-                    const auto liveFrequencyEvidence = captureFrequencyEvidence();
-                    detection::FrequencyEvidence frequencyEvidence = liveFrequencyEvidence;
-                    detection::FrequencyEvidence fullFrequencyEvidence = liveFrequencyEvidence;
-                    detection::measureCandidateWindowFrequency(
-                        _audioSignal,
-                        candidate,
-                        _audioSource.sampleRateHz() > 0 ? _audioSource.sampleRateHz() : 16000UL,
-                        _freqBandStream.targetFrequencyHz(),
-                        now,
-                        frequencyEvidence);
-                    detection::measureCandidateWindowFrequency(
-                        _audioSignal,
-                        candidate,
-                        _audioSource.sampleRateHz() > 0 ? _audioSource.sampleRateHz() : 16000UL,
-                        _freqBandStream.targetFrequencyHz(),
-                        now,
-                        fullFrequencyEvidence,
-                        candidate.durationMs);
-                    if (!processModernDetectorCandidate(candidate, patternResult, now, &frequencyEvidence)) {
-                        continue;
-                    }
-                    patternResult.candidate.frequencyFull = fullFrequencyEvidence;
-                    FrequencyEvidenceEvaluation::classifyPatternResult(patternResult, _frequencyEvidenceTuning);
-
-                    if (_valMode) {
-                        if (patternResult.valid) {
-                            _valOnsetLatchedUntilMs = (patternResult.candidate.startMs) + 250UL;
-                            _valTransientLatchedUntilMs = (patternResult.candidate.startMs) + 250UL;
-                        }
-                    }
-
-                    if (_sequenceTest.active) {
-                        handleSequenceCandidate(patternResult, queueDepthBeforeDrain, &liveFrequencyEvidence);
-                    }
-                }
-            }
-
-            processedSamples += static_cast<int>(block.sampleCount);
-            if (processedSamples > kMaxSamplesPerLoop) {
-                processedSamples = kMaxSamplesPerLoop;
-            }
+    AudioBlock block;
+    while (processedSamples < kMaxSamplesPerLoop && _i2sSource.readBlock(block)) {
+        if (block.sampleCount == 0 || block.samples == nullptr) {
+            break;
         }
-    } else {
-        while (processedSamples < kMaxSamplesPerLoop && _audioSource.available()) {
-            int sample = 0;
-            uint32_t sampleTimeUs = 0;
-            if (!_audioSource.readSample(sample, sampleTimeUs)) {
-                break;
-            }
-            const unsigned long sampleTimeMs = sampleTimeUs / 1000UL;
+
+        const uint32_t sampleRateHz = _audioSource.sampleRateHz() > 0 ? _audioSource.sampleRateHz() : 16000UL;
+        const uint32_t samplePeriodUs = sampleRateHz > 0 ? static_cast<uint32_t>(1000000UL / sampleRateHz) : 0;
+        for (uint16_t i = 0; i < block.sampleCount; ++i) {
+            const uint64_t sampleIndex = block.startSampleIndex + static_cast<uint64_t>(i);
+            const uint32_t sampleTimeUs = sampleRateHz > 0
+                ? static_cast<uint32_t>((sampleIndex * 1000000ULL) / static_cast<uint64_t>(sampleRateHz))
+                : block.approxStartMicros;
+            const uint32_t approxBlockSampleMicros = samplePeriodUs > 0
+                ? block.approxStartMicros + static_cast<uint32_t>(static_cast<uint32_t>(i) * samplePeriodUs)
+                : block.approxStartMicros;
+            const uint32_t sampleTimeMsApprox = approxBlockSampleMicros / 1000UL;
             AudioSignalFrame frame;
-            _audioSignal.update(sample, sampleTimeUs, frame);
-            frame.sampleTimeMs = sampleTimeMs;
+            _audioSignal.update(static_cast<int>(block.samples[i]), sampleTimeUs, frame);
+            frame.sampleTimeMs = sampleTimeMsApprox;
             if (_sequenceFeatureHistory != nullptr) {
                 detection::FeatureExtractor::observeFrame(frame, *_sequenceFeatureHistory);
             }
             _audioOnsetDetector.update(static_cast<float>(frame.level), frame.sampleTimeUs);
             _ampCandidateBuilder.observeSample(frame, _audioOnsetDetector);
             _freqBandStream.observeCenteredSample(frame.centeredSample);
-            updateSequenceAmbientStats();
             if (_sequenceTest.active && _sequenceTest.currentTrial > 0 && _detection != nullptr) {
                 const detection::FrequencyEvidence runtimeFrequencyEvidence = captureFrequencyEvidence();
-                _detection->observeFrame(frame, runtimeFrequencyEvidence, sampleTimeMs);
+                _detection->observeFrame(frame, runtimeFrequencyEvidence, sampleTimeMsApprox);
                 detection::PatternResult runtimePatternResult;
                 while (_detection->popPatternResult(runtimePatternResult)) {
                     _sequenceTest.currentTrialDiagnostics.runtimePatternResult = runtimePatternResult;
@@ -1094,53 +990,55 @@ void AnalyzerApp::update() {
                 }
                 _sequenceTest.currentTrialDiagnostics.runtimeFieldState = _detection->fieldState();
             }
+        }
+        updateSequenceAmbientStats();
+        if (!_sequenceTest.liveFrequencyOnly) {
+            noteSequenceTransientReject(_audioSignal.sampleTimeUs() / 1000UL);
+            const unsigned long queueDepthBeforeDrain = static_cast<unsigned long>(_ampCandidateBuilder.candidateQueueDepth());
 
-            if (!_sequenceTest.liveFrequencyOnly) {
-                if (detectorOnsetDetected()) {
-                    _valOnsetLatchedUntilMs = sampleTimeMs + 250;
+            DetectorCandidate candidate;
+            while (_ampCandidateBuilder.popCandidate(candidate)) {
+                detection::PatternResult patternResult;
+                const auto liveFrequencyEvidence = captureFrequencyEvidence();
+                detection::FrequencyEvidence frequencyEvidence = liveFrequencyEvidence;
+                detection::FrequencyEvidence fullFrequencyEvidence = liveFrequencyEvidence;
+                detection::measureCandidateWindowFrequency(
+                    _audioSignal,
+                    candidate,
+                    _audioSource.sampleRateHz() > 0 ? _audioSource.sampleRateHz() : 16000UL,
+                    _freqBandStream.targetFrequencyHz(),
+                    now,
+                    frequencyEvidence);
+                detection::measureCandidateWindowFrequency(
+                    _audioSignal,
+                    candidate,
+                    _audioSource.sampleRateHz() > 0 ? _audioSource.sampleRateHz() : 16000UL,
+                    _freqBandStream.targetFrequencyHz(),
+                    now,
+                    fullFrequencyEvidence,
+                    candidate.durationMs);
+                if (!processModernDetectorCandidate(candidate, patternResult, now, &frequencyEvidence)) {
+                    continue;
                 }
-                if (detectorTransientDetected()) {
-                    _valTransientLatchedUntilMs = sampleTimeMs + 250;
-                }
-                if (_sequenceTest.active && _sequenceTest.currentTrial > 0) {
-                    if (detectorOnsetDetected()) {
-                        _sequenceTest.currentTrialDiagnostics.onsetSeen = true;
-                        if (_sequenceTest.currentTrialDiagnostics.firstOnsetMs == 0) {
-                            _sequenceTest.currentTrialDiagnostics.firstOnsetMs = sampleTimeMs;
-                        }
-                        _sequenceTest.currentTrialDiagnostics.lastOnsetMs = sampleTimeMs;
-                        if (_sequenceTest.currentTrialOnsetDetectedMs == 0) {
-                            _sequenceTest.currentTrialOnsetDetectedMs = sampleTimeMs;
-                        }
-                    } else {
-                        const char* onsetRejectReason = detectorOnsetRejectReasonName();
-                        if (strcmp(onsetRejectReason, "below_threshold") == 0) {
-                            _sequenceTest.currentTrialDiagnostics.onsetRejectBelowThreshold++;
-                        } else if (strcmp(onsetRejectReason, "peak_active") == 0) {
-                            _sequenceTest.currentTrialDiagnostics.onsetRejectPeakActive++;
-                        } else if (strcmp(onsetRejectReason, "cooldown_active") == 0) {
-                            _sequenceTest.currentTrialDiagnostics.onsetRejectCooldown++;
-                        } else if (strcmp(onsetRejectReason, "none") != 0) {
-                            _sequenceTest.currentTrialDiagnostics.onsetRejectOther++;
-                        }
+                patternResult.candidate.frequencyFull = fullFrequencyEvidence;
+                FrequencyEvidenceEvaluation::classifyPatternResult(patternResult, _frequencyEvidenceTuning);
 
-                        if (strcmp(onsetRejectReason, "none") != 0) {
-                            if (_sequenceTest.currentTrialDiagnostics.firstOnsetRejectMs == 0) {
-                                _sequenceTest.currentTrialDiagnostics.firstOnsetRejectMs = sampleTimeMs;
-                            }
-                            _sequenceTest.currentTrialDiagnostics.lastOnsetRejectMs = sampleTimeMs;
-                        }
+                if (_valMode) {
+                    if (patternResult.valid) {
+                        _valOnsetLatchedUntilMs = (patternResult.candidate.startMs) + 250UL;
+                        _valTransientLatchedUntilMs = (patternResult.candidate.startMs) + 250UL;
                     }
                 }
 
-                if (_sequenceTest.active && detectorTransientDetected()) {
-                    handleSequenceTransient(sampleTimeMs);
-                } else {
-                    noteSequenceTransientReject(sampleTimeMs);
+                if (_sequenceTest.active) {
+                    handleSequenceCandidate(patternResult, queueDepthBeforeDrain, &liveFrequencyEvidence);
                 }
             }
+        }
 
-            processedSamples++;
+        processedSamples += static_cast<int>(block.sampleCount);
+        if (processedSamples > kMaxSamplesPerLoop) {
+            processedSamples = kMaxSamplesPerLoop;
         }
     }
 
@@ -1870,11 +1768,6 @@ void AnalyzerApp::runRawTrigger(unsigned long toneHz, unsigned long durationMs, 
         return;
     }
 
-    if (_sourceKind != AudioSourceKind::I2S) {
-        Serial.println("RAW_ERR source=analog unsupported");
-        return;
-    }
-
     stopSequenceTest();
     stopCaptureSession();
     resetDetectorState();
@@ -2137,7 +2030,7 @@ void AnalyzerApp::printValueModeBanner() const {
         return;
     }
     Serial.print("EVT analyzer_val on source=");
-    Serial.print(_sourceKind == AudioSourceKind::I2S ? "I2S" : "Analog");
+    Serial.print("I2S");
     Serial.println(" detector=AMP");
     printDetectionParameters();
 }
@@ -2382,7 +2275,7 @@ void AnalyzerApp::startSequenceTest(unsigned long totalTrials, unsigned long per
 
     if (_sequenceTest.showDetails) {
         Serial.print("SEQ start source=");
-        Serial.print(_sourceKind == AudioSourceKind::I2S ? "I2S" : "Analog");
+        Serial.print("I2S");
         Serial.print(" detector=AMP");
         Serial.print(" profile=");
         Serial.print(detection::detectionProfileName(_sequenceTest.profileKind));

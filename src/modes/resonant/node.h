@@ -12,7 +12,6 @@
 #include "../../hal/PiezoToneOutput.h"
 #include "../../io/AudioSignal.h"
 #include "../../detection/detectors/AmpTransientDetector.h"
-#include "../../detection/legacy/AmpCandidateBuilder.h"
 #include "../../detection/features/FreqBandStream.h"
 #include "../../io/ChirpOutput.h"
 #include "../../behavior/ResonantBehavior.h"
@@ -97,11 +96,8 @@ private:
     const detection::DetectionProfile& activeDetectionProfile() const;
     const BehaviorProfile& activeBehaviorProfile() const;
     void applyActiveProfiles();
-    void processLegacyAmpFrame(const AudioSignalFrame& frame, unsigned long now, bool selfChirpSuppressed, bool& sawPatternThisLoop);
-    void drainLegacyAmpCandidates(unsigned long now, bool selfChirpSuppressed, bool& sawPatternThisLoop);
     void processModernFrame(const AudioSignalFrame& frame, unsigned long now, bool selfChirpSuppressed, bool& sawPatternThisLoop);
     FrequencyEvidence captureFrequencyEvidence() const;
-    void logCandidate(const DetectorCandidate& candidate, const PatternResult& patternResult, const FrequencyEvidence* liveFrequencyEvidence, unsigned long candidateNumber, long gapMs, unsigned long queueDepthBeforeDrain, unsigned long behaviorLagMs, const char* candidateClass, const char* action, const char* stateName, const char* gateName);
     void printRbSummary() const;
     void printRbSignalSummary() const;
     void printRbDetectorSummary() const;
@@ -118,8 +114,6 @@ private:
     // Signal / detection / behavior pipeline.
     AmpTransientDetector _audioOnsetDetector;
     AudioSignal _audioSignal;
-    // Legacy AMP path only. Modern detection flows through DetectionRuntime.
-    AmpCandidateBuilder _ampCandidateBuilder;
     FreqBandStream _freqBandStream;
     detection::DetectionRuntime _detection;
     FrequencyEvidenceEvaluation::Values _frequencyEvidenceTuning = {};

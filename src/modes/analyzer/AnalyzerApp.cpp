@@ -643,22 +643,16 @@ uint32_t analyzerLogFlagsFromToken(const char* token) {
             flags |= AnalyzerApp::ANALYZER_LOG_TRIAL;
         } else if (equalsIgnoreCase(part, "candidate")) {
             flags |= AnalyzerApp::ANALYZER_LOG_CANDIDATE;
-        } else if (equalsIgnoreCase(part, "report") || equalsIgnoreCase(part, "freq_class") || equalsIgnoreCase(part, "freq")) {
-            flags |= AnalyzerApp::ANALYZER_LOG_FREQ_CLASS;
-        } else if (equalsIgnoreCase(part, "explain") || equalsIgnoreCase(part, "liveraw") || equalsIgnoreCase(part, "raw_debug") || equalsIgnoreCase(part, "raw")) {
+        } else if (equalsIgnoreCase(part, "explain")) {
             flags |= AnalyzerApp::ANALYZER_LOG_EXPLAIN;
         } else if (equalsIgnoreCase(part, "custom") || equalsIgnoreCase(part, "ampwindow") || equalsIgnoreCase(part, "amp_window") || equalsIgnoreCase(part, "window")) {
             flags |= AnalyzerApp::ANALYZER_LOG_CUSTOM;
-        } else if (equalsIgnoreCase(part, "trialbrief") || equalsIgnoreCase(part, "triallite") || equalsIgnoreCase(part, "brief")) {
-            flags |= AnalyzerApp::ANALYZER_LOG_TRIAL;
-            flags |= AnalyzerApp::ANALYZER_LOG_TRIAL_BRIEF;
         } else if (equalsIgnoreCase(part, "default")) {
             flags |= AnalyzerApp::DEFAULT_ANALYZER_LOG_FLAGS;
         } else if (equalsIgnoreCase(part, "full")) {
             flags |= AnalyzerApp::ANALYZER_LOG_SUMMARY |
                      AnalyzerApp::ANALYZER_LOG_TRIAL |
                      AnalyzerApp::ANALYZER_LOG_CANDIDATE |
-                     AnalyzerApp::ANALYZER_LOG_FREQ_CLASS |
                      AnalyzerApp::ANALYZER_LOG_EXPLAIN;
         } else if (equalsIgnoreCase(part, "quiet") || equalsIgnoreCase(part, "none")) {
             flags = AnalyzerApp::ANALYZER_LOG_NONE;
@@ -670,27 +664,6 @@ uint32_t analyzerLogFlagsFromToken(const char* token) {
 }
 
 bool analyzerLogTokenUsesLegacyExplain(const char* token) {
-    if (token == nullptr || *token == '\0') {
-        return false;
-    }
-
-    if (equalsIgnoreCase(token, "raw") || equalsIgnoreCase(token, "raw_debug") || equalsIgnoreCase(token, "liveraw")) {
-        return true;
-    }
-
-    char buffer[64];
-    strncpy(buffer, token, sizeof(buffer));
-    buffer[sizeof(buffer) - 1] = '\0';
-
-    char* savePtr = nullptr;
-    char* part = strtok_r(buffer, ",+|", &savePtr);
-    while (part != nullptr) {
-        if (equalsIgnoreCase(part, "raw") || equalsIgnoreCase(part, "raw_debug") || equalsIgnoreCase(part, "liveraw")) {
-            return true;
-        }
-        part = strtok_r(nullptr, ",+|", &savePtr);
-    }
-
     return false;
 }
 
@@ -701,12 +674,11 @@ void printSequenceHelp() {
     Serial.println("SEQ IN: start [tries=N] [period=MS] [window=MS] [freq=HZ] [dur=MS] [test=LABEL]");
     Serial.println("SEQ IN: OBS start [tries=N] [period=2000] [window=1800] [freq=HZ] [dur=MS] [test=LABEL]");
     Serial.println("SEQ IN: [profile=freqamp|chirp] [liveFreqOnly=1|freqOnly=1|mode=livefreq]");
-    Serial.println("SEQ IN: [log=default|none|quiet|summary|summary+trial|trialbrief|candidate|report|explain|custom|ampwindow]");
-    Serial.println("SEQ IN: stable summary=log=summary; legacy aliases=raw|raw_debug|liveraw|freq_class|trialbrief");
+    Serial.println("SEQ IN: [log=default|none|quiet|summary|summary+trial|trial|candidate|explain|custom|ampwindow|full]");
+    Serial.println("SEQ IN: stable summary=log=summary");
     Serial.println("SEQ IN: [debug=0|1|2] [dumpSamples=0|1] [curveFormat=off|samples]");
     Serial.println("SEQ IN: [sampleFirst=N] [sampleEvery=N] [sampleLead=MS] [sampleTail=MS] [sampleStep=MS] [sampleMax=N]");
-    Serial.println("SEQ OUT: SEQ start / SEQ running / SEQ_CAND / SEQ_REPORT / SEQ_TRIAL / SEQ_EXPLAIN / SEQ_CUSTOM / SEQ_SUMMARY");
-    Serial.println("SEQ OUT: legacy explain = SEQ_EXPLAIN_LEGACY_*");
+    Serial.println("SEQ OUT: SEQ start / SEQ running / SEQ_CAND / SEQ_TRIAL / SEQ_EXPLAIN / SEQ_CUSTOM / SEQ_SUMMARY");
     Serial.println("SEQ OUT: candidate fields include onset_sample peak_sample release_sample peak_ms dur end_dt_ms freq_*");
     Serial.println("SEQ OBS: passive observe mode for an already-running external emitter");
     Serial.println("SEQ PROFILE: profile=freqamp|chirp");
@@ -921,7 +893,7 @@ void AnalyzerApp::begin() {
     _controlClaimAtMs = 0;
 
     Serial.println("EVT analyzer_ready");
-    Serial.println("EVT analyzer_help type='HELP', 'BASE', 'PARAM onset=23.0 release=20.0 cooldown=50 releaseDebounce=10 minMs=90 maxMs=240 minStrength=40.0 freqScore=10000 freqContrast=20.0', 'TEST', 'RAW trigger f=3200 dur=100 post=1000 dump=bin', 'SEQ log=default|summary|summary+trial|trialbrief|candidate|freq_class|explain|custom|ampwindow dumpSamples=1 curveFormat=samples', 'CAP', 'DET AMP', 'VAL', 'VAL OFF'");
+    Serial.println("EVT analyzer_help type='HELP', 'BASE', 'PARAM onset=23.0 release=20.0 cooldown=50 releaseDebounce=10 minMs=90 maxMs=240 minStrength=40.0 freqScore=10000 freqContrast=20.0', 'TEST', 'RAW trigger f=3200 dur=100 post=1000 dump=bin', 'SEQ log=default|summary|summary+trial|trial|candidate|explain|custom|ampwindow dumpSamples=1 curveFormat=samples', 'CAP', 'DET AMP', 'VAL', 'VAL OFF'");
 }
 
 void AnalyzerApp::configureParameters() {

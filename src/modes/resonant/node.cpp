@@ -94,17 +94,6 @@ BehaviorProfile makeFreqAmpBehaviorProfile() {
     return profile;
 }
 
-BehaviorProfile makeAmpStateBehaviorProfile() {
-    BehaviorProfile profile = makeFreqAmpBehaviorProfile();
-    profile.requireTonalForBehavior = false;
-    profile.waitAfterTransientMs = 500;
-    profile.idleTimeoutMs = 15000;
-    profile.idleTimeVariationMs = 6000;
-    profile.idleBlockedAfterHeardMs = 1500;
-    profile.idleBlockedAfterOwnEmitMs = 3000;
-    return profile;
-}
-
 const char* detectionProfileKindName(detection::DetectionProfileKind kind) {
     return detection::detectionProfileName(kind);
 }
@@ -737,7 +726,7 @@ void Node::handleSerialLine(const char* line) {
         Serial.println("RB CMD: RB PARAM onset=23 release=20 cooldown=50 releaseDebounce=10 minMs=90 maxMs=240 minStrength=40.0 freqScore=10000 freqContrast=50.0");
         Serial.println("RB CMD: RB BEHAV wait=100 refractory=0 idleTimeout=20000 idleTimeoutVariation=10000 idleBlockedAfterHeard=3000 idleBlockedAfterOwnEmit=5000 requireTonal=1");
         Serial.println("RB CMD: RB DETECT removed; use RB PROFILE");
-        Serial.println("RB CMD: RB PROFILE name=freqamp|ampstate|chirp");
+        Serial.println("RB CMD: RB PROFILE name=freqamp|chirp");
         Serial.println("RB CMD: RB rebase");
         Serial.println("RB CMD: RB rebase force");
         Serial.println("RB CMD: RB detectonly on|off");
@@ -999,7 +988,7 @@ void Node::handleProfileCommand(const char* line) {
         Serial.print(activeDetectionProfile().ampEnabled ? "amp" : "none");
         Serial.println(activeDetectionProfile().frequencyOnly ? "+freqonly" : "+full");
     } else {
-        Serial.println("RB PROFILE usage=name=freqamp|ampstate|chirp");
+        Serial.println("RB PROFILE usage=name=freqamp|chirp");
     }
 }
 
@@ -1024,11 +1013,8 @@ const detection::DetectionProfile& Node::activeDetectionProfile() const {
 
 const BehaviorProfile& Node::activeBehaviorProfile() const {
     static const BehaviorProfile kFreqAmpProfile = makeFreqAmpBehaviorProfile();
-    static const BehaviorProfile kAmpStateProfile = makeAmpStateBehaviorProfile();
 
     switch (_profileKind) {
-        case detection::DetectionProfileKind::AmpState:
-            return kAmpStateProfile;
         case detection::DetectionProfileKind::Chirp:
         case detection::DetectionProfileKind::FreqAmp:
         default:

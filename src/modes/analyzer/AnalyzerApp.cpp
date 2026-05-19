@@ -700,7 +700,7 @@ void printSequenceHelp() {
     Serial.println("CMD: SEQ stop");
     Serial.println("SEQ IN: start [tries=N] [period=MS] [window=MS] [freq=HZ] [dur=MS] [test=LABEL]");
     Serial.println("SEQ IN: OBS start [tries=N] [period=2000] [window=1800] [freq=HZ] [dur=MS] [test=LABEL]");
-    Serial.println("SEQ IN: [profile=freqamp|ampstate|chirp] [liveFreqOnly=1|freqOnly=1|mode=livefreq]");
+    Serial.println("SEQ IN: [profile=freqamp|chirp] [liveFreqOnly=1|freqOnly=1|mode=livefreq]");
     Serial.println("SEQ IN: [log=default|none|quiet|summary|summary+trial|trialbrief|candidate|report|explain|custom|ampwindow]");
     Serial.println("SEQ IN: stable summary=log=summary; legacy aliases=raw|raw_debug|liveraw|freq_class|trialbrief");
     Serial.println("SEQ IN: [debug=0|1|2] [dumpSamples=0|1] [curveFormat=off|samples]");
@@ -709,7 +709,7 @@ void printSequenceHelp() {
     Serial.println("SEQ OUT: legacy explain = SEQ_EXPLAIN_LEGACY_*");
     Serial.println("SEQ OUT: candidate fields include onset_sample peak_sample release_sample peak_ms dur end_dt_ms freq_*");
     Serial.println("SEQ OBS: passive observe mode for an already-running external emitter");
-    Serial.println("SEQ PROFILE: profile=freqamp|ampstate|chirp");
+    Serial.println("SEQ PROFILE: profile=freqamp|chirp");
     Serial.println("SEQ PARAM: freqScore=50000 freqContrast=20.0");
 }
 
@@ -3939,8 +3939,6 @@ const char* analyzerProfileDetailNamespace(detection::DetectionProfileKind profi
         return "freq_amp_live";
     }
     switch (profileKind) {
-        case detection::DetectionProfileKind::AmpState:
-            return "amp_state";
         case detection::DetectionProfileKind::Chirp:
             return "chirp";
         case detection::DetectionProfileKind::FreqAmp:
@@ -3954,8 +3952,6 @@ const char* analyzerProfileDetailSummary(detection::DetectionProfileKind profile
         return "generic live-frequency profile view";
     }
     switch (profileKind) {
-        case detection::DetectionProfileKind::AmpState:
-            return "amp-state profile view";
         case detection::DetectionProfileKind::Chirp:
             return "chirp profile view";
         case detection::DetectionProfileKind::FreqAmp:

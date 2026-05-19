@@ -9,13 +9,11 @@ namespace detection {
 
 enum class DetectionProfileKind {
     FreqAmp,
-    AmpState,
     Chirp,
 };
 
 enum class ProfileFeatureSetKind {
     FreqAmp,
-    AmpState,
     Chirp,
 };
 
@@ -31,7 +29,6 @@ enum class ProfileSignalDetectorKind {
 
 enum class ProfileInspectionRulesKind {
     FreqAmp,
-    AmpState,
     Chirp,
 };
 
@@ -67,8 +64,6 @@ inline const char* detectionProfileName(DetectionProfileKind kind) {
     switch (kind) {
         case DetectionProfileKind::FreqAmp:
             return "FreqAmp";
-        case DetectionProfileKind::AmpState:
-            return "AmpState";
         case DetectionProfileKind::Chirp:
             return "Chirp";
     }
@@ -79,8 +74,6 @@ inline const char* profileFeatureSetName(ProfileFeatureSetKind kind) {
     switch (kind) {
         case ProfileFeatureSetKind::FreqAmp:
             return "FreqAmp";
-        case ProfileFeatureSetKind::AmpState:
-            return "AmpState";
         case ProfileFeatureSetKind::Chirp:
             return "Chirp";
     }
@@ -111,8 +104,6 @@ inline const char* profileInspectionRulesName(ProfileInspectionRulesKind kind) {
     switch (kind) {
         case ProfileInspectionRulesKind::FreqAmp:
             return "FreqAmpRules";
-        case ProfileInspectionRulesKind::AmpState:
-            return "AmpStateRules";
         case ProfileInspectionRulesKind::Chirp:
             return "ChirpRules";
     }
@@ -148,10 +139,6 @@ inline bool detectionProfileKindFromName(const char* name, DetectionProfileKind&
 
     if (strcasecmp(name, "freqamp") == 0 || strcasecmp(name, "freq_amp") == 0) {
         outKind = DetectionProfileKind::FreqAmp;
-        return true;
-    }
-    if (strcasecmp(name, "ampstate") == 0 || strcasecmp(name, "amp_state") == 0) {
-        outKind = DetectionProfileKind::AmpState;
         return true;
     }
     if (strcasecmp(name, "chirp") == 0) {
@@ -193,38 +180,6 @@ inline DetectionProfile makeFreqAmpProfile() {
     return profile;
 }
 
-inline DetectionProfile makeAmpStateProfile() {
-    DetectionProfile profile = makeFreqAmpProfile();
-
-    // Identity and signal routing.
-    profile.kind = DetectionProfileKind::AmpState;
-    profile.featureSet = ProfileFeatureSetKind::AmpState;
-    profile.signalEmitter = ProfileSignalEmitterKind::Amp;
-    profile.signalDetector = ProfileSignalDetectorKind::Transient;
-    profile.inspectionRules = ProfileInspectionRulesKind::AmpState;
-    profile.patternAssembler = ProfilePatternAssemblerKind::SinglePulse;
-    profile.patternRules = ProfilePatternRulesKind::AmpActivity;
-
-    // Runtime behavior.
-    profile.useLegacyPath = true;
-    profile.frequencyOnly = false;
-    profile.ampEnabled = true;
-
-    // Inspector configuration.
-    profile.inspectionConfig = defaultInspectionConfig();
-    profile.inspectionConfig.ampWindowPreMs = 20;
-    profile.inspectionConfig.ampWindowPostMs = 120;
-
-    // Field-state windowing.
-    profile.fieldStateConfig.signalWindowMs = 2500;
-    profile.fieldStateConfig.patternWindowMs = 2500;
-    profile.fieldStateConfig.busySignalCountThreshold = 3;
-    profile.fieldStateConfig.denseSignalCountThreshold = 6;
-    profile.fieldStateConfig.quietSignalCountThreshold = 1;
-    profile.fieldStateConfig.busyActivityThreshold = 0.35f;
-    return profile;
-}
-
 inline DetectionProfile makeChirpProfile() {
     DetectionProfile profile = makeFreqAmpProfile();
 
@@ -258,12 +213,9 @@ inline DetectionProfile makeChirpProfile() {
 
 inline const DetectionProfile& detectionProfileForKind(DetectionProfileKind kind) {
     static const DetectionProfile kFreqAmp = makeFreqAmpProfile();
-    static const DetectionProfile kAmpState = makeAmpStateProfile();
     static const DetectionProfile kChirp = makeChirpProfile();
 
     switch (kind) {
-        case DetectionProfileKind::AmpState:
-            return kAmpState;
         case DetectionProfileKind::Chirp:
             return kChirp;
         case DetectionProfileKind::FreqAmp:

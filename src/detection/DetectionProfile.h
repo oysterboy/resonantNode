@@ -51,7 +51,6 @@ struct DetectionProfile {
     ProfileInspectionRulesKind inspectionRules = ProfileInspectionRulesKind::FreqAmp;
     ProfilePatternAssemblerKind patternAssembler = ProfilePatternAssemblerKind::SinglePulse;
     ProfilePatternRulesKind patternRules = ProfilePatternRulesKind::TonalLocality;
-    bool useLegacyPath = false;
     bool frequencyOnly = false;
     bool ampEnabled = true;
 
@@ -162,7 +161,6 @@ inline DetectionProfile makeFreqAmpProfile() {
     profile.patternRules = ProfilePatternRulesKind::TonalLocality;
 
     // Runtime behavior.
-    profile.useLegacyPath = false;
     profile.frequencyOnly = false;
     profile.ampEnabled = true;
 
@@ -193,7 +191,6 @@ inline DetectionProfile makeChirpProfile() {
     profile.patternRules = ProfilePatternRulesKind::ChirpSequence;
 
     // Runtime behavior.
-    profile.useLegacyPath = false;
     profile.frequencyOnly = false;
     profile.ampEnabled = true;
 

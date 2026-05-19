@@ -602,16 +602,9 @@ void Node::update() {
             _audioSignal.update(static_cast<int>(block.samples[i]), sampleTimeUs, frame);
             frame.sampleTimeMs = sampleTimeMsApprox;
             _freqBandStream.observeCenteredSample(frame.centeredSample);
-            if (activeDetectionProfile().useLegacyPath) {
-                processLegacyAmpFrame(frame, now, selfChirpSuppressed, sawPatternThisLoop);
-            } else {
-                processModernFrame(frame, now, selfChirpSuppressed, sawPatternThisLoop);
-            }
+            processModernFrame(frame, now, selfChirpSuppressed, sawPatternThisLoop);
         }
         sawI2SSample = true;
-        if (activeDetectionProfile().useLegacyPath) {
-            drainLegacyAmpCandidates(now, selfChirpSuppressed, sawPatternThisLoop);
-        }
 
         processedSamples += static_cast<int>(block.sampleCount);
         if (processedSamples > kMaxSamplesPerLoop) {

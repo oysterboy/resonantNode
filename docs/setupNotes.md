@@ -14,6 +14,37 @@ What the code actually does today:
 - In RB detect-only mode, tonal-valid hits pulse the LED at full brightness, transient-only hits pulse at 50% brightness, and normal RB LED behavior is unchanged.
 - Analyzer now has a passive `SEQ OBS` mode for observing an already-running external emitter without sending chirps or claiming control.
 
+## Source Organization
+
+The code is easiest to read in this order:
+
+### 1. Node / RB
+
+- Main files: [src/modes/resonant/node.cpp](/C:/Users/malte/Documents/PlatformIO/Projects/ESP32_learn01/src/modes/resonant/node.cpp), [src/modes/resonant/node.h](/C:/Users/malte/Documents/PlatformIO/Projects/ESP32_learn01/src/modes/resonant/node.h), [src/modes/resonant/node_debug.cpp](/C:/Users/malte/Documents/PlatformIO/Projects/ESP32_learn01/src/modes/resonant/node_debug.cpp), [src/modes/resonant/node_debug.h](/C:/Users/malte/Documents/PlatformIO/Projects/ESP32_learn01/src/modes/resonant/node_debug.h)
+- This is the RB / Resonant orchestration layer.
+- `Node::begin()` starts the hardware, detector, behavior, and debug state.
+- `Node::configureParameters()` splits into shared setup and I2S setup.
+- `Node::resetDetectionState()` clears the audio signal state, detector state, runtime, and related RB counters.
+- `Node::configureI2SParameters()` is where the node wires the active `DetectionProfile` into detection and behavior.
+
+### 2. Detection
+
+- Main files: [src/detection/DetectionRuntime.cpp](/C:/Users/malte/Documents/PlatformIO/Projects/ESP32_learn01/src/detection/DetectionRuntime.cpp), [src/detection/DetectionRuntime.h](/C:/Users/malte/Documents/PlatformIO/Projects/ESP32_learn01/src/detection/DetectionRuntime.h)
+- This is the main detection pipeline file.
+- `DetectionRuntime::reset()` clears the emitters, inspector, pattern assembler, field-state tracker, and feature history.
+- `DetectionRuntime::setInspectionConfig()` and `DetectionRuntime::setFieldStateConfig()` apply the active profile settings.
+- `DetectionRuntime::setProfileName()` records the current profile label for downstream reporting.
+
+### 3. Analyzer
+
+- Main files: [src/modes/analyzer/AnalyzerApp.cpp](/C:/Users/malte/Documents/PlatformIO/Projects/ESP32_learn01/src/modes/analyzer/AnalyzerApp.cpp), [src/modes/analyzer/AnalyzerApp.h](/C:/Users/malte/Documents/PlatformIO/Projects/ESP32_learn01/src/modes/analyzer/AnalyzerApp.h), [src/modes/analyzer/AnalyzerReporting.h](/C:/Users/malte/Documents/PlatformIO/Projects/ESP32_learn01/src/modes/analyzer/AnalyzerReporting.h)
+- This is the SEQ-facing orchestration layer.
+- `AnalyzerApp::begin()` starts the audio source, detector, frequency stream, and feature history.
+- `AnalyzerApp::configureParameters()` splits into shared setup and I2S setup, like Node.
+- `AnalyzerApp::resetDetectorState()` clears the current audio and sequence state between runs.
+- `AnalyzerApp::processPendingSequenceStart()` and `AnalyzerApp::startSequenceTest()` apply the active profile and sequence logging configuration before a run starts.
+- Analyzer should treat `DetectionRuntime` as the source of runtime pattern and field state facts.
+
 ## Quick Commands
 
 ### SEQ

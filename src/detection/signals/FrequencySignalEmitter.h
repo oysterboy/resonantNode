@@ -1,7 +1,7 @@
 #pragma once
 
 #include "SignalCandidate.h"
-#include "FrequencyEvidenceEvaluation.h"
+#include "../features/FrequencyMatchEvaluation.h"
 #include "../../io/AudioSignal.h"
 #include "../detectors/FrequencyMatchDetector.h"
 
@@ -19,14 +19,14 @@ public:
     void observeFrame(
         const AudioSignalFrame& frame,
         const detection::FrequencyEvidence& evidence,
-        const FrequencyEvidenceEvaluation::Values& frequencyTuning
+        const FrequencyMatchEvaluation::Values& frequencyTuning
     );
 
     bool popSignalCandidate(SignalCandidate& out);
     const FrequencyMatchDetector& detector() const;
 
 private:
-    void applyFrequencyTuning(const FrequencyEvidenceEvaluation::Values& frequencyTuning);
+    void applyFrequencyTuning(const FrequencyMatchEvaluation::Values& frequencyTuning);
 
     bool _hasPending = false;
     detection::FrequencyEvidence _peakEvidence = {};

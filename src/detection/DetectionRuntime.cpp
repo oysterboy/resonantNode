@@ -23,7 +23,7 @@ void DetectionRuntime::reset() {
     _lastInspectedSignal = {};
 }
 
-void DetectionRuntime::setFrequencyTuning(const FrequencyEvidenceEvaluation::Values& tuning) {
+void DetectionRuntime::setFrequencyTuning(const FrequencyMatchEvaluation::Values& tuning) {
     _frequencyTuning = tuning;
 }
 

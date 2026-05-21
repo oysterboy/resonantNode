@@ -7,7 +7,7 @@
 
 #include "../inspector/InspectorTypes.h"
 
-namespace FrequencyEvidenceEvaluation {
+namespace FrequencyMatchEvaluation {
 
 struct Values {
     float scoreMin = 50000.0f;
@@ -141,4 +141,4 @@ inline void buildFailReason(const detection::FrequencyEvidence& evidence,
     }
 }
 
-} // namespace FrequencyEvidenceEvaluation
+} // namespace FrequencyMatchEvaluation

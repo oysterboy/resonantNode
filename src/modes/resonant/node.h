@@ -5,7 +5,7 @@
 
 #include "../../detection/DetectionRuntime.h"
 #include "../../detection/DetectionProfile.h"
-#include "../../detection/signals/FrequencyEvidenceEvaluation.h"
+#include "../../detection/features/FrequencyMatchEvaluation.h"
 #include "../../behavior/BehaviorProfile.h"
 #include "../../hal/AudioSourceI2S.h"
 #include "../../hal/PiezoToneOutputBTL.h"
@@ -115,7 +115,7 @@ private:
     AudioSignal _audioSignal;
     FreqBandStream _freqBandStream;
     detection::DetectionRuntime _detection;
-    FrequencyEvidenceEvaluation::Values _frequencyEvidenceTuning = {};
+    FrequencyMatchEvaluation::Values _frequencyEvidenceTuning = {};
     ResonantBehavior _behavior;
 
     // Debug / logging support.

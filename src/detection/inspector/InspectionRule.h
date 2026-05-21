@@ -2,7 +2,7 @@
 
 #include "../signals/SignalCandidate.h"
 #include "SignalWindowEvaluator.h"
-#include "FrequencyEvidenceEvaluation.h"
+#include "../features/FrequencyMatchEvaluation.h"
 
 namespace detection {
 
@@ -28,7 +28,7 @@ inline InspectionRuleResult evaluateDurationRule(unsigned long durationMs, unsig
 
 inline InspectionRuleResult evaluateFrequencyRule(
     const SignalCandidate& candidate,
-    const FrequencyEvidenceEvaluation::Values& frequencyTuning
+    const FrequencyMatchEvaluation::Values& frequencyTuning
 ) {
     InspectionRuleResult out = {};
     if (!candidate.frequency.present) {
@@ -37,7 +37,7 @@ inline InspectionRuleResult evaluateFrequencyRule(
         return out;
     }
 
-    const auto eval = FrequencyEvidenceEvaluation::evaluate(candidate.frequency, frequencyTuning);
+    const auto eval = FrequencyMatchEvaluation::evaluate(candidate.frequency, frequencyTuning);
     if (!candidate.frequency.validWindow || !eval.validWindow) {
         out.passed = false;
         out.rejectReason = SignalRejectReason::InvalidTiming;

@@ -6,7 +6,7 @@
 
 #include "../../AudioDebugConfig.h"
 #include "../../detection/DetectorParameters.h"
-#include "../../detection/signals/FrequencyEvidenceEvaluation.h"
+#include "../../detection/features/FrequencyMatchEvaluation.h"
 #include "../../detection/inspector/FrequencyWindowProbe.h"
 #include "../../detection/features/FeatureExtractor.h"
 #include "../../detection/features/FeatureHistory.h"
@@ -79,10 +79,10 @@ bool analyzerLogEnabled(uint32_t flags, AnalyzerApp::AnalyzerLogFlags flag) {
 }
 
 void buildFrequencyFailReason(const detection::FrequencyEvidence& evidence,
-                              const FrequencyEvidenceEvaluation::Values& tuning,
+                              const FrequencyMatchEvaluation::Values& tuning,
                               char* out,
                               size_t outSize) {
-    FrequencyEvidenceEvaluation::buildFailReason(evidence, tuning, out, outSize);
+    FrequencyMatchEvaluation::buildFailReason(evidence, tuning, out, outSize);
 }
 
 const char* signalKindName(detection::SignalKind kind) {
@@ -366,11 +366,11 @@ const char* sequenceTrialDurationClass(long durMs) {
 void printH3FrequencyEvidenceFields(const detection::PatternResult& patternResult,
                                     const detection::FrequencyEvidence& frequencyEvidence,
                                     const detection::FrequencyEvidence* liveFrequencyEvidence,
-                                    const FrequencyEvidenceEvaluation::Values& tuning,
+                                    const FrequencyMatchEvaluation::Values& tuning,
                                     const char* candidateClass,
                                     long transientAgeOrDtMs,
                                     unsigned long referenceMs) {
-        const auto frequencyEval = FrequencyEvidenceEvaluation::evaluate(frequencyEvidence, tuning);
+        const auto frequencyEval = FrequencyMatchEvaluation::evaluate(frequencyEvidence, tuning);
         Serial.print(" candidate_class=");
         Serial.print(candidateClass);
     Serial.print(" pattern_valid=");
@@ -434,7 +434,7 @@ void printH3FrequencyEvidenceFields(const detection::PatternResult& patternResul
     Serial.print(" freq_valid_window=");
     Serial.print(patternResult.freq.validWindow ? 1 : 0);
     Serial.print(" freq_eval_reason=");
-    Serial.print(FrequencyEvidenceEvaluation::reasonName(frequencyEval.reason));
+    Serial.print(FrequencyMatchEvaluation::reasonName(frequencyEval.reason));
     if (liveFrequencyEvidence != nullptr) {
         Serial.print(" liveFreq[avail=");
         Serial.print(liveFrequencyEvidence->present ? 1 : 0);
@@ -927,11 +927,11 @@ void AnalyzerApp::handleUsbLine(const char* line) {
         char* savePtr = nullptr;
         char* token = strtok_r(buffer, " ", &savePtr);
         DetectorParameters::Values params = DetectorParameters::capture(_audioOnsetDetector);
-        FrequencyEvidenceEvaluation::Values freqTuning = _frequencyEvidenceTuning;
+        FrequencyMatchEvaluation::Values freqTuning = _frequencyEvidenceTuning;
 
         while ((token = strtok_r(nullptr, " ", &savePtr)) != nullptr) {
             DetectorParameters::parseToken(token, params);
-            FrequencyEvidenceEvaluation::parseToken(token, freqTuning);
+            FrequencyMatchEvaluation::parseToken(token, freqTuning);
         }
 
         DetectorParameters::apply(params, _audioOnsetDetector);
@@ -2566,7 +2566,7 @@ void AnalyzerApp::recordSequenceClassifierOutcome(const detection::PatternResult
         return;
     }
 
-    const auto freqEval = FrequencyEvidenceEvaluation::evaluate(patternResult.freq, _frequencyEvidenceTuning);
+    const auto freqEval = FrequencyMatchEvaluation::evaluate(patternResult.freq, _frequencyEvidenceTuning);
     const bool patternMatched = patternResult.patternMatched;
 
     if (unexpectedCandidate) {
@@ -2590,21 +2590,21 @@ void AnalyzerApp::recordSequenceClassifierOutcome(const detection::PatternResult
     }
 
     switch (freqEval.reason) {
-        case FrequencyEvidenceEvaluation::Reason::None:
+        case FrequencyMatchEvaluation::Reason::None:
             break;
-        case FrequencyEvidenceEvaluation::Reason::NoEvidence:
+        case FrequencyMatchEvaluation::Reason::NoEvidence:
             ++_sequenceTest.freqRejectNoEvidence;
             break;
-        case FrequencyEvidenceEvaluation::Reason::InvalidWindow:
+        case FrequencyMatchEvaluation::Reason::InvalidWindow:
             ++_sequenceTest.freqRejectInvalidWindow;
             break;
-        case FrequencyEvidenceEvaluation::Reason::ScoreTooLow:
+        case FrequencyMatchEvaluation::Reason::ScoreTooLow:
             ++_sequenceTest.freqRejectScore;
             break;
-        case FrequencyEvidenceEvaluation::Reason::ContrastTooLow:
+        case FrequencyMatchEvaluation::Reason::ContrastTooLow:
             ++_sequenceTest.freqRejectContrast;
             break;
-        case FrequencyEvidenceEvaluation::Reason::ScoreAndContrastTooLow:
+        case FrequencyMatchEvaluation::Reason::ScoreAndContrastTooLow:
             ++_sequenceTest.freqRejectBoth;
             break;
     }

@@ -53,11 +53,11 @@ void FrequencyMatchDetector::resetState() {
 void FrequencyMatchDetector::update(const detection::FrequencyEvidence& evidence,
                                     unsigned long now,
                                     uint64_t currentSample,
-                                    const FrequencyEvidenceEvaluation::Values& tuning,
+                                    const FrequencyMatchEvaluation::Values& tuning,
                                        unsigned long releaseDebounceMs,
                                        unsigned long cooldownAfterOnsetMs,
                                        unsigned long minTransientDurationMs) {
-    const auto liveFreqEval = FrequencyEvidenceEvaluation::evaluate(evidence, tuning);
+    const auto liveFreqEval = FrequencyMatchEvaluation::evaluate(evidence, tuning);
     thresholdScore = tuning.scoreMin;
     thresholdContrast = tuning.contrastMin;
     readyOk = evidence.windowAvailable;
@@ -188,7 +188,7 @@ live_freq_update_best:
         }
     }
 
-    const auto bestEval = FrequencyEvidenceEvaluation::evaluate(bestEvidence, tuning);
+    const auto bestEval = FrequencyMatchEvaluation::evaluate(bestEvidence, tuning);
     bestScoreOk = bestEval.scoreOk;
     bestContrastOk = bestEval.contrastOk;
     readyOk = bestEvidence.present ? bestEvidence.windowAvailable : evidence.windowAvailable;

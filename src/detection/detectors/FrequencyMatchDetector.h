@@ -2,7 +2,7 @@
 
 #include <stdint.h>
 
-#include "../signals/FrequencyEvidenceEvaluation.h"
+#include "../features/FrequencyMatchEvaluation.h"
 #include "../signals/SignalCandidate.h"
 
 /*
@@ -69,7 +69,7 @@ public:
     void update(const detection::FrequencyEvidence& evidence,
                 unsigned long now,
                 uint64_t currentSample,
-                const FrequencyEvidenceEvaluation::Values& tuning,
+                const FrequencyMatchEvaluation::Values& tuning,
                 unsigned long releaseDebounceMs,
                 unsigned long cooldownAfterOnsetMs,
                 unsigned long minTransientDurationMs);

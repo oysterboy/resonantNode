@@ -16,7 +16,7 @@
 #include "field/FieldState.h"
 #include "features/FeatureExtractor.h"
 #include "features/FeatureHistory.h"
-#include "signals/FrequencyEvidenceEvaluation.h"
+#include "features/FrequencyMatchEvaluation.h"
 
 namespace detection {
 
@@ -43,7 +43,7 @@ public:
 
     void reset();
 
-    void setFrequencyTuning(const FrequencyEvidenceEvaluation::Values& tuning);
+    void setFrequencyTuning(const FrequencyMatchEvaluation::Values& tuning);
     void setInspectionConfig(const InspectionConfig& config);
     void setAmpEnabled(bool enabled);
     void setRequireSupportForAcceptance(bool value);
@@ -76,7 +76,7 @@ private:
         unsigned long nowMs
     );
 
-    FrequencyEvidenceEvaluation::Values _frequencyTuning = {};
+    FrequencyMatchEvaluation::Values _frequencyTuning = {};
     InspectionConfig _inspectionConfig = defaultInspectionConfig();
     bool _ampEnabled = true;
     const char* _profileName = "unknown";

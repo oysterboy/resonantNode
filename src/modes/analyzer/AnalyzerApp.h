@@ -8,7 +8,7 @@
 #include "../../detection/DetectionProfile.h"
 #include "../../io/AudioSignal.h"
 #include "../../detection/DetectionRuntime.h"
-#include "../../detection/signals/FrequencyEvidenceEvaluation.h"
+#include "../../detection/features/FrequencyMatchEvaluation.h"
 #include "../../detection/signals/InspectedSignal.h"
 #include "../../detection/features/FreqBandStream.h"
 #include "../../detection/features/FeatureHistory.h"
@@ -463,7 +463,7 @@ private:
     detection::DetectionRuntime* _detection = nullptr;
     FreqBandStream _freqBandStream;
     detection::FeatureHistory* _sequenceFeatureHistory = nullptr;
-    FrequencyEvidenceEvaluation::Values _frequencyEvidenceTuning = {};
+    FrequencyMatchEvaluation::Values _frequencyEvidenceTuning = {};
     PendingSequenceStart _pendingSequenceStart = {};
 
     // Console and emitter control.

@@ -20,14 +20,14 @@ void FrequencySignalEmitter::reset() {
     _detector.resetState();
 }
 
-void FrequencySignalEmitter::applyFrequencyTuning(const FrequencyEvidenceEvaluation::Values& frequencyTuning) {
+void FrequencySignalEmitter::applyFrequencyTuning(const FrequencyMatchEvaluation::Values& frequencyTuning) {
     (void)frequencyTuning;
 }
 
 void FrequencySignalEmitter::observeFrame(
     const AudioSignalFrame& frame,
     const detection::FrequencyEvidence& evidence,
-    const FrequencyEvidenceEvaluation::Values& frequencyTuning
+    const FrequencyMatchEvaluation::Values& frequencyTuning
 ) {
     if (!frame.valid) {
         return;

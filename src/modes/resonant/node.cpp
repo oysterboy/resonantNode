@@ -5,7 +5,7 @@
 #include <esp_system.h>
 
 #include "../../detection/DetectorParameters.h"
-#include "../../detection/signals/FrequencyEvidenceEvaluation.h"
+#include "../../detection/features/FrequencyMatchEvaluation.h"
 #include "../../detection/inspector/FrequencyWindowProbe.h"
 #include "../../detection/patterns/PatternNames.h"
 
@@ -156,11 +156,11 @@ const char* h3RbCandidateClassName(const detection::PatternResult& patternResult
 
 void printH3FrequencyEvidenceFields(const detection::PatternResult& patternResult,
                                     const detection::FrequencyEvidence& frequencyEvidence,
-                                    const FrequencyEvidenceEvaluation::Values& tuning,
+                                    const FrequencyMatchEvaluation::Values& tuning,
                                     const char* candidateClass,
                                     long transientAgeOrDtMs,
                                     unsigned long referenceMs) {
-    const auto frequencyEval = FrequencyEvidenceEvaluation::evaluate(frequencyEvidence, tuning);
+    const auto frequencyEval = FrequencyMatchEvaluation::evaluate(frequencyEvidence, tuning);
     Serial.print(" candidate_class=");
     Serial.print(candidateClass);
     Serial.print(" pattern_valid=");
@@ -222,7 +222,7 @@ void printH3FrequencyEvidenceFields(const detection::PatternResult& patternResul
     Serial.print(" freq_valid_window=");
     Serial.print(frequencyEvidence.validWindow ? 1 : 0);
     Serial.print(" freq_eval_reason=");
-    Serial.print(FrequencyEvidenceEvaluation::reasonName(frequencyEval.reason));
+    Serial.print(FrequencyMatchEvaluation::reasonName(frequencyEval.reason));
 }
 }
 
@@ -634,11 +634,11 @@ void Node::handleSerialLine(const char* line) {
         }
 
         DetectorParameters::Values params = DetectorParameters::capture(_audioOnsetDetector);
-        FrequencyEvidenceEvaluation::Values freqTuning = _frequencyEvidenceTuning;
+        FrequencyMatchEvaluation::Values freqTuning = _frequencyEvidenceTuning;
 
         while ((token = strtok_r(nullptr, " ", &savePtr)) != nullptr) {
             DetectorParameters::parseToken(token, params);
-            FrequencyEvidenceEvaluation::parseToken(token, freqTuning);
+            FrequencyMatchEvaluation::parseToken(token, freqTuning);
         }
 
         DetectorParameters::apply(params, _audioOnsetDetector);
@@ -1035,7 +1035,7 @@ void Node::logCandidate(const DetectorCandidate& candidate, const detection::Pat
     Serial.print(patternResult.freq.present ? 1 : 0);
     Serial.print(" freq_matched=");
     Serial.print(patternResult.freq.matched ? 1 : 0);
-    const auto freqEval = FrequencyEvidenceEvaluation::evaluate(patternResult.freq, _frequencyEvidenceTuning);
+    const auto freqEval = FrequencyMatchEvaluation::evaluate(patternResult.freq, _frequencyEvidenceTuning);
     Serial.print(" freq_score_ok=");
     Serial.print(freqEval.scoreOk ? 1 : 0);
     Serial.print(" freq_contrast_ok=");
@@ -1066,7 +1066,7 @@ void Node::logCandidate(const DetectorCandidate& candidate, const detection::Pat
     Serial.print(" freq_valid_window=");
     Serial.print(patternResult.freq.validWindow ? 1 : 0);
     Serial.print(" freq_eval_reason=");
-    Serial.print(FrequencyEvidenceEvaluation::reasonName(freqEval.reason));
+    Serial.print(FrequencyMatchEvaluation::reasonName(freqEval.reason));
     if (liveFrequencyEvidence != nullptr) {
         Serial.print(" liveFreq[avail=");
         Serial.print(liveFrequencyEvidence->present ? 1 : 0);

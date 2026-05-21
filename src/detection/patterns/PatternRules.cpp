@@ -119,7 +119,6 @@ PatternResult PatternRules::evaluateFrequencyPattern(
     result.supportMatched = !_requireSupportForAcceptance || candidate.ampSupport >= AmpSupportLevel::Medium;
     if (!result.supportMatched) {
         result.kind = PatternResultKind::Rejected;
-        result.type = PatternType::FrequencyWeak;
         result.rejectReason = supportRejectReason(candidate);
         result.reasonCode = PatternReasonCode::UnsupportedPattern;
     }

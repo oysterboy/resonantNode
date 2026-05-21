@@ -3214,6 +3214,7 @@ AnalyzerReport AnalyzerApp::buildSequenceAnalyzerReport(unsigned long trialNumbe
         pattern.dtMs = report.classification.dtMs;
         pattern.ampSupport = actualPipelineAvailable && runtimePatternResult != nullptr ? ampSupportName(runtimePatternResult->ampSupport) : "unknown";
         pattern.reason = actualPipelineAvailable && runtimePatternResult != nullptr ? detection::patternReasonName(runtimePatternResult->reasonCode) : analyzerReasonName(report.classification.reason);
+        pattern.rejectReason = actualPipelineAvailable && runtimePatternResult != nullptr ? detection::patternRejectReasonName(runtimePatternResult->rejectReason) : analyzerReasonName(report.classification.reason);
         pattern.involvedSignals = actualPipelineAvailable && runtimePatternResult != nullptr ? runtimePatternResult->signalCount : 0U;
         report.primaryPattern = pattern;
     }
@@ -3278,7 +3279,7 @@ AnalyzerReport AnalyzerApp::buildSequenceAnalyzerReport(unsigned long trialNumbe
     report.profileDetail.ampWindow.available = ampWindowEvidence.available;
     report.profileDetail.ampWindow.observedOnly = ampWindowEvidence.observedOnly;
     report.profileDetail.ampWindow.note = ampWindowEvidence.available
-        ? "inspector_seen"
+        ? "amp_window_seen"
         : (actualPipelineAvailable ? "inspector_no_amp_window" : "missing_pipeline_result");
     report.profileDetail.ampWindow.windowStartMs = ampWindowEvidence.windowStartMs;
     report.profileDetail.ampWindow.windowEndMs = ampWindowEvidence.windowEndMs;
@@ -3331,12 +3332,16 @@ void AnalyzerApp::printSequenceTrialResult(const AnalyzerReport& report) const {
     }
     Serial.print(" pattern=");
     Serial.print(report.primaryPattern.type != nullptr ? report.primaryPattern.type : "unknown");
+    Serial.print(" pattern_result=");
+    Serial.print(report.primaryPattern.accepted ? "accepted" : "rejected");
     Serial.print(" profile=");
     Serial.print(report.context.profile != nullptr ? report.context.profile : "unknown");
     Serial.print(" confidence=");
     Serial.print(report.primaryPattern.confidence, 2);
-    Serial.print(" amp_support=");
+    Serial.print(" support=");
     Serial.print(report.primaryPattern.ampSupport != nullptr ? report.primaryPattern.ampSupport : "unknown");
+    Serial.print(" reject_reason=");
+    Serial.print(report.primaryPattern.rejectReason != nullptr ? report.primaryPattern.rejectReason : "none");
     Serial.print(" field=");
     Serial.print(report.field.state != nullptr ? report.field.state : "unknown");
     Serial.print(" reason=");
@@ -3407,16 +3412,16 @@ void AnalyzerApp::printSequenceExplain(const AnalyzerReport& report) const {
     Serial.print("ms");
     Serial.print(" available=");
     Serial.print(report.profileDetail.ampWindow.available ? 1 : 0);
-    Serial.print(" amp_support=");
-    Serial.print(report.profileDetail.ampWindow.supportClass != nullptr ? report.profileDetail.ampWindow.supportClass : "unknown");
-    Serial.print(" peak=");
-    Serial.print(report.profileDetail.ampWindow.peak, 1);
-    Serial.print(" floor=");
-    Serial.print(report.profileDetail.ampWindow.baseline, 1);
-    Serial.print(" lift=");
-    Serial.print(report.profileDetail.ampWindow.lift, 1);
-    Serial.print(" note=");
-    Serial.println(report.profileDetail.ampWindow.note != nullptr ? report.profileDetail.ampWindow.note : "none");
+        Serial.print(" amp_support=");
+        Serial.print(report.profileDetail.ampWindow.supportClass != nullptr ? report.profileDetail.ampWindow.supportClass : "unknown");
+        Serial.print(" peak=");
+        Serial.print(report.profileDetail.ampWindow.peak, 1);
+        Serial.print(" support_win=");
+        Serial.print(static_cast<long>(report.profileDetail.ampWindow.windowStartMs));
+        Serial.print("..");
+        Serial.print(static_cast<long>(report.profileDetail.ampWindow.windowEndMs));
+        Serial.print("ms available=");
+        Serial.println(report.profileDetail.ampWindow.available ? 1 : 0);
 
     Serial.print("SEQ_EXPLAIN_FIELD state=");
     Serial.print(report.field.state != nullptr ? report.field.state : "unknown");
@@ -3493,16 +3498,20 @@ void AnalyzerApp::printSequenceExplain(const AnalyzerReport& report) const {
 
         Serial.print("SEQ_EXPLAIN_PATTERN type=");
         Serial.print(report.primaryPattern.type != nullptr ? report.primaryPattern.type : "none");
+        Serial.print(" pattern_result=");
+        Serial.print(report.primaryPattern.accepted ? "accepted" : "rejected");
         Serial.print(" accepted=");
         Serial.print(report.primaryPattern.accepted ? 1 : 0);
         Serial.print(" dt=");
         printMs(report.primaryPattern.dtMs);
         Serial.print(" confidence=");
         Serial.print(report.primaryPattern.confidence, 2);
-        Serial.print(" amp_support=");
+        Serial.print(" support=");
         Serial.print(report.primaryPattern.ampSupport != nullptr ? report.primaryPattern.ampSupport : "unknown");
         Serial.print(" reason=");
         Serial.print(report.primaryPattern.reason != nullptr ? report.primaryPattern.reason : "none");
+        Serial.print(" reject_reason=");
+        Serial.print(report.primaryPattern.rejectReason != nullptr ? report.primaryPattern.rejectReason : "none");
         Serial.print(" signals=");
         Serial.print(report.primaryPattern.involvedSignals);
         Serial.println();
@@ -3521,7 +3530,7 @@ void AnalyzerApp::printSequenceExplain(const AnalyzerReport& report) const {
         Serial.print(report.profileDetail.ampBase, 1);
         Serial.print(" amp_lift=");
         Serial.print(report.profileDetail.ampLift, 1);
-        Serial.print(" amp_support=");
+        Serial.print(" support=");
         Serial.print(report.profileDetail.ampSupport != nullptr ? report.profileDetail.ampSupport : "unknown");
         Serial.println();
 
@@ -3580,23 +3589,23 @@ void AnalyzerApp::printSequenceAmpWindow(const AnalyzerReport& report) const {
     Serial.print(report.context.trial);
     Serial.print(" dt=");
     printMs(report.primaryPattern.dtMs);
-    Serial.print(" win=");
-    Serial.print(static_cast<long>(report.profileDetail.ampWindow.windowStartMs));
-    Serial.print("..");
-    Serial.print(static_cast<long>(report.profileDetail.ampWindow.windowEndMs));
-    Serial.print("ms");
-    Serial.print(" available=");
-    Serial.print(report.profileDetail.ampWindow.available ? 1 : 0);
+    Serial.print(" pattern_result=");
+    Serial.print(report.primaryPattern.accepted ? "accepted" : "rejected");
+    Serial.print(" pattern_type=");
+    Serial.print(report.primaryPattern.type != nullptr ? report.primaryPattern.type : "none");
+    Serial.print(" reject_reason=");
+    Serial.print(report.primaryPattern.rejectReason != nullptr ? report.primaryPattern.rejectReason : "none");
     Serial.print(" amp_support=");
     Serial.print(report.profileDetail.ampWindow.supportClass != nullptr ? report.profileDetail.ampWindow.supportClass : "unknown");
     Serial.print(" peak=");
     Serial.print(report.profileDetail.ampWindow.peak, 1);
-    Serial.print(" floor=");
-    Serial.print(report.profileDetail.ampWindow.baseline, 1);
-    Serial.print(" lift=");
-    Serial.print(report.profileDetail.ampWindow.lift, 1);
-    Serial.print(" note=");
-    Serial.println(report.profileDetail.ampWindow.note != nullptr ? report.profileDetail.ampWindow.note : "none");
+    Serial.print(" support_win=");
+    Serial.print(static_cast<long>(report.profileDetail.ampWindow.windowStartMs));
+    Serial.print("..");
+    Serial.print(static_cast<long>(report.profileDetail.ampWindow.windowEndMs));
+    Serial.print("ms available=");
+    Serial.print(report.profileDetail.ampWindow.available ? 1 : 0);
+    Serial.println();
 }
 
 void AnalyzerApp::printSequenceTrialResult(unsigned long trialNumber, const char* result, long dtMs, long durMs, float strength, bool audioOverflow, unsigned long duplicateCount, const SequenceTest::TrialDiagnostics& diagnostics) const {

@@ -1,5 +1,9 @@
 # Lab Notes
 
+FrequencyEvidenceEvaluation
+FrequencyMtchDEtector
+need both?
+
 ## 2026-05-18 18:25:30
 
 Detection Profile 'Frequency + Amp Inspection' works with these values:

@@ -80,6 +80,8 @@ inline DetectionProfile makeFreqAmpProfile() {
 
     // Inspector configuration.
     profile.inspectionConfig = defaultInspectionConfig(); // shared inspector defaults
+    profile.inspectionConfig.ampWindowPreMs = 10;
+    profile.inspectionConfig.ampWindowPostMs = 80;
 
     // Field-state windowing.
     profile.fieldStateConfig.signalWindowMs = 3500;

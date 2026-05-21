@@ -128,6 +128,7 @@ struct AnalyzerPatternObservation {
 
     const char* ampSupport = "unknown";
     const char* reason = "none";
+    const char* rejectReason = "none";
 
     unsigned int involvedSignals = 0;
 };

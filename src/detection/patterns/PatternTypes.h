@@ -6,7 +6,6 @@ namespace detection {
 enum class PatternType {
     None,
     ValidPattern,
-    FrequencyWeak,
     DuplicateAfterPrimary,
     UnexpectedNoise,
     Invalid,

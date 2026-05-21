@@ -46,8 +46,6 @@ inline const char* patternTypeName(PatternType type) {
             return "none";
         case PatternType::ValidPattern:
             return "valid_pattern";
-        case PatternType::FrequencyWeak:
-            return "frequency_weak";
         case PatternType::DuplicateAfterPrimary:
             return "duplicate_after_primary";
         case PatternType::UnexpectedNoise:

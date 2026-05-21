@@ -720,7 +720,7 @@ onsetStrength
 duration
 release
 releaseReason
-candidateValidity
+candidateAccepted
 ```
 
 Those belong to concrete feature detectors or candidate builders.

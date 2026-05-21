@@ -6,8 +6,6 @@ Detection Profile 'Frequency + Amp Inspection' works with these values:
 
 ```txt
 profile:
-  detectionOnly = false
-  requireTonalForBehavior = true
   ampEnabled = true
   useLegacyPath = false
   frequencyOnly = false
@@ -60,7 +58,7 @@ minStrength = 40.0
 
 freqScore = unknown / not printed as threshold
 freqContrast = unknown / not printed as threshold
-requireTonal = unknown / not active in summary
+requireTonal = hardcoded by the active RB profile
 behaviorSuppressSelfChirp = unknown / not part of SEQ log
 behaviorWaitAfterHeard = unknown / not part of SEQ log
 behaviorRefractory = unknown / not part of SEQ log

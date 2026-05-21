@@ -139,10 +139,10 @@ void NodeDebug::observeTransient(unsigned long now, bool transientDetected, floa
     updatePulse(now, transientDetected, transientStrength, _debugTransientVisibleUntilMs, _debugTransientStrength);
 }
 
-void NodeDebug::observePatternPulse(unsigned long now, bool fullPulse, bool tonalValid) {
+void NodeDebug::observePatternPulse(unsigned long now, bool fullPulse, bool patternMatched) {
     _ledPatternPulseStartMs = now;
     _ledPatternPulseCount = fullPulse ? kLedTransientPulseCount : 1;
-    _ledPatternPulseBrightness = tonalValid ? kLedBrightnessFull : kLedBrightnessHalf;
+    _ledPatternPulseBrightness = patternMatched ? kLedBrightnessFull : kLedBrightnessHalf;
 }
 
 void NodeDebug::observeBehaviorGate(unsigned long now,

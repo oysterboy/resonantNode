@@ -15,7 +15,7 @@
 #include "../../detection/features/FreqBandStream.h"
 #include "../../io/ChirpOutput.h"
 #include "../../behavior/ResonantBehavior.h"
-#include "../../detection/patterns/PatternPayload.h"
+#include "../../detection/patterns/PatternResult.h"
 #include "node_debug.h"
 
 /*
@@ -132,7 +132,6 @@ private:
     unsigned long _rbDurationSumMs = 0;
     unsigned long _rbLastLoggedOnsetRejectCount = 0;
     unsigned long _rbLastLoggedTransientRejectCount = 0;
-    bool _rbDetectOnly = false;
     RbLogMode _rbLogMode = RbLogMode::Minimal;
     detection::DetectionProfileKind _profileKind = detection::DetectionProfileKind::FreqAmp;
     bool _wasSelfChirpSuppressed = false;

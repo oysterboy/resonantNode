@@ -14,7 +14,7 @@ PatternResultKind resultKindFromCandidate(const PatternCandidate& candidate) {
         return PatternResultKind::ValidChirp;
     }
 
-    return PatternResultKind::TonalPulse;
+        return PatternResultKind::Pattern;
 }
 
 bool hasTransientEvidence(const PatternCandidate& candidate) {
@@ -27,6 +27,17 @@ bool hasTransientEvidence(const PatternCandidate& candidate) {
 
 bool hasFrequencyEvidence(const PatternCandidate& candidate) {
     return candidate.frequency.present || candidate.frequencyFull.present;
+}
+
+bool hasRequiredSupport(const PatternCandidate& candidate) {
+    return candidate.ampSupport >= AmpSupportClass::Medium;
+}
+
+PatternRejectReason supportRejectReason(const PatternCandidate& candidate) {
+    if (candidate.ampSupport == AmpSupportClass::Unknown) {
+        return PatternRejectReason::MissingSupport;
+    }
+    return PatternRejectReason::SupportTooLow;
 }
 
 PatternResult makeInvalidResult(const PatternCandidate& candidate,
@@ -62,9 +73,9 @@ PatternResult makeInvalidResult(const PatternCandidate& candidate,
     result.ampWindow = candidate.ampWindow;
     result.duplicateRisk = false;
     result.duplicateRiskScore = 0.0f;
-    result.candidateValid = false;
-    result.tonalValid = false;
-    result.behaviorEligible = false;
+    result.candidateAccepted = false;
+    result.patternMatched = false;
+    result.supportMatched = false;
     result.valid = false;
     return result;
 }
@@ -114,12 +125,12 @@ PatternResult PatternRules::evaluateFrequencyPattern(
     result.lastPulseMs = candidate.lastPulseMs;
     result.minGapMs = candidate.minGapMs;
     result.maxGapMs = candidate.maxGapMs;
-    result.candidateValid = true;
-    result.tonalValid = true;
-    result.behaviorEligible = true;
+    result.candidateAccepted = true;
+    result.patternMatched = true;
+    result.supportMatched = true;
     result.valid = true;
     result.source = PatternSource::FrequencyPrimary;
-    result.type = PatternType::ValidTonalTransient;
+    result.type = PatternType::ValidPattern;
     result.kind = resultKindFromCandidate(candidate);
     result.reasonCode = PatternReasonCode::FromAcceptedTransient;
     result.rejectReason = PatternRejectReason::None;
@@ -133,18 +144,21 @@ PatternResult PatternRules::evaluateFrequencyPattern(
 
     // Compatibility classification only. Signal acceptance already happened in SignalInspector.
     FrequencyEvidenceEvaluation::classifyPatternResult(result, frequencyTuning);
-    result.confidence = result.tonalValid ? 1.0f : 0.0f;
-    result.valid = true;
+    result.supportMatched = hasRequiredSupport(candidate);
+    if (!result.supportMatched) {
+        result.kind = PatternResultKind::Rejected;
+        result.type = PatternType::FrequencyWeak;
+        result.rejectReason = supportRejectReason(candidate);
+        result.reasonCode = PatternReasonCode::UnsupportedPattern;
+    }
+    result.confidence = result.patternMatched ? 1.0f : 0.0f;
+    result.valid = result.patternMatched && result.supportMatched;
     if (result.kind == PatternResultKind::TooDense) {
         result.type = PatternType::Ambiguous;
-        result.behaviorEligible = false;
-        result.tonalValid = false;
         result.valid = false;
         result.rejectReason = PatternRejectReason::UnexpectedTiming;
     } else if (result.kind == PatternResultKind::InvalidChirp) {
         result.type = PatternType::Invalid;
-        result.behaviorEligible = false;
-        result.tonalValid = false;
         result.valid = false;
         result.rejectReason = PatternRejectReason::UnexpectedTiming;
     }
@@ -173,10 +187,10 @@ PatternResult PatternRules::evaluateAmpPattern(
     result.lastPulseMs = candidate.lastPulseMs;
     result.minGapMs = candidate.minGapMs;
     result.maxGapMs = candidate.maxGapMs;
-    result.candidateValid = true;
-    result.tonalValid = false;
-    result.behaviorEligible = false;
-    result.valid = true;
+    result.candidateAccepted = true;
+    result.patternMatched = false;
+    result.supportMatched = false;
+    result.valid = false;
     result.source = PatternSource::AmpFallback;
     result.type = PatternType::TransientOnly;
     result.kind = resultKindFromCandidate(candidate);
@@ -194,18 +208,16 @@ PatternResult PatternRules::evaluateAmpPattern(
     if (!candidate.frequency.present) {
         result.rejectReason = PatternRejectReason::TransientOnly;
     }
-    result.tonalValid = false;
-    result.behaviorEligible = false;
-    result.valid = true;
+    result.patternMatched = false;
+    result.supportMatched = false;
+    result.valid = false;
     result.confidence = result.signalConfidence;
     if (result.kind == PatternResultKind::TooDense) {
         result.type = PatternType::Ambiguous;
-        result.behaviorEligible = false;
         result.valid = false;
         result.rejectReason = PatternRejectReason::UnexpectedTiming;
     } else if (result.kind == PatternResultKind::InvalidChirp) {
         result.type = PatternType::Invalid;
-        result.behaviorEligible = false;
         result.valid = false;
         result.rejectReason = PatternRejectReason::UnexpectedTiming;
     }

@@ -36,9 +36,9 @@ struct PatternResult {
     PatternCandidate candidate = {};
     FrequencyEvidence freq = {};
     FrequencyEvidence freqFull = {};
-    bool candidateValid = false;
-    bool tonalValid = false;
-    bool behaviorEligible = false;
+    bool candidateAccepted = false;
+    bool patternMatched = false;
+    bool supportMatched = false;
     bool valid = false;
 };
 

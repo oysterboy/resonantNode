@@ -381,12 +381,14 @@ void printH3FrequencyEvidenceFields(const detection::PatternResult& patternResul
     Serial.print(detection::patternTypeName(patternResult.type));
     Serial.print(" pattern_reason=");
     Serial.print(detection::patternReasonName(patternResult.reasonCode));
-    Serial.print(" candidate_valid=");
-    Serial.print(patternResult.candidateValid ? 1 : 0);
-    Serial.print(" tonal_valid=");
-    Serial.print(patternResult.tonalValid ? 1 : 0);
+    Serial.print(" candidate_accepted=");
+    Serial.print(patternResult.candidateAccepted ? 1 : 0);
+    Serial.print(" pattern_matched=");
+    Serial.print(patternResult.patternMatched ? 1 : 0);
+    Serial.print(" support_matched=");
+    Serial.print(patternResult.supportMatched ? 1 : 0);
     Serial.print(" behavior_eligible=");
-    Serial.print(patternResult.behaviorEligible ? 1 : 0);
+    Serial.print(patternResult.patternMatched && patternResult.supportMatched ? 1 : 0);
     Serial.print(" reject_reason=");
     Serial.print(detection::patternRejectReasonName(patternResult.rejectReason));
     Serial.print(" transient_duration_ms=");
@@ -1708,12 +1710,12 @@ void AnalyzerApp::startSequenceTest(unsigned long totalTrials, unsigned long per
     _sequenceTest.emptySourceLoops = 0;
     _sequenceTest.totalHitStrengthScaled = 0;
     _sequenceTest.totalHitDurationMs = 0;
-    _sequenceTest.tonalExpected = 0;
-    _sequenceTest.transientOnlyExpected = 0;
-    _sequenceTest.tonalDuplicates = 0;
-    _sequenceTest.nonTonalDuplicates = 0;
-    _sequenceTest.tonalUnexpected = 0;
-    _sequenceTest.nonTonalUnexpected = 0;
+    _sequenceTest.patternMatchedExpected = 0;
+    _sequenceTest.patternUnmatchedExpected = 0;
+    _sequenceTest.patternMatchedDuplicates = 0;
+    _sequenceTest.patternUnmatchedDuplicates = 0;
+    _sequenceTest.patternMatchedUnexpected = 0;
+    _sequenceTest.patternUnmatchedUnexpected = 0;
     _sequenceTest.freqRejectScore = 0;
     _sequenceTest.freqRejectContrast = 0;
     _sequenceTest.freqRejectBoth = 0;
@@ -2561,29 +2563,30 @@ const char* AnalyzerApp::sequenceTrialClassificationName(const char* result, lon
 }
 
 void AnalyzerApp::recordSequenceClassifierOutcome(const detection::PatternResult& patternResult, bool duplicateCandidate, bool unexpectedCandidate) {
-    if (_valMode || !patternResult.candidateValid) {
+    if (_valMode || !patternResult.candidateAccepted) {
         return;
     }
 
     const auto freqEval = FrequencyEvidenceEvaluation::evaluate(patternResult.freq, _frequencyEvidenceTuning);
+    const bool patternMatched = patternResult.patternMatched;
 
     if (unexpectedCandidate) {
-        if (patternResult.tonalValid) {
-            ++_sequenceTest.tonalUnexpected;
+        if (patternMatched) {
+            ++_sequenceTest.patternMatchedUnexpected;
         } else {
-            ++_sequenceTest.nonTonalUnexpected;
+            ++_sequenceTest.patternUnmatchedUnexpected;
         }
     } else if (duplicateCandidate) {
-        if (patternResult.tonalValid) {
-            ++_sequenceTest.tonalDuplicates;
+        if (patternMatched) {
+            ++_sequenceTest.patternMatchedDuplicates;
         } else {
-            ++_sequenceTest.nonTonalDuplicates;
+            ++_sequenceTest.patternUnmatchedDuplicates;
         }
     } else {
-        if (patternResult.tonalValid) {
-            ++_sequenceTest.tonalExpected;
+        if (patternMatched) {
+            ++_sequenceTest.patternMatchedExpected;
         } else {
-            ++_sequenceTest.transientOnlyExpected;
+            ++_sequenceTest.patternUnmatchedExpected;
         }
     }
 
@@ -4065,18 +4068,18 @@ void AnalyzerApp::printSequenceSummary() const {
     }
 
     if (analyzerLogEnabled(_sequenceTest.logFlags, AnalyzerApp::ANALYZER_LOG_CUSTOM)) {
-        Serial.print("SEQ_PROFILE_SUMMARY tonal_expected=");
-        Serial.print(_sequenceTest.tonalExpected);
-        Serial.print(" transient_only_expected=");
-        Serial.print(_sequenceTest.transientOnlyExpected);
-        Serial.print(" tonal_duplicates=");
-        Serial.print(_sequenceTest.tonalDuplicates);
-        Serial.print(" non_tonal_duplicates=");
-        Serial.print(_sequenceTest.nonTonalDuplicates);
-        Serial.print(" tonal_unexpected=");
-        Serial.print(_sequenceTest.tonalUnexpected);
-        Serial.print(" non_tonal_unexpected=");
-        Serial.print(_sequenceTest.nonTonalUnexpected);
+        Serial.print("SEQ_PROFILE_SUMMARY pattern_matched_expected=");
+        Serial.print(_sequenceTest.patternMatchedExpected);
+        Serial.print(" pattern_unmatched_expected=");
+        Serial.print(_sequenceTest.patternUnmatchedExpected);
+        Serial.print(" pattern_matched_duplicates=");
+        Serial.print(_sequenceTest.patternMatchedDuplicates);
+        Serial.print(" pattern_unmatched_duplicates=");
+        Serial.print(_sequenceTest.patternUnmatchedDuplicates);
+        Serial.print(" pattern_matched_unexpected=");
+        Serial.print(_sequenceTest.patternMatchedUnexpected);
+        Serial.print(" pattern_unmatched_unexpected=");
+        Serial.print(_sequenceTest.patternUnmatchedUnexpected);
         Serial.print(" freq_reject_score=");
         Serial.print(_sequenceTest.freqRejectScore);
         Serial.print(" freq_reject_contrast=");

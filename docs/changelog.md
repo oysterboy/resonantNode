@@ -151,13 +151,13 @@
 ### Changed
 - The shared frequency helper was renamed to `FrequencyEvidenceEvaluation` to match its classifier role.
 - The helper now owns the shared frequency evaluation, reject-reason mapping, and classifier staging logic.
-- `PatternResult` now carries classifier-facing fields such as `candidateValid`, `tonalValid`, `behaviorEligible`, and `rejectReason`.
+- `PatternResult` now carries classifier-facing fields such as `candidateAccepted`, `conditionMatched`, `behaviorEligible`, and `rejectReason`.
 - Analyzer and RB logs now print the classifier split alongside the existing frequency diagnostics.
 - Candidate and SEQ headline frequency logs now use the classified `patternResult.freq` snapshot instead of the raw detector-only fields, so `freq_matched`, `freq_conf`, and related values line up with the classifier result.
 - Analyzer SEQ now reports classifier-level counters for tonal primaries, tonal/non-tonal duplicates, tonal/non-tonal unexpected hits, and frequency reject buckets.
 - ResonantBehavior now accepts `requireTonal=0/1`, and RB logs `RB_BLOCK` when a non-tonal candidate is gated out.
 - The SEQ frequency-class summary now reports `valid_tonal_chirp` versus `transient_only` and shows the frequency evaluation reason.
-- RB behavior handling now keys off `candidateValid` so the new classification names can be logged without changing the current reaction behavior.
+- RB behavior handling now keys off `candidateAccepted` so the new classification names can be logged without changing the current reaction behavior.
 - The active pass note now records step 5 as complete, with the headline logging semantics aligned to the classifier snapshot.
 
 ### Verification

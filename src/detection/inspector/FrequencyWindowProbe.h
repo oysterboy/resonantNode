@@ -1,7 +1,7 @@
 #pragma once
 
 #include "../../io/AudioSignal.h"
-#include "../patterns/PatternPayload.h"
+#include "../inspector/InspectorTypes.h"
 
 namespace detection {
 

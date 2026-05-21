@@ -38,16 +38,14 @@ inline const char* patternResultKindName(PatternResultKind kind) {
     switch (kind) {
         case PatternResultKind::Unknown:
             return "unknown";
-        case PatternResultKind::TonalPulse:
-            return "tonal_pulse";
+        case PatternResultKind::Pattern:
+            return "pattern";
         case PatternResultKind::ValidChirp:
             return "valid_chirp";
         case PatternResultKind::InvalidChirp:
             return "invalid_chirp";
         case PatternResultKind::TooDense:
             return "too_dense";
-        case PatternResultKind::Residual:
-            return "residual";
         case PatternResultKind::Rejected:
             return "rejected";
     }
@@ -59,10 +57,8 @@ inline const char* patternTypeName(PatternType type) {
     switch (type) {
         case PatternType::None:
             return "none";
-        case PatternType::ValidTransient:
-            return "valid_transient";
-        case PatternType::ValidTonalTransient:
-            return "valid_tonal_transient";
+        case PatternType::ValidPattern:
+            return "valid_pattern";
         case PatternType::TransientOnly:
             return "transient_only";
         case PatternType::FrequencyWeak:
@@ -113,6 +109,10 @@ inline const char* patternRejectReasonName(PatternRejectReason reason) {
             return "contrast_too_low";
         case PatternRejectReason::FrequencyScoreAndContrastTooLow:
             return "score_and_contrast_too_low";
+        case PatternRejectReason::MissingSupport:
+            return "missing_support";
+        case PatternRejectReason::SupportTooLow:
+            return "support_too_low";
         case PatternRejectReason::TransientOnly:
             return "transient_only";
         case PatternRejectReason::DuplicateAfterPrimary:

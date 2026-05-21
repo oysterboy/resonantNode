@@ -12,7 +12,7 @@
 #include "../../detection/signals/InspectedSignal.h"
 #include "../../detection/features/FreqBandStream.h"
 #include "../../detection/features/FeatureHistory.h"
-#include "../../detection/patterns/PatternPayload.h"
+#include "../../detection/patterns/PatternResult.h"
 #include "../../detection/signals/SignalCandidate.h"
 #include "../../hal/AudioSource.h"
 #include "AnalyzerReporting.h"
@@ -321,12 +321,12 @@ private:
         unsigned long emptySourceLoops = 0;
         unsigned long totalHitStrengthScaled = 0;
         unsigned long totalHitDurationMs = 0;
-        unsigned long tonalExpected = 0;
-        unsigned long transientOnlyExpected = 0;
-        unsigned long tonalDuplicates = 0;
-        unsigned long nonTonalDuplicates = 0;
-        unsigned long tonalUnexpected = 0;
-        unsigned long nonTonalUnexpected = 0;
+        unsigned long patternMatchedExpected = 0;
+        unsigned long patternUnmatchedExpected = 0;
+        unsigned long patternMatchedDuplicates = 0;
+        unsigned long patternUnmatchedDuplicates = 0;
+        unsigned long patternMatchedUnexpected = 0;
+        unsigned long patternUnmatchedUnexpected = 0;
         unsigned long freqRejectScore = 0;
         unsigned long freqRejectContrast = 0;
         unsigned long freqRejectBoth = 0;

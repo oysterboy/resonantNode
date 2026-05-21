@@ -29,7 +29,7 @@ public:
 
     void observeOnset(unsigned long now, bool onsetDetected, float onsetStrength);
     void observeTransient(unsigned long now, bool transientDetected, float transientStrength, bool suppressed);
-    void observePatternPulse(unsigned long now, bool fullPulse, bool tonalValid);
+    void observePatternPulse(unsigned long now, bool fullPulse, bool patternMatched);
     void observeBehaviorGate(unsigned long now,
                              const ResonantBehavior& behavior,
                              bool transientDetected,

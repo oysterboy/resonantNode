@@ -3,7 +3,6 @@
 #include <stdint.h>
 
 #include "../inspector/FrequencyEvidenceEvaluation.h"
-#include "../patterns/PatternPayload.h"
 #include "../signals/SignalCandidate.h"
 
 /*

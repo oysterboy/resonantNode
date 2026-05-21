@@ -3,7 +3,7 @@
 #include <strings.h>
 
 #include "field/FieldState.h"
-#include "patterns/PatternTypes.h"
+#include "inspector/InspectorTypes.h"
 
 namespace detection {
 
@@ -38,7 +38,7 @@ enum class ProfilePatternAssemblerKind {
 };
 
 enum class ProfilePatternRulesKind {
-    TonalLocality,
+    PatternRules,
     AmpActivity,
     ChirpSequence,
 };
@@ -50,7 +50,7 @@ struct DetectionProfile {
     ProfileSignalDetectorKind signalDetector = ProfileSignalDetectorKind::FrequencyMatch;
     ProfileInspectionRulesKind inspectionRules = ProfileInspectionRulesKind::FreqAmp;
     ProfilePatternAssemblerKind patternAssembler = ProfilePatternAssemblerKind::SinglePulse;
-    ProfilePatternRulesKind patternRules = ProfilePatternRulesKind::TonalLocality;
+    ProfilePatternRulesKind patternRules = ProfilePatternRulesKind::PatternRules;
     bool frequencyOnly = false;
     bool ampEnabled = true;
 
@@ -59,6 +59,81 @@ struct DetectionProfile {
     FieldStateConfig fieldStateConfig = {};
 };
 
+// Actual profiles. These are the concrete profile definitions used at runtime.
+inline DetectionProfile makeFreqAmpProfile() {
+    DetectionProfile profile;
+
+    // Identity and signal routing.
+    profile.kind = DetectionProfileKind::FreqAmp;
+    profile.featureSet = ProfileFeatureSetKind::FreqAmp;
+    profile.signalEmitter = ProfileSignalEmitterKind::Frequency;
+    profile.signalDetector = ProfileSignalDetectorKind::FrequencyMatch;
+    profile.inspectionRules = ProfileInspectionRulesKind::FreqAmp;
+    profile.patternAssembler = ProfilePatternAssemblerKind::SinglePulse;
+    profile.patternRules = ProfilePatternRulesKind::PatternRules;
+
+    // Runtime behavior.
+    profile.frequencyOnly = false;
+    profile.ampEnabled = true;
+
+    // Inspector configuration.
+    profile.inspectionConfig = defaultInspectionConfig(); // shared inspector defaults
+
+    // Field-state windowing.
+    profile.fieldStateConfig.signalWindowMs = 3500;
+    profile.fieldStateConfig.patternWindowMs = 3500;
+    profile.fieldStateConfig.busySignalCountThreshold = 3;
+    profile.fieldStateConfig.denseSignalCountThreshold = 6;
+    profile.fieldStateConfig.quietSignalCountThreshold = 0;
+    profile.fieldStateConfig.quietActivityThreshold = 0.0f;
+    profile.fieldStateConfig.busyActivityThreshold = 0.4f;
+    return profile;
+}
+
+inline DetectionProfile makeChirpProfile() {
+    DetectionProfile profile = makeFreqAmpProfile();
+
+    // Identity and signal routing.
+    profile.kind = DetectionProfileKind::Chirp;
+    profile.featureSet = ProfileFeatureSetKind::Chirp;
+    profile.signalEmitter = ProfileSignalEmitterKind::Frequency;
+    profile.signalDetector = ProfileSignalDetectorKind::FrequencyMatch;
+    profile.inspectionRules = ProfileInspectionRulesKind::Chirp;
+    profile.patternAssembler = ProfilePatternAssemblerKind::ChirpSequence;
+    profile.patternRules = ProfilePatternRulesKind::ChirpSequence;
+
+    // Runtime behavior.
+    profile.frequencyOnly = false;
+    profile.ampEnabled = true;
+
+    // Inspector configuration.
+    profile.inspectionConfig = defaultInspectionConfig();
+    profile.inspectionConfig.ampWindowPreMs = 20;
+    profile.inspectionConfig.ampWindowPostMs = 120;
+
+    // Field-state windowing.
+    profile.fieldStateConfig.signalWindowMs = 4000;
+    profile.fieldStateConfig.patternWindowMs = 4000;
+    profile.fieldStateConfig.busySignalCountThreshold = 3;
+    profile.fieldStateConfig.denseSignalCountThreshold = 6;
+    profile.fieldStateConfig.busyActivityThreshold = 0.45f;
+    return profile;
+}
+
+inline const DetectionProfile& detectionProfileForKind(DetectionProfileKind kind) {
+    static const DetectionProfile kFreqAmp = makeFreqAmpProfile();
+    static const DetectionProfile kChirp = makeChirpProfile();
+
+    switch (kind) {
+        case DetectionProfileKind::Chirp:
+            return kChirp;
+        case DetectionProfileKind::FreqAmp:
+        default:
+            return kFreqAmp;
+    }
+}
+
+// Human-readable names for logs and help text.
 inline const char* detectionProfileName(DetectionProfileKind kind) {
     switch (kind) {
         case DetectionProfileKind::FreqAmp:
@@ -121,8 +196,8 @@ inline const char* profilePatternAssemblerName(ProfilePatternAssemblerKind kind)
 
 inline const char* profilePatternRulesName(ProfilePatternRulesKind kind) {
     switch (kind) {
-        case ProfilePatternRulesKind::TonalLocality:
-            return "TonalLocality";
+        case ProfilePatternRulesKind::PatternRules:
+            return "PatternRules";
         case ProfilePatternRulesKind::AmpActivity:
             return "AmpActivity";
         case ProfilePatternRulesKind::ChirpSequence:
@@ -146,79 +221,6 @@ inline bool detectionProfileKindFromName(const char* name, DetectionProfileKind&
     }
 
     return false;
-}
-
-inline DetectionProfile makeFreqAmpProfile() {
-    DetectionProfile profile;
-
-    // Identity and signal routing.
-    profile.kind = DetectionProfileKind::FreqAmp;
-    profile.featureSet = ProfileFeatureSetKind::FreqAmp;
-    profile.signalEmitter = ProfileSignalEmitterKind::Frequency;
-    profile.signalDetector = ProfileSignalDetectorKind::FrequencyMatch;
-    profile.inspectionRules = ProfileInspectionRulesKind::FreqAmp;
-    profile.patternAssembler = ProfilePatternAssemblerKind::SinglePulse;
-    profile.patternRules = ProfilePatternRulesKind::TonalLocality;
-
-    // Runtime behavior.
-    profile.frequencyOnly = false;
-    profile.ampEnabled = true;
-
-    // Inspector configuration.
-    profile.inspectionConfig = defaultInspectionConfig(); // shared defaults from PatternTypes.h
-
-    // Field-state windowing.
-    profile.fieldStateConfig.signalWindowMs = 3500;
-    profile.fieldStateConfig.patternWindowMs = 3500;
-    profile.fieldStateConfig.busySignalCountThreshold = 3;
-    profile.fieldStateConfig.denseSignalCountThreshold = 6;
-    profile.fieldStateConfig.quietSignalCountThreshold = 0;
-    profile.fieldStateConfig.quietActivityThreshold = 0.0f;
-    profile.fieldStateConfig.busyActivityThreshold = 0.4f;
-    return profile;
-}
-
-inline DetectionProfile makeChirpProfile() {
-    DetectionProfile profile = makeFreqAmpProfile();
-
-    // Identity and signal routing.
-    profile.kind = DetectionProfileKind::Chirp;
-    profile.featureSet = ProfileFeatureSetKind::Chirp;
-    profile.signalEmitter = ProfileSignalEmitterKind::Frequency;
-    profile.signalDetector = ProfileSignalDetectorKind::FrequencyMatch;
-    profile.inspectionRules = ProfileInspectionRulesKind::Chirp;
-    profile.patternAssembler = ProfilePatternAssemblerKind::ChirpSequence;
-    profile.patternRules = ProfilePatternRulesKind::ChirpSequence;
-
-    // Runtime behavior.
-    profile.frequencyOnly = false;
-    profile.ampEnabled = true;
-
-    // Inspector configuration.
-    profile.inspectionConfig = defaultInspectionConfig();
-    profile.inspectionConfig.ampWindowPreMs = 20;
-    profile.inspectionConfig.ampWindowPostMs = 120;
-
-    // Field-state windowing.
-    profile.fieldStateConfig.signalWindowMs = 4000;
-    profile.fieldStateConfig.patternWindowMs = 4000;
-    profile.fieldStateConfig.busySignalCountThreshold = 3;
-    profile.fieldStateConfig.denseSignalCountThreshold = 6;
-    profile.fieldStateConfig.busyActivityThreshold = 0.45f;
-    return profile;
-}
-
-inline const DetectionProfile& detectionProfileForKind(DetectionProfileKind kind) {
-    static const DetectionProfile kFreqAmp = makeFreqAmpProfile();
-    static const DetectionProfile kChirp = makeChirpProfile();
-
-    switch (kind) {
-        case DetectionProfileKind::Chirp:
-            return kChirp;
-        case DetectionProfileKind::FreqAmp:
-        default:
-            return kFreqAmp;
-    }
 }
 
 } // namespace detection

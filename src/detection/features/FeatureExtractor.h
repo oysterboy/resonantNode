@@ -1,7 +1,7 @@
 #pragma once
 
 #include "../../io/AudioSignal.h"
-#include "../patterns/PatternTypes.h"
+#include "../inspector/InspectorTypes.h"
 #include "FeatureHistory.h"
 
 namespace detection::FeatureExtractor {

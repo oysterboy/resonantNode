@@ -82,8 +82,6 @@ bool equalsIgnoreCase(const char* a, const char* b) {
 
 BehaviorProfile makeFreqAmpBehaviorProfile() {
     BehaviorProfile profile;
-    profile.detectionOnly = false;
-    profile.requireTonalForBehavior = true;
     profile.idleEnabled = true;
     profile.waitAfterTransientMs = 100;
     profile.refractoryAfterEmitMs = 0;
@@ -171,12 +169,12 @@ void printH3FrequencyEvidenceFields(const detection::PatternResult& patternResul
     Serial.print(detection::patternTypeName(patternResult.type));
     Serial.print(" pattern_reason=");
     Serial.print(detection::patternReasonName(patternResult.reasonCode));
-    Serial.print(" candidate_valid=");
-    Serial.print(patternResult.candidateValid ? 1 : 0);
-    Serial.print(" tonal_valid=");
-    Serial.print(patternResult.tonalValid ? 1 : 0);
-    Serial.print(" behavior_eligible=");
-    Serial.print(patternResult.behaviorEligible ? 1 : 0);
+    Serial.print(" candidate_accepted=");
+    Serial.print(patternResult.candidateAccepted ? 1 : 0);
+    Serial.print(" pattern_matched=");
+    Serial.print(patternResult.patternMatched ? 1 : 0);
+    Serial.print(" support_matched=");
+    Serial.print(patternResult.supportMatched ? 1 : 0);
     Serial.print(" reject_reason=");
     Serial.print(detection::patternRejectReasonName(patternResult.rejectReason));
     Serial.print(" transient_duration_ms=");
@@ -261,7 +259,6 @@ void Node::begin() {
     resetRbCounters();
     _rbLastLoggedOnsetRejectCount = 0;
     _rbLastLoggedTransientRejectCount = 0;
-    _rbDetectOnly = false;
     _rbBaselineState = RBBaselineState::ListenForQuiet;
     _rbBaselineStateStartedMs = millis();
     _rbBaselineQuietSinceMs = 0;
@@ -528,8 +525,6 @@ void Node::update() {
         Serial.print(_behavior.refractoryRemainingMs(now));
         Serial.print(" behaviorSuppressMs=");
         Serial.print(_behavior.behaviorSuppressRemainingMs(now));
-        Serial.print(" detectionOnly=");
-        Serial.print(_behavior.detectionOnly() ? 1 : 0);
         Serial.print(" outputBusy=");
         Serial.print(_behavior.outputBusy() ? 1 : 0);
         Serial.print(" wouldEmit=");
@@ -543,7 +538,7 @@ void Node::update() {
         _debug.observeI2SSignal(now, _audioSignal);
     }
 
-    if (rbOutputsEnabledNow && !_rbDetectOnly && _behavior.shouldStartChirp()) {
+    if (rbOutputsEnabledNow && _behavior.shouldStartChirp()) {
         const auto chirpPattern = _behavior.chirpPattern();
         const char* sourceName = _behavior.chirpRequestSourceName();
         if (rbShouldLogDetail()) {
@@ -609,12 +604,11 @@ void Node::pollSerialCommands() {
 void Node::handleSerialLine(const char* line) {
     if (equalsIgnoreCase(line, "RB help")) {
         Serial.println("RB CMD: RB PARAM onset=23 release=20 cooldown=50 releaseDebounce=10 minMs=90 maxMs=240 minStrength=40.0 freqScore=10000 freqContrast=50.0");
-        Serial.println("RB CMD: RB BEHAV wait=100 refractory=0 idleTimeout=20000 idleTimeoutVariation=10000 idleBlockedAfterHeard=3000 idleBlockedAfterOwnEmit=5000 requireTonal=1");
+        Serial.println("RB CMD: RB BEHAV wait=100 refractory=0 idleTimeout=20000 idleTimeoutVariation=10000 idleBlockedAfterHeard=3000 idleBlockedAfterOwnEmit=5000");
         Serial.println("RB CMD: RB DETECT removed; use RB PROFILE");
         Serial.println("RB CMD: RB PROFILE name=freqamp|chirp");
         Serial.println("RB CMD: RB rebase");
         Serial.println("RB CMD: RB rebase force");
-        Serial.println("RB CMD: RB detectonly on|off");
         Serial.println("RB CMD: RB log off|minimal|full");
         Serial.println("RB CMD: RB debug off|events|plot");
         Serial.println("RB CMD: RB summary");
@@ -686,7 +680,7 @@ void Node::handleSerialLine(const char* line) {
         token = token != nullptr ? strtok_r(nullptr, " ", &savePtr) : nullptr;
 
         if (token == nullptr || !equalsIgnoreCase(token, "BEHAV")) {
-            Serial.println("RB BEHAV usage=RB BEHAV wait=100 refractory=0 idleTimeout=20000 idleTimeoutVariation=10000 idleBlockedAfterHeard=3000 idleBlockedAfterOwnEmit=5000 requireTonal=1");
+            Serial.println("RB BEHAV usage=RB BEHAV wait=100 refractory=0 idleTimeout=20000 idleTimeoutVariation=10000 idleBlockedAfterHeard=3000 idleBlockedAfterOwnEmit=5000");
             return;
         }
 
@@ -696,7 +690,6 @@ void Node::handleSerialLine(const char* line) {
         unsigned long idleTimeoutVariationMs = _behavior.idleTimeVariationMs();
         unsigned long idleBlockedAfterHeardMs = _behavior.idleBlockedAfterHeardMs();
         unsigned long idleBlockedAfterOwnEmitMs = _behavior.idleBlockedAfterOwnEmitMs();
-        bool requireTonalForBehavior = _behavior.requireTonalForBehavior();
         bool idleEnabled = _behavior.idleEnabled();
 
         while ((token = strtok_r(nullptr, " ", &savePtr)) != nullptr) {
@@ -721,9 +714,6 @@ void Node::handleSerialLine(const char* line) {
             } else if (startsWithTokenIgnoreCase(token, "idleEnabled=")) {
                 const char* value = token + 12;
                 idleEnabled = equalsIgnoreCase(value, "1") || equalsIgnoreCase(value, "on") || equalsIgnoreCase(value, "true");
-            } else if (startsWithTokenIgnoreCase(token, "requireTonal=") || startsWithTokenIgnoreCase(token, "requireTonalForBehavior=")) {
-                const char* value = token + (startsWithTokenIgnoreCase(token, "requireTonalForBehavior=") ? 24 : 13);
-                requireTonalForBehavior = equalsIgnoreCase(value, "1") || equalsIgnoreCase(value, "on") || equalsIgnoreCase(value, "true");
             }
         }
 
@@ -734,7 +724,6 @@ void Node::handleSerialLine(const char* line) {
         _behavior.setIdleBlockedAfterHeardMs(idleBlockedAfterHeardMs);
         _behavior.setIdleBlockedAfterOwnEmitMs(idleBlockedAfterOwnEmitMs);
         _behavior.setIdleEnabled(idleEnabled);
-        _behavior.setRequireTonalForBehavior(requireTonalForBehavior);
 
         Serial.print("RB BEHAV wait=");
         Serial.print(_behavior.waitAfterTransientMs());
@@ -749,9 +738,7 @@ void Node::handleSerialLine(const char* line) {
         Serial.print(" idleBlockedOwnEmit=");
         Serial.print(_behavior.idleBlockedAfterOwnEmitMs());
         Serial.print(" idleEnabled=");
-        Serial.print(_behavior.idleEnabled() ? 1 : 0);
-        Serial.print(" requireTonal=");
-        Serial.println(_behavior.requireTonalForBehavior() ? 1 : 0);
+        Serial.println(_behavior.idleEnabled() ? 1 : 0);
         return;
     }
     if (startsWithTokenIgnoreCase(line, "RB rebase force")) {
@@ -765,25 +752,6 @@ void Node::handleSerialLine(const char* line) {
     if (startsWithTokenIgnoreCase(line, "RB rebase")) {
         startRbQuietBaseline();
         Serial.println("RB rebase requested quiet-gated");
-        return;
-    }
-    if (startsWithTokenIgnoreCase(line, "RB detectonly")) {
-        const char* mode = line + 13;
-        while (*mode == ' ') {
-            ++mode;
-        }
-        if (equalsIgnoreCase(mode, "on")) {
-            _rbDetectOnly = true;
-            _behavior.setDetectionOnly(true);
-            Serial.println("RB detectonly=on");
-        } else if (equalsIgnoreCase(mode, "off")) {
-            _rbDetectOnly = false;
-            _behavior.setDetectionOnly(false);
-            Serial.println("RB detectonly=off");
-        } else {
-            Serial.print("RB detectonly=");
-            Serial.println(_rbDetectOnly ? "on" : "off");
-        }
         return;
     }
     if (startsWithTokenIgnoreCase(line, "RB log")) {
@@ -937,7 +905,7 @@ void Node::processDetectionFrame(const AudioSignalFrame& frame,
         }
 
         ++_rbCandidateCount;
-        if (patternResult.candidateValid) {
+        if (patternResult.candidateAccepted) {
             ++_rbActionCount;
         }
 
@@ -961,7 +929,7 @@ void Node::processDetectionFrame(const AudioSignalFrame& frame,
             Serial.print(" fieldDense=");
             Serial.print(_detection.fieldState().dense ? 1 : 0);
             Serial.print(" eligible=");
-            Serial.print(patternResult.behaviorEligible ? 1 : 0);
+            Serial.print(_behavior.behaviorEligible() ? 1 : 0);
             Serial.print(" decision=");
             Serial.print(_behavior.lastDecisionName());
             Serial.print(" valid=");
@@ -970,9 +938,6 @@ void Node::processDetectionFrame(const AudioSignalFrame& frame,
             Serial.println(profileName());
         }
 
-        if (_rbDetectOnly) {
-            _debug.observePatternPulse(now, patternResult.candidateValid, patternResult.tonalValid);
-        }
     }
 
 }
@@ -1063,12 +1028,12 @@ void Node::logCandidate(const DetectorCandidate& candidate, const detection::Pat
     Serial.print(detection::patternSourceName(patternResult.source));
     Serial.print(" candidate_class=");
     Serial.print(candidateClass);
-    Serial.print(" candidate_valid=");
-    Serial.print(patternResult.candidateValid ? 1 : 0);
-    Serial.print(" tonal_valid=");
-    Serial.print(patternResult.tonalValid ? 1 : 0);
-    Serial.print(" behavior_eligible=");
-    Serial.print(patternResult.behaviorEligible ? 1 : 0);
+    Serial.print(" candidate_accepted=");
+    Serial.print(patternResult.candidateAccepted ? 1 : 0);
+    Serial.print(" pattern_matched=");
+    Serial.print(patternResult.patternMatched ? 1 : 0);
+    Serial.print(" support_matched=");
+    Serial.print(patternResult.supportMatched ? 1 : 0);
     Serial.print(" reject_reason=");
     Serial.print(detection::patternRejectReasonName(patternResult.rejectReason));
     Serial.print(" transient_present=");
@@ -1155,11 +1120,10 @@ void Node::printRbSummary() const {
     Serial.print(" avg_duration=");
     Serial.print(avgDuration, 1);
     Serial.print("ms detectOnly=");
-    Serial.print(_rbDetectOnly ? 1 : 0);
+    Serial.print(0);
     Serial.print(" profile=");
     Serial.print(profileName());
-    Serial.print(" requireTonal=");
-    Serial.println(_behavior.requireTonalForBehavior() ? 1 : 0);
+    Serial.println();
     Serial.print("RB baseline state=");
     Serial.println(rbBaselineStateName());
     Serial.print("RB log mode=");
@@ -1171,10 +1135,8 @@ void Node::printRbSummary() const {
 }
 
 void Node::printRbBehaviorSummary() const {
-    Serial.print("RB behavior detectOnly=");
-    Serial.print(_behavior.detectionOnly() ? 1 : 0);
-    Serial.print(" requireTonal=");
-    Serial.print(_behavior.requireTonalForBehavior() ? 1 : 0);
+    Serial.print("RB behavior idle=");
+    Serial.print(_behavior.idleEnabled() ? 1 : 0);
     Serial.print(" wait=");
     Serial.print(_behavior.waitAfterTransientMs());
     Serial.print(" refractory=");
@@ -1213,8 +1175,6 @@ void Node::printRbBehaviorSummary() const {
     Serial.print(_behavior.patternsIgnoredInvalid());
     Serial.print(" ignoredAmbiguous=");
     Serial.print(_behavior.patternsIgnoredAmbiguous());
-    Serial.print(" blockedDetectionOnly=");
-    Serial.print(_behavior.blockedDetectionOnly());
     Serial.print(" blockedOutputBusy=");
     Serial.print(_behavior.blockedOutputBusy());
     Serial.print(" blockedWaiting=");

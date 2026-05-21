@@ -5,7 +5,8 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "../patterns/PatternPayload.h"
+#include "InspectorTypes.h"
+#include "../patterns/PatternResult.h"
 
 namespace FrequencyEvidenceEvaluation {
 
@@ -128,15 +129,14 @@ inline bool passes(const detection::FrequencyEvidence& evidence, const Values& v
 }
 
 inline void classifyPatternResult(detection::PatternResult& result, const Values& frequencyTuning) {
-    if (!result.candidateValid) {
+    if (!result.candidateAccepted) {
         result.freq = result.candidate.frequency;
         result.freqFull = result.candidate.frequencyFull;
         result.source = detection::PatternSource::ComparisonOnly;
         result.type = detection::PatternType::Invalid;
         result.reasonCode = detection::PatternReasonCode::DetectorRejected;
         result.rejectReason = detection::PatternRejectReason::NoCandidate;
-        result.tonalValid = false;
-        result.behaviorEligible = false;
+        result.patternMatched = false;
         result.valid = false;
         return;
     }
@@ -152,13 +152,11 @@ inline void classifyPatternResult(detection::PatternResult& result, const Values
     result.source = eval.matched
         ? detection::PatternSource::FrequencyPrimary
         : detection::PatternSource::AmpFallback;
-    result.tonalValid = eval.matched;
-    result.behaviorEligible = result.candidateValid && result.tonalValid;
+    result.patternMatched = eval.matched;
     result.rejectReason = rejectReasonFromEvaluation(eval.reason);
-    result.valid = true;
     result.reasonCode = detection::PatternReasonCode::FromAcceptedTransient;
-    result.type = result.tonalValid
-        ? detection::PatternType::ValidTonalTransient
+    result.type = result.patternMatched
+        ? detection::PatternType::ValidPattern
         : detection::PatternType::TransientOnly;
 }
 

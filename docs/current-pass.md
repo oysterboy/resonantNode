@@ -1,75 +1,70 @@
-# LegacyRemoval
+# Pattern File Reorg
 
-ResonantNode / Resonanzraum detection refactor tracker.
+## Goal
 
-## Current Status
+Clean up the pattern-side file layout so each file has a clear ownership boundary, while keeping the `detection` namespace and current runtime behavior unchanged.
 
-- Core legacy-path removals are in place in active source.
-- Analyzer compatibility cleanup in active source is done.
-- Active docs are aligned; historical refactor docs remain as history.
-- Analyzer boundary cleanup is done in the normal path.
-- `AmpTransientDetector` stays.
+Target split:
 
-## Locked Decisions
+- `src/detection/patterns/PatternTypes.h`
+- `src/detection/patterns/PatternCandidate.h`
+- `src/detection/patterns/PatternResult.h`
+- `src/detection/patterns/PatternRules.h/.cpp`
+- `src/detection/patterns/PatternAssembler.h/.cpp`
+- `src/detection/patterns/PatternNames.h`
 
-- Node and Analyzer are I2S-only, DetectionRuntime-only, profile-configured.
-- No `DetectionMode`.
-- No `AmpState`.
-- No `useLegacyPath`.
-- No legacy candidate-builder folder in active source.
-- Analyzer SEQ consumes `PatternResult` / `FieldState` from `DetectionRuntime` only.
-- `RAW_SAMPLE_CAPTURE` stays separate.
-- `AmpTransientDetector` stays as runtime support.
+Keep:
 
-## Done
+- the `detection` namespace
+- current behavior
+- current profile composition
 
-- Removed the AnalogMic path.
-- Removed `DetectionMode`.
-- Removed `AmpState`.
-- Removed `useLegacyPath`.
-- Removed the legacy candidate-builder path from active source.
-- Removed the remaining analyzer compatibility shims and legacy summary labels from active source.
-- Renamed Analyzer compatibility storage to neutral trial-report storage and removed dead parity bookkeeping.
-- Removed the remaining Analyzer parity scaffolding from `AnalyzerReporting.h`.
-- Reworded transitional comments and payload notes in the detection/pattern helpers.
-- Removed the Analyzer live-frequency fallback path and its `liveFrequencyOnly` mode handling.
-- Kept `AmpTransientDetector` instead of deleting it in Pass 10.
+## Current Scope
 
-## Pending
+The inspector-owned evidence split is done. The next cleanup is the pattern-side organization:
 
-- Keep historical refactor docs as history, but do not treat them as active implementation guidance.
+- keep `PatternCandidate.h` and `PatternResult.h` as focused shape files
+- keep `PatternAssembler` and `PatternRules` as logic files
+- slim `PatternTypes.h` so it only holds pattern-owned enums and shared pattern vocabulary
+- decide whether `PatternTypes.h` still needs a rename after the trim
 
-## Working Rule
+### Keep
 
-For each remaining pass:
+- `PatternCandidate.h`
+- `PatternResult.h`
+- `PatternAssembler.h/.cpp`
+- `PatternRules.h/.cpp`
+- `PatternNames.h`
 
-1. Change only what belongs to that pass.
-2. Verify the code still builds or reaches the expected runtime state.
-3. Commit the pass on its own.
+### Split or Trim
 
-## Final Target Shape
+- `PatternTypes.h`
 
-### Node
+### Possible Rename
 
-- I2S only.
-- `DetectionProfile` config only.
-- `DetectionRuntime` only.
-- Consumes `PatternResult` + `FieldState`.
-- No `DetectionMode`.
-- No legacy candidate builder.
+- `PatternTypes.h`
 
-### Analyzer
+## Do Now
 
-- I2S only.
-- `DetectionRuntime` only.
-- `SEQ_TRIAL`, `SEQ_EXPLAIN`, and `SEQ_SUMMARY` come from actual pipeline `PatternResult` + `FieldState`.
-- Analyzer consumes actual pipeline results in the normal path.
-- `RAW_SAMPLE_CAPTURE` is separate.
-- No legacy SEQ/report aliases.
+1. Trim `PatternTypes.h` to pattern-only enums and vocabulary.
+2. Keep `PatternCandidate.h` / `PatternResult.h` as separate focused files.
+3. Keep `PatternAssembler` / `PatternRules` separate.
+4. Build both `esp32dev` and `esp32dev-analyzer`.
 
-### Detection
+## Do Not Do
 
-- No legacy builder folder in active source.
-- No `AmpState`.
-- No `useLegacyPath`.
-- AMP remains only as current runtime signal support, not as a legacy path.
+- do not change detection behavior
+- do not change profile values
+- do not add a compatibility layer
+- do not leave long-lived forwarding headers behind
+- do not change the `detection` namespace
+
+## Why
+
+The current file layout is correct by namespace, but a few pattern headers still feel broader than their ownership. Splitting by ownership keeps the code easy to scan without flattening it into a mega file.
+
+## Status
+
+Done in active source and verified with both `esp32dev` and `esp32dev-analyzer` builds.
+
+Removed the umbrella `PatternPayload.h` layer and switched consumers to the concrete candidate/result headers directly.

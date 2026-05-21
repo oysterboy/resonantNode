@@ -3,7 +3,7 @@
 
 #include "BehaviorProfile.h"
 #include "../detection/field/FieldState.h"
-#include "../detection/patterns/PatternPayload.h"
+#include "../detection/patterns/PatternResult.h"
 #include "../io/ChirpOutput.h"
 
 /*
@@ -26,8 +26,6 @@ public:
         ConsumedPattern,
         IgnoredInvalidPattern,
         IgnoredAmbiguousPattern,
-        DetectionOnly,
-        ListenOnly,
         Disabled,
         OutputBusy,
         WaitingAfterHeard,
@@ -52,8 +50,6 @@ public:
     void update(bool transientDetected, float transientStrength, unsigned long now);
     void seedIdleSchedule(unsigned long now);
 
-    void setDetectionOnly(bool value);
-    void setRequireTonalForBehavior(bool value);
     void setWaitAfterTransientMs(unsigned long value);
     void setRefractoryAfterEmitMs(unsigned long value);
     void setIdleTimeMs(unsigned long value);
@@ -70,7 +66,7 @@ public:
     unsigned long idleBlockedAfterOwnEmitMs() const;
     bool idleEnabled() const;
     unsigned long idleTimeoutMs() const;
-    bool requireTonalForBehavior() const;
+    bool behaviorEligible() const;
 
     // state output (for debug / LED)
     float activity() const;
@@ -80,7 +76,6 @@ public:
     unsigned long waitRemainingMs(unsigned long now) const;
     unsigned long refractoryRemainingMs(unsigned long now) const;
     unsigned long behaviorSuppressRemainingMs(unsigned long now) const;
-    bool detectionOnly() const;
     bool outputBusy() const;
     bool takeWouldEmit();
     BehaviorDecision lastDecision() const;
@@ -97,7 +92,6 @@ public:
     unsigned long patternsReceived() const;
     unsigned long patternsIgnoredInvalid() const;
     unsigned long patternsIgnoredAmbiguous() const;
-    unsigned long blockedDetectionOnly() const;
     unsigned long blockedOutputBusy() const;
     unsigned long blockedRefractory() const;
     unsigned long blockedWaiting() const;
@@ -149,8 +143,7 @@ private:
     unsigned long _lastDecisionMs = 0;
     BehaviorDecision _lastDecision = BehaviorDecision::None;
     BehaviorDecision _lastBlockReason = BehaviorDecision::None;
-    bool _detectionOnly = false;
-    bool _requireTonalForBehavior = true;
+    bool _behaviorEligible = false;
     bool _wouldEmit = false;
     bool _outputBusy = false;
 
@@ -182,7 +175,6 @@ private:
     unsigned long _patternsReceived = 0;
     unsigned long _patternsIgnoredInvalid = 0;
     unsigned long _patternsIgnoredAmbiguous = 0;
-    unsigned long _blockedDetectionOnly = 0;
     unsigned long _blockedOutputBusy = 0;
     unsigned long _blockedRefractory = 0;
     unsigned long _blockedWaiting = 0;

@@ -1,8 +1,6 @@
 #pragma once
 
 struct BehaviorProfile {
-    bool detectionOnly = false;
-    bool requireTonalForBehavior = true;
     bool idleEnabled = true;
 
     unsigned long waitAfterTransientMs = 100;

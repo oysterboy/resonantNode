@@ -2,7 +2,7 @@
 
 #include <Arduino.h>
 
-#include "../patterns/PatternTypes.h"
+#include "../inspector/InspectorTypes.h"
 
 namespace detection {
 

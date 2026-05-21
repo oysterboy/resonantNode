@@ -1,5 +1,6 @@
 #pragma once
 
+#include "InspectorTypes.h"
 #include "../signals/InspectedSignal.h"
 
 namespace detection {

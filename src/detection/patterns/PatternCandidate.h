@@ -59,7 +59,7 @@ struct PatternCandidate {
 
     bool audioOverflowDuringCandidate = false;
 
-    // Transitional evidence payloads retained for compatibility.
+    // Evidence payloads retained with the candidate for downstream reporting.
     TransientEvidence transient;
     FrequencyEvidence frequency;
     FrequencyEvidence frequencyFull;

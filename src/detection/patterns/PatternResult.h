@@ -32,7 +32,7 @@ struct PatternResult {
     unsigned long minGapMs = 0;
     unsigned long maxGapMs = 0;
 
-    // Transitional payloads carried through for compatibility and reporting.
+    // Candidate and evidence payloads carried through for reporting and downstream classification.
     PatternCandidate candidate = {};
     FrequencyEvidence freq = {};
     FrequencyEvidence freqFull = {};

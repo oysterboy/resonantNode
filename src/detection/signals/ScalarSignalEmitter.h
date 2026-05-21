@@ -19,7 +19,7 @@ value and fill the payload-specific evidence fields.
 Responsibilities:
 - track first seen, peak, and release-observed timing for one scalar stream
 - translate a closed scalar transient into a SignalCandidate payload
-- keep candidate lifecycle parity between AMP and frequency sources
+- keep candidate lifecycle behavior aligned between AMP and frequency sources
 
 Does NOT:
 - decide pattern meaning

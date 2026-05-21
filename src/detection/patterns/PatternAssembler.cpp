@@ -49,7 +49,7 @@ PatternCandidate makePatternCandidateFromSignal(const detection::InspectedSignal
             candidate.signalSlots[0].releaseMs = source.releaseMs;
             candidate.signalSlots[0].strength = source.score;
             candidate.signalSlots[0].confidence = source.frequencyConfidence;
-            // Frequency score/contrast are temporarily mapped into legacy strength fields for compatibility.
+            // Frequency score/contrast are mapped into the candidate strength fields used by reporting.
             candidate.frequency = source.frequency;
             candidate.frequencyFull = source.frequency;
             candidate.transient.present = false;

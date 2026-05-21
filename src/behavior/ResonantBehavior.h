@@ -47,8 +47,8 @@ public:
     BehaviorDecision handlePatternResult(const detection::PatternResult& result, unsigned long now);
     BehaviorDecision handlePatternResult(const detection::PatternResult& result, const detection::FieldState& field, unsigned long now);
     void update(unsigned long now);
-    // Legacy shim: kept only for compatibility with older call sites that still feed raw transient flags.
-    // The architecture contract is PatternResult-driven.
+    // Boolean convenience overload for callers that still provide transient flags directly.
+    // The main architecture remains PatternResult-driven.
     void update(bool transientDetected, float transientStrength, unsigned long now);
     void seedIdleSchedule(unsigned long now);
 
@@ -130,7 +130,7 @@ private:
     // --- behavior state ---
     float _activityLevel = 0.0f;
     detection::FieldState _lastFieldState = {};
-    // Legacy compatibility state for the old bool-based update shim.
+    // Cached inputs for the boolean convenience overload.
     bool _pendingTransientDetected = false;
     float _pendingTransientStrength = 0.0f;
     unsigned long _pendingTransientMs = 0;

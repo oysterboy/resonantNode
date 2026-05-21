@@ -140,8 +140,7 @@ enum class PatternResultKind {
     Rejected,
 };
 
-// Raw detector evidence captured for transient-trigger analysis.
-// This remains a compatibility payload for legacy and analyzer paths.
+// Raw detector evidence captured for transient-trigger analysis and reporting.
 struct TransientEvidence {
     bool present = false;
 
@@ -162,9 +161,7 @@ struct TransientEvidence {
     bool audioOverflowDuringCandidate = false;
 };
 
-// Frequency evidence carried alongside a candidate for tonal classification.
-// Roadmap code prefers the dedicated signal / pattern layers, but this
-// container stays here as the transitional compatibility payload.
+// Frequency evidence carried alongside a candidate for tonal classification and reporting.
 struct FrequencyEvidence {
     bool present = false;
     bool matched = false;

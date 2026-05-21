@@ -8,11 +8,51 @@ What the code actually does today:
 - Raw history provides candidate-window frequency evidence.
 - `FrequencyEvidenceEvaluation` classifies tonal validity.
 - Behavior may optionally require tonal validity, but that is a runtime behavior gate, not the detector baseline.
-- RB currently uses `wait=100 ms`, `refractory=0`, `idleTimeout=20000 ms`, `idleTimeoutVariation=10000 ms`, `idleBlockedAfterHeard=3000 ms`, and `idleBlockedAfterOwnEmit=5000 ms` on both the analog and I2S paths.
+- RB currently uses `wait=100 ms`, `refractory=0`, `idleTimeout=20000 ms`, `idleTimeoutVariation=10000 ms`, `idleBlockedAfterHeard=3000 ms`, and `idleBlockedAfterOwnEmit=5000 ms` on the I2S path.
 - RB logging defaults to `off` on boot, and `RB log full` now stays compact so it does not flood the timing loop.
 - Own-emit detection/analyzer tail suppression is `0 ms`, while `behaviorSuppressSelfChirp` stays at `200 ms`.
 - In RB detect-only mode, tonal-valid hits pulse the LED at full brightness, transient-only hits pulse at 50% brightness, and normal RB LED behavior is unchanged.
 - Analyzer now has a passive `SEQ OBS` mode for observing an already-running external emitter without sending chirps or claiming control.
+
+## Used Parameters
+
+These are the parameters used in the current SEQ smoke tests and the active runtime defaults they exercised:
+
+### SEQ command parameters
+
+- `tries=20`
+- `freq=3200`
+- `profile=freqamp`
+- `log=summary+trial+explain`
+- `test=30cm`
+- `test=90cm`
+- `test=130cm`
+
+### SEQ runtime defaults seen in the monitor log
+
+- `warmup_ms=500`
+- `loopDelayMs=0`
+- `quiet=0`
+- `period_ms=2500`
+- `window_start_ms=0`
+- `window_end_ms=2200`
+- `dur_ms=100`
+
+### AMP detector defaults seen in the monitor log
+
+- `onset=30.0`
+- `release=20.0`
+- `cooldown=50`
+- `releaseDebounce=10`
+- `minMs=90`
+- `maxMs=240`
+- `minStrength=40.0`
+
+### Distance test points
+
+- `30 cm` - strong support, occasional miss
+- `90 cm` - cleanest run in the current set
+- `130 cm` - still healthy, but weaker support and a little more drop-off
 
 ## Source Organization
 
@@ -53,13 +93,18 @@ The code is easiest to read in this order:
 - `SEQ OBS start period=2000 window=2000 freq=3200 dur=100 log=full`
 - `SEQ help`
 - `PARAM onset=23 release=20 cooldown=50 releaseDebounce=10 minMs=90 maxMs=240 minStrength=40.0 freqScore=50000 freqContrast=20.0`
+- Current smoke-test command:
+  - `SEQ start tries=20 freq=3200 log=summary+trial+explain profile=freqamp`
+  - `SEQ start tries=20 freq=3200 test=30cm log=summary+trial+explain profile=freqamp`
+  - `SEQ start tries=20 freq=3200 test=90cm log=summary+trial+explain profile=freqamp`
+  - `SEQ start tries=20 freq=3200 test=130cm log=summary+trial+explain profile=freqamp`
 
 ### SEQ log sweep
 - `SEQ log=default`
 - `SEQ log=trial`
 - `SEQ log=summary+trial`
 - `SEQ log=full`
-- `SEQ log=raw`
+- `RAW trigger`
 - `SEQ debug=2`
 - `RAW trigger`
 - `SEQ tries=10 debug=2`
@@ -234,7 +279,6 @@ Quick checks for the current detection setup:
 
 - Start RB and confirm the boot log prints the active profile and its composition.
 - Send `RB PROFILE name=freqamp`.
-- Send `RB PROFILE name=ampstate`.
 - Send `RB PROFILE name=chirp`.
 - Confirm each reply prints the new profile and component metadata.
 

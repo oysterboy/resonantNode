@@ -8,7 +8,6 @@
 #include "../../detection/DetectionProfile.h"
 #include "../../io/AudioSignal.h"
 #include "../../detection/DetectionRuntime.h"
-#include "../../detection/detectors/FrequencyMatchDetector.h"
 #include "../../detection/inspector/FrequencyEvidenceEvaluation.h"
 #include "../../detection/signals/InspectedSignal.h"
 #include "../../detection/features/FreqBandStream.h"
@@ -55,11 +54,8 @@ public:
         ANALYZER_LOG_SUMMARY = 1u << 0,
         ANALYZER_LOG_TRIAL = 1u << 1,
         ANALYZER_LOG_CANDIDATE = 1u << 2,
-        ANALYZER_LOG_FREQ_CLASS = 1u << 3,
-        // Preferred name for the legacy SEQ raw/debug explanation path.
         ANALYZER_LOG_EXPLAIN = 1u << 4,
-        ANALYZER_LOG_RAW_DEBUG = ANALYZER_LOG_EXPLAIN,
-        ANALYZER_LOG_TRIAL_BRIEF = 1u << 5,
+        ANALYZER_LOG_TRIAL_SUMMARY = 1u << 5,
         ANALYZER_LOG_CUSTOM = 1u << 6,
         ANALYZER_LOG_AMP_WINDOW = ANALYZER_LOG_CUSTOM,
     };
@@ -180,10 +176,6 @@ private:
             unsigned long acceptedFrequencyProcessedAtMs = 0;
             FrequencyEvidence acceptedParityProbe64 = {};
             unsigned long acceptedParityProbe64ProcessedAtMs = 0;
-            detection::SignalCandidate deprecatedAcceptedSignalCandidate = {};
-            detection::PatternResult deprecatedAcceptedPatternResult = {};
-            detection::InspectedSignal deprecatedAcceptedInspectedSignal = {};
-            bool deprecatedAcceptedPatternCaptured = false;
             detection::PatternResult runtimePatternResult = {};
             detection::FieldState runtimeFieldState = {};
             bool runtimePatternCaptured = false;
@@ -257,7 +249,6 @@ private:
         bool showDetails = true;
         bool externalEmitter = false;
         detection::DetectionProfileKind profileKind = detection::DetectionProfileKind::FreqAmp;
-        bool liveFrequencyOnly = false;
         bool progressLineStarted = false;
         unsigned long totalTrials = 100;
         unsigned long periodMs = 2500;
@@ -294,9 +285,9 @@ private:
         CurveSnapshot sampleHistoryPending = {};
         CurveSnapshot sampleRows[kMaxSampleRows] = {};
         size_t sampleRowCount = 0;
-        AnalyzerReport* deprecatedAnalyzerReports = nullptr;
-        mutable size_t deprecatedAnalyzerReportCapacity = 0;
-        mutable size_t deprecatedAnalyzerReportCount = 0;
+        AnalyzerReport* trialReports = nullptr;
+        mutable size_t trialReportCapacity = 0;
+        mutable size_t trialReportCount = 0;
 
         // Trial scheduling and aggregate results.
         unsigned long startedAtMs = 0;
@@ -330,9 +321,6 @@ private:
         unsigned long emptySourceLoops = 0;
         unsigned long totalHitStrengthScaled = 0;
         unsigned long totalHitDurationMs = 0;
-        // Frequency path uses a dedicated frequency-evidence detector.
-        FrequencyMatchDetector liveFrequency;
-
         unsigned long tonalExpected = 0;
         unsigned long transientOnlyExpected = 0;
         unsigned long tonalDuplicates = 0;
@@ -345,17 +333,6 @@ private:
         unsigned long freqRejectNoEvidence = 0;
         unsigned long freqRejectInvalidWindow = 0;
 
-        unsigned long parityCompared = 0;
-        unsigned long parityMatched = 0;
-        unsigned long parityMissingActual = 0;
-        unsigned long parityMissingRecheck = 0;
-        unsigned long parityAcceptedMismatch = 0;
-        unsigned long parityTypeMismatch = 0;
-        unsigned long parityLocalityMismatch = 0;
-        unsigned long paritySourceMismatch = 0;
-        unsigned long parityReasonMismatch = 0;
-        unsigned long parityTimingMismatch = 0;
-        unsigned long parityConfidenceMismatch = 0;
     };
 
     struct PendingSequenceStart {
@@ -377,7 +354,6 @@ private:
         unsigned long sampleDumpStepMs = 0;
         unsigned long sampleDumpMaxRows = 0;
         detection::DetectionProfileKind profileKind = detection::DetectionProfileKind::FreqAmp;
-        bool liveFrequencyOnly = false;
         bool externalEmitter = false;
         char setupLabelStorage[96] = {};
     };
@@ -428,11 +404,10 @@ private:
     void printBaseHints() const;
 
     // Sequence-test workflows.
-    void startSequenceTest(unsigned long totalTrials, unsigned long periodMs, unsigned long windowEndOffsetMs, unsigned long toneHz, unsigned long durationMs, bool quiet = false, bool showDetails = true, const char* setupLabel = nullptr, uint32_t logFlags = DEFAULT_ANALYZER_LOG_FLAGS, bool sampleDumpEnabled = false, unsigned long sampleDumpFirstTrials = 2, unsigned long sampleDumpEveryNth = 0, unsigned long sampleDumpLeadMs = 50, unsigned long sampleDumpTailMs = 800, unsigned long sampleDumpStepMs = 1, unsigned long sampleDumpMaxRows = 5000, detection::DetectionProfileKind profileKind = detection::DetectionProfileKind::FreqAmp, bool liveFrequencyOnly = false, bool externalEmitter = false);
+    void startSequenceTest(unsigned long totalTrials, unsigned long periodMs, unsigned long windowEndOffsetMs, unsigned long toneHz, unsigned long durationMs, bool quiet = false, bool showDetails = true, const char* setupLabel = nullptr, uint32_t logFlags = DEFAULT_ANALYZER_LOG_FLAGS, bool sampleDumpEnabled = false, unsigned long sampleDumpFirstTrials = 2, unsigned long sampleDumpEveryNth = 0, unsigned long sampleDumpLeadMs = 50, unsigned long sampleDumpTailMs = 800, unsigned long sampleDumpStepMs = 1, unsigned long sampleDumpMaxRows = 5000, detection::DetectionProfileKind profileKind = detection::DetectionProfileKind::FreqAmp, bool externalEmitter = false);
     void stopSequenceTest();
     void updateSequenceTest(unsigned long now);
     void handleSequenceTransient(unsigned long now);
-    void updateSequenceLiveFrequencyDiagnostics(unsigned long now);
     void finalizeSequenceTrial(unsigned long now);
     void printCaptureSummary() const;
     void startCaptureSession(unsigned long totalTrials, unsigned long periodMs, unsigned long windowEndOffsetMs, unsigned long toneHz, unsigned long durationMs, bool quiet = false);
@@ -458,12 +433,6 @@ private:
     AnalyzerReport buildSequenceAnalyzerReport(unsigned long trialNumber, const char* result, long dtMs, long durMs, float strength, bool audioOverflow, unsigned long duplicateCount, const SequenceTest::TrialDiagnostics& diagnostics) const;
     void recordSequenceClassifierOutcome(const PatternResult& patternResult, bool duplicateCandidate, bool unexpectedCandidate);
     void handleSequenceCandidate(const PatternResult& patternResult, unsigned long queueDepthBeforeDrain, const FrequencyEvidence* liveFrequencyEvidence = nullptr);
-    // Legacy debug fallback only; not used in the normal Analyzer reporting path.
-    bool evaluateModernSignalCandidate(
-        const detection::SignalCandidate& signal,
-        PatternResult& outResult,
-        detection::InspectedSignal* outInspected = nullptr
-    ) const;
     FrequencyEvidence scanSequenceFrequencyParity64(const PatternCandidate& patternCandidate, unsigned long observedAtMs) const;
     void updateSequenceAmbientStats();
 
@@ -519,7 +488,6 @@ private:
     SequenceTest _sequenceTest;
     CaptureSession _captureSession;
     unsigned long _rawCaptureSequenceId = 0;
-    FrequencyEvidenceEvaluation::Values _liveFrequencyEvidenceTuning = {};
 
     // Print throttling for the VAL view.
     mutable unsigned long _lastPrintMs = 0;

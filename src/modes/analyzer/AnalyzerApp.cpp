@@ -161,17 +161,17 @@ const char* signalRejectReasonName(detection::SignalRejectReason reason) {
     }
 }
 
-const char* ampSupportName(detection::AmpSupportClass value) {
+const char* ampSupportName(detection::AmpSupportLevel value) {
     switch (value) {
-        case detection::AmpSupportClass::None:
+        case detection::AmpSupportLevel::None:
             return "none";
-        case detection::AmpSupportClass::Weak:
+        case detection::AmpSupportLevel::Weak:
             return "weak";
-        case detection::AmpSupportClass::Medium:
+        case detection::AmpSupportLevel::Medium:
             return "medium";
-        case detection::AmpSupportClass::Strong:
+        case detection::AmpSupportLevel::Strong:
             return "strong";
-        case detection::AmpSupportClass::Unknown:
+        case detection::AmpSupportLevel::Unknown:
         default:
             return "unknown";
     }
@@ -370,19 +370,17 @@ void printH3FrequencyEvidenceFields(const detection::PatternResult& patternResul
                                     const char* candidateClass,
                                     long transientAgeOrDtMs,
                                     unsigned long referenceMs) {
-    const auto frequencyEval = FrequencyEvidenceEvaluation::evaluate(frequencyEvidence, tuning);
-    Serial.print(" candidate_class=");
-    Serial.print(candidateClass);
-    Serial.print(" source=");
-    Serial.print(detection::patternSourceName(patternResult.source));
+        const auto frequencyEval = FrequencyEvidenceEvaluation::evaluate(frequencyEvidence, tuning);
+        Serial.print(" candidate_class=");
+        Serial.print(candidateClass);
     Serial.print(" pattern_valid=");
     Serial.print(patternResult.valid ? 1 : 0);
     Serial.print(" pattern_type=");
     Serial.print(detection::patternTypeName(patternResult.type));
     Serial.print(" pattern_reason=");
     Serial.print(detection::patternReasonName(patternResult.reasonCode));
-    Serial.print(" candidate_accepted=");
-    Serial.print(patternResult.candidateAccepted ? 1 : 0);
+    Serial.print(" pattern_candidate_accepted=");
+    Serial.print(patternResult.patternCandidateAccepted ? 1 : 0);
     Serial.print(" pattern_matched=");
     Serial.print(patternResult.patternMatched ? 1 : 0);
     Serial.print(" support_matched=");
@@ -2563,7 +2561,7 @@ const char* AnalyzerApp::sequenceTrialClassificationName(const char* result, lon
 }
 
 void AnalyzerApp::recordSequenceClassifierOutcome(const detection::PatternResult& patternResult, bool duplicateCandidate, bool unexpectedCandidate) {
-    if (_valMode || !patternResult.candidateAccepted) {
+    if (_valMode || !patternResult.patternCandidateAccepted) {
         return;
     }
 
@@ -2746,8 +2744,8 @@ void AnalyzerApp::handleSequenceCandidate(const detection::PatternResult& patter
         Serial.print(" freq_contrast=");
         Serial.print(patternResult.freq.spectralContrast, 1);
         printH3FrequencyEvidenceFields(patternResult, patternResult.freq, liveFrequencyEvidence, _frequencyEvidenceTuning, candidateClass, dtFromTriggerMs, patternResult.processedAtMs);
-        Serial.print(" source=");
-        Serial.println(detection::patternSourceName(patternResult.source));
+        Serial.print(" pattern_type=");
+        Serial.println(detection::patternTypeName(patternResult.type));
 
         Serial.print("SEQ_CAND role=pattern trial=");
         Serial.print(_sequenceTest.currentTrial);
@@ -2802,8 +2800,8 @@ void AnalyzerApp::handleSequenceCandidate(const detection::PatternResult& patter
         Serial.print(" freq_contrast=");
         Serial.print(patternResult.freq.spectralContrast, 1);
         printH3FrequencyEvidenceFields(patternResult, patternResult.freq, liveFrequencyEvidence, _frequencyEvidenceTuning, candidateClass, dtFromTriggerMs, patternResult.processedAtMs);
-        Serial.print(" source=");
-        Serial.println(detection::patternSourceName(patternResult.source));
+        Serial.print(" pattern_type=");
+        Serial.println(detection::patternTypeName(patternResult.type));
     }
 
     if (!inWindow) {
@@ -3214,7 +3212,6 @@ AnalyzerReport AnalyzerApp::buildSequenceAnalyzerReport(unsigned long trialNumbe
         pattern.confidence = actualPipelineAvailable && runtimePatternResult != nullptr ? runtimePatternResult->confidence : 0.0f;
         pattern.dtMs = report.classification.dtMs;
         pattern.ampSupport = actualPipelineAvailable && runtimePatternResult != nullptr ? ampSupportName(runtimePatternResult->ampSupport) : "unknown";
-        pattern.sourceClass = actualPipelineAvailable && runtimePatternResult != nullptr ? detection::patternSourceName(runtimePatternResult->source) : "unknown";
         pattern.reason = actualPipelineAvailable && runtimePatternResult != nullptr ? detection::patternReasonName(runtimePatternResult->reasonCode) : analyzerReasonName(report.classification.reason);
         pattern.involvedSignals = actualPipelineAvailable && runtimePatternResult != nullptr ? runtimePatternResult->signalCount : 0U;
         report.primaryPattern = pattern;
@@ -3335,8 +3332,6 @@ void AnalyzerApp::printSequenceTrialResult(const AnalyzerReport& report) const {
     Serial.print(report.primaryPattern.type != nullptr ? report.primaryPattern.type : "unknown");
     Serial.print(" profile=");
     Serial.print(report.context.profile != nullptr ? report.context.profile : "unknown");
-    Serial.print(" source=");
-    Serial.print(report.primaryPattern.sourceClass != nullptr ? report.primaryPattern.sourceClass : "unknown");
     Serial.print(" confidence=");
     Serial.print(report.primaryPattern.confidence, 2);
     Serial.print(" amp_support=");
@@ -3392,8 +3387,6 @@ void AnalyzerApp::printSequenceExplain(const AnalyzerReport& report) const {
     }
     Serial.print(" profile=");
     Serial.print(report.context.profile != nullptr ? report.context.profile : "unknown");
-    Serial.print(" source=");
-    Serial.print(report.primaryPattern.sourceClass != nullptr ? report.primaryPattern.sourceClass : "unknown");
     Serial.print(" confidence=");
     Serial.print(report.primaryPattern.confidence, 2);
     Serial.print(" amp_support=");
@@ -3507,8 +3500,6 @@ void AnalyzerApp::printSequenceExplain(const AnalyzerReport& report) const {
         Serial.print(report.primaryPattern.confidence, 2);
         Serial.print(" amp_support=");
         Serial.print(report.primaryPattern.ampSupport != nullptr ? report.primaryPattern.ampSupport : "unknown");
-        Serial.print(" source=");
-        Serial.print(report.primaryPattern.sourceClass != nullptr ? report.primaryPattern.sourceClass : "unknown");
         Serial.print(" reason=");
         Serial.print(report.primaryPattern.reason != nullptr ? report.primaryPattern.reason : "none");
         Serial.print(" signals=");

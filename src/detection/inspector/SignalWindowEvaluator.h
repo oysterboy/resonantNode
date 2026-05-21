@@ -31,25 +31,25 @@ inline SignalWindowStats evaluateSignalWindow(const SignalCandidate& candidate) 
     return out;
 }
 
-inline AmpSupportClass classifyAmpSupport(const SignalWindowStats& stats) {
+inline AmpSupportLevel classifyAmpSupport(const SignalWindowStats& stats) {
     if (!stats.hasAmp) {
-        return AmpSupportClass::Unknown;
+        return AmpSupportLevel::Unknown;
     }
 
     const AmpSupportConfig config{};
     if (stats.ampLevel >= config.strongPeakThreshold) {
-        return AmpSupportClass::Strong;
+        return AmpSupportLevel::Strong;
     }
 
     if (stats.ampLevel >= config.mediumPeakThreshold) {
-        return AmpSupportClass::Medium;
+        return AmpSupportLevel::Medium;
     }
 
     if (stats.ampLevel >= config.weakPeakThreshold) {
-        return AmpSupportClass::Weak;
+        return AmpSupportLevel::Weak;
     }
 
-    return AmpSupportClass::None;
+    return AmpSupportLevel::None;
 }
 
 } // namespace detection

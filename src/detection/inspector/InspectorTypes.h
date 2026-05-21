@@ -5,7 +5,7 @@
 namespace detection {
 
 // AMP support is a classification, not a distance estimate.
-enum class AmpSupportClass {
+enum class AmpSupportLevel {
     Unknown,
     None,
     Weak,
@@ -20,24 +20,24 @@ struct AmpSupportConfig {
     float weakPeakThreshold = 20.0f;
 };
 
-inline AmpSupportClass classifyAmpSupport(float peak, bool evidenceValid, const AmpSupportConfig& config) {
+inline AmpSupportLevel classifyAmpSupport(float peak, bool evidenceValid, const AmpSupportConfig& config) {
     if (!evidenceValid) {
-        return AmpSupportClass::Unknown;
+        return AmpSupportLevel::Unknown;
     }
 
     if (peak >= config.strongPeakThreshold) {
-        return AmpSupportClass::Strong;
+        return AmpSupportLevel::Strong;
     }
 
     if (peak >= config.mediumPeakThreshold) {
-        return AmpSupportClass::Medium;
+        return AmpSupportLevel::Medium;
     }
 
     if (peak >= config.weakPeakThreshold) {
-        return AmpSupportClass::Weak;
+        return AmpSupportLevel::Weak;
     }
 
-    return AmpSupportClass::None;
+    return AmpSupportLevel::None;
 }
 
 // Inspector configuration combines AMP thresholds with window behavior.
@@ -75,7 +75,7 @@ struct AmpWindowEvidence {
     float baseline = 0.0f;
     float lift = 0.0f;
 
-    AmpSupportClass supportClass = AmpSupportClass::Unknown;
+    AmpSupportLevel supportClass = AmpSupportLevel::Unknown;
 };
 
 // Raw detector evidence captured for transient-trigger analysis and reporting.

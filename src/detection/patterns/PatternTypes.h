@@ -22,12 +22,6 @@ enum class PatternReasonCode {
     UnsupportedPattern,
 };
 
-enum class PatternSource {
-    ComparisonOnly,
-    AmpFallback,
-    FrequencyPrimary,
-};
-
 // Pattern rejection reasons are kept separate from result kinds.
 enum class PatternRejectReason {
     None,

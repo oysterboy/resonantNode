@@ -6,7 +6,6 @@
 #include <string.h>
 
 #include "../inspector/InspectorTypes.h"
-#include "../patterns/PatternResult.h"
 
 namespace FrequencyEvidenceEvaluation {
 
@@ -75,25 +74,6 @@ inline const char* reasonName(Reason reason) {
     return "unknown";
 }
 
-inline detection::PatternRejectReason rejectReasonFromEvaluation(Reason reason) {
-    switch (reason) {
-        case Reason::None:
-            return detection::PatternRejectReason::None;
-        case Reason::NoEvidence:
-            return detection::PatternRejectReason::NoFrequencyEvidence;
-        case Reason::InvalidWindow:
-            return detection::PatternRejectReason::FrequencyWindowInvalid;
-        case Reason::ScoreTooLow:
-            return detection::PatternRejectReason::FrequencyScoreTooLow;
-        case Reason::ContrastTooLow:
-            return detection::PatternRejectReason::FrequencyContrastTooLow;
-        case Reason::ScoreAndContrastTooLow:
-            return detection::PatternRejectReason::FrequencyScoreAndContrastTooLow;
-    }
-
-    return detection::PatternRejectReason::UnexpectedNoise;
-}
-
 inline Evaluation evaluate(const detection::FrequencyEvidence& evidence, const Values& values) {
     Evaluation out;
     out.present = evidence.present;
@@ -126,42 +106,6 @@ inline Evaluation evaluate(const detection::FrequencyEvidence& evidence, const V
 
 inline bool passes(const detection::FrequencyEvidence& evidence, const Values& values) {
     return evaluate(evidence, values).matched;
-}
-
-inline void classifyPatternResult(detection::PatternResult& result, const Values& frequencyTuning) {
-    if (!result.candidateAccepted) {
-        result.freq = result.candidate.frequency;
-        result.freqFull = result.candidate.frequencyFull;
-        result.source = detection::PatternSource::ComparisonOnly;
-        result.type = detection::PatternType::Invalid;
-        result.reasonCode = detection::PatternReasonCode::DetectorRejected;
-        result.rejectReason = detection::PatternRejectReason::NoCandidate;
-        result.patternMatched = false;
-        result.valid = false;
-        return;
-    }
-
-    const Evaluation eval = evaluate(result.candidate.frequency, frequencyTuning);
-    result.freq = result.candidate.frequency;
-    result.freq.validWindow = eval.validWindow;
-    result.freq.matched = eval.matched;
-    result.freq.confidence = eval.matched ? 1.0f : 0.0f;
-    result.freq.score = eval.score;
-    result.freq.spectralContrast = eval.contrast;
-    result.freqFull = result.candidate.frequencyFull;
-    result.source = eval.matched
-        ? detection::PatternSource::FrequencyPrimary
-        : detection::PatternSource::AmpFallback;
-    result.patternMatched = eval.matched;
-    result.rejectReason = rejectReasonFromEvaluation(eval.reason);
-    result.reasonCode = detection::PatternReasonCode::FromAcceptedTransient;
-    result.type = result.patternMatched
-        ? detection::PatternType::ValidPattern
-        : detection::PatternType::TransientOnly;
-}
-
-inline void classifyPatternResult(detection::PatternResult& result, const ClassifierTuning& tuning) {
-    classifyPatternResult(result, tuning.frequency);
 }
 
 inline void buildFailReason(const detection::FrequencyEvidence& evidence,

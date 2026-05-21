@@ -169,8 +169,8 @@ void printH3FrequencyEvidenceFields(const detection::PatternResult& patternResul
     Serial.print(detection::patternTypeName(patternResult.type));
     Serial.print(" pattern_reason=");
     Serial.print(detection::patternReasonName(patternResult.reasonCode));
-    Serial.print(" candidate_accepted=");
-    Serial.print(patternResult.candidateAccepted ? 1 : 0);
+    Serial.print(" pattern_candidate_accepted=");
+    Serial.print(patternResult.patternCandidateAccepted ? 1 : 0);
     Serial.print(" pattern_matched=");
     Serial.print(patternResult.patternMatched ? 1 : 0);
     Serial.print(" support_matched=");
@@ -905,7 +905,7 @@ void Node::processDetectionFrame(const AudioSignalFrame& frame,
         }
 
         ++_rbCandidateCount;
-        if (patternResult.candidateAccepted) {
+        if (patternResult.patternCandidateAccepted) {
             ++_rbActionCount;
         }
 
@@ -920,8 +920,6 @@ void Node::processDetectionFrame(const AudioSignalFrame& frame,
         if (rbShouldLogDetail()) {
             Serial.print("RB pattern=");
             Serial.print(detection::patternTypeName(patternResult.type));
-            Serial.print(" source=");
-            Serial.print(detection::patternSourceName(patternResult.source));
             Serial.print(" fieldQuiet=");
             Serial.print(_detection.fieldState().quiet ? 1 : 0);
             Serial.print(" fieldActive=");
@@ -1024,12 +1022,10 @@ void Node::logCandidate(const DetectorCandidate& candidate, const detection::Pat
     Serial.print(candidate.audioOverflowDuringCandidate ? "overflow" : "ok");
     Serial.print(" pattern=");
     Serial.print(detection::patternTypeName(patternResult.type));
-    Serial.print(" source=");
-    Serial.print(detection::patternSourceName(patternResult.source));
     Serial.print(" candidate_class=");
     Serial.print(candidateClass);
     Serial.print(" candidate_accepted=");
-    Serial.print(patternResult.candidateAccepted ? 1 : 0);
+    Serial.print(patternResult.patternCandidateAccepted ? 1 : 0);
     Serial.print(" pattern_matched=");
     Serial.print(patternResult.patternMatched ? 1 : 0);
     Serial.print(" support_matched=");

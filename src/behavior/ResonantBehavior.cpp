@@ -127,7 +127,7 @@ ResonantBehavior::BehaviorDecision ResonantBehavior::handlePatternResult(const d
     _wouldEmit = false;
     _outputBusy = _state == State::Chirping;
 
-    if (!result.candidateAccepted) {
+    if (!result.patternCandidateAccepted) {
         _behaviorEligible = false;
         if (result.type == detection::PatternType::Ambiguous) {
             _lastDecision = BehaviorDecision::IgnoredAmbiguousPattern;
@@ -150,7 +150,7 @@ ResonantBehavior::BehaviorDecision ResonantBehavior::handlePatternResult(const d
         return _lastDecision;
     }
 
-    if (!result.candidateAccepted || !result.patternMatched || !result.supportMatched) {
+    if (!result.patternCandidateAccepted || !result.patternMatched || !result.supportMatched) {
         _behaviorEligible = false;
         _lastDecision = BehaviorDecision::UnknownBlocked;
         _lastBlockReason = BehaviorDecision::UnknownBlocked;

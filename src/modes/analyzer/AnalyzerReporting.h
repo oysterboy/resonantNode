@@ -127,7 +127,6 @@ struct AnalyzerPatternObservation {
     long dtMs = -1;
 
     const char* ampSupport = "unknown";
-    const char* sourceClass = "unknown";
     const char* reason = "none";
 
     unsigned int involvedSignals = 0;

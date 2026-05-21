@@ -1,64 +1,65 @@
-# Inspector Boundary Cleanup
+# Frequency Ownership Closeout
 
 ## Goal
 
-Make the inspector boundary match the roadmap more clearly:
+Close the remaining gap to the roadmap by making frequency evidence a single-owner fact in the detection chain:
 
-- `FreqAmp` should use `SignalInspector` for AMP-window / support inspection only
-- frequency-window checks should stay with the detector / pattern side
-- any later profile that truly needs a frequency-window inspector path can add it explicitly
+- `FrequencyMatchDetector` evaluates frequency evidence once
+- later stages consume the already-produced frequency facts
+- `SignalInspector` stays AMP-side only for the steady-state `FreqAmp` path
+- `PatternRules` should not re-derive raw frequency meaning from the candidate again
 
-The goal is cleaner ownership, not behavior drift.
+The goal is a clean stage boundary, not a new rule system.
 
 ## Current Scope
 
-The inspector boundary is now aligned with the steady-state `FreqAmp` flow:
+What is already aligned:
 
-- keep AMP-window inspection in `SignalInspector`
-- keep live frequency detection in `FrequencyMatchDetector`
-- keep frequency-evidence evaluation on the detector / pattern-rule side
-- avoid turning `SignalInspector` into a general-purpose mixed inspector again
-
-`PatternSource` stays as a small provenance label on `PatternResult` for now because it still helps explain `ComparisonOnly`, `AmpFallback`, and `FrequencyPrimary` in logs and debugging.
-
-Inspector shape:
-
-- prefer one generic inspection mechanism composed per profile when that stays clear
-- allow separate inspector variants if the profile branches become materially different
-- do not let `SignalInspector` turn into a second detector
+- `FrequencyMatchDetector` owns frequency evaluation once
+- `PatternRules` consumes detector-produced frequency facts
+- `SignalInspector` is AMP-side only for `FreqAmp`
+- `FrequencyEvidenceEvaluation` lives under `src/detection/signals/`
+- the detector-to-pattern handoff no longer re-runs raw frequency evaluation
+- the pattern-stage acceptance flag is now `patternCandidateAccepted`
 
 ## Done
 
-- `SignalInspector` is AMP-side only for the steady-state `FreqAmp` flow
-- live frequency detection stays in `FrequencyMatchDetector`
-- frequency evidence is no longer treated as a normal inspector responsibility for `FreqAmp`
-- `PatternSource` remains a provenance label for now
-- both `esp32dev` and `esp32dev-analyzer` builds passed
+- `SignalInspector` no longer acts like a second frequency detector
+- `FrequencyEvidenceEvaluation` moved out of the inspector folder
+- `PatternRules` now consumes detector-produced frequency facts
+- `PatternSource` has been removed from the model and logs
+- `candidateAccepted` was renamed to `patternCandidateAccepted`
+- the code builds cleanly on `esp32dev` and `esp32dev-analyzer`
 
 ## Pending
 
-- decide whether a future profile should use the generic inspector or a dedicated inspector variant
-- revisit `PatternSource` only if the result-origin story gets simplified too
-- keep tightening docs so the stage chain stays easy to read
+- rename any remaining report labels that still say `source=` when they now mean `pattern_type=`
+- decide whether `patternCandidateAccepted` should stay, or whether `patternMatched` plus `valid` are enough
 
 ## Do Now
 
-1. Keep the detector and pattern-rule frequency logic intact.
-2. Decide whether a later profile should use the generic inspector or a dedicated inspector variant.
-3. Keep `PatternSource` only as long as it helps explain the result origin.
-4. Build `esp32dev` and `esp32dev-analyzer` when code changes resume.
+1. Build `esp32dev` and `esp32dev-analyzer` after the `PatternSource` and acceptance rename cleanup.
+2. Check the remaining `SEQ` / `RB` report labels for any stale wording.
+3. Decide whether `patternCandidateAccepted` is still worth keeping.
 
 ## Do Not Do
 
 - do not change profile defaults
 - do not change behavior policy
 - do not add a compatibility layer
-- do not flatten the detector/pattern/inspector split
+- do not flatten detector, inspector, and pattern responsibilities
 
 ## Why
 
-`SignalInspector` should annotate and support the current `FreqAmp` candidates, not become a second frequency detector. Keeping the boundary narrow makes the architecture easier to read and less likely to drift back into a catch-all inspector.
+The roadmap target is a simple ownership chain:
+
+```text
+detector -> signal facts -> inspector -> pattern rules -> behavior
+```
+
+If a later stage keeps re-evaluating the raw frequency evidence, the ownership line stays blurry. The clean closeout is to let the detector produce the frequency verdict once and let later stages consume that verdict.
 
 ## Status
 
-Done in active source and verified with both `esp32dev` and `esp32dev-analyzer` builds.
+The detector-to-pattern ownership line is now closed for frequency evaluation.
+`PatternSource` has been removed; the remaining cleanup is mostly about report label wording and whether the pattern-stage acceptance flag is still needed.

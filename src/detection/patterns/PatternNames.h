@@ -4,19 +4,6 @@
 
 namespace detection {
 
-inline const char* patternSourceName(PatternSource source) {
-    switch (source) {
-        case PatternSource::ComparisonOnly:
-            return "comparison_only";
-        case PatternSource::AmpFallback:
-            return "amp_fallback";
-        case PatternSource::FrequencyPrimary:
-            return "frequency_primary";
-    }
-
-    return "unknown";
-}
-
 inline const char* patternCandidateKindName(PatternCandidateKind kind) {
     switch (kind) {
         case PatternCandidateKind::Unknown:

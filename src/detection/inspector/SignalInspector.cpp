@@ -27,7 +27,7 @@ void fillAmpWindowObservation(
 
     out.signal.ampLevel = peak;
     out.signal.ampBaseline = floor;
-    out.ampSupport = available ? classifyAmpSupport(peak, available, config.ampSupport) : detection::AmpSupportClass::Unknown;
+    out.ampSupport = available ? classifyAmpSupport(peak, available, config.ampSupport) : detection::AmpSupportLevel::Unknown;
 
     auto& ampEvidence = out.ampWindow;
     ampEvidence.available = available;
@@ -135,7 +135,7 @@ void SignalInspector::annotateAmpSupportAndLocality(
     ampEvidence.baseline = 0.0f;
     ampEvidence.lift = 0.0f;
     ampEvidence.supportBasis = "peak";
-    ampEvidence.supportClass = AmpSupportClass::Unknown;
+    ampEvidence.supportClass = AmpSupportLevel::Unknown;
 
     if (_config.enableAmpSupportInspection && featureHistory != nullptr) {
         const ScalarWindow ampWindow = featureHistory->getWindow(FeatureStreamId::AmpEnvelope, startMs, endMs);
@@ -150,7 +150,7 @@ void SignalInspector::annotateAmpSupportAndLocality(
     if (!candidate.ampEvidencePresent) {
         out.signal.ampLevel = 0.0f;
         out.signal.ampBaseline = 0.0f;
-        out.ampSupport = AmpSupportClass::Unknown;
+        out.ampSupport = AmpSupportLevel::Unknown;
         return;
     }
 

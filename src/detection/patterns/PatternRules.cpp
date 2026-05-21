@@ -14,7 +14,7 @@ PatternResultKind resultKindFromCandidate(const PatternCandidate& candidate) {
         return PatternResultKind::ValidChirp;
     }
 
-        return PatternResultKind::Pattern;
+    return PatternResultKind::Pattern;
 }
 
 bool hasTransientEvidence(const PatternCandidate& candidate) {
@@ -25,16 +25,12 @@ bool hasTransientEvidence(const PatternCandidate& candidate) {
            candidate.releaseStrength > 0.0f;
 }
 
-bool hasFrequencyEvidence(const PatternCandidate& candidate) {
-    return candidate.frequency.present || candidate.frequencyFull.present;
-}
-
 bool hasRequiredSupport(const PatternCandidate& candidate) {
-    return candidate.ampSupport >= AmpSupportClass::Medium;
+    return candidate.ampSupport >= AmpSupportLevel::Medium;
 }
 
 PatternRejectReason supportRejectReason(const PatternCandidate& candidate) {
-    if (candidate.ampSupport == AmpSupportClass::Unknown) {
+    if (candidate.ampSupport == AmpSupportLevel::Unknown) {
         return PatternRejectReason::MissingSupport;
     }
     return PatternRejectReason::SupportTooLow;
@@ -65,15 +61,14 @@ PatternResult makeInvalidResult(const PatternCandidate& candidate,
     result.maxGapMs = candidate.maxGapMs;
     result.reasonCode = PatternReasonCode::DetectorRejected;
     result.rejectReason = PatternRejectReason::NoCandidate;
-    result.source = PatternSource::ComparisonOnly;
     result.confidence = 0.0f;
     result.signalConfidence = 0.0f;
     result.frequencyConfidence = 0.0f;
-    result.ampSupport = AmpSupportClass::Unknown;
+    result.ampSupport = AmpSupportLevel::Unknown;
     result.ampWindow = candidate.ampWindow;
     result.duplicateRisk = false;
     result.duplicateRiskScore = 0.0f;
-    result.candidateAccepted = false;
+    result.patternCandidateAccepted = false;
     result.patternMatched = false;
     result.supportMatched = false;
     result.valid = false;
@@ -86,18 +81,14 @@ namespace detection {
 
 PatternResult PatternRules::evaluate(
     const PatternCandidate& candidate,
-    unsigned long nowMs,
-    const FrequencyEvidenceEvaluation::Values& frequencyTuning
+    unsigned long nowMs
 ) const {
-    if (hasFrequencyEvidence(candidate)) {
-        const auto eval = FrequencyEvidenceEvaluation::evaluate(candidate.frequency, frequencyTuning);
-        if (eval.matched && eval.validWindow) {
-            return evaluateFrequencyPattern(candidate, nowMs, frequencyTuning);
-        }
+    if (candidate.frequency.present && candidate.frequency.matched) {
+        return evaluateFrequencyPattern(candidate, nowMs);
     }
 
     if (hasTransientEvidence(candidate)) {
-        return evaluateAmpPattern(candidate, nowMs, frequencyTuning);
+        return evaluateAmpPattern(candidate, nowMs);
     }
 
     return makeInvalidResult(candidate, nowMs);
@@ -105,8 +96,7 @@ PatternResult PatternRules::evaluate(
 
 PatternResult PatternRules::evaluateFrequencyPattern(
     const PatternCandidate& candidate,
-    unsigned long nowMs,
-    const FrequencyEvidenceEvaluation::Values& frequencyTuning
+    unsigned long nowMs
 ) const {
     PatternResult result = {};
     result.candidate = candidate;
@@ -125,11 +115,10 @@ PatternResult PatternRules::evaluateFrequencyPattern(
     result.lastPulseMs = candidate.lastPulseMs;
     result.minGapMs = candidate.minGapMs;
     result.maxGapMs = candidate.maxGapMs;
-    result.candidateAccepted = true;
+    result.patternCandidateAccepted = true;
     result.patternMatched = true;
     result.supportMatched = true;
     result.valid = true;
-    result.source = PatternSource::FrequencyPrimary;
     result.type = PatternType::ValidPattern;
     result.kind = resultKindFromCandidate(candidate);
     result.reasonCode = PatternReasonCode::FromAcceptedTransient;
@@ -141,9 +130,6 @@ PatternResult PatternRules::evaluateFrequencyPattern(
     result.duplicateRisk = candidate.duplicateRisk;
     result.duplicateRiskScore = candidate.duplicateRiskScore;
     result.confidence = result.signalConfidence;
-
-    // Compatibility classification only. Signal acceptance already happened in SignalInspector.
-    FrequencyEvidenceEvaluation::classifyPatternResult(result, frequencyTuning);
     result.supportMatched = hasRequiredSupport(candidate);
     if (!result.supportMatched) {
         result.kind = PatternResultKind::Rejected;
@@ -167,8 +153,7 @@ PatternResult PatternRules::evaluateFrequencyPattern(
 
 PatternResult PatternRules::evaluateAmpPattern(
     const PatternCandidate& candidate,
-    unsigned long nowMs,
-    const FrequencyEvidenceEvaluation::Values& frequencyTuning
+    unsigned long nowMs
 ) const {
     PatternResult result = {};
     result.candidate = candidate;
@@ -187,11 +172,10 @@ PatternResult PatternRules::evaluateAmpPattern(
     result.lastPulseMs = candidate.lastPulseMs;
     result.minGapMs = candidate.minGapMs;
     result.maxGapMs = candidate.maxGapMs;
-    result.candidateAccepted = true;
+    result.patternCandidateAccepted = true;
     result.patternMatched = false;
     result.supportMatched = false;
     result.valid = false;
-    result.source = PatternSource::AmpFallback;
     result.type = PatternType::TransientOnly;
     result.kind = resultKindFromCandidate(candidate);
     result.reasonCode = PatternReasonCode::FromAcceptedTransient;
@@ -202,9 +186,6 @@ PatternResult PatternRules::evaluateAmpPattern(
     result.duplicateRisk = candidate.duplicateRisk;
     result.duplicateRiskScore = candidate.duplicateRiskScore;
     result.confidence = result.signalConfidence;
-
-    // Compatibility classification only. Signal acceptance already happened in SignalInspector.
-    FrequencyEvidenceEvaluation::classifyPatternResult(result, frequencyTuning);
     if (!candidate.frequency.present) {
         result.rejectReason = PatternRejectReason::TransientOnly;
     }

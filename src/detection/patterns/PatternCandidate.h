@@ -52,7 +52,7 @@ struct PatternCandidate {
     float ambientBaseline = 0.0f;
     float signalConfidence = 0.0f;
     float frequencyConfidence = 0.0f;
-    AmpSupportClass ampSupport = AmpSupportClass::Unknown;
+    AmpSupportLevel ampSupport = AmpSupportLevel::Unknown;
     AmpWindowEvidence ampWindow = {};
     bool duplicateRisk = false;
     float duplicateRiskScore = 0.0f;

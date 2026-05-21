@@ -127,7 +127,7 @@ void DetectionRuntime::drainSignalEmitters(unsigned long nowMs) {
 void DetectionRuntime::drainPatternAssembler(unsigned long nowMs) {
     PatternCandidate candidate;
     while (_patternAssembler.popPatternCandidate(candidate)) {
-        const PatternResult result = _patternRules.evaluate(candidate, nowMs, _frequencyTuning);
+        const PatternResult result = _patternRules.evaluate(candidate, nowMs);
         _fieldStateTracker.observePatternResult(result, nowMs);
         capturePipelineResult(result, &_lastSignalCandidate, &_lastInspectedSignal, nowMs);
         pushPatternResult(result);

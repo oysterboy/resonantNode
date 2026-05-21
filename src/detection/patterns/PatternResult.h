@@ -14,11 +14,10 @@ struct PatternResult {
     PatternType type = PatternType::None;
     PatternReasonCode reasonCode = PatternReasonCode::None;
     PatternRejectReason rejectReason = PatternRejectReason::None;
-    PatternSource source = PatternSource::ComparisonOnly;
     float confidence = 0.0f;
     float signalConfidence = 0.0f;
     float frequencyConfidence = 0.0f;
-    AmpSupportClass ampSupport = AmpSupportClass::Unknown;
+    AmpSupportLevel ampSupport = AmpSupportLevel::Unknown;
     AmpWindowEvidence ampWindow = {};
     bool duplicateRisk = false;
     float duplicateRiskScore = 0.0f;
@@ -36,7 +35,7 @@ struct PatternResult {
     PatternCandidate candidate = {};
     FrequencyEvidence freq = {};
     FrequencyEvidence freqFull = {};
-    bool candidateAccepted = false;
+    bool patternCandidateAccepted = false;
     bool patternMatched = false;
     bool supportMatched = false;
     bool valid = false;

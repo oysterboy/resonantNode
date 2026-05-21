@@ -39,6 +39,10 @@ void DetectionRuntime::setAmpEnabled(bool enabled) {
     }
 }
 
+void DetectionRuntime::setRequireSupportForAcceptance(bool value) {
+    _patternRules.setRequireSupportForAcceptance(value);
+}
+
 void DetectionRuntime::setFieldStateConfig(const FieldStateConfig& config) {
     _fieldStateTracker.setConfig(config);
 }

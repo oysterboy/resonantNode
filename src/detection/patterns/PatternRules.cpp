@@ -1,7 +1,12 @@
 #include "PatternRules.h"
 
+namespace detection {
+
+void PatternRules::setRequireSupportForAcceptance(bool value) {
+    _requireSupportForAcceptance = value;
+}
+
 namespace {
-using namespace detection;
 
 PatternResultKind resultKindFromCandidate(const PatternCandidate& candidate) {
     if (candidate.kind == PatternCandidateKind::PulseSequence || candidate.signalCount > 1 || candidate.pulseCount > 1) {
@@ -17,18 +22,6 @@ PatternResultKind resultKindFromCandidate(const PatternCandidate& candidate) {
     return PatternResultKind::Pattern;
 }
 
-bool hasTransientEvidence(const PatternCandidate& candidate) {
-    return candidate.transient.present ||
-           candidate.durationMs > 0 ||
-           candidate.peakStrength > 0.0f ||
-           candidate.onsetStrength > 0.0f ||
-           candidate.releaseStrength > 0.0f;
-}
-
-bool hasRequiredSupport(const PatternCandidate& candidate) {
-    return candidate.ampSupport >= AmpSupportLevel::Medium;
-}
-
 PatternRejectReason supportRejectReason(const PatternCandidate& candidate) {
     if (candidate.ampSupport == AmpSupportLevel::Unknown) {
         return PatternRejectReason::MissingSupport;
@@ -37,7 +30,7 @@ PatternRejectReason supportRejectReason(const PatternCandidate& candidate) {
 }
 
 PatternResult makeInvalidResult(const PatternCandidate& candidate,
-                                unsigned long nowMs) {
+                               unsigned long nowMs) {
     PatternResult result = {};
     result.candidate = candidate;
     if (!result.candidate.frequency.present && result.candidate.frequencyFull.present) {
@@ -77,18 +70,12 @@ PatternResult makeInvalidResult(const PatternCandidate& candidate,
 
 } // namespace
 
-namespace detection {
-
 PatternResult PatternRules::evaluate(
     const PatternCandidate& candidate,
     unsigned long nowMs
 ) const {
     if (candidate.frequency.present && candidate.frequency.matched) {
         return evaluateFrequencyPattern(candidate, nowMs);
-    }
-
-    if (hasTransientEvidence(candidate)) {
-        return evaluateAmpPattern(candidate, nowMs);
     }
 
     return makeInvalidResult(candidate, nowMs);
@@ -129,8 +116,7 @@ PatternResult PatternRules::evaluateFrequencyPattern(
     result.ampWindow = candidate.ampWindow;
     result.duplicateRisk = candidate.duplicateRisk;
     result.duplicateRiskScore = candidate.duplicateRiskScore;
-    result.confidence = result.signalConfidence;
-    result.supportMatched = hasRequiredSupport(candidate);
+    result.supportMatched = !_requireSupportForAcceptance || candidate.ampSupport >= AmpSupportLevel::Medium;
     if (!result.supportMatched) {
         result.kind = PatternResultKind::Rejected;
         result.type = PatternType::FrequencyWeak;
@@ -139,60 +125,6 @@ PatternResult PatternRules::evaluateFrequencyPattern(
     }
     result.confidence = result.patternMatched ? 1.0f : 0.0f;
     result.valid = result.patternMatched && result.supportMatched;
-    if (result.kind == PatternResultKind::TooDense) {
-        result.type = PatternType::Ambiguous;
-        result.valid = false;
-        result.rejectReason = PatternRejectReason::UnexpectedTiming;
-    } else if (result.kind == PatternResultKind::InvalidChirp) {
-        result.type = PatternType::Invalid;
-        result.valid = false;
-        result.rejectReason = PatternRejectReason::UnexpectedTiming;
-    }
-    return result;
-}
-
-PatternResult PatternRules::evaluateAmpPattern(
-    const PatternCandidate& candidate,
-    unsigned long nowMs
-) const {
-    PatternResult result = {};
-    result.candidate = candidate;
-    if (!result.candidate.frequency.present && result.candidate.frequencyFull.present) {
-        result.candidate.frequency = result.candidate.frequencyFull;
-    }
-    if (!result.candidate.frequencyFull.present && result.candidate.frequency.present) {
-        result.candidate.frequencyFull = result.candidate.frequency;
-    }
-    result.processedAtMs = nowMs;
-    result.lineageId = candidate.lineageId;
-    result.primarySlotIndex = candidate.primarySlotIndex;
-    result.signalCount = candidate.signalCount;
-    result.pulseCount = candidate.pulseCount;
-    result.firstPulseMs = candidate.firstPulseMs;
-    result.lastPulseMs = candidate.lastPulseMs;
-    result.minGapMs = candidate.minGapMs;
-    result.maxGapMs = candidate.maxGapMs;
-    result.patternCandidateAccepted = true;
-    result.patternMatched = false;
-    result.supportMatched = false;
-    result.valid = false;
-    result.type = PatternType::TransientOnly;
-    result.kind = resultKindFromCandidate(candidate);
-    result.reasonCode = PatternReasonCode::FromAcceptedTransient;
-    result.signalConfidence = candidate.signalConfidence > 0.0f ? candidate.signalConfidence : 0.5f;
-    result.frequencyConfidence = candidate.frequencyConfidence;
-    result.ampSupport = candidate.ampSupport;
-    result.ampWindow = candidate.ampWindow;
-    result.duplicateRisk = candidate.duplicateRisk;
-    result.duplicateRiskScore = candidate.duplicateRiskScore;
-    result.confidence = result.signalConfidence;
-    if (!candidate.frequency.present) {
-        result.rejectReason = PatternRejectReason::TransientOnly;
-    }
-    result.patternMatched = false;
-    result.supportMatched = false;
-    result.valid = false;
-    result.confidence = result.signalConfidence;
     if (result.kind == PatternResultKind::TooDense) {
         result.type = PatternType::Ambiguous;
         result.valid = false;

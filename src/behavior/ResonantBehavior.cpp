@@ -45,8 +45,6 @@ const char* patternTypeName(detection::PatternType type) {
     switch (type) {
         case detection::PatternType::None:
             return "none";
-        case detection::PatternType::TransientOnly:
-            return "transient_only";
         case detection::PatternType::ValidPattern:
             return "valid_pattern";
         case detection::PatternType::Invalid:

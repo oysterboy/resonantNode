@@ -53,6 +53,7 @@ struct DetectionProfile {
     ProfilePatternRulesKind patternRules = ProfilePatternRulesKind::PatternRules;
     bool frequencyOnly = false;
     bool ampEnabled = true;
+    bool requireSupportForAcceptance = true;
 
     InspectionConfig inspectionConfig = defaultInspectionConfig();
 
@@ -75,6 +76,7 @@ inline DetectionProfile makeFreqAmpProfile() {
     // Runtime behavior.
     profile.frequencyOnly = false;
     profile.ampEnabled = true;
+    profile.requireSupportForAcceptance = true;
 
     // Inspector configuration.
     profile.inspectionConfig = defaultInspectionConfig(); // shared inspector defaults
@@ -105,6 +107,7 @@ inline DetectionProfile makeChirpProfile() {
     // Runtime behavior.
     profile.frequencyOnly = false;
     profile.ampEnabled = true;
+    profile.requireSupportForAcceptance = true;
 
     // Inspector configuration.
     profile.inspectionConfig = defaultInspectionConfig();

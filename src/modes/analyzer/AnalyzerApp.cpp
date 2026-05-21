@@ -1643,6 +1643,7 @@ void AnalyzerApp::startSequenceTest(unsigned long totalTrials, unsigned long per
     const detection::DetectionProfile& selectedProfile = detection::detectionProfileForKind(_sequenceTest.profileKind);
     _detection->setAmpEnabled(selectedProfile.ampEnabled);
     _detection->setInspectionConfig(selectedProfile.inspectionConfig);
+    _detection->setRequireSupportForAcceptance(selectedProfile.requireSupportForAcceptance);
     _detection->setFieldStateConfig(selectedProfile.fieldStateConfig);
     _detection->setProfileName(detection::detectionProfileName(selectedProfile.kind));
 

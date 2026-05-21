@@ -74,7 +74,6 @@ private:
     };
 
     void configureParameters();
-    void configureSharedParameters();
     void configureI2SParameters();
     void startRbQuietBaseline();
     void resetRbCounters();

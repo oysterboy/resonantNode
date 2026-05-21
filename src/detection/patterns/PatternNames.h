@@ -46,8 +46,6 @@ inline const char* patternTypeName(PatternType type) {
             return "none";
         case PatternType::ValidPattern:
             return "valid_pattern";
-        case PatternType::TransientOnly:
-            return "transient_only";
         case PatternType::FrequencyWeak:
             return "frequency_weak";
         case PatternType::DuplicateAfterPrimary:
@@ -100,8 +98,6 @@ inline const char* patternRejectReasonName(PatternRejectReason reason) {
             return "missing_support";
         case PatternRejectReason::SupportTooLow:
             return "support_too_low";
-        case PatternRejectReason::TransientOnly:
-            return "transient_only";
         case PatternRejectReason::DuplicateAfterPrimary:
             return "duplicate_after_primary";
         case PatternRejectReason::UnexpectedTiming:

@@ -46,6 +46,7 @@ public:
     void setFrequencyTuning(const FrequencyEvidenceEvaluation::Values& tuning);
     void setInspectionConfig(const InspectionConfig& config);
     void setAmpEnabled(bool enabled);
+    void setRequireSupportForAcceptance(bool value);
     void setFieldStateConfig(const FieldStateConfig& config);
     void setProfileName(const char* profileName);
 

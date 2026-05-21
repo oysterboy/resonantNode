@@ -11,7 +11,7 @@ Short operator notes for running RB and Analyzer with the current detection stac
 ## Detection Profiles
 
 - Default profile: `FreqAmp`
-- Defaults defined in `src/detection/DetectionProfile.h`
+- Profile definitions live in `src/detection/DetectionProfile.h`
 
 - Switch profile at runtime with:
   - `RB PROFILE name=freqamp`
@@ -19,28 +19,41 @@ Short operator notes for running RB and Analyzer with the current detection stac
 - Profiles own the detection composition.
 - Live low-level detection tuning is mostly profile-defined, not a freeform runtime knob set.
 
-### What a profile sets:
+### Detection knobs
 
-- `featureSet`
-  - the high-level detection family
-- `signalEmitter`
-  - how the signal is represented or emitted into the detection stack
-- `signalDetector`
-  - the detector type used on that signal
-- `inspectionRules`
+**Runtime parameter**
+- `kind` in `src/detection/DetectionProfile.h`
+  - selected at runtime via `RB PROFILE name=freqamp|chirp`
+
+**Coded in profile**
+- `featureSet` in `src/detection/DetectionProfile.h`
+  - high-level detection family
+- `signalEmitter` in `src/detection/DetectionProfile.h`
+  - how the signal is represented or emitted
+- `signalDetector` in `src/detection/DetectionProfile.h`
+  - detector type used on that signal
+- `inspectionRules` in `src/detection/DetectionProfile.h`
   - how candidate evidence is inspected
-- `patternAssembler`
+- `patternAssembler` in `src/detection/DetectionProfile.h`
   - how inspected evidence is grouped into candidates
-- `patternRules`
+- `patternRules` in `src/detection/DetectionProfile.h`
   - which pattern rules decide acceptance and support
-- `frequencyOnly`
+- `frequencyOnly` in `src/detection/DetectionProfile.h`
   - whether the profile is frequency-only or uses amp support too
-- `ampEnabled`
+- `ampEnabled` in `src/detection/DetectionProfile.h`
   - whether amp support is part of the profile path
-- `inspectionConfig`
+- `requireSupportForAcceptance` in `src/detection/DetectionProfile.h`
+  - whether support is a hard acceptance gate
+- `inspectionConfig` in `src/detection/DetectionProfile.h`
   - windowing and support thresholds used by the inspector
-- `fieldStateConfig`
+- `fieldStateConfig` in `src/detection/DetectionProfile.h`
   - signal/pattern window lengths and field-density thresholds
+
+**Elsewhere**
+- I2S tuning in `src/modes/resonant/node.cpp`
+  - `configureI2SParameters()`
+- frequency tuning thresholds in `src/modes/resonant/node.cpp` and `src/modes/analyzer/AnalyzerApp.cpp`
+  - `_frequencyEvidenceTuning`
 
 Current profile gate shape:
 
@@ -53,24 +66,34 @@ candidateAccepted -> patternMatched -> supportMatched -> behaviorEligible
 - Behavior profiles control how RB reacts after detection has already produced a valid result.
 - They do not change the detection profile itself.
 - The current RB behavior profile is the `FreqAmp` behavior setup used by the active node.
-- Defaults defined in `src/behavior/BehaviorProfile.h` and applied from `src/modes/resonant/node.cpp`
+- Defaults defined in `src/behavior/BehaviorProfile.h`
+- Applied from `src/modes/resonant/node.cpp`
 
-### Behavior knobs:
+### Behavior knobs
 
-- `idleEnabled`
+**Runtime parameter**
+- none at the moment
+
+**Coded in profile**
+- `idleEnabled` in `src/behavior/BehaviorProfile.h`
   - enables or disables idle emission behavior
-- `waitAfterTransientMs`
+- `waitAfterTransientMs` in `src/behavior/BehaviorProfile.h`
   - minimum wait after a transient before RB may emit
-- `refractoryAfterEmitMs`
+- `refractoryAfterEmitMs` in `src/behavior/BehaviorProfile.h`
   - refractory time after an emit
-- `idleTimeoutMs`
+- `idleTimeoutMs` in `src/behavior/BehaviorProfile.h`
   - time before idle emission may be considered
-- `idleTimeVariationMs`
+- `idleTimeVariationMs` in `src/behavior/BehaviorProfile.h`
   - variation applied to idle timing
-- `idleBlockedAfterHeardMs`
+- `idleBlockedAfterHeardMs` in `src/behavior/BehaviorProfile.h`
   - block idle emission for a while after hearing a pattern
-- `idleBlockedAfterOwnEmitMs`
+- `idleBlockedAfterOwnEmitMs` in `src/behavior/BehaviorProfile.h`
   - block idle emission for a while after the node emits itself
+
+**Elsewhere**
+- applied in `src/modes/resonant/node.cpp`
+  - `applyActiveProfiles()`
+  - `ResonantBehavior::configure(...)`
 
 Current live command:
 
@@ -94,10 +117,42 @@ RB BEHAV wait=100 refractory=0 idleTimeout=20000 idleTimeoutVariation=10000 idle
 
 ## Current Implementation
 
-- `candidateAccepted` means the inspector accepted a real, usable candidate.
+- `patternCandidateAccepted` means the inspector/pattern chain accepted a real, usable candidate.
 - `patternMatched` means the candidate matched the profile rules.
-- `supportMatched` means the profile-specific support gate passed, when support is required.
+- `supportMatched` means the profile-specific support gate passed.
 - `behaviorEligible` is the final gate used by RB to decide whether to react.
+
+### FreqAmp decision tree
+
+- `AudioSignalFrame` is built from the live I2S stream.
+- The detector produces signal evidence once.
+- `SignalInspector` adds AMP support and amp-window evidence.
+- `PatternRules` turns the candidate into a `PatternResult`.
+- For `FreqAmp`, the result is valid only when:
+  - the frequency path matched
+  - the profile-owned support gate allows acceptance
+  - `AmpSupportLevel >= Medium` when support is required
+- `DetectionRuntime` forwards the `PatternResult` and `FieldState` to RB.
+- `ResonantBehavior` decides whether to react now:
+  - reject if `patternCandidateAccepted` is false
+  - reject if the pattern is ambiguous
+  - reject if `patternMatched` is false
+  - reject if `supportMatched` is false
+  - otherwise apply the behavior state machine:
+    - `Chirping`
+    - `Refractory`
+    - `TransientSeen`
+    - self-suppression
+    - idle gating
+  - only then mark the result behavior-eligible
+
+Short version:
+
+```txt
+signal -> inspection -> pattern result -> behavior gate -> output
+```
+
+`FreqAmp` keeps support required by default. Future profiles can flip the profile-owned switch if they want support to be behavior-only.
 
 ## Source Organization
 

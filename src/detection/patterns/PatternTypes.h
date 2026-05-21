@@ -6,7 +6,6 @@ namespace detection {
 enum class PatternType {
     None,
     ValidPattern,
-    TransientOnly,
     FrequencyWeak,
     DuplicateAfterPrimary,
     UnexpectedNoise,
@@ -33,7 +32,6 @@ enum class PatternRejectReason {
     FrequencyScoreAndContrastTooLow,
     MissingSupport,
     SupportTooLow,
-    TransientOnly,
     DuplicateAfterPrimary,
     UnexpectedTiming,
     UnexpectedNoise,

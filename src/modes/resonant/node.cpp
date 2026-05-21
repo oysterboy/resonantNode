@@ -423,12 +423,11 @@ void Node::updateRbBaselineState(unsigned long now) {
 // --- parameter setup ---
 
 void Node::configureParameters() {
-    configureSharedParameters();
     configureI2SParameters();
 }
 
-void Node::configureSharedParameters() {
-    // Signal conditioning shared across sources.
+void Node::configureI2SParameters() {
+    // I2S/audio conditioning and detector tuning live here.
     _audioSignal.setSmoothingFactor(0.5f);
     _audioSignal.setBaselineUpdateFactor(0.005f);
     _frequencyEvidenceTuning.scoreMin = 10000.0f;
@@ -437,9 +436,6 @@ void Node::configureSharedParameters() {
     // Chirp tone is configured here so the node owns its output tuning.
     // The fallback/default frequency is defined by CHIRP_FREQUENCY_HZ.
     _chirpOutput.setToneHz(3200);
-}
-
-void Node::configureI2SParameters() {
     _audioSignal.setBaselineTrackingQuietThreshold(20);
 
     _audioOnsetDetector.setOnsetDetectionThreshold(23.0f);
@@ -447,8 +443,8 @@ void Node::configureI2SParameters() {
     _audioOnsetDetector.setCooldownAfterOnsetMs(10);
     _audioOnsetDetector.setReleaseDebounceMs(30);
     _audioOnsetDetector.setMinTransientDurationMs(60);
-        _audioOnsetDetector.setMaxTransientDurationMs(240);
-        _audioOnsetDetector.setMinTransientPeakStrength(40.0f);
+    _audioOnsetDetector.setMaxTransientDurationMs(240);
+    _audioOnsetDetector.setMinTransientPeakStrength(40.0f);
     // Behavior timing comes from the active profiles via applyActiveProfiles().
 }
 
@@ -882,6 +878,7 @@ void Node::applyActiveProfiles() {
     _detection.setAmpEnabled(detectionProfile.ampEnabled && !detectionProfile.frequencyOnly);
     _detection.setFrequencyTuning(_frequencyEvidenceTuning);
     _detection.setInspectionConfig(detectionProfile.inspectionConfig);
+    _detection.setRequireSupportForAcceptance(detectionProfile.requireSupportForAcceptance);
     _detection.setFieldStateConfig(detectionProfile.fieldStateConfig);
     _detection.setProfileName(detection::detectionProfileName(detectionProfile.kind));
 

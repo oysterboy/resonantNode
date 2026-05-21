@@ -5,7 +5,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "InspectorTypes.h"
+#include "../inspector/InspectorTypes.h"
 #include "../patterns/PatternResult.h"
 
 namespace FrequencyEvidenceEvaluation {

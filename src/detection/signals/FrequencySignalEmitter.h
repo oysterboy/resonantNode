@@ -1,7 +1,7 @@
 #pragma once
 
 #include "SignalCandidate.h"
-#include "../inspector/FrequencyEvidenceEvaluation.h"
+#include "FrequencyEvidenceEvaluation.h"
 #include "../../io/AudioSignal.h"
 #include "../detectors/FrequencyMatchDetector.h"
 

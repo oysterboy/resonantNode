@@ -5,7 +5,7 @@
 #include <esp_system.h>
 
 #include "../../detection/DetectorParameters.h"
-#include "../../detection/inspector/FrequencyEvidenceEvaluation.h"
+#include "../../detection/signals/FrequencyEvidenceEvaluation.h"
 #include "../../detection/inspector/FrequencyWindowProbe.h"
 #include "../../detection/patterns/PatternNames.h"
 

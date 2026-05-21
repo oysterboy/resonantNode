@@ -105,7 +105,7 @@ void DetectionRuntime::drainSignalEmitters(unsigned long nowMs) {
 
     while (_frequencyEmitter.popSignalCandidate(candidate)) {
         _fieldStateTracker.observeSignalCandidate(candidate, nowMs);
-        const InspectedSignal inspected = _signalInspector.inspectWithHistory(candidate, _frequencyTuning, &_featureHistory);
+        const InspectedSignal inspected = _signalInspector.inspectWithHistory(candidate, &_featureHistory);
         _fieldStateTracker.observeInspectedSignal(inspected, nowMs);
         _lastSignalCandidate = candidate;
         _lastInspectedSignal = inspected;
@@ -114,7 +114,7 @@ void DetectionRuntime::drainSignalEmitters(unsigned long nowMs) {
 
     while (_ampEmitter.popSignalCandidate(candidate)) {
         _fieldStateTracker.observeSignalCandidate(candidate, nowMs);
-        const InspectedSignal inspected = _signalInspector.inspectWithHistory(candidate, _frequencyTuning, &_featureHistory);
+        const InspectedSignal inspected = _signalInspector.inspectWithHistory(candidate, &_featureHistory);
         _fieldStateTracker.observeInspectedSignal(inspected, nowMs);
         _lastSignalCandidate = candidate;
         _lastInspectedSignal = inspected;

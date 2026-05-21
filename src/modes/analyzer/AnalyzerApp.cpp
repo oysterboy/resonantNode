@@ -6,7 +6,7 @@
 
 #include "../../AudioDebugConfig.h"
 #include "../../detection/DetectorParameters.h"
-#include "../../detection/inspector/FrequencyEvidenceEvaluation.h"
+#include "../../detection/signals/FrequencyEvidenceEvaluation.h"
 #include "../../detection/inspector/FrequencyWindowProbe.h"
 #include "../../detection/features/FeatureExtractor.h"
 #include "../../detection/features/FeatureHistory.h"

@@ -2,7 +2,7 @@
 
 #include <stdint.h>
 
-#include "../inspector/FrequencyEvidenceEvaluation.h"
+#include "../signals/FrequencyEvidenceEvaluation.h"
 #include "../signals/SignalCandidate.h"
 
 /*

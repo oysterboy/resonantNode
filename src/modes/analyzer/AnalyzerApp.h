@@ -8,7 +8,7 @@
 #include "../../detection/DetectionProfile.h"
 #include "../../io/AudioSignal.h"
 #include "../../detection/DetectionRuntime.h"
-#include "../../detection/inspector/FrequencyEvidenceEvaluation.h"
+#include "../../detection/signals/FrequencyEvidenceEvaluation.h"
 #include "../../detection/signals/InspectedSignal.h"
 #include "../../detection/features/FreqBandStream.h"
 #include "../../detection/features/FeatureHistory.h"

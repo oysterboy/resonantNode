@@ -4,7 +4,6 @@
 #include "../signals/InspectedSignal.h"
 #include "../signals/RawWindow.h"
 #include "../features/FeatureHistory.h"
-#include "FrequencyEvidenceEvaluation.h"
 
 namespace detection {
 
@@ -15,13 +14,11 @@ public:
 
     InspectedSignal inspect(
         const SignalCandidate& candidate,
-        const FrequencyEvidenceEvaluation::Values& frequencyTuning,
         const RawWindowStats* rawWindow = nullptr
     ) const;
 
     InspectedSignal inspectWithHistory(
         const SignalCandidate& candidate,
-        const FrequencyEvidenceEvaluation::Values& frequencyTuning,
         const FeatureHistory* featureHistory,
         const RawWindowStats* rawWindow = nullptr
     ) const;
@@ -40,13 +37,6 @@ private:
     ) const;
     InspectedSignal inspectImpl(
         const SignalCandidate& candidate,
-        const FrequencyEvidenceEvaluation::Values& frequencyTuning,
-        const FeatureHistory* featureHistory
-    ) const;
-
-    InspectedSignal inspectFrequency(
-        const SignalCandidate& candidate,
-        const FrequencyEvidenceEvaluation::Values& frequencyTuning,
         const FeatureHistory* featureHistory
     ) const;
 

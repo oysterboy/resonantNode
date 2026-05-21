@@ -5,7 +5,7 @@
 
 #include "../../detection/DetectionRuntime.h"
 #include "../../detection/DetectionProfile.h"
-#include "../../detection/inspector/FrequencyEvidenceEvaluation.h"
+#include "../../detection/signals/FrequencyEvidenceEvaluation.h"
 #include "../../behavior/BehaviorProfile.h"
 #include "../../hal/AudioSourceI2S.h"
 #include "../../hal/PiezoToneOutputBTL.h"

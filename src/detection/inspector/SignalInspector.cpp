@@ -1,5 +1,5 @@
 #include "SignalInspector.h"
-#include "InspectionRule.h"
+#include "SignalWindowEvaluator.h"
 
 namespace {
 
@@ -160,7 +160,6 @@ void SignalInspector::annotateAmpSupportAndLocality(
 
 InspectedSignal SignalInspector::inspectImpl(
     const SignalCandidate& candidate,
-    const FrequencyEvidenceEvaluation::Values& frequencyTuning,
     const FeatureHistory* featureHistory
 ) const {
     if (!candidate.present) {
@@ -182,9 +181,8 @@ InspectedSignal SignalInspector::inspectImpl(
 
     switch (candidate.kind) {
         case SignalKind::AmpTransient:
-            return inspectAmp(candidate, featureHistory);
         case SignalKind::FrequencyMatch:
-            return inspectFrequency(candidate, frequencyTuning, featureHistory);
+            return inspectAmp(candidate, featureHistory);
         case SignalKind::None:
         default: {
             InspectedSignal out;
@@ -199,57 +197,19 @@ InspectedSignal SignalInspector::inspectImpl(
 
 InspectedSignal SignalInspector::inspect(
     const SignalCandidate& candidate,
-    const FrequencyEvidenceEvaluation::Values& frequencyTuning,
     const RawWindowStats* rawWindow
 ) const {
     (void)rawWindow;
-    return inspectImpl(candidate, frequencyTuning, nullptr);
+    return inspectImpl(candidate, nullptr);
 }
 
 InspectedSignal SignalInspector::inspectWithHistory(
     const SignalCandidate& candidate,
-    const FrequencyEvidenceEvaluation::Values& frequencyTuning,
     const FeatureHistory* featureHistory,
     const RawWindowStats* rawWindow
 ) const {
     (void)rawWindow;
-    return inspectImpl(candidate, frequencyTuning, featureHistory);
-}
-
-InspectedSignal SignalInspector::inspectFrequency(
-    const SignalCandidate& candidate,
-    const FrequencyEvidenceEvaluation::Values& frequencyTuning,
-    const FeatureHistory* featureHistory
-) const {
-    InspectedSignal out;
-    out.signal = candidate;
-    out.durationMs = candidate.durationMs;
-    out.strength = candidate.strength;
-    out.confidence = 0.0f;
-    out.signalConfidence = 0.0f;
-    out.frequencyConfidence = 0.0f;
-
-    const InspectionRuleResult durationRule = evaluateDurationRule(candidate.durationMs);
-    if (!durationRule.passed) {
-        setRejected(out, durationRule.rejectReason);
-        return out;
-    }
-
-    const InspectionRuleResult frequencyRule = evaluateFrequencyRule(candidate, frequencyTuning);
-    if (!frequencyRule.passed) {
-        setRejected(out, frequencyRule.rejectReason);
-        return out;
-    }
-
-    out.decision = SignalDecision::Accepted;
-    out.accepted = true;
-    out.rejected = false;
-    out.rejectReason = SignalRejectReason::None;
-    out.signalConfidence = 1.0f;
-    out.frequencyConfidence = frequencyRule.confidence;
-    out.confidence = out.signalConfidence;
-    annotateAcceptedSignal(out, candidate, featureHistory);
-    return out;
+    return inspectImpl(candidate, featureHistory);
 }
 
 InspectedSignal SignalInspector::inspectAmp(
@@ -260,24 +220,14 @@ InspectedSignal SignalInspector::inspectAmp(
     out.signal = candidate;
     out.durationMs = candidate.durationMs;
     out.strength = candidate.strength;
-    out.confidence = 0.0f;
-    out.signalConfidence = 0.0f;
-    out.frequencyConfidence = 0.0f;
-
-    const SignalWindowStats window = evaluateSignalWindow(candidate);
-    const InspectionRuleResult ampRule = evaluateAmpRule(window);
-    if (!ampRule.passed) {
-        setRejected(out, ampRule.rejectReason);
-        return out;
-    }
+    out.signalConfidence = candidate.signalConfidence > 0.0f ? candidate.signalConfidence : 1.0f;
+    out.frequencyConfidence = candidate.frequencyConfidence;
+    out.confidence = out.signalConfidence;
 
     out.decision = SignalDecision::Accepted;
     out.accepted = true;
     out.rejected = false;
     out.rejectReason = SignalRejectReason::None;
-    out.signalConfidence = 1.0f;
-    out.frequencyConfidence = 0.0f;
-    out.confidence = out.signalConfidence;
     annotateAcceptedSignal(out, candidate, featureHistory);
     return out;
 }

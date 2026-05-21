@@ -16,7 +16,7 @@
 #include "field/FieldState.h"
 #include "features/FeatureExtractor.h"
 #include "features/FeatureHistory.h"
-#include "inspector/FrequencyEvidenceEvaluation.h"
+#include "signals/FrequencyEvidenceEvaluation.h"
 
 namespace detection {
 

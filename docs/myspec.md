@@ -1,4 +1,7 @@
-# ResonantNode Architecture Spec v0.2.1
+# ResonantNode Architecture Spec v0.2.3
+
+This version aligns the active documentation with the landed `DetectionRuntime` and `AnalyzerReport` architecture.
+It is a consolidation pass, not a new architecture milestone.
 
 ## 1. Purpose
 
@@ -1300,14 +1303,16 @@ SignalCandidate
 -> PatternResult
 ```
 
-The current pattern vocabulary includes:
+The current pattern vocabulary is intentionally generic:
 
 ```text
-ValidTonalTransient
-TransientOnly
+Valid
+Rejected
 Invalid
-Ambiguous / future
+Ambiguous
 ```
+
+`ValidPattern` is the current profile-specific positive label used by the code for accepted pattern results.
 
 The current implementation still supports candidate-window frequency enrichment through raw sample history:
 
@@ -1460,8 +1465,8 @@ It can reuse the same onset/transient detector logic as the amplitude path, with
 
 This is an implementation strategy inside the shared Detection / Pattern Pipeline.
 
-For the current tonal click / short beep path, the practical target is still a tonal transient, not a full chirp.
-That means the current implementation should stay conceptually closer to `ValidTonalTransient` than to an expanding chirp taxonomy.
+For the current tonal click / short beep path, the practical target is still a valid transient-style pattern, not a full chirp.
+That means the current implementation should stay conceptually closer to a `ValidPattern` result than to an expanding chirp taxonomy.
 The raw-history diagnostic pass can still support that target.
 
 ##### Temporal-First Chirp Detection
@@ -1573,7 +1578,7 @@ AmpSignalEmitter and FrequencySignalEmitter are active candidate sources.
 ScalarTransientDetector is the reusable scalar transient core.
 FrequencyMatchDetector preserves source-specific frequency lifecycle behavior.
 FrequencyWindowProbe provides raw-history candidate-window frequency evidence.
-PatternRules produce ValidTonalTransient / TransientOnly / Invalid.
+PatternRules produce generic valid / rejected / invalid pattern outcomes.
 FieldStateTracker provides simple acoustic context.
 ```
 
@@ -1618,7 +1623,11 @@ A `PatternResult` may contain:
 
 ```text
 patternType
-validity
+valid
+patternCandidateAccepted
+patternMatched
+supportMatched
+behaviorEligible
 confidence
 score
 startTime
@@ -1631,26 +1640,21 @@ sourceEvidence
 ambiguity state
 ```
 
-Current primary pattern types:
+Current primary result kinds:
 
 ```text
-ValidTonalTransient
-TransientOnly
+Valid
+Rejected
 Invalid
-Ambiguous / future
+Ambiguous
+TooDense
+DuplicateAfterPrimary
+UnexpectedNoise
 ```
 
-`ValidTonalTransient` means a tonal transient / tonal pulse candidate.
+`ValidPattern` is the current profile-specific positive label for an accepted pattern result.
 
-```text
-It does not mean pulsed chirp or continuous chirp.
-```
-
-Pulsed chirp requires temporal grouping over multiple tonal pulse candidates.
-
-```text
-Continuous tonal chirp requires frequency trajectory analysis inside one event window.
-```
+Pattern family identity should stay metadata, not be hardcoded into the shared result name.
 
 Runtime behavior may only need a reduced interpretation:
 
@@ -1765,7 +1769,7 @@ PatternResult = QUIET
 Better:
 
 ```text
-PatternResult = ValidTonalTransient
+PatternResult = ValidPattern
 
 FieldState:
     fieldActivity = busy
@@ -2471,76 +2475,22 @@ SensorNode
 
 ---
 
-## 24. Current Practical Refactor Passes
+## 24. Historical Notes
 
-Recommended refactor passes against this architecture:
+This section is historical and should not be used as current implementation guidance.
 
-```text
-A. Analyzer reference / parity check
-B. Resonant drain parity
-C. Candidate validity parity
-D. Timing / lag logging
-E. Behavior blocking reasons
-F. Detection-only Resonant mode
-G. Cautious behavior re-enable
-```
-
-Purpose of these passes:
-
-```text
-A-B:
-    confirm current analyzer and resonant code see the same signal/candidates
-
-C:
-    ensure candidate validity is judged consistently
-
-D:
-    expose timing lag and buffering problems
-
-E:
-    make behavior silence explainable
-
-F:
-    separate detection from behavior
-
-G:
-    re-enable behavior only after detection is trustworthy
-```
+- old refactor-pass notes have been archived
+- older detector-baseline tuning notes have been superseded by landed runtime behavior
+- current implementation guidance belongs in the active spec sections above, not here
 
 ---
 
-## 25. Current Detection Baseline
+## 25. Historical Detection Baseline
 
-Current working baseline should be treated as frozen unless a test pass explicitly changes it.
+This section is historical and should not be used as current implementation guidance.
 
-Current AMP detector baseline:
-
-```text
-onsetThreshold = 36.0
-releaseThreshold = 26.0
-cooldownMs = 0-100 ms
-releaseDebounceMs = 30
-minTransientDurationMs = 60
-maxTransientDurationMs = 240
-minTransientPeakStrength = 40.0
-```
-
-Expected classification band:
-
-```text
-expected transient: 100–300 ms
-early hit: <100 ms
-late hit: >300 ms
-```
-
-Current conclusion:
-
-```text
-Stop tuning detector parameters for now.
-Improve classification, logging, physical setup, and architecture separation.
-```
-
----
+- old AMP detector tuning notes have been superseded by landed runtime behavior
+- the active detection contract is documented in the current spec sections above
 
 ## 26. Design Rules
 
@@ -2701,11 +2651,13 @@ It does not own:
 - pattern assembly
 - behavior decisions
 
-### 30.3 AMP Locality Inspection
+### 30.3 AMP Support Inspection
 
-`SignalInspector` may add AMP support and locality during inspection.
+`SignalInspector` may add AMP support and other profile-specific inspection evidence during inspection.
 
 It may use retrospective feature history or raw-window fallback when available.
+
+Later profile-specific inspectors may reuse lower-level feature evaluators, but the steady-state `FreqAmp` path stays AMP-side only in the inspector.
 
 ### 30.4 FeatureHistory and ScalarWindow
 
@@ -2770,8 +2722,8 @@ They are code-defined and selected through the current profile mechanism.
 Current modern concepts map to these source areas:
 
 ```text
-Feature history, streams, and retrospective windows -> src/detection/features/*
-Signal emission and inspection -> src/detection/signals/*
+Feature history, streams, and reusable evidence helpers -> src/detection/features/*
+Signal emission and candidate sources -> src/detection/signals/*
 Detectors -> src/detection/detectors/*
 Inspection and probe helpers -> src/detection/inspector/*
 Pattern payloads and interpretation -> src/detection/patterns/*
@@ -2782,4 +2734,6 @@ Analyzer proof and SEQ tracing -> src/modes/analyzer/*
 ```
 
 This map is intentionally narrow and reflects the current implemented split, not every future VEKTOR concept.
+
+
 

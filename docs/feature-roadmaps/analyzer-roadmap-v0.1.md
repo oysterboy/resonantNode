@@ -1,8 +1,12 @@
 # Analyzer Roadmap v0.1
 
+Status: archived / implemented
+
+AnalyzerReport, SEQ_TRIAL, SEQ_EXPLAIN, and SEQ_SUMMARY have been folded into the active spec contract in `docs/myspec.md`.
+This file is historical reference only and should not be used as current implementation guidance.
+
 **Project:** ResonantNode / Resonanzraum  
 **Area:** Detection Refactor / Analyzer  
-**Status:** Draft roadmap, accepted direction  
 **Date:** 2026-05-17
 
 ---

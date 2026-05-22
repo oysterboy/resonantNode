@@ -1,6 +1,6 @@
 #pragma once
 
-struct BehaviorProfile {
+struct BehaviorGateConfig {
     bool idleEnabled = true;
 
     unsigned long waitAfterTransientMs = 100;

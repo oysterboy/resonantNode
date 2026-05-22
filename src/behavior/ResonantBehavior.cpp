@@ -95,7 +95,7 @@ void ResonantBehavior::resetState() {
     _lastFieldState = {};
 }
 
-void ResonantBehavior::configure(const BehaviorProfile& profile) {
+void ResonantBehavior::configure(const BehaviorGateConfig& profile) {
     setWaitAfterTransientMs(profile.waitAfterTransientMs);
     setRefractoryAfterEmitMs(profile.refractoryAfterEmitMs);
     setIdleTimeoutMs(profile.idleTimeoutMs);

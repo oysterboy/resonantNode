@@ -51,6 +51,10 @@ void SignalInspector::configure(const InspectionConfig& config) {
     _config = config;
 }
 
+void SignalInspector::setInspectionRules(ProfileInspectionRulesKind rules) {
+    _inspectionRules = rules;
+}
+
 void SignalInspector::reset() {
     _lastAcceptedAmpMs = 0;
     _lastAcceptedFrequencyMs = 0;
@@ -179,20 +183,20 @@ InspectedSignal SignalInspector::inspectImpl(
         return out;
     }
 
-    switch (candidate.kind) {
-        case SignalKind::AmpTransient:
-        case SignalKind::FrequencyMatch:
-            return inspectAmp(candidate, featureHistory);
-        case SignalKind::None:
-        default: {
-            InspectedSignal out;
-            out.signal = candidate;
-            out.durationMs = candidate.durationMs;
-            out.strength = candidate.strength;
-            setRejected(out, SignalRejectReason::UnsupportedKind);
-            return out;
-        }
+    const bool acceptsCandidate =
+        (_inspectionRules == ProfileInspectionRulesKind::FreqAmp && candidate.kind == SignalKind::FrequencyMatch) ||
+        (_inspectionRules == ProfileInspectionRulesKind::Chirp && candidate.kind == SignalKind::AmpTransient);
+
+    if (acceptsCandidate) {
+        return inspectAmp(candidate, featureHistory);
     }
+
+    InspectedSignal out;
+    out.signal = candidate;
+    out.durationMs = candidate.durationMs;
+    out.strength = candidate.strength;
+    setRejected(out, SignalRejectReason::UnsupportedKind);
+    return out;
 }
 
 InspectedSignal SignalInspector::inspect(

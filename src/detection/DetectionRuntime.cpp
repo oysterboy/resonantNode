@@ -8,11 +8,13 @@ void DetectionRuntime::reset() {
     _ampEmitter.reset();
     _frequencyEmitter.reset();
     _signalInspector.reset();
-    _signalInspector.configure(_inspectionConfig);
     _patternAssembler.reset();
     _fieldStateTracker.reset();
     _featureHistory.reset();
-    _ampEnabled = true;
+    _signalEmitterKind = ProfileSignalEmitterKind::Frequency;
+    _inspectionRulesKind = ProfileInspectionRulesKind::FreqAmp;
+    _signalInspector.configure(_inspectionConfig);
+    _signalInspector.setInspectionRules(_inspectionRulesKind);
     _profileName = "unknown";
     _resultQueue[0] = {};
     _resultReadIndex = 0;
@@ -27,16 +29,20 @@ void DetectionRuntime::setFrequencyTuning(const FrequencyMatchEvaluation::Values
     _frequencyTuning = tuning;
 }
 
+void DetectionRuntime::setSignalEmitter(ProfileSignalEmitterKind kind) {
+    _signalEmitterKind = kind;
+    _frequencyEmitter.reset();
+    _ampEmitter.reset();
+}
+
+void DetectionRuntime::setInspectionRules(ProfileInspectionRulesKind kind) {
+    _inspectionRulesKind = kind;
+    _signalInspector.setInspectionRules(_inspectionRulesKind);
+}
+
 void DetectionRuntime::setInspectionConfig(const InspectionConfig& config) {
     _inspectionConfig = config;
     _signalInspector.configure(_inspectionConfig);
-}
-
-void DetectionRuntime::setAmpEnabled(bool enabled) {
-    _ampEnabled = enabled;
-    if (!_ampEnabled) {
-        _ampEmitter.reset();
-    }
 }
 
 void DetectionRuntime::setRequireSupportForAcceptance(bool value) {
@@ -64,9 +70,13 @@ void DetectionRuntime::observeFrame(
     FeatureExtractor::observeFrame(frame, _featureHistory);
     FeatureExtractor::observeFrequencyEvidence(frequencyEvidence, nowMs, _featureHistory);
 
-    _frequencyEmitter.observeFrame(frame, frequencyEvidence, _frequencyTuning);
-    if (_ampEnabled) {
-        _ampEmitter.observeFrame(frame);
+    switch (_signalEmitterKind) {
+        case ProfileSignalEmitterKind::Frequency:
+            _frequencyEmitter.observeFrame(frame, frequencyEvidence, _frequencyTuning);
+            break;
+        case ProfileSignalEmitterKind::Amp:
+            _ampEmitter.observeFrame(frame);
+            break;
     }
 
     drainSignalEmitters(nowMs);
@@ -107,22 +117,27 @@ const FeatureHistory& DetectionRuntime::featureHistory() const {
 void DetectionRuntime::drainSignalEmitters(unsigned long nowMs) {
     SignalCandidate candidate;
 
-    while (_frequencyEmitter.popSignalCandidate(candidate)) {
-        _fieldStateTracker.observeSignalCandidate(candidate, nowMs);
-        const InspectedSignal inspected = _signalInspector.inspectWithHistory(candidate, &_featureHistory);
-        _fieldStateTracker.observeInspectedSignal(inspected, nowMs);
-        _lastSignalCandidate = candidate;
-        _lastInspectedSignal = inspected;
-        _patternAssembler.acceptSignal(inspected);
-    }
-
-    while (_ampEmitter.popSignalCandidate(candidate)) {
-        _fieldStateTracker.observeSignalCandidate(candidate, nowMs);
-        const InspectedSignal inspected = _signalInspector.inspectWithHistory(candidate, &_featureHistory);
-        _fieldStateTracker.observeInspectedSignal(inspected, nowMs);
-        _lastSignalCandidate = candidate;
-        _lastInspectedSignal = inspected;
-        _patternAssembler.acceptSignal(inspected);
+    switch (_signalEmitterKind) {
+        case ProfileSignalEmitterKind::Frequency:
+            while (_frequencyEmitter.popSignalCandidate(candidate)) {
+                _fieldStateTracker.observeSignalCandidate(candidate, nowMs);
+                const InspectedSignal inspected = _signalInspector.inspectWithHistory(candidate, &_featureHistory);
+                _fieldStateTracker.observeInspectedSignal(inspected, nowMs);
+                _lastSignalCandidate = candidate;
+                _lastInspectedSignal = inspected;
+                _patternAssembler.acceptSignal(inspected);
+            }
+            break;
+        case ProfileSignalEmitterKind::Amp:
+            while (_ampEmitter.popSignalCandidate(candidate)) {
+                _fieldStateTracker.observeSignalCandidate(candidate, nowMs);
+                const InspectedSignal inspected = _signalInspector.inspectWithHistory(candidate, &_featureHistory);
+                _fieldStateTracker.observeInspectedSignal(inspected, nowMs);
+                _lastSignalCandidate = candidate;
+                _lastInspectedSignal = inspected;
+                _patternAssembler.acceptSignal(inspected);
+            }
+            break;
     }
 
     (void)nowMs;

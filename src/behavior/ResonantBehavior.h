@@ -41,7 +41,7 @@ public:
     };
 
     void resetState();
-    void configure(const BehaviorProfile& profile);
+    void configure(const BehaviorGateConfig& profile);
     BehaviorDecision handlePatternResult(const detection::PatternResult& result, unsigned long now);
     BehaviorDecision handlePatternResult(const detection::PatternResult& result, const detection::FieldState& field, unsigned long now);
     void update(unsigned long now);

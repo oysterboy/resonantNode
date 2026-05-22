@@ -88,8 +88,8 @@ bool equalsIgnoreCase(const char* a, const char* b) {
     return *a == '\0' && *b == '\0';
 }
 
-BehaviorProfile makeFreqAmpBehaviorProfile() {
-    BehaviorProfile profile;
+BehaviorGateConfig makeFreqAmpBehaviorProfile() {
+    BehaviorGateConfig profile;
     profile.idleEnabled = true;
     profile.waitAfterTransientMs = 100;
     profile.refractoryAfterEmitMs = 0;
@@ -105,16 +105,10 @@ const char* detectionProfileKindName(detection::DetectionProfileKind kind) {
 }
 
 void printProfileComposition(const detection::DetectionProfile& profile) {
-    Serial.print(" features=");
-    Serial.print(detection::profileFeatureSetName(profile.featureSet));
     Serial.print(" emitters=");
     Serial.print(detection::profileSignalEmitterName(profile.signalEmitter));
-    Serial.print(" detectors=");
-    Serial.print(detection::profileSignalDetectorName(profile.signalDetector));
-    Serial.print(" inspectorRules=");
+    Serial.print(" inspectionRules=");
     Serial.print(detection::profileInspectionRulesName(profile.inspectionRules));
-    Serial.print(" patternAssembler=");
-    Serial.print(detection::profilePatternAssemblerName(profile.patternAssembler));
     Serial.print(" patternRules=");
     Serial.print(detection::profilePatternRulesName(profile.patternRules));
     Serial.print(" fieldStateConfig=");
@@ -287,8 +281,7 @@ void Node::begin() {
     Serial.print("RB PROFILE name=");
     Serial.print(profileName());
     printProfileComposition(activeDetectionProfile());
-    Serial.print(" active=");
-    Serial.println(activeDetectionProfile().ampEnabled ? "amp" : "none");
+    Serial.println();
 
     Serial.print("RB det mode=AMP onset=");
     Serial.print(_audioOnsetDetector.onsetDetectionThreshold(), 1);
@@ -834,9 +827,7 @@ void Node::handleProfileCommand(const char* line) {
         Serial.print("RB PROFILE name=");
         Serial.print(profileName());
         printProfileComposition(activeDetectionProfile());
-        Serial.print(" emitters=");
-        Serial.print(activeDetectionProfile().ampEnabled ? "amp" : "none");
-        Serial.println(activeDetectionProfile().frequencyOnly ? "+freqonly" : "+full");
+        Serial.println();
     } else {
         Serial.println("RB PROFILE usage=name=freqamp|chirp");
     }
@@ -861,8 +852,8 @@ const detection::DetectionProfile& Node::activeDetectionProfile() const {
     return detection::detectionProfileForKind(_profileKind);
 }
 
-const BehaviorProfile& Node::activeBehaviorProfile() const {
-    static const BehaviorProfile kFreqAmpProfile = makeFreqAmpBehaviorProfile();
+const BehaviorGateConfig& Node::activeBehaviorProfile() const {
+    static const BehaviorGateConfig kFreqAmpProfile = makeFreqAmpBehaviorProfile();
 
     switch (_profileKind) {
         case detection::DetectionProfileKind::Chirp:
@@ -874,9 +865,10 @@ const BehaviorProfile& Node::activeBehaviorProfile() const {
 
 void Node::applyActiveProfiles() {
     const detection::DetectionProfile& detectionProfile = activeDetectionProfile();
-    const BehaviorProfile& behaviorProfile = activeBehaviorProfile();
+    const BehaviorGateConfig& behaviorProfile = activeBehaviorProfile();
 
-    _detection.setAmpEnabled(detectionProfile.ampEnabled && !detectionProfile.frequencyOnly);
+    _detection.setSignalEmitter(detectionProfile.signalEmitter);
+    _detection.setInspectionRules(detectionProfile.inspectionRules);
     _detection.setFrequencyTuning(_frequencyEvidenceTuning);
     _detection.setInspectionConfig(detectionProfile.inspectionConfig);
     _detection.setRequireSupportForAcceptance(detectionProfile.requireSupportForAcceptance);

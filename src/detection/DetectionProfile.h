@@ -12,29 +12,14 @@ enum class DetectionProfileKind {
     Chirp,
 };
 
-enum class ProfileFeatureSetKind {
-    FreqAmp,
-    Chirp,
-};
-
 enum class ProfileSignalEmitterKind {
     Frequency,
     Amp,
 };
 
-enum class ProfileSignalDetectorKind {
-    FrequencyMatch,
-    Transient,
-};
-
 enum class ProfileInspectionRulesKind {
     FreqAmp,
     Chirp,
-};
-
-enum class ProfilePatternAssemblerKind {
-    SinglePulse,
-    ChirpSequence,
 };
 
 enum class ProfilePatternRulesKind {
@@ -45,14 +30,9 @@ enum class ProfilePatternRulesKind {
 
 struct DetectionProfile {
     DetectionProfileKind kind = DetectionProfileKind::FreqAmp;
-    ProfileFeatureSetKind featureSet = ProfileFeatureSetKind::FreqAmp;
     ProfileSignalEmitterKind signalEmitter = ProfileSignalEmitterKind::Frequency;
-    ProfileSignalDetectorKind signalDetector = ProfileSignalDetectorKind::FrequencyMatch;
     ProfileInspectionRulesKind inspectionRules = ProfileInspectionRulesKind::FreqAmp;
-    ProfilePatternAssemblerKind patternAssembler = ProfilePatternAssemblerKind::SinglePulse;
     ProfilePatternRulesKind patternRules = ProfilePatternRulesKind::PatternRules;
-    bool frequencyOnly = false;
-    bool ampEnabled = true;
     bool requireSupportForAcceptance = true;
 
     InspectionConfig inspectionConfig = defaultInspectionConfig();
@@ -66,16 +46,10 @@ inline DetectionProfile makeFreqAmpProfile() {
 
     // Identity and signal routing.
     profile.kind = DetectionProfileKind::FreqAmp;
-    profile.featureSet = ProfileFeatureSetKind::FreqAmp;
     profile.signalEmitter = ProfileSignalEmitterKind::Frequency;
-    profile.signalDetector = ProfileSignalDetectorKind::FrequencyMatch;
     profile.inspectionRules = ProfileInspectionRulesKind::FreqAmp;
-    profile.patternAssembler = ProfilePatternAssemblerKind::SinglePulse;
     profile.patternRules = ProfilePatternRulesKind::PatternRules;
 
-    // Runtime behavior.
-    profile.frequencyOnly = false;
-    profile.ampEnabled = true;
     profile.requireSupportForAcceptance = true;
 
     // Inspector configuration.
@@ -99,16 +73,10 @@ inline DetectionProfile makeChirpProfile() {
 
     // Identity and signal routing.
     profile.kind = DetectionProfileKind::Chirp;
-    profile.featureSet = ProfileFeatureSetKind::Chirp;
-    profile.signalEmitter = ProfileSignalEmitterKind::Frequency;
-    profile.signalDetector = ProfileSignalDetectorKind::FrequencyMatch;
+    profile.signalEmitter = ProfileSignalEmitterKind::Amp;
     profile.inspectionRules = ProfileInspectionRulesKind::Chirp;
-    profile.patternAssembler = ProfilePatternAssemblerKind::ChirpSequence;
     profile.patternRules = ProfilePatternRulesKind::ChirpSequence;
 
-    // Runtime behavior.
-    profile.frequencyOnly = false;
-    profile.ampEnabled = true;
     profile.requireSupportForAcceptance = true;
 
     // Inspector configuration.
@@ -149,16 +117,6 @@ inline const char* detectionProfileName(DetectionProfileKind kind) {
     return "unknown";
 }
 
-inline const char* profileFeatureSetName(ProfileFeatureSetKind kind) {
-    switch (kind) {
-        case ProfileFeatureSetKind::FreqAmp:
-            return "FreqAmp";
-        case ProfileFeatureSetKind::Chirp:
-            return "Chirp";
-    }
-    return "unknown";
-}
-
 inline const char* profileSignalEmitterName(ProfileSignalEmitterKind kind) {
     switch (kind) {
         case ProfileSignalEmitterKind::Frequency:
@@ -169,32 +127,12 @@ inline const char* profileSignalEmitterName(ProfileSignalEmitterKind kind) {
     return "unknown";
 }
 
-inline const char* profileSignalDetectorName(ProfileSignalDetectorKind kind) {
-    switch (kind) {
-        case ProfileSignalDetectorKind::FrequencyMatch:
-            return "FrequencyMatchDetector";
-        case ProfileSignalDetectorKind::Transient:
-            return "TransientDetector";
-    }
-    return "unknown";
-}
-
 inline const char* profileInspectionRulesName(ProfileInspectionRulesKind kind) {
     switch (kind) {
         case ProfileInspectionRulesKind::FreqAmp:
             return "FreqAmpRules";
         case ProfileInspectionRulesKind::Chirp:
             return "ChirpRules";
-    }
-    return "unknown";
-}
-
-inline const char* profilePatternAssemblerName(ProfilePatternAssemblerKind kind) {
-    switch (kind) {
-        case ProfilePatternAssemblerKind::SinglePulse:
-            return "SinglePulse";
-        case ProfilePatternAssemblerKind::ChirpSequence:
-            return "ChirpSequence";
     }
     return "unknown";
 }

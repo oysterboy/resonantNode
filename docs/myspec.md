@@ -2661,7 +2661,6 @@ FeatureExtractor
 FeatureStream
 FeatureHistory
 SignalEmitter
-SignalDetector
 SignalInspector
 PatternAssembler
 PatternRules
@@ -2698,6 +2697,22 @@ It does not own:
 It may use retrospective feature history or raw-window fallback when available.
 
 Later profile-specific inspectors may reuse lower-level feature evaluators, but the steady-state `FreqAmp` path stays AMP-side only in the inspector.
+
+`DetectionProfile` is the composition shell for the active runtime profile.
+
+The current profile shell is intentionally small:
+
+```text
+kind
+signalEmitter
+inspectionRules
+patternRules
+requireSupportForAcceptance
+inspectionConfig
+fieldStateConfig
+```
+
+The profile shell should describe what the runtime applies, not duplicate selectors that are already implied by the active emitter or inspector path.
 
 ### 30.4 FeatureHistory and ScalarWindow
 

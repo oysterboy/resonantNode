@@ -10,6 +10,7 @@ namespace detection {
 class SignalInspector {
 public:
     void configure(const InspectionConfig& config);
+    void setInspectionRules(ProfileInspectionRulesKind rules);
     void reset();
 
     InspectedSignal inspect(
@@ -47,6 +48,7 @@ private:
 
     mutable unsigned long _lastAcceptedAmpMs = 0;
     mutable unsigned long _lastAcceptedFrequencyMs = 0;
+    ProfileInspectionRulesKind _inspectionRules = ProfileInspectionRulesKind::FreqAmp;
     InspectionConfig _config = defaultInspectionConfig();
 };
 

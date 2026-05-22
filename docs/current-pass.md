@@ -95,18 +95,18 @@ struct DetectionProfile {
     FieldStateConfig fieldState;
 
     SignalEmitterSelection emitters;
-    PatternAssemblerMode assemblerMode;
+    ProfileInspectionRulesKind inspectionRules;
 };
 ```
 
 Fixed runtime apply points:
 
 ```text
-SignalInspector applies InspectionConfig.
+DetectionRuntime/profile factory applies emitter selection.
+SignalInspector applies InspectionConfig and inspectionRules.
 PatternRules applies PatternRulesConfig.
 Behavior applies BehaviorGateConfig.
 FieldStateTracker applies FieldStateConfig.
-DetectionRuntime/profile factory applies emitter + assembler selection.
 ```
 
 ## 3. Required clean gate vocabulary
@@ -427,6 +427,26 @@ Replace fake/decorative profile fields with real stage-specific configs.
 
 Use plain structs. No generic rule engine.
 
+What we have already trimmed away from the profile shell:
+- `featureSet`
+- `signalDetector`
+- `frequencyOnly`
+- `ampEnabled`
+- decorative `patternAssembler` labels
+
+What the active `DetectionProfile` currently keeps as runtime-relevant composition:
+- `kind`
+- `signalEmitter`
+- `inspectionRules`
+- `patternRules`
+- `requireSupportForAcceptance`
+- `inspectionConfig`
+- `fieldStateConfig`
+
+What we still intend to add as real stage-owned payloads:
+- `BehaviorGateConfig`
+- `PatternRulesConfig` only if the support gate grows beyond a single profile-owned switch
+
 ```cpp
 struct DetectionProfile {
     InspectionConfig inspection;
@@ -434,20 +454,19 @@ struct DetectionProfile {
     BehaviorGateConfig behaviorGate;
     FieldStateConfig fieldState;
     SignalEmitterSelection emitters;
-    PatternAssemblerMode assemblerMode;
 };
 ```
 
 ### 4.2 Fixed apply points
 
-Implement/apply configs only at these points:
+Implement/apply configs only at these points. Some of these are already live; the rest should stay as the next real apply points rather than decorative fields:
 
 ```text
-SignalInspector      ← InspectionConfig
-PatternRules         ← PatternRulesConfig
-Behavior             ← BehaviorGateConfig
-FieldStateTracker    ← FieldStateConfig
-DetectionRuntime     ← emitters + assemblerMode
+DetectionRuntime     <- signalEmitter selection
+SignalInspector      <- inspectionRules + InspectionConfig
+PatternRules         <- support gate / future PatternRulesConfig
+Behavior             <- BehaviorGateConfig
+FieldStateTracker    <- FieldStateConfig
 ```
 
 ### 4.3 Delete loose/decorative fields
@@ -463,6 +482,8 @@ DetectionProfile fields configure runtime or are gone.
 No decorative profile fields remain.
 No JSON/YAML/registry/rule engine introduced.
 ```
+
+Status: DONE
 
 ---
 
@@ -540,19 +561,10 @@ Weak/None/Unknown become rejected/residual results with explicit reasons. They a
 
 FreqAmp must not emit PulseSequence candidates.
 
-Add/use:
-
-```cpp
-enum class PatternAssemblerMode {
-    SinglePulseOnly,
-    PulseSequence
-};
-```
-
-For FreqAmp:
+For the current runtime, the assembler stays fixed as single-pulse only:
 
 ```text
-PatternAssemblerMode::SinglePulseOnly
+single_pulse_only
 ```
 
 Acceptance:

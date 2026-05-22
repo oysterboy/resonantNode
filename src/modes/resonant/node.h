@@ -93,7 +93,7 @@ private:
     bool setProfileFromName(const char* name);
     const char* profileName() const;
     const detection::DetectionProfile& activeDetectionProfile() const;
-    const BehaviorProfile& activeBehaviorProfile() const;
+    const BehaviorGateConfig& activeBehaviorProfile() const;
     void applyActiveProfiles();
     void processDetectionFrame(const AudioSignalFrame& frame, unsigned long now, bool selfChirpSuppressed, bool& sawPatternThisLoop);
     FrequencyEvidence captureFrequencyEvidence(unsigned long observedAtMs) const;

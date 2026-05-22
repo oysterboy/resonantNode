@@ -121,24 +121,6 @@ const char* signalSourceName(detection::SignalSource source) {
     }
 }
 
-const char* signalDetectorKindName(detection::SignalDetectorKind kind) {
-    switch (kind) {
-        case detection::SignalDetectorKind::Transient:
-            return "transient";
-        case detection::SignalDetectorKind::FrequencyMatch:
-            return "frequency_match";
-        case detection::SignalDetectorKind::Dip:
-            return "dip";
-        case detection::SignalDetectorKind::Plateau:
-            return "plateau";
-        case detection::SignalDetectorKind::ThresholdCrossing:
-            return "threshold_crossing";
-        case detection::SignalDetectorKind::Unknown:
-        default:
-            return "unknown";
-    }
-}
-
 const char* signalRejectReasonName(detection::SignalRejectReason reason) {
     switch (reason) {
         case detection::SignalRejectReason::None:
@@ -1641,7 +1623,8 @@ void AnalyzerApp::startSequenceTest(unsigned long totalTrials, unsigned long per
     _detection->reset();
     _detection->setFrequencyTuning(_frequencyEvidenceTuning);
     const detection::DetectionProfile& selectedProfile = detection::detectionProfileForKind(_sequenceTest.profileKind);
-    _detection->setAmpEnabled(selectedProfile.ampEnabled);
+    _detection->setSignalEmitter(selectedProfile.signalEmitter);
+    _detection->setInspectionRules(selectedProfile.inspectionRules);
     _detection->setInspectionConfig(selectedProfile.inspectionConfig);
     _detection->setRequireSupportForAcceptance(selectedProfile.requireSupportForAcceptance);
     _detection->setFieldStateConfig(selectedProfile.fieldStateConfig);

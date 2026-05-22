@@ -44,8 +44,9 @@ public:
     void reset();
 
     void setFrequencyTuning(const FrequencyMatchEvaluation::Values& tuning);
+    void setSignalEmitter(ProfileSignalEmitterKind kind);
+    void setInspectionRules(ProfileInspectionRulesKind kind);
     void setInspectionConfig(const InspectionConfig& config);
-    void setAmpEnabled(bool enabled);
     void setRequireSupportForAcceptance(bool value);
     void setFieldStateConfig(const FieldStateConfig& config);
     void setProfileName(const char* profileName);
@@ -77,8 +78,9 @@ private:
     );
 
     FrequencyMatchEvaluation::Values _frequencyTuning = {};
+    ProfileSignalEmitterKind _signalEmitterKind = ProfileSignalEmitterKind::Frequency;
+    ProfileInspectionRulesKind _inspectionRulesKind = ProfileInspectionRulesKind::FreqAmp;
     InspectionConfig _inspectionConfig = defaultInspectionConfig();
-    bool _ampEnabled = true;
     const char* _profileName = "unknown";
 
     AmpSignalEmitter _ampEmitter;

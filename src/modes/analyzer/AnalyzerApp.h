@@ -425,12 +425,12 @@ private:
     void printTransientStatsDebug(unsigned long now) const;
     void printSequenceExplain(const AnalyzerReport& report) const;
     void printSequenceAmpWindow(const AnalyzerReport& report) const;
-    void printSequenceTrialResult(unsigned long trialNumber, const char* result, long dtMs, long durMs, float strength, bool audioOverflow, unsigned long duplicateCount, const SequenceTest::TrialDiagnostics& diagnostics) const;
+    void printSequenceTrialResult(unsigned long trialNumber, AnalyzerResult result, long dtMs, long durMs, float strength, bool audioOverflow, unsigned long duplicateCount, const SequenceTest::TrialDiagnostics& diagnostics) const;
     void printSequenceTrialResult(const AnalyzerReport& report) const;
     void printSequenceFinalOutput() const;
     void printSequenceSummary() const;
     const char* activeAnalyzerProfileName() const;
-    AnalyzerReport buildSequenceAnalyzerReport(unsigned long trialNumber, const char* result, long dtMs, long durMs, float strength, bool audioOverflow, unsigned long duplicateCount, const SequenceTest::TrialDiagnostics& diagnostics) const;
+    AnalyzerReport buildSequenceAnalyzerReport(unsigned long trialNumber, AnalyzerResult result, long dtMs, long durMs, float strength, bool audioOverflow, unsigned long duplicateCount, const SequenceTest::TrialDiagnostics& diagnostics) const;
     void recordSequenceClassifierOutcome(const PatternResult& patternResult, bool duplicateCandidate, bool unexpectedCandidate);
     void handleSequenceCandidate(const PatternResult& patternResult, const FrequencyEvidence* liveFrequencyEvidence = nullptr);
     FrequencyEvidence scanSequenceFrequencyParity64(const PatternCandidate& patternCandidate, unsigned long observedAtMs) const;

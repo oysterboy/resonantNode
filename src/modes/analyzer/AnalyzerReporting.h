@@ -122,6 +122,10 @@ struct AnalyzerExpectedEvent {
 struct AnalyzerPatternObservation {
     const char* type = "none";
     bool accepted = false;
+    bool candidateAccepted = false;
+    bool patternMatched = false;
+    bool supportMatched = false;
+    bool behaviorEligible = false;
 
     float confidence = 0.0f;
     long dtMs = -1;
@@ -197,15 +201,22 @@ struct AnalyzerAmpWindowObservation {
 struct AnalyzerProfileDetail {
     const char* namespaceName = "none";
     const char* summary = "";
+    const char* emitter = "unknown";
+    const char* inspectionRules = "unknown";
+    const char* patternRules = "unknown";
+    const char* ampSupport = "unknown";
+    const char* ampSupportMin = "medium";
+    const char* assembler = "unknown";
+    bool requireSupportForAcceptance = true;
 
     float freqScore = 0.0f;
     float freqContrast = 0.0f;
+    float freqScoreMin = 0.0f;
+    float freqContrastMin = 0.0f;
 
     float ampLevel = 0.0f;
     float ampBase = 0.0f;
     float ampLift = 0.0f;
-
-    const char* ampSupport = "unknown";
     AnalyzerAmpWindowObservation ampWindow;
 };
 

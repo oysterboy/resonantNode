@@ -2955,27 +2955,27 @@ void AnalyzerApp::finalizeSequenceTrial(unsigned long now) {
     const bool unexpectedTrial = !invalidAudioTrial && _sequenceTest.currentTrialUnexpected > 0;
     const bool hitTrial = !invalidAudioTrial && _sequenceTest.currentTrialHit;
 
-    const char* result = "miss";
+    AnalyzerResult result = AnalyzerResult::Miss;
     long dtMs = -1;
     long durMs = -1;
     float strength = 0.0f;
 
     if (invalidAudioTrial) {
         _sequenceTest.invalidAudio++;
-        result = "invalid_audio";
+        result = AnalyzerResult::InvalidAudio;
     } else if (unexpectedTrial) {
         _sequenceTest.unexpected++;
-        result = "unexpected";
+        result = AnalyzerResult::Unexpected;
     } else if (hitTrial) {
         _sequenceTest.hits++;
         dtMs = static_cast<long>(diagnostics.acceptedTransientMs - _sequenceTest.currentTrialStartMs);
         durMs = static_cast<long>(diagnostics.acceptedTransientDurationMs);
         strength = diagnostics.acceptedTransientStrength;
         if (dtMs >= kLateOnsetMinMs) {
-            result = "late";
+            result = AnalyzerResult::Late;
             _sequenceTest.lateHits++;
         } else {
-            result = "expected";
+            result = AnalyzerResult::Expected;
             _sequenceTest.expectedHits++;
         }
         _sequenceTest.totalHitStrengthScaled += static_cast<unsigned long>(diagnostics.acceptedTransientStrength * 100.0f);
@@ -3021,41 +3021,7 @@ void AnalyzerApp::finalizeSequenceTrial(unsigned long now) {
     }
 }
 
-static AnalyzerResult analyzerResultFromSequenceOutcome(const char* result) {
-    if (result == nullptr) {
-        return AnalyzerResult::Unknown;
-    }
-    if (strcmp(result, "expected") == 0) {
-        return AnalyzerResult::Expected;
-    }
-    if (strcmp(result, "late") == 0) {
-        return AnalyzerResult::Late;
-    }
-    if (strcmp(result, "miss") == 0) {
-        return AnalyzerResult::Miss;
-    }
-    if (strcmp(result, "duplicate") == 0) {
-        return AnalyzerResult::Duplicate;
-    }
-    if (strcmp(result, "unexpected") == 0) {
-        return AnalyzerResult::Unexpected;
-    }
-    if (strcmp(result, "rejected") == 0) {
-        return AnalyzerResult::Rejected;
-    }
-    if (strcmp(result, "ambiguous") == 0) {
-        return AnalyzerResult::Ambiguous;
-    }
-    if (strcmp(result, "too_dense") == 0) {
-        return AnalyzerResult::TooDense;
-    }
-    if (strcmp(result, "invalid_audio") == 0) {
-        return AnalyzerResult::InvalidAudio;
-    }
-    return AnalyzerResult::Unknown;
-}
-
-static AnalyzerReason analyzerReasonFromSequenceOutcome(const char* result,
+static AnalyzerReason analyzerReasonFromSequenceOutcome(AnalyzerResult result,
                                                        long dtMs,
                                                        unsigned long rawCandidateCount,
                                                        AmpTransientDetector::TransientRejectReason strongestRejectReason,
@@ -3063,25 +3029,18 @@ static AnalyzerReason analyzerReasonFromSequenceOutcome(const char* result,
     if (audioOverflow) {
         return AnalyzerReason::InvalidAudio;
     }
-    if (result == nullptr) {
-        return AnalyzerReason::Unknown;
-    }
-    if (strcmp(result, "expected") == 0) {
+    switch (result) {
+        case AnalyzerResult::Expected:
         return AnalyzerReason::ValidPatternInExpectedWindow;
-    }
-    if (strcmp(result, "late") == 0) {
+        case AnalyzerResult::Late:
         return AnalyzerReason::ValidPatternAfterWindow;
-    }
-    if (strcmp(result, "unexpected") == 0) {
+        case AnalyzerResult::Unexpected:
         return AnalyzerReason::UnexpectedValidPatternWithoutTrigger;
-    }
-    if (strcmp(result, "duplicate") == 0) {
+        case AnalyzerResult::Duplicate:
         return AnalyzerReason::DuplicatePatternAfterPrimary;
-    }
-    if (strcmp(result, "invalid_audio") == 0) {
+        case AnalyzerResult::InvalidAudio:
         return AnalyzerReason::InvalidAudio;
-    }
-    if (strcmp(result, "miss") == 0) {
+        case AnalyzerResult::Miss:
         if (rawCandidateCount == 0) {
             return AnalyzerReason::NoSignalCandidate;
         }
@@ -3097,17 +3056,16 @@ static AnalyzerReason analyzerReasonFromSequenceOutcome(const char* result,
                 break;
         }
         return dtMs >= 0 ? AnalyzerReason::PatternCandidateRejected : AnalyzerReason::NoSignalCandidate;
-    }
-    if (strcmp(result, "rejected") == 0) {
+        case AnalyzerResult::Rejected:
         return AnalyzerReason::PatternCandidateRejected;
-    }
-    if (strcmp(result, "ambiguous") == 0) {
+        case AnalyzerResult::Ambiguous:
         return AnalyzerReason::MultipleCompetingPatterns;
-    }
-    if (strcmp(result, "too_dense") == 0) {
+        case AnalyzerResult::TooDense:
         return AnalyzerReason::FieldTooDense;
+        case AnalyzerResult::Unknown:
+        default:
+            return AnalyzerReason::Unknown;
     }
-    return AnalyzerReason::Unknown;
 }
 
 static size_t analyzerReasonIndex(AnalyzerReason value) {
@@ -3139,7 +3097,7 @@ const char* analyzerProfileDetailSummary(detection::DetectionProfileKind profile
 }
 
 AnalyzerReport AnalyzerApp::buildSequenceAnalyzerReport(unsigned long trialNumber,
-                                                        const char* result,
+                                                        AnalyzerResult result,
                                                         long dtMs,
                                                         long durMs,
                                                      float strength,
@@ -3180,7 +3138,7 @@ AnalyzerReport AnalyzerApp::buildSequenceAnalyzerReport(unsigned long trialNumbe
         return "missing_pipeline_result";
     }();
 
-    report.classification.result = analyzerResultFromSequenceOutcome(result);
+    report.classification.result = result;
     report.classification.reason = actualPipelineAvailable
         ? analyzerReasonFromSequenceOutcome(result, dtMs, diagnostics.rawCandidateCount, diagnostics.strongestRejectReason, audioOverflow)
         : AnalyzerReason::MissingPipelineResult;
@@ -3194,6 +3152,10 @@ AnalyzerReport AnalyzerApp::buildSequenceAnalyzerReport(unsigned long trialNumbe
         pattern.accepted = actualPipelineAvailable && runtimePatternResult != nullptr
             ? runtimePatternResult->valid
             : false;
+        pattern.candidateAccepted = actualPipelineAvailable && runtimePatternResult != nullptr ? runtimePatternResult->patternCandidateAccepted : false;
+        pattern.patternMatched = actualPipelineAvailable && runtimePatternResult != nullptr ? runtimePatternResult->patternMatched : false;
+        pattern.supportMatched = actualPipelineAvailable && runtimePatternResult != nullptr ? runtimePatternResult->supportMatched : false;
+        pattern.behaviorEligible = pattern.accepted;
         pattern.confidence = actualPipelineAvailable && runtimePatternResult != nullptr ? runtimePatternResult->confidence : 0.0f;
         pattern.dtMs = report.classification.dtMs;
         pattern.ampSupport = actualPipelineAvailable && runtimePatternResult != nullptr ? ampSupportName(runtimePatternResult->ampSupport) : "unknown";
@@ -3251,8 +3213,18 @@ AnalyzerReport AnalyzerApp::buildSequenceAnalyzerReport(unsigned long trialNumbe
 
     report.profileDetail.namespaceName = analyzerProfileDetailNamespace(_sequenceTest.profileKind);
     report.profileDetail.summary = analyzerProfileDetailSummary(_sequenceTest.profileKind);
+    const detection::DetectionProfile& selectedProfile = detection::detectionProfileForKind(_sequenceTest.profileKind);
+    report.profileDetail.emitter = detection::profileSignalEmitterName(selectedProfile.signalEmitter);
+    report.profileDetail.inspectionRules = detection::profileInspectionRulesName(selectedProfile.inspectionRules);
+    report.profileDetail.patternRules = detection::profilePatternRulesName(selectedProfile.patternRules);
+    report.profileDetail.ampSupport = selectedProfile.patternRulesConfig.requireSupportForAcceptance ? "enabled" : "disabled";
+    report.profileDetail.ampSupportMin = "medium";
+    report.profileDetail.assembler = "single_pulse";
+    report.profileDetail.requireSupportForAcceptance = selectedProfile.patternRulesConfig.requireSupportForAcceptance;
     report.profileDetail.freqScore = actualPipelineAvailable && runtimePatternResult != nullptr ? runtimePatternResult->freq.score : 0.0f;
     report.profileDetail.freqContrast = actualPipelineAvailable && runtimePatternResult != nullptr ? runtimePatternResult->freq.spectralContrast : 0.0f;
+    report.profileDetail.freqScoreMin = _frequencyEvidenceTuning.scoreMin;
+    report.profileDetail.freqContrastMin = _frequencyEvidenceTuning.contrastMin;
     report.profileDetail.ampLevel = report.signals.primaryStrength;
     report.profileDetail.ampBase = diagnostics.acceptedAmbientBaseline;
     report.profileDetail.ampLift = report.profileDetail.ampLevel - report.profileDetail.ampBase;
@@ -3277,7 +3249,7 @@ AnalyzerReport AnalyzerApp::buildSequenceAnalyzerReport(unsigned long trialNumbe
     report.debug.patterns = diagnostics.transientAccepted ? 1U : 0U;
     report.debug.rejects = report.signals.rejected;
     report.debug.duplicates = duplicateCount;
-    report.debug.unexpected = strcmp(result, "unexpected") == 0 ? 1U : 0U;
+    report.debug.unexpected = result == AnalyzerResult::Unexpected ? 1U : 0U;
     report.debug.artifactCaptured = actualPipelineAvailable;
     report.debug.artifactFallback = !actualPipelineAvailable;
     report.debug.artifactState = actualPipelineAvailable ? "CAPTURED" : "MISSING_PIPELINE";
@@ -3305,6 +3277,20 @@ void AnalyzerApp::printSequenceTrialResult(const AnalyzerReport& report) const {
     Serial.println();
     Serial.print("SEQ_TRIAL trial=");
     Serial.print(report.context.trial);
+    Serial.print(" profile=");
+    Serial.print(report.context.profile != nullptr ? report.context.profile : "unknown");
+    Serial.print(" emitters=");
+    Serial.print(report.profileDetail.emitter != nullptr ? report.profileDetail.emitter : "unknown");
+    Serial.print(" ampSupport=");
+    Serial.print(report.profileDetail.ampSupport != nullptr ? report.profileDetail.ampSupport : "unknown");
+    Serial.print(" ampSupportMin=");
+    Serial.print(report.profileDetail.ampSupportMin != nullptr ? report.profileDetail.ampSupportMin : "unknown");
+    Serial.print(" assembler=");
+    Serial.print(report.profileDetail.assembler != nullptr ? report.profileDetail.assembler : "unknown");
+    Serial.print(" freqScoreMin=");
+    Serial.print(report.profileDetail.freqScoreMin, 1);
+    Serial.print(" freqContrastMin=");
+    Serial.print(report.profileDetail.freqContrastMin, 2);
     Serial.print(" result=");
     Serial.print(analyzerResultName(report.classification.result));
     Serial.print(" dt=");
@@ -3318,6 +3304,14 @@ void AnalyzerApp::printSequenceTrialResult(const AnalyzerReport& report) const {
     Serial.print(report.primaryPattern.type != nullptr ? report.primaryPattern.type : "unknown");
     Serial.print(" pattern_result=");
     Serial.print(report.primaryPattern.accepted ? "accepted" : "rejected");
+    Serial.print(" candidateAccepted=");
+    Serial.print(report.primaryPattern.candidateAccepted ? 1 : 0);
+    Serial.print(" patternMatched=");
+    Serial.print(report.primaryPattern.patternMatched ? 1 : 0);
+    Serial.print(" supportMatched=");
+    Serial.print(report.primaryPattern.supportMatched ? 1 : 0);
+    Serial.print(" behaviorEligible=");
+    Serial.print(report.primaryPattern.behaviorEligible ? 1 : 0);
     Serial.print(" profile=");
     Serial.print(report.context.profile != nullptr ? report.context.profile : "unknown");
     Serial.print(" confidence=");
@@ -3364,6 +3358,20 @@ void AnalyzerApp::printSequenceExplain(const AnalyzerReport& report) const {
     Serial.println();
     Serial.print("SEQ_EXPLAIN trial=");
     Serial.print(report.context.trial);
+    Serial.print(" profile=");
+    Serial.print(report.context.profile != nullptr ? report.context.profile : "unknown");
+    Serial.print(" emitters=");
+    Serial.print(report.profileDetail.emitter != nullptr ? report.profileDetail.emitter : "unknown");
+    Serial.print(" ampSupport=");
+    Serial.print(report.profileDetail.ampSupport != nullptr ? report.profileDetail.ampSupport : "unknown");
+    Serial.print(" ampSupportMin=");
+    Serial.print(report.profileDetail.ampSupportMin != nullptr ? report.profileDetail.ampSupportMin : "unknown");
+    Serial.print(" assembler=");
+    Serial.print(report.profileDetail.assembler != nullptr ? report.profileDetail.assembler : "unknown");
+    Serial.print(" freqScoreMin=");
+    Serial.print(report.profileDetail.freqScoreMin, 1);
+    Serial.print(" freqContrastMin=");
+    Serial.print(report.profileDetail.freqContrastMin, 2);
     Serial.print(" result=");
     Serial.print(analyzerResultName(report.classification.result));
     Serial.print(" pattern=");
@@ -3383,6 +3391,16 @@ void AnalyzerApp::printSequenceExplain(const AnalyzerReport& report) const {
     Serial.print(report.primaryPattern.ampSupport != nullptr ? report.primaryPattern.ampSupport : "unknown");
     Serial.print(" reason=");
     Serial.print(analyzerReasonName(report.classification.reason));
+    Serial.println();
+
+    Serial.print("SEQ_EXPLAIN_GATES candidateAccepted=");
+    Serial.print(report.primaryPattern.candidateAccepted ? 1 : 0);
+    Serial.print(" patternMatched=");
+    Serial.print(report.primaryPattern.patternMatched ? 1 : 0);
+    Serial.print(" supportMatched=");
+    Serial.print(report.primaryPattern.supportMatched ? 1 : 0);
+    Serial.print(" behaviorEligible=");
+    Serial.print(report.primaryPattern.behaviorEligible ? 1 : 0);
     Serial.println();
 
     Serial.print("SEQ_AMP_WINDOW trial=");
@@ -3592,7 +3610,7 @@ void AnalyzerApp::printSequenceAmpWindow(const AnalyzerReport& report) const {
     Serial.println();
 }
 
-void AnalyzerApp::printSequenceTrialResult(unsigned long trialNumber, const char* result, long dtMs, long durMs, float strength, bool audioOverflow, unsigned long duplicateCount, const SequenceTest::TrialDiagnostics& diagnostics) const {
+void AnalyzerApp::printSequenceTrialResult(unsigned long trialNumber, AnalyzerResult result, long dtMs, long durMs, float strength, bool audioOverflow, unsigned long duplicateCount, const SequenceTest::TrialDiagnostics& diagnostics) const {
     if (_valMode) {
         return;
     }
@@ -3703,12 +3721,12 @@ void AnalyzerApp::printSequenceTrialResult(unsigned long trialNumber, const char
     Serial.print("SEQ_TRIAL trial=");
     Serial.print(trialNumber);
     if (summaryTrial) {
-        const bool accepted = strcmp(result, "expected") == 0 || strcmp(result, "late") == 0;
+        const bool accepted = result == AnalyzerResult::Expected || result == AnalyzerResult::Late;
         Serial.print(" accept=");
         Serial.print(accepted ? 1 : 0);
     } else {
         Serial.print(" result=");
-        Serial.print(result);
+        Serial.print(analyzerResultName(result));
         Serial.print(" dt=");
         if (dtMs >= 0) {
             Serial.print(dtMs);

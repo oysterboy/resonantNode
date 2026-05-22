@@ -744,6 +744,8 @@ SEQ_SUMMARY counts completed trials correctly.
 No stack canary / unsafe huge buffers introduced.
 ```
 
+Status: DONE
+
 ---
 
 # Pass 8 — Behavior boundary only, no large behavior framework

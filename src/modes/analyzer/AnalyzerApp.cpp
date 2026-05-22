@@ -3197,16 +3197,16 @@ AnalyzerReport AnalyzerApp::buildSequenceAnalyzerReport(unsigned long trialNumbe
 
     if (actualPipelineAvailable && runtimeFieldState != nullptr) {
         report.field.state = runtimeFieldState->dense ? "dense" : (runtimeFieldState->active ? (runtimeFieldState->quiet ? "quiet" : "active") : "unknown");
-        report.field.activity = runtimeFieldState->activity;
-        report.field.density = runtimeFieldState->density;
+        report.field.rawActivity = runtimeFieldState->activity;
+        report.field.validPatternActivity = runtimeFieldState->density;
         report.field.recentValidPatterns = runtimeFieldState->recentPatternCount;
         report.field.recentRejects = runtimeFieldState->recentSignalCount > runtimeFieldState->recentPatternCount
             ? runtimeFieldState->recentSignalCount - runtimeFieldState->recentPatternCount
             : 0U;
     } else {
         report.field.state = "unknown";
-        report.field.activity = 0.0f;
-        report.field.density = 0.0f;
+        report.field.rawActivity = 0.0f;
+        report.field.validPatternActivity = 0.0f;
         report.field.recentValidPatterns = 0U;
         report.field.recentRejects = diagnostics.rawCandidateCount;
     }
@@ -3427,10 +3427,10 @@ void AnalyzerApp::printSequenceExplain(const AnalyzerReport& report) const {
 
     Serial.print("SEQ_EXPLAIN_FIELD state=");
     Serial.print(report.field.state != nullptr ? report.field.state : "unknown");
-    Serial.print(" activity=");
-    Serial.print(report.field.activity, 2);
-    Serial.print(" density=");
-    Serial.print(report.field.density, 2);
+    Serial.print(" rawActivity=");
+    Serial.print(report.field.rawActivity, 2);
+    Serial.print(" validPatternActivity=");
+    Serial.print(report.field.validPatternActivity, 2);
     Serial.print(" recent_valid=");
     Serial.print(report.field.recentValidPatterns);
     Serial.print(" recent_rejects=");

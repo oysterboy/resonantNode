@@ -880,6 +880,8 @@ Behavior may use FieldState for response policy.
 PatternRules do not classify from FieldState.
 ```
 
+Status: DONE
+
 ---
 
 # Pass 10 — Commands, params, and help text

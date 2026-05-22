@@ -167,8 +167,8 @@ struct AnalyzerInspectionObservation {
 
 struct AnalyzerFieldObservation {
     const char* state = "unknown";
-    float activity = 0.0f;
-    float density = 0.0f;
+    float rawActivity = 0.0f;
+    float validPatternActivity = 0.0f;
 
     unsigned int recentValidPatterns = 0;
     unsigned int recentRejects = 0;

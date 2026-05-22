@@ -1325,9 +1325,10 @@ AMP / transient candidate
 
 This remains useful for diagnostics and comparison.
 
-Frequency-first detection is now partially landed as a separate signal path, but it is not yet a full profile-level strategy system.
+Frequency-first detection is a landed signal path.
+Profile-level composition and any future grouping refinement remain separate roadmap work.
 
-Full candidate correlation and pulsed chirp grouping remain later.
+Candidate correlation and pulsed chirp grouping belong to the roadmap, not the active contract.
 
 #### Current Tonal-Click Strategy
 
@@ -1352,14 +1353,14 @@ Retrospective frequency feature path:
     -> candidate-aligned frequency evidence
 ```
 
-This is still conceptually a tonal transient / tonal pulse target, not a full chirp target.
+This is still conceptually a valid transient-style pattern target, not a full chirp target.
 
 Current priority:
 
 ```text
 stabilize the landed AMP and frequency candidate paths
 keep PatternResult as the behavior-facing contract
-do not promote candidate correlation or pulsed chirp grouping yet
+keep candidate correlation and pulsed chirp grouping out of the active spec
 ```
 
 Behavior should consume `PatternResult`, not raw frequency evidence or detector flags.
@@ -1553,7 +1554,8 @@ ambiguousCluster
 
 These relation facts are not final behavior decisions.
 
-For the current firmware pass, full candidate correlation should remain later / volatile. The lower-risk path is AMP/transient candidate windows plus raw-history frequency measurement.
+For the current firmware pass, full candidate correlation is a roadmap item.
+The active spec keeps AMP/transient candidate windows and frequency evidence as separate concepts, with raw-history diagnostics remaining optional.
 
 #### 7.3.10 Stability Markers
 

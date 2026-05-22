@@ -11,7 +11,7 @@
 #include "../../hal/PiezoToneOutputBTL.h"
 #include "../../hal/PiezoToneOutput.h"
 #include "../../io/AudioSignal.h"
-#include "../../detection/detectors/AmpTransientDetector.h"
+#include "../../detection/detectors/AmpDiagnosticProbe.h"
 #include "../../detection/features/FreqBandStream.h"
 #include "../../io/ChirpOutput.h"
 #include "../../behavior/ResonantBehavior.h"
@@ -113,7 +113,7 @@ private:
     ChirpOutput _chirpOutput;
 
     // Signal / detection / behavior pipeline.
-    AmpTransientDetector _audioOnsetDetector;
+    detection::AmpDiagnosticProbe _ampDiagnosticProbe;
     AudioSignal _audioSignal;
     FreqBandStream _freqBandStream;
     detection::DetectionRuntime _detection;

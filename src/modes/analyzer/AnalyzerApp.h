@@ -4,7 +4,7 @@
 #include <stdint.h>
 
 #include "../../hal/AudioSourceI2S.h"
-#include "../../detection/detectors/AmpTransientDetector.h"
+#include "../../detection/detectors/AmpDiagnosticProbe.h"
 #include "../../detection/DetectionProfile.h"
 #include "../../io/AudioSignal.h"
 #include "../../detection/DetectionRuntime.h"
@@ -361,41 +361,15 @@ private:
 
     // Setup, control, and detector configuration helpers.
     void configureParameters();
-    void configureSharedParameters();
     void configureI2SParameters();
     void beginEmitterControl();
     void processPendingSequenceStart();
     void pollUsbConsole();
     void pollEmitterSerial();
     void handleUsbLine(const char* line);
+    void printSequenceHelp();
     void sendEmitterCommand(const char* command);
     void resetDetectorState();
-
-    // Detector state inspection and tuning helpers.
-    bool detectorOnsetDetected() const;
-    float detectorOnsetStrength() const;
-    bool detectorTransientDetected() const;
-    float detectorTransientStrength() const;
-    unsigned long detectorTransientDurationMs() const;
-    bool detectorTransientPeakActive() const;
-    const char* detectorOnsetRejectReasonName() const;
-    const char* detectorTransientRejectReasonName() const;
-    unsigned long detectorTransientRejectedDurationMs() const;
-    float detectorTransientRejectedStrength() const;
-    float detectorOnsetDetectionThreshold() const;
-    float detectorOnsetReleaseThreshold() const;
-    unsigned long detectorCooldownAfterOnsetMs() const;
-    unsigned long detectorMinTransientDurationMs() const;
-    unsigned long detectorMaxTransientDurationMs() const;
-    float detectorMinTransientPeakStrength() const;
-    unsigned long detectorReleaseDebounceMs() const;
-    void setDetectorOnsetDetectionThreshold(float value);
-    void setDetectorOnsetReleaseThreshold(float value);
-    void setDetectorCooldownAfterOnsetMs(unsigned long value);
-    void setDetectorMinTransientDurationMs(unsigned long value);
-    void setDetectorMaxTransientDurationMs(unsigned long value);
-    void setDetectorMinTransientPeakStrength(float value);
-    void setDetectorReleaseDebounceMs(unsigned long value);
 
     // Session lifecycle helpers.
     void startBaseSession(unsigned long durationMs, bool quiet = false);
@@ -460,7 +434,7 @@ private:
     AudioSourceI2S _i2sSource;
     AudioSource& _audioSource;
     AudioSignal _audioSignal;
-    AmpTransientDetector _audioOnsetDetector;
+    detection::AmpDiagnosticProbe _ampTransientDiagnosticProbe;
     detection::DetectionRuntime* _detection = nullptr;
     FreqBandStream _freqBandStream;
     detection::FeatureHistory* _sequenceFeatureHistory = nullptr;

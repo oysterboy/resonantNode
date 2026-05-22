@@ -629,22 +629,11 @@ void AnalyzerApp::printDetectionParameters() const {
     if (_valMode) {
         return;
     }
-    Serial.print("SEQ det mode=");
-    Serial.print("AMP");
-    Serial.print(" onset=");
-    Serial.print(detectorOnsetDetectionThreshold(), 1);
-    Serial.print(" release=");
-    Serial.print(detectorOnsetReleaseThreshold(), 1);
-    Serial.print(" cooldown=");
-    Serial.print(detectorCooldownAfterOnsetMs());
-    Serial.print(" releaseDebounce=");
-    Serial.print(detectorReleaseDebounceMs());
-    Serial.print(" minMs=");
-    Serial.print(detectorMinTransientDurationMs());
-    Serial.print(" maxMs=");
-    Serial.print(detectorMaxTransientDurationMs());
-    Serial.print(" minStrength=");
-    Serial.print(detectorMinTransientPeakStrength(), 1);
+    Serial.print("SEQ tuning freqScore=");
+    Serial.print(_frequencyEvidenceTuning.scoreMin, 1);
+    Serial.print(" freqContrast=");
+    Serial.print(_frequencyEvidenceTuning.contrastMin, 1);
+    Serial.print(" transientDetector=fixed");
     Serial.println();
 }
 
@@ -665,7 +654,8 @@ void AnalyzerApp::printTransientStatsDebug(unsigned long now) const {
         return;
     }
     const unsigned long elapsedMs = now - _sequenceTest.startedAtMs;
-    const unsigned long expectedCount = (elapsedMs + (detectorCooldownAfterOnsetMs() / 2)) / detectorCooldownAfterOnsetMs();
+    const detection::AmpDiagnosticSnapshot probeSnapshot = _ampTransientDiagnosticProbe.snapshot();
+    const unsigned long expectedCount = (elapsedMs + (probeSnapshot.cooldownAfterOnsetMs / 2)) / probeSnapshot.cooldownAfterOnsetMs;
     const unsigned long successRate = expectedCount > 0 ? ((_sequenceTest.hits * 100UL) / expectedCount) : 0;
 
     Serial.print("DET transient stats t=");
@@ -1125,8 +1115,9 @@ void AnalyzerApp::printValueFrame(unsigned long now) const {
     }
 
     _lastPrintMs = now;
-    const bool onsetVisible = detectorOnsetDetected() || now < _valOnsetLatchedUntilMs;
-    const bool transientVisible = detectorTransientDetected() || now < _valTransientLatchedUntilMs;
+    const detection::AmpDiagnosticSnapshot probeSnapshot = _ampTransientDiagnosticProbe.snapshot();
+    const bool onsetVisible = probeSnapshot.onsetVisible || now < _valOnsetLatchedUntilMs;
+    const bool transientVisible = probeSnapshot.transientVisible || now < _valTransientLatchedUntilMs;
 
     Serial.print("rawSample:");
     Serial.print(_audioSignal.rawSignal());

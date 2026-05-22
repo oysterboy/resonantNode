@@ -278,6 +278,8 @@ Tests at non-3200 Hz analyze the selected frequency, not a hardcoded default.
 
 Status: DONE
 
+Note: the analyzer can still be split further into smaller coordinator/helper files later if needed, but that is now a maintenance refactor rather than part of the semantic cleanup pass.
+
 ---
 
 # Pass 2 — SEQ / Analyzer timing correctness
@@ -362,6 +364,9 @@ Analyzer logs do not include fake diagnostics.
 
 Status: DONE
 
+Note: the local AMP transient helper is still being converted into a diagnostic probe boundary. The next slice should keep the wrapper diagnostic-only and avoid re-exposing detector-truth API through Node or Analyzer.
+Note: the legacy H3 candidate/frequency re-evaluation helpers in `node.cpp` are being removed in the same pass; Analyzer/RB should report detector and pattern results, not rebuild frequency meaning for logging.
+
 ---
 
 # Pass 3 — Clean gate vocabulary switch
@@ -412,6 +417,8 @@ Analyzer and debug output show the stage chain.
 ```
 
 Status: DONE
+
+Note: the AMP diagnostic probe public surface is now snapshot/observation-only; direct detector-style getters were pruned from Node and Analyzer call sites.
 
 ---
 

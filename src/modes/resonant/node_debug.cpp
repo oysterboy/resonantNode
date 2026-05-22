@@ -2,7 +2,7 @@
 
 #include "../../behavior/ResonantBehavior.h"
 #include "../../AudioDebugConfig.h"
-#include "../../detection/detectors/AmpTransientDetector.h"
+#include "../../detection/detectors/AmpDiagnosticProbe.h"
 #include "../../io/AudioSignal.h"
 #include "../../io/ChirpOutput.h"
 
@@ -295,7 +295,7 @@ void NodeDebug::updateLed(unsigned long now,
 
 void NodeDebug::printPlotValues(unsigned long now,
                                const AudioSignal& audioSignal,
-                               const AmpTransientDetector& audioOnsetDetector,
+                               const detection::AmpDiagnosticProbe& ampDiagnosticProbe,
                                const ResonantBehavior& behavior,
                                const ChirpOutput& chirpOutput,
                                bool selfChirpSuppressed) {
@@ -314,7 +314,8 @@ void NodeDebug::printPlotValues(unsigned long now,
     const float transientStrength = _debugTransientStrength;
     const int onsetPulse = now < _debugOnsetVisibleUntilMs ? 1 : 0;
     const int transientPulse = now < _debugTransientVisibleUntilMs ? 1 : 0;
-    const unsigned long transientDurationMs = audioOnsetDetector.transientDurationMs();
+    const detection::AmpDiagnosticSnapshot probeSnapshot = ampDiagnosticProbe.snapshot();
+    const unsigned long transientDurationMs = probeSnapshot.transientDurationMs;
     const unsigned long coreLoopAvgUs = _coreLoopSamples > 0 ? (_coreLoopUsSum / _coreLoopSamples) : 0;
     const unsigned long fullLoopAvgUs = _fullLoopSamples > 0 ? (_fullLoopUsSum / _fullLoopSamples) : 0;
     const int state = behavior.stateCode();

@@ -3,6 +3,7 @@
 #include <strings.h>
 
 #include "field/FieldState.h"
+#include "features/FrequencyMatchEvaluation.h"
 #include "inspector/InspectorTypes.h"
 #include "patterns/PatternRules.h"
 
@@ -34,6 +35,7 @@ struct DetectionProfile {
     ProfileSignalEmitterKind signalEmitter = ProfileSignalEmitterKind::Frequency;
     ProfileInspectionRulesKind inspectionRules = ProfileInspectionRulesKind::FreqAmp;
     ProfilePatternRulesKind patternRules = ProfilePatternRulesKind::PatternRules;
+    FrequencyMatchEvaluation::Values frequencyTuning = {};
     PatternRulesConfig patternRulesConfig = {};
 
     InspectionConfig inspectionConfig = defaultInspectionConfig();
@@ -52,6 +54,8 @@ inline DetectionProfile makeFreqAmpProfile() {
     profile.patternRules = ProfilePatternRulesKind::PatternRules;
 
     profile.patternRulesConfig.requireSupportForAcceptance = true;
+    profile.frequencyTuning.scoreMin = 10000.0f;
+    profile.frequencyTuning.contrastMin = 50.0f;
 
     // Inspector configuration.
     profile.inspectionConfig = defaultInspectionConfig(); // shared inspector defaults
@@ -79,6 +83,8 @@ inline DetectionProfile makeChirpProfile() {
     profile.patternRules = ProfilePatternRulesKind::ChirpSequence;
 
     profile.patternRulesConfig.requireSupportForAcceptance = true;
+    profile.frequencyTuning.scoreMin = 10000.0f;
+    profile.frequencyTuning.contrastMin = 50.0f;
 
     // Inspector configuration.
     profile.inspectionConfig = defaultInspectionConfig();

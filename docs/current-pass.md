@@ -360,6 +360,8 @@ Acceptance:
 Analyzer logs do not include fake diagnostics.
 ```
 
+Status: DONE
+
 ---
 
 # Pass 3 — Clean gate vocabulary switch

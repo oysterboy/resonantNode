@@ -559,7 +559,7 @@ void AnalyzerApp::update() {
                     _sequenceTest.currentTrialDiagnostics.runtimePatternResult = runtimePatternResult;
                     _sequenceTest.currentTrialDiagnostics.runtimePatternCaptured = true;
                     _sequenceTest.currentTrialDiagnostics.runtimeFieldState = _detection->fieldState();
-                    handleSequenceCandidate(runtimePatternResult, 0, &runtimeFrequencyEvidence);
+                handleSequenceCandidate(runtimePatternResult, &runtimeFrequencyEvidence);
                 }
             }
         }
@@ -1086,7 +1086,7 @@ void AnalyzerApp::handleUsbLine(const char* line) {
 
         unsigned long totalTrials = 100;
         unsigned long periodMs = externalEmitter ? 2000 : 2500;
-        unsigned long windowEndOffsetMs = externalEmitter ? 2000 : 2200;
+        unsigned long windowEndOffsetMs = externalEmitter ? 600 : 2200;
         unsigned long toneHz = 3200;
         unsigned long durationMs = 100;
         uint32_t logFlags = AnalyzerApp::DEFAULT_ANALYZER_LOG_FLAGS;
@@ -1598,16 +1598,15 @@ void AnalyzerApp::startSequenceTest(unsigned long totalTrials, unsigned long per
     if (windowEndOffsetMs >= periodMs) {
         windowEndOffsetMs = periodMs > 250 ? periodMs - 250 : periodMs;
     }
+    if (externalEmitter && windowEndOffsetMs < durationMs + 500) {
+        windowEndOffsetMs = durationMs + 500;
+    }
     if (sampleDumpStepMs == 0) {
         sampleDumpStepMs = 1;
     }
     if (sampleDumpTailMs < sampleDumpLeadMs) {
         sampleDumpTailMs = sampleDumpLeadMs;
     }
-    if (externalEmitter) {
-        windowEndOffsetMs = periodMs;
-    }
-
     free(_sequenceTest.trialReports);
     _sequenceTest.trialReports = nullptr;
     _sequenceTest.trialReportCapacity = 0;
@@ -1947,11 +1946,12 @@ void AnalyzerApp::updateCaptureSession(unsigned long now) {
     }
 
     const unsigned long trialNumber = _captureSession.currentTrial + 1;
+    const unsigned long scheduledAtMs = _captureSession.nextTriggerAtMs;
     _captureSession.currentTrial = trialNumber;
-    _captureSession.currentTrialStartMs = now;
-    _captureSession.currentTrialEndMs = now + _captureSession.windowEndOffsetMs;
+    _captureSession.currentTrialStartMs = scheduledAtMs;
+    _captureSession.currentTrialEndMs = scheduledAtMs + _captureSession.windowEndOffsetMs;
     _captureSession.currentTrialFinalized = false;
-    _captureSession.nextTriggerAtMs = now + _captureSession.periodMs;
+    _captureSession.nextTriggerAtMs = scheduledAtMs + _captureSession.periodMs;
 
     const int raw = _audioSignal.rawSignal();
     const float delta = static_cast<float>(_audioSignal.centeredSignal());
@@ -2109,8 +2109,8 @@ void AnalyzerApp::updateSequenceTest(unsigned long now) {
     const unsigned long scheduledAtMs = _sequenceTest.nextTriggerAtMs;
     _sequenceTest.currentTrial = trialNumber;
     _sequenceTest.currentTrialScheduledAtMs = scheduledAtMs;
-    _sequenceTest.currentTrialStartMs = now;
-    _sequenceTest.currentTrialEndMs = now + _sequenceTest.windowEndOffsetMs;
+    _sequenceTest.currentTrialStartMs = scheduledAtMs;
+    _sequenceTest.currentTrialEndMs = scheduledAtMs + _sequenceTest.windowEndOffsetMs;
     _sequenceTest.currentTrialOnsetDetectedMs = 0;
     _sequenceTest.currentTrialTransientDetectedMs = 0;
     _sequenceTest.currentTrialHit = false;
@@ -2130,7 +2130,7 @@ void AnalyzerApp::updateSequenceTest(unsigned long now) {
     _sequenceTest.currentTrialDiagnostics.strongestRejectDtFromTriggerMs = -1;
     _sequenceTest.currentTrialDiagnostics.strongestRejectDurationMs = 0;
     _sequenceTest.currentTrialDiagnostics.strongestRejectStrength = 0.0f;
-    _sequenceTest.nextTriggerAtMs = now + _sequenceTest.periodMs;
+    _sequenceTest.nextTriggerAtMs = scheduledAtMs + _sequenceTest.periodMs;
 
     beginSequenceSampleDump(trialNumber);
 
@@ -2617,7 +2617,7 @@ void AnalyzerApp::recordSequenceClassifierOutcome(const detection::PatternResult
     }
 }
 
-void AnalyzerApp::handleSequenceCandidate(const detection::PatternResult& patternResult, unsigned long queueDepthBeforeDrain, const detection::FrequencyEvidence* liveFrequencyEvidence) {
+void AnalyzerApp::handleSequenceCandidate(const detection::PatternResult& patternResult, const detection::FrequencyEvidence* liveFrequencyEvidence) {
     if (_valMode) {
         return;
     }
@@ -2632,8 +2632,8 @@ void AnalyzerApp::handleSequenceCandidate(const detection::PatternResult& patter
     const auto& candidate = patternResult.candidate;
     const unsigned long candidateIdx = diagnostics.rawCandidateCount;
     const unsigned long onsetMs = candidate.startMs;
-    const long dtFromTriggerMs = static_cast<long>(onsetMs) - static_cast<long>(_sequenceTest.currentTrialStartMs);
-    const long dtFromTrialStartMs = static_cast<long>(onsetMs) - static_cast<long>(_sequenceTest.currentTrialScheduledAtMs);
+    const long dtFromTriggerMs = static_cast<long>(onsetMs) - static_cast<long>(_sequenceTest.currentTrialScheduledAtMs);
+    const long dtFromTrialStartMs = static_cast<long>(onsetMs) - static_cast<long>(_sequenceTest.currentTrialStartMs);
     const long processLagMs = patternResult.processedAtMs >= onsetMs
         ? static_cast<long>(patternResult.processedAtMs - onsetMs)
         : -1;
@@ -2648,9 +2648,9 @@ void AnalyzerApp::handleSequenceCandidate(const detection::PatternResult& patter
         _sequenceTest.trialHadAudioOverflow = true;
     }
 
-    const bool preWindow = !_sequenceTest.externalEmitter && onsetMs < _sequenceTest.currentTrialStartMs + _sequenceTest.windowStartOffsetMs;
-    const bool postWindow = !_sequenceTest.externalEmitter && onsetMs > _sequenceTest.currentTrialEndMs;
-    const bool inWindow = _sequenceTest.externalEmitter || (!preWindow && !postWindow);
+    const bool preWindow = onsetMs < _sequenceTest.currentTrialStartMs + _sequenceTest.windowStartOffsetMs;
+    const bool postWindow = onsetMs > _sequenceTest.currentTrialEndMs;
+    const bool inWindow = !preWindow && !postWindow;
     const bool duplicateCandidate = _sequenceTest.currentTrialHit && inWindow;
     const char* candidateClass = h3SequenceCandidateClass(duplicateCandidate, inWindow, dtFromTriggerMs);
 
@@ -2733,8 +2733,6 @@ void AnalyzerApp::handleSequenceCandidate(const detection::PatternResult& patter
         } else {
             Serial.print("-");
         }
-        Serial.print(" queue_before=");
-        Serial.print(queueDepthBeforeDrain);
         Serial.print(" strength=");
         Serial.print(candidate.peakStrength, 1);
         Serial.print(" transient_present=");
@@ -2789,8 +2787,6 @@ void AnalyzerApp::handleSequenceCandidate(const detection::PatternResult& patter
         } else {
             Serial.print("-");
         }
-        Serial.print(" queue_before=");
-        Serial.print(queueDepthBeforeDrain);
         Serial.print(" strength=");
         Serial.print(candidate.peakStrength, 1);
         Serial.print(" transient_present=");
@@ -2918,8 +2914,6 @@ void AnalyzerApp::handleSequenceCandidate(const detection::PatternResult& patter
         } else {
             Serial.print("-");
         }
-        Serial.print(" queue_before=");
-        Serial.print(queueDepthBeforeDrain);
         Serial.print(" strength=");
         Serial.print(candidate.peakStrength, 1);
         Serial.print(" transient_present=");

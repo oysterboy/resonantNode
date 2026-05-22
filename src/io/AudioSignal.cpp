@@ -2,6 +2,16 @@
 
 #include <Arduino.h>
 
+namespace {
+uint32_t sampleOffsetUs(uint32_t sampleOffset, uint32_t sampleRateHz) {
+    if (sampleRateHz == 0) {
+        return 0;
+    }
+
+    return static_cast<uint32_t>((static_cast<uint64_t>(sampleOffset) * 1000000ULL) / static_cast<uint64_t>(sampleRateHz));
+}
+}
+
 // -----------------------------------------------------------------------------
 // Construction and lifecycle
 // -----------------------------------------------------------------------------
@@ -84,19 +94,14 @@ void AudioSignal::processBlock(const AudioBlock& block) {
 
     _stats.blocksProcessed++;
     const uint32_t sampleRateHz = _source.sampleRateHz();
-    const uint32_t samplePeriodUs = sampleRateHz > 0 ? static_cast<uint32_t>(1000000UL / sampleRateHz) : 0;
     for (uint16_t i = 0; i < block.sampleCount; ++i) {
         const uint64_t sampleIndex = block.startSampleIndex + static_cast<uint64_t>(i);
-        const uint32_t sampleTimeUs = sampleRateHz > 0
-            ? static_cast<uint32_t>((sampleIndex * 1000000ULL) / static_cast<uint64_t>(sampleRateHz))
-            : block.approxStartMicros;
-        const uint32_t approxBlockSampleMicros = samplePeriodUs > 0
-            ? block.approxStartMicros + static_cast<uint32_t>(static_cast<uint32_t>(i) * samplePeriodUs)
-            : block.approxStartMicros;
-        const uint32_t sampleTimeMsApprox = approxBlockSampleMicros / 1000UL;
+        const uint32_t sampleTimeOffsetUs = sampleOffsetUs(static_cast<uint32_t>(i), sampleRateHz);
+        const uint32_t sampleTimeUs = block.approxStartMicros + sampleTimeOffsetUs;
+        const uint32_t sampleTimeMs = sampleTimeUs / 1000UL;
         processSample(static_cast<int>(block.samples[i]), sampleTimeUs, sampleIndex, sampleRateHz, block.overflowBeforeBlock);
         _stats.samplesProcessed++;
-        emitFrame(_latestFrame, sampleIndex, sampleTimeUs, sampleTimeMsApprox, sampleRateHz, block.overflowBeforeBlock);
+        emitFrame(_latestFrame, sampleIndex, sampleTimeUs, sampleTimeMs, sampleRateHz, block.overflowBeforeBlock);
         emitCurveSample(sampleTimeUs);
     }
 }

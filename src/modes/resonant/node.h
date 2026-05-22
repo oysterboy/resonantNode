@@ -96,7 +96,7 @@ private:
     const BehaviorProfile& activeBehaviorProfile() const;
     void applyActiveProfiles();
     void processDetectionFrame(const AudioSignalFrame& frame, unsigned long now, bool selfChirpSuppressed, bool& sawPatternThisLoop);
-    FrequencyEvidence captureFrequencyEvidence() const;
+    FrequencyEvidence captureFrequencyEvidence(unsigned long observedAtMs) const;
     void printRbSummary() const;
     void printRbSignalSummary() const;
     void printRbDetectorSummary() const;

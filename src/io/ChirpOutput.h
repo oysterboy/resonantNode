@@ -31,6 +31,7 @@ public:
 
     void begin();
     void setToneHz(uint32_t toneHz);
+    uint32_t toneHz() const;
     void setTiming(unsigned long chirpOnMs, unsigned long chirpPauseMs);
     void start(ChirpPattern pattern = ChirpPattern::Single);
     void stop();

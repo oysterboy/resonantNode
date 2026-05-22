@@ -53,6 +53,14 @@ constexpr unsigned long kLiveFrequencyReleaseDebounceMs = 20UL;
 constexpr unsigned long kLiveFrequencyCooldownAfterOnsetMs = 300UL;
 constexpr unsigned long kLiveFrequencyMinTransientDurationMs = 50UL;
 
+uint32_t sampleOffsetUs(uint32_t sampleOffset, uint32_t sampleRateHz) {
+    if (sampleRateHz == 0) {
+        return 0;
+    }
+
+    return static_cast<uint32_t>((static_cast<uint64_t>(sampleOffset) * 1000000ULL) / static_cast<uint64_t>(sampleRateHz));
+}
+
 bool startsWithTokenIgnoreCase(const char* line, const char* token) {
     while (*token != '\0') {
         if (*line == '\0') {
@@ -250,6 +258,8 @@ void Node::begin() {
     _audioSignal.begin(false);
     _audioOnsetDetector.begin();
     _freqBandStream.resetState();
+    _freqBandStream.setSampleRateHz(_audioSource.sampleRateHz());
+    _freqBandStream.setTargetFrequencyHz(_chirpOutput.toneHz());
     _detection.reset();
     applyActiveProfiles();
     _behavior.resetState();
@@ -434,8 +444,8 @@ void Node::configureI2SParameters() {
     _frequencyEvidenceTuning.contrastMin = 50.0f;
 
     // Chirp tone is configured here so the node owns its output tuning.
-    // The fallback/default frequency is defined by CHIRP_FREQUENCY_HZ.
-    _chirpOutput.setToneHz(3200);
+    _chirpOutput.setToneHz(CHIRP_FREQUENCY_HZ);
+    _freqBandStream.setTargetFrequencyHz(_chirpOutput.toneHz());
     _audioSignal.setBaselineTrackingQuietThreshold(20);
 
     _audioOnsetDetector.setOnsetDetectionThreshold(23.0f);
@@ -473,19 +483,10 @@ void Node::update() {
         }
 
         const uint32_t sampleRateHz = _audioSource.sampleRateHz() > 0 ? _audioSource.sampleRateHz() : 16000UL;
-        const uint32_t samplePeriodUs = sampleRateHz > 0 ? static_cast<uint32_t>(1000000UL / sampleRateHz) : 0;
         for (uint16_t i = 0; i < block.sampleCount; ++i) {
-            const uint64_t sampleIndex = block.startSampleIndex + static_cast<uint64_t>(i);
-            const uint32_t sampleTimeUs = sampleRateHz > 0
-                ? static_cast<uint32_t>((sampleIndex * 1000000ULL) / static_cast<uint64_t>(sampleRateHz))
-                : block.approxStartMicros;
-            const uint32_t approxBlockSampleMicros = samplePeriodUs > 0
-                ? block.approxStartMicros + static_cast<uint32_t>(static_cast<uint32_t>(i) * samplePeriodUs)
-                : block.approxStartMicros;
-            const uint32_t sampleTimeMsApprox = approxBlockSampleMicros / 1000UL;
+            const uint32_t sampleTimeUs = block.approxStartMicros + sampleOffsetUs(static_cast<uint32_t>(i), sampleRateHz);
             AudioSignalFrame frame;
             _audioSignal.update(static_cast<int>(block.samples[i]), sampleTimeUs, frame);
-            frame.sampleTimeMs = sampleTimeMsApprox;
             _freqBandStream.observeCenteredSample(frame.centeredSample);
             processDetectionFrame(frame, now, selfChirpSuppressed, sawPatternThisLoop);
         }
@@ -881,6 +882,8 @@ void Node::applyActiveProfiles() {
     _detection.setRequireSupportForAcceptance(detectionProfile.requireSupportForAcceptance);
     _detection.setFieldStateConfig(detectionProfile.fieldStateConfig);
     _detection.setProfileName(detection::detectionProfileName(detectionProfile.kind));
+    _freqBandStream.setSampleRateHz(_audioSource.sampleRateHz());
+    _freqBandStream.setTargetFrequencyHz(_chirpOutput.toneHz());
 
     _behavior.configure(behaviorProfile);
 }
@@ -889,7 +892,7 @@ void Node::processDetectionFrame(const AudioSignalFrame& frame,
                               unsigned long now,
                               bool selfChirpSuppressed,
                               bool& sawPatternThisLoop) {
-    const auto liveFrequencyEvidence = captureFrequencyEvidence();
+    const auto liveFrequencyEvidence = captureFrequencyEvidence(frame.sampleTimeMs);
     _detection.observeFrame(frame, liveFrequencyEvidence, frame.sampleTimeMs);
 
     detection::PatternResult patternResult;
@@ -947,9 +950,9 @@ const char* Node::rbLogModeName() const {
     return _rbLogMode == RbLogMode::Full ? "full" : "off";
 }
 
-detection::FrequencyEvidence Node::captureFrequencyEvidence() const {
+detection::FrequencyEvidence Node::captureFrequencyEvidence(unsigned long observedAtMs) const {
     detection::FrequencyEvidence evidence;
-    evidence.observedAtMs = millis();
+    evidence.observedAtMs = observedAtMs;
     const bool present = _freqBandStream.windowReady();
     const float totalEnergy = _freqBandStream.lastTotalEnergy();
 

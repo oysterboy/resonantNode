@@ -16,6 +16,10 @@ void ChirpOutput::setToneHz(uint32_t toneHz) {
     _toneOutput.setToneHz(_toneHz);
 }
 
+uint32_t ChirpOutput::toneHz() const {
+    return _toneHz;
+}
+
 void ChirpOutput::setTiming(unsigned long chirpOnMs, unsigned long chirpPauseMs) {
     _chirpOnMs = chirpOnMs;
     _chirpPauseMs = chirpPauseMs;

@@ -445,7 +445,7 @@ private:
     bool sequenceSampleDumpSelected(unsigned long trialNumber) const;
     unsigned long sequenceSampleDumpEstimatedRows(unsigned long selectedTrials) const;
     static void sequenceCurveSampleCallback(const CurveSnapshot& snapshot, void* context);
-    FrequencyEvidence captureFrequencyEvidence() const;
+    FrequencyEvidence captureFrequencyEvidence(unsigned long observedAtMs) const;
     void noteSequenceTransientReject(unsigned long eventMs);
     void noteSequenceTransientRejectReason(unsigned long eventMs, const char* reasonName, unsigned long durationMs, float strength);
     const char* sequenceTrialClassificationName(const char* result, long dtMs, long durMs, const SequenceTest::TrialDiagnostics& diagnostics) const;

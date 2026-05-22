@@ -43,6 +43,14 @@ constexpr long kSmearedDurationMaxMs = 240L;
 constexpr long kTooLongDurationMinMs = 241L;
 constexpr long kNearMaxDurationMinMs = 220L;
 
+uint32_t sampleOffsetUs(uint32_t sampleOffset, uint32_t sampleRateHz) {
+    if (sampleRateHz == 0) {
+        return 0;
+    }
+
+    return static_cast<uint32_t>((static_cast<uint64_t>(sampleOffset) * 1000000ULL) / static_cast<uint64_t>(sampleRateHz));
+}
+
 bool startsWithToken(const char* line, const char* token) {
     return strncmp(line, token, strlen(token)) == 0;
 }
@@ -478,6 +486,8 @@ void AnalyzerApp::begin() {
     _audioSignal.setCurveSampleCallback(&AnalyzerApp::sequenceCurveSampleCallback, this);
     _audioOnsetDetector.begin();
     _freqBandStream.resetState();
+    _freqBandStream.setSampleRateHz(_audioSource.sampleRateHz());
+    _freqBandStream.setTargetFrequencyHz(3200UL);
     if (_sequenceFeatureHistory == nullptr) {
         _sequenceFeatureHistory = new detection::FeatureHistory();
     }
@@ -532,27 +542,18 @@ void AnalyzerApp::update() {
         }
 
         const uint32_t sampleRateHz = _audioSource.sampleRateHz() > 0 ? _audioSource.sampleRateHz() : 16000UL;
-        const uint32_t samplePeriodUs = sampleRateHz > 0 ? static_cast<uint32_t>(1000000UL / sampleRateHz) : 0;
         for (uint16_t i = 0; i < block.sampleCount; ++i) {
-            const uint64_t sampleIndex = block.startSampleIndex + static_cast<uint64_t>(i);
-            const uint32_t sampleTimeUs = sampleRateHz > 0
-                ? static_cast<uint32_t>((sampleIndex * 1000000ULL) / static_cast<uint64_t>(sampleRateHz))
-                : block.approxStartMicros;
-            const uint32_t approxBlockSampleMicros = samplePeriodUs > 0
-                ? block.approxStartMicros + static_cast<uint32_t>(static_cast<uint32_t>(i) * samplePeriodUs)
-                : block.approxStartMicros;
-            const uint32_t sampleTimeMsApprox = approxBlockSampleMicros / 1000UL;
+            const uint32_t sampleTimeUs = block.approxStartMicros + sampleOffsetUs(static_cast<uint32_t>(i), sampleRateHz);
             AudioSignalFrame frame;
             _audioSignal.update(static_cast<int>(block.samples[i]), sampleTimeUs, frame);
-            frame.sampleTimeMs = sampleTimeMsApprox;
             if (_sequenceFeatureHistory != nullptr) {
                 detection::FeatureExtractor::observeFrame(frame, *_sequenceFeatureHistory);
             }
             _audioOnsetDetector.update(static_cast<float>(frame.level), frame.sampleTimeUs);
             _freqBandStream.observeCenteredSample(frame.centeredSample);
             if (_sequenceTest.active && _sequenceTest.currentTrial > 0 && _detection != nullptr) {
-                const detection::FrequencyEvidence runtimeFrequencyEvidence = captureFrequencyEvidence();
-                _detection->observeFrame(frame, runtimeFrequencyEvidence, sampleTimeMsApprox);
+                const detection::FrequencyEvidence runtimeFrequencyEvidence = captureFrequencyEvidence(frame.sampleTimeMs);
+                _detection->observeFrame(frame, runtimeFrequencyEvidence, frame.sampleTimeMs);
                 detection::PatternResult runtimePatternResult;
                 while (_detection->popPatternResult(runtimePatternResult)) {
                     _sequenceTest.currentTrialDiagnostics.runtimePatternResult = runtimePatternResult;
@@ -1646,6 +1647,9 @@ void AnalyzerApp::startSequenceTest(unsigned long totalTrials, unsigned long per
     _detection->setRequireSupportForAcceptance(selectedProfile.requireSupportForAcceptance);
     _detection->setFieldStateConfig(selectedProfile.fieldStateConfig);
     _detection->setProfileName(detection::detectionProfileName(selectedProfile.kind));
+    _freqBandStream.setSampleRateHz(_audioSource.sampleRateHz());
+    _freqBandStream.setTargetFrequencyHz(toneHz);
+    _freqBandStream.resetState();
 
     const bool wantSummaryReports =
         analyzerLogEnabled(logFlags, AnalyzerApp::ANALYZER_LOG_SUMMARY);
@@ -1850,6 +1854,9 @@ void AnalyzerApp::startCaptureSession(unsigned long totalTrials, unsigned long p
     _captureSession.bestRawSwing = 0;
     _captureSession.bestDeltaSwing = 0.0f;
     _captureSession.lastStatusPrintMs = _captureSession.startedAtMs;
+    _freqBandStream.setSampleRateHz(_audioSource.sampleRateHz());
+    _freqBandStream.setTargetFrequencyHz(toneHz);
+    _freqBandStream.resetState();
 
     // Capture uses the same emitter hand-off and rebase step as sequence mode.
     const unsigned long captureClaimSendMs = millis();
@@ -2163,12 +2170,12 @@ void AnalyzerApp::handleSequenceTransient(unsigned long now) {
         _sequenceTest.currentTrialOnsetDetectedMs = now;
     }
 
-    if (_sequenceTest.currentTrialHit) {
+        if (_sequenceTest.currentTrialHit) {
         if (_sequenceTest.currentTrialDiagnostics.duplicateCount == 0) {
             _sequenceTest.currentTrialDiagnostics.duplicateTransientMs = now;
             _sequenceTest.currentTrialDiagnostics.duplicateTransientStrength = detectorTransientStrength();
             _sequenceTest.currentTrialDiagnostics.duplicateTransientDurationMs = detectorTransientDurationMs();
-            _sequenceTest.currentTrialDiagnostics.duplicateFrequencyEvidence = captureFrequencyEvidence();
+            _sequenceTest.currentTrialDiagnostics.duplicateFrequencyEvidence = captureFrequencyEvidence(static_cast<unsigned long>(now));
             _sequenceTest.currentTrialDiagnostics.duplicateFrequencyProcessedAtMs = now;
             _sequenceTest.currentTrialDiagnostics.duplicateDeltaFromPrimaryMs = _sequenceTest.currentTrialDiagnostics.transientAccepted
                 ? static_cast<long>(now) - static_cast<long>(_sequenceTest.currentTrialDiagnostics.acceptedTransientMs)
@@ -2426,9 +2433,9 @@ void AnalyzerApp::sequenceCurveSampleCallback(const CurveSnapshot& snapshot, voi
     self->recordSequenceSample(snapshot);
 }
 
-detection::FrequencyEvidence AnalyzerApp::captureFrequencyEvidence() const {
+detection::FrequencyEvidence AnalyzerApp::captureFrequencyEvidence(unsigned long observedAtMs) const {
     detection::FrequencyEvidence evidence;
-    evidence.observedAtMs = millis();
+    evidence.observedAtMs = observedAtMs;
     const bool present = _freqBandStream.windowReady();
     const float totalEnergy = _freqBandStream.lastTotalEnergy();
 

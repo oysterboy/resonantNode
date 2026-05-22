@@ -11,6 +11,14 @@ int normalizeToAdcScale(int32_t rawSample) {
     const int32_t clamped = signed12 < -2048 ? -2048 : (signed12 > 2047 ? 2047 : signed12);
     return static_cast<int>(clamped + 2048);
 }
+
+uint32_t sampleOffsetUs(uint32_t sampleOffset, uint32_t sampleRateHz) {
+    if (sampleRateHz == 0) {
+        return 0;
+    }
+
+    return static_cast<uint32_t>((static_cast<uint64_t>(sampleOffset) * 1000000ULL) / static_cast<uint64_t>(sampleRateHz));
+}
 }
 
 AudioSourceI2S::AudioSourceI2S(int sckPin, int fsPin, int dataInPin, int sampleRate, int bitsPerSample)
@@ -29,7 +37,8 @@ void AudioSourceI2S::begin() {
     I2S.end();
     I2S.setAllPins(_sckPin, _fsPin, _dataInPin, I2S_PIN_NO_CHANGE, I2S_PIN_NO_CHANGE);
     const int beginResult = I2S.begin(I2S_PHILIPS_MODE, _sampleRate, _bitsPerSample);
-    if (beginResult != 0) {
+    const bool beginSucceeded = beginResult != 0;
+    if (beginSucceeded) {
         // Force mono at the source so the RX stream does not expose the inactive slot as alternating zeros.
         const esp_err_t monoResult = esp_i2s::i2s_set_clk(
             static_cast<esp_i2s::i2s_port_t>(0),
@@ -57,7 +66,7 @@ bool AudioSourceI2S::readSample(int& sample, uint32_t& sampleTimeUs) {
 
     const size_t index = _blockCursor++;
     sample = static_cast<int>(_blockSamples[index]);
-    sampleTimeUs = _blockApproxStartMicros + static_cast<uint32_t>(index * _samplePeriodUs);
+    sampleTimeUs = _blockApproxStartMicros + sampleOffsetUs(static_cast<uint32_t>(index), static_cast<uint32_t>(_sampleRate));
     return true;
 }
 
@@ -106,7 +115,7 @@ bool AudioSourceI2S::readBlock(AudioBlock& block) {
     block.samples = _blockSamples + _blockCursor;
     block.sampleCount = static_cast<uint16_t>(_blockCount - _blockCursor);
     block.startSampleIndex = _blockStartSampleIndex + _blockCursor;
-    block.approxStartMicros = _blockApproxStartMicros + static_cast<uint32_t>(_blockCursor * _samplePeriodUs);
+    block.approxStartMicros = _blockApproxStartMicros + sampleOffsetUs(static_cast<uint32_t>(_blockCursor), static_cast<uint32_t>(_sampleRate));
     block.overflowBeforeBlock = _blockOverflowBeforeBlock;
     _blockCursor = _blockCount;
     return true;
@@ -199,7 +208,6 @@ bool AudioSourceI2S::refillBlock() {
 
     uint8_t rawBytes[kRefillBatchSize * sizeof(int32_t)] = {};
     const int bytesRead = I2S.read(rawBytes, static_cast<size_t>(requestedBytes));
-    const uint32_t samplesRead = bytesRead > 0 ? static_cast<uint32_t>(bytesRead / bytesPerSample) : 0;
     recordReadAttempt(requestedBytes, bytesRead, bytesRead <= 0);
     if (bytesRead <= 0) {
         return false;
@@ -207,12 +215,18 @@ bool AudioSourceI2S::refillBlock() {
 
     const size_t fullSamplesRead = static_cast<size_t>(bytesRead) / static_cast<size_t>(bytesPerSample);
     const uint32_t fillEndUs = micros();
+    const uint32_t availableSamples = static_cast<uint32_t>(availableBytes / bytesPerSample);
+    const uint32_t readSamples = static_cast<uint32_t>(fullSamplesRead);
+    const uint32_t firstReturnedSampleAgeSamples = availableSamples > 0
+        ? availableSamples - 1U
+        : (readSamples > 0 ? readSamples - 1U : 0U);
+    const uint32_t firstReturnedSampleOffsetUs = sampleOffsetUs(firstReturnedSampleAgeSamples, static_cast<uint32_t>(_sampleRate));
     const size_t sampleBytes = static_cast<size_t>(bytesPerSample);
     const size_t samplesToProcess = fullSamplesRead;
     _blockCount = 0;
     _blockCursor = 0;
     _blockStartSampleIndex = _stats.totalSamplesRead;
-    _blockApproxStartMicros = fillEndUs;
+    _blockApproxStartMicros = fillEndUs > firstReturnedSampleOffsetUs ? fillEndUs - firstReturnedSampleOffsetUs : 0U;
     _blockOverflowBeforeBlock = _droppedSamples > 0;
     for (size_t i = 0; i < samplesToProcess; ++i) {
         int rawSample = 0;
@@ -233,7 +247,6 @@ bool AudioSourceI2S::refillBlock() {
             memcpy(&rawSample, samplePtr, sampleBytes);
         }
 
-        const uint32_t sampleTimeUs = fillEndUs - static_cast<uint32_t>((samplesToProcess - 1 - i) * _samplePeriodUs);
         const int sample = normalizeToAdcScale(rawSample);
         if (i < kRefillBatchSize) {
             _blockSamples[i] = sample;
@@ -246,6 +259,6 @@ bool AudioSourceI2S::refillBlock() {
             _stats.overflowCount++;
         }
     }
-    _stats.totalSamplesRead += static_cast<uint64_t>(samplesRead);
+    _stats.totalSamplesRead += static_cast<uint64_t>(fullSamplesRead);
     return _blockCount > 0;
 }

@@ -831,6 +831,8 @@ Own chirps are suppressed before detection ingestion where intended.
 
 Do not implement full `BehaviorRuntime`, `OutputDispatcher`, or `DebugReporter` unless required by the smallest local change.
 
+Status: DONE
+
 ---
 
 # Pass 9 — FieldState boundary and minimal cleanup

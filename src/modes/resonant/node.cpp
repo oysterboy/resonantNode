@@ -480,8 +480,11 @@ void Node::update() {
             const uint32_t sampleTimeUs = block.approxStartMicros + sampleOffsetUs(static_cast<uint32_t>(i), sampleRateHz);
             AudioSignalFrame frame;
             _audioSignal.update(static_cast<int>(block.samples[i]), sampleTimeUs, frame);
-            _freqBandStream.observeCenteredSample(frame.centeredSample);
-            processDetectionFrame(frame, now, selfChirpSuppressed, sawPatternThisLoop);
+            const bool ownEmitSuppressed = now < _behavior.ownEmitDetectionSuppressUntilMs();
+            if (!ownEmitSuppressed) {
+                _freqBandStream.observeCenteredSample(frame.centeredSample);
+                processDetectionFrame(frame, now, selfChirpSuppressed, sawPatternThisLoop);
+            }
         }
         sawI2SSample = true;
 

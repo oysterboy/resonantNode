@@ -164,13 +164,6 @@ ResonantBehavior::BehaviorDecision ResonantBehavior::handlePatternResult(const d
         return _lastDecision;
     }
 
-    if (!result.patternCandidateAccepted || !result.patternMatched || !result.supportMatched) {
-        _behaviorEligible = false;
-        _lastDecision = BehaviorDecision::UnknownBlocked;
-        _lastBlockReason = BehaviorDecision::UnknownBlocked;
-        return _lastDecision;
-    }
-
     _behaviorEligible = false;
 
     if (_state == State::Chirping) {

@@ -108,7 +108,7 @@ PatternResult PatternRules::evaluateFrequencyPattern(
     result.valid = true;
     result.type = PatternType::ValidPattern;
     result.kind = resultKindFromCandidate(candidate);
-    result.reasonCode = PatternReasonCode::FromAcceptedTransient;
+    result.reasonCode = PatternReasonCode::FromFrequencyMatch;
     result.rejectReason = PatternRejectReason::None;
     result.signalConfidence = candidate.signalConfidence > 0.0f ? candidate.signalConfidence : 1.0f;
     result.frequencyConfidence = candidate.frequencyConfidence;

@@ -63,8 +63,8 @@ inline const char* patternReasonName(PatternReasonCode code) {
     switch (code) {
         case PatternReasonCode::None:
             return "none";
-        case PatternReasonCode::FromAcceptedTransient:
-            return "from_accepted_transient";
+        case PatternReasonCode::FromFrequencyMatch:
+            return "from_frequency_match";
         case PatternReasonCode::DetectorRejected:
             return "detector_rejected";
         case PatternReasonCode::AmbiguousEvidence:

@@ -24,17 +24,10 @@ enum class ProfileInspectionRulesKind {
     Chirp,
 };
 
-enum class ProfilePatternRulesKind {
-    PatternRules,
-    AmpActivity,
-    ChirpSequence,
-};
-
 struct DetectionProfile {
     DetectionProfileKind kind = DetectionProfileKind::FreqAmp;
     ProfileSignalEmitterKind signalEmitter = ProfileSignalEmitterKind::Frequency;
     ProfileInspectionRulesKind inspectionRules = ProfileInspectionRulesKind::FreqAmp;
-    ProfilePatternRulesKind patternRules = ProfilePatternRulesKind::PatternRules;
     FrequencyMatchEvaluation::Values frequencyTuning = {};
     PatternRulesConfig patternRulesConfig = {};
 
@@ -51,7 +44,6 @@ inline DetectionProfile makeFreqAmpProfile() {
     profile.kind = DetectionProfileKind::FreqAmp;
     profile.signalEmitter = ProfileSignalEmitterKind::Frequency;
     profile.inspectionRules = ProfileInspectionRulesKind::FreqAmp;
-    profile.patternRules = ProfilePatternRulesKind::PatternRules;
 
     profile.patternRulesConfig.requireSupportForAcceptance = true;
     profile.frequencyTuning.scoreMin = 10000.0f;
@@ -80,7 +72,6 @@ inline DetectionProfile makeChirpProfile() {
     profile.kind = DetectionProfileKind::Chirp;
     profile.signalEmitter = ProfileSignalEmitterKind::Amp;
     profile.inspectionRules = ProfileInspectionRulesKind::Chirp;
-    profile.patternRules = ProfilePatternRulesKind::ChirpSequence;
 
     profile.patternRulesConfig.requireSupportForAcceptance = true;
     profile.frequencyTuning.scoreMin = 10000.0f;
@@ -140,18 +131,6 @@ inline const char* profileInspectionRulesName(ProfileInspectionRulesKind kind) {
             return "FreqAmpRules";
         case ProfileInspectionRulesKind::Chirp:
             return "ChirpRules";
-    }
-    return "unknown";
-}
-
-inline const char* profilePatternRulesName(ProfilePatternRulesKind kind) {
-    switch (kind) {
-        case ProfilePatternRulesKind::PatternRules:
-            return "PatternRules";
-        case ProfilePatternRulesKind::AmpActivity:
-            return "AmpActivity";
-        case ProfilePatternRulesKind::ChirpSequence:
-            return "ChirpSequence";
     }
     return "unknown";
 }

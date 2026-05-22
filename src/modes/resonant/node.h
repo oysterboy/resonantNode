@@ -54,6 +54,7 @@ public:
     using PatternResult = detection::PatternResult;
 
     enum class RbLogMode {
+        Off,
         Full,
         Minimal,
     };
@@ -125,7 +126,9 @@ private:
     char _serialLineBuffer[96] = {};
     size_t _serialLineLength = 0;
     unsigned long _rbCandidateCount = 0;
-    unsigned long _rbActionCount = 0;
+    unsigned long _rbPatternAcceptedCount = 0;
+    unsigned long _rbValidPatternCount = 0;
+    unsigned long _rbChirpStartedCount = 0;
     unsigned long _rbOverflowCandidates = 0;
     unsigned long _rbLastCandidateMs = 0;
     bool _rbHaveLastCandidateMs = false;

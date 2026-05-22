@@ -5,19 +5,13 @@
 #include "../hal/ToneOutput.h"
 
 /*
-IO
+Concrete chirp output device.
 
-- concrete chirp output device
-- owns waveform emission
-- reports output lifecycle
+Owns waveform emission and reports output lifecycle.
 
 Does NOT:
 - decide when to chirp
 - own behavior logic
-
-Legacy placeholder:
-- multiple beep patterns for transient and idle responses
-- duration and tone remain configurable
 */
 
 class ChirpOutput {
@@ -50,8 +44,6 @@ private:
     unsigned long _phaseStartMs = 0;
     unsigned long _activeChirpOnMs = 100;
     unsigned long _activeChirpPauseMs = 150;
-    unsigned long _idleChirpLongPauseMs = 1000;
-
     uint32_t _toneHz;
     unsigned long _chirpOnMs = 100;
     unsigned long _chirpPauseMs = 150;

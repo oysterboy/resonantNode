@@ -11,7 +11,7 @@ void AnalyzerApp::printSequenceHelp() {
     Serial.println("CMD: SEQ stop");
     Serial.println("SEQ IN: start [tries=N] [period=MS] [window=MS] [freq=HZ] [dur=MS] [test=LABEL]");
     Serial.println("SEQ IN: OBS start [tries=N] [period=2000] [window=1800] [freq=HZ] [dur=MS] [test=LABEL]");
-    Serial.println("SEQ IN: [profile=freqamp|chirp]");
+    Serial.println("SEQ IN: [profile=freqamp]");
     Serial.println("SEQ IN: [log=default|none|quiet|summary|summary+trial|trial|candidate|explain|custom|full]");
     Serial.println("SEQ IN: stable summary=log=summary");
     Serial.println("SEQ IN: [debug=0|1|2] [dumpSamples=0|1] [curveFormat=off|samples]");
@@ -19,7 +19,7 @@ void AnalyzerApp::printSequenceHelp() {
     Serial.println("SEQ OUT: SEQ start / SEQ running / SEQ_CAND / SEQ_TRIAL / SEQ_EXPLAIN / SEQ_CUSTOM / SEQ_SUMMARY");
     Serial.println("SEQ OUT: candidate fields include onset_sample peak_sample release_sample peak_ms dur end_dt_ms freq_*");
     Serial.println("SEQ OBS: passive observe mode for an already-running external emitter");
-    Serial.println("SEQ PROFILE: profile=freqamp|chirp");
+    Serial.println("SEQ PROFILE: profile=freqamp");
     Serial.println("SEQ PARAM: freqScore=10000 freqContrast=50.0");
 }
 
@@ -173,7 +173,8 @@ void AnalyzerApp::handleUsbLine(const char* line) {
             return;
         }
 
-        if (equalsIgnoreCase(token, "SEQ") || equalsIgnoreCase(token, "HELP")) {
+        token = strtok_r(nullptr, " ", &savePtr);
+        if (token == nullptr || equalsIgnoreCase(token, "HELP")) {
             printSequenceHelp();
             return;
         }
@@ -184,11 +185,7 @@ void AnalyzerApp::handleUsbLine(const char* line) {
             return;
         }
 
-        if (equalsIgnoreCase(token, "OBS")) {
-            _sequenceTest.externalEmitter = true;
-        }
-
-        if (equalsIgnoreCase(token, "START") || equalsIgnoreCase(token, "OBS") || token == nullptr) {
+        if (equalsIgnoreCase(token, "START") || equalsIgnoreCase(token, "OBS")) {
             unsigned long totalTrials = 100;
             unsigned long periodMs = 2500;
             unsigned long windowEndOffsetMs = 2200;
@@ -207,6 +204,7 @@ void AnalyzerApp::handleUsbLine(const char* line) {
             bool externalEmitter = false;
             char setupLabel[96] = TEST_SETUP_LABEL;
             uint32_t logFlags = DEFAULT_ANALYZER_LOG_FLAGS;
+            externalEmitter = equalsIgnoreCase(token, "OBS");
 
             while ((token = strtok_r(nullptr, " ", &savePtr)) != nullptr) {
                 if (startsWithTokenIgnoreCase(token, "tries=")) {
@@ -253,7 +251,11 @@ void AnalyzerApp::handleUsbLine(const char* line) {
                     sampleDumpEnabled = true;
                     sampleDumpMaxRows = static_cast<unsigned long>(strtoul(token + 10, nullptr, 10));
                 } else if (equalsIgnoreCase(token, "external")) {
-                    externalEmitter = true;
+                    // Observing an already-running external emitter is an explicit mode.
+                    // Keep the current mode if the caller already requested OBS.
+                    if (!externalEmitter) {
+                        externalEmitter = true;
+                    }
                 } else if (equalsIgnoreCase(token, "labels")) {
                     strncpy(setupLabel, "labels", sizeof(setupLabel));
                     setupLabel[sizeof(setupLabel) - 1] = '\0';

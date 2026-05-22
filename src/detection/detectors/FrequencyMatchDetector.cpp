@@ -2,6 +2,8 @@
 
 #include <string.h>
 
+#include "../../TimingUtils.h"
+
 void FrequencyMatchDetector::resetState() {
     present = false;
     liveFrequencyOnly = false;
@@ -81,7 +83,7 @@ void FrequencyMatchDetector::update(const detection::FrequencyEvidence& evidence
         }
 
         if (liveFreqEval.matched) {
-            if (now < candidateRefractoryUntilMs) {
+            if (timing::beforeDeadline(now, candidateRefractoryUntilMs)) {
                 strncpy(suppressReason, "refractory", sizeof(suppressReason) - 1);
                 suppressReason[sizeof(suppressReason) - 1] = '\0';
                 wouldProduceCandidate = false;
@@ -124,7 +126,7 @@ void FrequencyMatchDetector::update(const detection::FrequencyEvidence& evidence
                 candidateState[sizeof(candidateState) - 1] = '\0';
             } else {
                 candidateHoldWindows++;
-                candidateHoldMs = now >= candidateFirstSeenMs ? now - candidateFirstSeenMs : 0UL;
+                candidateHoldMs = static_cast<unsigned long>(now - candidateFirstSeenMs);
                 if (evidence.spectralContrast > candidatePeakContrast
                     || (evidence.spectralContrast == candidatePeakContrast && evidence.score > candidatePeakScore)) {
                     candidatePeakMs = now;
@@ -143,7 +145,7 @@ void FrequencyMatchDetector::update(const detection::FrequencyEvidence& evidence
                 frequencyCandidate.durationMs = candidateHoldMs;
             }
         } else if (candidateActive && candidateLastMatchedMs > 0) {
-            if (now >= candidateLastMatchedMs + releaseDebounceMs) {
+            if (timing::elapsedSince(now, candidateLastMatchedMs, releaseDebounceMs)) {
                 candidateActive = false;
                 candidateClosed = true;
                 candidateReleaseMs = candidateLastMatchedMs;

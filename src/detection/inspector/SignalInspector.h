@@ -31,7 +31,7 @@ private:
         const FeatureHistory* featureHistory
     ) const;
     void annotateDuplicateRisk(InspectedSignal& out, const SignalCandidate& candidate) const;
-    void annotateAmpSupportAndLocality(
+    void annotateAmpSupport(
         InspectedSignal& out,
         const SignalCandidate& candidate,
         const FeatureHistory* featureHistory

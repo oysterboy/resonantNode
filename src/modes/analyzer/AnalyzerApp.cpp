@@ -6,6 +6,7 @@
 
 #include "../../RuntimeDefaults.h"
 #include "../../AudioDebugConfig.h"
+#include "../../TimingUtils.h"
 #include "../../detection/features/FrequencyMatchEvaluation.h"
 #include "../../detection/inspector/FrequencyWindowProbe.h"
 #include "AnalyzerTextUtils.h"
@@ -247,7 +248,7 @@ void AnalyzerApp::update() {
     }
 
     updateBaseSession(now);
-    if (_controlClaimPending && !_controlClaimSent && now >= _controlClaimAtMs) {
+    if (_controlClaimPending && !_controlClaimSent && timing::atOrAfter(now, _controlClaimAtMs)) {
         sendEmitterCommand("MODE REMOTE");
         _controlClaimSent = true;
         _controlClaimPending = false;
@@ -370,7 +371,7 @@ void AnalyzerApp::updateBaseSession(unsigned long now) {
     _baseSession.deltaSum += delta;
     _baseSession.baselineSum += baseline;
 
-    if (AUDIO_VERBOSE_DEBUG && !_baseSession.quiet && now - _baseSession.lastStatusPrintMs >= 5000UL) {
+    if (AUDIO_VERBOSE_DEBUG && !_baseSession.quiet && timing::elapsedSince(now, _baseSession.lastStatusPrintMs, 5000UL)) {
         const unsigned long avgRaw = _baseSession.samples > 0 ? _baseSession.rawSum / _baseSession.samples : 0;
         const float avgDelta = _baseSession.samples > 0 ? _baseSession.deltaSum / static_cast<float>(_baseSession.samples) : 0.0f;
         const float avgBaseline = _baseSession.samples > 0 ? _baseSession.baselineSum / static_cast<float>(_baseSession.samples) : 0.0f;
@@ -397,7 +398,7 @@ void AnalyzerApp::updateBaseSession(unsigned long now) {
         _baseSession.lastStatusPrintMs = now;
     }
 
-    if (now - _baseSession.startedAtMs >= _baseSession.durationMs) {
+    if (timing::elapsedSince(now, _baseSession.startedAtMs, _baseSession.durationMs)) {
         printBaseSummary();
         stopBaseSession();
         Serial.println("BASE stopped");
@@ -599,10 +600,8 @@ AnalyzerReport AnalyzerApp::buildSequenceAnalyzerReport(unsigned long trialNumbe
     const detection::DetectionProfile& selectedProfile = detection::detectionProfileForKind(_sequenceTest.profileKind);
     report.profileDetail.emitter = detection::profileSignalEmitterName(selectedProfile.signalEmitter);
     report.profileDetail.inspectionRules = detection::profileInspectionRulesName(selectedProfile.inspectionRules);
-    report.profileDetail.patternRules = detection::profilePatternRulesName(selectedProfile.patternRules);
     report.profileDetail.ampSupport = selectedProfile.patternRulesConfig.requireSupportForAcceptance ? "enabled" : "disabled";
     report.profileDetail.ampSupportMin = "medium";
-    report.profileDetail.assembler = "single_pulse";
     report.profileDetail.requireSupportForAcceptance = selectedProfile.patternRulesConfig.requireSupportForAcceptance;
     report.profileDetail.freqScore = actualPipelineAvailable && runtimePatternResult != nullptr ? runtimePatternResult->freq.score : 0.0f;
     report.profileDetail.freqContrast = actualPipelineAvailable && runtimePatternResult != nullptr ? runtimePatternResult->freq.spectralContrast : 0.0f;
@@ -629,7 +628,7 @@ AnalyzerReport AnalyzerApp::buildSequenceAnalyzerReport(unsigned long trialNumbe
 
     report.debug.signals = diagnostics.rawCandidateCount;
     report.debug.inspected = diagnostics.rawCandidateCount;
-    report.debug.patterns = diagnostics.transientAccepted ? 1U : 0U;
+    report.debug.patterns = diagnostics.patternAccepted ? 1U : 0U;
     report.debug.rejects = report.signals.rejected;
     report.debug.duplicates = duplicateCount;
     report.debug.unexpected = result == AnalyzerResult::Unexpected ? 1U : 0U;

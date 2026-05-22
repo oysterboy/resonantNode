@@ -109,23 +109,6 @@ void ChirpOutput::update() {
             }
             break;
 
-        case 2:
-            if (elapsed >= _idleChirpLongPauseMs) {
-                _phase = 3;
-                _phaseStartMs = now;
-                _toneOutput.setToneHz(_toneHz);
-                _toneOutput.toneOn();
-            }
-            break;
-
-        case 3:
-            if (elapsed >= _activeChirpOnMs) {
-                _toneOutput.toneOff();
-                _active = false;
-                _finished = true;
-                _phaseStartMs = now;
-            }
-            break;
     }
 }
 

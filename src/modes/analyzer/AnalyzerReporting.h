@@ -203,10 +203,8 @@ struct AnalyzerProfileDetail {
     const char* summary = "";
     const char* emitter = "unknown";
     const char* inspectionRules = "unknown";
-    const char* patternRules = "unknown";
     const char* ampSupport = "unknown";
     const char* ampSupportMin = "medium";
-    const char* assembler = "unknown";
     bool requireSupportForAcceptance = true;
 
     float freqScore = 0.0f;

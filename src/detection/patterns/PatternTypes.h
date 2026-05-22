@@ -14,7 +14,7 @@ enum class PatternType {
 
 enum class PatternReasonCode {
     None,
-    FromAcceptedTransient,
+    FromFrequencyMatch,
     DetectorRejected,
     AmbiguousEvidence,
     UnsupportedPattern,

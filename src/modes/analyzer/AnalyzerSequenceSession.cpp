@@ -5,6 +5,7 @@
 #include <string.h>
 
 #include "../../AudioDebugConfig.h"
+#include "../../TimingUtils.h"
 
 bool waitForEmitterAck(const char* expectedPrefix, unsigned long timeoutMs);
 
@@ -150,10 +151,16 @@ void AnalyzerApp::startSequenceTest(unsigned long totalTrials, unsigned long per
     _sequenceTest.currentTrialStartMs = 0;
     _sequenceTest.currentTrialEndMs = 0;
     _sequenceTest.currentTrialOnsetDetectedMs = 0;
-    _sequenceTest.currentTrialTransientDetectedMs = 0;
+    _sequenceTest.currentTrialPatternDetectedMs = 0;
+    _sequenceTest.primaryValidPatternCaptured = false;
+    _sequenceTest.primaryValidPattern = {};
+    _sequenceTest.primaryValidPatternDtMs = -1;
+    _sequenceTest.rejectedInWindowCount = 0;
+    _sequenceTest.firstRejectedInWindow = {};
     _sequenceTest.currentTrialHit = false;
     _sequenceTest.currentTrialFinalized = false;
     _sequenceTest.currentTrialUnexpected = 0;
+    _sequenceTest.currentTrialRejected = 0;
     _sequenceTest.currentTrialDiagnostics = {};
     _sequenceTest.hits = 0;
     _sequenceTest.expectedHits = 0;
@@ -277,7 +284,7 @@ void AnalyzerApp::updateSequenceTest(unsigned long now) {
         return;
     }
 
-    if (_sequenceTest.currentTrial > 0 && now >= _sequenceTest.currentTrialEndMs) {
+    if (_sequenceTest.currentTrial > 0 && timing::atOrAfter(now, _sequenceTest.currentTrialEndMs)) {
         finalizeSequenceTrial(now);
     }
 
@@ -285,7 +292,7 @@ void AnalyzerApp::updateSequenceTest(unsigned long now) {
         return;
     }
 
-    if (now < _sequenceTest.nextTriggerAtMs) {
+    if (timing::beforeDeadline(now, _sequenceTest.nextTriggerAtMs)) {
         return;
     }
 
@@ -300,10 +307,16 @@ void AnalyzerApp::updateSequenceTest(unsigned long now) {
     _sequenceTest.currentTrialStartMs = scheduledAtMs;
     _sequenceTest.currentTrialEndMs = scheduledAtMs + _sequenceTest.windowEndOffsetMs;
     _sequenceTest.currentTrialOnsetDetectedMs = 0;
-    _sequenceTest.currentTrialTransientDetectedMs = 0;
+    _sequenceTest.currentTrialPatternDetectedMs = 0;
+    _sequenceTest.primaryValidPatternCaptured = false;
+    _sequenceTest.primaryValidPattern = {};
+    _sequenceTest.primaryValidPatternDtMs = -1;
+    _sequenceTest.rejectedInWindowCount = 0;
+    _sequenceTest.firstRejectedInWindow = {};
     _sequenceTest.currentTrialHit = false;
     _sequenceTest.currentTrialFinalized = false;
     _sequenceTest.currentTrialUnexpected = 0;
+    _sequenceTest.currentTrialRejected = 0;
     _sequenceTest.trialHadAudioOverflow = false;
     _sequenceTest.trialOverflowCountAtStart = _audioSource.stats().overflowCount;
     const detection::AmpDiagnosticSnapshot probeSnapshot = _ampTransientDiagnosticProbe.snapshot();
@@ -328,76 +341,6 @@ void AnalyzerApp::updateSequenceTest(unsigned long now) {
         snprintf(command, sizeof(command), "CHIRP freq=%lu dur=%lu", _sequenceTest.toneHz, _sequenceTest.durationMs);
         sendEmitterCommand(command);
     }
-}
-
-void AnalyzerApp::handleSequenceTransient(unsigned long now) {
-    if (_valMode) {
-        return;
-    }
-    if (!_sequenceTest.active || _sequenceTest.currentTrial == 0) {
-        _sequenceTest.unexpected++;
-        _sequenceTest.currentTrialUnexpected++;
-        return;
-    }
-    if (_sequenceTest.currentTrialFinalized) {
-        return;
-    }
-
-    const bool inWindow = now >= _sequenceTest.currentTrialStartMs + _sequenceTest.windowStartOffsetMs && now <= _sequenceTest.currentTrialEndMs;
-    if (!inWindow) {
-        _sequenceTest.unexpected++;
-        _sequenceTest.currentTrialUnexpected++;
-        return;
-    }
-
-    _sequenceTest.currentTrialDiagnostics.onsetSeen = true;
-    if (_sequenceTest.currentTrialDiagnostics.firstOnsetMs == 0) {
-        _sequenceTest.currentTrialDiagnostics.firstOnsetMs = now;
-    }
-    _sequenceTest.currentTrialDiagnostics.lastOnsetMs = now;
-    if (_sequenceTest.currentTrialOnsetDetectedMs == 0) {
-        _sequenceTest.currentTrialOnsetDetectedMs = now;
-    }
-
-    if (_sequenceTest.currentTrialHit) {
-        if (_sequenceTest.currentTrialDiagnostics.duplicateCount == 0) {
-            _sequenceTest.currentTrialDiagnostics.duplicateTransientMs = now;
-            const detection::AmpDiagnosticSnapshot probeSnapshot = _ampTransientDiagnosticProbe.snapshot();
-            _sequenceTest.currentTrialDiagnostics.duplicateTransientStrength = probeSnapshot.transientStrength;
-            _sequenceTest.currentTrialDiagnostics.duplicateTransientDurationMs = probeSnapshot.transientDurationMs;
-            _sequenceTest.currentTrialDiagnostics.duplicateFrequencyEvidence = captureFrequencyEvidence(static_cast<unsigned long>(now));
-            _sequenceTest.currentTrialDiagnostics.duplicateFrequencyProcessedAtMs = now;
-            _sequenceTest.currentTrialDiagnostics.duplicateDeltaFromPrimaryMs = _sequenceTest.currentTrialDiagnostics.transientAccepted
-                ? static_cast<long>(now) - static_cast<long>(_sequenceTest.currentTrialDiagnostics.acceptedTransientMs)
-                : 0;
-            _sequenceTest.currentTrialDiagnostics.duplicateOriginWindow = true;
-            strncpy(_sequenceTest.currentTrialDiagnostics.duplicateReason, "duplicate_after_primary", sizeof(_sequenceTest.currentTrialDiagnostics.duplicateReason) - 1);
-            _sequenceTest.currentTrialDiagnostics.duplicateReason[sizeof(_sequenceTest.currentTrialDiagnostics.duplicateReason) - 1] = '\0';
-        }
-        _sequenceTest.currentTrialDiagnostics.duplicateCount++;
-        if (_sequenceTest.currentTrialDiagnostics.duplicateDtCount < SequenceTest::kMaxDuplicateDts) {
-            _sequenceTest.currentTrialDiagnostics.duplicateDts[_sequenceTest.currentTrialDiagnostics.duplicateDtCount++] = now >= _sequenceTest.currentTrialTransientDetectedMs
-                ? now - _sequenceTest.currentTrialTransientDetectedMs
-                : 0;
-        }
-        return;
-    }
-
-    _sequenceTest.currentTrialDiagnostics.transientAccepted = true;
-    _sequenceTest.currentTrialDiagnostics.acceptedTransientMs = now;
-    const detection::AmpDiagnosticSnapshot probeSnapshot = _ampTransientDiagnosticProbe.snapshot();
-    _sequenceTest.currentTrialDiagnostics.acceptedTransientOnsetStrength = probeSnapshot.onsetStrength;
-    _sequenceTest.currentTrialDiagnostics.acceptedTransientStrength = probeSnapshot.transientStrength;
-    _sequenceTest.currentTrialDiagnostics.acceptedTransientDurationMs = probeSnapshot.transientDurationMs;
-    _sequenceTest.currentTrialDiagnostics.acceptedTransientReleaseStrength = probeSnapshot.transientStrength;
-    _sequenceTest.currentTrialDiagnostics.acceptedTransientPeakMs = now;
-    _sequenceTest.currentTrialDiagnostics.acceptedTransientReleaseMs = now + probeSnapshot.transientDurationMs;
-    _sequenceTest.currentTrialDiagnostics.lastTransientRejectReason = AmpTransientDetector::TransientRejectReason::None;
-    _sequenceTest.currentTrialDiagnostics.lastRejectStrength = 0.0f;
-    _sequenceTest.currentTrialDiagnostics.lastRejectDurationMs = 0;
-    _sequenceTest.currentTrialTransientDetectedMs = now;
-
-    _sequenceTest.currentTrialHit = true;
 }
 
 void AnalyzerApp::updateSequenceAmbientStats() {
@@ -465,8 +408,9 @@ void AnalyzerApp::finalizeSequenceTrial(unsigned long now) {
 
     const bool invalidAudioTrial = _sequenceTest.trialHadAudioOverflow
                                    || _audioSource.stats().overflowCount != _sequenceTest.trialOverflowCountAtStart;
+    const bool hitTrial = !invalidAudioTrial && _sequenceTest.primaryValidPatternCaptured;
+    const bool rejectedTrial = !invalidAudioTrial && _sequenceTest.rejectedInWindowCount > 0;
     const bool unexpectedTrial = !invalidAudioTrial && _sequenceTest.currentTrialUnexpected > 0;
-    const bool hitTrial = !invalidAudioTrial && _sequenceTest.currentTrialHit;
 
     AnalyzerResult result = AnalyzerResult::Miss;
     long dtMs = -1;
@@ -476,14 +420,11 @@ void AnalyzerApp::finalizeSequenceTrial(unsigned long now) {
     if (invalidAudioTrial) {
         _sequenceTest.invalidAudio++;
         result = AnalyzerResult::InvalidAudio;
-    } else if (unexpectedTrial) {
-        _sequenceTest.unexpected++;
-        result = AnalyzerResult::Unexpected;
     } else if (hitTrial) {
         _sequenceTest.hits++;
-        dtMs = static_cast<long>(diagnostics.acceptedTransientMs - _sequenceTest.currentTrialStartMs);
-        durMs = static_cast<long>(diagnostics.acceptedTransientDurationMs);
-        strength = diagnostics.acceptedTransientStrength;
+        dtMs = _sequenceTest.primaryValidPatternDtMs;
+        durMs = static_cast<long>(_sequenceTest.primaryValidPattern.candidate.durationMs);
+        strength = _sequenceTest.primaryValidPattern.candidate.peakStrength;
         if (dtMs >= kLateOnsetMinMs) {
             result = AnalyzerResult::Late;
             _sequenceTest.lateHits++;
@@ -491,8 +432,13 @@ void AnalyzerApp::finalizeSequenceTrial(unsigned long now) {
             result = AnalyzerResult::Expected;
             _sequenceTest.expectedHits++;
         }
-        _sequenceTest.totalHitStrengthScaled += static_cast<unsigned long>(diagnostics.acceptedTransientStrength * 100.0f);
-        _sequenceTest.totalHitDurationMs += diagnostics.acceptedTransientDurationMs;
+        _sequenceTest.totalHitStrengthScaled += static_cast<unsigned long>(_sequenceTest.primaryValidPattern.candidate.peakStrength * 100.0f);
+        _sequenceTest.totalHitDurationMs += _sequenceTest.primaryValidPattern.candidate.durationMs;
+    } else if (rejectedTrial) {
+        result = AnalyzerResult::Rejected;
+    } else if (unexpectedTrial) {
+        _sequenceTest.unexpected++;
+        result = AnalyzerResult::Unexpected;
     } else {
         _sequenceTest.misses++;
     }

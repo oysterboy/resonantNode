@@ -132,8 +132,6 @@ void AnalyzerApp::printSequenceTrialResult(const AnalyzerReport& report) const {
     Serial.print(report.profileDetail.ampSupport != nullptr ? report.profileDetail.ampSupport : "unknown");
     Serial.print(" ampSupportMin=");
     Serial.print(report.profileDetail.ampSupportMin != nullptr ? report.profileDetail.ampSupportMin : "unknown");
-    Serial.print(" assembler=");
-    Serial.print(report.profileDetail.assembler != nullptr ? report.profileDetail.assembler : "unknown");
     Serial.print(" freqScoreMin=");
     Serial.print(report.profileDetail.freqScoreMin, 1);
     Serial.print(" freqContrastMin=");
@@ -213,8 +211,6 @@ void AnalyzerApp::printSequenceExplain(const AnalyzerReport& report) const {
     Serial.print(report.profileDetail.ampSupport != nullptr ? report.profileDetail.ampSupport : "unknown");
     Serial.print(" ampSupportMin=");
     Serial.print(report.profileDetail.ampSupportMin != nullptr ? report.profileDetail.ampSupportMin : "unknown");
-    Serial.print(" assembler=");
-    Serial.print(report.profileDetail.assembler != nullptr ? report.profileDetail.assembler : "unknown");
     Serial.print(" freqScoreMin=");
     Serial.print(report.profileDetail.freqScoreMin, 1);
     Serial.print(" freqContrastMin=");
@@ -470,7 +466,7 @@ void AnalyzerApp::printSequenceTrialResult(unsigned long trialNumber, AnalyzerRe
 
     const detection::PatternResult* runtimePatternResult = diagnostics.runtimePatternCaptured ? &diagnostics.runtimePatternResult : nullptr;
     const auto buildTrialSignal = [&]() {
-        if (!diagnostics.transientAccepted) {
+        if (!diagnostics.patternAccepted) {
             detection::SignalCandidate signal = {};
             if (runtimePatternResult == nullptr) {
                 return signal;
@@ -509,21 +505,21 @@ void AnalyzerApp::printSequenceTrialResult(unsigned long trialNumber, AnalyzerRe
         signal.detectorKind = detection::SignalDetectorKind::FrequencyMatch;
         signal.present = true;
         signal.valid = true;
-        signal.startSample = diagnostics.acceptedTransientOnsetSample;
-        signal.peakSample = diagnostics.acceptedTransientPeakSample;
-        signal.releaseSample = diagnostics.acceptedTransientReleaseSample;
-        signal.startMs = diagnostics.acceptedTransientMs;
-        signal.peakMs = diagnostics.acceptedTransientPeakMs != 0 ? diagnostics.acceptedTransientPeakMs : diagnostics.acceptedTransientMs;
-        signal.releaseMs = diagnostics.acceptedTransientReleaseMs != 0 ? diagnostics.acceptedTransientReleaseMs : signal.peakMs;
+        signal.startSample = diagnostics.acceptedPatternOnsetSample;
+        signal.peakSample = diagnostics.acceptedPatternPeakSample;
+        signal.releaseSample = diagnostics.acceptedPatternReleaseSample;
+        signal.startMs = diagnostics.acceptedPatternMs;
+        signal.peakMs = diagnostics.acceptedPatternPeakMs != 0 ? diagnostics.acceptedPatternPeakMs : diagnostics.acceptedPatternMs;
+        signal.releaseMs = diagnostics.acceptedPatternReleaseMs != 0 ? diagnostics.acceptedPatternReleaseMs : signal.peakMs;
         signal.endMs = signal.releaseMs;
-        signal.durationMs = diagnostics.acceptedTransientDurationMs;
-        signal.strength = diagnostics.acceptedTransientStrength;
-        signal.score = diagnostics.acceptedFrequencyEvidence.present ? diagnostics.acceptedFrequencyEvidence.score : diagnostics.acceptedTransientStrength;
+        signal.durationMs = diagnostics.acceptedPatternDurationMs;
+        signal.strength = diagnostics.acceptedPatternStrength;
+        signal.score = diagnostics.acceptedFrequencyEvidence.present ? diagnostics.acceptedFrequencyEvidence.score : diagnostics.acceptedPatternStrength;
         signal.contrast = diagnostics.acceptedFrequencyEvidence.present ? diagnostics.acceptedFrequencyEvidence.spectralContrast : 0.0f;
         signal.confidence = diagnostics.acceptedFrequencyEvidence.present && diagnostics.acceptedFrequencyEvidence.matched ? 1.0f : 0.0f;
         signal.signalConfidence = signal.confidence;
         signal.frequencyConfidence = signal.confidence;
-        signal.ampLevel = diagnostics.acceptedTransientStrength;
+        signal.ampLevel = diagnostics.acceptedPatternStrength;
         signal.ampBaseline = diagnostics.acceptedAmbientBaseline;
         signal.ampEvidencePresent = true;
         signal.frequency = diagnostics.acceptedFrequencyEvidence;
@@ -557,8 +553,8 @@ void AnalyzerApp::printSequenceTrialResult(unsigned long trialNumber, AnalyzerRe
         : detection::ScalarWindow{};
 
     const bool summaryTrial = analyzerLogEnabled(_sequenceTest.logFlags, AnalyzerApp::ANALYZER_LOG_TRIAL_SUMMARY);
-    const float freqScore = runtimePatternResult != nullptr ? runtimePatternResult->freq.score : (diagnostics.transientAccepted ? diagnostics.acceptedTransientStrength : trialSignal.score);
-    const float freqContrast = runtimePatternResult != nullptr ? runtimePatternResult->freq.spectralContrast : (diagnostics.transientAccepted ? diagnostics.acceptedFrequencyEvidence.spectralContrast : trialSignal.contrast);
+    const float freqScore = runtimePatternResult != nullptr ? runtimePatternResult->freq.score : (diagnostics.patternAccepted ? diagnostics.acceptedPatternStrength : trialSignal.score);
+    const float freqContrast = runtimePatternResult != nullptr ? runtimePatternResult->freq.spectralContrast : (diagnostics.patternAccepted ? diagnostics.acceptedFrequencyEvidence.spectralContrast : trialSignal.contrast);
     const char* ampSupport = runtimePatternResult != nullptr ? ampSupportName(runtimePatternResult->ampSupport) : "Unknown";
     const float ampPeak = runtimePatternResult != nullptr ? runtimePatternResult->candidate.peakStrength : trialSignal.ampLevel;
     const float ampBaseline = runtimePatternResult != nullptr ? runtimePatternResult->candidate.ambientBaseline : trialSignal.ampBaseline;

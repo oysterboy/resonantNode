@@ -2,6 +2,8 @@
 
 #include <Arduino.h>
 
+#include "../../TimingUtils.h"
+
 bool waitForEmitterAck(const char* expectedPrefix, unsigned long timeoutMs);
 
 void AnalyzerApp::startCaptureSession(unsigned long totalTrials, unsigned long periodMs, unsigned long windowEndOffsetMs, unsigned long toneHz, unsigned long durationMs, bool quiet) {
@@ -118,13 +120,13 @@ void AnalyzerApp::updateCaptureSession(unsigned long now) {
 
     const bool inTrialWindow = _captureSession.currentTrial > 0
                                && !_captureSession.currentTrialFinalized
-                               && now >= _captureSession.currentTrialStartMs
-                               && now <= _captureSession.currentTrialEndMs;
+                               && timing::atOrAfter(now, _captureSession.currentTrialStartMs)
+                               && timing::atOrAfter(_captureSession.currentTrialEndMs, now);
     if (inTrialWindow) {
         updateCaptureTrial(now);
     }
 
-    if (_captureSession.currentTrial > 0 && now >= _captureSession.currentTrialEndMs && !_captureSession.currentTrialFinalized) {
+    if (_captureSession.currentTrial > 0 && timing::atOrAfter(now, _captureSession.currentTrialEndMs) && !_captureSession.currentTrialFinalized) {
         finalizeCaptureTrial(now);
     }
 
@@ -136,7 +138,7 @@ void AnalyzerApp::updateCaptureSession(unsigned long now) {
         return;
     }
 
-    if (now < _captureSession.nextTriggerAtMs) {
+    if (timing::beforeDeadline(now, _captureSession.nextTriggerAtMs)) {
         return;
     }
 
@@ -168,7 +170,7 @@ void AnalyzerApp::updateCaptureQuietStats(unsigned long now) {
     if (!_captureSession.active) {
         return;
     }
-    if (_captureSession.currentTrial > 0 && !_captureSession.currentTrialFinalized && now >= _captureSession.currentTrialStartMs && now <= _captureSession.currentTrialEndMs) {
+    if (_captureSession.currentTrial > 0 && !_captureSession.currentTrialFinalized && timing::atOrAfter(now, _captureSession.currentTrialStartMs) && timing::atOrAfter(_captureSession.currentTrialEndMs, now)) {
         return;
     }
 
@@ -206,7 +208,7 @@ void AnalyzerApp::updateCaptureTrial(unsigned long now) {
         return;
     }
 
-    if (now < _captureSession.currentTrialStartMs || now > _captureSession.currentTrialEndMs) {
+    if (timing::beforeDeadline(now, _captureSession.currentTrialStartMs) || timing::beforeDeadline(_captureSession.currentTrialEndMs, now)) {
         return;
     }
 

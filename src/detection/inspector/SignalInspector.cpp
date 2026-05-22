@@ -68,7 +68,7 @@ void SignalInspector::annotateAcceptedSignal(
     out.duplicateRisk = false;
     out.duplicateRiskScore = 0.0f;
     annotateDuplicateRisk(out, candidate);
-    annotateAmpSupportAndLocality(out, candidate, featureHistory);
+    annotateAmpSupport(out, candidate, featureHistory);
     out.signal.confidence = out.confidence;
     out.signal.signalConfidence = out.signalConfidence;
     out.signal.frequencyConfidence = out.frequencyConfidence;
@@ -106,7 +106,7 @@ void SignalInspector::annotateDuplicateRisk(InspectedSignal& out, const SignalCa
         return;
     }
 
-    const unsigned long elapsedMs = acceptedMs > *lastAcceptedMs ? (acceptedMs - *lastAcceptedMs) : 0;
+    const unsigned long elapsedMs = static_cast<unsigned long>(acceptedMs - *lastAcceptedMs);
     if (elapsedMs < kDuplicateRiskWindowMs) {
         out.duplicateRisk = true;
         out.duplicateRiskScore = 1.0f - (static_cast<float>(elapsedMs) / static_cast<float>(kDuplicateRiskWindowMs));
@@ -121,7 +121,7 @@ void SignalInspector::annotateDuplicateRisk(InspectedSignal& out, const SignalCa
     *lastAcceptedMs = acceptedMs;
 }
 
-void SignalInspector::annotateAmpSupportAndLocality(
+void SignalInspector::annotateAmpSupport(
     InspectedSignal& out,
     const SignalCandidate& candidate,
     const FeatureHistory* featureHistory

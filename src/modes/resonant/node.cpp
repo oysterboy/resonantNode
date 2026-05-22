@@ -5,6 +5,7 @@
 #include <esp_system.h>
 
 #include "../../RuntimeDefaults.h"
+#include "../../TimingUtils.h"
 #include "../../detection/features/FrequencyMatchEvaluation.h"
 #include "../../detection/inspector/FrequencyWindowProbe.h"
 #include "../../detection/patterns/PatternNames.h"
@@ -105,15 +106,13 @@ void printProfileComposition(const detection::DetectionProfile& profile) {
     Serial.print(detection::profileSignalEmitterName(profile.signalEmitter));
     Serial.print(" inspectionRules=");
     Serial.print(detection::profileInspectionRulesName(profile.inspectionRules));
-    Serial.print(" patternRules=");
-    Serial.print(detection::profilePatternRulesName(profile.patternRules));
     Serial.print(" fieldStateConfig=");
     Serial.print(profile.fieldStateConfig.signalWindowMs);
     Serial.print("/");
     Serial.print(profile.fieldStateConfig.patternWindowMs);
 }
 
-const char* behaviorGateName(const ResonantBehavior& behavior, unsigned long now, bool transientDetected, bool selfChirpSuppressed) {
+const char* behaviorGateName(const ResonantBehavior& behavior, unsigned long now, bool patternDetected, bool selfChirpSuppressed) {
     if (selfChirpSuppressed) {
         return "self_ignore";
     }
@@ -123,8 +122,8 @@ const char* behaviorGateName(const ResonantBehavior& behavior, unsigned long now
     if (behavior.waitRemainingMs(now) > 0) {
         return "wait";
     }
-    if (transientDetected) {
-        return "transient";
+    if (patternDetected) {
+        return "pattern";
     }
     return behavior.stateCode() == 0 ? "idle" : behavior.stateName();
 }
@@ -212,7 +211,9 @@ void Node::startRbQuietBaseline() {
 
 void Node::resetRbCounters() {
     _rbCandidateCount = 0;
-    _rbActionCount = 0;
+    _rbPatternAcceptedCount = 0;
+    _rbValidPatternCount = 0;
+    _rbChirpStartedCount = 0;
     _rbOverflowCandidates = 0;
     _rbLastCandidateMs = 0;
     _rbHaveLastCandidateMs = false;
@@ -291,7 +292,7 @@ void Node::updateRbBaselineState(unsigned long now) {
                     Serial.print(_audioSignal.baseline(), 1);
                     Serial.print(" smooth=");
                     Serial.println(_audioSignal.smoothedSignalMagnitude());
-                } else if (_rbBaselineLastLogMs == 0 || now - _rbBaselineLastLogMs >= 1000) {
+                } else if (_rbBaselineLastLogMs == 0 || timing::elapsedSince(now, _rbBaselineLastLogMs, 1000UL)) {
                     _rbBaselineLastLogMs = now;
                     Serial.print("RB rebase waiting smooth=");
                     Serial.print(smooth, 1);
@@ -300,7 +301,7 @@ void Node::updateRbBaselineState(unsigned long now) {
                 }
             } else {
                 _rbBaselineQuietSinceMs = 0;
-                if (now - _rbBaselineStateStartedMs >= kRbStartupBaselineTimeoutMs) {
+                if (timing::elapsedSince(now, _rbBaselineStateStartedMs, kRbStartupBaselineTimeoutMs)) {
                     _rbBaselineState = RBBaselineState::FailedNoQuiet;
                     Serial.print("RB rebase skipped reason=no_quiet smooth=");
                     Serial.println(smooth, 1);
@@ -312,7 +313,7 @@ void Node::updateRbBaselineState(unsigned long now) {
             break;
 
         case RBBaselineState::Settle:
-            if (now >= _rbBaselineSettleUntilMs) {
+            if (timing::atOrAfter(now, _rbBaselineSettleUntilMs)) {
                 _rbBaselineState = RBBaselineState::Active;
                 Serial.println("RB baseline active");
             }
@@ -357,8 +358,6 @@ void Node::configureI2SParameters() {
 void Node::update() {
     const unsigned long now = millis();
     const unsigned long nowUs = micros();
-    updateRbBaselineState(now);
-    const bool rbOutputsEnabledNow = rbOutputsEnabled();
     const bool selfChirpSuppressed = _behavior.behaviorSuppressed(now);
     _wasSelfChirpSuppressed = selfChirpSuppressed;
 
@@ -381,7 +380,10 @@ void Node::update() {
             const uint32_t sampleTimeUs = block.approxStartMicros + sampleOffsetUs(static_cast<uint32_t>(i), sampleRateHz);
             AudioSignalFrame frame;
             _audioSignal.update(static_cast<int>(block.samples[i]), sampleTimeUs, frame);
-            const bool ownEmitSuppressed = now < _behavior.ownEmitDetectionSuppressUntilMs();
+            if (rbShouldLogDetail()) {
+                _ampDiagnosticProbe.observe(static_cast<float>(frame.level), frame.sampleTimeUs);
+            }
+            const bool ownEmitSuppressed = frame.sampleTimeMs < _behavior.ownEmitDetectionSuppressUntilMs();
             if (!ownEmitSuppressed) {
                 _freqBandStream.observeCenteredSample(frame.centeredSample);
                 processDetectionFrame(frame, now, selfChirpSuppressed, sawPatternThisLoop);
@@ -394,6 +396,9 @@ void Node::update() {
             processedSamples = kMaxSamplesPerLoop;
         }
     }
+
+    updateRbBaselineState(now);
+    const bool rbOutputsEnabledNow = rbOutputsEnabled();
 
     if (rbOutputsEnabledNow) {
         _behavior.update(now);
@@ -453,10 +458,10 @@ void Node::update() {
             Serial.print(" pattern=");
             Serial.println(chirpPatternName(chirpPattern));
         }
-        _debug.observeChirpStarted(now, sourceName, chirpPattern);
-        _chirpOutput.start(chirpPattern);
-        _behavior.notifyChirpStarted(now);
-        ++_rbActionCount;
+    _debug.observeChirpStarted(now, sourceName, chirpPattern);
+    _chirpOutput.start(chirpPattern);
+    _behavior.notifyChirpStarted(now);
+    ++_rbChirpStartedCount;
     }
 
     _chirpOutput.update();
@@ -499,8 +504,8 @@ void Node::handleSerialLine(const char* line) {
     if (equalsIgnoreCase(line, "RB help")) {
         Serial.println("RB CMD: RB PARAM freqScore=10000 freqContrast=50.0");
         Serial.println("RB CMD: RB BEHAV wait=100 refractory=0 idleTimeout=20000 idleTimeoutVariation=10000 idleBlockedAfterHeard=3000 idleBlockedAfterOwnEmit=5000");
-        Serial.println("RB CMD: RB DETECT status");
-        Serial.println("RB CMD: RB PROFILE name=freqamp|chirp");
+        Serial.println("RB CMD: RB STATUS");
+        Serial.println("RB CMD: RB PROFILE name=freqamp");
         Serial.println("RB CMD: RB rebase");
         Serial.println("RB CMD: RB rebase force");
         Serial.println("RB CMD: RB log off|minimal|full");
@@ -513,7 +518,7 @@ void Node::handleSerialLine(const char* line) {
         handleProfileCommand(line);
         return;
     }
-    if (startsWithTokenIgnoreCase(line, "RB DETECT")) {
+    if (startsWithTokenIgnoreCase(line, "RB STATUS") || startsWithTokenIgnoreCase(line, "RB DETECT")) {
         handleDetectCommand(line);
         return;
     }
@@ -673,7 +678,9 @@ void Node::handleLogCommand(const char* line) {
         ++mode;
     }
 
-    if (equalsIgnoreCase(mode, "off") || equalsIgnoreCase(mode, "minimal")) {
+    if (equalsIgnoreCase(mode, "off")) {
+        _rbLogMode = RbLogMode::Off;
+    } else if (equalsIgnoreCase(mode, "minimal")) {
         _rbLogMode = RbLogMode::Minimal;
     } else if (equalsIgnoreCase(mode, "full")) {
         _rbLogMode = RbLogMode::Full;
@@ -691,14 +698,12 @@ void Node::handleLogCommand(const char* line) {
 void Node::handleDetectCommand(const char* line) {
     (void)line;
     const detection::DetectionProfile& detectionProfile = activeDetectionProfile();
-    Serial.print("RB DETECT profile=");
+    Serial.print("RB STATUS profile=");
     Serial.print(detection::detectionProfileName(detectionProfile.kind));
     Serial.print(" emitters=");
     Serial.print(detection::profileSignalEmitterName(detectionProfile.signalEmitter));
     Serial.print(" inspectionRules=");
     Serial.print(detection::profileInspectionRulesName(detectionProfile.inspectionRules));
-    Serial.print(" patternRules=");
-    Serial.print(detection::profilePatternRulesName(detectionProfile.patternRules));
     Serial.print(" requireSupportForAcceptance=");
     Serial.print(detectionProfile.patternRulesConfig.requireSupportForAcceptance ? 1 : 0);
     Serial.print(" freqScore=");
@@ -729,7 +734,7 @@ void Node::handleProfileCommand(const char* line) {
         printProfileComposition(activeDetectionProfile());
         Serial.println();
     } else {
-        Serial.println("RB PROFILE usage=name=freqamp|chirp");
+        Serial.println("RB PROFILE usage=name=freqamp");
     }
 }
 
@@ -802,7 +807,10 @@ void Node::processDetectionFrame(const AudioSignalFrame& frame,
 
         ++_rbCandidateCount;
         if (patternResult.patternCandidateAccepted) {
-            ++_rbActionCount;
+            ++_rbPatternAcceptedCount;
+        }
+        if (patternResult.valid) {
+            ++_rbValidPatternCount;
         }
 
         if (patternResult.candidate.audioOverflowDuringCandidate) {
@@ -843,7 +851,15 @@ bool Node::rbShouldLogDetail() const {
 }
 
 const char* Node::rbLogModeName() const {
-    return _rbLogMode == RbLogMode::Full ? "full" : "off";
+    switch (_rbLogMode) {
+        case RbLogMode::Off:
+            return "off";
+        case RbLogMode::Minimal:
+            return "minimal";
+        case RbLogMode::Full:
+            return "full";
+    }
+    return "off";
 }
 
 detection::FrequencyEvidence Node::captureFrequencyEvidence(unsigned long observedAtMs) const {
@@ -874,8 +890,12 @@ void Node::printRbSummary() const {
 
     Serial.print("RB summary: candidates=");
     Serial.print(_rbCandidateCount);
-    Serial.print(" actions=");
-    Serial.print(_rbActionCount);
+    Serial.print(" patternAccepted=");
+    Serial.print(_rbPatternAcceptedCount);
+    Serial.print(" validPatterns=");
+    Serial.print(_rbValidPatternCount);
+    Serial.print(" chirpStarted=");
+    Serial.print(_rbChirpStartedCount);
     Serial.print(" overflowCandidates=");
     Serial.print(_rbOverflowCandidates);
     Serial.print(" avg_strength=");

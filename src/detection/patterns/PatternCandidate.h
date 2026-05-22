@@ -5,7 +5,12 @@
 
 namespace detection {
 
-// Candidate data is assembled before the rules layer decides the final result.
+/*
+PatternCandidate
+
+Candidate data assembled before PatternRules decides the final result.
+Carries the inspected signal payloads that the rules layer evaluates.
+*/
 struct PatternCandidate {
     // Core sequence summary.
     PatternCandidateKind kind = PatternCandidateKind::Unknown;

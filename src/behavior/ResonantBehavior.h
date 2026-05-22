@@ -7,16 +7,15 @@
 #include "../io/ChirpOutput.h"
 
 /*
-Behavior
+ResonantBehavior
 
-- owns the state machine
-- reacts to PatternResult inputs
-- decides when to request sound output
+Owns the local reaction state machine for ResonantNode.
+Consumes PatternResult and FieldState.
+Decides behaviorEligible, blocking reasons, idle timing, wait/refractory/self-suppression,
+and requested chirp pattern.
 
-Does NOT:
-- know hardware details
-- generate waveforms
-- derive first-stage detection from raw signal math
+Does not inspect SignalCandidates, FeatureStreams, or detector internals.
+Does not execute hardware output directly.
 */
 
 class ResonantBehavior {
@@ -47,7 +46,7 @@ public:
     BehaviorDecision handlePatternResult(const detection::PatternResult& result, unsigned long now);
     BehaviorDecision handlePatternResult(const detection::PatternResult& result, const detection::FieldState& field, unsigned long now);
     void update(unsigned long now);
-    // Boolean convenience overload for callers that still provide transient flags directly.
+    // Boolean convenience overload for callers that still provide pattern flags directly.
     // The main architecture remains PatternResult-driven.
     void update(bool transientDetected, float transientStrength, unsigned long now);
     void seedIdleSchedule(unsigned long now);

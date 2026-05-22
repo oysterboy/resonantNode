@@ -4,6 +4,12 @@
 
 namespace detection {
 
+/*
+FieldState
+
+Acoustic context summary used by Behavior alongside PatternResults.
+FieldState is not a pattern result and does not decide behavior by itself.
+*/
 struct FieldStateConfig {
     unsigned long signalWindowMs = 5000;
     unsigned long patternWindowMs = 5000;

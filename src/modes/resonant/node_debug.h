@@ -11,6 +11,13 @@ namespace detection {
 class AmpDiagnosticProbe;
 }
 
+/*
+NodeDebug
+
+Formats debug and status output for the normal Resonant node runtime.
+Observes snapshots from signal, detection diagnostics, behavior, and output.
+Does not make runtime decisions.
+*/
 class NodeDebug {
 public:
     enum class DebugMode {

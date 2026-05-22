@@ -20,6 +20,17 @@
 
 namespace detection {
 
+/*
+DetectionRuntime
+
+Owns the active detection pipeline wiring:
+feature observation, signal emission, signal inspection, pattern assembly,
+pattern rules, field-state tracking, and PatternResult queueing.
+
+Consumes AudioSignalFrame and FrequencyEvidence.
+Produces PatternResult and FieldState.
+Does not decide behavior or output.
+*/
 struct DetectionPipelineResult {
     bool hasPattern = false;
     PatternResult pattern = {};
@@ -67,6 +78,7 @@ public:
 private:
     static constexpr size_t kResultQueueCapacity = 8;
 
+    // Pipeline stages in execution order.
     void drainSignalEmitters(unsigned long nowMs);
     void drainPatternAssembler(unsigned long nowMs);
     bool pushPatternResult(const PatternResult& result);
@@ -78,6 +90,7 @@ private:
     );
 
     FrequencyMatchEvaluation::Values _frequencyTuning = {};
+    // Profile configuration applied at fixed runtime stages.
     ProfileSignalEmitterKind _signalEmitterKind = ProfileSignalEmitterKind::Frequency;
     ProfileInspectionRulesKind _inspectionRulesKind = ProfileInspectionRulesKind::FreqAmp;
     InspectionConfig _inspectionConfig = defaultInspectionConfig();

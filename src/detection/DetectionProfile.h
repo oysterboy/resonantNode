@@ -9,6 +9,15 @@
 
 namespace detection {
 
+/*
+DetectionProfile
+
+Code-defined detection profile composition.
+Profiles select the active signal emitter, inspection rules, pattern rules,
+inspection config, field-state config, and frequency tuning.
+
+Profiles declare composition; DetectionRuntime applies the selected fields at fixed stages.
+*/
 enum class DetectionProfileKind {
     FreqAmp,
     Chirp,
@@ -25,14 +34,15 @@ enum class ProfileInspectionRulesKind {
 };
 
 struct DetectionProfile {
+    // Identity and composition.
     DetectionProfileKind kind = DetectionProfileKind::FreqAmp;
     ProfileSignalEmitterKind signalEmitter = ProfileSignalEmitterKind::Frequency;
     ProfileInspectionRulesKind inspectionRules = ProfileInspectionRulesKind::FreqAmp;
+
+    // Stage configuration.
     FrequencyMatchEvaluation::Values frequencyTuning = {};
     PatternRulesConfig patternRulesConfig = {};
-
     InspectionConfig inspectionConfig = defaultInspectionConfig();
-
     FieldStateConfig fieldStateConfig = {};
 };
 

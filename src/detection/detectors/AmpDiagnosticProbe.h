@@ -6,6 +6,15 @@
 
 namespace detection {
 
+/*
+AmpDiagnosticProbe
+
+Diagnostic-only wrapper around AmpTransientDetector.
+Observes amplitude transients and reports snapshots/observations for AMPDIAG
+or SEQ_EXPLAIN.
+Must not produce SignalCandidate, PatternResult, FieldState, Analyzer hit truth,
+or Behavior input.
+*/
 struct AmpDiagnosticObservation {
     bool transientObserved = false;
     uint32_t onsetMs = 0;

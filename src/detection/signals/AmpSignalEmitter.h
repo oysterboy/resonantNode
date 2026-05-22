@@ -6,8 +6,13 @@
 
 namespace detection {
 
-// Roadmap adapter for the AMP scalar path.
-// Scalar transient mechanics now live in ScalarSignalEmitter / ScalarTransientDetector.
+/*
+AmpSignalEmitter
+
+Owns the AMP-side signal candidate path.
+Wraps ScalarSignalEmitter to produce AMP transient candidates from AudioSignalFrame input.
+Does not decide pattern meaning or behavior.
+*/
 class AmpSignalEmitter {
 public:
     AmpSignalEmitter();

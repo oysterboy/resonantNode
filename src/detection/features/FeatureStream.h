@@ -4,6 +4,12 @@
 
 namespace detection {
 
+/*
+FeatureStream
+
+Shared identifiers and values for measured signal features.
+Feature streams are measurements, not candidates and not pattern meanings.
+*/
 enum class FeatureStreamId {
     Unknown,
     AmpEnvelope,

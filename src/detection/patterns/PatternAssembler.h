@@ -8,6 +8,13 @@
 
 namespace detection {
 
+/*
+PatternAssembler
+
+Owns the current pattern-candidate assembly queue.
+Consumes inspected signals and produces PatternCandidate records.
+Does not decide pattern validity or support gates.
+*/
 class PatternAssembler {
 public:
     void reset();

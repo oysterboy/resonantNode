@@ -8,6 +8,13 @@
 
 namespace detection {
 
+/*
+FeatureHistory
+
+Bounded history for measured feature streams used by retrospective inspection.
+Stores feature values and window summaries by timestamp.
+Does not decide candidate validity or pattern meaning.
+*/
 class FeatureHistory {
 public:
     static constexpr size_t kMaxSamplesPerStream = 512;

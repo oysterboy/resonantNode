@@ -5,6 +5,13 @@
 
 #include "AudioSource.h"
 
+/*
+AudioSourceI2S
+
+ESP32 I2S implementation of AudioSource.
+Owns I2S setup, block reads, raw-sample diagnostics, and approximate block timing.
+Does not know about AudioSignal, DetectionRuntime, Analyzer, or Behavior.
+*/
 class AudioSourceI2S : public AudioSource {
 public:
     AudioSourceI2S(int sckPin, int fsPin, int dataInPin, int sampleRate = 16000, int bitsPerSample = 32);

@@ -2,6 +2,13 @@
 
 #include <stdint.h>
 
+/*
+AudioSource
+
+Owns the hardware-facing audio input contract.
+Provides raw and block sample access plus approximate sample timing.
+Does not perform signal detection or classification.
+*/
 struct AudioSourceStats {
     uint32_t reads = 0;
     uint32_t readBytes = 0;
@@ -22,6 +29,7 @@ struct AudioBlock {
     uint16_t sampleCount = 0;
 
     uint64_t startSampleIndex = 0;
+    // Approximate wall-clock time of samples[0].
     uint32_t approxStartMicros = 0;
 
     bool overflowBeforeBlock = false;

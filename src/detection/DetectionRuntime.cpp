@@ -1,5 +1,6 @@
 #include "DetectionRuntime.h"
 
+// DetectionRuntime pipeline execution in source order.
 namespace detection {
 
 DetectionRuntime::DetectionRuntime() = default;

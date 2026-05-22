@@ -1,5 +1,11 @@
 #pragma once
 
+/*
+BehaviorGateConfig
+
+Behavior-side timing and gating defaults.
+These settings affect behavior eligibility, not pattern validity.
+*/
 struct BehaviorGateConfig {
     bool idleEnabled = true;
 

@@ -1,6 +1,7 @@
 #include "SignalInspector.h"
 #include "SignalWindowEvaluator.h"
 
+// SignalInspector evidence annotation and inspection in source order.
 namespace {
 
 constexpr unsigned long kDuplicateRiskWindowMs = 150;

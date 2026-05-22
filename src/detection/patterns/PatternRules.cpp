@@ -1,5 +1,6 @@
 #include "PatternRules.h"
 
+// PatternRules converts PatternCandidates into PatternResults.
 namespace detection {
 
 void PatternRules::configure(const PatternRulesConfig& config) {

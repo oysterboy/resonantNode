@@ -5,6 +5,12 @@
 
 namespace detection {
 
+/*
+InspectedSignal
+
+SignalCandidate plus SignalInspector decision and added evidence.
+Owns candidateAccepted and signal-stage rejection reason.
+*/
 enum class SignalDecision {
     None,
     Accepted,

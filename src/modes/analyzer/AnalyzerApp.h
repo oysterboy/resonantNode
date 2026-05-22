@@ -21,28 +21,12 @@
 /*
 AnalyzerApp
 
-Owns the analyzer-mode orchestration layer for the Resonant project.
+Analyzer-mode coordinator for the Resonant project.
+Wires audio input, DetectionRuntime, diagnostic probes, emitter control,
+SEQ trials, RAW capture, and reporting.
 
-Responsibilities:
-- wire up the chosen audio source and detector chain
-- run base calibration, capture, and sequence-test sessions
-- manage detector parameters and control-claim handshakes
-- collect candidate, frequency, and timing diagnostics
-- print runtime summaries and debug output for analyzer workflows
-
-Does NOT:
-- implement the detector algorithms themselves
-- own the audio signal processing primitives
-- make resonance behavior decisions
-
-File structure:
-- public mode lifecycle
-- session state bundles
-- setup and control helpers
-- detector parameter helpers
-- session/capture/sequence workflows
-- reporting and debug output
-- runtime state
+Analyzer measures DetectionRuntime output against expected events.
+It does not implement detection algorithms, PatternRules, Behavior, or output policy.
 */
 class AnalyzerApp {
 public:

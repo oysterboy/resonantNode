@@ -5,6 +5,13 @@
 #include "../../hal/PiezoToneOutput.h"
 #include "../../io/ChirpOutput.h"
 
+/*
+EmitterApp
+
+Standalone output-device mode used by Analyzer tests.
+Receives serial commands and executes ChirpOutput/ToneOutput actions.
+Does not perform detection or behavior decisions.
+*/
 class EmitterApp {
 public:
     enum class EmitterMode {
@@ -13,6 +20,7 @@ public:
         Sweep
     };
 
+    // Serial transport label kept for the control-port protocol surface.
     enum class ControlSerialKind {
         Serial2
     };

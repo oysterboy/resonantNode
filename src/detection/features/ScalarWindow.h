@@ -6,6 +6,12 @@
 
 namespace detection {
 
+/*
+ScalarWindow
+
+Summary of one feature-history interval.
+Used by SignalInspector for candidate-relative support evidence.
+*/
 struct ScalarWindow {
     bool present = false;
     bool valid = false;

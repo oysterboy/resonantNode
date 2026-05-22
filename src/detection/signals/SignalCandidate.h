@@ -6,6 +6,12 @@
 
 namespace detection {
 
+/*
+SignalCandidate
+
+Low-level source-tagged signal event proposed by a SignalEmitter.
+It is not a pattern result and must not drive behavior directly.
+*/
 enum class SignalKind {
     None,
     AmpTransient,

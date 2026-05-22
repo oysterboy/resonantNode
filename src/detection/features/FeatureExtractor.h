@@ -4,6 +4,12 @@
 #include "../inspector/InspectorTypes.h"
 #include "FeatureHistory.h"
 
+/*
+FeatureExtractor
+
+Small helper namespace that derives feature-history samples from AudioSignalFrame.
+It measures feature streams only; it does not emit candidates or classify patterns.
+*/
 namespace detection::FeatureExtractor {
 
 inline void observeFrame(const AudioSignalFrame& frame, FeatureHistory& history) {

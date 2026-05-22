@@ -3,6 +3,14 @@
 #include "AnalyzerReporting.h"
 #include "../../detection/detectors/AmpTransientDetector.h"
 
+/*
+AnalyzerClassifier
+
+Small helper for Analyzer trial classification reasons.
+Consumes AnalyzerResult plus trial metadata.
+Does not re-evaluate DetectionRuntime pattern validity.
+The AMP transient reject reason is used only as a diagnostic reason input.
+*/
 struct AnalyzerSequenceClassificationInput {
     AnalyzerResult result = AnalyzerResult::Unknown;
     long dtMs = -1;

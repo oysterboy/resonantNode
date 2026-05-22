@@ -2,6 +2,12 @@
 
 #include <Arduino.h>
 
+/*
+ToneOutput
+
+Minimal hardware output interface for tone-capable sound emitters.
+Behavior and ChirpOutput call this interface; implementations own GPIO/PWM/I2S details.
+*/
 class ToneOutput {
 public:
     virtual ~ToneOutput() = default;

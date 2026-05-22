@@ -7,6 +7,13 @@
 
 namespace detection {
 
+/*
+FieldStateTracker
+
+Observes signal candidates, inspected signals, and PatternResults to maintain
+recent acoustic context.
+Does not classify patterns and does not trigger output.
+*/
 class FieldStateTracker {
 public:
     void setConfig(const FieldStateConfig& config);

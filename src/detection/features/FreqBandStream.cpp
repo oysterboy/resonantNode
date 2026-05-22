@@ -3,6 +3,7 @@
 #include <Arduino.h>
 #include <math.h>
 
+// FreqBandStream maintains the rolling narrow-band frequency evidence stream.
 void FreqBandStream::resetState() {
     _sampleCount = 0;
     _sampleWriteIndex = 0;

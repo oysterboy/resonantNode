@@ -27,7 +27,7 @@ Does NOT:
 - implement the behavior state machine
 - classify patterns
 - generate waveforms
-- own detector thresholds as core behavior logic
+- own probe thresholds as diagnostics, not core behavior logic
 
 File structure:
 - local helpers and constants
@@ -332,7 +332,7 @@ void Node::configureParameters() {
 }
 
 void Node::configureI2SParameters() {
-    // I2S/audio conditioning and detector tuning live here.
+    // I2S/audio conditioning and profile tuning live here.
     const detection::DetectionProfile& detectionProfile = activeDetectionProfile();
     _audioSignal.setSmoothingFactor(0.5f);
     _audioSignal.setBaselineUpdateFactor(0.005f);

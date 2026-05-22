@@ -2,6 +2,14 @@
 
 #include <stdint.h>
 
+/*
+AnalyzerReporting
+
+Analyzer report data model and print helpers.
+Reports DetectionRuntime gate-chain output, trial classification, field state,
+and diagnostic details.
+Does not own detection or behavior decisions.
+*/
 enum class AnalyzerResult {
     Expected,
     Early,

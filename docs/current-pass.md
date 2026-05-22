@@ -1,1137 +1,2232 @@
-# ResonantNode Post-Cleanup Bug / Drift List
+# ResonantNode src commenting + ordering pass
 
-Status: complete
+Scope: `src/` only.
 
-This pass is closed; future cleanup should start in a new pass.
+Intent: improve human readability after the cleanup/refactor by making file order, member order, file headers, and grouping comments match the current architecture.
 
-Intent: prioritize remaining bugs and roadmap/spec drift after the recent cleanup pass. This list is ordered by practical impact: first restore testability, then fix Analyzer truth, then remove profile/runtime drift, then simplify names/logs/dead code.
+Status: complete.
 
-## Scope baseline
+Done:
+- aligned the central src contracts with short ownership-style file headers
+- tightened analyzer and node comments to describe gate-chain and probe boundaries
+- removed stale roadmap/legacy/H3 wording from active source comments and status text
+- kept the analyzer/emitter/node help text aligned with the current probe-focused wording
+- verified `esp32dev` and `esp32dev-analyzer` both build successfully
 
-Accepted architecture / cleanup decisions still apply:
+This is **not** a behavior refactor pass. Do not change runtime logic except where a comment is obviously false and the smallest correction is a rename/comment move.
+
+## Global rules for this pass
+
+### 1. Comments must describe ownership, not history
+
+Prefer comments that answer:
 
 ```text
-DetectionRuntime owns detection truth.
-PatternRules own patternMatched / supportMatched / valid.
-Analyzer measures ExpectedEvent + PatternResult + timing; it does not redo detection.
-Behavior consumes PatternResult + FieldState and owns behaviorEligible.
-FreqAmpProfile = FrequencyMatch primary + AMP support inspection + SinglePulseOnly.
-AmpSignalEmitter is not active in FreqAmp.
-ChirpProfile / AmpStateProfile may exist as proof/future concepts, but must not falsely affect stable FreqAmp runtime.
-Runtime timestamps use one local node timebase: wall-clock sample time in uint32_t ms.
+What does this file/class own?
+What does it consume?
+What does it produce?
+What must it not do?
+```
+
+Avoid comments that preserve old migration history in active code:
+
+```text
+legacy
+roadmap adapter
+modern
+current
+temporary
+placeholder
+H3
+```
+
+If historical context is still useful, move it to docs, not file headers.
+
+### 2. File headers should be short and contractual
+
+Recommended file header shape:
+
+```cpp
+/*
+ClassName / ModuleName
+
+Owns:
+- ...
+
+Consumes:
+- ...
+
+Produces:
+- ...
+
+Does not:
+- ...
+*/
+```
+
+Do not put long roadmap prose in headers. Long architecture belongs in docs.
+
+### 3. Member grouping order
+
+Use this order in classes where it fits:
+
+```text
+public:
+  type aliases / small enums
+  lifecycle: constructor, begin/reset/configure
+  per-loop/update methods
+  commands/actions
+  observations/getters
+  debug/report helpers only if public
+
+private:
+  nested structs/enums
+  private helpers in execution order
+  config/profile state
+  hardware/resource members
+  signal/detection members
+  behavior/output members
+  session/runtime state
+  counters/statistics
+  debug/throttle state
+```
+
+For structs, order fields by meaning:
+
+```text
+identity/config
+state flags
+timing
+measurements/evidence
+classification/gates
+counters/debug
+```
+
+### 4. Grouping comments should be sparse and stable
+
+Good:
+
+```cpp
+// Profile configuration applied at fixed runtime stages.
+// Audio input and derived feature state.
+// Analyzer sequence trial state.
+```
+
+Bad:
+
+```cpp
+// New stuff
+// H3
+// temporary
+// old path
+// random helper functions
+```
+
+### 5. Header includes
+
+Suggested include order:
+
+```cpp
+#pragma once
+
+// C/C++ standard headers
+#include <stdint.h>
+#include <stddef.h>
+
+// Arduino / platform headers
+#include <Arduino.h>
+
+// Local project headers, broad-to-specific or dependency order
+#include "..."
+```
+
+Remove unused includes when safe. Prefer forward declarations in headers when only references/pointers are used.
+
+---
+
+# Folder-level intended reading order
+
+Use this as the mental order for readers and for comments:
+
+```text
+RuntimeDefaults / AudioDebugConfig
+hal/                  hardware boundaries
+io/                   audio signal and sound output resources
+DetectionProfile      profile/config composition
+DetectionRuntime      pipeline orchestrator
+features/             measured feature streams/history
+signals/              signal candidates and emitters
+inspector/            signal-stage inspection/evidence
+patterns/             pattern candidates/rules/results
+field/                acoustic context
+behavior/             response decision logic
+modes/resonant/       normal node orchestration
+modes/analyzer/       measurement/test orchestration
+modes/emitter/        standalone output device
+main.cpp              compile-time mode switch
 ```
 
 ---
 
-# P0 — Testability / broken command path
+# Root files
 
-## 1. SEQ command parsing likely broken
+## `src/RuntimeDefaults.h`
 
-### Bug
+### Current role
+Shared runtime constants such as default chirp frequency and duration.
 
-`SEQ` commands appear to return help immediately instead of processing subcommands.
-
-### Details
-
-In `AnalyzerCommands.cpp` / `handleUsbLine()` style logic, the parser enters the `SEQ` branch, tokenizes the command, then checks the first token. For a command like:
-
-```text
-SEQ start tries=100
-```
-
-the first token is always:
-
-```text
-SEQ
-```
-
-If the code checks `token == "SEQ"` as a help condition and returns, the parser never reaches `start`, `obs`, `stop`, etc.
-
-### Suggested fix
-
-Consume the `SEQ` token first, then parse the subcommand:
+### Suggested header comment
+Add a tiny header; currently it has no ownership comment.
 
 ```cpp
-char* token = strtok_r(buffer, " ", &savePtr); // "SEQ"
-char* subcommand = strtok_r(nullptr, " ", &savePtr); // "START" / "OBS" / "STOP" / "HELP"
+/*
+RuntimeDefaults
 
-if (subcommand == nullptr || equalsIgnoreCase(subcommand, "HELP")) {
-    printSequenceHelp();
-    return;
-}
-
-if (equalsIgnoreCase(subcommand, "START")) { ... }
-if (equalsIgnoreCase(subcommand, "OBS")) { ... }
-if (equalsIgnoreCase(subcommand, "STOP")) { ... }
+Shared compile-time defaults used by runtime modes and output hardware.
+These are defaults, not live profile state.
+*/
 ```
 
-### Test / check
-
-Verify these commands do not print help unless requested:
+### Ordering
+Keep constants grouped by domain:
 
 ```text
-SEQ help
-SEQ start tries=5
-SEQ obs tries=5
-SEQ stop
+sound/output defaults
+analyzer defaults if any later
 ```
 
-Acceptance:
-
-```text
-SEQ start starts a sequence.
-SEQ obs starts observation mode.
-SEQ stop stops the active sequence.
-```
-
-Status: DONE
+Avoid adding unrelated detection thresholds here. Detection thresholds belong in profile/config structs.
 
 ---
 
-# P1 — Analyzer truth / classification correctness
+## `src/AudioDebugConfig.h`
 
-## 2. Analyzer still counts invalid/rejected PatternResults as trial hits
+### Current role
+Shared debug/test defaults.
 
-### Bug
+### Suggested action
+Header is mostly good. Shorten if it becomes too descriptive.
 
-`handleSequenceCandidate()` still appears to set `currentTrialHit = true` for an in-window `PatternResult` without requiring:
-
-```cpp
-patternResult.valid == true
-```
-
-### Details
-
-This violates the accepted hit gate:
+### Suggested ordering
 
 ```text
-Only PatternResult.valid counts as Analyzer hit and Behavior input.
+debug enable flags
+stress/test knobs
+default labels
 ```
 
-Current risk:
-
-```text
-PatternResult arrives in expected window
-→ Analyzer stores acceptedTransient/acceptedPattern fields
-→ currentTrialHit = true
-→ trial becomes expected/late
-```
-
-even if:
-
-```text
-candidateAccepted=false
-patternMatched=false
-supportMatched=false
-valid=false
-reason=missing_amp_support / amp_support_too_low / rejected
-```
-
-### Suggested fix
-
-In `handleSequenceCandidate()` split observation from hit classification:
-
-```cpp
-const bool inWindow = ...;
-const bool validHit = patternResult.valid;
-
-recordCandidateObservation(patternResult, timing, inWindow);
-
-if (!validHit) {
-    recordRejectedPatternObservation(patternResult, timing, inWindow);
-    return;
-}
-
-if (inWindow) {
-    capturePrimaryValidPattern(patternResult, timing);
-}
-```
-
-Do not set the primary hit fields for invalid/rejected PatternResults.
-
-Recommended state names:
-
-```cpp
-bool primaryValidPatternCaptured;
-PatternResult primaryValidPattern;
-uint32_t primaryValidPatternDtMs;
-uint32_t rejectedInWindowCount;
-PatternResult firstRejectedInWindow;
-```
-
-### Test / check
-
-Run a case where frequency matches but AMP support is too low / unknown.
-
-Expected:
-
-```text
-SEQ_TRIAL result=miss or rejected
-rejected_count > 0
-supportMatched=false
-valid=false
-```
-
-Not acceptable:
-
-```text
-SEQ_TRIAL result=expected with valid=false
-```
-
-Status: DONE
+### Comment warning
+Make clear this file gates diagnostics only, not behavior/detection truth.
 
 ---
 
-## 3. Unexpected candidates still override a valid expected hit
+# `hal/`
 
-### Bug
+## `src/hal/AudioSource.h`
 
-Final trial classification still gives `unexpected` priority over `expected/late` if any unexpected candidate occurred.
+### Current role
+Abstract audio input boundary and block representation.
 
-### Details
-
-Current dangerous shape:
-
-```cpp
-if (invalidAudioTrial) result = Invalid;
-else if (unexpectedTrial) result = Unexpected;
-else if (hitTrial) result = Expected/Late;
-```
-
-This violates the accepted decision:
-
-```text
-unexpected / duplicate / rejected are flags/counters, not primary result overrides.
-```
-
-A valid in-window hit should remain the primary result even if there are extra out-of-window candidates.
-
-### Suggested fix
-
-Classify primary result first:
-
-```text
-primary result = expected / late / early / miss / rejected / invalid_audio
-flags = unexpected_count, duplicate_count, rejected_count
-```
-
-Suggested order:
+### Suggested header comment
 
 ```cpp
-if (invalidAudioTrial) {
-    result = AnalyzerResult::InvalidAudio;
-} else if (primaryValidPatternCaptured) {
-    result = classifyTiming(primaryValidPatternDtMs);
-} else if (rejectedInWindowCount > 0) {
-    result = AnalyzerResult::Rejected;
-} else {
-    result = AnalyzerResult::Miss;
-}
+/*
+AudioSource
 
-report.unexpectedCount = currentTrialUnexpected;
-report.duplicateCount = currentTrialDuplicate;
-report.rejectedCount = currentTrialRejected;
+Owns the hardware-facing audio input contract.
+Provides raw/centered sample blocks plus approximate sample timing.
+Does not perform signal detection or classification.
+*/
 ```
 
-### Test / check
+### Suggested struct ordering
 
-Create/observe a trial with:
+`AudioSourceStats`:
 
 ```text
-one valid in-window result
-one extra out-of-window candidate
+blocks/samples
+errors/overflows
+last timing/backlog info if added later
 ```
 
-Expected:
+`AudioBlock`:
 
 ```text
-result=expected
-unexpected=1
+samples pointer/count
+first sample timestamp
+sample rate
+transport/backlog diagnostics
 ```
 
-Not:
+### Comment note
+Clarify `approxStartMicros`:
 
-```text
-result=unexpected
+```cpp
+// Approximate wall-clock time of samples[0]. This is a short-lived micros timestamp.
 ```
 
-Status: DONE
+Also note that long-lived runtime event time should use millisecond node time derived from frame timing.
 
 ---
 
-## 4. Analyzer still uses old mutable `currentTrialHit` truth instead of stored primary PatternResult
+## `src/hal/AudioSourceI2S.h/.cpp`
 
-### Bug
+### Current role
+ESP32 I2S MEMS input implementation.
 
-Trial classification still appears to derive from mutable booleans and old `acceptedTransient*` fields instead of a stored primary valid `PatternResult`.
-
-### Details
-
-Current shape:
-
-```text
-PatternResult arrives
-→ handleSequenceCandidate mutates currentTrialHit and acceptedTransient fields
-→ finalizeSequenceTrial reads currentTrialHit
-```
-
-This preserves the old direct-transient detector mental model.
-
-### Suggested fix
-
-Store trial-level observations explicitly:
+### Header comment
+Add concise ownership comment.
 
 ```cpp
-struct SequencePrimaryObservation {
-    bool hasValidPattern = false;
-    PatternResult pattern = {};
-    uint32_t dtMs = 0;
-};
+/*
+AudioSourceI2S
 
-struct SequenceRejectedObservation {
-    uint32_t inWindowCount = 0;
-    uint32_t outOfWindowCount = 0;
-    PatternResult firstInWindow = {};
-};
+ESP32 I2S implementation of AudioSource.
+Owns I2S setup, block reads, raw-sample diagnostics, and approximate block timing.
+Does not know about AudioSignal, DetectionRuntime, Analyzer, or Behavior.
+*/
 ```
 
-Then classify from:
+### Member order
 
 ```text
-ExpectedEvent + SequencePrimaryObservation + rejected/unexpected/duplicate counters
+constructor
+begin/reset
+block read API
+raw diagnostic read API
+stats/getters
+private timing helpers
+private hardware config
+private block buffer state
+private stats
 ```
 
-### Test / check
-
-Review `finalizeSequenceTrial()` and ensure it does not infer trial truth from `acceptedTransient*` or `currentTrialHit` without checking `PatternResult.valid`.
-
-Status: DONE
-
----
-
-# P2 — Profile/runtime drift
-
-## 5. `ChirpProfile` is still exposed as normal although not truly implemented
-
-### Bug / drift
-
-Help and commands still expose:
-
-```text
-profile=freqamp|chirp
-```
-
-but `ChirpProfile` is not yet a real stable profile composition with proper chirp-specific pattern rules and assembler behavior.
-
-### Details
-
-The updated roadmap treats `ChirpProfile` as a proof/future profile. It should not silently behave as if it were stable.
-
-Current risk:
-
-```text
-User selects chirp
-logs claim chirp composition
-runtime still mostly uses generic/current PatternRules behavior
-results are misleading
-```
-
-### Suggested fix
-
-Near-term options:
-
-Option A — hide/park:
-
-```text
-Expose only profile=freqamp in help and normal commands.
-Keep makeChirpProfile() in code as parked/proof if needed.
-```
-
-Option B — mark explicit experimental:
-
-```text
-profile=chirp_experimental
-```
-
-and print:
-
-```text
-WARNING: chirp profile is proof/future; not stable runtime profile.
-```
-
-Recommended for cleanup: Option A.
-
-### Test / check
-
-`RB help` and `SEQ help` should not advertise `chirp` as stable.
-
-Status: DONE
-
----
-
-## 6. `ProfilePatternRulesKind` appears decorative / not applied
-
-### Bug / drift
-
-`DetectionProfile` still contains something like:
-
-```cpp
-ProfilePatternRulesKind patternRules;
-```
-
-but runtime appears to apply only `PatternRulesConfig`, not the pattern-rules kind.
-
-### Details
-
-This means logs/profile summaries may say:
-
-```text
-patternRules=ChirpSequence
-```
-
-while runtime still uses the same concrete `PatternRules` implementation.
-
-This violates the human-engineer rule:
-
-```text
-profile composition must be real or parked
-```
-
-### Suggested fix
-
-Either make the field real:
-
-```cpp
-_detection.setPatternRulesKind(profile.patternRules);
-```
-
-with actual runtime behavior differences,
-
-or remove it from active profile output and profile structs until real.
-
-Recommended now:
-
-```text
-Keep PatternRulesConfig as the real applied config.
-Do not print/store decorative PatternRulesKind as active truth unless it changes runtime behavior.
-```
-
-### Test / check
-
-Profile startup logs should only show composition fields that are actually applied.
-
-Status: DONE
-
----
-
-## 7. PatternAssembler mode is implicit, not explicit
-
-### Bug / drift
-
-FreqAmp currently behaves as SinglePulseOnly, which is correct, but there is no explicit applied `PatternAssemblerMode` visible in runtime config.
-
-### Details
-
-The accepted profile-composition direction says profile should select assembler behavior. The current code is acceptable if only one assembler mode exists, but profile logs must not imply configurable assembler behavior unless actually applied.
-
-### Suggested fix
-
-Either:
-
-```cpp
-enum class PatternAssemblerMode { SinglePulseOnly, PulseSequence };
-```
-
-and apply it to `PatternAssembler`,
-
-or keep assembler non-configurable for now and do not log/advertise assembler kind as active profile composition.
-
-Recommended now:
-
-```text
-If ChirpProfile is parked, keep assembler simple and non-configurable.
-If assembler kind is logged, make it real.
-```
-
-### Test / check
-
-FreqAmp should not emit PulseSequence candidates.
-
-Status: DONE
-
----
-
-# P3 — Node/RB runtime and diagnostics
-
-## 8. Node AMP diagnostic probe exists but may not be observed
-
-### Bug / drift
-
-`Node` owns an `AmpDiagnosticProbe`, configures/prints it, but it appears not to call:
-
-```cpp
-_ampDiagnosticProbe.observe(frame);
-```
-
-### Details
-
-This means Node/RB AMP diagnostic output may show thresholds/config but no real observation data.
-
-Earlier decision:
-
-```text
-AMP diagnostic may stay, but only as explicit diagnostic probe.
-```
-
-A half-wired diagnostic probe creates confusion.
-
-### Suggested fix
-
-Choose one:
-
-Option A — implement diagnostic observation gated by debug/AMPDIAG:
-
-```cpp
-if (_ampDiagEnabled) {
-    _ampDiagnosticProbe.observe(frame);
-}
-```
-
-Option B — remove Node-owned AMP diagnostic probe and keep AMPDIAG only in Analyzer.
-
-Recommended:
-
-```text
-Keep it only if an explicit RB/AMPDIAG command needs it.
-Otherwise remove from Node and keep Analyzer diagnostics.
-```
-
-### Test / check
-
-If kept:
-
-```text
-AMPDIAG on
-RB/AMPDIAG status shows nonzero observation counters when sound occurs.
-AMPDIAG off
-no diagnostic CPU work / no probe observation
-```
-
-Status: DONE
-
----
-
-## 9. Own-chirp suppression uses loop `now` instead of frame time
-
-### Bug / drift
-
-Node now suppresses detection during own emit, which is good, but the check appears based on loop `now`, not per-frame `frame.sampleTimeMs`.
-
-### Details
-
-With backlog-aware audio timing, a frame may represent a sample older than current loop time. Suppression should gate the audio frame by the frame’s event time.
-
-### Suggested fix
-
+### Grouping comments
 Use:
 
 ```cpp
-const bool ownEmitSuppressed =
-    frame.sampleTimeMs < _behavior.ownEmitDetectionSuppressUntilMs();
+// I2S hardware configuration.
+// Buffered block state.
+// Approximate sample timing and diagnostics.
 ```
 
-instead of a loop-level `now` check where practical.
-
-### Test / check
-
-During own chirp, detection/FieldState should not ingest frames whose sample time falls inside the suppression window.
-
-Status: DONE
+### Comment corrections
+Avoid comments implying exact timestamps. Use “approximate first-sample timestamp”.
 
 ---
 
-## 10. RB counters still mix accepted patterns and emitted chirps
+## `src/hal/ToneOutput.h`
 
-### Bug
-
-`_rbActionCount` still appears to increment both when a pattern candidate is accepted and when a chirp actually starts.
-
-### Details
-
-This makes runtime stats misleading:
-
-```text
-accepted pattern candidate != emitted chirp action
-```
-
-### Suggested fix
-
-Split counters:
+### Header comment
+Add short interface contract.
 
 ```cpp
-_rbCandidateCount;
-_rbPatternAcceptedCount;
-_rbValidPatternCount;
-_rbChirpStartedCount;
+/*
+ToneOutput
+
+Minimal hardware output interface for tone-capable sound emitters.
+Behavior and ChirpOutput call this interface; implementations own GPIO/PWM/I2S details.
+*/
 ```
 
-Increment:
+### Ordering
+Lifecycle then output control:
 
 ```text
-candidateCount: every PatternResult observed
-patternAcceptedCount: candidateAccepted true
-validPatternCount: result.valid true
-chirpStartedCount: output actually started
+begin
+setToneHz
+toneOn
+toneOff
 ```
 
-### Test / check
-
-With behavior disabled/listen-only:
-
-```text
-validPatternCount may increase
-chirpStartedCount must stay 0
-```
-
-Status: DONE
+Good as-is.
 
 ---
 
-## 11. RB log mode still exposes fake `off|minimal|full`
+## `src/hal/PiezoToneOutput.h/.cpp`
+## `src/hal/PiezoToneOutputBTL.h/.cpp`
 
-### Bug
+### Current role
+Concrete tone outputs.
 
-Help says:
-
-```text
-RB log off|minimal|full
-```
-
-but enum still appears to have only:
+### Suggested header comment
 
 ```cpp
-Minimal
-Full
+/*
+PiezoToneOutput / PiezoToneOutputBTL
+
+Concrete ToneOutput implementation for piezo PWM output.
+Owns pin/channel setup and tone on/off hardware state.
+Does not choose when sounds should be emitted.
+*/
 ```
 
-and `rbLogModeName()` maps non-full to `off`.
+### Member order
 
-### Suggested fix
+```text
+constructor
+begin
+setToneHz
+toneOn/toneOff
+private hardware pins/channels
+private active tone config
+```
 
-Either add real `Off`:
+### Comment note for BTL
+Add a short note near BTL-specific fields:
 
 ```cpp
-enum class RbLogMode { Off, Minimal, Full };
+// invertedPin uses ESP32 pin matrix inversion for BTL drive.
 ```
 
-or remove `off` from help and use:
-
-```text
-RB log minimal|full
-```
-
-Recommended:
-
-```text
-Add real Off, keep Minimal, Full.
-```
-
-### Test / check
-
-```text
-RB log off     -> no RB runtime logs
-RB log minimal -> compact logs
-RB log full    -> detailed logs
-RB status      -> reports correct mode name
-```
-
-Status: DONE
+Avoid broader hardware theory in code comments.
 
 ---
 
-## 12. `RB DETECT` command/status remains as old vocabulary
+# `io/`
 
-### Bug / drift
+## `src/io/AudioSignal.h/.cpp`
 
-`RB DETECT` remains in help/commands, even though active architecture is profile/runtime-based.
+### Current role
+Shared signal representation, smoothing, sample history, frame emission.
 
-### Details
+### Header comment
+Add/refresh because this is central and currently mostly field definitions.
 
-This is not necessarily a functional bug, but it preserves the old DetectionMode vocabulary.
+```cpp
+/*
+AudioSignal
 
-### Suggested fix
+Owns detector-neutral signal state derived from SoundInput:
+level, smoothed level, baseline/activity, centered samples, frame timing,
+and bounded raw sample history.
 
-Rename/remove:
-
-```text
-RB DETECT status -> RB DETECTION status
-or RB PROFILE status
-or RB STATUS
+Does not decide candidates, pattern meaning, or behavior response.
+*/
 ```
 
-Do not expose `RB DETECT` as if old detection mode selection exists.
+### Suggested file/member order
 
-### Test / check
+In header:
 
-Help text should not imply old DetectionMode or AMP-detector runtime.
+```text
+AudioSignalStats
+CurveSnapshot
+AudioSignalFrame
+DetectorCandidate              // consider comment: legacy/diagnostic candidate shape if still needed
+RawSampleHistory
+AudioSignal class
+```
 
-Status: DONE
+Inside `RawSampleHistory`:
+
+```text
+public lifecycle/config
+public write/read/window methods
+private sample record struct
+private ring buffer state
+```
+
+Inside `AudioSignal`:
+
+```text
+lifecycle/config: begin, reset, configure sample rate
+block/frame processing
+state getters
+raw history access
+private helper methods
+private timing/sample counters
+private signal smoothing/baseline state
+private raw history
+```
+
+### Comment updates
+
+- Clarify `AudioSignalFrame::sampleTimeUs` and `sampleTimeMs`:
+
+```cpp
+// Wall-clock-derived local node sample time for this frame.
+// sampleTimeMs is the runtime event time used by detection/analyzer/behavior.
+```
+
+- If `DetectorCandidate` remains, add a note:
+
+```cpp
+// Legacy/diagnostic candidate shape used by retrospective probes; not the DetectionRuntime SignalCandidate contract.
+```
+
+If that is not true, rename later.
+
+### Simplification suggestion
+If `AudioSignal::processBlock()` is not used by Node/Analyzer, mark it clearly:
+
+```cpp
+// Optional helper for block-to-frame conversion; main modes currently process frames manually.
+```
+
+or remove in a later cleanup.
 
 ---
 
-## 13. Baseline state updates before audio processing
+## `src/io/ChirpOutput.h/.cpp`
 
-### Bug / drift
+### Current role
+SoundOutput-like chirp/pulse state machine over `ToneOutput`.
 
-Node updates RB baseline/quiet state before reading and processing current audio blocks.
+### Header comment replacement
+Current “IO - concrete chirp output device” is okay but vague. Replace with:
 
-### Details
+```cpp
+/*
+ChirpOutput
 
-This means baseline logic uses previous-loop signal values.
-
-Severity: low/medium.
-
-### Suggested fix
-
-Move baseline update after audio processing if it does not disturb startup behavior:
-
-```text
-read/process audio
-update baseline/quiet state from fresh AudioSignal
-run behavior/output
+Owns the local sound-output pulse/chirp state machine on top of ToneOutput.
+Executes requested chirp patterns and reports busy/done state.
+Does not decide when or why a chirp should happen.
+*/
 ```
 
-If changing order is risky, leave for later but document.
+### Member order
 
-### Test / check
+```text
+ChirpPattern enum
+constructor
+begin/config
+start/stop/update
+status getters
+private phase helpers
+private ToneOutput reference/config
+private active output state
+private timing state
+```
 
-Startup/rebase still behaves correctly; no false ready/quiet state.
-
-Status: DONE
+### Comment cleanup
+Remove “Legacy placeholder” if present. If old phases remain, either remove unreachable phases or comment the actual state machine.
 
 ---
 
-# P4 — Analyzer cleanup / dead paths / reporting
+# `detection/DetectionProfile.h`
 
-## 14. Dead `handleSequenceTransient()` still exists
+### Current role
+Code-defined profile composition/configuration.
 
-### Bug / drift
+### Important correction
+Do not describe this as merely decorative. It is intended as real profile composition, but comments must distinguish applied fields from parked/future fields.
 
-`handleSequenceTransient()` still exists but appears not to be called.
+### Suggested header comment
 
-### Details
+```cpp
+/*
+DetectionProfile
 
-It is old direct-AMP-trial-truth logic and still mutates old fields such as:
+Code-defined detection profile composition.
+A profile selects the active signal emitter, inspection config, pattern-rule config,
+field-state config, and profile-specific tuning.
 
-```text
-currentTrialHit
-acceptedTransientMs
+Profiles declare composition; DetectionRuntime applies the selected fields at fixed stages.
+*/
 ```
 
-Even unreachable, it preserves the old mental model and creates future misuse risk.
-
-### Suggested fix
-
-Delete it, or move diagnostic-only parts into AMPDIAG / SEQ_EXPLAIN with names that cannot affect trial classification.
-
-### Test / check
-
-Search:
+### Suggested ordering
 
 ```text
-handleSequenceTransient
-currentTrialHit
-acceptedTransient
+DetectionProfileKind
+ProfileSignalEmitterKind
+ProfileInspectionRulesKind
+ProfilePatternRulesKind      // keep only if applied/meaningful, otherwise park/remove printing
+DetectionProfile struct
+profile factory functions
+profile lookup
+name helpers
+parse helpers
 ```
 
-Ensure no dead direct-detector trial truth remains.
+### Struct field order
 
-Status: DONE
+```cpp
+struct DetectionProfile {
+    // Identity and composition.
+    DetectionProfileKind kind;
+    ProfileSignalEmitterKind signalEmitter;
+    ProfileInspectionRulesKind inspectionRules;
+    ProfilePatternRulesKind patternRules;
+
+    // Stage configs applied by DetectionRuntime.
+    InspectionConfig inspectionConfig;
+    PatternRulesConfig patternRulesConfig;
+    FieldStateConfig fieldStateConfig;
+
+    // Source-specific tuning.
+    FrequencyMatchEvaluation::Values frequencyTuning;
+};
+```
+
+### Comment warnings
+
+- If `patternRules` is not actually applied, add a TODO/parked note or stop printing it as active truth.
+- Do not expose `Chirp` as stable if it is proof/future only.
+
+Suggested note:
+
+```cpp
+// FreqAmp is the stable active profile for current runtime validation.
+// Chirp is a proof/future profile until multi-signal assembly and chirp rules are real.
+```
 
 ---
 
-## 15. Analyzer still uses `acceptedTransient*` names for PatternResult-based truth
+# `detection/DetectionRuntime.h/.cpp`
 
-### Bug / drift
+### Current role
+Composition layer for detection pipeline.
 
-Analyzer fields still use old transient naming while storing runtime PatternResult-derived observations.
+### Header comment
+Add a class-level contract.
 
-Examples:
+```cpp
+/*
+DetectionRuntime
 
-```text
-acceptedTransientMs
-acceptedTransientDurationMs
-acceptedTransientStrength
-transientAccepted
+Owns the active detection pipeline wiring:
+feature observation, signal emission, signal inspection, pattern assembly,
+pattern rules, field-state tracking, and PatternResult queueing.
+
+Consumes AudioSignalFrame + FrequencyEvidence.
+Produces PatternResult and FieldState.
+Does not decide behavior or output.
+*/
 ```
 
-### Suggested fix
+### Member order
 
-Rename runtime truth fields:
+Public:
 
 ```text
-acceptedPatternMs
-acceptedPatternDurationMs
-acceptedPatternStrength
-patternAccepted
-primaryPatternResult
+constructor
+reset / resetState
+profile/config apply methods
+observeFrame
+result/field getters
+pipeline debug getters
 ```
 
-Keep transient-specific names only under AMP diagnostic observation structs.
+Private:
 
-### Test / check
+```text
+queue constants
+internal pipeline steps in execution order:
+  observe features
+  drain emitters
+  drain assembler
+  push result
+  capture latest result
+config/profile state
+pipeline components
+result queue
+latest debug snapshot
+```
 
-`acceptedTransient*` should only exist in AMP diagnostic code, not Analyzer primary classification.
+### Grouping comments
 
-Status: DONE
+```cpp
+// Profile configuration applied at fixed runtime stages.
+// Pipeline components in execution order.
+// Result queue and latest pipeline snapshot.
+```
+
+### Comment correction
+If `reset()` resets both state and config-like fields, either rename in comments:
+
+```cpp
+// Resets runtime state and returns profile selection to defaults.
+```
+
+or better later split into `resetState()` and `resetConfig()`.
 
 ---
 
-## 16. H3 helper names remain in Analyzer reporting
+# `detection/DetectorParameters.h`
 
-### Bug / drift
+### Current role
+Parsing old scalar transient detector params.
 
-Functions named like:
+### Suggested header comment
 
-```text
-h3SequenceCandidateClass...
+```cpp
+/*
+DetectorParameters
+
+Small parser for scalar transient detector tuning values.
+Current use should be diagnostic or profile-specific only; active runtime tuning
+should be exposed through profile/stage configs.
+*/
 ```
 
-remain. These are stale report-format names, not architecture terms.
+### Warning
+If this only configures AMPDIAG now, rename file later to `AmpDiagnosticParameters` or move closer to diagnostics.
 
-### Suggested fix
+---
 
-Rename to neutral terms:
+# `detection/detectors/`
+
+## `AmpDiagnosticProbe.h/.cpp`
+
+### Current role
+Diagnostic wrapper around `AmpTransientDetector`.
+
+### Header comment
+Add explicit fence.
+
+```cpp
+/*
+AmpDiagnosticProbe
+
+Diagnostic-only wrapper around AmpTransientDetector.
+Observes amplitude transients and reports snapshots/observations for AMPDIAG
+or SEQ_EXPLAIN.
+
+Must not produce SignalCandidate, PatternResult, FieldState, Analyzer hit truth,
+or Behavior input.
+*/
+```
+
+### Member order
+
+```text
+AmpDiagnosticObservation
+AmpDiagnosticSnapshot
+AmpDiagnosticProbe class:
+  lifecycle/config
+  observe frame
+  pop/snapshot diagnostics
+  private detector
+  private observation state/counters
+```
+
+### Method naming
+Use observe/snapshot/popObservation. Avoid detector-truth names.
+
+---
+
+## `AmpTransientDetector.h/.cpp`
+
+### Current role
+Amplitude facade over scalar transient detector.
+
+### Header comment
+Mostly good. Add boundary:
+
+```cpp
+// This is a detector implementation building block, not the active behavior boundary.
+// Runtime code should normally access it through AmpSignalEmitter or AmpDiagnosticProbe.
+```
+
+### Member order
+
+```text
+reject reason enum/name helpers
+constructor/begin/reset/config
+update
+observation getters
+stats/debug getters
+private scalar detector
+private current observation state
+```
+
+---
+
+## `ScalarTransientDetector.h/.cpp`
+
+### Current role
+Reusable scalar onset/transient state machine.
+
+### Header comment
+Good. Keep.
+
+### Member grouping
+Current grouping comments are useful. Suggested order:
+
+```text
+public enums
+lifecycle/config
+update
+candidate/observation getters
+reject/stats getters
+private onset stage state
+private transient stage state
+private timing/config
+private stats/diagnostics
+```
+
+### Comment cleanup
+Keep comments about ONSET STAGE / TRANSIENT STAGE; those are useful.
+
+---
+
+## `FrequencyMatchDetector.h/.cpp`
+
+### Current role
+Frequency signal lifecycle detector.
+
+### Header comment
+Good. Add explicit “does not” line:
+
+```cpp
+// Does not inspect AMP support, assemble patterns, apply PatternRules, or decide behavior.
+```
+
+### Member order
+This class currently has many public fields/state. For readability, group fields even if still public:
+
+```text
+config/result flags
+candidate lifecycle timestamps
+evidence scores
+close/reject reasons
+debug counters
+```
+
+Long-term simplification: move public state into a `FrequencyMatchState`/`FrequencyMatchSnapshot` and make the detector class own private state.
+
+---
+
+# `detection/features/`
+
+## `FeatureExtractor.h`
+
+### Current role
+Inline helper that writes AudioSignalFrame into FeatureHistory.
+
+### Header comment
+
+```cpp
+/*
+FeatureExtractor
+
+Small helper namespace that derives feature-history samples from AudioSignalFrame.
+It measures feature streams only; it does not emit candidates or classify patterns.
+*/
+```
+
+If it stays one inline function, no further grouping needed.
+
+---
+
+## `FeatureHistory.h/.cpp`
+
+### Header comment
+
+```cpp
+/*
+FeatureHistory
+
+Bounded ring history for feature streams used by retrospective signal inspection.
+Stores measured feature values by stream and timestamp.
+Does not decide candidate validity or pattern meaning.
+*/
+```
+
+### Member order
+
+```text
+lifecycle/reset
+observe/write samples
+window query
+stream helpers
+private StreamBuffer struct
+private buffers
+```
+
+---
+
+## `FeatureStream.h`
+
+### Header comment
+
+```cpp
+/*
+FeatureStream
+
+Shared identifiers and values for measured signal features.
+Feature streams are measurements, not candidates and not pattern meanings.
+*/
+```
+
+### Ordering
+Enum first, then struct. Good.
+
+---
+
+## `FreqBandStream.h/.cpp`
+
+### Header comment
+Good. Add applied config note:
+
+```cpp
+// Target frequency and sample rate must be set by the active profile/test configuration.
+```
+
+### Member order
+
+```text
+lifecycle/config
+observe sample
+evidence getters
+private compute helper(s)
+private config
+private sample ring/window state
+private latest evidence
+```
+
+### Comment warning
+Do not call this a detector. It is a feature/evidence stream.
+
+---
+
+## `FrequencyMatchEvaluation.h`
+
+### Header comment
+
+```cpp
+/*
+FrequencyMatchEvaluation
+
+Threshold parsing and evaluation helpers for frequency-match evidence.
+This is signal/profile tuning support, not PatternRules.
+*/
+```
+
+### Ordering
+
+```text
+Values
+ClassifierTuning
+Reason
+Evaluation
+parse/apply/evaluate helpers
+name helpers
+```
+
+---
+
+## `ScalarWindow.h`
+
+### Header comment
+
+```cpp
+/*
+ScalarWindow
+
+Summary of one feature-history interval.
+Used by SignalInspector for candidate-relative support evidence.
+*/
+```
+
+---
+
+# `detection/signals/`
+
+## `SignalCandidate.h`
+
+### Header comment
+
+```cpp
+/*
+SignalCandidate
+
+Low-level source-tagged signal event proposed by a SignalEmitter/SignalDetector.
+It is not a pattern result and must not drive behavior directly.
+*/
+```
+
+### Field order
+
+```text
+identity/source/provenance
+timing/sample positions
+duration/strength/frequency evidence
+AMP evidence if source-provided
+validity/debug flags
+```
+
+### Comment note
+Use `accepted` only for source detector acceptance if present; signal-stage acceptance belongs to `InspectedSignal.candidateAccepted`.
+
+---
+
+## `InspectedSignal.h`
+
+### Header comment
+
+```cpp
+/*
+InspectedSignal
+
+SignalCandidate plus SignalInspector decision and added evidence.
+Owns candidateAccepted and signal-stage rejection reason.
+*/
+```
+
+### Ordering
+
+```text
+SignalDecision enum
+SignalRejectReason enum
+InspectedSignal struct:
+  source candidate
+  candidateAccepted/decision/reason
+  support/evidence annotations
+  duplicate risk
+```
+
+---
+
+## `AmpSignalEmitter.h/.cpp`
+
+### Current comment
+“Roadmap adapter” is stale.
+
+### Replace header comment
+
+```cpp
+/*
+AmpSignalEmitter
+
+SignalEmitter for amplitude-transient candidates.
+Wraps scalar transient mechanics and emits AMP SignalCandidates when enabled by a profile.
+Does not apply pattern rules or behavior decisions.
+*/
+```
+
+### Note
+If FreqAmp disables this, comment should not imply it is dead. It is profile-selected.
+
+---
+
+## `FrequencySignalEmitter.h/.cpp`
+
+### Current comment
+“Roadmap adapter” is stale.
+
+### Replace header comment
+
+```cpp
+/*
+FrequencySignalEmitter
+
+SignalEmitter for target-frequency match candidates.
+Uses FrequencyMatchDetector lifecycle and emits frequency SignalCandidates.
+Does not inspect AMP support or decide pattern validity.
+*/
+```
+
+### Member order
+
+```text
+lifecycle/config
+observe evidence
+pop candidate
+debug/latest detector getter
+private detector
+private pending candidate queue/state
+```
+
+---
+
+## `ScalarSignalEmitter.h/.cpp`
+
+### Header comment
+
+```cpp
+/*
+ScalarSignalEmitter
+
+Reusable adapter from scalar transient detection to SignalCandidate emission.
+Used by source-specific emitters such as AmpSignalEmitter.
+*/
+```
+
+### Member order
+
+```text
+config source identity
+begin/reset/apply detector params
+observe scalar/frame
+pop pending candidate
+private detector
+private pending candidate state
+```
+
+---
+
+## `RawWindow.h`
+
+### Header comment
+
+```cpp
+/*
+RawWindow
+
+Scratch-buffer helper for raw/centered sample window analysis.
+Used for diagnostic or candidate-window feature measurement when FeatureHistory is insufficient.
+*/
+```
+
+Existing heap-safety comment is useful; keep it.
+
+---
+
+# `detection/inspector/`
+
+## `InspectorTypes.h`
+
+### Current role
+Shared inspection configs and evidence payloads.
+
+### Header comment
+Add top-level comment:
+
+```cpp
+/*
+InspectorTypes
+
+Shared signal-inspection configuration and evidence payloads.
+These types belong to the signal inspection stage, not behavior.
+*/
+```
+
+### Suggested order
+
+```text
+AmpSupportLevel
+AmpSupportConfig
+InspectionConfig
+AmpWindowEvidence
+TransientEvidence
+FrequencyEvidence
+name/helper functions if any
+```
+
+### Comment note
+Existing AMP support comment is good. Keep “not a distance estimate”.
+
+---
+
+## `SignalInspector.h/.cpp`
+
+### Header comment
+
+```cpp
+/*
+SignalInspector
+
+Consumes SignalCandidates, applies signal-stage inspection, and emits InspectedSignals.
+Owns candidateAccepted and signal-stage support evidence.
+Does not assemble patterns, apply PatternRules, or decide behavior eligibility.
+*/
+```
+
+### Member order
+
+```text
+reset/config
+inspect method
+private support/evidence helpers
+private duplicate-risk helpers
+private config
+private temporal state
+```
+
+### Comment cleanup
+Rename comments/methods that still mention locality:
+
+```text
+annotateAmpSupportAndLocality -> annotateAmpSupport
+```
+
+---
+
+## `InspectionRule.h`
+
+### Header comment
+
+```cpp
+/*
+InspectionRule
+
+Small fixed helper result for signal-stage inspection checks.
+Not a dynamic rule engine.
+*/
+```
+
+---
+
+## `SignalWindowEvaluator.h`
+
+### Header comment
+
+```cpp
+/*
+SignalWindowEvaluator
+
+Small stat helpers for candidate-relative feature windows.
+Used by SignalInspector to turn FeatureHistory windows into support evidence.
+*/
+```
+
+---
+
+## `FrequencyWindowProbe.h/.cpp`
+
+### Header comment
+
+```cpp
+/*
+FrequencyWindowProbe
+
+Retrospective raw-history frequency measurement for a known candidate window.
+Diagnostic/enrichment helper; not the live frequency stream and not a detector.
+*/
+```
+
+### File order
+
+```text
+local math helpers
+public measure functions
+```
+
+---
+
+# `detection/patterns/`
+
+## `PatternTypes.h`
+
+### Header comment
+Good idea to keep concise.
+
+```cpp
+/*
+PatternTypes
+
+Shared pattern-layer labels and reasons.
+These describe pattern-rule outcomes, not analyzer trial classes.
+*/
+```
+
+### Ordering
+Current order is good:
+
+```text
+PatternType
+PatternReasonCode
+PatternRejectReason
+PatternCandidateKind
+PatternResultKind
+```
+
+Ensure reason names do not carry obsolete transient-first language.
+
+---
+
+## `PatternCandidate.h`
+
+### Header comment
+Already useful. Add one line:
+
+```cpp
+// PatternCandidate is classifier-facing; it is built from accepted InspectedSignals.
+```
+
+### Field order
+
+```text
+candidate kind / signal count
+signal slots
+chosen timing/strength summary
+support/evidence payloads
+provenance/debug
+```
+
+---
+
+## `PatternResult.h`
+
+### Header comment
+Good. Add gate ownership note:
+
+```cpp
+// For FreqAmp, valid = patternMatched && supportMatched.
+// Behavior still computes behaviorEligible separately.
+```
+
+### Field order
+
+```text
+rule output gates:
+  kind/type/reason/rejectReason
+  candidateAccepted/patternMatched/supportMatched/valid/behaviorEligible
+confidence/score
+timing/provenance
+evidence payloads
+```
+
+### Comment note
+If `behaviorEligible` is stored here but owned by Behavior, comment carefully:
+
+```cpp
+// behaviorEligible is behavior-owned; PatternRules should leave it false/default.
+```
+
+or keep it out of PatternRules reports.
+
+---
+
+## `PatternAssembler.h/.cpp`
+
+### Header comment
+
+```cpp
+/*
+PatternAssembler
+
+Turns accepted InspectedSignals into PatternCandidates.
+Current stable mode is single-signal assembly for FreqAmp.
+Does not decide pattern validity or support gates.
+*/
+```
+
+### Member order
+
+```text
+reset/config if any
+accept inspected signals
+pop pattern candidates
+private make candidate helpers
+private recent-signal state if still used
+pending queue state
+```
+
+### Comment warning
+Do not comment this as Chirp assembler unless multi-signal grouping is actually active.
+
+---
+
+## `PatternRules.h/.cpp`
+
+### Header comment
+
+```cpp
+/*
+PatternRules
+
+Interprets PatternCandidates into PatternResults.
+Owns patternMatched, supportMatched, valid, confidence, and pattern rejection reasons.
+Does not inspect raw signals directly and does not decide behavior eligibility.
+*/
+```
+
+### Member order
+
+```text
+PatternRulesConfig
+PatternRules class:
+  config
+  evaluate
+  private source/profile-specific evaluation helpers
+  private reason helpers
+```
+
+### Comment cleanup
+Replace old reason comments like “accepted transient” with “accepted signal” or profile-specific “frequency match”.
+
+---
+
+## `PatternNames.h`
+
+### Header comment
+
+```cpp
+/*
+PatternNames
+
+String helpers for pattern-layer enums used by logs and Analyzer output.
+No runtime decisions should depend on these strings.
+*/
+```
+
+---
+
+# `detection/field/`
+
+## `FieldState.h`
+
+### Header comment
+
+```cpp
+/*
+FieldState
+
+Acoustic context summary used by Behavior alongside PatternResults.
+FieldState is not a pattern result and does not decide behavior by itself.
+*/
+```
+
+### Field order
+
+`FieldStateConfig`:
+
+```text
+windows
+thresholds
+```
+
+`FieldState`:
+
+```text
+activity metrics
+counts
+boolean states quiet/active/dense
+last timestamps
+```
+
+---
+
+## `FieldStateTracker.h/.cpp`
+
+### Header comment
+
+```cpp
+/*
+FieldStateTracker
+
+Observes signal candidates, inspected signals, and PatternResults to maintain
+recent acoustic context.
+Does not classify patterns and does not trigger output.
+*/
+```
+
+### Member order
+
+```text
+config
+reset/observe methods
+state getter
+private prune/update helpers
+private config
+private rolling event buffers/counters
+private current FieldState
+```
+
+---
+
+# `behavior/`
+
+## `BehaviorProfile.h`
+
+### Current issue
+Fields still say `waitAfterTransientMs`. This is naming drift if behavior is PatternResult-driven.
+
+### Suggested header comment
+
+```cpp
+/*
+BehaviorProfile / BehaviorGateConfig
+
+Behavior-side timing and gating defaults.
+These settings affect behavior eligibility, not pattern validity.
+*/
+```
+
+### Field order
+
+```text
+feature toggles
+response/wait timing
+refractory/self-suppression timing
+idle timing
+probability/limits if added later
+```
+
+### Rename suggestion
+Later rename:
+
+```text
+waitAfterTransientMs -> waitAfterPatternMs / waitAfterHeardMs
+```
+
+---
+
+## `ResonantBehavior.h/.cpp`
+
+### Header comment replacement
+Current header says generic “Behavior” and has partial bullets. Replace with contract:
+
+```cpp
+/*
+ResonantBehavior
+
+Owns the local reaction state machine for ResonantNode.
+Consumes PatternResult + FieldState + output status/time.
+Decides behaviorEligible, blocking reasons, idle timing, wait/refractory/self-suppression,
+and requested chirp pattern.
+
+Does not inspect SignalCandidates, FeatureStreams, or detector internals.
+Does not execute hardware output directly.
+*/
+```
+
+### Public member order
+
+```text
+BehaviorDecision enum
+constructor/config/reset
+PatternResult input: handlePatternResult(...)
+loop/update
+output request API: shouldStartChirp/consumeChirpRequest/requestedPattern
+state getters
+debug/counter getters
+```
+
+Move the boolean transient overload down under a clearly marked legacy/compat group or delete if unused.
+
+### Private member order
+
+```text
+State enum
+state/timing input cache
+behavior timing config
+behavior state flags
+pending/action latch
+counters
+private helpers
+```
+
+### Grouping comments
+Replace transient wording:
+
+```text
+// Cached pattern input for compatibility path.
+// Behavior timing state.
+// Behavior gate counters.
+// Output request latch.
+```
+
+### Rename suggestions
+
+```text
+Transient -> Pattern / HeardPattern in behavior-facing names
+ChirpRequestSource::Transient -> HeardPattern / Response
+```
+
+Do not rename in same pass if it risks behavior changes; note for naming cleanup.
+
+---
+
+# `modes/resonant/`
+
+## `node.h/.cpp`
+
+### Header comment
+Current header is cut/partial in places. Replace with precise contract:
+
+```cpp
+/*
+Node
+
+Normal ResonantNode runtime coordinator.
+Owns hardware setup, loop order, profile application, command routing, and
+coarse runtime snapshots.
+
+Coordinates:
+SoundInput -> AudioSignal -> DetectionRuntime -> ResonantBehavior -> ChirpOutput.
+
+Does not own detection meaning, behavior decisions, or output waveform internals.
+*/
+```
+
+### Public order
+
+```text
+RbLogMode enum
+constructor
+begin/update/loopDelay
+```
+
+### Private helper order
+Arrange declarations in execution order:
+
+```text
+setup/profile/config helpers
+serial command handlers
+main audio/detection processing helpers
+behavior/output processing helpers
+debug/status print helpers
+baseline/startup helpers
+```
+
+### Member order
+
+```text
+Hardware wiring:
+  AudioSourceI2S
+  Piezo outputs
+  ChirpOutput
+Signal/detection/profile:
+  AudioSignal
+  FreqBandStream
+  DetectionRuntime
+  active DetectionProfile/config values
+Behavior/output:
+  ResonantBehavior
+Debug/diagnostics:
+  AmpDiagnosticProbe
+  NodeDebug
+  log mode/debug flags
+Runtime counters:
+  candidate/result/chirp counters
+Baseline/startup state
+Serial buffers/throttle state
+```
+
+### Comment cleanup
+
+- Replace “detector=AMP” or “RB DETECT” comments with “detection profile/status”.
+- If AMP diagnostic probe remains, comment it as diagnostic-only.
+- Split `_rbActionCount` comments when counters are split.
+- Use `frame.sampleTimeMs` comments for detection-time decisions.
+
+---
+
+## `node_debug.h/.cpp`
+
+### Header comment
+
+```cpp
+/*
+NodeDebug
+
+Formats debug/status output for the normal Resonant node runtime.
+Observes snapshots from signal, detection diagnostics, behavior, and output.
+Does not make runtime decisions.
+*/
+```
+
+### Public member order
+
+```text
+DebugMode enum
+config setters
+periodic loop/status methods
+specific event log methods
+```
+
+### Private order
+
+```text
+mode/config
+print timing
+event pulse counters
+I2S/signal stats
+output stats
+```
+
+### Comment cleanup
+If NodeDebug prints AMP diagnostic data, label it `ampDiag`, not active detector state.
+
+---
+
+# `modes/analyzer/`
+
+## Analyzer folder file order recommendation
+
+For human reading, keep files conceptually ordered like this:
+
+```text
+AnalyzerApp.h                 public app + shared state declarations
+AnalyzerApp.cpp               begin/update/main loop orchestration
+AnalyzerCommands.cpp          serial command parsing/help
+AnalyzerEmitterControl.cpp    emitter handshake/control
+AnalyzerSequenceSession.cpp   SEQ lifecycle scheduling
+AnalyzerSequenceHelpers.cpp   SEQ candidate handling/classification helpers
+AnalyzerClassifier.*          typed AnalyzerResult/Reason helpers
+AnalyzerReporting.*           AnalyzerReport structs + printers
+AnalyzerRawCapture.cpp        RAW_SAMPLE_CAPTURE path
+AnalyzerCaptureSession.cpp    older/base capture session, if still used
+AnalyzerTextUtils.*           tiny parsing/log flag helpers
+```
+
+If `AnalyzerReporting.h` defines all report structs, it can be read before `AnalyzerApp.h`; but in code include order, avoid cycles.
+
+---
+
+## `AnalyzerApp.h`
+
+### Current issue
+It is still very large and mixes state structs, helper declarations, and members. It is much better than before, but needs grouping for readability.
+
+### Header comment
+Mostly good. Update to emphasize observation, not detection truth:
+
+```cpp
+/*
+AnalyzerApp
+
+Analyzer-mode coordinator for controlled measurement runs.
+Wires audio input, DetectionRuntime, diagnostic probes, emitter control,
+SEQ trials, RAW capture, and reporting.
+
+Analyzer measures DetectionRuntime output against expected events.
+It does not implement detector algorithms, PatternRules, Behavior, or output policy.
+*/
+```
+
+### Public order
+Current public order is fine.
+
+### Private nested struct order
+Suggested:
+
+```text
+BaseSession
+CaptureSession
+SequenceTest
+PendingSequenceStart
+```
+
+Inside `SequenceTest`, reorder into:
+
+```text
+small enums
+CandidateSample
+TrialDiagnostics      // later split if possible
+configuration fields
+current trial scheduling fields
+current trial primary observation fields
+aggregate counters
+report/sample capture buffers
+```
+
+### TrialDiagnostics grouping
+Add grouping comments inside `TrialDiagnostics`:
+
+```cpp
+// Primary PatternResult observation.
+// Rejected / non-primary candidate observations.
+// AMP diagnostic observations.
+// Frequency evidence snapshots.
+// Candidate counters and origin counts.
+// Ambient/audio quality summary.
+// Duplicate observations.
+// Legacy transient reject diagnostics. // only if still kept
+```
+
+Rename old groups later:
+
+```text
+acceptedTransient* -> acceptedPattern* or primaryPattern*
+duplicateTransient* -> duplicatePattern* or ampDiagDuplicate* depending truth
+```
+
+### Helper declaration order
+Group helper declarations by file/module, not randomly:
+
+```text
+setup/config helpers
+command handlers
+emitter control
+base/capture sessions
+sequence lifecycle
+sequence candidate classification
+RAW/sample capture
+reporting/printing
+utility helpers
+```
+
+### Member order
+Current member grouping is good in broad strokes. Improve labels:
+
+```cpp
+// Hardware and signal chain.
+// Detection runtime and feature state.
+// Diagnostic probes.
+// Emitter control.
+// Analyzer sessions.
+// Reporting / value mode / print throttles.
+```
+
+---
+
+## `AnalyzerApp.cpp`
+
+### Header comment
+No file header needed if `AnalyzerApp.h` owns contract. Add a short section comment after includes:
+
+```cpp
+// AnalyzerApp lifecycle and main loop orchestration.
+```
+
+### Function order
+
+```text
+constructor
+begin
+update
+loopDelay
+small setup/config helpers used by begin/update
+```
+
+Move local helper functions to anonymous namespace near top only if they are used by this file alone. Otherwise move to `AnalyzerTextUtils` or reporting helpers.
+
+---
+
+## `AnalyzerCommands.cpp`
+
+### File header comment
+
+```cpp
+/*
+AnalyzerCommands
+
+Serial command parsing and help text for Analyzer mode.
+Does not run detection or classify trials directly.
+*/
+```
+
+### Function order
+
+```text
+help printers
+main line dispatcher
+command-specific handlers in help order:
+  SEQ
+  RAW
+  BASE/CAPTURE
+  PARAM/PROFILE/LOG
+```
+
+### Comment warning
+Keep help text aligned with actual stable profiles and commands. If `chirp` is hidden/experimental, do not advertise it as stable here.
+
+---
+
+## `AnalyzerEmitterControl.cpp`
+
+### Header comment
+
+```cpp
+/*
+AnalyzerEmitterControl
+
+Synchronous serial control and handshake helpers for a remote emitter.
+Owns emitter command/ack protocol only.
+*/
+```
+
+### Order
+
+```text
+waitForEmitterAck
+claim/release control
+send trigger/tone commands
+```
+
+### Comment note
+Mention blocking behavior and timeout clearly.
+
+---
+
+## `AnalyzerSequenceSession.cpp`
+
+### Header comment
+
+```cpp
+/*
+AnalyzerSequenceSession
+
+Owns SEQ session lifecycle: start, schedule trials, trigger emitter, finalize trials,
+and update aggregate counters.
+Detection meaning comes from DetectionRuntime PatternResults.
+*/
+```
+
+### Function order
+
+```text
+startSequenceTest / pending start
+stop/reset sequence
+updateSequenceTest scheduler
+finalizeSequenceTrial
+summary/update helpers
+```
+
+### Comment notes
+Add a short comment near scheduling fields:
+
+```cpp
+// expectedTriggerMs anchors trial windows; dt is eventMs - expectedTriggerMs.
+```
+
+Avoid absolute timestamp comparisons in comments; use dt/offset language.
+
+---
+
+## `AnalyzerSequenceHelpers.cpp`
+
+### Header comment
+
+```cpp
+/*
+AnalyzerSequenceHelpers
+
+SEQ candidate/result handling and diagnostic extraction.
+Observes PatternResults and diagnostic probes, records trial observations,
+and prepares report fields.
+Does not decide PatternRules validity.
+*/
+```
+
+### Function order
+
+```text
+local classification/name helpers
+candidate origin/window helpers
+handleSequenceCandidate
+record duplicate/rejected observations
+sample capture helpers
+explain/debug helpers
+```
+
+### Comment cleanup
+Rename `h3*` helpers to neutral names:
 
 ```text
 sequenceCandidateClass...
-sequencePatternClass...
 printFrequencyEvidenceFields...
 ```
 
-or delete if replaced by gate-chain reporting.
+Add gate-chain comments near candidate handling:
 
-### Test / check
-
-No `h3*` helper names in active code unless there is a documented reason.
-
-Status: DONE
+```cpp
+// Any PatternResult may be logged. Only valid PatternResults may become primary trial hits.
+```
 
 ---
 
-## 17. Duplicated SEQ_CAND reporting blocks
+## `AnalyzerClassifier.h/.cpp`
 
-### Bug / drift
+### Current role
+Maps analyzer result input to reason.
 
-`handleSequenceCandidate()` still prints multiple similar blocks:
+### Header comment
 
-```text
-role=detector
-role=pattern
-role=result
+```cpp
+/*
+AnalyzerClassifier
+
+Small helper for Analyzer trial classification reasons.
+Consumes AnalyzerResult plus trial metadata.
+Does not re-evaluate DetectionRuntime pattern validity.
+*/
 ```
 
-with overlapping fields.
+### Include cleanup
+It currently includes `AmpTransientDetector` for reject reason. If this remains, comment it as AMP diagnostic reason only. Prefer moving diagnostic reject reason out of the core classifier input later.
 
-### Suggested fix
-
-Collapse to a smaller stage-chain report:
-
-```text
-SEQ_CAND stage=signal ... candidateAccepted=...
-SEQ_CAND stage=pattern ... patternMatched=... supportMatched=... valid=... reason=...
-```
-
-or one compact line:
+### Ordering
 
 ```text
-SEQ_CAND dt=... candidateAccepted=... patternMatched=... supportMatched=... valid=... reason=...
+classification input struct
+reason helper declarations
 ```
-
-Keep `SEQ_EXPLAIN` detailed, but avoid triple duplicate output.
-
-### Test / check
-
-SEQ output remains readable and includes gate chain.
-
-Status: DONE
 
 ---
 
-# P5 — Gate/profile naming drift
+## `AnalyzerReporting.h/.cpp`
 
-## 18. `annotateAmpSupportAndLocality()` still mentions Locality
-
-### Bug / drift
-
-`LocalityClass` is gone, but method names still mention locality.
-
-### Suggested fix
-
-Rename:
+### Header comment
 
 ```cpp
-annotateAmpSupportAndLocality(...)
+/*
+AnalyzerReporting
+
+Analyzer report data model and print helpers.
+Reports DetectionRuntime gate-chain output, trial classification, field state,
+and diagnostic details.
+Does not own detection or behavior decisions.
+*/
 ```
 
-to:
+### Struct order
+Current order is mostly good. Suggested:
+
+```text
+AnalyzerResult / AnalyzerReason
+enum name helpers if present
+RunContext
+ExpectedEvent
+PatternObservation
+SignalObservation
+InspectionObservation
+FieldObservation
+Classification
+ProfileDetail
+DebugSummary
+Summary
+AnalyzerReport
+```
+
+### Field grouping comments
+Use concise comments like:
 
 ```cpp
-annotateAmpSupport(...)
+// DetectionRuntime gate chain.
+// Analyzer trial classification.
+// Diagnostic-only AMP window details.
 ```
 
-Update comments/logs accordingly.
+### File implementation order
 
-### Test / check
-
-No `Locality` in active architecture code unless explicitly historical.
-
-Status: DONE
+```text
+name helpers
+small print helpers
+profile detail builders
+report builders
+SEQ_TRIAL printer
+SEQ_EXPLAIN printer
+SEQ_SUMMARY printer
+```
 
 ---
 
-## 19. `FromAcceptedTransient` reason remains in frequency-first PatternRules
+## `AnalyzerRawCapture.cpp`
 
-### Bug / drift
+### Header comment
 
-Pattern reason names still mention transient even for frequency-first FreqAmp results.
+```cpp
+/*
+AnalyzerRawCapture
 
-### Suggested fix
-
-Rename to a source-neutral or frequency-specific reason:
-
-```text
-FromAcceptedSignal
-FromFrequencyMatch
-PatternMatched
-ValidPattern
+RAW_SAMPLE_CAPTURE diagnostic path.
+Captures sample-level data for waveform/timing inspection.
+Separate from SEQ_EXPLAIN and from DetectionRuntime truth.
+*/
 ```
 
-Pick one based on enum semantics.
+### Comment note
+Clarify raw sample timestamps if they are direct `micros()` and not backlog-corrected:
 
-### Test / check
-
-FreqAmp valid result should not report `FromAcceptedTransient`.
-
-Status: DONE
+```cpp
+// RAW timestamps are diagnostic capture times, not PatternResult event times.
+```
 
 ---
 
-## 20. Behavior helper still says `transientDetected`
+## `AnalyzerCaptureSession.cpp`
 
-### Bug / drift
+### Header comment
 
-Behavior helper names still use old transient wording:
+```cpp
+/*
+AnalyzerCaptureSession
 
-```text
-behaviorGateName(..., transientDetected, ...)
+Older/basic capture session for raw/delta response measurement.
+Separate from SEQ PatternResult validation.
+*/
 ```
 
-### Suggested fix
-
-Rename to pattern terms:
-
-```text
-patternDetected
-validPatternHeard
-patternAvailable
-```
-
-Behavior should not expose raw transient vocabulary.
-
-### Test / check
-
-Behavior code consumes and names `PatternResult`, not transients.
-
-Status: DONE
+If it is no longer used, mark for later deletion rather than over-commenting.
 
 ---
 
-# P6 — Rollover / timing hardening
+## `AnalyzerTextUtils.h/.cpp`
 
-## 21. Duplicate-risk elapsed uses non-rollover-safe comparison
-
-### Bug
-
-SignalInspector duplicate-risk code appears to calculate elapsed time like:
+### Header comment
 
 ```cpp
-acceptedMs > lastAcceptedMs ? acceptedMs - lastAcceptedMs : 0
+/*
+AnalyzerTextUtils
+
+Tiny parsing and logging-flag helpers for Analyzer serial commands.
+No application state or runtime decisions.
+*/
 ```
 
-This fails over `uint32_t` rollover.
-
-### Suggested fix
-
-Use unsigned subtraction:
-
-```cpp
-const uint32_t elapsedMs = static_cast<uint32_t>(acceptedMs - lastAcceptedMs);
-```
-
-Then compare elapsed durations.
-
-### Test / check
-
-Unit/small test with artificial wrap values:
-
-```text
-lastAcceptedMs = 0xFFFFFFF0
-acceptedMs     = 0x00000020
-elapsed         = 0x30
-```
-
-Status: DONE
+### Suggestion
+If Emitter/Node duplicate these helpers later, consider moving to `src/util/SerialTextUtils.*`, but not necessary in this commenting pass.
 
 ---
 
-## 22. General deadline comparisons should use rollover-safe helpers
+# `modes/emitter/`
 
-### Bug / risk
+## `EmitterApp.h/.cpp`
 
-Some code still uses direct comparisons:
-
-```cpp
-now >= deadline
-now < suppressUntil
-now - started > duration
-```
-
-Some are acceptable for short runs, but not consistently rollover-safe.
-
-### Suggested fix
-
-Introduce small helpers:
+### Header comment
 
 ```cpp
-inline bool elapsedSince(uint32_t now, uint32_t then, uint32_t durationMs) {
-    return static_cast<uint32_t>(now - then) >= durationMs;
-}
+/*
+EmitterApp
 
-inline bool beforeDeadline(uint32_t now, uint32_t deadline) {
-    return static_cast<int32_t>(now - deadline) < 0;
-}
+Standalone output-device mode used by Analyzer tests.
+Receives serial commands and executes ChirpOutput/ToneOutput actions.
+Does not perform detection or behavior decisions.
+*/
 ```
 
-Use for behavior gates, refractory, suppression, sequence windows where practical.
+### Member order
 
-For Analyzer windows, prefer relative dt:
-
-```cpp
-uint32_t dt = eventMs - expectedTriggerMs;
-bool inWindow = dt >= windowStartOffsetMs && dt <= windowEndOffsetMs;
+```text
+EmitterMode enum
+constructor
+begin/update/loopDelay
+private command parser
+private output helpers
+private output hardware members
+private mode/serial state
 ```
 
-### Test / check
-
-No absolute window check like:
-
-```cpp
-eventMs >= windowStartMs && eventMs <= windowEndMs
-```
-
-for runtime event classification unless explicitly safe.
-
-Status: DONE
+### Cleanup note
+`ControlSerialKind` appears unused/stale. If kept, comment why. Otherwise remove later.
 
 ---
 
-# P7 — Output / legacy comments
+# `main.cpp`
 
-## 23. `ChirpOutput` still has legacy/dead wording or unreachable phases
+### Current role
+Compile-time app mode selection.
 
-### Bug / drift
+### Header comment
+Current comment is fine.
 
-Earlier review found `ChirpOutput` comments like:
+### Suggested addition
+
+```cpp
+// main.cpp only selects the app mode and delegates lifecycle to the selected app.
+```
+
+No further grouping needed.
+
+---
+
+# Cross-repo commenting tasks in priority order
+
+## Pass C1 — Remove misleading active-code words
+
+Search and replace/comment-review these terms:
 
 ```text
+Roadmap adapter
 Legacy placeholder
+H3
+modern
+current path
+old path
+transientDetected in behavior-facing context
+FromAcceptedTransient if used for frequency-first pattern
+Locality after LocalityClass removal
 ```
 
-and possibly unreachable phase states.
+Do not remove “legacy” from archived docs; this pass is `src/` only.
 
-### Suggested fix
+## Pass C2 — Add/replace file headers for central contracts
 
-Review `ChirpOutput` state machine:
+Priority files:
 
-- If phases 2/3 are unreachable, delete them.
-- If still used, rename/comment them accurately.
-- Remove `Legacy placeholder` wording from active code.
+```text
+DetectionRuntime.h
+DetectionProfile.h
+SignalInspector.h
+PatternRules.h
+PatternAssembler.h
+PatternResult.h
+ResonantBehavior.h
+node.h
+AnalyzerApp.h
+AnalyzerReporting.h
+AnalyzerSequenceSession.cpp
+AnalyzerSequenceHelpers.cpp
+AudioSignal.h
+AudioSource.h
+ChirpOutput.h
+AmpDiagnosticProbe.h
+```
 
-### Test / check
+## Pass C3 — Reorder major class members
 
-Response chirp / idle chirp still plays as expected.
+Priority files:
 
-Status: DONE
+```text
+AnalyzerApp.h
+node.h
+ResonantBehavior.h
+DetectionRuntime.h
+DetectionProfile.h
+AudioSignal.h
+NodeDebug.h
+EmitterApp.h
+```
+
+Do not change behavior. Pure declaration order and comment grouping only.
+
+## Pass C4 — Align analyzer comments with gate-chain truth
+
+In Analyzer files, all comments should reflect:
+
+```text
+Analyzer observes PatternResult + expected event timing.
+Analyzer does not decide pattern validity.
+Only valid PatternResult can become primary hit.
+Rejected/duplicate/unexpected are observations/counters.
+```
+
+## Pass C5 — Align behavior comments with PatternResult boundary
+
+Behavior comments should reflect:
+
+```text
+Behavior consumes PatternResult + FieldState.
+Behavior computes behaviorEligible/blocking reasons.
+Behavior does not inspect SignalCandidates, FeatureStreams, or AMP/frequency internals.
+```
+
+## Pass C6 — Align detection comments with stage ownership
+
+Detection comments should use:
+
+```text
+SignalEmitter creates SignalCandidate.
+SignalInspector owns candidateAccepted.
+PatternAssembler creates PatternCandidate.
+PatternRules owns patternMatched/supportMatched/valid.
+Behavior owns behaviorEligible.
+FieldStateTracker owns acoustic context.
+```
+
+## Pass C7 — Leave future architecture out of active comments
+
+Mention future profiles only where necessary, and mark clearly:
+
+```text
+FreqAmp = stable active profile.
+AmpState / Chirp = proof/future until composition and rules are real.
+```
+
+Do not describe future work as active behavior.
 
 ---
 
-# P8 — Packaging / source hygiene
+# Acceptance checks
 
-## 24. Review ZIP still includes package garbage
-
-### Bug / hygiene
-
-Uploaded ZIP still contains:
+After the commenting/order pass:
 
 ```text
-.git/
-src.zip
-src (2).zip
+1. A reader can open node.h and see Node is only coordinator.
+2. A reader can open DetectionRuntime.h and see the pipeline order.
+3. A reader can open DetectionProfile.h and see which fields are real apply-point config.
+4. A reader can open PatternResult.h and see the gate-chain meaning.
+5. A reader can open AnalyzerApp.h and understand state groups without reading every method.
+6. A reader can open ResonantBehavior.h and see that Behavior owns reaction, not detection.
+7. No active src comment says roadmap/legacy/H3 unless it is explicitly a diagnostic/historical name being removed.
+8. Help/log comments do not advertise fake stable Chirp behavior.
 ```
 
-### Suggested fix
-
-Add/verify `.gitignore` and export clean source packages without nested source archives or `.git`.
-
-Recommended `.gitignore` additions:
-
-```gitignore
-.pio/
-*.zip
-.vscode/.browse.c_cpp.db*
-```
-
-### Test / check
-
-Review ZIP should include project source and config only, not build artifacts or nested copies.
-
-Status: DONE
-
----
-
-# Recommended implementation order
-
-```text
-1. Fix SEQ command parser.
-2. Fix Analyzer hit gate: only PatternResult.valid counts.
-3. Fix unexpected/rejected/duplicate as flags/counters, not primary overrides.
-4. Replace currentTrialHit/acceptedTransient truth with primaryValidPattern observation.
-5. Park/hide ChirpProfile from stable help/commands or mark experimental.
-6. Remove/decorate only real-applied profile composition fields.
-7. Decide Node AMP diagnostic: wire as gated AMPDIAG or remove from Node.
-8. Use frame.sampleTimeMs for own-chirp detection suppression.
-9. Split RB counters.
-10. Fix RB log off/minimal/full.
-11. Delete dead handleSequenceTransient path.
-12. Rename acceptedTransient/H3/Locality/FromAcceptedTransient/transientDetected leftovers.
-13. Add rollover-safe helpers and patch high-value timing checks.
-14. Clean ChirpOutput legacy/dead phases.
-15. Clean package ZIP/source hygiene.
-```
-
-# Done criteria
-
-This cleanup stage is done when:
-
-```text
-SEQ commands work again.
-Analyzer never reports expected/late from valid=false PatternResult.
-Unexpected/rejected/duplicate are counters/flags, not primary overrides.
-FreqAmp is the only stable advertised runtime profile.
-Profile logs only show config that is actually applied.
-AMP diagnostics are either explicitly gated or removed from Node.
-RB counters distinguish detected patterns from emitted chirps.
-Old transient/H3/locality wording is gone from active truth paths.
-Timing checks use frame/sample time and rollover-safe elapsed comparisons where relevant.
-```

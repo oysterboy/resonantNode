@@ -4,6 +4,13 @@
 
 namespace detection {
 
+/*
+PatternRules
+
+Interprets PatternCandidates into PatternResults.
+Owns patternMatched, supportMatched, valid, confidence, and pattern rejection reasons.
+Does not inspect raw signals directly and does not decide behavior eligibility.
+*/
 struct PatternRulesConfig {
     bool requireSupportForAcceptance = true;
 };

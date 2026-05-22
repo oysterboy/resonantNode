@@ -1,5 +1,6 @@
 #include "PatternAssembler.h"
 
+// PatternAssembler converts inspected signals into queued PatternCandidates.
 namespace {
 
 using PatternCandidate = detection::PatternCandidate;

@@ -22,30 +22,10 @@
 Node
 
 Owns orchestration for the Resonant node.
+Coordinates hardware setup, signal flow, detection runtime, behavior, chirp output,
+serial commands, logging, and summaries.
 
-Responsibilities:
-- wire hardware sources and outputs
-- feed audio into signal and detection layers
-- pass PatternResult objects into ResonantBehavior
-- start and finish chirps when behavior requests them
-- manage startup baseline state for the I2S path
-- handle serial commands, logging, and summary reporting
-
-Does NOT:
-- implement the behavior state machine
-- classify patterns
-- generate waveforms
-- own detector thresholds as core behavior logic
-
-File structure:
-- enums and construction
-- hardware / signal / behavior members
-- logging and runtime counters
-- baseline and startup state
-- lifecycle / parameter setup
-- loop orchestration
-- serial command handling
-- logging / summary helpers
+Does not implement behavior decisions, classify patterns, or generate waveforms.
 */
 
 class Node {

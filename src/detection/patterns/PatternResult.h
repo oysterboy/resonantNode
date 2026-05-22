@@ -5,7 +5,13 @@
 
 namespace detection {
 
-// PatternResult is the rule-level summary used by runtime and analyzer reports.
+/*
+PatternResult
+
+Rule-level summary used by runtime and analyzer reports.
+Owns patternMatched, supportMatched, valid, confidence, and rejection reasons.
+Does not decide behavior eligibility.
+*/
 struct PatternResult {
     // Rule output and classification.
     PatternResultKind kind = PatternResultKind::Unknown;

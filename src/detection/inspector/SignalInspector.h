@@ -7,6 +7,13 @@
 
 namespace detection {
 
+/*
+SignalInspector
+
+Owns signal-stage inspection and evidence annotation.
+Consumes SignalCandidate plus optional feature/raw history and produces InspectedSignal.
+Does not decide pattern validity or behavior eligibility.
+*/
 class SignalInspector {
 public:
     void configure(const InspectionConfig& config);

@@ -5,6 +5,12 @@
 
 namespace detection {
 
+/*
+FrequencyWindowProbe
+
+Retrospective helper for measuring frequency evidence around a candidate window.
+Produces FrequencyEvidence only; it does not create SignalCandidate or PatternResult.
+*/
 bool measureCandidateWindowFrequency(const AudioSignal& audioSignal,
                                      const DetectorCandidate& candidate,
                                      unsigned long sampleRateHz,

@@ -7,6 +7,12 @@
 
 #include "../inspector/InspectorTypes.h"
 
+/*
+FrequencyMatchEvaluation
+
+Threshold parsing and evaluation helpers for frequency-match evidence.
+This is signal/profile tuning support, not PatternRules.
+*/
 namespace FrequencyMatchEvaluation {
 
 struct Values {

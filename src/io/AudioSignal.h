@@ -11,6 +11,7 @@ struct AudioSignalStats {
 };
 
 struct CurveSnapshot {
+    // Diagnostic curve sample time in milliseconds.
     unsigned long sampleMs = 0;
     int current = 0;
     int env = 0;
@@ -20,7 +21,9 @@ struct CurveSnapshot {
 
 struct AudioSignalFrame {
     uint64_t sampleIndex = 0;
+    // Wall-clock-derived sample time for this frame.
     uint32_t sampleTimeUs = 0;
+    // Runtime event time used by detection/analyzer/behavior.
     uint32_t sampleTimeMs = 0;
     unsigned long sampleRateHz = 0;
     int rawSample = 0;
@@ -34,6 +37,7 @@ struct AudioSignalFrame {
 };
 
 struct DetectorCandidate {
+    // Legacy/diagnostic candidate shape used by retrospective probes.
     uint64_t onsetSample = 0;
     uint64_t peakSample = 0;
     uint64_t releaseSample = 0;

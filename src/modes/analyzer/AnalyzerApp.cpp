@@ -28,7 +28,7 @@ This file owns analyzer-mode orchestration, not the detector internals.
 File structure:
 - local utility helpers
 - construction and setup
-- runtime loop and detector state
+- runtime loop and diagnostic probe state
 - console and emitter control
 - raw-trigger and value-mode helpers
 - sequence, capture, and base sessions
@@ -199,7 +199,7 @@ void AnalyzerApp::configureI2SParameters() {
 }
 
 // -----------------------------------------------------------------------------
-// Runtime loop and detector state
+// Runtime loop and diagnostic probe state
 // -----------------------------------------------------------------------------
 
 void AnalyzerApp::update() {
@@ -416,7 +416,7 @@ void AnalyzerApp::printValueModeBanner() const {
     }
     Serial.print("EVT analyzer_val on source=");
     Serial.print("I2S");
-    Serial.println(" detector=AMP");
+    Serial.println(" probe=AMP");
     printDetectionParameters();
 }
 

@@ -7,9 +7,14 @@
 
 namespace detection {
 
-// Roadmap adapter for the target frequency stream.
-// Frequency lifecycle now lives in FrequencyMatchDetector and uses matched
-// frequency windows rather than forcing the path through scalar timing.
+/*
+FrequencySignalEmitter
+
+Owns the frequency-match signal candidate path.
+Wraps FrequencyMatchDetector to produce frequency candidates from AudioSignalFrame
+and FrequencyEvidence input.
+Does not decide pattern meaning or behavior.
+*/
 class FrequencySignalEmitter {
 public:
     FrequencySignalEmitter();

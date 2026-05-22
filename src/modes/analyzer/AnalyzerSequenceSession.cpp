@@ -233,7 +233,7 @@ void AnalyzerApp::startSequenceTest(unsigned long totalTrials, unsigned long per
     if (_sequenceTest.showDetails) {
         Serial.print("SEQ start source=");
         Serial.print("I2S");
-        Serial.print(" detector=AMP");
+        Serial.print(" probe=AMP");
         Serial.print(" profile=");
         Serial.print(detection::detectionProfileName(_sequenceTest.profileKind));
         Serial.print(" mode=");

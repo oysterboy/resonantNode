@@ -1096,6 +1096,8 @@ SEQ behavior unchanged after split.
 Report semantics already cleaned before extraction.
 ```
 
+Status: DONE
+
 ---
 
 # 5. Smoke checks after key passes

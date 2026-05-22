@@ -3225,6 +3225,7 @@ AnalyzerReport AnalyzerApp::buildSequenceAnalyzerReport(unsigned long trialNumbe
     return report;
 }
 
+#if 0
 void AnalyzerApp::printSequenceTrialResult(const AnalyzerReport& report) const {
     if (_valMode) {
         return;
@@ -4277,3 +4278,4 @@ void AnalyzerApp::printValueFrame(unsigned long now) const {
     Serial.print("transient:");
     Serial.println(transientVisible ? 1 : 0);
 }
+#endif

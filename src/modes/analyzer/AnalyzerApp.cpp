@@ -243,7 +243,7 @@ uint32_t analyzerLogFlagsFromToken(const char* token) {
             flags |= AnalyzerApp::ANALYZER_LOG_CANDIDATE;
         } else if (equalsIgnoreCase(part, "explain")) {
             flags |= AnalyzerApp::ANALYZER_LOG_EXPLAIN;
-        } else if (equalsIgnoreCase(part, "custom") || equalsIgnoreCase(part, "ampwindow") || equalsIgnoreCase(part, "amp_window") || equalsIgnoreCase(part, "window")) {
+        } else if (equalsIgnoreCase(part, "custom")) {
             flags |= AnalyzerApp::ANALYZER_LOG_CUSTOM;
         } else if (equalsIgnoreCase(part, "default")) {
             flags |= AnalyzerApp::DEFAULT_ANALYZER_LOG_FLAGS;
@@ -268,7 +268,7 @@ void printSequenceHelp() {
     Serial.println("SEQ IN: start [tries=N] [period=MS] [window=MS] [freq=HZ] [dur=MS] [test=LABEL]");
     Serial.println("SEQ IN: OBS start [tries=N] [period=2000] [window=1800] [freq=HZ] [dur=MS] [test=LABEL]");
     Serial.println("SEQ IN: [profile=freqamp|chirp]");
-    Serial.println("SEQ IN: [log=default|none|quiet|summary|summary+trial|trial|candidate|explain|custom|ampwindow|full]");
+    Serial.println("SEQ IN: [log=default|none|quiet|summary|summary+trial|trial|candidate|explain|custom|full]");
     Serial.println("SEQ IN: stable summary=log=summary");
     Serial.println("SEQ IN: [debug=0|1|2] [dumpSamples=0|1] [curveFormat=off|samples]");
     Serial.println("SEQ IN: [sampleFirst=N] [sampleEvery=N] [sampleLead=MS] [sampleTail=MS] [sampleStep=MS] [sampleMax=N]");
@@ -485,7 +485,7 @@ void AnalyzerApp::begin() {
     _controlClaimAtMs = 0;
 
     Serial.println("EVT analyzer_ready");
-    Serial.println("EVT analyzer_help type='HELP', 'BASE', 'PARAM onset=23.0 release=20.0 cooldown=50 releaseDebounce=10 minMs=90 maxMs=240 minStrength=40.0 freqScore=10000 freqContrast=20.0', 'TEST', 'RAW trigger f=3200 dur=100 post=1000 dump=bin', 'SEQ log=default|summary|summary+trial|trial|candidate|explain|custom|ampwindow dumpSamples=1 curveFormat=samples', 'CAP', 'DET AMP', 'VAL', 'VAL OFF'");
+    Serial.println("EVT analyzer_help type='HELP', 'BASE', 'PARAM onset=23.0 release=20.0 cooldown=50 releaseDebounce=10 minMs=90 maxMs=240 minStrength=40.0 freqScore=10000 freqContrast=20.0', 'TEST', 'RAW trigger f=3200 dur=100 post=1000 dump=bin', 'SEQ log=default|summary|summary+trial|trial|candidate|explain|custom|full dumpSamples=1 curveFormat=samples', 'CAP', 'DET AMP', 'VAL', 'VAL OFF'");
 }
 
 void AnalyzerApp::configureParameters() {
@@ -891,7 +891,7 @@ void AnalyzerApp::handleUsbLine(const char* line) {
         Serial.println("CMD: EMIT MODE AUTO interval=2000 freq=3200 dur=100");
         Serial.println("CMD: EMIT SWEEP start=3000 stop=3500 step=100 dur=80 pause=1000");
         Serial.println("CMD: TEST");
-        Serial.println("CMD: raw trigger f=3200 dur=100 post=1000 dump=bin");
+        Serial.println("CMD: RAW trigger f=3200 dur=100 post=1000 dump=bin");
         Serial.println("CMD: SEQ");
         Serial.println("CMD: SEQ help");
         Serial.println("CMD: SEQ stop");
@@ -1000,7 +1000,7 @@ void AnalyzerApp::handleUsbLine(const char* line) {
         token = token != nullptr ? strtok_r(nullptr, " ", &savePtr) : nullptr;
 
         if (token == nullptr || !equalsIgnoreCase(token, "trigger")) {
-            Serial.println("RAW_ERR usage=raw trigger f=3200 dur=100 post=1000");
+            Serial.println("RAW_ERR usage=RAW trigger f=3200 dur=100 post=1000");
             return;
         }
 

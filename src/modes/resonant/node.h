@@ -94,6 +94,8 @@ private:
     const char* profileName() const;
     const detection::DetectionProfile& activeDetectionProfile() const;
     const BehaviorGateConfig& activeBehaviorProfile() const;
+    void applyActiveDetectionProfile();
+    void applyActiveBehaviorGateConfig();
     void applyActiveProfiles();
     void processDetectionFrame(const AudioSignalFrame& frame, unsigned long now, bool selfChirpSuppressed, bool& sawPatternThisLoop);
     FrequencyEvidence captureFrequencyEvidence(unsigned long observedAtMs) const;

@@ -982,6 +982,8 @@ No command exposes inactive tuning as if active.
 RB PARAM does not reset behavior config.
 ```
 
+Status: DONE
+
 ---
 
 # Pass 11 — Code cleanup / dead paths

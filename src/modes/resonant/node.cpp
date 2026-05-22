@@ -4,7 +4,6 @@
 
 #include <esp_system.h>
 
-#include "../../detection/DetectorParameters.h"
 #include "../../detection/features/FrequencyMatchEvaluation.h"
 #include "../../detection/inspector/FrequencyWindowProbe.h"
 #include "../../detection/patterns/PatternNames.h"
@@ -596,9 +595,9 @@ void Node::pollSerialCommands() {
 
 void Node::handleSerialLine(const char* line) {
     if (equalsIgnoreCase(line, "RB help")) {
-        Serial.println("RB CMD: RB PARAM onset=23 release=20 cooldown=50 releaseDebounce=10 minMs=90 maxMs=240 minStrength=40.0 freqScore=10000 freqContrast=50.0");
+        Serial.println("RB CMD: RB PARAM freqScore=10000 freqContrast=50.0");
         Serial.println("RB CMD: RB BEHAV wait=100 refractory=0 idleTimeout=20000 idleTimeoutVariation=10000 idleBlockedAfterHeard=3000 idleBlockedAfterOwnEmit=5000");
-        Serial.println("RB CMD: RB DETECT removed; use RB PROFILE");
+        Serial.println("RB CMD: RB DETECT status");
         Serial.println("RB CMD: RB PROFILE name=freqamp|chirp");
         Serial.println("RB CMD: RB rebase");
         Serial.println("RB CMD: RB rebase force");
@@ -626,37 +625,19 @@ void Node::handleSerialLine(const char* line) {
         token = token != nullptr ? strtok_r(nullptr, " ", &savePtr) : nullptr;
 
         if (token == nullptr || !equalsIgnoreCase(token, "PARAM")) {
-            Serial.println("RB PARAM usage=RB PARAM onset=23 release=20 cooldown=50 releaseDebounce=10 minMs=90 maxMs=240 minStrength=40.0 freqScore=10000 freqContrast=50.0");
+            Serial.println("RB PARAM usage=RB PARAM freqScore=10000 freqContrast=50.0");
             return;
         }
 
-        DetectorParameters::Values params = DetectorParameters::capture(_audioOnsetDetector);
         FrequencyMatchEvaluation::Values freqTuning = _frequencyEvidenceTuning;
 
         while ((token = strtok_r(nullptr, " ", &savePtr)) != nullptr) {
-            DetectorParameters::parseToken(token, params);
             FrequencyMatchEvaluation::parseToken(token, freqTuning);
         }
 
-        DetectorParameters::apply(params, _audioOnsetDetector);
         _frequencyEvidenceTuning = freqTuning;
-        _detection.setFrequencyTuning(_frequencyEvidenceTuning);
-        applyActiveProfiles();
+        applyActiveDetectionProfile();
 
-        Serial.print("RB PARAM onset=");
-        Serial.print(_audioOnsetDetector.onsetDetectionThreshold(), 1);
-        Serial.print(" release=");
-        Serial.print(_audioOnsetDetector.onsetReleaseThreshold(), 1);
-        Serial.print(" cooldown=");
-        Serial.print(_audioOnsetDetector.cooldownAfterOnsetMs());
-        Serial.print(" releaseDebounce=");
-        Serial.print(_audioOnsetDetector.releaseDebounceMs());
-        Serial.print(" minMs=");
-        Serial.print(_audioOnsetDetector.minTransientDurationMs());
-        Serial.print(" maxMs=");
-        Serial.print(_audioOnsetDetector.maxTransientDurationMs());
-        Serial.print(" minStrength=");
-        Serial.print(_audioOnsetDetector.minTransientPeakStrength(), 1);
         Serial.print(" freqScore=");
         Serial.print(_frequencyEvidenceTuning.scoreMin, 0);
         Serial.print(" freqContrast=");
@@ -807,7 +788,21 @@ void Node::handleLogCommand(const char* line) {
 
 void Node::handleDetectCommand(const char* line) {
     (void)line;
-    Serial.println("RB DETECT removed; use RB PROFILE");
+    const detection::DetectionProfile& detectionProfile = activeDetectionProfile();
+    Serial.print("RB DETECT profile=");
+    Serial.print(detection::detectionProfileName(detectionProfile.kind));
+    Serial.print(" emitters=");
+    Serial.print(detection::profileSignalEmitterName(detectionProfile.signalEmitter));
+    Serial.print(" inspectionRules=");
+    Serial.print(detection::profileInspectionRulesName(detectionProfile.inspectionRules));
+    Serial.print(" patternRules=");
+    Serial.print(detection::profilePatternRulesName(detectionProfile.patternRules));
+    Serial.print(" requireSupportForAcceptance=");
+    Serial.print(detectionProfile.patternRulesConfig.requireSupportForAcceptance ? 1 : 0);
+    Serial.print(" freqScore=");
+    Serial.print(_frequencyEvidenceTuning.scoreMin, 0);
+    Serial.print(" freqContrast=");
+    Serial.println(_frequencyEvidenceTuning.contrastMin, 1);
 }
 
 void Node::handleProfileCommand(const char* line) {
@@ -867,8 +862,12 @@ const BehaviorGateConfig& Node::activeBehaviorProfile() const {
 }
 
 void Node::applyActiveProfiles() {
+    applyActiveDetectionProfile();
+    applyActiveBehaviorGateConfig();
+}
+
+void Node::applyActiveDetectionProfile() {
     const detection::DetectionProfile& detectionProfile = activeDetectionProfile();
-    const BehaviorGateConfig& behaviorProfile = activeBehaviorProfile();
 
     _detection.setSignalEmitter(detectionProfile.signalEmitter);
     _detection.setInspectionRules(detectionProfile.inspectionRules);
@@ -879,8 +878,10 @@ void Node::applyActiveProfiles() {
     _detection.setProfileName(detection::detectionProfileName(detectionProfile.kind));
     _freqBandStream.setSampleRateHz(_audioSource.sampleRateHz());
     _freqBandStream.setTargetFrequencyHz(_chirpOutput.toneHz());
+}
 
-    _behavior.configure(behaviorProfile);
+void Node::applyActiveBehaviorGateConfig() {
+    _behavior.configure(activeBehaviorProfile());
 }
 
 void Node::processDetectionFrame(const AudioSignalFrame& frame,

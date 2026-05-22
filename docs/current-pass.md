@@ -411,6 +411,8 @@ grep finds no old gate names except in archived docs/tests if intentionally pres
 Analyzer and debug output show the stage chain.
 ```
 
+Status: DONE
+
 ---
 
 # Pass 4 — Minimal real DetectionProfile composition

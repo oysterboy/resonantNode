@@ -204,7 +204,7 @@ private:
             unsigned long candidateCount = 0;
             unsigned long candidateOverflowCount = 0;
             unsigned long firstCandidateMs = 0;
-            bool bestCandidateValid = false;
+            bool bestCandidateAccepted = false;
             long bestCandidateDtFromTriggerMs = 0;
             unsigned long bestCandidateDurationMs = 0;
             float bestCandidateStrength = 0.0f;

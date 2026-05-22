@@ -387,13 +387,13 @@ void printH3FrequencyEvidenceFields(const detection::PatternResult& patternResul
     Serial.print(detection::patternTypeName(patternResult.type));
     Serial.print(" pattern_reason=");
     Serial.print(detection::patternReasonName(patternResult.reasonCode));
-    Serial.print(" pattern_candidate_accepted=");
+    Serial.print(" candidateAccepted=");
     Serial.print(patternResult.patternCandidateAccepted ? 1 : 0);
-    Serial.print(" pattern_matched=");
+    Serial.print(" patternMatched=");
     Serial.print(patternResult.patternMatched ? 1 : 0);
-    Serial.print(" support_matched=");
+    Serial.print(" supportMatched=");
     Serial.print(patternResult.supportMatched ? 1 : 0);
-    Serial.print(" behavior_eligible=");
+    Serial.print(" behaviorEligible=");
     Serial.print(patternResult.patternMatched && patternResult.supportMatched ? 1 : 0);
     Serial.print(" reject_reason=");
     Serial.print(detection::patternRejectReasonName(patternResult.rejectReason));
@@ -2686,8 +2686,8 @@ void AnalyzerApp::handleSequenceCandidate(const detection::PatternResult& patter
 
     recordSequenceClassifierOutcome(patternResult, duplicateCandidate, !inWindow);
 
-    if (!diagnostics.bestCandidateValid || candidate.peakStrength > diagnostics.bestCandidateStrength) {
-        diagnostics.bestCandidateValid = true;
+    if (!diagnostics.bestCandidateAccepted || candidate.peakStrength > diagnostics.bestCandidateStrength) {
+        diagnostics.bestCandidateAccepted = true;
         diagnostics.bestCandidateDtFromTriggerMs = dtFromTriggerMs;
         diagnostics.bestCandidateDurationMs = candidate.durationMs;
         diagnostics.bestCandidateStrength = candidate.peakStrength;

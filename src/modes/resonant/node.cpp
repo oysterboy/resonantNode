@@ -871,7 +871,7 @@ void Node::applyActiveProfiles() {
     _detection.setInspectionRules(detectionProfile.inspectionRules);
     _detection.setFrequencyTuning(_frequencyEvidenceTuning);
     _detection.setInspectionConfig(detectionProfile.inspectionConfig);
-    _detection.setRequireSupportForAcceptance(detectionProfile.requireSupportForAcceptance);
+    _detection.setPatternRulesConfig(detectionProfile.patternRulesConfig);
     _detection.setFieldStateConfig(detectionProfile.fieldStateConfig);
     _detection.setProfileName(detection::detectionProfileName(detectionProfile.kind));
     _freqBandStream.setSampleRateHz(_audioSource.sampleRateHz());

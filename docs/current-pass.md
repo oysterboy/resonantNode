@@ -90,7 +90,7 @@ Revised D10 detail:
 ```cpp
 struct DetectionProfile {
     InspectionConfig inspection;
-    PatternRulesConfig patternRules;
+    PatternRulesConfig patternRulesConfig;
     BehaviorGateConfig behaviorGate;
     FieldStateConfig fieldState;
 
@@ -126,7 +126,7 @@ Remove/replace old or ambiguous terms:
 candidateValid                 → candidateAccepted
 tonalValid                     → patternMatched
 conditionMatched               → remove if duplicate of patternMatched
-requireTonalForBehavior        → PatternRulesConfig / BehaviorGateConfig
+requireTonalForBehavior        → PatternRulesConfig.requireSupportForAcceptance / BehaviorGateConfig
 LocalityClass / near / mid/far → AmpSupportClass
 ```
 
@@ -439,21 +439,21 @@ What the active `DetectionProfile` currently keeps as runtime-relevant compositi
 - `signalEmitter`
 - `inspectionRules`
 - `patternRules`
-- `requireSupportForAcceptance`
+- `patternRulesConfig`
 - `inspectionConfig`
 - `fieldStateConfig`
 
 What we still intend to add as real stage-owned payloads:
 - `BehaviorGateConfig`
-- `PatternRulesConfig` only if the support gate grows beyond a single profile-owned switch
 
 ```cpp
 struct DetectionProfile {
     InspectionConfig inspection;
-    PatternRulesConfig patternRules;
+    PatternRulesConfig patternRulesConfig;
     BehaviorGateConfig behaviorGate;
     FieldStateConfig fieldState;
     SignalEmitterSelection emitters;
+    ProfileInspectionRulesKind inspectionRules;
 };
 ```
 
@@ -464,7 +464,7 @@ Implement/apply configs only at these points. Some of these are already live; th
 ```text
 DetectionRuntime     <- signalEmitter selection
 SignalInspector      <- inspectionRules + InspectionConfig
-PatternRules         <- support gate / future PatternRulesConfig
+PatternRules         <- PatternRulesConfig
 Behavior             <- BehaviorGateConfig
 FieldStateTracker    <- FieldStateConfig
 ```

@@ -2,8 +2,8 @@
 
 namespace detection {
 
-void PatternRules::setRequireSupportForAcceptance(bool value) {
-    _requireSupportForAcceptance = value;
+void PatternRules::configure(const PatternRulesConfig& config) {
+    _config = config;
 }
 
 namespace {
@@ -116,7 +116,7 @@ PatternResult PatternRules::evaluateFrequencyPattern(
     result.ampWindow = candidate.ampWindow;
     result.duplicateRisk = candidate.duplicateRisk;
     result.duplicateRiskScore = candidate.duplicateRiskScore;
-    result.supportMatched = !_requireSupportForAcceptance || candidate.ampSupport >= AmpSupportLevel::Medium;
+    result.supportMatched = !_config.requireSupportForAcceptance || candidate.ampSupport >= AmpSupportLevel::Medium;
     if (!result.supportMatched) {
         result.kind = PatternResultKind::Rejected;
         result.rejectReason = supportRejectReason(candidate);

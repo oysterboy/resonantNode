@@ -4,6 +4,7 @@
 
 #include "field/FieldState.h"
 #include "inspector/InspectorTypes.h"
+#include "patterns/PatternRules.h"
 
 namespace detection {
 
@@ -33,7 +34,7 @@ struct DetectionProfile {
     ProfileSignalEmitterKind signalEmitter = ProfileSignalEmitterKind::Frequency;
     ProfileInspectionRulesKind inspectionRules = ProfileInspectionRulesKind::FreqAmp;
     ProfilePatternRulesKind patternRules = ProfilePatternRulesKind::PatternRules;
-    bool requireSupportForAcceptance = true;
+    PatternRulesConfig patternRulesConfig = {};
 
     InspectionConfig inspectionConfig = defaultInspectionConfig();
 
@@ -50,7 +51,7 @@ inline DetectionProfile makeFreqAmpProfile() {
     profile.inspectionRules = ProfileInspectionRulesKind::FreqAmp;
     profile.patternRules = ProfilePatternRulesKind::PatternRules;
 
-    profile.requireSupportForAcceptance = true;
+    profile.patternRulesConfig.requireSupportForAcceptance = true;
 
     // Inspector configuration.
     profile.inspectionConfig = defaultInspectionConfig(); // shared inspector defaults
@@ -77,7 +78,7 @@ inline DetectionProfile makeChirpProfile() {
     profile.inspectionRules = ProfileInspectionRulesKind::Chirp;
     profile.patternRules = ProfilePatternRulesKind::ChirpSequence;
 
-    profile.requireSupportForAcceptance = true;
+    profile.patternRulesConfig.requireSupportForAcceptance = true;
 
     // Inspector configuration.
     profile.inspectionConfig = defaultInspectionConfig();

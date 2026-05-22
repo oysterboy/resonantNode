@@ -1626,7 +1626,7 @@ void AnalyzerApp::startSequenceTest(unsigned long totalTrials, unsigned long per
     _detection->setSignalEmitter(selectedProfile.signalEmitter);
     _detection->setInspectionRules(selectedProfile.inspectionRules);
     _detection->setInspectionConfig(selectedProfile.inspectionConfig);
-    _detection->setRequireSupportForAcceptance(selectedProfile.requireSupportForAcceptance);
+    _detection->setPatternRulesConfig(selectedProfile.patternRulesConfig);
     _detection->setFieldStateConfig(selectedProfile.fieldStateConfig);
     _detection->setProfileName(detection::detectionProfileName(selectedProfile.kind));
     _freqBandStream.setSampleRateHz(_audioSource.sampleRateHz());

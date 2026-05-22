@@ -15,6 +15,7 @@ void DetectionRuntime::reset() {
     _inspectionRulesKind = ProfileInspectionRulesKind::FreqAmp;
     _signalInspector.configure(_inspectionConfig);
     _signalInspector.setInspectionRules(_inspectionRulesKind);
+    _patternRules.configure(_patternRulesConfig);
     _profileName = "unknown";
     _resultQueue[0] = {};
     _resultReadIndex = 0;
@@ -45,8 +46,9 @@ void DetectionRuntime::setInspectionConfig(const InspectionConfig& config) {
     _signalInspector.configure(_inspectionConfig);
 }
 
-void DetectionRuntime::setRequireSupportForAcceptance(bool value) {
-    _patternRules.setRequireSupportForAcceptance(value);
+void DetectionRuntime::setPatternRulesConfig(const PatternRulesConfig& config) {
+    _patternRulesConfig = config;
+    _patternRules.configure(_patternRulesConfig);
 }
 
 void DetectionRuntime::setFieldStateConfig(const FieldStateConfig& config) {

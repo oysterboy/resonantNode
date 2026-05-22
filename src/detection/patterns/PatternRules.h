@@ -4,9 +4,13 @@
 
 namespace detection {
 
+struct PatternRulesConfig {
+    bool requireSupportForAcceptance = true;
+};
+
 class PatternRules {
 public:
-    void setRequireSupportForAcceptance(bool value);
+    void configure(const PatternRulesConfig& config);
 
     PatternResult evaluate(
         const PatternCandidate& candidate,
@@ -19,7 +23,7 @@ private:
         unsigned long nowMs
     ) const;
 
-    bool _requireSupportForAcceptance = true;
+    PatternRulesConfig _config = {};
 };
 
 } // namespace detection

@@ -47,7 +47,7 @@ public:
     void setSignalEmitter(ProfileSignalEmitterKind kind);
     void setInspectionRules(ProfileInspectionRulesKind kind);
     void setInspectionConfig(const InspectionConfig& config);
-    void setRequireSupportForAcceptance(bool value);
+    void setPatternRulesConfig(const PatternRulesConfig& config);
     void setFieldStateConfig(const FieldStateConfig& config);
     void setProfileName(const char* profileName);
 
@@ -81,6 +81,7 @@ private:
     ProfileSignalEmitterKind _signalEmitterKind = ProfileSignalEmitterKind::Frequency;
     ProfileInspectionRulesKind _inspectionRulesKind = ProfileInspectionRulesKind::FreqAmp;
     InspectionConfig _inspectionConfig = defaultInspectionConfig();
+    PatternRulesConfig _patternRulesConfig = {};
     const char* _profileName = "unknown";
 
     AmpSignalEmitter _ampEmitter;

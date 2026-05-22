@@ -2707,7 +2707,7 @@ kind
 signalEmitter
 inspectionRules
 patternRules
-requireSupportForAcceptance
+patternRulesConfig
 inspectionConfig
 fieldStateConfig
 ```
@@ -2719,7 +2719,7 @@ Fixed apply points:
 ```text
 DetectionRuntime     <- signalEmitter selection
 SignalInspector      <- inspectionRules + InspectionConfig
-PatternRules         <- support gate
+PatternRules         <- PatternRulesConfig
 Behavior             <- BehaviorGateConfig
 FieldStateTracker    <- FieldStateConfig
 ```
@@ -2727,6 +2727,7 @@ FieldStateTracker    <- FieldStateConfig
 `signalEmitter` chooses the active emitter family.
 `inspectionRules` chooses the inspection strategy and windowing rule.
 `patternRules` chooses the final pattern policy.
+`patternRulesConfig.requireSupportForAcceptance` controls whether support is required for acceptance.
 
 ### 30.4 FeatureHistory and ScalarWindow
 

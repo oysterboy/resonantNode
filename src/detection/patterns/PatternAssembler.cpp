@@ -2,8 +2,6 @@
 
 namespace {
 
-constexpr unsigned long kSequenceGapMs = 250UL;
-
 using PatternCandidate = detection::PatternCandidate;
 using PatternCandidateKind = detection::PatternCandidateKind;
 
@@ -99,63 +97,6 @@ PatternCandidate makePatternCandidateFromSignal(const detection::InspectedSignal
     return candidate;
 }
 
-PatternCandidate makePulseSequenceCandidate(
-    const detection::InspectedSignal& first,
-    const detection::InspectedSignal& second
-) {
-    PatternCandidate candidate = {};
-    candidate.kind = PatternCandidateKind::PulseSequence;
-    candidate.lineageId = static_cast<uint32_t>(first.signal.startSample & 0xFFFFFFFFu) ^
-                           (static_cast<uint32_t>(second.signal.startSample & 0xFFFFFFFFu) << 1);
-    candidate.primarySlotIndex = 0;
-    candidate.signalCount = 2;
-    candidate.pulseCount = 2;
-    candidate.signalSlotCount = 2;
-
-    const detection::SignalCandidate* sources[2] = { &first.signal, &second.signal };
-    candidate.firstPulseMs = sources[0]->releaseMs != 0 ? sources[0]->releaseMs : sources[0]->peakMs;
-    candidate.lastPulseMs = sources[1]->releaseMs != 0 ? sources[1]->releaseMs : sources[1]->peakMs;
-    candidate.minGapMs = candidate.lastPulseMs > candidate.firstPulseMs ? (candidate.lastPulseMs - candidate.firstPulseMs) : 0;
-    candidate.maxGapMs = candidate.minGapMs;
-    candidate.startMs = sources[0]->startMs;
-    candidate.heardAtMs = candidate.lastPulseMs;
-    candidate.acceptedMs = candidate.heardAtMs;
-    candidate.durationMs = candidate.lastPulseMs > candidate.startMs ? (candidate.lastPulseMs - candidate.startMs) : 0;
-    candidate.signalConfidence = (first.signalConfidence + second.signalConfidence) * 0.5f;
-    candidate.frequencyConfidence = (first.frequencyConfidence + second.frequencyConfidence) * 0.5f;
-    candidate.ampSupport = first.ampSupport;
-    candidate.ampWindow = first.ampWindow;
-    candidate.duplicateRisk = first.duplicateRisk || second.duplicateRisk;
-    candidate.duplicateRiskScore = (first.duplicateRiskScore + second.duplicateRiskScore) * 0.5f;
-    candidate.canOverlap = true;
-
-    for (size_t i = 0; i < 2; ++i) {
-        const detection::SignalCandidate& source = *sources[i];
-        candidate.signalSlots[i].kindTag = static_cast<uint8_t>(source.kind);
-        candidate.signalSlots[i].sourceTag = static_cast<uint8_t>(source.source);
-        candidate.signalSlots[i].onsetSample = source.startSample;
-        candidate.signalSlots[i].peakSample = source.peakSample;
-        candidate.signalSlots[i].releaseSample = source.releaseSample;
-        candidate.signalSlots[i].startMs = source.startMs;
-        candidate.signalSlots[i].peakMs = source.peakMs;
-        candidate.signalSlots[i].releaseMs = source.releaseMs;
-        candidate.signalSlots[i].strength = source.kind == detection::SignalKind::FrequencyMatch ? source.score : source.strength;
-        candidate.signalSlots[i].confidence = source.kind == detection::SignalKind::FrequencyMatch ? source.frequencyConfidence : source.signalConfidence;
-    }
-
-    candidate.onsetSample = sources[0]->startSample;
-    candidate.peakSample = sources[1]->peakSample;
-    candidate.releaseSample = sources[1]->releaseSample;
-    candidate.onsetStrength = sources[0]->kind == detection::SignalKind::FrequencyMatch ? sources[0]->score : sources[0]->strength;
-    candidate.peakStrength = sources[1]->kind == detection::SignalKind::FrequencyMatch ? sources[1]->score : sources[1]->strength;
-    candidate.releaseStrength = candidate.peakStrength;
-    candidate.ambientBaseline = sources[0]->kind == detection::SignalKind::AmpTransient ? sources[0]->ampBaseline : 0.0f;
-    candidate.transient = first.signal.transient;
-    candidate.frequency = first.signal.frequency;
-    candidate.frequencyFull = second.signal.frequency;
-    return candidate;
-}
-
 } // namespace
 
 namespace detection {
@@ -196,25 +137,6 @@ size_t PatternAssembler::acceptSignals(const InspectedSignal* signals, size_t co
                         }
                     }
 
-                    if (signal.signal.kind == SignalKind::FrequencyMatch && _recentSignalCount >= 2) {
-                        const size_t prevIndex = (_recentSignalReadIndex + _recentSignalCount - 2) % kRecentSignalCapacity;
-                        const InspectedSignal& prev = _recentSignals[prevIndex];
-                        if (prev.accepted && prev.signal.present && prev.signal.kind == SignalKind::FrequencyMatch && prev.signal.valid) {
-                            const unsigned long prevMs = prev.signal.releaseMs != 0 ? prev.signal.releaseMs : prev.signal.peakMs;
-                            const unsigned long currMs = signal.signal.releaseMs != 0 ? signal.signal.releaseMs : signal.signal.peakMs;
-                            const unsigned long gapMs = currMs > prevMs ? (currMs - prevMs) : 0;
-                            if (gapMs > 0 && gapMs <= kSequenceGapMs) {
-                                PatternCandidate sequenceCandidate = makePulseSequenceCandidate(prev, signal);
-                                sequenceCandidate.minGapMs = gapMs;
-                                sequenceCandidate.maxGapMs = gapMs;
-                                sequenceCandidate.signalCount = 2;
-                                sequenceCandidate.pulseCount = 2;
-                                if (pushPatternCandidate(sequenceCandidate)) {
-                                    ++accepted;
-                                }
-                            }
-                        }
-                    }
                 }
                 break;
 

@@ -151,15 +151,9 @@ void SignalInspector::annotateAmpSupportAndLocality(
         }
     }
 
-    if (!candidate.ampEvidencePresent) {
-        out.signal.ampLevel = 0.0f;
-        out.signal.ampBaseline = 0.0f;
-        out.ampSupport = AmpSupportLevel::Unknown;
-        return;
-    }
-
-    // Observation-only AMP snapshot fallback for live FrequencyFirst candidates.
-    fillAmpWindowObservation(out, candidate, candidate.ampLevel, 0.0f, true, _config);
+    out.signal.ampLevel = 0.0f;
+    out.signal.ampBaseline = 0.0f;
+    out.ampSupport = AmpSupportLevel::Unknown;
 }
 
 InspectedSignal SignalInspector::inspectImpl(

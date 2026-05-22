@@ -575,6 +575,8 @@ AMP support is inspection evidence, not an independent candidate source.
 Weak/missing AMP support is reported as rejected/residual, not valid.
 ```
 
+Status: DONE
+
 ---
 
 # Pass 6 — PatternResult and PatternRules contract

@@ -11,19 +11,21 @@ Completed:
 - Pass 3: Keep future work in roadmaps
 - Pass 4: Remove obsolete active-doc material
 - Pass 5: Normalize `PatternResult` vocabulary
-
-Pending:
-
 - Pass 6: Update behavior input boundary
 - Pass 7: Retire analyzer roadmap
 - Pass 8: Keep behavior roadmap active
 - Pass 9: Restrict Codex to docs only
 - Pass 10: Archive vs delete
 
+Pending:
+
+None.
+
 Notes:
 
 - `docs/myspec.md` is already at `v0.2.3`
 - `docs/feature-roadmaps/analyzer-roadmap-v0.1.md` has been archived
+- `docs/docs-workflo_spec` has been archived
 - the active detection roadmap remains future-facing
 - follow-up work for this pass should continue here until all passes are done
 ---

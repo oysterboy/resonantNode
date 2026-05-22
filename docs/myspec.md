@@ -1711,7 +1711,7 @@ ResonantNode should distinguish between pattern events and broader acoustic fiel
 
 `PatternResult` represents a meaningful detected acoustic event.
 
-`AcousticFieldState` represents the current or recent condition of the acoustic environment.
+`FieldState` represents the current or recent condition of the acoustic environment.
 
 These are different inputs to behavior.
 
@@ -1719,7 +1719,7 @@ These are different inputs to behavior.
 PatternResult:
     What meaningful event happened?
 
-AcousticFieldState:
+FieldState:
     What is the surrounding acoustic field like?
 ```
 
@@ -1727,13 +1727,13 @@ Behavior may consume both:
 
 ```text
 PatternResult
-+ AcousticFieldState
++ FieldState
 + local timers
 + parameters
 -> behavior decision
 ```
 
-Acoustic field state helps behavior make contextual decisions that are not tied to one specific detected pattern.
+FieldState helps behavior make contextual decisions that are not tied to one specific detected pattern.
 
 Examples:
 
@@ -1812,7 +1812,7 @@ It is not pattern classification.
 
 It should not directly trigger output.
 
-Behavior may later consume `FieldState` as context.
+Behavior consumes `FieldState` as context.
 
 ---
 ## 9. Sound Output
@@ -1874,7 +1874,7 @@ Behavior may produce sound output actions, state changes, or VEKTOR events.
 ```text
 Behavior input:
 - PatternResults
-- FieldState / acoustic context
+- FieldState
 - local timers
 - current node state
 - parameters

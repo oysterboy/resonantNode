@@ -2,7 +2,7 @@
 
 Scope: ResonantNode / Resonanzraum behavior architecture.
 
-Status: accepted roadmap, not yet full implementation.
+Status: active future roadmap, not yet full implementation.
 
 Primary goal:
 
@@ -142,7 +142,7 @@ Behavior should consume:
 
 ```txt
 PatternResults
-AcousticFieldState / FieldState
+FieldState
 OutputStatus
 time
 ```
@@ -160,7 +160,7 @@ Suggested interface objects:
 ```txt
 SignalSnapshot
 PatternResults
-AcousticFieldSnapshot / FieldState
+FieldState
 BehaviorInput
 BehaviorDecision
 BehaviorAction

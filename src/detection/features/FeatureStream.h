@@ -7,7 +7,7 @@ namespace detection {
 /*
 FeatureStream
 
-Shared identifiers and values for measured signal features.
+Shared identifiers and values for measured occurrence features.
 Feature streams are measurements, not candidates and not pattern meanings.
 */
 enum class FeatureStreamId {

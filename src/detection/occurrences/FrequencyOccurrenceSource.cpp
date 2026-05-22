@@ -1,4 +1,4 @@
-#include "FrequencySignalEmitter.h"
+﻿#include "FrequencyOccurrenceSource.h"
 
 namespace detection {
 
@@ -10,9 +10,9 @@ constexpr unsigned long kFrequencyMinTransientDurationMs = 50UL;
 
 } // namespace
 
-FrequencySignalEmitter::FrequencySignalEmitter() = default;
+FrequencyOccurrenceSource::FrequencyOccurrenceSource() = default;
 
-void FrequencySignalEmitter::reset() {
+void FrequencyOccurrenceSource::reset() {
     _hasPending = false;
     _peakEvidence = {};
     _pending = {};
@@ -20,11 +20,11 @@ void FrequencySignalEmitter::reset() {
     _detector.resetState();
 }
 
-void FrequencySignalEmitter::applyFrequencyTuning(const FrequencyMatchEvaluation::Values& frequencyTuning) {
+void FrequencyOccurrenceSource::applyFrequencyTuning(const FrequencyMatchEvaluation::Values& frequencyTuning) {
     (void)frequencyTuning;
 }
 
-void FrequencySignalEmitter::observeFrame(
+void FrequencyOccurrenceSource::observeFrame(
     const AudioSignalFrame& frame,
     const detection::FrequencyEvidence& evidence,
     const FrequencyMatchEvaluation::Values& frequencyTuning
@@ -51,11 +51,11 @@ void FrequencySignalEmitter::observeFrame(
     }
 
     if (_detector.candidateEmitted && _detector.candidateReleaseMs != _lastEmittedReleaseMs) {
-        SignalCandidate candidate = _detector.frequencyCandidate;
+        Occurrence candidate = _detector.frequencyCandidate;
         candidate.present = true;
-        candidate.kind = SignalKind::FrequencyMatch;
-        candidate.source = SignalSource::Frequency;
-        candidate.detectorKind = SignalDetectorKind::FrequencyMatch;
+        candidate.kind = OccurrenceKind::FrequencyMatch;
+        candidate.source = OccurrenceSource::Frequency;
+        candidate.detectorKind = OccurrenceDetectorKind::FrequencyMatch;
         candidate.confidence = candidate.valid ? 1.0f : 0.0f;
         candidate.signalConfidence = candidate.confidence;
         candidate.frequencyConfidence = candidate.valid
@@ -81,7 +81,7 @@ void FrequencySignalEmitter::observeFrame(
     }
 }
 
-bool FrequencySignalEmitter::popSignalCandidate(SignalCandidate& out) {
+bool FrequencyOccurrenceSource::popOccurrence(Occurrence& out) {
     if (!_hasPending) {
         return false;
     }
@@ -91,8 +91,9 @@ bool FrequencySignalEmitter::popSignalCandidate(SignalCandidate& out) {
     return true;
 }
 
-const FrequencyMatchDetector& FrequencySignalEmitter::detector() const {
+const FrequencyMatchDetector& FrequencyOccurrenceSource::detector() const {
     return _detector;
 }
 
 } // namespace detection
+

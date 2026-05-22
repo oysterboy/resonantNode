@@ -94,7 +94,7 @@ private:
     unsigned long _lastOnsetUs = 0;
     OnsetRejectReason _lastOnsetRejectReason = OnsetRejectReason::None;
 
-    float _onsetDetectionThreshold = 75.0f; // Minimum signal magnitude required to count as an onset.
+    float _onsetDetectionThreshold = 75.0f; // Minimum occurrence magnitude required to count as an onset.
     float _onsetReleaseThreshold = 67.5f; // Hysteresis prevents short dips from ending a peak too early.
     unsigned long _cooldownAfterOnsetMs = 500; // Merge repeated threshold crossings from one acoustic event.
 

@@ -14,7 +14,7 @@ Responsibilities:
 
 Does NOT:
 - read raw audio samples
-- perform signal detection or classification
+- perform occurrence detection or classification
 - own hardware output implementation
 - decide detector thresholds or feature extraction logic
 

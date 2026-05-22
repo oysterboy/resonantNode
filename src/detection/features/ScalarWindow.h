@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include <Arduino.h>
 
@@ -10,7 +10,7 @@ namespace detection {
 ScalarWindow
 
 Summary of one feature-history interval.
-Used by SignalInspector for candidate-relative support evidence.
+Used by OccurrenceInspector for candidate-relative support evidence.
 */
 struct ScalarWindow {
     bool present = false;
@@ -33,3 +33,4 @@ struct ScalarWindow {
 };
 
 } // namespace detection
+

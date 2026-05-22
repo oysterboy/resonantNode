@@ -52,7 +52,7 @@ void ScalarTransientDetector::update(float signalMagnitude, uint32_t sampleTimeU
 
 void ScalarTransientDetector::updateOnsetStage(unsigned long nowUs, float signalMagnitude, bool aboveAttackThreshold, bool onsetCooldownElapsed) {
     // Use raw magnitude for the edge so short bursts are not delayed by smoothing.
-    // The separate release threshold keeps the peak stable when the signal wobbles near the edge.
+    // The separate release threshold keeps the peak stable when the occurrence wobbles near the edge.
     if (aboveAttackThreshold && !_peakActive && onsetCooldownElapsed) {
         _peakActive = true;
         _peakStartedUs = nowUs;
@@ -92,7 +92,7 @@ void ScalarTransientDetector::updateTransientStage(unsigned long nowUs, float si
         }
     }
 
-    // Close the peak only after the signal has stayed below the release
+    // Close the peak only after the occurrence has stayed below the release
     // threshold for long enough to count as a real end of burst.
     const unsigned long releaseDebounceUs = _releaseDebounceMs * 1000UL;
     if (_peakActive && _releaseCandidateStartedUs != 0 && nowUs - _releaseCandidateStartedUs >= releaseDebounceUs) {

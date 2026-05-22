@@ -1,7 +1,7 @@
 #pragma once
 
-#include "../signals/SignalCandidate.h"
-#include "../signals/InspectedSignal.h"
+#include "../occurrences/Occurrence.h"
+#include "../occurrences/InspectedOccurrence.h"
 #include "../patterns/PatternResult.h"
 #include "FieldState.h"
 
@@ -10,7 +10,7 @@ namespace detection {
 /*
 FieldStateTracker
 
-Observes signal candidates, inspected signals, and PatternResults to maintain
+Observes occurrence candidates, inspected signals, and PatternResults to maintain
 recent acoustic context.
 Does not classify patterns and does not trigger output.
 */
@@ -23,13 +23,13 @@ public:
 
     void update(unsigned long nowMs);
 
-    void observeSignalCandidate(
-        const SignalCandidate& signal,
+    void observeOccurrence(
+        const Occurrence& occurrence,
         unsigned long nowMs
     );
 
-    void observeInspectedSignal(
-        const InspectedSignal& signal,
+    void observeInspectedOccurrence(
+        const InspectedOccurrence& occurrence,
         unsigned long nowMs
     );
 
@@ -46,7 +46,7 @@ private:
     FieldStateConfig _config = {};
     FieldState _state = {};
 
-    unsigned long _signalCountInWindow = 0;
+    unsigned long _occurrenceCountInWindow = 0;
     unsigned long _acceptedSignalCountInWindow = 0;
     unsigned long _patternCountInWindow = 0;
 
@@ -55,3 +55,4 @@ private:
 };
 
 } // namespace detection
+

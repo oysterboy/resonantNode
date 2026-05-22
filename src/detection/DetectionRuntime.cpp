@@ -8,14 +8,14 @@ DetectionRuntime::DetectionRuntime() = default;
 void DetectionRuntime::reset() {
     _ampEmitter.reset();
     _frequencyEmitter.reset();
-    _signalInspector.reset();
+    _occurrenceInspector.reset();
     _patternAssembler.reset();
     _fieldStateTracker.reset();
     _featureHistory.reset();
-    _signalEmitterKind = ProfileSignalEmitterKind::Frequency;
-    _inspectionRulesKind = ProfileInspectionRulesKind::FreqAmp;
-    _signalInspector.configure(_inspectionConfig);
-    _signalInspector.setInspectionRules(_inspectionRulesKind);
+    _occurrenceSourceKind = ProfileOccurrenceSourceKind::Frequency;
+    _inspectionRulesKind = ProfileInspectionRulesKind::TonalPulse;
+    _occurrenceInspector.configure(_inspectionConfig);
+    _occurrenceInspector.setInspectionRules(_inspectionRulesKind);
     _patternRules.configure(_patternRulesConfig);
     _profileName = "unknown";
     _resultQueue[0] = {};
@@ -23,28 +23,28 @@ void DetectionRuntime::reset() {
     _resultCount = 0;
     _latestPipelineResult = {};
     _hasLatestPipelineResult = false;
-    _lastSignalCandidate = {};
-    _lastInspectedSignal = {};
+    _lastOccurrence = {};
+    _lastInspectedOccurrence = {};
 }
 
 void DetectionRuntime::setFrequencyTuning(const FrequencyMatchEvaluation::Values& tuning) {
     _frequencyTuning = tuning;
 }
 
-void DetectionRuntime::setSignalEmitter(ProfileSignalEmitterKind kind) {
-    _signalEmitterKind = kind;
+void DetectionRuntime::setOccurrenceSource(ProfileOccurrenceSourceKind kind) {
+    _occurrenceSourceKind = kind;
     _frequencyEmitter.reset();
     _ampEmitter.reset();
 }
 
 void DetectionRuntime::setInspectionRules(ProfileInspectionRulesKind kind) {
     _inspectionRulesKind = kind;
-    _signalInspector.setInspectionRules(_inspectionRulesKind);
+    _occurrenceInspector.setInspectionRules(_inspectionRulesKind);
 }
 
 void DetectionRuntime::setInspectionConfig(const InspectionConfig& config) {
     _inspectionConfig = config;
-    _signalInspector.configure(_inspectionConfig);
+    _occurrenceInspector.configure(_inspectionConfig);
 }
 
 void DetectionRuntime::setPatternRulesConfig(const PatternRulesConfig& config) {
@@ -73,16 +73,16 @@ void DetectionRuntime::observeFrame(
     FeatureExtractor::observeFrame(frame, _featureHistory);
     FeatureExtractor::observeFrequencyEvidence(frequencyEvidence, nowMs, _featureHistory);
 
-    switch (_signalEmitterKind) {
-        case ProfileSignalEmitterKind::Frequency:
+    switch (_occurrenceSourceKind) {
+        case ProfileOccurrenceSourceKind::Frequency:
             _frequencyEmitter.observeFrame(frame, frequencyEvidence, _frequencyTuning);
             break;
-        case ProfileSignalEmitterKind::Amp:
+        case ProfileOccurrenceSourceKind::Amp:
             _ampEmitter.observeFrame(frame);
             break;
     }
 
-    drainSignalEmitters(nowMs);
+    drainOccurrenceSources(nowMs);
     drainPatternAssembler(nowMs);
 }
 
@@ -105,7 +105,7 @@ const DetectionPipelineResult& DetectionRuntime::latestPipelineResult() const {
     return _latestPipelineResult;
 }
 
-const FrequencySignalEmitter& DetectionRuntime::frequencyEmitter() const {
+const FrequencyOccurrenceSource& DetectionRuntime::frequencyEmitter() const {
     return _frequencyEmitter;
 }
 
@@ -117,27 +117,27 @@ const FeatureHistory& DetectionRuntime::featureHistory() const {
     return _featureHistory;
 }
 
-void DetectionRuntime::drainSignalEmitters(unsigned long nowMs) {
-    SignalCandidate candidate;
+void DetectionRuntime::drainOccurrenceSources(unsigned long nowMs) {
+    Occurrence candidate;
 
-    switch (_signalEmitterKind) {
-        case ProfileSignalEmitterKind::Frequency:
-            while (_frequencyEmitter.popSignalCandidate(candidate)) {
-                _fieldStateTracker.observeSignalCandidate(candidate, nowMs);
-                const InspectedSignal inspected = _signalInspector.inspectWithHistory(candidate, &_featureHistory);
-                _fieldStateTracker.observeInspectedSignal(inspected, nowMs);
-                _lastSignalCandidate = candidate;
-                _lastInspectedSignal = inspected;
+    switch (_occurrenceSourceKind) {
+        case ProfileOccurrenceSourceKind::Frequency:
+            while (_frequencyEmitter.popOccurrence(candidate)) {
+                _fieldStateTracker.observeOccurrence(candidate, nowMs);
+                const InspectedOccurrence inspected = _occurrenceInspector.inspectWithHistory(candidate, &_featureHistory);
+                _fieldStateTracker.observeInspectedOccurrence(inspected, nowMs);
+                _lastOccurrence = candidate;
+                _lastInspectedOccurrence = inspected;
                 _patternAssembler.acceptSignal(inspected);
             }
             break;
-        case ProfileSignalEmitterKind::Amp:
-            while (_ampEmitter.popSignalCandidate(candidate)) {
-                _fieldStateTracker.observeSignalCandidate(candidate, nowMs);
-                const InspectedSignal inspected = _signalInspector.inspectWithHistory(candidate, &_featureHistory);
-                _fieldStateTracker.observeInspectedSignal(inspected, nowMs);
-                _lastSignalCandidate = candidate;
-                _lastInspectedSignal = inspected;
+        case ProfileOccurrenceSourceKind::Amp:
+            while (_ampEmitter.popOccurrence(candidate)) {
+                _fieldStateTracker.observeOccurrence(candidate, nowMs);
+                const InspectedOccurrence inspected = _occurrenceInspector.inspectWithHistory(candidate, &_featureHistory);
+                _fieldStateTracker.observeInspectedOccurrence(inspected, nowMs);
+                _lastOccurrence = candidate;
+                _lastInspectedOccurrence = inspected;
                 _patternAssembler.acceptSignal(inspected);
             }
             break;
@@ -151,7 +151,7 @@ void DetectionRuntime::drainPatternAssembler(unsigned long nowMs) {
     while (_patternAssembler.popPatternCandidate(candidate)) {
         const PatternResult result = _patternRules.evaluate(candidate, nowMs);
         _fieldStateTracker.observePatternResult(result, nowMs);
-        capturePipelineResult(result, &_lastSignalCandidate, &_lastInspectedSignal, nowMs);
+        capturePipelineResult(result, &_lastOccurrence, &_lastInspectedOccurrence, nowMs);
         pushPatternResult(result);
     }
 }
@@ -169,20 +169,20 @@ bool DetectionRuntime::pushPatternResult(const PatternResult& result) {
 
 void DetectionRuntime::capturePipelineResult(
     const PatternResult& result,
-    const SignalCandidate* signal,
-    const InspectedSignal* inspectedSignal,
+    const Occurrence* occurrence,
+    const InspectedOccurrence* inspectedOccurrence,
     unsigned long nowMs
 ) {
     _latestPipelineResult = {};
     _latestPipelineResult.hasPattern = true;
     _latestPipelineResult.pattern = result;
-    _latestPipelineResult.hasSignal = signal != nullptr && signal->present;
-    if (_latestPipelineResult.hasSignal && signal != nullptr) {
-        _latestPipelineResult.signal = *signal;
+    _latestPipelineResult.hasOccurrence = occurrence != nullptr && occurrence->present;
+    if (_latestPipelineResult.hasOccurrence && occurrence != nullptr) {
+        _latestPipelineResult.occurrence = *occurrence;
     }
-    _latestPipelineResult.hasInspectedSignal = inspectedSignal != nullptr && inspectedSignal->signal.present;
-    if (_latestPipelineResult.hasInspectedSignal && inspectedSignal != nullptr) {
-        _latestPipelineResult.inspectedSignal = *inspectedSignal;
+    _latestPipelineResult.hasInspectedOccurrence = inspectedOccurrence != nullptr && inspectedOccurrence->occurrence.present;
+    if (_latestPipelineResult.hasInspectedOccurrence && inspectedOccurrence != nullptr) {
+        _latestPipelineResult.inspectedOccurrence = *inspectedOccurrence;
     }
     _latestPipelineResult.hasField = true;
     _latestPipelineResult.field = _fieldStateTracker.state();
@@ -192,3 +192,5 @@ void DetectionRuntime::capturePipelineResult(
 }
 
 } // namespace detection
+
+

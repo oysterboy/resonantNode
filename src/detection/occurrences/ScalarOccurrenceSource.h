@@ -1,15 +1,15 @@
-#pragma once
+﻿#pragma once
 
 #include <stdint.h>
 
 #include "../detectors/ScalarTransientDetector.h"
 #include "../../io/AudioSignal.h"
-#include "SignalCandidate.h"
+#include "Occurrence.h"
 
 namespace detection {
 
 /*
-ScalarSignalEmitter
+ScalarOccurrenceSource
 
 Owns the reusable scalar candidate lifecycle around ScalarTransientDetector.
 It keeps the generic open/peak/release bookkeeping shared by AMP and
@@ -18,7 +18,7 @@ value and fill the payload-specific evidence fields.
 
 Responsibilities:
 - track first seen, peak, and release-observed timing for one scalar stream
-- translate a closed scalar transient into a SignalCandidate payload
+- translate a closed scalar transient into a Occurrence payload
 - keep candidate lifecycle behavior aligned between AMP and frequency sources
 
 Does NOT:
@@ -27,9 +27,9 @@ Does NOT:
 - own Analyzer SEQ reporting
 - own source-specific evidence extraction
 */
-class ScalarSignalEmitter {
+class ScalarOccurrenceSource {
 public:
-    ScalarSignalEmitter();
+    ScalarOccurrenceSource();
 
     void reset();
     void begin();
@@ -67,9 +67,9 @@ public:
     float lastTransientRejectedStrength() const;
 
     bool consumeCandidate(const AudioSignalFrame& frame,
-                          SignalKind kind,
-                          SignalSource source,
-                          SignalCandidate& out);
+                          OccurrenceKind kind,
+                          OccurrenceSource source,
+                          Occurrence& out);
 
 private:
     void resetCandidateLifecycle();
@@ -94,3 +94,4 @@ private:
 };
 
 } // namespace detection
+

@@ -213,7 +213,7 @@ void NodeDebug::observeI2SSignal(unsigned long now, const AudioSignal& audioSign
         return;
     }
 
-    Serial.print("I2S signal t=");
+    Serial.print("I2S occurrence t=");
     Serial.print(now);
     Serial.print(" raw=");
     Serial.print(rawSignal);
@@ -306,7 +306,7 @@ void NodeDebug::printPlotValues(unsigned long now,
 
     _lastDebugPrintMs = now;
 
-    // Plot the raw signal levels so the serial plotter mirrors the actual
+    // Plot the raw occurrence levels so the serial plotter mirrors the actual
     // acoustic envelope instead of a heavily compressed display scale.
     const float centeredSignal = static_cast<float>(audioSignal.centeredSignal());
     const float signalMagnitude = static_cast<float>(audioSignal.signalMagnitude());

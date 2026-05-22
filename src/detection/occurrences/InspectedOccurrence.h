@@ -1,23 +1,23 @@
 #pragma once
 
 #include "../inspector/InspectorTypes.h"
-#include "SignalCandidate.h"
+#include "Occurrence.h"
 
 namespace detection {
 
 /*
-InspectedSignal
+InspectedOccurrence
 
-SignalCandidate plus SignalInspector decision and added evidence.
-Owns candidateAccepted and signal-stage rejection reason.
+Occurrence plus OccurrenceInspector decision and added evidence.
+Owns candidateAccepted and occurrence-stage rejection reason.
 */
-enum class SignalDecision {
+enum class OccurrenceDecision {
     None,
     Accepted,
     Rejected
 };
 
-enum class SignalRejectReason {
+enum class OccurrenceRejectReason {
     None,
     TooShort,
     TooLong,
@@ -32,14 +32,14 @@ enum class SignalRejectReason {
     Unknown
 };
 
-struct InspectedSignal {
-    SignalCandidate signal = {};
-    SignalDecision decision = SignalDecision::None;
+struct InspectedOccurrence {
+    Occurrence occurrence = {};
+    OccurrenceDecision decision = OccurrenceDecision::None;
 
     bool accepted = false;
     bool rejected = false;
 
-    SignalRejectReason rejectReason = SignalRejectReason::None;
+    OccurrenceRejectReason rejectReason = OccurrenceRejectReason::None;
     unsigned long durationMs = 0;
     float strength = 0.0f;
     float confidence = 0.0f;
@@ -52,3 +52,4 @@ struct InspectedSignal {
 };
 
 } // namespace detection
+

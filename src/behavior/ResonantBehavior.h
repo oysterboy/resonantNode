@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include <Arduino.h>
 
 #include "BehaviorProfile.h"
@@ -14,7 +14,7 @@ Consumes PatternResult and FieldState.
 Decides behaviorEligible, blocking reasons, idle timing, wait/refractory/self-suppression,
 and requested chirp pattern.
 
-Does not inspect SignalCandidates, FeatureStreams, or detector internals.
+Does not inspect Occurrences, FeatureStreams, or detector internals.
 Does not execute hardware output directly.
 */
 
@@ -189,3 +189,4 @@ private:
     unsigned long idleMinMs() const;
     unsigned long idleMaxMs() const;
 };
+

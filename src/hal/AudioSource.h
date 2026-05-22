@@ -7,7 +7,7 @@ AudioSource
 
 Owns the hardware-facing audio input contract.
 Provides raw and block sample access plus approximate sample timing.
-Does not perform signal detection or classification.
+Does not perform occurrence detection or classification.
 */
 struct AudioSourceStats {
     uint32_t reads = 0;

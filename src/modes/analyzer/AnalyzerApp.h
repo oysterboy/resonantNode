@@ -9,11 +9,11 @@
 #include "../../io/AudioSignal.h"
 #include "../../detection/DetectionRuntime.h"
 #include "../../detection/features/FrequencyMatchEvaluation.h"
-#include "../../detection/signals/InspectedSignal.h"
+#include "../../detection/occurrences/InspectedOccurrence.h"
 #include "../../detection/features/FreqBandStream.h"
 #include "../../detection/features/FeatureHistory.h"
 #include "../../detection/patterns/PatternResult.h"
-#include "../../detection/signals/SignalCandidate.h"
+#include "../../detection/occurrences/Occurrence.h"
 #include "../../hal/AudioSource.h"
 #include "../../RuntimeDefaults.h"
 #include "AnalyzerReporting.h"
@@ -233,7 +233,7 @@ private:
         bool quiet = false;
         bool showDetails = true;
         bool externalEmitter = false;
-        detection::DetectionProfileKind profileKind = detection::DetectionProfileKind::FreqAmp;
+        detection::DetectionProfileKind profileKind = detection::DetectionProfileKind::TonalPulse;
         bool progressLineStarted = false;
         unsigned long totalTrials = 100;
         unsigned long periodMs = 2500;
@@ -344,7 +344,7 @@ private:
         unsigned long sampleDumpTailMs = 0;
         unsigned long sampleDumpStepMs = 0;
         unsigned long sampleDumpMaxRows = 0;
-        detection::DetectionProfileKind profileKind = detection::DetectionProfileKind::FreqAmp;
+        detection::DetectionProfileKind profileKind = detection::DetectionProfileKind::TonalPulse;
         bool externalEmitter = false;
         char setupLabelStorage[96] = {};
     };
@@ -369,7 +369,7 @@ private:
     void printBaseHints() const;
 
     // Sequence-test workflows.
-    void startSequenceTest(unsigned long totalTrials, unsigned long periodMs, unsigned long windowEndOffsetMs, unsigned long toneHz, unsigned long durationMs, bool quiet = false, bool showDetails = true, const char* setupLabel = nullptr, uint32_t logFlags = DEFAULT_ANALYZER_LOG_FLAGS, bool sampleDumpEnabled = false, unsigned long sampleDumpFirstTrials = 2, unsigned long sampleDumpEveryNth = 0, unsigned long sampleDumpLeadMs = 50, unsigned long sampleDumpTailMs = 800, unsigned long sampleDumpStepMs = 1, unsigned long sampleDumpMaxRows = 5000, detection::DetectionProfileKind profileKind = detection::DetectionProfileKind::FreqAmp, bool externalEmitter = false);
+    void startSequenceTest(unsigned long totalTrials, unsigned long periodMs, unsigned long windowEndOffsetMs, unsigned long toneHz, unsigned long durationMs, bool quiet = false, bool showDetails = true, const char* setupLabel = nullptr, uint32_t logFlags = DEFAULT_ANALYZER_LOG_FLAGS, bool sampleDumpEnabled = false, unsigned long sampleDumpFirstTrials = 2, unsigned long sampleDumpEveryNth = 0, unsigned long sampleDumpLeadMs = 50, unsigned long sampleDumpTailMs = 800, unsigned long sampleDumpStepMs = 1, unsigned long sampleDumpMaxRows = 5000, detection::DetectionProfileKind profileKind = detection::DetectionProfileKind::TonalPulse, bool externalEmitter = false);
     void stopSequenceTest();
     void updateSequenceTest(unsigned long now);
     void finalizeSequenceTrial(unsigned long now);
@@ -382,7 +382,7 @@ private:
     void finalizeCaptureTrial(unsigned long now);
     void runRawTrigger(unsigned long toneHz, unsigned long durationMs, unsigned long postMs, unsigned long preMs, unsigned long decim, bool dumpChunks, bool dumpBinary);
     void printAudioSourceSummary() const;
-    void printSignalSummary() const;
+    void printOccurrenceSummary() const;
     void printCaptureHints() const;
     void printDetectionParameters() const;
     void printTransientAcceptedDebug(unsigned long now, float strength, unsigned long durationMs) const;
@@ -418,7 +418,7 @@ private:
     void printValueFrame(unsigned long now) const;
     void printValueModeBanner() const;
 
-    // Hardware and signal chain.
+    // Hardware and occurrence chain.
     int _inputPin;
     AudioSourceI2S _i2sSource;
     AudioSource& _audioSource;
@@ -457,3 +457,4 @@ private:
     mutable unsigned long _lastPrintMs = 0;
     static constexpr unsigned long kPrintIntervalMs = 100;
 };
+

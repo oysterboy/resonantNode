@@ -41,10 +41,10 @@ Stable flow:
 AudioSignal
 → FeatureExtractors
 → FeatureStreams / FeatureHistory
-→ SignalEmitters / SignalDetectors
-→ SignalCandidates
-→ SignalInspector
-→ InspectedSignals
+→ OccurrenceSources / OccurrenceDetectors
+→ OccurrenceCandidates
+→ OccurrenceInspector
+→ InspectedOccurrences
 → PatternAssembler
 → PatternCandidates
 → PatternRules
@@ -56,8 +56,8 @@ Parallel context path:
 
 ```text
 FeatureStreams
-+ SignalCandidates
-+ InspectedSignals
++ OccurrenceCandidates
++ InspectedOccurrences
 + PatternResults
 → FieldStateTracker
 → FieldState
@@ -67,9 +67,9 @@ FeatureStreams
 Stable rule:
 
 ```text
-Detector creates SignalCandidate.
+Detector creates OccurrenceCandidate.
 Inspector accepts/rejects and adds evidence.
-Assembler groups accepted inspected signals.
+Assembler groups accepted inspected Occurences.
 PatternRules decide pattern match / support match / validity.
 FieldState summarizes acoustic context.
 Behavior decides reaction eligibility.
@@ -81,12 +81,12 @@ Behavior decides reaction eligibility.
 
 ### `candidateAccepted`
 
-Owned by `SignalInspector`.
+Owned by `OccurrenceInspector`.
 
 Meaning:
 
 ```text
-The signal candidate is accepted as structurally usable at signal level.
+The occurrence candidate is accepted as structurally usable at occurrence level.
 ```
 
 It does not mean valid pattern, valid chirp, or behavior should react.
@@ -104,7 +104,7 @@ The pattern candidate matches the active profile’s pattern rules.
 Examples:
 
 ```text
-FreqAmpProfile:
+TonalPulseProfile:
 frequency / tonal transient pattern matched
 
 ChirpProfile:
@@ -130,7 +130,7 @@ Example:
 amp_support >= Medium
 ```
 
-For the current FreqAmp direction, prefer PatternRules ownership:
+For the current TonalPulse direction, prefer PatternRules ownership:
 
 ```text
 patternMatched=true
@@ -177,7 +177,7 @@ add dynamic registries
 keep compatibility aliases
 keep old and new fields side by side
 spread behavior eligibility into PatternRules
-move inspection evidence into FrequencyMatchDetector
+move inspection evidence into FrequencyOccurrenceSource
 ```
 
 Do:
@@ -211,7 +211,7 @@ struct DetectionProfile {
 Runtime application points are fixed:
 
 ```text
-SignalInspector applies InspectionConfig.
+OccurrenceInspector applies InspectionConfig.
 PatternRules applies PatternRulesConfig.
 Behavior applies BehaviorGateConfig.
 ```
@@ -230,7 +230,7 @@ This pass aligns the code with the stage model:
 
 ```text
 candidateAccepted
-→ produced by SignalInspector
+→ produced by OccurrenceInspector
 
 patternMatched
 → produced by PatternRules
@@ -261,50 +261,50 @@ behaviorEligible
 
 Make `DetectionRuntime` the real path and remove ambiguous legacy ownership.
 
-`FrequencyMatchDetector` stays signal-level only. It may own frequency lifecycle, match windows, score/contrast, release, and refractory behavior. It must not own AMP support, pattern meaning, or behavior decisions.
+`FrequencyOccurrenceSource` stays occurrence-level only. It may own frequency lifecycle, match windows, score/contrast, release, and refractory behavior. It must not own AMP support, pattern meaning, or behavior decisions.
 
-`AmpSignalEmitter` and `FrequencySignalEmitter` produce `SignalCandidates`; they are not mini-pipelines.
+`AmpOccurrenceSource` and `FrequencyOccurrenceSource` produce `OccurrenceCandidates`; they are not mini-pipelines.
 
 ## Items
 
 9. **Make `DetectionRuntime` the main Resonant detection path** — Route Resonant behavior through the roadmap runtime.
 10. **Reduce or isolate legacy AMP candidate handling** — Keep legacy AMP only as analyzer/reference or remove it once no longer needed.
-11. **Rename `FrequencyTransient` to `FrequencyMatch`** — Align naming with `FrequencyMatchDetector`.
-12. **Keep `FrequencyMatchDetector` contained at signal-detection level** — It owns frequency lifecycle only.
-13. **Clarify `AmpSignalEmitter` and `FrequencySignalEmitter` as emitters** — Emitters propose `SignalCandidates` only.
-14. **Keep `PatternAssembler` trivial but explicit** — One accepted signal may become one simple pattern candidate for now.
-15. **Remove duplicated signal-level validation from `PatternRules`** — Signal acceptance belongs in `SignalInspector`.
-16. **Clean Analyzer / debug logs around pipeline stages** — Make `SIGNAL → INSPECTED → PATTERN_CANDIDATE → PATTERN_RESULT` traceable.
+11. **Rename `FrequencyTransient` to `FrequencyMatch`** — Align naming with `FrequencyOccurrenceSource`.
+12. **Keep `FrequencyOccurrenceSource` contained at occurrence-detection level** — It owns frequency lifecycle only.
+13. **Clarify `AmpOccurrenceSource` and `FrequencyOccurrenceSource` as emitters** — Emitters propose `OccurrenceCandidates` only.
+14. **Keep `PatternAssembler` trivial but explicit** — One accepted occurrence may become one simple pattern candidate for now.
+15. **Remove duplicated occurrence-level validation from `PatternRules`** — Occurrence acceptance belongs in `OccurrenceInspector`.
+16. **Clean Analyzer / debug logs around pipeline stages** — Make `OCCURRENCE → INSPECTED → PATTERN_CANDIDATE → PATTERN_RESULT` traceable.
 
 ---
 
-# C. Signal layer completion
+# C. Occurrence layer completion
 
 ## Purpose
 
-Create a stable common signal layer for all signal sources.
+Create a stable common occurrence layer for all occurrence sources.
 
-A `SignalCandidate` means:
+A `OccurrenceCandidate` means:
 
 ```text
-Something signal-like may have happened.
+Something occurrence-like may have happened.
 ```
 
-An `InspectedSignal` means:
+An `InspectedOccurrence` means:
 
 ```text
-This candidate has been accepted/rejected/annotated at signal level.
+This candidate has been accepted/rejected/annotated at occurrence level.
 ```
 
 ## Items
 
-17. **Stabilize `SignalCandidate` structure** — Define common low-level candidate shape.
-18. **Stabilize `InspectedSignal` structure** — Define accepted/rejected/annotated signal output.
-19. **Add signal acceptance / rejection reasons** — Make signal-stage failures explainable.
-20. **Add duration / strength / confidence fields** — Store comparable facts across signal sources.
+17. **Stabilize `OccurrenceCandidate` structure** — Define common low-level candidate shape.
+18. **Stabilize `InspectedOccurrence` structure** — Define accepted/rejected/annotated occurrence output.
+19. **Add occurrence acceptance / rejection reasons** — Make occurrence-stage failures explainable.
+20. **Add duration / strength / confidence fields** — Store comparable facts across occurrence sources.
 21. **Add duplicate-risk annotation** — Mark likely duplicate/tail candidates at inspection.
 22. **Add source tags and detector provenance consistently** — Preserve source, kind, and detector origin.
-23. **Support multiple `SignalDetector` implementations under one signal layer** — Allow `TransientDetector`, `FrequencyMatchDetector`, and later detector types.
+23. **Support multiple `OccurrenceDetector` implementations under one occurrence layer** — Allow `TransientDetector`, `FrequencyOccurrenceSource`, and later detector types.
 
 ---
 
@@ -317,10 +317,10 @@ Keep frequency-first detection, but qualify it with secondary AMP window evidenc
 Current architecture:
 
 ```text
-FrequencyMatchDetector
-→ SignalCandidate
+FrequencyOccurrenceSource
+→ OccurrenceCandidate
 
-SignalInspector
+OccurrenceInspector
 → AMP feature window
 → amp_support = strong / medium / weak / none / unknown
 
@@ -340,12 +340,12 @@ Do not map AMP support to near/mid/far.
 
 ## Items
 
-24. **Add AMP support inspection for frequency-first candidates** — Secondary AMP evidence belongs in SignalInspector.
+24. **Add AMP support inspection for frequency-first candidates** — Secondary AMP evidence belongs in OccurrenceInspector.
 25. **Use `AmpSupportClass` directly** — Classify AMP support as `unknown`, `none`, `weak`, `medium`, or `strong`.
 26. **Remove `LocalityClass` from the active architecture** — No near/mid/far mapping.
 27. **Separate frequency match confidence from AMP support** — Keep identity and support distinct.
 28. **Let `PatternRules` interpret `AmpSupportClass` directly** — PatternRules may use support as a validity gate.
-29. **Keep frequency lifecycle inside `FrequencyMatchDetector`** — Preserve match/release/refractory behavior there.
+29. **Keep frequency lifecycle inside `FrequencyOccurrenceSource`** — Preserve match/release/refractory behavior there.
 30. **Keep frequency evidence evaluation separate from frequency detection** — Use evaluator/inspector logic for additional facts.
 31. **Make `AmpSupportConfig` visible in profile startup logs** — Analyzer/debug must show active thresholds/basis.
 
@@ -377,7 +377,7 @@ candidate
 
 ## Items
 
-32. **Generalize `SignalInspector`** — Shared signal inspection stage.
+32. **Generalize `OccurrenceInspector`** — Shared occurrence inspection stage.
 33. **Use simple inspection helpers / rules** — Fixed fields, no dynamic rule registry.
 34. **Introduce shared window evaluators** — Share peak/mean/support/tail/contrast calculations.
 35. **Use `ScalarWindow` from `FeatureHistory` as preferred path** — Prefer stored feature history over snapshots.
@@ -391,17 +391,17 @@ candidate
 
 ## Purpose
 
-Separate signal facts from pattern meaning.
+Separate occurrence facts from pattern meaning.
 
 ```text
-InspectedSignal
+InspectedOccurrence
 → PatternAssembler
 → PatternCandidate
 → PatternRules
 → PatternResult
 ```
 
-A `PatternCandidate` is one possible grouping of accepted inspected signals.
+A `PatternCandidate` is one possible grouping of accepted inspected Occurences.
 
 A `PatternResult` is the first meaning-bearing detection output.
 
@@ -419,12 +419,12 @@ reason
 39. **Stabilize `PatternCandidate` as its own structure** — Make pattern candidates independent of legacy aliases.
 40. **Stabilize `PatternResult` as meaning-bearing output** — Behavior consumes this, not lower-level objects.
 41. **Keep `PatternRules` as the only pattern interpretation layer** — Pattern meaning belongs here.
-42. **Add single-signal pulse pattern assembly** — Formalize current trivial assembler behavior.
+42. **Add single-occurrence pulse pattern assembly** — Formalize current trivial assembler behavior.
 43. **Add `patternMatched` to PatternResult / pattern evaluation output** — Main pattern-rule result.
 44. **Add `supportMatched` to PatternResult only if used as gate** — Secondary evidence gate result.
 45. **Add explicit residual / rejected reasons** — e.g. `amp_support_too_low`, `missing_amp_support`, `wrong_timing`.
-46. **Add multi-signal chirp / burst pattern assembly** — Group inspected signals into temporal patterns.
-47. **Allow one `InspectedSignal` to belong to multiple `PatternCandidates`** — Support overlapping interpretations.
+46. **Add multi-occurrence chirp / burst pattern assembly** — Group inspected Occurences into temporal patterns.
+47. **Allow one `InspectedOccurrence` to belong to multiple `PatternCandidates`** — Support overlapping interpretations.
 48. **Add pulse-count / timing validation** — Evaluate pulse sequences and chirp timing.
 49. **Add residual / invalid / too-dense pattern handling** — Represent non-valid pattern outcomes clearly.
 
@@ -469,7 +469,7 @@ PatternRules must not use FieldState to classify patterns.
 
 ## Purpose
 
-Make measured signal facts reusable over time.
+Make measured occurrence facts reusable over time.
 
 Feature streams are measured values, not detectors and not meanings:
 
@@ -484,7 +484,7 @@ ambient/activity estimates
 ## Items
 
 58. **Stabilize `FeatureExtractor`** — Define how raw audio becomes feature streams.
-59. **Stabilize `FeatureStream`** — Define reusable signal facts over time.
+59. **Stabilize `FeatureStream`** — Define reusable occurrence facts over time.
 60. **Stabilize `FeatureHistory`** — Store recent feature-stream values for inspection.
 61. **Support AMP feature history for AMP support inspection** — Make retrospective inspection practical.
 62. **Support frequency evidence needed by current profiles** — Keep Goertzel / FrequencyMatch data available cleanly.
@@ -504,7 +504,7 @@ A profile chooses:
 
 ```text
 feature extractors
-signal emitters / detectors
+occurrence sources / detectors
 inspection config
 pattern assembler
 pattern rules config
@@ -519,9 +519,9 @@ A factory/configurer wires it into runtime.
 ## Items
 
 66. **Introduce code-defined detection profile factories** — Compose profiles in code, not external config.
-67. **Let profiles select emitters and detectors** — Profile chooses signal sources and detector types.
-68. **Let profiles select `InspectionConfig`** — Profile chooses signal evidence checks and gates.
-69. **Let profiles select `PatternAssembler`** — Profile chooses one-signal or multi-signal grouping.
+67. **Let profiles select emitters and detectors** — Profile chooses occurrence sources and detector types.
+68. **Let profiles select `InspectionConfig`** — Profile chooses occurrence evidence checks and gates.
+69. **Let profiles select `PatternAssembler`** — Profile chooses one-occurrence or multi-occurrence grouping.
 70. **Let profiles select `PatternRulesConfig`** — Profile chooses pattern interpretation and validity gates.
 71. **Let profiles select `FieldStateConfig`** — Profile chooses acoustic context summaries.
 72. **Let profiles select `BehaviorGateConfig`** — Profile chooses behavior-side gates.
@@ -543,18 +543,18 @@ Do not implement white-noise, woodblock, chime, object-hit, etc. yet.
 Proof profiles:
 
 ```text
-FreqAmpProfile
+TonalPulseProfile
 AmpStateProfile
 ChirpProfile
 ```
 
 ## Items
 
-77. **Define `FreqAmpProfile`** — FrequencyMatch primary + AMP support inspection.
-78. **For `FreqAmpProfile`, prefer support gate in PatternRules** — `amp_support >= Medium` can be required for valid local tonal pattern.
+77. **Define `TonalPulseProfile`** — FrequencyMatch primary + AMP support inspection.
+78. **For `TonalPulseProfile`, prefer support gate in PatternRules** — `amp_support >= Medium` can be required for valid local tonal pattern.
 79. **Define `AmpStateProfile`** — AMP transient detection with FieldState-driven behavior.
 80. **For `AmpStateProfile`, keep detection broader** — Behavior + FieldState decides response.
-81. **Define `ChirpProfile` as first real pattern profile** — Multi-signal pulse grouping through PatternAssembler.
+81. **Define `ChirpProfile` as first real pattern profile** — Multi-occurrence pulse grouping through PatternAssembler.
 82. **For `ChirpProfile`, hard-gate timing/count in PatternRules** — Behavior reacts only to valid chirp PatternResults.
 83. **Verify profile switching in code** — Active profile can be selected without changing detection internals.
 84. **Park white-noise / woodblock / object-like chains** — Keep as future ideas, not current targets.
@@ -589,7 +589,7 @@ Detection owns pattern validity and meaning.
 ## Items
 
 85. **Ensure Behavior consumes only `PatternResult + FieldState`** — Keep behavior input clean.
-86. **Remove direct behavior access to signal candidates** — No behavior decisions from raw signal candidates.
+86. **Remove direct behavior access to occurrence candidates** — No behavior decisions from raw occurrence candidates.
 87. **Remove direct behavior access to feature streams** — Feature facts must pass through detection/field-state layers.
 88. **Keep response probability / suppression / waiting in Behavior** — Behavior owns reaction strategy.
 89. **Keep pattern meaning in `PatternRules`** — PatternRules decide what was detected.
@@ -646,24 +646,24 @@ profile proof scope
 
 ## Items
 
-101. **Update Detection Roadmap overview** — Reflect current signal-vs-pattern pipeline and clean gate model.
+101. **Update Detection Roadmap overview** — Reflect current occurrence-vs-pattern pipeline and clean gate model.
 102. **Update Architecture Spec detection section** — Align spec with implemented names and boundaries.
-103. **Document stable naming set** — FeatureExtractor, SignalEmitter, SignalDetector, SignalInspector, PatternAssembler, PatternRules, FieldState, DetectionProfile.
+103. **Document stable naming set** — FeatureExtractor, OccurrenceSource, OccurrenceDetector, OccurrenceInspector, PatternAssembler, PatternRules, FieldState, DetectionProfile.
 104. **Document gate vocabulary** — `candidateAccepted`, `patternMatched`, `supportMatched`, `behaviorEligible`.
-105. **Document signal-vs-pattern split** — SignalCandidate → InspectedSignal → PatternCandidate → PatternResult.
-106. **Document `FrequencyMatchDetector` boundary** — Frequency lifecycle only; no AMP support or behavior.
-107. **Document AMP support inspection** — SignalInspector adds `amp_support`.
+105. **Document occurrence-vs-pattern split** — OccurrenceCandidate → InspectedOccurrence → PatternCandidate → PatternResult.
+106. **Document `FrequencyOccurrenceSource` boundary** — Frequency lifecycle only; no AMP support or behavior.
+107. **Document AMP support inspection** — OccurrenceInspector adds `amp_support`.
 108. **Document FeatureHistory / ScalarWindow usage** — Retrospective window inspection and RawWindow fallback.
 109. **Document FieldState boundary** — Acoustic context, not pattern meaning.
 110. **Document PatternAssembler role** — Grouping, not judging.
 111. **Document PatternRules role** — Pattern matching, support gates, validity.
 112. **Document behavior input boundary** — Behavior consumes PatternResult + FieldState.
-113. **Document current proof profiles** — FreqAmp, AmpState, Chirp.
+113. **Document current proof profiles** — TonalPulse, AmpState, Chirp.
 114. **Document parked future profiles** — WhiteNoiseRoom, WoodBlock, object-like detection remain future.
 115. **Document legacy AMP status** — Active, isolated, archived, or removed.
 116. **Add implementation-status table** — Mark sections done/partial/open based on code state.
 117. **Add file/module map** — Map roadmap concepts to actual source files.
-118. **Add logging guide** — Expected SIGNAL / INSPECTED / PATTERN / FIELD / BEHAVIOR logs.
+118. **Add logging guide** — Expected Occurence / INSPECTED / PATTERN / FIELD / BEHAVIOR logs.
 119. **Add testing / smoke-check guide** — Quick checks for frequency-first, amp support, FieldState, profile switching.
 120. **Freeze docs before further profile expansion** — Use as reference before adding new detection chains.
 
@@ -689,7 +689,7 @@ profile proof scope
    - `PatternRulesConfig`
    - `BehaviorGateConfig`
 
-4. For `FreqAmpProfile`:
+4. For `TonalPulseProfile`:
    - Inspector annotates `amp_support`.
    - PatternRules sets `patternMatched`.
    - PatternRules sets `supportMatched`.

@@ -3,15 +3,15 @@
 #include <stddef.h>
 
 #include "../io/AudioSignal.h"
-#include "signals/AmpSignalEmitter.h"
-#include "signals/FrequencySignalEmitter.h"
-#include "inspector/SignalInspector.h"
+#include "occurrences/AmpOccurrenceSource.h"
+#include "occurrences/FrequencyOccurrenceSource.h"
+#include "inspector/OccurrenceInspector.h"
 #include "inspector/InspectorTypes.h"
 #include "patterns/PatternAssembler.h"
 #include "patterns/PatternRules.h"
 #include "patterns/PatternResult.h"
-#include "signals/SignalCandidate.h"
-#include "signals/InspectedSignal.h"
+#include "occurrences/Occurrence.h"
+#include "occurrences/InspectedOccurrence.h"
 #include "field/FieldStateTracker.h"
 #include "field/FieldState.h"
 #include "features/FeatureExtractor.h"
@@ -24,7 +24,7 @@ namespace detection {
 DetectionRuntime
 
 Owns the active detection pipeline wiring:
-feature observation, signal emission, signal inspection, pattern assembly,
+feature observation, occurrence emission, occurrence inspection, pattern assembly,
 pattern rules, field-state tracking, and PatternResult queueing.
 
 Consumes AudioSignalFrame and FrequencyEvidence.
@@ -35,11 +35,11 @@ struct DetectionPipelineResult {
     bool hasPattern = false;
     PatternResult pattern = {};
 
-    bool hasSignal = false;
-    SignalCandidate signal = {};
+    bool hasOccurrence = false;
+    Occurrence occurrence = {};
 
-    bool hasInspectedSignal = false;
-    InspectedSignal inspectedSignal = {};
+    bool hasInspectedOccurrence = false;
+    InspectedOccurrence inspectedOccurrence = {};
 
     bool hasField = false;
     FieldState field = {};
@@ -55,7 +55,7 @@ public:
     void reset();
 
     void setFrequencyTuning(const FrequencyMatchEvaluation::Values& tuning);
-    void setSignalEmitter(ProfileSignalEmitterKind kind);
+    void setOccurrenceSource(ProfileOccurrenceSourceKind kind);
     void setInspectionRules(ProfileInspectionRulesKind kind);
     void setInspectionConfig(const InspectionConfig& config);
     void setPatternRulesConfig(const PatternRulesConfig& config);
@@ -71,7 +71,7 @@ public:
     bool popPatternResult(PatternResult& out);
     bool hasLatestPipelineResult() const;
     const DetectionPipelineResult& latestPipelineResult() const;
-    const FrequencySignalEmitter& frequencyEmitter() const;
+    const FrequencyOccurrenceSource& frequencyEmitter() const;
     const FieldState& fieldState() const;
     const FeatureHistory& featureHistory() const;
 
@@ -79,27 +79,27 @@ private:
     static constexpr size_t kResultQueueCapacity = 8;
 
     // Pipeline stages in execution order.
-    void drainSignalEmitters(unsigned long nowMs);
+    void drainOccurrenceSources(unsigned long nowMs);
     void drainPatternAssembler(unsigned long nowMs);
     bool pushPatternResult(const PatternResult& result);
     void capturePipelineResult(
         const PatternResult& result,
-        const SignalCandidate* signal,
-        const InspectedSignal* inspectedSignal,
+        const Occurrence* occurrence,
+        const InspectedOccurrence* inspectedOccurrence,
         unsigned long nowMs
     );
 
     FrequencyMatchEvaluation::Values _frequencyTuning = {};
     // Profile configuration applied at fixed runtime stages.
-    ProfileSignalEmitterKind _signalEmitterKind = ProfileSignalEmitterKind::Frequency;
-    ProfileInspectionRulesKind _inspectionRulesKind = ProfileInspectionRulesKind::FreqAmp;
+    ProfileOccurrenceSourceKind _occurrenceSourceKind = ProfileOccurrenceSourceKind::Frequency;
+    ProfileInspectionRulesKind _inspectionRulesKind = ProfileInspectionRulesKind::TonalPulse;
     InspectionConfig _inspectionConfig = defaultInspectionConfig();
     PatternRulesConfig _patternRulesConfig = {};
     const char* _profileName = "unknown";
 
-    AmpSignalEmitter _ampEmitter;
-    FrequencySignalEmitter _frequencyEmitter;
-    SignalInspector _signalInspector;
+    AmpOccurrenceSource _ampEmitter;
+    FrequencyOccurrenceSource _frequencyEmitter;
+    OccurrenceInspector _occurrenceInspector;
     PatternAssembler _patternAssembler;
     PatternRules _patternRules;
     FieldStateTracker _fieldStateTracker;
@@ -111,8 +111,10 @@ private:
 
     DetectionPipelineResult _latestPipelineResult = {};
     bool _hasLatestPipelineResult = false;
-    SignalCandidate _lastSignalCandidate = {};
-    InspectedSignal _lastInspectedSignal = {};
+    Occurrence _lastOccurrence = {};
+    InspectedOccurrence _lastInspectedOccurrence = {};
 };
 
 } // namespace detection
+
+

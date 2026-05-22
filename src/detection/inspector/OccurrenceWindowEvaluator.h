@@ -1,11 +1,11 @@
 #pragma once
 
 #include "InspectorTypes.h"
-#include "../signals/InspectedSignal.h"
+#include "../occurrences/InspectedOccurrence.h"
 
 namespace detection {
 
-struct SignalWindowStats {
+struct OccurrenceWindowStats {
     unsigned long durationMs = 0;
     float strength = 0.0f;
     float signalConfidence = 0.0f;
@@ -17,8 +17,8 @@ struct SignalWindowStats {
     bool hasFrequency = false;
 };
 
-inline SignalWindowStats evaluateSignalWindow(const SignalCandidate& candidate) {
-    SignalWindowStats out = {};
+inline OccurrenceWindowStats evaluateSignalWindow(const Occurrence& candidate) {
+    OccurrenceWindowStats out = {};
     out.durationMs = candidate.durationMs;
     out.strength = candidate.strength;
     out.signalConfidence = candidate.signalConfidence;
@@ -31,7 +31,7 @@ inline SignalWindowStats evaluateSignalWindow(const SignalCandidate& candidate) 
     return out;
 }
 
-inline AmpSupportLevel classifyAmpSupport(const SignalWindowStats& stats) {
+inline AmpSupportLevel classifyAmpSupport(const OccurrenceWindowStats& stats) {
     if (!stats.hasAmp) {
         return AmpSupportLevel::Unknown;
     }
@@ -53,3 +53,4 @@ inline AmpSupportLevel classifyAmpSupport(const SignalWindowStats& stats) {
 }
 
 } // namespace detection
+

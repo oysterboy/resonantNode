@@ -1,4 +1,4 @@
-#include "FrequencyMatchDetector.h"
+﻿#include "FrequencyMatchDetector.h"
 
 #include <string.h>
 
@@ -71,9 +71,9 @@ void FrequencyMatchDetector::update(const detection::FrequencyEvidence& evidence
 
     present = evidence.present;
     frequencyCandidate.present = evidence.present;
-    frequencyCandidate.kind = detection::SignalKind::FrequencyMatch;
-    frequencyCandidate.source = detection::SignalSource::Frequency;
-    frequencyCandidate.detectorKind = detection::SignalDetectorKind::FrequencyMatch;
+    frequencyCandidate.kind = detection::OccurrenceKind::FrequencyMatch;
+    frequencyCandidate.source = detection::OccurrenceSource::Frequency;
+    frequencyCandidate.detectorKind = detection::OccurrenceDetectorKind::FrequencyMatch;
 
     if (evidence.present) {
         if (!firstThresholdCrossingSeen && liveFreqEval.matched) {
@@ -217,3 +217,4 @@ live_freq_update_best:
     strncpy(wouldCandidateReason, wouldCandidate, sizeof(wouldCandidateReason) - 1);
     wouldCandidateReason[sizeof(wouldCandidateReason) - 1] = '\0';
 }
+

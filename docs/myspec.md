@@ -86,7 +86,7 @@ ResonantNode:
 
 ## 4. Architectural Principle
 
-ResonantNode separates **capability**, **signal**, **meaning**, and **behavior**.
+ResonantNode separates **capability**, **signal/detection**, **meaning**, and **behavior**.
 
 ```text
 Resources describe what the node can sense or do.
@@ -203,9 +203,9 @@ The following modules are specific to the acoustic Resonanzraum application.
 
 ```text
 AudioSignal
-SignalCandidate
-SignalInspector
-InspectedSignal
+OccurrenceCandidate
+OccurrenceInspector
+InspectedOccurrence
 PatternCandidate
 PatternRules
 Detectors
@@ -213,7 +213,7 @@ Inspector
 DetectionRuntime
 ScalarTransientDetector
 AmpTransientDetector
-FrequencyMatchDetector
+FrequencyOccurrenceSource
 FreqBandStream
 FrequencyWindowProbe
 FieldStateTracker
@@ -237,8 +237,8 @@ SoundInput
 AudioSignal
 RawSampleHistory
 DetectionRuntime
-SignalEmitters
-SignalInspector
+OccurrenceSources
+OccurrenceInspector
 PatternAssembler
 PatternRules
 FieldStateTracker
@@ -290,8 +290,8 @@ SoundInput
 AudioSignal
 RawSampleHistory
 DetectionRuntime
-SignalEmitters
-SignalInspector
+OccurrenceSources
+OccurrenceInspector
 PatternAssembler
 PatternRules
 FieldStateTracker
@@ -308,7 +308,7 @@ Pattern profiles select and compose implementation-specific modules:
 ```text
 evidence extractors
 candidate sources
-signal inspectors
+occurrence inspectors
 pattern assemblers
 pattern rules
 thresholds
@@ -392,8 +392,8 @@ It connects:
 SoundInput
 → AudioSignal
 → Feature Evidence
-→ SignalCandidates
-→ InspectedSignals
+→ OccurrenceCandidates
+→ InspectedOccurrences
 → PatternCandidates
 → PatternResults
 → ResonantBehavior
@@ -426,8 +426,8 @@ The stable audio detection contract is:
 ```text
 AudioSignal
 → Feature Evidence
-→ SignalCandidate
-→ InspectedSignal
+→ OccurrenceCandidate
+→ InspectedOccurrence
 → PatternCandidate
 → PatternResult
 → Behavior
@@ -440,7 +440,7 @@ Important distinction:
 ```text
 The scaffold is the detection / pattern architecture.
 
-Transient detection, frequency detection, signal inspection, pattern assembly, and pattern rules are first concrete implementations inside that scaffold.
+Transient detection, frequency detection, occurrence inspection, pattern assembly, and pattern rules are first concrete implementations inside that scaffold.
 They are not the scaffold itself.
 ```
 
@@ -459,10 +459,10 @@ The landed runtime flow is:
 
 ```text
 FeatureStreams
-→ SignalEmitters / CandidateSources
-→ SignalCandidates
-→ SignalInspector
-→ InspectedSignals
+→ OccurrenceSources / CandidateSources
+→ OccurrenceCandidates
+→ OccurrenceInspector
+→ InspectedOccurrences
 → PatternAssembler
 → PatternCandidates
 → PatternRules
@@ -473,8 +473,8 @@ FeatureStreams
 `FieldStateTracker` observes the detection flow in parallel:
 
 ```text
-SignalCandidates
-+ InspectedSignals
+OccurrenceCandidates
++ InspectedOccurrences
 + PatternResults
 → FieldStateTracker
 → FieldState
@@ -503,20 +503,20 @@ spectral contrast
 target-band evidence
 ```
 
-`SignalEmitter` / `CandidateSource`
+`OccurrenceSource` / `CandidateSource`
 
 Connects one feature stream or evidence source to candidate emission.
 
-It produces `SignalCandidate` objects.
+It produces `OccurrenceCandidate` objects.
 
 Examples:
 
 ```text
-AmpSignalEmitter
-FrequencySignalEmitter
+AmpOccurrenceSource
+FrequencyOccurrenceSource
 ```
 
-`SignalCandidate`
+`OccurrenceCandidate`
 
 A low-level candidate emitted by one evidence path.
 
@@ -529,11 +529,11 @@ FrequencyTransient
 
 It carries source identity, timing, strength/score, and attached evidence.
 
-`SignalInspector`
+`OccurrenceInspector`
 
-Accepts or rejects `SignalCandidate`s before pattern assembly.
+Accepts or rejects `OccurrenceCandidate`s before pattern assembly.
 
-It performs signal-level validation, not pattern-level meaning.
+It performs occurrence-level validation, not pattern-level meaning.
 
 Examples:
 
@@ -544,25 +544,25 @@ reject weak frequency score / contrast
 accept usable amp transient
 ```
 
-`InspectedSignal`
+`InspectedOccurrence`
 
-A signal candidate plus the inspection decision.
+A occurrence candidate plus the inspection decision.
 
-It is the handoff object between signal-level detection and pattern assembly.
+It is the handoff object between occurrence-level detection and pattern assembly.
 
 `PatternAssembler`
 
-Turns accepted `InspectedSignal`s into `PatternCandidate`s.
+Turns accepted `InspectedOccurrence`s into `PatternCandidate`s.
 
-Current implementation is simple and mostly one-signal-to-one-pattern-candidate.
+Current implementation is simple and mostly one-occurrence-to-one-pattern-candidate.
 
-Later implementations may group several inspected signals.
+Later implementations may group several inspected Occurences.
 
 `PatternRules`
 
 Interprets `PatternCandidate`s and emits `PatternResult`s.
 
-Pattern rules are applied after signal inspection and candidate assembly.
+Pattern rules are applied after occurrence inspection and candidate assembly.
 
 Low-level detectors do not apply pattern rules.
 
@@ -579,9 +579,9 @@ It is the current composition layer for the detection path.
 It wires together:
 
 ```text
-AmpSignalEmitter
-FrequencySignalEmitter
-SignalInspector
+AmpOccurrenceSource
+FrequencyOccurrenceSource
+OccurrenceInspector
 PatternAssembler
 PatternRules
 FieldStateTracker
@@ -597,7 +597,7 @@ A future `DetectionStrategy` may select:
 ```text
 enabled feature streams
 candidate sources
-signal inspection rules
+occurrence inspection rules
 candidate enrichment rules
 active PatternRules
 emitted PatternResult vocabulary
@@ -607,8 +607,8 @@ field-state interpretation
 The stable rule remains:
 
 ```text
-low-level detectors and signal emitters do not apply PatternRules.
-PatternRules belong after SignalInspector and PatternAssembler.
+low-level detectors and occurrence sources do not apply PatternRules.
+PatternRules belong after OccurrenceInspector and PatternAssembler.
 ```
 
 ### Detector Layer Status
@@ -637,7 +637,7 @@ It computes rolling frequency score, target power, neighbor power, total energy,
 
 It does not own behavior, pattern meaning, or candidate assembly.
 
-`FrequencyMatchDetector`
+`FrequencyOccurrenceSource`
 
 Frequency-specific lifecycle detector used by the current frequency candidate path.
 
@@ -778,10 +778,10 @@ General chain:
 
 ```text
 AudioSignal
-→ Feature Detectors / SignalEmitters
-→ Feature Evidence / SignalCandidates
-→ SignalInspector
-→ InspectedSignals
+→ Feature Detectors / OccurrenceSources
+→ Feature Evidence / OccurrenceCandidates
+→ OccurrenceInspector
+→ InspectedOccurrences
 → PatternAssembler
 → PatternCandidates
 → PatternRules / Pattern Detector(s)
@@ -801,13 +801,13 @@ Feature Evidence
 
 The current implementation includes AMP and frequency candidate sources inside this scaffold.
 
-AMP/transient detection, frequency matching, signal inspection, and pattern rules are concrete implementations inside the scaffold.
+AMP/transient detection, frequency matching, occurrence inspection, and pattern rules are concrete implementations inside the scaffold.
 
 Neither path should become structurally privileged just because it is implemented first.
 
 ---
 
-#### 7.3.1 FeatureStreams and SignalEmitters
+#### 7.3.1 FeatureStreams and OccurrenceSources
 
 A `FeatureStream` is a time-varying measurement derived from the audio signal.
 
@@ -822,26 +822,26 @@ broadband energy
 activity estimate
 ```
 
-A `SignalEmitter` or `CandidateSource` connects one feature stream or evidence source to candidate emission.
+A `OccurrenceSource` or `CandidateSource` connects one feature stream or evidence source to candidate emission.
 
-It produces `SignalCandidate` objects.
+It produces `OccurrenceCandidate` objects.
 
 Examples:
 
 ```text
-AmpSignalEmitter
-FrequencySignalEmitter
+AmpOccurrenceSource
+FrequencyOccurrenceSource
 ```
 
-Signal emitters do not decide pattern meaning.
+Occurrence sources do not decide pattern meaning.
 
-They only turn feature-stream activity or source-specific detector output into source-tagged signal candidates.
+They only turn feature-stream activity or source-specific detector output into source-tagged occurrence candidates.
 
 ---
 
-#### 7.3.2 SignalCandidates and Signal Inspection
+#### 7.3.2 OccurrenceCandidates and Occurrence Inspection
 
-A `SignalCandidate` is a low-level candidate emitted by one evidence path.
+A `OccurrenceCandidate` is a low-level candidate emitted by one evidence path.
 
 Examples:
 
@@ -850,7 +850,7 @@ AmpTransient
 FrequencyTransient
 ```
 
-A `SignalCandidate` may contain:
+A `OccurrenceCandidate` may contain:
 
 ```text
 candidateId
@@ -869,9 +869,9 @@ rejection facts
 overflow flag
 ```
 
-`SignalInspector` accepts or rejects `SignalCandidate`s before pattern assembly.
+`OccurrenceInspector` accepts or rejects `OccurrenceCandidate`s before pattern assembly.
 
-It performs signal-level validation, not pattern-level meaning.
+It performs occurrence-level validation, not pattern-level meaning.
 
 Examples:
 
@@ -882,26 +882,26 @@ reject weak frequency score / contrast
 accept usable amp transient
 ```
 
-`InspectedSignal` is the handoff object between signal-level detection and pattern assembly.
+`InspectedOccurrence` is the handoff object between occurrence-level detection and pattern assembly.
 
-It contains the original signal candidate plus the inspection decision and inspection facts.
+It contains the original occurrence candidate plus the inspection decision and inspection facts.
 
 ---
 
 #### 7.3.3 Pattern Assembly and PatternRules
 
-`PatternAssembler` turns accepted `InspectedSignal`s into `PatternCandidate`s.
+`PatternAssembler` turns accepted `InspectedOccurrence`s into `PatternCandidate`s.
 
-Current implementation is simple and mostly one-signal-to-one-pattern-candidate.
+Current implementation is simple and mostly one-occurrence-to-one-pattern-candidate.
 
-Later implementations may group several inspected signals.
+Later implementations may group several inspected occurencess.
 
 A `PatternCandidate` is the classifier-facing object used for pattern interpretation.
 
 It may include:
 
 ```text
-source signal(s)
+source occurence(s)
 start time
 end time
 duration
@@ -913,14 +913,14 @@ validity / rejection facts
 
 `PatternRules` interpret `PatternCandidate`s and emit `PatternResult`s.
 
-Pattern rules are applied only after signal inspection and pattern assembly.
+Pattern rules are applied only after occurrence inspection and pattern assembly.
 
-Low-level detectors and signal emitters do not apply `PatternRules`.
+Low-level detectors and occurrence sources do not apply `PatternRules`.
 
 ```text
-SignalCandidate
-→ SignalInspector
-→ InspectedSignal
+OccurrenceCandidate
+→ OccurrenceInspector
+→ InspectedOccurrence
 → PatternAssembler
 → PatternCandidate
 → PatternRules
@@ -1026,7 +1026,7 @@ It is a firmware-owned ring buffer used for retrospective, candidate-aligned fea
 
 AudioSignal should own this history directly or through a small helper owned by AudioSignal.
 
-That keeps the buffer close to the shared signal layer while keeping it separate from hardware transport and detector-specific math.
+That keeps the buffer close to the shared occurrence layer while keeping it separate from hardware transport and detector-specific math.
 
 Purpose:
 
@@ -1110,18 +1110,18 @@ Examples:
 ```text
 AmpEnvelopeStream
 -> ScalarTransientDetector
--> AmpTransient SignalCandidate
+-> AmpTransient OccurrenceCandidate
 ```
 
 ```text
 FrequencyBandStream / TargetBandEnvelope
--> ScalarTransientDetector or source-specific FrequencyMatchDetector
--> FrequencyTransient SignalCandidate
+-> ScalarTransientDetector or source-specific FrequencyOccurrenceSource
+-> FrequencyTransient OccurrenceCandidate
 ```
 
 This means detector mechanics can be chained differently depending on the input stream.
 
-The produced signal candidate must carry its source:
+The produced occurrence candidate must carry its source:
 
 ```text
 candidate.source = AMP
@@ -1131,7 +1131,7 @@ candidate.source = BROADBAND
 
 The detector should not decide pattern meaning.
 
-It only turns a scalar stream or source-specific evidence path into a signal candidate.
+It only turns a scalar stream or source-specific evidence path into a occurrence candidate.
 
 Pattern meaning belongs to `PatternRules`, after inspection and assembly.
 
@@ -1195,7 +1195,7 @@ The detection / pattern layer may evaluate one pattern candidate through one or 
 General model:
 
 ```text
-InspectedSignal(s)
+InspectedOccurrence(s)
 → PatternAssembler
 → PatternCandidate
 → PatternRule(s)
@@ -1234,7 +1234,7 @@ if no valid result:
 
 The resolver is optional in the current implementation.
 
-It is an architectural placeholder and should not become complex before signal inspection, pattern assembly, and current pattern rules are stable.
+It is an architectural placeholder and should not become complex before occurrence inspection, pattern assembly, and current pattern rules are stable.
 
 ---
 
@@ -1265,7 +1265,7 @@ enabledPatterns = CHIRP + TONE
 enabledPatterns = DEBUG_ALL
 ```
 
-Configuration should select which feature streams, signal emitters, inspection rules, pattern assemblers, and pattern rules are active.
+Configuration should select which feature streams, occurrence sources, inspection rules, pattern assemblers, and pattern rules are active.
 
 Configuration should not change the behavior contract.
 
@@ -1275,28 +1275,24 @@ Behavior should still consume `PatternResult`.
 
 #### 7.3.8 Current Implementation Boundary
 
-The current implementation has two candidate-producing evidence paths:
+The current implementation has one candidate-producing evidence paths:
 
 ```text
-AMP path:
-    AudioSignal / frame level
-    -> AmpSignalEmitter
-    -> ScalarSignalEmitter / ScalarTransientDetector mechanics
-    -> AmpTransient SignalCandidate
+
 
 Frequency path:
     frequency evidence stream
-    -> FrequencySignalEmitter
-    -> FrequencyMatchDetector
-    -> FrequencyTransient SignalCandidate
+    -> FrequencyOccurrenceSource
+    -> FrequencyOccurrenceSource
+    -> FrequencyTransient OccurrenceCandidate
 ```
 
-Accepted signal candidates are inspected and assembled:
+Accepted occurrence candidates are inspected and assembled:
 
 ```text
-SignalCandidate
--> SignalInspector
--> InspectedSignal
+OccurrenceCandidate
+-> OccurrenceInspector
+-> InspectedOccurrence
 -> PatternAssembler
 -> PatternCandidate
 -> PatternRules
@@ -1325,7 +1321,7 @@ AMP / transient candidate
 
 This remains useful for diagnostics and comparison.
 
-Frequency-first detection is a landed signal path.
+Frequency-first detection is a landed occurrence path.
 Profile-level composition and any future grouping refinement remain separate roadmap work.
 
 Candidate correlation and pulsed chirp grouping belong to the roadmap, not the active contract.
@@ -1337,14 +1333,14 @@ For the current tonal-click / short-beep problem, the implementation is a mixed 
 ```text
 AMP path:
     amplitude / level evidence
-    -> AmpSignalEmitter
-    -> AmpTransient SignalCandidate
+    -> AmpOccurrenceSource
+    -> AmpTransient OccurrenceCandidate
 
 Frequency path:
     frequency evidence stream
-    -> FrequencySignalEmitter
-    -> FrequencyMatchDetector
-    -> FrequencyTransient SignalCandidate
+    -> FrequencyOccurrenceSource
+    -> FrequencyOccurrenceSource
+    -> FrequencyTransient OccurrenceCandidate
 
 Retrospective frequency feature path:
     AMP / transient candidate
@@ -1563,12 +1559,12 @@ Stable:
 
 ```text
 Detection is not a single fixed pipeline.
-The landed flow uses SignalCandidates, InspectedSignals, PatternCandidates, PatternRules, and PatternResults.
+The landed flow uses OccurrenceCandidates, InspectedOccurrences, PatternCandidates, PatternRules, and PatternResults.
 Behavior consumes PatternResult.
 Multiple evidence paths and pattern detectors must remain possible.
 Streams and candidate/window features must not be conflated.
 Low-level detectors do not apply PatternRules.
-PatternRules belong after signal inspection and pattern assembly.
+PatternRules belong after occurrence inspection and pattern assembly.
 FieldState is separate acoustic context.
 ```
 
@@ -1576,9 +1572,9 @@ Current:
 
 ```text
 DetectionRuntime wires the current detection path.
-AmpSignalEmitter and FrequencySignalEmitter are active candidate sources.
+AmpOccurrenceSource and FrequencyOccurrenceSource are active candidate sources.
 ScalarTransientDetector is the reusable scalar transient core.
-FrequencyMatchDetector preserves source-specific frequency lifecycle behavior.
+FrequencyOccurrenceSource preserves source-specific frequency lifecycle behavior.
 FrequencyWindowProbe provides raw-history candidate-window frequency evidence.
 PatternRules produce generic valid / rejected / invalid pattern outcomes.
 FieldStateTracker provides simple acoustic context.
@@ -1782,8 +1778,8 @@ FieldState:
 The current `FieldStateTracker` observes:
 
 ```text
-SignalCandidate
-InspectedSignal
+OccurrenceCandidate
+InspectedOccurrence
 PatternResult
 ```
 
@@ -1795,14 +1791,14 @@ Current fields include:
 activity
 density
 noiseFloor
-recentSignalCount
-recentAcceptedSignalCount
+recentOccurenceCount
+recentAcceptedOccurenceCount
 recentPatternCount
 quiet
 active
 dense
-lastSignalMs
-lastInspectedSignalMs
+lastOccurenceMs
+lastInspectedOccurrenceMs
 lastPatternMs
 ```
 
@@ -2309,7 +2305,7 @@ AnalyzerReport
 RunContext
 ExpectedEvent
 PatternObservation
-SignalObservation
+SignalObservation (maybe)
 InspectionObservation
 FieldObservation
 AnalyzerClassification
@@ -2660,28 +2656,28 @@ The current detection stack uses a stable naming set:
 FeatureExtractor
 FeatureStream
 FeatureHistory
-SignalEmitter
-SignalInspector
+OccurrenceSource
+OccurrenceInspector
 PatternAssembler
 PatternRules
 FieldState
 DetectionProfile
 ```
 
-### 30.1 Signal vs Pattern Split
+### 30.1 Occurrence vs Pattern Split
 
 Detection moves through a clear meaning chain:
 
 ```text
-SignalCandidate -> InspectedSignal -> PatternCandidate -> PatternResult
+OccurrenceCandidate -> InspectedOccurrence -> PatternCandidate -> PatternResult
 ```
 
-The signal layer records measured evidence.
+The occurrence layer records measured evidence.
 The pattern layer interprets that evidence into pattern meaning.
 
-### 30.2 FrequencyMatchDetector Boundary
+### 30.2 FrequencyOccurrenceSource Boundary
 
-`FrequencyMatchDetector` owns only the frequency candidate lifecycle.
+`FrequencyOccurrenceSource` owns only the frequency occurrence lifecycle.
 
 It does not own:
 
@@ -2692,11 +2688,11 @@ It does not own:
 
 ### 30.3 AMP Support Inspection
 
-`SignalInspector` may add AMP support and other profile-specific inspection evidence during inspection.
+`OccurrenceInspector` may add AMP support and other profile-specific inspection evidence during inspection.
 
 It may use retrospective feature history or raw-window fallback when available.
 
-Later profile-specific inspectors may reuse lower-level feature evaluators, but the steady-state `FreqAmp` path stays AMP-side only in the inspector.
+Later profile-specific inspectors may reuse lower-level feature evaluators, but the steady-state `TonalPulse` path stays AMP-side only in the inspector.
 
 `DetectionProfile` is the composition shell for the active runtime profile.
 
@@ -2704,7 +2700,7 @@ The current profile shell is intentionally small:
 
 ```text
 kind
-signalEmitter
+OccurenceEmitter
 inspectionRules
 patternRules
 patternRulesConfig
@@ -2717,14 +2713,14 @@ The profile shell should describe what the runtime applies, not duplicate select
 Fixed apply points:
 
 ```text
-DetectionRuntime     <- signalEmitter selection
-SignalInspector      <- inspectionRules + InspectionConfig
+DetectionRuntime     <- occurrenceSource selection
+OccurrenceInspector  <- inspectionRules + InspectionConfig
 PatternRules         <- PatternRulesConfig
 Behavior             <- BehaviorGateConfig
 FieldStateTracker    <- FieldStateConfig
 ```
 
-`signalEmitter` chooses the active emitter family.
+`occurrenceSource` chooses the active occurrence source family.
 `inspectionRules` chooses the inspection strategy and windowing rule.
 `patternRules` chooses the final pattern policy.
 `patternRulesConfig.requireSupportForAcceptance` controls whether support is required for acceptance.
@@ -2750,15 +2746,15 @@ It summarizes quiet, busy, density, chatter, and recent activity conditions.
 
 ### 30.6 PatternAssembler Role
 
-`PatternAssembler` groups inspected signals into pattern candidates.
+`PatternAssembler` groups inspected occurrences into pattern candidates.
 
-It currently supports simple one-signal assembly and can later grow into multi-signal chirp grouping.
+It currently supports simple one-occurrence assembly and can later grow into multi-occurrence chirp grouping.
 
 ### 30.7 PatternRules Role
 
 `PatternRules` interprets `PatternCandidate` into `PatternResult`.
 
-It does not inspect raw signals directly.
+It does not inspect raw occurrences directly.
 
 ### 30.8 Behavior Input Boundary
 
@@ -2770,8 +2766,8 @@ PatternResult + FieldState
 
 Behavior does not consume:
 
-- `SignalCandidate`
-- `InspectedSignal`
+- `OccurrenceCandidate`
+- `InspectedOccurrence`
 - `FeatureStream`
 - detector internals
 
@@ -2780,7 +2776,7 @@ Behavior does not consume:
 The current proof profiles are:
 
 ```text
-FreqAmpProfile
+TonalPulseProfile
 AmpStateProfile
 ChirpProfile
 ```
@@ -2793,7 +2789,7 @@ Current modern concepts map to these source areas:
 
 ```text
 Feature history, streams, and reusable evidence helpers -> src/detection/features/*
-Signal emission and candidate sources -> src/detection/signals/*
+Occurrence emission and candidate sources -> src/detection/occurrences/*
 Detectors -> src/detection/detectors/*
 Inspection and probe helpers -> src/detection/inspector/*
 Pattern payloads and interpretation -> src/detection/patterns/*

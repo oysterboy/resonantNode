@@ -1,6 +1,6 @@
 #pragma once
 
-#include "SignalCandidate.h"
+#include "Occurrence.h"
 #include "../features/FrequencyMatchEvaluation.h"
 #include "../../io/AudioSignal.h"
 #include "../detectors/FrequencyMatchDetector.h"
@@ -8,16 +8,16 @@
 namespace detection {
 
 /*
-FrequencySignalEmitter
+FrequencyOccurrenceSource
 
-Owns the frequency-match signal candidate path.
+Owns the frequency-match occurrence candidate path.
 Wraps FrequencyMatchDetector to produce frequency candidates from AudioSignalFrame
 and FrequencyEvidence input.
 Does not decide pattern meaning or behavior.
 */
-class FrequencySignalEmitter {
+class FrequencyOccurrenceSource {
 public:
-    FrequencySignalEmitter();
+    FrequencyOccurrenceSource();
 
     void reset();
 
@@ -27,7 +27,7 @@ public:
         const FrequencyMatchEvaluation::Values& frequencyTuning
     );
 
-    bool popSignalCandidate(SignalCandidate& out);
+    bool popOccurrence(Occurrence& out);
     const FrequencyMatchDetector& detector() const;
 
 private:
@@ -36,8 +36,9 @@ private:
     bool _hasPending = false;
     detection::FrequencyEvidence _peakEvidence = {};
     FrequencyMatchDetector _detector = {};
-    SignalCandidate _pending = {};
+    Occurrence _pending = {};
     unsigned long _lastEmittedReleaseMs = 0;
 };
 
 } // namespace detection
+

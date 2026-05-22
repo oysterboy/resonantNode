@@ -6,19 +6,19 @@ namespace {
 using PatternCandidate = detection::PatternCandidate;
 using PatternCandidateKind = detection::PatternCandidateKind;
 
-PatternCandidate makePatternCandidateFromSignal(const detection::InspectedSignal& signal) {
+PatternCandidate makePatternCandidateFromSignal(const detection::InspectedOccurrence& occurrence) {
     PatternCandidate candidate = {};
     candidate.transient = {};
 
-    const detection::SignalCandidate& source = signal.signal;
+    const detection::Occurrence& source = occurrence.occurrence;
     candidate.kind = PatternCandidateKind::SinglePulse;
     candidate.lineageId = static_cast<uint32_t>(source.startSample & 0xFFFFFFFFu);
     candidate.primarySlotIndex = 0;
-    candidate.signalCount = 1;
+    candidate.occurrenceCount = 1;
     candidate.pulseCount = 1;
-    candidate.signalSlotCount = 1;
+    candidate.occurrenceSlotCount = 1;
     switch (source.kind) {
-        case detection::SignalKind::FrequencyMatch:
+        case detection::OccurrenceKind::FrequencyMatch:
             candidate.onsetSample = source.startSample;
             candidate.peakSample = source.peakSample;
             candidate.releaseSample = source.releaseSample;
@@ -38,23 +38,23 @@ PatternCandidate makePatternCandidateFromSignal(const detection::InspectedSignal
             candidate.duplicateRiskScore = source.duplicateRiskScore;
             candidate.firstPulseMs = candidate.acceptedMs;
             candidate.lastPulseMs = candidate.acceptedMs;
-            candidate.signalSlots[0].kindTag = static_cast<uint8_t>(source.kind);
-            candidate.signalSlots[0].sourceTag = static_cast<uint8_t>(source.source);
-            candidate.signalSlots[0].onsetSample = source.startSample;
-            candidate.signalSlots[0].peakSample = source.peakSample;
-            candidate.signalSlots[0].releaseSample = source.releaseSample;
-            candidate.signalSlots[0].startMs = source.startMs;
-            candidate.signalSlots[0].peakMs = source.peakMs;
-            candidate.signalSlots[0].releaseMs = source.releaseMs;
-            candidate.signalSlots[0].strength = source.score;
-            candidate.signalSlots[0].confidence = source.frequencyConfidence;
+            candidate.occurrenceSlots[0].kindTag = static_cast<uint8_t>(source.kind);
+            candidate.occurrenceSlots[0].sourceTag = static_cast<uint8_t>(source.source);
+            candidate.occurrenceSlots[0].onsetSample = source.startSample;
+            candidate.occurrenceSlots[0].peakSample = source.peakSample;
+            candidate.occurrenceSlots[0].releaseSample = source.releaseSample;
+            candidate.occurrenceSlots[0].startMs = source.startMs;
+            candidate.occurrenceSlots[0].peakMs = source.peakMs;
+            candidate.occurrenceSlots[0].releaseMs = source.releaseMs;
+            candidate.occurrenceSlots[0].strength = source.score;
+            candidate.occurrenceSlots[0].confidence = source.frequencyConfidence;
             // Frequency score/contrast are mapped into the candidate strength fields used by reporting.
             candidate.frequency = source.frequency;
             candidate.frequencyFull = source.frequency;
             candidate.transient.present = false;
             break;
 
-        case detection::SignalKind::AmpTransient:
+        case detection::OccurrenceKind::AmpTransient:
             candidate.onsetSample = source.startSample;
             candidate.peakSample = source.peakSample;
             candidate.releaseSample = source.releaseSample;
@@ -74,22 +74,22 @@ PatternCandidate makePatternCandidateFromSignal(const detection::InspectedSignal
             candidate.duplicateRiskScore = source.duplicateRiskScore;
             candidate.firstPulseMs = candidate.acceptedMs;
             candidate.lastPulseMs = candidate.acceptedMs;
-            candidate.signalSlots[0].kindTag = static_cast<uint8_t>(source.kind);
-            candidate.signalSlots[0].sourceTag = static_cast<uint8_t>(source.source);
-            candidate.signalSlots[0].onsetSample = source.startSample;
-            candidate.signalSlots[0].peakSample = source.peakSample;
-            candidate.signalSlots[0].releaseSample = source.releaseSample;
-            candidate.signalSlots[0].startMs = source.startMs;
-            candidate.signalSlots[0].peakMs = source.peakMs;
-            candidate.signalSlots[0].releaseMs = source.releaseMs;
-            candidate.signalSlots[0].strength = source.strength;
-            candidate.signalSlots[0].confidence = source.signalConfidence;
+            candidate.occurrenceSlots[0].kindTag = static_cast<uint8_t>(source.kind);
+            candidate.occurrenceSlots[0].sourceTag = static_cast<uint8_t>(source.source);
+            candidate.occurrenceSlots[0].onsetSample = source.startSample;
+            candidate.occurrenceSlots[0].peakSample = source.peakSample;
+            candidate.occurrenceSlots[0].releaseSample = source.releaseSample;
+            candidate.occurrenceSlots[0].startMs = source.startMs;
+            candidate.occurrenceSlots[0].peakMs = source.peakMs;
+            candidate.occurrenceSlots[0].releaseMs = source.releaseMs;
+            candidate.occurrenceSlots[0].strength = source.strength;
+            candidate.occurrenceSlots[0].confidence = source.signalConfidence;
             candidate.transient = source.transient;
             candidate.frequency = source.frequency;
             candidate.frequencyFull = source.frequency;
             break;
 
-        case detection::SignalKind::None:
+        case detection::OccurrenceKind::None:
         default:
             candidate.kind = PatternCandidateKind::Unknown;
             break;
@@ -106,32 +106,32 @@ void PatternAssembler::reset() {
     _readIndex = 0;
     _count = 0;
     _recentSignalReadIndex = 0;
-    _recentSignalCount = 0;
+    _recentOccurrenceCount = 0;
 }
 
-void PatternAssembler::acceptSignal(const InspectedSignal& signal) {
-    acceptSignals(&signal, 1);
+void PatternAssembler::acceptSignal(const InspectedOccurrence& occurrence) {
+    acceptSignals(&occurrence, 1);
 }
 
-size_t PatternAssembler::acceptSignals(const InspectedSignal* signals, size_t count) {
+size_t PatternAssembler::acceptSignals(const InspectedOccurrence* signals, size_t count) {
     if (signals == nullptr || count == 0) {
         return 0;
     }
 
     size_t accepted = 0;
     for (size_t i = 0; i < count; ++i) {
-        const InspectedSignal& signal = signals[i];
-        pushRecentSignal(signal);
+        const InspectedOccurrence& occurrence = signals[i];
+        pushRecentSignal(occurrence);
 
-        if (!signal.accepted || !signal.signal.present) {
+        if (!occurrence.accepted || !occurrence.occurrence.present) {
             continue;
         }
 
-        switch (signal.signal.kind) {
-            case SignalKind::AmpTransient:
-            case SignalKind::FrequencyMatch:
-                if (signal.signal.valid) {
-                    const PatternCandidate candidate = makePatternCandidateFromSignal(signal);
+        switch (occurrence.occurrence.kind) {
+            case OccurrenceKind::AmpTransient:
+            case OccurrenceKind::FrequencyMatch:
+                if (occurrence.occurrence.valid) {
+                    const PatternCandidate candidate = makePatternCandidateFromSignal(occurrence);
                     if (candidate.transient.present || candidate.frequency.present || candidate.durationMs > 0 || candidate.peakStrength != 0.0f || candidate.onsetStrength != 0.0f) {
                         if (pushPatternCandidate(candidate)) {
                             ++accepted;
@@ -141,7 +141,7 @@ size_t PatternAssembler::acceptSignals(const InspectedSignal* signals, size_t co
                 }
                 break;
 
-            case SignalKind::None:
+            case OccurrenceKind::None:
             default:
                 // Unsupported kinds are ignored in this pass.
                 break;
@@ -151,12 +151,12 @@ size_t PatternAssembler::acceptSignals(const InspectedSignal* signals, size_t co
     return accepted;
 }
 
-size_t PatternAssembler::assemble(const InspectedSignal* signals, size_t signalCount, PatternCandidate* out, size_t maxOut) {
-    if (signals == nullptr || signalCount == 0 || out == nullptr || maxOut == 0) {
+size_t PatternAssembler::assemble(const InspectedOccurrence* signals, size_t occurrenceCount, PatternCandidate* out, size_t maxOut) {
+    if (signals == nullptr || occurrenceCount == 0 || out == nullptr || maxOut == 0) {
         return 0;
     }
 
-    const size_t accepted = acceptSignals(signals, signalCount);
+    const size_t accepted = acceptSignals(signals, occurrenceCount);
     size_t written = 0;
     while (written < maxOut && popPatternCandidate(out[written])) {
         ++written;
@@ -189,11 +189,11 @@ size_t PatternAssembler::popPatternCandidates(PatternCandidate* out, size_t maxO
     return written;
 }
 
-void PatternAssembler::pushRecentSignal(const InspectedSignal& signal) {
-    const size_t writeIndex = (_recentSignalReadIndex + _recentSignalCount) % kRecentSignalCapacity;
-    _recentSignals[writeIndex] = signal;
-    if (_recentSignalCount < kRecentSignalCapacity) {
-        ++_recentSignalCount;
+void PatternAssembler::pushRecentSignal(const InspectedOccurrence& occurrence) {
+    const size_t writeIndex = (_recentSignalReadIndex + _recentOccurrenceCount) % kRecentSignalCapacity;
+    _recentSignals[writeIndex] = occurrence;
+    if (_recentOccurrenceCount < kRecentSignalCapacity) {
+        ++_recentOccurrenceCount;
     } else {
         _recentSignalReadIndex = (_recentSignalReadIndex + 1) % kRecentSignalCapacity;
     }
@@ -211,3 +211,4 @@ bool PatternAssembler::pushPatternCandidate(const PatternCandidate& candidate) {
 }
 
 } // namespace detection
+

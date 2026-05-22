@@ -15,7 +15,7 @@ class AmpDiagnosticProbe;
 NodeDebug
 
 Formats debug and status output for the normal Resonant node runtime.
-Observes snapshots from signal, detection diagnostics, behavior, and output.
+Observes snapshots from occurrence, detection diagnostics, behavior, and output.
 Does not make runtime decisions.
 */
 class NodeDebug {
@@ -94,7 +94,7 @@ private:
     unsigned long _debugChirpVisibleUntilMs = 0;
     const unsigned long _debugChirpEventHoldMs = 150;
 
-    // I2S signal stats.
+    // I2S occurrence stats.
     unsigned long _lastI2SSignalLogMs = 0;
     int _i2sSignalMin = 0;
     int _i2sSignalMax = 0;

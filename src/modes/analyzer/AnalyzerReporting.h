@@ -30,8 +30,8 @@ enum class AnalyzerReason {
     ValidPatternBeforeWindow,
     ValidPatternAfterWindow,
     MissingPipelineResult,
-    NoSignalCandidate,
-    SignalSeenButRejected,
+    NoOccurrence,
+    OccurrenceSeenButRejected,
     InspectionFailed,
     PatternCandidateRejected,
     MultipleValidPatterns,
@@ -83,10 +83,10 @@ inline const char* analyzerReasonName(AnalyzerReason value) {
             return "valid_pattern_after_window";
         case AnalyzerReason::MissingPipelineResult:
             return "missing_pipeline_result";
-        case AnalyzerReason::NoSignalCandidate:
-            return "no_signal_candidate";
-        case AnalyzerReason::SignalSeenButRejected:
-            return "signal_seen_but_rejected";
+        case AnalyzerReason::NoOccurrence:
+            return "no_occurrence_candidate";
+        case AnalyzerReason::OccurrenceSeenButRejected:
+            return "occurrence_seen_but_rejected";
         case AnalyzerReason::InspectionFailed:
             return "inspection_failed";
         case AnalyzerReason::PatternCandidateRejected:
@@ -142,12 +142,12 @@ struct AnalyzerPatternObservation {
     const char* reason = "none";
     const char* rejectReason = "none";
 
-    unsigned int involvedSignals = 0;
+    unsigned int involvedOccurrences = 0;
 };
 
 // Keep Analyzer-specific for now; later shared AudioReporting may reuse the
 // snapshot-style observation vocabulary without pulling in classification logic.
-struct AnalyzerSignalObservation {
+struct AnalyzerOccurrenceObservation {
     unsigned int total = 0;
     unsigned int accepted = 0;
     unsigned int rejected = 0;
@@ -227,7 +227,7 @@ struct AnalyzerProfileDetail {
 };
 
 struct AnalyzerDebugSummary {
-    unsigned int signals = 0;
+    unsigned int occurrences = 0;
     unsigned int inspected = 0;
     unsigned int patterns = 0;
 
@@ -278,7 +278,7 @@ struct AnalyzerReport {
     AnalyzerExpectedEvent expected;
 
     AnalyzerPatternObservation primaryPattern;
-    AnalyzerSignalObservation signals;
+    AnalyzerOccurrenceObservation occurrences;
     AnalyzerInspectionObservation inspection;
     AnalyzerFieldObservation field;
 
@@ -290,3 +290,4 @@ struct AnalyzerReport {
 inline AnalyzerReport makeEmptyAnalyzerReport() {
     return AnalyzerReport{};
 }
+

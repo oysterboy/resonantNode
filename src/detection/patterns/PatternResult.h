@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include "PatternTypes.h"
 #include "PatternCandidate.h"
@@ -30,7 +30,7 @@ struct PatternResult {
 
     // Provenance and timing summary.
     unsigned long processedAtMs = 0;
-    uint8_t signalCount = 0;
+    uint8_t occurrenceCount = 0;
     uint8_t pulseCount = 0;
     unsigned long firstPulseMs = 0;
     unsigned long lastPulseMs = 0;
@@ -48,3 +48,4 @@ struct PatternResult {
 };
 
 } // namespace detection
+

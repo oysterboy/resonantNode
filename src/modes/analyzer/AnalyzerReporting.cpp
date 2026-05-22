@@ -8,9 +8,9 @@ const char* analyzerProfileDetailNamespace(detection::DetectionProfileKind profi
     switch (profileKind) {
         case detection::DetectionProfileKind::Chirp:
             return "chirp";
-        case detection::DetectionProfileKind::FreqAmp:
+        case detection::DetectionProfileKind::TonalPulse:
         default:
-            return "freq_amp";
+            return "tonal_pulse";
     }
 }
 
@@ -18,51 +18,51 @@ const char* analyzerProfileDetailSummary(detection::DetectionProfileKind profile
     switch (profileKind) {
         case detection::DetectionProfileKind::Chirp:
             return "chirp profile view";
-        case detection::DetectionProfileKind::FreqAmp:
+        case detection::DetectionProfileKind::TonalPulse:
         default:
-            return "generic freq-amp profile view";
+            return "generic tonal pulse profile view";
     }
 }
 
-const char* signalSourceName(detection::SignalSource source) {
+const char* occurrenceSourceName(detection::OccurrenceSource source) {
     switch (source) {
-        case detection::SignalSource::Amp:
+        case detection::OccurrenceSource::Amp:
             return "amp";
-        case detection::SignalSource::Frequency:
+        case detection::OccurrenceSource::Frequency:
             return "frequency";
-        case detection::SignalSource::Broadband:
+        case detection::OccurrenceSource::Broadband:
             return "broadband";
-        case detection::SignalSource::None:
+        case detection::OccurrenceSource::None:
         default:
             return "none";
     }
 }
 
-const char* signalRejectReasonName(detection::SignalRejectReason reason) {
+const char* occurrenceRejectReasonName(detection::OccurrenceRejectReason reason) {
     switch (reason) {
-        case detection::SignalRejectReason::None:
+        case detection::OccurrenceRejectReason::None:
             return "none";
-        case detection::SignalRejectReason::TooShort:
+        case detection::OccurrenceRejectReason::TooShort:
             return "too_short";
-        case detection::SignalRejectReason::TooLong:
+        case detection::OccurrenceRejectReason::TooLong:
             return "too_long";
-        case detection::SignalRejectReason::TooWeak:
+        case detection::OccurrenceRejectReason::TooWeak:
             return "too_weak";
-        case detection::SignalRejectReason::BelowThreshold:
+        case detection::OccurrenceRejectReason::BelowThreshold:
             return "below_threshold";
-        case detection::SignalRejectReason::DuplicateRisk:
+        case detection::OccurrenceRejectReason::DuplicateRisk:
             return "duplicate_risk";
-        case detection::SignalRejectReason::Cooldown:
+        case detection::OccurrenceRejectReason::Cooldown:
             return "cooldown";
-        case detection::SignalRejectReason::MissingFrequencyEvidence:
+        case detection::OccurrenceRejectReason::MissingFrequencyEvidence:
             return "missing_frequency_evidence";
-        case detection::SignalRejectReason::MissingAmpSupport:
+        case detection::OccurrenceRejectReason::MissingAmpSupport:
             return "missing_amp_support";
-        case detection::SignalRejectReason::InvalidTiming:
+        case detection::OccurrenceRejectReason::InvalidTiming:
             return "invalid_timing";
-        case detection::SignalRejectReason::UnsupportedKind:
+        case detection::OccurrenceRejectReason::UnsupportedKind:
             return "unsupported_kind";
-        case detection::SignalRejectReason::Unknown:
+        case detection::OccurrenceRejectReason::Unknown:
         default:
             return "unknown";
     }
@@ -172,7 +172,7 @@ void AnalyzerApp::printSequenceTrialResult(const AnalyzerReport& report) const {
     Serial.print(" dup=");
     Serial.print(report.debug.duplicates);
     Serial.print(" candidates=");
-    Serial.print(report.signals.total);
+    Serial.print(report.occurrences.total);
     Serial.println();
 }
 
@@ -305,26 +305,26 @@ void AnalyzerApp::printSequenceExplain(const AnalyzerReport& report) const {
         printUnsignedMs(report.expected.triggerMs);
         Serial.println();
 
-        Serial.print("SEQ_EXPLAIN_SIGNAL total=");
-        Serial.print(report.signals.total);
+        Serial.print("SEQ_EXPLAIN_OCCURRENCE total=");
+        Serial.print(report.occurrences.total);
         Serial.print(" accepted=");
-        Serial.print(report.signals.accepted);
+        Serial.print(report.occurrences.accepted);
         Serial.print(" rejected=");
-        Serial.print(report.signals.rejected);
+        Serial.print(report.occurrences.rejected);
         Serial.print(" primary_source=");
-        Serial.print(report.signals.primarySource != nullptr ? report.signals.primarySource : "none");
+        Serial.print(report.occurrences.primarySource != nullptr ? report.occurrences.primarySource : "none");
         Serial.print(" primary_dt=");
-        printMs(report.signals.primaryDtMs);
+        printMs(report.occurrences.primaryDtMs);
         Serial.print(" primary_dur=");
-        printUnsignedMs(report.signals.primaryDurationMs);
+        printUnsignedMs(report.occurrences.primaryDurationMs);
         Serial.print(" primary_strength=");
-        Serial.print(report.signals.primaryStrength, 1);
+        Serial.print(report.occurrences.primaryStrength, 1);
         Serial.print(" confidence=");
-        Serial.print(report.signals.primaryConfidence, 2);
+        Serial.print(report.occurrences.primaryConfidence, 2);
         Serial.print(" main_reject=");
-        Serial.print(report.signals.mainRejectReason != nullptr ? report.signals.mainRejectReason : "none");
+        Serial.print(report.occurrences.mainRejectReason != nullptr ? report.occurrences.mainRejectReason : "none");
         Serial.print(" duplicate_risk=");
-        Serial.print(report.signals.duplicateRisk ? 1 : 0);
+        Serial.print(report.occurrences.duplicateRisk ? 1 : 0);
         Serial.println();
 
         Serial.print("SEQ_EXPLAIN_INSPECTION inspected=");
@@ -357,8 +357,8 @@ void AnalyzerApp::printSequenceExplain(const AnalyzerReport& report) const {
         Serial.print(report.primaryPattern.reason != nullptr ? report.primaryPattern.reason : "none");
         Serial.print(" reject_reason=");
         Serial.print(report.primaryPattern.rejectReason != nullptr ? report.primaryPattern.rejectReason : "none");
-        Serial.print(" signals=");
-        Serial.print(report.primaryPattern.involvedSignals);
+        Serial.print(" occurrences=");
+        Serial.print(report.primaryPattern.involvedOccurrences);
         Serial.println();
 
         Serial.print("SEQ_EXPLAIN_PROFILE_DETAIL ns=");
@@ -388,14 +388,14 @@ void AnalyzerApp::printSequenceExplain(const AnalyzerReport& report) const {
         Serial.print("SEQ_EXPLAIN_DUPLICATES count=");
         Serial.print(report.debug.duplicates);
         Serial.print(" duplicate_risk=");
-        Serial.print(report.signals.duplicateRisk ? 1 : 0);
+        Serial.print(report.occurrences.duplicateRisk ? 1 : 0);
         Serial.println();
     }
 
     printSequenceAmpWindow(report);
 
     Serial.print("SEQ_EXPLAIN_DEBUG raw_candidates=");
-    Serial.print(report.debug.signals);
+    Serial.print(report.debug.occurrences);
     Serial.print(" inspected_candidates=");
     Serial.print(report.debug.inspected);
     Serial.print(" accepted_patterns=");
@@ -465,74 +465,74 @@ void AnalyzerApp::printSequenceTrialResult(unsigned long trialNumber, AnalyzerRe
     }
 
     const detection::PatternResult* runtimePatternResult = diagnostics.runtimePatternCaptured ? &diagnostics.runtimePatternResult : nullptr;
-    const auto buildTrialSignal = [&]() {
+    const auto buildTrialOccurrence = [&]() {
         if (!diagnostics.patternAccepted) {
-            detection::SignalCandidate signal = {};
+            detection::Occurrence occurrence = {};
             if (runtimePatternResult == nullptr) {
-                return signal;
+                return occurrence;
             }
-            signal.kind = detection::SignalKind::FrequencyMatch;
-            signal.source = detection::SignalSource::Frequency;
-            signal.detectorKind = detection::SignalDetectorKind::FrequencyMatch;
-            signal.present = true;
-            signal.valid = runtimePatternResult->valid;
-            signal.startSample = runtimePatternResult->candidate.onsetSample;
-            signal.peakSample = runtimePatternResult->candidate.peakSample;
-            signal.releaseSample = runtimePatternResult->candidate.releaseSample;
-            signal.startMs = runtimePatternResult->candidate.startMs;
-            signal.peakMs = runtimePatternResult->candidate.acceptedMs != 0
+            occurrence.kind = detection::OccurrenceKind::FrequencyMatch;
+            occurrence.source = detection::OccurrenceSource::Frequency;
+            occurrence.detectorKind = detection::OccurrenceDetectorKind::FrequencyMatch;
+            occurrence.present = true;
+            occurrence.valid = runtimePatternResult->valid;
+            occurrence.startSample = runtimePatternResult->candidate.onsetSample;
+            occurrence.peakSample = runtimePatternResult->candidate.peakSample;
+            occurrence.releaseSample = runtimePatternResult->candidate.releaseSample;
+            occurrence.startMs = runtimePatternResult->candidate.startMs;
+            occurrence.peakMs = runtimePatternResult->candidate.acceptedMs != 0
                 ? runtimePatternResult->candidate.acceptedMs
                 : runtimePatternResult->candidate.startMs;
-            signal.releaseMs = runtimePatternResult->candidate.durationMs > 0
-                ? signal.startMs + runtimePatternResult->candidate.durationMs
-                : signal.peakMs;
-            signal.endMs = signal.releaseMs;
-            signal.durationMs = runtimePatternResult->candidate.durationMs;
-            signal.strength = runtimePatternResult->candidate.peakStrength;
-            signal.score = runtimePatternResult->freq.score;
-            signal.contrast = runtimePatternResult->freq.spectralContrast;
-            signal.confidence = runtimePatternResult->confidence;
-            signal.signalConfidence = signal.confidence;
-            signal.frequencyConfidence = signal.confidence;
-            signal.ampEvidencePresent = true;
-            signal.frequency = runtimePatternResult->freq;
-            return signal;
+            occurrence.releaseMs = runtimePatternResult->candidate.durationMs > 0
+                ? occurrence.startMs + runtimePatternResult->candidate.durationMs
+                : occurrence.peakMs;
+            occurrence.endMs = occurrence.releaseMs;
+            occurrence.durationMs = runtimePatternResult->candidate.durationMs;
+            occurrence.strength = runtimePatternResult->candidate.peakStrength;
+            occurrence.score = runtimePatternResult->freq.score;
+            occurrence.contrast = runtimePatternResult->freq.spectralContrast;
+            occurrence.confidence = runtimePatternResult->confidence;
+            occurrence.signalConfidence = occurrence.confidence;
+            occurrence.frequencyConfidence = occurrence.confidence;
+            occurrence.ampEvidencePresent = true;
+            occurrence.frequency = runtimePatternResult->freq;
+            return occurrence;
         }
 
-        detection::SignalCandidate signal = {};
-        signal.kind = detection::SignalKind::FrequencyMatch;
-        signal.source = detection::SignalSource::Frequency;
-        signal.detectorKind = detection::SignalDetectorKind::FrequencyMatch;
-        signal.present = true;
-        signal.valid = true;
-        signal.startSample = diagnostics.acceptedPatternOnsetSample;
-        signal.peakSample = diagnostics.acceptedPatternPeakSample;
-        signal.releaseSample = diagnostics.acceptedPatternReleaseSample;
-        signal.startMs = diagnostics.acceptedPatternMs;
-        signal.peakMs = diagnostics.acceptedPatternPeakMs != 0 ? diagnostics.acceptedPatternPeakMs : diagnostics.acceptedPatternMs;
-        signal.releaseMs = diagnostics.acceptedPatternReleaseMs != 0 ? diagnostics.acceptedPatternReleaseMs : signal.peakMs;
-        signal.endMs = signal.releaseMs;
-        signal.durationMs = diagnostics.acceptedPatternDurationMs;
-        signal.strength = diagnostics.acceptedPatternStrength;
-        signal.score = diagnostics.acceptedFrequencyEvidence.present ? diagnostics.acceptedFrequencyEvidence.score : diagnostics.acceptedPatternStrength;
-        signal.contrast = diagnostics.acceptedFrequencyEvidence.present ? diagnostics.acceptedFrequencyEvidence.spectralContrast : 0.0f;
-        signal.confidence = diagnostics.acceptedFrequencyEvidence.present && diagnostics.acceptedFrequencyEvidence.matched ? 1.0f : 0.0f;
-        signal.signalConfidence = signal.confidence;
-        signal.frequencyConfidence = signal.confidence;
-        signal.ampLevel = diagnostics.acceptedPatternStrength;
-        signal.ampBaseline = diagnostics.acceptedAmbientBaseline;
-        signal.ampEvidencePresent = true;
-        signal.frequency = diagnostics.acceptedFrequencyEvidence;
-        signal.frequency.present = true;
-        signal.frequency.observedAtMs = diagnostics.acceptedFrequencyProcessedAtMs;
-        return signal;
+        detection::Occurrence occurrence = {};
+        occurrence.kind = detection::OccurrenceKind::FrequencyMatch;
+        occurrence.source = detection::OccurrenceSource::Frequency;
+        occurrence.detectorKind = detection::OccurrenceDetectorKind::FrequencyMatch;
+        occurrence.present = true;
+        occurrence.valid = true;
+        occurrence.startSample = diagnostics.acceptedPatternOnsetSample;
+        occurrence.peakSample = diagnostics.acceptedPatternPeakSample;
+        occurrence.releaseSample = diagnostics.acceptedPatternReleaseSample;
+        occurrence.startMs = diagnostics.acceptedPatternMs;
+        occurrence.peakMs = diagnostics.acceptedPatternPeakMs != 0 ? diagnostics.acceptedPatternPeakMs : diagnostics.acceptedPatternMs;
+        occurrence.releaseMs = diagnostics.acceptedPatternReleaseMs != 0 ? diagnostics.acceptedPatternReleaseMs : occurrence.peakMs;
+        occurrence.endMs = occurrence.releaseMs;
+        occurrence.durationMs = diagnostics.acceptedPatternDurationMs;
+        occurrence.strength = diagnostics.acceptedPatternStrength;
+        occurrence.score = diagnostics.acceptedFrequencyEvidence.present ? diagnostics.acceptedFrequencyEvidence.score : diagnostics.acceptedPatternStrength;
+        occurrence.contrast = diagnostics.acceptedFrequencyEvidence.present ? diagnostics.acceptedFrequencyEvidence.spectralContrast : 0.0f;
+        occurrence.confidence = diagnostics.acceptedFrequencyEvidence.present && diagnostics.acceptedFrequencyEvidence.matched ? 1.0f : 0.0f;
+        occurrence.signalConfidence = occurrence.confidence;
+        occurrence.frequencyConfidence = occurrence.confidence;
+        occurrence.ampLevel = diagnostics.acceptedPatternStrength;
+        occurrence.ampBaseline = diagnostics.acceptedAmbientBaseline;
+        occurrence.ampEvidencePresent = true;
+        occurrence.frequency = diagnostics.acceptedFrequencyEvidence;
+        occurrence.frequency.present = true;
+        occurrence.frequency.observedAtMs = diagnostics.acceptedFrequencyProcessedAtMs;
+        return occurrence;
     };
 
-    const detection::SignalCandidate trialSignal = buildTrialSignal();
-    const unsigned long probeStartMs = trialSignal.startMs > 20UL ? trialSignal.startMs - 20UL : 0UL;
-    const unsigned long probeEndMs = trialSignal.endMs != 0
-        ? trialSignal.endMs + 20UL
-        : (trialSignal.releaseMs != 0 ? trialSignal.releaseMs + 20UL : trialSignal.peakMs + 20UL);
+    const detection::Occurrence trialOccurrence = buildTrialOccurrence();
+    const unsigned long probeStartMs = trialOccurrence.startMs > 20UL ? trialOccurrence.startMs - 20UL : 0UL;
+    const unsigned long probeEndMs = trialOccurrence.endMs != 0
+        ? trialOccurrence.endMs + 20UL
+        : (trialOccurrence.releaseMs != 0 ? trialOccurrence.releaseMs + 20UL : trialOccurrence.peakMs + 20UL);
     const size_t ampSampleCount = _sequenceFeatureHistory != nullptr
         ? _sequenceFeatureHistory->sampleCount(detection::FeatureStreamId::AmpEnvelope)
         : 0U;
@@ -553,11 +553,11 @@ void AnalyzerApp::printSequenceTrialResult(unsigned long trialNumber, AnalyzerRe
         : detection::ScalarWindow{};
 
     const bool summaryTrial = analyzerLogEnabled(_sequenceTest.logFlags, AnalyzerApp::ANALYZER_LOG_TRIAL_SUMMARY);
-    const float freqScore = runtimePatternResult != nullptr ? runtimePatternResult->freq.score : (diagnostics.patternAccepted ? diagnostics.acceptedPatternStrength : trialSignal.score);
-    const float freqContrast = runtimePatternResult != nullptr ? runtimePatternResult->freq.spectralContrast : (diagnostics.patternAccepted ? diagnostics.acceptedFrequencyEvidence.spectralContrast : trialSignal.contrast);
+    const float freqScore = runtimePatternResult != nullptr ? runtimePatternResult->freq.score : (diagnostics.patternAccepted ? diagnostics.acceptedPatternStrength : trialOccurrence.score);
+    const float freqContrast = runtimePatternResult != nullptr ? runtimePatternResult->freq.spectralContrast : (diagnostics.patternAccepted ? diagnostics.acceptedFrequencyEvidence.spectralContrast : trialOccurrence.contrast);
     const char* ampSupport = runtimePatternResult != nullptr ? ampSupportName(runtimePatternResult->ampSupport) : "Unknown";
-    const float ampPeak = runtimePatternResult != nullptr ? runtimePatternResult->candidate.peakStrength : trialSignal.ampLevel;
-    const float ampBaseline = runtimePatternResult != nullptr ? runtimePatternResult->candidate.ambientBaseline : trialSignal.ampBaseline;
+    const float ampPeak = runtimePatternResult != nullptr ? runtimePatternResult->candidate.peakStrength : trialOccurrence.ampLevel;
+    const float ampBaseline = runtimePatternResult != nullptr ? runtimePatternResult->candidate.ambientBaseline : trialOccurrence.ampBaseline;
     const float ampLift = ampPeak - ampBaseline;
 
     Serial.println();
@@ -734,8 +734,8 @@ void AnalyzerApp::printSequenceSummary() const {
                 ++dtCount;
             }
 
-            if (report.signals.primaryDurationMs > 0) {
-                durSumMs += report.signals.primaryDurationMs;
+            if (report.occurrences.primaryDurationMs > 0) {
+                durSumMs += report.occurrences.primaryDurationMs;
                 ++durCount;
             }
 
@@ -875,10 +875,10 @@ void AnalyzerApp::printSequenceSummary() const {
         Serial.print(missReasonCounts[analyzerReasonIndex(AnalyzerReason::ValidPatternBeforeWindow)]);
         Serial.print(" valid_pattern_after_window=");
         Serial.print(missReasonCounts[analyzerReasonIndex(AnalyzerReason::ValidPatternAfterWindow)]);
-        Serial.print(" no_signal_candidate=");
-        Serial.print(missReasonCounts[analyzerReasonIndex(AnalyzerReason::NoSignalCandidate)]);
-        Serial.print(" signal_seen_but_rejected=");
-        Serial.print(missReasonCounts[analyzerReasonIndex(AnalyzerReason::SignalSeenButRejected)]);
+        Serial.print(" no_occurrence_candidate=");
+        Serial.print(missReasonCounts[analyzerReasonIndex(AnalyzerReason::NoOccurrence)]);
+        Serial.print(" occurrence_seen_but_rejected=");
+        Serial.print(missReasonCounts[analyzerReasonIndex(AnalyzerReason::OccurrenceSeenButRejected)]);
         Serial.print(" inspection_failed=");
         Serial.print(missReasonCounts[analyzerReasonIndex(AnalyzerReason::InspectionFailed)]);
         Serial.print(" pattern_candidate_rejected=");
@@ -919,7 +919,7 @@ void AnalyzerApp::printSequenceSummary() const {
         printDetectionParameters();
     }
     printAudioSourceSummary();
-    printSignalSummary();
+    printOccurrenceSummary();
 }
 
 void AnalyzerApp::printSequenceFinalOutput() const {
@@ -987,7 +987,7 @@ void AnalyzerApp::printBaseSummary() const {
     Serial.println(deltaQuietPeak, 1);
     printBaseHints();
     printAudioSourceSummary();
-    printSignalSummary();
+    printOccurrenceSummary();
 }
 
 void AnalyzerApp::printBaseHints() const {
@@ -1041,7 +1041,7 @@ void AnalyzerApp::printCaptureSummary() const {
     Serial.println(_captureSession.quietDeltaMax, 1);
     printCaptureHints();
     printAudioSourceSummary();
-    printSignalSummary();
+    printOccurrenceSummary();
 }
 
 void AnalyzerApp::printCaptureHints() const {
@@ -1090,9 +1090,9 @@ void AnalyzerApp::printAudioSourceSummary() const {
     Serial.println(static_cast<unsigned long long>(stats.totalSamplesRead));
 }
 
-void AnalyzerApp::printSignalSummary() const {
+void AnalyzerApp::printOccurrenceSummary() const {
     const AudioSignalStats& stats = _audioSignal.stats();
-    Serial.println("SIGNAL summary:");
+    Serial.println("OCCURRENCE summary:");
     Serial.print("blocks=");
     Serial.print(stats.blocksProcessed);
     Serial.print(" samples=");
@@ -1136,3 +1136,4 @@ void AnalyzerApp::printValueFrame(unsigned long now) const {
     Serial.print("transient:");
     Serial.println(transientVisible ? 1 : 0);
 }
+

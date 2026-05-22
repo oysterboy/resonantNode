@@ -1,4 +1,4 @@
-#include "PatternRules.h"
+﻿#include "PatternRules.h"
 
 // PatternRules converts PatternCandidates into PatternResults.
 namespace detection {
@@ -10,7 +10,7 @@ void PatternRules::configure(const PatternRulesConfig& config) {
 namespace {
 
 PatternResultKind resultKindFromCandidate(const PatternCandidate& candidate) {
-    if (candidate.kind == PatternCandidateKind::PulseSequence || candidate.signalCount > 1 || candidate.pulseCount > 1) {
+    if (candidate.kind == PatternCandidateKind::PulseSequence || candidate.occurrenceCount > 1 || candidate.pulseCount > 1) {
         if (candidate.maxGapMs > 0 && candidate.maxGapMs < 20UL) {
             return PatternResultKind::TooDense;
         }
@@ -47,7 +47,7 @@ PatternResult makeInvalidResult(const PatternCandidate& candidate,
     result.kind = PatternResultKind::Rejected;
     result.lineageId = candidate.lineageId;
     result.primarySlotIndex = candidate.primarySlotIndex;
-    result.signalCount = candidate.signalCount;
+    result.occurrenceCount = candidate.occurrenceCount;
     result.pulseCount = candidate.pulseCount;
     result.firstPulseMs = candidate.firstPulseMs;
     result.lastPulseMs = candidate.lastPulseMs;
@@ -97,7 +97,7 @@ PatternResult PatternRules::evaluateFrequencyPattern(
     result.processedAtMs = nowMs;
     result.lineageId = candidate.lineageId;
     result.primarySlotIndex = candidate.primarySlotIndex;
-    result.signalCount = candidate.signalCount;
+    result.occurrenceCount = candidate.occurrenceCount;
     result.pulseCount = candidate.pulseCount;
     result.firstPulseMs = candidate.firstPulseMs;
     result.lastPulseMs = candidate.lastPulseMs;
@@ -138,3 +138,4 @@ PatternResult PatternRules::evaluateFrequencyPattern(
 }
 
 } // namespace detection
+

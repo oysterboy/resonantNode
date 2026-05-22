@@ -11,7 +11,7 @@ void AnalyzerApp::printSequenceHelp() {
     Serial.println("CMD: SEQ stop");
     Serial.println("SEQ IN: start [tries=N] [period=MS] [window=MS] [freq=HZ] [dur=MS] [test=LABEL]");
     Serial.println("SEQ IN: OBS start [tries=N] [period=2000] [window=1800] [freq=HZ] [dur=MS] [test=LABEL]");
-    Serial.println("SEQ IN: [profile=freqamp]");
+    Serial.println("SEQ IN: [profile=tonalpulse]");
     Serial.println("SEQ IN: [log=default|none|quiet|summary|summary+trial|trial|candidate|explain|custom|full]");
     Serial.println("SEQ IN: stable summary=log=summary");
     Serial.println("SEQ IN: [debug=0|1|2] [dumpSamples=0|1] [curveFormat=off|samples]");
@@ -19,7 +19,7 @@ void AnalyzerApp::printSequenceHelp() {
     Serial.println("SEQ OUT: SEQ start / SEQ running / SEQ_CAND / SEQ_TRIAL / SEQ_EXPLAIN / SEQ_CUSTOM / SEQ_SUMMARY");
     Serial.println("SEQ OUT: candidate fields include onset_sample peak_sample release_sample peak_ms dur end_dt_ms freq_*");
     Serial.println("SEQ OBS: passive observe mode for an already-running external emitter");
-    Serial.println("SEQ PROFILE: profile=freqamp");
+    Serial.println("SEQ PROFILE: profile=tonalpulse");
     Serial.println("SEQ PARAM: freqScore=10000 freqContrast=50.0");
 }
 
@@ -200,7 +200,7 @@ void AnalyzerApp::handleUsbLine(const char* line) {
             unsigned long sampleDumpTailMs = 800;
             unsigned long sampleDumpStepMs = 1;
             unsigned long sampleDumpMaxRows = 5000;
-            detection::DetectionProfileKind profileKind = detection::DetectionProfileKind::FreqAmp;
+            detection::DetectionProfileKind profileKind = detection::DetectionProfileKind::TonalPulse;
             bool externalEmitter = false;
             char setupLabel[96] = TEST_SETUP_LABEL;
             uint32_t logFlags = DEFAULT_ANALYZER_LOG_FLAGS;
@@ -225,8 +225,8 @@ void AnalyzerApp::handleUsbLine(const char* line) {
                     showDetails = true;
                 } else if (startsWithTokenIgnoreCase(token, "profile=")) {
                     const char* profileValue = token + 8;
-                    if (equalsIgnoreCase(profileValue, "freqamp")) {
-                        profileKind = detection::DetectionProfileKind::FreqAmp;
+                    if (equalsIgnoreCase(profileValue, "tonalpulse")) {
+                        profileKind = detection::DetectionProfileKind::TonalPulse;
                     } else if (equalsIgnoreCase(profileValue, "chirp")) {
                         profileKind = detection::DetectionProfileKind::Chirp;
                     }

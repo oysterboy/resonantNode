@@ -30,9 +30,9 @@
 ## 2026-05-15 - Detection RF 5.2: shared scalar lifecycle parity
 
 ### Changed
-- Added a shared `ScalarSignalEmitter` helper so AMP and frequency now share the scalar candidate lifecycle instead of keeping separate wrapper-local timing logic.
+- Added a shared `ScalarOccurrenceSource` helper so AMP and frequency now share the scalar candidate lifecycle instead of keeping separate wrapper-local timing logic.
 - Extended `ScalarTransientDetector` with generic release-observation timing so candidate duration is based on the release-observed point instead of the later debounce close.
-- Rewired `AmpSignalEmitter` and `FrequencySignalEmitter` to use the shared scalar emitter path.
+- Rewired `AmpOccurrenceSource` and `FrequencyOccurrenceSource` to use the shared scalar emitter path.
 - Marked Analyzer SEQ frequency-candidate logging as legacy comparison output so the builder path is no longer ambiguous in logs.
 - Kept `AmpTransientDetector` as the legacy AMP facade.
 
@@ -359,7 +359,7 @@
 
 ### Changed
 - Restored the frequency-side roadmap path to a dedicated frequency evidence detector instead of forcing it through the shared scalar transient lifecycle.
-- Split the primary SEQ frequency path onto `FrequencyMatchDetector` with explicit `emitter=frequency` and `detector=frequency_evidence` logging.
+- Split the primary SEQ frequency path onto `FrequencyOccurrenceSource` with explicit `emitter=frequency` and `detector=frequency_evidence` logging.
 - Kept `FrequencyCandidateBuilder` as legacy/comparison support rather than the primary SEQ frequency path.
 
 ### Verification

@@ -11,7 +11,7 @@ Acoustic context summary used by Behavior alongside PatternResults.
 FieldState is not a pattern result and does not decide behavior by itself.
 */
 struct FieldStateConfig {
-    unsigned long signalWindowMs = 5000;
+    unsigned long occurrenceWindowMs = 5000;
     unsigned long patternWindowMs = 5000;
 
     unsigned long busySignalCountThreshold = 4;
@@ -29,12 +29,12 @@ struct FieldState {
     float noiseFloor = 0.0f;
     unsigned long chatter = 0;
 
-    unsigned long lastSignalMs = 0;
-    unsigned long lastInspectedSignalMs = 0;
+    unsigned long lastOccurrenceMs = 0;
+    unsigned long lastInspectedOccurrenceMs = 0;
     unsigned long lastPatternMs = 0;
 
-    unsigned long recentSignalCount = 0;
-    unsigned long recentAcceptedSignalCount = 0;
+    unsigned long recentOccurrenceCount = 0;
+    unsigned long recentAcceptedOccurrenceCount = 0;
     unsigned long recentPatternCount = 0;
 
     bool quiet = true;
@@ -43,3 +43,4 @@ struct FieldState {
 };
 
 } // namespace detection
+

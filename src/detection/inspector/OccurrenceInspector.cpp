@@ -1,13 +1,13 @@
-#include "SignalInspector.h"
-#include "SignalWindowEvaluator.h"
+#include "OccurrenceInspector.h"
+#include "OccurrenceWindowEvaluator.h"
 
-// SignalInspector evidence annotation and inspection in source order.
+// OccurrenceInspector evidence annotation and inspection in source order.
 namespace {
 
 constexpr unsigned long kDuplicateRiskWindowMs = 150;
 
-void setRejected(detection::InspectedSignal& out, detection::SignalRejectReason reason) {
-    out.decision = detection::SignalDecision::Rejected;
+void setRejected(detection::InspectedOccurrence& out, detection::OccurrenceRejectReason reason) {
+    out.decision = detection::OccurrenceDecision::Rejected;
     out.accepted = false;
     out.rejected = true;
     out.rejectReason = reason;
@@ -17,8 +17,8 @@ void setRejected(detection::InspectedSignal& out, detection::SignalRejectReason 
 }
 
 void fillAmpWindowObservation(
-    detection::InspectedSignal& out,
-    const detection::SignalCandidate& candidate,
+    detection::InspectedOccurrence& out,
+    const detection::Occurrence& candidate,
     float peak,
     float floor,
     bool available,
@@ -26,8 +26,8 @@ void fillAmpWindowObservation(
 ) {
     const float lift = peak - floor;
 
-    out.signal.ampLevel = peak;
-    out.signal.ampBaseline = floor;
+    out.occurrence.ampLevel = peak;
+    out.occurrence.ampBaseline = floor;
     out.ampSupport = available ? classifyAmpSupport(peak, available, config.ampSupport) : detection::AmpSupportLevel::Unknown;
 
     auto& ampEvidence = out.ampWindow;
@@ -48,38 +48,38 @@ void fillAmpWindowObservation(
 
 namespace detection {
 
-void SignalInspector::configure(const InspectionConfig& config) {
+void OccurrenceInspector::configure(const InspectionConfig& config) {
     _config = config;
 }
 
-void SignalInspector::setInspectionRules(ProfileInspectionRulesKind rules) {
+void OccurrenceInspector::setInspectionRules(ProfileInspectionRulesKind rules) {
     _inspectionRules = rules;
 }
 
-void SignalInspector::reset() {
+void OccurrenceInspector::reset() {
     _lastAcceptedAmpMs = 0;
     _lastAcceptedFrequencyMs = 0;
 }
 
-void SignalInspector::annotateAcceptedSignal(
-    InspectedSignal& out,
-    const SignalCandidate& candidate,
+void OccurrenceInspector::annotateAcceptedSignal(
+    InspectedOccurrence& out,
+    const Occurrence& candidate,
     const FeatureHistory* featureHistory
 ) const {
     out.duplicateRisk = false;
     out.duplicateRiskScore = 0.0f;
     annotateDuplicateRisk(out, candidate);
     annotateAmpSupport(out, candidate, featureHistory);
-    out.signal.confidence = out.confidence;
-    out.signal.signalConfidence = out.signalConfidence;
-    out.signal.frequencyConfidence = out.frequencyConfidence;
-    out.signal.ampEvidencePresent = candidate.ampEvidencePresent;
-    out.signal.ampSupport = out.ampSupport;
-    out.signal.duplicateRisk = out.duplicateRisk;
-    out.signal.duplicateRiskScore = out.duplicateRiskScore;
+    out.occurrence.confidence = out.confidence;
+    out.occurrence.signalConfidence = out.signalConfidence;
+    out.occurrence.frequencyConfidence = out.frequencyConfidence;
+    out.occurrence.ampEvidencePresent = candidate.ampEvidencePresent;
+    out.occurrence.ampSupport = out.ampSupport;
+    out.occurrence.duplicateRisk = out.duplicateRisk;
+    out.occurrence.duplicateRiskScore = out.duplicateRiskScore;
 }
 
-void SignalInspector::annotateDuplicateRisk(InspectedSignal& out, const SignalCandidate& candidate) const {
+void OccurrenceInspector::annotateDuplicateRisk(InspectedOccurrence& out, const Occurrence& candidate) const {
     if (!_config.enableDuplicateRiskInspection) {
         return;
     }
@@ -92,9 +92,9 @@ void SignalInspector::annotateDuplicateRisk(InspectedSignal& out, const SignalCa
     }
 
     unsigned long* lastAcceptedMs = nullptr;
-    if (candidate.kind == SignalKind::FrequencyMatch) {
+    if (candidate.kind == OccurrenceKind::FrequencyMatch) {
         lastAcceptedMs = &_lastAcceptedFrequencyMs;
-    } else if (candidate.kind == SignalKind::AmpTransient) {
+    } else if (candidate.kind == OccurrenceKind::AmpTransient) {
         lastAcceptedMs = &_lastAcceptedAmpMs;
     }
 
@@ -122,9 +122,9 @@ void SignalInspector::annotateDuplicateRisk(InspectedSignal& out, const SignalCa
     *lastAcceptedMs = acceptedMs;
 }
 
-void SignalInspector::annotateAmpSupport(
-    InspectedSignal& out,
-    const SignalCandidate& candidate,
+void OccurrenceInspector::annotateAmpSupport(
+    InspectedOccurrence& out,
+    const Occurrence& candidate,
     const FeatureHistory* featureHistory
 ) const {
     const unsigned long startMs = candidate.startMs > _config.ampWindowPreMs ? candidate.startMs - _config.ampWindowPreMs : 0UL;
@@ -152,58 +152,58 @@ void SignalInspector::annotateAmpSupport(
         }
     }
 
-    out.signal.ampLevel = 0.0f;
-    out.signal.ampBaseline = 0.0f;
+    out.occurrence.ampLevel = 0.0f;
+    out.occurrence.ampBaseline = 0.0f;
     out.ampSupport = AmpSupportLevel::Unknown;
 }
 
-InspectedSignal SignalInspector::inspectImpl(
-    const SignalCandidate& candidate,
+InspectedOccurrence OccurrenceInspector::inspectImpl(
+    const Occurrence& candidate,
     const FeatureHistory* featureHistory
 ) const {
     if (!candidate.present) {
-        InspectedSignal out;
-        out.signal = candidate;
-        setRejected(out, SignalRejectReason::UnsupportedKind);
+        InspectedOccurrence out;
+        out.occurrence = candidate;
+        setRejected(out, OccurrenceRejectReason::UnsupportedKind);
         return out;
     }
 
     if (!candidate.valid) {
-        InspectedSignal out;
-        out.signal = candidate;
+        InspectedOccurrence out;
+        out.occurrence = candidate;
         out.durationMs = candidate.durationMs;
         out.strength = candidate.strength;
         out.confidence = 0.0f;
-        setRejected(out, SignalRejectReason::InvalidTiming);
+        setRejected(out, OccurrenceRejectReason::InvalidTiming);
         return out;
     }
 
     const bool acceptsCandidate =
-        (_inspectionRules == ProfileInspectionRulesKind::FreqAmp && candidate.kind == SignalKind::FrequencyMatch) ||
-        (_inspectionRules == ProfileInspectionRulesKind::Chirp && candidate.kind == SignalKind::AmpTransient);
+        (_inspectionRules == ProfileInspectionRulesKind::TonalPulse && candidate.kind == OccurrenceKind::FrequencyMatch) ||
+        (_inspectionRules == ProfileInspectionRulesKind::Chirp && candidate.kind == OccurrenceKind::AmpTransient);
 
     if (acceptsCandidate) {
         return inspectAmp(candidate, featureHistory);
     }
 
-    InspectedSignal out;
-    out.signal = candidate;
+    InspectedOccurrence out;
+    out.occurrence = candidate;
     out.durationMs = candidate.durationMs;
     out.strength = candidate.strength;
-    setRejected(out, SignalRejectReason::UnsupportedKind);
+    setRejected(out, OccurrenceRejectReason::UnsupportedKind);
     return out;
 }
 
-InspectedSignal SignalInspector::inspect(
-    const SignalCandidate& candidate,
+InspectedOccurrence OccurrenceInspector::inspect(
+    const Occurrence& candidate,
     const RawWindowStats* rawWindow
 ) const {
     (void)rawWindow;
     return inspectImpl(candidate, nullptr);
 }
 
-InspectedSignal SignalInspector::inspectWithHistory(
-    const SignalCandidate& candidate,
+InspectedOccurrence OccurrenceInspector::inspectWithHistory(
+    const Occurrence& candidate,
     const FeatureHistory* featureHistory,
     const RawWindowStats* rawWindow
 ) const {
@@ -211,24 +211,25 @@ InspectedSignal SignalInspector::inspectWithHistory(
     return inspectImpl(candidate, featureHistory);
 }
 
-InspectedSignal SignalInspector::inspectAmp(
-    const SignalCandidate& candidate,
+InspectedOccurrence OccurrenceInspector::inspectAmp(
+    const Occurrence& candidate,
     const FeatureHistory* featureHistory
 ) const {
-    InspectedSignal out;
-    out.signal = candidate;
+    InspectedOccurrence out;
+    out.occurrence = candidate;
     out.durationMs = candidate.durationMs;
     out.strength = candidate.strength;
     out.signalConfidence = candidate.signalConfidence > 0.0f ? candidate.signalConfidence : 1.0f;
     out.frequencyConfidence = candidate.frequencyConfidence;
     out.confidence = out.signalConfidence;
 
-    out.decision = SignalDecision::Accepted;
+    out.decision = OccurrenceDecision::Accepted;
     out.accepted = true;
     out.rejected = false;
-    out.rejectReason = SignalRejectReason::None;
+    out.rejectReason = OccurrenceRejectReason::None;
     annotateAcceptedSignal(out, candidate, featureHistory);
     return out;
 }
 
 } // namespace detection
+

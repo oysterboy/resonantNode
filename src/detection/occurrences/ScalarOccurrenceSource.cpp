@@ -1,56 +1,56 @@
-#include "ScalarSignalEmitter.h"
+#include "ScalarOccurrenceSource.h"
 
 namespace detection {
 
-ScalarSignalEmitter::ScalarSignalEmitter() = default;
+ScalarOccurrenceSource::ScalarOccurrenceSource() = default;
 
-void ScalarSignalEmitter::reset() {
+void ScalarOccurrenceSource::reset() {
     _detector.resetState();
     resetCandidateLifecycle();
 }
 
-void ScalarSignalEmitter::begin() {
+void ScalarOccurrenceSource::begin() {
     _detector.begin();
     resetCandidateLifecycle();
 }
 
-void ScalarSignalEmitter::setOnsetDetectionThreshold(float value) {
+void ScalarOccurrenceSource::setOnsetDetectionThreshold(float value) {
     _detector.setOnsetDetectionThreshold(value);
 }
 
-void ScalarSignalEmitter::setOnsetReleaseThreshold(float value) {
+void ScalarOccurrenceSource::setOnsetReleaseThreshold(float value) {
     _detector.setOnsetReleaseThreshold(value);
 }
 
-void ScalarSignalEmitter::setCooldownAfterOnsetMs(unsigned long value) {
+void ScalarOccurrenceSource::setCooldownAfterOnsetMs(unsigned long value) {
     _detector.setCooldownAfterOnsetMs(value);
 }
 
-void ScalarSignalEmitter::setMinTransientDurationMs(unsigned long value) {
+void ScalarOccurrenceSource::setMinTransientDurationMs(unsigned long value) {
     _detector.setMinTransientDurationMs(value);
 }
 
-void ScalarSignalEmitter::setMaxTransientDurationMs(unsigned long value) {
+void ScalarOccurrenceSource::setMaxTransientDurationMs(unsigned long value) {
     _detector.setMaxTransientDurationMs(value);
 }
 
-void ScalarSignalEmitter::setMinTransientPeakStrength(float value) {
+void ScalarOccurrenceSource::setMinTransientPeakStrength(float value) {
     _detector.setMinTransientPeakStrength(value);
 }
 
-void ScalarSignalEmitter::setReleaseDebounceMs(unsigned long value) {
+void ScalarOccurrenceSource::setReleaseDebounceMs(unsigned long value) {
     _detector.setReleaseDebounceMs(value);
 }
 
-void ScalarSignalEmitter::setDiagnosticsEnabled(bool enabled) {
+void ScalarOccurrenceSource::setDiagnosticsEnabled(bool enabled) {
     _detector.setDiagnosticsEnabled(enabled);
 }
 
-void ScalarSignalEmitter::setDiagnosticsLabel(const char* value) {
+void ScalarOccurrenceSource::setDiagnosticsLabel(const char* value) {
     _detector.setDiagnosticsLabel(value);
 }
 
-void ScalarSignalEmitter::observe(const AudioSignalFrame& frame, float signalLevel) {
+void ScalarOccurrenceSource::observe(const AudioSignalFrame& frame, float signalLevel) {
     if (!frame.valid) {
         return;
     }
@@ -93,7 +93,7 @@ void ScalarSignalEmitter::observe(const AudioSignalFrame& frame, float signalLev
             _candidateReleaseObservedUs = _detector.releaseObservedUs();
             _candidateReleaseObservedMs = _candidateReleaseObservedUs / 1000UL;
         } else if (!_detector.transientDetected() && _releaseObserved) {
-            // The signal recovered before the release debounce elapsed.
+            // The occurrence recovered before the release debounce elapsed.
             _releaseObserved = false;
             _candidateReleaseObservedUs = 0;
             _candidateReleaseObservedMs = 0;
@@ -106,86 +106,86 @@ void ScalarSignalEmitter::observe(const AudioSignalFrame& frame, float signalLev
     }
 }
 
-bool ScalarSignalEmitter::onsetDetected() const {
+bool ScalarOccurrenceSource::onsetDetected() const {
     return _detector.onsetDetected();
 }
 
-float ScalarSignalEmitter::onsetStrength() const {
+float ScalarOccurrenceSource::onsetStrength() const {
     return _detector.onsetStrength();
 }
 
-bool ScalarSignalEmitter::transientDetected() const {
+bool ScalarOccurrenceSource::transientDetected() const {
     return _candidateReady && _detector.transientDetected();
 }
 
-float ScalarSignalEmitter::transientStrength() const {
+float ScalarOccurrenceSource::transientStrength() const {
     return _detector.transientStrength();
 }
 
-unsigned long ScalarSignalEmitter::transientDurationMs() const {
+unsigned long ScalarOccurrenceSource::transientDurationMs() const {
     return _detector.transientDurationMs();
 }
 
-bool ScalarSignalEmitter::candidateActive() const {
+bool ScalarOccurrenceSource::candidateActive() const {
     return _candidateActive;
 }
 
-bool ScalarSignalEmitter::releaseObserved() const {
+bool ScalarOccurrenceSource::releaseObserved() const {
     return _releaseObserved;
 }
 
-unsigned long ScalarSignalEmitter::candidateHoldWindows() const {
+unsigned long ScalarOccurrenceSource::candidateHoldWindows() const {
     return _candidateHoldWindows;
 }
 
-unsigned long ScalarSignalEmitter::candidateFirstSeenMs() const {
+unsigned long ScalarOccurrenceSource::candidateFirstSeenMs() const {
     return _candidateFirstSeenMs;
 }
 
-unsigned long ScalarSignalEmitter::candidatePeakMs() const {
+unsigned long ScalarOccurrenceSource::candidatePeakMs() const {
     return _candidatePeakMs;
 }
 
-unsigned long ScalarSignalEmitter::candidateReleaseObservedMs() const {
+unsigned long ScalarOccurrenceSource::candidateReleaseObservedMs() const {
     return _candidateReleaseObservedMs;
 }
 
-uint64_t ScalarSignalEmitter::candidateFirstSeenSample() const {
+uint64_t ScalarOccurrenceSource::candidateFirstSeenSample() const {
     return _candidateFirstSeenSample;
 }
 
-uint64_t ScalarSignalEmitter::candidatePeakSample() const {
+uint64_t ScalarOccurrenceSource::candidatePeakSample() const {
     return _candidatePeakSample;
 }
 
-uint64_t ScalarSignalEmitter::candidateReleaseSample() const {
+uint64_t ScalarOccurrenceSource::candidateReleaseSample() const {
     return _candidateReleaseSample;
 }
 
-float ScalarSignalEmitter::candidatePeakStrength() const {
+float ScalarOccurrenceSource::candidatePeakStrength() const {
     return _candidatePeakStrength;
 }
 
-const char* ScalarSignalEmitter::lastOnsetRejectReasonName() const {
+const char* ScalarOccurrenceSource::lastOnsetRejectReasonName() const {
     return _detector.lastOnsetRejectReasonName();
 }
 
-const char* ScalarSignalEmitter::lastTransientRejectReasonName() const {
+const char* ScalarOccurrenceSource::lastTransientRejectReasonName() const {
     return _detector.lastTransientRejectReasonName();
 }
 
-unsigned long ScalarSignalEmitter::lastTransientRejectedDurationMs() const {
+unsigned long ScalarOccurrenceSource::lastTransientRejectedDurationMs() const {
     return _detector.lastTransientRejectedDurationMs();
 }
 
-float ScalarSignalEmitter::lastTransientRejectedStrength() const {
+float ScalarOccurrenceSource::lastTransientRejectedStrength() const {
     return _detector.lastTransientRejectedStrength();
 }
 
-bool ScalarSignalEmitter::consumeCandidate(const AudioSignalFrame& frame,
-                                           SignalKind kind,
-                                           SignalSource source,
-                                           SignalCandidate& out) {
+bool ScalarOccurrenceSource::consumeCandidate(const AudioSignalFrame& frame,
+                                           OccurrenceKind kind,
+                                           OccurrenceSource source,
+                                           Occurrence& out) {
     if (!_candidateReady || !_candidateActive) {
         return false;
     }
@@ -193,9 +193,9 @@ bool ScalarSignalEmitter::consumeCandidate(const AudioSignalFrame& frame,
     out = {};
     out.kind = kind;
     out.source = source;
-    out.detectorKind = kind == SignalKind::FrequencyMatch
-        ? SignalDetectorKind::FrequencyMatch
-        : SignalDetectorKind::Transient;
+    out.detectorKind = kind == OccurrenceKind::FrequencyMatch
+        ? OccurrenceDetectorKind::FrequencyMatch
+        : OccurrenceDetectorKind::Transient;
     out.present = true;
     out.startSample = _candidateFirstSeenSample;
     out.peakSample = _candidatePeakSample;
@@ -210,7 +210,7 @@ bool ScalarSignalEmitter::consumeCandidate(const AudioSignalFrame& frame,
     out.contrast = 0.0f;
     out.confidence = 1.0f;
     out.signalConfidence = 1.0f;
-    out.frequencyConfidence = kind == SignalKind::FrequencyMatch ? 1.0f : 0.0f;
+    out.frequencyConfidence = kind == OccurrenceKind::FrequencyMatch ? 1.0f : 0.0f;
     out.ampEvidencePresent = true;
     out.ampLevel = static_cast<float>(frame.level);
     out.ampBaseline = frame.baseline;
@@ -233,7 +233,7 @@ bool ScalarSignalEmitter::consumeCandidate(const AudioSignalFrame& frame,
     return true;
 }
 
-void ScalarSignalEmitter::resetCandidateLifecycle() {
+void ScalarOccurrenceSource::resetCandidateLifecycle() {
     _candidateActive = false;
     _releaseObserved = false;
     _candidateReady = false;
@@ -253,3 +253,4 @@ void ScalarSignalEmitter::resetCandidateLifecycle() {
 }
 
 } // namespace detection
+

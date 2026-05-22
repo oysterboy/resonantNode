@@ -70,7 +70,7 @@ setToneHz(kDefaultChirpFrequencyHz);
 
 Config must be applied at obvious places:
 
-InspectionConfig      → SignalInspector
+InspectionConfig      → OccurrenceInspector
 PatternRulesConfig    → PatternRules
 BehaviorGateConfig    → Behavior
 FieldStateConfig      → FieldStateTracker
@@ -99,16 +99,16 @@ behavior eligibility
 
 Use the roadmap vocabulary:
 
-candidateAccepted  → SignalInspector
+candidateAccepted  → OccurrenceInspector
 patternMatched     → PatternRules
-supportMatched     → PatternRules for FreqAmp
+supportMatched     → PatternRules for TonalPulse
 behaviorEligible   → Behavior
 
 valid means:
 
 patternMatched && supportMatched
 
-for current FreqAmp.
+for current TonalPulse.
 
 9. Runtime time has one clock
 
@@ -127,13 +127,13 @@ Sample index is for buffers/history, not runtime event comparison.
 
 Allowed:
 
-FreqAmpProfile uses FrequencyMatch + AMP support + SinglePulseOnly
+TonalPulseProfile uses FrequencyMatch + AMP support + SinglePulseOnly
 AmpStateProfile parked/proof
 ChirpProfile parked/proof
 
 Not allowed:
 
-profile says ChirpSequence but runtime still behaves like FreqAmp
+profile says ChirpSequence but runtime still behaves like TonalPulse
 
 A profile option must either work or be hidden/marked parked.
 
@@ -141,14 +141,14 @@ A profile option must either work or be hidden/marked parked.
 
 Do not globally delete:
 
-AmpSignalEmitter
+AmpOccurrenceSource
 ChirpProfile concept
 AmpStateProfile concept
 PulseSequence concept
 
-But for current FreqAmp cleanup:
+But for current TonalPulse cleanup:
 
-AmpSignalEmitter off
+AmpOccurrenceSource off
 PulseSequence off
 Chirp behavior inactive
 
@@ -273,7 +273,7 @@ onset/release active
 
 if runtime is actually:
 
-profile=FreqAmp
+profile=TonalPulse
 frequency candidate source
 AMP support inspection
 SinglePulseOnly
@@ -284,7 +284,7 @@ Logs should show active profile config and gate chain.
 
 For this cleanup milestone, success is:
 
-FreqAmp works as one clear active profile.
+TonalPulse works as one clear active profile.
 Timing is trustworthy.
 Analyzer reports the gate chain.
 Behavior consumes valid PatternResult + FieldState.

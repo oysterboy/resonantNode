@@ -9,22 +9,22 @@ namespace detection {
 PatternCandidate
 
 Candidate data assembled before PatternRules decides the final result.
-Carries the inspected signal payloads that the rules layer evaluates.
+Carries the inspected occurrence payloads that the rules layer evaluates.
 */
 struct PatternCandidate {
     // Core sequence summary.
     PatternCandidateKind kind = PatternCandidateKind::Unknown;
     uint32_t lineageId = 0;
     uint8_t primarySlotIndex = 0;
-    uint8_t signalCount = 0;
+    uint8_t occurrenceCount = 0;
     uint8_t pulseCount = 0;
     unsigned long firstPulseMs = 0;
     unsigned long lastPulseMs = 0;
     unsigned long minGapMs = 0;
     unsigned long maxGapMs = 0;
 
-    // Per-slot signal snapshots for multi-signal candidates.
-    struct SignalSlot {
+    // Per-slot occurrence snapshots for multi-occurrence candidates.
+    struct OccurrenceSlot {
         uint8_t kindTag = 0;
         uint8_t sourceTag = 0;
         uint64_t onsetSample = 0;
@@ -36,10 +36,10 @@ struct PatternCandidate {
         float strength = 0.0f;
         float confidence = 0.0f;
     };
-    static constexpr uint8_t kMaxSignalSlots = 3;
+    static constexpr uint8_t kMaxOccurrenceSlots = 3;
 
-    uint8_t signalSlotCount = 0;
-    SignalSlot signalSlots[kMaxSignalSlots] = {};
+    uint8_t occurrenceSlotCount = 0;
+    OccurrenceSlot occurrenceSlots[kMaxOccurrenceSlots] = {};
 
     // Timing and strength for the chosen candidate.
     uint64_t onsetSample = 0;
@@ -72,3 +72,4 @@ struct PatternCandidate {
 };
 
 } // namespace detection
+

@@ -17,7 +17,7 @@ Owns orchestration for the Resonant node.
 
 Responsibilities:
 - wire hardware sources and outputs
-- feed audio into signal and detection layers
+- feed audio into occurrence and detection layers
 - pass PatternResult objects into ResonantBehavior
 - start and finish chirps when behavior requests them
 - manage startup baseline state for the I2S path
@@ -85,7 +85,7 @@ bool equalsIgnoreCase(const char* a, const char* b) {
     return *a == '\0' && *b == '\0';
 }
 
-BehaviorGateConfig makeFreqAmpBehaviorProfile() {
+BehaviorGateConfig makeTonalPulseBehaviorProfile() {
     BehaviorGateConfig profile;
     profile.idleEnabled = true;
     profile.waitAfterTransientMs = 100;
@@ -103,11 +103,11 @@ const char* detectionProfileKindName(detection::DetectionProfileKind kind) {
 
 void printProfileComposition(const detection::DetectionProfile& profile) {
     Serial.print(" emitters=");
-    Serial.print(detection::profileSignalEmitterName(profile.signalEmitter));
+    Serial.print(detection::profileOccurrenceSourceName(profile.occurrenceSource));
     Serial.print(" inspectionRules=");
     Serial.print(detection::profileInspectionRulesName(profile.inspectionRules));
     Serial.print(" fieldStateConfig=");
-    Serial.print(profile.fieldStateConfig.signalWindowMs);
+    Serial.print(profile.fieldStateConfig.occurrenceWindowMs);
     Serial.print("/");
     Serial.print(profile.fieldStateConfig.patternWindowMs);
 }
@@ -505,7 +505,7 @@ void Node::handleSerialLine(const char* line) {
         Serial.println("RB CMD: RB PARAM freqScore=10000 freqContrast=50.0");
         Serial.println("RB CMD: RB BEHAV wait=100 refractory=0 idleTimeout=20000 idleTimeoutVariation=10000 idleBlockedAfterHeard=3000 idleBlockedAfterOwnEmit=5000");
         Serial.println("RB CMD: RB STATUS");
-        Serial.println("RB CMD: RB PROFILE name=freqamp");
+        Serial.println("RB CMD: RB PROFILE name=tonalpulse");
         Serial.println("RB CMD: RB rebase");
         Serial.println("RB CMD: RB rebase force");
         Serial.println("RB CMD: RB log off|minimal|full");
@@ -701,7 +701,7 @@ void Node::handleDetectCommand(const char* line) {
     Serial.print("RB STATUS profile=");
     Serial.print(detection::detectionProfileName(detectionProfile.kind));
     Serial.print(" emitters=");
-    Serial.print(detection::profileSignalEmitterName(detectionProfile.signalEmitter));
+    Serial.print(detection::profileOccurrenceSourceName(detectionProfile.occurrenceSource));
     Serial.print(" inspectionRules=");
     Serial.print(detection::profileInspectionRulesName(detectionProfile.inspectionRules));
     Serial.print(" requireSupportForAcceptance=");
@@ -734,7 +734,7 @@ void Node::handleProfileCommand(const char* line) {
         printProfileComposition(activeDetectionProfile());
         Serial.println();
     } else {
-        Serial.println("RB PROFILE usage=name=freqamp");
+        Serial.println("RB PROFILE usage=name=tonalpulse");
     }
 }
 
@@ -758,13 +758,13 @@ const detection::DetectionProfile& Node::activeDetectionProfile() const {
 }
 
 const BehaviorGateConfig& Node::activeBehaviorProfile() const {
-    static const BehaviorGateConfig kFreqAmpProfile = makeFreqAmpBehaviorProfile();
+    static const BehaviorGateConfig kTonalPulseProfile = makeTonalPulseBehaviorProfile();
 
     switch (_profileKind) {
         case detection::DetectionProfileKind::Chirp:
-        case detection::DetectionProfileKind::FreqAmp:
+        case detection::DetectionProfileKind::TonalPulse:
         default:
-            return kFreqAmpProfile;
+            return kTonalPulseProfile;
     }
 }
 
@@ -776,7 +776,7 @@ void Node::applyActiveProfiles() {
 void Node::applyActiveDetectionProfile() {
     const detection::DetectionProfile& detectionProfile = activeDetectionProfile();
 
-    _detection.setSignalEmitter(detectionProfile.signalEmitter);
+    _detection.setOccurrenceSource(detectionProfile.occurrenceSource);
     _detection.setInspectionRules(detectionProfile.inspectionRules);
     _detection.setFrequencyTuning(_frequencyEvidenceTuning);
     _detection.setInspectionConfig(detectionProfile.inspectionConfig);
@@ -973,7 +973,7 @@ void Node::printRbBehaviorSummary() const {
 }
 
 void Node::printRbSignalSummary() const {
-    Serial.print("RB signal baseline=");
+    Serial.print("RB occurrence baseline=");
     Serial.print(_audioSignal.baseline(), 1);
     Serial.print(" mag=");
     Serial.print(_audioSignal.signalMagnitude());
@@ -1011,4 +1011,6 @@ void Node::printRbDetectorSummary() const {
     Serial.print(" lastRejectStrength=");
     Serial.println(probeSnapshot.rejectedStrength, 1);
 }
+
+
 

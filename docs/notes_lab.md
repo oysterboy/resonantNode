@@ -238,11 +238,11 @@ Use these runs as baseline parity checks:
 Introduce the architecture shape:
 FeatureExtractors
 -> FeatureStreams / FeatureHistory
--> SignalEmitters
--> SignalDetectors
--> SignalCandidates
--> SignalInspector
--> InspectedSignals
+-> OccurrenceSources
+-> OccurrenceDetectors
+-> OccurrenceCandidates
+-> OccurrenceInspector
+-> InspectedOccurrences
 -> PatternAssembler
 -> PatternCandidates
 -> PatternRules

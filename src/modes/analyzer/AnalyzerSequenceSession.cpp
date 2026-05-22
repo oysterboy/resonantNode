@@ -1,4 +1,4 @@
-#include "AnalyzerApp.h"
+﻿#include "AnalyzerApp.h"
 
 #include <Arduino.h>
 #include <stdlib.h>
@@ -96,7 +96,7 @@ void AnalyzerApp::startSequenceTest(unsigned long totalTrials, unsigned long per
     _detection->reset();
     _detection->setFrequencyTuning(_frequencyEvidenceTuning);
     const detection::DetectionProfile& selectedProfile = detection::detectionProfileForKind(_sequenceTest.profileKind);
-    _detection->setSignalEmitter(selectedProfile.signalEmitter);
+    _detection->setOccurrenceSource(selectedProfile.occurrenceSource);
     _detection->setInspectionRules(selectedProfile.inspectionRules);
     _detection->setInspectionConfig(selectedProfile.inspectionConfig);
     _detection->setPatternRulesConfig(selectedProfile.patternRulesConfig);
@@ -479,3 +479,5 @@ void AnalyzerApp::finalizeSequenceTrial(unsigned long now) {
         stopSequenceTest();
     }
 }
+
+

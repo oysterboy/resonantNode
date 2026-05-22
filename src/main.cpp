@@ -1,7 +1,7 @@
 #include <Arduino.h>
 
 // Select exactly one runtime mode at compile time:
-// - ANALYZER_MODE for signal analysis
+// - ANALYZER_MODE for occurrence analysis
 // - EMITTER_MODE for the standalone output device
 // - default for the resonant node sketch
 #if defined(ANALYZER_MODE)

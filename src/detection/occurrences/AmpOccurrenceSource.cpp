@@ -1,4 +1,4 @@
-#include "AmpSignalEmitter.h"
+﻿#include "AmpOccurrenceSource.h"
 
 namespace detection {
 
@@ -6,10 +6,10 @@ namespace {
 
 } // namespace
 
-void AmpSignalEmitter::fillAmpCandidate(SignalCandidate& candidate, const AudioSignalFrame& frame) {
-    candidate.kind = SignalKind::AmpTransient;
-    candidate.source = SignalSource::Amp;
-    candidate.detectorKind = SignalDetectorKind::Transient;
+void AmpOccurrenceSource::fillAmpCandidate(Occurrence& candidate, const AudioSignalFrame& frame) {
+    candidate.kind = OccurrenceKind::AmpTransient;
+    candidate.source = OccurrenceSource::Amp;
+    candidate.detectorKind = OccurrenceDetectorKind::Transient;
     candidate.valid = candidate.durationMs > 0 || candidate.strength > 0.0f || candidate.releaseMs != 0;
     // AMP transients do not expose a separate peak timestamp, so peakMs stays at the default.
     candidate.endMs = candidate.releaseMs;
@@ -34,20 +34,20 @@ void AmpSignalEmitter::fillAmpCandidate(SignalCandidate& candidate, const AudioS
     candidate.transient.audioOverflowDuringCandidate = frame.overflowDuringBlock;
 }
 
-AmpSignalEmitter::AmpSignalEmitter() = default;
+AmpOccurrenceSource::AmpOccurrenceSource() = default;
 
-void AmpSignalEmitter::reset() {
+void AmpOccurrenceSource::reset() {
     _hasPending = false;
     _pending = {};
     _scalarEmitter.reset();
 }
 
-void AmpSignalEmitter::observeFrame(const AudioSignalFrame& frame) {
+void AmpOccurrenceSource::observeFrame(const AudioSignalFrame& frame) {
     _scalarEmitter.observe(frame, static_cast<float>(frame.level));
 
     if (_scalarEmitter.transientDetected()) {
-        SignalCandidate candidate;
-        if (_scalarEmitter.consumeCandidate(frame, SignalKind::AmpTransient, SignalSource::Amp, candidate)) {
+        Occurrence candidate;
+        if (_scalarEmitter.consumeCandidate(frame, OccurrenceKind::AmpTransient, OccurrenceSource::Amp, candidate)) {
             fillAmpCandidate(candidate, frame);
             _pending = candidate;
             _hasPending = true;
@@ -55,7 +55,7 @@ void AmpSignalEmitter::observeFrame(const AudioSignalFrame& frame) {
     }
 }
 
-bool AmpSignalEmitter::popSignalCandidate(SignalCandidate& out) {
+bool AmpOccurrenceSource::popOccurrence(Occurrence& out) {
     if (!_hasPending) {
         return false;
     }
@@ -66,3 +66,4 @@ bool AmpSignalEmitter::popSignalCandidate(SignalCandidate& out) {
 }
 
 } // namespace detection
+

@@ -1,62 +1,63 @@
 #pragma once
 
 #include "../DetectionProfile.h"
-#include "../signals/InspectedSignal.h"
-#include "../signals/RawWindow.h"
+#include "../occurrences/InspectedOccurrence.h"
+#include "../occurrences/RawWindow.h"
 #include "../features/FeatureHistory.h"
 
 namespace detection {
 
 /*
-SignalInspector
+OccurrenceInspector
 
-Owns signal-stage inspection and evidence annotation.
-Consumes SignalCandidate plus optional feature/raw history and produces InspectedSignal.
+Owns occurrence-stage inspection and evidence annotation.
+Consumes Occurrence plus optional feature/raw history and produces InspectedOccurrence.
 Does not decide pattern validity or behavior eligibility.
 */
-class SignalInspector {
+class OccurrenceInspector {
 public:
     void configure(const InspectionConfig& config);
     void setInspectionRules(ProfileInspectionRulesKind rules);
     void reset();
 
-    InspectedSignal inspect(
-        const SignalCandidate& candidate,
+    InspectedOccurrence inspect(
+        const Occurrence& candidate,
         const RawWindowStats* rawWindow = nullptr
     ) const;
 
-    InspectedSignal inspectWithHistory(
-        const SignalCandidate& candidate,
+    InspectedOccurrence inspectWithHistory(
+        const Occurrence& candidate,
         const FeatureHistory* featureHistory,
         const RawWindowStats* rawWindow = nullptr
     ) const;
 
 private:
     void annotateAcceptedSignal(
-        InspectedSignal& out,
-        const SignalCandidate& candidate,
+        InspectedOccurrence& out,
+        const Occurrence& candidate,
         const FeatureHistory* featureHistory
     ) const;
-    void annotateDuplicateRisk(InspectedSignal& out, const SignalCandidate& candidate) const;
+    void annotateDuplicateRisk(InspectedOccurrence& out, const Occurrence& candidate) const;
     void annotateAmpSupport(
-        InspectedSignal& out,
-        const SignalCandidate& candidate,
+        InspectedOccurrence& out,
+        const Occurrence& candidate,
         const FeatureHistory* featureHistory
     ) const;
-    InspectedSignal inspectImpl(
-        const SignalCandidate& candidate,
+    InspectedOccurrence inspectImpl(
+        const Occurrence& candidate,
         const FeatureHistory* featureHistory
     ) const;
 
-    InspectedSignal inspectAmp(
-        const SignalCandidate& candidate,
+    InspectedOccurrence inspectAmp(
+        const Occurrence& candidate,
         const FeatureHistory* featureHistory
     ) const;
 
     mutable unsigned long _lastAcceptedAmpMs = 0;
     mutable unsigned long _lastAcceptedFrequencyMs = 0;
-    ProfileInspectionRulesKind _inspectionRules = ProfileInspectionRulesKind::FreqAmp;
+    ProfileInspectionRulesKind _inspectionRules = ProfileInspectionRulesKind::TonalPulse;
     InspectionConfig _config = defaultInspectionConfig();
 };
 
 } // namespace detection
+

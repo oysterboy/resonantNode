@@ -7,26 +7,26 @@
 namespace detection {
 
 /*
-SignalCandidate
+Occurrence
 
-Low-level source-tagged signal event proposed by a SignalEmitter.
+Low-level source-tagged occurrence event proposed by a OccurrenceSource.
 It is not a pattern result and must not drive behavior directly.
 */
-enum class SignalKind {
+enum class OccurrenceKind {
     None,
     AmpTransient,
     FrequencyMatch,
     BroadbandTransient
 };
 
-enum class SignalSource {
+enum class OccurrenceSource {
     None,
     Amp,
     Frequency,
     Broadband
 };
 
-enum class SignalDetectorKind {
+enum class OccurrenceDetectorKind {
     Unknown,
     Transient,
     FrequencyMatch,
@@ -35,13 +35,13 @@ enum class SignalDetectorKind {
     ThresholdCrossing
 };
 
-struct SignalCandidate {
-    SignalKind kind = SignalKind::None;
-    SignalSource source = SignalSource::None;
+struct Occurrence {
+    OccurrenceKind kind = OccurrenceKind::None;
+    OccurrenceSource source = OccurrenceSource::None;
 
     bool present = false;
     bool valid = false;
-    SignalDetectorKind detectorKind = SignalDetectorKind::Unknown;
+    OccurrenceDetectorKind detectorKind = OccurrenceDetectorKind::Unknown;
 
     uint64_t startSample = 0;
     uint64_t peakSample = 0;
@@ -73,3 +73,4 @@ struct SignalCandidate {
 };
 
 } // namespace detection
+

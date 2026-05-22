@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include "../../io/AudioSignal.h"
 #include "../inspector/InspectorTypes.h"
@@ -9,7 +9,7 @@ namespace detection {
 FrequencyWindowProbe
 
 Retrospective helper for measuring frequency evidence around a candidate window.
-Produces FrequencyEvidence only; it does not create SignalCandidate or PatternResult.
+Produces FrequencyEvidence only; it does not create Occurrence or PatternResult.
 */
 bool measureCandidateWindowFrequency(const AudioSignal& audioSignal,
                                      const DetectorCandidate& candidate,
@@ -28,3 +28,4 @@ bool measureCandidateWindowFrequencyParityScan64(const AudioSignal& audioSignal,
                                                  unsigned long windowSampleCount = 64UL);
 
 } // namespace detection
+

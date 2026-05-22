@@ -22,7 +22,7 @@
 Node
 
 Owns orchestration for the Resonant node.
-Coordinates hardware setup, signal flow, detection runtime, behavior, chirp output,
+Coordinates hardware setup, occurrence flow, detection runtime, behavior, chirp output,
 serial commands, logging, and summaries.
 
 Does not implement behavior decisions, classify patterns, or generate waveforms.
@@ -93,7 +93,7 @@ private:
     PiezoToneOutputBTL _toneOutputBTL;
     ChirpOutput _chirpOutput;
 
-    // Signal / detection / behavior pipeline.
+    // Occurrence / detection / behavior pipeline.
     detection::AmpDiagnosticProbe _ampDiagnosticProbe;
     AudioSignal _audioSignal;
     FreqBandStream _freqBandStream;
@@ -117,7 +117,7 @@ private:
     unsigned long _rbLastLoggedOnsetRejectCount = 0;
     unsigned long _rbLastLoggedTransientRejectCount = 0;
     RbLogMode _rbLogMode = RbLogMode::Minimal;
-    detection::DetectionProfileKind _profileKind = detection::DetectionProfileKind::FreqAmp;
+    detection::DetectionProfileKind _profileKind = detection::DetectionProfileKind::TonalPulse;
     bool _wasSelfChirpSuppressed = false;
     unsigned long _rbLastWouldEmitHeardMs = 0;
     ResonantBehavior::BehaviorDecision _rbLastWouldEmitDecision = ResonantBehavior::BehaviorDecision::None;

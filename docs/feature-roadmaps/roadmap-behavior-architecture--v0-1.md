@@ -197,7 +197,7 @@ It should:
 
 It should not:
 
-- read raw SignalCandidates
+- read raw OccurrenceCandidates
 - read low-level detector internals
 - dispatch hardware directly
 - manage physical output state machines
@@ -606,7 +606,7 @@ Detection Roadmap goal:
 
 ```txt
 Behavior consumes PatternResults + FieldState,
-not SignalCandidates or detector internals.
+not OccurrenceCandidates or detector internals.
 ```
 
 Behavior Roadmap goal:

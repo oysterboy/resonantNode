@@ -11,11 +11,11 @@ Short operator notes for running RB and Analyzer with the current detection stac
 
 ## Detection Profiles
 
-- Default profile: `FreqAmp`
+- Default profile: `TonalPulse`
 - Profile definitions live in `src/detection/DetectionProfile.h`
 
 - Switch profile at runtime with:
-  - `RB PROFILE name=freqamp`
+  - `RB PROFILE name=tonalpulse`
   - `RB PROFILE name=chirp`
 - Profiles own the detection composition.
 - Live low-level detection tuning is mostly profile-defined, not a freeform runtime knob set.
@@ -24,7 +24,7 @@ Short operator notes for running RB and Analyzer with the current detection stac
 
 **Runtime parameter**
 - `kind` in `src/detection/DetectionProfile.h`
-  - selected at runtime via `RB PROFILE name=freqamp|chirp`
+  - selected at runtime via `RB PROFILE name=tonalpulse|chirp`
   - Analyzer SEQ also selects a profile when it starts a run
 
 **Coded in profile**
@@ -39,7 +39,7 @@ Short operator notes for running RB and Analyzer with the current detection stac
 - `inspectionConfig` in `src/detection/DetectionProfile.h`
   - windowing and support settings used by the inspector
 - `fieldStateConfig` in `src/detection/DetectionProfile.h`
-  - signal/pattern window lengths and field-density thresholds
+  - occurrence/pattern window lengths and field-density thresholds
 
 **Elsewhere**
 - I2S tuning in `src/modes/resonant/node.cpp`
@@ -57,7 +57,7 @@ Short operator notes for running RB and Analyzer with the current detection stac
   - calls `configureI2SParameters()`
   - starts `AudioSignal`
   - begins the AMP diagnostic probe
-  - seeds frequency tuning from the default `FreqAmp` profile
+  - seeds frequency tuning from the default `TonalPulse` profile
 - `AnalyzerApp::startSequenceTest()`
   - resets `DetectionRuntime`
   - reapplies the selected profile's emitter, inspection, pattern, and field configs
@@ -89,7 +89,7 @@ candidateAccepted -> patternMatched -> supportMatched -> behaviorEligible
 
 - Behavior profiles control how RB reacts after detection has already produced a valid result.
 - They do not change the detection profile itself.
-- The current RB behavior profile is the `FreqAmp` behavior setup used by the active node.
+- The current RB behavior profile is the `TonalPulse` behavior setup used by the active node.
 - Defaults defined in `src/behavior/BehaviorProfile.h`
 - Applied from `src/modes/resonant/node.cpp`
 - `RB BEHAV` updates the active behavior values and reapplies them immediately.
@@ -131,7 +131,7 @@ RB BEHAV wait=100 refractory=0 idleTimeout=20000 idleTimeoutVariation=10000 idle
 - Show RB profile:
   - `RB PROFILE`
 - Set RB profile:
-  - `RB PROFILE name=freqamp`
+  - `RB PROFILE name=tonalpulse`
   - `RB PROFILE name=chirp`
 - Tune RB frequency thresholds:
   - `RB PARAM freqScore=10000 freqContrast=50.0`
@@ -151,13 +151,13 @@ RB BEHAV wait=100 refractory=0 idleTimeout=20000 idleTimeoutVariation=10000 idle
 - `supportMatched` means the profile-specific support gate passed.
 - `behaviorEligible` is the final gate used by RB to decide whether to react.
 
-### FreqAmp decision tree
+### TonalPulse decision tree
 
 - `AudioSignalFrame` is built from the live I2S stream.
-- The detector produces signal evidence once.
-- `SignalInspector` adds AMP support and amp-window evidence.
+- The detector produces occurrence evidence once.
+- `OccurrenceInspector` adds AMP support and amp-window evidence.
 - `PatternRules` turns the candidate into a `PatternResult`.
-- For `FreqAmp`, the result is valid only when:
+- For `TonalPulse`, the result is valid only when:
   - the frequency path matched
   - the profile-owned support gate allows acceptance
   - `AmpSupportLevel >= Medium` when support is required
@@ -178,16 +178,16 @@ RB BEHAV wait=100 refractory=0 idleTimeout=20000 idleTimeoutVariation=10000 idle
 Short version:
 
 ```txt
-signal -> inspection -> pattern result -> behavior gate -> output
+occurrence -> inspection -> pattern result -> behavior gate -> output
 ```
 
-`FreqAmp` keeps support required by default. Future profiles can flip the profile-owned switch if they want support to be behavior-only.
+`TonalPulse` keeps support required by default. Future profiles can flip the profile-owned switch if they want support to be behavior-only.
 
 ## Source Organization
 
 - `src/detection/`
   - detection profiles
-  - signal emitters and detectors
+  - occurrence emitters and detectors
   - inspection rules
   - pattern assembly and pattern rules
   - field-state tracking

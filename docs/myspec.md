@@ -2714,6 +2714,20 @@ fieldStateConfig
 
 The profile shell should describe what the runtime applies, not duplicate selectors that are already implied by the active emitter or inspector path.
 
+Fixed apply points:
+
+```text
+DetectionRuntime     <- signalEmitter selection
+SignalInspector      <- inspectionRules + InspectionConfig
+PatternRules         <- support gate
+Behavior             <- BehaviorGateConfig
+FieldStateTracker    <- FieldStateConfig
+```
+
+`signalEmitter` chooses the active emitter family.
+`inspectionRules` chooses the inspection strategy and windowing rule.
+`patternRules` chooses the final pattern policy.
+
 ### 30.4 FeatureHistory and ScalarWindow
 
 `FeatureHistory` keeps bounded retrospective feature samples.

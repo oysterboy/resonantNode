@@ -2298,6 +2298,44 @@ avg_duration
 avg_detection_time
 ```
 
+### AnalyzerReport Contract
+
+The landed analyzer contract centers on a compact report object:
+
+```text
+AnalyzerReport
+RunContext
+ExpectedEvent
+PatternObservation
+SignalObservation
+InspectionObservation
+FieldObservation
+AnalyzerClassification
+ProfileDetail
+DebugSummary
+```
+
+`AnalyzerReport` is the measurement and reporting object.
+It does not own detection.
+It does not own behavior.
+
+The stable printed modes are:
+
+```text
+SEQ_TRIAL
+SEQ_EXPLAIN
+SEQ_SUMMARY
+```
+
+`SEQ_TRIAL` is the compact default trial line.
+`SEQ_EXPLAIN` is the detailed explanation line.
+`SEQ_SUMMARY` is the aggregate summary line.
+
+`RAW_SAMPLE_CAPTURE` remains a separate diagnostic path and should not be conflated with `SEQ_EXPLAIN`.
+
+The report can be richer than the printed line.
+The printed line should stay compact.
+
 ---
 
 ## 20. Runtime Modes

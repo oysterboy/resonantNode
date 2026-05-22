@@ -1,6 +1,6 @@
 # Detection Roadmap v0.4 — Clean Gate / Profile Composition Roadmap
 
-Status: updated roadmap  
+Status: active future work  
 Scope: ResonantNode / Resonanzraum detection architecture  
 Intent: clean switch, no compatibility layer, no generic rule engine
 

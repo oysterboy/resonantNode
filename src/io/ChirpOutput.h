@@ -1,6 +1,7 @@
 #pragma once
 #include <Arduino.h>
 
+#include "../RuntimeDefaults.h"
 #include "../hal/ToneOutput.h"
 
 /*
@@ -27,7 +28,7 @@ public:
         Idle
     };
 
-    explicit ChirpOutput(ToneOutput& toneOutput, uint32_t toneHz = 3200);
+    explicit ChirpOutput(ToneOutput& toneOutput, uint32_t toneHz = runtime::kDefaultChirpFrequencyHz);
 
     void begin();
     void setToneHz(uint32_t toneHz);

@@ -1057,6 +1057,8 @@ No obvious stale demo files in active source.
 Runtime defaults have one source of truth.
 ```
 
+Status: DONE
+
 ---
 
 # Pass 12 — Mechanical Analyzer split, only after semantics are clean

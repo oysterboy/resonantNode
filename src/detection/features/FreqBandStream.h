@@ -2,6 +2,8 @@
 
 #include <stdint.h>
 
+#include "../../RuntimeDefaults.h"
+
 /*
 FreqBandStream
 
@@ -46,7 +48,7 @@ private:
     float computeGoertzelPowerAtFrequency(float frequencyHz) const;
     void pushSample(int sample);
 
-    unsigned long _targetFrequencyHz = 3200;
+    unsigned long _targetFrequencyHz = runtime::kDefaultChirpFrequencyHz;
     unsigned long _sampleRateHz = 16000;
     unsigned long _windowSizeSamples = 64;
     float _lastFrequencyScore = 0.0f;

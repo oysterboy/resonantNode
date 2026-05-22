@@ -3,6 +3,8 @@
 #include <Arduino.h>
 #include <string.h>
 
+#include "../../RuntimeDefaults.h"
+
 namespace {
 bool startsWithToken(const char* line, const char* token) {
     return strncmp(line, token, strlen(token)) == 0;
@@ -128,7 +130,7 @@ void EmitterApp::handleChirpCommand(const char* line) {
     strncpy(buffer, line, sizeof(buffer));
     buffer[sizeof(buffer) - 1] = '\0';
 
-    unsigned long toneHz = 3200;
+    unsigned long toneHz = runtime::kDefaultChirpFrequencyHz;
     unsigned long durationMs = 100;
     char* savePtr = nullptr;
     char* token = strtok_r(buffer, " ", &savePtr);

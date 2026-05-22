@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "../../RuntimeDefaults.h"
 #include "../../AudioDebugConfig.h"
 #include "../../detection/DetectorParameters.h"
 #include "../../detection/features/FrequencyMatchEvaluation.h"
@@ -469,7 +470,7 @@ void AnalyzerApp::begin() {
     _audioOnsetDetector.begin();
     _freqBandStream.resetState();
     _freqBandStream.setSampleRateHz(_audioSource.sampleRateHz());
-    _freqBandStream.setTargetFrequencyHz(3200UL);
+    _freqBandStream.setTargetFrequencyHz(runtime::kDefaultChirpFrequencyHz);
     if (_sequenceFeatureHistory == nullptr) {
         _sequenceFeatureHistory = new detection::FeatureHistory();
     }
@@ -983,7 +984,11 @@ void AnalyzerApp::handleUsbLine(const char* line) {
             return;
         }
         sendEmitterCommand("MODE REMOTE");
-        sendEmitterCommand("CHIRP freq=3200 dur=100");
+        char chirpCommand[64];
+        snprintf(chirpCommand, sizeof(chirpCommand), "CHIRP freq=%lu dur=%lu",
+                 static_cast<unsigned long>(runtime::kDefaultChirpFrequencyHz),
+                 runtime::kDefaultChirpDurationMs);
+        sendEmitterCommand(chirpCommand);
         return;
     }
 
@@ -1004,7 +1009,7 @@ void AnalyzerApp::handleUsbLine(const char* line) {
             return;
         }
 
-        unsigned long toneHz = 3200;
+        unsigned long toneHz = runtime::kDefaultChirpFrequencyHz;
         unsigned long durationMs = 100;
         unsigned long postMs = 1000;
         unsigned long preMs = 0;
@@ -1069,7 +1074,7 @@ void AnalyzerApp::handleUsbLine(const char* line) {
         unsigned long totalTrials = 100;
         unsigned long periodMs = externalEmitter ? 2000 : 2500;
         unsigned long windowEndOffsetMs = externalEmitter ? 600 : 2200;
-        unsigned long toneHz = 3200;
+        unsigned long toneHz = runtime::kDefaultChirpFrequencyHz;
         unsigned long durationMs = 100;
         uint32_t logFlags = AnalyzerApp::DEFAULT_ANALYZER_LOG_FLAGS;
         bool customLogRequested = false;
@@ -1203,7 +1208,7 @@ void AnalyzerApp::handleUsbLine(const char* line) {
         unsigned long totalTrials = 20;
         unsigned long periodMs = 2500;
         unsigned long windowEndOffsetMs = 500;
-        unsigned long toneHz = 3200;
+        unsigned long toneHz = runtime::kDefaultChirpFrequencyHz;
         unsigned long durationMs = 100;
 
         while (token != nullptr) {
@@ -2678,117 +2683,74 @@ void AnalyzerApp::handleSequenceCandidate(const detection::PatternResult& patter
     }
 
     if (analyzerLogEnabled(_sequenceTest.logFlags, AnalyzerApp::ANALYZER_LOG_CANDIDATE) && !_sequenceTest.quiet) {
-        const uint32_t sampleRateHz = _audioSource.sampleRateHz() > 0 ? _audioSource.sampleRateHz() : 16000UL;
-        const unsigned long peakOffsetMs = candidate.peakSample >= candidate.onsetSample
-            ? static_cast<unsigned long>(((candidate.peakSample - candidate.onsetSample) * 1000ULL) / static_cast<uint64_t>(sampleRateHz))
-            : 0UL;
-        Serial.print("SEQ_CAND role=detector trial=");
-        Serial.print(_sequenceTest.currentTrial);
-        Serial.print(" idx=");
-        Serial.print(candidateIdx);
-        Serial.print(" onset_ms=");
-        Serial.print(onsetMs);
-        Serial.print(" onset_sample=");
-        Serial.print(candidate.onsetSample);
-        Serial.print(" peak_sample=");
-        Serial.print(candidate.peakSample);
-        Serial.print(" release_sample=");
-        Serial.print(candidate.releaseSample);
-        Serial.print(" onset_dt_ms=");
-        Serial.print(dtFromTriggerMs);
-        Serial.print(" peak_ms=");
-        Serial.print(candidate.startMs + peakOffsetMs);
-        Serial.print(" dur=");
-        Serial.print(candidate.durationMs);
-        Serial.print(" end_dt_ms=");
-        if (dtFromTriggerMs >= 0) {
-            Serial.print(dtFromTriggerMs + static_cast<long>(candidate.durationMs));
-            Serial.print("ms");
-        } else {
-            Serial.print("-");
-        }
-        Serial.print(" processed_at_ms=");
-        Serial.print(patternResult.processedAtMs);
-        Serial.print(" process_lag_ms=");
-        if (processLagMs >= 0) {
-            Serial.print(processLagMs);
-            Serial.print("ms");
-        } else {
-            Serial.print("-");
-        }
-        Serial.print(" strength=");
-        Serial.print(candidate.peakStrength, 1);
-        Serial.print(" transient_present=");
-        Serial.print(patternResult.candidate.transient.present ? 1 : 0);
-        Serial.print(" freq_present=");
-        Serial.print(patternResult.freq.present ? 1 : 0);
-        Serial.print(" freq_matched=");
-        Serial.print(patternResult.freq.matched ? 1 : 0);
-        Serial.print(" freq_score=");
-        Serial.print(patternResult.freq.score, 1);
-        Serial.print(" freq_conf=");
-        Serial.print(patternResult.freq.confidence, 1);
-        Serial.print(" freq_target_hz=");
-        Serial.print(patternResult.freq.targetHz);
-        Serial.print(" freq_contrast=");
-        Serial.print(patternResult.freq.spectralContrast, 1);
-        printH3FrequencyEvidenceFields(patternResult, patternResult.freq, liveFrequencyEvidence, _frequencyEvidenceTuning, candidateClass, dtFromTriggerMs, patternResult.processedAtMs);
-        Serial.print(" pattern_type=");
-        Serial.println(detection::patternTypeName(patternResult.type));
+        auto printSequenceCandidateLine = [&](const char* role, const char* indexLabel, bool includeReason) {
+            Serial.print("SEQ_CAND role=");
+            Serial.print(role);
+            Serial.print(" trial=");
+            Serial.print(_sequenceTest.currentTrial);
+            Serial.print(" ");
+            Serial.print(indexLabel);
+            Serial.print("=");
+            Serial.print(candidateIdx);
+            Serial.print(" onset_ms=");
+            Serial.print(onsetMs);
+            Serial.print(" onset_sample=");
+            Serial.print(candidate.onsetSample);
+            Serial.print(" peak_sample=");
+            Serial.print(candidate.peakSample);
+            Serial.print(" release_sample=");
+            Serial.print(candidate.releaseSample);
+            Serial.print(" onset_dt_ms=");
+            Serial.print(dtFromTriggerMs);
+            Serial.print(" peak_ms=");
+            Serial.print(candidate.startMs + peakOffsetMs);
+            Serial.print(" dur=");
+            Serial.print(candidate.durationMs);
+            Serial.print(" end_dt_ms=");
+            if (dtFromTriggerMs >= 0) {
+                Serial.print(dtFromTriggerMs + static_cast<long>(candidate.durationMs));
+                Serial.print("ms");
+            } else {
+                Serial.print("-");
+            }
+            Serial.print(" processed_at_ms=");
+            Serial.print(patternResult.processedAtMs);
+            Serial.print(" process_lag_ms=");
+            if (processLagMs >= 0) {
+                Serial.print(processLagMs);
+                Serial.print("ms");
+            } else {
+                Serial.print("-");
+            }
+            Serial.print(" strength=");
+            Serial.print(candidate.peakStrength, 1);
+            Serial.print(" transient_present=");
+            Serial.print(patternResult.candidate.transient.present ? 1 : 0);
+            Serial.print(" freq_present=");
+            Serial.print(patternResult.freq.present ? 1 : 0);
+            Serial.print(" freq_matched=");
+            Serial.print(patternResult.freq.matched ? 1 : 0);
+            Serial.print(" freq_score=");
+            Serial.print(patternResult.freq.score, 1);
+            Serial.print(" freq_conf=");
+            Serial.print(patternResult.freq.confidence, 1);
+            Serial.print(" freq_target_hz=");
+            Serial.print(patternResult.freq.targetHz);
+            Serial.print(" freq_contrast=");
+            Serial.print(patternResult.freq.spectralContrast, 1);
+            printH3FrequencyEvidenceFields(patternResult, patternResult.freq, liveFrequencyEvidence, _frequencyEvidenceTuning, candidateClass, dtFromTriggerMs, patternResult.processedAtMs);
+            Serial.print(" pattern_type=");
+            Serial.print(detection::patternTypeName(patternResult.type));
+            if (includeReason) {
+                Serial.print(" reason=");
+                Serial.print(detection::patternReasonName(patternResult.reasonCode));
+            }
+            Serial.println();
+        };
 
-        Serial.print("SEQ_CAND role=pattern trial=");
-        Serial.print(_sequenceTest.currentTrial);
-        Serial.print(" idx=");
-        Serial.print(candidateIdx);
-        Serial.print(" onset_ms=");
-        Serial.print(onsetMs);
-        Serial.print(" onset_sample=");
-        Serial.print(candidate.onsetSample);
-        Serial.print(" peak_sample=");
-        Serial.print(candidate.peakSample);
-        Serial.print(" release_sample=");
-        Serial.print(candidate.releaseSample);
-        Serial.print(" onset_dt_ms=");
-        Serial.print(dtFromTriggerMs);
-        Serial.print(" peak_ms=");
-        Serial.print(candidate.startMs + peakOffsetMs);
-        Serial.print(" dur=");
-        Serial.print(candidate.durationMs);
-        Serial.print(" end_dt_ms=");
-        if (dtFromTriggerMs >= 0) {
-            Serial.print(dtFromTriggerMs + static_cast<long>(candidate.durationMs));
-            Serial.print("ms");
-        } else {
-            Serial.print("-");
-        }
-        Serial.print(" processed_at_ms=");
-        Serial.print(patternResult.processedAtMs);
-        Serial.print(" process_lag_ms=");
-        if (processLagMs >= 0) {
-            Serial.print(processLagMs);
-            Serial.print("ms");
-        } else {
-            Serial.print("-");
-        }
-        Serial.print(" strength=");
-        Serial.print(candidate.peakStrength, 1);
-        Serial.print(" transient_present=");
-        Serial.print(patternResult.candidate.transient.present ? 1 : 0);
-        Serial.print(" freq_present=");
-        Serial.print(patternResult.freq.present ? 1 : 0);
-        Serial.print(" freq_matched=");
-        Serial.print(patternResult.freq.matched ? 1 : 0);
-        Serial.print(" freq_score=");
-        Serial.print(patternResult.freq.score, 1);
-        Serial.print(" freq_conf=");
-        Serial.print(patternResult.freq.confidence, 1);
-        Serial.print(" freq_target_hz=");
-        Serial.print(patternResult.freq.targetHz);
-        Serial.print(" freq_contrast=");
-        Serial.print(patternResult.freq.spectralContrast, 1);
-        printH3FrequencyEvidenceFields(patternResult, patternResult.freq, liveFrequencyEvidence, _frequencyEvidenceTuning, candidateClass, dtFromTriggerMs, patternResult.processedAtMs);
-        Serial.print(" pattern_type=");
-        Serial.println(detection::patternTypeName(patternResult.type));
+        printSequenceCandidateLine("detector", "idx", false);
+        printSequenceCandidateLine("pattern", "idx", false);
+        printSequenceCandidateLine("result", "primary_idx", true);
     }
 
     if (!inWindow) {

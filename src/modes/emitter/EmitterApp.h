@@ -1,5 +1,6 @@
 #pragma once
 
+#include "../../RuntimeDefaults.h"
 #include "../../hal/PiezoToneOutputBTL.h"
 #include "../../hal/PiezoToneOutput.h"
 #include "../../io/ChirpOutput.h"
@@ -50,7 +51,7 @@ private:
     unsigned long _baudRate;
     EmitterMode _mode = EmitterMode::Auto;
     unsigned long _autoIntervalMs = 2000;
-    unsigned long _autoToneHz = 3200;
+    unsigned long _autoToneHz = runtime::kDefaultChirpFrequencyHz;
     unsigned long _autoDurationMs = 100;
     unsigned long _nextAutoChirpAtMs = 0;
     unsigned long _sweepStartHz = 3000;

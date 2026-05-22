@@ -15,6 +15,7 @@
 #include "../../detection/patterns/PatternResult.h"
 #include "../../detection/signals/SignalCandidate.h"
 #include "../../hal/AudioSource.h"
+#include "../../RuntimeDefaults.h"
 #include "AnalyzerReporting.h"
 
 /*
@@ -102,7 +103,7 @@ private:
         unsigned long periodMs = 2500;
         unsigned long windowStartOffsetMs = 0;
         unsigned long windowEndOffsetMs = 500;
-        unsigned long toneHz = 3200;
+        unsigned long toneHz = runtime::kDefaultChirpFrequencyHz;
         unsigned long durationMs = 100;
 
         unsigned long startedAtMs = 0;
@@ -254,7 +255,7 @@ private:
         unsigned long periodMs = 2500;
         unsigned long windowStartOffsetMs = 0;
         unsigned long windowEndOffsetMs = 2200;
-        unsigned long toneHz = 3200;
+        unsigned long toneHz = runtime::kDefaultChirpFrequencyHz;
         unsigned long durationMs = 100;
         char setupLabel[48] = TEST_SETUP_LABEL;
 

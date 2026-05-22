@@ -4,13 +4,10 @@
 
 #include <esp_system.h>
 
+#include "../../RuntimeDefaults.h"
 #include "../../detection/features/FrequencyMatchEvaluation.h"
 #include "../../detection/inspector/FrequencyWindowProbe.h"
 #include "../../detection/patterns/PatternNames.h"
-
-#ifndef CHIRP_FREQUENCY_HZ
-#define CHIRP_FREQUENCY_HZ 3200
-#endif
 
 /*
 Node
@@ -436,7 +433,7 @@ void Node::configureI2SParameters() {
     _frequencyEvidenceTuning.contrastMin = 50.0f;
 
     // Chirp tone is configured here so the node owns its output tuning.
-    _chirpOutput.setToneHz(CHIRP_FREQUENCY_HZ);
+    _chirpOutput.setToneHz(runtime::kDefaultChirpFrequencyHz);
     _freqBandStream.setTargetFrequencyHz(_chirpOutput.toneHz());
     _audioSignal.setBaselineTrackingQuietThreshold(20);
 
@@ -892,9 +889,7 @@ void Node::processDetectionFrame(const AudioSignalFrame& frame,
     _detection.observeFrame(frame, liveFrequencyEvidence, frame.sampleTimeMs);
 
     detection::PatternResult patternResult;
-    bool emittedPattern = false;
     while (_detection.popPatternResult(patternResult)) {
-        emittedPattern = true;
         const auto behaviorDecision = _behavior.handlePatternResult(patternResult, _detection.fieldState(), now);
         if (behaviorDecision == ResonantBehavior::BehaviorDecision::ConsumedPattern) {
             sawPatternThisLoop = true;
@@ -966,135 +961,6 @@ detection::FrequencyEvidence Node::captureFrequencyEvidence(unsigned long observ
     evidence.validWindow = present;
     return evidence;
 }
-
-#if 0
-void Node::logCandidate(const DetectorCandidate& candidate, const detection::PatternResult& patternResult, const detection::FrequencyEvidence* liveFrequencyEvidence, unsigned long candidateNumber, long gapMs, unsigned long queueDepthBeforeDrain, unsigned long behaviorLagMs, const char* candidateClass, const char* action, const char* stateName, const char* gateName) {
-    const uint32_t sampleRateHz = _audioSource.sampleRateHz() > 0 ? _audioSource.sampleRateHz() : 16000UL;
-    const unsigned long peakOffsetMs = candidate.peakSample >= candidate.onsetSample
-        ? static_cast<unsigned long>(((candidate.peakSample - candidate.onsetSample) * 1000ULL) / static_cast<uint64_t>(sampleRateHz))
-        : 0UL;
-    Serial.print("RB candidate n=");
-    Serial.print(candidateNumber);
-    Serial.print(" gap=");
-    if (gapMs >= 0) {
-        Serial.print(gapMs);
-        Serial.print("ms");
-    } else {
-        Serial.print("-");
-    }
-    Serial.print(" dur=");
-    Serial.print(candidate.durationMs);
-    Serial.print(" onset_sample=");
-    Serial.print(candidate.onsetSample);
-    Serial.print(" peak_sample=");
-    Serial.print(candidate.peakSample);
-    Serial.print(" release_sample=");
-    Serial.print(candidate.releaseSample);
-    Serial.print(" end_dt_ms=");
-    if (candidate.onsetMillisApprox > 0) {
-        Serial.print(candidate.onsetMillisApprox + candidate.durationMs);
-        Serial.print("ms");
-    } else {
-        Serial.print("-");
-    }
-    Serial.print(" peak_ms=");
-    Serial.print(candidate.onsetMillisApprox + peakOffsetMs);
-    Serial.print(" processed_at_ms=");
-    Serial.print(patternResult.processedAtMs);
-    Serial.print(" process_lag_ms=");
-    if (patternResult.processedAtMs >= candidate.onsetMillisApprox) {
-        Serial.print(patternResult.processedAtMs - candidate.onsetMillisApprox);
-        Serial.print("ms");
-    } else {
-        Serial.print("-");
-    }
-    Serial.print(" behavior_lag_ms=");
-    Serial.print(behaviorLagMs);
-    Serial.print(" queue_before=");
-    Serial.print(queueDepthBeforeDrain);
-    Serial.print(" strength=");
-    Serial.print(candidate.peakStrength, 1);
-    Serial.print(" audio=");
-    Serial.print(candidate.audioOverflowDuringCandidate ? "overflow" : "ok");
-    Serial.print(" pattern=");
-    Serial.print(detection::patternTypeName(patternResult.type));
-    Serial.print(" candidate_class=");
-    Serial.print(candidateClass);
-    Serial.print(" candidateAccepted=");
-    Serial.print(patternResult.patternCandidateAccepted ? 1 : 0);
-    Serial.print(" patternMatched=");
-    Serial.print(patternResult.patternMatched ? 1 : 0);
-    Serial.print(" supportMatched=");
-    Serial.print(patternResult.supportMatched ? 1 : 0);
-    Serial.print(" reject_reason=");
-    Serial.print(detection::patternRejectReasonName(patternResult.rejectReason));
-    Serial.print(" transient_present=");
-    Serial.print(patternResult.candidate.transient.present ? 1 : 0);
-    Serial.print(" freq_present=");
-    Serial.print(patternResult.freq.present ? 1 : 0);
-    Serial.print(" freq_matched=");
-    Serial.print(patternResult.freq.matched ? 1 : 0);
-    const auto freqEval = FrequencyMatchEvaluation::evaluate(patternResult.freq, _frequencyEvidenceTuning);
-    Serial.print(" freq_score_ok=");
-    Serial.print(freqEval.scoreOk ? 1 : 0);
-    Serial.print(" freq_contrast_ok=");
-    Serial.print(freqEval.contrastOk ? 1 : 0);
-    Serial.print(" freq_score=");
-    Serial.print(patternResult.freq.score, 1);
-    Serial.print(" freq_conf=");
-    Serial.print(patternResult.freq.confidence, 1);
-    Serial.print(" freq_target_hz=");
-    Serial.print(patternResult.freq.targetHz);
-    Serial.print(" freq_target_power=");
-    Serial.print(patternResult.freq.targetPower, 1);
-    Serial.print(" freq_neighbor_power=");
-    Serial.print(patternResult.freq.neighborPower, 1);
-    Serial.print(" freq_total_energy=");
-    Serial.print(patternResult.freq.totalEnergy, 1);
-    Serial.print(" freq_contrast=");
-    Serial.print(patternResult.freq.spectralContrast, 1);
-    Serial.print(" freq_observed_at_ms=");
-    Serial.print(patternResult.freq.observedAtMs);
-    Serial.print(" freq_age_ms=");
-    if (patternResult.freq.observedAtMs > 0 && patternResult.processedAtMs >= patternResult.freq.observedAtMs) {
-        Serial.print(patternResult.processedAtMs - patternResult.freq.observedAtMs);
-        Serial.print("ms");
-    } else {
-        Serial.print("-");
-    }
-    Serial.print(" freq_valid_window=");
-    Serial.print(patternResult.freq.validWindow ? 1 : 0);
-    Serial.print(" freq_eval_reason=");
-    Serial.print(FrequencyMatchEvaluation::reasonName(freqEval.reason));
-    if (liveFrequencyEvidence != nullptr) {
-        Serial.print(" liveFreq[avail=");
-        Serial.print(liveFrequencyEvidence->present ? 1 : 0);
-        Serial.print(" ready=");
-        Serial.print(liveFrequencyEvidence->windowAvailable ? 1 : 0);
-        Serial.print(" samples=");
-        Serial.print(liveFrequencyEvidence->windowSampleCount);
-        Serial.print(" score=");
-        Serial.print(liveFrequencyEvidence->score, 1);
-        Serial.print(" target=");
-        Serial.print(liveFrequencyEvidence->targetHz);
-        Serial.print(" contrast=");
-        Serial.print(liveFrequencyEvidence->spectralContrast, 2);
-        Serial.print(" obs=");
-        Serial.print(liveFrequencyEvidence->observedAtMs);
-        Serial.print("]");
-    }
-    Serial.print(" reason=");
-    Serial.print(detection::patternReasonName(patternResult.reasonCode));
-    Serial.print(" valid=");
-    Serial.print(patternResult.valid ? 1 : 0);
-    Serial.print(" action=");
-    Serial.print(action);
-    Serial.print(" state=");
-    Serial.print(stateName);
-    Serial.print(" gate=");
-    Serial.println(gateName);
-}
-#endif
 
 void Node::printRbSummary() const {
     const float avgStrength = _rbCandidateCount > 0 ? (static_cast<float>(_rbStrengthSumScaled) / 100.0f) / static_cast<float>(_rbCandidateCount) : 0.0f;

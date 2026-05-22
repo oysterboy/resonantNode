@@ -2557,7 +2557,7 @@ void AnalyzerApp::recordSequenceClassifierOutcome(const detection::PatternResult
     }
 
     const auto freqEval = FrequencyMatchEvaluation::evaluate(patternResult.freq, _frequencyEvidenceTuning);
-    const bool patternMatched = patternResult.patternMatched;
+    const bool patternMatched = patternResult.valid;
 
     if (unexpectedCandidate) {
         if (patternMatched) {

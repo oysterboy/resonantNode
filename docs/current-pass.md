@@ -643,6 +643,8 @@ Analyzer and Behavior use valid as hit gate.
 Rejected signal candidates remain diagnostics.
 ```
 
+Status: DONE
+
 ---
 
 # Pass 7 — Analyzer correctness and reporting

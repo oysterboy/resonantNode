@@ -26,6 +26,8 @@ public:
         ConsumedPattern,
         IgnoredInvalidPattern,
         IgnoredAmbiguousPattern,
+        IgnoredMissingSupport,
+        IgnoredSupportTooLow,
         Disabled,
         OutputBusy,
         WaitingAfterHeard,

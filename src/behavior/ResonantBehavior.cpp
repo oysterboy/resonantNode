@@ -148,6 +148,22 @@ ResonantBehavior::BehaviorDecision ResonantBehavior::handlePatternResult(const d
         return _lastDecision;
     }
 
+    if (!result.valid) {
+        _behaviorEligible = false;
+        if (result.rejectReason == detection::PatternRejectReason::MissingSupport) {
+            _lastDecision = BehaviorDecision::IgnoredMissingSupport;
+            _lastBlockReason = BehaviorDecision::IgnoredMissingSupport;
+        } else if (result.rejectReason == detection::PatternRejectReason::SupportTooLow) {
+            _lastDecision = BehaviorDecision::IgnoredSupportTooLow;
+            _lastBlockReason = BehaviorDecision::IgnoredSupportTooLow;
+        } else {
+            _lastDecision = BehaviorDecision::IgnoredInvalidPattern;
+            _lastBlockReason = BehaviorDecision::IgnoredInvalidPattern;
+        }
+        _patternsIgnoredInvalid++;
+        return _lastDecision;
+    }
+
     if (!result.patternCandidateAccepted || !result.patternMatched || !result.supportMatched) {
         _behaviorEligible = false;
         _lastDecision = BehaviorDecision::UnknownBlocked;
@@ -570,6 +586,10 @@ const char* ResonantBehavior::behaviorDecisionName(BehaviorDecision decision) {
             return "ignored_invalid_pattern";
         case BehaviorDecision::IgnoredAmbiguousPattern:
             return "ignored_ambiguous_pattern";
+        case BehaviorDecision::IgnoredMissingSupport:
+            return "ignored_missing_support";
+        case BehaviorDecision::IgnoredSupportTooLow:
+            return "ignored_support_too_low";
         case BehaviorDecision::Disabled:
             return "disabled";
         case BehaviorDecision::OutputBusy:

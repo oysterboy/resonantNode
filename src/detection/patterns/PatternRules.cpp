@@ -122,8 +122,8 @@ PatternResult PatternRules::evaluateFrequencyPattern(
         result.rejectReason = supportRejectReason(candidate);
         result.reasonCode = PatternReasonCode::UnsupportedPattern;
     }
-    result.confidence = result.patternMatched ? 1.0f : 0.0f;
     result.valid = result.patternMatched && result.supportMatched;
+    result.confidence = result.valid ? 1.0f : 0.0f;
     if (result.kind == PatternResultKind::TooDense) {
         result.type = PatternType::Ambiguous;
         result.valid = false;

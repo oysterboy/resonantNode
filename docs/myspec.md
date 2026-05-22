@@ -1312,7 +1312,7 @@ Invalid
 Ambiguous
 ```
 
-`ValidPattern` is the current profile-specific positive label used by the code for accepted pattern results.
+`Valid` is the current generic positive label for an accepted pattern result.
 
 The current implementation still supports candidate-window frequency enrichment through raw sample history:
 
@@ -1467,7 +1467,7 @@ It can reuse the same onset/transient detector logic as the amplitude path, with
 This is an implementation strategy inside the shared Detection / Pattern Pipeline.
 
 For the current tonal click / short beep path, the practical target is still a valid transient-style pattern, not a full chirp.
-That means the current implementation should stay conceptually closer to a `ValidPattern` result than to an expanding chirp taxonomy.
+That means the current implementation should stay conceptually closer to a `Valid` result than to an expanding chirp taxonomy.
 The raw-history diagnostic pass can still support that target.
 
 ##### Temporal-First Chirp Detection
@@ -1654,7 +1654,7 @@ DuplicateAfterPrimary
 UnexpectedNoise
 ```
 
-`ValidPattern` is the current profile-specific positive label for an accepted pattern result.
+`Valid` is the current generic positive label for an accepted pattern result.
 
 Pattern family identity should stay metadata, not be hardcoded into the shared result name.
 
@@ -1771,7 +1771,7 @@ PatternResult = QUIET
 Better:
 
 ```text
-PatternResult = ValidPattern
+PatternResult = Valid
 
 FieldState:
     fieldActivity = busy

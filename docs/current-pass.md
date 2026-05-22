@@ -10,10 +10,10 @@ Completed:
 - Pass 2: Fold landed architecture into `myspec`
 - Pass 3: Keep future work in roadmaps
 - Pass 4: Remove obsolete active-doc material
+- Pass 5: Normalize `PatternResult` vocabulary
 
 Pending:
 
-- Pass 5: Normalize `PatternResult` vocabulary
 - Pass 6: Update behavior input boundary
 - Pass 7: Retire analyzer roadmap
 - Pass 8: Keep behavior roadmap active
@@ -29,6 +29,8 @@ Notes:
 ---
 
 ## Pass 4 — Remove Obsolete Active-Doc Material
+
+Status: done
 
 ### Goal
 

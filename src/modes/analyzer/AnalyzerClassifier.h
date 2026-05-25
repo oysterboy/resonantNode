@@ -1,7 +1,7 @@
 #pragma once
 
 #include "AnalyzerReporting.h"
-#include "../../detection/detectors/AmpTransientDetector.h"
+#include "../../detection/detectors/AmpDiagnosticProbe.h"
 
 /*
 AnalyzerClassifier
@@ -16,7 +16,7 @@ struct AnalyzerSequenceClassificationInput {
     long dtMs = -1;
     float confidence = 0.0f;
     unsigned long rawCandidateCount = 0;
-    AmpTransientDetector::TransientRejectReason strongestRejectReason = AmpTransientDetector::TransientRejectReason::None;
+    detection::AmpDiagnosticRejectReason strongestAmpDiagRejectReason = detection::AmpDiagnosticRejectReason::None;
     bool audioOverflow = false;
     bool patternAvailable = false;
 };

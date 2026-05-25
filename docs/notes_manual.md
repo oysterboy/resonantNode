@@ -29,7 +29,7 @@ Short operator notes for running RB and Analyzer with the current detection stac
 
 **Runtime parameter**
 - `kind` in `src/detection/DetectionProfile.h`
-  - selected at runtime via `RB PROFILE name=tonalpulse|chirp`
+  - selected at runtime via `RB PROFILE name=tonalpulse|chirp_experimental`
   - Analyzer SEQ also selects a profile when it starts a run
 
 **Coded in profile**

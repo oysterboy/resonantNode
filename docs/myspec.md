@@ -2777,8 +2777,7 @@ The current proof profiles are:
 
 ```text
 TonalPulseProfile
-AmpStateProfile
-ChirpProfile
+ChirpExperimentalProfile
 ```
 
 They are code-defined and selected through the current profile mechanism.

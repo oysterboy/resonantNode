@@ -1,7 +1,5 @@
 ﻿#include "AnalyzerClassifier.h"
 
-#include "../../detection/detectors/AmpTransientDetector.h"
-
 AnalyzerReason analyzerReasonFromSequenceOutcome(const AnalyzerSequenceClassificationInput& input) {
     if (input.audioOverflow) {
         return AnalyzerReason::InvalidAudio;
@@ -22,14 +20,16 @@ AnalyzerReason analyzerReasonFromSequenceOutcome(const AnalyzerSequenceClassific
             if (input.rawCandidateCount == 0) {
                 return AnalyzerReason::NoOccurrence;
             }
-            switch (input.strongestRejectReason) {
-                case AmpTransientDetector::TransientRejectReason::DurationTooShort:
-                case AmpTransientDetector::TransientRejectReason::DurationTooLong:
-                case AmpTransientDetector::TransientRejectReason::StrengthTooLow:
+            switch (input.strongestAmpDiagRejectReason) {
+                case detection::AmpDiagnosticRejectReason::TooShort:
+                case detection::AmpDiagnosticRejectReason::TooLong:
+                case detection::AmpDiagnosticRejectReason::Weak:
                     return AnalyzerReason::OccurrenceSeenButRejected;
-                case AmpTransientDetector::TransientRejectReason::PeakStillActive:
+                case detection::AmpDiagnosticRejectReason::PeakStillActive:
                     return AnalyzerReason::InspectionFailed;
-                case AmpTransientDetector::TransientRejectReason::None:
+                case detection::AmpDiagnosticRejectReason::None:
+                case detection::AmpDiagnosticRejectReason::NoOnset:
+                case detection::AmpDiagnosticRejectReason::Unknown:
                 default:
                     break;
             }

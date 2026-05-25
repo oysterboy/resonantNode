@@ -204,7 +204,7 @@ private:
             unsigned long transientRejectTooShortCount = 0;
             unsigned long transientRejectTooLongCount = 0;
             unsigned long transientRejectWeakCount = 0;
-            AmpTransientDetector::TransientRejectReason strongestRejectReason = AmpTransientDetector::TransientRejectReason::None;
+            detection::AmpDiagnosticRejectReason strongestAmpDiagRejectReason = detection::AmpDiagnosticRejectReason::None;
             long strongestRejectDtFromTriggerMs = -1;
             unsigned long strongestRejectDurationMs = 0;
             float strongestRejectStrength = 0.0f;
@@ -222,7 +222,7 @@ private:
             unsigned long firstOnsetRejectMs = 0;
             unsigned long lastOnsetRejectMs = 0;
 
-            AmpTransientDetector::TransientRejectReason lastTransientRejectReason = AmpTransientDetector::TransientRejectReason::None;
+            detection::AmpDiagnosticRejectReason lastAmpDiagRejectReason = detection::AmpDiagnosticRejectReason::None;
             float lastRejectStrength = 0.0f;
             unsigned long lastRejectDurationMs = 0;
             bool peakActiveAtEnd = false;
@@ -288,7 +288,6 @@ private:
         long primaryValidPatternDtMs = -1;
         unsigned long rejectedInWindowCount = 0;
         detection::PatternResult firstRejectedInWindow = {};
-        bool currentTrialHit = false;
         bool currentTrialFinalized = false;
         unsigned long currentTrialUnexpected = 0;
         unsigned long currentTrialRejected = 0;
@@ -410,8 +409,8 @@ private:
     unsigned long sequenceSampleDumpEstimatedRows(unsigned long selectedTrials) const;
     static void sequenceCurveSampleCallback(const CurveSnapshot& snapshot, void* context);
     FrequencyEvidence captureFrequencyEvidence(unsigned long observedAtMs) const;
-    void noteSequenceTransientReject(unsigned long eventMs);
-    void noteSequenceTransientRejectReason(unsigned long eventMs, const char* reasonName, unsigned long durationMs, float strength);
+    void noteAmpDiagnosticReject(unsigned long eventMs);
+    void noteAmpDiagnosticRejectReason(unsigned long eventMs, detection::AmpDiagnosticRejectReason reason, unsigned long durationMs, float strength);
     const char* sequenceTrialClassificationName(const char* result, long dtMs, long durMs, const SequenceTest::TrialDiagnostics& diagnostics) const;
 
     // Miscellaneous output helpers.

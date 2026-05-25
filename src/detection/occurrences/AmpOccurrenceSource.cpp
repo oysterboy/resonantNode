@@ -2,16 +2,11 @@
 
 namespace detection {
 
-namespace {
-
-} // namespace
-
 void AmpOccurrenceSource::fillAmpCandidate(Occurrence& candidate, const AudioSignalFrame& frame) {
     candidate.kind = OccurrenceKind::AmpTransient;
     candidate.source = OccurrenceSource::Amp;
     candidate.detectorKind = OccurrenceDetectorKind::Transient;
     candidate.valid = candidate.durationMs > 0 || candidate.strength > 0.0f || candidate.releaseMs != 0;
-    // AMP transients do not expose a separate peak timestamp, so peakMs stays at the default.
     candidate.endMs = candidate.releaseMs;
     candidate.confidence = candidate.valid ? 1.0f : 0.0f;
     candidate.signalConfidence = candidate.confidence;

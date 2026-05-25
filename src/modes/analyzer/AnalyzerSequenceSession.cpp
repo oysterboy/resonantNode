@@ -157,7 +157,6 @@ void AnalyzerApp::startSequenceTest(unsigned long totalTrials, unsigned long per
     _sequenceTest.primaryValidPatternDtMs = -1;
     _sequenceTest.rejectedInWindowCount = 0;
     _sequenceTest.firstRejectedInWindow = {};
-    _sequenceTest.currentTrialHit = false;
     _sequenceTest.currentTrialFinalized = false;
     _sequenceTest.currentTrialUnexpected = 0;
     _sequenceTest.currentTrialRejected = 0;
@@ -313,7 +312,6 @@ void AnalyzerApp::updateSequenceTest(unsigned long now) {
     _sequenceTest.primaryValidPatternDtMs = -1;
     _sequenceTest.rejectedInWindowCount = 0;
     _sequenceTest.firstRejectedInWindow = {};
-    _sequenceTest.currentTrialHit = false;
     _sequenceTest.currentTrialFinalized = false;
     _sequenceTest.currentTrialUnexpected = 0;
     _sequenceTest.currentTrialRejected = 0;
@@ -328,7 +326,7 @@ void AnalyzerApp::updateSequenceTest(unsigned long now) {
     _sequenceTest.currentTrialDiagnostics.runtimePatternCaptured = false;
     _sequenceTest.currentTrialDiagnostics.runtimePatternResult = {};
     _sequenceTest.currentTrialDiagnostics.runtimeFieldState = {};
-    _sequenceTest.currentTrialDiagnostics.strongestRejectReason = AmpTransientDetector::TransientRejectReason::None;
+    _sequenceTest.currentTrialDiagnostics.strongestAmpDiagRejectReason = detection::AmpDiagnosticRejectReason::None;
     _sequenceTest.currentTrialDiagnostics.strongestRejectDtFromTriggerMs = -1;
     _sequenceTest.currentTrialDiagnostics.strongestRejectDurationMs = 0;
     _sequenceTest.currentTrialDiagnostics.strongestRejectStrength = 0.0f;
@@ -391,18 +389,7 @@ void AnalyzerApp::finalizeSequenceTrial(unsigned long now) {
 
     const detection::AmpDiagnosticSnapshot probeSnapshot = _ampTransientDiagnosticProbe.snapshot();
     diagnostics.peakActiveAtEnd = probeSnapshot.peakActive;
-    const char* transientRejectReason = probeSnapshot.transientRejectReason;
-    if (strcmp(transientRejectReason, "duration_too_short") == 0) {
-        diagnostics.lastTransientRejectReason = AmpTransientDetector::TransientRejectReason::DurationTooShort;
-    } else if (strcmp(transientRejectReason, "duration_too_long") == 0) {
-        diagnostics.lastTransientRejectReason = AmpTransientDetector::TransientRejectReason::DurationTooLong;
-    } else if (strcmp(transientRejectReason, "strength_too_low") == 0) {
-        diagnostics.lastTransientRejectReason = AmpTransientDetector::TransientRejectReason::StrengthTooLow;
-    } else if (strcmp(transientRejectReason, "peak_still_active") == 0) {
-        diagnostics.lastTransientRejectReason = AmpTransientDetector::TransientRejectReason::PeakStillActive;
-    } else {
-        diagnostics.lastTransientRejectReason = AmpTransientDetector::TransientRejectReason::None;
-    }
+    diagnostics.lastAmpDiagRejectReason = probeSnapshot.transientRejectReason;
     diagnostics.lastRejectDurationMs = probeSnapshot.rejectedDurationMs;
     diagnostics.lastRejectStrength = probeSnapshot.rejectedStrength;
 

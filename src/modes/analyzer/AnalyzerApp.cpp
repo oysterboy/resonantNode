@@ -524,10 +524,14 @@ AnalyzerReport AnalyzerApp::buildSequenceAnalyzerReport(unsigned long trialNumbe
     classificationInput.dtMs = dtMs;
     classificationInput.confidence = actualPipelineAvailable && runtimePatternResult != nullptr ? runtimePatternResult->confidence : 0.0f;
     classificationInput.rawCandidateCount = diagnostics.rawCandidateCount;
-    classificationInput.strongestRejectReason = diagnostics.strongestRejectReason;
+    classificationInput.strongestAmpDiagRejectReason = diagnostics.strongestAmpDiagRejectReason;
     classificationInput.audioOverflow = audioOverflow;
     classificationInput.patternAvailable = actualPipelineAvailable && runtimePatternResult != nullptr;
     report.classification = classifySequenceTrial(classificationInput);
+    report.ampDiag.seen = diagnostics.lastAmpDiagRejectReason != detection::AmpDiagnosticRejectReason::None;
+    report.ampDiag.reason = detection::ampDiagnosticRejectReasonName(diagnostics.lastAmpDiagRejectReason);
+    report.ampDiag.durationMs = diagnostics.lastRejectDurationMs;
+    report.ampDiag.strength = diagnostics.lastRejectStrength;
     {
         // Analyzer consumes the PatternResult produced by DetectionRuntime.
         // Analyzer does not re-run occurrence inspection or pattern interpretation.

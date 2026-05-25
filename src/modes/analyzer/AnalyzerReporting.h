@@ -145,6 +145,13 @@ struct AnalyzerPatternObservation {
     unsigned int involvedOccurrences = 0;
 };
 
+struct AnalyzerAmpDiagnosticObservation {
+    bool seen = false;
+    const char* reason = "none";
+    unsigned long durationMs = 0;
+    float strength = 0.0f;
+};
+
 // Keep Analyzer-specific for now; later shared AudioReporting may reuse the
 // snapshot-style observation vocabulary without pulling in classification logic.
 struct AnalyzerOccurrenceObservation {
@@ -284,6 +291,7 @@ struct AnalyzerReport {
 
     AnalyzerClassification classification;
     AnalyzerProfileDetail profileDetail;
+    AnalyzerAmpDiagnosticObservation ampDiag;
     AnalyzerDebugSummary debug;
 };
 

@@ -46,9 +46,6 @@ constexpr int kRbStartupQuietThreshold = 20;
 constexpr unsigned long kRbStartupQuietHoldMs = 1000;
 constexpr unsigned long kRbStartupBaselineTimeoutMs = 8000;
 constexpr unsigned long kRbPostRebaseSettleMs = 500;
-constexpr unsigned long kLiveFrequencyReleaseDebounceMs = 20UL;
-constexpr unsigned long kLiveFrequencyCooldownAfterOnsetMs = 300UL;
-constexpr unsigned long kLiveFrequencyMinTransientDurationMs = 50UL;
 
 uint32_t sampleOffsetUs(uint32_t sampleOffset, uint32_t sampleRateHz) {
     if (sampleRateHz == 0) {
@@ -510,10 +507,6 @@ void Node::handleSerialLine(const char* line) {
         handleDetectCommand(line);
         return;
     }
-    if (startsWithTokenIgnoreCase(line, "RB DETECT")) {
-        Serial.println("ERR RB DETECT removed; use RB STATUS");
-        return;
-    }
     if (startsWithTokenIgnoreCase(line, "RB PARAM")) {
         char buffer[96];
         strncpy(buffer, line, sizeof(buffer));
@@ -894,8 +887,7 @@ void Node::printRbSummary() const {
     Serial.print(avgStrength, 1);
     Serial.print(" avg_duration=");
     Serial.print(avgDuration, 1);
-    Serial.print("ms detectOnly=");
-    Serial.print(0);
+    Serial.print("ms");
     Serial.print(" profile=");
     Serial.print(profileName());
     Serial.println();

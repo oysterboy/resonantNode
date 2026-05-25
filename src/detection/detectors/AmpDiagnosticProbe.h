@@ -1,6 +1,7 @@
 ﻿#pragma once
 
 #include <stdint.h>
+#include <string.h>
 
 #include "AmpTransientDetector.h"
 
@@ -15,6 +16,62 @@ or SEQ_EXPLAIN.
 Must not produce Occurrence, PatternResult, FieldState, Analyzer hit truth,
 or Behavior input.
 */
+enum class AmpDiagnosticRejectReason {
+    None,
+    TooShort,
+    TooLong,
+    Weak,
+    NoOnset,
+    PeakStillActive,
+    Unknown,
+};
+
+inline const char* ampDiagnosticRejectReasonName(AmpDiagnosticRejectReason value) {
+    switch (value) {
+        case AmpDiagnosticRejectReason::None:
+            return "none";
+        case AmpDiagnosticRejectReason::TooShort:
+            return "too_short";
+        case AmpDiagnosticRejectReason::TooLong:
+            return "too_long";
+        case AmpDiagnosticRejectReason::Weak:
+            return "weak";
+        case AmpDiagnosticRejectReason::NoOnset:
+            return "no_onset";
+        case AmpDiagnosticRejectReason::PeakStillActive:
+            return "peak_still_active";
+        case AmpDiagnosticRejectReason::Unknown:
+        default:
+            return "unknown";
+    }
+}
+
+inline AmpDiagnosticRejectReason ampDiagnosticRejectReasonFromName(const char* name) {
+    if (name == nullptr || name[0] == '\0') {
+        return AmpDiagnosticRejectReason::Unknown;
+    }
+
+    if (strcmp(name, "none") == 0) {
+        return AmpDiagnosticRejectReason::None;
+    }
+    if (strcmp(name, "duration_too_short") == 0 || strcmp(name, "too_short") == 0) {
+        return AmpDiagnosticRejectReason::TooShort;
+    }
+    if (strcmp(name, "duration_too_long") == 0 || strcmp(name, "too_long") == 0) {
+        return AmpDiagnosticRejectReason::TooLong;
+    }
+    if (strcmp(name, "strength_too_low") == 0 || strcmp(name, "weak") == 0) {
+        return AmpDiagnosticRejectReason::Weak;
+    }
+    if (strcmp(name, "no_onset") == 0) {
+        return AmpDiagnosticRejectReason::NoOnset;
+    }
+    if (strcmp(name, "peak_still_active") == 0) {
+        return AmpDiagnosticRejectReason::PeakStillActive;
+    }
+    return AmpDiagnosticRejectReason::Unknown;
+}
+
 struct AmpDiagnosticObservation {
     bool transientObserved = false;
     uint32_t onsetMs = 0;
@@ -22,7 +79,7 @@ struct AmpDiagnosticObservation {
     uint32_t durationMs = 0;
     float strength = 0.0f;
     const char* closeReason = "none";
-    const char* rejectReason = "none";
+    AmpDiagnosticRejectReason rejectReason = AmpDiagnosticRejectReason::None;
 };
 
 struct AmpDiagnosticSnapshot {
@@ -34,7 +91,7 @@ struct AmpDiagnosticSnapshot {
     unsigned long transientDurationMs = 0;
     float peakStrength = 0.0f;
     const char* onsetRejectReason = "none";
-    const char* transientRejectReason = "none";
+    AmpDiagnosticRejectReason transientRejectReason = AmpDiagnosticRejectReason::None;
     unsigned long rejectedDurationMs = 0;
     float rejectedStrength = 0.0f;
     unsigned long onsetRejectedCount = 0;

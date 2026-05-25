@@ -140,6 +140,15 @@ void AnalyzerApp::printSequenceTrialResult(const AnalyzerReport& report) const {
     Serial.print(report.profileDetail.freqContrastMin, 2);
     Serial.print(" result=");
     Serial.print(analyzerResultName(report.classification.result));
+    Serial.print(" ampdiag_seen=");
+    Serial.print(report.ampDiag.seen ? 1 : 0);
+    Serial.print(" ampdiag_reason=");
+    Serial.print(report.ampDiag.reason != nullptr ? report.ampDiag.reason : "none");
+    Serial.print(" ampdiag_duration_ms=");
+    Serial.print(report.ampDiag.durationMs);
+    Serial.print("ms");
+    Serial.print(" ampdiag_strength=");
+    Serial.print(report.ampDiag.strength, 1);
     Serial.print(" dt=");
     if (report.classification.dtMs >= 0) {
         Serial.print(report.classification.dtMs);
@@ -219,6 +228,15 @@ void AnalyzerApp::printSequenceExplain(const AnalyzerReport& report) const {
     Serial.print(report.profileDetail.freqContrastMin, 2);
     Serial.print(" result=");
     Serial.print(analyzerResultName(report.classification.result));
+    Serial.print(" ampdiag_seen=");
+    Serial.print(report.ampDiag.seen ? 1 : 0);
+    Serial.print(" ampdiag_reason=");
+    Serial.print(report.ampDiag.reason != nullptr ? report.ampDiag.reason : "none");
+    Serial.print(" ampdiag_duration_ms=");
+    Serial.print(report.ampDiag.durationMs);
+    Serial.print("ms");
+    Serial.print(" ampdiag_strength=");
+    Serial.print(report.ampDiag.strength, 1);
     Serial.print(" pattern=");
     Serial.print(report.primaryPattern.type != nullptr ? report.primaryPattern.type : "unknown");
     Serial.print(" dt=");

@@ -76,7 +76,7 @@ AmpDiagnosticSnapshot AmpDiagnosticProbe::snapshot() const {
     snapshot.transientDurationMs = _detector.transientDurationMs();
     snapshot.peakStrength = _detector.peakStrength();
     snapshot.onsetRejectReason = _detector.lastOnsetRejectReasonName();
-    snapshot.transientRejectReason = _detector.lastTransientRejectReasonName();
+    snapshot.transientRejectReason = ampDiagnosticRejectReasonFromName(_detector.lastTransientRejectReasonName());
     snapshot.rejectedDurationMs = _detector.lastTransientRejectedDurationMs();
     snapshot.rejectedStrength = _detector.lastTransientRejectedStrength();
     snapshot.onsetRejectedCount = _detector.onsetRejectedCount();

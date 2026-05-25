@@ -9,11 +9,6 @@
 namespace {
 
 constexpr long kLateOnsetMinMs = 200L;
-constexpr long kCleanDurationMinMs = 80L;
-constexpr long kCleanDurationMaxMs = 180L;
-constexpr long kSmearedDurationMinMs = 181L;
-constexpr long kSmearedDurationMaxMs = 240L;
-constexpr long kTooLongDurationMinMs = 241L;
 
 bool analyzerLogEnabled(uint32_t flags, AnalyzerApp::AnalyzerLogFlags flag) {
     return (flags & static_cast<uint32_t>(flag)) != 0;
@@ -277,7 +272,7 @@ detection::FrequencyEvidence AnalyzerApp::scanSequenceFrequencyParity64(const de
     return {};
 }
 
-void AnalyzerApp::noteSequenceTransientReject(unsigned long eventMs) {
+void AnalyzerApp::noteAmpDiagnosticReject(unsigned long eventMs) {
     if (_valMode) {
         return;
     }
@@ -286,15 +281,15 @@ void AnalyzerApp::noteSequenceTransientReject(unsigned long eventMs) {
     }
 
     const detection::AmpDiagnosticSnapshot probeSnapshot = _ampTransientDiagnosticProbe.snapshot();
-    const char* reasonName = probeSnapshot.transientRejectReason;
-    if (strcmp(reasonName, "none") == 0) {
+    const detection::AmpDiagnosticRejectReason reason = probeSnapshot.transientRejectReason;
+    if (reason == detection::AmpDiagnosticRejectReason::None) {
         return;
     }
 
-    noteSequenceTransientRejectReason(eventMs, reasonName, probeSnapshot.rejectedDurationMs, probeSnapshot.rejectedStrength);
+    noteAmpDiagnosticRejectReason(eventMs, reason, probeSnapshot.rejectedDurationMs, probeSnapshot.rejectedStrength);
 }
 
-void AnalyzerApp::noteSequenceTransientRejectReason(unsigned long eventMs, const char* reasonName, unsigned long durationMs, float strength) {
+void AnalyzerApp::noteAmpDiagnosticRejectReason(unsigned long eventMs, detection::AmpDiagnosticRejectReason reason, unsigned long durationMs, float strength) {
     if (_valMode) {
         return;
     }
@@ -312,15 +307,8 @@ void AnalyzerApp::noteSequenceTransientRejectReason(unsigned long eventMs, const
     diagnostics.transientRejectTooLongCount = longCount;
     diagnostics.transientRejectWeakCount = weakCount;
 
-    const AmpTransientDetector::TransientRejectReason reason =
-        strcmp(reasonName, "duration_too_short") == 0 ? AmpTransientDetector::TransientRejectReason::DurationTooShort :
-        strcmp(reasonName, "duration_too_long") == 0 ? AmpTransientDetector::TransientRejectReason::DurationTooLong :
-        strcmp(reasonName, "strength_too_low") == 0 ? AmpTransientDetector::TransientRejectReason::StrengthTooLow :
-        strcmp(reasonName, "peak_still_active") == 0 ? AmpTransientDetector::TransientRejectReason::PeakStillActive :
-        AmpTransientDetector::TransientRejectReason::None;
-
-    if (reason != AmpTransientDetector::TransientRejectReason::None && strength >= diagnostics.strongestRejectStrength) {
-        diagnostics.strongestRejectReason = reason;
+    if (reason != detection::AmpDiagnosticRejectReason::None && strength >= diagnostics.strongestRejectStrength) {
+        diagnostics.strongestAmpDiagRejectReason = reason;
         diagnostics.strongestRejectDtFromTriggerMs = static_cast<long>(eventMs - _sequenceTest.currentTrialStartMs);
         diagnostics.strongestRejectDurationMs = durationMs;
         diagnostics.strongestRejectStrength = strength;
@@ -328,6 +316,9 @@ void AnalyzerApp::noteSequenceTransientRejectReason(unsigned long eventMs, const
 }
 
 const char* AnalyzerApp::sequenceTrialClassificationName(const char* result, long dtMs, long durMs, const SequenceTest::TrialDiagnostics& diagnostics) const {
+    (void)dtMs;
+    (void)durMs;
+    (void)diagnostics;
     if (strcmp(result, "invalid_audio") == 0) {
         return "invalid_audio";
     }
@@ -337,31 +328,7 @@ const char* AnalyzerApp::sequenceTrialClassificationName(const char* result, lon
     if (strcmp(result, "late") == 0) {
         return "late";
     }
-    if (strcmp(result, "miss") == 0) {
-        switch (diagnostics.strongestRejectReason) {
-            case AmpTransientDetector::TransientRejectReason::DurationTooLong:
-                return "miss_too_long";
-            case AmpTransientDetector::TransientRejectReason::StrengthTooLow:
-                return "miss_weak";
-            case AmpTransientDetector::TransientRejectReason::None:
-            case AmpTransientDetector::TransientRejectReason::DurationTooShort:
-            case AmpTransientDetector::TransientRejectReason::PeakStillActive:
-                return "miss_no_onset";
-        }
-    }
-    if (dtMs >= kLateOnsetMinMs) {
-        return "late";
-    }
-    if (durMs >= kTooLongDurationMinMs) {
-        return "expected_too_long";
-    }
-    if (durMs >= kSmearedDurationMinMs && durMs <= kSmearedDurationMaxMs) {
-        return "expected_smeared";
-    }
-    if (durMs >= kCleanDurationMinMs && durMs <= kCleanDurationMaxMs) {
-        return "expected_clean";
-    }
-    return "expected_clean";
+    return result;
 }
 
 void AnalyzerApp::recordSequenceClassifierOutcome(const detection::PatternResult& patternResult, bool duplicateCandidate, bool unexpectedCandidate) {
@@ -641,12 +608,10 @@ void AnalyzerApp::handleSequenceCandidate(const detection::PatternResult& patter
     _sequenceTest.currentTrialDiagnostics.acceptedFrequencyProcessedAtMs = patternResult.processedAtMs;
     _sequenceTest.currentTrialDiagnostics.acceptedParityProbe64 = scanSequenceFrequencyParity64(patternResult.candidate, patternResult.processedAtMs);
     _sequenceTest.currentTrialDiagnostics.acceptedParityProbe64ProcessedAtMs = patternResult.processedAtMs;
-    _sequenceTest.currentTrialDiagnostics.lastTransientRejectReason = AmpTransientDetector::TransientRejectReason::None;
+    _sequenceTest.currentTrialDiagnostics.lastAmpDiagRejectReason = detection::AmpDiagnosticRejectReason::None;
     _sequenceTest.currentTrialDiagnostics.lastRejectStrength = 0.0f;
     _sequenceTest.currentTrialDiagnostics.lastRejectDurationMs = 0;
     _sequenceTest.currentTrialPatternDetectedMs = onsetMs;
-
-    _sequenceTest.currentTrialHit = _sequenceTest.primaryValidPatternCaptured;
 
     if (analyzerLogEnabled(_sequenceTest.logFlags, AnalyzerApp::ANALYZER_LOG_CANDIDATE) && !_sequenceTest.quiet) {
         Serial.print("SEQ_CAND role=result trial=");

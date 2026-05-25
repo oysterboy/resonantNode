@@ -69,7 +69,7 @@ Stable rule:
 ```text
 Detector creates OccurrenceCandidate.
 Inspector accepts/rejects and adds evidence.
-Assembler groups accepted inspected Occurences.
+Assembler groups accepted inspected Occurrences.
 PatternRules decide pattern match / support match / validity.
 FieldState summarizes acoustic context.
 Behavior decides reaction eligibility.
@@ -401,7 +401,7 @@ InspectedOccurrence
 → PatternResult
 ```
 
-A `PatternCandidate` is one possible grouping of accepted inspected Occurences.
+    A `PatternCandidate` is one possible grouping of accepted inspected Occurrences.
 
 A `PatternResult` is the first meaning-bearing detection output.
 
@@ -423,7 +423,7 @@ reason
 43. **Add `patternMatched` to PatternResult / pattern evaluation output** — Main pattern-rule result.
 44. **Add `supportMatched` to PatternResult only if used as gate** — Secondary evidence gate result.
 45. **Add explicit residual / rejected reasons** — e.g. `amp_support_too_low`, `missing_amp_support`, `wrong_timing`.
-46. **Add multi-occurrence chirp / burst pattern assembly** — Group inspected Occurences into temporal patterns.
+46. **Add multi-occurrence chirp / burst pattern assembly** — Group inspected Occurrences into temporal patterns.
 47. **Allow one `InspectedOccurrence` to belong to multiple `PatternCandidates`** — Support overlapping interpretations.
 48. **Add pulse-count / timing validation** — Evaluate pulse sequences and chirp timing.
 49. **Add residual / invalid / too-dense pattern handling** — Represent non-valid pattern outcomes clearly.
@@ -663,7 +663,7 @@ profile proof scope
 115. **Document legacy AMP status** — Active, isolated, archived, or removed.
 116. **Add implementation-status table** — Mark sections done/partial/open based on code state.
 117. **Add file/module map** — Map roadmap concepts to actual source files.
-118. **Add logging guide** — Expected Occurence / INSPECTED / PATTERN / FIELD / BEHAVIOR logs.
+118. **Add logging guide** — Expected Occurrence / INSPECTED / PATTERN / FIELD / BEHAVIOR logs.
 119. **Add testing / smoke-check guide** — Quick checks for frequency-first, amp support, FieldState, profile switching.
 120. **Freeze docs before further profile expansion** — Use as reference before adding new detection chains.
 

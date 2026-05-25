@@ -459,8 +459,8 @@ const char* AnalyzerApp::activeAnalyzerProfileName() const {
 
 const char* analyzerProfileDetailNamespace(detection::DetectionProfileKind profileKind) {
     switch (profileKind) {
-        case detection::DetectionProfileKind::Chirp:
-            return "chirp";
+        case detection::DetectionProfileKind::ChirpExperimental:
+            return "chirp_experimental";
         case detection::DetectionProfileKind::TonalPulse:
         default:
             return "tonal_pulse";
@@ -469,8 +469,8 @@ const char* analyzerProfileDetailNamespace(detection::DetectionProfileKind profi
 
 const char* analyzerProfileDetailSummary(detection::DetectionProfileKind profileKind) {
     switch (profileKind) {
-        case detection::DetectionProfileKind::Chirp:
-            return "chirp profile view";
+        case detection::DetectionProfileKind::ChirpExperimental:
+            return "chirp_experimental profile view";
         case detection::DetectionProfileKind::TonalPulse:
         default:
             return "generic tonal pulse profile view";

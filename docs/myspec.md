@@ -556,7 +556,7 @@ Turns accepted `InspectedOccurrence`s into `PatternCandidate`s.
 
 Current implementation is simple and mostly one-occurrence-to-one-pattern-candidate.
 
-Later implementations may group several inspected Occurences.
+Later implementations may group several inspected Occurrences.
 
 `PatternRules`
 
@@ -1791,13 +1791,13 @@ Current fields include:
 activity
 density
 noiseFloor
-recentOccurenceCount
-recentAcceptedOccurenceCount
+recentOccurrenceCount
+recentAcceptedOccurrenceCount
 recentPatternCount
 quiet
 active
 dense
-lastOccurenceMs
+lastOccurrenceMs
 lastInspectedOccurrenceMs
 lastPatternMs
 ```
@@ -1971,7 +1971,7 @@ loop:
     resources.update(now)
 
     soundInput.update(now)
-    signal.update(now)
+    audioSignal.update(now)
     detector.update(now)
 
     classifier.update(now)
@@ -2700,7 +2700,7 @@ The current profile shell is intentionally small:
 
 ```text
 kind
-OccurenceEmitter
+OccurrenceSource
 inspectionRules
 patternRules
 patternRulesConfig

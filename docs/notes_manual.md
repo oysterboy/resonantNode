@@ -16,9 +16,14 @@ Short operator notes for running RB and Analyzer with the current detection stac
 
 - Switch profile at runtime with:
   - `RB PROFILE name=tonalpulse`
-  - `RB PROFILE name=chirp`
 - Profiles own the detection composition.
 - Live low-level detection tuning is mostly profile-defined, not a freeform runtime knob set.
+
+### Developer / Experimental profiles
+
+- `ChirpExperimental`
+  - select with `RB PROFILE name=chirp_experimental`
+  - experimental / proof profile / not stable / not normal use
 
 ### Detection knobs
 
@@ -102,8 +107,8 @@ candidateAccepted -> patternMatched -> supportMatched -> behaviorEligible
 **Coded in profile**
 - `idleEnabled` in `src/behavior/BehaviorProfile.h`
   - enables or disables idle emission behavior
-- `waitAfterTransientMs` in `src/behavior/BehaviorProfile.h`
-  - minimum wait after a transient before RB may emit
+- `waitAfterHeardMs` in `src/behavior/BehaviorProfile.h`
+  - minimum wait after a heard pattern before RB may emit
 - `refractoryAfterEmitMs` in `src/behavior/BehaviorProfile.h`
   - refractory time after an emit
 - `idleTimeoutMs` in `src/behavior/BehaviorProfile.h`
@@ -132,7 +137,7 @@ RB BEHAV wait=100 refractory=0 idleTimeout=20000 idleTimeoutVariation=10000 idle
   - `RB PROFILE`
 - Set RB profile:
   - `RB PROFILE name=tonalpulse`
-  - `RB PROFILE name=chirp`
+  - `RB PROFILE name=chirp_experimental` (experimental)
 - Tune RB frequency thresholds:
   - `RB PARAM freqScore=10000 freqContrast=50.0`
 - Show RB behavior settings:
@@ -143,6 +148,13 @@ RB BEHAV wait=100 refractory=0 idleTimeout=20000 idleTimeoutVariation=10000 idle
   - `PARAM freqScore=10000 freqContrast=50.0`
 - Show Analyzer SEQ help:
   - `SEQ help`
+
+### Experimental profile
+
+- `ChirpExperimental`
+  - `RB PROFILE name=chirp_experimental`
+  - `SEQ ... profile=chirp_experimental`
+  - experimental / proof profile / not stable / not normal use
 
 ## Current Implementation
 

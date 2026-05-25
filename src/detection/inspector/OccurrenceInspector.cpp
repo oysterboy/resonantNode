@@ -180,7 +180,7 @@ InspectedOccurrence OccurrenceInspector::inspectImpl(
 
     const bool acceptsCandidate =
         (_inspectionRules == ProfileInspectionRulesKind::TonalPulse && candidate.kind == OccurrenceKind::FrequencyMatch) ||
-        (_inspectionRules == ProfileInspectionRulesKind::Chirp && candidate.kind == OccurrenceKind::AmpTransient);
+        (_inspectionRules == ProfileInspectionRulesKind::ChirpExperimental && candidate.kind == OccurrenceKind::AmpTransient);
 
     if (acceptsCandidate) {
         return inspectAmp(candidate, featureHistory);

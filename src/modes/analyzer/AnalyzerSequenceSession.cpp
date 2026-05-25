@@ -93,7 +93,7 @@ void AnalyzerApp::startSequenceTest(unsigned long totalTrials, unsigned long per
     if (_detection == nullptr) {
         _detection = new detection::DetectionRuntime();
     }
-    _detection->reset();
+    _detection->resetState();
     _detection->setFrequencyTuning(_frequencyEvidenceTuning);
     const detection::DetectionProfile& selectedProfile = detection::detectionProfileForKind(_sequenceTest.profileKind);
     _detection->setOccurrenceSource(selectedProfile.occurrenceSource);

@@ -20,7 +20,7 @@ Profiles declare composition; DetectionRuntime applies the selected fields at fi
 */
 enum class DetectionProfileKind {
     TonalPulse,
-    Chirp,
+    ChirpExperimental,
 };
 
 enum class ProfileOccurrenceSourceKind {
@@ -30,7 +30,7 @@ enum class ProfileOccurrenceSourceKind {
 
 enum class ProfileInspectionRulesKind {
     TonalPulse,
-    Chirp,
+    ChirpExperimental,
 };
 
 struct DetectionProfile {
@@ -75,13 +75,13 @@ inline DetectionProfile makeTonalPulseProfile() {
     return profile;
 }
 
-inline DetectionProfile makeChirpProfile() {
+inline DetectionProfile makeChirpExperimentalProfile() {
     DetectionProfile profile = makeTonalPulseProfile();
 
     // Identity and occurrence routing.
-    profile.kind = DetectionProfileKind::Chirp;
+    profile.kind = DetectionProfileKind::ChirpExperimental;
     profile.occurrenceSource = ProfileOccurrenceSourceKind::Amp;
-    profile.inspectionRules = ProfileInspectionRulesKind::Chirp;
+    profile.inspectionRules = ProfileInspectionRulesKind::ChirpExperimental;
 
     profile.patternRulesConfig.requireSupportForAcceptance = true;
     profile.frequencyTuning.scoreMin = 10000.0f;
@@ -103,11 +103,11 @@ inline DetectionProfile makeChirpProfile() {
 
 inline const DetectionProfile& detectionProfileForKind(DetectionProfileKind kind) {
     static const DetectionProfile kTonalPulse = makeTonalPulseProfile();
-    static const DetectionProfile kChirp = makeChirpProfile();
+    static const DetectionProfile kChirpExperimental = makeChirpExperimentalProfile();
 
     switch (kind) {
-        case DetectionProfileKind::Chirp:
-            return kChirp;
+        case DetectionProfileKind::ChirpExperimental:
+            return kChirpExperimental;
         case DetectionProfileKind::TonalPulse:
         default:
             return kTonalPulse;
@@ -119,8 +119,8 @@ inline const char* detectionProfileName(DetectionProfileKind kind) {
     switch (kind) {
         case DetectionProfileKind::TonalPulse:
             return "TonalPulse";
-        case DetectionProfileKind::Chirp:
-            return "Chirp";
+        case DetectionProfileKind::ChirpExperimental:
+            return "ChirpExperimental";
     }
     return "unknown";
 }
@@ -139,8 +139,8 @@ inline const char* profileInspectionRulesName(ProfileInspectionRulesKind kind) {
     switch (kind) {
         case ProfileInspectionRulesKind::TonalPulse:
             return "TonalPulseRules";
-        case ProfileInspectionRulesKind::Chirp:
-            return "ChirpRules";
+        case ProfileInspectionRulesKind::ChirpExperimental:
+            return "ChirpExperimentalRules";
     }
     return "unknown";
 }
@@ -154,8 +154,8 @@ inline bool detectionProfileKindFromName(const char* name, DetectionProfileKind&
         outKind = DetectionProfileKind::TonalPulse;
         return true;
     }
-    if (strcasecmp(name, "chirp") == 0) {
-        outKind = DetectionProfileKind::Chirp;
+    if (strcasecmp(name, "chirp_experimental") == 0) {
+        outKind = DetectionProfileKind::ChirpExperimental;
         return true;
     }
 

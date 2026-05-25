@@ -1,4 +1,5 @@
 #include "ResonantBehavior.h"
+#include "../TimingUtils.h"
 
 /*
 ResonantBehavior
@@ -19,13 +20,13 @@ Does NOT:
 - decide detector thresholds or feature extraction logic
 
 File structure:
-- lifecycle: resetState(), update(bool...), handlePatternResult(), update(now)
+- lifecycle: resetState(), handlePatternResult(), update(now)
 - configuration: detection flags and timing setters/getters
 - output / hooks: chirp requests, suppression gates, chirp lifecycle hooks
 - inspection: state, counters, timestamps, and decision names
 
 Timing roles:
-- waitAfterTransientMs: delay before responding to a heard event
+- waitAfterHeardMs: delay before responding to a heard event
 - refractoryAfterEmitMs: post-emit holdoff after chirp finish
 - behavior suppression: block reactions to our own active chirp
 - own-emit detection suppression: detection/analyzer-side tail window for ring-down
@@ -60,12 +61,12 @@ const char* patternTypeName(detection::PatternType type) {
 void ResonantBehavior::resetState() {
     _state = State::Idle;
     _activityLevel = 0.0f;
-    _pendingTransientDetected = false;
-    _pendingTransientStrength = 0.0f;
-    _pendingTransientMs = 0;
+    _pendingHeardPatternDetected = false;
+    _pendingHeardPatternStrength = 0.0f;
+    _pendingHeardPatternMs = 0;
     _lastEmitMs = 0;
-    _lastTransientMs = 0;
-    _transientStartedMs = 0;
+    _lastHeardPatternMs = 0;
+    _heardPatternStartedMs = 0;
     _refractoryStartedMs = 0;
     _behaviorSuppressUntilMs = 0;
     _waitUntilMs = 0;
@@ -96,20 +97,13 @@ void ResonantBehavior::resetState() {
 }
 
 void ResonantBehavior::configure(const BehaviorGateConfig& profile) {
-    setWaitAfterTransientMs(profile.waitAfterTransientMs);
+    setWaitAfterHeardMs(profile.waitAfterHeardMs);
     setRefractoryAfterEmitMs(profile.refractoryAfterEmitMs);
     setIdleTimeoutMs(profile.idleTimeoutMs);
     setIdleTimeVariationMs(profile.idleTimeVariationMs);
     setIdleBlockedAfterHeardMs(profile.idleBlockedAfterHeardMs);
     setIdleBlockedAfterOwnEmitMs(profile.idleBlockedAfterOwnEmitMs);
     setIdleEnabled(profile.idleEnabled);
-}
-
-void ResonantBehavior::update(bool transientDetected, float transientStrength, unsigned long now) {
-    _pendingTransientDetected = transientDetected;
-    _pendingTransientStrength = transientStrength;
-    _pendingTransientMs = now;
-    update(now);
 }
 
 ResonantBehavior::BehaviorDecision ResonantBehavior::handlePatternResult(const detection::PatternResult& result, const detection::FieldState& field, unsigned long now) {
@@ -174,7 +168,7 @@ ResonantBehavior::BehaviorDecision ResonantBehavior::handlePatternResult(const d
         _lastDecision = BehaviorDecision::RefractoryAfterEmit;
         _lastBlockReason = BehaviorDecision::RefractoryAfterEmit;
         _blockedRefractory++;
-    } else if (_state == State::TransientSeen) {
+    } else if (_state == State::HeardPattern) {
         _lastDecision = BehaviorDecision::AlreadyScheduled;
         _lastBlockReason = BehaviorDecision::AlreadyScheduled;
         _blockedWaiting++;
@@ -186,15 +180,15 @@ ResonantBehavior::BehaviorDecision ResonantBehavior::handlePatternResult(const d
         _behaviorEligible = true;
         _lastDecision = BehaviorDecision::ConsumedPattern;
         _lastBlockReason = BehaviorDecision::None;
-        _pendingTransientDetected = true;
-        if (result.candidate.peakStrength > _pendingTransientStrength) {
-            _pendingTransientStrength = result.candidate.peakStrength;
+        _pendingHeardPatternDetected = true;
+        if (result.candidate.peakStrength > _pendingHeardPatternStrength) {
+            _pendingHeardPatternStrength = result.candidate.peakStrength;
         }
-        _pendingTransientMs = result.candidate.acceptedMs != 0 ? result.candidate.acceptedMs : now;
-        _lastPatternHeardAtMs = _pendingTransientMs;
-        _transientStartedMs = now;
-        _state = State::TransientSeen;
-        _waitUntilMs = now + _waitAfterTransientMs;
+        _pendingHeardPatternMs = result.candidate.acceptedMs != 0 ? result.candidate.acceptedMs : now;
+        _lastPatternHeardAtMs = _pendingHeardPatternMs;
+        _heardPatternStartedMs = now;
+        _state = State::HeardPattern;
+        _waitUntilMs = now + _waitAfterHeardMs;
         scheduleNextIdle(now);
     }
 
@@ -202,45 +196,45 @@ ResonantBehavior::BehaviorDecision ResonantBehavior::handlePatternResult(const d
         || _lastDecision == BehaviorDecision::RefractoryAfterEmit
         || _lastDecision == BehaviorDecision::AlreadyScheduled
         || _lastDecision == BehaviorDecision::SelfSuppressed) {
-        _lastPatternHeardAtMs = _pendingTransientMs != 0 ? _pendingTransientMs : _lastPatternHeardAtMs;
+        _lastPatternHeardAtMs = _pendingHeardPatternMs != 0 ? _pendingHeardPatternMs : _lastPatternHeardAtMs;
     }
 
     return _lastDecision;
 }
 
 void ResonantBehavior::update(unsigned long now) {
-    const bool transientDetected = _pendingTransientDetected;
-    const float transientStrength = _pendingTransientStrength;
-    const unsigned long transientMs = _pendingTransientMs;
+    const bool heardPatternDetected = _pendingHeardPatternDetected;
+    const float heardPatternStrength = _pendingHeardPatternStrength;
+    const unsigned long heardPatternMs = _pendingHeardPatternMs;
 
-    _pendingTransientDetected = false;
-    _pendingTransientStrength = 0.0f;
-    _pendingTransientMs = 0;
+    _pendingHeardPatternDetected = false;
+    _pendingHeardPatternStrength = 0.0f;
+    _pendingHeardPatternMs = 0;
 
     _chirpRequested = false;
     _chirpRequestSource = ChirpRequestSource::None;
     _chirpPattern = ChirpOutput::ChirpPattern::Single;
-    _activityLevel = transientStrength;
+    _activityLevel = heardPatternStrength;
     _outputBusy = _state == State::Chirping;
 
     if (_nextIdleAtMs == 0) {
         scheduleNextIdle(now);
     }
 
-    // Track the last transient time so idle-triggered chirps do not fire while
+    // Track the last heard pattern time so idle-triggered chirps do not fire while
     // the node is still hearing bursts.
-    if (transientDetected) {
-     	_lastTransientMs = transientMs != 0 ? transientMs : now;
+    if (heardPatternDetected) {
+        _lastHeardPatternMs = heardPatternMs != 0 ? heardPatternMs : now;
     }
 
     // --- state machine ---
     switch (_state) {
 
         case State::Idle:
-            if (transientDetected) {
-                _transientStartedMs = now;
-                _state = State::TransientSeen;
-                _waitUntilMs = now + _waitAfterTransientMs;
+            if (heardPatternDetected) {
+                _heardPatternStartedMs = now;
+                _state = State::HeardPattern;
+                _waitUntilMs = now + _waitAfterHeardMs;
             }
             else if (canIdle(now)) {
                 _wouldEmit = true;
@@ -257,14 +251,14 @@ void ResonantBehavior::update(unsigned long now) {
             }
             break;
 
-        case State::TransientSeen:
+        case State::HeardPattern:
             // Wait after the transient settles, then respond.
-            if (now >= _waitUntilMs) {
+            if (timing::atOrAfter(now, _waitUntilMs)) {
                 _wouldEmit = true;
                 _lastDecision = BehaviorDecision::WouldEmit;
                 _lastBlockReason = BehaviorDecision::None;
                 _chirpRequested = true;
-                _chirpRequestSource = ChirpRequestSource::Transient;
+                _chirpRequestSource = ChirpRequestSource::HeardPattern;
                 _chirpPattern = ChirpOutput::ChirpPattern::Single;
                 _lastEmitMs = now;
                 _outputBusy = true;
@@ -280,15 +274,15 @@ void ResonantBehavior::update(unsigned long now) {
 
         case State::Refractory:
             _outputBusy = false;
-            if (now - _refractoryStartedMs > _refractoryAfterEmitMs) {
+            if (timing::elapsedSince(now, _refractoryStartedMs, _refractoryAfterEmitMs)) {
                 _state = State::Idle;
             }
             break;
     }
 }
 
-void ResonantBehavior::setWaitAfterTransientMs(unsigned long value) {
-    _waitAfterTransientMs = value;
+void ResonantBehavior::setWaitAfterHeardMs(unsigned long value) {
+    _waitAfterHeardMs = value;
 }
 
 void ResonantBehavior::setRefractoryAfterEmitMs(unsigned long value) {
@@ -323,8 +317,8 @@ void ResonantBehavior::seedIdleSchedule(unsigned long now) {
     scheduleNextIdle(now);
 }
 
-unsigned long ResonantBehavior::waitAfterTransientMs() const {
-    return _waitAfterTransientMs;
+unsigned long ResonantBehavior::waitAfterHeardMs() const {
+    return _waitAfterHeardMs;
 }
 
 unsigned long ResonantBehavior::refractoryAfterEmitMs() const {
@@ -369,8 +363,8 @@ const char* ResonantBehavior::chirpRequestSourceName() const {
     switch (_chirpRequestSource) {
         case ChirpRequestSource::None:
             return "none";
-        case ChirpRequestSource::Transient:
-            return "transient";
+        case ChirpRequestSource::HeardPattern:
+            return "heard_pattern";
         case ChirpRequestSource::Idle:
             return "idle";
     }
@@ -423,10 +417,10 @@ bool ResonantBehavior::isActive() const {
 }
 
 unsigned long ResonantBehavior::waitRemainingMs(unsigned long now) const {
-    if (_state != State::TransientSeen) {
+    if (_state != State::HeardPattern) {
         return 0;
     }
-    if (now <= _waitUntilMs) {
+    if (timing::beforeDeadline(now, _waitUntilMs)) {
         return _waitUntilMs - now;
     }
     return 0;
@@ -436,14 +430,14 @@ unsigned long ResonantBehavior::refractoryRemainingMs(unsigned long now) const {
     if (_state != State::Refractory) {
         return 0;
     }
-    if (now <= _refractoryUntilMs) {
+    if (timing::beforeDeadline(now, _refractoryUntilMs)) {
         return _refractoryUntilMs - now;
     }
     return 0;
 }
 
 unsigned long ResonantBehavior::behaviorSuppressRemainingMs(unsigned long now) const {
-    if (now >= _behaviorSuppressUntilMs) {
+    if (timing::atOrAfter(now, _behaviorSuppressUntilMs)) {
         return 0;
     }
     return _behaviorSuppressUntilMs - now;
@@ -543,8 +537,8 @@ const char* ResonantBehavior::stateName() const {
     switch (_state) {
         case State::Idle:
             return "Idle";
-        case State::TransientSeen:
-            return "TransientSeen";
+        case State::HeardPattern:
+            return "HeardPattern";
         case State::Chirping:
             return "Chirping";
         case State::Refractory:
@@ -558,7 +552,7 @@ int ResonantBehavior::stateCode() const {
     switch (_state) {
         case State::Idle:
             return 0;
-        case State::TransientSeen:
+        case State::HeardPattern:
             return 1;
         case State::Chirping:
             return 2;
@@ -623,13 +617,13 @@ bool ResonantBehavior::canIdle(unsigned long now) const {
     if (_lastFieldState.active || _lastFieldState.dense) {
         return false;
     }
-    if (_nextIdleAtMs != 0 && now < _nextIdleAtMs) {
+    if (_nextIdleAtMs != 0 && timing::beforeDeadline(now, _nextIdleAtMs)) {
         return false;
     }
-    if (now - _lastTransientMs < _idleBlockedAfterHeardMs) {
+    if (!timing::elapsedSince(now, _lastHeardPatternMs, _idleBlockedAfterHeardMs)) {
         return false;
     }
-    if (now - _lastEmitMs < _idleBlockedAfterOwnEmitMs) {
+    if (!timing::elapsedSince(now, _lastEmitMs, _idleBlockedAfterOwnEmitMs)) {
         return false;
     }
     return true;

@@ -7,10 +7,6 @@
 class AudioSignal;
 class ResonantBehavior;
 
-namespace detection {
-class AmpDiagnosticProbe;
-}
-
 /*
 NodeDebug
 
@@ -54,7 +50,6 @@ public:
 
     void printPlotValues(unsigned long now,
                          const AudioSignal& audioSignal,
-                         const detection::AmpDiagnosticProbe& ampDiagnosticProbe,
                          const ResonantBehavior& behavior,
                          const ChirpOutput& chirpOutput,
                          bool selfChirpSuppressed);

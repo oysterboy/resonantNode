@@ -2,7 +2,6 @@
 
 #include "../../behavior/ResonantBehavior.h"
 #include "../../AudioDebugConfig.h"
-#include "../../detection/detectors/AmpDiagnosticProbe.h"
 #include "../../io/AudioSignal.h"
 #include "../../io/ChirpOutput.h"
 #include "../../TimingUtils.h"
@@ -209,7 +208,7 @@ void NodeDebug::observeI2SSignal(unsigned long now, const AudioSignal& audioSign
         if (centeredSignal > _i2sCenteredMax) _i2sCenteredMax = centeredSignal;
     }
 
-    if (_lastI2SSignalLogMs != 0 && now - _lastI2SSignalLogMs < _i2sSignalLogIntervalMs) {
+    if (_lastI2SSignalLogMs != 0 && !timing::elapsedSince(now, _lastI2SSignalLogMs, _i2sSignalLogIntervalMs)) {
         return;
     }
 
@@ -296,7 +295,6 @@ void NodeDebug::updateLed(unsigned long now,
 
 void NodeDebug::printPlotValues(unsigned long now,
                                const AudioSignal& audioSignal,
-                               const detection::AmpDiagnosticProbe& ampDiagnosticProbe,
                                const ResonantBehavior& behavior,
                                const ChirpOutput& chirpOutput,
                                bool selfChirpSuppressed) {
@@ -315,8 +313,6 @@ void NodeDebug::printPlotValues(unsigned long now,
     const float transientStrength = _debugTransientStrength;
     const int onsetPulse = timing::beforeDeadline(now, _debugOnsetVisibleUntilMs) ? 1 : 0;
     const int transientPulse = timing::beforeDeadline(now, _debugTransientVisibleUntilMs) ? 1 : 0;
-    const detection::AmpDiagnosticSnapshot probeSnapshot = ampDiagnosticProbe.snapshot();
-    const unsigned long transientDurationMs = probeSnapshot.transientDurationMs;
     const unsigned long coreLoopAvgUs = _coreLoopSamples > 0 ? (_coreLoopUsSum / _coreLoopSamples) : 0;
     const unsigned long fullLoopAvgUs = _fullLoopSamples > 0 ? (_fullLoopUsSum / _fullLoopSamples) : 0;
     const int state = behavior.stateCode();
@@ -336,8 +332,6 @@ void NodeDebug::printPlotValues(unsigned long now,
     Serial.print(transientPulse);
     Serial.print(" transient:");
     Serial.print(transientStrength, 3);
-    Serial.print(" transientMs:");
-    Serial.print(transientDurationMs);
     Serial.print(" behaviorSuppressSelfChirp:");
     Serial.print(selfChirpSuppressed ? 1 : 0);
     Serial.print(" coreUs:");

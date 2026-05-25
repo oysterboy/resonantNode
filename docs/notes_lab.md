@@ -13,7 +13,7 @@ profile:
   ampEnabled = true
   useLegacyPath = false
   frequencyOnly = false
-  waitAfterTransientMs = 100
+  waitAfterHeardMs = 100
   refractoryAfterEmitMs = 0
   idleTimeoutMs = 20000
   idleTimeVariationMs = 10000

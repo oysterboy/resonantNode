@@ -46,12 +46,9 @@ public:
     BehaviorDecision handlePatternResult(const detection::PatternResult& result, unsigned long now);
     BehaviorDecision handlePatternResult(const detection::PatternResult& result, const detection::FieldState& field, unsigned long now);
     void update(unsigned long now);
-    // Boolean convenience overload for callers that still provide pattern flags directly.
-    // The main architecture remains PatternResult-driven.
-    void update(bool transientDetected, float transientStrength, unsigned long now);
     void seedIdleSchedule(unsigned long now);
 
-    void setWaitAfterTransientMs(unsigned long value);
+    void setWaitAfterHeardMs(unsigned long value);
     void setRefractoryAfterEmitMs(unsigned long value);
     void setIdleTimeMs(unsigned long value);
     void setIdleTimeVariationMs(unsigned long value);
@@ -59,7 +56,7 @@ public:
     void setIdleBlockedAfterOwnEmitMs(unsigned long value);
     void setIdleEnabled(bool value);
     void setIdleTimeoutMs(unsigned long value);
-    unsigned long waitAfterTransientMs() const;
+    unsigned long waitAfterHeardMs() const;
     unsigned long refractoryAfterEmitMs() const;
     unsigned long idleTimeMs() const;
     unsigned long idleTimeVariationMs() const;
@@ -115,7 +112,7 @@ private:
     // --- state machine ---
     enum class State {
         Idle,
-        TransientSeen,
+        HeardPattern,
         Chirping,
         Refractory
     };
@@ -125,15 +122,15 @@ private:
     // --- behavior state ---
     float _activityLevel = 0.0f;
     detection::FieldState _lastFieldState = {};
-    // Cached inputs for the boolean convenience overload.
-    bool _pendingTransientDetected = false;
-    float _pendingTransientStrength = 0.0f;
-    unsigned long _pendingTransientMs = 0;
+    // Cached inputs from the last heard pattern event.
+    bool _pendingHeardPatternDetected = false;
+    float _pendingHeardPatternStrength = 0.0f;
+    unsigned long _pendingHeardPatternMs = 0;
 
     // --- timing state ---
     unsigned long _lastEmitMs = 0;
-    unsigned long _lastTransientMs = 0;
-    unsigned long _transientStartedMs = 0;
+    unsigned long _lastHeardPatternMs = 0;
+    unsigned long _heardPatternStartedMs = 0;
     unsigned long _refractoryStartedMs = 0;
     unsigned long _behaviorSuppressUntilMs = 0;
     unsigned long _waitUntilMs = 0;
@@ -149,7 +146,7 @@ private:
     bool _outputBusy = false;
 
     // --- timing parameters ---
-    unsigned long _waitAfterTransientMs = 500; // Delay before responding after a transient is seen.
+    unsigned long _waitAfterHeardMs = 500; // Delay before responding after a heard pattern is seen.
     unsigned long _refractoryAfterEmitMs = 200; // Ignore follow-up activity for a short time after a chirp finishes.
     unsigned long _behaviorSuppressSelfChirpMs = 250; // Behavior-level suppression while the node's chirp is active.
     unsigned long _detectionSuppressTailMsOwnEmit = 0; // Detector/analyzer suppression tail after our own emit.
@@ -165,7 +162,7 @@ private:
 
     enum class ChirpRequestSource {
         None,
-        Transient,
+        HeardPattern,
         Idle
     };
 

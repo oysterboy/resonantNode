@@ -11,7 +11,6 @@
 #include "../../hal/PiezoToneOutputBTL.h"
 #include "../../hal/PiezoToneOutput.h"
 #include "../../io/AudioSignal.h"
-#include "../../detection/detectors/AmpDiagnosticProbe.h"
 #include "../../detection/features/FreqBandStream.h"
 #include "../../io/ChirpOutput.h"
 #include "../../behavior/ResonantBehavior.h"
@@ -94,7 +93,6 @@ private:
     ChirpOutput _chirpOutput;
 
     // Occurrence / detection / behavior pipeline.
-    detection::AmpDiagnosticProbe _ampDiagnosticProbe;
     AudioSignal _audioSignal;
     FreqBandStream _freqBandStream;
     detection::DetectionRuntime _detection;

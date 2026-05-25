@@ -52,7 +52,7 @@ class DetectionRuntime {
 public:
     DetectionRuntime();
 
-    void reset();
+    void resetState();
 
     void setFrequencyTuning(const FrequencyMatchEvaluation::Values& tuning);
     void setOccurrenceSource(ProfileOccurrenceSourceKind kind);

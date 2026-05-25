@@ -126,8 +126,8 @@ Desired shape:
 
 ```txt
 Node.update()
-  signal.update()
-  detection.update(signal snapshot)
+  audioSignal.update()
+  detection.update(audioSignal snapshot)
   behavior.update(BehaviorInput)
   output.submit(BehaviorAction)
   output.update()

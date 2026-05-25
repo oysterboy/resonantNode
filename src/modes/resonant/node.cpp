@@ -88,7 +88,7 @@ bool equalsIgnoreCase(const char* a, const char* b) {
 BehaviorGateConfig makeTonalPulseBehaviorProfile() {
     BehaviorGateConfig profile;
     profile.idleEnabled = true;
-    profile.waitAfterTransientMs = 100;
+    profile.waitAfterHeardMs = 100;
     profile.refractoryAfterEmitMs = 0;
     profile.idleTimeoutMs = 20000;
     profile.idleTimeVariationMs = 10000;
@@ -149,7 +149,6 @@ Node::Node(int inputPin, int ledPin, int chirpPin, int chirpBtlPin)
     : _ledPin(ledPin),
       _i2sSource(14, 27, 33, 16000, 32),
       _audioSource(_i2sSource),
-      _ampDiagnosticProbe(),
       _audioSignal(_audioSource),
       _freqBandStream(),
       _toneOutput(chirpPin),
@@ -165,11 +164,10 @@ void Node::begin() {
     configureParameters();
     _audioSource.begin();
     _audioSignal.begin(false);
-    _ampDiagnosticProbe.begin();
     _freqBandStream.resetState();
     _freqBandStream.setSampleRateHz(_audioSource.sampleRateHz());
     _freqBandStream.setTargetFrequencyHz(_chirpOutput.toneHz());
-    _detection.reset();
+    _detection.resetState();
     applyActiveProfiles();
     _behavior.resetState();
     resetDetectionState();
@@ -223,8 +221,7 @@ void Node::resetRbCounters() {
 
 void Node::resetDetectionState() {
     _audioSignal.resetSignalState();
-    _ampDiagnosticProbe.resetState();
-    _detection.reset();
+    _detection.resetState();
     applyActiveProfiles();
     _wasSelfChirpSuppressed = false;
     _rbLastLoggedOnsetRejectCount = 0;
@@ -343,13 +340,6 @@ void Node::configureI2SParameters() {
     _freqBandStream.setTargetFrequencyHz(_chirpOutput.toneHz());
     _audioSignal.setBaselineTrackingQuietThreshold(20);
 
-    _ampDiagnosticProbe.setOnsetDetectionThreshold(23.0f);
-    _ampDiagnosticProbe.setOnsetReleaseThreshold(20.0f);
-    _ampDiagnosticProbe.setCooldownAfterOnsetMs(10);
-    _ampDiagnosticProbe.setReleaseDebounceMs(30);
-    _ampDiagnosticProbe.setMinTransientDurationMs(60);
-    _ampDiagnosticProbe.setMaxTransientDurationMs(240);
-    _ampDiagnosticProbe.setMinTransientPeakStrength(40.0f);
     // Behavior timing comes from the active profiles via applyActiveProfiles().
 }
 
@@ -380,9 +370,6 @@ void Node::update() {
             const uint32_t sampleTimeUs = block.approxStartMicros + sampleOffsetUs(static_cast<uint32_t>(i), sampleRateHz);
             AudioSignalFrame frame;
             _audioSignal.update(static_cast<int>(block.samples[i]), sampleTimeUs, frame);
-            if (rbShouldLogDetail()) {
-                _ampDiagnosticProbe.observe(static_cast<float>(frame.level), frame.sampleTimeUs);
-            }
             const bool ownEmitSuppressed = frame.sampleTimeMs < _behavior.ownEmitDetectionSuppressUntilMs();
             if (!ownEmitSuppressed) {
                 _freqBandStream.observeCenteredSample(frame.centeredSample);
@@ -506,6 +493,7 @@ void Node::handleSerialLine(const char* line) {
         Serial.println("RB CMD: RB BEHAV wait=100 refractory=0 idleTimeout=20000 idleTimeoutVariation=10000 idleBlockedAfterHeard=3000 idleBlockedAfterOwnEmit=5000");
         Serial.println("RB CMD: RB STATUS");
         Serial.println("RB CMD: RB PROFILE name=tonalpulse");
+        Serial.println("RB CMD(EXP): RB PROFILE name=chirp_experimental (experimental)");
         Serial.println("RB CMD: RB rebase");
         Serial.println("RB CMD: RB rebase force");
         Serial.println("RB CMD: RB log off|minimal|full");
@@ -518,8 +506,12 @@ void Node::handleSerialLine(const char* line) {
         handleProfileCommand(line);
         return;
     }
-    if (startsWithTokenIgnoreCase(line, "RB STATUS") || startsWithTokenIgnoreCase(line, "RB DETECT")) {
+    if (startsWithTokenIgnoreCase(line, "RB STATUS")) {
         handleDetectCommand(line);
+        return;
+    }
+    if (startsWithTokenIgnoreCase(line, "RB DETECT")) {
+        Serial.println("ERR RB DETECT removed; use RB STATUS");
         return;
     }
     if (startsWithTokenIgnoreCase(line, "RB PARAM")) {
@@ -565,7 +557,7 @@ void Node::handleSerialLine(const char* line) {
             return;
         }
 
-        unsigned long waitAfterTransientMs = _behavior.waitAfterTransientMs();
+        unsigned long waitAfterHeardMs = _behavior.waitAfterHeardMs();
         unsigned long refractoryAfterEmitMs = _behavior.refractoryAfterEmitMs();
         unsigned long idleTimeoutMs = _behavior.idleTimeoutMs();
         unsigned long idleTimeoutVariationMs = _behavior.idleTimeVariationMs();
@@ -576,7 +568,7 @@ void Node::handleSerialLine(const char* line) {
         while ((token = strtok_r(nullptr, " ", &savePtr)) != nullptr) {
             if (startsWithTokenIgnoreCase(token, "wait=") || startsWithTokenIgnoreCase(token, "waitMs=")) {
                 const char* value = token + (startsWithTokenIgnoreCase(token, "waitMs=") ? 7 : 5);
-                waitAfterTransientMs = strtoul(value, nullptr, 10);
+                waitAfterHeardMs = strtoul(value, nullptr, 10);
             } else if (startsWithTokenIgnoreCase(token, "refractory=") || startsWithTokenIgnoreCase(token, "refractoryMs=")) {
                 const char* value = token + (startsWithTokenIgnoreCase(token, "refractoryMs=") ? 13 : 11);
                 refractoryAfterEmitMs = strtoul(value, nullptr, 10);
@@ -598,7 +590,7 @@ void Node::handleSerialLine(const char* line) {
             }
         }
 
-        _behavior.setWaitAfterTransientMs(waitAfterTransientMs);
+        _behavior.setWaitAfterHeardMs(waitAfterHeardMs);
         _behavior.setRefractoryAfterEmitMs(refractoryAfterEmitMs);
         _behavior.setIdleTimeoutMs(idleTimeoutMs);
         _behavior.setIdleTimeVariationMs(idleTimeoutVariationMs);
@@ -607,7 +599,7 @@ void Node::handleSerialLine(const char* line) {
         _behavior.setIdleEnabled(idleEnabled);
 
         Serial.print("RB BEHAV wait=");
-        Serial.print(_behavior.waitAfterTransientMs());
+        Serial.print(_behavior.waitAfterHeardMs());
         Serial.print(" refractory=");
         Serial.print(_behavior.refractoryAfterEmitMs());
         Serial.print(" idleTimeout=");
@@ -734,7 +726,7 @@ void Node::handleProfileCommand(const char* line) {
         printProfileComposition(activeDetectionProfile());
         Serial.println();
     } else {
-        Serial.println("RB PROFILE usage=name=tonalpulse");
+        Serial.println("RB PROFILE usage=name=tonalpulse|chirp_experimental");
     }
 }
 
@@ -761,7 +753,7 @@ const BehaviorGateConfig& Node::activeBehaviorProfile() const {
     static const BehaviorGateConfig kTonalPulseProfile = makeTonalPulseBehaviorProfile();
 
     switch (_profileKind) {
-        case detection::DetectionProfileKind::Chirp:
+        case detection::DetectionProfileKind::ChirpExperimental:
         case detection::DetectionProfileKind::TonalPulse:
         default:
             return kTonalPulseProfile;
@@ -914,14 +906,13 @@ void Node::printRbSummary() const {
 
     printRbBehaviorSummary();
     printRbSignalSummary();
-    printRbDetectorSummary();
 }
 
 void Node::printRbBehaviorSummary() const {
     Serial.print("RB behavior idle=");
     Serial.print(_behavior.idleEnabled() ? 1 : 0);
     Serial.print(" wait=");
-    Serial.print(_behavior.waitAfterTransientMs());
+    Serial.print(_behavior.waitAfterHeardMs());
     Serial.print(" refractory=");
     Serial.print(_behavior.refractoryAfterEmitMs());
     Serial.print(" idleTimeout=");
@@ -980,37 +971,5 @@ void Node::printRbSignalSummary() const {
     Serial.print(" smooth=");
     Serial.println(_audioSignal.smoothedSignalMagnitude());
 }
-
-void Node::printRbDetectorSummary() const {
-    const detection::AmpDiagnosticSnapshot probeSnapshot = _ampDiagnosticProbe.snapshot();
-    Serial.print("RB det mode=AMP onset=");
-    Serial.print(probeSnapshot.onsetDetectionThreshold, 1);
-    Serial.print(" release=");
-    Serial.print(probeSnapshot.onsetReleaseThreshold, 1);
-    Serial.print(" cooldown=");
-    Serial.print(probeSnapshot.cooldownAfterOnsetMs);
-    Serial.print(" releaseDebounce=");
-    Serial.print(probeSnapshot.releaseDebounceMs);
-    Serial.print(" minMs=");
-    Serial.print(probeSnapshot.minTransientDurationMs);
-    Serial.print(" maxMs=");
-    Serial.print(probeSnapshot.maxTransientDurationMs);
-    Serial.print(" minStrength=");
-    Serial.println(probeSnapshot.minTransientPeakStrength, 1);
-
-    Serial.print("RB det: tooShort=");
-    Serial.print(probeSnapshot.transientRejectedDurationTooShortCount);
-    Serial.print(" tooLong=");
-    Serial.print(probeSnapshot.transientRejectedDurationTooLongCount);
-    Serial.print(" weak=");
-    Serial.print(probeSnapshot.transientRejectedStrengthTooLowCount);
-    Serial.print(" lastReject=");
-    Serial.print(probeSnapshot.transientRejectReason);
-    Serial.print(" lastRejectDur=");
-    Serial.print(probeSnapshot.rejectedDurationMs);
-    Serial.print(" lastRejectStrength=");
-    Serial.println(probeSnapshot.rejectedStrength, 1);
-}
-
 
 

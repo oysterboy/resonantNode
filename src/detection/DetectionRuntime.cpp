@@ -5,19 +5,13 @@ namespace detection {
 
 DetectionRuntime::DetectionRuntime() = default;
 
-void DetectionRuntime::reset() {
+void DetectionRuntime::resetState() {
     _ampEmitter.reset();
     _frequencyEmitter.reset();
     _occurrenceInspector.reset();
     _patternAssembler.reset();
     _fieldStateTracker.reset();
     _featureHistory.reset();
-    _occurrenceSourceKind = ProfileOccurrenceSourceKind::Frequency;
-    _inspectionRulesKind = ProfileInspectionRulesKind::TonalPulse;
-    _occurrenceInspector.configure(_inspectionConfig);
-    _occurrenceInspector.setInspectionRules(_inspectionRulesKind);
-    _patternRules.configure(_patternRulesConfig);
-    _profileName = "unknown";
     _resultQueue[0] = {};
     _resultReadIndex = 0;
     _resultCount = 0;

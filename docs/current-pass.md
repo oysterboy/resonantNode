@@ -1,593 +1,801 @@
-# Codex Instruction — Rename Signal Layer to Occurrence + FreqAmp Profile to TonalPulse
+# ResonantNode Cleanup Instruction — Post-Bugfix / Docs+Naming Pass
 
-Scope: naming-only refactor.
+Scope: `src/` and active `docs/` after the latest bugfix, commenting, and rename pass.  
+Project: ResonantNode / Resonanzraum Detection Refactor.  
+Intent: finish half-transitions, remove remaining roadmap drift, and align code/help/docs with the current stable runtime.
 
-Goal:
+This pass is **not** a new architecture expansion. It is a cleanup and alignment pass.
 
-1. Rename the source-level bounded detection objects from `Signal*` terminology to `Occurrence*`.
-2. Rename the `FreqAmp` profile to `TonalPulse` throughout the codebase and docs.
-3. Remove or avoid decorative/duplicated global profile fields if they only mirror hardwired source behavior.
-4. Do not change runtime behavior, detector thresholds, pattern rules, analyzer semantics, or behavior decisions.
+## Baseline decisions
 
-This pass is a mechanical naming / terminology alignment pass.
-
----
-
-## Global Rules
-
-Do:
+Use these as hard constraints for this pass.
 
 ```text
-- rename folders, files, headers, classes, structs, enums, functions, variables, labels, logs, comments, and docs
-- dont tuch files in archive
-- update includes and build references
-- update namespace/type references consistently
-- update analyzer output labels only where they refer to renamed architecture objects/profile names
-- run grep checks before and after
-- build/compile after the rename
-```
+D16 Chirp remains selectable only as explicitly experimental.
+    Use `profile=chirp_experimental` / `ChirpExperimental`.
+    Do not expose or accept stable/plain `profile=chirp`.
 
-Do not:
+D17 AmpStateProfile is roadmap/proof-profile only.
+    Do not mention it in normal manual/help.
+    Do not add command parsing or selectable code now.
 
-```text
-- change detector logic
-- change PatternRules logic
-- change thresholds
-- change behavior decisions
-- change Analyzer classification semantics
-- change output timing
-- change profile behavior
-- add new architecture
-- partially alias old names unless needed temporarily for compile migration
-```
+D18 Remove the `RB DETECT` alias entirely.
+    Only `RB STATUS` remains.
 
-No compatibility aliases should remain after the pass unless absolutely necessary.
+D19 AMP diagnostics are Analyzer-only for now.
+    Remove/disable AMP diagnostic probe from normal RB/Node exposure.
+    Keep AMP diagnostics in Analyzer / SEQ_EXPLAIN / AMPDIAG.
 
-If any alias is kept, add a TODO explaining why and when it can be removed.
+D20 Clean Behavior transient wording now.
+    Remove old boolean transient-update overload if unused.
+    Rename Behavior internals from transient-oriented names to pattern/heard wording.
 
----
+D21 Apply targeted rollover hardening now.
+    Use timing helpers for key Behavior/runtime timing checks.
+    Do not blindly rewrite the whole repo.
 
-# Part A — Rename Signal Layer to Occurrence
+D22 Split DetectionRuntime reset now.
+    resetState() clears runtime state only.
+    applyProfile/configure owns profile/config fields.
 
-## Intent
+D23 Update active docs to current Occurrence vocabulary now.
+    Archive docs may keep old Signal wording.
 
-The current `Signal*` terminology is ambiguous because `AudioSignal` / `FeatureStream` represent continuous signal material, while `SignalCandidate` / `InspectedSignal` are bounded source-level detected objects.
+D24 Global spelling pass: Occurrence, not Occurence.
+    Apply to code, docs, comments, logs, filenames where relevant.
 
-Use `Occurrence` for the bounded source-level detected thing.
+D25 Replace docs/current-pass.md with this next active cleanup pass.
+    Archive old current-pass content first.
 
-Architectural distinction:
+D26 Leave the engineer-rules filename typo for now.
+    Do not rename `docs/engeinerr_ruels.md` in this pass.
 
-```text
-Signal:
-    continuous audio-derived material / stream state
+D27 Leave archive docs untouched.
+    Do not edit large historical archive docs.
 
-Occurrence:
-    bounded source-level acoustic happening derived from one evidence path
+D28 Add a separate active implementation-status document.
+    Do not bury it in the main spec/current-pass.
 
-PatternCandidate:
-    assembled pattern-level candidate ready for PatternRules
+D29 Manual may mention ChirpExperimental only in a clearly separate developer/experimental section.
+    Normal quickstart/stable workflow shows TonalPulse only.
 
-PatternResult:
-    semantic result consumed by Behavior / Analyzer
-```
-
-Keep `AudioSignal` / `audioSignal` terminology untouched where it means the continuous audio signal layer.
-
-This pass is about the discrete detection layer.
-
----
-
-## Required Rename Map
-
-Apply consistently across folders, files, types, functions, variables, comments, labels, docs, and logs.
-
-```text
-SignalCandidate        → Occurrence
-SignalSource           → OccurrenceSource
-SignalEmitter          → OccurrenceSource
-AmpSignalEmitter       → AmpOccurrenceSource
-FrequencySignalEmitter → FrequencyOccurrenceSource
-SignalInspector        → OccurrenceInspector
-InspectedSignal        → InspectedOccurrence
-```
-
-Plural and collection names:
-
-```text
-SignalCandidates          → Occurrences
-InspectedSignals          → InspectedOccurrences
-signalCandidates          → occurrences
-inspectedSignals          → inspectedOccurrences
-signalCount               → occurrenceCount
-recentSignalCount         → recentOccurrenceCount
-recentAcceptedSignalCount → recentAcceptedOccurrenceCount
-lastSignalMs              → lastOccurrenceMs
-lastInspectedSignalMs     → lastInspectedOccurrenceMs
-```
-
-Source-specific labels, if present:
-
-```text
-AmpSignal       → AmpOccurrence
-FrequencySignal → FrequencyOccurrence
-```
-
-Only apply source-specific replacements if those identifiers exist.
-
----
-
-## Folder / File Rename Guidance
-
-If the codebase has a folder named:
-
-```text
-src/detection/signals/
-```
-
-rename it to:
-
-```text
-src/detection/occurrences/
-```
-
-Example file renames if present:
-
-```text
-SignalCandidate.h        → Occurrence.h
-SignalSource.h           → OccurrenceSource.h
-SignalEmitter.h          → OccurrenceSource.h
-AmpSignalEmitter.h       → AmpOccurrenceSource.h
-FrequencySignalEmitter.h → FrequencyOccurrenceSource.h
-SignalInspector.h        → OccurrenceInspector.h
-InspectedSignal.h        → InspectedOccurrence.h
-```
-
-Update all `#include` paths.
-
-If PlatformIO/build config references file paths explicitly, update those too.
-
----
-
-## API / Function Rename Guidance
-
-Rename functions and methods where the meaning is now occurrence-based.
-
-Examples:
-
-```text
-emitSignalCandidate(...)      → emitOccurrence(...)
-tryEmitSignal(...)            → tryEmitOccurrence(...)
-inspectSignal(...)            → inspectOccurrence(...)
-onSignalCandidate(...)        → onOccurrence(...)
-recordSignalCandidate(...)    → recordOccurrence(...)
-recentSignalCount()           → recentOccurrenceCount()
-lastSignalMs()                → lastOccurrenceMs()
-```
-
-Do not rename unrelated uses of `signal` where it refers to continuous audio signal material.
-
-Keep names like these if they refer to continuous signal:
-
-```text
-AudioSignal
-audioSignal
-signalLevel
-signalFrame
-signalMagnitude
-signalProcessing
-signal stream
+D30 No plain `profile=chirp` alias.
+    If entered, return error/help suggesting `profile=chirp_experimental`.
 ```
 
 ---
 
-## Logs / Analyzer / Docs Labels
+## Global rules for this pass
 
-Update log labels where they refer to bounded detection objects.
-
-Examples:
+### Do
 
 ```text
-signals=           → occurrences=
-signal_count=      → occurrence_count=
-signal_source=     → occurrence_source=
-inspected_signal=  → inspected_occurrence=
+- Make code/help/docs tell the same truth.
+- Keep TonalPulse as the only stable active profile.
+- Keep ChirpExperimental selectable only with explicit experimental naming.
+- Keep AmpState roadmap-only.
+- Make diagnostic paths visibly diagnostic.
+- Remove compatibility aliases that preserve old mental models.
+- Use Occurrence vocabulary in active code/docs.
+- Keep changes boring and local.
 ```
 
-Do not rename labels where `signal` means continuous audio signal level or signal processing.
-
-Analyzer report sections should update similarly if they exist:
+### Do not
 
 ```text
-SignalObservation      → OccurrenceObservation
-signals                → occurrences
-primarySignal          → primaryOccurrence
-acceptedSignals        → acceptedOccurrences
-rejectedSignals        → rejectedOccurrences
-```
-
-Only rename Analyzer types if they are part of the bounded-object layer.
-
----
-
-## FieldState Rename Guidance
-
-If `FieldState` contains signal-count fields, update them:
-
-```text
-recentSignalCount          → recentOccurrenceCount
-recentAcceptedSignalCount  → recentAcceptedOccurrenceCount
-lastSignalMs               → lastOccurrenceMs
-lastInspectedSignalMs      → lastInspectedOccurrenceMs
-```
-
-Meaning remains identical.
-
-Do not change `FieldState` behavior, thresholds, or semantics.
-
----
-
-## Spec / Docs Flow Update
-
-Update architecture flow text from:
-
-```text
-FeatureStreams
-→ SignalEmitters / CandidateSources
-→ SignalCandidates
-→ SignalInspector
-→ InspectedSignals
-→ PatternAssembler
-→ PatternCandidates
-→ PatternRules
-→ PatternResults
-```
-
-to:
-
-```text
-FeatureStreams
-→ OccurrenceSources
-→ Occurrences
-→ OccurrenceInspector
-→ InspectedOccurrences
-→ PatternAssembler
-→ PatternCandidates
-→ PatternRules
-→ PatternResults
-```
-
-If the docs mention `SignalEmitter / CandidateSource`, prefer the new term:
-
-```text
-OccurrenceSource
+- Do not implement AmpStateProfile now.
+- Do not implement full ChirpProfile / multi-pulse PatternRules now.
+- Do not create generic rule engines, dynamic registries, schedulers, or broad BehaviorRuntime framework.
+- Do not rename archive docs or clean the whole archive.
+- Do not keep old and new command names side by side.
+- Do not keep `profile=chirp` as a hidden alias.
+- Do not expose AMP diagnostic in RB as if it were active detection.
 ```
 
 ---
 
-## Part A Post-Rename Grep Checks
+# Pass order
 
-After renaming, run:
+## Pass 1 — Profile exposure cleanup
 
-```bash
-grep -R "SignalCandidate\|InspectedSignal\|SignalInspector\|SignalEmitter\|AmpSignalEmitter\|FrequencySignalEmitter\|SignalSource" -n src include docs test 2>/dev/null
-```
+Status: DONE
 
-Remaining matches are allowed only in archived historical docs.
+### Goal
 
-Active code and active docs should not use these names.
+Make profile exposure match actual implementation status.
 
-Also check lowercase labels:
-
-```bash
-grep -R "signalCandidate\|inspectedSignal\|signalEmitter\|signal_source\|signal_count\|recentSignalCount\|lastSignalMs" -n src include docs test 2>/dev/null
-```
-
-Update or justify all active matches.
-
----
-
-# Part B — Rename FreqAmp Profile to TonalPulse
-
-## Intent
-
-Rename the current `FreqAmp` profile to `TonalPulse`.
-
-This is a profile/name change only.
-
-Do not change profile behavior, thresholds, rules, detector logic, analyzer semantics, or behavior decisions.
-
----
-
-## Mandatory Preflight Search
-
-Before applying the rename, search for existing usage of `TonalPulse`, the earlier accidental `RonalPulse` spelling, and close variants.
-
-Run:
-
-```bash
-grep -R "TonalPulse\|tonalPulse\|tonalpulse\|TONAL_PULSE\|RonalPulse\|ronalPulse\|ronalpulse\|RONAL_PULSE" -n src include docs test 2>/dev/null
-```
-
-If existing `TonalPulse` usage is found:
-
-```text
-- report the matches
-- determine whether they are active code, docs, archive, or stale references
-- merge carefully if they already describe the same profile
-- do not create a second competing TonalPulse concept
-```
-
-If `RonalPulse` appears:
-
-```text
-- treat it as stale/wrong spelling unless explicitly documented as historical archive
-- rename active occurrences to TonalPulse
-```
-
-The requested target name is:
+Stable:
 
 ```text
 TonalPulse
 ```
 
-Do not use:
+Selectable experimental:
 
 ```text
-RonalPulse
+ChirpExperimental
+```
+
+Roadmap only:
+
+```text
+AmpState
+```
+
+### Required changes
+
+1. Rename command value for experimental chirp:
+
+```text
+profile=chirp_experimental
+```
+
+2. Do not accept:
+
+```text
+profile=chirp
+```
+
+3. If user enters `profile=chirp`, return an error/help message such as:
+
+```text
+Unknown profile `chirp`. Use `profile=chirp_experimental` for the experimental proof profile, or `profile=tonalpulse` for stable runtime.
+```
+
+4. Update enum/string/log naming if needed:
+
+```text
+Chirp -> ChirpExperimental
+profileName = "ChirpExperimental"
+command token = "chirp_experimental"
+```
+
+5. Help output:
+
+Stable help should advertise:
+
+```text
+profile=tonalpulse
+```
+
+Experimental/developer help may mention:
+
+```text
+profile=chirp_experimental   experimental / proof profile / not stable
+```
+
+6. Do not add AmpState command parsing.
+
+### Files likely involved
+
+```text
+src/detection/DetectionProfile.h/.cpp
+src/modes/resonant/node.cpp / node_commands.cpp / help functions
+src/modes/analyzer/AnalyzerCommands.cpp
+src/modes/analyzer/AnalyzerReporting.cpp if profile names are printed
+active docs/manual/help files
+```
+
+### Acceptance checks
+
+```text
+RB PROFILE name=tonalpulse               -> works
+RB PROFILE name=chirp                    -> rejected, suggests chirp_experimental
+RB PROFILE name=chirp_experimental       -> works, logs experimental name
+SEQ ... profile=tonalpulse               -> works
+SEQ ... profile=chirp                    -> rejected
+SEQ ... profile=chirp_experimental       -> works, clearly experimental
+Normal help shows TonalPulse as stable.
+Experimental help/manual section may show ChirpExperimental.
+AmpState does not appear in normal help/manual.
 ```
 
 ---
 
-## Required Rename Map
+## Pass 2 — Remove `RB DETECT` alias
 
-Apply consistently:
+Status: DONE
 
-```text
-FreqAmp          → TonalPulse
-freqAmp          → tonalPulse
-freqamp          → tonalpulse
-FREQ_AMP         → TONAL_PULSE
-FREQAMP          → TONALPULSE
-FreqAmpProfile   → TonalPulseProfile
-```
+### Goal
 
-If code uses enum values:
+Remove old command vocabulary.
+
+### Required changes
+
+1. Remove parser support for:
 
 ```text
-DetectionProfileKind::FreqAmp       → DetectionProfileKind::TonalPulse
-ProfileFeatureSetKind::FreqAmp      → ProfileFeatureSetKind::TonalPulse
-ProfileInspectionRulesKind::FreqAmp → ProfileInspectionRulesKind::TonalPulse
+RB DETECT
 ```
 
-Apply equivalent replacements for all profile-related enums and config labels.
+2. Keep only:
+
+```text
+RB STATUS
+```
+
+3. Remove `RB DETECT` from comments, help, tests, and active docs.
+
+4. If old notes mention `RB DETECT`, leave archive untouched, but do not mention it in active docs.
+
+### Acceptance checks
+
+```text
+RB STATUS -> works
+RB DETECT -> unknown command / helpful error
+help/manual mention only RB STATUS
+```
 
 ---
 
-## Profile Field Cleanup: signalEmitter / signalDetector
+## Pass 3 — AMP diagnostics Analyzer-only
 
-Current architectural finding:
+Status: DONE
 
-```text
-profile.signalEmitter and profile.signalDetector may be decorative / duplicated if actual detector wiring is hardcoded inside the occurrence source classes.
-```
+### Goal
 
-Use this rule:
+AMP diagnostics must not appear in RB/Node as active detection or normal status.
 
-```text
-OccurrenceSource owns its source-specific detector path.
+### Required changes
 
-AmpOccurrenceSource uses scalar transient mechanics.
-FrequencyOccurrenceSource uses FrequencyMatchDetector.
+1. Remove or disable Node/RB-side `AmpDiagnosticProbe` member if it is not needed for normal runtime.
 
-The profile should not carry a separate global signalDetector field unless detector choice is genuinely independent from source choice.
-```
-
-During the rename pass:
+2. Remove RB status/log output such as:
 
 ```text
-- Rename these fields if they remain active and are needed for compile.
-- If they are only decorative/log metadata, remove them from active profile config/logging.
-- Do not add a new global occurrenceDetector field.
-- Do not implement per-source config in this pass.
+RB det mode=AMP
+RB ampdiag ...
 ```
 
-Preferred current documentation wording:
+unless there is a deliberately separate RB AMPDIAG command. For this pass, prefer Analyzer-only.
+
+3. Keep AMP diagnostics available in:
 
 ```text
-Current implementation:
-OccurrenceSource classes own detector wiring.
-
-Future profile cleanup may replace decorative emitter/detector fields with per-source OccurrenceSourceConfig.
+Analyzer
+SEQ_EXPLAIN
+AMPDIAG
 ```
 
-Do not change runtime logic in this pass.
+4. Normal RB runtime should be about:
+
+```text
+TonalPulse profile
+PatternResult
+FieldState
+Behavior
+Output
+```
+
+5. Do not let AMP diagnostic influence:
+
+```text
+DetectionRuntime truth
+PatternResult
+FieldState
+Behavior
+Analyzer classification
+self-suppression
+idle logic
+response logic
+```
+
+### Files likely involved
+
+```text
+src/modes/resonant/node.*
+src/modes/resonant/node_debug.cpp
+src/modes/resonant/node_commands.cpp
+src/modes/analyzer/*
+src/detection/detectors/AmpDiagnosticProbe.*
+```
+
+### Acceptance checks
+
+```text
+RB STATUS does not print AMP diagnostic as active detector mode.
+RB logs do not say det mode=AMP.
+Analyzer SEQ_EXPLAIN / AMPDIAG still show AMP diagnostic facts.
+No RB behavior path reads AmpDiagnosticProbe.
+```
 
 ---
 
-## Files / Folders
+## Pass 4 — Behavior transient wording cleanup
 
-Rename profile-specific files if present:
+Status: DONE
 
-```text
-FreqAmpProfile.*       → TonalPulseProfile.*
-FreqAmpPatternRules.*  → TonalPulsePatternRules.*
-FreqAmpConfig.*        → TonalPulseConfig.*
-```
+### Goal
 
-Only rename files that are specifically profile-named.
+Behavior should no longer expose old transient vocabulary. Behavior consumes PatternResult / heard pattern events.
 
-Do not rename generic frequency/amp detector files unless they are actually profile-specific.
+### Required changes
 
-Do not rename these if they are generic components:
-
-```text
-FrequencyMatchDetector
-FrequencyBandStreamExtractor
-AmpTransientDetector
-FrequencyWindowProbe
-```
-
-Those are not profile names.
-
----
-
-## Logs / Commands / Parameters
-
-Update labels where they identify the profile:
-
-```text
-profile=FreqAmp       → profile=TonalPulse
-PROFILE FreqAmp       → PROFILE TonalPulse
-mode=freqamp          → mode=tonalpulse
-```
-
-If serial commands accept profile names, update accepted string:
-
-```text
-freqamp → tonalpulse
-```
-
-If backward compatibility is not required, remove old `freqamp` input.
-
-If backward compatibility is kept temporarily, mark it explicitly:
+1. Remove old boolean overload if unused:
 
 ```cpp
-// Temporary alias for old serial profile name. Remove after migration.
+update(bool transientDetected, float transientStrength, unsigned long now)
 ```
 
-Preferred: no compatibility alias unless needed for immediate usability.
+2. Rename behavior internals:
+
+```text
+waitAfterTransientMs    -> waitAfterPatternMs or waitAfterHeardMs
+pendingTransient*       -> pendingPattern* or pendingHeardPattern*
+lastTransientMs         -> lastHeardPatternMs
+transientDetected       -> patternDetected / validPatternHeard
+transientStrength       -> patternStrength / heardPatternStrength
+```
+
+3. Prefer `heard` wording where the behavior cares about the fact that something was heard, not the low-level detection type:
+
+```text
+waitAfterHeardMs
+lastHeardPatternMs
+```
+
+4. Keep behavior logic unchanged unless required by rename.
+
+5. Do not start broad BehaviorRuntime/Profile/OutputDispatcher refactor.
+
+### Files likely involved
+
+```text
+src/behavior/ResonantBehavior.h
+src/behavior/ResonantBehavior.cpp
+src/behavior/BehaviorProfile.h/.cpp if names appear there
+src/modes/resonant/node.cpp if it calls old names
+active docs/manual if behavior params are documented
+```
+
+### Acceptance checks
+
+```text
+No public Behavior API uses transient wording.
+No internal behavior member uses pendingTransient / waitAfterTransient / lastTransient.
+Behavior still consumes PatternResult + FieldState.
+Response behavior remains recognizable.
+```
 
 ---
 
-## Docs
+## Pass 5 — Targeted rollover hardening
 
-Update active docs:
+Status: DONE
+
+### Goal
+
+Use rollover-safe timing helpers for the important runtime deadlines.
+
+### Existing principle
+
+```text
+Runtime timestamps are uint32_t / unsigned long milliseconds.
+Elapsed time uses unsigned subtraction.
+Window classification uses dt from a known anchor.
+```
+
+### Required changes
+
+1. Use existing `TimingUtils` helpers or add small helpers if missing:
+
+```cpp
+elapsedSince(now, then, durationMs)
+beforeDeadline(now, deadlineMs)
+atOrAfter(now, deadlineMs)
+```
+
+2. Patch targeted areas only:
+
+```text
+Behavior wait deadline
+Behavior suppression deadline
+Behavior detection suppression deadline
+Behavior refractory timing
+Idle timing if present
+Duplicate-risk elapsed checks
+Analyzer SEQ window classification if still using absolute comparisons
+```
+
+3. Do not rewrite every comparison in the repo blindly.
+
+4. For SEQ windows, prefer:
+
+```cpp
+uint32_t dt = eventMs - expectedTriggerMs;
+bool inWindow = dt >= windowStartOffsetMs && dt <= windowEndOffsetMs;
+```
+
+5. Avoid:
+
+```cpp
+if (now > start + duration)
+if (eventMs >= windowStartMs && eventMs <= windowEndMs)
+if (acceptedMs > lastAcceptedMs ? acceptedMs - lastAcceptedMs : 0)
+```
+
+### Files likely involved
+
+```text
+src/util/TimingUtils.h
+src/behavior/ResonantBehavior.cpp
+src/detection/inspector/OccurrenceInspector.cpp or equivalent duplicate-risk logic
+src/modes/analyzer/AnalyzerSequenceSession.cpp
+src/modes/resonant/node.cpp
+```
+
+### Acceptance checks
+
+```text
+Behavior deadlines use timing helpers.
+Duplicate-risk elapsed uses unsigned subtraction.
+Analyzer windows classify by dt from expected trigger where applicable.
+No logic changes except rollover-safe comparison.
+```
+
+---
+
+## Pass 6 — Split DetectionRuntime reset
+
+Status: DONE
+
+### Goal
+
+Separate runtime state reset from profile/config reset.
+
+### Required changes
+
+1. Replace ambiguous `reset()` behavior with explicit functions:
+
+```cpp
+resetState();     // runtime state only
+applyProfile(...); // profile/config only
+```
+
+or keep `reset()` only if it clearly means state-only.
+
+2. `resetState()` may clear:
+
+```text
+result queues
+field tracker state
+occurrence source state
+detector/source runtime state
+inspector transient state if any
+pattern assembler transient state
+pattern rules transient state if any
+```
+
+3. `resetState()` must not reset:
+
+```text
+active profile name
+occurrence source kind
+inspection rules kind
+PatternRulesConfig
+FieldStateConfig
+BehaviorGateConfig
+thresholds / gates
+```
+
+4. Profile switch should explicitly call:
+
+```cpp
+applyProfile(profile);
+resetState(); // only if desired
+```
+
+5. SEQ start/runtime clear should call:
+
+```cpp
+resetState();
+```
+
+not a function that silently reverts to defaults.
+
+### Files likely involved
+
+```text
+src/detection/DetectionRuntime.h
+src/detection/DetectionRuntime.cpp
+src/modes/resonant/node.cpp
+src/modes/analyzer/AnalyzerApp.cpp
+src/modes/analyzer/AnalyzerSequenceSession.cpp
+```
+
+### Acceptance checks
+
+```text
+SEQ reset does not revert active profile/config.
+RB profile switch is explicit and logged.
+DetectionRuntime profileName does not become "unknown" after normal state reset.
+```
+
+---
+
+## Pass 7 — Active docs: Occurrence vocabulary + spelling
+
+Status: DONE
+
+### Goal
+
+Active docs should match current code vocabulary.
+
+### Required changes
+
+1. Update active docs from old Signal terminology to current Occurrence terminology.
+
+Replace in active docs where appropriate:
+
+```text
+SignalCandidate       -> Occurrence
+SignalEmitter         -> OccurrenceSource
+SignalDetector        -> Occurrence detector / source-specific detector where applicable
+SignalInspector       -> OccurrenceInspector
+InspectedSignal       -> InspectedOccurrence
+Signal layer          -> Occurrence layer
+```
+
+2. Archive docs may keep old terms.
+
+3. Add note only if needed:
+
+```text
+Older archive docs use SignalCandidate / SignalEmitter naming. Current active code uses Occurrence / OccurrenceSource.
+```
+
+4. Global spelling pass:
+
+```text
+Occurence -> Occurrence
+```
+
+Apply to:
+
+```text
+active docs
+code symbols if any are misspelled
+comments
+logs
+help text
+filenames if relevant
+```
+
+5. Do not edit large archive docs in this pass.
+
+### Files likely involved
 
 ```text
 docs/myspec.md
-detection roadmap docs
-current-pass.md
-README or architecture docs
-analyzer docs
+docs/feature-roadmaps/detection-roadmap-v0.4-clean-gate-profile-composition.md
+docs/notes_manual.md
+docs/current-pass.md
+src/** comments/logs if any misspell Occurrence
 ```
 
-Replace profile references:
+### Acceptance checks
 
 ```text
-FreqAmp profile       → TonalPulse profile
-FreqAmp path          → TonalPulse path
-FreqAmp strategy      → TonalPulse strategy
-FreqAmp PatternRules  → TonalPulse PatternRules
-```
-
-Do not rewrite generic text about frequency + amplitude evidence unless it specifically names the profile.
-
----
-
-## Part B Post-Rename Grep Checks
-
-After renaming, run:
-
-```bash
-grep -R "FreqAmp\|freqAmp\|freqamp\|FREQ_AMP\|FREQAMP" -n src include docs test 2>/dev/null
-```
-
-Active code and active docs should have no `FreqAmp` references.
-
-Allowed only in archived historical docs if clearly marked archived.
-
-Confirm target name appears:
-
-```bash
-grep -R "TonalPulse\|tonalPulse\|tonalpulse\|TONAL_PULSE" -n src include docs test 2>/dev/null
-```
-
-Confirm no accidental `RonalPulse` remains:
-
-```bash
-grep -R "RonalPulse\|ronalPulse\|ronalpulse\|RONAL_PULSE" -n src include docs test 2>/dev/null
-```
-
-If `RonalPulse` appears, inspect and fix unless intentionally present in archived historical docs.
-
----
-
-# Build / Verification
-
-After both renames:
-
-```bash
-pio run
-```
-
-If the project has specific environments, use the normal build command for this repo.
-
-Also inspect compile-time mode names that may be affected:
-
-```text
-ANALYZER_MODE
-EMITTER_MODE
-default Resonant mode
-```
-
-No runtime behavior should change.
-
----
-
-# Final Acceptance Criteria
-
-The pass is successful when:
-
-```text
-- Active code uses Occurrence terminology for bounded source-level detections.
-- Active docs use Occurrence terminology in the detection flow.
-- Continuous audio signal terminology still uses Signal where appropriate.
-- PatternCandidate remains PatternCandidate.
-- PatternResult remains PatternResult.
-- FreqAmp is fully renamed to TonalPulse.
-- RonalPulse does not remain in active code/docs.
-- Generic frequency / amplitude component names are not renamed unless profile-specific.
-- Decorative global signalDetector/signalEmitter fields are removed or explicitly justified if still present.
-- Build succeeds.
-- No detector logic, thresholds, PatternRules behavior, Analyzer semantics, or Behavior decisions changed.
+Active docs use Occurrence vocabulary.
+No active doc says SignalCandidate as current code term.
+No active doc/code has misspelled Occurence.
+Archive docs untouched.
 ```
 
 ---
 
-# Important Concept Summary
+## Pass 8 — Replace `docs/current-pass.md`
 
-Use this final conceptual vocabulary:
+Status: PENDING (kept active per user instruction)
 
-```text
-AudioSignal / FeatureStream:
-    continuous audio-derived material
+### Goal
 
-Occurrence:
-    bounded source-level acoustic happening from one evidence path
+Make `docs/current-pass.md` describe the actual next active pass.
 
-InspectedOccurrence:
-    occurrence plus inspection decision / facts
+### Required changes
 
-PatternCandidate:
-    assembled pattern-level candidate
-
-PatternRules:
-    pattern interpretation
-
-PatternResult:
-    semantic result consumed by Behavior / Analyzer
-```
-
-Profile naming:
+1. Archive old `current-pass.md` first:
 
 ```text
-TonalPulse:
-    current profile formerly named FreqAmp
+docs/archive/refactors/rename-signal-to-occurrence-tonalpulse.md
 ```
 
-Current implementation contract:
+2. Create new `docs/current-pass.md` with this cleanup pass:
 
 ```text
-OccurrenceSource classes own their detector wiring.
-Profile-level detector kind should not be a separate global field unless detector choice is genuinely independent from source choice.
+Post-bugfix cleanup pass:
+- ChirpExperimental exposure
+- AmpState roadmap-only
+- remove RB DETECT
+- AMPDIAG Analyzer-only
+- Behavior transient wording cleanup
+- targeted rollover hardening
+- split DetectionRuntime reset
+- active docs Occurrence vocabulary
+- Occurrence spelling pass
+- implementation-status doc
 ```
+
+3. Do not rename `docs/engeinerr_ruels.md` in this pass.
+
+4. Do not add archive README in this pass.
+
+### Acceptance checks
+
+```text
+docs/current-pass.md describes current cleanup pass.
+Old rename pass content is archived.
+Engineer-rules filename unchanged.
+Archive docs otherwise untouched.
+```
+
+---
+
+## Pass 9 — Add separate implementation-status doc
+
+Status: DONE
+
+### Goal
+
+Add a short active status document to prevent stable/experimental/roadmap confusion.
+
+### Required file
+
+```text
+docs/implementation-status.md
+```
+
+### Suggested content
+
+```md
+# ResonantNode Implementation Status
+
+Status vocabulary:
+
+- stable active
+- selectable experimental
+- roadmap only
+- landed
+- deferred
+
+| Item | Status | Notes |
+|---|---|---|
+| TonalPulseProfile | stable active | Main runtime profile. |
+| ChirpExperimental | selectable experimental | Proof profile, not stable normal runtime. Select with `profile=chirp_experimental`. |
+| AmpStateProfile | roadmap only | Do not expose in help/manual/commands yet. |
+| Occurrence rename | landed | Active code/docs use Occurrence vocabulary. |
+| Analyzer valid gate | landed | Analyzer hit truth is PatternResult.valid. |
+| AMP diagnostics in RB | removed / Analyzer-only | AMPDIAG belongs to Analyzer / SEQ_EXPLAIN. |
+| Behavior transient wording cleanup | current pass | Rename to pattern/heard terms. |
+| DetectionRuntime reset split | current pass | resetState vs applyProfile. |
+| BehaviorRuntime | deferred | Future behavior architecture work. |
+| OutputDispatcher | deferred | Future behavior/output separation. |
+| Full Chirp PatternRules | roadmap only | Not part of stable runtime. |
+| AmpState runtime | roadmap only | Not implemented now. |
+```
+
+### Acceptance checks
+
+```text
+Implementation-status doc exists.
+It distinguishes stable active / selectable experimental / roadmap only / deferred.
+It does not claim AmpState is implemented.
+It does not claim ChirpExperimental is stable.
+```
+
+---
+
+## Pass 10 — Manual/help update
+
+Status: DONE
+
+### Goal
+
+Make the normal manual stable-first, with experimental profile separated.
+
+### Required changes
+
+1. Normal quickstart shows only:
+
+```text
+profile=tonalpulse
+```
+
+2. Add a separate section:
+
+```text
+Developer / Experimental profiles
+```
+
+3. In that section only, document:
+
+```text
+profile=chirp_experimental
+```
+
+with wording:
+
+```text
+experimental / proof profile / not stable / not normal use
+```
+
+4. Do not mention AmpState in normal manual/help.
+
+5. Do not mention `profile=chirp`.
+
+### Acceptance checks
+
+```text
+Normal manual workflow uses TonalPulse only.
+ChirpExperimental appears only in experimental section.
+AmpState does not appear in normal help/manual.
+profile=chirp does not appear except maybe as an invalid example.
+```
+
+---
+
+# Final acceptance checklist
+
+Run these checks after all passes.
+
+## Command behavior
+
+```text
+RB STATUS                                    works
+RB DETECT                                    rejected / unknown
+RB PROFILE name=tonalpulse                   works
+RB PROFILE name=chirp                        rejected, suggests chirp_experimental
+RB PROFILE name=chirp_experimental           works, experimental label visible
+SEQ ... profile=tonalpulse                   works
+SEQ ... profile=chirp                        rejected
+SEQ ... profile=chirp_experimental           works, experimental label visible
+```
+
+## Runtime architecture
+
+```text
+TonalPulse remains the only stable active profile.
+ChirpExperimental is clearly experimental.
+AmpState is roadmap only.
+RB/Node does not expose AMP diagnostic as active detection.
+Behavior no longer exposes transient-oriented API/names.
+DetectionRuntime reset does not silently reset profile/config.
+```
+
+## Timing
+
+```text
+Behavior deadlines use rollover-safe helpers.
+Duplicate-risk elapsed uses unsigned subtraction.
+SEQ windows use dt-from-anchor where applicable.
+No broad risky timing rewrite was introduced.
+```
+
+## Docs
+
+```text
+Active docs use Occurrence vocabulary.
+Occurrence spelling is correct.
+docs/current-pass.md describes this pass.
+Old current-pass content is archived.
+docs/implementation-status.md exists.
+Normal manual shows TonalPulse only.
+Experimental section may mention ChirpExperimental.
+Archive docs untouched.
+```
+
+---
+
+# Stop conditions
+
+Stop and report if:
+
+```text
+- profile=chirp must be kept for compatibility; this contradicts D30.
+- AmpState appears required by code; this contradicts D17.
+- Behavior boolean transient update is still used by Node or Analyzer.
+- DetectionRuntime reset split requires broad invasive changes.
+- Occurrence spelling change affects public command compatibility.
+```
+
+In those cases, report the conflict instead of adding compatibility sediment.

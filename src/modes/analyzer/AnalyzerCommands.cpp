@@ -20,6 +20,7 @@ void AnalyzerApp::printSequenceHelp() {
     Serial.println("SEQ OUT: candidate fields include onset_sample peak_sample release_sample peak_ms dur end_dt_ms freq_*");
     Serial.println("SEQ OBS: passive observe mode for an already-running external emitter");
     Serial.println("SEQ PROFILE: profile=tonalpulse");
+    Serial.println("SEQ PROFILE(EXP): profile=chirp_experimental (experimental)");
     Serial.println("SEQ PARAM: freqScore=10000 freqContrast=50.0");
 }
 
@@ -201,6 +202,8 @@ void AnalyzerApp::handleUsbLine(const char* line) {
             unsigned long sampleDumpStepMs = 1;
             unsigned long sampleDumpMaxRows = 5000;
             detection::DetectionProfileKind profileKind = detection::DetectionProfileKind::TonalPulse;
+            bool profileSeen = false;
+            bool profileValid = true;
             bool externalEmitter = false;
             char setupLabel[96] = TEST_SETUP_LABEL;
             uint32_t logFlags = DEFAULT_ANALYZER_LOG_FLAGS;
@@ -227,8 +230,16 @@ void AnalyzerApp::handleUsbLine(const char* line) {
                     const char* profileValue = token + 8;
                     if (equalsIgnoreCase(profileValue, "tonalpulse")) {
                         profileKind = detection::DetectionProfileKind::TonalPulse;
-                    } else if (equalsIgnoreCase(profileValue, "chirp")) {
-                        profileKind = detection::DetectionProfileKind::Chirp;
+                        profileSeen = true;
+                    } else if (equalsIgnoreCase(profileValue, "chirp_experimental")) {
+                        profileKind = detection::DetectionProfileKind::ChirpExperimental;
+                        profileSeen = true;
+                    } else {
+                        profileValid = false;
+                        Serial.print("ERR SEQ unknown profile=");
+                        Serial.print(profileValue);
+                        Serial.println(" use profile=tonalpulse or profile=chirp_experimental");
+                        return;
                     }
                 } else if (startsWithTokenIgnoreCase(token, "log=")) {
                     logFlags = analyzerLogFlagsFromToken(token + 4);
@@ -262,6 +273,12 @@ void AnalyzerApp::handleUsbLine(const char* line) {
                 }
             }
 
+            if (!profileSeen) {
+                profileKind = detection::DetectionProfileKind::TonalPulse;
+            }
+            if (!profileValid) {
+                return;
+            }
             startSequenceTest(totalTrials, periodMs, windowEndOffsetMs, toneHz, durationMs, quiet, showDetails, setupLabel, logFlags, sampleDumpEnabled, sampleDumpFirstTrials, sampleDumpEveryNth, sampleDumpLeadMs, sampleDumpTailMs, sampleDumpStepMs, sampleDumpMaxRows, profileKind, externalEmitter);
             Serial.println("OK SEQ");
             return;

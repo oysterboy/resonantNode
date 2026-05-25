@@ -2,12 +2,14 @@
 
 #include <Arduino.h>
 
+#include "../../TimingUtils.h"
+
 namespace {
 
 const char* analyzerProfileDetailNamespace(detection::DetectionProfileKind profileKind) {
     switch (profileKind) {
-        case detection::DetectionProfileKind::Chirp:
-            return "chirp";
+        case detection::DetectionProfileKind::ChirpExperimental:
+            return "chirp_experimental";
         case detection::DetectionProfileKind::TonalPulse:
         default:
             return "tonal_pulse";
@@ -16,8 +18,8 @@ const char* analyzerProfileDetailNamespace(detection::DetectionProfileKind profi
 
 const char* analyzerProfileDetailSummary(detection::DetectionProfileKind profileKind) {
     switch (profileKind) {
-        case detection::DetectionProfileKind::Chirp:
-            return "chirp profile view";
+        case detection::DetectionProfileKind::ChirpExperimental:
+            return "chirp_experimental profile view";
         case detection::DetectionProfileKind::TonalPulse:
         default:
             return "generic tonal pulse profile view";
@@ -1106,7 +1108,7 @@ void AnalyzerApp::printOccurrenceSummary() const {
 }
 
 void AnalyzerApp::printValueFrame(unsigned long now) const {
-    if (_lastPrintMs != 0 && now - _lastPrintMs < kPrintIntervalMs) {
+    if (_lastPrintMs != 0 && !timing::elapsedSince(now, _lastPrintMs, kPrintIntervalMs)) {
         return;
     }
 

@@ -546,7 +546,7 @@ accept usable amp transient
 
 `InspectedOccurrence`
 
-A occurrence candidate plus the inspection decision.
+An occurrence candidate plus the inspection decision.
 
 It is the handoff object between occurrence-level detection and pattern assembly.
 
@@ -882,7 +882,7 @@ reject weak frequency score / contrast
 accept usable amp transient
 ```
 
-`InspectedOccurrence` is the handoff object between occurrence-level detection and pattern assembly.
+A `InspectedOccurrence` is the handoff object between occurrence-level detection and pattern assembly.
 
 It contains the original occurrence candidate plus the inspection decision and inspection facts.
 
@@ -894,14 +894,14 @@ It contains the original occurrence candidate plus the inspection decision and i
 
 Current implementation is simple and mostly one-occurrence-to-one-pattern-candidate.
 
-Later implementations may group several inspected occurencess.
+Later implementations may group several inspected occurrences.
 
 A `PatternCandidate` is the classifier-facing object used for pattern interpretation.
 
 It may include:
 
 ```text
-source occurence(s)
+source occurrence(s)
 start time
 end time
 duration
@@ -1891,6 +1891,46 @@ FieldState summarizes acoustic context.
 
 Behavior decides whether and how to react.
 
+### Behavior Modulation and Intended Drift
+
+Behavior programs may intentionally vary output parameters around configured centers.
+
+Examples:
+
+```text
+frequency drift
+duration shortening
+gain variation
+response probability shifts
+field-dependent response changes
+```
+
+These variations belong to behavior configuration and behavior decision logic.
+
+They do not belong to:
+
+```text
+Node
+OutputDispatcher
+SoundOutput hardware layer
+DetectionProfile
+```
+
+`SoundOutput` executes requested frequency, duration, gain, or output profile variants, but it does not decide artistic modulation.
+
+Detection tolerance must be configured separately from emitted-output variation.
+
+If behavior emits variable frequencies or durations, the matching `DetectionProfile` / `PatternRules` must explicitly define the accepted recognition range.
+
+Example:
+
+```text
+emit center:              3200 Hz
+emit deviation:           ±120 Hz
+detection accepted band:   3000–3400 Hz
+dense field behavior:     shorten beep and increase frequency spread
+```
+
 Example behavior rules:
 
 ```text
@@ -2305,7 +2345,7 @@ AnalyzerReport
 RunContext
 ExpectedEvent
 PatternObservation
-SignalObservation (maybe)
+OccurrenceObservation
 InspectionObservation
 FieldObservation
 AnalyzerClassification
@@ -2316,6 +2356,43 @@ DebugSummary
 `AnalyzerReport` is the measurement and reporting object.
 It does not own detection.
 It does not own behavior.
+
+### Analyzer Profile Detail Contract
+
+Analyzer output uses one stable outer report shape across detection profiles.
+
+Every `DetectionProfile` must provide an analyzer-readable generic view:
+
+```text
+profile kind
+pattern family
+PatternResult kind
+valid / invalid / rejected / ambiguous
+confidence if meaningful
+timing
+reason
+primary occurrence / source summary
+field state summary
+```
+
+Profiles may additionally provide profile-specific detail payloads.
+
+Examples:
+
+```text
+detail.tonalPulse.*
+detail.pulsedChirp.*
+detail.chime.*
+detail.noise.*
+```
+
+The Analyzer may format known profile detail namespaces, but it must not require a separate report type per profile.
+
+`DetectionProfile` defines which detail kind a profile produces.
+
+`PatternResult`, `PatternObservation`, or `ProfileDetail` carries the runtime values observed for a specific detection.
+
+Analyzer consumes the generic view first and profile detail second.
 
 The stable printed modes are:
 
@@ -2724,6 +2801,42 @@ FieldStateTracker    <- FieldStateConfig
 `inspectionRules` chooses the inspection strategy and windowing rule.
 `patternRules` chooses the final pattern policy.
 `patternRulesConfig.requireSupportForAcceptance` controls whether support is required for acceptance.
+
+### DetectionProfile Analyzer Contract
+
+`DetectionProfile` defines the analyzer-facing profile identity and detail family.
+
+It should expose or imply:
+
+```text
+profile kind
+pattern family
+occurrence source family
+inspection rule family
+pattern rule family
+profile detail kind
+human-readable profile label
+```
+
+`DetectionProfile` does not store runtime analyzer evidence.
+
+Runtime evidence belongs to:
+
+```text
+OccurrenceObservation
+InspectionObservation
+PatternObservation
+ProfileDetail
+DebugSummary
+```
+
+Rule:
+
+```text
+DetectionProfile defines what kind of evidence/result this profile produces.
+PatternResult / ProfileDetail carries what this specific detection actually measured.
+Analyzer formats the generic result plus the profile detail.
+```
 
 ### 30.4 FeatureHistory and ScalarWindow
 

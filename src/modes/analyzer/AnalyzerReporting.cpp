@@ -70,17 +70,17 @@ const char* occurrenceRejectReasonName(detection::OccurrenceRejectReason reason)
     }
 }
 
-const char* ampSupportName(detection::AmpSupportLevel value) {
+const char* strengthClassName(detection::StrengthClass value) {
     switch (value) {
-        case detection::AmpSupportLevel::None:
+        case detection::StrengthClass::None:
             return "none";
-        case detection::AmpSupportLevel::Weak:
+        case detection::StrengthClass::Weak:
             return "weak";
-        case detection::AmpSupportLevel::Medium:
+        case detection::StrengthClass::Medium:
             return "medium";
-        case detection::AmpSupportLevel::Strong:
+        case detection::StrengthClass::Strong:
             return "strong";
-        case detection::AmpSupportLevel::Unknown:
+        case detection::StrengthClass::Unknown:
         default:
             return "unknown";
     }
@@ -130,25 +130,16 @@ void AnalyzerApp::printSequenceTrialResult(const AnalyzerReport& report) const {
     Serial.print(report.context.profile != nullptr ? report.context.profile : "unknown");
     Serial.print(" emitters=");
     Serial.print(report.profileDetail.emitter != nullptr ? report.profileDetail.emitter : "unknown");
-    Serial.print(" ampSupport=");
-    Serial.print(report.profileDetail.ampSupport != nullptr ? report.profileDetail.ampSupport : "unknown");
-    Serial.print(" ampSupportMin=");
-    Serial.print(report.profileDetail.ampSupportMin != nullptr ? report.profileDetail.ampSupportMin : "unknown");
+    Serial.print(" broadAmpStrength=");
+    Serial.print(report.profileDetail.broadAmpStrength != nullptr ? report.profileDetail.broadAmpStrength : "unknown");
+    Serial.print(" broadAmpStrengthMin=");
+    Serial.print(report.profileDetail.broadAmpStrengthMin != nullptr ? report.profileDetail.broadAmpStrengthMin : "unknown");
     Serial.print(" freqScoreMin=");
     Serial.print(report.profileDetail.freqScoreMin, 1);
     Serial.print(" freqContrastMin=");
     Serial.print(report.profileDetail.freqContrastMin, 2);
     Serial.print(" result=");
     Serial.print(analyzerResultName(report.classification.result));
-    Serial.print(" ampdiag_seen=");
-    Serial.print(report.ampDiag.seen ? 1 : 0);
-    Serial.print(" ampdiag_reason=");
-    Serial.print(report.ampDiag.reason != nullptr ? report.ampDiag.reason : "none");
-    Serial.print(" ampdiag_duration_ms=");
-    Serial.print(report.ampDiag.durationMs);
-    Serial.print("ms");
-    Serial.print(" ampdiag_strength=");
-    Serial.print(report.ampDiag.strength, 1);
     Serial.print(" dt=");
     if (report.classification.dtMs >= 0) {
         Serial.print(report.classification.dtMs);
@@ -173,7 +164,7 @@ void AnalyzerApp::printSequenceTrialResult(const AnalyzerReport& report) const {
     Serial.print(" confidence=");
     Serial.print(report.primaryPattern.confidence, 2);
     Serial.print(" support=");
-    Serial.print(report.primaryPattern.ampSupport != nullptr ? report.primaryPattern.ampSupport : "unknown");
+    Serial.print(report.primaryPattern.broadAmpStrength != nullptr ? report.primaryPattern.broadAmpStrength : "unknown");
     Serial.print(" reject_reason=");
     Serial.print(report.primaryPattern.rejectReason != nullptr ? report.primaryPattern.rejectReason : "none");
     Serial.print(" field=");
@@ -218,25 +209,16 @@ void AnalyzerApp::printSequenceExplain(const AnalyzerReport& report) const {
     Serial.print(report.context.profile != nullptr ? report.context.profile : "unknown");
     Serial.print(" emitters=");
     Serial.print(report.profileDetail.emitter != nullptr ? report.profileDetail.emitter : "unknown");
-    Serial.print(" ampSupport=");
-    Serial.print(report.profileDetail.ampSupport != nullptr ? report.profileDetail.ampSupport : "unknown");
-    Serial.print(" ampSupportMin=");
-    Serial.print(report.profileDetail.ampSupportMin != nullptr ? report.profileDetail.ampSupportMin : "unknown");
+    Serial.print(" broadAmpStrength=");
+    Serial.print(report.profileDetail.broadAmpStrength != nullptr ? report.profileDetail.broadAmpStrength : "unknown");
+    Serial.print(" broadAmpStrengthMin=");
+    Serial.print(report.profileDetail.broadAmpStrengthMin != nullptr ? report.profileDetail.broadAmpStrengthMin : "unknown");
     Serial.print(" freqScoreMin=");
     Serial.print(report.profileDetail.freqScoreMin, 1);
     Serial.print(" freqContrastMin=");
     Serial.print(report.profileDetail.freqContrastMin, 2);
     Serial.print(" result=");
     Serial.print(analyzerResultName(report.classification.result));
-    Serial.print(" ampdiag_seen=");
-    Serial.print(report.ampDiag.seen ? 1 : 0);
-    Serial.print(" ampdiag_reason=");
-    Serial.print(report.ampDiag.reason != nullptr ? report.ampDiag.reason : "none");
-    Serial.print(" ampdiag_duration_ms=");
-    Serial.print(report.ampDiag.durationMs);
-    Serial.print("ms");
-    Serial.print(" ampdiag_strength=");
-    Serial.print(report.ampDiag.strength, 1);
     Serial.print(" pattern=");
     Serial.print(report.primaryPattern.type != nullptr ? report.primaryPattern.type : "unknown");
     Serial.print(" dt=");
@@ -250,8 +232,8 @@ void AnalyzerApp::printSequenceExplain(const AnalyzerReport& report) const {
     Serial.print(report.context.profile != nullptr ? report.context.profile : "unknown");
     Serial.print(" confidence=");
     Serial.print(report.primaryPattern.confidence, 2);
-    Serial.print(" amp_support=");
-    Serial.print(report.primaryPattern.ampSupport != nullptr ? report.primaryPattern.ampSupport : "unknown");
+    Serial.print(" broadAmpStrength=");
+    Serial.print(report.primaryPattern.broadAmpStrength != nullptr ? report.primaryPattern.broadAmpStrength : "unknown");
     Serial.print(" reason=");
     Serial.print(analyzerReasonName(report.classification.reason));
     Serial.println();
@@ -271,22 +253,22 @@ void AnalyzerApp::printSequenceExplain(const AnalyzerReport& report) const {
     Serial.print(" dt=");
     printMs(report.primaryPattern.dtMs);
     Serial.print(" win=");
-    Serial.print(static_cast<long>(report.profileDetail.ampWindow.windowStartMs));
+    Serial.print(static_cast<long>(report.profileDetail.broadAmp.windowStartMs));
     Serial.print("..");
-    Serial.print(static_cast<long>(report.profileDetail.ampWindow.windowEndMs));
+    Serial.print(static_cast<long>(report.profileDetail.broadAmp.windowEndMs));
     Serial.print("ms");
     Serial.print(" available=");
-    Serial.print(report.profileDetail.ampWindow.available ? 1 : 0);
-    Serial.print(" amp_support=");
-    Serial.print(report.profileDetail.ampWindow.supportClass != nullptr ? report.profileDetail.ampWindow.supportClass : "unknown");
+    Serial.print(report.profileDetail.broadAmp.available ? 1 : 0);
+    Serial.print(" broadAmpStrength=");
+    Serial.print(report.profileDetail.broadAmp.strength != nullptr ? report.profileDetail.broadAmp.strength : "unknown");
     Serial.print(" peak=");
-    Serial.print(report.profileDetail.ampWindow.peak, 1);
+    Serial.print(report.profileDetail.broadAmp.peak, 1);
     Serial.print(" support_win=");
-    Serial.print(static_cast<long>(report.profileDetail.ampWindow.windowStartMs));
+    Serial.print(static_cast<long>(report.profileDetail.broadAmp.windowStartMs));
     Serial.print("..");
-    Serial.print(static_cast<long>(report.profileDetail.ampWindow.windowEndMs));
+    Serial.print(static_cast<long>(report.profileDetail.broadAmp.windowEndMs));
     Serial.print("ms available=");
-    Serial.println(report.profileDetail.ampWindow.available ? 1 : 0);
+    Serial.println(report.profileDetail.broadAmp.available ? 1 : 0);
 
     Serial.print("SEQ_EXPLAIN_FIELD state=");
     Serial.print(report.field.state != nullptr ? report.field.state : "unknown");
@@ -355,8 +337,8 @@ void AnalyzerApp::printSequenceExplain(const AnalyzerReport& report) const {
         Serial.print(report.inspection.rejected);
         Serial.print(" evidence=");
         Serial.print(report.inspection.primaryEvidence != nullptr ? report.inspection.primaryEvidence : "none");
-        Serial.print(" amp_support=");
-        Serial.print(report.inspection.ampSupport != nullptr ? report.inspection.ampSupport : "unknown");
+        Serial.print(" broadAmpStrength=");
+        Serial.print(report.inspection.broadAmpStrength != nullptr ? report.inspection.broadAmpStrength : "unknown");
         Serial.print(" main_reject=");
         Serial.print(report.inspection.mainRejectReason != nullptr ? report.inspection.mainRejectReason : "none");
         Serial.println();
@@ -371,8 +353,8 @@ void AnalyzerApp::printSequenceExplain(const AnalyzerReport& report) const {
         printMs(report.primaryPattern.dtMs);
         Serial.print(" confidence=");
         Serial.print(report.primaryPattern.confidence, 2);
-        Serial.print(" support=");
-        Serial.print(report.primaryPattern.ampSupport != nullptr ? report.primaryPattern.ampSupport : "unknown");
+        Serial.print(" broadAmpStrength=");
+        Serial.print(report.primaryPattern.broadAmpStrength != nullptr ? report.primaryPattern.broadAmpStrength : "unknown");
         Serial.print(" reason=");
         Serial.print(report.primaryPattern.reason != nullptr ? report.primaryPattern.reason : "none");
         Serial.print(" reject_reason=");
@@ -395,8 +377,8 @@ void AnalyzerApp::printSequenceExplain(const AnalyzerReport& report) const {
         Serial.print(report.profileDetail.ampBase, 1);
         Serial.print(" amp_lift=");
         Serial.print(report.profileDetail.ampLift, 1);
-        Serial.print(" support=");
-        Serial.print(report.profileDetail.ampSupport != nullptr ? report.profileDetail.ampSupport : "unknown");
+        Serial.print(" broadAmpStrength=");
+        Serial.print(report.profileDetail.broadAmpStrength != nullptr ? report.profileDetail.broadAmpStrength : "unknown");
         Serial.println();
 
         Serial.print("SEQ_EXPLAIN_PIPELINE_SOURCE source=");
@@ -460,16 +442,16 @@ void AnalyzerApp::printSequenceAmpWindow(const AnalyzerReport& report) const {
     Serial.print(report.primaryPattern.type != nullptr ? report.primaryPattern.type : "none");
     Serial.print(" reject_reason=");
     Serial.print(report.primaryPattern.rejectReason != nullptr ? report.primaryPattern.rejectReason : "none");
-    Serial.print(" amp_support=");
-    Serial.print(report.profileDetail.ampWindow.supportClass != nullptr ? report.profileDetail.ampWindow.supportClass : "unknown");
+    Serial.print(" broadAmpStrength=");
+    Serial.print(report.profileDetail.broadAmp.strength != nullptr ? report.profileDetail.broadAmp.strength : "unknown");
     Serial.print(" peak=");
-    Serial.print(report.profileDetail.ampWindow.peak, 1);
+    Serial.print(report.profileDetail.broadAmp.peak, 1);
     Serial.print(" support_win=");
-    Serial.print(static_cast<long>(report.profileDetail.ampWindow.windowStartMs));
+    Serial.print(static_cast<long>(report.profileDetail.broadAmp.windowStartMs));
     Serial.print("..");
-    Serial.print(static_cast<long>(report.profileDetail.ampWindow.windowEndMs));
+    Serial.print(static_cast<long>(report.profileDetail.broadAmp.windowEndMs));
     Serial.print("ms available=");
-    Serial.print(report.profileDetail.ampWindow.available ? 1 : 0);
+    Serial.print(report.profileDetail.broadAmp.available ? 1 : 0);
     Serial.println();
 }
 
@@ -575,7 +557,7 @@ void AnalyzerApp::printSequenceTrialResult(unsigned long trialNumber, AnalyzerRe
     const bool summaryTrial = analyzerLogEnabled(_sequenceTest.logFlags, AnalyzerApp::ANALYZER_LOG_TRIAL_SUMMARY);
     const float freqScore = runtimePatternResult != nullptr ? runtimePatternResult->freq.score : (diagnostics.patternAccepted ? diagnostics.acceptedPatternStrength : trialOccurrence.score);
     const float freqContrast = runtimePatternResult != nullptr ? runtimePatternResult->freq.spectralContrast : (diagnostics.patternAccepted ? diagnostics.acceptedFrequencyEvidence.spectralContrast : trialOccurrence.contrast);
-    const char* ampSupport = runtimePatternResult != nullptr ? ampSupportName(runtimePatternResult->ampSupport) : "Unknown";
+    const char* broadAmpStrength = runtimePatternResult != nullptr ? strengthClassName(runtimePatternResult->broadAmpStrength) : "Unknown";
     const float ampPeak = runtimePatternResult != nullptr ? runtimePatternResult->candidate.peakStrength : trialOccurrence.ampLevel;
     const float ampBaseline = runtimePatternResult != nullptr ? runtimePatternResult->candidate.ambientBaseline : trialOccurrence.ampBaseline;
     const float ampLift = ampPeak - ampBaseline;
@@ -615,8 +597,8 @@ void AnalyzerApp::printSequenceTrialResult(unsigned long trialNumber, AnalyzerRe
     Serial.print(freqScore, 1);
     Serial.print(" freq_contrast=");
     Serial.print(freqContrast, 2);
-    Serial.print(" amp_support=");
-    Serial.print(ampSupport);
+    Serial.print(" broadAmpStrength=");
+    Serial.print(broadAmpStrength);
     Serial.print(" amp_peak=");
     Serial.print(ampPeak, 1);
     Serial.print(" diagnostic_floor=");
@@ -670,8 +652,7 @@ void AnalyzerApp::printTransientStatsDebug(unsigned long now) const {
         return;
     }
     const unsigned long elapsedMs = now - _sequenceTest.startedAtMs;
-    const detection::AmpDiagnosticSnapshot probeSnapshot = _ampTransientDiagnosticProbe.snapshot();
-    const unsigned long expectedCount = (elapsedMs + (probeSnapshot.cooldownAfterOnsetMs / 2)) / probeSnapshot.cooldownAfterOnsetMs;
+    const unsigned long expectedCount = 0;
     const unsigned long successRate = expectedCount > 0 ? ((_sequenceTest.hits * 100UL) / expectedCount) : 0;
 
     Serial.print("DET transient stats t=");
@@ -1131,10 +1112,6 @@ void AnalyzerApp::printValueFrame(unsigned long now) const {
     }
 
     _lastPrintMs = now;
-    const detection::AmpDiagnosticSnapshot probeSnapshot = _ampTransientDiagnosticProbe.snapshot();
-    const bool onsetVisible = probeSnapshot.onsetVisible || now < _valOnsetLatchedUntilMs;
-    const bool transientVisible = probeSnapshot.transientVisible || now < _valTransientLatchedUntilMs;
-
     Serial.print("rawSample:");
     Serial.print(_audioSignal.rawSignal());
     Serial.print('\t');
@@ -1151,9 +1128,9 @@ void AnalyzerApp::printValueFrame(unsigned long now) const {
     Serial.print(static_cast<int>(_audioSignal.smoothedSignalMagnitude()));
     Serial.print('\t');
     Serial.print("onset:");
-    Serial.print(onsetVisible ? 1 : 0);
+    Serial.print(now < _valOnsetLatchedUntilMs ? 1 : 0);
     Serial.print('\t');
     Serial.print("transient:");
-    Serial.println(transientVisible ? 1 : 0);
+    Serial.println(now < _valTransientLatchedUntilMs ? 1 : 0);
 }
 

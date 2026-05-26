@@ -318,19 +318,11 @@ void AnalyzerApp::updateSequenceTest(unsigned long now) {
     _sequenceTest.currentTrialRejected = 0;
     _sequenceTest.trialHadAudioOverflow = false;
     _sequenceTest.trialOverflowCountAtStart = _audioSource.stats().overflowCount;
-    const detection::AmpDiagnosticSnapshot probeSnapshot = _ampTransientDiagnosticProbe.snapshot();
-    _sequenceTest.trialTransientRejectTooShortCountAtStart = probeSnapshot.transientRejectedDurationTooShortCount;
-    _sequenceTest.trialTransientRejectTooLongCountAtStart = probeSnapshot.transientRejectedDurationTooLongCount;
-    _sequenceTest.trialTransientRejectWeakCountAtStart = probeSnapshot.transientRejectedStrengthTooLowCount;
     _sequenceTest.currentTrialDiagnostics = {};
     _sequenceTest.currentTrialDiagnostics.acceptedAmbientBaseline = _audioSignal.baseline();
     _sequenceTest.currentTrialDiagnostics.runtimePatternCaptured = false;
     _sequenceTest.currentTrialDiagnostics.runtimePatternResult = {};
     _sequenceTest.currentTrialDiagnostics.runtimeFieldState = {};
-    _sequenceTest.currentTrialDiagnostics.strongestAmpDiagRejectReason = detection::AmpDiagnosticRejectReason::None;
-    _sequenceTest.currentTrialDiagnostics.strongestRejectDtFromTriggerMs = -1;
-    _sequenceTest.currentTrialDiagnostics.strongestRejectDurationMs = 0;
-    _sequenceTest.currentTrialDiagnostics.strongestRejectStrength = 0.0f;
     _sequenceTest.nextTriggerAtMs = scheduledAtMs + _sequenceTest.periodMs;
 
     beginSequenceSampleDump(trialNumber);
@@ -387,12 +379,6 @@ void AnalyzerApp::finalizeSequenceTrial(unsigned long now) {
     }
 
     auto& diagnostics = _sequenceTest.currentTrialDiagnostics;
-
-    const detection::AmpDiagnosticSnapshot probeSnapshot = _ampTransientDiagnosticProbe.snapshot();
-    diagnostics.peakActiveAtEnd = probeSnapshot.peakActive;
-    diagnostics.lastAmpDiagRejectReason = probeSnapshot.transientRejectReason;
-    diagnostics.lastRejectDurationMs = probeSnapshot.rejectedDurationMs;
-    diagnostics.lastRejectStrength = probeSnapshot.rejectedStrength;
 
     const bool invalidAudioTrial = _sequenceTest.trialHadAudioOverflow
                                    || _audioSource.stats().overflowCount != _sequenceTest.trialOverflowCountAtStart;

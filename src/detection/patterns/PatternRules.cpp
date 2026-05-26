@@ -24,7 +24,7 @@ PatternResultKind resultKindFromCandidate(const PatternCandidate& candidate) {
 }
 
 PatternRejectReason supportRejectReason(const PatternCandidate& candidate) {
-    if (candidate.ampSupport == AmpSupportLevel::Unknown) {
+    if (candidate.broadAmpStrength == StrengthClass::Unknown) {
         return PatternRejectReason::MissingSupport;
     }
     return PatternRejectReason::SupportTooLow;
@@ -58,8 +58,8 @@ PatternResult makeInvalidResult(const PatternCandidate& candidate,
     result.confidence = 0.0f;
     result.signalConfidence = 0.0f;
     result.frequencyConfidence = 0.0f;
-    result.ampSupport = AmpSupportLevel::Unknown;
-    result.ampWindow = candidate.ampWindow;
+    result.broadAmpStrength = StrengthClass::Unknown;
+    result.broadAmp = candidate.broadAmp;
     result.duplicateRisk = false;
     result.duplicateRiskScore = 0.0f;
     result.patternCandidateAccepted = false;
@@ -113,14 +113,29 @@ PatternResult PatternRules::evaluateFrequencyPattern(
     result.rejectReason = PatternRejectReason::None;
     result.signalConfidence = candidate.signalConfidence > 0.0f ? candidate.signalConfidence : 1.0f;
     result.frequencyConfidence = candidate.frequencyConfidence;
-    result.ampSupport = candidate.ampSupport;
-    result.ampWindow = candidate.ampWindow;
+    result.broadAmpStrength = candidate.broadAmpStrength;
+    result.broadAmp = candidate.broadAmp;
     result.duplicateRisk = candidate.duplicateRisk;
     result.duplicateRiskScore = candidate.duplicateRiskScore;
-    result.supportMatched = !_config.requireSupportForAcceptance || candidate.ampSupport >= AmpSupportLevel::Medium;
+    result.supportMatched = true;
+    if (_config.requireSupportForAcceptance) {
+        switch (_config.supportSource) {
+            case PatternSupportSource::None:
+                result.supportMatched = true;
+                break;
+            case PatternSupportSource::BroadAmp:
+                result.supportMatched = candidate.broadAmpStrength >= _config.minimumSupport;
+                break;
+            case PatternSupportSource::TargetBand:
+                result.supportMatched = false;
+                break;
+        }
+    }
     if (!result.supportMatched) {
         result.kind = PatternResultKind::Rejected;
-        result.rejectReason = supportRejectReason(candidate);
+        result.rejectReason = _config.supportSource == PatternSupportSource::TargetBand
+            ? PatternRejectReason::MissingSupport
+            : supportRejectReason(candidate);
         result.reasonCode = PatternReasonCode::UnsupportedPattern;
     }
     result.valid = result.patternMatched && result.supportMatched;

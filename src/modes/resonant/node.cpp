@@ -7,7 +7,6 @@
 #include "../../RuntimeDefaults.h"
 #include "../../TimingUtils.h"
 #include "../../detection/features/FrequencyMatchEvaluation.h"
-#include "../../detection/inspector/FrequencyWindowProbe.h"
 #include "../../detection/patterns/PatternNames.h"
 
 #ifndef BUILD_DATE
@@ -127,20 +126,22 @@ void printDetectionProfileDetails(const detection::DetectionProfile& profile) {
     Serial.println(profile.frequencyMatchTuning.scoreMin, 0);
     Serial.print("  freqMatch.contrastMin=");
     Serial.println(profile.frequencyMatchTuning.contrastMin, 1);
-    Serial.print("  inspection.ampWindowPreMs=");
-    Serial.println(profile.inspectionConfig.ampWindowPreMs);
-    Serial.print("  inspection.ampWindowPostMs=");
-    Serial.println(profile.inspectionConfig.ampWindowPostMs);
-    Serial.print("  inspection.ampSupport.strong=");
-    Serial.println(profile.inspectionConfig.ampSupport.strongPeakThreshold, 1);
-    Serial.print("  inspection.ampSupport.medium=");
-    Serial.println(profile.inspectionConfig.ampSupport.mediumPeakThreshold, 1);
-    Serial.print("  inspection.ampSupport.weak=");
-    Serial.println(profile.inspectionConfig.ampSupport.weakPeakThreshold, 1);
-    Serial.print("  inspection.ampSupportEnabled=");
-    Serial.println(profile.inspectionConfig.enableAmpSupportInspection ? 1 : 0);
-    Serial.print("  inspection.duplicateRiskEnabled=");
-    Serial.println(profile.inspectionConfig.enableDuplicateRiskInspection ? 1 : 0);
+    Serial.print("  inspection.broadAmp.enabled=");
+    Serial.println(profile.inspectionConfig.broadAmp.enabled ? 1 : 0);
+    Serial.print("  inspection.broadAmp.windowPreMs=");
+    Serial.println(profile.inspectionConfig.broadAmp.windowPreMs);
+    Serial.print("  inspection.broadAmp.windowPostMs=");
+    Serial.println(profile.inspectionConfig.broadAmp.windowPostMs);
+    Serial.print("  inspection.broadAmp.strength.strong=");
+    Serial.println(profile.inspectionConfig.broadAmp.strength.strongPeakThreshold, 1);
+    Serial.print("  inspection.broadAmp.strength.medium=");
+    Serial.println(profile.inspectionConfig.broadAmp.strength.mediumPeakThreshold, 1);
+    Serial.print("  inspection.broadAmp.strength.weak=");
+    Serial.println(profile.inspectionConfig.broadAmp.strength.weakPeakThreshold, 1);
+    Serial.print("  inspection.duplicateRisk.enabled=");
+    Serial.println(profile.inspectionConfig.duplicateRisk.enabled ? 1 : 0);
+    Serial.print("  inspection.duplicateRisk.windowMs=");
+    Serial.println(profile.inspectionConfig.duplicateRisk.windowMs);
     Serial.print("  pattern.requireSupportForAcceptance=");
     Serial.println(profile.patternRulesConfig.requireSupportForAcceptance ? 1 : 0);
     Serial.print("  fieldState.occurrenceWindowMs=");

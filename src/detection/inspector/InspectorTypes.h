@@ -4,8 +4,8 @@
 
 namespace detection {
 
-// AMP support is a classification, not a distance estimate.
-enum class AmpSupportLevel {
+// Strength is a classification, not a distance estimate.
+enum class StrengthClass {
     Unknown,
     None,
     Weak,
@@ -20,49 +20,55 @@ struct AmpSupportConfig {
     float weakPeakThreshold = 15.0f;
 };
 
-inline AmpSupportLevel classifyAmpSupport(float peak, bool evidenceValid, const AmpSupportConfig& config) {
+inline StrengthClass classifyAmpSupport(float peak, bool evidenceValid, const AmpSupportConfig& config) {
     if (!evidenceValid) {
-        return AmpSupportLevel::Unknown;
+        return StrengthClass::Unknown;
     }
 
     if (peak >= config.strongPeakThreshold) {
-        return AmpSupportLevel::Strong;
+        return StrengthClass::Strong;
     }
 
     if (peak >= config.mediumPeakThreshold) {
-        return AmpSupportLevel::Medium;
+        return StrengthClass::Medium;
     }
 
     if (peak >= config.weakPeakThreshold) {
-        return AmpSupportLevel::Weak;
+        return StrengthClass::Weak;
     }
 
-    return AmpSupportLevel::None;
+    return StrengthClass::None;
 }
 
-// Inspector configuration combines AMP thresholds with window behavior.
+struct BroadAmpStrengthInspectionConfig {
+    bool enabled = true;
+    AmpSupportConfig strength = {};
+    uint32_t windowPreMs = 20;
+    uint32_t windowPostMs = 120;
+};
+
+struct DuplicateRiskInspectionConfig {
+    bool enabled = true;
+    uint32_t windowMs = 150;
+};
+
+// Inspector configuration combines module-specific inspection settings.
 // Profile factories provide this object to DetectionRuntime.
 struct InspectionConfig {
-    AmpSupportConfig ampSupport = {};
-    uint32_t ampWindowPreMs = 20;
-    uint32_t ampWindowPostMs = 120;
-    bool enableAmpSupportInspection = true;
-    bool enableDuplicateRiskInspection = true;
+    BroadAmpStrengthInspectionConfig broadAmp = {};
+    DuplicateRiskInspectionConfig duplicateRisk = {};
 };
 
 inline InspectionConfig defaultInspectionConfig() {
     InspectionConfig config;
-    config.ampSupport = AmpSupportConfig{};
-    config.ampWindowPreMs = 20;
-    config.ampWindowPostMs = 120;
-    config.enableAmpSupportInspection = true;
-    config.enableDuplicateRiskInspection = true;
+    config.broadAmp = BroadAmpStrengthInspectionConfig{};
+    config.duplicateRisk = DuplicateRiskInspectionConfig{};
     return config;
 }
 
-// AMP evidence captured by the inspector for a single candidate.
+// Broad AMP strength evidence captured by the inspector for a single candidate.
 // This is runtime evidence, not configuration.
-struct AmpWindowEvidence {
+struct BroadAmpStrengthEvidence {
     bool available = false;
     bool observedOnly = true;
     // Diagnostic only: the support decision is peak-based.
@@ -75,7 +81,7 @@ struct AmpWindowEvidence {
     float baseline = 0.0f;
     float lift = 0.0f;
 
-    AmpSupportLevel supportClass = AmpSupportLevel::Unknown;
+    StrengthClass strength = StrengthClass::Unknown;
 };
 
 // Raw detector evidence captured for transient-trigger analysis and reporting.

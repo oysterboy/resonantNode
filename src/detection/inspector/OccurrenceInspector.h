@@ -2,7 +2,6 @@
 
 #include "../DetectionProfile.h"
 #include "../occurrences/InspectedOccurrence.h"
-#include "../occurrences/RawWindow.h"
 #include "../features/FeatureHistory.h"
 
 namespace detection {
@@ -21,24 +20,22 @@ public:
     void reset();
 
     InspectedOccurrence inspect(
-        const Occurrence& candidate,
-        const RawWindowStats* rawWindow = nullptr
+        const Occurrence& candidate
     ) const;
 
     InspectedOccurrence inspectWithHistory(
         const Occurrence& candidate,
-        const FeatureHistory* featureHistory,
-        const RawWindowStats* rawWindow = nullptr
+        const FeatureHistory* featureHistory
     ) const;
 
 private:
-    void annotateAcceptedSignal(
+    void inspectAcceptedOccurrence(
         InspectedOccurrence& out,
         const Occurrence& candidate,
         const FeatureHistory* featureHistory
     ) const;
     void annotateDuplicateRisk(InspectedOccurrence& out, const Occurrence& candidate) const;
-    void annotateAmpSupport(
+    void annotateBroadAmpStrength(
         InspectedOccurrence& out,
         const Occurrence& candidate,
         const FeatureHistory* featureHistory
@@ -48,7 +45,7 @@ private:
         const FeatureHistory* featureHistory
     ) const;
 
-    InspectedOccurrence inspectAmp(
+    InspectedOccurrence inspectAcceptedOccurrenceResult(
         const Occurrence& candidate,
         const FeatureHistory* featureHistory
     ) const;

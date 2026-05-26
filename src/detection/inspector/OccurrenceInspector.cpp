@@ -1,10 +1,6 @@
 #include "OccurrenceInspector.h"
-#include "OccurrenceWindowEvaluator.h"
-
 // OccurrenceInspector evidence annotation and inspection in source order.
 namespace {
-
-constexpr unsigned long kDuplicateRiskWindowMs = 150;
 
 void setRejected(detection::InspectedOccurrence& out, detection::OccurrenceRejectReason reason) {
     out.decision = detection::OccurrenceDecision::Rejected;
@@ -28,18 +24,18 @@ void fillAmpWindowObservation(
 
     out.occurrence.ampLevel = peak;
     out.occurrence.ampBaseline = floor;
-    out.ampSupport = available ? classifyAmpSupport(peak, available, config.ampSupport) : detection::AmpSupportLevel::Unknown;
+    out.broadAmpStrength = available ? classifyAmpSupport(peak, available, config.broadAmp.strength) : detection::StrengthClass::Unknown;
 
-    auto& ampEvidence = out.ampWindow;
+    auto& ampEvidence = out.broadAmp;
     ampEvidence.available = available;
     ampEvidence.observedOnly = true;
     ampEvidence.supportBasis = "peak";
-    ampEvidence.windowStartMs = static_cast<int16_t>(-static_cast<int32_t>(config.ampWindowPreMs));
-    ampEvidence.windowEndMs = static_cast<int16_t>(config.ampWindowPostMs);
+    ampEvidence.windowStartMs = static_cast<int16_t>(-static_cast<int32_t>(config.broadAmp.windowPreMs));
+    ampEvidence.windowEndMs = static_cast<int16_t>(config.broadAmp.windowPostMs);
     ampEvidence.peak = peak;
     ampEvidence.baseline = floor;
     ampEvidence.lift = lift;
-    ampEvidence.supportClass = out.ampSupport;
+    ampEvidence.strength = out.broadAmpStrength;
 
     (void)candidate;
 }
@@ -61,7 +57,7 @@ void OccurrenceInspector::reset() {
     _lastAcceptedFrequencyMs = 0;
 }
 
-void OccurrenceInspector::annotateAcceptedSignal(
+void OccurrenceInspector::inspectAcceptedOccurrence(
     InspectedOccurrence& out,
     const Occurrence& candidate,
     const FeatureHistory* featureHistory
@@ -69,18 +65,19 @@ void OccurrenceInspector::annotateAcceptedSignal(
     out.duplicateRisk = false;
     out.duplicateRiskScore = 0.0f;
     annotateDuplicateRisk(out, candidate);
-    annotateAmpSupport(out, candidate, featureHistory);
+    annotateBroadAmpStrength(out, candidate, featureHistory);
     out.occurrence.confidence = out.confidence;
     out.occurrence.signalConfidence = out.signalConfidence;
     out.occurrence.frequencyConfidence = out.frequencyConfidence;
     out.occurrence.ampEvidencePresent = candidate.ampEvidencePresent;
-    out.occurrence.ampSupport = out.ampSupport;
+    out.occurrence.broadAmpStrength = out.broadAmpStrength;
+    out.occurrence.broadAmp = out.broadAmp;
     out.occurrence.duplicateRisk = out.duplicateRisk;
     out.occurrence.duplicateRiskScore = out.duplicateRiskScore;
 }
 
 void OccurrenceInspector::annotateDuplicateRisk(InspectedOccurrence& out, const Occurrence& candidate) const {
-    if (!_config.enableDuplicateRiskInspection) {
+    if (!_config.duplicateRisk.enabled) {
         return;
     }
 
@@ -108,9 +105,9 @@ void OccurrenceInspector::annotateDuplicateRisk(InspectedOccurrence& out, const 
     }
 
     const unsigned long elapsedMs = static_cast<unsigned long>(acceptedMs - *lastAcceptedMs);
-    if (elapsedMs < kDuplicateRiskWindowMs) {
+    if (elapsedMs < _config.duplicateRisk.windowMs) {
         out.duplicateRisk = true;
-        out.duplicateRiskScore = 1.0f - (static_cast<float>(elapsedMs) / static_cast<float>(kDuplicateRiskWindowMs));
+        out.duplicateRiskScore = 1.0f - (static_cast<float>(elapsedMs) / static_cast<float>(_config.duplicateRisk.windowMs));
         if (out.duplicateRiskScore < 0.0f) {
             out.duplicateRiskScore = 0.0f;
         }
@@ -122,27 +119,27 @@ void OccurrenceInspector::annotateDuplicateRisk(InspectedOccurrence& out, const 
     *lastAcceptedMs = acceptedMs;
 }
 
-void OccurrenceInspector::annotateAmpSupport(
+void OccurrenceInspector::annotateBroadAmpStrength(
     InspectedOccurrence& out,
     const Occurrence& candidate,
     const FeatureHistory* featureHistory
 ) const {
-    const unsigned long startMs = candidate.startMs > _config.ampWindowPreMs ? candidate.startMs - _config.ampWindowPreMs : 0UL;
+    const unsigned long startMs = candidate.startMs > _config.broadAmp.windowPreMs ? candidate.startMs - _config.broadAmp.windowPreMs : 0UL;
     const unsigned long endMs = candidate.endMs != 0
-        ? candidate.endMs + _config.ampWindowPostMs
-        : (candidate.releaseMs != 0 ? candidate.releaseMs + _config.ampWindowPostMs : candidate.peakMs + _config.ampWindowPostMs);
-    auto& ampEvidence = out.ampWindow;
+        ? candidate.endMs + _config.broadAmp.windowPostMs
+        : (candidate.releaseMs != 0 ? candidate.releaseMs + _config.broadAmp.windowPostMs : candidate.peakMs + _config.broadAmp.windowPostMs);
+    auto& ampEvidence = out.broadAmp;
     ampEvidence.available = false;
     ampEvidence.observedOnly = true;
-    ampEvidence.windowStartMs = static_cast<int16_t>(-static_cast<int32_t>(_config.ampWindowPreMs));
-    ampEvidence.windowEndMs = static_cast<int16_t>(_config.ampWindowPostMs);
+    ampEvidence.windowStartMs = static_cast<int16_t>(-static_cast<int32_t>(_config.broadAmp.windowPreMs));
+    ampEvidence.windowEndMs = static_cast<int16_t>(_config.broadAmp.windowPostMs);
     ampEvidence.peak = 0.0f;
     ampEvidence.baseline = 0.0f;
     ampEvidence.lift = 0.0f;
     ampEvidence.supportBasis = "peak";
-    ampEvidence.supportClass = AmpSupportLevel::Unknown;
+    ampEvidence.strength = StrengthClass::Unknown;
 
-    if (_config.enableAmpSupportInspection && featureHistory != nullptr) {
+    if (_config.broadAmp.enabled && featureHistory != nullptr) {
         const ScalarWindow ampWindow = featureHistory->getWindow(FeatureStreamId::AmpEnvelope, startMs, endMs);
         if (ampWindow.valid) {
             const float floor = ampWindow.mean;
@@ -154,7 +151,7 @@ void OccurrenceInspector::annotateAmpSupport(
 
     out.occurrence.ampLevel = 0.0f;
     out.occurrence.ampBaseline = 0.0f;
-    out.ampSupport = AmpSupportLevel::Unknown;
+    out.broadAmpStrength = StrengthClass::Unknown;
 }
 
 InspectedOccurrence OccurrenceInspector::inspectImpl(
@@ -183,7 +180,7 @@ InspectedOccurrence OccurrenceInspector::inspectImpl(
         (_inspectionRules == ProfileInspectionRulesKind::ChirpExperimental && candidate.kind == OccurrenceKind::AmpTransient);
 
     if (acceptsCandidate) {
-        return inspectAmp(candidate, featureHistory);
+        return inspectAcceptedOccurrenceResult(candidate, featureHistory);
     }
 
     InspectedOccurrence out;
@@ -195,23 +192,19 @@ InspectedOccurrence OccurrenceInspector::inspectImpl(
 }
 
 InspectedOccurrence OccurrenceInspector::inspect(
-    const Occurrence& candidate,
-    const RawWindowStats* rawWindow
+    const Occurrence& candidate
 ) const {
-    (void)rawWindow;
     return inspectImpl(candidate, nullptr);
 }
 
 InspectedOccurrence OccurrenceInspector::inspectWithHistory(
     const Occurrence& candidate,
-    const FeatureHistory* featureHistory,
-    const RawWindowStats* rawWindow
+    const FeatureHistory* featureHistory
 ) const {
-    (void)rawWindow;
     return inspectImpl(candidate, featureHistory);
 }
 
-InspectedOccurrence OccurrenceInspector::inspectAmp(
+InspectedOccurrence OccurrenceInspector::inspectAcceptedOccurrenceResult(
     const Occurrence& candidate,
     const FeatureHistory* featureHistory
 ) const {
@@ -227,7 +220,7 @@ InspectedOccurrence OccurrenceInspector::inspectAmp(
     out.accepted = true;
     out.rejected = false;
     out.rejectReason = OccurrenceRejectReason::None;
-    annotateAcceptedSignal(out, candidate, featureHistory);
+    inspectAcceptedOccurrence(out, candidate, featureHistory);
     return out;
 }
 

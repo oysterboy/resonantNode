@@ -70,11 +70,13 @@ inline DetectionProfile makeTonalPulseProfile() {
 
     // Inspector configuration.
     profile.inspectionConfig = defaultInspectionConfig();
-    profile.inspectionConfig.ampWindowPreMs = 10;
-    profile.inspectionConfig.ampWindowPostMs = 80;
+    profile.inspectionConfig.broadAmp.windowPreMs = 10;
+    profile.inspectionConfig.broadAmp.windowPostMs = 10;
 
     // Pattern rules.
     profile.patternRulesConfig.requireSupportForAcceptance = true;
+    profile.patternRulesConfig.supportSource = PatternSupportSource::BroadAmp;
+    profile.patternRulesConfig.minimumSupport = StrengthClass::Medium;
 
     // Field-state windowing.
     profile.fieldStateConfig.occurrenceWindowMs = 3500;
@@ -104,11 +106,13 @@ inline DetectionProfile makeChirpExperimentalProfile() {
 
     // Pattern rules.
     profile.patternRulesConfig.requireSupportForAcceptance = false;
+    profile.patternRulesConfig.supportSource = PatternSupportSource::BroadAmp;
+    profile.patternRulesConfig.minimumSupport = StrengthClass::Medium;
 
     // Inspector configuration.
     profile.inspectionConfig = defaultInspectionConfig();
-    profile.inspectionConfig.ampWindowPreMs = 20;
-    profile.inspectionConfig.ampWindowPostMs = 120;
+    profile.inspectionConfig.broadAmp.windowPreMs = 20;
+    profile.inspectionConfig.broadAmp.windowPostMs = 120;
 
     // Field-state windowing.
     profile.fieldStateConfig.occurrenceWindowMs = 4000;

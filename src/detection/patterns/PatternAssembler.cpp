@@ -32,8 +32,8 @@ PatternCandidate makePatternCandidateFromSignal(const detection::InspectedOccurr
             candidate.ambientBaseline = 0.0f;
             candidate.signalConfidence = source.signalConfidence;
             candidate.frequencyConfidence = source.frequencyConfidence;
-            candidate.ampSupport = source.ampSupport;
-            candidate.ampWindow = source.ampWindow;
+            candidate.broadAmpStrength = source.broadAmpStrength;
+            candidate.broadAmp = source.broadAmp;
             candidate.duplicateRisk = source.duplicateRisk;
             candidate.duplicateRiskScore = source.duplicateRiskScore;
             candidate.firstPulseMs = candidate.acceptedMs;
@@ -68,8 +68,8 @@ PatternCandidate makePatternCandidateFromSignal(const detection::InspectedOccurr
             candidate.ambientBaseline = source.transient.ambientBaseline;
             candidate.signalConfidence = source.signalConfidence;
             candidate.frequencyConfidence = source.frequencyConfidence;
-            candidate.ampSupport = source.ampSupport;
-            candidate.ampWindow = source.ampWindow;
+            candidate.broadAmpStrength = source.broadAmpStrength;
+            candidate.broadAmp = source.broadAmp;
             candidate.duplicateRisk = source.duplicateRisk;
             candidate.duplicateRiskScore = source.duplicateRiskScore;
             candidate.firstPulseMs = candidate.acceptedMs;

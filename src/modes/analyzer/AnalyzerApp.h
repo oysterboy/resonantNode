@@ -4,7 +4,6 @@
 #include <stdint.h>
 
 #include "../../hal/AudioSourceI2S.h"
-#include "../../detection/detectors/AmpDiagnosticProbe.h"
 #include "../../detection/DetectionProfile.h"
 #include "../../io/AudioSignal.h"
 #include "../../detection/DetectionRuntime.h"
@@ -159,8 +158,6 @@ private:
             FrequencyEvidence acceptedFrequencyEvidence = {};
             FrequencyEvidence acceptedFrequencyEvidenceFull = {};
             unsigned long acceptedFrequencyProcessedAtMs = 0;
-            FrequencyEvidence acceptedParityProbe64 = {};
-            unsigned long acceptedParityProbe64ProcessedAtMs = 0;
             detection::PatternResult runtimePatternResult = {};
             detection::FieldState runtimeFieldState = {};
             bool runtimePatternCaptured = false;
@@ -175,8 +172,6 @@ private:
             FrequencyEvidence duplicateFrequencyEvidence = {};
             FrequencyEvidence duplicateFrequencyEvidenceFull = {};
             unsigned long duplicateFrequencyProcessedAtMs = 0;
-            FrequencyEvidence duplicateParityProbe64 = {};
-            unsigned long duplicateParityProbe64ProcessedAtMs = 0;
             long duplicateDeltaFromPrimaryMs = 0;
             bool duplicateOriginWindow = false;
             char duplicateReason[32] = "none";
@@ -201,14 +196,6 @@ private:
             float ambientBaselineMax = 0.0f;
             int maxSignalLevel = 0;
 
-            unsigned long transientRejectTooShortCount = 0;
-            unsigned long transientRejectTooLongCount = 0;
-            unsigned long transientRejectWeakCount = 0;
-            detection::AmpDiagnosticRejectReason strongestAmpDiagRejectReason = detection::AmpDiagnosticRejectReason::None;
-            long strongestRejectDtFromTriggerMs = -1;
-            unsigned long strongestRejectDurationMs = 0;
-            float strongestRejectStrength = 0.0f;
-
             unsigned long duplicateDts[kMaxDuplicateDts] = {};
             unsigned long duplicateDtCount = 0;
 
@@ -222,7 +209,6 @@ private:
             unsigned long firstOnsetRejectMs = 0;
             unsigned long lastOnsetRejectMs = 0;
 
-            detection::AmpDiagnosticRejectReason lastAmpDiagRejectReason = detection::AmpDiagnosticRejectReason::None;
             float lastRejectStrength = 0.0f;
             unsigned long lastRejectDurationMs = 0;
             bool peakActiveAtEnd = false;
@@ -396,7 +382,6 @@ private:
     AnalyzerReport buildSequenceAnalyzerReport(unsigned long trialNumber, AnalyzerResult result, long dtMs, long durMs, float strength, bool audioOverflow, unsigned long duplicateCount, const SequenceTest::TrialDiagnostics& diagnostics) const;
     void recordSequenceClassifierOutcome(const PatternResult& patternResult, bool duplicateCandidate, bool unexpectedCandidate);
     void handleSequenceCandidate(const PatternResult& patternResult, const FrequencyEvidence* liveFrequencyEvidence = nullptr);
-    FrequencyEvidence scanSequenceFrequencyParity64(const PatternCandidate& patternCandidate, unsigned long observedAtMs) const;
     void updateSequenceAmbientStats();
 
     // Sequence sample capture helpers.
@@ -409,8 +394,6 @@ private:
     unsigned long sequenceSampleDumpEstimatedRows(unsigned long selectedTrials) const;
     static void sequenceCurveSampleCallback(const CurveSnapshot& snapshot, void* context);
     FrequencyEvidence captureFrequencyEvidence(unsigned long observedAtMs) const;
-    void noteAmpDiagnosticReject(unsigned long eventMs);
-    void noteAmpDiagnosticRejectReason(unsigned long eventMs, detection::AmpDiagnosticRejectReason reason, unsigned long durationMs, float strength);
     const char* sequenceTrialClassificationName(const char* result, long dtMs, long durMs, const SequenceTest::TrialDiagnostics& diagnostics) const;
 
     // Miscellaneous output helpers.
@@ -422,7 +405,6 @@ private:
     AudioSourceI2S _i2sSource;
     AudioSource& _audioSource;
     AudioSignal _audioSignal;
-    detection::AmpDiagnosticProbe _ampTransientDiagnosticProbe;
     detection::DetectionRuntime* _detection = nullptr;
     FreqBandStream _freqBandStream;
     detection::FeatureHistory* _sequenceFeatureHistory = nullptr;

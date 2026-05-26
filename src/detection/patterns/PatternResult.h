@@ -23,8 +23,8 @@ struct PatternResult {
     float confidence = 0.0f;
     float signalConfidence = 0.0f;
     float frequencyConfidence = 0.0f;
-    AmpSupportLevel ampSupport = AmpSupportLevel::Unknown;
-    AmpWindowEvidence ampWindow = {};
+    StrengthClass broadAmpStrength = StrengthClass::Unknown;
+    BroadAmpStrengthEvidence broadAmp = {};
     bool duplicateRisk = false;
     float duplicateRiskScore = 0.0f;
 

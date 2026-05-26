@@ -16,5 +16,5 @@ struct BehaviorGateConfig {
     unsigned long idleTimeoutMs = 20000;
     unsigned long idleTimeVariationMs = 5000;
     unsigned long idleBlockedAfterHeardMs = 1000;
-    unsigned long idleBlockedAfterOwnEmitMs = 1500;
+    unsigned long idleBlockedAfterOwnEmitMs = 500;
 };

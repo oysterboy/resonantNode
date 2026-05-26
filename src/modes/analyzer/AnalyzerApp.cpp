@@ -8,11 +8,9 @@
 #include "../../AudioDebugConfig.h"
 #include "../../TimingUtils.h"
 #include "../../detection/features/FrequencyMatchEvaluation.h"
-#include "../../detection/inspector/FrequencyWindowProbe.h"
 #include "AnalyzerTextUtils.h"
 #include "../../detection/features/FeatureExtractor.h"
 #include "../../detection/features/FeatureHistory.h"
-#include "../../detection/occurrences/RawWindow.h"
 #include "../../detection/patterns/PatternAssembler.h"
 #include "../../detection/patterns/PatternNames.h"
 #include "../../detection/patterns/PatternRules.h"
@@ -121,22 +119,21 @@ const char* occurrenceRejectReasonName(detection::OccurrenceRejectReason reason)
     }
 }
 
-const char* ampSupportName(detection::AmpSupportLevel value) {
+const char* strengthClassName(detection::StrengthClass value) {
     switch (value) {
-        case detection::AmpSupportLevel::None:
+        case detection::StrengthClass::None:
             return "none";
-        case detection::AmpSupportLevel::Weak:
+        case detection::StrengthClass::Weak:
             return "weak";
-        case detection::AmpSupportLevel::Medium:
+        case detection::StrengthClass::Medium:
             return "medium";
-        case detection::AmpSupportLevel::Strong:
+        case detection::StrengthClass::Strong:
             return "strong";
-        case detection::AmpSupportLevel::Unknown:
+        case detection::StrengthClass::Unknown:
         default:
             return "unknown";
     }
 }
-
 
 // -----------------------------------------------------------------------------
 // Construction and setup
@@ -146,7 +143,6 @@ AnalyzerApp::AnalyzerApp(int inputPin)
     : _inputPin(inputPin),
       _i2sSource(14, 27, 33, 16000, 32),
       _audioSource(_i2sSource),
-      _ampTransientDiagnosticProbe(),
       _audioSignal(_audioSource),
       _freqBandStream() {
     _frequencyEvidenceTuning = detection::detectionProfileForKind(detection::DetectionProfileKind::TonalPulse).frequencyMatchTuning;
@@ -159,7 +155,6 @@ void AnalyzerApp::begin() {
     _audioSource.begin();
     _audioSignal.begin();
     _audioSignal.setCurveSampleCallback(&AnalyzerApp::sequenceCurveSampleCallback, this);
-    _ampTransientDiagnosticProbe.begin();
     _freqBandStream.resetState();
     _freqBandStream.setSampleRateHz(_audioSource.sampleRateHz());
     _freqBandStream.setTargetFrequencyHz(runtime::kDefaultChirpFrequencyHz);
@@ -167,7 +162,6 @@ void AnalyzerApp::begin() {
         _sequenceFeatureHistory = new detection::FeatureHistory();
     }
     _sequenceFeatureHistory->reset();
-    _ampTransientDiagnosticProbe.setDiagnosticsEnabled(AUDIO_VERBOSE_DEBUG);
     _lastPrintMs = 0;
     _usbLineLength = 0;
     _usbLineBuffer[0] = '\0';
@@ -189,13 +183,6 @@ void AnalyzerApp::configureI2SParameters() {
     _audioSignal.setSmoothingFactor(0.5f);
     _audioSignal.setBaselineUpdateFactor(0.005f);
     _audioSignal.setBaselineTrackingQuietThreshold(20);
-    _ampTransientDiagnosticProbe.setOnsetDetectionThreshold(30.0f);
-    _ampTransientDiagnosticProbe.setOnsetReleaseThreshold(20.0f);
-    _ampTransientDiagnosticProbe.setCooldownAfterOnsetMs(50);
-    _ampTransientDiagnosticProbe.setReleaseDebounceMs(10);
-    _ampTransientDiagnosticProbe.setMinTransientDurationMs(90);
-    _ampTransientDiagnosticProbe.setMaxTransientDurationMs(240);
-    _ampTransientDiagnosticProbe.setMinTransientPeakStrength(40.0f);
 }
 
 // -----------------------------------------------------------------------------
@@ -220,7 +207,6 @@ void AnalyzerApp::update() {
             if (_sequenceFeatureHistory != nullptr) {
                 detection::FeatureExtractor::observeFrame(frame, *_sequenceFeatureHistory);
             }
-            _ampTransientDiagnosticProbe.observe(static_cast<float>(frame.level), frame.sampleTimeUs);
             _freqBandStream.observeCenteredSample(frame.centeredSample);
             if (_sequenceTest.active && _sequenceTest.currentTrial > 0 && _detection != nullptr) {
                 const detection::FrequencyEvidence runtimeFrequencyEvidence = captureFrequencyEvidence(frame.sampleTimeMs);
@@ -524,14 +510,9 @@ AnalyzerReport AnalyzerApp::buildSequenceAnalyzerReport(unsigned long trialNumbe
     classificationInput.dtMs = dtMs;
     classificationInput.confidence = actualPipelineAvailable && runtimePatternResult != nullptr ? runtimePatternResult->confidence : 0.0f;
     classificationInput.rawCandidateCount = diagnostics.rawCandidateCount;
-    classificationInput.strongestAmpDiagRejectReason = diagnostics.strongestAmpDiagRejectReason;
     classificationInput.audioOverflow = audioOverflow;
     classificationInput.patternAvailable = actualPipelineAvailable && runtimePatternResult != nullptr;
     report.classification = classifySequenceTrial(classificationInput);
-    report.ampDiag.seen = diagnostics.lastAmpDiagRejectReason != detection::AmpDiagnosticRejectReason::None;
-    report.ampDiag.reason = detection::ampDiagnosticRejectReasonName(diagnostics.lastAmpDiagRejectReason);
-    report.ampDiag.durationMs = diagnostics.lastRejectDurationMs;
-    report.ampDiag.strength = diagnostics.lastRejectStrength;
     {
         // Analyzer consumes the PatternResult produced by DetectionRuntime.
         // Analyzer does not re-run occurrence inspection or pattern interpretation.
@@ -546,7 +527,7 @@ AnalyzerReport AnalyzerApp::buildSequenceAnalyzerReport(unsigned long trialNumbe
         pattern.behaviorEligible = pattern.accepted;
         pattern.confidence = actualPipelineAvailable && runtimePatternResult != nullptr ? runtimePatternResult->confidence : 0.0f;
         pattern.dtMs = report.classification.dtMs;
-        pattern.ampSupport = actualPipelineAvailable && runtimePatternResult != nullptr ? ampSupportName(runtimePatternResult->ampSupport) : "unknown";
+        pattern.broadAmpStrength = actualPipelineAvailable && runtimePatternResult != nullptr ? strengthClassName(runtimePatternResult->broadAmpStrength) : "unknown";
         pattern.reason = actualPipelineAvailable && runtimePatternResult != nullptr ? detection::patternReasonName(runtimePatternResult->reasonCode) : analyzerReasonName(report.classification.reason);
         pattern.rejectReason = actualPipelineAvailable && runtimePatternResult != nullptr ? detection::patternRejectReasonName(runtimePatternResult->rejectReason) : analyzerReasonName(report.classification.reason);
         pattern.involvedOccurrences = actualPipelineAvailable && runtimePatternResult != nullptr ? runtimePatternResult->occurrenceCount : 0U;
@@ -573,13 +554,13 @@ AnalyzerReport AnalyzerApp::buildSequenceAnalyzerReport(unsigned long trialNumbe
     report.inspection.rejected = diagnostics.rawCandidateCount > report.inspection.accepted ? diagnostics.rawCandidateCount - report.inspection.accepted : 0U;
     if (actualPipelineAvailable && runtimeInspectedOccurrence != nullptr && runtimeInspectedOccurrence->occurrence.present) {
         report.inspection.primaryEvidence = occurrenceSourceName(runtimeInspectedOccurrence->occurrence.source);
-        report.inspection.ampSupport = ampSupportName(runtimeInspectedOccurrence->ampSupport);
-        report.inspection.supportClass = ampSupportName(runtimeInspectedOccurrence->ampSupport);
+        report.inspection.broadAmpStrength = strengthClassName(runtimeInspectedOccurrence->broadAmpStrength);
+        report.inspection.broadAmpStrengthClass = strengthClassName(runtimeInspectedOccurrence->broadAmpStrength);
         report.inspection.mainRejectReason = runtimeInspectedOccurrence->rejected ? occurrenceRejectReasonName(runtimeInspectedOccurrence->rejectReason) : "none";
     } else {
         report.inspection.primaryEvidence = "none";
-        report.inspection.ampSupport = "unknown";
-        report.inspection.supportClass = "unsupported";
+        report.inspection.broadAmpStrength = "unknown";
+        report.inspection.broadAmpStrengthClass = "unsupported";
         report.inspection.mainRejectReason = analyzerReasonName(report.classification.reason);
     }
 
@@ -604,8 +585,8 @@ AnalyzerReport AnalyzerApp::buildSequenceAnalyzerReport(unsigned long trialNumbe
     const detection::DetectionProfile& selectedProfile = detection::detectionProfileForKind(_sequenceTest.profileKind);
     report.profileDetail.emitter = detection::profileOccurrenceSourceName(selectedProfile.occurrenceSource);
     report.profileDetail.inspectionRules = detection::profileInspectionRulesName(selectedProfile.inspectionRules);
-    report.profileDetail.ampSupport = selectedProfile.patternRulesConfig.requireSupportForAcceptance ? "enabled" : "disabled";
-    report.profileDetail.ampSupportMin = "medium";
+    report.profileDetail.broadAmpStrength = selectedProfile.patternRulesConfig.requireSupportForAcceptance ? "enabled" : "disabled";
+    report.profileDetail.broadAmpStrengthMin = "medium";
     report.profileDetail.requireSupportForAcceptance = selectedProfile.patternRulesConfig.requireSupportForAcceptance;
     report.profileDetail.freqScore = actualPipelineAvailable && runtimePatternResult != nullptr ? runtimePatternResult->freq.score : 0.0f;
     report.profileDetail.freqContrast = actualPipelineAvailable && runtimePatternResult != nullptr ? runtimePatternResult->freq.spectralContrast : 0.0f;
@@ -614,21 +595,21 @@ AnalyzerReport AnalyzerApp::buildSequenceAnalyzerReport(unsigned long trialNumbe
     report.profileDetail.ampLevel = report.occurrences.primaryStrength;
     report.profileDetail.ampBase = diagnostics.acceptedAmbientBaseline;
     report.profileDetail.ampLift = report.profileDetail.ampLevel - report.profileDetail.ampBase;
-    report.profileDetail.ampSupport = report.primaryPattern.ampSupport;
-    const detection::AmpWindowEvidence ampWindowEvidence = actualPipelineAvailable && runtimeInspectedOccurrence != nullptr
-        ? runtimeInspectedOccurrence->ampWindow
-        : detection::AmpWindowEvidence{};
-    report.profileDetail.ampWindow.available = ampWindowEvidence.available;
-    report.profileDetail.ampWindow.observedOnly = ampWindowEvidence.observedOnly;
-    report.profileDetail.ampWindow.note = ampWindowEvidence.available
-        ? "amp_window_seen"
-        : (actualPipelineAvailable ? "inspector_no_amp_window" : "missing_pipeline_result");
-    report.profileDetail.ampWindow.windowStartMs = ampWindowEvidence.windowStartMs;
-    report.profileDetail.ampWindow.windowEndMs = ampWindowEvidence.windowEndMs;
-    report.profileDetail.ampWindow.peak = ampWindowEvidence.peak;
-    report.profileDetail.ampWindow.baseline = ampWindowEvidence.baseline;
-    report.profileDetail.ampWindow.lift = ampWindowEvidence.lift;
-    report.profileDetail.ampWindow.supportClass = ampSupportName(ampWindowEvidence.supportClass);
+    report.profileDetail.broadAmpStrength = report.primaryPattern.broadAmpStrength;
+    const detection::BroadAmpStrengthEvidence ampWindowEvidence = actualPipelineAvailable && runtimeInspectedOccurrence != nullptr
+        ? runtimeInspectedOccurrence->broadAmp
+        : detection::BroadAmpStrengthEvidence{};
+    report.profileDetail.broadAmp.available = ampWindowEvidence.available;
+    report.profileDetail.broadAmp.observedOnly = ampWindowEvidence.observedOnly;
+    report.profileDetail.broadAmp.note = ampWindowEvidence.available
+        ? "broad_amp_seen"
+        : (actualPipelineAvailable ? "inspector_no_broad_amp" : "missing_pipeline_result");
+    report.profileDetail.broadAmp.windowStartMs = ampWindowEvidence.windowStartMs;
+    report.profileDetail.broadAmp.windowEndMs = ampWindowEvidence.windowEndMs;
+    report.profileDetail.broadAmp.peak = ampWindowEvidence.peak;
+    report.profileDetail.broadAmp.baseline = ampWindowEvidence.baseline;
+    report.profileDetail.broadAmp.lift = ampWindowEvidence.lift;
+    report.profileDetail.broadAmp.strength = strengthClassName(ampWindowEvidence.strength);
 
     report.debug.occurrences = diagnostics.rawCandidateCount;
     report.debug.inspected = diagnostics.rawCandidateCount;

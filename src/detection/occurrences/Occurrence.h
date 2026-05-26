@@ -63,8 +63,8 @@ struct Occurrence {
     float ampLevel = 0.0f;
     float ampBaseline = 0.0f;
     bool ampEvidencePresent = false;
-    AmpSupportLevel ampSupport = AmpSupportLevel::Unknown;
-    AmpWindowEvidence ampWindow = {};
+    StrengthClass broadAmpStrength = StrengthClass::Unknown;
+    BroadAmpStrengthEvidence broadAmp = {};
     bool duplicateRisk = false;
     float duplicateRiskScore = 0.0f;
 

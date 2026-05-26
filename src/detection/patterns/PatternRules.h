@@ -11,8 +11,16 @@ Interprets PatternCandidates into PatternResults.
 Owns patternMatched, supportMatched, valid, confidence, and pattern rejection reasons.
 Does not inspect raw signals directly and does not decide behavior eligibility.
 */
+enum class PatternSupportSource {
+    None,
+    BroadAmp,
+    TargetBand,
+};
+
 struct PatternRulesConfig {
     bool requireSupportForAcceptance = true;
+    PatternSupportSource supportSource = PatternSupportSource::BroadAmp;
+    StrengthClass minimumSupport = StrengthClass::Medium;
 };
 
 class PatternRules {

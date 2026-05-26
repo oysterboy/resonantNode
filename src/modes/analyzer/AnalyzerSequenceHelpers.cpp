@@ -4,7 +4,6 @@
 #include <string.h>
 
 #include "../../detection/patterns/PatternNames.h"
-#include "../../detection/inspector/FrequencyWindowProbe.h"
 
 namespace {
 
@@ -177,23 +176,13 @@ void AnalyzerApp::printSequenceSampleDump(unsigned long trialNumber) const {
         return;
     }
 
-    const detection::AmpDiagnosticSnapshot probeSnapshot = _ampTransientDiagnosticProbe.snapshot();
     Serial.print("SAMPLES_BEGIN trial=");
     Serial.print(trialNumber);
     Serial.print(" trigger_ms=");
     Serial.print(_sequenceTest.sampleDumpTriggerMs);
     Serial.print(" sample_rate_ms=");
     Serial.print(_sequenceTest.sampleDumpStepMs);
-    Serial.print(" fields=t,current,env,peak,open onset=");
-    Serial.print(probeSnapshot.onsetDetectionThreshold, 1);
-    Serial.print(" release=");
-    Serial.print(probeSnapshot.onsetReleaseThreshold, 1);
-    Serial.print(" minStrength=");
-    Serial.print(probeSnapshot.minTransientPeakStrength, 1);
-    Serial.print(" minMs=");
-    Serial.print(probeSnapshot.minTransientDurationMs);
-    Serial.print(" maxMs=");
-    Serial.print(probeSnapshot.maxTransientDurationMs);
+    Serial.print(" fields=t,current,env,peak,open");
     Serial.println();
 
     for (size_t i = 0; i < _sequenceTest.sampleRowCount; ++i) {
@@ -241,78 +230,6 @@ detection::FrequencyEvidence AnalyzerApp::captureFrequencyEvidence(unsigned long
     evidence.spectralContrast = _freqBandStream.lastSpectralContrast();
     evidence.validWindow = present;
     return evidence;
-}
-
-detection::FrequencyEvidence AnalyzerApp::scanSequenceFrequencyParity64(const detection::PatternCandidate& patternCandidate, unsigned long observedAtMs) const {
-    detection::FrequencyEvidence evidence;
-    DetectorCandidate detectorCandidate;
-    detectorCandidate.onsetSample = patternCandidate.onsetSample;
-    detectorCandidate.peakSample = patternCandidate.peakSample;
-    detectorCandidate.releaseSample = patternCandidate.releaseSample;
-    detectorCandidate.onsetMillisApprox = patternCandidate.startMs;
-    detectorCandidate.releaseMillisApprox = patternCandidate.startMs + patternCandidate.durationMs;
-    detectorCandidate.onsetStrength = patternCandidate.onsetStrength;
-    detectorCandidate.peakStrength = patternCandidate.peakStrength;
-    detectorCandidate.releaseStrength = patternCandidate.releaseStrength;
-    detectorCandidate.ambientBaseline = patternCandidate.ambientBaseline;
-    detectorCandidate.durationMs = patternCandidate.durationMs;
-    detectorCandidate.audioOverflowDuringCandidate = patternCandidate.audioOverflowDuringCandidate;
-
-    const unsigned long sampleRateHz = _audioSource.sampleRateHz() > 0 ? _audioSource.sampleRateHz() : 16000UL;
-    if (detection::measureCandidateWindowFrequencyParityScan64(_audioSignal,
-                                                               detectorCandidate,
-                                                               sampleRateHz,
-                                                               _freqBandStream.targetFrequencyHz(),
-                                                               observedAtMs,
-                                                               evidence,
-                                                               64UL)) {
-        return evidence;
-    }
-
-    return {};
-}
-
-void AnalyzerApp::noteAmpDiagnosticReject(unsigned long eventMs) {
-    if (_valMode) {
-        return;
-    }
-    if (!_sequenceTest.active || _sequenceTest.currentTrial == 0 || _sequenceTest.currentTrialFinalized) {
-        return;
-    }
-
-    const detection::AmpDiagnosticSnapshot probeSnapshot = _ampTransientDiagnosticProbe.snapshot();
-    const detection::AmpDiagnosticRejectReason reason = probeSnapshot.transientRejectReason;
-    if (reason == detection::AmpDiagnosticRejectReason::None) {
-        return;
-    }
-
-    noteAmpDiagnosticRejectReason(eventMs, reason, probeSnapshot.rejectedDurationMs, probeSnapshot.rejectedStrength);
-}
-
-void AnalyzerApp::noteAmpDiagnosticRejectReason(unsigned long eventMs, detection::AmpDiagnosticRejectReason reason, unsigned long durationMs, float strength) {
-    if (_valMode) {
-        return;
-    }
-    if (!_sequenceTest.active || _sequenceTest.currentTrial == 0 || _sequenceTest.currentTrialFinalized) {
-        return;
-    }
-
-    auto& diagnostics = _sequenceTest.currentTrialDiagnostics;
-    const detection::AmpDiagnosticSnapshot probeSnapshot = _ampTransientDiagnosticProbe.snapshot();
-    const unsigned long shortCount = probeSnapshot.transientRejectedDurationTooShortCount - _sequenceTest.trialTransientRejectTooShortCountAtStart;
-    const unsigned long longCount = probeSnapshot.transientRejectedDurationTooLongCount - _sequenceTest.trialTransientRejectTooLongCountAtStart;
-    const unsigned long weakCount = probeSnapshot.transientRejectedStrengthTooLowCount - _sequenceTest.trialTransientRejectWeakCountAtStart;
-
-    diagnostics.transientRejectTooShortCount = shortCount;
-    diagnostics.transientRejectTooLongCount = longCount;
-    diagnostics.transientRejectWeakCount = weakCount;
-
-    if (reason != detection::AmpDiagnosticRejectReason::None && strength >= diagnostics.strongestRejectStrength) {
-        diagnostics.strongestAmpDiagRejectReason = reason;
-        diagnostics.strongestRejectDtFromTriggerMs = static_cast<long>(eventMs - _sequenceTest.currentTrialStartMs);
-        diagnostics.strongestRejectDurationMs = durationMs;
-        diagnostics.strongestRejectStrength = strength;
-    }
 }
 
 const char* AnalyzerApp::sequenceTrialClassificationName(const char* result, long dtMs, long durMs, const SequenceTest::TrialDiagnostics& diagnostics) const {
@@ -574,8 +491,6 @@ void AnalyzerApp::handleSequenceCandidate(const detection::PatternResult& patter
             diagnostics.duplicateFrequencyEvidence = patternResult.freq;
             diagnostics.duplicateFrequencyEvidenceFull = patternResult.freqFull;
             diagnostics.duplicateFrequencyProcessedAtMs = patternResult.processedAtMs;
-            diagnostics.duplicateParityProbe64 = scanSequenceFrequencyParity64(patternResult.candidate, patternResult.processedAtMs);
-            diagnostics.duplicateParityProbe64ProcessedAtMs = patternResult.processedAtMs;
             diagnostics.duplicateDeltaFromPrimaryMs = diagnostics.patternAccepted
                 ? static_cast<long>(onsetMs) - static_cast<long>(diagnostics.acceptedPatternMs)
                 : 0;
@@ -606,9 +521,6 @@ void AnalyzerApp::handleSequenceCandidate(const detection::PatternResult& patter
     _sequenceTest.currentTrialDiagnostics.acceptedFrequencyEvidence = patternResult.freq;
     _sequenceTest.currentTrialDiagnostics.acceptedFrequencyEvidenceFull = patternResult.freqFull;
     _sequenceTest.currentTrialDiagnostics.acceptedFrequencyProcessedAtMs = patternResult.processedAtMs;
-    _sequenceTest.currentTrialDiagnostics.acceptedParityProbe64 = scanSequenceFrequencyParity64(patternResult.candidate, patternResult.processedAtMs);
-    _sequenceTest.currentTrialDiagnostics.acceptedParityProbe64ProcessedAtMs = patternResult.processedAtMs;
-    _sequenceTest.currentTrialDiagnostics.lastAmpDiagRejectReason = detection::AmpDiagnosticRejectReason::None;
     _sequenceTest.currentTrialDiagnostics.lastRejectStrength = 0.0f;
     _sequenceTest.currentTrialDiagnostics.lastRejectDurationMs = 0;
     _sequenceTest.currentTrialPatternDetectedMs = onsetMs;

@@ -138,18 +138,11 @@ struct AnalyzerPatternObservation {
     float confidence = 0.0f;
     long dtMs = -1;
 
-    const char* ampSupport = "unknown";
+    const char* broadAmpStrength = "unknown";
     const char* reason = "none";
     const char* rejectReason = "none";
 
     unsigned int involvedOccurrences = 0;
-};
-
-struct AnalyzerAmpDiagnosticObservation {
-    bool seen = false;
-    const char* reason = "none";
-    unsigned long durationMs = 0;
-    float strength = 0.0f;
 };
 
 // Keep Analyzer-specific for now; later shared AudioReporting may reuse the
@@ -175,8 +168,8 @@ struct AnalyzerInspectionObservation {
     unsigned int rejected = 0;
 
     const char* primaryEvidence = "none";
-    const char* ampSupport = "unknown";
-    const char* supportClass = "unknown";
+    const char* broadAmpStrength = "unknown";
+    const char* broadAmpStrengthClass = "unknown";
     const char* mainRejectReason = "none";
 };
 
@@ -197,7 +190,7 @@ struct AnalyzerClassification {
     float confidence = 0.0f;
 };
 
-struct AnalyzerAmpWindowObservation {
+struct AnalyzerBroadAmpStrengthObservation {
     bool available = false;
     bool observedOnly = true;
     const char* supportBasis = "peak";
@@ -210,7 +203,7 @@ struct AnalyzerAmpWindowObservation {
     float baseline = 0.0f;
     float lift = 0.0f;
 
-    const char* supportClass = "unknown";
+    const char* strength = "unknown";
 };
 
 struct AnalyzerProfileDetail {
@@ -218,8 +211,8 @@ struct AnalyzerProfileDetail {
     const char* summary = "";
     const char* emitter = "unknown";
     const char* inspectionRules = "unknown";
-    const char* ampSupport = "unknown";
-    const char* ampSupportMin = "medium";
+    const char* broadAmpStrength = "unknown";
+    const char* broadAmpStrengthMin = "medium";
     bool requireSupportForAcceptance = true;
 
     float freqScore = 0.0f;
@@ -230,7 +223,7 @@ struct AnalyzerProfileDetail {
     float ampLevel = 0.0f;
     float ampBase = 0.0f;
     float ampLift = 0.0f;
-    AnalyzerAmpWindowObservation ampWindow;
+    AnalyzerBroadAmpStrengthObservation broadAmp;
 };
 
 struct AnalyzerDebugSummary {
@@ -291,7 +284,6 @@ struct AnalyzerReport {
 
     AnalyzerClassification classification;
     AnalyzerProfileDetail profileDetail;
-    AnalyzerAmpDiagnosticObservation ampDiag;
     AnalyzerDebugSummary debug;
 };
 

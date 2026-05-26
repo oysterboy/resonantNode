@@ -20,19 +20,6 @@ AnalyzerReason analyzerReasonFromSequenceOutcome(const AnalyzerSequenceClassific
             if (input.rawCandidateCount == 0) {
                 return AnalyzerReason::NoOccurrence;
             }
-            switch (input.strongestAmpDiagRejectReason) {
-                case detection::AmpDiagnosticRejectReason::TooShort:
-                case detection::AmpDiagnosticRejectReason::TooLong:
-                case detection::AmpDiagnosticRejectReason::Weak:
-                    return AnalyzerReason::OccurrenceSeenButRejected;
-                case detection::AmpDiagnosticRejectReason::PeakStillActive:
-                    return AnalyzerReason::InspectionFailed;
-                case detection::AmpDiagnosticRejectReason::None:
-                case detection::AmpDiagnosticRejectReason::NoOnset:
-                case detection::AmpDiagnosticRejectReason::Unknown:
-                default:
-                    break;
-            }
             return input.dtMs >= 0 ? AnalyzerReason::PatternCandidateRejected : AnalyzerReason::NoOccurrence;
         case AnalyzerResult::Rejected:
             return AnalyzerReason::PatternCandidateRejected;

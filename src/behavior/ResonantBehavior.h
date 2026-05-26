@@ -50,6 +50,8 @@ public:
 
     void setWaitAfterHeardMs(unsigned long value);
     void setRefractoryAfterEmitMs(unsigned long value);
+    void setBehaviorSuppressSelfChirpMs(unsigned long value);
+    void setDetectionSuppressTailMsOwnEmit(unsigned long value);
     void setIdleTimeMs(unsigned long value);
     void setIdleTimeVariationMs(unsigned long value);
     void setIdleBlockedAfterHeardMs(unsigned long value);
@@ -58,6 +60,8 @@ public:
     void setIdleTimeoutMs(unsigned long value);
     unsigned long waitAfterHeardMs() const;
     unsigned long refractoryAfterEmitMs() const;
+    unsigned long behaviorSuppressSelfChirpMs() const;
+    unsigned long detectionSuppressTailMsOwnEmit() const;
     unsigned long idleTimeMs() const;
     unsigned long idleTimeVariationMs() const;
     unsigned long idleBlockedAfterHeardMs() const;

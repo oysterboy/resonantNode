@@ -15,9 +15,9 @@ enum class AmpSupportLevel {
 
 // Shared thresholds for AMP support classification.
 struct AmpSupportConfig {
-    float strongPeakThreshold = 70.0f;
-    float mediumPeakThreshold = 40.0f;
-    float weakPeakThreshold = 20.0f;
+    float strongPeakThreshold = 60.0f;
+    float mediumPeakThreshold = 30.0f;
+    float weakPeakThreshold = 15.0f;
 };
 
 inline AmpSupportLevel classifyAmpSupport(float peak, bool evidenceValid, const AmpSupportConfig& config) {

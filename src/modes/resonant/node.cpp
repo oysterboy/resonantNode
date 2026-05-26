@@ -91,15 +91,7 @@ bool equalsIgnoreCase(const char* a, const char* b) {
 }
 
 BehaviorGateConfig makeTonalPulseBehaviorProfile() {
-    BehaviorGateConfig profile;
-    profile.idleEnabled = true;
-    profile.waitAfterHeardMs = 100;
-    profile.refractoryAfterEmitMs = 0;
-    profile.idleTimeoutMs = 20000;
-    profile.idleTimeVariationMs = 10000;
-    profile.idleBlockedAfterHeardMs = 3000;
-    profile.idleBlockedAfterOwnEmitMs = 5000;
-    return profile;
+    return BehaviorGateConfig{};
 }
 
 const char* detectionProfileKindName(detection::DetectionProfileKind kind) {
@@ -115,6 +107,78 @@ void printProfileComposition(const detection::DetectionProfile& profile) {
     Serial.print(profile.fieldStateConfig.occurrenceWindowMs);
     Serial.print("/");
     Serial.print(profile.fieldStateConfig.patternWindowMs);
+}
+
+void printDetectionProfileDetails(const detection::DetectionProfile& profile) {
+    Serial.println("RB DETECT");
+    Serial.print("  kind=");
+    Serial.println(detection::detectionProfileName(profile.kind));
+    Serial.print("  occurrenceSource=");
+    Serial.println(detection::profileOccurrenceSourceName(profile.occurrenceSource));
+    Serial.print("  inspectionRules=");
+    Serial.println(detection::profileInspectionRulesName(profile.inspectionRules));
+    Serial.print("  freqTiming.releaseDebounceMs=");
+    Serial.println(profile.frequencyOccurrenceTiming.releaseDebounceMs);
+    Serial.print("  freqTiming.cooldownAfterOnsetMs=");
+    Serial.println(profile.frequencyOccurrenceTiming.cooldownAfterOnsetMs);
+    Serial.print("  freqTiming.minTransientDurationMs=");
+    Serial.println(profile.frequencyOccurrenceTiming.minTransientDurationMs);
+    Serial.print("  freqMatch.scoreMin=");
+    Serial.println(profile.frequencyMatchTuning.scoreMin, 0);
+    Serial.print("  freqMatch.contrastMin=");
+    Serial.println(profile.frequencyMatchTuning.contrastMin, 1);
+    Serial.print("  inspection.ampWindowPreMs=");
+    Serial.println(profile.inspectionConfig.ampWindowPreMs);
+    Serial.print("  inspection.ampWindowPostMs=");
+    Serial.println(profile.inspectionConfig.ampWindowPostMs);
+    Serial.print("  inspection.ampSupport.strong=");
+    Serial.println(profile.inspectionConfig.ampSupport.strongPeakThreshold, 1);
+    Serial.print("  inspection.ampSupport.medium=");
+    Serial.println(profile.inspectionConfig.ampSupport.mediumPeakThreshold, 1);
+    Serial.print("  inspection.ampSupport.weak=");
+    Serial.println(profile.inspectionConfig.ampSupport.weakPeakThreshold, 1);
+    Serial.print("  inspection.ampSupportEnabled=");
+    Serial.println(profile.inspectionConfig.enableAmpSupportInspection ? 1 : 0);
+    Serial.print("  inspection.duplicateRiskEnabled=");
+    Serial.println(profile.inspectionConfig.enableDuplicateRiskInspection ? 1 : 0);
+    Serial.print("  pattern.requireSupportForAcceptance=");
+    Serial.println(profile.patternRulesConfig.requireSupportForAcceptance ? 1 : 0);
+    Serial.print("  fieldState.occurrenceWindowMs=");
+    Serial.println(profile.fieldStateConfig.occurrenceWindowMs);
+    Serial.print("  fieldState.patternWindowMs=");
+    Serial.println(profile.fieldStateConfig.patternWindowMs);
+    Serial.print("  fieldState.busySignalCountThreshold=");
+    Serial.println(profile.fieldStateConfig.busySignalCountThreshold);
+    Serial.print("  fieldState.denseSignalCountThreshold=");
+    Serial.println(profile.fieldStateConfig.denseSignalCountThreshold);
+    Serial.print("  fieldState.quietSignalCountThreshold=");
+    Serial.println(profile.fieldStateConfig.quietSignalCountThreshold);
+    Serial.print("  fieldState.quietActivityThreshold=");
+    Serial.println(profile.fieldStateConfig.quietActivityThreshold, 2);
+    Serial.print("  fieldState.busyActivityThreshold=");
+    Serial.println(profile.fieldStateConfig.busyActivityThreshold, 2);
+}
+
+void printBehaviorRuntimeDetails(const ResonantBehavior& behavior) {
+    Serial.println("RB BEHAV");
+    Serial.print("  idleEnabled=");
+    Serial.println(behavior.idleEnabled() ? 1 : 0);
+    Serial.print("  waitAfterHeardMs=");
+    Serial.println(behavior.waitAfterHeardMs());
+    Serial.print("  refractoryAfterEmitMs=");
+    Serial.println(behavior.refractoryAfterEmitMs());
+    Serial.print("  behaviorSuppressSelfChirpMs=");
+    Serial.println(behavior.behaviorSuppressSelfChirpMs());
+    Serial.print("  detectionSuppressTailMsOwnEmit=");
+    Serial.println(behavior.detectionSuppressTailMsOwnEmit());
+    Serial.print("  idleTimeoutMs=");
+    Serial.println(behavior.idleTimeoutMs());
+    Serial.print("  idleTimeVariationMs=");
+    Serial.println(behavior.idleTimeVariationMs());
+    Serial.print("  idleBlockedAfterHeardMs=");
+    Serial.println(behavior.idleBlockedAfterHeardMs());
+    Serial.print("  idleBlockedAfterOwnEmitMs=");
+    Serial.println(behavior.idleBlockedAfterOwnEmitMs());
 }
 
 void printBuildIdentity() {
@@ -213,6 +277,10 @@ void Node::begin() {
     Serial.print(profileName());
     printProfileComposition(activeDetectionProfile());
     printBuildIdentity();
+    Serial.println();
+    printDetectionProfileDetails(activeDetectionProfile());
+    Serial.println();
+    printBehaviorRuntimeDetails(_behavior);
     Serial.println();
     Serial.print("RB startup baseline=");
     Serial.println(rbBaselineStateName());
@@ -506,7 +574,7 @@ void Node::pollSerialCommands() {
 void Node::handleSerialLine(const char* line) {
     if (equalsIgnoreCase(line, "RB help")) {
         Serial.println("RB CMD: RB PARAM freqScore=10000 freqContrast=50.0");
-        Serial.println("RB CMD: RB BEHAV wait=100 refractory=0 idleTimeout=20000 idleTimeoutVariation=10000 idleBlockedAfterHeard=3000 idleBlockedAfterOwnEmit=5000");
+        Serial.println("RB CMD: RB BEHAV wait=100 refractory=0 suppressSelfChirp=250 detectionSuppressTail=0 idleTimeout=20000 idleTimeoutVariation=10000 idleBlockedAfterHeard=3000 idleBlockedAfterOwnEmit=5000");
         Serial.println("RB CMD: RB STATUS");
         Serial.println("RB CMD: RB PROFILE name=tonalpulse");
         Serial.println("RB CMD(EXP): RB PROFILE name=chirp_experimental (experimental)");
@@ -565,12 +633,14 @@ void Node::handleSerialLine(const char* line) {
         token = token != nullptr ? strtok_r(nullptr, " ", &savePtr) : nullptr;
 
         if (token == nullptr || !equalsIgnoreCase(token, "BEHAV")) {
-            Serial.println("RB BEHAV usage=RB BEHAV wait=100 refractory=0 idleTimeout=20000 idleTimeoutVariation=10000 idleBlockedAfterHeard=3000 idleBlockedAfterOwnEmit=5000");
+            Serial.println("RB BEHAV usage=RB BEHAV wait=100 refractory=0 suppressSelfChirp=250 detectionSuppressTail=0 idleTimeout=20000 idleTimeoutVariation=10000 idleBlockedAfterHeard=3000 idleBlockedAfterOwnEmit=5000");
             return;
         }
 
         unsigned long waitAfterHeardMs = _behavior.waitAfterHeardMs();
         unsigned long refractoryAfterEmitMs = _behavior.refractoryAfterEmitMs();
+        unsigned long behaviorSuppressSelfChirpMs = _behavior.behaviorSuppressSelfChirpMs();
+        unsigned long detectionSuppressTailMsOwnEmit = _behavior.detectionSuppressTailMsOwnEmit();
         unsigned long idleTimeoutMs = _behavior.idleTimeoutMs();
         unsigned long idleTimeoutVariationMs = _behavior.idleTimeVariationMs();
         unsigned long idleBlockedAfterHeardMs = _behavior.idleBlockedAfterHeardMs();
@@ -584,6 +654,12 @@ void Node::handleSerialLine(const char* line) {
             } else if (startsWithTokenIgnoreCase(token, "refractory=") || startsWithTokenIgnoreCase(token, "refractoryMs=")) {
                 const char* value = token + (startsWithTokenIgnoreCase(token, "refractoryMs=") ? 13 : 11);
                 refractoryAfterEmitMs = strtoul(value, nullptr, 10);
+            } else if (startsWithTokenIgnoreCase(token, "suppressSelfChirp=") || startsWithTokenIgnoreCase(token, "behaviorSuppressSelfChirpMs=")) {
+                const char* value = token + (startsWithTokenIgnoreCase(token, "behaviorSuppressSelfChirpMs=") ? 28 : 18);
+                behaviorSuppressSelfChirpMs = strtoul(value, nullptr, 10);
+            } else if (startsWithTokenIgnoreCase(token, "detectionSuppressTail=") || startsWithTokenIgnoreCase(token, "detectionSuppressTailMsOwnEmit=")) {
+                const char* value = token + (startsWithTokenIgnoreCase(token, "detectionSuppressTailMsOwnEmit=") ? 31 : 22);
+                detectionSuppressTailMsOwnEmit = strtoul(value, nullptr, 10);
             } else if (startsWithTokenIgnoreCase(token, "idleTimeout=") || startsWithTokenIgnoreCase(token, "idle=") || startsWithTokenIgnoreCase(token, "idleMs=") || startsWithTokenIgnoreCase(token, "idleTimeoutMs=")) {
                 const char* value = token + (startsWithTokenIgnoreCase(token, "idleTimeoutMs=") ? 14 : startsWithTokenIgnoreCase(token, "idleMs=") ? 7 : startsWithTokenIgnoreCase(token, "idleTimeout=") ? 12 : 5);
                 idleTimeoutMs = strtoul(value, nullptr, 10);
@@ -604,6 +680,8 @@ void Node::handleSerialLine(const char* line) {
 
         _behavior.setWaitAfterHeardMs(waitAfterHeardMs);
         _behavior.setRefractoryAfterEmitMs(refractoryAfterEmitMs);
+        _behavior.setBehaviorSuppressSelfChirpMs(behaviorSuppressSelfChirpMs);
+        _behavior.setDetectionSuppressTailMsOwnEmit(detectionSuppressTailMsOwnEmit);
         _behavior.setIdleTimeoutMs(idleTimeoutMs);
         _behavior.setIdleTimeVariationMs(idleTimeoutVariationMs);
         _behavior.setIdleBlockedAfterHeardMs(idleBlockedAfterHeardMs);
@@ -614,6 +692,10 @@ void Node::handleSerialLine(const char* line) {
         Serial.print(_behavior.waitAfterHeardMs());
         Serial.print(" refractory=");
         Serial.print(_behavior.refractoryAfterEmitMs());
+        Serial.print(" suppressSelfChirp=");
+        Serial.print(_behavior.behaviorSuppressSelfChirpMs());
+        Serial.print(" detectionSuppressTail=");
+        Serial.print(_behavior.detectionSuppressTailMsOwnEmit());
         Serial.print(" idleTimeout=");
         Serial.print(_behavior.idleTimeoutMs());
         Serial.print(" idleTimeoutVariation=");
@@ -718,6 +800,10 @@ void Node::handleDetectCommand(const char* line) {
     Serial.print(_behavior.stateName());
     Serial.print(" behavior_idle=");
     Serial.print(_behavior.idleEnabled() ? 1 : 0);
+    Serial.print(" behavior_suppressSelfChirpMs=");
+    Serial.print(_behavior.behaviorSuppressSelfChirpMs());
+    Serial.print(" behavior_detectionSuppressTailMsOwnEmit=");
+    Serial.print(_behavior.detectionSuppressTailMsOwnEmit());
     Serial.print(" output_busy=");
     Serial.print(_behavior.outputBusy() ? 1 : 0);
     printBuildIdentity();
@@ -937,6 +1023,10 @@ void Node::printRbBehaviorSummary() const {
     Serial.print(_behavior.waitAfterHeardMs());
     Serial.print(" refractory=");
     Serial.print(_behavior.refractoryAfterEmitMs());
+    Serial.print(" suppressSelfChirp=");
+    Serial.print(_behavior.behaviorSuppressSelfChirpMs());
+    Serial.print(" detectionSuppressTail=");
+    Serial.print(_behavior.detectionSuppressTailMsOwnEmit());
     Serial.print(" idleTimeout=");
     Serial.print(_behavior.idleTimeoutMs());
     Serial.print(" idleTimeoutVariation=");

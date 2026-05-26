@@ -4,6 +4,48 @@ FrequencyEvidenceEvaluation
 FrequencyMtchDEtector
 need both?
 
+## 2026-05-26
+
+Stable 5-node slow circle configuration, with the committed defaults now coming from `DetectionProfile.h` and `BehaviorProfile.h`:
+
+```txt
+DetectionProfile::makeTonalPulseProfile
+  kind = TonalPulse
+  occurrenceSource = FrequencyOccurrenceSource
+  inspectionRules = TonalPulseRules
+  freqTiming.releaseDebounceMs = 10
+  freqTiming.cooldownAfterOnsetMs = 20
+  freqTiming.minTransientDurationMs = 80
+  freqMatch.scoreMin = 10000.0
+  freqMatch.contrastMin = 50.0
+  inspection.ampWindowPreMs = 10
+  inspection.ampWindowPostMs = 80
+  inspection.ampSupport.strong = 60.0
+  inspection.ampSupport.medium = 30.0
+  inspection.ampSupport.weak = 15.0
+  inspection.ampSupportEnabled = 1
+  inspection.duplicateRiskEnabled = 1
+  pattern.requireSupportForAcceptance = 1
+  fieldState.occurrenceWindowMs = 3500
+  fieldState.patternWindowMs = 3500
+  fieldState.busySignalCountThreshold = 3
+  fieldState.denseSignalCountThreshold = 6
+  fieldState.quietSignalCountThreshold = 0
+  fieldState.quietActivityThreshold = 0.00
+  fieldState.busyActivityThreshold = 0.40
+
+BehaviorGateConfig
+  idleEnabled = 1
+  waitAfterHeardMs = 200
+  refractoryAfterEmitMs = 0
+  behaviorSuppressSelfChirpMs = 100
+  detectionSuppressTailMsOwnEmit = 0
+  idleTimeoutMs = 20000
+  idleTimeVariationMs = 5000
+  idleBlockedAfterHeardMs = 1000
+  idleBlockedAfterOwnEmitMs = 1500
+```
+
 ## 2026-05-18 18:25:30
 
 Detection Profile 'Frequency + Amp Inspection' works with these values:

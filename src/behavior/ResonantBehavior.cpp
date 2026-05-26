@@ -99,6 +99,8 @@ void ResonantBehavior::resetState() {
 void ResonantBehavior::configure(const BehaviorGateConfig& profile) {
     setWaitAfterHeardMs(profile.waitAfterHeardMs);
     setRefractoryAfterEmitMs(profile.refractoryAfterEmitMs);
+    setBehaviorSuppressSelfChirpMs(profile.behaviorSuppressSelfChirpMs);
+    setDetectionSuppressTailMsOwnEmit(profile.detectionSuppressTailMsOwnEmit);
     setIdleTimeoutMs(profile.idleTimeoutMs);
     setIdleTimeVariationMs(profile.idleTimeVariationMs);
     setIdleBlockedAfterHeardMs(profile.idleBlockedAfterHeardMs);
@@ -289,6 +291,14 @@ void ResonantBehavior::setRefractoryAfterEmitMs(unsigned long value) {
     _refractoryAfterEmitMs = value;
 }
 
+void ResonantBehavior::setBehaviorSuppressSelfChirpMs(unsigned long value) {
+    _behaviorSuppressSelfChirpMs = value;
+}
+
+void ResonantBehavior::setDetectionSuppressTailMsOwnEmit(unsigned long value) {
+    _detectionSuppressTailMsOwnEmit = value;
+}
+
 void ResonantBehavior::setIdleTimeMs(unsigned long value) {
     _idleTimeMs = value;
 }
@@ -323,6 +333,14 @@ unsigned long ResonantBehavior::waitAfterHeardMs() const {
 
 unsigned long ResonantBehavior::refractoryAfterEmitMs() const {
     return _refractoryAfterEmitMs;
+}
+
+unsigned long ResonantBehavior::behaviorSuppressSelfChirpMs() const {
+    return _behaviorSuppressSelfChirpMs;
+}
+
+unsigned long ResonantBehavior::detectionSuppressTailMsOwnEmit() const {
+    return _detectionSuppressTailMsOwnEmit;
 }
 
 unsigned long ResonantBehavior::idleTimeoutMs() const {
@@ -381,8 +399,11 @@ bool ResonantBehavior::behaviorSuppressed(unsigned long now) const {
 }
 
 void ResonantBehavior::notifyChirpStarted(unsigned long now) {
-    scheduleNextIdle(now);
-    const unsigned long suppressUntilMs = now + _behaviorSuppressSelfChirpMs;
+    unsigned long suppressMs = _behaviorSuppressSelfChirpMs;
+    if (_chirpRequestSource == ChirpRequestSource::Idle && _idleBlockedAfterOwnEmitMs > suppressMs) {
+        suppressMs = _idleBlockedAfterOwnEmitMs;
+    }
+    const unsigned long suppressUntilMs = now + suppressMs;
     if (suppressUntilMs > _behaviorSuppressUntilMs) {
         _behaviorSuppressUntilMs = suppressUntilMs;
     }
@@ -612,9 +633,6 @@ void ResonantBehavior::scheduleNextIdle(unsigned long now) {
 
 bool ResonantBehavior::canIdle(unsigned long now) const {
     if (!_idleEnabled) {
-        return false;
-    }
-    if (_lastFieldState.active || _lastFieldState.dense) {
         return false;
     }
     if (_nextIdleAtMs != 0 && timing::beforeDeadline(now, _nextIdleAtMs)) {

@@ -1,3 +1,33 @@
+# 2026-05-26 - 5-node slow circle stabilization
+
+### Context
+
+The current RB pass is now using the committed profile defaults directly:
+
+```text
+DetectionProfile.h = TonalPulse / frequency-gated detection defaults
+BehaviorProfile.h = behavior timing defaults
+node.cpp = no local TonalPulse overrides
+```
+
+### Decision
+
+Lock the current 5-node slow circle baseline to the committed profile headers:
+
+```text
+TonalPulse detection stays frequency-gated
+TonalPulse behavior stays self-suppressed and idle-gated by the default behavior config
+runtime startup should defer to the profile headers rather than hardcoded node-side overrides
+```
+
+### Current Baseline
+
+```text
+5-node slow circle
+freq/amp gated
+stable as committed
+```
+
 # Changelog
 
 This changelog records documentation and architecture decisions.

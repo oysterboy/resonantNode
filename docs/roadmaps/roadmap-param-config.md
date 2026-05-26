@@ -22,6 +22,14 @@ Installation config provides overrides.
 
 But the next use case may not need runtime params yet.
 
+Usability note:
+
+```text
+one installation preset should describe the whole node
+detection, behavior, output, and node-specific values can live in one preset
+subsystem ownership stays split underneath for implementation clarity
+```
+
 ---
 
 ## Spec Candidates

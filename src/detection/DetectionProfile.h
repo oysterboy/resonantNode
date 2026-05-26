@@ -62,8 +62,8 @@ inline DetectionProfile makeTonalPulseProfile() {
     profile.inspectionRules = ProfileInspectionRulesKind::TonalPulse;
 
     // Frequency path tuning.
-    profile.frequencyOccurrenceTiming.releaseDebounceMs = 20;
-    profile.frequencyOccurrenceTiming.cooldownAfterOnsetMs = 300;
+    profile.frequencyOccurrenceTiming.releaseDebounceMs = 10;
+    profile.frequencyOccurrenceTiming.cooldownAfterOnsetMs = 20;
     profile.frequencyOccurrenceTiming.minTransientDurationMs = 80;
     profile.frequencyMatchTuning.scoreMin = 10000.0f;
     profile.frequencyMatchTuning.contrastMin = 50.0f;
@@ -96,14 +96,14 @@ inline DetectionProfile makeChirpExperimentalProfile() {
     profile.inspectionRules = ProfileInspectionRulesKind::ChirpExperimental;
 
     // Frequency path tuning.
-    profile.frequencyOccurrenceTiming.releaseDebounceMs = 20;
-    profile.frequencyOccurrenceTiming.cooldownAfterOnsetMs = 300;
-    profile.frequencyOccurrenceTiming.minTransientDurationMs = 80;
+    profile.frequencyOccurrenceTiming.releaseDebounceMs = 10;
+    profile.frequencyOccurrenceTiming.cooldownAfterOnsetMs = 10;
+    profile.frequencyOccurrenceTiming.minTransientDurationMs = 90;
     profile.frequencyMatchTuning.scoreMin = 10000.0f;
     profile.frequencyMatchTuning.contrastMin = 50.0f;
 
     // Pattern rules.
-    profile.patternRulesConfig.requireSupportForAcceptance = true;
+    profile.patternRulesConfig.requireSupportForAcceptance = false;
 
     // Inspector configuration.
     profile.inspectionConfig = defaultInspectionConfig();

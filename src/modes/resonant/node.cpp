@@ -348,18 +348,15 @@ void Node::configureParameters() {
 }
 
 void Node::configureI2SParameters() {
-    // I2S/audio conditioning and profile tuning live here.
-    const detection::DetectionProfile& detectionProfile = activeDetectionProfile();
+    // I2S/audio conditioning.
     _audioSignal.setSmoothingFactor(0.5f);
     _audioSignal.setBaselineUpdateFactor(0.005f);
-    _frequencyEvidenceTuning = detectionProfile.frequencyTuning;
 
-    // Chirp tone is configured here so the node owns its output tuning.
+    // Transitional node wiring: keep the active tone and detector target aligned here
+    // while the node still runs frequency-based profiles.
     _chirpOutput.setToneHz(runtime::kDefaultChirpFrequencyHz);
     _freqBandStream.setTargetFrequencyHz(_chirpOutput.toneHz());
     _audioSignal.setBaselineTrackingQuietThreshold(20);
-
-    // Behavior timing comes from the active profiles via applyActiveProfiles().
 }
 
 // --- main update loop ---
@@ -543,19 +540,19 @@ void Node::handleSerialLine(const char* line) {
             return;
         }
 
-        FrequencyMatchEvaluation::Values freqTuning = _frequencyEvidenceTuning;
+        FrequencyMatchEvaluation::Values freqTuning = _activeDetectionProfile.frequencyMatchTuning;
 
         while ((token = strtok_r(nullptr, " ", &savePtr)) != nullptr) {
             FrequencyMatchEvaluation::parseToken(token, freqTuning);
         }
 
-        _frequencyEvidenceTuning = freqTuning;
+        _activeDetectionProfile.frequencyMatchTuning = freqTuning;
         applyActiveDetectionProfile();
 
         Serial.print(" freqScore=");
-        Serial.print(_frequencyEvidenceTuning.scoreMin, 0);
+        Serial.print(_activeDetectionProfile.frequencyMatchTuning.scoreMin, 0);
         Serial.print(" freqContrast=");
-        Serial.println(_frequencyEvidenceTuning.contrastMin, 1);
+        Serial.println(_activeDetectionProfile.frequencyMatchTuning.contrastMin, 1);
         return;
     }
     if (startsWithTokenIgnoreCase(line, "RB BEHAV")) {
@@ -714,9 +711,9 @@ void Node::handleDetectCommand(const char* line) {
     Serial.print(" requireSupportForAcceptance=");
     Serial.print(detectionProfile.patternRulesConfig.requireSupportForAcceptance ? 1 : 0);
     Serial.print(" freqScore=");
-    Serial.print(_frequencyEvidenceTuning.scoreMin, 0);
+    Serial.print(detectionProfile.frequencyMatchTuning.scoreMin, 0);
     Serial.print(" freqContrast=");
-    Serial.print(_frequencyEvidenceTuning.contrastMin, 1);
+    Serial.print(detectionProfile.frequencyMatchTuning.contrastMin, 1);
     Serial.print(" behavior_state=");
     Serial.print(_behavior.stateName());
     Serial.print(" behavior_idle=");
@@ -760,6 +757,7 @@ bool Node::setProfileFromName(const char* name) {
     }
 
     _profileKind = parsed;
+    _activeDetectionProfile = detection::detectionProfileForKind(_profileKind);
     applyActiveProfiles();
     return true;
 }
@@ -769,7 +767,7 @@ const char* Node::profileName() const {
 }
 
 const detection::DetectionProfile& Node::activeDetectionProfile() const {
-    return detection::detectionProfileForKind(_profileKind);
+    return _activeDetectionProfile;
 }
 
 const BehaviorGateConfig& Node::activeBehaviorProfile() const {
@@ -793,7 +791,8 @@ void Node::applyActiveDetectionProfile() {
 
     _detection.setOccurrenceSource(detectionProfile.occurrenceSource);
     _detection.setInspectionRules(detectionProfile.inspectionRules);
-    _detection.setFrequencyTuning(_frequencyEvidenceTuning);
+    _detection.setFrequencyOccurrenceTiming(detectionProfile.frequencyOccurrenceTiming);
+    _detection.setFrequencyMatchTuning(detectionProfile.frequencyMatchTuning);
     _detection.setInspectionConfig(detectionProfile.inspectionConfig);
     _detection.setPatternRulesConfig(detectionProfile.patternRulesConfig);
     _detection.setFieldStateConfig(detectionProfile.fieldStateConfig);

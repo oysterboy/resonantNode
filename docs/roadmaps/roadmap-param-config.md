@@ -108,6 +108,19 @@ clear export/verify workflow
 
 Unsaved runtime `PARAM SET` is not enough as the main 5-node workflow because it creates invisible drift.
 
+Live profile model for the future runtime-param route:
+
+```text
+keep one live profile instance per node
+startup builds it from factory defaults
+apply saved values on top if they exist
+apply live tuning on top of that
+RESET rebuilds the live profile from factory defaults again
+SAVE persists the current live profile state
+```
+
+This means `DetectionProfile` stays the default recipe, while `Node` or runtime state owns the mutable live copy.
+
 ---
 
 ## Implementation Order

@@ -54,7 +54,8 @@ public:
 
     void resetState();
 
-    void setFrequencyTuning(const FrequencyMatchEvaluation::Values& tuning);
+    void setFrequencyMatchTuning(const FrequencyMatchEvaluation::Values& tuning);
+    void setFrequencyOccurrenceTiming(const DetectionProfile::FrequencyOccurrenceTiming& timing);
     void setOccurrenceSource(ProfileOccurrenceSourceKind kind);
     void setInspectionRules(ProfileInspectionRulesKind kind);
     void setInspectionConfig(const InspectionConfig& config);
@@ -89,7 +90,8 @@ private:
         unsigned long nowMs
     );
 
-    FrequencyMatchEvaluation::Values _frequencyTuning = {};
+    FrequencyMatchEvaluation::Values _frequencyMatchTuning = {};
+    DetectionProfile::FrequencyOccurrenceTiming _frequencyOccurrenceTiming = {};
     // Profile configuration applied at fixed runtime stages.
     ProfileOccurrenceSourceKind _occurrenceSourceKind = ProfileOccurrenceSourceKind::Frequency;
     ProfileInspectionRulesKind _inspectionRulesKind = ProfileInspectionRulesKind::TonalPulse;

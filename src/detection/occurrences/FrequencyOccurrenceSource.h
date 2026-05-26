@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Occurrence.h"
+#include "../DetectionProfile.h"
 #include "../features/FrequencyMatchEvaluation.h"
 #include "../../io/AudioSignal.h"
 #include "../detectors/FrequencyMatchDetector.h"
@@ -21,6 +22,8 @@ public:
 
     void reset();
 
+    void setTimingConfig(const DetectionProfile::FrequencyOccurrenceTiming& timingConfig);
+
     void observeFrame(
         const AudioSignalFrame& frame,
         const detection::FrequencyEvidence& evidence,
@@ -36,6 +39,7 @@ private:
     bool _hasPending = false;
     detection::FrequencyEvidence _peakEvidence = {};
     FrequencyMatchDetector _detector = {};
+    DetectionProfile::FrequencyOccurrenceTiming _timingConfig = {};
     Occurrence _pending = {};
     unsigned long _lastEmittedReleaseMs = 0;
 };

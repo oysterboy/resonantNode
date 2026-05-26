@@ -94,10 +94,11 @@ void AnalyzerApp::startSequenceTest(unsigned long totalTrials, unsigned long per
         _detection = new detection::DetectionRuntime();
     }
     _detection->resetState();
-    _detection->setFrequencyTuning(_frequencyEvidenceTuning);
+    _detection->setFrequencyMatchTuning(_frequencyEvidenceTuning);
     const detection::DetectionProfile& selectedProfile = detection::detectionProfileForKind(_sequenceTest.profileKind);
     _detection->setOccurrenceSource(selectedProfile.occurrenceSource);
     _detection->setInspectionRules(selectedProfile.inspectionRules);
+    _detection->setFrequencyOccurrenceTiming(selectedProfile.frequencyOccurrenceTiming);
     _detection->setInspectionConfig(selectedProfile.inspectionConfig);
     _detection->setPatternRulesConfig(selectedProfile.patternRulesConfig);
     _detection->setFieldStateConfig(selectedProfile.fieldStateConfig);

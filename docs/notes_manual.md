@@ -149,6 +149,19 @@ RB BEHAV wait=100 refractory=0 idleTimeout=20000 idleTimeoutVariation=10000 idle
 - Show Analyzer SEQ help:
   - `SEQ help`
 
+## Route A Code Points
+
+The code-owned config sites are listed above in the detection and behavior sections.
+
+Use this route as a reminder only:
+
+```text
+detection defaults -> detection/profile code
+behavior defaults  -> behavior code
+output defaults    -> output code
+Node               -> status/log exposure only
+```
+
 ### Experimental profile
 
 - `ChirpExperimental`

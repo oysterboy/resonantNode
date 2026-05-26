@@ -21,14 +21,20 @@ void DetectionRuntime::resetState() {
     _lastInspectedOccurrence = {};
 }
 
-void DetectionRuntime::setFrequencyTuning(const FrequencyMatchEvaluation::Values& tuning) {
-    _frequencyTuning = tuning;
+void DetectionRuntime::setFrequencyMatchTuning(const FrequencyMatchEvaluation::Values& tuning) {
+    _frequencyMatchTuning = tuning;
+}
+
+void DetectionRuntime::setFrequencyOccurrenceTiming(const DetectionProfile::FrequencyOccurrenceTiming& timing) {
+    _frequencyOccurrenceTiming = timing;
+    _frequencyEmitter.setTimingConfig(_frequencyOccurrenceTiming);
 }
 
 void DetectionRuntime::setOccurrenceSource(ProfileOccurrenceSourceKind kind) {
     _occurrenceSourceKind = kind;
     _frequencyEmitter.reset();
     _ampEmitter.reset();
+    _frequencyEmitter.setTimingConfig(_frequencyOccurrenceTiming);
 }
 
 void DetectionRuntime::setInspectionRules(ProfileInspectionRulesKind kind) {
@@ -69,7 +75,7 @@ void DetectionRuntime::observeFrame(
 
     switch (_occurrenceSourceKind) {
         case ProfileOccurrenceSourceKind::Frequency:
-            _frequencyEmitter.observeFrame(frame, frequencyEvidence, _frequencyTuning);
+            _frequencyEmitter.observeFrame(frame, frequencyEvidence, _frequencyMatchTuning);
             break;
         case ProfileOccurrenceSourceKind::Amp:
             _ampEmitter.observeFrame(frame);

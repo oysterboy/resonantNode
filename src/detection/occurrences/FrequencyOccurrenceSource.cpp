@@ -2,14 +2,6 @@
 
 namespace detection {
 
-namespace {
-
-constexpr unsigned long kFrequencyReleaseDebounceMs = 20UL;
-constexpr unsigned long kFrequencyCooldownAfterOnsetMs = 300UL;
-constexpr unsigned long kFrequencyMinTransientDurationMs = 50UL;
-
-} // namespace
-
 FrequencyOccurrenceSource::FrequencyOccurrenceSource() = default;
 
 void FrequencyOccurrenceSource::reset() {
@@ -18,6 +10,10 @@ void FrequencyOccurrenceSource::reset() {
     _pending = {};
     _lastEmittedReleaseMs = 0;
     _detector.resetState();
+}
+
+void FrequencyOccurrenceSource::setTimingConfig(const DetectionProfile::FrequencyOccurrenceTiming& timingConfig) {
+    _timingConfig = timingConfig;
 }
 
 void FrequencyOccurrenceSource::applyFrequencyTuning(const FrequencyMatchEvaluation::Values& frequencyTuning) {
@@ -40,9 +36,9 @@ void FrequencyOccurrenceSource::observeFrame(
         frame.sampleTimeMs,
         frame.sampleIndex,
         frequencyTuning,
-        kFrequencyReleaseDebounceMs,
-        kFrequencyCooldownAfterOnsetMs,
-        kFrequencyMinTransientDurationMs);
+        _timingConfig.releaseDebounceMs,
+        _timingConfig.cooldownAfterOnsetMs,
+        _timingConfig.minTransientDurationMs);
 
     if (_detector.candidateActive && (!_peakEvidence.present
         || evidence.spectralContrast > _peakEvidence.spectralContrast

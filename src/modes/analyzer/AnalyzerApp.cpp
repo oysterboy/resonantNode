@@ -149,7 +149,7 @@ AnalyzerApp::AnalyzerApp(int inputPin)
       _ampTransientDiagnosticProbe(),
       _audioSignal(_audioSource),
       _freqBandStream() {
-    _frequencyEvidenceTuning = detection::detectionProfileForKind(detection::DetectionProfileKind::TonalPulse).frequencyTuning;
+    _frequencyEvidenceTuning = detection::detectionProfileForKind(detection::DetectionProfileKind::TonalPulse).frequencyMatchTuning;
 }
 
 void AnalyzerApp::begin() {

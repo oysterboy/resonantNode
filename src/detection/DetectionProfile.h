@@ -14,7 +14,7 @@ DetectionProfile
 
 Code-defined detection profile composition.
 Profiles select the active occurrence emitter, inspection rules, pattern rules,
-inspection config, field-state config, and frequency tuning.
+inspection config, field-state config, and frequency match tuning.
 
 Profiles declare composition; DetectionRuntime applies the selected fields at fixed stages.
 */
@@ -40,7 +40,13 @@ struct DetectionProfile {
     ProfileInspectionRulesKind inspectionRules = ProfileInspectionRulesKind::TonalPulse;
 
     // Stage configuration.
-    FrequencyMatchEvaluation::Values frequencyTuning = {};
+    struct FrequencyOccurrenceTiming {
+        unsigned long releaseDebounceMs = 20;
+        unsigned long cooldownAfterOnsetMs = 300;
+        unsigned long minTransientDurationMs = 80;
+    } frequencyOccurrenceTiming = {};
+
+    FrequencyMatchEvaluation::Values frequencyMatchTuning = {};
     PatternRulesConfig patternRulesConfig = {};
     InspectionConfig inspectionConfig = defaultInspectionConfig();
     FieldStateConfig fieldStateConfig = {};
@@ -55,14 +61,20 @@ inline DetectionProfile makeTonalPulseProfile() {
     profile.occurrenceSource = ProfileOccurrenceSourceKind::Frequency;
     profile.inspectionRules = ProfileInspectionRulesKind::TonalPulse;
 
-    profile.patternRulesConfig.requireSupportForAcceptance = true;
-    profile.frequencyTuning.scoreMin = 10000.0f;
-    profile.frequencyTuning.contrastMin = 50.0f;
+    // Frequency path tuning.
+    profile.frequencyOccurrenceTiming.releaseDebounceMs = 20;
+    profile.frequencyOccurrenceTiming.cooldownAfterOnsetMs = 300;
+    profile.frequencyOccurrenceTiming.minTransientDurationMs = 80;
+    profile.frequencyMatchTuning.scoreMin = 10000.0f;
+    profile.frequencyMatchTuning.contrastMin = 50.0f;
 
     // Inspector configuration.
-    profile.inspectionConfig = defaultInspectionConfig(); // shared inspector defaults
+    profile.inspectionConfig = defaultInspectionConfig();
     profile.inspectionConfig.ampWindowPreMs = 10;
     profile.inspectionConfig.ampWindowPostMs = 80;
+
+    // Pattern rules.
+    profile.patternRulesConfig.requireSupportForAcceptance = true;
 
     // Field-state windowing.
     profile.fieldStateConfig.occurrenceWindowMs = 3500;
@@ -83,9 +95,15 @@ inline DetectionProfile makeChirpExperimentalProfile() {
     profile.occurrenceSource = ProfileOccurrenceSourceKind::Amp;
     profile.inspectionRules = ProfileInspectionRulesKind::ChirpExperimental;
 
+    // Frequency path tuning.
+    profile.frequencyOccurrenceTiming.releaseDebounceMs = 20;
+    profile.frequencyOccurrenceTiming.cooldownAfterOnsetMs = 300;
+    profile.frequencyOccurrenceTiming.minTransientDurationMs = 80;
+    profile.frequencyMatchTuning.scoreMin = 10000.0f;
+    profile.frequencyMatchTuning.contrastMin = 50.0f;
+
+    // Pattern rules.
     profile.patternRulesConfig.requireSupportForAcceptance = true;
-    profile.frequencyTuning.scoreMin = 10000.0f;
-    profile.frequencyTuning.contrastMin = 50.0f;
 
     // Inspector configuration.
     profile.inspectionConfig = defaultInspectionConfig();
@@ -101,6 +119,7 @@ inline DetectionProfile makeChirpExperimentalProfile() {
     return profile;
 }
 
+// Profile lookup by kind.
 inline const DetectionProfile& detectionProfileForKind(DetectionProfileKind kind) {
     static const DetectionProfile kTonalPulse = makeTonalPulseProfile();
     static const DetectionProfile kChirpExperimental = makeChirpExperimentalProfile();
@@ -114,7 +133,7 @@ inline const DetectionProfile& detectionProfileForKind(DetectionProfileKind kind
     }
 }
 
-// Human-readable names for logs and help text.
+// Human-readable names for profile kinds used in logs and help text.
 inline const char* detectionProfileName(DetectionProfileKind kind) {
     switch (kind) {
         case DetectionProfileKind::TonalPulse:
@@ -125,6 +144,7 @@ inline const char* detectionProfileName(DetectionProfileKind kind) {
     return "unknown";
 }
 
+// Human-readable names for occurrence sources used in logs and help text.
 inline const char* profileOccurrenceSourceName(ProfileOccurrenceSourceKind kind) {
     switch (kind) {
         case ProfileOccurrenceSourceKind::Frequency:
@@ -135,6 +155,7 @@ inline const char* profileOccurrenceSourceName(ProfileOccurrenceSourceKind kind)
     return "unknown";
 }
 
+// Human-readable names for inspection-rule sets used in logs and help text.
 inline const char* profileInspectionRulesName(ProfileInspectionRulesKind kind) {
     switch (kind) {
         case ProfileInspectionRulesKind::TonalPulse:
@@ -145,6 +166,7 @@ inline const char* profileInspectionRulesName(ProfileInspectionRulesKind kind) {
     return "unknown";
 }
 
+// Parse profile names from user-facing text.
 inline bool detectionProfileKindFromName(const char* name, DetectionProfileKind& outKind) {
     if (name == nullptr) {
         return false;
@@ -163,5 +185,3 @@ inline bool detectionProfileKindFromName(const char* name, DetectionProfileKind&
 }
 
 } // namespace detection
-
-

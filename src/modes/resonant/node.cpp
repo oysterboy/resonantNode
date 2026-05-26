@@ -10,6 +10,14 @@
 #include "../../detection/inspector/FrequencyWindowProbe.h"
 #include "../../detection/patterns/PatternNames.h"
 
+#ifndef BUILD_DATE
+#define BUILD_DATE "unknown-date"
+#endif
+
+#ifndef BUILD_REV
+#define BUILD_REV 0
+#endif
+
 /*
 Node
 
@@ -109,6 +117,19 @@ void printProfileComposition(const detection::DetectionProfile& profile) {
     Serial.print(profile.fieldStateConfig.patternWindowMs);
 }
 
+void printBuildIdentity() {
+    char nodeIdBuffer[17];
+    const uint64_t nodeId = ESP.getEfuseMac();
+    snprintf(nodeIdBuffer, sizeof(nodeIdBuffer), "0x%012llX", static_cast<unsigned long long>(nodeId));
+
+    Serial.print(" build=");
+    Serial.print(BUILD_DATE);
+    Serial.print(" rev=");
+    Serial.print(BUILD_REV);
+    Serial.print(" node_id=");
+    Serial.print(nodeIdBuffer);
+}
+
 const char* behaviorGateName(const ResonantBehavior& behavior, unsigned long now, bool patternDetected, bool selfChirpSuppressed) {
     if (selfChirpSuppressed) {
         return "self_ignore";
@@ -191,6 +212,7 @@ void Node::begin() {
     Serial.print("RB PROFILE name=");
     Serial.print(profileName());
     printProfileComposition(activeDetectionProfile());
+    printBuildIdentity();
     Serial.println();
     Serial.print("RB startup baseline=");
     Serial.println(rbBaselineStateName());
@@ -694,7 +716,15 @@ void Node::handleDetectCommand(const char* line) {
     Serial.print(" freqScore=");
     Serial.print(_frequencyEvidenceTuning.scoreMin, 0);
     Serial.print(" freqContrast=");
-    Serial.println(_frequencyEvidenceTuning.contrastMin, 1);
+    Serial.print(_frequencyEvidenceTuning.contrastMin, 1);
+    Serial.print(" behavior_state=");
+    Serial.print(_behavior.stateName());
+    Serial.print(" behavior_idle=");
+    Serial.print(_behavior.idleEnabled() ? 1 : 0);
+    Serial.print(" output_busy=");
+    Serial.print(_behavior.outputBusy() ? 1 : 0);
+    printBuildIdentity();
+    Serial.println();
 }
 
 void Node::handleProfileCommand(const char* line) {
@@ -890,6 +920,7 @@ void Node::printRbSummary() const {
     Serial.print("ms");
     Serial.print(" profile=");
     Serial.print(profileName());
+    printBuildIdentity();
     Serial.println();
     Serial.print("RB baseline state=");
     Serial.println(rbBaselineStateName());

@@ -80,3 +80,28 @@ Still to do:
 [TODO] No generic runtime plugin graph.
 [TODO] No ParamRegistry work.
 ```
+
+## Pass 4 - Analyzer Hot Path Stabilization
+
+Goal:
+
+```text
+keep the analyzer diagnostics useful without letting debug output perturb timing
+```
+
+Done:
+
+```text
+[LANDED] Moved SEQ_CAND emission out of the audio hot path and into trial finalization.
+[LANDED] Kept candidate facts in trial diagnostics so the analyzer can still print full candidate detail.
+[LANDED] Reduced analyzer reporting to one source confidence and one pattern confidence.
+[LANDED] Simplified SEQ measurements to detector strength plus inspector strength.
+[LANDED] Kept the detector / inspector / pattern split visible in SEQ_EXPLAIN without duplicating raw window data.
+```
+
+Follow-up:
+
+```text
+[TODO] Re-run the 50-trial TonalPulse SEQ check and confirm the miss rate stays stable without relying on inline candidate logging.
+[TODO] Watch for any remaining timing skew between trial scheduling and pattern finalization.
+```

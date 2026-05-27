@@ -88,9 +88,8 @@ minimumSupport stays as the strength threshold for the required support target.
 [LANDED] ScalarOccurrenceSource is the unified scalar candidate source and selects the observed stream.
 [LANDED] FrequencyOccurrenceSource remains specialized and uses FrequencyMatchDetector.
 [REMOVED] FrequencyWindowProbe.*, OccurrenceWindowEvaluator.h, RawWindow core path, AmpDiagnosticProbe.*, AmpTransientDetector.*, AmpOccurrenceSource.* are absent from current src.zip.
-[PARTIAL] InspectionConfig still has named ampStrength + duplicateRisk fields, not ordered InspectionPlan modules.
-[PARTIAL] DetectionProfile still expresses inspector composition through named module toggles; it should eventually declare an explicit inspector composition shape / plan.
-[PARTIAL] OccurrenceInspector still hardcodes duplicate-risk + amp-strength annotation.
+[PARTIAL] InspectionConfig still exists as a legacy helper, but DetectionProfile now owns explicit InspectionPlan composition directly.
+[REMOVED] Duplicate-risk annotation has been dropped from the active inspector/pattern pipeline.
 [LANDED] PatternRulesConfig now names required support directly with EvidenceTarget.
 [TODO] TargetBandStrength is not implemented.
 ```
@@ -153,7 +152,7 @@ Active code now uses `PatternRulesConfig.requiredSupportTarget`; the historical 
 [LANDED] Add InspectionModuleKind and EvidenceTarget.
 [LANDED] Replace named InspectionConfig fields with ordered InspectionPlan.
 [LANDED] Refactor OccurrenceInspector to loop plan modules.
-[PARTIAL] Move DetectionProfile toward explicit inspector composition instead of named module toggles.
+[LANDED] Move DetectionProfile toward explicit inspector composition instead of named module toggles.
 [LANDED] Derive inspector acceptance from the selected source/profile kind instead of storing a separate inspectionRules field.
 [PARTIAL] Route scalar evidence into configured evidence targets.
 [TODO] Add FeatureHistory scalar projections for the useful parts of FrequencyFeatureFrame, not only score and contrast.
@@ -178,12 +177,7 @@ Active code now uses `PatternRulesConfig.requiredSupportTarget`; the historical 
 
 ### Pass D5 — future TargetBandStrength
 
-```text
-[TODO] Add FeatureStreamId::TargetBandStrength or equivalent target-band scalar feature.
-[TODO] Add InspectionPlan module: ScalarFeatureStrength → TargetBandStrength.
-[TODO] Add PatternRulesConfig support for TargetBandStrength if later measurements prove useful.
-[TODO] Use it for directed/locality-aware TonalPulse only after measurements prove useful.
-```
+deferred
 
 ### Pass D6 — later detection family work
 

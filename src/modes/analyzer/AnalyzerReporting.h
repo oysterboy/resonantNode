@@ -167,7 +167,6 @@ struct AnalyzerOccurrenceObservation {
     float confidence = 0.0f;
 
     const char* mainRejectReason = "none";
-    bool duplicateRisk = false;
     const char* rejectReason = "none";
 };
 

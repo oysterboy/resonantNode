@@ -71,9 +71,9 @@ void DetectionRuntime::setOccurrenceSource(OccurrenceSourceKind kind) {
     _scalarEmitter.setConfig(_scalarTransientConfig);
 }
 
-void DetectionRuntime::setInspectionConfig(const InspectionConfig& config) {
-    _inspectionConfig = config;
-    _occurrenceInspector.configure(_inspectionConfig);
+void DetectionRuntime::setInspectionPlan(const InspectionPlan& plan) {
+    _inspectionPlan = plan;
+    _occurrenceInspector.configure(_inspectionPlan);
 }
 
 void DetectionRuntime::setPatternRulesConfig(const PatternRulesConfig& config) {

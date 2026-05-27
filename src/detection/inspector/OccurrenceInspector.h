@@ -15,7 +15,7 @@ Does not decide pattern validity or behavior eligibility.
 */
 class OccurrenceInspector {
 public:
-    void configure(const InspectionConfig& config);
+    void configure(const InspectionPlan& plan);
     void reset();
 
     InspectedOccurrence inspect(
@@ -33,16 +33,12 @@ private:
         const Occurrence& candidate,
         const FeatureHistory* featureHistory
     ) const;
-    void annotateDuplicateRisk(
-        InspectedOccurrence& out,
-        const Occurrence& candidate,
-        const DuplicateRiskInspectionConfig& config
-    ) const;
     void annotateAmpStrength(
         InspectedOccurrence& out,
         const Occurrence& candidate,
         const FeatureHistory* featureHistory,
-        const ScalarFeatureInspectionConfig& config
+        const ScalarFeatureInspectionConfig& config,
+        EvidenceTarget target
     ) const;
     void runInspectionModule(
         InspectedOccurrence& out,
@@ -60,10 +56,7 @@ private:
         const FeatureHistory* featureHistory
     ) const;
 
-    mutable unsigned long _lastAcceptedAmpMs = 0;
-    mutable unsigned long _lastAcceptedFrequencyMs = 0;
-    InspectionConfig _config = defaultInspectionConfig();
-    InspectionPlan _inspectionPlan = makeInspectionPlan(_config);
+    InspectionPlan _inspectionPlan = {};
 };
 
 } // namespace detection

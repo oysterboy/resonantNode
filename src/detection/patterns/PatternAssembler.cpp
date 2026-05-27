@@ -35,8 +35,6 @@ PatternCandidate makePatternCandidateFromSignal(const detection::InspectedOccurr
             candidate.frequencyScoreStrength = source.frequencyScoreStrength;
             candidate.frequencyContrastQuality = source.frequencyContrastQuality;
             candidate.targetBandStrength = source.targetBandStrength;
-            candidate.duplicateRisk = source.duplicateRisk;
-            candidate.duplicateRiskScore = source.duplicateRiskScore;
             candidate.firstPulseMs = candidate.acceptedMs;
             candidate.lastPulseMs = candidate.acceptedMs;
             candidate.occurrenceSlots[0].kindTag = static_cast<uint8_t>(source.kind);
@@ -71,8 +69,6 @@ PatternCandidate makePatternCandidateFromSignal(const detection::InspectedOccurr
             candidate.frequencyScoreStrength = source.frequencyScoreStrength;
             candidate.frequencyContrastQuality = source.frequencyContrastQuality;
             candidate.targetBandStrength = source.targetBandStrength;
-            candidate.duplicateRisk = source.duplicateRisk;
-            candidate.duplicateRiskScore = source.duplicateRiskScore;
             candidate.firstPulseMs = candidate.acceptedMs;
             candidate.lastPulseMs = candidate.acceptedMs;
             candidate.occurrenceSlots[0].kindTag = static_cast<uint8_t>(source.kind);

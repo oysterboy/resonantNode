@@ -66,8 +66,6 @@ struct Occurrence {
     StrengthClass frequencyScoreStrength = StrengthClass::Unknown;
     StrengthClass frequencyContrastQuality = StrengthClass::Unknown;
     StrengthClass targetBandStrength = StrengthClass::Unknown;
-    bool duplicateRisk = false;
-    float duplicateRiskScore = 0.0f;
 
     TransientEvidence transient = {};
     FrequencyFeatureFrame frequency = {};

@@ -56,7 +56,7 @@ struct DetectionProfile {
     FrequencyMatchConfig frequencyMatch = {};
     ScalarTransientConfig scalarTransient = {};
     PatternRulesConfig patternRulesConfig = {};
-    InspectionConfig inspectionConfig = defaultInspectionConfig();
+    InspectionPlan inspectionPlan = {};
     FieldStateConfig fieldStateConfig = {};
 };
 
@@ -75,11 +75,14 @@ inline DetectionProfile makeTonalPulseProfile() {
     profile.frequencyMatch.scoreMin = 10000.0f;
     profile.frequencyMatch.contrastMin = 50.0f;
 
-    // Inspector configuration.
-    profile.inspectionConfig = defaultInspectionConfig();
-    profile.inspectionConfig.frequencyScore.enabled = false;
-    profile.inspectionConfig.ampStrength.windowPreMs = 10;
-    profile.inspectionConfig.ampStrength.windowPostMs = 10;
+    // Inspector composition.
+    profile.inspectionPlan = {};
+    profile.inspectionPlan.modules[0].kind = InspectionModuleKind::ScalarFeatureStrength;
+    profile.inspectionPlan.modules[0].target = EvidenceTarget::AmpStrength;
+    profile.inspectionPlan.modules[0].scalar.stream = FeatureStreamId::AmpEnvelope;
+    profile.inspectionPlan.modules[0].scalar.windowPreMs = 10;
+    profile.inspectionPlan.modules[0].scalar.windowPostMs = 10;
+    profile.inspectionPlan.count = 1;
 
     // Pattern rules.
     profile.patternRulesConfig.requireSupportForAcceptance = true;
@@ -114,14 +117,14 @@ inline DetectionProfile makeAmpProfile() {
     profile.frequencyMatch.contrastMin = 50.0f;
 
 
-    // Inspector configuration.
-    profile.inspectionConfig = defaultInspectionConfig();
-    profile.inspectionConfig.ampStrength.enabled = false;
-    profile.inspectionConfig.frequencyScore.enabled = true;
-    profile.inspectionConfig.frequencyScore.stream = FeatureStreamId::FrequencyScore;
-    profile.inspectionConfig.frequencyScore.target = EvidenceTarget::FrequencyScoreStrength;
-    profile.inspectionConfig.frequencyScore.windowPreMs = 20;
-    profile.inspectionConfig.frequencyScore.windowPostMs = 120;
+    // Inspector composition.
+    profile.inspectionPlan = {};
+    profile.inspectionPlan.modules[0].kind = InspectionModuleKind::ScalarFeatureStrength;
+    profile.inspectionPlan.modules[0].target = EvidenceTarget::FrequencyScoreStrength;
+    profile.inspectionPlan.modules[0].scalar.stream = FeatureStreamId::FrequencyScore;
+    profile.inspectionPlan.modules[0].scalar.windowPreMs = 20;
+    profile.inspectionPlan.modules[0].scalar.windowPostMs = 120;
+    profile.inspectionPlan.count = 1;
 
         // Pattern rules.
     profile.patternRulesConfig.requireSupportForAcceptance = true;
@@ -157,11 +160,14 @@ inline DetectionProfile makeChirpExperimentalProfile() {
     profile.patternRulesConfig.requiredSupportTarget = EvidenceTarget::AmpStrength;
     profile.patternRulesConfig.minimumSupportStrength = StrengthClass::Medium;
 
-    // Inspector configuration.
-    profile.inspectionConfig = defaultInspectionConfig();
-    profile.inspectionConfig.frequencyScore.enabled = false;
-    profile.inspectionConfig.ampStrength.windowPreMs = 20;
-    profile.inspectionConfig.ampStrength.windowPostMs = 120;
+    // Inspector composition.
+    profile.inspectionPlan = {};
+    profile.inspectionPlan.modules[0].kind = InspectionModuleKind::ScalarFeatureStrength;
+    profile.inspectionPlan.modules[0].target = EvidenceTarget::AmpStrength;
+    profile.inspectionPlan.modules[0].scalar.stream = FeatureStreamId::AmpEnvelope;
+    profile.inspectionPlan.modules[0].scalar.windowPreMs = 20;
+    profile.inspectionPlan.modules[0].scalar.windowPostMs = 120;
+    profile.inspectionPlan.count = 1;
 
     // Field-state windowing.
     profile.fieldStateConfig.occurrenceWindowMs = 4000;

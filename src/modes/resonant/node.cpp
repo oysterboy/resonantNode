@@ -78,7 +78,25 @@ const char* evidenceTargetName(detection::EvidenceTarget value) {
     }
 }
 
-bool startsWithTokenIgnoreCase(const char* line, const char* token) {
+const char* inspectionPlanName(const detection::InspectionPlan& plan) {
+    if (plan.count == 1 &&
+        plan.modules[0].kind == detection::InspectionModuleKind::ScalarFeatureStrength) {
+        switch (plan.modules[0].target) {
+            case detection::EvidenceTarget::FrequencyScoreStrength:
+                return "frequency_score";
+            case detection::EvidenceTarget::TargetBandStrength:
+                return "target_band";
+            case detection::EvidenceTarget::AmpStrength:
+            default:
+                return "amp_strength";
+        }
+    }
+
+    return "custom";
+}
+}
+
+static bool startsWithTokenIgnoreCase(const char* line, const char* token) {
     while (*token != '\0') {
         if (*line == '\0') {
             return false;
@@ -93,7 +111,7 @@ bool startsWithTokenIgnoreCase(const char* line, const char* token) {
     return true;
 }
 
-bool equalsIgnoreCase(const char* a, const char* b) {
+static bool equalsIgnoreCase(const char* a, const char* b) {
     while (*a != '\0' && *b != '\0') {
         if (toupper(static_cast<unsigned char>(*a)) != toupper(static_cast<unsigned char>(*b))) {
             return false;
@@ -116,7 +134,8 @@ const char* detectionProfileKindName(detection::DetectionProfileKind kind) {
 void printProfileComposition(const detection::DetectionProfile& profile) {
     Serial.print(" emitters=");
     Serial.print(detection::occurrenceSourceKindName(profile.occurrenceSource));
-    Serial.print(" inspectionAcceptance=derived_from_source");
+    Serial.print(" inspectionPlan=");
+    Serial.print(inspectionPlanName(profile.inspectionPlan));
     Serial.print(" fieldStateConfig=");
     Serial.print(profile.fieldStateConfig.occurrenceWindowMs);
     Serial.print("/");
@@ -129,7 +148,8 @@ void printDetectionProfileDetails(const detection::DetectionProfile& profile) {
     Serial.println(detection::detectionProfileName(profile.kind));
     Serial.print("  occurrenceSource=");
     Serial.println(detection::occurrenceSourceKindName(profile.occurrenceSource));
-    Serial.println("  inspectionAcceptance=derived_from_source");
+    Serial.print("  inspectionPlan=");
+    Serial.println(inspectionPlanName(profile.inspectionPlan));
     Serial.print("  freqMatch.releaseDebounceMs=");
     Serial.println(profile.frequencyMatch.releaseDebounceMs);
     Serial.print("  freqMatch.cooldownAfterOnsetMs=");
@@ -140,22 +160,28 @@ void printDetectionProfileDetails(const detection::DetectionProfile& profile) {
     Serial.println(profile.frequencyMatch.scoreMin, 0);
     Serial.print("  freqMatch.contrastMin=");
     Serial.println(profile.frequencyMatch.contrastMin, 1);
-    Serial.print("  inspection.ampStrength.enabled=");
-    Serial.println(profile.inspectionConfig.ampStrength.enabled ? 1 : 0);
-    Serial.print("  inspection.ampStrength.windowPreMs=");
-    Serial.println(profile.inspectionConfig.ampStrength.windowPreMs);
-    Serial.print("  inspection.ampStrength.windowPostMs=");
-    Serial.println(profile.inspectionConfig.ampStrength.windowPostMs);
-    Serial.print("  inspection.ampStrength.strength.strong=");
-    Serial.println(profile.inspectionConfig.ampStrength.strength.strongPeakThreshold, 1);
-    Serial.print("  inspection.ampStrength.strength.medium=");
-    Serial.println(profile.inspectionConfig.ampStrength.strength.mediumPeakThreshold, 1);
-    Serial.print("  inspection.ampStrength.strength.weak=");
-    Serial.println(profile.inspectionConfig.ampStrength.strength.weakPeakThreshold, 1);
-    Serial.print("  inspection.duplicateRisk.enabled=");
-    Serial.println(profile.inspectionConfig.duplicateRisk.enabled ? 1 : 0);
-    Serial.print("  inspection.duplicateRisk.windowMs=");
-    Serial.println(profile.inspectionConfig.duplicateRisk.windowMs);
+    for (size_t i = 0; i < profile.inspectionPlan.count; ++i) {
+        const auto& module = profile.inspectionPlan.modules[i];
+        Serial.print("  inspectionPlan.module[");
+        Serial.print(static_cast<unsigned int>(i));
+        Serial.print("].kind=");
+        Serial.print(module.kind == detection::InspectionModuleKind::ScalarFeatureStrength ? "ScalarFeatureStrength" : "None");
+        Serial.print(" target=");
+        Serial.print(evidenceTargetName(module.target));
+        if (module.kind == detection::InspectionModuleKind::ScalarFeatureStrength) {
+            Serial.print(" stream=");
+            Serial.print(module.scalar.stream == detection::FeatureStreamId::AmpEnvelope ? "AmpEnvelope" :
+                         (module.scalar.stream == detection::FeatureStreamId::FrequencyScore ? "FrequencyScore" :
+                         (module.scalar.stream == detection::FeatureStreamId::FrequencyContrast ? "FrequencyContrast" :
+                         (module.scalar.stream == detection::FeatureStreamId::AmbientFloor ? "AmbientFloor" : "Unknown"))));
+            Serial.print(" windowPreMs=");
+            Serial.print(module.scalar.windowPreMs);
+            Serial.print(" windowPostMs=");
+            Serial.println(module.scalar.windowPostMs);
+        } else {
+            Serial.println();
+        }
+    }
     Serial.print("  pattern.requireSupportForAcceptance=");
     Serial.println(profile.patternRulesConfig.requireSupportForAcceptance ? 1 : 0);
     Serial.print("  pattern.requiredSupportTarget=");
@@ -238,8 +264,6 @@ const char* chirpPatternName(ChirpOutput::ChirpPattern pattern) {
     }
 
     return "unknown";
-}
-
 }
 
 // --- constructors ---
@@ -809,9 +833,8 @@ void Node::handleDetectCommand(const char* line) {
     Serial.print(detection::detectionProfileName(detectionProfile.kind));
     Serial.print(" emitters=");
     Serial.print(detection::occurrenceSourceKindName(detectionProfile.occurrenceSource));
-    Serial.print(" inspectionAcceptance=");
-    Serial.print(detection::occurrenceSourceKindName(detectionProfile.occurrenceSource));
-    Serial.print("_derived");
+    Serial.print(" inspectionPlan=");
+    Serial.print(inspectionPlanName(detectionProfile.inspectionPlan));
     Serial.print(" requireSupportForAcceptance=");
     Serial.print(detectionProfile.patternRulesConfig.requireSupportForAcceptance ? 1 : 0);
     Serial.print(" requiredSupportTarget=");
@@ -902,7 +925,7 @@ void Node::applyActiveDetectionProfile() {
     _detection.setOccurrenceSource(detectionProfile.occurrenceSource);
     _detection.setFrequencyMatchConfig(detectionProfile.frequencyMatch);
     _detection.setScalarTransientConfig(detectionProfile.scalarTransient);
-    _detection.setInspectionConfig(detectionProfile.inspectionConfig);
+    _detection.setInspectionPlan(detectionProfile.inspectionPlan);
     _detection.setPatternRulesConfig(detectionProfile.patternRulesConfig);
     _detection.setFieldStateConfig(detectionProfile.fieldStateConfig);
     _detection.setProfileName(detection::detectionProfileName(detectionProfile.kind));

@@ -98,7 +98,7 @@ void AnalyzerApp::startSequenceTest(unsigned long totalTrials, unsigned long per
     _detection->setFrequencyMatchConfig(selectedProfile.frequencyMatch);
     _detection->setScalarTransientConfig(selectedProfile.scalarTransient);
     _detection->setOccurrenceSource(selectedProfile.occurrenceSource);
-    _detection->setInspectionConfig(selectedProfile.inspectionConfig);
+    _detection->setInspectionPlan(selectedProfile.inspectionPlan);
     _detection->setPatternRulesConfig(selectedProfile.patternRulesConfig);
     _detection->setFieldStateConfig(selectedProfile.fieldStateConfig);
     _detection->setProfileName(detection::detectionProfileName(selectedProfile.kind));

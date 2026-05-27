@@ -76,8 +76,6 @@ PatternResult makeInvalidResult(const PatternCandidate& candidate,
     result.frequencyScoreStrength = candidate.frequencyScoreStrength;
     result.frequencyContrastQuality = candidate.frequencyContrastQuality;
     result.targetBandStrength = candidate.targetBandStrength;
-    result.duplicateRisk = false;
-    result.duplicateRiskScore = 0.0f;
     result.patternCandidateAccepted = false;
     result.patternMatched = false;
     result.supportMatched = false;
@@ -132,8 +130,6 @@ PatternResult PatternRules::evaluateFrequencyPattern(
     result.frequencyScoreStrength = candidate.frequencyScoreStrength;
     result.frequencyContrastQuality = candidate.frequencyContrastQuality;
     result.targetBandStrength = candidate.targetBandStrength;
-    result.duplicateRisk = candidate.duplicateRisk;
-    result.duplicateRiskScore = candidate.duplicateRiskScore;
     result.supportMatched = true;
     if (_config.requireSupportForAcceptance) {
         const StrengthClass supportStrength = supportStrengthForTarget(candidate, _config.requiredSupportTarget);

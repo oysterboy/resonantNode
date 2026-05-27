@@ -50,15 +50,9 @@ struct AmpStrengthInspectionConfig {
     uint32_t windowPostMs = 120;
 };
 
-struct DuplicateRiskInspectionConfig {
-    bool enabled = true;
-    uint32_t windowMs = 150;
-};
-
 enum class InspectionModuleKind {
     None,
     ScalarFeatureStrength,
-    DuplicateRisk,
 };
 
 enum class EvidenceTarget {
@@ -72,7 +66,6 @@ enum class EvidenceTarget {
 struct ScalarFeatureInspectionConfig {
     bool enabled = true;
     FeatureStreamId stream = FeatureStreamId::AmpEnvelope;
-    EvidenceTarget target = EvidenceTarget::AmpStrength;
     AmpStrengthConfig strength = {};
     uint32_t windowPreMs = 20;
     uint32_t windowPostMs = 120;
@@ -82,7 +75,6 @@ struct InspectionModuleConfig {
     InspectionModuleKind kind = InspectionModuleKind::None;
     EvidenceTarget target = EvidenceTarget::None;
     ScalarFeatureInspectionConfig scalar = {};
-    DuplicateRiskInspectionConfig duplicateRisk = {};
 };
 
 static constexpr size_t kMaxInspectionModules = 4;
@@ -97,7 +89,6 @@ struct InspectionPlan {
 struct InspectionConfig {
     AmpStrengthInspectionConfig ampStrength = {};
     ScalarFeatureInspectionConfig frequencyScore = {};
-    DuplicateRiskInspectionConfig duplicateRisk = {};
 };
 
 inline InspectionPlan makeInspectionPlan(const InspectionConfig& config) {
@@ -108,7 +99,6 @@ inline InspectionPlan makeInspectionPlan(const InspectionConfig& config) {
         plan.modules[plan.count].target = EvidenceTarget::AmpStrength;
         plan.modules[plan.count].scalar.enabled = config.ampStrength.enabled;
         plan.modules[plan.count].scalar.stream = FeatureStreamId::AmpEnvelope;
-        plan.modules[plan.count].scalar.target = EvidenceTarget::AmpStrength;
         plan.modules[plan.count].scalar.strength = config.ampStrength.strength;
         plan.modules[plan.count].scalar.windowPreMs = config.ampStrength.windowPreMs;
         plan.modules[plan.count].scalar.windowPostMs = config.ampStrength.windowPostMs;
@@ -120,17 +110,9 @@ inline InspectionPlan makeInspectionPlan(const InspectionConfig& config) {
         plan.modules[plan.count].target = EvidenceTarget::FrequencyScoreStrength;
         plan.modules[plan.count].scalar.enabled = config.frequencyScore.enabled;
         plan.modules[plan.count].scalar.stream = config.frequencyScore.stream;
-        plan.modules[plan.count].scalar.target = config.frequencyScore.target;
         plan.modules[plan.count].scalar.strength = config.frequencyScore.strength;
         plan.modules[plan.count].scalar.windowPreMs = config.frequencyScore.windowPreMs;
         plan.modules[plan.count].scalar.windowPostMs = config.frequencyScore.windowPostMs;
-        ++plan.count;
-    }
-
-    if (config.duplicateRisk.enabled) {
-        plan.modules[plan.count].kind = InspectionModuleKind::DuplicateRisk;
-        plan.modules[plan.count].target = EvidenceTarget::None;
-        plan.modules[plan.count].duplicateRisk = config.duplicateRisk;
         ++plan.count;
     }
 
@@ -141,7 +123,6 @@ inline InspectionConfig defaultInspectionConfig() {
     InspectionConfig config;
     config.ampStrength = AmpStrengthInspectionConfig{};
     config.frequencyScore = ScalarFeatureInspectionConfig{};
-    config.duplicateRisk = DuplicateRiskInspectionConfig{};
     return config;
 }
 

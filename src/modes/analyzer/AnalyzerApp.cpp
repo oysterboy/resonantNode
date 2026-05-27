@@ -119,8 +119,6 @@ const char* occurrenceRejectReasonName(detection::OccurrenceRejectReason reason)
             return "too_weak";
         case detection::OccurrenceRejectReason::BelowThreshold:
             return "below_threshold";
-        case detection::OccurrenceRejectReason::DuplicateRisk:
-            return "duplicate_risk";
         case detection::OccurrenceRejectReason::Cooldown:
             return "cooldown";
         case detection::OccurrenceRejectReason::MissingFrequencyEvidence:
@@ -167,6 +165,40 @@ const char* evidenceTargetName(detection::EvidenceTarget value) {
         default:
             return "None";
     }
+}
+
+const char* inspectionPlanName(const detection::InspectionPlan& plan) {
+    if (plan.count == 1 &&
+        plan.modules[0].kind == detection::InspectionModuleKind::ScalarFeatureStrength) {
+        switch (plan.modules[0].target) {
+            case detection::EvidenceTarget::FrequencyScoreStrength:
+                return "frequency_score";
+            case detection::EvidenceTarget::TargetBandStrength:
+                return "target_band";
+            case detection::EvidenceTarget::AmpStrength:
+            default:
+                return "amp_strength";
+        }
+    }
+
+    return "custom";
+}
+
+const char* inspectionModulesName(const detection::InspectionPlan& plan) {
+    if (plan.count == 1 &&
+        plan.modules[0].kind == detection::InspectionModuleKind::ScalarFeatureStrength) {
+        return "ScalarFeatureStrength";
+    }
+
+    return "custom";
+}
+
+const char* inspectionEvidenceTargetsName(const detection::InspectionPlan& plan) {
+    if (plan.count > 0 && plan.modules[0].kind == detection::InspectionModuleKind::ScalarFeatureStrength) {
+        return evidenceTargetName(plan.modules[0].target);
+    }
+
+    return "none";
 }
 
 // -----------------------------------------------------------------------------
@@ -601,7 +633,6 @@ AnalyzerReport AnalyzerApp::buildSequenceAnalyzerReport(unsigned long trialNumbe
             ? occurrenceRejectReasonName(runtimeInspectedOccurrence->rejectReason)
             : "none";
         report.occurrences.rejectReason = report.occurrences.mainRejectReason;
-        report.occurrences.duplicateRisk = occurrence.duplicateRisk;
     } else {
         report.occurrences.kind = "none";
         report.occurrences.primarySource = "unknown";
@@ -618,7 +649,6 @@ AnalyzerReport AnalyzerApp::buildSequenceAnalyzerReport(unsigned long trialNumbe
         report.occurrences.confidence = trialHasPipelineEvidence ? runtimePatternResult->confidence : 0.0f;
         report.occurrences.mainRejectReason = analyzerReasonName(report.classification.reason);
         report.occurrences.rejectReason = report.occurrences.mainRejectReason;
-        report.occurrences.duplicateRisk = duplicateCount > 0;
     }
 
     report.inspection.inspected = diagnostics.rawCandidateCount;
@@ -669,15 +699,9 @@ AnalyzerReport AnalyzerApp::buildSequenceAnalyzerReport(unsigned long trialNumbe
     report.profileDetail.summary = analyzerProfileDetailSummary(_sequenceTest.profileKind);
     report.profileDetail.emitter = detection::occurrenceSourceKindName(selectedProfile.occurrenceSource);
     report.profileDetail.inspectionAcceptance = detection::occurrenceSourceKindName(selectedProfile.occurrenceSource);
-    report.profileDetail.inspectionPlan = selectedProfile.patternRulesConfig.requireSupportForAcceptance
-        ? "scalar_feature_strength+duplicate_risk"
-        : "duplicate_risk";
-    report.profileDetail.inspectionModules = selectedProfile.patternRulesConfig.requireSupportForAcceptance
-        ? "ScalarFeatureStrength,DuplicateRisk"
-        : "DuplicateRisk";
-    report.profileDetail.evidenceTargets = selectedProfile.patternRulesConfig.requireSupportForAcceptance
-        ? evidenceTargetName(selectedProfile.patternRulesConfig.requiredSupportTarget)
-        : "none";
+    report.profileDetail.inspectionPlan = inspectionPlanName(selectedProfile.inspectionPlan);
+    report.profileDetail.inspectionModules = inspectionModulesName(selectedProfile.inspectionPlan);
+    report.profileDetail.evidenceTargets = inspectionEvidenceTargetsName(selectedProfile.inspectionPlan);
     report.profileDetail.requiredSupportTarget = evidenceTargetName(selectedProfile.patternRulesConfig.requiredSupportTarget);
     report.profileDetail.ampStrength = selectedProfile.patternRulesConfig.requireSupportForAcceptance ? "enabled" : "disabled";
     report.profileDetail.ampStrengthMin = strengthClassName(selectedProfile.patternRulesConfig.minimumSupportStrength);

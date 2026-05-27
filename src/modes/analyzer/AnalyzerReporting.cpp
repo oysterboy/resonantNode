@@ -56,8 +56,6 @@ const char* occurrenceRejectReasonName(detection::OccurrenceRejectReason reason)
             return "too_weak";
         case detection::OccurrenceRejectReason::BelowThreshold:
             return "below_threshold";
-        case detection::OccurrenceRejectReason::DuplicateRisk:
-            return "duplicate_risk";
         case detection::OccurrenceRejectReason::Cooldown:
             return "cooldown";
         case detection::OccurrenceRejectReason::MissingFrequencyEvidence:
@@ -284,9 +282,7 @@ void AnalyzerApp::printSequenceExplain(const AnalyzerReport& report) const {
     Serial.print(" confidence=");
     Serial.print(report.occurrences.confidence, 2);
     Serial.print(" reject_reason=");
-    Serial.print(report.occurrences.rejectReason != nullptr ? report.occurrences.rejectReason : "none");
-    Serial.print(" duplicate_risk=");
-    Serial.println(report.occurrences.duplicateRisk ? 1 : 0);
+    Serial.println(report.occurrences.rejectReason != nullptr ? report.occurrences.rejectReason : "none");
 
     Serial.println("3 inspectors:");
     Serial.print("module_results: module_target=");
@@ -368,9 +364,7 @@ void AnalyzerApp::printSequenceExplain(const AnalyzerReport& report) const {
         Serial.print(" confidence=");
         Serial.print(report.occurrences.confidence, 2);
         Serial.print(" A_main_reject=");
-        Serial.print(report.occurrences.mainRejectReason != nullptr ? report.occurrences.mainRejectReason : "none");
-        Serial.print(" A_duplicate_risk=");
-        Serial.println(report.occurrences.duplicateRisk ? 1 : 0);
+        Serial.println(report.occurrences.mainRejectReason != nullptr ? report.occurrences.mainRejectReason : "none");
 
         Serial.println("custom_pattern:");
         Serial.print("valid=");

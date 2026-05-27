@@ -16,14 +16,15 @@ void fillScalarStrengthObservation(
     float peak,
     float floor,
     bool available,
-    const detection::ScalarFeatureInspectionConfig& config
+    const detection::ScalarFeatureInspectionConfig& config,
+    detection::EvidenceTarget target
 ) {
     const float lift = peak - floor;
     const detection::StrengthClass strength = available ? classifyAmpStrength(peak, available, config.strength) : detection::StrengthClass::Unknown;
 
     out.occurrence.ampLevel = peak;
     out.occurrence.ampBaseline = floor;
-    switch (config.target) {
+    switch (target) {
         case detection::EvidenceTarget::AmpStrength:
             out.ampStrength = strength;
             {
@@ -60,14 +61,11 @@ void fillScalarStrengthObservation(
 
 namespace detection {
 
-void OccurrenceInspector::configure(const InspectionConfig& config) {
-    _config = config;
-    _inspectionPlan = makeInspectionPlan(_config);
+void OccurrenceInspector::configure(const InspectionPlan& plan) {
+    _inspectionPlan = plan;
 }
 
 void OccurrenceInspector::reset() {
-    _lastAcceptedAmpMs = 0;
-    _lastAcceptedFrequencyMs = 0;
 }
 
 void OccurrenceInspector::inspectAcceptedOccurrence(
@@ -75,8 +73,6 @@ void OccurrenceInspector::inspectAcceptedOccurrence(
     const Occurrence& candidate,
     const FeatureHistory* featureHistory
 ) const {
-    out.duplicateRisk = false;
-    out.duplicateRiskScore = 0.0f;
     out.ampStrength = StrengthClass::Unknown;
     out.ampStrengthEvidence = {};
     out.frequencyScoreStrength = StrengthClass::Unknown;
@@ -94,62 +90,14 @@ void OccurrenceInspector::inspectAcceptedOccurrence(
     out.occurrence.frequencyScoreStrength = out.frequencyScoreStrength;
     out.occurrence.frequencyContrastQuality = out.frequencyContrastQuality;
     out.occurrence.targetBandStrength = out.targetBandStrength;
-    out.occurrence.duplicateRisk = out.duplicateRisk;
-    out.occurrence.duplicateRiskScore = out.duplicateRiskScore;
-}
-
-void OccurrenceInspector::annotateDuplicateRisk(
-    InspectedOccurrence& out,
-    const Occurrence& candidate,
-    const DuplicateRiskInspectionConfig& config
-) const {
-    if (!config.enabled) {
-        return;
-    }
-
-    const unsigned long acceptedMs = candidate.releaseMs != 0 ? candidate.releaseMs
-                                                              : (candidate.endMs != 0 ? candidate.endMs
-                                                                                     : candidate.peakMs);
-    if (acceptedMs == 0) {
-        return;
-    }
-
-    unsigned long* lastAcceptedMs = nullptr;
-    if (candidate.kind == OccurrenceKind::FrequencyMatch) {
-        lastAcceptedMs = &_lastAcceptedFrequencyMs;
-    } else if (candidate.kind == OccurrenceKind::AmpTransient) {
-        lastAcceptedMs = &_lastAcceptedAmpMs;
-    }
-
-    if (lastAcceptedMs == nullptr) {
-        return;
-    }
-
-    if (*lastAcceptedMs == 0) {
-        *lastAcceptedMs = acceptedMs;
-        return;
-    }
-
-    const unsigned long elapsedMs = static_cast<unsigned long>(acceptedMs - *lastAcceptedMs);
-    if (elapsedMs < config.windowMs) {
-        out.duplicateRisk = true;
-        out.duplicateRiskScore = 1.0f - (static_cast<float>(elapsedMs) / static_cast<float>(config.windowMs));
-        if (out.duplicateRiskScore < 0.0f) {
-            out.duplicateRiskScore = 0.0f;
-        }
-        if (out.duplicateRiskScore > 1.0f) {
-            out.duplicateRiskScore = 1.0f;
-        }
-    }
-
-    *lastAcceptedMs = acceptedMs;
 }
 
 void OccurrenceInspector::annotateAmpStrength(
     InspectedOccurrence& out,
     const Occurrence& candidate,
     const FeatureHistory* featureHistory,
-    const ScalarFeatureInspectionConfig& config
+    const ScalarFeatureInspectionConfig& config,
+    EvidenceTarget target
 ) const {
     const unsigned long startMs = candidate.startMs > config.windowPreMs ? candidate.startMs - config.windowPreMs : 0UL;
     const unsigned long endMs = candidate.endMs != 0
@@ -171,7 +119,7 @@ void OccurrenceInspector::annotateAmpStrength(
         if (scalarWindow.valid) {
             const float floor = scalarWindow.mean;
             const float peak = scalarWindow.peak;
-            fillScalarStrengthObservation(out, candidate, peak, floor, true, config);
+            fillScalarStrengthObservation(out, candidate, peak, floor, true, config, target);
             return;
         }
     }
@@ -188,16 +136,13 @@ void OccurrenceInspector::runInspectionModule(
     const InspectionModuleConfig& module
 ) const {
     switch (module.kind) {
-        case InspectionModuleKind::ScalarFeatureStrength:
+    case InspectionModuleKind::ScalarFeatureStrength:
             if (module.target == EvidenceTarget::AmpStrength ||
                 module.target == EvidenceTarget::FrequencyScoreStrength ||
                 module.target == EvidenceTarget::FrequencyContrastQuality ||
                 module.target == EvidenceTarget::TargetBandStrength) {
-                annotateAmpStrength(out, candidate, featureHistory, module.scalar);
+                annotateAmpStrength(out, candidate, featureHistory, module.scalar, module.target);
             }
-            break;
-        case InspectionModuleKind::DuplicateRisk:
-            annotateDuplicateRisk(out, candidate, module.duplicateRisk);
             break;
         case InspectionModuleKind::None:
         default:

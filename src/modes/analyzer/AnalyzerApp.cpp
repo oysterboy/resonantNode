@@ -540,6 +540,7 @@ AnalyzerReport AnalyzerApp::buildSequenceAnalyzerReport(unsigned long trialNumbe
     const detection::FieldState* runtimeFieldState = actualPipelineAvailable && pipelineResult->hasField
         ? &pipelineResult->field
         : nullptr;
+    const detection::DetectionProfile& selectedProfile = detection::detectionProfileForKind(_sequenceTest.profileKind);
     const bool trialHasPipelineEvidence = actualPipelineAvailable
         && runtimePatternResult != nullptr
         && diagnostics.rawCandidateCount > 0;
@@ -625,13 +626,26 @@ AnalyzerReport AnalyzerApp::buildSequenceAnalyzerReport(unsigned long trialNumbe
     report.inspection.rejected = diagnostics.rawCandidateCount > report.inspection.accepted ? diagnostics.rawCandidateCount - report.inspection.accepted : 0U;
     if (trialHasPipelineEvidence && runtimeInspectedOccurrence != nullptr && runtimeInspectedOccurrence->occurrence.present) {
         report.inspection.primaryEvidence = occurrenceSourceName(runtimeInspectedOccurrence->occurrence.source);
-        report.inspection.ampStrength = strengthClassName(runtimeInspectedOccurrence->ampStrength);
-        report.inspection.ampStrengthClass = strengthClassName(runtimeInspectedOccurrence->ampStrength);
+        switch (selectedProfile.patternRulesConfig.requiredSupportTarget) {
+            case detection::EvidenceTarget::FrequencyScoreStrength:
+                report.inspection.moduleTarget = "frequency_score";
+                report.inspection.moduleStrengthClass = strengthClassName(runtimeInspectedOccurrence->frequencyScoreStrength);
+                break;
+            case detection::EvidenceTarget::TargetBandStrength:
+                report.inspection.moduleTarget = "target_band";
+                report.inspection.moduleStrengthClass = strengthClassName(runtimeInspectedOccurrence->targetBandStrength);
+                break;
+            case detection::EvidenceTarget::AmpStrength:
+            default:
+                report.inspection.moduleTarget = "amp_strength";
+                report.inspection.moduleStrengthClass = strengthClassName(runtimeInspectedOccurrence->ampStrength);
+                break;
+        }
         report.inspection.mainRejectReason = runtimeInspectedOccurrence->rejected ? occurrenceRejectReasonName(runtimeInspectedOccurrence->rejectReason) : "none";
     } else {
         report.inspection.primaryEvidence = "none";
-        report.inspection.ampStrength = "unknown";
-        report.inspection.ampStrengthClass = "unsupported";
+        report.inspection.moduleTarget = "unknown";
+        report.inspection.moduleStrengthClass = "unsupported";
         report.inspection.mainRejectReason = analyzerReasonName(report.classification.reason);
     }
 
@@ -653,9 +667,8 @@ AnalyzerReport AnalyzerApp::buildSequenceAnalyzerReport(unsigned long trialNumbe
 
     report.profileDetail.namespaceName = analyzerProfileDetailNamespace(_sequenceTest.profileKind);
     report.profileDetail.summary = analyzerProfileDetailSummary(_sequenceTest.profileKind);
-    const detection::DetectionProfile& selectedProfile = detection::detectionProfileForKind(_sequenceTest.profileKind);
     report.profileDetail.emitter = detection::occurrenceSourceKindName(selectedProfile.occurrenceSource);
-    report.profileDetail.inspectionRules = detection::profileInspectionRulesName(selectedProfile.inspectionRules);
+    report.profileDetail.inspectionAcceptance = detection::occurrenceSourceKindName(selectedProfile.occurrenceSource);
     report.profileDetail.inspectionPlan = selectedProfile.patternRulesConfig.requireSupportForAcceptance
         ? "scalar_feature_strength+duplicate_risk"
         : "duplicate_risk";

@@ -65,10 +65,6 @@ void OccurrenceInspector::configure(const InspectionConfig& config) {
     _inspectionPlan = makeInspectionPlan(_config);
 }
 
-void OccurrenceInspector::setInspectionRules(ProfileInspectionRulesKind rules) {
-    _inspectionRules = rules;
-}
-
 void OccurrenceInspector::reset() {
     _lastAcceptedAmpMs = 0;
     _lastAcceptedFrequencyMs = 0;
@@ -231,9 +227,8 @@ InspectedOccurrence OccurrenceInspector::inspectImpl(
     }
 
     const bool acceptsCandidate =
-        (_inspectionRules == ProfileInspectionRulesKind::TonalPulse && candidate.kind == OccurrenceKind::FrequencyMatch) ||
-        ((_inspectionRules == ProfileInspectionRulesKind::Amp ||
-          _inspectionRules == ProfileInspectionRulesKind::ChirpExperimental) && candidate.kind == OccurrenceKind::AmpTransient);
+        (candidate.source == OccurrenceSource::Frequency && candidate.kind == OccurrenceKind::FrequencyMatch) ||
+        (candidate.source == OccurrenceSource::Amp && candidate.kind == OccurrenceKind::AmpTransient);
 
     if (acceptsCandidate) {
         return inspectAcceptedOccurrenceResult(candidate, featureHistory);

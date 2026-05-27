@@ -89,6 +89,7 @@ minimumSupport stays as the strength threshold for the required support target.
 [LANDED] FrequencyOccurrenceSource remains specialized and uses FrequencyMatchDetector.
 [REMOVED] FrequencyWindowProbe.*, OccurrenceWindowEvaluator.h, RawWindow core path, AmpDiagnosticProbe.*, AmpTransientDetector.*, AmpOccurrenceSource.* are absent from current src.zip.
 [PARTIAL] InspectionConfig still has named ampStrength + duplicateRisk fields, not ordered InspectionPlan modules.
+[PARTIAL] DetectionProfile still expresses inspector composition through named module toggles; it should eventually declare an explicit inspector composition shape / plan.
 [PARTIAL] OccurrenceInspector still hardcodes duplicate-risk + amp-strength annotation.
 [LANDED] PatternRulesConfig now names required support directly with EvidenceTarget.
 [TODO] TargetBandStrength is not implemented.
@@ -152,6 +153,8 @@ Active code now uses `PatternRulesConfig.requiredSupportTarget`; the historical 
 [LANDED] Add InspectionModuleKind and EvidenceTarget.
 [LANDED] Replace named InspectionConfig fields with ordered InspectionPlan.
 [LANDED] Refactor OccurrenceInspector to loop plan modules.
+[PARTIAL] Move DetectionProfile toward explicit inspector composition instead of named module toggles.
+[LANDED] Derive inspector acceptance from the selected source/profile kind instead of storing a separate inspectionRules field.
 [PARTIAL] Route scalar evidence into configured evidence targets.
 [TODO] Add FeatureHistory scalar projections for the useful parts of FrequencyFeatureFrame, not only score and contrast.
 [LANDED] Preserve current TonalPulse behavior under the new profile wiring.

@@ -65,21 +65,12 @@ confirm the new architecture behaves as intended without broadening scope
 Still to do:
 
 ```text
-[TODO] Verify TonalPulse output is still stable in runtime logs and analyzer reports.
-[TODO] Verify Amp test profile produces the expected source / inspector wiring.
-[TODO] Do not start TargetBandStrength yet.
-[TODO] Do not add a plugin / factory graph.
+[DONE] Verify TonalPulse output is still stable in runtime logs and analyzer reports.
+[DONE] Verify Amp test profile produces the expected source / inspector wiring.
 [TODO] Keep the extra frequency-history projections commented out for now to reduce analyzer memory pressure.
 ```
 
-## Non-goals
 
-```text
-[TODO] No TargetBandStrengthInspector yet.
-[TODO] No BehaviorRuntime work.
-[TODO] No generic runtime plugin graph.
-[TODO] No ParamRegistry work.
-```
 
 ## Pass 4 - Analyzer Hot Path Stabilization
 
@@ -102,6 +93,30 @@ Done:
 Follow-up:
 
 ```text
-[TODO] Re-run the 50-trial TonalPulse SEQ check and confirm the miss rate stays stable without relying on inline candidate logging.
+[DONE] Re-run the 50-trial TonalPulse SEQ check and confirm the miss rate stays stable without relying on inline candidate logging.
 [TODO] Watch for any remaining timing skew between trial scheduling and pattern finalization.
+```
+
+## Pass 5 - Inspector Acceptance Simplification
+
+Goal:
+
+```text
+derive inspector acceptance from the selected source/profile kind instead of carrying a separate inspectionRules field
+```
+
+Done:
+
+```text
+[LANDED] Removed the stored inspectionRules field from DetectionProfile.
+[LANDED] Made OccurrenceInspector derive candidate-family acceptance from the emitted occurrence source.
+[LANDED] Removed the runtime inspectionRules setter from DetectionRuntime and the sequence/session wiring.
+[LANDED] Updated analyzer and node profile details to describe the derived inspection acceptance instead of a duplicated rule field.
+```
+
+Follow-up:
+
+```text
+[TODO] Re-run TonalPulse and Amp SEQ logs to confirm the simplified wiring still reads correctly.
+[TODO] Keep the runtime boundary clear: source emits, inspector annotates, pattern rules decide.
 ```

@@ -176,7 +176,7 @@ void AnalyzerApp::printSequenceTrialResult(const AnalyzerReport& report) const {
     Serial.print("detector_strength=");
     Serial.print(report.occurrences.strength, 1);
     Serial.print(" inspector_strength=");
-    Serial.print(report.inspection.ampStrengthClass != nullptr ? report.inspection.ampStrengthClass : "unknown");
+    Serial.print(report.inspection.moduleStrengthClass != nullptr ? report.inspection.moduleStrengthClass : "unknown");
     Serial.print(" inspector_evidence=");
     Serial.println(report.inspection.primaryEvidence != nullptr ? report.inspection.primaryEvidence : "none");
 }
@@ -289,10 +289,10 @@ void AnalyzerApp::printSequenceExplain(const AnalyzerReport& report) const {
     Serial.println(report.occurrences.duplicateRisk ? 1 : 0);
 
     Serial.println("3 inspectors:");
-    Serial.print("module_results: amp_strength=");
-    Serial.print(report.profileDetail.ampStrength != nullptr ? report.profileDetail.ampStrength : "unknown");
-    Serial.print(" amp_strength_class=");
-    Serial.print(report.inspection.ampStrengthClass != nullptr ? report.inspection.ampStrengthClass : "unknown");
+    Serial.print("module_results: module_target=");
+    Serial.print(report.inspection.moduleTarget != nullptr ? report.inspection.moduleTarget : "unknown");
+    Serial.print(" module_strength_class=");
+    Serial.print(report.inspection.moduleStrengthClass != nullptr ? report.inspection.moduleStrengthClass : "unknown");
     Serial.print(" evidence=");
     Serial.print(report.inspection.primaryEvidence != nullptr ? report.inspection.primaryEvidence : "none");
     Serial.print(" inspected=");
@@ -525,8 +525,10 @@ void AnalyzerApp::printSequenceAmpWindow(const AnalyzerReport& report) const {
     Serial.print(report.primaryPattern.rejectReason != nullptr ? report.primaryPattern.rejectReason : "none");
     Serial.println();
 
-    Serial.print("  amp_strength=");
-    Serial.print(report.profileDetail.ampStrengthObservation.strength != nullptr ? report.profileDetail.ampStrengthObservation.strength : "unknown");
+    Serial.print("  module_target=");
+    Serial.print(report.inspection.moduleTarget != nullptr ? report.inspection.moduleTarget : "unknown");
+    Serial.print(" module_strength=");
+    Serial.print(report.inspection.moduleStrengthClass != nullptr ? report.inspection.moduleStrengthClass : "unknown");
     Serial.print(" peak=");
     Serial.print(report.profileDetail.ampStrengthObservation.peak, 1);
     Serial.print(" window=");

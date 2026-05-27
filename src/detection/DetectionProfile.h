@@ -47,29 +47,10 @@ struct ScalarTransientConfig {
     unsigned long releaseDebounceMs = 20;
 };
 
-enum class ProfileInspectionRulesKind {
-    TonalPulse,
-    Amp,
-    ChirpExperimental,
-};
-
-inline ProfileInspectionRulesKind profileInspectionRulesForKind(DetectionProfileKind kind) {
-    switch (kind) {
-        case DetectionProfileKind::Amp:
-            return ProfileInspectionRulesKind::Amp;
-        case DetectionProfileKind::ChirpExperimental:
-            return ProfileInspectionRulesKind::ChirpExperimental;
-        case DetectionProfileKind::TonalPulse:
-        default:
-            return ProfileInspectionRulesKind::TonalPulse;
-    }
-}
-
 struct DetectionProfile {
     // Identity and composition.
     DetectionProfileKind kind = DetectionProfileKind::TonalPulse;
     OccurrenceSourceKind occurrenceSource = OccurrenceSourceKind::FrequencyMatch;
-    ProfileInspectionRulesKind inspectionRules = ProfileInspectionRulesKind::TonalPulse;
 
     // Stage configuration.
     FrequencyMatchConfig frequencyMatch = {};
@@ -86,7 +67,6 @@ inline DetectionProfile makeTonalPulseProfile() {
     // Identity and occurrence routing.
     profile.kind = DetectionProfileKind::TonalPulse;
     profile.occurrenceSource = OccurrenceSourceKind::FrequencyMatch;
-    profile.inspectionRules = profileInspectionRulesForKind(profile.kind);
 
     // Frequency path tuning.
     profile.frequencyMatch.releaseDebounceMs = 10;
@@ -123,7 +103,6 @@ inline DetectionProfile makeAmpProfile() {
     // Identity and occurrence routing.
     profile.kind = DetectionProfileKind::Amp;
     profile.occurrenceSource = OccurrenceSourceKind::ScalarTransient;
-    profile.inspectionRules = profileInspectionRulesForKind(profile.kind);
     profile.scalarTransient = {};
     profile.scalarTransient.observedStream = FeatureStreamId::AmpEnvelope;
 
@@ -164,7 +143,6 @@ inline DetectionProfile makeChirpExperimentalProfile() {
     // Identity and occurrence routing.
     profile.kind = DetectionProfileKind::ChirpExperimental;
     profile.occurrenceSource = OccurrenceSourceKind::ScalarTransient;
-    profile.inspectionRules = profileInspectionRulesForKind(profile.kind);
     profile.scalarTransient.observedStream = FeatureStreamId::AmpEnvelope;
 
     // Amp detector path tuning.
@@ -231,19 +209,6 @@ inline const char* occurrenceSourceKindName(OccurrenceSourceKind kind) {
             return "FrequencyMatchSource";
         case OccurrenceSourceKind::ScalarTransient:
             return "ScalarTransientSource";
-    }
-    return "unknown";
-}
-
-// Human-readable names for inspection-rule sets used in logs and help text.
-inline const char* profileInspectionRulesName(ProfileInspectionRulesKind kind) {
-    switch (kind) {
-        case ProfileInspectionRulesKind::TonalPulse:
-            return "TonalPulseRules";
-        case ProfileInspectionRulesKind::Amp:
-            return "AmpRules";
-        case ProfileInspectionRulesKind::ChirpExperimental:
-            return "ChirpExperimentalRules";
     }
     return "unknown";
 }

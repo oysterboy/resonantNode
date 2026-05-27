@@ -116,8 +116,7 @@ const char* detectionProfileKindName(detection::DetectionProfileKind kind) {
 void printProfileComposition(const detection::DetectionProfile& profile) {
     Serial.print(" emitters=");
     Serial.print(detection::occurrenceSourceKindName(profile.occurrenceSource));
-    Serial.print(" inspectionRules=");
-    Serial.print(detection::profileInspectionRulesName(profile.inspectionRules));
+    Serial.print(" inspectionAcceptance=derived_from_source");
     Serial.print(" fieldStateConfig=");
     Serial.print(profile.fieldStateConfig.occurrenceWindowMs);
     Serial.print("/");
@@ -130,8 +129,7 @@ void printDetectionProfileDetails(const detection::DetectionProfile& profile) {
     Serial.println(detection::detectionProfileName(profile.kind));
     Serial.print("  occurrenceSource=");
     Serial.println(detection::occurrenceSourceKindName(profile.occurrenceSource));
-    Serial.print("  inspectionRules=");
-    Serial.println(detection::profileInspectionRulesName(profile.inspectionRules));
+    Serial.println("  inspectionAcceptance=derived_from_source");
     Serial.print("  freqMatch.releaseDebounceMs=");
     Serial.println(profile.frequencyMatch.releaseDebounceMs);
     Serial.print("  freqMatch.cooldownAfterOnsetMs=");
@@ -811,8 +809,9 @@ void Node::handleDetectCommand(const char* line) {
     Serial.print(detection::detectionProfileName(detectionProfile.kind));
     Serial.print(" emitters=");
     Serial.print(detection::occurrenceSourceKindName(detectionProfile.occurrenceSource));
-    Serial.print(" inspectionRules=");
-    Serial.print(detection::profileInspectionRulesName(detectionProfile.inspectionRules));
+    Serial.print(" inspectionAcceptance=");
+    Serial.print(detection::occurrenceSourceKindName(detectionProfile.occurrenceSource));
+    Serial.print("_derived");
     Serial.print(" requireSupportForAcceptance=");
     Serial.print(detectionProfile.patternRulesConfig.requireSupportForAcceptance ? 1 : 0);
     Serial.print(" requiredSupportTarget=");
@@ -901,7 +900,6 @@ void Node::applyActiveDetectionProfile() {
     const detection::DetectionProfile& detectionProfile = activeDetectionProfile();
 
     _detection.setOccurrenceSource(detectionProfile.occurrenceSource);
-    _detection.setInspectionRules(detectionProfile.inspectionRules);
     _detection.setFrequencyMatchConfig(detectionProfile.frequencyMatch);
     _detection.setScalarTransientConfig(detectionProfile.scalarTransient);
     _detection.setInspectionConfig(detectionProfile.inspectionConfig);

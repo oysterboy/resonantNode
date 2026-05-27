@@ -16,7 +16,6 @@ Does not decide pattern validity or behavior eligibility.
 class OccurrenceInspector {
 public:
     void configure(const InspectionConfig& config);
-    void setInspectionRules(ProfileInspectionRulesKind rules);
     void reset();
 
     InspectedOccurrence inspect(
@@ -63,7 +62,6 @@ private:
 
     mutable unsigned long _lastAcceptedAmpMs = 0;
     mutable unsigned long _lastAcceptedFrequencyMs = 0;
-    ProfileInspectionRulesKind _inspectionRules = ProfileInspectionRulesKind::TonalPulse;
     InspectionConfig _config = defaultInspectionConfig();
     InspectionPlan _inspectionPlan = makeInspectionPlan(_config);
 };

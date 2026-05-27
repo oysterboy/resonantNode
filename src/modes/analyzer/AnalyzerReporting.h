@@ -177,8 +177,8 @@ struct AnalyzerInspectionObservation {
     unsigned int rejected = 0;
 
     const char* primaryEvidence = "none";
-    const char* ampStrength = "unknown";
-    const char* ampStrengthClass = "unknown";
+    const char* moduleTarget = "unknown";
+    const char* moduleStrengthClass = "unknown";
     const char* mainRejectReason = "none";
 };
 
@@ -218,7 +218,7 @@ struct AnalyzerProfileDetail {
     const char* namespaceName = "none";
     const char* summary = "";
     const char* emitter = "unknown";
-    const char* inspectionRules = "unknown";
+    const char* inspectionAcceptance = "unknown";
     const char* inspectionPlan = "unknown";
     const char* inspectionModules = "unknown";
     const char* evidenceTargets = "unknown";

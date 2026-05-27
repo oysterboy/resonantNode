@@ -58,7 +58,6 @@ public:
     void setFrequencyMatchConfig(const FrequencyMatchConfig& config);
     void setScalarTransientConfig(const ScalarTransientConfig& config);
     void setOccurrenceSource(OccurrenceSourceKind kind);
-    void setInspectionRules(ProfileInspectionRulesKind kind);
     void setInspectionConfig(const InspectionConfig& config);
     void setPatternRulesConfig(const PatternRulesConfig& config);
     void setFieldStateConfig(const FieldStateConfig& config);
@@ -95,7 +94,6 @@ private:
     ScalarTransientConfig _scalarTransientConfig = {};
     // Profile configuration applied at fixed runtime stages.
     OccurrenceSourceKind _occurrenceSourceKind = OccurrenceSourceKind::FrequencyMatch;
-    ProfileInspectionRulesKind _inspectionRulesKind = ProfileInspectionRulesKind::TonalPulse;
     InspectionConfig _inspectionConfig = defaultInspectionConfig();
     PatternRulesConfig _patternRulesConfig = {};
     const char* _profileName = "unknown";

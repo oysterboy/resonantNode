@@ -50,9 +50,8 @@ enum class PatternCandidateKind {
 // Result kinds describe the rule-level outcome.
 enum class PatternResultKind {
     Unknown,
-    Pattern,
-    ValidChirp,
-    InvalidChirp,
+    Valid,
+    Invalid,
     TooDense,
     Rejected,
 };

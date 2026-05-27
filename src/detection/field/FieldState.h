@@ -14,9 +14,9 @@ struct FieldStateConfig {
     unsigned long occurrenceWindowMs = 5000;
     unsigned long patternWindowMs = 5000;
 
-    unsigned long busySignalCountThreshold = 4;
-    unsigned long denseSignalCountThreshold = 8;
-    unsigned long quietSignalCountThreshold = 0;
+    unsigned long busyOccurrenceCountThreshold = 4;
+    unsigned long denseOccurrenceCountThreshold = 8;
+    unsigned long quietOccurrenceCountThreshold = 0;
 
     float quietActivityThreshold = 0.0f;
     float busyActivityThreshold = 0.5f;

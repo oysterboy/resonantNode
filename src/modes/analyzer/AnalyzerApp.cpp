@@ -292,6 +292,27 @@ void AnalyzerApp::update() {
         }
         updateSequenceAmbientStats();
 
+        if (_sequenceTest.active &&
+            _sequenceTest.profileKind == detection::DetectionProfileKind::TonalPulse2 &&
+            !_sequenceTest.quiet &&
+            timing::elapsedSince(now, _sequenceTest.lastStatusPrintMs, 500UL)) {
+            Serial.print("SEQ_FREQDBG profile=TonalPulse2 score=");
+            Serial.print(_freqBandStream.lastFrequencyScore(), 1);
+            Serial.print(" contrast=");
+            Serial.print(_freqBandStream.lastSpectralContrast(), 2);
+            Serial.print(" target_power=");
+            Serial.print(_freqBandStream.lastTargetPower(), 1);
+            Serial.print(" neighbor_power=");
+            Serial.print(_freqBandStream.lastNeighborPower(), 1);
+            Serial.print(" total_energy=");
+            Serial.print(_freqBandStream.lastTotalEnergy(), 1);
+            Serial.print(" ready=");
+            Serial.print(_freqBandStream.windowReady() ? 1 : 0);
+            Serial.print(" samples=");
+            Serial.println(_freqBandStream.sampleCount());
+            _sequenceTest.lastStatusPrintMs = now;
+        }
+
         processedSamples += static_cast<int>(block.sampleCount);
         if (processedSamples > kMaxSamplesPerLoop) {
             processedSamples = kMaxSamplesPerLoop;
@@ -517,6 +538,8 @@ const char* analyzerProfileDetailNamespace(detection::DetectionProfileKind profi
     switch (profileKind) {
         case detection::DetectionProfileKind::Amp:
             return "amp";
+        case detection::DetectionProfileKind::TonalPulse2:
+            return "tonal_pulse_2";
         case detection::DetectionProfileKind::ChirpExperimental:
             return "chirp_experimental";
         case detection::DetectionProfileKind::TonalPulse:
@@ -529,6 +552,8 @@ const char* analyzerProfileDetailSummary(detection::DetectionProfileKind profile
     switch (profileKind) {
         case detection::DetectionProfileKind::Amp:
             return "amp scalar profile view";
+        case detection::DetectionProfileKind::TonalPulse2:
+            return "tonal_pulse_2 profile view";
         case detection::DetectionProfileKind::ChirpExperimental:
             return "chirp_experimental profile view";
         case detection::DetectionProfileKind::TonalPulse:

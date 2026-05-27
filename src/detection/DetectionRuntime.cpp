@@ -162,7 +162,7 @@ void DetectionRuntime::drainOccurrenceSources(unsigned long nowMs) {
                 _fieldStateTracker.observeInspectedOccurrence(inspected, nowMs);
                 _lastOccurrence = candidate;
                 _lastInspectedOccurrence = inspected;
-                _patternAssembler.acceptSignal(inspected);
+                _patternAssembler.acceptOccurrence(inspected);
             }
             break;
         case OccurrenceSourceKind::ScalarTransient:
@@ -172,7 +172,7 @@ void DetectionRuntime::drainOccurrenceSources(unsigned long nowMs) {
                 _fieldStateTracker.observeInspectedOccurrence(inspected, nowMs);
                 _lastOccurrence = candidate;
                 _lastInspectedOccurrence = inspected;
-                _patternAssembler.acceptSignal(inspected);
+                _patternAssembler.acceptOccurrence(inspected);
             }
             break;
     }

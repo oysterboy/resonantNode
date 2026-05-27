@@ -89,6 +89,7 @@ void AnalyzerApp::startSequenceTest(unsigned long totalTrials, unsigned long per
     _sequenceTest.sampleDumpMaxRows = sampleDumpMaxRows == 0 ? 1 : sampleDumpMaxRows;
     _sequenceTest.sampleDumpWarned = false;
     clearSequenceSampleDump();
+    _sequenceTest.lastStatusPrintMs = millis();
 
     if (_detection == nullptr) {
         _detection = new detection::DetectionRuntime();

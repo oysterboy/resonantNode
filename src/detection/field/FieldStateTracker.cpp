@@ -13,19 +13,19 @@ const FieldStateConfig& FieldStateTracker::config() const {
 void FieldStateTracker::reset() {
     _state = {};
     _occurrenceCountInWindow = 0;
-    _acceptedSignalCountInWindow = 0;
+    _acceptedOccurrenceCountInWindow = 0;
     _patternCountInWindow = 0;
-    _signalWindowStartMs = 0;
+    _occurrenceWindowStartMs = 0;
     _patternWindowStartMs = 0;
 }
 
 void FieldStateTracker::update(unsigned long nowMs) {
-    if (_signalWindowStartMs == 0) {
-        _signalWindowStartMs = nowMs;
-    } else if (nowMs >= _signalWindowStartMs && nowMs - _signalWindowStartMs >= _config.occurrenceWindowMs) {
+    if (_occurrenceWindowStartMs == 0) {
+        _occurrenceWindowStartMs = nowMs;
+    } else if (nowMs >= _occurrenceWindowStartMs && nowMs - _occurrenceWindowStartMs >= _config.occurrenceWindowMs) {
         _occurrenceCountInWindow = 0;
-        _acceptedSignalCountInWindow = 0;
-        _signalWindowStartMs = nowMs;
+        _acceptedOccurrenceCountInWindow = 0;
+        _occurrenceWindowStartMs = nowMs;
     }
 
     if (_patternWindowStartMs == 0) {
@@ -49,7 +49,7 @@ void FieldStateTracker::observeOccurrence(const Occurrence& occurrence, unsigned
 void FieldStateTracker::observeInspectedOccurrence(const InspectedOccurrence& occurrence, unsigned long nowMs) {
     if (occurrence.accepted) {
         _state.lastInspectedOccurrenceMs = nowMs;
-        ++_acceptedSignalCountInWindow;
+        ++_acceptedOccurrenceCountInWindow;
         recompute(nowMs);
     }
 }
@@ -69,22 +69,22 @@ const FieldState& FieldStateTracker::state() const {
 void FieldStateTracker::recompute(unsigned long nowMs) {
     (void)nowMs;
     _state.recentOccurrenceCount = _occurrenceCountInWindow;
-    _state.recentAcceptedOccurrenceCount = _acceptedSignalCountInWindow;
+    _state.recentAcceptedOccurrenceCount = _acceptedOccurrenceCountInWindow;
     _state.recentPatternCount = _patternCountInWindow;
     _state.chatter = _occurrenceCountInWindow;
-    _state.quiet = _occurrenceCountInWindow <= _config.quietSignalCountThreshold;
+    _state.quiet = _occurrenceCountInWindow <= _config.quietOccurrenceCountThreshold;
     _state.active = _occurrenceCountInWindow > 0;
-    _state.dense = _occurrenceCountInWindow >= _config.denseSignalCountThreshold;
+    _state.dense = _occurrenceCountInWindow >= _config.denseOccurrenceCountThreshold;
     _state.activity = _occurrenceCountInWindow == 0
         ? 0.0f
-        : (_occurrenceCountInWindow >= _config.busySignalCountThreshold
+        : (_occurrenceCountInWindow >= _config.busyOccurrenceCountThreshold
             ? 1.0f
-            : static_cast<float>(_occurrenceCountInWindow) / static_cast<float>(_config.busySignalCountThreshold));
+            : static_cast<float>(_occurrenceCountInWindow) / static_cast<float>(_config.busyOccurrenceCountThreshold));
     _state.density = _patternCountInWindow == 0
         ? 0.0f
-        : (_patternCountInWindow >= _config.denseSignalCountThreshold
+        : (_patternCountInWindow >= _config.denseOccurrenceCountThreshold
             ? 1.0f
-            : static_cast<float>(_patternCountInWindow) / static_cast<float>(_config.denseSignalCountThreshold));
+            : static_cast<float>(_patternCountInWindow) / static_cast<float>(_config.denseOccurrenceCountThreshold));
     _state.noiseFloor = _occurrenceCountInWindow == 0 ? 0.0f : static_cast<float>(_occurrenceCountInWindow) / static_cast<float>(_config.occurrenceWindowMs);
     _state.avgAmbientLevel = _state.noiseFloor;
 }

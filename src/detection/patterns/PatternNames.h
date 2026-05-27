@@ -25,12 +25,10 @@ inline const char* patternResultKindName(PatternResultKind kind) {
     switch (kind) {
         case PatternResultKind::Unknown:
             return "unknown";
-        case PatternResultKind::Pattern:
-            return "pattern";
-        case PatternResultKind::ValidChirp:
-            return "valid_chirp";
-        case PatternResultKind::InvalidChirp:
-            return "invalid_chirp";
+        case PatternResultKind::Valid:
+            return "valid";
+        case PatternResultKind::Invalid:
+            return "invalid";
         case PatternResultKind::TooDense:
             return "too_dense";
         case PatternResultKind::Rejected:

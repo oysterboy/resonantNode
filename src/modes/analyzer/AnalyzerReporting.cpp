@@ -10,6 +10,8 @@ const char* analyzerProfileDetailNamespace(detection::DetectionProfileKind profi
     switch (profileKind) {
         case detection::DetectionProfileKind::Amp:
             return "amp";
+        case detection::DetectionProfileKind::TonalPulse2:
+            return "tonal_pulse_2";
         case detection::DetectionProfileKind::ChirpExperimental:
             return "chirp_experimental";
         case detection::DetectionProfileKind::TonalPulse:
@@ -22,6 +24,8 @@ const char* analyzerProfileDetailSummary(detection::DetectionProfileKind profile
     switch (profileKind) {
         case detection::DetectionProfileKind::Amp:
             return "amp scalar profile view";
+        case detection::DetectionProfileKind::TonalPulse2:
+            return "tonal_pulse_2 profile view";
         case detection::DetectionProfileKind::ChirpExperimental:
             return "chirp_experimental profile view";
         case detection::DetectionProfileKind::TonalPulse:

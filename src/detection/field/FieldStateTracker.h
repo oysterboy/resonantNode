@@ -47,10 +47,10 @@ private:
     FieldState _state = {};
 
     unsigned long _occurrenceCountInWindow = 0;
-    unsigned long _acceptedSignalCountInWindow = 0;
+    unsigned long _acceptedOccurrenceCountInWindow = 0;
     unsigned long _patternCountInWindow = 0;
 
-    unsigned long _signalWindowStartMs = 0;
+    unsigned long _occurrenceWindowStartMs = 0;
     unsigned long _patternWindowStartMs = 0;
 };
 

@@ -43,13 +43,6 @@ inline StrengthClass classifyAmpStrength(float peak, bool evidenceValid, const A
     return StrengthClass::None;
 }
 
-struct AmpStrengthInspectionConfig {
-    bool enabled = true;
-    AmpStrengthConfig strength = {};
-    uint32_t windowPreMs = 20;
-    uint32_t windowPostMs = 120;
-};
-
 enum class InspectionModuleKind {
     None,
     ScalarFeatureStrength,
@@ -83,48 +76,6 @@ struct InspectionPlan {
     InspectionModuleConfig modules[kMaxInspectionModules] = {};
     size_t count = 0;
 };
-
-// Inspector configuration combines module-specific inspection settings.
-// Profile factories provide this object to DetectionRuntime.
-struct InspectionConfig {
-    AmpStrengthInspectionConfig ampStrength = {};
-    ScalarFeatureInspectionConfig frequencyScore = {};
-};
-
-inline InspectionPlan makeInspectionPlan(const InspectionConfig& config) {
-    InspectionPlan plan = {};
-
-    if (config.ampStrength.enabled) {
-        plan.modules[plan.count].kind = InspectionModuleKind::ScalarFeatureStrength;
-        plan.modules[plan.count].target = EvidenceTarget::AmpStrength;
-        plan.modules[plan.count].scalar.enabled = config.ampStrength.enabled;
-        plan.modules[plan.count].scalar.stream = FeatureStreamId::AmpEnvelope;
-        plan.modules[plan.count].scalar.strength = config.ampStrength.strength;
-        plan.modules[plan.count].scalar.windowPreMs = config.ampStrength.windowPreMs;
-        plan.modules[plan.count].scalar.windowPostMs = config.ampStrength.windowPostMs;
-        ++plan.count;
-    }
-
-    if (config.frequencyScore.enabled) {
-        plan.modules[plan.count].kind = InspectionModuleKind::ScalarFeatureStrength;
-        plan.modules[plan.count].target = EvidenceTarget::FrequencyScoreStrength;
-        plan.modules[plan.count].scalar.enabled = config.frequencyScore.enabled;
-        plan.modules[plan.count].scalar.stream = config.frequencyScore.stream;
-        plan.modules[plan.count].scalar.strength = config.frequencyScore.strength;
-        plan.modules[plan.count].scalar.windowPreMs = config.frequencyScore.windowPreMs;
-        plan.modules[plan.count].scalar.windowPostMs = config.frequencyScore.windowPostMs;
-        ++plan.count;
-    }
-
-    return plan;
-}
-
-inline InspectionConfig defaultInspectionConfig() {
-    InspectionConfig config;
-    config.ampStrength = AmpStrengthInspectionConfig{};
-    config.frequencyScore = ScalarFeatureInspectionConfig{};
-    return config;
-}
 
 // AMP strength evidence captured by the inspector for a single candidate.
 // This is runtime evidence, not configuration.

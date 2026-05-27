@@ -1,6 +1,6 @@
 #include "PatternAssembler.h"
 
-// PatternAssembler converts inspected signals into queued PatternCandidates.
+// PatternAssembler converts inspected occurrences into queued PatternCandidates.
 namespace {
 
 using PatternCandidate = detection::PatternCandidate;
@@ -101,23 +101,23 @@ namespace detection {
 void PatternAssembler::reset() {
     _readIndex = 0;
     _count = 0;
-    _recentSignalReadIndex = 0;
+    _recentOccurrenceReadIndex = 0;
     _recentOccurrenceCount = 0;
 }
 
-void PatternAssembler::acceptSignal(const InspectedOccurrence& occurrence) {
-    acceptSignals(&occurrence, 1);
+void PatternAssembler::acceptOccurrence(const InspectedOccurrence& occurrence) {
+    acceptOccurrences(&occurrence, 1);
 }
 
-size_t PatternAssembler::acceptSignals(const InspectedOccurrence* signals, size_t count) {
-    if (signals == nullptr || count == 0) {
+size_t PatternAssembler::acceptOccurrences(const InspectedOccurrence* occurrences, size_t count) {
+    if (occurrences == nullptr || count == 0) {
         return 0;
     }
 
     size_t accepted = 0;
     for (size_t i = 0; i < count; ++i) {
-        const InspectedOccurrence& occurrence = signals[i];
-        pushRecentSignal(occurrence);
+        const InspectedOccurrence& occurrence = occurrences[i];
+        pushRecentOccurrence(occurrence);
 
         if (!occurrence.accepted || !occurrence.occurrence.present) {
             continue;
@@ -147,12 +147,12 @@ size_t PatternAssembler::acceptSignals(const InspectedOccurrence* signals, size_
     return accepted;
 }
 
-size_t PatternAssembler::assemble(const InspectedOccurrence* signals, size_t occurrenceCount, PatternCandidate* out, size_t maxOut) {
-    if (signals == nullptr || occurrenceCount == 0 || out == nullptr || maxOut == 0) {
+size_t PatternAssembler::assemble(const InspectedOccurrence* occurrences, size_t occurrenceCount, PatternCandidate* out, size_t maxOut) {
+    if (occurrences == nullptr || occurrenceCount == 0 || out == nullptr || maxOut == 0) {
         return 0;
     }
 
-    const size_t accepted = acceptSignals(signals, occurrenceCount);
+    const size_t accepted = acceptOccurrences(occurrences, occurrenceCount);
     size_t written = 0;
     while (written < maxOut && popPatternCandidate(out[written])) {
         ++written;
@@ -185,13 +185,13 @@ size_t PatternAssembler::popPatternCandidates(PatternCandidate* out, size_t maxO
     return written;
 }
 
-void PatternAssembler::pushRecentSignal(const InspectedOccurrence& occurrence) {
-    const size_t writeIndex = (_recentSignalReadIndex + _recentOccurrenceCount) % kRecentSignalCapacity;
-    _recentSignals[writeIndex] = occurrence;
-    if (_recentOccurrenceCount < kRecentSignalCapacity) {
+void PatternAssembler::pushRecentOccurrence(const InspectedOccurrence& occurrence) {
+    const size_t writeIndex = (_recentOccurrenceReadIndex + _recentOccurrenceCount) % kRecentOccurrenceCapacity;
+    _recentOccurrences[writeIndex] = occurrence;
+    if (_recentOccurrenceCount < kRecentOccurrenceCapacity) {
         ++_recentOccurrenceCount;
     } else {
-        _recentSignalReadIndex = (_recentSignalReadIndex + 1) % kRecentSignalCapacity;
+        _recentOccurrenceReadIndex = (_recentOccurrenceReadIndex + 1) % kRecentOccurrenceCapacity;
     }
 }
 

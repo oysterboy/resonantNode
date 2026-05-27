@@ -190,12 +190,12 @@ void printDetectionProfileDetails(const detection::DetectionProfile& profile) {
     Serial.println(profile.fieldStateConfig.occurrenceWindowMs);
     Serial.print("  fieldState.patternWindowMs=");
     Serial.println(profile.fieldStateConfig.patternWindowMs);
-    Serial.print("  fieldState.busySignalCountThreshold=");
-    Serial.println(profile.fieldStateConfig.busySignalCountThreshold);
-    Serial.print("  fieldState.denseSignalCountThreshold=");
-    Serial.println(profile.fieldStateConfig.denseSignalCountThreshold);
-    Serial.print("  fieldState.quietSignalCountThreshold=");
-    Serial.println(profile.fieldStateConfig.quietSignalCountThreshold);
+    Serial.print("  fieldState.busyOccurrenceCountThreshold=");
+    Serial.println(profile.fieldStateConfig.busyOccurrenceCountThreshold);
+    Serial.print("  fieldState.denseOccurrenceCountThreshold=");
+    Serial.println(profile.fieldStateConfig.denseOccurrenceCountThreshold);
+    Serial.print("  fieldState.quietOccurrenceCountThreshold=");
+    Serial.println(profile.fieldStateConfig.quietOccurrenceCountThreshold);
     Serial.print("  fieldState.quietActivityThreshold=");
     Serial.println(profile.fieldStateConfig.quietActivityThreshold, 2);
     Serial.print("  fieldState.busyActivityThreshold=");
@@ -618,6 +618,7 @@ void Node::handleSerialLine(const char* line) {
         Serial.println("RB CMD: RB BEHAV wait=100 refractory=0 suppressSelfChirp=250 detectionSuppressTail=0 idleTimeout=20000 idleTimeoutVariation=10000 idleBlockedAfterHeard=3000 idleBlockedAfterOwnEmit=5000");
         Serial.println("RB CMD: RB STATUS");
         Serial.println("RB CMD: RB PROFILE name=tonalpulse");
+        Serial.println("RB CMD(ALT): RB PROFILE name=tonalpulse2");
         Serial.println("RB CMD(AMP): RB PROFILE name=amp");
         Serial.println("RB CMD(EXP): RB PROFILE name=chirp_experimental (experimental)");
         Serial.println("RB CMD: RB rebase");
@@ -879,7 +880,7 @@ void Node::handleProfileCommand(const char* line) {
         printProfileComposition(activeDetectionProfile());
         Serial.println();
     } else {
-        Serial.println("RB PROFILE usage=name=tonalpulse|amp|chirp_experimental");
+        Serial.println("RB PROFILE usage=name=tonalpulse|tonalpulse2|amp|chirp_experimental");
     }
 }
 
@@ -907,6 +908,7 @@ const BehaviorGateConfig& Node::activeBehaviorProfile() const {
     static const BehaviorGateConfig kTonalPulseProfile = makeTonalPulseBehaviorProfile();
 
     switch (_profileKind) {
+        case detection::DetectionProfileKind::TonalPulse2:
         case detection::DetectionProfileKind::ChirpExperimental:
         case detection::DetectionProfileKind::TonalPulse:
         default:

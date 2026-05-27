@@ -266,6 +266,7 @@ private:
         unsigned long sampleDumpCaptureStartMs = 0;
         unsigned long sampleDumpCaptureEndMs = 0;
         unsigned long sampleDumpNextEmitMs = 0;
+        unsigned long lastStatusPrintMs = 0;
         static constexpr size_t kMaxSampleHistory = 256;
         static constexpr size_t kMaxSampleRows = 2048;
         static constexpr size_t kMaxTrialReports = 128;

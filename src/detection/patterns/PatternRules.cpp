@@ -31,12 +31,12 @@ PatternResultKind resultKindFromCandidate(const PatternCandidate& candidate) {
             return PatternResultKind::TooDense;
         }
         if (candidate.maxGapMs > 0 && candidate.maxGapMs > 250UL) {
-            return PatternResultKind::InvalidChirp;
+            return PatternResultKind::Invalid;
         }
-        return PatternResultKind::ValidChirp;
+        return PatternResultKind::Valid;
     }
 
-    return PatternResultKind::Pattern;
+    return PatternResultKind::Valid;
 }
 
 PatternRejectReason supportRejectReason(StrengthClass supportStrength) {
@@ -146,7 +146,7 @@ PatternResult PatternRules::evaluateFrequencyPattern(
         result.type = PatternType::Ambiguous;
         result.valid = false;
         result.rejectReason = PatternRejectReason::UnexpectedTiming;
-    } else if (result.kind == PatternResultKind::InvalidChirp) {
+    } else if (result.kind == PatternResultKind::Invalid) {
         result.type = PatternType::Invalid;
         result.valid = false;
         result.rejectReason = PatternRejectReason::UnexpectedTiming;

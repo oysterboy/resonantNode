@@ -1,223 +1,185 @@
-# Roadmap — Detection
+# Roadmap - Detection Cleanup
 
-Status: active roadmap. Scope: detection architecture cleanup, current TonalPulse stability, and later target-band strength evidence.
+Status: active roadmap. Scope: next detection cleanup only.
 
-## Status legend
+This roadmap is intentionally narrow.
 
-```text
-[LANDED]    Verified in current src.zip.
-[PARTIAL]   Partly present in source, but not yet the intended final shape.
-[TODO]      Next or later implementation work.
-[DEFERRED]  Intentionally later / not for the current test slice.
-[REMOVED]   Confirmed absent from current source or intentionally removed.
-```
+The landed architecture belongs in `docs/myspec.md`.
 
+This file tracks what to do next.
 
-## Architecture goal
+---
+
+## Architecture Goal
 
 ```text
-Audio / DSP feature calculation
-→ FeatureStreams / FeatureHistory
-→ OccurrenceSource
-→ OccurrenceInspector / InspectionPlan
-→ PatternAssembler
-→ PatternRules
-→ PatternResult
-→ FieldState / Behavior
+AudioSignal / FeatureStreams
+-> OccurrenceSources
+-> Occurrences
+-> OccurrenceInspector / InspectionPlan
+-> InspectedOccurrences
+-> PatternAssembler
+-> PatternCandidates
+-> PatternRules
+-> PatternResults
+-> Behavior
 ```
 
-Core rule:
+Rule:
 
 ```text
 Scalar-first, specialized-by-exception.
 ```
 
-OccurrenceSources emit candidates. Inspectors add evidence. PatternRules decide support and validity.
-FeatureHistory should keep scalar projections for the useful parts of `FrequencyFeatureFrame`, not only score and contrast.
-
-## Target profile shape
+Current source already has:
 
 ```text
-Profile selects the occurrence source family.
-The selected source uses its own defaults and the profile overrides only the fields it needs.
-Profile selects an inspection plan made of scalar inspector modules and special inspector modules.
-Scalar inspector modules select the observed stream, evidence target, and window.
-Special inspector modules use their own module-specific config.
-PatternRules make the final support decision.
-```
-
-## Runtime invocation principles
-
-```text
-DetectionRuntime owns the active profile wiring at runtime.
-The selected occurrence source is invoked first and produces the candidate occurrence.
-OccurrenceInspector runs after candidate creation and annotates evidence using the configured inspection plan.
-FeatureHistory is read by scalar inspectors; it is not the source of occurrence creation.
-PatternAssembler copies candidate and evidence fields into PatternCandidate.
-PatternRules evaluate the candidate and evidence, then decide support and acceptance.
-Occurrence.valid is the source-level gate; PatternRules should not re-do detector validation.
-```
-
-## Future runtime simplification
-
-```text
-Prefer binding the DetectionProfile once per session instead of switching it at runtime.
-That makes it easier to populate FeatureHistory only with the streams needed by the active profile.
-This is a later simplification, not part of the current pass.
-```
-
-## Support requirement shape
-
-```text
-PatternRulesConfig should eventually name the required evidence target directly instead of a source-style support label.
-That keeps the support requirement aligned with EvidenceTarget and InspectionPlan.
-minimumSupport stays as the strength threshold for the required support target.
-```
-
-## Source-verified current status
-
-```text
-[LANDED] DetectionRuntime pipeline exists.
-[LANDED] DetectionProfile exists with TonalPulse and ChirpExperimental profiles.
-[LANDED] FeatureHistory and ScalarWindow exist.
-[LANDED] FreqBandStream exists as live DSP feature calculator.
-[LANDED] FrequencyFeatureFrame exists and has replaced the old FrequencyEvidence name in code.
-[LANDED] StrengthClass exists and has replaced AmpSupportLevel.
-[LANDED] AmpStrengthEvidence exists and has replaced old AmpWindowEvidence naming.
-[LANDED] ScalarTransientDetector and ScalarOccurrenceSource exist.
-[LANDED] ScalarOccurrenceSource is the unified scalar candidate source and selects the observed stream.
-[LANDED] FrequencyOccurrenceSource remains specialized and uses FrequencyMatchDetector.
-[REMOVED] FrequencyWindowProbe.*, OccurrenceWindowEvaluator.h, RawWindow core path, AmpDiagnosticProbe.*, AmpTransientDetector.*, AmpOccurrenceSource.* are absent from current src.zip.
-[PARTIAL] InspectionConfig still exists as a legacy helper, but DetectionProfile now owns explicit InspectionPlan composition directly.
-[REMOVED] Duplicate-risk annotation has been dropped from the active inspector/pattern pipeline.
-[LANDED] PatternRulesConfig now names required support directly with EvidenceTarget.
-[TODO] TargetBandStrength is not implemented.
-```
-
-## Naming decisions
-
-```text
-FeatureFrame = one current calculated feature packet.
-FeatureStream = scalar values over time.
-Window = data slice / summary from history.
-Evidence = inspected candidate-relative result.
-Strength = measured / classified evidence.
-Support = PatternRules interpretation.
-```
-
-Final names:
-
-```text
-FrequencyFeatureFrame
-StrengthClass
-AmpStrengthEvidence
-AmpStrength
-TargetBandStrength
-FrequencyScoreStrength
-FrequencyContrastQuality
-FrequencyTargetPower
-FrequencyNeighborPower
-FrequencyTotalEnergy
-FrequencyWindowValid
-ScalarWindow
+DetectionProfile
+DetectionRuntime
+OccurrenceSourceKind
+FrequencyOccurrenceSource
+ScalarOccurrenceSource
 InspectionPlan
-ScalarFeatureStrength
+PatternRulesConfig.requiredSupportTarget
+FeatureHistory
+FieldStateTracker
+AnalyzerReport / ProfileDetail
 ```
 
-Cleanup still needed:
+---
+
+## Current Status
+
+Landed:
 
 ```text
-PatternSupportSource::BroadAmp → AmpStrength
-PatternSupportSource::TargetBand → TargetBandStrength
-minimumSupport → minimumSupportStrength
+Occurrence wording in PatternAssembler
+OccurrenceCount wording in FieldState config/tracker
+Generic PatternResultKind vocabulary
+Dead helper-driven InspectionConfig removed
+AnalyzerProfileDetail fields
 ```
 
-Active code now uses `PatternRulesConfig.requiredSupportTarget`; the historical cleanup block above is kept only as archive context.
-
-## Implementation order
-
-### Pass D1 — completed cleanup baseline
+Partly cleaned:
 
 ```text
-[LANDED] Remove old window/probe/diagnostic residue.
-[LANDED] Rename core evidence names: StrengthClass, AmpStrengthEvidence, FrequencyFeatureFrame.
-[LANDED] Keep FrequencyMatch as first specialized OccurrenceSource.
-[LANDED] Switch support requirement modeling from source-style labels to required evidence targets.
+DetectionProfile Amp/ChirpExperimental profile comments still mention shared frequency tuning in a few places
+myspec still contains a few archive-era references that should stay archived or be rewritten more tightly
 ```
 
-### Pass D2 — current cleanup: InspectionPlan
+Future target:
 
 ```text
-[LANDED] Rename remaining PatternSupportSource names.
-[LANDED] Add InspectionModuleKind and EvidenceTarget.
-[LANDED] Replace named InspectionConfig fields with ordered InspectionPlan.
-[LANDED] Refactor OccurrenceInspector to loop plan modules.
-[LANDED] Move DetectionProfile toward explicit inspector composition instead of named module toggles.
-[LANDED] Derive inspector acceptance from the selected source/profile kind instead of storing a separate inspectionRules field.
-[PARTIAL] Route scalar evidence into configured evidence targets.
-[TODO] Add FeatureHistory scalar projections for the useful parts of FrequencyFeatureFrame, not only score and contrast.
-[LANDED] Preserve current TonalPulse behavior under the new profile wiring.
+Normalize feature evidence streams and inspector thresholds onto a shared 0..1 decision scale, while keeping raw measurements for diagnostics.
 ```
 
-### Pass D3 — analyzer/reporting alignment
+---
+
+## Next Pass D-CLEAN
+
+Goal:
 
 ```text
-[PARTIAL] Make Analyzer names match AmpStrength / FrequencyFeatureFrame / InspectionPlan.
-[PARTIAL] Remove remaining local variable names such as ampWindowEvidence when they mean AmpStrengthEvidence.
-[TODO] Report enabled inspection modules and evidence targets when helpful.
+Keep the active docs and source vocabulary aligned with the landed Occurrence + InspectionPlan architecture.
+No behavior change.
 ```
 
-### Pass D4 — source config cleanup
+### D-CLEAN.1 - Docs alignment
+
+Focus:
 
 ```text
-[LANDED] Replace ProfileOccurrenceSourceKind Frequency/Amp with OccurrenceSourceKind::FrequencyMatch and OccurrenceSourceKind::ScalarTransient.
-[LANDED] Add ScalarTransientConfig as the flat scalar source config.
-[LANDED] Keep FrequencyMatchConfig as the flat frequency source config.
+docs/myspec.md
+docs/roadmaps/roadmap-detection.md
+docs/current-pass.md
 ```
 
-### Pass D5 — future TargetBandStrength
-
-deferred
-
-### Pass D6 — later detection family work
+Make sure the active docs present:
 
 ```text
-[DEFERRED] PulseSequence / pulsed chirp.
-[DEFERRED] CompoundFrequencyQuality only if scalar score/contrast inspections are insufficient.
-[DEFERRED] Complex sound object sources.
-[DEFERRED] FrequencyMatch-to-scalar-source migration; not current scope.
+OccurrenceSources
+InspectionPlan
+EvidenceTarget / requiredSupportTarget
+PatternAssembler / PatternRules
 ```
 
-## Current / first cleanup pass
+Remove or archive stale wording for removed source/probe paths.
 
-See `current-pass.md`. In short:
+### D-CLEAN.2 - Cleanup wording in source
+
+Focus:
 
 ```text
-Rename remaining support-source names.
-Introduce InspectionPlan.
-Make OccurrenceInspector loop configured modules.
-Keep behavior unchanged.
-Do not add TargetBandStrength yet.
+PatternAssembler wording
+FieldState wording
+PatternResultKind vocabulary
+DetectionProfile comments
+resonant node status output
 ```
 
-## Spec candidates
+Keep the runtime behavior unchanged.
+
+### D-CLEAN.3 - Helper cleanup
+
+Focus:
 
 ```text
-Detection is scalar-first, specialized-by-exception.
-ScalarOccurrenceSource is the scalar case.
-FrequencyMatch is the first accepted specialized OccurrenceSource.
-OccurrenceInspector is a coordinator over an ordered InspectionPlan.
-Most inspection modules use ScalarFeatureStrength over FeatureHistory + ScalarWindow.
-Inspectors produce evidence/strength; PatternRules decide support.
-TargetBandStrength is future inspection evidence, not an OccurrenceSource.
+unused helper config shapes
+legacy comment blocks that still imply removed architecture
 ```
 
-## Non-goals now
+Keep:
 
 ```text
-No TargetBandStrength implementation in current pass.
-No full dynamic graph / plugin registry.
+InspectionPlan
+InspectionModuleConfig
+ScalarFeatureInspectionConfig
+```
+
+---
+
+## Non-Goals
+
+```text
+No TargetBandStrength implementation.
+No pulsed chirp grouping.
+No CandidateCorrelator.
 No FrequencyMatch rewrite to scalar source.
-No BehaviorRuntime work.
+No behavior architecture work.
 No ParamRegistry work.
+No output dispatcher work.
+```
+
+---
+
+## Verification
+
+Run grep checks:
+
+```bash
+grep -R "acceptSignal\|acceptSignals\|recentSignal" -n src/detection
+grep -R "busySignalCount\|denseSignalCount\|quietSignalCount\|acceptedSignalCount\|signalWindowStart" -n src
+grep -R "ValidChirp\|InvalidChirp" -n src
+grep -R "SignalCandidate\|SignalEmitter\|SignalInspector\|InspectedSignal" -n src docs/myspec.md docs/roadmaps/roadmap-detection.md
+grep -R "AmpOccurrenceSource\|AmpTransientDetector\|FrequencyWindowProbe\|OccurrenceWindowEvaluator\|AmpDiagnosticProbe" -n src docs/myspec.md docs/roadmaps/roadmap-detection.md
+```
+
+Then build:
+
+```bash
+pio run
+```
+
+---
+
+## Success Criteria
+
+```text
+docs/myspec.md describes landed code shape
+docs/roadmaps/roadmap-detection.md focuses on next cleanup only
+PatternAssembler uses Occurrence wording
+FieldState uses OccurrenceCount wording
+PatternResultKind uses generic result names
+runtime behavior unchanged
+build succeeds
 ```

@@ -16,16 +16,38 @@ Profiles select the active occurrence emitter, inspection rules, pattern rules,
 inspection config, field-state config, and frequency match tuning.
 
 Profiles declare composition; DetectionRuntime applies the selected fields at fixed stages.
+
+Common enum / selector types used in this file:
+
+```text
+DetectionProfileKind { TonalPulse, TonalPulse2, Amp, ChirpExperimental }
+OccurrenceSourceKind { FrequencyMatch, ScalarTransient }
+FeatureStreamId { AmpEnvelope, FrequencyScore, FrequencyContrast, AmbientFloor }
+EvidenceTarget { None, AmpStrength, FrequencyScoreStrength, FrequencyContrastQuality, TargetBandStrength }
+StrengthClass { Unknown, None, Weak, Medium, Strong }
+InspectionModuleKind { None, ScalarFeatureStrength }
+```
+
+New profile checklist:
+- add the kind here
+- add a factory in this file
+- register it in detectionProfileForKind(...)
+- add its name in detectionProfileName(...)
+- add parser support in detectionProfileKindFromName(...)
+- update analyzer help/parser if SEQ should accept it
+- update node help/parser and behavior mapping if RB should accept it
 */
-enum class DetectionProfileKind {
-    TonalPulse,
-    Amp,
-    ChirpExperimental,
-};
 
 enum class OccurrenceSourceKind {
     FrequencyMatch,
     ScalarTransient,
+};
+
+enum class DetectionProfileKind {
+    TonalPulse,
+    TonalPulse2,
+    Amp,
+    ChirpExperimental,
 };
 
 struct FrequencyMatchConfig {
@@ -46,6 +68,7 @@ struct ScalarTransientConfig {
     float minTransientPeakStrength = 0.0f;
     unsigned long releaseDebounceMs = 20;
 };
+
 
 struct DetectionProfile {
     // Identity and composition.
@@ -92,33 +115,23 @@ inline DetectionProfile makeTonalPulseProfile() {
     // Field-state windowing.
     profile.fieldStateConfig.occurrenceWindowMs = 3500;
     profile.fieldStateConfig.patternWindowMs = 3500;
-    profile.fieldStateConfig.busySignalCountThreshold = 3;
-    profile.fieldStateConfig.denseSignalCountThreshold = 6;
-    profile.fieldStateConfig.quietSignalCountThreshold = 0;
+    profile.fieldStateConfig.busyOccurrenceCountThreshold = 3;
+    profile.fieldStateConfig.denseOccurrenceCountThreshold = 6;
+    profile.fieldStateConfig.quietOccurrenceCountThreshold = 0;
     profile.fieldStateConfig.quietActivityThreshold = 0.0f;
     profile.fieldStateConfig.busyActivityThreshold = 0.4f;
     return profile;
 }
 
 inline DetectionProfile makeAmpProfile() {
-    DetectionProfile profile = makeTonalPulseProfile();
+    DetectionProfile profile;
 
     // Identity and occurrence routing.
     profile.kind = DetectionProfileKind::Amp;
     profile.occurrenceSource = OccurrenceSourceKind::ScalarTransient;
-    profile.scalarTransient = {};
     profile.scalarTransient.observedStream = FeatureStreamId::AmpEnvelope;
 
-    // Amp detector path tuning.
-    profile.frequencyMatch.releaseDebounceMs = 10;
-    profile.frequencyMatch.cooldownAfterOnsetMs = 10;
-    profile.frequencyMatch.minTransientDurationMs = 90;
-    profile.frequencyMatch.scoreMin = 10000.0f;
-    profile.frequencyMatch.contrastMin = 50.0f;
-
-
     // Inspector composition.
-    profile.inspectionPlan = {};
     profile.inspectionPlan.modules[0].kind = InspectionModuleKind::ScalarFeatureStrength;
     profile.inspectionPlan.modules[0].target = EvidenceTarget::FrequencyScoreStrength;
     profile.inspectionPlan.modules[0].scalar.stream = FeatureStreamId::FrequencyScore;
@@ -126,34 +139,70 @@ inline DetectionProfile makeAmpProfile() {
     profile.inspectionPlan.modules[0].scalar.windowPostMs = 120;
     profile.inspectionPlan.count = 1;
 
-        // Pattern rules.
+    // Pattern rules.
     profile.patternRulesConfig.requireSupportForAcceptance = true;
     profile.patternRulesConfig.requiredSupportTarget = EvidenceTarget::FrequencyScoreStrength;
     profile.patternRulesConfig.minimumSupportStrength = StrengthClass::Medium;
-    
+
     // Field-state windowing.
     profile.fieldStateConfig.occurrenceWindowMs = 4000;
     profile.fieldStateConfig.patternWindowMs = 4000;
-    profile.fieldStateConfig.busySignalCountThreshold = 3;
-    profile.fieldStateConfig.denseSignalCountThreshold = 6;
+    profile.fieldStateConfig.busyOccurrenceCountThreshold = 3;
+    profile.fieldStateConfig.denseOccurrenceCountThreshold = 6;
     profile.fieldStateConfig.busyActivityThreshold = 0.45f;
     return profile;
 }
 
+inline DetectionProfile makeTonalPulse2Profile() {
+    DetectionProfile profile;
+
+    // Identity and occurrence routing.
+    profile.kind = DetectionProfileKind::TonalPulse2;
+    profile.occurrenceSource = OccurrenceSourceKind::ScalarTransient;
+    profile.scalarTransient.observedStream = FeatureStreamId::FrequencyContrast;
+    profile.scalarTransient.onsetDetectionThreshold = 50.0f;
+    profile.scalarTransient.onsetReleaseThreshold = 30.0f;
+    profile.scalarTransient.minTransientPeakStrength = 0.0f;
+    
+    profile.scalarTransient.minTransientDurationMs = 60;
+    profile.scalarTransient.maxTransientDurationMs = 160;
+    profile.scalarTransient.cooldownAfterOnsetMs = 120;
+    profile.scalarTransient.releaseDebounceMs = 10;
+
+    // Inspector composition.
+    profile.inspectionPlan.modules[0].kind = InspectionModuleKind::ScalarFeatureStrength;
+    profile.inspectionPlan.modules[0].target = EvidenceTarget::TargetBandStrength;
+    profile.inspectionPlan.modules[0].scalar.stream = FeatureStreamId::FrequencyScore;
+    profile.inspectionPlan.modules[0].scalar.strength.strongPeakThreshold = 25000.0f;
+    profile.inspectionPlan.modules[0].scalar.strength.mediumPeakThreshold = 15000.0f;
+    profile.inspectionPlan.modules[0].scalar.strength.weakPeakThreshold = 8000.0f;
+    profile.inspectionPlan.modules[0].scalar.windowPreMs = 20;
+    profile.inspectionPlan.modules[0].scalar.windowPostMs = 120;
+    profile.inspectionPlan.count = 1;
+
+    // Pattern rules.
+    profile.patternRulesConfig.requireSupportForAcceptance = true;
+    profile.patternRulesConfig.requiredSupportTarget = EvidenceTarget::TargetBandStrength;
+    profile.patternRulesConfig.minimumSupportStrength = StrengthClass::Medium;
+
+    // Field-state windowing.
+    profile.fieldStateConfig.occurrenceWindowMs = 3500;
+    profile.fieldStateConfig.patternWindowMs = 3500;
+    profile.fieldStateConfig.busyOccurrenceCountThreshold = 3;
+    profile.fieldStateConfig.denseOccurrenceCountThreshold = 6;
+    profile.fieldStateConfig.quietOccurrenceCountThreshold = 0;
+    profile.fieldStateConfig.quietActivityThreshold = 0.0f;
+    profile.fieldStateConfig.busyActivityThreshold = 0.4f;
+    return profile;
+}
+
 inline DetectionProfile makeChirpExperimentalProfile() {
-    DetectionProfile profile = makeTonalPulseProfile();
+    DetectionProfile profile;
 
     // Identity and occurrence routing.
     profile.kind = DetectionProfileKind::ChirpExperimental;
     profile.occurrenceSource = OccurrenceSourceKind::ScalarTransient;
     profile.scalarTransient.observedStream = FeatureStreamId::AmpEnvelope;
-
-    // Amp detector path tuning.
-    profile.frequencyMatch.releaseDebounceMs = 10;
-    profile.frequencyMatch.cooldownAfterOnsetMs = 10;
-    profile.frequencyMatch.minTransientDurationMs = 90;
-    profile.frequencyMatch.scoreMin = 10000.0f;
-    profile.frequencyMatch.contrastMin = 50.0f;
 
     // Pattern rules.
     profile.patternRulesConfig.requireSupportForAcceptance = false;
@@ -172,8 +221,8 @@ inline DetectionProfile makeChirpExperimentalProfile() {
     // Field-state windowing.
     profile.fieldStateConfig.occurrenceWindowMs = 4000;
     profile.fieldStateConfig.patternWindowMs = 4000;
-    profile.fieldStateConfig.busySignalCountThreshold = 3;
-    profile.fieldStateConfig.denseSignalCountThreshold = 6;
+    profile.fieldStateConfig.busyOccurrenceCountThreshold = 3;
+    profile.fieldStateConfig.denseOccurrenceCountThreshold = 6;
     profile.fieldStateConfig.busyActivityThreshold = 0.45f;
     return profile;
 }
@@ -181,10 +230,13 @@ inline DetectionProfile makeChirpExperimentalProfile() {
 // Profile lookup by kind.
 inline const DetectionProfile& detectionProfileForKind(DetectionProfileKind kind) {
     static const DetectionProfile kTonalPulse = makeTonalPulseProfile();
+    static const DetectionProfile kTonalPulse2 = makeTonalPulse2Profile();
     static const DetectionProfile kAmp = makeAmpProfile();
     static const DetectionProfile kChirpExperimental = makeChirpExperimentalProfile();
 
     switch (kind) {
+        case DetectionProfileKind::TonalPulse2:
+            return kTonalPulse2;
         case DetectionProfileKind::Amp:
             return kAmp;
         case DetectionProfileKind::ChirpExperimental:
@@ -200,6 +252,8 @@ inline const char* detectionProfileName(DetectionProfileKind kind) {
     switch (kind) {
         case DetectionProfileKind::TonalPulse:
             return "TonalPulse";
+        case DetectionProfileKind::TonalPulse2:
+            return "TonalPulse2";
         case DetectionProfileKind::Amp:
             return "Amp";
         case DetectionProfileKind::ChirpExperimental:
@@ -227,6 +281,10 @@ inline bool detectionProfileKindFromName(const char* name, DetectionProfileKind&
 
     if (strcasecmp(name, "tonalpulse") == 0 || strcasecmp(name, "tonal_pulse") == 0) {
         outKind = DetectionProfileKind::TonalPulse;
+        return true;
+    }
+    if (strcasecmp(name, "tonalpulse2") == 0 || strcasecmp(name, "tonal_pulse_2") == 0 || strcasecmp(name, "tonal_pulse2") == 0) {
+        outKind = DetectionProfileKind::TonalPulse2;
         return true;
     }
     if (strcasecmp(name, "amp") == 0) {

@@ -40,7 +40,6 @@ AnalyzerClassification classifySequenceTrial(const AnalyzerSequenceClassificatio
         ? analyzerReasonFromSequenceOutcome(input)
         : AnalyzerReason::MissingPipelineResult;
     classification.dtMs = input.dtMs;
-    classification.confidence = input.patternAvailable ? input.confidence : 0.0f;
     return classification;
 }
 

@@ -211,8 +211,8 @@ void AnalyzerApp::sequenceCurveSampleCallback(const CurveSnapshot& snapshot, voi
     self->recordSequenceSample(snapshot);
 }
 
-detection::FrequencyEvidence AnalyzerApp::captureFrequencyEvidence(unsigned long observedAtMs) const {
-    detection::FrequencyEvidence evidence;
+detection::FrequencyFeatureFrame AnalyzerApp::captureFrequencyFeatureFrame(unsigned long observedAtMs) const {
+    detection::FrequencyFeatureFrame evidence;
     evidence.observedAtMs = observedAtMs;
     const bool present = _freqBandStream.windowReady();
     const float totalEnergy = _freqBandStream.lastTotalEnergy();
@@ -297,7 +297,7 @@ void AnalyzerApp::recordSequenceClassifierOutcome(const detection::PatternResult
     }
 }
 
-void AnalyzerApp::handleSequenceCandidate(const detection::PatternResult& patternResult, const detection::FrequencyEvidence* liveFrequencyEvidence) {
+void AnalyzerApp::handleSequenceCandidate(const detection::PatternResult& patternResult, const detection::FrequencyFeatureFrame* liveFrequencyFrame) {
     if (_valMode) {
         return;
     }
@@ -310,7 +310,6 @@ void AnalyzerApp::handleSequenceCandidate(const detection::PatternResult& patter
     diagnostics.rawCandidateCount++;
 
     const auto& candidate = patternResult.candidate;
-    const unsigned long candidateIdx = diagnostics.rawCandidateCount;
     const unsigned long onsetMs = candidate.startMs;
     const long dtFromTriggerMs = static_cast<long>(onsetMs) - static_cast<long>(_sequenceTest.currentTrialScheduledAtMs);
     const long dtFromTrialStartMs = static_cast<long>(onsetMs) - static_cast<long>(_sequenceTest.currentTrialStartMs);
@@ -352,6 +351,27 @@ void AnalyzerApp::handleSequenceCandidate(const detection::PatternResult& patter
         entry.durationMs = candidate.durationMs;
         entry.strength = candidate.peakStrength;
         entry.origin = origin;
+        entry.onsetSample = candidate.onsetSample;
+        entry.peakSample = candidate.peakSample;
+        entry.releaseSample = candidate.releaseSample;
+        entry.peakMs = candidate.startMs + peakOffsetMs;
+        entry.endDtMs = dtFromTriggerMs >= 0 ? dtFromTriggerMs + static_cast<long>(candidate.durationMs) : -1;
+        entry.processedAtMs = patternResult.processedAtMs;
+        entry.processLagMs = processLagMs;
+        entry.transientPresent = patternResult.candidate.transient.present;
+        entry.freqPresent = patternResult.freq.present;
+        entry.freqMatched = patternResult.freq.matched;
+        entry.freqScore = patternResult.freq.score;
+        entry.patternValid = patternResult.valid;
+        entry.candidateAccepted = patternResult.patternCandidateAccepted;
+        entry.patternMatched = patternResult.patternMatched;
+        entry.supportMatched = patternResult.supportMatched;
+        entry.behaviorEligible = patternResult.valid;
+        entry.duplicateCandidate = duplicateCandidate;
+        entry.candidateClass = candidateClass;
+        entry.patternType = detection::patternTypeName(patternResult.type);
+        entry.reason = detection::patternReasonName(patternResult.reasonCode);
+        entry.rejectReason = detection::patternRejectReasonName(patternResult.rejectReason);
     } else {
         diagnostics.candidateOverflowCount++;
     }
@@ -372,78 +392,6 @@ void AnalyzerApp::handleSequenceCandidate(const detection::PatternResult& patter
         diagnostics.bestCandidateDurationMs = candidate.durationMs;
         diagnostics.bestCandidateStrength = candidate.peakStrength;
         diagnostics.bestCandidateOrigin = origin;
-    }
-
-    if (analyzerLogEnabled(_sequenceTest.logFlags, AnalyzerApp::ANALYZER_LOG_CANDIDATE) && !_sequenceTest.quiet) {
-        Serial.print("SEQ_CAND trial=");
-        Serial.print(_sequenceTest.currentTrial);
-        Serial.print(" idx=");
-        Serial.print(candidateIdx);
-        Serial.print(" candidate_class=");
-        Serial.print(candidateClass);
-        Serial.print(" onset_ms=");
-        Serial.print(onsetMs);
-        Serial.print(" onset_sample=");
-        Serial.print(candidate.onsetSample);
-        Serial.print(" peak_sample=");
-        Serial.print(candidate.peakSample);
-        Serial.print(" release_sample=");
-        Serial.print(candidate.releaseSample);
-        Serial.print(" onset_dt_ms=");
-        Serial.print(dtFromTriggerMs);
-        Serial.print(" peak_ms=");
-        Serial.print(candidate.startMs + peakOffsetMs);
-        Serial.print(" dur=");
-        Serial.print(candidate.durationMs);
-        Serial.print(" end_dt_ms=");
-        if (dtFromTriggerMs >= 0) {
-            Serial.print(dtFromTriggerMs + static_cast<long>(candidate.durationMs));
-            Serial.print("ms");
-        } else {
-            Serial.print("-");
-        }
-        Serial.print(" processed_at_ms=");
-        Serial.print(patternResult.processedAtMs);
-        Serial.print(" process_lag_ms=");
-        if (processLagMs >= 0) {
-            Serial.print(processLagMs);
-            Serial.print("ms");
-        } else {
-            Serial.print("-");
-        }
-        Serial.print(" strength=");
-        Serial.print(candidate.peakStrength, 1);
-        Serial.print(" transient_present=");
-        Serial.print(patternResult.candidate.transient.present ? 1 : 0);
-        Serial.print(" freq_present=");
-        Serial.print(patternResult.freq.present ? 1 : 0);
-        Serial.print(" freq_matched=");
-        Serial.print(patternResult.freq.matched ? 1 : 0);
-        Serial.print(" freq_score=");
-        Serial.print(patternResult.freq.score, 1);
-        Serial.print(" freq_conf=");
-        Serial.print(patternResult.freq.confidence, 1);
-        Serial.print(" freq_target_hz=");
-        Serial.print(patternResult.freq.targetHz);
-        Serial.print(" freq_contrast=");
-        Serial.print(patternResult.freq.spectralContrast, 1);
-        Serial.print(" pattern_valid=");
-        Serial.print(patternResult.valid ? 1 : 0);
-        Serial.print(" candidateAccepted=");
-        Serial.print(patternResult.patternCandidateAccepted ? 1 : 0);
-        Serial.print(" patternMatched=");
-        Serial.print(patternResult.patternMatched ? 1 : 0);
-        Serial.print(" supportMatched=");
-        Serial.print(patternResult.supportMatched ? 1 : 0);
-        Serial.print(" behaviorEligible=");
-        Serial.print(patternResult.valid ? 1 : 0);
-        Serial.print(" reject_reason=");
-        Serial.print(detection::patternRejectReasonName(patternResult.rejectReason));
-        Serial.print(" pattern_type=");
-        Serial.print(detection::patternTypeName(patternResult.type));
-        Serial.print(" reason=");
-        Serial.print(detection::patternReasonName(patternResult.reasonCode));
-        Serial.println();
     }
 
     if (!inWindow) {
@@ -488,8 +436,8 @@ void AnalyzerApp::handleSequenceCandidate(const detection::PatternResult& patter
             diagnostics.duplicatePatternReleaseSample = candidate.releaseSample;
             diagnostics.duplicatePatternPeakMs = candidate.startMs + peakOffsetMs;
             diagnostics.duplicatePatternReleaseMs = candidate.startMs + candidate.durationMs;
-            diagnostics.duplicateFrequencyEvidence = patternResult.freq;
-            diagnostics.duplicateFrequencyEvidenceFull = patternResult.freqFull;
+            diagnostics.duplicateFrequencyFrame = patternResult.freq;
+            diagnostics.duplicateFrequencyFrameFull = patternResult.freqFull;
             diagnostics.duplicateFrequencyProcessedAtMs = patternResult.processedAtMs;
             diagnostics.duplicateDeltaFromPrimaryMs = diagnostics.patternAccepted
                 ? static_cast<long>(onsetMs) - static_cast<long>(diagnostics.acceptedPatternMs)
@@ -518,78 +466,11 @@ void AnalyzerApp::handleSequenceCandidate(const detection::PatternResult& patter
     _sequenceTest.currentTrialDiagnostics.acceptedPatternPeakMs = candidate.startMs + peakOffsetMs;
     _sequenceTest.currentTrialDiagnostics.acceptedPatternReleaseMs = candidate.startMs + candidate.durationMs;
     _sequenceTest.currentTrialDiagnostics.acceptedAmbientBaseline = candidate.ambientBaseline;
-    _sequenceTest.currentTrialDiagnostics.acceptedFrequencyEvidence = patternResult.freq;
-    _sequenceTest.currentTrialDiagnostics.acceptedFrequencyEvidenceFull = patternResult.freqFull;
+    _sequenceTest.currentTrialDiagnostics.acceptedFrequencyFrame = patternResult.freq;
+    _sequenceTest.currentTrialDiagnostics.acceptedFrequencyFrameFull = patternResult.freqFull;
     _sequenceTest.currentTrialDiagnostics.acceptedFrequencyProcessedAtMs = patternResult.processedAtMs;
     _sequenceTest.currentTrialDiagnostics.lastRejectStrength = 0.0f;
     _sequenceTest.currentTrialDiagnostics.lastRejectDurationMs = 0;
     _sequenceTest.currentTrialPatternDetectedMs = onsetMs;
 
-    if (analyzerLogEnabled(_sequenceTest.logFlags, AnalyzerApp::ANALYZER_LOG_CANDIDATE) && !_sequenceTest.quiet) {
-        Serial.print("SEQ_CAND role=result trial=");
-        Serial.print(_sequenceTest.currentTrial);
-        Serial.print(" primary_idx=");
-        Serial.print(candidateIdx);
-        Serial.print(" onset_ms=");
-        Serial.print(candidate.startMs);
-        Serial.print(" onset_sample=");
-        Serial.print(candidate.onsetSample);
-        Serial.print(" peak_sample=");
-        Serial.print(candidate.peakSample);
-        Serial.print(" release_sample=");
-        Serial.print(candidate.releaseSample);
-        Serial.print(" onset_dt_ms=");
-        Serial.print(dtFromTriggerMs);
-        Serial.print(" peak_ms=");
-        Serial.print(candidate.startMs + peakOffsetMs);
-        Serial.print(" dur=");
-        Serial.print(candidate.durationMs);
-        Serial.print(" end_dt_ms=");
-        if (dtFromTriggerMs >= 0) {
-            Serial.print(dtFromTriggerMs + static_cast<long>(candidate.durationMs));
-            Serial.print("ms");
-        } else {
-            Serial.print("-");
-        }
-        Serial.print(" processed_at_ms=");
-        Serial.print(patternResult.processedAtMs);
-        Serial.print(" process_lag_ms=");
-        if (processLagMs >= 0) {
-            Serial.print(processLagMs);
-            Serial.print("ms");
-        } else {
-            Serial.print("-");
-        }
-        Serial.print(" strength=");
-        Serial.print(candidate.peakStrength, 1);
-        Serial.print(" transient_present=");
-        Serial.print(patternResult.candidate.transient.present ? 1 : 0);
-        Serial.print(" freq_present=");
-        Serial.print(patternResult.freq.present ? 1 : 0);
-        Serial.print(" freq_matched=");
-        Serial.print(patternResult.freq.matched ? 1 : 0);
-        Serial.print(" freq_score=");
-        Serial.print(patternResult.freq.score, 1);
-        Serial.print(" freq_conf=");
-        Serial.print(patternResult.freq.confidence, 1);
-        Serial.print(" freq_target_hz=");
-        Serial.print(patternResult.freq.targetHz);
-        Serial.print(" freq_contrast=");
-        Serial.print(patternResult.freq.spectralContrast, 1);
-        Serial.print(" reason=");
-        Serial.print(detection::patternReasonName(patternResult.reasonCode));
-        Serial.print(" pattern_valid=");
-        Serial.print(patternResult.valid ? 1 : 0);
-        Serial.print(" candidateAccepted=");
-        Serial.print(patternResult.patternCandidateAccepted ? 1 : 0);
-        Serial.print(" patternMatched=");
-        Serial.print(patternResult.patternMatched ? 1 : 0);
-        Serial.print(" supportMatched=");
-        Serial.print(patternResult.supportMatched ? 1 : 0);
-        Serial.print(" behaviorEligible=");
-        Serial.print(patternResult.valid ? 1 : 0);
-        Serial.print(" reject_reason=");
-        Serial.print(detection::patternRejectReasonName(patternResult.rejectReason));
-        Serial.println();
-    }
 }

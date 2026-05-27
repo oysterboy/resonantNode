@@ -5,9 +5,41 @@ namespace detection {
 
 DetectionRuntime::DetectionRuntime() = default;
 
+namespace {
+
+OccurrenceSource occurrenceSourceForStream(FeatureStreamId stream) {
+    switch (stream) {
+        case FeatureStreamId::FrequencyScore:
+        case FeatureStreamId::FrequencyContrast:
+            return OccurrenceSource::Frequency;
+        case FeatureStreamId::AmpEnvelope:
+        case FeatureStreamId::AmbientFloor:
+        case FeatureStreamId::Unknown:
+        default:
+            return OccurrenceSource::Amp;
+    }
+}
+
+float selectedScalarValue(const AudioSignalFrame& frame, FeatureStreamId stream, const FeatureHistory& history) {
+    switch (stream) {
+        case FeatureStreamId::AmpEnvelope:
+            return static_cast<float>(frame.level);
+        case FeatureStreamId::AmbientFloor:
+            return frame.baseline;
+        case FeatureStreamId::FrequencyScore:
+        case FeatureStreamId::FrequencyContrast:
+            return history.latestValue(stream);
+        case FeatureStreamId::Unknown:
+        default:
+            return static_cast<float>(frame.level);
+    }
+}
+
+} // namespace
+
 void DetectionRuntime::resetState() {
-    _ampEmitter.reset();
     _frequencyEmitter.reset();
+    _scalarEmitter.reset();
     _occurrenceInspector.reset();
     _patternAssembler.reset();
     _fieldStateTracker.reset();
@@ -21,20 +53,22 @@ void DetectionRuntime::resetState() {
     _lastInspectedOccurrence = {};
 }
 
-void DetectionRuntime::setFrequencyMatchTuning(const FrequencyMatchEvaluation::Values& tuning) {
-    _frequencyMatchTuning = tuning;
+void DetectionRuntime::setFrequencyMatchConfig(const FrequencyMatchConfig& config) {
+    _frequencyMatchConfig = config;
+    _frequencyEmitter.setConfig(_frequencyMatchConfig);
 }
 
-void DetectionRuntime::setFrequencyOccurrenceTiming(const DetectionProfile::FrequencyOccurrenceTiming& timing) {
-    _frequencyOccurrenceTiming = timing;
-    _frequencyEmitter.setTimingConfig(_frequencyOccurrenceTiming);
+void DetectionRuntime::setScalarTransientConfig(const ScalarTransientConfig& config) {
+    _scalarTransientConfig = config;
+    _scalarEmitter.setConfig(_scalarTransientConfig);
 }
 
-void DetectionRuntime::setOccurrenceSource(ProfileOccurrenceSourceKind kind) {
+void DetectionRuntime::setOccurrenceSource(OccurrenceSourceKind kind) {
     _occurrenceSourceKind = kind;
     _frequencyEmitter.reset();
-    _ampEmitter.reset();
-    _frequencyEmitter.setTimingConfig(_frequencyOccurrenceTiming);
+    _scalarEmitter.reset();
+    _frequencyEmitter.setConfig(_frequencyMatchConfig);
+    _scalarEmitter.setConfig(_scalarTransientConfig);
 }
 
 void DetectionRuntime::setInspectionRules(ProfileInspectionRulesKind kind) {
@@ -62,7 +96,7 @@ void DetectionRuntime::setProfileName(const char* profileName) {
 
 void DetectionRuntime::observeFrame(
     const AudioSignalFrame& frame,
-    const FrequencyEvidence& frequencyEvidence,
+    const FrequencyFeatureFrame& frequencyEvidence,
     unsigned long nowMs
 ) {
     _fieldStateTracker.update(nowMs);
@@ -71,14 +105,19 @@ void DetectionRuntime::observeFrame(
     }
 
     FeatureExtractor::observeFrame(frame, _featureHistory);
-    FeatureExtractor::observeFrequencyEvidence(frequencyEvidence, nowMs, _featureHistory);
+    FeatureExtractor::observeFrequencyFeatureFrame(frequencyEvidence, nowMs, _featureHistory);
 
     switch (_occurrenceSourceKind) {
-        case ProfileOccurrenceSourceKind::Frequency:
-            _frequencyEmitter.observeFrame(frame, frequencyEvidence, _frequencyMatchTuning);
+        case OccurrenceSourceKind::FrequencyMatch:
+            _frequencyEmitter.observeFrame(frame, frequencyEvidence);
             break;
-        case ProfileOccurrenceSourceKind::Amp:
-            _ampEmitter.observeFrame(frame);
+        case OccurrenceSourceKind::ScalarTransient:
+            _scalarEmitter.observeFrame(
+                frame,
+                selectedScalarValue(frame, _scalarTransientConfig.observedStream, _featureHistory),
+                OccurrenceKind::AmpTransient,
+                occurrenceSourceForStream(_scalarTransientConfig.observedStream)
+            );
             break;
     }
 
@@ -121,7 +160,7 @@ void DetectionRuntime::drainOccurrenceSources(unsigned long nowMs) {
     Occurrence candidate;
 
     switch (_occurrenceSourceKind) {
-        case ProfileOccurrenceSourceKind::Frequency:
+        case OccurrenceSourceKind::FrequencyMatch:
             while (_frequencyEmitter.popOccurrence(candidate)) {
                 _fieldStateTracker.observeOccurrence(candidate, nowMs);
                 const InspectedOccurrence inspected = _occurrenceInspector.inspectWithHistory(candidate, &_featureHistory);
@@ -131,8 +170,8 @@ void DetectionRuntime::drainOccurrenceSources(unsigned long nowMs) {
                 _patternAssembler.acceptSignal(inspected);
             }
             break;
-        case ProfileOccurrenceSourceKind::Amp:
-            while (_ampEmitter.popOccurrence(candidate)) {
+        case OccurrenceSourceKind::ScalarTransient:
+            while (_scalarEmitter.popOccurrence(candidate)) {
                 _fieldStateTracker.observeOccurrence(candidate, nowMs);
                 const InspectedOccurrence inspected = _occurrenceInspector.inspectWithHistory(candidate, &_featureHistory);
                 _fieldStateTracker.observeInspectedOccurrence(inspected, nowMs);

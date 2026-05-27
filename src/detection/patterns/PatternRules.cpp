@@ -9,6 +9,22 @@ void PatternRules::configure(const PatternRulesConfig& config) {
 
 namespace {
 
+StrengthClass supportStrengthForTarget(const PatternCandidate& candidate, EvidenceTarget target) {
+    switch (target) {
+        case EvidenceTarget::AmpStrength:
+            return candidate.ampStrength;
+        case EvidenceTarget::FrequencyScoreStrength:
+            return candidate.frequencyScoreStrength;
+        case EvidenceTarget::FrequencyContrastQuality:
+            return candidate.frequencyContrastQuality;
+        case EvidenceTarget::TargetBandStrength:
+            return candidate.targetBandStrength;
+        case EvidenceTarget::None:
+        default:
+            return StrengthClass::Unknown;
+    }
+}
+
 PatternResultKind resultKindFromCandidate(const PatternCandidate& candidate) {
     if (candidate.kind == PatternCandidateKind::PulseSequence || candidate.occurrenceCount > 1 || candidate.pulseCount > 1) {
         if (candidate.maxGapMs > 0 && candidate.maxGapMs < 20UL) {
@@ -23,11 +39,10 @@ PatternResultKind resultKindFromCandidate(const PatternCandidate& candidate) {
     return PatternResultKind::Pattern;
 }
 
-PatternRejectReason supportRejectReason(const PatternCandidate& candidate) {
-    if (candidate.broadAmpStrength == StrengthClass::Unknown) {
-        return PatternRejectReason::MissingSupport;
-    }
-    return PatternRejectReason::SupportTooLow;
+PatternRejectReason supportRejectReason(StrengthClass supportStrength) {
+    return supportStrength == StrengthClass::Unknown
+        ? PatternRejectReason::MissingSupport
+        : PatternRejectReason::SupportTooLow;
 }
 
 PatternResult makeInvalidResult(const PatternCandidate& candidate,
@@ -53,13 +68,14 @@ PatternResult makeInvalidResult(const PatternCandidate& candidate,
     result.lastPulseMs = candidate.lastPulseMs;
     result.minGapMs = candidate.minGapMs;
     result.maxGapMs = candidate.maxGapMs;
-    result.reasonCode = PatternReasonCode::DetectorRejected;
-    result.rejectReason = PatternRejectReason::NoCandidate;
+    result.reasonCode = PatternReasonCode::FromOccurrence;
+    result.rejectReason = PatternRejectReason::InvalidOccurrence;
     result.confidence = 0.0f;
-    result.signalConfidence = 0.0f;
-    result.frequencyConfidence = 0.0f;
-    result.broadAmpStrength = StrengthClass::Unknown;
-    result.broadAmp = candidate.broadAmp;
+    result.ampStrength = StrengthClass::Unknown;
+    result.ampStrengthEvidence = candidate.ampStrengthEvidence;
+    result.frequencyScoreStrength = candidate.frequencyScoreStrength;
+    result.frequencyContrastQuality = candidate.frequencyContrastQuality;
+    result.targetBandStrength = candidate.targetBandStrength;
     result.duplicateRisk = false;
     result.duplicateRiskScore = 0.0f;
     result.patternCandidateAccepted = false;
@@ -75,11 +91,11 @@ PatternResult PatternRules::evaluate(
     const PatternCandidate& candidate,
     unsigned long nowMs
 ) const {
-    if (candidate.frequency.present && candidate.frequency.matched) {
-        return evaluateFrequencyPattern(candidate, nowMs);
+    if (!candidate.valid) {
+        return makeInvalidResult(candidate, nowMs);
     }
 
-    return makeInvalidResult(candidate, nowMs);
+    return evaluateFrequencyPattern(candidate, nowMs);
 }
 
 PatternResult PatternRules::evaluateFrequencyPattern(
@@ -109,33 +125,23 @@ PatternResult PatternRules::evaluateFrequencyPattern(
     result.valid = true;
     result.type = PatternType::ValidPattern;
     result.kind = resultKindFromCandidate(candidate);
-    result.reasonCode = PatternReasonCode::FromFrequencyMatch;
+    result.reasonCode = PatternReasonCode::FromOccurrence;
     result.rejectReason = PatternRejectReason::None;
-    result.signalConfidence = candidate.signalConfidence > 0.0f ? candidate.signalConfidence : 1.0f;
-    result.frequencyConfidence = candidate.frequencyConfidence;
-    result.broadAmpStrength = candidate.broadAmpStrength;
-    result.broadAmp = candidate.broadAmp;
+    result.ampStrength = candidate.ampStrength;
+    result.ampStrengthEvidence = candidate.ampStrengthEvidence;
+    result.frequencyScoreStrength = candidate.frequencyScoreStrength;
+    result.frequencyContrastQuality = candidate.frequencyContrastQuality;
+    result.targetBandStrength = candidate.targetBandStrength;
     result.duplicateRisk = candidate.duplicateRisk;
     result.duplicateRiskScore = candidate.duplicateRiskScore;
     result.supportMatched = true;
     if (_config.requireSupportForAcceptance) {
-        switch (_config.supportSource) {
-            case PatternSupportSource::None:
-                result.supportMatched = true;
-                break;
-            case PatternSupportSource::BroadAmp:
-                result.supportMatched = candidate.broadAmpStrength >= _config.minimumSupport;
-                break;
-            case PatternSupportSource::TargetBand:
-                result.supportMatched = false;
-                break;
-        }
+        const StrengthClass supportStrength = supportStrengthForTarget(candidate, _config.requiredSupportTarget);
+        result.supportMatched = supportStrength >= _config.minimumSupportStrength;
     }
     if (!result.supportMatched) {
         result.kind = PatternResultKind::Rejected;
-        result.rejectReason = _config.supportSource == PatternSupportSource::TargetBand
-            ? PatternRejectReason::MissingSupport
-            : supportRejectReason(candidate);
+        result.rejectReason = supportRejectReason(supportStrengthForTarget(candidate, _config.requiredSupportTarget));
         result.reasonCode = PatternReasonCode::UnsupportedPattern;
     }
     result.valid = result.patternMatched && result.supportMatched;

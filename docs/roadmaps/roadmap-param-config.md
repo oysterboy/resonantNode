@@ -1,337 +1,111 @@
 # Roadmap — Param / Config Infrastructure
 
-Status: active roadmap. Scope: Param / Config infrastructure.
+Status: active roadmap. Scope: hardcoded config workflow now, runtime params later.
 
-This roadmap is the detailed version of Param / Config work referenced by the General Node roadmap.
+## Status legend
 
----
+```text
+[LANDED]    Verified in current src.zip.
+[PARTIAL]   Partly present in source, but not yet the intended final shape.
+[TODO]      Next or later implementation work.
+[DEFERRED]  Intentionally later / not for the current test slice.
+[REMOVED]   Confirmed absent from current source or intentionally removed.
+```
 
-## Architecture Goal
 
-Eventually:
+## Architecture goal
 
 ```text
 Modules define parameters.
-Registries collect parameter definitions.
-ConfigStore stores values.
+Registries later collect parameter definitions.
+ConfigStore later stores values.
 Node wires modules and registries.
 Commands access the registry.
 Profiles provide defaults.
 Installation config provides overrides.
 ```
 
-But the next use case may not need runtime params yet.
-
-Usability note:
+## Source-verified current status
 
 ```text
-one installation preset should describe the whole node
-detection, behavior, output, and node-specific values can live in one preset
-subsystem ownership stays split underneath for implementation clarity
+[LANDED] Hardcoded DetectionProfile defaults exist.
+[LANDED] BehaviorGateConfig defaults exist.
+[PARTIAL] RB PARAM command can tune frequency thresholds at runtime.
+[PARTIAL] RB BEHAV command can tune behavior values at runtime.
+[TODO] ParamRegistry is not landed.
+[TODO] ParamDescriptor is not landed.
+[TODO] ConfigStore / persistence is not landed.
+[TODO] PARAM SAVE / LOAD / VERIFY is not landed.
+[TODO] Fleet/OTA param workflow is not landed.
 ```
 
----
+## Implementation order
 
-## Spec Candidates
+### P1 — first cleanup pass: status-visible hardcoded workflow
 
-These are stable rules that should later be considered for `myspec.md`:
+```text
+[TODO] Keep hardcoded config as primary 5-node workflow.
+[TODO] Make active hardcoded/test values visible in STATUS.
+[TODO] Label RB PARAM / RB BEHAV as temporary runtime tuning, not durable config.
+[TODO] Ensure changed runtime values are visible so invisible drift is reduced during tests.
+```
+
+### P2 — Param LIST/GET only if needed
+
+```text
+[DEFERRED] Add ParamDescriptor.
+[DEFERRED] Add ParamRegistry.
+[DEFERRED] Let 1–2 real modules register 3–5 params.
+[DEFERRED] Add PARAM LIST and PARAM GET.
+```
+
+### P3 — SET with validation
+
+```text
+[DEFERRED] Add PARAM SET only after LIST/GET is useful.
+[DEFERRED] Add validation and clear error result.
+```
+
+### P4 — persistence / verification
+
+```text
+[DEFERRED] Add PARAM SAVE / LOAD / RESET.
+[DEFERRED] Add VERIFY / STATUS confirmation.
+[DEFERRED] Only then rely on runtime params for multi-node workflow.
+```
+
+### P5 — fleet / install config
+
+```text
+[DEFERRED] Bulk apply.
+[DEFERRED] verify.
+[DEFERRED] export/import.
+[DEFERRED] VEKTOR exposure later.
+```
+
+## Current / first cleanup pass
+
+```text
+No ParamRegistry now.
+Make hardcoded and ad-hoc runtime values visible.
+Keep ownership with DetectionProfile / BehaviorGateConfig / output config.
+```
+
+## Spec candidates
 
 ```text
 Params attach to subsystem owners, not Node glue.
-Runtime PARAM SET is not a useful 5-node workflow unless paired with SAVE/LOAD or fleet apply/verify.
+Runtime PARAM SET is not useful for 5-node workflow unless paired with SAVE/LOAD or fleet apply/verify.
 Hardcoded params are acceptable only when they live with the correct module/profile owner.
 ```
 
----
-
-## MVP Guardrail
-
-MVP does not mean throwaway.
-
-Each minimum viable pass should be the smallest useful slice that still follows the intended architecture direction.
-
-Avoid two extremes:
+## Non-goals now
 
 ```text
-too large:
-    empty frameworks, generic registries, factories, unused abstractions
-
-too small / wrong:
-    hacks in Node, duplicated logic, temporary APIs, shortcuts that must be removed immediately
-```
-
-A good MVP:
-
-```text
-uses real current modules
-solves a real near-term problem
-keeps ownership in the right subsystem
-can be extended without rewriting the same boundary
-does not create compatibility sediment
-```
-
-If the quickest implementation would put logic in the wrong owner, prefer a slightly larger but correctly placed slice.
-
-Rule:
-
-```text
-Build the smallest slice you can keep.
-```
-
-
----
-
-## Current Status
-
-Current practical workflow can remain:
-
-```text
-hardcoded params + firmware upload
-```
-
-This is acceptable for early 5-node TonalPulse testing if hardcoded values live with their correct owner.
-
-Good:
-
-```text
-TonalPulse defaults live with DetectionProfile / profile config
-Behavior defaults live with behavior config
-Output defaults live with output config
-STATUS reports them
-```
-
-Bad:
-
-```text
-all test params live as random globals in node.cpp
-```
-
-Runtime params become worthwhile only with one of:
-
-```text
-PARAM SET + SAVE/LOAD + VERIFY
-fleet/OTA param apply + VERIFY
-clear export/verify workflow
-```
-
-Unsaved runtime `PARAM SET` is not enough as the main 5-node workflow because it creates invisible drift.
-
-Live profile model for the future runtime-param route:
-
-```text
-keep one live profile instance per node
-startup builds it from factory defaults
-apply saved values on top if they exist
-apply live tuning on top of that
-RESET rebuilds the live profile from factory defaults again
-SAVE persists the current live profile state
-```
-
-This means `DetectionProfile` stays the default recipe, while `Node` or runtime state owns the mutable live copy.
-
----
-
-## Implementation Order
-
-### Route A — hardcoded firmware-config workflow
-
-Use first.
-
-```text
-1. hardcode test params in code/config defaults
-2. upload same firmware to all 5 nodes
-3. run test
-4. change params in code/config
-5. upload again
-```
-
-Best when:
-
-```text
-detection/behavior is still changing
-param set is small
-reliability matters more than convenience
-```
-
-### Route B — runtime-config workflow
-
-Use later if hardcoded upload becomes too slow.
-
-Required minimum:
-
-```text
-PARAM LIST
-PARAM GET
-PARAM SET
-PARAM SAVE
-PARAM LOAD
-VERIFY / STATUS
-```
-
-Do not stop at unsaved `PARAM SET`.
-
-### Route C — fleet/OTA param workflow
-
-Later.
-
-Required minimum:
-
-```text
-bulk apply
-verify
-save
-report failures
-```
-
----
-
-## Minimum Viable First Pass
-
-For immediate 5-node testing:
-
-```text
-No ParamRegistry required.
-```
-
-Instead:
-
-```text
-make key hardcoded params visible in STATUS/log output
-```
-
-Minimum visible values:
-
-```text
-active detection profile
-active behavior mode / enabled flag
-key TonalPulse detection defaults
-key behavior defaults
-output frequency/profile if hardcoded
-firmware/build label if available
-node id if available
-```
-
-Success:
-
-```text
-It is clear which firmware/config a node is running during physical tests.
-```
-
----
-
-## First Runtime Param Pass, if needed later
-
-Goal:
-
-```text
-Inspect real params without changing them.
-```
-
-Architecture-aligned slice:
-
-```text
-ParamDescriptor
-ParamRegistry
-registerParams() on 1–2 real modules
-PARAM LIST
-PARAM GET <path>
-```
-
-Pick 3–5 real params:
-
-```text
-behavior.refractoryMs
-behavior.waitAfterHeardMs
-detection.activeProfile
-output.defaultFrequencyHz
-analyzer.trialCount
-```
-
-Do not implement yet:
-
-```text
-PARAM SET
-SAVE / LOAD
-persistence
-profile defaults
-installation overrides
-VEKTOR exposure
-bulk import/export
-OTA/fleet tuning
-```
-
----
-
-## Second Runtime Param Pass, if needed later
-
-Goal:
-
-```text
-Change params safely.
-```
-
-Add:
-
-```text
-PARAM SET <path> <value>
-validation
-clear error result
-```
-
-Still no persistence unless the workflow needs it immediately.
-
----
-
-## Third Runtime Param Pass
-
-Goal:
-
-```text
-Make runtime params useful across restart.
-```
-
-Add:
-
-```text
-PARAM SAVE
-PARAM LOAD
-PARAM RESET
-STATUS / VERIFY
-```
-
-Only then rely on runtime params for 5-node test workflow.
-
----
-
-## Later Phases
-
-```text
-profile defaults
-installation overrides
-export / import
-bulk / fleet update
-VEKTOR exposure
-```
-
----
-
-## Non-Goals for First Implementation
-
-```text
-generic reflection framework
-complex nested schemas
-remote fleet OTA
-web UI
-full VEKTOR resource mapping
-dynamic module loading
-generic behavior factory
-node-owned param switchboard
-```
-
----
-
-## One-Line Strategy
-
-```text
-Use hardcoded params for the first 5-node tests; add runtime params only when they include persistence or verification and remain module-owned.
+Generic reflection framework.
+Persistence.
+Bulk/fleet update.
+VEKTOR param exposure.
+Complex nested schemas.
+Node-owned param switchboard.
 ```

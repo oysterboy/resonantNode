@@ -13,7 +13,7 @@ FrequencyOccurrenceSource
 
 Owns the frequency-match occurrence candidate path.
 Wraps FrequencyMatchDetector to produce frequency candidates from AudioSignalFrame
-and FrequencyEvidence input.
+and FrequencyFeatureFrame input.
 Does not decide pattern meaning or behavior.
 */
 class FrequencyOccurrenceSource {
@@ -22,24 +22,21 @@ public:
 
     void reset();
 
-    void setTimingConfig(const DetectionProfile::FrequencyOccurrenceTiming& timingConfig);
+    void setConfig(const FrequencyMatchConfig& config);
 
     void observeFrame(
         const AudioSignalFrame& frame,
-        const detection::FrequencyEvidence& evidence,
-        const FrequencyMatchEvaluation::Values& frequencyTuning
+        const detection::FrequencyFeatureFrame& evidence
     );
 
     bool popOccurrence(Occurrence& out);
     const FrequencyMatchDetector& detector() const;
 
 private:
-    void applyFrequencyTuning(const FrequencyMatchEvaluation::Values& frequencyTuning);
-
     bool _hasPending = false;
-    detection::FrequencyEvidence _peakEvidence = {};
+    detection::FrequencyFeatureFrame _peakEvidence = {};
     FrequencyMatchDetector _detector = {};
-    DetectionProfile::FrequencyOccurrenceTiming _timingConfig = {};
+    FrequencyMatchConfig _config = {};
     Occurrence _pending = {};
     unsigned long _lastEmittedReleaseMs = 0;
 };

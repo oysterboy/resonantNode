@@ -62,6 +62,22 @@ uint32_t sampleOffsetUs(uint32_t sampleOffset, uint32_t sampleRateHz) {
     return static_cast<uint32_t>((static_cast<uint64_t>(sampleOffset) * 1000000ULL) / static_cast<uint64_t>(sampleRateHz));
 }
 
+const char* evidenceTargetName(detection::EvidenceTarget value) {
+    switch (value) {
+        case detection::EvidenceTarget::AmpStrength:
+            return "AmpStrength";
+        case detection::EvidenceTarget::FrequencyScoreStrength:
+            return "FrequencyScoreStrength";
+        case detection::EvidenceTarget::FrequencyContrastQuality:
+            return "FrequencyContrastQuality";
+        case detection::EvidenceTarget::TargetBandStrength:
+            return "TargetBandStrength";
+        case detection::EvidenceTarget::None:
+        default:
+            return "None";
+    }
+}
+
 bool startsWithTokenIgnoreCase(const char* line, const char* token) {
     while (*token != '\0') {
         if (*line == '\0') {
@@ -99,7 +115,7 @@ const char* detectionProfileKindName(detection::DetectionProfileKind kind) {
 
 void printProfileComposition(const detection::DetectionProfile& profile) {
     Serial.print(" emitters=");
-    Serial.print(detection::profileOccurrenceSourceName(profile.occurrenceSource));
+    Serial.print(detection::occurrenceSourceKindName(profile.occurrenceSource));
     Serial.print(" inspectionRules=");
     Serial.print(detection::profileInspectionRulesName(profile.inspectionRules));
     Serial.print(" fieldStateConfig=");
@@ -113,37 +129,39 @@ void printDetectionProfileDetails(const detection::DetectionProfile& profile) {
     Serial.print("  kind=");
     Serial.println(detection::detectionProfileName(profile.kind));
     Serial.print("  occurrenceSource=");
-    Serial.println(detection::profileOccurrenceSourceName(profile.occurrenceSource));
+    Serial.println(detection::occurrenceSourceKindName(profile.occurrenceSource));
     Serial.print("  inspectionRules=");
     Serial.println(detection::profileInspectionRulesName(profile.inspectionRules));
-    Serial.print("  freqTiming.releaseDebounceMs=");
-    Serial.println(profile.frequencyOccurrenceTiming.releaseDebounceMs);
-    Serial.print("  freqTiming.cooldownAfterOnsetMs=");
-    Serial.println(profile.frequencyOccurrenceTiming.cooldownAfterOnsetMs);
-    Serial.print("  freqTiming.minTransientDurationMs=");
-    Serial.println(profile.frequencyOccurrenceTiming.minTransientDurationMs);
+    Serial.print("  freqMatch.releaseDebounceMs=");
+    Serial.println(profile.frequencyMatch.releaseDebounceMs);
+    Serial.print("  freqMatch.cooldownAfterOnsetMs=");
+    Serial.println(profile.frequencyMatch.cooldownAfterOnsetMs);
+    Serial.print("  freqMatch.minTransientDurationMs=");
+    Serial.println(profile.frequencyMatch.minTransientDurationMs);
     Serial.print("  freqMatch.scoreMin=");
-    Serial.println(profile.frequencyMatchTuning.scoreMin, 0);
+    Serial.println(profile.frequencyMatch.scoreMin, 0);
     Serial.print("  freqMatch.contrastMin=");
-    Serial.println(profile.frequencyMatchTuning.contrastMin, 1);
-    Serial.print("  inspection.broadAmp.enabled=");
-    Serial.println(profile.inspectionConfig.broadAmp.enabled ? 1 : 0);
-    Serial.print("  inspection.broadAmp.windowPreMs=");
-    Serial.println(profile.inspectionConfig.broadAmp.windowPreMs);
-    Serial.print("  inspection.broadAmp.windowPostMs=");
-    Serial.println(profile.inspectionConfig.broadAmp.windowPostMs);
-    Serial.print("  inspection.broadAmp.strength.strong=");
-    Serial.println(profile.inspectionConfig.broadAmp.strength.strongPeakThreshold, 1);
-    Serial.print("  inspection.broadAmp.strength.medium=");
-    Serial.println(profile.inspectionConfig.broadAmp.strength.mediumPeakThreshold, 1);
-    Serial.print("  inspection.broadAmp.strength.weak=");
-    Serial.println(profile.inspectionConfig.broadAmp.strength.weakPeakThreshold, 1);
+    Serial.println(profile.frequencyMatch.contrastMin, 1);
+    Serial.print("  inspection.ampStrength.enabled=");
+    Serial.println(profile.inspectionConfig.ampStrength.enabled ? 1 : 0);
+    Serial.print("  inspection.ampStrength.windowPreMs=");
+    Serial.println(profile.inspectionConfig.ampStrength.windowPreMs);
+    Serial.print("  inspection.ampStrength.windowPostMs=");
+    Serial.println(profile.inspectionConfig.ampStrength.windowPostMs);
+    Serial.print("  inspection.ampStrength.strength.strong=");
+    Serial.println(profile.inspectionConfig.ampStrength.strength.strongPeakThreshold, 1);
+    Serial.print("  inspection.ampStrength.strength.medium=");
+    Serial.println(profile.inspectionConfig.ampStrength.strength.mediumPeakThreshold, 1);
+    Serial.print("  inspection.ampStrength.strength.weak=");
+    Serial.println(profile.inspectionConfig.ampStrength.strength.weakPeakThreshold, 1);
     Serial.print("  inspection.duplicateRisk.enabled=");
     Serial.println(profile.inspectionConfig.duplicateRisk.enabled ? 1 : 0);
     Serial.print("  inspection.duplicateRisk.windowMs=");
     Serial.println(profile.inspectionConfig.duplicateRisk.windowMs);
     Serial.print("  pattern.requireSupportForAcceptance=");
     Serial.println(profile.patternRulesConfig.requireSupportForAcceptance ? 1 : 0);
+    Serial.print("  pattern.requiredSupportTarget=");
+    Serial.println(evidenceTargetName(profile.patternRulesConfig.requiredSupportTarget));
     Serial.print("  fieldState.occurrenceWindowMs=");
     Serial.println(profile.fieldStateConfig.occurrenceWindowMs);
     Serial.print("  fieldState.patternWindowMs=");
@@ -578,6 +596,7 @@ void Node::handleSerialLine(const char* line) {
         Serial.println("RB CMD: RB BEHAV wait=100 refractory=0 suppressSelfChirp=250 detectionSuppressTail=0 idleTimeout=20000 idleTimeoutVariation=10000 idleBlockedAfterHeard=3000 idleBlockedAfterOwnEmit=5000");
         Serial.println("RB CMD: RB STATUS");
         Serial.println("RB CMD: RB PROFILE name=tonalpulse");
+        Serial.println("RB CMD(AMP): RB PROFILE name=amp");
         Serial.println("RB CMD(EXP): RB PROFILE name=chirp_experimental (experimental)");
         Serial.println("RB CMD: RB rebase");
         Serial.println("RB CMD: RB rebase force");
@@ -609,19 +628,22 @@ void Node::handleSerialLine(const char* line) {
             return;
         }
 
-        FrequencyMatchEvaluation::Values freqTuning = _activeDetectionProfile.frequencyMatchTuning;
+        FrequencyMatchEvaluation::Values freqTuning = {};
+        freqTuning.scoreMin = _activeDetectionProfile.frequencyMatch.scoreMin;
+        freqTuning.contrastMin = _activeDetectionProfile.frequencyMatch.contrastMin;
 
         while ((token = strtok_r(nullptr, " ", &savePtr)) != nullptr) {
             FrequencyMatchEvaluation::parseToken(token, freqTuning);
         }
 
-        _activeDetectionProfile.frequencyMatchTuning = freqTuning;
+        _activeDetectionProfile.frequencyMatch.scoreMin = freqTuning.scoreMin;
+        _activeDetectionProfile.frequencyMatch.contrastMin = freqTuning.contrastMin;
         applyActiveDetectionProfile();
 
         Serial.print(" freqScore=");
-        Serial.print(_activeDetectionProfile.frequencyMatchTuning.scoreMin, 0);
+        Serial.print(_activeDetectionProfile.frequencyMatch.scoreMin, 0);
         Serial.print(" freqContrast=");
-        Serial.println(_activeDetectionProfile.frequencyMatchTuning.contrastMin, 1);
+        Serial.println(_activeDetectionProfile.frequencyMatch.contrastMin, 1);
         return;
     }
     if (startsWithTokenIgnoreCase(line, "RB BEHAV")) {
@@ -788,15 +810,17 @@ void Node::handleDetectCommand(const char* line) {
     Serial.print("RB STATUS profile=");
     Serial.print(detection::detectionProfileName(detectionProfile.kind));
     Serial.print(" emitters=");
-    Serial.print(detection::profileOccurrenceSourceName(detectionProfile.occurrenceSource));
+    Serial.print(detection::occurrenceSourceKindName(detectionProfile.occurrenceSource));
     Serial.print(" inspectionRules=");
     Serial.print(detection::profileInspectionRulesName(detectionProfile.inspectionRules));
     Serial.print(" requireSupportForAcceptance=");
     Serial.print(detectionProfile.patternRulesConfig.requireSupportForAcceptance ? 1 : 0);
+    Serial.print(" requiredSupportTarget=");
+    Serial.print(evidenceTargetName(detectionProfile.patternRulesConfig.requiredSupportTarget));
     Serial.print(" freqScore=");
-    Serial.print(detectionProfile.frequencyMatchTuning.scoreMin, 0);
+    Serial.print(detectionProfile.frequencyMatch.scoreMin, 0);
     Serial.print(" freqContrast=");
-    Serial.print(detectionProfile.frequencyMatchTuning.contrastMin, 1);
+    Serial.print(detectionProfile.frequencyMatch.contrastMin, 1);
     Serial.print(" behavior_state=");
     Serial.print(_behavior.stateName());
     Serial.print(" behavior_idle=");
@@ -833,7 +857,7 @@ void Node::handleProfileCommand(const char* line) {
         printProfileComposition(activeDetectionProfile());
         Serial.println();
     } else {
-        Serial.println("RB PROFILE usage=name=tonalpulse|chirp_experimental");
+        Serial.println("RB PROFILE usage=name=tonalpulse|amp|chirp_experimental");
     }
 }
 
@@ -878,8 +902,8 @@ void Node::applyActiveDetectionProfile() {
 
     _detection.setOccurrenceSource(detectionProfile.occurrenceSource);
     _detection.setInspectionRules(detectionProfile.inspectionRules);
-    _detection.setFrequencyOccurrenceTiming(detectionProfile.frequencyOccurrenceTiming);
-    _detection.setFrequencyMatchTuning(detectionProfile.frequencyMatchTuning);
+    _detection.setFrequencyMatchConfig(detectionProfile.frequencyMatch);
+    _detection.setScalarTransientConfig(detectionProfile.scalarTransient);
     _detection.setInspectionConfig(detectionProfile.inspectionConfig);
     _detection.setPatternRulesConfig(detectionProfile.patternRulesConfig);
     _detection.setFieldStateConfig(detectionProfile.fieldStateConfig);
@@ -896,8 +920,8 @@ void Node::processDetectionFrame(const AudioSignalFrame& frame,
                               unsigned long now,
                               bool selfChirpSuppressed,
                               bool& sawPatternThisLoop) {
-    const auto liveFrequencyEvidence = captureFrequencyEvidence(frame.sampleTimeMs);
-    _detection.observeFrame(frame, liveFrequencyEvidence, frame.sampleTimeMs);
+    const auto liveFrequencyFrame = captureFrequencyFeatureFrame(frame.sampleTimeMs);
+    _detection.observeFrame(frame, liveFrequencyFrame, frame.sampleTimeMs);
 
     detection::PatternResult patternResult;
     while (_detection.popPatternResult(patternResult)) {
@@ -963,8 +987,8 @@ const char* Node::rbLogModeName() const {
     return "off";
 }
 
-detection::FrequencyEvidence Node::captureFrequencyEvidence(unsigned long observedAtMs) const {
-    detection::FrequencyEvidence evidence;
+detection::FrequencyFeatureFrame Node::captureFrequencyFeatureFrame(unsigned long observedAtMs) const {
+    detection::FrequencyFeatureFrame evidence;
     evidence.observedAtMs = observedAtMs;
     const bool present = _freqBandStream.windowReady();
     const float totalEnergy = _freqBandStream.lastTotalEnergy();

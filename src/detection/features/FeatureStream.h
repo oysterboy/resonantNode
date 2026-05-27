@@ -16,6 +16,11 @@ enum class FeatureStreamId {
     AmbientFloor,
     FrequencyScore,
     FrequencyContrast,
+    // Temporarily disabled to reduce analyzer history footprint during the current pass.
+    // FrequencyTargetPower,
+    // FrequencyNeighborPower,
+    // FrequencyTotalEnergy,
+    // FrequencyWindowValid,
 };
 
 struct FeatureStream {

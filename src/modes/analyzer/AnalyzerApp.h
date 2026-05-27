@@ -29,7 +29,7 @@ It does not implement detection algorithms, PatternRules, Behavior, or output po
 */
 class AnalyzerApp {
 public:
-    using FrequencyEvidence = detection::FrequencyEvidence;
+    using FrequencyFeatureFrame = detection::FrequencyFeatureFrame;
     using PatternCandidate = detection::PatternCandidate;
     using PatternResult = detection::PatternResult;
 
@@ -135,6 +135,27 @@ private:
             unsigned long durationMs = 0;
             float strength = 0.0f;
             CandidateOrigin origin = CandidateOrigin::InWindow;
+            uint64_t onsetSample = 0;
+            uint64_t peakSample = 0;
+            uint64_t releaseSample = 0;
+            unsigned long peakMs = 0;
+            long endDtMs = -1;
+            unsigned long processedAtMs = 0;
+            long processLagMs = -1;
+            bool transientPresent = false;
+            bool freqPresent = false;
+            bool freqMatched = false;
+            float freqScore = 0.0f;
+            bool patternValid = false;
+            bool candidateAccepted = false;
+            bool patternMatched = false;
+            bool supportMatched = false;
+            bool behaviorEligible = false;
+            bool duplicateCandidate = false;
+            const char* candidateClass = "unknown";
+            const char* patternType = "none";
+            const char* reason = "none";
+            const char* rejectReason = "none";
         };
 
         // Live per-trial diagnostics and rejection bookkeeping.
@@ -155,8 +176,8 @@ private:
             uint64_t acceptedPatternReleaseSample = 0;
             unsigned long acceptedPatternPeakMs = 0;
             unsigned long acceptedPatternReleaseMs = 0;
-            FrequencyEvidence acceptedFrequencyEvidence = {};
-            FrequencyEvidence acceptedFrequencyEvidenceFull = {};
+            FrequencyFeatureFrame acceptedFrequencyFrame = {};
+            FrequencyFeatureFrame acceptedFrequencyFrameFull = {};
             unsigned long acceptedFrequencyProcessedAtMs = 0;
             detection::PatternResult runtimePatternResult = {};
             detection::FieldState runtimeFieldState = {};
@@ -169,8 +190,8 @@ private:
             uint64_t duplicatePatternReleaseSample = 0;
             unsigned long duplicatePatternPeakMs = 0;
             unsigned long duplicatePatternReleaseMs = 0;
-            FrequencyEvidence duplicateFrequencyEvidence = {};
-            FrequencyEvidence duplicateFrequencyEvidenceFull = {};
+            FrequencyFeatureFrame duplicateFrequencyFrame = {};
+            FrequencyFeatureFrame duplicateFrequencyFrameFull = {};
             unsigned long duplicateFrequencyProcessedAtMs = 0;
             long duplicateDeltaFromPrimaryMs = 0;
             bool duplicateOriginWindow = false;
@@ -374,6 +395,7 @@ private:
     void printTransientStatsDebug(unsigned long now) const;
     void printSequenceExplain(const AnalyzerReport& report) const;
     void printSequenceAmpWindow(const AnalyzerReport& report) const;
+    void printSequenceCandidateLogs(unsigned long trialNumber, const SequenceTest::TrialDiagnostics& diagnostics) const;
     void printSequenceTrialResult(unsigned long trialNumber, AnalyzerResult result, long dtMs, long durMs, float strength, bool audioOverflow, unsigned long duplicateCount, const SequenceTest::TrialDiagnostics& diagnostics) const;
     void printSequenceTrialResult(const AnalyzerReport& report) const;
     void printSequenceFinalOutput() const;
@@ -381,7 +403,7 @@ private:
     const char* activeAnalyzerProfileName() const;
     AnalyzerReport buildSequenceAnalyzerReport(unsigned long trialNumber, AnalyzerResult result, long dtMs, long durMs, float strength, bool audioOverflow, unsigned long duplicateCount, const SequenceTest::TrialDiagnostics& diagnostics) const;
     void recordSequenceClassifierOutcome(const PatternResult& patternResult, bool duplicateCandidate, bool unexpectedCandidate);
-    void handleSequenceCandidate(const PatternResult& patternResult, const FrequencyEvidence* liveFrequencyEvidence = nullptr);
+    void handleSequenceCandidate(const PatternResult& patternResult, const FrequencyFeatureFrame* liveFrequencyFrame = nullptr);
     void updateSequenceAmbientStats();
 
     // Sequence sample capture helpers.
@@ -393,7 +415,7 @@ private:
     bool sequenceSampleDumpSelected(unsigned long trialNumber) const;
     unsigned long sequenceSampleDumpEstimatedRows(unsigned long selectedTrials) const;
     static void sequenceCurveSampleCallback(const CurveSnapshot& snapshot, void* context);
-    FrequencyEvidence captureFrequencyEvidence(unsigned long observedAtMs) const;
+    FrequencyFeatureFrame captureFrequencyFeatureFrame(unsigned long observedAtMs) const;
     const char* sequenceTrialClassificationName(const char* result, long dtMs, long durMs, const SequenceTest::TrialDiagnostics& diagnostics) const;
 
     // Miscellaneous output helpers.

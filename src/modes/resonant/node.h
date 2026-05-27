@@ -28,7 +28,7 @@ Does not implement behavior decisions, classify patterns, or generate waveforms.
 
 class Node {
 public:
-    using FrequencyEvidence = detection::FrequencyEvidence;
+    using FrequencyFeatureFrame = detection::FrequencyFeatureFrame;
     using PatternResult = detection::PatternResult;
 
     enum class RbLogMode {
@@ -77,7 +77,7 @@ private:
     void applyActiveBehaviorGateConfig();
     void applyActiveProfiles();
     void processDetectionFrame(const AudioSignalFrame& frame, unsigned long now, bool selfChirpSuppressed, bool& sawPatternThisLoop);
-    FrequencyEvidence captureFrequencyEvidence(unsigned long observedAtMs) const;
+    FrequencyFeatureFrame captureFrequencyFeatureFrame(unsigned long observedAtMs) const;
     void printRbSummary() const;
     void printRbSignalSummary() const;
     void printRbDetectorSummary() const;

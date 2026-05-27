@@ -21,10 +21,11 @@ struct PatternResult {
     PatternReasonCode reasonCode = PatternReasonCode::None;
     PatternRejectReason rejectReason = PatternRejectReason::None;
     float confidence = 0.0f;
-    float signalConfidence = 0.0f;
-    float frequencyConfidence = 0.0f;
-    StrengthClass broadAmpStrength = StrengthClass::Unknown;
-    BroadAmpStrengthEvidence broadAmp = {};
+    StrengthClass ampStrength = StrengthClass::Unknown;
+    AmpStrengthEvidence ampStrengthEvidence = {};
+    StrengthClass frequencyScoreStrength = StrengthClass::Unknown;
+    StrengthClass frequencyContrastQuality = StrengthClass::Unknown;
+    StrengthClass targetBandStrength = StrengthClass::Unknown;
     bool duplicateRisk = false;
     float duplicateRiskScore = 0.0f;
 
@@ -39,8 +40,8 @@ struct PatternResult {
 
     // Candidate and evidence payloads carried through for reporting and downstream classification.
     PatternCandidate candidate = {};
-    FrequencyEvidence freq = {};
-    FrequencyEvidence freqFull = {};
+    FrequencyFeatureFrame freq = {};
+    FrequencyFeatureFrame freqFull = {};
     bool patternCandidateAccepted = false;
     bool patternMatched = false;
     bool supportMatched = false;

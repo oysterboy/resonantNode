@@ -15,6 +15,7 @@ enum class PatternType {
 enum class PatternReasonCode {
     None,
     FromFrequencyMatch,
+    FromOccurrence,
     DetectorRejected,
     AmbiguousEvidence,
     UnsupportedPattern,
@@ -24,6 +25,7 @@ enum class PatternReasonCode {
 enum class PatternRejectReason {
     None,
     NoCandidate,
+    InvalidOccurrence,
     NoFrequencyEvidence,
     FrequencyWindowInvalid,
     FrequencyScoreTooLow,

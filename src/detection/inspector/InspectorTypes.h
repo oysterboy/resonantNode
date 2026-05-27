@@ -1,6 +1,9 @@
 #pragma once
 
+#include <stddef.h>
 #include <stdint.h>
+
+#include "../features/FeatureStream.h"
 
 namespace detection {
 
@@ -13,14 +16,14 @@ enum class StrengthClass {
     Strong,
 };
 
-// Shared thresholds for AMP support classification.
-struct AmpSupportConfig {
+// Shared thresholds for amplitude strength classification.
+struct AmpStrengthConfig {
     float strongPeakThreshold = 60.0f;
     float mediumPeakThreshold = 30.0f;
     float weakPeakThreshold = 15.0f;
 };
 
-inline StrengthClass classifyAmpSupport(float peak, bool evidenceValid, const AmpSupportConfig& config) {
+inline StrengthClass classifyAmpStrength(float peak, bool evidenceValid, const AmpStrengthConfig& config) {
     if (!evidenceValid) {
         return StrengthClass::Unknown;
     }
@@ -40,9 +43,9 @@ inline StrengthClass classifyAmpSupport(float peak, bool evidenceValid, const Am
     return StrengthClass::None;
 }
 
-struct BroadAmpStrengthInspectionConfig {
+struct AmpStrengthInspectionConfig {
     bool enabled = true;
-    AmpSupportConfig strength = {};
+    AmpStrengthConfig strength = {};
     uint32_t windowPreMs = 20;
     uint32_t windowPostMs = 120;
 };
@@ -52,23 +55,99 @@ struct DuplicateRiskInspectionConfig {
     uint32_t windowMs = 150;
 };
 
-// Inspector configuration combines module-specific inspection settings.
-// Profile factories provide this object to DetectionRuntime.
-struct InspectionConfig {
-    BroadAmpStrengthInspectionConfig broadAmp = {};
+enum class InspectionModuleKind {
+    None,
+    ScalarFeatureStrength,
+    DuplicateRisk,
+};
+
+enum class EvidenceTarget {
+    None,
+    AmpStrength,
+    FrequencyScoreStrength,
+    FrequencyContrastQuality,
+    TargetBandStrength,
+};
+
+struct ScalarFeatureInspectionConfig {
+    bool enabled = true;
+    FeatureStreamId stream = FeatureStreamId::AmpEnvelope;
+    EvidenceTarget target = EvidenceTarget::AmpStrength;
+    AmpStrengthConfig strength = {};
+    uint32_t windowPreMs = 20;
+    uint32_t windowPostMs = 120;
+};
+
+struct InspectionModuleConfig {
+    InspectionModuleKind kind = InspectionModuleKind::None;
+    EvidenceTarget target = EvidenceTarget::None;
+    ScalarFeatureInspectionConfig scalar = {};
     DuplicateRiskInspectionConfig duplicateRisk = {};
 };
 
+static constexpr size_t kMaxInspectionModules = 4;
+
+struct InspectionPlan {
+    InspectionModuleConfig modules[kMaxInspectionModules] = {};
+    size_t count = 0;
+};
+
+// Inspector configuration combines module-specific inspection settings.
+// Profile factories provide this object to DetectionRuntime.
+struct InspectionConfig {
+    AmpStrengthInspectionConfig ampStrength = {};
+    ScalarFeatureInspectionConfig frequencyScore = {};
+    DuplicateRiskInspectionConfig duplicateRisk = {};
+};
+
+inline InspectionPlan makeInspectionPlan(const InspectionConfig& config) {
+    InspectionPlan plan = {};
+
+    if (config.ampStrength.enabled) {
+        plan.modules[plan.count].kind = InspectionModuleKind::ScalarFeatureStrength;
+        plan.modules[plan.count].target = EvidenceTarget::AmpStrength;
+        plan.modules[plan.count].scalar.enabled = config.ampStrength.enabled;
+        plan.modules[plan.count].scalar.stream = FeatureStreamId::AmpEnvelope;
+        plan.modules[plan.count].scalar.target = EvidenceTarget::AmpStrength;
+        plan.modules[plan.count].scalar.strength = config.ampStrength.strength;
+        plan.modules[plan.count].scalar.windowPreMs = config.ampStrength.windowPreMs;
+        plan.modules[plan.count].scalar.windowPostMs = config.ampStrength.windowPostMs;
+        ++plan.count;
+    }
+
+    if (config.frequencyScore.enabled) {
+        plan.modules[plan.count].kind = InspectionModuleKind::ScalarFeatureStrength;
+        plan.modules[plan.count].target = EvidenceTarget::FrequencyScoreStrength;
+        plan.modules[plan.count].scalar.enabled = config.frequencyScore.enabled;
+        plan.modules[plan.count].scalar.stream = config.frequencyScore.stream;
+        plan.modules[plan.count].scalar.target = config.frequencyScore.target;
+        plan.modules[plan.count].scalar.strength = config.frequencyScore.strength;
+        plan.modules[plan.count].scalar.windowPreMs = config.frequencyScore.windowPreMs;
+        plan.modules[plan.count].scalar.windowPostMs = config.frequencyScore.windowPostMs;
+        ++plan.count;
+    }
+
+    if (config.duplicateRisk.enabled) {
+        plan.modules[plan.count].kind = InspectionModuleKind::DuplicateRisk;
+        plan.modules[plan.count].target = EvidenceTarget::None;
+        plan.modules[plan.count].duplicateRisk = config.duplicateRisk;
+        ++plan.count;
+    }
+
+    return plan;
+}
+
 inline InspectionConfig defaultInspectionConfig() {
     InspectionConfig config;
-    config.broadAmp = BroadAmpStrengthInspectionConfig{};
+    config.ampStrength = AmpStrengthInspectionConfig{};
+    config.frequencyScore = ScalarFeatureInspectionConfig{};
     config.duplicateRisk = DuplicateRiskInspectionConfig{};
     return config;
 }
 
-// Broad AMP strength evidence captured by the inspector for a single candidate.
+// AMP strength evidence captured by the inspector for a single candidate.
 // This is runtime evidence, not configuration.
-struct BroadAmpStrengthEvidence {
+struct AmpStrengthEvidence {
     bool available = false;
     bool observedOnly = true;
     // Diagnostic only: the support decision is peak-based.
@@ -105,8 +184,8 @@ struct TransientEvidence {
     bool audioOverflowDuringCandidate = false;
 };
 
-// Frequency evidence carried alongside a candidate for pattern classification and reporting.
-struct FrequencyEvidence {
+// Frequency feature packet carried alongside a candidate for pattern classification and reporting.
+struct FrequencyFeatureFrame {
     bool present = false;
     bool matched = false;
 

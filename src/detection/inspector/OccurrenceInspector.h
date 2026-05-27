@@ -34,11 +34,22 @@ private:
         const Occurrence& candidate,
         const FeatureHistory* featureHistory
     ) const;
-    void annotateDuplicateRisk(InspectedOccurrence& out, const Occurrence& candidate) const;
-    void annotateBroadAmpStrength(
+    void annotateDuplicateRisk(
         InspectedOccurrence& out,
         const Occurrence& candidate,
-        const FeatureHistory* featureHistory
+        const DuplicateRiskInspectionConfig& config
+    ) const;
+    void annotateAmpStrength(
+        InspectedOccurrence& out,
+        const Occurrence& candidate,
+        const FeatureHistory* featureHistory,
+        const ScalarFeatureInspectionConfig& config
+    ) const;
+    void runInspectionModule(
+        InspectedOccurrence& out,
+        const Occurrence& candidate,
+        const FeatureHistory* featureHistory,
+        const InspectionModuleConfig& module
     ) const;
     InspectedOccurrence inspectImpl(
         const Occurrence& candidate,
@@ -54,6 +65,7 @@ private:
     mutable unsigned long _lastAcceptedFrequencyMs = 0;
     ProfileInspectionRulesKind _inspectionRules = ProfileInspectionRulesKind::TonalPulse;
     InspectionConfig _config = defaultInspectionConfig();
+    InspectionPlan _inspectionPlan = makeInspectionPlan(_config);
 };
 
 } // namespace detection

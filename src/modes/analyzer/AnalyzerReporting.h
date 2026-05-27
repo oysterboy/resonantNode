@@ -76,11 +76,11 @@ inline const char* analyzerReasonName(AnalyzerReason value) {
         case AnalyzerReason::None:
             return "none";
         case AnalyzerReason::ValidPatternInExpectedWindow:
-            return "valid_pattern_in_expected_window";
+            return "result_in_expected_window";
         case AnalyzerReason::ValidPatternBeforeWindow:
-            return "valid_pattern_before_window";
+            return "result_before_window";
         case AnalyzerReason::ValidPatternAfterWindow:
-            return "valid_pattern_after_window";
+            return "result_after_window";
         case AnalyzerReason::MissingPipelineResult:
             return "missing_pipeline_result";
         case AnalyzerReason::NoOccurrence:
@@ -138,7 +138,7 @@ struct AnalyzerPatternObservation {
     float confidence = 0.0f;
     long dtMs = -1;
 
-    const char* broadAmpStrength = "unknown";
+    const char* ampStrength = "unknown";
     const char* reason = "none";
     const char* rejectReason = "none";
 
@@ -152,14 +152,23 @@ struct AnalyzerOccurrenceObservation {
     unsigned int accepted = 0;
     unsigned int rejected = 0;
 
+    const char* kind = "none";
     const char* primarySource = "none";
+    const char* detectorKind = "unknown";
+    bool present = false;
+    bool valid = false;
+    unsigned long startMs = 0;
+    unsigned long peakMs = 0;
+    unsigned long releaseMs = 0;
     long primaryDtMs = -1;
     unsigned long primaryDurationMs = 0;
     float primaryStrength = 0.0f;
-    float primaryConfidence = 0.0f;
+    float strength = 0.0f;
+    float confidence = 0.0f;
 
     const char* mainRejectReason = "none";
     bool duplicateRisk = false;
+    const char* rejectReason = "none";
 };
 
 struct AnalyzerInspectionObservation {
@@ -168,8 +177,8 @@ struct AnalyzerInspectionObservation {
     unsigned int rejected = 0;
 
     const char* primaryEvidence = "none";
-    const char* broadAmpStrength = "unknown";
-    const char* broadAmpStrengthClass = "unknown";
+    const char* ampStrength = "unknown";
+    const char* ampStrengthClass = "unknown";
     const char* mainRejectReason = "none";
 };
 
@@ -187,10 +196,9 @@ struct AnalyzerClassification {
     AnalyzerReason reason = AnalyzerReason::Unknown;
 
     long dtMs = -1;
-    float confidence = 0.0f;
 };
 
-struct AnalyzerBroadAmpStrengthObservation {
+struct AnalyzerAmpStrengthObservation {
     bool available = false;
     bool observedOnly = true;
     const char* supportBasis = "peak";
@@ -211,8 +219,12 @@ struct AnalyzerProfileDetail {
     const char* summary = "";
     const char* emitter = "unknown";
     const char* inspectionRules = "unknown";
-    const char* broadAmpStrength = "unknown";
-    const char* broadAmpStrengthMin = "medium";
+    const char* inspectionPlan = "unknown";
+    const char* inspectionModules = "unknown";
+    const char* evidenceTargets = "unknown";
+    const char* requiredSupportTarget = "unknown";
+    const char* ampStrength = "unknown";
+    const char* ampStrengthMin = "medium";
     bool requireSupportForAcceptance = true;
 
     float freqScore = 0.0f;
@@ -223,7 +235,7 @@ struct AnalyzerProfileDetail {
     float ampLevel = 0.0f;
     float ampBase = 0.0f;
     float ampLift = 0.0f;
-    AnalyzerBroadAmpStrengthObservation broadAmp;
+    AnalyzerAmpStrengthObservation ampStrengthObservation;
 };
 
 struct AnalyzerDebugSummary {

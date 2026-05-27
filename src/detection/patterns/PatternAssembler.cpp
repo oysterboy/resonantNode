@@ -8,9 +8,9 @@ using PatternCandidateKind = detection::PatternCandidateKind;
 
 PatternCandidate makePatternCandidateFromSignal(const detection::InspectedOccurrence& occurrence) {
     PatternCandidate candidate = {};
-    candidate.transient = {};
-
     const detection::Occurrence& source = occurrence.occurrence;
+    candidate.transient = {};
+    candidate.valid = source.valid;
     candidate.kind = PatternCandidateKind::SinglePulse;
     candidate.lineageId = static_cast<uint32_t>(source.startSample & 0xFFFFFFFFu);
     candidate.primarySlotIndex = 0;
@@ -30,10 +30,11 @@ PatternCandidate makePatternCandidateFromSignal(const detection::InspectedOccurr
             candidate.peakStrength = source.score;
             candidate.releaseStrength = source.contrast;
             candidate.ambientBaseline = 0.0f;
-            candidate.signalConfidence = source.signalConfidence;
-            candidate.frequencyConfidence = source.frequencyConfidence;
-            candidate.broadAmpStrength = source.broadAmpStrength;
-            candidate.broadAmp = source.broadAmp;
+            candidate.ampStrength = source.ampStrength;
+            candidate.ampStrengthEvidence = source.ampStrengthEvidence;
+            candidate.frequencyScoreStrength = source.frequencyScoreStrength;
+            candidate.frequencyContrastQuality = source.frequencyContrastQuality;
+            candidate.targetBandStrength = source.targetBandStrength;
             candidate.duplicateRisk = source.duplicateRisk;
             candidate.duplicateRiskScore = source.duplicateRiskScore;
             candidate.firstPulseMs = candidate.acceptedMs;
@@ -47,7 +48,6 @@ PatternCandidate makePatternCandidateFromSignal(const detection::InspectedOccurr
             candidate.occurrenceSlots[0].peakMs = source.peakMs;
             candidate.occurrenceSlots[0].releaseMs = source.releaseMs;
             candidate.occurrenceSlots[0].strength = source.score;
-            candidate.occurrenceSlots[0].confidence = source.frequencyConfidence;
             // Frequency score/contrast are mapped into the candidate strength fields used by reporting.
             candidate.frequency = source.frequency;
             candidate.frequencyFull = source.frequency;
@@ -66,10 +66,11 @@ PatternCandidate makePatternCandidateFromSignal(const detection::InspectedOccurr
             candidate.peakStrength = source.strength;
             candidate.releaseStrength = source.transient.releaseStrength;
             candidate.ambientBaseline = source.transient.ambientBaseline;
-            candidate.signalConfidence = source.signalConfidence;
-            candidate.frequencyConfidence = source.frequencyConfidence;
-            candidate.broadAmpStrength = source.broadAmpStrength;
-            candidate.broadAmp = source.broadAmp;
+            candidate.ampStrength = source.ampStrength;
+            candidate.ampStrengthEvidence = source.ampStrengthEvidence;
+            candidate.frequencyScoreStrength = source.frequencyScoreStrength;
+            candidate.frequencyContrastQuality = source.frequencyContrastQuality;
+            candidate.targetBandStrength = source.targetBandStrength;
             candidate.duplicateRisk = source.duplicateRisk;
             candidate.duplicateRiskScore = source.duplicateRiskScore;
             candidate.firstPulseMs = candidate.acceptedMs;
@@ -83,7 +84,6 @@ PatternCandidate makePatternCandidateFromSignal(const detection::InspectedOccurr
             candidate.occurrenceSlots[0].peakMs = source.peakMs;
             candidate.occurrenceSlots[0].releaseMs = source.releaseMs;
             candidate.occurrenceSlots[0].strength = source.strength;
-            candidate.occurrenceSlots[0].confidence = source.signalConfidence;
             candidate.transient = source.transient;
             candidate.frequency = source.frequency;
             candidate.frequencyFull = source.frequency;

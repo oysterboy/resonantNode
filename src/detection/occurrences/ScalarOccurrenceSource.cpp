@@ -14,6 +14,28 @@ void ScalarOccurrenceSource::begin() {
     resetCandidateLifecycle();
 }
 
+void ScalarOccurrenceSource::setConfig(const ScalarTransientConfig& config) {
+    setOnsetDetectionThreshold(config.onsetDetectionThreshold);
+    setOnsetReleaseThreshold(config.onsetReleaseThreshold);
+    setCooldownAfterOnsetMs(config.cooldownAfterOnsetMs);
+    setMinTransientDurationMs(config.minTransientDurationMs);
+    setMaxTransientDurationMs(config.maxTransientDurationMs);
+    setMinTransientPeakStrength(config.minTransientPeakStrength);
+    setReleaseDebounceMs(config.releaseDebounceMs);
+}
+
+void ScalarOccurrenceSource::observeFrame(const AudioSignalFrame& frame, float signalLevel, OccurrenceKind kind, OccurrenceSource source) {
+    observe(frame, signalLevel);
+
+    if (transientDetected()) {
+        Occurrence candidate;
+        if (consumeCandidate(frame, kind, source, candidate)) {
+            _pending = candidate;
+            _hasPending = true;
+        }
+    }
+}
+
 void ScalarOccurrenceSource::setOnsetDetectionThreshold(float value) {
     _detector.setOnsetDetectionThreshold(value);
 }
@@ -182,6 +204,17 @@ float ScalarOccurrenceSource::lastTransientRejectedStrength() const {
     return _detector.lastTransientRejectedStrength();
 }
 
+bool ScalarOccurrenceSource::popOccurrence(Occurrence& out) {
+    if (!_hasPending) {
+        return false;
+    }
+
+    out = _pending;
+    _pending = {};
+    _hasPending = false;
+    return true;
+}
+
 bool ScalarOccurrenceSource::consumeCandidate(const AudioSignalFrame& frame,
                                            OccurrenceKind kind,
                                            OccurrenceSource source,
@@ -209,8 +242,6 @@ bool ScalarOccurrenceSource::consumeCandidate(const AudioSignalFrame& frame,
     out.score = _candidatePeakStrength;
     out.contrast = 0.0f;
     out.confidence = 1.0f;
-    out.signalConfidence = 1.0f;
-    out.frequencyConfidence = kind == OccurrenceKind::FrequencyMatch ? 1.0f : 0.0f;
     out.ampEvidencePresent = true;
     out.ampLevel = static_cast<float>(frame.level);
     out.ampBaseline = frame.baseline;
@@ -237,6 +268,7 @@ void ScalarOccurrenceSource::resetCandidateLifecycle() {
     _candidateActive = false;
     _releaseObserved = false;
     _candidateReady = false;
+    _hasPending = false;
     _candidateFirstSeenSample = 0;
     _candidatePeakSample = 0;
     _candidateReleaseSample = 0;
@@ -250,6 +282,7 @@ void ScalarOccurrenceSource::resetCandidateLifecycle() {
     _candidateOnsetStrength = 0.0f;
     _candidatePeakStrength = 0.0f;
     _candidateCurrentStrength = 0.0f;
+    _pending = {};
 }
 
 } // namespace detection

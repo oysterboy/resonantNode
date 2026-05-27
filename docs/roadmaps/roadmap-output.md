@@ -1,178 +1,96 @@
 # Roadmap — Output
 
-Status: future-supporting roadmap. Scope: future SoundOutput / OutputProfile boundary.
+Status: future-supporting roadmap. Scope: SoundOutput / ChirpOutput boundary, later OutputStatus and OutputProfile.
 
-This roadmap keeps emitted sound shape separate from Detection and Behavior.
+## Status legend
 
-Output work is probably after the immediate Detection naming pass and early 5-node TonalPulse tests.
+```text
+[LANDED]    Verified in current src.zip.
+[PARTIAL]   Partly present in source, but not yet the intended final shape.
+[TODO]      Next or later implementation work.
+[DEFERRED]  Intentionally later / not for the current test slice.
+[REMOVED]   Confirmed absent from current source or intentionally removed.
+```
 
----
 
-## Architecture Goal
-
-Eventually:
+## Architecture goal
 
 ```text
 Behavior requests output.
-SoundOutput executes output.
-OutputStatus reports output availability.
-OutputProfile / ChirpProfile owns available sound shape.
+SoundOutput / ChirpOutput executes output.
+OutputStatus reports availability.
+OutputProfile later defines available emitted sound shapes.
 ```
 
-Behavior decides modulation / intended drift.
+Detection should not trigger output directly. Behavior decides modulation / drift. Output executes.
 
-SoundOutput executes requested output values and may validate physical limits, but it does not decide artistic drift.
+## Source-verified current status
 
-Detection should not trigger output directly.
+```text
+[LANDED] ChirpOutput exists.
+[LANDED] HAL tone output classes exist.
+[LANDED] Node starts/updates ChirpOutput from ResonantBehavior.
+[PARTIAL] Behavior has outputBusy state, but no stable OutputStatus object.
+[TODO] OutputStatus is not landed.
+[TODO] OutputRequest is not landed.
+[TODO] OutputProfile / ChirpProfile is not landed.
+[TODO] OutputDispatcher is not landed.
+```
 
----
+## Implementation order
 
-## Spec Candidates
+### O1 — first cleanup pass: name current output path
 
-These are stable rules that should later be considered for `myspec.md`:
+```text
+[TODO] Document current output path as current ChirpOutput path.
+[TODO] Keep output generation unchanged for 5-node tests.
+[TODO] Expose busy / last-start / last-finished only if already cheap.
+[TODO] Ensure behavior remains owner of response decision.
+```
+
+### O2 — minimal OutputStatus
+
+```text
+[DEFERRED] Add OutputStatus only when behavior/status needs it.
+Fields may include busy, lastStartMs, lastDoneMs, currentPattern.
+```
+
+### O3 — OutputRequest
+
+```text
+[DEFERRED] Behavior emits OutputRequest / BehaviorAction.
+[DEFERRED] Output executes request and validates physical limits.
+```
+
+### O4 — OutputProfile
+
+```text
+[DEFERRED] Add OutputProfile / ChirpProfile only after behavior variations prove needed.
+[DEFERRED] Connect later to ResonantProgram.
+```
+
+## Current / first cleanup pass
+
+```text
+No output refactor before the 5-node TonalPulse tests unless status visibility is needed.
+```
+
+## Spec candidates
 
 ```text
 OutputProfile defines what can be emitted.
-Behavior may request concrete values or profile variants.
-SoundOutput executes requested values; it does not decide behavior modulation.
-Behavior should not own hardware details.
+Behavior may request concrete values or variants.
+SoundOutput executes requested values and may validate limits.
+SoundOutput does not decide behavior modulation.
 ```
 
----
-
-## MVP Guardrail
-
-MVP does not mean throwaway.
-
-Each minimum viable pass should be the smallest useful slice that still follows the intended architecture direction.
-
-Avoid two extremes:
+## Non-goals now
 
 ```text
-too large:
-    empty frameworks, generic registries, factories, unused abstractions
-
-too small / wrong:
-    hacks in Node, duplicated logic, temporary APIs, shortcuts that must be removed immediately
-```
-
-A good MVP:
-
-```text
-uses real current modules
-solves a real near-term problem
-keeps ownership in the right subsystem
-can be extended without rewriting the same boundary
-does not create compatibility sediment
-```
-
-If the quickest implementation would put logic in the wrong owner, prefer a slightly larger but correctly placed slice.
-
-Rule:
-
-```text
-Build the smallest slice you can keep.
-```
-
-
----
-
-## Current Status
-
-Current SoundOutput path exists.
-
-Not landed:
-
-```text
-OutputStatus as stable behavior input
-OutputRequest
-OutputProfile / ChirpProfile
-action lifecycle
-OutputDispatcher
-```
-
----
-
-## Implementation Order
-
-```text
-1. For 5-node tests, keep output behavior hardcoded/current.
-2. Expose output status only if needed for behavior/status logs.
-3. Later add OutputStatus.
-4. Later add OutputRequest.
-5. Later add OutputProfile / ChirpProfile.
-6. Later connect to ResonantProgram.
-```
-
----
-
-## Minimum Viable First Pass
-
-Goal:
-
-```text
-Make output state visible only if needed for the 5-node tests.
-```
-
-Do:
-
-```text
-- expose busy / lastStartMs / lastDoneMs if already cheap
-- keep output generation unchanged
-```
-
-Do not:
-
-```text
-- add OutputDispatcher
-- add profile system
-- change output timing
-- change behavior decisions
-- implement action lifecycle yet
-```
-
-Ownership guardrail:
-
-```text
-output status should come from SoundOutput
-Behavior may consume status later, but should not read output internals
-```
-
-Success:
-
-```text
-Status/logs can show whether output is busy or recently emitted, if needed for tests.
-```
-
----
-
-## Later Phases
-
-```text
-OutputStatus
-OutputRequest / action object
-OutputProfile / ChirpProfile
-action lifecycle
-hardware path separation
-ResonantProgram compatibility
-```
-
----
-
-## Non-Goals for First Implementation
-
-```text
-advanced synthesizer architecture
-multi-channel audio engine
-generic scheduler
-behavior-owned waveform generation
-VEKTOR Art-Net / bulk output integration
-```
-
----
-
-## One-Line Strategy
-
-```text
-Keep output simple for TonalPulse tests; add OutputStatus/Profile only when behavior variations need a cleaner output boundary.
+OutputDispatcher.
+OutputProfile.
+Advanced synthesizer architecture.
+Multi-channel audio engine.
+Generic scheduler.
+Behavior-owned waveform generation.
 ```

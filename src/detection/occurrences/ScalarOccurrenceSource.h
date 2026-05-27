@@ -2,6 +2,7 @@
 
 #include <stdint.h>
 
+#include "../DetectionProfile.h"
 #include "../detectors/ScalarTransientDetector.h"
 #include "../../io/AudioSignal.h"
 #include "Occurrence.h"
@@ -33,6 +34,8 @@ public:
 
     void reset();
     void begin();
+    void setConfig(const ScalarTransientConfig& config);
+    void observeFrame(const AudioSignalFrame& frame, float signalLevel, OccurrenceKind kind, OccurrenceSource source);
 
     void setOnsetDetectionThreshold(float value);
     void setOnsetReleaseThreshold(float value);
@@ -66,6 +69,7 @@ public:
     unsigned long lastTransientRejectedDurationMs() const;
     float lastTransientRejectedStrength() const;
 
+    bool popOccurrence(Occurrence& out);
     bool consumeCandidate(const AudioSignalFrame& frame,
                           OccurrenceKind kind,
                           OccurrenceSource source,
@@ -78,6 +82,7 @@ private:
     bool _candidateActive = false;
     bool _releaseObserved = false;
     bool _candidateReady = false;
+    bool _hasPending = false;
     uint64_t _candidateFirstSeenSample = 0;
     uint64_t _candidatePeakSample = 0;
     uint64_t _candidateReleaseSample = 0;
@@ -91,6 +96,7 @@ private:
     float _candidateOnsetStrength = 0.0f;
     float _candidatePeakStrength = 0.0f;
     float _candidateCurrentStrength = 0.0f;
+    Occurrence _pending = {};
 };
 
 } // namespace detection

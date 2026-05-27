@@ -52,7 +52,7 @@ void FrequencyMatchDetector::resetState() {
     memset(&frequencyCandidate, 0, sizeof(frequencyCandidate));
 }
 
-void FrequencyMatchDetector::update(const detection::FrequencyEvidence& evidence,
+void FrequencyMatchDetector::update(const detection::FrequencyFeatureFrame& evidence,
                                     unsigned long now,
                                     uint64_t currentSample,
                                     const FrequencyMatchEvaluation::Values& tuning,
@@ -120,8 +120,6 @@ void FrequencyMatchDetector::update(const detection::FrequencyEvidence& evidence
                 frequencyCandidate.score = evidence.score;
                 frequencyCandidate.contrast = evidence.spectralContrast;
                 frequencyCandidate.confidence = 0.0f;
-                frequencyCandidate.signalConfidence = 0.0f;
-                frequencyCandidate.frequencyConfidence = 0.0f;
                 strncpy(candidateState, "open", sizeof(candidateState) - 1);
                 candidateState[sizeof(candidateState) - 1] = '\0';
             } else {
@@ -167,8 +165,6 @@ void FrequencyMatchDetector::update(const detection::FrequencyEvidence& evidence
                 frequencyCandidate.durationMs = candidateHoldMs;
                 frequencyCandidate.candidateHoldWindows = candidateHoldWindows;
                 frequencyCandidate.confidence = holdOk ? 1.0f : 0.0f;
-                frequencyCandidate.signalConfidence = frequencyCandidate.confidence;
-                frequencyCandidate.frequencyConfidence = frequencyCandidate.confidence;
             }
         }
 

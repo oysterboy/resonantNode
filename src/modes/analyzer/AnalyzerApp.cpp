@@ -54,7 +54,7 @@ bool analyzerLogEnabled(uint32_t flags, AnalyzerApp::AnalyzerLogFlags flag) {
     return (flags & static_cast<uint32_t>(flag)) != 0;
 }
 
-void buildFrequencyFailReason(const detection::FrequencyEvidence& evidence,
+void buildFrequencyFailReason(const detection::FrequencyFeatureFrame& evidence,
                               const FrequencyMatchEvaluation::Values& tuning,
                               char* out,
                               size_t outSize) {
@@ -86,6 +86,24 @@ const char* occurrenceSourceName(detection::OccurrenceSource source) {
         case detection::OccurrenceSource::None:
         default:
             return "none";
+    }
+}
+
+const char* occurrenceDetectorKindName(detection::OccurrenceDetectorKind kind) {
+    switch (kind) {
+        case detection::OccurrenceDetectorKind::Transient:
+            return "transient";
+        case detection::OccurrenceDetectorKind::FrequencyMatch:
+            return "frequency_match";
+        case detection::OccurrenceDetectorKind::Dip:
+            return "dip";
+        case detection::OccurrenceDetectorKind::Plateau:
+            return "plateau";
+        case detection::OccurrenceDetectorKind::ThresholdCrossing:
+            return "threshold_crossing";
+        case detection::OccurrenceDetectorKind::Unknown:
+        default:
+            return "unknown";
     }
 }
 
@@ -135,6 +153,22 @@ const char* strengthClassName(detection::StrengthClass value) {
     }
 }
 
+const char* evidenceTargetName(detection::EvidenceTarget value) {
+    switch (value) {
+        case detection::EvidenceTarget::AmpStrength:
+            return "AmpStrength";
+        case detection::EvidenceTarget::FrequencyScoreStrength:
+            return "FrequencyScoreStrength";
+        case detection::EvidenceTarget::FrequencyContrastQuality:
+            return "FrequencyContrastQuality";
+        case detection::EvidenceTarget::TargetBandStrength:
+            return "TargetBandStrength";
+        case detection::EvidenceTarget::None:
+        default:
+            return "None";
+    }
+}
+
 // -----------------------------------------------------------------------------
 // Construction and setup
 // -----------------------------------------------------------------------------
@@ -145,7 +179,8 @@ AnalyzerApp::AnalyzerApp(int inputPin)
       _audioSource(_i2sSource),
       _audioSignal(_audioSource),
       _freqBandStream() {
-    _frequencyEvidenceTuning = detection::detectionProfileForKind(detection::DetectionProfileKind::TonalPulse).frequencyMatchTuning;
+    _frequencyEvidenceTuning.scoreMin = detection::detectionProfileForKind(detection::DetectionProfileKind::TonalPulse).frequencyMatch.scoreMin;
+    _frequencyEvidenceTuning.contrastMin = detection::detectionProfileForKind(detection::DetectionProfileKind::TonalPulse).frequencyMatch.contrastMin;
 }
 
 void AnalyzerApp::begin() {
@@ -158,6 +193,9 @@ void AnalyzerApp::begin() {
     _freqBandStream.resetState();
     _freqBandStream.setSampleRateHz(_audioSource.sampleRateHz());
     _freqBandStream.setTargetFrequencyHz(runtime::kDefaultChirpFrequencyHz);
+    if (_detection == nullptr) {
+        _detection = new detection::DetectionRuntime();
+    }
     if (_sequenceFeatureHistory == nullptr) {
         _sequenceFeatureHistory = new detection::FeatureHistory();
     }
@@ -208,15 +246,15 @@ void AnalyzerApp::update() {
                 detection::FeatureExtractor::observeFrame(frame, *_sequenceFeatureHistory);
             }
             _freqBandStream.observeCenteredSample(frame.centeredSample);
-            if (_sequenceTest.active && _sequenceTest.currentTrial > 0 && _detection != nullptr) {
-                const detection::FrequencyEvidence runtimeFrequencyEvidence = captureFrequencyEvidence(frame.sampleTimeMs);
-                _detection->observeFrame(frame, runtimeFrequencyEvidence, frame.sampleTimeMs);
+            if (_sequenceTest.active && _sequenceTest.currentTrial > 0) {
+                const detection::FrequencyFeatureFrame runtimeFrequencyFrame = captureFrequencyFeatureFrame(frame.sampleTimeMs);
+                _detection->observeFrame(frame, runtimeFrequencyFrame, frame.sampleTimeMs);
                 detection::PatternResult runtimePatternResult;
                 while (_detection->popPatternResult(runtimePatternResult)) {
                     _sequenceTest.currentTrialDiagnostics.runtimePatternResult = runtimePatternResult;
                     _sequenceTest.currentTrialDiagnostics.runtimePatternCaptured = true;
                     _sequenceTest.currentTrialDiagnostics.runtimeFieldState = _detection->fieldState();
-                handleSequenceCandidate(runtimePatternResult, &runtimeFrequencyEvidence);
+                handleSequenceCandidate(runtimePatternResult, &runtimeFrequencyFrame);
                 }
             }
         }
@@ -445,6 +483,8 @@ const char* AnalyzerApp::activeAnalyzerProfileName() const {
 
 const char* analyzerProfileDetailNamespace(detection::DetectionProfileKind profileKind) {
     switch (profileKind) {
+        case detection::DetectionProfileKind::Amp:
+            return "amp";
         case detection::DetectionProfileKind::ChirpExperimental:
             return "chirp_experimental";
         case detection::DetectionProfileKind::TonalPulse:
@@ -455,6 +495,8 @@ const char* analyzerProfileDetailNamespace(detection::DetectionProfileKind profi
 
 const char* analyzerProfileDetailSummary(detection::DetectionProfileKind profileKind) {
     switch (profileKind) {
+        case detection::DetectionProfileKind::Amp:
+            return "amp scalar profile view";
         case detection::DetectionProfileKind::ChirpExperimental:
             return "chirp_experimental profile view";
         case detection::DetectionProfileKind::TonalPulse:
@@ -498,6 +540,9 @@ AnalyzerReport AnalyzerApp::buildSequenceAnalyzerReport(unsigned long trialNumbe
     const detection::FieldState* runtimeFieldState = actualPipelineAvailable && pipelineResult->hasField
         ? &pipelineResult->field
         : nullptr;
+    const bool trialHasPipelineEvidence = actualPipelineAvailable
+        && runtimePatternResult != nullptr
+        && diagnostics.rawCandidateCount > 0;
     const auto artifactReason = [&]() -> const char* {
         if (actualPipelineAvailable) {
             return "captured_from_runtime_pipeline";
@@ -508,7 +553,6 @@ AnalyzerReport AnalyzerApp::buildSequenceAnalyzerReport(unsigned long trialNumbe
     AnalyzerSequenceClassificationInput classificationInput;
     classificationInput.result = result;
     classificationInput.dtMs = dtMs;
-    classificationInput.confidence = actualPipelineAvailable && runtimePatternResult != nullptr ? runtimePatternResult->confidence : 0.0f;
     classificationInput.rawCandidateCount = diagnostics.rawCandidateCount;
     classificationInput.audioOverflow = audioOverflow;
     classificationInput.patternAvailable = actualPipelineAvailable && runtimePatternResult != nullptr;
@@ -517,50 +561,77 @@ AnalyzerReport AnalyzerApp::buildSequenceAnalyzerReport(unsigned long trialNumbe
         // Analyzer consumes the PatternResult produced by DetectionRuntime.
         // Analyzer does not re-run occurrence inspection or pattern interpretation.
         AnalyzerPatternObservation pattern = {};
-        pattern.type = actualPipelineAvailable && runtimePatternResult != nullptr ? detection::patternTypeName(runtimePatternResult->type) : "unknown";
-        pattern.accepted = actualPipelineAvailable && runtimePatternResult != nullptr
+        pattern.type = trialHasPipelineEvidence ? detection::patternTypeName(runtimePatternResult->type) : "unknown";
+        pattern.accepted = trialHasPipelineEvidence
             ? runtimePatternResult->valid
             : false;
-        pattern.candidateAccepted = actualPipelineAvailable && runtimePatternResult != nullptr ? runtimePatternResult->patternCandidateAccepted : false;
-        pattern.patternMatched = actualPipelineAvailable && runtimePatternResult != nullptr ? runtimePatternResult->patternMatched : false;
-        pattern.supportMatched = actualPipelineAvailable && runtimePatternResult != nullptr ? runtimePatternResult->supportMatched : false;
+        pattern.candidateAccepted = trialHasPipelineEvidence ? runtimePatternResult->patternCandidateAccepted : false;
+        pattern.patternMatched = trialHasPipelineEvidence ? runtimePatternResult->patternMatched : false;
+        pattern.supportMatched = trialHasPipelineEvidence ? runtimePatternResult->supportMatched : false;
         pattern.behaviorEligible = pattern.accepted;
-        pattern.confidence = actualPipelineAvailable && runtimePatternResult != nullptr ? runtimePatternResult->confidence : 0.0f;
+        pattern.confidence = trialHasPipelineEvidence ? runtimePatternResult->confidence : 0.0f;
         pattern.dtMs = report.classification.dtMs;
-        pattern.broadAmpStrength = actualPipelineAvailable && runtimePatternResult != nullptr ? strengthClassName(runtimePatternResult->broadAmpStrength) : "unknown";
-        pattern.reason = actualPipelineAvailable && runtimePatternResult != nullptr ? detection::patternReasonName(runtimePatternResult->reasonCode) : analyzerReasonName(report.classification.reason);
-        pattern.rejectReason = actualPipelineAvailable && runtimePatternResult != nullptr ? detection::patternRejectReasonName(runtimePatternResult->rejectReason) : analyzerReasonName(report.classification.reason);
-        pattern.involvedOccurrences = actualPipelineAvailable && runtimePatternResult != nullptr ? runtimePatternResult->occurrenceCount : 0U;
+        pattern.ampStrength = trialHasPipelineEvidence ? strengthClassName(runtimePatternResult->ampStrength) : "unknown";
+        pattern.reason = trialHasPipelineEvidence ? detection::patternReasonName(runtimePatternResult->reasonCode) : analyzerReasonName(report.classification.reason);
+        pattern.rejectReason = trialHasPipelineEvidence ? detection::patternRejectReasonName(runtimePatternResult->rejectReason) : analyzerReasonName(report.classification.reason);
+        pattern.involvedOccurrences = trialHasPipelineEvidence ? runtimePatternResult->occurrenceCount : 0U;
         report.primaryPattern = pattern;
     }
 
     report.occurrences.total = diagnostics.rawCandidateCount;
-    report.occurrences.accepted = actualPipelineAvailable && runtimePatternResult != nullptr && runtimePatternResult->valid ? 1U : 0U;
+    report.occurrences.accepted = trialHasPipelineEvidence && runtimePatternResult->valid ? 1U : 0U;
     report.occurrences.rejected = diagnostics.rawCandidateCount > report.occurrences.accepted ? diagnostics.rawCandidateCount - report.occurrences.accepted : 0U;
-    report.occurrences.primarySource = actualPipelineAvailable && runtimeInspectedOccurrence != nullptr && runtimeInspectedOccurrence->occurrence.present
-        ? occurrenceSourceName(runtimeInspectedOccurrence->occurrence.source)
-        : "unknown";
-    report.occurrences.primaryDtMs = dtMs;
-    report.occurrences.primaryDurationMs = durMs >= 0 ? static_cast<unsigned long>(durMs) : 0UL;
-    report.occurrences.primaryStrength = strength;
-    report.occurrences.primaryConfidence = actualPipelineAvailable && runtimePatternResult != nullptr ? runtimePatternResult->confidence : 0.0f;
-    report.occurrences.mainRejectReason = actualPipelineAvailable && runtimeInspectedOccurrence != nullptr
-        ? (runtimeInspectedOccurrence->rejected ? occurrenceRejectReasonName(runtimeInspectedOccurrence->rejectReason) : "none")
-        : analyzerReasonName(report.classification.reason);
-    report.occurrences.duplicateRisk = duplicateCount > 0;
+    if (trialHasPipelineEvidence && runtimeInspectedOccurrence != nullptr && runtimeInspectedOccurrence->occurrence.present) {
+        const detection::Occurrence& occurrence = runtimeInspectedOccurrence->occurrence;
+        report.occurrences.kind = occurrenceKindName(occurrence.kind);
+        report.occurrences.primarySource = occurrenceSourceName(occurrence.source);
+        report.occurrences.detectorKind = occurrenceDetectorKindName(occurrence.detectorKind);
+        report.occurrences.present = occurrence.present;
+        report.occurrences.valid = occurrence.valid;
+        report.occurrences.startMs = occurrence.startMs;
+        report.occurrences.peakMs = occurrence.peakMs;
+        report.occurrences.releaseMs = occurrence.releaseMs;
+        report.occurrences.primaryDtMs = static_cast<long>(occurrence.startMs) - static_cast<long>(_sequenceTest.currentTrialScheduledAtMs);
+        report.occurrences.primaryDurationMs = occurrence.durationMs;
+        report.occurrences.primaryStrength = occurrence.strength;
+        report.occurrences.strength = occurrence.strength;
+        report.occurrences.confidence = occurrence.confidence;
+        report.occurrences.mainRejectReason = runtimeInspectedOccurrence->rejected
+            ? occurrenceRejectReasonName(runtimeInspectedOccurrence->rejectReason)
+            : "none";
+        report.occurrences.rejectReason = report.occurrences.mainRejectReason;
+        report.occurrences.duplicateRisk = occurrence.duplicateRisk;
+    } else {
+        report.occurrences.kind = "none";
+        report.occurrences.primarySource = "unknown";
+        report.occurrences.detectorKind = "unknown";
+        report.occurrences.present = false;
+        report.occurrences.valid = false;
+        report.occurrences.startMs = 0;
+        report.occurrences.peakMs = 0;
+        report.occurrences.releaseMs = 0;
+        report.occurrences.primaryDtMs = dtMs;
+        report.occurrences.primaryDurationMs = durMs >= 0 ? static_cast<unsigned long>(durMs) : 0UL;
+        report.occurrences.primaryStrength = strength;
+        report.occurrences.strength = strength;
+        report.occurrences.confidence = trialHasPipelineEvidence ? runtimePatternResult->confidence : 0.0f;
+        report.occurrences.mainRejectReason = analyzerReasonName(report.classification.reason);
+        report.occurrences.rejectReason = report.occurrences.mainRejectReason;
+        report.occurrences.duplicateRisk = duplicateCount > 0;
+    }
 
     report.inspection.inspected = diagnostics.rawCandidateCount;
     report.inspection.accepted = report.occurrences.accepted;
     report.inspection.rejected = diagnostics.rawCandidateCount > report.inspection.accepted ? diagnostics.rawCandidateCount - report.inspection.accepted : 0U;
-    if (actualPipelineAvailable && runtimeInspectedOccurrence != nullptr && runtimeInspectedOccurrence->occurrence.present) {
+    if (trialHasPipelineEvidence && runtimeInspectedOccurrence != nullptr && runtimeInspectedOccurrence->occurrence.present) {
         report.inspection.primaryEvidence = occurrenceSourceName(runtimeInspectedOccurrence->occurrence.source);
-        report.inspection.broadAmpStrength = strengthClassName(runtimeInspectedOccurrence->broadAmpStrength);
-        report.inspection.broadAmpStrengthClass = strengthClassName(runtimeInspectedOccurrence->broadAmpStrength);
+        report.inspection.ampStrength = strengthClassName(runtimeInspectedOccurrence->ampStrength);
+        report.inspection.ampStrengthClass = strengthClassName(runtimeInspectedOccurrence->ampStrength);
         report.inspection.mainRejectReason = runtimeInspectedOccurrence->rejected ? occurrenceRejectReasonName(runtimeInspectedOccurrence->rejectReason) : "none";
     } else {
         report.inspection.primaryEvidence = "none";
-        report.inspection.broadAmpStrength = "unknown";
-        report.inspection.broadAmpStrengthClass = "unsupported";
+        report.inspection.ampStrength = "unknown";
+        report.inspection.ampStrengthClass = "unsupported";
         report.inspection.mainRejectReason = analyzerReasonName(report.classification.reason);
     }
 
@@ -583,33 +654,42 @@ AnalyzerReport AnalyzerApp::buildSequenceAnalyzerReport(unsigned long trialNumbe
     report.profileDetail.namespaceName = analyzerProfileDetailNamespace(_sequenceTest.profileKind);
     report.profileDetail.summary = analyzerProfileDetailSummary(_sequenceTest.profileKind);
     const detection::DetectionProfile& selectedProfile = detection::detectionProfileForKind(_sequenceTest.profileKind);
-    report.profileDetail.emitter = detection::profileOccurrenceSourceName(selectedProfile.occurrenceSource);
+    report.profileDetail.emitter = detection::occurrenceSourceKindName(selectedProfile.occurrenceSource);
     report.profileDetail.inspectionRules = detection::profileInspectionRulesName(selectedProfile.inspectionRules);
-    report.profileDetail.broadAmpStrength = selectedProfile.patternRulesConfig.requireSupportForAcceptance ? "enabled" : "disabled";
-    report.profileDetail.broadAmpStrengthMin = "medium";
+    report.profileDetail.inspectionPlan = selectedProfile.patternRulesConfig.requireSupportForAcceptance
+        ? "scalar_feature_strength+duplicate_risk"
+        : "duplicate_risk";
+    report.profileDetail.inspectionModules = selectedProfile.patternRulesConfig.requireSupportForAcceptance
+        ? "ScalarFeatureStrength,DuplicateRisk"
+        : "DuplicateRisk";
+    report.profileDetail.evidenceTargets = selectedProfile.patternRulesConfig.requireSupportForAcceptance
+        ? evidenceTargetName(selectedProfile.patternRulesConfig.requiredSupportTarget)
+        : "none";
+    report.profileDetail.requiredSupportTarget = evidenceTargetName(selectedProfile.patternRulesConfig.requiredSupportTarget);
+    report.profileDetail.ampStrength = selectedProfile.patternRulesConfig.requireSupportForAcceptance ? "enabled" : "disabled";
+    report.profileDetail.ampStrengthMin = strengthClassName(selectedProfile.patternRulesConfig.minimumSupportStrength);
     report.profileDetail.requireSupportForAcceptance = selectedProfile.patternRulesConfig.requireSupportForAcceptance;
-    report.profileDetail.freqScore = actualPipelineAvailable && runtimePatternResult != nullptr ? runtimePatternResult->freq.score : 0.0f;
-    report.profileDetail.freqContrast = actualPipelineAvailable && runtimePatternResult != nullptr ? runtimePatternResult->freq.spectralContrast : 0.0f;
-    report.profileDetail.freqScoreMin = _frequencyEvidenceTuning.scoreMin;
-    report.profileDetail.freqContrastMin = _frequencyEvidenceTuning.contrastMin;
+    report.profileDetail.freqScore = trialHasPipelineEvidence ? runtimePatternResult->freq.score : 0.0f;
+    report.profileDetail.freqContrast = trialHasPipelineEvidence ? runtimePatternResult->freq.spectralContrast : 0.0f;
+    report.profileDetail.freqScoreMin = selectedProfile.frequencyMatch.scoreMin;
+    report.profileDetail.freqContrastMin = selectedProfile.frequencyMatch.contrastMin;
     report.profileDetail.ampLevel = report.occurrences.primaryStrength;
     report.profileDetail.ampBase = diagnostics.acceptedAmbientBaseline;
     report.profileDetail.ampLift = report.profileDetail.ampLevel - report.profileDetail.ampBase;
-    report.profileDetail.broadAmpStrength = report.primaryPattern.broadAmpStrength;
-    const detection::BroadAmpStrengthEvidence ampWindowEvidence = actualPipelineAvailable && runtimeInspectedOccurrence != nullptr
-        ? runtimeInspectedOccurrence->broadAmp
-        : detection::BroadAmpStrengthEvidence{};
-    report.profileDetail.broadAmp.available = ampWindowEvidence.available;
-    report.profileDetail.broadAmp.observedOnly = ampWindowEvidence.observedOnly;
-    report.profileDetail.broadAmp.note = ampWindowEvidence.available
-        ? "broad_amp_seen"
-        : (actualPipelineAvailable ? "inspector_no_broad_amp" : "missing_pipeline_result");
-    report.profileDetail.broadAmp.windowStartMs = ampWindowEvidence.windowStartMs;
-    report.profileDetail.broadAmp.windowEndMs = ampWindowEvidence.windowEndMs;
-    report.profileDetail.broadAmp.peak = ampWindowEvidence.peak;
-    report.profileDetail.broadAmp.baseline = ampWindowEvidence.baseline;
-    report.profileDetail.broadAmp.lift = ampWindowEvidence.lift;
-    report.profileDetail.broadAmp.strength = strengthClassName(ampWindowEvidence.strength);
+    const detection::AmpStrengthEvidence ampStrengthEvidence = trialHasPipelineEvidence && runtimeInspectedOccurrence != nullptr
+        ? runtimeInspectedOccurrence->ampStrengthEvidence
+        : detection::AmpStrengthEvidence{};
+    report.profileDetail.ampStrengthObservation.available = ampStrengthEvidence.available;
+    report.profileDetail.ampStrengthObservation.observedOnly = ampStrengthEvidence.observedOnly;
+    report.profileDetail.ampStrengthObservation.note = ampStrengthEvidence.available
+        ? "amp_strength_seen"
+        : (trialHasPipelineEvidence ? "inspector_no_amp_strength" : "missing_pipeline_result");
+    report.profileDetail.ampStrengthObservation.windowStartMs = ampStrengthEvidence.windowStartMs;
+    report.profileDetail.ampStrengthObservation.windowEndMs = ampStrengthEvidence.windowEndMs;
+    report.profileDetail.ampStrengthObservation.peak = ampStrengthEvidence.peak;
+    report.profileDetail.ampStrengthObservation.baseline = ampStrengthEvidence.baseline;
+    report.profileDetail.ampStrengthObservation.lift = ampStrengthEvidence.lift;
+    report.profileDetail.ampStrengthObservation.strength = strengthClassName(ampStrengthEvidence.strength);
 
     report.debug.occurrences = diagnostics.rawCandidateCount;
     report.debug.inspected = diagnostics.rawCandidateCount;
@@ -617,13 +697,13 @@ AnalyzerReport AnalyzerApp::buildSequenceAnalyzerReport(unsigned long trialNumbe
     report.debug.rejects = report.occurrences.rejected;
     report.debug.duplicates = duplicateCount;
     report.debug.unexpected = result == AnalyzerResult::Unexpected ? 1U : 0U;
-    report.debug.artifactCaptured = actualPipelineAvailable;
-    report.debug.artifactFallback = !actualPipelineAvailable;
-    report.debug.artifactState = actualPipelineAvailable ? "CAPTURED" : "MISSING_PIPELINE";
+    report.debug.artifactCaptured = trialHasPipelineEvidence;
+    report.debug.artifactFallback = !trialHasPipelineEvidence;
+    report.debug.artifactState = trialHasPipelineEvidence ? "CAPTURED" : "MISSING_PIPELINE";
     report.debug.artifactReason = artifactReason;
-    report.debug.pipelineSource = actualPipelineAvailable ? "actual_pipeline" : "missing_runtime_pipeline";
-    report.debug.pipelineFallback = !actualPipelineAvailable;
-    report.debug.mainRejectReason = actualPipelineAvailable && runtimeInspectedOccurrence != nullptr
+    report.debug.pipelineSource = trialHasPipelineEvidence ? "actual_pipeline" : "missing_runtime_pipeline";
+    report.debug.pipelineFallback = !trialHasPipelineEvidence;
+    report.debug.mainRejectReason = trialHasPipelineEvidence && runtimeInspectedOccurrence != nullptr
         ? (runtimeInspectedOccurrence->rejected ? occurrenceRejectReasonName(runtimeInspectedOccurrence->rejectReason) : "none")
         : analyzerReasonName(report.classification.reason);
 

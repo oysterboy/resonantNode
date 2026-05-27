@@ -21,7 +21,7 @@ inline void observeFrame(const AudioSignalFrame& frame, FeatureHistory& history)
     history.record(FeatureStreamId::AmbientFloor, frame.sampleTimeMs, frame.baseline);
 }
 
-inline void observeFrequencyEvidence(const FrequencyEvidence& evidence, unsigned long nowMs, FeatureHistory& history) {
+inline void observeFrequencyFeatureFrame(const FrequencyFeatureFrame& evidence, unsigned long nowMs, FeatureHistory& history) {
     if (!evidence.present) {
         return;
     }
@@ -29,6 +29,11 @@ inline void observeFrequencyEvidence(const FrequencyEvidence& evidence, unsigned
     const unsigned long sampleTimeMs = nowMs != 0 ? nowMs : evidence.observedAtMs;
     history.record(FeatureStreamId::FrequencyScore, sampleTimeMs, evidence.score);
     history.record(FeatureStreamId::FrequencyContrast, sampleTimeMs, evidence.spectralContrast);
+    // Temporarily disabled to reduce analyzer memory pressure during the current pass.
+    // history.record(FeatureStreamId::FrequencyTargetPower, sampleTimeMs, evidence.targetPower);
+    // history.record(FeatureStreamId::FrequencyNeighborPower, sampleTimeMs, evidence.neighborPower);
+    // history.record(FeatureStreamId::FrequencyTotalEnergy, sampleTimeMs, evidence.totalEnergy);
+    // history.record(FeatureStreamId::FrequencyWindowValid, sampleTimeMs, evidence.validWindow ? 1.0f : 0.0f);
 }
 
 } // namespace detection::FeatureExtractor

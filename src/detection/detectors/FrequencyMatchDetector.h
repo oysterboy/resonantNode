@@ -57,8 +57,8 @@ public:
     float bestScore = 0.0f;
     float bestContrast = 0.0f;
     unsigned long bestWindowSampleCount = 0;
-    detection::FrequencyEvidence bestEvidence = {};
-    detection::FrequencyEvidence candidateEvidence = {};
+    detection::FrequencyFeatureFrame bestEvidence = {};
+    detection::FrequencyFeatureFrame candidateEvidence = {};
     char candidateState[16] = "none";
     char suppressReason[48] = "none";
     char wouldCandidateReason[48] = "none";
@@ -66,7 +66,7 @@ public:
 
     void resetState();
 
-    void update(const detection::FrequencyEvidence& evidence,
+    void update(const detection::FrequencyFeatureFrame& evidence,
                 unsigned long now,
                 uint64_t currentSample,
                 const FrequencyMatchEvaluation::Values& tuning,

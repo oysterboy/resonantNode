@@ -94,11 +94,11 @@ void AnalyzerApp::startSequenceTest(unsigned long totalTrials, unsigned long per
         _detection = new detection::DetectionRuntime();
     }
     _detection->resetState();
-    _detection->setFrequencyMatchTuning(_frequencyEvidenceTuning);
     const detection::DetectionProfile& selectedProfile = detection::detectionProfileForKind(_sequenceTest.profileKind);
+    _detection->setFrequencyMatchConfig(selectedProfile.frequencyMatch);
+    _detection->setScalarTransientConfig(selectedProfile.scalarTransient);
     _detection->setOccurrenceSource(selectedProfile.occurrenceSource);
     _detection->setInspectionRules(selectedProfile.inspectionRules);
-    _detection->setFrequencyOccurrenceTiming(selectedProfile.frequencyOccurrenceTiming);
     _detection->setInspectionConfig(selectedProfile.inspectionConfig);
     _detection->setPatternRulesConfig(selectedProfile.patternRulesConfig);
     _detection->setFieldStateConfig(selectedProfile.fieldStateConfig);
@@ -422,6 +422,7 @@ void AnalyzerApp::finalizeSequenceTrial(unsigned long now) {
     const bool summaryTrial = analyzerLogEnabled(_sequenceTest.logFlags, AnalyzerApp::ANALYZER_LOG_TRIAL_SUMMARY);
     flushSequenceSampleHistory(now + 1UL);
     printSequenceSampleDump(_sequenceTest.currentTrial);
+    printSequenceCandidateLogs(_sequenceTest.currentTrial, diagnostics);
     if (summaryTrial) {
         printSequenceTrialResult(_sequenceTest.currentTrial, result, dtMs, durMs, strength, invalidAudioTrial, diagnostics.duplicateCount, diagnostics);
     } else {

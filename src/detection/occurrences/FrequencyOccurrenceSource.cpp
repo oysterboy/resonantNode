@@ -12,33 +12,30 @@ void FrequencyOccurrenceSource::reset() {
     _detector.resetState();
 }
 
-void FrequencyOccurrenceSource::setTimingConfig(const DetectionProfile::FrequencyOccurrenceTiming& timingConfig) {
-    _timingConfig = timingConfig;
-}
-
-void FrequencyOccurrenceSource::applyFrequencyTuning(const FrequencyMatchEvaluation::Values& frequencyTuning) {
-    (void)frequencyTuning;
+void FrequencyOccurrenceSource::setConfig(const FrequencyMatchConfig& config) {
+    _config = config;
 }
 
 void FrequencyOccurrenceSource::observeFrame(
     const AudioSignalFrame& frame,
-    const detection::FrequencyEvidence& evidence,
-    const FrequencyMatchEvaluation::Values& frequencyTuning
+    const detection::FrequencyFeatureFrame& evidence
 ) {
     if (!frame.valid) {
         return;
     }
 
-    applyFrequencyTuning(frequencyTuning);
+    FrequencyMatchEvaluation::Values frequencyTuning = {};
+    frequencyTuning.scoreMin = _config.scoreMin;
+    frequencyTuning.contrastMin = _config.contrastMin;
 
     _detector.update(
         evidence,
         frame.sampleTimeMs,
         frame.sampleIndex,
         frequencyTuning,
-        _timingConfig.releaseDebounceMs,
-        _timingConfig.cooldownAfterOnsetMs,
-        _timingConfig.minTransientDurationMs);
+        _config.releaseDebounceMs,
+        _config.cooldownAfterOnsetMs,
+        _config.minTransientDurationMs);
 
     if (_detector.candidateActive && (!_peakEvidence.present
         || evidence.spectralContrast > _peakEvidence.spectralContrast
@@ -53,10 +50,6 @@ void FrequencyOccurrenceSource::observeFrame(
         candidate.source = OccurrenceSource::Frequency;
         candidate.detectorKind = OccurrenceDetectorKind::FrequencyMatch;
         candidate.confidence = candidate.valid ? 1.0f : 0.0f;
-        candidate.signalConfidence = candidate.confidence;
-        candidate.frequencyConfidence = candidate.valid
-            ? 1.0f
-            : ((_detector.bestScoreOk || _detector.bestContrastOk) ? 0.5f : 0.0f);
         candidate.ampEvidencePresent = true;
         candidate.ampLevel = static_cast<float>(frame.level);
         candidate.ampBaseline = frame.baseline;

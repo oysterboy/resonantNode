@@ -65,6 +65,8 @@ inline const char* patternReasonName(PatternReasonCode code) {
             return "none";
         case PatternReasonCode::FromFrequencyMatch:
             return "from_frequency_match";
+        case PatternReasonCode::FromOccurrence:
+            return "from_occurrence";
         case PatternReasonCode::DetectorRejected:
             return "detector_rejected";
         case PatternReasonCode::AmbiguousEvidence:
@@ -82,6 +84,8 @@ inline const char* patternRejectReasonName(PatternRejectReason reason) {
             return "none";
         case PatternRejectReason::NoCandidate:
             return "no_candidate";
+        case PatternRejectReason::InvalidOccurrence:
+            return "invalid_occurrence";
         case PatternRejectReason::NoFrequencyEvidence:
             return "no_frequency_evidence";
         case PatternRejectReason::FrequencyWindowInvalid:

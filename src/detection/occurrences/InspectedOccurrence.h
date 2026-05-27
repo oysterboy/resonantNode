@@ -43,10 +43,11 @@ struct InspectedOccurrence {
     unsigned long durationMs = 0;
     float strength = 0.0f;
     float confidence = 0.0f;
-    float signalConfidence = 0.0f;
-    float frequencyConfidence = 0.0f;
-    StrengthClass broadAmpStrength = StrengthClass::Unknown;
-    BroadAmpStrengthEvidence broadAmp = {};
+    StrengthClass ampStrength = StrengthClass::Unknown;
+    AmpStrengthEvidence ampStrengthEvidence = {};
+    StrengthClass frequencyScoreStrength = StrengthClass::Unknown;
+    StrengthClass frequencyContrastQuality = StrengthClass::Unknown;
+    StrengthClass targetBandStrength = StrengthClass::Unknown;
     bool duplicateRisk = false;
     float duplicateRiskScore = 0.0f;
 };

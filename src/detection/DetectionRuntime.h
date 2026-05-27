@@ -3,8 +3,9 @@
 #include <stddef.h>
 
 #include "../io/AudioSignal.h"
-#include "occurrences/AmpOccurrenceSource.h"
+#include "DetectionProfile.h"
 #include "occurrences/FrequencyOccurrenceSource.h"
+#include "occurrences/ScalarOccurrenceSource.h"
 #include "inspector/OccurrenceInspector.h"
 #include "inspector/InspectorTypes.h"
 #include "patterns/PatternAssembler.h"
@@ -27,7 +28,7 @@ Owns the active detection pipeline wiring:
 feature observation, occurrence emission, occurrence inspection, pattern assembly,
 pattern rules, field-state tracking, and PatternResult queueing.
 
-Consumes AudioSignalFrame and FrequencyEvidence.
+Consumes AudioSignalFrame and FrequencyFeatureFrame.
 Produces PatternResult and FieldState.
 Does not decide behavior or output.
 */
@@ -54,9 +55,9 @@ public:
 
     void resetState();
 
-    void setFrequencyMatchTuning(const FrequencyMatchEvaluation::Values& tuning);
-    void setFrequencyOccurrenceTiming(const DetectionProfile::FrequencyOccurrenceTiming& timing);
-    void setOccurrenceSource(ProfileOccurrenceSourceKind kind);
+    void setFrequencyMatchConfig(const FrequencyMatchConfig& config);
+    void setScalarTransientConfig(const ScalarTransientConfig& config);
+    void setOccurrenceSource(OccurrenceSourceKind kind);
     void setInspectionRules(ProfileInspectionRulesKind kind);
     void setInspectionConfig(const InspectionConfig& config);
     void setPatternRulesConfig(const PatternRulesConfig& config);
@@ -65,7 +66,7 @@ public:
 
     void observeFrame(
         const AudioSignalFrame& frame,
-        const FrequencyEvidence& frequencyEvidence,
+        const FrequencyFeatureFrame& frequencyEvidence,
         unsigned long nowMs
     );
 
@@ -90,17 +91,17 @@ private:
         unsigned long nowMs
     );
 
-    FrequencyMatchEvaluation::Values _frequencyMatchTuning = {};
-    DetectionProfile::FrequencyOccurrenceTiming _frequencyOccurrenceTiming = {};
+    FrequencyMatchConfig _frequencyMatchConfig = {};
+    ScalarTransientConfig _scalarTransientConfig = {};
     // Profile configuration applied at fixed runtime stages.
-    ProfileOccurrenceSourceKind _occurrenceSourceKind = ProfileOccurrenceSourceKind::Frequency;
+    OccurrenceSourceKind _occurrenceSourceKind = OccurrenceSourceKind::FrequencyMatch;
     ProfileInspectionRulesKind _inspectionRulesKind = ProfileInspectionRulesKind::TonalPulse;
     InspectionConfig _inspectionConfig = defaultInspectionConfig();
     PatternRulesConfig _patternRulesConfig = {};
     const char* _profileName = "unknown";
 
-    AmpOccurrenceSource _ampEmitter;
     FrequencyOccurrenceSource _frequencyEmitter;
+    ScalarOccurrenceSource _scalarEmitter;
     OccurrenceInspector _occurrenceInspector;
     PatternAssembler _patternAssembler;
     PatternRules _patternRules;

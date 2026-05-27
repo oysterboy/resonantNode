@@ -22,6 +22,7 @@ struct PatternCandidate {
     unsigned long lastPulseMs = 0;
     unsigned long minGapMs = 0;
     unsigned long maxGapMs = 0;
+    bool valid = false;
 
     // Per-slot occurrence snapshots for multi-occurrence candidates.
     struct OccurrenceSlot {
@@ -34,7 +35,6 @@ struct PatternCandidate {
         unsigned long peakMs = 0;
         unsigned long releaseMs = 0;
         float strength = 0.0f;
-        float confidence = 0.0f;
     };
     static constexpr uint8_t kMaxOccurrenceSlots = 3;
 
@@ -55,10 +55,11 @@ struct PatternCandidate {
     float peakStrength = 0.0f;
     float releaseStrength = 0.0f;
     float ambientBaseline = 0.0f;
-    float signalConfidence = 0.0f;
-    float frequencyConfidence = 0.0f;
-    StrengthClass broadAmpStrength = StrengthClass::Unknown;
-    BroadAmpStrengthEvidence broadAmp = {};
+    StrengthClass ampStrength = StrengthClass::Unknown;
+    AmpStrengthEvidence ampStrengthEvidence = {};
+    StrengthClass frequencyScoreStrength = StrengthClass::Unknown;
+    StrengthClass frequencyContrastQuality = StrengthClass::Unknown;
+    StrengthClass targetBandStrength = StrengthClass::Unknown;
     bool duplicateRisk = false;
     float duplicateRiskScore = 0.0f;
     bool canOverlap = true;
@@ -67,8 +68,8 @@ struct PatternCandidate {
 
     // Evidence payloads retained with the candidate for downstream reporting.
     TransientEvidence transient;
-    FrequencyEvidence frequency;
-    FrequencyEvidence frequencyFull;
+    FrequencyFeatureFrame frequency;
+    FrequencyFeatureFrame frequencyFull;
 };
 
 } // namespace detection

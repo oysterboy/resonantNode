@@ -2,234 +2,121 @@
 
 Status: active roadmap. Scope: cross-roadmap sequencing and shared node infrastructure.
 
-This roadmap decides which feature roadmap to advance, how far to advance it, and when to stop.
+## Status legend
 
-It does not replace the specialized roadmaps.
+```text
+[LANDED]    Verified in current src.zip.
+[PARTIAL]   Partly present in source, but not yet the intended final shape.
+[TODO]      Next or later implementation work.
+[DEFERRED]  Intentionally later / not for the current test slice.
+[REMOVED]   Confirmed absent from current source or intentionally removed.
+```
 
----
 
-## Architecture Goal
-
-The node should become a clear composition root:
+## Architecture goal
 
 ```text
 Node wires modules.
 Modules own logic.
-Registries collect module-owned exposure.
+Registries later collect module-owned exposure.
 Profiles/programs choose compatible module behavior.
 Installation config stores chosen values later.
 ```
 
-Target shape, later:
+## Source-verified current status
 
 ```text
-Node
-├─ ParamRegistry
-├─ ConfigStore / NodeConfig
-├─ CommandRouter
-├─ StateRegistry / EventReporter
-├─ SoundInput
-├─ AudioSignalState
-├─ DetectionRuntime
-├─ BehaviorHost
-├─ SoundOutput
-├─ Analyzer
-└─ DebugReporter
+[LANDED] DetectionRuntime exists.
+[LANDED] DetectionProfile exists.
+[LANDED] Analyzer app/reporting exists.
+[LANDED] FieldStateTracker exists.
+[LANDED] ResonantBehavior exists and consumes PatternResult / FieldState.
+[LANDED] ChirpOutput / current output path exists.
+[PARTIAL] Node still owns serial command handling and runtime profile tuning commands directly.
+[TODO] ParamRegistry is not landed.
+[TODO] ConfigStore is not landed.
+[TODO] CommandRouter is not landed.
+[TODO] BehaviorHost is not landed.
+[TODO] OutputStatus / OutputProfile are not landed.
+[TODO] ResonantProgram bundle is not landed.
+[TODO] VEKTOR exposure is not landed.
 ```
 
-This is a target shape, not an instruction to build all of it now.
+## Implementation order
 
----
+### G1 — current priority: finish detection cleanup
 
-## Spec Candidates
+```text
+[TODO] Complete Detection InspectionPlan pass first.
+Reason: detection names and evidence boundaries affect Analyzer, Behavior, Param, and future myspec.
+```
 
-These are stable rules that should later be considered for `myspec.md` when updating it from source + docs:
+### G2 — first general cleanup pass: 5-node status baseline
+
+```text
+[TODO] Make STATUS report firmware/build label if available.
+[TODO] Show active detection profile and occurrence source.
+[TODO] Show current frequency thresholds.
+[TODO] Show current inspection support source and minimum strength.
+[TODO] Show behavior enabled/mode-ish state using current ResonantBehavior fields.
+[TODO] Show output busy/recent state if already cheap.
+```
+
+Do not build a registry. This pass is only visibility for physical tests.
+
+### G3 — hardcoded config workflow
+
+```text
+[TODO] Keep hardcoded defaults as the primary 5-node workflow.
+[TODO] Ensure hardcoded values live with the right owner: DetectionProfile, BehaviorProfile, output config.
+[TODO] Upload the same firmware to all test nodes.
+```
+
+### G4 — Node boundary map
+
+```text
+[TODO] Document which current code paths belong to Detection, Behavior, Output, Analyzer, and Node glue.
+[TODO] Identify command/status code that can later move to CommandRouter / registries.
+```
+
+### G5 — later infrastructure
+
+```text
+[DEFERRED] Param LIST/GET.
+[DEFERRED] PARAM SET + SAVE/LOAD / verify.
+[DEFERRED] CommandRouter.
+[DEFERRED] BehaviorInput.
+[DEFERRED] OutputStatus.
+[DEFERRED] BehaviorProgram / OutputProfile.
+[DEFERRED] ResonantProgram bundle.
+[DEFERRED] VEKTOR exposure.
+```
+
+## Current / first cleanup pass
+
+```text
+After Detection current-pass, add a clear 5-node STATUS baseline.
+No new framework.
+No registry.
+No large Node rewrite.
+```
+
+## Spec candidates
 
 ```text
 Node wires modules; modules own logic.
-Modules register params/commands/state; Node does not own all exposure.
-Installation-specific values should live in config/presets, not random Node globals.
+Node may report module-owned state but should not become the owner of subsystem meaning.
+Hardcoded test defaults are acceptable only when stored with the correct subsystem/profile owner.
 ```
 
----
-
-## MVP Guardrail
-
-MVP does not mean throwaway.
-
-Each minimum viable pass should be the smallest useful slice that still follows the intended architecture direction.
-
-Avoid two extremes:
+## Non-goals now
 
 ```text
-too large:
-    empty frameworks, generic registries, factories, unused abstractions
-
-too small / wrong:
-    hacks in Node, duplicated logic, temporary APIs, shortcuts that must be removed immediately
-```
-
-A good MVP:
-
-```text
-uses real current modules
-solves a real near-term problem
-keeps ownership in the right subsystem
-can be extended without rewriting the same boundary
-does not create compatibility sediment
-```
-
-If the quickest implementation would put logic in the wrong owner, prefer a slightly larger but correctly placed slice.
-
-Rule:
-
-```text
-Build the smallest slice you can keep.
-```
-
-
----
-
-## Current Status
-
-Landed enough:
-
-```text
-DetectionRuntime
-DetectionProfile v1
-AnalyzerReport
-FieldState v0
-current Behavior boundary
-SoundOutput as current output path
-```
-
-Not landed:
-
-```text
-ParamRegistry
-ConfigStore
-CommandRouter
-BehaviorHost
-OutputStatus / OutputProfile
-ResonantProgram bundle
-VEKTOR exposure
-```
-
----
-
-## Current Use Case
-
-Near-term work is driven by:
-
-```text
-test TonalPulse detection and behavior variations on 5 nodes
-```
-
-This favors:
-
-```text
-clear naming
-clear status/logs
-hardcoded params + firmware upload
-repeatable test builds
-```
-
-over:
-
-```text
-large ParamRegistry
-generic CommandRouter
-profile factories
-future chirp/detection families
-```
-
----
-
-## Cross-Roadmap Implementation Order
-
-| Order | Advance roadmap | Minimum pass | Why now | Stop when |
-|---|---|---|---|---|
-| 1 | Detection | Occurrence + TonalPulse rename | remove naming confusion before tests | build passes and grep is clean |
-| 2 | General Node | 5-node status baseline | identify nodes/config during tests | profile/mode/key params visible |
-| 3 | Testing workflow | hardcoded config + upload | reliable 5-node param consistency | same firmware tested on all nodes |
-| 4 | Param | LIST/GET only if needed | inspect params without changing workflow | 3–5 real params readable |
-| 5 | Param | SET + SAVE/LOAD only if needed | runtime tuning only useful if persistent/verified | values survive restart / can be verified |
-| 6 | Behavior | minimal behavior mode/variation | test behavior variations without BehaviorRuntime | explicit simple modes tested |
-| 7 | Detection | profile cleanup / PulseSequence | only after TonalPulse tests | test findings justify next detection work |
-| 8 | Behavior/Output | BehaviorInput / OutputStatus | after tests show need | boundary explicit, behavior unchanged |
-
----
-
-## Minimum Viable First Pass
-
-Goal:
-
-```text
-Support 5-node TonalPulse tests without building large infrastructure.
-```
-
-Do:
-
-```text
-- complete Detection naming cleanup
-- expose/clean status for firmware/profile/behavior/key params
-- keep hardcoded params as the primary test workflow
-```
-
-Do not:
-
-```text
-- build ParamRegistry yet
-- build CommandRouter yet
-- build BehaviorHost yet
-- build OutputProfile yet
-- build ResonantProgram yet
-```
-
-Ownership guardrail:
-
-```text
-hardcoded detection defaults live with DetectionProfile / profile config
-hardcoded behavior defaults live with behavior config
-hardcoded output defaults live with output config
-Node may report values, but should not become their owner
-```
-
----
-
-## Later Infrastructure Order
-
-```text
-1. Node boundary map
-2. Param LIST/GET
-3. PARAM SET + SAVE/LOAD or fleet apply/verify
-4. CommandRouter for real commands
-5. BehaviorInput
-6. OutputStatus
-7. BehaviorProgram / OutputProfile
-8. ResonantProgram bundle
-9. VEKTOR exposure
-```
-
----
-
-## Non-Goals for Now
-
-```text
-full registry system
-central command scheduler
-BehaviorRuntime
-OutputDispatcher
-ResonantProgram
-VEKTOR exposure
-large Node rewrite
-compatibility wrappers
-```
-
----
-
-## One-Line Strategy
-
-```text
-Use the 5-node TonalPulse test as the next vertical slice; build only the architecture-aligned infrastructure that makes that test clearer, repeatable, and comparable.
+ParamRegistry.
+CommandRouter.
+BehaviorHost.
+OutputProfile.
+ResonantProgram.
+VEKTOR.
+Large Node rewrite.
 ```

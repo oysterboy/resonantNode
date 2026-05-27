@@ -80,7 +80,7 @@ inline const char* reasonName(Reason reason) {
     return "unknown";
 }
 
-inline Evaluation evaluate(const detection::FrequencyEvidence& evidence, const Values& values) {
+inline Evaluation evaluate(const detection::FrequencyFeatureFrame& evidence, const Values& values) {
     Evaluation out;
     out.present = evidence.present;
     out.validWindow = evidence.validWindow;
@@ -110,11 +110,11 @@ inline Evaluation evaluate(const detection::FrequencyEvidence& evidence, const V
     return out;
 }
 
-inline bool passes(const detection::FrequencyEvidence& evidence, const Values& values) {
+inline bool passes(const detection::FrequencyFeatureFrame& evidence, const Values& values) {
     return evaluate(evidence, values).matched;
 }
 
-inline void buildFailReason(const detection::FrequencyEvidence& evidence,
+inline void buildFailReason(const detection::FrequencyFeatureFrame& evidence,
                             const Values& values,
                             char* out,
                             size_t outSize) {

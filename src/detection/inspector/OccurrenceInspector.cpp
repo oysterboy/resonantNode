@@ -171,11 +171,7 @@ InspectedOccurrence OccurrenceInspector::inspectImpl(
         return out;
     }
 
-    const bool acceptsCandidate =
-        (candidate.source == OccurrenceSource::Frequency && candidate.kind == OccurrenceKind::FrequencyMatch) ||
-        (candidate.source == OccurrenceSource::Amp && candidate.kind == OccurrenceKind::AmpTransient);
-
-    if (acceptsCandidate) {
+    if (candidate.valid) {
         return inspectAcceptedOccurrenceResult(candidate, featureHistory);
     }
 

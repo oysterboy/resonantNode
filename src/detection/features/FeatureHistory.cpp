@@ -1,5 +1,7 @@
 #include "FeatureHistory.h"
 
+#include <string.h>
+
 namespace detection {
 
 bool FeatureHistory::isSupportedStream(FeatureStreamId stream) {
@@ -14,18 +16,35 @@ size_t FeatureHistory::streamIndex(FeatureStreamId stream) {
 void FeatureHistory::reset() {
     for (size_t i = 0; i < kStreamCount; ++i) {
         StreamBuffer& buffer = _streams[i];
-        buffer.sampleCount = 0;
+        buffer.binCount = 0;
         buffer.writeIndex = 0;
-        memset(buffer.samples, 0, sizeof(buffer.samples));
+        buffer.valueCount = 0;
+        memset(buffer.bins, 0, sizeof(buffer.bins));
     }
 }
 
 void FeatureHistory::pushSample(StreamBuffer& buffer, const FeatureStream& sample) {
-    buffer.samples[buffer.writeIndex] = sample;
-    buffer.writeIndex = (buffer.writeIndex + 1U) % kMaxSamplesPerStream;
-    if (buffer.sampleCount < kMaxSamplesPerStream) {
-        ++buffer.sampleCount;
+    FeatureBin& bin = buffer.bins[buffer.writeIndex];
+    if (buffer.binCount == kMaxSamplesPerStream) {
+        if (buffer.valueCount >= bin.count) {
+            buffer.valueCount -= bin.count;
+        } else {
+            buffer.valueCount = 0;
+        }
+    } else {
+        ++buffer.binCount;
     }
+
+    bin.timeMs = sample.timeMs;
+    bin.first = sample.value;
+    bin.last = sample.value;
+    bin.min = sample.value;
+    bin.max = sample.value;
+    bin.sum = sample.value;
+    bin.count = 1;
+
+    ++buffer.valueCount;
+    buffer.writeIndex = (buffer.writeIndex + 1U) % kMaxSamplesPerStream;
 }
 
 void FeatureHistory::record(const FeatureStream& sample) {
@@ -41,12 +60,31 @@ void FeatureHistory::record(FeatureStreamId id, unsigned long timeMs, float valu
     }
 
     StreamBuffer& buffer = _streams[streamIndex(id)];
-    if (buffer.sampleCount > 0) {
+    if (buffer.binCount > 0) {
         const size_t latestIndex = (buffer.writeIndex + kMaxSamplesPerStream - 1U) % kMaxSamplesPerStream;
-        FeatureStream& latest = buffer.samples[latestIndex];
+        FeatureBin& latest = buffer.bins[latestIndex];
         if (latest.timeMs == timeMs) {
-            latest.id = id;
-            latest.value = value;
+            if (latest.count == 0) {
+                latest.first = value;
+                latest.min = value;
+                latest.max = value;
+                latest.sum = value;
+                latest.count = 1;
+            } else {
+                if (latest.count == 1) {
+                    latest.first = latest.last;
+                }
+                if (value < latest.min) {
+                    latest.min = value;
+                }
+                if (value > latest.max) {
+                    latest.max = value;
+                }
+                latest.sum += value;
+                ++latest.count;
+            }
+            latest.last = value;
+            ++buffer.valueCount;
             return;
         }
     }
@@ -58,7 +96,7 @@ void FeatureHistory::record(FeatureStreamId id, unsigned long timeMs, float valu
     record(sample);
 }
 
-ScalarWindow FeatureHistory::getWindow(FeatureStreamId stream, unsigned long startMs, unsigned long endMs) const {
+ScalarWindow FeatureHistory::getWindow(FeatureStreamId stream, unsigned long startMs, unsigned long endMs, float sustainedThreshold) const {
     ScalarWindow out;
     out.stream = stream;
     out.startMs = startMs;
@@ -69,51 +107,54 @@ ScalarWindow FeatureHistory::getWindow(FeatureStreamId stream, unsigned long sta
     }
 
     const StreamBuffer& buffer = _streams[streamIndex(stream)];
-    if (buffer.sampleCount == 0) {
+    if (buffer.binCount == 0) {
         return out;
     }
 
-    const size_t oldestIndex = buffer.sampleCount == kMaxSamplesPerStream ? buffer.writeIndex : 0U;
+    const size_t oldestIndex = buffer.binCount == kMaxSamplesPerStream ? buffer.writeIndex : 0U;
     float sum = 0.0f;
     float minValue = 0.0f;
     float maxValue = 0.0f;
     bool haveWindow = false;
-    size_t count = 0;
+    unsigned long valueCount = 0;
+    size_t sustainedCount = 0;
 
-    for (size_t i = 0; i < buffer.sampleCount; ++i) {
+    for (size_t i = 0; i < buffer.binCount; ++i) {
         const size_t index = (oldestIndex + i) % kMaxSamplesPerStream;
-        const FeatureStream& sample = buffer.samples[index];
-        if (sample.timeMs < startMs || sample.timeMs > endMs) {
+        const FeatureBin& bin = buffer.bins[index];
+        if (bin.timeMs < startMs || bin.timeMs > endMs) {
             continue;
         }
 
         if (!haveWindow) {
-            out.first = sample.value;
-            out.last = sample.value;
-            minValue = sample.value;
-            maxValue = sample.value;
-            out.peak = sample.value;
-            out.peakTimeMs = sample.timeMs;
+            out.first = bin.first;
+            out.last = bin.last;
+            minValue = bin.min;
+            maxValue = bin.max;
+            out.peak = bin.max;
+            out.peakTimeMs = bin.timeMs;
             haveWindow = true;
         } else {
-            out.last = sample.value;
-            if (sample.value < minValue) {
-                minValue = sample.value;
+            out.last = bin.last;
+            if (bin.min < minValue) {
+                minValue = bin.min;
             }
-            if (sample.value > maxValue) {
-                maxValue = sample.value;
+            if (bin.max > maxValue) {
+                maxValue = bin.max;
             }
-            if (sample.value > out.peak) {
-                out.peak = sample.value;
-                out.peakTimeMs = sample.timeMs;
+            if (bin.max > out.peak) {
+                out.peak = bin.max;
+                out.peakTimeMs = bin.timeMs;
             }
         }
 
-        sum += sample.value;
-        ++count;
+        sum += bin.sum;
+        valueCount += static_cast<unsigned long>(bin.count);
+        if (sustainedThreshold > 0.0f && bin.max >= sustainedThreshold) {
+            ++sustainedCount;
+        }
     }
 
-    out.sampleCount = count;
     out.valid = haveWindow;
     if (!out.valid) {
         return out;
@@ -122,8 +163,12 @@ ScalarWindow FeatureHistory::getWindow(FeatureStreamId stream, unsigned long sta
     out.durationMs = endMs >= startMs ? (endMs - startMs) : 0UL;
     out.min = minValue;
     out.max = maxValue;
-    out.mean = count > 0 ? sum / static_cast<float>(count) : 0.0f;
+    out.mean = valueCount > 0 ? sum / static_cast<float>(valueCount) : 0.0f;
+    out.sampleCount = valueCount;
     out.rise = out.last - out.first;
+    out.sustainedThreshold = sustainedThreshold;
+    out.sustainedCount = sustainedCount;
+    out.sustainedMs = static_cast<unsigned long>(sustainedCount);
     return out;
 }
 
@@ -131,7 +176,7 @@ size_t FeatureHistory::sampleCount(FeatureStreamId stream) const {
     if (!isSupportedStream(stream)) {
         return 0;
     }
-    return _streams[streamIndex(stream)].sampleCount;
+    return _streams[streamIndex(stream)].valueCount;
 }
 
 bool FeatureHistory::hasSamples(FeatureStreamId stream) const {
@@ -144,12 +189,12 @@ unsigned long FeatureHistory::latestTimeMs(FeatureStreamId stream) const {
     }
 
     const StreamBuffer& buffer = _streams[streamIndex(stream)];
-    if (buffer.sampleCount == 0) {
+    if (buffer.binCount == 0) {
         return 0;
     }
 
-    const size_t latestIndex = buffer.sampleCount == 0 ? 0U : (buffer.writeIndex + kMaxSamplesPerStream - 1U) % kMaxSamplesPerStream;
-    return buffer.samples[latestIndex].timeMs;
+    const size_t latestIndex = (buffer.writeIndex + kMaxSamplesPerStream - 1U) % kMaxSamplesPerStream;
+    return buffer.bins[latestIndex].timeMs;
 }
 
 float FeatureHistory::latestValue(FeatureStreamId stream) const {
@@ -158,12 +203,12 @@ float FeatureHistory::latestValue(FeatureStreamId stream) const {
     }
 
     const StreamBuffer& buffer = _streams[streamIndex(stream)];
-    if (buffer.sampleCount == 0) {
+    if (buffer.binCount == 0) {
         return 0.0f;
     }
 
     const size_t latestIndex = (buffer.writeIndex + kMaxSamplesPerStream - 1U) % kMaxSamplesPerStream;
-    return buffer.samples[latestIndex].value;
+    return buffer.bins[latestIndex].last;
 }
 
 } // namespace detection

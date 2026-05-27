@@ -103,6 +103,7 @@ inline DetectionProfile makeTonalPulseProfile() {
     profile.inspectionPlan.modules[0].kind = InspectionModuleKind::ScalarFeatureStrength;
     profile.inspectionPlan.modules[0].target = EvidenceTarget::AmpStrength;
     profile.inspectionPlan.modules[0].scalar.stream = FeatureStreamId::AmpEnvelope;
+    profile.inspectionPlan.modules[0].scalar.mode = ScalarInspectionMode::PeakAbsolute;
     profile.inspectionPlan.modules[0].scalar.windowPreMs = 10;
     profile.inspectionPlan.modules[0].scalar.windowPostMs = 10;
     profile.inspectionPlan.count = 1;
@@ -135,8 +136,10 @@ inline DetectionProfile makeAmpProfile() {
     profile.inspectionPlan.modules[0].kind = InspectionModuleKind::ScalarFeatureStrength;
     profile.inspectionPlan.modules[0].target = EvidenceTarget::FrequencyScoreStrength;
     profile.inspectionPlan.modules[0].scalar.stream = FeatureStreamId::FrequencyScore;
+    profile.inspectionPlan.modules[0].scalar.mode = ScalarInspectionMode::SustainedAboveThreshold;
     profile.inspectionPlan.modules[0].scalar.windowPreMs = 20;
     profile.inspectionPlan.modules[0].scalar.windowPostMs = 120;
+    profile.inspectionPlan.modules[0].scalar.minSustainedMs = 25;
     profile.inspectionPlan.count = 1;
 
     // Pattern rules.
@@ -171,11 +174,11 @@ inline DetectionProfile makeTonalPulse2Profile() {
 
     // Inspector composition.
     profile.inspectionPlan.modules[0].kind = InspectionModuleKind::ScalarFeatureStrength;
-    profile.inspectionPlan.modules[0].target = EvidenceTarget::TargetBandStrength;
     profile.inspectionPlan.modules[0].scalar.stream = FeatureStreamId::FrequencyScore;
     profile.inspectionPlan.modules[0].scalar.strength.strongPeakThreshold = 25000.0f;
     profile.inspectionPlan.modules[0].scalar.strength.mediumPeakThreshold = 15000.0f;
     profile.inspectionPlan.modules[0].scalar.strength.weakPeakThreshold = 8000.0f;
+    profile.inspectionPlan.modules[0].scalar.mode = ScalarInspectionMode::MeanAbsolute;
     profile.inspectionPlan.modules[0].scalar.windowPreMs = 20;
     profile.inspectionPlan.modules[0].scalar.windowPostMs = 120;
     profile.inspectionPlan.count = 1;
@@ -214,6 +217,7 @@ inline DetectionProfile makeChirpExperimentalProfile() {
     profile.inspectionPlan.modules[0].kind = InspectionModuleKind::ScalarFeatureStrength;
     profile.inspectionPlan.modules[0].target = EvidenceTarget::AmpStrength;
     profile.inspectionPlan.modules[0].scalar.stream = FeatureStreamId::AmpEnvelope;
+    profile.inspectionPlan.modules[0].scalar.mode = ScalarInspectionMode::PeakAbsolute;
     profile.inspectionPlan.modules[0].scalar.windowPreMs = 20;
     profile.inspectionPlan.modules[0].scalar.windowPostMs = 120;
     profile.inspectionPlan.count = 1;

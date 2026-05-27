@@ -30,6 +30,9 @@ struct ScalarWindow {
     float peak = 0.0f;
     unsigned long peakTimeMs = 0;
     float rise = 0.0f;
+    float sustainedThreshold = 0.0f;
+    size_t sustainedCount = 0;
+    unsigned long sustainedMs = 0;
 };
 
 } // namespace detection

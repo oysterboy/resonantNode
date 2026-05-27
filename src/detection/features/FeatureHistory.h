@@ -25,7 +25,7 @@ public:
     void record(const FeatureStream& sample);
     void record(FeatureStreamId id, unsigned long timeMs, float value);
 
-    ScalarWindow getWindow(FeatureStreamId stream, unsigned long startMs, unsigned long endMs) const;
+    ScalarWindow getWindow(FeatureStreamId stream, unsigned long startMs, unsigned long endMs, float sustainedThreshold = 0.0f) const;
 
     size_t sampleCount(FeatureStreamId stream) const;
     bool hasSamples(FeatureStreamId stream) const;
@@ -33,10 +33,21 @@ public:
     float latestValue(FeatureStreamId stream) const;
 
 private:
+    struct FeatureBin {
+        unsigned long timeMs = 0;
+        float first = 0.0f;
+        float last = 0.0f;
+        float min = 0.0f;
+        float max = 0.0f;
+        float sum = 0.0f;
+        size_t count = 0;
+    };
+
     struct StreamBuffer {
-        FeatureStream samples[kMaxSamplesPerStream] = {};
-        size_t sampleCount = 0;
+        FeatureBin bins[kMaxSamplesPerStream] = {};
+        size_t binCount = 0;
         size_t writeIndex = 0;
+        size_t valueCount = 0;
     };
 
     static bool isSupportedStream(FeatureStreamId stream);

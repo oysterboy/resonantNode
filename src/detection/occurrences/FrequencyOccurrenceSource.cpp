@@ -51,7 +51,7 @@ void FrequencyOccurrenceSource::observeFrame(
         candidate.detectorKind = OccurrenceDetectorKind::FrequencyMatch;
         candidate.confidence = candidate.valid ? 1.0f : 0.0f;
         candidate.ampEvidencePresent = true;
-        candidate.ampLevel = static_cast<float>(frame.level);
+        candidate.ampLevel = frame.centeredMagnitude;
         candidate.ampBaseline = frame.baseline;
         candidate.frequency = _peakEvidence;
         candidate.frequency.present = true;

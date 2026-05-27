@@ -243,7 +243,7 @@ bool ScalarOccurrenceSource::consumeCandidate(const AudioSignalFrame& frame,
     out.contrast = 0.0f;
     out.confidence = 1.0f;
     out.ampEvidencePresent = true;
-    out.ampLevel = static_cast<float>(frame.level);
+    out.ampLevel = frame.centeredMagnitude;
     out.ampBaseline = frame.baseline;
     out.transient.present = true;
     out.transient.onsetSample = _candidateFirstSeenSample;

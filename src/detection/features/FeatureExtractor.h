@@ -17,7 +17,7 @@ inline void observeFrame(const AudioSignalFrame& frame, FeatureHistory& history)
         return;
     }
 
-    history.record(FeatureStreamId::AmpEnvelope, frame.sampleTimeMs, static_cast<float>(frame.level));
+    history.record(FeatureStreamId::AmpEnvelope, frame.sampleTimeMs, frame.centeredMagnitude);
     history.record(FeatureStreamId::AmbientFloor, frame.sampleTimeMs, frame.baseline);
 }
 

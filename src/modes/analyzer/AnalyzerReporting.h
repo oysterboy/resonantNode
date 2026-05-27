@@ -1,5 +1,6 @@
 #pragma once
 
+#include <stddef.h>
 #include <stdint.h>
 
 /*
@@ -200,15 +201,24 @@ struct AnalyzerClassification {
 struct AnalyzerAmpStrengthObservation {
     bool available = false;
     bool observedOnly = true;
-    const char* supportBasis = "peak";
+    const char* supportBasis = "centered_magnitude_peak";
+    const char* mode = "peak_absolute";
     const char* note = "none";
 
     int16_t windowStartMs = -20;
     int16_t windowEndMs = 120;
 
+    float classificationValue = 0.0f;
+    float centeredMagnitude = 0.0f;
     float peak = 0.0f;
+    float mean = 0.0f;
+    float last = 0.0f;
     float baseline = 0.0f;
     float lift = 0.0f;
+    size_t sampleCount = 0;
+    size_t sustainedCount = 0;
+    unsigned long sustainedMs = 0;
+    float sustainedThreshold = 0.0f;
 
     const char* strength = "unknown";
 };
@@ -231,6 +241,7 @@ struct AnalyzerProfileDetail {
     float freqScoreMin = 0.0f;
     float freqContrastMin = 0.0f;
 
+    float ampCenteredMagnitude = 0.0f;
     float ampLevel = 0.0f;
     float ampBase = 0.0f;
     float ampLift = 0.0f;

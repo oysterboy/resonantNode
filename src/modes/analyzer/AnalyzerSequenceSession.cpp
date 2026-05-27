@@ -323,6 +323,7 @@ void AnalyzerApp::updateSequenceTest(unsigned long now) {
     _sequenceTest.currentTrialDiagnostics.runtimePatternCaptured = false;
     _sequenceTest.currentTrialDiagnostics.runtimePatternResult = {};
     _sequenceTest.currentTrialDiagnostics.runtimeFieldState = {};
+    _detection->resetDiagnostics();
     _sequenceTest.nextTriggerAtMs = scheduledAtMs + _sequenceTest.periodMs;
 
     beginSequenceSampleDump(trialNumber);
@@ -423,6 +424,7 @@ void AnalyzerApp::finalizeSequenceTrial(unsigned long now) {
     flushSequenceSampleHistory(now + 1UL);
     printSequenceSampleDump(_sequenceTest.currentTrial);
     printSequenceCandidateLogs(_sequenceTest.currentTrial, diagnostics);
+    printSequenceDiagnostics(_sequenceTest.currentTrial, result);
     if (summaryTrial) {
         printSequenceTrialResult(_sequenceTest.currentTrial, result, dtMs, durMs, strength, invalidAudioTrial, diagnostics.duplicateCount, diagnostics);
     } else {

@@ -13,17 +13,52 @@ void setRejected(detection::InspectedOccurrence& out, detection::OccurrenceRejec
 void fillScalarStrengthObservation(
     detection::InspectedOccurrence& out,
     const detection::Occurrence& candidate,
-    float peak,
-    float floor,
+    const detection::ScalarWindow& scalarWindow,
     bool available,
     const detection::ScalarFeatureInspectionConfig& config,
     detection::EvidenceTarget target
 ) {
-    const float lift = peak - floor;
-    const detection::StrengthClass strength = available ? classifyAmpStrength(peak, available, config.strength) : detection::StrengthClass::Unknown;
+    const float peak = scalarWindow.peak;
+    const float mean = scalarWindow.mean;
+    const float last = scalarWindow.last;
+    const size_t sampleCount = scalarWindow.sampleCount;
+    const size_t sustainedCount = scalarWindow.sustainedCount;
+    const unsigned long sustainedMs = scalarWindow.sustainedMs;
+    const float sustainedThreshold = scalarWindow.sustainedThreshold;
+    float classificationValue = peak;
+    const char* supportBasis = "peak_absolute";
+    bool classified = available;
+    detection::StrengthClass strength = detection::StrengthClass::Unknown;
 
-    out.occurrence.ampLevel = peak;
-    out.occurrence.ampBaseline = floor;
+    switch (config.mode) {
+        case detection::ScalarInspectionMode::PeakAbsolute:
+            classificationValue = peak;
+            supportBasis = "peak_absolute";
+            strength = available ? classifyAmpStrength(classificationValue, available, config.strength) : detection::StrengthClass::Unknown;
+            break;
+        case detection::ScalarInspectionMode::MeanAbsolute:
+            classificationValue = mean;
+            supportBasis = "mean_absolute";
+            strength = available ? classifyAmpStrength(classificationValue, available, config.strength) : detection::StrengthClass::Unknown;
+            break;
+        case detection::ScalarInspectionMode::SustainedAboveThreshold:
+            classificationValue = peak;
+            supportBasis = "sustained_above_threshold";
+            {
+                const size_t requiredSustainedCount = config.minSustainedCount > 0
+                    ? config.minSustainedCount
+                    : static_cast<size_t>(config.minSustainedMs > 0 ? config.minSustainedMs : 1U);
+                const bool sustainedEnough = sustainedCount >= requiredSustainedCount;
+                classified = available && sustainedEnough;
+                strength = classified ? classifyAmpStrength(classificationValue, available, config.strength) : detection::StrengthClass::Unknown;
+            }
+            break;
+    }
+
+    const float lift = classified ? classificationValue - mean : 0.0f;
+
+    out.occurrence.ampLevel = classified ? classificationValue : 0.0f;
+    out.occurrence.ampBaseline = mean;
     switch (target) {
         case detection::EvidenceTarget::AmpStrength:
             out.ampStrength = strength;
@@ -31,12 +66,20 @@ void fillScalarStrengthObservation(
                 auto& ampEvidence = out.ampStrengthEvidence;
                 ampEvidence.available = available;
                 ampEvidence.observedOnly = true;
-                ampEvidence.supportBasis = "peak";
+                ampEvidence.supportBasis = supportBasis;
+                ampEvidence.mode = config.mode;
                 ampEvidence.windowStartMs = static_cast<int16_t>(-static_cast<int32_t>(config.windowPreMs));
                 ampEvidence.windowEndMs = static_cast<int16_t>(config.windowPostMs);
                 ampEvidence.peak = peak;
-                ampEvidence.baseline = floor;
+                ampEvidence.mean = mean;
+                ampEvidence.last = last;
+                ampEvidence.baseline = mean;
                 ampEvidence.lift = lift;
+                ampEvidence.classificationValue = classificationValue;
+                ampEvidence.sampleCount = sampleCount;
+                ampEvidence.sustainedCount = sustainedCount;
+                ampEvidence.sustainedMs = sustainedMs;
+                ampEvidence.sustainedThreshold = sustainedThreshold;
                 ampEvidence.strength = out.ampStrength;
             }
             break;
@@ -111,15 +154,16 @@ void OccurrenceInspector::annotateAmpStrength(
     ampEvidence.peak = 0.0f;
     ampEvidence.baseline = 0.0f;
     ampEvidence.lift = 0.0f;
-    ampEvidence.supportBasis = "peak";
+    ampEvidence.supportBasis = "centered_magnitude_peak";
     ampEvidence.strength = StrengthClass::Unknown;
 
     if (config.enabled && featureHistory != nullptr) {
-        const ScalarWindow scalarWindow = featureHistory->getWindow(config.stream, startMs, endMs);
+        const float sustainedThreshold = config.mode == detection::ScalarInspectionMode::SustainedAboveThreshold
+            ? config.strength.weakPeakThreshold
+            : 0.0f;
+        const ScalarWindow scalarWindow = featureHistory->getWindow(config.stream, startMs, endMs, sustainedThreshold);
         if (scalarWindow.valid) {
-            const float floor = scalarWindow.mean;
-            const float peak = scalarWindow.peak;
-            fillScalarStrengthObservation(out, candidate, peak, floor, true, config, target);
+            fillScalarStrengthObservation(out, candidate, scalarWindow, true, config, target);
             return;
         }
     }

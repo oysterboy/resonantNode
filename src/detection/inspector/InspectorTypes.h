@@ -16,6 +16,25 @@ enum class StrengthClass {
     Strong,
 };
 
+enum class ScalarInspectionMode {
+    PeakAbsolute,
+    MeanAbsolute,
+    SustainedAboveThreshold,
+};
+
+inline const char* scalarInspectionModeName(ScalarInspectionMode mode) {
+    switch (mode) {
+        case ScalarInspectionMode::PeakAbsolute:
+            return "peak_absolute";
+        case ScalarInspectionMode::MeanAbsolute:
+            return "mean_absolute";
+        case ScalarInspectionMode::SustainedAboveThreshold:
+            return "sustained_above_threshold";
+    }
+
+    return "unknown";
+}
+
 // Shared thresholds for amplitude strength classification.
 struct AmpStrengthConfig {
     float strongPeakThreshold = 60.0f;
@@ -59,9 +78,12 @@ enum class EvidenceTarget {
 struct ScalarFeatureInspectionConfig {
     bool enabled = true;
     FeatureStreamId stream = FeatureStreamId::AmpEnvelope;
+    ScalarInspectionMode mode = ScalarInspectionMode::PeakAbsolute;
     AmpStrengthConfig strength = {};
     uint32_t windowPreMs = 20;
     uint32_t windowPostMs = 120;
+    uint32_t minSustainedMs = 0;
+    size_t minSustainedCount = 0;
 };
 
 struct InspectionModuleConfig {
@@ -82,15 +104,23 @@ struct InspectionPlan {
 struct AmpStrengthEvidence {
     bool available = false;
     bool observedOnly = true;
-    // Diagnostic only: the support decision is peak-based.
-    const char* supportBasis = "peak";
+    // Diagnostic only: the support decision is peak-based on centered magnitude.
+    const char* supportBasis = "centered_magnitude_peak";
+    ScalarInspectionMode mode = ScalarInspectionMode::PeakAbsolute;
 
     int16_t windowStartMs = -20;
     int16_t windowEndMs = 120;
 
     float peak = 0.0f;
+    float mean = 0.0f;
+    float last = 0.0f;
     float baseline = 0.0f;
     float lift = 0.0f;
+    float classificationValue = 0.0f;
+    size_t sampleCount = 0;
+    size_t sustainedCount = 0;
+    unsigned long sustainedMs = 0;
+    float sustainedThreshold = 0.0f;
 
     StrengthClass strength = StrengthClass::Unknown;
 };

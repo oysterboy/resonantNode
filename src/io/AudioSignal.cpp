@@ -219,6 +219,7 @@ void AudioSignal::emitFrame(AudioSignalFrame& outFrame, uint64_t sampleIndex, ui
     outFrame.sampleRateHz = sampleRateHz;
     outFrame.rawSample = _rawSignal;
     outFrame.centeredSample = _centeredSignal;
+    outFrame.centeredMagnitude = static_cast<float>(abs(_centeredSignal));
     outFrame.level = _signalMagnitude;
     outFrame.smoothedLevel = static_cast<int>(_smoothedSignalMagnitude);
     outFrame.baseline = _baseline;

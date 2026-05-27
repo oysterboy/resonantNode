@@ -1,6 +1,7 @@
 #include "AnalyzerApp.h"
 
 #include <Arduino.h>
+#include <string.h>
 
 #include "../../TimingUtils.h"
 
@@ -92,6 +93,50 @@ const char* strengthClassName(detection::StrengthClass value) {
     }
 }
 
+void printInspectionScalarDetails(const AnalyzerReport& report) {
+    const char* moduleTarget = report.inspection.moduleTarget != nullptr ? report.inspection.moduleTarget : "unknown";
+
+    if (strcmp(moduleTarget, "amp_strength") == 0) {
+        Serial.print(" inspector_mode=");
+        Serial.print(report.profileDetail.ampStrengthObservation.mode != nullptr ? report.profileDetail.ampStrengthObservation.mode : "unknown");
+        Serial.print(" inspector_classification=");
+        Serial.print(report.profileDetail.ampStrengthObservation.classificationValue, 1);
+        Serial.print(" inspector_centered=");
+        Serial.print(report.profileDetail.ampStrengthObservation.centeredMagnitude, 1);
+        Serial.print(" inspector_baseline=");
+        Serial.print(report.profileDetail.ampStrengthObservation.baseline, 1);
+        Serial.print(" inspector_lift=");
+        Serial.print(report.profileDetail.ampStrengthObservation.lift, 1);
+        Serial.print(" inspector_sustained=");
+        Serial.print(report.profileDetail.ampStrengthObservation.sustainedMs);
+        Serial.print("/");
+        Serial.print(report.profileDetail.ampStrengthObservation.sustainedCount);
+        Serial.print("@");
+        Serial.print(report.profileDetail.ampStrengthObservation.sustainedThreshold, 1);
+        return;
+    }
+
+    if (strcmp(moduleTarget, "frequency_score") == 0) {
+        Serial.print(" inspector_score=");
+        Serial.print(report.profileDetail.freqScore, 2);
+        Serial.print(" inspector_contrast=");
+        Serial.print(report.profileDetail.freqContrast, 2);
+        return;
+    }
+
+    if (strcmp(moduleTarget, "target_band") == 0) {
+        Serial.print(" inspector_level=");
+        Serial.print(report.profileDetail.ampLevel, 1);
+        Serial.print(" inspector_base=");
+        Serial.print(report.profileDetail.ampBase, 1);
+        Serial.print(" inspector_lift=");
+        Serial.print(report.profileDetail.ampLift, 1);
+        return;
+    }
+
+    Serial.print(" inspector_value=unknown");
+}
+
 bool analyzerLogEnabled(uint32_t flags, AnalyzerApp::AnalyzerLogFlags flag) {
     return (flags & static_cast<uint32_t>(flag)) != 0;
 }
@@ -179,6 +224,7 @@ void AnalyzerApp::printSequenceTrialResult(const AnalyzerReport& report) const {
     Serial.print(report.occurrences.strength, 1);
     Serial.print(" inspector_strength=");
     Serial.print(report.inspection.moduleStrengthClass != nullptr ? report.inspection.moduleStrengthClass : "unknown");
+    printInspectionScalarDetails(report);
     Serial.print(" inspector_evidence=");
     Serial.println(report.inspection.primaryEvidence != nullptr ? report.inspection.primaryEvidence : "none");
 }
@@ -293,6 +339,7 @@ void AnalyzerApp::printSequenceExplain(const AnalyzerReport& report) const {
     Serial.print(report.inspection.moduleTarget != nullptr ? report.inspection.moduleTarget : "unknown");
     Serial.print(" module_strength_class=");
     Serial.print(report.inspection.moduleStrengthClass != nullptr ? report.inspection.moduleStrengthClass : "unknown");
+    printInspectionScalarDetails(report);
     Serial.print(" evidence=");
     Serial.print(report.inspection.primaryEvidence != nullptr ? report.inspection.primaryEvidence : "none");
     Serial.print(" inspected=");
@@ -305,6 +352,36 @@ void AnalyzerApp::printSequenceExplain(const AnalyzerReport& report) const {
     Serial.println(report.inspection.mainRejectReason != nullptr ? report.inspection.mainRejectReason : "none");
     Serial.println("modules:");
     printModuleList(report.profileDetail.inspectionModules);
+    if (report.inspection.moduleTarget != nullptr && strcmp(report.inspection.moduleTarget, "amp_strength") == 0) {
+        Serial.print("scalar.mode=");
+        Serial.print(report.profileDetail.ampStrengthObservation.mode != nullptr ? report.profileDetail.ampStrengthObservation.mode : "unknown");
+        Serial.print(" scalar.peak=");
+        Serial.print(report.profileDetail.ampStrengthObservation.peak, 1);
+        Serial.print(" scalar.mean=");
+        Serial.print(report.profileDetail.ampStrengthObservation.mean, 1);
+        Serial.print(" scalar.last=");
+        Serial.print(report.profileDetail.ampStrengthObservation.last, 1);
+        Serial.print(" scalar.count=");
+        Serial.print(report.profileDetail.ampStrengthObservation.sampleCount);
+        Serial.print(" scalar.classificationValue=");
+        Serial.print(report.profileDetail.ampStrengthObservation.classificationValue, 1);
+        Serial.print(" scalar.strengthClass=");
+        Serial.print(report.profileDetail.ampStrengthObservation.strength != nullptr ? report.profileDetail.ampStrengthObservation.strength : "unknown");
+        Serial.print(" scalar.sustainedMs=");
+        Serial.print(report.profileDetail.ampStrengthObservation.sustainedMs);
+        Serial.print(" scalar.sustainedCount=");
+        Serial.print(report.profileDetail.ampStrengthObservation.sustainedCount);
+        Serial.print(" scalar.sustainedThreshold=");
+        Serial.print(report.profileDetail.ampStrengthObservation.sustainedThreshold, 1);
+        Serial.print(" inspector_centered=");
+        Serial.print(report.profileDetail.ampStrengthObservation.centeredMagnitude, 1);
+        Serial.print(" inspector_baseline=");
+        Serial.print(report.profileDetail.ampStrengthObservation.baseline, 1);
+        Serial.print(" inspector_lift=");
+        Serial.print(report.profileDetail.ampStrengthObservation.lift, 1);
+        Serial.print(" inspector_strength=");
+        Serial.println(report.profileDetail.ampStrengthObservation.strength != nullptr ? report.profileDetail.ampStrengthObservation.strength : "unknown");
+    }
 
     Serial.println("4 field:");
     Serial.print("field_state=");
@@ -398,8 +475,8 @@ void AnalyzerApp::printSequenceExplain(const AnalyzerReport& report) const {
         Serial.print(report.profileDetail.freqScore, 1);
         Serial.print(" freq_contrast=");
         Serial.print(report.profileDetail.freqContrast, 2);
-        Serial.print(" amp_level=");
-        Serial.print(report.profileDetail.ampLevel, 1);
+        Serial.print(" amp_centered=");
+        Serial.print(report.profileDetail.ampCenteredMagnitude, 1);
         Serial.print(" amp_base=");
         Serial.print(report.profileDetail.ampBase, 1);
         Serial.print(" amp_lift=");
@@ -492,6 +569,70 @@ void AnalyzerApp::printSequenceCandidateLogs(unsigned long trialNumber, const Se
     }
 }
 
+void AnalyzerApp::printSequenceDiagnostics(unsigned long trialNumber, AnalyzerResult result) const {
+    if (_valMode) {
+        return;
+    }
+    if (!analyzerLogEnabled(_sequenceTest.logFlags, AnalyzerApp::ANALYZER_LOG_TRIAL) &&
+        !analyzerLogEnabled(_sequenceTest.logFlags, AnalyzerApp::ANALYZER_LOG_EXPLAIN) &&
+        !analyzerLogEnabled(_sequenceTest.logFlags, AnalyzerApp::ANALYZER_LOG_CUSTOM)) {
+        return;
+    }
+    if (_detection == nullptr) {
+        return;
+    }
+
+    const detection::DetectionDiagnostics& diag = _detection->diagnostics();
+    Serial.print("SEQ_REJECTS trial=");
+    Serial.print(trialNumber);
+    Serial.print(" result=");
+    Serial.print(analyzerResultName(result));
+    Serial.print(" source=");
+    Serial.print(diag.occurrenceSource != nullptr ? diag.occurrenceSource : "unknown");
+    Serial.print(" freq_reason=");
+    Serial.print(diag.frequencyReason != nullptr ? diag.frequencyReason : "none");
+    Serial.print(" freq_suppress=");
+    Serial.print(diag.frequencySuppressReason != nullptr ? diag.frequencySuppressReason : "none");
+    Serial.print(" freq_would=");
+    Serial.print(diag.frequencyWouldCandidateReason != nullptr ? diag.frequencyWouldCandidateReason : "none");
+    Serial.print(" freq_ready=");
+    Serial.print(diag.frequencyReadyOk ? 1 : 0);
+    Serial.print(" freq_gate=");
+    Serial.print(diag.frequencyGateOpen ? 1 : 0);
+    Serial.print(" freq_present=");
+    Serial.print(diag.frequencyPresent ? 1 : 0);
+    Serial.print(" freq_valid=");
+    Serial.print(diag.frequencyValidWindow ? 1 : 0);
+    Serial.print(" freq_match=");
+    Serial.print(diag.frequencyMatched ? 1 : 0);
+    Serial.print(" freq_score=");
+    Serial.print(diag.frequencyScore, 1);
+    Serial.print("/");
+    Serial.print(diag.frequencyScoreMin, 1);
+    Serial.print(" freq_contrast=");
+    Serial.print(diag.frequencyContrast, 2);
+    Serial.print("/");
+    Serial.print(diag.frequencyContrastMin, 2);
+    Serial.print(" freq_state=");
+    Serial.print(diag.frequencyCandidateState != nullptr ? diag.frequencyCandidateState : "none");
+    Serial.print(" amp_centered=");
+    Serial.print(diag.ampCenteredMagnitude, 1);
+    Serial.print(" amp_level=");
+    Serial.print(diag.ampLevel, 1);
+    Serial.print(" amp_baseline=");
+    Serial.print(diag.ampBaseline, 1);
+    Serial.print(" amp_lift=");
+    Serial.print(diag.ampLift, 1);
+    Serial.print(" onset_reject=");
+    Serial.print(diag.scalarOnsetRejectReason != nullptr ? diag.scalarOnsetRejectReason : "none");
+    Serial.print(" transient_reject=");
+    Serial.print(diag.scalarTransientRejectReason != nullptr ? diag.scalarTransientRejectReason : "none");
+    Serial.print(" transient_reject_dur=");
+    Serial.print(diag.scalarTransientRejectedDurationMs);
+    Serial.print(" transient_reject_strength=");
+    Serial.println(diag.scalarTransientRejectedStrength, 1);
+}
+
 void AnalyzerApp::printSequenceAmpWindow(const AnalyzerReport& report) const {
     if (_valMode) {
         return;
@@ -527,8 +668,8 @@ void AnalyzerApp::printSequenceAmpWindow(const AnalyzerReport& report) const {
     Serial.print(report.inspection.moduleTarget != nullptr ? report.inspection.moduleTarget : "unknown");
     Serial.print(" module_strength=");
     Serial.print(report.inspection.moduleStrengthClass != nullptr ? report.inspection.moduleStrengthClass : "unknown");
-    Serial.print(" peak=");
-    Serial.print(report.profileDetail.ampStrengthObservation.peak, 1);
+    Serial.print(" centered=");
+    Serial.print(report.profileDetail.ampStrengthObservation.centeredMagnitude, 1);
     Serial.print(" window=");
     Serial.print(static_cast<long>(report.profileDetail.ampStrengthObservation.windowStartMs));
     Serial.print("..");

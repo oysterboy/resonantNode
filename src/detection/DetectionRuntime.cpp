@@ -23,7 +23,7 @@ OccurrenceSource occurrenceSourceForStream(FeatureStreamId stream) {
 float selectedScalarValue(const AudioSignalFrame& frame, FeatureStreamId stream, const FeatureHistory& history) {
     switch (stream) {
         case FeatureStreamId::AmpEnvelope:
-            return static_cast<float>(frame.level);
+            return frame.centeredMagnitude;
         case FeatureStreamId::AmbientFloor:
             return frame.baseline;
         case FeatureStreamId::FrequencyScore:
@@ -32,6 +32,17 @@ float selectedScalarValue(const AudioSignalFrame& frame, FeatureStreamId stream,
         case FeatureStreamId::Unknown:
         default:
             return static_cast<float>(frame.level);
+    }
+}
+
+const char* occurrenceSourceName(OccurrenceSourceKind kind) {
+    switch (kind) {
+        case OccurrenceSourceKind::FrequencyMatch:
+            return "frequency_match";
+        case OccurrenceSourceKind::ScalarTransient:
+            return "scalar_transient";
+        default:
+            return "unknown";
     }
 }
 
@@ -49,8 +60,13 @@ void DetectionRuntime::resetState() {
     _resultCount = 0;
     _latestPipelineResult = {};
     _hasLatestPipelineResult = false;
+    resetDiagnostics();
     _lastOccurrence = {};
     _lastInspectedOccurrence = {};
+}
+
+void DetectionRuntime::resetDiagnostics() {
+    _diagnostics = {};
 }
 
 void DetectionRuntime::setFrequencyMatchConfig(const FrequencyMatchConfig& config) {
@@ -116,6 +132,7 @@ void DetectionRuntime::observeFrame(
             break;
     }
 
+    updateDiagnostics(frame, frequencyEvidence, nowMs);
     drainOccurrenceSources(nowMs);
     drainPatternAssembler(nowMs);
 }
@@ -137,6 +154,10 @@ bool DetectionRuntime::hasLatestPipelineResult() const {
 
 const DetectionPipelineResult& DetectionRuntime::latestPipelineResult() const {
     return _latestPipelineResult;
+}
+
+const DetectionDiagnostics& DetectionRuntime::diagnostics() const {
+    return _diagnostics;
 }
 
 const FrequencyOccurrenceSource& DetectionRuntime::frequencyEmitter() const {
@@ -223,6 +244,49 @@ void DetectionRuntime::capturePipelineResult(
     _latestPipelineResult.profileName = _profileName;
     _latestPipelineResult.timestampMs = nowMs;
     _hasLatestPipelineResult = true;
+}
+
+void DetectionRuntime::updateDiagnostics(
+    const AudioSignalFrame& frame,
+    const FrequencyFeatureFrame& frequencyEvidence,
+    unsigned long nowMs
+) {
+    _diagnostics.present = frame.valid;
+    _diagnostics.observedAtMs = nowMs;
+    _diagnostics.occurrenceSource = occurrenceSourceName(_occurrenceSourceKind);
+    _diagnostics.ampCenteredMagnitude = frame.centeredMagnitude;
+    _diagnostics.ampLevel = static_cast<float>(frame.level);
+    _diagnostics.ampBaseline = frame.baseline;
+    _diagnostics.ampLift = frame.centeredMagnitude - frame.baseline;
+
+    _diagnostics.scalarOnsetRejectReason = _scalarEmitter.lastOnsetRejectReasonName();
+    _diagnostics.scalarTransientRejectReason = _scalarEmitter.lastTransientRejectReasonName();
+    _diagnostics.scalarTransientRejectedDurationMs = _scalarEmitter.lastTransientRejectedDurationMs();
+    _diagnostics.scalarTransientRejectedStrength = _scalarEmitter.lastTransientRejectedStrength();
+
+    FrequencyMatchEvaluation::Values tuning = {};
+    tuning.scoreMin = _frequencyMatchConfig.scoreMin;
+    tuning.contrastMin = _frequencyMatchConfig.contrastMin;
+    const auto frequencyEval = FrequencyMatchEvaluation::evaluate(frequencyEvidence, tuning);
+    const auto& detector = _frequencyEmitter.detector();
+    _diagnostics.detectorKind = _occurrenceSourceKind == OccurrenceSourceKind::FrequencyMatch
+        ? "frequency_match"
+        : "scalar_transient";
+    _diagnostics.frequencyPresent = frequencyEval.present;
+    _diagnostics.frequencyValidWindow = frequencyEval.validWindow;
+    _diagnostics.frequencyMatched = frequencyEval.matched;
+    _diagnostics.frequencyScoreOk = frequencyEval.scoreOk;
+    _diagnostics.frequencyContrastOk = frequencyEval.contrastOk;
+    _diagnostics.frequencyScore = frequencyEval.score;
+    _diagnostics.frequencyContrast = frequencyEval.contrast;
+    _diagnostics.frequencyScoreMin = frequencyEval.scoreMin;
+    _diagnostics.frequencyContrastMin = frequencyEval.contrastMin;
+    _diagnostics.frequencyReason = FrequencyMatchEvaluation::reasonName(frequencyEval.reason);
+    _diagnostics.frequencySuppressReason = detector.suppressReason;
+    _diagnostics.frequencyWouldCandidateReason = detector.wouldCandidateReason;
+    _diagnostics.frequencyCandidateState = detector.candidateState;
+    _diagnostics.frequencyReadyOk = detector.readyOk;
+    _diagnostics.frequencyGateOpen = detector.gateOpen;
 }
 
 } // namespace detection

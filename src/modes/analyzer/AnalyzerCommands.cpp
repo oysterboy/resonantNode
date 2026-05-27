@@ -275,6 +275,9 @@ void AnalyzerApp::handleUsbLine(const char* line) {
                     if (!externalEmitter) {
                         externalEmitter = true;
                     }
+                } else if (startsWithTokenIgnoreCase(token, "test=")) {
+                    strncpy(setupLabel, token + 5, sizeof(setupLabel));
+                    setupLabel[sizeof(setupLabel) - 1] = '\0';
                 } else if (equalsIgnoreCase(token, "labels")) {
                     strncpy(setupLabel, "labels", sizeof(setupLabel));
                     setupLabel[sizeof(setupLabel) - 1] = '\0';

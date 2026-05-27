@@ -49,11 +49,46 @@ struct DetectionPipelineResult {
     unsigned long timestampMs = 0;
 };
 
+struct DetectionDiagnostics {
+    bool present = false;
+    unsigned long observedAtMs = 0;
+
+    const char* occurrenceSource = "unknown";
+    const char* detectorKind = "unknown";
+
+    bool frequencyPresent = false;
+    bool frequencyValidWindow = false;
+    bool frequencyMatched = false;
+    bool frequencyScoreOk = false;
+    bool frequencyContrastOk = false;
+    float frequencyScore = 0.0f;
+    float frequencyContrast = 0.0f;
+    float frequencyScoreMin = 0.0f;
+    float frequencyContrastMin = 0.0f;
+    const char* frequencyReason = "none";
+    const char* frequencySuppressReason = "none";
+    const char* frequencyWouldCandidateReason = "none";
+    const char* frequencyCandidateState = "none";
+    bool frequencyReadyOk = false;
+    bool frequencyGateOpen = false;
+
+    const char* scalarOnsetRejectReason = "none";
+    const char* scalarTransientRejectReason = "none";
+    unsigned long scalarTransientRejectedDurationMs = 0;
+    float scalarTransientRejectedStrength = 0.0f;
+
+    float ampCenteredMagnitude = 0.0f;
+    float ampLevel = 0.0f;
+    float ampBaseline = 0.0f;
+    float ampLift = 0.0f;
+};
+
 class DetectionRuntime {
 public:
     DetectionRuntime();
 
     void resetState();
+    void resetDiagnostics();
 
     void setFrequencyMatchConfig(const FrequencyMatchConfig& config);
     void setScalarTransientConfig(const ScalarTransientConfig& config);
@@ -72,6 +107,7 @@ public:
     bool popPatternResult(PatternResult& out);
     bool hasLatestPipelineResult() const;
     const DetectionPipelineResult& latestPipelineResult() const;
+    const DetectionDiagnostics& diagnostics() const;
     const FrequencyOccurrenceSource& frequencyEmitter() const;
     const FieldState& fieldState() const;
     const FeatureHistory& featureHistory() const;
@@ -87,6 +123,11 @@ private:
         const PatternResult& result,
         const Occurrence* occurrence,
         const InspectedOccurrence* inspectedOccurrence,
+        unsigned long nowMs
+    );
+    void updateDiagnostics(
+        const AudioSignalFrame& frame,
+        const FrequencyFeatureFrame& frequencyEvidence,
         unsigned long nowMs
     );
 
@@ -112,6 +153,7 @@ private:
 
     DetectionPipelineResult _latestPipelineResult = {};
     bool _hasLatestPipelineResult = false;
+    DetectionDiagnostics _diagnostics = {};
     Occurrence _lastOccurrence = {};
     InspectedOccurrence _lastInspectedOccurrence = {};
 };

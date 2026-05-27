@@ -28,6 +28,7 @@ struct AudioSignalFrame {
     unsigned long sampleRateHz = 0;
     int rawSample = 0;
     int centeredSample = 0;
+    float centeredMagnitude = 0.0f;
     int level = 0;
     int smoothedLevel = 0;
     float baseline = 0.0f;

@@ -3,6 +3,7 @@
 #include <Arduino.h>
 #include <stdlib.h>
 #include <string.h>
+#include <new>
 
 #include "../../RuntimeDefaults.h"
 #include "../../AudioDebugConfig.h"
@@ -229,9 +230,14 @@ void AnalyzerApp::begin() {
         _detection = new detection::DetectionRuntime();
     }
     if (_sequenceFeatureHistory == nullptr) {
-        _sequenceFeatureHistory = new detection::FeatureHistory();
+        _sequenceFeatureHistory = new (std::nothrow) detection::FeatureHistory();
+        if (_sequenceFeatureHistory == nullptr) {
+            Serial.println("EVT analyzer_warn feature_history_alloc_failed");
+        }
     }
-    _sequenceFeatureHistory->reset();
+    if (_sequenceFeatureHistory != nullptr) {
+        _sequenceFeatureHistory->reset();
+    }
     _lastPrintMs = 0;
     _usbLineLength = 0;
     _usbLineBuffer[0] = '\0';
@@ -735,22 +741,32 @@ AnalyzerReport AnalyzerApp::buildSequenceAnalyzerReport(unsigned long trialNumbe
     report.profileDetail.freqContrast = trialHasPipelineEvidence ? runtimePatternResult->freq.spectralContrast : 0.0f;
     report.profileDetail.freqScoreMin = selectedProfile.frequencyMatch.scoreMin;
     report.profileDetail.freqContrastMin = selectedProfile.frequencyMatch.contrastMin;
-    report.profileDetail.ampLevel = report.occurrences.primaryStrength;
+    report.profileDetail.ampCenteredMagnitude = report.occurrences.primaryStrength;
+    report.profileDetail.ampLevel = report.profileDetail.ampCenteredMagnitude;
     report.profileDetail.ampBase = diagnostics.acceptedAmbientBaseline;
-    report.profileDetail.ampLift = report.profileDetail.ampLevel - report.profileDetail.ampBase;
+    report.profileDetail.ampLift = report.profileDetail.ampCenteredMagnitude - report.profileDetail.ampBase;
     const detection::AmpStrengthEvidence ampStrengthEvidence = trialHasPipelineEvidence && runtimeInspectedOccurrence != nullptr
         ? runtimeInspectedOccurrence->ampStrengthEvidence
         : detection::AmpStrengthEvidence{};
     report.profileDetail.ampStrengthObservation.available = ampStrengthEvidence.available;
     report.profileDetail.ampStrengthObservation.observedOnly = ampStrengthEvidence.observedOnly;
+    report.profileDetail.ampStrengthObservation.mode = detection::scalarInspectionModeName(ampStrengthEvidence.mode);
     report.profileDetail.ampStrengthObservation.note = ampStrengthEvidence.available
         ? "amp_strength_seen"
         : (trialHasPipelineEvidence ? "inspector_no_amp_strength" : "missing_pipeline_result");
     report.profileDetail.ampStrengthObservation.windowStartMs = ampStrengthEvidence.windowStartMs;
     report.profileDetail.ampStrengthObservation.windowEndMs = ampStrengthEvidence.windowEndMs;
+    report.profileDetail.ampStrengthObservation.classificationValue = ampStrengthEvidence.classificationValue;
+    report.profileDetail.ampStrengthObservation.centeredMagnitude = ampStrengthEvidence.peak;
     report.profileDetail.ampStrengthObservation.peak = ampStrengthEvidence.peak;
+    report.profileDetail.ampStrengthObservation.mean = ampStrengthEvidence.mean;
+    report.profileDetail.ampStrengthObservation.last = ampStrengthEvidence.last;
     report.profileDetail.ampStrengthObservation.baseline = ampStrengthEvidence.baseline;
     report.profileDetail.ampStrengthObservation.lift = ampStrengthEvidence.lift;
+    report.profileDetail.ampStrengthObservation.sampleCount = ampStrengthEvidence.sampleCount;
+    report.profileDetail.ampStrengthObservation.sustainedCount = ampStrengthEvidence.sustainedCount;
+    report.profileDetail.ampStrengthObservation.sustainedMs = ampStrengthEvidence.sustainedMs;
+    report.profileDetail.ampStrengthObservation.sustainedThreshold = ampStrengthEvidence.sustainedThreshold;
     report.profileDetail.ampStrengthObservation.strength = strengthClassName(ampStrengthEvidence.strength);
 
     report.debug.occurrences = diagnostics.rawCandidateCount;

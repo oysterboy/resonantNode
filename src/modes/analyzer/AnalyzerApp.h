@@ -395,6 +395,7 @@ private:
     void printTransientAcceptedDebug(unsigned long now, float strength, unsigned long durationMs) const;
     void printTransientStatsDebug(unsigned long now) const;
     void printSequenceExplain(const AnalyzerReport& report) const;
+    void printSequenceDiagnostics(unsigned long trialNumber, AnalyzerResult result) const;
     void printSequenceAmpWindow(const AnalyzerReport& report) const;
     void printSequenceCandidateLogs(unsigned long trialNumber, const SequenceTest::TrialDiagnostics& diagnostics) const;
     void printSequenceTrialResult(unsigned long trialNumber, AnalyzerResult result, long dtMs, long durMs, float strength, bool audioOverflow, unsigned long duplicateCount, const SequenceTest::TrialDiagnostics& diagnostics) const;

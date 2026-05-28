@@ -3,6 +3,7 @@
 #include <Arduino.h>
 #include <string.h>
 
+#include "../../detection/features/FrequencyMatchEvaluation.h"
 #include "../../detection/patterns/PatternNames.h"
 
 namespace {

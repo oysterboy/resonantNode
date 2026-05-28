@@ -141,6 +141,13 @@ bool analyzerLogEnabled(uint32_t flags, AnalyzerApp::AnalyzerLogFlags flag) {
     return (flags & static_cast<uint32_t>(flag)) != 0;
 }
 
+bool analyzerLogIsFull(uint32_t flags) {
+    return flags == (AnalyzerApp::ANALYZER_LOG_SUMMARY |
+                     AnalyzerApp::ANALYZER_LOG_TRIAL |
+                     AnalyzerApp::ANALYZER_LOG_CANDIDATE |
+                     AnalyzerApp::ANALYZER_LOG_EXPLAIN);
+}
+
 const char* sequenceTrialDurationClass(long durMs) {
     if (durMs < 0) {
         return "invalid";
@@ -569,68 +576,166 @@ void AnalyzerApp::printSequenceCandidateLogs(unsigned long trialNumber, const Se
     }
 }
 
-void AnalyzerApp::printSequenceDiagnostics(unsigned long trialNumber, AnalyzerResult result) const {
+void AnalyzerApp::printSequenceDiagnostics(const AnalyzerReport& report) const {
     if (_valMode) {
         return;
     }
-    if (!analyzerLogEnabled(_sequenceTest.logFlags, AnalyzerApp::ANALYZER_LOG_TRIAL) &&
-        !analyzerLogEnabled(_sequenceTest.logFlags, AnalyzerApp::ANALYZER_LOG_EXPLAIN) &&
-        !analyzerLogEnabled(_sequenceTest.logFlags, AnalyzerApp::ANALYZER_LOG_CUSTOM)) {
+    if (!_sequenceTest.diagnosticsEnabled ||
+        !analyzerLogEnabled(_sequenceTest.logFlags, AnalyzerApp::ANALYZER_LOG_DIAG)) {
         return;
     }
-    if (_detection == nullptr) {
-        return;
-    }
-
-    const detection::DetectionDiagnostics& diag = _detection->diagnostics();
-    Serial.print("SEQ_REJECTS trial=");
-    Serial.print(trialNumber);
+    Serial.print("SEQ_FREQ_DIAG trial=");
+    Serial.print(report.context.trial);
+    Serial.print(" current_trial_id=");
+    Serial.print(report.frequency.currentTrialId);
     Serial.print(" result=");
-    Serial.print(analyzerResultName(result));
+    Serial.print(analyzerResultName(report.classification.result));
     Serial.print(" source=");
-    Serial.print(diag.occurrenceSource != nullptr ? diag.occurrenceSource : "unknown");
-    Serial.print(" freq_reason=");
-    Serial.print(diag.frequencyReason != nullptr ? diag.frequencyReason : "none");
-    Serial.print(" freq_suppress=");
-    Serial.print(diag.frequencySuppressReason != nullptr ? diag.frequencySuppressReason : "none");
-    Serial.print(" freq_would=");
-    Serial.print(diag.frequencyWouldCandidateReason != nullptr ? diag.frequencyWouldCandidateReason : "none");
-    Serial.print(" freq_ready=");
-    Serial.print(diag.frequencyReadyOk ? 1 : 0);
-    Serial.print(" freq_gate=");
-    Serial.print(diag.frequencyGateOpen ? 1 : 0);
-    Serial.print(" freq_present=");
-    Serial.print(diag.frequencyPresent ? 1 : 0);
-    Serial.print(" freq_valid=");
-    Serial.print(diag.frequencyValidWindow ? 1 : 0);
-    Serial.print(" freq_match=");
-    Serial.print(diag.frequencyMatched ? 1 : 0);
-    Serial.print(" freq_score=");
-    Serial.print(diag.frequencyScore, 1);
-    Serial.print("/");
-    Serial.print(diag.frequencyScoreMin, 1);
-    Serial.print(" freq_contrast=");
-    Serial.print(diag.frequencyContrast, 2);
-    Serial.print("/");
-    Serial.print(diag.frequencyContrastMin, 2);
-    Serial.print(" freq_state=");
-    Serial.print(diag.frequencyCandidateState != nullptr ? diag.frequencyCandidateState : "none");
+    Serial.print(report.profileDetail.emitter != nullptr ? report.profileDetail.emitter : "unknown");
+    Serial.print(" accepted_present=");
+    Serial.print(report.frequency.acceptedPresent ? 1 : 0);
+    if (report.frequency.acceptedPresent) {
+        Serial.print(" accepted_start_ms=");
+        Serial.print(report.frequency.acceptedStartMs);
+        Serial.print(" accepted_peak_ms=");
+        Serial.print(report.frequency.acceptedPeakMs);
+        Serial.print(" accepted_release_ms=");
+        Serial.print(report.frequency.acceptedReleaseMs);
+        Serial.print(" accepted_dt_ms=");
+        if (report.frequency.acceptedDtMs >= 0) {
+            Serial.print(report.frequency.acceptedDtMs);
+            Serial.print("ms");
+        } else {
+            Serial.print("-1ms");
+        }
+        Serial.print(" accepted_dur_ms=");
+        Serial.print(report.frequency.acceptedDurationMs);
+        Serial.print(" accepted_strength=");
+        Serial.print(report.frequency.acceptedStrength, 1);
+        Serial.print(" accepted_score=");
+        Serial.print(report.frequency.acceptedScore, 1);
+        Serial.print(" accepted_contrast=");
+        Serial.print(report.frequency.acceptedContrast, 2);
+    }
+    Serial.print(" window_start_ms=");
+    Serial.print(report.frequency.windowStartMs);
+    Serial.print(" window_end_ms=");
+    Serial.print(report.frequency.windowEndMs);
+    Serial.print(" diag_first_frame_ms=");
+    Serial.print(report.frequency.diagFirstFrameMs);
+    Serial.print(" diag_last_frame_ms=");
+    Serial.print(report.frequency.diagLastFrameMs);
+    Serial.print(" expected_window_ms=");
+    Serial.print(report.frequency.expectedWindowMs);
+    Serial.print(" expected_frame_count_estimate=");
+    Serial.print(report.frequency.expectedFrameCountEstimate);
+    Serial.print(" diag_frame_count_ok=");
+    Serial.print(report.frequency.diagFrameCountOk ? 1 : 0);
+    Serial.print(" frames=");
+    Serial.print(report.frequency.frames);
+    Serial.print(" valid=");
+    Serial.print(report.frequency.validFrames);
+    Serial.print(" score_ok_frames=");
+    Serial.print(report.frequency.scoreOkFrames);
+    Serial.print(" contrast_ok_frames=");
+    Serial.print(report.frequency.contrastOkFrames);
+    Serial.print(" both_ok_frames=");
+    Serial.print(report.frequency.bothOkFrames);
+    Serial.print(" match_frames=");
+    Serial.print(report.frequency.matchFrames);
+    Serial.print(" reject_frames=");
+    Serial.print(report.frequency.rejectFrames);
+    Serial.print(" matched_frames=");
+    Serial.print(report.frequency.matchFrames);
+    Serial.print(" longest_match_run_frames=");
+    Serial.print(report.frequency.longestMatchRunFrames);
+    Serial.print(" longest_match_run_ms=");
+    Serial.print(report.frequency.longestMatchRunMs);
+    Serial.print(" sum_score=");
+    Serial.print(report.frequency.sumScore, 1);
+    Serial.print(" sum_contrast=");
+    Serial.print(report.frequency.sumContrast, 2);
+    Serial.print(" mean_score=");
+    Serial.print(report.frequency.meanScore, 1);
+    Serial.print(" mean_contrast=");
+    Serial.print(report.frequency.meanContrast, 2);
+    Serial.print(" score_threshold=");
+    Serial.print(report.frequency.scoreThreshold, 1);
+    Serial.print(" contrast_threshold=");
+    Serial.print(report.frequency.contrastThreshold, 2);
+    Serial.print(" max_score=");
+    Serial.print(report.frequency.maxScore, 1);
+    Serial.print(" max_score_ms=");
+    Serial.print(report.frequency.maxScoreMs);
+    Serial.print(" max_contrast=");
+    Serial.print(report.frequency.maxContrast, 2);
+    Serial.print(" max_contrast_ms=");
+    Serial.print(report.frequency.maxContrastMs);
+    Serial.print(" best_reject_reason=");
+    Serial.print(report.frequency.bestRejectReason != nullptr ? report.frequency.bestRejectReason : "unknown");
+    Serial.print(" occurrence_opened=");
+    Serial.print(report.frequency.occurrenceOpened ? 1 : 0);
+    Serial.print(" occurrence_released=");
+    Serial.print(report.frequency.occurrenceReleased ? 1 : 0);
+    Serial.print(" occurrence_emitted=");
+    Serial.print(report.frequency.occurrenceEmitted ? 1 : 0);
+    Serial.print(" occurrence_suppressed=");
+    Serial.print(report.frequency.occurrenceSuppressed ? 1 : 0);
+    Serial.print(" occurrence_timing_class=");
+    Serial.print(report.frequency.occurrenceTimingClass != nullptr ? report.frequency.occurrenceTimingClass : "none");
+    Serial.print(" near_miss=");
+    Serial.print(report.frequency.nearMiss ? 1 : 0);
+    Serial.print(" near_miss_reason=");
+    Serial.print(report.frequency.nearMissReason != nullptr ? report.frequency.nearMissReason : "none");
+    Serial.print(" diag_inconsistent=");
+    Serial.print(report.frequency.inconsistent ? 1 : 0);
+    Serial.println();
+    Serial.print("  context current_trial_id=");
+    Serial.print(report.frequency.currentTrialId);
+    if (report.frequency.inconsistent) {
+        Serial.print(" accepted_trial_id=");
+        Serial.print(report.frequency.acceptedTrialId);
+        Serial.print(" accepted_source=");
+        Serial.print(report.frequency.acceptedSource != nullptr ? report.frequency.acceptedSource : "none");
+        Serial.print(" analyzer_result=");
+        Serial.print(analyzerResultName(report.classification.result));
+        Serial.print(" analyzer_reason=");
+        Serial.print(analyzerReasonName(report.classification.reason));
+    }
+    Serial.print(" live_freq_reason=");
+    Serial.print(report.frequency.liveFreqReason != nullptr ? report.frequency.liveFreqReason : "none");
+    Serial.print(" live_freq_suppress=");
+    Serial.print(report.frequency.liveFreqSuppress != nullptr ? report.frequency.liveFreqSuppress : "none");
+    Serial.print(" live_freq_would=");
+    Serial.print(report.frequency.liveFreqWould != nullptr ? report.frequency.liveFreqWould : "none");
+    Serial.print(" live_freq_ready=");
+    Serial.print(report.frequency.liveFreqReady ? 1 : 0);
+    Serial.print(" live_freq_gate=");
+    Serial.print(report.frequency.liveFreqGate ? 1 : 0);
+    Serial.print(" live_freq_present=");
+    Serial.print(report.frequency.liveFreqPresent ? 1 : 0);
+    Serial.print(" live_freq_valid=");
+    Serial.print(report.frequency.liveFreqValid ? 1 : 0);
+    Serial.print(" live_freq_match=");
+    Serial.print(report.frequency.liveFreqMatch ? 1 : 0);
+    Serial.print(" live_freq_state=");
+    Serial.print(report.frequency.liveFreqState != nullptr ? report.frequency.liveFreqState : "none");
     Serial.print(" amp_centered=");
-    Serial.print(diag.ampCenteredMagnitude, 1);
+    Serial.print(report.profileDetail.ampStrengthObservation.centeredMagnitude, 1);
     Serial.print(" amp_level=");
-    Serial.print(diag.ampLevel, 1);
+    Serial.print(report.profileDetail.ampLevel, 1);
     Serial.print(" amp_baseline=");
-    Serial.print(diag.ampBaseline, 1);
+    Serial.print(report.profileDetail.ampBase, 1);
     Serial.print(" amp_lift=");
-    Serial.print(diag.ampLift, 1);
+    Serial.print(report.profileDetail.ampLift, 1);
     Serial.print(" onset_reject=");
-    Serial.print(diag.scalarOnsetRejectReason != nullptr ? diag.scalarOnsetRejectReason : "none");
+    Serial.print(report.profileDetail.ampStrengthObservation.note != nullptr ? report.profileDetail.ampStrengthObservation.note : "none");
     Serial.print(" transient_reject=");
-    Serial.print(diag.scalarTransientRejectReason != nullptr ? diag.scalarTransientRejectReason : "none");
+    Serial.print(report.debug.mainRejectReason != nullptr ? report.debug.mainRejectReason : "none");
     Serial.print(" transient_reject_dur=");
-    Serial.print(diag.scalarTransientRejectedDurationMs);
+    Serial.print(report.occurrences.primaryDurationMs);
     Serial.print(" transient_reject_strength=");
-    Serial.println(diag.scalarTransientRejectedStrength, 1);
+    Serial.println(report.occurrences.primaryStrength, 1);
 }
 
 void AnalyzerApp::printSequenceAmpWindow(const AnalyzerReport& report) const {

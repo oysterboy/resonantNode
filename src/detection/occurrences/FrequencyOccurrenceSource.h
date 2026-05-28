@@ -23,6 +23,7 @@ public:
     void reset();
 
     void setConfig(const FrequencyMatchConfig& config);
+    void setDiagnosticsEnabled(bool enabled);
 
     void observeFrame(
         const AudioSignalFrame& frame,
@@ -30,6 +31,7 @@ public:
     );
 
     bool popOccurrence(Occurrence& out);
+    FrequencyMatchDetector& detector();
     const FrequencyMatchDetector& detector() const;
 
 private:

@@ -82,6 +82,8 @@ uint32_t analyzerLogFlagsFromToken(const char* token) {
             flags |= AnalyzerApp::ANALYZER_LOG_TRIAL;
         } else if (equalsIgnoreCase(part, "candidate")) {
             flags |= AnalyzerApp::ANALYZER_LOG_CANDIDATE;
+        } else if (equalsIgnoreCase(part, "diag")) {
+            flags |= AnalyzerApp::ANALYZER_LOG_DIAG;
         } else if (equalsIgnoreCase(part, "explain")) {
             flags |= AnalyzerApp::ANALYZER_LOG_EXPLAIN;
         } else if (equalsIgnoreCase(part, "custom")) {

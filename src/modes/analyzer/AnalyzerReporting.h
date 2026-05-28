@@ -164,6 +164,8 @@ struct AnalyzerOccurrenceObservation {
     long primaryDtMs = -1;
     unsigned long primaryDurationMs = 0;
     float primaryStrength = 0.0f;
+    float score = 0.0f;
+    float contrast = 0.0f;
     float strength = 0.0f;
     float confidence = 0.0f;
 
@@ -268,6 +270,73 @@ struct AnalyzerDebugSummary {
 
 };
 
+struct AnalyzerFrequencyDiagnostic {
+    unsigned long currentTrialId = 0;
+    unsigned long acceptedTrialId = 0;
+    const char* acceptedSource = "none";
+    unsigned long windowStartMs = 0;
+    unsigned long windowEndMs = 0;
+    unsigned long diagFirstFrameMs = 0;
+    unsigned long diagLastFrameMs = 0;
+    unsigned long expectedWindowMs = 0;
+    unsigned long expectedFrameCountEstimate = 0;
+    bool diagFrameCountOk = false;
+    bool acceptedPresent = false;
+    long acceptedDtMs = -1;
+    unsigned long acceptedStartMs = 0;
+    unsigned long acceptedPeakMs = 0;
+    unsigned long acceptedReleaseMs = 0;
+    unsigned long acceptedDurationMs = 0;
+    float acceptedStrength = 0.0f;
+    float acceptedScore = 0.0f;
+    float acceptedContrast = 0.0f;
+
+    unsigned long frames = 0;
+    unsigned long validFrames = 0;
+    unsigned long scoreOkFrames = 0;
+    unsigned long contrastOkFrames = 0;
+    unsigned long bothOkFrames = 0;
+    unsigned long matchFrames = 0;
+    unsigned long rejectFrames = 0;
+    unsigned long longestMatchRunFrames = 0;
+    unsigned long longestMatchRunMs = 0;
+    unsigned long currentMatchRunFrames = 0;
+    unsigned long currentMatchRunStartMs = 0;
+
+    float sumScore = 0.0f;
+    float sumContrast = 0.0f;
+    float meanScore = 0.0f;
+    float meanContrast = 0.0f;
+    float scoreThreshold = 0.0f;
+    float contrastThreshold = 0.0f;
+    float maxScore = 0.0f;
+    unsigned long maxScoreMs = 0;
+    float maxContrast = 0.0f;
+    unsigned long maxContrastMs = 0;
+    float minScore = 0.0f;
+    float minContrast = 0.0f;
+
+    const char* bestRejectReason = "unknown";
+    bool nearMiss = false;
+    const char* nearMissReason = "none";
+    bool inconsistent = false;
+    bool occurrenceOpened = false;
+    bool occurrenceReleased = false;
+    bool occurrenceEmitted = false;
+    bool occurrenceSuppressed = false;
+    const char* occurrenceTimingClass = "none";
+
+    const char* liveFreqReason = "none";
+    const char* liveFreqSuppress = "none";
+    const char* liveFreqWould = "none";
+    const char* liveFreqState = "none";
+    bool liveFreqReady = false;
+    bool liveFreqGate = false;
+    bool liveFreqPresent = false;
+    bool liveFreqValid = false;
+    bool liveFreqMatch = false;
+};
+
 struct AnalyzerSummary {
     const char* profileName = "unknown";
 
@@ -303,6 +372,7 @@ struct AnalyzerReport {
     AnalyzerOccurrenceObservation occurrences;
     AnalyzerInspectionObservation inspection;
     AnalyzerFieldObservation field;
+    AnalyzerFrequencyDiagnostic frequency;
 
     AnalyzerClassification classification;
     AnalyzerProfileDetail profileDetail;

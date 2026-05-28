@@ -16,6 +16,10 @@ void FrequencyOccurrenceSource::setConfig(const FrequencyMatchConfig& config) {
     _config = config;
 }
 
+void FrequencyOccurrenceSource::setDiagnosticsEnabled(bool enabled) {
+    _detector.setDiagnosticsEnabled(enabled);
+}
+
 void FrequencyOccurrenceSource::observeFrame(
     const AudioSignalFrame& frame,
     const detection::FrequencyFeatureFrame& evidence
@@ -78,6 +82,10 @@ bool FrequencyOccurrenceSource::popOccurrence(Occurrence& out) {
     out = _pending;
     _hasPending = false;
     return true;
+}
+
+FrequencyMatchDetector& FrequencyOccurrenceSource::detector() {
+    return _detector;
 }
 
 const FrequencyMatchDetector& FrequencyOccurrenceSource::detector() const {

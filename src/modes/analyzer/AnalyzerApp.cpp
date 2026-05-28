@@ -8,10 +8,10 @@
 #include "../../RuntimeDefaults.h"
 #include "../../AudioDebugConfig.h"
 #include "../../TimingUtils.h"
-#include "../../detection/features/FrequencyMatchEvaluation.h"
 #include "AnalyzerTextUtils.h"
 #include "../../detection/features/FeatureExtractor.h"
 #include "../../detection/features/FeatureHistory.h"
+#include "../../detection/detectors/FrequencyMatchDetector.h"
 #include "../../detection/patterns/PatternAssembler.h"
 #include "../../detection/patterns/PatternNames.h"
 #include "../../detection/patterns/PatternRules.h"
@@ -523,6 +523,7 @@ void AnalyzerApp::processPendingSequenceStart() {
         pending.durationMs,
         pending.quiet,
         pending.showDetails,
+        pending.diagnosticsEnabled,
         pending.setupLabel,
         pending.logFlags,
         pending.sampleDumpEnabled,
@@ -658,6 +659,8 @@ AnalyzerReport AnalyzerApp::buildSequenceAnalyzerReport(unsigned long trialNumbe
         report.occurrences.primaryDtMs = static_cast<long>(occurrence.startMs) - static_cast<long>(_sequenceTest.currentTrialScheduledAtMs);
         report.occurrences.primaryDurationMs = occurrence.durationMs;
         report.occurrences.primaryStrength = occurrence.strength;
+        report.occurrences.score = occurrence.score;
+        report.occurrences.contrast = occurrence.contrast;
         report.occurrences.strength = occurrence.strength;
         report.occurrences.confidence = occurrence.confidence;
         report.occurrences.mainRejectReason = runtimeInspectedOccurrence->rejected
@@ -676,6 +679,8 @@ AnalyzerReport AnalyzerApp::buildSequenceAnalyzerReport(unsigned long trialNumbe
         report.occurrences.primaryDtMs = dtMs;
         report.occurrences.primaryDurationMs = durMs >= 0 ? static_cast<unsigned long>(durMs) : 0UL;
         report.occurrences.primaryStrength = strength;
+        report.occurrences.score = runtimePatternResult != nullptr ? runtimePatternResult->freq.score : 0.0f;
+        report.occurrences.contrast = runtimePatternResult != nullptr ? runtimePatternResult->freq.spectralContrast : 0.0f;
         report.occurrences.strength = strength;
         report.occurrences.confidence = trialHasPipelineEvidence ? runtimePatternResult->confidence : 0.0f;
         report.occurrences.mainRejectReason = analyzerReasonName(report.classification.reason);
@@ -784,6 +789,105 @@ AnalyzerReport AnalyzerApp::buildSequenceAnalyzerReport(unsigned long trialNumbe
     report.debug.mainRejectReason = trialHasPipelineEvidence && runtimeInspectedOccurrence != nullptr
         ? (runtimeInspectedOccurrence->rejected ? occurrenceRejectReasonName(runtimeInspectedOccurrence->rejectReason) : "none")
         : analyzerReasonName(report.classification.reason);
+
+    const bool diagnosticsRequested = _sequenceTest.diagnosticsEnabled
+        && analyzerLogEnabled(_sequenceTest.logFlags, AnalyzerApp::ANALYZER_LOG_DIAG);
+    const detection::DetectionDiagnostics* runtimeDiag = nullptr;
+    const FrequencyMatchDetector* frequencyDetector = nullptr;
+    if (diagnosticsRequested && _detection != nullptr) {
+        _detection->captureDiagnostics();
+        runtimeDiag = &_detection->diagnostics();
+        frequencyDetector = &_detection->frequencyEmitter().detector();
+    }
+
+    report.frequency.currentTrialId = report.context.trial;
+    report.frequency.windowStartMs = _sequenceTest.currentTrialStartMs;
+    report.frequency.windowEndMs = _sequenceTest.currentTrialEndMs;
+    report.frequency.expectedWindowMs = _sequenceTest.currentTrialEndMs >= _sequenceTest.currentTrialStartMs
+        ? _sequenceTest.currentTrialEndMs - _sequenceTest.currentTrialStartMs
+        : 0UL;
+    report.frequency.expectedFrameCountEstimate =
+        static_cast<unsigned long>((report.frequency.expectedWindowMs
+            * static_cast<unsigned long>(_audioSource.sampleRateHz() > 0 ? _audioSource.sampleRateHz() : 16000UL)) / 1000UL);
+
+    report.frequency.acceptedPresent = report.occurrences.present
+        && report.occurrences.valid
+        && report.primaryPattern.accepted;
+    report.frequency.acceptedTrialId = report.frequency.acceptedPresent ? report.context.trial : 0UL;
+    report.frequency.acceptedSource = report.frequency.acceptedPresent
+        ? (report.occurrences.primarySource != nullptr ? report.occurrences.primarySource : "unknown")
+        : "none";
+    report.frequency.acceptedDtMs = report.frequency.acceptedPresent ? report.occurrences.primaryDtMs : -1;
+    report.frequency.acceptedStartMs = report.frequency.acceptedPresent ? report.occurrences.startMs : 0UL;
+    report.frequency.acceptedPeakMs = report.frequency.acceptedPresent ? report.occurrences.peakMs : 0UL;
+    report.frequency.acceptedReleaseMs = report.frequency.acceptedPresent ? report.occurrences.releaseMs : 0UL;
+    report.frequency.acceptedDurationMs = report.frequency.acceptedPresent ? report.occurrences.primaryDurationMs : 0UL;
+    report.frequency.acceptedStrength = report.frequency.acceptedPresent ? report.occurrences.primaryStrength : 0.0f;
+    report.frequency.acceptedScore = report.frequency.acceptedPresent ? report.occurrences.score : 0.0f;
+    report.frequency.acceptedContrast = report.frequency.acceptedPresent ? report.occurrences.contrast : 0.0f;
+
+    if (runtimeDiag != nullptr) {
+        report.frequency.frames = runtimeDiag->frequencyFrames;
+        report.frequency.validFrames = runtimeDiag->frequencyValidFrames;
+        report.frequency.scoreOkFrames = runtimeDiag->frequencyScoreOkFrames;
+        report.frequency.contrastOkFrames = runtimeDiag->frequencyContrastOkFrames;
+        report.frequency.bothOkFrames = runtimeDiag->frequencyBothOkFrames;
+        report.frequency.matchFrames = runtimeDiag->frequencyMatchFrames;
+        report.frequency.rejectFrames = runtimeDiag->frequencyRejectFrames;
+        report.frequency.meanScore = runtimeDiag->frequencyScoreMean;
+        report.frequency.meanContrast = runtimeDiag->frequencyContrastMean;
+        report.frequency.sumScore = report.frequency.meanScore * static_cast<float>(report.frequency.frames);
+        report.frequency.sumContrast = report.frequency.meanContrast * static_cast<float>(report.frequency.frames);
+        report.frequency.scoreThreshold = runtimeDiag->frequencyScoreThreshold;
+        report.frequency.contrastThreshold = runtimeDiag->frequencyContrastThreshold;
+        report.frequency.maxScore = runtimeDiag->frequencyScoreMax;
+        report.frequency.maxScoreMs = runtimeDiag->frequencyScoreMaxMs;
+        report.frequency.maxContrast = runtimeDiag->frequencyContrastMax;
+        report.frequency.maxContrastMs = runtimeDiag->frequencyContrastMaxMs;
+        report.frequency.minScore = runtimeDiag->frequencyScoreMin;
+        report.frequency.minContrast = runtimeDiag->frequencyContrastMin;
+        report.frequency.liveFreqReason = runtimeDiag->frequencyReason != nullptr ? runtimeDiag->frequencyReason : "none";
+        report.frequency.liveFreqSuppress = runtimeDiag->frequencySuppressReason != nullptr ? runtimeDiag->frequencySuppressReason : "none";
+        report.frequency.liveFreqWould = runtimeDiag->frequencyWouldCandidateReason != nullptr ? runtimeDiag->frequencyWouldCandidateReason : "none";
+        report.frequency.liveFreqState = runtimeDiag->frequencyCandidateState != nullptr ? runtimeDiag->frequencyCandidateState : "none";
+        report.frequency.liveFreqReady = runtimeDiag->frequencyReadyOk;
+        report.frequency.liveFreqGate = runtimeDiag->frequencyGateOpen;
+        report.frequency.liveFreqPresent = runtimeDiag->frequencyPresent;
+        report.frequency.liveFreqValid = runtimeDiag->frequencyValidWindow;
+        report.frequency.liveFreqMatch = runtimeDiag->frequencyMatched;
+        report.frequency.bestRejectReason = runtimeDiag->frequencyReason != nullptr ? runtimeDiag->frequencyReason : "unknown";
+        report.frequency.nearMiss = runtimeDiag->frequencyNearMiss;
+        report.frequency.nearMissReason = runtimeDiag->frequencyNearMissReason != nullptr ? runtimeDiag->frequencyNearMissReason : "none";
+    }
+
+    if (frequencyDetector != nullptr) {
+        report.frequency.diagFirstFrameMs = report.frequency.acceptedPresent ? report.frequency.acceptedStartMs : 0UL;
+        report.frequency.diagLastFrameMs = report.frequency.acceptedPresent ? report.frequency.acceptedReleaseMs : 0UL;
+        report.frequency.diagFrameCountOk = report.frequency.expectedFrameCountEstimate == 0
+            ? report.frequency.frames == 0
+            : report.frequency.frames > 0;
+        report.frequency.occurrenceOpened = frequencyDetector->candidateActive
+            || frequencyDetector->candidateClosed
+            || frequencyDetector->candidateEmitted
+            || frequencyDetector->candidateFirstSeenMs > 0;
+        report.frequency.occurrenceReleased = frequencyDetector->candidateClosed || frequencyDetector->candidateReleaseMs > 0;
+        report.frequency.occurrenceEmitted = report.frequency.acceptedPresent || frequencyDetector->candidateEmitted;
+        report.frequency.occurrenceSuppressed = report.frequency.occurrenceOpened && !report.frequency.occurrenceEmitted;
+        if (frequencyDetector->candidateFirstSeenMs == 0) {
+            report.frequency.occurrenceTimingClass = "none";
+        } else if (frequencyDetector->candidateFirstSeenMs < report.frequency.windowStartMs) {
+            report.frequency.occurrenceTimingClass = "early";
+        } else if (frequencyDetector->candidateFirstSeenMs > report.frequency.windowEndMs) {
+            report.frequency.occurrenceTimingClass = "late";
+        } else {
+            report.frequency.occurrenceTimingClass = "inside";
+        }
+    }
+    report.frequency.inconsistent = report.classification.result == AnalyzerResult::Miss && report.frequency.acceptedPresent;
+    if (report.classification.result == AnalyzerResult::Miss && !report.frequency.acceptedPresent && report.frequency.bestRejectReason != nullptr && strcmp(report.frequency.bestRejectReason, "occurrence_emitted") == 0) {
+        report.frequency.bestRejectReason = "unknown_or_stale_reason";
+        report.frequency.inconsistent = true;
+    }
 
     return report;
 }

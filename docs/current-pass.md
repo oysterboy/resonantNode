@@ -1,685 +1,344 @@
-# Detection Stabilization Cleanup / Fix Plan
+# Codex Instruction — Make Frequency Reject Diagnostics Actually Useful
 
-Scope: ResonantNode / TonalPulse detection stabilization after `myspec_v0.2.4_cleanup_candidate.md` and the follow-up code discussion.
+## Goal
 
-Purpose: define the next cleanup/fix sequence around current detection instability, especially AMP instability vs FrequencyMatch stability.
-
-This is **not** a broad architecture refactor. It is a stabilization plan.
-
----
-
-## 0. Current Working Interpretation
-
-Current observations:
-
-```text
-FrequencyMatch feels snappy and comparatively stable.
-AMP inspection finds peaks, but weak/medium/strong class varies strongly.
-AMP strength/locality is too unstable to be required TonalPulse support.
-FrequencyScore / contrast are closer to the actual emitted tonal signal.
-```
-
-Likely causes of AMP instability include both acoustics and code/data-path issues:
-
-```text
-broad amplitude is not target-specific
-absolute AMP thresholds are distance/mounting dependent
-peak-only AMP classification is spike-sensitive
-FeatureHistory currently risks same-ms overwrite
-AMP history may use already gated `frame.level`
-baseline tracking / quiet gate may affect AMP values
-AMP/frequency windows may not align perfectly
-```
-
-Near-term decision:
-
-```text
-Do not keep AmpStrength as required TonalPulse support.
-Move TonalPulse toward frequency-first validation:
-FrequencyMatchSource + full-window strict FrequencyScoreStrength.
-```
-
----
-
-## 1. First Step: Preserve a Pre-Fix Baseline
-
-Before changing low-level history, baseline, AMP, or thresholds:
-
-```text
-Run old/current TonalPulse exactly as-is.
-```
+Replace the current broad/cumulative `SEQ_REJECTS` output with a **trial-local reject diagnostic** that explains why an expected emitted pulse did or did not become an `Occurrence`.
 
 Status:
 
 ```text
-baseline running / captured on current pass
+implemented in code: compact trial-local `SEQ_FREQ_DIAG` gated by explicit `log=...+diag`
 ```
 
-Use the already defined baseline plan:
+The current diagnostic is too ambiguous:
 
 ```text
-seq_baseline_old_tonalpulse_distance_ladder.md
-```
+SEQ_REJECTS trial=2 result=expected ...
+freq_would=matched
+freq_match=1
+freq_state=rejected
+freq_count=54944
+freq_match_count=3438
+freq_reject_count=51506
 
-Baseline ladder:
+This is misleading because the same trial may have an accepted FrequencyMatch occurrence in SEQ_EXPLAIN. The line is currently mixing accepted-trial state, background/rejected frames, and cumulative counters.
 
-```text
-30 cm
-50 cm
-70 cm
-90 cm
-120 cm
-```
+The new diagnostic must answer:
 
-Prefer:
+For this trial window, why did FrequencyMatch emit or not emit an Occurrence?
+Rename Output
 
-```text
-100 trials per distance
-```
+Rename:
 
-Minimum if short on time:
+SEQ_REJECTS
 
-```text
-50 trials per distance
-```
+to:
 
-Save:
+SEQ_FREQ_DIAG
 
-```text
-SEQ_SUMMARY
-SEQ_TRIAL lines
-profile/status line
-distance
-node id
-firmware/build label
-physical notes
-```
+or, if it prints only failure cases:
 
-Do not change during baseline:
+SEQ_FREQ_REJECT
 
-```text
-thresholds
-support target
-baseline settings
-history code
-feature aggregation
-output frequency/duration/gain
-behavior mode
-orientation/mounting
-```
+Preferred for now:
 
-Reason:
+SEQ_FREQ_DIAG
 
-```text
-Without this baseline, later low-level fixes cannot be evaluated cleanly.
-```
+because it can print both accepted and missed trial windows.
 
----
+Core Rule
 
-## 2. Stabilization Sequence Overview
+Diagnostics must be trial-local and window-local.
 
-Recommended implementation order:
+Do not print cumulative run counters in per-trial diagnostics.
 
-```text
-A — Pre-fix SEQ baseline
-B — FeatureHistory same-ms aggregation
-C — AMP envelope source cleanup: centered / ungated magnitude
-D — ScalarFeatureStrength classification modes
-E — Scalar inspection window timing modes
-F — Repeat old TonalPulse baseline
-G — New TonalPulse-B profile/config: FrequencyMatch + full-window strict FrequencyScoreStrength
-H — AMP demotion / Analyzer output cleanup
-I — Later only: baseline tracking diagnostics / slower baseline follow
-```
+Reset the diagnostic accumulator at the start of each SEQ trial / expected window.
 
-Do not combine all of these with threshold tuning.
+Track Two Separate Things
 
----
+For each trial, track:
 
-## 3. Pass A — Pre-Fix SEQ Baseline
+A. accepted occurrence, if one exists
+B. rejected frequency evidence inside the expected window
 
-Goal:
+Do not collapse these into the same fields.
 
-```text
-Capture current old TonalPulse behavior before changing signal/history code.
-```
+Accepted occurrence fields
+accepted_present
+accepted_start_ms
+accepted_peak_ms
+accepted_release_ms
+accepted_dt_ms
+accepted_dur_ms
+accepted_score_peak
+accepted_contrast_peak
+accepted_strength
 
-Status:
+If no occurrence was emitted:
 
-```text
-completed on current pass; baseline captured before low-level changes
-```
+accepted_present=0
+Rejected / non-occurrence evidence fields
+frames
+valid_frames
+score_ok_frames
+contrast_ok_frames
+both_ok_frames
+match_frames
+reject_frames
 
-Deliverables:
+max_score
+max_score_ms
+max_contrast
+max_contrast_ms
+mean_score
+mean_contrast
 
-```text
-baseline logs
-SEQ_SUMMARY per distance
-notes on AMP weak/medium/strong distribution
-notes on freqScore/contrast trend
-```
+best_reject_reason
+last_reject_reason
+Useful Failure Classification
 
-Success:
+The diagnostic must classify the failure into one clear reason.
 
-```text
-Current miss/late/duplicate/reject behavior is known across distance.
-```
+Add:
 
-Non-goal:
-
-```text
-No code changes.
-```
-
----
-
-## 4. Pass B — FeatureHistory Same-ms Aggregation
-
-Problem:
-
-```text
-FeatureHistory is ms/time-bin based.
-Multiple writes with the same timeMs can overwrite earlier values.
-For AMP, this can lose peaks and make classification timing-dependent.
-```
-
-Status:
-
-```text
-implemented: same-ms feature writes now aggregate into per-ms bins
-```
-
-Fix:
-
-```text
-Keep FeatureHistory ms-based.
-Change same-ms writes from overwrite to aggregation.
-```
-
-Per-bin target:
-
-```text
-timeMs
-min
-max
-sum
-count
-last
-```
-
-ScalarWindow should derive:
-
-```text
-peak = max(bin.max)
-mean = sum(bin.sum) / sum(bin.count)
-last = newest bin.last
-count/valueCount = sum(bin.count)
-```
-
-Do not make all FeatureHistory sample-based.
-
-Reason:
-
-```text
-Sample-based FeatureHistory is RAM-heavy across multiple streams.
-RawSampleHistory can remain sample-based for waveform diagnostics.
-FeatureHistory should be ms-bin based but aggregated.
-```
-
-Success:
-
-```text
-FeatureHistory no longer loses same-ms AMP peaks.
-ScalarWindow exposes peak and mean from aggregated bins.
-```
-
-Non-goals:
-
-```text
-No threshold retuning.
-No profile behavior change.
-No RawSampleHistory redesign.
-```
-
----
-
-## 5. Pass C — AmpEnvelope Uses Centered / Ungated Magnitude
-
-Problem:
-
-```text
-FeatureExtractor currently records AmpEnvelope from frame.level.
-If frame.level is quiet-gated or smoothed, AMP inspection may see a processed value instead of raw centered magnitude.
-```
-
-Fix:
-
-Add/expose:
-
-```text
-centeredMagnitude = abs(raw - baseline)
-```
-
-Then write:
-
-```text
-FeatureStreamId::AmpEnvelope = centeredMagnitude
-```
-
-Keep existing `frame.level` for current logic unless explicitly needed elsewhere.
-
-Diagnostic output should allow comparison:
-
-```text
-amp.centeredMagnitude
-amp.level
-amp.baseline
-```
-
-Success:
-
-```text
-AMP inspection history receives ungated centered magnitude.
-Quiet gate effects can be distinguished from actual weak AMP.
-```
-
-Non-goals:
-
-```text
-No baseline rewrite.
-No baseline alpha change.
-No quiet threshold retuning.
-```
-
----
-
-## 6. Pass D — ScalarFeatureStrength Classification Modes
-
-Problem:
-
-```text
-Scalar inspection is too close to peak-only absolute classification.
-For AMP this is unstable.
-For FrequencyScore, full-window mean/strict classification is needed.
-```
-
-Add explicit mode enum:
-
-```cpp
-enum class ScalarInspectionMode {
-    PeakAbsolute,
-    MeanAbsolute,
-    SustainedAboveThreshold,
+enum class FrequencyDiagReason {
+    None,
+    NoFrames,
+    NoValidFrames,
+    ScoreTooLow,
+    ContrastTooLow,
+    ScoreAndContrastTooLow,
+    MatchTooShort,
+    Suppressed,
+    NotReady,
+    GateClosed,
+    TimingOutsideWindow,
+    OccurrenceEmitted,
+    Unknown,
 };
-```
 
-Scope:
+For misses, best_reject_reason should usually be one of:
 
-```text
-Applies to ScalarFeatureStrength in the inspector path only.
-Does not change ScalarOccurrenceSource behavior.
-```
+NoFrames
+NoValidFrames
+ScoreTooLow
+ContrastTooLow
+ScoreAndContrastTooLow
+MatchTooShort
+Suppressed
+NotReady
+GateClosed
+TimingOutsideWindow
 
-Optional later, not required now:
+For expected trials with accepted occurrence:
 
-```text
-PeakLift
-MeanLift
-```
+best_reject_reason=occurrence_emitted
 
-Do **not** implement lift/local-floor modes until a reliable floor-window model exists.
+or:
 
-### Mode semantics
+best_reject_reason=none
 
-```text
-PeakAbsolute:
-    legacy-compatible mode
-    classificationValue = window.peak
+Do not print freq_state=rejected when accepted_present=1 unless it is clearly labeled as background/context rejection.
 
-MeanAbsolute:
-    full-window / stable support mode
-    classificationValue = window.mean
+Identify Near-Misses
 
-SustainedAboveThreshold:
-    spike rejection mode
-    classify based on bins/ms above threshold
-```
+Add a simple near-miss classification.
 
-Extend `ScalarFeatureInspectionConfig` with:
+near_miss=0/1
+near_miss_reason=...
 
-```text
-mode
-minSustainedMs or minSustainedCount
-```
+Recommended logic:
 
-Do not retune thresholds.
+near_miss=1 if:
+  max_score >= 0.75 * score_threshold
+  OR max_contrast >= 0.75 * contrast_threshold
+  OR score_ok_frames > 0
+  OR contrast_ok_frames > 0
 
-Analyzer/SEQ_EXPLAIN should expose:
+This helps distinguish:
 
-```text
-scalar.mode
-scalar.peak
-scalar.mean
-scalar.last
-scalar.count
-scalar.classificationValue
-scalar.strengthClass
-```
+no useful tone seen
 
-Success:
+from:
 
-```text
-PeakAbsolute preserves legacy behavior.
-MeanAbsolute is available for full-window FrequencyScore validation.
-SustainedAboveThreshold is available or explicitly deferred.
-```
+almost enough frequency evidence, but gate did not open
+Important: Score and Contrast Must Use Real Thresholds
 
-Status:
+Current output sometimes shows:
 
-```text
-implemented in inspector path only; ScalarOccurrenceSource is unchanged
-```
+freq_score=2320.4/0.0
+freq_contrast=220.16/0.00
 
----
+That is not useful for reject analysis.
 
-## 7. Pass E — Scalar Inspection Window Timing Modes
+Print real thresholds:
 
-Problem:
+score_threshold=10000.0
+contrast_threshold=50.0
 
-```text
-AMP around frequency and full-window frequency validation need explicit window semantics.
-```
+And use fields like:
 
-Add minimal explicit window mode:
+max_score=...
+score_threshold=...
+max_contrast=...
+contrast_threshold=...
 
-```cpp
-enum class ScalarInspectionWindowMode {
-    FullOccurrence,
-    CustomOffsets,
-};
-```
+Do not print /0.0 unless the threshold is actually disabled.
 
-Optional later:
+Suggested Output: Expected Trial
+SEQ_FREQ_DIAG trial=12 result=expected
+accepted_present=1 accepted_dt=33ms accepted_dur=98ms accepted_strength=25624.2
+frames=1800 valid=1800 match_frames=120 reject_frames=1680
+score_ok_frames=120 contrast_ok_frames=120 both_ok_frames=120
+max_score=25624.2 score_threshold=10000.0
+max_contrast=820.4 contrast_threshold=50.0
+mean_score=1934.0 mean_contrast=229.5
+best_reject_reason=occurrence_emitted near_miss=0
+Suggested Output: Miss Trial
+SEQ_FREQ_DIAG trial=34 result=miss
+accepted_present=0
+frames=1800 valid=1800 match_frames=0 reject_frames=1800
+score_ok_frames=0 contrast_ok_frames=8 both_ok_frames=0
+max_score=4200.0 score_threshold=10000.0
+max_contrast=73.0 contrast_threshold=50.0
+mean_score=1707.4 mean_contrast=223.3
+best_reject_reason=score_too_low near_miss=1 near_miss_reason=contrast_ok_score_low
 
-```text
-EarlyOccurrence
-PeakCentered
-```
+Another miss case:
 
-Semantics:
+SEQ_FREQ_DIAG trial=34 result=miss
+accepted_present=0
+frames=1800 valid=1800 match_frames=0 reject_frames=1800
+score_ok_frames=0 contrast_ok_frames=0 both_ok_frames=0
+max_score=1200.0 score_threshold=10000.0
+max_contrast=12.0 contrast_threshold=50.0
+mean_score=80.0 mean_contrast=1.4
+best_reject_reason=score_and_contrast_too_low near_miss=0
+Required Diagnostic Logic
 
-```text
-FullOccurrence:
-    start = occurrence.startMs
-    end   = occurrence.endMs
+For each live frequency frame inside the trial window:
 
-CustomOffsets:
-    start = occurrence.startMs + preMs
-    end   = occurrence.endMs + postMs
-```
+diag.frames++;
 
-Use signed offsets if supported.
+if (frame.valid) {
+    diag.validFrames++;
+}
 
-Recommended future usage:
+if (frame.score >= config.scoreThreshold) {
+    diag.scoreOkFrames++;
+}
 
-```text
-FrequencyScoreStrength:
-    mode = MeanAbsolute
-    windowMode = FullOccurrence
+if (frame.contrast >= config.contrastThreshold) {
+    diag.contrastOkFrames++;
+}
 
-AmpStrength diagnostic:
-    mode = PeakAbsolute or SustainedAboveThreshold
-    windowMode = FullOccurrence or CustomOffsets
-```
+if (frame.score >= config.scoreThreshold &&
+    frame.contrast >= config.contrastThreshold) {
+    diag.bothOkFrames++;
+}
 
-Success:
+if (frame.matched) {
+    diag.matchFrames++;
+}
 
-```text
-Scalar inspection windows are explicit rather than implicit.
-```
+if (!frame.matched) {
+    diag.rejectFrames++;
+    diag.lastRejectReason = classifyFrameReject(frame);
+}
 
-Non-goal:
+diag.maxScore = max(diag.maxScore, frame.score);
+diag.maxContrast = max(diag.maxContrast, frame.contrast);
+diag.sumScore += frame.score;
+diag.sumContrast += frame.contrast;
 
-```text
-No arbitrary window expression system.
-```
+At trial end:
 
----
+diag.meanScore = diag.frames > 0 ? diag.sumScore / diag.frames : 0;
+diag.meanContrast = diag.frames > 0 ? diag.sumContrast / diag.frames : 0;
+diag.bestRejectReason = classifyTrialReject(diag, acceptedPresent);
+diag.nearMiss = classifyNearMiss(diag);
+Trial Reject Classification
 
-## 8. Pass F — Repeat Old TonalPulse Baseline
+Use this priority:
 
-After passes B–E, repeat the same old/current TonalPulse distance ladder.
+if accepted_present:
+    OccurrenceEmitted
 
-Do not tune thresholds yet.
+else if frames == 0:
+    NoFrames
 
-Compare against pre-fix baseline:
+else if valid_frames == 0:
+    NoValidFrames
 
-```text
-miss rate
-late rate
-duplicate rate
-rejected count
-AMP weak/medium/strong distribution
-freqScore support distribution
-avg_dt
-avg_dur
-```
+else if gate_closed:
+    GateClosed
 
-Purpose:
+else if not_ready:
+    NotReady
 
-```text
-Measure what changed due to low-level history/evidence mechanics only.
-```
+else if suppressed:
+    Suppressed
 
----
+else if both_ok_frames > 0 but match_frames == 0:
+    MatchTooShort
 
-## 9. Pass G — TonalPulse-B Profile / Config
+else if score_ok_frames == 0 and contrast_ok_frames == 0:
+    ScoreAndContrastTooLow
 
-After low-level mechanics are stable, test the new frequency-first support model.
+else if score_ok_frames == 0:
+    ScoreTooLow
 
-Target profile/config:
+else if contrast_ok_frames == 0:
+    ContrastTooLow
 
-```text
-OccurrenceSource:
-    FrequencyMatch
+else:
+    Unknown
+Print Policy
 
-Inspection:
-    ScalarFeatureStrength
-    stream = FrequencyScore
-    target = FrequencyScoreStrength
-    mode = MeanAbsolute
-    windowMode = FullOccurrence
+For active debugging:
 
-PatternRules:
-    requireSupportForAcceptance = true
-    requiredSupportTarget = FrequencyScoreStrength
+diagnostics=1 → print SEQ_FREQ_DIAG for every trial
 
-AMP:
-    optional diagnostic only
-    not required support
-```
+Later default:
 
-Interpretation:
+diagnostics=0 → no SEQ_FREQ_DIAG
+diagnostics=miss → print only for miss/late/duplicate/rejected
 
-```text
-FrequencyMatchSource catches likely tonal occurrences.
-Full-window FrequencyScoreStrength validates them strictly.
-AMP no longer gates TonalPulse acceptance.
-```
+Do not print per-frame diagnostics.
 
-Important guardrail:
+Performance / Safety Rules
 
-```text
-FrequencyMatchSource should be permissive enough to catch candidates.
-FrequencyScoreInspector should be the stricter full-window validation.
-Do not make both gates identical.
-```
+Do not reintroduce the diagnostic-collapse bug.
 
-Test matrix:
+Avoid:
 
-```text
-A — FrequencyMatch only
-    supportRequired = false
+large snapshots
+heap allocations per trial
+large report buffers
+per-frame Serial output
+copying frame arrays
+state mutation from diagnostic reads
 
-B — FrequencyMatch + full-window strict FrequencyScoreStrength
-    supportRequired = true
-    requiredSupportTarget = FrequencyScoreStrength
+Use:
 
-C — old/current AMP-supported TonalPulse
-    supportRequired = true
-    requiredSupportTarget = AmpStrength
-```
+small fixed-size struct
+simple counters
+sum/min/max
+one line per trial
+no dynamic allocation
 
-Expected:
+Diagnostics must be passive:
 
-```text
-A = sensitivity baseline
-B = likely best useful balance
-C = confirms AMP instability
-```
-
----
-
-## 10. Pass H — AMP Demotion / Analyzer Output Cleanup
-
-If AMP remains unstable:
-
-```text
-do not show AMP as central default SEQ_TRIAL truth
-```
-
-Default `SEQ_TRIAL` for TonalPulse-B should emphasize:
-
-```text
-profile
-source
-result
-pattern
-dt
-duration
-freqScore.full / mean
-freqScore.supportClass
-freqContrast / peak contrast
-reason
-```
-
-Move AMP to:
-
-```text
-SEQ_EXPLAIN
-optional diagnostic output
-separate AMP diagnostic mode
-```
-
-Do not remove AMP code completely yet; demote its role.
-
----
-
-## 11. Later Pass I — Baseline Tracking Diagnostics / Slow Baseline
-
-Baseline tracking is a suspect, but should be measured before changing.
-
-Add diagnostic fields:
-
-```text
-raw
-baseline
-centered
-centeredMagnitude
-levelAfterGate
-baselineDelta
-baselineUpdatedThisFrame
-```
-
-Only after evidence:
-
-```text
-make baseline following slower
-freeze baseline during active/high-energy windows
-separate DC removal from quiet gating
-```
-
-Do not change baseline tracking in the same pass as FeatureHistory aggregation or threshold tuning.
-
----
-
-## 12. Code Cleanup Items in Parallel / After Stabilization
-
-Useful cleanup after or between stabilization passes:
-
-```text
-PatternAssembler:
-    acceptSignal → acceptOccurrence
-    _recentSignals → _recentOccurrences
-
-FieldState:
-    busySignalCountThreshold → busyOccurrenceCountThreshold
-    denseSignalCountThreshold → denseOccurrenceCountThreshold
-    quietSignalCountThreshold → quietOccurrenceCountThreshold
-
-PatternResultKind:
-    ValidChirp → Valid
-    InvalidChirp → Invalid
-
-Generic scalar inspector naming:
-    annotateAmpStrength → annotateScalarFeatureStrength
-    AmpStrengthEvidence → ScalarStrengthEvidence or target-specific evidence
-```
-
-These are mostly naming/contract cleanup, not detection logic.
-
----
-
-## 13. Non-Goals for This Stabilization Plan
-
-```text
-No pulsed chirp grouping.
-No CandidateCorrelator.
-No behavior architecture refactor.
-No OutputDispatcher.
-No ParamRegistry.
-No VEKTOR exposure.
-No broad profile factory rewrite.
-No runtime graph-builder config.
-No threshold retuning mixed into low-level fixes.
-```
-
-Status:
-
-```text
-implemented: AmpEnvelope now records centeredMagnitude, and analyzer/inspector diagnostics print centered values explicitly
-```
-
----
-
-## 14. Recommended Immediate Next Step
-
-```text
-Run the old TonalPulse SEQ distance ladder baseline.
-```
-
-Then implement:
-
-```text
-FeatureHistory same-ms aggregation
-AmpEnvelope centered / ungated magnitude
-ScalarInspectionMode
-ScalarInspectionWindowMode
-```
-
-Then repeat baseline.
-
-Only after that:
-
-```text
-test TonalPulse-B:
-FrequencyMatch + full-window strict FrequencyScoreStrength
-```
-
----
-
-## One-Line Plan
-
-```text
-Baseline old TonalPulse first, fix low-level scalar/history mechanics without retuning, repeat the ladder, then test frequency-first TonalPulse-B with full-window strict FrequencyScore support and AMP demoted to diagnostics.
-```
+Observe FrequencyMatch.
+Do not influence FrequencyMatch.
+Success Criteria
+- Output renamed from SEQ_REJECTS to SEQ_FREQ_DIAG.
+- Per-trial counters reset every trial.
+- No cumulative counters in per-trial line.
+- Expected trials clearly show accepted_present=1.
+- Miss trials clearly show accepted_present=0 and a meaningful best_reject_reason.
+- Real score/contrast thresholds are printed.
+- Near-miss classification exists.
+- No contradictory fields like freq_match=1 + freq_state=rejected without context.
+- diagnostics=1 does not collapse detection rate.
+- 100-trial diagnostics=1 run stays close to diagnostics=0 behavior.

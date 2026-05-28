@@ -63,8 +63,25 @@ public:
     char suppressReason[48] = "none";
     char wouldCandidateReason[48] = "none";
     detection::Occurrence frequencyCandidate = {};
+    unsigned long diagnosticsObservedCount = 0;
+    unsigned long diagnosticsValidCount = 0;
+    unsigned long diagnosticsScoreOkCount = 0;
+    unsigned long diagnosticsContrastOkCount = 0;
+    unsigned long diagnosticsBothOkCount = 0;
+    unsigned long diagnosticsMatchedCount = 0;
+    unsigned long diagnosticsRejectedCount = 0;
+    float diagnosticsScoreSum = 0.0f;
+    float diagnosticsScoreMin = 0.0f;
+    float diagnosticsScoreMax = 0.0f;
+    unsigned long diagnosticsScoreMaxMs = 0;
+    float diagnosticsContrastSum = 0.0f;
+    float diagnosticsContrastMin = 0.0f;
+    float diagnosticsContrastMax = 0.0f;
+    unsigned long diagnosticsContrastMaxMs = 0;
 
     void resetState();
+    void setDiagnosticsEnabled(bool enabled);
+    void resetDiagnosticsSummary();
 
     void update(const detection::FrequencyFeatureFrame& evidence,
                 unsigned long now,
@@ -73,5 +90,12 @@ public:
                 unsigned long releaseDebounceMs,
                 unsigned long cooldownAfterOnsetMs,
                 unsigned long minTransientDurationMs);
+
+    float diagnosticsScoreMean() const;
+    float diagnosticsContrastMean() const;
+
+private:
+    bool _diagnosticsEnabled = false;
+    bool _diagnosticsHaveStats = false;
 };
 

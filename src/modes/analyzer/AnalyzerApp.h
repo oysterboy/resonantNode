@@ -38,6 +38,7 @@ public:
         ANALYZER_LOG_SUMMARY = 1u << 0,
         ANALYZER_LOG_TRIAL = 1u << 1,
         ANALYZER_LOG_CANDIDATE = 1u << 2,
+        ANALYZER_LOG_DIAG = 1u << 3,
         ANALYZER_LOG_EXPLAIN = 1u << 4,
         ANALYZER_LOG_TRIAL_SUMMARY = 1u << 5,
         ANALYZER_LOG_CUSTOM = 1u << 6,
@@ -233,12 +234,14 @@ private:
             float lastRejectStrength = 0.0f;
             unsigned long lastRejectDurationMs = 0;
             bool peakActiveAtEnd = false;
+            AnalyzerFrequencyDiagnostic frequency = {};
         };
 
         // Sequence-test configuration and execution state.
         bool active = false;
         bool quiet = false;
         bool showDetails = true;
+        bool diagnosticsEnabled = true;
         bool externalEmitter = false;
         detection::DetectionProfileKind profileKind = detection::DetectionProfileKind::TonalPulse;
         bool progressLineStarted = false;
@@ -342,6 +345,7 @@ private:
         unsigned long durationMs = 0;
         bool quiet = false;
         bool showDetails = false;
+        bool diagnosticsEnabled = true;
         const char* setupLabel = nullptr;
         uint32_t logFlags = 0;
         bool sampleDumpEnabled = false;
@@ -376,7 +380,7 @@ private:
     void printBaseHints() const;
 
     // Sequence-test workflows.
-    void startSequenceTest(unsigned long totalTrials, unsigned long periodMs, unsigned long windowEndOffsetMs, unsigned long toneHz, unsigned long durationMs, bool quiet = false, bool showDetails = true, const char* setupLabel = nullptr, uint32_t logFlags = DEFAULT_ANALYZER_LOG_FLAGS, bool sampleDumpEnabled = false, unsigned long sampleDumpFirstTrials = 2, unsigned long sampleDumpEveryNth = 0, unsigned long sampleDumpLeadMs = 50, unsigned long sampleDumpTailMs = 800, unsigned long sampleDumpStepMs = 1, unsigned long sampleDumpMaxRows = 5000, detection::DetectionProfileKind profileKind = detection::DetectionProfileKind::TonalPulse, bool externalEmitter = false);
+    void startSequenceTest(unsigned long totalTrials, unsigned long periodMs, unsigned long windowEndOffsetMs, unsigned long toneHz, unsigned long durationMs, bool quiet = false, bool showDetails = true, bool diagnosticsEnabled = true, const char* setupLabel = nullptr, uint32_t logFlags = DEFAULT_ANALYZER_LOG_FLAGS, bool sampleDumpEnabled = false, unsigned long sampleDumpFirstTrials = 2, unsigned long sampleDumpEveryNth = 0, unsigned long sampleDumpLeadMs = 50, unsigned long sampleDumpTailMs = 800, unsigned long sampleDumpStepMs = 1, unsigned long sampleDumpMaxRows = 5000, detection::DetectionProfileKind profileKind = detection::DetectionProfileKind::TonalPulse, bool externalEmitter = false);
     void stopSequenceTest();
     void updateSequenceTest(unsigned long now);
     void finalizeSequenceTrial(unsigned long now);
@@ -395,7 +399,7 @@ private:
     void printTransientAcceptedDebug(unsigned long now, float strength, unsigned long durationMs) const;
     void printTransientStatsDebug(unsigned long now) const;
     void printSequenceExplain(const AnalyzerReport& report) const;
-    void printSequenceDiagnostics(unsigned long trialNumber, AnalyzerResult result) const;
+    void printSequenceDiagnostics(const AnalyzerReport& report) const;
     void printSequenceAmpWindow(const AnalyzerReport& report) const;
     void printSequenceCandidateLogs(unsigned long trialNumber, const SequenceTest::TrialDiagnostics& diagnostics) const;
     void printSequenceTrialResult(unsigned long trialNumber, AnalyzerResult result, long dtMs, long durMs, float strength, bool audioOverflow, unsigned long duplicateCount, const SequenceTest::TrialDiagnostics& diagnostics) const;

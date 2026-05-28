@@ -50,6 +50,41 @@ void FrequencyMatchDetector::resetState() {
     strncpy(wouldCandidateReason, "none", sizeof(wouldCandidateReason) - 1);
     wouldCandidateReason[sizeof(wouldCandidateReason) - 1] = '\0';
     memset(&frequencyCandidate, 0, sizeof(frequencyCandidate));
+    resetDiagnosticsSummary();
+}
+
+void FrequencyMatchDetector::setDiagnosticsEnabled(bool enabled) {
+    _diagnosticsEnabled = enabled;
+    if (!enabled) {
+        resetDiagnosticsSummary();
+    }
+}
+
+void FrequencyMatchDetector::resetDiagnosticsSummary() {
+    diagnosticsObservedCount = 0;
+    diagnosticsValidCount = 0;
+    diagnosticsScoreOkCount = 0;
+    diagnosticsContrastOkCount = 0;
+    diagnosticsBothOkCount = 0;
+    diagnosticsMatchedCount = 0;
+    diagnosticsRejectedCount = 0;
+    diagnosticsScoreSum = 0.0f;
+    diagnosticsScoreMin = 0.0f;
+    diagnosticsScoreMax = 0.0f;
+    diagnosticsScoreMaxMs = 0;
+    diagnosticsContrastSum = 0.0f;
+    diagnosticsContrastMin = 0.0f;
+    diagnosticsContrastMax = 0.0f;
+    diagnosticsContrastMaxMs = 0;
+    _diagnosticsHaveStats = false;
+}
+
+float FrequencyMatchDetector::diagnosticsScoreMean() const {
+    return diagnosticsObservedCount > 0 ? diagnosticsScoreSum / static_cast<float>(diagnosticsObservedCount) : 0.0f;
+}
+
+float FrequencyMatchDetector::diagnosticsContrastMean() const {
+    return diagnosticsObservedCount > 0 ? diagnosticsContrastSum / static_cast<float>(diagnosticsObservedCount) : 0.0f;
 }
 
 void FrequencyMatchDetector::update(const detection::FrequencyFeatureFrame& evidence,
@@ -168,49 +203,100 @@ void FrequencyMatchDetector::update(const detection::FrequencyFeatureFrame& evid
             }
         }
 
+        if (_diagnosticsEnabled) {
 live_freq_update_best:
-        const bool better = !bestEvidence.present
-            || evidence.spectralContrast > bestContrast
-            || (evidence.spectralContrast == bestContrast && evidence.score > bestScore);
-        if (better) {
-            bestEvidence = evidence;
-            bestObservedAtMs = now;
-            bestObservedSample = currentSample;
-            bestScore = evidence.score;
-            bestContrast = evidence.spectralContrast;
-            bestWindowSampleCount = evidence.windowSampleCount;
-        }
+            const bool better = !bestEvidence.present
+                || evidence.spectralContrast > bestContrast
+                || (evidence.spectralContrast == bestContrast && evidence.score > bestScore);
+            if (better) {
+                bestEvidence = evidence;
+                bestObservedAtMs = now;
+                bestObservedSample = currentSample;
+                bestScore = evidence.score;
+                bestContrast = evidence.spectralContrast;
+                bestWindowSampleCount = evidence.windowSampleCount;
+            }
 
-        if (liveFreqEval.matched) {
-            wouldProduceCandidate = true;
+            if (liveFreqEval.matched) {
+                wouldProduceCandidate = true;
+            }
         }
     }
 
-    const auto bestEval = FrequencyMatchEvaluation::evaluate(bestEvidence, tuning);
-    bestScoreOk = bestEval.scoreOk;
-    bestContrastOk = bestEval.contrastOk;
-    readyOk = bestEvidence.present ? bestEvidence.windowAvailable : evidence.windowAvailable;
-    gateOpen = bestEvidence.present && readyOk && bestEval.matched;
+    if (_diagnosticsEnabled) {
+        const auto bestEval = FrequencyMatchEvaluation::evaluate(bestEvidence, tuning);
+        bestScoreOk = bestEval.scoreOk;
+        bestContrastOk = bestEval.contrastOk;
+        readyOk = bestEvidence.present ? bestEvidence.windowAvailable : evidence.windowAvailable;
+        gateOpen = bestEvidence.present && readyOk && bestEval.matched;
 
-    const char* suppress = "none";
-    if (!readyOk) {
-        suppress = "live_window_not_ready";
-    } else if (!bestEval.present) {
-        suppress = "no_frequency_evidence";
-    } else if (!bestEval.validWindow) {
-        suppress = "frequency_window_invalid";
-    } else if (!bestEval.scoreOk && !bestEval.contrastOk) {
-        suppress = "freq_score_and_contrast_too_low";
-    } else if (!bestEval.scoreOk) {
-        suppress = "freq_score_too_low";
-    } else if (!bestEval.contrastOk) {
-        suppress = "freq_contrast_too_low";
+        const char* suppress = "none";
+        if (!readyOk) {
+            suppress = "live_window_not_ready";
+        } else if (!bestEval.present) {
+            suppress = "no_frequency_evidence";
+        } else if (!bestEval.validWindow) {
+            suppress = "frequency_window_invalid";
+        } else if (!bestEval.scoreOk && !bestEval.contrastOk) {
+            suppress = "freq_score_and_contrast_too_low";
+        } else if (!bestEval.scoreOk) {
+            suppress = "freq_score_too_low";
+        } else if (!bestEval.contrastOk) {
+            suppress = "freq_contrast_too_low";
+        }
+        strncpy(suppressReason, suppress, sizeof(suppressReason) - 1);
+        suppressReason[sizeof(suppressReason) - 1] = '\0';
+
+        const char* wouldCandidate = wouldProduceCandidate ? "matched" : suppress;
+        strncpy(wouldCandidateReason, wouldCandidate, sizeof(wouldCandidateReason) - 1);
+        wouldCandidateReason[sizeof(wouldCandidateReason) - 1] = '\0';
+
+        if (evidence.present) {
+            ++diagnosticsObservedCount;
+            if (evidence.validWindow) {
+                ++diagnosticsValidCount;
+            }
+            if (liveFreqEval.scoreOk) {
+                ++diagnosticsScoreOkCount;
+            }
+            if (liveFreqEval.contrastOk) {
+                ++diagnosticsContrastOkCount;
+            }
+            if (liveFreqEval.scoreOk && liveFreqEval.contrastOk) {
+                ++diagnosticsBothOkCount;
+            }
+            diagnosticsScoreSum += evidence.score;
+            diagnosticsContrastSum += evidence.spectralContrast;
+            if (!_diagnosticsHaveStats) {
+                diagnosticsScoreMin = evidence.score;
+                diagnosticsScoreMax = evidence.score;
+                diagnosticsContrastMin = evidence.spectralContrast;
+                diagnosticsContrastMax = evidence.spectralContrast;
+                diagnosticsScoreMaxMs = now;
+                diagnosticsContrastMaxMs = now;
+                _diagnosticsHaveStats = true;
+            } else {
+                if (evidence.score < diagnosticsScoreMin) {
+                    diagnosticsScoreMin = evidence.score;
+                }
+                if (evidence.score > diagnosticsScoreMax) {
+                    diagnosticsScoreMax = evidence.score;
+                    diagnosticsScoreMaxMs = now;
+                }
+                if (evidence.spectralContrast < diagnosticsContrastMin) {
+                    diagnosticsContrastMin = evidence.spectralContrast;
+                }
+                if (evidence.spectralContrast > diagnosticsContrastMax) {
+                    diagnosticsContrastMax = evidence.spectralContrast;
+                    diagnosticsContrastMaxMs = now;
+                }
+            }
+            if (liveFreqEval.matched) {
+                ++diagnosticsMatchedCount;
+            } else {
+                ++diagnosticsRejectedCount;
+            }
+        }
     }
-    strncpy(suppressReason, suppress, sizeof(suppressReason) - 1);
-    suppressReason[sizeof(suppressReason) - 1] = '\0';
-
-    const char* wouldCandidate = wouldProduceCandidate ? "matched" : suppress;
-    strncpy(wouldCandidateReason, wouldCandidate, sizeof(wouldCandidateReason) - 1);
-    wouldCandidateReason[sizeof(wouldCandidateReason) - 1] = '\0';
 }
 

@@ -21,6 +21,24 @@
 
 namespace detection {
 
+enum class FrequencyDiagReason {
+    None,
+    NoFrames,
+    NoValidFrames,
+    ScoreTooLow,
+    ContrastTooLow,
+    ScoreAndContrastTooLow,
+    MatchTooShort,
+    Suppressed,
+    NotReady,
+    GateClosed,
+    TimingOutsideWindow,
+    OccurrenceEmitted,
+    Unknown,
+};
+
+const char* frequencyDiagReasonName(FrequencyDiagReason reason);
+
 /*
 DetectionRuntime
 
@@ -50,21 +68,48 @@ struct DetectionPipelineResult {
 };
 
 struct DetectionDiagnostics {
-    bool present = false;
     unsigned long observedAtMs = 0;
 
     const char* occurrenceSource = "unknown";
     const char* detectorKind = "unknown";
+
+    bool acceptedPresent = false;
+    unsigned long acceptedStartMs = 0;
+    unsigned long acceptedPeakMs = 0;
+    unsigned long acceptedReleaseMs = 0;
+    unsigned long acceptedDurationMs = 0;
+    float acceptedStrength = 0.0f;
+    float acceptedScore = 0.0f;
+    float acceptedContrast = 0.0f;
+
+    unsigned long frequencyFrames = 0;
+    unsigned long frequencyValidFrames = 0;
+    unsigned long frequencyScoreOkFrames = 0;
+    unsigned long frequencyContrastOkFrames = 0;
+    unsigned long frequencyBothOkFrames = 0;
+    unsigned long frequencyMatchFrames = 0;
+    unsigned long frequencyRejectFrames = 0;
+
+    float frequencyScoreMean = 0.0f;
+    float frequencyContrastMean = 0.0f;
+    float frequencyScoreMin = 0.0f;
+    float frequencyContrastMin = 0.0f;
+    float frequencyScoreMax = 0.0f;
+    float frequencyContrastMax = 0.0f;
+    unsigned long frequencyScoreMaxMs = 0;
+    unsigned long frequencyContrastMaxMs = 0;
+    float frequencyScoreThreshold = 0.0f;
+    float frequencyContrastThreshold = 0.0f;
+
+    FrequencyDiagReason frequencyBestRejectReason = FrequencyDiagReason::Unknown;
+    bool frequencyNearMiss = false;
+    const char* frequencyNearMissReason = "none";
 
     bool frequencyPresent = false;
     bool frequencyValidWindow = false;
     bool frequencyMatched = false;
     bool frequencyScoreOk = false;
     bool frequencyContrastOk = false;
-    float frequencyScore = 0.0f;
-    float frequencyContrast = 0.0f;
-    float frequencyScoreMin = 0.0f;
-    float frequencyContrastMin = 0.0f;
     const char* frequencyReason = "none";
     const char* frequencySuppressReason = "none";
     const char* frequencyWouldCandidateReason = "none";
@@ -89,6 +134,8 @@ public:
 
     void resetState();
     void resetDiagnostics();
+    void setDiagnosticsEnabled(bool enabled);
+    void captureDiagnostics();
 
     void setFrequencyMatchConfig(const FrequencyMatchConfig& config);
     void setScalarTransientConfig(const ScalarTransientConfig& config);
@@ -125,11 +172,6 @@ private:
         const InspectedOccurrence* inspectedOccurrence,
         unsigned long nowMs
     );
-    void updateDiagnostics(
-        const AudioSignalFrame& frame,
-        const FrequencyFeatureFrame& frequencyEvidence,
-        unsigned long nowMs
-    );
 
     FrequencyMatchConfig _frequencyMatchConfig = {};
     ScalarTransientConfig _scalarTransientConfig = {};
@@ -154,6 +196,7 @@ private:
     DetectionPipelineResult _latestPipelineResult = {};
     bool _hasLatestPipelineResult = false;
     DetectionDiagnostics _diagnostics = {};
+    bool _diagnosticsEnabled = true;
     Occurrence _lastOccurrence = {};
     InspectedOccurrence _lastInspectedOccurrence = {};
 };

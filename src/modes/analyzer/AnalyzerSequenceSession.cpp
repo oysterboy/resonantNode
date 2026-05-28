@@ -37,7 +37,7 @@ unsigned long countSelectedSampleDumpTrials(unsigned long totalTrials, unsigned 
 
 } // namespace
 
-void AnalyzerApp::startSequenceTest(unsigned long totalTrials, unsigned long periodMs, unsigned long windowEndOffsetMs, unsigned long toneHz, unsigned long durationMs, bool quiet, bool showDetails, const char* setupLabel, uint32_t logFlags, bool sampleDumpEnabled, unsigned long sampleDumpFirstTrials, unsigned long sampleDumpEveryNth, unsigned long sampleDumpLeadMs, unsigned long sampleDumpTailMs, unsigned long sampleDumpStepMs, unsigned long sampleDumpMaxRows, detection::DetectionProfileKind profileKind, bool externalEmitter) {
+void AnalyzerApp::startSequenceTest(unsigned long totalTrials, unsigned long periodMs, unsigned long windowEndOffsetMs, unsigned long toneHz, unsigned long durationMs, bool quiet, bool showDetails, bool diagnosticsEnabled, const char* setupLabel, uint32_t logFlags, bool sampleDumpEnabled, unsigned long sampleDumpFirstTrials, unsigned long sampleDumpEveryNth, unsigned long sampleDumpLeadMs, unsigned long sampleDumpTailMs, unsigned long sampleDumpStepMs, unsigned long sampleDumpMaxRows, detection::DetectionProfileKind profileKind, bool externalEmitter) {
     if (_valMode) {
         return;
     }
@@ -70,6 +70,7 @@ void AnalyzerApp::startSequenceTest(unsigned long totalTrials, unsigned long per
     _sequenceTest.active = true;
     _sequenceTest.quiet = quiet;
     _sequenceTest.showDetails = showDetails;
+    _sequenceTest.diagnosticsEnabled = diagnosticsEnabled;
     _sequenceTest.externalEmitter = externalEmitter;
     _sequenceTest.profileKind = profileKind;
     _sequenceTest.progressLineStarted = false;
@@ -103,6 +104,7 @@ void AnalyzerApp::startSequenceTest(unsigned long totalTrials, unsigned long per
     _detection->setPatternRulesConfig(selectedProfile.patternRulesConfig);
     _detection->setFieldStateConfig(selectedProfile.fieldStateConfig);
     _detection->setProfileName(detection::detectionProfileName(selectedProfile.kind));
+    _detection->setDiagnosticsEnabled(_sequenceTest.diagnosticsEnabled);
     _freqBandStream.setSampleRateHz(_audioSource.sampleRateHz());
     _freqBandStream.setTargetFrequencyHz(toneHz);
     _freqBandStream.resetState();
@@ -217,6 +219,9 @@ void AnalyzerApp::startSequenceTest(unsigned long totalTrials, unsigned long per
         Serial.println("ms");
     }
     resetDetectorState();
+    if (_detection != nullptr) {
+        _detection->setDiagnosticsEnabled(_sequenceTest.diagnosticsEnabled);
+    }
     _audioSignal.resetStats();
     _audioSource.resetStats();
     Serial.println("AUDIO stats reset");
@@ -323,6 +328,17 @@ void AnalyzerApp::updateSequenceTest(unsigned long now) {
     _sequenceTest.currentTrialDiagnostics.runtimePatternCaptured = false;
     _sequenceTest.currentTrialDiagnostics.runtimePatternResult = {};
     _sequenceTest.currentTrialDiagnostics.runtimeFieldState = {};
+    _sequenceTest.currentTrialDiagnostics.frequency = {};
+    _sequenceTest.currentTrialDiagnostics.frequency.currentTrialId = trialNumber;
+    _sequenceTest.currentTrialDiagnostics.frequency.windowStartMs = _sequenceTest.currentTrialStartMs;
+    _sequenceTest.currentTrialDiagnostics.frequency.windowEndMs = _sequenceTest.currentTrialEndMs;
+    _sequenceTest.currentTrialDiagnostics.frequency.expectedWindowMs = _sequenceTest.currentTrialEndMs >= _sequenceTest.currentTrialStartMs
+        ? _sequenceTest.currentTrialEndMs - _sequenceTest.currentTrialStartMs
+        : 0UL;
+    _sequenceTest.currentTrialDiagnostics.frequency.expectedFrameCountEstimate =
+        static_cast<unsigned long>((_sequenceTest.currentTrialDiagnostics.frequency.expectedWindowMs
+            * static_cast<unsigned long>(_audioSource.sampleRateHz() > 0 ? _audioSource.sampleRateHz() : 16000UL)) / 1000UL);
+    _sequenceTest.currentTrialDiagnostics.frequency.diagFrameCountOk = false;
     _detection->resetDiagnostics();
     _sequenceTest.nextTriggerAtMs = scheduledAtMs + _sequenceTest.periodMs;
 
@@ -424,7 +440,7 @@ void AnalyzerApp::finalizeSequenceTrial(unsigned long now) {
     flushSequenceSampleHistory(now + 1UL);
     printSequenceSampleDump(_sequenceTest.currentTrial);
     printSequenceCandidateLogs(_sequenceTest.currentTrial, diagnostics);
-    printSequenceDiagnostics(_sequenceTest.currentTrial, result);
+    printSequenceDiagnostics(finalizedReport);
     if (summaryTrial) {
         printSequenceTrialResult(_sequenceTest.currentTrial, result, dtMs, durMs, strength, invalidAudioTrial, diagnostics.duplicateCount, diagnostics);
     } else {

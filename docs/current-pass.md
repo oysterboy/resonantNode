@@ -1,344 +1,216 @@
-# Codex Instruction — Make Frequency Reject Diagnostics Actually Useful
+# Codex Instruction — Stabilize SEQ Diagnostics Without Timing Pressure
 
 ## Goal
 
-Replace the current broad/cumulative `SEQ_REJECTS` output with a **trial-local reject diagnostic** that explains why an expected emitted pulse did or did not become an `Occurrence`.
+Keep the detector baseline stable while making miss diagnostics useful.
 
-Status:
+Current facts:
 
 ```text
-implemented in code: compact trial-local `SEQ_FREQ_DIAG` gated by explicit `log=...+diag`
+diagnostics off:
+  expected=99
+  miss=1
+  duplicate=1
 ```
 
-The current diagnostic is too ambiguous:
+So the detection path is basically stable.
+
+When heavier diagnostics are enabled, miss rate can collapse. Therefore diagnostics must be treated as potentially intrusive.
+
+Also:
 
 ```text
-SEQ_REJECTS trial=2 result=expected ...
-freq_would=matched
-freq_match=1
-freq_state=rejected
-freq_count=54944
-freq_match_count=3438
-freq_reject_count=51506
+SEQ_VERBOSE_WARN reason=analyzer_report_alloc_failed requested=100 reports
+```
 
-This is misleading because the same trial may have an accepted FrequencyMatch occurrence in SEQ_EXPLAIN. The line is currently mixing accepted-trial state, background/rejected frames, and cumulative counters.
+This warning does not appear to cause the stable 99/1 result directly, but dynamic report allocation is unsafe noise in this timing-sensitive path and should be removed.
 
-The new diagnostic must answer:
+## Main rules
 
-For this trial window, why did FrequencyMatch emit or not emit an Occurrence?
-Rename Output
-
-Rename:
-
-SEQ_REJECTS
-
-to:
-
-SEQ_FREQ_DIAG
-
-or, if it prints only failure cases:
-
-SEQ_FREQ_REJECT
-
-Preferred for now:
-
-SEQ_FREQ_DIAG
-
-because it can print both accepted and missed trial windows.
-
-Core Rule
-
-Diagnostics must be trial-local and window-local.
-
-Do not print cumulative run counters in per-trial diagnostics.
-
-Reset the diagnostic accumulator at the start of each SEQ trial / expected window.
-
-Track Two Separate Things
-
-For each trial, track:
-
-A. accepted occurrence, if one exists
-B. rejected frequency evidence inside the expected window
-
-Do not collapse these into the same fields.
-
-Accepted occurrence fields
-accepted_present
-accepted_start_ms
-accepted_peak_ms
-accepted_release_ms
-accepted_dt_ms
-accepted_dur_ms
-accepted_score_peak
-accepted_contrast_peak
-accepted_strength
-
-If no occurrence was emitted:
-
-accepted_present=0
-Rejected / non-occurrence evidence fields
-frames
-valid_frames
-score_ok_frames
-contrast_ok_frames
-both_ok_frames
-match_frames
-reject_frames
-
-max_score
-max_score_ms
-max_contrast
-max_contrast_ms
-mean_score
-mean_contrast
-
-best_reject_reason
-last_reject_reason
-Useful Failure Classification
-
-The diagnostic must classify the failure into one clear reason.
-
-Add:
-
-enum class FrequencyDiagReason {
-    None,
-    NoFrames,
-    NoValidFrames,
-    ScoreTooLow,
-    ContrastTooLow,
-    ScoreAndContrastTooLow,
-    MatchTooShort,
-    Suppressed,
-    NotReady,
-    GateClosed,
-    TimingOutsideWindow,
-    OccurrenceEmitted,
-    Unknown,
-};
-
-For misses, best_reject_reason should usually be one of:
-
-NoFrames
-NoValidFrames
-ScoreTooLow
-ContrastTooLow
-ScoreAndContrastTooLow
-MatchTooShort
-Suppressed
-NotReady
-GateClosed
-TimingOutsideWindow
-
-For expected trials with accepted occurrence:
-
-best_reject_reason=occurrence_emitted
-
-or:
-
-best_reject_reason=none
-
-Do not print freq_state=rejected when accepted_present=1 unless it is clearly labeled as background/context rejection.
-
-Identify Near-Misses
-
-Add a simple near-miss classification.
-
-near_miss=0/1
-near_miss_reason=...
-
-Recommended logic:
-
-near_miss=1 if:
-  max_score >= 0.75 * score_threshold
-  OR max_contrast >= 0.75 * contrast_threshold
-  OR score_ok_frames > 0
-  OR contrast_ok_frames > 0
-
-This helps distinguish:
-
-no useful tone seen
-
-from:
-
-almost enough frequency evidence, but gate did not open
-Important: Score and Contrast Must Use Real Thresholds
-
-Current output sometimes shows:
-
-freq_score=2320.4/0.0
-freq_contrast=220.16/0.00
-
-That is not useful for reject analysis.
-
-Print real thresholds:
-
-score_threshold=10000.0
-contrast_threshold=50.0
-
-And use fields like:
-
-max_score=...
-score_threshold=...
-max_contrast=...
-contrast_threshold=...
-
-Do not print /0.0 unless the threshold is actually disabled.
-
-Suggested Output: Expected Trial
-SEQ_FREQ_DIAG trial=12 result=expected
-accepted_present=1 accepted_dt=33ms accepted_dur=98ms accepted_strength=25624.2
-frames=1800 valid=1800 match_frames=120 reject_frames=1680
-score_ok_frames=120 contrast_ok_frames=120 both_ok_frames=120
-max_score=25624.2 score_threshold=10000.0
-max_contrast=820.4 contrast_threshold=50.0
-mean_score=1934.0 mean_contrast=229.5
-best_reject_reason=occurrence_emitted near_miss=0
-Suggested Output: Miss Trial
-SEQ_FREQ_DIAG trial=34 result=miss
-accepted_present=0
-frames=1800 valid=1800 match_frames=0 reject_frames=1800
-score_ok_frames=0 contrast_ok_frames=8 both_ok_frames=0
-max_score=4200.0 score_threshold=10000.0
-max_contrast=73.0 contrast_threshold=50.0
-mean_score=1707.4 mean_contrast=223.3
-best_reject_reason=score_too_low near_miss=1 near_miss_reason=contrast_ok_score_low
-
-Another miss case:
-
-SEQ_FREQ_DIAG trial=34 result=miss
-accepted_present=0
-frames=1800 valid=1800 match_frames=0 reject_frames=1800
-score_ok_frames=0 contrast_ok_frames=0 both_ok_frames=0
-max_score=1200.0 score_threshold=10000.0
-max_contrast=12.0 contrast_threshold=50.0
-mean_score=80.0 mean_contrast=1.4
-best_reject_reason=score_and_contrast_too_low near_miss=0
-Required Diagnostic Logic
-
-For each live frequency frame inside the trial window:
-
-diag.frames++;
-
-if (frame.valid) {
-    diag.validFrames++;
-}
-
-if (frame.score >= config.scoreThreshold) {
-    diag.scoreOkFrames++;
-}
-
-if (frame.contrast >= config.contrastThreshold) {
-    diag.contrastOkFrames++;
-}
-
-if (frame.score >= config.scoreThreshold &&
-    frame.contrast >= config.contrastThreshold) {
-    diag.bothOkFrames++;
-}
-
-if (frame.matched) {
-    diag.matchFrames++;
-}
-
-if (!frame.matched) {
-    diag.rejectFrames++;
-    diag.lastRejectReason = classifyFrameReject(frame);
-}
-
-diag.maxScore = max(diag.maxScore, frame.score);
-diag.maxContrast = max(diag.maxContrast, frame.contrast);
-diag.sumScore += frame.score;
-diag.sumContrast += frame.contrast;
-
-At trial end:
-
-diag.meanScore = diag.frames > 0 ? diag.sumScore / diag.frames : 0;
-diag.meanContrast = diag.frames > 0 ? diag.sumContrast / diag.frames : 0;
-diag.bestRejectReason = classifyTrialReject(diag, acceptedPresent);
-diag.nearMiss = classifyNearMiss(diag);
-Trial Reject Classification
-
-Use this priority:
-
-if accepted_present:
-    OccurrenceEmitted
-
-else if frames == 0:
-    NoFrames
-
-else if valid_frames == 0:
-    NoValidFrames
-
-else if gate_closed:
-    GateClosed
-
-else if not_ready:
-    NotReady
-
-else if suppressed:
-    Suppressed
-
-else if both_ok_frames > 0 but match_frames == 0:
-    MatchTooShort
-
-else if score_ok_frames == 0 and contrast_ok_frames == 0:
-    ScoreAndContrastTooLow
-
-else if score_ok_frames == 0:
-    ScoreTooLow
-
-else if contrast_ok_frames == 0:
-    ContrastTooLow
-
-else:
-    Unknown
-Print Policy
-
-For active debugging:
-
-diagnostics=1 → print SEQ_FREQ_DIAG for every trial
-
-Later default:
-
-diagnostics=0 → no SEQ_FREQ_DIAG
-diagnostics=miss → print only for miss/late/duplicate/rejected
-
-Do not print per-frame diagnostics.
-
-Performance / Safety Rules
-
-Do not reintroduce the diagnostic-collapse bug.
+Do not add timing pressure.
 
 Avoid:
 
-large snapshots
-heap allocations per trial
-large report buffers
+```text
 per-frame Serial output
-copying frame arrays
-state mutation from diagnostic reads
+large snapshots
+heap allocation per trial
+large retained report buffers
+copying arrays
+diagnostic reads that mutate detector/runtime state
+verbose per-trial output during normal 100-trial baseline runs
+```
 
-Use:
+Use only:
 
-small fixed-size struct
-simple counters
-sum/min/max
-one line per trial
-no dynamic allocation
+```text
+fixed-size counters
+small trial-local structs
+summary counters
+miss-only diagnostic lines
+optional small ring buffer
+```
 
-Diagnostics must be passive:
+## Fix analyzer report allocation
 
-Observe FrequencyMatch.
-Do not influence FrequencyMatch.
-Success Criteria
-- Output renamed from SEQ_REJECTS to SEQ_FREQ_DIAG.
-- Per-trial counters reset every trial.
-- No cumulative counters in per-trial line.
-- Expected trials clearly show accepted_present=1.
-- Miss trials clearly show accepted_present=0 and a meaningful best_reject_reason.
-- Real score/contrast thresholds are printed.
-- Near-miss classification exists.
-- No contradictory fields like freq_match=1 + freq_state=rejected without context.
-- diagnostics=1 does not collapse detection rate.
-- 100-trial diagnostics=1 run stays close to diagnostics=0 behavior.
+Remove or avoid dynamic allocation of 100 analyzer reports.
+
+Preferred options:
+
+```text
+1. Stream compact per-trial output directly.
+2. Store only summary counters for the full run.
+3. Keep a fixed ring buffer for the last 8 or 16 detailed reports.
+4. Allow full retained report storage only for small runs, e.g. tries <= 20.
+```
+
+Success:
+
+```text
+No SEQ_VERBOSE_WARN reason=analyzer_report_alloc_failed during normal 50/100 trial runs.
+```
+
+## Diagnostic modes
+
+Add/keep explicit diagnostic levels:
+
+```text
+
+diagmiss
+diagtrial
+```
+
+Meaning:
+
+```text
+nothing
+  baseline mode. No SEQ_FREQ_DIAG lines.
+
+diagmiss:
+  collect tiny counters silently.
+  print SEQ_FREQ_DIAG only for misses / late / duplicate / rejected.
+
+diagtrial:
+  print one compact SEQ_FREQ_DIAG per trial.
+  use only for short diagnostic runs.
+```
+
+Default for 100-trial runs:
+
+```text
+off
+```
+
+Do not use full `diagtrial` as the default baseline.
+
+## Keep SEQ_FREQ_DIAG trial-local
+
+The latest tiny diagnostic fixed the cumulative-counter bug. Preserve that.
+
+Required:
+
+```text
+frames ≈ 35k for 2200ms
+diag_frame_count_ok=1
+window_start_ms / window_end_ms correct
+```
+
+If frames become cumulative again, fail the pass.
+
+## Fix stale/global occurrence fields
+
+Miss lines must not show stale unprefixed occurrence state.
+
+Replace ambiguous fields:
+
+```text
+occurrence_opened
+occurrence_released
+occurrence_emitted
+occurrence_suppressed
+best_reject_reason
+```
+
+with trial-local names:
+
+```text
+trial_occurrence_opened
+trial_occurrence_released
+trial_occurrence_emitted
+trial_occurrence_suppressed
+trial_suppress_reason
+trial_miss_reason
+```
+
+If live/global state is useful, prefix it:
+
+```text
+live_occurrence_state
+live_freq_reason
+live_freq_match
+```
+
+For a miss:
+
+```text
+accepted_present=0
+trial_occurrence_emitted=0
+```
+
+Do not print unprefixed `occurrence_emitted`.
+
+## Add minimal emitter facts
+
+Because emitted sounds were audibly regular, emitter absence is less likely, but still report minimal facts if cheap:
+
+```text
+emit_command_sent=0/1
+emit_command_ms=...
+emit_trial_id=...
+emit_status=ok/timeout/not_sent/unknown
+remote_claim_ok=0/1
+```
+
+No blocking waits. No retries. No behavioral change.
+
+
+
+
+
+
+## Validation test
+
+Run this matrix:
+
+```text
+A. diagnostics off, 100 trials
+B. diagnostics miss-only, 100 trials
+C. diagnostics trial, 20 trials only
+```
+
+Expected:
+
+```text
+A and B should stay close to stable baseline.
+C must not collapse detection, but it is not the normal baseline mode.
+```
+
+Current stable baseline to compare against:
+
+```text
+expected≈99
+miss≈1
+duplicate≈1
+```
+
+## Success criteria
+
+```text
+- No analyzer_report_alloc_failed in normal 50/100 trial runs.
+- diagnostics off remains stable.
+- diagnostics miss-only does not noticeably reduce detection rate.
+- SEQ_FREQ_DIAG stays trial-local.
+- Miss lines show trial_miss_reason and freq_evidence_class.
+- Miss lines do not contain stale unprefixed occurrence state.
+- Summary reports miss reason counts and longest miss streak.
+```

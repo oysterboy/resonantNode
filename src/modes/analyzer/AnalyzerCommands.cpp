@@ -12,7 +12,8 @@ void AnalyzerApp::printSequenceHelp() {
     Serial.println("SEQ IN: start [tries=N] [period=MS] [window=MS] [freq=HZ] [dur=MS] [test=LABEL]");
     Serial.println("SEQ IN: OBS start [tries=N] [period=2000] [window=1800] [freq=HZ] [dur=MS] [test=LABEL]");
     Serial.println("SEQ IN: [profile=tonalpulse|tonalpulse2|amp]");
-    Serial.println("SEQ IN: [log=default|none|quiet|summary|summary+trial|trial|candidate|explain|custom|full|...+diag]");
+    Serial.println("SEQ IN: [log=default|none|quiet|summary|summary+trial|trial|candidate|explain|custom|full]");
+    Serial.println("SEQ IN: [diag=off|miss|trial]");
     Serial.println("SEQ IN: stable summary=log=summary");
     Serial.println("SEQ IN: [debug=0|1|2] [dumpSamples=0|1] [curveFormat=off|samples]");
     Serial.println("SEQ IN: [sampleFirst=N] [sampleEvery=N] [sampleLead=MS] [sampleTail=MS] [sampleStep=MS] [sampleMax=N]");
@@ -207,6 +208,8 @@ void AnalyzerApp::handleUsbLine(const char* line) {
             bool profileSeen = false;
             bool profileValid = true;
             bool externalEmitter = false;
+            AnalyzerApp::SequenceDiagMode diagMode = AnalyzerApp::SequenceDiagMode::Off;
+            bool diagSeen = false;
             char setupLabel[96] = TEST_SETUP_LABEL;
             uint32_t logFlags = DEFAULT_ANALYZER_LOG_FLAGS;
             externalEmitter = equalsIgnoreCase(token, "OBS");
@@ -251,6 +254,21 @@ void AnalyzerApp::handleUsbLine(const char* line) {
                     }
                 } else if (startsWithTokenIgnoreCase(token, "log=")) {
                     logFlags = analyzerLogFlagsFromToken(token + 4);
+                } else if (startsWithTokenIgnoreCase(token, "diag=")) {
+                    const char* diagValue = token + 5;
+                    diagSeen = true;
+                    if (equalsIgnoreCase(diagValue, "off")) {
+                        diagMode = AnalyzerApp::SequenceDiagMode::Off;
+                    } else if (equalsIgnoreCase(diagValue, "miss")) {
+                        diagMode = AnalyzerApp::SequenceDiagMode::Miss;
+                    } else if (equalsIgnoreCase(diagValue, "trial")) {
+                        diagMode = AnalyzerApp::SequenceDiagMode::Trial;
+                    } else {
+                        Serial.print("ERR SEQ unknown diag=");
+                        Serial.print(diagValue);
+                        Serial.println(" use diag=off, diag=miss or diag=trial");
+                        return;
+                    }
                 } else if (startsWithTokenIgnoreCase(token, "sampleFirst=")) {
                     sampleDumpEnabled = true;
                     sampleDumpFirstTrials = static_cast<unsigned long>(strtoul(token + 12, nullptr, 10));
@@ -290,8 +308,10 @@ void AnalyzerApp::handleUsbLine(const char* line) {
             if (!profileValid) {
                 return;
             }
-            const bool diagnosticsEnabled = (logFlags & static_cast<uint32_t>(AnalyzerApp::ANALYZER_LOG_DIAG)) != 0;
-            startSequenceTest(totalTrials, periodMs, windowEndOffsetMs, toneHz, durationMs, quiet, showDetails, diagnosticsEnabled, setupLabel, logFlags, sampleDumpEnabled, sampleDumpFirstTrials, sampleDumpEveryNth, sampleDumpLeadMs, sampleDumpTailMs, sampleDumpStepMs, sampleDumpMaxRows, profileKind, externalEmitter);
+            if (!diagSeen && (logFlags & static_cast<uint32_t>(AnalyzerApp::ANALYZER_LOG_DIAG)) != 0) {
+                diagMode = AnalyzerApp::SequenceDiagMode::Trial;
+            }
+            startSequenceTest(totalTrials, periodMs, windowEndOffsetMs, toneHz, durationMs, quiet, showDetails, diagMode, setupLabel, logFlags, sampleDumpEnabled, sampleDumpFirstTrials, sampleDumpEveryNth, sampleDumpLeadMs, sampleDumpTailMs, sampleDumpStepMs, sampleDumpMaxRows, profileKind, externalEmitter);
             Serial.println("OK SEQ");
             return;
         }

@@ -168,6 +168,59 @@ size_t analyzerReasonIndex(AnalyzerReason value) {
     return static_cast<size_t>(value);
 }
 
+const char* sequenceDiagModeName(AnalyzerApp::SequenceDiagMode mode) {
+    switch (mode) {
+        case AnalyzerApp::SequenceDiagMode::Miss:
+            return "miss";
+        case AnalyzerApp::SequenceDiagMode::Trial:
+            return "trial";
+        case AnalyzerApp::SequenceDiagMode::Off:
+        default:
+            return "off";
+    }
+}
+
+const char* analyzerEvidenceTargetName(detection::EvidenceTarget value) {
+    switch (value) {
+        case detection::EvidenceTarget::AmpStrength:
+            return "AmpStrength";
+        case detection::EvidenceTarget::FrequencyScoreStrength:
+            return "FrequencyScoreStrength";
+        case detection::EvidenceTarget::FrequencyContrastQuality:
+            return "FrequencyContrastQuality";
+        case detection::EvidenceTarget::TargetBandStrength:
+            return "TargetBandStrength";
+        case detection::EvidenceTarget::None:
+        default:
+            return "None";
+    }
+}
+
+bool sequenceDiagnosticsShouldPrint(AnalyzerApp::SequenceDiagMode mode, AnalyzerResult result) {
+    if (mode == AnalyzerApp::SequenceDiagMode::Trial) {
+        return true;
+    }
+    if (mode != AnalyzerApp::SequenceDiagMode::Miss) {
+        return false;
+    }
+
+    switch (result) {
+        case AnalyzerResult::Miss:
+        case AnalyzerResult::Late:
+        case AnalyzerResult::Duplicate:
+        case AnalyzerResult::Rejected:
+        case AnalyzerResult::Ambiguous:
+        case AnalyzerResult::TooDense:
+        case AnalyzerResult::InvalidAudio:
+            return true;
+        case AnalyzerResult::Expected:
+        case AnalyzerResult::Early:
+        case AnalyzerResult::Unknown:
+        default:
+            return false;
+    }
+}
+
 } // namespace
 
 void AnalyzerApp::printSequenceTrialResult(const AnalyzerReport& report) const {
@@ -580,8 +633,7 @@ void AnalyzerApp::printSequenceDiagnostics(const AnalyzerReport& report) const {
     if (_valMode) {
         return;
     }
-    if (!_sequenceTest.diagnosticsEnabled ||
-        !analyzerLogEnabled(_sequenceTest.logFlags, AnalyzerApp::ANALYZER_LOG_DIAG)) {
+    if (!sequenceDiagnosticsShouldPrint(_sequenceTest.diagMode, report.classification.result)) {
         return;
     }
     Serial.print("SEQ_FREQ_DIAG trial=");
@@ -671,18 +723,32 @@ void AnalyzerApp::printSequenceDiagnostics(const AnalyzerReport& report) const {
     Serial.print(report.frequency.maxContrast, 2);
     Serial.print(" max_contrast_ms=");
     Serial.print(report.frequency.maxContrastMs);
-    Serial.print(" best_reject_reason=");
-    Serial.print(report.frequency.bestRejectReason != nullptr ? report.frequency.bestRejectReason : "unknown");
-    Serial.print(" occurrence_opened=");
-    Serial.print(report.frequency.occurrenceOpened ? 1 : 0);
-    Serial.print(" occurrence_released=");
-    Serial.print(report.frequency.occurrenceReleased ? 1 : 0);
-    Serial.print(" occurrence_emitted=");
-    Serial.print(report.frequency.occurrenceEmitted ? 1 : 0);
-    Serial.print(" occurrence_suppressed=");
-    Serial.print(report.frequency.occurrenceSuppressed ? 1 : 0);
-    Serial.print(" occurrence_timing_class=");
-    Serial.print(report.frequency.occurrenceTimingClass != nullptr ? report.frequency.occurrenceTimingClass : "none");
+    Serial.print(" trial_miss_reason=");
+    Serial.print(report.frequency.trialMissReason != nullptr ? report.frequency.trialMissReason : "unknown");
+    Serial.print(" trial_occurrence_opened=");
+    Serial.print(report.frequency.trialOccurrenceOpened ? 1 : 0);
+    Serial.print(" trial_occurrence_released=");
+    Serial.print(report.frequency.trialOccurrenceReleased ? 1 : 0);
+    Serial.print(" trial_occurrence_emitted=");
+    Serial.print(report.frequency.trialOccurrenceEmitted ? 1 : 0);
+    Serial.print(" trial_occurrence_timing_class=");
+    Serial.print(report.frequency.trialOccurrenceTimingClass != nullptr ? report.frequency.trialOccurrenceTimingClass : "none");
+    Serial.print(" freq_evidence_class=");
+    Serial.print(report.frequency.freqEvidenceClass != nullptr ? report.frequency.freqEvidenceClass : "none");
+    if (report.frequency.freqEvidenceClass != nullptr && strcmp(report.frequency.freqEvidenceClass, "strong_no_occurrence") == 0) {
+        Serial.print(" trace_source_occurrence_emitted=");
+        Serial.print(report.frequency.sourceOccurrenceEmitted ? 1 : 0);
+        Serial.print(" trace_runtime_evidence_seen=");
+        Serial.print(report.frequency.runtimeEvidenceSeen ? 1 : 0);
+        Serial.print(" trace_runtime_occurrence_received=");
+        Serial.print(report.frequency.runtimeOccurrenceReceived ? 1 : 0);
+        Serial.print(" trace_analyzer_seen=");
+        Serial.print(report.frequency.analyzerSeenOccurrence ? 1 : 0);
+        Serial.print(" detection_gate_blocked=");
+        Serial.print(report.frequency.detectionGateBlocked ? 1 : 0);
+        Serial.print(" detection_gate_reason=");
+        Serial.print(report.frequency.detectionGateReason != nullptr ? report.frequency.detectionGateReason : "none");
+    }
     Serial.print(" near_miss=");
     Serial.print(report.frequency.nearMiss ? 1 : 0);
     Serial.print(" near_miss_reason=");
@@ -704,8 +770,6 @@ void AnalyzerApp::printSequenceDiagnostics(const AnalyzerReport& report) const {
     }
     Serial.print(" live_freq_reason=");
     Serial.print(report.frequency.liveFreqReason != nullptr ? report.frequency.liveFreqReason : "none");
-    Serial.print(" live_freq_suppress=");
-    Serial.print(report.frequency.liveFreqSuppress != nullptr ? report.frequency.liveFreqSuppress : "none");
     Serial.print(" live_freq_would=");
     Serial.print(report.frequency.liveFreqWould != nullptr ? report.frequency.liveFreqWould : "none");
     Serial.print(" live_freq_ready=");
@@ -998,126 +1062,10 @@ void AnalyzerApp::printSequenceSummary() const {
     AnalyzerSummary summary = {};
     summary.profileName = activeAnalyzerProfileName();
     summary.trials = _sequenceTest.totalTrials;
-    const AnalyzerReport* profileReport = _sequenceTest.trialReports != nullptr && _sequenceTest.trialReportCount > 0
-        ? &_sequenceTest.trialReports[0]
-        : nullptr;
-
-    const size_t reasonCount = static_cast<size_t>(AnalyzerReason::Unknown) + 1U;
-    unsigned int missReasonCounts[reasonCount] = {};
-    unsigned int rejectReasonCounts[reasonCount] = {};
-    unsigned long dtSumMs = 0;
-    unsigned long durSumMs = 0;
-    unsigned long completedTrialCount = 0;
-    size_t dtCount = 0;
-    size_t durCount = 0;
-    float confidenceSum = 0.0f;
-
-    const bool capturedSummaryAvailable = _sequenceTest.trialReports != nullptr;
-    if (capturedSummaryAvailable) {
-        completedTrialCount = static_cast<unsigned long>(_sequenceTest.trialReportCount);
-        for (size_t i = 0; i < _sequenceTest.trialReportCount; ++i) {
-            const AnalyzerReport& report = _sequenceTest.trialReports[i];
-            switch (report.classification.result) {
-                case AnalyzerResult::Expected:
-                    ++summary.expected;
-                    break;
-                case AnalyzerResult::Early:
-                    ++summary.early;
-                    break;
-                case AnalyzerResult::Late:
-                    ++summary.late;
-                    break;
-                case AnalyzerResult::Miss:
-                    ++summary.miss;
-                    break;
-                case AnalyzerResult::Duplicate:
-                    ++summary.duplicate;
-                    break;
-                case AnalyzerResult::Unexpected:
-                    ++summary.unexpected;
-                    break;
-                case AnalyzerResult::Rejected:
-                    ++summary.rejected;
-                    break;
-                case AnalyzerResult::Ambiguous:
-                    ++summary.ambiguous;
-                    break;
-                case AnalyzerResult::TooDense:
-                    ++summary.tooDense;
-                    break;
-                case AnalyzerResult::InvalidAudio:
-                    ++summary.invalidAudio;
-                    break;
-                case AnalyzerResult::Unknown:
-                default:
-                    break;
-            }
-
-            if (report.debug.duplicates > 0) {
-                ++summary.duplicate;
-            }
-
-            if (report.classification.dtMs >= 0) {
-                dtSumMs += static_cast<unsigned long>(report.classification.dtMs);
-                ++dtCount;
-            }
-
-            if (report.occurrences.primaryDurationMs > 0) {
-                durSumMs += report.occurrences.primaryDurationMs;
-                ++durCount;
-            }
-
-            confidenceSum += report.primaryPattern.confidence;
-
-            const size_t reasonIndex = analyzerReasonIndex(report.classification.reason);
-            if (reasonIndex < reasonCount) {
-                if (report.classification.result == AnalyzerResult::Miss) {
-                    ++missReasonCounts[reasonIndex];
-                } else if (report.classification.result == AnalyzerResult::Rejected ||
-                           report.classification.result == AnalyzerResult::Ambiguous ||
-                           report.classification.result == AnalyzerResult::TooDense ||
-                           report.classification.result == AnalyzerResult::InvalidAudio) {
-                    ++rejectReasonCounts[reasonIndex];
-                }
-            }
-        }
-    }
-
-    if (!capturedSummaryAvailable) {
-        summary.expected = _sequenceTest.expectedHits;
-        summary.early = 0;
-        summary.late = _sequenceTest.lateHits;
-        summary.miss = _sequenceTest.misses;
-        summary.duplicate = _sequenceTest.duplicates > 0 ? 1U : 0U;
-        summary.unexpected = _sequenceTest.unexpected;
-        summary.rejected = 0;
-        summary.ambiguous = 0;
-        summary.tooDense = 0;
-        summary.invalidAudio = _sequenceTest.invalidAudio;
-        summary.avgDtMs = -1.0f;
-        summary.avgDurationMs = -1.0f;
-        summary.avgConfidence = 0.0f;
-        summary.completed = _sequenceTest.currentTrial;
-        summary.duplicateRate = summary.completed > 0 ? static_cast<float>(summary.duplicate) / static_cast<float>(summary.completed) : 0.0f;
-        summary.unexpectedRate = summary.completed > 0 ? static_cast<float>(summary.unexpected) / static_cast<float>(summary.completed) : 0.0f;
-        completedTrialCount = summary.completed;
-    } else {
-        summary.avgDtMs = dtCount > 0 ? static_cast<float>(dtSumMs) / static_cast<float>(dtCount) : -1.0f;
-        summary.avgDurationMs = durCount > 0 ? static_cast<float>(durSumMs) / static_cast<float>(durCount) : -1.0f;
-        summary.completed = completedTrialCount;
-        summary.avgConfidence = summary.completed > 0 ? confidenceSum / static_cast<float>(summary.completed) : 0.0f;
-        summary.duplicateRate = summary.completed > 0 ? static_cast<float>(summary.duplicate) / static_cast<float>(summary.completed) : 0.0f;
-        summary.unexpectedRate = summary.completed > 0 ? static_cast<float>(summary.unexpected) / static_cast<float>(summary.completed) : 0.0f;
-    }
-
-    if (summary.completed == 0) {
-        summary.completed = capturedSummaryAvailable ? completedTrialCount : _sequenceTest.currentTrial;
-    }
-
-    auto selectMaxReason = [&](const unsigned int* counts, AnalyzerReason fallback) {
+    const auto selectMaxReason = [](const unsigned long* counts, AnalyzerReason fallback) {
         unsigned int bestCount = 0;
         AnalyzerReason bestReason = fallback;
-        for (size_t i = 0; i < reasonCount; ++i) {
+        for (size_t i = 0; i <= static_cast<size_t>(AnalyzerReason::Unknown); ++i) {
             if (counts[i] > bestCount) {
                 bestCount = counts[i];
                 bestReason = static_cast<AnalyzerReason>(i);
@@ -1126,8 +1074,31 @@ void AnalyzerApp::printSequenceSummary() const {
         return bestReason;
     };
 
-    summary.mainMissReason = selectMaxReason(missReasonCounts, AnalyzerReason::None);
-    summary.mainRejectReason = selectMaxReason(rejectReasonCounts, AnalyzerReason::None);
+    const detection::DetectionProfile& selectedProfile = detection::detectionProfileForKind(_sequenceTest.profileKind);
+    summary.expected = _sequenceTest.expectedHits;
+    summary.early = 0;
+    summary.late = _sequenceTest.lateHits;
+    summary.miss = _sequenceTest.misses;
+    summary.duplicate = _sequenceTest.duplicates > 0 ? 1U : 0U;
+    summary.unexpected = _sequenceTest.unexpected;
+    summary.rejected = 0;
+    summary.ambiguous = 0;
+    summary.tooDense = 0;
+    summary.invalidAudio = _sequenceTest.invalidAudio;
+    summary.avgDtMs = _sequenceTest.patternDtCount > 0
+        ? static_cast<float>(_sequenceTest.totalPatternDtMs) / static_cast<float>(_sequenceTest.patternDtCount)
+        : -1.0f;
+    summary.avgDurationMs = _sequenceTest.patternDurationCount > 0
+        ? static_cast<float>(_sequenceTest.totalPatternDurationMs) / static_cast<float>(_sequenceTest.patternDurationCount)
+        : -1.0f;
+    summary.completed = static_cast<unsigned int>(_sequenceTest.completedTrials > 0 ? _sequenceTest.completedTrials : _sequenceTest.currentTrial);
+    summary.avgConfidence = summary.completed > 0
+        ? _sequenceTest.totalPatternConfidence / static_cast<float>(summary.completed)
+        : 0.0f;
+    summary.duplicateRate = summary.completed > 0 ? static_cast<float>(summary.duplicate) / static_cast<float>(summary.completed) : 0.0f;
+    summary.unexpectedRate = summary.completed > 0 ? static_cast<float>(summary.unexpected) / static_cast<float>(summary.completed) : 0.0f;
+    summary.mainMissReason = selectMaxReason(_sequenceTest.missReasonCounts, AnalyzerReason::None);
+    summary.mainRejectReason = selectMaxReason(_sequenceTest.rejectReasonCounts, AnalyzerReason::None);
 
     const long avgDtRounded = summary.avgDtMs >= 0.0f ? static_cast<long>(summary.avgDtMs + 0.5f) : -1L;
     const long avgDurRounded = summary.avgDurationMs >= 0.0f ? static_cast<long>(summary.avgDurationMs + 0.5f) : -1L;
@@ -1136,11 +1107,13 @@ void AnalyzerApp::printSequenceSummary() const {
     Serial.print("SEQ_SUMMARY profile=");
     Serial.print(summary.profileName != nullptr ? summary.profileName : "unknown");
     Serial.print(" source=");
-    Serial.print(profileReport != nullptr && profileReport->profileDetail.emitter != nullptr ? profileReport->profileDetail.emitter : "unknown");
+    Serial.print(detection::occurrenceSourceKindName(selectedProfile.occurrenceSource));
     Serial.print(" required_support_target=");
-    Serial.print(profileReport != nullptr && profileReport->profileDetail.requiredSupportTarget != nullptr ? profileReport->profileDetail.requiredSupportTarget : "unknown");
+    Serial.print(analyzerEvidenceTargetName(selectedProfile.patternRulesConfig.requiredSupportTarget));
     Serial.print(" support_gate=");
-    Serial.print(profileReport != nullptr && profileReport->profileDetail.ampStrength != nullptr ? profileReport->profileDetail.ampStrength : "unknown");
+    Serial.print(selectedProfile.patternRulesConfig.requireSupportForAcceptance ? "enabled" : "disabled");
+    Serial.print(" diag_mode=");
+    Serial.print(sequenceDiagModeName(_sequenceTest.diagMode));
     Serial.print(" trials=");
     Serial.print(summary.trials);
     Serial.print(" completed=");
@@ -1193,36 +1166,46 @@ void AnalyzerApp::printSequenceSummary() const {
     Serial.print(" main_reject_reason=");
     Serial.println(analyzerReasonName(summary.mainRejectReason));
 
-    bool anyReasonCounts = false;
-    for (size_t i = 0; i < reasonCount; ++i) {
-        if (missReasonCounts[i] > 0 || rejectReasonCounts[i] > 0) {
-            anyReasonCounts = true;
-            break;
-        }
-    }
+    Serial.print("  miss_reason_counts: none=");
+    Serial.print(_sequenceTest.missReasonCounts[analyzerReasonIndex(AnalyzerReason::None)]);
+    Serial.print(" result_expected_window=");
+    Serial.print(_sequenceTest.missReasonCounts[analyzerReasonIndex(AnalyzerReason::ValidPatternInExpectedWindow)]);
+    Serial.print(" result_before_window=");
+    Serial.print(_sequenceTest.missReasonCounts[analyzerReasonIndex(AnalyzerReason::ValidPatternBeforeWindow)]);
+    Serial.print(" result_after_window=");
+    Serial.print(_sequenceTest.missReasonCounts[analyzerReasonIndex(AnalyzerReason::ValidPatternAfterWindow)]);
+    Serial.print(" no_occurrence=");
+    Serial.print(_sequenceTest.missReasonCounts[analyzerReasonIndex(AnalyzerReason::NoOccurrence)]);
+    Serial.print(" occ_rejected=");
+    Serial.print(_sequenceTest.missReasonCounts[analyzerReasonIndex(AnalyzerReason::OccurrenceSeenButRejected)]);
+    Serial.print(" inspection_failed=");
+    Serial.print(_sequenceTest.missReasonCounts[analyzerReasonIndex(AnalyzerReason::InspectionFailed)]);
+    Serial.print(" pattern_rejected=");
+    Serial.print(_sequenceTest.missReasonCounts[analyzerReasonIndex(AnalyzerReason::PatternCandidateRejected)]);
+    Serial.println();
 
-    if (anyReasonCounts || analyzerLogEnabled(_sequenceTest.logFlags, AnalyzerApp::ANALYZER_LOG_CUSTOM)) {
-        Serial.print("  A_reason_counts: result_expected_window=");
-        Serial.print(missReasonCounts[analyzerReasonIndex(AnalyzerReason::ValidPatternInExpectedWindow)]);
-        Serial.print(" result_before_window=");
-        Serial.print(missReasonCounts[analyzerReasonIndex(AnalyzerReason::ValidPatternBeforeWindow)]);
-        Serial.print(" result_after_window=");
-        Serial.print(missReasonCounts[analyzerReasonIndex(AnalyzerReason::ValidPatternAfterWindow)]);
-        Serial.print(" no_occurrence=");
-        Serial.print(missReasonCounts[analyzerReasonIndex(AnalyzerReason::NoOccurrence)]);
-        Serial.print(" occ_rejected=");
-        Serial.print(missReasonCounts[analyzerReasonIndex(AnalyzerReason::OccurrenceSeenButRejected)]);
-        Serial.print(" inspection_failed=");
-        Serial.print(missReasonCounts[analyzerReasonIndex(AnalyzerReason::InspectionFailed)]);
-        Serial.print(" pattern_rejected=");
-        Serial.print(missReasonCounts[analyzerReasonIndex(AnalyzerReason::PatternCandidateRejected)]);
-        Serial.print(" dup_after_primary=");
-        Serial.print(rejectReasonCounts[analyzerReasonIndex(AnalyzerReason::DuplicatePatternAfterPrimary)]);
-        Serial.print(" unexpected_without_trigger=");
-        Serial.print(rejectReasonCounts[analyzerReasonIndex(AnalyzerReason::UnexpectedValidPatternWithoutTrigger)]);
-        Serial.print(" invalid_audio=");
-        Serial.println(rejectReasonCounts[analyzerReasonIndex(AnalyzerReason::InvalidAudio)]);
-    }
+    Serial.print("  freq_evidence_class_counts: accepted=");
+    Serial.print(_sequenceTest.freqEvidenceClassCounts[0]);
+    Serial.print(" strong_no_occurrence=");
+    Serial.print(_sequenceTest.freqEvidenceClassCounts[1]);
+    Serial.print(" partial=");
+    Serial.print(_sequenceTest.freqEvidenceClassCounts[2]);
+    Serial.print(" weak=");
+    Serial.print(_sequenceTest.freqEvidenceClassCounts[3]);
+    Serial.print(" none=");
+    Serial.println(_sequenceTest.freqEvidenceClassCounts[4]);
+
+    Serial.print("  reject_reason_counts: dup_after_primary=");
+    Serial.print(_sequenceTest.rejectReasonCounts[analyzerReasonIndex(AnalyzerReason::DuplicatePatternAfterPrimary)]);
+    Serial.print(" unexpected_without_trigger=");
+    Serial.print(_sequenceTest.rejectReasonCounts[analyzerReasonIndex(AnalyzerReason::UnexpectedValidPatternWithoutTrigger)]);
+    Serial.print(" invalid_audio=");
+    Serial.println(_sequenceTest.rejectReasonCounts[analyzerReasonIndex(AnalyzerReason::InvalidAudio)]);
+
+    Serial.print("  longest_miss_streak=");
+    Serial.print(_sequenceTest.longestMissStreak);
+    Serial.print(" first_miss_trial=");
+    Serial.println(_sequenceTest.firstMissTrial);
 
     if (analyzerLogEnabled(_sequenceTest.logFlags, AnalyzerApp::ANALYZER_LOG_CUSTOM)) {
         Serial.print("  A_profile_summary: matched_expected=");

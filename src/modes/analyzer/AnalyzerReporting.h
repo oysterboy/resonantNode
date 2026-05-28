@@ -316,18 +316,23 @@ struct AnalyzerFrequencyDiagnostic {
     float minScore = 0.0f;
     float minContrast = 0.0f;
 
-    const char* bestRejectReason = "unknown";
+    const char* trialMissReason = "unknown";
     bool nearMiss = false;
     const char* nearMissReason = "none";
+    const char* freqEvidenceClass = "none";
+    bool sourceOccurrenceEmitted = false;
+    bool runtimeEvidenceSeen = false;
+    bool runtimeOccurrenceReceived = false;
+    bool analyzerSeenOccurrence = false;
+    bool detectionGateBlocked = false;
+    const char* detectionGateReason = "none";
     bool inconsistent = false;
-    bool occurrenceOpened = false;
-    bool occurrenceReleased = false;
-    bool occurrenceEmitted = false;
-    bool occurrenceSuppressed = false;
-    const char* occurrenceTimingClass = "none";
+    bool trialOccurrenceOpened = false;
+    bool trialOccurrenceReleased = false;
+    bool trialOccurrenceEmitted = false;
+    const char* trialOccurrenceTimingClass = "none";
 
     const char* liveFreqReason = "none";
-    const char* liveFreqSuppress = "none";
     const char* liveFreqWould = "none";
     const char* liveFreqState = "none";
     bool liveFreqReady = false;

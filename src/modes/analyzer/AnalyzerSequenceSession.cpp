@@ -35,9 +35,29 @@ unsigned long countSelectedSampleDumpTrials(unsigned long totalTrials, unsigned 
     return selected;
 }
 
+size_t analyzerReasonIndex(AnalyzerReason value) {
+    return static_cast<size_t>(value);
+}
+
+size_t frequencyEvidenceClassIndex(const AnalyzerReport& report) {
+    if (report.frequency.acceptedPresent) {
+        return 0U;
+    }
+    if (report.frequency.bothOkFrames > 500UL) {
+        return 1U;
+    }
+    if (report.frequency.scoreOkFrames > 0 || report.frequency.contrastOkFrames > 0) {
+        return 2U;
+    }
+    if (report.frequency.maxScore > 0.0f) {
+        return 3U;
+    }
+    return 4U;
+}
+
 } // namespace
 
-void AnalyzerApp::startSequenceTest(unsigned long totalTrials, unsigned long periodMs, unsigned long windowEndOffsetMs, unsigned long toneHz, unsigned long durationMs, bool quiet, bool showDetails, bool diagnosticsEnabled, const char* setupLabel, uint32_t logFlags, bool sampleDumpEnabled, unsigned long sampleDumpFirstTrials, unsigned long sampleDumpEveryNth, unsigned long sampleDumpLeadMs, unsigned long sampleDumpTailMs, unsigned long sampleDumpStepMs, unsigned long sampleDumpMaxRows, detection::DetectionProfileKind profileKind, bool externalEmitter) {
+void AnalyzerApp::startSequenceTest(unsigned long totalTrials, unsigned long periodMs, unsigned long windowEndOffsetMs, unsigned long toneHz, unsigned long durationMs, bool quiet, bool showDetails, SequenceDiagMode diagMode, const char* setupLabel, uint32_t logFlags, bool sampleDumpEnabled, unsigned long sampleDumpFirstTrials, unsigned long sampleDumpEveryNth, unsigned long sampleDumpLeadMs, unsigned long sampleDumpTailMs, unsigned long sampleDumpStepMs, unsigned long sampleDumpMaxRows, detection::DetectionProfileKind profileKind, bool externalEmitter) {
     if (_valMode) {
         return;
     }
@@ -62,15 +82,10 @@ void AnalyzerApp::startSequenceTest(unsigned long totalTrials, unsigned long per
     if (sampleDumpTailMs < sampleDumpLeadMs) {
         sampleDumpTailMs = sampleDumpLeadMs;
     }
-    free(_sequenceTest.trialReports);
-    _sequenceTest.trialReports = nullptr;
-    _sequenceTest.trialReportCapacity = 0;
-    _sequenceTest.trialReportCount = 0;
-
     _sequenceTest.active = true;
     _sequenceTest.quiet = quiet;
     _sequenceTest.showDetails = showDetails;
-    _sequenceTest.diagnosticsEnabled = diagnosticsEnabled;
+    _sequenceTest.diagMode = diagMode;
     _sequenceTest.externalEmitter = externalEmitter;
     _sequenceTest.profileKind = profileKind;
     _sequenceTest.progressLineStarted = false;
@@ -104,26 +119,11 @@ void AnalyzerApp::startSequenceTest(unsigned long totalTrials, unsigned long per
     _detection->setPatternRulesConfig(selectedProfile.patternRulesConfig);
     _detection->setFieldStateConfig(selectedProfile.fieldStateConfig);
     _detection->setProfileName(detection::detectionProfileName(selectedProfile.kind));
-    _detection->setDiagnosticsEnabled(_sequenceTest.diagnosticsEnabled);
+    _detection->setDiagnosticsEnabled(_sequenceTest.diagMode != SequenceDiagMode::Off);
     _freqBandStream.setSampleRateHz(_audioSource.sampleRateHz());
     _freqBandStream.setTargetFrequencyHz(toneHz);
     _freqBandStream.resetState();
 
-    const bool wantSummaryReports =
-        analyzerLogEnabled(logFlags, AnalyzerApp::ANALYZER_LOG_SUMMARY);
-    if (wantSummaryReports) {
-        const size_t desiredCapacity = static_cast<size_t>(totalTrials < SequenceTest::kMaxTrialReports ? totalTrials : SequenceTest::kMaxTrialReports);
-        if (desiredCapacity > 0) {
-            _sequenceTest.trialReports = static_cast<AnalyzerReport*>(calloc(desiredCapacity, sizeof(AnalyzerReport)));
-            if (_sequenceTest.trialReports != nullptr) {
-                _sequenceTest.trialReportCapacity = desiredCapacity;
-            } else {
-                Serial.print("SEQ_VERBOSE_WARN reason=analyzer_report_alloc_failed requested=");
-                Serial.print(desiredCapacity);
-                Serial.println(" reports");
-            }
-        }
-    }
     if (setupLabel != nullptr && setupLabel[0] != '\0') {
         strncpy(_sequenceTest.setupLabel, setupLabel, sizeof(_sequenceTest.setupLabel));
         _sequenceTest.setupLabel[sizeof(_sequenceTest.setupLabel) - 1] = '\0';
@@ -187,6 +187,18 @@ void AnalyzerApp::startSequenceTest(unsigned long totalTrials, unsigned long per
     _sequenceTest.freqRejectBoth = 0;
     _sequenceTest.freqRejectNoEvidence = 0;
     _sequenceTest.freqRejectInvalidWindow = 0;
+    _sequenceTest.totalPatternDtMs = 0;
+    _sequenceTest.totalPatternDurationMs = 0;
+    _sequenceTest.totalPatternConfidence = 0.0f;
+    _sequenceTest.patternDtCount = 0;
+    _sequenceTest.patternDurationCount = 0;
+    _sequenceTest.completedTrials = 0;
+    memset(_sequenceTest.missReasonCounts, 0, sizeof(_sequenceTest.missReasonCounts));
+    memset(_sequenceTest.rejectReasonCounts, 0, sizeof(_sequenceTest.rejectReasonCounts));
+    memset(_sequenceTest.freqEvidenceClassCounts, 0, sizeof(_sequenceTest.freqEvidenceClassCounts));
+    _sequenceTest.currentMissStreak = 0;
+    _sequenceTest.longestMissStreak = 0;
+    _sequenceTest.firstMissTrial = 0;
 
     if (!_sequenceTest.externalEmitter) {
         // Rebase before the first trial so every run starts from the quiet floor.
@@ -220,7 +232,7 @@ void AnalyzerApp::startSequenceTest(unsigned long totalTrials, unsigned long per
     }
     resetDetectorState();
     if (_detection != nullptr) {
-        _detection->setDiagnosticsEnabled(_sequenceTest.diagnosticsEnabled);
+        _detection->setDiagnosticsEnabled(_sequenceTest.diagMode != SequenceDiagMode::Off);
     }
     _audioSignal.resetStats();
     _audioSource.resetStats();
@@ -275,10 +287,6 @@ void AnalyzerApp::startSequenceTest(unsigned long totalTrials, unsigned long per
 void AnalyzerApp::stopSequenceTest() {
     _sequenceTest.active = false;
     _sequenceTest.sampleDumpCapturing = false;
-    free(_sequenceTest.trialReports);
-    _sequenceTest.trialReports = nullptr;
-    _sequenceTest.trialReportCapacity = 0;
-    _sequenceTest.trialReportCount = 0;
 }
 
 void AnalyzerApp::updateSequenceTest(unsigned long now) {
@@ -436,6 +444,41 @@ void AnalyzerApp::finalizeSequenceTrial(unsigned long now) {
 
     _sequenceTest.duplicates += diagnostics.duplicateCount;
     AnalyzerReport finalizedReport = buildSequenceAnalyzerReport(_sequenceTest.currentTrial, result, dtMs, durMs, strength, invalidAudioTrial, diagnostics.duplicateCount, diagnostics);
+    _sequenceTest.completedTrials++;
+    _sequenceTest.totalPatternConfidence += finalizedReport.primaryPattern.confidence;
+    if (finalizedReport.classification.dtMs >= 0) {
+        _sequenceTest.totalPatternDtMs += static_cast<unsigned long>(finalizedReport.classification.dtMs);
+        _sequenceTest.patternDtCount++;
+    }
+    if (finalizedReport.occurrences.primaryDurationMs > 0) {
+        _sequenceTest.totalPatternDurationMs += finalizedReport.occurrences.primaryDurationMs;
+        _sequenceTest.patternDurationCount++;
+    }
+    if (result == AnalyzerResult::Miss) {
+        const size_t reasonIndex = analyzerReasonIndex(finalizedReport.classification.reason);
+        if (reasonIndex < static_cast<size_t>(AnalyzerReason::Unknown) + 1U) {
+            _sequenceTest.missReasonCounts[reasonIndex]++;
+        }
+        _sequenceTest.currentMissStreak++;
+        if (_sequenceTest.firstMissTrial == 0) {
+            _sequenceTest.firstMissTrial = _sequenceTest.currentTrial;
+        }
+        if (_sequenceTest.currentMissStreak > _sequenceTest.longestMissStreak) {
+            _sequenceTest.longestMissStreak = _sequenceTest.currentMissStreak;
+        }
+    } else {
+        _sequenceTest.currentMissStreak = 0;
+    }
+    if (result == AnalyzerResult::Rejected ||
+        result == AnalyzerResult::Ambiguous ||
+        result == AnalyzerResult::TooDense ||
+        result == AnalyzerResult::InvalidAudio) {
+        const size_t reasonIndex = analyzerReasonIndex(finalizedReport.classification.reason);
+        if (reasonIndex < static_cast<size_t>(AnalyzerReason::Unknown) + 1U) {
+            _sequenceTest.rejectReasonCounts[reasonIndex]++;
+        }
+    }
+    _sequenceTest.freqEvidenceClassCounts[frequencyEvidenceClassIndex(finalizedReport)]++;
     const bool summaryTrial = analyzerLogEnabled(_sequenceTest.logFlags, AnalyzerApp::ANALYZER_LOG_TRIAL_SUMMARY);
     flushSequenceSampleHistory(now + 1UL);
     printSequenceSampleDump(_sequenceTest.currentTrial);
@@ -453,17 +496,6 @@ void AnalyzerApp::finalizeSequenceTrial(unsigned long now) {
         !analyzerLogEnabled(_sequenceTest.logFlags, AnalyzerApp::ANALYZER_LOG_EXPLAIN)) {
         printSequenceAmpWindow(finalizedReport);
     }
-    if (_sequenceTest.trialReports != nullptr) {
-        const size_t reportIndex = static_cast<size_t>(_sequenceTest.currentTrial - 1UL);
-        if (reportIndex < _sequenceTest.trialReportCapacity) {
-            _sequenceTest.trialReports[reportIndex] = finalizedReport;
-            const size_t storedCount = reportIndex + 1UL;
-            if (storedCount > _sequenceTest.trialReportCount) {
-                _sequenceTest.trialReportCount = storedCount;
-            }
-        }
-    }
-
     Serial.flush();
     _sequenceTest.currentTrialFinalized = true;
 

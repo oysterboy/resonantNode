@@ -33,6 +33,12 @@ public:
     using PatternCandidate = detection::PatternCandidate;
     using PatternResult = detection::PatternResult;
 
+    enum class SequenceDiagMode {
+        Off,
+        Miss,
+        Trial,
+    };
+
     enum AnalyzerLogFlags : uint32_t {
         ANALYZER_LOG_NONE = 0,
         ANALYZER_LOG_SUMMARY = 1u << 0,
@@ -241,7 +247,7 @@ private:
         bool active = false;
         bool quiet = false;
         bool showDetails = true;
-        bool diagnosticsEnabled = true;
+        SequenceDiagMode diagMode = SequenceDiagMode::Off;
         bool externalEmitter = false;
         detection::DetectionProfileKind profileKind = detection::DetectionProfileKind::TonalPulse;
         bool progressLineStarted = false;
@@ -272,7 +278,6 @@ private:
         unsigned long lastStatusPrintMs = 0;
         static constexpr size_t kMaxSampleHistory = 256;
         static constexpr size_t kMaxSampleRows = 2048;
-        static constexpr size_t kMaxTrialReports = 128;
         CurveSnapshot sampleHistory[kMaxSampleHistory] = {};
         size_t sampleHistoryStart = 0;
         size_t sampleHistoryCount = 0;
@@ -281,9 +286,6 @@ private:
         CurveSnapshot sampleHistoryPending = {};
         CurveSnapshot sampleRows[kMaxSampleRows] = {};
         size_t sampleRowCount = 0;
-        AnalyzerReport* trialReports = nullptr;
-        mutable size_t trialReportCapacity = 0;
-        mutable size_t trialReportCount = 0;
 
         // Trial scheduling and aggregate results.
         unsigned long startedAtMs = 0;
@@ -333,6 +335,18 @@ private:
         unsigned long freqRejectBoth = 0;
         unsigned long freqRejectNoEvidence = 0;
         unsigned long freqRejectInvalidWindow = 0;
+        unsigned long totalPatternDtMs = 0;
+        unsigned long totalPatternDurationMs = 0;
+        float totalPatternConfidence = 0.0f;
+        unsigned long patternDtCount = 0;
+        unsigned long patternDurationCount = 0;
+        unsigned long completedTrials = 0;
+        unsigned long missReasonCounts[static_cast<size_t>(AnalyzerReason::Unknown) + 1U] = {};
+        unsigned long rejectReasonCounts[static_cast<size_t>(AnalyzerReason::Unknown) + 1U] = {};
+        unsigned long freqEvidenceClassCounts[5] = {};
+        unsigned long currentMissStreak = 0;
+        unsigned long longestMissStreak = 0;
+        unsigned long firstMissTrial = 0;
 
     };
 
@@ -345,7 +359,7 @@ private:
         unsigned long durationMs = 0;
         bool quiet = false;
         bool showDetails = false;
-        bool diagnosticsEnabled = true;
+        SequenceDiagMode diagMode = SequenceDiagMode::Off;
         const char* setupLabel = nullptr;
         uint32_t logFlags = 0;
         bool sampleDumpEnabled = false;
@@ -380,7 +394,7 @@ private:
     void printBaseHints() const;
 
     // Sequence-test workflows.
-    void startSequenceTest(unsigned long totalTrials, unsigned long periodMs, unsigned long windowEndOffsetMs, unsigned long toneHz, unsigned long durationMs, bool quiet = false, bool showDetails = true, bool diagnosticsEnabled = true, const char* setupLabel = nullptr, uint32_t logFlags = DEFAULT_ANALYZER_LOG_FLAGS, bool sampleDumpEnabled = false, unsigned long sampleDumpFirstTrials = 2, unsigned long sampleDumpEveryNth = 0, unsigned long sampleDumpLeadMs = 50, unsigned long sampleDumpTailMs = 800, unsigned long sampleDumpStepMs = 1, unsigned long sampleDumpMaxRows = 5000, detection::DetectionProfileKind profileKind = detection::DetectionProfileKind::TonalPulse, bool externalEmitter = false);
+    void startSequenceTest(unsigned long totalTrials, unsigned long periodMs, unsigned long windowEndOffsetMs, unsigned long toneHz, unsigned long durationMs, bool quiet = false, bool showDetails = true, SequenceDiagMode diagMode = SequenceDiagMode::Off, const char* setupLabel = nullptr, uint32_t logFlags = DEFAULT_ANALYZER_LOG_FLAGS, bool sampleDumpEnabled = false, unsigned long sampleDumpFirstTrials = 2, unsigned long sampleDumpEveryNth = 0, unsigned long sampleDumpLeadMs = 50, unsigned long sampleDumpTailMs = 800, unsigned long sampleDumpStepMs = 1, unsigned long sampleDumpMaxRows = 5000, detection::DetectionProfileKind profileKind = detection::DetectionProfileKind::TonalPulse, bool externalEmitter = false);
     void stopSequenceTest();
     void updateSequenceTest(unsigned long now);
     void finalizeSequenceTrial(unsigned long now);

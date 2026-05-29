@@ -110,6 +110,20 @@ struct DetectionDiagnostics {
     unsigned long frequencyMinDurationMs = 0;
     unsigned long frequencyMaxDurationMs = 0;
 
+    const char* scalarRejectReason = "none";
+    const char* scalarNoEmitReason = "none";
+    const char* scalarGateReason = "none";
+    bool scalarOpened = false;
+    bool scalarReleased = false;
+    bool scalarValidRelease = false;
+    bool scalarEmitAllowed = false;
+    unsigned long scalarOpenMs = 0;
+    unsigned long scalarPeakMs = 0;
+    unsigned long scalarReleaseMs = 0;
+    unsigned long scalarDurationMs = 0;
+    unsigned long scalarMinDurationMs = 0;
+    unsigned long scalarMaxDurationMs = 0;
+
     const char* scalarOnsetRejectReason = "none";
     const char* scalarTransientRejectReason = "none";
     unsigned long scalarTransientRejectedDurationMs = 0;

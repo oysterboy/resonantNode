@@ -636,6 +636,10 @@ void AnalyzerApp::printSequenceDiagnostics(const AnalyzerReport& report) const {
     if (!sequenceDiagnosticsShouldPrint(_sequenceTest.diagMode, report.classification.result)) {
         return;
     }
+    if (report.profileDetail.emitter != nullptr && strcmp(report.profileDetail.emitter, "ScalarTransientSource") == 0) {
+        printSequenceScalarDiagnostics(report);
+        return;
+    }
     Serial.print("SEQ_FREQ_DIAG trial=");
     Serial.print(report.context.trial);
     Serial.print(" current_trial_id=");
@@ -822,6 +826,140 @@ void AnalyzerApp::printSequenceDiagnostics(const AnalyzerReport& report) const {
     Serial.print(report.occurrences.primaryDurationMs);
     Serial.print(" transient_reject_strength=");
     Serial.println(report.occurrences.primaryStrength, 1);
+}
+
+void AnalyzerApp::printSequenceScalarDiagnostics(const AnalyzerReport& report) const {
+    if (_valMode) {
+        return;
+    }
+    if (!sequenceDiagnosticsShouldPrint(_sequenceTest.diagMode, report.classification.result)) {
+        return;
+    }
+
+    Serial.print("SEQ_SCALAR_DIAG trial=");
+    Serial.print(report.context.trial);
+    Serial.print(" current_trial_id=");
+    Serial.print(report.scalar.currentTrialId);
+    Serial.print(" result=");
+    Serial.print(analyzerResultName(report.classification.result));
+    Serial.print(" source=");
+    Serial.print(report.profileDetail.emitter != nullptr ? report.profileDetail.emitter : "unknown");
+    Serial.print(" accepted_present=");
+    Serial.print(report.scalar.acceptedPresent ? 1 : 0);
+    if (report.scalar.acceptedPresent) {
+        Serial.print(" accepted_source=");
+        Serial.print(report.scalar.acceptedSource != nullptr ? report.scalar.acceptedSource : "none");
+        Serial.print(" accepted_trial_id=");
+        Serial.print(report.scalar.acceptedTrialId);
+        Serial.print(" accepted_start_ms=");
+        Serial.print(report.scalar.acceptedStartMs);
+        Serial.print(" accepted_peak_ms=");
+        Serial.print(report.scalar.acceptedPeakMs);
+        Serial.print(" accepted_release_ms=");
+        Serial.print(report.scalar.acceptedReleaseMs);
+        Serial.print(" accepted_dt_ms=");
+        if (report.scalar.acceptedDtMs >= 0) {
+            Serial.print(report.scalar.acceptedDtMs);
+            Serial.print("ms");
+        } else {
+            Serial.print("-1ms");
+        }
+        Serial.print(" accepted_dur_ms=");
+        Serial.print(report.scalar.acceptedDurationMs);
+        Serial.print(" accepted_strength=");
+        Serial.print(report.scalar.acceptedStrength, 1);
+        Serial.print(" accepted_score=");
+        Serial.print(report.scalar.acceptedScore, 1);
+        Serial.print(" accepted_contrast=");
+        Serial.print(report.scalar.acceptedContrast, 2);
+    }
+    Serial.print(" window_start_ms=");
+    Serial.print(report.scalar.windowStartMs);
+    Serial.print(" window_end_ms=");
+    Serial.print(report.scalar.windowEndMs);
+    Serial.print(" expected_window_ms=");
+    Serial.print(report.scalar.expectedWindowMs);
+    Serial.print(" expected_frame_count_estimate=");
+    Serial.print(report.scalar.expectedFrameCountEstimate);
+    Serial.print(" diag_frame_count_ok=");
+    Serial.print(report.scalar.diagFrameCountOk ? 1 : 0);
+    Serial.print(" scalar_reject_reason=");
+    Serial.print(report.scalar.scalarRejectReason != nullptr ? report.scalar.scalarRejectReason : "unknown");
+    Serial.print(" scalar_no_emit_reason=");
+    Serial.print(report.scalar.scalarNoEmitReason != nullptr ? report.scalar.scalarNoEmitReason : "none");
+    Serial.print(" scalar_gate_reason=");
+    Serial.print(report.scalar.scalarGateReason != nullptr ? report.scalar.scalarGateReason : "none");
+    Serial.print(" scalar_opened=");
+    Serial.print(report.scalar.scalarOpened ? 1 : 0);
+    Serial.print(" scalar_released=");
+    Serial.print(report.scalar.scalarReleased ? 1 : 0);
+    Serial.print(" scalar_emitted=");
+    Serial.print(report.scalar.sourceOccurrenceEmitted ? 1 : 0);
+    Serial.print(" scalar_valid_release=");
+    Serial.print(report.scalar.scalarValidRelease ? 1 : 0);
+    Serial.print(" scalar_emit_allowed=");
+    Serial.print(report.scalar.scalarEmitAllowed ? 1 : 0);
+    Serial.print(" scalar_open_ms=");
+    Serial.print(report.scalar.scalarOpenMs);
+    Serial.print(" scalar_peak_ms=");
+    Serial.print(report.scalar.scalarPeakMs);
+    Serial.print(" scalar_release_ms=");
+    Serial.print(report.scalar.scalarReleaseMs);
+    Serial.print(" scalar_duration_ms=");
+    Serial.print(report.scalar.scalarDurationMs);
+    Serial.print(" scalar_min_duration_ms=");
+    Serial.print(report.scalar.scalarMinDurationMs);
+    Serial.print(" scalar_max_duration_ms=");
+    Serial.print(report.scalar.scalarMaxDurationMs);
+    Serial.print(" trace_source_occurrence_emitted=");
+    Serial.print(report.scalar.sourceOccurrenceEmitted ? 1 : 0);
+    Serial.print(" trace_runtime_evidence_seen=");
+    Serial.print(report.scalar.runtimeEvidenceSeen ? 1 : 0);
+    Serial.print(" trace_runtime_occurrence_received=");
+    Serial.print(report.scalar.runtimeOccurrenceReceived ? 1 : 0);
+    Serial.print(" trace_analyzer_seen=");
+    Serial.print(report.scalar.analyzerSeenOccurrence ? 1 : 0);
+    Serial.print(" detection_gate_blocked=");
+    Serial.print(report.scalar.detectionGateBlocked ? 1 : 0);
+    Serial.print(" detection_gate_reason=");
+    Serial.print(report.scalar.detectionGateReason != nullptr ? report.scalar.detectionGateReason : "none");
+    Serial.print(" diag_inconsistent=");
+    Serial.println(report.scalar.inconsistent ? 1 : 0);
+
+    Serial.print("  context current_trial_id=");
+    Serial.print(report.scalar.currentTrialId);
+    Serial.print(" live_scalar_reason=");
+    Serial.print(report.scalar.liveScalarReason != nullptr ? report.scalar.liveScalarReason : "none");
+    Serial.print(" live_scalar_would=");
+    Serial.print(report.scalar.liveScalarWould != nullptr ? report.scalar.liveScalarWould : "none");
+    Serial.print(" live_scalar_ready=");
+    Serial.print(report.scalar.liveScalarReady ? 1 : 0);
+    Serial.print(" live_scalar_gate=");
+    Serial.print(report.scalar.liveScalarGate ? 1 : 0);
+    Serial.print(" live_scalar_present=");
+    Serial.print(report.scalar.liveScalarPresent ? 1 : 0);
+    Serial.print(" live_scalar_valid=");
+    Serial.print(report.scalar.liveScalarValid ? 1 : 0);
+    Serial.print(" live_scalar_match=");
+    Serial.print(report.scalar.liveScalarMatch ? 1 : 0);
+    Serial.print(" live_scalar_state=");
+    Serial.print(report.scalar.liveScalarState != nullptr ? report.scalar.liveScalarState : "none");
+    Serial.print(" amp_centered=");
+    Serial.print(report.profileDetail.ampCenteredMagnitude, 1);
+    Serial.print(" amp_level=");
+    Serial.print(report.profileDetail.ampLevel, 1);
+    Serial.print(" amp_baseline=");
+    Serial.print(report.profileDetail.ampBase, 1);
+    Serial.print(" amp_lift=");
+    Serial.print(report.profileDetail.ampLift, 1);
+    Serial.print(" onset_reject=");
+    Serial.print(report.scalar.scalarNoEmitReason != nullptr ? report.scalar.scalarNoEmitReason : "none");
+    Serial.print(" transient_reject=");
+    Serial.print(report.scalar.scalarRejectReason != nullptr ? report.scalar.scalarRejectReason : "none");
+    Serial.print(" transient_reject_dur=");
+    Serial.print(report.scalar.scalarDurationMs);
+    Serial.print(" transient_reject_strength=");
+    Serial.println(report.profileDetail.ampStrengthObservation.classificationValue, 1);
 }
 
 void AnalyzerApp::printSequenceAmpWindow(const AnalyzerReport& report) const {

@@ -353,6 +353,59 @@ struct AnalyzerFrequencyDiagnostic {
     bool liveFreqMatch = false;
 };
 
+struct AnalyzerScalarDiagnostic {
+    unsigned long currentTrialId = 0;
+    unsigned long acceptedTrialId = 0;
+    const char* acceptedSource = "none";
+    unsigned long windowStartMs = 0;
+    unsigned long windowEndMs = 0;
+    unsigned long expectedWindowMs = 0;
+    unsigned long expectedFrameCountEstimate = 0;
+    bool diagFrameCountOk = false;
+    bool acceptedPresent = false;
+    long acceptedDtMs = -1;
+    unsigned long acceptedStartMs = 0;
+    unsigned long acceptedPeakMs = 0;
+    unsigned long acceptedReleaseMs = 0;
+    unsigned long acceptedDurationMs = 0;
+    float acceptedStrength = 0.0f;
+    float acceptedScore = 0.0f;
+    float acceptedContrast = 0.0f;
+
+    const char* trialMissReason = "unknown";
+    const char* scalarRejectReason = "none";
+    const char* scalarNoEmitReason = "none";
+    const char* scalarGateReason = "none";
+    bool scalarOpened = false;
+    bool scalarReleased = false;
+    bool scalarEmitted = false;
+    bool scalarValidRelease = false;
+    bool scalarEmitAllowed = false;
+    unsigned long scalarOpenMs = 0;
+    unsigned long scalarPeakMs = 0;
+    unsigned long scalarReleaseMs = 0;
+    unsigned long scalarDurationMs = 0;
+    unsigned long scalarMinDurationMs = 0;
+    unsigned long scalarMaxDurationMs = 0;
+
+    bool sourceOccurrenceEmitted = false;
+    bool runtimeEvidenceSeen = false;
+    bool runtimeOccurrenceReceived = false;
+    bool analyzerSeenOccurrence = false;
+    bool detectionGateBlocked = false;
+    const char* detectionGateReason = "none";
+    bool inconsistent = false;
+
+    const char* liveScalarReason = "none";
+    const char* liveScalarWould = "none";
+    const char* liveScalarState = "none";
+    bool liveScalarReady = false;
+    bool liveScalarGate = false;
+    bool liveScalarPresent = false;
+    bool liveScalarValid = false;
+    bool liveScalarMatch = false;
+};
+
 struct AnalyzerSummary {
     const char* profileName = "unknown";
 
@@ -393,6 +446,7 @@ struct AnalyzerReport {
     AnalyzerClassification classification;
     AnalyzerProfileDetail profileDetail;
     AnalyzerDebugSummary debug;
+    AnalyzerScalarDiagnostic scalar;
 };
 
 inline AnalyzerReport makeEmptyAnalyzerReport() {

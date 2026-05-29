@@ -1,141 +1,122 @@
-# Codex Instruction - FrequencyMatch Reject Summary Pass
+# Codex Instruction - Scalar Reject Summary Parity
 
 ## Goal
 
-Make `SEQ_FREQ_DIAG` trustworthy for the remaining `strong_no_occurrence` cases by carrying a detector-owned no-emit / reject summary forward once per trial.
+Mirror the trial-local reject/no-emit summary we already have for FrequencyMatch on the ScalarTransient path.
 
-This pass is intentionally narrow:
+This pass stays narrow:
 
-- focus on `FrequencyMatch` only
+- scope only the scalar source / detector path
 - keep the summary trial-local
-- do not build the generic `SEQ_INSPECT` path yet
-- do not expand `PatternResult`
+- do not add `SEQ_INSPECT`
+- do not change `PatternResult`
 
-## Current reading
+## Why this pass
 
-The emitted candidate path is already trustworthy:
+FrequencyMatch now carries a trustworthy trial-local `fm_*` summary into `SEQ_FREQ_DIAG`.
+
+The next roadmap item is the same concept for Scalar sources:
 
 ```text
-Occurrence -> OccurrenceInspector -> InspectedOccurrence -> PatternAssembler -> PatternCandidate -> PatternRules -> PatternResult -> Analyzer
+ScalarTransientDetector / ScalarOccurrenceSource
 ```
 
-What is still weak is the rejected / non-emitted path:
+We want the analyzer to explain scalar rejects with detector-owned facts, not with live counters or stale state.
 
-- analyzer can see a miss
-- analyzer can see some live counters
-- but the detector-owned no-emit reason is not yet carried in a clean trial summary
+## Status
 
-## Pass Scope
+implemented on current pass; scalar reject summary now prints trial-locally in `SEQ_SCALAR_DIAG`
 
-This pass should only do the following:
+## Pass scope
+
+Only do the following:
 
 ```text
-FrequencyMatchDetector
-  -> capture candidate lifecycle facts for the current trial
-  -> store a small reject / no-emit summary
+ScalarTransientDetector
+  -> keep a small reject / no-emit summary for the current trial
+
+ScalarOccurrenceSource
+  -> expose the detector facts cleanly
 
 DetectionRuntime
-  -> reset that summary at trial start
-  -> snapshot it once at trial end
+  -> snapshot scalar reject facts once per trial
 
 Analyzer
-  -> print the carried trial summary in SEQ_FREQ_DIAG
-  -> do not infer reject reasons from counters
+  -> print the carried scalar reject summary in trial diagnostics / explain output
 ```
 
-## Trial-local facts to carry
+## Facts to carry
 
-For the current trial only, carry:
+The scalar side should at least carry:
 
 ```text
-fm_reject_reason
-fm_no_emit_reason
-fm_gate_reason
-fm_opened
-fm_released
-fm_emitted
-fm_valid_release
-fm_emit_allowed
-fm_open_ms
-fm_peak_ms
-fm_release_ms
-fm_duration_ms
-fm_min_duration_ms
-fm_max_duration_ms
+scalar_reject_reason
+scalar_no_emit_reason
+scalar_gate_reason
+scalar_opened
+scalar_released
+scalar_emitted
+scalar_valid_release
+scalar_emit_allowed
+scalar_open_ms
+scalar_peak_ms
+scalar_release_ms
+scalar_duration_ms
+scalar_min_duration_ms
+scalar_max_duration_ms
 ```
 
-Also carry the minimal trace split:
+If the scalar path already has equivalent lifecycle fields, reuse them instead of inventing duplicates.
 
-```text
-trace_source_occurrence_emitted
-trace_runtime_evidence_seen
-trace_runtime_occurrence_received
-trace_analyzer_seen
-```
+## Success criteria
 
-## What counts as success
-
-For a `strong_no_occurrence` miss:
+For a rejected scalar candidate, the analyzer should be able to print:
 
 ```text
 accepted_present=0
-freq_evidence_class=strong_no_occurrence
-fm_opened=1
-fm_released=1
-fm_emitted=0
-fm_reject_reason=...
-fm_no_emit_reason=...
-trace_source_occurrence_emitted=0
-trace_runtime_evidence_seen=1
-trace_runtime_occurrence_received=0
-trace_analyzer_seen=0
+scalar_reject_reason=...
+scalar_no_emit_reason=...
+scalar_opened=1/0
+scalar_released=1/0
+scalar_emitted=1/0
+scalar_duration_ms=...
+scalar_min_duration_ms=...
+scalar_max_duration_ms=...
 ```
 
-The important rule is:
-
-- the analyzer may print carried facts
-- the analyzer may not reconstruct reject reasons from raw counters
+and those values should refer to the same trial-local candidate lifecycle.
 
 ## Not in this pass
 
 ```text
 Generic SEQ_INSPECT
 Pattern diagnostics
-Scalar reject summaries
-Re-introducing per-frame diagnostic accumulation
-Overloading SEQ_TRIAL with more verbose detail
-```
-
-## Suggested implementation order
-
-```text
-1. Keep detector-owned reject / no-emit facts for FrequencyMatch only.
-2. Snapshot them in DetectionRuntime at trial end.
-3. Print them in SEQ_FREQ_DIAG.
-4. Verify the result against a miss-only run.
+Cross-profile normalization
+Reintroducing per-frame diagnostic accumulation
+Changing FrequencyMatch behavior again
 ```
 
 ## Practical test
 
-Use a short diagnostic run first:
+Use the scalar-heavy profile for verification:
 
 ```text
-SEQ start tries=20 log=summary diag=miss test=freq-evidence
+SEQ start tries=20 log=summary diag=miss test=amp-evidence
 ```
 
-Then a longer comparison run:
+Then compare with a longer run:
 
 ```text
-SEQ start tries=100 log=summary diag=miss test=freq-evidence
+SEQ start tries=100 log=summary diag=miss test=amp-evidence
 ```
 
 ## Roadmap link
 
-This pass is the narrow FrequencyMatch slice of the analyser roadmap item:
+This is the Scalar half of the analyser roadmap item:
 
 ```text
 Add detector/source reject-candidate log
 Analyzer drain + aggregate rejects
 ```
 
-The generic cross-profile `SEQ_INSPECT` layer can come later.
+Once Scalar parity is in place, the generic `SEQ_INSPECT` layer can be designed on top of both source types.

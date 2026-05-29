@@ -347,6 +347,13 @@ void AnalyzerApp::updateSequenceTest(unsigned long now) {
         static_cast<unsigned long>((_sequenceTest.currentTrialDiagnostics.frequency.expectedWindowMs
             * static_cast<unsigned long>(_audioSource.sampleRateHz() > 0 ? _audioSource.sampleRateHz() : 16000UL)) / 1000UL);
     _sequenceTest.currentTrialDiagnostics.frequency.diagFrameCountOk = false;
+    _sequenceTest.currentTrialDiagnostics.scalar = {};
+    _sequenceTest.currentTrialDiagnostics.scalar.currentTrialId = trialNumber;
+    _sequenceTest.currentTrialDiagnostics.scalar.windowStartMs = _sequenceTest.currentTrialStartMs;
+    _sequenceTest.currentTrialDiagnostics.scalar.windowEndMs = _sequenceTest.currentTrialEndMs;
+    _sequenceTest.currentTrialDiagnostics.scalar.expectedWindowMs = _sequenceTest.currentTrialDiagnostics.frequency.expectedWindowMs;
+    _sequenceTest.currentTrialDiagnostics.scalar.expectedFrameCountEstimate = _sequenceTest.currentTrialDiagnostics.frequency.expectedFrameCountEstimate;
+    _sequenceTest.currentTrialDiagnostics.scalar.diagFrameCountOk = false;
     _detection->resetDiagnostics();
     _sequenceTest.nextTriggerAtMs = scheduledAtMs + _sequenceTest.periodMs;
 

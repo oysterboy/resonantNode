@@ -241,6 +241,7 @@ private:
             unsigned long lastRejectDurationMs = 0;
             bool peakActiveAtEnd = false;
             AnalyzerFrequencyDiagnostic frequency = {};
+            AnalyzerScalarDiagnostic scalar = {};
         };
 
         // Sequence-test configuration and execution state.
@@ -332,11 +333,11 @@ private:
         unsigned long patternUnmatchedUnexpected = 0;
         unsigned long freqRejectScore = 0;
         unsigned long freqRejectContrast = 0;
-        unsigned long freqRejectBoth = 0;
-        unsigned long freqRejectNoEvidence = 0;
-        unsigned long freqRejectInvalidWindow = 0;
-        unsigned long totalPatternDtMs = 0;
-        unsigned long totalPatternDurationMs = 0;
+            unsigned long freqRejectBoth = 0;
+            unsigned long freqRejectNoEvidence = 0;
+            unsigned long freqRejectInvalidWindow = 0;
+            unsigned long totalPatternDtMs = 0;
+            unsigned long totalPatternDurationMs = 0;
         float totalPatternConfidence = 0.0f;
         unsigned long patternDtCount = 0;
         unsigned long patternDurationCount = 0;
@@ -345,10 +346,11 @@ private:
         unsigned long rejectReasonCounts[static_cast<size_t>(AnalyzerReason::Unknown) + 1U] = {};
         unsigned long freqEvidenceClassCounts[5] = {};
         unsigned long currentMissStreak = 0;
-        unsigned long longestMissStreak = 0;
-        unsigned long firstMissTrial = 0;
+            unsigned long longestMissStreak = 0;
+            unsigned long firstMissTrial = 0;
 
-    };
+            AnalyzerScalarDiagnostic scalar = {};
+        };
 
     struct PendingSequenceStart {
         bool active = false;
@@ -414,6 +416,7 @@ private:
     void printTransientStatsDebug(unsigned long now) const;
     void printSequenceExplain(const AnalyzerReport& report) const;
     void printSequenceDiagnostics(const AnalyzerReport& report) const;
+    void printSequenceScalarDiagnostics(const AnalyzerReport& report) const;
     void printSequenceAmpWindow(const AnalyzerReport& report) const;
     void printSequenceCandidateLogs(unsigned long trialNumber, const SequenceTest::TrialDiagnostics& diagnostics) const;
     void printSequenceTrialResult(unsigned long trialNumber, AnalyzerResult result, long dtMs, long durMs, float strength, bool audioOverflow, unsigned long duplicateCount, const SequenceTest::TrialDiagnostics& diagnostics) const;

@@ -1,5 +1,7 @@
 #include "DetectionRuntime.h"
 
+#include <string.h>
+
 // DetectionRuntime pipeline execution in source order.
 namespace detection {
 
@@ -108,6 +110,28 @@ void DetectionRuntime::captureDiagnostics() {
 
     _diagnostics.scalarOnsetRejectReason = _scalarEmitter.lastOnsetRejectReasonName();
     _diagnostics.scalarTransientRejectReason = _scalarEmitter.lastTransientRejectReasonName();
+    _diagnostics.scalarRejectReason = _diagnostics.scalarTransientRejectReason != nullptr && strcmp(_diagnostics.scalarTransientRejectReason, "none") != 0
+        ? _diagnostics.scalarTransientRejectReason
+        : _diagnostics.scalarOnsetRejectReason;
+    _diagnostics.scalarNoEmitReason = _diagnostics.scalarRejectReason;
+    _diagnostics.scalarGateReason = _diagnostics.scalarRejectReason;
+    _diagnostics.scalarOpened = _scalarEmitter.candidateActive()
+        || _scalarEmitter.releaseObserved()
+        || _scalarEmitter.candidateFirstSeenMs() > 0;
+    _diagnostics.scalarReleased = _scalarEmitter.releaseObserved()
+        || _scalarEmitter.candidateReleaseObservedMs() > 0;
+    _diagnostics.scalarValidRelease = _diagnostics.scalarReleased
+        && _diagnostics.scalarRejectReason != nullptr
+        && strcmp(_diagnostics.scalarRejectReason, "none") == 0;
+    _diagnostics.scalarEmitAllowed = _diagnostics.scalarValidRelease;
+    _diagnostics.scalarOpenMs = _scalarEmitter.candidateFirstSeenMs();
+    _diagnostics.scalarPeakMs = _scalarEmitter.candidatePeakMs();
+    _diagnostics.scalarReleaseMs = _scalarEmitter.candidateReleaseObservedMs();
+    _diagnostics.scalarDurationMs = _diagnostics.scalarReleased && _diagnostics.scalarReleaseMs >= _diagnostics.scalarOpenMs
+        ? _diagnostics.scalarReleaseMs - _diagnostics.scalarOpenMs
+        : 0UL;
+    _diagnostics.scalarMinDurationMs = _scalarTransientConfig.minTransientDurationMs;
+    _diagnostics.scalarMaxDurationMs = _scalarTransientConfig.maxTransientDurationMs;
     _diagnostics.scalarTransientRejectedDurationMs = _scalarEmitter.lastTransientRejectedDurationMs();
     _diagnostics.scalarTransientRejectedStrength = _scalarEmitter.lastTransientRejectedStrength();
 

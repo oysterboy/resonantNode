@@ -921,6 +921,117 @@ AnalyzerReport AnalyzerApp::buildSequenceAnalyzerReport(unsigned long trialNumbe
         report.frequency.runtimeOccurrenceReceived = false;
     }
 
+    const bool scalarProfile = selectedProfile.occurrenceSource == detection::OccurrenceSourceKind::ScalarTransient;
+    if (scalarProfile) {
+        report.scalar.currentTrialId = report.context.trial;
+        report.scalar.windowStartMs = _sequenceTest.currentTrialStartMs;
+        report.scalar.windowEndMs = _sequenceTest.currentTrialEndMs;
+        report.scalar.expectedWindowMs = report.scalar.windowEndMs >= report.scalar.windowStartMs
+            ? report.scalar.windowEndMs - report.scalar.windowStartMs
+            : 0UL;
+        report.scalar.expectedFrameCountEstimate =
+            static_cast<unsigned long>((report.scalar.expectedWindowMs
+                * static_cast<unsigned long>(_audioSource.sampleRateHz() > 0 ? _audioSource.sampleRateHz() : 16000UL)) / 1000UL);
+        report.scalar.diagFrameCountOk = report.scalar.expectedWindowMs > 0 && report.scalar.expectedFrameCountEstimate > 0;
+
+        report.scalar.acceptedPresent = report.occurrences.present
+            && report.occurrences.valid
+            && report.primaryPattern.accepted
+            && report.occurrences.primarySource != nullptr
+            && strcmp(report.occurrences.primarySource, "amp") == 0;
+        report.scalar.acceptedTrialId = report.scalar.acceptedPresent ? report.context.trial : 0UL;
+        report.scalar.acceptedSource = report.scalar.acceptedPresent
+            ? (report.occurrences.primarySource != nullptr ? report.occurrences.primarySource : "unknown")
+            : "none";
+        report.scalar.acceptedDtMs = report.scalar.acceptedPresent ? report.occurrences.primaryDtMs : -1;
+        report.scalar.acceptedStartMs = report.scalar.acceptedPresent ? report.occurrences.startMs : 0UL;
+        report.scalar.acceptedPeakMs = report.scalar.acceptedPresent ? report.occurrences.peakMs : 0UL;
+        report.scalar.acceptedReleaseMs = report.scalar.acceptedPresent ? report.occurrences.releaseMs : 0UL;
+        report.scalar.acceptedDurationMs = report.scalar.acceptedPresent ? report.occurrences.primaryDurationMs : 0UL;
+        report.scalar.acceptedStrength = report.scalar.acceptedPresent ? report.occurrences.primaryStrength : 0.0f;
+        report.scalar.acceptedScore = report.scalar.acceptedPresent ? report.occurrences.score : 0.0f;
+        report.scalar.acceptedContrast = report.scalar.acceptedPresent ? report.occurrences.contrast : 0.0f;
+
+        if (runtimeDiag != nullptr) {
+            report.scalar.scalarRejectReason = runtimeDiag->scalarRejectReason != nullptr ? runtimeDiag->scalarRejectReason : "unknown";
+            report.scalar.scalarNoEmitReason = runtimeDiag->scalarNoEmitReason != nullptr ? runtimeDiag->scalarNoEmitReason : "none";
+            report.scalar.scalarGateReason = runtimeDiag->scalarGateReason != nullptr ? runtimeDiag->scalarGateReason : "none";
+            report.scalar.scalarOpened = runtimeDiag->scalarOpened;
+            report.scalar.scalarReleased = runtimeDiag->scalarReleased;
+            report.scalar.scalarValidRelease = runtimeDiag->scalarValidRelease;
+            report.scalar.scalarEmitAllowed = runtimeDiag->scalarEmitAllowed;
+            report.scalar.scalarOpenMs = runtimeDiag->scalarOpenMs;
+            report.scalar.scalarPeakMs = runtimeDiag->scalarPeakMs;
+            report.scalar.scalarReleaseMs = runtimeDiag->scalarReleaseMs;
+            report.scalar.scalarDurationMs = runtimeDiag->scalarDurationMs;
+            report.scalar.scalarMinDurationMs = runtimeDiag->scalarMinDurationMs;
+            report.scalar.scalarMaxDurationMs = runtimeDiag->scalarMaxDurationMs;
+            report.scalar.sourceOccurrenceEmitted = report.occurrences.present;
+            report.scalar.runtimeEvidenceSeen = runtimeDiag->scalarOpened
+                || runtimeDiag->scalarReleased
+                || (runtimeDiag->scalarRejectReason != nullptr && strcmp(runtimeDiag->scalarRejectReason, "none") != 0);
+            report.scalar.runtimeOccurrenceReceived = report.scalar.sourceOccurrenceEmitted;
+            report.scalar.analyzerSeenOccurrence = report.scalar.acceptedPresent;
+            report.scalar.liveScalarReason = runtimeDiag->scalarRejectReason != nullptr ? runtimeDiag->scalarRejectReason : "none";
+            report.scalar.liveScalarWould = runtimeDiag->scalarNoEmitReason != nullptr ? runtimeDiag->scalarNoEmitReason : "none";
+            report.scalar.liveScalarReady = runtimeDiag->scalarOpened;
+            report.scalar.liveScalarGate = runtimeDiag->scalarEmitAllowed;
+            report.scalar.liveScalarPresent = report.occurrences.present;
+            report.scalar.liveScalarValid = report.occurrences.valid;
+            report.scalar.liveScalarMatch = report.primaryPattern.accepted;
+            report.scalar.liveScalarState = runtimeDiag->scalarOpened
+                ? (runtimeDiag->scalarReleased ? "released" : "active")
+                : "idle";
+            report.scalar.detectionGateBlocked = !report.scalar.acceptedPresent
+                && (report.scalar.scalarOpened
+                    || report.scalar.scalarReleased
+                    || (report.scalar.scalarRejectReason != nullptr && strcmp(report.scalar.scalarRejectReason, "none") != 0));
+            if (!report.scalar.acceptedPresent) {
+                if (report.scalar.scalarRejectReason != nullptr && strcmp(report.scalar.scalarRejectReason, "none") != 0) {
+                    report.scalar.detectionGateReason = report.scalar.scalarRejectReason;
+                } else if (report.scalar.scalarOpened && !report.scalar.scalarReleased) {
+                    report.scalar.detectionGateReason = "opened_not_released";
+                } else if (!report.scalar.scalarOpened) {
+                    report.scalar.detectionGateReason = "no_evidence";
+                } else {
+                    report.scalar.detectionGateReason = "none";
+                }
+            } else {
+                report.scalar.detectionGateReason = "none";
+            }
+        }
+
+        if (report.scalar.acceptedPresent) {
+            report.scalar.scalarRejectReason = "none";
+            report.scalar.scalarNoEmitReason = "none";
+            report.scalar.scalarGateReason = "none";
+            report.scalar.scalarOpened = true;
+            report.scalar.scalarReleased = true;
+            report.scalar.scalarValidRelease = true;
+            report.scalar.scalarEmitAllowed = true;
+            report.scalar.scalarOpenMs = report.scalar.acceptedStartMs;
+            report.scalar.scalarPeakMs = report.scalar.acceptedPeakMs;
+            report.scalar.scalarReleaseMs = report.scalar.acceptedReleaseMs;
+            report.scalar.scalarDurationMs = report.scalar.acceptedDurationMs;
+            report.scalar.sourceOccurrenceEmitted = true;
+            report.scalar.runtimeEvidenceSeen = true;
+            report.scalar.runtimeOccurrenceReceived = true;
+            report.scalar.analyzerSeenOccurrence = true;
+            report.scalar.liveScalarReason = "none";
+            report.scalar.liveScalarWould = "none";
+            report.scalar.liveScalarReady = true;
+            report.scalar.liveScalarGate = true;
+            report.scalar.liveScalarPresent = true;
+            report.scalar.liveScalarValid = true;
+            report.scalar.liveScalarMatch = true;
+            report.scalar.liveScalarState = "released";
+            report.scalar.detectionGateBlocked = false;
+            report.scalar.detectionGateReason = "none";
+        }
+
+        report.scalar.inconsistent = report.classification.result == AnalyzerResult::Miss && report.scalar.acceptedPresent;
+    }
+
     return report;
 }
 

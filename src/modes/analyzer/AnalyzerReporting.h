@@ -255,6 +255,14 @@ struct AnalyzerDebugSummary {
     unsigned int inspected = 0;
     unsigned int patterns = 0;
 
+    const char* audioHealth = "unknown";
+    unsigned long audioZeroishFrames = 0;
+    unsigned long audioFlatlineFrames = 0;
+    unsigned long audioLargeJumpFrames = 0;
+    unsigned long audioRmsTooLowFrames = 0;
+    unsigned long audioRmsTooHighFrames = 0;
+    unsigned long audioMaxAbsDelta = 0;
+
     unsigned int rejects = 0;
     unsigned int duplicates = 0;
     unsigned int unexpected = 0;
@@ -302,6 +310,13 @@ struct AnalyzerFrequencyDiagnostic {
     unsigned long longestMatchRunMs = 0;
     unsigned long currentMatchRunFrames = 0;
     unsigned long currentMatchRunStartMs = 0;
+    const char* audioHealth = "unknown";
+    unsigned long audioZeroishFrames = 0;
+    unsigned long audioFlatlineFrames = 0;
+    unsigned long audioLargeJumpFrames = 0;
+    unsigned long audioRmsTooLowFrames = 0;
+    unsigned long audioRmsTooHighFrames = 0;
+    unsigned long audioMaxAbsDelta = 0;
 
     float sumScore = 0.0f;
     float sumContrast = 0.0f;

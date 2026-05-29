@@ -186,6 +186,12 @@ void AnalyzerApp::startSequenceTest(unsigned long totalTrials, unsigned long per
     _sequenceTest.samplesProcessed = 0;
     _sequenceTest.maxSamplesPerLoop = 0;
     _sequenceTest.emptySourceLoops = 0;
+    _sequenceTest.availableBytesSum = 0;
+    _sequenceTest.availableBytesSamples = 0;
+    _sequenceTest.maxAvailableBytes = 0;
+    _sequenceTest.maxBlockAgeMs = 0;
+    _sequenceTest.maxUpdateLoopUs = 0;
+    _sequenceTest.maxProcessingLagMs = 0;
     _sequenceTest.totalHitStrengthScaled = 0;
     _sequenceTest.totalHitDurationMs = 0;
     _sequenceTest.patternMatchedExpected = 0;
@@ -520,6 +526,9 @@ void AnalyzerApp::finalizeSequenceTrial(unsigned long now) {
     _sequenceTest.freqEvidenceClassCounts[frequencyEvidenceClassIndex(*finalizedReport)]++;
     flushSequenceSampleHistory(now + 1UL);
     printSequenceTrialResult(*finalizedReport);
+    if (_sequenceTest.outputConfig.mode == AnalyzerApp::SeqOutputMode::SignalCheck) {
+        printSignalCheck();
+    }
     if (_sequenceTest.sampleDumpEnabled) {
         printSequenceSampleDump(_sequenceTest.currentTrial);
     }

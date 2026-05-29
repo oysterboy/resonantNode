@@ -39,6 +39,11 @@ constexpr long kSmearedDurationMinMs = 181L;
 constexpr long kSmearedDurationMaxMs = 240L;
 constexpr long kTooLongDurationMinMs = 241L;
 constexpr long kNearMaxDurationMinMs = 220L;
+constexpr long kAudioZeroishAbsThreshold = 8L;
+constexpr long kAudioLargeJumpAbsThreshold = 12000L;
+constexpr float kAudioRmsTooLowThreshold = 40.0f;
+constexpr float kAudioRmsTooHighThreshold = 30000.0f;
+constexpr unsigned long kAudioFlatlineStreakFrames = 32UL;
 
 
 uint32_t sampleOffsetUs(uint32_t sampleOffset, uint32_t sampleRateHz) {
@@ -47,6 +52,90 @@ uint32_t sampleOffsetUs(uint32_t sampleOffset, uint32_t sampleRateHz) {
     }
 
     return static_cast<uint32_t>((static_cast<uint64_t>(sampleOffset) * 1000000ULL) / static_cast<uint64_t>(sampleRateHz));
+}
+
+unsigned long sampleFramesToMs(unsigned long frames, uint32_t sampleRateHz) {
+    if (frames == 0 || sampleRateHz == 0) {
+        return 0UL;
+    }
+
+    return static_cast<unsigned long>((static_cast<uint64_t>(frames) * 1000ULL) / static_cast<uint64_t>(sampleRateHz));
+}
+
+const char* audioHealthNameFromCounters(unsigned long zeroishFrames,
+                                        unsigned long flatlineFrames,
+                                        unsigned long largeJumpFrames,
+                                        unsigned long rmsTooLowFrames,
+                                        unsigned long rmsTooHighFrames) {
+    if (rmsTooHighFrames > 0) {
+        return "clipped";
+    }
+    if (largeJumpFrames > 0) {
+        return "glitchy";
+    }
+    if (flatlineFrames > 0) {
+        return "flatline";
+    }
+    if (zeroishFrames > 0 || rmsTooLowFrames > 0) {
+        return "zeroish";
+    }
+    return "ok";
+}
+
+void AnalyzerApp::updateSequenceAudioHealth(const AudioSignalFrame& frame) {
+    if (!_sequenceTest.active || _sequenceTest.currentTrial == 0 || _sequenceTest.currentTrialFinalized) {
+        return;
+    }
+
+    auto& diagnostics = _sequenceTest.currentTrialDiagnostics;
+    const long centeredSample = static_cast<long>(frame.centeredSample);
+    const long rawSample = static_cast<long>(frame.rawSample);
+    const unsigned long absCentered = static_cast<unsigned long>(centeredSample >= 0 ? centeredSample : -centeredSample);
+    const unsigned long absRaw = static_cast<unsigned long>(rawSample >= 0 ? rawSample : -rawSample);
+    const unsigned long delta = diagnostics.audioHasLastCenteredSample
+        ? static_cast<unsigned long>(labs(centeredSample - diagnostics.audioLastCenteredSample))
+        : 0UL;
+
+    ++diagnostics.audioFrames;
+    diagnostics.audioSumSquares += static_cast<uint64_t>(absCentered) * static_cast<uint64_t>(absCentered);
+    if (absCentered <= static_cast<unsigned long>(kAudioZeroishAbsThreshold)) {
+        ++diagnostics.audioZeroishFrames;
+    }
+    if (diagnostics.audioHasLastCenteredSample && centeredSample == diagnostics.audioLastCenteredSample) {
+        ++diagnostics.audioFlatlineRunFrames;
+        if (diagnostics.audioFlatlineRunFrames >= kAudioFlatlineStreakFrames) {
+            ++diagnostics.audioFlatlineFrames;
+        }
+    } else {
+        diagnostics.audioFlatlineRunFrames = 0;
+    }
+    if (delta > diagnostics.audioMaxAbsDelta) {
+        diagnostics.audioMaxAbsDelta = delta;
+    }
+    if (diagnostics.audioHasLastCenteredSample && delta >= static_cast<unsigned long>(kAudioLargeJumpAbsThreshold)) {
+        ++diagnostics.audioLargeJumpFrames;
+    }
+
+    const float rms = diagnostics.audioFrames > 0
+        ? static_cast<float>(sqrt(static_cast<double>(diagnostics.audioSumSquares) / static_cast<double>(diagnostics.audioFrames)))
+        : 0.0f;
+    diagnostics.audioRms = rms;
+    if (rms < kAudioRmsTooLowThreshold) {
+        ++diagnostics.audioRmsTooLowFrames;
+    }
+    if (rms > kAudioRmsTooHighThreshold || absRaw > 32760UL) {
+        ++diagnostics.audioRmsTooHighFrames;
+    }
+
+    diagnostics.audioHealth = audioHealthNameFromCounters(
+        diagnostics.audioZeroishFrames,
+        diagnostics.audioFlatlineFrames,
+        diagnostics.audioLargeJumpFrames,
+        diagnostics.audioRmsTooLowFrames,
+        diagnostics.audioRmsTooHighFrames
+    );
+    diagnostics.audioLastCenteredSample = centeredSample;
+    diagnostics.audioHasLastCenteredSample = true;
 }
 
 void buildFrequencyFailReason(const detection::FrequencyFeatureFrame& evidence,
@@ -202,6 +291,8 @@ const char* seqOutputModeName(AnalyzerApp::SeqOutputMode mode) {
             return "quiet";
         case AnalyzerApp::SeqOutputMode::Compact:
             return "compact";
+        case AnalyzerApp::SeqOutputMode::SignalCheck:
+            return "signalcheck";
         case AnalyzerApp::SeqOutputMode::Full:
             return "full";
         case AnalyzerApp::SeqOutputMode::Source:
@@ -268,6 +359,9 @@ AnalyzerApp::SeqOutputMode seqOutputModeFromToken(const char* token, bool* valid
     }
     if (equalsIgnoreCase(token, "compact") || equalsIgnoreCase(token, "trial")) {
         return AnalyzerApp::SeqOutputMode::Compact;
+    }
+    if (equalsIgnoreCase(token, "signalcheck")) {
+        return AnalyzerApp::SeqOutputMode::SignalCheck;
     }
     if (equalsIgnoreCase(token, "full")) {
         return AnalyzerApp::SeqOutputMode::Full;
@@ -355,7 +449,7 @@ void AnalyzerApp::begin() {
     _controlClaimAtMs = 0;
 
     Serial.println("EVT analyzer_ready");
-    Serial.println("EVT analyzer_help type='HELP', 'BASE', 'PARAM freqScore=10000 freqContrast=50.0', 'TEST', 'RAW trigger f=3200 dur=100 post=1000 dump=bin', 'SEQ MODE quiet|compact|full|source|inspect|pattern|dump WHEN off|miss|all VERBOSE 0|1|2 STATUS', 'CAP', 'DET AMP', 'VAL', 'VAL OFF'");
+    Serial.println("EVT analyzer_help type='HELP', 'BASE', 'PARAM freqScore=10000 freqContrast=50.0', 'TEST', 'RAW trigger f=3200 dur=100 post=1000 dump=bin', 'SEQ MODE quiet|compact|signalcheck|full|source|inspect|pattern|dump WHEN off|miss|all VERBOSE 0|1|2 STATUS', 'CAP', 'DET AMP', 'VAL', 'VAL OFF'");
 }
 
 void AnalyzerApp::configureParameters() {
@@ -415,13 +509,35 @@ AnalyzerApp::SequenceDiagMode AnalyzerApp::sequenceDiagModeFromOutputWhen(SeqOut
 // -----------------------------------------------------------------------------
 
 void AnalyzerApp::update() {
+    const unsigned long updateLoopStartUs = micros();
     const unsigned long now = millis();
 
     int processedSamples = 0;
     AudioBlock block;
-    while (processedSamples < kMaxSamplesPerLoop && _i2sSource.readBlock(block)) {
+    while (processedSamples < kMaxSamplesPerLoop) {
+        const int availableBytesBeforeRead = _audioSource.availableBytes();
+        if (!_i2sSource.readBlock(block)) {
+            break;
+        }
         if (block.sampleCount == 0 || block.samples == nullptr) {
             break;
+        }
+
+        if (_sequenceTest.active) {
+            if (availableBytesBeforeRead >= 0) {
+                const unsigned long availableBytes = static_cast<unsigned long>(availableBytesBeforeRead);
+                _sequenceTest.availableBytesSum += static_cast<uint64_t>(availableBytes);
+                _sequenceTest.availableBytesSamples++;
+                if (availableBytes > _sequenceTest.maxAvailableBytes) {
+                    _sequenceTest.maxAvailableBytes = availableBytes;
+                }
+            }
+            const unsigned long blockAgeMs = micros() > block.approxStartMicros
+                ? static_cast<unsigned long>((micros() - block.approxStartMicros) / 1000UL)
+                : 0UL;
+            if (blockAgeMs > _sequenceTest.maxBlockAgeMs) {
+                _sequenceTest.maxBlockAgeMs = blockAgeMs;
+            }
         }
 
         const uint32_t sampleRateHz = _audioSource.sampleRateHz() > 0 ? _audioSource.sampleRateHz() : 16000UL;
@@ -431,6 +547,13 @@ void AnalyzerApp::update() {
             _audioSignal.update(static_cast<int>(block.samples[i]), sampleTimeUs, frame);
             _freqBandStream.observeCenteredSample(frame.centeredSample);
             if (_sequenceTest.active && _sequenceTest.currentTrial > 0) {
+                const unsigned long processingLagMs = millis() > frame.sampleTimeMs
+                    ? millis() - frame.sampleTimeMs
+                    : 0UL;
+                if (processingLagMs > _sequenceTest.maxProcessingLagMs) {
+                    _sequenceTest.maxProcessingLagMs = processingLagMs;
+                }
+                updateSequenceAudioHealth(frame);
                 const detection::FrequencyFeatureFrame runtimeFrequencyFrame = captureFrequencyFeatureFrame(frame.sampleTimeMs);
                 _detection->observeFrame(frame, runtimeFrequencyFrame, frame.sampleTimeMs);
                 while (_detection->popPatternResult(_sequenceTest.currentTrialDiagnostics.runtimePatternResult)) {
@@ -472,6 +595,10 @@ void AnalyzerApp::update() {
     _sequenceTest.samplesProcessed += static_cast<unsigned long>(processedSamples);
     if (static_cast<unsigned long>(processedSamples) > _sequenceTest.maxSamplesPerLoop) {
         _sequenceTest.maxSamplesPerLoop = static_cast<unsigned long>(processedSamples);
+    }
+    const unsigned long updateLoopUs = micros() - updateLoopStartUs;
+    if (_sequenceTest.active && updateLoopUs > _sequenceTest.maxUpdateLoopUs) {
+        _sequenceTest.maxUpdateLoopUs = updateLoopUs;
     }
 
     updateBaseSession(now);
@@ -986,6 +1113,18 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
         report.frequency.bothOkFrames = runtimeDiag->frequencyBothOkFrames;
         report.frequency.matchFrames = runtimeDiag->frequencyMatchFrames;
         report.frequency.rejectFrames = runtimeDiag->frequencyRejectFrames;
+        report.frequency.longestMatchRunFrames = runtimeDiag->frequencyLongestMatchRunFrames;
+        report.frequency.longestMatchRunMs = sampleFramesToMs(
+            runtimeDiag->frequencyLongestMatchRunFrames,
+            _audioSource.sampleRateHz() > 0 ? _audioSource.sampleRateHz() : 16000UL
+        );
+        report.frequency.audioHealth = diagnostics.audioHealth != nullptr ? diagnostics.audioHealth : "unknown";
+        report.frequency.audioZeroishFrames = diagnostics.audioZeroishFrames;
+        report.frequency.audioFlatlineFrames = diagnostics.audioFlatlineFrames;
+        report.frequency.audioLargeJumpFrames = diagnostics.audioLargeJumpFrames;
+        report.frequency.audioRmsTooLowFrames = diagnostics.audioRmsTooLowFrames;
+        report.frequency.audioRmsTooHighFrames = diagnostics.audioRmsTooHighFrames;
+        report.frequency.audioMaxAbsDelta = diagnostics.audioMaxAbsDelta;
         report.frequency.meanScore = runtimeDiag->frequencyScoreMean;
         report.frequency.meanContrast = runtimeDiag->frequencyContrastMean;
         report.frequency.sumScore = report.frequency.meanScore * static_cast<float>(report.frequency.frames);
@@ -1012,11 +1151,6 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
         report.frequency.trialMissReason = runtimeDiag->frequencyRejectReason != nullptr ? runtimeDiag->frequencyRejectReason : "unknown";
         report.frequency.nearMiss = runtimeDiag->frequencyNearMiss;
         report.frequency.nearMissReason = runtimeDiag->frequencyNearMissReason != nullptr ? runtimeDiag->frequencyNearMissReason : "none";
-    }
-
-    if (report.frequency.longestMatchRunFrames == 0 && report.frequency.matchFrames > 0) {
-        report.frequency.longestMatchRunFrames = report.frequency.matchFrames;
-        report.frequency.longestMatchRunMs = report.frequency.fmDurationMs;
     }
 
     if (frequencyDetector != nullptr) {

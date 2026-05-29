@@ -41,6 +41,7 @@ public:
     enum class SeqOutputMode {
         Quiet,
         Compact,
+        SignalCheck,
         Full,
         Source,
         Inspect,
@@ -68,6 +69,8 @@ public:
     unsigned long loopDelayMs() const;
 
 private:
+    void updateSequenceAudioHealth(const AudioSignalFrame& frame);
+
     // Session state bundles, ordered from lighter calibration state to the most specialized sequence-test state.
     struct BaseSession {
         bool active = false;
@@ -195,6 +198,21 @@ private:
             detection::PatternResult runtimePatternResult = {};
             detection::FieldState runtimeFieldState = {};
             bool runtimePatternCaptured = false;
+
+            unsigned long audioFrames = 0;
+            unsigned long audioZeroishFrames = 0;
+            unsigned long audioFlatlineFrames = 0;
+            unsigned long audioLargeJumpFrames = 0;
+            unsigned long audioRmsTooLowFrames = 0;
+            unsigned long audioRmsTooHighFrames = 0;
+            unsigned long audioMaxAbsDelta = 0;
+            unsigned long audioFlatlineRunFrames = 0;
+            long audioLastCenteredSample = 0;
+            bool audioHasLastCenteredSample = false;
+            uint64_t audioSumSquares = 0;
+            float audioRms = 0.0f;
+            const char* audioHealth = "unknown";
+
             unsigned long duplicatePatternMs = 0;
             float duplicatePatternStrength = 0.0f;
             unsigned long duplicatePatternDurationMs = 0;
@@ -329,6 +347,12 @@ private:
         unsigned long samplesProcessed = 0;
         unsigned long maxSamplesPerLoop = 0;
         unsigned long emptySourceLoops = 0;
+        uint64_t availableBytesSum = 0;
+        unsigned long availableBytesSamples = 0;
+        unsigned long maxAvailableBytes = 0;
+        unsigned long maxBlockAgeMs = 0;
+        unsigned long maxUpdateLoopUs = 0;
+        unsigned long maxProcessingLagMs = 0;
         unsigned long totalHitStrengthScaled = 0;
         unsigned long totalHitDurationMs = 0;
         unsigned long patternMatchedExpected = 0;
@@ -414,6 +438,7 @@ private:
     void finalizeCaptureTrial(unsigned long now);
     void runRawTrigger(unsigned long toneHz, unsigned long durationMs, unsigned long postMs, unsigned long preMs, unsigned long decim, bool dumpChunks, bool dumpBinary);
     void printAudioSourceSummary() const;
+    void printAudioRunSummary() const;
     void printOccurrenceSummary() const;
     void printCaptureHints() const;
     void printDetectionParameters() const;
@@ -425,6 +450,7 @@ private:
     void printSequenceInspect(const AnalyzerReport& report) const;
     void printSequencePattern(const AnalyzerReport& report) const;
     void printSequenceStatus() const;
+    void printSignalCheck() const;
     void printSequenceTrialHeader(unsigned long trialNumber) const;
     void printSequenceCandidateLogs(unsigned long trialNumber, const SequenceTest::TrialDiagnostics& diagnostics) const;
     void printSequenceTrialResult(const AnalyzerReport& report) const;

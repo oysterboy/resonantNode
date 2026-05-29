@@ -13,9 +13,10 @@ void AnalyzerApp::printSequenceHelp() {
     Serial.println("SEQ IN: OBS start [N|tries=N] [period=2000] [window=1800] [freq=HZ] [dur=MS] [test=LABEL]");
     Serial.println("SEQ IN: TRIES N");
     Serial.println("SEQ IN: [profile=tonalpulse|tonalpulse2|amp]");
-    Serial.println("SEQ IN: MODE quiet|compact|full|source|inspect|pattern|dump");
+    Serial.println("SEQ IN: MODE quiet|compact|signalcheck|full|source|inspect|pattern|dump");
     Serial.println("SEQ IN: MODE quiet = no sequence output");
     Serial.println("SEQ IN: MODE compact = compact trial view");
+    Serial.println("SEQ IN: MODE signalcheck = compact trial view + audio health snapshot");
     Serial.println("SEQ IN: MODE full = trial + source + inspect + pattern");
     Serial.println("SEQ IN: WHEN off|miss|all");
     Serial.println("SEQ IN: VERBOSE 0|1|2");
@@ -23,7 +24,7 @@ void AnalyzerApp::printSequenceHelp() {
     Serial.println("SEQ IN: STATUS");
     Serial.println("SEQ IN: [dumpSamples=0|1] [curveFormat=off|samples]");
     Serial.println("SEQ IN: [sampleFirst=N] [sampleEvery=N] [sampleLead=MS] [sampleTail=MS] [sampleStep=MS] [sampleMax=N]");
-    Serial.println("SEQ OUT: SEQ start / SEQ running / SEQ_PATTERN / SEQ_TRIAL / SEQ_INSPECT / SEQ_SOURCE / SEQ_DUMP / SEQ_SUMMARY");
+    Serial.println("SEQ OUT: SEQ start / SEQ running / SEQ_PATTERN / SEQ_TRIAL / SEQ_INSPECT / SEQ_SOURCE / SEQ_DUMP / SEQ_SUMMARY / AUDIO run / SIGNALCHECK");
     Serial.println("SEQ OUT: candidate fields include onset_sample peak_sample release_sample peak_ms dur end_dt_ms freq_*");
     Serial.println("SEQ OBS: passive observe mode for an already-running external emitter");
     Serial.println("SEQ PROFILE: profile=tonalpulse");
@@ -360,7 +361,7 @@ void AnalyzerApp::handleUsbLine(const char* line) {
                     if (!valid) {
                         Serial.print("ERR SEQ unknown mode=");
                         Serial.print(token + 5);
-                        Serial.println(" use mode=quiet, mode=compact, mode=full, mode=source, mode=inspect, mode=pattern or mode=dump");
+                        Serial.println(" use mode=quiet, mode=compact, mode=signalcheck, mode=full, mode=source, mode=inspect, mode=pattern or mode=dump");
                         return;
                     }
                     if (outputConfig.mode == AnalyzerApp::SeqOutputMode::Quiet) {

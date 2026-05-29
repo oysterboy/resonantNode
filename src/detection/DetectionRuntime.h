@@ -71,6 +71,9 @@ struct DetectionDiagnostics {
     unsigned long frequencyBothOkFrames = 0;
     unsigned long frequencyMatchFrames = 0;
     unsigned long frequencyRejectFrames = 0;
+    unsigned long frequencyLongestMatchRunFrames = 0;
+    unsigned long frequencyLongestMatchRunStartMs = 0;
+    unsigned long frequencyLongestMatchRunEndMs = 0;
 
     float frequencyScoreMean = 0.0f;
     float frequencyContrastMean = 0.0f;

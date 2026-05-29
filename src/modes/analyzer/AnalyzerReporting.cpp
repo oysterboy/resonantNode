@@ -825,7 +825,7 @@ void AnalyzerApp::printSequenceDiagnostics(const AnalyzerReport& report) const {
             Serial.print("ms");
             Serial.print(" strength=");
             Serial.print(report.frequency.acceptedStrength, 1);
-        } else if (report.frequency.sourceOccurrenceEmitted) {
+        } else {
             Serial.print(" best_peak_ms=");
             Serial.print(report.frequency.fmPeakMs);
             Serial.print(" best_dur_ms=");
@@ -1297,7 +1297,28 @@ void AnalyzerApp::printSequenceSummary() const {
     const long avgDurRounded = summary.avgDurationMs >= 0.0f ? static_cast<long>(summary.avgDurationMs + 0.5f) : -1L;
 
     Serial.println();
-    Serial.print("SEQ_SUMMARY profile=");
+    Serial.print("SEQ_SUMMARY counts: expected=");
+    Serial.print(summary.expected);
+    Serial.print(" early=");
+    Serial.print(summary.early);
+    Serial.print(" late=");
+    Serial.print(summary.late);
+    Serial.print(" miss=");
+    Serial.print(summary.miss);
+    Serial.print(" duplicate=");
+    Serial.print(summary.duplicate);
+    Serial.print(" unexpected=");
+    Serial.print(summary.unexpected);
+    Serial.print(" rejected=");
+    Serial.print(summary.rejected);
+    Serial.print(" ambiguous=");
+    Serial.print(summary.ambiguous);
+    Serial.print(" too_dense=");
+    Serial.print(summary.tooDense);
+    Serial.print(" invalid_audio=");
+    Serial.println(summary.invalidAudio);
+
+    Serial.print("  metadata: profile=");
     Serial.print(summary.profileName != nullptr ? summary.profileName : "unknown");
     Serial.print(" source=");
     Serial.print(selectedProfile.occurrenceSource == detection::OccurrenceSourceKind::FrequencyMatch
@@ -1335,28 +1356,7 @@ void AnalyzerApp::printSequenceSummary() const {
     }
     Serial.println();
 
-    Serial.print("  A_counts: expected=");
-    Serial.print(summary.expected);
-    Serial.print(" early=");
-    Serial.print(summary.early);
-    Serial.print(" late=");
-    Serial.print(summary.late);
-    Serial.print(" miss=");
-    Serial.print(summary.miss);
-    Serial.print(" duplicate=");
-    Serial.print(summary.duplicate);
-    Serial.print(" unexpected=");
-    Serial.print(summary.unexpected);
-    Serial.print(" rejected=");
-    Serial.print(summary.rejected);
-    Serial.print(" ambiguous=");
-    Serial.print(summary.ambiguous);
-    Serial.print(" too_dense=");
-    Serial.print(summary.tooDense);
-    Serial.print(" invalid_audio=");
-    Serial.println(summary.invalidAudio);
-
-    Serial.print("  A_rates: duplicate=");
+    Serial.print("  details: A_rates: duplicate=");
     Serial.print(summary.duplicateRate, 2);
     Serial.print(" unexpected=");
     Serial.print(summary.unexpectedRate, 2);
@@ -1442,6 +1442,7 @@ void AnalyzerApp::printSequenceFinalOutput() const {
         return;
     }
     printSequenceSummary();
+    printAudioRunSummary();
 }
 
 void AnalyzerApp::printSequenceStatus() const {
@@ -1459,6 +1460,50 @@ void AnalyzerApp::printSequenceStatus() const {
     Serial.print(activeAnalyzerProfileName());
     Serial.print(" tries=");
     Serial.print(_seqOutputConfig.totalTrials);
+    Serial.println();
+}
+
+void AnalyzerApp::printSignalCheck() const {
+    if (_valMode) {
+        return;
+    }
+
+    const auto& diagnostics = _sequenceTest.currentTrialDiagnostics;
+    if (_sequenceTest.currentTrial == 0 && diagnostics.audioFrames == 0) {
+        Serial.println("SIGNALCHECK state=idle");
+        return;
+    }
+
+    const char* audioHealth = "ok";
+    if (diagnostics.audioRmsTooHighFrames > 0) {
+        audioHealth = "clipped";
+    } else if (diagnostics.audioLargeJumpFrames > 0) {
+        audioHealth = "glitchy";
+    } else if (diagnostics.audioFlatlineFrames > 0) {
+        audioHealth = "flatline";
+    } else if (diagnostics.audioZeroishFrames > 0 || diagnostics.audioRmsTooLowFrames > 0) {
+        audioHealth = "zeroish";
+    }
+
+    Serial.print("SIGNALCHECK");
+    Serial.print(" trial=");
+    Serial.print(_sequenceTest.currentTrial);
+    Serial.print(" audio_health=");
+    Serial.print(audioHealth);
+    Serial.print(" zeroish_frames=");
+    Serial.print(diagnostics.audioZeroishFrames);
+    Serial.print(" flatline_frames=");
+    Serial.print(diagnostics.audioFlatlineFrames);
+    Serial.print(" large_jump_frames=");
+    Serial.print(diagnostics.audioLargeJumpFrames);
+    Serial.print(" rms_too_low_frames=");
+    Serial.print(diagnostics.audioRmsTooLowFrames);
+    Serial.print(" rms_too_high_frames=");
+    Serial.print(diagnostics.audioRmsTooHighFrames);
+    Serial.print(" max_abs_delta=");
+    Serial.print(diagnostics.audioMaxAbsDelta);
+    Serial.print(" rms=");
+    Serial.print(diagnostics.audioRms, 1);
     Serial.println();
 }
 
@@ -1621,6 +1666,47 @@ void AnalyzerApp::printAudioSourceSummary() const {
     Serial.print(stats.droppedBlockCount);
     Serial.print(" totalSamples=");
     Serial.println(static_cast<unsigned long long>(stats.totalSamplesRead));
+}
+
+void AnalyzerApp::printAudioRunSummary() const {
+    if (!_sequenceTest.active && _sequenceTest.completedTrials == 0) {
+        return;
+    }
+
+    const unsigned long now = millis();
+    const unsigned long sampleRateHz = _audioSource.sampleRateHz() > 0 ? _audioSource.sampleRateHz() : 16000UL;
+    const unsigned long runElapsedMs = _sequenceTest.startedAtMs > 0
+        ? (now >= _sequenceTest.startedAtMs ? now - _sequenceTest.startedAtMs : 0UL)
+        : 0UL;
+    const unsigned long expectedSamples = static_cast<unsigned long>(
+        (static_cast<unsigned long long>(runElapsedMs) * static_cast<unsigned long long>(sampleRateHz)) / 1000ULL);
+    const unsigned long processedSamples = _sequenceTest.samplesProcessed;
+    const float processedRatio = expectedSamples > 0
+        ? static_cast<float>(processedSamples) / static_cast<float>(expectedSamples)
+        : 0.0f;
+    const unsigned long avgAvailableBytes = _sequenceTest.availableBytesSamples > 0
+        ? static_cast<unsigned long>(_sequenceTest.availableBytesSum / static_cast<uint64_t>(_sequenceTest.availableBytesSamples))
+        : 0UL;
+
+    Serial.println("AUDIO run:");
+    Serial.print("run_elapsed_ms=");
+    Serial.print(runElapsedMs);
+    Serial.print(" expected_samples=");
+    Serial.print(expectedSamples);
+    Serial.print(" processed_samples=");
+    Serial.print(processedSamples);
+    Serial.print(" processed_ratio=");
+    Serial.print(processedRatio, 3);
+    Serial.print(" max_available_bytes=");
+    Serial.print(_sequenceTest.maxAvailableBytes);
+    Serial.print(" avg_available_bytes=");
+    Serial.print(avgAvailableBytes);
+    Serial.print(" max_block_age_ms=");
+    Serial.print(_sequenceTest.maxBlockAgeMs);
+    Serial.print(" max_update_loop_us=");
+    Serial.print(_sequenceTest.maxUpdateLoopUs);
+    Serial.print(" max_processing_lag_ms=");
+    Serial.println(_sequenceTest.maxProcessingLagMs);
 }
 
 void AnalyzerApp::printOccurrenceSummary() const {

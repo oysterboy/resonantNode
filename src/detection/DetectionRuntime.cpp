@@ -149,6 +149,9 @@ void DetectionRuntime::captureDiagnostics() {
     _diagnostics.frequencyBothOkFrames = detector.diagnosticsBothOkCount;
     _diagnostics.frequencyMatchFrames = detector.diagnosticsMatchedCount;
     _diagnostics.frequencyRejectFrames = detector.diagnosticsRejectedCount;
+    _diagnostics.frequencyLongestMatchRunFrames = detector.longestMatchRunFrames;
+    _diagnostics.frequencyLongestMatchRunStartMs = detector.longestMatchRunStartMs;
+    _diagnostics.frequencyLongestMatchRunEndMs = detector.longestMatchRunEndMs;
     _diagnostics.frequencyScoreMean = detector.diagnosticsScoreMean();
     _diagnostics.frequencyContrastMean = detector.diagnosticsContrastMean();
     _diagnostics.frequencyScoreMin = detector.diagnosticsScoreMin;

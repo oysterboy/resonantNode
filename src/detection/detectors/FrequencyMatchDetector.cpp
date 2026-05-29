@@ -37,6 +37,11 @@ void FrequencyMatchDetector::resetState() {
     candidatePeakWindowSampleCount = 0;
     candidateMinDurationMs = 0;
     candidateMaxDurationMs = 0;
+    currentMatchRunFrames = 0;
+    currentMatchRunStartMs = 0;
+    longestMatchRunFrames = 0;
+    longestMatchRunStartMs = 0;
+    longestMatchRunEndMs = 0;
     bestObservedAtMs = 0;
     bestObservedSample = 0;
     bestScore = 0.0f;
@@ -129,6 +134,10 @@ void FrequencyMatchDetector::update(const detection::FrequencyFeatureFrame& evid
         }
 
         if (liveFreqEval.matched) {
+            if (currentMatchRunFrames == 0) {
+                currentMatchRunStartMs = now;
+            }
+            ++currentMatchRunFrames;
             if (timing::beforeDeadline(now, candidateRefractoryUntilMs)) {
                 strncpy(gateReason, "refractory", sizeof(gateReason) - 1);
                 gateReason[sizeof(gateReason) - 1] = '\0';
@@ -188,6 +197,14 @@ void FrequencyMatchDetector::update(const detection::FrequencyFeatureFrame& evid
                 frequencyCandidate.candidateHoldWindows = candidateHoldWindows;
                 frequencyCandidate.durationMs = candidateHoldMs;
             }
+        } else if (currentMatchRunFrames > 0) {
+            if (currentMatchRunFrames > longestMatchRunFrames) {
+                longestMatchRunFrames = currentMatchRunFrames;
+                longestMatchRunStartMs = currentMatchRunStartMs;
+                longestMatchRunEndMs = candidateLastMatchedMs > 0 ? candidateLastMatchedMs : now;
+            }
+            currentMatchRunFrames = 0;
+            currentMatchRunStartMs = 0;
         } else if (candidateActive && candidateLastMatchedMs > 0) {
             if (timing::elapsedSince(now, candidateLastMatchedMs, releaseDebounceMs)) {
                 candidateActive = false;
@@ -238,7 +255,22 @@ live_freq_update_best:
         }
     }
 
+    if (!evidence.present && currentMatchRunFrames > 0) {
+        if (currentMatchRunFrames > longestMatchRunFrames) {
+            longestMatchRunFrames = currentMatchRunFrames;
+            longestMatchRunStartMs = currentMatchRunStartMs;
+            longestMatchRunEndMs = candidateLastMatchedMs > 0 ? candidateLastMatchedMs : now;
+        }
+        currentMatchRunFrames = 0;
+        currentMatchRunStartMs = 0;
+    }
+
     if (_diagnosticsEnabled) {
+        if (currentMatchRunFrames > 0 && currentMatchRunFrames > longestMatchRunFrames) {
+            longestMatchRunFrames = currentMatchRunFrames;
+            longestMatchRunStartMs = currentMatchRunStartMs;
+            longestMatchRunEndMs = candidateLastMatchedMs > 0 ? candidateLastMatchedMs : now;
+        }
         const auto bestEval = FrequencyMatchEvaluation::evaluate(bestEvidence, tuning);
         bestScoreOk = bestEval.scoreOk;
         bestContrastOk = bestEval.contrastOk;

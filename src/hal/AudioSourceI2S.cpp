@@ -55,6 +55,10 @@ bool AudioSourceI2S::available() {
     return _blockCursor < _blockCount || refillBlock();
 }
 
+int AudioSourceI2S::availableBytes() const {
+    return I2S.available();
+}
+
 bool AudioSourceI2S::readSample(int& sample, uint32_t& sampleTimeUs) {
     if (_blockCursor >= _blockCount && !refillBlock()) {
         return false;

@@ -56,6 +56,11 @@ public:
     unsigned long candidatePeakWindowSampleCount = 0;
     unsigned long candidateMinDurationMs = 0;
     unsigned long candidateMaxDurationMs = 0;
+    unsigned long currentMatchRunFrames = 0;
+    unsigned long currentMatchRunStartMs = 0;
+    unsigned long longestMatchRunFrames = 0;
+    unsigned long longestMatchRunStartMs = 0;
+    unsigned long longestMatchRunEndMs = 0;
     unsigned long bestObservedAtMs = 0;
     uint64_t bestObservedSample = 0;
     float bestScore = 0.0f;

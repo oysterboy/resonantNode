@@ -67,7 +67,8 @@ void DetectionRuntime::resetState() {
 
 void DetectionRuntime::resetDiagnostics() {
     _diagnostics = {};
-    _frequencyEmitter.detector().resetDiagnosticsSummary();
+    _frequencyEmitter.reset();
+    _scalarEmitter.reset();
 }
 
 void DetectionRuntime::setDiagnosticsEnabled(bool enabled) {

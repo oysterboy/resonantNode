@@ -1,162 +1,141 @@
-# Codex Instruction — Carry FrequencyMatch Reject / No-Emit Reason Forward
+# Codex Instruction - FrequencyMatch Reject Summary Pass
 
 ## Goal
 
-Explain the remaining rare `strong_no_occurrence` misses.
+Make `SEQ_FREQ_DIAG` trustworthy for the remaining `strong_no_occurrence` cases by carrying a detector-owned no-emit / reject summary forward once per trial.
 
-Current 400-trial run:
+This pass is intentionally narrow:
+
+- focus on `FrequencyMatch` only
+- keep the summary trial-local
+- do not build the generic `SEQ_INSPECT` path yet
+- do not expand `PatternResult`
+
+## Current reading
+
+The emitted candidate path is already trustworthy:
 
 ```text
-expected=397
-late=1
-miss=2
-duplicate=1
-freq_evidence_class_counts: accepted=398 strong_no_occurrence=2
+Occurrence -> OccurrenceInspector -> InspectedOccurrence -> PatternAssembler -> PatternCandidate -> PatternRules -> PatternResult -> Analyzer
+```
 
-The two misses show:
+What is still weak is the rejected / non-emitted path:
 
-freq_evidence_class=strong_no_occurrence
-score_ok_frames≈1000
-both_ok_frames≈1000
-match_frames≈1000
-trial_occurrence_opened=1
-trial_occurrence_released=1
-trial_occurrence_emitted=0
-trace_source_occurrence_emitted=0
-trace_analyzer_seen=0
+- analyzer can see a miss
+- analyzer can see some live counters
+- but the detector-owned no-emit reason is not yet carried in a clean trial summary
 
-So this is not weak frequency evidence. The missing explanation is:
+## Pass Scope
 
-Why did FrequencyMatch open/release but not emit an occurrence?
-Core rule
+This pass should only do the following:
 
-FrequencyMatchSource / detector owns the reject/no-emit reason.
+```text
+FrequencyMatchDetector
+  -> capture candidate lifecycle facts for the current trial
+  -> store a small reject / no-emit summary
 
-Analyzer must not infer this from raw counters.
+DetectionRuntime
+  -> reset that summary at trial start
+  -> snapshot it once at trial end
 
-SEQ should only print facts carried forward from the detector/source/runtime/analyzer.
+Analyzer
+  -> print the carried trial summary in SEQ_FREQ_DIAG
+  -> do not infer reject reasons from counters
+```
 
-Add / carry forward detector reject reason
+## Trial-local facts to carry
 
-If FrequencyMatch already has an internal reject reason, carry it forward into the trial diagnostic.
+For the current trial only, carry:
 
-Add fields:
-
+```text
 fm_reject_reason
 fm_no_emit_reason
 fm_gate_reason
-
-Suggested enum values:
-
-none
-score_too_low
-contrast_too_low
-score_and_contrast_too_low
-duration_too_short
-duration_too_long
-invalid_release
-not_open
-not_released
-gate_closed
-not_ready
-already_emitted
-outside_window
-unknown
-
-If an internal reject reason already exists, do not create a second parallel enum unless needed. Prefer to reuse/carry the existing detector reason.
-
-Add duration / lifecycle details
-
-For each strong_no_occurrence miss, print:
-
+fm_opened
+fm_released
+fm_emitted
+fm_valid_release
+fm_emit_allowed
 fm_open_ms
 fm_peak_ms
 fm_release_ms
 fm_duration_ms
 fm_min_duration_ms
 fm_max_duration_ms
-fm_duration_ok=0/1
-fm_opened=0/1
-fm_released=0/1
-fm_emitted=0/1
+```
 
-The goal is to distinguish:
+Also carry the minimal trace split:
 
-opened but duration too short
-opened but duration too long
-opened/released but invalid release
-opened/released and valid, but emit edge skipped
-Add gate details
+```text
+trace_source_occurrence_emitted
+trace_runtime_evidence_seen
+trace_runtime_occurrence_received
+trace_analyzer_seen
+```
 
-Print current source/detector gate facts:
+## What counts as success
 
-fm_ready=0/1
-fm_gate_open=0/1
-fm_gate_reason=none/not_ready/cooldown/refractory/invalid_state/unknown
-fm_valid_release=0/1
-fm_emit_allowed=0/1
+For a `strong_no_occurrence` miss:
 
-Only include gates that actually exist in FrequencyMatch / DetectionRuntime. Do not import RB behavior suppression concepts.
-
-Fix ambiguous runtime trace naming
-
-Current field:
-
-trace_runtime_received
-
-is ambiguous because misses show:
-
-trace_source_occurrence_emitted=0
-trace_runtime_received=1
-
-Split it into:
-
-trace_runtime_evidence_seen=0/1
-trace_runtime_occurrence_received=0/1
-
-Required consistency:
-
-if trace_source_occurrence_emitted=0:
-    trace_runtime_occurrence_received must be 0
-
-If the runtime saw frames/evidence/candidate state only:
-
-trace_runtime_evidence_seen=1
-trace_runtime_occurrence_received=0
-Output example
-
-For a strong-no-occurrence miss:
-
-SEQ_FREQ_DIAG trial=116 result=miss
-freq_evidence_class=strong_no_occurrence
+```text
 accepted_present=0
-analyzer_reason=no_occurrence_candidate
-
+freq_evidence_class=strong_no_occurrence
 fm_opened=1
 fm_released=1
 fm_emitted=0
-fm_open_ms=...
-fm_peak_ms=...
-fm_release_ms=...
-fm_duration_ms=...
-fm_min_duration_ms=...
-fm_max_duration_ms=...
-fm_duration_ok=0/1
-fm_valid_release=0/1
-fm_emit_allowed=0/1
 fm_reject_reason=...
 fm_no_emit_reason=...
-
 trace_source_occurrence_emitted=0
 trace_runtime_evidence_seen=1
 trace_runtime_occurrence_received=0
 trace_analyzer_seen=0
-Success criteria
-- Strong-no-occurrence misses carry a real FrequencyMatch no-emit/reject reason.
-- Duration gates are visible: duration, min, max, duration_ok.
-- Gate state is visible: ready, gate_open, valid_release, emit_allowed.
-- Analyzer does not infer detector reasons from counters.
-- SEQ only prints carried facts.
-- Runtime trace distinguishes evidence seen from occurrence received.
+```
 
-And yes: **if the detector already has a reject reason internally, prefer carrying that forward**. The current problem is not necessarily missing logic; it may be that the reason exists but gets lost before `SEQ_FREQ_DIAG`.
+The important rule is:
+
+- the analyzer may print carried facts
+- the analyzer may not reconstruct reject reasons from raw counters
+
+## Not in this pass
+
+```text
+Generic SEQ_INSPECT
+Pattern diagnostics
+Scalar reject summaries
+Re-introducing per-frame diagnostic accumulation
+Overloading SEQ_TRIAL with more verbose detail
+```
+
+## Suggested implementation order
+
+```text
+1. Keep detector-owned reject / no-emit facts for FrequencyMatch only.
+2. Snapshot them in DetectionRuntime at trial end.
+3. Print them in SEQ_FREQ_DIAG.
+4. Verify the result against a miss-only run.
+```
+
+## Practical test
+
+Use a short diagnostic run first:
+
+```text
+SEQ start tries=20 log=summary diag=miss test=freq-evidence
+```
+
+Then a longer comparison run:
+
+```text
+SEQ start tries=100 log=summary diag=miss test=freq-evidence
+```
+
+## Roadmap link
+
+This pass is the narrow FrequencyMatch slice of the analyser roadmap item:
+
+```text
+Add detector/source reject-candidate log
+Analyzer drain + aggregate rejects
+```
+
+The generic cross-profile `SEQ_INSPECT` layer can come later.

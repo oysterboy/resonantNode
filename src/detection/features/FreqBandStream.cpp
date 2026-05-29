@@ -21,14 +21,17 @@ void FreqBandStream::resetState() {
     _profileComputeTotalUs = 0;
     _profileEnergyTotalUs = 0;
     _profileGoertzelTotalUs = 0;
+    updateCachedGoertzelCoefficients();
 }
 
 void FreqBandStream::setTargetFrequencyHz(unsigned long value) {
     _targetFrequencyHz = value;
+    updateCachedGoertzelCoefficients();
 }
 
 void FreqBandStream::setSampleRateHz(unsigned long value) {
     _sampleRateHz = value == 0 ? 1 : value;
+    updateCachedGoertzelCoefficients();
 }
 
 void FreqBandStream::setWindowSizeSamples(unsigned long value) {
@@ -39,6 +42,7 @@ void FreqBandStream::setWindowSizeSamples(unsigned long value) {
         value = kMaxWindowSizeSamples;
     }
     _windowSizeSamples = value;
+    updateCachedGoertzelCoefficients();
 }
 
 void FreqBandStream::observeCenteredSample(int centeredSample) {
@@ -72,15 +76,30 @@ void FreqBandStream::pushSample(int sample) {
     }
 }
 
-float FreqBandStream::computeGoertzelPowerAtFrequency(float frequencyHz) const {
+void FreqBandStream::updateCachedGoertzelCoefficients() {
+    const float sampleRateHz = static_cast<float>(_sampleRateHz == 0 ? 1 : _sampleRateHz);
+    const float targetHz = static_cast<float>(_targetFrequencyHz);
+    const float binSpacingHz = frequencyBinSpacingHz();
+    const float lowerFrequency = _targetFrequencyHz > static_cast<unsigned long>(binSpacingHz)
+        ? targetHz - binSpacingHz
+        : targetHz * 0.5f;
+    const float upperFrequency = targetHz + binSpacingHz;
+
+    _cachedTargetFrequencyHz = targetHz;
+    _cachedLowerFrequencyHz = lowerFrequency < 1.0f ? 1.0f : lowerFrequency;
+    _cachedUpperFrequencyHz = upperFrequency;
+    _cachedTargetCoeff = 2.0f * cosf(2.0f * PI * _cachedTargetFrequencyHz / sampleRateHz);
+    _cachedLowerCoeff = 2.0f * cosf(2.0f * PI * _cachedLowerFrequencyHz / sampleRateHz);
+    _cachedUpperCoeff = 2.0f * cosf(2.0f * PI * _cachedUpperFrequencyHz / sampleRateHz);
+    _cachedGoertzelValid = true;
+}
+
+float FreqBandStream::computeGoertzelPowerFromCoeff(float coeff) const {
     if (_windowSizeSamples == 0 || _sampleCount < _windowSizeSamples) {
         return 0.0f;
     }
 
     const unsigned long profileStartUs = micros();
-    const float omega = 2.0f * PI * frequencyHz / static_cast<float>(_sampleRateHz);
-    const float coeff = 2.0f * cosf(omega);
-
     float sPrev = 0.0f;
     float sPrev2 = 0.0f;
 
@@ -97,6 +116,26 @@ float FreqBandStream::computeGoertzelPowerAtFrequency(float frequencyHz) const {
     const float power = sPrev2 * sPrev2 + sPrev * sPrev - coeff * sPrev * sPrev2;
     _profileGoertzelTotalUs += static_cast<unsigned long>(micros() - profileStartUs);
     return power;
+}
+
+float FreqBandStream::computeGoertzelPowerAtFrequency(float frequencyHz) const {
+    if (!_cachedGoertzelValid) {
+        return 0.0f;
+    }
+
+    if (frequencyHz == _cachedTargetFrequencyHz) {
+        return computeGoertzelPowerFromCoeff(_cachedTargetCoeff);
+    }
+    if (frequencyHz == _cachedLowerFrequencyHz) {
+        return computeGoertzelPowerFromCoeff(_cachedLowerCoeff);
+    }
+    if (frequencyHz == _cachedUpperFrequencyHz) {
+        return computeGoertzelPowerFromCoeff(_cachedUpperCoeff);
+    }
+
+    const float sampleRateHz = static_cast<float>(_sampleRateHz == 0 ? 1 : _sampleRateHz);
+    const float coeff = 2.0f * cosf(2.0f * PI * frequencyHz / sampleRateHz);
+    return computeGoertzelPowerFromCoeff(coeff);
 }
 
 float FreqBandStream::computeFrequencyScore() {
@@ -120,14 +159,9 @@ float FreqBandStream::computeFrequencyScore() {
     }
     _profileEnergyTotalUs += static_cast<unsigned long>(micros() - energyStartUs);
 
-    const float targetPower = computeGoertzelPowerAtFrequency(static_cast<float>(_targetFrequencyHz));
-    const float binSpacingHz = frequencyBinSpacingHz();
-    const float lowerFrequency = _targetFrequencyHz > static_cast<unsigned long>(binSpacingHz)
-        ? static_cast<float>(_targetFrequencyHz) - binSpacingHz
-        : static_cast<float>(_targetFrequencyHz) * 0.5f;
-    const float upperFrequency = static_cast<float>(_targetFrequencyHz) + binSpacingHz;
-    const float lowerPower = computeGoertzelPowerAtFrequency(lowerFrequency < 1.0f ? 1.0f : lowerFrequency);
-    const float upperPower = computeGoertzelPowerAtFrequency(upperFrequency);
+    const float targetPower = computeGoertzelPowerAtFrequency(_cachedTargetFrequencyHz);
+    const float lowerPower = computeGoertzelPowerAtFrequency(_cachedLowerFrequencyHz);
+    const float upperPower = computeGoertzelPowerAtFrequency(_cachedUpperFrequencyHz);
     const float neighborPower = (lowerPower + upperPower) * 0.5f;
     const float normalized = (targetPower * 1000.0f) / (totalEnergy + 1.0f);
     const float contrast = targetPower / (neighborPower + 1.0f);

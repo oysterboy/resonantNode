@@ -53,11 +53,20 @@ public:
 private:
     float computeFrequencyScore();
     float computeGoertzelPowerAtFrequency(float frequencyHz) const;
+    float computeGoertzelPowerFromCoeff(float coeff) const;
+    void updateCachedGoertzelCoefficients();
     void pushSample(int sample);
 
     unsigned long _targetFrequencyHz = runtime::kDefaultChirpFrequencyHz;
     unsigned long _sampleRateHz = 16000;
     unsigned long _windowSizeSamples = 64;
+    float _cachedTargetFrequencyHz = 0.0f;
+    float _cachedLowerFrequencyHz = 0.0f;
+    float _cachedUpperFrequencyHz = 0.0f;
+    float _cachedTargetCoeff = 0.0f;
+    float _cachedLowerCoeff = 0.0f;
+    float _cachedUpperCoeff = 0.0f;
+    bool _cachedGoertzelValid = false;
     float _lastFrequencyScore = 0.0f;
     float _lastTargetPower = 0.0f;
     float _lastNeighborPower = 0.0f;

@@ -1,171 +1,64 @@
-# Step 3 — Find Analyzer Audio-Throughput Regression Before Detector Tuning
+# Step 3 - Analyzer Audio Throughput Findings
 
-## Context
+## Summary
 
-Recent SEQ timing tests show severe audio under-processing:
+We proved the analyzer throughput regression is real, and we also proved where most of the time is going.
 
-- `expected_samples ≈ 205k`
-- `processed_samples ≈ 100k`
-- `processed_ratio ≈ 0.49–0.50`
-- `max_available_bytes = 2048`
-- `avg_available_bytes ≈ 1937–1956`
-- `maxReadBytes = 128`
+The key result is:
 
-This correlates with high miss counts.
+- `FreqBandStream` is the dominant hot-path cost.
+- Diagnostics are secondary.
+- With `freqband` off, the analyzer keeps up much better.
+- With `freqband` on, the analyzer falls behind badly.
 
-Important historical note:
+## Measured Results
 
-Before the recent Analyzer changes, the same hardware/detector setup did not produce miss counts like this. Therefore treat this as a likely Analyzer regression or audio-loop regression, not primarily as a detector-tuning problem.
+### Throughput
 
-## Goal
+- `freqband on`, `diag on`
+  - `processed_ratio` around `0.56-0.80`
+  - `max_update_loop_us` around `41,645-53,692`
+  - `avg_available_bytes` around `1,997-2,004`
+- `freqband off`, `diag on`
+  - `processed_ratio = 0.982`
+  - `max_update_loop_us` around `3,176-3,716`
+  - `avg_available_bytes` around `354-390`
+- `freqband off`, `diag off`
+  - `processed_ratio = 0.982`
+  - `max_update_loop_us` around `3,176-3,326`
+  - `avg_available_bytes` around `323-390`
 
-Restore Analyzer audio processing coverage to near full stream rate before changing any detection thresholds.
+### FreqBandStream profiling
 
-Target:
+- `observe_calls = 115,200`
+- `avg_observe_us = 54.66`
+- `compute_calls = 115,137`
+- `avg_compute_us = 53.21`
+- `avg_energy_us = 6.62`
+- `avg_goertzel_us = 42.32`
 
-- `processed_ratio >= 0.95`
-- `avg_available_bytes` clearly below `max_available_bytes`
-- `max_available_bytes` not constantly saturated at `2048`
-- `droppedBlocks = 0`
-- `overflow = 0`
+### Inspection result
 
-## Tasks
+- `pushSample(...)` is not the problem.
+- The total-energy sweep is comparatively small.
+- `computeGoertzelPowerAtFrequency(...)` is the hot inner loop.
+- The repeated Goertzel passes dominate the cost.
+- `cosf(...)` is being recomputed every call even though the configuration is stable during a trial.
 
-### 1. Compare old vs current Analyzer loop structure
+## Interpretation
 
-Inspect recent changes around:
+- `AudioSourceI2S::kRefillBatchSize = 128` and `AnalyzerApp::kMaxSamplesPerLoop = 512` were necessary, but not enough.
+- Removing analyzer-side audio-health bookkeeping helped a little, but not enough on its own.
+- `DetectionRuntime` diagnostics add some overhead, but they are secondary compared with `FreqBandStream`.
+- `SEQ DIAG off` barely changes throughput once `SEQ FREQBAND off` is already in effect.
 
-- `AnalyzerApp::update()`
-- SEQ run loop
-- SEQ compact/miss diagnostics
-- stage-status derivation
-- `AnalyzerReport` construction
-- any per-frame / per-sample diagnostic collection
-- audio reset / rebase / warmup behavior
+## Current Conclusion
 
-Find whether Analyzer now does expensive work inside the audio-drain loop or before enough audio has been drained.
+The throughput regression is primarily caused by the per-sample frequency scoring path, not by report generation, not by diagnostics output, and not by the analyzer summary layer.
 
-### 2. Verify audio drain is called frequently enough
+## Next Step
 
-Check whether current Analyzer logic still drains audio continuously during SEQ.
+1. Cache the Goertzel coefficient(s) for the stable target/sample-rate/window configuration so we stop recomputing `cosf(...)` every sample.
+2. If we need a smaller follow-up cut after that, inspect `DetectionRuntime::observeFrame(...)` and `FrequencyMatchDetector::update(...)`.
+3. Keep detector thresholds, PatternRules, and support gates unchanged for now.
 
-Specifically confirm:
-
-- audio update is called even while waiting for trial windows
-- audio update is called during miss diagnostics
-- report printing does not block audio ingestion during active trials
-- stage-status/report derivation is not happening per sample unless absolutely necessary
-
-### 3. Inspect hard audio throttles
-
-Check these limits:
-
-```cpp
-AudioSourceI2S::kRefillBatchSize = 32;
-AnalyzerApp::kMaxSamplesPerLoop = 128;
-node.cpp::kMaxSamplesPerLoop = 128;
-```
-
-These imply:
-
-- max I2S read ≈ `128 bytes`
-- max Analyzer audio work ≈ `128 samples` per `update()`
-
-This may have been survivable before Analyzer became heavier, but it is not currently enough.
-
-### 4. Apply the smallest throughput fix
-
-Start conservatively:
-
-```cpp
-AudioSourceI2S::kRefillBatchSize = 128;
-AnalyzerApp::kMaxSamplesPerLoop = 512;
-node.cpp::kMaxSamplesPerLoop = 512;
-```
-
-Do not change detection thresholds.
-
-Do not change PatternRules.
-
-Do not change TonalPulse profile values.
-
-### 5. Keep detection semantics unchanged
-
-Preserve the current per-sample detection path:
-
-```cpp
-AudioSignal::update(...)
-FreqBandStream::observeCenteredSample(...)
-DetectionRuntime::observeFrame(...)
-```
-
-Do not switch to block-level detection yet unless timing semantics are proven identical.
-
-### 6. Move expensive Analyzer work out of the audio-drain path
-
-If any of the following are currently done per sample or per audio frame, move them to trial-end or summary time:
-
-- string formatting
-- stage-status text generation
-- miss explanation formatting
-- `SEQ_EXPLAIN` construction
-- report-line construction
-- repeated reason-name conversion
-- large debug snapshot assembly
-
-The active audio loop should only collect minimal structured facts.
-
-### 7. Re-test before further changes
-
-Run:
-
-```text
-SEQ FREQCOMPUTE off
-SEQ tries=5 or 100
-
-SEQ FREQCOMPUTE on
-SEQ tries=5 or 100
-```
-
-Report:
-
-```text
-processed_ratio
-processed_samples
-expected_samples
-max_available_bytes
-avg_available_bytes
-maxReadBytes
-max_update_loop_us
-max_processing_lag_ms
-miss count
-main_miss_reason
-freq_evidence_class_counts
-```
-
-## Non-goals
-
-Do not tune:
-
-- frequency score threshold
-- frequency contrast threshold
-- AmpStrength support gates
-- detector onset/release
-- PatternRules
-- Behavior suppression
-- SEQ classification windows
-
-This pass is about restoring Analyzer/audio timing parity with the previously working behavior.
-
-## Recommended starting change
-
-Start with exactly this conservative change:
-
-```text
-kRefillBatchSize:    32  → 128
-kMaxSamplesPerLoop: 128 → 512
-```
-
-Then judge by `processed_ratio`.
-
-If it still stays around `0.5`, the bottleneck is not just read size. Then the next suspect is CPU cost per sample, especially frequency scoring being recomputed every sample.

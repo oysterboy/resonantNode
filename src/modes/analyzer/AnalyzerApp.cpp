@@ -545,7 +545,9 @@ void AnalyzerApp::update() {
             const uint32_t sampleTimeUs = block.approxStartMicros + sampleOffsetUs(static_cast<uint32_t>(i), sampleRateHz);
             AudioSignalFrame frame;
             _audioSignal.update(static_cast<int>(block.samples[i]), sampleTimeUs, frame);
-            _freqBandStream.observeCenteredSample(frame.centeredSample);
+            if (_sequenceTest.outputConfig.frequencyBandEnabled) {
+                _freqBandStream.observeCenteredSample(frame.centeredSample);
+            }
             if (_sequenceTest.active && _sequenceTest.currentTrial > 0) {
                 const unsigned long processingLagMs = millis() > frame.sampleTimeMs
                     ? millis() - frame.sampleTimeMs
@@ -553,7 +555,12 @@ void AnalyzerApp::update() {
                 if (processingLagMs > _sequenceTest.maxProcessingLagMs) {
                     _sequenceTest.maxProcessingLagMs = processingLagMs;
                 }
-                const detection::FrequencyFeatureFrame runtimeFrequencyFrame = captureFrequencyFeatureFrame(frame.sampleTimeMs);
+                detection::FrequencyFeatureFrame runtimeFrequencyFrame = {};
+                if (_sequenceTest.outputConfig.frequencyBandEnabled) {
+                    runtimeFrequencyFrame = captureFrequencyFeatureFrame(frame.sampleTimeMs);
+                } else {
+                    runtimeFrequencyFrame.observedAtMs = frame.sampleTimeMs;
+                }
                 _detection->observeFrame(frame, runtimeFrequencyFrame, frame.sampleTimeMs);
                 while (_detection->popPatternResult(_sequenceTest.currentTrialDiagnostics.runtimePatternResult)) {
                     _sequenceTest.currentTrialDiagnostics.runtimePatternCaptured = true;
@@ -1069,7 +1076,8 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
         ? (runtimeInspectedOccurrence->rejected ? occurrenceRejectReasonName(runtimeInspectedOccurrence->rejectReason) : "none")
         : analyzerReasonName(report.classification.reason);
 
-    const bool diagnosticsRequested = _sequenceTest.outputConfig.when != AnalyzerApp::SeqOutputWhen::Off;
+    const bool diagnosticsRequested = _sequenceTest.outputConfig.when != AnalyzerApp::SeqOutputWhen::Off &&
+        _sequenceTest.outputConfig.diagnosticsEnabled;
     const detection::DetectionDiagnostics* runtimeDiag = nullptr;
     const FrequencyMatchDetector* frequencyDetector = nullptr;
     if (diagnosticsRequested && _detection != nullptr) {

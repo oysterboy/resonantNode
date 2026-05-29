@@ -131,10 +131,11 @@ void AnalyzerApp::startSequenceTest(unsigned long totalTrials, unsigned long per
     _detection->setPatternRulesConfig(selectedProfile.patternRulesConfig);
     _detection->setFieldStateConfig(selectedProfile.fieldStateConfig);
     _detection->setProfileName(detection::detectionProfileName(selectedProfile.kind));
-    _detection->setDiagnosticsEnabled(_sequenceTest.diagMode != SequenceDiagMode::Off);
+    _detection->setDiagnosticsEnabled(_sequenceTest.outputConfig.diagnosticsEnabled);
     _freqBandStream.setSampleRateHz(_audioSource.sampleRateHz());
     _freqBandStream.setTargetFrequencyHz(toneHz);
     _freqBandStream.resetState();
+    _sequenceTest.outputConfig = _seqOutputConfig;
 
     if (setupLabel != nullptr && setupLabel[0] != '\0') {
         strncpy(_sequenceTest.setupLabel, setupLabel, sizeof(_sequenceTest.setupLabel));
@@ -250,7 +251,7 @@ void AnalyzerApp::startSequenceTest(unsigned long totalTrials, unsigned long per
     }
     resetDetectorState();
     if (_detection != nullptr) {
-        _detection->setDiagnosticsEnabled(_sequenceTest.diagMode != SequenceDiagMode::Off);
+        _detection->setDiagnosticsEnabled(_sequenceTest.outputConfig.diagnosticsEnabled);
     }
     _audioSignal.resetStats();
     _audioSource.resetStats();
@@ -385,7 +386,9 @@ void AnalyzerApp::updateSequenceTest(unsigned long now) {
     _sequenceTest.currentTrialDiagnostics.scalar.expectedFrameCountEstimate = _sequenceTest.currentTrialDiagnostics.frequency.expectedFrameCountEstimate;
     _sequenceTest.currentTrialDiagnostics.scalar.diagFrameCountOk = false;
     printSequenceTrialHeader(trialNumber);
-    _detection->resetDiagnostics();
+    if (_sequenceTest.outputConfig.diagnosticsEnabled) {
+        _detection->resetDiagnostics();
+    }
     _sequenceTest.nextTriggerAtMs = scheduledAtMs + _sequenceTest.periodMs;
 
     beginSequenceSampleDump(trialNumber);

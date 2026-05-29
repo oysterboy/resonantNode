@@ -43,6 +43,13 @@ public:
     unsigned long sampleCount() const;
     bool windowReady() const;
 
+    unsigned long profileObserveCalls() const;
+    unsigned long profileComputeCalls() const;
+    unsigned long profileObserveTotalUs() const;
+    unsigned long profileComputeTotalUs() const;
+    unsigned long profileEnergyTotalUs() const;
+    unsigned long profileGoertzelTotalUs() const;
+
 private:
     float computeFrequencyScore();
     float computeGoertzelPowerAtFrequency(float frequencyHz) const;
@@ -61,4 +68,11 @@ private:
     int _sampleBuffer[kMaxWindowSizeSamples] = {};
     unsigned long _sampleCount = 0;
     unsigned long _sampleWriteIndex = 0;
+
+    unsigned long _profileObserveCalls = 0;
+    unsigned long _profileComputeCalls = 0;
+    unsigned long _profileObserveTotalUs = 0;
+    unsigned long _profileComputeTotalUs = 0;
+    unsigned long _profileEnergyTotalUs = 0;
+    mutable unsigned long _profileGoertzelTotalUs = 0;
 };

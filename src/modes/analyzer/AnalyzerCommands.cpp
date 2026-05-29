@@ -5,6 +5,36 @@
 #include <stdlib.h>
 #include <string.h>
 
+namespace {
+
+bool parseOnOffToken(const char* token, bool* valid) {
+    if (valid != nullptr) {
+        *valid = true;
+    }
+    if (token == nullptr || *token == '\0') {
+        if (valid != nullptr) {
+            *valid = false;
+        }
+        return true;
+    }
+    if (equalsIgnoreCase(token, "on") || equalsIgnoreCase(token, "1") || equalsIgnoreCase(token, "true")) {
+        return true;
+    }
+    if (equalsIgnoreCase(token, "off") || equalsIgnoreCase(token, "0") || equalsIgnoreCase(token, "false")) {
+        return false;
+    }
+    if (valid != nullptr) {
+        *valid = false;
+    }
+    return true;
+}
+
+const char* onOffName(bool value) {
+    return value ? "on" : "off";
+}
+
+} // namespace
+
 void AnalyzerApp::printSequenceHelp() {
     Serial.println("CMD: SEQ help");
     Serial.println("CMD: SEQ");
@@ -18,6 +48,8 @@ void AnalyzerApp::printSequenceHelp() {
     Serial.println("SEQ IN: MODE compact = compact trial view");
     Serial.println("SEQ IN: MODE signalcheck = compact trial view + audio health snapshot");
     Serial.println("SEQ IN: MODE full = trial + source + inspect + pattern");
+    Serial.println("SEQ IN: DIAG on|off");
+    Serial.println("SEQ IN: FREQBAND on|off");
     Serial.println("SEQ IN: WHEN off|miss|all");
     Serial.println("SEQ IN: VERBOSE 0|1|2");
     Serial.println("SEQ IN: TRIES N");
@@ -190,8 +222,45 @@ void AnalyzerApp::handleUsbLine(const char* line) {
             return;
         }
 
-        if (equalsIgnoreCase(token, "STATUS")) {
-            printSequenceStatus();
+    if (equalsIgnoreCase(token, "STATUS")) {
+        printSequenceStatus();
+        return;
+    }
+
+    if (equalsIgnoreCase(token, "DIAG") || equalsIgnoreCase(token, "DIAGNOSTICS")) {
+        const char* enabledToken = strtok_r(nullptr, " ", &savePtr);
+        bool valid = false;
+        const bool enabled = parseOnOffToken(enabledToken, &valid);
+        if (!valid) {
+            Serial.println("ERR SEQ unknown diagnostics use DIAG on|off");
+            return;
+        }
+        _seqOutputConfig.diagnosticsEnabled = enabled;
+        if (_sequenceTest.active) {
+            _sequenceTest.outputConfig.diagnosticsEnabled = enabled;
+            if (_detection != nullptr) {
+                _detection->setDiagnosticsEnabled(enabled);
+            }
+        }
+        Serial.print("OK SEQ DIAG ");
+        Serial.println(onOffName(enabled));
+        return;
+    }
+
+    if (equalsIgnoreCase(token, "FREQBAND")) {
+        const char* enabledToken = strtok_r(nullptr, " ", &savePtr);
+        bool valid = false;
+        const bool enabled = parseOnOffToken(enabledToken, &valid);
+        if (!valid) {
+                Serial.println("ERR SEQ unknown freqband use FREQBAND on|off");
+                return;
+            }
+            _seqOutputConfig.frequencyBandEnabled = enabled;
+            if (_sequenceTest.active) {
+                _sequenceTest.outputConfig.frequencyBandEnabled = enabled;
+            }
+            Serial.print("OK SEQ FREQBAND ");
+            Serial.println(onOffName(enabled));
             return;
         }
 
@@ -238,7 +307,7 @@ void AnalyzerApp::handleUsbLine(const char* line) {
                 _sequenceTest.outputConfig.when = when;
                 _sequenceTest.diagMode = AnalyzerApp::sequenceDiagModeFromOutputWhen(when);
                 if (_detection != nullptr) {
-                    _detection->setDiagnosticsEnabled(_sequenceTest.diagMode != AnalyzerApp::SequenceDiagMode::Off);
+                    _detection->setDiagnosticsEnabled(_sequenceTest.outputConfig.diagnosticsEnabled);
                 }
             }
             Serial.print("OK SEQ WHEN ");
@@ -386,6 +455,15 @@ void AnalyzerApp::handleUsbLine(const char* line) {
                         return;
                     }
                     outputConfig.verbosity = static_cast<uint8_t>(verbosity);
+                } else if (startsWithTokenIgnoreCase(token, "diag=") || startsWithTokenIgnoreCase(token, "diagnostics=")) {
+                    const char* valueToken = strchr(token, '=') != nullptr ? strchr(token, '=') + 1 : nullptr;
+                    bool valid = false;
+                    const bool enabled = parseOnOffToken(valueToken, &valid);
+                    if (!valid) {
+                        Serial.println("ERR SEQ diagnostics use diag=on|off");
+                        return;
+                    }
+                    outputConfig.diagnosticsEnabled = enabled;
                 } else if (startsWithTokenIgnoreCase(token, "sampleFirst=")) {
                     sampleDumpEnabled = true;
                     sampleDumpFirstTrials = static_cast<unsigned long>(strtoul(token + 12, nullptr, 10));

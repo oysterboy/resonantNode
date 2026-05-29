@@ -60,6 +60,8 @@ public:
         SeqOutputWhen when = SeqOutputWhen::Miss;
         uint8_t verbosity = 0;
         unsigned long totalTrials = 100;
+        bool diagnosticsEnabled = true;
+        bool frequencyBandEnabled = true;
     };
 
     AnalyzerApp(int inputPin = 34);

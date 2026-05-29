@@ -15,6 +15,12 @@ void FreqBandStream::resetState() {
     for (unsigned long i = 0; i < kMaxWindowSizeSamples; ++i) {
         _sampleBuffer[i] = 0;
     }
+    _profileObserveCalls = 0;
+    _profileComputeCalls = 0;
+    _profileObserveTotalUs = 0;
+    _profileComputeTotalUs = 0;
+    _profileEnergyTotalUs = 0;
+    _profileGoertzelTotalUs = 0;
 }
 
 void FreqBandStream::setTargetFrequencyHz(unsigned long value) {
@@ -36,6 +42,7 @@ void FreqBandStream::setWindowSizeSamples(unsigned long value) {
 }
 
 void FreqBandStream::observeCenteredSample(int centeredSample) {
+    const unsigned long profileStartUs = micros();
     pushSample(centeredSample);
     if (_sampleCount < _windowSizeSamples) {
         _lastFrequencyScore = 0.0f;
@@ -43,10 +50,14 @@ void FreqBandStream::observeCenteredSample(int centeredSample) {
         _lastNeighborPower = 0.0f;
         _lastTotalEnergy = 0.0f;
         _lastSpectralContrast = 0.0f;
+        ++_profileObserveCalls;
+        _profileObserveTotalUs += static_cast<unsigned long>(micros() - profileStartUs);
         return;
     }
 
     computeFrequencyScore();
+    ++_profileObserveCalls;
+    _profileObserveTotalUs += static_cast<unsigned long>(micros() - profileStartUs);
 }
 
 void FreqBandStream::pushSample(int sample) {
@@ -66,6 +77,7 @@ float FreqBandStream::computeGoertzelPowerAtFrequency(float frequencyHz) const {
         return 0.0f;
     }
 
+    const unsigned long profileStartUs = micros();
     const float omega = 2.0f * PI * frequencyHz / static_cast<float>(_sampleRateHz);
     const float coeff = 2.0f * cosf(omega);
 
@@ -82,7 +94,9 @@ float FreqBandStream::computeGoertzelPowerAtFrequency(float frequencyHz) const {
         sPrev = s;
     }
 
-    return sPrev2 * sPrev2 + sPrev * sPrev - coeff * sPrev * sPrev2;
+    const float power = sPrev2 * sPrev2 + sPrev * sPrev - coeff * sPrev * sPrev2;
+    _profileGoertzelTotalUs += static_cast<unsigned long>(micros() - profileStartUs);
+    return power;
 }
 
 float FreqBandStream::computeFrequencyScore() {
@@ -95,6 +109,8 @@ float FreqBandStream::computeFrequencyScore() {
         return 0.0f;
     }
 
+    const unsigned long profileStartUs = micros();
+    const unsigned long energyStartUs = micros();
     float totalEnergy = 0.0f;
     const unsigned long startIndex = _sampleWriteIndex;
     for (unsigned long i = 0; i < _windowSizeSamples; ++i) {
@@ -102,6 +118,7 @@ float FreqBandStream::computeFrequencyScore() {
         const float sample = static_cast<float>(_sampleBuffer[index]);
         totalEnergy += sample * sample;
     }
+    _profileEnergyTotalUs += static_cast<unsigned long>(micros() - energyStartUs);
 
     const float targetPower = computeGoertzelPowerAtFrequency(static_cast<float>(_targetFrequencyHz));
     const float binSpacingHz = frequencyBinSpacingHz();
@@ -120,6 +137,8 @@ float FreqBandStream::computeFrequencyScore() {
     _lastNeighborPower = neighborPower;
     _lastTotalEnergy = totalEnergy;
     _lastSpectralContrast = contrast;
+    ++_profileComputeCalls;
+    _profileComputeTotalUs += static_cast<unsigned long>(micros() - profileStartUs);
 
     return normalized;
 }
@@ -169,4 +188,28 @@ unsigned long FreqBandStream::sampleCount() const {
 
 bool FreqBandStream::windowReady() const {
     return _sampleCount >= _windowSizeSamples && _windowSizeSamples > 0;
+}
+
+unsigned long FreqBandStream::profileObserveCalls() const {
+    return _profileObserveCalls;
+}
+
+unsigned long FreqBandStream::profileComputeCalls() const {
+    return _profileComputeCalls;
+}
+
+unsigned long FreqBandStream::profileObserveTotalUs() const {
+    return _profileObserveTotalUs;
+}
+
+unsigned long FreqBandStream::profileComputeTotalUs() const {
+    return _profileComputeTotalUs;
+}
+
+unsigned long FreqBandStream::profileEnergyTotalUs() const {
+    return _profileEnergyTotalUs;
+}
+
+unsigned long FreqBandStream::profileGoertzelTotalUs() const {
+    return _profileGoertzelTotalUs;
 }

@@ -325,6 +325,9 @@ void AnalyzerApp::printSequenceInspect(const AnalyzerReport& report) const {
     if (_valMode) {
         return;
     }
+    if (!_sequenceTest.outputConfig.diagnosticsEnabled) {
+        return;
+    }
     if (!sequenceOutputModeEnabled(_sequenceTest.outputConfig.mode, SeqOutputMode::Inspect)) {
         return;
     }
@@ -414,6 +417,9 @@ void AnalyzerApp::printSequencePattern(const AnalyzerReport& report) const {
     if (_valMode) {
         return;
     }
+    if (!_sequenceTest.outputConfig.diagnosticsEnabled) {
+        return;
+    }
     if (!sequenceOutputModeEnabled(_sequenceTest.outputConfig.mode, SeqOutputMode::Pattern)) {
         return;
     }
@@ -454,6 +460,9 @@ void AnalyzerApp::printSequencePattern(const AnalyzerReport& report) const {
 
 void AnalyzerApp::printSequenceExplain(const AnalyzerReport& report) const {
     if (_valMode) {
+        return;
+    }
+    if (!_sequenceTest.outputConfig.diagnosticsEnabled) {
         return;
     }
     if (!sequenceOutputModeEnabled(_sequenceTest.outputConfig.mode, SeqOutputMode::Explain)) {
@@ -711,6 +720,9 @@ void AnalyzerApp::printSequenceCandidateLogs(unsigned long trialNumber, const Se
     if (_valMode) {
         return;
     }
+    if (!_sequenceTest.outputConfig.diagnosticsEnabled) {
+        return;
+    }
     if (_sequenceTest.outputConfig.mode != SeqOutputMode::Explain) {
         return;
     }
@@ -791,6 +803,9 @@ void AnalyzerApp::printSequenceCandidateLogs(unsigned long trialNumber, const Se
 
 void AnalyzerApp::printSequenceDiagnostics(const AnalyzerReport& report) const {
     if (_valMode) {
+        return;
+    }
+    if (!_sequenceTest.outputConfig.diagnosticsEnabled) {
         return;
     }
     if (!sequenceOutputModeEnabled(_sequenceTest.outputConfig.mode, SeqOutputMode::Source)) {
@@ -1034,6 +1049,9 @@ void AnalyzerApp::printSequenceDiagnostics(const AnalyzerReport& report) const {
 
 void AnalyzerApp::printSequenceScalarDiagnostics(const AnalyzerReport& report) const {
     if (_valMode) {
+        return;
+    }
+    if (!_sequenceTest.outputConfig.diagnosticsEnabled) {
         return;
     }
     if (!sequenceOutputModeEnabled(_sequenceTest.outputConfig.mode, SeqOutputMode::Source)) {
@@ -1460,11 +1478,18 @@ void AnalyzerApp::printSequenceStatus() const {
     Serial.print(activeAnalyzerProfileName());
     Serial.print(" tries=");
     Serial.print(_seqOutputConfig.totalTrials);
+    Serial.print(" diagnostics=");
+    Serial.print(_seqOutputConfig.diagnosticsEnabled ? "on" : "off");
+    Serial.print(" freqband=");
+    Serial.print(_seqOutputConfig.frequencyBandEnabled ? "on" : "off");
     Serial.println();
 }
 
 void AnalyzerApp::printSignalCheck() const {
     if (_valMode) {
+        return;
+    }
+    if (!_sequenceTest.outputConfig.diagnosticsEnabled) {
         return;
     }
 
@@ -1707,6 +1732,35 @@ void AnalyzerApp::printAudioRunSummary() const {
     Serial.print(_sequenceTest.maxUpdateLoopUs);
     Serial.print(" max_processing_lag_ms=");
     Serial.println(_sequenceTest.maxProcessingLagMs);
+
+    const unsigned long freqObserveCalls = _freqBandStream.profileObserveCalls();
+    const unsigned long freqComputeCalls = _freqBandStream.profileComputeCalls();
+    const float avgObserveUs = freqObserveCalls > 0
+        ? static_cast<float>(_freqBandStream.profileObserveTotalUs()) / static_cast<float>(freqObserveCalls)
+        : 0.0f;
+    const float avgComputeUs = freqComputeCalls > 0
+        ? static_cast<float>(_freqBandStream.profileComputeTotalUs()) / static_cast<float>(freqComputeCalls)
+        : 0.0f;
+    const float avgEnergyUs = freqComputeCalls > 0
+        ? static_cast<float>(_freqBandStream.profileEnergyTotalUs()) / static_cast<float>(freqComputeCalls)
+        : 0.0f;
+    const float avgGoertzelUs = freqComputeCalls > 0
+        ? static_cast<float>(_freqBandStream.profileGoertzelTotalUs()) / static_cast<float>(freqComputeCalls)
+        : 0.0f;
+
+    Serial.print("FREQBAND profile:");
+    Serial.print(" observe_calls=");
+    Serial.print(freqObserveCalls);
+    Serial.print(" avg_observe_us=");
+    Serial.print(avgObserveUs, 2);
+    Serial.print(" compute_calls=");
+    Serial.print(freqComputeCalls);
+    Serial.print(" avg_compute_us=");
+    Serial.print(avgComputeUs, 2);
+    Serial.print(" avg_energy_us=");
+    Serial.print(avgEnergyUs, 2);
+    Serial.print(" avg_goertzel_us=");
+    Serial.println(avgGoertzelUs, 2);
 }
 
 void AnalyzerApp::printOccurrenceSummary() const {

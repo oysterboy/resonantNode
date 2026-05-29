@@ -62,6 +62,7 @@ public:
         unsigned long totalTrials = 100;
         bool diagnosticsEnabled = true;
         bool frequencyBandEnabled = true;
+        unsigned long frequencyComputeDecimation = 1;
     };
 
     AnalyzerApp(int inputPin = 34);

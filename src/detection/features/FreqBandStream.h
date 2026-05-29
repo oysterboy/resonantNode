@@ -28,6 +28,7 @@ public:
     void setTargetFrequencyHz(unsigned long value);
     void setSampleRateHz(unsigned long value);
     void setWindowSizeSamples(unsigned long value);
+    void setComputeDecimation(unsigned long value);
 
     void observeCenteredSample(int centeredSample);
 
@@ -40,6 +41,7 @@ public:
     unsigned long targetFrequencyHz() const;
     unsigned long sampleRateHz() const;
     unsigned long windowSizeSamples() const;
+    unsigned long computeDecimation() const;
     unsigned long sampleCount() const;
     bool windowReady() const;
 
@@ -60,6 +62,8 @@ private:
     unsigned long _targetFrequencyHz = runtime::kDefaultChirpFrequencyHz;
     unsigned long _sampleRateHz = 16000;
     unsigned long _windowSizeSamples = 64;
+    unsigned long _computeDecimation = 1;
+    unsigned long _computeCountdown = 0;
     float _cachedTargetFrequencyHz = 0.0f;
     float _cachedLowerFrequencyHz = 0.0f;
     float _cachedUpperFrequencyHz = 0.0f;

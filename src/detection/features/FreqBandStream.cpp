@@ -7,6 +7,7 @@
 void FreqBandStream::resetState() {
     _sampleCount = 0;
     _sampleWriteIndex = 0;
+    _computeCountdown = 0;
     _lastFrequencyScore = 0.0f;
     _lastTargetPower = 0.0f;
     _lastNeighborPower = 0.0f;
@@ -42,7 +43,16 @@ void FreqBandStream::setWindowSizeSamples(unsigned long value) {
         value = kMaxWindowSizeSamples;
     }
     _windowSizeSamples = value;
+    _computeCountdown = 0;
     updateCachedGoertzelCoefficients();
+}
+
+void FreqBandStream::setComputeDecimation(unsigned long value) {
+    if (value == 0) {
+        value = 1;
+    }
+    _computeDecimation = value;
+    _computeCountdown = 0;
 }
 
 void FreqBandStream::observeCenteredSample(int centeredSample) {
@@ -59,7 +69,14 @@ void FreqBandStream::observeCenteredSample(int centeredSample) {
         return;
     }
 
-    computeFrequencyScore();
+    if (_computeDecimation <= 1) {
+        computeFrequencyScore();
+    } else if (_computeCountdown == 0) {
+        computeFrequencyScore();
+        _computeCountdown = _computeDecimation - 1;
+    } else {
+        --_computeCountdown;
+    }
     ++_profileObserveCalls;
     _profileObserveTotalUs += static_cast<unsigned long>(micros() - profileStartUs);
 }
@@ -214,6 +231,10 @@ unsigned long FreqBandStream::sampleRateHz() const {
 
 unsigned long FreqBandStream::windowSizeSamples() const {
     return _windowSizeSamples;
+}
+
+unsigned long FreqBandStream::computeDecimation() const {
+    return _computeDecimation;
 }
 
 unsigned long FreqBandStream::sampleCount() const {

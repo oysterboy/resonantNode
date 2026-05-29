@@ -1482,6 +1482,8 @@ void AnalyzerApp::printSequenceStatus() const {
     Serial.print(_seqOutputConfig.diagnosticsEnabled ? "on" : "off");
     Serial.print(" freqband=");
     Serial.print(_seqOutputConfig.frequencyBandEnabled ? "on" : "off");
+    Serial.print(" freqdecimate=");
+    Serial.print(_seqOutputConfig.frequencyComputeDecimation);
     Serial.println();
 }
 
@@ -1732,6 +1734,12 @@ void AnalyzerApp::printAudioRunSummary() const {
     Serial.print(_sequenceTest.maxUpdateLoopUs);
     Serial.print(" max_processing_lag_ms=");
     Serial.println(_sequenceTest.maxProcessingLagMs);
+
+    Serial.print("FREQBAND config:");
+    Serial.print(" freqband=");
+    Serial.print(_seqOutputConfig.frequencyBandEnabled ? "on" : "off");
+    Serial.print(" decimation=");
+    Serial.println(_seqOutputConfig.frequencyComputeDecimation);
 
     const unsigned long freqObserveCalls = _freqBandStream.profileObserveCalls();
     const unsigned long freqComputeCalls = _freqBandStream.profileComputeCalls();

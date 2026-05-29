@@ -50,6 +50,7 @@ void AnalyzerApp::printSequenceHelp() {
     Serial.println("SEQ IN: MODE full = trial + source + inspect + pattern");
     Serial.println("SEQ IN: DIAG on|off");
     Serial.println("SEQ IN: FREQBAND on|off");
+    Serial.println("SEQ IN: FREQDECIMATE 1|4|8|16");
     Serial.println("SEQ IN: WHEN off|miss|all");
     Serial.println("SEQ IN: VERBOSE 0|1|2");
     Serial.println("SEQ IN: TRIES N");
@@ -252,17 +253,38 @@ void AnalyzerApp::handleUsbLine(const char* line) {
         bool valid = false;
         const bool enabled = parseOnOffToken(enabledToken, &valid);
         if (!valid) {
-                Serial.println("ERR SEQ unknown freqband use FREQBAND on|off");
-                return;
-            }
-            _seqOutputConfig.frequencyBandEnabled = enabled;
-            if (_sequenceTest.active) {
-                _sequenceTest.outputConfig.frequencyBandEnabled = enabled;
-            }
-            Serial.print("OK SEQ FREQBAND ");
-            Serial.println(onOffName(enabled));
+            Serial.println("ERR SEQ unknown freqband use FREQBAND on|off");
             return;
         }
+        _seqOutputConfig.frequencyBandEnabled = enabled;
+        if (_sequenceTest.active) {
+            _sequenceTest.outputConfig.frequencyBandEnabled = enabled;
+        }
+        Serial.print("OK SEQ FREQBAND ");
+        Serial.println(onOffName(enabled));
+        return;
+    }
+
+    if (equalsIgnoreCase(token, "FREQDECIMATE")) {
+        const char* decimateToken = strtok_r(nullptr, " ", &savePtr);
+        if (decimateToken == nullptr || *decimateToken == '\0') {
+            Serial.println("ERR SEQ missing freqdecimate use FREQDECIMATE 1|4|8|16");
+            return;
+        }
+        const unsigned long decimation = strtoul(decimateToken, nullptr, 10);
+        if (decimation == 0UL) {
+            Serial.println("ERR SEQ freqdecimate out of range use N>=1");
+            return;
+        }
+        _seqOutputConfig.frequencyComputeDecimation = decimation;
+        _freqBandStream.setComputeDecimation(decimation);
+        if (_sequenceTest.active) {
+            _sequenceTest.outputConfig.frequencyComputeDecimation = decimation;
+        }
+        Serial.print("OK SEQ FREQDECIMATE ");
+        Serial.println(decimation);
+        return;
+    }
 
         if (equalsIgnoreCase(token, "MODE")) {
             const char* modeToken = strtok_r(nullptr, " ", &savePtr);

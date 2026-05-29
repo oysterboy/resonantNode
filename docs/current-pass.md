@@ -1,430 +1,171 @@
-# Codex Instruction — Analyzer Memory / Timing Pressure Cleanup
+# Step 3 — Find Analyzer Audio-Throughput Regression Before Detector Tuning
 
-## Scope
+## Context
 
-This pass is limited to Analyzer memory/timing pressure and output gating.
+Recent SEQ timing tests show severe audio under-processing:
 
-Do **not** include broader output architecture work in this pass. Specifically, do not implement the Derived StageStatus Chain, result vocabulary cleanup, summary consistency cleanup, evidence namespace refactor, or Pattern-stage output redesign here.
+- `expected_samples ≈ 205k`
+- `processed_samples ≈ 100k`
+- `processed_ratio ≈ 0.49–0.50`
+- `max_available_bytes = 2048`
+- `avg_available_bytes ≈ 1937–1956`
+- `maxReadBytes = 128`
 
-This pass should only address:
+This correlates with high miss counts.
 
-1. Output mode ownership
-2. Quiet mode semantics
-3. Duplicate Analyzer FeatureHistory update
-4. Avoiding unnecessary live-state/report work
-5. Bounded diagnostic storage
+Important historical note:
 
-## Status
+Before the recent Analyzer changes, the same hardware/detector setup did not produce miss counts like this. Therefore treat this as a likely Analyzer regression or audio-loop regression, not primarily as a detector-tuning problem.
 
-done
+## Goal
 
-## Implemented
+Restore Analyzer audio processing coverage to near full stream rate before changing any detection thresholds.
 
-- removed the analyzer-side duplicate `FeatureHistory` update
-- kept `SEQ_TRIAL`/`SEQ_SOURCE`/`SEQ_INSPECT`/`SEQ_PATTERN` behind the output config
-- made quiet mode stay compact without stage/debug dumps
-- stopped the verdict printer from triggering inspect output as a side effect
-- kept summary output and bounded diagnostics intact
+Target:
 
----
+- `processed_ratio >= 0.95`
+- `avg_available_bytes` clearly below `max_available_bytes`
+- `max_available_bytes` not constantly saturated at `2048`
+- `droppedBlocks = 0`
+- `overflow = 0`
 
-## 1. Fix output mode ownership
+## Tasks
 
-### Problem
+### 1. Compare old vs current Analyzer loop structure
 
-`MODE`, `WHEN`, and `VERBOSITY` must consistently control Analyzer output, but compact modes may still accidentally print verbose, stage, or debug blocks.
+Inspect recent changes around:
 
-### Required behavior
+- `AnalyzerApp::update()`
+- SEQ run loop
+- SEQ compact/miss diagnostics
+- stage-status derivation
+- `AnalyzerReport` construction
+- any per-frame / per-sample diagnostic collection
+- audio reset / rebase / warmup behavior
 
-Use this contract:
+Find whether Analyzer now does expensive work inside the audio-drain loop or before enough audio has been drained.
 
-```text
-MODE      = which line families may print
-WHEN      = which trials get extra/stage output
-VERBOSITY = how many fields each printed line contains
-```
+### 2. Verify audio drain is called frequently enough
 
-Ensure all Analyzer print paths obey this contract.
+Check whether current Analyzer logic still drains audio continuously during SEQ.
 
-### Implementation instruction
+Specifically confirm:
 
-Audit all SEQ print functions and make sure each one checks the output config before printing:
+- audio update is called even while waiting for trial windows
+- audio update is called during miss diagnostics
+- report printing does not block audio ingestion during active trials
+- stage-status/report derivation is not happening per sample unless absolutely necessary
 
-```text
-SEQ_TRIAL
-SEQ_SOURCE
-SEQ_INSPECT
-SEQ_PATTERN
-SEQ_EXPLAIN / old verbose dump
-SEQ_SUMMARY
-```
+### 3. Inspect hard audio throttles
 
-Rules:
-
-```text
-mode=compact
-  may print compact SEQ_TRIAL
-  must not print verbose/stage/debug blocks
-
-mode=source
-  may print SEQ_TRIAL + SEQ_SOURCE according to WHEN
-
-mode=inspect
-  may print SEQ_TRIAL + SEQ_INSPECT according to WHEN
-
-mode=pattern
-  may print SEQ_TRIAL + SEQ_PATTERN according to WHEN
-
-mode=explain
-  may print all relevant stage lines / old verbose dump according to WHEN and VERBOSITY
-
-mode=quiet
-  see quiet semantics below
-```
-
-Do not let any old diagnostic function bypass the config.
-
-### Acceptance criteria
-
-- `mode=compact verbosity=0` does not print verbose diagnostic blocks.
-- `mode=source` does not accidentally print inspect/pattern/deep blocks.
-- `mode=inspect` does not accidentally print source/pattern/deep blocks unless explicitly intended.
-- Old verbose output only appears under `mode=explain` and/or high verbosity.
-
----
-
-## 2. Clarify quiet mode semantics
-
-### Problem
-
-Quiet mode may still print compact per-trial results, but it should not print verbose, stage, or debug blocks.
-
-### Required behavior
-
-For this project, `quiet` does **not** necessarily mean fully silent.
-
-Define it as:
-
-```text
-quiet = compact per-trial output allowed
-quiet = no verbose/stage/debug blocks
-quiet = no unnecessary diagnostic dumps
-```
-
-If a fully silent mode is needed later, add a separate mode such as `silent` or `off`. Do not change that in this pass unless already trivial.
-
-### Implementation instruction
-
-Make sure `mode=quiet` suppresses:
-
-```text
-SEQ_SOURCE
-SEQ_INSPECT
-SEQ_PATTERN
-SEQ_EXPLAIN
-old verbose diagnostic dumps
-large multi-line measurement blocks
-```
-
-but may allow compact final trial output such as:
-
-```text
-#12 ----------------
-result=expected dt=52ms confidence=1.00
-```
-
-or a single compact `SEQ_TRIAL` line.
-
-### Acceptance criteria
-
-- `mode=quiet` does not print verbose diagnostic blocks.
-- `mode=quiet` may still print compact end-of-trial results.
-- `mode=quiet` output is clearly smaller than `mode=compact` or `mode=source`.
-- No stage/debug output appears in quiet mode.
-
----
-
-## 3. Remove duplicated Analyzer FeatureHistory update
-
-### Problem
-
-FeatureHistory should be updated by the normal DetectionRuntime pipeline only.
-
-Analyzer-side FeatureHistory updates can duplicate work and create timing pressure.
-
-Current pattern to look for:
+Check these limits:
 
 ```cpp
-if (_sequenceFeatureHistory != nullptr) {
-    detection::FeatureExtractor::observeFrame(frame, *_sequenceFeatureHistory);
-}
+AudioSourceI2S::kRefillBatchSize = 32;
+AnalyzerApp::kMaxSamplesPerLoop = 128;
+node.cpp::kMaxSamplesPerLoop = 128;
 ```
 
-while the normal detection pipeline also updates FeatureHistory inside `DetectionRuntime::observeFrame()`.
+These imply:
 
-### Required behavior
+- max I2S read ≈ `128 bytes`
+- max Analyzer audio work ≈ `128 samples` per `update()`
 
-For normal SEQ operation:
+This may have been survivable before Analyzer became heavier, but it is not currently enough.
 
-```text
-DetectionRuntime owns and updates FeatureHistory.
-Inspectors consume FeatureHistory through the normal detection pipeline.
-Analyzer does not maintain/update a parallel FeatureHistory.
-```
+### 4. Apply the smallest throughput fix
 
-### Implementation instruction
-
-Remove the Analyzer-side FeatureHistory update entirely if nothing currently needs it.
-
-If a special diagnostic still needs `_sequenceFeatureHistory`, gate it behind an explicit helper:
+Start conservatively:
 
 ```cpp
-bool AnalyzerApp::sequenceAuxFeatureHistoryNeeded() const {
-    if (!_sequenceTest.active) return false;
-
-    // Only enable for features that explicitly read _sequenceFeatureHistory.
-    if (_sequenceTest.sampleDumpEnabled) return true;
-
-    if (_sequenceTest.outputConfig.mode == SeqOutputMode::Explain &&
-        _sequenceTest.outputConfig.verbosity > 1) {
-        return true;
-    }
-
-    return false;
-}
+AudioSourceI2S::kRefillBatchSize = 128;
+AnalyzerApp::kMaxSamplesPerLoop = 512;
+node.cpp::kMaxSamplesPerLoop = 512;
 ```
 
-Then use:
+Do not change detection thresholds.
+
+Do not change PatternRules.
+
+Do not change TonalPulse profile values.
+
+### 5. Keep detection semantics unchanged
+
+Preserve the current per-sample detection path:
 
 ```cpp
-if (_sequenceFeatureHistory != nullptr && sequenceAuxFeatureHistoryNeeded()) {
-    detection::FeatureExtractor::observeFrame(frame, *_sequenceFeatureHistory);
-}
+AudioSignal::update(...)
+FreqBandStream::observeCenteredSample(...)
+DetectionRuntime::observeFrame(...)
 ```
 
-If no current diagnostic reads `_sequenceFeatureHistory`, prefer deleting the allocation and update path for now.
+Do not switch to block-level detection yet unless timing semantics are proven identical.
 
-### Acceptance criteria
+### 6. Move expensive Analyzer work out of the audio-drain path
 
-- During normal SEQ runs, only `DetectionRuntime::observeFrame()` updates FeatureHistory.
-- Analyzer does not duplicate FeatureHistory updates in the hot loop.
-- Inspector behavior remains unchanged because it uses the normal pipeline FeatureHistory.
-- No detection thresholds or profile behavior are changed.
+If any of the following are currently done per sample or per audio frame, move them to trial-end or summary time:
 
----
+- string formatting
+- stage-status text generation
+- miss explanation formatting
+- `SEQ_EXPLAIN` construction
+- report-line construction
+- repeated reason-name conversion
+- large debug snapshot assembly
 
-## 4. Avoid unnecessary live-state / report work
+The active audio loop should only collect minimal structured facts.
 
-### Problem
+### 7. Re-test before further changes
 
-Analyzer output should not trigger unnecessary live-state reads, copies, captures, or report work in compact modes.
-
-### Required behavior
-
-Compact modes should do the minimum necessary work:
+Run:
 
 ```text
-build final trial result
-update summary counters
-print compact output if configured
+SEQ FREQCOMPUTE off
+SEQ tries=5 or 100
+
+SEQ FREQCOMPUTE on
+SEQ tries=5 or 100
 ```
 
-Avoid extra capture/copy work unless a selected mode actually needs it.
-
-### Implementation instruction
-
-Review the trial finalization path and guard expensive optional work behind output config checks.
-
-Look for calls like:
+Report:
 
 ```text
-captureDiagnostics
-flushSequenceSampleHistory
-printSequenceSampleDump
-printSequenceCandidateLogs
-printSequenceDiagnostics
-printSequencePattern
-printSequenceExplain
-large measurement block formatting
+processed_ratio
+processed_samples
+expected_samples
+max_available_bytes
+avg_available_bytes
+maxReadBytes
+max_update_loop_us
+max_processing_lag_ms
+miss count
+main_miss_reason
+freq_evidence_class_counts
 ```
 
-Make sure they only run when the active mode/verbosity requires them.
+## Non-goals
 
-Compact/quiet paths should skip:
+Do not tune:
+
+- frequency score threshold
+- frequency contrast threshold
+- AmpStrength support gates
+- detector onset/release
+- PatternRules
+- Behavior suppression
+- SEQ classification windows
+
+This pass is about restoring Analyzer/audio timing parity with the previously working behavior.
+
+## Recommended starting change
+
+Start with exactly this conservative change:
 
 ```text
-sample dumps
-candidate logs
-deep diagnostics
-large frame counters
-large multi-line measurement blocks
-extra live runtime captures
+kRefillBatchSize:    32  → 128
+kMaxSamplesPerLoop: 128 → 512
 ```
 
-Important: stage/trial printers should use the finalized report snapshot where possible, not mutable live detector/runtime state after reset. However, do not implement the full StageStatus Chain in this pass.
+Then judge by `processed_ratio`.
 
-### Acceptance criteria
-
-- Compact trial runs do not call sample dump / candidate log / explain dump functions.
-- Compact trial runs do not perform unnecessary diagnostic capture.
-- Finalization time is reduced in compact and quiet modes.
-- Output still reports correct final result and summary counters.
-
----
-
-## 5. Review and bound per-trial diagnostic storage
-
-### Problem
-
-Analyzer has had memory pressure issues. Diagnostic storage must be bounded and predictable.
-
-### Required behavior
-
-Diagnostics must avoid:
-
-```text
-dynamic allocation in hot paths
-unbounded vectors/lists
-large per-trial buffers enabled by default
-raw frame logs in normal modes
-String accumulation
-```
-
-Use fixed-size, bounded data structures.
-
-### Implementation instruction
-
-Audit Analyzer and detector diagnostics for:
-
-```text
-std::vector
-String
-heap allocation
-large arrays
-per-trial buffers
-candidate logs
-sample history
-raw dumps
-```
-
-Keep or introduce these rules:
-
-```text
-- no unbounded diagnostic storage
-- no heap growth during SEQ run
-- fixed-size ring buffers only
-- large buffers only when explicitly enabled
-- diagnostic counters preferred over full logs
-```
-
-If reject/candidate diagnostics already exist or are added later, they must be bounded:
-
-```cpp
-static constexpr uint8_t kRejectLogCapacity = 4; // or 8 max
-```
-
-or use aggregate counters + one best selected candidate:
-
-```text
-rejects.count
-rejects.reason_counts
-selected_reject.*
-```
-
-For this pass, do not implement the full reject-candidate log unless already started. Just ensure current diagnostic storage is bounded and safe.
-
-### Acceptance criteria
-
-- No unbounded diagnostic storage is active during normal SEQ runs.
-- No new heap allocation is introduced in hot-loop diagnostics.
-- Large sample/candidate buffers are disabled unless explicitly requested.
-- Memory usage is predictable across long SEQ runs.
-
----
-
-## Do not change in this pass
-
-Do **not** change:
-
-```text
-Frequency thresholds
-Duration gates
-Support gates
-PatternRules
-Detection profile behavior
-Frequency computation strategy
-Derived StageStatus Chain
-Result vocabulary
-Summary reason taxonomy
-Evidence namespace design
-Pattern output design
-```
-
-This pass is only about reducing Analyzer memory/timing pressure and making output gating predictable.
-
----
-
-## Suggested verification
-
-Run the same acoustic setup with:
-
-```text
-SEQ MODE quiet
-SEQ WHEN miss
-SEQ VERBOSITY 0
-```
-
-Expected:
-
-```text
-compact output only
-no verbose/stage/debug blocks
-no Analyzer duplicate FeatureHistory update
-bounded diagnostics only
-```
-
-Then run:
-
-```text
-SEQ MODE compact
-SEQ WHEN miss
-SEQ VERBOSITY 0
-```
-
-Expected:
-
-```text
-compact trial output
-no deep diagnostic blocks
-no duplicate FeatureHistory update
-```
-
-Then run:
-
-```text
-SEQ MODE source
-SEQ WHEN miss
-SEQ VERBOSITY 1
-```
-
-Expected:
-
-```text
-source-stage output only as configured
-no inspect/pattern/deep blocks unless requested
-bounded diagnostic storage
-```
-
-Compare miss rates between quiet/trial/source modes. If compact modes improve significantly, Analyzer output/diagnostic pressure was affecting detection timing.
-
----
-
-## Core rule
-
-```text
-Keep normal detection pipeline work normal.
-Remove Analyzer-side duplicated work.
-Make output gating predictable.
-Keep diagnostics bounded.
-Do not mix this with broader Analyzer output architecture refactors.
-```
+If it still stays around `0.5`, the bottleneck is not just read size. Then the next suspect is CPU cost per sample, especially frequency scoring being recomputed every sample.

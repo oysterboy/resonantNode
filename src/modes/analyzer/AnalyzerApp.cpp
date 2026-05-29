@@ -31,7 +31,7 @@ File structure:
 - sequence, capture, and base sessions
 - diagnostics and summary output
 */
-constexpr int kMaxSamplesPerLoop = 128;
+constexpr int kMaxSamplesPerLoop = 512;
 constexpr long kLateOnsetMinMs = 200L;
 constexpr long kCleanDurationMinMs = 80L;
 constexpr long kCleanDurationMaxMs = 180L;
@@ -553,7 +553,6 @@ void AnalyzerApp::update() {
                 if (processingLagMs > _sequenceTest.maxProcessingLagMs) {
                     _sequenceTest.maxProcessingLagMs = processingLagMs;
                 }
-                updateSequenceAudioHealth(frame);
                 const detection::FrequencyFeatureFrame runtimeFrequencyFrame = captureFrequencyFeatureFrame(frame.sampleTimeMs);
                 _detection->observeFrame(frame, runtimeFrequencyFrame, frame.sampleTimeMs);
                 while (_detection->popPatternResult(_sequenceTest.currentTrialDiagnostics.runtimePatternResult)) {

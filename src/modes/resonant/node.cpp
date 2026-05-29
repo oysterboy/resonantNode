@@ -48,7 +48,7 @@ File structure:
 */
 
 namespace {
-constexpr int kMaxSamplesPerLoop = 128;
+constexpr int kMaxSamplesPerLoop = 512;
 constexpr int kRbStartupQuietThreshold = 20;
 constexpr unsigned long kRbStartupQuietHoldMs = 1000;
 constexpr unsigned long kRbStartupBaselineTimeoutMs = 8000;

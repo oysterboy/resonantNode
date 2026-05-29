@@ -2,6 +2,7 @@
 
 #include <cstddef>
 #include <stdint.h>
+#include <memory>
 
 #include "AudioSource.h"
 
@@ -39,8 +40,8 @@ private:
     int _sampleRate;
     int _bitsPerSample;
     bool _started = false;
-    static constexpr size_t kRefillBatchSize = 32;
-    int32_t _blockSamples[kRefillBatchSize] = {};
+    static constexpr size_t kRefillBatchSize = 128;
+    std::unique_ptr<int32_t[]> _blockSamples;
     size_t _blockCount = 0;
     size_t _blockCursor = 0;
     uint64_t _blockStartSampleIndex = 0;

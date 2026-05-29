@@ -1,6 +1,7 @@
 #include "AudioSourceI2S.h"
 #include <I2S.h>
 #include <string.h>
+#include <new>
 
 namespace {
 int normalizeToAdcScale(int32_t rawSample) {
@@ -26,11 +27,15 @@ AudioSourceI2S::AudioSourceI2S(int sckPin, int fsPin, int dataInPin, int sampleR
       _fsPin(fsPin),
       _dataInPin(dataInPin),
       _sampleRate(sampleRate),
-      _bitsPerSample(bitsPerSample) {}
+      _bitsPerSample(bitsPerSample),
+      _blockSamples(new (std::nothrow) int32_t[kRefillBatchSize] {}) {}
 
 void AudioSourceI2S::begin() {
     // Keep the public contract sample-based even though I2S may buffer internally.
     resetStats();
+    if (!_blockSamples) {
+        _blockSamples.reset(new (std::nothrow) int32_t[kRefillBatchSize] {});
+    }
     _started = false;
     _samplePeriodUs = _sampleRate > 0 ? static_cast<uint32_t>(1000000UL / static_cast<uint32_t>(_sampleRate)) : 0;
 
@@ -108,6 +113,12 @@ bool AudioSourceI2S::readRawSample(int& sample, uint32_t& sampleTimeUs) {
 }
 
 bool AudioSourceI2S::readBlock(AudioBlock& block) {
+    if (!_blockSamples) {
+        block.samples = nullptr;
+        block.sampleCount = 0;
+        return false;
+    }
+
     if (_blockCursor >= _blockCount && !refillBlock()) {
         return false;
     }
@@ -116,7 +127,7 @@ bool AudioSourceI2S::readBlock(AudioBlock& block) {
         return false;
     }
 
-    block.samples = _blockSamples + _blockCursor;
+    block.samples = _blockSamples.get() + _blockCursor;
     block.sampleCount = static_cast<uint16_t>(_blockCount - _blockCursor);
     block.startSampleIndex = _blockStartSampleIndex + _blockCursor;
     block.approxStartMicros = _blockApproxStartMicros + sampleOffsetUs(static_cast<uint32_t>(_blockCursor), static_cast<uint32_t>(_sampleRate));
@@ -182,6 +193,11 @@ void AudioSourceI2S::recordReadAttempt(int requestedBytes, int bytesRead, bool r
 }
 
 bool AudioSourceI2S::refillBlock() {
+    if (!_blockSamples) {
+        recordReadAttempt(0, 0, true);
+        return false;
+    }
+
     if (!_started) {
         recordReadAttempt(0, 0, true);
         return false;

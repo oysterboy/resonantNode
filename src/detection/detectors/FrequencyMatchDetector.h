@@ -49,9 +49,13 @@ public:
     bool bestScoreOk = false;
     bool bestContrastOk = false;
     bool gateOpen = false;
+    bool emitAllowed = false;
+    bool validRelease = false;
     float candidatePeakScore = 0.0f;
     float candidatePeakContrast = 0.0f;
     unsigned long candidatePeakWindowSampleCount = 0;
+    unsigned long candidateMinDurationMs = 0;
+    unsigned long candidateMaxDurationMs = 0;
     unsigned long bestObservedAtMs = 0;
     uint64_t bestObservedSample = 0;
     float bestScore = 0.0f;
@@ -60,8 +64,9 @@ public:
     detection::FrequencyFeatureFrame bestEvidence = {};
     detection::FrequencyFeatureFrame candidateEvidence = {};
     char candidateState[16] = "none";
-    char suppressReason[48] = "none";
+    char gateReason[48] = "none";
     char wouldCandidateReason[48] = "none";
+    char noEmitReason[48] = "none";
     detection::Occurrence frequencyCandidate = {};
     unsigned long diagnosticsObservedCount = 0;
     unsigned long diagnosticsValidCount = 0;

@@ -21,24 +21,6 @@
 
 namespace detection {
 
-enum class FrequencyDiagReason {
-    None,
-    NoFrames,
-    NoValidFrames,
-    ScoreTooLow,
-    ContrastTooLow,
-    ScoreAndContrastTooLow,
-    MatchTooShort,
-    Suppressed,
-    NotReady,
-    GateClosed,
-    TimingOutsideWindow,
-    OccurrenceEmitted,
-    Unknown,
-};
-
-const char* frequencyDiagReasonName(FrequencyDiagReason reason);
-
 /*
 DetectionRuntime
 
@@ -101,7 +83,6 @@ struct DetectionDiagnostics {
     float frequencyScoreThreshold = 0.0f;
     float frequencyContrastThreshold = 0.0f;
 
-    FrequencyDiagReason frequencyBestRejectReason = FrequencyDiagReason::Unknown;
     bool frequencyNearMiss = false;
     const char* frequencyNearMissReason = "none";
 
@@ -110,12 +91,24 @@ struct DetectionDiagnostics {
     bool frequencyMatched = false;
     bool frequencyScoreOk = false;
     bool frequencyContrastOk = false;
-    const char* frequencyReason = "none";
-    const char* frequencySuppressReason = "none";
+    const char* frequencyRejectReason = "none";
+    const char* frequencyNoEmitReason = "none";
+    const char* frequencyGateReason = "none";
     const char* frequencyWouldCandidateReason = "none";
     const char* frequencyCandidateState = "none";
     bool frequencyReadyOk = false;
     bool frequencyGateOpen = false;
+    bool frequencyOpened = false;
+    bool frequencyReleased = false;
+    bool frequencyEmitted = false;
+    bool frequencyValidRelease = false;
+    bool frequencyEmitAllowed = false;
+    unsigned long frequencyOpenMs = 0;
+    unsigned long frequencyPeakMs = 0;
+    unsigned long frequencyReleaseMs = 0;
+    unsigned long frequencyDurationMs = 0;
+    unsigned long frequencyMinDurationMs = 0;
+    unsigned long frequencyMaxDurationMs = 0;
 
     const char* scalarOnsetRejectReason = "none";
     const char* scalarTransientRejectReason = "none";

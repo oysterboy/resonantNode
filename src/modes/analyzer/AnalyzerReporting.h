@@ -320,6 +320,21 @@ struct AnalyzerFrequencyDiagnostic {
     bool nearMiss = false;
     const char* nearMissReason = "none";
     const char* freqEvidenceClass = "none";
+    const char* fmRejectReason = "none";
+    const char* fmNoEmitReason = "none";
+    const char* fmGateReason = "none";
+    bool fmOpened = false;
+    bool fmReleased = false;
+    bool fmEmitted = false;
+    bool fmDurationOk = false;
+    bool fmValidRelease = false;
+    bool fmEmitAllowed = false;
+    unsigned long fmOpenMs = 0;
+    unsigned long fmPeakMs = 0;
+    unsigned long fmReleaseMs = 0;
+    unsigned long fmDurationMs = 0;
+    unsigned long fmMinDurationMs = 0;
+    unsigned long fmMaxDurationMs = 0;
     bool sourceOccurrenceEmitted = false;
     bool runtimeEvidenceSeen = false;
     bool runtimeOccurrenceReceived = false;
@@ -327,10 +342,6 @@ struct AnalyzerFrequencyDiagnostic {
     bool detectionGateBlocked = false;
     const char* detectionGateReason = "none";
     bool inconsistent = false;
-    bool trialOccurrenceOpened = false;
-    bool trialOccurrenceReleased = false;
-    bool trialOccurrenceEmitted = false;
-    const char* trialOccurrenceTimingClass = "none";
 
     const char* liveFreqReason = "none";
     const char* liveFreqWould = "none";

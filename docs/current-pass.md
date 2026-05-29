@@ -1,216 +1,162 @@
-# Codex Instruction — Stabilize SEQ Diagnostics Without Timing Pressure
+# Codex Instruction — Carry FrequencyMatch Reject / No-Emit Reason Forward
 
 ## Goal
 
-Keep the detector baseline stable while making miss diagnostics useful.
+Explain the remaining rare `strong_no_occurrence` misses.
 
-Current facts:
-
-```text
-diagnostics off:
-  expected=99
-  miss=1
-  duplicate=1
-```
-
-So the detection path is basically stable.
-
-When heavier diagnostics are enabled, miss rate can collapse. Therefore diagnostics must be treated as potentially intrusive.
-
-Also:
+Current 400-trial run:
 
 ```text
-SEQ_VERBOSE_WARN reason=analyzer_report_alloc_failed requested=100 reports
-```
+expected=397
+late=1
+miss=2
+duplicate=1
+freq_evidence_class_counts: accepted=398 strong_no_occurrence=2
 
-This warning does not appear to cause the stable 99/1 result directly, but dynamic report allocation is unsafe noise in this timing-sensitive path and should be removed.
+The two misses show:
 
-## Main rules
-
-Do not add timing pressure.
-
-Avoid:
-
-```text
-per-frame Serial output
-large snapshots
-heap allocation per trial
-large retained report buffers
-copying arrays
-diagnostic reads that mutate detector/runtime state
-verbose per-trial output during normal 100-trial baseline runs
-```
-
-Use only:
-
-```text
-fixed-size counters
-small trial-local structs
-summary counters
-miss-only diagnostic lines
-optional small ring buffer
-```
-
-## Fix analyzer report allocation
-
-Remove or avoid dynamic allocation of 100 analyzer reports.
-
-Preferred options:
-
-```text
-1. Stream compact per-trial output directly.
-2. Store only summary counters for the full run.
-3. Keep a fixed ring buffer for the last 8 or 16 detailed reports.
-4. Allow full retained report storage only for small runs, e.g. tries <= 20.
-```
-
-Success:
-
-```text
-No SEQ_VERBOSE_WARN reason=analyzer_report_alloc_failed during normal 50/100 trial runs.
-```
-
-## Diagnostic modes
-
-Add/keep explicit diagnostic levels:
-
-```text
-
-diagmiss
-diagtrial
-```
-
-Meaning:
-
-```text
-nothing
-  baseline mode. No SEQ_FREQ_DIAG lines.
-
-diagmiss:
-  collect tiny counters silently.
-  print SEQ_FREQ_DIAG only for misses / late / duplicate / rejected.
-
-diagtrial:
-  print one compact SEQ_FREQ_DIAG per trial.
-  use only for short diagnostic runs.
-```
-
-Default for 100-trial runs:
-
-```text
-off
-```
-
-Do not use full `diagtrial` as the default baseline.
-
-## Keep SEQ_FREQ_DIAG trial-local
-
-The latest tiny diagnostic fixed the cumulative-counter bug. Preserve that.
-
-Required:
-
-```text
-frames ≈ 35k for 2200ms
-diag_frame_count_ok=1
-window_start_ms / window_end_ms correct
-```
-
-If frames become cumulative again, fail the pass.
-
-## Fix stale/global occurrence fields
-
-Miss lines must not show stale unprefixed occurrence state.
-
-Replace ambiguous fields:
-
-```text
-occurrence_opened
-occurrence_released
-occurrence_emitted
-occurrence_suppressed
-best_reject_reason
-```
-
-with trial-local names:
-
-```text
-trial_occurrence_opened
-trial_occurrence_released
-trial_occurrence_emitted
-trial_occurrence_suppressed
-trial_suppress_reason
-trial_miss_reason
-```
-
-If live/global state is useful, prefix it:
-
-```text
-live_occurrence_state
-live_freq_reason
-live_freq_match
-```
-
-For a miss:
-
-```text
-accepted_present=0
+freq_evidence_class=strong_no_occurrence
+score_ok_frames≈1000
+both_ok_frames≈1000
+match_frames≈1000
+trial_occurrence_opened=1
+trial_occurrence_released=1
 trial_occurrence_emitted=0
-```
+trace_source_occurrence_emitted=0
+trace_analyzer_seen=0
 
-Do not print unprefixed `occurrence_emitted`.
+So this is not weak frequency evidence. The missing explanation is:
 
-## Add minimal emitter facts
+Why did FrequencyMatch open/release but not emit an occurrence?
+Core rule
 
-Because emitted sounds were audibly regular, emitter absence is less likely, but still report minimal facts if cheap:
+FrequencyMatchSource / detector owns the reject/no-emit reason.
 
-```text
-emit_command_sent=0/1
-emit_command_ms=...
-emit_trial_id=...
-emit_status=ok/timeout/not_sent/unknown
-remote_claim_ok=0/1
-```
+Analyzer must not infer this from raw counters.
 
-No blocking waits. No retries. No behavioral change.
+SEQ should only print facts carried forward from the detector/source/runtime/analyzer.
 
+Add / carry forward detector reject reason
 
+If FrequencyMatch already has an internal reject reason, carry it forward into the trial diagnostic.
 
+Add fields:
 
+fm_reject_reason
+fm_no_emit_reason
+fm_gate_reason
 
+Suggested enum values:
 
-## Validation test
+none
+score_too_low
+contrast_too_low
+score_and_contrast_too_low
+duration_too_short
+duration_too_long
+invalid_release
+not_open
+not_released
+gate_closed
+not_ready
+already_emitted
+outside_window
+unknown
 
-Run this matrix:
+If an internal reject reason already exists, do not create a second parallel enum unless needed. Prefer to reuse/carry the existing detector reason.
 
-```text
-A. diagnostics off, 100 trials
-B. diagnostics miss-only, 100 trials
-C. diagnostics trial, 20 trials only
-```
+Add duration / lifecycle details
 
-Expected:
+For each strong_no_occurrence miss, print:
 
-```text
-A and B should stay close to stable baseline.
-C must not collapse detection, but it is not the normal baseline mode.
-```
+fm_open_ms
+fm_peak_ms
+fm_release_ms
+fm_duration_ms
+fm_min_duration_ms
+fm_max_duration_ms
+fm_duration_ok=0/1
+fm_opened=0/1
+fm_released=0/1
+fm_emitted=0/1
 
-Current stable baseline to compare against:
+The goal is to distinguish:
 
-```text
-expected≈99
-miss≈1
-duplicate≈1
-```
+opened but duration too short
+opened but duration too long
+opened/released but invalid release
+opened/released and valid, but emit edge skipped
+Add gate details
 
-## Success criteria
+Print current source/detector gate facts:
 
-```text
-- No analyzer_report_alloc_failed in normal 50/100 trial runs.
-- diagnostics off remains stable.
-- diagnostics miss-only does not noticeably reduce detection rate.
-- SEQ_FREQ_DIAG stays trial-local.
-- Miss lines show trial_miss_reason and freq_evidence_class.
-- Miss lines do not contain stale unprefixed occurrence state.
-- Summary reports miss reason counts and longest miss streak.
-```
+fm_ready=0/1
+fm_gate_open=0/1
+fm_gate_reason=none/not_ready/cooldown/refractory/invalid_state/unknown
+fm_valid_release=0/1
+fm_emit_allowed=0/1
+
+Only include gates that actually exist in FrequencyMatch / DetectionRuntime. Do not import RB behavior suppression concepts.
+
+Fix ambiguous runtime trace naming
+
+Current field:
+
+trace_runtime_received
+
+is ambiguous because misses show:
+
+trace_source_occurrence_emitted=0
+trace_runtime_received=1
+
+Split it into:
+
+trace_runtime_evidence_seen=0/1
+trace_runtime_occurrence_received=0/1
+
+Required consistency:
+
+if trace_source_occurrence_emitted=0:
+    trace_runtime_occurrence_received must be 0
+
+If the runtime saw frames/evidence/candidate state only:
+
+trace_runtime_evidence_seen=1
+trace_runtime_occurrence_received=0
+Output example
+
+For a strong-no-occurrence miss:
+
+SEQ_FREQ_DIAG trial=116 result=miss
+freq_evidence_class=strong_no_occurrence
+accepted_present=0
+analyzer_reason=no_occurrence_candidate
+
+fm_opened=1
+fm_released=1
+fm_emitted=0
+fm_open_ms=...
+fm_peak_ms=...
+fm_release_ms=...
+fm_duration_ms=...
+fm_min_duration_ms=...
+fm_max_duration_ms=...
+fm_duration_ok=0/1
+fm_valid_release=0/1
+fm_emit_allowed=0/1
+fm_reject_reason=...
+fm_no_emit_reason=...
+
+trace_source_occurrence_emitted=0
+trace_runtime_evidence_seen=1
+trace_runtime_occurrence_received=0
+trace_analyzer_seen=0
+Success criteria
+- Strong-no-occurrence misses carry a real FrequencyMatch no-emit/reject reason.
+- Duration gates are visible: duration, min, max, duration_ok.
+- Gate state is visible: ready, gate_open, valid_release, emit_allowed.
+- Analyzer does not infer detector reasons from counters.
+- SEQ only prints carried facts.
+- Runtime trace distinguishes evidence seen from occurrence received.
+
+And yes: **if the detector already has a reject reason internally, prefer carrying that forward**. The current problem is not necessarily missing logic; it may be that the reason exists but gets lost before `SEQ_FREQ_DIAG`.

@@ -30,9 +30,13 @@ void FrequencyMatchDetector::resetState() {
     bestScoreOk = false;
     bestContrastOk = false;
     gateOpen = false;
+    emitAllowed = false;
+    validRelease = false;
     candidatePeakScore = 0.0f;
     candidatePeakContrast = 0.0f;
     candidatePeakWindowSampleCount = 0;
+    candidateMinDurationMs = 0;
+    candidateMaxDurationMs = 0;
     bestObservedAtMs = 0;
     bestObservedSample = 0;
     bestScore = 0.0f;
@@ -43,12 +47,15 @@ void FrequencyMatchDetector::resetState() {
     memset(candidateState, 0, sizeof(candidateState));
     strncpy(candidateState, "none", sizeof(candidateState) - 1);
     candidateState[sizeof(candidateState) - 1] = '\0';
-    memset(suppressReason, 0, sizeof(suppressReason));
-    strncpy(suppressReason, "none", sizeof(suppressReason) - 1);
-    suppressReason[sizeof(suppressReason) - 1] = '\0';
+    memset(gateReason, 0, sizeof(gateReason));
+    strncpy(gateReason, "none", sizeof(gateReason) - 1);
+    gateReason[sizeof(gateReason) - 1] = '\0';
     memset(wouldCandidateReason, 0, sizeof(wouldCandidateReason));
     strncpy(wouldCandidateReason, "none", sizeof(wouldCandidateReason) - 1);
     wouldCandidateReason[sizeof(wouldCandidateReason) - 1] = '\0';
+    memset(noEmitReason, 0, sizeof(noEmitReason));
+    strncpy(noEmitReason, "none", sizeof(noEmitReason) - 1);
+    noEmitReason[sizeof(noEmitReason) - 1] = '\0';
     memset(&frequencyCandidate, 0, sizeof(frequencyCandidate));
     resetDiagnosticsSummary();
 }
@@ -98,10 +105,14 @@ void FrequencyMatchDetector::update(const detection::FrequencyFeatureFrame& evid
     thresholdScore = tuning.scoreMin;
     thresholdContrast = tuning.contrastMin;
     readyOk = evidence.windowAvailable;
+    candidateMinDurationMs = minTransientDurationMs;
+    candidateMaxDurationMs = 0;
     bestScoreOk = liveFreqEval.scoreOk;
     bestContrastOk = liveFreqEval.contrastOk;
     gateOpen = evidence.present && evidence.windowAvailable && liveFreqEval.matched;
-    suppressReason[0] = '\0';
+    emitAllowed = false;
+    validRelease = false;
+    gateReason[0] = '\0';
     wouldCandidateReason[0] = '\0';
 
     present = evidence.present;
@@ -119,8 +130,8 @@ void FrequencyMatchDetector::update(const detection::FrequencyFeatureFrame& evid
 
         if (liveFreqEval.matched) {
             if (timing::beforeDeadline(now, candidateRefractoryUntilMs)) {
-                strncpy(suppressReason, "refractory", sizeof(suppressReason) - 1);
-                suppressReason[sizeof(suppressReason) - 1] = '\0';
+                strncpy(gateReason, "refractory", sizeof(gateReason) - 1);
+                gateReason[sizeof(gateReason) - 1] = '\0';
                 wouldProduceCandidate = false;
                 strncpy(wouldCandidateReason, "refractory", sizeof(wouldCandidateReason) - 1);
                 wouldCandidateReason[sizeof(wouldCandidateReason) - 1] = '\0';
@@ -190,9 +201,13 @@ void FrequencyMatchDetector::update(const detection::FrequencyFeatureFrame& evid
                 const bool holdOk = candidateHoldMs >= minTransientDurationMs;
                 const char* closeState = holdOk ? "closed" : "rejected";
                 candidateEmitted = holdOk;
+                validRelease = holdOk;
+                emitAllowed = holdOk;
                 strncpy(candidateState, closeState, sizeof(candidateState) - 1);
                 candidateState[sizeof(candidateState) - 1] = '\0';
                 candidateRefractoryUntilMs = now + cooldownAfterOnsetMs;
+                strncpy(noEmitReason, holdOk ? "none" : "duration_too_short", sizeof(noEmitReason) - 1);
+                noEmitReason[sizeof(noEmitReason) - 1] = '\0';
                 frequencyCandidate.valid = holdOk;
                 frequencyCandidate.releaseMs = candidateReleaseMs;
                 frequencyCandidate.releaseSample = candidateReleaseSample;
@@ -244,8 +259,8 @@ live_freq_update_best:
         } else if (!bestEval.contrastOk) {
             suppress = "freq_contrast_too_low";
         }
-        strncpy(suppressReason, suppress, sizeof(suppressReason) - 1);
-        suppressReason[sizeof(suppressReason) - 1] = '\0';
+        strncpy(gateReason, suppress, sizeof(gateReason) - 1);
+        gateReason[sizeof(gateReason) - 1] = '\0';
 
         const char* wouldCandidate = wouldProduceCandidate ? "matched" : suppress;
         strncpy(wouldCandidateReason, wouldCandidate, sizeof(wouldCandidateReason) - 1);

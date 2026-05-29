@@ -46,95 +46,7 @@ const char* occurrenceSourceName(OccurrenceSourceKind kind) {
     }
 }
 
-const char* frequencyDiagReasonLabel(FrequencyDiagReason reason) {
-    switch (reason) {
-        case FrequencyDiagReason::None:
-            return "none";
-        case FrequencyDiagReason::NoFrames:
-            return "no_frames";
-        case FrequencyDiagReason::NoValidFrames:
-            return "no_valid_frames";
-        case FrequencyDiagReason::ScoreTooLow:
-            return "score_too_low";
-        case FrequencyDiagReason::ContrastTooLow:
-            return "contrast_too_low";
-        case FrequencyDiagReason::ScoreAndContrastTooLow:
-            return "score_and_contrast_too_low";
-        case FrequencyDiagReason::MatchTooShort:
-            return "match_too_short";
-        case FrequencyDiagReason::Suppressed:
-            return "suppressed";
-        case FrequencyDiagReason::NotReady:
-            return "not_ready";
-        case FrequencyDiagReason::GateClosed:
-            return "gate_closed";
-        case FrequencyDiagReason::TimingOutsideWindow:
-            return "timing_outside_window";
-        case FrequencyDiagReason::OccurrenceEmitted:
-            return "occurrence_emitted";
-        case FrequencyDiagReason::Unknown:
-        default:
-            return "unknown";
-    }
-}
-
-FrequencyDiagReason classifyFrequencyDiagReason(const DetectionDiagnostics& diag,
-                                                const FrequencyMatchDetector& detector,
-                                                const bool acceptedPresent) {
-    if (acceptedPresent) {
-        return FrequencyDiagReason::OccurrenceEmitted;
-    }
-
-    if (diag.frequencyFrames == 0) {
-        return FrequencyDiagReason::NoFrames;
-    }
-
-    if (diag.frequencyValidFrames == 0) {
-        return FrequencyDiagReason::NoValidFrames;
-    }
-
-    if (diag.frequencyScoreOkFrames == 0 && diag.frequencyContrastOkFrames == 0) {
-        return FrequencyDiagReason::ScoreAndContrastTooLow;
-    }
-
-    if (diag.frequencyScoreOkFrames == 0) {
-        return FrequencyDiagReason::ScoreTooLow;
-    }
-
-    if (diag.frequencyContrastOkFrames == 0) {
-        return FrequencyDiagReason::ContrastTooLow;
-    }
-
-    if (detector.suppressReason[0] != '\0' && strcmp(detector.suppressReason, "refractory") == 0) {
-        return FrequencyDiagReason::Suppressed;
-    }
-
-    if (!detector.readyOk) {
-        return FrequencyDiagReason::NotReady;
-    }
-
-    if (!detector.gateOpen) {
-        if (detector.candidateActive) {
-            return FrequencyDiagReason::TimingOutsideWindow;
-        }
-        if (detector.candidateClosed && !detector.candidateEmitted) {
-            return FrequencyDiagReason::MatchTooShort;
-        }
-        return FrequencyDiagReason::GateClosed;
-    }
-
-    if (detector.candidateClosed && !detector.candidateEmitted) {
-        return FrequencyDiagReason::MatchTooShort;
-    }
-
-    return FrequencyDiagReason::Unknown;
-}
-
 } // namespace
-
-const char* frequencyDiagReasonName(FrequencyDiagReason reason) {
-    return frequencyDiagReasonLabel(reason);
-}
 
 void DetectionRuntime::resetState() {
     _frequencyEmitter.reset();
@@ -215,19 +127,37 @@ void DetectionRuntime::captureDiagnostics() {
     _diagnostics.frequencyContrastMean = detector.diagnosticsContrastMean();
     _diagnostics.frequencyScoreMin = detector.diagnosticsScoreMin;
     _diagnostics.frequencyContrastMin = detector.diagnosticsContrastMin;
-    _diagnostics.frequencySuppressReason = detector.suppressReason;
+    _diagnostics.frequencyRejectReason = detector.candidateEmitted
+        ? "none"
+        : (detector.candidateClosed
+            ? (detector.noEmitReason[0] != '\0' ? detector.noEmitReason : "unknown")
+            : (detector.gateReason[0] != '\0' ? detector.gateReason : "unknown"));
+    _diagnostics.frequencyNoEmitReason = detector.noEmitReason;
+    _diagnostics.frequencyGateReason = detector.gateReason;
     _diagnostics.frequencyWouldCandidateReason = detector.wouldCandidateReason;
     _diagnostics.frequencyCandidateState = detector.candidateState;
     _diagnostics.frequencyReadyOk = detector.readyOk;
     _diagnostics.frequencyGateOpen = detector.gateOpen;
+    _diagnostics.frequencyOpened = detector.candidateActive
+        || detector.candidateClosed
+        || detector.candidateEmitted
+        || detector.candidateFirstSeenMs > 0;
+    _diagnostics.frequencyReleased = detector.candidateClosed || detector.candidateReleaseMs > 0;
+    _diagnostics.frequencyEmitted = detector.candidateEmitted;
+    _diagnostics.frequencyValidRelease = detector.validRelease;
+    _diagnostics.frequencyEmitAllowed = detector.emitAllowed;
+    _diagnostics.frequencyOpenMs = detector.candidateFirstSeenMs;
+    _diagnostics.frequencyPeakMs = detector.candidatePeakMs;
+    _diagnostics.frequencyReleaseMs = detector.candidateReleaseMs;
+    _diagnostics.frequencyDurationMs = detector.candidateHoldMs;
+    _diagnostics.frequencyMinDurationMs = detector.candidateMinDurationMs;
+    _diagnostics.frequencyMaxDurationMs = detector.candidateMaxDurationMs;
     _diagnostics.frequencyScoreMax = detector.diagnosticsScoreMax;
     _diagnostics.frequencyContrastMax = detector.diagnosticsContrastMax;
     _diagnostics.frequencyScoreMaxMs = detector.diagnosticsScoreMaxMs;
     _diagnostics.frequencyContrastMaxMs = detector.diagnosticsContrastMaxMs;
     _diagnostics.frequencyScoreThreshold = detector.thresholdScore;
     _diagnostics.frequencyContrastThreshold = detector.thresholdContrast;
-    _diagnostics.frequencyBestRejectReason = classifyFrequencyDiagReason(_diagnostics, detector, acceptedPresent);
-    _diagnostics.frequencyReason = frequencyDiagReasonLabel(_diagnostics.frequencyBestRejectReason);
     const bool scoreNear = _diagnostics.frequencyScoreThreshold > 0.0f
         && _diagnostics.frequencyScoreMax >= (_diagnostics.frequencyScoreThreshold * 0.75f);
     const bool contrastNear = _diagnostics.frequencyContrastThreshold > 0.0f

@@ -846,7 +846,7 @@ AnalyzerReport AnalyzerApp::buildSequenceAnalyzerReport(unsigned long trialNumbe
         report.frequency.maxContrastMs = runtimeDiag->frequencyContrastMaxMs;
         report.frequency.minScore = runtimeDiag->frequencyScoreMin;
         report.frequency.minContrast = runtimeDiag->frequencyContrastMin;
-        report.frequency.liveFreqReason = runtimeDiag->frequencyReason != nullptr ? runtimeDiag->frequencyReason : "none";
+        report.frequency.liveFreqReason = runtimeDiag->frequencyRejectReason != nullptr ? runtimeDiag->frequencyRejectReason : "none";
         report.frequency.liveFreqWould = runtimeDiag->frequencyWouldCandidateReason != nullptr ? runtimeDiag->frequencyWouldCandidateReason : "none";
         report.frequency.liveFreqState = runtimeDiag->frequencyCandidateState != nullptr ? runtimeDiag->frequencyCandidateState : "none";
         report.frequency.liveFreqReady = runtimeDiag->frequencyReadyOk;
@@ -854,7 +854,7 @@ AnalyzerReport AnalyzerApp::buildSequenceAnalyzerReport(unsigned long trialNumbe
         report.frequency.liveFreqPresent = runtimeDiag->frequencyPresent;
         report.frequency.liveFreqValid = runtimeDiag->frequencyValidWindow;
         report.frequency.liveFreqMatch = runtimeDiag->frequencyMatched;
-        report.frequency.trialMissReason = runtimeDiag->frequencyReason != nullptr ? runtimeDiag->frequencyReason : "unknown";
+        report.frequency.trialMissReason = runtimeDiag->frequencyRejectReason != nullptr ? runtimeDiag->frequencyRejectReason : "unknown";
         report.frequency.nearMiss = runtimeDiag->frequencyNearMiss;
         report.frequency.nearMissReason = runtimeDiag->frequencyNearMissReason != nullptr ? runtimeDiag->frequencyNearMissReason : "none";
     }
@@ -863,32 +863,38 @@ AnalyzerReport AnalyzerApp::buildSequenceAnalyzerReport(unsigned long trialNumbe
         report.frequency.sourceOccurrenceEmitted = frequencyDetector->candidateEmitted;
         report.frequency.runtimeEvidenceSeen = runtimeDiag != nullptr ? runtimeDiag->frequencyPresent : false;
         report.frequency.runtimeOccurrenceReceived = report.frequency.sourceOccurrenceEmitted && runtimeReceivedOccurrence;
-        report.frequency.diagFirstFrameMs = report.frequency.acceptedPresent ? report.frequency.acceptedStartMs : 0UL;
-        report.frequency.diagLastFrameMs = report.frequency.acceptedPresent ? report.frequency.acceptedReleaseMs : 0UL;
+        report.frequency.fmRejectReason = runtimeDiag != nullptr && runtimeDiag->frequencyRejectReason != nullptr
+            ? runtimeDiag->frequencyRejectReason
+            : "unknown";
+        report.frequency.fmNoEmitReason = runtimeDiag != nullptr && runtimeDiag->frequencyNoEmitReason != nullptr
+            ? runtimeDiag->frequencyNoEmitReason
+            : "none";
+        report.frequency.fmGateReason = runtimeDiag != nullptr && runtimeDiag->frequencyGateReason != nullptr
+            ? runtimeDiag->frequencyGateReason
+            : "none";
+        report.frequency.fmOpened = runtimeDiag != nullptr ? runtimeDiag->frequencyOpened : false;
+        report.frequency.fmReleased = runtimeDiag != nullptr ? runtimeDiag->frequencyReleased : false;
+        report.frequency.fmEmitted = runtimeDiag != nullptr ? runtimeDiag->frequencyEmitted : false;
+        report.frequency.fmDurationOk = runtimeDiag != nullptr ? runtimeDiag->frequencyValidRelease : false;
+        report.frequency.fmValidRelease = runtimeDiag != nullptr ? runtimeDiag->frequencyValidRelease : false;
+        report.frequency.fmEmitAllowed = runtimeDiag != nullptr ? runtimeDiag->frequencyEmitAllowed : false;
+        report.frequency.fmOpenMs = runtimeDiag != nullptr ? runtimeDiag->frequencyOpenMs : 0UL;
+        report.frequency.fmPeakMs = runtimeDiag != nullptr ? runtimeDiag->frequencyPeakMs : 0UL;
+        report.frequency.fmReleaseMs = runtimeDiag != nullptr ? runtimeDiag->frequencyReleaseMs : 0UL;
+        report.frequency.fmDurationMs = runtimeDiag != nullptr ? runtimeDiag->frequencyDurationMs : 0UL;
+        report.frequency.fmMinDurationMs = runtimeDiag != nullptr ? runtimeDiag->frequencyMinDurationMs : 0UL;
+        report.frequency.fmMaxDurationMs = runtimeDiag != nullptr ? runtimeDiag->frequencyMaxDurationMs : 0UL;
+        report.frequency.diagFirstFrameMs = report.frequency.fmOpenMs;
+        report.frequency.diagLastFrameMs = report.frequency.fmReleaseMs;
         report.frequency.diagFrameCountOk = report.frequency.expectedFrameCountEstimate == 0
             ? report.frequency.frames == 0
             : report.frequency.frames > 0;
-        report.frequency.trialOccurrenceOpened = frequencyDetector->candidateActive
-            || frequencyDetector->candidateClosed
-            || frequencyDetector->candidateEmitted
-            || frequencyDetector->candidateFirstSeenMs > 0;
-        report.frequency.trialOccurrenceReleased = frequencyDetector->candidateClosed || frequencyDetector->candidateReleaseMs > 0;
-        report.frequency.trialOccurrenceEmitted = report.frequency.acceptedPresent || frequencyDetector->candidateEmitted;
-        if (frequencyDetector->candidateFirstSeenMs == 0) {
-            report.frequency.trialOccurrenceTimingClass = "none";
-        } else if (frequencyDetector->candidateFirstSeenMs < report.frequency.windowStartMs) {
-            report.frequency.trialOccurrenceTimingClass = "early";
-        } else if (frequencyDetector->candidateFirstSeenMs > report.frequency.windowEndMs) {
-            report.frequency.trialOccurrenceTimingClass = "late";
-        } else {
-            report.frequency.trialOccurrenceTimingClass = "inside";
-        }
         report.frequency.detectionGateBlocked = !runtimeDiag->frequencyGateOpen || !runtimeDiag->frequencyReadyOk;
         if (!runtimeDiag->frequencyReadyOk) {
             report.frequency.detectionGateReason = "not_ready";
         } else if (!runtimeDiag->frequencyGateOpen) {
-            report.frequency.detectionGateReason = runtimeDiag->frequencySuppressReason != nullptr && runtimeDiag->frequencySuppressReason[0] != '\0'
-                ? runtimeDiag->frequencySuppressReason
+            report.frequency.detectionGateReason = report.frequency.fmGateReason != nullptr && report.frequency.fmGateReason[0] != '\0'
+                ? report.frequency.fmGateReason
                 : "unknown";
         } else {
             report.frequency.detectionGateReason = "none";
@@ -897,7 +903,7 @@ AnalyzerReport AnalyzerApp::buildSequenceAnalyzerReport(unsigned long trialNumbe
     report.frequency.inconsistent = report.classification.result == AnalyzerResult::Miss && report.frequency.acceptedPresent;
     if (report.frequency.acceptedPresent) {
         report.frequency.freqEvidenceClass = "accepted";
-    } else if (report.frequency.bothOkFrames > 500UL) {
+    } else if (report.frequency.fmOpened && report.frequency.fmReleased && !report.frequency.fmEmitted) {
         report.frequency.freqEvidenceClass = "strong_no_occurrence";
     } else if (report.frequency.scoreOkFrames > 0 || report.frequency.contrastOkFrames > 0) {
         report.frequency.freqEvidenceClass = "partial";

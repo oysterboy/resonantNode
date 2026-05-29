@@ -520,12 +520,30 @@ void AnalyzerApp::finalizeSequenceTrial(unsigned long now) {
     _sequenceTest.freqEvidenceClassCounts[frequencyEvidenceClassIndex(*finalizedReport)]++;
     flushSequenceSampleHistory(now + 1UL);
     printSequenceTrialResult(*finalizedReport);
-    printSequenceSampleDump(_sequenceTest.currentTrial);
-    printSequenceCandidateLogs(_sequenceTest.currentTrial, diagnostics);
-    printSequenceDiagnostics(*finalizedReport);
-    printSequencePattern(*finalizedReport);
+    if (_sequenceTest.sampleDumpEnabled) {
+        printSequenceSampleDump(_sequenceTest.currentTrial);
+    }
+    if (_sequenceTest.outputConfig.mode == AnalyzerApp::SeqOutputMode::Inspect ||
+        _sequenceTest.outputConfig.mode == AnalyzerApp::SeqOutputMode::Full ||
+        _sequenceTest.outputConfig.mode == AnalyzerApp::SeqOutputMode::Explain) {
+        printSequenceInspect(*finalizedReport);
+    }
+    if (_sequenceTest.outputConfig.mode == AnalyzerApp::SeqOutputMode::Full ||
+        _sequenceTest.outputConfig.mode == AnalyzerApp::SeqOutputMode::Explain) {
+        printSequenceDiagnostics(*finalizedReport);
+    }
+    if (_sequenceTest.outputConfig.mode == AnalyzerApp::SeqOutputMode::Pattern ||
+        _sequenceTest.outputConfig.mode == AnalyzerApp::SeqOutputMode::Full ||
+        _sequenceTest.outputConfig.mode == AnalyzerApp::SeqOutputMode::Explain) {
+        printSequencePattern(*finalizedReport);
+    }
     if (_sequenceTest.outputConfig.mode == AnalyzerApp::SeqOutputMode::Explain) {
+        printSequenceCandidateLogs(_sequenceTest.currentTrial, diagnostics);
         printSequenceExplain(*finalizedReport);
+    } else if (_sequenceTest.outputConfig.mode == AnalyzerApp::SeqOutputMode::Source) {
+        printSequenceDiagnostics(*finalizedReport);
+    } else if (_sequenceTest.outputConfig.mode == AnalyzerApp::SeqOutputMode::Pattern) {
+        printSequencePattern(*finalizedReport);
     }
     Serial.flush();
     _sequenceTest.currentTrialFinalized = true;

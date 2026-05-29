@@ -10,7 +10,6 @@
 #include "../../detection/features/FrequencyMatchEvaluation.h"
 #include "../../detection/occurrences/InspectedOccurrence.h"
 #include "../../detection/features/FreqBandStream.h"
-#include "../../detection/features/FeatureHistory.h"
 #include "../../detection/patterns/PatternResult.h"
 #include "../../detection/occurrences/Occurrence.h"
 #include "../../hal/AudioSource.h"
@@ -41,7 +40,8 @@ public:
 
     enum class SeqOutputMode {
         Quiet,
-        Trial,
+        Compact,
+        Full,
         Source,
         Inspect,
         Pattern,
@@ -55,7 +55,7 @@ public:
     };
 
     struct SeqOutputConfig {
-        SeqOutputMode mode = SeqOutputMode::Trial;
+        SeqOutputMode mode = SeqOutputMode::Compact;
         SeqOutputWhen when = SeqOutputWhen::Miss;
         uint8_t verbosity = 0;
         unsigned long totalTrials = 100;
@@ -467,7 +467,6 @@ private:
     AudioSignal _audioSignal;
     detection::DetectionRuntime* _detection = nullptr;
     FreqBandStream _freqBandStream;
-    detection::FeatureHistory* _sequenceFeatureHistory = nullptr;
     FrequencyMatchEvaluation::Values _frequencyEvidenceTuning = {};
     SeqOutputConfig _seqOutputConfig = {};
     PendingSequenceStart _pendingSequenceStart = {};

@@ -662,7 +662,7 @@ Include `SEQ_PATTERN` in the command/output contract from the start, even if pat
 ## Recommended commands
 
 ```text
-SEQ MODE <trial|source|inspect|pattern|dump|quiet>
+SEQ MODE <quiet|compact|full|source|inspect|pattern|dump>
 SEQ WHEN <off|miss|all>
 SEQ VERBOSE <0|1|2>
 SEQ TRIES <N>

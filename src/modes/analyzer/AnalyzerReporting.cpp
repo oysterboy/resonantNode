@@ -169,6 +169,31 @@ const char* sequenceDiagModeName(AnalyzerApp::SequenceDiagMode mode) {
     }
 }
 
+const char* rejectStageName(const AnalyzerReport& report) {
+    switch (report.classification.reason) {
+        case AnalyzerReason::MissingPipelineResult:
+        case AnalyzerReason::NoOccurrence:
+            return "source";
+        case AnalyzerReason::OccurrenceSeenButRejected:
+        case AnalyzerReason::InspectionFailed:
+            return "inspect";
+        case AnalyzerReason::PatternCandidateRejected:
+        case AnalyzerReason::MultipleValidPatterns:
+        case AnalyzerReason::MultipleCompetingPatterns:
+        case AnalyzerReason::DuplicatePatternAfterPrimary:
+            return "pattern";
+        case AnalyzerReason::InvalidAudio:
+        case AnalyzerReason::FieldTooDense:
+        case AnalyzerReason::UnexpectedValidPatternWithoutTrigger:
+        case AnalyzerReason::ValidPatternBeforeWindow:
+        case AnalyzerReason::ValidPatternAfterWindow:
+        case AnalyzerReason::Unknown:
+        case AnalyzerReason::None:
+        default:
+            return "unknown";
+    }
+}
+
 const char* analyzerEvidenceTargetName(detection::EvidenceTarget value) {
     switch (value) {
         case detection::EvidenceTarget::AmpStrength:
@@ -227,12 +252,14 @@ void AnalyzerApp::printSequenceTrialResult(const AnalyzerReport& report) const {
         Serial.print("-1ms");
     }
     Serial.print(" confidence=");
-    Serial.println(report.primaryPattern.confidence, 2);
-
-    printSequenceInspect(report);
-
-    if (_sequenceTest.outputConfig.mode == SeqOutputMode::Trial) {
-        return;
+    Serial.print(report.primaryPattern.confidence, 2);
+    if (report.classification.result != AnalyzerResult::Expected &&
+        report.classification.result != AnalyzerResult::Early &&
+        report.classification.result != AnalyzerResult::Late) {
+        Serial.print(" rejectStage=");
+        Serial.println(rejectStageName(report));
+    } else {
+        Serial.println();
     }
 
     if (_sequenceTest.outputConfig.mode != SeqOutputMode::Explain) {
@@ -301,49 +328,37 @@ void AnalyzerApp::printSequenceInspect(const AnalyzerReport& report) const {
     if (!sequenceOutputModeEnabled(_sequenceTest.outputConfig.mode, SeqOutputMode::Inspect)) {
         return;
     }
-    if (!sequenceOutputWhenEnabled(_sequenceTest.outputConfig.when, report.classification.result)) {
+    if (_sequenceTest.outputConfig.mode != SeqOutputMode::Full &&
+        !sequenceOutputWhenEnabled(_sequenceTest.outputConfig.when, report.classification.result)) {
         return;
     }
     if (!report.occurrences.present) {
         return;
     }
 
-    const char* sourceName = report.occurrences.primarySource != nullptr
-        ? report.occurrences.primarySource
-        : (report.profileDetail.emitter != nullptr ? report.profileDetail.emitter : "unknown");
-    const char* inspectorName = report.profileDetail.inspectionModules != nullptr
-        ? report.profileDetail.inspectionModules
-        : "unknown";
     const char* supportTarget = report.profileDetail.requiredSupportTarget != nullptr
         ? report.profileDetail.requiredSupportTarget
         : "unknown";
-    const bool supportAccepted = report.primaryPattern.supportMatched;
-    const char* supportReason = supportAccepted
-        ? "support_ok"
-        : (report.primaryPattern.rejectReason != nullptr && report.primaryPattern.rejectReason[0] != '\0' && strcmp(report.primaryPattern.rejectReason, "none") != 0
-            ? report.primaryPattern.rejectReason
-            : (report.inspection.mainRejectReason != nullptr ? report.inspection.mainRejectReason : "unknown"));
+    const bool inspectVerbose = _sequenceTest.outputConfig.verbosity > 0;
 
-    Serial.print("SEQ_INSPECT trial=");
-    Serial.print(report.context.trial);
-    Serial.print(" profile=");
-    Serial.print(report.context.profile != nullptr ? report.context.profile : "unknown");
-    Serial.print(" stage=inspect");
-    Serial.print(" source=");
-    Serial.print(sourceName);
-    Serial.print(" occurrence=");
-    Serial.print(report.occurrences.valid ? "accepted" : "rejected");
-    Serial.print(" inspector=");
-    Serial.print(inspectorName);
-    Serial.print(" support_target=");
-    Serial.print(supportTarget);
-    Serial.print(" support=");
-    Serial.print(report.inspection.moduleStrengthClass != nullptr ? report.inspection.moduleStrengthClass : "unknown");
-    Serial.print(" accepted=");
-    Serial.print(supportAccepted ? 1 : 0);
-    Serial.print(" reason=");
-    Serial.print(supportReason);
+    Serial.print("SEQ_INSPECT evidence=");
+    if (strcmp(supportTarget, "FrequencyScoreStrength") == 0) {
+        Serial.print("freq.score=");
+        Serial.print(report.profileDetail.freqScore, 2);
+    } else if (strcmp(supportTarget, "AmpStrength") == 0) {
+        Serial.print("scalar.classification=");
+        Serial.print(report.profileDetail.ampStrengthObservation.classificationValue, 1);
+    } else if (strcmp(supportTarget, "TargetBandStrength") == 0) {
+        Serial.print("target_band.level=");
+        Serial.print(report.profileDetail.ampLevel, 1);
+    } else {
+        Serial.print("unknown");
+    }
     Serial.println();
+
+    if (!inspectVerbose) {
+        return;
+    }
 
     Serial.print("  evidence.broad_amp.centered=");
     Serial.print(report.profileDetail.ampCenteredMagnitude, 1);
@@ -402,7 +417,8 @@ void AnalyzerApp::printSequencePattern(const AnalyzerReport& report) const {
     if (!sequenceOutputModeEnabled(_sequenceTest.outputConfig.mode, SeqOutputMode::Pattern)) {
         return;
     }
-    if (!sequenceOutputWhenEnabled(_sequenceTest.outputConfig.when, report.classification.result)) {
+    if (_sequenceTest.outputConfig.mode != SeqOutputMode::Full &&
+        !sequenceOutputWhenEnabled(_sequenceTest.outputConfig.when, report.classification.result)) {
         return;
     }
 
@@ -780,7 +796,8 @@ void AnalyzerApp::printSequenceDiagnostics(const AnalyzerReport& report) const {
     if (!sequenceOutputModeEnabled(_sequenceTest.outputConfig.mode, SeqOutputMode::Source)) {
         return;
     }
-    if (!sequenceOutputWhenEnabled(_sequenceTest.outputConfig.when, report.classification.result)) {
+    if (_sequenceTest.outputConfig.mode != SeqOutputMode::Full &&
+        !sequenceOutputWhenEnabled(_sequenceTest.outputConfig.when, report.classification.result)) {
         return;
     }
     const bool compactSource = _sequenceTest.outputConfig.verbosity == 0 &&
@@ -1022,7 +1039,8 @@ void AnalyzerApp::printSequenceScalarDiagnostics(const AnalyzerReport& report) c
     if (!sequenceOutputModeEnabled(_sequenceTest.outputConfig.mode, SeqOutputMode::Source)) {
         return;
     }
-    if (!sequenceOutputWhenEnabled(_sequenceTest.outputConfig.when, report.classification.result)) {
+    if (_sequenceTest.outputConfig.mode != SeqOutputMode::Full &&
+        !sequenceOutputWhenEnabled(_sequenceTest.outputConfig.when, report.classification.result)) {
         return;
     }
 

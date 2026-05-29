@@ -9,8 +9,6 @@
 #include "../../AudioDebugConfig.h"
 #include "../../TimingUtils.h"
 #include "AnalyzerTextUtils.h"
-#include "../../detection/features/FeatureExtractor.h"
-#include "../../detection/features/FeatureHistory.h"
 #include "../../detection/detectors/FrequencyMatchDetector.h"
 #include "../../detection/patterns/PatternAssembler.h"
 #include "../../detection/patterns/PatternNames.h"
@@ -202,6 +200,10 @@ const char* seqOutputModeName(AnalyzerApp::SeqOutputMode mode) {
     switch (mode) {
         case AnalyzerApp::SeqOutputMode::Quiet:
             return "quiet";
+        case AnalyzerApp::SeqOutputMode::Compact:
+            return "compact";
+        case AnalyzerApp::SeqOutputMode::Full:
+            return "full";
         case AnalyzerApp::SeqOutputMode::Source:
             return "source";
         case AnalyzerApp::SeqOutputMode::Inspect:
@@ -210,9 +212,8 @@ const char* seqOutputModeName(AnalyzerApp::SeqOutputMode mode) {
             return "pattern";
         case AnalyzerApp::SeqOutputMode::Explain:
             return "dump";
-        case AnalyzerApp::SeqOutputMode::Trial:
         default:
-            return "trial";
+            return "compact";
     }
 }
 
@@ -263,10 +264,13 @@ AnalyzerApp::SeqOutputMode seqOutputModeFromToken(const char* token, bool* valid
         if (valid != nullptr) {
             *valid = false;
         }
-        return AnalyzerApp::SeqOutputMode::Trial;
+        return AnalyzerApp::SeqOutputMode::Compact;
     }
-    if (equalsIgnoreCase(token, "trial")) {
-        return AnalyzerApp::SeqOutputMode::Trial;
+    if (equalsIgnoreCase(token, "compact") || equalsIgnoreCase(token, "trial")) {
+        return AnalyzerApp::SeqOutputMode::Compact;
+    }
+    if (equalsIgnoreCase(token, "full")) {
+        return AnalyzerApp::SeqOutputMode::Full;
     }
     if (equalsIgnoreCase(token, "source")) {
         return AnalyzerApp::SeqOutputMode::Source;
@@ -286,7 +290,7 @@ AnalyzerApp::SeqOutputMode seqOutputModeFromToken(const char* token, bool* valid
     if (valid != nullptr) {
         *valid = false;
     }
-    return AnalyzerApp::SeqOutputMode::Trial;
+    return AnalyzerApp::SeqOutputMode::Compact;
 }
 
 AnalyzerApp::SeqOutputWhen seqOutputWhenFromToken(const char* token, bool* valid) {
@@ -341,15 +345,6 @@ void AnalyzerApp::begin() {
     if (_detection == nullptr) {
         _detection = new detection::DetectionRuntime();
     }
-    if (_sequenceFeatureHistory == nullptr) {
-        _sequenceFeatureHistory = new (std::nothrow) detection::FeatureHistory();
-        if (_sequenceFeatureHistory == nullptr) {
-            Serial.println("EVT analyzer_warn feature_history_alloc_failed");
-        }
-    }
-    if (_sequenceFeatureHistory != nullptr) {
-        _sequenceFeatureHistory->reset();
-    }
     _lastPrintMs = 0;
     _usbLineLength = 0;
     _usbLineBuffer[0] = '\0';
@@ -360,7 +355,7 @@ void AnalyzerApp::begin() {
     _controlClaimAtMs = 0;
 
     Serial.println("EVT analyzer_ready");
-    Serial.println("EVT analyzer_help type='HELP', 'BASE', 'PARAM freqScore=10000 freqContrast=50.0', 'TEST', 'RAW trigger f=3200 dur=100 post=1000 dump=bin', 'SEQ MODE trial|source|inspect|pattern|dump|quiet WHEN off|miss|all VERBOSE 0|1|2 STATUS', 'CAP', 'DET AMP', 'VAL', 'VAL OFF'");
+    Serial.println("EVT analyzer_help type='HELP', 'BASE', 'PARAM freqScore=10000 freqContrast=50.0', 'TEST', 'RAW trigger f=3200 dur=100 post=1000 dump=bin', 'SEQ MODE quiet|compact|full|source|inspect|pattern|dump WHEN off|miss|all VERBOSE 0|1|2 STATUS', 'CAP', 'DET AMP', 'VAL', 'VAL OFF'");
 }
 
 void AnalyzerApp::configureParameters() {
@@ -385,7 +380,7 @@ bool AnalyzerApp::sequenceOutputModeEnabled(SeqOutputMode configured, SeqOutputM
     if (configured == SeqOutputMode::Quiet) {
         return false;
     }
-    if (configured == SeqOutputMode::Explain) {
+    if (configured == SeqOutputMode::Explain || configured == SeqOutputMode::Full) {
         return true;
     }
     return configured == requested;
@@ -434,9 +429,6 @@ void AnalyzerApp::update() {
             const uint32_t sampleTimeUs = block.approxStartMicros + sampleOffsetUs(static_cast<uint32_t>(i), sampleRateHz);
             AudioSignalFrame frame;
             _audioSignal.update(static_cast<int>(block.samples[i]), sampleTimeUs, frame);
-            if (_sequenceFeatureHistory != nullptr) {
-                detection::FeatureExtractor::observeFrame(frame, *_sequenceFeatureHistory);
-            }
             _freqBandStream.observeCenteredSample(frame.centeredSample);
             if (_sequenceTest.active && _sequenceTest.currentTrial > 0) {
                 const detection::FrequencyFeatureFrame runtimeFrequencyFrame = captureFrequencyFeatureFrame(frame.sampleTimeMs);
@@ -508,9 +500,6 @@ unsigned long AnalyzerApp::loopDelayMs() const {
 
 void AnalyzerApp::resetDetectorState() {
     _audioSignal.resetSignalState();
-    if (_sequenceFeatureHistory != nullptr) {
-        _sequenceFeatureHistory->reset();
-    }
 }
 
 void AnalyzerApp::startBaseSession(unsigned long durationMs, bool quiet) {

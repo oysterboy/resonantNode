@@ -1,122 +1,115 @@
-# Codex Instruction - Scalar Reject Summary Parity
+# Codex Instruction - Normalize FrequencyMatch and Scalar Diagnostic Semantics
 
 ## Goal
 
-Mirror the trial-local reject/no-emit summary we already have for FrequencyMatch on the ScalarTransient path.
+Keep the scoped source and inspector diagnostics stable, then make the carried evidence names line up cleanly across FrequencyMatch and Scalar paths.
 
 This pass stays narrow:
 
-- scope only the scalar source / detector path
-- keep the summary trial-local
-- do not add `SEQ_INSPECT`
+- keep `SEQ_SOURCE` and `SEQ_INSPECT` bounded and trial-local
+- normalize the evidence namespaces printed by the inspector view
+- do not add `SEQ_PATTERN`
 - do not change `PatternResult`
 
 ## Why this pass
 
-FrequencyMatch now carries a trustworthy trial-local `fm_*` summary into `SEQ_FREQ_DIAG`.
+`SEQ_SOURCE` is in place and `SEQ_INSPECT` is working on-device.
 
-The next roadmap item is the same concept for Scalar sources:
-
-```text
-ScalarTransientDetector / ScalarOccurrenceSource
-```
-
-We want the analyzer to explain scalar rejects with detector-owned facts, not with live counters or stale state.
+The next step is to make the inspector evidence easier to compare across profiles by printing the support-target-specific fields only, instead of mixing unrelated zero-valued evidence into the same line.
 
 ## Status
 
-implemented on current pass; scalar reject summary now prints trial-locally in `SEQ_SCALAR_DIAG`
+done
 
 ## Pass scope
 
 Only do the following:
 
 ```text
-ScalarTransientDetector
-  -> keep a small reject / no-emit summary for the current trial
+Inspector / support summary
+  -> keep compact accepted / rejected support facts for the current trial
+  -> reflect the inspector modules and support target chosen by the active profile
+  -> print only the evidence namespace that matches the active support target
 
-ScalarOccurrenceSource
-  -> expose the detector facts cleanly
-
-DetectionRuntime
-  -> snapshot scalar reject facts once per trial
+SEQ_SOURCE / SEQ_INSPECT
+  -> stay trial-local and bounded
+  -> keep the source + inspector views separate
 
 Analyzer
-  -> print the carried scalar reject summary in trial diagnostics / explain output
+  -> print the carried inspector summary in trial diagnostics / explain output
 ```
 
 ## Facts to carry
 
-The scalar side should at least carry:
+The inspector side should at least carry:
 
 ```text
-scalar_reject_reason
-scalar_no_emit_reason
-scalar_gate_reason
-scalar_opened
-scalar_released
-scalar_emitted
-scalar_valid_release
-scalar_emit_allowed
-scalar_open_ms
-scalar_peak_ms
-scalar_release_ms
-scalar_duration_ms
-scalar_min_duration_ms
-scalar_max_duration_ms
+trial
+profile
+stage=inspect
+source
+occurrence
+inspector
+support_target
+support
+accepted
+reason
+evidence.freq.*
+evidence.scalar.*
+evidence.broad_amp.*
+evidence.target_band.*
 ```
 
-If the scalar path already has equivalent lifecycle fields, reuse them instead of inventing duplicates.
+Keep the rejected path compact:
+
+- always aggregate counts by reason
+- always keep one selected/best support summary
+- optionally keep a tiny fixed-size support ring for deep debug
 
 ## Success criteria
 
-For a rejected scalar candidate, the analyzer should be able to print:
+For an inspected occurrence, the analyzer should be able to print:
 
 ```text
-accepted_present=0
-scalar_reject_reason=...
-scalar_no_emit_reason=...
-scalar_opened=1/0
-scalar_released=1/0
-scalar_emitted=1/0
-scalar_duration_ms=...
-scalar_min_duration_ms=...
-scalar_max_duration_ms=...
+occurrence=accepted
+support_target=...
+support=...
+accepted=true|false
+reason=...
+evidence.*
 ```
 
-and those values should refer to the same trial-local candidate lifecycle.
+and those values should refer to the same trial-local inspected occurrence.
 
 ## Not in this pass
 
 ```text
-Generic SEQ_INSPECT
-Pattern diagnostics
-Cross-profile normalization
+SEQ_PATTERN
+Cross-profile normalization beyond the inspector evidence fields
 Reintroducing per-frame diagnostic accumulation
-Changing FrequencyMatch behavior again
+Changing detection behavior again
 ```
 
 ## Practical test
 
-Use the scalar-heavy profile for verification:
+Use the frequency-heavy profile first:
 
 ```text
-SEQ start tries=20 log=summary diag=miss test=amp-evidence
+SEQ start tries=20 log=summary+trial diag=miss profile=tonalpulse test=freq-evidence
 ```
 
-Then compare with a longer run:
+Then compare with the scalar-heavy profile:
 
 ```text
-SEQ start tries=100 log=summary diag=miss test=amp-evidence
+SEQ start tries=20 log=summary+trial diag=miss profile=amp test=amp-evidence
 ```
 
 ## Roadmap link
 
-This is the Scalar half of the analyser roadmap item:
+This is the next item after `SEQ_INSPECT`:
 
 ```text
-Add detector/source reject-candidate log
-Analyzer drain + aggregate rejects
+Normalize FrequencyMatch and Scalar Diagnostic Semantics
 ```
 
-Once Scalar parity is in place, the generic `SEQ_INSPECT` layer can be designed on top of both source types.
+`SEQ_PATTERN` can now be designed on top of the source and inspector stages.

@@ -14,10 +14,6 @@ namespace {
 constexpr unsigned long kSequenceWarmupMs = 500;
 constexpr long kLateOnsetMinMs = 200L;
 
-bool analyzerLogEnabled(uint32_t flags, AnalyzerApp::AnalyzerLogFlags flag) {
-    return (flags & static_cast<uint32_t>(flag)) != 0;
-}
-
 unsigned long countSelectedSampleDumpTrials(unsigned long totalTrials, unsigned long firstTrials, unsigned long everyNth) {
     if (totalTrials == 0) {
         return 0;
@@ -55,9 +51,25 @@ size_t frequencyEvidenceClassIndex(const AnalyzerReport& report) {
     return 4U;
 }
 
+const char* sequenceEvidenceTargetName(detection::EvidenceTarget value) {
+    switch (value) {
+        case detection::EvidenceTarget::AmpStrength:
+            return "AmpStrength";
+        case detection::EvidenceTarget::FrequencyScoreStrength:
+            return "FrequencyScoreStrength";
+        case detection::EvidenceTarget::FrequencyContrastQuality:
+            return "FrequencyContrastQuality";
+        case detection::EvidenceTarget::TargetBandStrength:
+            return "TargetBandStrength";
+        case detection::EvidenceTarget::None:
+        default:
+            return "None";
+    }
+}
+
 } // namespace
 
-void AnalyzerApp::startSequenceTest(unsigned long totalTrials, unsigned long periodMs, unsigned long windowEndOffsetMs, unsigned long toneHz, unsigned long durationMs, bool quiet, bool showDetails, SequenceDiagMode diagMode, const char* setupLabel, uint32_t logFlags, bool sampleDumpEnabled, unsigned long sampleDumpFirstTrials, unsigned long sampleDumpEveryNth, unsigned long sampleDumpLeadMs, unsigned long sampleDumpTailMs, unsigned long sampleDumpStepMs, unsigned long sampleDumpMaxRows, detection::DetectionProfileKind profileKind, bool externalEmitter) {
+void AnalyzerApp::startSequenceTest(unsigned long totalTrials, unsigned long periodMs, unsigned long windowEndOffsetMs, unsigned long toneHz, unsigned long durationMs, bool quiet, bool showDetails, SequenceDiagMode diagMode, const char* setupLabel, bool sampleDumpEnabled, unsigned long sampleDumpFirstTrials, unsigned long sampleDumpEveryNth, unsigned long sampleDumpLeadMs, unsigned long sampleDumpTailMs, unsigned long sampleDumpStepMs, unsigned long sampleDumpMaxRows, detection::DetectionProfileKind profileKind, bool externalEmitter) {
     if (_valMode) {
         return;
     }
@@ -83,13 +95,14 @@ void AnalyzerApp::startSequenceTest(unsigned long totalTrials, unsigned long per
         sampleDumpTailMs = sampleDumpLeadMs;
     }
     _sequenceTest.active = true;
-    _sequenceTest.quiet = quiet;
+    _sequenceTest.quiet = quiet || _sequenceTest.outputConfig.mode == AnalyzerApp::SeqOutputMode::Quiet;
     _sequenceTest.showDetails = showDetails;
-    _sequenceTest.diagMode = diagMode;
     _sequenceTest.externalEmitter = externalEmitter;
     _sequenceTest.profileKind = profileKind;
+    const detection::DetectionProfile& selectedProfile = detection::detectionProfileForKind(_sequenceTest.profileKind);
+    _sequenceTest.outputConfig = _seqOutputConfig;
+    _sequenceTest.diagMode = sequenceDiagModeFromOutputWhen(_sequenceTest.outputConfig.when);
     _sequenceTest.progressLineStarted = false;
-    _sequenceTest.logFlags = logFlags;
     _sequenceTest.totalTrials = totalTrials;
     _sequenceTest.periodMs = periodMs;
     _sequenceTest.windowStartOffsetMs = 0;
@@ -111,7 +124,6 @@ void AnalyzerApp::startSequenceTest(unsigned long totalTrials, unsigned long per
         _detection = new detection::DetectionRuntime();
     }
     _detection->resetState();
-    const detection::DetectionProfile& selectedProfile = detection::detectionProfileForKind(_sequenceTest.profileKind);
     _detection->setFrequencyMatchConfig(selectedProfile.frequencyMatch);
     _detection->setScalarTransientConfig(selectedProfile.scalarTransient);
     _detection->setOccurrenceSource(selectedProfile.occurrenceSource);
@@ -236,23 +248,35 @@ void AnalyzerApp::startSequenceTest(unsigned long totalTrials, unsigned long per
     }
     _audioSignal.resetStats();
     _audioSource.resetStats();
-    Serial.println("AUDIO stats reset");
+    if (!_sequenceTest.quiet) {
+        Serial.println("AUDIO stats reset");
+    }
 
-    Serial.print("SEQ start test=");
-    Serial.print(_sequenceTest.setupLabel);
-    Serial.print(" warmup_ms=");
-    Serial.print(kSequenceWarmupMs);
-    Serial.print(" loopDelayMs=");
-    Serial.print(TEST_LOOP_DELAY_MS);
-    Serial.print(" logStress=");
-    Serial.println(TEST_LOG_STRESS ? 1 : 0);
+    if (!_sequenceTest.quiet) {
+        Serial.print("SEQ start test=");
+        Serial.print(_sequenceTest.setupLabel);
+        Serial.print(" warmup_ms=");
+        Serial.print(kSequenceWarmupMs);
+        Serial.print(" loopDelayMs=");
+        Serial.print(TEST_LOOP_DELAY_MS);
+        Serial.print(" logStress=");
+        Serial.println(TEST_LOG_STRESS ? 1 : 0);
+    }
 
-    if (_sequenceTest.showDetails) {
+    if (_sequenceTest.showDetails && !_sequenceTest.quiet) {
         Serial.print("SEQ start source=");
         Serial.print("I2S");
         Serial.print(" probe=AMP");
         Serial.print(" profile=");
         Serial.print(detection::detectionProfileName(_sequenceTest.profileKind));
+        Serial.print(" source=");
+        Serial.print(detection::occurrenceSourceKindName(selectedProfile.occurrenceSource));
+        Serial.print(" detector=");
+        Serial.print(detection::occurrenceSourceKindName(selectedProfile.occurrenceSource));
+        Serial.print(" required_support_target=");
+        Serial.print(sequenceEvidenceTargetName(selectedProfile.patternRulesConfig.requiredSupportTarget));
+        Serial.print(" support_gate=");
+        Serial.print(selectedProfile.patternRulesConfig.requireSupportForAcceptance ? "enabled" : "disabled");
         Serial.print(" mode=");
         Serial.print(_sequenceTest.externalEmitter ? "OBS" : "SEQ");
         Serial.print(" test=");
@@ -354,6 +378,7 @@ void AnalyzerApp::updateSequenceTest(unsigned long now) {
     _sequenceTest.currentTrialDiagnostics.scalar.expectedWindowMs = _sequenceTest.currentTrialDiagnostics.frequency.expectedWindowMs;
     _sequenceTest.currentTrialDiagnostics.scalar.expectedFrameCountEstimate = _sequenceTest.currentTrialDiagnostics.frequency.expectedFrameCountEstimate;
     _sequenceTest.currentTrialDiagnostics.scalar.diagFrameCountOk = false;
+    printSequenceTrialHeader(trialNumber);
     _detection->resetDiagnostics();
     _sequenceTest.nextTriggerAtMs = scheduledAtMs + _sequenceTest.periodMs;
 
@@ -450,19 +475,26 @@ void AnalyzerApp::finalizeSequenceTrial(unsigned long now) {
     }
 
     _sequenceTest.duplicates += diagnostics.duplicateCount;
-    AnalyzerReport finalizedReport = buildSequenceAnalyzerReport(_sequenceTest.currentTrial, result, dtMs, durMs, strength, invalidAudioTrial, diagnostics.duplicateCount, diagnostics);
+    AnalyzerReport* finalizedReport = sequenceReportScratch();
+    if (finalizedReport == nullptr) {
+        Serial.println("SEQ_VERBOSE_WARN reason=analyzer_report_alloc_failed requested=1 report");
+        _sequenceTest.currentTrialFinalized = true;
+        stopSequenceTest();
+        return;
+    }
+    buildSequenceAnalyzerReport(*finalizedReport, _sequenceTest.currentTrial, result, dtMs, durMs, strength, invalidAudioTrial, diagnostics.duplicateCount, diagnostics);
     _sequenceTest.completedTrials++;
-    _sequenceTest.totalPatternConfidence += finalizedReport.primaryPattern.confidence;
-    if (finalizedReport.classification.dtMs >= 0) {
-        _sequenceTest.totalPatternDtMs += static_cast<unsigned long>(finalizedReport.classification.dtMs);
+    _sequenceTest.totalPatternConfidence += finalizedReport->primaryPattern.confidence;
+    if (finalizedReport->classification.dtMs >= 0) {
+        _sequenceTest.totalPatternDtMs += static_cast<unsigned long>(finalizedReport->classification.dtMs);
         _sequenceTest.patternDtCount++;
     }
-    if (finalizedReport.occurrences.primaryDurationMs > 0) {
-        _sequenceTest.totalPatternDurationMs += finalizedReport.occurrences.primaryDurationMs;
+    if (finalizedReport->occurrences.primaryDurationMs > 0) {
+        _sequenceTest.totalPatternDurationMs += finalizedReport->occurrences.primaryDurationMs;
         _sequenceTest.patternDurationCount++;
     }
     if (result == AnalyzerResult::Miss) {
-        const size_t reasonIndex = analyzerReasonIndex(finalizedReport.classification.reason);
+        const size_t reasonIndex = analyzerReasonIndex(finalizedReport->classification.reason);
         if (reasonIndex < static_cast<size_t>(AnalyzerReason::Unknown) + 1U) {
             _sequenceTest.missReasonCounts[reasonIndex]++;
         }
@@ -480,28 +512,20 @@ void AnalyzerApp::finalizeSequenceTrial(unsigned long now) {
         result == AnalyzerResult::Ambiguous ||
         result == AnalyzerResult::TooDense ||
         result == AnalyzerResult::InvalidAudio) {
-        const size_t reasonIndex = analyzerReasonIndex(finalizedReport.classification.reason);
+        const size_t reasonIndex = analyzerReasonIndex(finalizedReport->classification.reason);
         if (reasonIndex < static_cast<size_t>(AnalyzerReason::Unknown) + 1U) {
             _sequenceTest.rejectReasonCounts[reasonIndex]++;
         }
     }
-    _sequenceTest.freqEvidenceClassCounts[frequencyEvidenceClassIndex(finalizedReport)]++;
-    const bool summaryTrial = analyzerLogEnabled(_sequenceTest.logFlags, AnalyzerApp::ANALYZER_LOG_TRIAL_SUMMARY);
+    _sequenceTest.freqEvidenceClassCounts[frequencyEvidenceClassIndex(*finalizedReport)]++;
     flushSequenceSampleHistory(now + 1UL);
+    printSequenceTrialResult(*finalizedReport);
     printSequenceSampleDump(_sequenceTest.currentTrial);
     printSequenceCandidateLogs(_sequenceTest.currentTrial, diagnostics);
-    printSequenceDiagnostics(finalizedReport);
-    if (summaryTrial) {
-        printSequenceTrialResult(_sequenceTest.currentTrial, result, dtMs, durMs, strength, invalidAudioTrial, diagnostics.duplicateCount, diagnostics);
-    } else {
-        printSequenceTrialResult(finalizedReport);
-    }
-    if (analyzerLogEnabled(_sequenceTest.logFlags, AnalyzerApp::ANALYZER_LOG_EXPLAIN)) {
-        printSequenceExplain(finalizedReport);
-    }
-    if (analyzerLogEnabled(_sequenceTest.logFlags, AnalyzerApp::ANALYZER_LOG_CUSTOM) &&
-        !analyzerLogEnabled(_sequenceTest.logFlags, AnalyzerApp::ANALYZER_LOG_EXPLAIN)) {
-        printSequenceAmpWindow(finalizedReport);
+    printSequenceDiagnostics(*finalizedReport);
+    printSequencePattern(*finalizedReport);
+    if (_sequenceTest.outputConfig.mode == AnalyzerApp::SeqOutputMode::Explain) {
+        printSequenceExplain(*finalizedReport);
     }
     Serial.flush();
     _sequenceTest.currentTrialFinalized = true;

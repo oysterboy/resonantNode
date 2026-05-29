@@ -132,6 +132,7 @@ void DetectionRuntime::captureDiagnostics() {
         : 0UL;
     _diagnostics.scalarMinDurationMs = _scalarTransientConfig.minTransientDurationMs;
     _diagnostics.scalarMaxDurationMs = _scalarTransientConfig.maxTransientDurationMs;
+    _diagnostics.scalarPeakStrength = _scalarEmitter.candidatePeakStrength();
     _diagnostics.scalarTransientRejectedDurationMs = _scalarEmitter.lastTransientRejectedDurationMs();
     _diagnostics.scalarTransientRejectedStrength = _scalarEmitter.lastTransientRejectedStrength();
 
@@ -181,6 +182,9 @@ void DetectionRuntime::captureDiagnostics() {
     _diagnostics.frequencyContrastMax = detector.diagnosticsContrastMax;
     _diagnostics.frequencyScoreMaxMs = detector.diagnosticsScoreMaxMs;
     _diagnostics.frequencyContrastMaxMs = detector.diagnosticsContrastMaxMs;
+    _diagnostics.frequencyPeakScore = detector.candidatePeakScore;
+    _diagnostics.frequencyPeakContrast = detector.candidatePeakContrast;
+    _diagnostics.frequencyPeakWindowSampleCount = detector.candidatePeakWindowSampleCount;
     _diagnostics.frequencyScoreThreshold = detector.thresholdScore;
     _diagnostics.frequencyContrastThreshold = detector.thresholdContrast;
     const bool scoreNear = _diagnostics.frequencyScoreThreshold > 0.0f

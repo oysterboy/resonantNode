@@ -51,10 +51,6 @@ uint32_t sampleOffsetUs(uint32_t sampleOffset, uint32_t sampleRateHz) {
     return static_cast<uint32_t>((static_cast<uint64_t>(sampleOffset) * 1000000ULL) / static_cast<uint64_t>(sampleRateHz));
 }
 
-bool analyzerLogEnabled(uint32_t flags, AnalyzerApp::AnalyzerLogFlags flag) {
-    return (flags & static_cast<uint32_t>(flag)) != 0;
-}
-
 void buildFrequencyFailReason(const detection::FrequencyFeatureFrame& evidence,
                               const FrequencyMatchEvaluation::Values& tuning,
                               char* out,
@@ -202,6 +198,122 @@ const char* inspectionEvidenceTargetsName(const detection::InspectionPlan& plan)
     return "none";
 }
 
+const char* seqOutputModeName(AnalyzerApp::SeqOutputMode mode) {
+    switch (mode) {
+        case AnalyzerApp::SeqOutputMode::Quiet:
+            return "quiet";
+        case AnalyzerApp::SeqOutputMode::Source:
+            return "source";
+        case AnalyzerApp::SeqOutputMode::Inspect:
+            return "inspect";
+        case AnalyzerApp::SeqOutputMode::Pattern:
+            return "pattern";
+        case AnalyzerApp::SeqOutputMode::Explain:
+            return "dump";
+        case AnalyzerApp::SeqOutputMode::Trial:
+        default:
+            return "trial";
+    }
+}
+
+const char* seqOutputWhenName(AnalyzerApp::SeqOutputWhen value) {
+    switch (value) {
+        case AnalyzerApp::SeqOutputWhen::Off:
+            return "off";
+        case AnalyzerApp::SeqOutputWhen::All:
+            return "all";
+        case AnalyzerApp::SeqOutputWhen::Miss:
+        default:
+            return "miss";
+    }
+}
+
+bool seqOutputWhenEnabled(AnalyzerApp::SeqOutputWhen configured, AnalyzerResult result) {
+    switch (configured) {
+        case AnalyzerApp::SeqOutputWhen::All:
+            return true;
+        case AnalyzerApp::SeqOutputWhen::Off:
+            return false;
+        case AnalyzerApp::SeqOutputWhen::Miss:
+        default:
+            switch (result) {
+                case AnalyzerResult::Miss:
+                case AnalyzerResult::Late:
+                case AnalyzerResult::Duplicate:
+                case AnalyzerResult::Unexpected:
+                case AnalyzerResult::Rejected:
+                case AnalyzerResult::Ambiguous:
+                case AnalyzerResult::TooDense:
+                case AnalyzerResult::InvalidAudio:
+                    return true;
+                case AnalyzerResult::Expected:
+                case AnalyzerResult::Early:
+                case AnalyzerResult::Unknown:
+                default:
+                    return false;
+            }
+    }
+}
+
+AnalyzerApp::SeqOutputMode seqOutputModeFromToken(const char* token, bool* valid) {
+    if (valid != nullptr) {
+        *valid = true;
+    }
+    if (token == nullptr || *token == '\0') {
+        if (valid != nullptr) {
+            *valid = false;
+        }
+        return AnalyzerApp::SeqOutputMode::Trial;
+    }
+    if (equalsIgnoreCase(token, "trial")) {
+        return AnalyzerApp::SeqOutputMode::Trial;
+    }
+    if (equalsIgnoreCase(token, "source")) {
+        return AnalyzerApp::SeqOutputMode::Source;
+    }
+    if (equalsIgnoreCase(token, "inspect")) {
+        return AnalyzerApp::SeqOutputMode::Inspect;
+    }
+    if (equalsIgnoreCase(token, "pattern")) {
+        return AnalyzerApp::SeqOutputMode::Pattern;
+    }
+    if (equalsIgnoreCase(token, "dump")) {
+        return AnalyzerApp::SeqOutputMode::Explain;
+    }
+    if (equalsIgnoreCase(token, "quiet")) {
+        return AnalyzerApp::SeqOutputMode::Quiet;
+    }
+    if (valid != nullptr) {
+        *valid = false;
+    }
+    return AnalyzerApp::SeqOutputMode::Trial;
+}
+
+AnalyzerApp::SeqOutputWhen seqOutputWhenFromToken(const char* token, bool* valid) {
+    if (valid != nullptr) {
+        *valid = true;
+    }
+    if (token == nullptr || *token == '\0') {
+        if (valid != nullptr) {
+            *valid = false;
+        }
+        return AnalyzerApp::SeqOutputWhen::Miss;
+    }
+    if (equalsIgnoreCase(token, "off")) {
+        return AnalyzerApp::SeqOutputWhen::Off;
+    }
+    if (equalsIgnoreCase(token, "miss")) {
+        return AnalyzerApp::SeqOutputWhen::Miss;
+    }
+    if (equalsIgnoreCase(token, "all")) {
+        return AnalyzerApp::SeqOutputWhen::All;
+    }
+    if (valid != nullptr) {
+        *valid = false;
+    }
+    return AnalyzerApp::SeqOutputWhen::Miss;
+}
+
 // -----------------------------------------------------------------------------
 // Construction and setup
 // -----------------------------------------------------------------------------
@@ -248,7 +360,7 @@ void AnalyzerApp::begin() {
     _controlClaimAtMs = 0;
 
     Serial.println("EVT analyzer_ready");
-    Serial.println("EVT analyzer_help type='HELP', 'BASE', 'PARAM freqScore=10000 freqContrast=50.0', 'TEST', 'RAW trigger f=3200 dur=100 post=1000 dump=bin', 'SEQ log=default|summary|summary+trial|trial|candidate|explain|custom|full diag=off|miss|trial dumpSamples=1 curveFormat=samples', 'CAP', 'DET AMP', 'VAL', 'VAL OFF'");
+    Serial.println("EVT analyzer_help type='HELP', 'BASE', 'PARAM freqScore=10000 freqContrast=50.0', 'TEST', 'RAW trigger f=3200 dur=100 post=1000 dump=bin', 'SEQ MODE trial|source|inspect|pattern|dump|quiet WHEN off|miss|all VERBOSE 0|1|2 STATUS', 'CAP', 'DET AMP', 'VAL', 'VAL OFF'");
 }
 
 void AnalyzerApp::configureParameters() {
@@ -259,6 +371,48 @@ void AnalyzerApp::configureI2SParameters() {
     _audioSignal.setSmoothingFactor(0.5f);
     _audioSignal.setBaselineUpdateFactor(0.005f);
     _audioSignal.setBaselineTrackingQuietThreshold(20);
+}
+
+const char* AnalyzerApp::sequenceOutputModeName(SeqOutputMode mode) {
+    return seqOutputModeName(mode);
+}
+
+const char* AnalyzerApp::sequenceOutputWhenName(SeqOutputWhen value) {
+    return seqOutputWhenName(value);
+}
+
+bool AnalyzerApp::sequenceOutputModeEnabled(SeqOutputMode configured, SeqOutputMode requested) {
+    if (configured == SeqOutputMode::Quiet) {
+        return false;
+    }
+    if (configured == SeqOutputMode::Explain) {
+        return true;
+    }
+    return configured == requested;
+}
+
+bool AnalyzerApp::sequenceOutputWhenEnabled(SeqOutputWhen configured, AnalyzerResult result) {
+    return seqOutputWhenEnabled(configured, result);
+}
+
+AnalyzerApp::SeqOutputMode AnalyzerApp::sequenceOutputModeFromToken(const char* token, bool* valid) {
+    return seqOutputModeFromToken(token, valid);
+}
+
+AnalyzerApp::SeqOutputWhen AnalyzerApp::sequenceOutputWhenFromToken(const char* token, bool* valid) {
+    return seqOutputWhenFromToken(token, valid);
+}
+
+AnalyzerApp::SequenceDiagMode AnalyzerApp::sequenceDiagModeFromOutputWhen(SeqOutputWhen when) {
+    switch (when) {
+        case SeqOutputWhen::Off:
+            return SequenceDiagMode::Off;
+        case SeqOutputWhen::All:
+            return SequenceDiagMode::Trial;
+        case SeqOutputWhen::Miss:
+        default:
+            return SequenceDiagMode::Miss;
+    }
 }
 
 // -----------------------------------------------------------------------------
@@ -287,12 +441,10 @@ void AnalyzerApp::update() {
             if (_sequenceTest.active && _sequenceTest.currentTrial > 0) {
                 const detection::FrequencyFeatureFrame runtimeFrequencyFrame = captureFrequencyFeatureFrame(frame.sampleTimeMs);
                 _detection->observeFrame(frame, runtimeFrequencyFrame, frame.sampleTimeMs);
-                detection::PatternResult runtimePatternResult;
-                while (_detection->popPatternResult(runtimePatternResult)) {
-                    _sequenceTest.currentTrialDiagnostics.runtimePatternResult = runtimePatternResult;
+                while (_detection->popPatternResult(_sequenceTest.currentTrialDiagnostics.runtimePatternResult)) {
                     _sequenceTest.currentTrialDiagnostics.runtimePatternCaptured = true;
                     _sequenceTest.currentTrialDiagnostics.runtimeFieldState = _detection->fieldState();
-                handleSequenceCandidate(runtimePatternResult, &runtimeFrequencyFrame);
+                    handleSequenceCandidate(_sequenceTest.currentTrialDiagnostics.runtimePatternResult, &runtimeFrequencyFrame);
                 }
             }
         }
@@ -525,7 +677,6 @@ void AnalyzerApp::processPendingSequenceStart() {
         pending.showDetails,
         pending.diagMode,
         pending.setupLabel,
-        pending.logFlags,
         pending.sampleDumpEnabled,
         pending.sampleDumpFirstTrials,
         pending.sampleDumpEveryNth,
@@ -569,15 +720,27 @@ const char* analyzerProfileDetailSummary(detection::DetectionProfileKind profile
     }
 }
 
-AnalyzerReport AnalyzerApp::buildSequenceAnalyzerReport(unsigned long trialNumber,
-                                                        AnalyzerResult result,
-                                                        long dtMs,
-                                                        long durMs,
-                                                     float strength,
-                                                     bool audioOverflow,
-                                                     unsigned long duplicateCount,
-                                                     const SequenceTest::TrialDiagnostics& diagnostics) const {
-    AnalyzerReport report = makeEmptyAnalyzerReport();
+AnalyzerReport* AnalyzerApp::sequenceReportScratch() {
+    if (_sequenceReportScratch == nullptr) {
+        _sequenceReportScratch = new (std::nothrow) AnalyzerReport();
+        if (_sequenceReportScratch != nullptr) {
+            *_sequenceReportScratch = makeEmptyAnalyzerReport();
+        }
+    }
+
+    return _sequenceReportScratch;
+}
+
+void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
+                                              unsigned long trialNumber,
+                                              AnalyzerResult result,
+                                              long dtMs,
+                                              long durMs,
+                                              float strength,
+                                              bool audioOverflow,
+                                              unsigned long duplicateCount,
+                                              const SequenceTest::TrialDiagnostics& diagnostics) const {
+    report = makeEmptyAnalyzerReport();
 
     report.context.profile = activeAnalyzerProfileName();
     report.context.mode = _sequenceTest.externalEmitter ? "OBS" : "SEQ";
@@ -791,7 +954,7 @@ AnalyzerReport AnalyzerApp::buildSequenceAnalyzerReport(unsigned long trialNumbe
         ? (runtimeInspectedOccurrence->rejected ? occurrenceRejectReasonName(runtimeInspectedOccurrence->rejectReason) : "none")
         : analyzerReasonName(report.classification.reason);
 
-    const bool diagnosticsRequested = _sequenceTest.diagMode != AnalyzerApp::SequenceDiagMode::Off;
+    const bool diagnosticsRequested = _sequenceTest.outputConfig.when != AnalyzerApp::SeqOutputWhen::Off;
     const detection::DetectionDiagnostics* runtimeDiag = nullptr;
     const FrequencyMatchDetector* frequencyDetector = nullptr;
     if (diagnosticsRequested && _detection != nullptr) {
@@ -846,6 +1009,9 @@ AnalyzerReport AnalyzerApp::buildSequenceAnalyzerReport(unsigned long trialNumbe
         report.frequency.maxContrastMs = runtimeDiag->frequencyContrastMaxMs;
         report.frequency.minScore = runtimeDiag->frequencyScoreMin;
         report.frequency.minContrast = runtimeDiag->frequencyContrastMin;
+        report.frequency.peakScore = runtimeDiag->frequencyPeakScore;
+        report.frequency.peakContrast = runtimeDiag->frequencyPeakContrast;
+        report.frequency.peakWindowSampleCount = runtimeDiag->frequencyPeakWindowSampleCount;
         report.frequency.liveFreqReason = runtimeDiag->frequencyRejectReason != nullptr ? runtimeDiag->frequencyRejectReason : "none";
         report.frequency.liveFreqWould = runtimeDiag->frequencyWouldCandidateReason != nullptr ? runtimeDiag->frequencyWouldCandidateReason : "none";
         report.frequency.liveFreqState = runtimeDiag->frequencyCandidateState != nullptr ? runtimeDiag->frequencyCandidateState : "none";
@@ -857,6 +1023,11 @@ AnalyzerReport AnalyzerApp::buildSequenceAnalyzerReport(unsigned long trialNumbe
         report.frequency.trialMissReason = runtimeDiag->frequencyRejectReason != nullptr ? runtimeDiag->frequencyRejectReason : "unknown";
         report.frequency.nearMiss = runtimeDiag->frequencyNearMiss;
         report.frequency.nearMissReason = runtimeDiag->frequencyNearMissReason != nullptr ? runtimeDiag->frequencyNearMissReason : "none";
+    }
+
+    if (report.frequency.longestMatchRunFrames == 0 && report.frequency.matchFrames > 0) {
+        report.frequency.longestMatchRunFrames = report.frequency.matchFrames;
+        report.frequency.longestMatchRunMs = report.frequency.fmDurationMs;
     }
 
     if (frequencyDetector != nullptr) {
@@ -960,13 +1131,14 @@ AnalyzerReport AnalyzerApp::buildSequenceAnalyzerReport(unsigned long trialNumbe
             report.scalar.scalarReleased = runtimeDiag->scalarReleased;
             report.scalar.scalarValidRelease = runtimeDiag->scalarValidRelease;
             report.scalar.scalarEmitAllowed = runtimeDiag->scalarEmitAllowed;
-            report.scalar.scalarOpenMs = runtimeDiag->scalarOpenMs;
-            report.scalar.scalarPeakMs = runtimeDiag->scalarPeakMs;
-            report.scalar.scalarReleaseMs = runtimeDiag->scalarReleaseMs;
-            report.scalar.scalarDurationMs = runtimeDiag->scalarDurationMs;
-            report.scalar.scalarMinDurationMs = runtimeDiag->scalarMinDurationMs;
-            report.scalar.scalarMaxDurationMs = runtimeDiag->scalarMaxDurationMs;
-            report.scalar.sourceOccurrenceEmitted = report.occurrences.present;
+        report.scalar.scalarOpenMs = runtimeDiag->scalarOpenMs;
+        report.scalar.scalarPeakMs = runtimeDiag->scalarPeakMs;
+        report.scalar.scalarReleaseMs = runtimeDiag->scalarReleaseMs;
+        report.scalar.scalarDurationMs = runtimeDiag->scalarDurationMs;
+        report.scalar.scalarMinDurationMs = runtimeDiag->scalarMinDurationMs;
+        report.scalar.scalarMaxDurationMs = runtimeDiag->scalarMaxDurationMs;
+        report.scalar.scalarPeakStrength = runtimeDiag->scalarPeakStrength;
+        report.scalar.sourceOccurrenceEmitted = report.occurrences.present;
             report.scalar.runtimeEvidenceSeen = runtimeDiag->scalarOpened
                 || runtimeDiag->scalarReleased
                 || (runtimeDiag->scalarRejectReason != nullptr && strcmp(runtimeDiag->scalarRejectReason, "none") != 0);
@@ -1032,7 +1204,6 @@ AnalyzerReport AnalyzerApp::buildSequenceAnalyzerReport(unsigned long trialNumbe
         report.scalar.inconsistent = report.classification.result == AnalyzerResult::Miss && report.scalar.acceptedPresent;
     }
 
-    return report;
 }
 
 

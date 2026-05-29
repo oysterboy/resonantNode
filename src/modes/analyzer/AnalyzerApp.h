@@ -39,21 +39,27 @@ public:
         Trial,
     };
 
-    enum AnalyzerLogFlags : uint32_t {
-        ANALYZER_LOG_NONE = 0,
-        ANALYZER_LOG_SUMMARY = 1u << 0,
-        ANALYZER_LOG_TRIAL = 1u << 1,
-        ANALYZER_LOG_CANDIDATE = 1u << 2,
-        ANALYZER_LOG_DIAG = 1u << 3,
-        ANALYZER_LOG_EXPLAIN = 1u << 4,
-        ANALYZER_LOG_TRIAL_SUMMARY = 1u << 5,
-        ANALYZER_LOG_CUSTOM = 1u << 6,
-        ANALYZER_LOG_AMP_WINDOW = ANALYZER_LOG_CUSTOM,
+    enum class SeqOutputMode {
+        Quiet,
+        Trial,
+        Source,
+        Inspect,
+        Pattern,
+        Explain,
     };
 
-    static constexpr uint32_t DEFAULT_ANALYZER_LOG_FLAGS =
-        ANALYZER_LOG_SUMMARY |
-        ANALYZER_LOG_TRIAL;
+    enum class SeqOutputWhen {
+        Off,
+        Miss,
+        All,
+    };
+
+    struct SeqOutputConfig {
+        SeqOutputMode mode = SeqOutputMode::Trial;
+        SeqOutputWhen when = SeqOutputWhen::Miss;
+        uint8_t verbosity = 0;
+        unsigned long totalTrials = 100;
+    };
 
     AnalyzerApp(int inputPin = 34);
 
@@ -249,6 +255,7 @@ private:
         bool quiet = false;
         bool showDetails = true;
         SequenceDiagMode diagMode = SequenceDiagMode::Off;
+        SeqOutputConfig outputConfig = {};
         bool externalEmitter = false;
         detection::DetectionProfileKind profileKind = detection::DetectionProfileKind::TonalPulse;
         bool progressLineStarted = false;
@@ -311,7 +318,6 @@ private:
         unsigned long trialTransientRejectTooLongCountAtStart = 0;
         unsigned long trialTransientRejectWeakCountAtStart = 0;
         TrialDiagnostics currentTrialDiagnostics;
-        uint32_t logFlags = DEFAULT_ANALYZER_LOG_FLAGS;
 
         unsigned long hits = 0;
         unsigned long expectedHits = 0;
@@ -363,7 +369,6 @@ private:
         bool showDetails = false;
         SequenceDiagMode diagMode = SequenceDiagMode::Off;
         const char* setupLabel = nullptr;
-        uint32_t logFlags = 0;
         bool sampleDumpEnabled = false;
         unsigned long sampleDumpFirstTrials = 0;
         unsigned long sampleDumpEveryNth = 0;
@@ -396,7 +401,7 @@ private:
     void printBaseHints() const;
 
     // Sequence-test workflows.
-    void startSequenceTest(unsigned long totalTrials, unsigned long periodMs, unsigned long windowEndOffsetMs, unsigned long toneHz, unsigned long durationMs, bool quiet = false, bool showDetails = true, SequenceDiagMode diagMode = SequenceDiagMode::Off, const char* setupLabel = nullptr, uint32_t logFlags = DEFAULT_ANALYZER_LOG_FLAGS, bool sampleDumpEnabled = false, unsigned long sampleDumpFirstTrials = 2, unsigned long sampleDumpEveryNth = 0, unsigned long sampleDumpLeadMs = 50, unsigned long sampleDumpTailMs = 800, unsigned long sampleDumpStepMs = 1, unsigned long sampleDumpMaxRows = 5000, detection::DetectionProfileKind profileKind = detection::DetectionProfileKind::TonalPulse, bool externalEmitter = false);
+    void startSequenceTest(unsigned long totalTrials, unsigned long periodMs, unsigned long windowEndOffsetMs, unsigned long toneHz, unsigned long durationMs, bool quiet = false, bool showDetails = true, SequenceDiagMode diagMode = SequenceDiagMode::Off, const char* setupLabel = nullptr, bool sampleDumpEnabled = false, unsigned long sampleDumpFirstTrials = 2, unsigned long sampleDumpEveryNth = 0, unsigned long sampleDumpLeadMs = 50, unsigned long sampleDumpTailMs = 800, unsigned long sampleDumpStepMs = 1, unsigned long sampleDumpMaxRows = 5000, detection::DetectionProfileKind profileKind = detection::DetectionProfileKind::TonalPulse, bool externalEmitter = false);
     void stopSequenceTest();
     void updateSequenceTest(unsigned long now);
     void finalizeSequenceTrial(unsigned long now);
@@ -417,14 +422,17 @@ private:
     void printSequenceExplain(const AnalyzerReport& report) const;
     void printSequenceDiagnostics(const AnalyzerReport& report) const;
     void printSequenceScalarDiagnostics(const AnalyzerReport& report) const;
-    void printSequenceAmpWindow(const AnalyzerReport& report) const;
+    void printSequenceInspect(const AnalyzerReport& report) const;
+    void printSequencePattern(const AnalyzerReport& report) const;
+    void printSequenceStatus() const;
+    void printSequenceTrialHeader(unsigned long trialNumber) const;
     void printSequenceCandidateLogs(unsigned long trialNumber, const SequenceTest::TrialDiagnostics& diagnostics) const;
-    void printSequenceTrialResult(unsigned long trialNumber, AnalyzerResult result, long dtMs, long durMs, float strength, bool audioOverflow, unsigned long duplicateCount, const SequenceTest::TrialDiagnostics& diagnostics) const;
     void printSequenceTrialResult(const AnalyzerReport& report) const;
     void printSequenceFinalOutput() const;
     void printSequenceSummary() const;
     const char* activeAnalyzerProfileName() const;
-    AnalyzerReport buildSequenceAnalyzerReport(unsigned long trialNumber, AnalyzerResult result, long dtMs, long durMs, float strength, bool audioOverflow, unsigned long duplicateCount, const SequenceTest::TrialDiagnostics& diagnostics) const;
+    AnalyzerReport* sequenceReportScratch();
+    void buildSequenceAnalyzerReport(AnalyzerReport& report, unsigned long trialNumber, AnalyzerResult result, long dtMs, long durMs, float strength, bool audioOverflow, unsigned long duplicateCount, const SequenceTest::TrialDiagnostics& diagnostics) const;
     void recordSequenceClassifierOutcome(const PatternResult& patternResult, bool duplicateCandidate, bool unexpectedCandidate);
     void handleSequenceCandidate(const PatternResult& patternResult, const FrequencyFeatureFrame* liveFrequencyFrame = nullptr);
     void updateSequenceAmbientStats();
@@ -444,6 +452,13 @@ private:
     // Miscellaneous output helpers.
     void printValueFrame(unsigned long now) const;
     void printValueModeBanner() const;
+    static const char* sequenceOutputModeName(SeqOutputMode mode);
+    static const char* sequenceOutputWhenName(SeqOutputWhen value);
+    static bool sequenceOutputModeEnabled(SeqOutputMode configured, SeqOutputMode requested);
+    static bool sequenceOutputWhenEnabled(SeqOutputWhen configured, AnalyzerResult result);
+    static SeqOutputMode sequenceOutputModeFromToken(const char* token, bool* valid = nullptr);
+    static SeqOutputWhen sequenceOutputWhenFromToken(const char* token, bool* valid = nullptr);
+    static SequenceDiagMode sequenceDiagModeFromOutputWhen(SeqOutputWhen when);
 
     // Hardware and occurrence chain.
     int _inputPin;
@@ -454,6 +469,7 @@ private:
     FreqBandStream _freqBandStream;
     detection::FeatureHistory* _sequenceFeatureHistory = nullptr;
     FrequencyMatchEvaluation::Values _frequencyEvidenceTuning = {};
+    SeqOutputConfig _seqOutputConfig = {};
     PendingSequenceStart _pendingSequenceStart = {};
 
     // Console and emitter control.
@@ -478,6 +494,7 @@ private:
     SequenceTest _sequenceTest;
     CaptureSession _captureSession;
     unsigned long _rawCaptureSequenceId = 0;
+    AnalyzerReport* _sequenceReportScratch = nullptr;
 
     // Print throttling for the VAL view.
     mutable unsigned long _lastPrintMs = 0;

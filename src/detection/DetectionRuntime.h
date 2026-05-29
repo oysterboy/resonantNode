@@ -80,6 +80,9 @@ struct DetectionDiagnostics {
     float frequencyContrastMax = 0.0f;
     unsigned long frequencyScoreMaxMs = 0;
     unsigned long frequencyContrastMaxMs = 0;
+    float frequencyPeakScore = 0.0f;
+    float frequencyPeakContrast = 0.0f;
+    unsigned long frequencyPeakWindowSampleCount = 0;
     float frequencyScoreThreshold = 0.0f;
     float frequencyContrastThreshold = 0.0f;
 
@@ -123,6 +126,7 @@ struct DetectionDiagnostics {
     unsigned long scalarDurationMs = 0;
     unsigned long scalarMinDurationMs = 0;
     unsigned long scalarMaxDurationMs = 0;
+    float scalarPeakStrength = 0.0f;
 
     const char* scalarOnsetRejectReason = "none";
     const char* scalarTransientRejectReason = "none";

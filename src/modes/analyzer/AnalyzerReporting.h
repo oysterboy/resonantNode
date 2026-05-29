@@ -315,6 +315,9 @@ struct AnalyzerFrequencyDiagnostic {
     unsigned long maxContrastMs = 0;
     float minScore = 0.0f;
     float minContrast = 0.0f;
+    float peakScore = 0.0f;
+    float peakContrast = 0.0f;
+    unsigned long peakWindowSampleCount = 0;
 
     const char* trialMissReason = "unknown";
     bool nearMiss = false;
@@ -387,6 +390,7 @@ struct AnalyzerScalarDiagnostic {
     unsigned long scalarDurationMs = 0;
     unsigned long scalarMinDurationMs = 0;
     unsigned long scalarMaxDurationMs = 0;
+    float scalarPeakStrength = 0.0f;
 
     bool sourceOccurrenceEmitted = false;
     bool runtimeEvidenceSeen = false;

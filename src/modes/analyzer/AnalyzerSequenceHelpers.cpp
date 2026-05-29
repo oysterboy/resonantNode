@@ -10,10 +10,6 @@ namespace {
 
 constexpr long kLateOnsetMinMs = 200L;
 
-bool analyzerLogEnabled(uint32_t flags, AnalyzerApp::AnalyzerLogFlags flag) {
-    return (flags & static_cast<uint32_t>(flag)) != 0;
-}
-
 const char* sequenceCandidateClass(bool duplicateCandidate, bool inWindow, long dtFromTriggerMs) {
     if (duplicateCandidate) {
         return "duplicate";

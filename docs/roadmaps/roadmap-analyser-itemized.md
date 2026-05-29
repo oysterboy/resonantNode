@@ -94,7 +94,7 @@ Stop expanding the current verbose diagnostic path. Keep it available, but do no
 ## Tasks
 
 - Keep `SEQ_TRIAL` compact and stable.
-- Treat current verbose diagnostic output as `SEQ_EXPLAIN` / deep developer dump.
+- Treat current verbose diagnostic output as `SEQ_DUMP` / deep developer dump.
 - Do not add more unrelated fields to the existing verbose path.
 - Keep `SEQ_SUMMARY` for aggregate run comparison.
 - Document that current verbose output may mix aggregate and candidate-specific data.
@@ -103,7 +103,7 @@ Stop expanding the current verbose diagnostic path. Keep it available, but do no
 
 ```text
 SEQ_TRIAL = compact truth
-SEQ_EXPLAIN = full verbose fallback
+SEQ_DUMP = full verbose fallback
 ```
 
 ---
@@ -645,35 +645,28 @@ Make analyzer output easier to control and easier to read by separating:
 ```text
 MODE
 WHEN
-VERBOSITY
+VERBOSE
 ```
 
 Include `SEQ_PATTERN` in the command/output contract from the start, even if pattern output is initially sparse or silent.
 
 ## Tasks
 
-- Add a clearer SEQ command model with `MODE`, `WHEN`, and `VERBOSITY`.
-- Keep `debug` / `details` out of the primary user-facing contract.
+ - Add a clearer SEQ command model with `MODE`, `WHEN`, `VERBOSE`, and `TRIES`.
 - Add `SEQ STATUS` so the active output state is visible.
 - Route `SEQ_SOURCE`, `SEQ_INSPECT`, and `SEQ_PATTERN` through the new output config.
+- Make every trial start with a blank line and `#<trial> ----------------`, even in quiet mode.
 - Allow `SEQ_PATTERN` to exist as a stage contract even if it prints nothing yet.
-- Keep the current verbose developer dump behind `MODE=explain` and high verbosity.
+- Keep the current verbose developer dump behind `MODE=dump` and high verbosity.
 
 ## Recommended commands
 
 ```text
-SEQ MODE <trial|source|inspect|pattern|explain|quiet>
+SEQ MODE <trial|source|inspect|pattern|dump|quiet>
 SEQ WHEN <off|miss|all>
-SEQ VERBOSITY <0|1|2>
+SEQ VERBOSE <0|1|2>
+SEQ TRIES <N>
 SEQ STATUS
-```
-
-Optional aliases:
-
-```text
-SEQ mode=trial
-SEQ when=miss
-SEQ verbosity=0
 ```
 
 ## Default contract
@@ -681,7 +674,7 @@ SEQ verbosity=0
 ```text
 MODE=trial
 WHEN=miss
-VERBOSITY=0
+VERBOSE=0
 ```
 
 Meaning:
@@ -705,6 +698,26 @@ Analyzer output becomes easier to steer without losing the current bounded diagn
 
 ---
 
+# Pass J — Best Candidate Source Summary (PARTIAL)
+
+## Goal
+
+Keep `SEQ_SOURCE` compact, but make rejected trials tell us the best candidate the detector saw in the window.
+
+## Short scope
+
+- keep the final reject reason
+- add a best-candidate summary for rejected source trials
+- use detector-native peak choice for frequency
+- use strongest tracked transient for scalar
+- keep `SEQ_DUMP` as the deeper fallback
+
+## Result
+
+`SEQ_SOURCE` explains the near-miss candidate without turning into the full dump.
+
+---
+
 # Final Output Map
 
 ```text
@@ -725,7 +738,7 @@ SEQ_PATTERN
   present in the command/output model from the start
   may be sparse or silent until pattern logic becomes useful
 
-SEQ_EXPLAIN
+SEQ_DUMP
   full verbose developer dump
   fallback only
 
@@ -768,5 +781,5 @@ SEQ_INSPECT explains Inspector / support evidence.
 
 SEQ_PATTERN explains PatternAssembler / PatternRules.
 
-SEQ_EXPLAIN remains the full-chain developer dump.
+SEQ_DUMP remains the full-chain developer dump.
 ```

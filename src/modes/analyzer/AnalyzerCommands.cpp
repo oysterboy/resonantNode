@@ -52,7 +52,7 @@ void AnalyzerApp::printSequenceHelp() {
     Serial.println("SEQ IN: FREQBAND on|off");
     Serial.println("SEQ IN: FREQDECIMATE 1|4|8|16");
     Serial.println("SEQ IN: WHEN off|miss|all");
-    Serial.println("SEQ IN: VERBOSE 0|1|2");
+    Serial.println("SEQ IN: VERBOSE 0|1|2 (0=compact, 1=summary, 2=deep debug)");
     Serial.println("SEQ IN: TRIES N");
     Serial.println("SEQ IN: STATUS");
     Serial.println("SEQ IN: [dumpSamples=0|1] [curveFormat=off|samples]");

@@ -169,6 +169,13 @@ const char* sequenceDiagModeName(AnalyzerApp::SequenceDiagMode mode) {
     }
 }
 
+unsigned int sequenceDetailLevel(const AnalyzerApp::SeqOutputConfig& outputConfig) {
+    if (outputConfig.mode == AnalyzerApp::SeqOutputMode::Explain) {
+        return 2U;
+    }
+    return outputConfig.verbosity >= 2U ? 2U : outputConfig.verbosity >= 1U ? 1U : 0U;
+}
+
 const char* rejectStageName(const AnalyzerReport& report) {
     switch (report.classification.reason) {
         case AnalyzerReason::MissingPipelineResult:
@@ -242,8 +249,14 @@ void AnalyzerApp::printSequenceTrialResult(const AnalyzerReport& report) const {
         return;
     }
 
-    Serial.print("result=");
+    Serial.print("trial=");
+    Serial.print(report.context.trial);
+    Serial.print(" profile=");
+    Serial.print(report.context.profile != nullptr ? report.context.profile : "unknown");
+    Serial.print(" result=");
     Serial.print(analyzerResultName(report.classification.result));
+    Serial.print(" reason=");
+    Serial.print(analyzerReasonName(report.classification.reason));
     Serial.print(" dt=");
     if (report.classification.dtMs >= 0) {
         Serial.print(report.classification.dtMs);
@@ -256,11 +269,10 @@ void AnalyzerApp::printSequenceTrialResult(const AnalyzerReport& report) const {
     if (report.classification.result != AnalyzerResult::Expected &&
         report.classification.result != AnalyzerResult::Early &&
         report.classification.result != AnalyzerResult::Late) {
-        Serial.print(" rejectStage=");
-        Serial.println(rejectStageName(report));
-    } else {
-        Serial.println();
+        Serial.print(" failed_at=");
+        Serial.print(analyzerStageName(report.classification.primaryStage));
     }
+    Serial.println();
 
     if (_sequenceTest.outputConfig.mode != SeqOutputMode::Explain) {
         return;
@@ -342,9 +354,10 @@ void AnalyzerApp::printSequenceInspect(const AnalyzerReport& report) const {
     const char* supportTarget = report.profileDetail.requiredSupportTarget != nullptr
         ? report.profileDetail.requiredSupportTarget
         : "unknown";
-    const bool inspectVerbose = _sequenceTest.outputConfig.verbosity > 0;
+    const unsigned int detailLevel = sequenceDetailLevel(_sequenceTest.outputConfig);
 
-    Serial.print("SEQ_INSPECT evidence=");
+    Serial.print("SEQ_INSPECT");
+    Serial.print(" evidence=");
     if (strcmp(supportTarget, "FrequencyScoreStrength") == 0) {
         Serial.print("freq.score=");
         Serial.print(report.profileDetail.freqScore, 2);
@@ -359,7 +372,7 @@ void AnalyzerApp::printSequenceInspect(const AnalyzerReport& report) const {
     }
     Serial.println();
 
-    if (!inspectVerbose) {
+    if (detailLevel < 2U) {
         return;
     }
 
@@ -428,7 +441,10 @@ void AnalyzerApp::printSequencePattern(const AnalyzerReport& report) const {
         return;
     }
 
-    Serial.print("SEQ_PATTERN pattern=");
+    const unsigned int detailLevel = sequenceDetailLevel(_sequenceTest.outputConfig);
+
+    Serial.print("SEQ_PATTERN");
+    Serial.print(" pattern=");
     Serial.print(report.primaryPattern.type != nullptr ? report.primaryPattern.type : "none");
     Serial.print(" accepted=");
     Serial.print(report.primaryPattern.accepted ? 1 : 0);
@@ -442,7 +458,7 @@ void AnalyzerApp::printSequencePattern(const AnalyzerReport& report) const {
     Serial.print(report.primaryPattern.reason != nullptr ? report.primaryPattern.reason : "none");
     Serial.print(" reject_reason=");
     Serial.print(report.primaryPattern.rejectReason != nullptr ? report.primaryPattern.rejectReason : "none");
-    if (_sequenceTest.outputConfig.verbosity > 0) {
+    if (detailLevel >= 2U) {
         Serial.print(" confidence=");
         Serial.print(report.primaryPattern.confidence, 2);
         Serial.print(" dt=");
@@ -815,7 +831,8 @@ void AnalyzerApp::printSequenceDiagnostics(const AnalyzerReport& report) const {
         !sequenceOutputWhenEnabled(_sequenceTest.outputConfig.when, report.classification.result)) {
         return;
     }
-    const bool compactSource = _sequenceTest.outputConfig.verbosity == 0 &&
+    const unsigned int detailLevel = sequenceDetailLevel(_sequenceTest.outputConfig);
+    const bool compactSource = detailLevel == 0U &&
         _sequenceTest.outputConfig.mode != SeqOutputMode::Explain;
     const char* frequencySourceReason = report.frequency.acceptedPresent
         ? "none"
@@ -827,7 +844,8 @@ void AnalyzerApp::printSequenceDiagnostics(const AnalyzerReport& report) const {
         return;
     }
     if (compactSource) {
-        Serial.print("SEQ_SOURCE state=");
+        Serial.print("SEQ_SOURCE");
+        Serial.print(" state=");
         Serial.print(report.frequency.acceptedPresent ? "accepted" : (report.frequency.sourceOccurrenceEmitted ? "rejected" : "none"));
         Serial.print(" reason=");
         Serial.print(frequencySourceReason);
@@ -1001,6 +1019,11 @@ void AnalyzerApp::printSequenceDiagnostics(const AnalyzerReport& report) const {
     Serial.print(" diag_inconsistent=");
     Serial.print(report.frequency.inconsistent ? 1 : 0);
     Serial.println();
+
+    if (detailLevel < 2U) {
+        return;
+    }
+
     Serial.print("  context current_trial_id=");
     Serial.print(report.frequency.currentTrialId);
     if (report.frequency.inconsistent) {
@@ -1062,7 +1085,8 @@ void AnalyzerApp::printSequenceScalarDiagnostics(const AnalyzerReport& report) c
         return;
     }
 
-    const bool compactSource = _sequenceTest.outputConfig.verbosity == 0 &&
+    const unsigned int detailLevel = sequenceDetailLevel(_sequenceTest.outputConfig);
+    const bool compactSource = detailLevel == 0U &&
         _sequenceTest.outputConfig.mode != SeqOutputMode::Explain;
     const char* scalarSourceReason = report.scalar.acceptedPresent
         ? "none"
@@ -1070,7 +1094,8 @@ void AnalyzerApp::printSequenceScalarDiagnostics(const AnalyzerReport& report) c
             ? report.scalar.scalarRejectReason
             : (report.scalar.trialMissReason != nullptr ? report.scalar.trialMissReason : "unknown"));
     if (compactSource) {
-        Serial.print("SEQ_SOURCE state=");
+        Serial.print("SEQ_SOURCE");
+        Serial.print(" state=");
         Serial.print(report.scalar.acceptedPresent ? "accepted" : (report.scalar.sourceOccurrenceEmitted ? "rejected" : "none"));
         Serial.print(" reason=");
         Serial.print(scalarSourceReason);
@@ -1186,6 +1211,10 @@ void AnalyzerApp::printSequenceScalarDiagnostics(const AnalyzerReport& report) c
     Serial.print(report.scalar.detectionGateReason != nullptr ? report.scalar.detectionGateReason : "none");
     Serial.print(" diag_inconsistent=");
     Serial.println(report.scalar.inconsistent ? 1 : 0);
+
+    if (detailLevel < 2U) {
+        return;
+    }
 
     Serial.print("  context current_trial_id=");
     Serial.print(report.scalar.currentTrialId);

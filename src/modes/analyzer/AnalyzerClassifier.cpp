@@ -33,12 +33,41 @@ AnalyzerReason analyzerReasonFromSequenceOutcome(const AnalyzerSequenceClassific
     }
 }
 
+AnalyzerStage analyzerPrimaryStageFromReason(AnalyzerReason reason) {
+    switch (reason) {
+        case AnalyzerReason::MissingPipelineResult:
+        case AnalyzerReason::NoOccurrence:
+        case AnalyzerReason::OccurrenceSeenButRejected:
+            return AnalyzerStage::Source;
+        case AnalyzerReason::InspectionFailed:
+            return AnalyzerStage::Inspect;
+        case AnalyzerReason::PatternCandidateRejected:
+        case AnalyzerReason::MultipleValidPatterns:
+        case AnalyzerReason::MultipleCompetingPatterns:
+            return AnalyzerStage::Pattern;
+        case AnalyzerReason::FieldTooDense:
+        case AnalyzerReason::InvalidAudio:
+            return AnalyzerStage::Field;
+        case AnalyzerReason::ValidPatternInExpectedWindow:
+        case AnalyzerReason::ValidPatternBeforeWindow:
+        case AnalyzerReason::ValidPatternAfterWindow:
+        case AnalyzerReason::UnexpectedValidPatternWithoutTrigger:
+        case AnalyzerReason::DuplicatePatternAfterPrimary:
+            return AnalyzerStage::Analyzer;
+        case AnalyzerReason::None:
+        case AnalyzerReason::Unknown:
+        default:
+            return AnalyzerStage::None;
+    }
+}
+
 AnalyzerClassification classifySequenceTrial(const AnalyzerSequenceClassificationInput& input) {
     AnalyzerClassification classification = {};
     classification.result = input.result;
     classification.reason = input.patternAvailable
         ? analyzerReasonFromSequenceOutcome(input)
         : AnalyzerReason::MissingPipelineResult;
+    classification.primaryStage = analyzerPrimaryStageFromReason(classification.reason);
     classification.dtMs = input.dtMs;
     return classification;
 }

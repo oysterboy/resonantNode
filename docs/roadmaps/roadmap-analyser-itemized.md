@@ -1,41 +1,87 @@
-# Analyzer Roadmap — Itemized Implementation Passes
+# Analyzer Roadmap — Landed, Current Pass, Upcoming
 
-## Scope
+## Purpose
 
-This roadmap covers the next Analyzer diagnostic work:
+This roadmap keeps Analyzer work focused and separated from Node runtime cleanup.
 
-- stabilize / freeze current diagnostic output
-- fix result propagation for rejected detector/source candidates
-- add scoped diagnostic paths for source and inspector stages
-- keep Pattern diagnostics separate from Detector/Source and Inspector diagnostics
-- prepare both FrequencyMatch and Scalar paths for trustworthy Analyzer output
-- keep Analyzer memory usage bounded and predictable
+Analyzer is the diagnostic / test lane. It should explain what happened in Detection, Inspector, Pattern, and final trial classification without becoming runtime glue.
+
+```text
+Node      = coordinator / wiring
+Detection = what happened
+Behavior  = what to do
+Output    = execute
+Params    = live tuning
+Control   = commands
+Analyzer  = dev/test diagnostic lane
+```
 
 ---
 
-## Updated Architecture Rule
+## Core Rules
 
 ```text
-Accepted path may carry rich objects.
-Rejected path carries compact diagnostics only.
-Analyzer must stay bounded and predictable.
+Default Analyzer output = compact truth.
+
+Rejected candidates need bounded real summaries before diagnosis is trustworthy.
+
+Source / Detector owns candidate lifecycle and source reject reason.
+
+Inspector owns evidence and support pass/fail facts.
+
+Pattern layer owns assembly and pattern rule decisions.
+
+Analyzer owns trial-level aggregation, best-candidate selection, timing classification, and readable output.
+
+Analyzer must stay profile-generic at the outer level.
 ```
 
-Rejected diagnostics should be stored as compact bounded summaries:
+Important distinction:
 
 ```text
-always aggregate counts by reason
-always keep selected/best reject summary
-optionally keep a tiny fixed-size reject ring for deep debug
+source candidate exists
+!= occurrence emitted
+!= inspection passed
+!= pattern valid
+!= trial expected hit
 ```
 
-Do not implement an unbounded reject log.
+---
 
-## Current State
+# Landed / Mostly Landed
 
-### Emitted / accepted source candidates
+## A — Existing Output Split
 
-Emitted candidates already travel through the real object pipeline:
+The current Analyzer already has the intended output families:
+
+```text
+SEQ_TRIAL    compact trial truth
+SEQ_SOURCE   source / detector lifecycle diagnostics
+SEQ_INSPECT  inspector / support evidence diagnostics
+SEQ_PATTERN  pattern-stage contract, sparse for now
+SEQ_DUMP     verbose developer fallback
+SEQ_SUMMARY  aggregate run comparison
+```
+
+This split is correct and should stay.
+
+## B — Output Mode / Verbosity Skeleton
+
+The command/output model already points in the right direction:
+
+```text
+MODE
+WHEN
+VERBOSE
+TRIES
+STATUS
+```
+
+The remaining work is not to invent more output modes, but to make the existing staged lines clearer and more generic.
+
+## C — Accepted Occurrence Pipeline
+
+For emitted / accepted source candidates, the actual pipeline shape is already close to the target:
 
 ```text
 Occurrence
@@ -48,560 +94,309 @@ Occurrence
 → Analyzer
 ```
 
-This is true for both:
+This is the good path. The readable Analyzer output should expose this path without coupling itself to one profile.
+
+## D — Reject Diagnostics Direction
+
+The old roadmap already established the right rejected-path rule:
 
 ```text
-FrequencyOccurrenceSource
-ScalarOccurrenceSource
+Accepted path may carry rich objects.
+Rejected path carries compact diagnostics only.
+Analyzer must stay bounded and predictable.
 ```
 
-So for emitted candidates, both FrequencyMatch and Scalar paths already carry forward proper `Occurrence` objects.
-
-### Rejected / non-emitted source candidates
-
-Rejected candidates are not yet carried forward as proper candidate records.
-
-Current rejected-path diagnostics are mostly:
+Use bounded summaries, not unbounded logs:
 
 ```text
-per-frame counts
-means
-maxima
-one live/latest candidate state
-last reject reason / counters
-```
-
-This is the weak point.
-
-A trial can contain many rejected candidates but usually only one accepted occurrence. Therefore a current line like:
-
-```text
-reason=too_short
-max_score=...
-max_contrast=...
-```
-
-does not prove that `reason`, `max_score`, and `max_contrast` refer to the same rejected candidate.
-
----
-
-# Pass A — Freeze / Stabilize Current Output (DONE)
-
-## Goal
-
-Stop expanding the current verbose diagnostic path. Keep it available, but do not make it the main readable diagnostic.
-
-## Tasks
-
-- Keep `SEQ_TRIAL` compact and stable.
-- Treat current verbose diagnostic output as `SEQ_DUMP` / deep developer dump.
-- Do not add more unrelated fields to the existing verbose path.
-- Keep `SEQ_SUMMARY` for aggregate run comparison.
-- Document that current verbose output may mix aggregate and candidate-specific data.
-
-## Result
-
-```text
-SEQ_TRIAL = compact truth
-SEQ_DUMP = full verbose fallback
+aggregate counts by reason
+selected / best reject summary
+tiny fixed-size reject ring only for deep debug if needed
 ```
 
 ---
 
-# Pass B — Fix Reject Result Propagation (DONE)
+# Current Pass
 
-## Goal
-
-Rejected / non-emitted source candidates need compact real records, similar in spirit to emitted occurrences.
-
-## Tasks
-
-Add a small fixed-size per-trial reject log/list at detector/source level.
-
-Recommended initial target:
+The current pass has exactly two feature goals.
 
 ```text
-FrequencyMatchDetector or FrequencyOccurrenceSource
+Feature 1 — Make Analyzer output readable.
+Feature 2 — Make Analyzer output profile-generic.
 ```
 
-Then extend the same concept to:
-
-```text
-ScalarTransientDetector / ScalarOccurrenceSource
-```
-
-## RejectCandidateSummary fields
-
-Each rejected candidate summary should include at least:
-
-```text
-reason / no_emit_reason
-open_ms
-peak_ms
-last_match_ms
-release_ms
-duration_ms
-min_duration_ms
-hold_windows / match_frames
-peak_score / peak_strength
-peak_contrast if available
-score_threshold / strength_threshold
-contrast_threshold if available
-```
-
-For FrequencyMatch:
-
-```text
-peak_score
-peak_contrast
-score_threshold
-contrast_threshold
-```
-
-For Scalar:
-
-```text
-peak_strength
-strength_threshold / min_peak_strength
-onset_threshold
-release_threshold
-```
-
-## Ownership rule
-
-```text
-Detector / Source owns:
-  candidate lifecycle
-  close / no-emit reason
-  timing
-  peak evidence
-
-Analyzer owns:
-  trial-level aggregation
-  best-reject selection
-  readable output
-```
-
-## Result
-
-Analyzer can print trustworthy reject information:
-
-```text
-selected_reject.*
-rejects.*
-trial.*
-```
+Everything else is allowed only if it directly supports these two goals.
 
 ---
 
-# Pass C — Analyzer Drain + Aggregate Rejects (DONE)
+## Feature 1 — Readable Staged Output (DONE)
 
-## Goal
+### Goal
 
-Analyzer should consume reject candidate summaries and turn them into readable trial diagnostics.
+Make Analyzer output explain the path of a trial without mixing unrelated facts into one line.
 
-## Tasks
-
-- Drain reject summaries at the same point where Analyzer captures diagnostics.
-- Count rejects by reason.
-- Select one primary / best reject for human-readable output.
-- Keep aggregate trial context separate from selected candidate values.
-
-## Recommended primary reject selection
-
-For current TonalPulse debugging:
+Target separation:
 
 ```text
-1. candidate inside expected window
-2. longest matched duration / closest to valid min duration
-3. highest score/contrast or peak strength
-4. closest to expected event center
+SEQ_TRIAL
+  final compact truth
+
+SEQ_SOURCE
+  source / detector lifecycle
+  candidate opened / released / emitted / rejected
+  selected reject and reject counts
+
+SEQ_INSPECT
+  inspector evidence
+  support target
+  pass/fail reason
+
+SEQ_PATTERN
+  pattern assembly / pattern rules
+  initially sparse, but contract exists
+
+SEQ_DUMP
+  verbose fallback only
+
+SEQ_SUMMARY
+  aggregate run comparison
 ```
 
-## Output namespaces
+### Required cleanup
 
-Use clear namespaces:
+Separate these concepts in output:
 
 ```text
-selected_reject.*
-rejects.*
-trial.*
+raw/source data
+source candidate
+rejected source candidate
+emitted occurrence
+inspected occurrence
+inspector support evidence
+pattern candidate
+PatternResult
+Analyzer classification
 ```
 
-Example:
+A miss should become explainable like this:
 
 ```text
-selected_reject.reason=duration_too_short
-selected_reject.duration_ms=18
-selected_reject.min_duration_ms=25
-selected_reject.peak_score=92000
-selected_reject.peak_contrast=84
-
-rejects.count=6
-rejects.too_short=5
-rejects.score_too_low=1
-
-trial.max_score=121000
-trial.max_contrast=91
+source: candidate opened, rejected as duration_too_short
+inspect: not reached
+pattern: not reached
+analyzer: miss / SourceCandidateRejected
 ```
 
-## Result
+or:
 
-`too_short` becomes trustworthy because it is tied to a specific rejected candidate.
+```text
+source: occurrence emitted
+inspect: amp support too weak
+pattern: rejected
+analyzer: miss / PatternRejected
+```
+
+### Output discipline
+
+`SEQ_SOURCE` must not explain inspector or pattern failures.
+
+`SEQ_INSPECT` must not explain detector/source lifecycle.
+
+`SEQ_PATTERN` must not replace final Analyzer classification.
+
+`SEQ_TRIAL` must stay compact.
+
+`SEQ_DUMP` remains the place for verbose mixed developer data.
+
+### Result
+
+Done. The staged analyzer output is now split into compact trial truth plus scoped source, inspect, pattern, and dump views with a stable verbosity policy.
 
 ---
 
-# Pass D — Add Scoped Source Output: SEQ_SOURCE (DONE)
+## Feature 2 — Profile-Generic Analyzer View
 
-## Goal
+### Goal
 
-Create a readable, profile-generic diagnostic path for Detector/Source lifecycle and reject handling.
+Analyzer output should not be hardcoded around one profile or detector type.
 
-`SEQ_SOURCE` should be the first new scoped output after reject-candidate propagation is fixed.
-
-## Scope
-
-`SEQ_SOURCE` answers:
+Avoid this as the main shape:
 
 ```text
-Did the source/detector open a candidate?
-Did it release?
-Did it emit an occurrence?
-If it rejected one or more candidates, why?
-Which rejected candidate best explains the trial result?
+TonalPulse-only fields
+FrequencyMatch-only trial truth
+Scalar-only special cases
+Amp-specific top-level assumptions
 ```
 
-It does not explain inspector support or pattern rules.
-
-## Stable outer fields
+Use one generic outer vocabulary:
 
 ```text
-trial
-profile
-stage=source
-source
-detector
-occurrence
-emitted
-accepted
-reason
+SourceObservation
+OccurrenceObservation
+InspectionObservation
+PatternObservation
+FieldObservation
+AnalyzerClassification
 ```
 
-## Source/reject namespaces
-
-```text
-selected_reject.*
-rejects.*
-trial.*
-```
-
-## Profile-specific source evidence namespaces
+Profile-specific details are allowed only inside scoped namespaces:
 
 ```text
 source.freq.*
 source.scalar.*
 source.amp.*
-```
-
-## Example: FrequencyMatch source reject
-
-```text
-SEQ_SOURCE trial=42 profile=tonal_pulse stage=source
-source=FrequencyMatch
-occurrence=rejected
-emitted=false
-reason=duration_too_short
-selected_reject.duration_ms=18
-selected_reject.min_duration_ms=25
-selected_reject.peak_score=92000
-selected_reject.peak_contrast=84
-selected_reject.score_threshold=10000
-selected_reject.contrast_threshold=50
-rejects.count=6
-rejects.too_short=5
-trial.max_score=121000
-trial.max_contrast=91
-```
-
-## Example: Scalar source reject
-
-```text
-SEQ_SOURCE trial=47 profile=tonal_contrast_scalar stage=source
-source=ScalarTransient
-stream=FrequencyContrast
-occurrence=rejected
-emitted=false
-reason=strength_too_low
-selected_reject.duration_ms=36
-selected_reject.min_duration_ms=25
-selected_reject.peak_strength=42
-selected_reject.min_peak_strength=50
-rejects.count=3
-```
-
-## Example: source emitted
-
-```text
-SEQ_SOURCE trial=48 profile=tonal_pulse stage=source
-source=FrequencyMatch
-occurrence=emitted
-emitted=true
-reason=valid_source_occurrence
-occurrence.start_ms=124
-occurrence.peak_ms=173
-occurrence.release_ms=214
-occurrence.duration_ms=90
-occurrence.score=98000
-occurrence.contrast=76
-```
-
-## Result
-
-Source/detector diagnostics become readable and trustworthy without mixing in inspector or PatternResult logic.
-
----
-
-# Pass E — Add Scoped Inspector Output: SEQ_INSPECT (DONE)
-
-## Goal
-
-Create a readable, profile-generic diagnostic path for Inspector / support evidence after an occurrence exists.
-
-## Scope
-
-`SEQ_INSPECT` answers:
-
-```text
-Which inspector ran?
-Which support target was evaluated?
-What evidence value/class was produced?
-Did inspection/support pass?
-If not, why?
-```
-
-It does not explain source candidate lifecycle and does not explain PatternAssembler / PatternRules internals.
-
-## Stable outer fields
-
-```text
-trial
-profile
-stage=inspect
-source
-occurrence
-inspector
-support_target
-support
-accepted
-reason
-```
-
-## Profile-specific evidence namespaces
-
-```text
 evidence.freq.*
+evidence.amp.*
 evidence.scalar.*
-evidence.broad_amp.*
-evidence.target_band.*
-evidence.duplicate.*
+pattern.tonal.*
+pattern.chirp.*
 ```
 
-## Example: inspector accepted
+### Why this matters
+
+The same Analyzer shape should compare:
 
 ```text
-SEQ_INSPECT trial=43 profile=tonal_pulse stage=inspect
-source=FrequencyMatch
-occurrence=accepted
-inspector=ScalarFeatureStrength
-support_target=AmpStrength
-support=medium
-accepted=true
-reason=support_ok
-evidence.amp.level=510
-evidence.amp.min=400
+TonalPulse / FrequencyMatch
+ScalarFreqContrast
+ScalarFreqScore
+ChirpExperimental
+future AmpTransient diagnostic profile
 ```
 
-## Example: inspector failed
-
-```text
-SEQ_INSPECT trial=44 profile=tonal_pulse stage=inspect
-source=FrequencyMatch
-occurrence=accepted
-inspector=ScalarFeatureStrength
-support_target=AmpStrength
-support=weak
-accepted=false
-reason=support_too_low
-evidence.amp.level=123
-evidence.amp.min=400
-```
-
-## Example: scalar frequency profile inspection
-
-```text
-SEQ_INSPECT trial=51 profile=tonal_contrast_scalar stage=inspect
-source=ScalarTransient
-stream=FrequencyContrast
-occurrence=accepted
-inspector=ScalarFeatureStrength
-support_target=FrequencyScoreStrength
-support=strong
-accepted=true
-reason=support_ok
-evidence.freq.score_peak=87000
-evidence.freq.score_min=10000
-```
-
-## Result
-
-Inspector diagnostics are separated from source lifecycle diagnostics and stay profile-generic.
+The profile changes. The Analyzer report shape should not.
 
 ---
 
-# Pass F — Normalize FrequencyMatch and Scalar Diagnostic Semantics (PARTIAL)
+# Upcoming After Current Pass
 
-## Goal
+## 3 — Multistage Candidate Path Visibility
 
-Both FrequencyMatch and Scalar paths should expose comparable diagnostic concepts.
-
-## Current emitted path
-
-Both already carry emitted candidates forward:
+Once readable and generic output exists, improve path tracing across the full logic chain:
 
 ```text
-FrequencyMatch emitted candidate
+SourceCandidate
 → Occurrence
-→ Inspector
+→ InspectedOccurrence
+→ PatternCandidate
 → PatternResult
-
-Scalar emitted candidate
-→ Occurrence
-→ Inspector
-→ PatternResult
+→ AnalyzerClassification
 ```
 
-## Current rejected path
-
-Both still need better reject-candidate summaries.
-
-FrequencyMatch currently has:
+Important rule:
 
 ```text
-score / contrast counters
-max / mean over trial frames
-one live/latest candidate state
+An occurrence can be accepted while the resulting pattern is rejected.
 ```
 
-Scalar currently has:
+Example:
 
 ```text
-last reject reason
-last rejected duration
-last rejected strength
-reject counters
+occurrence accepted
+inspection partially passed
+pattern rejected
+trial result = miss
 ```
 
-Neither currently provides a robust per-trial list of rejected candidate summaries.
+This becomes more important for Scalar-on-frequency and later multi-occurrence patterns.
 
-## Tasks
+---
 
-- Add reject summaries for FrequencyMatch first.
-- Add equivalent reject summaries for Scalar.
-- Keep source-specific evidence fields, but normalize outer fields.
-- Ensure `SEQ_SOURCE` can print both FrequencyMatch and Scalar source records with the same outer shape.
+## 4 — Stage-Specific Failure Reasons
 
-## Shared reject concepts
+Failure reasons should belong to the stage where the failure happened.
 
 ```text
-reason
-open_ms
-peak_ms
-release_ms
-duration_ms
-min_duration_ms
-peak_value
-threshold
+Source:
+  no_candidate
+  duration_too_short
+  duration_too_long
+  score_too_low
+  contrast_too_low
+  strength_too_low
+
+Inspector:
+  support_ok
+  support_too_low
+  evidence_missing
+  stale_feature_window
+  low_coverage
+
+Pattern:
+  not_assembled
+  missing_required_support
+  inter_pulse_gap_invalid
+  too_many_occurrences
+  pattern_rule_failed
+
+Analyzer:
+  expected
+  early
+  late
+  miss
+  duplicate
+  unexpected
+  rejected
+  ambiguous
+  too_dense
 ```
 
-## FrequencyMatch-specific evidence
+Do not collapse all of these into `miss` too early.
+
+---
+
+## 5 — Timing / Frame / Cadence / History Diagnostics
+
+From the recent timing discussion, Analyzer needs to expose freshness and cadence facts before scalar-on-frequency can be trusted.
+
+Important rules:
 
 ```text
-peak_score
-peak_contrast
-score_threshold
-contrast_threshold
+1 loop != 1 frame
+1 frame != 1 ms
+1 history bucket != 1 fresh measurement
 ```
 
-## Scalar-specific evidence
+Report global timing/freshness facts:
 
 ```text
-peak_strength
-min_peak_strength
-onset_threshold
-release_threshold
+sample_rate_hz
+frame_samples
+frame_ms
+freq_divider
+freq_update_ms
+history_bucket_ms
+processed_frames
+freq_feature_updates
+history_valid_count
+history_coverage
+latest_feature_age_ms
 ```
 
-## Result
-
-`SEQ_SOURCE` and `SEQ_INSPECT` can work across profiles without hardcoding one detector type.
-
-The inspector reason wording is now also aligned for weak support outcomes:
+For scalar windows, report:
 
 ```text
-support_ok / support_too_low
+window_ms
+bucket_count
+fresh_value_count
+coverage_ratio
+held_value_age_ms
+```
+
+Purpose:
+
+```text
+If Scalar detection reads frequency history, Analyzer must show whether that history contains fresh frequency values or held/stale values.
 ```
 
 ---
 
-# Pass G — Keep Pattern Diagnostics Separate (PARTIAL)
+## 6 — SEQ_SUMMARY Upgrade
 
-## Goal
+After stage-specific output is stable, upgrade summary aggregation.
 
-Do not overload `SEQ_SOURCE` or `SEQ_INSPECT` with PatternAssembler / PatternRules details.
-
-## Future output
-
-Add later:
-
-```text
-SEQ_PATTERN
-```
-
-## Purpose
-
-`SEQ_PATTERN` answers:
-
-```text
-How were inspected occurrences assembled into PatternCandidates?
-Why did PatternRules accept or reject them?
-```
-
-## Example future output
-
-```text
-SEQ_PATTERN trial=78 profile=chirp_experimental
-inspected_occurrences=3
-pattern_candidates=1
-pattern=chirp3
-accepted=false
-reason=inter_pulse_gap_too_long
-```
-
-## Result
-
-Detector/Source diagnosis, Inspector diagnosis, and Pattern diagnosis stay readable and separately scoped.
-
----
-
-# Pass H — Update Summary Output (PARTIAL)
-
-## Goal
-
-`SEQ_SUMMARY` should aggregate the new result vocabulary and reject reasons.
-
-## Tasks
-
-Include:
+Aggregate final classifications:
 
 ```text
 expected
@@ -615,106 +410,162 @@ ambiguous
 too_dense
 ```
 
-Also include:
+Aggregate reasons by stage:
 
 ```text
-reason counts
-source reject reason counts
-inspector reject/support reason counts
-pattern reject reason counts
-duplicate rate
-unexpected rate
-avg dt
-avg duration
-avg confidence
-main miss/reject reasons
+source_reject_reasons
+inspector_reject_reasons
+pattern_reject_reasons
+analyzer_classification_reasons
 ```
 
-## Result
+Also useful:
 
-Summary output becomes useful for comparing profiles and test runs.
+```text
+avg_dt
+avg_duration
+avg_confidence
+main_miss_reason
+main_reject_reason
+duplicate_rate
+unexpected_rate
+```
+
+This is for comparing runs and profiles, not for single-trial forensic debugging.
 
 ---
 
-# Pass I â€” Command Parsing & Output Verbosity Cleanup With Pattern (PARTIAL)
+## 7 — Tune TonalPulse With Trustworthy Output
 
-## Goal
+Only tune after Analyzer output can explain misses reliably.
 
-Make analyzer output easier to control and easier to read by separating:
-
-```text
-MODE
-WHEN
-VERBOSE
-```
-
-Include `SEQ_PATTERN` in the command/output contract from the start, even if pattern output is initially sparse or silent.
-
-## Tasks
-
- - Add a clearer SEQ command model with `MODE`, `WHEN`, `VERBOSE`, and `TRIES`.
-- Add `SEQ STATUS` so the active output state is visible.
-- Route `SEQ_SOURCE`, `SEQ_INSPECT`, and `SEQ_PATTERN` through the new output config.
-- Make every trial start with a blank line and `#<trial> ----------------`, even in quiet mode.
-- Allow `SEQ_PATTERN` to exist as a stage contract even if it prints nothing yet.
-- Keep the current verbose developer dump behind `MODE=dump` and high verbosity.
-
-## Recommended commands
+Use the new Analyzer shape to distinguish:
 
 ```text
-SEQ MODE <quiet|compact|full|source|inspect|pattern|dump>
-SEQ WHEN <off|miss|all>
-SEQ VERBOSE <0|1|2>
-SEQ TRIES <N>
-SEQ STATUS
+source miss / no candidate
+source reject / too short
+source reject / score or contrast too low
+inspector reject / amp support too weak
+pattern reject
+valid pattern too early / too late
+duplicate / unexpected
 ```
 
-## Default contract
-
-```text
-MODE=trial
-WHEN=miss
-VERBOSE=0
-```
-
-Meaning:
-
-- always print compact `SEQ_TRIAL`
-- print extra stage lines only when the mode allows them
-- keep `SEQ_PATTERN` silent or sparse until pattern logic becomes useful
-
-## Pattern rule
-
-Pattern belongs in the command model from the beginning:
-
-```text
-SEQ_PATTERN exists as a stage contract.
-It may print nothing or very sparse information for now.
-```
-
-## Result
-
-Analyzer output becomes easier to steer without losing the current bounded diagnostic model.
+Do not tune based on mixed aggregate fields that may not refer to the same candidate.
 
 ---
 
-# Pass J — Best Candidate Source Summary (PARTIAL)
+## 8 — Add Scalar-on-Frequency Comparison Profile
 
-## Goal
+After TonalPulse is readable and timing/freshness is visible, add or revive scalar-on-frequency as a comparison profile.
 
-Keep `SEQ_SOURCE` compact, but make rejected trials tell us the best candidate the detector saw in the window.
+Candidate profiles:
 
-## Short scope
+```text
+Scalar on FrequencyContrast
+Scalar on FrequencyScore
+Scalar on combined inspected frequency evidence later
+```
 
-- keep the final reject reason
-- add a best-candidate summary for rejected source trials
-- use detector-native peak choice for frequency
-- use strongest tracked transient for scalar
-- keep `SEQ_DUMP` as the deeper fallback
+Goal is not immediate replacement.
 
-## Result
+Goal is comparison using the same Analyzer output shape:
 
-`SEQ_SOURCE` explains the near-miss candidate without turning into the full dump.
+```text
+TonalPulse vs ScalarFreqContrast
+same SEQ_TRIAL
+same SEQ_SOURCE
+same SEQ_INSPECT
+same SEQ_SUMMARY
+```
+
+---
+
+## 9 — Decide Whether Scalar Can Replace FrequencyMatch
+
+Do not delete FrequencyMatch yet.
+
+Decision rule:
+
+```text
+Replace FrequencyMatch only if scalar-on-frequency matches or beats it under the same Analyzer summary and with acceptable freshness/cadence behavior.
+```
+
+The safer abstraction remains:
+
+```text
+one shared candidate lifecycle mechanic
+multiple feature/source implementations
+```
+
+not:
+
+```text
+force all detection into one scalar stream before cadence/freshness behavior is proven
+```
+
+---
+
+# Relationship to Node Separation Roadmap
+
+Analyzer cleanup supports Node separation, but Analyzer should not become part of Node runtime.
+
+Correct direction:
+
+```text
+Node becomes thinner.
+Analyzer becomes clearer.
+Detection owns detection truth.
+Behavior consumes PatternResult + FieldState.
+Output executes actions.
+Params tune subsystem owners.
+```
+
+Do not move Analyzer responsibilities into Node.
+
+Do not use Node as the place where source/inspector/pattern diagnostics are interpreted.
+
+---
+
+# Out of Scope for Current Pass
+
+Do not do these in the current pass unless absolutely necessary for Feature 1 or Feature 2:
+
+```text
+full pattern debugger
+new behavior logic
+Node rewrite
+Param registry
+TonalPulse tuning
+Scalar replacement decision
+frequency detector redesign
+new FieldState model
+OSC / VEKTOR integration
+large command-system rewrite
+```
+
+---
+
+# Recommended Work Order
+
+```text
+1. Current Pass:
+   readable staged output
+   profile-generic Analyzer view
+
+2. Add timing / freshness diagnostics:
+   frame, cadence, history coverage, feature age
+
+3. Tune TonalPulse with trustworthy Analyzer output
+
+4. Add Scalar-on-frequency comparison profile
+
+5. Compare TonalPulse vs Scalar profile using same SEQ_SUMMARY shape
+
+6. Decide whether Scalar can replace FrequencyMatch
+
+7. Continue Node separation without pulling Analyzer into Node
+```
 
 ---
 
@@ -723,63 +574,30 @@ Keep `SEQ_SOURCE` compact, but make rejected trials tell us the best candidate t
 ```text
 SEQ_TRIAL
   compact truth
-  default output
+  always the default human result
 
 SEQ_SOURCE
-  detector/source lifecycle + reject candidate diagnostic
-  explains candidate open/release/emit/reject
+  source / detector lifecycle
+  candidate open / release / emit / reject
+  selected source reject
+  source reject counts
 
 SEQ_INSPECT
-  inspector/support evidence diagnostic
-  explains support/evidence acceptance or rejection
+  inspector evidence
+  support target
+  support pass/fail
+  evidence value and threshold
 
 SEQ_PATTERN
-  pattern assembly + pattern rule diagnostic
-  present in the command/output model from the start
-  may be sparse or silent until pattern logic becomes useful
+  pattern assembly / rules
+  present as contract now
+  sparse until pattern logic needs detailed diagnostics
 
 SEQ_DUMP
-  full verbose developer dump
-  fallback only
+  verbose developer fallback
+  allowed to be mixed and noisy
 
 SEQ_SUMMARY
-  aggregate run comparison
-```
-
----
-
-# Compact Implementation Order
-
-```text
-A. Freeze / stabilize existing output
-B. Add detector/source reject-candidate log
-C. Analyzer drain + aggregate rejects
-D. Add SEQ_SOURCE
-E. Add SEQ_INSPECT
-F. Normalize FrequencyMatch + Scalar diagnostics
-G. Add SEQ_PATTERN later
-H. Update SEQ_SUMMARY
-I. Command parsing & output verbosity cleanup with pattern
-```
-
----
-
-# Core Architecture Rules
-
-```text
-Default Analyzer output = compact truth.
-
-Rejects need real candidate summaries before diagnosis is trustworthy.
-
-Detector / Source owns candidate lifecycle and reject reason.
-
-Analyzer owns aggregation, best-reject selection, and readable output.
-
-SEQ_SOURCE explains Source / Detector lifecycle.
-
-SEQ_INSPECT explains Inspector / support evidence.
-
-SEQ_PATTERN explains PatternAssembler / PatternRules.
-
-SEQ_DUMP remains the full-chain developer dump.
+  run/profile comparison
+  aggregates final classes and staged reasons
 ```

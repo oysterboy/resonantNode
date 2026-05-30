@@ -545,9 +545,13 @@ void AnalyzerApp::finalizeSequenceTrial(unsigned long now) {
         _sequenceTest.outputConfig.mode == AnalyzerApp::SeqOutputMode::Explain) {
         printSequenceDiagnostics(*finalizedReport);
     }
-    if (_sequenceTest.outputConfig.mode == AnalyzerApp::SeqOutputMode::Pattern ||
-        _sequenceTest.outputConfig.mode == AnalyzerApp::SeqOutputMode::Full ||
-        _sequenceTest.outputConfig.mode == AnalyzerApp::SeqOutputMode::Explain) {
+    const bool patternStageReached =
+        finalizedReport->classification.primaryStage == AnalyzerStage::Pattern ||
+        finalizedReport->classification.primaryStage == AnalyzerStage::Analyzer;
+    if (patternStageReached &&
+        (_sequenceTest.outputConfig.mode == AnalyzerApp::SeqOutputMode::Pattern ||
+         _sequenceTest.outputConfig.mode == AnalyzerApp::SeqOutputMode::Full ||
+         _sequenceTest.outputConfig.mode == AnalyzerApp::SeqOutputMode::Explain)) {
         printSequencePattern(*finalizedReport);
     }
     if (_sequenceTest.outputConfig.mode == AnalyzerApp::SeqOutputMode::Explain) {
@@ -555,7 +559,7 @@ void AnalyzerApp::finalizeSequenceTrial(unsigned long now) {
         printSequenceExplain(*finalizedReport);
     } else if (_sequenceTest.outputConfig.mode == AnalyzerApp::SeqOutputMode::Source) {
         printSequenceDiagnostics(*finalizedReport);
-    } else if (_sequenceTest.outputConfig.mode == AnalyzerApp::SeqOutputMode::Pattern) {
+    } else if (_sequenceTest.outputConfig.mode == AnalyzerApp::SeqOutputMode::Pattern && patternStageReached) {
         printSequencePattern(*finalizedReport);
     }
     Serial.flush();

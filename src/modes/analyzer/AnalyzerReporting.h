@@ -44,6 +44,15 @@ enum class AnalyzerReason {
     Unknown,
 };
 
+enum class AnalyzerStage {
+    None,
+    Source,
+    Inspect,
+    Pattern,
+    Analyzer,
+    Field,
+};
+
 inline const char* analyzerResultName(AnalyzerResult value) {
     switch (value) {
         case AnalyzerResult::Expected:
@@ -107,6 +116,24 @@ inline const char* analyzerReasonName(AnalyzerReason value) {
         case AnalyzerReason::Unknown:
         default:
             return "unknown";
+    }
+}
+
+inline const char* analyzerStageName(AnalyzerStage value) {
+    switch (value) {
+        case AnalyzerStage::Source:
+            return "source";
+        case AnalyzerStage::Inspect:
+            return "inspect";
+        case AnalyzerStage::Pattern:
+            return "pattern";
+        case AnalyzerStage::Analyzer:
+            return "analyzer";
+        case AnalyzerStage::Field:
+            return "field";
+        case AnalyzerStage::None:
+        default:
+            return "none";
     }
 }
 
@@ -196,6 +223,7 @@ struct AnalyzerFieldObservation {
 struct AnalyzerClassification {
     AnalyzerResult result = AnalyzerResult::Unknown;
     AnalyzerReason reason = AnalyzerReason::Unknown;
+    AnalyzerStage primaryStage = AnalyzerStage::None;
 
     long dtMs = -1;
 };

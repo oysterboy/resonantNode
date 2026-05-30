@@ -309,6 +309,25 @@ trial result = miss
 
 This becomes more important for Scalar-on-frequency and later multi-occurrence patterns.
 
+## 3b â€” Generic Pattern Reports
+
+When pattern detection is actually used, make `SEQ_PATTERN` generic in the same way as `SEQ_SOURCE` and `SEQ_INSPECT`.
+
+Goal:
+
+```text
+pattern.tonal.*
+pattern.chirp.*
+pattern.scalar.*
+```
+
+Rule:
+
+```text
+keep the outer pattern shape stable
+add profile-specific details only in namespaced fields
+```
+
 ---
 
 ## 4 — Stage-Specific Failure Reasons

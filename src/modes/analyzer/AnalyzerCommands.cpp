@@ -48,6 +48,7 @@ void AnalyzerApp::printSequenceHelp() {
     Serial.println("SEQ IN: MODE compact = compact trial view");
     Serial.println("SEQ IN: MODE signalcheck = compact trial view + audio health snapshot");
     Serial.println("SEQ IN: MODE full = trial + source + inspect + pattern");
+    Serial.println("SEQ IN: PROFILE tonalpulse|tonalpulse2|amp|chirp_experimental");
     Serial.println("SEQ IN: DIAG on|off");
     Serial.println("SEQ IN: FREQBAND on|off");
     Serial.println("SEQ IN: FREQDECIMATE 1|4|8|16");
@@ -60,10 +61,11 @@ void AnalyzerApp::printSequenceHelp() {
     Serial.println("SEQ OUT: SEQ start / SEQ running / SEQ_PATTERN / SEQ_TRIAL / SEQ_INSPECT / SEQ_SOURCE / SEQ_DUMP / SEQ_SUMMARY / AUDIO run / SIGNALCHECK");
     Serial.println("SEQ OUT: candidate fields include onset_sample peak_sample release_sample peak_ms dur end_dt_ms freq_*");
     Serial.println("SEQ OBS: passive observe mode for an already-running external emitter");
-    Serial.println("SEQ PROFILE: profile=tonalpulse");
-    Serial.println("SEQ PROFILE(ALT): profile=tonalpulse2");
-    Serial.println("SEQ PROFILE(AMP): profile=amp (scalar amp detector / freqscore inspector)");
-    Serial.println("SEQ PROFILE(EXP): profile=chirp_experimental (experimental)");
+    Serial.println("SEQ IN: PROFILE tonalpulse|tonalpulse2|amp|chirp_experimental");
+    Serial.println("SEQ PROFILE tonalpulse");
+    Serial.println("SEQ PROFILE tonalpulse2");
+    Serial.println("SEQ PROFILE amp");
+    Serial.println("SEQ PROFILE chirp_experimental");
     Serial.println("SEQ PARAM: freqScore=10000 freqContrast=50.0");
 }
 
@@ -337,6 +339,41 @@ void AnalyzerApp::handleUsbLine(const char* line) {
             return;
         }
 
+        if (equalsIgnoreCase(token, "PROFILE")) {
+            const char* profileToken = strtok_r(nullptr, " ", &savePtr);
+            if (profileToken == nullptr || *profileToken == '\0') {
+                Serial.print("SEQ PROFILE ");
+                Serial.println(detection::detectionProfileName(_seqOutputConfig.profileKind));
+                return;
+            }
+
+            detection::DetectionProfileKind profileKind = detection::DetectionProfileKind::TonalPulse;
+            bool validProfile = true;
+            if (equalsIgnoreCase(profileToken, "tonalpulse")) {
+                profileKind = detection::DetectionProfileKind::TonalPulse;
+            } else if (equalsIgnoreCase(profileToken, "tonalpulse2") || equalsIgnoreCase(profileToken, "tonal_pulse_2") || equalsIgnoreCase(profileToken, "tonal_pulse2")) {
+                profileKind = detection::DetectionProfileKind::TonalPulse2;
+            } else if (equalsIgnoreCase(profileToken, "amp")) {
+                profileKind = detection::DetectionProfileKind::Amp;
+            } else if (equalsIgnoreCase(profileToken, "chirp_experimental")) {
+                profileKind = detection::DetectionProfileKind::ChirpExperimental;
+            } else {
+                validProfile = false;
+            }
+
+            if (!validProfile) {
+                Serial.print("ERR SEQ unknown profile=");
+                Serial.print(profileToken);
+                Serial.println(" use PROFILE tonalpulse, PROFILE tonalpulse2, PROFILE amp or PROFILE chirp_experimental");
+                return;
+            }
+
+            _seqOutputConfig.profileKind = profileKind;
+            Serial.print("OK SEQ PROFILE ");
+            Serial.println(detection::detectionProfileName(_seqOutputConfig.profileKind));
+            return;
+        }
+
         if (equalsIgnoreCase(token, "VERBOSE")) {
             const char* verbosityToken = strtok_r(nullptr, " ", &savePtr);
             if (verbosityToken == nullptr || *verbosityToken == '\0') {
@@ -396,7 +433,7 @@ void AnalyzerApp::handleUsbLine(const char* line) {
             unsigned long sampleDumpTailMs = 800;
             unsigned long sampleDumpStepMs = 1;
             unsigned long sampleDumpMaxRows = 5000;
-            detection::DetectionProfileKind profileKind = detection::DetectionProfileKind::TonalPulse;
+            detection::DetectionProfileKind profileKind = _seqOutputConfig.profileKind;
             bool profileSeen = false;
             bool profileValid = true;
             bool externalEmitter = false;
@@ -520,7 +557,7 @@ void AnalyzerApp::handleUsbLine(const char* line) {
             }
 
             if (!profileSeen) {
-                profileKind = detection::DetectionProfileKind::TonalPulse;
+                profileKind = _seqOutputConfig.profileKind;
             }
             if (!profileValid) {
                 return;
@@ -532,10 +569,6 @@ void AnalyzerApp::handleUsbLine(const char* line) {
             return;
         }
 
-        if (equalsIgnoreCase(token, "PROFILE")) {
-            printSequenceHelp();
-            return;
-        }
     }
 
     if (equalsIgnoreCase(line, "CAP")) {

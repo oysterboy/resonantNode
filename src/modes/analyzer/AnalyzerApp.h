@@ -60,6 +60,7 @@ public:
         SeqOutputWhen when = SeqOutputWhen::Miss;
         uint8_t verbosity = 0;
         unsigned long totalTrials = 100;
+        detection::DetectionProfileKind profileKind = detection::DetectionProfileKind::TonalPulse;
         bool diagnosticsEnabled = true;
         bool frequencyBandEnabled = true;
         unsigned long frequencyComputeDecimation = 1;

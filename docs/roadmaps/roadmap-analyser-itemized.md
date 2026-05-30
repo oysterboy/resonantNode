@@ -267,6 +267,14 @@ future AmpTransient diagnostic profile
 
 The profile changes. The Analyzer report shape should not.
 
+Implementation note:
+
+```text
+Keep display labels in the Analyzer reporting descriptor layer.
+Detectors and inspectors should keep canonical data only.
+Future profiles add new namespace tables there, not ad hoc printer strings.
+```
+
 ---
 
 # Upcoming After Current Pass

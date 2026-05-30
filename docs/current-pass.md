@@ -43,6 +43,8 @@ The throughput regression is real, and the measurements point to `FreqBandStream
 Keep `SEQ FREQDECIMATE` as the tuning knob for further A/B testing.
 If we need more headroom later, the next deeper optimization would be a rolling frequency implementation, but that is not necessary yet.
 
+For staged output growth, the display labels should stay centralized in the analyzer reporting descriptor layer so future profiles only add new namespace tables there instead of changing detectors and printers separately.
+
 ## Step 1 Field Inventory
 
 Field map:

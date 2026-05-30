@@ -7,6 +7,63 @@
 
 namespace {
 
+struct AnalyzerFieldDescriptor {
+    const char* namespaceName;
+    const char* fieldName;
+};
+
+void printFieldLabel(const AnalyzerFieldDescriptor& descriptor) {
+    if (descriptor.namespaceName != nullptr && descriptor.namespaceName[0] != '\0') {
+        Serial.print(descriptor.namespaceName);
+        Serial.print('.');
+    }
+    Serial.print(descriptor.fieldName != nullptr ? descriptor.fieldName : "unknown");
+    Serial.print('=');
+}
+
+void printField(const AnalyzerFieldDescriptor& descriptor, const char* value) {
+    printFieldLabel(descriptor);
+    Serial.print(value != nullptr ? value : "none");
+}
+
+void printField(const AnalyzerFieldDescriptor& descriptor, bool value) {
+    printFieldLabel(descriptor);
+    Serial.print(value ? 1 : 0);
+}
+
+void printField(const AnalyzerFieldDescriptor& descriptor, unsigned long value) {
+    printFieldLabel(descriptor);
+    Serial.print(value);
+}
+
+void printField(const AnalyzerFieldDescriptor& descriptor, long value) {
+    printFieldLabel(descriptor);
+    Serial.print(value);
+}
+
+void printField(const AnalyzerFieldDescriptor& descriptor, float value, uint8_t precision = 1) {
+    printFieldLabel(descriptor);
+    Serial.print(value, precision);
+}
+
+constexpr AnalyzerFieldDescriptor kSourceKindField{nullptr, "source_kind"};
+constexpr AnalyzerFieldDescriptor kStreamKindField{nullptr, "stream_kind"};
+constexpr AnalyzerFieldDescriptor kOccurrenceStateField{nullptr, "occurrence_state"};
+constexpr AnalyzerFieldDescriptor kEmittedField{nullptr, "emitted"};
+constexpr AnalyzerFieldDescriptor kAcceptedField{nullptr, "accepted"};
+constexpr AnalyzerFieldDescriptor kReasonField{nullptr, "reason"};
+constexpr AnalyzerFieldDescriptor kSelectedRejectPresentField{nullptr, "selected_reject_present"};
+constexpr AnalyzerFieldDescriptor kRejectCountField{nullptr, "reject_count"};
+constexpr AnalyzerFieldDescriptor kSupportTargetField{nullptr, "support_target"};
+constexpr AnalyzerFieldDescriptor kSupportField{nullptr, "support"};
+constexpr AnalyzerFieldDescriptor kEvidenceFreqScoreField{"evidence.freq", "score"};
+constexpr AnalyzerFieldDescriptor kEvidenceFreqContrastField{"evidence.freq", "contrast"};
+constexpr AnalyzerFieldDescriptor kEvidenceScalarModeField{"evidence.scalar", "mode"};
+constexpr AnalyzerFieldDescriptor kEvidenceScalarClassificationField{"evidence.scalar", "classification"};
+constexpr AnalyzerFieldDescriptor kSourceFreqPeakScoreField{"source.freq", "peak_score"};
+constexpr AnalyzerFieldDescriptor kSourceFreqPeakContrastField{"source.freq", "peak_contrast"};
+constexpr AnalyzerFieldDescriptor kSourceScalarPeakStrengthField{"source.scalar", "peak_strength"};
+
 const char* analyzerProfileDetailNamespace(detection::DetectionProfileKind profileKind) {
     switch (profileKind) {
         case detection::DetectionProfileKind::Amp:
@@ -845,75 +902,74 @@ void AnalyzerApp::printSequenceDiagnostics(const AnalyzerReport& report) const {
     }
     if (compactSource) {
         Serial.print("SEQ_SOURCE");
-        Serial.print(" state=");
-        Serial.print(report.frequency.acceptedPresent ? "accepted" : (report.frequency.sourceOccurrenceEmitted ? "rejected" : "none"));
-        Serial.print(" reason=");
-        Serial.print(frequencySourceReason);
+        Serial.print(' ');
+        printField(kOccurrenceStateField, report.frequency.acceptedPresent ? "accepted" : (report.frequency.sourceOccurrenceEmitted ? "rejected" : "none"));
+        Serial.print(' ');
+        printField(kReasonField, frequencySourceReason);
         if (report.frequency.acceptedPresent) {
-            Serial.print(" dt=");
-            Serial.print(report.frequency.acceptedDtMs);
-            Serial.print("ms");
-            Serial.print(" dur=");
-            Serial.print(report.frequency.acceptedDurationMs);
-            Serial.print("ms");
-            Serial.print(" strength=");
-            Serial.print(report.frequency.acceptedStrength, 1);
+            Serial.print(' ');
+            printField(AnalyzerFieldDescriptor{nullptr, "dt_ms"}, report.frequency.acceptedDtMs);
+            Serial.print(' ');
+            printField(AnalyzerFieldDescriptor{nullptr, "duration_ms"}, report.frequency.acceptedDurationMs);
+            Serial.print(' ');
+            printField(AnalyzerFieldDescriptor{nullptr, "strength"}, report.frequency.acceptedStrength, 1);
         } else {
-            Serial.print(" best_peak_ms=");
-            Serial.print(report.frequency.fmPeakMs);
-            Serial.print(" best_dur_ms=");
-            Serial.print(report.frequency.fmDurationMs);
-            Serial.print(" best_score=");
-            Serial.print(report.frequency.peakScore, 1);
-            Serial.print(" best_contrast=");
-            Serial.print(report.frequency.peakContrast, 2);
+            Serial.print(' ');
+            printField(AnalyzerFieldDescriptor{nullptr, "selected_reject_peak_ms"}, report.frequency.fmPeakMs);
+            Serial.print(' ');
+            printField(AnalyzerFieldDescriptor{nullptr, "selected_reject_duration_ms"}, report.frequency.fmDurationMs);
+            Serial.print(' ');
+            printField(kSourceFreqPeakScoreField, report.frequency.peakScore, 1);
+            Serial.print(' ');
+            printField(kSourceFreqPeakContrastField, report.frequency.peakContrast, 2);
         }
         Serial.println();
         return;
     }
     Serial.print("SEQ_SOURCE");
-    Serial.print(" state=");
-    Serial.print(report.frequency.acceptedPresent ? "accepted" : (report.frequency.sourceOccurrenceEmitted ? "rejected" : "none"));
-    Serial.print(" reason=");
-    Serial.print(frequencySourceReason);
+    Serial.print(' ');
+    printField(kSourceKindField, report.occurrences.primarySource != nullptr ? report.occurrences.primarySource : "unknown");
+    Serial.print(' ');
+    printField(kStreamKindField, report.occurrences.detectorKind != nullptr ? report.occurrences.detectorKind : "unknown");
+    Serial.print(' ');
+    printField(kOccurrenceStateField, report.frequency.acceptedPresent ? "accepted" : (report.frequency.sourceOccurrenceEmitted ? "rejected" : "none"));
+    Serial.print(' ');
+    printField(kEmittedField, report.frequency.sourceOccurrenceEmitted);
+    Serial.print(' ');
+    printField(kAcceptedField, report.frequency.acceptedPresent);
+    Serial.print(' ');
+    printField(kReasonField, frequencySourceReason);
+    Serial.print(' ');
+    printField(kSelectedRejectPresentField, (report.frequency.sourceOccurrenceEmitted && !report.frequency.acceptedPresent));
+    Serial.print(' ');
+    printField(kRejectCountField, report.frequency.rejectFrames);
     if (report.frequency.acceptedPresent) {
-        Serial.print(" accepted_start_ms=");
-        Serial.print(report.frequency.acceptedStartMs);
-        Serial.print(" accepted_peak_ms=");
-        Serial.print(report.frequency.acceptedPeakMs);
-        Serial.print(" accepted_release_ms=");
-        Serial.print(report.frequency.acceptedReleaseMs);
-        Serial.print(" accepted_dt_ms=");
-        if (report.frequency.acceptedDtMs >= 0) {
-            Serial.print(report.frequency.acceptedDtMs);
-            Serial.print("ms");
-        } else {
-            Serial.print("-1ms");
-        }
-        Serial.print(" accepted_dur_ms=");
-        Serial.print(report.frequency.acceptedDurationMs);
-        Serial.print(" accepted_strength=");
-        Serial.print(report.frequency.acceptedStrength, 1);
-        Serial.print(" accepted_score=");
-        Serial.print(report.frequency.acceptedScore, 1);
-        Serial.print(" accepted_contrast=");
-        Serial.print(report.frequency.acceptedContrast, 2);
+        Serial.print(' ');
+        printField(AnalyzerFieldDescriptor{nullptr, "occurrence_dt_ms"}, report.frequency.acceptedDtMs);
+        Serial.print(' ');
+        printField(AnalyzerFieldDescriptor{nullptr, "occurrence_duration_ms"}, report.frequency.acceptedDurationMs);
+        Serial.print(' ');
+        printField(AnalyzerFieldDescriptor{nullptr, "occurrence_strength"}, report.frequency.acceptedStrength, 1);
+        Serial.print(' ');
+        printField(AnalyzerFieldDescriptor{nullptr, "occurrence_score"}, report.frequency.acceptedScore, 1);
+        Serial.print(' ');
+        printField(AnalyzerFieldDescriptor{nullptr, "occurrence_contrast"}, report.frequency.acceptedContrast, 2);
     } else if (report.frequency.sourceOccurrenceEmitted) {
-        Serial.print(" best_peak_ms=");
-        Serial.print(report.frequency.fmPeakMs);
-        Serial.print(" best_dur_ms=");
-        Serial.print(report.frequency.fmDurationMs);
-        Serial.print(" best_score=");
-        Serial.print(report.frequency.peakScore, 1);
-        Serial.print(" best_contrast=");
-        Serial.print(report.frequency.peakContrast, 2);
-        Serial.print(" best_window_samples=");
-        Serial.print(report.frequency.peakWindowSampleCount);
+        Serial.print(' ');
+        printField(AnalyzerFieldDescriptor{nullptr, "selected_reject_peak_ms"}, report.frequency.fmPeakMs);
+        Serial.print(' ');
+        printField(AnalyzerFieldDescriptor{nullptr, "selected_reject_duration_ms"}, report.frequency.fmDurationMs);
+        Serial.print(' ');
+        printField(kSourceFreqPeakScoreField, report.frequency.peakScore, 1);
+        Serial.print(' ');
+        printField(kSourceFreqPeakContrastField, report.frequency.peakContrast, 2);
+        Serial.print(' ');
+        printField(AnalyzerFieldDescriptor{nullptr, "selected_reject_window_samples"}, report.frequency.peakWindowSampleCount);
     }
-    Serial.print(" window_start_ms=");
-    Serial.print(report.frequency.windowStartMs);
-    Serial.print(" window_end_ms=");
-    Serial.print(report.frequency.windowEndMs);
+    Serial.print(" ");
+    printField(AnalyzerFieldDescriptor{"source.freq", "window_start_ms"}, report.frequency.windowStartMs);
+    Serial.print(" ");
+    printField(AnalyzerFieldDescriptor{"source.freq", "window_end_ms"}, report.frequency.windowEndMs);
     Serial.print(" diag_first_frame_ms=");
     Serial.print(report.frequency.diagFirstFrameMs);
     Serial.print(" diag_last_frame_ms=");

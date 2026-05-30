@@ -591,6 +591,7 @@ SEQ_SUMMARY  aggregate run comparison
 Command/state controls:
 
 ```text
+SEQ PROFILE <tonalpulse|tonalpulse2|amp|chirp_experimental>
 SEQ MODE <quiet|compact|signalcheck|full|source|inspect|pattern|dump>
 SEQ WHEN <off|miss|all>
 SEQ VERBOSE <0|1|2>
@@ -598,7 +599,18 @@ SEQ TRIES <N>
 SEQ STATUS
 ```
 
+Verbosity contract:
+
+```text
+VERBOSE 0 = compact output
+VERBOSE 1 = readable stage summary
+VERBOSE 2 = namespaced deep detail
+MODE=DUMP remains the raw developer fallback
+```
+
 Rejected detector/source candidates are kept as compact bounded summaries. Analyzer owns aggregation and readable selection; detector/source owns candidate lifecycle and reject reasons.
+
+Analyzer display labels are owned by the analyzer reporting descriptor layer. Detectors and inspectors keep semantic data; the analyzer maps that data into stable namespaced output. New profiles extend those namespace mappings instead of adding ad hoc printer strings in the runtime pipeline.
 
 ---
 
@@ -688,6 +700,8 @@ Landed profile behavior in analyzer terms:
 - `TonalPulse` currently uses `FrequencyMatch` as the source path.
 - `Amp` currently uses `ScalarTransient` as the source path.
 - `SEQ_SOURCE`, `SEQ_INSPECT`, and `SEQ_PATTERN` stay separated so source, inspector, and pattern diagnosis do not mix.
+
+When adding a new detection profile, also add or extend its analyzer namespace mapping so the staged output stays useful and profile-generic. Do not hardcode analyzer display labels in detectors or inspectors.
 
 ---
 

@@ -63,7 +63,7 @@ public:
         detection::DetectionProfileKind profileKind = detection::DetectionProfileKind::TonalPulse;
         bool diagnosticsEnabled = true;
         bool frequencyBandEnabled = true;
-        unsigned long frequencyComputeDecimation = 1;
+        unsigned long frequencyComputeDecimation = 4;
     };
 
     AnalyzerApp(int inputPin = 34);

@@ -62,7 +62,7 @@ private:
     unsigned long _targetFrequencyHz = runtime::kDefaultChirpFrequencyHz;
     unsigned long _sampleRateHz = 16000;
     unsigned long _windowSizeSamples = 64;
-    unsigned long _computeDecimation = 1;
+    unsigned long _computeDecimation = 4;
     unsigned long _computeCountdown = 0;
     float _cachedTargetFrequencyHz = 0.0f;
     float _cachedLowerFrequencyHz = 0.0f;

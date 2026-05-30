@@ -577,6 +577,29 @@ AnalyzerSummary
 
 `RAW_SAMPLE_CAPTURE` remains separate from SEQ reporting.
 
+Current landed SEQ output contract is intentionally compact and scoped:
+
+```text
+SEQ_TRIAL    compact truth, default output
+SEQ_SOURCE   detector/source lifecycle + reject summary
+SEQ_INSPECT  inspector/support evidence
+SEQ_PATTERN  pattern assembly + pattern rule view
+SEQ_DUMP     deep verbose developer fallback
+SEQ_SUMMARY  aggregate run comparison
+```
+
+Command/state controls:
+
+```text
+SEQ MODE <quiet|compact|signalcheck|full|source|inspect|pattern|dump>
+SEQ WHEN <off|miss|all>
+SEQ VERBOSE <0|1|2>
+SEQ TRIES <N>
+SEQ STATUS
+```
+
+Rejected detector/source candidates are kept as compact bounded summaries. Analyzer owns aggregation and readable selection; detector/source owns candidate lifecycle and reject reasons.
+
 ---
 
 ## 13. Analyzer Profile Detail Contract
@@ -616,6 +639,12 @@ Analyzer may format known profile detail namespaces, but it must not require a s
 
 Analyzer consumes the generic view first and profile detail second.
 
+The landed analyzer detail shape is profile-neutral at the outer level:
+
+- `FrequencyMatch` and `Scalar` share the same outer trial/report vocabulary.
+- Profile-specific evidence lives in profile-specific fields, not separate report types.
+- `SEQ_SUMMARY` aggregates result counts, reason counts, and selected-best reject context.
+
 ---
 
 ## 14. DetectionProfile Analyzer Contract
@@ -653,6 +682,12 @@ DetectionProfile defines what kind of evidence/result this profile produces.
 PatternResult / ProfileDetail carries what this specific detection actually measured.
 Analyzer formats the generic result plus the profile detail.
 ```
+
+Landed profile behavior in analyzer terms:
+
+- `TonalPulse` currently uses `FrequencyMatch` as the source path.
+- `Amp` currently uses `ScalarTransient` as the source path.
+- `SEQ_SOURCE`, `SEQ_INSPECT`, and `SEQ_PATTERN` stay separated so source, inspector, and pattern diagnosis do not mix.
 
 ---
 

@@ -23,6 +23,22 @@ enum class FeatureStreamId {
     // FrequencyWindowValid,
 };
 
+inline const char* featureStreamName(FeatureStreamId value) {
+    switch (value) {
+        case FeatureStreamId::AmpEnvelope:
+            return "amp_envelope";
+        case FeatureStreamId::AmbientFloor:
+            return "ambient_floor";
+        case FeatureStreamId::FrequencyScore:
+            return "frequency_score";
+        case FeatureStreamId::FrequencyContrast:
+            return "frequency_contrast";
+        case FeatureStreamId::Unknown:
+        default:
+            return "unknown";
+    }
+}
+
 struct FeatureStream {
     FeatureStreamId id = FeatureStreamId::Unknown;
     unsigned long timeMs = 0;

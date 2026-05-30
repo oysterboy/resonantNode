@@ -437,7 +437,7 @@ void AnalyzerApp::begin() {
     _freqBandStream.setSampleRateHz(_audioSource.sampleRateHz());
     _freqBandStream.setTargetFrequencyHz(runtime::kDefaultChirpFrequencyHz);
     if (_detection == nullptr) {
-        _detection = new detection::DetectionRuntime();
+        _detection = new (std::nothrow) detection::DetectionRuntime();
     }
     _lastPrintMs = 0;
     _usbLineLength = 0;
@@ -1021,29 +1021,51 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
     report.profileDetail.ampLevel = report.profileDetail.ampCenteredMagnitude;
     report.profileDetail.ampBase = diagnostics.acceptedAmbientBaseline;
     report.profileDetail.ampLift = report.profileDetail.ampCenteredMagnitude - report.profileDetail.ampBase;
-    const detection::AmpStrengthEvidence ampStrengthEvidence = trialHasPipelineEvidence && runtimeInspectedOccurrence != nullptr
-        ? runtimeInspectedOccurrence->ampStrengthEvidence
-        : detection::AmpStrengthEvidence{};
-    report.profileDetail.ampStrengthObservation.available = ampStrengthEvidence.available;
-    report.profileDetail.ampStrengthObservation.observedOnly = ampStrengthEvidence.observedOnly;
-    report.profileDetail.ampStrengthObservation.mode = detection::scalarInspectionModeName(ampStrengthEvidence.mode);
-    report.profileDetail.ampStrengthObservation.note = ampStrengthEvidence.available
-        ? "amp_strength_seen"
-        : (trialHasPipelineEvidence ? "inspector_no_amp_strength" : "missing_pipeline_result");
-    report.profileDetail.ampStrengthObservation.windowStartMs = ampStrengthEvidence.windowStartMs;
-    report.profileDetail.ampStrengthObservation.windowEndMs = ampStrengthEvidence.windowEndMs;
-    report.profileDetail.ampStrengthObservation.classificationValue = ampStrengthEvidence.classificationValue;
-    report.profileDetail.ampStrengthObservation.centeredMagnitude = ampStrengthEvidence.peak;
-    report.profileDetail.ampStrengthObservation.peak = ampStrengthEvidence.peak;
-    report.profileDetail.ampStrengthObservation.mean = ampStrengthEvidence.mean;
-    report.profileDetail.ampStrengthObservation.last = ampStrengthEvidence.last;
-    report.profileDetail.ampStrengthObservation.baseline = ampStrengthEvidence.baseline;
-    report.profileDetail.ampStrengthObservation.lift = ampStrengthEvidence.lift;
-    report.profileDetail.ampStrengthObservation.sampleCount = ampStrengthEvidence.sampleCount;
-    report.profileDetail.ampStrengthObservation.sustainedCount = ampStrengthEvidence.sustainedCount;
-    report.profileDetail.ampStrengthObservation.sustainedMs = ampStrengthEvidence.sustainedMs;
-    report.profileDetail.ampStrengthObservation.sustainedThreshold = ampStrengthEvidence.sustainedThreshold;
-    report.profileDetail.ampStrengthObservation.strength = strengthClassName(ampStrengthEvidence.strength);
+    report.profileDetail.scalarObservationCount = trialHasPipelineEvidence && runtimeInspectedOccurrence != nullptr
+        ? runtimeInspectedOccurrence->scalarObservationCount
+        : 0U;
+    for (size_t i = 0; i < report.profileDetail.scalarObservationCount; ++i) {
+        report.profileDetail.scalarObservations[i] = runtimeInspectedOccurrence->scalarObservations[i];
+    }
+
+    const detection::ScalarInspectionObservation* ampStrengthObservation = nullptr;
+    if (trialHasPipelineEvidence && runtimeInspectedOccurrence != nullptr) {
+        for (size_t i = 0; i < runtimeInspectedOccurrence->scalarObservationCount; ++i) {
+            const detection::ScalarInspectionObservation& observation = runtimeInspectedOccurrence->scalarObservations[i];
+            if (observation.stream == detection::FeatureStreamId::AmpEnvelope) {
+                ampStrengthObservation = &observation;
+                break;
+            }
+            if (ampStrengthObservation == nullptr) {
+                ampStrengthObservation = &observation;
+            }
+        }
+    }
+
+    const detection::ScalarInspectionObservation emptyScalarObservation{};
+    const detection::ScalarInspectionObservation& selectedScalarObservation = ampStrengthObservation != nullptr
+        ? *ampStrengthObservation
+        : emptyScalarObservation;
+    report.profileDetail.ampStrengthObservation.available = selectedScalarObservation.available;
+    report.profileDetail.ampStrengthObservation.observedOnly = selectedScalarObservation.observedOnly;
+    report.profileDetail.ampStrengthObservation.mode = detection::scalarInspectionModeName(selectedScalarObservation.mode);
+    report.profileDetail.ampStrengthObservation.note = selectedScalarObservation.note != nullptr
+        ? selectedScalarObservation.note
+        : "none";
+    report.profileDetail.ampStrengthObservation.windowStartMs = selectedScalarObservation.windowStartMs;
+    report.profileDetail.ampStrengthObservation.windowEndMs = selectedScalarObservation.windowEndMs;
+    report.profileDetail.ampStrengthObservation.classificationValue = selectedScalarObservation.classificationValue;
+    report.profileDetail.ampStrengthObservation.centeredMagnitude = selectedScalarObservation.peak;
+    report.profileDetail.ampStrengthObservation.peak = selectedScalarObservation.peak;
+    report.profileDetail.ampStrengthObservation.mean = selectedScalarObservation.mean;
+    report.profileDetail.ampStrengthObservation.last = selectedScalarObservation.last;
+    report.profileDetail.ampStrengthObservation.baseline = selectedScalarObservation.baseline;
+    report.profileDetail.ampStrengthObservation.lift = selectedScalarObservation.lift;
+    report.profileDetail.ampStrengthObservation.sampleCount = selectedScalarObservation.sampleCount;
+    report.profileDetail.ampStrengthObservation.sustainedCount = selectedScalarObservation.sustainedCount;
+    report.profileDetail.ampStrengthObservation.sustainedMs = selectedScalarObservation.sustainedMs;
+    report.profileDetail.ampStrengthObservation.sustainedThreshold = selectedScalarObservation.sustainedThreshold;
+    report.profileDetail.ampStrengthObservation.strength = strengthClassName(selectedScalarObservation.strength);
 
     report.debug.occurrences = diagnostics.rawCandidateCount;
     report.debug.inspected = diagnostics.rawCandidateCount;

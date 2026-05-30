@@ -10,13 +10,12 @@ void setRejected(detection::InspectedOccurrence& out, detection::OccurrenceRejec
     out.confidence = 0.0f;
 }
 
-void fillScalarStrengthObservation(
-    detection::InspectedOccurrence& out,
+void fillScalarObservation(
+    detection::ScalarInspectionObservation& obs,
     const detection::Occurrence& candidate,
     const detection::ScalarWindow& scalarWindow,
     bool available,
-    const detection::ScalarFeatureInspectionConfig& config,
-    detection::EvidenceTarget target
+    const detection::ScalarFeatureInspectionConfig& config
 ) {
     const float peak = scalarWindow.peak;
     const float mean = scalarWindow.mean;
@@ -74,45 +73,25 @@ void fillScalarStrengthObservation(
         lift = classificationValue - mean;
     }
 
-    out.occurrence.ampLevel = classified ? classificationValue : 0.0f;
-    out.occurrence.ampBaseline = mean;
-    switch (target) {
-        case detection::EvidenceTarget::AmpStrength:
-            out.ampStrength = strength;
-            {
-                auto& ampEvidence = out.ampStrengthEvidence;
-                ampEvidence.available = available;
-                ampEvidence.observedOnly = true;
-                ampEvidence.supportBasis = supportBasis;
-                ampEvidence.mode = config.mode;
-                ampEvidence.windowStartMs = static_cast<int16_t>(-static_cast<int32_t>(config.windowPreMs));
-                ampEvidence.windowEndMs = static_cast<int16_t>(config.windowPostMs);
-                ampEvidence.peak = peak;
-                ampEvidence.mean = mean;
-                ampEvidence.last = last;
-                ampEvidence.baseline = mean;
-                ampEvidence.lift = lift;
-                ampEvidence.classificationValue = classificationValue;
-                ampEvidence.sampleCount = sampleCount;
-                ampEvidence.sustainedCount = sustainedCount;
-                ampEvidence.sustainedMs = sustainedMs;
-                ampEvidence.sustainedThreshold = sustainedThreshold;
-                ampEvidence.strength = out.ampStrength;
-            }
-            break;
-        case detection::EvidenceTarget::FrequencyScoreStrength:
-            out.frequencyScoreStrength = strength;
-            break;
-        case detection::EvidenceTarget::FrequencyContrastQuality:
-            out.frequencyContrastQuality = strength;
-            break;
-        case detection::EvidenceTarget::TargetBandStrength:
-            out.targetBandStrength = strength;
-            break;
-        case detection::EvidenceTarget::None:
-        default:
-            break;
-    }
+    obs.available = available;
+    obs.observedOnly = true;
+    obs.stream = scalarWindow.stream;
+    obs.mode = config.mode;
+    obs.supportBasis = supportBasis;
+    obs.note = available ? "scalar_observed" : "scalar_unavailable";
+    obs.windowStartMs = static_cast<int16_t>(-static_cast<int32_t>(config.windowPreMs));
+    obs.windowEndMs = static_cast<int16_t>(config.windowPostMs);
+    obs.peak = peak;
+    obs.mean = mean;
+    obs.last = last;
+    obs.baseline = mean;
+    obs.lift = lift;
+    obs.classificationValue = classificationValue;
+    obs.sampleCount = sampleCount;
+    obs.sustainedCount = sustainedCount;
+    obs.sustainedMs = sustainedMs;
+    obs.sustainedThreshold = sustainedThreshold;
+    obs.strength = strength;
 
     (void)candidate;
 }
@@ -135,6 +114,7 @@ void OccurrenceInspector::inspectAcceptedOccurrence(
 ) const {
     out.ampStrength = StrengthClass::Unknown;
     out.ampStrengthEvidence = {};
+    out.scalarObservationCount = 0;
     out.frequencyScoreStrength = StrengthClass::Unknown;
     out.frequencyContrastQuality = StrengthClass::Unknown;
     out.targetBandStrength = StrengthClass::Unknown;
@@ -169,31 +149,43 @@ void OccurrenceInspector::annotateAmpStrength(
         : (candidate.endMs != 0
             ? candidate.endMs + config.windowPostMs
             : (candidate.releaseMs != 0 ? candidate.releaseMs + config.windowPostMs : candidate.peakMs + config.windowPostMs));
-    auto& ampEvidence = out.ampStrengthEvidence;
-    ampEvidence.available = false;
-    ampEvidence.observedOnly = true;
-    ampEvidence.windowStartMs = static_cast<int16_t>(-static_cast<int32_t>(config.windowPreMs));
-    ampEvidence.windowEndMs = static_cast<int16_t>(config.windowPostMs);
-    ampEvidence.peak = 0.0f;
-    ampEvidence.baseline = 0.0f;
-    ampEvidence.lift = 0.0f;
-    ampEvidence.supportBasis = "centered_magnitude_peak";
-    ampEvidence.strength = StrengthClass::Unknown;
-
+    ScalarInspectionObservation observation = {};
+    observation.stream = config.stream;
+    observation.mode = config.mode;
+    observation.supportBasis = "centered_magnitude_peak";
+    observation.note = "window_unavailable";
     if (config.enabled && featureHistory != nullptr) {
         const float sustainedThreshold = config.mode == detection::ScalarInspectionMode::SustainedAboveThreshold
             ? config.strength.weakPeakThreshold
             : 0.0f;
         const ScalarWindow scalarWindow = featureHistory->getWindow(config.stream, startMs, endMs, sustainedThreshold);
         if (scalarWindow.valid) {
-            fillScalarStrengthObservation(out, candidate, scalarWindow, true, config, target);
-            return;
+            fillScalarObservation(observation, candidate, scalarWindow, true, config);
+        } else {
+            observation.note = "window_invalid";
         }
+    } else if (!config.enabled) {
+        observation.note = "inspection_disabled";
+    } else if (featureHistory == nullptr) {
+        observation.note = "missing_feature_history";
     }
 
-    out.occurrence.ampLevel = 0.0f;
-    out.occurrence.ampBaseline = 0.0f;
-    out.ampStrength = StrengthClass::Unknown;
+    if (out.scalarObservationCount < kMaxInspectionModules) {
+        out.scalarObservations[out.scalarObservationCount++] = observation;
+    }
+
+    out.occurrence.ampLevel = observation.available ? observation.classificationValue : 0.0f;
+    out.occurrence.ampBaseline = observation.available ? observation.baseline : 0.0f;
+    if (target == detection::EvidenceTarget::AmpStrength) {
+        out.ampStrength = observation.strength;
+        out.ampStrengthEvidence = observation;
+    } else if (target == detection::EvidenceTarget::FrequencyScoreStrength) {
+        out.frequencyScoreStrength = observation.strength;
+    } else if (target == detection::EvidenceTarget::FrequencyContrastQuality) {
+        out.frequencyContrastQuality = observation.strength;
+    } else if (target == detection::EvidenceTarget::TargetBandStrength) {
+        out.targetBandStrength = observation.strength;
+    }
 }
 
 void OccurrenceInspector::runInspectionModule(

@@ -107,12 +107,14 @@ struct InspectionPlan {
 
 // AMP strength evidence captured by the inspector for a single candidate.
 // This is runtime evidence, not configuration.
-struct AmpStrengthEvidence {
+struct ScalarInspectionObservation {
     bool available = false;
     bool observedOnly = true;
-    // Diagnostic only: the support decision is peak-based on centered magnitude.
-    const char* supportBasis = "centered_magnitude_peak";
+    FeatureStreamId stream = FeatureStreamId::Unknown;
     ScalarInspectionMode mode = ScalarInspectionMode::PeakAbsolute;
+    // Diagnostic only: the support decision basis used by the inspector.
+    const char* supportBasis = "centered_magnitude_peak";
+    const char* note = "none";
 
     int16_t windowStartMs = -20;
     int16_t windowEndMs = 120;
@@ -130,6 +132,8 @@ struct AmpStrengthEvidence {
 
     StrengthClass strength = StrengthClass::Unknown;
 };
+
+using AmpStrengthEvidence = ScalarInspectionObservation;
 
 // Raw detector evidence captured for transient-trigger analysis and reporting.
 struct TransientEvidence {

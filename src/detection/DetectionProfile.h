@@ -183,7 +183,7 @@ inline DetectionProfile makeTonalPulse2Profile() {
     profile.inspectionPlan.modules[1].kind = InspectionModuleKind::ScalarFeatureStrength;
     profile.inspectionPlan.modules[1].target = EvidenceTarget::AmpStrength;
     profile.inspectionPlan.modules[1].scalar.stream = FeatureStreamId::AmpEnvelope;
-    profile.inspectionPlan.modules[1].scalar.mode = ScalarInspectionMode::PeakAbsolute;
+    profile.inspectionPlan.modules[1].scalar.mode = ScalarInspectionMode::PeakCentered;
     profile.inspectionPlan.modules[1].scalar.windowPreMs = 10;
     profile.inspectionPlan.modules[1].scalar.windowPostMs = 10;
     profile.inspectionPlan.count = 2;

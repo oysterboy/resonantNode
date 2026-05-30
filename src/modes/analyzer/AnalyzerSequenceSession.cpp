@@ -1,6 +1,7 @@
 ﻿#include "AnalyzerApp.h"
 
 #include <Arduino.h>
+#include <new>
 #include <stdlib.h>
 #include <string.h>
 
@@ -120,7 +121,12 @@ void AnalyzerApp::startSequenceTest(unsigned long totalTrials, unsigned long per
     clearSequenceSampleDump();
 
     if (_detection == nullptr) {
-        _detection = new detection::DetectionRuntime();
+        _detection = new (std::nothrow) detection::DetectionRuntime();
+        if (_detection == nullptr) {
+            Serial.println("ERR MEMERROR reason=detection_runtime_alloc_failed");
+            _sequenceTest.active = false;
+            return;
+        }
     }
     _detection->resetState();
     _detection->setFrequencyMatchConfig(selectedProfile.frequencyMatch);

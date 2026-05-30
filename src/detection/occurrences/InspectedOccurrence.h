@@ -32,6 +32,8 @@ enum class OccurrenceRejectReason {
 };
 
 struct InspectedOccurrence {
+    static constexpr size_t kMaxScalarObservations = kMaxInspectionModules;
+
     Occurrence occurrence = {};
     OccurrenceDecision decision = OccurrenceDecision::None;
 
@@ -44,6 +46,8 @@ struct InspectedOccurrence {
     float confidence = 0.0f;
     StrengthClass ampStrength = StrengthClass::Unknown;
     AmpStrengthEvidence ampStrengthEvidence = {};
+    size_t scalarObservationCount = 0;
+    ScalarInspectionObservation scalarObservations[kMaxScalarObservations] = {};
     StrengthClass frequencyScoreStrength = StrengthClass::Unknown;
     StrengthClass frequencyContrastQuality = StrengthClass::Unknown;
     StrengthClass targetBandStrength = StrengthClass::Unknown;

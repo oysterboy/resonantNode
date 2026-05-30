@@ -3,6 +3,8 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include "../../detection/inspector/InspectorTypes.h"
+
 /*
 AnalyzerReporting
 
@@ -266,6 +268,8 @@ struct AnalyzerProfileDetail {
     const char* ampStrength = "unknown";
     const char* ampStrengthMin = "medium";
     bool requireSupportForAcceptance = true;
+    size_t scalarObservationCount = 0;
+    detection::ScalarInspectionObservation scalarObservations[detection::kMaxInspectionModules] = {};
 
     float freqScore = 0.0f;
     float freqContrast = 0.0f;

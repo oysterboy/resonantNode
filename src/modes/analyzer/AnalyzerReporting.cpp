@@ -69,7 +69,12 @@ constexpr AnalyzerFieldDescriptor kEvidenceScalarSustainedMsField{"evidence.scal
 constexpr AnalyzerFieldDescriptor kEvidenceScalarSustainedCountField{"evidence.scalar", "sustained_count"};
 constexpr AnalyzerFieldDescriptor kEvidenceScalarSustainedThresholdField{"evidence.scalar", "sustained_threshold"};
 constexpr AnalyzerFieldDescriptor kInspectorModeField{"inspector", "mode"};
+constexpr AnalyzerFieldDescriptor kInspectorStreamField{"inspector", "stream"};
 constexpr AnalyzerFieldDescriptor kInspectorClassificationField{"inspector", "classification"};
+constexpr AnalyzerFieldDescriptor kInspectorPeakField{"inspector", "peak"};
+constexpr AnalyzerFieldDescriptor kInspectorMeanField{"inspector", "mean"};
+constexpr AnalyzerFieldDescriptor kInspectorLastField{"inspector", "last"};
+constexpr AnalyzerFieldDescriptor kInspectorCountField{"inspector", "count"};
 constexpr AnalyzerFieldDescriptor kInspectorCenteredField{"inspector", "centered"};
 constexpr AnalyzerFieldDescriptor kInspectorBaselineField{"inspector", "baseline"};
 constexpr AnalyzerFieldDescriptor kInspectorLiftField{"inspector", "lift"};
@@ -77,11 +82,9 @@ constexpr AnalyzerFieldDescriptor kInspectorSustainedField{"inspector", "sustain
 constexpr AnalyzerFieldDescriptor kInspectorSustainedMsField{"inspector", "sustained_ms"};
 constexpr AnalyzerFieldDescriptor kInspectorSustainedCountField{"inspector", "sustained_count"};
 constexpr AnalyzerFieldDescriptor kInspectorSustainedThresholdField{"inspector", "sustained_threshold"};
-constexpr AnalyzerFieldDescriptor kInspectorScoreField{"inspector", "score"};
-constexpr AnalyzerFieldDescriptor kInspectorContrastField{"inspector", "contrast"};
-constexpr AnalyzerFieldDescriptor kInspectorLevelField{"inspector", "level"};
-constexpr AnalyzerFieldDescriptor kInspectorBaseField{"inspector", "base"};
-constexpr AnalyzerFieldDescriptor kInspectorValueField{"inspector", "value"};
+constexpr AnalyzerFieldDescriptor kInspectorStrengthField{"inspector", "strength"};
+constexpr AnalyzerFieldDescriptor kInspectorSupportBasisField{"inspector", "support_basis"};
+constexpr AnalyzerFieldDescriptor kInspectorNoteField{"inspector", "note"};
 constexpr AnalyzerFieldDescriptor kSourceFreqPeakScoreField{"source.freq", "peak_score"};
 constexpr AnalyzerFieldDescriptor kSourceFreqPeakContrastField{"source.freq", "peak_contrast"};
 constexpr AnalyzerFieldDescriptor kSourceScalarPeakStrengthField{"source.scalar", "peak_strength"};
@@ -320,49 +323,52 @@ const char* strengthClassName(detection::StrengthClass value) {
     }
 }
 
+void printScalarObservation(const detection::ScalarInspectionObservation& observation) {
+    Serial.print(" scalar.inspect");
+    Serial.print(" ");
+    printField(kInspectorStreamField, detection::featureStreamName(observation.stream));
+    Serial.print(" ");
+    printField(kInspectorModeField, detection::scalarInspectionModeName(observation.mode));
+    Serial.print(" ");
+    printField(kInspectorClassificationField, observation.classificationValue, 1);
+    Serial.print(" ");
+    printField(kInspectorPeakField, observation.peak, 1);
+    Serial.print(" ");
+    printField(kInspectorMeanField, observation.mean, 1);
+    Serial.print(" ");
+    printField(kInspectorLastField, observation.last, 1);
+    Serial.print(" ");
+    printField(kInspectorBaselineField, observation.baseline, 1);
+    Serial.print(" ");
+    printField(kInspectorLiftField, observation.lift, 1);
+    Serial.print(" ");
+    printField(kInspectorCountField, static_cast<unsigned long>(observation.sampleCount));
+    Serial.print(" ");
+    printField(kInspectorSustainedMsField, observation.sustainedMs);
+    Serial.print("/");
+    printField(kInspectorSustainedCountField, static_cast<unsigned long>(observation.sustainedCount));
+    Serial.print("@");
+    printField(kInspectorSustainedThresholdField, observation.sustainedThreshold, 1);
+    Serial.print(" ");
+    printField(kInspectorStrengthField, strengthClassName(observation.strength));
+    Serial.print(" ");
+    printField(kInspectorSupportBasisField, observation.supportBasis != nullptr ? observation.supportBasis : "none");
+    Serial.print(" ");
+    printField(kInspectorNoteField, observation.note != nullptr ? observation.note : "none");
+}
+
 void printInspectionScalarDetails(const AnalyzerReport& report) {
-    const char* moduleTarget = report.inspection.moduleTarget != nullptr ? report.inspection.moduleTarget : "unknown";
-
-    if (strcmp(moduleTarget, "amp_strength") == 0) {
-        Serial.print(' ');
-        printField(kInspectorModeField, report.profileDetail.ampStrengthObservation.mode != nullptr ? report.profileDetail.ampStrengthObservation.mode : "unknown");
-        Serial.print(' ');
-        printField(kInspectorClassificationField, report.profileDetail.ampStrengthObservation.classificationValue, 1);
-        Serial.print(' ');
-        printField(kInspectorCenteredField, report.profileDetail.ampStrengthObservation.centeredMagnitude, 1);
-        Serial.print(' ');
-        printField(kInspectorBaselineField, report.profileDetail.ampStrengthObservation.baseline, 1);
-        Serial.print(' ');
-        printField(kInspectorLiftField, report.profileDetail.ampStrengthObservation.lift, 1);
-        Serial.print(' ');
-        printField(kInspectorSustainedMsField, report.profileDetail.ampStrengthObservation.sustainedMs);
-        Serial.print('/');
-        printField(kInspectorSustainedCountField, static_cast<unsigned long>(report.profileDetail.ampStrengthObservation.sustainedCount));
-        Serial.print('@');
-        printField(kInspectorSustainedThresholdField, report.profileDetail.ampStrengthObservation.sustainedThreshold, 1);
+    if (report.profileDetail.scalarObservationCount == 0) {
+        Serial.print(" scalar.inspect stream=unknown mode=unknown value=unknown");
         return;
     }
 
-    if (strcmp(moduleTarget, "frequency_score") == 0) {
-        Serial.print(' ');
-        printField(kInspectorScoreField, report.profileDetail.freqScore, 2);
-        Serial.print(' ');
-        printField(kInspectorContrastField, report.profileDetail.freqContrast, 2);
-        return;
+    for (size_t i = 0; i < report.profileDetail.scalarObservationCount; ++i) {
+        if (i > 0) {
+            Serial.print(" |");
+        }
+        printScalarObservation(report.profileDetail.scalarObservations[i]);
     }
-
-    if (strcmp(moduleTarget, "target_band") == 0) {
-        Serial.print(' ');
-        printField(kInspectorLevelField, report.profileDetail.ampLevel, 1);
-        Serial.print(' ');
-        printField(kInspectorBaseField, report.profileDetail.ampBase, 1);
-        Serial.print(' ');
-        printField(kInspectorLiftField, report.profileDetail.ampLift, 1);
-        return;
-    }
-
-    Serial.print(' ');
-    printField(kInspectorValueField, "unknown");
 }
 
 const char* sequenceTrialDurationClass(long durMs) {
@@ -831,10 +837,10 @@ void AnalyzerApp::printSequenceExplain(const AnalyzerReport& report) const {
     Serial.println(report.occurrences.rejectReason != nullptr ? report.occurrences.rejectReason : "none");
 
     Serial.println("3 inspectors:");
-    Serial.print("module_results: module_target=");
-    Serial.print(report.inspection.moduleTarget != nullptr ? report.inspection.moduleTarget : "unknown");
-    Serial.print(" module_strength_class=");
+    Serial.print("module_results: module_strength_class=");
     Serial.print(report.inspection.moduleStrengthClass != nullptr ? report.inspection.moduleStrengthClass : "unknown");
+    Serial.print(" module_count=");
+    Serial.print(report.profileDetail.inspectionModuleCount);
     printInspectionScalarDetails(report);
     Serial.print(" evidence=");
     Serial.print(report.inspection.primaryEvidence != nullptr ? report.inspection.primaryEvidence : "none");
@@ -848,36 +854,6 @@ void AnalyzerApp::printSequenceExplain(const AnalyzerReport& report) const {
     Serial.println(report.inspection.mainRejectReason != nullptr ? report.inspection.mainRejectReason : "none");
     Serial.println("modules:");
     printModuleList(report.profileDetail.inspectionModules);
-    if (report.inspection.moduleTarget != nullptr && strcmp(report.inspection.moduleTarget, "amp_strength") == 0) {
-        Serial.print("scalar.mode=");
-        Serial.print(report.profileDetail.ampStrengthObservation.mode != nullptr ? report.profileDetail.ampStrengthObservation.mode : "unknown");
-        Serial.print(" scalar.peak=");
-        Serial.print(report.profileDetail.ampStrengthObservation.peak, 1);
-        Serial.print(" scalar.mean=");
-        Serial.print(report.profileDetail.ampStrengthObservation.mean, 1);
-        Serial.print(" scalar.last=");
-        Serial.print(report.profileDetail.ampStrengthObservation.last, 1);
-        Serial.print(" scalar.count=");
-        Serial.print(report.profileDetail.ampStrengthObservation.sampleCount);
-        Serial.print(" scalar.classificationValue=");
-        Serial.print(report.profileDetail.ampStrengthObservation.classificationValue, 1);
-        Serial.print(" scalar.strengthClass=");
-        Serial.print(report.profileDetail.ampStrengthObservation.strength != nullptr ? report.profileDetail.ampStrengthObservation.strength : "unknown");
-        Serial.print(" scalar.sustainedMs=");
-        Serial.print(report.profileDetail.ampStrengthObservation.sustainedMs);
-        Serial.print(" scalar.sustainedCount=");
-        Serial.print(report.profileDetail.ampStrengthObservation.sustainedCount);
-        Serial.print(" scalar.sustainedThreshold=");
-        Serial.print(report.profileDetail.ampStrengthObservation.sustainedThreshold, 1);
-        Serial.print(" inspector_centered=");
-        Serial.print(report.profileDetail.ampStrengthObservation.centeredMagnitude, 1);
-        Serial.print(" inspector_baseline=");
-        Serial.print(report.profileDetail.ampStrengthObservation.baseline, 1);
-        Serial.print(" inspector_lift=");
-        Serial.print(report.profileDetail.ampStrengthObservation.lift, 1);
-        Serial.print(" inspector_strength=");
-        Serial.println(report.profileDetail.ampStrengthObservation.strength != nullptr ? report.profileDetail.ampStrengthObservation.strength : "unknown");
-    }
 
     Serial.println("4 field:");
     Serial.print("field_state=");

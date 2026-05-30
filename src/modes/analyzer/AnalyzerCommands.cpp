@@ -104,6 +104,7 @@ void AnalyzerApp::handleUsbLine(const char* line) {
         Serial.println("CMD: EMIT MODE AUTO interval=2000 freq=3200 dur=100");
         Serial.println("CMD: EMIT SWEEP start=3000 stop=3500 step=100 dur=80 pause=1000");
         Serial.println("CMD: TEST");
+        Serial.println("CMD: RAWBAND contrast f=3200 dur=100 post=1000 decim=4");
         Serial.println("CMD: RAW trigger f=3200 dur=100 post=1000 dump=bin");
         Serial.println("CMD: SEQ");
         Serial.println("CMD: SEQ help");
@@ -166,6 +167,46 @@ void AnalyzerApp::handleUsbLine(const char* line) {
     if (startsWithTokenIgnoreCase(line, "TEST")) {
         startBaseSession(12000, false);
         Serial.println("OK TEST");
+        return;
+    }
+
+    if (startsWithTokenIgnoreCase(line, "RAWBAND")) {
+        char buffer[160];
+        strncpy(buffer, line, sizeof(buffer));
+        buffer[sizeof(buffer) - 1] = '\0';
+
+        unsigned long toneHz = runtime::kDefaultChirpFrequencyHz;
+        unsigned long durationMs = 100;
+        unsigned long postMs = 1000;
+        unsigned long preMs = 0;
+        unsigned long decim = 4;
+        bool contrastMode = false;
+
+        char* savePtr = nullptr;
+        char* token = strtok_r(buffer, " ", &savePtr);
+        while ((token = strtok_r(nullptr, " ", &savePtr)) != nullptr) {
+            if (startsWithTokenIgnoreCase(token, "f=")) {
+                toneHz = static_cast<unsigned long>(strtoul(token + 2, nullptr, 10));
+            } else if (startsWithTokenIgnoreCase(token, "dur=")) {
+                durationMs = static_cast<unsigned long>(strtoul(token + 4, nullptr, 10));
+            } else if (startsWithTokenIgnoreCase(token, "post=")) {
+                postMs = static_cast<unsigned long>(strtoul(token + 5, nullptr, 10));
+            } else if (startsWithTokenIgnoreCase(token, "pre=")) {
+                preMs = static_cast<unsigned long>(strtoul(token + 4, nullptr, 10));
+            } else if (startsWithTokenIgnoreCase(token, "decim=")) {
+                decim = static_cast<unsigned long>(strtoul(token + 6, nullptr, 10));
+            } else if (equalsIgnoreCase(token, "contrast")) {
+                contrastMode = true;
+            }
+        }
+
+        if (!contrastMode) {
+            Serial.println("ERR RAWBAND use RAWBAND contrast");
+            return;
+        }
+
+        runRawBandTrigger(toneHz, durationMs, postMs, preMs, decim);
+        Serial.println("OK RAWBAND");
         return;
     }
 

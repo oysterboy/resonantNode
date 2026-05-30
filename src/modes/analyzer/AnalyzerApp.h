@@ -305,7 +305,6 @@ private:
         unsigned long sampleDumpCaptureStartMs = 0;
         unsigned long sampleDumpCaptureEndMs = 0;
         unsigned long sampleDumpNextEmitMs = 0;
-        unsigned long lastStatusPrintMs = 0;
         static constexpr size_t kMaxSampleHistory = 256;
         static constexpr size_t kMaxSampleRows = 2048;
         CurveSnapshot sampleHistory[kMaxSampleHistory] = {};
@@ -441,6 +440,7 @@ private:
     void updateCaptureTrial(unsigned long now);
     void finalizeCaptureTrial(unsigned long now);
     void runRawTrigger(unsigned long toneHz, unsigned long durationMs, unsigned long postMs, unsigned long preMs, unsigned long decim, bool dumpChunks, bool dumpBinary);
+    void runRawBandTrigger(unsigned long toneHz, unsigned long durationMs, unsigned long postMs, unsigned long preMs, unsigned long decim);
     void printAudioSourceSummary() const;
     void printAudioRunSummary() const;
     void printOccurrenceSummary() const;

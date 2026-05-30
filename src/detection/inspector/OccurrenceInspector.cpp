@@ -26,6 +26,7 @@ void fillScalarStrengthObservation(
     const unsigned long sustainedMs = scalarWindow.sustainedMs;
     const float sustainedThreshold = scalarWindow.sustainedThreshold;
     float classificationValue = peak;
+    float lift = 0.0f;
     const char* supportBasis = "peak_absolute";
     bool classified = available;
     detection::StrengthClass strength = detection::StrengthClass::Unknown;
@@ -53,9 +54,25 @@ void fillScalarStrengthObservation(
                 strength = classified ? classifyAmpStrength(classificationValue, available, config.strength) : detection::StrengthClass::Unknown;
             }
             break;
+        case detection::ScalarInspectionMode::PeakCentered:
+            classificationValue = mean;
+            supportBasis = "peak_centered_mean";
+            lift = peak - mean;
+            strength = available ? classifyAmpStrength(classificationValue, available, config.strength) : detection::StrengthClass::Unknown;
+            break;
+        case detection::ScalarInspectionMode::PeakCenteredLift:
+            lift = peak - mean;
+            classificationValue = lift;
+            supportBasis = "peak_centered_lift";
+            strength = available ? classifyAmpStrength(classificationValue, available, config.strength) : detection::StrengthClass::Unknown;
+            break;
     }
 
-    const float lift = classified ? classificationValue - mean : 0.0f;
+    if (!classified) {
+        lift = 0.0f;
+    } else if (config.mode != detection::ScalarInspectionMode::PeakCentered && config.mode != detection::ScalarInspectionMode::PeakCenteredLift) {
+        lift = classificationValue - mean;
+    }
 
     out.occurrence.ampLevel = classified ? classificationValue : 0.0f;
     out.occurrence.ampBaseline = mean;
@@ -142,10 +159,16 @@ void OccurrenceInspector::annotateAmpStrength(
     const ScalarFeatureInspectionConfig& config,
     EvidenceTarget target
 ) const {
-    const unsigned long startMs = candidate.startMs > config.windowPreMs ? candidate.startMs - config.windowPreMs : 0UL;
-    const unsigned long endMs = candidate.endMs != 0
-        ? candidate.endMs + config.windowPostMs
-        : (candidate.releaseMs != 0 ? candidate.releaseMs + config.windowPostMs : candidate.peakMs + config.windowPostMs);
+    const bool peakCenteredWindow = config.mode == detection::ScalarInspectionMode::PeakCentered;
+    const unsigned long anchorMs = peakCenteredWindow
+        ? candidate.peakMs
+        : candidate.startMs;
+    const unsigned long startMs = anchorMs > config.windowPreMs ? anchorMs - config.windowPreMs : 0UL;
+    const unsigned long endMs = peakCenteredWindow
+        ? candidate.peakMs + config.windowPostMs
+        : (candidate.endMs != 0
+            ? candidate.endMs + config.windowPostMs
+            : (candidate.releaseMs != 0 ? candidate.releaseMs + config.windowPostMs : candidate.peakMs + config.windowPostMs));
     auto& ampEvidence = out.ampStrengthEvidence;
     ampEvidence.available = false;
     ampEvidence.observedOnly = true;

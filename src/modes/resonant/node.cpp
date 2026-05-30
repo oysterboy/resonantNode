@@ -497,7 +497,7 @@ void Node::update() {
             _audioSignal.update(static_cast<int>(block.samples[i]), sampleTimeUs, frame);
             const bool ownEmitSuppressed = frame.sampleTimeMs < _behavior.ownEmitDetectionSuppressUntilMs();
             if (!ownEmitSuppressed) {
-                _freqBandStream.observeCenteredSample(frame.centeredSample);
+                _freqBandStream.observeCenteredSample(frame.centeredSample, frame.sampleTimeMs);
                 processDetectionFrame(frame, now, selfChirpSuppressed, sawPatternThisLoop);
             }
         }
@@ -1018,8 +1018,10 @@ detection::FrequencyFeatureFrame Node::captureFrequencyFeatureFrame(unsigned lon
 
     evidence.present = present;
     evidence.matched = false;
+    evidence.updatedThisFrame = _freqBandStream.updatedOnLastObserve();
     evidence.targetHz = present ? _freqBandStream.targetFrequencyHz() : 0;
     evidence.windowSampleCount = _freqBandStream.sampleCount();
+    evidence.ageSamples = _freqBandStream.evidenceAgeSamples();
     evidence.windowAvailable = present;
     evidence.score = _freqBandStream.lastFrequencyScore();
     evidence.confidence = 0.0f;

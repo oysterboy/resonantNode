@@ -260,6 +260,7 @@ struct AnalyzerProfileDetail {
     const char* inspectionAcceptance = "unknown";
     const char* inspectionPlan = "unknown";
     const char* inspectionModules = "unknown";
+    size_t inspectionModuleCount = 0;
     const char* evidenceTargets = "unknown";
     const char* requiredSupportTarget = "unknown";
     const char* ampStrength = "unknown";
@@ -329,6 +330,10 @@ struct AnalyzerFrequencyDiagnostic {
 
     unsigned long frames = 0;
     unsigned long validFrames = 0;
+    unsigned long freshFrames = 0;
+    unsigned long heldFrames = 0;
+    unsigned long historyScoreRecords = 0;
+    unsigned long historyContrastRecords = 0;
     unsigned long scoreOkFrames = 0;
     unsigned long contrastOkFrames = 0;
     unsigned long bothOkFrames = 0;

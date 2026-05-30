@@ -118,6 +118,9 @@ ScalarWindow FeatureHistory::getWindow(FeatureStreamId stream, unsigned long sta
     bool haveWindow = false;
     unsigned long valueCount = 0;
     size_t sustainedCount = 0;
+    size_t bucketCount = 0;
+    unsigned long firstValueMs = 0;
+    unsigned long lastValueMs = 0;
 
     for (size_t i = 0; i < buffer.binCount; ++i) {
         const size_t index = (oldestIndex + i) % kMaxSamplesPerStream;
@@ -125,6 +128,7 @@ ScalarWindow FeatureHistory::getWindow(FeatureStreamId stream, unsigned long sta
         if (bin.timeMs < startMs || bin.timeMs > endMs) {
             continue;
         }
+        ++bucketCount;
 
         if (!haveWindow) {
             out.first = bin.first;
@@ -133,6 +137,7 @@ ScalarWindow FeatureHistory::getWindow(FeatureStreamId stream, unsigned long sta
             maxValue = bin.max;
             out.peak = bin.max;
             out.peakTimeMs = bin.timeMs;
+            firstValueMs = bin.timeMs;
             haveWindow = true;
         } else {
             out.last = bin.last;
@@ -147,6 +152,7 @@ ScalarWindow FeatureHistory::getWindow(FeatureStreamId stream, unsigned long sta
                 out.peakTimeMs = bin.timeMs;
             }
         }
+        lastValueMs = bin.timeMs;
 
         sum += bin.sum;
         valueCount += static_cast<unsigned long>(bin.count);
@@ -165,6 +171,12 @@ ScalarWindow FeatureHistory::getWindow(FeatureStreamId stream, unsigned long sta
     out.max = maxValue;
     out.mean = valueCount > 0 ? sum / static_cast<float>(valueCount) : 0.0f;
     out.sampleCount = valueCount;
+    out.freshValueCount = valueCount;
+    out.bucketCount = bucketCount;
+    out.coverageRatio = bucketCount > 0 ? static_cast<float>(valueCount) / static_cast<float>(bucketCount) : 0.0f;
+    out.firstValueMs = firstValueMs;
+    out.lastValueMs = lastValueMs;
+    out.latestValueAgeMs = haveWindow && endMs >= lastValueMs ? endMs - lastValueMs : 0UL;
     out.rise = out.last - out.first;
     out.sustainedThreshold = sustainedThreshold;
     out.sustainedCount = sustainedCount;

@@ -71,6 +71,8 @@ Future target:
 
 ```text
 Normalize feature evidence streams and inspector thresholds onto a shared 0..1 decision scale, while keeping raw measurements for diagnostics.
+Scalar detectors should accept a resolved scalar value, with the profile/runtime deciding whether it comes from frame.* or frequencyFeatureFrame.*.
+Expand PatternResult to carry a bounded set of contributing occurrence summaries for multi-occurrence patterns, while keeping the result compact and predictable.
 ```
 
 ---

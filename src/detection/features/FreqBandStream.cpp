@@ -8,6 +8,7 @@ void FreqBandStream::resetState() {
     _sampleCount = 0;
     _sampleWriteIndex = 0;
     _computeCountdown = 0;
+    _updatedOnLastObserve = false;
     _lastFrequencyScore = 0.0f;
     _lastTargetPower = 0.0f;
     _lastNeighborPower = 0.0f;
@@ -55,8 +56,9 @@ void FreqBandStream::setComputeDecimation(unsigned long value) {
     _computeCountdown = 0;
 }
 
-void FreqBandStream::observeCenteredSample(int centeredSample) {
+void FreqBandStream::observeCenteredSample(int centeredSample, unsigned long sampleTimeMs) {
     const unsigned long profileStartUs = micros();
+    _updatedOnLastObserve = false;
     pushSample(centeredSample);
     if (_sampleCount < _windowSizeSamples) {
         _lastFrequencyScore = 0.0f;
@@ -71,10 +73,13 @@ void FreqBandStream::observeCenteredSample(int centeredSample) {
 
     if (_computeDecimation <= 1) {
         computeFrequencyScore();
+        _updatedOnLastObserve = true;
     } else if (_computeCountdown == 0) {
         computeFrequencyScore();
         _computeCountdown = _computeDecimation - 1;
-    } else {
+        _updatedOnLastObserve = true;
+    }
+    if (!_updatedOnLastObserve) {
         --_computeCountdown;
     }
     ++_profileObserveCalls;
@@ -267,4 +272,17 @@ unsigned long FreqBandStream::profileEnergyTotalUs() const {
 
 unsigned long FreqBandStream::profileGoertzelTotalUs() const {
     return _profileGoertzelTotalUs;
+}
+
+bool FreqBandStream::updatedOnLastObserve() const {
+    return _updatedOnLastObserve;
+}
+
+unsigned long FreqBandStream::evidenceAgeSamples() const {
+    if (!_updatedOnLastObserve && _sampleCount >= _windowSizeSamples && _computeDecimation > 1) {
+        const unsigned long countdown = _computeCountdown;
+        const unsigned long maxAge = _computeDecimation > 0 ? _computeDecimation - 1U : 0U;
+        return countdown <= maxAge ? (maxAge - countdown) : 0UL;
+    }
+    return 0UL;
 }

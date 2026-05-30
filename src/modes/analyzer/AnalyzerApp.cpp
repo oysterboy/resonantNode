@@ -546,7 +546,7 @@ void AnalyzerApp::update() {
             AudioSignalFrame frame;
             _audioSignal.update(static_cast<int>(block.samples[i]), sampleTimeUs, frame);
             if (_sequenceTest.outputConfig.frequencyBandEnabled) {
-                _freqBandStream.observeCenteredSample(frame.centeredSample);
+                _freqBandStream.observeCenteredSample(frame.centeredSample, frame.sampleTimeMs);
             }
             if (_sequenceTest.active && _sequenceTest.currentTrial > 0) {
                 const unsigned long processingLagMs = millis() > frame.sampleTimeMs
@@ -570,27 +570,6 @@ void AnalyzerApp::update() {
             }
         }
         updateSequenceAmbientStats();
-
-        if (_sequenceTest.active &&
-            _sequenceTest.profileKind == detection::DetectionProfileKind::TonalPulse2 &&
-            !_sequenceTest.quiet &&
-            timing::elapsedSince(now, _sequenceTest.lastStatusPrintMs, 500UL)) {
-            Serial.print("SEQ_FREQDBG profile=TonalPulse2 score=");
-            Serial.print(_freqBandStream.lastFrequencyScore(), 1);
-            Serial.print(" contrast=");
-            Serial.print(_freqBandStream.lastSpectralContrast(), 2);
-            Serial.print(" target_power=");
-            Serial.print(_freqBandStream.lastTargetPower(), 1);
-            Serial.print(" neighbor_power=");
-            Serial.print(_freqBandStream.lastNeighborPower(), 1);
-            Serial.print(" total_energy=");
-            Serial.print(_freqBandStream.lastTotalEnergy(), 1);
-            Serial.print(" ready=");
-            Serial.print(_freqBandStream.windowReady() ? 1 : 0);
-            Serial.print(" samples=");
-            Serial.println(_freqBandStream.sampleCount());
-            _sequenceTest.lastStatusPrintMs = now;
-        }
 
         processedSamples += static_cast<int>(block.sampleCount);
         if (processedSamples > kMaxSamplesPerLoop) {
@@ -1023,13 +1002,19 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
     report.profileDetail.inspectionAcceptance = detection::occurrenceSourceKindName(selectedProfile.occurrenceSource);
     report.profileDetail.inspectionPlan = inspectionPlanName(selectedProfile.inspectionPlan);
     report.profileDetail.inspectionModules = inspectionModulesName(selectedProfile.inspectionPlan);
+    report.profileDetail.inspectionModuleCount = selectedProfile.inspectionPlan.count;
     report.profileDetail.evidenceTargets = inspectionEvidenceTargetsName(selectedProfile.inspectionPlan);
     report.profileDetail.requiredSupportTarget = evidenceTargetName(selectedProfile.patternRulesConfig.requiredSupportTarget);
     report.profileDetail.ampStrength = selectedProfile.patternRulesConfig.requireSupportForAcceptance ? "enabled" : "disabled";
     report.profileDetail.ampStrengthMin = strengthClassName(selectedProfile.patternRulesConfig.minimumSupportStrength);
     report.profileDetail.requireSupportForAcceptance = selectedProfile.patternRulesConfig.requireSupportForAcceptance;
-    report.profileDetail.freqScore = trialHasPipelineEvidence ? runtimePatternResult->freq.score : 0.0f;
-    report.profileDetail.freqContrast = trialHasPipelineEvidence ? runtimePatternResult->freq.spectralContrast : 0.0f;
+    if (report.occurrences.present) {
+        report.profileDetail.freqScore = report.occurrences.score;
+        report.profileDetail.freqContrast = report.occurrences.contrast;
+    } else {
+        report.profileDetail.freqScore = trialHasPipelineEvidence ? runtimePatternResult->freq.score : 0.0f;
+        report.profileDetail.freqContrast = trialHasPipelineEvidence ? runtimePatternResult->freq.spectralContrast : 0.0f;
+    }
     report.profileDetail.freqScoreMin = selectedProfile.frequencyMatch.scoreMin;
     report.profileDetail.freqContrastMin = selectedProfile.frequencyMatch.contrastMin;
     report.profileDetail.ampCenteredMagnitude = report.occurrences.primaryStrength;
@@ -1111,6 +1096,14 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
     report.frequency.acceptedStrength = report.frequency.acceptedPresent ? report.occurrences.primaryStrength : 0.0f;
     report.frequency.acceptedScore = report.frequency.acceptedPresent ? report.occurrences.score : 0.0f;
     report.frequency.acceptedContrast = report.frequency.acceptedPresent ? report.occurrences.contrast : 0.0f;
+    report.frequency.freshFrames = _freqBandStream.profileComputeCalls();
+    report.frequency.heldFrames = _freqBandStream.profileObserveCalls() > _freqBandStream.profileComputeCalls()
+        ? _freqBandStream.profileObserveCalls() - _freqBandStream.profileComputeCalls()
+        : 0UL;
+    if (_detection != nullptr) {
+        report.frequency.historyScoreRecords = _detection->featureHistory().sampleCount(detection::FeatureStreamId::FrequencyScore);
+        report.frequency.historyContrastRecords = _detection->featureHistory().sampleCount(detection::FeatureStreamId::FrequencyContrast);
+    }
 
     if (runtimeDiag != nullptr) {
         report.frequency.frames = runtimeDiag->frequencyFrames;

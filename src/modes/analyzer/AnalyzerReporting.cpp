@@ -144,6 +144,8 @@ constexpr AnalyzerFieldDescriptor kSourceFmEmittedField{"source.freq", "fm_emitt
 constexpr AnalyzerFieldDescriptor kSourceFmValidReleaseField{"source.freq", "fm_valid_release"};
 constexpr AnalyzerFieldDescriptor kSourceFmEmitAllowedField{"source.freq", "fm_emit_allowed"};
 constexpr AnalyzerFieldDescriptor kSourceFreqEvidenceClassField{"source.freq", "freq_evidence_class"};
+constexpr AnalyzerFieldDescriptor kSourceFreqHistoryScoreRecordsField{"source.freq", "history_score_records"};
+constexpr AnalyzerFieldDescriptor kSourceFreqHistoryContrastRecordsField{"source.freq", "history_contrast_records"};
 constexpr AnalyzerFieldDescriptor kSourceTraceSourceOccurrenceEmittedField{"source.freq", "trace_source_occurrence_emitted"};
 constexpr AnalyzerFieldDescriptor kSourceTraceRuntimeEvidenceSeenField{"source.freq", "trace_runtime_evidence_seen"};
 constexpr AnalyzerFieldDescriptor kSourceTraceRuntimeOccurrenceReceivedField{"source.freq", "trace_runtime_occurrence_received"};
@@ -597,6 +599,26 @@ void AnalyzerApp::printSequenceInspect(const AnalyzerReport& report) const {
         Serial.print("unknown");
     }
     Serial.println();
+
+    if (report.profileDetail.inspectionModuleCount > 1 &&
+        strcmp(supportTarget, "FrequencyScoreStrength") == 0 &&
+        report.profileDetail.ampStrengthObservation.available) {
+        Serial.print("SEQ_INSPECT");
+        Serial.print(" secondary=");
+        Serial.print("amp.classification=");
+        Serial.print(report.profileDetail.ampStrengthObservation.classificationValue, 1);
+        Serial.print(" amp.mode=");
+        Serial.print(report.profileDetail.ampStrengthObservation.mode != nullptr ? report.profileDetail.ampStrengthObservation.mode : "unknown");
+        Serial.print(" amp.peak=");
+        Serial.print(report.profileDetail.ampStrengthObservation.peak, 1);
+        Serial.print(" amp.mean=");
+        Serial.print(report.profileDetail.ampStrengthObservation.mean, 1);
+        Serial.print(" amp.baseline=");
+        Serial.print(report.profileDetail.ampStrengthObservation.baseline, 1);
+        Serial.print(" amp.lift=");
+        Serial.print(report.profileDetail.ampStrengthObservation.lift, 1);
+        Serial.println();
+    }
 
     if (detailLevel < 2U) {
         return;
@@ -1153,6 +1175,10 @@ void AnalyzerApp::printSequenceDiagnostics(const AnalyzerReport& report) const {
     printField(kSourceFramesField, report.frequency.frames);
     Serial.print(' ');
     printField(kSourceValidFramesField, report.frequency.validFrames);
+    Serial.print(' ');
+    printField(kSourceFreqHistoryScoreRecordsField, report.frequency.historyScoreRecords);
+    Serial.print(' ');
+    printField(kSourceFreqHistoryContrastRecordsField, report.frequency.historyContrastRecords);
     Serial.print(' ');
     printField(kSourceScoreOkFramesField, report.frequency.scoreOkFrames);
     Serial.print(' ');
@@ -2021,6 +2047,35 @@ void AnalyzerApp::printAudioRunSummary() const {
     Serial.print(avgEnergyUs, 2);
     Serial.print(" avg_goertzel_us=");
     Serial.println(avgGoertzelUs, 2);
+
+    const unsigned long freqFreshObserveCalls = _freqBandStream.profileComputeCalls();
+    const unsigned long freqHeldObserveCalls = _freqBandStream.profileObserveCalls() > _freqBandStream.profileComputeCalls()
+        ? _freqBandStream.profileObserveCalls() - _freqBandStream.profileComputeCalls()
+        : 0UL;
+    const unsigned long freqAgeSamples = _freqBandStream.evidenceAgeSamples();
+    const unsigned long freqComputedAtSample = _freqBandStream.sampleCount() >= freqAgeSamples
+        ? _freqBandStream.sampleCount() - freqAgeSamples
+        : 0UL;
+    unsigned long freqHistoryScoreRecords = 0;
+    unsigned long freqHistoryContrastRecords = 0;
+    if (_detection != nullptr) {
+        freqHistoryScoreRecords = _detection->featureHistory().sampleCount(detection::FeatureStreamId::FrequencyScore);
+        freqHistoryContrastRecords = _detection->featureHistory().sampleCount(detection::FeatureStreamId::FrequencyContrast);
+    }
+
+    Serial.print("FREQBAND freshness:");
+    Serial.print(" fresh_frames=");
+    Serial.print(freqFreshObserveCalls);
+    Serial.print(" held_frames=");
+    Serial.print(freqHeldObserveCalls);
+    Serial.print(" age_samples=");
+    Serial.print(freqAgeSamples);
+    Serial.print(" computed_at_sample=");
+    Serial.print(freqComputedAtSample);
+    Serial.print(" history_score_records=");
+    Serial.print(freqHistoryScoreRecords);
+    Serial.print(" history_contrast_records=");
+    Serial.println(freqHistoryContrastRecords);
 }
 
 void AnalyzerApp::printOccurrenceSummary() const {

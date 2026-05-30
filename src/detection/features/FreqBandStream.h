@@ -30,7 +30,7 @@ public:
     void setWindowSizeSamples(unsigned long value);
     void setComputeDecimation(unsigned long value);
 
-    void observeCenteredSample(int centeredSample);
+    void observeCenteredSample(int centeredSample, unsigned long sampleTimeMs = 0);
 
     float lastFrequencyScore() const;
     float lastTargetPower() const;
@@ -51,6 +51,8 @@ public:
     unsigned long profileComputeTotalUs() const;
     unsigned long profileEnergyTotalUs() const;
     unsigned long profileGoertzelTotalUs() const;
+    bool updatedOnLastObserve() const;
+    unsigned long evidenceAgeSamples() const;
 
 private:
     float computeFrequencyScore();
@@ -64,6 +66,7 @@ private:
     unsigned long _windowSizeSamples = 64;
     unsigned long _computeDecimation = 4;
     unsigned long _computeCountdown = 0;
+    bool _updatedOnLastObserve = false;
     float _cachedTargetFrequencyHz = 0.0f;
     float _cachedLowerFrequencyHz = 0.0f;
     float _cachedUpperFrequencyHz = 0.0f;

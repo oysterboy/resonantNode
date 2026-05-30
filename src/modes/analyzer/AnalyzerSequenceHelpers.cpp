@@ -216,8 +216,10 @@ detection::FrequencyFeatureFrame AnalyzerApp::captureFrequencyFeatureFrame(unsig
 
     evidence.present = present;
     evidence.matched = false;
+    evidence.updatedThisFrame = _freqBandStream.updatedOnLastObserve();
     evidence.targetHz = present ? _freqBandStream.targetFrequencyHz() : 0;
     evidence.windowSampleCount = _freqBandStream.sampleCount();
+    evidence.ageSamples = _freqBandStream.evidenceAgeSamples();
     evidence.windowAvailable = present;
     evidence.score = _freqBandStream.lastFrequencyScore();
     evidence.confidence = 0.0f;

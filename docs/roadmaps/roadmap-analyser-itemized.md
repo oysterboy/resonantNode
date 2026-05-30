@@ -253,6 +253,13 @@ pattern.tonal.*
 pattern.chirp.*
 ```
 
+Future link:
+
+```text
+PatternResult should carry a bounded set of contributing occurrence summaries once multi-occurrence pattern results are needed.
+Analyzer should treat that as the structured pattern-stage payload, not as an unbounded occurrence log.
+```
+
 ### Why this matters
 
 The same Analyzer shape should compare:

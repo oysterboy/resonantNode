@@ -20,6 +20,8 @@ enum class ScalarInspectionMode {
     PeakAbsolute,
     MeanAbsolute,
     SustainedAboveThreshold,
+    PeakCentered,
+    PeakCenteredLift,
 };
 
 inline const char* scalarInspectionModeName(ScalarInspectionMode mode) {
@@ -30,6 +32,10 @@ inline const char* scalarInspectionModeName(ScalarInspectionMode mode) {
             return "mean_absolute";
         case ScalarInspectionMode::SustainedAboveThreshold:
             return "sustained_above_threshold";
+        case ScalarInspectionMode::PeakCentered:
+            return "peak_centered";
+        case ScalarInspectionMode::PeakCenteredLift:
+            return "peak_centered_lift";
     }
 
     return "unknown";
@@ -150,12 +156,14 @@ struct TransientEvidence {
 struct FrequencyFeatureFrame {
     bool present = false;
     bool matched = false;
+    bool updatedThisFrame = false;
 
     unsigned long targetHz = 0;
     unsigned long observedAtMs = 0;
     uint64_t windowStartSample = 0;
     uint64_t windowEndSample = 0;
     unsigned long windowSampleCount = 0;
+    unsigned long ageSamples = 0;
     bool windowAvailable = false;
 
     float score = 0.0f;

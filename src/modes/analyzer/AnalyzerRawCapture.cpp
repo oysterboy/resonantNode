@@ -21,6 +21,16 @@ int16_t rawCaptureSampleToInt16(int sample) {
     return static_cast<int16_t>(shifted);
 }
 
+int16_t clampCenteredSampleToInt16(int sample) {
+    if (sample > 32767) {
+        return 32767;
+    }
+    if (sample < -32768) {
+        return -32768;
+    }
+    return static_cast<int16_t>(sample);
+}
+
 unsigned long rawCaptureChunkSize(unsigned long sampleRateHz, unsigned long decim) {
     const unsigned long baseChunk = sampleRateHz / 20UL;
     const unsigned long decimatedChunk = decim > 0 ? baseChunk / decim : baseChunk;
@@ -28,6 +38,205 @@ unsigned long rawCaptureChunkSize(unsigned long sampleRateHz, unsigned long deci
 }
 
 } // namespace
+
+void AnalyzerApp::runRawBandTrigger(unsigned long toneHz,
+                                    unsigned long durationMs,
+                                    unsigned long postMs,
+                                    unsigned long preMs,
+                                    unsigned long decim) {
+    if (_valMode) {
+        return;
+    }
+
+    stopSequenceTest();
+    stopCaptureSession();
+    resetDetectorState();
+    _audioSource.resetStats();
+    _audioSignal.resetSignalState();
+
+    if (toneHz == 0) {
+        toneHz = 1;
+    }
+    if (durationMs == 0) {
+        durationMs = 1;
+    }
+    if (postMs == 0) {
+        postMs = 1;
+    }
+    if (decim == 0) {
+        decim = 1;
+    }
+
+    const uint32_t sampleRateHz = _audioSource.sampleRateHz() > 0 ? _audioSource.sampleRateHz() : 16000UL;
+    const unsigned long maxSamples = 16000UL;
+    unsigned long preWantedSamples = static_cast<unsigned long>((static_cast<uint64_t>(preMs) * static_cast<uint64_t>(sampleRateHz)) / 1000ULL);
+    unsigned long postWantedSamples = static_cast<unsigned long>((static_cast<uint64_t>(postMs) * static_cast<uint64_t>(sampleRateHz)) / 1000ULL);
+    if (preWantedSamples > maxSamples) {
+        preWantedSamples = maxSamples;
+    }
+    if (postWantedSamples > maxSamples) {
+        postWantedSamples = maxSamples;
+    }
+    if (preWantedSamples + postWantedSamples > maxSamples) {
+        if (preWantedSamples >= maxSamples) {
+            preWantedSamples = maxSamples;
+            postWantedSamples = 0;
+        } else {
+            postWantedSamples = maxSamples - preWantedSamples;
+        }
+    }
+    if (preWantedSamples == 0 && postWantedSamples == 0) {
+        postWantedSamples = 1;
+    }
+
+    FreqBandStream band;
+    band.resetState();
+    band.setTargetFrequencyHz(_freqBandStream.targetFrequencyHz());
+    band.setSampleRateHz(sampleRateHz);
+    band.setWindowSizeSamples(_freqBandStream.windowSizeSamples());
+    band.setComputeDecimation(decim);
+
+    int16_t* rawBuffer = static_cast<int16_t*>(malloc(static_cast<size_t>(maxSamples) * sizeof(int16_t)));
+    if (rawBuffer == nullptr) {
+        Serial.println("RAWBAND_ERR memory=band_buffer_alloc_failed");
+        return;
+    }
+    unsigned long flushedSamples = 0;
+    int discardedSample = 0;
+    uint32_t discardedSampleTimeUs = 0;
+    while (flushedSamples < kRawCaptureFlushSamples && _audioSource.readRawSample(discardedSample, discardedSampleTimeUs)) {
+        ++flushedSamples;
+    }
+
+    const unsigned long captureId = ++_rawCaptureSequenceId;
+    const unsigned long triggerMs = millis() + preMs;
+
+    unsigned long capturedSamples = 0;
+    unsigned long freshSamples = 0;
+    unsigned long heldSamples = 0;
+    float maxScore = 0.0f;
+    float maxContrast = 0.0f;
+    unsigned long sampleIndex = 0;
+
+    auto captureAndStoreSample = [&]() {
+        int rawSample = 0;
+        uint32_t sampleTimeUs = 0;
+        if (!_audioSource.readRawSample(rawSample, sampleTimeUs)) {
+            return false;
+        }
+
+        AudioSignalFrame frame = {};
+        if (!_audioSignal.update(rawSample, sampleTimeUs, frame)) {
+            return false;
+        }
+
+        const int centeredSample = frame.centeredSample;
+        band.observeCenteredSample(centeredSample, frame.sampleTimeMs);
+        if (band.updatedOnLastObserve()) {
+            ++freshSamples;
+        } else {
+            ++heldSamples;
+        }
+        if (band.lastFrequencyScore() > maxScore) {
+            maxScore = band.lastFrequencyScore();
+        }
+        if (band.lastSpectralContrast() > maxContrast) {
+            maxContrast = band.lastSpectralContrast();
+        }
+
+        rawBuffer[capturedSamples < maxSamples ? capturedSamples : (maxSamples - 1UL)] = clampCenteredSampleToInt16(centeredSample);
+
+        ++sampleIndex;
+        ++capturedSamples;
+        return true;
+    };
+
+    const unsigned long preDeadlineMs = millis() + preMs + kRawCaptureTimeoutSlackMs;
+    while (sampleIndex < preWantedSamples && millis() <= preDeadlineMs) {
+        if (!captureAndStoreSample()) {
+            delay(1);
+        }
+    }
+
+    char emitterCommand[96];
+    snprintf(emitterCommand, sizeof(emitterCommand), "CHIRP freq=%lu dur=%lu", toneHz, durationMs);
+    sendEmitterCommand(emitterCommand);
+    Serial2.flush();
+
+    const unsigned long postDeadlineMs = millis() + postMs + kRawCaptureTimeoutSlackMs;
+    while ((capturedSamples - preWantedSamples) < postWantedSamples && millis() <= postDeadlineMs) {
+        if (!captureAndStoreSample()) {
+            delay(1);
+        }
+    }
+
+    Serial.print("RAWBAND_BEGIN id=");
+    Serial.print(captureId);
+    Serial.print(" sr=");
+    Serial.print(sampleRateHz);
+    Serial.print(" trigger_ms=");
+    Serial.print(triggerMs);
+    Serial.print(" f=");
+    Serial.print(toneHz);
+    Serial.print(" dur=");
+    Serial.print(durationMs);
+    Serial.print(" pre_ms=");
+    Serial.print(preMs);
+    Serial.print(" post_ms=");
+    Serial.print(postMs);
+    Serial.print(" decim=");
+    Serial.print(decim);
+    Serial.print(" metric=contrast");
+    Serial.println();
+
+    FreqBandStream dumpBand;
+    dumpBand.resetState();
+    dumpBand.setTargetFrequencyHz(_freqBandStream.targetFrequencyHz());
+    dumpBand.setSampleRateHz(sampleRateHz);
+    dumpBand.setWindowSizeSamples(_freqBandStream.windowSizeSamples());
+    dumpBand.setComputeDecimation(decim);
+
+    for (unsigned long i = 0; i < capturedSamples; ++i) {
+        dumpBand.observeCenteredSample(static_cast<int>(rawBuffer[i]));
+        const char* phase = i < preWantedSamples ? "pre" : "post";
+        Serial.print("RAWBAND_SAMPLE phase=");
+        Serial.print(phase);
+        Serial.print(" i=");
+        Serial.print(i);
+        Serial.print(" centered=");
+        Serial.print(rawBuffer[i]);
+        Serial.print(" score=");
+        Serial.print(dumpBand.lastFrequencyScore(), 2);
+        Serial.print(" contrast=");
+        Serial.print(dumpBand.lastSpectralContrast(), 2);
+        Serial.print(" target_power=");
+        Serial.print(dumpBand.lastTargetPower(), 1);
+        Serial.print(" neighbor_power=");
+        Serial.print(dumpBand.lastNeighborPower(), 1);
+        Serial.print(" total_energy=");
+        Serial.print(dumpBand.lastTotalEnergy(), 1);
+        Serial.print(" updated=");
+        Serial.print(dumpBand.updatedOnLastObserve() ? 1 : 0);
+        Serial.print(" age_samples=");
+        Serial.println(dumpBand.evidenceAgeSamples());
+    }
+
+    Serial.print("RAWBAND_SUMMARY id=");
+    Serial.print(captureId);
+    Serial.print(" captured=");
+    Serial.print(capturedSamples);
+    Serial.print(" fresh=");
+    Serial.print(freshSamples);
+    Serial.print(" held=");
+    Serial.print(heldSamples);
+    Serial.print(" max_score=");
+    Serial.print(maxScore, 2);
+    Serial.print(" max_contrast=");
+    Serial.print(maxContrast, 2);
+    Serial.println();
+
+    free(rawBuffer);
+}
 
 void AnalyzerApp::runRawTrigger(unsigned long toneHz,
                                 unsigned long durationMs,

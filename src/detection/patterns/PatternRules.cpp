@@ -56,7 +56,6 @@ PatternResult makeInvalidResult(const PatternCandidate& candidate,
         result.candidate.frequencyFull = result.candidate.frequency;
     }
     result.freq = candidate.frequency;
-    result.freqFull = candidate.frequencyFull;
     result.processedAtMs = nowMs;
     result.type = PatternType::Invalid;
     result.kind = PatternResultKind::Rejected;

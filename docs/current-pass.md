@@ -1,380 +1,143 @@
-# Current Pass — AMP Deviation Measurement and Support Metric Selection
+# Current Pass - Generic Runtime Result Forwarding
 
 ## Goal
 
-Improve the reliability of AMP support evidence by measuring robust AMP metrics before changing detection behavior.
+Make the runtime detection path uniform and generic across profiles.
 
-This pass covers ranked fix-list items **5–8** only:
+The analyzer should only forward and print runtime truth, not reconstruct it.
+
+Core idea:
 
 ```text
-5. Add AMP robust metric reporting.
-6. Add AMP pre_event_floor and event_lift metrics.
-7. Run controlled deviation comparisons before changing support behavior.
-8. Replace PeakAbsolute only after measurement; likely EventP75 or EventP75MinusPreFloor.
+PatternResult
+  -> InspectedOccurrences
+    -> Occurrence
+    -> generic observations
+    -> optional detector-specific data only when required
+```
+
+Rejected candidates should stay in diagnostics, with generic-first data and optional specialized fields only if needed.
+
+Analyzer should know only:
+
+```text
+- runtime detection results
+- system health
+- audio health
+- temporary comparison output while metric selection is still in progress
+- analyzer trial-shape classification
+```
+
+Temporary comparison / testing output policy:
+
+```text
+keep now:
+  analyzer serial compare output only, while metric selection is still in progress
+
+keep permanently:
+  runtime truth, generic observations, detector-specific facts when required
+  system health and audio health
+
+discard from long-term design:
+  analyzer-side compare buffers
+  duplicate copies of the same observation data
+  compare-only summary state
 ```
 
 ## Working rule
 
 ```text
-Measure first.
-Do not replace PeakAbsolute blindly.
+Measure and forward first.
+Do not duplicate runtime truth in analyzer state.
+Do not move specialized data into the generic path unless it is required by runtime semantics.
 Every implemented item must be committed after implementation.
-Do not stop after an individual item unless the build is broken and cannot be resolved locally.
 Continue until the end of this pass list.
 ```
 
 ## Scope
 
-This pass focuses on **AMP deviation**, not general detection refactor work.
+This pass focuses on the runtime forwarding boundary, not on new detection behavior.
 
 In scope:
 
-- Add robust AMP window statistics.
-- Add event-relative AMP floor metrics.
-- Extend Analyzer / SEQ_INSPECT output with AMP comparison values.
-- Keep current behavior unchanged until measurement is available.
-- Compare metrics across controlled runs.
-- Add one new AMP support mode only after measurement.
-- Retune AMP support thresholds only after the new metric is chosen.
+- Make accepted results carry `InspectedOccurrence` consistently.
+- Keep generic observations in the runtime result path.
+- Keep rejected-candidate diagnostics compact and generic-first.
+- Keep analyzer output thin and profile-generic.
+- Keep analyzer trial-shape classification separate from runtime occurrence truth.
+- Retain system/audio health reporting.
+- Retain temporary compare output only while we still need external metric comparison.
 
-Out of scope for this pass:
+Out of scope:
 
-- FrequencyMatch detector rewrite.
-- Scalar-on-frequency cleanup.
-- Hann Goertzel A/B.
-- Target generation handling.
-- I2S backlog work.
-- Analyzer staged truth rewrite.
-- Behavior changes beyond AMP support metric selection.
+- New detector algorithms.
+- Threshold retuning.
+- Behavior changes in detection acceptance.
+- New output modes.
+- Broad analyzer redesign.
 
 ---
 
-# Item 5 — Add AMP robust metric reporting
+# Item 1 - Forward generic runtime result objects uniformly
 
 ## Status
 
-done
+in progress
 
 ## Goal
 
-Expose robust scalar-window statistics for the inspected window that currently feeds `PeakAbsolute` support.
+Make `PatternResult` and the accepted runtime path carry the inspected occurrences and their generic observations directly and uniformly.
 
-Note:
-
-- This applies to the generic scalar-window inspection path, not AMP-only.
-
-Current suspected issue:
-
-```text
-TonalPulse AMP support uses PeakAbsolute.
-PeakAbsolute is sensitive to spikes, contact ticks, sharp waveform peaks, and single-bin outliers.
-```
+The analyzer should not have to duplicate or reassemble that information from multiple places.
 
 ## Implementation tasks
 
-Add AMP window statistics to the scalar/window inspection path.
-
-At minimum report:
-
-```text
-amp.window_start_ms
-amp.window_end_ms
-amp.window_ms
-amp.bucket_count
-amp.value_count
-amp.covered_ms
-amp.coverage_ratio
-
-amp.peak
-amp.mean
-amp.rms
-amp.median
-amp.p75
-amp.p90
-amp.trimmed_mean
-```
-
-## Notes
-
-- Keep existing `PeakAbsolute` support decision unchanged.
-- This item is measurement-only.
-- `coverage_ratio` must mean true time coverage, not `valueCount / bucketCount`.
-- If `trimmed_mean` is too expensive or awkward, make it optional and implement after RMS / median / p75 / p90.
-
-## Suggested implementation order
-
-```text
-1. Add RMS support.
-2. Add bounded scratch-window median / p75 / p90.
-3. Add optional trimmed_mean.
-4. Add fields to AMP inspection evidence / Analyzer output.
-5. Confirm current PeakAbsolute remains visible.
-```
-
-## Acceptance checks
-
-- [x] Build succeeds.
-- [x] Existing detection behavior is unchanged.
-- [x] SEQ_INSPECT or equivalent scalar inspection output prints old and new metrics.
-- [x] PeakAbsolute is still printed for comparison.
-- [x] No new metric is used for support acceptance yet.
-
-## Commit
-
-Commit after this item.
-
-Suggested commit message:
-
-```text
-Add AMP robust window metrics for inspection diagnostics
-```
-
----
-
-# Item 6 — Add AMP pre_event_floor and event_lift metrics
-
-## Status
-
-done
-
-## Goal
-
-Add local acoustic floor comparison for scalar-window support analysis.
-
-Important distinction:
-
-```text
-input_baseline = existing AudioSignal adaptive baseline
-pre_event_floor = new local FeatureHistory window before the event
-```
-
-The new floor is not a replacement for the existing adaptive input baseline.
-
-## Suggested windows
-
-Event window:
-
-```text
-candidate_peak_ms - 10 ms
-→ candidate_peak_ms + 90 ms
-```
-
-Pre-event floor window:
-
-```text
-candidate_peak_ms - 250 ms
-→ candidate_peak_ms - 50 ms
-```
-
-If candidate peak time is not available or unreliable, use the best available occurrence time consistently and print which anchor was used.
-
-## Metrics to compute
-
-Add/report:
-
-```text
-amp.pre_floor_median
-amp.pre_floor_p75
-amp.pre_floor_rms
-amp.lift_p75 = event_p75 - pre_floor_median
-amp.lift_rms = event_rms - pre_floor_rms
-amp.lift_trimmed_mean = event_trimmed_mean - pre_floor_median
-```
-
-Optional:
-
-```text
-amp.pre_floor_coverage_ratio
-amp.pre_floor_bucket_count
-amp.pre_floor_value_count
-```
-
-## Implementation notes
-
-- Use existing `AmpEnvelope` FeatureHistory.
-- Do not call this `baseline` in output unless qualified.
-- Prefer names like `pre_event_floor`, `event_level`, and `event_lift`.
-- Keep old `amp.lift` / same-window lift only if renamed or clearly distinguished.
-
-## Acceptance checks
-
-- [x] Build succeeds.
-- [x] SEQ_INSPECT shows event-window metrics and pre-event-floor metrics.
-- [x] Existing support acceptance still uses the old mode unless explicitly configured otherwise.
-- [x] Missing/low-coverage pre-event floor is reported clearly, not silently treated as zero.
-
-## Commit
-
-Commit after this item.
-
-Suggested commit message:
-
-```text
-Add AMP pre-event floor and event lift diagnostics
-```
-
----
-
-# Item 7 — Run controlled deviation comparisons
-
-## Goal
-
-Use the new metrics to determine whether AMP deviation is mostly caused by `PeakAbsolute` / metric choice, local floor changes, or real physical variation.
-
-## Test runs
-
-Run the same output mode and profile across:
-
-```text
-1. stable same-position
-2. near
-3. mid
-4. far
-5. movement / cable disturbance
-```
-
-For each run, collect enough trials to see spread, not just one-off behavior.
-
-Suggested run size:
-
-```text
-50–100 trials per condition, if practical
-```
-
-## Compare these metrics
-
-```text
-amp.peak
-amp.mean
-amp.rms
-amp.median
-amp.p75
-amp.p90
-amp.trimmed_mean
-amp.lift_p75
-amp.lift_rms
-amp.lift_trimmed_mean
-```
-
-For each metric, compare:
-
-```text
-median value
-standard deviation
-coefficient of variation
-near/far separation
-miss/reject correlation
-spike/outlier behavior
-low-coverage cases
-```
-
-## Success criteria
-
-A good replacement metric should:
-
-```text
-- show lower spread than PeakAbsolute under stable conditions
-- still separate useful support classes
-- not spike randomly
-- not collapse during valid events
-- correlate with support presence better than raw peak
-```
-
-Expected likely candidates:
-
-```text
-event_p75
-event_p75 - pre_event_floor_median
-event_rms - pre_event_floor_rms
-event_trimmed_mean
-```
-
-## Output summary
-
-At the end of the comparison, write a short note into the work log or commit message body:
-
-```text
-Best candidate metric:
-Rejected metrics:
-Reason:
-Threshold implication:
-Known caveat:
-```
-
-## Commit
-
-Commit after adding any test-output support or summary artifact.
-
-Suggested commit message:
-
-```text
-Compare AMP support metrics across deviation test runs
-```
-
----
-
-# Item 8 — Replace PeakAbsolute only after measurement
-
-## Goal
-
-Add one new AMP support mode and retune thresholds only after Item 7 identifies the best candidate.
-
-## Candidate support modes
-
-Preferred first candidates:
-
-```text
-EventP75MinusPreFloor
-EventP75
-EventRmsMinusPreFloor
-```
-
-Avoid as long-term support truth:
-
-```text
-PeakAbsolute
-```
-
-PeakAbsolute may remain available as a diagnostic or fallback mode.
-
-## Implementation tasks
-
-1. Add the selected support mode to the scalar inspection mode enum / config.
-2. Make TonalPulse or a test profile able to select the new mode.
-3. Keep PeakAbsolute available for comparison.
-4. Update SEQ_INSPECT to print:
-
-```text
-amp.support_mode
-amp.classification_value
-amp.support_strength
-amp.threshold_weak
-amp.threshold_medium
-amp.threshold_strong
-```
-
-5. Retune thresholds for:
-
-```text
-weak
-medium
-strong
-```
-
-## Retuning rule
-
-Do not reuse old PeakAbsolute thresholds blindly.
-
-The new metric may have a different scale.
+- Ensure the accepted runtime path carries `InspectedOccurrence` when the runtime produced one.
+- Keep `Occurrence` inside that path.
+- Keep generic scalar-window observations inside that path.
+- Keep detector-specific data only where the runtime actually needs it.
+- Remove analyzer-side duplication of accepted-path observation state where possible.
+
+## Already there
+
+- `OccurrenceInspector` already produces `InspectedOccurrence` with generic scalar observations and detector-specific strength fields.
+- `PatternAssembler` already consumes `InspectedOccurrence` and builds `PatternCandidate` from it.
+- `DetectionRuntime` already carries `PatternResult`, `Occurrence`, and a single `InspectedOccurrence` in the pipeline result.
+- Analyzer already forwards the runtime result into its report instead of re-running inspection.
+- `PatternResult` now carries an inspected-occurrence reference for the latest runtime pipeline result.
+
+## TODO
+
+- Make the plural accepted-path shape explicit in the runtime result boundary instead of relying on a single copied inspected occurrence.
+- Reduce or remove analyzer-side re-selection of scalar observation data where runtime can already provide the chosen shape.
+- Keep detector-specific data out of the generic path unless runtime semantics require it.
+- Preserve the analyzer trial-shape classification as a separate layer.
 
 ## Acceptance checks
 
 - Build succeeds.
-- Old PeakAbsolute mode still exists.
-- New mode can be selected through profile/config.
-- SEQ_INSPECT clearly prints which mode produced support classification.
-- New thresholds are documented in profile config.
-- Detection behavior is tested with at least one stable run after switching.
+- Accepted-path output still shows the same runtime facts.
+- Analyzer output still forwards the runtime result without inventing a second truth path.
+- No behavior change in detection acceptance.
+- Frequency data stays detector-specific, whether it comes from a frequency-match detector or a scalar detector.
+- Special windows can stay detector-specific for now and move into the generic path later if we need them.
+- Analyzer keeps its own trial-shape classification:
+
+```text
+expected
+early
+late
+miss
+duplicate
+unexpected
+rejected
+ambiguous
+too_dense
+invalid_audio
+```
+
+- That analyzer classification stays separate from runtime occurrence truth.
+- Runtime still owns detector / inspection / pattern facts.
 
 ## Commit
 
@@ -383,32 +146,181 @@ Commit after this item.
 Suggested commit message:
 
 ```text
-Add measured AMP support mode and retune thresholds
+Forward runtime result data uniformly through PatternResult
 ```
 
 ---
 
-# Final acceptance for the pass
+# Item 2 - Keep rejected diagnostics generic-first
 
-The pass is complete when:
+## Status
+
+partial
+
+## Goal
+
+Make rejected-candidate diagnostics carry only what is needed to explain the rejection.
+
+Generic data should be first-class. Specialized data should stay optional and shallow.
+
+## Implementation tasks
+
+- Keep rejected-candidate summaries in diagnostics.
+- Store the rejection reason in the diagnostics path.
+- Keep generic observation facts available for rejected candidates when they help explain the failure.
+- Add specialized fields only when a detector truly needs them.
+- Avoid copying accepted-path payloads into diagnostics.
+
+## Already there
+
+- `DetectionDiagnostics` already carries generic and detector-specific rejection facts.
+- `OccurrenceInspector` already writes rejection reasons onto rejected inspected occurrences.
+- Analyzer reporting already has separate reject-oriented output, including `SEQ_SOURCE_REJECT`.
+
+## TODO
+
+- Keep rejected summaries generic-first and compact.
+- Remove any remaining accepted-path duplication from reject diagnostics.
+- Keep specialized reject fields shallow and optional.
+- Make sure rejected candidates remain explainable without leaning on accepted-path payloads.
+
+## Acceptance checks
+
+- Rejected candidates are explainable without accepted-path duplication.
+- Generic diagnostics are enough for most cases.
+- Specialized data remains optional.
+- Analyzer output stays bounded and readable.
+
+## Commit
+
+Commit after this item.
+
+Suggested commit message:
 
 ```text
-- AMP robust metrics are visible.
-- Pre-event floor / lift metrics are visible.
-- Controlled comparison has been run or the output is ready for it.
-- PeakAbsolute has not been replaced without measurement.
-- If replaced, the selected mode and thresholds are documented.
-- Each implemented item has its own commit.
+Keep rejected diagnostics generic-first
 ```
 
-## Final pass summary to write after completion
+---
+
+# Item 3 - Keep analyzer thin and transitional compare output temporary
+
+## Status
+
+in progress
+
+## Goal
+
+Keep the analyzer as a forwarding and presentation layer.
+
+It may print system/audio health and temporary compare output while we are still comparing metrics externally, but it should not become a second detection engine.
+
+## Implementation tasks
+
+- Keep `SYSTEM_HEALTH` and `AUDIO_IO_HEALTH` in the analyzer.
+- Keep `SEQ_INSPECT_COMPARE` only as a temporary comparison aid.
+- Keep profile-specific decision logic in runtime, not analyzer.
+- Avoid adding new analyzer-only truth paths.
+- Remove temporary compare output once the next metric choice is settled.
+
+## Already there
+
+- `SYSTEM_HEALTH` and `AUDIO_IO_HEALTH` are already printed by the analyzer.
+- `SEQ_INSPECT_COMPARE` exists as a temporary serial-only comparison line and is marked temporary in code.
+- Analyzer still keeps its own trial-shape classification layer.
+
+## TODO
+
+- Keep the compare line temporary and remove it once metric selection is done.
+- Avoid introducing any new analyzer-only truth storage or compare buffers.
+- Keep the analyzer limited to presentation, health, and trial-shape classification.
+
+## Acceptance checks
+
+- Analyzer output remains readable and profile-generic.
+- Health output still works.
+- Temporary compare output is clearly marked as temporary.
+- No extra detection state lives only in analyzer.
+
+## Commit
+
+Commit after this item.
+
+Suggested commit message:
 
 ```text
-Implemented:
-Selected AMP metric:
-Old PeakAbsolute behavior:
-New thresholds:
-Observed deviation improvement:
-Remaining physical/acoustic limitations:
-Next recommended pass:
+Keep analyzer as a thin runtime result presenter
 ```
+
+---
+
+# Item 4 - Pattern-result reporting parity for resonant/node consumers
+
+## Status
+
+pending
+
+## Goal
+
+Make the runtime-side resonant/node reporter able to describe:
+
+- the pattern itself
+- the continued occurrences that make up that pattern
+- the carried data for those occurrences
+
+The output should use the same core truth fields the analyzer already shows, without depending on analyzer-specific framing.
+
+This is about reporting parity for the node/RB consumer, not duplicating analyzer output structure.
+
+## Implementation tasks
+
+- Keep the runtime pattern report centered on `PatternResult` and `InspectedOccurrence`.
+- Include output about the pattern and the continued occurrences that form it.
+- Include the carried data for those occurrences.
+- Reuse the same core pattern facts across analyzer and runtime/node reporting.
+- Reuse analyzer `SEQ_SOURCE` and `SEQ_INSPECT` as the information reference where helpful, but not as a code dependency.
+- Keep detector-specific data available when the detector needs it, but do not bake analyzer-only formatting into runtime.
+- Keep the resonant/node pattern summary focused on the same truth fields the analyzer prints.
+
+## Already there
+
+- `PatternResult` already exists as the shared runtime pattern summary.
+- `Node` already consumes `PatternResult` in the resonant path.
+- The analyzer already prints pattern truth facts from runtime results.
+
+## TODO
+
+- Decide which occurrence-chain fields must be shown in the runtime/node report.
+- Decide which pattern fields must be shared verbatim between analyzer and runtime/node reports.
+- Decide which source/inspect fields should be mirrored in runtime/node output and which should stay analyzer-only.
+- Keep runtime/node formatting independent from analyzer implementation details.
+- Keep any runtime-side resonant/node pattern summary aligned with analyzer truth fields.
+- Avoid introducing analyzer-shaped duplication into the runtime reporter.
+
+## Acceptance checks
+
+- Resonant/node pattern reporting can describe the same pattern truth as the analyzer.
+- Resonant/node reporting can also describe the occurrence chain that makes up the pattern.
+- No analyzer-only formatting leaks into runtime truth.
+- Pattern reporting stays based on the shared runtime result objects.
+
+## Commit
+
+Commit after this item.
+
+Suggested commit message:
+
+```text
+Add pattern-result reporting parity for resonant/node consumers
+```
+
+---
+
+## Pass note
+
+This pass is about the generic forwarding boundary:
+
+- accepted path: runtime truth forwarded cleanly
+- rejected path: compact diagnostics, generic-first
+- analyzer: thin observer with health and temporary comparison output
+- runtime consumers: pattern-result reporting parity without analyzer-shaped duplication

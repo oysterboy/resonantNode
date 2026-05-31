@@ -362,7 +362,11 @@ void DetectionRuntime::drainOccurrenceSources(unsigned long nowMs) {
 void DetectionRuntime::drainPatternAssembler(unsigned long nowMs) {
     PatternCandidate candidate;
     while (_patternAssembler.popPatternCandidate(candidate)) {
-        const PatternResult result = _patternRules.evaluate(candidate, nowMs);
+        PatternResult result = _patternRules.evaluate(candidate, nowMs);
+        if (_lastInspectedOccurrence.occurrence.present) {
+            result.hasInspectedOccurrence = true;
+            result.inspectedOccurrence = &_lastInspectedOccurrence;
+        }
         _fieldStateTracker.observePatternResult(result, nowMs);
         capturePipelineResult(result, &_lastOccurrence, &_lastInspectedOccurrence, nowMs);
         pushPatternResult(result);
@@ -393,9 +397,15 @@ void DetectionRuntime::capturePipelineResult(
     if (_latestPipelineResult.hasOccurrence && occurrence != nullptr) {
         _latestPipelineResult.occurrence = *occurrence;
     }
-    _latestPipelineResult.hasInspectedOccurrence = inspectedOccurrence != nullptr && inspectedOccurrence->occurrence.present;
-    if (_latestPipelineResult.hasInspectedOccurrence && inspectedOccurrence != nullptr) {
+    _latestPipelineResult.hasInspectedOccurrence = result.hasInspectedOccurrence || (inspectedOccurrence != nullptr && inspectedOccurrence->occurrence.present);
+    if (_latestPipelineResult.hasInspectedOccurrence && inspectedOccurrence != nullptr && inspectedOccurrence->occurrence.present) {
         _latestPipelineResult.inspectedOccurrence = *inspectedOccurrence;
+    } else if (result.hasInspectedOccurrence && result.inspectedOccurrence != nullptr) {
+        _latestPipelineResult.inspectedOccurrence = *result.inspectedOccurrence;
+    }
+    if (_latestPipelineResult.hasInspectedOccurrence) {
+        _latestPipelineResult.pattern.hasInspectedOccurrence = true;
+        _latestPipelineResult.pattern.inspectedOccurrence = &_latestPipelineResult.inspectedOccurrence;
     }
     _latestPipelineResult.hasField = true;
     _latestPipelineResult.field = _fieldStateTracker.state();

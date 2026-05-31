@@ -1178,9 +1178,12 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
     const bool runtimeReceivedOccurrence = pipelineResult != nullptr && pipelineResult->hasOccurrence;
     const bool actualPipelineAvailable = pipelineResult != nullptr && pipelineResult->hasPattern;
     const detection::PatternResult* runtimePatternResult = actualPipelineAvailable ? &pipelineResult->pattern : nullptr;
-    const detection::InspectedOccurrence* runtimeInspectedOccurrence = actualPipelineAvailable && pipelineResult->hasInspectedOccurrence
-        ? &pipelineResult->inspectedOccurrence
-        : nullptr;
+    const detection::InspectedOccurrence* runtimeInspectedOccurrence = nullptr;
+    if (runtimePatternResult != nullptr && runtimePatternResult->hasInspectedOccurrence) {
+        runtimeInspectedOccurrence = runtimePatternResult->inspectedOccurrence;
+    } else if (actualPipelineAvailable && pipelineResult->hasInspectedOccurrence) {
+        runtimeInspectedOccurrence = &pipelineResult->inspectedOccurrence;
+    }
     const detection::FieldState* runtimeFieldState = actualPipelineAvailable && pipelineResult->hasField
         ? &pipelineResult->field
         : nullptr;

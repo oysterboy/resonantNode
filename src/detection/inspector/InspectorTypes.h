@@ -24,6 +24,35 @@ enum class ScalarInspectionMode {
     PeakCenteredLift,
 };
 
+enum class ScalarInspectionBasis {
+    None,
+    CenteredMagnitudePeak,
+    PeakAbsolute,
+    MeanAbsolute,
+    SustainedAboveThreshold,
+    PeakCenteredMean,
+    PeakCenteredLift,
+};
+
+enum class ScalarInspectionNote {
+    None,
+    ScalarObserved,
+    ScalarUnavailable,
+    WindowInvalid,
+    InspectionDisabled,
+    MissingFeatureHistory,
+    PreFloorObserved,
+    PreFloorUnavailable,
+};
+
+enum class ScalarInspectionAnchor {
+    None,
+    Peak,
+    Start,
+    Release,
+    Fallback,
+};
+
 inline const char* scalarInspectionModeName(ScalarInspectionMode mode) {
     switch (mode) {
         case ScalarInspectionMode::PeakAbsolute:
@@ -105,20 +134,21 @@ struct InspectionPlan {
     size_t count = 0;
 };
 
-// AMP strength evidence captured by the inspector for a single candidate.
+// Scalar evidence captured by the inspector for a single candidate.
 // This is runtime evidence, not configuration.
 struct ScalarInspectionObservation {
+    // Label-like fields are enum-backed; string rendering happens in
+    // DetectionNames.h at print time.
     bool available = false;
-    bool observedOnly = true;
     FeatureStreamId stream = FeatureStreamId::Unknown;
     ScalarInspectionMode mode = ScalarInspectionMode::PeakAbsolute;
-    // Diagnostic only: the support decision basis used by the inspector.
-    const char* supportBasis = "centered_magnitude_peak";
-    const char* note = "none";
+    ScalarInspectionBasis supportBasis = ScalarInspectionBasis::CenteredMagnitudePeak;
+    ScalarInspectionNote note = ScalarInspectionNote::None;
 
     int16_t windowStartMs = -20;
     int16_t windowEndMs = 120;
-    const char* anchor = "peak";
+    ScalarInspectionAnchor anchor = ScalarInspectionAnchor::Peak;
+    // These are numeric observation facts, not labels.
     unsigned long windowMs = 0;
     size_t valueCount = 0;
     size_t bucketCount = 0;
@@ -127,8 +157,8 @@ struct ScalarInspectionObservation {
     float coverageRatio = 0.0f;
 
     bool preFloorAvailable = false;
-    const char* preFloorAnchor = "peak";
-    const char* preFloorNote = "none";
+    ScalarInspectionAnchor preFloorAnchor = ScalarInspectionAnchor::Peak;
+    ScalarInspectionNote preFloorNote = ScalarInspectionNote::None;
     int16_t preFloorWindowStartMs = -250;
     int16_t preFloorWindowEndMs = -50;
     unsigned long preFloorWindowMs = 0;
@@ -136,14 +166,13 @@ struct ScalarInspectionObservation {
     size_t preFloorBucketCount = 0;
     size_t preFloorCoveredMs = 0;
     float preFloorCoverageRatio = 0.0f;
+    // Pre-floor comparison facts.
     float preFloorMedian = 0.0f;
     float preFloorP75 = 0.0f;
     float preFloorRms = 0.0f;
     float preFloorTrimmedMean = 0.0f;
-    float liftP75 = 0.0f;
-    float liftRms = 0.0f;
-    float liftTrimmedMean = 0.0f;
 
+    // Core evidence metrics.
     float peak = 0.0f;
     float mean = 0.0f;
     float rms = 0.0f;
@@ -152,8 +181,6 @@ struct ScalarInspectionObservation {
     float p90 = 0.0f;
     float trimmedMean = 0.0f;
     float last = 0.0f;
-    float baseline = 0.0f;
-    float lift = 0.0f;
     float classificationValue = 0.0f;
     size_t sampleCount = 0;
     size_t sustainedCount = 0;
@@ -163,7 +190,7 @@ struct ScalarInspectionObservation {
     StrengthClass strength = StrengthClass::Unknown;
 };
 
-using AmpStrengthEvidence = ScalarInspectionObservation;
+using ScalarEvidence = ScalarInspectionObservation;
 
 // Raw detector evidence captured for transient-trigger analysis and reporting.
 struct TransientEvidence {

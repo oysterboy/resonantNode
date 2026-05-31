@@ -71,7 +71,7 @@ PatternResult makeInvalidResult(const PatternCandidate& candidate,
     result.rejectReason = PatternRejectReason::InvalidOccurrence;
     result.confidence = 0.0f;
     result.ampStrength = StrengthClass::Unknown;
-    result.ampStrengthEvidence = candidate.ampStrengthEvidence;
+    result.scalarEvidence = candidate.scalarEvidence;
     result.frequencyScoreStrength = candidate.frequencyScoreStrength;
     result.frequencyContrastQuality = candidate.frequencyContrastQuality;
     result.targetBandStrength = candidate.targetBandStrength;
@@ -125,7 +125,7 @@ PatternResult PatternRules::evaluateFrequencyPattern(
     result.reasonCode = PatternReasonCode::FromOccurrence;
     result.rejectReason = PatternRejectReason::None;
     result.ampStrength = candidate.ampStrength;
-    result.ampStrengthEvidence = candidate.ampStrengthEvidence;
+    result.scalarEvidence = candidate.scalarEvidence;
     result.frequencyScoreStrength = candidate.frequencyScoreStrength;
     result.frequencyContrastQuality = candidate.frequencyContrastQuality;
     result.targetBandStrength = candidate.targetBandStrength;

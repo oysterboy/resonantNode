@@ -82,7 +82,26 @@ Out of scope:
 
 ## Status
 
-pending
+in progress
+
+## Implemented so far
+
+- Renamed the scalar evidence payload to `ScalarEvidence` / `scalarEvidence`.
+- Trimmed `InspectedOccurrence` down to the wrapped `Occurrence`, `decision`, `rejectReason`, and scalar observations.
+- Trimmed `ScalarInspectionObservation` by removing stored `baseline` and the stored lift trio.
+- Split shared presentation helpers into:
+  - `src/detection/DetectionNames.h`
+  - `src/detection/DetectionDerivedValues.h`
+- Updated analyzer reporting to use the shared helpers instead of reading string labels from the observation payload.
+
+## Documentation
+
+The shape note below is the current source-of-truth for which inspection fields are:
+
+- enum-backed labels
+- numeric observation facts
+- derived presentation values
+- analyzer/reporting-only string names
 
 ## Goal
 
@@ -99,6 +118,13 @@ The main trimming target is `ScalarInspectionObservation`, but `InspectedOccurre
 
 Keep only the most relevant human-readable labels inside the structs for now. Extra summaries can stay for the moment if they still help diagnostics and reporting.
 
+Shape note:
+
+- `ScalarInspectionObservation` no longer stores string labels.
+- Label-like members are enum-backed and print through `src/detection/DetectionNames.h`.
+- Derived presentation values print through `src/detection/DetectionDerivedValues.h`.
+- Any remaining string-backed names are in analyzer/reporting structs, not in the inspection payload itself.
+
 ## Implementation tasks
 
 - Rename `AmpStrengthEvidence` to `ScalarEvidence` and `ampStrengthEvidence` to `scalarEvidence` so the type and field names match the actual scalar evidence meaning.
@@ -107,7 +133,8 @@ Keep only the most relevant human-readable labels inside the structs for now. Ex
 - Keep analyzer/runtime behavior unchanged.
 - Trim `ScalarInspectionObservation` to the smallest shape that still carries the evidence and the interpretation needed by the current pass.
 - Trim `InspectedOccurrence` to a minimal wrapper around `Occurrence` plus inspection decision and evidence.
-- Add a shared lookup/helper table for printing field names in `src/detection/InspectionNames.h` so analyzer and node can format the same facts without storing strings in the structs.
+- Add shared lookup/helpers for printing field names in `src/detection/DetectionNames.h` so analyzer and node can format the same facts without storing strings in the structs.
+- Add shared derived-value helpers in `src/detection/DetectionDerivedValues.h` for print-time math like lift and pre-floor deltas, so consumers can compute presentation values without storing them in the observation structs.
 
 ## Already there
 

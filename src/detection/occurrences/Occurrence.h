@@ -62,7 +62,7 @@ struct Occurrence {
     float ampBaseline = 0.0f;
     bool ampEvidencePresent = false;
     StrengthClass ampStrength = StrengthClass::Unknown;
-    AmpStrengthEvidence ampStrengthEvidence = {};
+    ScalarEvidence scalarEvidence = {};
     StrengthClass frequencyScoreStrength = StrengthClass::Unknown;
     StrengthClass frequencyContrastQuality = StrengthClass::Unknown;
     StrengthClass targetBandStrength = StrengthClass::Unknown;

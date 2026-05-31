@@ -31,7 +31,7 @@ PatternCandidate makePatternCandidateFromSignal(const detection::InspectedOccurr
             candidate.releaseStrength = source.contrast;
             candidate.ambientBaseline = 0.0f;
             candidate.ampStrength = source.ampStrength;
-            candidate.ampStrengthEvidence = source.ampStrengthEvidence;
+            candidate.scalarEvidence = source.scalarEvidence;
             candidate.frequencyScoreStrength = source.frequencyScoreStrength;
             candidate.frequencyContrastQuality = source.frequencyContrastQuality;
             candidate.targetBandStrength = source.targetBandStrength;
@@ -65,7 +65,7 @@ PatternCandidate makePatternCandidateFromSignal(const detection::InspectedOccurr
             candidate.releaseStrength = source.transient.releaseStrength;
             candidate.ambientBaseline = source.transient.ambientBaseline;
             candidate.ampStrength = source.ampStrength;
-            candidate.ampStrengthEvidence = source.ampStrengthEvidence;
+            candidate.scalarEvidence = source.scalarEvidence;
             candidate.frequencyScoreStrength = source.frequencyScoreStrength;
             candidate.frequencyContrastQuality = source.frequencyContrastQuality;
             candidate.targetBandStrength = source.targetBandStrength;
@@ -119,7 +119,7 @@ size_t PatternAssembler::acceptOccurrences(const InspectedOccurrence* occurrence
         const InspectedOccurrence& occurrence = occurrences[i];
         pushRecentOccurrence(occurrence);
 
-        if (!occurrence.accepted || !occurrence.occurrence.present) {
+        if (occurrence.decision != OccurrenceDecision::Accepted || !occurrence.occurrence.present) {
             continue;
         }
 

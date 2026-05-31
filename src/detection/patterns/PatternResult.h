@@ -24,7 +24,7 @@ struct PatternResult {
     PatternRejectReason rejectReason = PatternRejectReason::None;
     float confidence = 0.0f;
     StrengthClass ampStrength = StrengthClass::Unknown;
-    AmpStrengthEvidence ampStrengthEvidence = {};
+    ScalarEvidence scalarEvidence = {};
     StrengthClass frequencyScoreStrength = StrengthClass::Unknown;
     StrengthClass frequencyContrastQuality = StrengthClass::Unknown;
     StrengthClass targetBandStrength = StrengthClass::Unknown;

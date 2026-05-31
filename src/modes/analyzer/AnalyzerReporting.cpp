@@ -4,6 +4,8 @@
 #include <string.h>
 
 #include "../../TimingUtils.h"
+#include "../../detection/DetectionDerivedValues.h"
+#include "../../detection/DetectionNames.h"
 
 namespace {
 
@@ -335,11 +337,11 @@ void printScalarObservation(const detection::ScalarInspectionObservation& observ
     Serial.print(" ");
     printField(kInspectorCountField, static_cast<unsigned long>(observation.sampleCount));
     Serial.print(" ");
-    printField(kInspectorSupportBasisField, observation.supportBasis != nullptr ? observation.supportBasis : "none");
+    printField(kInspectorSupportBasisField, detection::scalarInspectionBasisName(observation.supportBasis));
     Serial.print(" ");
-    printField(kInspectorNoteField, observation.note != nullptr ? observation.note : "none");
+    printField(kInspectorNoteField, detection::scalarInspectionNoteName(observation.note));
     Serial.print(" ");
-    printField(kInspectorAnchorField, observation.anchor != nullptr ? observation.anchor : "none");
+    printField(kInspectorAnchorField, detection::scalarInspectionAnchorName(observation.anchor));
     Serial.print(" ");
     Serial.print("pre_floor_window_start_ms=");
     Serial.print(observation.preFloorWindowStartMs);
@@ -363,10 +365,10 @@ void printScalarObservation(const detection::ScalarInspectionObservation& observ
     Serial.print(observation.coverageRatio, 3);
     Serial.print(" ");
     Serial.print("pre_floor_anchor=");
-    Serial.print(observation.preFloorAnchor != nullptr ? observation.preFloorAnchor : "none");
+    Serial.print(detection::scalarInspectionAnchorName(observation.preFloorAnchor));
     Serial.print(" ");
     Serial.print("pre_floor_note=");
-    Serial.print(observation.preFloorNote != nullptr ? observation.preFloorNote : "none");
+    Serial.print(detection::scalarInspectionNoteName(observation.preFloorNote));
     Serial.print(" ");
     Serial.print("pre_floor_window_ms=");
     Serial.print(observation.preFloorWindowMs);
@@ -396,13 +398,13 @@ void printScalarObservation(const detection::ScalarInspectionObservation& observ
     Serial.print(observation.preFloorTrimmedMean, 1);
     Serial.print(" ");
     Serial.print("lift_p75=");
-    Serial.print(observation.liftP75, 1);
+    Serial.print(detection::scalarInspectionLiftP75(observation), 1);
     Serial.print(" ");
     Serial.print("lift_rms=");
-    Serial.print(observation.liftRms, 1);
+    Serial.print(detection::scalarInspectionLiftRms(observation), 1);
     Serial.print(" ");
     Serial.print("lift_trimmed_mean=");
-    Serial.print(observation.liftTrimmedMean, 1);
+    Serial.print(detection::scalarInspectionLiftTrimmedMean(observation), 1);
     Serial.print(" ");
     printField(kInspectorPeakField, observation.peak, 1);
     Serial.print(" ");
@@ -425,9 +427,9 @@ void printScalarObservation(const detection::ScalarInspectionObservation& observ
     Serial.print(" ");
     printField(kInspectorLastField, observation.last, 1);
     Serial.print(" ");
-    printField(kInspectorBaselineField, observation.baseline, 1);
+    printField(kInspectorBaselineField, observation.mean, 1);
     Serial.print(" ");
-    printField(kInspectorLiftField, observation.lift, 1);
+    printField(kInspectorLiftField, detection::scalarInspectionLift(observation), 1);
     Serial.print(" ");
     printField(kInspectorSustainedMsField, observation.sustainedMs);
     Serial.print("/");
@@ -700,11 +702,11 @@ void AnalyzerApp::printSequenceInspect(const AnalyzerReport& report) const {
         Serial.print(" accepted=");
         Serial.print(report.scalar.acceptedPresent ? 1 : 0);
         Serial.print(" note=");
-        Serial.print(report.profileDetail.scalarObservation.note != nullptr ? report.profileDetail.scalarObservation.note : "none");
+        Serial.print(detection::scalarInspectionNoteName(report.profileDetail.scalarObservation.note));
         Serial.print(" mode=");
         Serial.print(detection::scalarInspectionModeName(report.profileDetail.scalarObservation.mode));
         Serial.print(" anchor=");
-        Serial.print(report.profileDetail.scalarObservation.anchor != nullptr ? report.profileDetail.scalarObservation.anchor : "none");
+        Serial.print(detection::scalarInspectionAnchorName(report.profileDetail.scalarObservation.anchor));
         Serial.print(" coverage=");
         Serial.print(report.profileDetail.scalarObservation.coverageRatio, 3);
         Serial.print(" pre_floor_coverage=");
@@ -724,11 +726,11 @@ void AnalyzerApp::printSequenceInspect(const AnalyzerReport& report) const {
         Serial.print(" trimmed_mean=");
         Serial.print(report.profileDetail.scalarObservation.trimmedMean, 1);
         Serial.print(" lift_p75=");
-        Serial.print(report.profileDetail.scalarObservation.liftP75, 1);
+        Serial.print(detection::scalarInspectionLiftP75(report.profileDetail.scalarObservation), 1);
         Serial.print(" lift_rms=");
-        Serial.print(report.profileDetail.scalarObservation.liftRms, 1);
+        Serial.print(detection::scalarInspectionLiftRms(report.profileDetail.scalarObservation), 1);
         Serial.print(" lift_trimmed_mean=");
-        Serial.println(report.profileDetail.scalarObservation.liftTrimmedMean, 1);
+        Serial.println(detection::scalarInspectionLiftTrimmedMean(report.profileDetail.scalarObservation), 1);
     }
 
     if (report.profileDetail.inspectionModuleCount > 1 &&
@@ -741,7 +743,7 @@ void AnalyzerApp::printSequenceInspect(const AnalyzerReport& report) const {
         Serial.print(" scalar.mode=");
         Serial.print(detection::scalarInspectionModeName(report.profileDetail.scalarObservation.mode));
         Serial.print(" scalar.anchor=");
-        Serial.print(report.profileDetail.scalarObservation.anchor != nullptr ? report.profileDetail.scalarObservation.anchor : "none");
+        Serial.print(detection::scalarInspectionAnchorName(report.profileDetail.scalarObservation.anchor));
         Serial.print(" scalar.pre_floor_window_start_ms=");
         Serial.print(report.profileDetail.scalarObservation.preFloorWindowStartMs);
         Serial.print(" scalar.pre_floor_window_end_ms=");
@@ -761,9 +763,9 @@ void AnalyzerApp::printSequenceInspect(const AnalyzerReport& report) const {
         Serial.print(" scalar.coverage_ratio=");
         Serial.print(report.profileDetail.scalarObservation.coverageRatio, 3);
         Serial.print(" scalar.pre_floor_anchor=");
-        Serial.print(report.profileDetail.scalarObservation.preFloorAnchor != nullptr ? report.profileDetail.scalarObservation.preFloorAnchor : "none");
+        Serial.print(detection::scalarInspectionAnchorName(report.profileDetail.scalarObservation.preFloorAnchor));
         Serial.print(" scalar.pre_floor_note=");
-        Serial.print(report.profileDetail.scalarObservation.preFloorNote != nullptr ? report.profileDetail.scalarObservation.preFloorNote : "none");
+        Serial.print(detection::scalarInspectionNoteName(report.profileDetail.scalarObservation.preFloorNote));
         Serial.print(" scalar.pre_floor_window_ms=");
         Serial.print(report.profileDetail.scalarObservation.preFloorWindowMs);
         Serial.print(" scalar.pre_floor_value_count=");
@@ -783,11 +785,11 @@ void AnalyzerApp::printSequenceInspect(const AnalyzerReport& report) const {
         Serial.print(" scalar.pre_floor_trimmed_mean=");
         Serial.print(report.profileDetail.scalarObservation.preFloorTrimmedMean, 1);
         Serial.print(" scalar.lift_p75=");
-        Serial.print(report.profileDetail.scalarObservation.liftP75, 1);
+        Serial.print(detection::scalarInspectionLiftP75(report.profileDetail.scalarObservation), 1);
         Serial.print(" scalar.lift_rms=");
-        Serial.print(report.profileDetail.scalarObservation.liftRms, 1);
+        Serial.print(detection::scalarInspectionLiftRms(report.profileDetail.scalarObservation), 1);
         Serial.print(" scalar.lift_trimmed_mean=");
-        Serial.print(report.profileDetail.scalarObservation.liftTrimmedMean, 1);
+        Serial.print(detection::scalarInspectionLiftTrimmedMean(report.profileDetail.scalarObservation), 1);
         Serial.print(" scalar.peak=");
         Serial.print(report.profileDetail.scalarObservation.peak, 1);
         Serial.print(" scalar.mean=");
@@ -803,9 +805,9 @@ void AnalyzerApp::printSequenceInspect(const AnalyzerReport& report) const {
         Serial.print(" scalar.trimmed_mean=");
         Serial.print(report.profileDetail.scalarObservation.trimmedMean, 1);
         Serial.print(" scalar.baseline=");
-        Serial.print(report.profileDetail.scalarObservation.baseline, 1);
+        Serial.print(report.profileDetail.scalarObservation.mean, 1);
         Serial.print(" scalar.lift=");
-        Serial.print(report.profileDetail.scalarObservation.lift, 1);
+        Serial.print(detection::scalarInspectionLift(report.profileDetail.scalarObservation), 1);
         Serial.println();
     }
 
@@ -847,9 +849,9 @@ void AnalyzerApp::printSequenceInspect(const AnalyzerReport& report) const {
         Serial.print(" evidence.scalar.pre_floor_window_end_ms=");
         Serial.print(report.profileDetail.scalarObservation.preFloorWindowEndMs);
         Serial.print(" evidence.scalar.pre_floor_anchor=");
-        Serial.print(report.profileDetail.scalarObservation.preFloorAnchor != nullptr ? report.profileDetail.scalarObservation.preFloorAnchor : "none");
+        Serial.print(detection::scalarInspectionAnchorName(report.profileDetail.scalarObservation.preFloorAnchor));
         Serial.print(" evidence.scalar.pre_floor_note=");
-        Serial.print(report.profileDetail.scalarObservation.preFloorNote != nullptr ? report.profileDetail.scalarObservation.preFloorNote : "none");
+        Serial.print(detection::scalarInspectionNoteName(report.profileDetail.scalarObservation.preFloorNote));
         Serial.print(" evidence.scalar.pre_floor_window_ms=");
         Serial.print(report.profileDetail.scalarObservation.preFloorWindowMs);
         Serial.print(" evidence.scalar.pre_floor_value_count=");
@@ -869,11 +871,11 @@ void AnalyzerApp::printSequenceInspect(const AnalyzerReport& report) const {
         Serial.print(" evidence.scalar.pre_floor_trimmed_mean=");
         Serial.print(report.profileDetail.scalarObservation.preFloorTrimmedMean, 1);
         Serial.print(" evidence.scalar.lift_p75=");
-        Serial.print(report.profileDetail.scalarObservation.liftP75, 1);
+        Serial.print(detection::scalarInspectionLiftP75(report.profileDetail.scalarObservation), 1);
         Serial.print(" evidence.scalar.lift_rms=");
-        Serial.print(report.profileDetail.scalarObservation.liftRms, 1);
+        Serial.print(detection::scalarInspectionLiftRms(report.profileDetail.scalarObservation), 1);
         Serial.print(" evidence.scalar.lift_trimmed_mean=");
-        Serial.print(report.profileDetail.scalarObservation.liftTrimmedMean, 1);
+        Serial.print(detection::scalarInspectionLiftTrimmedMean(report.profileDetail.scalarObservation), 1);
         Serial.print(" evidence.scalar.classification=");
         Serial.print(report.profileDetail.scalarObservation.classificationValue, 1);
         Serial.print(" evidence.scalar.peak=");
@@ -893,9 +895,9 @@ void AnalyzerApp::printSequenceInspect(const AnalyzerReport& report) const {
         Serial.print(" evidence.scalar.last=");
         Serial.print(report.profileDetail.scalarObservation.last, 1);
         Serial.print(" evidence.scalar.baseline=");
-        Serial.print(report.profileDetail.scalarObservation.baseline, 1);
+        Serial.print(report.profileDetail.scalarObservation.mean, 1);
         Serial.print(" evidence.scalar.lift=");
-        Serial.print(report.profileDetail.scalarObservation.lift, 1);
+        Serial.print(detection::scalarInspectionLift(report.profileDetail.scalarObservation), 1);
         Serial.print(" evidence.scalar.sustained_ms=");
         Serial.print(report.profileDetail.scalarObservation.sustainedMs);
         Serial.print(" evidence.scalar.sustained_count=");
@@ -1536,7 +1538,7 @@ void AnalyzerApp::printSequenceDiagnostics(const AnalyzerReport& report) const {
     Serial.print(' ');
     printField(kSourceAmpLiftField, report.profileDetail.ampLift, 1);
     Serial.print(' ');
-    printField(kSourceOnsetRejectField, report.profileDetail.scalarObservation.note != nullptr ? report.profileDetail.scalarObservation.note : "none");
+    printField(kSourceOnsetRejectField, detection::scalarInspectionNoteName(report.profileDetail.scalarObservation.note));
     Serial.print(' ');
     printField(kSourceTransientRejectField, report.debug.mainRejectReason != nullptr ? report.debug.mainRejectReason : "none");
     Serial.print(' ');

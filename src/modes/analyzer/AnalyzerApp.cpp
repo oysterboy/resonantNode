@@ -1246,7 +1246,7 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
         report.occurrences.contrast = occurrence.contrast;
         report.occurrences.strength = occurrence.strength;
         report.occurrences.confidence = occurrence.confidence;
-        report.occurrences.mainRejectReason = runtimeInspectedOccurrence->rejected
+        report.occurrences.mainRejectReason = runtimeInspectedOccurrence->decision == detection::OccurrenceDecision::Rejected
             ? occurrenceRejectReasonName(runtimeInspectedOccurrence->rejectReason)
             : "none";
         report.occurrences.rejectReason = report.occurrences.mainRejectReason;
@@ -1278,19 +1278,19 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
         switch (selectedProfile.patternRulesConfig.requiredSupportTarget) {
             case detection::EvidenceTarget::FrequencyScoreStrength:
                 report.inspection.moduleTarget = "frequency_score";
-                report.inspection.moduleStrengthClass = strengthClassName(runtimeInspectedOccurrence->frequencyScoreStrength);
+                report.inspection.moduleStrengthClass = strengthClassName(runtimeInspectedOccurrence->occurrence.frequencyScoreStrength);
                 break;
             case detection::EvidenceTarget::TargetBandStrength:
                 report.inspection.moduleTarget = "target_band";
-                report.inspection.moduleStrengthClass = strengthClassName(runtimeInspectedOccurrence->targetBandStrength);
+                report.inspection.moduleStrengthClass = strengthClassName(runtimeInspectedOccurrence->occurrence.targetBandStrength);
                 break;
             case detection::EvidenceTarget::AmpStrength:
             default:
                 report.inspection.moduleTarget = "amp_strength";
-                report.inspection.moduleStrengthClass = strengthClassName(runtimeInspectedOccurrence->ampStrength);
+                report.inspection.moduleStrengthClass = strengthClassName(runtimeInspectedOccurrence->occurrence.ampStrength);
                 break;
         }
-        report.inspection.mainRejectReason = runtimeInspectedOccurrence->rejected ? occurrenceRejectReasonName(runtimeInspectedOccurrence->rejectReason) : "none";
+        report.inspection.mainRejectReason = runtimeInspectedOccurrence->decision == detection::OccurrenceDecision::Rejected ? occurrenceRejectReasonName(runtimeInspectedOccurrence->rejectReason) : "none";
     } else {
         report.inspection.primaryEvidence = "none";
         report.inspection.moduleTarget = "unknown";
@@ -1372,7 +1372,7 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
     report.debug.pipelineSource = trialHasPipelineEvidence ? "actual_pipeline" : "missing_runtime_pipeline";
     report.debug.pipelineFallback = !trialHasPipelineEvidence;
     report.debug.mainRejectReason = trialHasPipelineEvidence && runtimeInspectedOccurrence != nullptr
-        ? (runtimeInspectedOccurrence->rejected ? occurrenceRejectReasonName(runtimeInspectedOccurrence->rejectReason) : "none")
+        ? (runtimeInspectedOccurrence->decision == detection::OccurrenceDecision::Rejected ? occurrenceRejectReasonName(runtimeInspectedOccurrence->rejectReason) : "none")
         : analyzerReasonName(report.classification.reason);
 
     const bool diagnosticsRequested = _sequenceTest.outputConfig.when != AnalyzerApp::SeqOutputWhen::Off &&

@@ -47,7 +47,7 @@ void FieldStateTracker::observeOccurrence(const Occurrence& occurrence, unsigned
 }
 
 void FieldStateTracker::observeInspectedOccurrence(const InspectedOccurrence& occurrence, unsigned long nowMs) {
-    if (occurrence.accepted) {
+    if (occurrence.decision == OccurrenceDecision::Accepted) {
         _state.lastInspectedOccurrenceMs = nowMs;
         ++_acceptedOccurrenceCountInWindow;
         recompute(nowMs);

@@ -148,6 +148,9 @@ public:
 
     void resetState();
     void resetDiagnostics();
+    void resetDiagnosticsCounters();
+    void resetOccurrenceSources();
+    void resetDetectionState();
     void setDiagnosticsEnabled(bool enabled);
     void captureDiagnostics();
 

@@ -1505,6 +1505,38 @@ void AnalyzerApp::printDetectionParameters() const {
     Serial.print(_frequencyEvidenceTuning.contrastMin, 1);
     Serial.print(" transientDetector=fixed");
     Serial.println();
+
+    const unsigned long sampleRateHz = _audioSource.sampleRateHz() > 0 ? _audioSource.sampleRateHz() : 16000UL;
+    const unsigned long windowSamples = _freqBandStream.windowSizeSamples();
+    const unsigned long computeDecimation = _freqBandStream.computeDecimation();
+    const unsigned long ageSamples = _freqBandStream.evidenceAgeSamples();
+    const float windowMs = sampleRateHz > 0
+        ? (static_cast<float>(windowSamples) * 1000.0f) / static_cast<float>(sampleRateHz)
+        : 0.0f;
+    const float updateStepMs = sampleRateHz > 0
+        ? (static_cast<float>(computeDecimation) * 1000.0f) / static_cast<float>(sampleRateHz)
+        : 0.0f;
+    const float ageMs = sampleRateHz > 0
+        ? (static_cast<float>(ageSamples) * 1000.0f) / static_cast<float>(sampleRateHz)
+        : 0.0f;
+
+    Serial.print("FREQBAND runtime:");
+    Serial.print(" freq.window_samples=");
+    Serial.print(windowSamples);
+    Serial.print(" freq.window_ms=");
+    Serial.print(windowMs, 2);
+    Serial.print(" freq.compute_decimation=");
+    Serial.print(computeDecimation);
+    Serial.print(" freq.update_step_ms=");
+    Serial.print(updateStepMs, 3);
+    Serial.print(" freq.target_hz=");
+    Serial.print(_freqBandStream.targetFrequencyHz());
+    Serial.print(" freq.updated_this_frame=");
+    Serial.print(_freqBandStream.updatedOnLastObserve() ? 1 : 0);
+    Serial.print(" freq.evidence_age_samples=");
+    Serial.print(ageSamples);
+    Serial.print(" freq.evidence_age_ms=");
+    Serial.println(ageMs, 3);
 }
 
 void AnalyzerApp::printTransientAcceptedDebug(unsigned long now, float strength, unsigned long durationMs) const {

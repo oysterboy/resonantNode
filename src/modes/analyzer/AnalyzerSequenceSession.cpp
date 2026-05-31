@@ -404,7 +404,7 @@ void AnalyzerApp::updateSequenceTest(unsigned long now) {
     resetLoopHealthWindow();
     printSequenceTrialHeader(trialNumber);
     if (_sequenceTest.outputConfig.diagnosticsEnabled) {
-        _detection->resetDiagnostics();
+        _detection->resetDiagnosticsCounters();
     }
     _sequenceTest.nextTriggerAtMs = scheduledAtMs + _sequenceTest.periodMs;
 

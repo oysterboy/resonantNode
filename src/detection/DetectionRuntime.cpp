@@ -22,15 +22,16 @@ OccurrenceSource occurrenceSourceForStream(FeatureStreamId stream) {
     }
 }
 
-float selectedScalarValue(const AudioSignalFrame& frame, FeatureStreamId stream, const FeatureHistory& history) {
+float selectedScalarValue(const AudioSignalFrame& frame, const FrequencyFeatureFrame& frequencyEvidence, FeatureStreamId stream) {
     switch (stream) {
         case FeatureStreamId::AmpEnvelope:
             return frame.centeredMagnitude;
         case FeatureStreamId::AmbientFloor:
             return frame.baseline;
         case FeatureStreamId::FrequencyScore:
+            return frequencyEvidence.score;
         case FeatureStreamId::FrequencyContrast:
-            return history.latestValue(stream);
+            return frequencyEvidence.spectralContrast;
         case FeatureStreamId::Unknown:
         default:
             return static_cast<float>(frame.level);
@@ -51,8 +52,25 @@ const char* occurrenceSourceName(OccurrenceSourceKind kind) {
 } // namespace
 
 void DetectionRuntime::resetState() {
+    resetDetectionState();
+    resetDiagnosticsCounters();
+}
+
+void DetectionRuntime::resetDiagnostics() {
+    resetDiagnosticsCounters();
+}
+
+void DetectionRuntime::resetDiagnosticsCounters() {
+    _diagnostics = {};
+}
+
+void DetectionRuntime::resetOccurrenceSources() {
     _frequencyEmitter.reset();
     _scalarEmitter.reset();
+}
+
+void DetectionRuntime::resetDetectionState() {
+    resetOccurrenceSources();
     _occurrenceInspector.reset();
     _patternAssembler.reset();
     _fieldStateTracker.reset();
@@ -62,29 +80,19 @@ void DetectionRuntime::resetState() {
     _resultCount = 0;
     _latestPipelineResult = {};
     _hasLatestPipelineResult = false;
-    resetDiagnostics();
     _lastOccurrence = {};
     _lastInspectedOccurrence = {};
-}
-
-void DetectionRuntime::resetDiagnostics() {
-    _diagnostics = {};
-    _frequencyEmitter.reset();
-    _scalarEmitter.reset();
 }
 
 void DetectionRuntime::setDiagnosticsEnabled(bool enabled) {
     _diagnosticsEnabled = enabled;
     _frequencyEmitter.setDiagnosticsEnabled(enabled);
     _scalarEmitter.setDiagnosticsEnabled(enabled);
-    if (!enabled) {
-        resetDiagnostics();
-    }
 }
 
 void DetectionRuntime::captureDiagnostics() {
     if (!_diagnosticsEnabled) {
-        resetDiagnostics();
+        _diagnostics = {};
         return;
     }
 
@@ -233,8 +241,7 @@ void DetectionRuntime::setScalarTransientConfig(const ScalarTransientConfig& con
 
 void DetectionRuntime::setOccurrenceSource(OccurrenceSourceKind kind) {
     _occurrenceSourceKind = kind;
-    _frequencyEmitter.reset();
-    _scalarEmitter.reset();
+    resetOccurrenceSources();
     _frequencyEmitter.setConfig(_frequencyMatchConfig);
     _scalarEmitter.setConfig(_scalarTransientConfig);
 }
@@ -277,7 +284,7 @@ void DetectionRuntime::observeFrame(
         case OccurrenceSourceKind::ScalarTransient:
             _scalarEmitter.observeFrame(
                 frame,
-                selectedScalarValue(frame, _scalarTransientConfig.observedStream, _featureHistory),
+                selectedScalarValue(frame, frequencyEvidence, _scalarTransientConfig.observedStream),
                 OccurrenceKind::AmpTransient,
                 occurrenceSourceForStream(_scalarTransientConfig.observedStream)
             );

@@ -1,660 +1,370 @@
-# Pass: Wiring / MEMS Dropout Diagnostics
-
-## Context
-
-We are investigating movement-triggered miss streaks in the ResonantNode / Resonanzraum detection path.
-
-Current known fact:
-
-```text
-Strike 1: it is not a full ESP32 reboot.
-```
-
-Therefore, do not focus on brownout / watchdog / reboot as the primary explanation in this pass.
-
-The next diagnostic target is:
-
-```text
-ESP32 stays alive
-  ↓
-Is I2S still returning data?
-  ↓
-Is raw MEMS audio still valid?
-  ↓
-Is frequency evidence still being produced?
-  ↓
-Is the detector rejecting because evidence is absent / weak / too short?
-```
-
-This pass is diagnostic-first. Do not change detection behavior except where explicitly marked as optional recovery handling.
-
----
+# Current Pass - Detection Safety + Deviation Preparation
 
 ## Goal
 
-When a 10–20 second miss streak happens after cable/movement, the logs must classify the failure as one of:
+This pass prepares the detection stack for trustworthy deviation work and prevents debug/runtime mismatches from corrupting measurements.
+
+It does not yet replace the AMP support metric or retune thresholds. It sets up the code so the next deviation pass can measure AMP / FrequencyScore behavior honestly.
+
+## Working Rule
+
+Each item must be implemented, compiled/tested as far as practical, and committed before moving to the next item.
+
+Do not stop after a single successful item. Continue through the full pass list in order.
+
+Recommended commit style:
 
 ```text
-NO_I2S_DATA
-FLATLINE_AUDIO
-INVALID_AUDIO
-LOW_COVERAGE
-STALE_AUDIO
-FREQ_NO_UPDATES
-FREQ_SCORE_LOW
-FREQ_TOO_SHORT
-DETECTOR_REJECTED
-NORMAL_AUDIO_BUT_NO_TONE
+pass: <short item name>
 ```
 
-The Analyzer should stop reporting all of these as generic `miss`.
-
----
-
-## Non-goals
-
-Do not tune thresholds in this pass.
-
-Do not redesign AMP support in this pass.
-
-Do not change Behavior/RB suppression/refractory logic.
-
-Do not treat this as an acoustic-distance / AMP deviation pass.
-
-Do not assume reboot/brownout unless `uptime_ms` proves it.
-
----
-
-## Pass A — Minimal system continuity proof
-
-### Task
-
-Add a lightweight `SYSTEM_HEALTH` diagnostic line.
-
-Print every 500 ms during SEQ / Analyzer runs.
-
-### Fields
+Example:
 
 ```text
-SYSTEM_HEALTH
-t_ms=...
-uptime_ms=...
-boot_count=...
-reset_reason=...
-loop_max_us=...
-free_heap=...
-```
-
-### Requirements
-
-`uptime_ms` must be monotonic during the miss streak.
-
-If `uptime_ms` resets, classify separately as real reboot. But current working assumption is that it does not reset.
-
-### Acceptance
-
-During a movement-triggered miss streak, logs show:
-
-```text
-SYSTEM_HEALTH ... uptime_ms continues increasing
-```
-
-Then full ESP32 reboot is ruled out.
-
----
-
-## Pass B — I2S input health
-
-### Task
-
-Add `AUDIO_IO_HEALTH`.
-
-Print every 500 ms during SEQ / Analyzer runs.
-
-### Fields
-
-```text
-AUDIO_IO_HEALTH
-t_ms=...
-i2s_reads=...
-i2s_bytes_read=...
-processed_samples=...
-expected_samples=...
-processed_ratio=...
-frames_emitted=...
-partial_frames=...
-duplicate_frames=...
-gap_samples=...
-overlap_samples=...
-max_block_age_ms=...
-max_processing_lag_ms=...
-```
-
-### Meaning
-
-If `i2s_bytes_read` drops to zero or near-zero during the dead period:
-
-```text
-audio_state=NO_I2S_DATA
-```
-
-If `processed_ratio` drops badly:
-
-```text
-audio_state=LOW_COVERAGE
-```
-
-If frame invariants break:
-
-```text
-audio_state=INVALID_FRAME_STREAM
-```
-
-### Required invariants
-
-```text
-partial_frames == 0
-duplicate_frames == 0
-unexpected_overlap == 0
-```
-
-If overlap is intentional, log it explicitly as intentional. Otherwise treat as a diagnostic failure.
-
-### Acceptance
-
-During a dead period, we can answer:
-
-```text
-Is I2S still returning bytes? yes/no
-Is the frame stream still valid? yes/no
+pass: split diagnostics reset from detector state
 ```
 
 ---
 
-## Pass C — Raw MEMS audio health
+# Scope
 
-### Task
+## Must complete in this pass
 
-Add raw-audio statistics from the audio frames.
+1. Split diagnostics reset from detector/source reset.
+2. Confirm Node/Analyzer runtime parity with explicit frequency config/status output.
+3. Make scalar source input live-source based.
+4. Preserve fresh-only frequency history and make detector reporting ms-first.
+5. Fix FeatureHistory window statistic semantics if contained/small enough for this pass.
 
-Print every 500 ms during SEQ / Analyzer runs.
+## Out of scope for this pass
 
-### Diagnostic line
+Do not yet:
 
-```text
-RAW_AUDIO_HEALTH
-t_ms=...
-frames=...
-min_sample=...
-max_sample=...
-dc_mean=...
-mean_abs=...
-max_abs=...
-zero_ratio=...
-clip_count=...
-flatline=0|1
-```
-
-### Detection rules
-
-Use conservative thresholds first. The goal is not perfect classification; the goal is visibility.
-
-Suggested states:
-
-```text
-FLATLINE_AUDIO
-- max_abs below tiny threshold for > 250 ms
-
-CLIPPING_AUDIO
-- clip_count above threshold
-
-DC_STUCK_AUDIO
-- dc_mean large and mean_abs very small, or sample range tiny around a non-zero DC value
-
-RAW_AUDIO_OK
-- max_abs / mean_abs plausible and not flatline
-```
-
-### Interpretation
-
-```text
-I2S bytes normal + flatline=1
-→ MEMS output/contact/power/data dropout
-
-I2S bytes normal + clipping/noise burst
-→ cable/contact instability or bad data line
-
-I2S bytes normal + raw audio normal
-→ not a raw MEMS dropout; continue to frequency diagnostics
-```
-
-### Acceptance
-
-During a dead period, we can answer:
-
-```text
-Is the MEMS producing plausible changing audio? yes/no
-```
+- replace `PeakAbsolute` as TonalPulse AMP support truth
+- retune AMP thresholds
+- add Hann-windowed Goertzel
+- add coverage-based FrequencyMatch mode
+- rewrite Analyzer stage reporting fully
+- rename all semantic debt globally unless directly touched
 
 ---
 
-## Pass D — AudioHealthState
+# Item 1 - Split Diagnostics Reset from Detector/Source Reset
 
-### Task
+## Status
 
-Introduce a small diagnostic-only state enum.
+Done.
 
-### Suggested enum
+## Problem
+
+`DetectionRuntime::resetDiagnostics()` currently resets real occurrence sources / emitters. Debug/reporting state must not affect live detection state.
+
+If diagnostics reset can clear live candidates, all later Analyzer/deviation measurements are suspect.
+
+## Required changes
+
+- [x] Split diagnostics counter reset from source/detector state reset.
+- [x] Introduce separate functions with clear names, for example:
 
 ```cpp
-enum class AudioHealthState {
-    OK,
-    NoI2SData,
-    LowCoverage,
-    InvalidFrameStream,
-    FlatlineAudio,
-    DcStuckAudio,
-    ClippingAudio,
-    StaleAudio,
-    Unknown
-};
+resetDiagnosticsCounters();
+resetOccurrenceSources();
+resetDetectionState();
 ```
 
-### Priority order
+- [x] `captureDiagnostics()` must not reset live emitters merely because diagnostics are disabled.
+- [x] Profile switching / explicit runtime reset may reset occurrence sources.
+- [x] Diagnostics-only reset may only clear diagnostic snapshots/counters.
 
-When multiple problems are present, classify in this order:
+## Acceptance checks
 
-```text
-NoI2SData
-InvalidFrameStream
-LowCoverage
-FlatlineAudio
-DcStuckAudio
-ClippingAudio
-StaleAudio
-OK
-Unknown
-```
+- [x] Disabling diagnostics does not reset live source candidates.
+- [x] Calling diagnostics capture while diagnostics are disabled does not alter detection behavior.
+- [x] Existing profile/runtime reset still has a clear path to reset emitters when explicitly intended.
 
-### Diagnostic line
-
-When state changes, print:
+## Commit after item
 
 ```text
-AUDIO_HEALTH_CHANGE
-t_ms=...
-from=...
-to=...
-reason=...
-```
-
-When a bad state recovers, print:
-
-```text
-AUDIO_RECOVERED
-t_ms=...
-previous_state=...
-duration_ms=...
-```
-
-### Acceptance
-
-A 20 second dead period produces a clear start/recovery pair if audio health is abnormal:
-
-```text
-AUDIO_HEALTH_CHANGE ... to=FlatlineAudio
-AUDIO_RECOVERED ... duration_ms=20000
+pass: split diagnostics reset from detector state
 ```
 
 ---
 
-## Pass E — Frequency source health
+# Item 2 - Node/Analyzer Runtime Parity Status
 
-### Task
+## Status
 
-Add `FREQ_HEALTH` to show whether frequency evidence exists during the dead period.
+Done.
 
-Print every 500 ms during SEQ / Analyzer runs.
+## Problem
 
-### Fields
+Analyzer and Node may run different frequency settings. Frequency window / decimation / target must be visible in both paths before comparing behavior or debugging deviation.
+
+## Required changes
+
+- [x] Print or expose the same runtime frequency facts in both Analyzer and Node/RB status/logs:
 
 ```text
-FREQ_HEALTH
-t_ms=...
-target_hz=...
-target_generation=...
-window_samples=...
-window_ms=...
-update_step_ms=...
-fresh_updates=...
-latest_age_ms=...
-score_peak_recent=...
-contrast_peak_recent=...
-score_ok_recent=...
-contrast_ok_recent=...
-matched_ms_recent=...
+freq.window_samples
+freq.window_ms
+freq.compute_decimation
+freq.update_step_ms
+freq.target_hz
 ```
 
-### Interpretation
+- [x] If available, also include:
 
 ```text
-fresh_updates stop
-→ frequency extractor not producing fresh evidence
-
-fresh_updates continue but score_peak_recent low
-→ audio exists, but target frequency is absent / weak / shifted
-
-score_peak_recent ok but matched_ms_recent too short
-→ detector gate / release / min-duration issue
-
-score and contrast ok, but no candidate
-→ detector lifecycle bug or expected-window mismatch
+freq.updated_this_frame
+freq.evidence_age_samples
+freq.evidence_age_ms
 ```
 
-### Acceptance
+## Rules
 
-During a miss streak, we can answer:
+- [x] Do not assume Analyzer config equals Node config.
+- [x] The runtime should make the active values visible.
+- [x] If decimation can be set in Analyzer but not Node, make that difference explicit in status or add a Node-side config path if small.
+
+## Acceptance checks
+
+- [x] Analyzer output shows frequency config.
+- [x] Node/RB status or startup output shows frequency config.
+- [x] It is immediately visible whether both are using the same window and decimation.
+
+## Commit after item
 
 ```text
-Is frequency evidence missing, weak, or too short?
+pass: expose frequency runtime config parity
 ```
 
 ---
 
-## Pass F — FrequencyMatch rejected candidate summary
+# Item 3 - Scalar Source Input Must Use Live Source Values
 
-### Task
+## Status
 
-Carry FrequencyMatch failure reasons out of the source/detector.
+Done.
 
-Do not only report `no candidate`.
+## Problem
 
-### Required reject reasons
+Scalar-on-AMP already uses live frame data, but scalar-on-frequency currently risks reading from `FeatureHistory.latestValue()`. Source detectors should consume live/current source values. Inspectors should consume retrospective FeatureHistory windows.
+
+Correct split:
 
 ```text
-NoFreshFrequencyFrames
-ScoreBelowThreshold
-ContrastBelowThreshold
-TooShort
-ReleasedBeforeMinDuration
-TooLong
-OutsideExpectedWindow
-TargetGenerationChanged
-LowCoverage
-AudioInvalid
-Unknown
+Source path = live stream
+Inspector path = FeatureHistory window
 ```
 
-### Suggested rejected summary
+## Required changes
+
+- [x] Change scalar source selection so it receives both the current `AudioSignalFrame` and the current `FrequencyFeatureFrame`.
+
+Target behavior:
+
+```text
+Scalar source on AmpEnvelope:
+  input = frame.centeredMagnitude
+
+Scalar source on FrequencyScore:
+  input = frequencyFrame.score
+
+Scalar source on FrequencyContrast:
+  input = frequencyFrame.spectralContrast
+
+Scalar source on AmbientFloor:
+  input = frame.baseline
+```
+
+- [x] Do not use `history.latestValue(FrequencyScore)` or `history.latestValue(FrequencyContrast)` as source detector input.
+
+## Held/fresh rule for this pass
+
+- [x] Do not over-refactor freshness gating here.
+
+Allowed for now:
+
+```text
+frequencyFrame may expose held latest score/contrast between fresh updates
+scalar-on-frequency may consume the live frequencyFrame value
+```
+
+Required:
+
+```text
+scalar source input no longer depends on FeatureHistory
+```
+
+Fresh-only FeatureHistory remains for inspectors.
+
+## Optional small cleanup
+
+If easy, add a helper:
 
 ```cpp
-struct FrequencyRejectSummary {
-    bool present = false;
-
-    FrequencyRejectReason reason = FrequencyRejectReason::Unknown;
-
-    uint32_t openMs = 0;
-    uint32_t peakMs = 0;
-    uint32_t closeMs = 0;
-    uint32_t durationMs = 0;
-
-    float scorePeak = 0.0f;
-    float contrastPeak = 0.0f;
-
-    uint32_t matchedMs = 0;
-    uint32_t requiredMs = 0;
-
-    uint16_t freshUpdates = 0;
-    uint16_t scoreOkUpdates = 0;
-    uint16_t contrastOkUpdates = 0;
-    uint16_t matchedUpdates = 0;
-};
+bool isFrequencyDerivedStream(FeatureStreamId stream);
 ```
 
-### Acceptance
+Do not rename `AmpTransient` globally in this item unless trivial. That is later cleanup.
 
-A failed expected event can distinguish:
+## Acceptance checks
+
+- [x] Scalar-on-AMP still uses `frame.centeredMagnitude`.
+- [x] Scalar-on-frequency uses `frequencyFrame.score` / `frequencyFrame.spectralContrast` directly.
+- [x] FeatureHistory is not used to provide scalar source input.
+- [x] Inspectors still use FeatureHistory windows.
+
+## Commit after item
 
 ```text
-no frequency data
-score low
-contrast low
-too short
-audio invalid
+pass: make scalar source input live-source based
 ```
 
 ---
 
-## Pass G — Carry health + reject reason into SEQ_INSPECT
+# Item 4 - Preserve Fresh-only Frequency History + Make Detector Reporting ms-first
 
-### Task
+## Status
 
-Update `SEQ_INSPECT` so each trial includes source failure class, audio state, and frequency reject reason.
+Done.
 
-### Example: raw audio dropout
+## Problem
+
+Fresh-only FeatureHistory appears to be the right model. The detector may still consume held live values, which is acceptable while decisions are wall-time based. The risk is mostly reporting/interpretation: counts must not be presented as independent evidence.
+
+## Required changes
+
+- [x] Confirm and preserve:
 
 ```text
-SEQ_INSPECT
-trial=42
-result=miss
-source=freq
-candidate=none
-audio_state=FlatlineAudio
-source_failure=audio_invalid
-freq_reject=AudioInvalid
-reason=no_frequency_candidate_because_audio_invalid
+FrequencyFeatureFrame has updatedThisFrame / freshness marker.
+FeatureHistory records FrequencyScore / FrequencyContrast only when updatedThisFrame is true.
+Inspector windows over frequency streams therefore use fresh frequency bins only.
 ```
 
-### Example: frequency evidence too short
+- [x] Adjust diagnostics/reporting where practical:
 
 ```text
-SEQ_INSPECT
-trial=43
-result=miss
-source=freq
-candidate=rejected
-audio_state=OK
-source_failure=freq_too_short
-freq_reject=TooShort
-score_peak=...
-contrast_peak=...
-matched_ms=18
-required_ms=30
-reason=frequency_match_too_short
+candidate.duration_ms = primary timing truth
+release_gap_ms = primary release truth
+matched_span_ms = preferred over raw frame/window counts
 ```
 
-### Example: normal audio, no target tone
+- [x] Counts may remain, but label them honestly:
 
 ```text
-SEQ_INSPECT
-trial=44
-result=miss
-source=freq
-candidate=none
-audio_state=OK
-source_failure=no_target_frequency
-freq_reject=ScoreBelowThreshold
-score_peak=...
-contrast_peak=...
-reason=score_below_threshold
+observed_calls
+matched_calls
+score_ok_calls
+contrast_ok_calls
 ```
 
-### Acceptance
-
-Generic miss output is no longer acceptable for these cases:
+- [x] Avoid implying:
 
 ```text
-audio invalid
-frequency score absent
-frequency score weak
-frequency match too short
+independent windows
+independent evidence frames
+```
+
+## Acceptance checks
+
+- [x] Frequency history is still fresh-only.
+- [x] Detector acceptance remains ms-based.
+- [x] Any printed count fields are clearly secondary and not named as independent evidence if they include held calls.
+- [x] No behavior retuning in this item.
+
+## Commit after item
+
+```text
+pass: keep frequency history fresh and detector reports ms-first
 ```
 
 ---
 
-## Pass H — Optional recovery behavior
+# Item 5 - Fix FeatureHistory Window Statistic Semantics
 
-Only after diagnostics prove a real stuck I2S / MEMS stream.
+## Status
 
-### Optional behavior
+Done.
 
-If bad audio state persists for more than a threshold:
+## Problem
+
+Some FeatureHistory/ScalarWindow fields currently sound physically meaningful but are ambiguous or misleading.
+
+Known issue:
 
 ```text
-NoI2SData > 1000 ms
-FlatlineAudio > 2000 ms
-InvalidFrameStream > 1000 ms
+coverageRatio = valueCount / bucketCount
 ```
 
-then log:
+This is not true time coverage. For AMP, many values may land in one millisecond bucket, so this can exceed 1 or behave like values-per-bucket.
+
+## Required changes
+
+- [x] Split window statistics into explicit fields:
 
 ```text
-AUDIO_RECOVERY_ATTEMPT
-state=...
-action=flush_i2s
+valueCount        // number of recorded values
+bucketCount       // number of ms bins with data
+valuesPerBucket   // density, if useful
+coveredMs         // number of represented ms bins or covered time
+coverageRatio     // coveredMs / requestedWindowMs
 ```
 
-Possible recovery actions:
+- [x] Avoid using `freshValueCount` generically for AMP. AMP density and frequency freshness are different concepts.
+
+- [x] If a full rename is too large, add new fields and leave old fields as deprecated/compat for now.
+
+## Rules
+
+- [x] Inspector windows remain time-window based.
+- [x] AMP and frequency can share the same outer window shape.
+- [x] Frequency-specific freshness remains represented by fresh-only recording and/or frequency-specific diagnostics.
+
+## Acceptance checks
+
+- [x] `coverageRatio` means time coverage, not value density.
+- [x] AMP windows can report both dense value count and time coverage.
+- [x] Frequency windows can report fresh-bin coverage without pretending to have AMP-like density.
+- [x] Existing inspector logic still compiles and produces equivalent decisions unless explicitly changed.
+
+## Commit after item
 
 ```text
-flush I2S DMA buffers
-reset internal frame assembler
-clear stale feature buffers
-optionally reinitialize I2S driver
-```
-
-### Important
-
-Recovery must be explicitly logged.
-
-Do not hide recovery inside normal detection.
-
-Do not reset detector state silently in a way that makes Analyzer truth ambiguous.
-
-### Acceptance
-
-If recovery is implemented, logs show:
-
-```text
-AUDIO_HEALTH_CHANGE
-AUDIO_RECOVERY_ATTEMPT
-AUDIO_RECOVERED
-```
-
----
-
-## Pass I — Test protocol
-
-### Test 1: stable no-touch run
-
-Goal:
-
-```text
-Baseline health logs under stable conditions.
-```
-
-Expected:
-
-```text
-AudioHealthState=OK
-processed_ratio near 1.0
-partial_frames=0
-duplicate_frames=0
-raw audio not flat
-freq fresh updates present
-normal candidate acceptance
-```
-
-### Test 2: gentle cable movement
-
-Goal:
-
-```text
-Trigger the known miss streak.
-```
-
-Record:
-
-```text
-Does I2S byte count continue?
-Does raw audio flatline or clip?
-Do frequency updates continue?
-What reject reason appears?
-Does AudioHealthState recover?
-```
-
-### Test 3: intentional mic occlusion / acoustic weakening
-
-Goal:
-
-```text
-Differentiate acoustic weak signal from wiring dropout.
-```
-
-Expected:
-
-```text
-audio_state=OK
-raw audio still plausible
-freq score low or matched_ms too short
-not NoI2SData / FlatlineAudio
-```
-
-### Test 4: unplug / disturb MEMS line if safe
-
-Goal:
-
-```text
-Capture known bad electrical signature.
-```
-
-Expected:
-
-```text
-NoI2SData or FlatlineAudio or ClippingAudio
-```
-
-Use only if safe for hardware.
-
----
-
-## Success criteria
-
-This pass succeeds when one movement-triggered 10–20 second miss streak can be classified as one of:
-
-```text
-NoI2SData
-FlatlineAudio
-DcStuckAudio
-ClippingAudio
-LowCoverage
-FreqNoUpdates
-ScoreLow
-TooShort
-```
-
-And the trial output says why:
-
-```text
-not generic miss
-not behavior suppression
-not reboot
+pass: clarify feature history window statistics
 ```
 
 ---
 
-## Final architecture implication
+# End-of-pass checks
 
-The detection chain should expose physical/wiring failures as input health states:
+After all items are complete, run a short sanity test and inspect output for:
 
 ```text
-I2S / MEMS / Raw Audio Health
-  ↓
-Frequency Evidence Health
-  ↓
-FrequencyMatch Detector Reject Reason
-  ↓
-SEQ_INSPECT Failure Class
+- diagnostics reset does not affect detection
+- Analyzer and Node show same frequency config values where expected
+- scalar-on-frequency source input no longer uses FeatureHistory.latestValue
+- frequency FeatureHistory remains fresh-only
+- detector outputs prioritize ms timing
+- FeatureHistory window stats have clear semantics
 ```
 
-Software should not pretend wiring dropouts are acoustic misses.
+Do not start AMP support replacement until this pass is done.
+
+## Status
+
+All current-pass items are checked off in the doc. Remaining work, if any, belongs in the next pass preview or in follow-up cleanup commits.
+
+---
+
+# Next Pass Preview - Signal Deviation Measurement
+
+After this current pass, the next pass should focus on improving signal deviation measurement:
+
+```text
+1. Add AMP robust metrics: peak, mean, RMS, median, p75, p90, trimmed_mean.
+2. Add AMP pre_event_floor and event_lift metrics.
+3. Run controlled deviation comparisons.
+4. Replace PeakAbsolute only after data proves the better support metric.
+```

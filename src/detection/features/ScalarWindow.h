@@ -21,8 +21,11 @@ struct ScalarWindow {
     unsigned long endMs = 0;
     unsigned long durationMs = 0;
     size_t sampleCount = 0;
+    size_t valueCount = 0;
     size_t freshValueCount = 0;
     size_t bucketCount = 0;
+    float valuesPerBucket = 0.0f;
+    unsigned long coveredMs = 0;
     float coverageRatio = 0.0f;
     unsigned long firstValueMs = 0;
     unsigned long lastValueMs = 0;

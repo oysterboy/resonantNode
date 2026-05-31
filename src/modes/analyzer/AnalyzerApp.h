@@ -252,6 +252,13 @@ private:
             float audioRms = 0.0f;
             const char* audioHealth = "unknown";
 
+            uint16_t rawFrames = 0;
+            int16_t rawMin = 0;
+            int16_t rawMax = 0;
+            int32_t rawSum = 0;
+            uint32_t rawAbsSum = 0;
+            uint16_t rawMaxAbs = 0;
+
             unsigned long duplicatePatternMs = 0;
             float duplicatePatternStrength = 0.0f;
             unsigned long duplicatePatternDurationMs = 0;

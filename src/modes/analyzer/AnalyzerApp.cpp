@@ -1336,62 +1336,54 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
     report.profileDetail.ampLevel = report.profileDetail.ampCenteredMagnitude;
     report.profileDetail.ampBase = diagnostics.acceptedAmbientBaseline;
     report.profileDetail.ampLift = report.profileDetail.ampCenteredMagnitude - report.profileDetail.ampBase;
-    report.profileDetail.scalarObservationCount = trialHasPipelineEvidence && runtimeInspectedOccurrence != nullptr
-        ? runtimeInspectedOccurrence->scalarObservationCount
-        : 0U;
-    for (size_t i = 0; i < report.profileDetail.scalarObservationCount; ++i) {
-        report.profileDetail.scalarObservations[i] = runtimeInspectedOccurrence->scalarObservations[i];
-    }
-
-    const detection::ScalarInspectionObservation* ampStrengthObservation = nullptr;
+    const detection::ScalarInspectionObservation* selectedScalarObservationPtr = nullptr;
     if (trialHasPipelineEvidence && runtimeInspectedOccurrence != nullptr) {
         for (size_t i = 0; i < runtimeInspectedOccurrence->scalarObservationCount; ++i) {
             const detection::ScalarInspectionObservation& observation = runtimeInspectedOccurrence->scalarObservations[i];
             if (observation.stream == detection::FeatureStreamId::AmpEnvelope) {
-                ampStrengthObservation = &observation;
+                selectedScalarObservationPtr = &observation;
                 break;
             }
-            if (ampStrengthObservation == nullptr) {
-                ampStrengthObservation = &observation;
+            if (selectedScalarObservationPtr == nullptr) {
+                selectedScalarObservationPtr = &observation;
             }
         }
     }
 
     const detection::ScalarInspectionObservation emptyScalarObservation{};
-    const detection::ScalarInspectionObservation& selectedScalarObservation = ampStrengthObservation != nullptr
-        ? *ampStrengthObservation
+    const detection::ScalarInspectionObservation& selectedScalarObservation = selectedScalarObservationPtr != nullptr
+        ? *selectedScalarObservationPtr
         : emptyScalarObservation;
-    report.profileDetail.ampStrengthObservation.available = selectedScalarObservation.available;
-    report.profileDetail.ampStrengthObservation.observedOnly = selectedScalarObservation.observedOnly;
-    report.profileDetail.ampStrengthObservation.mode = detection::scalarInspectionModeName(selectedScalarObservation.mode);
-    report.profileDetail.ampStrengthObservation.note = selectedScalarObservation.note != nullptr
+    report.profileDetail.scalarObservation.available = selectedScalarObservation.available;
+    report.profileDetail.scalarObservation.observedOnly = selectedScalarObservation.observedOnly;
+    report.profileDetail.scalarObservation.mode = selectedScalarObservation.mode;
+    report.profileDetail.scalarObservation.note = selectedScalarObservation.note != nullptr
         ? selectedScalarObservation.note
         : "none";
-    report.profileDetail.ampStrengthObservation.windowStartMs = selectedScalarObservation.windowStartMs;
-    report.profileDetail.ampStrengthObservation.windowEndMs = selectedScalarObservation.windowEndMs;
-    report.profileDetail.ampStrengthObservation.windowMs = selectedScalarObservation.windowMs;
-    report.profileDetail.ampStrengthObservation.valueCount = selectedScalarObservation.valueCount;
-    report.profileDetail.ampStrengthObservation.bucketCount = selectedScalarObservation.bucketCount;
-    report.profileDetail.ampStrengthObservation.coveredMs = selectedScalarObservation.coveredMs;
-    report.profileDetail.ampStrengthObservation.valuesPerBucket = selectedScalarObservation.valuesPerBucket;
-    report.profileDetail.ampStrengthObservation.coverageRatio = selectedScalarObservation.coverageRatio;
-    report.profileDetail.ampStrengthObservation.classificationValue = selectedScalarObservation.classificationValue;
-    report.profileDetail.ampStrengthObservation.centeredMagnitude = selectedScalarObservation.peak;
-    report.profileDetail.ampStrengthObservation.peak = selectedScalarObservation.peak;
-    report.profileDetail.ampStrengthObservation.mean = selectedScalarObservation.mean;
-    report.profileDetail.ampStrengthObservation.rms = selectedScalarObservation.rms;
-    report.profileDetail.ampStrengthObservation.median = selectedScalarObservation.median;
-    report.profileDetail.ampStrengthObservation.p75 = selectedScalarObservation.p75;
-    report.profileDetail.ampStrengthObservation.p90 = selectedScalarObservation.p90;
-    report.profileDetail.ampStrengthObservation.trimmedMean = selectedScalarObservation.trimmedMean;
-    report.profileDetail.ampStrengthObservation.last = selectedScalarObservation.last;
-    report.profileDetail.ampStrengthObservation.baseline = selectedScalarObservation.baseline;
-    report.profileDetail.ampStrengthObservation.lift = selectedScalarObservation.lift;
-    report.profileDetail.ampStrengthObservation.sampleCount = selectedScalarObservation.sampleCount;
-    report.profileDetail.ampStrengthObservation.sustainedCount = selectedScalarObservation.sustainedCount;
-    report.profileDetail.ampStrengthObservation.sustainedMs = selectedScalarObservation.sustainedMs;
-    report.profileDetail.ampStrengthObservation.sustainedThreshold = selectedScalarObservation.sustainedThreshold;
-    report.profileDetail.ampStrengthObservation.strength = strengthClassName(selectedScalarObservation.strength);
+    report.profileDetail.scalarObservation.windowStartMs = selectedScalarObservation.windowStartMs;
+    report.profileDetail.scalarObservation.windowEndMs = selectedScalarObservation.windowEndMs;
+    report.profileDetail.scalarObservation.windowMs = selectedScalarObservation.windowMs;
+    report.profileDetail.scalarObservation.valueCount = selectedScalarObservation.valueCount;
+    report.profileDetail.scalarObservation.bucketCount = selectedScalarObservation.bucketCount;
+    report.profileDetail.scalarObservation.coveredMs = selectedScalarObservation.coveredMs;
+    report.profileDetail.scalarObservation.valuesPerBucket = selectedScalarObservation.valuesPerBucket;
+    report.profileDetail.scalarObservation.coverageRatio = selectedScalarObservation.coverageRatio;
+    report.profileDetail.scalarObservation.classificationValue = selectedScalarObservation.classificationValue;
+    report.profileDetail.scalarObservation.peak = selectedScalarObservation.peak;
+    report.profileDetail.scalarObservation.mean = selectedScalarObservation.mean;
+    report.profileDetail.scalarObservation.rms = selectedScalarObservation.rms;
+    report.profileDetail.scalarObservation.median = selectedScalarObservation.median;
+    report.profileDetail.scalarObservation.p75 = selectedScalarObservation.p75;
+    report.profileDetail.scalarObservation.p90 = selectedScalarObservation.p90;
+    report.profileDetail.scalarObservation.trimmedMean = selectedScalarObservation.trimmedMean;
+    report.profileDetail.scalarObservation.last = selectedScalarObservation.last;
+    report.profileDetail.scalarObservation.baseline = selectedScalarObservation.baseline;
+    report.profileDetail.scalarObservation.lift = selectedScalarObservation.lift;
+    report.profileDetail.scalarObservation.sampleCount = selectedScalarObservation.sampleCount;
+    report.profileDetail.scalarObservation.sustainedCount = selectedScalarObservation.sustainedCount;
+    report.profileDetail.scalarObservation.sustainedMs = selectedScalarObservation.sustainedMs;
+    report.profileDetail.scalarObservation.sustainedThreshold = selectedScalarObservation.sustainedThreshold;
+    report.profileDetail.scalarObservation.strength = selectedScalarObservation.strength;
 
     report.debug.occurrences = diagnostics.rawCandidateCount;
     report.debug.inspected = diagnostics.rawCandidateCount;

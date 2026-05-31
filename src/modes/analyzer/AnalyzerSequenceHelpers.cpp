@@ -435,8 +435,6 @@ void AnalyzerApp::handleSequenceCandidate(const detection::PatternResult& patter
             diagnostics.duplicatePatternReleaseSample = candidate.releaseSample;
             diagnostics.duplicatePatternPeakMs = candidate.startMs + peakOffsetMs;
             diagnostics.duplicatePatternReleaseMs = candidate.startMs + candidate.durationMs;
-            diagnostics.duplicateFrequencyFrame = patternResult.freq;
-            diagnostics.duplicateFrequencyFrameFull = patternResult.freqFull;
             diagnostics.duplicateFrequencyProcessedAtMs = patternResult.processedAtMs;
             diagnostics.duplicateDeltaFromPrimaryMs = diagnostics.patternAccepted
                 ? static_cast<long>(onsetMs) - static_cast<long>(diagnostics.acceptedPatternMs)
@@ -465,8 +463,6 @@ void AnalyzerApp::handleSequenceCandidate(const detection::PatternResult& patter
     _sequenceTest.currentTrialDiagnostics.acceptedPatternPeakMs = candidate.startMs + peakOffsetMs;
     _sequenceTest.currentTrialDiagnostics.acceptedPatternReleaseMs = candidate.startMs + candidate.durationMs;
     _sequenceTest.currentTrialDiagnostics.acceptedAmbientBaseline = candidate.ambientBaseline;
-    _sequenceTest.currentTrialDiagnostics.acceptedFrequencyFrame = patternResult.freq;
-    _sequenceTest.currentTrialDiagnostics.acceptedFrequencyFrameFull = patternResult.freqFull;
     _sequenceTest.currentTrialDiagnostics.acceptedFrequencyProcessedAtMs = patternResult.processedAtMs;
     _sequenceTest.currentTrialDiagnostics.lastRejectStrength = 0.0f;
     _sequenceTest.currentTrialDiagnostics.lastRejectDurationMs = 0;

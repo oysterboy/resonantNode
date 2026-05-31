@@ -51,9 +51,17 @@ Out of scope for this pass:
 
 # Item 5 — Add AMP robust metric reporting
 
+## Status
+
+done
+
 ## Goal
 
-Expose robust AMP statistics for the same inspected AMP window that currently feeds `PeakAbsolute` support.
+Expose robust scalar-window statistics for the inspected window that currently feeds `PeakAbsolute` support.
+
+Note:
+
+- This applies to the generic scalar-window inspection path, not AMP-only.
 
 Current suspected issue:
 
@@ -105,11 +113,11 @@ amp.trimmed_mean
 
 ## Acceptance checks
 
-- Build succeeds.
-- Existing detection behavior is unchanged.
-- SEQ_INSPECT or equivalent AMP inspection output prints old and new AMP metrics.
-- PeakAbsolute is still printed for comparison.
-- No new metric is used for support acceptance yet.
+- [x] Build succeeds.
+- [x] Existing detection behavior is unchanged.
+- [x] SEQ_INSPECT or equivalent scalar inspection output prints old and new metrics.
+- [x] PeakAbsolute is still printed for comparison.
+- [x] No new metric is used for support acceptance yet.
 
 ## Commit
 

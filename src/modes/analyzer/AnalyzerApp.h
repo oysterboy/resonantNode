@@ -231,8 +231,6 @@ private:
             uint64_t acceptedPatternReleaseSample = 0;
             unsigned long acceptedPatternPeakMs = 0;
             unsigned long acceptedPatternReleaseMs = 0;
-            FrequencyFeatureFrame acceptedFrequencyFrame = {};
-            FrequencyFeatureFrame acceptedFrequencyFrameFull = {};
             unsigned long acceptedFrequencyProcessedAtMs = 0;
             detection::PatternResult runtimePatternResult = {};
             detection::FieldState runtimeFieldState = {};
@@ -267,8 +265,6 @@ private:
             uint64_t duplicatePatternReleaseSample = 0;
             unsigned long duplicatePatternPeakMs = 0;
             unsigned long duplicatePatternReleaseMs = 0;
-            FrequencyFeatureFrame duplicateFrequencyFrame = {};
-            FrequencyFeatureFrame duplicateFrequencyFrameFull = {};
             unsigned long duplicateFrequencyProcessedAtMs = 0;
             long duplicateDeltaFromPrimaryMs = 0;
             bool duplicateOriginWindow = false;

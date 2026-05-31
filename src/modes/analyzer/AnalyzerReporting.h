@@ -230,42 +230,6 @@ struct AnalyzerClassification {
     long dtMs = -1;
 };
 
-struct AnalyzerAmpStrengthObservation {
-    bool available = false;
-    bool observedOnly = true;
-    const char* supportBasis = "centered_magnitude_peak";
-    const char* mode = "peak_absolute";
-    const char* note = "none";
-
-    int16_t windowStartMs = -20;
-    int16_t windowEndMs = 120;
-    unsigned long windowMs = 0;
-    size_t valueCount = 0;
-    size_t bucketCount = 0;
-    size_t coveredMs = 0;
-    float valuesPerBucket = 0.0f;
-    float coverageRatio = 0.0f;
-
-    float classificationValue = 0.0f;
-    float centeredMagnitude = 0.0f;
-    float peak = 0.0f;
-    float mean = 0.0f;
-    float rms = 0.0f;
-    float median = 0.0f;
-    float p75 = 0.0f;
-    float p90 = 0.0f;
-    float trimmedMean = 0.0f;
-    float last = 0.0f;
-    float baseline = 0.0f;
-    float lift = 0.0f;
-    size_t sampleCount = 0;
-    size_t sustainedCount = 0;
-    unsigned long sustainedMs = 0;
-    float sustainedThreshold = 0.0f;
-
-    const char* strength = "unknown";
-};
-
 struct AnalyzerProfileDetail {
     const char* namespaceName = "none";
     const char* summary = "";
@@ -279,8 +243,7 @@ struct AnalyzerProfileDetail {
     const char* ampStrength = "unknown";
     const char* ampStrengthMin = "medium";
     bool requireSupportForAcceptance = true;
-    size_t scalarObservationCount = 0;
-    detection::ScalarInspectionObservation scalarObservations[detection::kMaxInspectionModules] = {};
+    detection::ScalarInspectionObservation scalarObservation = {};
 
     float freqScore = 0.0f;
     float freqContrast = 0.0f;
@@ -291,7 +254,6 @@ struct AnalyzerProfileDetail {
     float ampLevel = 0.0f;
     float ampBase = 0.0f;
     float ampLift = 0.0f;
-    AnalyzerAmpStrengthObservation ampStrengthObservation;
 };
 
 struct AnalyzerDebugSummary {

@@ -174,7 +174,7 @@ private:
     };
 
     struct SequenceTest {
-        static constexpr size_t kMaxTrialCandidates = 16;
+        static constexpr size_t kMaxTrialCandidates = 12;
         static constexpr size_t kMaxDuplicateDts = 8;
         enum class CandidateOrigin {
             PreWindow,

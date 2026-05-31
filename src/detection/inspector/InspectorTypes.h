@@ -118,12 +118,31 @@ struct ScalarInspectionObservation {
 
     int16_t windowStartMs = -20;
     int16_t windowEndMs = 120;
+    const char* anchor = "peak";
     unsigned long windowMs = 0;
     size_t valueCount = 0;
     size_t bucketCount = 0;
     size_t coveredMs = 0;
     float valuesPerBucket = 0.0f;
     float coverageRatio = 0.0f;
+
+    bool preFloorAvailable = false;
+    const char* preFloorAnchor = "peak";
+    const char* preFloorNote = "none";
+    int16_t preFloorWindowStartMs = -250;
+    int16_t preFloorWindowEndMs = -50;
+    unsigned long preFloorWindowMs = 0;
+    size_t preFloorValueCount = 0;
+    size_t preFloorBucketCount = 0;
+    size_t preFloorCoveredMs = 0;
+    float preFloorCoverageRatio = 0.0f;
+    float preFloorMedian = 0.0f;
+    float preFloorP75 = 0.0f;
+    float preFloorRms = 0.0f;
+    float preFloorTrimmedMean = 0.0f;
+    float liftP75 = 0.0f;
+    float liftRms = 0.0f;
+    float liftTrimmedMean = 0.0f;
 
     float peak = 0.0f;
     float mean = 0.0f;

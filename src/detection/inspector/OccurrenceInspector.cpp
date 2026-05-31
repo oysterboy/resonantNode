@@ -14,6 +14,8 @@ void fillScalarObservation(
     detection::ScalarInspectionObservation& obs,
     const detection::Occurrence& candidate,
     const detection::ScalarWindow& scalarWindow,
+    const detection::ScalarWindow& preFloorWindow,
+    const char* preFloorAnchor,
     bool available,
     const detection::ScalarFeatureInspectionConfig& config
 ) {
@@ -73,6 +75,21 @@ void fillScalarObservation(
         lift = classificationValue - mean;
     }
 
+    const bool preferPeakAnchor = config.mode == detection::ScalarInspectionMode::PeakCentered ||
+        config.mode == detection::ScalarInspectionMode::PeakCenteredLift;
+    const char* eventAnchorName = preferPeakAnchor
+        ? (candidate.peakMs != 0
+            ? "peak"
+            : (candidate.startMs != 0
+                ? "start"
+                : (candidate.releaseMs != 0 ? "release" : "fallback")))
+        : (candidate.startMs != 0
+            ? "start"
+            : (candidate.releaseMs != 0
+                ? "release"
+                : (candidate.peakMs != 0 ? "peak" : "fallback")));
+    const char* preFloorAnchorName = preFloorAnchor != nullptr ? preFloorAnchor : "none";
+
     obs.available = available;
     obs.observedOnly = true;
     obs.stream = scalarWindow.stream;
@@ -81,12 +98,30 @@ void fillScalarObservation(
     obs.note = available ? "scalar_observed" : "scalar_unavailable";
     obs.windowStartMs = static_cast<int16_t>(-static_cast<int32_t>(config.windowPreMs));
     obs.windowEndMs = static_cast<int16_t>(config.windowPostMs);
+    obs.anchor = eventAnchorName;
     obs.windowMs = scalarWindow.durationMs;
     obs.valueCount = scalarWindow.valueCount;
     obs.bucketCount = scalarWindow.bucketCount;
     obs.coveredMs = scalarWindow.coveredMs;
     obs.valuesPerBucket = scalarWindow.valuesPerBucket;
     obs.coverageRatio = scalarWindow.coverageRatio;
+    obs.preFloorAvailable = preFloorWindow.valid;
+    obs.preFloorAnchor = preFloorAnchorName;
+    obs.preFloorNote = preFloorWindow.valid ? "pre_floor_observed" : "pre_floor_unavailable";
+    obs.preFloorWindowStartMs = static_cast<int16_t>(-250);
+    obs.preFloorWindowEndMs = static_cast<int16_t>(-50);
+    obs.preFloorWindowMs = preFloorWindow.durationMs;
+    obs.preFloorValueCount = preFloorWindow.valueCount;
+    obs.preFloorBucketCount = preFloorWindow.bucketCount;
+    obs.preFloorCoveredMs = preFloorWindow.coveredMs;
+    obs.preFloorCoverageRatio = preFloorWindow.coverageRatio;
+    obs.preFloorMedian = preFloorWindow.median;
+    obs.preFloorP75 = preFloorWindow.p75;
+    obs.preFloorRms = preFloorWindow.rms;
+    obs.preFloorTrimmedMean = preFloorWindow.trimmedMean;
+    obs.liftP75 = preFloorWindow.valid ? (scalarWindow.p75 - preFloorWindow.median) : 0.0f;
+    obs.liftRms = preFloorWindow.valid ? (scalarWindow.rms - preFloorWindow.rms) : 0.0f;
+    obs.liftTrimmedMean = preFloorWindow.valid ? (scalarWindow.trimmedMean - preFloorWindow.median) : 0.0f;
     obs.peak = peak;
     obs.mean = mean;
     obs.rms = scalarWindow.rms;
@@ -160,18 +195,32 @@ void OccurrenceInspector::annotateAmpStrength(
         : (candidate.endMs != 0
             ? candidate.endMs + config.windowPostMs
             : (candidate.releaseMs != 0 ? candidate.releaseMs + config.windowPostMs : candidate.peakMs + config.windowPostMs));
+    const unsigned long preFloorAnchorMs = candidate.peakMs != 0
+        ? candidate.peakMs
+        : (candidate.startMs != 0
+            ? candidate.startMs
+            : (candidate.releaseMs != 0 ? candidate.releaseMs : candidate.endMs));
+    const char* preFloorAnchorName = candidate.peakMs != 0
+        ? "peak"
+        : (candidate.startMs != 0
+            ? "start"
+            : (candidate.releaseMs != 0 ? "release" : "fallback"));
+    const unsigned long preFloorStartMs = preFloorAnchorMs > 250UL ? preFloorAnchorMs - 250UL : 0UL;
+    const unsigned long preFloorEndMs = preFloorAnchorMs > 50UL ? preFloorAnchorMs - 50UL : 0UL;
     ScalarInspectionObservation observation = {};
     observation.stream = config.stream;
     observation.mode = config.mode;
     observation.supportBasis = "centered_magnitude_peak";
     observation.note = "window_unavailable";
+    ScalarWindow preFloorWindow = {};
     if (config.enabled && featureHistory != nullptr) {
         const float sustainedThreshold = config.mode == detection::ScalarInspectionMode::SustainedAboveThreshold
             ? config.strength.weakPeakThreshold
             : 0.0f;
         const ScalarWindow scalarWindow = featureHistory->getWindow(config.stream, startMs, endMs, sustainedThreshold);
+        preFloorWindow = featureHistory->getWindow(config.stream, preFloorStartMs, preFloorEndMs, 0.0f);
         if (scalarWindow.valid) {
-            fillScalarObservation(observation, candidate, scalarWindow, true, config);
+            fillScalarObservation(observation, candidate, scalarWindow, preFloorWindow, preFloorAnchorName, true, config);
         } else {
             observation.note = "window_invalid";
         }

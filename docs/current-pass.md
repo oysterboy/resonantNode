@@ -133,9 +133,13 @@ Add AMP robust window metrics for inspection diagnostics
 
 # Item 6 — Add AMP pre_event_floor and event_lift metrics
 
+## Status
+
+done
+
 ## Goal
 
-Add local acoustic floor comparison for AMP support analysis.
+Add local acoustic floor comparison for scalar-window support analysis.
 
 Important distinction:
 
@@ -194,10 +198,10 @@ amp.pre_floor_value_count
 
 ## Acceptance checks
 
-- Build succeeds.
-- SEQ_INSPECT shows event-window metrics and pre-event-floor metrics.
-- Existing support acceptance still uses the old mode unless explicitly configured otherwise.
-- Missing/low-coverage pre-event floor is reported clearly, not silently treated as zero.
+- [x] Build succeeds.
+- [x] SEQ_INSPECT shows event-window metrics and pre-event-floor metrics.
+- [x] Existing support acceptance still uses the old mode unless explicitly configured otherwise.
+- [x] Missing/low-coverage pre-event floor is reported clearly, not silently treated as zero.
 
 ## Commit
 

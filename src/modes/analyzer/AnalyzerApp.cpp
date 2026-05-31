@@ -1354,36 +1354,7 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
     const detection::ScalarInspectionObservation& selectedScalarObservation = selectedScalarObservationPtr != nullptr
         ? *selectedScalarObservationPtr
         : emptyScalarObservation;
-    report.profileDetail.scalarObservation.available = selectedScalarObservation.available;
-    report.profileDetail.scalarObservation.observedOnly = selectedScalarObservation.observedOnly;
-    report.profileDetail.scalarObservation.mode = selectedScalarObservation.mode;
-    report.profileDetail.scalarObservation.note = selectedScalarObservation.note != nullptr
-        ? selectedScalarObservation.note
-        : "none";
-    report.profileDetail.scalarObservation.windowStartMs = selectedScalarObservation.windowStartMs;
-    report.profileDetail.scalarObservation.windowEndMs = selectedScalarObservation.windowEndMs;
-    report.profileDetail.scalarObservation.windowMs = selectedScalarObservation.windowMs;
-    report.profileDetail.scalarObservation.valueCount = selectedScalarObservation.valueCount;
-    report.profileDetail.scalarObservation.bucketCount = selectedScalarObservation.bucketCount;
-    report.profileDetail.scalarObservation.coveredMs = selectedScalarObservation.coveredMs;
-    report.profileDetail.scalarObservation.valuesPerBucket = selectedScalarObservation.valuesPerBucket;
-    report.profileDetail.scalarObservation.coverageRatio = selectedScalarObservation.coverageRatio;
-    report.profileDetail.scalarObservation.classificationValue = selectedScalarObservation.classificationValue;
-    report.profileDetail.scalarObservation.peak = selectedScalarObservation.peak;
-    report.profileDetail.scalarObservation.mean = selectedScalarObservation.mean;
-    report.profileDetail.scalarObservation.rms = selectedScalarObservation.rms;
-    report.profileDetail.scalarObservation.median = selectedScalarObservation.median;
-    report.profileDetail.scalarObservation.p75 = selectedScalarObservation.p75;
-    report.profileDetail.scalarObservation.p90 = selectedScalarObservation.p90;
-    report.profileDetail.scalarObservation.trimmedMean = selectedScalarObservation.trimmedMean;
-    report.profileDetail.scalarObservation.last = selectedScalarObservation.last;
-    report.profileDetail.scalarObservation.baseline = selectedScalarObservation.baseline;
-    report.profileDetail.scalarObservation.lift = selectedScalarObservation.lift;
-    report.profileDetail.scalarObservation.sampleCount = selectedScalarObservation.sampleCount;
-    report.profileDetail.scalarObservation.sustainedCount = selectedScalarObservation.sustainedCount;
-    report.profileDetail.scalarObservation.sustainedMs = selectedScalarObservation.sustainedMs;
-    report.profileDetail.scalarObservation.sustainedThreshold = selectedScalarObservation.sustainedThreshold;
-    report.profileDetail.scalarObservation.strength = selectedScalarObservation.strength;
+    report.profileDetail.scalarObservation = selectedScalarObservation;
 
     report.debug.occurrences = diagnostics.rawCandidateCount;
     report.debug.inspected = diagnostics.rawCandidateCount;

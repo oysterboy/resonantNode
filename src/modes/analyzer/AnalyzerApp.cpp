@@ -1,6 +1,7 @@
 #include "AnalyzerApp.h"
 
 #include <Arduino.h>
+#include <esp_system.h>
 #include <stdlib.h>
 #include <string.h>
 #include <new>
@@ -45,6 +46,8 @@ constexpr float kAudioRmsTooLowThreshold = 40.0f;
 constexpr float kAudioRmsTooHighThreshold = 30000.0f;
 constexpr unsigned long kAudioFlatlineStreakFrames = 32UL;
 
+RTC_DATA_ATTR static uint32_t g_analyzerBootCount = 0;
+
 
 uint32_t sampleOffsetUs(uint32_t sampleOffset, uint32_t sampleRateHz) {
     if (sampleRateHz == 0) {
@@ -80,6 +83,49 @@ const char* audioHealthNameFromCounters(unsigned long zeroishFrames,
         return "zeroish";
     }
     return "ok";
+}
+
+const char* systemResetReasonName(esp_reset_reason_t reason) {
+    switch (reason) {
+        case ESP_RST_POWERON:
+            return "POWERON_RESET";
+        case ESP_RST_EXT:
+            return "EXT_RESET";
+        case ESP_RST_SW:
+            return "SW_RESET";
+        case ESP_RST_PANIC:
+            return "PANIC_RESET";
+        case ESP_RST_INT_WDT:
+            return "INT_WDT_RESET";
+        case ESP_RST_TASK_WDT:
+            return "TASK_WDT_RESET";
+        case ESP_RST_WDT:
+            return "WDT_RESET";
+        case ESP_RST_DEEPSLEEP:
+            return "DEEPSLEEP_RESET";
+        case ESP_RST_BROWNOUT:
+            return "BROWNOUT_RESET";
+        case ESP_RST_SDIO:
+            return "SDIO_RESET";
+#if defined(ESP_RST_USB)
+        case ESP_RST_USB:
+            return "USB_RESET";
+#endif
+#if defined(ESP_RST_JTAG)
+        case ESP_RST_JTAG:
+            return "JTAG_RESET";
+#endif
+#if defined(ESP_RST_EFUSE)
+        case ESP_RST_EFUSE:
+            return "EFUSE_RESET";
+#endif
+#if defined(ESP_RST_PWR_GLITCH)
+        case ESP_RST_PWR_GLITCH:
+            return "PWR_GLITCH_RESET";
+#endif
+        default:
+            return "UNKNOWN_RESET";
+    }
 }
 
 void AnalyzerApp::updateSequenceAudioHealth(const AudioSignalFrame& frame) {
@@ -136,6 +182,142 @@ void AnalyzerApp::updateSequenceAudioHealth(const AudioSignalFrame& frame) {
     );
     diagnostics.audioLastCenteredSample = centeredSample;
     diagnostics.audioHasLastCenteredSample = true;
+}
+
+unsigned long AnalyzerApp::activeRunStartMs() const {
+    if (_sequenceTest.active) {
+        return _sequenceTest.startedAtMs;
+    }
+    if (_baseSession.active) {
+        return _baseSession.startedAtMs;
+    }
+    if (_captureSession.active) {
+        return _captureSession.startedAtMs;
+    }
+    return 0UL;
+}
+
+unsigned long AnalyzerApp::activeRunEndMs() const {
+    if (_sequenceTest.active && _sequenceTest.currentTrialEndMs > 0) {
+        return _sequenceTest.currentTrialEndMs;
+    }
+    if (_captureSession.active && _captureSession.currentTrialEndMs > 0) {
+        return _captureSession.currentTrialEndMs;
+    }
+    if (_baseSession.active) {
+        return millis();
+    }
+    return millis();
+}
+
+void AnalyzerApp::resetLoopHealthWindow() {
+    _loopHealth.reset();
+    _loopLastUs = micros();
+}
+
+void AnalyzerApp::printSystemHealth(const AnalyzerReport& report) const {
+    const AudioSourceStats& sourceStats = _audioSource.stats();
+    const AudioSignalStats& signalStats = _audioSignal.stats();
+    const unsigned long sampleRateHz = _audioSource.sampleRateHz() > 0 ? _audioSource.sampleRateHz() : 16000UL;
+    const unsigned long runStartMs = activeRunStartMs();
+    const unsigned long runEndMs = activeRunEndMs();
+    const unsigned long runElapsedMs = runStartMs > 0 && runEndMs >= runStartMs ? runEndMs - runStartMs : 0UL;
+    const unsigned long loopWindowStartMs = _sequenceTest.active && _sequenceTest.currentTrialStartMs > 0
+        ? _sequenceTest.currentTrialStartMs
+        : runStartMs;
+    const unsigned long loopWindowEndMs = _sequenceTest.active && _sequenceTest.currentTrialEndMs >= _sequenceTest.currentTrialStartMs
+        ? _sequenceTest.currentTrialEndMs
+        : runEndMs;
+    const unsigned long loopStatsWindowMs = loopWindowEndMs >= loopWindowStartMs
+        ? loopWindowEndMs - loopWindowStartMs
+        : 0UL;
+    const unsigned long expectedSamples = static_cast<unsigned long>(
+        (static_cast<unsigned long long>(runElapsedMs) * static_cast<unsigned long long>(sampleRateHz)) / 1000ULL);
+    const unsigned long processedSamples = (_sequenceTest.active && _sequenceTest.currentTrial > 0)
+        ? _sequenceTest.currentTrialSamplesProcessed
+        : (_sequenceTest.active ? _sequenceTest.samplesProcessed
+            : static_cast<unsigned long>(signalStats.samplesProcessed));
+    const float processedRatio = expectedSamples > 0
+        ? static_cast<float>(processedSamples) / static_cast<float>(expectedSamples)
+        : 0.0f;
+    const unsigned long loopAvgUs = _loopHealth.count > 0 ? static_cast<unsigned long>(_loopHealth.sumUs / _loopHealth.count) : 0UL;
+    const unsigned long updateLoopAvgUs = _sequenceTest.updateLoopCount > 0
+        ? static_cast<unsigned long>(_sequenceTest.totalUpdateLoopUs / _sequenceTest.updateLoopCount)
+        : 0UL;
+
+    Serial.print("SYSTEM_HEALTH");
+    Serial.print(" trial=");
+    Serial.print(report.context.trial);
+    Serial.print(" t_ms=");
+    Serial.print(report.context.timestampMs);
+    Serial.print(" uptime_ms=");
+    Serial.print(millis());
+    Serial.print(" boot_count=");
+    Serial.print(g_analyzerBootCount);
+    Serial.print(" reset_reason=");
+    Serial.print(systemResetReasonName(esp_reset_reason()));
+    Serial.print(" run_start_ms=");
+    Serial.print(runStartMs);
+    Serial.print(" run_end_ms=");
+    Serial.print(runEndMs);
+    Serial.print(" run_elapsed_ms=");
+    Serial.print(runElapsedMs);
+    Serial.print(" free_heap=");
+    Serial.print(esp_get_free_heap_size());
+    Serial.print(" loop_stats_window_ms=");
+    Serial.print(loopStatsWindowMs);
+    Serial.print(" loop_stats_scope=");
+    Serial.print(_sequenceTest.active && _sequenceTest.currentTrialStartMs > 0 ? "trial_window" : "run_window");
+    Serial.print(" loop_count=");
+    Serial.print(_loopHealth.count);
+    Serial.print(" loop_avg_us=");
+    Serial.print(loopAvgUs);
+    Serial.print(" loop_max_window_us=");
+    Serial.print(_loopHealth.maxUs);
+    Serial.print(" loop_over_5ms=");
+    Serial.print(_loopHealth.over5ms);
+    Serial.print(" loop_over_20ms=");
+    Serial.print(_loopHealth.over20ms);
+    Serial.print(" loop_max_since_boot_us=");
+    Serial.print(_loopMaxSinceBootUs);
+    Serial.print(" update_loop_count=");
+    Serial.print(_sequenceTest.updateLoopCount);
+    Serial.print(" update_loop_avg_us=");
+    Serial.print(updateLoopAvgUs);
+    Serial.print(" update_loop_max_us=");
+    Serial.print(_sequenceTest.currentTrialUpdateLoopMaxUs);
+    Serial.print(" sample_work_max_us=");
+    Serial.print(_sequenceTest.maxSampleWorkUs);
+    Serial.print(" trial_finalize_max_us=");
+    Serial.print(_sequenceTest.maxFinalizeTrialUs);
+    Serial.println();
+    _loopHealth.reset();
+
+    Serial.print("AUDIO_IO_HEALTH");
+    Serial.print(" t_ms=");
+    Serial.print(report.context.timestampMs);
+    Serial.print(" i2s_reads=");
+    Serial.print(sourceStats.reads);
+    Serial.print(" i2s_bytes_read=");
+    Serial.print(sourceStats.readBytes);
+    Serial.print(" processed_samples=");
+    Serial.print(processedSamples);
+    Serial.print(" expected_samples=");
+    Serial.print(expectedSamples);
+    Serial.print(" processed_ratio=");
+    Serial.print(processedRatio, 3);
+    Serial.print(" frames_emitted=");
+    Serial.print(signalStats.blocksProcessed);
+    Serial.print(" partial_frames=");
+    Serial.print(sourceStats.shortReads);
+    Serial.print(" duplicate_frames=0");
+    Serial.print(" gap_samples=");
+    Serial.print(sourceStats.droppedBlockCount);
+    Serial.print(" overlap_samples=0");
+    Serial.print(" max_block_age_ms=");
+    Serial.print(_sequenceTest.active ? _sequenceTest.maxBlockAgeMs : 0UL);
+    Serial.print(" max_processing_lag_ms=");
+    Serial.println(_sequenceTest.active ? _sequenceTest.maxProcessingLagMs : 0UL);
 }
 
 void buildFrequencyFailReason(const detection::FrequencyFeatureFrame& evidence,
@@ -295,6 +477,8 @@ const char* seqOutputModeName(AnalyzerApp::SeqOutputMode mode) {
             return "signalcheck";
         case AnalyzerApp::SeqOutputMode::Full:
             return "full";
+        case AnalyzerApp::SeqOutputMode::System:
+            return "system";
         case AnalyzerApp::SeqOutputMode::Source:
             return "source";
         case AnalyzerApp::SeqOutputMode::Inspect:
@@ -366,6 +550,9 @@ AnalyzerApp::SeqOutputMode seqOutputModeFromToken(const char* token, bool* valid
     if (equalsIgnoreCase(token, "full")) {
         return AnalyzerApp::SeqOutputMode::Full;
     }
+    if (equalsIgnoreCase(token, "system")) {
+        return AnalyzerApp::SeqOutputMode::System;
+    }
     if (equalsIgnoreCase(token, "source")) {
         return AnalyzerApp::SeqOutputMode::Source;
     }
@@ -428,6 +615,7 @@ AnalyzerApp::AnalyzerApp(int inputPin)
 
 void AnalyzerApp::begin() {
     beginEmitterControl();
+    ++g_analyzerBootCount;
 
     configureParameters();
     _audioSource.begin();
@@ -440,6 +628,9 @@ void AnalyzerApp::begin() {
         _detection = new (std::nothrow) detection::DetectionRuntime();
     }
     _lastPrintMs = 0;
+    _loopLastUs = micros();
+    _loopMaxSinceBootUs = 0;
+    _loopHealth.reset();
     _usbLineLength = 0;
     _usbLineBuffer[0] = '\0';
     _emitterLineLength = 0;
@@ -449,7 +640,7 @@ void AnalyzerApp::begin() {
     _controlClaimAtMs = 0;
 
     Serial.println("EVT analyzer_ready");
-    Serial.println("EVT analyzer_help type='HELP', 'BASE', 'PARAM freqScore=10000 freqContrast=50.0', 'TEST', 'RAW trigger f=3200 dur=100 post=1000 dump=bin', 'SEQ MODE quiet|compact|signalcheck|full|source|inspect|pattern|dump WHEN off|miss|all VERBOSE 0|1|2 STATUS', 'CAP', 'DET AMP', 'VAL', 'VAL OFF'");
+    Serial.println("EVT analyzer_help type='HELP', 'BASE', 'PARAM freqScore=10000 freqContrast=50.0', 'TEST', 'RAW trigger f=3200 dur=100 post=1000 dump=bin', 'SEQ MODE quiet|compact|signalcheck|full|system|source|inspect|pattern|dump WHEN off|miss|all VERBOSE 0|1|2 STATUS', 'CAP', 'DET AMP', 'VAL', 'VAL OFF'");
 }
 
 void AnalyzerApp::configureParameters() {
@@ -509,11 +700,22 @@ AnalyzerApp::SequenceDiagMode AnalyzerApp::sequenceDiagModeFromOutputWhen(SeqOut
 // -----------------------------------------------------------------------------
 
 void AnalyzerApp::update() {
-    const unsigned long updateLoopStartUs = micros();
+    const uint32_t nowUs = micros();
+    if (_loopLastUs != 0) {
+        const uint32_t loopUs = nowUs - _loopLastUs;
+        _loopHealth.record(loopUs);
+        if (loopUs > _loopMaxSinceBootUs) {
+            _loopMaxSinceBootUs = loopUs;
+        }
+    }
+    _loopLastUs = nowUs;
+
+    const unsigned long updateLoopStartUs = nowUs;
     const unsigned long now = millis();
 
     int processedSamples = 0;
     AudioBlock block;
+    const uint32_t sampleWorkStartUs = micros();
     while (processedSamples < kMaxSamplesPerLoop) {
         const int availableBytesBeforeRead = _audioSource.availableBytes();
         if (!_i2sSource.readBlock(block)) {
@@ -555,6 +757,10 @@ void AnalyzerApp::update() {
                 if (processingLagMs > _sequenceTest.maxProcessingLagMs) {
                     _sequenceTest.maxProcessingLagMs = processingLagMs;
                 }
+                if (frame.sampleTimeMs >= _sequenceTest.currentTrialStartMs &&
+                    frame.sampleTimeMs <= _sequenceTest.currentTrialEndMs) {
+                    ++_sequenceTest.currentTrialSamplesProcessed;
+                }
                 detection::FrequencyFeatureFrame runtimeFrequencyFrame = {};
                 if (_sequenceTest.outputConfig.frequencyBandEnabled) {
                     runtimeFrequencyFrame = captureFrequencyFeatureFrame(frame.sampleTimeMs);
@@ -576,12 +782,23 @@ void AnalyzerApp::update() {
             processedSamples = kMaxSamplesPerLoop;
         }
     }
+    const unsigned long sampleWorkUs = static_cast<unsigned long>(micros() - sampleWorkStartUs);
+    if (_sequenceTest.active && sampleWorkUs > _sequenceTest.maxSampleWorkUs) {
+        _sequenceTest.maxSampleWorkUs = sampleWorkUs;
+    }
 
     _sequenceTest.samplesProcessed += static_cast<unsigned long>(processedSamples);
     if (static_cast<unsigned long>(processedSamples) > _sequenceTest.maxSamplesPerLoop) {
         _sequenceTest.maxSamplesPerLoop = static_cast<unsigned long>(processedSamples);
     }
     const unsigned long updateLoopUs = micros() - updateLoopStartUs;
+    if (_sequenceTest.active) {
+        _sequenceTest.totalUpdateLoopUs += updateLoopUs;
+        ++_sequenceTest.updateLoopCount;
+        if (updateLoopUs > _sequenceTest.currentTrialUpdateLoopMaxUs) {
+            _sequenceTest.currentTrialUpdateLoopMaxUs = updateLoopUs;
+        }
+    }
     if (_sequenceTest.active && updateLoopUs > _sequenceTest.maxUpdateLoopUs) {
         _sequenceTest.maxUpdateLoopUs = updateLoopUs;
     }

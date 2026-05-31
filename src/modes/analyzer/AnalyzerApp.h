@@ -43,6 +43,7 @@ public:
         Compact,
         SignalCheck,
         Full,
+        System,
         Source,
         Inspect,
         Pattern,
@@ -74,6 +75,40 @@ public:
 
 private:
     void updateSequenceAudioHealth(const AudioSignalFrame& frame);
+    void printSystemHealth(const AnalyzerReport& report) const;
+    unsigned long activeRunStartMs() const;
+    unsigned long activeRunEndMs() const;
+    void resetLoopHealthWindow();
+
+    struct LoopHealthStats {
+        uint32_t count = 0;
+        uint64_t sumUs = 0;
+        uint32_t maxUs = 0;
+        uint32_t over5ms = 0;
+        uint32_t over20ms = 0;
+
+        void record(uint32_t loopUs) {
+            ++count;
+            sumUs += loopUs;
+            if (loopUs > maxUs) {
+                maxUs = loopUs;
+            }
+            if (loopUs > 5000UL) {
+                ++over5ms;
+            }
+            if (loopUs > 20000UL) {
+                ++over20ms;
+            }
+        }
+
+        void reset() {
+            count = 0;
+            sumUs = 0;
+            maxUs = 0;
+            over5ms = 0;
+            over20ms = 0;
+        }
+    };
 
     // Session state bundles, ordered from lighter calibration state to the most specialized sequence-test state.
     struct BaseSession {
@@ -348,6 +383,7 @@ private:
         unsigned long duplicates = 0;
         unsigned long invalidAudio = 0;
         unsigned long samplesProcessed = 0;
+        unsigned long currentTrialSamplesProcessed = 0;
         unsigned long maxSamplesPerLoop = 0;
         unsigned long emptySourceLoops = 0;
         uint64_t availableBytesSum = 0;
@@ -355,6 +391,11 @@ private:
         unsigned long maxAvailableBytes = 0;
         unsigned long maxBlockAgeMs = 0;
         unsigned long maxUpdateLoopUs = 0;
+        uint64_t totalUpdateLoopUs = 0;
+        unsigned long updateLoopCount = 0;
+        unsigned long currentTrialUpdateLoopMaxUs = 0;
+        unsigned long maxSampleWorkUs = 0;
+        unsigned long maxFinalizeTrialUs = 0;
         unsigned long maxProcessingLagMs = 0;
         unsigned long totalHitStrengthScaled = 0;
         unsigned long totalHitDurationMs = 0;
@@ -527,6 +568,9 @@ private:
 
     // Print throttling for the VAL view.
     mutable unsigned long _lastPrintMs = 0;
+    uint32_t _loopLastUs = 0;
+    unsigned long _loopMaxSinceBootUs = 0;
+    mutable LoopHealthStats _loopHealth;
     static constexpr unsigned long kPrintIntervalMs = 100;
 };
 

@@ -180,13 +180,14 @@ inline DetectionProfile makeTonalPulse2Profile() {
     profile.inspectionPlan.modules[0].scalar.mode = ScalarInspectionMode::PeakCenteredLift;
     profile.inspectionPlan.modules[0].scalar.windowPreMs = 1;
     profile.inspectionPlan.modules[0].scalar.windowPostMs = 90;
-    profile.inspectionPlan.modules[1].kind = InspectionModuleKind::ScalarFeatureStrength;
-    profile.inspectionPlan.modules[1].target = EvidenceTarget::AmpStrength;
-    profile.inspectionPlan.modules[1].scalar.stream = FeatureStreamId::AmpEnvelope;
-    profile.inspectionPlan.modules[1].scalar.mode = ScalarInspectionMode::PeakCentered;
-    profile.inspectionPlan.modules[1].scalar.windowPreMs = 10;
-    profile.inspectionPlan.modules[1].scalar.windowPostMs = 10;
-    profile.inspectionPlan.count = 2;
+    //profile.inspectionPlan.modules[1].kind = InspectionModuleKind::ScalarFeatureStrength;
+    //profile.inspectionPlan.modules[1].target = EvidenceTarget::AmpStrength;
+    //profile.inspectionPlan.modules[1].scalar.stream = FeatureStreamId::AmpEnvelope;
+    //profile.inspectionPlan.modules[1].scalar.mode = ScalarInspectionMode::PeakCentered;
+    //profile.inspectionPlan.modules[1].scalar.windowPreMs = 10;
+    //profile.inspectionPlan.modules[1].scalar.windowPostMs = 10;
+   // profile.inspectionPlan.count = 2;
+   profile.inspectionPlan.count = 1;
 
     // Pattern rules.
     profile.patternRulesConfig.requireSupportForAcceptance = false;

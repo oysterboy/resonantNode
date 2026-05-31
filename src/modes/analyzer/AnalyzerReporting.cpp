@@ -508,6 +508,11 @@ void AnalyzerApp::printSequenceTrialResult(const AnalyzerReport& report) const {
     }
     Serial.println();
 
+    if (_sequenceTest.outputConfig.mode == SeqOutputMode::Full ||
+        _sequenceTest.outputConfig.mode == SeqOutputMode::System) {
+        printSystemHealth(report);
+    }
+
     if (_sequenceTest.outputConfig.mode != SeqOutputMode::Explain) {
         return;
     }
@@ -1080,7 +1085,10 @@ void AnalyzerApp::printSequenceDiagnostics(const AnalyzerReport& report) const {
             printField(kSourceAcceptedDurationMsField, report.frequency.acceptedDurationMs);
             Serial.print(' ');
             printField(kSourceAcceptedStrengthField, report.frequency.acceptedStrength, 1);
-        } else {
+        }
+        Serial.println();
+        if (report.frequency.sourceOccurrenceEmitted && !report.frequency.acceptedPresent) {
+            Serial.print("SEQ_SOURCE_REJECT");
             Serial.print(' ');
             printField(kSourceSelectedRejectPeakMsField, report.frequency.fmPeakMs);
             Serial.print(' ');
@@ -1089,8 +1097,14 @@ void AnalyzerApp::printSequenceDiagnostics(const AnalyzerReport& report) const {
             printField(kSourceFreqPeakScoreField, report.frequency.peakScore, 1);
             Serial.print(' ');
             printField(kSourceFreqPeakContrastField, report.frequency.peakContrast, 2);
+            Serial.print(' ');
+            printField(kSourceFmRejectReasonField, report.frequency.fmRejectReason != nullptr ? report.frequency.fmRejectReason : "unknown");
+            Serial.print(' ');
+            printField(kSourceFmNoEmitReasonField, report.frequency.fmNoEmitReason != nullptr ? report.frequency.fmNoEmitReason : "none");
+            Serial.print(' ');
+            printField(kSourceFmGateReasonField, report.frequency.fmGateReason != nullptr ? report.frequency.fmGateReason : "none");
+            Serial.println();
         }
-        Serial.println();
         return;
     }
     Serial.print("SEQ_SOURCE");
@@ -1121,17 +1135,6 @@ void AnalyzerApp::printSequenceDiagnostics(const AnalyzerReport& report) const {
         printField(kSourceAcceptedScoreField, report.frequency.acceptedScore, 1);
         Serial.print(' ');
         printField(kSourceAcceptedContrastField, report.frequency.acceptedContrast, 2);
-    } else if (report.frequency.sourceOccurrenceEmitted) {
-        Serial.print(' ');
-        printField(kSourceSelectedRejectPeakMsField, report.frequency.fmPeakMs);
-        Serial.print(' ');
-        printField(kSourceSelectedRejectDurationMsField, report.frequency.fmDurationMs);
-        Serial.print(' ');
-        printField(kSourceFreqPeakScoreField, report.frequency.peakScore, 1);
-        Serial.print(' ');
-        printField(kSourceFreqPeakContrastField, report.frequency.peakContrast, 2);
-        Serial.print(' ');
-        printField(kSourceSelectedRejectWindowSamplesField, report.frequency.peakWindowSampleCount);
     }
     Serial.print(" ");
     printField(AnalyzerFieldDescriptor{"source.freq", "window_start_ms"}, report.frequency.windowStartMs);
@@ -1194,36 +1197,6 @@ void AnalyzerApp::printSequenceDiagnostics(const AnalyzerReport& report) const {
     Serial.print(' ');
     printField(kSourceTrialMissReasonField, report.frequency.trialMissReason != nullptr ? report.frequency.trialMissReason : "unknown");
     Serial.print(' ');
-    printField(kSourceFmRejectReasonField, report.frequency.fmRejectReason != nullptr ? report.frequency.fmRejectReason : "unknown");
-    Serial.print(' ');
-    printField(kSourceFmNoEmitReasonField, report.frequency.fmNoEmitReason != nullptr ? report.frequency.fmNoEmitReason : "none");
-    Serial.print(' ');
-    printField(kSourceFmGateReasonField, report.frequency.fmGateReason != nullptr ? report.frequency.fmGateReason : "none");
-    Serial.print(' ');
-    printField(kSourceFmOpenMsField, report.frequency.fmOpenMs);
-    Serial.print(' ');
-    printField(kSourceFmPeakMsField, report.frequency.fmPeakMs);
-    Serial.print(' ');
-    printField(kSourceFmReleaseMsField, report.frequency.fmReleaseMs);
-    Serial.print(' ');
-    printField(kSourceFmDurationMsField, report.frequency.fmDurationMs);
-    Serial.print(' ');
-    printField(kSourceFmMinDurationMsField, report.frequency.fmMinDurationMs);
-    Serial.print(' ');
-    printField(kSourceFmMaxDurationMsField, report.frequency.fmMaxDurationMs);
-    Serial.print(' ');
-    printField(kSourceFmDurationOkField, report.frequency.fmDurationOk);
-    Serial.print(' ');
-    printField(kSourceFmOpenedField, report.frequency.fmOpened);
-    Serial.print(' ');
-    printField(kSourceFmReleasedField, report.frequency.fmReleased);
-    Serial.print(' ');
-    printField(kSourceFmEmittedField, report.frequency.fmEmitted);
-    Serial.print(' ');
-    printField(kSourceFmValidReleaseField, report.frequency.fmValidRelease);
-    Serial.print(' ');
-    printField(kSourceFmEmitAllowedField, report.frequency.fmEmitAllowed);
-    Serial.print(' ');
     printField(kSourceFreqEvidenceClassField, report.frequency.freqEvidenceClass != nullptr ? report.frequency.freqEvidenceClass : "none");
     if (report.frequency.freqEvidenceClass != nullptr && strcmp(report.frequency.freqEvidenceClass, "strong_no_occurrence") == 0) {
         Serial.print(' ');
@@ -1246,6 +1219,51 @@ void AnalyzerApp::printSequenceDiagnostics(const AnalyzerReport& report) const {
     Serial.print(' ');
     printField(kSourceDiagInconsistentField, report.frequency.inconsistent);
     Serial.println();
+
+    if (report.frequency.sourceOccurrenceEmitted && !report.frequency.acceptedPresent) {
+        Serial.print("SEQ_SOURCE_REJECT");
+        Serial.print(' ');
+        printField(kSourceSelectedRejectPeakMsField, report.frequency.fmPeakMs);
+        Serial.print(' ');
+        printField(kSourceSelectedRejectDurationMsField, report.frequency.fmDurationMs);
+        Serial.print(' ');
+        printField(kSourceSelectedRejectWindowSamplesField, report.frequency.peakWindowSampleCount);
+        Serial.print(' ');
+        printField(kSourceFreqPeakScoreField, report.frequency.peakScore, 1);
+        Serial.print(' ');
+        printField(kSourceFreqPeakContrastField, report.frequency.peakContrast, 2);
+        Serial.print(' ');
+        printField(kSourceFmRejectReasonField, report.frequency.fmRejectReason != nullptr ? report.frequency.fmRejectReason : "unknown");
+        Serial.print(' ');
+        printField(kSourceFmNoEmitReasonField, report.frequency.fmNoEmitReason != nullptr ? report.frequency.fmNoEmitReason : "none");
+        Serial.print(' ');
+        printField(kSourceFmGateReasonField, report.frequency.fmGateReason != nullptr ? report.frequency.fmGateReason : "none");
+        Serial.print(' ');
+        printField(kSourceFmOpenMsField, report.frequency.fmOpenMs);
+        Serial.print(' ');
+        printField(kSourceFmPeakMsField, report.frequency.fmPeakMs);
+        Serial.print(' ');
+        printField(kSourceFmReleaseMsField, report.frequency.fmReleaseMs);
+        Serial.print(' ');
+        printField(kSourceFmDurationMsField, report.frequency.fmDurationMs);
+        Serial.print(' ');
+        printField(kSourceFmMinDurationMsField, report.frequency.fmMinDurationMs);
+        Serial.print(' ');
+        printField(kSourceFmMaxDurationMsField, report.frequency.fmMaxDurationMs);
+        Serial.print(' ');
+        printField(kSourceFmDurationOkField, report.frequency.fmDurationOk);
+        Serial.print(' ');
+        printField(kSourceFmOpenedField, report.frequency.fmOpened);
+        Serial.print(' ');
+        printField(kSourceFmReleasedField, report.frequency.fmReleased);
+        Serial.print(' ');
+        printField(kSourceFmEmittedField, report.frequency.fmEmitted);
+        Serial.print(' ');
+        printField(kSourceFmValidReleaseField, report.frequency.fmValidRelease);
+        Serial.print(' ');
+        printField(kSourceFmEmitAllowedField, report.frequency.fmEmitAllowed);
+        Serial.println();
+    }
 
     if (detailLevel < 2U) {
         return;

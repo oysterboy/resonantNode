@@ -191,6 +191,7 @@ void AnalyzerApp::startSequenceTest(unsigned long totalTrials, unsigned long per
     _sequenceTest.duplicates = 0;
     _sequenceTest.invalidAudio = 0;
     _sequenceTest.samplesProcessed = 0;
+    _sequenceTest.currentTrialSamplesProcessed = 0;
     _sequenceTest.maxSamplesPerLoop = 0;
     _sequenceTest.emptySourceLoops = 0;
     _sequenceTest.availableBytesSum = 0;
@@ -198,6 +199,11 @@ void AnalyzerApp::startSequenceTest(unsigned long totalTrials, unsigned long per
     _sequenceTest.maxAvailableBytes = 0;
     _sequenceTest.maxBlockAgeMs = 0;
     _sequenceTest.maxUpdateLoopUs = 0;
+    _sequenceTest.totalUpdateLoopUs = 0;
+    _sequenceTest.updateLoopCount = 0;
+    _sequenceTest.currentTrialUpdateLoopMaxUs = 0;
+    _sequenceTest.maxSampleWorkUs = 0;
+    _sequenceTest.maxFinalizeTrialUs = 0;
     _sequenceTest.maxProcessingLagMs = 0;
     _sequenceTest.totalHitStrengthScaled = 0;
     _sequenceTest.totalHitDurationMs = 0;
@@ -391,6 +397,11 @@ void AnalyzerApp::updateSequenceTest(unsigned long now) {
     _sequenceTest.currentTrialDiagnostics.scalar.expectedWindowMs = _sequenceTest.currentTrialDiagnostics.frequency.expectedWindowMs;
     _sequenceTest.currentTrialDiagnostics.scalar.expectedFrameCountEstimate = _sequenceTest.currentTrialDiagnostics.frequency.expectedFrameCountEstimate;
     _sequenceTest.currentTrialDiagnostics.scalar.diagFrameCountOk = false;
+    _sequenceTest.currentTrialSamplesProcessed = 0;
+    _sequenceTest.currentTrialUpdateLoopMaxUs = 0;
+    _sequenceTest.totalUpdateLoopUs = 0;
+    _sequenceTest.updateLoopCount = 0;
+    resetLoopHealthWindow();
     printSequenceTrialHeader(trialNumber);
     if (_sequenceTest.outputConfig.diagnosticsEnabled) {
         _detection->resetDiagnostics();
@@ -450,6 +461,7 @@ void AnalyzerApp::finalizeSequenceTrial(unsigned long now) {
         return;
     }
 
+    const uint32_t finalizeStartUs = micros();
     auto& diagnostics = _sequenceTest.currentTrialDiagnostics;
 
     const bool invalidAudioTrial = _sequenceTest.trialHadAudioOverflow
@@ -493,6 +505,10 @@ void AnalyzerApp::finalizeSequenceTrial(unsigned long now) {
     AnalyzerReport* finalizedReport = sequenceReportScratch();
     if (finalizedReport == nullptr) {
         Serial.println("SEQ_VERBOSE_WARN reason=analyzer_report_alloc_failed requested=1 report");
+        const unsigned long finalizeUs = static_cast<unsigned long>(micros() - finalizeStartUs);
+        if (finalizeUs > _sequenceTest.maxFinalizeTrialUs) {
+            _sequenceTest.maxFinalizeTrialUs = finalizeUs;
+        }
         _sequenceTest.currentTrialFinalized = true;
         stopSequenceTest();
         return;
@@ -573,6 +589,11 @@ void AnalyzerApp::finalizeSequenceTrial(unsigned long now) {
     if (_sequenceTest.currentTrial >= _sequenceTest.totalTrials) {
         printSequenceFinalOutput();
         stopSequenceTest();
+    }
+
+    const unsigned long finalizeUs = static_cast<unsigned long>(micros() - finalizeStartUs);
+    if (finalizeUs > _sequenceTest.maxFinalizeTrialUs) {
+        _sequenceTest.maxFinalizeTrialUs = finalizeUs;
     }
 }
 

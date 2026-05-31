@@ -43,11 +43,12 @@ void AnalyzerApp::printSequenceHelp() {
     Serial.println("SEQ IN: OBS start [N|tries=N] [period=2000] [window=1800] [freq=HZ] [dur=MS] [test=LABEL]");
     Serial.println("SEQ IN: TRIES N");
     Serial.println("SEQ IN: [profile=tonalpulse|tonalpulse2|amp]");
-    Serial.println("SEQ IN: MODE quiet|compact|signalcheck|full|source|inspect|pattern|dump");
+    Serial.println("SEQ IN: MODE quiet|compact|signalcheck|full|system|source|inspect|pattern|dump");
     Serial.println("SEQ IN: MODE quiet = no sequence output");
     Serial.println("SEQ IN: MODE compact = compact trial view");
     Serial.println("SEQ IN: MODE signalcheck = compact trial view + audio health snapshot");
-    Serial.println("SEQ IN: MODE full = trial + source + inspect + pattern");
+    Serial.println("SEQ IN: MODE full = trial + source + inspect + pattern + system health");
+    Serial.println("SEQ IN: MODE system = trial verdict + system health + summary");
     Serial.println("SEQ IN: PROFILE tonalpulse|tonalpulse2|amp|chirp_experimental");
     Serial.println("SEQ IN: DIAG on|off");
     Serial.println("SEQ IN: FREQBAND on|off");
@@ -334,7 +335,7 @@ void AnalyzerApp::handleUsbLine(const char* line) {
             bool valid = false;
             const AnalyzerApp::SeqOutputMode mode = AnalyzerApp::sequenceOutputModeFromToken(modeToken, &valid);
             if (!valid) {
-                Serial.println("ERR SEQ unknown mode use MODE quiet|compact|full|source|inspect|pattern|dump");
+                Serial.println("ERR SEQ unknown mode use MODE quiet|compact|signalcheck|full|system|source|inspect|pattern|dump");
                 return;
             }
             _seqOutputConfig.mode = mode;

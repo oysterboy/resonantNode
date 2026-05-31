@@ -39,7 +39,6 @@ struct DetectionPipelineResult {
     bool hasOccurrence = false;
     Occurrence occurrence = {};
 
-    bool hasInspectedOccurrence = false;
     InspectedOccurrence inspectedOccurrence = {};
 
     bool hasField = false;

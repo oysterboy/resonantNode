@@ -203,36 +203,29 @@ in progress
 
 ## Goal
 
-Make `PatternResult` and the accepted runtime path carry the inspected occurrences and their generic observations directly and uniformly.
+Make `PatternResult` the runtime handoff for `InspectedOccurrence` and the generic observations it carries.
 
-The analyzer should not have to duplicate or reassemble that information from multiple places.
+`Occurrence` is the precursor, `InspectedOccurrence` is the inspected runtime truth, and analyzer should consume the runtime handoff rather than rebuilding it from side copies.
 
-Current step: forward the latest inspected occurrence through the runtime result path without losing the runtime-owned truth.
-Later step: carry a bounded inspected-occurrence chain for patterns that are formed from multiple contributing occurrences.
-
-## Implementation tasks
-
-- Ensure the accepted runtime path carries `InspectedOccurrence` when the runtime produced one.
-- Keep `Occurrence` inside that path.
-- Keep generic scalar-window observations inside that path.
-- Keep detector-specific data only where the runtime actually needs it.
-- Remove analyzer-side duplication of accepted-path observation state where possible.
+Current step: forward the latest inspected occurrence through `PatternResult` without losing the runtime-owned truth.
+Later step: carry a bounded inspected-occurrence chain for patterns formed from multiple contributing occurrences.
 
 ## Already there
 
 - `OccurrenceInspector` already produces `InspectedOccurrence` with generic scalar observations and detector-specific strength fields.
 - `PatternAssembler` already consumes `InspectedOccurrence` and builds `PatternCandidate` from it.
-- `DetectionRuntime` already carries `PatternResult`, `Occurrence`, and a single `InspectedOccurrence` in the pipeline result.
+- `DetectionRuntime` already carries the runtime `Occurrence`, the inspected occurrence, and the `PatternResult` handoff.
+- `PatternResult` already points at the inspected occurrence when runtime produced one.
 - Analyzer already forwards the runtime result into its report instead of re-running inspection.
-- `PatternResult` now carries an inspected-occurrence reference for the latest runtime pipeline result.
+- The runtime boundary already carries the inspected occurrence through `PatternResult` so analyzer can read the result handoff instead of reconstructing it from side copies.
+- The accepted-path boundary is already explicit around the inspected occurrence; analyzer no longer falls back to a copied side-state result path.
+- Analyzer already reads the chosen scalar observation directly from runtime `scalarEvidence` instead of re-selecting it from copied observation slots.
+- Analyzer trial-shape classification already stays separate from runtime occurrence truth.
+- Detector-specific strength data stays on the runtime occurrence/pattern records where runtime semantics require it, while the scalar inspection path stays generic.
 
 ## TODO
 
-- Make the plural accepted-path shape explicit in the runtime result boundary instead of relying on a single copied inspected occurrence.
-- Add a bounded inspected-occurrence chain for patterns that are formed from multiple contributing occurrences.
-- Reduce or remove analyzer-side re-selection of scalar observation data where runtime can already provide the chosen shape.
-- Keep detector-specific data out of the generic path unless runtime semantics require it.
-- Preserve the analyzer trial-shape classification as a separate layer.
+- Future / Not now: add a bounded inspected-occurrence chain for patterns formed from multiple contributing occurrences.
 
 ## Acceptance checks
 

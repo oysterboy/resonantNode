@@ -1179,10 +1179,8 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
     const bool actualPipelineAvailable = pipelineResult != nullptr && pipelineResult->hasPattern;
     const detection::PatternResult* runtimePatternResult = actualPipelineAvailable ? &pipelineResult->pattern : nullptr;
     const detection::InspectedOccurrence* runtimeInspectedOccurrence = nullptr;
-    if (runtimePatternResult != nullptr && runtimePatternResult->hasInspectedOccurrence) {
+    if (runtimePatternResult != nullptr && runtimePatternResult->inspectedOccurrence != nullptr) {
         runtimeInspectedOccurrence = runtimePatternResult->inspectedOccurrence;
-    } else if (actualPipelineAvailable && pipelineResult->hasInspectedOccurrence) {
-        runtimeInspectedOccurrence = &pipelineResult->inspectedOccurrence;
     }
     const detection::FieldState* runtimeFieldState = actualPipelineAvailable && pipelineResult->hasField
         ? &pipelineResult->field
@@ -1339,24 +1337,11 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
     report.profileDetail.ampLevel = report.profileDetail.ampCenteredMagnitude;
     report.profileDetail.ampBase = diagnostics.acceptedAmbientBaseline;
     report.profileDetail.ampLift = report.profileDetail.ampCenteredMagnitude - report.profileDetail.ampBase;
-    const detection::ScalarInspectionObservation* selectedScalarObservationPtr = nullptr;
-    if (trialHasPipelineEvidence && runtimeInspectedOccurrence != nullptr) {
-        for (size_t i = 0; i < runtimeInspectedOccurrence->scalarObservationCount; ++i) {
-            const detection::ScalarInspectionObservation& observation = runtimeInspectedOccurrence->scalarObservations[i];
-            if (observation.stream == detection::FeatureStreamId::AmpEnvelope) {
-                selectedScalarObservationPtr = &observation;
-                break;
-            }
-            if (selectedScalarObservationPtr == nullptr) {
-                selectedScalarObservationPtr = &observation;
-            }
-        }
-    }
-
     const detection::ScalarInspectionObservation emptyScalarObservation{};
-    const detection::ScalarInspectionObservation& selectedScalarObservation = selectedScalarObservationPtr != nullptr
-        ? *selectedScalarObservationPtr
-        : emptyScalarObservation;
+    const detection::ScalarInspectionObservation& selectedScalarObservation =
+        trialHasPipelineEvidence && runtimeInspectedOccurrence != nullptr && runtimeInspectedOccurrence->occurrence.scalarEvidence.available
+            ? runtimeInspectedOccurrence->occurrence.scalarEvidence
+            : emptyScalarObservation;
     report.profileDetail.scalarObservation = selectedScalarObservation;
 
     report.debug.occurrences = diagnostics.rawCandidateCount;

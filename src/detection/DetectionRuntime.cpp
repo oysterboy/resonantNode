@@ -364,7 +364,6 @@ void DetectionRuntime::drainPatternAssembler(unsigned long nowMs) {
     while (_patternAssembler.popPatternCandidate(candidate)) {
         PatternResult result = _patternRules.evaluate(candidate, nowMs);
         if (_lastInspectedOccurrence.occurrence.present) {
-            result.hasInspectedOccurrence = true;
             result.inspectedOccurrence = &_lastInspectedOccurrence;
         }
         _fieldStateTracker.observePatternResult(result, nowMs);
@@ -397,14 +396,12 @@ void DetectionRuntime::capturePipelineResult(
     if (_latestPipelineResult.hasOccurrence && occurrence != nullptr) {
         _latestPipelineResult.occurrence = *occurrence;
     }
-    _latestPipelineResult.hasInspectedOccurrence = result.hasInspectedOccurrence || (inspectedOccurrence != nullptr && inspectedOccurrence->occurrence.present);
-    if (_latestPipelineResult.hasInspectedOccurrence && inspectedOccurrence != nullptr && inspectedOccurrence->occurrence.present) {
+    if (inspectedOccurrence != nullptr && inspectedOccurrence->occurrence.present) {
         _latestPipelineResult.inspectedOccurrence = *inspectedOccurrence;
-    } else if (result.hasInspectedOccurrence && result.inspectedOccurrence != nullptr) {
+    } else if (result.inspectedOccurrence != nullptr && result.inspectedOccurrence->occurrence.present) {
         _latestPipelineResult.inspectedOccurrence = *result.inspectedOccurrence;
     }
-    if (_latestPipelineResult.hasInspectedOccurrence) {
-        _latestPipelineResult.pattern.hasInspectedOccurrence = true;
+    if (_latestPipelineResult.inspectedOccurrence.occurrence.present) {
         _latestPipelineResult.pattern.inspectedOccurrence = &_latestPipelineResult.inspectedOccurrence;
     }
     _latestPipelineResult.hasField = true;

@@ -98,7 +98,7 @@ struct InspectionModuleConfig {
     ScalarFeatureInspectionConfig scalar = {};
 };
 
-static constexpr size_t kMaxInspectionModules = 4;
+static constexpr size_t kMaxInspectionModules = 3;
 
 struct InspectionPlan {
     InspectionModuleConfig modules[kMaxInspectionModules] = {};

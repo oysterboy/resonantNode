@@ -78,6 +78,96 @@ Out of scope:
 
 ---
 
+# Item 0 - Trim inspection payloads and cleanup legacy AMP naming
+
+## Status
+
+pending
+
+## Goal
+
+Trim the inspection payloads that currently ride along with accepted occurrences:
+
+- `InspectedOccurrence`
+- `ScalarInspectionObservation`
+
+and remove the legacy `AmpStrengthEvidence` name now that the underlying data is generic scalar evidence.
+
+This is a cleanup pass, not a behavior change.
+
+The main trimming target is `ScalarInspectionObservation`, but `InspectedOccurrence` should also lose redundant duplicate fields that only repeat what `Occurrence` already carries.
+
+Keep only the most relevant human-readable labels inside the structs for now. Extra summaries can stay for the moment if they still help diagnostics and reporting.
+
+## Implementation tasks
+
+- Rename `AmpStrengthEvidence` to `ScalarEvidence` and `ampStrengthEvidence` to `scalarEvidence` so the type and field names match the actual scalar evidence meaning.
+- Keep the evidence payload itself intact.
+- Update any field names or comments that still imply AMP-only semantics for this evidence.
+- Keep analyzer/runtime behavior unchanged.
+- Trim `ScalarInspectionObservation` to the smallest shape that still carries the evidence and the interpretation needed by the current pass.
+- Trim `InspectedOccurrence` to a minimal wrapper around `Occurrence` plus inspection decision and evidence.
+- Add a shared lookup/helper table for printing field names in `src/detection/InspectionNames.h` so analyzer and node can format the same facts without storing strings in the structs.
+
+## Already there
+
+- `AmpStrengthEvidence` is currently an alias of `ScalarInspectionObservation`.
+- The actual evidence payload is already generic scalar evidence.
+
+## TODO
+
+- Update the structs and references to use `ScalarEvidence`.
+- Remove the remaining AMP-shaped evidence field names at these sites:
+  - `src/detection/occurrences/Occurrence.h`
+  - `src/detection/occurrences/InspectedOccurrence.h`
+  - `src/detection/patterns/PatternCandidate.h`
+  - `src/detection/patterns/PatternResult.h`
+  - any inspector / runtime / reporter references that still print or copy `ampStrengthEvidence`
+- Keep the reporting shape unchanged unless a name follows from the rename naturally.
+- Remove redundant fields from `ScalarInspectionObservation`:
+  - string notes and anchors where enums or derived output will do
+  - duplicate baseline/lift storage where the numbers can be derived
+  - any fields that only exist for verbose debug formatting, except for the few most useful human-readable labels we keep for now
+- Keep the resulting struct focused on:
+  - the selected stream and mode
+  - window coverage and sample counts
+  - pre-floor comparison evidence
+  - the numeric metrics used for classification and reporting
+- Drop `lift` from storage and derive it from the kept evidence fields when printing or comparing.
+- Remove redundant fields from `InspectedOccurrence` that are already present in `Occurrence`.
+- Keep `InspectedOccurrence` focused on:
+  - the wrapped occurrence
+  - inspection decision
+  - reject reason
+  - scalar inspection evidence
+- Move printing labels out of the data structs and into shared helper functions used by analyzer and node.
+- Keep extra summary fields only while they still help diagnostics or external comparison.
+- Treat `decision` as the only inspection state we need in `InspectedOccurrence`; `accepted/rejected` become redundant.
+- Derive `windowStartMs` / `windowEndMs` and `preFloorWindowStartMs` / `preFloorWindowEndMs` from the inspector configuration and anchor instead of storing them.
+
+## Acceptance checks
+
+- No remaining AMP-specific type name is used for generic scalar evidence.
+- No remaining `ampStrengthEvidence` field name is used for generic scalar evidence.
+- `ScalarInspectionObservation` is smaller but still carries the evidence needed for the current pass.
+- `InspectedOccurrence` is slimmer and no longer duplicates obvious `Occurrence` fields.
+- Analyzer and node can both print the same field names from a shared lookup/helper layer.
+- The most relevant human-readable labels still print cleanly.
+- Build succeeds.
+- Behavior stays unchanged.
+
+## Commit
+
+Commit after this item.
+
+Suggested commit message:
+
+```text
+Remove legacy AMP naming from scalar evidence
+```
+
+---
+
 # Item 1 - Forward generic runtime result objects uniformly
 
 ## Status
@@ -89,6 +179,9 @@ in progress
 Make `PatternResult` and the accepted runtime path carry the inspected occurrences and their generic observations directly and uniformly.
 
 The analyzer should not have to duplicate or reassemble that information from multiple places.
+
+Current step: forward the latest inspected occurrence through the runtime result path without losing the runtime-owned truth.
+Later step: carry a bounded inspected-occurrence chain for patterns that are formed from multiple contributing occurrences.
 
 ## Implementation tasks
 
@@ -109,6 +202,7 @@ The analyzer should not have to duplicate or reassemble that information from mu
 ## TODO
 
 - Make the plural accepted-path shape explicit in the runtime result boundary instead of relying on a single copied inspected occurrence.
+- Add a bounded inspected-occurrence chain for patterns that are formed from multiple contributing occurrences.
 - Reduce or remove analyzer-side re-selection of scalar observation data where runtime can already provide the chosen shape.
 - Keep detector-specific data out of the generic path unless runtime semantics require it.
 - Preserve the analyzer trial-shape classification as a separate layer.
@@ -121,6 +215,7 @@ The analyzer should not have to duplicate or reassemble that information from mu
 - No behavior change in detection acceptance.
 - Frequency data stays detector-specific, whether it comes from a frequency-match detector or a scalar detector.
 - Special windows can stay detector-specific for now and move into the generic path later if we need them.
+- Multi-occurrence patterns can later carry a bounded occurrence chain for diagnostics and reporting.
 - Analyzer keeps its own trial-shape classification:
 
 ```text
@@ -316,6 +411,68 @@ Add pattern-result reporting parity for resonant/node consumers
 
 ---
 
+# Item 5 - Expand for actual multi-occurrence patterns
+
+## Status
+
+pending
+
+## Goal
+
+Let runtime and diagnostics represent patterns that are formed by multiple contributing occurrences, not just a single inspected occurrence.
+
+For now, the current single-occurrence path is enough because most patterns still arrive as one occurrence and one inspected occurrence carries the pattern truth we need.
+
+When actual multi-occurrence patterns become real, we will need a bounded chain so we can keep:
+
+- which occurrences contributed to the pattern
+- which extra arrivals were near-misses or context
+- which parts should stay in diagnostics rather than the accepted result path
+
+This is the stage where the occurrence chain becomes first-class, if and when the data really requires it.
+
+## Implementation tasks
+
+- Carry a bounded inspected-occurrence chain for a pattern result.
+- Preserve which occurrences contributed to the accepted pattern.
+- Preserve extra contributing arrivals for diagnostics and explanation.
+- Keep the chain bounded so the ESP32 memory budget stays under control.
+- Keep pattern reporting generic-first, with detector-specific fields only when required.
+
+## Already there
+
+- `PatternCandidate` already carries a small bounded occurrence slot list.
+- `PatternResult` already carries the latest inspected-occurrence reference.
+- Analyzer already distinguishes primary accepted pattern facts from rejected-candidate diagnostics.
+
+## TODO
+
+- Decide the bounded chain shape for multi-occurrence pattern results.
+- Decide which contributing occurrences should be kept in the accepted path versus diagnostics.
+- Decide how much of the chain should be surfaced in runtime/node reporting.
+- Keep the shape generic enough that frequency and scalar detectors can both use it.
+- Keep the current single-occurrence path as the default until real multi-occurrence patterns justify the extra structure.
+
+## Acceptance checks
+
+- The current single-occurrence path remains sufficient for today's common case.
+- A pattern can later describe more than one contributing occurrence when needed.
+- Accepted pattern reporting can preserve the occurrence chain that built it.
+- Diagnostic reporting can still explain extra arrivals and rejected contributors.
+- The memory footprint stays bounded and ESP32-safe.
+
+## Commit
+
+Commit after this item.
+
+Suggested commit message:
+
+```text
+Expand pattern results for multi-occurrence chains
+```
+
+---
+
 ## Pass note
 
 This pass is about the generic forwarding boundary:
@@ -324,3 +481,4 @@ This pass is about the generic forwarding boundary:
 - rejected path: compact diagnostics, generic-first
 - analyzer: thin observer with health and temporary comparison output
 - runtime consumers: pattern-result reporting parity without analyzer-shaped duplication
+- multi-occurrence patterns: bounded occurrence chains become first-class

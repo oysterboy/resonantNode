@@ -118,9 +118,20 @@ struct ScalarInspectionObservation {
 
     int16_t windowStartMs = -20;
     int16_t windowEndMs = 120;
+    unsigned long windowMs = 0;
+    size_t valueCount = 0;
+    size_t bucketCount = 0;
+    size_t coveredMs = 0;
+    float valuesPerBucket = 0.0f;
+    float coverageRatio = 0.0f;
 
     float peak = 0.0f;
     float mean = 0.0f;
+    float rms = 0.0f;
+    float median = 0.0f;
+    float p75 = 0.0f;
+    float p90 = 0.0f;
+    float trimmedMean = 0.0f;
     float last = 0.0f;
     float baseline = 0.0f;
     float lift = 0.0f;

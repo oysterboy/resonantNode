@@ -36,6 +36,11 @@ struct ScalarWindow {
     float min = 0.0f;
     float max = 0.0f;
     float mean = 0.0f;
+    float rms = 0.0f;
+    float median = 0.0f;
+    float p75 = 0.0f;
+    float p90 = 0.0f;
+    float trimmedMean = 0.0f;
     float peak = 0.0f;
     unsigned long peakTimeMs = 0;
     float rise = 0.0f;

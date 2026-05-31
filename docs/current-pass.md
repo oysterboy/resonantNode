@@ -1,370 +1,402 @@
-# Current Pass - Detection Safety + Deviation Preparation
+# Current Pass — AMP Deviation Measurement and Support Metric Selection
 
 ## Goal
 
-This pass prepares the detection stack for trustworthy deviation work and prevents debug/runtime mismatches from corrupting measurements.
+Improve the reliability of AMP support evidence by measuring robust AMP metrics before changing detection behavior.
 
-It does not yet replace the AMP support metric or retune thresholds. It sets up the code so the next deviation pass can measure AMP / FrequencyScore behavior honestly.
-
-## Working Rule
-
-Each item must be implemented, compiled/tested as far as practical, and committed before moving to the next item.
-
-Do not stop after a single successful item. Continue through the full pass list in order.
-
-Recommended commit style:
+This pass covers ranked fix-list items **5–8** only:
 
 ```text
-pass: <short item name>
+5. Add AMP robust metric reporting.
+6. Add AMP pre_event_floor and event_lift metrics.
+7. Run controlled deviation comparisons before changing support behavior.
+8. Replace PeakAbsolute only after measurement; likely EventP75 or EventP75MinusPreFloor.
 ```
 
-Example:
+## Working rule
 
 ```text
-pass: split diagnostics reset from detector state
+Measure first.
+Do not replace PeakAbsolute blindly.
+Every implemented item must be committed after implementation.
+Do not stop after an individual item unless the build is broken and cannot be resolved locally.
+Continue until the end of this pass list.
 ```
+
+## Scope
+
+This pass focuses on **AMP deviation**, not general detection refactor work.
+
+In scope:
+
+- Add robust AMP window statistics.
+- Add event-relative AMP floor metrics.
+- Extend Analyzer / SEQ_INSPECT output with AMP comparison values.
+- Keep current behavior unchanged until measurement is available.
+- Compare metrics across controlled runs.
+- Add one new AMP support mode only after measurement.
+- Retune AMP support thresholds only after the new metric is chosen.
+
+Out of scope for this pass:
+
+- FrequencyMatch detector rewrite.
+- Scalar-on-frequency cleanup.
+- Hann Goertzel A/B.
+- Target generation handling.
+- I2S backlog work.
+- Analyzer staged truth rewrite.
+- Behavior changes beyond AMP support metric selection.
 
 ---
 
-# Scope
+# Item 5 — Add AMP robust metric reporting
 
-## Must complete in this pass
+## Goal
 
-1. Split diagnostics reset from detector/source reset.
-2. Confirm Node/Analyzer runtime parity with explicit frequency config/status output.
-3. Make scalar source input live-source based.
-4. Preserve fresh-only frequency history and make detector reporting ms-first.
-5. Fix FeatureHistory window statistic semantics if contained/small enough for this pass.
+Expose robust AMP statistics for the same inspected AMP window that currently feeds `PeakAbsolute` support.
 
-## Out of scope for this pass
-
-Do not yet:
-
-- replace `PeakAbsolute` as TonalPulse AMP support truth
-- retune AMP thresholds
-- add Hann-windowed Goertzel
-- add coverage-based FrequencyMatch mode
-- rewrite Analyzer stage reporting fully
-- rename all semantic debt globally unless directly touched
-
----
-
-# Item 1 - Split Diagnostics Reset from Detector/Source Reset
-
-## Status
-
-Done.
-
-## Problem
-
-`DetectionRuntime::resetDiagnostics()` currently resets real occurrence sources / emitters. Debug/reporting state must not affect live detection state.
-
-If diagnostics reset can clear live candidates, all later Analyzer/deviation measurements are suspect.
-
-## Required changes
-
-- [x] Split diagnostics counter reset from source/detector state reset.
-- [x] Introduce separate functions with clear names, for example:
-
-```cpp
-resetDiagnosticsCounters();
-resetOccurrenceSources();
-resetDetectionState();
-```
-
-- [x] `captureDiagnostics()` must not reset live emitters merely because diagnostics are disabled.
-- [x] Profile switching / explicit runtime reset may reset occurrence sources.
-- [x] Diagnostics-only reset may only clear diagnostic snapshots/counters.
-
-## Acceptance checks
-
-- [x] Disabling diagnostics does not reset live source candidates.
-- [x] Calling diagnostics capture while diagnostics are disabled does not alter detection behavior.
-- [x] Existing profile/runtime reset still has a clear path to reset emitters when explicitly intended.
-
-## Commit after item
+Current suspected issue:
 
 ```text
-pass: split diagnostics reset from detector state
+TonalPulse AMP support uses PeakAbsolute.
+PeakAbsolute is sensitive to spikes, contact ticks, sharp waveform peaks, and single-bin outliers.
 ```
 
----
+## Implementation tasks
 
-# Item 2 - Node/Analyzer Runtime Parity Status
+Add AMP window statistics to the scalar/window inspection path.
 
-## Status
-
-Done.
-
-## Problem
-
-Analyzer and Node may run different frequency settings. Frequency window / decimation / target must be visible in both paths before comparing behavior or debugging deviation.
-
-## Required changes
-
-- [x] Print or expose the same runtime frequency facts in both Analyzer and Node/RB status/logs:
+At minimum report:
 
 ```text
-freq.window_samples
-freq.window_ms
-freq.compute_decimation
-freq.update_step_ms
-freq.target_hz
+amp.window_start_ms
+amp.window_end_ms
+amp.window_ms
+amp.bucket_count
+amp.value_count
+amp.covered_ms
+amp.coverage_ratio
+
+amp.peak
+amp.mean
+amp.rms
+amp.median
+amp.p75
+amp.p90
+amp.trimmed_mean
 ```
 
-- [x] If available, also include:
+## Notes
+
+- Keep existing `PeakAbsolute` support decision unchanged.
+- This item is measurement-only.
+- `coverage_ratio` must mean true time coverage, not `valueCount / bucketCount`.
+- If `trimmed_mean` is too expensive or awkward, make it optional and implement after RMS / median / p75 / p90.
+
+## Suggested implementation order
 
 ```text
-freq.updated_this_frame
-freq.evidence_age_samples
-freq.evidence_age_ms
-```
-
-## Rules
-
-- [x] Do not assume Analyzer config equals Node config.
-- [x] The runtime should make the active values visible.
-- [x] If decimation can be set in Analyzer but not Node, make that difference explicit in status or add a Node-side config path if small.
-
-## Acceptance checks
-
-- [x] Analyzer output shows frequency config.
-- [x] Node/RB status or startup output shows frequency config.
-- [x] It is immediately visible whether both are using the same window and decimation.
-
-## Commit after item
-
-```text
-pass: expose frequency runtime config parity
-```
-
----
-
-# Item 3 - Scalar Source Input Must Use Live Source Values
-
-## Status
-
-Done.
-
-## Problem
-
-Scalar-on-AMP already uses live frame data, but scalar-on-frequency currently risks reading from `FeatureHistory.latestValue()`. Source detectors should consume live/current source values. Inspectors should consume retrospective FeatureHistory windows.
-
-Correct split:
-
-```text
-Source path = live stream
-Inspector path = FeatureHistory window
-```
-
-## Required changes
-
-- [x] Change scalar source selection so it receives both the current `AudioSignalFrame` and the current `FrequencyFeatureFrame`.
-
-Target behavior:
-
-```text
-Scalar source on AmpEnvelope:
-  input = frame.centeredMagnitude
-
-Scalar source on FrequencyScore:
-  input = frequencyFrame.score
-
-Scalar source on FrequencyContrast:
-  input = frequencyFrame.spectralContrast
-
-Scalar source on AmbientFloor:
-  input = frame.baseline
-```
-
-- [x] Do not use `history.latestValue(FrequencyScore)` or `history.latestValue(FrequencyContrast)` as source detector input.
-
-## Held/fresh rule for this pass
-
-- [x] Do not over-refactor freshness gating here.
-
-Allowed for now:
-
-```text
-frequencyFrame may expose held latest score/contrast between fresh updates
-scalar-on-frequency may consume the live frequencyFrame value
-```
-
-Required:
-
-```text
-scalar source input no longer depends on FeatureHistory
-```
-
-Fresh-only FeatureHistory remains for inspectors.
-
-## Optional small cleanup
-
-If easy, add a helper:
-
-```cpp
-bool isFrequencyDerivedStream(FeatureStreamId stream);
-```
-
-Do not rename `AmpTransient` globally in this item unless trivial. That is later cleanup.
-
-## Acceptance checks
-
-- [x] Scalar-on-AMP still uses `frame.centeredMagnitude`.
-- [x] Scalar-on-frequency uses `frequencyFrame.score` / `frequencyFrame.spectralContrast` directly.
-- [x] FeatureHistory is not used to provide scalar source input.
-- [x] Inspectors still use FeatureHistory windows.
-
-## Commit after item
-
-```text
-pass: make scalar source input live-source based
-```
-
----
-
-# Item 4 - Preserve Fresh-only Frequency History + Make Detector Reporting ms-first
-
-## Status
-
-Done.
-
-## Problem
-
-Fresh-only FeatureHistory appears to be the right model. The detector may still consume held live values, which is acceptable while decisions are wall-time based. The risk is mostly reporting/interpretation: counts must not be presented as independent evidence.
-
-## Required changes
-
-- [x] Confirm and preserve:
-
-```text
-FrequencyFeatureFrame has updatedThisFrame / freshness marker.
-FeatureHistory records FrequencyScore / FrequencyContrast only when updatedThisFrame is true.
-Inspector windows over frequency streams therefore use fresh frequency bins only.
-```
-
-- [x] Adjust diagnostics/reporting where practical:
-
-```text
-candidate.duration_ms = primary timing truth
-release_gap_ms = primary release truth
-matched_span_ms = preferred over raw frame/window counts
-```
-
-- [x] Counts may remain, but label them honestly:
-
-```text
-observed_calls
-matched_calls
-score_ok_calls
-contrast_ok_calls
-```
-
-- [x] Avoid implying:
-
-```text
-independent windows
-independent evidence frames
+1. Add RMS support.
+2. Add bounded scratch-window median / p75 / p90.
+3. Add optional trimmed_mean.
+4. Add fields to AMP inspection evidence / Analyzer output.
+5. Confirm current PeakAbsolute remains visible.
 ```
 
 ## Acceptance checks
 
-- [x] Frequency history is still fresh-only.
-- [x] Detector acceptance remains ms-based.
-- [x] Any printed count fields are clearly secondary and not named as independent evidence if they include held calls.
-- [x] No behavior retuning in this item.
+- Build succeeds.
+- Existing detection behavior is unchanged.
+- SEQ_INSPECT or equivalent AMP inspection output prints old and new AMP metrics.
+- PeakAbsolute is still printed for comparison.
+- No new metric is used for support acceptance yet.
 
-## Commit after item
+## Commit
+
+Commit after this item.
+
+Suggested commit message:
 
 ```text
-pass: keep frequency history fresh and detector reports ms-first
+Add AMP robust window metrics for inspection diagnostics
 ```
 
 ---
 
-# Item 5 - Fix FeatureHistory Window Statistic Semantics
+# Item 6 — Add AMP pre_event_floor and event_lift metrics
 
-## Status
+## Goal
 
-Done.
+Add local acoustic floor comparison for AMP support analysis.
 
-## Problem
-
-Some FeatureHistory/ScalarWindow fields currently sound physically meaningful but are ambiguous or misleading.
-
-Known issue:
+Important distinction:
 
 ```text
-coverageRatio = valueCount / bucketCount
+input_baseline = existing AudioSignal adaptive baseline
+pre_event_floor = new local FeatureHistory window before the event
 ```
 
-This is not true time coverage. For AMP, many values may land in one millisecond bucket, so this can exceed 1 or behave like values-per-bucket.
+The new floor is not a replacement for the existing adaptive input baseline.
 
-## Required changes
+## Suggested windows
 
-- [x] Split window statistics into explicit fields:
+Event window:
 
 ```text
-valueCount        // number of recorded values
-bucketCount       // number of ms bins with data
-valuesPerBucket   // density, if useful
-coveredMs         // number of represented ms bins or covered time
-coverageRatio     // coveredMs / requestedWindowMs
+candidate_peak_ms - 10 ms
+→ candidate_peak_ms + 90 ms
 ```
 
-- [x] Avoid using `freshValueCount` generically for AMP. AMP density and frequency freshness are different concepts.
+Pre-event floor window:
 
-- [x] If a full rename is too large, add new fields and leave old fields as deprecated/compat for now.
+```text
+candidate_peak_ms - 250 ms
+→ candidate_peak_ms - 50 ms
+```
 
-## Rules
+If candidate peak time is not available or unreliable, use the best available occurrence time consistently and print which anchor was used.
 
-- [x] Inspector windows remain time-window based.
-- [x] AMP and frequency can share the same outer window shape.
-- [x] Frequency-specific freshness remains represented by fresh-only recording and/or frequency-specific diagnostics.
+## Metrics to compute
+
+Add/report:
+
+```text
+amp.pre_floor_median
+amp.pre_floor_p75
+amp.pre_floor_rms
+amp.lift_p75 = event_p75 - pre_floor_median
+amp.lift_rms = event_rms - pre_floor_rms
+amp.lift_trimmed_mean = event_trimmed_mean - pre_floor_median
+```
+
+Optional:
+
+```text
+amp.pre_floor_coverage_ratio
+amp.pre_floor_bucket_count
+amp.pre_floor_value_count
+```
+
+## Implementation notes
+
+- Use existing `AmpEnvelope` FeatureHistory.
+- Do not call this `baseline` in output unless qualified.
+- Prefer names like `pre_event_floor`, `event_level`, and `event_lift`.
+- Keep old `amp.lift` / same-window lift only if renamed or clearly distinguished.
 
 ## Acceptance checks
 
-- [x] `coverageRatio` means time coverage, not value density.
-- [x] AMP windows can report both dense value count and time coverage.
-- [x] Frequency windows can report fresh-bin coverage without pretending to have AMP-like density.
-- [x] Existing inspector logic still compiles and produces equivalent decisions unless explicitly changed.
+- Build succeeds.
+- SEQ_INSPECT shows event-window metrics and pre-event-floor metrics.
+- Existing support acceptance still uses the old mode unless explicitly configured otherwise.
+- Missing/low-coverage pre-event floor is reported clearly, not silently treated as zero.
 
-## Commit after item
+## Commit
+
+Commit after this item.
+
+Suggested commit message:
 
 ```text
-pass: clarify feature history window statistics
+Add AMP pre-event floor and event lift diagnostics
 ```
 
 ---
 
-# End-of-pass checks
+# Item 7 — Run controlled deviation comparisons
 
-After all items are complete, run a short sanity test and inspect output for:
+## Goal
+
+Use the new metrics to determine whether AMP deviation is mostly caused by `PeakAbsolute` / metric choice, local floor changes, or real physical variation.
+
+## Test runs
+
+Run the same output mode and profile across:
 
 ```text
-- diagnostics reset does not affect detection
-- Analyzer and Node show same frequency config values where expected
-- scalar-on-frequency source input no longer uses FeatureHistory.latestValue
-- frequency FeatureHistory remains fresh-only
-- detector outputs prioritize ms timing
-- FeatureHistory window stats have clear semantics
+1. stable same-position
+2. near
+3. mid
+4. far
+5. movement / cable disturbance
 ```
 
-Do not start AMP support replacement until this pass is done.
+For each run, collect enough trials to see spread, not just one-off behavior.
 
-## Status
+Suggested run size:
 
-All current-pass items are checked off in the doc. Remaining work, if any, belongs in the next pass preview or in follow-up cleanup commits.
+```text
+50–100 trials per condition, if practical
+```
+
+## Compare these metrics
+
+```text
+amp.peak
+amp.mean
+amp.rms
+amp.median
+amp.p75
+amp.p90
+amp.trimmed_mean
+amp.lift_p75
+amp.lift_rms
+amp.lift_trimmed_mean
+```
+
+For each metric, compare:
+
+```text
+median value
+standard deviation
+coefficient of variation
+near/far separation
+miss/reject correlation
+spike/outlier behavior
+low-coverage cases
+```
+
+## Success criteria
+
+A good replacement metric should:
+
+```text
+- show lower spread than PeakAbsolute under stable conditions
+- still separate useful support classes
+- not spike randomly
+- not collapse during valid events
+- correlate with support presence better than raw peak
+```
+
+Expected likely candidates:
+
+```text
+event_p75
+event_p75 - pre_event_floor_median
+event_rms - pre_event_floor_rms
+event_trimmed_mean
+```
+
+## Output summary
+
+At the end of the comparison, write a short note into the work log or commit message body:
+
+```text
+Best candidate metric:
+Rejected metrics:
+Reason:
+Threshold implication:
+Known caveat:
+```
+
+## Commit
+
+Commit after adding any test-output support or summary artifact.
+
+Suggested commit message:
+
+```text
+Compare AMP support metrics across deviation test runs
+```
 
 ---
 
-# Next Pass Preview - Signal Deviation Measurement
+# Item 8 — Replace PeakAbsolute only after measurement
 
-After this current pass, the next pass should focus on improving signal deviation measurement:
+## Goal
+
+Add one new AMP support mode and retune thresholds only after Item 7 identifies the best candidate.
+
+## Candidate support modes
+
+Preferred first candidates:
 
 ```text
-1. Add AMP robust metrics: peak, mean, RMS, median, p75, p90, trimmed_mean.
-2. Add AMP pre_event_floor and event_lift metrics.
-3. Run controlled deviation comparisons.
-4. Replace PeakAbsolute only after data proves the better support metric.
+EventP75MinusPreFloor
+EventP75
+EventRmsMinusPreFloor
+```
+
+Avoid as long-term support truth:
+
+```text
+PeakAbsolute
+```
+
+PeakAbsolute may remain available as a diagnostic or fallback mode.
+
+## Implementation tasks
+
+1. Add the selected support mode to the scalar inspection mode enum / config.
+2. Make TonalPulse or a test profile able to select the new mode.
+3. Keep PeakAbsolute available for comparison.
+4. Update SEQ_INSPECT to print:
+
+```text
+amp.support_mode
+amp.classification_value
+amp.support_strength
+amp.threshold_weak
+amp.threshold_medium
+amp.threshold_strong
+```
+
+5. Retune thresholds for:
+
+```text
+weak
+medium
+strong
+```
+
+## Retuning rule
+
+Do not reuse old PeakAbsolute thresholds blindly.
+
+The new metric may have a different scale.
+
+## Acceptance checks
+
+- Build succeeds.
+- Old PeakAbsolute mode still exists.
+- New mode can be selected through profile/config.
+- SEQ_INSPECT clearly prints which mode produced support classification.
+- New thresholds are documented in profile config.
+- Detection behavior is tested with at least one stable run after switching.
+
+## Commit
+
+Commit after this item.
+
+Suggested commit message:
+
+```text
+Add measured AMP support mode and retune thresholds
+```
+
+---
+
+# Final acceptance for the pass
+
+The pass is complete when:
+
+```text
+- AMP robust metrics are visible.
+- Pre-event floor / lift metrics are visible.
+- Controlled comparison has been run or the output is ready for it.
+- PeakAbsolute has not been replaced without measurement.
+- If replaced, the selected mode and thresholds are documented.
+- Each implemented item has its own commit.
+```
+
+## Final pass summary to write after completion
+
+```text
+Implemented:
+Selected AMP metric:
+Old PeakAbsolute behavior:
+New thresholds:
+Observed deviation improvement:
+Remaining physical/acoustic limitations:
+Next recommended pass:
 ```

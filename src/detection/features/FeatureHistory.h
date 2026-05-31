@@ -26,6 +26,13 @@ public:
     void record(FeatureStreamId id, unsigned long timeMs, float value);
 
     ScalarWindow getWindow(FeatureStreamId stream, unsigned long startMs, unsigned long endMs, float sustainedThreshold = 0.0f) const;
+    size_t copyWindowApproximateValues(
+        FeatureStreamId stream,
+        unsigned long startMs,
+        unsigned long endMs,
+        float* outValues,
+        size_t capacity
+    ) const;
 
     size_t sampleCount(FeatureStreamId stream) const;
     bool hasSamples(FeatureStreamId stream) const;
@@ -40,6 +47,7 @@ private:
         float min = 0.0f;
         float max = 0.0f;
         float sum = 0.0f;
+        double sumSquares = 0.0;
         size_t count = 0;
     };
 

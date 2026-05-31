@@ -270,20 +270,20 @@ Forward runtime result data uniformly through PatternResult
 
 ## Status
 
-partial
+done
 
 ## Goal
 
-Make rejected-candidate diagnostics carry only what is needed to explain the rejection.
+Make rejected-candidate diagnostics provide a clear reject handoff.
 
-Generic data should be first-class. Specialized data should stay optional and shallow.
+The top-level reject summary should stay generic and readable, with detector-specific detail only when runtime semantics require it.
 
 ## Implementation tasks
 
-- Keep rejected-candidate summaries in diagnostics.
+- Keep the top-level rejected-candidate summary in diagnostics.
 - Store the rejection reason in the diagnostics path.
-- Keep generic observation facts available for rejected candidates when they help explain the failure.
-- Add specialized fields only when a detector truly needs them.
+- Keep generic observation facts available when they help explain the failure.
+- Add detector-specific reject detail only when runtime semantics require it.
 - Avoid copying accepted-path payloads into diagnostics.
 
 ## Already there
@@ -291,13 +291,11 @@ Generic data should be first-class. Specialized data should stay optional and sh
 - `DetectionDiagnostics` already carries generic and detector-specific rejection facts.
 - `OccurrenceInspector` already writes rejection reasons onto rejected inspected occurrences.
 - Analyzer reporting already has separate reject-oriented output, including `SEQ_SOURCE_REJECT`.
-
-## TODO
-
-- Keep rejected summaries generic-first and compact.
-- Remove any remaining accepted-path duplication from reject diagnostics.
-- Keep specialized reject fields shallow and optional.
-- Make sure rejected candidates remain explainable without leaning on accepted-path payloads.
+- The runtime-to-analyzer reject handoff already exists as a generic summary with optional detector-specific detail underneath.
+- Rejected candidates are already explainable without leaning on accepted-path payloads.
+- Generic diagnostics are already enough for most cases.
+- Specialized data stays optional and shallow.
+- Analyzer output stays bounded and readable.
 
 ## Acceptance checks
 
@@ -318,11 +316,11 @@ Keep rejected diagnostics generic-first
 
 ---
 
-# Item 3 - Keep analyzer thin and transitional compare output temporary
+# Item 3a - Keep analyzer thin and transitional compare output temporary
 
 ## Status
 
-in progress
+partial
 
 ## Goal
 
@@ -365,6 +363,96 @@ Suggested commit message:
 
 ```text
 Keep analyzer as a thin runtime result presenter
+```
+
+---
+
+# Item 3b - Keep rejected diagnostics generic-first
+
+## Status
+
+done
+
+## Goal
+
+Make rejected-candidate diagnostics provide a clear reject handoff.
+
+The top-level reject summary should stay generic and readable, with detector-specific detail only when runtime semantics require it.
+
+## Implementation tasks
+
+- Keep the top-level rejected-candidate summary in diagnostics.
+- Store the rejection reason in the diagnostics path.
+- Keep generic observation facts available when they help explain the failure.
+- Add detector-specific reject detail only when runtime semantics require it.
+- Avoid copying accepted-path payloads into diagnostics.
+
+## Already there
+
+- `DetectionDiagnostics` already carries generic and detector-specific rejection facts.
+- `OccurrenceInspector` already writes rejection reasons onto rejected inspected occurrences.
+- Analyzer reporting already has separate reject-oriented output, including `SEQ_SOURCE_REJECT`.
+- The runtime-to-analyzer reject handoff already exists as a generic summary with optional detector-specific detail underneath.
+- Rejected candidates are already explainable without leaning on accepted-path payloads.
+- Generic diagnostics are already enough for most cases.
+- Specialized data stays optional and shallow.
+- Analyzer output stays bounded and readable.
+
+## Acceptance checks
+
+- Rejected candidates are explainable without accepted-path duplication.
+- Generic diagnostics are enough for most cases.
+- Specialized data remains optional.
+- Analyzer output stays bounded and readable.
+
+## Commit
+
+Commit after this item.
+
+Suggested commit message:
+
+```text
+Keep rejected diagnostics generic-first
+```
+
+---
+
+# Item 3c - Remove temporary compare output after metric selection
+
+## Status
+
+pending
+
+## Goal
+
+Drop the temporary `SEQ_INSPECT_COMPARE` line once the metric choice is settled and the transition is over.
+
+The analyzer should keep the thin presentation role, but it should not keep transitional comparison output forever.
+
+## Already there
+
+- `SEQ_INSPECT_COMPARE` is already clearly marked as temporary in code.
+- The analyzer already keeps its own trial-shape classification layer.
+
+## TODO
+
+- Remove `SEQ_INSPECT_COMPARE` after the chosen metric is no longer in flux.
+- Keep the analyzer output focused on runtime truth, health, and trial-shape classification.
+
+## Acceptance checks
+
+- No temporary compare line remains after metric selection is complete.
+- Analyzer stays thin and presentation-oriented.
+- Health and runtime truth output still work normally.
+
+## Commit
+
+Commit after this item.
+
+Suggested commit message:
+
+```text
+Remove temporary compare output after metric selection
 ```
 
 ---

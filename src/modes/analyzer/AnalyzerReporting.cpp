@@ -688,6 +688,49 @@ void AnalyzerApp::printSequenceInspect(const AnalyzerReport& report) const {
     }
     Serial.println();
 
+    // TEMP: per-trial comparison line for external analysis of deviation runs.
+    if (detailLevel > 0U && report.profileDetail.scalarObservation.available) {
+        Serial.print("SEQ_INSPECT_COMPARE");
+        Serial.print(" trial=");
+        Serial.print(report.context.trial);
+        Serial.print(" profile=");
+        Serial.print(report.context.profile != nullptr ? report.context.profile : "unknown");
+        Serial.print(" result=");
+        Serial.print(analyzerResultName(report.classification.result));
+        Serial.print(" accepted=");
+        Serial.print(report.scalar.acceptedPresent ? 1 : 0);
+        Serial.print(" note=");
+        Serial.print(report.profileDetail.scalarObservation.note != nullptr ? report.profileDetail.scalarObservation.note : "none");
+        Serial.print(" mode=");
+        Serial.print(detection::scalarInspectionModeName(report.profileDetail.scalarObservation.mode));
+        Serial.print(" anchor=");
+        Serial.print(report.profileDetail.scalarObservation.anchor != nullptr ? report.profileDetail.scalarObservation.anchor : "none");
+        Serial.print(" coverage=");
+        Serial.print(report.profileDetail.scalarObservation.coverageRatio, 3);
+        Serial.print(" pre_floor_coverage=");
+        Serial.print(report.profileDetail.scalarObservation.preFloorCoverageRatio, 3);
+        Serial.print(" peak=");
+        Serial.print(report.profileDetail.scalarObservation.peak, 1);
+        Serial.print(" mean=");
+        Serial.print(report.profileDetail.scalarObservation.mean, 1);
+        Serial.print(" rms=");
+        Serial.print(report.profileDetail.scalarObservation.rms, 1);
+        Serial.print(" median=");
+        Serial.print(report.profileDetail.scalarObservation.median, 1);
+        Serial.print(" p75=");
+        Serial.print(report.profileDetail.scalarObservation.p75, 1);
+        Serial.print(" p90=");
+        Serial.print(report.profileDetail.scalarObservation.p90, 1);
+        Serial.print(" trimmed_mean=");
+        Serial.print(report.profileDetail.scalarObservation.trimmedMean, 1);
+        Serial.print(" lift_p75=");
+        Serial.print(report.profileDetail.scalarObservation.liftP75, 1);
+        Serial.print(" lift_rms=");
+        Serial.print(report.profileDetail.scalarObservation.liftRms, 1);
+        Serial.print(" lift_trimmed_mean=");
+        Serial.println(report.profileDetail.scalarObservation.liftTrimmedMean, 1);
+    }
+
     if (report.profileDetail.inspectionModuleCount > 1 &&
         strcmp(supportTarget, "FrequencyScoreStrength") == 0 &&
         report.profileDetail.scalarObservation.available) {

@@ -70,7 +70,7 @@ const char* sequenceEvidenceTargetName(detection::EvidenceTarget value) {
 
 } // namespace
 
-void AnalyzerApp::startSequenceTest(unsigned long totalTrials, unsigned long periodMs, unsigned long windowEndOffsetMs, unsigned long toneHz, unsigned long durationMs, bool quiet, bool showDetails, SequenceDiagMode diagMode, const char* setupLabel, bool sampleDumpEnabled, unsigned long sampleDumpFirstTrials, unsigned long sampleDumpEveryNth, unsigned long sampleDumpLeadMs, unsigned long sampleDumpTailMs, unsigned long sampleDumpStepMs, unsigned long sampleDumpMaxRows, detection::DetectionProfileKind profileKind, bool externalEmitter) {
+void AnalyzerApp::startSequenceTest(unsigned long totalTrials, unsigned long periodMs, unsigned long windowEndOffsetMs, unsigned long toneHz, unsigned long durationMs, bool quiet, bool showDetails, SequenceDiagMode diagMode, const char* setupLabel, bool sampleDumpEnabled, unsigned long sampleDumpFirstTrials, unsigned long sampleDumpEveryNth, unsigned long sampleDumpLeadMs, unsigned long sampleDumpTailMs, unsigned long sampleDumpStepMs, unsigned long sampleDumpMaxRows, unsigned long startupDelayMs, detection::DetectionProfileKind profileKind, bool externalEmitter) {
     if (_valMode) {
         return;
     }
@@ -110,6 +110,7 @@ void AnalyzerApp::startSequenceTest(unsigned long totalTrials, unsigned long per
     _sequenceTest.windowEndOffsetMs = windowEndOffsetMs;
     _sequenceTest.toneHz = toneHz;
     _sequenceTest.durationMs = durationMs;
+    _sequenceTest.startupDelayMs = startupDelayMs;
     _sequenceTest.sampleDumpEnabled = sampleDumpEnabled;
     _sequenceTest.sampleDumpFirstTrials = sampleDumpFirstTrials;
     _sequenceTest.sampleDumpEveryNth = sampleDumpEveryNth;
@@ -164,7 +165,7 @@ void AnalyzerApp::startSequenceTest(unsigned long totalTrials, unsigned long per
         }
     }
     _sequenceTest.startedAtMs = millis();
-    _sequenceTest.nextTriggerAtMs = _sequenceTest.startedAtMs + kSequenceWarmupMs;
+    _sequenceTest.nextTriggerAtMs = _sequenceTest.startedAtMs + _sequenceTest.startupDelayMs;
     _sequenceTest.currentTrial = 0;
     _sequenceTest.currentTrialScheduledAtMs = 0;
     _sequenceTest.currentTrialStartMs = 0;
@@ -271,8 +272,8 @@ void AnalyzerApp::startSequenceTest(unsigned long totalTrials, unsigned long per
     if (!_sequenceTest.quiet) {
         Serial.print("SEQ start test=");
         Serial.print(_sequenceTest.setupLabel);
-        Serial.print(" warmup_ms=");
-        Serial.print(kSequenceWarmupMs);
+        Serial.print(" startup_delay_ms=");
+        Serial.print(_sequenceTest.startupDelayMs);
         Serial.print(" loopDelayMs=");
         Serial.print(TEST_LOOP_DELAY_MS);
         Serial.print(" logStress=");
@@ -307,8 +308,8 @@ void AnalyzerApp::startSequenceTest(unsigned long totalTrials, unsigned long per
         Serial.print(_sequenceTest.externalEmitter ? "OBS" : "SEQ");
         Serial.print(" test=");
         Serial.print(_sequenceTest.setupLabel);
-        Serial.print(" warmup_ms=");
-        Serial.print(kSequenceWarmupMs);
+        Serial.print(" startup_delay_ms=");
+        Serial.print(_sequenceTest.startupDelayMs);
         Serial.print(" loopDelayMs=");
         Serial.print(TEST_LOOP_DELAY_MS);
         Serial.print(" logStress=");

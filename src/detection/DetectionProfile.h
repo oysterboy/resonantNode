@@ -93,11 +93,11 @@ inline DetectionProfile makeTonalPulseProfile() {
     profile.occurrenceSource = OccurrenceSourceKind::FrequencyMatch;
 
     // Frequency path tuning.
-    profile.frequencyMatch.releaseDebounceMs = 20;
-    profile.frequencyMatch.cooldownAfterOnsetMs = 20;
-    profile.frequencyMatch.minTransientDurationMs = 80;
-    profile.frequencyMatch.scoreMin = 10000.0f;
-    profile.frequencyMatch.contrastMin = 50.0f;
+    profile.frequencyMatch.releaseDebounceMs = 30;    // Hold the release briefly to avoid chatter.
+    profile.frequencyMatch.cooldownAfterOnsetMs = 0; // Re-arm after a short post-close cooldown (bad var naming)
+    profile.frequencyMatch.minTransientDurationMs = 70; // Require a sustained match before emit.
+    profile.frequencyMatch.scoreMin = 10000.0f;       // Minimum frequency score gate.
+    profile.frequencyMatch.contrastMin = 500.0f;       // Minimum spectral contrast gate.
 
     // Inspector composition.
     profile.inspectionPlan = {};
@@ -139,7 +139,7 @@ inline DetectionProfile makeTonalPulseProfile() {
     profile.inspectionPlan.count = 3;
 
     // Pattern rules.
-    profile.patternRulesConfig.requireSupportForAcceptance = true;
+    profile.patternRulesConfig.requireSupportForAcceptance = false;
     profile.patternRulesConfig.requiredSupportTarget = EvidenceTarget::AmpStrength;
     profile.patternRulesConfig.minimumSupportStrength = StrengthClass::Medium;
 

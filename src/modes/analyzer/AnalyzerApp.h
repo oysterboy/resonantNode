@@ -325,6 +325,7 @@ private:
         unsigned long windowEndOffsetMs = 2200;
         unsigned long toneHz = runtime::kDefaultChirpFrequencyHz;
         unsigned long durationMs = 100;
+        unsigned long startupDelayMs = 1000;
         char setupLabel[48] = TEST_SETUP_LABEL;
 
         bool sampleDumpEnabled = false;
@@ -447,6 +448,7 @@ private:
         unsigned long sampleDumpTailMs = 0;
         unsigned long sampleDumpStepMs = 0;
         unsigned long sampleDumpMaxRows = 0;
+        unsigned long startupDelayMs = 1000;
         detection::DetectionProfileKind profileKind = detection::DetectionProfileKind::TonalPulse;
         bool externalEmitter = false;
         char setupLabelStorage[96] = {};
@@ -472,7 +474,7 @@ private:
     void printBaseHints() const;
 
     // Sequence-test workflows.
-    void startSequenceTest(unsigned long totalTrials, unsigned long periodMs, unsigned long windowEndOffsetMs, unsigned long toneHz, unsigned long durationMs, bool quiet = false, bool showDetails = true, SequenceDiagMode diagMode = SequenceDiagMode::Off, const char* setupLabel = nullptr, bool sampleDumpEnabled = false, unsigned long sampleDumpFirstTrials = 2, unsigned long sampleDumpEveryNth = 0, unsigned long sampleDumpLeadMs = 50, unsigned long sampleDumpTailMs = 800, unsigned long sampleDumpStepMs = 1, unsigned long sampleDumpMaxRows = 5000, detection::DetectionProfileKind profileKind = detection::DetectionProfileKind::TonalPulse, bool externalEmitter = false);
+    void startSequenceTest(unsigned long totalTrials, unsigned long periodMs, unsigned long windowEndOffsetMs, unsigned long toneHz, unsigned long durationMs, bool quiet = false, bool showDetails = true, SequenceDiagMode diagMode = SequenceDiagMode::Off, const char* setupLabel = nullptr, bool sampleDumpEnabled = false, unsigned long sampleDumpFirstTrials = 2, unsigned long sampleDumpEveryNth = 0, unsigned long sampleDumpLeadMs = 50, unsigned long sampleDumpTailMs = 800, unsigned long sampleDumpStepMs = 1, unsigned long sampleDumpMaxRows = 5000, unsigned long startupDelayMs = 1000, detection::DetectionProfileKind profileKind = detection::DetectionProfileKind::TonalPulse, bool externalEmitter = false);
     void stopSequenceTest();
     void updateSequenceTest(unsigned long now);
     void finalizeSequenceTrial(unsigned long now);

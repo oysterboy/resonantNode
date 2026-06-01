@@ -39,8 +39,8 @@ void AnalyzerApp::printSequenceHelp() {
     Serial.println("CMD: SEQ help");
     Serial.println("CMD: SEQ");
     Serial.println("CMD: SEQ stop");
-    Serial.println("SEQ IN: start [N|tries=N] [period=MS] [window=MS] [freq=HZ] [dur=MS] [test=LABEL]");
-    Serial.println("SEQ IN: OBS start [N|tries=N] [period=2000] [window=1800] [freq=HZ] [dur=MS] [test=LABEL]");
+    Serial.println("SEQ IN: start [N|tries=N] [period=MS] [window=MS] [freq=HZ] [dur=MS] [delay=MS] [test=LABEL]");
+    Serial.println("SEQ IN: OBS start [N|tries=N] [period=2000] [window=1800] [freq=HZ] [dur=MS] [delay=MS] [test=LABEL]");
     Serial.println("SEQ IN: TRIES N");
     Serial.println("SEQ IN: [profile=tonalpulse|amp|chirp_experimental]");
     Serial.println("SEQ IN: MODE quiet|compact|signalcheck|full|system|source|inspect|pattern|dump");
@@ -464,6 +464,7 @@ void AnalyzerApp::handleUsbLine(const char* line) {
             unsigned long windowEndOffsetMs = 2200;
             unsigned long toneHz = runtime::kDefaultChirpFrequencyHz;
             unsigned long durationMs = 100;
+            unsigned long startupDelayMs = 1000;
             bool quiet = false;
             bool showDetails = true;
             bool sampleDumpEnabled = false;
@@ -496,6 +497,8 @@ void AnalyzerApp::handleUsbLine(const char* line) {
                     toneHz = static_cast<unsigned long>(strtoul(token + 5, nullptr, 10));
                 } else if (startsWithTokenIgnoreCase(token, "dur=")) {
                     durationMs = static_cast<unsigned long>(strtoul(token + 4, nullptr, 10));
+                } else if (startsWithTokenIgnoreCase(token, "delay=") || startsWithTokenIgnoreCase(token, "warmup=")) {
+                    startupDelayMs = static_cast<unsigned long>(strtoul(strchr(token, '=') + 1, nullptr, 10));
                 } else if (equalsIgnoreCase(token, "quiet")) {
                     quiet = true;
                 } else if (equalsIgnoreCase(token, "show=0")) {
@@ -601,7 +604,7 @@ void AnalyzerApp::handleUsbLine(const char* line) {
             }
             _seqOutputConfig = outputConfig;
             _seqOutputConfig.totalTrials = totalTrials;
-            startSequenceTest(totalTrials, periodMs, windowEndOffsetMs, toneHz, durationMs, quiet, showDetails, AnalyzerApp::SequenceDiagMode::Off, setupLabel, sampleDumpEnabled, sampleDumpFirstTrials, sampleDumpEveryNth, sampleDumpLeadMs, sampleDumpTailMs, sampleDumpStepMs, sampleDumpMaxRows, profileKind, externalEmitter);
+            startSequenceTest(totalTrials, periodMs, windowEndOffsetMs, toneHz, durationMs, quiet, showDetails, AnalyzerApp::SequenceDiagMode::Off, setupLabel, sampleDumpEnabled, sampleDumpFirstTrials, sampleDumpEveryNth, sampleDumpLeadMs, sampleDumpTailMs, sampleDumpStepMs, sampleDumpMaxRows, startupDelayMs, profileKind, externalEmitter);
             Serial.println("OK SEQ");
             return;
         }

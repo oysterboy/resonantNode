@@ -1126,6 +1126,7 @@ void AnalyzerApp::processPendingSequenceStart() {
         pending.sampleDumpTailMs,
         pending.sampleDumpStepMs,
         pending.sampleDumpMaxRows,
+        pending.startupDelayMs,
         pending.profileKind,
         pending.externalEmitter);
 }

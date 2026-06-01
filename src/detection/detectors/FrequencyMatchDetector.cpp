@@ -47,6 +47,20 @@ void FrequencyMatchDetector::resetState() {
     bestScore = 0.0f;
     bestContrast = 0.0f;
     bestWindowSampleCount = 0;
+    candidateCount = 0;
+    rejectedCount = 0;
+    bestDurationMs = 0;
+    secondBestDurationMs = 0;
+    bestOpenMs = 0;
+    bestPeakMs = 0;
+    bestLastMatchMs = 0;
+    bestCloseMs = 0;
+    bestPeakScore = 0.0f;
+    bestPeakContrast = 0.0f;
+    bestRejectReason = "none";
+    bestGateReason = "none";
+    totalMatchMs = 0;
+    islandCount = 0;
     memset(&bestEvidence, 0, sizeof(bestEvidence));
     memset(&candidateEvidence, 0, sizeof(candidateEvidence));
     memset(candidateState, 0, sizeof(candidateState));
@@ -63,6 +77,30 @@ void FrequencyMatchDetector::resetState() {
     noEmitReason[sizeof(noEmitReason) - 1] = '\0';
     memset(&frequencyCandidate, 0, sizeof(frequencyCandidate));
     resetDiagnosticsSummary();
+}
+
+void FrequencyMatchDetector::resetRejectSummary() {
+    candidateCount = 0;
+    rejectedCount = 0;
+    bestDurationMs = 0;
+    secondBestDurationMs = 0;
+    bestOpenMs = 0;
+    bestPeakMs = 0;
+    bestLastMatchMs = 0;
+    bestCloseMs = 0;
+    bestPeakScore = 0.0f;
+    bestPeakContrast = 0.0f;
+    bestRejectReason = "none";
+    bestGateReason = "none";
+    totalMatchMs = 0;
+    islandCount = 0;
+    memset(&bestEvidence, 0, sizeof(bestEvidence));
+    memset(&candidateEvidence, 0, sizeof(candidateEvidence));
+    bestObservedAtMs = 0;
+    bestObservedSample = 0;
+    bestScore = 0.0f;
+    bestContrast = 0.0f;
+    bestWindowSampleCount = 0;
 }
 
 void FrequencyMatchDetector::setDiagnosticsEnabled(bool enabled) {
@@ -97,6 +135,40 @@ float FrequencyMatchDetector::diagnosticsScoreMean() const {
 
 float FrequencyMatchDetector::diagnosticsContrastMean() const {
     return diagnosticsObservedCount > 0 ? diagnosticsContrastSum / static_cast<float>(diagnosticsObservedCount) : 0.0f;
+}
+
+void FrequencyMatchDetector::updateBestRejectedCandidate() {
+    if (!candidateClosed || candidateEmitted) {
+        return;
+    }
+
+    ++rejectedCount;
+    if (candidateHoldMs >= bestDurationMs) {
+        secondBestDurationMs = bestDurationMs;
+        bestDurationMs = candidateHoldMs;
+        bestOpenMs = candidateFirstSeenMs;
+        bestPeakMs = candidatePeakMs;
+        bestLastMatchMs = candidateLastMatchedMs;
+        bestCloseMs = candidateReleaseMs;
+        bestPeakScore = candidatePeakScore;
+        bestPeakContrast = candidatePeakContrast;
+        bestRejectReason = noEmitReason[0] != '\0' ? noEmitReason : "unknown";
+        bestGateReason = gateReason[0] != '\0' ? gateReason : "unknown";
+    } else if (candidateHoldMs > secondBestDurationMs) {
+        secondBestDurationMs = candidateHoldMs;
+    }
+}
+
+void FrequencyMatchDetector::observeClosedCandidate(bool accepted) {
+    if (accepted) {
+        return;
+    }
+
+    ++candidateCount;
+    ++rejectedCount;
+    ++islandCount;
+    totalMatchMs += candidateHoldMs;
+    updateBestRejectedCandidate();
 }
 
 void FrequencyMatchDetector::update(const detection::FrequencyFeatureFrame& evidence,
@@ -232,6 +304,9 @@ void FrequencyMatchDetector::update(const detection::FrequencyFeatureFrame& evid
                 frequencyCandidate.durationMs = candidateHoldMs;
                 frequencyCandidate.candidateHoldWindows = candidateHoldWindows;
                 frequencyCandidate.confidence = holdOk ? 1.0f : 0.0f;
+                if (!holdOk) {
+                    observeClosedCandidate(false);
+                }
             }
         }
 

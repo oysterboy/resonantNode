@@ -361,6 +361,7 @@ void AnalyzerApp::handleSequenceCandidate(const detection::PatternResult& patter
         entry.freqPresent = patternResult.freq.present;
         entry.freqMatched = patternResult.freq.matched;
         entry.freqScore = patternResult.freq.score;
+        entry.freqContrast = patternResult.freq.spectralContrast;
         entry.patternValid = patternResult.valid;
         entry.candidateAccepted = patternResult.patternCandidateAccepted;
         entry.patternMatched = patternResult.patternMatched;

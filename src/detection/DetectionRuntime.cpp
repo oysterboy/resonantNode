@@ -59,11 +59,17 @@ void DetectionRuntime::resetDiagnostics() {
 
 void DetectionRuntime::resetDiagnosticsCounters() {
     _diagnostics = {};
+    _frequencyEmitter.detector().resetDiagnosticsSummary();
 }
 
 void DetectionRuntime::resetOccurrenceSources() {
     _frequencyEmitter.reset();
     _scalarEmitter.reset();
+}
+
+void DetectionRuntime::resetSourceRejectSummaries() {
+    _frequencyEmitter.detector().resetRejectSummary();
+    _scalarEmitter.resetRejectSummary();
 }
 
 void DetectionRuntime::resetDetectionState() {
@@ -140,86 +146,235 @@ void DetectionRuntime::captureDiagnostics() {
     _diagnostics.scalarPeakStrength = _scalarEmitter.candidatePeakStrength();
     _diagnostics.scalarTransientRejectedDurationMs = _scalarEmitter.lastTransientRejectedDurationMs();
     _diagnostics.scalarTransientRejectedStrength = _scalarEmitter.lastTransientRejectedStrength();
+    _diagnostics.sourceSummary = {};
+    _diagnostics.sourceLastCandidate = {};
 
-    const auto& detector = _frequencyEmitter.detector();
-    _diagnostics.frequencyPresent = detector.diagnosticsObservedCount > 0;
-    _diagnostics.frequencyValidWindow = detector.readyOk;
-    _diagnostics.frequencyMatched = detector.diagnosticsMatchedCount > 0;
-    _diagnostics.frequencyScoreOk = detector.bestScoreOk;
-    _diagnostics.frequencyContrastOk = detector.bestContrastOk;
-    _diagnostics.frequencyFrames = detector.diagnosticsObservedCount;
-    _diagnostics.frequencyValidFrames = detector.diagnosticsValidCount;
-    _diagnostics.frequencyScoreOkFrames = detector.diagnosticsScoreOkCount;
-    _diagnostics.frequencyContrastOkFrames = detector.diagnosticsContrastOkCount;
-    _diagnostics.frequencyBothOkFrames = detector.diagnosticsBothOkCount;
-    _diagnostics.frequencyMatchFrames = detector.diagnosticsMatchedCount;
-    _diagnostics.frequencyRejectFrames = detector.diagnosticsRejectedCount;
-    _diagnostics.frequencyLongestMatchRunFrames = detector.longestMatchRunFrames;
-    _diagnostics.frequencyLongestMatchRunStartMs = detector.longestMatchRunStartMs;
-    _diagnostics.frequencyLongestMatchRunEndMs = detector.longestMatchRunEndMs;
-    _diagnostics.frequencyScoreMean = detector.diagnosticsScoreMean();
-    _diagnostics.frequencyContrastMean = detector.diagnosticsContrastMean();
-    _diagnostics.frequencyScoreMin = detector.diagnosticsScoreMin;
-    _diagnostics.frequencyContrastMin = detector.diagnosticsContrastMin;
-    _diagnostics.frequencyRejectReason = detector.candidateEmitted
-        ? "none"
-        : (detector.candidateClosed
-            ? (detector.noEmitReason[0] != '\0' ? detector.noEmitReason : "unknown")
-            : (detector.gateReason[0] != '\0' ? detector.gateReason : "unknown"));
-    _diagnostics.frequencyNoEmitReason = detector.noEmitReason;
-    _diagnostics.frequencyGateReason = detector.gateReason;
-    _diagnostics.frequencyWouldCandidateReason = detector.wouldCandidateReason;
-    _diagnostics.frequencyCandidateState = detector.candidateState;
-    _diagnostics.frequencyReadyOk = detector.readyOk;
-    _diagnostics.frequencyGateOpen = detector.gateOpen;
-    _diagnostics.frequencyOpened = detector.candidateActive
-        || detector.candidateClosed
-        || detector.candidateEmitted
-        || detector.candidateFirstSeenMs > 0;
-    _diagnostics.frequencyReleased = detector.candidateClosed || detector.candidateReleaseMs > 0;
-    _diagnostics.frequencyEmitted = detector.candidateEmitted;
-    _diagnostics.frequencyValidRelease = detector.validRelease;
-    _diagnostics.frequencyEmitAllowed = detector.emitAllowed;
-    _diagnostics.frequencyOpenMs = detector.candidateFirstSeenMs;
-    _diagnostics.frequencyPeakMs = detector.candidatePeakMs;
-    _diagnostics.frequencyReleaseMs = detector.candidateReleaseMs;
-    _diagnostics.frequencyDurationMs = detector.candidateHoldMs;
-    _diagnostics.frequencyMinDurationMs = detector.candidateMinDurationMs;
-    _diagnostics.frequencyMaxDurationMs = detector.candidateMaxDurationMs;
-    _diagnostics.frequencyScoreMax = detector.diagnosticsScoreMax;
-    _diagnostics.frequencyContrastMax = detector.diagnosticsContrastMax;
-    _diagnostics.frequencyScoreMaxMs = detector.diagnosticsScoreMaxMs;
-    _diagnostics.frequencyContrastMaxMs = detector.diagnosticsContrastMaxMs;
-    _diagnostics.frequencyPeakScore = detector.candidatePeakScore;
-    _diagnostics.frequencyPeakContrast = detector.candidatePeakContrast;
-    _diagnostics.frequencyPeakWindowSampleCount = detector.candidatePeakWindowSampleCount;
-    _diagnostics.frequencyScoreThreshold = detector.thresholdScore;
-    _diagnostics.frequencyContrastThreshold = detector.thresholdContrast;
-    const bool scoreNear = _diagnostics.frequencyScoreThreshold > 0.0f
-        && _diagnostics.frequencyScoreMax >= (_diagnostics.frequencyScoreThreshold * 0.75f);
-    const bool contrastNear = _diagnostics.frequencyContrastThreshold > 0.0f
-        && _diagnostics.frequencyContrastMax >= (_diagnostics.frequencyContrastThreshold * 0.75f);
-    _diagnostics.frequencyNearMiss = !acceptedPresent && (scoreNear || contrastNear
-        || _diagnostics.frequencyScoreOkFrames > 0
-        || _diagnostics.frequencyContrastOkFrames > 0);
-    if (_diagnostics.frequencyNearMiss) {
-        if (_diagnostics.frequencyScoreOkFrames > 0 && _diagnostics.frequencyContrastOkFrames == 0) {
-            _diagnostics.frequencyNearMissReason = "score_ok_contrast_low";
-        } else if (_diagnostics.frequencyContrastOkFrames > 0 && _diagnostics.frequencyScoreOkFrames == 0) {
-            _diagnostics.frequencyNearMissReason = "contrast_ok_score_low";
-        } else if (scoreNear && contrastNear) {
-            _diagnostics.frequencyNearMissReason = "near_threshold";
-        } else if (scoreNear) {
-            _diagnostics.frequencyNearMissReason = "score_near_threshold";
-        } else if (contrastNear) {
-            _diagnostics.frequencyNearMissReason = "contrast_near_threshold";
-        } else if (_diagnostics.frequencyScoreOkFrames > 0 && _diagnostics.frequencyContrastOkFrames > 0) {
-            _diagnostics.frequencyNearMissReason = "both_ok_no_emission";
+    if (_occurrenceSourceKind == OccurrenceSourceKind::FrequencyMatch) {
+        const auto& detector = _frequencyEmitter.detector();
+        _diagnostics.frequencyPresent = detector.diagnosticsObservedCount > 0;
+        _diagnostics.frequencyValidWindow = detector.readyOk;
+        _diagnostics.frequencyMatched = detector.diagnosticsMatchedCount > 0;
+        _diagnostics.frequencyScoreOk = detector.bestScoreOk;
+        _diagnostics.frequencyContrastOk = detector.bestContrastOk;
+        _diagnostics.frequencyFrames = detector.diagnosticsObservedCount;
+        _diagnostics.frequencyValidFrames = detector.diagnosticsValidCount;
+        _diagnostics.frequencyScoreOkFrames = detector.diagnosticsScoreOkCount;
+        _diagnostics.frequencyContrastOkFrames = detector.diagnosticsContrastOkCount;
+        _diagnostics.frequencyBothOkFrames = detector.diagnosticsBothOkCount;
+        _diagnostics.frequencyMatchFrames = detector.diagnosticsMatchedCount;
+        _diagnostics.frequencyRejectFrames = detector.diagnosticsRejectedCount;
+        _diagnostics.frequencyLongestMatchRunFrames = detector.longestMatchRunFrames;
+        _diagnostics.frequencyLongestMatchRunStartMs = detector.longestMatchRunStartMs;
+        _diagnostics.frequencyLongestMatchRunEndMs = detector.longestMatchRunEndMs;
+        _diagnostics.frequencyScoreMean = detector.diagnosticsScoreMean();
+        _diagnostics.frequencyContrastMean = detector.diagnosticsContrastMean();
+        _diagnostics.frequencyScoreMin = detector.diagnosticsScoreMin;
+        _diagnostics.frequencyContrastMin = detector.diagnosticsContrastMin;
+        _diagnostics.frequencyScoreMax = detector.diagnosticsScoreMax;
+        _diagnostics.frequencyContrastMax = detector.diagnosticsContrastMax;
+        _diagnostics.frequencyScoreMaxMs = detector.diagnosticsScoreMaxMs;
+        _diagnostics.frequencyContrastMaxMs = detector.diagnosticsContrastMaxMs;
+        _diagnostics.frequencyPeakScore = detector.candidatePeakScore;
+        _diagnostics.frequencyPeakContrast = detector.candidatePeakContrast;
+        _diagnostics.frequencyPeakWindowSampleCount = detector.candidatePeakWindowSampleCount;
+        _diagnostics.frequencyScoreThreshold = detector.thresholdScore;
+        _diagnostics.frequencyContrastThreshold = detector.thresholdContrast;
+        const bool scoreNear = _diagnostics.frequencyScoreThreshold > 0.0f
+            && _diagnostics.frequencyScoreMax >= (_diagnostics.frequencyScoreThreshold * 0.75f);
+        const bool contrastNear = _diagnostics.frequencyContrastThreshold > 0.0f
+            && _diagnostics.frequencyContrastMax >= (_diagnostics.frequencyContrastThreshold * 0.75f);
+        _diagnostics.frequencyNearMiss = !acceptedPresent && (scoreNear || contrastNear
+            || _diagnostics.frequencyScoreOkFrames > 0
+            || _diagnostics.frequencyContrastOkFrames > 0);
+        if (_diagnostics.frequencyNearMiss) {
+            if (_diagnostics.frequencyScoreOkFrames > 0 && _diagnostics.frequencyContrastOkFrames == 0) {
+                _diagnostics.frequencyNearMissReason = "score_ok_contrast_low";
+            } else if (_diagnostics.frequencyContrastOkFrames > 0 && _diagnostics.frequencyScoreOkFrames == 0) {
+                _diagnostics.frequencyNearMissReason = "contrast_ok_score_low";
+            } else if (scoreNear && contrastNear) {
+                _diagnostics.frequencyNearMissReason = "near_threshold";
+            } else if (scoreNear) {
+                _diagnostics.frequencyNearMissReason = "score_near_threshold";
+            } else if (contrastNear) {
+                _diagnostics.frequencyNearMissReason = "contrast_near_threshold";
+            } else if (_diagnostics.frequencyScoreOkFrames > 0 && _diagnostics.frequencyContrastOkFrames > 0) {
+                _diagnostics.frequencyNearMissReason = "both_ok_no_emission";
+            } else {
+                _diagnostics.frequencyNearMissReason = "near_miss";
+            }
         } else {
-            _diagnostics.frequencyNearMissReason = "near_miss";
+            _diagnostics.frequencyNearMissReason = "none";
         }
+
+        _diagnostics.sourceSummary.present = detector.rejectedCount > 0;
+        _diagnostics.sourceSummary.candidateCount = detector.rejectedCount;
+        _diagnostics.sourceSummary.rejectCount = detector.rejectedCount;
+        _diagnostics.sourceSummary.bestDurationMs = detector.bestDurationMs;
+        _diagnostics.sourceSummary.secondBestDurationMs = detector.secondBestDurationMs;
+        _diagnostics.sourceSummary.bestOpenMs = detector.bestOpenMs;
+        _diagnostics.sourceSummary.bestPeakMs = detector.bestPeakMs;
+        _diagnostics.sourceSummary.bestLastMatchMs = detector.bestLastMatchMs;
+        _diagnostics.sourceSummary.bestCloseMs = detector.bestCloseMs;
+        _diagnostics.sourceSummary.bestPeakPrimary = detector.bestPeakScore;
+        _diagnostics.sourceSummary.bestPeakSecondary = detector.bestPeakContrast;
+        _diagnostics.sourceSummary.bestRejectReason = detector.bestRejectReason;
+        _diagnostics.sourceSummary.bestGateReason = detector.bestGateReason;
+        _diagnostics.sourceSummary.maxPeakPrimary = detector.diagnosticsScoreMax;
+        _diagnostics.sourceSummary.maxPeakPrimaryMs = detector.diagnosticsScoreMaxMs;
+        _diagnostics.sourceSummary.maxPeakSecondary = detector.diagnosticsContrastMax;
+        _diagnostics.sourceSummary.maxPeakSecondaryMs = detector.diagnosticsContrastMaxMs;
+        _diagnostics.sourceSummary.totalMatchMs = detector.totalMatchMs;
+        _diagnostics.sourceSummary.islandCount = detector.islandCount;
+        _diagnostics.sourceLastCandidate.present = detector.candidateActive || detector.candidateClosed || detector.candidateEmitted || detector.candidateFirstSeenMs > 0;
+        _diagnostics.sourceLastCandidate.peakMs = detector.candidatePeakMs;
+        _diagnostics.sourceLastCandidate.durationMs = detector.candidateHoldMs;
+        _diagnostics.sourceLastCandidate.windowSamples = detector.candidatePeakWindowSampleCount;
+        _diagnostics.sourceLastCandidate.peakPrimary = detector.candidatePeakScore;
+        _diagnostics.sourceLastCandidate.peakSecondary = detector.candidatePeakContrast;
+        _diagnostics.sourceLastCandidate.reason = detector.noEmitReason;
+        _diagnostics.sourceLastCandidate.gateReason = detector.gateReason;
+        _diagnostics.sourceLastCandidate.scope = "unknown";
+        _diagnostics.frequencyRejectReason = detector.candidateEmitted
+            ? "none"
+            : (detector.candidateClosed
+                ? (detector.noEmitReason[0] != '\0' ? detector.noEmitReason : "unknown")
+                : (detector.gateReason[0] != '\0' ? detector.gateReason : "unknown"));
+        _diagnostics.frequencyNoEmitReason = detector.noEmitReason;
+        _diagnostics.frequencyGateReason = detector.gateReason;
+        _diagnostics.frequencyWouldCandidateReason = detector.wouldCandidateReason;
+        _diagnostics.frequencyCandidateState = detector.candidateState;
+        _diagnostics.frequencyReadyOk = detector.readyOk;
+        _diagnostics.frequencyGateOpen = detector.gateOpen;
+        _diagnostics.frequencyOpened = detector.candidateActive
+            || detector.candidateClosed
+            || detector.candidateEmitted
+            || detector.candidateFirstSeenMs > 0;
+        _diagnostics.frequencyReleased = detector.candidateClosed || detector.candidateReleaseMs > 0;
+        _diagnostics.frequencyEmitted = detector.candidateEmitted;
+        _diagnostics.frequencyValidRelease = detector.validRelease;
+        _diagnostics.frequencyEmitAllowed = detector.emitAllowed;
+        _diagnostics.frequencyOpenMs = detector.candidateFirstSeenMs;
+        _diagnostics.frequencyPeakMs = detector.candidatePeakMs;
+        _diagnostics.frequencyReleaseMs = detector.candidateReleaseMs;
+        _diagnostics.frequencyDurationMs = detector.candidateHoldMs;
+        _diagnostics.frequencyMinDurationMs = detector.candidateMinDurationMs;
+        _diagnostics.frequencyMaxDurationMs = detector.candidateMaxDurationMs;
+        _diagnostics.frequencyScoreMax = detector.diagnosticsScoreMax;
+        _diagnostics.frequencyContrastMax = detector.diagnosticsContrastMax;
+        _diagnostics.frequencyScoreMaxMs = detector.diagnosticsScoreMaxMs;
+        _diagnostics.frequencyContrastMaxMs = detector.diagnosticsContrastMaxMs;
+        _diagnostics.frequencyPeakScore = detector.candidatePeakScore;
+        _diagnostics.frequencyPeakContrast = detector.candidatePeakContrast;
+        _diagnostics.frequencyPeakWindowSampleCount = detector.candidatePeakWindowSampleCount;
     } else {
+        _diagnostics.scalarRejectReason = _scalarEmitter.lastTransientRejectReasonName();
+        _diagnostics.scalarNoEmitReason = _diagnostics.scalarRejectReason;
+        _diagnostics.scalarGateReason = _diagnostics.scalarRejectReason;
+        _diagnostics.sourceSummary.present = _scalarEmitter.rejectedCandidateCount() > 0;
+        _diagnostics.sourceSummary.candidateCount = _scalarEmitter.rejectedCandidateCount();
+        _diagnostics.sourceSummary.rejectCount = _scalarEmitter.rejectedCandidateCount();
+        _diagnostics.sourceSummary.bestDurationMs = _scalarEmitter.bestRejectedDurationMs();
+        _diagnostics.sourceSummary.secondBestDurationMs = _scalarEmitter.secondBestRejectedDurationMs();
+        _diagnostics.sourceSummary.bestOpenMs = _scalarEmitter.bestRejectedOpenMs();
+        _diagnostics.sourceSummary.bestPeakMs = _scalarEmitter.bestRejectedPeakMs();
+        _diagnostics.sourceSummary.bestLastMatchMs = _scalarEmitter.bestRejectedLastMatchMs();
+        _diagnostics.sourceSummary.bestCloseMs = _scalarEmitter.bestRejectedCloseMs();
+        _diagnostics.sourceSummary.bestPeakPrimary = _scalarEmitter.bestRejectedPeakStrength();
+        _diagnostics.sourceSummary.bestPeakSecondary = 0.0f;
+        _diagnostics.sourceSummary.bestRejectReason = _scalarEmitter.bestRejectedReasonName();
+        _diagnostics.sourceSummary.bestGateReason = _scalarEmitter.bestRejectedGateReasonName();
+        _diagnostics.sourceSummary.maxPeakPrimary = _scalarEmitter.maxRejectedPeakStrength();
+        _diagnostics.sourceSummary.maxPeakPrimaryMs = _scalarEmitter.maxRejectedPeakStrengthMs();
+        _diagnostics.sourceSummary.maxPeakSecondary = 0.0f;
+        _diagnostics.sourceSummary.maxPeakSecondaryMs = 0UL;
+        _diagnostics.sourceSummary.totalMatchMs = _scalarEmitter.totalRejectedMatchMs();
+        _diagnostics.sourceSummary.islandCount = _scalarEmitter.rejectedIslandCount();
+        _diagnostics.sourceLastCandidate.present = _scalarEmitter.candidateActive()
+            || _scalarEmitter.releaseObserved()
+            || _scalarEmitter.candidateFirstSeenMs() > 0;
+        _diagnostics.sourceLastCandidate.peakMs = _scalarEmitter.candidatePeakMs();
+        _diagnostics.sourceLastCandidate.durationMs = _scalarEmitter.transientDurationMs();
+        _diagnostics.sourceLastCandidate.windowSamples = 0;
+        _diagnostics.sourceLastCandidate.peakPrimary = _scalarEmitter.candidatePeakStrength();
+        _diagnostics.sourceLastCandidate.peakSecondary = 0.0f;
+        _diagnostics.sourceLastCandidate.reason = _scalarEmitter.lastTransientRejectReasonName();
+        _diagnostics.sourceLastCandidate.gateReason = _scalarEmitter.lastTransientRejectReasonName();
+        _diagnostics.sourceLastCandidate.scope = "unknown";
+        _diagnostics.scalarOpened = _scalarEmitter.candidateActive()
+            || _scalarEmitter.releaseObserved()
+            || _scalarEmitter.candidateFirstSeenMs() > 0;
+        _diagnostics.scalarReleased = _scalarEmitter.releaseObserved()
+            || _scalarEmitter.candidateReleaseObservedMs() > 0;
+        _diagnostics.scalarValidRelease = _diagnostics.scalarReleased
+            && _diagnostics.scalarRejectReason != nullptr
+            && strcmp(_diagnostics.scalarRejectReason, "none") == 0;
+        _diagnostics.scalarEmitAllowed = _diagnostics.scalarValidRelease;
+        _diagnostics.scalarOpenMs = _scalarEmitter.candidateFirstSeenMs();
+        _diagnostics.scalarPeakMs = _scalarEmitter.candidatePeakMs();
+        _diagnostics.scalarReleaseMs = _scalarEmitter.candidateReleaseObservedMs();
+        _diagnostics.scalarDurationMs = _diagnostics.scalarReleased && _diagnostics.scalarReleaseMs >= _diagnostics.scalarOpenMs
+            ? _diagnostics.scalarReleaseMs - _diagnostics.scalarOpenMs
+            : 0UL;
+        _diagnostics.scalarMinDurationMs = _scalarTransientConfig.minTransientDurationMs;
+        _diagnostics.scalarMaxDurationMs = _scalarTransientConfig.maxTransientDurationMs;
+        _diagnostics.scalarPeakStrength = _scalarEmitter.candidatePeakStrength();
+        _diagnostics.scalarTransientRejectedDurationMs = _scalarEmitter.lastTransientRejectedDurationMs();
+        _diagnostics.scalarTransientRejectedStrength = _scalarEmitter.lastTransientRejectedStrength();
+        _diagnostics.frequencyPresent = false;
+        _diagnostics.frequencyValidWindow = false;
+        _diagnostics.frequencyMatched = false;
+        _diagnostics.frequencyScoreOk = false;
+        _diagnostics.frequencyContrastOk = false;
+        _diagnostics.frequencyFrames = 0;
+        _diagnostics.frequencyValidFrames = 0;
+        _diagnostics.frequencyScoreOkFrames = 0;
+        _diagnostics.frequencyContrastOkFrames = 0;
+        _diagnostics.frequencyBothOkFrames = 0;
+        _diagnostics.frequencyMatchFrames = 0;
+        _diagnostics.frequencyRejectFrames = 0;
+        _diagnostics.frequencyLongestMatchRunFrames = 0;
+        _diagnostics.frequencyLongestMatchRunStartMs = 0;
+        _diagnostics.frequencyLongestMatchRunEndMs = 0;
+        _diagnostics.frequencyScoreMean = 0.0f;
+        _diagnostics.frequencyContrastMean = 0.0f;
+        _diagnostics.frequencyScoreMin = 0.0f;
+        _diagnostics.frequencyContrastMin = 0.0f;
+        _diagnostics.frequencyScoreMax = 0.0f;
+        _diagnostics.frequencyContrastMax = 0.0f;
+        _diagnostics.frequencyScoreMaxMs = 0;
+        _diagnostics.frequencyContrastMaxMs = 0;
+        _diagnostics.frequencyPeakScore = 0.0f;
+        _diagnostics.frequencyPeakContrast = 0.0f;
+        _diagnostics.frequencyPeakWindowSampleCount = 0;
+        _diagnostics.frequencyScoreThreshold = 0.0f;
+        _diagnostics.frequencyContrastThreshold = 0.0f;
+        _diagnostics.frequencyNearMiss = false;
         _diagnostics.frequencyNearMissReason = "none";
+        _diagnostics.frequencyRejectReason = _diagnostics.scalarRejectReason;
+        _diagnostics.frequencyNoEmitReason = _diagnostics.scalarNoEmitReason;
+        _diagnostics.frequencyGateReason = _diagnostics.scalarGateReason;
+        _diagnostics.frequencyWouldCandidateReason = _diagnostics.scalarGateReason;
+        _diagnostics.frequencyCandidateState = _diagnostics.scalarOpened ? "active" : "idle";
+        _diagnostics.frequencyReadyOk = _diagnostics.scalarOpened;
+        _diagnostics.frequencyGateOpen = _diagnostics.scalarEmitAllowed;
+        _diagnostics.frequencyOpened = _diagnostics.scalarOpened;
+        _diagnostics.frequencyReleased = _diagnostics.scalarReleased;
+        _diagnostics.frequencyEmitted = _diagnostics.scalarEmitAllowed;
+        _diagnostics.frequencyValidRelease = _diagnostics.scalarValidRelease;
+        _diagnostics.frequencyEmitAllowed = _diagnostics.scalarEmitAllowed;
+        _diagnostics.frequencyOpenMs = _diagnostics.scalarOpenMs;
+        _diagnostics.frequencyPeakMs = _diagnostics.scalarPeakMs;
+        _diagnostics.frequencyReleaseMs = _diagnostics.scalarReleaseMs;
+        _diagnostics.frequencyDurationMs = _diagnostics.scalarDurationMs;
+        _diagnostics.frequencyMinDurationMs = _diagnostics.scalarMinDurationMs;
+        _diagnostics.frequencyMaxDurationMs = _diagnostics.scalarMaxDurationMs;
+        _diagnostics.frequencyScoreMax = 0.0f;
+        _diagnostics.frequencyContrastMax = 0.0f;
+        _diagnostics.frequencyScoreMaxMs = 0;
+        _diagnostics.frequencyContrastMaxMs = 0;
+        _diagnostics.frequencyPeakScore = _diagnostics.scalarPeakStrength;
+        _diagnostics.frequencyPeakContrast = 0.0f;
+        _diagnostics.frequencyPeakWindowSampleCount = 0;
     }
     _diagnostics.detectorKind = _occurrenceSourceKind == OccurrenceSourceKind::FrequencyMatch
         ? "frequency_match"

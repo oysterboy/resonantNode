@@ -48,6 +48,40 @@ struct DetectionPipelineResult {
     unsigned long timestampMs = 0;
 };
 
+struct SourceCandidateSummary {
+    bool present = false;
+    unsigned long candidateCount = 0;
+    unsigned long rejectCount = 0;
+    unsigned long bestDurationMs = 0;
+    unsigned long secondBestDurationMs = 0;
+    unsigned long bestOpenMs = 0;
+    unsigned long bestPeakMs = 0;
+    unsigned long bestLastMatchMs = 0;
+    unsigned long bestCloseMs = 0;
+    float bestPeakPrimary = 0.0f;
+    float bestPeakSecondary = 0.0f;
+    const char* bestRejectReason = "none";
+    const char* bestGateReason = "none";
+    float maxPeakPrimary = 0.0f;
+    unsigned long maxPeakPrimaryMs = 0;
+    float maxPeakSecondary = 0.0f;
+    unsigned long maxPeakSecondaryMs = 0;
+    unsigned long totalMatchMs = 0;
+    unsigned long islandCount = 0;
+};
+
+struct SourceCandidateSnapshot {
+    bool present = false;
+    unsigned long peakMs = 0;
+    unsigned long durationMs = 0;
+    unsigned long windowSamples = 0;
+    float peakPrimary = 0.0f;
+    float peakSecondary = 0.0f;
+    const char* reason = "none";
+    const char* gateReason = "none";
+    const char* scope = "unknown";
+};
+
 struct DetectionDiagnostics {
     unsigned long observedAtMs = 0;
 
@@ -85,6 +119,8 @@ struct DetectionDiagnostics {
     float frequencyPeakScore = 0.0f;
     float frequencyPeakContrast = 0.0f;
     unsigned long frequencyPeakWindowSampleCount = 0;
+    SourceCandidateSummary sourceSummary = {};
+    SourceCandidateSnapshot sourceLastCandidate = {};
     float frequencyScoreThreshold = 0.0f;
     float frequencyContrastThreshold = 0.0f;
 
@@ -149,6 +185,7 @@ public:
     void resetDiagnostics();
     void resetDiagnosticsCounters();
     void resetOccurrenceSources();
+    void resetSourceRejectSummaries();
     void resetDetectionState();
     void setDiagnosticsEnabled(bool enabled);
     void captureDiagnostics();

@@ -97,7 +97,7 @@ inline DetectionProfile makeTonalPulseProfile() {
     profile.frequencyMatch.cooldownAfterOnsetMs = 0; // Re-arm after a short post-close cooldown (bad var naming)
     profile.frequencyMatch.minTransientDurationMs = 70; // Require a sustained match before emit.
     profile.frequencyMatch.scoreMin = 10000.0f;       // Minimum frequency score gate.
-    profile.frequencyMatch.contrastMin = 500.0f;       // Minimum spectral contrast gate.
+    profile.frequencyMatch.contrastMin = 50.0f;       // Minimum spectral contrast gate.
 
     // Inspector composition.
     profile.inspectionPlan = {};

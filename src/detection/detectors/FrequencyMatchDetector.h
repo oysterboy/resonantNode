@@ -66,6 +66,20 @@ public:
     float bestScore = 0.0f;
     float bestContrast = 0.0f;
     unsigned long bestWindowSampleCount = 0;
+    unsigned long candidateCount = 0;
+    unsigned long rejectedCount = 0;
+    unsigned long bestDurationMs = 0;
+    unsigned long secondBestDurationMs = 0;
+    unsigned long bestOpenMs = 0;
+    unsigned long bestPeakMs = 0;
+    unsigned long bestLastMatchMs = 0;
+    unsigned long bestCloseMs = 0;
+    float bestPeakScore = 0.0f;
+    float bestPeakContrast = 0.0f;
+    const char* bestRejectReason = "none";
+    const char* bestGateReason = "none";
+    unsigned long totalMatchMs = 0;
+    unsigned long islandCount = 0;
     detection::FrequencyFeatureFrame bestEvidence = {};
     detection::FrequencyFeatureFrame candidateEvidence = {};
     char candidateState[16] = "none";
@@ -90,6 +104,7 @@ public:
     unsigned long diagnosticsContrastMaxMs = 0;
 
     void resetState();
+    void resetRejectSummary();
     void setDiagnosticsEnabled(bool enabled);
     void resetDiagnosticsSummary();
 
@@ -104,7 +119,11 @@ public:
     float diagnosticsScoreMean() const;
     float diagnosticsContrastMean() const;
 
+    void observeClosedCandidate(bool accepted);
+
 private:
+    void updateBestRejectedCandidate();
+
     bool _diagnosticsEnabled = false;
     bool _diagnosticsHaveStats = false;
 };

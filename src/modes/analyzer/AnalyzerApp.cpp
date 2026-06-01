@@ -1477,6 +1477,38 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
         report.frequency.peakScore = runtimeDiag->frequencyPeakScore;
         report.frequency.peakContrast = runtimeDiag->frequencyPeakContrast;
         report.frequency.peakWindowSampleCount = runtimeDiag->frequencyPeakWindowSampleCount;
+        report.frequency.sourceSummary.present = runtimeDiag->sourceSummary.present;
+        report.frequency.sourceSummary.candidateCount = runtimeDiag->sourceSummary.candidateCount;
+        report.frequency.sourceSummary.rejectCount = runtimeDiag->sourceSummary.rejectCount;
+        report.frequency.sourceSummary.bestDurationMs = runtimeDiag->sourceSummary.bestDurationMs;
+        report.frequency.sourceSummary.secondBestDurationMs = runtimeDiag->sourceSummary.secondBestDurationMs;
+        report.frequency.sourceSummary.bestOpenMs = runtimeDiag->sourceSummary.bestOpenMs;
+        report.frequency.sourceSummary.bestPeakMs = runtimeDiag->sourceSummary.bestPeakMs;
+        report.frequency.sourceSummary.bestLastMatchMs = runtimeDiag->sourceSummary.bestLastMatchMs;
+        report.frequency.sourceSummary.bestCloseMs = runtimeDiag->sourceSummary.bestCloseMs;
+        report.frequency.sourceSummary.bestPeakPrimary = runtimeDiag->sourceSummary.bestPeakPrimary;
+        report.frequency.sourceSummary.bestPeakSecondary = runtimeDiag->sourceSummary.bestPeakSecondary;
+        report.frequency.sourceSummary.bestRejectReason = runtimeDiag->sourceSummary.bestRejectReason;
+        report.frequency.sourceSummary.bestGateReason = runtimeDiag->sourceSummary.bestGateReason;
+        report.frequency.sourceSummary.maxPeakPrimary = runtimeDiag->sourceSummary.maxPeakPrimary;
+        report.frequency.sourceSummary.maxPeakPrimaryMs = runtimeDiag->sourceSummary.maxPeakPrimaryMs;
+        report.frequency.sourceSummary.maxPeakSecondary = runtimeDiag->sourceSummary.maxPeakSecondary;
+        report.frequency.sourceSummary.maxPeakSecondaryMs = runtimeDiag->sourceSummary.maxPeakSecondaryMs;
+        report.frequency.sourceSummary.totalMatchMs = runtimeDiag->sourceSummary.totalMatchMs;
+        report.frequency.sourceSummary.islandCount = runtimeDiag->sourceSummary.islandCount;
+        report.frequency.sourceLastCandidate.present = runtimeDiag->sourceLastCandidate.present;
+        report.frequency.sourceLastCandidate.peakMs = runtimeDiag->sourceLastCandidate.peakMs;
+        report.frequency.sourceLastCandidate.durationMs = runtimeDiag->sourceLastCandidate.durationMs;
+        report.frequency.sourceLastCandidate.windowSamples = runtimeDiag->sourceLastCandidate.windowSamples;
+        report.frequency.sourceLastCandidate.peakPrimary = runtimeDiag->sourceLastCandidate.peakPrimary;
+        report.frequency.sourceLastCandidate.peakSecondary = runtimeDiag->sourceLastCandidate.peakSecondary;
+        report.frequency.sourceLastCandidate.reason = runtimeDiag->sourceLastCandidate.reason;
+        report.frequency.sourceLastCandidate.gateReason = runtimeDiag->sourceLastCandidate.gateReason;
+        report.frequency.sourceLastCandidate.scope = report.frequency.sourceLastCandidate.present
+            ? (report.frequency.sourceLastCandidate.peakMs >= report.frequency.windowStartMs && report.frequency.sourceLastCandidate.peakMs <= report.frequency.windowEndMs
+                ? "in_window"
+                : (report.frequency.sourceLastCandidate.peakMs < report.frequency.windowStartMs ? "before_window" : "after_window"))
+            : "stale";
         report.frequency.liveFreqReason = runtimeDiag->frequencyRejectReason != nullptr ? runtimeDiag->frequencyRejectReason : "none";
         report.frequency.liveFreqWould = runtimeDiag->frequencyWouldCandidateReason != nullptr ? runtimeDiag->frequencyWouldCandidateReason : "none";
         report.frequency.liveFreqState = runtimeDiag->frequencyCandidateState != nullptr ? runtimeDiag->frequencyCandidateState : "none";
@@ -1606,6 +1638,43 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
         report.scalar.scalarMaxDurationMs = runtimeDiag->scalarMaxDurationMs;
         report.scalar.scalarPeakStrength = runtimeDiag->scalarPeakStrength;
         report.scalar.sourceOccurrenceEmitted = report.occurrences.present;
+        report.scalar.sourceSummary.present = !report.scalar.acceptedPresent
+            && (report.scalar.scalarOpened
+                || report.scalar.scalarReleased
+                || (report.scalar.scalarRejectReason != nullptr && strcmp(report.scalar.scalarRejectReason, "none") != 0));
+        report.scalar.sourceSummary.candidateCount = report.scalar.sourceSummary.present ? 1UL : 0UL;
+        report.scalar.sourceSummary.rejectCount = report.scalar.sourceSummary.candidateCount;
+        report.scalar.sourceSummary.bestDurationMs = report.scalar.scalarDurationMs;
+        report.scalar.sourceSummary.secondBestDurationMs = 0UL;
+        report.scalar.sourceSummary.bestOpenMs = report.scalar.scalarOpenMs;
+        report.scalar.sourceSummary.bestPeakMs = report.scalar.scalarPeakMs;
+        report.scalar.sourceSummary.bestLastMatchMs = report.scalar.scalarReleaseMs;
+        report.scalar.sourceSummary.bestCloseMs = report.scalar.scalarReleaseMs;
+        report.scalar.sourceSummary.bestPeakPrimary = report.scalar.scalarPeakStrength;
+        report.scalar.sourceSummary.bestPeakSecondary = 0.0f;
+        report.scalar.sourceSummary.bestRejectReason = report.scalar.scalarRejectReason != nullptr ? report.scalar.scalarRejectReason : "none";
+        report.scalar.sourceSummary.bestGateReason = report.scalar.scalarGateReason != nullptr ? report.scalar.scalarGateReason : "none";
+        report.scalar.sourceSummary.maxPeakPrimary = runtimeDiag->sourceSummary.maxPeakPrimary;
+        report.scalar.sourceSummary.maxPeakPrimaryMs = runtimeDiag->sourceSummary.maxPeakPrimaryMs;
+        report.scalar.sourceSummary.maxPeakSecondary = 0.0f;
+        report.scalar.sourceSummary.maxPeakSecondaryMs = 0UL;
+        report.scalar.sourceSummary.totalMatchMs = report.scalar.scalarDurationMs;
+        report.scalar.sourceSummary.islandCount = report.scalar.sourceSummary.present ? 1UL : 0UL;
+        report.scalar.sourceLastCandidate.present = report.scalar.scalarOpened
+            || report.scalar.scalarReleased
+            || report.scalar.scalarEmitAllowed;
+        report.scalar.sourceLastCandidate.peakMs = report.scalar.scalarPeakMs;
+        report.scalar.sourceLastCandidate.durationMs = report.scalar.scalarDurationMs;
+        report.scalar.sourceLastCandidate.windowSamples = 0UL;
+        report.scalar.sourceLastCandidate.peakPrimary = report.scalar.scalarPeakStrength;
+        report.scalar.sourceLastCandidate.peakSecondary = 0.0f;
+        report.scalar.sourceLastCandidate.reason = report.scalar.scalarRejectReason != nullptr ? report.scalar.scalarRejectReason : "none";
+        report.scalar.sourceLastCandidate.gateReason = report.scalar.scalarGateReason != nullptr ? report.scalar.scalarGateReason : "none";
+        report.scalar.sourceLastCandidate.scope = report.scalar.scalarOpened
+            ? (report.scalar.scalarPeakMs >= report.scalar.windowStartMs && report.scalar.scalarPeakMs <= report.scalar.windowEndMs
+                ? "in_window"
+                : (report.scalar.scalarPeakMs < report.scalar.windowStartMs ? "before_window" : "after_window"))
+            : "stale";
             report.scalar.runtimeEvidenceSeen = runtimeDiag->scalarOpened
                 || runtimeDiag->scalarReleased
                 || (runtimeDiag->scalarRejectReason != nullptr && strcmp(runtimeDiag->scalarRejectReason, "none") != 0);

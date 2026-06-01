@@ -33,6 +33,7 @@ public:
     ScalarOccurrenceSource();
 
     void reset();
+    void resetRejectSummary();
     void begin();
     void setConfig(const ScalarTransientConfig& config);
     void observeFrame(const AudioSignalFrame& frame, float signalLevel, OccurrenceKind kind, OccurrenceSource source);
@@ -64,6 +65,20 @@ public:
     uint64_t candidatePeakSample() const;
     uint64_t candidateReleaseSample() const;
     float candidatePeakStrength() const;
+    unsigned long rejectedCandidateCount() const;
+    unsigned long bestRejectedDurationMs() const;
+    unsigned long secondBestRejectedDurationMs() const;
+    unsigned long bestRejectedOpenMs() const;
+    unsigned long bestRejectedPeakMs() const;
+    unsigned long bestRejectedLastMatchMs() const;
+    unsigned long bestRejectedCloseMs() const;
+    float bestRejectedPeakStrength() const;
+    float maxRejectedPeakStrength() const;
+    unsigned long maxRejectedPeakStrengthMs() const;
+    const char* bestRejectedReasonName() const;
+    const char* bestRejectedGateReasonName() const;
+    unsigned long totalRejectedMatchMs() const;
+    unsigned long rejectedIslandCount() const;
     const char* lastOnsetRejectReasonName() const;
     const char* lastTransientRejectReasonName() const;
     unsigned long lastTransientRejectedDurationMs() const;
@@ -96,6 +111,21 @@ private:
     float _candidateOnsetStrength = 0.0f;
     float _candidatePeakStrength = 0.0f;
     float _candidateCurrentStrength = 0.0f;
+    unsigned long _rejectedCandidateCount = 0;
+    unsigned long _rejectedBestDurationMs = 0;
+    unsigned long _rejectedSecondBestDurationMs = 0;
+    unsigned long _rejectedBestOpenMs = 0;
+    unsigned long _rejectedBestPeakMs = 0;
+    unsigned long _rejectedBestLastMatchMs = 0;
+    unsigned long _rejectedBestCloseMs = 0;
+    float _rejectedBestPeakStrength = 0.0f;
+    float _rejectedMaxPeakStrength = 0.0f;
+    unsigned long _rejectedMaxPeakStrengthMs = 0;
+    const char* _rejectedBestReason = "none";
+    const char* _rejectedBestGateReason = "none";
+    unsigned long _rejectedTotalMatchMs = 0;
+    unsigned long _rejectedIslandCount = 0;
+    unsigned long _lastObservedTransientRejectedCount = 0;
     Occurrence _pending = {};
 };
 

@@ -201,6 +201,7 @@ private:
             bool freqPresent = false;
             bool freqMatched = false;
             float freqScore = 0.0f;
+            float freqContrast = 0.0f;
             bool patternValid = false;
             bool candidateAccepted = false;
             bool patternMatched = false;
@@ -553,6 +554,7 @@ private:
     int _controlTxPin = 17;
     char _usbLineBuffer[96];
     size_t _usbLineLength = 0;
+    char _commandScratch[128];
     char _emitterLineBuffer[96];
     size_t _emitterLineLength = 0;
 

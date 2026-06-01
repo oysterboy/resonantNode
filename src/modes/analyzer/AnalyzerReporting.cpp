@@ -54,7 +54,34 @@ constexpr AnalyzerFieldDescriptor kOccurrenceStateField{nullptr, "occurrence_sta
 constexpr AnalyzerFieldDescriptor kEmittedField{nullptr, "emitted"};
 constexpr AnalyzerFieldDescriptor kAcceptedField{nullptr, "accepted"};
 constexpr AnalyzerFieldDescriptor kReasonField{nullptr, "analyzer_miss_reason"};
-constexpr AnalyzerFieldDescriptor kSelectedRejectPresentField{nullptr, "selected_reject_present"};
+constexpr AnalyzerFieldDescriptor kSourceStateField{nullptr, "state"};
+constexpr AnalyzerFieldDescriptor kSourceScopeField{nullptr, "scope"};
+constexpr AnalyzerFieldDescriptor kSourceLastCandidatePresentField{nullptr, "last_candidate_present"};
+constexpr AnalyzerFieldDescriptor kSourceLastCandidatePeakMsField{nullptr, "last_candidate_peak_ms"};
+constexpr AnalyzerFieldDescriptor kSourceLastCandidateDurationMsField{nullptr, "last_candidate_duration_ms"};
+constexpr AnalyzerFieldDescriptor kSourceLastCandidateWindowSamplesField{nullptr, "last_candidate_window_samples"};
+constexpr AnalyzerFieldDescriptor kSourceLastCandidateReasonField{nullptr, "last_candidate_reason"};
+constexpr AnalyzerFieldDescriptor kSourceLastCandidateGateReasonField{nullptr, "last_candidate_gate_reason"};
+constexpr AnalyzerFieldDescriptor kSourceLastCandidateScopeField{nullptr, "last_candidate_scope"};
+constexpr AnalyzerFieldDescriptor kSourceCandidateCountField{nullptr, "candidate_count"};
+constexpr AnalyzerFieldDescriptor kSourceRejectCountField{nullptr, "reject_count"};
+constexpr AnalyzerFieldDescriptor kSourceAcceptedCountField{nullptr, "accepted_count"};
+constexpr AnalyzerFieldDescriptor kSourceBestDurationMsField{nullptr, "best_dur_ms"};
+constexpr AnalyzerFieldDescriptor kSourceSecondBestDurationMsField{nullptr, "second_dur_ms"};
+constexpr AnalyzerFieldDescriptor kSourceBestOpenMsField{nullptr, "best_open_ms"};
+constexpr AnalyzerFieldDescriptor kSourceBestPeakMsField{nullptr, "best_peak_ms"};
+constexpr AnalyzerFieldDescriptor kSourceBestLastMatchMsField{nullptr, "best_last_match_ms"};
+constexpr AnalyzerFieldDescriptor kSourceBestCloseMsField{nullptr, "best_close_ms"};
+constexpr AnalyzerFieldDescriptor kSourceBestPeakScoreField{nullptr, "best_peak_score"};
+constexpr AnalyzerFieldDescriptor kSourceBestPeakContrastField{nullptr, "best_peak_contrast"};
+constexpr AnalyzerFieldDescriptor kSourceBestRejectReasonField{nullptr, "best_reject_reason"};
+constexpr AnalyzerFieldDescriptor kSourceBestGateReasonField{nullptr, "best_gate_reason"};
+constexpr AnalyzerFieldDescriptor kSourceMaxPrimaryField{nullptr, "max_primary"};
+constexpr AnalyzerFieldDescriptor kSourceMaxPrimaryMsField{nullptr, "max_primary_ms"};
+constexpr AnalyzerFieldDescriptor kSourceMaxSecondaryField{nullptr, "max_secondary"};
+constexpr AnalyzerFieldDescriptor kSourceMaxSecondaryMsField{nullptr, "max_secondary_ms"};
+constexpr AnalyzerFieldDescriptor kSourceTotalMatchMsField{nullptr, "total_match_ms"};
+constexpr AnalyzerFieldDescriptor kSourceIslandCountField{nullptr, "island_count"};
 constexpr AnalyzerFieldDescriptor kRejectCountField{nullptr, "reject_count"};
 constexpr AnalyzerFieldDescriptor kSupportTargetField{nullptr, "support_target"};
 constexpr AnalyzerFieldDescriptor kSupportField{nullptr, "support"};
@@ -241,6 +268,84 @@ constexpr AnalyzerFieldDescriptor kScalarOnsetRejectField{nullptr, "onset_reject
 constexpr AnalyzerFieldDescriptor kScalarTransientRejectField{nullptr, "transient_reject"};
 constexpr AnalyzerFieldDescriptor kScalarTransientRejectDurField{nullptr, "transient_reject_dur"};
 constexpr AnalyzerFieldDescriptor kScalarTransientRejectStrengthField{nullptr, "transient_reject_strength"};
+
+const char* sourceCandidateScopeName(unsigned long peakMs, unsigned long windowStartMs, unsigned long windowEndMs) {
+    if (peakMs == 0UL || windowEndMs < windowStartMs) {
+        return "unknown";
+    }
+    if (peakMs < windowStartMs) {
+        return "before_window";
+    }
+    if (peakMs > windowEndMs) {
+        return "after_window";
+    }
+    return "in_window";
+}
+
+void printSourceRejectSummaryLine(
+    const char* label,
+    unsigned long trialId,
+    const AnalyzerSourceCandidateSummary& summary,
+    unsigned long windowStartMs,
+    unsigned long windowEndMs
+) {
+    const bool hasRejects = summary.present;
+    const char* reason = hasRejects && summary.bestRejectReason != nullptr && summary.bestRejectReason[0] != '\0'
+        ? summary.bestRejectReason
+        : "none";
+    const char* gateReason = hasRejects && summary.bestGateReason != nullptr && summary.bestGateReason[0] != '\0'
+        ? summary.bestGateReason
+        : "None";
+    const char* scope = hasRejects
+        ? sourceCandidateScopeName(summary.bestPeakMs, windowStartMs, windowEndMs)
+        : "unknown";
+
+    Serial.println(label);
+    Serial.print("  ");
+    printField(kSourceRejectCountField, summary.rejectCount);
+    if (!hasRejects) {
+        Serial.println();
+        return;
+    }
+    Serial.print(' ');
+    printField(kSourceTotalMatchMsField, summary.totalMatchMs);
+    Serial.println();
+    Serial.print("  ");
+    printField(kSourceBestDurationMsField, summary.bestDurationMs);
+    Serial.print(' ');
+    printField(kSourceSecondBestDurationMsField, summary.secondBestDurationMs);
+    Serial.print(' ');
+    printField(kSourceBestPeakScoreField, summary.bestPeakPrimary, 1);
+    Serial.print(' ');
+    printField(kSourceBestPeakContrastField, summary.bestPeakSecondary, 2);
+    Serial.println();
+    Serial.print("  ");
+    printField(kSourceBestOpenMsField, summary.bestOpenMs);
+    Serial.print(' ');
+    printField(kSourceBestPeakMsField, summary.bestPeakMs);
+    Serial.print(' ');
+    printField(kSourceBestLastMatchMsField, summary.bestLastMatchMs);
+    Serial.print(' ');
+    printField(kSourceBestCloseMsField, summary.bestCloseMs);
+    Serial.println();
+    Serial.print("  ");
+    printField(kSourceBestRejectReasonField, reason);
+    Serial.print(' ');
+    printField(kSourceBestGateReasonField, gateReason);
+    Serial.println();
+    Serial.print("  ");
+    printField(kSourceMaxPrimaryField, summary.maxPeakPrimary, 1);
+    Serial.print(' ');
+    printField(kSourceMaxPrimaryMsField, summary.maxPeakPrimaryMs);
+    Serial.print(' ');
+    printField(kSourceMaxSecondaryField, summary.maxPeakSecondary, 2);
+    Serial.print(' ');
+    printField(kSourceMaxSecondaryMsField, summary.maxPeakSecondaryMs);
+    Serial.println();
+    Serial.print("  ");
+    printField(kSourceScopeField, scope);
+    Serial.println();
+}
 
 const char* analyzerProfileDetailNamespace(detection::DetectionProfileKind profileKind) {
     switch (profileKind) {
@@ -1389,48 +1494,30 @@ void AnalyzerApp::printSequenceDiagnostics(const AnalyzerReport& report) const {
     const bool compactSource = detailLevel == 0U &&
         _sequenceTest.outputConfig.mode != SeqOutputMode::Explain;
     const bool compactSourceDiag = compactSource;
-    const char* frequencySourceReason = report.frequency.acceptedPresent
-        ? "none"
-        : (report.frequency.analyzerMissReason != nullptr && report.frequency.analyzerMissReason[0] != '\0'
-            ? report.frequency.analyzerMissReason
-            : "none");
+    const auto& frequencySourceSummary = report.frequency.sourceSummary;
+    const auto& frequencyLastCandidate = report.frequency.sourceLastCandidate;
+    const char* lastCandidateScope = frequencyLastCandidate.scope != nullptr ? frequencyLastCandidate.scope : "unknown";
+    const bool lastCandidatePresent = frequencyLastCandidate.present;
     if (report.profileDetail.emitter != nullptr && strcmp(report.profileDetail.emitter, "ScalarTransientSource") == 0) {
         printSequenceScalarDiagnostics(report);
         return;
     }
 
-    Serial.print("SEQ_SOURCE");
-    Serial.print(' ');
-    printField(kSourceKindField, report.occurrences.primarySource != nullptr ? report.occurrences.primarySource : "unknown");
-    Serial.print(' ');
-    printField(kStreamKindField, report.occurrences.detectorKind != nullptr ? report.occurrences.detectorKind : "unknown");
-    Serial.print(' ');
-    printField(kOccurrenceStateField, report.frequency.acceptedPresent ? "accepted" : (report.frequency.sourceOccurrenceEmitted ? "rejected" : "none"));
-    Serial.print(' ');
-    printField(kEmittedField, report.frequency.sourceOccurrenceEmitted);
-    Serial.print(' ');
-    printField(kAcceptedField, report.frequency.acceptedPresent);
-    Serial.print(' ');
-    printField(kReasonField, frequencySourceReason);
-    Serial.print(' ');
-    const bool sourceRejectPresent = !report.frequency.acceptedPresent
-        && (report.frequency.sourceOccurrenceEmitted
-            || (report.frequency.selectedRejectReason != nullptr && strcmp(report.frequency.selectedRejectReason, "none") != 0)
-            || (report.frequency.sourceLastRejectReason != nullptr && strcmp(report.frequency.sourceLastRejectReason, "none") != 0));
-    printField(kSelectedRejectPresentField, sourceRejectPresent);
-    Serial.print(' ');
-    printField(kRejectCountField, report.frequency.rejectFrames);
+    Serial.println("SEQ_SOURCE");
+    Serial.print("state=");
+    Serial.print(report.frequency.acceptedPresent ? "accepted" : "none");
     if (report.frequency.acceptedPresent) {
         Serial.print(' ');
-        printField(kSourceSelectedAcceptPresentField, report.frequency.acceptedPresent);
-        Serial.print(' ');
-        printField(kSourceSelectedAcceptDurationMsField, report.frequency.acceptedDurationMs);
+        printField(kSourceAcceptedSourceField, report.frequency.acceptedSource != nullptr ? report.frequency.acceptedSource : "none");
+        Serial.println();
         Serial.print(' ');
         printField(kSourceAcceptedDtMsField, report.frequency.acceptedDtMs);
         Serial.print(' ');
         printField(kSourceAcceptedDurationMsField, report.frequency.acceptedDurationMs);
+        Serial.println();
         Serial.print(' ');
         printField(kSourceAcceptedStrengthField, report.frequency.acceptedStrength, 1);
+        Serial.println();
         Serial.print(' ');
         printField(kSourceAcceptedScoreField, report.frequency.acceptedScore, 1);
         Serial.print(' ');
@@ -1438,104 +1525,73 @@ void AnalyzerApp::printSequenceDiagnostics(const AnalyzerReport& report) const {
     }
     Serial.println();
 
-    if (sourceRejectPresent) {
-        Serial.print("SEQ_SOURCE_REJECT");
-        Serial.print(' ');
-        printField(kSourceSelectedRejectPeakMsField, report.frequency.fmPeakMs);
-        Serial.print(' ');
-        printField(kSourceSelectedRejectDurationMsField, report.frequency.fmDurationMs);
-        Serial.print(' ');
-        printField(kSourceSelectedRejectWindowSamplesField, report.frequency.peakWindowSampleCount);
-        Serial.print(' ');
-        printField(kSourceFreqPeakScoreField, report.frequency.peakScore, 1);
-        Serial.print(' ');
-        printField(kSourceFreqPeakContrastField, report.frequency.peakContrast, 2);
-        Serial.print(' ');
-        printField(kSourceSourceLastRejectReasonField, report.frequency.sourceLastRejectReason != nullptr ? report.frequency.sourceLastRejectReason : "none");
-        Serial.print(' ');
-        printField(kSourceSelectedRejectReasonField, report.frequency.selectedRejectReason != nullptr ? report.frequency.selectedRejectReason : "none");
-        Serial.print(' ');
-        printField(kSourceSelectedRejectGateReasonField, report.frequency.selectedRejectGateReason != nullptr ? report.frequency.selectedRejectGateReason : "none");
-        Serial.print(' ');
-        printField(kSourceFmOpenMsField, report.frequency.fmOpenMs);
-        Serial.print(' ');
-        printField(kSourceFmPeakMsField, report.frequency.fmPeakMs);
-        Serial.print(' ');
-        printField(kSourceFmReleaseMsField, report.frequency.fmReleaseMs);
-        Serial.print(' ');
-        printField(kSourceFmDurationMsField, report.frequency.fmDurationMs);
-        Serial.print(' ');
-        printField(kSourceFmMinDurationMsField, report.frequency.fmMinDurationMs);
-        Serial.print(' ');
-        printField(kSourceFmMaxDurationMsField, report.frequency.fmMaxDurationMs);
-        Serial.print(' ');
-        printField(kSourceFmDurationOkField, report.frequency.fmDurationOk);
-        Serial.print(' ');
-        printField(kSourceFmOpenedField, report.frequency.fmOpened);
-        Serial.print(' ');
-        printField(kSourceFmReleasedField, report.frequency.fmReleased);
-        Serial.print(' ');
-        printField(kSourceFmEmittedField, report.frequency.fmEmitted);
-        Serial.print(' ');
-        printField(kSourceFmValidReleaseField, report.frequency.fmValidRelease);
-        Serial.print(' ');
-        printField(kSourceFmEmitAllowedField, report.frequency.fmEmitAllowed);
-        Serial.println();
-    }
+    printSourceRejectSummaryLine(
+        "SEQ_SOURCE_REJECTS",
+        report.frequency.currentTrialId,
+        frequencySourceSummary,
+        report.frequency.windowStartMs,
+        report.frequency.windowEndMs
+    );
 
-    Serial.print("SEQ_SOURCE_DIAG");
-    Serial.print(' ');
-    printField(kSourceCurrentTrialIdField, report.frequency.currentTrialId);
-    Serial.print(' ');
-    printField(kSourceAcceptedTrialIdField, report.frequency.acceptedTrialId);
-    Serial.print(' ');
-    printField(kSourceAcceptedSourceField, report.frequency.acceptedSource != nullptr ? report.frequency.acceptedSource : "none");
-    Serial.print(' ');
-    printField(kSourceAnalyzerResultField, analyzerResultName(report.classification.result));
-    Serial.print(' ');
-    printField(kSourceAnalyzerReasonField, analyzerReasonName(report.classification.reason));
-    if (sourceRejectPresent) {
+    if (detailLevel >= 1U) {
+        if (lastCandidatePresent) {
+            Serial.print("SEQ_SOURCE_LAST_CANDIDATE");
+            Serial.print(' ');
+            printField(kSourceLastCandidatePresentField, lastCandidatePresent);
+            Serial.print(' ');
+            printField(kSourceLastCandidatePeakMsField, frequencyLastCandidate.peakMs);
+            Serial.print(' ');
+            printField(kSourceLastCandidateDurationMsField, frequencyLastCandidate.durationMs);
+            Serial.print(' ');
+            printField(kSourceLastCandidateWindowSamplesField, frequencyLastCandidate.windowSamples);
+            Serial.print(' ');
+            printField(kSourceFreqPeakScoreField, frequencyLastCandidate.peakPrimary, 1);
+            Serial.print(' ');
+            printField(kSourceFreqPeakContrastField, frequencyLastCandidate.peakSecondary, 2);
+            Serial.print(' ');
+            printField(kSourceLastCandidateReasonField, frequencyLastCandidate.reason != nullptr ? frequencyLastCandidate.reason : "none");
+            Serial.print(' ');
+            printField(kSourceLastCandidateGateReasonField, frequencyLastCandidate.gateReason != nullptr ? frequencyLastCandidate.gateReason : "none");
+            Serial.print(' ');
+            printField(kSourceScopeField, frequencyLastCandidate.scope != nullptr ? frequencyLastCandidate.scope : "unknown");
+            Serial.print(' ');
+            printField(kSourceFmOpenMsField, report.frequency.fmOpenMs);
+            Serial.print(' ');
+            printField(kSourceFmPeakMsField, report.frequency.fmPeakMs);
+            Serial.print(' ');
+            printField(kSourceFmReleaseMsField, report.frequency.fmReleaseMs);
+            Serial.print(' ');
+            printField(kSourceFmDurationMsField, report.frequency.fmDurationMs);
+            Serial.print(' ');
+            printField(kSourceFmMinDurationMsField, report.frequency.fmMinDurationMs);
+            Serial.print(' ');
+            printField(kSourceFmMaxDurationMsField, report.frequency.fmMaxDurationMs);
+            Serial.print(' ');
+            printField(kSourceFmDurationOkField, report.frequency.fmDurationOk);
+            Serial.print(' ');
+            printField(kSourceFmOpenedField, report.frequency.fmOpened);
+            Serial.print(' ');
+            printField(kSourceFmReleasedField, report.frequency.fmReleased);
+            Serial.print(' ');
+            printField(kSourceFmEmittedField, report.frequency.fmEmitted);
+            Serial.print(' ');
+            printField(kSourceFmValidReleaseField, report.frequency.fmValidRelease);
+            Serial.print(' ');
+            printField(kSourceFmEmitAllowedField, report.frequency.fmEmitAllowed);
+            Serial.println();
+        }
+
+        Serial.print("SEQ_SOURCE_DIAG");
         Serial.print(' ');
-        printField(kSourceSelectedRejectPeakMsField, report.frequency.fmPeakMs);
+        printField(kSourceCurrentTrialIdField, report.frequency.currentTrialId);
         Serial.print(' ');
-        printField(kSourceSelectedRejectDurationMsField, report.frequency.fmDurationMs);
+        printField(kSourceAcceptedTrialIdField, report.frequency.acceptedTrialId);
         Serial.print(' ');
-        printField(kSourceSelectedRejectWindowSamplesField, report.frequency.peakWindowSampleCount);
+        printField(kSourceAcceptedSourceField, report.frequency.acceptedSource != nullptr ? report.frequency.acceptedSource : "none");
         Serial.print(' ');
-        printField(kSourceFreqPeakScoreField, report.frequency.peakScore, 1);
+        printField(kSourceAnalyzerResultField, analyzerResultName(report.classification.result));
         Serial.print(' ');
-        printField(kSourceFreqPeakContrastField, report.frequency.peakContrast, 2);
-        Serial.print(' ');
-        printField(kSourceSourceLastRejectReasonField, report.frequency.sourceLastRejectReason != nullptr ? report.frequency.sourceLastRejectReason : "none");
-        Serial.print(' ');
-        printField(kSourceSelectedRejectReasonField, report.frequency.selectedRejectReason != nullptr ? report.frequency.selectedRejectReason : "none");
-        Serial.print(' ');
-        printField(kSourceSelectedRejectGateReasonField, report.frequency.selectedRejectGateReason != nullptr ? report.frequency.selectedRejectGateReason : "none");
-        Serial.print(' ');
-        printField(kSourceFmOpenMsField, report.frequency.fmOpenMs);
-        Serial.print(' ');
-        printField(kSourceFmPeakMsField, report.frequency.fmPeakMs);
-        Serial.print(' ');
-        printField(kSourceFmReleaseMsField, report.frequency.fmReleaseMs);
-        Serial.print(' ');
-        printField(kSourceFmDurationMsField, report.frequency.fmDurationMs);
-        Serial.print(' ');
-        printField(kSourceFmMinDurationMsField, report.frequency.fmMinDurationMs);
-        Serial.print(' ');
-        printField(kSourceFmMaxDurationMsField, report.frequency.fmMaxDurationMs);
-        Serial.print(' ');
-        printField(kSourceFmDurationOkField, report.frequency.fmDurationOk);
-        Serial.print(' ');
-        printField(kSourceFmOpenedField, report.frequency.fmOpened);
-        Serial.print(' ');
-        printField(kSourceFmReleasedField, report.frequency.fmReleased);
-        Serial.print(' ');
-        printField(kSourceFmEmittedField, report.frequency.fmEmitted);
-        Serial.print(' ');
-        printField(kSourceFmValidReleaseField, report.frequency.fmValidRelease);
-        Serial.print(' ');
-        printField(kSourceFmEmitAllowedField, report.frequency.fmEmitAllowed);
-    }
+        printField(kSourceAnalyzerReasonField, analyzerReasonName(report.classification.reason));
     Serial.print(' ');
     printField(AnalyzerFieldDescriptor{"source.freq", "window_start_ms"}, report.frequency.windowStartMs);
     Serial.print(' ');
@@ -1647,6 +1703,7 @@ void AnalyzerApp::printSequenceDiagnostics(const AnalyzerReport& report) const {
         printField(kSourceDetectionGateReasonField, report.frequency.detectionGateReason != nullptr ? report.frequency.detectionGateReason : "none");
     }
     Serial.println();
+    }
 
     if (detailLevel < 2U) {
         return;
@@ -1716,56 +1773,91 @@ void AnalyzerApp::printSequenceScalarDiagnostics(const AnalyzerReport& report) c
     }
 
     const unsigned int detailLevel = sequenceDetailLevel(_sequenceTest.outputConfig);
-    const bool compactSource = detailLevel == 0U &&
-        _sequenceTest.outputConfig.mode != SeqOutputMode::Explain;
-    const char* scalarSourceReason = report.scalar.acceptedPresent
-        ? "none"
-        : (report.scalar.scalarRejectReason != nullptr && report.scalar.scalarRejectReason[0] != '\0'
-            ? report.scalar.scalarRejectReason
-            : (report.scalar.trialMissReason != nullptr ? report.scalar.trialMissReason : "unknown"));
-    if (compactSource) {
-        Serial.print("SEQ_SOURCE");
-        Serial.print(" state=");
-        Serial.print(report.scalar.acceptedPresent ? "accepted" : (report.scalar.sourceOccurrenceEmitted ? "rejected" : "none"));
-        Serial.print(" reason=");
-        Serial.print(scalarSourceReason);
-        if (report.scalar.acceptedPresent) {
-            Serial.print(" dt=");
-            Serial.print(report.scalar.acceptedDtMs);
-            Serial.print("ms");
-            Serial.print(" dur=");
-            Serial.print(report.scalar.acceptedDurationMs);
-            Serial.print("ms");
-            Serial.print(" strength=");
-            Serial.print(report.scalar.acceptedStrength, 1);
-        } else if (report.scalar.sourceOccurrenceEmitted) {
-            Serial.print(" best_peak_ms=");
-            Serial.print(report.scalar.scalarPeakMs);
-            Serial.print(" best_dur_ms=");
-            Serial.print(report.scalar.scalarDurationMs);
-            Serial.print(" best_strength=");
-            Serial.print(report.scalar.scalarPeakStrength, 1);
-        }
-        Serial.println();
-        return;
-    }
+    const auto& scalarSourceSummary = report.scalar.sourceSummary;
+    const auto& scalarLastCandidate = report.scalar.sourceLastCandidate;
+    const bool scalarLastCandidatePresent = scalarLastCandidate.present;
 
-    Serial.print("SEQ_SOURCE");
-    Serial.print(" state=");
-    Serial.print(report.scalar.acceptedPresent ? "accepted" : (report.scalar.sourceOccurrenceEmitted ? "rejected" : "none"));
-    Serial.print(" reason=");
-    Serial.print(scalarSourceReason);
+    Serial.println("SEQ_SOURCE");
+    Serial.print("state=");
+    Serial.print(report.scalar.acceptedPresent ? "accepted" : "none");
     if (report.scalar.acceptedPresent) {
         Serial.print(' ');
         printField(kScalarAcceptedSourceField, report.scalar.acceptedSource != nullptr ? report.scalar.acceptedSource : "none");
+        Serial.println();
+        Serial.print(' ');
+        printField(kScalarAcceptedDtMsField, report.scalar.acceptedDtMs);
+        Serial.print(' ');
+        printField(kScalarAcceptedDurMsField, report.scalar.acceptedDurationMs);
+        Serial.println();
+        Serial.print(' ');
+        printField(kScalarAcceptedStrengthField, report.scalar.acceptedStrength, 1);
+        Serial.println();
+        Serial.print(' ');
+        printField(kScalarAcceptedScoreField, report.scalar.acceptedScore, 1);
+        Serial.print(' ');
+        printField(kScalarAcceptedContrastField, report.scalar.acceptedContrast, 2);
+    }
+    Serial.println();
+
+    printSourceRejectSummaryLine(
+        "SEQ_SOURCE_REJECTS",
+        report.scalar.currentTrialId,
+        scalarSourceSummary,
+        report.scalar.windowStartMs,
+        report.scalar.windowEndMs
+    );
+
+    if (detailLevel >= 1U) {
+        if (scalarLastCandidatePresent) {
+            Serial.print("SEQ_SOURCE_LAST_CANDIDATE");
+            Serial.print(' ');
+            printField(kSourceLastCandidatePresentField, scalarLastCandidatePresent);
+            Serial.print(' ');
+            printField(kSourceLastCandidatePeakMsField, scalarLastCandidate.peakMs);
+            Serial.print(' ');
+            printField(kSourceLastCandidateDurationMsField, scalarLastCandidate.durationMs);
+            Serial.print(' ');
+            printField(kSourceLastCandidateWindowSamplesField, scalarLastCandidate.windowSamples);
+            Serial.print(' ');
+            printField(kSourceScalarPeakStrengthField, scalarLastCandidate.peakPrimary, 1);
+            Serial.print(' ');
+            printField(kSourceLastCandidateReasonField, scalarLastCandidate.reason != nullptr ? scalarLastCandidate.reason : "none");
+            Serial.print(' ');
+            printField(kSourceLastCandidateGateReasonField, scalarLastCandidate.gateReason != nullptr ? scalarLastCandidate.gateReason : "none");
+            Serial.print(' ');
+            printField(kSourceScopeField, scalarLastCandidate.scope != nullptr ? scalarLastCandidate.scope : "unknown");
+            Serial.print(' ');
+            printField(kScalarOpenMsField, report.scalar.scalarOpenMs);
+            Serial.print(' ');
+            printField(kScalarPeakMsField, report.scalar.scalarPeakMs);
+            Serial.print(' ');
+            printField(kScalarReleaseMsField, report.scalar.scalarReleaseMs);
+            Serial.print(' ');
+            printField(kScalarDurationMsField, report.scalar.scalarDurationMs);
+            Serial.print(' ');
+            printField(kScalarMinDurationMsField, report.scalar.scalarMinDurationMs);
+            Serial.print(' ');
+            printField(kScalarMaxDurationMsField, report.scalar.scalarMaxDurationMs);
+            Serial.print(' ');
+            printField(kScalarOpenedField, report.scalar.scalarOpened);
+            Serial.print(' ');
+            printField(kScalarReleasedField, report.scalar.scalarReleased);
+            Serial.print(' ');
+            printField(kScalarEmittedField, report.scalar.sourceOccurrenceEmitted);
+            Serial.print(' ');
+            printField(kScalarValidReleaseField, report.scalar.scalarValidRelease);
+            Serial.print(' ');
+            printField(kScalarEmitAllowedField, report.scalar.scalarEmitAllowed);
+            Serial.println();
+        }
+
+        Serial.print("SEQ_SOURCE_DIAG");
+        Serial.print(' ');
+        printField(kScalarCurrentTrialIdField, report.scalar.currentTrialId);
         Serial.print(' ');
         printField(kScalarAcceptedTrialIdField, report.scalar.acceptedTrialId);
         Serial.print(' ');
-        printField(kScalarAcceptedStartMsField, report.scalar.acceptedStartMs);
-        Serial.print(' ');
-        printField(kScalarAcceptedPeakMsField, report.scalar.acceptedPeakMs);
-        Serial.print(' ');
-        printField(kScalarAcceptedReleaseMsField, report.scalar.acceptedReleaseMs);
+        printField(kScalarAcceptedSourceField, report.scalar.acceptedSource != nullptr ? report.scalar.acceptedSource : "none");
         Serial.print(' ');
         printField(kScalarAcceptedDtMsField, report.scalar.acceptedDtMs);
         Serial.print(' ');
@@ -1776,16 +1868,8 @@ void AnalyzerApp::printSequenceScalarDiagnostics(const AnalyzerReport& report) c
         printField(kScalarAcceptedScoreField, report.scalar.acceptedScore, 1);
         Serial.print(' ');
         printField(kScalarAcceptedContrastField, report.scalar.acceptedContrast, 2);
-    } else if (report.scalar.sourceOccurrenceEmitted) {
         Serial.print(' ');
-        printField(kScalarBestPeakMsField, report.scalar.scalarPeakMs);
-        Serial.print(' ');
-        printField(kScalarBestDurMsField, report.scalar.scalarDurationMs);
-        Serial.print(' ');
-        printField(kScalarBestStrengthField, report.scalar.scalarPeakStrength, 1);
-    }
-    Serial.print(' ');
-    printField(kScalarWindowStartField, report.scalar.windowStartMs);
+        printField(kScalarWindowStartField, report.scalar.windowStartMs);
     Serial.print(' ');
     printField(kScalarWindowEndField, report.scalar.windowEndMs);
     Serial.print(' ');
@@ -1800,10 +1884,6 @@ void AnalyzerApp::printSequenceScalarDiagnostics(const AnalyzerReport& report) c
     printField(kScalarNoEmitReasonField, report.scalar.scalarNoEmitReason != nullptr ? report.scalar.scalarNoEmitReason : "none");
     Serial.print(' ');
     printField(kScalarGateReasonField, report.scalar.scalarGateReason != nullptr ? report.scalar.scalarGateReason : "none");
-    Serial.print(' ');
-    printField(kScalarOpenedField, report.scalar.scalarOpened);
-    Serial.print(' ');
-    printField(kScalarReleasedField, report.scalar.scalarReleased);
     Serial.print(' ');
     printField(kScalarEmittedField, report.scalar.sourceOccurrenceEmitted);
     Serial.print(' ');
@@ -1837,6 +1917,7 @@ void AnalyzerApp::printSequenceScalarDiagnostics(const AnalyzerReport& report) c
     Serial.print(' ');
     printField(kScalarDiagInconsistentField, report.scalar.inconsistent);
     Serial.println();
+    }
 
     if (detailLevel < 2U) {
         return;

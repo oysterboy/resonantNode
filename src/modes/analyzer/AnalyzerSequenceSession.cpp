@@ -409,6 +409,7 @@ void AnalyzerApp::updateSequenceTest(unsigned long now) {
     _sequenceTest.currentTrialUpdateLoopMaxUs = 0;
     _sequenceTest.totalUpdateLoopUs = 0;
     _sequenceTest.updateLoopCount = 0;
+    _detection->resetSourceRejectSummaries();
     resetLoopHealthWindow();
     printSequenceTrialHeader(trialNumber);
     if (_sequenceTest.outputConfig.diagnosticsEnabled) {

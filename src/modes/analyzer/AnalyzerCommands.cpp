@@ -117,12 +117,11 @@ void AnalyzerApp::handleUsbLine(const char* line) {
     }
 
     if (startsWithTokenIgnoreCase(line, "PARAM")) {
-        char buffer[128];
-        strncpy(buffer, line, sizeof(buffer));
-        buffer[sizeof(buffer) - 1] = '\0';
+        strncpy(_commandScratch, line, sizeof(_commandScratch));
+        _commandScratch[sizeof(_commandScratch) - 1] = '\0';
 
         char* savePtr = nullptr;
-        char* token = strtok_r(buffer, " ", &savePtr);
+        char* token = strtok_r(_commandScratch, " ", &savePtr);
         FrequencyMatchEvaluation::Values freqTuning = _frequencyEvidenceTuning;
 
         while ((token = strtok_r(nullptr, " ", &savePtr)) != nullptr) {
@@ -136,15 +135,14 @@ void AnalyzerApp::handleUsbLine(const char* line) {
     }
 
     if (startsWithTokenIgnoreCase(line, "BASE")) {
-        char buffer[96];
-        strncpy(buffer, line, sizeof(buffer));
-        buffer[sizeof(buffer) - 1] = '\0';
+        strncpy(_commandScratch, line, sizeof(_commandScratch));
+        _commandScratch[sizeof(_commandScratch) - 1] = '\0';
 
         bool quiet = false;
         unsigned long durationMs = 10000;
 
         char* savePtr = nullptr;
-        char* token = strtok_r(buffer, " ", &savePtr);
+        char* token = strtok_r(_commandScratch, " ", &savePtr);
         while ((token = strtok_r(nullptr, " ", &savePtr)) != nullptr) {
             if (equalsIgnoreCase(token, "quiet")) {
                 quiet = true;
@@ -171,9 +169,8 @@ void AnalyzerApp::handleUsbLine(const char* line) {
     }
 
     if (startsWithTokenIgnoreCase(line, "RAWBAND")) {
-        char buffer[160];
-        strncpy(buffer, line, sizeof(buffer));
-        buffer[sizeof(buffer) - 1] = '\0';
+        strncpy(_commandScratch, line, sizeof(_commandScratch));
+        _commandScratch[sizeof(_commandScratch) - 1] = '\0';
 
         unsigned long toneHz = runtime::kDefaultChirpFrequencyHz;
         unsigned long durationMs = 100;
@@ -183,7 +180,7 @@ void AnalyzerApp::handleUsbLine(const char* line) {
         bool contrastMode = false;
 
         char* savePtr = nullptr;
-        char* token = strtok_r(buffer, " ", &savePtr);
+        char* token = strtok_r(_commandScratch, " ", &savePtr);
         while ((token = strtok_r(nullptr, " ", &savePtr)) != nullptr) {
             if (startsWithTokenIgnoreCase(token, "f=")) {
                 toneHz = static_cast<unsigned long>(strtoul(token + 2, nullptr, 10));
@@ -211,9 +208,8 @@ void AnalyzerApp::handleUsbLine(const char* line) {
     }
 
     if (startsWithTokenIgnoreCase(line, "RAW")) {
-        char buffer[160];
-        strncpy(buffer, line, sizeof(buffer));
-        buffer[sizeof(buffer) - 1] = '\0';
+        strncpy(_commandScratch, line, sizeof(_commandScratch));
+        _commandScratch[sizeof(_commandScratch) - 1] = '\0';
 
         unsigned long toneHz = runtime::kDefaultChirpFrequencyHz;
         unsigned long durationMs = 100;
@@ -224,7 +220,7 @@ void AnalyzerApp::handleUsbLine(const char* line) {
         bool dumpBinary = false;
 
         char* savePtr = nullptr;
-        char* token = strtok_r(buffer, " ", &savePtr);
+        char* token = strtok_r(_commandScratch, " ", &savePtr);
         while ((token = strtok_r(nullptr, " ", &savePtr)) != nullptr) {
             if (startsWithTokenIgnoreCase(token, "f=")) {
                 toneHz = static_cast<unsigned long>(strtoul(token + 2, nullptr, 10));
@@ -249,12 +245,11 @@ void AnalyzerApp::handleUsbLine(const char* line) {
     }
 
     if (startsWithTokenIgnoreCase(line, "SEQ")) {
-        char buffer[128];
-        strncpy(buffer, line, sizeof(buffer));
-        buffer[sizeof(buffer) - 1] = '\0';
+        strncpy(_commandScratch, line, sizeof(_commandScratch));
+        _commandScratch[sizeof(_commandScratch) - 1] = '\0';
 
         char* savePtr = nullptr;
-        char* token = strtok_r(buffer, " ", &savePtr);
+        char* token = strtok_r(_commandScratch, " ", &savePtr);
         if (token == nullptr) {
             printSequenceHelp();
             return;
@@ -458,63 +453,66 @@ void AnalyzerApp::handleUsbLine(const char* line) {
         }
 
         if (equalsIgnoreCase(token, "START") || equalsIgnoreCase(token, "OBS")) {
-            unsigned long totalTrials = _seqOutputConfig.totalTrials;
+            _pendingSequenceStart = {};
+            _pendingSequenceStart.active = true;
+            _pendingSequenceStart.totalTrials = _seqOutputConfig.totalTrials;
+            _pendingSequenceStart.periodMs = 2500;
+            _pendingSequenceStart.windowEndOffsetMs = 2200;
+            _pendingSequenceStart.toneHz = runtime::kDefaultChirpFrequencyHz;
+            _pendingSequenceStart.durationMs = 100;
+            _pendingSequenceStart.quiet = false;
+            _pendingSequenceStart.showDetails = true;
+            _pendingSequenceStart.diagMode = AnalyzerApp::SequenceDiagMode::Off;
+            _pendingSequenceStart.setupLabel = _pendingSequenceStart.setupLabelStorage;
+            _pendingSequenceStart.setupLabelStorage[0] = '\0';
+            _pendingSequenceStart.sampleDumpEnabled = false;
+            _pendingSequenceStart.sampleDumpFirstTrials = 2;
+            _pendingSequenceStart.sampleDumpEveryNth = 0;
+            _pendingSequenceStart.sampleDumpLeadMs = 50;
+            _pendingSequenceStart.sampleDumpTailMs = 800;
+            _pendingSequenceStart.sampleDumpStepMs = 1;
+            _pendingSequenceStart.sampleDumpMaxRows = 5000;
+            _pendingSequenceStart.startupDelayMs = 1000;
+            _pendingSequenceStart.profileKind = _seqOutputConfig.profileKind;
+            _pendingSequenceStart.externalEmitter = equalsIgnoreCase(token, "OBS");
             bool totalTrialsSet = false;
-            unsigned long periodMs = 2500;
-            unsigned long windowEndOffsetMs = 2200;
-            unsigned long toneHz = runtime::kDefaultChirpFrequencyHz;
-            unsigned long durationMs = 100;
-            unsigned long startupDelayMs = 1000;
-            bool quiet = false;
-            bool showDetails = true;
-            bool sampleDumpEnabled = false;
-            unsigned long sampleDumpFirstTrials = 2;
-            unsigned long sampleDumpEveryNth = 0;
-            unsigned long sampleDumpLeadMs = 50;
-            unsigned long sampleDumpTailMs = 800;
-            unsigned long sampleDumpStepMs = 1;
-            unsigned long sampleDumpMaxRows = 5000;
-            detection::DetectionProfileKind profileKind = _seqOutputConfig.profileKind;
             bool profileSeen = false;
             bool profileValid = true;
-            bool externalEmitter = false;
-            char setupLabel[96] = TEST_SETUP_LABEL;
             AnalyzerApp::SeqOutputConfig outputConfig = _seqOutputConfig;
-            externalEmitter = equalsIgnoreCase(token, "OBS");
 
             while ((token = strtok_r(nullptr, " ", &savePtr)) != nullptr) {
                 if (!totalTrialsSet && strchr(token, '=') == nullptr && strspn(token, "0123456789") == strlen(token)) {
-                    totalTrials = static_cast<unsigned long>(strtoul(token, nullptr, 10));
+                    _pendingSequenceStart.totalTrials = static_cast<unsigned long>(strtoul(token, nullptr, 10));
                     totalTrialsSet = true;
                 } else if (startsWithTokenIgnoreCase(token, "tries=")) {
-                    totalTrials = static_cast<unsigned long>(strtoul(token + 6, nullptr, 10));
+                    _pendingSequenceStart.totalTrials = static_cast<unsigned long>(strtoul(token + 6, nullptr, 10));
                     totalTrialsSet = true;
                 } else if (startsWithTokenIgnoreCase(token, "period=")) {
-                    periodMs = static_cast<unsigned long>(strtoul(token + 7, nullptr, 10));
+                    _pendingSequenceStart.periodMs = static_cast<unsigned long>(strtoul(token + 7, nullptr, 10));
                 } else if (startsWithTokenIgnoreCase(token, "window=")) {
-                    windowEndOffsetMs = static_cast<unsigned long>(strtoul(token + 7, nullptr, 10));
+                    _pendingSequenceStart.windowEndOffsetMs = static_cast<unsigned long>(strtoul(token + 7, nullptr, 10));
                 } else if (startsWithTokenIgnoreCase(token, "freq=")) {
-                    toneHz = static_cast<unsigned long>(strtoul(token + 5, nullptr, 10));
+                    _pendingSequenceStart.toneHz = static_cast<unsigned long>(strtoul(token + 5, nullptr, 10));
                 } else if (startsWithTokenIgnoreCase(token, "dur=")) {
-                    durationMs = static_cast<unsigned long>(strtoul(token + 4, nullptr, 10));
+                    _pendingSequenceStart.durationMs = static_cast<unsigned long>(strtoul(token + 4, nullptr, 10));
                 } else if (startsWithTokenIgnoreCase(token, "delay=") || startsWithTokenIgnoreCase(token, "warmup=")) {
-                    startupDelayMs = static_cast<unsigned long>(strtoul(strchr(token, '=') + 1, nullptr, 10));
+                    _pendingSequenceStart.startupDelayMs = static_cast<unsigned long>(strtoul(strchr(token, '=') + 1, nullptr, 10));
                 } else if (equalsIgnoreCase(token, "quiet")) {
-                    quiet = true;
+                    _pendingSequenceStart.quiet = true;
                 } else if (equalsIgnoreCase(token, "show=0")) {
-                    showDetails = false;
+                    _pendingSequenceStart.showDetails = false;
                 } else if (equalsIgnoreCase(token, "show=1")) {
-                    showDetails = true;
+                    _pendingSequenceStart.showDetails = true;
                 } else if (startsWithTokenIgnoreCase(token, "profile=")) {
                     const char* profileValue = token + 8;
                     if (equalsIgnoreCase(profileValue, "tonalpulse")) {
-                        profileKind = detection::DetectionProfileKind::TonalPulse;
+                        _pendingSequenceStart.profileKind = detection::DetectionProfileKind::TonalPulse;
                         profileSeen = true;
                     } else if (equalsIgnoreCase(profileValue, "amp")) {
-                        profileKind = detection::DetectionProfileKind::Amp;
+                        _pendingSequenceStart.profileKind = detection::DetectionProfileKind::Amp;
                         profileSeen = true;
                     } else if (equalsIgnoreCase(profileValue, "chirp_experimental")) {
-                        profileKind = detection::DetectionProfileKind::ChirpExperimental;
+                        _pendingSequenceStart.profileKind = detection::DetectionProfileKind::ChirpExperimental;
                         profileSeen = true;
                     } else {
                         profileValid = false;
@@ -564,47 +562,49 @@ void AnalyzerApp::handleUsbLine(const char* line) {
                     }
                     outputConfig.diagnosticsEnabled = enabled;
                 } else if (startsWithTokenIgnoreCase(token, "sampleFirst=")) {
-                    sampleDumpEnabled = true;
-                    sampleDumpFirstTrials = static_cast<unsigned long>(strtoul(token + 12, nullptr, 10));
+                    _pendingSequenceStart.sampleDumpEnabled = true;
+                    _pendingSequenceStart.sampleDumpFirstTrials = static_cast<unsigned long>(strtoul(token + 12, nullptr, 10));
                 } else if (startsWithTokenIgnoreCase(token, "sampleEvery=")) {
-                    sampleDumpEnabled = true;
-                    sampleDumpEveryNth = static_cast<unsigned long>(strtoul(token + 12, nullptr, 10));
+                    _pendingSequenceStart.sampleDumpEnabled = true;
+                    _pendingSequenceStart.sampleDumpEveryNth = static_cast<unsigned long>(strtoul(token + 12, nullptr, 10));
                 } else if (startsWithTokenIgnoreCase(token, "sampleLead=")) {
-                    sampleDumpEnabled = true;
-                    sampleDumpLeadMs = static_cast<unsigned long>(strtoul(token + 11, nullptr, 10));
+                    _pendingSequenceStart.sampleDumpEnabled = true;
+                    _pendingSequenceStart.sampleDumpLeadMs = static_cast<unsigned long>(strtoul(token + 11, nullptr, 10));
                 } else if (startsWithTokenIgnoreCase(token, "sampleTail=")) {
-                    sampleDumpEnabled = true;
-                    sampleDumpTailMs = static_cast<unsigned long>(strtoul(token + 11, nullptr, 10));
+                    _pendingSequenceStart.sampleDumpEnabled = true;
+                    _pendingSequenceStart.sampleDumpTailMs = static_cast<unsigned long>(strtoul(token + 11, nullptr, 10));
                 } else if (startsWithTokenIgnoreCase(token, "sampleStep=")) {
-                    sampleDumpEnabled = true;
-                    sampleDumpStepMs = static_cast<unsigned long>(strtoul(token + 11, nullptr, 10));
+                    _pendingSequenceStart.sampleDumpEnabled = true;
+                    _pendingSequenceStart.sampleDumpStepMs = static_cast<unsigned long>(strtoul(token + 11, nullptr, 10));
                 } else if (startsWithTokenIgnoreCase(token, "sampleMax=")) {
-                    sampleDumpEnabled = true;
-                    sampleDumpMaxRows = static_cast<unsigned long>(strtoul(token + 10, nullptr, 10));
+                    _pendingSequenceStart.sampleDumpEnabled = true;
+                    _pendingSequenceStart.sampleDumpMaxRows = static_cast<unsigned long>(strtoul(token + 10, nullptr, 10));
                 } else if (equalsIgnoreCase(token, "external")) {
                     // Observing an already-running external emitter is an explicit mode.
                     // Keep the current mode if the caller already requested OBS.
-                    if (!externalEmitter) {
-                        externalEmitter = true;
-                    }
+                    _pendingSequenceStart.externalEmitter = true;
                 } else if (startsWithTokenIgnoreCase(token, "test=")) {
-                    strncpy(setupLabel, token + 5, sizeof(setupLabel));
-                    setupLabel[sizeof(setupLabel) - 1] = '\0';
+                    strncpy(_pendingSequenceStart.setupLabelStorage, token + 5, sizeof(_pendingSequenceStart.setupLabelStorage));
+                    _pendingSequenceStart.setupLabelStorage[sizeof(_pendingSequenceStart.setupLabelStorage) - 1] = '\0';
                 } else if (equalsIgnoreCase(token, "labels")) {
-                    strncpy(setupLabel, "labels", sizeof(setupLabel));
-                    setupLabel[sizeof(setupLabel) - 1] = '\0';
+                    strncpy(_pendingSequenceStart.setupLabelStorage, "labels", sizeof(_pendingSequenceStart.setupLabelStorage));
+                    _pendingSequenceStart.setupLabelStorage[sizeof(_pendingSequenceStart.setupLabelStorage) - 1] = '\0';
                 }
             }
 
             if (!profileSeen) {
-                profileKind = _seqOutputConfig.profileKind;
+                _pendingSequenceStart.profileKind = _seqOutputConfig.profileKind;
             }
             if (!profileValid) {
                 return;
             }
             _seqOutputConfig = outputConfig;
-            _seqOutputConfig.totalTrials = totalTrials;
-            startSequenceTest(totalTrials, periodMs, windowEndOffsetMs, toneHz, durationMs, quiet, showDetails, AnalyzerApp::SequenceDiagMode::Off, setupLabel, sampleDumpEnabled, sampleDumpFirstTrials, sampleDumpEveryNth, sampleDumpLeadMs, sampleDumpTailMs, sampleDumpStepMs, sampleDumpMaxRows, startupDelayMs, profileKind, externalEmitter);
+            _seqOutputConfig.totalTrials = _pendingSequenceStart.totalTrials;
+            if (_pendingSequenceStart.setupLabelStorage[0] == '\0') {
+                strncpy(_pendingSequenceStart.setupLabelStorage, TEST_SETUP_LABEL, sizeof(_pendingSequenceStart.setupLabelStorage));
+                _pendingSequenceStart.setupLabelStorage[sizeof(_pendingSequenceStart.setupLabelStorage) - 1] = '\0';
+            }
+            _pendingSequenceStart.setupLabel = _pendingSequenceStart.setupLabelStorage;
             Serial.println("OK SEQ");
             return;
         }

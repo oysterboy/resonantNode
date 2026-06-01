@@ -7,11 +7,32 @@ ScalarOccurrenceSource::ScalarOccurrenceSource() = default;
 void ScalarOccurrenceSource::reset() {
     _detector.resetState();
     resetCandidateLifecycle();
+    resetRejectSummary();
+    _lastObservedTransientRejectedCount = 0;
+}
+
+void ScalarOccurrenceSource::resetRejectSummary() {
+    _rejectedCandidateCount = 0;
+    _rejectedBestDurationMs = 0;
+    _rejectedSecondBestDurationMs = 0;
+    _rejectedBestOpenMs = 0;
+    _rejectedBestPeakMs = 0;
+    _rejectedBestLastMatchMs = 0;
+    _rejectedBestCloseMs = 0;
+    _rejectedBestPeakStrength = 0.0f;
+    _rejectedMaxPeakStrength = 0.0f;
+    _rejectedMaxPeakStrengthMs = 0;
+    _rejectedBestReason = "none";
+    _rejectedBestGateReason = "none";
+    _rejectedTotalMatchMs = 0;
+    _rejectedIslandCount = 0;
 }
 
 void ScalarOccurrenceSource::begin() {
     _detector.begin();
     resetCandidateLifecycle();
+    resetRejectSummary();
+    _lastObservedTransientRejectedCount = 0;
 }
 
 void ScalarOccurrenceSource::setConfig(const ScalarTransientConfig& config) {
@@ -122,6 +143,36 @@ void ScalarOccurrenceSource::observe(const AudioSignalFrame& frame, float signal
         }
     }
 
+    const unsigned long transientRejectedCount = _detector.transientRejectedCount();
+    if (_candidateActive && transientRejectedCount > _lastObservedTransientRejectedCount) {
+        _lastObservedTransientRejectedCount = transientRejectedCount;
+
+        const unsigned long rejectedDurationMs = _detector.lastTransientRejectedDurationMs();
+        const float rejectedPeakStrength = _detector.lastTransientRejectedStrength();
+        ++_rejectedCandidateCount;
+        ++_rejectedIslandCount;
+        _rejectedTotalMatchMs += rejectedDurationMs;
+        if (rejectedPeakStrength >= _rejectedMaxPeakStrength) {
+            _rejectedMaxPeakStrength = rejectedPeakStrength;
+            _rejectedMaxPeakStrengthMs = _candidatePeakMs;
+        }
+        if (rejectedDurationMs >= _rejectedBestDurationMs) {
+            _rejectedSecondBestDurationMs = _rejectedBestDurationMs;
+            _rejectedBestDurationMs = rejectedDurationMs;
+            _rejectedBestOpenMs = _candidateFirstSeenMs;
+            _rejectedBestPeakMs = _candidatePeakMs;
+            _rejectedBestLastMatchMs = _candidateReleaseObservedMs != 0 ? _candidateReleaseObservedMs : _candidatePeakMs;
+            _rejectedBestCloseMs = _candidateReleaseObservedMs != 0 ? _candidateReleaseObservedMs : _candidatePeakMs;
+            _rejectedBestPeakStrength = _candidatePeakStrength;
+            _rejectedBestReason = _detector.lastTransientRejectReasonName();
+            _rejectedBestGateReason = _detector.lastTransientRejectReasonName();
+        } else if (rejectedDurationMs > _rejectedSecondBestDurationMs) {
+            _rejectedSecondBestDurationMs = rejectedDurationMs;
+        }
+
+        resetCandidateLifecycle();
+    }
+
     if (_candidateActive && _detector.transientDetected()) {
         _candidateReady = true;
         _candidateReleaseSample = frame.sampleIndex;
@@ -186,6 +237,62 @@ uint64_t ScalarOccurrenceSource::candidateReleaseSample() const {
 
 float ScalarOccurrenceSource::candidatePeakStrength() const {
     return _candidatePeakStrength;
+}
+
+unsigned long ScalarOccurrenceSource::rejectedCandidateCount() const {
+    return _rejectedCandidateCount;
+}
+
+unsigned long ScalarOccurrenceSource::bestRejectedDurationMs() const {
+    return _rejectedBestDurationMs;
+}
+
+unsigned long ScalarOccurrenceSource::secondBestRejectedDurationMs() const {
+    return _rejectedSecondBestDurationMs;
+}
+
+unsigned long ScalarOccurrenceSource::bestRejectedOpenMs() const {
+    return _rejectedBestOpenMs;
+}
+
+unsigned long ScalarOccurrenceSource::bestRejectedPeakMs() const {
+    return _rejectedBestPeakMs;
+}
+
+unsigned long ScalarOccurrenceSource::bestRejectedLastMatchMs() const {
+    return _rejectedBestLastMatchMs;
+}
+
+unsigned long ScalarOccurrenceSource::bestRejectedCloseMs() const {
+    return _rejectedBestCloseMs;
+}
+
+float ScalarOccurrenceSource::bestRejectedPeakStrength() const {
+    return _rejectedBestPeakStrength;
+}
+
+float ScalarOccurrenceSource::maxRejectedPeakStrength() const {
+    return _rejectedMaxPeakStrength;
+}
+
+unsigned long ScalarOccurrenceSource::maxRejectedPeakStrengthMs() const {
+    return _rejectedMaxPeakStrengthMs;
+}
+
+const char* ScalarOccurrenceSource::bestRejectedReasonName() const {
+    return _rejectedBestReason;
+}
+
+const char* ScalarOccurrenceSource::bestRejectedGateReasonName() const {
+    return _rejectedBestGateReason;
+}
+
+unsigned long ScalarOccurrenceSource::totalRejectedMatchMs() const {
+    return _rejectedTotalMatchMs;
+}
+
+unsigned long ScalarOccurrenceSource::rejectedIslandCount() const {
+    return _rejectedIslandCount;
 }
 
 const char* ScalarOccurrenceSource::lastOnsetRejectReasonName() const {

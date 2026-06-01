@@ -8,8 +8,15 @@
 namespace detection {
 
 bool FeatureHistory::isSupportedStream(FeatureStreamId stream) {
-    return stream != FeatureStreamId::Unknown &&
-           static_cast<size_t>(stream) < kStreamCount;
+    switch (stream) {
+        case FeatureStreamId::AmpEnvelope:
+        case FeatureStreamId::FrequencyScore:
+        case FeatureStreamId::FrequencyContrast:
+            return true;
+        case FeatureStreamId::Unknown:
+        default:
+            return false;
+    }
 }
 
 size_t FeatureHistory::streamIndex(FeatureStreamId stream) {

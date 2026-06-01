@@ -93,14 +93,14 @@ inline DetectionProfile makeTonalPulseProfile() {
     profile.occurrenceSource = OccurrenceSourceKind::FrequencyMatch;
 
     // Frequency path tuning.
-    profile.frequencyMatch.scoreMin = 10000.0f;       // Minimum frequency score gate.
+    profile.frequencyMatch.scoreMin = 8000.0f;       // Minimum frequency score gate.
     profile.frequencyMatch.contrastMin = 50.0f;       // Minimum spectral contrast gate.
     profile.frequencyMatch.minTransientDurationMs = 60; // Require a sustained match before emit.
     profile.frequencyMatch.releaseDebounceMs = 30;    // Hold the release briefly to avoid missing fragmented pulses
     profile.frequencyMatch.cooldownAfterOnsetMs = 0; // Re-arm after a short post-close cooldown (bad var naming)
   
     // Inspector composition.
-    
+
     profile.inspectionPlan = {};
     profile.inspectionPlan.modules[0].kind = InspectionModuleKind::ScalarFeatureStrength;
     profile.inspectionPlan.modules[0].target = EvidenceTarget::AmpStrength;

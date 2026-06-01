@@ -587,18 +587,20 @@ large command-system rewrite
    readable staged output
    profile-generic Analyzer view
 
-2. Add timing / freshness diagnostics:
+2. Further cleanup of VERBOSE levels and staged line payloads.
+
+3. Add timing / freshness diagnostics:
    frame, cadence, history coverage, feature age
 
-3. Tune TonalPulse with trustworthy Analyzer output
+4. Tune TonalPulse with trustworthy Analyzer output
 
-4. Add Scalar-on-frequency comparison profile
+5. Add Scalar-on-frequency comparison profile
 
-5. Compare TonalPulse vs Scalar profile using same SEQ_SUMMARY shape
+6. Compare TonalPulse vs Scalar profile using same SEQ_SUMMARY shape
 
-6. Decide whether Scalar can replace FrequencyMatch
+7. Decide whether Scalar can replace FrequencyMatch
 
-7. Continue Node separation without pulling Analyzer into Node
+8. Continue Node separation without pulling Analyzer into Node
 ```
 
 ---

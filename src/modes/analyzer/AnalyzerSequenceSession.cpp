@@ -121,12 +121,9 @@ void AnalyzerApp::startSequenceTest(unsigned long totalTrials, unsigned long per
     clearSequenceSampleDump();
 
     if (_detection == nullptr) {
-        _detection = new (std::nothrow) detection::DetectionRuntime();
-        if (_detection == nullptr) {
-            Serial.println("ERR MEMERROR reason=detection_runtime_alloc_failed");
-            _sequenceTest.active = false;
-            return;
-        }
+        Serial.println("ERR MEMERROR reason=detection_runtime_alloc_failed");
+        _sequenceTest.active = false;
+        return;
     }
     _detection->resetState();
     _detection->setFrequencyMatchConfig(selectedProfile.frequencyMatch);
@@ -296,6 +293,16 @@ void AnalyzerApp::startSequenceTest(unsigned long totalTrials, unsigned long per
         Serial.print(sequenceEvidenceTargetName(selectedProfile.patternRulesConfig.requiredSupportTarget));
         Serial.print(" support_gate=");
         Serial.print(selectedProfile.patternRulesConfig.requireSupportForAcceptance ? "enabled" : "disabled");
+        Serial.print(" freq_min_duration_ms=");
+        Serial.print(selectedProfile.frequencyMatch.minTransientDurationMs);
+        Serial.print(" freq_release_debounce_ms=");
+        Serial.print(selectedProfile.frequencyMatch.releaseDebounceMs);
+        Serial.print(" freq_cooldown_ms=");
+        Serial.print(selectedProfile.frequencyMatch.cooldownAfterOnsetMs);
+        Serial.print(" freq_score_min=");
+        Serial.print(selectedProfile.frequencyMatch.scoreMin, 1);
+        Serial.print(" freq_contrast_min=");
+        Serial.print(selectedProfile.frequencyMatch.contrastMin, 1);
         Serial.print(" mode=");
         Serial.print(_sequenceTest.externalEmitter ? "OBS" : "SEQ");
         Serial.print(" test=");

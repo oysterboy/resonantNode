@@ -13,7 +13,6 @@ Feature streams are measurements, not candidates and not pattern meanings.
 enum class FeatureStreamId {
     Unknown,
     AmpEnvelope,
-    AmbientFloor,
     FrequencyScore,
     FrequencyContrast,
     // Temporarily disabled to reduce analyzer history footprint during the current pass.
@@ -27,8 +26,6 @@ inline const char* featureStreamName(FeatureStreamId value) {
     switch (value) {
         case FeatureStreamId::AmpEnvelope:
             return "amp_envelope";
-        case FeatureStreamId::AmbientFloor:
-            return "ambient_floor";
         case FeatureStreamId::FrequencyScore:
             return "frequency_score";
         case FeatureStreamId::FrequencyContrast:

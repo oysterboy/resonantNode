@@ -344,13 +344,13 @@ struct AnalyzerFrequencyDiagnostic {
     float peakContrast = 0.0f;
     unsigned long peakWindowSampleCount = 0;
 
-    const char* trialMissReason = "unknown";
+    const char* analyzerMissReason = "none";
     bool nearMiss = false;
     const char* nearMissReason = "none";
     const char* freqEvidenceClass = "none";
-    const char* fmRejectReason = "none";
-    const char* fmNoEmitReason = "none";
-    const char* fmGateReason = "none";
+    const char* sourceLastRejectReason = "none";
+    const char* selectedRejectReason = "none";
+    const char* selectedRejectGateReason = "none";
     bool fmOpened = false;
     bool fmReleased = false;
     bool fmEmitted = false;

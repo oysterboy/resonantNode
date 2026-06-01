@@ -15,7 +15,6 @@ OccurrenceSource occurrenceSourceForStream(FeatureStreamId stream) {
         case FeatureStreamId::FrequencyContrast:
             return OccurrenceSource::Frequency;
         case FeatureStreamId::AmpEnvelope:
-        case FeatureStreamId::AmbientFloor:
         case FeatureStreamId::Unknown:
         default:
             return OccurrenceSource::Amp;
@@ -26,8 +25,6 @@ float selectedScalarValue(const AudioSignalFrame& frame, const FrequencyFeatureF
     switch (stream) {
         case FeatureStreamId::AmpEnvelope:
             return frame.centeredMagnitude;
-        case FeatureStreamId::AmbientFloor:
-            return frame.baseline;
         case FeatureStreamId::FrequencyScore:
             return frequencyEvidence.score;
         case FeatureStreamId::FrequencyContrast:

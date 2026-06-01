@@ -70,6 +70,25 @@ unsigned long sampleFramesToMs(unsigned long frames, uint32_t sampleRateHz) {
     return static_cast<unsigned long>((static_cast<uint64_t>(frames) * 1000ULL) / static_cast<uint64_t>(sampleRateHz));
 }
 
+void printHeapStatus(const char* when) {
+    const uint32_t free8 = static_cast<uint32_t>(heap_caps_get_free_size(MALLOC_CAP_8BIT));
+    const uint32_t largest8 = static_cast<uint32_t>(heap_caps_get_largest_free_block(MALLOC_CAP_8BIT));
+    const uint32_t freeInternal = static_cast<uint32_t>(heap_caps_get_free_size(MALLOC_CAP_INTERNAL));
+    Serial.print("HEAP_STATUS when=");
+    Serial.print(when != nullptr ? when : "unknown");
+    Serial.print(" free_8bit=");
+    Serial.print(free8);
+    Serial.print(" largest_8bit=");
+    Serial.print(largest8);
+    Serial.print(" free_internal=");
+    Serial.println(freeInternal);
+}
+
+void printRuntimeSize() {
+    Serial.print("RUNTIME_SIZE detection_runtime_bytes=");
+    Serial.println(static_cast<unsigned long>(sizeof(detection::DetectionRuntime)));
+}
+
 const char* audioHealthNameFromCounters(unsigned long zeroishFrames,
                                         unsigned long flatlineFrames,
                                         unsigned long largeJumpFrames,
@@ -721,8 +740,15 @@ void AnalyzerApp::begin() {
     _freqBandStream.resetState();
     _freqBandStream.setSampleRateHz(_audioSource.sampleRateHz());
     _freqBandStream.setTargetFrequencyHz(runtime::kDefaultChirpFrequencyHz);
+    printRuntimeSize();
+    printHeapStatus("begin_before_runtime_alloc");
     if (_detection == nullptr) {
         _detection = new (std::nothrow) detection::DetectionRuntime();
+    }
+    if (_detection == nullptr) {
+        printHeapStatus("begin_runtime_alloc_failed");
+        Serial.println("ERR MEMERROR reason=detection_runtime_alloc_failed");
+        return;
     }
     _lastPrintMs = 0;
     _loopLastUs = micros();
@@ -1144,6 +1170,11 @@ AnalyzerReport* AnalyzerApp::sequenceReportScratch() {
         }
     }
 
+    if (_sequenceReportScratch == nullptr) {
+        return nullptr;
+    }
+
+    *_sequenceReportScratch = makeEmptyAnalyzerReport();
     return _sequenceReportScratch;
 }
 
@@ -1447,7 +1478,9 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
         report.frequency.liveFreqPresent = runtimeDiag->frequencyPresent;
         report.frequency.liveFreqValid = runtimeDiag->frequencyValidWindow;
         report.frequency.liveFreqMatch = runtimeDiag->frequencyMatched;
-        report.frequency.trialMissReason = runtimeDiag->frequencyRejectReason != nullptr ? runtimeDiag->frequencyRejectReason : "unknown";
+        report.frequency.analyzerMissReason = report.classification.result == AnalyzerResult::Miss
+            ? analyzerReasonName(report.classification.reason)
+            : "none";
         report.frequency.nearMiss = runtimeDiag->frequencyNearMiss;
         report.frequency.nearMissReason = runtimeDiag->frequencyNearMissReason != nullptr ? runtimeDiag->frequencyNearMissReason : "none";
     }
@@ -1456,13 +1489,13 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
         report.frequency.sourceOccurrenceEmitted = frequencyDetector->candidateEmitted;
         report.frequency.runtimeEvidenceSeen = runtimeDiag != nullptr ? runtimeDiag->frequencyPresent : false;
         report.frequency.runtimeOccurrenceReceived = report.frequency.sourceOccurrenceEmitted && runtimeReceivedOccurrence;
-        report.frequency.fmRejectReason = runtimeDiag != nullptr && runtimeDiag->frequencyRejectReason != nullptr
+        report.frequency.sourceLastRejectReason = runtimeDiag != nullptr && runtimeDiag->frequencyRejectReason != nullptr
             ? runtimeDiag->frequencyRejectReason
-            : "unknown";
-        report.frequency.fmNoEmitReason = runtimeDiag != nullptr && runtimeDiag->frequencyNoEmitReason != nullptr
+            : "none";
+        report.frequency.selectedRejectReason = runtimeDiag != nullptr && report.frequency.sourceOccurrenceEmitted && !report.frequency.acceptedPresent && runtimeDiag->frequencyNoEmitReason != nullptr
             ? runtimeDiag->frequencyNoEmitReason
             : "none";
-        report.frequency.fmGateReason = runtimeDiag != nullptr && runtimeDiag->frequencyGateReason != nullptr
+        report.frequency.selectedRejectGateReason = runtimeDiag != nullptr && runtimeDiag->frequencyGateReason != nullptr
             ? runtimeDiag->frequencyGateReason
             : "none";
         report.frequency.fmOpened = runtimeDiag != nullptr ? runtimeDiag->frequencyOpened : false;
@@ -1486,8 +1519,8 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
         if (!runtimeDiag->frequencyReadyOk) {
             report.frequency.detectionGateReason = "not_ready";
         } else if (!runtimeDiag->frequencyGateOpen) {
-            report.frequency.detectionGateReason = report.frequency.fmGateReason != nullptr && report.frequency.fmGateReason[0] != '\0'
-                ? report.frequency.fmGateReason
+            report.frequency.detectionGateReason = report.frequency.selectedRejectGateReason != nullptr && report.frequency.selectedRejectGateReason[0] != '\0'
+                ? report.frequency.selectedRejectGateReason
                 : "unknown";
         } else {
             report.frequency.detectionGateReason = "none";
@@ -1505,8 +1538,13 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
     } else {
         report.frequency.freqEvidenceClass = "none";
     }
-    if (report.classification.result == AnalyzerResult::Miss && !report.frequency.acceptedPresent && report.frequency.trialMissReason != nullptr && strcmp(report.frequency.trialMissReason, "occurrence_emitted") == 0) {
-        report.frequency.trialMissReason = "unknown_or_stale_reason";
+    if (report.frequency.analyzerMissReason == nullptr || report.frequency.analyzerMissReason[0] == '\0') {
+        report.frequency.analyzerMissReason = report.classification.result == AnalyzerResult::Miss
+            ? "no_accepted_occurrence"
+            : "none";
+    }
+    if (report.classification.result == AnalyzerResult::Miss && !report.frequency.acceptedPresent && report.frequency.analyzerMissReason != nullptr && strcmp(report.frequency.analyzerMissReason, "occurrence_emitted") == 0) {
+        report.frequency.analyzerMissReason = "unknown_or_stale_reason";
         report.frequency.inconsistent = true;
     }
     report.frequency.analyzerSeenOccurrence = report.frequency.acceptedPresent;

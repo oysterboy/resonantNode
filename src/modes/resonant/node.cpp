@@ -172,8 +172,7 @@ void printDetectionProfileDetails(const detection::DetectionProfile& profile) {
             Serial.print(" stream=");
             Serial.print(module.scalar.stream == detection::FeatureStreamId::AmpEnvelope ? "AmpEnvelope" :
                          (module.scalar.stream == detection::FeatureStreamId::FrequencyScore ? "FrequencyScore" :
-                         (module.scalar.stream == detection::FeatureStreamId::FrequencyContrast ? "FrequencyContrast" :
-                         (module.scalar.stream == detection::FeatureStreamId::AmbientFloor ? "AmbientFloor" : "Unknown"))));
+                         (module.scalar.stream == detection::FeatureStreamId::FrequencyContrast ? "FrequencyContrast" : "Unknown")));
             Serial.print(" windowPreMs=");
             Serial.print(module.scalar.windowPreMs);
             Serial.print(" windowPostMs=");

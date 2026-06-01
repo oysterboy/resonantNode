@@ -178,7 +178,7 @@ inline DetectionProfile makeTonalPulse2Profile() {
     profile.inspectionPlan.modules[0].scalar.strength.mediumPeakThreshold = 15000.0f;
     profile.inspectionPlan.modules[0].scalar.strength.weakPeakThreshold = 8000.0f;
     profile.inspectionPlan.modules[0].scalar.mode = ScalarInspectionMode::PeakCenteredLift;
-    profile.inspectionPlan.modules[0].scalar.windowPreMs = 1;
+    profile.inspectionPlan.modules[0].scalar.windowPreMs = 10;
     profile.inspectionPlan.modules[0].scalar.windowPostMs = 90;
     //profile.inspectionPlan.modules[1].kind = InspectionModuleKind::ScalarFeatureStrength;
     //profile.inspectionPlan.modules[1].target = EvidenceTarget::AmpStrength;

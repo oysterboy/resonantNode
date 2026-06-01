@@ -454,6 +454,7 @@ void AnalyzerApp::handleUsbLine(const char* line) {
         }
 
         if (equalsIgnoreCase(token, "STOP")) {
+            printSequenceSummary();
             stopSequenceTest();
             Serial.println("OK SEQ STOP");
             return;

@@ -305,7 +305,6 @@ Can observe streams such as:
 AmpEnvelope
 FrequencyScore
 FrequencyContrast
-AmbientFloor
 ```
 
 Status:
@@ -333,7 +332,6 @@ Current FeatureStream examples:
 
 ```text
 AmpEnvelope
-AmbientFloor
 FrequencyScore
 FrequencyContrast
 ```

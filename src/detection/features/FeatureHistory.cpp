@@ -10,7 +10,17 @@ bool FeatureHistory::isSupportedStream(FeatureStreamId stream) {
 }
 
 size_t FeatureHistory::streamIndex(FeatureStreamId stream) {
-    return static_cast<size_t>(stream);
+    switch (stream) {
+        case FeatureStreamId::AmpEnvelope:
+            return 0U;
+        case FeatureStreamId::FrequencyScore:
+            return 1U;
+        case FeatureStreamId::FrequencyContrast:
+            return 2U;
+        case FeatureStreamId::Unknown:
+        default:
+            return 0U;
+    }
 }
 
 void FeatureHistory::reset() {

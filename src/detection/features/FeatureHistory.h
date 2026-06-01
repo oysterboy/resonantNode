@@ -18,7 +18,7 @@ Does not decide candidate validity or pattern meaning.
 class FeatureHistory {
 public:
     static constexpr size_t kMaxSamplesPerStream = 512;
-    static constexpr size_t kStreamCount = static_cast<size_t>(FeatureStreamId::FrequencyContrast) + 1U;
+    static constexpr size_t kStreamCount = 3;
 
     void reset();
 

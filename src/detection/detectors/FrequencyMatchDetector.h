@@ -79,6 +79,8 @@ public:
     const char* bestRejectReason = "none";
     const char* bestGateReason = "none";
     unsigned long totalMatchMs = 0;
+    unsigned long totalGapMs = 0;
+    unsigned long maxGapMs = 0;
     unsigned long islandCount = 0;
     detection::FrequencyFeatureFrame bestEvidence = {};
     detection::FrequencyFeatureFrame candidateEvidence = {};
@@ -94,6 +96,9 @@ public:
     unsigned long diagnosticsBothOkCount = 0;
     unsigned long diagnosticsMatchedCount = 0;
     unsigned long diagnosticsRejectedCount = 0;
+    unsigned long diagnosticsScoreTooLowCount = 0;
+    unsigned long diagnosticsContrastTooLowCount = 0;
+    unsigned long diagnosticsScoreAndContrastTooLowCount = 0;
     float diagnosticsScoreSum = 0.0f;
     float diagnosticsScoreMin = 0.0f;
     float diagnosticsScoreMax = 0.0f;
@@ -102,6 +107,7 @@ public:
     float diagnosticsContrastMin = 0.0f;
     float diagnosticsContrastMax = 0.0f;
     unsigned long diagnosticsContrastMaxMs = 0;
+    unsigned long lastRejectedCloseMs = 0;
 
     void resetState();
     void resetRejectSummary();

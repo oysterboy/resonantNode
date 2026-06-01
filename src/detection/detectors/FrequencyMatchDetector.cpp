@@ -60,7 +60,10 @@ void FrequencyMatchDetector::resetState() {
     bestRejectReason = "none";
     bestGateReason = "none";
     totalMatchMs = 0;
+    totalGapMs = 0;
+    maxGapMs = 0;
     islandCount = 0;
+    lastRejectedCloseMs = 0;
     memset(&bestEvidence, 0, sizeof(bestEvidence));
     memset(&candidateEvidence, 0, sizeof(candidateEvidence));
     memset(candidateState, 0, sizeof(candidateState));
@@ -93,7 +96,10 @@ void FrequencyMatchDetector::resetRejectSummary() {
     bestRejectReason = "none";
     bestGateReason = "none";
     totalMatchMs = 0;
+    totalGapMs = 0;
+    maxGapMs = 0;
     islandCount = 0;
+    lastRejectedCloseMs = 0;
     memset(&bestEvidence, 0, sizeof(bestEvidence));
     memset(&candidateEvidence, 0, sizeof(candidateEvidence));
     bestObservedAtMs = 0;
@@ -118,6 +124,9 @@ void FrequencyMatchDetector::resetDiagnosticsSummary() {
     diagnosticsBothOkCount = 0;
     diagnosticsMatchedCount = 0;
     diagnosticsRejectedCount = 0;
+    diagnosticsScoreTooLowCount = 0;
+    diagnosticsContrastTooLowCount = 0;
+    diagnosticsScoreAndContrastTooLowCount = 0;
     diagnosticsScoreSum = 0.0f;
     diagnosticsScoreMin = 0.0f;
     diagnosticsScoreMax = 0.0f;
@@ -142,7 +151,6 @@ void FrequencyMatchDetector::updateBestRejectedCandidate() {
         return;
     }
 
-    ++rejectedCount;
     if (candidateHoldMs >= bestDurationMs) {
         secondBestDurationMs = bestDurationMs;
         bestDurationMs = candidateHoldMs;
@@ -166,6 +174,14 @@ void FrequencyMatchDetector::observeClosedCandidate(bool accepted) {
 
     ++candidateCount;
     ++rejectedCount;
+    if (lastRejectedCloseMs > 0 && candidateFirstSeenMs > lastRejectedCloseMs) {
+        const unsigned long gapMs = candidateFirstSeenMs - lastRejectedCloseMs;
+        totalGapMs += gapMs;
+        if (gapMs > maxGapMs) {
+            maxGapMs = gapMs;
+        }
+    }
+    lastRejectedCloseMs = candidateReleaseMs > 0 ? candidateReleaseMs : candidateLastMatchedMs;
     ++islandCount;
     totalMatchMs += candidateHoldMs;
     updateBestRejectedCandidate();
@@ -380,12 +396,18 @@ live_freq_update_best:
             }
             if (liveFreqEval.scoreOk) {
                 ++diagnosticsScoreOkCount;
+            } else if (liveFreqEval.contrastOk) {
+                ++diagnosticsScoreTooLowCount;
             }
             if (liveFreqEval.contrastOk) {
                 ++diagnosticsContrastOkCount;
+            } else if (liveFreqEval.scoreOk) {
+                ++diagnosticsContrastTooLowCount;
             }
             if (liveFreqEval.scoreOk && liveFreqEval.contrastOk) {
                 ++diagnosticsBothOkCount;
+            } else if (!liveFreqEval.scoreOk && !liveFreqEval.contrastOk) {
+                ++diagnosticsScoreAndContrastTooLowCount;
             }
             diagnosticsScoreSum += evidence.score;
             diagnosticsContrastSum += evidence.spectralContrast;

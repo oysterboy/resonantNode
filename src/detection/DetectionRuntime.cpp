@@ -219,11 +219,16 @@ void DetectionRuntime::captureDiagnostics() {
         _diagnostics.sourceSummary.bestPeakSecondary = detector.bestPeakContrast;
         _diagnostics.sourceSummary.bestRejectReason = detector.bestRejectReason;
         _diagnostics.sourceSummary.bestGateReason = detector.bestGateReason;
+        _diagnostics.sourceSummary.scoreTooLowFrames = detector.diagnosticsScoreTooLowCount;
+        _diagnostics.sourceSummary.contrastTooLowFrames = detector.diagnosticsContrastTooLowCount;
+        _diagnostics.sourceSummary.scoreAndContrastTooLowFrames = detector.diagnosticsScoreAndContrastTooLowCount;
         _diagnostics.sourceSummary.maxPeakPrimary = detector.diagnosticsScoreMax;
         _diagnostics.sourceSummary.maxPeakPrimaryMs = detector.diagnosticsScoreMaxMs;
         _diagnostics.sourceSummary.maxPeakSecondary = detector.diagnosticsContrastMax;
         _diagnostics.sourceSummary.maxPeakSecondaryMs = detector.diagnosticsContrastMaxMs;
         _diagnostics.sourceSummary.totalMatchMs = detector.totalMatchMs;
+        _diagnostics.sourceSummary.totalGapMs = detector.totalGapMs;
+        _diagnostics.sourceSummary.maxGapMs = detector.maxGapMs;
         _diagnostics.sourceSummary.islandCount = detector.islandCount;
         _diagnostics.sourceLastCandidate.present = detector.candidateActive || detector.candidateClosed || detector.candidateEmitted || detector.candidateFirstSeenMs > 0;
         _diagnostics.sourceLastCandidate.peakMs = detector.candidatePeakMs;
@@ -283,11 +288,16 @@ void DetectionRuntime::captureDiagnostics() {
         _diagnostics.sourceSummary.bestPeakSecondary = 0.0f;
         _diagnostics.sourceSummary.bestRejectReason = _scalarEmitter.bestRejectedReasonName();
         _diagnostics.sourceSummary.bestGateReason = _scalarEmitter.bestRejectedGateReasonName();
+        _diagnostics.sourceSummary.scoreTooLowFrames = 0;
+        _diagnostics.sourceSummary.contrastTooLowFrames = 0;
+        _diagnostics.sourceSummary.scoreAndContrastTooLowFrames = 0;
         _diagnostics.sourceSummary.maxPeakPrimary = _scalarEmitter.maxRejectedPeakStrength();
         _diagnostics.sourceSummary.maxPeakPrimaryMs = _scalarEmitter.maxRejectedPeakStrengthMs();
         _diagnostics.sourceSummary.maxPeakSecondary = 0.0f;
         _diagnostics.sourceSummary.maxPeakSecondaryMs = 0UL;
         _diagnostics.sourceSummary.totalMatchMs = _scalarEmitter.totalRejectedMatchMs();
+        _diagnostics.sourceSummary.totalGapMs = _scalarEmitter.totalRejectedGapMs();
+        _diagnostics.sourceSummary.maxGapMs = _scalarEmitter.maxRejectedGapMs();
         _diagnostics.sourceSummary.islandCount = _scalarEmitter.rejectedIslandCount();
         _diagnostics.sourceLastCandidate.present = _scalarEmitter.candidateActive()
             || _scalarEmitter.releaseObserved()

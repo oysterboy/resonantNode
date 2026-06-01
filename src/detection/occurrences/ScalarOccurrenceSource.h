@@ -78,6 +78,8 @@ public:
     const char* bestRejectedReasonName() const;
     const char* bestRejectedGateReasonName() const;
     unsigned long totalRejectedMatchMs() const;
+    unsigned long totalRejectedGapMs() const;
+    unsigned long maxRejectedGapMs() const;
     unsigned long rejectedIslandCount() const;
     const char* lastOnsetRejectReasonName() const;
     const char* lastTransientRejectReasonName() const;
@@ -124,6 +126,9 @@ private:
     const char* _rejectedBestReason = "none";
     const char* _rejectedBestGateReason = "none";
     unsigned long _rejectedTotalMatchMs = 0;
+    unsigned long _rejectedTotalGapMs = 0;
+    unsigned long _rejectedMaxGapMs = 0;
+    unsigned long _lastRejectedCloseMs = 0;
     unsigned long _rejectedIslandCount = 0;
     unsigned long _lastObservedTransientRejectedCount = 0;
     Occurrence _pending = {};

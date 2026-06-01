@@ -25,6 +25,9 @@ void ScalarOccurrenceSource::resetRejectSummary() {
     _rejectedBestReason = "none";
     _rejectedBestGateReason = "none";
     _rejectedTotalMatchMs = 0;
+    _rejectedTotalGapMs = 0;
+    _rejectedMaxGapMs = 0;
+    _lastRejectedCloseMs = 0;
     _rejectedIslandCount = 0;
 }
 
@@ -149,6 +152,15 @@ void ScalarOccurrenceSource::observe(const AudioSignalFrame& frame, float signal
 
         const unsigned long rejectedDurationMs = _detector.lastTransientRejectedDurationMs();
         const float rejectedPeakStrength = _detector.lastTransientRejectedStrength();
+        const unsigned long rejectedCloseMs = _candidateReleaseObservedMs != 0 ? _candidateReleaseObservedMs : _candidatePeakMs;
+        if (_lastRejectedCloseMs > 0 && _candidateFirstSeenMs > _lastRejectedCloseMs) {
+            const unsigned long gapMs = _candidateFirstSeenMs - _lastRejectedCloseMs;
+            _rejectedTotalGapMs += gapMs;
+            if (gapMs > _rejectedMaxGapMs) {
+                _rejectedMaxGapMs = gapMs;
+            }
+        }
+        _lastRejectedCloseMs = rejectedCloseMs;
         ++_rejectedCandidateCount;
         ++_rejectedIslandCount;
         _rejectedTotalMatchMs += rejectedDurationMs;
@@ -289,6 +301,14 @@ const char* ScalarOccurrenceSource::bestRejectedGateReasonName() const {
 
 unsigned long ScalarOccurrenceSource::totalRejectedMatchMs() const {
     return _rejectedTotalMatchMs;
+}
+
+unsigned long ScalarOccurrenceSource::totalRejectedGapMs() const {
+    return _rejectedTotalGapMs;
+}
+
+unsigned long ScalarOccurrenceSource::maxRejectedGapMs() const {
+    return _rejectedMaxGapMs;
 }
 
 unsigned long ScalarOccurrenceSource::rejectedIslandCount() const {

@@ -62,11 +62,16 @@ struct SourceCandidateSummary {
     float bestPeakSecondary = 0.0f;
     const char* bestRejectReason = "none";
     const char* bestGateReason = "none";
+    unsigned long scoreTooLowFrames = 0;
+    unsigned long contrastTooLowFrames = 0;
+    unsigned long scoreAndContrastTooLowFrames = 0;
     float maxPeakPrimary = 0.0f;
     unsigned long maxPeakPrimaryMs = 0;
     float maxPeakSecondary = 0.0f;
     unsigned long maxPeakSecondaryMs = 0;
     unsigned long totalMatchMs = 0;
+    unsigned long totalGapMs = 0;
+    unsigned long maxGapMs = 0;
     unsigned long islandCount = 0;
 };
 

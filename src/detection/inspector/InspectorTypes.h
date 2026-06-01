@@ -117,6 +117,8 @@ struct ScalarFeatureInspectionConfig {
     AmpStrengthConfig strength = {};
     uint32_t windowPreMs = 20;
     uint32_t windowPostMs = 120;
+    uint32_t preFloorWindowPreMs = 250;
+    uint32_t preFloorWindowPostMs = 50;
     uint32_t minSustainedMs = 0;
     size_t minSustainedCount = 0;
 };

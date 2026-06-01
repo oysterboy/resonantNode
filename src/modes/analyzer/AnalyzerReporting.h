@@ -244,6 +244,8 @@ struct AnalyzerProfileDetail {
     const char* ampStrengthMin = "medium";
     bool requireSupportForAcceptance = true;
     detection::ScalarInspectionObservation scalarObservation = {};
+    size_t inspectionObservationCount = 0;
+    detection::ScalarInspectionObservation inspectionObservations[detection::kMaxInspectionModules] = {};
 
     float freqScore = 0.0f;
     float freqContrast = 0.0f;

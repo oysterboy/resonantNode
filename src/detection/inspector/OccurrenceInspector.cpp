@@ -93,8 +93,8 @@ void fillScalarObservation(
     obs.preFloorAvailable = preFloorWindow.valid;
     obs.preFloorAnchor = preFloorAnchor;
     obs.preFloorNote = preFloorWindow.valid ? detection::ScalarInspectionNote::PreFloorObserved : detection::ScalarInspectionNote::PreFloorUnavailable;
-    obs.preFloorWindowStartMs = static_cast<int16_t>(-250);
-    obs.preFloorWindowEndMs = static_cast<int16_t>(-50);
+    obs.preFloorWindowStartMs = static_cast<int16_t>(-static_cast<int32_t>(config.preFloorWindowPreMs));
+    obs.preFloorWindowEndMs = static_cast<int16_t>(-static_cast<int32_t>(config.preFloorWindowPostMs));
     obs.preFloorWindowMs = preFloorWindow.durationMs;
     obs.preFloorValueCount = preFloorWindow.valueCount;
     obs.preFloorBucketCount = preFloorWindow.bucketCount;
@@ -172,8 +172,8 @@ void OccurrenceInspector::annotateAmpStrength(
         : (candidate.startMs != 0
             ? detection::ScalarInspectionAnchor::Start
             : (candidate.releaseMs != 0 ? detection::ScalarInspectionAnchor::Release : detection::ScalarInspectionAnchor::Fallback));
-    const unsigned long preFloorStartMs = preFloorAnchorMs > 250UL ? preFloorAnchorMs - 250UL : 0UL;
-    const unsigned long preFloorEndMs = preFloorAnchorMs > 50UL ? preFloorAnchorMs - 50UL : 0UL;
+    const unsigned long preFloorStartMs = preFloorAnchorMs > config.preFloorWindowPreMs ? preFloorAnchorMs - config.preFloorWindowPreMs : 0UL;
+    const unsigned long preFloorEndMs = preFloorAnchorMs > config.preFloorWindowPostMs ? preFloorAnchorMs - config.preFloorWindowPostMs : 0UL;
     ScalarInspectionObservation observation = {};
     observation.stream = config.stream;
     observation.mode = config.mode;

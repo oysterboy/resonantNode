@@ -42,14 +42,14 @@ void AnalyzerApp::printSequenceHelp() {
     Serial.println("SEQ IN: start [N|tries=N] [period=MS] [window=MS] [freq=HZ] [dur=MS] [test=LABEL]");
     Serial.println("SEQ IN: OBS start [N|tries=N] [period=2000] [window=1800] [freq=HZ] [dur=MS] [test=LABEL]");
     Serial.println("SEQ IN: TRIES N");
-    Serial.println("SEQ IN: [profile=tonalpulse|tonalpulse2|amp]");
+    Serial.println("SEQ IN: [profile=tonalpulse|amp|chirp_experimental]");
     Serial.println("SEQ IN: MODE quiet|compact|signalcheck|full|system|source|inspect|pattern|dump");
     Serial.println("SEQ IN: MODE quiet = no sequence output");
     Serial.println("SEQ IN: MODE compact = compact trial view");
     Serial.println("SEQ IN: MODE signalcheck = compact trial view + audio health snapshot");
     Serial.println("SEQ IN: MODE full = trial + source + inspect + pattern + system health");
     Serial.println("SEQ IN: MODE system = trial verdict + system health + summary");
-    Serial.println("SEQ IN: PROFILE tonalpulse|tonalpulse2|amp|chirp_experimental");
+    Serial.println("SEQ IN: PROFILE tonalpulse|amp|chirp_experimental");
     Serial.println("SEQ IN: DIAG on|off");
     Serial.println("SEQ IN: FREQBAND on|off");
     Serial.println("SEQ IN: FREQDECIMATE 1|4|8|16");
@@ -62,9 +62,8 @@ void AnalyzerApp::printSequenceHelp() {
     Serial.println("SEQ OUT: SEQ start / SEQ running / SEQ_PATTERN / SEQ_TRIAL / SEQ_INSPECT / SEQ_SOURCE / SEQ_DUMP / SEQ_SUMMARY / AUDIO run / SIGNALCHECK");
     Serial.println("SEQ OUT: candidate fields include onset_sample peak_sample release_sample peak_ms dur end_dt_ms freq_*");
     Serial.println("SEQ OBS: passive observe mode for an already-running external emitter");
-    Serial.println("SEQ IN: PROFILE tonalpulse|tonalpulse2|amp|chirp_experimental");
+    Serial.println("SEQ IN: PROFILE tonalpulse|amp|chirp_experimental");
     Serial.println("SEQ PROFILE tonalpulse");
-    Serial.println("SEQ PROFILE tonalpulse2");
     Serial.println("SEQ PROFILE amp");
     Serial.println("SEQ PROFILE chirp_experimental");
     Serial.println("SEQ PARAM: freqScore=10000 freqContrast=50.0");
@@ -393,8 +392,6 @@ void AnalyzerApp::handleUsbLine(const char* line) {
             bool validProfile = true;
             if (equalsIgnoreCase(profileToken, "tonalpulse")) {
                 profileKind = detection::DetectionProfileKind::TonalPulse;
-            } else if (equalsIgnoreCase(profileToken, "tonalpulse2") || equalsIgnoreCase(profileToken, "tonal_pulse_2") || equalsIgnoreCase(profileToken, "tonal_pulse2")) {
-                profileKind = detection::DetectionProfileKind::TonalPulse2;
             } else if (equalsIgnoreCase(profileToken, "amp")) {
                 profileKind = detection::DetectionProfileKind::Amp;
             } else if (equalsIgnoreCase(profileToken, "chirp_experimental")) {
@@ -406,7 +403,7 @@ void AnalyzerApp::handleUsbLine(const char* line) {
             if (!validProfile) {
                 Serial.print("ERR SEQ unknown profile=");
                 Serial.print(profileToken);
-                Serial.println(" use PROFILE tonalpulse, PROFILE tonalpulse2, PROFILE amp or PROFILE chirp_experimental");
+                Serial.println(" use PROFILE tonalpulse, PROFILE amp or PROFILE chirp_experimental");
                 return;
             }
 
@@ -510,9 +507,6 @@ void AnalyzerApp::handleUsbLine(const char* line) {
                     if (equalsIgnoreCase(profileValue, "tonalpulse")) {
                         profileKind = detection::DetectionProfileKind::TonalPulse;
                         profileSeen = true;
-                    } else if (equalsIgnoreCase(profileValue, "tonalpulse2") || equalsIgnoreCase(profileValue, "tonal_pulse_2") || equalsIgnoreCase(profileValue, "tonal_pulse2")) {
-                        profileKind = detection::DetectionProfileKind::TonalPulse2;
-                        profileSeen = true;
                     } else if (equalsIgnoreCase(profileValue, "amp")) {
                         profileKind = detection::DetectionProfileKind::Amp;
                         profileSeen = true;
@@ -523,7 +517,7 @@ void AnalyzerApp::handleUsbLine(const char* line) {
                         profileValid = false;
                         Serial.print("ERR SEQ unknown profile=");
                         Serial.print(profileValue);
-                        Serial.println(" use profile=tonalpulse, profile=tonalpulse2, profile=amp or profile=chirp_experimental");
+                        Serial.println(" use profile=tonalpulse, profile=amp or profile=chirp_experimental");
                         return;
                     }
                 } else if (startsWithTokenIgnoreCase(token, "mode=")) {

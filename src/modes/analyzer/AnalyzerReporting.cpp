@@ -246,8 +246,6 @@ const char* analyzerProfileDetailNamespace(detection::DetectionProfileKind profi
     switch (profileKind) {
         case detection::DetectionProfileKind::Amp:
             return "amp";
-        case detection::DetectionProfileKind::TonalPulse2:
-            return "tonal_pulse_2";
         case detection::DetectionProfileKind::ChirpExperimental:
             return "chirp_experimental";
         case detection::DetectionProfileKind::TonalPulse:
@@ -260,8 +258,6 @@ const char* analyzerProfileDetailSummary(detection::DetectionProfileKind profile
     switch (profileKind) {
         case detection::DetectionProfileKind::Amp:
             return "amp scalar profile view";
-        case detection::DetectionProfileKind::TonalPulse2:
-            return "tonal_pulse_2 profile view";
         case detection::DetectionProfileKind::ChirpExperimental:
             return "chirp_experimental profile view";
         case detection::DetectionProfileKind::TonalPulse:
@@ -671,6 +667,98 @@ void AnalyzerApp::printSequenceInspect(const AnalyzerReport& report) const {
         return;
     }
 
+    const detection::DetectionProfile& selectedProfile = detection::detectionProfileForKind(_sequenceTest.profileKind);
+    const unsigned int inspectDetailLevel = sequenceDetailLevel(_sequenceTest.outputConfig);
+    const size_t moduleCount = report.profileDetail.inspectionObservationCount < selectedProfile.inspectionPlan.count
+        ? report.profileDetail.inspectionObservationCount
+        : selectedProfile.inspectionPlan.count;
+
+    for (size_t i = 0; i < moduleCount; ++i) {
+        const auto& module = selectedProfile.inspectionPlan.modules[i];
+        const auto& observation = report.profileDetail.inspectionObservations[i];
+        const char* targetName = analyzerEvidenceTargetName(module.target);
+        const char* streamName = detection::featureStreamName(module.scalar.stream);
+
+        Serial.print("SEQ_INSPECT");
+        Serial.print(" module=");
+        Serial.print(static_cast<unsigned long>(i + 1U));
+        Serial.print(" target=");
+        Serial.print(targetName != nullptr ? targetName : "unknown");
+        Serial.print(" stream=");
+        Serial.print(streamName != nullptr ? streamName : "unknown");
+        Serial.print(" available=");
+        Serial.print(observation.available ? 1 : 0);
+        Serial.print(" evidence=");
+        if (module.target == detection::EvidenceTarget::FrequencyScoreStrength) {
+            Serial.print("freq.score=");
+            Serial.print(report.profileDetail.freqScore, 2);
+        } else if (module.target == detection::EvidenceTarget::FrequencyContrastQuality) {
+            Serial.print("freq.contrast=");
+            Serial.print(report.profileDetail.freqContrast, 2);
+        } else if (module.target == detection::EvidenceTarget::AmpStrength) {
+            Serial.print("scalar.classification=");
+            Serial.print(observation.classificationValue, 1);
+        } else if (module.target == detection::EvidenceTarget::TargetBandStrength) {
+            Serial.print("target_band.level=");
+            Serial.print(report.profileDetail.ampLevel, 1);
+        } else {
+            Serial.print("unknown");
+        }
+        if (observation.available) {
+            Serial.print(" strength=");
+            Serial.print(strengthClassName(observation.strength));
+            Serial.print(" note=");
+            Serial.print(detection::scalarInspectionNoteName(observation.note));
+        }
+        Serial.println();
+
+        if (inspectDetailLevel > 0U) {
+            Serial.print("SEQ_INSPECT_COMPARE");
+            Serial.print(" module=");
+            Serial.print(static_cast<unsigned long>(i + 1U));
+            Serial.print(" target=");
+            Serial.print(targetName != nullptr ? targetName : "unknown");
+            Serial.print(" stream=");
+            Serial.print(streamName != nullptr ? streamName : "unknown");
+            Serial.print(" accepted=");
+            Serial.print(observation.available ? 1 : 0);
+            Serial.print(" note=");
+            Serial.print(detection::scalarInspectionNoteName(observation.note));
+            Serial.print(" mode=");
+            Serial.print(detection::scalarInspectionModeName(observation.mode));
+            Serial.print(" anchor=");
+            Serial.print(detection::scalarInspectionAnchorName(observation.anchor));
+            Serial.print(" coverage=");
+            Serial.print(observation.coverageRatio, 3);
+            Serial.print(" pre_floor_coverage=");
+            Serial.print(observation.preFloorCoverageRatio, 3);
+            Serial.print(" peak=");
+            Serial.print(observation.peak, 1);
+            Serial.print(" mean=");
+            Serial.print(observation.mean, 1);
+            Serial.print(" rms=");
+            Serial.print(observation.rms, 1);
+            Serial.print(" median=");
+            Serial.print(observation.median, 1);
+            Serial.print(" p75=");
+            Serial.print(observation.p75, 1);
+            Serial.print(" p90=");
+            Serial.print(observation.p90, 1);
+            Serial.print(" trimmed_mean=");
+            Serial.print(observation.trimmedMean, 1);
+            Serial.print(" lift_p75=");
+            Serial.print(detection::scalarInspectionLiftP75(observation), 1);
+            Serial.print(" lift_rms=");
+            Serial.print(detection::scalarInspectionLiftRms(observation), 1);
+            Serial.print(" lift_trimmed_mean=");
+            Serial.println(detection::scalarInspectionLiftTrimmedMean(observation), 1);
+        }
+    }
+
+    return;
+}
+
+#if 0
     const char* supportTarget = report.profileDetail.requiredSupportTarget != nullptr
         ? report.profileDetail.requiredSupportTarget
         : "unknown";
@@ -917,7 +1005,10 @@ void AnalyzerApp::printSequenceInspect(const AnalyzerReport& report) const {
         Serial.print(" evidence.unknown=1");
     }
     Serial.println();
+    return;
 }
+
+#endif
 
 void AnalyzerApp::printSequencePattern(const AnalyzerReport& report) const {
     if (_valMode) {

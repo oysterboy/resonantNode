@@ -1138,8 +1138,6 @@ const char* analyzerProfileDetailNamespace(detection::DetectionProfileKind profi
     switch (profileKind) {
         case detection::DetectionProfileKind::Amp:
             return "amp";
-        case detection::DetectionProfileKind::TonalPulse2:
-            return "tonal_pulse_2";
         case detection::DetectionProfileKind::ChirpExperimental:
             return "chirp_experimental";
         case detection::DetectionProfileKind::TonalPulse:
@@ -1152,8 +1150,6 @@ const char* analyzerProfileDetailSummary(detection::DetectionProfileKind profile
     switch (profileKind) {
         case detection::DetectionProfileKind::Amp:
             return "amp scalar profile view";
-        case detection::DetectionProfileKind::TonalPulse2:
-            return "tonal_pulse_2 profile view";
         case detection::DetectionProfileKind::ChirpExperimental:
             return "chirp_experimental profile view";
         case detection::DetectionProfileKind::TonalPulse:
@@ -1374,6 +1370,16 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
             ? runtimeInspectedOccurrence->occurrence.scalarEvidence
             : emptyScalarObservation;
     report.profileDetail.scalarObservation = selectedScalarObservation;
+    report.profileDetail.inspectionObservationCount = 0;
+    if (trialHasPipelineEvidence && runtimeInspectedOccurrence != nullptr) {
+        const size_t availableCount = runtimeInspectedOccurrence->scalarObservationCount;
+        const size_t moduleCount = selectedProfile.inspectionPlan.count;
+        const size_t copyCount = availableCount < moduleCount ? availableCount : moduleCount;
+        report.profileDetail.inspectionObservationCount = copyCount;
+        for (size_t i = 0; i < copyCount; ++i) {
+            report.profileDetail.inspectionObservations[i] = runtimeInspectedOccurrence->scalarObservations[i];
+        }
+    }
 
     report.debug.occurrences = diagnostics.rawCandidateCount;
     report.debug.inspected = diagnostics.rawCandidateCount;

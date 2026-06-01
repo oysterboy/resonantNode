@@ -1,4 +1,6 @@
 #pragma once
+#ifndef DETECTION_PROFILE_H
+#define DETECTION_PROFILE_H
 
 #include <strings.h>
 
@@ -20,7 +22,7 @@ Profiles declare composition; DetectionRuntime applies the selected fields at fi
 Common enum / selector types used in this file:
 
 ```text
-DetectionProfileKind { TonalPulse, TonalPulse2, Amp, ChirpExperimental }
+DetectionProfileKind { TonalPulse, Amp, ChirpExperimental }
 OccurrenceSourceKind { FrequencyMatch, ScalarTransient }
 FeatureStreamId { AmpEnvelope, FrequencyScore, FrequencyContrast, AmbientFloor }
 EvidenceTarget { None, AmpStrength, FrequencyScoreStrength, FrequencyContrastQuality, TargetBandStrength }
@@ -45,7 +47,6 @@ enum class OccurrenceSourceKind {
 
 enum class DetectionProfileKind {
     TonalPulse,
-    TonalPulse2,
     Amp,
     ChirpExperimental,
 };
@@ -92,7 +93,7 @@ inline DetectionProfile makeTonalPulseProfile() {
     profile.occurrenceSource = OccurrenceSourceKind::FrequencyMatch;
 
     // Frequency path tuning.
-    profile.frequencyMatch.releaseDebounceMs = 10;
+    profile.frequencyMatch.releaseDebounceMs = 20;
     profile.frequencyMatch.cooldownAfterOnsetMs = 20;
     profile.frequencyMatch.minTransientDurationMs = 80;
     profile.frequencyMatch.scoreMin = 10000.0f;
@@ -103,10 +104,39 @@ inline DetectionProfile makeTonalPulseProfile() {
     profile.inspectionPlan.modules[0].kind = InspectionModuleKind::ScalarFeatureStrength;
     profile.inspectionPlan.modules[0].target = EvidenceTarget::AmpStrength;
     profile.inspectionPlan.modules[0].scalar.stream = FeatureStreamId::AmpEnvelope;
-    profile.inspectionPlan.modules[0].scalar.mode = ScalarInspectionMode::PeakAbsolute;
+    profile.inspectionPlan.modules[0].scalar.mode = ScalarInspectionMode::PeakCentered;
+    profile.inspectionPlan.modules[0].scalar.strength.strongPeakThreshold = 70.0f;
+    profile.inspectionPlan.modules[0].scalar.strength.mediumPeakThreshold = 40.0f;
+    profile.inspectionPlan.modules[0].scalar.strength.weakPeakThreshold = 20.0f;
     profile.inspectionPlan.modules[0].scalar.windowPreMs = 10;
-    profile.inspectionPlan.modules[0].scalar.windowPostMs = 10;
-    profile.inspectionPlan.count = 1;
+    profile.inspectionPlan.modules[0].scalar.windowPostMs = 90;
+    profile.inspectionPlan.modules[0].scalar.preFloorWindowPreMs = 250;
+    profile.inspectionPlan.modules[0].scalar.preFloorWindowPostMs = 50;
+
+    profile.inspectionPlan.modules[1].kind = InspectionModuleKind::ScalarFeatureStrength;
+    profile.inspectionPlan.modules[1].target = EvidenceTarget::FrequencyScoreStrength;
+    profile.inspectionPlan.modules[1].scalar.stream = FeatureStreamId::FrequencyScore;
+    profile.inspectionPlan.modules[1].scalar.mode = ScalarInspectionMode::PeakCentered;
+    profile.inspectionPlan.modules[1].scalar.strength.strongPeakThreshold = 25000.0f;
+    profile.inspectionPlan.modules[1].scalar.strength.mediumPeakThreshold = 15000.0f;
+    profile.inspectionPlan.modules[1].scalar.strength.weakPeakThreshold = 8000.0f;
+    profile.inspectionPlan.modules[1].scalar.windowPreMs = 10;
+    profile.inspectionPlan.modules[1].scalar.windowPostMs = 90;
+    profile.inspectionPlan.modules[1].scalar.preFloorWindowPreMs = 250;
+    profile.inspectionPlan.modules[1].scalar.preFloorWindowPostMs = 50;
+
+    profile.inspectionPlan.modules[2].kind = InspectionModuleKind::ScalarFeatureStrength;
+    profile.inspectionPlan.modules[2].target = EvidenceTarget::FrequencyContrastQuality;
+    profile.inspectionPlan.modules[2].scalar.stream = FeatureStreamId::FrequencyContrast;
+    profile.inspectionPlan.modules[2].scalar.mode = ScalarInspectionMode::PeakCentered;
+    profile.inspectionPlan.modules[2].scalar.strength.strongPeakThreshold = 80.0f;
+    profile.inspectionPlan.modules[2].scalar.strength.mediumPeakThreshold = 50.0f;
+    profile.inspectionPlan.modules[2].scalar.strength.weakPeakThreshold = 25.0f;
+    profile.inspectionPlan.modules[2].scalar.windowPreMs = 10;
+    profile.inspectionPlan.modules[2].scalar.windowPostMs = 90;
+    profile.inspectionPlan.modules[2].scalar.preFloorWindowPreMs = 250;
+    profile.inspectionPlan.modules[2].scalar.preFloorWindowPostMs = 50;
+    profile.inspectionPlan.count = 3;
 
     // Pattern rules.
     profile.patternRulesConfig.requireSupportForAcceptance = true;
@@ -133,17 +163,50 @@ inline DetectionProfile makeAmpProfile() {
     profile.scalarTransient.observedStream = FeatureStreamId::AmpEnvelope;
 
     // Inspector composition.
+
+
     profile.inspectionPlan.modules[0].kind = InspectionModuleKind::ScalarFeatureStrength;
-    profile.inspectionPlan.modules[0].target = EvidenceTarget::FrequencyScoreStrength;
-    profile.inspectionPlan.modules[0].scalar.stream = FeatureStreamId::FrequencyScore;
-    profile.inspectionPlan.modules[0].scalar.mode = ScalarInspectionMode::SustainedAboveThreshold;
-    profile.inspectionPlan.modules[0].scalar.windowPreMs = 20;
-    profile.inspectionPlan.modules[0].scalar.windowPostMs = 120;
-    profile.inspectionPlan.modules[0].scalar.minSustainedMs = 25;
-    profile.inspectionPlan.count = 1;
+    profile.inspectionPlan.modules[0].target = EvidenceTarget::AmpStrength;
+    profile.inspectionPlan.modules[0].scalar.stream = FeatureStreamId::AmpEnvelope;
+    profile.inspectionPlan.modules[0].scalar.mode = ScalarInspectionMode::PeakCentered;
+    profile.inspectionPlan.modules[0].scalar.strength.strongPeakThreshold = 70.0f;
+    profile.inspectionPlan.modules[0].scalar.strength.mediumPeakThreshold = 40.0f;
+    profile.inspectionPlan.modules[0].scalar.strength.weakPeakThreshold = 20.0f;
+    profile.inspectionPlan.modules[0].scalar.windowPreMs = 10;
+    profile.inspectionPlan.modules[0].scalar.windowPostMs = 90;
+    profile.inspectionPlan.modules[0].scalar.preFloorWindowPreMs = 250;
+    profile.inspectionPlan.modules[0].scalar.preFloorWindowPostMs = 50;
+
+    profile.inspectionPlan.modules[1].kind = InspectionModuleKind::ScalarFeatureStrength;
+    profile.inspectionPlan.modules[1].target = EvidenceTarget::FrequencyScoreStrength;
+    profile.inspectionPlan.modules[1].scalar.stream = FeatureStreamId::FrequencyScore;
+    profile.inspectionPlan.modules[1].scalar.mode = ScalarInspectionMode::PeakCentered;
+    profile.inspectionPlan.modules[1].scalar.strength.strongPeakThreshold = 25000.0f;
+    profile.inspectionPlan.modules[1].scalar.strength.mediumPeakThreshold = 15000.0f;
+    profile.inspectionPlan.modules[1].scalar.strength.weakPeakThreshold = 8000.0f;
+    profile.inspectionPlan.modules[1].scalar.windowPreMs = 10;
+    profile.inspectionPlan.modules[1].scalar.windowPostMs = 90;
+    profile.inspectionPlan.modules[1].scalar.preFloorWindowPreMs = 250;
+    profile.inspectionPlan.modules[1].scalar.preFloorWindowPostMs = 50;
+    //profile.inspectionPlan.modules[1].scalar.minSustainedMs = 25;
+    
+    profile.inspectionPlan.modules[2].kind = InspectionModuleKind::ScalarFeatureStrength;
+    profile.inspectionPlan.modules[2].target = EvidenceTarget::FrequencyContrastQuality;
+    profile.inspectionPlan.modules[2].scalar.stream = FeatureStreamId::FrequencyContrast;
+    profile.inspectionPlan.modules[2].scalar.mode = ScalarInspectionMode::PeakCentered;
+    profile.inspectionPlan.modules[2].scalar.strength.strongPeakThreshold = 80.0f;
+    profile.inspectionPlan.modules[2].scalar.strength.mediumPeakThreshold = 50.0f;
+    profile.inspectionPlan.modules[2].scalar.strength.weakPeakThreshold = 25.0f;
+    profile.inspectionPlan.modules[2].scalar.windowPreMs = 10;
+    profile.inspectionPlan.modules[2].scalar.windowPostMs = 90;
+    profile.inspectionPlan.modules[2].scalar.preFloorWindowPreMs = 250;
+    profile.inspectionPlan.modules[2].scalar.preFloorWindowPostMs = 50;
+    //profile.inspectionPlan.modules[2].scalar.minSustainedMs = 25;  
+    
+    profile.inspectionPlan.count = 3;
 
     // Pattern rules.
-    profile.patternRulesConfig.requireSupportForAcceptance = true;
+    profile.patternRulesConfig.requireSupportForAcceptance = false;
     profile.patternRulesConfig.requiredSupportTarget = EvidenceTarget::FrequencyScoreStrength;
     profile.patternRulesConfig.minimumSupportStrength = StrengthClass::Medium;
 
@@ -153,55 +216,6 @@ inline DetectionProfile makeAmpProfile() {
     profile.fieldStateConfig.busyOccurrenceCountThreshold = 3;
     profile.fieldStateConfig.denseOccurrenceCountThreshold = 6;
     profile.fieldStateConfig.busyActivityThreshold = 0.45f;
-    return profile;
-}
-
-inline DetectionProfile makeTonalPulse2Profile() {
-    DetectionProfile profile;
-
-    // Identity and occurrence routing.
-    profile.kind = DetectionProfileKind::TonalPulse2;
-    profile.occurrenceSource = OccurrenceSourceKind::FrequencyMatch;
-
-    // Frequency path tuning.
-    profile.frequencyMatch.releaseDebounceMs = 20;
-    profile.frequencyMatch.cooldownAfterOnsetMs = 20;
-    profile.frequencyMatch.minTransientDurationMs = 80;
-    profile.frequencyMatch.scoreMin = 10000.0f;
-    profile.frequencyMatch.contrastMin = 50.0f;
-
-    // Inspector composition.
-    profile.inspectionPlan.modules[0].kind = InspectionModuleKind::ScalarFeatureStrength;
-    profile.inspectionPlan.modules[0].target = EvidenceTarget::FrequencyScoreStrength;
-    profile.inspectionPlan.modules[0].scalar.stream = FeatureStreamId::FrequencyScore;
-    profile.inspectionPlan.modules[0].scalar.strength.strongPeakThreshold = 25000.0f;
-    profile.inspectionPlan.modules[0].scalar.strength.mediumPeakThreshold = 15000.0f;
-    profile.inspectionPlan.modules[0].scalar.strength.weakPeakThreshold = 8000.0f;
-    profile.inspectionPlan.modules[0].scalar.mode = ScalarInspectionMode::PeakCenteredLift;
-    profile.inspectionPlan.modules[0].scalar.windowPreMs = 10;
-    profile.inspectionPlan.modules[0].scalar.windowPostMs = 90;
-    //profile.inspectionPlan.modules[1].kind = InspectionModuleKind::ScalarFeatureStrength;
-    //profile.inspectionPlan.modules[1].target = EvidenceTarget::AmpStrength;
-    //profile.inspectionPlan.modules[1].scalar.stream = FeatureStreamId::AmpEnvelope;
-    //profile.inspectionPlan.modules[1].scalar.mode = ScalarInspectionMode::PeakCentered;
-    //profile.inspectionPlan.modules[1].scalar.windowPreMs = 10;
-    //profile.inspectionPlan.modules[1].scalar.windowPostMs = 10;
-   // profile.inspectionPlan.count = 2;
-   profile.inspectionPlan.count = 1;
-
-    // Pattern rules.
-    profile.patternRulesConfig.requireSupportForAcceptance = false;
-    profile.patternRulesConfig.requiredSupportTarget = EvidenceTarget::FrequencyScoreStrength;
-    profile.patternRulesConfig.minimumSupportStrength = StrengthClass::Medium;
-
-    // Field-state windowing.
-    profile.fieldStateConfig.occurrenceWindowMs = 3500;
-    profile.fieldStateConfig.patternWindowMs = 3500;
-    profile.fieldStateConfig.busyOccurrenceCountThreshold = 3;
-    profile.fieldStateConfig.denseOccurrenceCountThreshold = 6;
-    profile.fieldStateConfig.quietOccurrenceCountThreshold = 0;
-    profile.fieldStateConfig.quietActivityThreshold = 0.0f;
-    profile.fieldStateConfig.busyActivityThreshold = 0.4f;
     return profile;
 }
 
@@ -224,8 +238,13 @@ inline DetectionProfile makeChirpExperimentalProfile() {
     profile.inspectionPlan.modules[0].target = EvidenceTarget::AmpStrength;
     profile.inspectionPlan.modules[0].scalar.stream = FeatureStreamId::AmpEnvelope;
     profile.inspectionPlan.modules[0].scalar.mode = ScalarInspectionMode::PeakAbsolute;
+    profile.inspectionPlan.modules[0].scalar.strength.strongPeakThreshold = 70.0f;
+    profile.inspectionPlan.modules[0].scalar.strength.mediumPeakThreshold = 40.0f;
+    profile.inspectionPlan.modules[0].scalar.strength.weakPeakThreshold = 20.0f;
     profile.inspectionPlan.modules[0].scalar.windowPreMs = 20;
     profile.inspectionPlan.modules[0].scalar.windowPostMs = 120;
+    profile.inspectionPlan.modules[0].scalar.preFloorWindowPreMs = 250;
+    profile.inspectionPlan.modules[0].scalar.preFloorWindowPostMs = 50;
     profile.inspectionPlan.count = 1;
 
     // Field-state windowing.
@@ -240,13 +259,10 @@ inline DetectionProfile makeChirpExperimentalProfile() {
 // Profile lookup by kind.
 inline const DetectionProfile& detectionProfileForKind(DetectionProfileKind kind) {
     static const DetectionProfile kTonalPulse = makeTonalPulseProfile();
-    static const DetectionProfile kTonalPulse2 = makeTonalPulse2Profile();
     static const DetectionProfile kAmp = makeAmpProfile();
     static const DetectionProfile kChirpExperimental = makeChirpExperimentalProfile();
 
     switch (kind) {
-        case DetectionProfileKind::TonalPulse2:
-            return kTonalPulse2;
         case DetectionProfileKind::Amp:
             return kAmp;
         case DetectionProfileKind::ChirpExperimental:
@@ -262,8 +278,6 @@ inline const char* detectionProfileName(DetectionProfileKind kind) {
     switch (kind) {
         case DetectionProfileKind::TonalPulse:
             return "TonalPulse";
-        case DetectionProfileKind::TonalPulse2:
-            return "TonalPulse2";
         case DetectionProfileKind::Amp:
             return "Amp";
         case DetectionProfileKind::ChirpExperimental:
@@ -293,10 +307,6 @@ inline bool detectionProfileKindFromName(const char* name, DetectionProfileKind&
         outKind = DetectionProfileKind::TonalPulse;
         return true;
     }
-    if (strcasecmp(name, "tonalpulse2") == 0 || strcasecmp(name, "tonal_pulse_2") == 0 || strcasecmp(name, "tonal_pulse2") == 0) {
-        outKind = DetectionProfileKind::TonalPulse2;
-        return true;
-    }
     if (strcasecmp(name, "amp") == 0) {
         outKind = DetectionProfileKind::Amp;
         return true;
@@ -310,3 +320,5 @@ inline bool detectionProfileKindFromName(const char* name, DetectionProfileKind&
 }
 
 } // namespace detection
+
+#endif // DETECTION_PROFILE_H

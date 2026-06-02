@@ -901,10 +901,9 @@ void AnalyzerApp::update() {
                     _sequenceTest.currentTrialDiagnostics.runtimeFieldState = _detection->fieldState();
                     handleSequenceCandidate(_sequenceTest.currentTrialDiagnostics.runtimePatternResult, &runtimeFrequencyFrame);
                 }
+                updateSequenceAmbientStats(frame.sampleTimeMs);
             }
         }
-        updateSequenceAmbientStats();
-
         processedSamples += static_cast<int>(block.sampleCount);
         if (processedSamples > kMaxSamplesPerLoop) {
             processedSamples = kMaxSamplesPerLoop;
@@ -1446,6 +1445,7 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
         report.frequency.historyContrastRecords = _detection->featureHistory().sampleCount(detection::FeatureStreamId::FrequencyContrast);
     }
 
+    bool hasCurrentSourceEvidence = false;
     if (runtimeDiag != nullptr) {
         report.frequency.frames = runtimeDiag->frequencyFrames;
         report.frequency.validFrames = runtimeDiag->frequencyValidFrames;
@@ -1476,6 +1476,15 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
         report.frequency.maxScoreMs = runtimeDiag->frequencyScoreMaxMs;
         report.frequency.maxContrast = runtimeDiag->frequencyContrastMax;
         report.frequency.maxContrastMs = runtimeDiag->frequencyContrastMaxMs;
+        report.frequency.ampPeak = diagnostics.ambientBaselineSamples > 0
+            ? static_cast<float>(diagnostics.maxSignalLevel)
+            : 0.0f;
+        report.frequency.ampMean = diagnostics.ambientBaselineSamples > 0
+            ? diagnostics.ambientBaselineSum / static_cast<float>(diagnostics.ambientBaselineSamples)
+            : 0.0f;
+        report.frequency.ampPeakMs = diagnostics.ambientBaselineSamples > 0
+            ? diagnostics.ampPeakMs
+            : 0UL;
         report.frequency.minScore = runtimeDiag->frequencyScoreMin;
         report.frequency.minContrast = runtimeDiag->frequencyContrastMin;
         report.frequency.peakScore = runtimeDiag->frequencyPeakScore;
@@ -1518,6 +1527,18 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
                 ? "in_window"
                 : (report.frequency.sourceLastCandidate.peakMs < report.frequency.windowStartMs ? "before_window" : "after_window"))
             : "stale";
+        hasCurrentSourceEvidence = report.frequency.acceptedPresent || report.frequency.sourceSummary.present;
+        if (!hasCurrentSourceEvidence) {
+            report.frequency.sourceLastCandidate.present = false;
+            report.frequency.sourceLastCandidate.peakMs = 0;
+            report.frequency.sourceLastCandidate.durationMs = 0;
+            report.frequency.sourceLastCandidate.windowSamples = 0;
+            report.frequency.sourceLastCandidate.peakPrimary = 0.0f;
+            report.frequency.sourceLastCandidate.peakSecondary = 0.0f;
+            report.frequency.sourceLastCandidate.reason = "none";
+            report.frequency.sourceLastCandidate.gateReason = "none";
+            report.frequency.sourceLastCandidate.scope = "unknown";
+        }
         report.frequency.liveFreqReason = runtimeDiag->frequencyRejectReason != nullptr ? runtimeDiag->frequencyRejectReason : "none";
         report.frequency.liveFreqWould = runtimeDiag->frequencyWouldCandidateReason != nullptr ? runtimeDiag->frequencyWouldCandidateReason : "none";
         report.frequency.liveFreqState = runtimeDiag->frequencyCandidateState != nullptr ? runtimeDiag->frequencyCandidateState : "none";
@@ -1560,9 +1581,21 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
         report.frequency.fmMaxDurationMs = runtimeDiag != nullptr ? runtimeDiag->frequencyMaxDurationMs : 0UL;
         report.frequency.diagFirstFrameMs = report.frequency.fmOpenMs;
         report.frequency.diagLastFrameMs = report.frequency.fmReleaseMs;
-        if (!report.frequency.sourceSummary.present && !report.frequency.sourceLastCandidate.present) {
+        if (!hasCurrentSourceEvidence) {
             report.frequency.diagFirstFrameMs = 0;
             report.frequency.diagLastFrameMs = 0;
+            report.frequency.fmOpenMs = 0;
+            report.frequency.fmPeakMs = 0;
+            report.frequency.fmReleaseMs = 0;
+            report.frequency.fmDurationMs = 0;
+            report.frequency.fmMinDurationMs = 0;
+            report.frequency.fmMaxDurationMs = 0;
+            report.frequency.fmDurationOk = false;
+            report.frequency.fmOpened = false;
+            report.frequency.fmReleased = false;
+            report.frequency.fmEmitted = false;
+            report.frequency.fmValidRelease = false;
+            report.frequency.fmEmitAllowed = false;
         }
         report.frequency.diagFrameCountOk = report.frequency.expectedFrameCountEstimate == 0
             ? report.frequency.frames == 0
@@ -1643,13 +1676,13 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
             report.scalar.scalarReleased = runtimeDiag->scalarReleased;
             report.scalar.scalarValidRelease = runtimeDiag->scalarValidRelease;
             report.scalar.scalarEmitAllowed = runtimeDiag->scalarEmitAllowed;
-        report.scalar.scalarOpenMs = runtimeDiag->scalarOpenMs;
-        report.scalar.scalarPeakMs = runtimeDiag->scalarPeakMs;
-        report.scalar.scalarReleaseMs = runtimeDiag->scalarReleaseMs;
-        report.scalar.scalarDurationMs = runtimeDiag->scalarDurationMs;
-        report.scalar.scalarMinDurationMs = runtimeDiag->scalarMinDurationMs;
-        report.scalar.scalarMaxDurationMs = runtimeDiag->scalarMaxDurationMs;
-        report.scalar.scalarPeakStrength = runtimeDiag->scalarPeakStrength;
+            report.scalar.scalarOpenMs = runtimeDiag->scalarOpenMs;
+            report.scalar.scalarPeakMs = runtimeDiag->scalarPeakMs;
+            report.scalar.scalarReleaseMs = runtimeDiag->scalarReleaseMs;
+            report.scalar.scalarDurationMs = runtimeDiag->scalarDurationMs;
+            report.scalar.scalarMinDurationMs = runtimeDiag->scalarMinDurationMs;
+            report.scalar.scalarMaxDurationMs = runtimeDiag->scalarMaxDurationMs;
+            report.scalar.scalarPeakStrength = runtimeDiag->scalarPeakStrength;
         report.scalar.sourceOccurrenceEmitted = report.occurrences.present;
         report.scalar.sourceSummary.present = !report.scalar.acceptedPresent
             && (report.scalar.scalarOpened

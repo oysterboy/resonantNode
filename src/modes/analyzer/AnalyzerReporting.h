@@ -379,6 +379,9 @@ struct AnalyzerFrequencyDiagnostic {
     unsigned long maxScoreMs = 0;
     float maxContrast = 0.0f;
     unsigned long maxContrastMs = 0;
+    float ampPeak = 0.0f;
+    float ampMean = 0.0f;
+    unsigned long ampPeakMs = 0;
     float minScore = 0.0f;
     float minContrast = 0.0f;
     float peakScore = 0.0f;

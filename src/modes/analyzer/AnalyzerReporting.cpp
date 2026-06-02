@@ -213,6 +213,9 @@ constexpr AnalyzerFieldDescriptor kSourceAmpCenteredField{"source.amp", "centere
 constexpr AnalyzerFieldDescriptor kSourceAmpLevelField{"source.amp", "level"};
 constexpr AnalyzerFieldDescriptor kSourceAmpBaselineField{"source.amp", "baseline"};
 constexpr AnalyzerFieldDescriptor kSourceAmpLiftField{"source.amp", "lift"};
+constexpr AnalyzerFieldDescriptor kSourceAmpPeakField{"source.amp", "peak"};
+constexpr AnalyzerFieldDescriptor kSourceAmpMeanField{"source.amp", "mean"};
+constexpr AnalyzerFieldDescriptor kSourceAmpPeakTimeField{"source.amp.peak", "timeMs"};
 constexpr AnalyzerFieldDescriptor kSourceOnsetRejectField{"source.amp", "onset_reject"};
 constexpr AnalyzerFieldDescriptor kSourceTransientRejectField{"source.amp", "transient_reject"};
 constexpr AnalyzerFieldDescriptor kSourceTransientRejectDurField{"source.amp", "transient_reject_dur"};
@@ -1615,6 +1618,15 @@ void AnalyzerApp::printSequenceDiagnostics(const AnalyzerReport& report) const {
         Serial.print(' ');
         printField(kSourceValidFramesField, report.frequency.validFrames);
         Serial.print(' ');
+        printField(kSourceAmpPeakField, report.frequency.ampPeak, 1);
+        Serial.print(' ');
+        printField(kSourceAmpMeanField, report.frequency.ampMean, 1);
+        Serial.print(' ');
+        printField(kSourceAmpPeakTimeField,
+            report.frequency.ampPeakMs >= report.frequency.windowStartMs
+                ? report.frequency.ampPeakMs - report.frequency.windowStartMs
+                : 0UL);
+        Serial.print(' ');
         printField(kSourceFreshUpdatesField, report.frequency.freshFrames);
         Serial.print(' ');
         printField(kSourceFreqHistoryScoreRecordsField, report.frequency.historyScoreRecords);
@@ -1661,6 +1673,15 @@ void AnalyzerApp::printSequenceDiagnostics(const AnalyzerReport& report) const {
     printField(kSourceFramesField, report.frequency.frames);
     Serial.print(' ');
     printField(kSourceValidFramesField, report.frequency.validFrames);
+    Serial.print(' ');
+    printField(kSourceAmpPeakField, report.frequency.ampPeak, 1);
+    Serial.print(' ');
+    printField(kSourceAmpMeanField, report.frequency.ampMean, 1);
+    Serial.print(' ');
+    printField(kSourceAmpPeakTimeField,
+        report.frequency.ampPeakMs >= report.frequency.windowStartMs
+            ? report.frequency.ampPeakMs - report.frequency.windowStartMs
+            : 0UL);
     Serial.print(' ');
     printField(kSourceFreqHistoryScoreRecordsField, report.frequency.historyScoreRecords);
     Serial.print(' ');

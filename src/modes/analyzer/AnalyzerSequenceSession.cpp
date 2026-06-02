@@ -430,7 +430,7 @@ void AnalyzerApp::updateSequenceTest(unsigned long now) {
     }
 }
 
-void AnalyzerApp::updateSequenceAmbientStats() {
+void AnalyzerApp::updateSequenceAmbientStats(unsigned long nowMs) {
     if (_valMode) {
         return;
     }
@@ -446,6 +446,7 @@ void AnalyzerApp::updateSequenceAmbientStats() {
         diagnostics.ambientBaselineMin = baseline;
         diagnostics.ambientBaselineMax = baseline;
         diagnostics.maxSignalLevel = signalLevel;
+        diagnostics.ampPeakMs = nowMs;
     } else {
         if (baseline < diagnostics.ambientBaselineMin) {
             diagnostics.ambientBaselineMin = baseline;
@@ -455,11 +456,12 @@ void AnalyzerApp::updateSequenceAmbientStats() {
         }
         if (signalLevel > diagnostics.maxSignalLevel) {
             diagnostics.maxSignalLevel = signalLevel;
+            diagnostics.ampPeakMs = nowMs;
         }
     }
 
     diagnostics.ambientBaselineSamples++;
-    diagnostics.ambientBaselineSum += baseline;
+    diagnostics.ambientBaselineSum += static_cast<float>(signalLevel);
 }
 
 void AnalyzerApp::finalizeSequenceTrial(unsigned long now) {

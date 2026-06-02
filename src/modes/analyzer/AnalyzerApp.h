@@ -290,6 +290,7 @@ private:
             float ambientBaselineMin = 0.0f;
             float ambientBaselineMax = 0.0f;
             int maxSignalLevel = 0;
+            unsigned long ampPeakMs = 0;
 
             unsigned long duplicateDts[kMaxDuplicateDts] = {};
             unsigned long duplicateDtCount = 0;
@@ -512,7 +513,7 @@ private:
     void buildSequenceAnalyzerReport(AnalyzerReport& report, unsigned long trialNumber, AnalyzerResult result, long dtMs, long durMs, float strength, bool audioOverflow, unsigned long duplicateCount, const SequenceTest::TrialDiagnostics& diagnostics) const;
     void recordSequenceClassifierOutcome(const PatternResult& patternResult, bool duplicateCandidate, bool unexpectedCandidate);
     void handleSequenceCandidate(const PatternResult& patternResult, const FrequencyFeatureFrame* liveFrequencyFrame = nullptr);
-    void updateSequenceAmbientStats();
+    void updateSequenceAmbientStats(unsigned long nowMs);
 
     // Sequence sample capture helpers.
     void beginSequenceSampleDump(unsigned long trialNumber);

@@ -152,14 +152,18 @@ void printDetectionProfileDetails(const detection::DetectionProfile& profile) {
     Serial.println(inspectionPlanName(profile.inspectionPlan));
     Serial.print("  freqMatch.releaseDebounceMs=");
     Serial.println(profile.frequencyMatch.releaseDebounceMs);
-    Serial.print("  freqMatch.cooldownAfterOnsetMs=");
-    Serial.println(profile.frequencyMatch.cooldownAfterOnsetMs);
-    Serial.print("  freqMatch.minTransientDurationMs=");
-    Serial.println(profile.frequencyMatch.minTransientDurationMs);
-    Serial.print("  freqMatch.scoreMin=");
-    Serial.println(profile.frequencyMatch.scoreMin, 0);
-    Serial.print("  freqMatch.contrastMin=");
-    Serial.println(profile.frequencyMatch.contrastMin, 1);
+    Serial.print("  freqMatch.cooldownAfterReleaseMs=");
+    Serial.println(profile.frequencyMatch.cooldownAfterReleaseMs);
+    Serial.print("  freqMatch.minDurationMs=");
+    Serial.println(profile.frequencyMatch.minDurationMs);
+    Serial.print("  freqMatch.attackScoreMin=");
+    Serial.println(profile.frequencyMatch.attackScoreMin, 0);
+    Serial.print("  freqMatch.releaseScoreMin=");
+    Serial.println(profile.frequencyMatch.releaseScoreMin, 0);
+    Serial.print("  freqMatch.attackContrastMin=");
+    Serial.println(profile.frequencyMatch.attackContrastMin, 1);
+    Serial.print("  freqMatch.releaseContrastMin=");
+    Serial.println(profile.frequencyMatch.releaseContrastMin, 1);
     for (size_t i = 0; i < profile.inspectionPlan.count; ++i) {
         const auto& module = profile.inspectionPlan.modules[i];
         Serial.print("  inspectionPlan.module[");
@@ -613,7 +617,7 @@ void Node::pollSerialCommands() {
 
 void Node::handleSerialLine(const char* line) {
     if (equalsIgnoreCase(line, "RB help")) {
-        Serial.println("RB CMD: RB PARAM freqScore=10000 freqContrast=50.0");
+        Serial.println("RB CMD: RB PARAM freqScore=10000 freqContrast=50.0 freqReleaseScore=8000 freqReleaseContrast=50.0");
         Serial.println("RB CMD: RB BEHAV wait=100 refractory=0 suppressSelfChirp=250 detectionSuppressTail=0 idleTimeout=20000 idleTimeoutVariation=10000 idleBlockedAfterHeard=3000 idleBlockedAfterOwnEmit=5000");
         Serial.println("RB CMD: RB STATUS");
         Serial.println("RB CMD: RB PROFILE name=tonalpulse");
@@ -646,26 +650,38 @@ void Node::handleSerialLine(const char* line) {
         token = token != nullptr ? strtok_r(nullptr, " ", &savePtr) : nullptr;
 
         if (token == nullptr || !equalsIgnoreCase(token, "PARAM")) {
-            Serial.println("RB PARAM usage=RB PARAM freqScore=10000 freqContrast=50.0");
+            Serial.println("RB PARAM usage=RB PARAM freqScore=10000 freqContrast=50.0 freqReleaseScore=8000 freqReleaseContrast=50.0");
             return;
         }
 
         FrequencyMatchEvaluation::Values freqTuning = {};
-        freqTuning.scoreMin = _activeDetectionProfile.frequencyMatch.scoreMin;
-        freqTuning.contrastMin = _activeDetectionProfile.frequencyMatch.contrastMin;
+        freqTuning.attackScoreMin = _activeDetectionProfile.frequencyMatch.attackScoreMin;
+        freqTuning.releaseScoreMin = _activeDetectionProfile.frequencyMatch.releaseScoreMin;
+        freqTuning.attackContrastMin = _activeDetectionProfile.frequencyMatch.attackContrastMin;
+        freqTuning.releaseContrastMin = _activeDetectionProfile.frequencyMatch.releaseContrastMin;
+        freqTuning.scoreMin = freqTuning.attackScoreMin;
+        freqTuning.contrastMin = freqTuning.attackContrastMin;
 
         while ((token = strtok_r(nullptr, " ", &savePtr)) != nullptr) {
             FrequencyMatchEvaluation::parseToken(token, freqTuning);
         }
 
-        _activeDetectionProfile.frequencyMatch.scoreMin = freqTuning.scoreMin;
-        _activeDetectionProfile.frequencyMatch.contrastMin = freqTuning.contrastMin;
+        _activeDetectionProfile.frequencyMatch.attackScoreMin = freqTuning.attackScoreMin;
+        _activeDetectionProfile.frequencyMatch.releaseScoreMin = freqTuning.releaseScoreMin;
+        _activeDetectionProfile.frequencyMatch.attackContrastMin = freqTuning.attackContrastMin;
+        _activeDetectionProfile.frequencyMatch.releaseContrastMin = freqTuning.releaseContrastMin;
+        _activeDetectionProfile.frequencyMatch.scoreMin = freqTuning.attackScoreMin;
+        _activeDetectionProfile.frequencyMatch.contrastMin = freqTuning.attackContrastMin;
         applyActiveDetectionProfile();
 
         Serial.print(" freqScore=");
-        Serial.print(_activeDetectionProfile.frequencyMatch.scoreMin, 0);
+        Serial.print(_activeDetectionProfile.frequencyMatch.attackScoreMin, 0);
         Serial.print(" freqContrast=");
-        Serial.println(_activeDetectionProfile.frequencyMatch.contrastMin, 1);
+        Serial.print(_activeDetectionProfile.frequencyMatch.attackContrastMin, 1);
+        Serial.print(" freqReleaseScore=");
+        Serial.print(_activeDetectionProfile.frequencyMatch.releaseScoreMin, 0);
+        Serial.print(" freqReleaseContrast=");
+        Serial.println(_activeDetectionProfile.frequencyMatch.releaseContrastMin, 1);
         return;
     }
     if (startsWithTokenIgnoreCase(line, "RB BEHAV")) {
@@ -840,9 +856,13 @@ void Node::handleDetectCommand(const char* line) {
     Serial.print(" requiredSupportTarget=");
     Serial.print(evidenceTargetName(detectionProfile.patternRulesConfig.requiredSupportTarget));
     Serial.print(" freqScore=");
-    Serial.print(detectionProfile.frequencyMatch.scoreMin, 0);
+    Serial.print(detectionProfile.frequencyMatch.attackScoreMin, 0);
     Serial.print(" freqContrast=");
-    Serial.print(detectionProfile.frequencyMatch.contrastMin, 1);
+    Serial.print(detectionProfile.frequencyMatch.attackContrastMin, 1);
+    Serial.print(" freqReleaseScore=");
+    Serial.print(detectionProfile.frequencyMatch.releaseScoreMin, 0);
+    Serial.print(" freqReleaseContrast=");
+    Serial.print(detectionProfile.frequencyMatch.releaseContrastMin, 1);
     Serial.print(" behavior_state=");
     Serial.print(_behavior.stateName());
     Serial.print(" behavior_idle=");
@@ -1043,20 +1063,18 @@ detection::FrequencyFeatureFrame Node::captureFrequencyFeatureFrame(unsigned lon
     const bool present = _freqBandStream.windowReady();
     const float totalEnergy = _freqBandStream.lastTotalEnergy();
 
-    evidence.present = present;
+    evidence.evidencePresent = present;
     evidence.matched = false;
     evidence.updatedThisFrame = _freqBandStream.updatedOnLastObserve();
     evidence.targetHz = present ? _freqBandStream.targetFrequencyHz() : 0;
     evidence.windowSampleCount = _freqBandStream.sampleCount();
     evidence.ageSamples = _freqBandStream.evidenceAgeSamples();
-    evidence.windowAvailable = present;
     evidence.score = _freqBandStream.lastFrequencyScore();
     evidence.confidence = 0.0f;
     evidence.targetPower = _freqBandStream.lastTargetPower();
     evidence.neighborPower = _freqBandStream.lastNeighborPower();
     evidence.totalEnergy = totalEnergy;
     evidence.spectralContrast = _freqBandStream.lastSpectralContrast();
-    evidence.validWindow = present;
     return evidence;
 }
 

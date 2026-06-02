@@ -21,11 +21,11 @@ inline void observeFrame(const AudioSignalFrame& frame, FeatureHistory& history)
 }
 
 inline void observeFrequencyFeatureFrame(const FrequencyFeatureFrame& evidence, unsigned long nowMs, FeatureHistory& history) {
-    if (!evidence.present) {
+    if (!evidence.evidencePresent) {
         return;
     }
 
-    if (!evidence.validWindow || !evidence.updatedThisFrame) {
+    if (!evidence.updatedThisFrame) {
         return;
     }
 

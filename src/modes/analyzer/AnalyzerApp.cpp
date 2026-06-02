@@ -725,8 +725,12 @@ AnalyzerApp::AnalyzerApp(int inputPin)
       _audioSource(_i2sSource),
       _audioSignal(_audioSource),
       _freqBandStream() {
-    _frequencyEvidenceTuning.scoreMin = detection::detectionProfileForKind(detection::DetectionProfileKind::TonalPulse).frequencyMatch.scoreMin;
-    _frequencyEvidenceTuning.contrastMin = detection::detectionProfileForKind(detection::DetectionProfileKind::TonalPulse).frequencyMatch.contrastMin;
+    _frequencyEvidenceTuning.attackScoreMin = detection::detectionProfileForKind(detection::DetectionProfileKind::TonalPulse).frequencyMatch.attackScoreMin;
+    _frequencyEvidenceTuning.releaseScoreMin = detection::detectionProfileForKind(detection::DetectionProfileKind::TonalPulse).frequencyMatch.releaseScoreMin;
+    _frequencyEvidenceTuning.attackContrastMin = detection::detectionProfileForKind(detection::DetectionProfileKind::TonalPulse).frequencyMatch.attackContrastMin;
+    _frequencyEvidenceTuning.releaseContrastMin = detection::detectionProfileForKind(detection::DetectionProfileKind::TonalPulse).frequencyMatch.releaseContrastMin;
+    _frequencyEvidenceTuning.scoreMin = _frequencyEvidenceTuning.attackScoreMin;
+    _frequencyEvidenceTuning.contrastMin = _frequencyEvidenceTuning.attackContrastMin;
 }
 
 void AnalyzerApp::begin() {
@@ -763,7 +767,7 @@ void AnalyzerApp::begin() {
     _controlClaimAtMs = 0;
 
     Serial.println("EVT analyzer_ready");
-    Serial.println("EVT analyzer_help type='HELP', 'BASE', 'PARAM freqScore=10000 freqContrast=50.0', 'TEST', 'RAW trigger f=3200 dur=100 post=1000 dump=bin', 'SEQ MODE quiet|compact|signalcheck|full|system|source|inspect|pattern|dump WHEN off|miss|all VERBOSE 0|1|2 STATUS', 'CAP', 'DET AMP', 'VAL', 'VAL OFF'");
+    Serial.println("EVT analyzer_help type='HELP', 'BASE', 'PARAM freqScore=10000 freqContrast=50.0 freqReleaseScore=8000 freqReleaseContrast=50.0', 'TEST', 'RAW trigger f=3200 dur=100 post=1000 dump=bin', 'SEQ MODE quiet|compact|signalcheck|full|system|source|inspect|pattern|dump WHEN off|miss|all VERBOSE 0|1|2 STATUS', 'CAP', 'DET AMP', 'VAL', 'VAL OFF'");
 }
 
 void AnalyzerApp::configureParameters() {
@@ -1359,8 +1363,8 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
         report.profileDetail.freqScore = trialHasPipelineEvidence ? runtimePatternResult->freq.score : 0.0f;
         report.profileDetail.freqContrast = trialHasPipelineEvidence ? runtimePatternResult->freq.spectralContrast : 0.0f;
     }
-    report.profileDetail.freqScoreMin = selectedProfile.frequencyMatch.scoreMin;
-    report.profileDetail.freqContrastMin = selectedProfile.frequencyMatch.contrastMin;
+    report.profileDetail.freqScoreMin = selectedProfile.frequencyMatch.attackScoreMin;
+    report.profileDetail.freqContrastMin = selectedProfile.frequencyMatch.attackContrastMin;
     report.profileDetail.ampCenteredMagnitude = report.occurrences.primaryStrength;
     report.profileDetail.ampLevel = report.profileDetail.ampCenteredMagnitude;
     report.profileDetail.ampBase = diagnostics.acceptedAmbientBaseline;

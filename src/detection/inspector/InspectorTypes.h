@@ -217,7 +217,7 @@ struct TransientEvidence {
 
 // Frequency feature packet carried alongside a candidate for pattern classification and reporting.
 struct FrequencyFeatureFrame {
-    bool present = false;
+    bool evidencePresent = false;
     bool matched = false;
     bool updatedThisFrame = false;
 
@@ -227,7 +227,6 @@ struct FrequencyFeatureFrame {
     uint64_t windowEndSample = 0;
     unsigned long windowSampleCount = 0;
     unsigned long ageSamples = 0;
-    bool windowAvailable = false;
 
     float score = 0.0f;
     float confidence = 0.0f;
@@ -236,7 +235,6 @@ struct FrequencyFeatureFrame {
     float neighborPower = 0.0f;
     float totalEnergy = 0.0f;
     float spectralContrast = 0.0f;
-    bool validWindow = false;
 };
 
 } // namespace detection

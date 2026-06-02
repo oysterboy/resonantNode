@@ -29,8 +29,12 @@ void FrequencyOccurrenceSource::observeFrame(
     }
 
     FrequencyMatchEvaluation::Values frequencyTuning = {};
-    frequencyTuning.scoreMin = _config.scoreMin;
-    frequencyTuning.contrastMin = _config.contrastMin;
+    frequencyTuning.attackScoreMin = _config.attackScoreMin;
+    frequencyTuning.releaseScoreMin = _config.releaseScoreMin;
+    frequencyTuning.attackContrastMin = _config.attackContrastMin;
+    frequencyTuning.releaseContrastMin = _config.releaseContrastMin;
+    frequencyTuning.scoreMin = frequencyTuning.attackScoreMin;
+    frequencyTuning.contrastMin = frequencyTuning.attackContrastMin;
 
     _detector.update(
         evidence,
@@ -38,10 +42,10 @@ void FrequencyOccurrenceSource::observeFrame(
         frame.sampleIndex,
         frequencyTuning,
         _config.releaseDebounceMs,
-        _config.cooldownAfterOnsetMs,
-        _config.minTransientDurationMs);
+        _config.cooldownAfterReleaseMs,
+        _config.minDurationMs);
 
-    if (_detector.candidateActive && (!_peakEvidence.present
+    if (_detector.candidateActive && (!_peakEvidence.evidencePresent
         || evidence.spectralContrast > _peakEvidence.spectralContrast
         || (evidence.spectralContrast == _peakEvidence.spectralContrast && evidence.score > _peakEvidence.score))) {
         _peakEvidence = evidence;
@@ -58,11 +62,9 @@ void FrequencyOccurrenceSource::observeFrame(
         candidate.ampLevel = frame.centeredMagnitude;
         candidate.ampBaseline = frame.baseline;
         candidate.frequency = _peakEvidence;
-        candidate.frequency.present = true;
+        candidate.frequency.evidencePresent = true;
         candidate.frequency.matched = _detector.frequencyCandidate.valid;
         candidate.frequency.observedAtMs = frame.sampleTimeMs;
-        candidate.frequency.windowAvailable = _detector.readyOk;
-        candidate.frequency.validWindow = _detector.readyOk;
         candidate.frequency.targetHz = _peakEvidence.targetHz;
         candidate.transient.present = false;
         if (candidate.valid) {

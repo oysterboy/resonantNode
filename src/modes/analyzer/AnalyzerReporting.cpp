@@ -1981,24 +1981,32 @@ void AnalyzerApp::printDetectionParameters() const {
         return;
     }
     Serial.print("SEQ tuning freqScore=");
-    Serial.print(_frequencyEvidenceTuning.scoreMin, 1);
+    Serial.print(_frequencyEvidenceTuning.attackScoreMin, 1);
+    Serial.print(" freqReleaseScore=");
+    Serial.print(_frequencyEvidenceTuning.releaseScoreMin, 1);
     Serial.print(" freqContrast=");
-    Serial.print(_frequencyEvidenceTuning.contrastMin, 1);
+    Serial.print(_frequencyEvidenceTuning.attackContrastMin, 1);
+    Serial.print(" freqReleaseContrast=");
+    Serial.print(_frequencyEvidenceTuning.releaseContrastMin, 1);
     Serial.print(" transientDetector=fixed");
     Serial.println();
 
     const detection::DetectionProfile& selectedProfile = detection::detectionProfileForKind(_sequenceTest.profileKind);
     Serial.print("SEQ freqmatch:");
     Serial.print(" min_duration_ms=");
-    Serial.print(selectedProfile.frequencyMatch.minTransientDurationMs);
+    Serial.print(selectedProfile.frequencyMatch.minDurationMs);
     Serial.print(" release_debounce_ms=");
     Serial.print(selectedProfile.frequencyMatch.releaseDebounceMs);
     Serial.print(" cooldown_ms=");
-    Serial.print(selectedProfile.frequencyMatch.cooldownAfterOnsetMs);
-    Serial.print(" score_min=");
-    Serial.print(selectedProfile.frequencyMatch.scoreMin, 1);
-    Serial.print(" contrast_min=");
-    Serial.println(selectedProfile.frequencyMatch.contrastMin, 1);
+    Serial.print(selectedProfile.frequencyMatch.cooldownAfterReleaseMs);
+    Serial.print(" attack_score_min=");
+    Serial.print(selectedProfile.frequencyMatch.attackScoreMin, 1);
+    Serial.print(" release_score_min=");
+    Serial.print(selectedProfile.frequencyMatch.releaseScoreMin, 1);
+    Serial.print(" attack_contrast_min=");
+    Serial.print(selectedProfile.frequencyMatch.attackContrastMin, 1);
+    Serial.print(" release_contrast_min=");
+    Serial.println(selectedProfile.frequencyMatch.releaseContrastMin, 1);
 
     const unsigned long sampleRateHz = _audioSource.sampleRateHz() > 0 ? _audioSource.sampleRateHz() : 16000UL;
     const unsigned long windowSamples = _freqBandStream.windowSizeSamples();

@@ -66,7 +66,7 @@ void AnalyzerApp::printSequenceHelp() {
     Serial.println("SEQ PROFILE tonalpulse");
     Serial.println("SEQ PROFILE amp");
     Serial.println("SEQ PROFILE chirp_experimental");
-    Serial.println("SEQ PARAM: freqScore=10000 freqContrast=50.0");
+    Serial.println("SEQ PARAM: freqScore=10000 freqContrast=50.0 freqReleaseScore=8000 freqReleaseContrast=50.0");
 }
 
 void AnalyzerApp::pollUsbConsole() {
@@ -98,7 +98,7 @@ void AnalyzerApp::handleUsbLine(const char* line) {
         }
         Serial.println("CMD: BASE dur=10000 quiet");
         Serial.println("CMD: BASE stop");
-        Serial.println("CMD: PARAM freqScore=10000 freqContrast=50.0");
+        Serial.println("CMD: PARAM freqScore=10000 freqContrast=50.0 freqReleaseScore=8000 freqReleaseContrast=50.0");
         Serial.println("CMD: EMIT CHIRP freq=3200 dur=100");
         Serial.println("CMD: EMIT MODE REMOTE");
         Serial.println("CMD: EMIT MODE AUTO interval=2000 freq=3200 dur=100");

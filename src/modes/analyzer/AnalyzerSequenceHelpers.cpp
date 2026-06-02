@@ -214,20 +214,18 @@ detection::FrequencyFeatureFrame AnalyzerApp::captureFrequencyFeatureFrame(unsig
     const bool present = _freqBandStream.windowReady();
     const float totalEnergy = _freqBandStream.lastTotalEnergy();
 
-    evidence.present = present;
+    evidence.evidencePresent = present;
     evidence.matched = false;
     evidence.updatedThisFrame = _freqBandStream.updatedOnLastObserve();
     evidence.targetHz = present ? _freqBandStream.targetFrequencyHz() : 0;
     evidence.windowSampleCount = _freqBandStream.sampleCount();
     evidence.ageSamples = _freqBandStream.evidenceAgeSamples();
-    evidence.windowAvailable = present;
     evidence.score = _freqBandStream.lastFrequencyScore();
     evidence.confidence = 0.0f;
     evidence.targetPower = _freqBandStream.lastTargetPower();
     evidence.neighborPower = _freqBandStream.lastNeighborPower();
     evidence.totalEnergy = totalEnergy;
     evidence.spectralContrast = _freqBandStream.lastSpectralContrast();
-    evidence.validWindow = present;
     return evidence;
 }
 
@@ -284,13 +282,18 @@ void AnalyzerApp::recordSequenceClassifierOutcome(const detection::PatternResult
         case FrequencyMatchEvaluation::Reason::InvalidWindow:
             ++_sequenceTest.freqRejectInvalidWindow;
             break;
-        case FrequencyMatchEvaluation::Reason::ScoreTooLow:
+        case FrequencyMatchEvaluation::Reason::AttackScoreTooLow:
             ++_sequenceTest.freqRejectScore;
             break;
-        case FrequencyMatchEvaluation::Reason::ContrastTooLow:
+        case FrequencyMatchEvaluation::Reason::AttackContrastTooLow:
             ++_sequenceTest.freqRejectContrast;
             break;
-        case FrequencyMatchEvaluation::Reason::ScoreAndContrastTooLow:
+        case FrequencyMatchEvaluation::Reason::AttackScoreAndContrastTooLow:
+            ++_sequenceTest.freqRejectBoth;
+            break;
+        case FrequencyMatchEvaluation::Reason::ReleaseScoreTooLow:
+        case FrequencyMatchEvaluation::Reason::ReleaseContrastTooLow:
+        case FrequencyMatchEvaluation::Reason::ReleaseScoreAndContrastTooLow:
             ++_sequenceTest.freqRejectBoth;
             break;
     }
@@ -358,7 +361,7 @@ void AnalyzerApp::handleSequenceCandidate(const detection::PatternResult& patter
         entry.processedAtMs = patternResult.processedAtMs;
         entry.processLagMs = processLagMs;
         entry.transientPresent = patternResult.candidate.transient.present;
-        entry.freqPresent = patternResult.freq.present;
+        entry.freqPresent = patternResult.freq.evidencePresent;
         entry.freqMatched = patternResult.freq.matched;
         entry.freqScore = patternResult.freq.score;
         entry.freqContrast = patternResult.freq.spectralContrast;

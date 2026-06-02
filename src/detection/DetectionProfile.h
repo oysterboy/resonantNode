@@ -52,11 +52,18 @@ enum class DetectionProfileKind {
 };
 
 struct FrequencyMatchConfig {
-    unsigned long releaseDebounceMs = 20;
-    unsigned long cooldownAfterOnsetMs = 300;
-    unsigned long minTransientDurationMs = 80;
-    float scoreMin = 10000.0f;
-    float contrastMin = 50.0f;
+    unsigned long releaseDebounceMs = 30;
+    unsigned long cooldownAfterReleaseMs = 0;
+    unsigned long minDurationMs = 60;
+    float attackScoreMin = 10000.0f;
+    float releaseScoreMin = 8000.0f;
+    float attackContrastMin = 50.0f;
+    float releaseContrastMin = 50.0f;
+    // Compatibility mirrors. Keep aligned while call sites migrate.
+    float scoreMin = attackScoreMin;
+    float contrastMin = attackContrastMin;
+    unsigned long minTransientDurationMs = minDurationMs;
+    unsigned long cooldownAfterOnsetMs = cooldownAfterReleaseMs;
 };
 
 struct ScalarTransientConfig {
@@ -93,11 +100,17 @@ inline DetectionProfile makeTonalPulseProfile() {
     profile.occurrenceSource = OccurrenceSourceKind::FrequencyMatch;
 
     // Frequency path tuning.
-    profile.frequencyMatch.scoreMin = 8000.0f;       // Minimum frequency score gate.
-    profile.frequencyMatch.contrastMin = 50.0f;       // Minimum spectral contrast gate.
-    profile.frequencyMatch.minTransientDurationMs = 60; // Require a sustained match before emit.
-    profile.frequencyMatch.releaseDebounceMs = 30;    // Hold the release briefly to avoid missing fragmented pulses
-    profile.frequencyMatch.cooldownAfterOnsetMs = 0; // Re-arm after a short post-close cooldown (bad var naming)
+    profile.frequencyMatch.attackScoreMin = 10000.0f;
+    profile.frequencyMatch.releaseScoreMin = 8000.0f;
+    profile.frequencyMatch.attackContrastMin = 50.0f;
+    profile.frequencyMatch.releaseContrastMin = 50.0f;
+    profile.frequencyMatch.minDurationMs = 60;
+    profile.frequencyMatch.releaseDebounceMs = 30;
+    profile.frequencyMatch.cooldownAfterReleaseMs = 0;
+    profile.frequencyMatch.scoreMin = profile.frequencyMatch.attackScoreMin;
+    profile.frequencyMatch.contrastMin = profile.frequencyMatch.attackContrastMin;
+    profile.frequencyMatch.minTransientDurationMs = profile.frequencyMatch.minDurationMs;
+    profile.frequencyMatch.cooldownAfterOnsetMs = profile.frequencyMatch.cooldownAfterReleaseMs;
   
     // Inspector composition.
 

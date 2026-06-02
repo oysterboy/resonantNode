@@ -24,7 +24,8 @@ Does NOT:
 */
 class FrequencyMatchDetector {
 public:
-    bool present = false;
+    bool evidencePresent = false;
+    bool present = false; // compatibility mirror
     bool liveFrequencyOnly = false;
     bool firstThresholdCrossingSeen = false;
     bool wouldProduceCandidate = false;
@@ -43,12 +44,23 @@ public:
     unsigned long candidateHoldWindows = 0;
     unsigned long candidateHoldMs = 0;
     unsigned long candidateLastMatchedMs = 0;
-    float thresholdScore = 0.0f;
-    float thresholdContrast = 0.0f;
-    bool readyOk = false;
-    bool bestScoreOk = false;
-    bool bestContrastOk = false;
-    bool gateOpen = false;
+    float attackScoreThreshold = 0.0f;
+    float releaseScoreThreshold = 0.0f;
+    float attackContrastThreshold = 0.0f;
+    float releaseContrastThreshold = 0.0f;
+    bool evidenceOk = false;
+    bool attackScoreOk = false;
+    bool attackContrastOk = false;
+    bool attackOk = false;
+    bool releaseScoreOk = false;
+    bool releaseContrastOk = false;
+    bool releaseOk = false;
+    float thresholdScore = 0.0f;   // compatibility mirror
+    float thresholdContrast = 0.0f; // compatibility mirror
+    bool readyOk = false;          // compatibility mirror
+    bool bestScoreOk = false;      // compatibility mirror
+    bool bestContrastOk = false;   // compatibility mirror
+    bool gateOpen = false;         // compatibility mirror
     bool emitAllowed = false;
     bool validRelease = false;
     float candidatePeakScore = 0.0f;
@@ -56,11 +68,16 @@ public:
     unsigned long candidatePeakWindowSampleCount = 0;
     unsigned long candidateMinDurationMs = 0;
     unsigned long candidateMaxDurationMs = 0;
-    unsigned long currentMatchRunFrames = 0;
-    unsigned long currentMatchRunStartMs = 0;
-    unsigned long longestMatchRunFrames = 0;
-    unsigned long longestMatchRunStartMs = 0;
-    unsigned long longestMatchRunEndMs = 0;
+    unsigned long diagCurrentMatchStreakFrames = 0;
+    unsigned long diagCurrentMatchStreakStartMs = 0;
+    unsigned long diagLongestMatchStreakFrames = 0;
+    unsigned long diagLongestMatchStreakStartMs = 0;
+    unsigned long diagLongestMatchStreakEndMs = 0;
+    unsigned long currentMatchRunFrames = 0; // compatibility mirror
+    unsigned long currentMatchRunStartMs = 0; // compatibility mirror
+    unsigned long longestMatchRunFrames = 0; // compatibility mirror
+    unsigned long longestMatchRunStartMs = 0; // compatibility mirror
+    unsigned long longestMatchRunEndMs = 0; // compatibility mirror
     unsigned long bestObservedAtMs = 0;
     uint64_t bestObservedSample = 0;
     float bestScore = 0.0f;
@@ -108,6 +125,8 @@ public:
     float diagnosticsContrastMax = 0.0f;
     unsigned long diagnosticsContrastMaxMs = 0;
     unsigned long lastRejectedCloseMs = 0;
+    const char* lastReleaseFailCause = "none";
+    const char* candidateCloseCause = "none";
 
     void resetState();
     void resetRejectSummary();
@@ -119,8 +138,8 @@ public:
                 uint64_t currentSample,
                 const FrequencyMatchEvaluation::Values& tuning,
                 unsigned long releaseDebounceMs,
-                unsigned long cooldownAfterOnsetMs,
-                unsigned long minTransientDurationMs);
+                unsigned long cooldownAfterReleaseMs,
+                unsigned long minDurationMs);
 
     float diagnosticsScoreMean() const;
     float diagnosticsContrastMean() const;

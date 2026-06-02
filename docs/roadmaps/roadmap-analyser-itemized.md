@@ -223,10 +223,9 @@ Analyzer output should not be hardcoded around one profile or detector type.
 Avoid this as the main shape:
 
 ```text
-TonalPulse-only fields
-FrequencyMatch-only trial truth
-Scalar-only special cases
-Amp-specific top-level assumptions
+profile-specific top-level assumptions
+detector-specific truth at the outer layer
+profile-locked staged output
 ```
 
 Use one generic outer vocabulary:
@@ -265,11 +264,10 @@ Analyzer should treat that as the structured pattern-stage payload, not as an un
 The same Analyzer shape should compare:
 
 ```text
-TonalPulse / FrequencyMatch
-ScalarFreqContrast
-ScalarFreqScore
-ChirpExperimental
-future AmpTransient diagnostic profile
+profile A
+profile B
+profile C
+future experimental profiles
 ```
 
 The profile changes. The Analyzer report shape should not.
@@ -314,7 +312,7 @@ pattern rejected
 trial result = miss
 ```
 
-This becomes more important for Scalar-on-frequency and later multi-occurrence patterns.
+This becomes more important for later comparison profiles and multi-occurrence patterns.
 
 ## 3b â€” Generic Pattern Reports
 
@@ -323,9 +321,7 @@ When pattern detection is actually used, make `SEQ_PATTERN` generic in the same 
 Goal:
 
 ```text
-pattern.tonal.*
-pattern.chirp.*
-pattern.scalar.*
+pattern.<profile>.*
 ```
 
 Rule:
@@ -469,77 +465,6 @@ This is for comparing runs and profiles, not for single-trial forensic debugging
 
 ---
 
-## 7 — Tune TonalPulse With Trustworthy Output
-
-Only tune after Analyzer output can explain misses reliably.
-
-Use the new Analyzer shape to distinguish:
-
-```text
-source miss / no candidate
-source reject / too short
-source reject / score or contrast too low
-inspector reject / amp support too weak
-pattern reject
-valid pattern too early / too late
-duplicate / unexpected
-```
-
-Do not tune based on mixed aggregate fields that may not refer to the same candidate.
-
----
-
-## 8 — Add Scalar-on-Frequency Comparison Profile
-
-After TonalPulse is readable and timing/freshness is visible, add or revive scalar-on-frequency as a comparison profile.
-
-Candidate profiles:
-
-```text
-Scalar on FrequencyContrast
-Scalar on FrequencyScore
-Scalar on combined inspected frequency evidence later
-```
-
-Goal is not immediate replacement.
-
-Goal is comparison using the same Analyzer output shape:
-
-```text
-TonalPulse vs ScalarFreqContrast
-same SEQ_TRIAL
-same SEQ_SOURCE
-same SEQ_INSPECT
-same SEQ_SUMMARY
-```
-
----
-
-## 9 — Decide Whether Scalar Can Replace FrequencyMatch
-
-Do not delete FrequencyMatch yet.
-
-Decision rule:
-
-```text
-Replace FrequencyMatch only if scalar-on-frequency matches or beats it under the same Analyzer summary and with acceptable freshness/cadence behavior.
-```
-
-The safer abstraction remains:
-
-```text
-one shared candidate lifecycle mechanic
-multiple feature/source implementations
-```
-
-not:
-
-```text
-force all detection into one scalar stream before cadence/freshness behavior is proven
-```
-
----
-
 # Relationship to Node Separation Roadmap
 
 Analyzer cleanup supports Node separation, but Analyzer should not become part of Node runtime.
@@ -570,9 +495,6 @@ full pattern debugger
 new behavior logic
 Node rewrite
 Param registry
-TonalPulse tuning
-Scalar replacement decision
-frequency detector redesign
 new FieldState model
 OSC / VEKTOR integration
 large command-system rewrite
@@ -592,15 +514,7 @@ large command-system rewrite
 3. Add timing / freshness diagnostics:
    frame, cadence, history coverage, feature age
 
-4. Tune TonalPulse with trustworthy Analyzer output
-
-5. Add Scalar-on-frequency comparison profile
-
-6. Compare TonalPulse vs Scalar profile using same SEQ_SUMMARY shape
-
-7. Decide whether Scalar can replace FrequencyMatch
-
-8. Continue Node separation without pulling Analyzer into Node
+4. Continue Node separation without pulling Analyzer into Node
 ```
 
 ---
@@ -637,3 +551,6 @@ SEQ_SUMMARY
   run/profile comparison
   aggregates final classes and staged reasons
 ```
+
+
+

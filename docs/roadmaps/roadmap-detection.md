@@ -75,6 +75,16 @@ Scalar detectors should accept a resolved scalar value, with the profile/runtime
 Expand PatternResult to carry a bounded set of contributing occurrence summaries for multi-occurrence patterns, while keeping the result compact and predictable.
 ```
 
+Current pass mirror:
+
+```text
+Analyzer source output is being split into accepted, reject-summary, snapshot, and diag views.
+Reject summaries stay bounded and trial-local.
+Diag stays candidate-independent and can still show evidence freshness.
+Threshold-hit counters are tracked as frames, not candidate counts.
+Keep the outer analyzer vocabulary generic across source, inspect, pattern, and summary.
+```
+
 ---
 
 ## Next Pass D-CLEAN

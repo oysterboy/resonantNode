@@ -541,7 +541,13 @@ measurement classification
 summary statistics
 report formatting
 SEQ_TRIAL
-SEQ_EXPLAIN
+SEQ_SOURCE
+SEQ_SOURCE_REJECTS
+SEQ_SOURCE_LAST_CANDIDATE
+SEQ_SOURCE_DIAG
+SEQ_INSPECT
+SEQ_PATTERN
+SEQ_DUMP
 SEQ_SUMMARY
 ```
 
@@ -579,9 +585,12 @@ Current landed SEQ output contract is intentionally compact and scoped:
 
 ```text
 SEQ_TRIAL    compact truth, default output
-SEQ_SOURCE   detector/source lifecycle + reject summary
-SEQ_INSPECT  inspector/support evidence
-SEQ_PATTERN  pattern assembly + pattern rule view
+SEQ_SOURCE   accepted candidate from PatternResult
+SEQ_SOURCE_REJECTS  best rejected candidate + aggregates
+SEQ_SOURCE_LAST_CANDIDATE  detector snapshot
+SEQ_SOURCE_DIAG  candidate-independent window/evidence stats
+SEQ_INSPECT  per-module inspector evidence
+SEQ_PATTERN  pattern assembly / rules contract
 SEQ_DUMP     deep verbose developer fallback
 SEQ_SUMMARY  aggregate run comparison
 ```
@@ -606,7 +615,7 @@ VERBOSE 2 = namespaced deep detail
 MODE=DUMP remains the raw developer fallback
 ```
 
-Rejected detector/source candidates are kept as compact bounded summaries. Analyzer owns aggregation and readable selection; detector/source owns candidate lifecycle and reject reasons.
+Rejected detector/source candidates are kept as compact bounded summaries. Analyzer owns aggregation and readable selection; detector/source owns candidate lifecycle and reject reasons. `SEQ_SOURCE_DIAG` stays candidate-independent and can include frame/evidence freshness facts even when no candidate exists.
 
 Analyzer display labels are owned by the analyzer reporting descriptor layer. Detectors and inspectors keep semantic data; the analyzer maps that data into stable namespaced output. New profiles extend those namespace mappings instead of adding ad hoc printer strings in the runtime pipeline.
 
@@ -698,6 +707,9 @@ Landed profile behavior in analyzer terms:
 - `TonalPulse` currently uses `FrequencyMatch` as the source path.
 - `Amp` currently uses `ScalarTransient` as the source path.
 - `SEQ_SOURCE`, `SEQ_INSPECT`, and `SEQ_PATTERN` stay separated so source, inspector, and pattern diagnosis do not mix.
+- `SEQ_SOURCE_REJECTS` reports trial-local best reject context plus aggregate reject statistics.
+- `SEQ_SOURCE_LAST_CANDIDATE` reports the detector snapshot, not trial truth.
+- `SEQ_SOURCE_DIAG` reports window-level evidence facts, including freshness and threshold-hit frames.
 
 When adding a new detection profile, also add or extend its analyzer namespace mapping so the staged output stays useful and profile-generic. Do not hardcode analyzer display labels in detectors or inspectors.
 

@@ -1560,6 +1560,10 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
         report.frequency.fmMaxDurationMs = runtimeDiag != nullptr ? runtimeDiag->frequencyMaxDurationMs : 0UL;
         report.frequency.diagFirstFrameMs = report.frequency.fmOpenMs;
         report.frequency.diagLastFrameMs = report.frequency.fmReleaseMs;
+        if (!report.frequency.sourceSummary.present && !report.frequency.sourceLastCandidate.present) {
+            report.frequency.diagFirstFrameMs = 0;
+            report.frequency.diagLastFrameMs = 0;
+        }
         report.frequency.diagFrameCountOk = report.frequency.expectedFrameCountEstimate == 0
             ? report.frequency.frames == 0
             : report.frequency.frames > 0;

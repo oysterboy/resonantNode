@@ -621,6 +621,12 @@ Profile-specific details move into namespaced detail blocks.
 
 ## 02.1 Inventory current report fields
 
+Status:
+
+```text
+DONE
+```
+
 Search:
 
 ```text
@@ -645,6 +651,62 @@ inspection detail
 pattern detail
 classification detail
 debug/status only
+```
+
+Current inventory note:
+
+```text
+common source-stage truth:
+- report.frequency.acceptedPresent
+- report.frequency.sourceOccurrenceEmitted
+- report.frequency.runtimeEvidenceSeen
+- report.frequency.runtimeOccurrenceReceived
+- report.frequency.analyzerSeenOccurrence
+- report.frequency.detectionGateBlocked
+- report.frequency.detectionGateReason
+- report.frequency.sourceSummary
+- report.frequency.sourceLastCandidate
+- report.frequency.fmOpened / fmReleased / fmEmitted / fmValidRelease / fmEmitAllowed / fmCloseCause / fmOpenMs / fmPeakMs / fmReleaseMs / fmDurationMs
+- report.scalar.sourceOccurrenceEmitted
+- report.scalar.runtimeEvidenceSeen
+- report.scalar.runtimeOccurrenceReceived
+- report.scalar.analyzerSeenOccurrence
+- report.scalar.detectionGateBlocked
+- report.scalar.detectionGateReason
+- report.scalar.sourceSummary
+- report.scalar.sourceLastCandidate
+- report.scalar.scalarOpened / scalarReleased / scalarEmitted / scalarValidRelease / scalarEmitAllowed / scalarOpenMs / scalarPeakMs / scalarReleaseMs / scalarDurationMs
+
+frequency-specific source detail:
+- report.frequency.frames / validFrames / freshFrames / heldFrames
+- report.frequency.scoreOkFrames / contrastOkFrames / bothOkFrames / matchFrames / rejectFrames
+- report.frequency.releaseScoreOkFrames / releaseContrastOkFrames / releaseBothOkFrames
+- report.frequency.releaseScoreTooLowFrames / releaseContrastTooLowFrames / releaseScoreAndContrastTooLowFrames / releaseNoEvidenceFrames
+- report.frequency.scoreThreshold / contrastThreshold / maxScore / maxScoreMs / maxContrast / maxContrastMs
+- report.frequency.peakScore / peakContrast / peakWindowSampleCount
+- report.frequency.freqEvidenceClass
+- report.frequency.nearMiss / nearMissReason
+
+scalar-specific source detail:
+- report.scalar.scalarRejectReason / scalarNoEmitReason / scalarGateReason
+- report.scalar.scalarPeakStrength
+- report.scalar.trialMissReason
+- report.scalar.liveScalarReason / liveScalarWould / liveScalarState / liveScalarReady / liveScalarGate / liveScalarPresent / liveScalarValid / liveScalarMatch
+
+inspection detail:
+- report.inspection.*
+- report.profileDetail.inspection*
+
+pattern detail:
+- report.primaryPattern.*
+- report.occurrences.*
+
+classification detail:
+- report.classification.*
+
+debug/status only:
+- report.debug.*
+- report.profileDetail.namespaceName / summary / emitter / inspectionAcceptance / inspectionPlan / inspectionModules / inspectionModuleCount / evidenceTargets / requiredSupportTarget / ampStrength / ampStrengthMin / requireSupportForAcceptance / freqScore / freqContrast / freqScoreMin / freqContrastMin / ampCenteredMagnitude / ampLevel / ampBase / ampLift
 ```
 
 Commit:

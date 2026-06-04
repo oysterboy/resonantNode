@@ -1281,6 +1281,12 @@ GateResult owns attack/release threshold decision.
 
 ## 03.7 Align FrequencyMatch lifecycle names with ScalarDetector
 
+Status:
+
+```text
+DONE
+```
+
 Rename lifecycle counters if needed:
 
 ```text

@@ -61,9 +61,9 @@ void FrequencyMatchDetector::resetState() {
     candidatePeakSample = 0;
     candidateCloseMs = 0;
     candidateCloseSample = 0;
-    candidateHoldWindows = 0;
+    candidateHoldUpdates = 0;
     candidateDurationMs = 0;
-    candidateLastMatchMs = 0;
+    candidateLastMatchedMs = 0;
     attackScoreThreshold = 0.0f;
     releaseScoreThreshold = 0.0f;
     attackContrastThreshold = 0.0f;
@@ -212,7 +212,7 @@ void FrequencyMatchDetector::updateBestRejectedCandidate() {
         bestDurationMs = candidateDurationMs;
         bestOpenMs = candidateOpenMs;
         bestPeakMs = candidatePeakMs;
-        bestLastMatchMs = candidateLastMatchMs;
+        bestLastMatchMs = candidateLastMatchedMs;
         bestCloseMs = candidateCloseMs;
         bestPeakScore = candidatePeakScore;
         bestPeakContrast = candidatePeakContrast;
@@ -237,7 +237,7 @@ void FrequencyMatchDetector::observeClosedCandidate(bool accepted) {
             maxGapMs = gapMs;
         }
     }
-    lastRejectedCloseMs = candidateCloseMs > 0 ? candidateCloseMs : candidateLastMatchMs;
+    lastRejectedCloseMs = candidateCloseMs > 0 ? candidateCloseMs : candidateLastMatchedMs;
     ++islandCount;
     totalMatchMs += candidateDurationMs;
     updateBestRejectedCandidate();
@@ -296,7 +296,7 @@ void FrequencyMatchDetector::update(const detection::FrequencyFeatureFrame& evid
             if (diagCurrentMatchStreakFrames > diagLongestMatchStreakFrames) {
                 diagLongestMatchStreakFrames = diagCurrentMatchStreakFrames;
                 diagLongestMatchStreakStartMs = diagCurrentMatchStreakStartMs;
-                diagLongestMatchStreakEndMs = candidateLastMatchMs > 0 ? candidateLastMatchMs : now;
+                diagLongestMatchStreakEndMs = candidateLastMatchedMs > 0 ? candidateLastMatchedMs : now;
             }
             diagCurrentMatchStreakFrames = 0;
             diagCurrentMatchStreakStartMs = 0;
@@ -326,7 +326,7 @@ void FrequencyMatchDetector::update(const detection::FrequencyFeatureFrame& evid
         frequencyCandidate.releaseSample = candidateCloseSample;
         frequencyCandidate.endMs = candidateCloseMs;
         frequencyCandidate.durationMs = candidateDurationMs;
-        frequencyCandidate.candidateHoldWindows = candidateHoldWindows;
+        frequencyCandidate.candidateHoldWindows = candidateHoldUpdates;
         frequencyCandidate.confidence = accepted ? 1.0f : 0.0f;
         if (!accepted) {
             observeClosedCandidate(false);
@@ -364,9 +364,9 @@ void FrequencyMatchDetector::update(const detection::FrequencyFeatureFrame& evid
                     candidatePeakScore = evidence.score;
                     candidatePeakContrast = evidence.spectralContrast;
                     candidatePeakWindowSampleCount = evidence.windowSampleCount;
-                    candidateHoldWindows = 1;
+                    candidateHoldUpdates = 1;
                     candidateDurationMs = 0;
-                    candidateLastMatchMs = now;
+                    candidateLastMatchedMs = now;
                     candidateEvidence = evidence;
                     frequencyCandidate.startMs = now;
                     frequencyCandidate.startSample = currentSample;
@@ -392,10 +392,10 @@ void FrequencyMatchDetector::update(const detection::FrequencyFeatureFrame& evid
             }
         } else {
             if (releaseOk) {
-                candidateLastMatchMs = now;
-                ++candidateHoldWindows;
-                candidateDurationMs = candidateLastMatchMs >= candidateOpenMs
-                    ? candidateLastMatchMs - candidateOpenMs
+                candidateLastMatchedMs = now;
+                ++candidateHoldUpdates;
+                candidateDurationMs = candidateLastMatchedMs >= candidateOpenMs
+                    ? candidateLastMatchedMs - candidateOpenMs
                     : 0UL;
                 if (evidence.spectralContrast > candidatePeakContrast
                     || (evidence.spectralContrast == candidatePeakContrast && evidence.score > candidatePeakScore)) {
@@ -411,20 +411,20 @@ void FrequencyMatchDetector::update(const detection::FrequencyFeatureFrame& evid
                     frequencyCandidate.score = evidence.score;
                     frequencyCandidate.contrast = evidence.spectralContrast;
                 }
-                frequencyCandidate.candidateHoldWindows = candidateHoldWindows;
+                frequencyCandidate.candidateHoldWindows = candidateHoldUpdates;
                 frequencyCandidate.durationMs = candidateDurationMs;
                 frequencyCandidate.valid = false;
                 lastReleaseFailCause = FrequencyReleaseFailCause::None;
             } else {
                 lastReleaseFailCause = frequencyReleaseFailCauseFromReason(gates.releaseReason);
-                if (candidateLastMatchMs > 0 && timing::elapsedSince(now, candidateLastMatchMs, releaseDebounceMs)) {
+                if (candidateLastMatchedMs > 0 && timing::elapsedSince(now, candidateLastMatchedMs, releaseDebounceMs)) {
                     closeCandidate(candidateDurationMs >= minDurationMs);
                 }
             }
         }
     } else {
         updateDiagStreak(false);
-        if (candidateActive && candidateLastMatchMs > 0 && timing::elapsedSince(now, candidateLastMatchMs, releaseDebounceMs)) {
+        if (candidateActive && candidateLastMatchedMs > 0 && timing::elapsedSince(now, candidateLastMatchedMs, releaseDebounceMs)) {
             lastReleaseFailCause = FrequencyReleaseFailCause::NoEvidence;
             closeCandidate(candidateDurationMs >= minDurationMs);
         }

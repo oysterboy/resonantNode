@@ -50,9 +50,9 @@ public:
     uint64_t candidatePeakSample = 0;
     unsigned long candidateCloseMs = 0;
     uint64_t candidateCloseSample = 0;
-    unsigned long candidateHoldWindows = 0;
+    unsigned long candidateHoldUpdates = 0;
     unsigned long candidateDurationMs = 0;
-    unsigned long candidateLastMatchMs = 0;
+    unsigned long candidateLastMatchedMs = 0;
     float attackScoreThreshold = 0.0f;
     float releaseScoreThreshold = 0.0f;
     float attackContrastThreshold = 0.0f;

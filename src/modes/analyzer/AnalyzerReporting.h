@@ -550,6 +550,33 @@ struct AnalyzerScalarDiagnostic {
     bool liveScalarMatch = false;
 };
 
+struct AnalyzerSourceStageReport {
+    const char* sourceKind = "unknown";
+    const char* sourceName = "unknown";
+
+    bool acceptedPresent = false;
+    bool sourceOccurrenceEmitted = false;
+    bool runtimeEvidenceSeen = false;
+    bool runtimeOccurrenceReceived = false;
+    bool analyzerSeen = false;
+
+    bool detectionGateBlocked = false;
+    const char* detectionGateReason = "none";
+
+    AnalyzerSourceCandidateSummary sourceSummary = {};
+    AnalyzerSourceCandidateSnapshot lastCandidate = {};
+
+    bool activeAtTrialStart = false;
+    bool activeAtTrialEnd = false;
+    bool openedThisTrial = false;
+    bool closedThisTrial = false;
+    bool emittedThisTrial = false;
+    bool rejectedThisTrial = false;
+
+    AnalyzerFrequencyDiagnostic frequencyMatch = {};
+    AnalyzerScalarDiagnostic scalarTransient = {};
+};
+
 struct AnalyzerSummary {
     const char* profileName = "unknown";
 
@@ -581,6 +608,7 @@ struct AnalyzerSummary {
 struct AnalyzerReport {
     AnalyzerRunContext context;
     AnalyzerExpectedEvent expected;
+    AnalyzerSourceStageReport source;
 
     AnalyzerPatternObservation primaryPattern;
     AnalyzerOccurrenceObservation occurrences;

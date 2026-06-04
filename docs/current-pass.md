@@ -726,6 +726,12 @@ No behavior change.
 
 ## 02.2 Introduce shared source report struct
 
+Status:
+
+```text
+DONE
+```
+
 Target:
 
 ```text

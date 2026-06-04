@@ -996,6 +996,12 @@ report.classification
 
 Do not recalculate source/evidence classes in summary.
 
+Status:
+
+```text
+DONE
+```
+
 Commit:
 
 ```text

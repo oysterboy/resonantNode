@@ -36,6 +36,25 @@ size_t analyzerReasonIndex(AnalyzerReason value) {
     return static_cast<size_t>(value);
 }
 
+FrequencyEvidenceClass frequencyEvidenceClassFromLabel(const char* label) {
+    if (label == nullptr || label[0] == '\0') {
+        return FrequencyEvidenceClass::None;
+    }
+    if (strcmp(label, "accepted") == 0) {
+        return FrequencyEvidenceClass::Accepted;
+    }
+    if (strcmp(label, "strong_no_occurrence") == 0) {
+        return FrequencyEvidenceClass::StrongNoOccurrence;
+    }
+    if (strcmp(label, "partial") == 0) {
+        return FrequencyEvidenceClass::Partial;
+    }
+    if (strcmp(label, "weak") == 0) {
+        return FrequencyEvidenceClass::Weak;
+    }
+    return FrequencyEvidenceClass::None;
+}
+
 
 } // namespace
 
@@ -540,7 +559,11 @@ void AnalyzerApp::finalizeSequenceTrial(unsigned long now) {
             _sequenceTest.rejectReasonCounts[reasonIndex]++;
         }
     }
-    _sequenceTest.freqEvidenceClassCounts[frequencyEvidenceClassIndex(classifyFrequencyEvidence(*finalizedReport))]++;
+    _sequenceTest.freqEvidenceClassCounts[
+        frequencyEvidenceClassIndex(
+            frequencyEvidenceClassFromLabel(finalizedReport->source.frequencyMatch.freqEvidenceClass)
+        )
+    ]++;
     flushSequenceSampleHistory(now + 1UL);
     printSequenceTrialResult(*finalizedReport);
     if (_sequenceTest.outputConfig.mode == AnalyzerApp::SeqOutputMode::SignalCheck) {

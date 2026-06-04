@@ -345,6 +345,7 @@ struct AnalyzerDebugSummary {
 
 struct AnalyzerSourceCandidateSummary {
     bool present = false;
+    const char* origin = "unknown";
     unsigned long candidateCount = 0;
     unsigned long rejectCount = 0;
     unsigned long bestDurationMs = 0;

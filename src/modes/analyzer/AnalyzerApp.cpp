@@ -1505,6 +1505,7 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
         report.frequency.peakContrast = runtimeDiag->frequencyPeakContrast;
         report.frequency.peakWindowSampleCount = runtimeDiag->frequencyPeakWindowSampleCount;
         report.frequency.sourceSummary.present = runtimeDiag->sourceSummary.present;
+        report.frequency.sourceSummary.origin = "runtime_frequency_diag";
         report.frequency.sourceSummary.candidateCount = runtimeDiag->sourceSummary.candidateCount;
         report.frequency.sourceSummary.rejectCount = runtimeDiag->sourceSummary.rejectCount;
         report.frequency.sourceSummary.bestDurationMs = runtimeDiag->sourceSummary.bestDurationMs;
@@ -1697,6 +1698,7 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
             && (report.scalar.scalarOpened
                 || report.scalar.scalarReleased
                 || (report.scalar.scalarRejectReason != nullptr && strcmp(report.scalar.scalarRejectReason, "none") != 0));
+        report.scalar.sourceSummary.origin = "synthesized_scalar_lifecycle";
         report.scalar.sourceSummary.candidateCount = report.scalar.sourceSummary.present ? 1UL : 0UL;
         report.scalar.sourceSummary.rejectCount = report.scalar.sourceSummary.candidateCount;
         report.scalar.sourceSummary.bestDurationMs = report.scalar.scalarDurationMs;
@@ -1798,6 +1800,47 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
         }
 
         report.scalar.inconsistent = report.classification.result == AnalyzerResult::Miss && report.scalar.acceptedPresent;
+    }
+
+    const bool frequencySource = selectedProfile.occurrenceSource == detection::OccurrenceSourceKind::FrequencyMatch;
+    report.source.sourceKind = frequencySource ? "frequency_match" : "scalar_transient";
+    report.source.sourceName = detection::occurrenceSourceKindName(selectedProfile.occurrenceSource);
+    if (frequencySource) {
+        report.source.acceptedPresent = report.frequency.acceptedPresent;
+        report.source.sourceOccurrenceEmitted = report.frequency.sourceOccurrenceEmitted;
+        report.source.runtimeEvidenceSeen = report.frequency.runtimeEvidenceSeen;
+        report.source.runtimeOccurrenceReceived = report.frequency.runtimeOccurrenceReceived;
+        report.source.analyzerSeen = report.frequency.analyzerSeenOccurrence;
+        report.source.detectionGateBlocked = report.frequency.detectionGateBlocked;
+        report.source.detectionGateReason = report.frequency.detectionGateReason;
+        report.source.sourceSummary = report.frequency.sourceSummary;
+        report.source.lastCandidate = report.frequency.sourceLastCandidate;
+        report.source.activeAtTrialStart = report.frequency.fmOpened;
+        report.source.activeAtTrialEnd = report.frequency.fmReleased;
+        report.source.openedThisTrial = report.frequency.fmOpened;
+        report.source.closedThisTrial = report.frequency.fmReleased;
+        report.source.emittedThisTrial = report.frequency.fmEmitted;
+        report.source.rejectedThisTrial = report.frequency.sourceSummary.present && !report.frequency.acceptedPresent;
+        report.source.frequencyMatch = report.frequency;
+        report.source.scalarTransient = report.scalar;
+    } else {
+        report.source.acceptedPresent = report.scalar.acceptedPresent;
+        report.source.sourceOccurrenceEmitted = report.scalar.sourceOccurrenceEmitted;
+        report.source.runtimeEvidenceSeen = report.scalar.runtimeEvidenceSeen;
+        report.source.runtimeOccurrenceReceived = report.scalar.runtimeOccurrenceReceived;
+        report.source.analyzerSeen = report.scalar.analyzerSeenOccurrence;
+        report.source.detectionGateBlocked = report.scalar.detectionGateBlocked;
+        report.source.detectionGateReason = report.scalar.detectionGateReason;
+        report.source.sourceSummary = report.scalar.sourceSummary;
+        report.source.lastCandidate = report.scalar.sourceLastCandidate;
+        report.source.activeAtTrialStart = report.scalar.scalarOpened;
+        report.source.activeAtTrialEnd = report.scalar.scalarReleased;
+        report.source.openedThisTrial = report.scalar.scalarOpened;
+        report.source.closedThisTrial = report.scalar.scalarReleased;
+        report.source.emittedThisTrial = report.scalar.scalarEmitted;
+        report.source.rejectedThisTrial = report.scalar.sourceSummary.present && !report.scalar.acceptedPresent;
+        report.source.frequencyMatch = report.frequency;
+        report.source.scalarTransient = report.scalar;
     }
 
 }

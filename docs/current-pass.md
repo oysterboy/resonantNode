@@ -795,6 +795,12 @@ Old fields still compile during transition.
 
 ## 02.3 Populate common source fields
 
+Status:
+
+```text
+DONE
+```
+
 FrequencyMatch path:
 
 ```text

@@ -37,7 +37,7 @@ enum class Reason {
     ReleaseScoreAndContrastTooLow,
 };
 
-struct Evaluation {
+struct FrequencyMatchGateResult {
     bool evidenceOk = false;
     bool attackScoreOk = false;
     bool attackContrastOk = false;
@@ -55,6 +55,8 @@ struct Evaluation {
     Reason attackReason = Reason::None;
     Reason releaseReason = Reason::None;
 };
+
+using Evaluation = FrequencyMatchGateResult;
 
 inline bool parseToken(const char* token, Values& values) {
     if (token == nullptr) {
@@ -110,8 +112,8 @@ inline const char* reasonName(Reason reason) {
     return "unknown";
 }
 
-inline Evaluation evaluate(const detection::FrequencyFeatureFrame& evidence, const Values& values) {
-    Evaluation out;
+inline FrequencyMatchGateResult evaluate(const detection::FrequencyFeatureFrame& evidence, const Values& values) {
+    FrequencyMatchGateResult out;
     out.evidenceOk = evidence.evidencePresent;
     out.score = evidence.score;
     out.contrast = evidence.spectralContrast;
@@ -171,7 +173,7 @@ inline void buildFailReason(const detection::FrequencyFeatureFrame& evidence,
 
     out[0] = '\0';
 
-    const Evaluation eval = evaluate(evidence, values);
+    const FrequencyMatchGateResult eval = evaluate(evidence, values);
     switch (eval.attackReason) {
         case Reason::None:
             snprintf(out, outSize, "none");

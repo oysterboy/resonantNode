@@ -1240,6 +1240,12 @@ fresh_updates and held_status_packets are counted separately.
 
 ## 03.6 Extract FrequencyMatch gate result
 
+Status:
+
+```text
+DONE
+```
+
 Action:
 
 Create or clarify:

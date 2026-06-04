@@ -411,7 +411,9 @@ void AnalyzerApp::handleSequenceCandidate(const detection::PatternResult& patter
         return;
     }
 
-    if (!_sequenceTest.primaryValidPatternCaptured) {
+    const bool hadPrimaryBeforeCandidate = _sequenceTest.primaryValidPatternCaptured;
+
+    if (!hadPrimaryBeforeCandidate) {
         _sequenceTest.primaryValidPatternCaptured = true;
         _sequenceTest.primaryValidPattern = patternResult;
         _sequenceTest.primaryValidPatternDtMs = dtFromTriggerMs;
@@ -426,7 +428,7 @@ void AnalyzerApp::handleSequenceCandidate(const detection::PatternResult& patter
         _sequenceTest.currentTrialOnsetDetectedMs = onsetMs;
     }
 
-    if (_sequenceTest.primaryValidPatternCaptured) {
+    if (hadPrimaryBeforeCandidate) {
         if (diagnostics.duplicateCount == 0) {
             diagnostics.duplicatePatternMs = onsetMs;
             diagnostics.duplicatePatternStrength = candidate.peakStrength;

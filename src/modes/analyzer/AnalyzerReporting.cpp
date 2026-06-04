@@ -59,7 +59,7 @@ constexpr AnalyzerFieldDescriptor kSourceScopeField{nullptr, "scope"};
 constexpr AnalyzerFieldDescriptor kSourceLastCandidatePresentField{nullptr, "last_candidate_present"};
 constexpr AnalyzerFieldDescriptor kSourceLastCandidatePeakMsField{nullptr, "last_candidate_peak_ms"};
 constexpr AnalyzerFieldDescriptor kSourceLastCandidateDurationMsField{nullptr, "last_candidate_duration_ms"};
-constexpr AnalyzerFieldDescriptor kSourceLastCandidateWindowSamplesField{nullptr, "last_candidate_window_samples"};
+constexpr AnalyzerFieldDescriptor kSourceLastCandidateSampleCountField{nullptr, "last_candidate_sample_count"};
 constexpr AnalyzerFieldDescriptor kSourceLastCandidateReasonField{nullptr, "last_candidate_reason"};
 constexpr AnalyzerFieldDescriptor kSourceLastCandidateGateReasonField{nullptr, "last_candidate_gate_reason"};
 constexpr AnalyzerFieldDescriptor kSourceLastCandidateScopeField{nullptr, "last_candidate_scope"};
@@ -186,7 +186,7 @@ constexpr AnalyzerFieldDescriptor kSourceSelectedAcceptPresentField{"source.freq
 constexpr AnalyzerFieldDescriptor kSourceSelectedAcceptDurationMsField{"source.freq", "selected_accept_duration_ms"};
 constexpr AnalyzerFieldDescriptor kSourceSelectedRejectPeakMsField{"source.freq", "selected_reject_peak_ms"};
 constexpr AnalyzerFieldDescriptor kSourceSelectedRejectDurationMsField{"source.freq", "selected_reject_duration_ms"};
-constexpr AnalyzerFieldDescriptor kSourceSelectedRejectWindowSamplesField{"source.freq", "selected_reject_window_samples"};
+constexpr AnalyzerFieldDescriptor kSourceSelectedRejectSampleCountField{"source.freq", "selected_reject_sample_count"};
 constexpr AnalyzerFieldDescriptor kSourceAnalyzerMissReasonField{"source.freq", "analyzer_miss_reason"};
 constexpr AnalyzerFieldDescriptor kSourceSelectedRejectReasonField{"source.freq", "selected_reject_reason"};
 constexpr AnalyzerFieldDescriptor kSourceSelectedRejectGateReasonField{"source.freq", "selected_reject_gate_reason"};
@@ -511,7 +511,7 @@ void printFrequencyMatchSourceDetail(
         Serial.print(' ');
         printField(kSourceLastCandidateDurationMsField, frequencyLastCandidate.durationMs);
         Serial.print(' ');
-        printField(kSourceLastCandidateWindowSamplesField, frequencyLastCandidate.windowSamples);
+        printField(kSourceLastCandidateSampleCountField, frequencyLastCandidate.sampleCount);
         Serial.print(' ');
         printField(kSourceFreqPeakScoreField, frequencyLastCandidate.peakPrimary, 1);
         Serial.print(' ');
@@ -789,7 +789,7 @@ void printScalarTransientSourceDetail(
             Serial.print(' ');
             printField(kSourceLastCandidateDurationMsField, scalarLastCandidate.durationMs);
             Serial.print(' ');
-            printField(kSourceLastCandidateWindowSamplesField, scalarLastCandidate.windowSamples);
+            printField(kSourceLastCandidateSampleCountField, scalarLastCandidate.sampleCount);
             Serial.print(' ');
             printField(kSourceScalarPeakStrengthField, scalarLastCandidate.peakPrimary, 1);
             Serial.print(' ');
@@ -1921,11 +1921,11 @@ void AnalyzerApp::printDetectionParameters() const {
     Serial.println(selectedProfile.frequencyMatch.releaseContrastMin, 1);
 
     const unsigned long sampleRateHz = _audioSource.sampleRateHz() > 0 ? _audioSource.sampleRateHz() : 16000UL;
-    const unsigned long windowSamples = _freqBandStream.windowSizeSamples();
+    const unsigned long windowSizeSamples = _freqBandStream.windowSizeSamples();
     const unsigned long frequencyUpdateEverySamples = _freqBandStream.frequencyUpdateEverySamples();
     const unsigned long ageSamples = _freqBandStream.lastPacketAgeSamples();
     const float windowMs = sampleRateHz > 0
-        ? (static_cast<float>(windowSamples) * 1000.0f) / static_cast<float>(sampleRateHz)
+        ? (static_cast<float>(windowSizeSamples) * 1000.0f) / static_cast<float>(sampleRateHz)
         : 0.0f;
     const float updateStepMs = sampleRateHz > 0
         ? (static_cast<float>(frequencyUpdateEverySamples) * 1000.0f) / static_cast<float>(sampleRateHz)
@@ -1936,7 +1936,7 @@ void AnalyzerApp::printDetectionParameters() const {
 
     Serial.print("FREQBAND runtime:");
     Serial.print(" freq.window_samples=");
-    Serial.print(windowSamples);
+    Serial.print(windowSizeSamples);
     Serial.print(" freq.window_ms=");
     Serial.print(windowMs, 2);
     Serial.print(" freq.update_every_samples=");

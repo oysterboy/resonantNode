@@ -83,7 +83,7 @@ struct SourceCandidateSnapshot {
     bool present = false;
     unsigned long peakMs = 0;
     unsigned long durationMs = 0;
-    unsigned long windowSamples = 0;
+    unsigned long sampleCount = 0;
     float peakPrimary = 0.0f;
     float peakSecondary = 0.0f;
     const char* reason = "none";
@@ -134,7 +134,7 @@ struct DetectionDiagnostics {
     unsigned long frequencyContrastMaxMs = 0;
     float frequencyPeakScore = 0.0f;
     float frequencyPeakContrast = 0.0f;
-    unsigned long frequencyPeakWindowSampleCount = 0;
+    unsigned long frequencyPeakSampleCount = 0;
     SourceCandidateSummary sourceSummary = {};
     SourceCandidateSnapshot sourceLastCandidate = {};
     float frequencyScoreThreshold = 0.0f;

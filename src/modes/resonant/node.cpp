@@ -870,11 +870,11 @@ void Node::handleDetectCommand(const char* line) {
     Serial.print(" output_busy=");
     Serial.print(_behavior.outputBusy() ? 1 : 0);
     const unsigned long sampleRateHz = _audioSource.sampleRateHz() > 0 ? _audioSource.sampleRateHz() : 16000UL;
-    const unsigned long windowSamples = _freqBandStream.windowSizeSamples();
+    const unsigned long windowSizeSamples = _freqBandStream.windowSizeSamples();
     const unsigned long frequencyUpdateEverySamples = _freqBandStream.frequencyUpdateEverySamples();
     const unsigned long ageSamples = _freqBandStream.lastPacketAgeSamples();
     const float windowMs = sampleRateHz > 0
-        ? (static_cast<float>(windowSamples) * 1000.0f) / static_cast<float>(sampleRateHz)
+        ? (static_cast<float>(windowSizeSamples) * 1000.0f) / static_cast<float>(sampleRateHz)
         : 0.0f;
     const float updateStepMs = sampleRateHz > 0
         ? (static_cast<float>(frequencyUpdateEverySamples) * 1000.0f) / static_cast<float>(sampleRateHz)
@@ -883,7 +883,7 @@ void Node::handleDetectCommand(const char* line) {
         ? (static_cast<float>(ageSamples) * 1000.0f) / static_cast<float>(sampleRateHz)
         : 0.0f;
     Serial.print(" freq.window_samples=");
-    Serial.print(windowSamples);
+    Serial.print(windowSizeSamples);
     Serial.print(" freq.window_ms=");
     Serial.print(windowMs, 2);
     Serial.print(" freq.update_every_samples=");

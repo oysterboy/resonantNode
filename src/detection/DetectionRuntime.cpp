@@ -185,7 +185,7 @@ void DetectionRuntime::captureDiagnostics() {
         _diagnostics.frequencyContrastMaxMs = detector.diagnosticsContrastMaxMs;
         _diagnostics.frequencyPeakScore = detector.candidatePeakScore;
         _diagnostics.frequencyPeakContrast = detector.candidatePeakContrast;
-        _diagnostics.frequencyPeakWindowSampleCount = detector.candidatePeakWindowSampleCount;
+        _diagnostics.frequencyPeakSampleCount = detector.candidatePeakSampleCount;
         _diagnostics.frequencyScoreThreshold = detector.attackScoreThreshold;
         _diagnostics.frequencyContrastThreshold = detector.attackContrastThreshold;
         const bool scoreNear = _diagnostics.frequencyScoreThreshold > 0.0f
@@ -243,7 +243,7 @@ void DetectionRuntime::captureDiagnostics() {
         _diagnostics.sourceLastCandidate.present = detector.candidateActive || detector.candidateClosed || detector.candidateEmitted || detector.candidateOpenMs > 0;
         _diagnostics.sourceLastCandidate.peakMs = detector.candidatePeakMs;
         _diagnostics.sourceLastCandidate.durationMs = detector.candidateDurationMs;
-        _diagnostics.sourceLastCandidate.windowSamples = detector.candidatePeakWindowSampleCount;
+        _diagnostics.sourceLastCandidate.sampleCount = detector.candidatePeakSampleCount;
         _diagnostics.sourceLastCandidate.peakPrimary = detector.candidatePeakScore;
         _diagnostics.sourceLastCandidate.peakSecondary = detector.candidatePeakContrast;
         _diagnostics.sourceLastCandidate.reason = detector.noEmitReason;
@@ -280,7 +280,7 @@ void DetectionRuntime::captureDiagnostics() {
         _diagnostics.frequencyContrastMaxMs = detector.diagnosticsContrastMaxMs;
         _diagnostics.frequencyPeakScore = detector.candidatePeakScore;
         _diagnostics.frequencyPeakContrast = detector.candidatePeakContrast;
-        _diagnostics.frequencyPeakWindowSampleCount = detector.candidatePeakWindowSampleCount;
+        _diagnostics.frequencyPeakSampleCount = detector.candidatePeakSampleCount;
     } else {
         _diagnostics.scalarRejectReason = _scalarEmitter.lastTransientRejectReasonName();
         _diagnostics.scalarNoEmitReason = _diagnostics.scalarRejectReason;
@@ -314,7 +314,7 @@ void DetectionRuntime::captureDiagnostics() {
             || _scalarEmitter.candidateFirstSeenMs() > 0;
         _diagnostics.sourceLastCandidate.peakMs = _scalarEmitter.candidatePeakMs();
         _diagnostics.sourceLastCandidate.durationMs = _scalarEmitter.transientDurationMs();
-        _diagnostics.sourceLastCandidate.windowSamples = 0;
+        _diagnostics.sourceLastCandidate.sampleCount = 0;
         _diagnostics.sourceLastCandidate.peakPrimary = _scalarEmitter.candidatePeakStrength();
         _diagnostics.sourceLastCandidate.peakSecondary = 0.0f;
         _diagnostics.sourceLastCandidate.reason = _scalarEmitter.lastTransientRejectReasonName();
@@ -372,7 +372,7 @@ void DetectionRuntime::captureDiagnostics() {
         _diagnostics.frequencyContrastMaxMs = 0;
         _diagnostics.frequencyPeakScore = 0.0f;
         _diagnostics.frequencyPeakContrast = 0.0f;
-        _diagnostics.frequencyPeakWindowSampleCount = 0;
+        _diagnostics.frequencyPeakSampleCount = 0;
         _diagnostics.frequencyScoreThreshold = 0.0f;
         _diagnostics.frequencyContrastThreshold = 0.0f;
         _diagnostics.frequencyNearMiss = false;
@@ -401,7 +401,7 @@ void DetectionRuntime::captureDiagnostics() {
         _diagnostics.frequencyContrastMaxMs = 0;
         _diagnostics.frequencyPeakScore = _diagnostics.scalarPeakStrength;
         _diagnostics.frequencyPeakContrast = 0.0f;
-        _diagnostics.frequencyPeakWindowSampleCount = 0;
+        _diagnostics.frequencyPeakSampleCount = 0;
     }
     _diagnostics.detectorKind = _occurrenceSourceKind == OccurrenceSourceKind::FrequencyMatch
         ? "frequency_match"

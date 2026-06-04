@@ -68,7 +68,7 @@ public:
     bool validRelease = false;
     float candidatePeakScore = 0.0f;
     float candidatePeakContrast = 0.0f;
-    unsigned long candidatePeakWindowSampleCount = 0;
+    unsigned long candidatePeakSampleCount = 0;
     unsigned long candidateMinDurationMs = 0;
     unsigned long candidateMaxDurationMs = 0;
     unsigned long diagCurrentMatchStreakFrames = 0;
@@ -80,7 +80,7 @@ public:
     uint64_t bestObservedSample = 0;
     float bestScore = 0.0f;
     float bestContrast = 0.0f;
-    unsigned long bestWindowSampleCount = 0;
+    unsigned long bestPeakSampleCount = 0;
     unsigned long candidateCount = 0;
     unsigned long rejectedCount = 0;
     unsigned long bestDurationMs = 0;

@@ -378,7 +378,7 @@ struct AnalyzerSourceCandidateSnapshot {
     bool present = false;
     unsigned long peakMs = 0;
     unsigned long durationMs = 0;
-    unsigned long windowSamples = 0;
+    unsigned long sampleCount = 0;
     float peakPrimary = 0.0f;
     float peakSecondary = 0.0f;
     const char* reason = "none";
@@ -457,7 +457,7 @@ struct AnalyzerFrequencyDiagnostic {
     float minContrast = 0.0f;
     float peakScore = 0.0f;
     float peakContrast = 0.0f;
-    unsigned long peakWindowSampleCount = 0;
+    unsigned long peakSampleCount = 0;
     AnalyzerSourceCandidateSummary sourceSummary = {};
     AnalyzerSourceCandidateSnapshot sourceLastCandidate = {};
 

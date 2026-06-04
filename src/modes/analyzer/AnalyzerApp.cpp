@@ -1503,7 +1503,7 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
         report.frequency.minContrast = runtimeDiag->frequencyContrastMin;
         report.frequency.peakScore = runtimeDiag->frequencyPeakScore;
         report.frequency.peakContrast = runtimeDiag->frequencyPeakContrast;
-        report.frequency.peakWindowSampleCount = runtimeDiag->frequencyPeakWindowSampleCount;
+        report.frequency.peakSampleCount = runtimeDiag->frequencyPeakSampleCount;
         report.frequency.sourceSummary.present = runtimeDiag->sourceSummary.present;
         report.frequency.sourceSummary.origin = "runtime_frequency_diag";
         report.frequency.sourceSummary.candidateCount = runtimeDiag->sourceSummary.candidateCount;
@@ -1533,7 +1533,7 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
         report.frequency.sourceLastCandidate.present = runtimeDiag->sourceLastCandidate.present;
         report.frequency.sourceLastCandidate.peakMs = runtimeDiag->sourceLastCandidate.peakMs;
         report.frequency.sourceLastCandidate.durationMs = runtimeDiag->sourceLastCandidate.durationMs;
-        report.frequency.sourceLastCandidate.windowSamples = runtimeDiag->sourceLastCandidate.windowSamples;
+        report.frequency.sourceLastCandidate.sampleCount = runtimeDiag->sourceLastCandidate.sampleCount;
         report.frequency.sourceLastCandidate.peakPrimary = runtimeDiag->sourceLastCandidate.peakPrimary;
         report.frequency.sourceLastCandidate.peakSecondary = runtimeDiag->sourceLastCandidate.peakSecondary;
         report.frequency.sourceLastCandidate.reason = runtimeDiag->sourceLastCandidate.reason;
@@ -1548,7 +1548,7 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
             report.frequency.sourceLastCandidate.present = false;
             report.frequency.sourceLastCandidate.peakMs = 0;
             report.frequency.sourceLastCandidate.durationMs = 0;
-            report.frequency.sourceLastCandidate.windowSamples = 0;
+            report.frequency.sourceLastCandidate.sampleCount = 0;
             report.frequency.sourceLastCandidate.peakPrimary = 0.0f;
             report.frequency.sourceLastCandidate.peakSecondary = 0.0f;
             report.frequency.sourceLastCandidate.reason = "none";
@@ -1729,7 +1729,7 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
             || report.scalar.scalarEmitAllowed;
         report.scalar.sourceLastCandidate.peakMs = report.scalar.scalarPeakMs;
         report.scalar.sourceLastCandidate.durationMs = report.scalar.scalarDurationMs;
-        report.scalar.sourceLastCandidate.windowSamples = 0UL;
+        report.scalar.sourceLastCandidate.sampleCount = 0UL;
         report.scalar.sourceLastCandidate.peakPrimary = report.scalar.scalarPeakStrength;
         report.scalar.sourceLastCandidate.peakSecondary = 0.0f;
         report.scalar.sourceLastCandidate.reason = report.scalar.scalarRejectReason != nullptr ? report.scalar.scalarRejectReason : "none";

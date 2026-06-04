@@ -683,7 +683,7 @@ frequency-specific source detail:
 - report.frequency.releaseScoreOkFrames / releaseContrastOkFrames / releaseBothOkFrames
 - report.frequency.releaseScoreTooLowFrames / releaseContrastTooLowFrames / releaseScoreAndContrastTooLowFrames / releaseNoEvidenceFrames
 - report.frequency.scoreThreshold / contrastThreshold / maxScore / maxScoreMs / maxContrast / maxContrastMs
-- report.frequency.peakScore / peakContrast / peakWindowSampleCount
+- report.frequency.peakScore / peakContrast / peakSampleCount
 - report.frequency.freqEvidenceClass
 - report.frequency.nearMiss / nearMissReason
 
@@ -1577,6 +1577,12 @@ Target-band metrics are not described as generic frequency activity.
 ---
 
 ## 04.6 Window audit
+
+Status:
+
+```text
+DONE
+```
 
 Search:
 

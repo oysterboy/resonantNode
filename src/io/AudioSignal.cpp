@@ -51,7 +51,7 @@ void AudioSignal::rebase() {
 // Sample and block processing
 // -----------------------------------------------------------------------------
 
-bool AudioSignal::update(int sample, uint32_t sampleTimeUs, AudioSignalFrame& outFrame) {
+bool AudioSignal::update(int sample, uint32_t sampleTimeUs, AudioSamplePacket& outFrame) {
     _lastBlock.samples = nullptr;
     _lastBlock.sampleCount = 1;
     const uint64_t sampleIndex = _stats.samplesProcessed;
@@ -177,7 +177,7 @@ uint32_t AudioSignal::sampleTimeUs() const {
     return _sampleTimeUs;
 }
 
-const AudioSignalFrame& AudioSignal::latestFrame() const {
+const AudioSamplePacket& AudioSignal::latestFrame() const {
     return _latestFrame;
 }
 
@@ -211,15 +211,15 @@ void AudioSignal::emitCurveSample(uint32_t sampleTimeUs) {
     _curveSampleCallback(snapshot, _curveSampleCallbackContext);
 }
 
-void AudioSignal::emitFrame(AudioSignalFrame& outFrame, uint64_t sampleIndex, uint32_t sampleTimeUs, uint32_t sampleTimeMs, unsigned long sampleRateHz, bool blockOverflow) {
+void AudioSignal::emitFrame(AudioSamplePacket& outFrame, uint64_t sampleIndex, uint32_t sampleTimeUs, uint32_t sampleTimeMs, unsigned long sampleRateHz, bool blockOverflow) {
     outFrame = {};
     outFrame.sampleIndex = sampleIndex;
-    outFrame.sampleTimeUs = sampleTimeUs;
-    outFrame.sampleTimeMs = sampleTimeMs;
+    outFrame.timeUs = sampleTimeUs;
+    outFrame.timeMs = sampleTimeMs;
     outFrame.sampleRateHz = sampleRateHz;
-    outFrame.rawSample = _rawSignal;
-    outFrame.centeredSample = _centeredSignal;
-    outFrame.centeredMagnitude = static_cast<float>(abs(_centeredSignal));
+    outFrame.rawAudioValue = _rawSignal;
+    outFrame.centeredAudioValue = _centeredSignal;
+    outFrame.audioMagnitudeValue = static_cast<float>(abs(_centeredSignal));
     outFrame.level = _signalMagnitude;
     outFrame.smoothedLevel = static_cast<int>(_smoothedSignalMagnitude);
     outFrame.baseline = _baseline;

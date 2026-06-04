@@ -125,13 +125,13 @@ void AnalyzerApp::runRawBandTrigger(unsigned long toneHz,
             return false;
         }
 
-        AudioSignalFrame frame = {};
+        AudioSamplePacket frame = {};
         if (!_audioSignal.update(rawSample, sampleTimeUs, frame)) {
             return false;
         }
 
-        const int centeredSample = frame.centeredSample;
-        band.observeCenteredSample(centeredSample, frame.sampleTimeMs);
+        const int centeredSample = frame.centeredAudioValue;
+        band.observeCenteredSample(centeredSample, frame.timeMs);
         if (band.updatedOnLastObserve()) {
             ++freshSamples;
         } else {

@@ -496,11 +496,11 @@ void Node::update() {
         const uint32_t sampleRateHz = _audioSource.sampleRateHz() > 0 ? _audioSource.sampleRateHz() : 16000UL;
         for (uint16_t i = 0; i < block.sampleCount; ++i) {
             const uint32_t sampleTimeUs = block.approxStartMicros + sampleOffsetUs(static_cast<uint32_t>(i), sampleRateHz);
-            AudioSignalFrame frame;
+            AudioSamplePacket frame;
             _audioSignal.update(static_cast<int>(block.samples[i]), sampleTimeUs, frame);
-            const bool ownEmitSuppressed = frame.sampleTimeMs < _behavior.ownEmitDetectionSuppressUntilMs();
+            const bool ownEmitSuppressed = frame.timeMs < _behavior.ownEmitDetectionSuppressUntilMs();
             if (!ownEmitSuppressed) {
-                _freqBandStream.observeCenteredSample(frame.centeredSample, frame.sampleTimeMs);
+                _freqBandStream.observeCenteredSample(frame.centeredAudioValue, frame.timeMs);
                 processDetectionFrame(frame, now, selfChirpSuppressed, sawPatternThisLoop);
             }
         }
@@ -982,12 +982,12 @@ void Node::applyActiveBehaviorGateConfig() {
     _behavior.configure(activeBehaviorProfile());
 }
 
-void Node::processDetectionFrame(const AudioSignalFrame& frame,
+void Node::processDetectionFrame(const AudioSamplePacket& frame,
                               unsigned long now,
                               bool selfChirpSuppressed,
                               bool& sawPatternThisLoop) {
-    const auto liveFrequencyFrame = captureFrequencyFeatureFrame(frame.sampleTimeMs);
-    _detection.observeFrame(frame, liveFrequencyFrame, frame.sampleTimeMs);
+    const auto liveFrequencyFrame = captureFrequencyFeatureFrame(frame.timeMs);
+    _detection.observeFrame(frame, liveFrequencyFrame, frame.timeMs);
 
     detection::PatternResult patternResult;
     while (_detection.popPatternResult(patternResult)) {

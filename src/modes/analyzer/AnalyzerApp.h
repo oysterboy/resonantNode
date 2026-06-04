@@ -74,7 +74,7 @@ public:
     unsigned long loopDelayMs() const;
 
 private:
-    void updateSequenceAudioHealth(const AudioSignalFrame& frame);
+    void updateSequenceAudioHealth(const AudioSamplePacket& frame);
     void printSystemHealth(const AnalyzerReport& report) const;
     unsigned long activeRunStartMs() const;
     unsigned long activeRunEndMs() const;

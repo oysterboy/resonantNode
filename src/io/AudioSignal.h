@@ -19,16 +19,16 @@ struct CurveSnapshot {
     bool open = false;
 };
 
-struct AudioSignalFrame {
+struct AudioSamplePacket {
     uint64_t sampleIndex = 0;
     // Wall-clock-derived sample time for this frame.
-    uint32_t sampleTimeUs = 0;
+    uint32_t timeUs = 0;
     // Runtime event time used by detection/analyzer/behavior.
-    uint32_t sampleTimeMs = 0;
+    uint32_t timeMs = 0;
     unsigned long sampleRateHz = 0;
-    int rawSample = 0;
-    int centeredSample = 0;
-    float centeredMagnitude = 0.0f;
+    int rawAudioValue = 0;
+    int centeredAudioValue = 0;
+    float audioMagnitudeValue = 0.0f;
     int level = 0;
     int smoothedLevel = 0;
     float baseline = 0.0f;
@@ -164,7 +164,7 @@ public:
 
     void begin(bool doRebase = true);
     void rebase();
-    bool update(int sample, uint32_t sampleTimeUs, AudioSignalFrame& outFrame);
+    bool update(int sample, uint32_t sampleTimeUs, AudioSamplePacket& outFrame);
     void processBlock(const AudioBlock& block);
 
     void setBaselineTrackingQuietThreshold(int value);
@@ -179,7 +179,7 @@ public:
     int signalMagnitude() const;
     int smoothedSignalMagnitude() const;
     uint32_t sampleTimeUs() const;
-    const AudioSignalFrame& latestFrame() const;
+    const AudioSamplePacket& latestFrame() const;
     const AudioBlock& lastBlock() const;
     uint64_t lastBlockStartSample() const;
     uint16_t lastBlockSampleCount() const;
@@ -198,7 +198,7 @@ private:
     AudioSource& _source;
 
     void processSample(int sample, uint32_t sampleTimeUs, uint64_t sampleIndex, uint32_t sampleRateHz, bool blockOverflow);
-    void emitFrame(AudioSignalFrame& outFrame, uint64_t sampleIndex, uint32_t sampleTimeUs, uint32_t sampleTimeMs, unsigned long sampleRateHz, bool blockOverflow);
+    void emitFrame(AudioSamplePacket& outFrame, uint64_t sampleIndex, uint32_t sampleTimeUs, uint32_t sampleTimeMs, unsigned long sampleRateHz, bool blockOverflow);
     void emitCurveSample(uint32_t sampleTimeUs);
 
     int _rawSignal = 0;
@@ -207,7 +207,7 @@ private:
     uint32_t _sampleTimeUs = 0;
     float _baseline = 2000.0f;
     float _smoothedSignalMagnitude = 0.0f;
-    AudioSignalFrame _latestFrame;
+    AudioSamplePacket _latestFrame;
     AudioBlock _lastBlock;
     uint64_t _lastBlockStartSample = 0;
     uint16_t _lastBlockSampleCount = 0;

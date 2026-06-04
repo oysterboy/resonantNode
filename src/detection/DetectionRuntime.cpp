@@ -23,10 +23,10 @@ OccurrenceSource occurrenceSourceForStream(FeatureStreamId stream) {
     }
 }
 
-float selectedScalarValue(const AudioSignalFrame& frame, const FrequencyFeatureFrame& frequencyEvidence, FeatureStreamId stream) {
+float selectedScalarValue(const AudioSamplePacket& frame, const FrequencyFeatureFrame& frequencyEvidence, FeatureStreamId stream) {
     switch (stream) {
         case FeatureStreamId::AmpEnvelope:
-            return frame.centeredMagnitude;
+            return frame.audioMagnitudeValue;
         case FeatureStreamId::FrequencyScore:
             return frequencyEvidence.score;
         case FeatureStreamId::FrequencyContrast:
@@ -444,7 +444,7 @@ void DetectionRuntime::setProfileName(const char* profileName) {
 }
 
 void DetectionRuntime::observeFrame(
-    const AudioSignalFrame& frame,
+    const AudioSamplePacket& frame,
     const FrequencyFeatureFrame& frequencyEvidence,
     unsigned long nowMs
 ) {

@@ -7,7 +7,7 @@
 /*
 FeatureExtractor
 
-Small helper namespace that derives feature-history samples from AudioSignalFrame.
+Small helper namespace that derives feature-history samples from AudioSamplePacket.
 It measures feature streams only; it does not emit candidates or classify patterns.
 Producer emits a fresh feature sample or packet, sends it to FeatureHistory, and
 sends it to the selected OccurrenceSource in parallel. FeatureHistory is not the
@@ -15,12 +15,12 @@ live pipe into OccurrenceSource.
 */
 namespace detection::FeatureExtractor {
 
-inline void observeFrame(const AudioSignalFrame& frame, FeatureHistory& history) {
+inline void observeFrame(const AudioSamplePacket& frame, FeatureHistory& history) {
     if (!frame.valid) {
         return;
     }
 
-    history.record(FeatureStreamId::AmpEnvelope, frame.sampleTimeMs, frame.centeredMagnitude);
+    history.record(FeatureStreamId::AmpEnvelope, frame.timeMs, frame.audioMagnitudeValue);
 }
 
 inline void observeFrequencyFeatureFrame(const FrequencyFeatureFrame& evidence, unsigned long nowMs, FeatureHistory& history) {

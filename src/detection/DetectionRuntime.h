@@ -28,7 +28,7 @@ Owns the active detection pipeline wiring:
 feature observation, occurrence emission, occurrence inspection, pattern assembly,
 pattern rules, field-state tracking, and PatternResult queueing.
 
-Consumes AudioSignalFrame and FrequencyFeatureFrame.
+Consumes AudioSamplePacket and FrequencyFeatureFrame.
 Produces PatternResult and FieldState.
 Does not decide behavior or output.
 Feature producers fan out fresh samples to FeatureHistory and the selected
@@ -215,7 +215,7 @@ public:
     void setProfileName(const char* profileName);
 
     void observeFrame(
-        const AudioSignalFrame& frame,
+        const AudioSamplePacket& frame,
         const FrequencyFeatureFrame& frequencyEvidence,
         unsigned long nowMs
     );

@@ -1416,6 +1416,12 @@ Archive docs untouched.
 
 ## 04.2 Rename AudioSignalFrame to AudioSamplePacket
 
+Status:
+
+```text
+DONE
+```
+
 Target:
 
 ```text
@@ -1676,7 +1682,9 @@ Code logic branches on enums/types/reasons, not labels.
 
 Update:
 
+
 ```text
+myspec
 Detection architecture spec
 Analyzer roadmap/current diagnostics docs
 Detection roadmap/current pass docs

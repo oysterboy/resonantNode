@@ -12,7 +12,7 @@ namespace detection {
 FrequencyOccurrenceSource
 
 Owns the frequency-match occurrence candidate path.
-Wraps FrequencyMatchDetector to produce frequency candidates from AudioSignalFrame
+Wraps FrequencyMatchDetector to produce frequency candidates from AudioSamplePacket
 and FrequencyFeatureFrame input.
 Does not decide pattern meaning or behavior.
 Only fresh measurement packets advance the attack/release lifecycle; stale held
@@ -28,7 +28,7 @@ public:
     void setDiagnosticsEnabled(bool enabled);
 
     void observeFrame(
-        const AudioSignalFrame& frame,
+        const AudioSamplePacket& frame,
         const detection::FrequencyFeatureFrame& evidence
     );
 

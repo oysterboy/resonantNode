@@ -173,14 +173,14 @@ const char* systemResetReasonName(esp_reset_reason_t reason) {
     }
 }
 
-void AnalyzerApp::updateSequenceAudioHealth(const AudioSignalFrame& frame) {
+void AnalyzerApp::updateSequenceAudioHealth(const AudioSamplePacket& frame) {
     if (!_sequenceTest.active || _sequenceTest.currentTrial == 0 || _sequenceTest.currentTrialFinalized) {
         return;
     }
 
     auto& diagnostics = _sequenceTest.currentTrialDiagnostics;
-    const long centeredSample = static_cast<long>(frame.centeredSample);
-    const long rawSample = static_cast<long>(frame.rawSample);
+    const long centeredSample = static_cast<long>(frame.centeredAudioValue);
+    const long rawSample = static_cast<long>(frame.rawAudioValue);
     const unsigned long absCentered = static_cast<unsigned long>(centeredSample >= 0 ? centeredSample : -centeredSample);
     const unsigned long absRaw = static_cast<unsigned long>(rawSample >= 0 ? rawSample : -rawSample);
     const unsigned long delta = diagnostics.audioHasLastCenteredSample
@@ -208,17 +208,17 @@ void AnalyzerApp::updateSequenceAudioHealth(const AudioSignalFrame& frame) {
     }
 
     ++diagnostics.rawFrames;
-    diagnostics.rawSum += static_cast<int32_t>(frame.rawSample);
+    diagnostics.rawSum += static_cast<int32_t>(frame.rawAudioValue);
     diagnostics.rawAbsSum += static_cast<uint32_t>(absCentered);
     if (diagnostics.rawFrames == 1) {
-        diagnostics.rawMin = frame.rawSample;
-        diagnostics.rawMax = frame.rawSample;
+        diagnostics.rawMin = frame.rawAudioValue;
+        diagnostics.rawMax = frame.rawAudioValue;
     } else {
-        if (frame.rawSample < diagnostics.rawMin) {
-            diagnostics.rawMin = frame.rawSample;
+        if (frame.rawAudioValue < diagnostics.rawMin) {
+            diagnostics.rawMin = frame.rawAudioValue;
         }
-        if (frame.rawSample > diagnostics.rawMax) {
-            diagnostics.rawMax = frame.rawSample;
+        if (frame.rawAudioValue > diagnostics.rawMax) {
+            diagnostics.rawMax = frame.rawAudioValue;
         }
     }
     if (absCentered > diagnostics.rawMaxAbs) {
@@ -870,36 +870,36 @@ void AnalyzerApp::update() {
         const uint32_t sampleRateHz = _audioSource.sampleRateHz() > 0 ? _audioSource.sampleRateHz() : 16000UL;
         for (uint16_t i = 0; i < block.sampleCount; ++i) {
             const uint32_t sampleTimeUs = block.approxStartMicros + sampleOffsetUs(static_cast<uint32_t>(i), sampleRateHz);
-            AudioSignalFrame frame;
+            AudioSamplePacket frame;
             _audioSignal.update(static_cast<int>(block.samples[i]), sampleTimeUs, frame);
             updateSequenceAudioHealth(frame);
             if (_sequenceTest.outputConfig.frequencyBandEnabled) {
-                _freqBandStream.observeCenteredSample(frame.centeredSample, frame.sampleTimeMs);
+                _freqBandStream.observeCenteredSample(frame.centeredAudioValue, frame.timeMs);
             }
             if (_sequenceTest.active && _sequenceTest.currentTrial > 0) {
-                const unsigned long processingLagMs = millis() > frame.sampleTimeMs
-                    ? millis() - frame.sampleTimeMs
+                const unsigned long processingLagMs = millis() > frame.timeMs
+                    ? millis() - frame.timeMs
                     : 0UL;
                 if (processingLagMs > _sequenceTest.maxProcessingLagMs) {
                     _sequenceTest.maxProcessingLagMs = processingLagMs;
                 }
-                if (frame.sampleTimeMs >= _sequenceTest.currentTrialStartMs &&
-                    frame.sampleTimeMs <= _sequenceTest.currentTrialEndMs) {
+                if (frame.timeMs >= _sequenceTest.currentTrialStartMs &&
+                    frame.timeMs <= _sequenceTest.currentTrialEndMs) {
                     ++_sequenceTest.currentTrialSamplesProcessed;
                 }
                 detection::FrequencyFeatureFrame runtimeFrequencyFrame = {};
                 if (_sequenceTest.outputConfig.frequencyBandEnabled) {
-                    runtimeFrequencyFrame = captureFrequencyFeatureFrame(frame.sampleTimeMs);
+                    runtimeFrequencyFrame = captureFrequencyFeatureFrame(frame.timeMs);
                 } else {
-                    runtimeFrequencyFrame.observedAtMs = frame.sampleTimeMs;
+                    runtimeFrequencyFrame.observedAtMs = frame.timeMs;
                 }
-                _detection->observeFrame(frame, runtimeFrequencyFrame, frame.sampleTimeMs);
+                _detection->observeFrame(frame, runtimeFrequencyFrame, frame.timeMs);
                 while (_detection->popPatternResult(_sequenceTest.currentTrialDiagnostics.runtimePatternResult)) {
                     _sequenceTest.currentTrialDiagnostics.runtimePatternCaptured = true;
                     _sequenceTest.currentTrialDiagnostics.runtimeFieldState = _detection->fieldState();
                     handleSequenceCandidate(_sequenceTest.currentTrialDiagnostics.runtimePatternResult, &runtimeFrequencyFrame);
                 }
-                updateSequenceAmbientStats(frame.sampleTimeMs);
+                updateSequenceAmbientStats(frame.timeMs);
             }
         }
         processedSamples += static_cast<int>(block.sampleCount);

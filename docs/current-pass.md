@@ -1508,6 +1508,12 @@ Frequency measurement packet does not contain detector decisions.
 
 ## 04.4 Rename frequency cadence fields
 
+Status:
+
+```text
+DONE
+```
+
 Target:
 
 ```text

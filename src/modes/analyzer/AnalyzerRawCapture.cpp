@@ -94,7 +94,7 @@ void AnalyzerApp::runRawBandTrigger(unsigned long toneHz,
     band.setTargetFrequencyHz(_freqBandStream.targetFrequencyHz());
     band.setSampleRateHz(sampleRateHz);
     band.setWindowSizeSamples(_freqBandStream.windowSizeSamples());
-    band.setComputeDecimation(decim);
+    band.setFrequencyUpdateEverySamples(decim);
 
     int16_t* rawBuffer = static_cast<int16_t*>(malloc(static_cast<size_t>(maxSamples) * sizeof(int16_t)));
     if (rawBuffer == nullptr) {
@@ -132,7 +132,7 @@ void AnalyzerApp::runRawBandTrigger(unsigned long toneHz,
 
         const int centeredSample = frame.centeredAudioValue;
         band.observeCenteredSample(centeredSample, frame.timeMs);
-        if (band.updatedOnLastObserve()) {
+        if (band.producedFreshPacketOnLastObserve()) {
             ++freshSamples;
         } else {
             ++heldSamples;
@@ -194,7 +194,7 @@ void AnalyzerApp::runRawBandTrigger(unsigned long toneHz,
     dumpBand.setTargetFrequencyHz(_freqBandStream.targetFrequencyHz());
     dumpBand.setSampleRateHz(sampleRateHz);
     dumpBand.setWindowSizeSamples(_freqBandStream.windowSizeSamples());
-    dumpBand.setComputeDecimation(decim);
+    dumpBand.setFrequencyUpdateEverySamples(decim);
 
     for (unsigned long i = 0; i < capturedSamples; ++i) {
         dumpBand.observeCenteredSample(static_cast<int>(rawBuffer[i]));
@@ -216,9 +216,9 @@ void AnalyzerApp::runRawBandTrigger(unsigned long toneHz,
         Serial.print(" total_energy=");
         Serial.print(dumpBand.lastTotalEnergy(), 1);
         Serial.print(" updated=");
-        Serial.print(dumpBand.updatedOnLastObserve() ? 1 : 0);
+        Serial.print(dumpBand.producedFreshPacketOnLastObserve() ? 1 : 0);
         Serial.print(" age_samples=");
-        Serial.println(dumpBand.evidenceAgeSamples());
+        Serial.println(dumpBand.lastPacketAgeSamples());
     }
 
     Serial.print("RAWBAND_SUMMARY id=");

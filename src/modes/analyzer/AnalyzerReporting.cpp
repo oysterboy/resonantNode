@@ -1922,13 +1922,13 @@ void AnalyzerApp::printDetectionParameters() const {
 
     const unsigned long sampleRateHz = _audioSource.sampleRateHz() > 0 ? _audioSource.sampleRateHz() : 16000UL;
     const unsigned long windowSamples = _freqBandStream.windowSizeSamples();
-    const unsigned long computeDecimation = _freqBandStream.computeDecimation();
-    const unsigned long ageSamples = _freqBandStream.evidenceAgeSamples();
+    const unsigned long frequencyUpdateEverySamples = _freqBandStream.frequencyUpdateEverySamples();
+    const unsigned long ageSamples = _freqBandStream.lastPacketAgeSamples();
     const float windowMs = sampleRateHz > 0
         ? (static_cast<float>(windowSamples) * 1000.0f) / static_cast<float>(sampleRateHz)
         : 0.0f;
     const float updateStepMs = sampleRateHz > 0
-        ? (static_cast<float>(computeDecimation) * 1000.0f) / static_cast<float>(sampleRateHz)
+        ? (static_cast<float>(frequencyUpdateEverySamples) * 1000.0f) / static_cast<float>(sampleRateHz)
         : 0.0f;
     const float ageMs = sampleRateHz > 0
         ? (static_cast<float>(ageSamples) * 1000.0f) / static_cast<float>(sampleRateHz)
@@ -1939,17 +1939,17 @@ void AnalyzerApp::printDetectionParameters() const {
     Serial.print(windowSamples);
     Serial.print(" freq.window_ms=");
     Serial.print(windowMs, 2);
-    Serial.print(" freq.compute_decimation=");
-    Serial.print(computeDecimation);
-    Serial.print(" freq.update_step_ms=");
+    Serial.print(" freq.update_every_samples=");
+    Serial.print(frequencyUpdateEverySamples);
+    Serial.print(" freq.update_period_ms=");
     Serial.print(updateStepMs, 3);
     Serial.print(" freq.target_hz=");
     Serial.print(_freqBandStream.targetFrequencyHz());
-    Serial.print(" freq.updated_this_frame=");
-    Serial.print(_freqBandStream.updatedOnLastObserve() ? 1 : 0);
-    Serial.print(" freq.evidence_age_samples=");
+    Serial.print(" freq.produced_fresh_packet=");
+    Serial.print(_freqBandStream.producedFreshPacketOnLastObserve() ? 1 : 0);
+    Serial.print(" freq.packet_age_samples=");
     Serial.print(ageSamples);
-    Serial.print(" freq.evidence_age_ms=");
+    Serial.print(" freq.packet_age_ms=");
     Serial.println(ageMs, 3);
 }
 
@@ -2205,8 +2205,8 @@ void AnalyzerApp::printSequenceStatus() const {
     Serial.print(_seqOutputConfig.diagnosticsEnabled ? "on" : "off");
     Serial.print(" freqband=");
     Serial.print(_seqOutputConfig.frequencyBandEnabled ? "on" : "off");
-    Serial.print(" freqdecimate=");
-    Serial.print(_seqOutputConfig.frequencyComputeDecimation);
+    Serial.print(" freqUpdateEverySamples=");
+    Serial.print(_seqOutputConfig.frequencyUpdateEverySamples);
     Serial.println();
 }
 
@@ -2461,8 +2461,8 @@ void AnalyzerApp::printAudioRunSummary() const {
     Serial.print("FREQBAND config:");
     Serial.print(" freqband=");
     Serial.print(_seqOutputConfig.frequencyBandEnabled ? "on" : "off");
-    Serial.print(" decimation=");
-    Serial.println(_seqOutputConfig.frequencyComputeDecimation);
+    Serial.print(" updateEverySamples=");
+    Serial.println(_seqOutputConfig.frequencyUpdateEverySamples);
 
     const unsigned long freqObserveCalls = _freqBandStream.profileObserveCalls();
     const unsigned long freqComputeCalls = _freqBandStream.profileComputeCalls();
@@ -2497,7 +2497,7 @@ void AnalyzerApp::printAudioRunSummary() const {
     const unsigned long freqHeldObserveCalls = _freqBandStream.profileObserveCalls() > _freqBandStream.profileComputeCalls()
         ? _freqBandStream.profileObserveCalls() - _freqBandStream.profileComputeCalls()
         : 0UL;
-    const unsigned long freqAgeSamples = _freqBandStream.evidenceAgeSamples();
+    const unsigned long freqAgeSamples = _freqBandStream.lastPacketAgeSamples();
     const unsigned long freqComputedAtSample = _freqBandStream.sampleCount() >= freqAgeSamples
         ? _freqBandStream.sampleCount() - freqAgeSamples
         : 0UL;

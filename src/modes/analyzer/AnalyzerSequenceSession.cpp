@@ -125,7 +125,7 @@ void AnalyzerApp::startSequenceTest(unsigned long totalTrials, unsigned long per
     _detection->setDiagnosticsEnabled(_sequenceTest.outputConfig.diagnosticsEnabled);
     _freqBandStream.setSampleRateHz(_audioSource.sampleRateHz());
     _freqBandStream.setTargetFrequencyHz(toneHz);
-    _freqBandStream.setComputeDecimation(_sequenceTest.outputConfig.frequencyComputeDecimation);
+    _freqBandStream.setFrequencyUpdateEverySamples(_sequenceTest.outputConfig.frequencyUpdateEverySamples);
     _freqBandStream.resetState();
     _sequenceTest.outputConfig = _seqOutputConfig;
 

@@ -28,7 +28,7 @@ public:
     void setTargetFrequencyHz(unsigned long value);
     void setSampleRateHz(unsigned long value);
     void setWindowSizeSamples(unsigned long value);
-    void setComputeDecimation(unsigned long value);
+    void setFrequencyUpdateEverySamples(unsigned long value);
 
     void observeCenteredSample(int centeredSample, unsigned long sampleTimeMs = 0);
 
@@ -41,7 +41,7 @@ public:
     unsigned long targetFrequencyHz() const;
     unsigned long sampleRateHz() const;
     unsigned long windowSizeSamples() const;
-    unsigned long computeDecimation() const;
+    unsigned long frequencyUpdateEverySamples() const;
     unsigned long sampleCount() const;
     bool windowReady() const;
 
@@ -51,8 +51,8 @@ public:
     unsigned long profileComputeTotalUs() const;
     unsigned long profileEnergyTotalUs() const;
     unsigned long profileGoertzelTotalUs() const;
-    bool updatedOnLastObserve() const;
-    unsigned long evidenceAgeSamples() const;
+    bool producedFreshPacketOnLastObserve() const;
+    unsigned long lastPacketAgeSamples() const;
 
 private:
     float computeFrequencyScore();
@@ -64,9 +64,9 @@ private:
     unsigned long _targetFrequencyHz = runtime::kDefaultChirpFrequencyHz;
     unsigned long _sampleRateHz = 16000;
     unsigned long _windowSizeSamples = 64;
-    unsigned long _computeDecimation = 4;
-    unsigned long _computeCountdown = 0;
-    bool _updatedOnLastObserve = false;
+    unsigned long _frequencyUpdateEverySamples = 4;
+    unsigned long _samplesUntilNextFrequencyUpdate = 0;
+    bool _producedFreshPacketOnLastObserve = false;
     float _cachedTargetFrequencyHz = 0.0f;
     float _cachedLowerFrequencyHz = 0.0f;
     float _cachedUpperFrequencyHz = 0.0f;

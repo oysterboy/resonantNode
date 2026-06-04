@@ -7,8 +7,8 @@
 void FreqBandStream::resetState() {
     _sampleCount = 0;
     _sampleWriteIndex = 0;
-    _computeCountdown = 0;
-    _updatedOnLastObserve = false;
+    _samplesUntilNextFrequencyUpdate = 0;
+    _producedFreshPacketOnLastObserve = false;
     _lastFrequencyScore = 0.0f;
     _lastTargetPower = 0.0f;
     _lastNeighborPower = 0.0f;
@@ -44,21 +44,21 @@ void FreqBandStream::setWindowSizeSamples(unsigned long value) {
         value = kMaxWindowSizeSamples;
     }
     _windowSizeSamples = value;
-    _computeCountdown = 0;
+    _samplesUntilNextFrequencyUpdate = 0;
     updateCachedGoertzelCoefficients();
 }
 
-void FreqBandStream::setComputeDecimation(unsigned long value) {
+void FreqBandStream::setFrequencyUpdateEverySamples(unsigned long value) {
     if (value == 0) {
         value = 1;
     }
-    _computeDecimation = value;
-    _computeCountdown = 0;
+    _frequencyUpdateEverySamples = value;
+    _samplesUntilNextFrequencyUpdate = 0;
 }
 
 void FreqBandStream::observeCenteredSample(int centeredSample, unsigned long sampleTimeMs) {
     const unsigned long profileStartUs = micros();
-    _updatedOnLastObserve = false;
+    _producedFreshPacketOnLastObserve = false;
     pushSample(centeredSample);
     if (_sampleCount < _windowSizeSamples) {
         _lastFrequencyScore = 0.0f;
@@ -71,16 +71,16 @@ void FreqBandStream::observeCenteredSample(int centeredSample, unsigned long sam
         return;
     }
 
-    if (_computeDecimation <= 1) {
+    if (_frequencyUpdateEverySamples <= 1) {
         computeFrequencyScore();
-        _updatedOnLastObserve = true;
-    } else if (_computeCountdown == 0) {
+        _producedFreshPacketOnLastObserve = true;
+    } else if (_samplesUntilNextFrequencyUpdate == 0) {
         computeFrequencyScore();
-        _computeCountdown = _computeDecimation - 1;
-        _updatedOnLastObserve = true;
+        _samplesUntilNextFrequencyUpdate = _frequencyUpdateEverySamples - 1;
+        _producedFreshPacketOnLastObserve = true;
     }
-    if (!_updatedOnLastObserve) {
-        --_computeCountdown;
+    if (!_producedFreshPacketOnLastObserve) {
+        --_samplesUntilNextFrequencyUpdate;
     }
     ++_profileObserveCalls;
     _profileObserveTotalUs += static_cast<unsigned long>(micros() - profileStartUs);
@@ -238,8 +238,8 @@ unsigned long FreqBandStream::windowSizeSamples() const {
     return _windowSizeSamples;
 }
 
-unsigned long FreqBandStream::computeDecimation() const {
-    return _computeDecimation;
+unsigned long FreqBandStream::frequencyUpdateEverySamples() const {
+    return _frequencyUpdateEverySamples;
 }
 
 unsigned long FreqBandStream::sampleCount() const {
@@ -274,14 +274,14 @@ unsigned long FreqBandStream::profileGoertzelTotalUs() const {
     return _profileGoertzelTotalUs;
 }
 
-bool FreqBandStream::updatedOnLastObserve() const {
-    return _updatedOnLastObserve;
+bool FreqBandStream::producedFreshPacketOnLastObserve() const {
+    return _producedFreshPacketOnLastObserve;
 }
 
-unsigned long FreqBandStream::evidenceAgeSamples() const {
-    if (!_updatedOnLastObserve && _sampleCount >= _windowSizeSamples && _computeDecimation > 1) {
-        const unsigned long countdown = _computeCountdown;
-        const unsigned long maxAge = _computeDecimation > 0 ? _computeDecimation - 1U : 0U;
+unsigned long FreqBandStream::lastPacketAgeSamples() const {
+    if (!_producedFreshPacketOnLastObserve && _sampleCount >= _windowSizeSamples && _frequencyUpdateEverySamples > 1) {
+        const unsigned long countdown = _samplesUntilNextFrequencyUpdate;
+        const unsigned long maxAge = _frequencyUpdateEverySamples > 0 ? _frequencyUpdateEverySamples - 1U : 0U;
         return countdown <= maxAge ? (maxAge - countdown) : 0UL;
     }
     return 0UL;

@@ -216,10 +216,10 @@ detection::FrequencyBandMeasurementPacket AnalyzerApp::captureFrequencyFeatureFr
 
     evidence.present = present;
     evidence.matched = false;
-    evidence.fresh = _freqBandStream.updatedOnLastObserve();
+    evidence.fresh = _freqBandStream.producedFreshPacketOnLastObserve();
     evidence.targetHz = present ? _freqBandStream.targetFrequencyHz() : 0;
     evidence.windowSizeSamples = _freqBandStream.sampleCount();
-    evidence.ageSamples = _freqBandStream.evidenceAgeSamples();
+    evidence.ageSamples = _freqBandStream.lastPacketAgeSamples();
     evidence.targetBandScoreValue = _freqBandStream.lastFrequencyScore();
     evidence.confidence = 0.0f;
     evidence.targetBandPowerValue = _freqBandStream.lastTargetPower();

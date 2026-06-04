@@ -52,7 +52,7 @@ void AnalyzerApp::printSequenceHelp() {
     Serial.println("SEQ IN: PROFILE tonalpulse|amp|chirp_experimental");
     Serial.println("SEQ IN: DIAG on|off");
     Serial.println("SEQ IN: FREQBAND on|off");
-    Serial.println("SEQ IN: FREQDECIMATE 1|4|8|16");
+    Serial.println("SEQ IN: FREQUPDATEEVERYSAMPLES 1|4|8|16");
     Serial.println("SEQ IN: WHEN off|miss|all");
     Serial.println("SEQ IN: VERBOSE 0|1|2 (0=compact, 1=summary, 2=deep debug)");
     Serial.println("SEQ IN: TRIES N");
@@ -303,23 +303,23 @@ void AnalyzerApp::handleUsbLine(const char* line) {
         return;
     }
 
-    if (equalsIgnoreCase(token, "FREQDECIMATE")) {
+    if (equalsIgnoreCase(token, "FREQUPDATEEVERYSAMPLES")) {
         const char* decimateToken = strtok_r(nullptr, " ", &savePtr);
         if (decimateToken == nullptr || *decimateToken == '\0') {
-            Serial.println("ERR SEQ missing freqdecimate use FREQDECIMATE 1|4|8|16");
+            Serial.println("ERR SEQ missing freqUpdateEverySamples use FREQUPDATEEVERYSAMPLES 1|4|8|16");
             return;
         }
         const unsigned long decimation = strtoul(decimateToken, nullptr, 10);
         if (decimation == 0UL) {
-            Serial.println("ERR SEQ freqdecimate out of range use N>=1");
+            Serial.println("ERR SEQ freqUpdateEverySamples out of range use N>=1");
             return;
         }
-        _seqOutputConfig.frequencyComputeDecimation = decimation;
-        _freqBandStream.setComputeDecimation(decimation);
+        _seqOutputConfig.frequencyUpdateEverySamples = decimation;
+        _freqBandStream.setFrequencyUpdateEverySamples(decimation);
         if (_sequenceTest.active) {
-            _sequenceTest.outputConfig.frequencyComputeDecimation = decimation;
+            _sequenceTest.outputConfig.frequencyUpdateEverySamples = decimation;
         }
-        Serial.print("OK SEQ FREQDECIMATE ");
+        Serial.print("OK SEQ FREQUPDATEEVERYSAMPLES ");
         Serial.println(decimation);
         return;
     }

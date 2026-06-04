@@ -871,13 +871,13 @@ void Node::handleDetectCommand(const char* line) {
     Serial.print(_behavior.outputBusy() ? 1 : 0);
     const unsigned long sampleRateHz = _audioSource.sampleRateHz() > 0 ? _audioSource.sampleRateHz() : 16000UL;
     const unsigned long windowSamples = _freqBandStream.windowSizeSamples();
-    const unsigned long computeDecimation = _freqBandStream.computeDecimation();
-    const unsigned long ageSamples = _freqBandStream.evidenceAgeSamples();
+    const unsigned long frequencyUpdateEverySamples = _freqBandStream.frequencyUpdateEverySamples();
+    const unsigned long ageSamples = _freqBandStream.lastPacketAgeSamples();
     const float windowMs = sampleRateHz > 0
         ? (static_cast<float>(windowSamples) * 1000.0f) / static_cast<float>(sampleRateHz)
         : 0.0f;
     const float updateStepMs = sampleRateHz > 0
-        ? (static_cast<float>(computeDecimation) * 1000.0f) / static_cast<float>(sampleRateHz)
+        ? (static_cast<float>(frequencyUpdateEverySamples) * 1000.0f) / static_cast<float>(sampleRateHz)
         : 0.0f;
     const float ageMs = sampleRateHz > 0
         ? (static_cast<float>(ageSamples) * 1000.0f) / static_cast<float>(sampleRateHz)
@@ -886,17 +886,17 @@ void Node::handleDetectCommand(const char* line) {
     Serial.print(windowSamples);
     Serial.print(" freq.window_ms=");
     Serial.print(windowMs, 2);
-    Serial.print(" freq.compute_decimation=");
-    Serial.print(computeDecimation);
-    Serial.print(" freq.update_step_ms=");
+    Serial.print(" freq.update_every_samples=");
+    Serial.print(frequencyUpdateEverySamples);
+    Serial.print(" freq.update_period_ms=");
     Serial.print(updateStepMs, 3);
     Serial.print(" freq.target_hz=");
     Serial.print(_freqBandStream.targetFrequencyHz());
-    Serial.print(" freq.updated_this_frame=");
-    Serial.print(_freqBandStream.updatedOnLastObserve() ? 1 : 0);
-    Serial.print(" freq.evidence_age_samples=");
+    Serial.print(" freq.produced_fresh_packet=");
+    Serial.print(_freqBandStream.producedFreshPacketOnLastObserve() ? 1 : 0);
+    Serial.print(" freq.packet_age_samples=");
     Serial.print(ageSamples);
-    Serial.print(" freq.evidence_age_ms=");
+    Serial.print(" freq.packet_age_ms=");
     Serial.print(ageMs, 3);
     printBuildIdentity();
     Serial.println();
@@ -1061,10 +1061,10 @@ detection::FrequencyBandMeasurementPacket Node::captureFrequencyFeatureFrame(uns
 
     evidence.present = present;
     evidence.matched = false;
-    evidence.fresh = _freqBandStream.updatedOnLastObserve();
+    evidence.fresh = _freqBandStream.producedFreshPacketOnLastObserve();
     evidence.targetHz = present ? _freqBandStream.targetFrequencyHz() : 0;
     evidence.windowSizeSamples = _freqBandStream.sampleCount();
-    evidence.ageSamples = _freqBandStream.evidenceAgeSamples();
+    evidence.ageSamples = _freqBandStream.lastPacketAgeSamples();
     evidence.targetBandScoreValue = _freqBandStream.lastFrequencyScore();
     evidence.confidence = 0.0f;
     evidence.targetBandPowerValue = _freqBandStream.lastTargetPower();

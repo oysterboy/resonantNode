@@ -28,6 +28,11 @@ void FrequencyOccurrenceSource::observeFrame(
         return;
     }
 
+    if (!evidence.evidencePresent || !evidence.updatedThisFrame) {
+        // Fresh-only lifecycle: stale or held measurements do not move the detector.
+        return;
+    }
+
     FrequencyMatchEvaluation::Values frequencyTuning = {};
     frequencyTuning.attackScoreMin = _config.attackScoreMin;
     frequencyTuning.releaseScoreMin = _config.releaseScoreMin;

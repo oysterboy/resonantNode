@@ -1197,6 +1197,12 @@ Packet is measurement, not evidence/result.
 
 ## 03.5 Fresh-only FrequencyMatch lifecycle
 
+Status:
+
+```text
+DONE
+```
+
 Target:
 
 ```text

@@ -15,6 +15,8 @@ Owns the frequency-match occurrence candidate path.
 Wraps FrequencyMatchDetector to produce frequency candidates from AudioSignalFrame
 and FrequencyFeatureFrame input.
 Does not decide pattern meaning or behavior.
+Only fresh measurement packets advance the attack/release lifecycle; stale held
+packets are treated as status/debug-only input.
 */
 class FrequencyOccurrenceSource {
 public:

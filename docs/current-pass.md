@@ -1059,6 +1059,12 @@ Code comments and active docs state parallel fan-out explicitly.
 
 ## 03.2 Formalize AMP feature sample
 
+Status:
+
+```text
+DONE
+```
+
 Action:
 
 Ensure AMP level is represented as a first-class timestamped scalar sample:

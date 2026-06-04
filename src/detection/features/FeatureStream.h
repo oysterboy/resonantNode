@@ -42,4 +42,8 @@ struct FeatureStream {
     float value = 0.0f;
 };
 
+using AmpEnvelopeSample = FeatureStream;
+using FrequencyScoreSample = FeatureStream;
+using FrequencyContrastSample = FeatureStream;
+
 } // namespace detection

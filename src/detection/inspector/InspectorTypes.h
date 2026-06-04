@@ -215,7 +215,8 @@ struct TransientEvidence {
     bool audioOverflowDuringCandidate = false;
 };
 
-// Frequency feature packet carried alongside a candidate for pattern classification and reporting.
+// Frequency feature packet carried alongside a candidate for measurement and reporting.
+// Decision fields belong to the detector / gate result, not the measurement packet.
 struct FrequencyFeatureFrame {
     bool evidencePresent = false;
     bool matched = false;
@@ -236,5 +237,7 @@ struct FrequencyFeatureFrame {
     float totalEnergy = 0.0f;
     float spectralContrast = 0.0f;
 };
+
+using FrequencyBandMeasurementPacket = FrequencyFeatureFrame;
 
 } // namespace detection

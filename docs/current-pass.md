@@ -1144,6 +1144,12 @@ FrequencyScore and FrequencyContrast are scalar samples parallel to AmpEnvelope.
 
 ## 03.4 Keep compound frequency packet for FrequencyMatch
 
+Status:
+
+```text
+DONE
+```
+
 Action:
 
 Keep specialized compound packet:

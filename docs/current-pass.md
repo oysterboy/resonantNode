@@ -927,6 +927,12 @@ Subitem:
 02.5.1 Remove legacy source printer block after the common printer is in place.
 ```
 
+Status:
+
+```text
+DONE
+```
+
 Commit:
 
 ```text

@@ -890,6 +890,12 @@ Scalar-specific details live under source.scalarTransient.
 
 ## 02.5 Create one common source printer
 
+Status:
+
+```text
+DONE
+```
+
 Target:
 
 ```text
@@ -913,6 +919,12 @@ SEQ_SOURCE
 SEQ_SOURCE_REJECTS
 SEQ_SOURCE_LAST_CANDIDATE
 SEQ_SOURCE_DETAIL
+```
+
+Subitem:
+
+```text
+02.5.1 Remove legacy source printer block after the common printer is in place.
 ```
 
 Commit:

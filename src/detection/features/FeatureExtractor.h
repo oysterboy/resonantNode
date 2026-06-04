@@ -9,6 +9,9 @@ FeatureExtractor
 
 Small helper namespace that derives feature-history samples from AudioSignalFrame.
 It measures feature streams only; it does not emit candidates or classify patterns.
+Producer emits a fresh feature sample or packet, sends it to FeatureHistory, and
+sends it to the selected OccurrenceSource in parallel. FeatureHistory is not the
+live pipe into OccurrenceSource.
 */
 namespace detection::FeatureExtractor {
 

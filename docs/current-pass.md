@@ -1028,6 +1028,12 @@ Held frequency status is not live detection evidence.
 
 ## 03.1 Enforce fan-out model in comments/docs first
 
+Status:
+
+```text
+DONE
+```
+
 Add rule near feature producer/runtime code:
 
 ```text

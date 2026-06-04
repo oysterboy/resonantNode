@@ -31,6 +31,9 @@ pattern rules, field-state tracking, and PatternResult queueing.
 Consumes AudioSignalFrame and FrequencyFeatureFrame.
 Produces PatternResult and FieldState.
 Does not decide behavior or output.
+Feature producers fan out fresh samples to FeatureHistory and the selected
+OccurrenceSource in parallel; FeatureHistory is for retrospective inspection,
+not a live pipe into occurrence emission.
 */
 struct DetectionPipelineResult {
     bool hasPattern = false;

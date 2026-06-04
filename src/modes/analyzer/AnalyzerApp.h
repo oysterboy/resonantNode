@@ -415,7 +415,6 @@ private:
         unsigned long freqRejectContrast = 0;
             unsigned long freqRejectBoth = 0;
             unsigned long freqRejectNoEvidence = 0;
-            unsigned long freqRejectInvalidWindow = 0;
             unsigned long totalPatternDtMs = 0;
             unsigned long totalPatternDurationMs = 0;
         float totalPatternConfidence = 0.0f;

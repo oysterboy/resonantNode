@@ -25,7 +25,6 @@ Does NOT:
 class FrequencyMatchDetector {
 public:
     bool evidencePresent = false;
-    bool present = false; // compatibility mirror
     bool liveFrequencyOnly = false;
     bool firstThresholdCrossingSeen = false;
     bool wouldProduceCandidate = false;
@@ -55,12 +54,6 @@ public:
     bool releaseScoreOk = false;
     bool releaseContrastOk = false;
     bool releaseOk = false;
-    float thresholdScore = 0.0f;   // compatibility mirror
-    float thresholdContrast = 0.0f; // compatibility mirror
-    bool readyOk = false;          // compatibility mirror
-    bool bestScoreOk = false;      // compatibility mirror
-    bool bestContrastOk = false;   // compatibility mirror
-    bool gateOpen = false;         // compatibility mirror
     bool emitAllowed = false;
     bool validRelease = false;
     float candidatePeakScore = 0.0f;
@@ -73,11 +66,6 @@ public:
     unsigned long diagLongestMatchStreakFrames = 0;
     unsigned long diagLongestMatchStreakStartMs = 0;
     unsigned long diagLongestMatchStreakEndMs = 0;
-    unsigned long currentMatchRunFrames = 0; // compatibility mirror
-    unsigned long currentMatchRunStartMs = 0; // compatibility mirror
-    unsigned long longestMatchRunFrames = 0; // compatibility mirror
-    unsigned long longestMatchRunStartMs = 0; // compatibility mirror
-    unsigned long longestMatchRunEndMs = 0; // compatibility mirror
     unsigned long bestObservedAtMs = 0;
     uint64_t bestObservedSample = 0;
     float bestScore = 0.0f;

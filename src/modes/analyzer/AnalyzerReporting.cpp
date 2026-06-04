@@ -2272,8 +2272,7 @@ void AnalyzerApp::printSequenceSummary() const {
         Serial.print(_sequenceTest.freqRejectBoth);
         Serial.print(" freq_reject_no_evidence=");
         Serial.print(_sequenceTest.freqRejectNoEvidence);
-        Serial.print(" freq_reject_invalid_window=");
-        Serial.println(_sequenceTest.freqRejectInvalidWindow);
+        Serial.println();
     }
     if (_sequenceTest.showDetails) {
         printDetectionParameters();

@@ -273,14 +273,11 @@ void AnalyzerApp::recordSequenceClassifierOutcome(const detection::PatternResult
         }
     }
 
-    switch (freqEval.reason) {
+    switch (freqEval.attackReason) {
         case FrequencyMatchEvaluation::Reason::None:
             break;
         case FrequencyMatchEvaluation::Reason::NoEvidence:
             ++_sequenceTest.freqRejectNoEvidence;
-            break;
-        case FrequencyMatchEvaluation::Reason::InvalidWindow:
-            ++_sequenceTest.freqRejectInvalidWindow;
             break;
         case FrequencyMatchEvaluation::Reason::AttackScoreTooLow:
             ++_sequenceTest.freqRejectScore;

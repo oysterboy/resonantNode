@@ -59,11 +59,6 @@ struct FrequencyMatchConfig {
     float releaseScoreMin = 8000.0f;
     float attackContrastMin = 50.0f;
     float releaseContrastMin = 50.0f;
-    // Compatibility mirrors. Keep aligned while call sites migrate.
-    float scoreMin = attackScoreMin;
-    float contrastMin = attackContrastMin;
-    unsigned long minTransientDurationMs = minDurationMs;
-    unsigned long cooldownAfterOnsetMs = cooldownAfterReleaseMs;
 };
 
 struct ScalarTransientConfig {
@@ -107,10 +102,6 @@ inline DetectionProfile makeTonalPulseProfile() {
     profile.frequencyMatch.minDurationMs = 60;
     profile.frequencyMatch.releaseDebounceMs = 30;
     profile.frequencyMatch.cooldownAfterReleaseMs = 0;
-    profile.frequencyMatch.scoreMin = profile.frequencyMatch.attackScoreMin;
-    profile.frequencyMatch.contrastMin = profile.frequencyMatch.attackContrastMin;
-    profile.frequencyMatch.minTransientDurationMs = profile.frequencyMatch.minDurationMs;
-    profile.frequencyMatch.cooldownAfterOnsetMs = profile.frequencyMatch.cooldownAfterReleaseMs;
   
     // Inspector composition.
 

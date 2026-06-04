@@ -33,8 +33,6 @@ void FrequencyOccurrenceSource::observeFrame(
     frequencyTuning.releaseScoreMin = _config.releaseScoreMin;
     frequencyTuning.attackContrastMin = _config.attackContrastMin;
     frequencyTuning.releaseContrastMin = _config.releaseContrastMin;
-    frequencyTuning.scoreMin = frequencyTuning.attackScoreMin;
-    frequencyTuning.contrastMin = frequencyTuning.attackContrastMin;
 
     _detector.update(
         evidence,

@@ -729,8 +729,6 @@ AnalyzerApp::AnalyzerApp(int inputPin)
     _frequencyEvidenceTuning.releaseScoreMin = detection::detectionProfileForKind(detection::DetectionProfileKind::TonalPulse).frequencyMatch.releaseScoreMin;
     _frequencyEvidenceTuning.attackContrastMin = detection::detectionProfileForKind(detection::DetectionProfileKind::TonalPulse).frequencyMatch.attackContrastMin;
     _frequencyEvidenceTuning.releaseContrastMin = detection::detectionProfileForKind(detection::DetectionProfileKind::TonalPulse).frequencyMatch.releaseContrastMin;
-    _frequencyEvidenceTuning.scoreMin = _frequencyEvidenceTuning.attackScoreMin;
-    _frequencyEvidenceTuning.contrastMin = _frequencyEvidenceTuning.attackContrastMin;
 }
 
 void AnalyzerApp::begin() {

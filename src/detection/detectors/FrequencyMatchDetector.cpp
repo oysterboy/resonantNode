@@ -6,7 +6,6 @@
 
 void FrequencyMatchDetector::resetState() {
     evidencePresent = false;
-    present = false;
     liveFrequencyOnly = false;
     firstThresholdCrossingSeen = false;
     wouldProduceCandidate = false;
@@ -36,12 +35,6 @@ void FrequencyMatchDetector::resetState() {
     releaseScoreOk = false;
     releaseContrastOk = false;
     releaseOk = false;
-    thresholdScore = 0.0f;
-    thresholdContrast = 0.0f;
-    readyOk = false;
-    bestScoreOk = false;
-    bestContrastOk = false;
-    gateOpen = false;
     emitAllowed = false;
     validRelease = false;
     candidatePeakScore = 0.0f;
@@ -54,11 +47,6 @@ void FrequencyMatchDetector::resetState() {
     diagLongestMatchStreakFrames = 0;
     diagLongestMatchStreakStartMs = 0;
     diagLongestMatchStreakEndMs = 0;
-    currentMatchRunFrames = 0;
-    currentMatchRunStartMs = 0;
-    longestMatchRunFrames = 0;
-    longestMatchRunStartMs = 0;
-    longestMatchRunEndMs = 0;
     bestObservedAtMs = 0;
     bestObservedSample = 0;
     bestScore = 0.0f;
@@ -218,7 +206,6 @@ void FrequencyMatchDetector::update(const detection::FrequencyFeatureFrame& evid
     const auto gates = FrequencyMatchEvaluation::evaluate(evidence, tuning);
 
     evidencePresent = evidence.evidencePresent;
-    present = evidence.evidencePresent;
     evidenceOk = gates.evidenceOk;
 
     attackScoreThreshold = tuning.attackScoreMin;
@@ -233,12 +220,6 @@ void FrequencyMatchDetector::update(const detection::FrequencyFeatureFrame& evid
     releaseContrastOk = gates.releaseContrastOk;
     releaseOk = gates.releaseOk;
 
-    thresholdScore = attackScoreThreshold;
-    thresholdContrast = attackContrastThreshold;
-    readyOk = evidenceOk;
-    bestScoreOk = attackScoreOk;
-    bestContrastOk = attackContrastOk;
-    gateOpen = attackOk;
     emitAllowed = false;
     validRelease = false;
     gateReason[0] = '\0';
@@ -259,16 +240,11 @@ void FrequencyMatchDetector::update(const detection::FrequencyFeatureFrame& evid
                 diagCurrentMatchStreakStartMs = now;
             }
             ++diagCurrentMatchStreakFrames;
-            currentMatchRunFrames = diagCurrentMatchStreakFrames;
-            currentMatchRunStartMs = diagCurrentMatchStreakStartMs;
             if (diagCurrentMatchStreakFrames > diagLongestMatchStreakFrames) {
                 diagLongestMatchStreakFrames = diagCurrentMatchStreakFrames;
                 diagLongestMatchStreakStartMs = diagCurrentMatchStreakStartMs;
                 diagLongestMatchStreakEndMs = now;
             }
-            longestMatchRunFrames = diagLongestMatchStreakFrames;
-            longestMatchRunStartMs = diagLongestMatchStreakStartMs;
-            longestMatchRunEndMs = diagLongestMatchStreakEndMs;
         } else {
             if (diagCurrentMatchStreakFrames > diagLongestMatchStreakFrames) {
                 diagLongestMatchStreakFrames = diagCurrentMatchStreakFrames;
@@ -277,11 +253,6 @@ void FrequencyMatchDetector::update(const detection::FrequencyFeatureFrame& evid
             }
             diagCurrentMatchStreakFrames = 0;
             diagCurrentMatchStreakStartMs = 0;
-            currentMatchRunFrames = 0;
-            currentMatchRunStartMs = 0;
-            longestMatchRunFrames = diagLongestMatchStreakFrames;
-            longestMatchRunStartMs = diagLongestMatchStreakStartMs;
-            longestMatchRunEndMs = diagLongestMatchStreakEndMs;
         }
     };
 
@@ -426,13 +397,16 @@ void FrequencyMatchDetector::update(const detection::FrequencyFeatureFrame& evid
         }
 
         const auto bestEval = FrequencyMatchEvaluation::evaluate(bestEvidence, tuning);
-        bestScoreOk = bestEval.attackScoreOk;
-        bestContrastOk = bestEval.attackContrastOk;
-        readyOk = bestEvidence.evidencePresent ? bestEvidence.evidencePresent : evidence.evidencePresent;
-        gateOpen = bestEvidence.evidencePresent && readyOk && bestEval.attackOk;
+        attackScoreOk = bestEval.attackScoreOk;
+        attackContrastOk = bestEval.attackContrastOk;
+        attackOk = bestEval.attackOk;
+        releaseScoreOk = bestEval.releaseScoreOk;
+        releaseContrastOk = bestEval.releaseContrastOk;
+        releaseOk = bestEval.releaseOk;
+        evidenceOk = bestEvidence.evidencePresent ? bestEvidence.evidencePresent : evidence.evidencePresent;
 
         const char* suppress = "none";
-        if (!readyOk) {
+        if (!evidenceOk) {
             suppress = "live_window_not_ready";
         } else if (!bestEval.evidenceOk) {
             suppress = "no_frequency_evidence";

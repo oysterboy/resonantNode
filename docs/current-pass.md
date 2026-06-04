@@ -18,40 +18,40 @@ The pass does:
 
 ## Status Ledger
 
-This is the current read-through status for the pass. `COMPAT` means the code still carries compatibility mirrors while the new shape is in place.
+This is the current read-through status for the pass. `COMPAT REMOVED` means the old mirror fields are gone; `COMPAT` means some legacy reporting or transitional naming still remains.
 
-- Scope 1: `DONE / COMPAT`
-- Scope 2: `DONE / COMPAT`
-- Scope 3: `DONE / COMPAT`
-- Scope 4: `DONE / COMPAT`
-- Scope 5: `DONE / COMPAT`
-- Scope 6: `DONE / COMPAT`
+- Scope 1: `DONE / COMPAT REMOVED`
+- Scope 2: `DONE / COMPAT REMOVED`
+- Scope 3: `DONE / COMPAT REMOVED`
+- Scope 4: `DONE / COMPAT REMOVED`
+- Scope 5: `DONE / COMPAT REMOVED`
+- Scope 6: `DONE / PARTIAL / COMPAT REMOVED`
 
-- Phase 1: `DONE / COMPAT`
-  - 1.1 `DONE / COMPAT`
-  - 1.2 `DONE / COMPAT`
-  - 1.3 `DONE / COMPAT`
-- Phase 2: `DONE / COMPAT`
-  - 2.1 `DONE / COMPAT`
-  - 2.2 `DONE / COMPAT`
-- Phase 3: `DONE / COMPAT`
-  - 3.1 `DONE / COMPAT`
-  - 3.2 `DONE / COMPAT`
-  - 3.3 `DONE / COMPAT`
-- Phase 4: `DONE / COMPAT`
-- Phase 5: `DONE / COMPAT`
-  - 5.1 `DONE / COMPAT`
-  - 5.2 `PARTIAL / COMPAT`
-  - 5.3 `DONE / COMPAT`
-  - 5.4 `DONE / COMPAT`
-- Phase 6: `DONE / PARTIAL / COMPAT`
-  - 6.1 `DONE / COMPAT`
-  - 6.2 `DONE / COMPAT`
-  - 6.3 `DONE / PARTIAL / COMPAT`
-  - 6.4 `DONE / COMPAT`
-  - 6.5 `DONE / COMPAT`
-  - 6.6 `PARTIAL / COMPAT`
-  - 6.7 `DONE / COMPAT`
+- Phase 1: `DONE / COMPAT REMOVED`
+  - 1.1 `DONE / COMPAT REMOVED`
+  - 1.2 `DONE / COMPAT REMOVED`
+  - 1.3 `DONE / COMPAT REMOVED`
+- Phase 2: `DONE / COMPAT REMOVED`
+  - 2.1 `DONE / COMPAT REMOVED`
+  - 2.2 `DONE / COMPAT REMOVED`
+- Phase 3: `DONE / COMPAT REMOVED`
+  - 3.1 `DONE / COMPAT REMOVED`
+  - 3.2 `DONE / COMPAT REMOVED`
+  - 3.3 `DONE / COMPAT REMOVED`
+- Phase 4: `DONE / COMPAT REMOVED`
+- Phase 5: `DONE / COMPAT REMOVED`
+  - 5.1 `DONE / COMPAT REMOVED`
+  - 5.2 `PARTIAL / COMPAT REMOVED`
+  - 5.3 `DONE / COMPAT REMOVED`
+  - 5.4 `DONE / COMPAT REMOVED`
+- Phase 6: `DONE / PARTIAL / COMPAT REMOVED`
+  - 6.1 `DONE / COMPAT REMOVED`
+  - 6.2 `DONE / COMPAT REMOVED`
+  - 6.3 `DONE / PARTIAL / COMPAT REMOVED`
+  - 6.4 `DONE / COMPAT REMOVED`
+  - 6.5 `DONE / COMPAT REMOVED`
+  - 6.6 `PARTIAL / COMPAT REMOVED`
+  - 6.7 `DONE / COMPAT REMOVED`
 - Phase 7: `PARTIAL / COMPAT`
   - 7.1 `PARTIAL / COMPAT`
   - 7.2 `DONE / COMPAT`

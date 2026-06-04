@@ -215,7 +215,6 @@ void AnalyzerApp::startSequenceTest(unsigned long totalTrials, unsigned long per
     _sequenceTest.freqRejectContrast = 0;
     _sequenceTest.freqRejectBoth = 0;
     _sequenceTest.freqRejectNoEvidence = 0;
-    _sequenceTest.freqRejectInvalidWindow = 0;
     _sequenceTest.totalPatternDtMs = 0;
     _sequenceTest.totalPatternDurationMs = 0;
     _sequenceTest.totalPatternConfidence = 0.0f;

@@ -659,8 +659,6 @@ void Node::handleSerialLine(const char* line) {
         freqTuning.releaseScoreMin = _activeDetectionProfile.frequencyMatch.releaseScoreMin;
         freqTuning.attackContrastMin = _activeDetectionProfile.frequencyMatch.attackContrastMin;
         freqTuning.releaseContrastMin = _activeDetectionProfile.frequencyMatch.releaseContrastMin;
-        freqTuning.scoreMin = freqTuning.attackScoreMin;
-        freqTuning.contrastMin = freqTuning.attackContrastMin;
 
         while ((token = strtok_r(nullptr, " ", &savePtr)) != nullptr) {
             FrequencyMatchEvaluation::parseToken(token, freqTuning);
@@ -670,8 +668,6 @@ void Node::handleSerialLine(const char* line) {
         _activeDetectionProfile.frequencyMatch.releaseScoreMin = freqTuning.releaseScoreMin;
         _activeDetectionProfile.frequencyMatch.attackContrastMin = freqTuning.attackContrastMin;
         _activeDetectionProfile.frequencyMatch.releaseContrastMin = freqTuning.releaseContrastMin;
-        _activeDetectionProfile.frequencyMatch.scoreMin = freqTuning.attackScoreMin;
-        _activeDetectionProfile.frequencyMatch.contrastMin = freqTuning.attackContrastMin;
         applyActiveDetectionProfile();
 
         Serial.print(" freqScore=");

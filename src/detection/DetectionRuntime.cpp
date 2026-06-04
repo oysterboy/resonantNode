@@ -152,10 +152,10 @@ void DetectionRuntime::captureDiagnostics() {
     if (_occurrenceSourceKind == OccurrenceSourceKind::FrequencyMatch) {
         const auto& detector = _frequencyEmitter.detector();
         _diagnostics.frequencyPresent = detector.diagnosticsObservedCount > 0;
-        _diagnostics.frequencyValidWindow = detector.readyOk;
+        _diagnostics.frequencyValidWindow = detector.evidenceOk;
         _diagnostics.frequencyMatched = detector.diagnosticsMatchedCount > 0;
-        _diagnostics.frequencyScoreOk = detector.bestScoreOk;
-        _diagnostics.frequencyContrastOk = detector.bestContrastOk;
+        _diagnostics.frequencyScoreOk = detector.attackScoreOk;
+        _diagnostics.frequencyContrastOk = detector.attackContrastOk;
         _diagnostics.frequencyFrames = detector.diagnosticsObservedCount;
         _diagnostics.frequencyValidFrames = detector.diagnosticsValidCount;
         _diagnostics.frequencyScoreOkFrames = detector.diagnosticsScoreOkCount;
@@ -163,9 +163,9 @@ void DetectionRuntime::captureDiagnostics() {
         _diagnostics.frequencyBothOkFrames = detector.diagnosticsBothOkCount;
         _diagnostics.frequencyMatchFrames = detector.diagnosticsMatchedCount;
         _diagnostics.frequencyRejectFrames = detector.diagnosticsRejectedCount;
-        _diagnostics.frequencyLongestMatchRunFrames = detector.longestMatchRunFrames;
-        _diagnostics.frequencyLongestMatchRunStartMs = detector.longestMatchRunStartMs;
-        _diagnostics.frequencyLongestMatchRunEndMs = detector.longestMatchRunEndMs;
+        _diagnostics.frequencyLongestMatchRunFrames = detector.diagLongestMatchStreakFrames;
+        _diagnostics.frequencyLongestMatchRunStartMs = detector.diagLongestMatchStreakStartMs;
+        _diagnostics.frequencyLongestMatchRunEndMs = detector.diagLongestMatchStreakEndMs;
         _diagnostics.frequencyScoreMean = detector.diagnosticsScoreMean();
         _diagnostics.frequencyContrastMean = detector.diagnosticsContrastMean();
         _diagnostics.frequencyScoreMin = detector.diagnosticsScoreMin;
@@ -177,8 +177,8 @@ void DetectionRuntime::captureDiagnostics() {
         _diagnostics.frequencyPeakScore = detector.candidatePeakScore;
         _diagnostics.frequencyPeakContrast = detector.candidatePeakContrast;
         _diagnostics.frequencyPeakWindowSampleCount = detector.candidatePeakWindowSampleCount;
-        _diagnostics.frequencyScoreThreshold = detector.thresholdScore;
-        _diagnostics.frequencyContrastThreshold = detector.thresholdContrast;
+        _diagnostics.frequencyScoreThreshold = detector.attackScoreThreshold;
+        _diagnostics.frequencyContrastThreshold = detector.attackContrastThreshold;
         const bool scoreNear = _diagnostics.frequencyScoreThreshold > 0.0f
             && _diagnostics.frequencyScoreMax >= (_diagnostics.frequencyScoreThreshold * 0.75f);
         const bool contrastNear = _diagnostics.frequencyContrastThreshold > 0.0f
@@ -248,8 +248,8 @@ void DetectionRuntime::captureDiagnostics() {
         _diagnostics.frequencyGateReason = detector.gateReason;
         _diagnostics.frequencyWouldCandidateReason = detector.wouldCandidateReason;
         _diagnostics.frequencyCandidateState = detector.candidateState;
-        _diagnostics.frequencyReadyOk = detector.readyOk;
-        _diagnostics.frequencyGateOpen = detector.gateOpen;
+        _diagnostics.frequencyReadyOk = detector.evidenceOk;
+        _diagnostics.frequencyGateOpen = detector.attackOk;
         _diagnostics.frequencyOpened = detector.candidateActive
             || detector.candidateClosed
             || detector.candidateEmitted

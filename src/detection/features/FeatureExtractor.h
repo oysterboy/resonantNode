@@ -33,6 +33,8 @@ inline void observeFrequencyFeatureFrame(const FrequencyFeatureFrame& evidence, 
     }
 
     const unsigned long sampleTimeMs = evidence.observedAtMs != 0 ? evidence.observedAtMs : nowMs;
+    // Frequency score and contrast are first-class scalar samples in history.
+    // FrequencyFeatureFrame stays the compound packet used by FrequencyMatch.
     history.record(FeatureStreamId::FrequencyScore, sampleTimeMs, evidence.score);
     history.record(FeatureStreamId::FrequencyContrast, sampleTimeMs, evidence.spectralContrast);
     // Temporarily disabled to reduce analyzer memory pressure during the current pass.

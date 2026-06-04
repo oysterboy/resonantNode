@@ -1099,6 +1099,12 @@ AMP feature sample carries timing/index/freshness.
 
 ## 03.3 Formalize frequency scalar samples
 
+Status:
+
+```text
+DONE
+```
+
 Action:
 
 Ensure frequency scalar features exist or are conceptually clear:

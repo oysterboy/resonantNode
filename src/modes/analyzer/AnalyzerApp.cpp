@@ -1349,7 +1349,10 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
     report.profileDetail.inspectionModules = inspectionModulesName(selectedProfile.inspectionPlan);
     report.profileDetail.inspectionModuleCount = selectedProfile.inspectionPlan.count;
     report.profileDetail.evidenceTargets = inspectionEvidenceTargetsName(selectedProfile.inspectionPlan);
-    report.profileDetail.requiredSupportTarget = evidenceTargetName(selectedProfile.patternRulesConfig.requiredSupportTarget);
+    report.profileDetail.requiredSupportTarget = supportTargetDisplayName(
+        selectedProfile.patternRulesConfig.requiredSupportTarget,
+        selectedProfile.patternRulesConfig.requireSupportForAcceptance
+    );
     report.profileDetail.ampStrength = selectedProfile.patternRulesConfig.requireSupportForAcceptance ? "enabled" : "disabled";
     report.profileDetail.ampStrengthMin = strengthClassName(selectedProfile.patternRulesConfig.minimumSupportStrength);
     report.profileDetail.requireSupportForAcceptance = selectedProfile.patternRulesConfig.requireSupportForAcceptance;

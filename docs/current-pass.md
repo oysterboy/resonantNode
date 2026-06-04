@@ -509,6 +509,12 @@ No old disabled SEQ_INSPECT block remains in active reporting file.
 
 ## 01.6 Support-gate reporting clarification
 
+Status:
+
+```text
+DONE
+```
+
 Target areas:
 
 ```text

@@ -1954,7 +1954,10 @@ void AnalyzerApp::printSequenceSummary() const {
         ? "FrequencyMatchSource"
         : "ScalarTransientSource");
     Serial.print(" required_support_target=");
-    Serial.print(analyzerEvidenceTargetName(selectedProfile.patternRulesConfig.requiredSupportTarget));
+    Serial.print(supportTargetDisplayName(
+        selectedProfile.patternRulesConfig.requiredSupportTarget,
+        selectedProfile.patternRulesConfig.requireSupportForAcceptance
+    ));
     Serial.print(" support_gate=");
     Serial.print(selectedProfile.patternRulesConfig.requireSupportForAcceptance ? "enabled" : "disabled");
     Serial.print(" diag_mode=");

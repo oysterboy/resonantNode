@@ -179,6 +179,22 @@ inline size_t frequencyEvidenceClassIndex(FrequencyEvidenceClass value) {
     }
 }
 
+inline const char* supportTargetDisplayName(detection::EvidenceTarget value, bool supportGateEnabled) {
+    switch (value) {
+        case detection::EvidenceTarget::AmpStrength:
+            return supportGateEnabled ? "AmpStrength" : "diagnostic_only:AmpStrength";
+        case detection::EvidenceTarget::FrequencyScoreStrength:
+            return supportGateEnabled ? "FrequencyScoreStrength" : "diagnostic_only:FrequencyScoreStrength";
+        case detection::EvidenceTarget::FrequencyContrastQuality:
+            return supportGateEnabled ? "FrequencyContrastQuality" : "diagnostic_only:FrequencyContrastQuality";
+        case detection::EvidenceTarget::TargetBandStrength:
+            return supportGateEnabled ? "TargetBandStrength" : "diagnostic_only:TargetBandStrength";
+        case detection::EvidenceTarget::None:
+        default:
+            return supportGateEnabled ? "None" : "diagnostic_only:None";
+    }
+}
+
 struct AnalyzerRunContext {
     const char* profile = "none";
     const char* mode = "SEQ";

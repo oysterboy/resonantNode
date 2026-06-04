@@ -36,21 +36,6 @@ size_t analyzerReasonIndex(AnalyzerReason value) {
     return static_cast<size_t>(value);
 }
 
-const char* sequenceEvidenceTargetName(detection::EvidenceTarget value) {
-    switch (value) {
-        case detection::EvidenceTarget::AmpStrength:
-            return "AmpStrength";
-        case detection::EvidenceTarget::FrequencyScoreStrength:
-            return "FrequencyScoreStrength";
-        case detection::EvidenceTarget::FrequencyContrastQuality:
-            return "FrequencyContrastQuality";
-        case detection::EvidenceTarget::TargetBandStrength:
-            return "TargetBandStrength";
-        case detection::EvidenceTarget::None:
-        default:
-            return "None";
-    }
-}
 
 } // namespace
 
@@ -274,7 +259,10 @@ void AnalyzerApp::startSequenceTest(unsigned long totalTrials, unsigned long per
         Serial.print(" detector=");
         Serial.print(detection::occurrenceSourceKindName(selectedProfile.occurrenceSource));
         Serial.print(" required_support_target=");
-        Serial.print(sequenceEvidenceTargetName(selectedProfile.patternRulesConfig.requiredSupportTarget));
+        Serial.print(supportTargetDisplayName(
+            selectedProfile.patternRulesConfig.requiredSupportTarget,
+            selectedProfile.patternRulesConfig.requireSupportForAcceptance
+        ));
         Serial.print(" support_gate=");
         Serial.print(selectedProfile.patternRulesConfig.requireSupportForAcceptance ? "enabled" : "disabled");
         Serial.print(" freq_min_duration_ms=");

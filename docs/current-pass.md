@@ -843,6 +843,12 @@ Both FrequencyMatch and ScalarTransient populate the same outer source fields.
 
 ## 02.4 Move detail fields into namespaced blocks
 
+Status:
+
+```text
+DONE
+```
+
 Action:
 
 Mirror or move fields:

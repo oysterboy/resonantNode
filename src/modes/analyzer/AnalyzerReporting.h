@@ -411,6 +411,9 @@ struct AnalyzerFrequencyDiagnostic {
     unsigned long heldFrames = 0;
     unsigned long historyScoreRecords = 0;
     unsigned long historyContrastRecords = 0;
+    unsigned long scoreOkUpdates = 0;
+    unsigned long contrastOkUpdates = 0;
+    unsigned long bothOkUpdates = 0;
     unsigned long scoreOkFrames = 0;
     unsigned long contrastOkFrames = 0;
     unsigned long bothOkFrames = 0;

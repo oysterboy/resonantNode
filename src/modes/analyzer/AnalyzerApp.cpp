@@ -1822,6 +1822,10 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
         report.source.emittedThisTrial = report.frequency.fmEmitted;
         report.source.rejectedThisTrial = report.frequency.sourceSummary.present && !report.frequency.acceptedPresent;
         report.source.frequencyMatch = report.frequency;
+        report.source.frequencyMatch.scoreOkUpdates = report.frequency.scoreOkFrames;
+        report.source.frequencyMatch.contrastOkUpdates = report.frequency.contrastOkFrames;
+        report.source.frequencyMatch.bothOkUpdates = report.frequency.bothOkFrames;
+        report.source.frequencyMatch.freqEvidenceClass = report.frequency.freqEvidenceClass;
         report.source.scalarTransient = report.scalar;
     } else {
         report.source.acceptedPresent = report.scalar.acceptedPresent;
@@ -1840,6 +1844,10 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
         report.source.emittedThisTrial = report.scalar.scalarEmitted;
         report.source.rejectedThisTrial = report.scalar.sourceSummary.present && !report.scalar.acceptedPresent;
         report.source.frequencyMatch = report.frequency;
+        report.source.frequencyMatch.scoreOkUpdates = report.frequency.scoreOkFrames;
+        report.source.frequencyMatch.contrastOkUpdates = report.frequency.contrastOkFrames;
+        report.source.frequencyMatch.bothOkUpdates = report.frequency.bothOkFrames;
+        report.source.frequencyMatch.freqEvidenceClass = report.frequency.freqEvidenceClass;
         report.source.scalarTransient = report.scalar;
     }
 

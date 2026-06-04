@@ -553,6 +553,12 @@ No pattern acceptance behavior changes.
 
 ## 01.7 First-trial startup artifact flag
 
+Status:
+
+```text
+DONE
+```
+
 Target areas:
 
 ```text

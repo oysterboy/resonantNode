@@ -1224,6 +1224,11 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
         }
         return "missing_pipeline_result";
     }();
+    const bool startupArtifact = result == AnalyzerResult::Miss
+        && _sequenceTest.currentTrial == 1
+        && !trialHasPipelineEvidence
+        && !actualPipelineAvailable
+        && strcmp(artifactReason, "missing_pipeline_result") == 0;
 
     AnalyzerSequenceClassificationInput classificationInput;
     classificationInput.result = result;
@@ -1392,9 +1397,10 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
     report.debug.rejects = report.occurrences.rejected;
     report.debug.duplicates = duplicateCount;
     report.debug.unexpected = result == AnalyzerResult::Unexpected ? 1U : 0U;
+    report.debug.startupArtifact = startupArtifact;
     report.debug.artifactCaptured = trialHasPipelineEvidence;
     report.debug.artifactFallback = !trialHasPipelineEvidence;
-    report.debug.artifactState = trialHasPipelineEvidence ? "CAPTURED" : "MISSING_PIPELINE";
+    report.debug.artifactState = startupArtifact ? "STARTUP_ARTIFACT" : (trialHasPipelineEvidence ? "CAPTURED" : "MISSING_PIPELINE");
     report.debug.artifactReason = artifactReason;
     report.debug.pipelineSource = trialHasPipelineEvidence ? "actual_pipeline" : "missing_runtime_pipeline";
     report.debug.pipelineFallback = !trialHasPipelineEvidence;

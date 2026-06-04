@@ -1903,6 +1903,7 @@ void AnalyzerApp::printSequenceSummary() const {
     summary.ambiguous = 0;
     summary.tooDense = 0;
     summary.invalidAudio = _sequenceTest.invalidAudio;
+    summary.startupArtifacts = _sequenceTest.startupArtifacts;
     summary.avgDtMs = _sequenceTest.patternDtCount > 0
         ? static_cast<float>(_sequenceTest.totalPatternDtMs) / static_cast<float>(_sequenceTest.patternDtCount)
         : -1.0f;
@@ -1941,7 +1942,9 @@ void AnalyzerApp::printSequenceSummary() const {
     Serial.print(" too_dense=");
     Serial.print(summary.tooDense);
     Serial.print(" invalid_audio=");
-    Serial.println(summary.invalidAudio);
+    Serial.print(summary.invalidAudio);
+    Serial.print(" startup_artifacts=");
+    Serial.println(summary.startupArtifacts);
 
     Serial.print("  metadata: profile=");
     Serial.print(summary.profileName != nullptr ? summary.profileName : "unknown");

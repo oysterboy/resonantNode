@@ -388,6 +388,7 @@ private:
         unsigned long unexpected = 0;
         unsigned long duplicates = 0;
         unsigned long invalidAudio = 0;
+        unsigned long startupArtifacts = 0;
         unsigned long samplesProcessed = 0;
         unsigned long currentTrialSamplesProcessed = 0;
         unsigned long maxSamplesPerLoop = 0;

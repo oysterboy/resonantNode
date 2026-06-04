@@ -157,6 +157,7 @@ void AnalyzerApp::startSequenceTest(unsigned long totalTrials, unsigned long per
     _sequenceTest.unexpected = 0;
     _sequenceTest.duplicates = 0;
     _sequenceTest.invalidAudio = 0;
+    _sequenceTest.startupArtifacts = 0;
     _sequenceTest.samplesProcessed = 0;
     _sequenceTest.currentTrialSamplesProcessed = 0;
     _sequenceTest.maxSamplesPerLoop = 0;
@@ -484,7 +485,7 @@ void AnalyzerApp::finalizeSequenceTrial(unsigned long now) {
         _sequenceTest.unexpected++;
         result = AnalyzerResult::Unexpected;
     } else {
-        _sequenceTest.misses++;
+        result = AnalyzerResult::Miss;
     }
 
     _sequenceTest.duplicates += diagnostics.duplicateCount;
@@ -511,16 +512,21 @@ void AnalyzerApp::finalizeSequenceTrial(unsigned long now) {
         _sequenceTest.patternDurationCount++;
     }
     if (result == AnalyzerResult::Miss) {
-        const size_t reasonIndex = analyzerReasonIndex(finalizedReport->classification.reason);
-        if (reasonIndex < static_cast<size_t>(AnalyzerReason::Unknown) + 1U) {
-            _sequenceTest.missReasonCounts[reasonIndex]++;
-        }
-        _sequenceTest.currentMissStreak++;
-        if (_sequenceTest.firstMissTrial == 0) {
-            _sequenceTest.firstMissTrial = _sequenceTest.currentTrial;
-        }
-        if (_sequenceTest.currentMissStreak > _sequenceTest.longestMissStreak) {
-            _sequenceTest.longestMissStreak = _sequenceTest.currentMissStreak;
+        if (finalizedReport->debug.startupArtifact) {
+            _sequenceTest.startupArtifacts++;
+        } else {
+            _sequenceTest.misses++;
+            const size_t reasonIndex = analyzerReasonIndex(finalizedReport->classification.reason);
+            if (reasonIndex < static_cast<size_t>(AnalyzerReason::Unknown) + 1U) {
+                _sequenceTest.missReasonCounts[reasonIndex]++;
+            }
+            _sequenceTest.currentMissStreak++;
+            if (_sequenceTest.firstMissTrial == 0) {
+                _sequenceTest.firstMissTrial = _sequenceTest.currentTrial;
+            }
+            if (_sequenceTest.currentMissStreak > _sequenceTest.longestMissStreak) {
+                _sequenceTest.longestMissStreak = _sequenceTest.currentMissStreak;
+            }
         }
     } else {
         _sequenceTest.currentMissStreak = 0;

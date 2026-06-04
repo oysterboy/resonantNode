@@ -330,6 +330,7 @@ struct AnalyzerDebugSummary {
     unsigned int rejects = 0;
     unsigned int duplicates = 0;
     unsigned int unexpected = 0;
+    bool startupArtifact = false;
 
     bool artifactCaptured = false;
     bool artifactFallback = false;
@@ -564,6 +565,7 @@ struct AnalyzerSummary {
     unsigned int ambiguous = 0;
     unsigned int tooDense = 0;
     unsigned int invalidAudio = 0;
+    unsigned int startupArtifacts = 0;
 
     float avgDtMs = -1.0f;
     float avgDurationMs = -1.0f;

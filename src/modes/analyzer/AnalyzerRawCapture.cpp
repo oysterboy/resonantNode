@@ -137,11 +137,11 @@ void AnalyzerApp::runRawBandTrigger(unsigned long toneHz,
         } else {
             ++heldSamples;
         }
-        if (band.lastFrequencyScore() > maxScore) {
-            maxScore = band.lastFrequencyScore();
+        if (band.lastTargetBandScoreValue() > maxScore) {
+            maxScore = band.lastTargetBandScoreValue();
         }
-        if (band.lastSpectralContrast() > maxContrast) {
-            maxContrast = band.lastSpectralContrast();
+        if (band.lastTargetBandContrastValue() > maxContrast) {
+            maxContrast = band.lastTargetBandContrastValue();
         }
 
         rawBuffer[capturedSamples < maxSamples ? capturedSamples : (maxSamples - 1UL)] = clampCenteredSampleToInt16(centeredSample);
@@ -206,15 +206,15 @@ void AnalyzerApp::runRawBandTrigger(unsigned long toneHz,
         Serial.print(" centered=");
         Serial.print(rawBuffer[i]);
         Serial.print(" score=");
-        Serial.print(dumpBand.lastFrequencyScore(), 2);
+        Serial.print(dumpBand.lastTargetBandScoreValue(), 2);
         Serial.print(" contrast=");
-        Serial.print(dumpBand.lastSpectralContrast(), 2);
+        Serial.print(dumpBand.lastTargetBandContrastValue(), 2);
         Serial.print(" target_power=");
-        Serial.print(dumpBand.lastTargetPower(), 1);
+        Serial.print(dumpBand.lastTargetBandPowerValue(), 1);
         Serial.print(" neighbor_power=");
-        Serial.print(dumpBand.lastNeighborPower(), 1);
+        Serial.print(dumpBand.lastNeighborBandPowerValue(), 1);
         Serial.print(" total_energy=");
-        Serial.print(dumpBand.lastTotalEnergy(), 1);
+        Serial.print(dumpBand.lastTotalEnergyValue(), 1);
         Serial.print(" updated=");
         Serial.print(dumpBand.producedFreshPacketOnLastObserve() ? 1 : 0);
         Serial.print(" age_samples=");

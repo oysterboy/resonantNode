@@ -1545,6 +1545,12 @@ Cadence names describe sample-count update period, not vague decimation.
 
 ## 04.5 Rename target-band fields
 
+Status:
+
+```text
+DONE
+```
+
 Rename:
 
 ```text

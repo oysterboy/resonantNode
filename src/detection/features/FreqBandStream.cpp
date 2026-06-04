@@ -9,11 +9,11 @@ void FreqBandStream::resetState() {
     _sampleWriteIndex = 0;
     _samplesUntilNextFrequencyUpdate = 0;
     _producedFreshPacketOnLastObserve = false;
-    _lastFrequencyScore = 0.0f;
-    _lastTargetPower = 0.0f;
-    _lastNeighborPower = 0.0f;
-    _lastTotalEnergy = 0.0f;
-    _lastSpectralContrast = 0.0f;
+    _lastTargetBandScoreValue = 0.0f;
+    _lastTargetBandPowerValue = 0.0f;
+    _lastNeighborBandPowerValue = 0.0f;
+    _lastTotalEnergyValue = 0.0f;
+    _lastTargetBandContrastValue = 0.0f;
     for (unsigned long i = 0; i < kMaxWindowSizeSamples; ++i) {
         _sampleBuffer[i] = 0;
     }
@@ -61,11 +61,11 @@ void FreqBandStream::observeCenteredSample(int centeredSample, unsigned long sam
     _producedFreshPacketOnLastObserve = false;
     pushSample(centeredSample);
     if (_sampleCount < _windowSizeSamples) {
-        _lastFrequencyScore = 0.0f;
-        _lastTargetPower = 0.0f;
-        _lastNeighborPower = 0.0f;
-        _lastTotalEnergy = 0.0f;
-        _lastSpectralContrast = 0.0f;
+        _lastTargetBandScoreValue = 0.0f;
+        _lastTargetBandPowerValue = 0.0f;
+        _lastNeighborBandPowerValue = 0.0f;
+        _lastTotalEnergyValue = 0.0f;
+        _lastTargetBandContrastValue = 0.0f;
         ++_profileObserveCalls;
         _profileObserveTotalUs += static_cast<unsigned long>(micros() - profileStartUs);
         return;
@@ -101,7 +101,7 @@ void FreqBandStream::pushSample(int sample) {
 void FreqBandStream::updateCachedGoertzelCoefficients() {
     const float sampleRateHz = static_cast<float>(_sampleRateHz == 0 ? 1 : _sampleRateHz);
     const float targetHz = static_cast<float>(_targetFrequencyHz);
-    const float binSpacingHz = frequencyBinSpacingHz();
+    const float binSpacingHz = bandSpacingHz();
     const float lowerFrequency = _targetFrequencyHz > static_cast<unsigned long>(binSpacingHz)
         ? targetHz - binSpacingHz
         : targetHz * 0.5f;
@@ -162,11 +162,11 @@ float FreqBandStream::computeGoertzelPowerAtFrequency(float frequencyHz) const {
 
 float FreqBandStream::computeFrequencyScore() {
     if (_windowSizeSamples == 0 || _sampleCount < _windowSizeSamples) {
-        _lastFrequencyScore = 0.0f;
-        _lastTargetPower = 0.0f;
-        _lastNeighborPower = 0.0f;
-        _lastTotalEnergy = 0.0f;
-        _lastSpectralContrast = 0.0f;
+        _lastTargetBandScoreValue = 0.0f;
+        _lastTargetBandPowerValue = 0.0f;
+        _lastNeighborBandPowerValue = 0.0f;
+        _lastTotalEnergyValue = 0.0f;
+        _lastTargetBandContrastValue = 0.0f;
         return 0.0f;
     }
 
@@ -188,38 +188,38 @@ float FreqBandStream::computeFrequencyScore() {
     const float normalized = (targetPower * 1000.0f) / (totalEnergy + 1.0f);
     const float contrast = targetPower / (neighborPower + 1.0f);
 
-    _lastFrequencyScore = normalized;
-    _lastTargetPower = targetPower;
-    _lastNeighborPower = neighborPower;
-    _lastTotalEnergy = totalEnergy;
-    _lastSpectralContrast = contrast;
+    _lastTargetBandScoreValue = normalized;
+    _lastTargetBandPowerValue = targetPower;
+    _lastNeighborBandPowerValue = neighborPower;
+    _lastTotalEnergyValue = totalEnergy;
+    _lastTargetBandContrastValue = contrast;
     ++_profileComputeCalls;
     _profileComputeTotalUs += static_cast<unsigned long>(micros() - profileStartUs);
 
     return normalized;
 }
 
-float FreqBandStream::lastFrequencyScore() const {
-    return _lastFrequencyScore;
+float FreqBandStream::lastTargetBandScoreValue() const {
+    return _lastTargetBandScoreValue;
 }
 
-float FreqBandStream::lastTargetPower() const {
-    return _lastTargetPower;
+float FreqBandStream::lastTargetBandPowerValue() const {
+    return _lastTargetBandPowerValue;
 }
 
-float FreqBandStream::lastNeighborPower() const {
-    return _lastNeighborPower;
+float FreqBandStream::lastNeighborBandPowerValue() const {
+    return _lastNeighborBandPowerValue;
 }
 
-float FreqBandStream::lastTotalEnergy() const {
-    return _lastTotalEnergy;
+float FreqBandStream::lastTotalEnergyValue() const {
+    return _lastTotalEnergyValue;
 }
 
-float FreqBandStream::lastSpectralContrast() const {
-    return _lastSpectralContrast;
+float FreqBandStream::lastTargetBandContrastValue() const {
+    return _lastTargetBandContrastValue;
 }
 
-float FreqBandStream::frequencyBinSpacingHz() const {
+float FreqBandStream::bandSpacingHz() const {
     if (_windowSizeSamples == 0) {
         return 0.0f;
     }

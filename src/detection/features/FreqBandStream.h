@@ -32,12 +32,12 @@ public:
 
     void observeCenteredSample(int centeredSample, unsigned long sampleTimeMs = 0);
 
-    float lastFrequencyScore() const;
-    float lastTargetPower() const;
-    float lastNeighborPower() const;
-    float lastTotalEnergy() const;
-    float lastSpectralContrast() const;
-    float frequencyBinSpacingHz() const;
+    float lastTargetBandScoreValue() const;
+    float lastTargetBandPowerValue() const;
+    float lastNeighborBandPowerValue() const;
+    float lastTotalEnergyValue() const;
+    float lastTargetBandContrastValue() const;
+    float bandSpacingHz() const;
     unsigned long targetFrequencyHz() const;
     unsigned long sampleRateHz() const;
     unsigned long windowSizeSamples() const;
@@ -74,11 +74,11 @@ private:
     float _cachedLowerCoeff = 0.0f;
     float _cachedUpperCoeff = 0.0f;
     bool _cachedGoertzelValid = false;
-    float _lastFrequencyScore = 0.0f;
-    float _lastTargetPower = 0.0f;
-    float _lastNeighborPower = 0.0f;
-    float _lastTotalEnergy = 0.0f;
-    float _lastSpectralContrast = 0.0f;
+    float _lastTargetBandScoreValue = 0.0f;
+    float _lastTargetBandPowerValue = 0.0f;
+    float _lastNeighborBandPowerValue = 0.0f;
+    float _lastTotalEnergyValue = 0.0f;
+    float _lastTargetBandContrastValue = 0.0f;
 
     static constexpr unsigned long kMaxWindowSizeSamples = 128;
     int _sampleBuffer[kMaxWindowSizeSamples] = {};

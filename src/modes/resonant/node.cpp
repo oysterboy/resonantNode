@@ -1057,7 +1057,7 @@ detection::FrequencyBandMeasurementPacket Node::captureFrequencyFeatureFrame(uns
     detection::FrequencyBandMeasurementPacket evidence;
     evidence.observedAtMs = observedAtMs;
     const bool present = _freqBandStream.windowReady();
-    const float totalEnergy = _freqBandStream.lastTotalEnergy();
+    const float totalEnergy = _freqBandStream.lastTotalEnergyValue();
 
     evidence.present = present;
     evidence.matched = false;
@@ -1065,12 +1065,12 @@ detection::FrequencyBandMeasurementPacket Node::captureFrequencyFeatureFrame(uns
     evidence.targetHz = present ? _freqBandStream.targetFrequencyHz() : 0;
     evidence.windowSizeSamples = _freqBandStream.sampleCount();
     evidence.ageSamples = _freqBandStream.lastPacketAgeSamples();
-    evidence.targetBandScoreValue = _freqBandStream.lastFrequencyScore();
+    evidence.targetBandScoreValue = _freqBandStream.lastTargetBandScoreValue();
     evidence.confidence = 0.0f;
-    evidence.targetBandPowerValue = _freqBandStream.lastTargetPower();
-    evidence.neighborBandPowerValue = _freqBandStream.lastNeighborPower();
+    evidence.targetBandPowerValue = _freqBandStream.lastTargetBandPowerValue();
+    evidence.neighborBandPowerValue = _freqBandStream.lastNeighborBandPowerValue();
     evidence.totalEnergyValue = totalEnergy;
-    evidence.targetBandContrastValue = _freqBandStream.lastSpectralContrast();
+    evidence.targetBandContrastValue = _freqBandStream.lastTargetBandContrastValue();
     return evidence;
 }
 

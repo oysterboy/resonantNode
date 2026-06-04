@@ -23,14 +23,14 @@ OccurrenceSource occurrenceSourceForStream(FeatureStreamId stream) {
     }
 }
 
-float selectedScalarValue(const AudioSamplePacket& frame, const FrequencyFeatureFrame& frequencyEvidence, FeatureStreamId stream) {
+float selectedScalarValue(const AudioSamplePacket& frame, const FrequencyBandMeasurementPacket& frequencyEvidence, FeatureStreamId stream) {
     switch (stream) {
         case FeatureStreamId::AmpEnvelope:
             return frame.audioMagnitudeValue;
         case FeatureStreamId::FrequencyScore:
-            return frequencyEvidence.score;
+            return frequencyEvidence.targetBandScoreValue;
         case FeatureStreamId::FrequencyContrast:
-            return frequencyEvidence.spectralContrast;
+            return frequencyEvidence.targetBandContrastValue;
         case FeatureStreamId::Unknown:
         default:
             return static_cast<float>(frame.level);
@@ -445,7 +445,7 @@ void DetectionRuntime::setProfileName(const char* profileName) {
 
 void DetectionRuntime::observeFrame(
     const AudioSamplePacket& frame,
-    const FrequencyFeatureFrame& frequencyEvidence,
+    const FrequencyBandMeasurementPacket& frequencyEvidence,
     unsigned long nowMs
 ) {
     _fieldStateTracker.update(nowMs);

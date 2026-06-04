@@ -28,7 +28,6 @@ It does not implement detection algorithms, PatternRules, Behavior, or output po
 */
 class AnalyzerApp {
 public:
-    using FrequencyFeatureFrame = detection::FrequencyFeatureFrame;
     using PatternCandidate = detection::PatternCandidate;
     using PatternResult = detection::PatternResult;
 
@@ -512,7 +511,7 @@ private:
     AnalyzerReport* sequenceReportScratch();
     void buildSequenceAnalyzerReport(AnalyzerReport& report, unsigned long trialNumber, AnalyzerResult result, long dtMs, long durMs, float strength, bool audioOverflow, unsigned long duplicateCount, const SequenceTest::TrialDiagnostics& diagnostics) const;
     void recordSequenceClassifierOutcome(const PatternResult& patternResult, bool duplicateCandidate, bool unexpectedCandidate);
-    void handleSequenceCandidate(const PatternResult& patternResult, const FrequencyFeatureFrame* liveFrequencyFrame = nullptr);
+    void handleSequenceCandidate(const PatternResult& patternResult, const detection::FrequencyBandMeasurementPacket* liveFrequencyFrame = nullptr);
     void updateSequenceAmbientStats(unsigned long nowMs);
 
     // Sequence sample capture helpers.
@@ -524,7 +523,7 @@ private:
     bool sequenceSampleDumpSelected(unsigned long trialNumber) const;
     unsigned long sequenceSampleDumpEstimatedRows(unsigned long selectedTrials) const;
     static void sequenceCurveSampleCallback(const CurveSnapshot& snapshot, void* context);
-    FrequencyFeatureFrame captureFrequencyFeatureFrame(unsigned long observedAtMs) const;
+    detection::FrequencyBandMeasurementPacket captureFrequencyFeatureFrame(unsigned long observedAtMs) const;
     const char* sequenceTrialClassificationName(const char* result, long dtMs, long durMs, const SequenceTest::TrialDiagnostics& diagnostics) const;
 
     // Miscellaneous output helpers.

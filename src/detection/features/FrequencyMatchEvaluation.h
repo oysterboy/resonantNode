@@ -112,22 +112,22 @@ inline const char* reasonName(Reason reason) {
     return "unknown";
 }
 
-inline FrequencyMatchGateResult evaluate(const detection::FrequencyFeatureFrame& evidence, const Values& values) {
+inline FrequencyMatchGateResult evaluate(const detection::FrequencyBandMeasurementPacket& evidence, const Values& values) {
     FrequencyMatchGateResult out;
-    out.evidenceOk = evidence.evidencePresent;
-    out.score = evidence.score;
-    out.contrast = evidence.spectralContrast;
+    out.evidenceOk = evidence.present;
+    out.score = evidence.targetBandScoreValue;
+    out.contrast = evidence.targetBandContrastValue;
     out.attackScoreMin = values.attackScoreMin;
     out.releaseScoreMin = values.releaseScoreMin;
     out.attackContrastMin = values.attackContrastMin;
     out.releaseContrastMin = values.releaseContrastMin;
 
-    out.attackScoreOk = evidence.score >= values.attackScoreMin;
-    out.attackContrastOk = evidence.spectralContrast >= values.attackContrastMin;
+    out.attackScoreOk = evidence.targetBandScoreValue >= values.attackScoreMin;
+    out.attackContrastOk = evidence.targetBandContrastValue >= values.attackContrastMin;
     out.attackOk = out.evidenceOk && out.attackScoreOk && out.attackContrastOk;
 
-    out.releaseScoreOk = evidence.score >= values.releaseScoreMin;
-    out.releaseContrastOk = evidence.spectralContrast >= values.releaseContrastMin;
+    out.releaseScoreOk = evidence.targetBandScoreValue >= values.releaseScoreMin;
+    out.releaseContrastOk = evidence.targetBandContrastValue >= values.releaseContrastMin;
     out.releaseOk = out.evidenceOk && out.releaseScoreOk && out.releaseContrastOk;
 
     if (!out.evidenceOk) {
@@ -159,11 +159,11 @@ inline FrequencyMatchGateResult evaluate(const detection::FrequencyFeatureFrame&
     return out;
 }
 
-inline bool passes(const detection::FrequencyFeatureFrame& evidence, const Values& values) {
+inline bool passes(const detection::FrequencyBandMeasurementPacket& evidence, const Values& values) {
     return evaluate(evidence, values).matched;
 }
 
-inline void buildFailReason(const detection::FrequencyFeatureFrame& evidence,
+inline void buildFailReason(const detection::FrequencyBandMeasurementPacket& evidence,
                             const Values& values,
                             char* out,
                             size_t outSize) {

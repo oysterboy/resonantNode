@@ -66,8 +66,8 @@ struct PatternCandidate {
 
     // Evidence payloads retained with the candidate for downstream reporting.
     TransientEvidence transient;
-    FrequencyFeatureFrame frequency;
-    FrequencyFeatureFrame frequencyFull;
+    FrequencyBandMeasurementPacket frequency;
+    FrequencyBandMeasurementPacket frequencyFull;
 };
 
 } // namespace detection

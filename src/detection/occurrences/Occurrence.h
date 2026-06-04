@@ -68,7 +68,7 @@ struct Occurrence {
     StrengthClass targetBandStrength = StrengthClass::Unknown;
 
     TransientEvidence transient = {};
-    FrequencyFeatureFrame frequency = {};
+    FrequencyBandMeasurementPacket frequency = {};
 };
 
 } // namespace detection

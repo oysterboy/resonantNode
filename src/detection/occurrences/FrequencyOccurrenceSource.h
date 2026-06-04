@@ -13,7 +13,7 @@ FrequencyOccurrenceSource
 
 Owns the frequency-match occurrence candidate path.
 Wraps FrequencyMatchDetector to produce frequency candidates from AudioSamplePacket
-and FrequencyFeatureFrame input.
+and FrequencyBandMeasurementPacket input.
 Does not decide pattern meaning or behavior.
 Only fresh measurement packets advance the attack/release lifecycle; stale held
 packets are treated as status/debug-only input.
@@ -29,7 +29,7 @@ public:
 
     void observeFrame(
         const AudioSamplePacket& frame,
-        const detection::FrequencyFeatureFrame& evidence
+        const detection::FrequencyBandMeasurementPacket& evidence
     );
 
     bool popOccurrence(Occurrence& out);
@@ -38,7 +38,7 @@ public:
 
 private:
     bool _hasPending = false;
-    detection::FrequencyFeatureFrame _peakEvidence = {};
+    detection::FrequencyBandMeasurementPacket _peakEvidence = {};
     FrequencyMatchDetector _detector = {};
     FrequencyMatchConfig _config = {};
     Occurrence _pending = {};

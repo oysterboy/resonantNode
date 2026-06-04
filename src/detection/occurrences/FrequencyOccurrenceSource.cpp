@@ -22,13 +22,13 @@ void FrequencyOccurrenceSource::setDiagnosticsEnabled(bool enabled) {
 
 void FrequencyOccurrenceSource::observeFrame(
     const AudioSamplePacket& frame,
-    const detection::FrequencyFeatureFrame& evidence
+    const detection::FrequencyBandMeasurementPacket& evidence
 ) {
     if (!frame.valid) {
         return;
     }
 
-    if (!evidence.evidencePresent || !evidence.updatedThisFrame) {
+    if (!evidence.present || !evidence.fresh) {
         // Fresh-only lifecycle: stale or held measurements do not move the detector.
         return;
     }
@@ -48,9 +48,9 @@ void FrequencyOccurrenceSource::observeFrame(
         _config.cooldownAfterReleaseMs,
         _config.minDurationMs);
 
-    if (_detector.candidateActive && (!_peakEvidence.evidencePresent
-        || evidence.spectralContrast > _peakEvidence.spectralContrast
-        || (evidence.spectralContrast == _peakEvidence.spectralContrast && evidence.score > _peakEvidence.score))) {
+    if (_detector.candidateActive && (!_peakEvidence.present
+        || evidence.targetBandContrastValue > _peakEvidence.targetBandContrastValue
+        || (evidence.targetBandContrastValue == _peakEvidence.targetBandContrastValue && evidence.targetBandScoreValue > _peakEvidence.targetBandScoreValue))) {
         _peakEvidence = evidence;
     }
 
@@ -65,7 +65,7 @@ void FrequencyOccurrenceSource::observeFrame(
         candidate.ampLevel = frame.audioMagnitudeValue;
         candidate.ampBaseline = frame.baseline;
         candidate.frequency = _peakEvidence;
-        candidate.frequency.evidencePresent = true;
+        candidate.frequency.present = true;
         candidate.frequency.matched = _detector.frequencyCandidate.valid;
         candidate.frequency.observedAtMs = frame.timeMs;
         candidate.frequency.targetHz = _peakEvidence.targetHz;

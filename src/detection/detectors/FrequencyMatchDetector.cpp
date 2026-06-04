@@ -243,7 +243,7 @@ void FrequencyMatchDetector::observeClosedCandidate(bool accepted) {
     updateBestRejectedCandidate();
 }
 
-void FrequencyMatchDetector::update(const detection::FrequencyFeatureFrame& evidence,
+void FrequencyMatchDetector::update(const detection::FrequencyBandMeasurementPacket& evidence,
                                     unsigned long now,
                                     uint64_t currentSample,
                                     const FrequencyMatchEvaluation::Values& tuning,
@@ -252,7 +252,7 @@ void FrequencyMatchDetector::update(const detection::FrequencyFeatureFrame& evid
                                     unsigned long minDurationMs) {
     const auto gates = FrequencyMatchEvaluation::evaluate(evidence, tuning);
 
-    evidencePresent = evidence.evidencePresent;
+    evidencePresent = evidence.present;
     evidenceOk = gates.evidenceOk;
 
     attackScoreThreshold = tuning.attackScoreMin;
@@ -275,7 +275,7 @@ void FrequencyMatchDetector::update(const detection::FrequencyFeatureFrame& evid
     candidateMinDurationMs = minDurationMs;
     candidateMaxDurationMs = 0;
 
-    frequencyCandidate.present = evidence.evidencePresent;
+    frequencyCandidate.present = evidence.present;
     frequencyCandidate.kind = detection::OccurrenceKind::FrequencyMatch;
     frequencyCandidate.source = detection::OccurrenceSource::Frequency;
     frequencyCandidate.detectorKind = detection::OccurrenceDetectorKind::FrequencyMatch;
@@ -333,7 +333,7 @@ void FrequencyMatchDetector::update(const detection::FrequencyFeatureFrame& evid
         }
     };
 
-    if (evidence.evidencePresent) {
+    if (evidence.present) {
         if (attackOk) {
             if (!firstThresholdCrossingSeen) {
                 firstThresholdCrossingSeen = true;
@@ -361,9 +361,9 @@ void FrequencyMatchDetector::update(const detection::FrequencyFeatureFrame& evid
                     candidateOpenSample = currentSample;
                     candidatePeakMs = now;
                     candidatePeakSample = currentSample;
-                    candidatePeakScore = evidence.score;
-                    candidatePeakContrast = evidence.spectralContrast;
-                    candidatePeakWindowSampleCount = evidence.windowSampleCount;
+                    candidatePeakScore = evidence.targetBandScoreValue;
+                    candidatePeakContrast = evidence.targetBandContrastValue;
+                    candidatePeakWindowSampleCount = evidence.windowSizeSamples;
                     candidateHoldUpdates = 1;
                     candidateDurationMs = 0;
                     candidateLastMatchedMs = now;
@@ -377,9 +377,9 @@ void FrequencyMatchDetector::update(const detection::FrequencyFeatureFrame& evid
                     frequencyCandidate.endMs = 0;
                     frequencyCandidate.durationMs = 0;
                     frequencyCandidate.candidateHoldWindows = 1;
-                    frequencyCandidate.strength = evidence.score;
-                    frequencyCandidate.score = evidence.score;
-                    frequencyCandidate.contrast = evidence.spectralContrast;
+                    frequencyCandidate.strength = evidence.targetBandScoreValue;
+                    frequencyCandidate.score = evidence.targetBandScoreValue;
+                    frequencyCandidate.contrast = evidence.targetBandContrastValue;
                     frequencyCandidate.confidence = 0.0f;
                     strncpy(candidateState, "open", sizeof(candidateState) - 1);
                     candidateState[sizeof(candidateState) - 1] = '\0';
@@ -397,19 +397,19 @@ void FrequencyMatchDetector::update(const detection::FrequencyFeatureFrame& evid
                 candidateDurationMs = candidateLastMatchedMs >= candidateOpenMs
                     ? candidateLastMatchedMs - candidateOpenMs
                     : 0UL;
-                if (evidence.spectralContrast > candidatePeakContrast
-                    || (evidence.spectralContrast == candidatePeakContrast && evidence.score > candidatePeakScore)) {
+                if (evidence.targetBandContrastValue > candidatePeakContrast
+                    || (evidence.targetBandContrastValue == candidatePeakContrast && evidence.targetBandScoreValue > candidatePeakScore)) {
                     candidatePeakMs = now;
                     candidatePeakSample = currentSample;
-                    candidatePeakScore = evidence.score;
-                    candidatePeakContrast = evidence.spectralContrast;
-                    candidatePeakWindowSampleCount = evidence.windowSampleCount;
+                    candidatePeakScore = evidence.targetBandScoreValue;
+                    candidatePeakContrast = evidence.targetBandContrastValue;
+                    candidatePeakWindowSampleCount = evidence.windowSizeSamples;
                     candidateEvidence = evidence;
                     frequencyCandidate.peakMs = now;
                     frequencyCandidate.peakSample = currentSample;
-                    frequencyCandidate.strength = evidence.score;
-                    frequencyCandidate.score = evidence.score;
-                    frequencyCandidate.contrast = evidence.spectralContrast;
+                    frequencyCandidate.strength = evidence.targetBandScoreValue;
+                    frequencyCandidate.score = evidence.targetBandScoreValue;
+                    frequencyCandidate.contrast = evidence.targetBandContrastValue;
                 }
                 frequencyCandidate.candidateHoldWindows = candidateHoldUpdates;
                 frequencyCandidate.durationMs = candidateDurationMs;
@@ -431,16 +431,16 @@ void FrequencyMatchDetector::update(const detection::FrequencyFeatureFrame& evid
     }
 
     if (_diagnosticsEnabled) {
-        const bool better = !bestEvidence.evidencePresent
-            || evidence.spectralContrast > bestContrast
-            || (evidence.spectralContrast == bestContrast && evidence.score > bestScore);
-        if (evidence.evidencePresent && better) {
+        const bool better = !bestEvidence.present
+            || evidence.targetBandContrastValue > bestContrast
+            || (evidence.targetBandContrastValue == bestContrast && evidence.targetBandScoreValue > bestScore);
+        if (evidence.present && better) {
             bestEvidence = evidence;
             bestObservedAtMs = now;
             bestObservedSample = currentSample;
-            bestScore = evidence.score;
-            bestContrast = evidence.spectralContrast;
-            bestWindowSampleCount = evidence.windowSampleCount;
+            bestScore = evidence.targetBandScoreValue;
+            bestContrast = evidence.targetBandContrastValue;
+            bestWindowSampleCount = evidence.windowSizeSamples;
         }
 
         const auto bestEval = FrequencyMatchEvaluation::evaluate(bestEvidence, tuning);
@@ -450,7 +450,7 @@ void FrequencyMatchDetector::update(const detection::FrequencyFeatureFrame& evid
         releaseScoreOk = bestEval.releaseScoreOk;
         releaseContrastOk = bestEval.releaseContrastOk;
         releaseOk = bestEval.releaseOk;
-        evidenceOk = bestEvidence.evidencePresent ? bestEvidence.evidencePresent : evidence.evidencePresent;
+        evidenceOk = bestEvidence.present ? bestEvidence.present : evidence.present;
 
     const char* suppress = "none";
         if (!evidenceOk) {
@@ -471,7 +471,7 @@ void FrequencyMatchDetector::update(const detection::FrequencyFeatureFrame& evid
         strncpy(wouldCandidateReason, wouldCandidate, sizeof(wouldCandidateReason) - 1);
         wouldCandidateReason[sizeof(wouldCandidateReason) - 1] = '\0';
 
-        if (evidence.evidencePresent) {
+        if (evidence.present) {
             ++diagnosticsObservedCount;
             ++diagnosticsValidCount;
             if (attackScoreOk) {
@@ -489,29 +489,29 @@ void FrequencyMatchDetector::update(const detection::FrequencyFeatureFrame& evid
             } else if (!attackScoreOk && !attackContrastOk) {
                 ++diagnosticsScoreAndContrastTooLowCount;
             }
-            diagnosticsScoreSum += evidence.score;
-            diagnosticsContrastSum += evidence.spectralContrast;
+            diagnosticsScoreSum += evidence.targetBandScoreValue;
+            diagnosticsContrastSum += evidence.targetBandContrastValue;
             if (!_diagnosticsHaveStats) {
-                diagnosticsScoreMin = evidence.score;
-                diagnosticsScoreMax = evidence.score;
-                diagnosticsContrastMin = evidence.spectralContrast;
-                diagnosticsContrastMax = evidence.spectralContrast;
+                diagnosticsScoreMin = evidence.targetBandScoreValue;
+                diagnosticsScoreMax = evidence.targetBandScoreValue;
+                diagnosticsContrastMin = evidence.targetBandContrastValue;
+                diagnosticsContrastMax = evidence.targetBandContrastValue;
                 diagnosticsScoreMaxMs = now;
                 diagnosticsContrastMaxMs = now;
                 _diagnosticsHaveStats = true;
             } else {
-                if (evidence.score < diagnosticsScoreMin) {
-                    diagnosticsScoreMin = evidence.score;
+                if (evidence.targetBandScoreValue < diagnosticsScoreMin) {
+                    diagnosticsScoreMin = evidence.targetBandScoreValue;
                 }
-                if (evidence.score > diagnosticsScoreMax) {
-                    diagnosticsScoreMax = evidence.score;
+                if (evidence.targetBandScoreValue > diagnosticsScoreMax) {
+                    diagnosticsScoreMax = evidence.targetBandScoreValue;
                     diagnosticsScoreMaxMs = now;
                 }
-                if (evidence.spectralContrast < diagnosticsContrastMin) {
-                    diagnosticsContrastMin = evidence.spectralContrast;
+                if (evidence.targetBandContrastValue < diagnosticsContrastMin) {
+                    diagnosticsContrastMin = evidence.targetBandContrastValue;
                 }
-                if (evidence.spectralContrast > diagnosticsContrastMax) {
-                    diagnosticsContrastMax = evidence.spectralContrast;
+                if (evidence.targetBandContrastValue > diagnosticsContrastMax) {
+                    diagnosticsContrastMax = evidence.targetBandContrastValue;
                     diagnosticsContrastMaxMs = now;
                 }
             }

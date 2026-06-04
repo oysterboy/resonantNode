@@ -1456,6 +1456,12 @@ AudioSamplePacket means one processed raw audio sample plus metadata.
 
 ## 04.3 Rename FrequencyFeatureFrame to FrequencyBandMeasurementPacket
 
+Status:
+
+```text
+DONE
+```
+
 Target:
 
 ```text
@@ -1823,6 +1829,9 @@ Diagnostic-only scan on miss windows:
 3400
 3600
 ```
+
+How to do that: Use RAW CApture Window or better AMP feature history to rerun Goerzel calcuation after trial,
+if adding more buckets to live gertzel costes ram to much ( probable)
 
 Print:
 

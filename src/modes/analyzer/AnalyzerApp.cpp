@@ -436,7 +436,7 @@ void AnalyzerApp::printSystemHealth(const AnalyzerReport& report) const {
     }
 }
 
-void buildFrequencyFailReason(const detection::FrequencyFeatureFrame& evidence,
+void buildFrequencyFailReason(const detection::FrequencyBandMeasurementPacket& evidence,
                               const FrequencyMatchEvaluation::Values& tuning,
                               char* out,
                               size_t outSize) {
@@ -887,7 +887,7 @@ void AnalyzerApp::update() {
                     frame.timeMs <= _sequenceTest.currentTrialEndMs) {
                     ++_sequenceTest.currentTrialSamplesProcessed;
                 }
-                detection::FrequencyFeatureFrame runtimeFrequencyFrame = {};
+                detection::FrequencyBandMeasurementPacket runtimeFrequencyFrame = {};
                 if (_sequenceTest.outputConfig.frequencyBandEnabled) {
                     runtimeFrequencyFrame = captureFrequencyFeatureFrame(frame.timeMs);
                 } else {
@@ -1294,8 +1294,8 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
         report.occurrences.primaryDtMs = dtMs;
         report.occurrences.primaryDurationMs = durMs >= 0 ? static_cast<unsigned long>(durMs) : 0UL;
         report.occurrences.primaryStrength = strength;
-        report.occurrences.score = runtimePatternResult != nullptr ? runtimePatternResult->freq.score : 0.0f;
-        report.occurrences.contrast = runtimePatternResult != nullptr ? runtimePatternResult->freq.spectralContrast : 0.0f;
+        report.occurrences.score = runtimePatternResult != nullptr ? runtimePatternResult->freq.targetBandScoreValue : 0.0f;
+        report.occurrences.contrast = runtimePatternResult != nullptr ? runtimePatternResult->freq.targetBandContrastValue : 0.0f;
         report.occurrences.strength = strength;
         report.occurrences.confidence = trialHasPipelineEvidence ? runtimePatternResult->confidence : 0.0f;
         report.occurrences.mainRejectReason = analyzerReasonName(report.classification.reason);
@@ -1365,8 +1365,8 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
         report.profileDetail.freqScore = report.occurrences.score;
         report.profileDetail.freqContrast = report.occurrences.contrast;
     } else {
-        report.profileDetail.freqScore = trialHasPipelineEvidence ? runtimePatternResult->freq.score : 0.0f;
-        report.profileDetail.freqContrast = trialHasPipelineEvidence ? runtimePatternResult->freq.spectralContrast : 0.0f;
+        report.profileDetail.freqScore = trialHasPipelineEvidence ? runtimePatternResult->freq.targetBandScoreValue : 0.0f;
+        report.profileDetail.freqContrast = trialHasPipelineEvidence ? runtimePatternResult->freq.targetBandContrastValue : 0.0f;
     }
     report.profileDetail.freqScoreMin = selectedProfile.frequencyMatch.attackScoreMin;
     report.profileDetail.freqContrastMin = selectedProfile.frequencyMatch.attackContrastMin;

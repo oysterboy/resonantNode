@@ -215,29 +215,27 @@ struct TransientEvidence {
     bool audioOverflowDuringCandidate = false;
 };
 
-// Frequency feature packet carried alongside a candidate for measurement and reporting.
+// Frequency band measurement packet carried alongside a candidate for measurement and reporting.
 // Decision fields belong to the detector / gate result, not the measurement packet.
-struct FrequencyFeatureFrame {
-    bool evidencePresent = false;
+struct FrequencyBandMeasurementPacket {
+    bool present = false;
     bool matched = false;
-    bool updatedThisFrame = false;
+    bool fresh = false;
 
     unsigned long targetHz = 0;
     unsigned long observedAtMs = 0;
-    uint64_t windowStartSample = 0;
-    uint64_t windowEndSample = 0;
-    unsigned long windowSampleCount = 0;
+    uint64_t windowStartSampleIndex = 0;
+    uint64_t windowEndSampleIndex = 0;
+    unsigned long windowSizeSamples = 0;
     unsigned long ageSamples = 0;
 
-    float score = 0.0f;
+    float targetBandScoreValue = 0.0f;
     float confidence = 0.0f;
 
-    float targetPower = 0.0f;
-    float neighborPower = 0.0f;
-    float totalEnergy = 0.0f;
-    float spectralContrast = 0.0f;
+    float targetBandPowerValue = 0.0f;
+    float neighborBandPowerValue = 0.0f;
+    float totalEnergyValue = 0.0f;
+    float targetBandContrastValue = 0.0f;
 };
-
-using FrequencyBandMeasurementPacket = FrequencyFeatureFrame;
 
 } // namespace detection

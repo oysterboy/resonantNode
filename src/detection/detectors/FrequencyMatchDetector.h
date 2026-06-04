@@ -97,8 +97,8 @@ public:
     unsigned long totalGapMs = 0;
     unsigned long maxGapMs = 0;
     unsigned long islandCount = 0;
-    detection::FrequencyFeatureFrame bestEvidence = {};
-    detection::FrequencyFeatureFrame candidateEvidence = {};
+    detection::FrequencyBandMeasurementPacket bestEvidence = {};
+    detection::FrequencyBandMeasurementPacket candidateEvidence = {};
     char candidateState[16] = "none";
     char gateReason[48] = "none";
     char wouldCandidateReason[48] = "none";
@@ -138,7 +138,7 @@ public:
     void setDiagnosticsEnabled(bool enabled);
     void resetDiagnosticsSummary();
 
-    void update(const detection::FrequencyFeatureFrame& evidence,
+    void update(const detection::FrequencyBandMeasurementPacket& evidence,
                 unsigned long now,
                 uint64_t currentSample,
                 const FrequencyMatchEvaluation::Values& tuning,

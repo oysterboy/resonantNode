@@ -128,7 +128,7 @@ size_t PatternAssembler::acceptOccurrences(const InspectedOccurrence* occurrence
             case OccurrenceKind::FrequencyMatch:
                 if (occurrence.occurrence.valid) {
                     const PatternCandidate candidate = makePatternCandidateFromSignal(occurrence);
-                    if (candidate.transient.present || candidate.frequency.evidencePresent || candidate.durationMs > 0 || candidate.peakStrength != 0.0f || candidate.onsetStrength != 0.0f) {
+                    if (candidate.transient.present || candidate.frequency.present || candidate.durationMs > 0 || candidate.peakStrength != 0.0f || candidate.onsetStrength != 0.0f) {
                         if (pushPatternCandidate(candidate)) {
                             ++accepted;
                         }

@@ -49,10 +49,10 @@ PatternResult makeInvalidResult(const PatternCandidate& candidate,
                                unsigned long nowMs) {
     PatternResult result = {};
     result.candidate = candidate;
-    if (!result.candidate.frequency.evidencePresent && result.candidate.frequencyFull.evidencePresent) {
+    if (!result.candidate.frequency.present && result.candidate.frequencyFull.present) {
         result.candidate.frequency = result.candidate.frequencyFull;
     }
-    if (!result.candidate.frequencyFull.evidencePresent && result.candidate.frequency.evidencePresent) {
+    if (!result.candidate.frequencyFull.present && result.candidate.frequency.present) {
         result.candidate.frequencyFull = result.candidate.frequency;
     }
     result.freq = candidate.frequency;
@@ -101,10 +101,10 @@ PatternResult PatternRules::evaluateFrequencyPattern(
 ) const {
     PatternResult result = {};
     result.candidate = candidate;
-    if (!result.candidate.frequency.evidencePresent && result.candidate.frequencyFull.evidencePresent) {
+    if (!result.candidate.frequency.present && result.candidate.frequencyFull.present) {
         result.candidate.frequency = result.candidate.frequencyFull;
     }
-    if (!result.candidate.frequencyFull.evidencePresent && result.candidate.frequency.evidencePresent) {
+    if (!result.candidate.frequencyFull.present && result.candidate.frequency.present) {
         result.candidate.frequencyFull = result.candidate.frequency;
     }
     result.processedAtMs = nowMs;

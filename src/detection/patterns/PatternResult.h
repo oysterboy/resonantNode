@@ -41,7 +41,7 @@ struct PatternResult {
     // Candidate and evidence payloads carried through for reporting and downstream classification.
     PatternCandidate candidate = {};
     const InspectedOccurrence* inspectedOccurrence = nullptr;
-    FrequencyFeatureFrame freq = {};
+    FrequencyBandMeasurementPacket freq = {};
     bool patternCandidateAccepted = false;
     bool patternMatched = false;
     bool supportMatched = false;

@@ -5,6 +5,8 @@
 
 #include "../../detection/inspector/InspectorTypes.h"
 
+class FrequencyMatchDetector;
+
 /*
 AnalyzerReporting
 
@@ -613,6 +615,7 @@ struct AnalyzerReport {
     AnalyzerRunContext context;
     AnalyzerExpectedEvent expected;
     AnalyzerSourceStageReport source;
+    const FrequencyMatchDetector* frequencyDetector = nullptr;
 
     AnalyzerPatternObservation primaryPattern;
     AnalyzerOccurrenceObservation occurrences;

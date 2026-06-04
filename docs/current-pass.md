@@ -1319,6 +1319,12 @@ Lifecycle counts do not pretend to be windows or frames unless they are.
 
 ## 03.8 Add detector-state visibility
 
+Status:
+
+```text
+DONE
+```
+
 Add trial start/end diagnostics:
 
 ```text
@@ -1333,6 +1339,13 @@ emitted_this_trial
 rejected_this_trial
 fresh_release_ok_updates
 held_release_ok_updates
+```
+
+Note:
+
+```text
+The first attempt to store detector timestamps in the finalized report overflowed ESP32 DRAM.
+The final implementation avoids that RAM regression by reading the live detector state directly.
 ```
 
 Commit:

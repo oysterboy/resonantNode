@@ -171,6 +171,17 @@ constexpr AnalyzerFieldDescriptor kSourceAcceptedDurationMsField{"source.freq", 
 constexpr AnalyzerFieldDescriptor kSourceAcceptedStrengthField{"source.freq", "accepted_strength"};
 constexpr AnalyzerFieldDescriptor kSourceAcceptedScoreField{"source.freq", "accepted_score"};
 constexpr AnalyzerFieldDescriptor kSourceAcceptedContrastField{"source.freq", "accepted_contrast"};
+constexpr AnalyzerFieldDescriptor kSourceCandidateActiveAtTrialStartField{"source.freq", "candidate_active_at_trial_start"};
+constexpr AnalyzerFieldDescriptor kSourceCandidateFirstMsField{"source.freq", "candidate_first_ms"};
+constexpr AnalyzerFieldDescriptor kSourceCandidateLastMatchMsField{"source.freq", "candidate_last_match_ms"};
+constexpr AnalyzerFieldDescriptor kSourceCandidateHoldMsField{"source.freq", "candidate_hold_ms"};
+constexpr AnalyzerFieldDescriptor kSourceRefractoryRemainingMsField{"source.freq", "refractory_remaining_ms"};
+constexpr AnalyzerFieldDescriptor kSourceOpenedThisTrialField{"source.freq", "opened_this_trial"};
+constexpr AnalyzerFieldDescriptor kSourceClosedThisTrialField{"source.freq", "closed_this_trial"};
+constexpr AnalyzerFieldDescriptor kSourceEmittedThisTrialField{"source.freq", "emitted_this_trial"};
+constexpr AnalyzerFieldDescriptor kSourceRejectedThisTrialField{"source.freq", "rejected_this_trial"};
+constexpr AnalyzerFieldDescriptor kSourceFreshReleaseOkUpdatesField{"source.freq", "fresh_release_ok_updates"};
+constexpr AnalyzerFieldDescriptor kSourceHeldReleaseOkUpdatesField{"source.freq", "held_release_ok_updates"};
 constexpr AnalyzerFieldDescriptor kSourceSelectedAcceptPresentField{"source.freq", "selected_accept_present"};
 constexpr AnalyzerFieldDescriptor kSourceSelectedAcceptDurationMsField{"source.freq", "selected_accept_duration_ms"};
 constexpr AnalyzerFieldDescriptor kSourceSelectedRejectPeakMsField{"source.freq", "selected_reject_peak_ms"};
@@ -437,6 +448,47 @@ void printSequenceSourcePreamble(
         windowStartMs,
         windowEndMs
     );
+}
+
+void printSequenceSourceLifecycleDetail(
+    const AnalyzerReport& report,
+    const AnalyzerSourceStageReport& source,
+    const AnalyzerFrequencyDiagnostic& frequencySource
+) {
+    const FrequencyMatchDetector* detector = report.frequencyDetector;
+    const unsigned long candidateOpenMs = detector != nullptr ? detector->candidateOpenMs : 0UL;
+    const unsigned long candidateLastMatchedMs = detector != nullptr ? detector->candidateLastMatchedMs : 0UL;
+    const unsigned long refractoryRemainingMs = detector != nullptr && detector->candidateRefractoryUntilMs > report.context.timestampMs
+        ? detector->candidateRefractoryUntilMs - report.context.timestampMs
+        : 0UL;
+
+    Serial.print("SEQ_SOURCE_LIFECYCLE");
+    Serial.print(' ');
+    printField(kSourceCandidateActiveAtTrialStartField, source.activeAtTrialStart);
+    Serial.print(' ');
+    printField(kSourceCandidateFirstMsField, candidateOpenMs);
+    Serial.print(' ');
+    printField(kSourceCandidateLastMatchMsField, candidateLastMatchedMs);
+    Serial.print(' ');
+    printField(kSourceCandidateHoldMsField,
+        candidateLastMatchedMs >= candidateOpenMs
+            ? candidateLastMatchedMs - candidateOpenMs
+            : 0UL);
+    Serial.print(' ');
+    printField(kSourceRefractoryRemainingMsField, refractoryRemainingMs);
+    Serial.print(' ');
+    printField(kSourceOpenedThisTrialField, source.openedThisTrial);
+    Serial.print(' ');
+    printField(kSourceClosedThisTrialField, source.closedThisTrial);
+    Serial.print(' ');
+    printField(kSourceEmittedThisTrialField, source.emittedThisTrial);
+    Serial.print(' ');
+    printField(kSourceRejectedThisTrialField, source.rejectedThisTrial);
+    Serial.print(' ');
+    printField(kSourceFreshReleaseOkUpdatesField, report.frequency.releaseScoreOkFrames);
+    Serial.print(' ');
+    printField(kSourceHeldReleaseOkUpdatesField, report.frequency.heldFrames);
+    Serial.println();
 }
 
 void printFrequencyMatchSourceDetail(
@@ -1796,6 +1848,7 @@ void AnalyzerApp::printSequenceDiagnostics(const AnalyzerReport& report) const {
         frequencySource.windowStartMs,
         frequencySource.windowEndMs
     );
+    printSequenceSourceLifecycleDetail(report, source, frequencySource);
     printFrequencyMatchSourceDetail(report, source, frequencySource, detailLevel, compactSourceDiag);
 }
 

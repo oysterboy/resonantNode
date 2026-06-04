@@ -1570,6 +1570,8 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
         report.frequency.nearMissReason = runtimeDiag->frequencyNearMissReason != nullptr ? runtimeDiag->frequencyNearMissReason : "none";
     }
 
+    report.frequencyDetector = frequencyDetector;
+
     if (frequencyDetector != nullptr) {
         report.frequency.sourceOccurrenceEmitted = frequencyDetector->candidateEmitted;
         report.frequency.runtimeEvidenceSeen = runtimeDiag != nullptr ? runtimeDiag->frequencyPresent : false;

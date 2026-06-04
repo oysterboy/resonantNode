@@ -86,7 +86,7 @@ void AnalyzerApp::startCaptureSession(unsigned long totalTrials, unsigned long p
         Serial.print(millis() - captureRebaseStartMs);
         Serial.println("ms");
     }
-    resetDetectorState();
+    resetAudioSignalState();
     _audioSignal.resetStats();
     _audioSource.resetStats();
     Serial.println("AUDIO stats reset");

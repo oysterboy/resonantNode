@@ -465,7 +465,7 @@ private:
     void handleUsbLine(const char* line);
     void printSequenceHelp();
     void sendEmitterCommand(const char* command);
-    void resetDetectorState();
+    void resetAudioSignalState();
 
     // Session lifecycle helpers.
     void startBaseSession(unsigned long durationMs, bool quiet = false);

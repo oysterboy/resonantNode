@@ -55,6 +55,14 @@ enum class AnalyzerStage {
     Field,
 };
 
+enum class FrequencyEvidenceClass {
+    Accepted,
+    StrongNoOccurrence,
+    Partial,
+    Weak,
+    None,
+};
+
 inline const char* analyzerResultName(AnalyzerResult value) {
     switch (value) {
         case AnalyzerResult::Expected:
@@ -136,6 +144,38 @@ inline const char* analyzerStageName(AnalyzerStage value) {
         case AnalyzerStage::None:
         default:
             return "none";
+    }
+}
+
+inline const char* frequencyEvidenceClassLabel(FrequencyEvidenceClass value) {
+    switch (value) {
+        case FrequencyEvidenceClass::Accepted:
+            return "accepted";
+        case FrequencyEvidenceClass::StrongNoOccurrence:
+            return "strong_no_occurrence";
+        case FrequencyEvidenceClass::Partial:
+            return "partial";
+        case FrequencyEvidenceClass::Weak:
+            return "weak";
+        case FrequencyEvidenceClass::None:
+        default:
+            return "none";
+    }
+}
+
+inline size_t frequencyEvidenceClassIndex(FrequencyEvidenceClass value) {
+    switch (value) {
+        case FrequencyEvidenceClass::Accepted:
+            return 0U;
+        case FrequencyEvidenceClass::StrongNoOccurrence:
+            return 1U;
+        case FrequencyEvidenceClass::Partial:
+            return 2U;
+        case FrequencyEvidenceClass::Weak:
+            return 3U;
+        case FrequencyEvidenceClass::None:
+        default:
+            return 4U;
     }
 }
 
@@ -535,6 +575,22 @@ struct AnalyzerReport {
     AnalyzerDebugSummary debug;
     AnalyzerScalarDiagnostic scalar;
 };
+
+inline FrequencyEvidenceClass classifyFrequencyEvidence(const AnalyzerReport& report) {
+    if (report.frequency.acceptedPresent) {
+        return FrequencyEvidenceClass::Accepted;
+    }
+    if (report.frequency.fmOpened && report.frequency.fmReleased && !report.frequency.fmEmitted) {
+        return FrequencyEvidenceClass::StrongNoOccurrence;
+    }
+    if (report.frequency.scoreOkFrames > 0 || report.frequency.contrastOkFrames > 0) {
+        return FrequencyEvidenceClass::Partial;
+    }
+    if (report.frequency.maxScore > 0.0f) {
+        return FrequencyEvidenceClass::Weak;
+    }
+    return FrequencyEvidenceClass::None;
+}
 
 inline AnalyzerReport makeEmptyAnalyzerReport() {
     return AnalyzerReport{};

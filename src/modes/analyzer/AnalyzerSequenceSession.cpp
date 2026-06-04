@@ -1,4 +1,4 @@
-﻿#include "AnalyzerApp.h"
+#include "AnalyzerApp.h"
 
 #include <Arduino.h>
 #include <new>
@@ -34,22 +34,6 @@ unsigned long countSelectedSampleDumpTrials(unsigned long totalTrials, unsigned 
 
 size_t analyzerReasonIndex(AnalyzerReason value) {
     return static_cast<size_t>(value);
-}
-
-size_t frequencyEvidenceClassIndex(const AnalyzerReport& report) {
-    if (report.frequency.acceptedPresent) {
-        return 0U;
-    }
-    if (report.frequency.bothOkFrames > 500UL) {
-        return 1U;
-    }
-    if (report.frequency.scoreOkFrames > 0 || report.frequency.contrastOkFrames > 0) {
-        return 2U;
-    }
-    if (report.frequency.maxScore > 0.0f) {
-        return 3U;
-    }
-    return 4U;
 }
 
 const char* sequenceEvidenceTargetName(detection::EvidenceTarget value) {
@@ -258,7 +242,7 @@ void AnalyzerApp::startSequenceTest(unsigned long totalTrials, unsigned long per
         Serial.print(millis() - sequenceRebaseStartMs);
         Serial.println("ms");
     }
-    resetDetectorState();
+    resetAudioSignalState();
     if (_detection != nullptr) {
         _detection->setDiagnosticsEnabled(_sequenceTest.outputConfig.diagnosticsEnabled);
     }
@@ -562,7 +546,7 @@ void AnalyzerApp::finalizeSequenceTrial(unsigned long now) {
             _sequenceTest.rejectReasonCounts[reasonIndex]++;
         }
     }
-    _sequenceTest.freqEvidenceClassCounts[frequencyEvidenceClassIndex(*finalizedReport)]++;
+    _sequenceTest.freqEvidenceClassCounts[frequencyEvidenceClassIndex(classifyFrequencyEvidence(*finalizedReport))]++;
     flushSequenceSampleHistory(now + 1UL);
     printSequenceTrialResult(*finalizedReport);
     if (_sequenceTest.outputConfig.mode == AnalyzerApp::SeqOutputMode::SignalCheck) {

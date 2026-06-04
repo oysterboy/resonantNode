@@ -50,7 +50,7 @@ void AnalyzerApp::runRawBandTrigger(unsigned long toneHz,
 
     stopSequenceTest();
     stopCaptureSession();
-    resetDetectorState();
+    resetAudioSignalState();
     _audioSource.resetStats();
     _audioSignal.resetSignalState();
 
@@ -251,7 +251,7 @@ void AnalyzerApp::runRawTrigger(unsigned long toneHz,
 
     stopSequenceTest();
     stopCaptureSession();
-    resetDetectorState();
+    resetAudioSignalState();
     _audioSource.resetStats();
 
     if (toneHz == 0) {

@@ -252,6 +252,12 @@ Prevent Analyzer/source classification from lying.
 
 ## 01.1 Fix duplicate-after-primary bug
 
+Status:
+
+```text
+DONE
+```
+
 Target area:
 
 ```text
@@ -297,6 +303,12 @@ Expected trial classification is unchanged except corrected duplicate fields.
 
 ## 01.2 Unify frequency evidence classification
 
+Status:
+
+```text
+DONE
+```
+
 Target areas:
 
 ```text
@@ -307,14 +319,14 @@ AnalyzerReporting.*
 
 Problem:
 
-Two classifiers exist:
+Two classifiers used to exist:
 
 - Trial output assigns `report.frequency.freqEvidenceClass`.
 - Summary uses `frequencyEvidenceClassIndex()` with different rules.
 
 Action:
 
-Create one canonical classifier:
+One canonical classifier now exists:
 
 ```cpp
 enum class FrequencyEvidenceClass {
@@ -355,6 +367,12 @@ No separate inference path remains.
 ---
 
 ## 01.3 Rename misleading `resetDetectorState()`
+
+Status:
+
+```text
+DONE
+```
 
 Target:
 
@@ -399,6 +417,12 @@ No runtime behavior change unless explicitly intended.
 ---
 
 ## 01.4 Mark or remove FrequencyMatch compatibility mirrors
+
+Status:
+
+```text
+DONE
+```
 
 Target:
 
@@ -452,6 +476,12 @@ No active field is described as harmless compatibility-only while still driving 
 ---
 
 ## 01.5 Remove dead `#if 0` reporting block
+
+Status:
+
+```text
+DONE
+```
 
 Target:
 

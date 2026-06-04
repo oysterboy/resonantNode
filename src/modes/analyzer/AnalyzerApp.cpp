@@ -952,7 +952,7 @@ unsigned long AnalyzerApp::loopDelayMs() const {
     return TEST_LOOP_DELAY_MS;
 }
 
-void AnalyzerApp::resetDetectorState() {
+void AnalyzerApp::resetAudioSignalState() {
     _audioSignal.resetSignalState();
 }
 
@@ -983,7 +983,7 @@ void AnalyzerApp::startBaseSession(unsigned long durationMs, bool quiet) {
     sendEmitterCommand("MODE REMOTE");
     delay(100);
     _audioSignal.rebase();
-    resetDetectorState();
+    resetAudioSignalState();
     _audioSignal.resetStats();
     _audioSource.resetStats();
     Serial.println("AUDIO stats reset");
@@ -1622,17 +1622,7 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
         }
     }
     report.frequency.inconsistent = report.classification.result == AnalyzerResult::Miss && report.frequency.acceptedPresent;
-    if (report.frequency.acceptedPresent) {
-        report.frequency.freqEvidenceClass = "accepted";
-    } else if (report.frequency.fmOpened && report.frequency.fmReleased && !report.frequency.fmEmitted) {
-        report.frequency.freqEvidenceClass = "strong_no_occurrence";
-    } else if (report.frequency.scoreOkFrames > 0 || report.frequency.contrastOkFrames > 0) {
-        report.frequency.freqEvidenceClass = "partial";
-    } else if (report.frequency.maxScore > 0.0f) {
-        report.frequency.freqEvidenceClass = "weak";
-    } else {
-        report.frequency.freqEvidenceClass = "none";
-    }
+    report.frequency.freqEvidenceClass = frequencyEvidenceClassLabel(classifyFrequencyEvidence(report));
     if (report.frequency.analyzerMissReason == nullptr || report.frequency.analyzerMissReason[0] == '\0') {
         report.frequency.analyzerMissReason = report.classification.result == AnalyzerResult::Miss
             ? "no_accepted_occurrence"

@@ -40,7 +40,7 @@ private:
     FrequencyMatchDetector _detector = {};
     FrequencyMatchConfig _config = {};
     Occurrence _pending = {};
-    unsigned long _lastEmittedReleaseMs = 0;
+    unsigned long _lastEmittedCloseMs = 0;
 };
 
 } // namespace detection

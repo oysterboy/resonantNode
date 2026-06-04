@@ -8,7 +8,7 @@ void FrequencyOccurrenceSource::reset() {
     _hasPending = false;
     _peakEvidence = {};
     _pending = {};
-    _lastEmittedReleaseMs = 0;
+    _lastEmittedCloseMs = 0;
     _detector.resetState();
 }
 
@@ -49,7 +49,7 @@ void FrequencyOccurrenceSource::observeFrame(
         _peakEvidence = evidence;
     }
 
-    if (_detector.candidateEmitted && _detector.candidateReleaseMs != _lastEmittedReleaseMs) {
+    if (_detector.candidateEmitted && _detector.candidateCloseMs != _lastEmittedCloseMs) {
         Occurrence candidate = _detector.frequencyCandidate;
         candidate.present = true;
         candidate.kind = OccurrenceKind::FrequencyMatch;
@@ -69,7 +69,7 @@ void FrequencyOccurrenceSource::observeFrame(
             _pending = candidate;
             _hasPending = true;
         }
-        _lastEmittedReleaseMs = _detector.candidateReleaseMs;
+        _lastEmittedCloseMs = _detector.candidateCloseMs;
         _peakEvidence = {};
     }
 }

@@ -1452,9 +1452,16 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
         report.frequency.bothOkFrames = runtimeDiag->frequencyBothOkFrames;
         report.frequency.matchFrames = runtimeDiag->frequencyMatchFrames;
         report.frequency.rejectFrames = runtimeDiag->frequencyRejectFrames;
-        report.frequency.longestMatchRunFrames = runtimeDiag->frequencyLongestMatchRunFrames;
-        report.frequency.longestMatchRunMs = sampleFramesToMs(
-            runtimeDiag->frequencyLongestMatchRunFrames,
+        report.frequency.releaseScoreOkFrames = runtimeDiag->frequencyReleaseScoreOkFrames;
+        report.frequency.releaseContrastOkFrames = runtimeDiag->frequencyReleaseContrastOkFrames;
+        report.frequency.releaseBothOkFrames = runtimeDiag->frequencyReleaseBothOkFrames;
+        report.frequency.releaseScoreTooLowFrames = runtimeDiag->frequencyReleaseScoreTooLowFrames;
+        report.frequency.releaseContrastTooLowFrames = runtimeDiag->frequencyReleaseContrastTooLowFrames;
+        report.frequency.releaseScoreAndContrastTooLowFrames = runtimeDiag->frequencyReleaseScoreAndContrastTooLowFrames;
+        report.frequency.releaseNoEvidenceFrames = runtimeDiag->frequencyReleaseNoEvidenceFrames;
+        report.frequency.diagLongestMatchStreakFrames = runtimeDiag->frequencyDiagLongestMatchStreakFrames;
+        report.frequency.diagLongestMatchStreakMs = sampleFramesToMs(
+            runtimeDiag->frequencyDiagLongestMatchStreakFrames,
             _audioSource.sampleRateHz() > 0 ? _audioSource.sampleRateHz() : 16000UL
         );
         report.frequency.audioHealth = diagnostics.audioHealth != nullptr ? diagnostics.audioHealth : "unknown";
@@ -1501,6 +1508,7 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
         report.frequency.sourceSummary.bestPeakSecondary = runtimeDiag->sourceSummary.bestPeakSecondary;
         report.frequency.sourceSummary.bestRejectReason = runtimeDiag->sourceSummary.bestRejectReason;
         report.frequency.sourceSummary.bestGateReason = runtimeDiag->sourceSummary.bestGateReason;
+        report.frequency.sourceSummary.closeCause = runtimeDiag->sourceSummary.closeCause;
         report.frequency.sourceSummary.scoreTooLowFrames = runtimeDiag->sourceSummary.scoreTooLowFrames;
         report.frequency.sourceSummary.contrastTooLowFrames = runtimeDiag->sourceSummary.contrastTooLowFrames;
         report.frequency.sourceSummary.scoreAndContrastTooLowFrames = runtimeDiag->sourceSummary.scoreAndContrastTooLowFrames;
@@ -1571,6 +1579,9 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
         report.frequency.fmDurationOk = runtimeDiag != nullptr ? runtimeDiag->frequencyValidRelease : false;
         report.frequency.fmValidRelease = runtimeDiag != nullptr ? runtimeDiag->frequencyValidRelease : false;
         report.frequency.fmEmitAllowed = runtimeDiag != nullptr ? runtimeDiag->frequencyEmitAllowed : false;
+        report.frequency.fmCloseCause = runtimeDiag != nullptr && runtimeDiag->sourceSummary.closeCause != nullptr
+            ? runtimeDiag->sourceSummary.closeCause
+            : "none";
         report.frequency.fmOpenMs = runtimeDiag != nullptr ? runtimeDiag->frequencyOpenMs : 0UL;
         report.frequency.fmPeakMs = runtimeDiag != nullptr ? runtimeDiag->frequencyPeakMs : 0UL;
         report.frequency.fmReleaseMs = runtimeDiag != nullptr ? runtimeDiag->frequencyReleaseMs : 0UL;
@@ -1594,6 +1605,7 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
             report.frequency.fmEmitted = false;
             report.frequency.fmValidRelease = false;
             report.frequency.fmEmitAllowed = false;
+            report.frequency.fmCloseCause = "none";
         }
         report.frequency.diagFrameCountOk = report.frequency.expectedFrameCountEstimate == 0
             ? report.frequency.frames == 0

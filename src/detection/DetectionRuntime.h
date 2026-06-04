@@ -62,6 +62,7 @@ struct SourceCandidateSummary {
     float bestPeakSecondary = 0.0f;
     const char* bestRejectReason = "none";
     const char* bestGateReason = "none";
+    const char* closeCause = "none";
     unsigned long scoreTooLowFrames = 0;
     unsigned long contrastTooLowFrames = 0;
     unsigned long scoreAndContrastTooLowFrames = 0;
@@ -109,9 +110,16 @@ struct DetectionDiagnostics {
     unsigned long frequencyBothOkFrames = 0;
     unsigned long frequencyMatchFrames = 0;
     unsigned long frequencyRejectFrames = 0;
-    unsigned long frequencyLongestMatchRunFrames = 0;
-    unsigned long frequencyLongestMatchRunStartMs = 0;
-    unsigned long frequencyLongestMatchRunEndMs = 0;
+    unsigned long frequencyReleaseScoreOkFrames = 0;
+    unsigned long frequencyReleaseContrastOkFrames = 0;
+    unsigned long frequencyReleaseBothOkFrames = 0;
+    unsigned long frequencyReleaseScoreTooLowFrames = 0;
+    unsigned long frequencyReleaseContrastTooLowFrames = 0;
+    unsigned long frequencyReleaseScoreAndContrastTooLowFrames = 0;
+    unsigned long frequencyReleaseNoEvidenceFrames = 0;
+    unsigned long frequencyDiagLongestMatchStreakFrames = 0;
+    unsigned long frequencyDiagLongestMatchStreakStartMs = 0;
+    unsigned long frequencyDiagLongestMatchStreakEndMs = 0;
 
     float frequencyScoreMean = 0.0f;
     float frequencyContrastMean = 0.0f;

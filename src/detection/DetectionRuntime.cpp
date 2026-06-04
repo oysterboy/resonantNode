@@ -2,6 +2,8 @@
 
 #include <string.h>
 
+#include "detectors/FrequencyMatchDetector.h"
+
 // DetectionRuntime pipeline execution in source order.
 namespace detection {
 
@@ -163,9 +165,16 @@ void DetectionRuntime::captureDiagnostics() {
         _diagnostics.frequencyBothOkFrames = detector.diagnosticsBothOkCount;
         _diagnostics.frequencyMatchFrames = detector.diagnosticsMatchedCount;
         _diagnostics.frequencyRejectFrames = detector.diagnosticsRejectedCount;
-        _diagnostics.frequencyLongestMatchRunFrames = detector.diagLongestMatchStreakFrames;
-        _diagnostics.frequencyLongestMatchRunStartMs = detector.diagLongestMatchStreakStartMs;
-        _diagnostics.frequencyLongestMatchRunEndMs = detector.diagLongestMatchStreakEndMs;
+        _diagnostics.frequencyReleaseScoreOkFrames = detector.diagnosticsReleaseScoreOkCount;
+        _diagnostics.frequencyReleaseContrastOkFrames = detector.diagnosticsReleaseContrastOkCount;
+        _diagnostics.frequencyReleaseBothOkFrames = detector.diagnosticsReleaseBothOkCount;
+        _diagnostics.frequencyReleaseScoreTooLowFrames = detector.diagnosticsReleaseScoreTooLowCount;
+        _diagnostics.frequencyReleaseContrastTooLowFrames = detector.diagnosticsReleaseContrastTooLowCount;
+        _diagnostics.frequencyReleaseScoreAndContrastTooLowFrames = detector.diagnosticsReleaseScoreAndContrastTooLowCount;
+        _diagnostics.frequencyReleaseNoEvidenceFrames = detector.diagnosticsReleaseNoEvidenceCount;
+        _diagnostics.frequencyDiagLongestMatchStreakFrames = detector.diagLongestMatchStreakFrames;
+        _diagnostics.frequencyDiagLongestMatchStreakStartMs = detector.diagLongestMatchStreakStartMs;
+        _diagnostics.frequencyDiagLongestMatchStreakEndMs = detector.diagLongestMatchStreakEndMs;
         _diagnostics.frequencyScoreMean = detector.diagnosticsScoreMean();
         _diagnostics.frequencyContrastMean = detector.diagnosticsContrastMean();
         _diagnostics.frequencyScoreMin = detector.diagnosticsScoreMin;
@@ -219,6 +228,7 @@ void DetectionRuntime::captureDiagnostics() {
         _diagnostics.sourceSummary.bestPeakSecondary = detector.bestPeakContrast;
         _diagnostics.sourceSummary.bestRejectReason = detector.bestRejectReason;
         _diagnostics.sourceSummary.bestGateReason = detector.bestGateReason;
+        _diagnostics.sourceSummary.closeCause = frequencyReleaseFailCauseName(detector.candidateCloseCause);
         _diagnostics.sourceSummary.scoreTooLowFrames = detector.diagnosticsScoreTooLowCount;
         _diagnostics.sourceSummary.contrastTooLowFrames = detector.diagnosticsContrastTooLowCount;
         _diagnostics.sourceSummary.scoreAndContrastTooLowFrames = detector.diagnosticsScoreAndContrastTooLowCount;
@@ -230,9 +240,9 @@ void DetectionRuntime::captureDiagnostics() {
         _diagnostics.sourceSummary.totalGapMs = detector.totalGapMs;
         _diagnostics.sourceSummary.maxGapMs = detector.maxGapMs;
         _diagnostics.sourceSummary.islandCount = detector.islandCount;
-        _diagnostics.sourceLastCandidate.present = detector.candidateActive || detector.candidateClosed || detector.candidateEmitted || detector.candidateFirstSeenMs > 0;
+        _diagnostics.sourceLastCandidate.present = detector.candidateActive || detector.candidateClosed || detector.candidateEmitted || detector.candidateOpenMs > 0;
         _diagnostics.sourceLastCandidate.peakMs = detector.candidatePeakMs;
-        _diagnostics.sourceLastCandidate.durationMs = detector.candidateHoldMs;
+        _diagnostics.sourceLastCandidate.durationMs = detector.candidateDurationMs;
         _diagnostics.sourceLastCandidate.windowSamples = detector.candidatePeakWindowSampleCount;
         _diagnostics.sourceLastCandidate.peakPrimary = detector.candidatePeakScore;
         _diagnostics.sourceLastCandidate.peakSecondary = detector.candidatePeakContrast;
@@ -253,15 +263,15 @@ void DetectionRuntime::captureDiagnostics() {
         _diagnostics.frequencyOpened = detector.candidateActive
             || detector.candidateClosed
             || detector.candidateEmitted
-            || detector.candidateFirstSeenMs > 0;
-        _diagnostics.frequencyReleased = detector.candidateClosed || detector.candidateReleaseMs > 0;
+            || detector.candidateOpenMs > 0;
+        _diagnostics.frequencyReleased = detector.candidateClosed || detector.candidateCloseMs > 0;
         _diagnostics.frequencyEmitted = detector.candidateEmitted;
         _diagnostics.frequencyValidRelease = detector.validRelease;
         _diagnostics.frequencyEmitAllowed = detector.emitAllowed;
-        _diagnostics.frequencyOpenMs = detector.candidateFirstSeenMs;
+        _diagnostics.frequencyOpenMs = detector.candidateOpenMs;
         _diagnostics.frequencyPeakMs = detector.candidatePeakMs;
-        _diagnostics.frequencyReleaseMs = detector.candidateReleaseMs;
-        _diagnostics.frequencyDurationMs = detector.candidateHoldMs;
+        _diagnostics.frequencyReleaseMs = detector.candidateCloseMs;
+        _diagnostics.frequencyDurationMs = detector.candidateDurationMs;
         _diagnostics.frequencyMinDurationMs = detector.candidateMinDurationMs;
         _diagnostics.frequencyMaxDurationMs = detector.candidateMaxDurationMs;
         _diagnostics.frequencyScoreMax = detector.diagnosticsScoreMax;
@@ -342,9 +352,16 @@ void DetectionRuntime::captureDiagnostics() {
         _diagnostics.frequencyBothOkFrames = 0;
         _diagnostics.frequencyMatchFrames = 0;
         _diagnostics.frequencyRejectFrames = 0;
-        _diagnostics.frequencyLongestMatchRunFrames = 0;
-        _diagnostics.frequencyLongestMatchRunStartMs = 0;
-        _diagnostics.frequencyLongestMatchRunEndMs = 0;
+        _diagnostics.frequencyReleaseScoreOkFrames = 0;
+        _diagnostics.frequencyReleaseContrastOkFrames = 0;
+        _diagnostics.frequencyReleaseBothOkFrames = 0;
+        _diagnostics.frequencyReleaseScoreTooLowFrames = 0;
+        _diagnostics.frequencyReleaseContrastTooLowFrames = 0;
+        _diagnostics.frequencyReleaseScoreAndContrastTooLowFrames = 0;
+        _diagnostics.frequencyReleaseNoEvidenceFrames = 0;
+        _diagnostics.frequencyDiagLongestMatchStreakFrames = 0;
+        _diagnostics.frequencyDiagLongestMatchStreakStartMs = 0;
+        _diagnostics.frequencyDiagLongestMatchStreakEndMs = 0;
         _diagnostics.frequencyScoreMean = 0.0f;
         _diagnostics.frequencyContrastMean = 0.0f;
         _diagnostics.frequencyScoreMin = 0.0f;

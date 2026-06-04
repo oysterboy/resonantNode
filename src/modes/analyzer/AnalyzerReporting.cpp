@@ -146,8 +146,16 @@ constexpr AnalyzerFieldDescriptor kSourceContrastOkFramesField{"source.freq", "c
 constexpr AnalyzerFieldDescriptor kSourceBothOkFramesField{"source.freq", "both_ok_frames"};
 constexpr AnalyzerFieldDescriptor kSourceMatchFramesField{"source.freq", "match_frames"};
 constexpr AnalyzerFieldDescriptor kSourceRejectFramesField{"source.freq", "reject_frames"};
-constexpr AnalyzerFieldDescriptor kSourceLongestMatchRunFramesField{"source.freq", "longest_match_run_frames"};
-constexpr AnalyzerFieldDescriptor kSourceLongestMatchRunMsField{"source.freq", "longest_match_run_ms"};
+constexpr AnalyzerFieldDescriptor kSourceReleaseScoreOkFramesField{"source.freq", "release_score_ok_frames"};
+constexpr AnalyzerFieldDescriptor kSourceReleaseContrastOkFramesField{"source.freq", "release_contrast_ok_frames"};
+constexpr AnalyzerFieldDescriptor kSourceReleaseBothOkFramesField{"source.freq", "release_both_ok_frames"};
+constexpr AnalyzerFieldDescriptor kSourceReleaseScoreTooLowFramesField{"source.freq", "release_score_too_low_frames"};
+constexpr AnalyzerFieldDescriptor kSourceReleaseContrastTooLowFramesField{"source.freq", "release_contrast_too_low_frames"};
+constexpr AnalyzerFieldDescriptor kSourceReleaseScoreAndContrastTooLowFramesField{"source.freq", "release_score_and_contrast_too_low_frames"};
+constexpr AnalyzerFieldDescriptor kSourceReleaseNoEvidenceFramesField{"source.freq", "release_no_evidence_frames"};
+constexpr AnalyzerFieldDescriptor kSourceDiagLongestMatchStreakFramesField{"source.freq", "diag_longest_match_streak_frames"};
+constexpr AnalyzerFieldDescriptor kSourceDiagLongestMatchStreakMsField{"source.freq", "diag_longest_match_streak_ms"};
+constexpr AnalyzerFieldDescriptor kSourceCloseCauseField{"source.freq", "close_cause"};
 constexpr AnalyzerFieldDescriptor kSourceSumScoreField{"source.freq", "sum_score"};
 constexpr AnalyzerFieldDescriptor kSourceSumContrastField{"source.freq", "sum_contrast"};
 constexpr AnalyzerFieldDescriptor kSourceMeanScoreField{"source.freq", "mean_score"};
@@ -184,6 +192,7 @@ constexpr AnalyzerFieldDescriptor kSourceFmReleasedField{"source.freq", "fm_rele
 constexpr AnalyzerFieldDescriptor kSourceFmEmittedField{"source.freq", "fm_emitted"};
 constexpr AnalyzerFieldDescriptor kSourceFmValidReleaseField{"source.freq", "fm_valid_release"};
 constexpr AnalyzerFieldDescriptor kSourceFmEmitAllowedField{"source.freq", "fm_emit_allowed"};
+constexpr AnalyzerFieldDescriptor kSourceFmCloseCauseField{"source.freq", "fm_close_cause"};
 constexpr AnalyzerFieldDescriptor kSourceFreqEvidenceClassField{"source.freq", "freq_evidence_class"};
 constexpr AnalyzerFieldDescriptor kSourceFreqHistoryScoreRecordsField{"source.freq", "history_score_records"};
 constexpr AnalyzerFieldDescriptor kSourceFreqHistoryContrastRecordsField{"source.freq", "history_contrast_records"};
@@ -346,6 +355,8 @@ void printSourceRejectSummaryLine(
     printField(kSourceBestRejectReasonField, reason);
     Serial.print(' ');
     printField(kSourceBestGateReasonField, gateReason);
+    Serial.print(' ');
+    printField(kSourceCloseCauseField, summary.closeCause != nullptr ? summary.closeCause : "none");
     Serial.println();
     Serial.print("  ");
     printField(kSourceMaxPrimaryField, summary.maxPeakPrimary, 1);
@@ -1591,6 +1602,8 @@ void AnalyzerApp::printSequenceDiagnostics(const AnalyzerReport& report) const {
         printField(kSourceFmValidReleaseField, report.frequency.fmValidRelease);
         Serial.print(' ');
         printField(kSourceFmEmitAllowedField, report.frequency.fmEmitAllowed);
+        Serial.print(' ');
+        printField(kSourceFmCloseCauseField, report.frequency.fmCloseCause != nullptr ? report.frequency.fmCloseCause : "none");
         Serial.println();
     }
 
@@ -1663,6 +1676,8 @@ void AnalyzerApp::printSequenceDiagnostics(const AnalyzerReport& report) const {
         Serial.print(' ');
         printField(kSourceFreqEvidenceClassField, report.frequency.freqEvidenceClass != nullptr ? report.frequency.freqEvidenceClass : "none");
         Serial.print(' ');
+        printField(kSourceFmCloseCauseField, report.frequency.fmCloseCause != nullptr ? report.frequency.fmCloseCause : "none");
+        Serial.print(' ');
         printField(kSourceDiagInconsistentField, report.frequency.inconsistent);
         Serial.println();
         return;
@@ -1703,9 +1718,23 @@ void AnalyzerApp::printSequenceDiagnostics(const AnalyzerReport& report) const {
     Serial.print(' ');
     printField(kSourceRejectFramesField, report.frequency.rejectFrames);
     Serial.print(' ');
-    printField(kSourceLongestMatchRunFramesField, report.frequency.longestMatchRunFrames);
+    printField(kSourceReleaseScoreOkFramesField, report.frequency.releaseScoreOkFrames);
     Serial.print(' ');
-    printField(kSourceLongestMatchRunMsField, report.frequency.longestMatchRunMs);
+    printField(kSourceReleaseContrastOkFramesField, report.frequency.releaseContrastOkFrames);
+    Serial.print(' ');
+    printField(kSourceReleaseBothOkFramesField, report.frequency.releaseBothOkFrames);
+    Serial.print(' ');
+    printField(kSourceReleaseScoreTooLowFramesField, report.frequency.releaseScoreTooLowFrames);
+    Serial.print(' ');
+    printField(kSourceReleaseContrastTooLowFramesField, report.frequency.releaseContrastTooLowFrames);
+    Serial.print(' ');
+    printField(kSourceReleaseScoreAndContrastTooLowFramesField, report.frequency.releaseScoreAndContrastTooLowFrames);
+    Serial.print(' ');
+    printField(kSourceReleaseNoEvidenceFramesField, report.frequency.releaseNoEvidenceFrames);
+    Serial.print(' ');
+    printField(kSourceDiagLongestMatchStreakFramesField, report.frequency.diagLongestMatchStreakFrames);
+    Serial.print(' ');
+    printField(kSourceDiagLongestMatchStreakMsField, report.frequency.diagLongestMatchStreakMs);
     Serial.print(' ');
     printField(kSourceSumScoreField, report.frequency.sumScore, 1);
     Serial.print(' ');
@@ -1720,6 +1749,8 @@ void AnalyzerApp::printSequenceDiagnostics(const AnalyzerReport& report) const {
     printField(kSourceSelectedRejectGateReasonField, report.frequency.selectedRejectGateReason != nullptr ? report.frequency.selectedRejectGateReason : "none");
     Serial.print(' ');
     printField(kSourceFreqEvidenceClassField, report.frequency.freqEvidenceClass != nullptr ? report.frequency.freqEvidenceClass : "none");
+    Serial.print(' ');
+    printField(kSourceFmCloseCauseField, report.frequency.fmCloseCause != nullptr ? report.frequency.fmCloseCause : "none");
     Serial.print(' ');
     printField(kSourceNearMissField, report.frequency.nearMiss);
     Serial.print(' ');

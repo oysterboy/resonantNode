@@ -5,6 +5,16 @@
 #include "../features/FrequencyMatchEvaluation.h"
 #include "../occurrences/Occurrence.h"
 
+enum class FrequencyReleaseFailCause {
+    None,
+    NoEvidence,
+    ScoreLow,
+    ContrastLow,
+    ScoreAndContrastLow,
+};
+
+const char* frequencyReleaseFailCauseName(FrequencyReleaseFailCause cause);
+
 /*
 FrequencyMatchDetector
 
@@ -34,15 +44,15 @@ public:
     unsigned long candidateRefractoryUntilMs = 0;
     unsigned long firstThresholdCrossingMs = 0;
     uint64_t firstThresholdCrossingSample = 0;
-    unsigned long candidateFirstSeenMs = 0;
-    uint64_t candidateFirstSeenSample = 0;
+    unsigned long candidateOpenMs = 0;
+    uint64_t candidateOpenSample = 0;
     unsigned long candidatePeakMs = 0;
     uint64_t candidatePeakSample = 0;
-    unsigned long candidateReleaseMs = 0;
-    uint64_t candidateReleaseSample = 0;
+    unsigned long candidateCloseMs = 0;
+    uint64_t candidateCloseSample = 0;
     unsigned long candidateHoldWindows = 0;
-    unsigned long candidateHoldMs = 0;
-    unsigned long candidateLastMatchedMs = 0;
+    unsigned long candidateDurationMs = 0;
+    unsigned long candidateLastMatchMs = 0;
     float attackScoreThreshold = 0.0f;
     float releaseScoreThreshold = 0.0f;
     float attackContrastThreshold = 0.0f;
@@ -104,6 +114,13 @@ public:
     unsigned long diagnosticsScoreTooLowCount = 0;
     unsigned long diagnosticsContrastTooLowCount = 0;
     unsigned long diagnosticsScoreAndContrastTooLowCount = 0;
+    unsigned long diagnosticsReleaseScoreOkCount = 0;
+    unsigned long diagnosticsReleaseContrastOkCount = 0;
+    unsigned long diagnosticsReleaseBothOkCount = 0;
+    unsigned long diagnosticsReleaseScoreTooLowCount = 0;
+    unsigned long diagnosticsReleaseContrastTooLowCount = 0;
+    unsigned long diagnosticsReleaseScoreAndContrastTooLowCount = 0;
+    unsigned long diagnosticsReleaseNoEvidenceCount = 0;
     float diagnosticsScoreSum = 0.0f;
     float diagnosticsScoreMin = 0.0f;
     float diagnosticsScoreMax = 0.0f;
@@ -113,8 +130,8 @@ public:
     float diagnosticsContrastMax = 0.0f;
     unsigned long diagnosticsContrastMaxMs = 0;
     unsigned long lastRejectedCloseMs = 0;
-    const char* lastReleaseFailCause = "none";
-    const char* candidateCloseCause = "none";
+    FrequencyReleaseFailCause lastReleaseFailCause = FrequencyReleaseFailCause::None;
+    FrequencyReleaseFailCause candidateCloseCause = FrequencyReleaseFailCause::None;
 
     void resetState();
     void resetRejectSummary();

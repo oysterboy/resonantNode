@@ -300,6 +300,7 @@ struct AnalyzerSourceCandidateSummary {
     float bestPeakSecondary = 0.0f;
     const char* bestRejectReason = "none";
     const char* bestGateReason = "none";
+    const char* closeCause = "none";
     unsigned long scoreTooLowFrames = 0;
     unsigned long contrastTooLowFrames = 0;
     unsigned long scoreAndContrastTooLowFrames = 0;
@@ -357,10 +358,17 @@ struct AnalyzerFrequencyDiagnostic {
     unsigned long bothOkFrames = 0;
     unsigned long matchFrames = 0;
     unsigned long rejectFrames = 0;
-    unsigned long longestMatchRunFrames = 0;
-    unsigned long longestMatchRunMs = 0;
-    unsigned long currentMatchRunFrames = 0;
-    unsigned long currentMatchRunStartMs = 0;
+    unsigned long releaseScoreOkFrames = 0;
+    unsigned long releaseContrastOkFrames = 0;
+    unsigned long releaseBothOkFrames = 0;
+    unsigned long releaseScoreTooLowFrames = 0;
+    unsigned long releaseContrastTooLowFrames = 0;
+    unsigned long releaseScoreAndContrastTooLowFrames = 0;
+    unsigned long releaseNoEvidenceFrames = 0;
+    unsigned long diagLongestMatchStreakFrames = 0;
+    unsigned long diagLongestMatchStreakMs = 0;
+    unsigned long diagCurrentMatchStreakFrames = 0;
+    unsigned long diagCurrentMatchStreakStartMs = 0;
     const char* audioHealth = "unknown";
     unsigned long audioZeroishFrames = 0;
     unsigned long audioFlatlineFrames = 0;
@@ -403,6 +411,7 @@ struct AnalyzerFrequencyDiagnostic {
     bool fmDurationOk = false;
     bool fmValidRelease = false;
     bool fmEmitAllowed = false;
+    const char* fmCloseCause = "none";
     unsigned long fmOpenMs = 0;
     unsigned long fmPeakMs = 0;
     unsigned long fmReleaseMs = 0;

@@ -1373,6 +1373,12 @@ Value/Sample/Packet/Window/Frame/Evidence/Label are no longer ambiguous.
 
 ## 04.1 Add active naming glossary
 
+Status:
+
+```text
+DONE
+```
+
 Create/update:
 
 ```text

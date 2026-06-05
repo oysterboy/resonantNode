@@ -215,7 +215,7 @@ public:
     void setProfileName(const char* profileName);
 
     void observeFrame(
-        const AudioSamplePacket& frame,
+        const AudioSamplePacket& audioSamplePacket,
         const FrequencyBandMeasurementPacket& frequencyEvidence,
         unsigned long nowMs
     );

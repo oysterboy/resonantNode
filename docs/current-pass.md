@@ -1627,6 +1627,12 @@ Every active “Window” has start/end range semantics.
 
 ## 04.7 Frame audit
 
+Status:
+
+```text
+DONE
+```
+
 Search:
 
 ```text

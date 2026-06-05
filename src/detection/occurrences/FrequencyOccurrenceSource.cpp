@@ -21,10 +21,10 @@ void FrequencyOccurrenceSource::setDiagnosticsEnabled(bool enabled) {
 }
 
 void FrequencyOccurrenceSource::observeFrame(
-    const AudioSamplePacket& frame,
+    const AudioSamplePacket& audioSamplePacket,
     const detection::FrequencyBandMeasurementPacket& evidence
 ) {
-    if (!frame.valid) {
+    if (!audioSamplePacket.valid) {
         return;
     }
 
@@ -41,8 +41,8 @@ void FrequencyOccurrenceSource::observeFrame(
 
     _detector.update(
         evidence,
-        frame.timeMs,
-        frame.sampleIndex,
+        audioSamplePacket.timeMs,
+        audioSamplePacket.sampleIndex,
         frequencyTuning,
         _config.releaseDebounceMs,
         _config.cooldownAfterReleaseMs,
@@ -62,12 +62,12 @@ void FrequencyOccurrenceSource::observeFrame(
         candidate.detectorKind = OccurrenceDetectorKind::FrequencyMatch;
         candidate.confidence = candidate.valid ? 1.0f : 0.0f;
         candidate.ampEvidencePresent = true;
-        candidate.ampLevel = frame.audioMagnitudeValue;
-        candidate.ampBaseline = frame.baseline;
+        candidate.ampLevel = audioSamplePacket.audioMagnitudeValue;
+        candidate.ampBaseline = audioSamplePacket.baseline;
         candidate.frequency = _peakEvidence;
         candidate.frequency.present = true;
         candidate.frequency.matched = _detector.frequencyCandidate.valid;
-        candidate.frequency.observedAtMs = frame.timeMs;
+        candidate.frequency.observedAtMs = audioSamplePacket.timeMs;
         candidate.frequency.targetHz = _peakEvidence.targetHz;
         candidate.transient.present = false;
         if (candidate.valid) {

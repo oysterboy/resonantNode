@@ -15,15 +15,15 @@ live pipe into OccurrenceSource.
 */
 namespace detection::FeatureExtractor {
 
-inline void observeFrame(const AudioSamplePacket& frame, FeatureHistory& history) {
-    if (!frame.valid) {
+inline void observeFrame(const AudioSamplePacket& audioSamplePacket, FeatureHistory& history) {
+    if (!audioSamplePacket.valid) {
         return;
     }
 
-    history.record(FeatureStreamId::AmpEnvelope, frame.timeMs, frame.audioMagnitudeValue);
+    history.record(FeatureStreamId::AmpEnvelope, audioSamplePacket.timeMs, audioSamplePacket.audioMagnitudeValue);
 }
 
-inline void observeFrequencyFeatureFrame(const FrequencyBandMeasurementPacket& evidence, unsigned long nowMs, FeatureHistory& history) {
+inline void observeFrequencyMeasurementPacket(const FrequencyBandMeasurementPacket& evidence, unsigned long nowMs, FeatureHistory& history) {
     if (!evidence.present) {
         return;
     }

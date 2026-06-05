@@ -75,8 +75,8 @@ private:
     void applyActiveDetectionProfile();
     void applyActiveBehaviorGateConfig();
     void applyActiveProfiles();
-    void processDetectionFrame(const AudioSamplePacket& frame, unsigned long now, bool selfChirpSuppressed, bool& sawPatternThisLoop);
-    detection::FrequencyBandMeasurementPacket captureFrequencyFeatureFrame(unsigned long observedAtMs) const;
+    void processDetectionFrame(const AudioSamplePacket& audioSamplePacket, unsigned long now, bool selfChirpSuppressed, bool& sawPatternThisLoop);
+    detection::FrequencyBandMeasurementPacket captureFrequencyMeasurementPacket(unsigned long observedAtMs) const;
     void printRbSummary() const;
     void printRbSignalSummary() const;
     void printRbDetectorSummary() const;

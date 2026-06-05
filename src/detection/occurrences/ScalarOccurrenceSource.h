@@ -36,7 +36,7 @@ public:
     void resetRejectSummary();
     void begin();
     void setConfig(const ScalarTransientConfig& config);
-    void observeFrame(const AudioSamplePacket& frame, float signalLevel, OccurrenceKind kind, OccurrenceSource source);
+    void observeFrame(const AudioSamplePacket& audioSamplePacket, float signalLevel, OccurrenceKind kind, OccurrenceSource source);
 
     void setOnsetDetectionThreshold(float value);
     void setOnsetReleaseThreshold(float value);
@@ -48,7 +48,7 @@ public:
     void setDiagnosticsEnabled(bool enabled);
     void setDiagnosticsLabel(const char* value);
 
-    void observe(const AudioSamplePacket& frame, float signalLevel);
+    void observe(const AudioSamplePacket& audioSamplePacket, float signalLevel);
 
     bool onsetDetected() const;
     float onsetStrength() const;
@@ -87,7 +87,7 @@ public:
     float lastTransientRejectedStrength() const;
 
     bool popOccurrence(Occurrence& out);
-    bool consumeCandidate(const AudioSamplePacket& frame,
+    bool consumeCandidate(const AudioSamplePacket& audioSamplePacket,
                           OccurrenceKind kind,
                           OccurrenceSource source,
                           Occurrence& out);

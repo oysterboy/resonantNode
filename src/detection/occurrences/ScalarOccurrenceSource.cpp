@@ -48,12 +48,12 @@ void ScalarOccurrenceSource::setConfig(const ScalarTransientConfig& config) {
     setReleaseDebounceMs(config.releaseDebounceMs);
 }
 
-void ScalarOccurrenceSource::observeFrame(const AudioSamplePacket& frame, float signalLevel, OccurrenceKind kind, OccurrenceSource source) {
-    observe(frame, signalLevel);
+void ScalarOccurrenceSource::observeFrame(const AudioSamplePacket& audioSamplePacket, float signalLevel, OccurrenceKind kind, OccurrenceSource source) {
+    observe(audioSamplePacket, signalLevel);
 
     if (transientDetected()) {
         Occurrence candidate;
-        if (consumeCandidate(frame, kind, source, candidate)) {
+        if (consumeCandidate(audioSamplePacket, kind, source, candidate)) {
             _pending = candidate;
             _hasPending = true;
         }
@@ -96,25 +96,25 @@ void ScalarOccurrenceSource::setDiagnosticsLabel(const char* value) {
     _detector.setDiagnosticsLabel(value);
 }
 
-void ScalarOccurrenceSource::observe(const AudioSamplePacket& frame, float signalLevel) {
-    if (!frame.valid) {
+void ScalarOccurrenceSource::observe(const AudioSamplePacket& audioSamplePacket, float signalLevel) {
+    if (!audioSamplePacket.valid) {
         return;
     }
 
-    _detector.update(signalLevel, frame.timeUs);
+    _detector.update(signalLevel, audioSamplePacket.timeUs);
 
     if (_detector.onsetDetected()) {
         _candidateActive = true;
         _releaseObserved = false;
         _candidateReady = false;
-        _candidateFirstSeenSample = frame.sampleIndex;
-        _candidatePeakSample = frame.sampleIndex;
-        _candidateReleaseSample = frame.sampleIndex;
-        _candidateFirstSeenUs = frame.timeUs;
-        _candidatePeakUs = frame.timeUs;
+        _candidateFirstSeenSample = audioSamplePacket.sampleIndex;
+        _candidatePeakSample = audioSamplePacket.sampleIndex;
+        _candidateReleaseSample = audioSamplePacket.sampleIndex;
+        _candidateFirstSeenUs = audioSamplePacket.timeUs;
+        _candidatePeakUs = audioSamplePacket.timeUs;
         _candidateReleaseObservedUs = 0;
-        _candidateFirstSeenMs = frame.timeMs;
-        _candidatePeakMs = frame.timeMs;
+        _candidateFirstSeenMs = audioSamplePacket.timeMs;
+        _candidatePeakMs = audioSamplePacket.timeMs;
         _candidateReleaseObservedMs = 0;
         _candidateHoldWindows = 1;
         _candidateOnsetStrength = signalLevel;
@@ -125,9 +125,9 @@ void ScalarOccurrenceSource::observe(const AudioSamplePacket& frame, float signa
 
         if (signalLevel > _candidatePeakStrength) {
             _candidatePeakStrength = signalLevel;
-            _candidatePeakSample = frame.sampleIndex;
-            _candidatePeakUs = frame.timeUs;
-            _candidatePeakMs = frame.timeMs;
+            _candidatePeakSample = audioSamplePacket.sampleIndex;
+            _candidatePeakUs = audioSamplePacket.timeUs;
+            _candidatePeakMs = audioSamplePacket.timeMs;
         }
 
         _candidateCurrentStrength = signalLevel;
@@ -187,7 +187,7 @@ void ScalarOccurrenceSource::observe(const AudioSamplePacket& frame, float signa
 
     if (_candidateActive && _detector.transientDetected()) {
         _candidateReady = true;
-        _candidateReleaseSample = frame.sampleIndex;
+        _candidateReleaseSample = audioSamplePacket.sampleIndex;
     }
 }
 
@@ -342,7 +342,7 @@ bool ScalarOccurrenceSource::popOccurrence(Occurrence& out) {
     return true;
 }
 
-bool ScalarOccurrenceSource::consumeCandidate(const AudioSamplePacket& frame,
+bool ScalarOccurrenceSource::consumeCandidate(const AudioSamplePacket& audioSamplePacket,
                                            OccurrenceKind kind,
                                            OccurrenceSource source,
                                            Occurrence& out) {
@@ -362,7 +362,7 @@ bool ScalarOccurrenceSource::consumeCandidate(const AudioSamplePacket& frame,
     out.releaseSample = _candidateReleaseSample;
     out.startMs = _candidateFirstSeenMs;
     out.peakMs = _candidatePeakMs;
-    out.releaseMs = _releaseObserved ? _candidateReleaseObservedMs : frame.timeMs;
+    out.releaseMs = _releaseObserved ? _candidateReleaseObservedMs : audioSamplePacket.timeMs;
     out.endMs = out.releaseMs;
     out.durationMs = out.releaseMs >= out.startMs ? out.releaseMs - out.startMs : 0UL;
     out.strength = _candidatePeakStrength;
@@ -370,8 +370,8 @@ bool ScalarOccurrenceSource::consumeCandidate(const AudioSamplePacket& frame,
     out.contrast = 0.0f;
     out.confidence = 1.0f;
     out.ampEvidencePresent = true;
-    out.ampLevel = frame.audioMagnitudeValue;
-    out.ampBaseline = frame.baseline;
+    out.ampLevel = audioSamplePacket.audioMagnitudeValue;
+    out.ampBaseline = audioSamplePacket.baseline;
     out.transient.present = true;
     out.transient.onsetSample = _candidateFirstSeenSample;
     out.transient.peakSample = _candidatePeakSample;
@@ -383,8 +383,8 @@ bool ScalarOccurrenceSource::consumeCandidate(const AudioSamplePacket& frame,
     out.transient.onsetStrength = _candidateOnsetStrength;
     out.transient.peakStrength = _candidatePeakStrength;
     out.transient.releaseStrength = _candidateCurrentStrength;
-    out.transient.ambientBaseline = frame.baseline;
-    out.transient.audioOverflowDuringCandidate = frame.overflowDuringBlock;
+    out.transient.ambientBaseline = audioSamplePacket.baseline;
+    out.transient.audioOverflowDuringCandidate = audioSamplePacket.overflowDuringBlock;
     out.valid = true;
 
     resetCandidateLifecycle();

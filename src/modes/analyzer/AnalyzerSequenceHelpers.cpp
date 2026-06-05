@@ -208,7 +208,7 @@ void AnalyzerApp::sequenceCurveSampleCallback(const CurveSnapshot& snapshot, voi
     self->recordSequenceSample(snapshot);
 }
 
-detection::FrequencyBandMeasurementPacket AnalyzerApp::captureFrequencyFeatureFrame(unsigned long observedAtMs) const {
+detection::FrequencyBandMeasurementPacket AnalyzerApp::captureFrequencyMeasurementPacket(unsigned long observedAtMs) const {
     detection::FrequencyBandMeasurementPacket evidence;
     evidence.observedAtMs = observedAtMs;
     const bool present = _freqBandStream.windowReady();
@@ -296,7 +296,7 @@ void AnalyzerApp::recordSequenceClassifierOutcome(const detection::PatternResult
     }
 }
 
-void AnalyzerApp::handleSequenceCandidate(const detection::PatternResult& patternResult, const detection::FrequencyBandMeasurementPacket* liveFrequencyFrame) {
+void AnalyzerApp::handleSequenceCandidate(const detection::PatternResult& patternResult, const detection::FrequencyBandMeasurementPacket* liveFrequencyMeasurementPacket) {
     if (_valMode) {
         return;
     }

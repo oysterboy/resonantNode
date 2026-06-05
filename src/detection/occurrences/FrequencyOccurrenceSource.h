@@ -28,7 +28,7 @@ public:
     void setDiagnosticsEnabled(bool enabled);
 
     void observeFrame(
-        const AudioSamplePacket& frame,
+        const AudioSamplePacket& audioSamplePacket,
         const detection::FrequencyBandMeasurementPacket& evidence
     );
 

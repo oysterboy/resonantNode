@@ -496,12 +496,12 @@ void Node::update() {
         const uint32_t sampleRateHz = _audioSource.sampleRateHz() > 0 ? _audioSource.sampleRateHz() : 16000UL;
         for (uint16_t i = 0; i < block.sampleCount; ++i) {
             const uint32_t sampleTimeUs = block.approxStartMicros + sampleOffsetUs(static_cast<uint32_t>(i), sampleRateHz);
-            AudioSamplePacket frame;
-            _audioSignal.update(static_cast<int>(block.samples[i]), sampleTimeUs, frame);
-            const bool ownEmitSuppressed = frame.timeMs < _behavior.ownEmitDetectionSuppressUntilMs();
+            AudioSamplePacket audioSamplePacket;
+            _audioSignal.update(static_cast<int>(block.samples[i]), sampleTimeUs, audioSamplePacket);
+            const bool ownEmitSuppressed = audioSamplePacket.timeMs < _behavior.ownEmitDetectionSuppressUntilMs();
             if (!ownEmitSuppressed) {
-                _freqBandStream.observeCenteredSample(frame.centeredAudioValue, frame.timeMs);
-                processDetectionFrame(frame, now, selfChirpSuppressed, sawPatternThisLoop);
+                _freqBandStream.observeCenteredSample(audioSamplePacket.centeredAudioValue, audioSamplePacket.timeMs);
+                processDetectionFrame(audioSamplePacket, now, selfChirpSuppressed, sawPatternThisLoop);
             }
         }
         sawI2SSample = true;
@@ -982,12 +982,12 @@ void Node::applyActiveBehaviorGateConfig() {
     _behavior.configure(activeBehaviorProfile());
 }
 
-void Node::processDetectionFrame(const AudioSamplePacket& frame,
+void Node::processDetectionFrame(const AudioSamplePacket& audioSamplePacket,
                               unsigned long now,
                               bool selfChirpSuppressed,
                               bool& sawPatternThisLoop) {
-    const auto liveFrequencyFrame = captureFrequencyFeatureFrame(frame.timeMs);
-    _detection.observeFrame(frame, liveFrequencyFrame, frame.timeMs);
+    const auto liveFrequencyMeasurementPacket = captureFrequencyMeasurementPacket(audioSamplePacket.timeMs);
+    _detection.observeFrame(audioSamplePacket, liveFrequencyMeasurementPacket, audioSamplePacket.timeMs);
 
     detection::PatternResult patternResult;
     while (_detection.popPatternResult(patternResult)) {
@@ -1053,7 +1053,7 @@ const char* Node::rbLogModeName() const {
     return "off";
 }
 
-detection::FrequencyBandMeasurementPacket Node::captureFrequencyFeatureFrame(unsigned long observedAtMs) const {
+detection::FrequencyBandMeasurementPacket Node::captureFrequencyMeasurementPacket(unsigned long observedAtMs) const {
     detection::FrequencyBandMeasurementPacket evidence;
     evidence.observedAtMs = observedAtMs;
     const bool present = _freqBandStream.windowReady();

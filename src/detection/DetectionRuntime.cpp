@@ -23,17 +23,17 @@ OccurrenceSource occurrenceSourceForStream(FeatureStreamId stream) {
     }
 }
 
-float selectedScalarValue(const AudioSamplePacket& frame, const FrequencyBandMeasurementPacket& frequencyEvidence, FeatureStreamId stream) {
+float selectedScalarValue(const AudioSamplePacket& audioSamplePacket, const FrequencyBandMeasurementPacket& frequencyEvidence, FeatureStreamId stream) {
     switch (stream) {
         case FeatureStreamId::AmpEnvelope:
-            return frame.audioMagnitudeValue;
+            return audioSamplePacket.audioMagnitudeValue;
         case FeatureStreamId::FrequencyScore:
             return frequencyEvidence.targetBandScoreValue;
         case FeatureStreamId::FrequencyContrast:
             return frequencyEvidence.targetBandContrastValue;
         case FeatureStreamId::Unknown:
         default:
-            return static_cast<float>(frame.level);
+            return static_cast<float>(audioSamplePacket.level);
     }
 }
 
@@ -444,26 +444,26 @@ void DetectionRuntime::setProfileName(const char* profileName) {
 }
 
 void DetectionRuntime::observeFrame(
-    const AudioSamplePacket& frame,
+    const AudioSamplePacket& audioSamplePacket,
     const FrequencyBandMeasurementPacket& frequencyEvidence,
     unsigned long nowMs
 ) {
     _fieldStateTracker.update(nowMs);
-    if (!frame.valid) {
+    if (!audioSamplePacket.valid) {
         return;
     }
 
-    FeatureExtractor::observeFrame(frame, _featureHistory);
-    FeatureExtractor::observeFrequencyFeatureFrame(frequencyEvidence, nowMs, _featureHistory);
+    FeatureExtractor::observeFrame(audioSamplePacket, _featureHistory);
+    FeatureExtractor::observeFrequencyMeasurementPacket(frequencyEvidence, nowMs, _featureHistory);
 
     switch (_occurrenceSourceKind) {
         case OccurrenceSourceKind::FrequencyMatch:
-            _frequencyEmitter.observeFrame(frame, frequencyEvidence);
+            _frequencyEmitter.observeFrame(audioSamplePacket, frequencyEvidence);
             break;
         case OccurrenceSourceKind::ScalarTransient:
             _scalarEmitter.observeFrame(
-                frame,
-                selectedScalarValue(frame, frequencyEvidence, _scalarTransientConfig.observedStream),
+                audioSamplePacket,
+                selectedScalarValue(audioSamplePacket, frequencyEvidence, _scalarTransientConfig.observedStream),
                 OccurrenceKind::AmpTransient,
                 occurrenceSourceForStream(_scalarTransientConfig.observedStream)
             );

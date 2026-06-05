@@ -502,16 +502,6 @@ void AnalyzerApp::finalizeSequenceTrial(unsigned long now) {
 
     _sequenceTest.duplicates += diagnostics.duplicateCount;
     AnalyzerReport* finalizedReport = sequenceReportScratch();
-    if (finalizedReport == nullptr) {
-        Serial.println("SEQ_VERBOSE_WARN reason=analyzer_report_alloc_failed requested=1 report");
-        const unsigned long finalizeUs = static_cast<unsigned long>(micros() - finalizeStartUs);
-        if (finalizeUs > _sequenceTest.maxFinalizeTrialUs) {
-            _sequenceTest.maxFinalizeTrialUs = finalizeUs;
-        }
-        _sequenceTest.currentTrialFinalized = true;
-        stopSequenceTest();
-        return;
-    }
     buildSequenceAnalyzerReport(*finalizedReport, _sequenceTest.currentTrial, result, dtMs, durMs, strength, invalidAudioTrial, diagnostics.duplicateCount, diagnostics);
     _sequenceTest.completedTrials++;
     _sequenceTest.totalPatternConfidence += finalizedReport->primaryPattern.confidence;

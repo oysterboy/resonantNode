@@ -22,6 +22,11 @@ enum class FeatureStreamId {
     // FrequencyWindowValid,
 };
 
+inline bool streamRequiresFreshFrequency(FeatureStreamId stream) {
+    return stream == FeatureStreamId::FrequencyScore
+        || stream == FeatureStreamId::FrequencyContrast;
+}
+
 inline const char* featureStreamName(FeatureStreamId value) {
     switch (value) {
         case FeatureStreamId::AmpEnvelope:

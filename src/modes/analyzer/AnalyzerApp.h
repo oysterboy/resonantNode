@@ -580,7 +580,7 @@ private:
     SequenceTest _sequenceTest;
     CaptureSession _captureSession;
     unsigned long _rawCaptureSequenceId = 0;
-    AnalyzerReport* _sequenceReportScratch = nullptr;
+    AnalyzerReport _sequenceReportScratch = {};
 
     // Print throttling for the VAL view.
     mutable unsigned long _lastPrintMs = 0;

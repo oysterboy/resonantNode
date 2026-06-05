@@ -5,6 +5,72 @@
 
 namespace detection {
 
+namespace {
+
+void sortFloatValues(float* values, size_t count) {
+    for (size_t i = 0; i + 1 < count; ++i) {
+        size_t best = i;
+        for (size_t j = i + 1; j < count; ++j) {
+            if (values[j] < values[best]) {
+                best = j;
+            }
+        }
+        if (best != i) {
+            const float tmp = values[i];
+            values[i] = values[best];
+            values[best] = tmp;
+        }
+    }
+}
+
+float exactQuantile(const float* values, size_t count, float quantile) {
+    if (values == nullptr || count == 0) {
+        return 0.0f;
+    }
+
+    const float clampedQuantile = quantile < 0.0f ? 0.0f : (quantile > 1.0f ? 1.0f : quantile);
+    if (count == 1) {
+        return values[0];
+    }
+
+    const float position = clampedQuantile * static_cast<float>(count - 1U);
+    const size_t lowerIndex = static_cast<size_t>(position);
+    const size_t upperIndex = lowerIndex + 1U < count ? lowerIndex + 1U : lowerIndex;
+    const float fraction = position - static_cast<float>(lowerIndex);
+    if (upperIndex == lowerIndex) {
+        return values[lowerIndex];
+    }
+
+    return values[lowerIndex] + ((values[upperIndex] - values[lowerIndex]) * fraction);
+}
+
+float exactTrimmedMean(const float* values, size_t count, float trimFraction) {
+    if (values == nullptr || count == 0) {
+        return 0.0f;
+    }
+
+    const float clampedTrim = trimFraction < 0.0f ? 0.0f : (trimFraction > 0.5f ? 0.5f : trimFraction);
+    const size_t trimCount = static_cast<size_t>(static_cast<float>(count) * clampedTrim);
+    if (trimCount == 0 || count <= trimCount * 2U) {
+        float sum = 0.0f;
+        for (size_t i = 0; i < count; ++i) {
+            sum += values[i];
+        }
+        return sum / static_cast<float>(count);
+    }
+
+    float sum = 0.0f;
+    size_t keptCount = 0;
+    for (size_t i = trimCount; i < count - trimCount; ++i) {
+        sum += values[i];
+        ++keptCount;
+    }
+
+    return keptCount > 0 ? (sum / static_cast<float>(keptCount)) : 0.0f;
+}
+
+} // namespace
+
 bool FeatureHistory::isSupportedStream(FeatureStreamId stream) {
     switch (stream) {
         case FeatureStreamId::AmpEnvelope:
@@ -37,19 +103,26 @@ void FeatureHistory::reset() {
         buffer.binCount = 0;
         buffer.writeIndex = 0;
         buffer.valueCount = 0;
+        buffer.sampleWriteIndex = 0;
         memset(buffer.bins, 0, sizeof(buffer.bins));
+        memset(buffer.samples, 0, sizeof(buffer.samples));
     }
+}
+
+void FeatureHistory::pushRawSample(StreamBuffer& buffer, const FeatureStream& sample) {
+    RawSample& rawSample = buffer.samples[buffer.sampleWriteIndex];
+    rawSample.timeMs = sample.timeMs;
+    rawSample.value = sample.value;
+
+    if (buffer.valueCount < kMaxSamplesPerStream) {
+        ++buffer.valueCount;
+    }
+    buffer.sampleWriteIndex = (buffer.sampleWriteIndex + 1U) % kMaxSamplesPerStream;
 }
 
 void FeatureHistory::pushSample(StreamBuffer& buffer, const FeatureStream& sample) {
     FeatureBin& bin = buffer.bins[buffer.writeIndex];
-    if (buffer.binCount == kMaxSamplesPerStream) {
-        if (buffer.valueCount >= bin.count) {
-            buffer.valueCount -= bin.count;
-        } else {
-            buffer.valueCount = 0;
-        }
-    } else {
+    if (buffer.binCount < kMaxSamplesPerStream) {
         ++buffer.binCount;
     }
 
@@ -62,7 +135,6 @@ void FeatureHistory::pushSample(StreamBuffer& buffer, const FeatureStream& sampl
     bin.sumSquares = sample.value * sample.value;
     bin.count = 1;
 
-    ++buffer.valueCount;
     buffer.writeIndex = (buffer.writeIndex + 1U) % kMaxSamplesPerStream;
 }
 
@@ -70,6 +142,7 @@ void FeatureHistory::record(const FeatureStream& sample) {
     if (!isSupportedStream(sample.id)) {
         return;
     }
+    pushRawSample(_streams[streamIndex(sample.id)], sample);
     pushSample(_streams[streamIndex(sample.id)], sample);
 }
 
@@ -104,7 +177,11 @@ void FeatureHistory::record(FeatureStreamId id, unsigned long timeMs, float valu
                 ++latest.count;
             }
             latest.last = value;
-            ++buffer.valueCount;
+            FeatureStream sample;
+            sample.id = id;
+            sample.timeMs = timeMs;
+            sample.value = value;
+            pushRawSample(buffer, sample);
             return;
         }
     }
@@ -113,7 +190,8 @@ void FeatureHistory::record(FeatureStreamId id, unsigned long timeMs, float valu
     sample.id = id;
     sample.timeMs = timeMs;
     sample.value = value;
-    record(sample);
+    pushRawSample(buffer, sample);
+    pushSample(buffer, sample);
 }
 
 ScalarWindow FeatureHistory::getWindow(FeatureStreamId stream, unsigned long startMs, unsigned long endMs, float sustainedThreshold) const {
@@ -132,11 +210,12 @@ ScalarWindow FeatureHistory::getWindow(FeatureStreamId stream, unsigned long sta
     }
 
     const size_t oldestIndex = buffer.binCount == kMaxSamplesPerStream ? buffer.writeIndex : 0U;
+    float rawValues[kMaxSamplesPerStream] = {};
+    size_t rawCount = 0;
     float sum = 0.0f;
     float minValue = 0.0f;
     float maxValue = 0.0f;
     bool haveWindow = false;
-    unsigned long valueCount = 0;
     size_t sustainedCount = 0;
     size_t bucketCount = 0;
     float sumSquares = 0.0f;
@@ -174,13 +253,24 @@ ScalarWindow FeatureHistory::getWindow(FeatureStreamId stream, unsigned long sta
             }
         }
         lastValueMs = bin.timeMs;
-
-        sum += bin.sum;
-        sumSquares += bin.sumSquares;
-        valueCount += static_cast<unsigned long>(bin.count);
         if (sustainedThreshold > 0.0f && bin.max >= sustainedThreshold) {
             ++sustainedCount;
         }
+    }
+
+    const size_t oldestSampleIndex = buffer.valueCount == kMaxSamplesPerStream ? buffer.sampleWriteIndex : 0U;
+    for (size_t i = 0; i < buffer.valueCount; ++i) {
+        const size_t index = (oldestSampleIndex + i) % kMaxSamplesPerStream;
+        const RawSample& sample = buffer.samples[index];
+        if (sample.timeMs < startMs || sample.timeMs > endMs) {
+            continue;
+        }
+
+        if (rawCount < kMaxSamplesPerStream) {
+            rawValues[rawCount++] = sample.value;
+        }
+        sum += sample.value;
+        sumSquares += sample.value * sample.value;
     }
 
     out.valid = haveWindow;
@@ -191,13 +281,13 @@ ScalarWindow FeatureHistory::getWindow(FeatureStreamId stream, unsigned long sta
     out.durationMs = endMs >= startMs ? (endMs - startMs) : 0UL;
     out.min = minValue;
     out.max = maxValue;
-    out.mean = valueCount > 0 ? sum / static_cast<float>(valueCount) : 0.0f;
-    out.rms = valueCount > 0 ? sqrtf(sumSquares / static_cast<float>(valueCount)) : 0.0f;
-    out.sampleCount = valueCount;
-    out.valueCount = valueCount;
-    out.freshValueCount = valueCount;
+    out.mean = rawCount > 0 ? sum / static_cast<float>(rawCount) : 0.0f;
+    out.rms = rawCount > 0 ? sqrtf(sumSquares / static_cast<float>(rawCount)) : 0.0f;
+    out.sampleCount = rawCount;
+    out.valueCount = rawCount;
+    out.freshValueCount = rawCount;
     out.bucketCount = bucketCount;
-    out.valuesPerBucket = bucketCount > 0 ? static_cast<float>(valueCount) / static_cast<float>(bucketCount) : 0.0f;
+    out.valuesPerBucket = bucketCount > 0 ? static_cast<float>(rawCount) / static_cast<float>(bucketCount) : 0.0f;
     out.coveredMs = static_cast<unsigned long>(bucketCount);
     out.coverageRatio = out.durationMs > 0
         ? static_cast<float>(out.coveredMs) / static_cast<float>(out.durationMs)
@@ -210,10 +300,11 @@ ScalarWindow FeatureHistory::getWindow(FeatureStreamId stream, unsigned long sta
     out.sustainedCount = sustainedCount;
     out.sustainedMs = static_cast<unsigned long>(sustainedCount);
 
-    out.median = out.mean;
-    out.p75 = out.max;
-    out.p90 = out.max;
-    out.trimmedMean = out.mean;
+    sortFloatValues(rawValues, rawCount);
+    out.median = exactQuantile(rawValues, rawCount, 0.50f);
+    out.p75 = exactQuantile(rawValues, rawCount, 0.75f);
+    out.p90 = exactQuantile(rawValues, rawCount, 0.90f);
+    out.trimmedMean = exactTrimmedMean(rawValues, rawCount, 0.10f);
     return out;
 }
 
@@ -233,20 +324,16 @@ size_t FeatureHistory::copyWindowApproximateValues(
         return 0;
     }
 
-    const size_t oldestIndex = buffer.binCount == kMaxSamplesPerStream ? buffer.writeIndex : 0U;
+    const size_t oldestSampleIndex = buffer.valueCount == kMaxSamplesPerStream ? buffer.sampleWriteIndex : 0U;
     size_t written = 0;
 
-    for (size_t i = 0; i < buffer.binCount && written < capacity; ++i) {
-        const size_t index = (oldestIndex + i) % kMaxSamplesPerStream;
-        const FeatureBin& bin = buffer.bins[index];
-        if (bin.timeMs < startMs || bin.timeMs > endMs) {
+    for (size_t i = 0; i < buffer.valueCount && written < capacity; ++i) {
+        const size_t index = (oldestSampleIndex + i) % kMaxSamplesPerStream;
+        const RawSample& sample = buffer.samples[index];
+        if (sample.timeMs < startMs || sample.timeMs > endMs) {
             continue;
         }
-
-        const float representative = bin.count > 0 ? bin.sum / static_cast<float>(bin.count) : bin.last;
-        for (size_t j = 0; j < bin.count && written < capacity; ++j) {
-            outValues[written++] = representative;
-        }
+        outValues[written++] = sample.value;
     }
 
     return written;
@@ -269,12 +356,12 @@ unsigned long FeatureHistory::latestTimeMs(FeatureStreamId stream) const {
     }
 
     const StreamBuffer& buffer = _streams[streamIndex(stream)];
-    if (buffer.binCount == 0) {
+    if (buffer.valueCount == 0) {
         return 0;
     }
 
-    const size_t latestIndex = (buffer.writeIndex + kMaxSamplesPerStream - 1U) % kMaxSamplesPerStream;
-    return buffer.bins[latestIndex].timeMs;
+    const size_t latestIndex = (buffer.sampleWriteIndex + kMaxSamplesPerStream - 1U) % kMaxSamplesPerStream;
+    return buffer.samples[latestIndex].timeMs;
 }
 
 float FeatureHistory::latestValue(FeatureStreamId stream) const {
@@ -283,12 +370,12 @@ float FeatureHistory::latestValue(FeatureStreamId stream) const {
     }
 
     const StreamBuffer& buffer = _streams[streamIndex(stream)];
-    if (buffer.binCount == 0) {
+    if (buffer.valueCount == 0) {
         return 0.0f;
     }
 
-    const size_t latestIndex = (buffer.writeIndex + kMaxSamplesPerStream - 1U) % kMaxSamplesPerStream;
-    return buffer.bins[latestIndex].last;
+    const size_t latestIndex = (buffer.sampleWriteIndex + kMaxSamplesPerStream - 1U) % kMaxSamplesPerStream;
+    return buffer.samples[latestIndex].value;
 }
 
 } // namespace detection

@@ -4,7 +4,6 @@
 #include <esp_system.h>
 #include <stdlib.h>
 #include <string.h>
-#include <new>
 
 #include "../../RuntimeDefaults.h"
 #include "../../AudioDebugConfig.h"
@@ -1232,19 +1231,8 @@ const char* analyzerProfileDetailSummary(detection::DetectionProfileKind profile
 }
 
 AnalyzerReport* AnalyzerApp::sequenceReportScratch() {
-    if (_sequenceReportScratch == nullptr) {
-        _sequenceReportScratch = new (std::nothrow) AnalyzerReport();
-        if (_sequenceReportScratch != nullptr) {
-            *_sequenceReportScratch = makeEmptyAnalyzerReport();
-        }
-    }
-
-    if (_sequenceReportScratch == nullptr) {
-        return nullptr;
-    }
-
-    *_sequenceReportScratch = makeEmptyAnalyzerReport();
-    return _sequenceReportScratch;
+    _sequenceReportScratch = makeEmptyAnalyzerReport();
+    return &_sequenceReportScratch;
 }
 
 void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
@@ -1279,8 +1267,8 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
     const bool actualPipelineAvailable = pipelineResult != nullptr && pipelineResult->hasPattern;
     const detection::PatternResult* runtimePatternResult = actualPipelineAvailable ? &pipelineResult->pattern : nullptr;
     const detection::InspectedOccurrence* runtimeInspectedOccurrence = nullptr;
-    if (runtimePatternResult != nullptr && runtimePatternResult->inspectedOccurrence != nullptr) {
-        runtimeInspectedOccurrence = runtimePatternResult->inspectedOccurrence;
+    if (runtimePatternResult != nullptr && runtimePatternResult->inspectedOccurrence.occurrence.present) {
+        runtimeInspectedOccurrence = &runtimePatternResult->inspectedOccurrence;
     }
     const detection::FieldState* runtimeFieldState = actualPipelineAvailable && pipelineResult->hasField
         ? &pipelineResult->field
@@ -1488,6 +1476,9 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
         runtimeDiag = &_detection.diagnostics();
         frequencyDetector = &_detection.frequencyEmitter().detector();
     }
+    report.debug.patternResultQueueOverflowCount = runtimeDiag != nullptr
+        ? runtimeDiag->patternResultQueueOverflowCount
+        : 0UL;
 
     report.source.frequencyMatch.currentTrialId = report.context.trial;
     report.source.frequencyMatch.windowStartMs = _sequenceTest.currentTrialStartMs;

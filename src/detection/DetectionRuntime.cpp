@@ -61,6 +61,7 @@ void DetectionRuntime::resetDiagnostics() {
 
 void DetectionRuntime::resetDiagnosticsCounters() {
     _diagnostics = {};
+    _resultQueueOverflowCount = 0;
     _frequencyEmitter.detector().resetDiagnosticsSummary();
 }
 
@@ -83,6 +84,7 @@ void DetectionRuntime::resetDetectionState() {
     _resultQueue[0] = {};
     _resultReadIndex = 0;
     _resultCount = 0;
+    _resultQueueOverflowCount = 0;
     _latestPipelineResult = {};
     _hasLatestPipelineResult = false;
     _lastOccurrence = {};
@@ -403,6 +405,7 @@ void DetectionRuntime::captureDiagnostics() {
         _diagnostics.frequencyPeakContrast = 0.0f;
         _diagnostics.frequencyPeakSampleCount = 0;
     }
+    _diagnostics.patternResultQueueOverflowCount = _resultQueueOverflowCount;
     _diagnostics.detectorKind = _occurrenceSourceKind == OccurrenceSourceKind::FrequencyMatch
         ? "frequency_match"
         : "scalar_transient";
@@ -461,6 +464,9 @@ void DetectionRuntime::observeFrame(
             _frequencyEmitter.observeFrame(audioSamplePacket, frequencyEvidence);
             break;
         case OccurrenceSourceKind::ScalarTransient:
+            if (streamRequiresFreshFrequency(_scalarTransientConfig.observedStream) && !frequencyEvidence.fresh) {
+                break;
+            }
             _scalarEmitter.observeFrame(
                 audioSamplePacket,
                 selectedScalarValue(audioSamplePacket, frequencyEvidence, _scalarTransientConfig.observedStream),
@@ -543,7 +549,7 @@ void DetectionRuntime::drainPatternAssembler(unsigned long nowMs) {
     while (_patternAssembler.popPatternCandidate(candidate)) {
         PatternResult result = _patternRules.evaluate(candidate, nowMs);
         if (_lastInspectedOccurrence.occurrence.present) {
-            result.inspectedOccurrence = &_lastInspectedOccurrence;
+            result.inspectedOccurrence = _lastInspectedOccurrence;
         }
         _fieldStateTracker.observePatternResult(result, nowMs);
         capturePipelineResult(result, &_lastOccurrence, &_lastInspectedOccurrence, nowMs);
@@ -553,6 +559,7 @@ void DetectionRuntime::drainPatternAssembler(unsigned long nowMs) {
 
 bool DetectionRuntime::pushPatternResult(const PatternResult& result) {
     if (_resultCount == kResultQueueCapacity) {
+        ++_resultQueueOverflowCount;
         return false;
     }
 
@@ -577,11 +584,11 @@ void DetectionRuntime::capturePipelineResult(
     }
     if (inspectedOccurrence != nullptr && inspectedOccurrence->occurrence.present) {
         _latestPipelineResult.inspectedOccurrence = *inspectedOccurrence;
-    } else if (result.inspectedOccurrence != nullptr && result.inspectedOccurrence->occurrence.present) {
-        _latestPipelineResult.inspectedOccurrence = *result.inspectedOccurrence;
+    } else if (result.inspectedOccurrence.occurrence.present) {
+        _latestPipelineResult.inspectedOccurrence = result.inspectedOccurrence;
     }
     if (_latestPipelineResult.inspectedOccurrence.occurrence.present) {
-        _latestPipelineResult.pattern.inspectedOccurrence = &_latestPipelineResult.inspectedOccurrence;
+        _latestPipelineResult.pattern.inspectedOccurrence = _latestPipelineResult.inspectedOccurrence;
     }
     _latestPipelineResult.hasField = true;
     _latestPipelineResult.field = _fieldStateTracker.state();

@@ -342,6 +342,7 @@ struct AnalyzerDebugSummary {
     const char* pipelineSource = "actual_pipeline";
     bool pipelineFallback = false;
     const char* mainRejectReason = "none";
+    unsigned long patternResultQueueOverflowCount = 0;
 
 };
 

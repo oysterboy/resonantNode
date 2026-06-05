@@ -166,6 +166,7 @@ struct DetectionDiagnostics {
     unsigned long frequencyDurationMs = 0;
     unsigned long frequencyMinDurationMs = 0;
     unsigned long frequencyMaxDurationMs = 0;
+    unsigned long patternResultQueueOverflowCount = 0;
 
     const char* scalarRejectReason = "none";
     const char* scalarNoEmitReason = "none";
@@ -229,7 +230,7 @@ public:
     const FeatureHistory& featureHistory() const;
 
 private:
-    static constexpr size_t kResultQueueCapacity = 2;
+    static constexpr size_t kResultQueueCapacity = 4;
 
     // Pipeline stages in execution order.
     void drainOccurrenceSources(unsigned long nowMs);
@@ -261,6 +262,7 @@ private:
     PatternResult _resultQueue[kResultQueueCapacity] = {};
     size_t _resultReadIndex = 0;
     size_t _resultCount = 0;
+    unsigned long _resultQueueOverflowCount = 0;
 
     DetectionPipelineResult _latestPipelineResult = {};
     bool _hasLatestPipelineResult = false;

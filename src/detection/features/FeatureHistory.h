@@ -52,16 +52,24 @@ private:
         size_t count = 0;
     };
 
+    struct RawSample {
+        unsigned long timeMs = 0;
+        float value = 0.0f;
+    };
+
     struct StreamBuffer {
         FeatureBin bins[kMaxSamplesPerStream] = {};
+        RawSample samples[kMaxSamplesPerStream] = {};
         size_t binCount = 0;
         size_t writeIndex = 0;
         size_t valueCount = 0;
+        size_t sampleWriteIndex = 0;
     };
 
     static bool isSupportedStream(FeatureStreamId stream);
     static size_t streamIndex(FeatureStreamId stream);
 
+    void pushRawSample(StreamBuffer& buffer, const FeatureStream& sample);
     void pushSample(StreamBuffer& buffer, const FeatureStream& sample);
 
     StreamBuffer _streams[kStreamCount] = {};

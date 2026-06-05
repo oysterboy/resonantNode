@@ -1715,6 +1715,8 @@ void AnalyzerApp::printSequenceExplain(const AnalyzerReport& report) const {
     Serial.print(report.debug.duplicates);
     Serial.print(" A_debug_unexpected_hits=");
     Serial.print(report.debug.unexpected);
+    Serial.print(" A_debug_pattern_result_queue_overflow=");
+    Serial.print(report.debug.patternResultQueueOverflowCount);
     Serial.print(" A_debug_main_reject=");
     Serial.println(report.debug.mainRejectReason != nullptr ? report.debug.mainRejectReason : "none");
 

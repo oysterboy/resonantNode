@@ -10,6 +10,7 @@
 #include "../../AudioDebugConfig.h"
 #include "../../TimingUtils.h"
 #include "AnalyzerTextUtils.h"
+#include "AnalyzerHealthHelpers.h"
 #include "../../detection/detectors/FrequencyMatchDetector.h"
 #include "../../detection/patterns/PatternAssembler.h"
 #include "../../detection/patterns/PatternNames.h"
@@ -109,27 +110,6 @@ const char* audioHealthNameFromCounters(unsigned long zeroishFrames,
     return "ok";
 }
 
-const char* rawAudioHealthNameFromCounters(unsigned long clipFrames,
-                                           unsigned long rawFrames,
-                                           unsigned long rawMaxAbs,
-                                           float rawDcMean,
-                                           float rawMeanAbs,
-                                           int rawMin,
-                                           int rawMax) {
-    if (clipFrames > 0) {
-        return "clipping";
-    }
-    if (rawFrames >= kAudioFlatlineStreakFrames && rawMaxAbs <= kRawFlatlineMaxAbsThreshold) {
-        return "flatline";
-    }
-    const unsigned long rawRange = rawMax >= rawMin ? static_cast<unsigned long>(rawMax - rawMin) : 0UL;
-    const float dcMagnitude = rawDcMean >= 0.0f ? rawDcMean : -rawDcMean;
-    if (rawRange <= kRawDcStuckRangeThreshold && dcMagnitude > 64.0f && rawMeanAbs <= static_cast<float>(kRawDcStuckMeanAbsThreshold)) {
-        return "dc_stuck";
-    }
-    return "ok";
-}
-
 const char* systemResetReasonName(esp_reset_reason_t reason) {
     switch (reason) {
         case ESP_RST_POWERON:
@@ -209,11 +189,30 @@ void AnalyzerApp::updateSequenceAudioHealth(const AudioSamplePacket& audioSample
 
     ++diagnostics.rawFrames;
     diagnostics.rawSum += static_cast<int32_t>(audioSamplePacket.rawAudioValue);
-    diagnostics.rawAbsSum += static_cast<uint32_t>(absCentered);
+    diagnostics.rawAbsSum += static_cast<uint32_t>(absRaw);
     if (diagnostics.rawFrames == 1) {
         diagnostics.rawMin = audioSamplePacket.rawAudioValue;
         diagnostics.rawMax = audioSamplePacket.rawAudioValue;
+        diagnostics.rawSameValueRun = 1;
     } else {
+        if ((diagnostics.rawLastSample < 0 && rawSample > 0) || (diagnostics.rawLastSample > 0 && rawSample < 0)) {
+            if (diagnostics.rawZeroCrossings < 255U) {
+                ++diagnostics.rawZeroCrossings;
+            }
+        }
+        if (rawSample == diagnostics.rawLastSample) {
+            if (diagnostics.rawSameValueCount < 255U) {
+                ++diagnostics.rawSameValueCount;
+            }
+            if (diagnostics.rawSameValueRun < 255U) {
+                ++diagnostics.rawSameValueRun;
+            }
+        } else {
+            diagnostics.rawSameValueRun = 1;
+        }
+        if (diagnostics.rawSameValueRun > diagnostics.rawSameValueMaxRun) {
+            diagnostics.rawSameValueMaxRun = diagnostics.rawSameValueRun;
+        }
         if (audioSamplePacket.rawAudioValue < diagnostics.rawMin) {
             diagnostics.rawMin = audioSamplePacket.rawAudioValue;
         }
@@ -221,9 +220,10 @@ void AnalyzerApp::updateSequenceAudioHealth(const AudioSamplePacket& audioSample
             diagnostics.rawMax = audioSamplePacket.rawAudioValue;
         }
     }
-    if (absCentered > diagnostics.rawMaxAbs) {
-        diagnostics.rawMaxAbs = absCentered;
+    if (diagnostics.rawFrames == 1 && diagnostics.rawSameValueMaxRun < 1UL) {
+        diagnostics.rawSameValueMaxRun = 1;
     }
+    diagnostics.rawLastSample = rawSample;
     const float rms = diagnostics.audioFrames > 0
         ? static_cast<float>(sqrt(static_cast<double>(diagnostics.audioSumSquares) / static_cast<double>(diagnostics.audioFrames)))
         : 0.0f;
@@ -393,13 +393,16 @@ void AnalyzerApp::printSystemHealth(const AnalyzerReport& report) const {
     const float rawMeanAbs = rawDiagnostics.rawFrames > 0
         ? static_cast<float>(rawDiagnostics.rawAbsSum) / static_cast<float>(rawDiagnostics.rawFrames)
         : 0.0f;
+    const int32_t rawMinAbs = rawDiagnostics.rawMin < 0 ? -static_cast<int32_t>(rawDiagnostics.rawMin) : static_cast<int32_t>(rawDiagnostics.rawMin);
+    const int32_t rawMaxAbsValue = rawDiagnostics.rawMax < 0 ? -static_cast<int32_t>(rawDiagnostics.rawMax) : static_cast<int32_t>(rawDiagnostics.rawMax);
+    const uint16_t rawMaxAbs = static_cast<uint16_t>(rawMinAbs > rawMaxAbsValue ? rawMinAbs : rawMaxAbsValue);
     const float rawZeroRatio = rawDiagnostics.rawFrames > 0
         ? static_cast<float>(_sequenceTest.currentTrialDiagnostics.audioZeroishFrames) / static_cast<float>(rawDiagnostics.rawFrames)
         : 0.0f;
-    const char* rawHealth = rawAudioHealthNameFromCounters(
+    const char* rawHealth = rawHealthClassNameFromCounters(
         _sequenceTest.currentTrialDiagnostics.audioRmsTooHighFrames,
         rawDiagnostics.rawFrames,
-        rawDiagnostics.rawMaxAbs,
+        rawMaxAbs,
         rawDcMean,
         rawMeanAbs,
         rawDiagnostics.rawMin,
@@ -424,7 +427,7 @@ void AnalyzerApp::printSystemHealth(const AnalyzerReport& report) const {
         Serial.print(" mean_abs=");
         Serial.print(rawMeanAbs, 1);
         Serial.print(" max_abs=");
-        Serial.print(rawDiagnostics.rawMaxAbs);
+        Serial.print(rawMaxAbs);
         Serial.print(" zero_ratio=");
         Serial.print(rawZeroRatio, 3);
         Serial.print(" clip_count=");
@@ -868,6 +871,14 @@ void AnalyzerApp::update() {
         }
 
         const uint32_t sampleRateHz = _audioSource.sampleRateHz() > 0 ? _audioSource.sampleRateHz() : 16000UL;
+        if (_sequenceTest.active && _sequenceTest.currentTrial > 0) {
+            const uint8_t blockHash = static_cast<uint8_t>(rawBlockFingerprint(block.samples, block.sampleCount));
+            auto& diagnostics = _sequenceTest.currentTrialDiagnostics;
+            if (diagnostics.rawFrames > 0 && blockHash == diagnostics.rawLastBlockHash) {
+                ++diagnostics.rawBlockHashRepeatCount;
+            }
+            diagnostics.rawLastBlockHash = blockHash;
+        }
         for (uint16_t i = 0; i < block.sampleCount; ++i) {
             const uint32_t sampleTimeUs = block.approxStartMicros + sampleOffsetUs(static_cast<uint32_t>(i), sampleRateHz);
             AudioSamplePacket audioSamplePacket;

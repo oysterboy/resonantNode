@@ -255,7 +255,13 @@ private:
             int16_t rawMax = 0;
             int32_t rawSum = 0;
             uint32_t rawAbsSum = 0;
-            uint16_t rawMaxAbs = 0;
+            uint8_t rawZeroCrossings = 0;
+            uint8_t rawSameValueCount = 0;
+            uint8_t rawSameValueRun = 0;
+            uint8_t rawSameValueMaxRun = 0;
+            int16_t rawLastSample = 0;
+            uint8_t rawBlockHashRepeatCount = 0;
+            uint8_t rawLastBlockHash = 0;
 
             unsigned long duplicatePatternMs = 0;
             float duplicatePatternStrength = 0.0f;

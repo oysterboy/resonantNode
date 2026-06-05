@@ -6,6 +6,7 @@
 #include "../../TimingUtils.h"
 #include "../../detection/DetectionDerivedValues.h"
 #include "../../detection/DetectionNames.h"
+#include "AnalyzerHealthHelpers.h"
 
 namespace {
 
@@ -1275,6 +1276,71 @@ void AnalyzerApp::printSequenceTrialResult(const AnalyzerReport& report) const {
     }
     Serial.println();
 
+    if (_sequenceTest.outputConfig.diagnosticsEnabled &&
+        report.classification.result == AnalyzerResult::Miss) {
+        const auto& diagnostics = _sequenceTest.currentTrialDiagnostics;
+        const char* audioHealth = report.frequency.audioHealth != nullptr ? report.frequency.audioHealth : "unknown";
+        const bool audioPresent = diagnostics.audioFrames > 0;
+        const bool freshnessHeldEvidence = report.frequency.freshFrames == 0 && report.frequency.heldFrames > 0;
+        const bool detectorStayedOpen = report.frequency.fmOpened && !report.frequency.fmReleased && !report.frequency.fmEmitted;
+        const bool timingBacklog = _sequenceTest.maxProcessingLagMs > 250UL;
+
+        const char* faultClass = "UNKNOWN";
+        if (!audioPresent) {
+            faultClass = "NO_AUDIO_EVENT";
+        } else if (strcmp(audioHealth, "clipped") == 0 ||
+                   strcmp(audioHealth, "flatline") == 0 ||
+                   strcmp(audioHealth, "zeroish") == 0) {
+            faultClass = "INPUT_SAMPLE_BAD";
+        } else if (freshnessHeldEvidence) {
+            faultClass = "FRESHNESS_HELD_EVIDENCE_SUSPECT";
+        } else if (detectorStayedOpen) {
+            faultClass = "DETECTOR_STUCK_ACTIVE";
+        } else if (report.frequency.nearMiss) {
+            if (report.frequency.nearMissReason != nullptr &&
+                (strcmp(report.frequency.nearMissReason, "score_ok_contrast_low") == 0 ||
+                 strcmp(report.frequency.nearMissReason, "contrast_ok_score_low") == 0 ||
+                 strcmp(report.frequency.nearMissReason, "both_ok_no_emission") == 0)) {
+                faultClass = "DETECTOR_REJECTED_TARGET_PRESENT";
+            } else if (report.frequency.maxScore >= report.frequency.scoreThreshold * 0.75f ||
+                       report.frequency.maxContrast >= report.frequency.contrastThreshold * 0.75f) {
+                faultClass = "OUTPUT_SPECTRAL_SHIFT";
+            } else {
+                faultClass = "OUTPUT_BROADBAND_NON_TONAL";
+            }
+        } else if (timingBacklog) {
+            faultClass = "TIMING_BACKLOG";
+        }
+
+        Serial.print("SEQ_STREAK_FAULT trial=");
+        Serial.print(report.context.trial);
+        Serial.print(" result=miss");
+        Serial.print(" audio_present=");
+        Serial.print(audioPresent ? 1 : 0);
+        Serial.print(" audio_health=");
+        Serial.print(audioHealth);
+        Serial.print(" freq_score_max=");
+        Serial.print(report.frequency.maxScore, 1);
+        Serial.print(" freq_contrast_max=");
+        Serial.print(report.frequency.maxContrast, 2);
+        Serial.print(" fresh_freq_updates=");
+        Serial.print(report.frequency.freshFrames);
+        Serial.print(" held_freq_frames=");
+        Serial.print(report.frequency.heldFrames);
+        Serial.print(" det_active_start=");
+        Serial.print(report.frequency.fmOpenMs);
+        Serial.print(" opened_this_trial=");
+        Serial.print(report.frequency.fmOpened ? 1 : 0);
+        Serial.print(" closed_this_trial=");
+        Serial.print(report.frequency.fmReleased ? 1 : 0);
+        Serial.print(" emitted_this_trial=");
+        Serial.print(report.frequency.fmEmitted ? 1 : 0);
+        Serial.print(" timing_lag_max_ms=");
+        Serial.print(_sequenceTest.maxProcessingLagMs);
+        Serial.print(" fault_class=");
+        Serial.println(faultClass);
+    }
+
     if (_sequenceTest.outputConfig.mode == SeqOutputMode::Full ||
         _sequenceTest.outputConfig.mode == SeqOutputMode::System) {
         printSystemHealth(report);
@@ -2254,6 +2320,54 @@ void AnalyzerApp::printSignalCheck() const {
     Serial.print(diagnostics.audioMaxAbsDelta);
     Serial.print(" rms=");
     Serial.print(diagnostics.audioRms, 1);
+    const double rawFrameCount = diagnostics.rawFrames > 0 ? static_cast<double>(diagnostics.rawFrames) : 0.0;
+    const double rawMean = rawFrameCount > 0.0 ? static_cast<double>(diagnostics.rawSum) / rawFrameCount : 0.0;
+    const double rawMeanAbs = rawFrameCount > 0.0 ? static_cast<double>(diagnostics.rawAbsSum) / rawFrameCount : 0.0;
+    const double rawMinAbs = diagnostics.rawMin < 0 ? -static_cast<double>(diagnostics.rawMin) : static_cast<double>(diagnostics.rawMin);
+    const double rawMaxAbsValue = diagnostics.rawMax < 0 ? -static_cast<double>(diagnostics.rawMax) : static_cast<double>(diagnostics.rawMax);
+    const double rawMaxAbs = rawMinAbs > rawMaxAbsValue ? rawMinAbs : rawMaxAbsValue;
+    const double rawRange = diagnostics.rawFrames > 0 && diagnostics.rawMax >= diagnostics.rawMin
+        ? static_cast<double>(diagnostics.rawMax - diagnostics.rawMin)
+        : 0.0;
+    // Range-based proxy keeps the trial footprint small; exact variance would need another accumulator.
+    const double rawSpreadEst = rawRange > 0.0 ? rawRange / 3.4641016151377544 : 0.0;
+    const double rawZeroCrossRate = diagnostics.rawFrames > 1
+        ? static_cast<double>(diagnostics.rawZeroCrossings) / static_cast<double>(diagnostics.rawFrames - 1U)
+        : 0.0;
+    const double rawSameValueRatio = diagnostics.rawFrames > 1
+        ? static_cast<double>(diagnostics.rawSameValueCount) / static_cast<double>(diagnostics.rawFrames - 1U)
+        : 0.0;
+    const char* rawHealthClass = rawHealthClassNameFromCounters(
+        diagnostics.audioRmsTooHighFrames,
+        diagnostics.rawFrames,
+        static_cast<unsigned long>(rawMaxAbs),
+        static_cast<float>(rawMean),
+        static_cast<float>(rawMeanAbs),
+        diagnostics.rawMin,
+        diagnostics.rawMax
+    );
+    Serial.print(" raw_min=");
+    Serial.print(diagnostics.rawFrames > 0 ? diagnostics.rawMin : 0);
+    Serial.print(" raw_max=");
+    Serial.print(diagnostics.rawFrames > 0 ? diagnostics.rawMax : 0);
+    Serial.print(" raw_mean=");
+    Serial.print(rawMean, 1);
+    Serial.print(" raw_spread_est=");
+    Serial.print(rawSpreadEst, 1);
+    Serial.print(" raw_mean_abs=");
+    Serial.print(rawMeanAbs, 1);
+    Serial.print(" dc_offset=");
+    Serial.print(rawMean, 1);
+    Serial.print(" zero_cross_rate=");
+    Serial.print(rawZeroCrossRate, 3);
+    Serial.print(" same_value_ratio=");
+    Serial.print(rawSameValueRatio, 3);
+    Serial.print(" repeated_sample_max_run=");
+    Serial.print(static_cast<unsigned int>(diagnostics.rawSameValueMaxRun));
+    Serial.print(" block_hash_repeat_count=");
+    Serial.print(static_cast<unsigned int>(diagnostics.rawBlockHashRepeatCount));
+    Serial.print(" raw_health_class=");
+    Serial.print(rawHealthClass != nullptr ? rawHealthClass : "unknown");
     Serial.println();
 }
 

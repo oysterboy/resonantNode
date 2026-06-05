@@ -1429,434 +1429,435 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
         frequencyDetector = &_detection->frequencyEmitter().detector();
     }
 
-    report.frequency.currentTrialId = report.context.trial;
-    report.frequency.windowStartMs = _sequenceTest.currentTrialStartMs;
-    report.frequency.windowEndMs = _sequenceTest.currentTrialEndMs;
-    report.frequency.expectedWindowMs = _sequenceTest.currentTrialEndMs >= _sequenceTest.currentTrialStartMs
+    report.source.frequencyMatch.currentTrialId = report.context.trial;
+    report.source.frequencyMatch.windowStartMs = _sequenceTest.currentTrialStartMs;
+    report.source.frequencyMatch.windowEndMs = _sequenceTest.currentTrialEndMs;
+    report.source.frequencyMatch.expectedWindowMs = _sequenceTest.currentTrialEndMs >= _sequenceTest.currentTrialStartMs
         ? _sequenceTest.currentTrialEndMs - _sequenceTest.currentTrialStartMs
         : 0UL;
-    report.frequency.expectedFrameCountEstimate =
-        static_cast<unsigned long>((report.frequency.expectedWindowMs
+    report.source.frequencyMatch.expectedFrameCountEstimate =
+        static_cast<unsigned long>((report.source.frequencyMatch.expectedWindowMs
             * static_cast<unsigned long>(_audioSource.sampleRateHz() > 0 ? _audioSource.sampleRateHz() : 16000UL)) / 1000UL);
 
-    report.frequency.acceptedPresent = report.occurrences.present
+    report.source.frequencyMatch.acceptedPresent = report.occurrences.present
         && report.occurrences.valid
         && report.primaryPattern.accepted;
-    report.frequency.acceptedTrialId = report.frequency.acceptedPresent ? report.context.trial : 0UL;
-    report.frequency.acceptedSource = report.frequency.acceptedPresent
+    report.source.frequencyMatch.acceptedTrialId = report.source.frequencyMatch.acceptedPresent ? report.context.trial : 0UL;
+    report.source.frequencyMatch.acceptedSource = report.source.frequencyMatch.acceptedPresent
         ? (report.occurrences.primarySource != nullptr ? report.occurrences.primarySource : "unknown")
         : "none";
-    report.frequency.acceptedDtMs = report.frequency.acceptedPresent ? report.occurrences.primaryDtMs : -1;
-    report.frequency.acceptedStartMs = report.frequency.acceptedPresent ? report.occurrences.startMs : 0UL;
-    report.frequency.acceptedPeakMs = report.frequency.acceptedPresent ? report.occurrences.peakMs : 0UL;
-    report.frequency.acceptedReleaseMs = report.frequency.acceptedPresent ? report.occurrences.releaseMs : 0UL;
-    report.frequency.acceptedDurationMs = report.frequency.acceptedPresent ? report.occurrences.primaryDurationMs : 0UL;
-    report.frequency.acceptedStrength = report.frequency.acceptedPresent ? report.occurrences.primaryStrength : 0.0f;
-    report.frequency.acceptedScore = report.frequency.acceptedPresent ? report.occurrences.score : 0.0f;
-    report.frequency.acceptedContrast = report.frequency.acceptedPresent ? report.occurrences.contrast : 0.0f;
-    report.frequency.freshFrames = _freqBandStream.profileComputeCalls();
-    report.frequency.heldFrames = _freqBandStream.profileObserveCalls() > _freqBandStream.profileComputeCalls()
+    report.source.frequencyMatch.acceptedDtMs = report.source.frequencyMatch.acceptedPresent ? report.occurrences.primaryDtMs : -1;
+    report.source.frequencyMatch.acceptedStartMs = report.source.frequencyMatch.acceptedPresent ? report.occurrences.startMs : 0UL;
+    report.source.frequencyMatch.acceptedPeakMs = report.source.frequencyMatch.acceptedPresent ? report.occurrences.peakMs : 0UL;
+    report.source.frequencyMatch.acceptedReleaseMs = report.source.frequencyMatch.acceptedPresent ? report.occurrences.releaseMs : 0UL;
+    report.source.frequencyMatch.acceptedDurationMs = report.source.frequencyMatch.acceptedPresent ? report.occurrences.primaryDurationMs : 0UL;
+    report.source.frequencyMatch.acceptedStrength = report.source.frequencyMatch.acceptedPresent ? report.occurrences.primaryStrength : 0.0f;
+    report.source.frequencyMatch.acceptedScore = report.source.frequencyMatch.acceptedPresent ? report.occurrences.score : 0.0f;
+    report.source.frequencyMatch.acceptedContrast = report.source.frequencyMatch.acceptedPresent ? report.occurrences.contrast : 0.0f;
+    report.source.frequencyMatch.freshFrames = _freqBandStream.profileComputeCalls();
+    report.source.frequencyMatch.heldFrames = _freqBandStream.profileObserveCalls() > _freqBandStream.profileComputeCalls()
         ? _freqBandStream.profileObserveCalls() - _freqBandStream.profileComputeCalls()
         : 0UL;
     if (_detection != nullptr) {
-        report.frequency.historyScoreRecords = _detection->featureHistory().sampleCount(detection::FeatureStreamId::FrequencyScore);
-        report.frequency.historyContrastRecords = _detection->featureHistory().sampleCount(detection::FeatureStreamId::FrequencyContrast);
+        report.source.frequencyMatch.historyScoreRecords = _detection->featureHistory().sampleCount(detection::FeatureStreamId::FrequencyScore);
+        report.source.frequencyMatch.historyContrastRecords = _detection->featureHistory().sampleCount(detection::FeatureStreamId::FrequencyContrast);
     }
 
     bool hasCurrentSourceEvidence = false;
     if (runtimeDiag != nullptr) {
-        report.frequency.frames = runtimeDiag->frequencyFrames;
-        report.frequency.validFrames = runtimeDiag->frequencyValidFrames;
-        report.frequency.scoreOkUpdates = runtimeDiag->frequencyScoreOkFrames;
-        report.frequency.contrastOkUpdates = runtimeDiag->frequencyContrastOkFrames;
-        report.frequency.bothOkUpdates = runtimeDiag->frequencyBothOkFrames;
-        report.frequency.matchFrames = runtimeDiag->frequencyMatchFrames;
-        report.frequency.rejectFrames = runtimeDiag->frequencyRejectFrames;
-        report.frequency.releaseScoreOkFrames = runtimeDiag->frequencyReleaseScoreOkFrames;
-        report.frequency.releaseContrastOkFrames = runtimeDiag->frequencyReleaseContrastOkFrames;
-        report.frequency.releaseBothOkFrames = runtimeDiag->frequencyReleaseBothOkFrames;
-        report.frequency.releaseScoreTooLowFrames = runtimeDiag->frequencyReleaseScoreTooLowFrames;
-        report.frequency.releaseContrastTooLowFrames = runtimeDiag->frequencyReleaseContrastTooLowFrames;
-        report.frequency.releaseScoreAndContrastTooLowFrames = runtimeDiag->frequencyReleaseScoreAndContrastTooLowFrames;
-        report.frequency.releaseNoEvidenceFrames = runtimeDiag->frequencyReleaseNoEvidenceFrames;
-        report.frequency.diagLongestMatchStreakFrames = runtimeDiag->frequencyDiagLongestMatchStreakFrames;
-        report.frequency.diagLongestMatchStreakMs = sampleFramesToMs(
+        report.source.frequencyMatch.frames = runtimeDiag->frequencyFrames;
+        report.source.frequencyMatch.validFrames = runtimeDiag->frequencyValidFrames;
+        report.source.frequencyMatch.scoreOkUpdates = runtimeDiag->frequencyScoreOkFrames;
+        report.source.frequencyMatch.contrastOkUpdates = runtimeDiag->frequencyContrastOkFrames;
+        report.source.frequencyMatch.bothOkUpdates = runtimeDiag->frequencyBothOkFrames;
+        report.source.frequencyMatch.matchFrames = runtimeDiag->frequencyMatchFrames;
+        report.source.frequencyMatch.rejectFrames = runtimeDiag->frequencyRejectFrames;
+        report.source.frequencyMatch.releaseScoreOkFrames = runtimeDiag->frequencyReleaseScoreOkFrames;
+        report.source.frequencyMatch.releaseContrastOkFrames = runtimeDiag->frequencyReleaseContrastOkFrames;
+        report.source.frequencyMatch.releaseBothOkFrames = runtimeDiag->frequencyReleaseBothOkFrames;
+        report.source.frequencyMatch.releaseScoreTooLowFrames = runtimeDiag->frequencyReleaseScoreTooLowFrames;
+        report.source.frequencyMatch.releaseContrastTooLowFrames = runtimeDiag->frequencyReleaseContrastTooLowFrames;
+        report.source.frequencyMatch.releaseScoreAndContrastTooLowFrames = runtimeDiag->frequencyReleaseScoreAndContrastTooLowFrames;
+        report.source.frequencyMatch.releaseNoEvidenceFrames = runtimeDiag->frequencyReleaseNoEvidenceFrames;
+        report.source.frequencyMatch.diagLongestMatchStreakFrames = runtimeDiag->frequencyDiagLongestMatchStreakFrames;
+        report.source.frequencyMatch.diagLongestMatchStreakMs = sampleFramesToMs(
             runtimeDiag->frequencyDiagLongestMatchStreakFrames,
             _audioSource.sampleRateHz() > 0 ? _audioSource.sampleRateHz() : 16000UL
         );
-        report.frequency.audioHealth = diagnostics.audioHealth != nullptr ? diagnostics.audioHealth : "unknown";
-        report.frequency.audioZeroishFrames = diagnostics.audioZeroishFrames;
-        report.frequency.audioFlatlineFrames = diagnostics.audioFlatlineFrames;
-        report.frequency.audioLargeJumpFrames = diagnostics.audioLargeJumpFrames;
-        report.frequency.audioRmsTooLowFrames = diagnostics.audioRmsTooLowFrames;
-        report.frequency.audioRmsTooHighFrames = diagnostics.audioRmsTooHighFrames;
-        report.frequency.audioMaxAbsDelta = diagnostics.audioMaxAbsDelta;
-        report.frequency.meanScore = runtimeDiag->frequencyScoreMean;
-        report.frequency.meanContrast = runtimeDiag->frequencyContrastMean;
-        report.frequency.sumScore = report.frequency.meanScore * static_cast<float>(report.frequency.frames);
-        report.frequency.sumContrast = report.frequency.meanContrast * static_cast<float>(report.frequency.frames);
-        report.frequency.scoreThreshold = runtimeDiag->frequencyScoreThreshold;
-        report.frequency.contrastThreshold = runtimeDiag->frequencyContrastThreshold;
-        report.frequency.maxScore = runtimeDiag->frequencyScoreMax;
-        report.frequency.maxScoreMs = runtimeDiag->frequencyScoreMaxMs;
-        report.frequency.maxContrast = runtimeDiag->frequencyContrastMax;
-        report.frequency.maxContrastMs = runtimeDiag->frequencyContrastMaxMs;
-        report.frequency.ampPeak = diagnostics.ambientBaselineSamples > 0
+        report.source.frequencyMatch.audioHealth = diagnostics.audioHealth != nullptr ? diagnostics.audioHealth : "unknown";
+        report.source.frequencyMatch.audioZeroishFrames = diagnostics.audioZeroishFrames;
+        report.source.frequencyMatch.audioFlatlineFrames = diagnostics.audioFlatlineFrames;
+        report.source.frequencyMatch.audioLargeJumpFrames = diagnostics.audioLargeJumpFrames;
+        report.source.frequencyMatch.audioRmsTooLowFrames = diagnostics.audioRmsTooLowFrames;
+        report.source.frequencyMatch.audioRmsTooHighFrames = diagnostics.audioRmsTooHighFrames;
+        report.source.frequencyMatch.audioMaxAbsDelta = diagnostics.audioMaxAbsDelta;
+        report.source.frequencyMatch.meanScore = runtimeDiag->frequencyScoreMean;
+        report.source.frequencyMatch.meanContrast = runtimeDiag->frequencyContrastMean;
+        report.source.frequencyMatch.sumScore = report.source.frequencyMatch.meanScore * static_cast<float>(report.source.frequencyMatch.frames);
+        report.source.frequencyMatch.sumContrast = report.source.frequencyMatch.meanContrast * static_cast<float>(report.source.frequencyMatch.frames);
+        report.source.frequencyMatch.scoreThreshold = runtimeDiag->frequencyScoreThreshold;
+        report.source.frequencyMatch.contrastThreshold = runtimeDiag->frequencyContrastThreshold;
+        report.source.frequencyMatch.maxScore = runtimeDiag->frequencyScoreMax;
+        report.source.frequencyMatch.maxScoreMs = runtimeDiag->frequencyScoreMaxMs;
+        report.source.frequencyMatch.maxContrast = runtimeDiag->frequencyContrastMax;
+        report.source.frequencyMatch.maxContrastMs = runtimeDiag->frequencyContrastMaxMs;
+        report.source.frequencyMatch.ampPeak = diagnostics.ambientBaselineSamples > 0
             ? static_cast<float>(diagnostics.maxSignalLevel)
             : 0.0f;
-        report.frequency.ampMean = diagnostics.ambientBaselineSamples > 0
+        report.source.frequencyMatch.ampMean = diagnostics.ambientBaselineSamples > 0
             ? diagnostics.ambientBaselineSum / static_cast<float>(diagnostics.ambientBaselineSamples)
             : 0.0f;
-        report.frequency.ampPeakMs = diagnostics.ambientBaselineSamples > 0
+        report.source.frequencyMatch.ampPeakMs = diagnostics.ambientBaselineSamples > 0
             ? diagnostics.ampPeakMs
             : 0UL;
-        report.frequency.minScore = runtimeDiag->frequencyScoreMin;
-        report.frequency.minContrast = runtimeDiag->frequencyContrastMin;
-        report.frequency.peakScore = runtimeDiag->frequencyPeakScore;
-        report.frequency.peakContrast = runtimeDiag->frequencyPeakContrast;
-        report.frequency.peakSampleCount = runtimeDiag->frequencyPeakSampleCount;
-        report.frequency.sourceSummary.present = runtimeDiag->sourceSummary.present;
-        report.frequency.sourceSummary.origin = "runtime_frequency_diag";
-        report.frequency.sourceSummary.candidateCount = runtimeDiag->sourceSummary.candidateCount;
-        report.frequency.sourceSummary.rejectCount = runtimeDiag->sourceSummary.rejectCount;
-        report.frequency.sourceSummary.bestDurationMs = runtimeDiag->sourceSummary.bestDurationMs;
-        report.frequency.sourceSummary.secondBestDurationMs = runtimeDiag->sourceSummary.secondBestDurationMs;
-        report.frequency.sourceSummary.bestOpenMs = runtimeDiag->sourceSummary.bestOpenMs;
-        report.frequency.sourceSummary.bestPeakMs = runtimeDiag->sourceSummary.bestPeakMs;
-        report.frequency.sourceSummary.bestLastMatchMs = runtimeDiag->sourceSummary.bestLastMatchMs;
-        report.frequency.sourceSummary.bestCloseMs = runtimeDiag->sourceSummary.bestCloseMs;
-        report.frequency.sourceSummary.bestPeakPrimary = runtimeDiag->sourceSummary.bestPeakPrimary;
-        report.frequency.sourceSummary.bestPeakSecondary = runtimeDiag->sourceSummary.bestPeakSecondary;
-        report.frequency.sourceSummary.bestRejectReason = runtimeDiag->sourceSummary.bestRejectReason;
-        report.frequency.sourceSummary.bestGateReason = runtimeDiag->sourceSummary.bestGateReason;
-        report.frequency.sourceSummary.closeCause = runtimeDiag->sourceSummary.closeCause;
-        report.frequency.sourceSummary.scoreTooLowFrames = runtimeDiag->sourceSummary.scoreTooLowFrames;
-        report.frequency.sourceSummary.contrastTooLowFrames = runtimeDiag->sourceSummary.contrastTooLowFrames;
-        report.frequency.sourceSummary.scoreAndContrastTooLowFrames = runtimeDiag->sourceSummary.scoreAndContrastTooLowFrames;
-        report.frequency.sourceSummary.maxPeakPrimary = runtimeDiag->sourceSummary.maxPeakPrimary;
-        report.frequency.sourceSummary.maxPeakPrimaryMs = runtimeDiag->sourceSummary.maxPeakPrimaryMs;
-        report.frequency.sourceSummary.maxPeakSecondary = runtimeDiag->sourceSummary.maxPeakSecondary;
-        report.frequency.sourceSummary.maxPeakSecondaryMs = runtimeDiag->sourceSummary.maxPeakSecondaryMs;
-        report.frequency.sourceSummary.totalMatchMs = runtimeDiag->sourceSummary.totalMatchMs;
-        report.frequency.sourceSummary.totalGapMs = runtimeDiag->sourceSummary.totalGapMs;
-        report.frequency.sourceSummary.maxGapMs = runtimeDiag->sourceSummary.maxGapMs;
-        report.frequency.sourceSummary.islandCount = runtimeDiag->sourceSummary.islandCount;
-        report.frequency.sourceLastCandidate.present = runtimeDiag->sourceLastCandidate.present;
-        report.frequency.sourceLastCandidate.peakMs = runtimeDiag->sourceLastCandidate.peakMs;
-        report.frequency.sourceLastCandidate.durationMs = runtimeDiag->sourceLastCandidate.durationMs;
-        report.frequency.sourceLastCandidate.sampleCount = runtimeDiag->sourceLastCandidate.sampleCount;
-        report.frequency.sourceLastCandidate.peakPrimary = runtimeDiag->sourceLastCandidate.peakPrimary;
-        report.frequency.sourceLastCandidate.peakSecondary = runtimeDiag->sourceLastCandidate.peakSecondary;
-        report.frequency.sourceLastCandidate.reason = runtimeDiag->sourceLastCandidate.reason;
-        report.frequency.sourceLastCandidate.gateReason = runtimeDiag->sourceLastCandidate.gateReason;
-        report.frequency.sourceLastCandidate.scope = report.frequency.sourceLastCandidate.present
-            ? (report.frequency.sourceLastCandidate.peakMs >= report.frequency.windowStartMs && report.frequency.sourceLastCandidate.peakMs <= report.frequency.windowEndMs
+        report.source.frequencyMatch.minScore = runtimeDiag->frequencyScoreMin;
+        report.source.frequencyMatch.minContrast = runtimeDiag->frequencyContrastMin;
+        report.source.frequencyMatch.peakScore = runtimeDiag->frequencyPeakScore;
+        report.source.frequencyMatch.peakContrast = runtimeDiag->frequencyPeakContrast;
+        report.source.frequencyMatch.peakSampleCount = runtimeDiag->frequencyPeakSampleCount;
+        report.source.frequencyMatch.sourceSummary.present = runtimeDiag->sourceSummary.present;
+        report.source.frequencyMatch.sourceSummary.origin = "runtime_frequency_diag";
+        report.source.frequencyMatch.sourceSummary.candidateCount = runtimeDiag->sourceSummary.candidateCount;
+        report.source.frequencyMatch.sourceSummary.rejectCount = runtimeDiag->sourceSummary.rejectCount;
+        report.source.frequencyMatch.sourceSummary.bestDurationMs = runtimeDiag->sourceSummary.bestDurationMs;
+        report.source.frequencyMatch.sourceSummary.secondBestDurationMs = runtimeDiag->sourceSummary.secondBestDurationMs;
+        report.source.frequencyMatch.sourceSummary.bestOpenMs = runtimeDiag->sourceSummary.bestOpenMs;
+        report.source.frequencyMatch.sourceSummary.bestPeakMs = runtimeDiag->sourceSummary.bestPeakMs;
+        report.source.frequencyMatch.sourceSummary.bestLastMatchMs = runtimeDiag->sourceSummary.bestLastMatchMs;
+        report.source.frequencyMatch.sourceSummary.bestCloseMs = runtimeDiag->sourceSummary.bestCloseMs;
+        report.source.frequencyMatch.sourceSummary.bestPeakPrimary = runtimeDiag->sourceSummary.bestPeakPrimary;
+        report.source.frequencyMatch.sourceSummary.bestPeakSecondary = runtimeDiag->sourceSummary.bestPeakSecondary;
+        report.source.frequencyMatch.sourceSummary.bestRejectReason = runtimeDiag->sourceSummary.bestRejectReason;
+        report.source.frequencyMatch.sourceSummary.bestGateReason = runtimeDiag->sourceSummary.bestGateReason;
+        report.source.frequencyMatch.sourceSummary.closeCause = runtimeDiag->sourceSummary.closeCause;
+        report.source.frequencyMatch.sourceSummary.scoreTooLowFrames = runtimeDiag->sourceSummary.scoreTooLowFrames;
+        report.source.frequencyMatch.sourceSummary.contrastTooLowFrames = runtimeDiag->sourceSummary.contrastTooLowFrames;
+        report.source.frequencyMatch.sourceSummary.scoreAndContrastTooLowFrames = runtimeDiag->sourceSummary.scoreAndContrastTooLowFrames;
+        report.source.frequencyMatch.sourceSummary.maxPeakPrimary = runtimeDiag->sourceSummary.maxPeakPrimary;
+        report.source.frequencyMatch.sourceSummary.maxPeakPrimaryMs = runtimeDiag->sourceSummary.maxPeakPrimaryMs;
+        report.source.frequencyMatch.sourceSummary.maxPeakSecondary = runtimeDiag->sourceSummary.maxPeakSecondary;
+        report.source.frequencyMatch.sourceSummary.maxPeakSecondaryMs = runtimeDiag->sourceSummary.maxPeakSecondaryMs;
+        report.source.frequencyMatch.sourceSummary.totalMatchMs = runtimeDiag->sourceSummary.totalMatchMs;
+        report.source.frequencyMatch.sourceSummary.totalGapMs = runtimeDiag->sourceSummary.totalGapMs;
+        report.source.frequencyMatch.sourceSummary.maxGapMs = runtimeDiag->sourceSummary.maxGapMs;
+        report.source.frequencyMatch.sourceSummary.islandCount = runtimeDiag->sourceSummary.islandCount;
+        report.source.frequencyMatch.sourceLastCandidate.present = runtimeDiag->sourceLastCandidate.present;
+        report.source.frequencyMatch.sourceLastCandidate.peakMs = runtimeDiag->sourceLastCandidate.peakMs;
+        report.source.frequencyMatch.sourceLastCandidate.durationMs = runtimeDiag->sourceLastCandidate.durationMs;
+        report.source.frequencyMatch.sourceLastCandidate.sampleCount = runtimeDiag->sourceLastCandidate.sampleCount;
+        report.source.frequencyMatch.sourceLastCandidate.peakPrimary = runtimeDiag->sourceLastCandidate.peakPrimary;
+        report.source.frequencyMatch.sourceLastCandidate.peakSecondary = runtimeDiag->sourceLastCandidate.peakSecondary;
+        report.source.frequencyMatch.sourceLastCandidate.reason = runtimeDiag->sourceLastCandidate.reason;
+        report.source.frequencyMatch.sourceLastCandidate.gateReason = runtimeDiag->sourceLastCandidate.gateReason;
+        report.source.frequencyMatch.sourceLastCandidate.scope = report.source.frequencyMatch.sourceLastCandidate.present
+            ? (report.source.frequencyMatch.sourceLastCandidate.peakMs >= report.source.frequencyMatch.windowStartMs && report.source.frequencyMatch.sourceLastCandidate.peakMs <= report.source.frequencyMatch.windowEndMs
                 ? "in_window"
-                : (report.frequency.sourceLastCandidate.peakMs < report.frequency.windowStartMs ? "before_window" : "after_window"))
+                : (report.source.frequencyMatch.sourceLastCandidate.peakMs < report.source.frequencyMatch.windowStartMs ? "before_window" : "after_window"))
             : "stale";
-        hasCurrentSourceEvidence = report.frequency.acceptedPresent || report.frequency.sourceSummary.present;
+        hasCurrentSourceEvidence = report.source.frequencyMatch.acceptedPresent || report.source.frequencyMatch.sourceSummary.present;
         if (!hasCurrentSourceEvidence) {
-            report.frequency.sourceLastCandidate.present = false;
-            report.frequency.sourceLastCandidate.peakMs = 0;
-            report.frequency.sourceLastCandidate.durationMs = 0;
-            report.frequency.sourceLastCandidate.sampleCount = 0;
-            report.frequency.sourceLastCandidate.peakPrimary = 0.0f;
-            report.frequency.sourceLastCandidate.peakSecondary = 0.0f;
-            report.frequency.sourceLastCandidate.reason = "none";
-            report.frequency.sourceLastCandidate.gateReason = "none";
-            report.frequency.sourceLastCandidate.scope = "unknown";
+            report.source.frequencyMatch.sourceLastCandidate.present = false;
+            report.source.frequencyMatch.sourceLastCandidate.peakMs = 0;
+            report.source.frequencyMatch.sourceLastCandidate.durationMs = 0;
+            report.source.frequencyMatch.sourceLastCandidate.sampleCount = 0;
+            report.source.frequencyMatch.sourceLastCandidate.peakPrimary = 0.0f;
+            report.source.frequencyMatch.sourceLastCandidate.peakSecondary = 0.0f;
+            report.source.frequencyMatch.sourceLastCandidate.reason = "none";
+            report.source.frequencyMatch.sourceLastCandidate.gateReason = "none";
+            report.source.frequencyMatch.sourceLastCandidate.scope = "unknown";
         }
-        report.frequency.liveFreqReason = runtimeDiag->frequencyRejectReason != nullptr ? runtimeDiag->frequencyRejectReason : "none";
-        report.frequency.liveFreqWould = runtimeDiag->frequencyWouldCandidateReason != nullptr ? runtimeDiag->frequencyWouldCandidateReason : "none";
-        report.frequency.liveFreqState = runtimeDiag->frequencyCandidateState != nullptr ? runtimeDiag->frequencyCandidateState : "none";
-        report.frequency.liveFreqReady = runtimeDiag->frequencyReadyOk;
-        report.frequency.liveFreqGate = runtimeDiag->frequencyGateOpen;
-        report.frequency.liveFreqPresent = runtimeDiag->frequencyPresent;
-        report.frequency.liveFreqValid = runtimeDiag->frequencyValidWindow;
-        report.frequency.liveFreqMatch = runtimeDiag->frequencyMatched;
-        report.frequency.analyzerMissReason = report.classification.result == AnalyzerResult::Miss
+        report.source.frequencyMatch.liveFreqReason = runtimeDiag->frequencyRejectReason != nullptr ? runtimeDiag->frequencyRejectReason : "none";
+        report.source.frequencyMatch.liveFreqWould = runtimeDiag->frequencyWouldCandidateReason != nullptr ? runtimeDiag->frequencyWouldCandidateReason : "none";
+        report.source.frequencyMatch.liveFreqState = runtimeDiag->frequencyCandidateState != nullptr ? runtimeDiag->frequencyCandidateState : "none";
+        report.source.frequencyMatch.liveFreqReady = runtimeDiag->frequencyReadyOk;
+        report.source.frequencyMatch.liveFreqGate = runtimeDiag->frequencyGateOpen;
+        report.source.frequencyMatch.liveFreqPresent = runtimeDiag->frequencyPresent;
+        report.source.frequencyMatch.liveFreqValid = runtimeDiag->frequencyValidWindow;
+        report.source.frequencyMatch.liveFreqMatch = runtimeDiag->frequencyMatched;
+        report.source.frequencyMatch.analyzerMissReason = report.classification.result == AnalyzerResult::Miss
             ? analyzerReasonName(report.classification.reason)
             : "none";
-        report.frequency.nearMiss = runtimeDiag->frequencyNearMiss;
-        report.frequency.nearMissReason = runtimeDiag->frequencyNearMissReason != nullptr ? runtimeDiag->frequencyNearMissReason : "none";
+        report.source.frequencyMatch.nearMiss = runtimeDiag->frequencyNearMiss;
+        report.source.frequencyMatch.nearMissReason = runtimeDiag->frequencyNearMissReason != nullptr ? runtimeDiag->frequencyNearMissReason : "none";
     }
 
     report.frequencyDetector = frequencyDetector;
 
     if (frequencyDetector != nullptr) {
-        report.frequency.sourceOccurrenceEmitted = frequencyDetector->candidateEmitted;
-        report.frequency.runtimeEvidenceSeen = runtimeDiag != nullptr ? runtimeDiag->frequencyPresent : false;
-        report.frequency.runtimeOccurrenceReceived = report.frequency.sourceOccurrenceEmitted && runtimeReceivedOccurrence;
-        report.frequency.sourceLastRejectReason = runtimeDiag != nullptr && runtimeDiag->frequencyRejectReason != nullptr
+        report.source.frequencyMatch.sourceOccurrenceEmitted = frequencyDetector->candidateEmitted;
+        report.source.frequencyMatch.runtimeEvidenceSeen = runtimeDiag != nullptr ? runtimeDiag->frequencyPresent : false;
+        report.source.frequencyMatch.runtimeOccurrenceReceived = report.source.frequencyMatch.sourceOccurrenceEmitted && runtimeReceivedOccurrence;
+        report.source.frequencyMatch.sourceLastRejectReason = runtimeDiag != nullptr && runtimeDiag->frequencyRejectReason != nullptr
             ? runtimeDiag->frequencyRejectReason
             : "none";
-        report.frequency.selectedRejectReason = runtimeDiag != nullptr && report.frequency.sourceOccurrenceEmitted && !report.frequency.acceptedPresent && runtimeDiag->frequencyNoEmitReason != nullptr
+        report.source.frequencyMatch.selectedRejectReason = runtimeDiag != nullptr && report.source.frequencyMatch.sourceOccurrenceEmitted && !report.source.frequencyMatch.acceptedPresent && runtimeDiag->frequencyNoEmitReason != nullptr
             ? runtimeDiag->frequencyNoEmitReason
             : "none";
-        report.frequency.selectedRejectGateReason = runtimeDiag != nullptr && runtimeDiag->frequencyGateReason != nullptr
+        report.source.frequencyMatch.selectedRejectGateReason = runtimeDiag != nullptr && runtimeDiag->frequencyGateReason != nullptr
             ? runtimeDiag->frequencyGateReason
             : "none";
-        report.frequency.fmOpened = runtimeDiag != nullptr ? runtimeDiag->frequencyOpened : false;
-        report.frequency.fmReleased = runtimeDiag != nullptr ? runtimeDiag->frequencyReleased : false;
-        report.frequency.fmEmitted = runtimeDiag != nullptr ? runtimeDiag->frequencyEmitted : false;
-        report.frequency.fmDurationOk = runtimeDiag != nullptr ? runtimeDiag->frequencyValidRelease : false;
-        report.frequency.fmValidRelease = runtimeDiag != nullptr ? runtimeDiag->frequencyValidRelease : false;
-        report.frequency.fmEmitAllowed = runtimeDiag != nullptr ? runtimeDiag->frequencyEmitAllowed : false;
-        report.frequency.fmCloseCause = runtimeDiag != nullptr && runtimeDiag->sourceSummary.closeCause != nullptr
+        report.source.frequencyMatch.fmOpened = runtimeDiag != nullptr ? runtimeDiag->frequencyOpened : false;
+        report.source.frequencyMatch.fmReleased = runtimeDiag != nullptr ? runtimeDiag->frequencyReleased : false;
+        report.source.frequencyMatch.fmEmitted = runtimeDiag != nullptr ? runtimeDiag->frequencyEmitted : false;
+        report.source.frequencyMatch.fmDurationOk = runtimeDiag != nullptr ? runtimeDiag->frequencyValidRelease : false;
+        report.source.frequencyMatch.fmValidRelease = runtimeDiag != nullptr ? runtimeDiag->frequencyValidRelease : false;
+        report.source.frequencyMatch.fmEmitAllowed = runtimeDiag != nullptr ? runtimeDiag->frequencyEmitAllowed : false;
+        report.source.frequencyMatch.fmCloseCause = runtimeDiag != nullptr && runtimeDiag->sourceSummary.closeCause != nullptr
             ? runtimeDiag->sourceSummary.closeCause
             : "none";
-        report.frequency.fmOpenMs = runtimeDiag != nullptr ? runtimeDiag->frequencyOpenMs : 0UL;
-        report.frequency.fmPeakMs = runtimeDiag != nullptr ? runtimeDiag->frequencyPeakMs : 0UL;
-        report.frequency.fmReleaseMs = runtimeDiag != nullptr ? runtimeDiag->frequencyReleaseMs : 0UL;
-        report.frequency.fmDurationMs = runtimeDiag != nullptr ? runtimeDiag->frequencyDurationMs : 0UL;
-        report.frequency.fmMinDurationMs = runtimeDiag != nullptr ? runtimeDiag->frequencyMinDurationMs : 0UL;
-        report.frequency.fmMaxDurationMs = runtimeDiag != nullptr ? runtimeDiag->frequencyMaxDurationMs : 0UL;
-        report.frequency.diagFirstFrameMs = report.frequency.fmOpenMs;
-        report.frequency.diagLastFrameMs = report.frequency.fmReleaseMs;
+        report.source.frequencyMatch.fmOpenMs = runtimeDiag != nullptr ? runtimeDiag->frequencyOpenMs : 0UL;
+        report.source.frequencyMatch.fmPeakMs = runtimeDiag != nullptr ? runtimeDiag->frequencyPeakMs : 0UL;
+        report.source.frequencyMatch.fmReleaseMs = runtimeDiag != nullptr ? runtimeDiag->frequencyReleaseMs : 0UL;
+        report.source.frequencyMatch.fmDurationMs = runtimeDiag != nullptr ? runtimeDiag->frequencyDurationMs : 0UL;
+        report.source.frequencyMatch.fmMinDurationMs = runtimeDiag != nullptr ? runtimeDiag->frequencyMinDurationMs : 0UL;
+        report.source.frequencyMatch.fmMaxDurationMs = runtimeDiag != nullptr ? runtimeDiag->frequencyMaxDurationMs : 0UL;
+        report.source.frequencyMatch.diagFirstFrameMs = report.source.frequencyMatch.fmOpenMs;
+        report.source.frequencyMatch.diagLastFrameMs = report.source.frequencyMatch.fmReleaseMs;
         if (!hasCurrentSourceEvidence) {
-            report.frequency.diagFirstFrameMs = 0;
-            report.frequency.diagLastFrameMs = 0;
-            report.frequency.fmOpenMs = 0;
-            report.frequency.fmPeakMs = 0;
-            report.frequency.fmReleaseMs = 0;
-            report.frequency.fmDurationMs = 0;
-            report.frequency.fmMinDurationMs = 0;
-            report.frequency.fmMaxDurationMs = 0;
-            report.frequency.fmDurationOk = false;
-            report.frequency.fmOpened = false;
-            report.frequency.fmReleased = false;
-            report.frequency.fmEmitted = false;
-            report.frequency.fmValidRelease = false;
-            report.frequency.fmEmitAllowed = false;
-            report.frequency.fmCloseCause = "none";
+            report.source.frequencyMatch.diagFirstFrameMs = 0;
+            report.source.frequencyMatch.diagLastFrameMs = 0;
+            report.source.frequencyMatch.fmOpenMs = 0;
+            report.source.frequencyMatch.fmPeakMs = 0;
+            report.source.frequencyMatch.fmReleaseMs = 0;
+            report.source.frequencyMatch.fmDurationMs = 0;
+            report.source.frequencyMatch.fmMinDurationMs = 0;
+            report.source.frequencyMatch.fmMaxDurationMs = 0;
+            report.source.frequencyMatch.fmDurationOk = false;
+            report.source.frequencyMatch.fmOpened = false;
+            report.source.frequencyMatch.fmReleased = false;
+            report.source.frequencyMatch.fmEmitted = false;
+            report.source.frequencyMatch.fmValidRelease = false;
+            report.source.frequencyMatch.fmEmitAllowed = false;
+            report.source.frequencyMatch.fmCloseCause = "none";
         }
-        report.frequency.diagFrameCountOk = report.frequency.expectedFrameCountEstimate == 0
-            ? report.frequency.frames == 0
-            : report.frequency.frames > 0;
-        report.frequency.detectionGateBlocked = !runtimeDiag->frequencyGateOpen || !runtimeDiag->frequencyReadyOk;
+        report.source.frequencyMatch.diagFrameCountOk = report.source.frequencyMatch.expectedFrameCountEstimate == 0
+            ? report.source.frequencyMatch.frames == 0
+            : report.source.frequencyMatch.frames > 0;
+        report.source.frequencyMatch.detectionGateBlocked = !runtimeDiag->frequencyGateOpen || !runtimeDiag->frequencyReadyOk;
         if (!runtimeDiag->frequencyReadyOk) {
-            report.frequency.detectionGateReason = "not_ready";
+            report.source.frequencyMatch.detectionGateReason = "not_ready";
         } else if (!runtimeDiag->frequencyGateOpen) {
-            report.frequency.detectionGateReason = report.frequency.selectedRejectGateReason != nullptr && report.frequency.selectedRejectGateReason[0] != '\0'
-                ? report.frequency.selectedRejectGateReason
+            report.source.frequencyMatch.detectionGateReason = report.source.frequencyMatch.selectedRejectGateReason != nullptr && report.source.frequencyMatch.selectedRejectGateReason[0] != '\0'
+                ? report.source.frequencyMatch.selectedRejectGateReason
                 : "unknown";
         } else {
-            report.frequency.detectionGateReason = "none";
+            report.source.frequencyMatch.detectionGateReason = "none";
         }
     }
-    report.frequency.inconsistent = report.classification.result == AnalyzerResult::Miss && report.frequency.acceptedPresent;
-    if (report.frequency.analyzerMissReason == nullptr || report.frequency.analyzerMissReason[0] == '\0') {
-        report.frequency.analyzerMissReason = report.classification.result == AnalyzerResult::Miss
+    report.source.frequencyMatch.inconsistent = report.classification.result == AnalyzerResult::Miss && report.source.frequencyMatch.acceptedPresent;
+    if (report.source.frequencyMatch.analyzerMissReason == nullptr || report.source.frequencyMatch.analyzerMissReason[0] == '\0') {
+        report.source.frequencyMatch.analyzerMissReason = report.classification.result == AnalyzerResult::Miss
             ? "no_accepted_occurrence"
             : "none";
     }
-    if (report.classification.result == AnalyzerResult::Miss && !report.frequency.acceptedPresent && report.frequency.analyzerMissReason != nullptr && strcmp(report.frequency.analyzerMissReason, "occurrence_emitted") == 0) {
-        report.frequency.analyzerMissReason = "unknown_or_stale_reason";
-        report.frequency.inconsistent = true;
+    if (report.classification.result == AnalyzerResult::Miss && !report.source.frequencyMatch.acceptedPresent && report.source.frequencyMatch.analyzerMissReason != nullptr && strcmp(report.source.frequencyMatch.analyzerMissReason, "occurrence_emitted") == 0) {
+        report.source.frequencyMatch.analyzerMissReason = "unknown_or_stale_reason";
+        report.source.frequencyMatch.inconsistent = true;
     }
-    report.frequency.analyzerSeenOccurrence = report.frequency.acceptedPresent;
-    report.frequency.freqEvidenceClass = frequencyEvidenceClassLabel(classifyFrequencyEvidence(report));
-    if (!report.frequency.sourceOccurrenceEmitted) {
-        report.frequency.runtimeOccurrenceReceived = false;
+    report.source.frequencyMatch.analyzerSeenOccurrence = report.source.frequencyMatch.acceptedPresent;
+    report.frequency = report.source.frequencyMatch;
+    report.source.frequencyMatch.freqEvidenceClass = frequencyEvidenceClassLabel(classifyFrequencyEvidence(report));
+    report.frequency = report.source.frequencyMatch;
+    if (!report.source.frequencyMatch.sourceOccurrenceEmitted) {
+        report.source.frequencyMatch.runtimeOccurrenceReceived = false;
     }
 
     const bool scalarProfile = selectedProfile.occurrenceSource == detection::OccurrenceSourceKind::ScalarTransient;
     if (scalarProfile) {
-        report.scalar.currentTrialId = report.context.trial;
-        report.scalar.windowStartMs = _sequenceTest.currentTrialStartMs;
-        report.scalar.windowEndMs = _sequenceTest.currentTrialEndMs;
-        report.scalar.expectedWindowMs = report.scalar.windowEndMs >= report.scalar.windowStartMs
-            ? report.scalar.windowEndMs - report.scalar.windowStartMs
+        report.source.scalarTransient.currentTrialId = report.context.trial;
+        report.source.scalarTransient.windowStartMs = _sequenceTest.currentTrialStartMs;
+        report.source.scalarTransient.windowEndMs = _sequenceTest.currentTrialEndMs;
+        report.source.scalarTransient.expectedWindowMs = report.source.scalarTransient.windowEndMs >= report.source.scalarTransient.windowStartMs
+            ? report.source.scalarTransient.windowEndMs - report.source.scalarTransient.windowStartMs
             : 0UL;
-        report.scalar.expectedFrameCountEstimate =
-            static_cast<unsigned long>((report.scalar.expectedWindowMs
+        report.source.scalarTransient.expectedFrameCountEstimate =
+            static_cast<unsigned long>((report.source.scalarTransient.expectedWindowMs
                 * static_cast<unsigned long>(_audioSource.sampleRateHz() > 0 ? _audioSource.sampleRateHz() : 16000UL)) / 1000UL);
-        report.scalar.diagFrameCountOk = report.scalar.expectedWindowMs > 0 && report.scalar.expectedFrameCountEstimate > 0;
+        report.source.scalarTransient.diagFrameCountOk = report.source.scalarTransient.expectedWindowMs > 0 && report.source.scalarTransient.expectedFrameCountEstimate > 0;
 
-        report.scalar.acceptedPresent = report.occurrences.present
+        report.source.scalarTransient.acceptedPresent = report.occurrences.present
             && report.occurrences.valid
             && report.primaryPattern.accepted
             && report.occurrences.primarySource != nullptr
             && strcmp(report.occurrences.primarySource, "amp") == 0;
-        report.scalar.acceptedTrialId = report.scalar.acceptedPresent ? report.context.trial : 0UL;
-        report.scalar.acceptedSource = report.scalar.acceptedPresent
+        report.source.scalarTransient.acceptedTrialId = report.source.scalarTransient.acceptedPresent ? report.context.trial : 0UL;
+        report.source.scalarTransient.acceptedSource = report.source.scalarTransient.acceptedPresent
             ? (report.occurrences.primarySource != nullptr ? report.occurrences.primarySource : "unknown")
             : "none";
-        report.scalar.acceptedDtMs = report.scalar.acceptedPresent ? report.occurrences.primaryDtMs : -1;
-        report.scalar.acceptedStartMs = report.scalar.acceptedPresent ? report.occurrences.startMs : 0UL;
-        report.scalar.acceptedPeakMs = report.scalar.acceptedPresent ? report.occurrences.peakMs : 0UL;
-        report.scalar.acceptedReleaseMs = report.scalar.acceptedPresent ? report.occurrences.releaseMs : 0UL;
-        report.scalar.acceptedDurationMs = report.scalar.acceptedPresent ? report.occurrences.primaryDurationMs : 0UL;
-        report.scalar.acceptedStrength = report.scalar.acceptedPresent ? report.occurrences.primaryStrength : 0.0f;
-        report.scalar.acceptedScore = report.scalar.acceptedPresent ? report.occurrences.score : 0.0f;
-        report.scalar.acceptedContrast = report.scalar.acceptedPresent ? report.occurrences.contrast : 0.0f;
+        report.source.scalarTransient.acceptedDtMs = report.source.scalarTransient.acceptedPresent ? report.occurrences.primaryDtMs : -1;
+        report.source.scalarTransient.acceptedStartMs = report.source.scalarTransient.acceptedPresent ? report.occurrences.startMs : 0UL;
+        report.source.scalarTransient.acceptedPeakMs = report.source.scalarTransient.acceptedPresent ? report.occurrences.peakMs : 0UL;
+        report.source.scalarTransient.acceptedReleaseMs = report.source.scalarTransient.acceptedPresent ? report.occurrences.releaseMs : 0UL;
+        report.source.scalarTransient.acceptedDurationMs = report.source.scalarTransient.acceptedPresent ? report.occurrences.primaryDurationMs : 0UL;
+        report.source.scalarTransient.acceptedStrength = report.source.scalarTransient.acceptedPresent ? report.occurrences.primaryStrength : 0.0f;
+        report.source.scalarTransient.acceptedScore = report.source.scalarTransient.acceptedPresent ? report.occurrences.score : 0.0f;
+        report.source.scalarTransient.acceptedContrast = report.source.scalarTransient.acceptedPresent ? report.occurrences.contrast : 0.0f;
 
         if (runtimeDiag != nullptr) {
-            report.scalar.scalarRejectReason = runtimeDiag->scalarRejectReason != nullptr ? runtimeDiag->scalarRejectReason : "unknown";
-            report.scalar.scalarNoEmitReason = runtimeDiag->scalarNoEmitReason != nullptr ? runtimeDiag->scalarNoEmitReason : "none";
-            report.scalar.scalarGateReason = runtimeDiag->scalarGateReason != nullptr ? runtimeDiag->scalarGateReason : "none";
-            report.scalar.scalarOpened = runtimeDiag->scalarOpened;
-            report.scalar.scalarReleased = runtimeDiag->scalarReleased;
-            report.scalar.scalarValidRelease = runtimeDiag->scalarValidRelease;
-            report.scalar.scalarEmitAllowed = runtimeDiag->scalarEmitAllowed;
-            report.scalar.scalarOpenMs = runtimeDiag->scalarOpenMs;
-            report.scalar.scalarPeakMs = runtimeDiag->scalarPeakMs;
-            report.scalar.scalarReleaseMs = runtimeDiag->scalarReleaseMs;
-            report.scalar.scalarDurationMs = runtimeDiag->scalarDurationMs;
-            report.scalar.scalarMinDurationMs = runtimeDiag->scalarMinDurationMs;
-            report.scalar.scalarMaxDurationMs = runtimeDiag->scalarMaxDurationMs;
-            report.scalar.scalarPeakStrength = runtimeDiag->scalarPeakStrength;
-        report.scalar.sourceOccurrenceEmitted = report.occurrences.present;
-        report.scalar.sourceSummary.present = !report.scalar.acceptedPresent
-            && (report.scalar.scalarOpened
-                || report.scalar.scalarReleased
-                || (report.scalar.scalarRejectReason != nullptr && strcmp(report.scalar.scalarRejectReason, "none") != 0));
-        report.scalar.sourceSummary.origin = "synthesized_scalar_lifecycle";
-        report.scalar.sourceSummary.candidateCount = report.scalar.sourceSummary.present ? 1UL : 0UL;
-        report.scalar.sourceSummary.rejectCount = report.scalar.sourceSummary.candidateCount;
-        report.scalar.sourceSummary.bestDurationMs = report.scalar.scalarDurationMs;
-        report.scalar.sourceSummary.secondBestDurationMs = 0UL;
-        report.scalar.sourceSummary.bestOpenMs = report.scalar.scalarOpenMs;
-        report.scalar.sourceSummary.bestPeakMs = report.scalar.scalarPeakMs;
-        report.scalar.sourceSummary.bestLastMatchMs = report.scalar.scalarReleaseMs;
-        report.scalar.sourceSummary.bestCloseMs = report.scalar.scalarReleaseMs;
-        report.scalar.sourceSummary.bestPeakPrimary = report.scalar.scalarPeakStrength;
-        report.scalar.sourceSummary.bestPeakSecondary = 0.0f;
-        report.scalar.sourceSummary.bestRejectReason = report.scalar.scalarRejectReason != nullptr ? report.scalar.scalarRejectReason : "none";
-        report.scalar.sourceSummary.bestGateReason = report.scalar.scalarGateReason != nullptr ? report.scalar.scalarGateReason : "none";
-        report.scalar.sourceSummary.scoreTooLowFrames = 0;
-        report.scalar.sourceSummary.contrastTooLowFrames = 0;
-        report.scalar.sourceSummary.scoreAndContrastTooLowFrames = 0;
-        report.scalar.sourceSummary.maxPeakPrimary = runtimeDiag->sourceSummary.maxPeakPrimary;
-        report.scalar.sourceSummary.maxPeakPrimaryMs = runtimeDiag->sourceSummary.maxPeakPrimaryMs;
-        report.scalar.sourceSummary.maxPeakSecondary = 0.0f;
-        report.scalar.sourceSummary.maxPeakSecondaryMs = 0UL;
-        report.scalar.sourceSummary.totalMatchMs = report.scalar.scalarDurationMs;
-        report.scalar.sourceSummary.totalGapMs = runtimeDiag->sourceSummary.totalGapMs;
-        report.scalar.sourceSummary.maxGapMs = runtimeDiag->sourceSummary.maxGapMs;
-        report.scalar.sourceSummary.islandCount = report.scalar.sourceSummary.present ? 1UL : 0UL;
-        report.scalar.sourceLastCandidate.present = report.scalar.scalarOpened
-            || report.scalar.scalarReleased
-            || report.scalar.scalarEmitAllowed;
-        report.scalar.sourceLastCandidate.peakMs = report.scalar.scalarPeakMs;
-        report.scalar.sourceLastCandidate.durationMs = report.scalar.scalarDurationMs;
-        report.scalar.sourceLastCandidate.sampleCount = 0UL;
-        report.scalar.sourceLastCandidate.peakPrimary = report.scalar.scalarPeakStrength;
-        report.scalar.sourceLastCandidate.peakSecondary = 0.0f;
-        report.scalar.sourceLastCandidate.reason = report.scalar.scalarRejectReason != nullptr ? report.scalar.scalarRejectReason : "none";
-        report.scalar.sourceLastCandidate.gateReason = report.scalar.scalarGateReason != nullptr ? report.scalar.scalarGateReason : "none";
-        report.scalar.sourceLastCandidate.scope = report.scalar.scalarOpened
-            ? (report.scalar.scalarPeakMs >= report.scalar.windowStartMs && report.scalar.scalarPeakMs <= report.scalar.windowEndMs
+            report.source.scalarTransient.scalarRejectReason = runtimeDiag->scalarRejectReason != nullptr ? runtimeDiag->scalarRejectReason : "unknown";
+            report.source.scalarTransient.scalarNoEmitReason = runtimeDiag->scalarNoEmitReason != nullptr ? runtimeDiag->scalarNoEmitReason : "none";
+            report.source.scalarTransient.scalarGateReason = runtimeDiag->scalarGateReason != nullptr ? runtimeDiag->scalarGateReason : "none";
+            report.source.scalarTransient.scalarOpened = runtimeDiag->scalarOpened;
+            report.source.scalarTransient.scalarReleased = runtimeDiag->scalarReleased;
+            report.source.scalarTransient.scalarValidRelease = runtimeDiag->scalarValidRelease;
+            report.source.scalarTransient.scalarEmitAllowed = runtimeDiag->scalarEmitAllowed;
+            report.source.scalarTransient.scalarOpenMs = runtimeDiag->scalarOpenMs;
+            report.source.scalarTransient.scalarPeakMs = runtimeDiag->scalarPeakMs;
+            report.source.scalarTransient.scalarReleaseMs = runtimeDiag->scalarReleaseMs;
+            report.source.scalarTransient.scalarDurationMs = runtimeDiag->scalarDurationMs;
+            report.source.scalarTransient.scalarMinDurationMs = runtimeDiag->scalarMinDurationMs;
+            report.source.scalarTransient.scalarMaxDurationMs = runtimeDiag->scalarMaxDurationMs;
+            report.source.scalarTransient.scalarPeakStrength = runtimeDiag->scalarPeakStrength;
+        report.source.scalarTransient.sourceOccurrenceEmitted = report.occurrences.present;
+        report.source.scalarTransient.sourceSummary.present = !report.source.scalarTransient.acceptedPresent
+            && (report.source.scalarTransient.scalarOpened
+                || report.source.scalarTransient.scalarReleased
+                || (report.source.scalarTransient.scalarRejectReason != nullptr && strcmp(report.source.scalarTransient.scalarRejectReason, "none") != 0));
+        report.source.scalarTransient.sourceSummary.origin = "synthesized_scalar_lifecycle";
+        report.source.scalarTransient.sourceSummary.candidateCount = report.source.scalarTransient.sourceSummary.present ? 1UL : 0UL;
+        report.source.scalarTransient.sourceSummary.rejectCount = report.source.scalarTransient.sourceSummary.candidateCount;
+        report.source.scalarTransient.sourceSummary.bestDurationMs = report.source.scalarTransient.scalarDurationMs;
+        report.source.scalarTransient.sourceSummary.secondBestDurationMs = 0UL;
+        report.source.scalarTransient.sourceSummary.bestOpenMs = report.source.scalarTransient.scalarOpenMs;
+        report.source.scalarTransient.sourceSummary.bestPeakMs = report.source.scalarTransient.scalarPeakMs;
+        report.source.scalarTransient.sourceSummary.bestLastMatchMs = report.source.scalarTransient.scalarReleaseMs;
+        report.source.scalarTransient.sourceSummary.bestCloseMs = report.source.scalarTransient.scalarReleaseMs;
+        report.source.scalarTransient.sourceSummary.bestPeakPrimary = report.source.scalarTransient.scalarPeakStrength;
+        report.source.scalarTransient.sourceSummary.bestPeakSecondary = 0.0f;
+        report.source.scalarTransient.sourceSummary.bestRejectReason = report.source.scalarTransient.scalarRejectReason != nullptr ? report.source.scalarTransient.scalarRejectReason : "none";
+        report.source.scalarTransient.sourceSummary.bestGateReason = report.source.scalarTransient.scalarGateReason != nullptr ? report.source.scalarTransient.scalarGateReason : "none";
+        report.source.scalarTransient.sourceSummary.scoreTooLowFrames = 0;
+        report.source.scalarTransient.sourceSummary.contrastTooLowFrames = 0;
+        report.source.scalarTransient.sourceSummary.scoreAndContrastTooLowFrames = 0;
+        report.source.scalarTransient.sourceSummary.maxPeakPrimary = runtimeDiag->sourceSummary.maxPeakPrimary;
+        report.source.scalarTransient.sourceSummary.maxPeakPrimaryMs = runtimeDiag->sourceSummary.maxPeakPrimaryMs;
+        report.source.scalarTransient.sourceSummary.maxPeakSecondary = 0.0f;
+        report.source.scalarTransient.sourceSummary.maxPeakSecondaryMs = 0UL;
+        report.source.scalarTransient.sourceSummary.totalMatchMs = report.source.scalarTransient.scalarDurationMs;
+        report.source.scalarTransient.sourceSummary.totalGapMs = runtimeDiag->sourceSummary.totalGapMs;
+        report.source.scalarTransient.sourceSummary.maxGapMs = runtimeDiag->sourceSummary.maxGapMs;
+        report.source.scalarTransient.sourceSummary.islandCount = report.source.scalarTransient.sourceSummary.present ? 1UL : 0UL;
+        report.source.scalarTransient.sourceLastCandidate.present = report.source.scalarTransient.scalarOpened
+            || report.source.scalarTransient.scalarReleased
+            || report.source.scalarTransient.scalarEmitAllowed;
+        report.source.scalarTransient.sourceLastCandidate.peakMs = report.source.scalarTransient.scalarPeakMs;
+        report.source.scalarTransient.sourceLastCandidate.durationMs = report.source.scalarTransient.scalarDurationMs;
+        report.source.scalarTransient.sourceLastCandidate.sampleCount = 0UL;
+        report.source.scalarTransient.sourceLastCandidate.peakPrimary = report.source.scalarTransient.scalarPeakStrength;
+        report.source.scalarTransient.sourceLastCandidate.peakSecondary = 0.0f;
+        report.source.scalarTransient.sourceLastCandidate.reason = report.source.scalarTransient.scalarRejectReason != nullptr ? report.source.scalarTransient.scalarRejectReason : "none";
+        report.source.scalarTransient.sourceLastCandidate.gateReason = report.source.scalarTransient.scalarGateReason != nullptr ? report.source.scalarTransient.scalarGateReason : "none";
+        report.source.scalarTransient.sourceLastCandidate.scope = report.source.scalarTransient.scalarOpened
+            ? (report.source.scalarTransient.scalarPeakMs >= report.source.scalarTransient.windowStartMs && report.source.scalarTransient.scalarPeakMs <= report.source.scalarTransient.windowEndMs
                 ? "in_window"
-                : (report.scalar.scalarPeakMs < report.scalar.windowStartMs ? "before_window" : "after_window"))
+                : (report.source.scalarTransient.scalarPeakMs < report.source.scalarTransient.windowStartMs ? "before_window" : "after_window"))
             : "stale";
-            report.scalar.runtimeEvidenceSeen = runtimeDiag->scalarOpened
+            report.source.scalarTransient.runtimeEvidenceSeen = runtimeDiag->scalarOpened
                 || runtimeDiag->scalarReleased
                 || (runtimeDiag->scalarRejectReason != nullptr && strcmp(runtimeDiag->scalarRejectReason, "none") != 0);
-            report.scalar.runtimeOccurrenceReceived = report.scalar.sourceOccurrenceEmitted;
-            report.scalar.analyzerSeenOccurrence = report.scalar.acceptedPresent;
-            report.scalar.liveScalarReason = runtimeDiag->scalarRejectReason != nullptr ? runtimeDiag->scalarRejectReason : "none";
-            report.scalar.liveScalarWould = runtimeDiag->scalarNoEmitReason != nullptr ? runtimeDiag->scalarNoEmitReason : "none";
-            report.scalar.liveScalarReady = runtimeDiag->scalarOpened;
-            report.scalar.liveScalarGate = runtimeDiag->scalarEmitAllowed;
-            report.scalar.liveScalarPresent = report.occurrences.present;
-            report.scalar.liveScalarValid = report.occurrences.valid;
-            report.scalar.liveScalarMatch = report.primaryPattern.accepted;
-            report.scalar.liveScalarState = runtimeDiag->scalarOpened
+            report.source.scalarTransient.runtimeOccurrenceReceived = report.source.scalarTransient.sourceOccurrenceEmitted;
+            report.source.scalarTransient.analyzerSeenOccurrence = report.source.scalarTransient.acceptedPresent;
+            report.source.scalarTransient.liveScalarReason = runtimeDiag->scalarRejectReason != nullptr ? runtimeDiag->scalarRejectReason : "none";
+            report.source.scalarTransient.liveScalarWould = runtimeDiag->scalarNoEmitReason != nullptr ? runtimeDiag->scalarNoEmitReason : "none";
+            report.source.scalarTransient.liveScalarReady = runtimeDiag->scalarOpened;
+            report.source.scalarTransient.liveScalarGate = runtimeDiag->scalarEmitAllowed;
+            report.source.scalarTransient.liveScalarPresent = report.occurrences.present;
+            report.source.scalarTransient.liveScalarValid = report.occurrences.valid;
+            report.source.scalarTransient.liveScalarMatch = report.primaryPattern.accepted;
+            report.source.scalarTransient.liveScalarState = runtimeDiag->scalarOpened
                 ? (runtimeDiag->scalarReleased ? "released" : "active")
                 : "idle";
-            report.scalar.detectionGateBlocked = !report.scalar.acceptedPresent
-                && (report.scalar.scalarOpened
-                    || report.scalar.scalarReleased
-                    || (report.scalar.scalarRejectReason != nullptr && strcmp(report.scalar.scalarRejectReason, "none") != 0));
-            if (!report.scalar.acceptedPresent) {
-                if (report.scalar.scalarRejectReason != nullptr && strcmp(report.scalar.scalarRejectReason, "none") != 0) {
-                    report.scalar.detectionGateReason = report.scalar.scalarRejectReason;
-                } else if (report.scalar.scalarOpened && !report.scalar.scalarReleased) {
-                    report.scalar.detectionGateReason = "opened_not_released";
-                } else if (!report.scalar.scalarOpened) {
-                    report.scalar.detectionGateReason = "no_evidence";
+            report.source.scalarTransient.detectionGateBlocked = !report.source.scalarTransient.acceptedPresent
+                && (report.source.scalarTransient.scalarOpened
+                    || report.source.scalarTransient.scalarReleased
+                    || (report.source.scalarTransient.scalarRejectReason != nullptr && strcmp(report.source.scalarTransient.scalarRejectReason, "none") != 0));
+            if (!report.source.scalarTransient.acceptedPresent) {
+                if (report.source.scalarTransient.scalarRejectReason != nullptr && strcmp(report.source.scalarTransient.scalarRejectReason, "none") != 0) {
+                    report.source.scalarTransient.detectionGateReason = report.source.scalarTransient.scalarRejectReason;
+                } else if (report.source.scalarTransient.scalarOpened && !report.source.scalarTransient.scalarReleased) {
+                    report.source.scalarTransient.detectionGateReason = "opened_not_released";
+                } else if (!report.source.scalarTransient.scalarOpened) {
+                    report.source.scalarTransient.detectionGateReason = "no_evidence";
                 } else {
-                    report.scalar.detectionGateReason = "none";
+                    report.source.scalarTransient.detectionGateReason = "none";
                 }
             } else {
-                report.scalar.detectionGateReason = "none";
+                report.source.scalarTransient.detectionGateReason = "none";
             }
         }
 
-        if (report.scalar.acceptedPresent) {
-            report.scalar.scalarRejectReason = "none";
-            report.scalar.scalarNoEmitReason = "none";
-            report.scalar.scalarGateReason = "none";
-            report.scalar.scalarOpened = true;
-            report.scalar.scalarReleased = true;
-            report.scalar.scalarValidRelease = true;
-            report.scalar.scalarEmitAllowed = true;
-            report.scalar.scalarOpenMs = report.scalar.acceptedStartMs;
-            report.scalar.scalarPeakMs = report.scalar.acceptedPeakMs;
-            report.scalar.scalarReleaseMs = report.scalar.acceptedReleaseMs;
-            report.scalar.scalarDurationMs = report.scalar.acceptedDurationMs;
-            report.scalar.sourceOccurrenceEmitted = true;
-            report.scalar.runtimeEvidenceSeen = true;
-            report.scalar.runtimeOccurrenceReceived = true;
-            report.scalar.analyzerSeenOccurrence = true;
-            report.scalar.liveScalarReason = "none";
-            report.scalar.liveScalarWould = "none";
-            report.scalar.liveScalarReady = true;
-            report.scalar.liveScalarGate = true;
-            report.scalar.liveScalarPresent = true;
-            report.scalar.liveScalarValid = true;
-            report.scalar.liveScalarMatch = true;
-            report.scalar.liveScalarState = "released";
-            report.scalar.detectionGateBlocked = false;
-            report.scalar.detectionGateReason = "none";
+        if (report.source.scalarTransient.acceptedPresent) {
+            report.source.scalarTransient.scalarRejectReason = "none";
+            report.source.scalarTransient.scalarNoEmitReason = "none";
+            report.source.scalarTransient.scalarGateReason = "none";
+            report.source.scalarTransient.scalarOpened = true;
+            report.source.scalarTransient.scalarReleased = true;
+            report.source.scalarTransient.scalarValidRelease = true;
+            report.source.scalarTransient.scalarEmitAllowed = true;
+            report.source.scalarTransient.scalarOpenMs = report.source.scalarTransient.acceptedStartMs;
+            report.source.scalarTransient.scalarPeakMs = report.source.scalarTransient.acceptedPeakMs;
+            report.source.scalarTransient.scalarReleaseMs = report.source.scalarTransient.acceptedReleaseMs;
+            report.source.scalarTransient.scalarDurationMs = report.source.scalarTransient.acceptedDurationMs;
+            report.source.scalarTransient.sourceOccurrenceEmitted = true;
+            report.source.scalarTransient.runtimeEvidenceSeen = true;
+            report.source.scalarTransient.runtimeOccurrenceReceived = true;
+            report.source.scalarTransient.analyzerSeenOccurrence = true;
+            report.source.scalarTransient.liveScalarReason = "none";
+            report.source.scalarTransient.liveScalarWould = "none";
+            report.source.scalarTransient.liveScalarReady = true;
+            report.source.scalarTransient.liveScalarGate = true;
+            report.source.scalarTransient.liveScalarPresent = true;
+            report.source.scalarTransient.liveScalarValid = true;
+            report.source.scalarTransient.liveScalarMatch = true;
+            report.source.scalarTransient.liveScalarState = "released";
+            report.source.scalarTransient.detectionGateBlocked = false;
+            report.source.scalarTransient.detectionGateReason = "none";
         }
 
-        report.scalar.inconsistent = report.classification.result == AnalyzerResult::Miss && report.scalar.acceptedPresent;
+        report.source.scalarTransient.inconsistent = report.classification.result == AnalyzerResult::Miss && report.source.scalarTransient.acceptedPresent;
     }
 
     const bool frequencySource = selectedProfile.occurrenceSource == detection::OccurrenceSourceKind::FrequencyMatch;
     report.source.sourceKind = frequencySource ? "frequency_match" : "scalar_transient";
     report.source.sourceName = detection::occurrenceSourceKindName(selectedProfile.occurrenceSource);
     if (frequencySource) {
-        report.source.acceptedPresent = report.frequency.acceptedPresent;
-        report.source.sourceOccurrenceEmitted = report.frequency.sourceOccurrenceEmitted;
-        report.source.runtimeEvidenceSeen = report.frequency.runtimeEvidenceSeen;
-        report.source.runtimeOccurrenceReceived = report.frequency.runtimeOccurrenceReceived;
-        report.source.analyzerSeen = report.frequency.analyzerSeenOccurrence;
-        report.source.detectionGateBlocked = report.frequency.detectionGateBlocked;
-        report.source.detectionGateReason = report.frequency.detectionGateReason;
-        report.source.sourceSummary = report.frequency.sourceSummary;
-        report.source.lastCandidate = report.frequency.sourceLastCandidate;
-        report.source.activeAtTrialStart = report.frequency.fmOpened;
-        report.source.activeAtTrialEnd = report.frequency.fmReleased;
-        report.source.openedThisTrial = report.frequency.fmOpened;
-        report.source.closedThisTrial = report.frequency.fmReleased;
-        report.source.emittedThisTrial = report.frequency.fmEmitted;
-        report.source.rejectedThisTrial = report.frequency.sourceSummary.present && !report.frequency.acceptedPresent;
-        report.source.scalarTransient = report.scalar;
+        report.source.acceptedPresent = report.source.frequencyMatch.acceptedPresent;
+        report.source.sourceOccurrenceEmitted = report.source.frequencyMatch.sourceOccurrenceEmitted;
+        report.source.runtimeEvidenceSeen = report.source.frequencyMatch.runtimeEvidenceSeen;
+        report.source.runtimeOccurrenceReceived = report.source.frequencyMatch.runtimeOccurrenceReceived;
+        report.source.analyzerSeen = report.source.frequencyMatch.analyzerSeenOccurrence;
+        report.source.detectionGateBlocked = report.source.frequencyMatch.detectionGateBlocked;
+        report.source.detectionGateReason = report.source.frequencyMatch.detectionGateReason;
+        report.source.sourceSummary = report.source.frequencyMatch.sourceSummary;
+        report.source.lastCandidate = report.source.frequencyMatch.sourceLastCandidate;
+        report.source.activeAtTrialStart = report.source.frequencyMatch.fmOpened;
+        report.source.activeAtTrialEnd = report.source.frequencyMatch.fmReleased;
+        report.source.openedThisTrial = report.source.frequencyMatch.fmOpened;
+        report.source.closedThisTrial = report.source.frequencyMatch.fmReleased;
+        report.source.emittedThisTrial = report.source.frequencyMatch.fmEmitted;
+        report.source.rejectedThisTrial = report.source.frequencyMatch.sourceSummary.present && !report.source.frequencyMatch.acceptedPresent;
     } else {
-        report.source.acceptedPresent = report.scalar.acceptedPresent;
-        report.source.sourceOccurrenceEmitted = report.scalar.sourceOccurrenceEmitted;
-        report.source.runtimeEvidenceSeen = report.scalar.runtimeEvidenceSeen;
-        report.source.runtimeOccurrenceReceived = report.scalar.runtimeOccurrenceReceived;
-        report.source.analyzerSeen = report.scalar.analyzerSeenOccurrence;
-        report.source.detectionGateBlocked = report.scalar.detectionGateBlocked;
-        report.source.detectionGateReason = report.scalar.detectionGateReason;
-        report.source.sourceSummary = report.scalar.sourceSummary;
-        report.source.lastCandidate = report.scalar.sourceLastCandidate;
-        report.source.activeAtTrialStart = report.scalar.scalarOpened;
-        report.source.activeAtTrialEnd = report.scalar.scalarReleased;
-        report.source.openedThisTrial = report.scalar.scalarOpened;
-        report.source.closedThisTrial = report.scalar.scalarReleased;
-        report.source.emittedThisTrial = report.scalar.scalarEmitted;
-        report.source.rejectedThisTrial = report.scalar.sourceSummary.present && !report.scalar.acceptedPresent;
-        report.source.scalarTransient = report.scalar;
+        report.source.acceptedPresent = report.source.scalarTransient.acceptedPresent;
+        report.source.sourceOccurrenceEmitted = report.source.scalarTransient.sourceOccurrenceEmitted;
+        report.source.runtimeEvidenceSeen = report.source.scalarTransient.runtimeEvidenceSeen;
+        report.source.runtimeOccurrenceReceived = report.source.scalarTransient.runtimeOccurrenceReceived;
+        report.source.analyzerSeen = report.source.scalarTransient.analyzerSeenOccurrence;
+        report.source.detectionGateBlocked = report.source.scalarTransient.detectionGateBlocked;
+        report.source.detectionGateReason = report.source.scalarTransient.detectionGateReason;
+        report.source.sourceSummary = report.source.scalarTransient.sourceSummary;
+        report.source.lastCandidate = report.source.scalarTransient.sourceLastCandidate;
+        report.source.activeAtTrialStart = report.source.scalarTransient.scalarOpened;
+        report.source.activeAtTrialEnd = report.source.scalarTransient.scalarReleased;
+        report.source.openedThisTrial = report.source.scalarTransient.scalarOpened;
+        report.source.closedThisTrial = report.source.scalarTransient.scalarReleased;
+        report.source.emittedThisTrial = report.source.scalarTransient.scalarEmitted;
+        report.source.rejectedThisTrial = report.source.scalarTransient.sourceSummary.present && !report.source.scalarTransient.acceptedPresent;
     }
 
-    report.source.frequencyMatch = report.frequency;
+    report.scalar = report.source.scalarTransient;
 
 }
+
 
 
 

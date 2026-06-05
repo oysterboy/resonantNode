@@ -679,7 +679,7 @@ common source-stage truth:
 
 frequency-specific source detail:
 - report.frequency.frames / validFrames / freshFrames / heldFrames
-- report.frequency.scoreOkFrames / contrastOkFrames / bothOkFrames / matchFrames / rejectFrames
+- report.frequency.scoreOkUpdates / contrastOkUpdates / bothOkUpdates / matchFrames / rejectFrames
 - report.frequency.releaseScoreOkFrames / releaseContrastOkFrames / releaseBothOkFrames
 - report.frequency.releaseScoreTooLowFrames / releaseContrastTooLowFrames / releaseScoreAndContrastTooLowFrames / releaseNoEvidenceFrames
 - report.frequency.scoreThreshold / contrastThreshold / maxScore / maxScoreMs / maxContrast / maxContrastMs
@@ -854,13 +854,13 @@ Action:
 Move fields:
 
 ```text
-report.frequency.scoreOkFrames
+report.frequency.scoreOkUpdates
 → report.source.frequencyMatch.scoreOkUpdates
 
-report.frequency.contrastOkFrames
+report.frequency.contrastOkUpdates
 → report.source.frequencyMatch.contrastOkUpdates
 
-report.frequency.bothOkFrames
+report.frequency.bothOkUpdates
 → report.source.frequencyMatch.bothOkUpdates
 
 report.frequency.freqEvidenceClass
@@ -885,6 +885,21 @@ Acceptance:
 Frequency-specific details live under source.frequencyMatch.
 Scalar-specific details live under source.scalarTransient.
 No alias-only copy layer remains for the moved detail fields.
+```
+
+## 02.4.1 Flatten the carrier bridge
+
+Status:
+
+```text
+DONE
+```
+
+Note:
+
+```text
+report.source.frequencyMatch and report.source.scalarTransient are now populated directly.
+The outer report.frequency / report.scalar carriers still mirror them for compatibility and will be removed in a later cleanup pass.
 ```
 
 ---

@@ -465,6 +465,110 @@ This is for comparing runs and profiles, not for single-trial forensic debugging
 
 ---
 
+## 7 â€” Miss-Streak Forensics for Analyzer
+
+This section holds the remaining miss-analysis items from the current cleanup pass.
+
+Rule:
+
+```text
+Analyzer-only.
+Post-trial only.
+No extra live detector compute.
+```
+
+### 7.1 Post-trial miss-only band scan
+
+Goal:
+
+```text
+Use retained raw trial data from miss trials to rescan a small frequency set after finalization.
+```
+
+Bands:
+
+```text
+2800
+3000
+3200
+3400
+3600
+```
+
+Report:
+
+```text
+best_band_hz
+best_band_score
+best_band_contrast
+target3200_score_max
+target3200_contrast_max
+```
+
+If retained raw data is unavailable, mark the scan unavailable instead of adding new live storage.
+
+### 7.2 Emitter reference markers
+
+Add Analyzer-visible emitter markers:
+
+```text
+EMIT_START trial=N t=...
+EMIT_DONE trial=N t=...
+```
+
+Optional hardware marker:
+
+```text
+GPIO high during actual piezo drive
+```
+
+Purpose:
+
+```text
+Separate command/emitter path failures from input/detector failures.
+```
+
+### 7.3 I2S / mic bad-state checks
+
+Document and verify the reference mic setup with:
+
+```text
+logic analyzer on BCLK, WS/LRCLK, DOUT, GND
+capture good regime
+capture miss streak regime
+compare clocks and DOUT activity
+```
+
+Keep the hardened reference node checklist in the Analyzer roadmap so it stays visible during miss investigation.
+
+### 7.4 Physical isolation matrix
+
+Use short trials to separate acoustic, wiring, and analyzer-side faults:
+
+```text
+normal untouched
+wiggle emitter/piezo wires only
+wiggle MEMS/I2S wires only
+touch/move piezo mount only
+cover mic
+move analyzer only
+rotate analyzer only
+known-good emitter + current analyzer
+current emitter + known-good analyzer
+```
+
+Compare:
+
+```text
+fault_class
+raw_health
+target_band_score
+best_band_hz
+detector_state
+```
+
+---
+
 # Relationship to Node Separation Roadmap
 
 Analyzer cleanup supports Node separation, but Analyzer should not become part of Node runtime.

@@ -157,6 +157,8 @@ struct ScalarInspectionObservation {
     size_t coveredMs = 0;
     float valuesPerBucket = 0.0f;
     float coverageRatio = 0.0f;
+    unsigned long spanMs = 0;
+    unsigned long latestValueAgeMs = 0;
 
     bool preFloorAvailable = false;
     ScalarInspectionAnchor preFloorAnchor = ScalarInspectionAnchor::Peak;
@@ -168,6 +170,8 @@ struct ScalarInspectionObservation {
     size_t preFloorBucketCount = 0;
     size_t preFloorCoveredMs = 0;
     float preFloorCoverageRatio = 0.0f;
+    unsigned long preFloorSpanMs = 0;
+    unsigned long preFloorLatestValueAgeMs = 0;
     // Pre-floor comparison facts.
     float preFloorMedian = 0.0f;
     float preFloorP75 = 0.0f;
@@ -224,9 +228,6 @@ struct FrequencyBandMeasurementPacket {
 
     unsigned long targetHz = 0;
     unsigned long observedAtMs = 0;
-    uint64_t windowStartSampleIndex = 0;
-    uint64_t windowEndSampleIndex = 0;
-    unsigned long windowSizeSamples = 0;
     unsigned long ageSamples = 0;
 
     float targetBandScoreValue = 0.0f;

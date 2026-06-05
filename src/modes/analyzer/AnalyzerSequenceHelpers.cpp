@@ -3,6 +3,7 @@
 #include <Arduino.h>
 #include <string.h>
 
+#include "../../detection/features/FrequencyMeasurementPacketBuilder.h"
 #include "../../detection/features/FrequencyMatchEvaluation.h"
 #include "../../detection/patterns/PatternNames.h"
 
@@ -208,25 +209,8 @@ void AnalyzerApp::sequenceCurveSampleCallback(const CurveSnapshot& snapshot, voi
     self->recordSequenceSample(snapshot);
 }
 
-detection::FrequencyBandMeasurementPacket AnalyzerApp::captureFrequencyMeasurementPacket(unsigned long observedAtMs) const {
-    detection::FrequencyBandMeasurementPacket evidence;
-    evidence.observedAtMs = observedAtMs;
-    const bool present = _freqBandStream.windowReady();
-    const float totalEnergy = _freqBandStream.lastTotalEnergyValue();
-
-    evidence.present = present;
-    evidence.matched = false;
-    evidence.fresh = _freqBandStream.producedFreshPacketOnLastObserve();
-    evidence.targetHz = present ? _freqBandStream.targetFrequencyHz() : 0;
-    evidence.windowSizeSamples = _freqBandStream.sampleCount();
-    evidence.ageSamples = _freqBandStream.lastPacketAgeSamples();
-    evidence.targetBandScoreValue = _freqBandStream.lastTargetBandScoreValue();
-    evidence.confidence = 0.0f;
-    evidence.targetBandPowerValue = _freqBandStream.lastTargetBandPowerValue();
-    evidence.neighborBandPowerValue = _freqBandStream.lastNeighborBandPowerValue();
-    evidence.totalEnergyValue = totalEnergy;
-    evidence.targetBandContrastValue = _freqBandStream.lastTargetBandContrastValue();
-    return evidence;
+detection::FrequencyBandMeasurementPacket AnalyzerApp::captureFrequencyMeasurementPacket(const AudioSamplePacket& audioSamplePacket) const {
+    return detection::buildFrequencyMeasurementPacket(_freqBandStream, audioSamplePacket);
 }
 
 const char* AnalyzerApp::sequenceTrialClassificationName(const char* result, long dtMs, long durMs, const SequenceTest::TrialDiagnostics& diagnostics) const {

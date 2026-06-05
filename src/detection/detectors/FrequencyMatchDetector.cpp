@@ -363,7 +363,7 @@ void FrequencyMatchDetector::update(const detection::FrequencyBandMeasurementPac
                     candidatePeakSample = currentSample;
                     candidatePeakScore = evidence.targetBandScoreValue;
                     candidatePeakContrast = evidence.targetBandContrastValue;
-                    candidatePeakSampleCount = evidence.windowSizeSamples;
+                    candidatePeakSampleCount = 0;
                     candidateHoldUpdates = 1;
                     candidateDurationMs = 0;
                     candidateLastMatchedMs = now;
@@ -403,7 +403,7 @@ void FrequencyMatchDetector::update(const detection::FrequencyBandMeasurementPac
                     candidatePeakSample = currentSample;
                     candidatePeakScore = evidence.targetBandScoreValue;
                     candidatePeakContrast = evidence.targetBandContrastValue;
-                    candidatePeakSampleCount = evidence.windowSizeSamples;
+                    candidatePeakSampleCount = 0;
                     candidateEvidence = evidence;
                     frequencyCandidate.peakMs = now;
                     frequencyCandidate.peakSample = currentSample;
@@ -440,7 +440,7 @@ void FrequencyMatchDetector::update(const detection::FrequencyBandMeasurementPac
             bestObservedSample = currentSample;
             bestScore = evidence.targetBandScoreValue;
             bestContrast = evidence.targetBandContrastValue;
-            bestPeakSampleCount = evidence.windowSizeSamples;
+            bestPeakSampleCount = 0;
         }
 
         const auto bestEval = FrequencyMatchEvaluation::evaluate(bestEvidence, tuning);

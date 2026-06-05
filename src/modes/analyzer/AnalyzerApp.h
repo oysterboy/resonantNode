@@ -532,7 +532,7 @@ private:
     bool sequenceSampleDumpSelected(unsigned long trialNumber) const;
     unsigned long sequenceSampleDumpEstimatedRows(unsigned long selectedTrials) const;
     static void sequenceCurveSampleCallback(const CurveSnapshot& snapshot, void* context);
-    detection::FrequencyBandMeasurementPacket captureFrequencyMeasurementPacket(unsigned long observedAtMs) const;
+    detection::FrequencyBandMeasurementPacket captureFrequencyMeasurementPacket(const AudioSamplePacket& audioSamplePacket) const;
     const char* sequenceTrialClassificationName(const char* result, long dtMs, long durMs, const SequenceTest::TrialDiagnostics& diagnostics) const;
 
     // Miscellaneous output helpers.

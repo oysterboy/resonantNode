@@ -288,7 +288,8 @@ ScalarWindow FeatureHistory::getWindow(FeatureStreamId stream, unsigned long sta
     out.freshValueCount = rawCount;
     out.bucketCount = bucketCount;
     out.valuesPerBucket = bucketCount > 0 ? static_cast<float>(rawCount) / static_cast<float>(bucketCount) : 0.0f;
-    out.coveredMs = static_cast<unsigned long>(bucketCount);
+    out.spanMs = haveWindow && lastValueMs >= firstValueMs ? lastValueMs - firstValueMs : 0UL;
+    out.coveredMs = out.spanMs;
     out.coverageRatio = out.durationMs > 0
         ? static_cast<float>(out.coveredMs) / static_cast<float>(out.durationMs)
         : 0.0f;

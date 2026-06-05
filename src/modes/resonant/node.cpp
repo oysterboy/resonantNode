@@ -6,6 +6,7 @@
 
 #include "../../RuntimeDefaults.h"
 #include "../../TimingUtils.h"
+#include "../../detection/features/FrequencyMeasurementPacketBuilder.h"
 #include "../../detection/features/FrequencyMatchEvaluation.h"
 #include "../../detection/patterns/PatternNames.h"
 
@@ -986,7 +987,7 @@ void Node::processDetectionFrame(const AudioSamplePacket& audioSamplePacket,
                               unsigned long now,
                               bool selfChirpSuppressed,
                               bool& sawPatternThisLoop) {
-    const auto liveFrequencyMeasurementPacket = captureFrequencyMeasurementPacket(audioSamplePacket.timeMs);
+    const auto liveFrequencyMeasurementPacket = captureFrequencyMeasurementPacket(audioSamplePacket);
     _detection.observeFrame(audioSamplePacket, liveFrequencyMeasurementPacket, audioSamplePacket.timeMs);
 
     detection::PatternResult patternResult;
@@ -1053,25 +1054,8 @@ const char* Node::rbLogModeName() const {
     return "off";
 }
 
-detection::FrequencyBandMeasurementPacket Node::captureFrequencyMeasurementPacket(unsigned long observedAtMs) const {
-    detection::FrequencyBandMeasurementPacket evidence;
-    evidence.observedAtMs = observedAtMs;
-    const bool present = _freqBandStream.windowReady();
-    const float totalEnergy = _freqBandStream.lastTotalEnergyValue();
-
-    evidence.present = present;
-    evidence.matched = false;
-    evidence.fresh = _freqBandStream.producedFreshPacketOnLastObserve();
-    evidence.targetHz = present ? _freqBandStream.targetFrequencyHz() : 0;
-    evidence.windowSizeSamples = _freqBandStream.sampleCount();
-    evidence.ageSamples = _freqBandStream.lastPacketAgeSamples();
-    evidence.targetBandScoreValue = _freqBandStream.lastTargetBandScoreValue();
-    evidence.confidence = 0.0f;
-    evidence.targetBandPowerValue = _freqBandStream.lastTargetBandPowerValue();
-    evidence.neighborBandPowerValue = _freqBandStream.lastNeighborBandPowerValue();
-    evidence.totalEnergyValue = totalEnergy;
-    evidence.targetBandContrastValue = _freqBandStream.lastTargetBandContrastValue();
-    return evidence;
+detection::FrequencyBandMeasurementPacket Node::captureFrequencyMeasurementPacket(const AudioSamplePacket& audioSamplePacket) const {
+    return detection::buildFrequencyMeasurementPacket(_freqBandStream, audioSamplePacket);
 }
 
 void Node::printRbSummary() const {

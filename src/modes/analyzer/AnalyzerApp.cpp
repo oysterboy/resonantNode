@@ -959,7 +959,7 @@ void AnalyzerApp::update() {
                 }
                 detection::FrequencyBandMeasurementPacket runtimeFrequencyMeasurementPacket = {};
                 if (_sequenceTest.outputConfig.frequencyBandEnabled) {
-                    runtimeFrequencyMeasurementPacket = captureFrequencyMeasurementPacket(audioSamplePacket.timeMs);
+                    runtimeFrequencyMeasurementPacket = captureFrequencyMeasurementPacket(audioSamplePacket);
                 } else {
                     runtimeFrequencyMeasurementPacket.observedAtMs = audioSamplePacket.timeMs;
                 }
@@ -1533,6 +1533,30 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
             runtimeDiag->frequencyDiagLongestMatchStreakFrames,
             _audioSource.sampleRateHz() > 0 ? _audioSource.sampleRateHz() : 16000UL
         );
+        const unsigned long sampleRateHz = _audioSource.sampleRateHz() > 0 ? _audioSource.sampleRateHz() : 16000UL;
+        report.source.frequencyMatch.windowMs = sampleFramesToMs(_freqBandStream.windowSizeSamples(), sampleRateHz);
+        report.source.frequencyMatch.updateStepMs = sampleFramesToMs(_freqBandStream.frequencyUpdateEverySamples(), sampleRateHz);
+        report.source.frequencyMatch.overlapRatio = _freqBandStream.windowSizeSamples() > 0
+            ? (1.0f - (static_cast<float>(_freqBandStream.frequencyUpdateEverySamples()) / static_cast<float>(_freqBandStream.windowSizeSamples())))
+            : 0.0f;
+        if (report.source.frequencyMatch.overlapRatio < 0.0f) {
+            report.source.frequencyMatch.overlapRatio = 0.0f;
+        }
+        report.source.frequencyMatch.freshUpdateCount = _freqBandStream.profileComputeCalls();
+        report.source.frequencyMatch.heldUpdateCount = _freqBandStream.profileObserveCalls() > _freqBandStream.profileComputeCalls()
+            ? _freqBandStream.profileObserveCalls() - _freqBandStream.profileComputeCalls()
+            : 0UL;
+        report.source.frequencyMatch.bucketCount = report.source.frequencyMatch.frames;
+        report.source.frequencyMatch.valueCount = report.source.frequencyMatch.freshUpdateCount;
+        report.source.frequencyMatch.matchedUpdateCount = runtimeDiag->frequencyMatchFrames;
+        report.source.frequencyMatch.candidateDurationMs = runtimeDiag->frequencyDurationMs;
+        report.source.frequencyMatch.spanMs = runtimeDiag->frequencyDurationMs;
+        report.source.frequencyMatch.matchedSpanMs = report.frequency.diagLongestMatchStreakMs;
+        report.source.frequencyMatch.matchedCoverageMs = runtimeDiag->sourceSummary.totalMatchMs;
+        report.source.frequencyMatch.latestValueAgeMs = sampleFramesToMs(_freqBandStream.lastPacketAgeSamples(), sampleRateHz);
+        report.source.frequencyMatch.freshCoverageRatio = report.source.frequencyMatch.frames > 0
+            ? static_cast<float>(report.source.frequencyMatch.freshUpdateCount) / static_cast<float>(report.source.frequencyMatch.frames)
+            : 0.0f;
         report.source.frequencyMatch.audioHealth = diagnostics.audioHealth != nullptr ? diagnostics.audioHealth : "unknown";
         report.source.frequencyMatch.audioZeroishFrames = diagnostics.audioZeroishFrames;
         report.source.frequencyMatch.audioFlatlineFrames = diagnostics.audioFlatlineFrames;

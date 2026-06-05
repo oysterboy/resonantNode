@@ -29,6 +29,7 @@ struct ScalarWindow {
     float coverageRatio = 0.0f;
     unsigned long firstValueMs = 0;
     unsigned long lastValueMs = 0;
+    unsigned long spanMs = 0;
     unsigned long latestValueAgeMs = 0;
 
     float first = 0.0f;

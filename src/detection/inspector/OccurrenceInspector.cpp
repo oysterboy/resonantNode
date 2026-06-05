@@ -90,6 +90,8 @@ void fillScalarObservation(
     obs.coveredMs = scalarWindow.coveredMs;
     obs.valuesPerBucket = scalarWindow.valuesPerBucket;
     obs.coverageRatio = scalarWindow.coverageRatio;
+    obs.spanMs = scalarWindow.spanMs;
+    obs.latestValueAgeMs = scalarWindow.latestValueAgeMs;
     obs.preFloorAvailable = preFloorWindow.valid;
     obs.preFloorAnchor = preFloorAnchor;
     obs.preFloorNote = preFloorWindow.valid ? detection::ScalarInspectionNote::PreFloorObserved : detection::ScalarInspectionNote::PreFloorUnavailable;
@@ -100,6 +102,8 @@ void fillScalarObservation(
     obs.preFloorBucketCount = preFloorWindow.bucketCount;
     obs.preFloorCoveredMs = preFloorWindow.coveredMs;
     obs.preFloorCoverageRatio = preFloorWindow.coverageRatio;
+    obs.preFloorSpanMs = preFloorWindow.spanMs;
+    obs.preFloorLatestValueAgeMs = preFloorWindow.latestValueAgeMs;
     obs.preFloorMedian = preFloorWindow.median;
     obs.preFloorP75 = preFloorWindow.p75;
     obs.preFloorRms = preFloorWindow.rms;

@@ -78,7 +78,7 @@ DetectionRuntime exists.
 DetectionProfile exists.
 StrengthClass exists.
 AmpStrengthEvidence exists.
-FrequencyFeatureFrame exists.
+FrequencyBandMeasurementPacket exists.
 ScalarTransientDetector and ScalarOccurrenceSource exist.
 AmpOccurrenceSource uses ScalarOccurrenceSource over frame.level.
 FrequencyOccurrenceSource remains specialized and uses FrequencyMatchDetector.

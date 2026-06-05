@@ -46,7 +46,7 @@ Installation config provides overrides.
 ```text
 [TODO] Keep hardcoded config as primary 5-node workflow.
 [TODO] Make active hardcoded/test values visible in STATUS.
-[TODO] Label RB PARAM / RB BEHAV as temporary runtime tuning, not durable config.
+[TODO] Mark RB PARAM / RB BEHAV as temporary runtime tuning, not durable config.
 [TODO] Ensure changed runtime values are visible so invisible drift is reduced during tests.
 ```
 

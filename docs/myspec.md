@@ -85,8 +85,8 @@ SoundOutput:
 Current source implements this runtime flow:
 
 ```text
-AudioSignalFrame
-+ FrequencyFeatureFrame
+AudioSamplePacket
++ FrequencyBandMeasurementPacket
 → FeatureExtractor
 → FeatureHistory
 → selected OccurrenceSource

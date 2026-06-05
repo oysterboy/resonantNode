@@ -747,14 +747,7 @@ void AnalyzerApp::begin() {
     _freqBandStream.setTargetFrequencyHz(runtime::kDefaultChirpFrequencyHz);
     printRuntimeSize();
     printHeapStatus("begin_before_runtime_alloc");
-    if (_detection == nullptr) {
-        _detection = new (std::nothrow) detection::DetectionRuntime();
-    }
-    if (_detection == nullptr) {
-        printHeapStatus("begin_runtime_alloc_failed");
-        Serial.println("ERR MEMERROR reason=detection_runtime_alloc_failed");
-        return;
-    }
+    _detection.resetState();
     _lastPrintMs = 0;
     _loopLastUs = micros();
     _loopMaxSinceBootUs = 0;
@@ -904,10 +897,10 @@ void AnalyzerApp::update() {
                 } else {
                     runtimeFrequencyMeasurementPacket.observedAtMs = audioSamplePacket.timeMs;
                 }
-                _detection->observeFrame(audioSamplePacket, runtimeFrequencyMeasurementPacket, audioSamplePacket.timeMs);
-                while (_detection->popPatternResult(_sequenceTest.currentTrialDiagnostics.runtimePatternResult)) {
+                _detection.observeFrame(audioSamplePacket, runtimeFrequencyMeasurementPacket, audioSamplePacket.timeMs);
+                while (_detection.popPatternResult(_sequenceTest.currentTrialDiagnostics.runtimePatternResult)) {
                     _sequenceTest.currentTrialDiagnostics.runtimePatternCaptured = true;
-                    _sequenceTest.currentTrialDiagnostics.runtimeFieldState = _detection->fieldState();
+                    _sequenceTest.currentTrialDiagnostics.runtimeFieldState = _detection.fieldState();
                     handleSequenceCandidate(_sequenceTest.currentTrialDiagnostics.runtimePatternResult, &runtimeFrequencyMeasurementPacket);
                 }
                 updateSequenceAmbientStats(audioSamplePacket.timeMs);
@@ -1212,8 +1205,8 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
     report.expected.patternType = "sequence_trial";
     report.expected.expectedSource = _sequenceTest.externalEmitter ? "external" : "local";
 
-    const detection::DetectionPipelineResult* pipelineResult = _detection != nullptr && _detection->hasLatestPipelineResult()
-        ? &_detection->latestPipelineResult()
+    const detection::DetectionPipelineResult* pipelineResult = _detection.hasLatestPipelineResult()
+        ? &_detection.latestPipelineResult()
         : nullptr;
     const bool runtimeReceivedOccurrence = pipelineResult != nullptr && pipelineResult->hasOccurrence;
     const bool actualPipelineAvailable = pipelineResult != nullptr && pipelineResult->hasPattern;
@@ -1423,10 +1416,10 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
         _sequenceTest.outputConfig.diagnosticsEnabled;
     const detection::DetectionDiagnostics* runtimeDiag = nullptr;
     const FrequencyMatchDetector* frequencyDetector = nullptr;
-    if (diagnosticsRequested && _detection != nullptr) {
-        _detection->captureDiagnostics();
-        runtimeDiag = &_detection->diagnostics();
-        frequencyDetector = &_detection->frequencyEmitter().detector();
+    if (diagnosticsRequested) {
+        _detection.captureDiagnostics();
+        runtimeDiag = &_detection.diagnostics();
+        frequencyDetector = &_detection.frequencyEmitter().detector();
     }
 
     report.source.frequencyMatch.currentTrialId = report.context.trial;
@@ -1458,10 +1451,8 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
     report.source.frequencyMatch.heldFrames = _freqBandStream.profileObserveCalls() > _freqBandStream.profileComputeCalls()
         ? _freqBandStream.profileObserveCalls() - _freqBandStream.profileComputeCalls()
         : 0UL;
-    if (_detection != nullptr) {
-        report.source.frequencyMatch.historyScoreRecords = _detection->featureHistory().sampleCount(detection::FeatureStreamId::FrequencyScore);
-        report.source.frequencyMatch.historyContrastRecords = _detection->featureHistory().sampleCount(detection::FeatureStreamId::FrequencyContrast);
-    }
+    report.source.frequencyMatch.historyScoreRecords = _detection.featureHistory().sampleCount(detection::FeatureStreamId::FrequencyScore);
+    report.source.frequencyMatch.historyContrastRecords = _detection.featureHistory().sampleCount(detection::FeatureStreamId::FrequencyContrast);
 
     bool hasCurrentSourceEvidence = false;
     if (runtimeDiag != nullptr) {

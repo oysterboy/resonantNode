@@ -351,8 +351,8 @@ private:
         unsigned long sampleDumpCaptureStartMs = 0;
         unsigned long sampleDumpCaptureEndMs = 0;
         unsigned long sampleDumpNextEmitMs = 0;
-        static constexpr size_t kMaxSampleHistory = 256;
-        static constexpr size_t kMaxSampleRows = 2048;
+        static constexpr size_t kMaxSampleHistory = 128;
+        static constexpr size_t kMaxSampleRows = 1024;
         CurveSnapshot sampleHistory[kMaxSampleHistory] = {};
         size_t sampleHistoryStart = 0;
         size_t sampleHistoryCount = 0;
@@ -548,7 +548,7 @@ private:
     AudioSourceI2S _i2sSource;
     AudioSource& _audioSource;
     AudioSignal _audioSignal;
-    detection::DetectionRuntime* _detection = nullptr;
+    mutable detection::DetectionRuntime _detection;
     FreqBandStream _freqBandStream;
     FrequencyMatchEvaluation::Values _frequencyEvidenceTuning = {};
     SeqOutputConfig _seqOutputConfig = {};

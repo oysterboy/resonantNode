@@ -17,7 +17,7 @@ Does not decide candidate validity or pattern meaning.
 */
 class FeatureHistory {
 public:
-    static constexpr size_t kMaxSamplesPerStream = 512;
+    static constexpr size_t kMaxSamplesPerStream = 128;
     static constexpr size_t kStreamCount = 3;
 
     void reset();
@@ -47,7 +47,7 @@ private:
         float min = 0.0f;
         float max = 0.0f;
         float sum = 0.0f;
-        double sumSquares = 0.0;
+        float sumSquares = 0.0f;
         size_t count = 0;
     };
 

@@ -2617,10 +2617,8 @@ void AnalyzerApp::printAudioRunSummary() const {
         : 0UL;
     unsigned long freqHistoryScoreRecords = 0;
     unsigned long freqHistoryContrastRecords = 0;
-    if (_detection != nullptr) {
-        freqHistoryScoreRecords = _detection->featureHistory().sampleCount(detection::FeatureStreamId::FrequencyScore);
-        freqHistoryContrastRecords = _detection->featureHistory().sampleCount(detection::FeatureStreamId::FrequencyContrast);
-    }
+    freqHistoryScoreRecords = _detection.featureHistory().sampleCount(detection::FeatureStreamId::FrequencyScore);
+    freqHistoryContrastRecords = _detection.featureHistory().sampleCount(detection::FeatureStreamId::FrequencyContrast);
 
     Serial.print("FREQBAND freshness:");
     Serial.print(" fresh_frames=");

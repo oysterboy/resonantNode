@@ -229,7 +229,7 @@ public:
     const FeatureHistory& featureHistory() const;
 
 private:
-    static constexpr size_t kResultQueueCapacity = 8;
+    static constexpr size_t kResultQueueCapacity = 2;
 
     // Pipeline stages in execution order.
     void drainOccurrenceSources(unsigned long nowMs);

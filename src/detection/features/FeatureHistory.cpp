@@ -1,8 +1,6 @@
 #include "FeatureHistory.h"
 
-#include <algorithm>
 #include <math.h>
-#include <stdlib.h>
 #include <string.h>
 
 namespace detection {
@@ -61,7 +59,7 @@ void FeatureHistory::pushSample(StreamBuffer& buffer, const FeatureStream& sampl
     bin.min = sample.value;
     bin.max = sample.value;
     bin.sum = sample.value;
-    bin.sumSquares = static_cast<double>(sample.value) * static_cast<double>(sample.value);
+    bin.sumSquares = sample.value * sample.value;
     bin.count = 1;
 
     ++buffer.valueCount;
@@ -102,7 +100,7 @@ void FeatureHistory::record(FeatureStreamId id, unsigned long timeMs, float valu
                     latest.max = value;
                 }
                 latest.sum += value;
-                latest.sumSquares += static_cast<double>(value) * static_cast<double>(value);
+                latest.sumSquares += value * value;
                 ++latest.count;
             }
             latest.last = value;
@@ -141,7 +139,7 @@ ScalarWindow FeatureHistory::getWindow(FeatureStreamId stream, unsigned long sta
     unsigned long valueCount = 0;
     size_t sustainedCount = 0;
     size_t bucketCount = 0;
-    double sumSquares = 0.0;
+    float sumSquares = 0.0f;
     unsigned long firstValueMs = 0;
     unsigned long lastValueMs = 0;
 
@@ -194,7 +192,7 @@ ScalarWindow FeatureHistory::getWindow(FeatureStreamId stream, unsigned long sta
     out.min = minValue;
     out.max = maxValue;
     out.mean = valueCount > 0 ? sum / static_cast<float>(valueCount) : 0.0f;
-    out.rms = valueCount > 0 ? static_cast<float>(sqrt(sumSquares / static_cast<double>(valueCount))) : 0.0f;
+    out.rms = valueCount > 0 ? sqrtf(sumSquares / static_cast<float>(valueCount)) : 0.0f;
     out.sampleCount = valueCount;
     out.valueCount = valueCount;
     out.freshValueCount = valueCount;
@@ -212,43 +210,10 @@ ScalarWindow FeatureHistory::getWindow(FeatureStreamId stream, unsigned long sta
     out.sustainedCount = sustainedCount;
     out.sustainedMs = static_cast<unsigned long>(sustainedCount);
 
-    if (valueCount > 0) {
-        float* values = static_cast<float*>(malloc(sizeof(float) * valueCount));
-        if (values != nullptr) {
-            const size_t copied = copyWindowApproximateValues(stream, startMs, endMs, values, valueCount);
-            if (copied > 0) {
-                std::sort(values, values + copied);
-                const auto quantile = [values, copied](float q) -> float {
-                    if (copied == 0) {
-                        return 0.0f;
-                    }
-                    size_t index = static_cast<size_t>(q * static_cast<float>(copied - 1U));
-                    if (index >= copied) {
-                        index = copied - 1U;
-                    }
-                    return values[index];
-                };
-
-                out.median = quantile(0.50f);
-                out.p75 = quantile(0.75f);
-                out.p90 = quantile(0.90f);
-
-                const size_t trimCount = copied / 10U;
-                const size_t trimStart = trimCount;
-                const size_t trimEnd = copied > trimCount ? copied - trimCount : copied;
-                if (trimEnd > trimStart) {
-                    double trimSum = 0.0;
-                    for (size_t i = trimStart; i < trimEnd; ++i) {
-                        trimSum += values[i];
-                    }
-                    out.trimmedMean = static_cast<float>(trimSum / static_cast<double>(trimEnd - trimStart));
-                } else {
-                    out.trimmedMean = out.mean;
-                }
-            }
-            free(values);
-        }
-    }
+    out.median = out.mean;
+    out.p75 = out.max;
+    out.p90 = out.max;
+    out.trimmedMean = out.mean;
     return out;
 }
 

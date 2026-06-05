@@ -109,20 +109,15 @@ void AnalyzerApp::startSequenceTest(unsigned long totalTrials, unsigned long per
     _sequenceTest.sampleDumpWarned = false;
     clearSequenceSampleDump();
 
-    if (_detection == nullptr) {
-        Serial.println("ERR MEMERROR reason=detection_runtime_alloc_failed");
-        _sequenceTest.active = false;
-        return;
-    }
-    _detection->resetState();
-    _detection->setFrequencyMatchConfig(selectedProfile.frequencyMatch);
-    _detection->setScalarTransientConfig(selectedProfile.scalarTransient);
-    _detection->setOccurrenceSource(selectedProfile.occurrenceSource);
-    _detection->setInspectionPlan(selectedProfile.inspectionPlan);
-    _detection->setPatternRulesConfig(selectedProfile.patternRulesConfig);
-    _detection->setFieldStateConfig(selectedProfile.fieldStateConfig);
-    _detection->setProfileName(detection::detectionProfileName(selectedProfile.kind));
-    _detection->setDiagnosticsEnabled(_sequenceTest.outputConfig.diagnosticsEnabled);
+    _detection.resetState();
+    _detection.setFrequencyMatchConfig(selectedProfile.frequencyMatch);
+    _detection.setScalarTransientConfig(selectedProfile.scalarTransient);
+    _detection.setOccurrenceSource(selectedProfile.occurrenceSource);
+    _detection.setInspectionPlan(selectedProfile.inspectionPlan);
+    _detection.setPatternRulesConfig(selectedProfile.patternRulesConfig);
+    _detection.setFieldStateConfig(selectedProfile.fieldStateConfig);
+    _detection.setProfileName(detection::detectionProfileName(selectedProfile.kind));
+    _detection.setDiagnosticsEnabled(_sequenceTest.outputConfig.diagnosticsEnabled);
     _freqBandStream.setSampleRateHz(_audioSource.sampleRateHz());
     _freqBandStream.setTargetFrequencyHz(toneHz);
     _freqBandStream.setFrequencyUpdateEverySamples(_sequenceTest.outputConfig.frequencyUpdateEverySamples);
@@ -248,9 +243,7 @@ void AnalyzerApp::startSequenceTest(unsigned long totalTrials, unsigned long per
         Serial.println("ms");
     }
     resetAudioSignalState();
-    if (_detection != nullptr) {
-        _detection->setDiagnosticsEnabled(_sequenceTest.outputConfig.diagnosticsEnabled);
-    }
+    _detection.setDiagnosticsEnabled(_sequenceTest.outputConfig.diagnosticsEnabled);
     _audioSignal.resetStats();
     _audioSource.resetStats();
     if (!_sequenceTest.quiet) {
@@ -404,11 +397,11 @@ void AnalyzerApp::updateSequenceTest(unsigned long now) {
     _sequenceTest.currentTrialUpdateLoopMaxUs = 0;
     _sequenceTest.totalUpdateLoopUs = 0;
     _sequenceTest.updateLoopCount = 0;
-    _detection->resetSourceRejectSummaries();
+    _detection.resetSourceRejectSummaries();
     resetLoopHealthWindow();
     printSequenceTrialHeader(trialNumber);
     if (_sequenceTest.outputConfig.diagnosticsEnabled) {
-        _detection->resetDiagnosticsCounters();
+        _detection.resetDiagnosticsCounters();
     }
     _sequenceTest.nextTriggerAtMs = scheduledAtMs + _sequenceTest.periodMs;
 

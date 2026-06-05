@@ -58,7 +58,7 @@ struct DetectorCandidate {
 };
 
 struct RawSampleHistory {
-    static constexpr size_t kCapacity = 8000; // 500 ms at 16 kHz.
+    static constexpr size_t kCapacity = 4000; // 250 ms at 16 kHz.
 
     void reset() {
         _oldestSampleIndex = 0;

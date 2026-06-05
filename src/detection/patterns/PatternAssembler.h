@@ -27,8 +27,8 @@ public:
     size_t popPatternCandidates(PatternCandidate* out, size_t maxOut);
 
 private:
-    static constexpr size_t kQueueCapacity = 8;
-    static constexpr size_t kRecentOccurrenceCapacity = 4;
+    static constexpr size_t kQueueCapacity = 2;
+    static constexpr size_t kRecentOccurrenceCapacity = 2;
 
     void pushRecentOccurrence(const InspectedOccurrence& occurrence);
     bool pushPatternCandidate(const PatternCandidate& candidate);

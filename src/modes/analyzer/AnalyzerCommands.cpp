@@ -277,9 +277,7 @@ void AnalyzerApp::handleUsbLine(const char* line) {
         _seqOutputConfig.diagnosticsEnabled = enabled;
         if (_sequenceTest.active) {
             _sequenceTest.outputConfig.diagnosticsEnabled = enabled;
-            if (_detection != nullptr) {
-                _detection->setDiagnosticsEnabled(enabled);
-            }
+            _detection.setDiagnosticsEnabled(enabled);
         }
         Serial.print("OK SEQ DIAG ");
         Serial.println(onOffName(enabled));
@@ -343,9 +341,7 @@ void AnalyzerApp::handleUsbLine(const char* line) {
                     _sequenceTest.outputConfig.when = AnalyzerApp::SeqOutputWhen::Off;
                     _sequenceTest.outputConfig.verbosity = 0;
                     _sequenceTest.diagMode = AnalyzerApp::SequenceDiagMode::Off;
-                    if (_detection != nullptr) {
-                        _detection->setDiagnosticsEnabled(false);
-                    }
+                    _detection.setDiagnosticsEnabled(false);
                 }
             }
             Serial.print("OK SEQ MODE ");
@@ -366,9 +362,7 @@ void AnalyzerApp::handleUsbLine(const char* line) {
             if (_sequenceTest.active) {
                 _sequenceTest.outputConfig.when = when;
                 _sequenceTest.diagMode = AnalyzerApp::sequenceDiagModeFromOutputWhen(when);
-                if (_detection != nullptr) {
-                    _detection->setDiagnosticsEnabled(_sequenceTest.outputConfig.diagnosticsEnabled);
-                }
+                _detection.setDiagnosticsEnabled(_sequenceTest.outputConfig.diagnosticsEnabled);
             }
             Serial.print("OK SEQ WHEN ");
             Serial.println(AnalyzerApp::sequenceOutputWhenName(when));

@@ -1675,6 +1675,12 @@ Frame no longer means generic feature payload.
 
 ## 04.8 Label audit
 
+Status:
+
+```text
+DONE
+```
+
 Search:
 
 ```text

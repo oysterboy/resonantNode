@@ -36,20 +36,20 @@ size_t analyzerReasonIndex(AnalyzerReason value) {
     return static_cast<size_t>(value);
 }
 
-FrequencyEvidenceClass frequencyEvidenceClassFromLabel(const char* label) {
-    if (label == nullptr || label[0] == '\0') {
+FrequencyEvidenceClass frequencyEvidenceClassFromClassName(const char* className) {
+    if (className == nullptr || className[0] == '\0') {
         return FrequencyEvidenceClass::None;
     }
-    if (strcmp(label, "accepted") == 0) {
+    if (strcmp(className, "accepted") == 0) {
         return FrequencyEvidenceClass::Accepted;
     }
-    if (strcmp(label, "strong_no_occurrence") == 0) {
+    if (strcmp(className, "strong_no_occurrence") == 0) {
         return FrequencyEvidenceClass::StrongNoOccurrence;
     }
-    if (strcmp(label, "partial") == 0) {
+    if (strcmp(className, "partial") == 0) {
         return FrequencyEvidenceClass::Partial;
     }
-    if (strcmp(label, "weak") == 0) {
+    if (strcmp(className, "weak") == 0) {
         return FrequencyEvidenceClass::Weak;
     }
     return FrequencyEvidenceClass::None;
@@ -561,7 +561,7 @@ void AnalyzerApp::finalizeSequenceTrial(unsigned long now) {
     }
     _sequenceTest.freqEvidenceClassCounts[
         frequencyEvidenceClassIndex(
-            frequencyEvidenceClassFromLabel(finalizedReport->source.frequencyMatch.freqEvidenceClass)
+            frequencyEvidenceClassFromClassName(finalizedReport->source.frequencyMatch.freqEvidenceClass)
         )
     ]++;
     flushSequenceSampleHistory(now + 1UL);

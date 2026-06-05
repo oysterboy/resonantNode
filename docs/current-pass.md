@@ -851,7 +851,7 @@ DONE
 
 Action:
 
-Mirror or move fields:
+Move fields:
 
 ```text
 report.frequency.scoreOkFrames
@@ -884,6 +884,7 @@ Acceptance:
 ```text
 Frequency-specific details live under source.frequencyMatch.
 Scalar-specific details live under source.scalarTransient.
+No alias-only copy layer remains for the moved detail fields.
 ```
 
 ---

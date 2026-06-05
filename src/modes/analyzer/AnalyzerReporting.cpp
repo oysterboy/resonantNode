@@ -597,11 +597,11 @@ void printFrequencyMatchSourceDetail(
         Serial.print(' ');
         printField(kSourceScoreAndContrastTooLowFramesField, frequencySourceSummary.scoreAndContrastTooLowFrames);
         Serial.print(' ');
-        printField(kSourceScoreOkFramesField, frequencySource.scoreOkFrames);
+        printField(kSourceScoreOkFramesField, frequencySource.scoreOkUpdates);
         Serial.print(' ');
-        printField(kSourceContrastOkFramesField, frequencySource.contrastOkFrames);
+        printField(kSourceContrastOkFramesField, frequencySource.contrastOkUpdates);
         Serial.print(' ');
-        printField(kSourceBothOkFramesField, frequencySource.bothOkFrames);
+        printField(kSourceBothOkFramesField, frequencySource.bothOkUpdates);
         Serial.print(' ');
         printField(kSourceMaxScoreField, frequencySource.maxScore, 1);
         Serial.print(' ');
@@ -654,11 +654,11 @@ void printFrequencyMatchSourceDetail(
     Serial.print(' ');
     printField(kSourceScoreAndContrastTooLowFramesField, frequencySourceSummary.scoreAndContrastTooLowFrames);
     Serial.print(' ');
-    printField(kSourceScoreOkFramesField, report.frequency.scoreOkFrames);
+    printField(kSourceScoreOkFramesField, report.frequency.scoreOkUpdates);
     Serial.print(' ');
-    printField(kSourceContrastOkFramesField, report.frequency.contrastOkFrames);
+    printField(kSourceContrastOkFramesField, report.frequency.contrastOkUpdates);
     Serial.print(' ');
-    printField(kSourceBothOkFramesField, report.frequency.bothOkFrames);
+    printField(kSourceBothOkFramesField, report.frequency.bothOkUpdates);
     Serial.print(' ');
     printField(kSourceMatchFramesField, report.frequency.matchFrames);
     Serial.print(' ');
@@ -694,7 +694,7 @@ void printFrequencyMatchSourceDetail(
     Serial.print(' ');
     printField(kSourceSelectedRejectGateReasonField, report.frequency.selectedRejectGateReason != nullptr ? report.frequency.selectedRejectGateReason : "none");
     Serial.print(' ');
-    printField(kSourceFreqEvidenceClassField, report.frequency.freqEvidenceClass != nullptr ? report.frequency.freqEvidenceClass : "none");
+    printField(kSourceFreqEvidenceClassField, report.source.frequencyMatch.freqEvidenceClass != nullptr ? report.source.frequencyMatch.freqEvidenceClass : "none");
     Serial.print(' ');
     printField(kSourceFmCloseCauseField, report.frequency.fmCloseCause != nullptr ? report.frequency.fmCloseCause : "none");
     Serial.print(' ');
@@ -703,7 +703,7 @@ void printFrequencyMatchSourceDetail(
     printField(kSourceNearMissReasonField, report.frequency.nearMissReason != nullptr ? report.frequency.nearMissReason : "none");
     Serial.print(' ');
     printField(kSourceDiagInconsistentField, report.frequency.inconsistent);
-    if (detailLevel >= 2U && report.frequency.freqEvidenceClass != nullptr && strcmp(report.frequency.freqEvidenceClass, "strong_no_occurrence") == 0) {
+    if (detailLevel >= 2U && report.source.frequencyMatch.freqEvidenceClass != nullptr && strcmp(report.source.frequencyMatch.freqEvidenceClass, "strong_no_occurrence") == 0) {
         Serial.print(' ');
         printField(kSourceTraceSourceOccurrenceEmittedField, report.frequency.sourceOccurrenceEmitted);
         Serial.print(' ');

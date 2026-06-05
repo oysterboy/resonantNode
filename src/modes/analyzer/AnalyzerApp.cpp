@@ -1467,9 +1467,9 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
     if (runtimeDiag != nullptr) {
         report.frequency.frames = runtimeDiag->frequencyFrames;
         report.frequency.validFrames = runtimeDiag->frequencyValidFrames;
-        report.frequency.scoreOkFrames = runtimeDiag->frequencyScoreOkFrames;
-        report.frequency.contrastOkFrames = runtimeDiag->frequencyContrastOkFrames;
-        report.frequency.bothOkFrames = runtimeDiag->frequencyBothOkFrames;
+        report.frequency.scoreOkUpdates = runtimeDiag->frequencyScoreOkFrames;
+        report.frequency.contrastOkUpdates = runtimeDiag->frequencyContrastOkFrames;
+        report.frequency.bothOkUpdates = runtimeDiag->frequencyBothOkFrames;
         report.frequency.matchFrames = runtimeDiag->frequencyMatchFrames;
         report.frequency.rejectFrames = runtimeDiag->frequencyRejectFrames;
         report.frequency.releaseScoreOkFrames = runtimeDiag->frequencyReleaseScoreOkFrames;
@@ -1645,7 +1645,6 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
         }
     }
     report.frequency.inconsistent = report.classification.result == AnalyzerResult::Miss && report.frequency.acceptedPresent;
-    report.frequency.freqEvidenceClass = frequencyEvidenceClassLabel(classifyFrequencyEvidence(report));
     if (report.frequency.analyzerMissReason == nullptr || report.frequency.analyzerMissReason[0] == '\0') {
         report.frequency.analyzerMissReason = report.classification.result == AnalyzerResult::Miss
             ? "no_accepted_occurrence"
@@ -1656,6 +1655,7 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
         report.frequency.inconsistent = true;
     }
     report.frequency.analyzerSeenOccurrence = report.frequency.acceptedPresent;
+    report.frequency.freqEvidenceClass = frequencyEvidenceClassLabel(classifyFrequencyEvidence(report));
     if (!report.frequency.sourceOccurrenceEmitted) {
         report.frequency.runtimeOccurrenceReceived = false;
     }
@@ -1834,11 +1834,6 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
         report.source.closedThisTrial = report.frequency.fmReleased;
         report.source.emittedThisTrial = report.frequency.fmEmitted;
         report.source.rejectedThisTrial = report.frequency.sourceSummary.present && !report.frequency.acceptedPresent;
-        report.source.frequencyMatch = report.frequency;
-        report.source.frequencyMatch.scoreOkUpdates = report.frequency.scoreOkFrames;
-        report.source.frequencyMatch.contrastOkUpdates = report.frequency.contrastOkFrames;
-        report.source.frequencyMatch.bothOkUpdates = report.frequency.bothOkFrames;
-        report.source.frequencyMatch.freqEvidenceClass = report.frequency.freqEvidenceClass;
         report.source.scalarTransient = report.scalar;
     } else {
         report.source.acceptedPresent = report.scalar.acceptedPresent;
@@ -1856,13 +1851,10 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
         report.source.closedThisTrial = report.scalar.scalarReleased;
         report.source.emittedThisTrial = report.scalar.scalarEmitted;
         report.source.rejectedThisTrial = report.scalar.sourceSummary.present && !report.scalar.acceptedPresent;
-        report.source.frequencyMatch = report.frequency;
-        report.source.frequencyMatch.scoreOkUpdates = report.frequency.scoreOkFrames;
-        report.source.frequencyMatch.contrastOkUpdates = report.frequency.contrastOkFrames;
-        report.source.frequencyMatch.bothOkUpdates = report.frequency.bothOkFrames;
-        report.source.frequencyMatch.freqEvidenceClass = report.frequency.freqEvidenceClass;
         report.source.scalarTransient = report.scalar;
     }
+
+    report.source.frequencyMatch = report.frequency;
 
 }
 

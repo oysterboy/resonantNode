@@ -416,9 +416,6 @@ struct AnalyzerFrequencyDiagnostic {
     unsigned long scoreOkUpdates = 0;
     unsigned long contrastOkUpdates = 0;
     unsigned long bothOkUpdates = 0;
-    unsigned long scoreOkFrames = 0;
-    unsigned long contrastOkFrames = 0;
-    unsigned long bothOkFrames = 0;
     unsigned long matchFrames = 0;
     unsigned long rejectFrames = 0;
     unsigned long releaseScoreOkFrames = 0;
@@ -636,7 +633,7 @@ inline FrequencyEvidenceClass classifyFrequencyEvidence(const AnalyzerReport& re
     if (report.frequency.fmOpened && report.frequency.fmReleased && !report.frequency.fmEmitted) {
         return FrequencyEvidenceClass::StrongNoOccurrence;
     }
-    if (report.frequency.scoreOkFrames > 0 || report.frequency.contrastOkFrames > 0) {
+    if (report.frequency.scoreOkUpdates > 0 || report.frequency.contrastOkUpdates > 0) {
         return FrequencyEvidenceClass::Partial;
     }
     if (report.frequency.maxScore > 0.0f) {

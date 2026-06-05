@@ -569,6 +569,24 @@ detector_state
 
 ---
 
+## 8 â€” Future CurveSnapshot Use
+
+CurveSnapshot should stay a lightweight analyzer diagnostic payload, with intentionally bounded retention.
+
+Future use:
+
+```text
+Keep the curve-snapshot callback path for analyzer-only tracing and dumps.
+Treat the snapshot as a diagnostic probe shape, not a live detection data model.
+Use it for short sample history / row dumps when debugging timing, envelope, or curve-shape questions.
+```
+
+Rule:
+
+```text
+Analyzer may keep CurveSnapshot as a future diagnostic probe, but it should not grow into a broad retained data archive.
+```
+
 # Relationship to Node Separation Roadmap
 
 Analyzer cleanup supports Node separation, but Analyzer should not become part of Node runtime.

@@ -52,6 +52,17 @@ Rules:
 
 These are the immediate fixes for the current boot failure.
 
+## Implementation Status
+
+```text
+M1 DONE - DetectionRuntime now has direct ownership.
+M2 DONE - FeatureHistory stores only real streams.
+M3 DONE - FeatureBin sumSquares reduced to float.
+M4 DONE - FeatureHistory::getWindow() no longer allocates heap scratch.
+M5 DONE - Runtime and analyzer queues trimmed.
+M6 PENDING - Memory inventory diagnostics still to add.
+```
+
 ## Pass M1 — Stop Heap-Allocating `DetectionRuntime`
 
 ### Problem
@@ -757,4 +768,3 @@ No full-object duplication unless justified by memory map.
 No hidden profile-wide capacity increases.
 Every worked item must compile and be committed before moving on.
 ```
-

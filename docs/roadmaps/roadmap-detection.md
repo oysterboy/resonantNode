@@ -73,6 +73,7 @@ Future target:
 Normalize feature evidence streams and inspector thresholds onto a shared 0..1 decision scale, while keeping raw measurements for diagnostics.
 Scalar detectors should accept a resolved scalar value, with the profile/runtime deciding whether it comes from audioSamplePacket.* or frequencyBandMeasurementPacket.*.
 Expand PatternResult to carry a bounded set of contributing occurrence summaries for multi-occurrence patterns, while keeping the result compact and predictable.
+Keep AudioSignal raw sample history available as a future Analyzer post-trial probe path, not a live detector dependency.
 ```
 
 Current pass mirror:

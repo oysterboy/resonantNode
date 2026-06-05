@@ -352,7 +352,7 @@ private:
         unsigned long sampleDumpCaptureEndMs = 0;
         unsigned long sampleDumpNextEmitMs = 0;
         static constexpr size_t kMaxSampleHistory = 128;
-        static constexpr size_t kMaxSampleRows = 1024;
+        static constexpr size_t kMaxSampleRows = 256;
         CurveSnapshot sampleHistory[kMaxSampleHistory] = {};
         size_t sampleHistoryStart = 0;
         size_t sampleHistoryCount = 0;

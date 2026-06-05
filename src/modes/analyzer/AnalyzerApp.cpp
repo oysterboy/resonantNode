@@ -74,20 +74,87 @@ unsigned long sampleFramesToMs(unsigned long frames, uint32_t sampleRateHz) {
 void printHeapStatus(const char* when) {
     const uint32_t free8 = static_cast<uint32_t>(heap_caps_get_free_size(MALLOC_CAP_8BIT));
     const uint32_t largest8 = static_cast<uint32_t>(heap_caps_get_largest_free_block(MALLOC_CAP_8BIT));
+    const uint32_t min8 = static_cast<uint32_t>(heap_caps_get_minimum_free_size(MALLOC_CAP_8BIT));
     const uint32_t freeInternal = static_cast<uint32_t>(heap_caps_get_free_size(MALLOC_CAP_INTERNAL));
+    const uint32_t largestInternal = static_cast<uint32_t>(heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL));
+    const uint32_t minInternal = static_cast<uint32_t>(heap_caps_get_minimum_free_size(MALLOC_CAP_INTERNAL));
     Serial.print("HEAP_STATUS when=");
     Serial.print(when != nullptr ? when : "unknown");
     Serial.print(" free_8bit=");
     Serial.print(free8);
     Serial.print(" largest_8bit=");
     Serial.print(largest8);
+    Serial.print(" min_8bit=");
+    Serial.print(min8);
     Serial.print(" free_internal=");
     Serial.println(freeInternal);
+    Serial.print(" largest_internal=");
+    Serial.print(largestInternal);
+    Serial.print(" min_internal=");
+    Serial.println(minInternal);
 }
 
 void printRuntimeSize() {
+    Serial.println("MEMORY_INVENTORY");
     Serial.print("RUNTIME_SIZE detection_runtime_bytes=");
     Serial.println(static_cast<unsigned long>(sizeof(detection::DetectionRuntime)));
+    Serial.print("SIZE DetectionRuntime=");
+    Serial.println(static_cast<unsigned long>(sizeof(detection::DetectionRuntime)));
+    Serial.print("  SIZE FeatureHistory=");
+    Serial.println(static_cast<unsigned long>(sizeof(detection::FeatureHistory)));
+    Serial.print("    SIZE FeatureBin=");
+    Serial.println(static_cast<unsigned long>(detection::FeatureHistory::debugFeatureBinSize()));
+    Serial.print("  SIZE Occurrence=");
+    Serial.println(static_cast<unsigned long>(sizeof(detection::Occurrence)));
+    Serial.print("  SIZE InspectedOccurrence=");
+    Serial.println(static_cast<unsigned long>(sizeof(detection::InspectedOccurrence)));
+    Serial.print("  SIZE PatternAssembler=");
+    Serial.println(static_cast<unsigned long>(sizeof(detection::PatternAssembler)));
+    Serial.print("  SIZE PatternCandidate=");
+    Serial.println(static_cast<unsigned long>(sizeof(detection::PatternCandidate)));
+    Serial.print("  SIZE PatternResult=");
+    Serial.println(static_cast<unsigned long>(sizeof(detection::PatternResult)));
+    Serial.print("SIZE AudioSignal=");
+    Serial.println(static_cast<unsigned long>(sizeof(AudioSignal)));
+    Serial.print("  SIZE RawSampleHistory=");
+    Serial.println(static_cast<unsigned long>(sizeof(RawSampleHistory)));
+    Serial.print("SIZE AnalyzerApp::SequenceTest=");
+    Serial.println(static_cast<unsigned long>(AnalyzerApp::debugSequenceTestSize()));
+    Serial.print("  SIZE CurveSnapshot sampleHistory=");
+    Serial.println(static_cast<unsigned long>(sizeof(CurveSnapshot) * AnalyzerApp::debugSequenceTestSampleHistoryCapacity()));
+    Serial.print("  SIZE CurveSnapshot sampleHistoryPending=");
+    Serial.println(static_cast<unsigned long>(sizeof(CurveSnapshot)));
+    Serial.print("  SIZE CurveSnapshot sampleRows=");
+    Serial.println(static_cast<unsigned long>(sizeof(CurveSnapshot) * AnalyzerApp::debugSequenceTestSampleRowsCapacity()));
+    Serial.print("SIZE AnalyzerReport=");
+    Serial.println(static_cast<unsigned long>(sizeof(AnalyzerReport)));
+    const uint32_t free8 = static_cast<uint32_t>(heap_caps_get_free_size(MALLOC_CAP_8BIT));
+    const uint32_t largest8 = static_cast<uint32_t>(heap_caps_get_largest_free_block(MALLOC_CAP_8BIT));
+    const uint32_t min8 = static_cast<uint32_t>(heap_caps_get_minimum_free_size(MALLOC_CAP_8BIT));
+    const uint32_t freeInternal = static_cast<uint32_t>(heap_caps_get_free_size(MALLOC_CAP_INTERNAL));
+    const uint32_t largestInternal = static_cast<uint32_t>(heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL));
+    const uint32_t minInternal = static_cast<uint32_t>(heap_caps_get_minimum_free_size(MALLOC_CAP_INTERNAL));
+    const uint32_t freeDma = static_cast<uint32_t>(heap_caps_get_free_size(MALLOC_CAP_DMA));
+    const uint32_t largestDma = static_cast<uint32_t>(heap_caps_get_largest_free_block(MALLOC_CAP_DMA));
+    const uint32_t minDma = static_cast<uint32_t>(heap_caps_get_minimum_free_size(MALLOC_CAP_DMA));
+    Serial.print("HEAP_CAPS cap=8BIT free=");
+    Serial.print(free8);
+    Serial.print(" largest=");
+    Serial.print(largest8);
+    Serial.print(" min=");
+    Serial.println(min8);
+    Serial.print("HEAP_CAPS cap=INTERNAL free=");
+    Serial.print(freeInternal);
+    Serial.print(" largest=");
+    Serial.print(largestInternal);
+    Serial.print(" min=");
+    Serial.println(minInternal);
+    Serial.print("HEAP_CAPS cap=DMA free=");
+    Serial.print(freeDma);
+    Serial.print(" largest=");
+    Serial.print(largestDma);
+    Serial.print(" min=");
+    Serial.println(minDma);
 }
 
 const char* audioHealthNameFromCounters(unsigned long zeroishFrames,

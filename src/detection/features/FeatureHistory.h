@@ -19,6 +19,7 @@ class FeatureHistory {
 public:
     static constexpr size_t kMaxSamplesPerStream = 128;
     static constexpr size_t kStreamCount = 3;
+    static constexpr size_t debugFeatureBinSize();
 
     void reset();
 
@@ -67,3 +68,7 @@ private:
 };
 
 } // namespace detection
+
+constexpr size_t detection::FeatureHistory::debugFeatureBinSize() {
+    return sizeof(FeatureBin);
+}

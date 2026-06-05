@@ -71,6 +71,9 @@ public:
     void begin();
     void update();
     unsigned long loopDelayMs() const;
+    static constexpr size_t debugSequenceTestSize();
+    static constexpr size_t debugSequenceTestSampleHistoryCapacity();
+    static constexpr size_t debugSequenceTestSampleRowsCapacity();
 
 private:
     void updateSequenceAudioHealth(const AudioSamplePacket& audioSamplePacket);
@@ -586,4 +589,16 @@ private:
     mutable LoopHealthStats _loopHealth;
     static constexpr unsigned long kPrintIntervalMs = 100;
 };
+
+constexpr size_t AnalyzerApp::debugSequenceTestSize() {
+    return sizeof(SequenceTest);
+}
+
+constexpr size_t AnalyzerApp::debugSequenceTestSampleHistoryCapacity() {
+    return SequenceTest::kMaxSampleHistory;
+}
+
+constexpr size_t AnalyzerApp::debugSequenceTestSampleRowsCapacity() {
+    return SequenceTest::kMaxSampleRows;
+}
 

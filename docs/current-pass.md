@@ -60,7 +60,7 @@ M2 DONE - FeatureHistory stores only real streams.
 M3 DONE - FeatureBin sumSquares reduced to float.
 M4 DONE - FeatureHistory::getWindow() no longer allocates heap scratch.
 M5 DONE - Runtime and analyzer queues trimmed.
-M6 PENDING - Memory inventory diagnostics still to add.
+M6 DONE - Memory inventory diagnostics now print the ownership tree.
 ```
 
 ## Pass M1 — Stop Heap-Allocating `DetectionRuntime`
@@ -357,17 +357,44 @@ We need stable visibility into where memory goes.
 
 ### Target
 
-At boot, print sizes for major structures:
+At boot, print sizes for major structures as an ownership tree.
+
+Top-level entries are the owning objects.
+If a structure owns nested buffers or sub-objects, list those as indented sub-items under the owner instead of as peers.
+Examples:
+
+```text
+DetectionRuntime
+  FeatureHistory
+  PatternAssembler queue
+  PatternResult queue
+
+AudioSignal
+  RawSampleHistory
+
+AnalyzerApp::SequenceTest
+  CurveSnapshot sampleHistory
+  CurveSnapshot sampleHistoryPending
+  CurveSnapshot sampleRows
+```
+
+Print these ownership-tree sizes:
 
 ```cpp
 Serial.printf("SIZE DetectionRuntime=%u\n", sizeof(detection::DetectionRuntime));
-Serial.printf("SIZE FeatureHistory=%u\n", sizeof(detection::FeatureHistory));
-Serial.printf("SIZE FeatureBin=%u\n", sizeof(detection::FeatureHistory::FeatureBin));
-Serial.printf("SIZE Occurrence=%u\n", sizeof(detection::Occurrence));
-Serial.printf("SIZE InspectedOccurrence=%u\n", sizeof(detection::InspectedOccurrence));
-Serial.printf("SIZE PatternCandidate=%u\n", sizeof(detection::PatternCandidate));
-Serial.printf("SIZE PatternResult=%u\n", sizeof(detection::PatternResult));
-Serial.printf("SIZE DetectionPipelineResult=%u\n", sizeof(detection::DetectionPipelineResult));
+Serial.printf("  SIZE FeatureHistory=%u\n", sizeof(detection::FeatureHistory));
+Serial.printf("    SIZE FeatureBin=%u\n", sizeof(detection::FeatureHistory::FeatureBin));
+Serial.printf("  SIZE Occurrence=%u\n", sizeof(detection::Occurrence));
+Serial.printf("  SIZE InspectedOccurrence=%u\n", sizeof(detection::InspectedOccurrence));
+Serial.printf("  SIZE PatternAssembler=%u\n", sizeof(detection::PatternAssembler));
+Serial.printf("  SIZE PatternCandidate=%u\n", sizeof(detection::PatternCandidate));
+Serial.printf("  SIZE PatternResult=%u\n", sizeof(detection::PatternResult));
+Serial.printf("SIZE AudioSignal=%u\n", sizeof(AudioSignal));
+Serial.printf("  SIZE RawSampleHistory=%u\n", sizeof(RawSampleHistory));
+Serial.printf("SIZE AnalyzerApp::SequenceTest=%u\n", sizeof(AnalyzerApp::SequenceTest));
+Serial.printf("  SIZE CurveSnapshot sampleHistory=%u\n", sizeof(CurveSnapshot));
+Serial.printf("  SIZE CurveSnapshot sampleHistoryPending=%u\n", sizeof(CurveSnapshot));
+Serial.printf("  SIZE CurveSnapshot sampleRows=%u\n", sizeof(CurveSnapshot));
 Serial.printf("SIZE AnalyzerReport=%u\n", sizeof(AnalyzerReport));
 ```
 
@@ -396,13 +423,27 @@ Boot log shows:
 ```txt
 MEMORY_INVENTORY
 SIZE DetectionRuntime=...
-SIZE FeatureHistory=...
-SIZE FeatureBin=...
+  SIZE FeatureHistory=...
+    SIZE FeatureBin=...
+  SIZE Occurrence=...
+  SIZE InspectedOccurrence=...
+  SIZE PatternAssembler=...
+  SIZE PatternCandidate=...
+  SIZE PatternResult=...
+SIZE AudioSignal=...
+  SIZE RawSampleHistory=...
+SIZE AnalyzerApp::SequenceTest=...
+  SIZE CurveSnapshot sampleHistory=...
+  SIZE CurveSnapshot sampleHistoryPending=...
+  SIZE CurveSnapshot sampleRows=...
+SIZE AnalyzerReport=...
 ...
 HEAP_CAPS cap=8BIT free=... largest=... min=...
 HEAP_CAPS cap=INTERNAL free=... largest=... min=...
 HEAP_CAPS cap=DMA free=... largest=... min=...
 ```
+
+Private nested types stay private; the analyzer uses explicit debug helpers to print the inventory without widening core ownership APIs.
 
 ### Commit
 

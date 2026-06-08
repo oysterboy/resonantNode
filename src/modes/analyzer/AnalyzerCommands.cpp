@@ -43,12 +43,13 @@ void AnalyzerApp::printSequenceHelp() {
     Serial.println("SEQ IN: OBS start [N|tries=N] [period=2000] [window=1800] [freq=HZ] [dur=MS] [delay=MS] [report_settle=MS] [test=LABEL]");
     Serial.println("SEQ IN: TRIES N");
     Serial.println("SEQ IN: [profile=tonalpulse|amp|chirp_experimental]");
-    Serial.println("SEQ IN: MODE quiet|compact|signalcheck|full|system|source|inspect|pattern|dump");
+    Serial.println("SEQ IN: MODE quiet|trial|compact|signalcheck|streak|full|system|source|inspect|pattern|dump");
     Serial.println("SEQ IN: MODE quiet = no sequence output");
-    Serial.println("SEQ IN: MODE compact = compact trial view");
+    Serial.println("SEQ IN: MODE trial|compact = compact trial view");
     Serial.println("SEQ IN: MODE signalcheck = compact trial view + audio health snapshot");
-    Serial.println("SEQ IN: MODE full = trial + source + inspect + pattern + system health");
-    Serial.println("SEQ IN: MODE system = trial verdict + system health + summary");
+    Serial.println("SEQ IN: MODE streak = miss/duplicate streak diagnostics");
+    Serial.println("SEQ IN: MODE full = trial + source + inspect + pattern");
+    Serial.println("SEQ IN: MODE system = trial verdict + system health");
     Serial.println("SEQ IN: PROFILE tonalpulse|amp|chirp_experimental");
     Serial.println("SEQ IN: DIAG on|off");
     Serial.println("SEQ IN: FREQBAND on|off");
@@ -59,14 +60,14 @@ void AnalyzerApp::printSequenceHelp() {
     Serial.println("SEQ IN: STATUS");
     Serial.println("SEQ IN: [dumpSamples=0|1] [curveFormat=off|samples]");
     Serial.println("SEQ IN: [sampleFirst=N] [sampleEvery=N] [sampleLead=MS] [sampleTail=MS] [sampleStep=MS] [sampleMax=N]");
-    Serial.println("SEQ OUT: SEQ start / SEQ running / SEQ_PATTERN / SEQ_TRIAL / SEQ_INSPECT / SEQ_SOURCE / SEQ_DUMP / SEQ_SUMMARY / AUDIO run / SIGNALCHECK");
+    Serial.println("SEQ OUT: SEQ start / SEQ running / SEQ_PATTERN / SEQ_TRIAL / SEQ_STREAK / SEQ_INSPECT / SEQ_SOURCE / SEQ_DUMP / SEQ_SUMMARY / AUDIO run / SIGNALCHECK");
     Serial.println("SEQ OUT: candidate fields include onset_sample peak_sample release_sample peak_ms dur end_dt_ms freq_*");
     Serial.println("SEQ OBS: passive observe mode for an already-running external emitter");
     Serial.println("SEQ IN: PROFILE tonalpulse|amp|chirp_experimental");
     Serial.println("SEQ PROFILE tonalpulse");
     Serial.println("SEQ PROFILE amp");
     Serial.println("SEQ PROFILE chirp_experimental");
-    Serial.println("SEQ PARAM: freqScore=10000 freqContrast=50.0 freqReleaseScore=8000 freqReleaseContrast=50.0");
+    Serial.println("SEQ PARAM: freqScore=18000 freqContrast=50.0 freqReleaseScore=12000 freqReleaseContrast=50.0");
 }
 
 void AnalyzerApp::pollUsbConsole() {
@@ -98,7 +99,7 @@ void AnalyzerApp::handleUsbLine(const char* line) {
         }
         Serial.println("CMD: BASE dur=10000 quiet");
         Serial.println("CMD: BASE stop");
-        Serial.println("CMD: PARAM freqScore=10000 freqContrast=50.0 freqReleaseScore=8000 freqReleaseContrast=50.0");
+        Serial.println("CMD: PARAM freqScore=18000 freqContrast=50.0 freqReleaseScore=12000 freqReleaseContrast=50.0");
         Serial.println("CMD: EMIT CHIRP freq=3200 dur=100");
         Serial.println("CMD: EMIT MODE REMOTE");
         Serial.println("CMD: EMIT MODE AUTO interval=2000 freq=3200 dur=100");
@@ -327,7 +328,7 @@ void AnalyzerApp::handleUsbLine(const char* line) {
             bool valid = false;
             const AnalyzerApp::SeqOutputMode mode = AnalyzerApp::sequenceOutputModeFromToken(modeToken, &valid);
             if (!valid) {
-                Serial.println("ERR SEQ unknown mode use MODE quiet|compact|signalcheck|full|system|source|inspect|pattern|dump");
+                Serial.println("ERR SEQ unknown mode use MODE quiet|trial|compact|signalcheck|streak|full|system|source|inspect|pattern|dump");
                 return;
             }
             _seqOutputConfig.mode = mode;

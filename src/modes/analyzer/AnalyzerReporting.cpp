@@ -1474,7 +1474,7 @@ void AnalyzerApp::printSequenceTrialResult(const AnalyzerReport& report) const {
         return;
     }
 
-    Serial.print("trial=");
+    Serial.print("SEQ_TRIAL trial=");
     Serial.print(report.context.trial);
     Serial.print(" profile=");
     Serial.print(report.context.profile != nullptr ? report.context.profile : "unknown");
@@ -1497,103 +1497,178 @@ void AnalyzerApp::printSequenceTrialResult(const AnalyzerReport& report) const {
         Serial.print(" failed_at=");
         Serial.print(analyzerStageName(report.classification.primaryStage));
     }
+    if (report.frequency.acceptedPresent) {
+        Serial.print(" duration_ms=");
+        Serial.print(report.frequency.acceptedDurationMs);
+    }
+    if (_sequenceTest.currentTrialDiagnostics.duplicateCount > 0) {
+        Serial.print(" duplicate_count=");
+        Serial.print(_sequenceTest.currentTrialDiagnostics.duplicateCount);
+    }
+    if (_sequenceTest.outputConfig.verbosity > 0U) {
+        Serial.print(" candidate_count=");
+        Serial.print(_sequenceTest.currentTrialDiagnostics.candidateCount);
+        Serial.print(" miss_streak=");
+        Serial.print(_sequenceTest.currentMissStreak);
+    }
     Serial.println();
+}
 
-    const bool printStreakFaultLine = _sequenceTest.outputConfig.diagnosticsEnabled &&
-        (_sequenceTest.outputConfig.when == AnalyzerApp::SeqOutputWhen::All ||
-         report.classification.result == AnalyzerResult::Miss);
-    if (printStreakFaultLine) {
-        const auto& diagnostics = _sequenceTest.currentTrialDiagnostics;
-        const char* audioHealth = report.frequency.audioHealth != nullptr ? report.frequency.audioHealth : "unknown";
-        const double rawFrameCount = diagnostics.rawFrames > 0 ? static_cast<double>(diagnostics.rawFrames) : 0.0;
-        const double rawMean = rawFrameCount > 0.0 ? static_cast<double>(diagnostics.rawSum) / rawFrameCount : 0.0;
-        const double rawMeanAbs = rawFrameCount > 0.0 ? static_cast<double>(diagnostics.rawAbsSum) / rawFrameCount : 0.0;
-        const double rawMinAbs = diagnostics.rawMin < 0 ? -static_cast<double>(diagnostics.rawMin) : static_cast<double>(diagnostics.rawMin);
-        const double rawMaxAbsValue = diagnostics.rawMax < 0 ? -static_cast<double>(diagnostics.rawMax) : static_cast<double>(diagnostics.rawMax);
-        const double rawMaxAbs = rawMinAbs > rawMaxAbsValue ? rawMinAbs : rawMaxAbsValue;
-        const double rawRange = diagnostics.rawFrames > 0 && diagnostics.rawMax >= diagnostics.rawMin
-            ? static_cast<double>(diagnostics.rawMax - diagnostics.rawMin)
-            : 0.0;
-        // Range-based proxy keeps the trial footprint small; exact variance would need another accumulator.
-        const double rawSpreadEst = rawRange > 0.0 ? rawRange / 3.4641016151377544 : 0.0;
-        const double rawZeroCrossRate = diagnostics.rawFrames > 1
-            ? static_cast<double>(diagnostics.rawZeroCrossings) / static_cast<double>(diagnostics.rawFrames - 1U)
-            : 0.0;
-        const double rawSameValueRatio = diagnostics.rawFrames > 1
-            ? static_cast<double>(diagnostics.rawSameValueCount) / static_cast<double>(diagnostics.rawFrames - 1U)
-            : 0.0;
-        const char* rawHealthClass = rawHealthClassNameFromCounters(
-            diagnostics.audioRmsTooHighFrames,
-            diagnostics.rawFrames,
-            static_cast<unsigned long>(rawMaxAbs),
-            static_cast<float>(rawMean),
-            static_cast<float>(rawMeanAbs),
-            diagnostics.rawMin,
-            diagnostics.rawMax,
-            static_cast<float>(rawSameValueRatio),
-            static_cast<unsigned long>(diagnostics.rawSameValueMaxRun),
-            static_cast<unsigned long>(diagnostics.rawBlockHashRepeatCount),
-            diagnostics.audioFlatlineFrames,
-            diagnostics.audioZeroishFrames,
-            diagnostics.audioLargeJumpFrames,
-            diagnostics.audioRms,
-            diagnostics.audioRmsTooLowFrames,
-            diagnostics.audioRmsTooHighFrames
-        );
-        const bool audioRepeatWarningOnly = strcmp(audioHealth, "flatline") == 0 && strcmp(rawHealthClass, "ok") == 0;
-        const bool audioPresent = diagnostics.audioFrames > 0;
-        const bool timingBacklog = _sequenceTest.maxProcessingLagMs > 250UL;
-        const char* faultClass = report.classification.result == AnalyzerResult::Miss
-            ? sequenceFaultClassNameFromMiss(
-                report,
-                rawHealthClass,
-                audioPresent,
-                audioRepeatWarningOnly,
-                timingBacklog
-            )
-            : "none";
-        const char* emitStatus = [&]() -> const char* {
-            if (!diagnostics.emitSeen) {
+void AnalyzerApp::printSequenceStreak(const AnalyzerReport& report) const {
+    if (_valMode) {
+        return;
+    }
+    if (!_sequenceTest.outputConfig.diagnosticsEnabled) {
+        return;
+    }
+    if (_sequenceTest.outputConfig.mode != SeqOutputMode::Streak &&
+        _sequenceTest.outputConfig.mode != SeqOutputMode::Full &&
+        _sequenceTest.outputConfig.mode != SeqOutputMode::Explain) {
+        return;
+    }
+    if (!sequenceOutputWhenEnabled(_sequenceTest.outputConfig.when, report.classification.result)) {
+        return;
+    }
+
+    const auto& diagnostics = _sequenceTest.currentTrialDiagnostics;
+    const AnalyzerResult result = report.classification.result;
+    const bool streakRelevant =
+        result == AnalyzerResult::Miss ||
+        result == AnalyzerResult::Late ||
+        result == AnalyzerResult::Duplicate ||
+        result == AnalyzerResult::Unexpected ||
+        result == AnalyzerResult::Rejected ||
+        result == AnalyzerResult::Ambiguous ||
+        result == AnalyzerResult::TooDense ||
+        result == AnalyzerResult::InvalidAudio ||
+        diagnostics.duplicateCount > 0 ||
+        diagnostics.candidateCount > 1 ||
+        diagnostics.candidateOverflowCount > 0;
+    if (!streakRelevant) {
+        return;
+    }
+
+    const char* audioHealth = report.frequency.audioHealth != nullptr ? report.frequency.audioHealth : "unknown";
+    const double rawFrameCount = diagnostics.rawFrames > 0 ? static_cast<double>(diagnostics.rawFrames) : 0.0;
+    const double rawMean = rawFrameCount > 0.0 ? static_cast<double>(diagnostics.rawSum) / rawFrameCount : 0.0;
+    const double rawMeanAbs = rawFrameCount > 0.0 ? static_cast<double>(diagnostics.rawAbsSum) / rawFrameCount : 0.0;
+    const double rawMinAbs = diagnostics.rawMin < 0 ? -static_cast<double>(diagnostics.rawMin) : static_cast<double>(diagnostics.rawMin);
+    const double rawMaxAbsValue = diagnostics.rawMax < 0 ? -static_cast<double>(diagnostics.rawMax) : static_cast<double>(diagnostics.rawMax);
+    const double rawMaxAbs = rawMinAbs > rawMaxAbsValue ? rawMinAbs : rawMaxAbsValue;
+    const double rawRange = diagnostics.rawFrames > 0 && diagnostics.rawMax >= diagnostics.rawMin
+        ? static_cast<double>(diagnostics.rawMax - diagnostics.rawMin)
+        : 0.0;
+    const double rawSpreadEst = rawRange > 0.0 ? rawRange / 3.4641016151377544 : 0.0;
+    const double rawZeroCrossRate = diagnostics.rawFrames > 1
+        ? static_cast<double>(diagnostics.rawZeroCrossings) / static_cast<double>(diagnostics.rawFrames - 1U)
+        : 0.0;
+    const double rawSameValueRatio = diagnostics.rawFrames > 1
+        ? static_cast<double>(diagnostics.rawSameValueCount) / static_cast<double>(diagnostics.rawFrames - 1U)
+        : 0.0;
+    const char* rawHealthClass = rawHealthClassNameFromCounters(
+        diagnostics.audioRmsTooHighFrames,
+        diagnostics.rawFrames,
+        static_cast<unsigned long>(rawMaxAbs),
+        static_cast<float>(rawMean),
+        static_cast<float>(rawMeanAbs),
+        diagnostics.rawMin,
+        diagnostics.rawMax,
+        static_cast<float>(rawSameValueRatio),
+        static_cast<unsigned long>(diagnostics.rawSameValueMaxRun),
+        static_cast<unsigned long>(diagnostics.rawBlockHashRepeatCount),
+        diagnostics.audioFlatlineFrames,
+        diagnostics.audioZeroishFrames,
+        diagnostics.audioLargeJumpFrames,
+        diagnostics.audioRms,
+        diagnostics.audioRmsTooLowFrames,
+        diagnostics.audioRmsTooHighFrames
+    );
+    const bool audioRepeatWarningOnly = strcmp(audioHealth, "flatline") == 0 && strcmp(rawHealthClass, "ok") == 0;
+    const bool audioPresent = diagnostics.audioFrames > 0;
+    const bool timingBacklog = _sequenceTest.maxProcessingLagMs > 250UL;
+    const char* faultClass = result == AnalyzerResult::Miss
+        ? sequenceFaultClassNameFromMiss(
+            report,
+            rawHealthClass,
+            audioPresent,
+            audioRepeatWarningOnly,
+            timingBacklog
+        )
+        : "none";
+    const char* emitStatus = [&]() -> const char* {
+        if (!diagnostics.emitSeen) {
+            return "missing";
+        }
+        if (!(diagnostics.emitStartSeen && diagnostics.emitDoneSeen)) {
+            return "partial";
+        }
+
+        switch (result) {
+            case AnalyzerResult::Expected:
+                return "ok";
+            case AnalyzerResult::Late:
+                return "late";
+            case AnalyzerResult::Unexpected:
+                return "unexpected";
+            case AnalyzerResult::Rejected:
+                return "rejected";
+            case AnalyzerResult::Ambiguous:
+                return "ambiguous";
+            case AnalyzerResult::TooDense:
+                return "too_dense";
+            case AnalyzerResult::InvalidAudio:
+                return "invalid_audio";
+            case AnalyzerResult::Duplicate:
+                return "duplicate";
+            case AnalyzerResult::Miss:
                 return "missing";
-            }
-            if (!(diagnostics.emitStartSeen && diagnostics.emitDoneSeen)) {
-                return "partial";
-            }
+            case AnalyzerResult::Early:
+            case AnalyzerResult::Unknown:
+            default:
+                return "ok";
+        }
+    }();
 
-            switch (report.classification.result) {
-                case AnalyzerResult::Expected:
-                    return "ok";
-                case AnalyzerResult::Late:
-                    return "late";
-                case AnalyzerResult::Unexpected:
-                    return "unexpected";
-                case AnalyzerResult::Rejected:
-                    return "rejected";
-                case AnalyzerResult::Ambiguous:
-                    return "ambiguous";
-                case AnalyzerResult::TooDense:
-                    return "too_dense";
-                case AnalyzerResult::InvalidAudio:
-                    return "invalid_audio";
-                case AnalyzerResult::Duplicate:
-                    return "duplicate";
-                case AnalyzerResult::Miss:
-                    return "missing";
-                case AnalyzerResult::Early:
-                case AnalyzerResult::Unknown:
-                default:
-                    return "ok";
-            }
-        }();
+    const char* streakType = "miss_like";
+    if (result == AnalyzerResult::Duplicate || diagnostics.duplicateCount > 0) {
+        streakType = "duplicate_burst";
+    } else if (diagnostics.candidateOverflowCount > 0 || diagnostics.candidateCount > 1) {
+        streakType = "candidate_fragmentation";
+    } else if (result == AnalyzerResult::Miss) {
+        streakType = _sequenceTest.currentMissStreak > 1 ? "miss_continue" : "miss_start";
+    } else if (result == AnalyzerResult::Late) {
+        streakType = "late";
+    } else if (result == AnalyzerResult::Unexpected) {
+        streakType = "unexpected";
+    }
 
-        Serial.print("SEQ_STREAK_FAULT trial=");
-        Serial.print(report.context.trial);
-        Serial.print(" result=");
-        Serial.print(analyzerResultName(report.classification.result));
+    Serial.print("SEQ_STREAK trial=");
+    Serial.print(report.context.trial);
+    Serial.print(" type=");
+    Serial.print(streakType);
+    Serial.print(" result=");
+    Serial.print(analyzerResultName(result));
+    Serial.print(" streak=");
+    Serial.print(_sequenceTest.currentMissStreak);
+    Serial.print(" reason=");
+    Serial.print(analyzerReasonName(report.classification.reason));
+    Serial.print(" fault_class=");
+    Serial.print(faultClass != nullptr ? faultClass : "none");
+    if (_sequenceTest.outputConfig.verbosity >= 1U) {
         Serial.print(" audio_present=");
         Serial.print(audioPresent ? 1 : 0);
         Serial.print(" raw_health_class=");
         Serial.print(rawHealthClass != nullptr ? rawHealthClass : "unknown");
+        Serial.print(" emit_status=");
+        Serial.print(emitStatus);
+        Serial.print(" candidate_count=");
+        Serial.print(diagnostics.candidateCount);
+        Serial.print(" duplicate_count=");
+        Serial.print(diagnostics.duplicateCount);
+        Serial.print(" timing_lag_max_ms=");
+        Serial.print(_sequenceTest.maxProcessingLagMs);
+    }
+    if (_sequenceTest.outputConfig.verbosity >= 2U) {
         Serial.print(" raw_min=");
         Serial.print(diagnostics.rawFrames > 0 ? diagnostics.rawMin : 0);
         Serial.print(" raw_max=");
@@ -1634,8 +1709,6 @@ void AnalyzerApp::printSequenceTrialResult(const AnalyzerReport& report) const {
         Serial.print(report.frequency.matchedUpdateCount);
         Serial.print(" latest_feature_age_ms=");
         Serial.print(report.frequency.latestValueAgeMs);
-        Serial.print(" emit_status=");
-        Serial.print(emitStatus);
         const bool candidatePresent = report.frequency.lifecycleCandidateId > 0;
         if (candidatePresent) {
             Serial.print(" candidate_id=");
@@ -1685,99 +1758,8 @@ void AnalyzerApp::printSequenceTrialResult(const AnalyzerReport& report) const {
             Serial.print(" emitted_this_trial=");
             Serial.print(report.frequency.fmEmitted ? 1 : 0);
         }
-        Serial.print(" timing_lag_max_ms=");
-        Serial.print(_sequenceTest.maxProcessingLagMs);
-        Serial.print(" fault_class=");
-        Serial.println(faultClass);
-
-        const AudioSlotDiagnostics& slotDiag = _i2sSource.slotDiagnostics();
-        Serial.print("I2S_SLOT_DIAG");
-        Serial.print(" slot_diag_source=");
-        Serial.print(slotDiag.slotDiagSource != nullptr ? slotDiag.slotDiagSource : "unknown");
-        Serial.print(" present=");
-        Serial.print(slotDiag.present ? 1 : 0);
-        Serial.print(" slot0_samples=");
-        Serial.print(slotDiag.slotCount[0]);
-        Serial.print(" slot1_samples=");
-        Serial.print(slotDiag.slotCount[1]);
-        Serial.print(" slot0_signed_min=");
-        Serial.print(slotDiag.slotCount[0] > 0 ? slotDiag.slotMin[0] : 0);
-        Serial.print(" slot0_signed_max=");
-        Serial.print(slotDiag.slotCount[0] > 0 ? slotDiag.slotMax[0] : 0);
-        Serial.print(" slot0_signed_range=");
-        Serial.print(slotDiag.slotCount[0] > 0 ? static_cast<long>(slotDiag.slotMax[0] - slotDiag.slotMin[0]) : 0L);
-        Serial.print(" slot0_signed_rms=");
-        Serial.print(slotDiag.slotCount[0] > 0 ? sqrt(slotDiag.slotSumSquares[0] / static_cast<double>(slotDiag.slotCount[0])) : 0.0, 1);
-        Serial.print(" slot0_repeated_run=");
-        Serial.print(slotDiag.slotRepeatedRun[0]);
-        Serial.print(" slot1_signed_min=");
-        Serial.print(slotDiag.slotCount[1] > 0 ? slotDiag.slotMin[1] : 0);
-        Serial.print(" slot1_signed_max=");
-        Serial.print(slotDiag.slotCount[1] > 0 ? slotDiag.slotMax[1] : 0);
-        Serial.print(" slot1_signed_range=");
-        Serial.print(slotDiag.slotCount[1] > 0 ? static_cast<long>(slotDiag.slotMax[1] - slotDiag.slotMin[1]) : 0L);
-        Serial.print(" slot1_signed_rms=");
-        Serial.print(slotDiag.slotCount[1] > 0 ? sqrt(slotDiag.slotSumSquares[1] / static_cast<double>(slotDiag.slotCount[1])) : 0.0, 1);
-        Serial.print(" slot1_repeated_run=");
-        Serial.print(slotDiag.slotRepeatedRun[1]);
-        Serial.print(" chosen_slot=");
-        Serial.print(slotDiag.chosenSlot != nullptr ? slotDiag.chosenSlot : "none");
-        Serial.print(" active_slot=");
-        Serial.print(slotDiag.activeSlot != nullptr ? slotDiag.activeSlot : "none");
-        Serial.print(" slot_selection_reason=");
-        Serial.println(slotDiag.slotSelectionReason != nullptr ? slotDiag.slotSelectionReason : "none");
     }
-
-    if (_sequenceTest.outputConfig.mode == SeqOutputMode::Full ||
-        _sequenceTest.outputConfig.mode == SeqOutputMode::System) {
-        printSystemHealth(report);
-    }
-
-    if (_sequenceTest.outputConfig.mode != SeqOutputMode::Explain) {
-        return;
-    }
-
-    Serial.println("results:");
-    Serial.print("A_result=");
-    Serial.print(analyzerResultName(report.classification.result));
-    Serial.print(" A_dt=");
-    if (report.classification.dtMs >= 0) {
-        Serial.print(report.classification.dtMs);
-        Serial.print("ms");
-    } else {
-        Serial.print("-1ms");
-    }
-    Serial.print(" confidence=");
-    Serial.print(report.primaryPattern.confidence, 2);
     Serial.println();
-
-    Serial.print("pattern=");
-    Serial.print(report.primaryPattern.type != nullptr ? report.primaryPattern.type : "unknown");
-    Serial.print(" A_reason=");
-    Serial.print(analyzerReasonName(report.classification.reason));
-    Serial.print(" valid=");
-    Serial.print(report.primaryPattern.accepted ? 1 : 0);
-    Serial.print(" candidate_accepted=");
-    Serial.print(report.primaryPattern.candidateAccepted ? 1 : 0);
-    Serial.print(" pattern_matched=");
-    Serial.print(report.primaryPattern.patternMatched ? 1 : 0);
-    Serial.print(" support_matched=");
-    Serial.print(report.primaryPattern.supportMatched ? 1 : 0);
-    Serial.print(" behavior_eligible=");
-    Serial.print(report.primaryPattern.behaviorEligible ? 1 : 0);
-    Serial.print(" support=");
-    Serial.print(report.primaryPattern.ampStrength != nullptr ? report.primaryPattern.ampStrength : "unknown");
-    Serial.print(" reject_reason=");
-    Serial.println(report.primaryPattern.rejectReason != nullptr ? report.primaryPattern.rejectReason : "none");
-
-    Serial.println("measurements:");
-    Serial.print("detector_strength=");
-    Serial.print(report.occurrences.strength, 1);
-    Serial.print(" inspector_strength=");
-    Serial.print(report.inspection.moduleStrengthClass != nullptr ? report.inspection.moduleStrengthClass : "unknown");
-    printInspectionScalarDetails(report);
-    Serial.print(" inspector_evidence=");
-    Serial.println(report.inspection.primaryEvidence != nullptr ? report.inspection.primaryEvidence : "none");
 }
 
 void AnalyzerApp::printSequenceTrialHeader(unsigned long trialNumber) const {
@@ -2464,6 +2446,38 @@ void AnalyzerApp::printSequenceSummary() const {
 
     const long avgDtRounded = summary.avgDtMs >= 0.0f ? static_cast<long>(summary.avgDtMs + 0.5f) : -1L;
     const long avgDurRounded = summary.avgDurationMs >= 0.0f ? static_cast<long>(summary.avgDurationMs + 0.5f) : -1L;
+
+    if (_sequenceTest.outputConfig.verbosity == 0U &&
+        _sequenceTest.outputConfig.mode != SeqOutputMode::Explain) {
+        Serial.print("SEQ_SUMMARY profile=");
+        Serial.print(summary.profileName != nullptr ? summary.profileName : "unknown");
+        Serial.print(" trials=");
+        Serial.print(summary.trials);
+        Serial.print(" expected=");
+        Serial.print(summary.expected);
+        Serial.print(" miss=");
+        Serial.print(summary.miss);
+        Serial.print(" duplicate=");
+        Serial.print(_sequenceTest.duplicates);
+        Serial.print(" miss_streak_max=");
+        Serial.print(_sequenceTest.longestMissStreak);
+        Serial.print(" avg_dt=");
+        if (avgDtRounded >= 0) {
+            Serial.print(avgDtRounded);
+            Serial.print("ms");
+        } else {
+            Serial.print("-1ms");
+        }
+        Serial.print(" avg_dur=");
+        if (avgDurRounded >= 0) {
+            Serial.print(avgDurRounded);
+            Serial.print("ms");
+        } else {
+            Serial.print("-1ms");
+        }
+        Serial.println();
+        return;
+    }
 
     Serial.println();
     Serial.print("SEQ_SUMMARY counts: expected=");

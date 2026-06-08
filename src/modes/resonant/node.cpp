@@ -618,7 +618,7 @@ void Node::pollSerialCommands() {
 
 void Node::handleSerialLine(const char* line) {
     if (equalsIgnoreCase(line, "RB help")) {
-        Serial.println("RB CMD: RB PARAM freqScore=15000 freqContrast=50.0 freqReleaseScore=9000 freqReleaseContrast=50.0");
+        Serial.println("RB CMD: RB PARAM freqScore=18000 freqContrast=50.0 freqReleaseScore=12000 freqReleaseContrast=50.0");
         Serial.println("RB CMD: RB BEHAV wait=100 refractory=0 suppressSelfChirp=250 detectionSuppressTail=0 idleTimeout=20000 idleTimeoutVariation=10000 idleBlockedAfterHeard=3000 idleBlockedAfterOwnEmit=5000");
         Serial.println("RB CMD: RB STATUS");
         Serial.println("RB CMD: RB PROFILE name=tonalpulse");
@@ -651,7 +651,7 @@ void Node::handleSerialLine(const char* line) {
         token = token != nullptr ? strtok_r(nullptr, " ", &savePtr) : nullptr;
 
         if (token == nullptr || !equalsIgnoreCase(token, "PARAM")) {
-            Serial.println("RB PARAM usage=RB PARAM freqScore=15000 freqContrast=50.0 freqReleaseScore=9000 freqReleaseContrast=50.0");
+            Serial.println("RB PARAM usage=RB PARAM freqScore=18000 freqContrast=50.0 freqReleaseScore=12000 freqReleaseContrast=50.0");
             return;
         }
 

@@ -55,7 +55,7 @@ struct FrequencyMatchConfig {
     unsigned long releaseDebounceMs = 30;
     unsigned long cooldownAfterReleaseMs = 0;
     unsigned long minDurationMs = 60;
-    float attackScoreMin = 15000.0f;
+    float attackScoreMin = 18000.0f;
     float releaseScoreMin = 12000.0f;
     float attackContrastMin = 50.0f;
     float releaseContrastMin = 50.0f;
@@ -95,11 +95,11 @@ inline DetectionProfile makeTonalPulseProfile() {
     profile.occurrenceSource = OccurrenceSourceKind::FrequencyMatch;
 
     // Frequency path tuning.
-    profile.frequencyMatch.attackScoreMin = 15000.0f;
+    profile.frequencyMatch.attackScoreMin = 18000.0f;
     profile.frequencyMatch.releaseScoreMin = 12000.0f;
     profile.frequencyMatch.attackContrastMin = 50.0f;
     profile.frequencyMatch.releaseContrastMin = 50.0f;
-    profile.frequencyMatch.minDurationMs = 32;
+    profile.frequencyMatch.minDurationMs = 60;
     profile.frequencyMatch.releaseDebounceMs = 30;
     profile.frequencyMatch.cooldownAfterReleaseMs = 0;
   

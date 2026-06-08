@@ -581,6 +581,11 @@ void AnalyzerApp::finalizeSequenceTrial(unsigned long now) {
     if (_sequenceTest.outputConfig.mode == AnalyzerApp::SeqOutputMode::SignalCheck) {
         printSignalCheck();
     }
+    if (_sequenceTest.outputConfig.mode == AnalyzerApp::SeqOutputMode::Streak ||
+        _sequenceTest.outputConfig.mode == AnalyzerApp::SeqOutputMode::Full ||
+        _sequenceTest.outputConfig.mode == AnalyzerApp::SeqOutputMode::Explain) {
+        printSequenceStreak(*finalizedReport);
+    }
     if (_sequenceTest.sampleDumpEnabled) {
         printSequenceSampleDump(_sequenceTest.currentTrial);
     }
@@ -589,7 +594,8 @@ void AnalyzerApp::finalizeSequenceTrial(unsigned long now) {
         _sequenceTest.outputConfig.mode == AnalyzerApp::SeqOutputMode::Explain) {
         printSequenceInspect(*finalizedReport);
     }
-    if (_sequenceTest.outputConfig.mode == AnalyzerApp::SeqOutputMode::Full ||
+    if (_sequenceTest.outputConfig.mode == AnalyzerApp::SeqOutputMode::Source ||
+        _sequenceTest.outputConfig.mode == AnalyzerApp::SeqOutputMode::Full ||
         _sequenceTest.outputConfig.mode == AnalyzerApp::SeqOutputMode::Explain) {
         printSequenceDiagnostics(*finalizedReport);
     }
@@ -602,11 +608,13 @@ void AnalyzerApp::finalizeSequenceTrial(unsigned long now) {
          _sequenceTest.outputConfig.mode == AnalyzerApp::SeqOutputMode::Explain)) {
         printSequencePattern(*finalizedReport);
     }
+    if (_sequenceTest.outputConfig.mode == AnalyzerApp::SeqOutputMode::System ||
+        _sequenceTest.outputConfig.mode == AnalyzerApp::SeqOutputMode::Explain) {
+        printSystemHealth(*finalizedReport);
+    }
     if (_sequenceTest.outputConfig.mode == AnalyzerApp::SeqOutputMode::Explain) {
         printSequenceCandidateLogs(_sequenceTest.currentTrial, diagnostics);
         printSequenceExplain(*finalizedReport);
-    } else if (_sequenceTest.outputConfig.mode == AnalyzerApp::SeqOutputMode::Source) {
-        printSequenceDiagnostics(*finalizedReport);
     } else if (_sequenceTest.outputConfig.mode == AnalyzerApp::SeqOutputMode::Pattern && patternStageReached) {
         printSequencePattern(*finalizedReport);
     }

@@ -39,8 +39,10 @@ public:
 
     enum class SeqOutputMode {
         Quiet,
-        Compact,
+        Trial,
+        Compact = Trial,
         SignalCheck,
+        Streak,
         Full,
         System,
         Source,
@@ -56,7 +58,7 @@ public:
     };
 
     struct SeqOutputConfig {
-        SeqOutputMode mode = SeqOutputMode::Compact;
+        SeqOutputMode mode = SeqOutputMode::Trial;
         SeqOutputWhen when = SeqOutputWhen::Miss;
         uint8_t verbosity = 0;
         unsigned long totalTrials = 100;
@@ -502,6 +504,7 @@ private:
     void printSequenceScalarDiagnostics(const AnalyzerReport& report) const;
     void printSequenceInspect(const AnalyzerReport& report) const;
     void printSequencePattern(const AnalyzerReport& report) const;
+    void printSequenceStreak(const AnalyzerReport& report) const;
     void printSequenceStatus() const;
     void printSignalCheck() const;
     void printSequenceTrialHeader(unsigned long trialNumber) const;
@@ -531,6 +534,7 @@ private:
     // Miscellaneous output helpers.
     void printValueFrame(unsigned long now) const;
     void printValueModeBanner() const;
+    bool shouldPrintHardwareDiagnostics() const;
     static const char* sequenceOutputModeName(SeqOutputMode mode);
     static const char* sequenceOutputWhenName(SeqOutputWhen value);
     static bool sequenceOutputModeEnabled(SeqOutputMode configured, SeqOutputMode requested);

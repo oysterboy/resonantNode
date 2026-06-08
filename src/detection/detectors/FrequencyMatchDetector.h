@@ -15,6 +15,13 @@ enum class FrequencyReleaseFailCause {
 
 const char* frequencyReleaseFailCauseName(FrequencyReleaseFailCause cause);
 
+struct FrequencyBandDiagnosticStats {
+    float sum = 0.0f;
+    float min = 0.0f;
+    float max = 0.0f;
+    unsigned long maxMs = 0;
+};
+
 /*
 FrequencyMatchDetector
 
@@ -138,6 +145,13 @@ public:
     float diagnosticsContrastMin = 0.0f;
     float diagnosticsContrastMax = 0.0f;
     unsigned long diagnosticsContrastMaxMs = 0;
+    FrequencyBandDiagnosticStats diagnosticsTargetPower = {};
+    FrequencyBandDiagnosticStats diagnosticsLowerPower = {};
+    FrequencyBandDiagnosticStats diagnosticsUpperPower = {};
+    FrequencyBandDiagnosticStats diagnosticsNeighborPowerMean = {};
+    FrequencyBandDiagnosticStats diagnosticsNeighborPowerMax = {};
+    FrequencyBandDiagnosticStats diagnosticsLowerScore = {};
+    FrequencyBandDiagnosticStats diagnosticsUpperScore = {};
     unsigned long lastRejectedCloseMs = 0;
     FrequencyReleaseFailCause lastReleaseFailCause = FrequencyReleaseFailCause::None;
     FrequencyReleaseFailCause candidateCloseCause = FrequencyReleaseFailCause::None;
@@ -157,6 +171,13 @@ public:
 
     float diagnosticsScoreMean() const;
     float diagnosticsContrastMean() const;
+    float diagnosticsTargetPowerMean() const;
+    float diagnosticsLowerPowerMean() const;
+    float diagnosticsUpperPowerMean() const;
+    float diagnosticsNeighborPowerMeanValue() const;
+    float diagnosticsNeighborPowerMaxMean() const;
+    float diagnosticsLowerScoreMean() const;
+    float diagnosticsUpperScoreMean() const;
 
     void observeClosedCandidate(bool accepted);
 
@@ -165,5 +186,6 @@ private:
 
     bool _diagnosticsEnabled = false;
     bool _diagnosticsHaveStats = false;
+    bool _diagnosticsHaveBandStats = false;
 };
 

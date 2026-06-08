@@ -11,7 +11,12 @@ void FreqBandStream::resetState() {
     _producedFreshPacketOnLastObserve = false;
     _lastTargetBandScoreValue = 0.0f;
     _lastTargetBandPowerValue = 0.0f;
+    _lastLowerBandPowerValue = 0.0f;
+    _lastUpperBandPowerValue = 0.0f;
+    _lastLowerBandScoreValue = 0.0f;
+    _lastUpperBandScoreValue = 0.0f;
     _lastNeighborBandPowerValue = 0.0f;
+    _lastNeighborBandPowerMaxValue = 0.0f;
     _lastTotalEnergyValue = 0.0f;
     _lastTargetBandContrastValue = 0.0f;
     for (unsigned long i = 0; i < kMaxWindowSizeSamples; ++i) {
@@ -63,7 +68,12 @@ void FreqBandStream::observeCenteredSample(int centeredSample, unsigned long sam
     if (_sampleCount < _windowSizeSamples) {
         _lastTargetBandScoreValue = 0.0f;
         _lastTargetBandPowerValue = 0.0f;
+        _lastLowerBandPowerValue = 0.0f;
+        _lastUpperBandPowerValue = 0.0f;
+        _lastLowerBandScoreValue = 0.0f;
+        _lastUpperBandScoreValue = 0.0f;
         _lastNeighborBandPowerValue = 0.0f;
+        _lastNeighborBandPowerMaxValue = 0.0f;
         _lastTotalEnergyValue = 0.0f;
         _lastTargetBandContrastValue = 0.0f;
         ++_profileObserveCalls;
@@ -164,7 +174,12 @@ float FreqBandStream::computeFrequencyScore() {
     if (_windowSizeSamples == 0 || _sampleCount < _windowSizeSamples) {
         _lastTargetBandScoreValue = 0.0f;
         _lastTargetBandPowerValue = 0.0f;
+        _lastLowerBandPowerValue = 0.0f;
+        _lastUpperBandPowerValue = 0.0f;
+        _lastLowerBandScoreValue = 0.0f;
+        _lastUpperBandScoreValue = 0.0f;
         _lastNeighborBandPowerValue = 0.0f;
+        _lastNeighborBandPowerMaxValue = 0.0f;
         _lastTotalEnergyValue = 0.0f;
         _lastTargetBandContrastValue = 0.0f;
         return 0.0f;
@@ -185,12 +200,20 @@ float FreqBandStream::computeFrequencyScore() {
     const float lowerPower = computeGoertzelPowerAtFrequency(_cachedLowerFrequencyHz);
     const float upperPower = computeGoertzelPowerAtFrequency(_cachedUpperFrequencyHz);
     const float neighborPower = (lowerPower + upperPower) * 0.5f;
+    const float neighborPowerMax = lowerPower > upperPower ? lowerPower : upperPower;
     const float normalized = (targetPower * 1000.0f) / (totalEnergy + 1.0f);
+    const float lowerScore = (lowerPower * 1000.0f) / (totalEnergy + 1.0f);
+    const float upperScore = (upperPower * 1000.0f) / (totalEnergy + 1.0f);
     const float contrast = targetPower / (neighborPower + 1.0f);
 
     _lastTargetBandScoreValue = normalized;
     _lastTargetBandPowerValue = targetPower;
+    _lastLowerBandPowerValue = lowerPower;
+    _lastUpperBandPowerValue = upperPower;
+    _lastLowerBandScoreValue = lowerScore;
+    _lastUpperBandScoreValue = upperScore;
     _lastNeighborBandPowerValue = neighborPower;
+    _lastNeighborBandPowerMaxValue = neighborPowerMax;
     _lastTotalEnergyValue = totalEnergy;
     _lastTargetBandContrastValue = contrast;
     ++_profileComputeCalls;
@@ -207,8 +230,28 @@ float FreqBandStream::lastTargetBandPowerValue() const {
     return _lastTargetBandPowerValue;
 }
 
+float FreqBandStream::lastLowerBandPowerValue() const {
+    return _lastLowerBandPowerValue;
+}
+
+float FreqBandStream::lastUpperBandPowerValue() const {
+    return _lastUpperBandPowerValue;
+}
+
+float FreqBandStream::lastLowerBandScoreValue() const {
+    return _lastLowerBandScoreValue;
+}
+
+float FreqBandStream::lastUpperBandScoreValue() const {
+    return _lastUpperBandScoreValue;
+}
+
 float FreqBandStream::lastNeighborBandPowerValue() const {
     return _lastNeighborBandPowerValue;
+}
+
+float FreqBandStream::lastNeighborBandPowerMaxValue() const {
+    return _lastNeighborBandPowerMaxValue;
 }
 
 float FreqBandStream::lastTotalEnergyValue() const {

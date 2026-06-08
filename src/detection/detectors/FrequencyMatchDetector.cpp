@@ -205,7 +205,15 @@ void FrequencyMatchDetector::resetDiagnosticsSummary() {
     diagnosticsContrastMin = 0.0f;
     diagnosticsContrastMax = 0.0f;
     diagnosticsContrastMaxMs = 0;
+    diagnosticsTargetPower = {};
+    diagnosticsLowerPower = {};
+    diagnosticsUpperPower = {};
+    diagnosticsNeighborPowerMean = {};
+    diagnosticsNeighborPowerMax = {};
+    diagnosticsLowerScore = {};
+    diagnosticsUpperScore = {};
     _diagnosticsHaveStats = false;
+    _diagnosticsHaveBandStats = false;
 }
 
 float FrequencyMatchDetector::diagnosticsScoreMean() const {
@@ -214,6 +222,34 @@ float FrequencyMatchDetector::diagnosticsScoreMean() const {
 
 float FrequencyMatchDetector::diagnosticsContrastMean() const {
     return diagnosticsObservedCount > 0 ? diagnosticsContrastSum / static_cast<float>(diagnosticsObservedCount) : 0.0f;
+}
+
+float FrequencyMatchDetector::diagnosticsTargetPowerMean() const {
+    return diagnosticsObservedCount > 0 ? diagnosticsTargetPower.sum / static_cast<float>(diagnosticsObservedCount) : 0.0f;
+}
+
+float FrequencyMatchDetector::diagnosticsLowerPowerMean() const {
+    return diagnosticsObservedCount > 0 ? diagnosticsLowerPower.sum / static_cast<float>(diagnosticsObservedCount) : 0.0f;
+}
+
+float FrequencyMatchDetector::diagnosticsUpperPowerMean() const {
+    return diagnosticsObservedCount > 0 ? diagnosticsUpperPower.sum / static_cast<float>(diagnosticsObservedCount) : 0.0f;
+}
+
+float FrequencyMatchDetector::diagnosticsNeighborPowerMeanValue() const {
+    return diagnosticsObservedCount > 0 ? diagnosticsNeighborPowerMean.sum / static_cast<float>(diagnosticsObservedCount) : 0.0f;
+}
+
+float FrequencyMatchDetector::diagnosticsNeighborPowerMaxMean() const {
+    return diagnosticsObservedCount > 0 ? diagnosticsNeighborPowerMax.sum / static_cast<float>(diagnosticsObservedCount) : 0.0f;
+}
+
+float FrequencyMatchDetector::diagnosticsLowerScoreMean() const {
+    return diagnosticsObservedCount > 0 ? diagnosticsLowerScore.sum / static_cast<float>(diagnosticsObservedCount) : 0.0f;
+}
+
+float FrequencyMatchDetector::diagnosticsUpperScoreMean() const {
+    return diagnosticsObservedCount > 0 ? diagnosticsUpperScore.sum / static_cast<float>(diagnosticsObservedCount) : 0.0f;
 }
 
 void FrequencyMatchDetector::updateBestRejectedCandidate() {
@@ -501,6 +537,24 @@ void FrequencyMatchDetector::update(const detection::FrequencyBandMeasurementPac
         wouldCandidateReason[sizeof(wouldCandidateReason) - 1] = '\0';
 
         if (evidence.present) {
+            const bool firstBandStats = !_diagnosticsHaveBandStats;
+            const auto updateBandStats = [&](FrequencyBandDiagnosticStats& stats, float value) {
+                stats.sum += value;
+                if (firstBandStats) {
+                    stats.min = value;
+                    stats.max = value;
+                    stats.maxMs = now;
+                    return;
+                }
+                if (value < stats.min) {
+                    stats.min = value;
+                }
+                if (value > stats.max) {
+                    stats.max = value;
+                    stats.maxMs = now;
+                }
+            };
+
             ++diagnosticsObservedCount;
             ++diagnosticsValidCount;
             if (attackScoreOk) {
@@ -520,6 +574,14 @@ void FrequencyMatchDetector::update(const detection::FrequencyBandMeasurementPac
             }
             diagnosticsScoreSum += evidence.targetBandScoreValue;
             diagnosticsContrastSum += evidence.targetBandContrastValue;
+            updateBandStats(diagnosticsTargetPower, evidence.targetBandPowerValue);
+            updateBandStats(diagnosticsLowerPower, evidence.lowerBandPowerValue);
+            updateBandStats(diagnosticsUpperPower, evidence.upperBandPowerValue);
+            updateBandStats(diagnosticsNeighborPowerMean, evidence.neighborBandPowerValue);
+            updateBandStats(diagnosticsNeighborPowerMax, evidence.neighborBandPowerMaxValue);
+            updateBandStats(diagnosticsLowerScore, evidence.lowerBandScoreValue);
+            updateBandStats(diagnosticsUpperScore, evidence.upperBandScoreValue);
+            _diagnosticsHaveBandStats = true;
             if (!_diagnosticsHaveStats) {
                 diagnosticsScoreMin = evidence.targetBandScoreValue;
                 diagnosticsScoreMax = evidence.targetBandScoreValue;

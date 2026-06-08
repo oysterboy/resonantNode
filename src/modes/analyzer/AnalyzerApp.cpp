@@ -1565,6 +1565,27 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
         report.source.frequencyMatch.maxScoreMs = runtimeDiag->frequencyScoreMaxMs;
         report.source.frequencyMatch.maxContrast = runtimeDiag->frequencyContrastMax;
         report.source.frequencyMatch.maxContrastMs = runtimeDiag->frequencyContrastMaxMs;
+        report.source.frequencyMatch.targetPowerMean = runtimeDiag->frequencyTargetPowerMean;
+        report.source.frequencyMatch.lowerPowerMean = runtimeDiag->frequencyLowerPowerMean;
+        report.source.frequencyMatch.upperPowerMean = runtimeDiag->frequencyUpperPowerMean;
+        report.source.frequencyMatch.neighborPowerMean = runtimeDiag->frequencyNeighborPowerMean;
+        report.source.frequencyMatch.neighborPowerMaxMean = runtimeDiag->frequencyNeighborPowerMaxMean;
+        report.source.frequencyMatch.targetPowerMax = runtimeDiag->frequencyTargetPowerMax;
+        report.source.frequencyMatch.lowerPowerMax = runtimeDiag->frequencyLowerPowerMax;
+        report.source.frequencyMatch.upperPowerMax = runtimeDiag->frequencyUpperPowerMax;
+        report.source.frequencyMatch.neighborPowerMeanMax = runtimeDiag->frequencyNeighborPowerMeanMax;
+        report.source.frequencyMatch.neighborPowerMaxMax = runtimeDiag->frequencyNeighborPowerMaxMax;
+        report.source.frequencyMatch.targetPowerMaxMs = runtimeDiag->frequencyTargetPowerMaxMs;
+        report.source.frequencyMatch.lowerPowerMaxMs = runtimeDiag->frequencyLowerPowerMaxMs;
+        report.source.frequencyMatch.upperPowerMaxMs = runtimeDiag->frequencyUpperPowerMaxMs;
+        report.source.frequencyMatch.neighborPowerMeanMaxMs = runtimeDiag->frequencyNeighborPowerMeanMaxMs;
+        report.source.frequencyMatch.neighborPowerMaxMaxMs = runtimeDiag->frequencyNeighborPowerMaxMaxMs;
+        report.source.frequencyMatch.lowerScoreMean = runtimeDiag->frequencyLowerScoreMean;
+        report.source.frequencyMatch.upperScoreMean = runtimeDiag->frequencyUpperScoreMean;
+        report.source.frequencyMatch.lowerScoreMax = runtimeDiag->frequencyLowerScoreMax;
+        report.source.frequencyMatch.upperScoreMax = runtimeDiag->frequencyUpperScoreMax;
+        report.source.frequencyMatch.lowerScoreMaxMs = runtimeDiag->frequencyLowerScoreMaxMs;
+        report.source.frequencyMatch.upperScoreMaxMs = runtimeDiag->frequencyUpperScoreMaxMs;
         report.source.frequencyMatch.ampPeak = diagnostics.ambientBaselineSamples > 0
             ? static_cast<float>(diagnostics.maxSignalLevel)
             : 0.0f;

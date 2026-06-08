@@ -23,6 +23,11 @@ inline FrequencyBandMeasurementPacket buildFrequencyMeasurementPacket(
     evidence.confidence = 0.0f;
     evidence.targetBandPowerValue = freqBandStream.lastTargetBandPowerValue();
     evidence.neighborBandPowerValue = freqBandStream.lastNeighborBandPowerValue();
+    evidence.lowerBandPowerValue = freqBandStream.lastLowerBandPowerValue();
+    evidence.upperBandPowerValue = freqBandStream.lastUpperBandPowerValue();
+    evidence.lowerBandScoreValue = freqBandStream.lastLowerBandScoreValue();
+    evidence.upperBandScoreValue = freqBandStream.lastUpperBandScoreValue();
+    evidence.neighborBandPowerMaxValue = freqBandStream.lastNeighborBandPowerMaxValue();
     evidence.totalEnergyValue = freqBandStream.lastTotalEnergyValue();
     evidence.targetBandContrastValue = freqBandStream.lastTargetBandContrastValue();
     return evidence;

@@ -1010,6 +1010,8 @@ void AnalyzerApp::update() {
     }
 
     updateBaseSession(now);
+    // Drain emitter markers before SEQ finalization so trial latches reflect the latest observed state.
+    pollEmitterSerial();
     if (_controlClaimPending && !_controlClaimSent && timing::atOrAfter(now, _controlClaimAtMs)) {
         sendEmitterCommand("MODE REMOTE");
         _controlClaimSent = true;

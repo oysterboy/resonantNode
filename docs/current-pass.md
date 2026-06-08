@@ -41,6 +41,8 @@ Do not treat diagnostics as behavior inputs.
 # 1. Add emitter proof markers
 
 Done.
+But ouptuts are still all 0. Bug in emiiter maybe.
+
 
 ## Goal
 
@@ -293,72 +295,8 @@ DetectionCleanup [DBG-11] Refine miss fault classes
 
 ---
 
-# 4. Add centered audio diagnostics
+# 4. DEFERRED Add centered audio diagnostics
 
-## Goal
-
-Separate ADC-style normalized values from meaningful centered audio activity.
-
-## Required fields
-
-Add centered-domain stats:
-
-```text
-centered_min
-centered_max
-centered_range
-centered_mean
-centered_mean_abs
-centered_rms
-centered_zero_cross_rate
-centered_repeated_sample_max_run
-baseline_min
-baseline_max
-baseline_mean
-```
-
-Keep current normalized/raw fields, but clarify naming.
-
-Preferred new names:
-
-```text
-normalized_min
-normalized_max
-normalized_range
-normalized_mean
-normalized_spread_est
-```
-
-If renaming is too disruptive, print both old and new names temporarily.
-
-## Audio health hierarchy
-
-Use this order for diagnostic confidence:
-
-```text
-centered_health_class
-raw_health_class / normalized_health_class
-audio_health legacy warning
-```
-
-`audio_health` must not be the strongest classifier input unless centered/raw stats confirm it.
-
-## Acceptance
-
-SEQ output can distinguish:
-
-```text
-normalized input sits near midpoint
-centered signal has low activity
-baseline drift issue
-centered activity exists but target band is absent
-```
-
-## Commit
-
-```text
-DetectionCleanup [DBG-12] Add centered audio health diagnostics
-```
 
 ---
 
@@ -367,6 +305,8 @@ DetectionCleanup [DBG-12] Add centered audio health diagnostics
 ---
 
 # 6. Make I2S slot diagnostics default to raw I2S words
+
+Done.
 
 ## Goal
 

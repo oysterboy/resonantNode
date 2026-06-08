@@ -8,13 +8,16 @@
 
 struct AudioSlotDiagnostics {
     bool present = false;
+    const char* slotDiagSource = "post_mono_normalized";
     unsigned long slotCount[2] = {0, 0};
     int slotMin[2] = {0, 0};
     int slotMax[2] = {0, 0};
     double slotSumSquares[2] = {0.0, 0.0};
     unsigned long slotRepeatedRun[2] = {0, 0};
+    long slotSignedRange[2] = {0, 0};
     const char* chosenSlot = "none";
     const char* activeSlot = "none";
+    const char* slotSelectionReason = "none";
 };
 
 /*
@@ -62,6 +65,8 @@ private:
     unsigned long _droppedSamples = 0;
     size_t _maxBufferedSamples = 0;
     uint32_t _samplePeriodUs = 0;
+    uint64_t _outputSampleIndex = 0;
+    int _selectedSlotIndex = -1;
     AudioSourceStats _stats;
     AudioSlotDiagnostics _slotDiagnostics;
 };

@@ -25,6 +25,10 @@ uint32_t sampleOffsetUs(uint32_t sampleOffset, uint32_t sampleRateHz) {
 const char* slotName(size_t slotIndex) {
     return slotIndex == 0 ? "slot0" : "slot1";
 }
+
+bool slotHasMeaningfulVariation(unsigned long count, long signedRange) {
+    return count > 0 && signedRange > 0;
+}
 }
 
 AudioSourceI2S::AudioSourceI2S(int sckPin, int fsPin, int dataInPin, int sampleRate, int bitsPerSample)
@@ -47,18 +51,7 @@ void AudioSourceI2S::begin() {
     I2S.end();
     I2S.setAllPins(_sckPin, _fsPin, _dataInPin, I2S_PIN_NO_CHANGE, I2S_PIN_NO_CHANGE);
     const int beginResult = I2S.begin(I2S_PHILIPS_MODE, _sampleRate, _bitsPerSample);
-    const bool beginSucceeded = beginResult != 0;
-    if (beginSucceeded) {
-        // Force mono at the source so the RX stream does not expose the inactive slot as alternating zeros.
-        const esp_err_t monoResult = esp_i2s::i2s_set_clk(
-            static_cast<esp_i2s::i2s_port_t>(0),
-            static_cast<uint32_t>(_sampleRate),
-            static_cast<esp_i2s::i2s_bits_per_sample_t>(_bitsPerSample),
-            esp_i2s::I2S_CHANNEL_MONO);
-        _started = monoResult == ESP_OK;
-    } else {
-        _started = false;
-    }
+    _started = beginResult != 0;
 }
 
 bool AudioSourceI2S::available() {
@@ -173,8 +166,11 @@ void AudioSourceI2S::resetStats() {
     _blockOverflowBeforeBlock = false;
     _droppedSamples = 0;
     _maxBufferedSamples = 0;
+    _outputSampleIndex = 0;
+    _selectedSlotIndex = -1;
     _stats = {};
     _slotDiagnostics = {};
+    _slotDiagnostics.slotDiagSource = "raw_i2s_words";
 }
 
 void AudioSourceI2S::recordReadAttempt(int requestedBytes, int bytesRead, bool readError) {
@@ -244,15 +240,9 @@ bool AudioSourceI2S::refillBlock() {
     }
 
     const size_t fullSamplesRead = static_cast<size_t>(bytesRead) / static_cast<size_t>(bytesPerSample);
-    const uint32_t fillEndUs = micros();
-    const uint32_t availableSamples = static_cast<uint32_t>(availableBytes / bytesPerSample);
-    const uint32_t readSamples = static_cast<uint32_t>(fullSamplesRead);
-    const uint32_t firstReturnedSampleAgeSamples = availableSamples > 0
-        ? availableSamples - 1U
-        : (readSamples > 0 ? readSamples - 1U : 0U);
-    const uint32_t firstReturnedSampleOffsetUs = sampleOffsetUs(firstReturnedSampleAgeSamples, static_cast<uint32_t>(_sampleRate));
     const size_t sampleBytes = static_cast<size_t>(bytesPerSample);
     const size_t samplesToProcess = fullSamplesRead;
+    int32_t rawSamples[kRefillBatchSize] = {};
     double slotSumSquares[2] = {0.0, 0.0};
     unsigned long slotCount[2] = {0, 0};
     int slotMin[2] = {0, 0};
@@ -263,8 +253,7 @@ bool AudioSourceI2S::refillBlock() {
     unsigned long slotRepeatedRun[2] = {0, 0};
     _blockCount = 0;
     _blockCursor = 0;
-    _blockStartSampleIndex = _stats.totalSamplesRead;
-    _blockApproxStartMicros = fillEndUs > firstReturnedSampleOffsetUs ? fillEndUs - firstReturnedSampleOffsetUs : 0U;
+    _blockStartSampleIndex = _outputSampleIndex;
     _blockOverflowBeforeBlock = _droppedSamples > 0;
     for (size_t i = 0; i < samplesToProcess; ++i) {
         int rawSample = 0;
@@ -284,6 +273,8 @@ bool AudioSourceI2S::refillBlock() {
         } else {
             memcpy(&rawSample, samplePtr, sampleBytes);
         }
+
+        rawSamples[i] = rawSample;
 
         const int sample = normalizeToAdcScale(rawSample);
         const size_t slotIndex = i % 2U;
@@ -328,29 +319,64 @@ bool AudioSourceI2S::refillBlock() {
     }
     _stats.totalSamplesRead += static_cast<uint64_t>(fullSamplesRead);
     _slotDiagnostics.present = slotCount[0] > 0 || slotCount[1] > 0;
+    _slotDiagnostics.slotDiagSource = "raw_i2s_words";
     for (size_t slot = 0; slot < 2; ++slot) {
         _slotDiagnostics.slotCount[slot] = slotCount[slot];
         _slotDiagnostics.slotMin[slot] = slotHasValue[slot] ? slotMin[slot] : 0;
         _slotDiagnostics.slotMax[slot] = slotHasValue[slot] ? slotMax[slot] : 0;
         _slotDiagnostics.slotSumSquares[slot] = slotSumSquares[slot];
         _slotDiagnostics.slotRepeatedRun[slot] = slotRepeatedRun[slot];
+        _slotDiagnostics.slotSignedRange[slot] = slotHasValue[slot]
+            ? static_cast<long>(slotMax[slot] - slotMin[slot])
+            : 0L;
     }
     if (!_slotDiagnostics.present) {
         _slotDiagnostics.chosenSlot = "none";
         _slotDiagnostics.activeSlot = "none";
+        _slotDiagnostics.slotSelectionReason = "no_data";
     } else {
         const double rms0 = slotCount[0] > 0 ? sqrt(slotSumSquares[0] / static_cast<double>(slotCount[0])) : 0.0;
         const double rms1 = slotCount[1] > 0 ? sqrt(slotSumSquares[1] / static_cast<double>(slotCount[1])) : 0.0;
-        if (rms0 == 0.0 && rms1 == 0.0) {
-            _slotDiagnostics.chosenSlot = "none";
-            _slotDiagnostics.activeSlot = "none";
-        } else if (rms0 >= rms1) {
-            _slotDiagnostics.chosenSlot = "slot0";
-            _slotDiagnostics.activeSlot = (rms1 > 0.0 && rms0 <= rms1 * 1.1) ? "both" : "slot0";
-        } else {
-            _slotDiagnostics.chosenSlot = "slot1";
-            _slotDiagnostics.activeSlot = (rms0 > 0.0 && rms1 <= rms0 * 1.1) ? "both" : "slot1";
+        const long range0 = _slotDiagnostics.slotSignedRange[0];
+        const long range1 = _slotDiagnostics.slotSignedRange[1];
+        const bool alive0 = slotHasMeaningfulVariation(slotCount[0], range0);
+        const bool alive1 = slotHasMeaningfulVariation(slotCount[1], range1);
+        if (_selectedSlotIndex < 0) {
+            if (!alive0 && !alive1) {
+                _selectedSlotIndex = 0;
+                _slotDiagnostics.slotSelectionReason = "dead_slots_fallback_slot0";
+            } else if (alive0 != alive1) {
+                _selectedSlotIndex = alive0 ? 0 : 1;
+                _slotDiagnostics.slotSelectionReason = "reject_dead_slot";
+            } else if (range0 != range1) {
+                _selectedSlotIndex = range0 > range1 ? 0 : 1;
+                _slotDiagnostics.slotSelectionReason = "signed_range";
+            } else if (rms0 >= rms1) {
+                _selectedSlotIndex = 0;
+                _slotDiagnostics.slotSelectionReason = "rms_tie_break";
+            } else {
+                _selectedSlotIndex = 1;
+                _slotDiagnostics.slotSelectionReason = "rms";
+            }
         }
+        _slotDiagnostics.chosenSlot = slotName(static_cast<size_t>(_selectedSlotIndex));
+        _slotDiagnostics.activeSlot = (alive0 && alive1) ? "both" : slotName(static_cast<size_t>(_selectedSlotIndex));
     }
+    const size_t chosenSlotIndex = _selectedSlotIndex == 1 ? 1U : 0U;
+    const size_t selectedFrameCount = samplesToProcess / 2U;
+    const uint32_t fillEndUs = micros();
+    const uint32_t selectedFrameAge = selectedFrameCount > 0 ? static_cast<uint32_t>(selectedFrameCount - 1U) : 0U;
+    _blockApproxStartMicros = fillEndUs > sampleOffsetUs(selectedFrameAge, static_cast<uint32_t>(_sampleRate))
+        ? fillEndUs - sampleOffsetUs(selectedFrameAge, static_cast<uint32_t>(_sampleRate))
+        : 0U;
+    _blockCount = 0;
+    for (size_t frame = 0; frame < selectedFrameCount && _blockCount < kRefillBatchSize; ++frame) {
+        const size_t rawIndex = (frame * 2U) + chosenSlotIndex;
+        if (rawIndex >= samplesToProcess) {
+            break;
+        }
+        _blockSamples[_blockCount++] = normalizeToAdcScale(rawSamples[rawIndex]);
+    }
+    _outputSampleIndex += static_cast<uint64_t>(_blockCount);
     return _blockCount > 0;
 }

@@ -7,6 +7,7 @@
 #include "../../TimingUtils.h"
 #include "../../detection/DetectionDerivedValues.h"
 #include "../../detection/DetectionNames.h"
+#include "../../detection/patterns/PatternNames.h"
 #include "AnalyzerHealthHelpers.h"
 
 namespace {
@@ -1460,8 +1461,10 @@ void AnalyzerApp::printSequenceTrialResult(const AnalyzerReport& report) const {
     }
     Serial.println();
 
-    if (_sequenceTest.outputConfig.diagnosticsEnabled &&
-        report.classification.result == AnalyzerResult::Miss) {
+    const bool printStreakFaultLine = _sequenceTest.outputConfig.diagnosticsEnabled &&
+        (_sequenceTest.outputConfig.when == AnalyzerApp::SeqOutputWhen::All ||
+         report.classification.result == AnalyzerResult::Miss);
+    if (printStreakFaultLine) {
         const auto& diagnostics = _sequenceTest.currentTrialDiagnostics;
         const char* audioHealth = report.frequency.audioHealth != nullptr ? report.frequency.audioHealth : "unknown";
         const double rawFrameCount = diagnostics.rawFrames > 0 ? static_cast<double>(diagnostics.rawFrames) : 0.0;
@@ -1502,17 +1505,20 @@ void AnalyzerApp::printSequenceTrialResult(const AnalyzerReport& report) const {
         const bool audioRepeatWarningOnly = strcmp(audioHealth, "flatline") == 0 && strcmp(rawHealthClass, "ok") == 0;
         const bool audioPresent = diagnostics.audioFrames > 0;
         const bool timingBacklog = _sequenceTest.maxProcessingLagMs > 250UL;
-        const char* faultClass = sequenceFaultClassNameFromMiss(
-            report,
-            rawHealthClass,
-            audioPresent,
-            audioRepeatWarningOnly,
-            timingBacklog
-        );
+        const char* faultClass = report.classification.result == AnalyzerResult::Miss
+            ? sequenceFaultClassNameFromMiss(
+                report,
+                rawHealthClass,
+                audioPresent,
+                audioRepeatWarningOnly,
+                timingBacklog
+            )
+            : "none";
 
         Serial.print("SEQ_STREAK_FAULT trial=");
         Serial.print(report.context.trial);
-        Serial.print(" result=miss");
+        Serial.print(" result=");
+        Serial.print(analyzerResultName(report.classification.result));
         Serial.print(" audio_present=");
         Serial.print(audioPresent ? 1 : 0);
         Serial.print(" audio_health=");
@@ -1559,6 +1565,52 @@ void AnalyzerApp::printSequenceTrialResult(const AnalyzerReport& report) const {
         Serial.print(report.frequency.matchedUpdateCount);
         Serial.print(" latest_feature_age_ms=");
         Serial.print(report.frequency.latestValueAgeMs);
+        Serial.print(" emit_seen=");
+        Serial.print(diagnostics.emitSeen ? 1 : 0);
+        Serial.print(" emit_start_seen=");
+        Serial.print(diagnostics.emitStartSeen ? 1 : 0);
+        Serial.print(" emit_done_seen=");
+        Serial.print(diagnostics.emitDoneSeen ? 1 : 0);
+        Serial.print(" emit_drive_seen=");
+        Serial.print(diagnostics.emitDriveSeen ? 1 : 0);
+        Serial.print(" emit_start_dt_ms=");
+        Serial.print(diagnostics.emitStartDtMs);
+        Serial.print(" emit_done_dt_ms=");
+        Serial.print(diagnostics.emitDoneDtMs);
+        Serial.print(" emit_duration_ms=");
+        Serial.print(diagnostics.emitDurationMs);
+        Serial.print(" emit_trial_id=");
+        Serial.print(diagnostics.emitTrialId);
+        Serial.print(" candidate_id=");
+        Serial.print(report.frequency.lifecycleCandidateId);
+        Serial.print(" candidate_open_ms=");
+        Serial.print(report.frequency.fmOpenMs);
+        Serial.print(" candidate_last_match_ms=");
+        Serial.print(report.frequency.candidateLastMatchMs);
+        Serial.print(" candidate_release_ms=");
+        Serial.print(report.frequency.fmReleaseMs);
+        Serial.print(" candidate_close_ms=");
+        Serial.print(report.frequency.fmReleaseMs);
+        Serial.print(" candidate_duration_ms=");
+        Serial.print(report.frequency.fmDurationMs);
+        Serial.print(" duration_used_for_decision_ms=");
+        Serial.print(report.frequency.fmDurationUsedMs);
+        Serial.print(" min_duration_used_ms=");
+        Serial.print(report.frequency.fmMinDurationUsedMs);
+        Serial.print(" duration_ok=");
+        Serial.print(report.frequency.fmDurationOk ? 1 : 0);
+        Serial.print(" release_ok=");
+        Serial.print(report.frequency.fmValidRelease ? 1 : 0);
+        Serial.print(" emit_allowed=");
+        Serial.print(report.frequency.fmEmitAllowed ? 1 : 0);
+        Serial.print(" candidate_reject_reason=");
+        Serial.print(report.frequency.sourceLastRejectReason != nullptr ? report.frequency.sourceLastRejectReason : "none");
+        Serial.print(" candidate_no_emit_reason=");
+        Serial.print(report.frequency.selectedRejectReason != nullptr ? report.frequency.selectedRejectReason : "none");
+        Serial.print(" diag_duration_inconsistent=");
+        Serial.print(report.frequency.fmDurationInconsistent ? 1 : 0);
+        Serial.print(" diag_printed_duration_inconsistent=");
+        Serial.print(report.frequency.fmPrintedDurationInconsistent ? 1 : 0);
         Serial.print(" det_active_start=");
         Serial.print(report.frequency.fmOpenMs);
         Serial.print(" accepted_candidate_id=");
@@ -2080,15 +2132,9 @@ void AnalyzerApp::printSequenceCandidateLogs(unsigned long trialNumber, const Se
         Serial.print(" idx=");
         Serial.print(i + 1UL);
         Serial.print(" candidate_class=");
-        Serial.print(candidate.candidateClass != nullptr ? candidate.candidateClass : "unknown");
+        Serial.print(sequenceCandidateClassName(candidate.candidateClass));
         Serial.print(" onset_ms=");
         Serial.print(candidate.candidateMs);
-        Serial.print(" onset_sample=");
-        Serial.print(static_cast<unsigned long>(candidate.onsetSample));
-        Serial.print(" peak_sample=");
-        Serial.print(static_cast<unsigned long>(candidate.peakSample));
-        Serial.print(" release_sample=");
-        Serial.print(static_cast<unsigned long>(candidate.releaseSample));
         Serial.print(" onset_dt_ms=");
         Serial.print(candidate.dtFromTriggerMs);
         Serial.print(" peak_ms=");
@@ -2102,25 +2148,8 @@ void AnalyzerApp::printSequenceCandidateLogs(unsigned long trialNumber, const Se
         } else {
             Serial.print("-");
         }
-        Serial.print(" processed_at_ms=");
-        Serial.print(candidate.processedAtMs);
-        Serial.print(" process_lag_ms=");
-        if (candidate.processLagMs >= 0) {
-            Serial.print(candidate.processLagMs);
-            Serial.print("ms");
-        } else {
-            Serial.print("-");
-        }
         Serial.print(" strength=");
         Serial.print(candidate.strength, 1);
-        Serial.print(" transient_present=");
-        Serial.print(candidate.transientPresent ? 1 : 0);
-        Serial.print(" freq_present=");
-        Serial.print(candidate.freqPresent ? 1 : 0);
-        Serial.print(" freq_matched=");
-        Serial.print(candidate.freqMatched ? 1 : 0);
-        Serial.print(" freq_score=");
-        Serial.print(candidate.freqScore, 1);
         Serial.print(" pattern_valid=");
         Serial.print(candidate.patternValid ? 1 : 0);
         Serial.print(" candidateAccepted=");
@@ -2132,11 +2161,11 @@ void AnalyzerApp::printSequenceCandidateLogs(unsigned long trialNumber, const Se
         Serial.print(" behaviorEligible=");
         Serial.print(candidate.behaviorEligible ? 1 : 0);
         Serial.print(" reject_reason=");
-        Serial.print(candidate.rejectReason != nullptr ? candidate.rejectReason : "none");
+        Serial.print(detection::patternRejectReasonName(candidate.rejectReasonCode));
         Serial.print(" pattern_type=");
-        Serial.print(candidate.patternType != nullptr ? candidate.patternType : "none");
+        Serial.print(detection::patternTypeName(candidate.patternType));
         Serial.print(" reason=");
-        Serial.println(candidate.reason != nullptr ? candidate.reason : "none");
+        Serial.println(detection::patternReasonName(candidate.reasonCode));
     }
 
     if (diagnostics.candidateOverflowCount > 0) {

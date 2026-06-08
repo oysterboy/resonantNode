@@ -393,8 +393,6 @@ void AnalyzerApp::updateSequenceTest(unsigned long now) {
     _sequenceTest.currentTrialDiagnostics = {};
     _sequenceTest.currentTrialDiagnostics.acceptedAmbientBaseline = _audioSignal.baseline();
     _sequenceTest.currentTrialDiagnostics.runtimePatternCaptured = false;
-    _sequenceTest.currentTrialDiagnostics.runtimePatternResult = {};
-    _sequenceTest.currentTrialDiagnostics.runtimeFieldState = {};
     _sequenceTest.currentTrialDiagnostics.frequency = {};
     _sequenceTest.currentTrialDiagnostics.frequency.currentTrialId = trialNumber;
     _sequenceTest.currentTrialDiagnostics.frequency.windowStartMs = _sequenceTest.currentTrialStartMs;
@@ -429,7 +427,7 @@ void AnalyzerApp::updateSequenceTest(unsigned long now) {
 
     if (!_sequenceTest.externalEmitter) {
         char command[64];
-        snprintf(command, sizeof(command), "CHIRP freq=%lu dur=%lu", _sequenceTest.toneHz, _sequenceTest.durationMs);
+        snprintf(command, sizeof(command), "CHIRP trial=%lu freq=%lu dur=%lu", trialNumber, _sequenceTest.toneHz, _sequenceTest.durationMs);
         sendEmitterCommand(command);
     }
 }

@@ -164,12 +164,14 @@ struct DetectionDiagnostics {
     unsigned long frequencySelectedRejectCandidateId = 0;
     unsigned long frequencyLastCandidateId = 0;
     unsigned long frequencyLifecycleCandidateId = 0;
+    unsigned long frequencyLastMatchMs = 0;
     unsigned long frequencyDurationUsedMs = 0;
     unsigned long frequencyDurationPrintedMs = 0;
     unsigned long frequencyMinDurationUsedMs = 0;
     unsigned long frequencyMinDurationReportedMs = 0;
     bool frequencyDurationOk = false;
     bool frequencyDurationInconsistent = false;
+    bool frequencyPrintedDurationInconsistent = false;
     unsigned long frequencyOpenMs = 0;
     unsigned long frequencyPeakMs = 0;
     unsigned long frequencyReleaseMs = 0;

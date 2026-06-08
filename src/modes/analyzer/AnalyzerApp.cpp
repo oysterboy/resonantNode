@@ -975,10 +975,10 @@ void AnalyzerApp::update() {
                     runtimeFrequencyMeasurementPacket.observedAtMs = audioSamplePacket.timeMs;
                 }
                 _detection.observeFrame(audioSamplePacket, runtimeFrequencyMeasurementPacket, audioSamplePacket.timeMs);
-                while (_detection.popPatternResult(_sequenceTest.currentTrialDiagnostics.runtimePatternResult)) {
+                detection::PatternResult runtimePatternResult = {};
+                while (_detection.popPatternResult(runtimePatternResult)) {
                     _sequenceTest.currentTrialDiagnostics.runtimePatternCaptured = true;
-                    _sequenceTest.currentTrialDiagnostics.runtimeFieldState = _detection.fieldState();
-                    handleSequenceCandidate(_sequenceTest.currentTrialDiagnostics.runtimePatternResult, &runtimeFrequencyMeasurementPacket);
+                    handleSequenceCandidate(runtimePatternResult, &runtimeFrequencyMeasurementPacket);
                 }
                 updateSequenceAmbientStats(audioSamplePacket.timeMs);
             }
@@ -1577,6 +1577,36 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
         report.source.frequencyMatch.peakScore = runtimeDiag->frequencyPeakScore;
         report.source.frequencyMatch.peakContrast = runtimeDiag->frequencyPeakContrast;
         report.source.frequencyMatch.peakSampleCount = runtimeDiag->frequencyPeakSampleCount;
+        report.source.frequencyMatch.targetPresent = report.source.frequencyMatch.matchedUpdateCount > 0
+            || report.source.frequencyMatch.fmOpened
+            || report.source.frequencyMatch.fmEmitted;
+        const float targetScoreThreshold = report.source.frequencyMatch.scoreThreshold > 0.0f
+            ? report.source.frequencyMatch.scoreThreshold
+            : 0.0f;
+        const float targetPartialThreshold = targetScoreThreshold > 0.0f
+            ? targetScoreThreshold * 0.75f
+            : 0.0f;
+        const float targetNoiseFloor = targetScoreThreshold > 0.0f
+            ? targetScoreThreshold * 0.15f
+            : 0.0f;
+        const bool targetPartial = !report.source.frequencyMatch.targetPresent
+            && report.source.frequencyMatch.maxScore >= targetPartialThreshold
+            && report.source.frequencyMatch.maxScore < targetScoreThreshold;
+        report.source.frequencyMatch.weakTarget = !report.source.frequencyMatch.targetPresent
+            && report.source.frequencyMatch.maxScore > targetNoiseFloor
+            && report.source.frequencyMatch.maxScore < targetPartialThreshold;
+        report.source.frequencyMatch.noTarget = !report.source.frequencyMatch.targetPresent
+            && !targetPartial
+            && !report.source.frequencyMatch.weakTarget;
+        if (report.source.frequencyMatch.targetPresent) {
+            report.source.frequencyMatch.targetEvidenceClass = "present";
+        } else if (targetPartial) {
+            report.source.frequencyMatch.targetEvidenceClass = "partial";
+        } else if (report.source.frequencyMatch.weakTarget) {
+            report.source.frequencyMatch.targetEvidenceClass = "weak";
+        } else {
+            report.source.frequencyMatch.targetEvidenceClass = "none";
+        }
         report.source.frequencyMatch.sourceSummary.present = runtimeDiag->sourceSummary.present;
         report.source.frequencyMatch.sourceSummary.origin = "runtime_frequency_diag";
         report.source.frequencyMatch.sourceSummary.candidateCount = runtimeDiag->sourceSummary.candidateCount;
@@ -1652,9 +1682,17 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
         report.source.frequencyMatch.sourceLastRejectReason = runtimeDiag != nullptr && runtimeDiag->frequencyRejectReason != nullptr
             ? runtimeDiag->frequencyRejectReason
             : "none";
-        report.source.frequencyMatch.selectedRejectReason = runtimeDiag != nullptr && report.source.frequencyMatch.sourceOccurrenceEmitted && !report.source.frequencyMatch.acceptedPresent && runtimeDiag->frequencyNoEmitReason != nullptr
-            ? runtimeDiag->frequencyNoEmitReason
-            : "none";
+        report.source.frequencyMatch.selectedRejectReason = runtimeDiag != nullptr
+            && !report.source.frequencyMatch.acceptedPresent
+            && (
+                runtimeDiag->frequencySelectedRejectCandidateId > 0
+                || runtimeDiag->frequencyOpened
+                || runtimeDiag->frequencyReleased
+                || runtimeDiag->sourceSummary.rejectCount > 0
+            )
+            && runtimeDiag->frequencyNoEmitReason != nullptr
+                ? runtimeDiag->frequencyNoEmitReason
+                : "none";
         report.source.frequencyMatch.selectedRejectGateReason = runtimeDiag != nullptr && runtimeDiag->frequencyGateReason != nullptr
             ? runtimeDiag->frequencyGateReason
             : "none";
@@ -1668,11 +1706,13 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
         report.source.frequencyMatch.selectedRejectCandidateId = runtimeDiag != nullptr ? runtimeDiag->frequencySelectedRejectCandidateId : 0UL;
         report.source.frequencyMatch.lastCandidateId = runtimeDiag != nullptr ? runtimeDiag->frequencyLastCandidateId : 0UL;
         report.source.frequencyMatch.lifecycleCandidateId = runtimeDiag != nullptr ? runtimeDiag->frequencyLifecycleCandidateId : 0UL;
+        report.source.frequencyMatch.candidateLastMatchMs = runtimeDiag != nullptr ? runtimeDiag->frequencyLastMatchMs : 0UL;
         report.source.frequencyMatch.fmDurationUsedMs = runtimeDiag != nullptr ? runtimeDiag->frequencyDurationUsedMs : 0UL;
         report.source.frequencyMatch.fmDurationPrintedMs = runtimeDiag != nullptr ? runtimeDiag->frequencyDurationPrintedMs : 0UL;
         report.source.frequencyMatch.fmMinDurationUsedMs = runtimeDiag != nullptr ? runtimeDiag->frequencyMinDurationUsedMs : 0UL;
         report.source.frequencyMatch.fmMinDurationReportedMs = runtimeDiag != nullptr ? runtimeDiag->frequencyMinDurationReportedMs : 0UL;
         report.source.frequencyMatch.fmDurationInconsistent = runtimeDiag != nullptr ? runtimeDiag->frequencyDurationInconsistent : false;
+        report.source.frequencyMatch.fmPrintedDurationInconsistent = runtimeDiag != nullptr ? runtimeDiag->frequencyPrintedDurationInconsistent : false;
         report.source.frequencyMatch.fmCloseCause = runtimeDiag != nullptr && runtimeDiag->sourceSummary.closeCause != nullptr
             ? runtimeDiag->sourceSummary.closeCause
             : "none";

@@ -11,20 +11,44 @@ namespace {
 
 constexpr long kLateOnsetMinMs = 200L;
 
-const char* sequenceCandidateClass(bool duplicateCandidate, bool inWindow, long dtFromTriggerMs) {
+enum class SequenceCandidateClass : uint8_t {
+    Unknown = 0,
+    ExpectedPrimary,
+    Late,
+    UnexpectedNoise,
+    Duplicate,
+};
+
+uint8_t sequenceCandidateClass(bool duplicateCandidate, bool inWindow, long dtFromTriggerMs) {
     if (duplicateCandidate) {
-        return "duplicate";
+        return static_cast<uint8_t>(SequenceCandidateClass::Duplicate);
     }
     if (!inWindow) {
-        return "unexpected_noise";
+        return static_cast<uint8_t>(SequenceCandidateClass::UnexpectedNoise);
     }
     if (dtFromTriggerMs >= kLateOnsetMinMs) {
-        return "late";
+        return static_cast<uint8_t>(SequenceCandidateClass::Late);
     }
-    return "expected_primary";
+    return static_cast<uint8_t>(SequenceCandidateClass::ExpectedPrimary);
 }
 
 } // namespace
+
+const char* sequenceCandidateClassName(uint8_t value) {
+    switch (static_cast<SequenceCandidateClass>(value)) {
+        case SequenceCandidateClass::ExpectedPrimary:
+            return "expected_primary";
+        case SequenceCandidateClass::Late:
+            return "late";
+        case SequenceCandidateClass::UnexpectedNoise:
+            return "unexpected_noise";
+        case SequenceCandidateClass::Duplicate:
+            return "duplicate";
+        case SequenceCandidateClass::Unknown:
+        default:
+            return "unknown";
+    }
+}
 
 bool AnalyzerApp::sequenceSampleDumpSelected(unsigned long trialNumber) const {
     if (!_sequenceTest.sampleDumpEnabled) {
@@ -296,9 +320,6 @@ void AnalyzerApp::handleSequenceCandidate(const detection::PatternResult& patter
     const unsigned long onsetMs = candidate.startMs;
     const long dtFromTriggerMs = static_cast<long>(onsetMs) - static_cast<long>(_sequenceTest.currentTrialScheduledAtMs);
     const long dtFromTrialStartMs = static_cast<long>(onsetMs) - static_cast<long>(_sequenceTest.currentTrialStartMs);
-    const long processLagMs = patternResult.processedAtMs >= onsetMs
-        ? static_cast<long>(patternResult.processedAtMs - onsetMs)
-        : -1;
     const uint32_t sampleRateHz = _audioSource.sampleRateHz() > 0 ? _audioSource.sampleRateHz() : 16000UL;
     const unsigned long peakOffsetMs = candidate.peakSample >= candidate.onsetSample
         ? static_cast<unsigned long>(((candidate.peakSample - candidate.onsetSample) * 1000ULL) / static_cast<uint64_t>(sampleRateHz))
@@ -314,7 +335,7 @@ void AnalyzerApp::handleSequenceCandidate(const detection::PatternResult& patter
     const bool postWindow = onsetMs > _sequenceTest.currentTrialEndMs;
     const bool inWindow = !preWindow && !postWindow;
     const bool duplicateCandidate = _sequenceTest.primaryValidPatternCaptured && inWindow;
-    const char* candidateClass = sequenceCandidateClass(duplicateCandidate, inWindow, dtFromTriggerMs);
+    const auto candidateClass = sequenceCandidateClass(duplicateCandidate, inWindow, dtFromTriggerMs);
 
     const SequenceTest::CandidateOrigin origin = preWindow
         ? SequenceTest::CandidateOrigin::PreWindow
@@ -334,18 +355,8 @@ void AnalyzerApp::handleSequenceCandidate(const detection::PatternResult& patter
         entry.durationMs = candidate.durationMs;
         entry.strength = candidate.peakStrength;
         entry.origin = origin;
-        entry.onsetSample = candidate.onsetSample;
-        entry.peakSample = candidate.peakSample;
-        entry.releaseSample = candidate.releaseSample;
         entry.peakMs = candidate.startMs + peakOffsetMs;
         entry.endDtMs = dtFromTriggerMs >= 0 ? dtFromTriggerMs + static_cast<long>(candidate.durationMs) : -1;
-        entry.processedAtMs = patternResult.processedAtMs;
-        entry.processLagMs = processLagMs;
-        entry.transientPresent = patternResult.candidate.transient.present;
-        entry.freqPresent = patternResult.freq.present;
-        entry.freqMatched = patternResult.freq.matched;
-        entry.freqScore = patternResult.freq.targetBandScoreValue;
-        entry.freqContrast = patternResult.freq.targetBandContrastValue;
         entry.patternValid = patternResult.valid;
         entry.candidateAccepted = patternResult.patternCandidateAccepted;
         entry.patternMatched = patternResult.patternMatched;
@@ -353,9 +364,9 @@ void AnalyzerApp::handleSequenceCandidate(const detection::PatternResult& patter
         entry.behaviorEligible = patternResult.valid;
         entry.duplicateCandidate = duplicateCandidate;
         entry.candidateClass = candidateClass;
-        entry.patternType = detection::patternTypeName(patternResult.type);
-        entry.reason = detection::patternReasonName(patternResult.reasonCode);
-        entry.rejectReason = detection::patternRejectReasonName(patternResult.rejectReason);
+        entry.patternType = patternResult.type;
+        entry.reasonCode = patternResult.reasonCode;
+        entry.rejectReasonCode = patternResult.rejectReason;
     } else {
         diagnostics.candidateOverflowCount++;
     }
@@ -417,12 +428,8 @@ void AnalyzerApp::handleSequenceCandidate(const detection::PatternResult& patter
             diagnostics.duplicatePatternMs = onsetMs;
             diagnostics.duplicatePatternStrength = candidate.peakStrength;
             diagnostics.duplicatePatternDurationMs = candidate.durationMs;
-            diagnostics.duplicatePatternOnsetSample = candidate.onsetSample;
-            diagnostics.duplicatePatternPeakSample = candidate.peakSample;
-            diagnostics.duplicatePatternReleaseSample = candidate.releaseSample;
             diagnostics.duplicatePatternPeakMs = candidate.startMs + peakOffsetMs;
             diagnostics.duplicatePatternReleaseMs = candidate.startMs + candidate.durationMs;
-            diagnostics.duplicateFrequencyProcessedAtMs = patternResult.processedAtMs;
             diagnostics.duplicateDeltaFromPrimaryMs = diagnostics.patternAccepted
                 ? static_cast<long>(onsetMs) - static_cast<long>(diagnostics.acceptedPatternMs)
                 : 0;
@@ -444,13 +451,9 @@ void AnalyzerApp::handleSequenceCandidate(const detection::PatternResult& patter
     _sequenceTest.currentTrialDiagnostics.acceptedPatternStrength = candidate.peakStrength;
     _sequenceTest.currentTrialDiagnostics.acceptedPatternDurationMs = candidate.durationMs;
     _sequenceTest.currentTrialDiagnostics.acceptedPatternReleaseStrength = candidate.releaseStrength;
-    _sequenceTest.currentTrialDiagnostics.acceptedPatternOnsetSample = candidate.onsetSample;
-    _sequenceTest.currentTrialDiagnostics.acceptedPatternPeakSample = candidate.peakSample;
-    _sequenceTest.currentTrialDiagnostics.acceptedPatternReleaseSample = candidate.releaseSample;
     _sequenceTest.currentTrialDiagnostics.acceptedPatternPeakMs = candidate.startMs + peakOffsetMs;
     _sequenceTest.currentTrialDiagnostics.acceptedPatternReleaseMs = candidate.startMs + candidate.durationMs;
     _sequenceTest.currentTrialDiagnostics.acceptedAmbientBaseline = candidate.ambientBaseline;
-    _sequenceTest.currentTrialDiagnostics.acceptedFrequencyProcessedAtMs = patternResult.processedAtMs;
     _sequenceTest.currentTrialDiagnostics.lastRejectStrength = 0.0f;
     _sequenceTest.currentTrialDiagnostics.lastRejectDurationMs = 0;
     _sequenceTest.currentTrialPatternDetectedMs = onsetMs;

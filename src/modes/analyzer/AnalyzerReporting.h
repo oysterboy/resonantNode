@@ -470,6 +470,10 @@ struct AnalyzerFrequencyDiagnostic {
     float peakScore = 0.0f;
     float peakContrast = 0.0f;
     unsigned long peakSampleCount = 0;
+    const char* targetEvidenceClass = "none";
+    bool targetPresent = false;
+    bool weakTarget = false;
+    bool noTarget = true;
     AnalyzerSourceCandidateSummary sourceSummary = {};
     AnalyzerSourceCandidateSnapshot sourceLastCandidate = {};
 
@@ -490,11 +494,13 @@ struct AnalyzerFrequencyDiagnostic {
     unsigned long selectedRejectCandidateId = 0;
     unsigned long lastCandidateId = 0;
     unsigned long lifecycleCandidateId = 0;
+    unsigned long candidateLastMatchMs = 0;
     unsigned long fmDurationUsedMs = 0;
     unsigned long fmDurationPrintedMs = 0;
     unsigned long fmMinDurationUsedMs = 0;
     unsigned long fmMinDurationReportedMs = 0;
     bool fmDurationInconsistent = false;
+    bool fmPrintedDurationInconsistent = false;
     const char* fmCloseCause = "none";
     unsigned long fmOpenMs = 0;
     unsigned long fmPeakMs = 0;

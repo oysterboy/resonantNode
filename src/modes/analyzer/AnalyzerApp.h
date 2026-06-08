@@ -176,7 +176,7 @@ private:
     };
 
     struct SequenceTest {
-        static constexpr size_t kMaxTrialCandidates = 12;
+        static constexpr size_t kMaxTrialCandidates = 5;
         static constexpr size_t kMaxDuplicateDts = 8;
         enum class CandidateOrigin {
             PreWindow,
@@ -192,28 +192,18 @@ private:
             unsigned long durationMs = 0;
             float strength = 0.0f;
             CandidateOrigin origin = CandidateOrigin::InWindow;
-            uint64_t onsetSample = 0;
-            uint64_t peakSample = 0;
-            uint64_t releaseSample = 0;
             unsigned long peakMs = 0;
             long endDtMs = -1;
-            unsigned long processedAtMs = 0;
-            long processLagMs = -1;
-            bool transientPresent = false;
-            bool freqPresent = false;
-            bool freqMatched = false;
-            float freqScore = 0.0f;
-            float freqContrast = 0.0f;
             bool patternValid = false;
             bool candidateAccepted = false;
             bool patternMatched = false;
             bool supportMatched = false;
             bool behaviorEligible = false;
             bool duplicateCandidate = false;
-            const char* candidateClass = "unknown";
-            const char* patternType = "none";
-            const char* reason = "none";
-            const char* rejectReason = "none";
+            uint8_t candidateClass = 0;
+            detection::PatternType patternType = detection::PatternType::None;
+            detection::PatternReasonCode reasonCode = detection::PatternReasonCode::None;
+            detection::PatternRejectReason rejectReasonCode = detection::PatternRejectReason::None;
         };
 
         // Live per-trial diagnostics and rejection bookkeeping.
@@ -229,15 +219,20 @@ private:
             float acceptedPatternOnsetStrength = 0.0f;
             float acceptedPatternReleaseStrength = 0.0f;
             float acceptedAmbientBaseline = 0.0f;
-            uint64_t acceptedPatternOnsetSample = 0;
-            uint64_t acceptedPatternPeakSample = 0;
-            uint64_t acceptedPatternReleaseSample = 0;
             unsigned long acceptedPatternPeakMs = 0;
             unsigned long acceptedPatternReleaseMs = 0;
-            unsigned long acceptedFrequencyProcessedAtMs = 0;
-            detection::PatternResult runtimePatternResult = {};
-            detection::FieldState runtimeFieldState = {};
             bool runtimePatternCaptured = false;
+
+            bool emitSeen = false;
+            bool emitStartSeen = false;
+            bool emitDoneSeen = false;
+            bool emitDriveSeen = false;
+            unsigned long emitStartDtMs = 0;
+            unsigned long emitDoneDtMs = 0;
+            unsigned long emitDurationMs = 0;
+            unsigned long emitTrialId = 0;
+            unsigned long emitStartTrialId = 0;
+            unsigned long emitDoneTrialId = 0;
 
             unsigned long audioFrames = 0;
             unsigned long audioZeroishFrames = 0;
@@ -269,12 +264,8 @@ private:
             unsigned long duplicatePatternMs = 0;
             float duplicatePatternStrength = 0.0f;
             unsigned long duplicatePatternDurationMs = 0;
-            uint64_t duplicatePatternOnsetSample = 0;
-            uint64_t duplicatePatternPeakSample = 0;
-            uint64_t duplicatePatternReleaseSample = 0;
             unsigned long duplicatePatternPeakMs = 0;
             unsigned long duplicatePatternReleaseMs = 0;
-            unsigned long duplicateFrequencyProcessedAtMs = 0;
             long duplicateDeltaFromPrimaryMs = 0;
             bool duplicateOriginWindow = false;
             char duplicateReason[32] = "none";
@@ -589,6 +580,8 @@ private:
     mutable LoopHealthStats _loopHealth;
     static constexpr unsigned long kPrintIntervalMs = 100;
 };
+
+const char* sequenceCandidateClassName(uint8_t value);
 
 constexpr size_t AnalyzerApp::debugSequenceTestSize() {
     return sizeof(SequenceTest);

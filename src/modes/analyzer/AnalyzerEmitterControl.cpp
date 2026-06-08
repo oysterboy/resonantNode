@@ -2,7 +2,22 @@
 #include "AnalyzerTextUtils.h"
 
 #include <Arduino.h>
+#include <stdlib.h>
 #include <string.h>
+
+namespace {
+
+unsigned long parseUnsignedTokenValue(const char* line, const char* key, unsigned long fallback = 0) {
+    const char* found = strstr(line, key);
+    if (found == nullptr) {
+        return fallback;
+    }
+
+    found += strlen(key);
+    return strtoul(found, nullptr, 10);
+}
+
+} // namespace
 
 bool waitForEmitterAck(const char* expectedPrefix, unsigned long timeoutMs) {
     const unsigned long startMs = millis();
@@ -53,14 +68,41 @@ void AnalyzerApp::pollEmitterSerial() {
         }
 
         if (c == '\n') {
+            const unsigned long now = millis();
             _emitterLineBuffer[_emitterLineLength] = '\0';
-            // Expected acknowledgements are suppressed so the console stays readable.
-            if (_emitterLineLength > 0
-                && !_valMode
-                && !startsWithTokenIgnoreCase(_emitterLineBuffer, "OK CHIRP")
-                && !startsWithTokenIgnoreCase(_emitterLineBuffer, "OK MODE REMOTE")) {
+            const bool emitStartLine = startsWithTokenIgnoreCase(_emitterLineBuffer, "EMIT_START");
+            const bool emitDoneLine = startsWithTokenIgnoreCase(_emitterLineBuffer, "EMIT_DONE");
+            const bool emitDriveOnLine = startsWithTokenIgnoreCase(_emitterLineBuffer, "EMIT_DRIVE_ON");
+            const bool emitDriveOffLine = startsWithTokenIgnoreCase(_emitterLineBuffer, "EMIT_DRIVE_OFF");
+            if ((_sequenceTest.active && (emitStartLine || emitDoneLine || emitDriveOnLine || emitDriveOffLine))
+                || (_emitterLineLength > 0
+                    && !_valMode
+                    && !startsWithTokenIgnoreCase(_emitterLineBuffer, "OK CHIRP")
+                    && !startsWithTokenIgnoreCase(_emitterLineBuffer, "OK MODE REMOTE"))) {
                 Serial.print("EMIT< ");
                 Serial.println(_emitterLineBuffer);
+            }
+            if (_sequenceTest.active && _sequenceTest.currentTrial > 0 && (emitStartLine || emitDoneLine || emitDriveOnLine || emitDriveOffLine)) {
+                const unsigned long markerTrial = parseUnsignedTokenValue(_emitterLineBuffer, "trial=");
+                if (markerTrial == _sequenceTest.currentTrial) {
+                    auto& trialDiag = _sequenceTest.currentTrialDiagnostics;
+                    trialDiag.emitTrialId = markerTrial;
+                    trialDiag.emitSeen = true;
+                    if (emitStartLine || emitDriveOnLine) {
+                        trialDiag.emitStartSeen = true;
+                        trialDiag.emitDriveSeen = true;
+                        trialDiag.emitStartTrialId = markerTrial;
+                        trialDiag.emitStartDtMs = now >= _sequenceTest.currentTrialStartMs ? now - _sequenceTest.currentTrialStartMs : 0UL;
+                    }
+                    if (emitDoneLine || emitDriveOffLine) {
+                        trialDiag.emitDoneSeen = true;
+                        trialDiag.emitDoneTrialId = markerTrial;
+                        trialDiag.emitDoneDtMs = now >= _sequenceTest.currentTrialStartMs ? now - _sequenceTest.currentTrialStartMs : 0UL;
+                        trialDiag.emitDurationMs = trialDiag.emitDoneDtMs >= trialDiag.emitStartDtMs
+                            ? trialDiag.emitDoneDtMs - trialDiag.emitStartDtMs
+                            : 0UL;
+                    }
+                }
             }
             _emitterLineLength = 0;
             continue;

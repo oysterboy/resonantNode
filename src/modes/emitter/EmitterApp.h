@@ -44,7 +44,7 @@ private:
     void handleChirpCommand(const char* line);
     void handleModeCommand(const char* line);
     void handleSweepCommand(const char* line);
-    void startChirp(unsigned long toneHz, unsigned long durationMs);
+    void startChirp(unsigned long toneHz, unsigned long durationMs, unsigned long trialId = 0);
     void setMode(EmitterMode mode);
     void claimExternalControl();
     void configureAuto(unsigned long intervalMs, unsigned long toneHz, unsigned long durationMs);
@@ -69,6 +69,7 @@ private:
     unsigned long _sweepPauseMs = 1000;
     unsigned long _sweepCurrentHz = 1800;
     unsigned long _nextSweepStepAtMs = 0;
+    unsigned long _activeTrialId = 0;
     PiezoToneOutput _toneOutput;
     PiezoToneOutputBTL _toneOutputBTL;
     ChirpOutput _chirpOutput;

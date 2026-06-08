@@ -64,6 +64,15 @@ void EmitterApp::update() {
     _chirpOutput.update();
 
     if (_chirpOutput.finished()) {
+        Serial.print("EMIT_DONE trial=");
+        Serial.print(_activeTrialId);
+        Serial.print(" t_ms=");
+        Serial.println(millis());
+        Serial.print("EMIT_DRIVE_OFF trial=");
+        Serial.print(_activeTrialId);
+        Serial.print(" t_ms=");
+        Serial.println(millis());
+        _activeTrialId = 0;
         Serial.println("EVT emitter_chirp_finished");
     }
 
@@ -132,11 +141,14 @@ void EmitterApp::handleChirpCommand(const char* line) {
 
     unsigned long toneHz = runtime::kDefaultChirpFrequencyHz;
     unsigned long durationMs = 100;
+    unsigned long trialId = 0;
     char* savePtr = nullptr;
     char* token = strtok_r(buffer, " ", &savePtr);
     token = nextToken(savePtr);
     while (token != nullptr) {
-        if (startsWithToken(token, "freq=")) {
+        if (startsWithToken(token, "trial=")) {
+            trialId = strtoul(findValue(token), nullptr, 10);
+        } else if (startsWithToken(token, "freq=")) {
             toneHz = strtoul(findValue(token), nullptr, 10);
         } else if (startsWithToken(token, "dur=")) {
             durationMs = strtoul(findValue(token), nullptr, 10);
@@ -145,7 +157,7 @@ void EmitterApp::handleChirpCommand(const char* line) {
         token = nextToken(savePtr);
     }
 
-    startChirp(toneHz, durationMs);
+    startChirp(toneHz, durationMs, trialId);
 }
 
 void EmitterApp::handleModeCommand(const char* line) {
@@ -258,13 +270,22 @@ void EmitterApp::handleSweepCommand(const char* line) {
     sendControlAck(modeLine);
 }
 
-void EmitterApp::startChirp(unsigned long toneHz, unsigned long durationMs) {
+void EmitterApp::startChirp(unsigned long toneHz, unsigned long durationMs, unsigned long trialId) {
     if (_chirpOutput.isActive()) {
         _chirpOutput.stop();
     }
+    _activeTrialId = trialId;
     _chirpOutput.setToneHz(static_cast<uint32_t>(toneHz));
     _chirpOutput.setTiming(durationMs, 0);
     _chirpOutput.start();
+    Serial.print("EMIT_START trial=");
+    Serial.print(_activeTrialId);
+    Serial.print(" t_ms=");
+    Serial.println(millis());
+    Serial.print("EMIT_DRIVE_ON trial=");
+    Serial.print(_activeTrialId);
+    Serial.print(" t_ms=");
+    Serial.println(millis());
     if (_mode == EmitterMode::Auto) {
         _nextAutoChirpAtMs = millis() + _autoIntervalMs;
     }

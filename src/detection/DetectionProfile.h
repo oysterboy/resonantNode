@@ -56,7 +56,7 @@ struct FrequencyMatchConfig {
     unsigned long cooldownAfterReleaseMs = 0;
     unsigned long minDurationMs = 60;
     float attackScoreMin = 15000.0f;
-    float releaseScoreMin = 9000.0f;
+    float releaseScoreMin = 12000.0f;
     float attackContrastMin = 50.0f;
     float releaseContrastMin = 50.0f;
 };
@@ -96,7 +96,7 @@ inline DetectionProfile makeTonalPulseProfile() {
 
     // Frequency path tuning.
     profile.frequencyMatch.attackScoreMin = 15000.0f;
-    profile.frequencyMatch.releaseScoreMin = 9000.0f;
+    profile.frequencyMatch.releaseScoreMin = 12000.0f;
     profile.frequencyMatch.attackContrastMin = 50.0f;
     profile.frequencyMatch.releaseContrastMin = 50.0f;
     profile.frequencyMatch.minDurationMs = 32;

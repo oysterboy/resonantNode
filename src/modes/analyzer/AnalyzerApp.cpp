@@ -343,6 +343,13 @@ void AnalyzerApp::resetLoopHealthWindow() {
     _loopLastUs = micros();
 }
 
+bool AnalyzerApp::shouldPrintHardwareDiagnostics() const {
+    return _sequenceTest.outputConfig.diagnosticsEnabled &&
+           _sequenceTest.outputConfig.verbosity >= 2U &&
+           (_sequenceTest.outputConfig.mode == SeqOutputMode::System ||
+            _sequenceTest.outputConfig.mode == SeqOutputMode::Explain);
+}
+
 void AnalyzerApp::printSystemHealth(const AnalyzerReport& report) const {
     const AudioSourceStats& sourceStats = _audioSource.stats();
     const AudioSignalStats& signalStats = _audioSignal.stats();
@@ -512,6 +519,47 @@ void AnalyzerApp::printSystemHealth(const AnalyzerReport& report) const {
     } else if (_sequenceTest.outputConfig.verbosity >= 1U) {
         Serial.println();
     }
+
+    if (!shouldPrintHardwareDiagnostics()) {
+        return;
+    }
+
+    const AudioSlotDiagnostics& slotDiag = _i2sSource.slotDiagnostics();
+    Serial.print("I2S_SLOT_DIAG");
+    Serial.print(" slot_diag_source=");
+    Serial.print(slotDiag.slotDiagSource != nullptr ? slotDiag.slotDiagSource : "unknown");
+    Serial.print(" present=");
+    Serial.print(slotDiag.present ? 1 : 0);
+    Serial.print(" slot0_samples=");
+    Serial.print(slotDiag.slotCount[0]);
+    Serial.print(" slot1_samples=");
+    Serial.print(slotDiag.slotCount[1]);
+    Serial.print(" slot0_signed_min=");
+    Serial.print(slotDiag.slotCount[0] > 0 ? slotDiag.slotMin[0] : 0);
+    Serial.print(" slot0_signed_max=");
+    Serial.print(slotDiag.slotCount[0] > 0 ? slotDiag.slotMax[0] : 0);
+    Serial.print(" slot0_signed_range=");
+    Serial.print(slotDiag.slotCount[0] > 0 ? static_cast<long>(slotDiag.slotMax[0] - slotDiag.slotMin[0]) : 0L);
+    Serial.print(" slot0_signed_rms=");
+    Serial.print(slotDiag.slotCount[0] > 0 ? sqrt(slotDiag.slotSumSquares[0] / static_cast<double>(slotDiag.slotCount[0])) : 0.0, 1);
+    Serial.print(" slot0_repeated_run=");
+    Serial.print(slotDiag.slotRepeatedRun[0]);
+    Serial.print(" slot1_signed_min=");
+    Serial.print(slotDiag.slotCount[1] > 0 ? slotDiag.slotMin[1] : 0);
+    Serial.print(" slot1_signed_max=");
+    Serial.print(slotDiag.slotCount[1] > 0 ? slotDiag.slotMax[1] : 0);
+    Serial.print(" slot1_signed_range=");
+    Serial.print(slotDiag.slotCount[1] > 0 ? static_cast<long>(slotDiag.slotMax[1] - slotDiag.slotMin[1]) : 0L);
+    Serial.print(" slot1_signed_rms=");
+    Serial.print(slotDiag.slotCount[1] > 0 ? sqrt(slotDiag.slotSumSquares[1] / static_cast<double>(slotDiag.slotCount[1])) : 0.0, 1);
+    Serial.print(" slot1_repeated_run=");
+    Serial.print(slotDiag.slotRepeatedRun[1]);
+    Serial.print(" chosen_slot=");
+    Serial.print(slotDiag.chosenSlot != nullptr ? slotDiag.chosenSlot : "none");
+    Serial.print(" active_slot=");
+    Serial.print(slotDiag.activeSlot != nullptr ? slotDiag.activeSlot : "none");
+    Serial.print(" slot_selection_reason=");
+    Serial.println(slotDiag.slotSelectionReason != nullptr ? slotDiag.slotSelectionReason : "none");
 }
 
 void buildFrequencyFailReason(const detection::FrequencyBandMeasurementPacket& evidence,
@@ -665,10 +713,12 @@ const char* seqOutputModeName(AnalyzerApp::SeqOutputMode mode) {
     switch (mode) {
         case AnalyzerApp::SeqOutputMode::Quiet:
             return "quiet";
-        case AnalyzerApp::SeqOutputMode::Compact:
-            return "compact";
+        case AnalyzerApp::SeqOutputMode::Trial:
+            return "trial";
         case AnalyzerApp::SeqOutputMode::SignalCheck:
             return "signalcheck";
+        case AnalyzerApp::SeqOutputMode::Streak:
+            return "streak";
         case AnalyzerApp::SeqOutputMode::Full:
             return "full";
         case AnalyzerApp::SeqOutputMode::System:
@@ -682,7 +732,7 @@ const char* seqOutputModeName(AnalyzerApp::SeqOutputMode mode) {
         case AnalyzerApp::SeqOutputMode::Explain:
             return "dump";
         default:
-            return "compact";
+            return "trial";
     }
 }
 
@@ -733,13 +783,16 @@ AnalyzerApp::SeqOutputMode seqOutputModeFromToken(const char* token, bool* valid
         if (valid != nullptr) {
             *valid = false;
         }
-        return AnalyzerApp::SeqOutputMode::Compact;
+        return AnalyzerApp::SeqOutputMode::Trial;
     }
     if (equalsIgnoreCase(token, "compact") || equalsIgnoreCase(token, "trial")) {
-        return AnalyzerApp::SeqOutputMode::Compact;
+        return AnalyzerApp::SeqOutputMode::Trial;
     }
     if (equalsIgnoreCase(token, "signalcheck")) {
         return AnalyzerApp::SeqOutputMode::SignalCheck;
+    }
+    if (equalsIgnoreCase(token, "streak")) {
+        return AnalyzerApp::SeqOutputMode::Streak;
     }
     if (equalsIgnoreCase(token, "full")) {
         return AnalyzerApp::SeqOutputMode::Full;
@@ -765,7 +818,7 @@ AnalyzerApp::SeqOutputMode seqOutputModeFromToken(const char* token, bool* valid
     if (valid != nullptr) {
         *valid = false;
     }
-    return AnalyzerApp::SeqOutputMode::Compact;
+    return AnalyzerApp::SeqOutputMode::Trial;
 }
 
 AnalyzerApp::SeqOutputWhen seqOutputWhenFromToken(const char* token, bool* valid) {
@@ -836,7 +889,7 @@ void AnalyzerApp::begin() {
     _controlClaimAtMs = 0;
 
     Serial.println("EVT analyzer_ready");
-    Serial.println("EVT analyzer_help type='HELP', 'BASE', 'PARAM freqScore=10000 freqContrast=50.0 freqReleaseScore=8000 freqReleaseContrast=50.0', 'TEST', 'RAW trigger f=3200 dur=100 post=1000 dump=bin', 'SEQ MODE quiet|compact|signalcheck|full|system|source|inspect|pattern|dump WHEN off|miss|all VERBOSE 0|1|2 STATUS', 'CAP', 'DET AMP', 'VAL', 'VAL OFF'");
+    Serial.println("EVT analyzer_help type='HELP', 'BASE', 'PARAM freqScore=10000 freqContrast=50.0 freqReleaseScore=12000 freqReleaseContrast=50.0', 'TEST', 'RAW trigger f=3200 dur=100 post=1000 dump=bin', 'SEQ MODE quiet|trial|compact|signalcheck|streak|full|system|source|inspect|pattern|dump WHEN off|miss|all VERBOSE 0|1|2 STATUS', 'CAP', 'DET AMP', 'VAL', 'VAL OFF'");
 }
 
 void AnalyzerApp::configureParameters() {
@@ -861,8 +914,30 @@ bool AnalyzerApp::sequenceOutputModeEnabled(SeqOutputMode configured, SeqOutputM
     if (configured == SeqOutputMode::Quiet) {
         return false;
     }
-    if (configured == SeqOutputMode::Explain || configured == SeqOutputMode::Full) {
+    if (requested == SeqOutputMode::Trial) {
         return true;
+    }
+    if (requested == SeqOutputMode::SignalCheck) {
+        return configured == SeqOutputMode::SignalCheck;
+    }
+    if (requested == SeqOutputMode::Streak) {
+        return configured == SeqOutputMode::Streak ||
+               configured == SeqOutputMode::Full ||
+               configured == SeqOutputMode::Explain;
+    }
+    if (requested == SeqOutputMode::System) {
+        return configured == SeqOutputMode::System ||
+               configured == SeqOutputMode::Explain;
+    }
+    if (requested == SeqOutputMode::Explain) {
+        return configured == SeqOutputMode::Explain;
+    }
+    if (requested == SeqOutputMode::Source ||
+        requested == SeqOutputMode::Inspect ||
+        requested == SeqOutputMode::Pattern) {
+        return configured == requested ||
+               configured == SeqOutputMode::Full ||
+               configured == SeqOutputMode::Explain;
     }
     return configured == requested;
 }

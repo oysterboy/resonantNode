@@ -68,6 +68,7 @@ void AnalyzerApp::startSequenceTest(const PendingSequenceStart& pending) {
     bool showDetails = pending.showDetails;
     SequenceDiagMode diagMode = pending.diagMode;
     const char* setupLabel = pending.setupLabel;
+    unsigned long reportSettleMs = pending.reportSettleMs;
     bool sampleDumpEnabled = pending.sampleDumpEnabled;
     unsigned long sampleDumpFirstTrials = pending.sampleDumpFirstTrials;
     unsigned long sampleDumpEveryNth = pending.sampleDumpEveryNth;
@@ -97,6 +98,9 @@ void AnalyzerApp::startSequenceTest(const PendingSequenceStart& pending) {
     if (externalEmitter && windowEndOffsetMs < durationMs + 500) {
         windowEndOffsetMs = durationMs + 500;
     }
+    if (reportSettleMs == 0) {
+        reportSettleMs = 1;
+    }
     if (sampleDumpStepMs == 0) {
         sampleDumpStepMs = 1;
     }
@@ -119,6 +123,7 @@ void AnalyzerApp::startSequenceTest(const PendingSequenceStart& pending) {
     _sequenceTest.toneHz = toneHz;
     _sequenceTest.durationMs = durationMs;
     _sequenceTest.startupDelayMs = startupDelayMs;
+    _sequenceTest.reportSettleMs = reportSettleMs;
     _sequenceTest.sampleDumpEnabled = sampleDumpEnabled;
     _sequenceTest.sampleDumpFirstTrials = sampleDumpFirstTrials;
     _sequenceTest.sampleDumpEveryNth = sampleDumpEveryNth;
@@ -275,6 +280,8 @@ void AnalyzerApp::startSequenceTest(const PendingSequenceStart& pending) {
         Serial.print(_sequenceTest.setupLabel);
         Serial.print(" startup_delay_ms=");
         Serial.print(_sequenceTest.startupDelayMs);
+        Serial.print(" report_settle_ms=");
+        Serial.print(_sequenceTest.reportSettleMs);
         Serial.print(" loopDelayMs=");
         Serial.print(TEST_LOOP_DELAY_MS);
         Serial.print(" logStress=");
@@ -318,6 +325,8 @@ void AnalyzerApp::startSequenceTest(const PendingSequenceStart& pending) {
         Serial.print(_sequenceTest.setupLabel);
         Serial.print(" startup_delay_ms=");
         Serial.print(_sequenceTest.startupDelayMs);
+        Serial.print(" report_settle_ms=");
+        Serial.print(_sequenceTest.reportSettleMs);
         Serial.print(" loopDelayMs=");
         Serial.print(TEST_LOOP_DELAY_MS);
         Serial.print(" logStress=");
@@ -478,6 +487,8 @@ void AnalyzerApp::finalizeSequenceTrial(unsigned long now) {
         return;
     }
 
+    // Drain any late emitter markers before we snapshot the trial report.
+    pollEmitterSerial();
     const uint32_t finalizeStartUs = micros();
     auto& diagnostics = _sequenceTest.currentTrialDiagnostics;
 
@@ -599,7 +610,12 @@ void AnalyzerApp::finalizeSequenceTrial(unsigned long now) {
     } else if (_sequenceTest.outputConfig.mode == AnalyzerApp::SeqOutputMode::Pattern && patternStageReached) {
         printSequencePattern(*finalizedReport);
     }
-    Serial.flush();
+    if (_sequenceTest.currentTrial < _sequenceTest.totalTrials) {
+        const unsigned long settleUntilMs = now + _sequenceTest.reportSettleMs;
+        if (_sequenceTest.nextTriggerAtMs < settleUntilMs) {
+            _sequenceTest.nextTriggerAtMs = settleUntilMs;
+        }
+    }
     _sequenceTest.currentTrialFinalized = true;
 
     if (_sequenceTest.currentTrial >= _sequenceTest.totalTrials) {

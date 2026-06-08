@@ -327,6 +327,7 @@ private:
         unsigned long toneHz = runtime::kDefaultChirpFrequencyHz;
         unsigned long durationMs = 100;
         unsigned long startupDelayMs = 1000;
+        unsigned long reportSettleMs = 500;
         char setupLabel[48] = TEST_SETUP_LABEL;
 
         bool sampleDumpEnabled = false;
@@ -438,6 +439,7 @@ private:
         unsigned long windowEndOffsetMs = 0;
         unsigned long toneHz = 0;
         unsigned long durationMs = 0;
+        unsigned long reportSettleMs = 500;
         bool quiet = false;
         bool showDetails = false;
         SequenceDiagMode diagMode = SequenceDiagMode::Off;

@@ -22,6 +22,10 @@ char* nextToken(char*& savePtr) {
 void sendControlAck(const char* line) {
     Serial2.println(line);
 }
+
+void sendEmitterMarker(const char* line) {
+    Serial2.println(line);
+}
 }
 
 EmitterApp::EmitterApp(int outputPin, int rxPin, int txPin, unsigned long baudRate)
@@ -64,14 +68,11 @@ void EmitterApp::update() {
     _chirpOutput.update();
 
     if (_chirpOutput.finished()) {
-        Serial.print("EMIT_DONE trial=");
-        Serial.print(_activeTrialId);
-        Serial.print(" t_ms=");
-        Serial.println(millis());
-        Serial.print("EMIT_DRIVE_OFF trial=");
-        Serial.print(_activeTrialId);
-        Serial.print(" t_ms=");
-        Serial.println(millis());
+        char markerLine[96];
+        snprintf(markerLine, sizeof(markerLine), "EMIT_DONE trial=%lu t_ms=%lu", _activeTrialId, millis());
+        sendEmitterMarker(markerLine);
+        snprintf(markerLine, sizeof(markerLine), "EMIT_DRIVE_OFF trial=%lu t_ms=%lu", _activeTrialId, millis());
+        sendEmitterMarker(markerLine);
         _activeTrialId = 0;
         Serial.println("EVT emitter_chirp_finished");
     }
@@ -278,14 +279,11 @@ void EmitterApp::startChirp(unsigned long toneHz, unsigned long durationMs, unsi
     _chirpOutput.setToneHz(static_cast<uint32_t>(toneHz));
     _chirpOutput.setTiming(durationMs, 0);
     _chirpOutput.start();
-    Serial.print("EMIT_START trial=");
-    Serial.print(_activeTrialId);
-    Serial.print(" t_ms=");
-    Serial.println(millis());
-    Serial.print("EMIT_DRIVE_ON trial=");
-    Serial.print(_activeTrialId);
-    Serial.print(" t_ms=");
-    Serial.println(millis());
+    char markerLine[96];
+    snprintf(markerLine, sizeof(markerLine), "EMIT_START trial=%lu t_ms=%lu", _activeTrialId, millis());
+    sendEmitterMarker(markerLine);
+    snprintf(markerLine, sizeof(markerLine), "EMIT_DRIVE_ON trial=%lu t_ms=%lu", _activeTrialId, millis());
+    sendEmitterMarker(markerLine);
     if (_mode == EmitterMode::Auto) {
         _nextAutoChirpAtMs = millis() + _autoIntervalMs;
     }

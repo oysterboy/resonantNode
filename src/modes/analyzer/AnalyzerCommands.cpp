@@ -39,8 +39,8 @@ void AnalyzerApp::printSequenceHelp() {
     Serial.println("CMD: SEQ help");
     Serial.println("CMD: SEQ");
     Serial.println("CMD: SEQ stop");
-    Serial.println("SEQ IN: start [N|tries=N] [period=MS] [window=MS] [freq=HZ] [dur=MS] [delay=MS] [test=LABEL]");
-    Serial.println("SEQ IN: OBS start [N|tries=N] [period=2000] [window=1800] [freq=HZ] [dur=MS] [delay=MS] [test=LABEL]");
+    Serial.println("SEQ IN: start [N|tries=N] [period=MS] [window=MS] [freq=HZ] [dur=MS] [delay=MS] [report_settle=MS] [test=LABEL]");
+    Serial.println("SEQ IN: OBS start [N|tries=N] [period=2000] [window=1800] [freq=HZ] [dur=MS] [delay=MS] [report_settle=MS] [test=LABEL]");
     Serial.println("SEQ IN: TRIES N");
     Serial.println("SEQ IN: [profile=tonalpulse|amp|chirp_experimental]");
     Serial.println("SEQ IN: MODE quiet|compact|signalcheck|full|system|source|inspect|pattern|dump");
@@ -467,6 +467,7 @@ void AnalyzerApp::handleUsbLine(const char* line) {
             _pendingSequenceStart.sampleDumpStepMs = 1;
             _pendingSequenceStart.sampleDumpMaxRows = 5000;
             _pendingSequenceStart.startupDelayMs = 1000;
+            _pendingSequenceStart.reportSettleMs = 500;
             _pendingSequenceStart.profileKind = _seqOutputConfig.profileKind;
             _pendingSequenceStart.externalEmitter = equalsIgnoreCase(token, "OBS");
             bool totalTrialsSet = false;
@@ -489,6 +490,8 @@ void AnalyzerApp::handleUsbLine(const char* line) {
                     _pendingSequenceStart.durationMs = static_cast<unsigned long>(strtoul(token + 4, nullptr, 10));
                 } else if (startsWithTokenIgnoreCase(token, "delay=") || startsWithTokenIgnoreCase(token, "warmup=")) {
                     _pendingSequenceStart.startupDelayMs = static_cast<unsigned long>(strtoul(strchr(token, '=') + 1, nullptr, 10));
+                } else if (startsWithTokenIgnoreCase(token, "report_settle=") || startsWithTokenIgnoreCase(token, "settle=")) {
+                    _pendingSequenceStart.reportSettleMs = static_cast<unsigned long>(strtoul(strchr(token, '=') + 1, nullptr, 10));
                 } else if (equalsIgnoreCase(token, "quiet")) {
                     _pendingSequenceStart.quiet = true;
                 } else if (equalsIgnoreCase(token, "show=0")) {

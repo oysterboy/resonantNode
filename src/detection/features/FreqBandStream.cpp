@@ -201,12 +201,12 @@ float FreqBandStream::computeFrequencyScore() {
     const float upperPower = computeGoertzelPowerAtFrequency(_cachedUpperFrequencyHz);
     const float neighborPower = (lowerPower + upperPower) * 0.5f;
     const float neighborPowerMax = lowerPower > upperPower ? lowerPower : upperPower;
-    const float normalized = (targetPower * 1000.0f) / (totalEnergy + 1.0f);
+    const float absoluteScore = targetPower;
     const float lowerScore = (lowerPower * 1000.0f) / (totalEnergy + 1.0f);
     const float upperScore = (upperPower * 1000.0f) / (totalEnergy + 1.0f);
     const float contrast = targetPower / (neighborPower + 1.0f);
 
-    _lastTargetBandScoreValue = normalized;
+    _lastTargetBandScoreValue = absoluteScore;
     _lastTargetBandPowerValue = targetPower;
     _lastLowerBandPowerValue = lowerPower;
     _lastUpperBandPowerValue = upperPower;
@@ -219,7 +219,7 @@ float FreqBandStream::computeFrequencyScore() {
     ++_profileComputeCalls;
     _profileComputeTotalUs += static_cast<unsigned long>(micros() - profileStartUs);
 
-    return normalized;
+    return absoluteScore;
 }
 
 float FreqBandStream::lastTargetBandScoreValue() const {

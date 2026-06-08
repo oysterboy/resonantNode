@@ -19,7 +19,7 @@ inline FrequencyBandMeasurementPacket buildFrequencyMeasurementPacket(
     evidence.targetHz = present ? freqBandStream.targetFrequencyHz() : 0;
     evidence.observedAtMs = audioSamplePacket.timeMs;
     evidence.ageSamples = freqBandStream.lastPacketAgeSamples();
-    evidence.targetBandScoreValue = freqBandStream.lastTargetBandScoreValue();
+    evidence.targetBandScoreValue = freqBandStream.lastTargetBandPowerValue();
     evidence.confidence = 0.0f;
     evidence.targetBandPowerValue = freqBandStream.lastTargetBandPowerValue();
     evidence.neighborBandPowerValue = freqBandStream.lastNeighborBandPowerValue();

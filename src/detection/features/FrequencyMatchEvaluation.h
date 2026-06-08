@@ -16,8 +16,8 @@ This is occurrence/profile tuning support, not PatternRules.
 namespace FrequencyMatchEvaluation {
 
 struct Values {
-    float attackScoreMin = 10000.0f;
-    float releaseScoreMin = 8000.0f;
+    float attackScoreMin = 5000.0f;
+    float releaseScoreMin = 4000.0f;
     float attackContrastMin = 50.0f;
     float releaseContrastMin = 50.0f;
 };
@@ -115,42 +115,34 @@ inline const char* reasonName(Reason reason) {
 inline FrequencyMatchGateResult evaluate(const detection::FrequencyBandMeasurementPacket& evidence, const Values& values) {
     FrequencyMatchGateResult out;
     out.evidenceOk = evidence.present;
-    out.score = evidence.targetBandScoreValue;
+    out.score = evidence.targetBandPowerValue;
     out.contrast = evidence.targetBandContrastValue;
     out.attackScoreMin = values.attackScoreMin;
     out.releaseScoreMin = values.releaseScoreMin;
     out.attackContrastMin = values.attackContrastMin;
     out.releaseContrastMin = values.releaseContrastMin;
 
-    out.attackScoreOk = evidence.targetBandScoreValue >= values.attackScoreMin;
+    out.attackScoreOk = evidence.targetBandPowerValue >= values.attackScoreMin;
     out.attackContrastOk = evidence.targetBandContrastValue >= values.attackContrastMin;
-    out.attackOk = out.evidenceOk && out.attackScoreOk && out.attackContrastOk;
+    out.attackOk = out.evidenceOk && out.attackScoreOk;
 
-    out.releaseScoreOk = evidence.targetBandScoreValue >= values.releaseScoreMin;
+    out.releaseScoreOk = evidence.targetBandPowerValue >= values.releaseScoreMin;
     out.releaseContrastOk = evidence.targetBandContrastValue >= values.releaseContrastMin;
-    out.releaseOk = out.evidenceOk && out.releaseScoreOk && out.releaseContrastOk;
+    out.releaseOk = out.evidenceOk && out.releaseScoreOk;
 
     if (!out.evidenceOk) {
         out.attackReason = Reason::NoEvidence;
         out.releaseReason = Reason::NoEvidence;
-    } else if (!out.attackScoreOk && !out.attackContrastOk) {
-        out.attackReason = Reason::AttackScoreAndContrastTooLow;
     } else if (!out.attackScoreOk) {
         out.attackReason = Reason::AttackScoreTooLow;
-    } else if (!out.attackContrastOk) {
-        out.attackReason = Reason::AttackContrastTooLow;
     } else {
         out.attackReason = Reason::None;
     }
 
     if (!out.evidenceOk) {
         out.releaseReason = Reason::NoEvidence;
-    } else if (!out.releaseScoreOk && !out.releaseContrastOk) {
-        out.releaseReason = Reason::ReleaseScoreAndContrastTooLow;
     } else if (!out.releaseScoreOk) {
         out.releaseReason = Reason::ReleaseScoreTooLow;
-    } else if (!out.releaseContrastOk) {
-        out.releaseReason = Reason::ReleaseContrastTooLow;
     } else {
         out.releaseReason = Reason::None;
     }

@@ -29,14 +29,12 @@ FrequencyReleaseFailCause frequencyReleaseFailCauseFromReason(FrequencyMatchEval
             return FrequencyReleaseFailCause::NoEvidence;
         case FrequencyMatchEvaluation::Reason::ReleaseScoreTooLow:
             return FrequencyReleaseFailCause::ScoreLow;
-        case FrequencyMatchEvaluation::Reason::ReleaseContrastTooLow:
-            return FrequencyReleaseFailCause::ContrastLow;
-        case FrequencyMatchEvaluation::Reason::ReleaseScoreAndContrastTooLow:
-            return FrequencyReleaseFailCause::ScoreAndContrastLow;
         case FrequencyMatchEvaluation::Reason::None:
         case FrequencyMatchEvaluation::Reason::AttackScoreTooLow:
         case FrequencyMatchEvaluation::Reason::AttackContrastTooLow:
         case FrequencyMatchEvaluation::Reason::AttackScoreAndContrastTooLow:
+        case FrequencyMatchEvaluation::Reason::ReleaseContrastTooLow:
+        case FrequencyMatchEvaluation::Reason::ReleaseScoreAndContrastTooLow:
         default:
             return FrequencyReleaseFailCause::None;
     }
@@ -462,8 +460,8 @@ void FrequencyMatchDetector::update(const detection::FrequencyBandMeasurementPac
                 candidateDurationMs = candidateLastMatchedMs >= candidateOpenMs
                     ? candidateLastMatchedMs - candidateOpenMs
                     : 0UL;
-                if (evidence.targetBandContrastValue > candidatePeakContrast
-                    || (evidence.targetBandContrastValue == candidatePeakContrast && evidence.targetBandScoreValue > candidatePeakScore)) {
+                if (evidence.targetBandScoreValue > candidatePeakScore
+                    || (evidence.targetBandScoreValue == candidatePeakScore && evidence.targetBandContrastValue > candidatePeakContrast)) {
                     candidatePeakMs = now;
                     candidatePeakSample = currentSample;
                     candidatePeakScore = evidence.targetBandScoreValue;
@@ -497,8 +495,8 @@ void FrequencyMatchDetector::update(const detection::FrequencyBandMeasurementPac
 
     if (_diagnosticsEnabled) {
         const bool better = !bestEvidence.present
-            || evidence.targetBandContrastValue > bestContrast
-            || (evidence.targetBandContrastValue == bestContrast && evidence.targetBandScoreValue > bestScore);
+            || evidence.targetBandScoreValue > bestScore
+            || (evidence.targetBandScoreValue == bestScore && evidence.targetBandContrastValue > bestContrast);
         if (evidence.present && better) {
             bestEvidence = evidence;
             bestObservedAtMs = now;
@@ -517,17 +515,13 @@ void FrequencyMatchDetector::update(const detection::FrequencyBandMeasurementPac
         releaseOk = bestEval.releaseOk;
         evidenceOk = bestEvidence.present ? bestEvidence.present : evidence.present;
 
-    const char* suppress = "none";
+        const char* suppress = "none";
         if (!evidenceOk) {
             suppress = "live_window_not_ready";
         } else if (!bestEval.evidenceOk) {
             suppress = "no_frequency_evidence";
-        } else if (!bestEval.attackScoreOk && !bestEval.attackContrastOk) {
-            suppress = "freq_score_and_contrast_too_low";
         } else if (!bestEval.attackScoreOk) {
             suppress = "freq_score_too_low";
-        } else if (!bestEval.attackContrastOk) {
-            suppress = "freq_contrast_too_low";
         }
         strncpy(gateReason, suppress, sizeof(gateReason) - 1);
         gateReason[sizeof(gateReason) - 1] = '\0';
@@ -559,12 +553,12 @@ void FrequencyMatchDetector::update(const detection::FrequencyBandMeasurementPac
             ++diagnosticsValidCount;
             if (attackScoreOk) {
                 ++diagnosticsScoreOkCount;
-            } else if (attackContrastOk) {
+            } else {
                 ++diagnosticsScoreTooLowCount;
             }
             if (attackContrastOk) {
                 ++diagnosticsContrastOkCount;
-            } else if (attackScoreOk) {
+            } else {
                 ++diagnosticsContrastTooLowCount;
             }
             if (attackScoreOk && attackContrastOk) {
@@ -621,7 +615,7 @@ void FrequencyMatchDetector::update(const detection::FrequencyBandMeasurementPac
             } else {
                 ++diagnosticsReleaseContrastTooLowCount;
             }
-            if (releaseOk) {
+            if (releaseScoreOk && releaseContrastOk) {
                 ++diagnosticsReleaseBothOkCount;
             } else if (!releaseScoreOk && !releaseContrastOk) {
                 ++diagnosticsReleaseScoreAndContrastTooLowCount;

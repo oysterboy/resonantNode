@@ -1552,6 +1552,39 @@ void AnalyzerApp::printSequenceTrialResult(const AnalyzerReport& report) const {
                 timingBacklog
             )
             : "none";
+        const char* emitStatus = [&]() -> const char* {
+            if (!diagnostics.emitSeen) {
+                return "missing";
+            }
+            if (!(diagnostics.emitStartSeen && diagnostics.emitDoneSeen)) {
+                return "partial";
+            }
+
+            switch (report.classification.result) {
+                case AnalyzerResult::Expected:
+                    return "ok";
+                case AnalyzerResult::Late:
+                    return "late";
+                case AnalyzerResult::Unexpected:
+                    return "unexpected";
+                case AnalyzerResult::Rejected:
+                    return "rejected";
+                case AnalyzerResult::Ambiguous:
+                    return "ambiguous";
+                case AnalyzerResult::TooDense:
+                    return "too_dense";
+                case AnalyzerResult::InvalidAudio:
+                    return "invalid_audio";
+                case AnalyzerResult::Duplicate:
+                    return "duplicate";
+                case AnalyzerResult::Miss:
+                    return "missing";
+                case AnalyzerResult::Early:
+                case AnalyzerResult::Unknown:
+                default:
+                    return "ok";
+            }
+        }();
 
         Serial.print("SEQ_STREAK_FAULT trial=");
         Serial.print(report.context.trial);
@@ -1601,69 +1634,57 @@ void AnalyzerApp::printSequenceTrialResult(const AnalyzerReport& report) const {
         Serial.print(report.frequency.matchedUpdateCount);
         Serial.print(" latest_feature_age_ms=");
         Serial.print(report.frequency.latestValueAgeMs);
-        Serial.print(" emit_seen=");
-        Serial.print(diagnostics.emitSeen ? 1 : 0);
-        Serial.print(" emit_start_seen=");
-        Serial.print(diagnostics.emitStartSeen ? 1 : 0);
-        Serial.print(" emit_done_seen=");
-        Serial.print(diagnostics.emitDoneSeen ? 1 : 0);
-        Serial.print(" emit_drive_seen=");
-        Serial.print(diagnostics.emitDriveSeen ? 1 : 0);
-        Serial.print(" emit_start_dt_ms=");
-        Serial.print(diagnostics.emitStartDtMs);
-        Serial.print(" emit_done_dt_ms=");
-        Serial.print(diagnostics.emitDoneDtMs);
-        Serial.print(" emit_duration_ms=");
-        Serial.print(diagnostics.emitDurationMs);
-        Serial.print(" emit_trial_id=");
-        Serial.print(diagnostics.emitTrialId);
+        Serial.print(" emit_status=");
+        Serial.print(emitStatus);
         const bool candidatePresent = report.frequency.lifecycleCandidateId > 0;
-        Serial.print(" candidate_id=");
-        Serial.print(candidatePresent ? report.frequency.lifecycleCandidateId : 0UL);
-        Serial.print(" candidate_open_ms=");
-        Serial.print(candidatePresent ? report.frequency.fmOpenMs : 0UL);
-        Serial.print(" candidate_last_match_ms=");
-        Serial.print(candidatePresent ? report.frequency.candidateLastMatchMs : 0UL);
-        Serial.print(" candidate_release_ms=");
-        Serial.print(candidatePresent ? report.frequency.fmReleaseMs : 0UL);
-        Serial.print(" candidate_close_ms=");
-        Serial.print(candidatePresent ? report.frequency.fmReleaseMs : 0UL);
-        Serial.print(" candidate_duration_ms=");
-        Serial.print(candidatePresent ? report.frequency.fmDurationMs : 0UL);
-        Serial.print(" duration_used_for_decision_ms=");
-        Serial.print(candidatePresent ? report.frequency.fmDurationUsedMs : 0UL);
-        Serial.print(" min_duration_used_ms=");
-        Serial.print(candidatePresent ? report.frequency.fmMinDurationUsedMs : 0UL);
-        Serial.print(" duration_ok=");
-        Serial.print(candidatePresent && report.frequency.fmDurationOk ? 1 : 0);
-        Serial.print(" release_ok=");
-        Serial.print(candidatePresent && report.frequency.fmValidRelease ? 1 : 0);
-        Serial.print(" emit_allowed=");
-        Serial.print(candidatePresent && report.frequency.fmEmitAllowed ? 1 : 0);
-        Serial.print(" candidate_reject_reason=");
-        Serial.print(candidatePresent && report.frequency.sourceLastRejectReason != nullptr ? report.frequency.sourceLastRejectReason : "");
-        Serial.print(" candidate_no_emit_reason=");
-        Serial.print(candidatePresent && report.frequency.selectedRejectReason != nullptr ? report.frequency.selectedRejectReason : "");
-        Serial.print(" diag_duration_inconsistent=");
-        Serial.print(candidatePresent && report.frequency.fmDurationInconsistent ? 1 : 0);
-        Serial.print(" diag_printed_duration_inconsistent=");
-        Serial.print(candidatePresent && report.frequency.fmPrintedDurationInconsistent ? 1 : 0);
-        Serial.print(" det_active_start=");
-        Serial.print(report.frequency.fmOpenMs);
-        Serial.print(" accepted_candidate_id=");
-        Serial.print(report.frequency.acceptedCandidateId);
-        Serial.print(" selected_reject_candidate_id=");
-        Serial.print(report.frequency.selectedRejectCandidateId);
-        Serial.print(" last_candidate_id=");
-        Serial.print(report.frequency.lastCandidateId);
-        Serial.print(" lifecycle_candidate_id=");
-        Serial.print(report.frequency.lifecycleCandidateId);
-        Serial.print(" opened_this_trial=");
-        Serial.print(report.frequency.fmOpened ? 1 : 0);
-        Serial.print(" closed_this_trial=");
-        Serial.print(report.frequency.fmReleased ? 1 : 0);
-        Serial.print(" emitted_this_trial=");
-        Serial.print(report.frequency.fmEmitted ? 1 : 0);
+        if (candidatePresent) {
+            Serial.print(" candidate_id=");
+            Serial.print(report.frequency.lifecycleCandidateId);
+            Serial.print(" candidate_open_ms=");
+            Serial.print(report.frequency.fmOpenMs);
+            Serial.print(" candidate_last_match_ms=");
+            Serial.print(report.frequency.candidateLastMatchMs);
+            Serial.print(" candidate_release_ms=");
+            Serial.print(report.frequency.fmReleaseMs);
+            Serial.print(" candidate_close_ms=");
+            Serial.print(report.frequency.fmReleaseMs);
+            Serial.print(" candidate_duration_ms=");
+            Serial.print(report.frequency.fmDurationMs);
+            Serial.print(" duration_used_for_decision_ms=");
+            Serial.print(report.frequency.fmDurationUsedMs);
+            Serial.print(" min_duration_used_ms=");
+            Serial.print(report.frequency.fmMinDurationUsedMs);
+            Serial.print(" duration_ok=");
+            Serial.print(report.frequency.fmDurationOk ? 1 : 0);
+            Serial.print(" release_ok=");
+            Serial.print(report.frequency.fmValidRelease ? 1 : 0);
+            Serial.print(" emit_allowed=");
+            Serial.print(report.frequency.fmEmitAllowed ? 1 : 0);
+            Serial.print(" candidate_reject_reason=");
+            Serial.print(report.frequency.sourceLastRejectReason != nullptr ? report.frequency.sourceLastRejectReason : "");
+            Serial.print(" candidate_no_emit_reason=");
+            Serial.print(report.frequency.selectedRejectReason != nullptr ? report.frequency.selectedRejectReason : "");
+            Serial.print(" diag_duration_inconsistent=");
+            Serial.print(report.frequency.fmDurationInconsistent ? 1 : 0);
+            Serial.print(" diag_printed_duration_inconsistent=");
+            Serial.print(report.frequency.fmPrintedDurationInconsistent ? 1 : 0);
+            Serial.print(" det_active_start=");
+            Serial.print(report.frequency.fmOpenMs);
+            Serial.print(" accepted_candidate_id=");
+            Serial.print(report.frequency.acceptedCandidateId);
+            Serial.print(" selected_reject_candidate_id=");
+            Serial.print(report.frequency.selectedRejectCandidateId);
+            Serial.print(" last_candidate_id=");
+            Serial.print(report.frequency.lastCandidateId);
+            Serial.print(" lifecycle_candidate_id=");
+            Serial.print(report.frequency.lifecycleCandidateId);
+            Serial.print(" opened_this_trial=");
+            Serial.print(report.frequency.fmOpened ? 1 : 0);
+            Serial.print(" closed_this_trial=");
+            Serial.print(report.frequency.fmReleased ? 1 : 0);
+            Serial.print(" emitted_this_trial=");
+            Serial.print(report.frequency.fmEmitted ? 1 : 0);
+        }
         Serial.print(" timing_lag_max_ms=");
         Serial.print(_sequenceTest.maxProcessingLagMs);
         Serial.print(" fault_class=");

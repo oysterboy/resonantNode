@@ -99,7 +99,7 @@ inline DetectionProfile makeTonalPulseProfile() {
     profile.frequencyMatch.releaseScoreMin = 8000.0f;
     profile.frequencyMatch.attackContrastMin = 50.0f;
     profile.frequencyMatch.releaseContrastMin = 50.0f;
-    profile.frequencyMatch.minDurationMs = 40;
+    profile.frequencyMatch.minDurationMs = 32;
     profile.frequencyMatch.releaseDebounceMs = 30;
     profile.frequencyMatch.cooldownAfterReleaseMs = 0;
   

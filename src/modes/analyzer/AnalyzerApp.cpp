@@ -1661,9 +1661,18 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
         report.source.frequencyMatch.fmOpened = runtimeDiag != nullptr ? runtimeDiag->frequencyOpened : false;
         report.source.frequencyMatch.fmReleased = runtimeDiag != nullptr ? runtimeDiag->frequencyReleased : false;
         report.source.frequencyMatch.fmEmitted = runtimeDiag != nullptr ? runtimeDiag->frequencyEmitted : false;
-        report.source.frequencyMatch.fmDurationOk = runtimeDiag != nullptr ? runtimeDiag->frequencyValidRelease : false;
+        report.source.frequencyMatch.fmDurationOk = runtimeDiag != nullptr ? runtimeDiag->frequencyDurationOk : false;
         report.source.frequencyMatch.fmValidRelease = runtimeDiag != nullptr ? runtimeDiag->frequencyValidRelease : false;
         report.source.frequencyMatch.fmEmitAllowed = runtimeDiag != nullptr ? runtimeDiag->frequencyEmitAllowed : false;
+        report.source.frequencyMatch.acceptedCandidateId = runtimeDiag != nullptr ? runtimeDiag->frequencyAcceptedCandidateId : 0UL;
+        report.source.frequencyMatch.selectedRejectCandidateId = runtimeDiag != nullptr ? runtimeDiag->frequencySelectedRejectCandidateId : 0UL;
+        report.source.frequencyMatch.lastCandidateId = runtimeDiag != nullptr ? runtimeDiag->frequencyLastCandidateId : 0UL;
+        report.source.frequencyMatch.lifecycleCandidateId = runtimeDiag != nullptr ? runtimeDiag->frequencyLifecycleCandidateId : 0UL;
+        report.source.frequencyMatch.fmDurationUsedMs = runtimeDiag != nullptr ? runtimeDiag->frequencyDurationUsedMs : 0UL;
+        report.source.frequencyMatch.fmDurationPrintedMs = runtimeDiag != nullptr ? runtimeDiag->frequencyDurationPrintedMs : 0UL;
+        report.source.frequencyMatch.fmMinDurationUsedMs = runtimeDiag != nullptr ? runtimeDiag->frequencyMinDurationUsedMs : 0UL;
+        report.source.frequencyMatch.fmMinDurationReportedMs = runtimeDiag != nullptr ? runtimeDiag->frequencyMinDurationReportedMs : 0UL;
+        report.source.frequencyMatch.fmDurationInconsistent = runtimeDiag != nullptr ? runtimeDiag->frequencyDurationInconsistent : false;
         report.source.frequencyMatch.fmCloseCause = runtimeDiag != nullptr && runtimeDiag->sourceSummary.closeCause != nullptr
             ? runtimeDiag->sourceSummary.closeCause
             : "none";

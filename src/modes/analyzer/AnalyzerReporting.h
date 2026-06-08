@@ -486,6 +486,15 @@ struct AnalyzerFrequencyDiagnostic {
     bool fmDurationOk = false;
     bool fmValidRelease = false;
     bool fmEmitAllowed = false;
+    unsigned long acceptedCandidateId = 0;
+    unsigned long selectedRejectCandidateId = 0;
+    unsigned long lastCandidateId = 0;
+    unsigned long lifecycleCandidateId = 0;
+    unsigned long fmDurationUsedMs = 0;
+    unsigned long fmDurationPrintedMs = 0;
+    unsigned long fmMinDurationUsedMs = 0;
+    unsigned long fmMinDurationReportedMs = 0;
+    bool fmDurationInconsistent = false;
     const char* fmCloseCause = "none";
     unsigned long fmOpenMs = 0;
     unsigned long fmPeakMs = 0;

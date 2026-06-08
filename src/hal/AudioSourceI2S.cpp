@@ -1,5 +1,6 @@
 #include "AudioSourceI2S.h"
 #include <I2S.h>
+#include <math.h>
 #include <string.h>
 #include <new>
 
@@ -19,6 +20,10 @@ uint32_t sampleOffsetUs(uint32_t sampleOffset, uint32_t sampleRateHz) {
     }
 
     return static_cast<uint32_t>((static_cast<uint64_t>(sampleOffset) * 1000000ULL) / static_cast<uint64_t>(sampleRateHz));
+}
+
+const char* slotName(size_t slotIndex) {
+    return slotIndex == 0 ? "slot0" : "slot1";
 }
 }
 
@@ -156,6 +161,10 @@ const AudioSourceStats& AudioSourceI2S::stats() const {
     return _stats;
 }
 
+const AudioSlotDiagnostics& AudioSourceI2S::slotDiagnostics() const {
+    return _slotDiagnostics;
+}
+
 void AudioSourceI2S::resetStats() {
     _blockCursor = 0;
     _blockCount = 0;
@@ -165,6 +174,7 @@ void AudioSourceI2S::resetStats() {
     _droppedSamples = 0;
     _maxBufferedSamples = 0;
     _stats = {};
+    _slotDiagnostics = {};
 }
 
 void AudioSourceI2S::recordReadAttempt(int requestedBytes, int bytesRead, bool readError) {
@@ -243,6 +253,14 @@ bool AudioSourceI2S::refillBlock() {
     const uint32_t firstReturnedSampleOffsetUs = sampleOffsetUs(firstReturnedSampleAgeSamples, static_cast<uint32_t>(_sampleRate));
     const size_t sampleBytes = static_cast<size_t>(bytesPerSample);
     const size_t samplesToProcess = fullSamplesRead;
+    double slotSumSquares[2] = {0.0, 0.0};
+    unsigned long slotCount[2] = {0, 0};
+    int slotMin[2] = {0, 0};
+    int slotMax[2] = {0, 0};
+    bool slotHasValue[2] = {false, false};
+    int slotLastValue[2] = {0, 0};
+    unsigned long slotCurrentRun[2] = {0, 0};
+    unsigned long slotRepeatedRun[2] = {0, 0};
     _blockCount = 0;
     _blockCursor = 0;
     _blockStartSampleIndex = _stats.totalSamplesRead;
@@ -268,6 +286,35 @@ bool AudioSourceI2S::refillBlock() {
         }
 
         const int sample = normalizeToAdcScale(rawSample);
+        const size_t slotIndex = i % 2U;
+        const size_t diagSlotIndex = slotIndex < 2U ? slotIndex : 1U;
+        slotSumSquares[diagSlotIndex] += static_cast<double>(sample) * static_cast<double>(sample);
+        ++slotCount[diagSlotIndex];
+        if (!slotHasValue[diagSlotIndex]) {
+            slotHasValue[diagSlotIndex] = true;
+            slotMin[diagSlotIndex] = sample;
+            slotMax[diagSlotIndex] = sample;
+            slotLastValue[diagSlotIndex] = sample;
+            slotCurrentRun[diagSlotIndex] = 1;
+            slotRepeatedRun[diagSlotIndex] = 1;
+        } else {
+            if (sample < slotMin[diagSlotIndex]) {
+                slotMin[diagSlotIndex] = sample;
+            }
+            if (sample > slotMax[diagSlotIndex]) {
+                slotMax[diagSlotIndex] = sample;
+            }
+            if (sample == slotLastValue[diagSlotIndex]) {
+                ++slotCurrentRun[diagSlotIndex];
+            } else {
+                slotCurrentRun[diagSlotIndex] = 1;
+                slotLastValue[diagSlotIndex] = sample;
+            }
+            if (slotCurrentRun[diagSlotIndex] > slotRepeatedRun[diagSlotIndex]) {
+                slotRepeatedRun[diagSlotIndex] = slotCurrentRun[diagSlotIndex];
+            }
+            slotLastValue[diagSlotIndex] = sample;
+        }
         if (i < kRefillBatchSize) {
             _blockSamples[i] = sample;
             _blockCount++;
@@ -280,5 +327,30 @@ bool AudioSourceI2S::refillBlock() {
         }
     }
     _stats.totalSamplesRead += static_cast<uint64_t>(fullSamplesRead);
+    _slotDiagnostics.present = slotCount[0] > 0 || slotCount[1] > 0;
+    for (size_t slot = 0; slot < 2; ++slot) {
+        _slotDiagnostics.slotCount[slot] = slotCount[slot];
+        _slotDiagnostics.slotMin[slot] = slotHasValue[slot] ? slotMin[slot] : 0;
+        _slotDiagnostics.slotMax[slot] = slotHasValue[slot] ? slotMax[slot] : 0;
+        _slotDiagnostics.slotSumSquares[slot] = slotSumSquares[slot];
+        _slotDiagnostics.slotRepeatedRun[slot] = slotRepeatedRun[slot];
+    }
+    if (!_slotDiagnostics.present) {
+        _slotDiagnostics.chosenSlot = "none";
+        _slotDiagnostics.activeSlot = "none";
+    } else {
+        const double rms0 = slotCount[0] > 0 ? sqrt(slotSumSquares[0] / static_cast<double>(slotCount[0])) : 0.0;
+        const double rms1 = slotCount[1] > 0 ? sqrt(slotSumSquares[1] / static_cast<double>(slotCount[1])) : 0.0;
+        if (rms0 == 0.0 && rms1 == 0.0) {
+            _slotDiagnostics.chosenSlot = "none";
+            _slotDiagnostics.activeSlot = "none";
+        } else if (rms0 >= rms1) {
+            _slotDiagnostics.chosenSlot = "slot0";
+            _slotDiagnostics.activeSlot = (rms1 > 0.0 && rms0 <= rms1 * 1.1) ? "both" : "slot0";
+        } else {
+            _slotDiagnostics.chosenSlot = "slot1";
+            _slotDiagnostics.activeSlot = (rms0 > 0.0 && rms1 <= rms0 * 1.1) ? "both" : "slot1";
+        }
+    }
     return _blockCount > 0;
 }

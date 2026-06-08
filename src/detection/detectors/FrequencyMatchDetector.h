@@ -69,8 +69,17 @@ public:
     float candidatePeakScore = 0.0f;
     float candidatePeakContrast = 0.0f;
     unsigned long candidatePeakSampleCount = 0;
+    unsigned long candidateLifecycleId = 0;
+    unsigned long currentCandidateId = 0;
+    unsigned long acceptedCandidateId = 0;
+    unsigned long selectedRejectCandidateId = 0;
+    unsigned long lastCandidateId = 0;
     unsigned long candidateMinDurationMs = 0;
     unsigned long candidateMaxDurationMs = 0;
+    unsigned long candidateDecisionDurationMs = 0;
+    unsigned long candidateDecisionMinDurationMs = 0;
+    bool candidateDecisionDurationOk = false;
+    bool candidateDurationInconsistent = false;
     unsigned long diagCurrentMatchStreakFrames = 0;
     unsigned long diagCurrentMatchStreakStartMs = 0;
     unsigned long diagLongestMatchStreakFrames = 0;

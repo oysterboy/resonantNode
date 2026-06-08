@@ -6,6 +6,17 @@
 
 #include "AudioSource.h"
 
+struct AudioSlotDiagnostics {
+    bool present = false;
+    unsigned long slotCount[2] = {0, 0};
+    int slotMin[2] = {0, 0};
+    int slotMax[2] = {0, 0};
+    double slotSumSquares[2] = {0.0, 0.0};
+    unsigned long slotRepeatedRun[2] = {0, 0};
+    const char* chosenSlot = "none";
+    const char* activeSlot = "none";
+};
+
 /*
 AudioSourceI2S
 
@@ -27,6 +38,7 @@ public:
     unsigned long bufferedSamplesMax() const override;
     uint32_t sampleRateHz() const override;
     const AudioSourceStats& stats() const override;
+    const AudioSlotDiagnostics& slotDiagnostics() const;
     void resetStats() override;
     uint32_t samplePeriodUs() const;
 
@@ -51,4 +63,5 @@ private:
     size_t _maxBufferedSamples = 0;
     uint32_t _samplePeriodUs = 0;
     AudioSourceStats _stats;
+    AudioSlotDiagnostics _slotDiagnostics;
 };

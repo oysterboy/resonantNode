@@ -248,7 +248,13 @@ void DetectionRuntime::captureDiagnostics() {
         _diagnostics.sourceLastCandidate.sampleCount = detector.candidatePeakSampleCount;
         _diagnostics.sourceLastCandidate.peakPrimary = detector.candidatePeakScore;
         _diagnostics.sourceLastCandidate.peakSecondary = detector.candidatePeakContrast;
-        _diagnostics.sourceLastCandidate.reason = detector.noEmitReason;
+        _diagnostics.sourceLastCandidate.reason = detector.candidateEmitted
+            ? "none"
+            : (detector.candidateClosed
+                ? (detector.noEmitReason[0] != '\0' ? detector.noEmitReason : "unknown")
+                : (detector.candidateActive
+                    ? "open"
+                    : (detector.gateReason[0] != '\0' ? detector.gateReason : "unknown")));
         _diagnostics.sourceLastCandidate.gateReason = detector.gateReason;
         _diagnostics.sourceLastCandidate.scope = "unknown";
         _diagnostics.frequencyRejectReason = detector.candidateEmitted
@@ -270,6 +276,16 @@ void DetectionRuntime::captureDiagnostics() {
         _diagnostics.frequencyEmitted = detector.candidateEmitted;
         _diagnostics.frequencyValidRelease = detector.validRelease;
         _diagnostics.frequencyEmitAllowed = detector.emitAllowed;
+        _diagnostics.frequencyAcceptedCandidateId = detector.acceptedCandidateId;
+        _diagnostics.frequencySelectedRejectCandidateId = detector.selectedRejectCandidateId;
+        _diagnostics.frequencyLastCandidateId = detector.lastCandidateId;
+        _diagnostics.frequencyLifecycleCandidateId = detector.candidateLifecycleId;
+        _diagnostics.frequencyDurationUsedMs = detector.candidateDecisionDurationMs;
+        _diagnostics.frequencyDurationPrintedMs = detector.candidateDurationMs;
+        _diagnostics.frequencyMinDurationUsedMs = detector.candidateDecisionMinDurationMs;
+        _diagnostics.frequencyMinDurationReportedMs = detector.candidateMinDurationMs;
+        _diagnostics.frequencyDurationOk = detector.candidateDecisionDurationOk;
+        _diagnostics.frequencyDurationInconsistent = detector.candidateDurationInconsistent;
         _diagnostics.frequencyOpenMs = detector.candidateOpenMs;
         _diagnostics.frequencyPeakMs = detector.candidatePeakMs;
         _diagnostics.frequencyReleaseMs = detector.candidateCloseMs;

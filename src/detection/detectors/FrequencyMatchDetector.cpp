@@ -80,6 +80,11 @@ void FrequencyMatchDetector::resetState() {
     candidatePeakScore = 0.0f;
     candidatePeakContrast = 0.0f;
     candidatePeakSampleCount = 0;
+    candidateLifecycleId = 0;
+    currentCandidateId = 0;
+    acceptedCandidateId = 0;
+    selectedRejectCandidateId = 0;
+    lastCandidateId = 0;
     candidateMinDurationMs = 0;
     candidateMaxDurationMs = 0;
     diagCurrentMatchStreakFrames = 0;
@@ -154,6 +159,15 @@ void FrequencyMatchDetector::resetRejectSummary() {
     bestScore = 0.0f;
     bestContrast = 0.0f;
     bestPeakSampleCount = 0;
+    candidateLifecycleId = 0;
+    currentCandidateId = 0;
+    acceptedCandidateId = 0;
+    selectedRejectCandidateId = 0;
+    lastCandidateId = 0;
+    candidateDecisionDurationMs = 0;
+    candidateDecisionMinDurationMs = 0;
+    candidateDecisionDurationOk = false;
+    candidateDurationInconsistent = false;
     lastReleaseFailCause = FrequencyReleaseFailCause::None;
     candidateCloseCause = FrequencyReleaseFailCause::None;
 }
@@ -303,7 +317,7 @@ void FrequencyMatchDetector::update(const detection::FrequencyBandMeasurementPac
         }
     };
 
-    const auto closeCandidate = [&](bool accepted) {
+    const auto closeCandidate = [&](unsigned long minDurationMs) {
         candidateActive = false;
         candidateClosed = true;
         candidateCloseMs = now;
@@ -311,6 +325,8 @@ void FrequencyMatchDetector::update(const detection::FrequencyBandMeasurementPac
         candidateDurationMs = candidateCloseMs >= candidateOpenMs
             ? candidateCloseMs - candidateOpenMs
             : 0UL;
+        const bool durationOk = candidateDurationMs >= minDurationMs;
+        const bool accepted = durationOk;
         candidateState[0] = '\0';
         candidateEmitted = accepted;
         validRelease = accepted;
@@ -321,6 +337,17 @@ void FrequencyMatchDetector::update(const detection::FrequencyBandMeasurementPac
         strncpy(noEmitReason, accepted ? "none" : "duration_too_short", sizeof(noEmitReason) - 1);
         noEmitReason[sizeof(noEmitReason) - 1] = '\0';
         candidateCloseCause = lastReleaseFailCause;
+        lastCandidateId = currentCandidateId;
+        if (accepted) {
+            acceptedCandidateId = currentCandidateId;
+        } else {
+            selectedRejectCandidateId = currentCandidateId;
+        }
+        currentCandidateId = 0;
+        candidateDecisionDurationMs = candidateDurationMs;
+        candidateDecisionMinDurationMs = minDurationMs;
+        candidateDecisionDurationOk = durationOk;
+        candidateDurationInconsistent = accepted != durationOk;
         frequencyCandidate.valid = accepted;
         frequencyCandidate.releaseMs = candidateCloseMs;
         frequencyCandidate.releaseSample = candidateCloseSample;
@@ -357,6 +384,8 @@ void FrequencyMatchDetector::update(const detection::FrequencyBandMeasurementPac
                     candidateActive = true;
                     candidateClosed = false;
                     candidateEmitted = false;
+                    currentCandidateId = ++candidateLifecycleId;
+                    lastCandidateId = currentCandidateId;
                     candidateOpenMs = now;
                     candidateOpenSample = currentSample;
                     candidatePeakMs = now;
@@ -418,7 +447,7 @@ void FrequencyMatchDetector::update(const detection::FrequencyBandMeasurementPac
             } else {
                 lastReleaseFailCause = frequencyReleaseFailCauseFromReason(gates.releaseReason);
                 if (candidateLastMatchedMs > 0 && timing::elapsedSince(now, candidateLastMatchedMs, releaseDebounceMs)) {
-                    closeCandidate(candidateDurationMs >= minDurationMs);
+                    closeCandidate(minDurationMs);
                 }
             }
         }
@@ -426,7 +455,7 @@ void FrequencyMatchDetector::update(const detection::FrequencyBandMeasurementPac
         updateDiagStreak(false);
         if (candidateActive && candidateLastMatchedMs > 0 && timing::elapsedSince(now, candidateLastMatchedMs, releaseDebounceMs)) {
             lastReleaseFailCause = FrequencyReleaseFailCause::NoEvidence;
-            closeCandidate(candidateDurationMs >= minDurationMs);
+            closeCandidate(minDurationMs);
         }
     }
 

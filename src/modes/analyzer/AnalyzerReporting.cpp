@@ -1,6 +1,7 @@
 #include "AnalyzerApp.h"
 
 #include <Arduino.h>
+#include <math.h>
 #include <string.h>
 
 #include "../../TimingUtils.h"
@@ -188,6 +189,15 @@ constexpr AnalyzerFieldDescriptor kSourceSelectedAcceptDurationMsField{"source.f
 constexpr AnalyzerFieldDescriptor kSourceSelectedRejectPeakMsField{"source.freq", "selected_reject_peak_ms"};
 constexpr AnalyzerFieldDescriptor kSourceSelectedRejectDurationMsField{"source.freq", "selected_reject_duration_ms"};
 constexpr AnalyzerFieldDescriptor kSourceSelectedRejectSampleCountField{"source.freq", "selected_reject_sample_count"};
+constexpr AnalyzerFieldDescriptor kSourceAcceptedCandidateIdField{"source.freq", "accepted_candidate_id"};
+constexpr AnalyzerFieldDescriptor kSourceSelectedRejectCandidateIdField{"source.freq", "selected_reject_candidate_id"};
+constexpr AnalyzerFieldDescriptor kSourceLastCandidateIdField{"source.freq", "last_candidate_id"};
+constexpr AnalyzerFieldDescriptor kSourceLifecycleCandidateIdField{"source.freq", "lifecycle_candidate_id"};
+constexpr AnalyzerFieldDescriptor kSourceDurationUsedForDecisionMsField{"source.freq", "duration_used_for_decision_ms"};
+constexpr AnalyzerFieldDescriptor kSourceDurationPrintedMsField{"source.freq", "duration_printed_ms"};
+constexpr AnalyzerFieldDescriptor kSourceMinDurationUsedMsField{"source.freq", "min_duration_used_ms"};
+constexpr AnalyzerFieldDescriptor kSourceMinDurationReportedMsField{"source.freq", "min_duration_reported_ms"};
+constexpr AnalyzerFieldDescriptor kSourceDurationOkField{"source.freq", "duration_ok"};
 constexpr AnalyzerFieldDescriptor kSourceAnalyzerMissReasonField{"source.freq", "analyzer_miss_reason"};
 constexpr AnalyzerFieldDescriptor kSourceSelectedRejectReasonField{"source.freq", "selected_reject_reason"};
 constexpr AnalyzerFieldDescriptor kSourceSelectedRejectGateReasonField{"source.freq", "selected_reject_gate_reason"};
@@ -205,6 +215,7 @@ constexpr AnalyzerFieldDescriptor kSourceFmEmittedField{"source.freq", "fm_emitt
 constexpr AnalyzerFieldDescriptor kSourceFmValidReleaseField{"source.freq", "fm_valid_release"};
 constexpr AnalyzerFieldDescriptor kSourceFmEmitAllowedField{"source.freq", "fm_emit_allowed"};
 constexpr AnalyzerFieldDescriptor kSourceFmCloseCauseField{"source.freq", "fm_close_cause"};
+constexpr AnalyzerFieldDescriptor kSourceDiagDurationInconsistentField{"source.freq", "diag_duration_inconsistent"};
 constexpr AnalyzerFieldDescriptor kSourceFreqEvidenceClassField{"source.freq", "freq_evidence_class"};
 constexpr AnalyzerFieldDescriptor kSourceFreqHistoryScoreRecordsField{"source.freq", "history_score_records"};
 constexpr AnalyzerFieldDescriptor kSourceFreqHistoryContrastRecordsField{"source.freq", "history_contrast_records"};
@@ -476,6 +487,14 @@ void printSequenceSourceLifecycleDetail(
             ? candidateLastMatchedMs - candidateOpenMs
             : 0UL);
     Serial.print(' ');
+    printField(kSourceAcceptedCandidateIdField, report.frequency.acceptedCandidateId);
+    Serial.print(' ');
+    printField(kSourceSelectedRejectCandidateIdField, report.frequency.selectedRejectCandidateId);
+    Serial.print(' ');
+    printField(kSourceLastCandidateIdField, report.frequency.lastCandidateId);
+    Serial.print(' ');
+    printField(kSourceLifecycleCandidateIdField, report.frequency.lifecycleCandidateId);
+    Serial.print(' ');
     printField(kSourceRefractoryRemainingMsField, refractoryRemainingMs);
     Serial.print(' ');
     printField(kSourceOpenedThisTrialField, source.openedThisTrial);
@@ -524,6 +543,14 @@ void printFrequencyMatchSourceDetail(
         Serial.print(' ');
         printField(kSourceScopeField, frequencyLastCandidate.scope != nullptr ? frequencyLastCandidate.scope : "unknown");
         Serial.print(' ');
+        printField(kSourceAcceptedCandidateIdField, frequencySource.acceptedCandidateId);
+        Serial.print(' ');
+        printField(kSourceSelectedRejectCandidateIdField, frequencySource.selectedRejectCandidateId);
+        Serial.print(' ');
+        printField(kSourceLastCandidateIdField, frequencySource.lastCandidateId);
+        Serial.print(' ');
+        printField(kSourceLifecycleCandidateIdField, frequencySource.lifecycleCandidateId);
+        Serial.print(' ');
         printField(kSourceFmOpenMsField, frequencySource.fmOpenMs);
         Serial.print(' ');
         printField(kSourceFmPeakMsField, frequencySource.fmPeakMs);
@@ -549,6 +576,8 @@ void printFrequencyMatchSourceDetail(
         printField(kSourceFmEmitAllowedField, frequencySource.fmEmitAllowed);
         Serial.print(' ');
         printField(kSourceFmCloseCauseField, frequencySource.fmCloseCause != nullptr ? frequencySource.fmCloseCause : "none");
+        Serial.print(' ');
+        printField(kSourceDiagDurationInconsistentField, frequencySource.fmDurationInconsistent);
         Serial.println();
     }
 
@@ -623,6 +652,17 @@ void printFrequencyMatchSourceDetail(
         printField(AnalyzerFieldDescriptor{"source.freq", "max_gap_ms"}, frequencySource.sourceSummary.maxGapMs);
         Serial.print(' ');
         printField(AnalyzerFieldDescriptor{"source.freq", "fresh_coverage_ratio"}, frequencySource.freshCoverageRatio, 3);
+        Serial.print(' ');
+        printField(kSourceDurationUsedForDecisionMsField, frequencySource.fmDurationUsedMs);
+        Serial.print(' ');
+        printField(kSourceDurationPrintedMsField, frequencySource.fmDurationPrintedMs);
+        Serial.print(' ');
+        printField(kSourceMinDurationUsedMsField, frequencySource.fmMinDurationUsedMs);
+        Serial.print(' ');
+        printField(kSourceMinDurationReportedMsField, frequencySource.fmMinDurationReportedMs);
+        Serial.print(' ');
+        printField(kSourceDurationOkField, frequencySource.fmDurationOk);
+        Serial.print(' ');
         printField(kSourceScoreTooLowFramesField, frequencySourceSummary.scoreTooLowFrames);
         Serial.print(' ');
         printField(kSourceContrastTooLowFramesField, frequencySourceSummary.contrastTooLowFrames);
@@ -710,6 +750,16 @@ void printFrequencyMatchSourceDetail(
     Serial.print(' ');
     printField(AnalyzerFieldDescriptor{"source.freq", "fresh_coverage_ratio"}, report.frequency.freshCoverageRatio, 3);
     Serial.print(' ');
+    printField(kSourceDurationUsedForDecisionMsField, report.frequency.fmDurationUsedMs);
+    Serial.print(' ');
+    printField(kSourceDurationPrintedMsField, report.frequency.fmDurationPrintedMs);
+    Serial.print(' ');
+    printField(kSourceMinDurationUsedMsField, report.frequency.fmMinDurationUsedMs);
+    Serial.print(' ');
+    printField(kSourceMinDurationReportedMsField, report.frequency.fmMinDurationReportedMs);
+    Serial.print(' ');
+    printField(kSourceDurationOkField, report.frequency.fmDurationOk);
+    Serial.print(' ');
     printField(kSourceScoreTooLowFramesField, frequencySourceSummary.scoreTooLowFrames);
     Serial.print(' ');
     printField(kSourceContrastTooLowFramesField, frequencySourceSummary.contrastTooLowFrames);
@@ -759,6 +809,8 @@ void printFrequencyMatchSourceDetail(
     printField(kSourceFreqEvidenceClassField, report.source.frequencyMatch.freqEvidenceClass != nullptr ? report.source.frequencyMatch.freqEvidenceClass : "none");
     Serial.print(' ');
     printField(kSourceFmCloseCauseField, report.frequency.fmCloseCause != nullptr ? report.frequency.fmCloseCause : "none");
+    Serial.print(' ');
+    printField(kSourceDiagDurationInconsistentField, report.frequency.fmDurationInconsistent);
     Serial.print(' ');
     printField(kSourceNearMissField, report.frequency.nearMiss);
     Serial.print(' ');
@@ -1254,15 +1306,26 @@ const char* sequenceFaultClassNameFromMiss(
                                    report.frequency.fmOpened ||
                                    report.frequency.fmReleased ||
                                    report.frequency.fmEmitted;
+    const bool repeatLikeRaw = strcmp(rawHealthClass, "repeated") == 0 ||
+                               strcmp(rawHealthClass, "flatline") == 0 ||
+                               strcmp(rawHealthClass, "dc_stuck") == 0;
 
     if (!audioPresent) {
         return "NO_AUDIO_EVENT";
     }
-    if (strcmp(rawHealthClass, "clipped") == 0 ||
-        strcmp(rawHealthClass, "flatline") == 0 ||
-        strcmp(rawHealthClass, "dc_stuck") == 0 ||
-        strcmp(rawHealthClass, "repeated") == 0 ||
-        strcmp(rawHealthClass, "low_information") == 0) {
+    if (report.frequency.fmDurationInconsistent) {
+        return "DURATION_REJECT_INCONSISTENT";
+    }
+    if (report.frequency.fmOpened && report.frequency.fmReleased && !report.frequency.fmEmitted) {
+        return targetBandStrong ? "TARGET_PRESENT_DURATION_REJECT" : "DETECTOR_LIFECYCLE_REJECT";
+    }
+    if (repeatLikeRaw && targetBandPresent && !report.frequency.fmEmitted) {
+        return "INPUT_REPEATED_TARGET_PRESENT_NO_OCCURRENCE";
+    }
+    if (repeatLikeRaw && !targetBandPresent) {
+        return "INPUT_REPEATED_NO_TARGET";
+    }
+    if (strcmp(rawHealthClass, "clipped") == 0 || strcmp(rawHealthClass, "low_information") == 0) {
         return "INPUT_SAMPLE_BAD";
     }
     if (rawHealthWarningOnly) {
@@ -1498,6 +1561,14 @@ void AnalyzerApp::printSequenceTrialResult(const AnalyzerReport& report) const {
         Serial.print(report.frequency.latestValueAgeMs);
         Serial.print(" det_active_start=");
         Serial.print(report.frequency.fmOpenMs);
+        Serial.print(" accepted_candidate_id=");
+        Serial.print(report.frequency.acceptedCandidateId);
+        Serial.print(" selected_reject_candidate_id=");
+        Serial.print(report.frequency.selectedRejectCandidateId);
+        Serial.print(" last_candidate_id=");
+        Serial.print(report.frequency.lastCandidateId);
+        Serial.print(" lifecycle_candidate_id=");
+        Serial.print(report.frequency.lifecycleCandidateId);
         Serial.print(" opened_this_trial=");
         Serial.print(report.frequency.fmOpened ? 1 : 0);
         Serial.print(" closed_this_trial=");
@@ -1508,6 +1579,35 @@ void AnalyzerApp::printSequenceTrialResult(const AnalyzerReport& report) const {
         Serial.print(_sequenceTest.maxProcessingLagMs);
         Serial.print(" fault_class=");
         Serial.println(faultClass);
+
+        const AudioSlotDiagnostics& slotDiag = _i2sSource.slotDiagnostics();
+        Serial.print("I2S_SLOT_DIAG");
+        Serial.print(" present=");
+        Serial.print(slotDiag.present ? 1 : 0);
+        Serial.print(" slot0_min=");
+        Serial.print(slotDiag.slotCount[0] > 0 ? slotDiag.slotMin[0] : 0);
+        Serial.print(" slot0_max=");
+        Serial.print(slotDiag.slotCount[0] > 0 ? slotDiag.slotMax[0] : 0);
+        Serial.print(" slot0_range=");
+        Serial.print(slotDiag.slotCount[0] > 0 ? static_cast<long>(slotDiag.slotMax[0] - slotDiag.slotMin[0]) : 0L);
+        Serial.print(" slot0_rms=");
+        Serial.print(slotDiag.slotCount[0] > 0 ? sqrt(slotDiag.slotSumSquares[0] / static_cast<double>(slotDiag.slotCount[0])) : 0.0, 1);
+        Serial.print(" slot0_repeated_run=");
+        Serial.print(slotDiag.slotRepeatedRun[0]);
+        Serial.print(" slot1_min=");
+        Serial.print(slotDiag.slotCount[1] > 0 ? slotDiag.slotMin[1] : 0);
+        Serial.print(" slot1_max=");
+        Serial.print(slotDiag.slotCount[1] > 0 ? slotDiag.slotMax[1] : 0);
+        Serial.print(" slot1_range=");
+        Serial.print(slotDiag.slotCount[1] > 0 ? static_cast<long>(slotDiag.slotMax[1] - slotDiag.slotMin[1]) : 0L);
+        Serial.print(" slot1_rms=");
+        Serial.print(slotDiag.slotCount[1] > 0 ? sqrt(slotDiag.slotSumSquares[1] / static_cast<double>(slotDiag.slotCount[1])) : 0.0, 1);
+        Serial.print(" slot1_repeated_run=");
+        Serial.print(slotDiag.slotRepeatedRun[1]);
+        Serial.print(" chosen_slot=");
+        Serial.print(slotDiag.chosenSlot != nullptr ? slotDiag.chosenSlot : "none");
+        Serial.print(" active_slot=");
+        Serial.println(slotDiag.activeSlot != nullptr ? slotDiag.activeSlot : "none");
     }
 
     if (_sequenceTest.outputConfig.mode == SeqOutputMode::Full ||

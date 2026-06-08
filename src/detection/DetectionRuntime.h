@@ -160,6 +160,16 @@ struct DetectionDiagnostics {
     bool frequencyEmitted = false;
     bool frequencyValidRelease = false;
     bool frequencyEmitAllowed = false;
+    unsigned long frequencyAcceptedCandidateId = 0;
+    unsigned long frequencySelectedRejectCandidateId = 0;
+    unsigned long frequencyLastCandidateId = 0;
+    unsigned long frequencyLifecycleCandidateId = 0;
+    unsigned long frequencyDurationUsedMs = 0;
+    unsigned long frequencyDurationPrintedMs = 0;
+    unsigned long frequencyMinDurationUsedMs = 0;
+    unsigned long frequencyMinDurationReportedMs = 0;
+    bool frequencyDurationOk = false;
+    bool frequencyDurationInconsistent = false;
     unsigned long frequencyOpenMs = 0;
     unsigned long frequencyPeakMs = 0;
     unsigned long frequencyReleaseMs = 0;

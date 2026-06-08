@@ -350,6 +350,100 @@ bool AnalyzerApp::shouldPrintHardwareDiagnostics() const {
             _sequenceTest.outputConfig.mode == SeqOutputMode::Explain);
 }
 
+bool AnalyzerApp::shouldPrintSequenceTrial() const {
+    return !_valMode && _sequenceTest.outputConfig.mode != SeqOutputMode::Quiet;
+}
+
+bool AnalyzerApp::shouldPrintSequenceStreak(const AnalyzerReport& report) const {
+    if (_valMode || !_sequenceTest.outputConfig.diagnosticsEnabled) {
+        return false;
+    }
+    if (!sequenceOutputWhenEnabled(_sequenceTest.outputConfig.when, report.classification.result)) {
+        return false;
+    }
+
+    switch (_sequenceTest.outputConfig.mode) {
+        case SeqOutputMode::Streak:
+        case SeqOutputMode::Explain:
+            return true;
+        case SeqOutputMode::Full:
+            return _sequenceTest.outputConfig.verbosity >= 1U;
+        default:
+            return false;
+    }
+}
+
+bool AnalyzerApp::shouldPrintSequenceSource(const AnalyzerReport& report) const {
+    if (_valMode || !_sequenceTest.outputConfig.diagnosticsEnabled) {
+        return false;
+    }
+
+    switch (_sequenceTest.outputConfig.mode) {
+        case SeqOutputMode::Source:
+        case SeqOutputMode::Explain:
+            return sequenceOutputWhenEnabled(_sequenceTest.outputConfig.when, report.classification.result);
+        case SeqOutputMode::Full:
+            return true;
+        default:
+            return false;
+    }
+}
+
+bool AnalyzerApp::shouldPrintSequenceInspect(const AnalyzerReport& report) const {
+    if (_valMode || !_sequenceTest.outputConfig.diagnosticsEnabled) {
+        return false;
+    }
+
+    switch (_sequenceTest.outputConfig.mode) {
+        case SeqOutputMode::Inspect:
+        case SeqOutputMode::Explain:
+            return sequenceOutputWhenEnabled(_sequenceTest.outputConfig.when, report.classification.result);
+        case SeqOutputMode::Full:
+            return true;
+        default:
+            return false;
+    }
+}
+
+bool AnalyzerApp::shouldPrintSequencePattern(const AnalyzerReport& report) const {
+    if (_valMode || !_sequenceTest.outputConfig.diagnosticsEnabled) {
+        return false;
+    }
+
+    switch (_sequenceTest.outputConfig.mode) {
+        case SeqOutputMode::Pattern:
+        case SeqOutputMode::Explain:
+            return sequenceOutputWhenEnabled(_sequenceTest.outputConfig.when, report.classification.result);
+        case SeqOutputMode::Full:
+            return true;
+        default:
+            return false;
+    }
+}
+
+bool AnalyzerApp::shouldPrintSequenceSystem(const AnalyzerReport& report) const {
+    if (_valMode || !_sequenceTest.outputConfig.diagnosticsEnabled) {
+        return false;
+    }
+
+    switch (_sequenceTest.outputConfig.mode) {
+        case SeqOutputMode::System:
+        case SeqOutputMode::Explain:
+            return sequenceOutputWhenEnabled(_sequenceTest.outputConfig.when, report.classification.result);
+        case SeqOutputMode::Full:
+            return _sequenceTest.outputConfig.verbosity >= 2U;
+        default:
+            return false;
+    }
+}
+
+bool AnalyzerApp::shouldPrintSequenceExplain(const AnalyzerReport& report) const {
+    return !_valMode &&
+           _sequenceTest.outputConfig.diagnosticsEnabled &&
+           _sequenceTest.outputConfig.mode == SeqOutputMode::Explain &&
+           sequenceOutputWhenEnabled(_sequenceTest.outputConfig.when, report.classification.result);
+}
+
 void AnalyzerApp::printSystemHealth(const AnalyzerReport& report) const {
     const AudioSourceStats& sourceStats = _audioSource.stats();
     const AudioSignalStats& signalStats = _audioSignal.stats();
@@ -730,7 +824,7 @@ const char* seqOutputModeName(AnalyzerApp::SeqOutputMode mode) {
         case AnalyzerApp::SeqOutputMode::Pattern:
             return "pattern";
         case AnalyzerApp::SeqOutputMode::Explain:
-            return "dump";
+            return "explain";
         default:
             return "trial";
     }
@@ -809,7 +903,7 @@ AnalyzerApp::SeqOutputMode seqOutputModeFromToken(const char* token, bool* valid
     if (equalsIgnoreCase(token, "pattern")) {
         return AnalyzerApp::SeqOutputMode::Pattern;
     }
-    if (equalsIgnoreCase(token, "dump")) {
+    if (equalsIgnoreCase(token, "dump") || equalsIgnoreCase(token, "explain")) {
         return AnalyzerApp::SeqOutputMode::Explain;
     }
     if (equalsIgnoreCase(token, "quiet")) {
@@ -889,7 +983,7 @@ void AnalyzerApp::begin() {
     _controlClaimAtMs = 0;
 
     Serial.println("EVT analyzer_ready");
-    Serial.println("EVT analyzer_help type='HELP', 'BASE', 'PARAM freqScore=18000 freqContrast=50.0 freqReleaseScore=12000 freqReleaseContrast=50.0', 'TEST', 'RAW trigger f=3200 dur=100 post=1000 dump=bin', 'SEQ MODE quiet|trial|compact|signalcheck|streak|full|system|source|inspect|pattern|dump WHEN off|miss|all VERBOSE 0|1|2 STATUS', 'CAP', 'DET AMP', 'VAL', 'VAL OFF'");
+    Serial.println("EVT analyzer_help type='HELP', 'BASE', 'PARAM freqScore=18000 freqContrast=50.0 freqReleaseScore=12000 freqReleaseContrast=50.0', 'TEST', 'RAW trigger f=3200 dur=100 post=1000 dump=bin', 'SEQ MODE quiet|trial|compact|signalcheck|streak|full|system|source|inspect|pattern|explain WHEN off|miss|all VERBOSE 0|1|2 STATUS', 'CAP', 'DET AMP', 'VAL', 'VAL OFF'");
 }
 
 void AnalyzerApp::configureParameters() {
@@ -935,9 +1029,7 @@ bool AnalyzerApp::sequenceOutputModeEnabled(SeqOutputMode configured, SeqOutputM
     if (requested == SeqOutputMode::Source ||
         requested == SeqOutputMode::Inspect ||
         requested == SeqOutputMode::Pattern) {
-        return configured == requested ||
-               configured == SeqOutputMode::Full ||
-               configured == SeqOutputMode::Explain;
+        return configured == requested || configured == SeqOutputMode::Explain;
     }
     return configured == requested;
 }

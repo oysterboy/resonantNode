@@ -1518,15 +1518,7 @@ void AnalyzerApp::printSequenceStreak(const AnalyzerReport& report) const {
     if (_valMode) {
         return;
     }
-    if (!_sequenceTest.outputConfig.diagnosticsEnabled) {
-        return;
-    }
-    if (_sequenceTest.outputConfig.mode != SeqOutputMode::Streak &&
-        _sequenceTest.outputConfig.mode != SeqOutputMode::Full &&
-        _sequenceTest.outputConfig.mode != SeqOutputMode::Explain) {
-        return;
-    }
-    if (!sequenceOutputWhenEnabled(_sequenceTest.outputConfig.when, report.classification.result)) {
+    if (!shouldPrintSequenceStreak(report)) {
         return;
     }
 
@@ -1778,14 +1770,7 @@ void AnalyzerApp::printSequenceInspect(const AnalyzerReport& report) const {
     if (_valMode) {
         return;
     }
-    if (!_sequenceTest.outputConfig.diagnosticsEnabled) {
-        return;
-    }
-    if (!sequenceOutputModeEnabled(_sequenceTest.outputConfig.mode, SeqOutputMode::Inspect)) {
-        return;
-    }
-    if (_sequenceTest.outputConfig.mode != SeqOutputMode::Full &&
-        !sequenceOutputWhenEnabled(_sequenceTest.outputConfig.when, report.classification.result)) {
+    if (!shouldPrintSequenceInspect(report)) {
         return;
     }
     if (!report.occurrences.present) {
@@ -1888,14 +1873,7 @@ void AnalyzerApp::printSequencePattern(const AnalyzerReport& report) const {
     if (_valMode) {
         return;
     }
-    if (!_sequenceTest.outputConfig.diagnosticsEnabled) {
-        return;
-    }
-    if (!sequenceOutputModeEnabled(_sequenceTest.outputConfig.mode, SeqOutputMode::Pattern)) {
-        return;
-    }
-    if (_sequenceTest.outputConfig.mode != SeqOutputMode::Full &&
-        !sequenceOutputWhenEnabled(_sequenceTest.outputConfig.when, report.classification.result)) {
+    if (!shouldPrintSequencePattern(report)) {
         return;
     }
 
@@ -1936,13 +1914,7 @@ void AnalyzerApp::printSequenceExplain(const AnalyzerReport& report) const {
     if (_valMode) {
         return;
     }
-    if (!_sequenceTest.outputConfig.diagnosticsEnabled) {
-        return;
-    }
-    if (!sequenceOutputModeEnabled(_sequenceTest.outputConfig.mode, SeqOutputMode::Explain)) {
-        return;
-    }
-    if (!sequenceOutputWhenEnabled(_sequenceTest.outputConfig.when, report.classification.result)) {
+    if (!shouldPrintSequenceExplain(report)) {
         return;
     }
 
@@ -2228,14 +2200,7 @@ void AnalyzerApp::printSequenceDiagnostics(const AnalyzerReport& report) const {
     if (_valMode) {
         return;
     }
-    if (!_sequenceTest.outputConfig.diagnosticsEnabled) {
-        return;
-    }
-    if (!sequenceOutputModeEnabled(_sequenceTest.outputConfig.mode, SeqOutputMode::Source)) {
-        return;
-    }
-    if (_sequenceTest.outputConfig.mode != SeqOutputMode::Full &&
-        !sequenceOutputWhenEnabled(_sequenceTest.outputConfig.when, report.classification.result)) {
+    if (!shouldPrintSequenceSource(report)) {
         return;
     }
     const unsigned int detailLevel = sequenceDetailLevel(_sequenceTest.outputConfig);
@@ -2270,14 +2235,7 @@ void AnalyzerApp::printSequenceScalarDiagnostics(const AnalyzerReport& report) c
     if (_valMode) {
         return;
     }
-    if (!_sequenceTest.outputConfig.diagnosticsEnabled) {
-        return;
-    }
-    if (!sequenceOutputModeEnabled(_sequenceTest.outputConfig.mode, SeqOutputMode::Source)) {
-        return;
-    }
-    if (_sequenceTest.outputConfig.mode != SeqOutputMode::Full &&
-        !sequenceOutputWhenEnabled(_sequenceTest.outputConfig.when, report.classification.result)) {
+    if (!shouldPrintSequenceSource(report)) {
         return;
     }
 

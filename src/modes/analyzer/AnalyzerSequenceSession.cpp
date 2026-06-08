@@ -577,46 +577,36 @@ void AnalyzerApp::finalizeSequenceTrial(unsigned long now) {
         )
     ]++;
     flushSequenceSampleHistory(now + 1UL);
-    printSequenceTrialResult(*finalizedReport);
+    if (shouldPrintSequenceTrial()) {
+        printSequenceTrialResult(*finalizedReport);
+    }
     if (_sequenceTest.outputConfig.mode == AnalyzerApp::SeqOutputMode::SignalCheck) {
         printSignalCheck();
     }
-    if (_sequenceTest.outputConfig.mode == AnalyzerApp::SeqOutputMode::Streak ||
-        _sequenceTest.outputConfig.mode == AnalyzerApp::SeqOutputMode::Full ||
-        _sequenceTest.outputConfig.mode == AnalyzerApp::SeqOutputMode::Explain) {
+    if (shouldPrintSequenceStreak(*finalizedReport)) {
         printSequenceStreak(*finalizedReport);
     }
     if (_sequenceTest.sampleDumpEnabled) {
         printSequenceSampleDump(_sequenceTest.currentTrial);
     }
-    if (_sequenceTest.outputConfig.mode == AnalyzerApp::SeqOutputMode::Inspect ||
-        _sequenceTest.outputConfig.mode == AnalyzerApp::SeqOutputMode::Full ||
-        _sequenceTest.outputConfig.mode == AnalyzerApp::SeqOutputMode::Explain) {
+    if (shouldPrintSequenceInspect(*finalizedReport)) {
         printSequenceInspect(*finalizedReport);
     }
-    if (_sequenceTest.outputConfig.mode == AnalyzerApp::SeqOutputMode::Source ||
-        _sequenceTest.outputConfig.mode == AnalyzerApp::SeqOutputMode::Full ||
-        _sequenceTest.outputConfig.mode == AnalyzerApp::SeqOutputMode::Explain) {
+    if (shouldPrintSequenceSource(*finalizedReport)) {
         printSequenceDiagnostics(*finalizedReport);
     }
     const bool patternStageReached =
         finalizedReport->classification.primaryStage == AnalyzerStage::Pattern ||
         finalizedReport->classification.primaryStage == AnalyzerStage::Analyzer;
-    if (patternStageReached &&
-        (_sequenceTest.outputConfig.mode == AnalyzerApp::SeqOutputMode::Pattern ||
-         _sequenceTest.outputConfig.mode == AnalyzerApp::SeqOutputMode::Full ||
-         _sequenceTest.outputConfig.mode == AnalyzerApp::SeqOutputMode::Explain)) {
+    if (patternStageReached && shouldPrintSequencePattern(*finalizedReport)) {
         printSequencePattern(*finalizedReport);
     }
-    if (_sequenceTest.outputConfig.mode == AnalyzerApp::SeqOutputMode::System ||
-        _sequenceTest.outputConfig.mode == AnalyzerApp::SeqOutputMode::Explain) {
+    if (shouldPrintSequenceSystem(*finalizedReport)) {
         printSystemHealth(*finalizedReport);
     }
-    if (_sequenceTest.outputConfig.mode == AnalyzerApp::SeqOutputMode::Explain) {
+    if (shouldPrintSequenceExplain(*finalizedReport)) {
         printSequenceCandidateLogs(_sequenceTest.currentTrial, diagnostics);
         printSequenceExplain(*finalizedReport);
-    } else if (_sequenceTest.outputConfig.mode == AnalyzerApp::SeqOutputMode::Pattern && patternStageReached) {
-        printSequencePattern(*finalizedReport);
     }
     if (_sequenceTest.currentTrial < _sequenceTest.totalTrials) {
         const unsigned long settleUntilMs = now + _sequenceTest.reportSettleMs;

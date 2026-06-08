@@ -534,6 +534,13 @@ private:
     // Miscellaneous output helpers.
     void printValueFrame(unsigned long now) const;
     void printValueModeBanner() const;
+    bool shouldPrintSequenceTrial() const;
+    bool shouldPrintSequenceStreak(const AnalyzerReport& report) const;
+    bool shouldPrintSequenceSource(const AnalyzerReport& report) const;
+    bool shouldPrintSequenceInspect(const AnalyzerReport& report) const;
+    bool shouldPrintSequencePattern(const AnalyzerReport& report) const;
+    bool shouldPrintSequenceSystem(const AnalyzerReport& report) const;
+    bool shouldPrintSequenceExplain(const AnalyzerReport& report) const;
     bool shouldPrintHardwareDiagnostics() const;
     static const char* sequenceOutputModeName(SeqOutputMode mode);
     static const char* sequenceOutputWhenName(SeqOutputWhen value);

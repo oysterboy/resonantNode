@@ -58,7 +58,27 @@ FrequencyEvidenceClass frequencyEvidenceClassFromClassName(const char* className
 
 } // namespace
 
-void AnalyzerApp::startSequenceTest(unsigned long totalTrials, unsigned long periodMs, unsigned long windowEndOffsetMs, unsigned long toneHz, unsigned long durationMs, bool quiet, bool showDetails, SequenceDiagMode diagMode, const char* setupLabel, bool sampleDumpEnabled, unsigned long sampleDumpFirstTrials, unsigned long sampleDumpEveryNth, unsigned long sampleDumpLeadMs, unsigned long sampleDumpTailMs, unsigned long sampleDumpStepMs, unsigned long sampleDumpMaxRows, unsigned long startupDelayMs, detection::DetectionProfileKind profileKind, bool externalEmitter) {
+void AnalyzerApp::startSequenceTest(const PendingSequenceStart& pending) {
+    unsigned long totalTrials = pending.totalTrials;
+    unsigned long periodMs = pending.periodMs;
+    unsigned long windowEndOffsetMs = pending.windowEndOffsetMs;
+    unsigned long toneHz = pending.toneHz;
+    unsigned long durationMs = pending.durationMs;
+    bool quiet = pending.quiet;
+    bool showDetails = pending.showDetails;
+    SequenceDiagMode diagMode = pending.diagMode;
+    const char* setupLabel = pending.setupLabel;
+    bool sampleDumpEnabled = pending.sampleDumpEnabled;
+    unsigned long sampleDumpFirstTrials = pending.sampleDumpFirstTrials;
+    unsigned long sampleDumpEveryNth = pending.sampleDumpEveryNth;
+    unsigned long sampleDumpLeadMs = pending.sampleDumpLeadMs;
+    unsigned long sampleDumpTailMs = pending.sampleDumpTailMs;
+    unsigned long sampleDumpStepMs = pending.sampleDumpStepMs;
+    unsigned long sampleDumpMaxRows = pending.sampleDumpMaxRows;
+    unsigned long startupDelayMs = pending.startupDelayMs;
+    detection::DetectionProfileKind profileKind = pending.profileKind;
+    bool externalEmitter = pending.externalEmitter;
+
     if (_valMode) {
         return;
     }

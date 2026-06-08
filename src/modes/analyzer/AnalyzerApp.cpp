@@ -900,6 +900,8 @@ void AnalyzerApp::update() {
     const unsigned long updateLoopStartUs = nowUs;
     const unsigned long now = millis();
 
+    processPendingSequenceStart();
+
     int processedSamples = 0;
     AudioBlock block;
     const uint32_t sampleWorkStartUs = micros();
@@ -1004,7 +1006,6 @@ void AnalyzerApp::update() {
         _controlClaimSent = true;
         _controlClaimPending = false;
     }
-    processPendingSequenceStart();
     updateSequenceTest(now);
     updateCaptureSession(now);
     pollUsbConsole();
@@ -1177,29 +1178,8 @@ void AnalyzerApp::processPendingSequenceStart() {
         return;
     }
 
-    PendingSequenceStart pending = _pendingSequenceStart;
     _pendingSequenceStart.active = false;
-
-    startSequenceTest(
-        pending.totalTrials,
-        pending.periodMs,
-        pending.windowEndOffsetMs,
-        pending.toneHz,
-        pending.durationMs,
-        pending.quiet,
-        pending.showDetails,
-        pending.diagMode,
-        pending.setupLabel,
-        pending.sampleDumpEnabled,
-        pending.sampleDumpFirstTrials,
-        pending.sampleDumpEveryNth,
-        pending.sampleDumpLeadMs,
-        pending.sampleDumpTailMs,
-        pending.sampleDumpStepMs,
-        pending.sampleDumpMaxRows,
-        pending.startupDelayMs,
-        pending.profileKind,
-        pending.externalEmitter);
+    startSequenceTest(_pendingSequenceStart);
 }
 
 const char* AnalyzerApp::activeAnalyzerProfileName() const {

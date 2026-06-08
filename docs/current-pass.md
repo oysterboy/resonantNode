@@ -1,675 +1,708 @@
-# Detection Timing / Freshness Review
+# Code Instructions: Audio Health / Frequency Source Debug Diagnostics
 
-Source reviewed: `ESP32_learn01.zip`
+## Context
 
-## Purpose
+Current log already proves a useful bad-regime pattern:
 
-This document captures the timing and freshness risks found in the current Detection / Analyzer codebase.
+- Some trials are `expected`.
+- Some long streaks are `miss reason=no_occurrence_candidate failed_at=source`.
+- `SEQ_STREAK_FAULT` currently prints `audio_health=flatline` and `fault_class=INPUT_SAMPLE_BAD`.
+- The current `audio_health=flatline` label is **not reliable enough** to prove a full-trial I2S/MEMS flatline.
+- Some misses show very low target-band evidence.
+- Other misses show strong target-band evidence and many matched updates, but still `emitted_this_trial=0`.
 
-Main concern:
+Therefore, the next code pass should not tune thresholds. It should improve diagnostic truth.
 
-> Samples, audio frames, frequency windows, fresh frequency packets, held frequency packets, and diagnostic counts are not always clearly separated. Runtime behavior is mostly corrected, but diagnostic timing and some stream handling still need cleanup before SEQ_INSPECT / timing conclusions can be trusted.
+## Goal
+
+Add diagnostics that separate these failure families:
+
+```text
+A. No usable target-band evidence exists.
+B. Target-band evidence exists, but FrequencyMatch source does not emit an occurrence.
+C. Audio/I2S sample content is actually bad.
+D. Audio coverage exists, but processing is backlogged/stale.
+E. FrequencyMatch is driven by held/non-fresh measurements.
+F. Emitter/output did not produce the expected target-band object.
+```
+
+## Non-goals
+
+Do not do in this pass:
+
+```text
+Do not tune thresholds.
+Do not add Hann / 3-bin production detection.
+Do not redesign DetectionRuntime.
+Do not rename architecture broadly.
+Do not change profile semantics.
+Do not change support-gate behavior.
+Do not reset detector state automatically per trial.
+```
+
+This pass is diagnostics only unless explicitly marked otherwise.
 
 ---
 
-## Current verdict
+# 1. Make `audio_health=flatline` trustworthy
 
-The core fresh/held runtime path is now mostly correct:
+Status: done.
 
-- Detection time is based on audio sample time, not loop processing time.
-- Frequency history is fresh-only.
-- `FrequencyOccurrenceSource` ignores stale / held frequency packets.
-- Scalar-on-frequency is now fresh-gated.
-- Held frequency values should no longer drive normal detector lifecycle.
+## Problem
 
-Remaining concern:
+Current `SEQ_STREAK_FAULT audio_health=flatline` appears too sensitive.
 
-- Several diagnostics and helper structures still blur the difference between physical time, sample time, frequency update cadence, and bucket/count-based approximations.
-- Node-side suppression may still freeze the frequency stream, creating discontinuous frequency windows after suppression.
-- Frequency window timing is not explicit enough.
-- Analyzer and Node duplicate frequency packet construction, making future drift likely.
+A short repeated-value run can label the whole trial as `flatline`, even while the same trial has strong frequency evidence:
+
+```text
+freq_score_max > 20000
+freq_contrast_max > 1000
+matched_update_count > 0
+```
+
+That means current `audio_health=flatline` is a warning, not proof of full-trial flatline.
+
+## Required change
+
+Print stronger raw-health details directly in `SEQ_STREAK_FAULT`.
+
+Add fields:
+
+```text
+raw_health_class=...
+raw_min=...
+raw_max=...
+raw_range=...
+raw_mean=...
+raw_mean_abs=...
+raw_spread_est=...
+zero_cross_rate=...
+same_value_ratio=...
+repeated_sample_max_run=...
+block_hash_repeat_count=...
+audio_flatline_frames=...
+audio_zeroish_frames=...
+audio_large_jump_frames=...
+audio_rms=...
+```
+
+## Classification rule
+
+Do not classify a trial as `INPUT_SAMPLE_BAD` based only on a short flatline flag.
+
+Use:
+
+```text
+raw_health_class in {flatline, dc_stuck, clipped, repeated, low_information}
+→ INPUT_SAMPLE_BAD
+```
+
+If only the weak audio flatline flag is present:
+
+```text
+audio_health=flatline
+raw_health_class=ok
+→ AUDIO_REPEAT_WARNING
+```
+
+## Acceptance
+
+```text
+A trial with strong frequency evidence can no longer be blindly labeled INPUT_SAMPLE_BAD only because audio_health=flatline.
+SEQ_STREAK_FAULT prints enough raw stats to verify whether flatline is real.
+```
+
+## Commit
+
+```text
+DetectionCleanup [DBG-01] Strengthen audio health fault reporting
+```
 
 ---
 
-# 1. Timebase model that should be enforced
+# 2. Split miss families in `SEQ_STREAK_FAULT`
 
-## 1.1 Canonical runtime event time
+Status: done.
 
-Use audio sample capture time as canonical runtime event time.
+## Problem
 
-Expected model:
+Current `fault_class=INPUT_SAMPLE_BAD` collapses at least two different cases:
 
-```text
-I2S block approximate start time
-→ sample index inside block
-→ sample capture timestamp
-→ AudioSamplePacket.timeMs
-→ DetectionRuntime / OccurrenceSource / PatternResult timing
-```
+### Case A: No target evidence
 
-This is better than using `millis()` at processing time, because processing can be delayed by buffering, serial output, or loop scheduling.
-
-## 1.2 Frequency feature timing
-
-A frequency measurement is not a single instantaneous sample. It represents a trailing DSP window.
-
-Recommended canonical definition:
+Example shape:
 
 ```text
-FrequencyBandMeasurementPacket.observedAtMs = frequency window end time
+freq_score_max ≈ 250–340
+freq_contrast_max ≈ 18–32
+matched_update_count=0
+opened_this_trial=0
+closed_this_trial=0
+emitted_this_trial=0
 ```
 
-But the packet should also expose enough information to interpret the window:
+### Case B: Target evidence exists but no occurrence emitted
+
+Example shape:
 
 ```text
-window_start_sample_index
-window_end_sample_index
-window_size_samples
-window_start_ms
-window_end_ms
-window_center_ms
-fresh
-age_samples
-update_step_ms
+freq_score_max > 20000
+freq_contrast_max > 1000
+matched_update_count > 0
+opened_this_trial=1
+closed_this_trial=1
+emitted_this_trial=0
 ```
 
-Short-term minimum:
+These are different failure families.
 
-- Keep the packet minimal.
-- Treat `observedAtMs` as the current frame time.
+## Required change
 
----
+Update fault classification order.
 
-# 2. What is currently handled correctly
+Suggested classes:
 
-## 2.1 Audio sample timing
+```text
+INPUT_SAMPLE_BAD
+AUDIO_REPEAT_WARNING
+NO_TARGET_BAND_EVIDENCE
+TARGET_PRESENT_NO_OCCURRENCE
+DETECTOR_LIFECYCLE_REJECT
+FRESHNESS_HELD_EVIDENCE_SUSPECT
+TIMING_BACKLOG
+OUTPUT_SPECTRAL_SHIFT
+OUTPUT_BROADBAND_NON_TONAL
+NO_AUDIO_EVENT
+UNKNOWN
+```
 
-Analyzer and Node derive per-sample time from block start time plus sample offset.
+## Suggested logic
 
-Expected pattern:
+Pseudo-rule:
 
 ```cpp
-sampleTimeUs = block.approxStartMicros + sampleOffsetUs(i, sampleRateHz);
-audioSamplePacket.timeMs = sampleTimeUs / 1000;
-```
-
-DetectionRuntime receives the audio sample packet time.
-
-This is correct and should remain the canonical detection timebase.
-
-## 2.2 Frequency history is fresh-only
-
-`FeatureExtractor::observeFrequencyMeasurementPacket()` ignores packets that are not present or not fresh.
-
-Expected rule:
-
-```cpp
-if (!evidence.present || !evidence.fresh) {
-    return;
+if (rawHealthBad) {
+    fault = INPUT_SAMPLE_BAD;
+} else if (audioRepeatWarningOnly) {
+    fault = AUDIO_REPEAT_WARNING;
+} else if (targetBandStrong && openedThisTrial && closedThisTrial && !emittedThisTrial) {
+    fault = TARGET_PRESENT_NO_OCCURRENCE;
+} else if (targetBandStrong && !emittedThisTrial) {
+    fault = DETECTOR_LIFECYCLE_REJECT;
+} else if (!targetBandEvidence && audioPresent) {
+    fault = NO_TARGET_BAND_EVIDENCE;
+} else if (!audioPresent) {
+    fault = NO_AUDIO_EVENT;
+} else {
+    fault = UNKNOWN;
 }
 ```
 
-This prevents held frequency values from being written into `FeatureHistory` as if they were new evidence.
+Definitions should be explicit and printed in code comments.
 
-## 2.3 Frequency occurrence source is fresh-only
-
-`FrequencyOccurrenceSource::observeFrame()` ignores stale / held frequency packets.
-
-Expected rule:
-
-```cpp
-if (!evidence.present || !evidence.fresh) {
-    return;
-}
-```
-
-This prevents held frequency values from extending or closing FrequencyMatch candidates.
-
-## 2.4 Scalar-on-frequency is fresh-gated
-
-`DetectionRuntime::observeFrame()` now checks whether the selected scalar stream requires fresh frequency data.
-
-Expected rule:
-
-```cpp
-if (streamRequiresFreshFrequency(_scalarTransientConfig.observedStream) && !frequencyEvidence.fresh) {
-    break;
-}
-```
-
-This is important because a future scalar detector over `FrequencyScore` or `FrequencyContrast` must not tick on held values.
-
----
-
-# 3. Remaining timing and freshness risks
-
-## 3.1 Frequency window start/end are not explicit enough
-
-Current packet fields suggest a window model, but the packet construction does not clearly fill all window boundaries.
-
-Risk:
+## Acceptance
 
 ```text
-observedAtMs may be interpreted as:
-- current audio sample time
-- frequency packet production time
-- frequency window end time
-- frequency window center time
+Misses with high freq_score_max / freq_contrast_max are not classified as INPUT_SAMPLE_BAD unless raw_health_class proves bad audio.
+Misses with matched_update_count=0 and low score/contrast are classified separately from lifecycle rejects.
 ```
 
-Recommended decision:
+## Commit
 
 ```text
-observedAtMs = windowEndMs
-```
-
-Recommended code shape:
-
-```cpp
-evidence.observedAtMs = audioSamplePacket.timeMs; // defined as window end time
+DetectionCleanup [DBG-02] Split source miss fault classes
 ```
 
 ---
 
-## 3.2 Frequency candidate duration is update-cadence based
+# 3. Print candidate rejection / no-emit reason
 
-FrequencyMatch and scalar-on-frequency only update on fresh frequency packets. That is correct.
+## Problem
 
-But it means detector duration is quantized by frequency update cadence:
-
-```text
-computeDecimation 16 at 16 kHz → update every ~1 ms
-computeDecimation 32 at 16 kHz → update every ~2 ms
-computeDecimation 64 at 16 kHz → update every ~4 ms
-```
-
-This is not bad. But diagnostics must not confuse update counts with physical milliseconds or independent evidence.
-
-Required Analyzer output fields:
+The log has misses where:
 
 ```text
-window_ms
-update_step_ms
-overlap_ratio
-fresh_update_count
-matched_update_count
-candidate_duration_ms
-matched_span_ms
-matched_coverage_ms
-max_gap_ms
-fresh_coverage_ratio
-latest_feature_age_ms
+opened_this_trial=1
+closed_this_trial=1
+emitted_this_trial=0
 ```
 
-Avoid interpreting these as milliseconds:
+But the output does not explain why no occurrence was emitted.
+
+## Required fields
+
+For any trial with `opened_this_trial=1` or `closed_this_trial=1`, print:
 
 ```text
-hold_windows
-matched_update_count
-score_ok_frames
-contrast_ok_frames
-bucket_count
-sustained_count
+candidate_first_ms=...
+candidate_last_match_ms=...
+candidate_close_ms=...
+candidate_duration_ms=...
+candidate_hold_updates=...
+candidate_reject_reason=...
+candidate_no_emit_reason=...
+duration_ok=...
+min_duration_ms=...
+attack_ok_updates=...
+release_ok_updates=...
+fresh_attack_ok_updates=...
+fresh_release_ok_updates=...
+held_attack_ok_updates=...
+held_release_ok_updates=...
 ```
 
-They are counts, not direct physical time.
+## Required behavior
 
----
-
-## 3.3 FeatureHistory coverage is approximate
-
-`FeatureHistory::getWindow()` now derives fields like:
-
-```cpp
-out.spanMs = lastValueMs - firstValueMs;
-out.coveredMs = out.spanMs;
-out.coverageRatio = coveredMs / durationMs;
-out.latestValueAgeMs = endMs - lastValueMs;
-out.sustainedMs = static_cast<unsigned long>(sustainedCount);
-```
-
-This is dangerous for frequency streams.
-
-`bucketCount` is still a count.
-`coveredMs` is now the observed span between the first and last value in the window.
-For frequency streams, fresh updates may happen every 1, 2, 4, or more milliseconds.
-
-Therefore:
+If the source had target-band evidence and opened/closed a candidate, the diagnostic must explain one of:
 
 ```text
-bucketCount != physical covered milliseconds
-sustainedCount != sustained milliseconds
+duration_too_short
+release_failed
+refractory
+not_valid
+not_emitted_unknown
 ```
 
-Recommended replacement fields:
+`not_emitted_unknown` is acceptable initially, but should be rare and treated as a follow-up bug.
+
+## Acceptance
 
 ```text
-value_count
-bucket_count
-first_value_ms
-last_value_ms
-span_ms
-latest_value_age_ms
-expected_update_step_ms
-expected_update_count
-fresh_coverage_ratio
+Every opened-but-not-emitted miss has a visible no-emit or reject reason.
+High-evidence misses can be separated into duration, release, refractory, or unknown source emission failures.
 ```
 
-Short-term rule:
-
-- Keep `bucketCount` as a count.
-- Do not print or consume it as `coveredMs` for frequency-derived streams.
-- Rename misleading fields or mark them approximate.
-
----
-
-## 3.4 Node suppression may freeze the frequency stream
-
-Current concern:
-
-```cpp
-if (!ownEmitSuppressed) {
-    _freqBandStream.observeCenteredSample(...);
-    processDetectionFrame(...);
-}
-```
-
-If the frequency stream is not fed during own-emission suppression, the internal Goertzel window can become physically discontinuous.
-
-Failure shape:
+## Commit
 
 ```text
-before suppression: old samples in FreqBandStream ring
-suppression active: stream frozen
-suppression ends: new samples appended after a real-world time gap
-next frequency packet: marked fresh, but window contains old + new samples
-```
-
-Recommended architecture rule:
-
-```text
-Feed feature streams continuously.
-Gate detection ingestion / output, not feature extraction.
-```
-
-Preferred code shape:
-
-```cpp
-_freqBandStream.observeCenteredSample(
-    audioSamplePacket.centeredAudioValue,
-    audioSamplePacket.timeMs
-);
-
-if (!ownEmitSuppressed) {
-    processDetectionFrame(...);
-}
-```
-
-Alternative if stream feeding must pause:
-
-```cpp
-on suppression end:
-    _freqBandStream.resetState();
-```
-
-Preferred solution: keep the stream warm and gate only DetectionRuntime ingestion.
-
----
-
-## 3.5 Analyzer and Node duplicate frequency packet construction
-
-Both Analyzer and Node construct frequency measurement packets separately.
-
-Risk:
-
-```text
-Analyzer timing semantics and RB timing semantics can drift.
-```
-
-Recommended fix:
-
-Create one shared helper:
-
-```cpp
-FrequencyBandMeasurementPacket buildFrequencyMeasurementPacket(
-    const FreqBandStream& stream,
-    const AudioSamplePacket& sample
-);
-```
-
-Both Analyzer and Node should use it.
-
-The helper should own:
-
-```text
-fresh flag
-present flag
-observedAtMs
-ageSamples
-score
-contrast
-targetHz
-targetGeneration, later
+DetectionCleanup [DBG-03] Report FrequencyMatch no-emit reasons
 ```
 
 ---
 
-## 3.6 Held frequency diagnostics can still be confusing
+# 4. Split fresh vs held frequency evidence
 
-Runtime ignores held packets for detection, but diagnostics may still print held scores with current sample time.
+## Problem
 
-Risk:
-
-```text
-fresh=0
-observedAtMs=current sample time
-score=old held score
-ageSamples=large
-```
-
-Better diagnostic model:
+Current log prints:
 
 ```text
-current_sample_ms
-last_fresh_observed_ms
-latest_feature_age_ms
-fresh=false
-held_score=...
-```
-
-Short-term rule:
-
-- Do not present held values as current evidence.
-- When printing held values, label them as held / last-known / status-only.
-
----
-
-## 3.7 Frequency score calculation has duplicated total energy
-
-Found in `FreqBandStream::computeFrequencyScore()`:
-
-```cpp
-totalEnergy += sample * sample;
-```
-
-This uses rolling window energy to normalize the target band power.
-
-Effect:
-
-```text
-normalized frequency score depends on the window energy
-threshold tuning should be re-checked when the window or source changes
-```
-
-Keep thresholds tied to the current normalization scale.
-
----
-
-# 4. Codex implementation passes
-
-## Pass 01 — Make frequency packet timing explicit
-
-Goal:
-
-- Define and fill frequency window timing fields.
-- Make `observedAtMs` explicitly mean window end time.
-- Avoid ambiguity between current sample time and frequency window time.
-
-Tasks:
-
-- Keep the packet minimal.
-- Keep `observedAtMs` as the current frame time.
-
-Commit:
-
-```text
-DetectionCleanup [01] Make frequency packet window timing explicit
-
-- Fill frequency window start/end sample indices when building measurement packets.
-- Define observedAtMs as the frequency window end time.
-- Preserve existing detector behavior while making packet timing semantics explicit.
-```
-
----
-
-## Pass 02 — Keep frequency stream fed during Node suppression
-
-Goal:
-
-- Prevent discontinuous frequency windows after own-emission suppression.
-- Keep feature extraction independent from detection gating.
-
-Tasks:
-
-- Move `_freqBandStream.observeCenteredSample(...)` outside `!ownEmitSuppressed` branch.
-- Keep `processDetectionFrame(...)` gated by suppression.
-- Ensure self-suppression still prevents own chirps from becoming detections.
-- Add debug flag/counter if a packet is feature-fed but detection-gated.
-
-Commit:
-
-```text
-DetectionCleanup [02] Feed frequency stream during self suppression
-
-- Keep FreqBandStream updated while own-emission detection ingestion is suppressed.
-- Gate DetectionRuntime processing instead of freezing the feature stream.
-- Avoid discontinuous Goertzel windows after suppression ends.
-```
-
----
-
-## Pass 03 — Share frequency packet construction between Analyzer and Node
-
-Goal:
-
-- Prevent Analyzer/RB timing drift.
-- Put freshness and timing semantics in one place.
-
-Tasks:
-
-- Add shared helper for building `FrequencyBandMeasurementPacket`.
-- Use it from Analyzer and Node.
-- Remove duplicated construction logic.
-- Ensure helper exposes identical packet fields in both modes.
-
-Commit:
-
-```text
-DetectionCleanup [03] Share frequency measurement packet construction
-
-- Add one helper for FrequencyBandMeasurementPacket creation.
-- Use the helper from Analyzer and Node paths.
-- Keep freshness, age, score, contrast, and window timing semantics identical across modes.
-```
-
----
-
-## Pass 04 — Fix frequency score total-energy calculation
-
-Goal:
-
-- Verify total-energy accumulation is correct.
-- Stabilize score semantics before further tuning.
-
-Tasks:
-
-- Confirm the energy sum runs once per sample.
-- Check whether thresholds need to be noted as no longer comparable to previous runs.
-- Print runtime config and score scale in Analyzer output if helpful.
-
-Commit:
-
-```text
-DetectionCleanup [04] Verify frequency score energy normalization
-
-- Confirm total-energy accumulation is correct in frequency score calculation.
-- Preserve intended normalized score scale.
-- Mark old frequency score thresholds as requiring re-check after this verification.
-```
-
----
-
-## Pass 05 — Stop treating FeatureHistory buckets as milliseconds
-
-Goal:
-
-- Avoid misleading timing/coverage reporting from FeatureHistory.
-- Prepare inspector diagnostics for real frequency cadence reporting.
-
-Status:
-
-- Implemented in `FeatureHistory`, `OccurrenceInspector`, and analyzer reporting.
-
-Tasks:
-
-- Rename or supplement misleading fields:
-  - `coveredMs`
-  - `sustainedMs`
-  - `coverageRatio`
-- Add safer fields:
-  - `valueCount`
-  - `bucketCount`
-  - `firstValueMs`
-  - `lastValueMs`
-  - `spanMs`
-  - `latestValueAgeMs`
-- For frequency streams, avoid printing bucket-derived values as milliseconds.
-
-Commit:
-
-```text
-DetectionCleanup [05] Separate FeatureHistory counts from timing coverage
-
-- Stop treating bucket counts as physical milliseconds.
-- Add explicit value count, bucket count, span, and latest-age fields.
-- Make frequency-derived history reporting cadence-aware instead of bucket-ms based.
-```
-
----
-
-## Pass 06 — Add cadence-aware Analyzer frequency timing output
-
-Goal:
-
-- Make SEQ_INSPECT / SEQ_EXPLAIN timing trustworthy.
-- Report frequency evidence in physical time and cadence terms.
-
-Tasks:
-
-Status:
-
-- Implemented in analyzer frequency diagnostics and source reporting.
-
-Add Analyzer fields/output:
-
-```text
-freq.window_ms
-freq.update_step_ms
-freq.overlap_ratio
-freq.bucket_count
-freq.value_count
-freq.span_ms
-freq.latest_value_age_ms
-freq.matched_span_ms
-freq.matched_coverage_ms
-freq.max_gap_ms
-freq.fresh_coverage_ratio
-```
-
-Rules:
-
-- Counts remain counts.
-- Durations remain ms.
-- Coverage is explicitly defined.
-- Held values are labeled status-only, not evidence.
-- Cadence counters stay available, but the primary shape should match scalar timing vocabulary.
-
-Commit:
-
-```text
-DetectionCleanup [06] Add cadence-aware frequency timing diagnostics
-
-- Report frequency window size, update step, overlap ratio, and fresh coverage.
-- Separate update counts from physical durations.
-- Label held frequency values as status-only diagnostics, not detection evidence.
-```
-
----
-
-# 5. Acceptance checks
-
-## Runtime checks
-
-- Held frequency packets do not update FrequencyMatch candidates.
-- Held frequency packets do not update scalar-on-frequency candidates.
-- Frequency history only receives fresh frequency values.
-- Node self-suppression does not freeze FreqBandStream.
-- Detection ingestion remains suppressed during own emission.
-- Analyzer and Node build identical frequency measurement packets.
-
-## Timing checks
-
-Analyzer output should make these distinctions visible:
-
-```text
-sample_time_ms
-frequency_window_start_ms
-frequency_window_end_ms
-frequency_window_center_ms
 fresh_update_count
 held_update_count
-update_step_ms
-overlap_ratio
-candidate_duration_ms
-matched_span_ms
-matched_coverage_ms
-latest_feature_age_ms
+matched_update_count
 ```
 
-## Diagnostic checks
+But `matched_update_count` does not say whether matches are fresh measurements or held status reuse.
 
-- No field named `coveredMs` should be printed for frequency streams unless it is truly physical coverage.
-- No `bucketCount` / `holdWindows` / `matchedUpdates` field should be interpreted as ms.
-- Held frequency values should be printed only as held / last-known / status fields.
-- Frequency score thresholds should be re-checked after the total-energy fix.
+Also, current counts appear cumulative, not per-trial.
+
+## Required fields
+
+Print both total and per-trial counters, clearly named:
+
+```text
+fresh_updates_trial=...
+held_updates_trial=...
+matched_updates_trial=...
+
+fresh_updates_total=...
+held_updates_total=...
+matched_updates_total=...
+```
+
+Split matched/gate counters:
+
+```text
+fresh_matched_updates=...
+held_matched_updates=...
+fresh_attack_ok_updates=...
+held_attack_ok_updates=...
+fresh_release_ok_updates=...
+held_release_ok_updates=...
+fresh_both_ok_updates=...
+held_both_ok_updates=...
+```
+
+## Required classification support
+
+If:
+
+```text
+held_matched_updates > 0
+AND fresh_matched_updates == 0
+```
+
+then emit:
+
+```text
+fault_class=FRESHNESS_HELD_EVIDENCE_SUSPECT
+```
+
+or at least:
+
+```text
+freshness_suspect=held_match_only
+```
+
+## Acceptance
+
+```text
+The log can prove whether FrequencyMatch lifecycle used fresh frequency measurements or held values.
+Per-trial counters are not confused with cumulative counters.
+```
+
+## Commit
+
+```text
+DetectionCleanup [DBG-04] Split fresh and held frequency diagnostics
+```
 
 ---
 
-# 6. Final rule set
+# 5. Add per-trial audio read / backlog line
 
-## Stable rules
+## Problem
 
-1. Audio sample time is canonical runtime event time.
-2. Frequency measurements are windowed features, not instantaneous samples.
-3. Fresh frequency packets may become evidence.
-4. Held frequency packets are status/debug only.
-5. FeatureHistory stores fresh evidence, not held continuity values.
-6. OccurrenceSources should consume fresh feature values directly, not pull live detection data from FeatureHistory.
-7. Feature streams should continue running during suppression where possible.
-8. Suppression should gate detection ingestion/output, not freeze feature extraction.
-9. Counts are not milliseconds.
-10. Analyzer must report cadence, overlap, coverage, and age explicitly.
+`timing_lag_max_ms=32/33` alone is not enough.
+
+Need coverage and backlog visibility in the same trial.
+
+## Required line
+
+Add:
+
+```text
+SEQ_AUDIO_READ trial=N
+sample_coverage_ratio=...
+blocks=...
+samples=...
+max_processing_lag_ms=...
+max_block_age_ms=...
+max_available_bytes=...
+available_gt_batch_count=...
+max_read_duration_us=...
+partial_blocks=...
+short_reads=...
+zero_available_loops=...
+```
+
+## Interpretation
+
+```text
+sample_coverage_ratio high + lag low
+→ coverage and freshness likely okay
+
+sample_coverage_ratio high + lag/backlog high
+→ app caught up eventually, but not fully fresh
+
+sample_coverage_ratio low
+→ true coverage problem
+```
+
+## Acceptance
+
+```text
+A processed ratio around 0.98 is no longer treated as proof of fresh current-trial audio.
+SEQ_AUDIO_READ separates coverage from freshness/backlog.
+```
+
+## Commit
+
+```text
+DetectionCleanup [DBG-05] Add per-trial audio read diagnostics
+```
 
 ---
 
-# 7. Recommended immediate order
+# 6. Add emitter reference visibility
 
-Do these before trusting SEQ_INSPECT timing conclusions:
+## Problem
 
-```text
-01 Make frequency packet window timing explicit
-02 Feed frequency stream during Node suppression
-03 Share frequency packet construction between Analyzer and Node
-04 Fix duplicated frequency score total-energy accumulation
-05 Stop treating FeatureHistory buckets as milliseconds
-06 Add cadence-aware Analyzer frequency timing output
-```
+For no-target-evidence streaks, the log cannot yet prove whether the emitter actually produced the expected tone.
 
-After these passes, timing diagnostics should be reliable enough to compare:
+## Required output
+
+Emitter should print:
 
 ```text
-FrequencyMatch detector
-Scalar-on-frequency detector
-AMP support inspectors
-SEQ_INSPECT source/inspection/pattern failures
+EMIT_START trial=N t=...
+EMIT_DONE trial=N t=...
 ```
+
+Analyzer should record:
+
+```text
+emit_seen=...
+emit_start_dt_ms=...
+emit_done_dt_ms=...
+```
+
+Optional hardware marker:
+
+```text
+GPIO high during actual piezo drive
+```
+
+## Acceptance
+
+```text
+Analyzer can distinguish:
+- command/emitter did not fire
+- emitter fired but analyzer heard no target-band evidence
+- analyzer input/detector failed despite emitter fire
+```
+
+## Commit
+
+```text
+DetectionCleanup [DBG-06] Add emitter reference markers
+```
+
+---
+
+# 7. Add miss-only band scan
+
+## Problem
+
+Low target-band score does not distinguish:
+
+```text
+no tone
+wrong-band tone
+broadband click/noise
+```
+
+## Required diagnostic
+
+On misses only, scan a small fixed set:
+
+```text
+2800
+3000
+3200
+3400
+3600
+```
+
+Print:
+
+```text
+best_band_hz=...
+best_band_score=...
+best_band_contrast=...
+target3200_score_max=...
+target3200_contrast_max=...
+```
+
+## Classification
+
+```text
+best band exists away from 3200
+→ OUTPUT_SPECTRAL_SHIFT
+
+no narrow best band but audio present
+→ OUTPUT_BROADBAND_NON_TONAL
+
+3200 present but no occurrence
+→ TARGET_PRESENT_NO_OCCURRENCE
+```
+
+## Acceptance
+
+```text
+No-target-frequency misses can be separated into shifted tone, broadband event, or true no-frequency/no-audio case.
+```
+
+## Commit
+
+```text
+DetectionCleanup [DBG-07] Add miss-only frequency band scan
+```
+
+---
+
+# 8. Add final `SEQ_STREAK_FAULT` target shape
+
+Target line:
+
+```text
+SEQ_STREAK_FAULT trial=N result=miss
+audio_present=...
+audio_health=...
+raw_health_class=...
+raw_min=...
+raw_max=...
+raw_range=...
+raw_stddev=...
+same_value_ratio=...
+repeated_sample_max_run=...
+sample_coverage_ratio=...
+timing_lag_max_ms=...
+max_block_age_ms=...
+max_available_bytes=...
+freq_score_max=...
+freq_contrast_max=...
+fresh_updates_trial=...
+held_updates_trial=...
+fresh_matched_updates=...
+held_matched_updates=...
+candidate_duration_ms=...
+candidate_reject_reason=...
+candidate_no_emit_reason=...
+opened_this_trial=...
+closed_this_trial=...
+emitted_this_trial=...
+emit_seen=...
+best_band_hz=...
+best_band_score=...
+best_band_contrast=...
+fault_class=...
+```
+
+## Acceptance
+
+A single miss line should answer:
+
+```text
+Was audio present?
+Was raw audio content valid?
+Was read freshness/backlog acceptable?
+Was target-band evidence present?
+Was the detector using fresh or held frequency evidence?
+Did a candidate open/close?
+Why did it not emit?
+Did the emitter actually fire?
+Was the sound shifted/broadband/no-target?
+```
+
+## Commit
+
+```text
+DetectionCleanup [DBG-08] Expand streak fault diagnostic line
+```
+
+---
+
+# 9. Immediate interpretation rules for the current log
+
+Use these rules while reviewing the next run.
+
+## Long miss streak, low target-band evidence
+
+Pattern:
+
+```text
+freq_score_max < attackScoreMin
+freq_contrast_max < attackContrastMin
+matched_update_count=0
+opened_this_trial=0
+```
+
+Interpret as:
+
+```text
+NO_TARGET_BAND_EVIDENCE
+```
+
+Do not call it detector lifecycle failure.
+
+Next split:
+
+```text
+raw_health bad → INPUT_SAMPLE_BAD
+raw_health ok + emitter seen → OUTPUT_SPECTRAL_SHIFT / BROADBAND / weak output
+raw_health ok + emitter not seen → EMITTER_COMMAND_OR_OUTPUT_FAILURE
+```
+
+## High target-band evidence but no occurrence
+
+Pattern:
+
+```text
+freq_score_max high
+freq_contrast_max high
+matched updates > 0
+opened_this_trial=1
+closed_this_trial=1
+emitted_this_trial=0
+```
+
+Interpret as:
+
+```text
+TARGET_PRESENT_NO_OCCURRENCE
+```
+
+Next split:
+
+```text
+candidate_duration_ms < minDuration → duration_too_short
+held_release_ok dominates → freshness held evidence issue
+duration_ok but not emitted → source emission bug
+```
+
+## `audio_health=flatline`
+
+Interpret as:
+
+```text
+warning only
+```
+
+Trust only if confirmed by:
+
+```text
+raw_health_class=flatline/dc_stuck/repeated/low_information
+raw_range small
+raw_stddev low
+repeated_sample_max_run high
+same_value_ratio high
+```
+
+---
+
+# 10. Recommended implementation order
+
+1. `DBG-01` Strengthen audio health fault reporting.
+2. `DBG-02` Split source miss fault classes.
+3. `DBG-03` Report FrequencyMatch no-emit reasons.
+4. `DBG-04` Split fresh and held frequency diagnostics.
+5. `DBG-05` Add per-trial audio read diagnostics.
+6. `DBG-06` Add emitter reference markers.
+7. `DBG-07` Add miss-only frequency band scan.
+8. `DBG-08` Expand final streak fault line.
+
+Rationale:
+
+```text
+First make current audio_health trustworthy.
+Then stop collapsing different miss types.
+Then explain high-evidence no-emission cases.
+Then verify fresh/held lifecycle.
+Then add read freshness/backlog.
+Then separate emitter/output causes.
+Then add spectral-shift scan.
+```
+
+---
+
+# 11. Final acceptance
+
+After this diagnostic pass, the next log should allow every miss to be assigned to one of:
+
+```text
+INPUT_SAMPLE_BAD
+AUDIO_REPEAT_WARNING
+NO_TARGET_BAND_EVIDENCE
+TARGET_PRESENT_NO_OCCURRENCE
+DETECTOR_LIFECYCLE_REJECT
+FRESHNESS_HELD_EVIDENCE_SUSPECT
+TIMING_BACKLOG
+OUTPUT_SPECTRAL_SHIFT
+OUTPUT_BROADBAND_NON_TONAL
+NO_AUDIO_EVENT
+EMITTER_COMMAND_OR_OUTPUT_FAILURE
+UNKNOWN
+```
+
+`UNKNOWN` should be rare. If `UNKNOWN` remains common, add the missing field rather than tuning thresholds.

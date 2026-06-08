@@ -1237,6 +1237,61 @@ const char* sequenceDiagModeName(AnalyzerApp::SequenceDiagMode mode) {
     }
 }
 
+const char* sequenceFaultClassNameFromMiss(
+    const AnalyzerReport& report,
+    const char* rawHealthClass,
+    bool audioPresent,
+    bool rawHealthWarningOnly,
+    bool timingBacklog
+) {
+    const bool targetBandStrong = report.frequency.maxScore >= (report.frequency.scoreThreshold * 0.75f) ||
+                                  report.frequency.maxContrast >= (report.frequency.contrastThreshold * 0.75f) ||
+                                  report.frequency.scoreOkUpdates > 0 ||
+                                  report.frequency.contrastOkUpdates > 0 ||
+                                  report.frequency.bothOkUpdates > 0;
+    const bool targetBandPresent = targetBandStrong ||
+                                   report.frequency.matchFrames > 0 ||
+                                   report.frequency.fmOpened ||
+                                   report.frequency.fmReleased ||
+                                   report.frequency.fmEmitted;
+
+    if (!audioPresent) {
+        return "NO_AUDIO_EVENT";
+    }
+    if (strcmp(rawHealthClass, "clipped") == 0 ||
+        strcmp(rawHealthClass, "flatline") == 0 ||
+        strcmp(rawHealthClass, "dc_stuck") == 0 ||
+        strcmp(rawHealthClass, "repeated") == 0 ||
+        strcmp(rawHealthClass, "low_information") == 0) {
+        return "INPUT_SAMPLE_BAD";
+    }
+    if (rawHealthWarningOnly) {
+        return "AUDIO_REPEAT_WARNING";
+    }
+    if (report.frequency.freshUpdateCount == 0 && report.frequency.heldUpdateCount > 0) {
+        return "FRESHNESS_HELD_EVIDENCE_SUSPECT";
+    }
+    if (timingBacklog && !targetBandPresent) {
+        return "TIMING_BACKLOG";
+    }
+    if (!targetBandPresent) {
+        return "NO_TARGET_BAND_EVIDENCE";
+    }
+    if (report.frequency.freshFrames == 0 && report.frequency.heldFrames > 0) {
+        return "FRESHNESS_HELD_EVIDENCE_SUSPECT";
+    }
+    if (targetBandStrong && report.frequency.fmOpened && report.frequency.fmReleased && !report.frequency.fmEmitted) {
+        return "TARGET_PRESENT_NO_OCCURRENCE";
+    }
+    if (targetBandStrong && (report.frequency.fmOpened || report.frequency.fmReleased) && !report.frequency.fmEmitted) {
+        return "DETECTOR_LIFECYCLE_REJECT";
+    }
+    if (timingBacklog) {
+        return "TIMING_BACKLOG";
+    }
+    return "UNKNOWN";
+}
+
 unsigned int sequenceDetailLevel(const AnalyzerApp::SeqOutputConfig& outputConfig) {
     if (outputConfig.mode == AnalyzerApp::SeqOutputMode::Explain) {
         return 2U;
@@ -1346,37 +1401,51 @@ void AnalyzerApp::printSequenceTrialResult(const AnalyzerReport& report) const {
         report.classification.result == AnalyzerResult::Miss) {
         const auto& diagnostics = _sequenceTest.currentTrialDiagnostics;
         const char* audioHealth = report.frequency.audioHealth != nullptr ? report.frequency.audioHealth : "unknown";
+        const double rawFrameCount = diagnostics.rawFrames > 0 ? static_cast<double>(diagnostics.rawFrames) : 0.0;
+        const double rawMean = rawFrameCount > 0.0 ? static_cast<double>(diagnostics.rawSum) / rawFrameCount : 0.0;
+        const double rawMeanAbs = rawFrameCount > 0.0 ? static_cast<double>(diagnostics.rawAbsSum) / rawFrameCount : 0.0;
+        const double rawMinAbs = diagnostics.rawMin < 0 ? -static_cast<double>(diagnostics.rawMin) : static_cast<double>(diagnostics.rawMin);
+        const double rawMaxAbsValue = diagnostics.rawMax < 0 ? -static_cast<double>(diagnostics.rawMax) : static_cast<double>(diagnostics.rawMax);
+        const double rawMaxAbs = rawMinAbs > rawMaxAbsValue ? rawMinAbs : rawMaxAbsValue;
+        const double rawRange = diagnostics.rawFrames > 0 && diagnostics.rawMax >= diagnostics.rawMin
+            ? static_cast<double>(diagnostics.rawMax - diagnostics.rawMin)
+            : 0.0;
+        // Range-based proxy keeps the trial footprint small; exact variance would need another accumulator.
+        const double rawSpreadEst = rawRange > 0.0 ? rawRange / 3.4641016151377544 : 0.0;
+        const double rawZeroCrossRate = diagnostics.rawFrames > 1
+            ? static_cast<double>(diagnostics.rawZeroCrossings) / static_cast<double>(diagnostics.rawFrames - 1U)
+            : 0.0;
+        const double rawSameValueRatio = diagnostics.rawFrames > 1
+            ? static_cast<double>(diagnostics.rawSameValueCount) / static_cast<double>(diagnostics.rawFrames - 1U)
+            : 0.0;
+        const char* rawHealthClass = rawHealthClassNameFromCounters(
+            diagnostics.audioRmsTooHighFrames,
+            diagnostics.rawFrames,
+            static_cast<unsigned long>(rawMaxAbs),
+            static_cast<float>(rawMean),
+            static_cast<float>(rawMeanAbs),
+            diagnostics.rawMin,
+            diagnostics.rawMax,
+            static_cast<float>(rawSameValueRatio),
+            static_cast<unsigned long>(diagnostics.rawSameValueMaxRun),
+            static_cast<unsigned long>(diagnostics.rawBlockHashRepeatCount),
+            diagnostics.audioFlatlineFrames,
+            diagnostics.audioZeroishFrames,
+            diagnostics.audioLargeJumpFrames,
+            diagnostics.audioRms,
+            diagnostics.audioRmsTooLowFrames,
+            diagnostics.audioRmsTooHighFrames
+        );
+        const bool audioRepeatWarningOnly = strcmp(audioHealth, "flatline") == 0 && strcmp(rawHealthClass, "ok") == 0;
         const bool audioPresent = diagnostics.audioFrames > 0;
-        const bool freshnessHeldEvidence = report.frequency.freshFrames == 0 && report.frequency.heldFrames > 0;
-        const bool detectorStayedOpen = report.frequency.fmOpened && !report.frequency.fmReleased && !report.frequency.fmEmitted;
         const bool timingBacklog = _sequenceTest.maxProcessingLagMs > 250UL;
-
-        const char* faultClass = "UNKNOWN";
-        if (!audioPresent) {
-            faultClass = "NO_AUDIO_EVENT";
-        } else if (strcmp(audioHealth, "clipped") == 0 ||
-                   strcmp(audioHealth, "flatline") == 0 ||
-                   strcmp(audioHealth, "zeroish") == 0) {
-            faultClass = "INPUT_SAMPLE_BAD";
-        } else if (freshnessHeldEvidence) {
-            faultClass = "FRESHNESS_HELD_EVIDENCE_SUSPECT";
-        } else if (detectorStayedOpen) {
-            faultClass = "DETECTOR_STUCK_ACTIVE";
-        } else if (report.frequency.nearMiss) {
-            if (report.frequency.nearMissReason != nullptr &&
-                (strcmp(report.frequency.nearMissReason, "score_ok_contrast_low") == 0 ||
-                 strcmp(report.frequency.nearMissReason, "contrast_ok_score_low") == 0 ||
-                 strcmp(report.frequency.nearMissReason, "both_ok_no_emission") == 0)) {
-                faultClass = "DETECTOR_REJECTED_TARGET_PRESENT";
-            } else if (report.frequency.maxScore >= report.frequency.scoreThreshold * 0.75f ||
-                       report.frequency.maxContrast >= report.frequency.contrastThreshold * 0.75f) {
-                faultClass = "OUTPUT_SPECTRAL_SHIFT";
-            } else {
-                faultClass = "OUTPUT_BROADBAND_NON_TONAL";
-            }
-        } else if (timingBacklog) {
-            faultClass = "TIMING_BACKLOG";
-        }
+        const char* faultClass = sequenceFaultClassNameFromMiss(
+            report,
+            rawHealthClass,
+            audioPresent,
+            audioRepeatWarningOnly,
+            timingBacklog
+        );
 
         Serial.print("SEQ_STREAK_FAULT trial=");
         Serial.print(report.context.trial);
@@ -1385,6 +1454,36 @@ void AnalyzerApp::printSequenceTrialResult(const AnalyzerReport& report) const {
         Serial.print(audioPresent ? 1 : 0);
         Serial.print(" audio_health=");
         Serial.print(audioHealth);
+        Serial.print(" raw_health_class=");
+        Serial.print(rawHealthClass != nullptr ? rawHealthClass : "unknown");
+        Serial.print(" raw_min=");
+        Serial.print(diagnostics.rawFrames > 0 ? diagnostics.rawMin : 0);
+        Serial.print(" raw_max=");
+        Serial.print(diagnostics.rawFrames > 0 ? diagnostics.rawMax : 0);
+        Serial.print(" raw_range=");
+        Serial.print(rawRange, 1);
+        Serial.print(" raw_mean=");
+        Serial.print(rawMean, 1);
+        Serial.print(" raw_mean_abs=");
+        Serial.print(rawMeanAbs, 1);
+        Serial.print(" raw_spread_est=");
+        Serial.print(rawSpreadEst, 1);
+        Serial.print(" zero_cross_rate=");
+        Serial.print(rawZeroCrossRate, 3);
+        Serial.print(" same_value_ratio=");
+        Serial.print(rawSameValueRatio, 3);
+        Serial.print(" repeated_sample_max_run=");
+        Serial.print(static_cast<unsigned int>(diagnostics.rawSameValueMaxRun));
+        Serial.print(" block_hash_repeat_count=");
+        Serial.print(static_cast<unsigned int>(diagnostics.rawBlockHashRepeatCount));
+        Serial.print(" audio_flatline_frames=");
+        Serial.print(diagnostics.audioFlatlineFrames);
+        Serial.print(" audio_zeroish_frames=");
+        Serial.print(diagnostics.audioZeroishFrames);
+        Serial.print(" audio_large_jump_frames=");
+        Serial.print(diagnostics.audioLargeJumpFrames);
+        Serial.print(" audio_rms=");
+        Serial.print(diagnostics.audioRms, 1);
         Serial.print(" freq_score_max=");
         Serial.print(report.frequency.maxScore, 1);
         Serial.print(" freq_contrast_max=");
@@ -2416,7 +2515,16 @@ void AnalyzerApp::printSignalCheck() const {
         static_cast<float>(rawMean),
         static_cast<float>(rawMeanAbs),
         diagnostics.rawMin,
-        diagnostics.rawMax
+        diagnostics.rawMax,
+        static_cast<float>(rawSameValueRatio),
+        static_cast<unsigned long>(diagnostics.rawSameValueMaxRun),
+        static_cast<unsigned long>(diagnostics.rawBlockHashRepeatCount),
+        diagnostics.audioFlatlineFrames,
+        diagnostics.audioZeroishFrames,
+        diagnostics.audioLargeJumpFrames,
+        diagnostics.audioRms,
+        diagnostics.audioRmsTooLowFrames,
+        diagnostics.audioRmsTooHighFrames
     );
     Serial.print(" raw_min=");
     Serial.print(diagnostics.rawFrames > 0 ? diagnostics.rawMin : 0);

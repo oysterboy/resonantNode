@@ -472,7 +472,16 @@ void AnalyzerApp::printSystemHealth(const AnalyzerReport& report) const {
         rawDcMean,
         rawMeanAbs,
         rawDiagnostics.rawMin,
-        rawDiagnostics.rawMax
+        rawDiagnostics.rawMax,
+        0.0f,
+        0UL,
+        0UL,
+        _sequenceTest.currentTrialDiagnostics.audioFlatlineFrames,
+        _sequenceTest.currentTrialDiagnostics.audioZeroishFrames,
+        _sequenceTest.currentTrialDiagnostics.audioLargeJumpFrames,
+        _sequenceTest.currentTrialDiagnostics.audioRms,
+        _sequenceTest.currentTrialDiagnostics.audioRmsTooLowFrames,
+        _sequenceTest.currentTrialDiagnostics.audioRmsTooHighFrames
     );
     if (_sequenceTest.outputConfig.verbosity >= 1U) {
         Serial.print("RAW_AUDIO_HEALTH");

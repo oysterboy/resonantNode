@@ -585,10 +585,10 @@ Current landed SEQ output contract is intentionally compact and scoped:
 
 ```text
 SEQ_TRIAL    compact truth, default output
-SEQ_SOURCE   accepted candidate from PatternResult
-SEQ_SOURCE_REJECTS  best rejected candidate + aggregates
-SEQ_SOURCE_LAST_CANDIDATE  detector snapshot
-SEQ_SOURCE_DIAG  candidate-independent window/evidence stats
+SEQ_SOURCE   compact source summary
+SEQ_SOURCE_REJECTS  selected reject summary + aggregates
+SEQ_SOURCE_LAST_CANDIDATE  detector snapshot / lifecycle evidence
+SEQ_SOURCE_DIAG  candidate-independent deep evidence
 SEQ_INSPECT  per-module inspector evidence
 SEQ_PATTERN  pattern assembly / rules contract
 SEQ_DUMP     deep verbose developer fallback
@@ -598,8 +598,8 @@ SEQ_SUMMARY  aggregate run comparison
 Command/state controls:
 
 ```text
-SEQ PROFILE <tonalpulse|tonalpulse2|amp|chirp_experimental>
-SEQ MODE <quiet|compact|signalcheck|full|source|inspect|pattern|dump>
+SEQ PROFILE <tonalpulse|amp|chirp_experimental>
+SEQ MODE <quiet|trial|compact|signalcheck|streak|full|system|source|inspect|pattern|explain|dump>
 SEQ WHEN <off|miss|all>
 SEQ VERBOSE <0|1|2>
 SEQ TRIES <N>
@@ -609,13 +609,16 @@ SEQ STATUS
 Verbosity contract:
 
 ```text
-VERBOSE 0 = compact output
+VERBOSE 0 = compact trial output plus compact anomaly fields
 VERBOSE 1 = readable stage summary
 VERBOSE 2 = namespaced deep detail
-MODE=DUMP remains the raw developer fallback
+MODE full stays readable at V0/V1; deep dumps move to V2/explain
+MODE explain|dump remains the raw developer fallback
 ```
 
-Rejected detector/source candidates are kept as compact bounded summaries. Analyzer owns aggregation and readable selection; detector/source owns candidate lifecycle and reject reasons. `SEQ_SOURCE_DIAG` stays candidate-independent and can include frame/evidence freshness facts even when no candidate exists.
+Rejected detector/source candidates are kept as compact bounded summaries. Analyzer owns aggregation and readable selection; detector/source owns candidate lifecycle and reject reasons. `SEQ_SOURCE_DIAG` stays candidate-independent and can include frame/evidence freshness facts even when no candidate exists. `SEQ_SOURCE` and `SEQ_TRIAL` stay compact, while `SEQ_SOURCE_LAST_CANDIDATE` and `SEQ_SOURCE_DIAG` are reserved for deeper source evidence.
+
+Roadmap names such as `SEQ_SOURCE_FREQ` and `SEQ_EXPLAIN` may still appear in planning docs as a conceptual split for frequency evidence and structured explanation. In the landed runtime, those deeper diagnostics are represented by the compact `SEQ_SOURCE_*` family plus the `explain` / `dump` deep mode, so the spec should not imply a separate active top-level output mode unless the code actually adds one.
 
 Analyzer display labels are owned by the analyzer reporting descriptor layer. Detectors and inspectors keep semantic data; the analyzer maps that data into stable namespaced output. New profiles extend those namespace mappings instead of adding ad hoc printer strings in the runtime pipeline.
 
@@ -708,8 +711,9 @@ Landed profile behavior in analyzer terms:
 - `Amp` currently uses `ScalarTransient` as the source path.
 - `SEQ_SOURCE`, `SEQ_INSPECT`, and `SEQ_PATTERN` stay separated so source, inspector, and pattern diagnosis do not mix.
 - `SEQ_SOURCE_REJECTS` reports trial-local best reject context plus aggregate reject statistics.
-- `SEQ_SOURCE_LAST_CANDIDATE` reports the detector snapshot, not trial truth.
+- `SEQ_SOURCE_LAST_CANDIDATE` reports detector snapshot and lifecycle evidence, not trial truth.
 - `SEQ_SOURCE_DIAG` reports window-level evidence facts, including freshness and threshold-hit frames.
+- `SEQ_DUMP` remains the verbose mixed developer fallback, typically used at V2 or under `explain`.
 
 When adding a new detection profile, also add or extend its analyzer namespace mapping so the staged output stays useful and profile-generic. Do not hardcode analyzer display labels in detectors or inspectors.
 

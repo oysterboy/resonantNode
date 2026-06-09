@@ -2823,8 +2823,10 @@ void AnalyzerApp::printSequenceSummary() const {
     if (_sequenceTest.showDetails) {
         printDetectionParameters();
     }
-    printAudioSourceSummary();
-    printOccurrenceSummary();
+    if (_sequenceTest.outputConfig.verbosity > 0U || _sequenceTest.outputConfig.mode == SeqOutputMode::Explain) {
+        printAudioSourceSummary();
+        printOccurrenceSummary();
+    }
 }
 
 void AnalyzerApp::printSequenceFinalOutput() const {
@@ -2832,7 +2834,11 @@ void AnalyzerApp::printSequenceFinalOutput() const {
         return;
     }
     printSequenceSummary();
-    printAudioRunSummary();
+    if (_sequenceTest.outputConfig.verbosity > 0U ||
+        _sequenceTest.outputConfig.mode == SeqOutputMode::System ||
+        _sequenceTest.outputConfig.mode == SeqOutputMode::Explain) {
+        printAudioRunSummary();
+    }
 }
 
 void AnalyzerApp::printSequenceStatus() const {

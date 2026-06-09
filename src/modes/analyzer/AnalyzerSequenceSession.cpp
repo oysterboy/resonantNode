@@ -195,6 +195,7 @@ void AnalyzerApp::startSequenceTest(const PendingSequenceStart& pending) {
     _sequenceTest.misses = 0;
     _sequenceTest.unexpected = 0;
     _sequenceTest.duplicates = 0;
+    _sequenceTest.fragmentedAccepted = 0;
     _sequenceTest.invalidAudio = 0;
     _sequenceTest.startupArtifacts = 0;
     _sequenceTest.samplesProcessed = 0;
@@ -534,6 +535,11 @@ void AnalyzerApp::finalizeSequenceTrial(unsigned long now) {
     buildSequenceAnalyzerReport(*finalizedReport, _sequenceTest.currentTrial, result, dtMs, durMs, strength, invalidAudioTrial, diagnostics.duplicateCount, diagnostics);
     _sequenceTest.completedTrials++;
     _sequenceTest.totalPatternConfidence += finalizedReport->primaryPattern.confidence;
+    if (finalizedReport->source.acceptedPresent &&
+        (finalizedReport->source.sourceSummary.totalGapMs > 0 ||
+         finalizedReport->source.sourceSummary.islandCount > 1)) {
+        _sequenceTest.fragmentedAccepted++;
+    }
     if (finalizedReport->classification.dtMs >= 0) {
         _sequenceTest.totalPatternDtMs += static_cast<unsigned long>(finalizedReport->classification.dtMs);
         _sequenceTest.patternDtCount++;

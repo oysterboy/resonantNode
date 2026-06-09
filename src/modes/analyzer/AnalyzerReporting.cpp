@@ -324,6 +324,31 @@ const char* sourceCandidateScopeName(unsigned long peakMs, unsigned long windowS
     return "in_window";
 }
 
+unsigned long sourceGapCount(const AnalyzerSourceCandidateSummary& summary) {
+    return summary.islandCount > 0 ? summary.islandCount - 1UL : 0UL;
+}
+
+bool sourceFragmented(const AnalyzerSourceCandidateSummary& summary) {
+    return sourceGapCount(summary) > 0 || summary.totalGapMs > 0;
+}
+
+void printCompactGapFields(const AnalyzerSourceCandidateSummary& summary, bool alwaysPrintIslands = false) {
+    const unsigned long gapCount = sourceGapCount(summary);
+    if (gapCount > 0 || summary.totalGapMs > 0 || summary.maxGapMs > 0 || summary.candidateCount > 1) {
+        Serial.print(" gap_count=");
+        Serial.print(gapCount);
+        Serial.print(" max_gap_ms=");
+        Serial.print(summary.maxGapMs);
+    }
+    if (alwaysPrintIslands || summary.islandCount > 1) {
+        Serial.print(" islands=");
+        Serial.print(summary.islandCount > 0 ? summary.islandCount : 1UL);
+    }
+    if (sourceFragmented(summary)) {
+        Serial.print(" fragmented=1");
+    }
+}
+
 void printSourceRejectSummaryLine(
     const char* label,
     unsigned long trialId,
@@ -394,6 +419,208 @@ void printSourceRejectSummaryLine(
     Serial.print("  ");
     printField(kSourceScopeField, scope);
     Serial.println();
+}
+
+void printCompactFrequencySourceSummary(
+    const AnalyzerReport& report,
+    const AnalyzerSourceStageReport& source,
+    const AnalyzerFrequencyDiagnostic& frequencySource
+) {
+    const auto& summary = source.sourceSummary;
+    const bool accepted = source.acceptedPresent;
+    const float score = accepted ? frequencySource.acceptedScore : frequencySource.maxScore;
+    const float contrast = accepted ? frequencySource.acceptedContrast : frequencySource.maxContrast;
+    const unsigned long durationMs = accepted ? frequencySource.acceptedDurationMs : summary.bestDurationMs;
+    const char* closeCause = frequencySource.fmCloseCause != nullptr ? frequencySource.fmCloseCause : "none";
+
+    Serial.print("SEQ_SOURCE t=");
+    Serial.print(report.context.trial);
+    Serial.print(" state=");
+    Serial.print(accepted ? "accepted" : "none");
+    Serial.print(" src=freq");
+    Serial.print(" score=");
+    Serial.print(score, 1);
+    Serial.print(" contrast=");
+    Serial.print(contrast, 2);
+    Serial.print(" dur=");
+    Serial.print(durationMs);
+    Serial.print("ms");
+    Serial.print(" cand=");
+    Serial.print(summary.candidateCount);
+    Serial.print(" rejects=");
+    Serial.print(summary.rejectCount);
+    if (accepted) {
+        printCompactGapFields(summary, true);
+    }
+    Serial.print(" close=");
+    Serial.print(closeCause);
+    Serial.println();
+}
+
+void printCompactFrequencySourceExtras(
+    const AnalyzerReport& report,
+    const AnalyzerSourceStageReport& source,
+    const AnalyzerFrequencyDiagnostic& frequencySource
+) {
+    const auto& summary = source.sourceSummary;
+    const unsigned long candidateId = frequencySource.acceptedCandidateId > 0
+        ? frequencySource.acceptedCandidateId
+        : frequencySource.lifecycleCandidateId;
+    const unsigned long holdMs = frequencySource.candidateLastMatchMs >= frequencySource.fmOpenMs
+        ? frequencySource.candidateLastMatchMs - frequencySource.fmOpenMs
+        : 0UL;
+
+    Serial.print("SEQ_SOURCE_CAND t=");
+    Serial.print(report.context.trial);
+    Serial.print(" id=");
+    Serial.print(candidateId);
+    Serial.print(" open=");
+    Serial.print(frequencySource.fmOpenMs);
+    Serial.print(" peak=");
+    Serial.print(frequencySource.fmPeakMs);
+    Serial.print(" release=");
+    Serial.print(frequencySource.fmReleaseMs);
+    Serial.print(" hold=");
+    Serial.print(holdMs);
+    Serial.print(" dur=");
+    Serial.print(frequencySource.fmDurationMs);
+    Serial.print(" min=");
+    Serial.print(frequencySource.fmMinDurationUsedMs);
+    Serial.print(" duration_ok=");
+    Serial.print(frequencySource.fmDurationOk ? 1 : 0);
+    Serial.print(" emitted=");
+    Serial.println(frequencySource.fmEmitted ? 1 : 0);
+
+    if (source.acceptedPresent || summary.totalGapMs > 0 || summary.islandCount > 1) {
+        Serial.print("SEQ_SOURCE_GAPS t=");
+        Serial.print(report.context.trial);
+        Serial.print(" accepted_id=");
+        Serial.print(frequencySource.acceptedCandidateId);
+        Serial.print(" islands=");
+        Serial.print(summary.islandCount > 0 ? summary.islandCount : 1UL);
+        Serial.print(" gap_count=");
+        Serial.print(sourceGapCount(summary));
+        Serial.print(" total_gap_ms=");
+        Serial.print(summary.totalGapMs);
+        Serial.print(" max_gap_ms=");
+        Serial.print(summary.maxGapMs);
+        Serial.print(" longest_match_ms=");
+        Serial.print(frequencySource.diagLongestMatchStreakMs);
+        Serial.print(" coverage_ms=");
+        Serial.println(summary.totalMatchMs);
+    }
+
+    if (summary.rejectCount > 0) {
+        Serial.print("SEQ_SOURCE_REJECT t=");
+        Serial.print(report.context.trial);
+        Serial.print(" rejects=");
+        Serial.print(summary.rejectCount);
+        Serial.print(" best_dur=");
+        Serial.print(summary.bestDurationMs);
+        Serial.print(" second_dur=");
+        Serial.print(summary.secondBestDurationMs);
+        Serial.print(" best_score=");
+        Serial.print(summary.bestPeakPrimary, 1);
+        Serial.print(" best_reason=");
+        Serial.print(summary.bestRejectReason != nullptr ? summary.bestRejectReason : "none");
+        Serial.print(" best_gap=");
+        Serial.println(summary.maxGapMs);
+    }
+}
+
+void printCompactScalarSourceSummary(
+    const AnalyzerReport& report,
+    const AnalyzerSourceStageReport& source,
+    const AnalyzerScalarDiagnostic& scalarSource
+) {
+    const auto& summary = source.sourceSummary;
+    const bool accepted = source.acceptedPresent;
+
+    Serial.print("SEQ_SOURCE t=");
+    Serial.print(report.context.trial);
+    Serial.print(" state=");
+    Serial.print(accepted ? "accepted" : "none");
+    Serial.print(" src=scalar");
+    Serial.print(" score=");
+    Serial.print(accepted ? scalarSource.acceptedScore : summary.bestPeakPrimary, 1);
+    Serial.print(" contrast=0.00");
+    Serial.print(" dur=");
+    Serial.print(accepted ? scalarSource.acceptedDurationMs : summary.bestDurationMs);
+    Serial.print("ms");
+    Serial.print(" cand=");
+    Serial.print(summary.candidateCount);
+    Serial.print(" rejects=");
+    Serial.print(summary.rejectCount);
+    if (accepted) {
+        printCompactGapFields(summary, true);
+    }
+    Serial.print(" close=");
+    Serial.print(summary.closeCause != nullptr ? summary.closeCause : "none");
+    Serial.println();
+}
+
+void printCompactScalarSourceExtras(
+    const AnalyzerReport& report,
+    const AnalyzerSourceStageReport& source,
+    const AnalyzerScalarDiagnostic& scalarSource
+) {
+    const auto& summary = source.sourceSummary;
+    const auto& lastCandidate = source.lastCandidate;
+
+    Serial.print("SEQ_SOURCE_CAND t=");
+    Serial.print(report.context.trial);
+    Serial.print(" id=0");
+    Serial.print(" open=");
+    Serial.print(scalarSource.scalarOpenMs);
+    Serial.print(" peak=");
+    Serial.print(scalarSource.scalarPeakMs);
+    Serial.print(" release=");
+    Serial.print(scalarSource.scalarReleaseMs);
+    Serial.print(" hold=");
+    Serial.print(scalarSource.scalarReleaseMs >= scalarSource.scalarOpenMs ? scalarSource.scalarReleaseMs - scalarSource.scalarOpenMs : 0UL);
+    Serial.print(" dur=");
+    Serial.print(scalarSource.scalarDurationMs);
+    Serial.print(" min=");
+    Serial.print(scalarSource.scalarMinDurationMs);
+    Serial.print(" duration_ok=");
+    Serial.print(scalarSource.scalarValidRelease ? 1 : 0);
+    Serial.print(" emitted=");
+    Serial.println(scalarSource.sourceOccurrenceEmitted ? 1 : 0);
+
+    if (source.acceptedPresent || summary.totalGapMs > 0 || summary.islandCount > 1) {
+        Serial.print("SEQ_SOURCE_GAPS t=");
+        Serial.print(report.context.trial);
+        Serial.print(" accepted_id=0");
+        Serial.print(" islands=");
+        Serial.print(summary.islandCount > 0 ? summary.islandCount : 1UL);
+        Serial.print(" gap_count=");
+        Serial.print(sourceGapCount(summary));
+        Serial.print(" total_gap_ms=");
+        Serial.print(summary.totalGapMs);
+        Serial.print(" max_gap_ms=");
+        Serial.print(summary.maxGapMs);
+        Serial.print(" longest_match_ms=");
+        Serial.print(lastCandidate.durationMs);
+        Serial.print(" coverage_ms=");
+        Serial.println(summary.totalMatchMs);
+    }
+
+    if (summary.rejectCount > 0) {
+        Serial.print("SEQ_SOURCE_REJECT t=");
+        Serial.print(report.context.trial);
+        Serial.print(" rejects=");
+        Serial.print(summary.rejectCount);
+        Serial.print(" best_dur=");
+        Serial.print(summary.bestDurationMs);
+        Serial.print(" second_dur=");
+        Serial.print(summary.secondBestDurationMs);
+        Serial.print(" best_score=");
+        Serial.print(summary.bestPeakPrimary, 1);
+        Serial.print(" best_reason=");
+        Serial.print(summary.bestRejectReason != nullptr ? summary.bestRejectReason : "none");
+        Serial.print(" best_gap=");
+        Serial.println(summary.maxGapMs);
+    }
 }
 
 void printSequenceSourcePreamble(
@@ -1501,15 +1728,16 @@ void AnalyzerApp::printSequenceTrialResult(const AnalyzerReport& report) const {
         Serial.print(" duration_ms=");
         Serial.print(report.frequency.acceptedDurationMs);
     }
-    if (_sequenceTest.currentTrialDiagnostics.duplicateCount > 0) {
-        Serial.print(" duplicate_count=");
-        Serial.print(_sequenceTest.currentTrialDiagnostics.duplicateCount);
-    }
+    Serial.print(" candidate_count=");
+    Serial.print(_sequenceTest.currentTrialDiagnostics.candidateCount);
+    Serial.print(" duplicate_count=");
+    Serial.print(_sequenceTest.currentTrialDiagnostics.duplicateCount);
+    printCompactGapFields(report.source.sourceSummary);
     if (_sequenceTest.outputConfig.verbosity > 0U) {
-        Serial.print(" candidate_count=");
-        Serial.print(_sequenceTest.currentTrialDiagnostics.candidateCount);
-        Serial.print(" miss_streak=");
-        Serial.print(_sequenceTest.currentMissStreak);
+        if (_sequenceTest.currentMissStreak > 0) {
+            Serial.print(" miss_streak=");
+            Serial.print(_sequenceTest.currentMissStreak);
+        }
     }
     Serial.println();
 }
@@ -1822,7 +2050,7 @@ void AnalyzerApp::printSequenceInspect(const AnalyzerReport& report) const {
         }
         Serial.println();
 
-        if (inspectDetailLevel > 0U) {
+        if (inspectDetailLevel >= 2U) {
             Serial.print("SEQ_INSPECT_COMPARE");
             Serial.print(" module=");
             Serial.print(static_cast<unsigned long>(i + 1U));
@@ -2204,15 +2432,21 @@ void AnalyzerApp::printSequenceDiagnostics(const AnalyzerReport& report) const {
         return;
     }
     const unsigned int detailLevel = sequenceDetailLevel(_sequenceTest.outputConfig);
-    const bool compactSource = detailLevel == 0U &&
-        _sequenceTest.outputConfig.mode != SeqOutputMode::Explain;
-    const bool compactSourceDiag = compactSource;
     if (report.profileDetail.emitter != nullptr && strcmp(report.profileDetail.emitter, "ScalarTransientSource") == 0) {
         printSequenceScalarDiagnostics(report);
         return;
     }
     const auto& source = report.source;
     const auto& frequencySource = source.frequencyMatch;
+    if (detailLevel == 0U) {
+        printCompactFrequencySourceSummary(report, source, frequencySource);
+        return;
+    }
+    if (detailLevel == 1U) {
+        printCompactFrequencySourceSummary(report, source, frequencySource);
+        printCompactFrequencySourceExtras(report, source, frequencySource);
+        return;
+    }
     printSequenceSourcePreamble(
         false,
         source,
@@ -2228,7 +2462,7 @@ void AnalyzerApp::printSequenceDiagnostics(const AnalyzerReport& report) const {
         frequencySource.windowEndMs
     );
     printSequenceSourceLifecycleDetail(report, source, frequencySource);
-    printFrequencyMatchSourceDetail(report, source, frequencySource, detailLevel, compactSourceDiag);
+    printFrequencyMatchSourceDetail(report, source, frequencySource, detailLevel, false);
 }
 
 void AnalyzerApp::printSequenceScalarDiagnostics(const AnalyzerReport& report) const {
@@ -2242,6 +2476,15 @@ void AnalyzerApp::printSequenceScalarDiagnostics(const AnalyzerReport& report) c
     const unsigned int detailLevel = sequenceDetailLevel(_sequenceTest.outputConfig);
     const auto& source = report.source;
     const auto& scalarSource = source.scalarTransient;
+    if (detailLevel == 0U) {
+        printCompactScalarSourceSummary(report, source, scalarSource);
+        return;
+    }
+    if (detailLevel == 1U) {
+        printCompactScalarSourceSummary(report, source, scalarSource);
+        printCompactScalarSourceExtras(report, source, scalarSource);
+        return;
+    }
 
     printSequenceSourcePreamble(
         true,
@@ -2417,6 +2660,8 @@ void AnalyzerApp::printSequenceSummary() const {
         Serial.print(summary.miss);
         Serial.print(" duplicate=");
         Serial.print(_sequenceTest.duplicates);
+        Serial.print(" fragmented=");
+        Serial.print(_sequenceTest.fragmentedAccepted);
         Serial.print(" miss_streak_max=");
         Serial.print(_sequenceTest.longestMissStreak);
         Serial.print(" avg_dt=");

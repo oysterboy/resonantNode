@@ -389,6 +389,7 @@ private:
         unsigned long misses = 0;
         unsigned long unexpected = 0;
         unsigned long duplicates = 0;
+        unsigned long fragmentedAccepted = 0;
         unsigned long invalidAudio = 0;
         unsigned long startupArtifacts = 0;
         unsigned long samplesProcessed = 0;

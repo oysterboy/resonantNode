@@ -3,7 +3,7 @@
 ## Purpose
 
 Document the first active scalar `DetectorReport` migration path added in Pass D
-and updated through Pass G2b.
+and updated through Pass H.
 
 This pass introduces a canonical scalar detector report without removing the legacy `DetectionDiagnostics` bridge or changing Analyzer legacy output.
 
@@ -34,6 +34,15 @@ ScalarTransientDetector
 ```
 
 Legacy diagnostics remain populated in parallel for compatibility.
+
+Accepted scalar occurrence emission is now detector-owned too:
+
+```text
+ScalarTransientDetector
+-> popOccurrence(...)
+-> DetectionRuntime::drainOccurrenceSources()
+-> Inspector / Pattern path
+```
 
 ## Temporary Runtime Refresh Warning
 
@@ -108,8 +117,8 @@ and refreshed by `DetectionRuntime::refreshDetectorReports()`.
 
 This remains transitional:
 
-- `ScalarOccurrenceSource` still owns the active lifecycle bridge to emitted `Occurrence`
 - `ScalarOccurrenceSource` still owns legacy aggregate rejected-candidate diagnostics compatibility
+- `ScalarOccurrenceSource` still remains as a temporary legacy compatibility shell around the detector
 - `ScalarTransientDetector` exposes detector-local report building through `buildReport(...)` rather than a stored `report()` object
 - `DetectionRuntime` still stores the scalar report snapshot for the stable `scalarDetectorReport()` accessor
 
@@ -140,7 +149,7 @@ This pass does not:
 ## Remaining Gaps
 
 - `DetectionRuntime` still stores the scalar report snapshot even though detector-local code now assembles it
-- `ScalarOccurrenceSource` still owns scalar `Occurrence` emission and legacy aggregate reject diagnostics
+- `ScalarOccurrenceSource` no longer owns scalar `Occurrence` emission, but it still owns legacy aggregate reject diagnostics compatibility bookkeeping
 - scalar Analyzer synthesis still needs `DetectionDiagnostics` for some fallback and legacy-only fields
 - frequency still has no populated `DetectorReport` path
 - no migrated frequency detector-local report production path exists yet
@@ -149,6 +158,8 @@ This pass does not:
 
 Recommended next pass:
 
-- `Pass H - Route Scalar Occurrence Emission Directly from ScalarTransientDetector`
+- `Pass H2 - Remove Remaining ScalarOccurrenceSource Runtime Responsibilities`
 
-That pass should keep the canonical scalar report path detector-owned while shrinking the temporary wrapper role around occurrence emission.
+That pass should keep the canonical scalar report path detector-owned while
+shrinking the remaining wrapper role around legacy reject-summary
+compatibility.

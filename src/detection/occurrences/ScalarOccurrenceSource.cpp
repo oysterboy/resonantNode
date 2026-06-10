@@ -53,15 +53,7 @@ void ScalarOccurrenceSource::setConfig(const ScalarTransientConfig& config) {
 }
 
 void ScalarOccurrenceSource::observeFrame(const AudioSamplePacket& audioSamplePacket, float signalLevel, OccurrenceKind kind, OccurrenceSource source) {
-    observe(audioSamplePacket, signalLevel);
-
-    if (transientDetected()) {
-        Occurrence candidate;
-        if (consumeCandidate(audioSamplePacket, kind, source, candidate)) {
-            _pending = candidate;
-            _hasPending = true;
-        }
-    }
+    observe(audioSamplePacket, signalLevel, kind, source);
 }
 
 void ScalarOccurrenceSource::setOnsetDetectionThreshold(float value) {
@@ -100,17 +92,21 @@ void ScalarOccurrenceSource::setDiagnosticsLabel(const char* value) {
     _detector.setDiagnosticsLabel(value);
 }
 
-void ScalarOccurrenceSource::observe(const AudioSamplePacket& audioSamplePacket, float signalLevel) {
+void ScalarOccurrenceSource::observe(
+    const AudioSamplePacket& audioSamplePacket,
+    float signalLevel,
+    OccurrenceKind kind,
+    OccurrenceSource source
+) {
     if (!audioSamplePacket.valid) {
         return;
     }
 
-    _detector.update(signalLevel, audioSamplePacket.timeUs);
+    _detector.update(audioSamplePacket, signalLevel, kind, source);
 
     if (_detector.onsetDetected()) {
         _candidateActive = true;
         _releaseObserved = false;
-        _candidateReady = false;
         _candidateFirstSeenSample = audioSamplePacket.sampleIndex;
         _candidatePeakSample = audioSamplePacket.sampleIndex;
         _candidateReleaseSample = audioSamplePacket.sampleIndex;
@@ -140,11 +136,13 @@ void ScalarOccurrenceSource::observe(const AudioSamplePacket& audioSamplePacket,
     if (_candidateActive) {
         if (_detector.releaseObserved()) {
             _releaseObserved = true;
+            _candidateReleaseSample = audioSamplePacket.sampleIndex;
             _candidateReleaseObservedUs = _detector.releaseObservedUs();
             _candidateReleaseObservedMs = _candidateReleaseObservedUs / 1000UL;
         } else if (!_detector.transientDetected() && _releaseObserved) {
             // The occurrence recovered before the release debounce elapsed.
             _releaseObserved = false;
+            _candidateReleaseSample = 0;
             _candidateReleaseObservedUs = 0;
             _candidateReleaseObservedMs = 0;
         }
@@ -190,8 +188,7 @@ void ScalarOccurrenceSource::observe(const AudioSamplePacket& audioSamplePacket,
     }
 
     if (_candidateActive && _detector.transientDetected()) {
-        _candidateReady = true;
-        _candidateReleaseSample = audioSamplePacket.sampleIndex;
+        resetCandidateLifecycle();
     }
 }
 
@@ -212,7 +209,7 @@ float ScalarOccurrenceSource::onsetStrength() const {
 }
 
 bool ScalarOccurrenceSource::transientDetected() const {
-    return _candidateReady && _detector.transientDetected();
+    return _detector.transientDetected();
 }
 
 float ScalarOccurrenceSource::transientStrength() const {
@@ -344,70 +341,14 @@ float ScalarOccurrenceSource::lastTransientRejectedStrength() const {
 }
 
 bool ScalarOccurrenceSource::popOccurrence(Occurrence& out) {
-    if (!_hasPending) {
-        return false;
-    }
-
-    out = _pending;
-    _pending = {};
-    _hasPending = false;
-    return true;
-}
-
-bool ScalarOccurrenceSource::consumeCandidate(const AudioSamplePacket& audioSamplePacket,
-                                           OccurrenceKind kind,
-                                           OccurrenceSource source,
-                                           Occurrence& out) {
-    if (!_candidateReady || !_candidateActive) {
-        return false;
-    }
-
-    out = {};
-    out.kind = kind;
-    out.source = source;
-    out.detectorKind = kind == OccurrenceKind::FrequencyMatch
-        ? OccurrenceDetectorKind::FrequencyMatch
-        : OccurrenceDetectorKind::Transient;
-    out.present = true;
-    out.startSample = _candidateFirstSeenSample;
-    out.peakSample = _candidatePeakSample;
-    out.releaseSample = _candidateReleaseSample;
-    out.startMs = _candidateFirstSeenMs;
-    out.peakMs = _candidatePeakMs;
-    out.releaseMs = _releaseObserved ? _candidateReleaseObservedMs : audioSamplePacket.timeMs;
-    out.endMs = out.releaseMs;
-    out.durationMs = out.releaseMs >= out.startMs ? out.releaseMs - out.startMs : 0UL;
-    out.strength = _candidatePeakStrength;
-    out.score = _candidatePeakStrength;
-    out.contrast = 0.0f;
-    out.confidence = 1.0f;
-    out.ampEvidencePresent = true;
-    out.ampLevel = audioSamplePacket.audioMagnitudeValue;
-    out.ampBaseline = audioSamplePacket.baseline;
-    out.transient.present = true;
-    out.transient.onsetSample = _candidateFirstSeenSample;
-    out.transient.peakSample = _candidatePeakSample;
-    out.transient.releaseSample = _candidateReleaseSample;
-    out.transient.startMs = _candidateFirstSeenMs;
-    out.transient.heardAtMs = out.releaseMs;
-    out.transient.acceptedMs = out.releaseMs;
-    out.transient.durationMs = out.durationMs;
-    out.transient.onsetStrength = _candidateOnsetStrength;
-    out.transient.peakStrength = _candidatePeakStrength;
-    out.transient.releaseStrength = _candidateCurrentStrength;
-    out.transient.ambientBaseline = audioSamplePacket.baseline;
-    out.transient.audioOverflowDuringCandidate = audioSamplePacket.overflowDuringBlock;
-    out.valid = true;
-
-    resetCandidateLifecycle();
-    return true;
+    // Legacy temporary shell: accepted scalar Occurrence construction now
+    // lives in ScalarTransientDetector and this wrapper only delegates polling.
+    return _detector.popOccurrence(out);
 }
 
 void ScalarOccurrenceSource::resetCandidateLifecycle() {
     _candidateActive = false;
     _releaseObserved = false;
-    _candidateReady = false;
-    _hasPending = false;
     _candidateFirstSeenSample = 0;
     _candidatePeakSample = 0;
     _candidateReleaseSample = 0;
@@ -421,7 +362,6 @@ void ScalarOccurrenceSource::resetCandidateLifecycle() {
     _candidateOnsetStrength = 0.0f;
     _candidatePeakStrength = 0.0f;
     _candidateCurrentStrength = 0.0f;
-    _pending = {};
 }
 
 } // namespace detection

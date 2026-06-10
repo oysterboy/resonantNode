@@ -3,7 +3,9 @@
 #include <stdint.h>
 
 #include "../../AudioDebugConfig.h"
+#include "../../io/AudioSignal.h"
 #include "../DetectorReport.h"
+#include "../occurrences/Occurrence.h"
 
 /*
 ScalarTransientDetector
@@ -46,7 +48,12 @@ public:
     void resetState();
     void resetAcceptedOccurrenceSummary();
     void resetSelectedRejectSummary();
-    void update(float signalLevel, uint32_t sampleTimeUs);
+    void update(
+        const AudioSamplePacket& audioSamplePacket,
+        float signalLevel,
+        detection::OccurrenceKind kind,
+        detection::OccurrenceSource source
+    );
 
     void setOnsetDetectionThreshold(float value);
     void setOnsetReleaseThreshold(float value);
@@ -91,12 +98,21 @@ public:
     const detection::ScalarDetectorReportDetail& reportDetail() const;
     bool selectedRejectPresent() const;
     const detection::RejectedCandidateSummary& selectedReject() const;
+    bool popOccurrence(detection::Occurrence& out);
 
 private:
     void updateOnsetStage(unsigned long nowUs, float signalMagnitude, bool aboveAttackThreshold, bool onsetCooldownElapsed);
     void updateTransientStage(unsigned long nowUs, float signalMagnitude, bool aboveReleaseThreshold);
     void captureAcceptedOccurrence(unsigned long releaseObservedUs, unsigned long peakDurationUs);
     void captureSelectedReject(unsigned long releaseObservedUs);
+    void updateAcceptedOccurrenceCandidate(
+        const AudioSamplePacket& audioSamplePacket,
+        float signalMagnitude,
+        detection::OccurrenceKind kind,
+        detection::OccurrenceSource source
+    );
+    void capturePendingOccurrence(const AudioSamplePacket& audioSamplePacket);
+    void resetAcceptedOccurrenceCandidate();
     void refreshReportDetail();
     void printTransientStatsIfDue(unsigned long nowUs);
 
@@ -146,7 +162,26 @@ private:
     // Canonical scalar-report facts owned directly by the detector core.
     bool _acceptedOccurrencePresent = false;
     detection::AcceptedOccurrenceSummary _acceptedOccurrence = {};
+    unsigned long _acceptedOccurrenceReleaseMs = 0;
     detection::ScalarDetectorReportDetail _reportDetail = {};
     bool _selectedRejectPresent = false;
     detection::RejectedCandidateSummary _selectedReject = {};
+
+    // Detector-owned accepted-occurrence emission state. This preserves the
+    // current scalar Occurrence payload shape while moving emission ownership
+    // out of the temporary ScalarOccurrenceSource wrapper.
+    bool _acceptedOccurrenceCandidateActive = false;
+    detection::OccurrenceKind _acceptedOccurrenceKind = detection::OccurrenceKind::None;
+    detection::OccurrenceSource _acceptedOccurrenceSource = detection::OccurrenceSource::None;
+    uint64_t _acceptedOccurrenceStartSample = 0;
+    uint64_t _acceptedOccurrencePeakSample = 0;
+    unsigned long _acceptedOccurrenceStartMs = 0;
+    unsigned long _acceptedOccurrencePeakMs = 0;
+    unsigned long _acceptedOccurrenceHoldWindows = 0;
+    float _acceptedOccurrenceOnsetStrength = 0.0f;
+    float _acceptedOccurrencePeakStrength = 0.0f;
+    float _acceptedOccurrenceCurrentStrength = 0.0f;
+    unsigned long _lastObservedAcceptedOccurrenceRejectedCount = 0;
+    bool _pendingOccurrencePresent = false;
+    detection::Occurrence _pendingOccurrence = {};
 };

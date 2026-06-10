@@ -18,7 +18,8 @@ Status vocabulary:
 | AMP diagnostics in RB | removed / Analyzer-only | AMPDIAG belongs to Analyzer / `SEQ_EXPLAIN`. |
 | Scalar DetectorReport ownership | landed | Pass G2b moved canonical scalar report assembly into `ScalarTransientDetector`; runtime coordinates snapshot refresh only. |
 | Pass H checkpoint | landed | Pass G2c documented report-access limits, wrapper-era occurrence emission ownership, and Pass H non-goals. |
-| Scalar occurrence emission cleanup | deferred | Recommended next step is detector-owned scalar `Occurrence` emission without Analyzer or Pattern cleanup in the same pass. |
+| Scalar occurrence emission cleanup | landed | Pass H moved accepted scalar `Occurrence` emission into `ScalarTransientDetector`; runtime now drains the detector-owned payload. |
+| ScalarOccurrenceSource runtime cleanup | deferred | Wrapper still performs legacy scalar reject-summary compatibility bookkeeping. |
 | BehaviorRuntime | deferred | Future behavior architecture work. |
 | OutputDispatcher | deferred | Future behavior/output separation. |
 | Full Chirp PatternRules | roadmap only | Not part of stable runtime. |

@@ -2,10 +2,10 @@
 
 ## Purpose
 
-Document the scalar report ownership move that started in Pass F and now places
-canonical scalar `DetectorReport` assembly in detector-local code without
-changing scalar detection behavior, Analyzer output, or legacy diagnostics
-compatibility.
+Document the scalar report ownership move that started in Pass F and now, after
+Pass H, leaves both canonical scalar `DetectorReport` assembly and accepted
+scalar `Occurrence` emission in detector-local code without changing scalar
+detection behavior, Analyzer output, or legacy diagnostics compatibility.
 
 ## Previous Temporary Bridge
 
@@ -92,16 +92,17 @@ change the selection policy.
 
 `ScalarOccurrenceSource` still remains in the scalar path for:
 
-- `Occurrence` emission
-- accepted occurrence payload construction
 - legacy aggregate reject summary values used by `DetectionDiagnostics`
   - reject counts
   - best / second-best rejected duration summary
   - rejected gap totals / max gap / island count
   - max rejected peak strength aggregates
+- temporary wrapper-era candidate bookkeeping that keeps those legacy
+  aggregates aligned with detector state
 - legacy last-candidate compatibility fields
 
-Pass F does not remove those wrapper-owned aggregate leftovers.
+Pass H removed wrapper-owned accepted scalar occurrence construction, but these
+legacy aggregate leftovers still remain.
 
 ## Selected Reject Ownership
 
@@ -170,23 +171,24 @@ Pass F does not:
 
 `ScalarOccurrenceSource` still cannot be deleted yet because it still owns:
 
-- scalar `Occurrence` emission
-- accepted occurrence payload construction
 - legacy aggregate reject / source-summary compatibility values
+- temporary wrapper-era candidate bookkeeping used to keep those values current
 
 `DetectionRuntime` no longer assembles scalar report fields directly, but it
 still:
 
 - stores the scalar report snapshot
 - refreshes detector reports as a coordinator step
+- drains accepted scalar occurrences from `ScalarTransientDetector`
 - copies legacy scalar compatibility values into `DetectionDiagnostics`
 
 ## Recommended Next Pass
 
 Recommended next pass:
 
-- `Pass H - Route Scalar Occurrence Emission Directly from ScalarTransientDetector`
+- `Pass H2 - Remove Remaining ScalarOccurrenceSource Runtime Responsibilities`
 
-If scalar report ownership review still reveals cleanup gaps, the fallback is:
+If scalar wrapper cleanup is deferred and frequency work becomes the better
+immediate target, the fallback is:
 
-- `Pass G3 - Finish Scalar DetectorReport Ownership Cleanup`
+- `Pass I - Begin FrequencyMatch DetectorReport Migration`

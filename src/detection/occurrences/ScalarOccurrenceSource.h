@@ -13,20 +13,20 @@ namespace detection {
 ScalarOccurrenceSource
 
 Temporary migration wrapper around the canonical ScalarTransientDetector core.
-Owns the reusable scalar candidate lifecycle around ScalarTransientDetector.
-It keeps the generic open/peak/release bookkeeping shared by AMP and
-frequency sources, while source-specific wrappers only provide the stream
-value and fill the payload-specific evidence fields.
+Now acts as a temporary compatibility shell around ScalarTransientDetector.
+It retains legacy scalar reject-summary bookkeeping while accepted scalar
+Occurrence emission moves into the detector core.
 
 Responsibilities:
 - track first seen, peak, and release-observed timing for one scalar stream
-- translate a closed scalar transient into a Occurrence payload
-- keep candidate lifecycle behavior aligned between AMP and frequency sources
+- keep legacy reject aggregates aligned with detector state
+- forward scalar stream observations into the detector core
 
 Does NOT:
 - decide pattern meaning
 - own frequency-specific scoring
 - own canonical DetectorReport truth for scalar accepted/detail/reject fields
+- own accepted scalar Occurrence construction
 - own Analyzer SEQ reporting
 - own source-specific evidence extraction
 - define the final public detector boundary
@@ -51,7 +51,12 @@ public:
     void setDiagnosticsEnabled(bool enabled);
     void setDiagnosticsLabel(const char* value);
 
-    void observe(const AudioSamplePacket& audioSamplePacket, float signalLevel);
+    void observe(
+        const AudioSamplePacket& audioSamplePacket,
+        float signalLevel,
+        OccurrenceKind kind,
+        OccurrenceSource source
+    );
     ScalarTransientDetector& detector();
     const ScalarTransientDetector& detector() const;
 
@@ -92,10 +97,6 @@ public:
     float lastTransientRejectedStrength() const;
 
     bool popOccurrence(Occurrence& out);
-    bool consumeCandidate(const AudioSamplePacket& audioSamplePacket,
-                          OccurrenceKind kind,
-                          OccurrenceSource source,
-                          Occurrence& out);
 
 private:
     void resetCandidateLifecycle();
@@ -103,8 +104,6 @@ private:
     ScalarTransientDetector _detector;
     bool _candidateActive = false;
     bool _releaseObserved = false;
-    bool _candidateReady = false;
-    bool _hasPending = false;
     uint64_t _candidateFirstSeenSample = 0;
     uint64_t _candidatePeakSample = 0;
     uint64_t _candidateReleaseSample = 0;
@@ -136,7 +135,6 @@ private:
     unsigned long _lastRejectedCloseMs = 0;
     unsigned long _rejectedIslandCount = 0;
     unsigned long _lastObservedTransientRejectedCount = 0;
-    Occurrence _pending = {};
 };
 
 } // namespace detection

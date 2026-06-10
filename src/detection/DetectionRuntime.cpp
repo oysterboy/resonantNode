@@ -620,7 +620,10 @@ void DetectionRuntime::drainOccurrenceSources(unsigned long nowMs) {
             }
             break;
         case OccurrenceSourceKind::ScalarTransient:
-            while (_scalarEmitter.popOccurrence(candidate)) {
+            // Migration-only direct detector drain: scalar accepted Occurrence
+            // construction now lives in ScalarTransientDetector even though
+            // ScalarOccurrenceSource still remains for legacy compatibility.
+            while (_scalarEmitter.detector().popOccurrence(candidate)) {
                 _fieldStateTracker.observeOccurrence(candidate, nowMs);
                 const InspectedOccurrence inspected = _occurrenceInspector.inspectWithHistory(candidate, &_featureHistory);
                 _fieldStateTracker.observeInspectedOccurrence(inspected, nowMs);

@@ -159,9 +159,10 @@ accessor used by the Analyzer bridge.
 
 Temporary bridge work still remains in the scalar path:
 
-- `ScalarOccurrenceSource` still owns scalar `Occurrence` emission
-- `ScalarOccurrenceSource` still owns legacy aggregate rejected-candidate
-  diagnostics compatibility
+- `ScalarTransientDetector` now owns scalar accepted `Occurrence` emission and
+  detector-local report production
+- `ScalarOccurrenceSource` still remains as a temporary legacy compatibility
+  shell for rejected-candidate aggregate diagnostics
 - `DetectionRuntime` still stores the scalar report snapshot and copies legacy
   scalar compatibility values into `DetectionDiagnostics`
 - runtime report access is still scalar-specific through
@@ -172,9 +173,9 @@ Temporary bridge work still remains in the scalar path:
 
 Recommended next pass:
 
-- `Pass H - Route Scalar Occurrence Emission Directly from ScalarTransientDetector`
+- `Pass H2 - Remove Remaining ScalarOccurrenceSource Runtime Responsibilities`
 
-If scalar report ownership still reveals cleanup gaps after review, the fallback
-is:
+If scalar wrapper cleanup is deferred and the report boundary remains the more
+important next concern, the fallback is:
 
-- `Pass G3 - Finish Scalar DetectorReport Ownership Cleanup`
+- `Pass I - Begin FrequencyMatch DetectorReport Migration`

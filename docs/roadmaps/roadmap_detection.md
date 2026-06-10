@@ -75,7 +75,7 @@ Diagnostic sidechain:
 
 ```text
 Detector
-  → DetectorReport / RejectedCandidateSummary
+  → DetectorReport / SelectedRejectSummary
   → Analyzer SEQ_INSPECT / SEQ_EXPLAIN
 ```
 
@@ -94,7 +94,7 @@ Detector runtime output:
 
 Detector diagnostic/reporting output:
   DetectorReport
-  RejectedCandidateSummary
+  SelectedRejectSummary
   reject aggregates
   typed detector diagnostics
 ```
@@ -160,7 +160,7 @@ DetectorId
 DetectorDescriptor
 DetectorReport
 DetectorRejectClass
-RejectedCandidateSummary
+SelectedRejectSummary
 Occurrence
 Inspector
 InspectedOccurrence
@@ -465,12 +465,10 @@ Owns:
 ```text
 detectorId
 report window
-acceptedPresent
-acceptedOccurrence
-selectedRejectPresent
+accepted
 selectedReject
-rejectAggregates
-detectorAggregates
+thresholds
+aggregates
 typed detector diagnostics
 ```
 
@@ -483,7 +481,7 @@ It is not PatternResult and not AnalyzerReport.
 
 ---
 
-#### RejectedCandidateSummary
+#### SelectedRejectSummary
 
 Purpose:
 
@@ -509,7 +507,7 @@ selected typed detail fields where relevant
 Rule:
 
 ```text
-RejectedCandidateSummary belongs inside DetectorReport.
+SelectedRejectSummary belongs inside DetectorReport.
 It is not an Occurrence.
 ```
 
@@ -673,7 +671,7 @@ Shared outward detector contract:
 stable DetectorId / DetectorDescriptor
 accepted Occurrence emission
 DetectorReport exposure
-selected rejected candidate exposure through RejectedCandidateSummary
+selected reject exposure through DetectorReport.selectedReject / SelectedRejectSummary
 generic reject class through DetectorRejectClass
 ```
 

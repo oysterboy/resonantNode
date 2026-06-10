@@ -122,7 +122,7 @@ public:
     const detection::AcceptedOccurrenceSummary& acceptedOccurrence() const;
     const detection::ScalarDetectorReportDetail& reportDetail() const;
     bool selectedRejectPresent() const;
-    const detection::RejectedCandidateSummary& selectedReject() const;
+    const detection::SelectedRejectSummary& selectedReject() const;
     const LegacyRejectSummaryCompat& legacyRejectSummary() const;
     bool popOccurrence(detection::Occurrence& out);
 
@@ -192,7 +192,7 @@ private:
     unsigned long _acceptedOccurrenceReleaseMs = 0;
     detection::ScalarDetectorReportDetail _reportDetail = {};
     bool _selectedRejectPresent = false;
-    detection::RejectedCandidateSummary _selectedReject = {};
+    detection::SelectedRejectSummary _selectedReject = {};
 
     // Detector-owned accepted-occurrence emission state. This preserves the
     // current scalar Occurrence payload shape while keeping scalar Occurrence

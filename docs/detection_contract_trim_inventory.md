@@ -7,9 +7,10 @@ This inventory follows the direction in [current-pass.md](/c:/Users/malte/Docume
 Pass H4 note:
 
 - this file still reads as an earlier inventory snapshot in places
-- later passes introduced `DetectorId`, `DetectorReport`, and `RejectedCandidateSummary` as real contract types
+- later passes introduced `DetectorId`, sectioned `DetectorReport`, and `SelectedRejectSummary` as real contract types
 - scalar now has an active `DetectorReport` path, while frequency still remains partly on legacy diagnostics
 - use [detection_payload_split_audit.md](/c:/Users/malte/Documents/PlatformIO/Projects/ESP32_learn01/docs/detection_payload_split_audit.md) for the current payload-boundary status snapshot
+- where this older inventory still says `RejectedCandidateSummary`, read it as the earlier name for the current `DetectorReport.selectedReject` / `SelectedRejectSummary` direction
 
 Reference rules used during inspection:
 
@@ -21,7 +22,7 @@ Reference rules used during inspection:
 - `InspectedOccurrence` adds retrospective inspection evidence.
 - `PatternMatcher` owns pattern interpretation.
 - `PatternResult` carries behavior-facing meaning only.
-- `DetectorReport / RejectedCandidateSummary` carries detector-stage truth and selected rejects for analyzer inspection.
+- `DetectorReport / SelectedRejectSummary` carries detector-stage truth and selected rejects for analyzer inspection.
 - `AnalyzerReport` carries trial truth only.
 
 Current best central contract marker:

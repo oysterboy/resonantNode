@@ -33,7 +33,7 @@ Current implementation bridge:
 
 ```text
 Detector
--> DetectorReport / RejectedCandidateSummary
+-> DetectorReport / SelectedRejectSummary
 -> Analyzer SEQ_INSPECT / SEQ_EXPLAIN
 ```
 
@@ -41,7 +41,8 @@ Current implementation bridge:
 
 - `DetectionDiagnostics` remains the temporary shared diagnostic dump
 - legacy analyzer source reports remain temporary report surrogates
-- `DetectorReport` and `RejectedCandidateSummary` now exist as canonical contract types, with the scalar path already using a minimal active shape while frequency still remains on legacy diagnostics
+- `DetectorReport` and `SelectedRejectSummary` now exist as canonical contract types, with the scalar path already using a sectioned active shape while frequency still remains on legacy diagnostics
+- readers stay generic; detector-specific detail belongs in detector-owned report sections such as `report.scalar.*`
 
 ## Final Public Vocabulary
 
@@ -52,7 +53,7 @@ Current implementation bridge:
 - `DetectorDescriptor`
 - `DetectorReport`
 - `DetectorRejectClass`
-- `RejectedCandidateSummary`
+- `SelectedRejectSummary`
 - `Occurrence`
 - `Inspector`
 - `InspectedOccurrence`
@@ -90,7 +91,7 @@ Minimal canonical types added in these headers:
 - `OccurrenceType`
 - `DetectorDescriptor`
 - `DetectorRejectClass`
-- `RejectedCandidateSummary`
+- `SelectedRejectSummary`
 - `DetectorReport`
 
 Decision notes:
@@ -152,7 +153,7 @@ Generic outward contract:
 - `DetectorDescriptor`
 - `Occurrence` emission
 - `DetectorReport`
-- `RejectedCandidateSummary`
+- `SelectedRejectSummary`
 - `DetectorRejectClass`
 
 Specialized internals allowed:
@@ -237,7 +238,7 @@ Legacy analyzer source reports and detector pointers remain temporary migration 
 ## Open Decisions Deferred to Implementation Passes
 
 - exact `DetectorReport` payload shape beyond the minimal placeholder
-- exact `RejectedCandidateSummary` fields per detector type
+- exact detector-specific detail sections beyond the current scalar-first `SelectedRejectSummary` shell
 - when `DetectionRuntime` stops reading from occurrence-source wrappers directly
 - detector genericity / runtime report-refresh boundary beyond the current scalar migration bridge
 - how `DetectionDiagnostics` gets split and retired

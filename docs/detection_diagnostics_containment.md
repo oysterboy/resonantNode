@@ -6,6 +6,11 @@ Contain `DetectionDiagnostics` as a transitional migration structure and prepare
 
 This pass does not migrate active runtime or analyzer behavior. It classifies the current field groups and documents where they should end up.
 
+Historical naming note:
+
+- this document predates the current sectioned `DetectorReport` shape
+- where it says `RejectedCandidateSummary`, read that as the earlier name for the current `DetectorReport.selectedReject` / `SelectedRejectSummary` direction
+
 ## Current Role of DetectionDiagnostics
 
 `DetectionDiagnostics` is currently the live shared diagnostic dump produced by `DetectionRuntime::captureDiagnostics()` in [DetectionRuntime.cpp](/c:/Users/malte/Documents/PlatformIO/Projects/ESP32_learn01/src/detection/DetectionRuntime.cpp).

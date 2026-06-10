@@ -67,20 +67,20 @@ const char* scalarRejectReasonOrFallback(const char* transientRejectReason, cons
 }
 
 void populateScalarLegacyDiagnosticsFromReport(DetectionDiagnostics& diagnostics, const DetectorReport& report) {
-    diagnostics.scalarRejectReason = report.scalarTransient.rejectReason;
-    diagnostics.scalarNoEmitReason = report.scalarTransient.noEmitReason;
-    diagnostics.scalarGateReason = report.scalarTransient.gateReason;
-    diagnostics.scalarOpened = report.scalarTransient.opened;
-    diagnostics.scalarReleased = report.scalarTransient.released;
-    diagnostics.scalarValidRelease = report.scalarTransient.validRelease;
-    diagnostics.scalarEmitAllowed = report.scalarTransient.emitAllowed;
-    diagnostics.scalarOpenMs = report.scalarTransient.openMs;
-    diagnostics.scalarPeakMs = report.scalarTransient.peakMs;
-    diagnostics.scalarReleaseMs = report.scalarTransient.releaseMs;
-    diagnostics.scalarDurationMs = report.scalarTransient.durationMs;
-    diagnostics.scalarMinDurationMs = report.scalarTransient.minDurationMs;
-    diagnostics.scalarMaxDurationMs = report.scalarTransient.maxDurationMs;
-    diagnostics.scalarPeakStrength = report.scalarTransient.peakStrength;
+    diagnostics.scalarRejectReason = report.scalar.inspect.rejectReason;
+    diagnostics.scalarNoEmitReason = report.scalar.inspect.noEmitReason;
+    diagnostics.scalarGateReason = report.scalar.inspect.gateReason;
+    diagnostics.scalarOpened = report.scalar.inspect.opened;
+    diagnostics.scalarReleased = report.scalar.inspect.released;
+    diagnostics.scalarValidRelease = report.scalar.inspect.validRelease;
+    diagnostics.scalarEmitAllowed = report.scalar.inspect.emitAllowed;
+    diagnostics.scalarOpenMs = report.scalar.inspect.openMs;
+    diagnostics.scalarPeakMs = report.scalar.inspect.peakMs;
+    diagnostics.scalarReleaseMs = report.scalar.inspect.releaseMs;
+    diagnostics.scalarDurationMs = report.scalar.inspect.durationMs;
+    diagnostics.scalarMinDurationMs = report.thresholds.minDurationMs;
+    diagnostics.scalarMaxDurationMs = report.thresholds.maxDurationMs;
+    diagnostics.scalarPeakStrength = report.scalar.inspect.peakStrength;
 }
 
 } // namespace
@@ -181,7 +181,8 @@ void DetectionRuntime::captureDiagnostics() {
     if (_occurrenceSourceKind == OccurrenceSourceKind::ScalarTransient) {
         populateScalarLegacyDiagnosticsFromReport(_diagnostics, _scalarDetectorReport);
     } else {
-        const auto& scalarDetail = _scalarDetector.reportDetail();
+        const auto& scalarReportDetail = _scalarDetector.reportDetail();
+        const auto& scalarDetail = scalarReportDetail.inspect;
         _diagnostics.scalarRejectReason = scalarRejectReasonOrFallback(
             _diagnostics.scalarTransientRejectReason,
             _diagnostics.scalarOnsetRejectReason
@@ -196,8 +197,8 @@ void DetectionRuntime::captureDiagnostics() {
         _diagnostics.scalarPeakMs = scalarDetail.peakMs;
         _diagnostics.scalarReleaseMs = scalarDetail.releaseMs;
         _diagnostics.scalarDurationMs = scalarDetail.durationMs;
-        _diagnostics.scalarMinDurationMs = scalarDetail.minDurationMs;
-        _diagnostics.scalarMaxDurationMs = scalarDetail.maxDurationMs;
+        _diagnostics.scalarMinDurationMs = _scalarDetector.minTransientDurationMs();
+        _diagnostics.scalarMaxDurationMs = _scalarDetector.maxTransientDurationMs();
         _diagnostics.scalarPeakStrength = scalarDetail.peakStrength;
     }
     _diagnostics.scalarTransientRejectedDurationMs = _scalarDetector.lastTransientRejectedDurationMs();
@@ -376,9 +377,9 @@ void DetectionRuntime::captureDiagnostics() {
         _diagnostics.frequencyPeakSampleCount = detector.candidatePeakSampleCount;
     } else {
         const auto& scalarLegacySummary = _scalarDetector.legacyRejectSummary();
-        const bool scalarSelectedRejectPresent = _scalarDetectorReport.selectedRejectPresent;
+        const bool scalarSelectedRejectPresent = _scalarDetectorReport.selectedReject.present;
         const auto& scalarSelectedReject = _scalarDetectorReport.selectedReject;
-        const auto& scalarDetail = _scalarDetectorReport.scalarTransient;
+        const auto& scalarDetail = _scalarDetectorReport.scalar.inspect;
         populateScalarLegacyDiagnosticsFromReport(_diagnostics, _scalarDetectorReport);
         _diagnostics.sourceSummary.present = scalarLegacySummary.rejectedCandidateCount > 0;
         _diagnostics.sourceSummary.candidateCount = scalarLegacySummary.rejectedCandidateCount;

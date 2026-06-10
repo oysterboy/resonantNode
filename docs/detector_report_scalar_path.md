@@ -95,9 +95,9 @@ helpers, then exposed through a generic `DetectorReport` access path.
   - `maxDurationMs`
   - `peakStrength`
 
-## RejectedCandidateSummary Mapping
+## SelectedRejectSummary Mapping
 
-Scalar selected reject now maps from detector-owned scalar reject state into `RejectedCandidateSummary`:
+Scalar selected reject now maps from detector-owned scalar reject state into `SelectedRejectSummary`:
 
 - `rejectClass` <- mapped from detector transient reject reason enum
 - `detectorReason` <- detector transient reject reason name
@@ -105,8 +105,6 @@ Scalar selected reject now maps from detector-owned scalar reject state into `Re
 - `peakMs` <- strongest observed sample time
 - `endMs` <- release-observed time
 - `durationMs` <- rejected candidate duration
-- `requiredMinDurationMs` <- scalar profile min duration
-- `requiredMaxDurationMs` <- scalar profile max duration
 - `strength` <- rejected peak strength
 - `confidence` <- left defaulted because no canonical scalar confidence source exists yet
 

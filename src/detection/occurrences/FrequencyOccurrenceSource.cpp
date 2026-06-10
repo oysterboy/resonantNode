@@ -57,6 +57,8 @@ void FrequencyOccurrenceSource::observeFrame(
     if (_detector.candidateEmitted && _detector.candidateCloseMs != _lastEmittedCloseMs) {
         Occurrence candidate = _detector.frequencyCandidate;
         candidate.present = true;
+        candidate.detectorId = DetectorId::FrequencyMatch;
+        candidate.occurrenceType = OccurrenceType::FrequencyMatch;
         candidate.kind = OccurrenceKind::FrequencyMatch;
         candidate.source = OccurrenceSource::Frequency;
         candidate.detectorKind = OccurrenceDetectorKind::FrequencyMatch;

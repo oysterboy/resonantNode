@@ -30,7 +30,7 @@ The shared outward detector contract is:
 - stable `DetectorId` / `DetectorDescriptor`
 - accepted `Occurrence` emission
 - `DetectorReport` exposure
-- selected rejected candidate exposure through `RejectedCandidateSummary`
+- selected reject exposure through `DetectorReport.selectedReject` / `SelectedRejectSummary`
 - generic reject class through `DetectorRejectClass`
 
 Detector-specific internals may remain specialized:

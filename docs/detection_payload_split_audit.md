@@ -21,10 +21,11 @@ Occurrence:
 DetectorReport:
 
 - detector-stage truth and explainability surface
-- generic shell plus detector-specific detail
+- generic top-level shells plus detector-specific detail sections
 - owns selected reject summaries and reject aggregates
 - analyzer may consume it
 - pattern / behavior / normal output should not require it
+- readers stay generic; detector-specific meaning stays inside detector-owned sections such as `report.scalar.*`
 
 ## Current code status
 
@@ -56,6 +57,7 @@ Evidence:
 - canonical public occurrence category is lean: `OccurrenceType` now contains only `None`, `Transient`, and `FrequencyMatch`: `src/detection/DetectionTypes.h:62`
 - `OccurrenceDetailKind` no longer exists in active code; only doc references remain
 - legacy `Occurrence` still carries legacy source/kind enums and wide accepted-event payloads: `src/detection/occurrences/Occurrence.h:18`, `src/detection/occurrences/Occurrence.h:27`, `src/detection/occurrences/Occurrence.h:36`, `src/detection/occurrences/Occurrence.h:45`
+- `Occurrence` is now visibly organized as canonical generic shell, canonical scalar detail, then transitional compatibility payload blocks: `src/detection/occurrences/Occurrence.h:49`
 - `Occurrence` still carries specialized accepted-event detail such as `ampEvidencePresent`, `scalarEvidence`, `TransientEvidence`, and `FrequencyBandMeasurementPacket`: `src/detection/occurrences/Occurrence.h:70`, `src/detection/occurrences/Occurrence.h:72`, `src/detection/occurrences/Occurrence.h:77`, `src/detection/occurrences/Occurrence.h:78`
 - scalar accepted-occurrence construction is detector-owned, but it still populates many specialized fields on the outward `Occurrence`: `src/detection/detectors/ScalarTransientDetector.cpp:335`
 - `PatternAssembler` copies many `Occurrence` payload fields upward into `PatternCandidate`: `src/detection/patterns/PatternAssembler.cpp:11`, `src/detection/patterns/PatternAssembler.cpp:18`, `src/detection/patterns/PatternAssembler.cpp:52`
@@ -74,7 +76,7 @@ Status: partly true
 
 Evidence:
 
-- canonical `RejectedCandidateSummary`, `AcceptedOccurrenceSummary`, `ScalarDetectorReportDetail`, and `DetectorReport` types exist: `src/detection/DetectorReport.h:15`, `src/detection/DetectorReport.h:34`, `src/detection/DetectorReport.h:51`, `src/detection/DetectorReport.h:75`
+- canonical `AcceptedOccurrenceSummary`, `SelectedRejectSummary`, `ScalarDetectorReportDetail`, and sectioned `DetectorReport` types exist: `src/detection/DetectorReport.h:15`, `src/detection/DetectorReport.h:24`, `src/detection/DetectorReport.h:115`, `src/detection/DetectorReport.h:142`
 - scalar detector owns report construction and selected reject state: `src/detection/detectors/ScalarTransientDetector.h:120`, `src/detection/detectors/ScalarTransientDetector.h:123`, `src/detection/detectors/ScalarTransientDetector.h:125`, `src/detection/detectors/ScalarTransientDetector.cpp:578`
 - `DetectionRuntime` refreshes only the scalar detector report today: `src/detection/DetectionRuntime.cpp:139`, `src/detection/DetectionRuntime.cpp:148`, `src/detection/DetectionRuntime.h:283`
 - analyzer consumes scalar `DetectorReport` directly: `src/modes/analyzer/AnalyzerApp.cpp:1487`, `src/modes/analyzer/AnalyzerApp.cpp:2022`, `src/modes/analyzer/AnalyzerApp.cpp:2051`
@@ -85,7 +87,7 @@ Issues:
 
 - `DetectorReport` is active on scalar only
 - frequency does not yet expose matching detector-owned `DetectorReport` output
-- selected reject summary exists canonically for scalar, but aggregate diagnostics still mostly live outside `DetectorReport`
+- selected reject summary exists canonically for scalar as `SelectedRejectSummary`, but some legacy scalar source-summary synthesis and most frequency aggregate diagnostics still live outside `DetectorReport`
 - `DetectionDiagnostics` remains the dominant frequency diagnostic sidechain
 - `DetectionRuntime::refreshDetectorReports()` still special-cases scalar, which is acceptable as transitional coordination but not a parity end state
 
@@ -102,11 +104,11 @@ Issues:
 5. Does `Occurrence` contain only accepted-event facts, or does it contain reject/debug/report data?
    It contains accepted-event facts only, but too many specialized accepted-event fields. It does not currently carry reject history.
 6. Does `DetectorReport` contain selected reject and aggregate diagnostics?
-   Partly. Scalar selected reject does. Aggregate diagnostics are still mostly outside `DetectorReport`, especially on frequency.
+   Partly. Scalar now has generic accepted/selectedReject/thresholds/aggregates shells plus scalar detail sections. Some legacy scalar source-summary facts and most frequency aggregate diagnostics are still outside `DetectorReport`.
 7. Are specialized scalar/frequency diagnostic fields in `DetectorReport`, not `Occurrence`?
    Partly. Scalar has typed report detail. Frequency still does not. `Occurrence` still carries some heavy specialized accepted-event payload.
 8. Does Analyzer consume `DetectorReport` for diagnostics?
-   Yes on the scalar path.
+   Yes on the scalar path, although some scalar legacy summary formatting still falls back to compatibility diagnostics.
 9. Do PatternMatcher and Behavior avoid depending on `DetectorReport`?
    Yes. They do not depend on `DetectorReport`, although behavior still depends on leaked candidate payload.
 10. Do docs describe this split clearly, or do they still imply a third `OccurrenceDetailKind` / public detail-kind layer?

@@ -2019,7 +2019,9 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
 
     const bool scalarProfile = selectedProfile.occurrenceSource == detection::OccurrenceSourceKind::ScalarTransient;
     if (scalarProfile) {
-        const auto& scalarDetail = scalarDetectorReport.scalarTransient;
+        const auto& scalarAccepted = scalarDetectorReport.accepted;
+        const auto& scalarAcceptedDetail = scalarDetectorReport.scalar.accepted;
+        const auto& scalarDetail = scalarDetectorReport.scalar.inspect;
         const auto& scalarSelectedReject = scalarDetectorReport.selectedReject;
         const char* expectedScalarSource = analyzerExpectedScalarOccurrenceSource(selectedProfile);
         const bool scalarAcceptedPresent = report.occurrences.present
@@ -2028,7 +2030,7 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
             && report.occurrences.primarySource != nullptr
             && strcmp(report.occurrences.primarySource, expectedScalarSource) == 0;
         const bool scalarSelectedRejectPresent = scalarDetectorReportAvailable
-            ? scalarDetectorReport.selectedRejectPresent
+            ? scalarDetectorReport.selectedReject.present
             : false;
 
         report.source.scalarTransient.currentTrialId = report.context.trial;
@@ -2049,29 +2051,29 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
             : "none";
         report.source.scalarTransient.acceptedDtMs = report.source.scalarTransient.acceptedPresent
             ? (scalarDetectorReportAvailable
-                ? static_cast<long>(scalarDetectorReport.acceptedOccurrence.startMs) - static_cast<long>(_sequenceTest.currentTrialScheduledAtMs)
+                ? static_cast<long>(scalarAccepted.startMs) - static_cast<long>(_sequenceTest.currentTrialScheduledAtMs)
                 : report.occurrences.primaryDtMs)
             : -1;
         report.source.scalarTransient.acceptedStartMs = report.source.scalarTransient.acceptedPresent
-            ? (scalarDetectorReportAvailable ? scalarDetectorReport.acceptedOccurrence.startMs : report.occurrences.startMs)
+            ? (scalarDetectorReportAvailable ? scalarAccepted.startMs : report.occurrences.startMs)
             : 0UL;
         report.source.scalarTransient.acceptedPeakMs = report.source.scalarTransient.acceptedPresent
-            ? (scalarDetectorReportAvailable ? scalarDetectorReport.acceptedOccurrence.peakMs : report.occurrences.peakMs)
+            ? (scalarDetectorReportAvailable ? scalarAccepted.peakMs : report.occurrences.peakMs)
             : 0UL;
         report.source.scalarTransient.acceptedReleaseMs = report.source.scalarTransient.acceptedPresent
-            ? (scalarDetectorReportAvailable ? scalarDetectorReport.acceptedOccurrence.endMs : report.occurrences.releaseMs)
+            ? (scalarDetectorReportAvailable ? scalarAccepted.endMs : report.occurrences.releaseMs)
             : 0UL;
         report.source.scalarTransient.acceptedDurationMs = report.source.scalarTransient.acceptedPresent
-            ? (scalarDetectorReportAvailable ? scalarDetectorReport.acceptedOccurrence.durationMs : report.occurrences.primaryDurationMs)
+            ? (scalarDetectorReportAvailable ? scalarAccepted.durationMs : report.occurrences.primaryDurationMs)
             : 0UL;
         report.source.scalarTransient.acceptedStrength = report.source.scalarTransient.acceptedPresent
-            ? (scalarDetectorReportAvailable ? scalarDetectorReport.acceptedOccurrence.strength : report.occurrences.primaryStrength)
+            ? (scalarDetectorReportAvailable ? scalarAccepted.strength : report.occurrences.primaryStrength)
             : 0.0f;
         report.source.scalarTransient.acceptedScore = report.source.scalarTransient.acceptedPresent
-            ? (scalarDetectorReportAvailable ? scalarDetectorReport.acceptedOccurrence.score : report.occurrences.score)
+            ? (scalarDetectorReportAvailable ? scalarAcceptedDetail.value : report.occurrences.score)
             : 0.0f;
         report.source.scalarTransient.acceptedContrast = report.source.scalarTransient.acceptedPresent
-            ? (scalarDetectorReportAvailable ? scalarDetectorReport.acceptedOccurrence.contrast : report.occurrences.contrast)
+            ? (scalarDetectorReportAvailable ? 0.0f : report.occurrences.contrast)
             : 0.0f;
 
         if (scalarDetectorReportAvailable) {
@@ -2086,8 +2088,8 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
             report.source.scalarTransient.scalarPeakMs = scalarDetail.peakMs;
             report.source.scalarTransient.scalarReleaseMs = scalarDetail.releaseMs;
             report.source.scalarTransient.scalarDurationMs = scalarDetail.durationMs;
-            report.source.scalarTransient.scalarMinDurationMs = scalarDetail.minDurationMs;
-            report.source.scalarTransient.scalarMaxDurationMs = scalarDetail.maxDurationMs;
+            report.source.scalarTransient.scalarMinDurationMs = scalarDetectorReport.thresholds.minDurationMs;
+            report.source.scalarTransient.scalarMaxDurationMs = scalarDetectorReport.thresholds.maxDurationMs;
             report.source.scalarTransient.scalarPeakStrength = scalarDetail.peakStrength;
         } else if (runtimeDiag != nullptr) {
             report.source.scalarTransient.scalarRejectReason = analyzerTextOrFallback(runtimeDiag->scalarRejectReason, "unknown");

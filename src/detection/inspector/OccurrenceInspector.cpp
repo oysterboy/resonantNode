@@ -206,6 +206,13 @@ void OccurrenceInspector::annotateAmpStrength(
     }
 
     if (target == detection::EvidenceTarget::AmpStrength) {
+        out.occurrence.scalar.present = observation.available;
+        out.occurrence.scalar.value = observation.available ? observation.classificationValue : 0.0f;
+        out.occurrence.scalar.baseline = observation.available ? observation.mean : 0.0f;
+        out.occurrence.scalar.lift = observation.available
+            ? (out.occurrence.scalar.value - out.occurrence.scalar.baseline)
+            : 0.0f;
+        out.occurrence.scalar.strength = observation.available ? observation.classificationValue : 0.0f;
         out.occurrence.ampLevel = observation.available ? observation.classificationValue : 0.0f;
         out.occurrence.ampBaseline = observation.available ? observation.mean : 0.0f;
         out.occurrence.ampStrength = observation.strength;

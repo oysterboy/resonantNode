@@ -40,7 +40,7 @@ G2a established the stable outward detector contract:
 - `DetectorDescriptor`
 - accepted `Occurrence` emission
 - `DetectorReport` exposure
-- selected rejected candidate exposure through `RejectedCandidateSummary`
+- selected reject exposure through `DetectorReport.selectedReject` / `SelectedRejectSummary`
 - generic reject class through `DetectorRejectClass`
 
 G2a also locked the main genericity rule:

@@ -37,15 +37,16 @@ Current closest runtime mapping:
 
 ```text
 Detector
--> DetectorReport / RejectedCandidateSummary
+-> DetectorReport / SelectedRejectSummary
 -> Analyzer SEQ_INSPECT / SEQ_EXPLAIN
 ```
 
 Current closest mapping:
 
 - detector truth is still split across detector cores, `DetectionDiagnostics`, and analyzer legacy source report structs
-- the scalar path now has a canonical `DetectorReport` / `RejectedCandidateSummary` bridge, but frequency still does not
+- the scalar path now has a sectioned canonical `DetectorReport` bridge with generic top-level sections plus scalar detail, but frequency still does not
 - analyzer compatibility output still depends on legacy report synthesis alongside the canonical scalar bridge
+- readers stay generic; detector-specific meaning lives under detector-owned report sections such as `report.scalar.*`
 
 ## Minimal Runtime Contracts
 
@@ -85,8 +86,8 @@ Genericity rule:
 The shared detector contract is:
 
 - emits accepted `Occurrence`
-- exposes `DetectorReport`
-- exposes selected rejected candidate through `RejectedCandidateSummary`
+- exposes sectioned `DetectorReport`
+- exposes selected reject truth through `DetectorReport.selectedReject` plus detector-specific detail
 - has stable `DetectorId` / `DetectorDescriptor`
 
 Detector-specific parts may remain specialized:
@@ -177,10 +178,11 @@ Detector-stage truth and diagnostics for analyzer inspection output.
 
 Should own:
 
-- accepted-present facts
-- selected rejected candidate summary
-- detector-specific reject reason
-- detector aggregates and typed diagnostics
+- generic accepted summary
+- generic selected reject summary
+- generic thresholds / aggregate counts
+- detector-specific reject reason and typed detail blocks
+- detector aggregates and typed diagnostics that do not belong in the generic shell
 
 Current best fit:
 
@@ -192,7 +194,7 @@ Current gap:
 - scalar now has a real canonical report bridge, but frequency still does not
 - reject aggregates and much of the frequency-specific detail are still outside `DetectorReport`
 
-### RejectedCandidateSummary
+### SelectedRejectSummary
 
 Compact public summary of the selected rejected detector candidate.
 
@@ -207,7 +209,7 @@ Should own:
 
 Current best fit:
 
-- `RejectedCandidateSummary` on the scalar path
+- `SelectedRejectSummary` on the scalar path
 - summary and snapshot pieces in runtime and analyzer legacy code still cover the remaining frequency and compatibility gap
 
 Current gap:
@@ -267,7 +269,7 @@ Treat these as target vocabulary:
 
 - `Detector`
 - `DetectorReport`
-- `RejectedCandidateSummary`
+- `SelectedRejectSummary`
 - `Occurrence`
 - `InspectedOccurrence`
 - `Inspector`

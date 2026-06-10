@@ -332,7 +332,6 @@ void FrequencyMatchDetector::capturePendingOccurrence(const AudioSamplePacket& a
     _pendingOccurrence.detectorKind = detection::OccurrenceDetectorKind::FrequencyMatch;
     _pendingOccurrence.present = true;
     _pendingOccurrence.confidence = _pendingOccurrence.valid ? 1.0f : 0.0f;
-    _pendingOccurrence.ampEvidencePresent = true;
     _pendingOccurrence.ampLevel = audioSamplePacket.audioMagnitudeValue;
     _pendingOccurrence.ampBaseline = audioSamplePacket.baseline;
     _pendingOccurrence.frequency = candidateEvidence;
@@ -442,7 +441,6 @@ void FrequencyMatchDetector::update(const detection::FrequencyBandMeasurementPac
         frequencyCandidate.releaseSample = candidateCloseSample;
         frequencyCandidate.endMs = candidateCloseMs;
         frequencyCandidate.durationMs = candidateDurationMs;
-        frequencyCandidate.candidateHoldWindows = candidateHoldUpdates;
         frequencyCandidate.confidence = accepted ? 1.0f : 0.0f;
         if (!accepted) {
             observeClosedCandidate(false);
@@ -494,7 +492,6 @@ void FrequencyMatchDetector::update(const detection::FrequencyBandMeasurementPac
                     frequencyCandidate.releaseSample = 0;
                     frequencyCandidate.endMs = 0;
                     frequencyCandidate.durationMs = 0;
-                    frequencyCandidate.candidateHoldWindows = 1;
                     frequencyCandidate.strength = evidence.targetBandScoreValue;
                     frequencyCandidate.score = evidence.targetBandScoreValue;
                     frequencyCandidate.contrast = evidence.targetBandContrastValue;
@@ -529,7 +526,6 @@ void FrequencyMatchDetector::update(const detection::FrequencyBandMeasurementPac
                     frequencyCandidate.score = evidence.targetBandScoreValue;
                     frequencyCandidate.contrast = evidence.targetBandContrastValue;
                 }
-                frequencyCandidate.candidateHoldWindows = candidateHoldUpdates;
                 frequencyCandidate.durationMs = candidateDurationMs;
                 frequencyCandidate.valid = false;
                 lastReleaseFailCause = FrequencyReleaseFailCause::None;

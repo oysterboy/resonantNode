@@ -30,15 +30,24 @@ pattern code still consume them.
 
 ## Occurrence Fields Removed
 
-None in Q1.
+Removed by Q2 follow-up:
+
+- `candidateHoldWindows`
+- `ampEvidencePresent`
 
 ## Occurrence Fields Deferred
 
-Deferred to Q2:
+Still deferred after Q2:
 
 - legacy identity aliases
 - transitional AMP-named compatibility fields
 - detector-specific accepted detail that is still pattern/analyzer-readable
+
+Current Q2 note:
+
+- the obviously unused accepted-event baggage is now gone
+- the remaining deferred fields still have active inspector, pattern, or
+  analyzer consumers
 
 ## PatternResult Fields Kept
 
@@ -115,11 +124,12 @@ Still deferred after Q1:
 
 Recommended next pass:
 
-- `Q2`
+- `R`
 
 Reason:
 
 - the duplicate `PatternResult.freq` copy is gone
 - basic behavior/analyzer timing/strength reads no longer need `candidate`
-- the remaining payload debt is mostly `Occurrence` and heavier candidate /
-  inspected-occurrence carry-through
+- the easiest dead `Occurrence` baggage is removed
+- the remaining `Occurrence` debt is no longer low-risk trim; it is mostly
+  naming/compatibility payload that overlaps with the later routing cleanup

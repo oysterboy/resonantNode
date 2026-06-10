@@ -364,7 +364,6 @@ void ScalarTransientDetector::capturePendingOccurrence(const AudioSamplePacket& 
     _pendingOccurrence.durationMs = _pendingOccurrence.releaseMs >= _pendingOccurrence.startMs
         ? _pendingOccurrence.releaseMs - _pendingOccurrence.startMs
         : 0UL;
-    _pendingOccurrence.candidateHoldWindows = _acceptedOccurrenceHoldWindows;
     _pendingOccurrence.strength = _acceptedOccurrencePeakStrength;
     _pendingOccurrence.score = _acceptedOccurrencePeakStrength;
     _pendingOccurrence.contrast = 0.0f;
@@ -381,7 +380,6 @@ void ScalarTransientDetector::capturePendingOccurrence(const AudioSamplePacket& 
     _reportDetail.accepted.baseline = _pendingOccurrence.scalar.baseline;
     _reportDetail.accepted.lift = _pendingOccurrence.scalar.lift;
     _reportDetail.accepted.normalized = 0.0f;
-    _pendingOccurrence.ampEvidencePresent = true;
     _pendingOccurrence.ampLevel = audioSamplePacket.audioMagnitudeValue;
     _pendingOccurrence.ampBaseline = audioSamplePacket.baseline;
     _pendingOccurrence.transient.present = true;

@@ -93,8 +93,6 @@ struct Occurrence {
     // LEGACY_ACCEPTED_EVENT_PAYLOAD_COMPAT:
     // Retained while PatternAssembler and analyzer-side accepted-event readers
     // still read the older wide occurrence payload directly.
-    unsigned long candidateHoldWindows = 0;
-
     // LEGACY_SCALAR_FREQUENCY_VALUE_COMPAT:
     // Transitional detector-specific accepted-event measurements that have not
     // yet been pulled behind compact canonical detail blocks.
@@ -110,7 +108,6 @@ struct Occurrence {
     // Transitional AMP-era public names preserved only for compile/runtime
     // compatibility while the pipeline migrates to the neutral scalar detail
     // above.
-    bool ampEvidencePresent = false;
     float ampLevel = 0.0f;
     float ampBaseline = 0.0f;
 

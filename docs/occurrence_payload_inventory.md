@@ -20,12 +20,13 @@ This document defines what is generic accepted-event core, what is typed
 accepted detail, and what is only still present because downstream cleanup has
 not landed yet.
 
-Current follow-up after Pass Q1:
+Current follow-up after Pass Q2:
 
 - `PatternResult.freq` duplicate payload has been removed
 - non-legacy behavior and analyzer timing/strength readers now prefer compact
   top-level `PatternResult` summary fields instead of `PatternResult.candidate`
-- `Occurrence` itself remains intentionally untrimmed until Q2
+- `Occurrence.candidateHoldWindows` and `Occurrence.ampEvidencePresent` have
+  now been removed as unused accepted-event baggage
 
 ## Current Occurrence Role
 
@@ -95,7 +96,6 @@ Transitional scalar compatibility fields still carried:
 
 `ANALYZER_LEGACY_DETAIL`
 
-- `ampEvidencePresent`
 - `ampLevel`
 - `ampBaseline`
 - `ampStrength`
@@ -244,7 +244,7 @@ than durable accepted-event payload and are candidates to move out of
 
 `MOVE_TO_DETECTOR_REPORT_LATER`
 
-- `candidateHoldWindows`
+- none
 
 Rationale:
 
@@ -276,10 +276,8 @@ Analyzer/pattern compatibility no longer needs them:
 - `kind`
 - `source`
 - `detectorKind`
-- `ampEvidencePresent`
 - `ampLevel`
 - `ampBaseline`
-- `candidateHoldWindows`
 
 Conditional later-deletion candidates after pattern cleanup:
 
@@ -298,6 +296,8 @@ Notes:
 - the second group is still actively used today, so it is not safe to trim yet
 - some of those fields may survive in a cleaner typed accepted-detail shape
   rather than disappear outright
+- `candidateHoldWindows` and `ampEvidencePresent` have already been removed in
+  Pass Q2
 
 ## Fields To Keep Until PatternMatcher Cleanup
 

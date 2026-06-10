@@ -41,7 +41,7 @@ Current implementation bridge:
 
 - `DetectionDiagnostics` remains the temporary shared diagnostic dump
 - legacy analyzer source reports remain temporary report surrogates
-- the new `DetectorReport` and `RejectedCandidateSummary` headers define the canonical target names now, with minimal placeholder shapes only
+- `DetectorReport` and `RejectedCandidateSummary` now exist as canonical contract types, with the scalar path already using a minimal active shape while frequency still remains on legacy diagnostics
 
 ## Final Public Vocabulary
 

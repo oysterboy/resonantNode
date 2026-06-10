@@ -15,14 +15,14 @@ Canonical headers introduced in Pass A and checked again in Pass B:
 | `src/detection/DetectionTypes.h` | `src/detection/DetectorDescriptor.h`, `src/detection/occurrences/Occurrence.h` | stays minimal; no runtime or analyzer dependency |
 | `src/detection/DetectorDescriptor.h` | `src/detection/DetectorReport.h` | stays minimal; depends only on `DetectionTypes.h` |
 | `src/detection/DetectorReject.h` | `src/detection/DetectorReport.h` | stays minimal; no runtime/analyzer dependency |
-| `src/detection/DetectorReport.h` | `src/detection/DetectionRuntime.h` | intentional compile anchor only; `DetectionRuntime` does not populate `DetectorReport` yet |
+| `src/detection/DetectorReport.h` | `src/detection/DetectionRuntime.h` | initially added as a compile anchor; later passes activated scalar-path population while frequency still remains on legacy diagnostics |
 
 Integration outcome:
 
 - canonical headers compile cleanly through the active analyzer build
 - no circular include was introduced
 - no canonical header pulls in analyzer or heavy runtime implementation dependencies
-- `DetectionRuntime.h` keeps the `DetectorReport.h` include only as a harmless compile anchor during migration
+- `DetectionRuntime.h` still keeps the include boundary light, even though scalar `DetectorReport` population is now active
 
 ## Legacy Names Still Present
 
@@ -133,7 +133,7 @@ Wrapper policy remains explicit:
 ## Remaining Risks
 
 - `OccurrenceSourceKind` still leaks wrapper-era naming into profile selection and runtime wiring.
-- `DetectionDiagnostics` is still the active shared truth object, so `DetectorReport` remains only a placeholder contract in this pass.
+- `DetectionDiagnostics` is still the active shared truth object for frequency and compatibility paths, even though scalar `DetectorReport` population is now active.
 - analyzer legacy reporting still duplicates selected-reject and detector diagnostic truth in multiple analyzer-local structs.
 - `PatternAssembler` and `PatternRules` still appear as public stage names in code and includes, even though the target vocabulary is `PatternMatcher`.
 - `OccurrenceDetectorKind` still lacks a clearly scoped long-term home: it may remain detector-local, but that decision has not been fully implemented.

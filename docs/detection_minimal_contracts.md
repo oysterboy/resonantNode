@@ -184,8 +184,13 @@ Should own:
 
 Current best fit:
 
-- no single current type
-- pieces live in `DetectionDiagnostics`, `SourceCandidateSummary`, detector state, and analyzer legacy source report structs
+- `DetectorReport` on the scalar path
+- `DetectionDiagnostics`, `SourceCandidateSummary`, detector state, and analyzer legacy source report structs still cover the remaining frequency and compatibility gap
+
+Current gap:
+
+- scalar now has a real canonical report bridge, but frequency still does not
+- reject aggregates and much of the frequency-specific detail are still outside `DetectorReport`
 
 ### RejectedCandidateSummary
 
@@ -202,8 +207,13 @@ Should own:
 
 Current best fit:
 
-- no single current type
-- pieces are split between summary and snapshot structs in runtime and analyzer legacy code
+- `RejectedCandidateSummary` on the scalar path
+- summary and snapshot pieces in runtime and analyzer legacy code still cover the remaining frequency and compatibility gap
+
+Current gap:
+
+- scalar selected reject is now canonical, but frequency selected reject still is not
+- analyzer legacy reporting still duplicates reject-summary facts outside the canonical contract
 
 ### AnalyzerReport
 

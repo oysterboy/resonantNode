@@ -4,6 +4,13 @@
 
 This inventory follows the direction in [current-pass.md](/c:/Users/malte/Documents/PlatformIO/Projects/ESP32_learn01/docs/current-pass.md) and [roadmap_detection.md](/c:/Users/malte/Documents/PlatformIO/Projects/ESP32_learn01/docs/roadmaps/roadmap_detection.md).
 
+Pass H4 note:
+
+- this file still reads as an earlier inventory snapshot in places
+- later passes introduced `DetectorId`, `DetectorReport`, and `RejectedCandidateSummary` as real contract types
+- scalar now has an active `DetectorReport` path, while frequency still remains partly on legacy diagnostics
+- use [detection_payload_split_audit.md](/c:/Users/malte/Documents/PlatformIO/Projects/ESP32_learn01/docs/detection_payload_split_audit.md) for the current payload-boundary status snapshot
+
 Reference rules used during inspection:
 
 - `FeatureSample / FeatureFrame` stays measurement-only.

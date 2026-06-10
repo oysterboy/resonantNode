@@ -85,6 +85,7 @@ public:
     unsigned long maxTransientDurationMs() const;
     float minTransientPeakStrength() const;
     unsigned long releaseDebounceMs() const;
+    void buildReport(detection::DetectorReport& out, unsigned long nowMs) const;
     bool acceptedOccurrencePresent() const;
     const detection::AcceptedOccurrenceSummary& acceptedOccurrence() const;
     const detection::ScalarDetectorReportDetail& reportDetail() const;

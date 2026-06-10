@@ -2,24 +2,25 @@
 
 ## Purpose
 
-Document the Pass F ownership move that shifts canonical scalar `DetectorReport`
-facts closer to `ScalarTransientDetector` without changing scalar detection
-behavior, Analyzer output, or legacy diagnostics compatibility.
+Document the scalar report ownership move that started in Pass F and now places
+canonical scalar `DetectorReport` assembly in detector-local code without
+changing scalar detection behavior, Analyzer output, or legacy diagnostics
+compatibility.
 
 ## Previous Temporary Bridge
 
-Before Pass F, scalar report production still rebuilt canonical report truth
-from `ScalarOccurrenceSource` getters:
+Before the detector-core migration completed, scalar report production rebuilt
+canonical report truth through a scalar-specific runtime bridge:
 
 ```text
 ScalarTransientDetector
--> ScalarOccurrenceSource
+-> accepted/detail/reject getters
 -> DetectionRuntime::refreshScalarDetectorReport(...)
 -> DetectorReport
 ```
 
-That meant detector-stage canonical report fields still depended on wrapper-held
-candidate lifecycle and selected-reject summary data.
+That meant `DetectionRuntime` still assembled the outer scalar `DetectorReport`
+field-by-field even after more canonical facts had moved into the detector.
 
 ## Pass E Analyzer Bridge Assumption
 
@@ -34,19 +35,21 @@ consumption.
 
 ## New Report Ownership
 
-After Pass F, canonical scalar report production is split like this:
+After Pass G2b, canonical scalar report production is:
 
 ```text
 ScalarTransientDetector
+-> owns accepted occurrence summary
 -> owns ScalarDetectorReportDetail
 -> owns canonical selected RejectedCandidateSummary
--> DetectionRuntime::refreshScalarDetectorReport(...)
+-> buildReport(...)
+-> DetectionRuntime::refreshDetectorReports(...)
 -> DetectorReport
 ```
 
-`DetectionRuntime` still assembles the outer `DetectorReport`, but the
-canonical scalar detail and canonical selected reject now come from
-`ScalarTransientDetector` rather than wrapper-specific getters.
+`DetectionRuntime` still stores the scalar report snapshot for the stable
+`scalarDetectorReport()` accessor, but detector-local code now assembles the
+scalar-specific report fields.
 
 ## ScalarTransientDetector Facts Now Used Directly
 
@@ -74,6 +77,16 @@ candidate used by `DetectorReport.selectedReject`:
 The detector keeps the same `>= duration` selection rule that the old wrapper
 summary used for the chosen rejected candidate, so this ownership move does not
 change the selection policy.
+
+`ScalarTransientDetector` also now owns detector-local assembly of:
+
+- `DetectorReport.detectorId`
+- `DetectorReport.acceptedPresent`
+- `DetectorReport.acceptedOccurrence`
+- `DetectorReport.selectedRejectPresent`
+- `DetectorReport.selectedReject`
+- `DetectorReport.reportStartMs`
+- `DetectorReport.reportEndMs`
 
 ## ScalarOccurrenceSource Facts Still Used
 
@@ -109,14 +122,14 @@ later pass.
 
 `DetectionDiagnostics` remains active and compatible.
 
-Pass F keeps:
+The current migration state keeps:
 
 - `DetectionRuntime::scalarDetectorReport()` unchanged as the public accessor
 - scalar legacy fallback population intact
 - scalar legacy aggregate summaries intact
 
 The canonical scalar detail copied into legacy scalar diagnostics is now sourced
-from detector-owned report detail instead of wrapper reconstruction.
+from detector-built report snapshots instead of runtime scalar field mapping.
 
 ## Analyzer Compatibility
 
@@ -161,22 +174,19 @@ Pass F does not:
 - accepted occurrence payload construction
 - legacy aggregate reject / source-summary compatibility values
 
-`DetectionRuntime` also still assembles the outer `DetectorReport`, and accepted
-occurrence facts still come from runtime-held emitted occurrence state rather
-than directly from the detector core.
+`DetectionRuntime` no longer assembles scalar report fields directly, but it
+still:
 
-The `TEMP_SCALAR_REPORT_BRIDGE` comment remains because the wrapper is still in
-the scalar report path for occurrence emission and legacy aggregate compatibility
-data, even though canonical scalar detail and canonical selected reject are now
-detector-owned.
+- stores the scalar report snapshot
+- refreshes detector reports as a coordinator step
+- copies legacy scalar compatibility values into `DetectionDiagnostics`
 
 ## Recommended Next Pass
 
 Recommended next pass:
 
-- `Pass G - Remove ScalarOccurrenceSource from Scalar Report Path`
+- `Pass H - Route Scalar Occurrence Emission Directly from ScalarTransientDetector`
 
-If detector-owned accepted-occurrence facts prove to be the missing step first,
-the intermediate fallback remains:
+If scalar report ownership review still reveals cleanup gaps, the fallback is:
 
-- `Pass F2 - Add Missing ScalarTransientDetector Report Facts`
+- `Pass G3 - Finish Scalar DetectorReport Ownership Cleanup`

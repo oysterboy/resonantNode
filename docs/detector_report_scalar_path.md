@@ -2,7 +2,8 @@
 
 ## Purpose
 
-Document the first active `DetectorReport` migration path added in Pass D and clarified through Pass G.
+Document the first active scalar `DetectorReport` migration path added in Pass D
+and updated through Pass G2b.
 
 This pass introduces a canonical scalar detector report without removing the legacy `DetectionDiagnostics` bridge or changing Analyzer legacy output.
 
@@ -22,12 +23,12 @@ ScalarTransientDetector
 
 ## New Canonical Path Added
 
-The scalar canonical path currently assembled inside `DetectionRuntime` is:
+The active scalar canonical path is now:
 
 ```text
 ScalarTransientDetector
--> accepted occurrence summary / scalar detail / selected reject
--> DetectionRuntime::refreshScalarDetectorReport()
+-> buildReport(...)
+-> DetectionRuntime::refreshDetectorReports()
 -> DetectorReport
 -> DetectionRuntime::scalarDetectorReport()
 ```
@@ -36,12 +37,19 @@ Legacy diagnostics remain populated in parallel for compatibility.
 
 ## Temporary Runtime Refresh Warning
 
-`DetectionRuntime::refreshScalarDetectorReport()` is a scalar migration bridge only.
+The historical scalar-specific runtime bridge was:
 
-It must not become the pattern for future detectors.
+```text
+DetectionRuntime::refreshScalarDetectorReport()
+```
 
-Future detector reports should be produced by detector cores or detector-local helpers,
-then exposed through a generic `DetectorReport` access path.
+That name should not become the pattern for future detectors.
+
+The current equivalent runtime step is `refreshDetectorReports()`, which should
+remain coordinator-only.
+
+Future detector reports should be produced by detector cores or detector-local
+helpers, then exposed through a generic `DetectorReport` access path.
 
 ## Fields Populated in DetectorReport
 
@@ -95,16 +103,15 @@ Scalar selected reject now maps from detector-owned scalar reject state into `Re
 
 ## Temporary Bridges Still Used
 
-The scalar report is still assembled by `DetectionRuntime::refreshScalarDetectorReport()`.
-
-That bridge is explicit in code via the `TEMP_SCALAR_REPORT_BRIDGE` comment in `DetectionRuntime::refreshScalarDetectorReport()`.
+The scalar report is now built by `ScalarTransientDetector::buildReport(...)`
+and refreshed by `DetectionRuntime::refreshDetectorReports()`.
 
 This remains transitional:
 
 - `ScalarOccurrenceSource` still owns the active lifecycle bridge to emitted `Occurrence`
 - `ScalarOccurrenceSource` still owns legacy aggregate rejected-candidate diagnostics compatibility
-- `ScalarTransientDetector` does not yet expose a full `DetectorReport` object directly
-- detector-specific report assembly still lives in `DetectionRuntime`, which is not the long-term generic pattern
+- `ScalarTransientDetector` exposes detector-local report building through `buildReport(...)` rather than a stored `report()` object
+- `DetectionRuntime` still stores the scalar report snapshot for the stable `scalarDetectorReport()` accessor
 
 ## DetectionDiagnostics Compatibility
 
@@ -132,11 +139,11 @@ This pass does not:
 
 ## Remaining Gaps
 
-- detector-specific report assembly still happens in `DetectionRuntime::refreshScalarDetectorReport()`
+- `DetectionRuntime` still stores the scalar report snapshot even though detector-local code now assembles it
 - `ScalarOccurrenceSource` still owns scalar `Occurrence` emission and legacy aggregate reject diagnostics
 - scalar Analyzer synthesis still needs `DetectionDiagnostics` for some fallback and legacy-only fields
 - frequency still has no populated `DetectorReport` path
-- no generic detector-local report production pattern is wired yet across detector types
+- no migrated frequency detector-local report production path exists yet
 
 ## Recommended Next Pass
 

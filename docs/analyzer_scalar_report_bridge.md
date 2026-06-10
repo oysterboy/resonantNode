@@ -122,7 +122,7 @@ This pass does not:
 - scalar Analyzer synthesis still needs `DetectionDiagnostics` for some legacy-only fallback fields
 - selected reject gate and aggregate leftovers are not fully canonical yet
 - frequency Analyzer synthesis still does not consume `DetectorReport`
-- scalar report production still lives behind the temporary `ScalarOccurrenceSource` bridge
+- scalar report production is now detector-local, but scalar `Occurrence` emission and some legacy diagnostics still remain behind the temporary `ScalarOccurrenceSource` bridge
 
 ## Validation
 

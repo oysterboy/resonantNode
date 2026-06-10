@@ -298,7 +298,7 @@ private:
         const InspectedOccurrence* inspectedOccurrence,
         unsigned long nowMs
     );
-    void refreshScalarDetectorReport(unsigned long nowMs);
+    void refreshDetectorReports(unsigned long nowMs);
 
     FrequencyMatchConfig _frequencyMatchConfig = {};
     ScalarTransientConfig _scalarTransientConfig = {};

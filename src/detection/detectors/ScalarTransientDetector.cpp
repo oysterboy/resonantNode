@@ -412,6 +412,35 @@ unsigned long ScalarTransientDetector::releaseDebounceMs() const {
     return _releaseDebounceMs;
 }
 
+void ScalarTransientDetector::buildReport(detection::DetectorReport& out, unsigned long nowMs) const {
+    // Keep detector-specific report assembly local to the detector so
+    // DetectionRuntime only coordinates report snapshots.
+    out = {};
+    out.detectorId = detection::DetectorId::ScalarTransient;
+    out.acceptedPresent = _acceptedOccurrencePresent;
+    if (out.acceptedPresent) {
+        out.acceptedOccurrence = _acceptedOccurrence;
+    }
+
+    out.scalarTransient = _reportDetail;
+
+    out.selectedRejectPresent = _selectedRejectPresent;
+    if (out.selectedRejectPresent) {
+        out.selectedReject = _selectedReject;
+    }
+
+    if (out.acceptedPresent) {
+        out.reportStartMs = out.acceptedOccurrence.startMs;
+        out.reportEndMs = out.acceptedOccurrence.endMs;
+    } else if (out.scalarTransient.opened) {
+        out.reportStartMs = out.scalarTransient.openMs;
+        out.reportEndMs = out.scalarTransient.released ? out.scalarTransient.releaseMs : nowMs;
+    } else if (out.selectedRejectPresent) {
+        out.reportStartMs = out.selectedReject.startMs;
+        out.reportEndMs = out.selectedReject.endMs;
+    }
+}
+
 bool ScalarTransientDetector::acceptedOccurrencePresent() const {
     return _acceptedOccurrencePresent;
 }

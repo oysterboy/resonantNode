@@ -2,20 +2,23 @@
 
 ## Purpose
 
-Clarify the long-term boundary between detector-owned report production and
-`DetectionRuntime` coordination so migration bridges do not become the permanent
-architecture.
+Clarify the code boundary for detector report production so `DetectionRuntime`
+coordinates detectors without becoming the long-term owner of detector-specific
+report assembly.
 
 ## Problem
 
-`DetectionRuntime::refreshScalarDetectorReport()` was useful as a scalar
-migration bridge, but it would be the wrong long-term pattern if repeated per
+The earlier scalar migration bridge used a detector-specific runtime helper:
+
+```text
+DetectionRuntime::refreshScalarDetectorReport()
+```
+
+That was useful during migration, but it would be the wrong pattern if copied
+per detector type.
+
+`DetectionRuntime` must not grow one `refreshXXDetectorReport()` function per
 detector type.
-
-The architecture must avoid both:
-
-- under-generalizing into one runtime-owned `refreshXXDetectorReport()` function per detector
-- over-generalizing too early into a forced `IDetector` plus type-erased feature input
 
 ## Detector Genericity Rule
 
@@ -30,7 +33,7 @@ The shared outward detector contract is:
 - selected rejected candidate exposure through `RejectedCandidateSummary`
 - generic reject class through `DetectorRejectClass`
 
-The detector-specific internals may remain specialized:
+Detector-specific internals may remain specialized:
 
 - feature input type
 - update method shape
@@ -40,66 +43,109 @@ The detector-specific internals may remain specialized:
 - typed report detail
 - typed occurrence detail
 
-Detector-specific detail is allowed inside detector-owned reports.
-Detector-specific report assembly in `DetectionRuntime` is migration-only.
-`DetectionRuntime` coordinates detectors; it must not become the owner of
-detector-specific truth.
-
-## Accepted Long-Term Pattern
-
-```text
-detector.update(detector-specific feature input)
-detector.pollOccurrence(...)
-detector.report()
-```
-
-Equivalent detector-local report builders are also acceptable as long as report
-production stays detector-owned.
-
-## Rejected Long-Term Pattern
-
-```text
-DetectionRuntime::refreshScalarDetectorReport()
-DetectionRuntime::refreshFrequencyDetectorReport()
-DetectionRuntime::refreshChirpDetectorReport()
-DetectionRuntime::refreshKnockDetectorReport()
-```
-
-`DetectionRuntime` must not grow one detector-specific report refresh function
-per detector type.
-
-## DetectionRuntime Responsibility
-
-`DetectionRuntime` should:
-
-- coordinate profile-selected detectors
-- feed detector-specific inputs into detectors
-- poll accepted occurrences
-- expose detector-owned reports through a generic access path
-
-`DetectionRuntime` should not:
-
-- become the permanent assembler of detector-specific report truth
-- duplicate detector-local lifecycle or reject-summary ownership
-- force all detectors into the same input/update implementation shape
-
-## What This Means for Frequency Migration
-
-Frequency migration should follow the same outward contract as scalar:
-
-- detector-owned accepted occurrence truth
-- detector-owned selected reject truth
-- detector-owned typed report detail
-- generic `DetectorReport` exposure upward
-
-It does not need to copy the scalar bridge shape into a new
-`refreshFrequencyDetectorReport()` function.
-
-## What This Does Not Require Yet
-
 This does not require a forced `IDetector` base class or type-erased feature
 input yet.
 
-Different detectors may keep specialized feature inputs and specialized
-`update(...)` shapes until the codebase clearly benefits from a tighter shared
-interface.
+## Previous Scalar Refresh Path
+
+Before this pass, the active scalar report path looked like:
+
+```text
+ScalarTransientDetector
+-> accepted/detail/reject getters
+-> DetectionRuntime::refreshScalarDetectorReport(...)
+-> DetectorReport
+-> DetectionRuntime::scalarDetectorReport()
+```
+
+Canonical scalar facts were already detector-owned by Pass G, but
+`DetectionRuntime` still assembled the scalar-specific outer `DetectorReport`
+field-by-field.
+
+## New Scalar Report Ownership
+
+After this pass, scalar report assembly is detector-local:
+
+```text
+ScalarTransientDetector::buildReport(...)
+-> DetectionRuntime::refreshDetectorReports(...)
+-> DetectionRuntime::scalarDetectorReport()
+-> Analyzer scalar bridge
+```
+
+`ScalarTransientDetector` now builds the canonical scalar `DetectorReport`
+snapshot, including:
+
+- accepted occurrence summary
+- scalar detector detail
+- selected rejected candidate summary
+- report window start/end selection
+
+`DetectionRuntime` no longer maps those scalar-specific report fields itself.
+
+## DetectionRuntime Responsibility After This Pass
+
+`DetectionRuntime` now stays closer to coordinator role:
+
+- update the active detector path
+- drain accepted occurrences
+- ask active detectors to refresh report snapshots
+- expose the current scalar report through `scalarDetectorReport()`
+- copy legacy compatibility fields into `DetectionDiagnostics` where still needed
+
+Detector-specific report construction belongs to detector cores or
+detector-local helpers, not to detector-specific runtime refresh functions.
+
+## Frequency Migration Implication
+
+Frequency migration should not copy the old scalar bridge shape into:
+
+```text
+DetectionRuntime::refreshFrequencyDetectorReport()
+```
+
+Instead, frequency should follow the same outward rule:
+
+- detector-owned accepted/rejected truth
+- detector-owned typed report detail
+- generic `DetectorReport` exposure upward
+
+with frequency-specific input/update internals still free to remain specialized.
+
+## What Did Not Change
+
+This pass does not:
+
+- migrate `FrequencyMatchDetector`
+- introduce a forced `IDetector` base class
+- introduce type-erased detector feature input
+- change scalar detection behavior
+- change thresholds, timing, or profiles
+- redesign Analyzer output
+- remove `DetectionDiagnostics`
+- remove `ScalarOccurrenceSource`
+
+`DetectionRuntime::scalarDetectorReport()` remains the stable scalar report
+accessor used by the Analyzer bridge.
+
+## Remaining Temporary Bridges
+
+Temporary bridge work still remains in the scalar path:
+
+- `ScalarOccurrenceSource` still owns scalar `Occurrence` emission
+- `ScalarOccurrenceSource` still owns legacy aggregate rejected-candidate
+  diagnostics compatibility
+- `DetectionRuntime` still stores the scalar report snapshot and copies legacy
+  scalar compatibility values into `DetectionDiagnostics`
+- frequency still has no migrated `DetectorReport` path
+
+## Recommended Next Pass
+
+Recommended next pass:
+
+- `Pass H - Route Scalar Occurrence Emission Directly from ScalarTransientDetector`
+
+If scalar report ownership still reveals cleanup gaps after review, the fallback
+is:
+
+- `Pass G3 - Finish Scalar DetectorReport Ownership Cleanup`

@@ -124,50 +124,20 @@ void DetectionRuntime::setDiagnosticsEnabled(bool enabled) {
     _scalarEmitter.setDiagnosticsEnabled(enabled);
 }
 
-void DetectionRuntime::refreshScalarDetectorReport(unsigned long nowMs) {
+void DetectionRuntime::refreshDetectorReports(unsigned long nowMs) {
     _scalarDetectorReport = {};
     if (_occurrenceSourceKind != OccurrenceSourceKind::ScalarTransient) {
         return;
     }
 
-    DetectorReport& report = _scalarDetectorReport;
     const ScalarTransientDetector& scalarDetector = _scalarEmitter.detector();
-    report.detectorId = DetectorId::ScalarTransient;
-
-    // TEMP_SCALAR_REPORT_BRIDGE:
-    // Canonical scalar detector-truth fields now come directly from
-    // ScalarTransientDetector, including accepted occurrence, scalar detail,
-    // and selected reject facts. ScalarOccurrenceSource remains only for
-    // Occurrence emission and legacy aggregate reject diagnostics compatibility.
-    // DetectionRuntime must not grow one refreshXXDetectorReport() function per
-    // detector. Long-term report production belongs to detector cores or
-    // detector-local helpers.
-    report.acceptedPresent = scalarDetector.acceptedOccurrencePresent();
-    if (report.acceptedPresent) {
-        report.acceptedOccurrence = scalarDetector.acceptedOccurrence();
-    }
-
-    report.scalarTransient = scalarDetector.reportDetail();
-
-    report.selectedRejectPresent = scalarDetector.selectedRejectPresent();
-    if (report.selectedRejectPresent) {
-        report.selectedReject = scalarDetector.selectedReject();
-    }
-
-    if (report.acceptedPresent) {
-        report.reportStartMs = report.acceptedOccurrence.startMs;
-        report.reportEndMs = report.acceptedOccurrence.endMs;
-    } else if (report.scalarTransient.opened) {
-        report.reportStartMs = report.scalarTransient.openMs;
-        report.reportEndMs = report.scalarTransient.released ? report.scalarTransient.releaseMs : nowMs;
-    } else if (report.selectedRejectPresent) {
-        report.reportStartMs = report.selectedReject.startMs;
-        report.reportEndMs = report.selectedReject.endMs;
-    }
+    // DetectorRuntime coordinates detector-owned report snapshots. It must not
+    // become the permanent home of detector-specific report assembly.
+    scalarDetector.buildReport(_scalarDetectorReport, nowMs);
 }
 
 void DetectionRuntime::captureDiagnostics() {
-    refreshScalarDetectorReport(_latestPipelineResult.timestampMs);
+    refreshDetectorReports(_latestPipelineResult.timestampMs);
 
     if (!_diagnosticsEnabled) {
         _diagnostics = {};
@@ -593,7 +563,7 @@ void DetectionRuntime::observeFrame(
 
     drainOccurrenceSources(nowMs);
     drainPatternAssembler(nowMs);
-    refreshScalarDetectorReport(nowMs);
+    refreshDetectorReports(nowMs);
 }
 
 bool DetectionRuntime::popPatternResult(PatternResult& out) {

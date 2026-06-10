@@ -139,7 +139,7 @@ Rejected as target public contracts:
 Historical note:
 
 - `ScalarOccurrenceSource` was already removed after Pass H2
-- `FrequencyOccurrenceSource` remains the only active temporary occurrence-source wrapper
+- `FrequencyOccurrenceSource` remains the only active temporary occurrence-source wrapper, but after Pass M it is shell-only and no longer owns accepted occurrence emission
 
 Any remaining wrapper class may exist only temporarily during migration. It must not gain new architectural responsibilities and must not become the final detector boundary.
 
@@ -183,6 +183,7 @@ The same rule applies to accepted-occurrence drain ownership:
 Historical note:
 
 - `ScalarOccurrenceSource` already disappeared during Pass H2 after scalar detector ownership became direct
+- `FrequencyOccurrenceSource` remains temporarily only for specialized routing/config forwarding after Pass M
 
 Deletion target:
 

@@ -12,8 +12,8 @@ namespace detection {
 FrequencyOccurrenceSource
 
 Temporary migration wrapper around the canonical FrequencyMatchDetector core.
-Owns the frequency-match occurrence candidate path until detector cores emit
-Occurrence + DetectorReport directly.
+Now forwards specialized frequency input into the detector core while the
+remaining wrapper/routing cleanup is deferred.
 Wraps FrequencyMatchDetector to produce frequency candidates from AudioSamplePacket
 and FrequencyBandMeasurementPacket input.
 Does not decide pattern meaning or behavior.
@@ -39,12 +39,8 @@ public:
     const FrequencyMatchDetector& detector() const;
 
 private:
-    bool _hasPending = false;
-    detection::FrequencyBandMeasurementPacket _peakEvidence = {};
     FrequencyMatchDetector _detector = {};
     FrequencyMatchConfig _config = {};
-    Occurrence _pending = {};
-    unsigned long _lastEmittedCloseMs = 0;
 };
 
 } // namespace detection

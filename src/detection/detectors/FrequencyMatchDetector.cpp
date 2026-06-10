@@ -157,6 +157,9 @@ void FrequencyMatchDetector::resetState() {
     strncpy(noEmitReason, "none", sizeof(noEmitReason) - 1);
     noEmitReason[sizeof(noEmitReason) - 1] = '\0';
     memset(&frequencyCandidate, 0, sizeof(frequencyCandidate));
+    _pendingOccurrencePresent = false;
+    _pendingOccurrence = {};
+    _lastEmittedOccurrenceCloseMs = 0;
     resetDiagnosticsSummary();
 }
 
@@ -320,7 +323,29 @@ void FrequencyMatchDetector::observeClosedCandidate(bool accepted) {
     updateBestRejectedCandidate();
 }
 
+void FrequencyMatchDetector::capturePendingOccurrence(const AudioSamplePacket& audioSamplePacket) {
+    _pendingOccurrence = frequencyCandidate;
+    _pendingOccurrence.detectorId = detection::DetectorId::FrequencyMatch;
+    _pendingOccurrence.occurrenceType = detection::OccurrenceType::FrequencyMatch;
+    _pendingOccurrence.kind = detection::OccurrenceKind::FrequencyMatch;
+    _pendingOccurrence.source = detection::OccurrenceSource::Frequency;
+    _pendingOccurrence.detectorKind = detection::OccurrenceDetectorKind::FrequencyMatch;
+    _pendingOccurrence.present = true;
+    _pendingOccurrence.confidence = _pendingOccurrence.valid ? 1.0f : 0.0f;
+    _pendingOccurrence.ampEvidencePresent = true;
+    _pendingOccurrence.ampLevel = audioSamplePacket.audioMagnitudeValue;
+    _pendingOccurrence.ampBaseline = audioSamplePacket.baseline;
+    _pendingOccurrence.frequency = candidateEvidence;
+    _pendingOccurrence.frequency.present = true;
+    _pendingOccurrence.frequency.matched = frequencyCandidate.valid;
+    _pendingOccurrence.frequency.observedAtMs = audioSamplePacket.timeMs;
+    _pendingOccurrence.frequency.targetHz = candidateEvidence.targetHz;
+    _pendingOccurrence.transient.present = false;
+    _pendingOccurrencePresent = _pendingOccurrence.valid;
+}
+
 void FrequencyMatchDetector::update(const detection::FrequencyBandMeasurementPacket& evidence,
+                                    const AudioSamplePacket& audioSamplePacket,
                                     unsigned long now,
                                     uint64_t currentSample,
                                     const FrequencyMatchEvaluation::Values& tuning,
@@ -654,6 +679,11 @@ void FrequencyMatchDetector::update(const detection::FrequencyBandMeasurementPac
             ++diagnosticsReleaseNoEvidenceCount;
         }
     }
+
+    if (candidateEmitted && candidateCloseMs != _lastEmittedOccurrenceCloseMs) {
+        capturePendingOccurrence(audioSamplePacket);
+        _lastEmittedOccurrenceCloseMs = candidateCloseMs;
+    }
 }
 
 void FrequencyMatchDetector::buildReport(detection::DetectorReport& out, unsigned long nowMs) const {
@@ -729,5 +759,16 @@ void FrequencyMatchDetector::buildReport(detection::DetectorReport& out, unsigne
         out.reportStartMs = out.selectedReject.startMs;
         out.reportEndMs = out.selectedReject.endMs;
     }
+}
+
+bool FrequencyMatchDetector::popOccurrence(detection::Occurrence& out) {
+    if (!_pendingOccurrencePresent) {
+        return false;
+    }
+
+    out = _pendingOccurrence;
+    _pendingOccurrencePresent = false;
+    _pendingOccurrence = {};
+    return true;
 }
 

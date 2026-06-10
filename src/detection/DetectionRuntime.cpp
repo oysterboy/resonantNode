@@ -675,7 +675,7 @@ void DetectionRuntime::drainOccurrenceSources(unsigned long nowMs) {
 
     switch (_occurrenceSourceKind) {
         case OccurrenceSourceKind::FrequencyMatch:
-            while (_frequencyEmitter.popOccurrence(candidate)) {
+            while (_frequencyEmitter.detector().popOccurrence(candidate)) {
                 _fieldStateTracker.observeOccurrence(candidate, nowMs);
                 const InspectedOccurrence inspected = _occurrenceInspector.inspectWithHistory(candidate, &_featureHistory);
                 _fieldStateTracker.observeInspectedOccurrence(inspected, nowMs);

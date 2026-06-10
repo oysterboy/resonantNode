@@ -5,6 +5,7 @@
 #include "../DetectorReport.h"
 #include "../features/FrequencyMatchEvaluation.h"
 #include "../occurrences/Occurrence.h"
+#include "../../io/AudioSignal.h"
 
 enum class FrequencyReleaseFailCause {
     None,
@@ -164,6 +165,7 @@ public:
     void resetDiagnosticsSummary();
 
     void update(const detection::FrequencyBandMeasurementPacket& evidence,
+                const AudioSamplePacket& audioSamplePacket,
                 unsigned long now,
                 uint64_t currentSample,
                 const FrequencyMatchEvaluation::Values& tuning,
@@ -171,6 +173,7 @@ public:
                 unsigned long cooldownAfterReleaseMs,
                 unsigned long minDurationMs);
     void buildReport(detection::DetectorReport& out, unsigned long nowMs) const;
+    bool popOccurrence(detection::Occurrence& out);
 
     float diagnosticsScoreMean() const;
     float diagnosticsContrastMean() const;
@@ -186,9 +189,17 @@ public:
 
 private:
     void updateBestRejectedCandidate();
+    void capturePendingOccurrence(const AudioSamplePacket& audioSamplePacket);
 
     bool _diagnosticsEnabled = false;
     bool _diagnosticsHaveStats = false;
     bool _diagnosticsHaveBandStats = false;
+
+    // Detector-owned accepted-occurrence emission state. Frequency now mirrors
+    // the scalar ownership pattern while preserving the current Occurrence
+    // payload shape expected by inspector/pattern/analyzer consumers.
+    bool _pendingOccurrencePresent = false;
+    detection::Occurrence _pendingOccurrence = {};
+    unsigned long _lastEmittedOccurrenceCloseMs = 0;
 };
 

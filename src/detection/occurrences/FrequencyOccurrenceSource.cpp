@@ -5,10 +5,6 @@ namespace detection {
 FrequencyOccurrenceSource::FrequencyOccurrenceSource() = default;
 
 void FrequencyOccurrenceSource::reset() {
-    _hasPending = false;
-    _peakEvidence = {};
-    _pending = {};
-    _lastEmittedCloseMs = 0;
     _detector.resetState();
 }
 
@@ -41,54 +37,19 @@ void FrequencyOccurrenceSource::observeFrame(
 
     _detector.update(
         evidence,
+        audioSamplePacket,
         audioSamplePacket.timeMs,
         audioSamplePacket.sampleIndex,
         frequencyTuning,
         _config.releaseDebounceMs,
         _config.cooldownAfterReleaseMs,
         _config.minDurationMs);
-
-    if (_detector.candidateActive && (!_peakEvidence.present
-        || evidence.targetBandContrastValue > _peakEvidence.targetBandContrastValue
-        || (evidence.targetBandContrastValue == _peakEvidence.targetBandContrastValue && evidence.targetBandScoreValue > _peakEvidence.targetBandScoreValue))) {
-        _peakEvidence = evidence;
-    }
-
-    if (_detector.candidateEmitted && _detector.candidateCloseMs != _lastEmittedCloseMs) {
-        Occurrence candidate = _detector.frequencyCandidate;
-        candidate.present = true;
-        candidate.detectorId = DetectorId::FrequencyMatch;
-        candidate.occurrenceType = OccurrenceType::FrequencyMatch;
-        candidate.kind = OccurrenceKind::FrequencyMatch;
-        candidate.source = OccurrenceSource::Frequency;
-        candidate.detectorKind = OccurrenceDetectorKind::FrequencyMatch;
-        candidate.confidence = candidate.valid ? 1.0f : 0.0f;
-        candidate.ampEvidencePresent = true;
-        candidate.ampLevel = audioSamplePacket.audioMagnitudeValue;
-        candidate.ampBaseline = audioSamplePacket.baseline;
-        candidate.frequency = _peakEvidence;
-        candidate.frequency.present = true;
-        candidate.frequency.matched = _detector.frequencyCandidate.valid;
-        candidate.frequency.observedAtMs = audioSamplePacket.timeMs;
-        candidate.frequency.targetHz = _peakEvidence.targetHz;
-        candidate.transient.present = false;
-        if (candidate.valid) {
-            _pending = candidate;
-            _hasPending = true;
-        }
-        _lastEmittedCloseMs = _detector.candidateCloseMs;
-        _peakEvidence = {};
-    }
 }
 
 bool FrequencyOccurrenceSource::popOccurrence(Occurrence& out) {
-    if (!_hasPending) {
-        return false;
-    }
-
-    out = _pending;
-    _hasPending = false;
-    return true;
+    // Legacy shell-only compatibility: detector now owns the pending accepted
+    // Occurrence payload and this wrapper simply forwards access.
+    return _detector.popOccurrence(out);
 }
 
 FrequencyMatchDetector& FrequencyOccurrenceSource::detector() {

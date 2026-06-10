@@ -664,7 +664,10 @@ Current implementation note after Pass I:
 
 ```text
 FrequencyMatchDetector now also exposes a detector-owned DetectorReport path.
-FrequencyOccurrenceSource still temporarily owns accepted Occurrence emission.
+After Pass M, FrequencyMatchDetector also owns pending accepted Occurrence
+emission directly.
+FrequencyOccurrenceSource remains only as a temporary shell for specialized
+routing/config forwarding.
 ```
 
 ### 1.9a Detector Genericity Rule

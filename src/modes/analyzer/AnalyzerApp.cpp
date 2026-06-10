@@ -70,6 +70,43 @@ unsigned long sampleFramesToMs(unsigned long frames, uint32_t sampleRateHz) {
     return static_cast<unsigned long>((static_cast<uint64_t>(frames) * 1000ULL) / static_cast<uint64_t>(sampleRateHz));
 }
 
+bool analyzerTextIsNone(const char* value) {
+    return value == nullptr || strcmp(value, "none") == 0;
+}
+
+const char* analyzerTextOrFallback(const char* value, const char* fallback) {
+    return value != nullptr ? value : fallback;
+}
+
+bool analyzerHasScalarDetectorReport(const detection::DetectorReport& report) {
+    return report.detectorId == detection::DetectorId::ScalarTransient;
+}
+
+const char* analyzerExpectedScalarOccurrenceSource(const detection::DetectionProfile& profile) {
+    switch (profile.scalarTransient.observedStream) {
+        case detection::FeatureStreamId::FrequencyScore:
+        case detection::FeatureStreamId::FrequencyContrast:
+            return "frequency";
+        case detection::FeatureStreamId::AmpEnvelope:
+        case detection::FeatureStreamId::Unknown:
+        default:
+            return "amp";
+    }
+}
+
+const char* analyzerScopeFromPeakMs(bool present,
+                                    unsigned long peakMs,
+                                    unsigned long windowStartMs,
+                                    unsigned long windowEndMs) {
+    if (!present) {
+        return "stale";
+    }
+    if (peakMs >= windowStartMs && peakMs <= windowEndMs) {
+        return "in_window";
+    }
+    return peakMs < windowStartMs ? "before_window" : "after_window";
+}
+
 void printHeapStatus(const char* when) {
     const uint32_t free8 = static_cast<uint32_t>(heap_caps_get_free_size(MALLOC_CAP_8BIT));
     const uint32_t largest8 = static_cast<uint32_t>(heap_caps_get_largest_free_block(MALLOC_CAP_8BIT));
@@ -1447,6 +1484,8 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
         ? &pipelineResult->field
         : nullptr;
     const detection::DetectionProfile& selectedProfile = detection::detectionProfileForKind(_sequenceTest.profileKind);
+    const detection::DetectorReport& scalarDetectorReport = _detection.scalarDetectorReport();
+    const bool scalarDetectorReportAvailable = analyzerHasScalarDetectorReport(scalarDetectorReport);
     const bool trialHasPipelineEvidence = actualPipelineAvailable
         && runtimePatternResult != nullptr
         && diagnostics.rawCandidateCount > 0;
@@ -1980,6 +2019,18 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
 
     const bool scalarProfile = selectedProfile.occurrenceSource == detection::OccurrenceSourceKind::ScalarTransient;
     if (scalarProfile) {
+        const auto& scalarDetail = scalarDetectorReport.scalarTransient;
+        const auto& scalarSelectedReject = scalarDetectorReport.selectedReject;
+        const char* expectedScalarSource = analyzerExpectedScalarOccurrenceSource(selectedProfile);
+        const bool scalarAcceptedPresent = report.occurrences.present
+            && report.occurrences.valid
+            && report.primaryPattern.accepted
+            && report.occurrences.primarySource != nullptr
+            && strcmp(report.occurrences.primarySource, expectedScalarSource) == 0;
+        const bool scalarSelectedRejectPresent = scalarDetectorReportAvailable
+            ? scalarDetectorReport.selectedRejectPresent
+            : false;
+
         report.source.scalarTransient.currentTrialId = report.context.trial;
         report.source.scalarTransient.windowStartMs = _sequenceTest.currentTrialStartMs;
         report.source.scalarTransient.windowEndMs = _sequenceTest.currentTrialEndMs;
@@ -1991,28 +2042,57 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
                 * static_cast<unsigned long>(_audioSource.sampleRateHz() > 0 ? _audioSource.sampleRateHz() : 16000UL)) / 1000UL);
         report.source.scalarTransient.diagFrameCountOk = report.source.scalarTransient.expectedWindowMs > 0 && report.source.scalarTransient.expectedFrameCountEstimate > 0;
 
-        report.source.scalarTransient.acceptedPresent = report.occurrences.present
-            && report.occurrences.valid
-            && report.primaryPattern.accepted
-            && report.occurrences.primarySource != nullptr
-            && strcmp(report.occurrences.primarySource, "amp") == 0;
+        report.source.scalarTransient.acceptedPresent = scalarAcceptedPresent;
         report.source.scalarTransient.acceptedTrialId = report.source.scalarTransient.acceptedPresent ? report.context.trial : 0UL;
         report.source.scalarTransient.acceptedSource = report.source.scalarTransient.acceptedPresent
             ? (report.occurrences.primarySource != nullptr ? report.occurrences.primarySource : "unknown")
             : "none";
-        report.source.scalarTransient.acceptedDtMs = report.source.scalarTransient.acceptedPresent ? report.occurrences.primaryDtMs : -1;
-        report.source.scalarTransient.acceptedStartMs = report.source.scalarTransient.acceptedPresent ? report.occurrences.startMs : 0UL;
-        report.source.scalarTransient.acceptedPeakMs = report.source.scalarTransient.acceptedPresent ? report.occurrences.peakMs : 0UL;
-        report.source.scalarTransient.acceptedReleaseMs = report.source.scalarTransient.acceptedPresent ? report.occurrences.releaseMs : 0UL;
-        report.source.scalarTransient.acceptedDurationMs = report.source.scalarTransient.acceptedPresent ? report.occurrences.primaryDurationMs : 0UL;
-        report.source.scalarTransient.acceptedStrength = report.source.scalarTransient.acceptedPresent ? report.occurrences.primaryStrength : 0.0f;
-        report.source.scalarTransient.acceptedScore = report.source.scalarTransient.acceptedPresent ? report.occurrences.score : 0.0f;
-        report.source.scalarTransient.acceptedContrast = report.source.scalarTransient.acceptedPresent ? report.occurrences.contrast : 0.0f;
+        report.source.scalarTransient.acceptedDtMs = report.source.scalarTransient.acceptedPresent
+            ? (scalarDetectorReportAvailable
+                ? static_cast<long>(scalarDetectorReport.acceptedOccurrence.startMs) - static_cast<long>(_sequenceTest.currentTrialScheduledAtMs)
+                : report.occurrences.primaryDtMs)
+            : -1;
+        report.source.scalarTransient.acceptedStartMs = report.source.scalarTransient.acceptedPresent
+            ? (scalarDetectorReportAvailable ? scalarDetectorReport.acceptedOccurrence.startMs : report.occurrences.startMs)
+            : 0UL;
+        report.source.scalarTransient.acceptedPeakMs = report.source.scalarTransient.acceptedPresent
+            ? (scalarDetectorReportAvailable ? scalarDetectorReport.acceptedOccurrence.peakMs : report.occurrences.peakMs)
+            : 0UL;
+        report.source.scalarTransient.acceptedReleaseMs = report.source.scalarTransient.acceptedPresent
+            ? (scalarDetectorReportAvailable ? scalarDetectorReport.acceptedOccurrence.endMs : report.occurrences.releaseMs)
+            : 0UL;
+        report.source.scalarTransient.acceptedDurationMs = report.source.scalarTransient.acceptedPresent
+            ? (scalarDetectorReportAvailable ? scalarDetectorReport.acceptedOccurrence.durationMs : report.occurrences.primaryDurationMs)
+            : 0UL;
+        report.source.scalarTransient.acceptedStrength = report.source.scalarTransient.acceptedPresent
+            ? (scalarDetectorReportAvailable ? scalarDetectorReport.acceptedOccurrence.strength : report.occurrences.primaryStrength)
+            : 0.0f;
+        report.source.scalarTransient.acceptedScore = report.source.scalarTransient.acceptedPresent
+            ? (scalarDetectorReportAvailable ? scalarDetectorReport.acceptedOccurrence.score : report.occurrences.score)
+            : 0.0f;
+        report.source.scalarTransient.acceptedContrast = report.source.scalarTransient.acceptedPresent
+            ? (scalarDetectorReportAvailable ? scalarDetectorReport.acceptedOccurrence.contrast : report.occurrences.contrast)
+            : 0.0f;
 
-        if (runtimeDiag != nullptr) {
-            report.source.scalarTransient.scalarRejectReason = runtimeDiag->scalarRejectReason != nullptr ? runtimeDiag->scalarRejectReason : "unknown";
-            report.source.scalarTransient.scalarNoEmitReason = runtimeDiag->scalarNoEmitReason != nullptr ? runtimeDiag->scalarNoEmitReason : "none";
-            report.source.scalarTransient.scalarGateReason = runtimeDiag->scalarGateReason != nullptr ? runtimeDiag->scalarGateReason : "none";
+        if (scalarDetectorReportAvailable) {
+            report.source.scalarTransient.scalarRejectReason = analyzerTextOrFallback(scalarDetail.rejectReason, "unknown");
+            report.source.scalarTransient.scalarNoEmitReason = analyzerTextOrFallback(scalarDetail.noEmitReason, "none");
+            report.source.scalarTransient.scalarGateReason = analyzerTextOrFallback(scalarDetail.gateReason, "none");
+            report.source.scalarTransient.scalarOpened = scalarDetail.opened;
+            report.source.scalarTransient.scalarReleased = scalarDetail.released;
+            report.source.scalarTransient.scalarValidRelease = scalarDetail.validRelease;
+            report.source.scalarTransient.scalarEmitAllowed = scalarDetail.emitAllowed;
+            report.source.scalarTransient.scalarOpenMs = scalarDetail.openMs;
+            report.source.scalarTransient.scalarPeakMs = scalarDetail.peakMs;
+            report.source.scalarTransient.scalarReleaseMs = scalarDetail.releaseMs;
+            report.source.scalarTransient.scalarDurationMs = scalarDetail.durationMs;
+            report.source.scalarTransient.scalarMinDurationMs = scalarDetail.minDurationMs;
+            report.source.scalarTransient.scalarMaxDurationMs = scalarDetail.maxDurationMs;
+            report.source.scalarTransient.scalarPeakStrength = scalarDetail.peakStrength;
+        } else if (runtimeDiag != nullptr) {
+            report.source.scalarTransient.scalarRejectReason = analyzerTextOrFallback(runtimeDiag->scalarRejectReason, "unknown");
+            report.source.scalarTransient.scalarNoEmitReason = analyzerTextOrFallback(runtimeDiag->scalarNoEmitReason, "none");
+            report.source.scalarTransient.scalarGateReason = analyzerTextOrFallback(runtimeDiag->scalarGateReason, "none");
             report.source.scalarTransient.scalarOpened = runtimeDiag->scalarOpened;
             report.source.scalarTransient.scalarReleased = runtimeDiag->scalarReleased;
             report.source.scalarTransient.scalarValidRelease = runtimeDiag->scalarValidRelease;
@@ -2024,82 +2104,121 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
             report.source.scalarTransient.scalarMinDurationMs = runtimeDiag->scalarMinDurationMs;
             report.source.scalarTransient.scalarMaxDurationMs = runtimeDiag->scalarMaxDurationMs;
             report.source.scalarTransient.scalarPeakStrength = runtimeDiag->scalarPeakStrength;
-        report.source.scalarTransient.sourceOccurrenceEmitted = report.occurrences.present;
+        }
+
+        report.source.scalarTransient.sourceOccurrenceEmitted = report.source.scalarTransient.acceptedPresent;
         report.source.scalarTransient.sourceSummary.present = !report.source.scalarTransient.acceptedPresent
-            && (report.source.scalarTransient.scalarOpened
+            && (scalarSelectedRejectPresent
+                || report.source.scalarTransient.scalarOpened
                 || report.source.scalarTransient.scalarReleased
-                || (report.source.scalarTransient.scalarRejectReason != nullptr && strcmp(report.source.scalarTransient.scalarRejectReason, "none") != 0));
-        report.source.scalarTransient.sourceSummary.origin = "synthesized_scalar_lifecycle";
+                || !analyzerTextIsNone(report.source.scalarTransient.scalarRejectReason));
+        report.source.scalarTransient.sourceSummary.origin = scalarSelectedRejectPresent
+            ? "scalar_detector_report"
+            : "synthesized_scalar_lifecycle";
         report.source.scalarTransient.sourceSummary.candidateCount = report.source.scalarTransient.sourceSummary.present ? 1UL : 0UL;
         report.source.scalarTransient.sourceSummary.rejectCount = report.source.scalarTransient.sourceSummary.candidateCount;
-        report.source.scalarTransient.sourceSummary.bestDurationMs = report.source.scalarTransient.scalarDurationMs;
+        report.source.scalarTransient.sourceSummary.bestDurationMs = scalarSelectedRejectPresent
+            ? scalarSelectedReject.durationMs
+            : report.source.scalarTransient.scalarDurationMs;
         report.source.scalarTransient.sourceSummary.secondBestDurationMs = 0UL;
-        report.source.scalarTransient.sourceSummary.bestOpenMs = report.source.scalarTransient.scalarOpenMs;
-        report.source.scalarTransient.sourceSummary.bestPeakMs = report.source.scalarTransient.scalarPeakMs;
-        report.source.scalarTransient.sourceSummary.bestLastMatchMs = report.source.scalarTransient.scalarReleaseMs;
-        report.source.scalarTransient.sourceSummary.bestCloseMs = report.source.scalarTransient.scalarReleaseMs;
-        report.source.scalarTransient.sourceSummary.bestPeakPrimary = report.source.scalarTransient.scalarPeakStrength;
+        report.source.scalarTransient.sourceSummary.bestOpenMs = scalarSelectedRejectPresent
+            ? scalarSelectedReject.startMs
+            : report.source.scalarTransient.scalarOpenMs;
+        report.source.scalarTransient.sourceSummary.bestPeakMs = scalarSelectedRejectPresent
+            ? scalarSelectedReject.peakMs
+            : report.source.scalarTransient.scalarPeakMs;
+        report.source.scalarTransient.sourceSummary.bestLastMatchMs = scalarSelectedRejectPresent
+            ? scalarSelectedReject.endMs
+            : report.source.scalarTransient.scalarReleaseMs;
+        report.source.scalarTransient.sourceSummary.bestCloseMs = scalarSelectedRejectPresent
+            ? scalarSelectedReject.endMs
+            : report.source.scalarTransient.scalarReleaseMs;
+        report.source.scalarTransient.sourceSummary.bestPeakPrimary = scalarSelectedRejectPresent
+            ? scalarSelectedReject.strength
+            : report.source.scalarTransient.scalarPeakStrength;
         report.source.scalarTransient.sourceSummary.bestPeakSecondary = 0.0f;
-        report.source.scalarTransient.sourceSummary.bestRejectReason = report.source.scalarTransient.scalarRejectReason != nullptr ? report.source.scalarTransient.scalarRejectReason : "none";
-        report.source.scalarTransient.sourceSummary.bestGateReason = report.source.scalarTransient.scalarGateReason != nullptr ? report.source.scalarTransient.scalarGateReason : "none";
+        report.source.scalarTransient.sourceSummary.bestRejectReason = scalarSelectedRejectPresent
+            ? analyzerTextOrFallback(scalarSelectedReject.detectorReason, "none")
+            : analyzerTextOrFallback(report.source.scalarTransient.scalarRejectReason, "none");
+        report.source.scalarTransient.sourceSummary.bestGateReason = runtimeDiag != nullptr && runtimeDiag->sourceSummary.bestGateReason != nullptr
+            ? runtimeDiag->sourceSummary.bestGateReason
+            : analyzerTextOrFallback(report.source.scalarTransient.scalarGateReason, "none");
         report.source.scalarTransient.sourceSummary.scoreTooLowFrames = 0;
         report.source.scalarTransient.sourceSummary.contrastTooLowFrames = 0;
         report.source.scalarTransient.sourceSummary.scoreAndContrastTooLowFrames = 0;
-        report.source.scalarTransient.sourceSummary.maxPeakPrimary = runtimeDiag->sourceSummary.maxPeakPrimary;
-        report.source.scalarTransient.sourceSummary.maxPeakPrimaryMs = runtimeDiag->sourceSummary.maxPeakPrimaryMs;
+        report.source.scalarTransient.sourceSummary.maxPeakPrimary = runtimeDiag != nullptr
+            ? runtimeDiag->sourceSummary.maxPeakPrimary
+            : report.source.scalarTransient.sourceSummary.bestPeakPrimary;
+        report.source.scalarTransient.sourceSummary.maxPeakPrimaryMs = runtimeDiag != nullptr
+            ? runtimeDiag->sourceSummary.maxPeakPrimaryMs
+            : report.source.scalarTransient.sourceSummary.bestPeakMs;
         report.source.scalarTransient.sourceSummary.maxPeakSecondary = 0.0f;
         report.source.scalarTransient.sourceSummary.maxPeakSecondaryMs = 0UL;
-        report.source.scalarTransient.sourceSummary.totalMatchMs = report.source.scalarTransient.scalarDurationMs;
-        report.source.scalarTransient.sourceSummary.totalGapMs = runtimeDiag->sourceSummary.totalGapMs;
-        report.source.scalarTransient.sourceSummary.maxGapMs = runtimeDiag->sourceSummary.maxGapMs;
+        report.source.scalarTransient.sourceSummary.totalMatchMs = report.source.scalarTransient.sourceSummary.bestDurationMs;
+        report.source.scalarTransient.sourceSummary.totalGapMs = runtimeDiag != nullptr ? runtimeDiag->sourceSummary.totalGapMs : 0UL;
+        report.source.scalarTransient.sourceSummary.maxGapMs = runtimeDiag != nullptr ? runtimeDiag->sourceSummary.maxGapMs : 0UL;
         report.source.scalarTransient.sourceSummary.islandCount = report.source.scalarTransient.sourceSummary.present ? 1UL : 0UL;
-        report.source.scalarTransient.sourceLastCandidate.present = report.source.scalarTransient.scalarOpened
+        report.source.scalarTransient.sourceLastCandidate.present = scalarSelectedRejectPresent
+            || report.source.scalarTransient.scalarOpened
             || report.source.scalarTransient.scalarReleased
             || report.source.scalarTransient.scalarEmitAllowed;
-        report.source.scalarTransient.sourceLastCandidate.peakMs = report.source.scalarTransient.scalarPeakMs;
-        report.source.scalarTransient.sourceLastCandidate.durationMs = report.source.scalarTransient.scalarDurationMs;
+        report.source.scalarTransient.sourceLastCandidate.peakMs = scalarSelectedRejectPresent
+            ? scalarSelectedReject.peakMs
+            : report.source.scalarTransient.scalarPeakMs;
+        report.source.scalarTransient.sourceLastCandidate.durationMs = scalarSelectedRejectPresent
+            ? scalarSelectedReject.durationMs
+            : report.source.scalarTransient.scalarDurationMs;
         report.source.scalarTransient.sourceLastCandidate.sampleCount = 0UL;
-        report.source.scalarTransient.sourceLastCandidate.peakPrimary = report.source.scalarTransient.scalarPeakStrength;
+        report.source.scalarTransient.sourceLastCandidate.peakPrimary = scalarSelectedRejectPresent
+            ? scalarSelectedReject.strength
+            : report.source.scalarTransient.scalarPeakStrength;
         report.source.scalarTransient.sourceLastCandidate.peakSecondary = 0.0f;
-        report.source.scalarTransient.sourceLastCandidate.reason = report.source.scalarTransient.scalarRejectReason != nullptr ? report.source.scalarTransient.scalarRejectReason : "none";
-        report.source.scalarTransient.sourceLastCandidate.gateReason = report.source.scalarTransient.scalarGateReason != nullptr ? report.source.scalarTransient.scalarGateReason : "none";
-        report.source.scalarTransient.sourceLastCandidate.scope = report.source.scalarTransient.scalarOpened
-            ? (report.source.scalarTransient.scalarPeakMs >= report.source.scalarTransient.windowStartMs && report.source.scalarTransient.scalarPeakMs <= report.source.scalarTransient.windowEndMs
-                ? "in_window"
-                : (report.source.scalarTransient.scalarPeakMs < report.source.scalarTransient.windowStartMs ? "before_window" : "after_window"))
-            : "stale";
-            report.source.scalarTransient.runtimeEvidenceSeen = runtimeDiag->scalarOpened
-                || runtimeDiag->scalarReleased
-                || (runtimeDiag->scalarRejectReason != nullptr && strcmp(runtimeDiag->scalarRejectReason, "none") != 0);
-            report.source.scalarTransient.runtimeOccurrenceReceived = report.source.scalarTransient.sourceOccurrenceEmitted;
-            report.source.scalarTransient.analyzerSeenOccurrence = report.source.scalarTransient.acceptedPresent;
-            report.source.scalarTransient.liveScalarReason = runtimeDiag->scalarRejectReason != nullptr ? runtimeDiag->scalarRejectReason : "none";
-            report.source.scalarTransient.liveScalarWould = runtimeDiag->scalarNoEmitReason != nullptr ? runtimeDiag->scalarNoEmitReason : "none";
-            report.source.scalarTransient.liveScalarReady = runtimeDiag->scalarOpened;
-            report.source.scalarTransient.liveScalarGate = runtimeDiag->scalarEmitAllowed;
-            report.source.scalarTransient.liveScalarPresent = report.occurrences.present;
-            report.source.scalarTransient.liveScalarValid = report.occurrences.valid;
-            report.source.scalarTransient.liveScalarMatch = report.primaryPattern.accepted;
-            report.source.scalarTransient.liveScalarState = runtimeDiag->scalarOpened
-                ? (runtimeDiag->scalarReleased ? "released" : "active")
-                : "idle";
-            report.source.scalarTransient.detectionGateBlocked = !report.source.scalarTransient.acceptedPresent
-                && (report.source.scalarTransient.scalarOpened
-                    || report.source.scalarTransient.scalarReleased
-                    || (report.source.scalarTransient.scalarRejectReason != nullptr && strcmp(report.source.scalarTransient.scalarRejectReason, "none") != 0));
-            if (!report.source.scalarTransient.acceptedPresent) {
-                if (report.source.scalarTransient.scalarRejectReason != nullptr && strcmp(report.source.scalarTransient.scalarRejectReason, "none") != 0) {
-                    report.source.scalarTransient.detectionGateReason = report.source.scalarTransient.scalarRejectReason;
-                } else if (report.source.scalarTransient.scalarOpened && !report.source.scalarTransient.scalarReleased) {
-                    report.source.scalarTransient.detectionGateReason = "opened_not_released";
-                } else if (!report.source.scalarTransient.scalarOpened) {
-                    report.source.scalarTransient.detectionGateReason = "no_evidence";
-                } else {
-                    report.source.scalarTransient.detectionGateReason = "none";
-                }
+        report.source.scalarTransient.sourceLastCandidate.reason = scalarSelectedRejectPresent
+            ? analyzerTextOrFallback(scalarSelectedReject.detectorReason, "none")
+            : analyzerTextOrFallback(report.source.scalarTransient.scalarRejectReason, "none");
+        report.source.scalarTransient.sourceLastCandidate.gateReason = runtimeDiag != nullptr && runtimeDiag->sourceLastCandidate.gateReason != nullptr
+            ? runtimeDiag->sourceLastCandidate.gateReason
+            : analyzerTextOrFallback(report.source.scalarTransient.scalarGateReason, "none");
+        report.source.scalarTransient.sourceLastCandidate.scope = analyzerScopeFromPeakMs(
+            report.source.scalarTransient.sourceLastCandidate.present,
+            report.source.scalarTransient.sourceLastCandidate.peakMs,
+            report.source.scalarTransient.windowStartMs,
+            report.source.scalarTransient.windowEndMs
+        );
+        report.source.scalarTransient.runtimeEvidenceSeen = report.source.scalarTransient.acceptedPresent
+            || scalarSelectedRejectPresent
+            || report.source.scalarTransient.scalarOpened
+            || report.source.scalarTransient.scalarReleased
+            || !analyzerTextIsNone(report.source.scalarTransient.scalarRejectReason);
+        report.source.scalarTransient.runtimeOccurrenceReceived = report.source.scalarTransient.sourceOccurrenceEmitted;
+        report.source.scalarTransient.analyzerSeenOccurrence = report.source.scalarTransient.acceptedPresent;
+        report.source.scalarTransient.liveScalarReason = analyzerTextOrFallback(report.source.scalarTransient.scalarRejectReason, "none");
+        report.source.scalarTransient.liveScalarWould = analyzerTextOrFallback(report.source.scalarTransient.scalarNoEmitReason, "none");
+        report.source.scalarTransient.liveScalarReady = report.source.scalarTransient.scalarOpened;
+        report.source.scalarTransient.liveScalarGate = report.source.scalarTransient.scalarEmitAllowed;
+        report.source.scalarTransient.liveScalarPresent = report.occurrences.present;
+        report.source.scalarTransient.liveScalarValid = report.occurrences.valid;
+        report.source.scalarTransient.liveScalarMatch = report.primaryPattern.accepted;
+        report.source.scalarTransient.liveScalarState = report.source.scalarTransient.scalarOpened
+            ? (report.source.scalarTransient.scalarReleased ? "released" : "active")
+            : "idle";
+        report.source.scalarTransient.detectionGateBlocked = !report.source.scalarTransient.acceptedPresent
+            && (scalarSelectedRejectPresent
+                || report.source.scalarTransient.scalarOpened
+                || report.source.scalarTransient.scalarReleased
+                || !analyzerTextIsNone(report.source.scalarTransient.scalarRejectReason));
+        if (!report.source.scalarTransient.acceptedPresent) {
+            if (!analyzerTextIsNone(report.source.scalarTransient.scalarRejectReason)) {
+                report.source.scalarTransient.detectionGateReason = report.source.scalarTransient.scalarRejectReason;
+            } else if (report.source.scalarTransient.scalarOpened && !report.source.scalarTransient.scalarReleased) {
+                report.source.scalarTransient.detectionGateReason = "opened_not_released";
+            } else if (!report.source.scalarTransient.scalarOpened) {
+                report.source.scalarTransient.detectionGateReason = "no_evidence";
             } else {
                 report.source.scalarTransient.detectionGateReason = "none";
             }
+        } else {
+            report.source.scalarTransient.detectionGateReason = "none";
         }
 
         if (report.source.scalarTransient.acceptedPresent) {

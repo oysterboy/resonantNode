@@ -89,6 +89,18 @@ struct DetectionProfile {
     FieldStateConfig fieldStateConfig = {};
 };
 
+inline void applyAmpEnvelopeScalarTransientTuning(ScalarTransientConfig& config) {
+    // Lab-calibrated AMP thresholds: the default scalar detector thresholds are
+    // too high for the current AmpEnvelope magnitude range on analyzer runs.
+    config.onsetDetectionThreshold = 23.0f;
+    config.onsetReleaseThreshold = 20.0f;
+    config.cooldownAfterOnsetMs = 300;
+    config.minTransientDurationMs = 60;
+    config.maxTransientDurationMs = 240;
+    config.minTransientPeakStrength = 40.0f;
+    config.releaseDebounceMs = 30;
+}
+
 // Actual profiles. These are the concrete profile definitions used at runtime.
 inline DetectionProfile makeTonalPulseProfile() {
     DetectionProfile profile;
@@ -169,6 +181,10 @@ inline DetectionProfile makeAmpProfile() {
     profile.kind = DetectionProfileKind::Amp;
     profile.occurrenceSource = OccurrenceSourceKind::ScalarTransient;
     profile.scalarTransient.observedStream = FeatureStreamId::AmpEnvelope;
+    applyAmpEnvelopeScalarTransientTuning(profile.scalarTransient);
+    // Analyzer retune: recent AMP trials produced stable 29..38 peak-strength
+    // candidates, so keep the duration gate and lower only the peak gate here.
+    profile.scalarTransient.minTransientPeakStrength = 28.0f;
 
     // Inspector composition.
 
@@ -234,6 +250,7 @@ inline DetectionProfile makeChirpExperimentalProfile() {
     profile.kind = DetectionProfileKind::ChirpExperimental;
     profile.occurrenceSource = OccurrenceSourceKind::ScalarTransient;
     profile.scalarTransient.observedStream = FeatureStreamId::AmpEnvelope;
+    applyAmpEnvelopeScalarTransientTuning(profile.scalarTransient);
 
     // Pattern rules.
     profile.patternRulesConfig.requireSupportForAcceptance = false;

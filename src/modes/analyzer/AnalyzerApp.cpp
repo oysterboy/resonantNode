@@ -1549,13 +1549,13 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
     const bool trialHasPipelineEvidence = reportPatternResult != nullptr
         && diagnostics.rawCandidateCount > 0;
     const long reportPatternDtMs = reportPatternResult != nullptr
-        ? static_cast<long>(reportPatternResult->candidate.startMs) - static_cast<long>(_sequenceTest.currentTrialScheduledAtMs)
+        ? static_cast<long>(reportPatternResult->primaryStartMs) - static_cast<long>(_sequenceTest.currentTrialScheduledAtMs)
         : dtMs;
     const unsigned long reportPatternDurationMs = reportPatternResult != nullptr
-        ? reportPatternResult->candidate.durationMs
+        ? reportPatternResult->primaryDurationMs
         : (durMs >= 0 ? static_cast<unsigned long>(durMs) : 0UL);
     const float reportPatternStrength = reportPatternResult != nullptr
-        ? reportPatternResult->candidate.peakStrength
+        ? reportPatternResult->primaryStrength
         : strength;
     const auto artifactReason = [&]() -> const char* {
         if (reportPatternResult != nullptr || actualPipelineAvailable) {
@@ -1636,8 +1636,8 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
         report.occurrences.primaryDtMs = reportPatternDtMs;
         report.occurrences.primaryDurationMs = reportPatternDurationMs;
         report.occurrences.primaryStrength = reportPatternStrength;
-        report.occurrences.score = reportPatternResult != nullptr ? reportPatternResult->freq.targetBandScoreValue : 0.0f;
-        report.occurrences.contrast = reportPatternResult != nullptr ? reportPatternResult->freq.targetBandContrastValue : 0.0f;
+        report.occurrences.score = 0.0f;
+        report.occurrences.contrast = 0.0f;
         report.occurrences.strength = reportPatternStrength;
         report.occurrences.confidence = trialHasPipelineEvidence ? reportPatternResult->confidence : 0.0f;
         report.occurrences.mainRejectReason = analyzerReasonName(report.classification.reason);
@@ -1707,8 +1707,8 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
         report.profileDetail.freqScore = report.occurrences.score;
         report.profileDetail.freqContrast = report.occurrences.contrast;
     } else {
-        report.profileDetail.freqScore = trialHasPipelineEvidence ? reportPatternResult->freq.targetBandScoreValue : 0.0f;
-        report.profileDetail.freqContrast = trialHasPipelineEvidence ? reportPatternResult->freq.targetBandContrastValue : 0.0f;
+        report.profileDetail.freqScore = 0.0f;
+        report.profileDetail.freqContrast = 0.0f;
     }
     report.profileDetail.freqScoreMin = selectedProfile.frequencyMatch.attackScoreMin;
     report.profileDetail.freqContrastMin = selectedProfile.frequencyMatch.attackContrastMin;

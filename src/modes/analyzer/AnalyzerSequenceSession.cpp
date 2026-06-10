@@ -495,8 +495,8 @@ void AnalyzerApp::finalizeSequenceTrial(unsigned long now) {
     } else if (hitTrial) {
         _sequenceTest.hits++;
         dtMs = _sequenceTest.primaryValidPatternDtMs;
-        durMs = static_cast<long>(_sequenceTest.primaryValidPattern.candidate.durationMs);
-        strength = _sequenceTest.primaryValidPattern.candidate.peakStrength;
+        durMs = static_cast<long>(_sequenceTest.primaryValidPattern.primaryDurationMs);
+        strength = _sequenceTest.primaryValidPattern.primaryStrength;
         if (dtMs >= kLateOnsetMinMs) {
             result = AnalyzerResult::Late;
             _sequenceTest.lateHits++;
@@ -504,8 +504,8 @@ void AnalyzerApp::finalizeSequenceTrial(unsigned long now) {
             result = AnalyzerResult::Expected;
             _sequenceTest.expectedHits++;
         }
-        _sequenceTest.totalHitStrengthScaled += static_cast<unsigned long>(_sequenceTest.primaryValidPattern.candidate.peakStrength * 100.0f);
-        _sequenceTest.totalHitDurationMs += _sequenceTest.primaryValidPattern.candidate.durationMs;
+        _sequenceTest.totalHitStrengthScaled += static_cast<unsigned long>(_sequenceTest.primaryValidPattern.primaryStrength * 100.0f);
+        _sequenceTest.totalHitDurationMs += _sequenceTest.primaryValidPattern.primaryDurationMs;
     } else if (rejectedTrial) {
         result = AnalyzerResult::Rejected;
     } else if (unexpectedTrial) {

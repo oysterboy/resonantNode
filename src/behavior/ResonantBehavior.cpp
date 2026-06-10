@@ -116,7 +116,7 @@ ResonantBehavior::BehaviorDecision ResonantBehavior::handlePatternResult(const d
 ResonantBehavior::BehaviorDecision ResonantBehavior::handlePatternResult(const detection::PatternResult& result, unsigned long now) {
     _patternsReceived++;
     _lastPatternType = result.type;
-    _lastPatternHeardAtMs = result.candidate.heardAtMs != 0 ? result.candidate.heardAtMs : result.candidate.startMs;
+    _lastPatternHeardAtMs = result.primaryHeardAtMs != 0 ? result.primaryHeardAtMs : result.primaryStartMs;
     _lastDecisionMs = now;
     _wouldEmit = false;
     _outputBusy = _state == State::Chirping;
@@ -183,10 +183,10 @@ ResonantBehavior::BehaviorDecision ResonantBehavior::handlePatternResult(const d
         _lastDecision = BehaviorDecision::ConsumedPattern;
         _lastBlockReason = BehaviorDecision::None;
         _pendingHeardPatternDetected = true;
-        if (result.candidate.peakStrength > _pendingHeardPatternStrength) {
-            _pendingHeardPatternStrength = result.candidate.peakStrength;
+        if (result.primaryStrength > _pendingHeardPatternStrength) {
+            _pendingHeardPatternStrength = result.primaryStrength;
         }
-        _pendingHeardPatternMs = result.candidate.acceptedMs != 0 ? result.candidate.acceptedMs : now;
+        _pendingHeardPatternMs = result.primaryAcceptedMs != 0 ? result.primaryAcceptedMs : now;
         _lastPatternHeardAtMs = _pendingHeardPatternMs;
         _heardPatternStartedMs = now;
         _state = State::HeardPattern;

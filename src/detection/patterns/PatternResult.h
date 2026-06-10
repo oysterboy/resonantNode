@@ -36,10 +36,19 @@ struct PatternResult {
     unsigned long minGapMs = 0;
     unsigned long maxGapMs = 0;
 
-    // Candidate and evidence payloads carried through for reporting and downstream classification.
+    // Compact primary accepted-occurrence summary used by behavior and
+    // canonical analyzer/report readers.
+    unsigned long primaryStartMs = 0;
+    unsigned long primaryHeardAtMs = 0;
+    unsigned long primaryAcceptedMs = 0;
+    unsigned long primaryDurationMs = 0;
+    float primaryStrength = 0.0f;
+    bool primaryAudioOverflow = false;
+
+    // Transitional payload carried through while legacy analyzer paths and
+    // later payload-trim passes still depend on candidate/inspection detail.
     PatternCandidate candidate = {};
     InspectedOccurrence inspectedOccurrence = {};
-    FrequencyBandMeasurementPacket freq = {};
     bool patternCandidateAccepted = false;
     bool patternMatched = false;
     bool supportMatched = false;

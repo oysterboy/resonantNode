@@ -55,7 +55,6 @@ PatternResult makeInvalidResult(const PatternCandidate& candidate,
     if (!result.candidate.frequencyFull.present && result.candidate.frequency.present) {
         result.candidate.frequencyFull = result.candidate.frequency;
     }
-    result.freq = candidate.frequency;
     result.processedAtMs = nowMs;
     result.type = PatternType::Invalid;
     result.kind = PatternResultKind::Rejected;
@@ -67,6 +66,12 @@ PatternResult makeInvalidResult(const PatternCandidate& candidate,
     result.lastPulseMs = candidate.lastPulseMs;
     result.minGapMs = candidate.minGapMs;
     result.maxGapMs = candidate.maxGapMs;
+    result.primaryStartMs = candidate.startMs;
+    result.primaryHeardAtMs = candidate.heardAtMs;
+    result.primaryAcceptedMs = candidate.acceptedMs;
+    result.primaryDurationMs = candidate.durationMs;
+    result.primaryStrength = candidate.peakStrength;
+    result.primaryAudioOverflow = candidate.audioOverflowDuringCandidate;
     result.reasonCode = PatternReasonCode::FromOccurrence;
     result.rejectReason = PatternRejectReason::InvalidOccurrence;
     result.confidence = 0.0f;
@@ -116,6 +121,12 @@ PatternResult PatternRules::evaluateFrequencyPattern(
     result.lastPulseMs = candidate.lastPulseMs;
     result.minGapMs = candidate.minGapMs;
     result.maxGapMs = candidate.maxGapMs;
+    result.primaryStartMs = candidate.startMs;
+    result.primaryHeardAtMs = candidate.heardAtMs;
+    result.primaryAcceptedMs = candidate.acceptedMs;
+    result.primaryDurationMs = candidate.durationMs;
+    result.primaryStrength = candidate.peakStrength;
+    result.primaryAudioOverflow = candidate.audioOverflowDuringCandidate;
     result.patternCandidateAccepted = true;
     result.patternMatched = true;
     result.supportMatched = true;

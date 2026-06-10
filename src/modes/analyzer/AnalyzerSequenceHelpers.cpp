@@ -271,7 +271,10 @@ void AnalyzerApp::recordSequenceClassifierOutcome(const detection::PatternResult
 
     // Legacy output accounting: these counters feed the old SEQ summary and
     // compatibility diagnostics, not the future canonical detection contract.
-    const auto freqEval = FrequencyMatchEvaluation::evaluate(patternResult.freq, _frequencyEvidenceTuning);
+    const auto freqPacket = patternResult.inspectedOccurrence.occurrence.frequency.present
+        ? patternResult.inspectedOccurrence.occurrence.frequency
+        : patternResult.candidate.frequency;
+    const auto freqEval = FrequencyMatchEvaluation::evaluate(freqPacket, _frequencyEvidenceTuning);
     const bool patternMatched = patternResult.valid;
 
     if (unexpectedCandidate) {

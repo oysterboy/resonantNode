@@ -1013,13 +1013,13 @@ void Node::processDetectionFrame(const AudioSamplePacket& audioSamplePacket,
             ++_rbValidPatternCount;
         }
 
-        if (patternResult.candidate.audioOverflowDuringCandidate) {
+        if (patternResult.primaryAudioOverflow) {
             ++_rbOverflowCandidates;
         }
-        _rbStrengthSumScaled += static_cast<unsigned long>(patternResult.candidate.peakStrength * 100.0f);
-        _rbDurationSumMs += patternResult.candidate.durationMs;
+        _rbStrengthSumScaled += static_cast<unsigned long>(patternResult.primaryStrength * 100.0f);
+        _rbDurationSumMs += patternResult.primaryDurationMs;
         _rbHaveLastCandidateMs = true;
-        _rbLastCandidateMs = patternResult.candidate.heardAtMs;
+        _rbLastCandidateMs = patternResult.primaryHeardAtMs;
 
         if (rbShouldLogDetail()) {
             Serial.print("RB pattern=");

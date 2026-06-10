@@ -30,6 +30,7 @@ Status vocabulary:
 | Analyzer run summary split | landed | Pass N2 made `SEQ SUMMARY` the clean canonical-summary path, renamed the old summary to `SEQ SUMMARY LEG`, and kept legacy aggregate counters off the clean printer. |
 | Legacy diagnostics containment | landed | Pass O documented the hard exclusion list for clean paths, marked the canonical-to-legacy adapter boundary in code, and kept `DetectionDiagnostics` as explicit compatibility-only infrastructure. |
 | PatternMatcher boundary | landed | Pass P introduced `PatternMatcher` as the public pattern-stage facade, routed `DetectionRuntime` through it, and left `PatternAssembler` / `PatternRules` as internal helpers. |
+| PatternResult trim Q1 | landed | Pass Q1 removed the duplicate `PatternResult.freq` packet, added compact primary-occurrence summary fields, and moved behavior/non-legacy analyzer timing reads off `PatternResult.candidate`. |
 | BehaviorRuntime | deferred | Future behavior architecture work. |
 | OutputDispatcher | deferred | Future behavior/output separation. |
 | Full Chirp PatternRules | roadmap only | Not part of stable runtime. |

@@ -36,8 +36,8 @@ namespace detection {
 // Detector-specific details belong in typed Occurrence detail or DetectorReport.
 //
 // Migration note:
-//   ScalarOccurrenceSource and FrequencyOccurrenceSource are temporary wrappers.
-//   They must disappear after detector cores expose Occurrence + DetectorReport directly.
+//   FrequencyOccurrenceSource is still a temporary wrapper. ScalarTransientDetector
+//   already owns scalar Occurrence + DetectorReport directly.
 
 /*
 DetectionTypes

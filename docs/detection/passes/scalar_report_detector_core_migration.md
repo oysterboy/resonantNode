@@ -90,19 +90,18 @@ change the selection policy.
 
 ## ScalarOccurrenceSource Facts Still Used
 
-`ScalarOccurrenceSource` still remains in the scalar path for:
+Historical Pass F / Pass H state:
 
-- legacy aggregate reject summary values used by `DetectionDiagnostics`
-  - reject counts
-  - best / second-best rejected duration summary
-  - rejected gap totals / max gap / island count
-  - max rejected peak strength aggregates
-- temporary wrapper-era candidate bookkeeping that keeps those legacy
-  aggregates aligned with detector state
-- legacy last-candidate compatibility fields
+- `ScalarOccurrenceSource` still remained in the scalar path for legacy
+  aggregate reject-summary compatibility
 
-Pass H removed wrapper-owned accepted scalar occurrence construction, but these
-legacy aggregate leftovers still remain.
+After Pass H2:
+
+- `ScalarOccurrenceSource` is no longer used
+- temporary scalar aggregate reject-summary compatibility data now lives in
+  `ScalarTransientDetector`
+- `DetectionRuntime` reads scalar compatibility data from detector-owned report
+  facts or detector-owned temporary compatibility summary state
 
 ## Selected Reject Ownership
 
@@ -116,8 +115,8 @@ This means:
 
 now come from detector-owned facts.
 
-Legacy aggregate reject diagnostics still use wrapper-owned summary data until a
-later pass.
+Legacy aggregate reject diagnostics still remain temporary, but they no longer
+use wrapper-owned summary data.
 
 ## DetectionDiagnostics Compatibility
 
@@ -162,17 +161,11 @@ Pass F does not:
 
 - change scalar detector accept / reject behavior
 - change occurrence timing or strength semantics
-- delete `ScalarOccurrenceSource`
 - delete `DetectionDiagnostics`
 - migrate frequency `DetectorReport` production
 - redesign Analyzer output
 
 ## Remaining Bridge / Deletion Blockers
-
-`ScalarOccurrenceSource` still cannot be deleted yet because it still owns:
-
-- legacy aggregate reject / source-summary compatibility values
-- temporary wrapper-era candidate bookkeeping used to keep those values current
 
 `DetectionRuntime` no longer assembles scalar report fields directly, but it
 still:
@@ -182,13 +175,13 @@ still:
 - drains accepted scalar occurrences from `ScalarTransientDetector`
 - copies legacy scalar compatibility values into `DetectionDiagnostics`
 
+Pass H2 later removed `ScalarOccurrenceSource` by moving the remaining scalar
+compatibility summary ownership into `ScalarTransientDetector`.
+
 ## Recommended Next Pass
 
 Recommended next pass:
 
-- `Pass H2 - Remove Remaining ScalarOccurrenceSource Runtime Responsibilities`
-
-If scalar wrapper cleanup is deferred and frequency work becomes the better
-immediate target, the fallback is:
-
 - `Pass I - Begin FrequencyMatch DetectorReport Migration`
+
+The scalar wrapper cleanup follow-up is now complete after Pass H2.

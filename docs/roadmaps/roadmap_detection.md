@@ -614,6 +614,14 @@ ScalarOccurrenceSource
 
 then inventory decides which one survives, but the final architecture should not keep two public source-stage layers.
 
+Current implementation note after Pass H2:
+
+```text
+ScalarTransientDetector survived as the scalar public detector-stage owner.
+ScalarOccurrenceSource was removed after scalar Occurrence + DetectorReport
+ownership moved into the detector core.
+```
+
 Allowed migration outcomes:
 
 ```text
@@ -643,8 +651,9 @@ Public detector boundary decision:
 
 ```text
 Detector cores are canonical.
-ScalarOccurrenceSource and FrequencyOccurrenceSource are temporary wrappers
-scheduled for removal during the implementation phase.
+FrequencyOccurrenceSource remains a temporary wrapper scheduled for removal
+during the implementation phase.
+ScalarOccurrenceSource has already been removed after Pass H2.
 ```
 
 ### 1.9a Detector Genericity Rule
@@ -819,7 +828,6 @@ exact header locations
 which current class survives
 which files are deleted
 how DetectionDiagnostics is split
-whether current ScalarOccurrenceSource or ScalarTransientDetector is canonical
 whether current FrequencyOccurrenceSource or FrequencyMatchDetector is canonical
 how many report structs remain
 which aliases can be removed immediately

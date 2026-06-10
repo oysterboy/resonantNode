@@ -19,7 +19,7 @@ Status vocabulary:
 | Scalar DetectorReport ownership | landed | Pass G2b moved canonical scalar report assembly into `ScalarTransientDetector`; runtime coordinates snapshot refresh only. |
 | Pass H checkpoint | landed | Pass G2c documented report-access limits, wrapper-era occurrence emission ownership, and Pass H non-goals. |
 | Scalar occurrence emission cleanup | landed | Pass H moved accepted scalar `Occurrence` emission into `ScalarTransientDetector`; runtime now drains the detector-owned payload. |
-| ScalarOccurrenceSource runtime cleanup | deferred | Wrapper still performs legacy scalar reject-summary compatibility bookkeeping. |
+| ScalarOccurrenceSource runtime cleanup | landed | Pass H2 moved remaining scalar reject-summary compatibility ownership into `ScalarTransientDetector`, rewired runtime directly to the detector, and deleted `ScalarOccurrenceSource`. |
 | BehaviorRuntime | deferred | Future behavior architecture work. |
 | OutputDispatcher | deferred | Future behavior/output separation. |
 | Full Chirp PatternRules | roadmap only | Not part of stable runtime. |

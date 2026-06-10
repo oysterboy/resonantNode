@@ -150,7 +150,6 @@ This pass does not:
 - change thresholds, timing, or profiles
 - redesign Analyzer output
 - remove `DetectionDiagnostics`
-- remove `ScalarOccurrenceSource`
 
 `DetectionRuntime::scalarDetectorReport()` remains the stable scalar report
 accessor used by the Analyzer bridge.
@@ -161,10 +160,11 @@ Temporary bridge work still remains in the scalar path:
 
 - `ScalarTransientDetector` now owns scalar accepted `Occurrence` emission and
   detector-local report production
-- `ScalarOccurrenceSource` still remains as a temporary legacy compatibility
-  shell for rejected-candidate aggregate diagnostics
 - `DetectionRuntime` still stores the scalar report snapshot and copies legacy
   scalar compatibility values into `DetectionDiagnostics`
+- `ScalarTransientDetector` now also carries temporary legacy scalar
+  rejected-candidate aggregate compatibility data for
+  `DetectionDiagnostics` / Analyzer fallback
 - runtime report access is still scalar-specific through
   `scalarDetectorReport()`
 - frequency still has no migrated `DetectorReport` path
@@ -173,9 +173,7 @@ Temporary bridge work still remains in the scalar path:
 
 Recommended next pass:
 
-- `Pass H2 - Remove Remaining ScalarOccurrenceSource Runtime Responsibilities`
-
-If scalar wrapper cleanup is deferred and the report boundary remains the more
-important next concern, the fallback is:
-
 - `Pass I - Begin FrequencyMatch DetectorReport Migration`
+
+Scalar wrapper cleanup no longer blocks detector parity work because
+`ScalarOccurrenceSource` was removed in Pass H2.

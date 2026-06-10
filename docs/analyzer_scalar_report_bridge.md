@@ -113,7 +113,6 @@ This pass does not:
 - add frequency `DetectorReport` detail
 - remove `DetectionDiagnostics`
 - remove Analyzer legacy structs
-- remove `ScalarOccurrenceSource`
 - rewire `DetectionRuntime`
 - redesign SEQ output
 
@@ -122,7 +121,7 @@ This pass does not:
 - scalar Analyzer synthesis still needs `DetectionDiagnostics` for some legacy-only fallback fields
 - selected reject gate and aggregate leftovers are not fully canonical yet
 - frequency Analyzer synthesis still does not consume `DetectorReport`
-- scalar report production and accepted scalar `Occurrence` emission are now detector-owned, but scalar legacy aggregate diagnostics still remain behind the temporary `ScalarOccurrenceSource` / `DetectionRuntime` compatibility bridge
+- scalar report production and accepted scalar `Occurrence` emission are now detector-owned, and the remaining scalar legacy aggregate diagnostics now sit behind a temporary `ScalarTransientDetector` / `DetectionRuntime` compatibility bridge
 
 ## Validation
 
@@ -146,12 +145,11 @@ This pass does not:
 
 Recommended next pass:
 
-- `Pass H2 - Remove Remaining ScalarOccurrenceSource Runtime Responsibilities`
-
-If Analyzer bridge review shows that the compatibility-only scalar aggregates
-can stay in place while frequency work starts, the fallback alternative remains:
-
 - `Pass I - Begin FrequencyMatch DetectorReport Migration`
+
+Pass H2 later completed the scalar wrapper cleanup by deleting
+`ScalarOccurrenceSource` and moving the remaining scalar compatibility summary
+ownership into `ScalarTransientDetector`.
 
 Immediate follow-up items from the Pass E runtime checks:
 

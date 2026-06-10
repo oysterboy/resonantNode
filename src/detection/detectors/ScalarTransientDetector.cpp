@@ -60,6 +60,7 @@ void ScalarTransientDetector::resetState() {
     resetAcceptedOccurrenceCandidate();
     resetAcceptedOccurrenceSummary();
     resetSelectedRejectSummary();
+    resetLegacyRejectSummary();
 }
 
 void ScalarTransientDetector::resetAcceptedOccurrenceSummary() {
@@ -73,6 +74,11 @@ void ScalarTransientDetector::resetAcceptedOccurrenceSummary() {
 void ScalarTransientDetector::resetSelectedRejectSummary() {
     _selectedRejectPresent = false;
     _selectedReject = {};
+}
+
+void ScalarTransientDetector::resetLegacyRejectSummary() {
+    _legacyRejectSummary = {};
+    _lastRejectedCloseMs = 0;
 }
 
 void ScalarTransientDetector::update(
@@ -188,6 +194,7 @@ void ScalarTransientDetector::updateTransientStage(unsigned long nowUs, float si
                 _lastTransientRejectReason = TransientRejectReason::None;
             }
             captureSelectedReject(releaseObservedUs);
+            captureLegacyRejectSummary(releaseObservedUs);
         }
 
         _peakActive = false;
@@ -237,6 +244,52 @@ void ScalarTransientDetector::captureSelectedReject(unsigned long releaseObserve
     _selectedReject.requiredMaxDurationMs = _maxTransientDurationMs;
     _selectedReject.strength = _lastTransientRejectedStrength;
     _selectedReject.confidence = 0.0f;
+}
+
+void ScalarTransientDetector::captureLegacyRejectSummary(unsigned long releaseObservedUs) {
+    if (_lastTransientRejectReason == TransientRejectReason::None) {
+        return;
+    }
+
+    const unsigned long candidateStartMs = _peakStartedUs / 1000UL;
+    const unsigned long candidatePeakMs = _peakStrengthObservedUs / 1000UL;
+    const unsigned long candidateCloseMs = releaseObservedUs != 0
+        ? releaseObservedUs / 1000UL
+        : candidatePeakMs;
+    const unsigned long candidateDurationMs = _lastTransientRejectedDurationMs;
+    const float candidatePeakStrength = _lastTransientRejectedStrength;
+
+    if (_lastRejectedCloseMs > 0 && candidateStartMs > _lastRejectedCloseMs) {
+        const unsigned long gapMs = candidateStartMs - _lastRejectedCloseMs;
+        _legacyRejectSummary.totalRejectedGapMs += gapMs;
+        if (gapMs > _legacyRejectSummary.maxRejectedGapMs) {
+            _legacyRejectSummary.maxRejectedGapMs = gapMs;
+        }
+    }
+    _lastRejectedCloseMs = candidateCloseMs;
+
+    ++_legacyRejectSummary.rejectedCandidateCount;
+    ++_legacyRejectSummary.rejectedIslandCount;
+    _legacyRejectSummary.totalRejectedMatchMs += candidateDurationMs;
+
+    if (candidatePeakStrength >= _legacyRejectSummary.maxRejectedPeakStrength) {
+        _legacyRejectSummary.maxRejectedPeakStrength = candidatePeakStrength;
+        _legacyRejectSummary.maxRejectedPeakStrengthMs = candidatePeakMs;
+    }
+
+    if (candidateDurationMs >= _legacyRejectSummary.bestRejectedDurationMs) {
+        _legacyRejectSummary.secondBestRejectedDurationMs = _legacyRejectSummary.bestRejectedDurationMs;
+        _legacyRejectSummary.bestRejectedDurationMs = candidateDurationMs;
+        _legacyRejectSummary.bestRejectedOpenMs = candidateStartMs;
+        _legacyRejectSummary.bestRejectedPeakMs = candidatePeakMs;
+        _legacyRejectSummary.bestRejectedLastMatchMs = candidateCloseMs;
+        _legacyRejectSummary.bestRejectedCloseMs = candidateCloseMs;
+        _legacyRejectSummary.bestRejectedPeakStrength = candidatePeakStrength;
+        _legacyRejectSummary.bestRejectedReason = lastTransientRejectReasonName();
+        _legacyRejectSummary.bestRejectedGateReason = lastTransientRejectReasonName();
+    } else if (candidateDurationMs > _legacyRejectSummary.secondBestRejectedDurationMs) {
+        _legacyRejectSummary.secondBestRejectedDurationMs = candidateDurationMs;
+    }
 }
 
 void ScalarTransientDetector::updateAcceptedOccurrenceCandidate(
@@ -569,6 +622,10 @@ bool ScalarTransientDetector::selectedRejectPresent() const {
 
 const detection::RejectedCandidateSummary& ScalarTransientDetector::selectedReject() const {
     return _selectedReject;
+}
+
+const ScalarTransientDetector::LegacyRejectSummaryCompat& ScalarTransientDetector::legacyRejectSummary() const {
+    return _legacyRejectSummary;
 }
 
 bool ScalarTransientDetector::popOccurrence(detection::Occurrence& out) {

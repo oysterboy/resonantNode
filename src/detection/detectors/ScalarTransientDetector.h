@@ -27,6 +27,30 @@ Does NOT:
 */
 class ScalarTransientDetector {
 public:
+    // TEMP_SCALAR_DIAGNOSTIC_COMPAT:
+    // Legacy scalar reject-summary aggregates still needed by
+    // DetectionDiagnostics / Analyzer while scalar output migration is in
+    // progress. These are detector-owned temporary compatibility facts, not
+    // canonical DetectorReport fields.
+    struct LegacyRejectSummaryCompat {
+        unsigned long rejectedCandidateCount = 0;
+        unsigned long bestRejectedDurationMs = 0;
+        unsigned long secondBestRejectedDurationMs = 0;
+        unsigned long bestRejectedOpenMs = 0;
+        unsigned long bestRejectedPeakMs = 0;
+        unsigned long bestRejectedLastMatchMs = 0;
+        unsigned long bestRejectedCloseMs = 0;
+        float bestRejectedPeakStrength = 0.0f;
+        float maxRejectedPeakStrength = 0.0f;
+        unsigned long maxRejectedPeakStrengthMs = 0;
+        const char* bestRejectedReason = "none";
+        const char* bestRejectedGateReason = "none";
+        unsigned long totalRejectedMatchMs = 0;
+        unsigned long totalRejectedGapMs = 0;
+        unsigned long maxRejectedGapMs = 0;
+        unsigned long rejectedIslandCount = 0;
+    };
+
     enum class TransientRejectReason {
         None,
         DurationTooShort,
@@ -48,6 +72,7 @@ public:
     void resetState();
     void resetAcceptedOccurrenceSummary();
     void resetSelectedRejectSummary();
+    void resetLegacyRejectSummary();
     void update(
         const AudioSamplePacket& audioSamplePacket,
         float signalLevel,
@@ -98,6 +123,7 @@ public:
     const detection::ScalarDetectorReportDetail& reportDetail() const;
     bool selectedRejectPresent() const;
     const detection::RejectedCandidateSummary& selectedReject() const;
+    const LegacyRejectSummaryCompat& legacyRejectSummary() const;
     bool popOccurrence(detection::Occurrence& out);
 
 private:
@@ -105,6 +131,7 @@ private:
     void updateTransientStage(unsigned long nowUs, float signalMagnitude, bool aboveReleaseThreshold);
     void captureAcceptedOccurrence(unsigned long releaseObservedUs, unsigned long peakDurationUs);
     void captureSelectedReject(unsigned long releaseObservedUs);
+    void captureLegacyRejectSummary(unsigned long releaseObservedUs);
     void updateAcceptedOccurrenceCandidate(
         const AudioSamplePacket& audioSamplePacket,
         float signalMagnitude,
@@ -168,8 +195,8 @@ private:
     detection::RejectedCandidateSummary _selectedReject = {};
 
     // Detector-owned accepted-occurrence emission state. This preserves the
-    // current scalar Occurrence payload shape while moving emission ownership
-    // out of the temporary ScalarOccurrenceSource wrapper.
+    // current scalar Occurrence payload shape while keeping scalar Occurrence
+    // construction inside the detector core.
     bool _acceptedOccurrenceCandidateActive = false;
     detection::OccurrenceKind _acceptedOccurrenceKind = detection::OccurrenceKind::None;
     detection::OccurrenceSource _acceptedOccurrenceSource = detection::OccurrenceSource::None;
@@ -184,4 +211,11 @@ private:
     unsigned long _lastObservedAcceptedOccurrenceRejectedCount = 0;
     bool _pendingOccurrencePresent = false;
     detection::Occurrence _pendingOccurrence = {};
+
+    // TEMP_SCALAR_DIAGNOSTIC_COMPAT:
+    // These legacy reject aggregates are still copied into DetectionDiagnostics
+    // for Analyzer compatibility. They remain intentionally separate from the
+    // minimal canonical DetectorReport contract.
+    LegacyRejectSummaryCompat _legacyRejectSummary = {};
+    unsigned long _lastRejectedCloseMs = 0;
 };

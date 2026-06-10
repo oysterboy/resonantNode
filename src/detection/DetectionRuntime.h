@@ -8,8 +8,8 @@
 #include "DetectorReport.h"
 #include "../io/AudioSignal.h"
 #include "DetectionProfile.h"
+#include "detectors/ScalarTransientDetector.h"
 #include "occurrences/FrequencyOccurrenceSource.h"
-#include "occurrences/ScalarOccurrenceSource.h"
 #include "inspector/OccurrenceInspector.h"
 #include "inspector/InspectorTypes.h"
 #include "patterns/PatternAssembler.h"
@@ -309,7 +309,7 @@ private:
     const char* _profileName = "unknown";
 
     FrequencyOccurrenceSource _frequencyEmitter;
-    ScalarOccurrenceSource _scalarEmitter;
+    ScalarTransientDetector _scalarDetector;
     OccurrenceInspector _occurrenceInspector;
     PatternAssembler _patternAssembler;
     PatternRules _patternRules;

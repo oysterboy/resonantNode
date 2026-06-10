@@ -28,15 +28,11 @@ After Pass H, accepted scalar occurrence emission is detector-owned:
 
 ```text
 DetectionRuntime
--> ScalarOccurrenceSource::observeFrame(...)
 -> ScalarTransientDetector::update(...)
 -> ScalarTransientDetector pending scalar Occurrence
 -> ScalarTransientDetector::popOccurrence(...)
 -> DetectionRuntime::drainOccurrenceSources(...)
 ```
-
-`ScalarOccurrenceSource` still observes the scalar stream, but accepted
-occurrence construction no longer lives there.
 
 ## ScalarTransientDetector Ownership
 
@@ -59,27 +55,25 @@ accepted-event facts needed to rebuild the wrapper-era scalar occurrence:
 
 ## ScalarOccurrenceSource Status
 
-`ScalarOccurrenceSource` remains in the runtime as a temporary compatibility
-shell.
+Historical Pass H state:
 
-It now keeps:
+- `ScalarOccurrenceSource` still remained temporarily after accepted scalar
+  `Occurrence` emission moved into the detector core
 
-- legacy scalar reject-summary aggregates used by `DetectionDiagnostics`
-- wrapper-era candidate bookkeeping used by scalar legacy compatibility fields
-- config forwarding into `ScalarTransientDetector`
+After Pass H2:
 
-It no longer owns:
-
-- accepted scalar `Occurrence` construction
-- accepted scalar `Occurrence` storage
-- accepted scalar `Occurrence` polling semantics
+- `ScalarOccurrenceSource` was deleted
+- remaining scalar reject-summary compatibility data moved into
+  `ScalarTransientDetector`
+- `DetectionRuntime` now calls `ScalarTransientDetector` directly on the scalar
+  path
 
 ## DetectionRuntime Drain Path
 
 The scalar drain path changed from wrapper polling to direct detector polling:
 
 ```text
-while (_scalarEmitter.detector().popOccurrence(candidate)) { ... }
+while (_scalarDetector.popOccurrence(candidate)) { ... }
 ```
 
 `DetectionRuntime` still branches on `_occurrenceSourceKind` temporarily, but
@@ -177,9 +171,10 @@ Pass H does not:
 
 Temporary scalar bridge work still remains:
 
-- `ScalarOccurrenceSource` still performs legacy reject-summary compatibility bookkeeping
 - `DetectionRuntime` still stores the scalar report snapshot
 - `DetectionRuntime` still copies legacy scalar compatibility values into `DetectionDiagnostics`
+- `ScalarTransientDetector` now carries temporary legacy rejected-candidate
+  aggregate compatibility data for `DetectionDiagnostics`
 - runtime report access is still scalar-specific through `scalarDetectorReport()`
 - frequency still has no canonical `DetectorReport` / occurrence-emission migration
 
@@ -187,10 +182,10 @@ Temporary scalar bridge work still remains:
 
 Recommended next pass:
 
-- `Pass H2 - Remove Remaining ScalarOccurrenceSource Runtime Responsibilities`
+- `Pass I - Begin FrequencyMatch DetectorReport Migration`
 
 Reason:
 
 - accepted scalar occurrence emission is now detector-owned
-- the wrapper still carries meaningful legacy runtime bookkeeping for reject
-  aggregates and compatibility fields
+- the remaining scalar legacy compatibility bookkeeping now lives in the
+  detector, so the next useful detector contract step is frequency parity

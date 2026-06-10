@@ -268,6 +268,9 @@ struct AnalyzerExpectedEvent {
 };
 
 struct AnalyzerPatternObservation {
+    // PatternResult-owned pattern truth. Keep detector-specific and
+    // pattern-family-specific detail on PatternResult / canonical detail paths,
+    // not in AnalyzerClassification.
     const char* type = "none";
     bool accepted = false;
     bool candidateAccepted = false;
@@ -288,6 +291,7 @@ struct AnalyzerPatternObservation {
 // Keep Analyzer-specific for now; later shared AudioReporting may reuse the
 // snapshot-style observation vocabulary without pulling in classification logic.
 struct AnalyzerOccurrenceObservation {
+    // Occurrence / InspectedOccurrence-owned occurrence-stage truth.
     unsigned int total = 0;
     unsigned int accepted = 0;
     unsigned int rejected = 0;
@@ -313,6 +317,7 @@ struct AnalyzerOccurrenceObservation {
 };
 
 struct AnalyzerInspectionObservation {
+    // Inspector-owned support/inspection truth for the selected trial payload.
     unsigned int inspected = 0;
     unsigned int accepted = 0;
     unsigned int rejected = 0;
@@ -333,6 +338,9 @@ struct AnalyzerFieldObservation {
 };
 
 struct AnalyzerClassification {
+    // Generic trial classification only.
+    // Detector-specific, occurrence-specific, and pattern-specific explanations
+    // stay on DetectorReport, Occurrence/InspectedOccurrence, and PatternResult.
     AnalyzerResult result = AnalyzerResult::Unknown;
     AnalyzerReason reason = AnalyzerReason::Unknown;
     AnalyzerStage primaryStage = AnalyzerStage::None;

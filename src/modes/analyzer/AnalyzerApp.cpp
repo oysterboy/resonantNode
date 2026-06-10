@@ -1516,10 +1516,19 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
         : nullptr;
     const bool runtimeReceivedOccurrence = pipelineResult != nullptr && pipelineResult->hasOccurrence;
     const bool actualPipelineAvailable = pipelineResult != nullptr && pipelineResult->hasPattern;
-    const detection::PatternResult* runtimePatternResult = actualPipelineAvailable ? &pipelineResult->pattern : nullptr;
-    const detection::InspectedOccurrence* runtimeInspectedOccurrence = nullptr;
-    if (runtimePatternResult != nullptr && runtimePatternResult->inspectedOccurrence.occurrence.present) {
-        runtimeInspectedOccurrence = &runtimePatternResult->inspectedOccurrence;
+    const detection::PatternResult* selectedTrialPatternResult = nullptr;
+    if (_sequenceTest.primaryValidPatternCaptured) {
+        selectedTrialPatternResult = &_sequenceTest.primaryValidPattern;
+    } else if (_sequenceTest.rejectedInWindowCount > 0) {
+        selectedTrialPatternResult = &_sequenceTest.firstRejectedInWindow;
+    }
+    // Canonical Analyzer path: only the PatternResult snapshot captured for
+    // this finalized trial is allowed onto the clean inspect/explain path.
+    // Latest-runtime fallbacks stay out of the canonical trial truth model.
+    const detection::PatternResult* reportPatternResult = selectedTrialPatternResult;
+    const detection::InspectedOccurrence* reportInspectedOccurrence = nullptr;
+    if (reportPatternResult != nullptr && reportPatternResult->inspectedOccurrence.occurrence.present) {
+        reportInspectedOccurrence = &reportPatternResult->inspectedOccurrence;
     }
     const detection::FieldState* runtimeFieldState = actualPipelineAvailable && pipelineResult->hasField
         ? &pipelineResult->field
@@ -1534,11 +1543,19 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
     } else if (selectedProfile.occurrenceSource == detection::OccurrenceSourceKind::FrequencyMatch && frequencyDetectorReportAvailable) {
         report.detectorReport = &frequencyDetectorReport;
     }
-    const bool trialHasPipelineEvidence = actualPipelineAvailable
-        && runtimePatternResult != nullptr
+    const bool trialHasPipelineEvidence = reportPatternResult != nullptr
         && diagnostics.rawCandidateCount > 0;
+    const long reportPatternDtMs = reportPatternResult != nullptr
+        ? static_cast<long>(reportPatternResult->candidate.startMs) - static_cast<long>(_sequenceTest.currentTrialScheduledAtMs)
+        : dtMs;
+    const unsigned long reportPatternDurationMs = reportPatternResult != nullptr
+        ? reportPatternResult->candidate.durationMs
+        : (durMs >= 0 ? static_cast<unsigned long>(durMs) : 0UL);
+    const float reportPatternStrength = reportPatternResult != nullptr
+        ? reportPatternResult->candidate.peakStrength
+        : strength;
     const auto artifactReason = [&]() -> const char* {
-        if (actualPipelineAvailable) {
+        if (reportPatternResult != nullptr || actualPipelineAvailable) {
             return "captured_from_runtime_pipeline";
         }
         return "missing_pipeline_result";
@@ -1551,37 +1568,40 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
 
     AnalyzerSequenceClassificationInput classificationInput;
     classificationInput.result = result;
-    classificationInput.dtMs = dtMs;
+    classificationInput.dtMs = reportPatternDtMs;
     classificationInput.rawCandidateCount = diagnostics.rawCandidateCount;
     classificationInput.audioOverflow = audioOverflow;
-    classificationInput.patternAvailable = actualPipelineAvailable && runtimePatternResult != nullptr;
+    classificationInput.patternAvailable = reportPatternResult != nullptr;
+    classificationInput.detectorReportAvailable = report.detectorReport != nullptr;
+    classificationInput.detectorAcceptedPresent = report.detectorReport != nullptr && report.detectorReport->accepted.present;
+    classificationInput.detectorSelectedRejectPresent = report.detectorReport != nullptr && report.detectorReport->selectedReject.present;
     report.classification = classifySequenceTrial(classificationInput);
     {
         // Analyzer consumes the PatternResult produced by DetectionRuntime.
         // Analyzer does not re-run occurrence inspection or pattern interpretation.
         AnalyzerPatternObservation pattern = {};
-        pattern.type = trialHasPipelineEvidence ? detection::patternTypeName(runtimePatternResult->type) : "unknown";
+        pattern.type = trialHasPipelineEvidence ? detection::patternTypeName(reportPatternResult->type) : "none";
         pattern.accepted = trialHasPipelineEvidence
-            ? runtimePatternResult->valid
+            ? reportPatternResult->valid
             : false;
-        pattern.candidateAccepted = trialHasPipelineEvidence ? runtimePatternResult->patternCandidateAccepted : false;
-        pattern.patternMatched = trialHasPipelineEvidence ? runtimePatternResult->patternMatched : false;
-        pattern.supportMatched = trialHasPipelineEvidence ? runtimePatternResult->supportMatched : false;
+        pattern.candidateAccepted = trialHasPipelineEvidence ? reportPatternResult->patternCandidateAccepted : false;
+        pattern.patternMatched = trialHasPipelineEvidence ? reportPatternResult->patternMatched : false;
+        pattern.supportMatched = trialHasPipelineEvidence ? reportPatternResult->supportMatched : false;
         pattern.behaviorEligible = pattern.accepted;
-        pattern.confidence = trialHasPipelineEvidence ? runtimePatternResult->confidence : 0.0f;
+        pattern.confidence = trialHasPipelineEvidence ? reportPatternResult->confidence : 0.0f;
         pattern.dtMs = report.classification.dtMs;
-        pattern.ampStrength = trialHasPipelineEvidence ? strengthClassName(runtimePatternResult->ampStrength) : "unknown";
-        pattern.reason = trialHasPipelineEvidence ? detection::patternReasonName(runtimePatternResult->reasonCode) : analyzerReasonName(report.classification.reason);
-        pattern.rejectReason = trialHasPipelineEvidence ? detection::patternRejectReasonName(runtimePatternResult->rejectReason) : analyzerReasonName(report.classification.reason);
-        pattern.involvedOccurrences = trialHasPipelineEvidence ? runtimePatternResult->occurrenceCount : 0U;
+        pattern.ampStrength = trialHasPipelineEvidence ? strengthClassName(reportPatternResult->ampStrength) : "unknown";
+        pattern.reason = trialHasPipelineEvidence ? detection::patternReasonName(reportPatternResult->reasonCode) : "none";
+        pattern.rejectReason = trialHasPipelineEvidence ? detection::patternRejectReasonName(reportPatternResult->rejectReason) : "none";
+        pattern.involvedOccurrences = trialHasPipelineEvidence ? reportPatternResult->occurrenceCount : 0U;
         report.primaryPattern = pattern;
     }
 
     report.occurrences.total = diagnostics.rawCandidateCount;
-    report.occurrences.accepted = trialHasPipelineEvidence && runtimePatternResult->valid ? 1U : 0U;
+    report.occurrences.accepted = trialHasPipelineEvidence && reportPatternResult->valid ? 1U : 0U;
     report.occurrences.rejected = diagnostics.rawCandidateCount > report.occurrences.accepted ? diagnostics.rawCandidateCount - report.occurrences.accepted : 0U;
-    if (trialHasPipelineEvidence && runtimeInspectedOccurrence != nullptr && runtimeInspectedOccurrence->occurrence.present) {
-        const detection::Occurrence& occurrence = runtimeInspectedOccurrence->occurrence;
+    if (trialHasPipelineEvidence && reportInspectedOccurrence != nullptr && reportInspectedOccurrence->occurrence.present) {
+        const detection::Occurrence& occurrence = reportInspectedOccurrence->occurrence;
         report.occurrences.kind = occurrenceKindName(occurrence.kind);
         report.occurrences.primarySource = occurrenceSourceName(occurrence.source);
         report.occurrences.detectorKind = occurrenceDetectorKindName(occurrence.detectorKind);
@@ -1597,8 +1617,8 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
         report.occurrences.contrast = occurrence.contrast;
         report.occurrences.strength = occurrence.strength;
         report.occurrences.confidence = occurrence.confidence;
-        report.occurrences.mainRejectReason = runtimeInspectedOccurrence->decision == detection::OccurrenceDecision::Rejected
-            ? occurrenceRejectReasonName(runtimeInspectedOccurrence->rejectReason)
+        report.occurrences.mainRejectReason = reportInspectedOccurrence->decision == detection::OccurrenceDecision::Rejected
+            ? occurrenceRejectReasonName(reportInspectedOccurrence->rejectReason)
             : "none";
         report.occurrences.rejectReason = report.occurrences.mainRejectReason;
     } else {
@@ -1610,13 +1630,13 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
         report.occurrences.startMs = 0;
         report.occurrences.peakMs = 0;
         report.occurrences.releaseMs = 0;
-        report.occurrences.primaryDtMs = dtMs;
-        report.occurrences.primaryDurationMs = durMs >= 0 ? static_cast<unsigned long>(durMs) : 0UL;
-        report.occurrences.primaryStrength = strength;
-        report.occurrences.score = runtimePatternResult != nullptr ? runtimePatternResult->freq.targetBandScoreValue : 0.0f;
-        report.occurrences.contrast = runtimePatternResult != nullptr ? runtimePatternResult->freq.targetBandContrastValue : 0.0f;
-        report.occurrences.strength = strength;
-        report.occurrences.confidence = trialHasPipelineEvidence ? runtimePatternResult->confidence : 0.0f;
+        report.occurrences.primaryDtMs = reportPatternDtMs;
+        report.occurrences.primaryDurationMs = reportPatternDurationMs;
+        report.occurrences.primaryStrength = reportPatternStrength;
+        report.occurrences.score = reportPatternResult != nullptr ? reportPatternResult->freq.targetBandScoreValue : 0.0f;
+        report.occurrences.contrast = reportPatternResult != nullptr ? reportPatternResult->freq.targetBandContrastValue : 0.0f;
+        report.occurrences.strength = reportPatternStrength;
+        report.occurrences.confidence = trialHasPipelineEvidence ? reportPatternResult->confidence : 0.0f;
         report.occurrences.mainRejectReason = analyzerReasonName(report.classification.reason);
         report.occurrences.rejectReason = report.occurrences.mainRejectReason;
     }
@@ -1624,24 +1644,24 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
     report.inspection.inspected = diagnostics.rawCandidateCount;
     report.inspection.accepted = report.occurrences.accepted;
     report.inspection.rejected = diagnostics.rawCandidateCount > report.inspection.accepted ? diagnostics.rawCandidateCount - report.inspection.accepted : 0U;
-    if (trialHasPipelineEvidence && runtimeInspectedOccurrence != nullptr && runtimeInspectedOccurrence->occurrence.present) {
-        report.inspection.primaryEvidence = occurrenceSourceName(runtimeInspectedOccurrence->occurrence.source);
+    if (trialHasPipelineEvidence && reportInspectedOccurrence != nullptr && reportInspectedOccurrence->occurrence.present) {
+        report.inspection.primaryEvidence = occurrenceSourceName(reportInspectedOccurrence->occurrence.source);
         switch (selectedProfile.patternRulesConfig.requiredSupportTarget) {
             case detection::EvidenceTarget::FrequencyScoreStrength:
                 report.inspection.moduleTarget = "frequency_score";
-                report.inspection.moduleStrengthClass = strengthClassName(runtimeInspectedOccurrence->occurrence.frequencyScoreStrength);
+                report.inspection.moduleStrengthClass = strengthClassName(reportInspectedOccurrence->occurrence.frequencyScoreStrength);
                 break;
             case detection::EvidenceTarget::TargetBandStrength:
                 report.inspection.moduleTarget = "target_band";
-                report.inspection.moduleStrengthClass = strengthClassName(runtimeInspectedOccurrence->occurrence.targetBandStrength);
+                report.inspection.moduleStrengthClass = strengthClassName(reportInspectedOccurrence->occurrence.targetBandStrength);
                 break;
             case detection::EvidenceTarget::AmpStrength:
             default:
                 report.inspection.moduleTarget = "amp_strength";
-                report.inspection.moduleStrengthClass = strengthClassName(runtimeInspectedOccurrence->occurrence.ampStrength);
+                report.inspection.moduleStrengthClass = strengthClassName(reportInspectedOccurrence->occurrence.ampStrength);
                 break;
         }
-        report.inspection.mainRejectReason = runtimeInspectedOccurrence->decision == detection::OccurrenceDecision::Rejected ? occurrenceRejectReasonName(runtimeInspectedOccurrence->rejectReason) : "none";
+        report.inspection.mainRejectReason = reportInspectedOccurrence->decision == detection::OccurrenceDecision::Rejected ? occurrenceRejectReasonName(reportInspectedOccurrence->rejectReason) : "none";
     } else {
         report.inspection.primaryEvidence = "none";
         report.inspection.moduleTarget = "unknown";
@@ -1684,8 +1704,8 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
         report.profileDetail.freqScore = report.occurrences.score;
         report.profileDetail.freqContrast = report.occurrences.contrast;
     } else {
-        report.profileDetail.freqScore = trialHasPipelineEvidence ? runtimePatternResult->freq.targetBandScoreValue : 0.0f;
-        report.profileDetail.freqContrast = trialHasPipelineEvidence ? runtimePatternResult->freq.targetBandContrastValue : 0.0f;
+        report.profileDetail.freqScore = trialHasPipelineEvidence ? reportPatternResult->freq.targetBandScoreValue : 0.0f;
+        report.profileDetail.freqContrast = trialHasPipelineEvidence ? reportPatternResult->freq.targetBandContrastValue : 0.0f;
     }
     report.profileDetail.freqScoreMin = selectedProfile.frequencyMatch.attackScoreMin;
     report.profileDetail.freqContrastMin = selectedProfile.frequencyMatch.attackContrastMin;
@@ -1695,18 +1715,18 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
     report.profileDetail.ampLift = report.profileDetail.ampCenteredMagnitude - report.profileDetail.ampBase;
     const detection::ScalarInspectionObservation emptyScalarObservation{};
     const detection::ScalarInspectionObservation& selectedScalarObservation =
-        trialHasPipelineEvidence && runtimeInspectedOccurrence != nullptr && runtimeInspectedOccurrence->occurrence.scalarEvidence.available
-            ? runtimeInspectedOccurrence->occurrence.scalarEvidence
+        trialHasPipelineEvidence && reportInspectedOccurrence != nullptr && reportInspectedOccurrence->occurrence.scalarEvidence.available
+            ? reportInspectedOccurrence->occurrence.scalarEvidence
             : emptyScalarObservation;
     report.profileDetail.scalarObservation = selectedScalarObservation;
     report.profileDetail.inspectionObservationCount = 0;
-    if (trialHasPipelineEvidence && runtimeInspectedOccurrence != nullptr) {
-        const size_t availableCount = runtimeInspectedOccurrence->scalarObservationCount;
+    if (trialHasPipelineEvidence && reportInspectedOccurrence != nullptr) {
+        const size_t availableCount = reportInspectedOccurrence->scalarObservationCount;
         const size_t moduleCount = selectedProfile.inspectionPlan.count;
         const size_t copyCount = availableCount < moduleCount ? availableCount : moduleCount;
         report.profileDetail.inspectionObservationCount = copyCount;
         for (size_t i = 0; i < copyCount; ++i) {
-            report.profileDetail.inspectionObservations[i] = runtimeInspectedOccurrence->scalarObservations[i];
+            report.profileDetail.inspectionObservations[i] = reportInspectedOccurrence->scalarObservations[i];
         }
     }
 
@@ -1723,8 +1743,8 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
     report.debug.artifactReason = artifactReason;
     report.debug.pipelineSource = trialHasPipelineEvidence ? "actual_pipeline" : "missing_runtime_pipeline";
     report.debug.pipelineFallback = !trialHasPipelineEvidence;
-    report.debug.mainRejectReason = trialHasPipelineEvidence && runtimeInspectedOccurrence != nullptr
-        ? (runtimeInspectedOccurrence->decision == detection::OccurrenceDecision::Rejected ? occurrenceRejectReasonName(runtimeInspectedOccurrence->rejectReason) : "none")
+    report.debug.mainRejectReason = trialHasPipelineEvidence && reportInspectedOccurrence != nullptr
+        ? (reportInspectedOccurrence->decision == detection::OccurrenceDecision::Rejected ? occurrenceRejectReasonName(reportInspectedOccurrence->rejectReason) : "none")
         : analyzerReasonName(report.classification.reason);
 
     const bool diagnosticsRequested = _sequenceTest.outputConfig.when != AnalyzerApp::SeqOutputWhen::Off &&

@@ -5,22 +5,28 @@
 /*
 AnalyzerClassifier
 
-Legacy Analyzer classification bridge.
-Consumes AnalyzerResult plus trial metadata and maps it into AnalyzerReason
-without becoming the canonical detector contract.
-Keep this small and internal until the output rebuild replaces it.
+Generic Analyzer trial classification bridge.
+Consumes the small Analyzer-owned outcome summary and maps it into generic
+AnalyzerReason / AnalyzerStage values only.
+Detector-specific, occurrence-specific, and pattern-specific reject detail
+must stay on DetectorReport, Occurrence/InspectedOccurrence, and PatternResult.
 */
 struct AnalyzerSequenceClassificationInput {
-    // Legacy trial result from the current Analyzer pipeline.
+    // Generic trial result from Analyzer trial control flow.
     AnalyzerResult result = AnalyzerResult::Unknown;
-    // Legacy time delta used by the old reason mapping.
+    // Generic timing delta for the selected trial PatternResult when present.
     long dtMs = -1;
-    // Legacy candidate count from sequence bookkeeping.
+    // Runtime-private candidate count retained for compatibility classification.
     unsigned long rawCandidateCount = 0;
-    // Legacy overflow flag from the current Analyzer path.
+    // Runtime-private overflow flag.
     bool audioOverflow = false;
-    // Legacy gate: false keeps MissingPipelineResult semantics.
+    // Canonical PatternResult availability for the finalized trial snapshot.
+    // This remains generic; detector/pattern-specific reasons live elsewhere.
     bool patternAvailable = false;
+    // Canonical DetectorReport availability for the active detector path.
+    bool detectorReportAvailable = false;
+    bool detectorAcceptedPresent = false;
+    bool detectorSelectedRejectPresent = false;
 };
 
 AnalyzerReason analyzerReasonFromSequenceOutcome(const AnalyzerSequenceClassificationInput& input);

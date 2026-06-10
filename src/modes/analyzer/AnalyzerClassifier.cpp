@@ -17,12 +17,27 @@ AnalyzerReason analyzerReasonFromSequenceOutcome(const AnalyzerSequenceClassific
         case AnalyzerResult::InvalidAudio:
             return AnalyzerReason::InvalidAudio;
         case AnalyzerResult::Miss:
-            if (input.rawCandidateCount == 0) {
+            if (input.detectorSelectedRejectPresent) {
+                return AnalyzerReason::OccurrenceSeenButRejected;
+            }
+            if (input.detectorAcceptedPresent) {
+                return AnalyzerReason::InspectionFailed;
+            }
+            if (input.detectorReportAvailable || input.rawCandidateCount == 0) {
                 return AnalyzerReason::NoOccurrence;
             }
-            return input.dtMs >= 0 ? AnalyzerReason::PatternCandidateRejected : AnalyzerReason::NoOccurrence;
+            return AnalyzerReason::MissingPipelineResult;
         case AnalyzerResult::Rejected:
-            return AnalyzerReason::PatternCandidateRejected;
+            if (input.patternAvailable) {
+                return AnalyzerReason::PatternCandidateRejected;
+            }
+            if (input.detectorSelectedRejectPresent) {
+                return AnalyzerReason::OccurrenceSeenButRejected;
+            }
+            if (input.detectorAcceptedPresent) {
+                return AnalyzerReason::InspectionFailed;
+            }
+            return input.detectorReportAvailable ? AnalyzerReason::NoOccurrence : AnalyzerReason::MissingPipelineResult;
         case AnalyzerResult::Ambiguous:
             return AnalyzerReason::MultipleCompetingPatterns;
         case AnalyzerResult::TooDense:
@@ -64,7 +79,7 @@ AnalyzerStage analyzerPrimaryStageFromReason(AnalyzerReason reason) {
 AnalyzerClassification classifySequenceTrial(const AnalyzerSequenceClassificationInput& input) {
     AnalyzerClassification classification = {};
     classification.result = input.result;
-    classification.reason = input.patternAvailable
+    classification.reason = (input.patternAvailable || input.detectorReportAvailable)
         ? analyzerReasonFromSequenceOutcome(input)
         : AnalyzerReason::MissingPipelineResult;
     classification.primaryStage = analyzerPrimaryStageFromReason(classification.reason);

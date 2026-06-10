@@ -233,6 +233,15 @@ Target ownership:
 - `PatternResult` explains semantic pattern meaning
 - `AnalyzerReport` explains trial classification
 
+Canonical Analyzer boundary rule:
+
+- `AnalyzerClassification` stays generic
+- detector-specific reject detail stays in `DetectorReport`
+- occurrence / inspection-specific reject detail stays in `Occurrence` / `InspectedOccurrence`
+- pattern-specific reject detail stays in `PatternResult`
+- if detector or pattern did not produce a fact for the finalized trial, that
+  fact is not part of the clean canonical inspect/explain path
+
 Legacy analyzer source reports and detector pointers remain temporary migration structures only.
 
 ## Open Decisions Deferred to Implementation Passes

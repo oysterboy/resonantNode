@@ -23,6 +23,13 @@ Canonical inspect/explain now read from:
 Analyzer still prints the legacy surfaces separately through the old
 compatibility path.
 
+Boundary rule:
+
+- canonical inspect/explain only print facts frozen by detector, occurrence,
+  inspection, pattern, and analyzer-trial contracts
+- if a fact cannot yet be produced by those contracts for the finalized trial,
+  it stays out of the canonical path and remains legacy-only
+
 ## Output Shape
 
 Canonical `SEQ_INSPECT` / `SEQ_EXPLAIN` now follow this structure:
@@ -184,10 +191,12 @@ current `DetectorReport`.
 - canonical inspect/explain still do not replace legacy `SEQ_SOURCE`
 - analyzer still keeps a `DetectionDiagnostics` fallback for richer
   legacy-only frequency fields outside the frozen `DetectorReport`
+- analyzer trial truth now prefers finalized-trial `PatternResult` snapshots,
+  but generic analyzer stage/reason naming still needs later cleanup
 - canonical explain still uses the analyzer’s frozen pattern summary bridge
   rather than a more explicit canonical pattern print contract
 - legacy candidate logs remain legacy-only
 
 ## Recommended Next Pass
 
-Recommended next pass: `Pass L - Move analyzer trial truth to canonical inputs`.
+Recommended next pass: `Pass M - Frequency occurrence emission migration`.

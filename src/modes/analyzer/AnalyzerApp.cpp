@@ -78,12 +78,9 @@ const char* analyzerTextOrFallback(const char* value, const char* fallback) {
     return value != nullptr ? value : fallback;
 }
 
-bool analyzerHasScalarDetectorReport(const detection::DetectorReport& report) {
-    return report.detectorId == detection::DetectorId::ScalarTransient;
-}
-
-bool analyzerHasFrequencyDetectorReport(const detection::DetectorReport& report) {
-    return report.detectorId == detection::DetectorId::FrequencyMatch;
+const detection::DetectorReport& analyzerEmptyDetectorReport() {
+    static const detection::DetectorReport kEmptyReport = {};
+    return kEmptyReport;
 }
 
 const char* analyzerExpectedScalarOccurrenceSource(const detection::DetectionProfile& profile) {
@@ -1534,14 +1531,20 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
         ? &pipelineResult->field
         : nullptr;
     const detection::DetectionProfile& selectedProfile = detection::detectionProfileForKind(_sequenceTest.profileKind);
-    const detection::DetectorReport& scalarDetectorReport = _detection.scalarDetectorReport();
-    const bool scalarDetectorReportAvailable = analyzerHasScalarDetectorReport(scalarDetectorReport);
-    const detection::DetectorReport& frequencyDetectorReport = _detection.frequencyDetectorReport();
-    const bool frequencyDetectorReportAvailable = analyzerHasFrequencyDetectorReport(frequencyDetectorReport);
-    if (selectedProfile.occurrenceSource == detection::OccurrenceSourceKind::ScalarTransient && scalarDetectorReportAvailable) {
-        report.detectorReport = &scalarDetectorReport;
-    } else if (selectedProfile.occurrenceSource == detection::OccurrenceSourceKind::FrequencyMatch && frequencyDetectorReportAvailable) {
-        report.detectorReport = &frequencyDetectorReport;
+    const detection::DetectorReport& activeDetectorReport = _detection.activeDetectorReport();
+    const bool activeDetectorReportAvailable = activeDetectorReport.detectorId != detection::DetectorId::Unknown;
+    const detection::DetectorReport* scalarDetectorReportPtr = _detection.detectorReport(detection::DetectorId::ScalarTransient);
+    const bool scalarDetectorReportAvailable = scalarDetectorReportPtr != nullptr;
+    const detection::DetectorReport& scalarDetectorReport = scalarDetectorReportAvailable
+        ? *scalarDetectorReportPtr
+        : analyzerEmptyDetectorReport();
+    const detection::DetectorReport* frequencyDetectorReportPtr = _detection.detectorReport(detection::DetectorId::FrequencyMatch);
+    const bool frequencyDetectorReportAvailable = frequencyDetectorReportPtr != nullptr;
+    const detection::DetectorReport& frequencyDetectorReport = frequencyDetectorReportAvailable
+        ? *frequencyDetectorReportPtr
+        : analyzerEmptyDetectorReport();
+    if (activeDetectorReportAvailable) {
+        report.detectorReport = &activeDetectorReport;
     }
     const bool trialHasPipelineEvidence = reportPatternResult != nullptr
         && diagnostics.rawCandidateCount > 0;

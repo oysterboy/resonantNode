@@ -281,6 +281,10 @@ public:
     bool hasLatestPipelineResult() const;
     const DetectionPipelineResult& latestPipelineResult() const;
     const DetectionDiagnostics& diagnostics() const;
+    // Generic report access is the canonical upward path. Keep the typed
+    // wrappers below only as migration compatibility until callers are updated.
+    const DetectorReport* detectorReport(DetectorId id) const;
+    const DetectorReport& activeDetectorReport() const;
     const DetectorReport& scalarDetectorReport() const;
     const DetectorReport& frequencyDetectorReport() const;
     const FrequencyMatchDetector& frequencyDetector() const;

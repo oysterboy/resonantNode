@@ -26,6 +26,7 @@ Status vocabulary:
 | Analyzer trial truth canonical inputs | landed | Pass L keeps `AnalyzerClassification` generic, makes clean inspect/explain prefer finalized-trial `PatternResult` snapshots plus `DetectorReport`, and keeps synthesized fallback detail off the canonical path. |
 | Frequency occurrence emission migration | landed | Pass M moved pending accepted frequency `Occurrence` construction and `popOccurrence(...)` into `FrequencyMatchDetector`; `FrequencyOccurrenceSource` remains as a thin shell only. |
 | FrequencyOccurrenceSource removal | landed | Pass M1 moved the shell-only frequency routing duties into `DetectionRuntime`, added direct `frequencyDetector()` access, and deleted `FrequencyOccurrenceSource`. |
+| Generic DetectorReport access | landed | Pass N added `DetectionRuntime::detectorReport(DetectorId)` plus `activeDetectorReport()`, rewired Analyzer to the generic access path, and kept typed report accessors as transitional wrappers only. |
 | BehaviorRuntime | deferred | Future behavior architecture work. |
 | OutputDispatcher | deferred | Future behavior/output separation. |
 | Full Chirp PatternRules | roadmap only | Not part of stable runtime. |

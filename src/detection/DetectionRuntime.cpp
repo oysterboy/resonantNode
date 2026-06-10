@@ -662,14 +662,24 @@ const DetectionDiagnostics& DetectionRuntime::diagnostics() const {
     return _diagnostics;
 }
 
+const DetectorReport* DetectionRuntime::detectorReport(DetectorId id) const {
+    return _detectorReport.detectorId == id ? &_detectorReport : nullptr;
+}
+
+const DetectorReport& DetectionRuntime::activeDetectorReport() const {
+    return _detectorReport;
+}
+
 const DetectorReport& DetectionRuntime::scalarDetectorReport() const {
     static const DetectorReport kEmptyReport = {};
-    return _detectorReport.detectorId == DetectorId::ScalarTransient ? _detectorReport : kEmptyReport;
+    const DetectorReport* report = detectorReport(DetectorId::ScalarTransient);
+    return report != nullptr ? *report : kEmptyReport;
 }
 
 const DetectorReport& DetectionRuntime::frequencyDetectorReport() const {
     static const DetectorReport kEmptyReport = {};
-    return _detectorReport.detectorId == DetectorId::FrequencyMatch ? _detectorReport : kEmptyReport;
+    const DetectorReport* report = detectorReport(DetectorId::FrequencyMatch);
+    return report != nullptr ? *report : kEmptyReport;
 }
 
 const FrequencyMatchDetector& DetectionRuntime::frequencyDetector() const {

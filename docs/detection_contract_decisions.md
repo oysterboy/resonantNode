@@ -170,6 +170,13 @@ Detector-specific report building belongs to the detector core or a detector-loc
 
 DetectionRuntime coordinates detectors; it must not become the owner of detector-specific truth.
 
+Current implementation note after Pass N:
+
+- `DetectionRuntime` now exposes generic report access through
+  `detectorReport(DetectorId)` and `activeDetectorReport()`
+- `scalarDetectorReport()` / `frequencyDetectorReport()` remain transitional
+  compatibility wrappers only
+
 The same rule applies to accepted-occurrence drain ownership:
 
 - detector-specific input/update wiring may remain specialized during migration

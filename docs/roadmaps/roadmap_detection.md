@@ -704,6 +704,15 @@ DetectionRuntime must not grow one refreshXXDetectorReport() function per detect
 Detector-specific report production belongs to detector cores or detector-local helpers.
 ```
 
+Current implementation note after Pass N:
+
+```text
+DetectionRuntime now exposes generic report access through
+detectorReport(DetectorId) and activeDetectorReport().
+Typed scalar/frequency report accessors remain transitional wrappers and should
+not be copied for future detector families.
+```
+
 This does not require a forced `IDetector` base class or type-erased feature
 input yet.
 

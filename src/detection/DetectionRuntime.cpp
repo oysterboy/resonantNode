@@ -56,28 +56,6 @@ const char* scalarRejectReasonOrFallback(const char* transientRejectReason, cons
     return !reasonIsNone(transientRejectReason) ? transientRejectReason : onsetRejectReason;
 }
 
-DetectorRejectClass scalarRejectClassFromReason(const char* reason) {
-    if (reasonIsNone(reason)) {
-        return DetectorRejectClass::None;
-    }
-    if (strcmp(reason, "below_threshold") == 0) {
-        return DetectorRejectClass::Threshold;
-    }
-    if (strcmp(reason, "cooldown_active") == 0) {
-        return DetectorRejectClass::Cooldown;
-    }
-    if (strcmp(reason, "duration_too_short") == 0 || strcmp(reason, "duration_too_long") == 0) {
-        return DetectorRejectClass::Timing;
-    }
-    if (strcmp(reason, "strength_too_low") == 0) {
-        return DetectorRejectClass::Strength;
-    }
-    if (strcmp(reason, "peak_active") == 0 || strcmp(reason, "peak_still_active") == 0) {
-        return DetectorRejectClass::State;
-    }
-    return DetectorRejectClass::Unknown;
-}
-
 void populateScalarLegacyDiagnosticsFromReport(DetectionDiagnostics& diagnostics, const DetectorReport& report) {
     diagnostics.scalarRejectReason = report.scalarTransient.rejectReason;
     diagnostics.scalarNoEmitReason = report.scalarTransient.noEmitReason;
@@ -153,34 +131,14 @@ void DetectionRuntime::refreshScalarDetectorReport(unsigned long nowMs) {
     }
 
     DetectorReport& report = _scalarDetectorReport;
+    const ScalarTransientDetector& scalarDetector = _scalarEmitter.detector();
     report.detectorId = DetectorId::ScalarTransient;
 
-    const char* onsetRejectReason = _scalarEmitter.lastOnsetRejectReasonName();
-    const char* transientRejectReason = _scalarEmitter.lastTransientRejectReasonName();
-    const char* scalarRejectReason = scalarRejectReasonOrFallback(transientRejectReason, onsetRejectReason);
-
     // TEMP_SCALAR_REPORT_BRIDGE:
-    // This report is still assembled through ScalarOccurrenceSource while runtime
-    // wiring is migrated. The final target is ScalarTransientDetector -> DetectorReport.
-    report.scalarTransient.rejectReason = scalarRejectReason;
-    report.scalarTransient.noEmitReason = scalarRejectReason;
-    report.scalarTransient.gateReason = scalarRejectReason;
-    report.scalarTransient.opened = _scalarEmitter.candidateActive()
-        || _scalarEmitter.releaseObserved()
-        || _scalarEmitter.candidateFirstSeenMs() > 0;
-    report.scalarTransient.released = _scalarEmitter.releaseObserved()
-        || _scalarEmitter.candidateReleaseObservedMs() > 0;
-    report.scalarTransient.validRelease = report.scalarTransient.released && reasonIsNone(scalarRejectReason);
-    report.scalarTransient.emitAllowed = report.scalarTransient.validRelease;
-    report.scalarTransient.openMs = _scalarEmitter.candidateFirstSeenMs();
-    report.scalarTransient.peakMs = _scalarEmitter.candidatePeakMs();
-    report.scalarTransient.releaseMs = _scalarEmitter.candidateReleaseObservedMs();
-    report.scalarTransient.durationMs = report.scalarTransient.released && report.scalarTransient.releaseMs >= report.scalarTransient.openMs
-        ? report.scalarTransient.releaseMs - report.scalarTransient.openMs
-        : 0UL;
-    report.scalarTransient.minDurationMs = _scalarTransientConfig.minTransientDurationMs;
-    report.scalarTransient.maxDurationMs = _scalarTransientConfig.maxTransientDurationMs;
-    report.scalarTransient.peakStrength = _scalarEmitter.candidatePeakStrength();
+    // Canonical scalar detector-truth fields now come directly from
+    // ScalarTransientDetector. ScalarOccurrenceSource still remains in the path
+    // for Occurrence emission and for legacy aggregate reject diagnostics.
+    report.scalarTransient = scalarDetector.reportDetail();
 
     report.acceptedPresent = _lastOccurrence.present
         && _lastOccurrence.detectorKind == OccurrenceDetectorKind::Transient;
@@ -195,17 +153,9 @@ void DetectionRuntime::refreshScalarDetectorReport(unsigned long nowMs) {
         report.acceptedOccurrence.confidence = _lastOccurrence.confidence;
     }
 
-    report.selectedRejectPresent = _scalarEmitter.rejectedCandidateCount() > 0;
+    report.selectedRejectPresent = scalarDetector.selectedRejectPresent();
     if (report.selectedRejectPresent) {
-        report.selectedReject.rejectClass = scalarRejectClassFromReason(_scalarEmitter.bestRejectedReasonName());
-        report.selectedReject.detectorReason = _scalarEmitter.bestRejectedReasonName();
-        report.selectedReject.startMs = _scalarEmitter.bestRejectedOpenMs();
-        report.selectedReject.peakMs = _scalarEmitter.bestRejectedPeakMs();
-        report.selectedReject.endMs = _scalarEmitter.bestRejectedCloseMs();
-        report.selectedReject.durationMs = _scalarEmitter.bestRejectedDurationMs();
-        report.selectedReject.requiredMinDurationMs = _scalarTransientConfig.minTransientDurationMs;
-        report.selectedReject.requiredMaxDurationMs = _scalarTransientConfig.maxTransientDurationMs;
-        report.selectedReject.strength = _scalarEmitter.bestRejectedPeakStrength();
+        report.selectedReject = scalarDetector.selectedReject();
     }
 
     if (report.acceptedPresent) {

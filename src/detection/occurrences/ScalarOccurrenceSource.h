@@ -51,6 +51,8 @@ public:
     void setDiagnosticsLabel(const char* value);
 
     void observe(const AudioSamplePacket& audioSamplePacket, float signalLevel);
+    ScalarTransientDetector& detector();
+    const ScalarTransientDetector& detector() const;
 
     bool onsetDetected() const;
     float onsetStrength() const;

@@ -3,6 +3,7 @@
 #include <stdint.h>
 
 #include "../../AudioDebugConfig.h"
+#include "../DetectorReport.h"
 
 /*
 ScalarTransientDetector
@@ -43,6 +44,7 @@ public:
 
     void begin();
     void resetState();
+    void resetSelectedRejectSummary();
     void update(float signalLevel, uint32_t sampleTimeUs);
 
     void setOnsetDetectionThreshold(float value);
@@ -82,10 +84,15 @@ public:
     unsigned long maxTransientDurationMs() const;
     float minTransientPeakStrength() const;
     unsigned long releaseDebounceMs() const;
+    const detection::ScalarDetectorReportDetail& reportDetail() const;
+    bool selectedRejectPresent() const;
+    const detection::RejectedCandidateSummary& selectedReject() const;
 
 private:
     void updateOnsetStage(unsigned long nowUs, float signalMagnitude, bool aboveAttackThreshold, bool onsetCooldownElapsed);
     void updateTransientStage(unsigned long nowUs, float signalMagnitude, bool aboveReleaseThreshold);
+    void captureSelectedReject(unsigned long releaseObservedUs);
+    void refreshReportDetail();
     void printTransientStatsIfDue(unsigned long nowUs);
 
     // ONSET STAGE
@@ -110,6 +117,7 @@ private:
     unsigned long _transientRejectedStrengthTooLowCount = 0;
     bool _peakActive = false;
     unsigned long _peakStartedUs = 0;
+    unsigned long _peakStrengthObservedUs = 0;
     unsigned long _releaseCandidateStartedUs = 0;
     unsigned long _releaseObservedUs = 0;
     float _peakStrength = 0.0f;
@@ -129,4 +137,9 @@ private:
     unsigned long _expectedTransientPeriodMs = 2000; // Rough cadence we expect from the external source.
     bool _diagnosticsEnabled = AUDIO_VERBOSE_DEBUG;
     const char* _diagnosticsLabel = "EVT";
+
+    // Canonical scalar-report facts owned directly by the detector core.
+    detection::ScalarDetectorReportDetail _reportDetail = {};
+    bool _selectedRejectPresent = false;
+    detection::RejectedCandidateSummary _selectedReject = {};
 };

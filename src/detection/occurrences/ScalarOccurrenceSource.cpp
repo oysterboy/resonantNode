@@ -12,6 +12,7 @@ void ScalarOccurrenceSource::reset() {
 }
 
 void ScalarOccurrenceSource::resetRejectSummary() {
+    _detector.resetSelectedRejectSummary();
     _rejectedCandidateCount = 0;
     _rejectedBestDurationMs = 0;
     _rejectedSecondBestDurationMs = 0;
@@ -189,6 +190,14 @@ void ScalarOccurrenceSource::observe(const AudioSamplePacket& audioSamplePacket,
         _candidateReady = true;
         _candidateReleaseSample = audioSamplePacket.sampleIndex;
     }
+}
+
+ScalarTransientDetector& ScalarOccurrenceSource::detector() {
+    return _detector;
+}
+
+const ScalarTransientDetector& ScalarOccurrenceSource::detector() const {
+    return _detector;
 }
 
 bool ScalarOccurrenceSource::onsetDetected() const {

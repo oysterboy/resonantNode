@@ -1,6 +1,30 @@
 #include "ScalarTransientDetector.h"
 
 #include <Arduino.h>
+#include <string.h>
+
+namespace {
+
+bool detectorReasonIsNone(const char* reason) {
+    return reason == nullptr || strcmp(reason, "none") == 0;
+}
+
+detection::DetectorRejectClass scalarTransientRejectClass(ScalarTransientDetector::TransientRejectReason reason) {
+    switch (reason) {
+        case ScalarTransientDetector::TransientRejectReason::DurationTooShort:
+        case ScalarTransientDetector::TransientRejectReason::DurationTooLong:
+            return detection::DetectorRejectClass::Timing;
+        case ScalarTransientDetector::TransientRejectReason::StrengthTooLow:
+            return detection::DetectorRejectClass::Strength;
+        case ScalarTransientDetector::TransientRejectReason::PeakStillActive:
+            return detection::DetectorRejectClass::State;
+        case ScalarTransientDetector::TransientRejectReason::None:
+        default:
+            return detection::DetectorRejectClass::None;
+    }
+}
+
+} // namespace
 
 ScalarTransientDetector::ScalarTransientDetector() = default;
 
@@ -25,11 +49,19 @@ void ScalarTransientDetector::resetState() {
     _lastTransientRejectedStrength = 0.0f;
     _peakActive = false;
     _peakStartedUs = 0;
+    _peakStrengthObservedUs = 0;
     _releaseCandidateStartedUs = 0;
     _releaseObservedUs = 0;
     _peakStrength = 0.0f;
     _onsetRejectedCount = 0;
     _transientRejectedCount = 0;
+    _reportDetail = {};
+    resetSelectedRejectSummary();
+}
+
+void ScalarTransientDetector::resetSelectedRejectSummary() {
+    _selectedRejectPresent = false;
+    _selectedReject = {};
 }
 
 void ScalarTransientDetector::update(float signalMagnitude, uint32_t sampleTimeUs) {
@@ -47,6 +79,7 @@ void ScalarTransientDetector::update(float signalMagnitude, uint32_t sampleTimeU
 
     updateOnsetStage(nowUs, signalMagnitude, aboveAttackThreshold, onsetCooldownElapsed);
     updateTransientStage(nowUs, signalMagnitude, aboveReleaseThreshold);
+    refreshReportDetail();
     printTransientStatsIfDue(nowUs);
 }
 
@@ -56,6 +89,7 @@ void ScalarTransientDetector::updateOnsetStage(unsigned long nowUs, float signal
     if (aboveAttackThreshold && !_peakActive && onsetCooldownElapsed) {
         _peakActive = true;
         _peakStartedUs = nowUs;
+        _peakStrengthObservedUs = nowUs;
         _peakStrength = signalMagnitude;
 
         _onsetDetected = true;
@@ -76,6 +110,7 @@ void ScalarTransientDetector::updateOnsetStage(unsigned long nowUs, float signal
 void ScalarTransientDetector::updateTransientStage(unsigned long nowUs, float signalMagnitude, bool aboveReleaseThreshold) {
     if (_peakActive && signalMagnitude > _peakStrength) {
         _peakStrength = signalMagnitude;
+        _peakStrengthObservedUs = nowUs;
     }
 
     // Ignore brief dips below the release threshold so one burst does not get
@@ -133,14 +168,68 @@ void ScalarTransientDetector::updateTransientStage(unsigned long nowUs, float si
             } else {
                 _lastTransientRejectReason = TransientRejectReason::None;
             }
+            captureSelectedReject(releaseObservedUs);
         }
 
         _peakActive = false;
         _peakStartedUs = 0;
+        _peakStrengthObservedUs = 0;
         _releaseCandidateStartedUs = 0;
         _releaseObservedUs = 0;
         _peakStrength = 0.0f;
     }
+}
+
+void ScalarTransientDetector::captureSelectedReject(unsigned long releaseObservedUs) {
+    if (_lastTransientRejectReason == TransientRejectReason::None) {
+        return;
+    }
+
+    const unsigned long candidateStartMs = _peakStartedUs / 1000UL;
+    const unsigned long candidatePeakMs = _peakStrengthObservedUs / 1000UL;
+    const unsigned long candidateEndMs = releaseObservedUs / 1000UL;
+    const unsigned long candidateDurationMs = _lastTransientRejectedDurationMs;
+
+    if (_selectedRejectPresent && candidateDurationMs < _selectedReject.durationMs) {
+        return;
+    }
+
+    _selectedRejectPresent = true;
+    _selectedReject.rejectClass = scalarTransientRejectClass(_lastTransientRejectReason);
+    _selectedReject.detectorReason = lastTransientRejectReasonName();
+    _selectedReject.startMs = candidateStartMs;
+    _selectedReject.peakMs = candidatePeakMs;
+    _selectedReject.endMs = candidateEndMs;
+    _selectedReject.durationMs = candidateDurationMs;
+    _selectedReject.requiredMinDurationMs = _minTransientDurationMs;
+    _selectedReject.requiredMaxDurationMs = _maxTransientDurationMs;
+    _selectedReject.strength = _lastTransientRejectedStrength;
+    _selectedReject.confidence = 0.0f;
+}
+
+void ScalarTransientDetector::refreshReportDetail() {
+    const char* onsetRejectReason = lastOnsetRejectReasonName();
+    const char* transientRejectReason = lastTransientRejectReasonName();
+    const char* scalarRejectReason = !detectorReasonIsNone(transientRejectReason)
+        ? transientRejectReason
+        : onsetRejectReason;
+
+    _reportDetail.rejectReason = scalarRejectReason;
+    _reportDetail.noEmitReason = scalarRejectReason;
+    _reportDetail.gateReason = scalarRejectReason;
+    _reportDetail.opened = _peakActive || _releaseObservedUs != 0 || _peakStartedUs != 0;
+    _reportDetail.released = _releaseObservedUs != 0;
+    _reportDetail.validRelease = _reportDetail.released && detectorReasonIsNone(scalarRejectReason);
+    _reportDetail.emitAllowed = _reportDetail.validRelease;
+    _reportDetail.openMs = _peakStartedUs / 1000UL;
+    _reportDetail.peakMs = _peakStrengthObservedUs / 1000UL;
+    _reportDetail.releaseMs = _releaseObservedUs / 1000UL;
+    _reportDetail.durationMs = _reportDetail.released && _reportDetail.releaseMs >= _reportDetail.openMs
+        ? _reportDetail.releaseMs - _reportDetail.openMs
+        : 0UL;
+    _reportDetail.minDurationMs = _minTransientDurationMs;
+    _reportDetail.maxDurationMs = _maxTransientDurationMs;
+    _reportDetail.peakStrength = _peakStrength;
 }
 
 void ScalarTransientDetector::printTransientStatsIfDue(unsigned long nowUs) {
@@ -302,6 +391,18 @@ float ScalarTransientDetector::minTransientPeakStrength() const {
 
 unsigned long ScalarTransientDetector::releaseDebounceMs() const {
     return _releaseDebounceMs;
+}
+
+const detection::ScalarDetectorReportDetail& ScalarTransientDetector::reportDetail() const {
+    return _reportDetail;
+}
+
+bool ScalarTransientDetector::selectedRejectPresent() const {
+    return _selectedRejectPresent;
+}
+
+const detection::RejectedCandidateSummary& ScalarTransientDetector::selectedReject() const {
+    return _selectedReject;
 }
 
 void ScalarTransientDetector::setOnsetDetectionThreshold(float value) {

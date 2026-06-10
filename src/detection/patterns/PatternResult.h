@@ -4,6 +4,36 @@
 #include "PatternTypes.h"
 #include "PatternCandidate.h"
 
+// DETECTION_MINIMAL_CONTRACTS
+//
+// Public detection contracts should remain small and layered:
+//
+// FeatureSample / FeatureFrame:
+//   measured or derived feature input
+//
+// Detector:
+//   module that owns candidate lifecycle and emits accepted Occurrences
+//
+// Occurrence:
+//   accepted detector-level event
+//
+// InspectedOccurrence:
+//   Occurrence plus retrospective inspection evidence
+//
+// PatternMatcher:
+//   profile-selected pattern interpretation stage
+//
+// PatternResult:
+//   behavior-facing pattern meaning
+//
+// DetectorReport:
+//   detector-stage truth and diagnostics for Analyzer inspection output
+//
+// AnalyzerReport:
+//   trial-level classification
+//
+// Do not add detector-specific fields to PatternResult or AnalyzerReport.
+// Detector-specific details belong in typed Occurrence detail or DetectorReport.
 namespace detection {
 
 /*

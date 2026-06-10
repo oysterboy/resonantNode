@@ -440,6 +440,7 @@ private:
         unsigned long currentMissStreak = 0;
         unsigned long longestMissStreak = 0;
         unsigned long firstMissTrial = 0;
+        AnalyzerCleanSummary cleanSummary = {};
 
         AnalyzerScalarDiagnostic scalar = {};
         };
@@ -523,13 +524,15 @@ private:
     void legacyPrintSequenceCandidateLogs(unsigned long trialNumber, const SequenceTest::TrialDiagnostics& diagnostics) const;
     void legacyPrintSequenceTrialResult(const AnalyzerReport& report) const;
     void legacyPrintSequenceFinalOutput() const;
-    void legacyPrintSequenceSummary() const;
+    void legacyPrintSequenceSummaryLeg() const;
+    void printSequenceSummaryClean() const;
     const char* activeAnalyzerProfileName() const;
     AnalyzerReport* sequenceReportScratch();
     void buildSequenceAnalyzerReport(AnalyzerReport& report, unsigned long trialNumber, AnalyzerResult result, long dtMs, long durMs, float strength, bool audioOverflow, unsigned long duplicateCount, const SequenceTest::TrialDiagnostics& diagnostics) const;
     void recordSequenceClassifierOutcome(const PatternResult& patternResult, bool duplicateCandidate, bool unexpectedCandidate);
     void handleSequenceCandidate(const PatternResult& patternResult, const detection::FrequencyBandMeasurementPacket* liveFrequencyMeasurementPacket = nullptr);
     void updateSequenceAmbientStats(unsigned long nowMs);
+    void updateCleanSequenceSummary(const AnalyzerReport& report);
 
     // Sequence sample capture helpers.
     void beginSequenceSampleDump(unsigned long trialNumber);

@@ -61,11 +61,12 @@ void AnalyzerApp::printSequenceHelp() {
     Serial.println("SEQ IN: FREQUPDATEEVERYSAMPLES 1|4|8|16");
     Serial.println("SEQ IN: WHEN off|miss|all");
     Serial.println("SEQ IN: VERBOSE 0|1|2 (0=compact, 1=summary, 2=deep debug)");
+    Serial.println("SEQ IN: SUMMARY [LEG]");
     Serial.println("SEQ IN: TRIES N");
     Serial.println("SEQ IN: STATUS");
     Serial.println("SEQ IN: [dumpSamples=0|1] [curveFormat=off|samples]");
     Serial.println("SEQ IN: [sampleFirst=N] [sampleEvery=N] [sampleLead=MS] [sampleTail=MS] [sampleStep=MS] [sampleMax=N]");
-    Serial.println("SEQ OUT: SEQ start / SEQ running / SEQ_PATTERN / SEQ_TRIAL / SEQ_STREAK / SEQ_INSPECT / SEQ_INSPECT_LEG / SEQ_EXPLAIN / SEQ_EXPLAIN_LEG / SEQ_SOURCE / SEQ_SUMMARY / AUDIO run / SIGNALCHECK");
+    Serial.println("SEQ OUT: SEQ start / SEQ running / SEQ_PATTERN / SEQ_TRIAL / SEQ_STREAK / SEQ_INSPECT / SEQ_INSPECT_LEG / SEQ_EXPLAIN / SEQ_EXPLAIN_LEG / SEQ_SOURCE / SEQ_SUMMARY / SEQ_SUMMARY_LEG / AUDIO run / SIGNALCHECK");
     Serial.println("SEQ OUT: candidate fields include onset_sample peak_sample release_sample peak_ms dur end_dt_ms freq_*");
     Serial.println("SEQ OBS: passive observe mode for an already-running external emitter");
     Serial.println("SEQ IN: PROFILE tonalpulse|amp|chirp_experimental|scalar_freq_experimental");
@@ -450,8 +451,19 @@ void AnalyzerApp::handleUsbLine(const char* line) {
             return;
         }
 
+        if (equalsIgnoreCase(token, "SUMMARY")) {
+            const char* summaryMode = strtok_r(nullptr, " ", &savePtr);
+            if (summaryMode != nullptr &&
+                (equalsIgnoreCase(summaryMode, "LEG") || equalsIgnoreCase(summaryMode, "LEGACY"))) {
+                legacyPrintSequenceSummaryLeg();
+            } else {
+                printSequenceSummaryClean();
+            }
+            return;
+        }
+
         if (equalsIgnoreCase(token, "STOP")) {
-            legacyPrintSequenceSummary();
+            legacyPrintSequenceFinalOutput();
             stopSequenceTest();
             Serial.println("OK SEQ STOP");
             return;

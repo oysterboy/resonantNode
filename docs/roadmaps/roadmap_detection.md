@@ -793,6 +793,14 @@ RAW_SAMPLE_CAPTURE
   not a SEQ output mode
 ```
 
+Current implementation note after Pass N2:
+
+```text
+SEQ_SUMMARY is now the clean run-summary path.
+SEQ_SUMMARY_LEG is the explicit legacy aggregate path.
+Clean summary must not read DetectionDiagnostics or legacy analyzer diagnostic structs.
+```
+
 Future generic `SEQ_TRIAL` may show:
 
 ```text

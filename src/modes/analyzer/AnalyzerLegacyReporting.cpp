@@ -2895,11 +2895,70 @@ void AnalyzerApp::legacyPrintTransientStatsDebug(unsigned long now) const {
     Serial.println("%");
 }
 
-void AnalyzerApp::legacyPrintSequenceSummary() const {
+void AnalyzerApp::printSequenceSummaryClean() const {
     if (_valMode) {
         return;
     }
-    AnalyzerSummary summary = {};
+
+    const auto& summary = _sequenceTest.cleanSummary;
+    const long avgDtRounded = summary.dtCount > 0
+        ? static_cast<long>(static_cast<float>(summary.totalDtMs) / static_cast<float>(summary.dtCount) + 0.5f)
+        : -1L;
+    const float avgConfidence = summary.confidenceCount > 0
+        ? summary.totalConfidence / static_cast<float>(summary.confidenceCount)
+        : 0.0f;
+
+    Serial.print("SEQ_SUMMARY profile=");
+    Serial.print(summary.profileName != nullptr ? summary.profileName : "unknown");
+    Serial.print(" detector=");
+    Serial.print(canonicalDetectorIdName(summary.detectorId));
+    Serial.print(" trials=");
+    Serial.print(summary.trials);
+    Serial.print(" completed=");
+    Serial.print(summary.completed);
+    Serial.print(" expected=");
+    Serial.print(summary.expected);
+    Serial.print(" early=");
+    Serial.print(summary.early);
+    Serial.print(" late=");
+    Serial.print(summary.late);
+    Serial.print(" miss=");
+    Serial.print(summary.miss);
+    Serial.print(" duplicate=");
+    Serial.print(summary.duplicate);
+    Serial.print(" unexpected=");
+    Serial.print(summary.unexpected);
+    Serial.print(" rejected=");
+    Serial.print(summary.rejected);
+    Serial.print(" ambiguous=");
+    Serial.print(summary.ambiguous);
+    Serial.print(" too_dense=");
+    Serial.print(summary.tooDense);
+    Serial.print(" invalid_audio=");
+    Serial.print(summary.invalidAudio);
+    Serial.print(" detector_accepted=");
+    Serial.print(summary.detectorAccepted);
+    Serial.print(" detector_rejects=");
+    Serial.print(summary.detectorSelectedReject);
+    Serial.print(" patterns_valid=");
+    Serial.print(summary.validPattern);
+    Serial.print(" patterns_rejected=");
+    Serial.print(summary.rejectedPattern);
+    Serial.print(" avg_dt_ms=");
+    if (avgDtRounded >= 0L) {
+        Serial.print(avgDtRounded);
+    } else {
+        Serial.print(-1);
+    }
+    Serial.print(" avg_conf=");
+    Serial.println(avgConfidence, 2);
+}
+
+void AnalyzerApp::legacyPrintSequenceSummaryLeg() const {
+    if (_valMode) {
+        return;
+    }
+    AnalyzerLegacySummary summary = {};
     summary.profileName = activeAnalyzerProfileName();
     summary.trials = _sequenceTest.totalTrials;
     const auto selectMaxReason = [](const unsigned long* counts, AnalyzerReason fallback) {
@@ -2946,7 +3005,7 @@ void AnalyzerApp::legacyPrintSequenceSummary() const {
 
     if (_sequenceTest.outputConfig.verbosity == 0U &&
         _sequenceTest.outputConfig.mode != SeqOutputMode::Explain) {
-        Serial.print("SEQ_SUMMARY profile=");
+        Serial.print("SEQ_SUMMARY_LEG profile=");
         Serial.print(summary.profileName != nullptr ? summary.profileName : "unknown");
         Serial.print(" trials=");
         Serial.print(summary.trials);
@@ -2979,7 +3038,7 @@ void AnalyzerApp::legacyPrintSequenceSummary() const {
     }
 
     Serial.println();
-    Serial.print("SEQ_SUMMARY counts: expected=");
+    Serial.print("SEQ_SUMMARY_LEG counts: expected=");
     Serial.print(summary.expected);
     Serial.print(" early=");
     Serial.print(summary.early);
@@ -3129,7 +3188,7 @@ void AnalyzerApp::legacyPrintSequenceFinalOutput() const {
     if (_valMode) {
         return;
     }
-    legacyPrintSequenceSummary();
+    printSequenceSummaryClean();
     if (_sequenceTest.outputConfig.verbosity > 0U ||
         _sequenceTest.outputConfig.mode == SeqOutputMode::System ||
         _sequenceTest.outputConfig.mode == SeqOutputMode::Explain) {

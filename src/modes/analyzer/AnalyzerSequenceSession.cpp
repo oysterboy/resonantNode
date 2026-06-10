@@ -36,6 +36,9 @@ size_t analyzerReasonIndex(AnalyzerReason value) {
     return static_cast<size_t>(value);
 }
 
+detection::DetectorId cleanSummaryDetectorId(const AnalyzerReport& report) {
+    return report.detectorReport != nullptr ? report.detectorReport->detectorId : detection::DetectorId::Unknown;
+}
 
 } // namespace
 
@@ -218,6 +221,7 @@ void AnalyzerApp::startSequenceTest(const PendingSequenceStart& pending) {
     _sequenceTest.currentMissStreak = 0;
     _sequenceTest.longestMissStreak = 0;
     _sequenceTest.firstMissTrial = 0;
+    _sequenceTest.cleanSummary = {};
 
     if (!_sequenceTest.externalEmitter) {
         // Rebase before the first trial so every run starts from the quiet floor.
@@ -514,6 +518,7 @@ void AnalyzerApp::finalizeSequenceTrial(unsigned long now) {
     _sequenceTest.duplicates += diagnostics.duplicateCount;
     AnalyzerReport* finalizedReport = sequenceReportScratch();
     buildSequenceAnalyzerReport(*finalizedReport, _sequenceTest.currentTrial, result, dtMs, durMs, strength, invalidAudioTrial, diagnostics.duplicateCount, diagnostics);
+    updateCleanSequenceSummary(*finalizedReport);
     _sequenceTest.completedTrials++;
     _sequenceTest.totalPatternConfidence += finalizedReport->primaryPattern.confidence;
     if (finalizedReport->source.acceptedPresent &&
@@ -619,6 +624,77 @@ void AnalyzerApp::finalizeSequenceTrial(unsigned long now) {
     const unsigned long finalizeUs = static_cast<unsigned long>(micros() - finalizeStartUs);
     if (finalizeUs > _sequenceTest.maxFinalizeTrialUs) {
         _sequenceTest.maxFinalizeTrialUs = finalizeUs;
+    }
+}
+
+void AnalyzerApp::updateCleanSequenceSummary(const AnalyzerReport& report) {
+    AnalyzerCleanSummary& summary = _sequenceTest.cleanSummary;
+    summary.profileName = activeAnalyzerProfileName();
+    if (summary.detectorId == detection::DetectorId::Unknown) {
+        summary.detectorId = cleanSummaryDetectorId(report);
+    }
+    summary.trials = static_cast<unsigned int>(_sequenceTest.totalTrials);
+    summary.completed = static_cast<unsigned int>(_sequenceTest.completedTrials + 1UL);
+
+    switch (report.classification.result) {
+        case AnalyzerResult::Expected:
+            ++summary.expected;
+            break;
+        case AnalyzerResult::Early:
+            ++summary.early;
+            break;
+        case AnalyzerResult::Late:
+            ++summary.late;
+            break;
+        case AnalyzerResult::Miss:
+            ++summary.miss;
+            break;
+        case AnalyzerResult::Duplicate:
+            ++summary.duplicate;
+            break;
+        case AnalyzerResult::Unexpected:
+            ++summary.unexpected;
+            break;
+        case AnalyzerResult::Rejected:
+            ++summary.rejected;
+            break;
+        case AnalyzerResult::Ambiguous:
+            ++summary.ambiguous;
+            break;
+        case AnalyzerResult::TooDense:
+            ++summary.tooDense;
+            break;
+        case AnalyzerResult::InvalidAudio:
+            ++summary.invalidAudio;
+            break;
+        case AnalyzerResult::Unknown:
+        default:
+            break;
+    }
+
+    if (report.detectorReport != nullptr) {
+        if (report.detectorReport->accepted.present) {
+            ++summary.detectorAccepted;
+        }
+        if (report.detectorReport->selectedReject.present) {
+            ++summary.detectorSelectedReject;
+        }
+    }
+
+    if (report.primaryPattern.accepted) {
+        ++summary.validPattern;
+    } else if (report.primaryPattern.candidateAccepted || report.classification.result == AnalyzerResult::Rejected) {
+        ++summary.rejectedPattern;
+    }
+
+    if (report.classification.dtMs >= 0) {
+        summary.totalDtMs += report.classification.dtMs;
+        ++summary.dtCount;
+    }
+
+    if (report.primaryPattern.confidence > 0.0f) {
+        summary.totalConfidence += report.primaryPattern.confidence;
+        ++summary.confidenceCount;
     }
 }
 

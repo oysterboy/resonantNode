@@ -27,6 +27,7 @@ Status vocabulary:
 | Frequency occurrence emission migration | landed | Pass M moved pending accepted frequency `Occurrence` construction and `popOccurrence(...)` into `FrequencyMatchDetector`; `FrequencyOccurrenceSource` remains as a thin shell only. |
 | FrequencyOccurrenceSource removal | landed | Pass M1 moved the shell-only frequency routing duties into `DetectionRuntime`, added direct `frequencyDetector()` access, and deleted `FrequencyOccurrenceSource`. |
 | Generic DetectorReport access | landed | Pass N added `DetectionRuntime::detectorReport(DetectorId)` plus `activeDetectorReport()`, rewired Analyzer to the generic access path, and kept typed report accessors as transitional wrappers only. |
+| Analyzer run summary split | landed | Pass N2 made `SEQ SUMMARY` the clean canonical-summary path, renamed the old summary to `SEQ SUMMARY LEG`, and kept legacy aggregate counters off the clean printer. |
 | BehaviorRuntime | deferred | Future behavior architecture work. |
 | OutputDispatcher | deferred | Future behavior/output separation. |
 | Full Chirp PatternRules | roadmap only | Not part of stable runtime. |

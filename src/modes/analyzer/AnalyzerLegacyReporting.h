@@ -38,7 +38,11 @@ Does not own detection or behavior decisions.
 //   May include namespaced detector detail.
 //
 // SEQ_SUMMARY:
-//   Aggregate trial result counts and generic reject classes.
+//   Canonical aggregate trial result counts.
+//
+// SEQ_SUMMARY_LEG:
+//   Legacy aggregate output retained only for migration comparison and
+//   quarantine work.
 //
 // SEQ_EXPLAIN:
 //   Deep developer chain, rebuilt later from scoped reports.
@@ -701,7 +705,7 @@ struct AnalyzerSourceStageReport {
     AnalyzerScalarDiagnostic scalarTransient = {};
 };
 
-struct AnalyzerSummary {
+struct AnalyzerLegacySummary {
     const char* profileName = "unknown";
 
     unsigned int trials = 0;
@@ -727,6 +731,34 @@ struct AnalyzerSummary {
 
     AnalyzerReason mainMissReason = AnalyzerReason::None;
     AnalyzerReason mainRejectReason = AnalyzerReason::None;
+};
+
+struct AnalyzerCleanSummary {
+    const char* profileName = "unknown";
+    detection::DetectorId detectorId = detection::DetectorId::Unknown;
+
+    unsigned int trials = 0;
+    unsigned int completed = 0;
+    unsigned int expected = 0;
+    unsigned int early = 0;
+    unsigned int late = 0;
+    unsigned int miss = 0;
+    unsigned int duplicate = 0;
+    unsigned int unexpected = 0;
+    unsigned int rejected = 0;
+    unsigned int ambiguous = 0;
+    unsigned int tooDense = 0;
+    unsigned int invalidAudio = 0;
+
+    unsigned int detectorAccepted = 0;
+    unsigned int detectorSelectedReject = 0;
+    unsigned int validPattern = 0;
+    unsigned int rejectedPattern = 0;
+
+    long totalDtMs = 0;
+    unsigned int dtCount = 0;
+    float totalConfidence = 0.0f;
+    unsigned int confidenceCount = 0;
 };
 
 struct AnalyzerReport {

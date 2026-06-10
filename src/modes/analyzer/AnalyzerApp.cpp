@@ -82,6 +82,10 @@ bool analyzerHasScalarDetectorReport(const detection::DetectorReport& report) {
     return report.detectorId == detection::DetectorId::ScalarTransient;
 }
 
+bool analyzerHasFrequencyDetectorReport(const detection::DetectorReport& report) {
+    return report.detectorId == detection::DetectorId::FrequencyMatch;
+}
+
 const char* analyzerExpectedScalarOccurrenceSource(const detection::DetectionProfile& profile) {
     switch (profile.scalarTransient.observedStream) {
         case detection::FeatureStreamId::FrequencyScore:
@@ -1486,6 +1490,8 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
     const detection::DetectionProfile& selectedProfile = detection::detectionProfileForKind(_sequenceTest.profileKind);
     const detection::DetectorReport& scalarDetectorReport = _detection.scalarDetectorReport();
     const bool scalarDetectorReportAvailable = analyzerHasScalarDetectorReport(scalarDetectorReport);
+    const detection::DetectorReport& frequencyDetectorReport = _detection.frequencyDetectorReport();
+    const bool frequencyDetectorReportAvailable = analyzerHasFrequencyDetectorReport(frequencyDetectorReport);
     const bool trialHasPipelineEvidence = actualPipelineAvailable
         && runtimePatternResult != nullptr
         && diagnostics.rawCandidateCount > 0;
@@ -1723,6 +1729,26 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
         : 0UL;
     report.source.frequencyMatch.historyScoreRecords = _detection.featureHistory().sampleCount(detection::FeatureStreamId::FrequencyScore);
     report.source.frequencyMatch.historyContrastRecords = _detection.featureHistory().sampleCount(detection::FeatureStreamId::FrequencyContrast);
+    const auto& frequencyAccepted = frequencyDetectorReport.accepted;
+    const auto& frequencySelectedReject = frequencyDetectorReport.selectedReject;
+    const auto& frequencyDetail = frequencyDetectorReport.frequency;
+    if (frequencyDetectorReportAvailable) {
+        report.source.frequencyMatch.acceptedPresent = frequencyAccepted.present;
+        report.source.frequencyMatch.acceptedTrialId = report.source.frequencyMatch.acceptedPresent ? report.context.trial : 0UL;
+        report.source.frequencyMatch.acceptedSource = report.source.frequencyMatch.acceptedPresent
+            ? (report.occurrences.primarySource != nullptr ? report.occurrences.primarySource : "frequency")
+            : "none";
+        report.source.frequencyMatch.acceptedDtMs = report.source.frequencyMatch.acceptedPresent
+            ? static_cast<long>(frequencyAccepted.startMs) - static_cast<long>(_sequenceTest.currentTrialScheduledAtMs)
+            : -1L;
+        report.source.frequencyMatch.acceptedStartMs = report.source.frequencyMatch.acceptedPresent ? frequencyAccepted.startMs : 0UL;
+        report.source.frequencyMatch.acceptedPeakMs = report.source.frequencyMatch.acceptedPresent ? frequencyAccepted.peakMs : 0UL;
+        report.source.frequencyMatch.acceptedReleaseMs = report.source.frequencyMatch.acceptedPresent ? frequencyAccepted.endMs : 0UL;
+        report.source.frequencyMatch.acceptedDurationMs = report.source.frequencyMatch.acceptedPresent ? frequencyAccepted.durationMs : 0UL;
+        report.source.frequencyMatch.acceptedStrength = report.source.frequencyMatch.acceptedPresent ? frequencyAccepted.strength : 0.0f;
+        report.source.frequencyMatch.acceptedScore = report.source.frequencyMatch.acceptedPresent ? frequencyDetail.accepted.score : 0.0f;
+        report.source.frequencyMatch.acceptedContrast = report.source.frequencyMatch.acceptedPresent ? frequencyDetail.accepted.contrast : 0.0f;
+    }
 
     bool hasCurrentSourceEvidence = false;
     if (runtimeDiag != nullptr) {
@@ -1998,6 +2024,96 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
         } else {
             report.source.frequencyMatch.detectionGateReason = "none";
         }
+    }
+    if (frequencyDetectorReportAvailable) {
+        report.source.frequencyMatch.scoreOkUpdates = frequencyDetail.aggregates.scoreOkCount;
+        report.source.frequencyMatch.contrastOkUpdates = frequencyDetail.aggregates.contrastOkCount;
+        report.source.frequencyMatch.bothOkUpdates = frequencyDetail.aggregates.bothOkCount;
+        report.source.frequencyMatch.matchFrames = frequencyDetail.aggregates.matchCount;
+        report.source.frequencyMatch.scoreThreshold = frequencyDetail.thresholds.scoreThreshold;
+        report.source.frequencyMatch.contrastThreshold = frequencyDetail.thresholds.contrastThreshold;
+        report.source.frequencyMatch.sourceOccurrenceEmitted = frequencyDetail.inspect.emitted;
+        report.source.frequencyMatch.runtimeOccurrenceReceived = report.source.frequencyMatch.sourceOccurrenceEmitted && runtimeReceivedOccurrence;
+        report.source.frequencyMatch.sourceLastRejectReason = analyzerTextOrFallback(frequencyDetail.inspect.rejectReason, "none");
+        report.source.frequencyMatch.selectedRejectGateReason = analyzerTextOrFallback(frequencyDetail.inspect.gateReason, "none");
+        report.source.frequencyMatch.fmOpened = frequencyDetail.inspect.opened;
+        report.source.frequencyMatch.fmReleased = frequencyDetail.inspect.released;
+        report.source.frequencyMatch.fmEmitted = frequencyDetail.inspect.emitted;
+        report.source.frequencyMatch.fmValidRelease = frequencyDetail.inspect.validRelease;
+        report.source.frequencyMatch.fmEmitAllowed = frequencyDetail.inspect.emitAllowed;
+        report.source.frequencyMatch.fmOpenMs = frequencyDetail.inspect.openMs;
+        report.source.frequencyMatch.fmPeakMs = frequencyDetail.inspect.peakMs;
+        report.source.frequencyMatch.fmReleaseMs = frequencyDetail.inspect.releaseMs;
+        report.source.frequencyMatch.fmDurationMs = frequencyDetail.inspect.durationMs;
+        report.source.frequencyMatch.fmMinDurationMs = frequencyDetectorReport.thresholds.minDurationMs;
+        report.source.frequencyMatch.fmMaxDurationMs = frequencyDetectorReport.thresholds.maxDurationMs;
+        report.source.frequencyMatch.diagFirstFrameMs = report.source.frequencyMatch.fmOpenMs;
+        report.source.frequencyMatch.diagLastFrameMs = report.source.frequencyMatch.fmReleased
+            ? report.source.frequencyMatch.fmReleaseMs
+            : report.source.frequencyMatch.fmPeakMs;
+        report.source.frequencyMatch.liveFreqReason = analyzerTextOrFallback(frequencyDetail.inspect.rejectReason, "none");
+        report.source.frequencyMatch.liveFreqState = analyzerTextOrFallback(frequencyDetail.inspect.candidateState, "none");
+        report.source.frequencyMatch.liveFreqReady = frequencyDetail.inspect.readyOk;
+        report.source.frequencyMatch.liveFreqGate = frequencyDetail.inspect.gateOpen;
+        report.source.frequencyMatch.sourceSummary.present = report.source.frequencyMatch.sourceSummary.present || frequencySelectedReject.present;
+        report.source.frequencyMatch.sourceSummary.candidateCount = frequencyDetectorReport.aggregates.rejectedCount;
+        report.source.frequencyMatch.sourceSummary.rejectCount = frequencyDetectorReport.aggregates.rejectedCount;
+        if (frequencySelectedReject.present) {
+            report.source.frequencyMatch.selectedRejectReason = analyzerTextOrFallback(frequencySelectedReject.detectorReason, "none");
+            report.source.frequencyMatch.sourceSummary.origin = "frequency_detector_report";
+            report.source.frequencyMatch.sourceSummary.bestDurationMs = frequencySelectedReject.durationMs;
+            report.source.frequencyMatch.sourceSummary.bestOpenMs = frequencySelectedReject.startMs;
+            report.source.frequencyMatch.sourceSummary.bestPeakMs = frequencySelectedReject.peakMs;
+            report.source.frequencyMatch.sourceSummary.bestLastMatchMs = frequencySelectedReject.endMs;
+            report.source.frequencyMatch.sourceSummary.bestCloseMs = frequencySelectedReject.endMs;
+            report.source.frequencyMatch.sourceSummary.bestPeakPrimary = frequencySelectedReject.strength;
+            report.source.frequencyMatch.sourceSummary.bestPeakSecondary = frequencyDetail.selectedReject.contrast;
+            report.source.frequencyMatch.sourceSummary.bestRejectReason = analyzerTextOrFallback(frequencySelectedReject.detectorReason, "none");
+        }
+        report.source.frequencyMatch.detectionGateBlocked = !frequencyDetail.inspect.gateOpen || !frequencyDetail.inspect.readyOk;
+        if (!frequencyDetail.inspect.readyOk) {
+            report.source.frequencyMatch.detectionGateReason = "not_ready";
+        } else if (!frequencyDetail.inspect.gateOpen) {
+            report.source.frequencyMatch.detectionGateReason =
+                report.source.frequencyMatch.selectedRejectGateReason != nullptr && report.source.frequencyMatch.selectedRejectGateReason[0] != '\0'
+                    ? report.source.frequencyMatch.selectedRejectGateReason
+                    : "unknown";
+        } else {
+            report.source.frequencyMatch.detectionGateReason = "none";
+        }
+
+        const float targetScoreThreshold = report.source.frequencyMatch.scoreThreshold > 0.0f
+            ? report.source.frequencyMatch.scoreThreshold
+            : 0.0f;
+        const float targetPartialThreshold = targetScoreThreshold > 0.0f
+            ? targetScoreThreshold * 0.75f
+            : 0.0f;
+        const float targetNoiseFloor = targetScoreThreshold > 0.0f
+            ? targetScoreThreshold * 0.15f
+            : 0.0f;
+        report.source.frequencyMatch.targetPresent = report.source.frequencyMatch.matchFrames > 0
+            || report.source.frequencyMatch.fmOpened
+            || report.source.frequencyMatch.fmEmitted;
+        report.source.frequencyMatch.weakTarget = !report.source.frequencyMatch.targetPresent
+            && report.source.frequencyMatch.maxScore > targetNoiseFloor
+            && report.source.frequencyMatch.maxScore < targetPartialThreshold;
+        const bool targetPartial = !report.source.frequencyMatch.targetPresent
+            && report.source.frequencyMatch.maxScore >= targetPartialThreshold
+            && report.source.frequencyMatch.maxScore < targetScoreThreshold;
+        report.source.frequencyMatch.noTarget = !report.source.frequencyMatch.targetPresent
+            && !targetPartial
+            && !report.source.frequencyMatch.weakTarget;
+        if (report.source.frequencyMatch.targetPresent) {
+            report.source.frequencyMatch.targetEvidenceClass = "present";
+        } else if (targetPartial) {
+            report.source.frequencyMatch.targetEvidenceClass = "partial";
+        } else if (report.source.frequencyMatch.weakTarget) {
+            report.source.frequencyMatch.targetEvidenceClass = "weak";
+        } else {
+            report.source.frequencyMatch.targetEvidenceClass = "none";
+        }
+
+        hasCurrentSourceEvidence = report.source.frequencyMatch.acceptedPresent || report.source.frequencyMatch.sourceSummary.present;
     }
     report.source.frequencyMatch.inconsistent = report.classification.result == AnalyzerResult::Miss && report.source.frequencyMatch.acceptedPresent;
     if (report.source.frequencyMatch.analyzerMissReason == nullptr || report.source.frequencyMatch.analyzerMissReason[0] == '\0') {

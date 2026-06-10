@@ -1,1609 +1,1511 @@
-# Detection Refactor Passes I–N, updated with M2
+# Detection Refactor Roadmap — Passes O to S
 
-Status: planning / Codex instruction bundle  
+Status: implementation roadmap / Codex pass sequence  
 Scope: ResonantNode / Resonanzraum Detection Refactor  
-Position: after scalar path cleanup through Pass H2  
-Primary goal: migrate FrequencyMatch into the canonical detector contract, add canonical analyzer/report access, and inspect `Occurrence` payload policy before any payload trimming
+Position: after Pass N2  
+Purpose: legacy quarantine, PatternMatcher boundary cleanup, payload trimming, routing-name cleanup, and final legacy deletion
 
 ---
 
-## Preconditions before starting Pass I
+## Starting assumption
 
-Start this bundle only after Pass H2 has concluded that the scalar path is clean enough.
-
-Required H2 outcome:
+Passes through N2 have landed or are sufficiently complete:
 
 ```text
-ScalarOccurrenceSource is deleted, unused, shell-only, delegating-only,
-or remains only for clearly documented routing/build compatibility.
+- scalar detector report path exists
+- frequency detector report path exists
+- Analyzer scalar/frequency bridges read DetectorReport where possible
+- canonical SEQ_INSPECT exists or is scaffolded
+- Analyzer trial truth is moving toward PatternResult + DetectorReport + expected window
+- frequency accepted Occurrence emission has moved toward FrequencyMatchDetector
+- Occurrence payload inventory exists
+- generic DetectorReport access exists
+- Analyzer run summary is split into legacy and clean paths
 ```
 
-Do not start Pass I if:
-
-```text
-ScalarOccurrenceSource still owns meaningful scalar runtime behavior.
-```
-
-If it does, do:
-
-```text
-Pass H3 — Finish ScalarOccurrenceSource Runtime Cleanup
-```
-
-before starting this bundle.
+If any of these are false, do not blindly continue. Add a small blocker pass before O.
 
 ---
 
-## Global rules for Passes I–N
-
-Preserve these rules across all passes:
+## Global rules for O–S
 
 ```text
 - Runtime behavior change: expected none.
 - No threshold/profile/timing tuning.
-- No forced IDetector / type-erased feature input.
-- Detector input/update internals may remain specialized.
-- Detector outward contract should converge on:
-  DetectorId
-  DetectorDescriptor
-  Occurrence
-  DetectorReport
-  RejectedCandidateSummary
-  DetectorRejectClass
-- DetectionRuntime coordinates; detectors own detector truth.
-- DetectionDiagnostics is legacy compatibility, not canonical truth.
-- Analyzer legacy output stays stable until a pass explicitly changes/extends output.
+- No detector behavior changes.
+- No Analyzer classification changes unless explicitly scoped and backed by canonical facts.
+- No broad rewrite.
+- Compile after every implementation pass.
+- Commit after every pass.
+- Prefer small safe moves over heroic deletion.
+- Compatibility code may remain, but must be named as legacy/compat.
 ```
 
-Important `Occurrence` policy for all passes in this bundle:
-
-```text
-Occurrence currently contains generic accepted-event core plus transitional typed accepted-event detail.
-That is acceptable for now because Inspector / PatternAssembler / PatternRules still consume those fields.
-Do not trim Occurrence in Passes I–N.
-Do not widen Occurrence with detector diagnostics.
-Occurrence payload cleanup is deferred until after PatternMatcher / PatternResult cleanup.
-```
-
-Commit after every pass.
-
-Each pass should end with:
+Standard implementation checkpoint:
 
 ```bash
 platformio run -e esp32dev-analyzer
 git status
 git diff --stat
+```
+
+Standard commit pattern:
+
+```bash
 git add <changed files>
-git commit -m "<commit message>"
-```
-
-If the pass is docs-only, compile is optional unless code/comments/includes changed.
-
----
-
-# Pass I — Begin FrequencyMatch DetectorReport Migration
-
-## Goal
-
-Create the first `FrequencyMatchDetector` canonical `DetectorReport` path.
-
-Target direction:
-
-```text
-FrequencyMatchDetector::buildReport(...)
--> DetectionRuntime snapshots frequency report
--> DetectionDiagnostics compatibility copy remains active
--> Analyzer legacy output unchanged
-```
-
-Do not try to complete all frequency migration in one pass.
-
-## Required input docs
-
-```text
-docs/scalar_occurrence_source_cleanup.md
-docs/scalar_occurrence_emission_migration.md
-docs/g2abc_checkpoint_before_pass_h.md
-docs/detection_contract_decisions.md
-docs/detection_minimal_contracts.md
-docs/detection_contract_name_mapping.md
-docs/detection_contract_trim_inventory.md
-docs/detection_diagnostics_containment.md
-docs/detector_report_scalar_path.md
-docs/analyzer_scalar_report_bridge.md
-docs/scalar_report_detector_core_migration.md
-docs/generic_detector_report_refresh_boundary.md
-docs/implementation-status.md
-docs/roadmaps/roadmap_detection.md
-```
-
-## Tasks
-
-1. Inspect the current frequency diagnostic path:
-
-```text
-FrequencyMatchDetector
-FrequencyOccurrenceSource
-DetectionRuntime
-DetectionDiagnostics.frequency*
-AnalyzerFrequencyDiagnostic
-AnalyzerSourceStageReport
-AnalyzerLegacyReporting
-```
-
-2. Add minimal frequency report detail to `DetectorReport`.
-
-Recommended first fields:
-
-```text
-detectorId = FrequencyMatch
-reportStartMs / reportEndMs if available
-acceptedPresent
-accepted timing / strength / score / contrast
-selectedRejectPresent
-selectedReject
-frequency detail:
-  scoreThreshold
-  contrastThreshold
-  rejectReason
-  noEmitReason
-  gateReason
-  candidateState
-  readyOk
-  gateOpen
-  opened / released / emitted / validRelease / emitAllowed
-  openMs / peakMs / releaseMs / durationMs
-  minDurationMs / maxDurationMs
-  score-ok / contrast-ok / both-ok / match counters if already available
-```
-
-3. Add detector-owned report production:
-
-```cpp
-void FrequencyMatchDetector::buildReport(DetectorReport& out) const;
-```
-
-or equivalent.
-
-4. Populate `RejectedCandidateSummary` for the selected frequency reject where data is available.
-
-5. Keep `DetectionDiagnostics` alive as compatibility copy.
-
-6. Do not migrate frequency accepted `Occurrence` emission unless it is trivial and clearly isolated.
-
-7. Keep Analyzer frequency output stable.
-
-## Do not do
-
-```text
-- no full FrequencyOccurrenceSource deletion
-- no frequency accepted occurrence-emission migration unless trivial
-- no Analyzer output redesign
-- no DetectionDiagnostics deletion
-- no generic DetectorReport access redesign
-- no OccurrenceSourceKind redesign
-- no scalar path cleanup
-- no Occurrence trimming
-- no tuning
-```
-
-## Required doc
-
-Create:
-
-```text
-docs/frequency_detector_report_migration.md
-```
-
-Required sections:
-
-```text
-# Frequency DetectorReport Migration
-## Purpose
-## Starting Legacy Frequency Path
-## Scalar Reference Pattern
-## New Frequency Report Path Added
-## FrequencyMatchDetector Report Ownership
-## DetectorReport Fields Populated
-## RejectedCandidateSummary Mapping
-## Fields Deferred to Later Frequency Detail Expansion
-## DetectionDiagnostics Compatibility
-## Analyzer Compatibility
-## FrequencyOccurrenceSource Status
-## What Did Not Change
-## Remaining Temporary Bridges
-## Recommended Next Pass
-```
-
-## Expected report
-
-```text
-Files created
-Files updated
-Frequency DetectorReport producer location
-DetectorReport frequency fields added/populated
-RejectedCandidateSummary frequency fields populated
-Which frequency fields remain legacy-only
-Whether DetectionRuntime assembles any frequency-specific report truth
-Whether DetectionDiagnostics still works
-Whether Analyzer frequency output changed
-Whether FrequencyOccurrenceSource still owns accepted occurrence emission
-Whether scalar path changed
-Compile result
-Runtime sanity result if run
-Recommended next pass
-```
-
-## Commit instructions
-
-```bash
-platformio run -e esp32dev-analyzer
-git status
-git diff --stat
-git add src/detection src/modes/analyzer docs
-git commit -m "DetectionCleanup [I] add FrequencyMatch detector report path"
-```
-
-If only partial report scaffolding landed, use:
-
-```bash
-git commit -m "DetectionCleanup [I] scaffold FrequencyMatch detector report path"
+git commit -m "DetectionCleanup [PASS] <short description>"
 ```
 
 ---
 
-# Pass J — Bridge Legacy Analyzer Frequency Output from DetectorReport
+# Pass O — Contain / Retire DetectionDiagnostics and Legacy Diagnostic Paths
 
 ## Goal
 
-Make Analyzer frequency report synthesis read overlapping frequency detector-truth fields from `DetectorReport`, while keeping legacy SEQ output stable.
+Find legacy diagnostic/reporting structures, exclude them from clean paths, trim safe legacy, and quarantine remaining compatibility code.
 
-Target bridge:
-
-```text
-Frequency DetectorReport
--> AnalyzerApp::buildSequenceAnalyzerReport()
--> AnalyzerFrequencyDiagnostic / AnalyzerSourceStageReport
--> AnalyzerLegacyReporting unchanged
-```
-
-## Preconditions
-
-Start only after Pass I has established a frequency `DetectorReport`.
-
-## Tasks
-
-1. Inspect frequency Analyzer synthesis in:
+Priority order:
 
 ```text
-AnalyzerApp.cpp
-AnalyzerLegacyReporting.h
-AnalyzerLegacyReporting.cpp
-AnalyzerSequenceSession.cpp
-AnalyzerSequenceHelpers.cpp
+1. Find legacy things to exclude from the new clean paths.
+2. Trim legacy where safe.
+3. Quarantine hard, preferably by moving legacy-only code to explicit legacy/compat files.
 ```
 
-2. Replace exact overlapping frequency fields with values from `FrequencyMatchDetector` `DetectorReport`.
-
-Good candidates:
-
-```text
-acceptedPresent
-accepted timing / duration / strength
-accepted score / contrast
-frequency lifecycle state
-frequency gate/reject/no-emit reason
-thresholds
-selected reject summary
-basic frequency counters already in DetectorReport
-```
-
-3. Keep `DetectionDiagnostics` fallback for fields not represented in `DetectorReport`.
-
-4. Keep printed legacy SEQ output stable.
-
-5. Do not redesign `SEQ_INSPECT` yet.
-
-## Do not do
-
-```text
-- no Analyzer output format redesign
-- no canonical SEQ_INSPECT yet
-- no DetectionDiagnostics deletion
-- no FrequencyOccurrenceSource deletion
-- no frequency occurrence-emission migration
-- no scalar refactor
-- no Occurrence trimming
-- no tuning
-```
-
-## Required doc
-
-Create:
-
-```text
-docs/analyzer_frequency_report_bridge.md
-```
-
-Required sections:
-
-```text
-# Analyzer Frequency Report Bridge
-## Purpose
-## Previous Frequency Analyzer Source
-## New Frequency Analyzer Source
-## Fields Now Populated from DetectorReport
-## Fields Still Populated from DetectionDiagnostics
-## Legacy Output Compatibility
-## What Did Not Change
-## Remaining Gaps
-## Recommended Next Pass
-```
-
-## Expected report
-
-```text
-Files created
-Files updated
-Analyzer frequency fields now sourced from DetectorReport
-Analyzer frequency fields still sourced from DetectionDiagnostics
-Whether output text changed
-Whether frequency occurrence emission changed
-Whether scalar path changed
-Compile result
-Runtime sanity result if run
-Recommended next pass
-```
-
-## Commit instructions
-
-```bash
-platformio run -e esp32dev-analyzer
-git status
-git diff --stat
-git add src/modes/analyzer src/detection docs
-git commit -m "DetectionCleanup [J] bridge analyzer frequency output from DetectorReport"
-```
+Pass O is not a heroic deletion pass. It is a boundary-hardening pass.
 
 ---
 
-# Pass K — Add Canonical SEQ_INSPECT from DetectorReport
+## Clean path after O
 
-## Goal
-
-Add a canonical inspect output that reads from the canonical contracts instead of legacy diagnostic dumps.
-
-Target source model:
+Clean canonical code should flow through:
 
 ```text
 DetectorReport
 RejectedCandidateSummary
-PatternResult summary
-Analyzer expected window
-```
-
-Keep legacy SEQ output alive.
-
-This pass should add or stage canonical inspect output, not delete existing output.
-
-## Tasks
-
-1. Inspect current inspect/explain output:
-
-```text
-AnalyzerLegacyReporting.cpp
-AnalyzerLegacyReporting.h
-AnalyzerSequenceSession.cpp
-AnalyzerSequenceHelpers.cpp
-AnalyzerApp.cpp
-```
-
-2. Define canonical `SEQ_INSPECT` content based on:
-
-```text
-DetectorReport:
-  detectorId
-  acceptedPresent
-  accepted timing / strength / confidence
-  selectedReject
-  detector-specific detail namespace
-
-RejectedCandidateSummary:
-  rejectClass
-  detectorReason
-  timing / duration / strength
-
-PatternResult:
-  valid / matched / reason / confidence / pattern type
-
-Analyzer expected window:
-  trial id
-  expected start/end
-  dt classification if already available
-```
-
-3. Keep detector-specific details namespaced:
-
-```text
-detail.scalar.*
-detail.frequency.*
-```
-
-4. Add the new canonical output behind a safe mode/flag/name.
-
-Suggested names:
-
-```text
-SEQ_INSPECT
-SEQ_INSPECT_CANONICAL
-SEQ_EXPLAIN_CANONICAL
-```
-
-Choose the least disruptive option based on current mode names.
-
-5. Do not remove old output.
-
-## Do not do
-
-```text
-- no legacy output deletion
-- no Analyzer trial classification rewrite
-- no PatternResult trimming
-- no Occurrence trimming
-- no DetectionDiagnostics deletion
-- no tuning
-```
-
-## Required doc
-
-Create:
-
-```text
-docs/canonical_seq_inspect.md
-```
-
-Required sections:
-
-```text
-# Canonical SEQ_INSPECT
-## Purpose
-## Source Contracts
-## Output Shape
-## DetectorReport Fields Used
-## RejectedCandidateSummary Fields Used
-## PatternResult Fields Used
-## Legacy Output Compatibility
-## Scalar Coverage
-## Frequency Coverage
-## Remaining Gaps
-## Recommended Next Pass
-```
-
-## Expected report
-
-```text
-Files created
-Files updated
-New SEQ inspect mode/name
-Fields included
-Source contracts used
-Legacy output status
-DetectionDiagnostics dependency remaining
-Scalar coverage
-Frequency coverage
-Compile result
-Runtime sanity result if run
-Recommended next pass
-```
-
-## Commit instructions
-
-```bash
-platformio run -e esp32dev-analyzer
-git status
-git diff --stat
-git add src/modes/analyzer src/detection docs
-git commit -m "DetectionCleanup [K] add canonical SEQ inspect from DetectorReport"
-```
-
----
-
-# Pass L — Move Analyzer Trial Truth to PatternResult + DetectorReport
-
-## Goal
-
-Move `AnalyzerReport` trial classification toward canonical inputs:
-
-```text
-expected window
 PatternResult
-DetectorReport
+AnalyzerReport canonical inputs
+canonical SEQ_INSPECT
+clean SEQ_SUMMARY
 ```
 
-and away from reconstructed legacy detector/source dumps.
-
-This pass should reduce Analyzer dependency on `DetectionDiagnostics` for trial truth.
-
-## Tasks
-
-1. Inspect current trial classification path:
-
-```text
-AnalyzerApp::buildSequenceAnalyzerReport(...)
-AnalyzerClassifier
-AnalyzerReport
-AnalyzerSequenceSession
-AnalyzerLegacyReporting
-```
-
-2. Identify which Analyzer decisions still use:
+Clean canonical code should not read:
 
 ```text
 DetectionDiagnostics
-AnalyzerSourceStageReport
 AnalyzerScalarDiagnostic
 AnalyzerFrequencyDiagnostic
-legacy source summary fields
+AnalyzerSourceStageReport
+SourceCandidateSummary
+SourceCandidateSnapshot
+AnalyzerLegacyReporting structs
+legacy near-miss wording
+legacy source summary aggregates
 ```
 
-3. Replace trial classification inputs where safe with:
+Allowed direction:
 
 ```text
-PatternResult
-DetectorReport
-expected window
-runtime-private flags only where truly needed
+canonical -> legacy compatibility
 ```
 
-4. Keep legacy output structs as formatting compatibility if still needed.
-
-5. Keep printed output stable unless the pass explicitly adds a canonical output mode.
-
-## Do not do
+Forbidden direction:
 
 ```text
-- no output format redesign unless already staged in K
-- no DetectorReport field explosion
-- no PatternResult payload trim
-- no Occurrence trim
-- no FrequencyOccurrenceSource migration
-- no DetectionDiagnostics deletion yet
-- no tuning
-```
-
-## Required doc
-
-Create:
-
-```text
-docs/analyzer_trial_truth_canonical_inputs.md
-```
-
-Required sections:
-
-```text
-# Analyzer Trial Truth Canonical Inputs
-## Purpose
-## Previous Trial Truth Inputs
-## New Trial Truth Inputs
-## PatternResult Role
-## DetectorReport Role
-## Expected Window Role
-## DetectionDiagnostics Remaining Uses
-## Legacy Output Compatibility
-## What Did Not Change
-## Remaining Gaps
-## Recommended Next Pass
-```
-
-## Expected report
-
-```text
-Files created
-Files updated
-Analyzer classification fields moved to PatternResult / DetectorReport
-DetectionDiagnostics dependencies removed
-DetectionDiagnostics dependencies remaining
-Legacy output status
-Compile result
-Runtime sanity result if run
-Recommended next pass
-```
-
-## Commit instructions
-
-```bash
-platformio run -e esp32dev-analyzer
-git status
-git diff --stat
-git add src/modes/analyzer src/detection docs
-git commit -m "DetectionCleanup [L] move analyzer trial truth to canonical inputs"
+legacy diagnostics -> canonical detector/analyzer truth
 ```
 
 ---
-
-# Pass M — Frequency Occurrence Emission Migration
-
-## Goal
-
-Mirror the scalar occurrence-emission ownership cleanup for frequency.
-
-Target:
-
-```text
-FrequencyMatchDetector
--> pending accepted frequency Occurrence
--> FrequencyMatchDetector::popOccurrence(...)
--> DetectionRuntime drains Occurrence
--> Inspector / Pattern path unchanged
-```
-
-This should follow the scalar Pass H pattern.
-
-## Preconditions
-
-Start only after:
-
-```text
-- FrequencyMatchDetector has DetectorReport
-- Analyzer bridge is stable enough
-- canonical inspect/trial truth work did not reveal report blockers
-```
-
-## Tasks
-
-1. Inspect current frequency occurrence emission:
-
-```text
-FrequencyMatchDetector
-FrequencyOccurrenceSource
-Occurrence
-DetectionRuntime::drainOccurrenceSources(...)
-```
-
-2. Add detector-owned accepted frequency occurrence polling:
-
-```cpp
-bool FrequencyMatchDetector::popOccurrence(Occurrence& out);
-```
-
-or equivalent.
-
-3. Preserve current frequency `Occurrence` payload shape.
-
-4. Update `DetectionRuntime` frequency drain to use detector-owned occurrence.
-
-5. Keep `FrequencyOccurrenceSource` as a temporary shell only if needed.
-
-6. Keep Analyzer / Pattern unchanged.
-
-## Do not do
-
-```text
-- no Occurrence payload trimming
-- no PatternAssembler / PatternRules cleanup
-- no Analyzer output redesign
-- no DetectionDiagnostics deletion
-- no routing model redesign
-- no tuning
-```
-
-## Required doc
-
-Create:
-
-```text
-docs/frequency_occurrence_emission_migration.md
-```
-
-Required sections:
-
-```text
-# Frequency Occurrence Emission Migration
-## Purpose
-## Previous Frequency Occurrence Path
-## New Frequency Occurrence Path
-## FrequencyMatchDetector Ownership
-## FrequencyOccurrenceSource Status
-## DetectionRuntime Drain Path
-## Occurrence Payload Compatibility
-## DetectorReport Compatibility
-## Analyzer / Pattern Compatibility
-## What Did Not Change
-## Remaining Temporary Bridges
-## Recommended Next Pass
-```
-
-## Expected report
-
-```text
-Files created
-Files updated
-Where frequency Occurrence construction lived before
-Where frequency Occurrence construction lives after
-Whether FrequencyMatchDetector exposes popOccurrence
-Whether FrequencyOccurrenceSource remains
-Whether Occurrence payload changed
-Whether Analyzer output changed
-Whether Pattern stage changed
-Compile result
-Runtime sanity result if run
-Recommended next pass
-```
-
-## Commit instructions
-
-```bash
-platformio run -e esp32dev-analyzer
-git status
-git diff --stat
-git add src/detection src/modes/analyzer docs
-git commit -m "DetectionCleanup [M] move FrequencyMatch occurrence emission into detector"
-```
-
----
-
-# Pass M1 — Remove FrequencyOccurrenceSource Wrapper
-
-## Goal
-
-Remove the now-shell-only `FrequencyOccurrenceSource` wrapper after Pass M,
-mirroring the scalar wrapper cleanup path without changing frequency runtime
-behavior.
-
-Target:
-
-```text
-DetectionRuntime
--> owns/configures FrequencyMatchDetector directly
--> forwards fresh frequency evidence directly
--> drains detector-owned Occurrence directly
--> Analyzer / Pattern path unchanged
-```
-
-## Preconditions
-
-Start only after Pass M has landed and confirmed:
-
-```text
-- FrequencyMatchDetector owns pending accepted Occurrence state
-- FrequencyMatchDetector exposes popOccurrence(...)
-- FrequencyOccurrenceSource no longer owns accepted occurrence emission
-```
-
-## Tasks
-
-1. Move remaining wrapper duties into `DetectionRuntime`:
-
-```text
-FrequencyMatchConfig storage/use
-fresh-only gating
-detector update call assembly
-diagnostics enable/reset forwarding
-```
-
-2. Replace wrapper-oriented access with direct detector access.
-
-Suggested shape:
-
-```cpp
-FrequencyMatchDetector& frequencyDetector();
-const FrequencyMatchDetector& frequencyDetector() const;
-```
-
-or equivalent.
-
-3. Delete:
-
-```text
-src/detection/occurrences/FrequencyOccurrenceSource.h
-src/detection/occurrences/FrequencyOccurrenceSource.cpp
-```
-
-4. Keep runtime/analyzer behavior stable.
-
-## Do not do
-
-```text
-- no Occurrence payload trim
-- no Analyzer output redesign
-- no DetectionDiagnostics deletion
-- no profile/tuning changes
-- no OccurrenceSourceKind cleanup unless trivial
-```
-
-## Required doc
-
-Create:
-
-```text
-docs/frequency_occurrence_source_removal.md
-```
-
-Required sections:
-
-```text
-# FrequencyOccurrenceSource Removal
-## Purpose
-## Previous Shell-Only Wrapper Role
-## Responsibilities Moved Into DetectionRuntime
-## New Direct FrequencyMatchDetector Path
-## Accessor Changes
-## What Did Not Change
-## Remaining Routing Cleanup
-## Recommended Next Pass
-```
-
-## Commit instructions
-
-```bash
-platformio run -e esp32dev-analyzer
-git status
-git diff --stat
-git add src/detection src/modes/analyzer docs
-git commit -m "DetectionCleanup [M1] remove FrequencyOccurrenceSource wrapper"
-```
-
----
-
-# Pass M2 — Occurrence Payload Inventory / Accepted Detail Policy
-
-## Goal
-
-Inspect and document the current `Occurrence` payload after both scalar and frequency accepted occurrence emission have moved toward detector ownership.
-
-This is an inspection and policy pass.
-
-Do **not** trim `Occurrence` in M2.
-
-## Why M2 exists
-
-`Occurrence` still carries a lot of legacy typed accepted-event detail.
-
-That is acceptable for now because downstream stages still depend on it:
-
-```text
-Inspector
-PatternAssembler
-PatternRules
-PatternResult
-Analyzer legacy compatibility
-```
-
-But before later PatternMatcher / PatternResult cleanup, we need to know:
-
-```text
-What is generic accepted-event core?
-What is scalar accepted-event detail?
-What is frequency accepted-event detail?
-What is detector diagnostic leakage?
-What is only present because PatternAssembler / PatternRules still use it?
-```
-
-## Tasks
-
-1. Inspect:
-
-```text
-src/detection/occurrences/Occurrence.h
-src/detection/occurrences/InspectedOccurrence.h
-src/detection/inspector/OccurrenceInspector.*
-src/detection/patterns/PatternAssembler.*
-src/detection/patterns/PatternRules.*
-src/detection/patterns/PatternResult.h
-src/detection/DetectorReport.h
-src/detection/detectors/ScalarTransientDetector.*
-src/detection/detectors/FrequencyMatchDetector.*
-src/modes/analyzer/*
-```
-
-2. Classify every important `Occurrence` field into:
-
-```text
-GENERIC_ACCEPTED_CORE
-SCALAR_ACCEPTED_DETAIL
-FREQUENCY_ACCEPTED_DETAIL
-INSPECTOR_INPUT_DETAIL
-PATTERN_LEGACY_DETAIL
-ANALYZER_LEGACY_DETAIL
-MOVE_TO_DETECTOR_REPORT_LATER
-DELETE_LATER
-UNKNOWN
-```
-
-3. Check that `Occurrence` does not carry:
-
-```text
-selected rejects
-threshold dumps
-detector counters
-analyzer labels
-near-miss explanations
-full feature-history windows
-debug dumps
-```
-
-4. If it does, document the field and proposed later target.
-
-5. Do not move fields yet.
-
-## Required doc
-
-Create:
-
-```text
-docs/occurrence_payload_inventory.md
-```
-
-Required sections:
-
-```text
-# Occurrence Payload Inventory / Accepted Detail Policy
-## Purpose
-## Current Occurrence Role
-## Generic Accepted-Event Core
-## Scalar Accepted Detail
-## Frequency Accepted Detail
-## Inspector Dependencies
-## PatternAssembler / PatternRules Dependencies
-## Analyzer Legacy Dependencies
-## Fields That Belong in DetectorReport Later
-## Fields To Delete Later
-## Fields To Keep Until PatternMatcher Cleanup
-## Policy For Upcoming Passes
-## Recommended Next Pass
-```
-
-Policy section must state:
-
-```text
-Occurrence cleanup is deferred.
-Do not trim Occurrence before PatternMatcher / PatternResult cleanup.
-Do not add detector diagnostics to Occurrence.
-Preserve payload shape in detector migration passes.
-```
-
-## Expected report
-
-```text
-Files created
-Files updated
-Occurrence field classification summary
-Fields safe as generic core
-Fields typed accepted detail
-Fields tied to PatternAssembler / PatternRules
-Fields that belong in DetectorReport later
-Fields proposed for deletion later
-Whether code changed
-Compile result if code touched
-Recommended next pass
-```
-
-## Commit instructions
-
-If docs-only:
-
-```bash
-git status
-git diff --stat
-git add docs/occurrence_payload_inventory.md docs
-git commit -m "DetectionDocs [M2] inventory Occurrence payload policy"
-```
-
-If code comments were touched:
-
-```bash
-platformio run -e esp32dev-analyzer
-git status
-git diff --stat
-git add src/detection docs
-git commit -m "DetectionDocs [M2] document Occurrence payload policy"
-```
-
----
-
-# Pass N — Add Generic DetectorReport Access
-
-## Goal
-
-Replace scalar/frequency-specific report accessors with a generic report access shape, without forcing generic detector input/update.
-
-Target:
-
-```text
-DetectorReport access is generic.
-Detector input/update remains specialized.
-```
-
-Possible API:
-
-```cpp
-const DetectorReport* detectorReport(DetectorId id) const;
-const DetectorReport& activeDetectorReport() const;
-```
-
-or another low-risk equivalent.
-
-## Context
-
-Avoid the long-term pattern:
-
-```text
-scalarDetectorReport()
-frequencyDetectorReport()
-chirpDetectorReport()
-...
-```
-
-Scalar/frequency-specific accessors may remain temporarily as compatibility wrappers if needed.
-
-## Tasks
-
-1. Inspect current report access:
-
-```text
-DetectionRuntime
-AnalyzerApp
-AnalyzerLegacyReporting
-DetectorReport users
-```
-
-2. Add generic report access by `DetectorId` or active detector role.
-
-3. Refactor Analyzer and runtime call sites where low-risk.
-
-4. Keep scalar/frequency-specific accessors only as deprecated compatibility wrappers if needed.
-
-5. Do not introduce generic detector input/update interface.
-
-## Do not do
-
-```text
-- no forced IDetector
-- no type-erased feature input
-- no profile routing redesign unless trivial
-- no DetectionDiagnostics deletion
-- no output redesign
-- no Occurrence trimming
-- no tuning
-```
-
-## Required doc
-
-Create:
-
-```text
-docs/generic_detector_report_access.md
-```
-
-Required sections:
-
-```text
-# Generic DetectorReport Access
-## Purpose
-## Previous Report Access
-## New Report Access
-## DetectorId Mapping
-## Active Detector Report Access
-## Compatibility Accessors
-## Analyzer Call Sites Updated
-## What Did Not Change
-## Remaining Gaps
-## Recommended Next Pass
-```
-
-## Expected report
-
-```text
-Files created
-Files updated
-New generic report API
-Compatibility accessors remaining
-Call sites updated
-Call sites deferred
-Whether Analyzer still uses scalar/frequency-specific accessors
-Whether DetectionDiagnostics still depends on old access
-Compile result
-Runtime sanity result if run
-Recommended next pass
-```
-
-## Commit instructions
-
-```bash
-platformio run -e esp32dev-analyzer
-git status
-git diff --stat
-git add src/detection src/modes/analyzer docs
-git commit -m "DetectionCleanup [N] add generic DetectorReport access"
-```
-
----
-
-# Pass N2 - Split Analyzer Run Summary: Legacy vs Clean Summary Printer
-
-## Goal
-
-Pass N2 splits Analyzer run summary output into two explicit paths:
-
-```text
-LEGACY summary:
-  old/current run summary printer
-  renamed clearly as LEG / *_LEG / LEG*
-  may still read legacy diagnostics and old Analyzer structs
-
-CLEAN summary:
-  new summary printer
-  populated only from the new clean path:
-    DetectorReport
-    RejectedCandidateSummary
-    PatternResult
-    AnalyzerReport canonical classification facts
-```
-
-The goal is to avoid Pass O quarantining legacy diagnostics before summary
-dependencies are visible and separated.
-
-## Why this pass exists
-
-Run summary is aggregate output. It can quietly depend on old counters, legacy
-source summaries, old reason strings, and `DetectionDiagnostics`.
-
-Before Pass O moves or quarantines legacy diagnostics, we need:
-
-```text
-- the current summary path clearly marked as legacy
-- a new clean summary path that does not read legacy diagnostic structures
-- an explicit comparison point between legacy summary and clean summary
-```
-
-This prevents the new clean reporting path from inheriting old Analyzer /
-`DetectionDiagnostics` assumptions.
 
 ## Required input docs
 
-Read these before editing code:
+Read before editing:
 
 ```text
 docs/generic_detector_report_access.md
+docs/analyzer_run_summary_split.md
 docs/canonical_seq_inspect.md
 docs/analyzer_trial_truth_canonical_inputs.md
+docs/frequency_occurrence_emission_migration.md
 docs/occurrence_payload_inventory.md
-docs/frequency_detector_report_migration.md
-docs/analyzer_frequency_report_bridge.md
-docs/analyzer_scalar_report_bridge.md
 docs/detection_diagnostics_containment.md
+docs/analyzer_scalar_report_bridge.md
+docs/analyzer_frequency_report_bridge.md
 docs/detection_contract_decisions.md
 docs/detection_contract_name_mapping.md
 docs/implementation-status.md
 docs/roadmaps/roadmap_detection.md
 ```
 
-If some docs do not exist yet, continue with available docs and report missing
-docs.
+Continue if some docs are missing, but report missing docs.
 
-## Preconditions
+---
 
-Start this pass only after:
-
-```text
-- Analyzer has access to canonical DetectorReport data
-- PatternResult is available as canonical pattern fact source
-- Analyzer trial classification has at least a canonical direction
-- generic DetectorReport access exists or is explicitly available enough for Analyzer use
-```
-
-Do not start this pass if summary must still be built only from
-`DetectionDiagnostics`.
-
-## Target output modes / naming
-
-Rename the current summary command/printer/code path with explicit legacy
-naming.
-
-Acceptable naming:
+## Main code areas to inspect
 
 ```text
-SEQ_SUMMARY_LEG
-SEQ_LEG_SUMMARY
-LEG_SUMMARY
-AnalyzerLegacySummaryPrinter
-printLegacySummary(...)
+src/detection/DetectionRuntime.h
+src/detection/DetectionRuntime.cpp
+src/detection/DetectorReport.h
+src/detection/DetectorReject.h
+src/detection/occurrences/Occurrence.h
+src/detection/patterns/PatternResult.h
+
+src/modes/analyzer/AnalyzerApp.cpp
+src/modes/analyzer/AnalyzerReport.h
+src/modes/analyzer/AnalyzerLegacyReporting.h
+src/modes/analyzer/AnalyzerLegacyReporting.cpp
+src/modes/analyzer/AnalyzerSequenceSession.cpp
+src/modes/analyzer/AnalyzerSequenceHelpers.cpp
 ```
 
-Choose the naming style that best fits current command/mode conventions.
-
-The important rule:
-
-```text
-Current summary path must be visibly legacy in commands and code.
-```
-
-Add a new clean summary command/printer.
-
-Acceptable naming:
-
-```text
-SEQ_SUMMARY
-SEQ_SUMMARY_CLEAN
-AnalyzerSummaryPrinter
-printSummary(...)
-```
-
-Preferred if not too disruptive:
-
-```text
-SEQ_SUMMARY      = clean summary
-SEQ_SUMMARY_LEG  = old legacy summary
-```
-
-If changing the existing command name is too risky, use:
-
-```text
-SEQ_SUMMARY_LEG    = old legacy summary alias
-SEQ_SUMMARY_CLEAN  = new path
-```
-
-and document that default switching is deferred.
-
-## Clean summary data rule
-
-The new clean summary must be populated only from canonical facts:
-
-```text
-DetectorReport
-RejectedCandidateSummary
-PatternResult
-AnalyzerReport canonical classification
-expected trial/window facts
-```
-
-Allowed canonical facts:
-
-```text
-trial id
-profile / detector id
-expected window
-Analyzer result / classification
-Analyzer reason if canonical
-PatternResult valid / matched / rejected / reason
-PatternResult confidence / pattern type
-DetectorReport acceptedPresent
-DetectorReport accepted timing / strength / confidence
-DetectorReport selectedReject
-DetectorRejectClass
-DetectorId
-```
-
-Forbidden as input for the clean summary:
+Search terms:
 
 ```text
 DetectionDiagnostics
-SourceCandidateSummary
-SourceCandidateSnapshot
 AnalyzerScalarDiagnostic
 AnalyzerFrequencyDiagnostic
 AnalyzerSourceStageReport
 AnalyzerSourceCandidateSummary
 AnalyzerSourceCandidateSnapshot
-legacy source summary aggregates
-legacy near-miss wording
-wrapper-owned reject summaries
-old raw source counters unless they are now inside DetectorReport
+SourceCandidateSummary
+SourceCandidateSnapshot
+Legacy
+legacy
+diag
+summary
+near_miss
+sourceSummary
+sourceLastCandidate
 ```
 
-Legacy code may still use those.
+---
 
-Clean code must not.
+## Task O.1 — Inventory legacy carriers
 
-## Main tasks
-
-### 01. Inspect current summary path
-
-Inspect all current run summary / aggregate reporting code, likely including:
+Classify every relevant legacy carrier:
 
 ```text
-src/modes/analyzer/AnalyzerApp.cpp
-src/modes/analyzer/AnalyzerSequenceSession.cpp
-src/modes/analyzer/AnalyzerSequenceHelpers.cpp
-src/modes/analyzer/AnalyzerLegacyReporting.h
-src/modes/analyzer/AnalyzerLegacyReporting.cpp
-src/modes/analyzer/AnalyzerReport.h
-```
-
-Find:
-
-```text
-summary command names
-summary mode parsing
-summary printer function(s)
-summary aggregate data structures
-reason counters
-result counters
-miss/reject counters
-duplicate/unexpected counters
-detector/source aggregate counters
-output labels
-```
-
-Classify every data dependency:
-
-```text
-CANONICAL_SUMMARY_FACT
-LEGACY_SUMMARY_FACT
-RUNTIME_PRIVATE_COUNTER
-DELETE_IF_UNUSED
+CANONICAL_STILL_USED_BY_CLEAN_PATH
+LEGACY_OUTPUT_COMPATIBILITY_ONLY
+LEGACY_ANALYZER_FALLBACK
+RUNTIME_PRIVATE_DEBUG
+DELETE_NOW_IF_UNUSED
+MOVE_TO_LEGACY_FILE
+KEEP_TEMPORARILY_WITH_COMMENT
 UNKNOWN
 ```
 
-### 02. Rename current summary path as legacy
+Focus on structures and helpers, not every local variable.
 
-Rename current/current-old summary code path so it is unmistakably legacy.
+Expected output: a table in `docs/legacy_diagnostics_containment.md`.
 
-### 03. Add clean summary accumulator
+---
 
-Add a new clean summary accumulator or data model.
+## Task O.2 — Create hard exclusion list
 
-Suggested minimal shape:
-
-```cpp
-struct AnalyzerCleanSummary {
-  uint32_t trialCount;
-  uint32_t expectedCount;
-  uint32_t earlyCount;
-  uint32_t lateCount;
-  uint32_t missCount;
-  uint32_t duplicateCount;
-  uint32_t unexpectedCount;
-  uint32_t rejectedCount;
-  uint32_t ambiguousCount;
-  uint32_t tooDenseCount;
-
-  uint32_t acceptedDetectorCount;
-  uint32_t selectedRejectCount;
-  uint32_t validPatternCount;
-  uint32_t rejectedPatternCount;
-
-  float avgDtMs;
-  float avgConfidence;
-};
-```
-
-Keep it smaller if needed.
-
-Do not copy the entire legacy summary model.
-
-### 04. Populate clean summary only from canonical trial facts
-
-At the end of each trial, update clean summary from:
+Document and, where helpful, add comments that these must not be used by new clean paths:
 
 ```text
-AnalyzerReport canonical classification
-PatternResult
-DetectorReport / selected reject
-expected window
+DetectionDiagnostics
+AnalyzerScalarDiagnostic
+AnalyzerFrequencyDiagnostic
+AnalyzerSourceStageReport
+AnalyzerSourceCandidateSummary
+AnalyzerSourceCandidateSnapshot
+SourceCandidateSummary
+SourceCandidateSnapshot
+legacy source-summary aggregates
+legacy near-miss strings
+legacy wrapper-owned diagnostic fallbacks
 ```
 
-Do not read `DetectionDiagnostics`.
-
-### 05. Add clean summary printer
-
-Add a new printer for the clean summary.
-
-Recommended output shape:
+Allowed use:
 
 ```text
-SEQ_SUMMARY profile=<profile> detector=<detector>
-trials=<n> expected=<n> early=<n> late=<n> miss=<n>
-duplicate=<n> unexpected=<n> rejected=<n> ambiguous=<n> too_dense=<n>
-detector_accepted=<n> detector_rejects=<n>
-patterns_valid=<n> patterns_rejected=<n>
-avg_dt_ms=<x> avg_conf=<x>
+legacy formatting
+legacy summary
+compatibility adapters
+temporary comparison output
 ```
 
-Legacy summary should print with explicit legacy marker:
+Forbidden use:
 
 ```text
-SEQ_SUMMARY_LEG ...
+DetectorReport population from legacy analyzer structs
+Analyzer canonical classification from DetectionDiagnostics
+PatternResult payload from legacy diagnostics
+clean SEQ_SUMMARY from legacy diagnostics
 ```
 
-### 06. Keep old legacy summary working
+---
 
-Do not delete the old summary yet.
+## Task O.3 — Trim safe legacy
 
-### 07. Do not change Analyzer classification semantics
-
-This pass changes summary plumbing and output separation.
-
-It must not change:
+Delete only clearly safe things:
 
 ```text
-trial classification
+unused fields
+unused helper functions
+dead compatibility branches
+old aliases fully replaced by canonical names
+duplicate comments
+stale docs claiming DetectorReport is placeholder-only
+legacy fallback fields no longer read
+```
+
+Do not delete if still used by:
+
+```text
+SEQ_*_LEG output
+legacy summary
+comparison output
+runtime-private debug
+temporary adapter
+```
+
+---
+
+## Task O.4 — Quarantine remaining legacy
+
+Prefer explicit files or explicit namespaces.
+
+Possible files:
+
+```text
+src/modes/analyzer/AnalyzerLegacyTypes.h
+src/modes/analyzer/AnalyzerLegacyAdapters.h
+src/modes/analyzer/AnalyzerLegacyReporting.h
+src/detection/DetectionDiagnosticsLegacy.h
+src/detection/DetectionDiagnosticsCompat.h
+```
+
+Preferred direction:
+
+```text
+Analyzer legacy formatting stays in analyzer legacy files.
+Detection diagnostics compatibility structs move out of core runtime headers if safe.
+Runtime compatibility adapters live in compat helpers.
+Canonical headers avoid including legacy types.
+```
+
+If moving is too risky:
+
+```text
+- group legacy structs together
+- add hard comments
+- create the doc table
+- defer physical move to O2
+```
+
+---
+
+## Task O.5 — Add one-way compatibility adapters where useful
+
+Adapter direction should be:
+
+```text
+DetectorReport -> legacy AnalyzerScalarDiagnostic
+DetectorReport -> legacy AnalyzerFrequencyDiagnostic
+DetectorReport / RejectedCandidateSummary -> legacy source candidate summary
+PatternResult -> legacy output fields
+```
+
+Avoid:
+
+```text
+legacy -> DetectorReport
+legacy -> Analyzer canonical truth
+```
+
+If any legacy-to-canonical path remains, document as blocker.
+
+---
+
+## Task O.6 — Keep output stable
+
+Do not change:
+
+```text
+Analyzer classification
+canonical SEQ_INSPECT field semantics
+legacy SEQ output format
+clean summary semantics
 detector behavior
-pattern validity
-timing windows
-thresholds
-profile defaults
+pattern behavior
 Occurrence payload
 PatternResult payload
 ```
 
-### 08. Prepare Pass O
+Moving/renaming code is allowed if output stays the same.
 
-At the end of this pass, document exactly which legacy summary dependencies
-remain.
+---
 
-## Documentation tasks
+## Required documentation
 
 Create:
 
 ```text
-docs/analyzer_run_summary_split.md
+docs/legacy_diagnostics_containment.md
 ```
 
 Required sections:
 
 ```text
-# Analyzer Run Summary Split
+# Legacy Diagnostics Containment
+
 ## Purpose
-## Previous Summary Path
-## Legacy Summary Path
-## Clean Summary Path
-## Command / Mode Names
-## Clean Summary Input Facts
-## Forbidden Inputs For Clean Summary
-## Legacy Summary Dependencies Still Present
-## Clean Summary Fields Implemented
-## Clean Summary Fields Deferred
-## Compatibility / Aliases
+## Clean Canonical Path
+## Legacy Compatibility Path
+## Hard Exclusion List for New Clean Paths
+## Legacy Inventory Table
+## Items Trimmed in Pass O
+## Items Quarantined in Pass O
+## Items Still Legacy but Temporarily Kept
+## DetectionDiagnostics Status
+## AnalyzerLegacyReporting Status
+## Compatibility Adapter Direction
+## Canonical Code Still Depending on Legacy
+## Legacy Code Reading Canonical Data
 ## What Did Not Change
-## Pass O Implications
+## Remaining Blockers
 ## Recommended Next Pass
 ```
 
-Also update if meaningful:
+Update if meaningful:
 
 ```text
-docs/canonical_seq_inspect.md
-docs/analyzer_trial_truth_canonical_inputs.md
-docs/legacy_diagnostics_containment.md
+docs/detection_diagnostics_containment.md
+docs/detection_contract_name_mapping.md
+docs/detection_contract_decisions.md
 docs/implementation-status.md
-docs/current-pass.md
 docs/roadmaps/roadmap_detection.md
 ```
 
-If `docs/legacy_diagnostics_containment.md` does not exist yet, add a short
-note for Pass O instead of failing.
+---
 
-## Allowed code changes
+## Acceptance criteria
 
-Allowed:
-
-```text
-- rename old summary path to LEG / legacy
-- add legacy summary command alias if needed
-- add clean summary accumulator
-- add clean summary printer
-- populate clean summary from DetectorReport / PatternResult / AnalyzerReport
-- keep old summary alive
-- update docs
-```
-
-## Not allowed
-
-Do **not**:
+Pass O is accepted if:
 
 ```text
-- delete legacy summary
-- delete DetectionDiagnostics
-- redesign Analyzer classification
-- change detector behavior
-- change pattern behavior
-- trim Occurrence
-- trim PatternResult
-- internalize PatternAssembler / PatternRules
-- redesign command system broadly
-- tune thresholds/timing/profile values
+- legacy diagnostic/reporting structures are inventoried and classified
+- hard exclusion list exists
+- at least some safe trimming or quarantine happened, or blockers are explicit
+- remaining legacy code is marked compatibility-only
+- clean paths do not gain new legacy dependencies
+- adapter direction is canonical -> legacy where possible
+- no detector behavior changed
+- no Analyzer classification changed
+- no Occurrence / PatternResult trimming happened
+- build succeeds
 ```
 
-## Compile and test checkpoint
+---
 
-Run:
-
-```bash
-platformio run -e esp32dev-analyzer
-```
-
-If hardware is available, run a short Analyzer sequence and check:
-
-```text
-legacy summary still prints under LEG name
-clean summary prints under clean/new name
-clean summary does not require DetectionDiagnostics
-trial classification did not change
-```
-
-If no runtime test is run, state that clearly.
-
-## Expected output report
-
-After completing this pass, report:
+## Expected report
 
 ```text
 Files created
 Files updated
-Old summary command/name before
-Legacy summary command/name after
-New clean summary command/name
-Clean summary input sources
-Forbidden legacy inputs avoided
-Legacy summary dependencies still present
-Aliases kept, if any
-Whether default SEQ_SUMMARY changed
-Whether output text changed
-Whether Analyzer classification changed
-Whether detector behavior changed
-Whether Occurrence / PatternResult changed
-Path of docs/analyzer_run_summary_split.md
+Legacy things found and classified
+Hard exclusion list location
+Items deleted
+Items moved/quarantined
+Items still legacy but kept
+DetectionDiagnostics status
+AnalyzerLegacyReporting status
+Canonical code still reading legacy?
+Legacy code reading canonical?
+Adapter direction
+Output changes, if any
 Compile result
 Runtime sanity result if run
-Runtime behavior change: expected none
-Remaining blockers for Pass O
+Remaining blockers
 Recommended next pass
 ```
 
-## Acceptance criteria
-
-Pass N2 is accepted if:
-
-```text
-- current summary path is visibly renamed or marked as legacy in code/commands
-- a new clean summary path exists
-- clean summary is populated only from canonical facts
-- clean summary does not read DetectionDiagnostics or legacy Analyzer diagnostic structs
-- legacy summary still works
-- Analyzer classification is unchanged
-- detector behavior is unchanged
-- Occurrence / PatternResult payloads are unchanged
-- build succeeds
-```
+---
 
 ## Commit instructions
-
-After completing Pass N2:
 
 ```bash
 platformio run -e esp32dev-analyzer
 git status
 git diff --stat
-git add src/modes/analyzer src/detection docs
-git commit -m "DetectionCleanup [N2] split analyzer run summary paths"
+git add src/detection src/modes/analyzer docs
+git commit -m "DetectionCleanup [O] contain legacy diagnostics"
 ```
 
-If this pass is mostly command/printer naming:
+If mostly docs/inventory:
 
 ```bash
-git commit -m "AnalyzerCleanup [N2] mark legacy run summary and add clean summary"
+git commit -m "DetectionDocs [O] inventory legacy diagnostics containment"
 ```
 
-If the clean summary is scaffold-only:
+If significant moves:
 
 ```bash
-git commit -m "AnalyzerCleanup [N2] scaffold clean analyzer run summary"
+git commit -m "DetectionCleanup [O] quarantine legacy diagnostics"
 ```
 
 ---
 
-# Expected roadmap after Pass N2
+# Pass O2 — Legacy Diagnostics Follow-up, if needed
 
-After Pass N2, the likely next passes are:
+## When to run O2
+
+Run O2 only if Pass O reports one of these blockers:
 
 ```text
-Pass O — Contain / Retire DetectionDiagnostics
-Pass P — Internalize PatternAssembler / PatternRules behind PatternMatcher
-Pass Q — Trim PatternResult / Occurrence Payloads
-Pass R — Clean Profile Routing Names
-Pass S — Remove Legacy Sediment
+- legacy code could not be moved safely
+- canonical paths still read DetectionDiagnostics
+- Analyzer canonical truth still reads legacy structs
+- compatibility adapters could not be one-way
+- legacy types are still included by central canonical headers
 ```
 
-Do not start those until Pass N result is reviewed.
+Skip O2 if O fully quarantined legacy diagnostics.
+
+---
+
+## Goal
+
+Finish the specific legacy-containment blocker from O.
+
+O2 should be narrow. Do not repeat the full O inventory.
+
+---
+
+## Possible O2 scopes
+
+Pick one scope based on O result.
+
+### O2a — Move legacy diagnostics to compatibility files
+
+```text
+- Move legacy diagnostic structs/helpers into explicit legacy/compat files.
+- Fix includes.
+- Keep behavior/output stable.
+```
+
+Possible target files:
+
+```text
+src/detection/DetectionDiagnosticsCompat.h
+src/modes/analyzer/AnalyzerLegacyTypes.h
+src/modes/analyzer/AnalyzerLegacyAdapters.h
+```
+
+### O2b — Remove canonical dependencies on legacy diagnostics
+
+```text
+- Replace remaining canonical reads of DetectionDiagnostics with DetectorReport / PatternResult.
+- Keep legacy adapters reading canonical data.
+```
+
+### O2c — Convert legacy-to-canonical paths into canonical-to-legacy adapters
+
+```text
+- Invert remaining dependency direction.
+- Legacy output can read canonical data.
+- Canonical data cannot be derived from legacy structs.
+```
+
+---
+
+## Required documentation
+
+Update:
+
+```text
+docs/legacy_diagnostics_containment.md
+docs/implementation-status.md
+```
+
+Add a short section:
+
+```text
+## Pass O2 Follow-up
+```
+
+Document:
+
+```text
+blocker from O
+what was moved / changed
+what remains
+whether O2 is now complete
+```
+
+---
+
+## Acceptance criteria
+
+```text
+- the specific O blocker is resolved or reduced
+- no broad unrelated cleanup
+- no output behavior change unless documented
+- no detector behavior change
+- build succeeds
+```
+
+---
+
+## Commit instructions
+
+```bash
+platformio run -e esp32dev-analyzer
+git status
+git diff --stat
+git add src/detection src/modes/analyzer docs
+git commit -m "DetectionCleanup [O2] finish legacy diagnostics quarantine"
+```
+
+---
+
+# Pass P — PatternMatcher Boundary / Internalize PatternAssembler + PatternRules
+
+## Goal
+
+Make `PatternMatcher` the public pattern-stage boundary.
+
+Target public shape:
+
+```text
+InspectedOccurrence
+-> PatternMatcher
+-> PatternResult
+```
+
+Internal helpers may remain:
+
+```text
+PatternAssembler
+PatternRules
+PatternCandidate
+```
+
+but they should no longer be the public conceptual boundary.
+
+---
+
+## Why this pass comes after O
+
+After O, legacy analyzer/diagnostic structures should no longer drive clean paths.
+
+Now we can clean the pattern boundary without dragging old source/analyzer diagnostics along.
+
+---
+
+## Required input docs
+
+```text
+docs/occurrence_payload_inventory.md
+docs/legacy_diagnostics_containment.md
+docs/analyzer_trial_truth_canonical_inputs.md
+docs/canonical_seq_inspect.md
+docs/detection_contract_decisions.md
+docs/detection_contract_name_mapping.md
+docs/implementation-status.md
+```
+
+---
+
+## Main code areas
+
+```text
+src/detection/patterns/PatternAssembler.h
+src/detection/patterns/PatternAssembler.cpp
+src/detection/patterns/PatternRules.h
+src/detection/patterns/PatternRules.cpp
+src/detection/patterns/PatternResult.h
+src/detection/patterns/PatternCandidate.h
+src/detection/patterns/PatternMatcher.h
+src/detection/patterns/PatternMatcher.cpp
+src/detection/DetectionRuntime.cpp
+src/modes/analyzer/AnalyzerApp.cpp
+```
+
+If `PatternMatcher` does not exist, create the thinnest possible wrapper first.
+
+---
+
+## Task P.1 — Identify current public pattern API
+
+Find all external code calling or depending on:
+
+```text
+PatternAssembler
+PatternRules
+PatternCandidate
+PatternResult internals
+```
+
+Classify use sites:
+
+```text
+PUBLIC_BOUNDARY_USE
+INTERNAL_PATTERN_HELPER_USE
+ANALYZER_FORMATTING_USE
+LEGACY_COMPAT_USE
+DELETE_LATER
+UNKNOWN
+```
+
+---
+
+## Task P.2 — Introduce or strengthen PatternMatcher
+
+Target minimal public API:
+
+```cpp
+class PatternMatcher {
+public:
+  void reset();
+  PatternResult update(const InspectedOccurrence& occurrence);
+  PatternResult latestResult() const;
+};
+```
+
+Adapt to existing code style.
+
+If current flow needs a batch/drain model, keep existing runtime semantics.
+
+Important: do not redesign pattern logic yet.
+
+---
+
+## Task P.3 — Move PatternAssembler / PatternRules behind PatternMatcher
+
+Preferred direction:
+
+```text
+DetectionRuntime calls PatternMatcher.
+PatternMatcher internally uses PatternAssembler / PatternRules.
+Analyzer reads PatternResult, not PatternAssembler / PatternRules internals.
+```
+
+Allowed intermediate state:
+
+```text
+PatternMatcher is a thin façade over existing PatternAssembler + PatternRules.
+```
+
+Not allowed:
+
+```text
+broad rewrite of pattern semantics
+large PatternResult shape changes
+Occurrence trimming
+detector behavior changes
+```
+
+---
+
+## Task P.4 — Public naming cleanup
+
+Make docs and comments say:
+
+```text
+PatternMatcher is public pattern stage.
+PatternAssembler / PatternRules are internal implementation helpers.
+```
+
+Do not rename every file unless low-risk.
+
+---
+
+## Required documentation
+
+Create:
+
+```text
+docs/pattern_matcher_boundary.md
+```
+
+Required sections:
+
+```text
+# PatternMatcher Boundary
+
+## Purpose
+## Previous Public Pattern Path
+## New Public Pattern Path
+## PatternMatcher API
+## PatternAssembler Status
+## PatternRules Status
+## PatternResult Status
+## Analyzer Dependencies
+## DetectionRuntime Dependencies
+## What Did Not Change
+## Remaining Pattern Legacy
+## Recommended Next Pass
+```
+
+---
+
+## Acceptance criteria
+
+```text
+- PatternMatcher is the public pattern-stage API or façade
+- DetectionRuntime routes through PatternMatcher where possible
+- PatternAssembler / PatternRules are internal or documented as temporary internals
+- Analyzer does not depend on PatternAssembler / PatternRules internals for clean output
+- PatternResult payload is not broadly changed
+- Occurrence payload is not trimmed
+- build succeeds
+```
+
+---
+
+## Expected report
+
+```text
+Files created
+Files updated
+PatternMatcher API
+Runtime call path before/after
+PatternAssembler status
+PatternRules status
+Analyzer dependencies remaining
+PatternResult changes, if any
+Occurrence changes, if any
+Compile result
+Runtime sanity result if run
+Remaining blockers
+Recommended next pass
+```
+
+---
+
+## Commit instructions
+
+```bash
+platformio run -e esp32dev-analyzer
+git status
+git diff --stat
+git add src/detection src/modes/analyzer docs
+git commit -m "DetectionCleanup [P] introduce PatternMatcher boundary"
+```
+
+---
+
+# Pass Q — Trim PatternResult / Occurrence Payloads
+
+## Goal
+
+Remove lower-layer baggage from `PatternResult` and `Occurrence` after detector ownership and PatternMatcher boundary are clear.
+
+This is the first pass where actual payload trimming is allowed.
+
+---
+
+## Preconditions
+
+Start Q only if all are true:
+
+```text
+- scalar emits Occurrence from ScalarTransientDetector
+- frequency emits Occurrence from FrequencyMatchDetector
+- Analyzer trial truth uses PatternResult + DetectorReport + expected window
+- clean SEQ_INSPECT and clean summary exist
+- DetectionDiagnostics is compatibility-only or quarantined
+- PatternMatcher is the public pattern boundary
+- docs/occurrence_payload_inventory.md exists
+```
+
+If any are false, add a blocker pass before Q.
+
+---
+
+## Target conceptual split
+
+`Occurrence` should move toward:
+
+```text
+generic accepted-event core:
+  detectorId / provenance
+  occurrence type
+  timing
+  duration
+  strength
+  confidence
+
+typed accepted detail:
+  scalar detail
+  frequency detail
+  other detector-specific accepted-event detail if truly needed
+
+not in Occurrence:
+  selected rejects
+  thresholds
+  detector counters
+  analyzer labels
+  near-miss explanations
+  debug dumps
+```
+
+`PatternResult` should move toward:
+
+```text
+pattern-level facts:
+  pattern type
+  valid/matched/rejected
+  reason
+  timing
+  confidence
+  referenced occurrence ids or compact occurrence facts
+  support class needed by behavior
+
+not in PatternResult:
+  detector thresholds
+  detector counters
+  selected rejects
+  Analyzer diagnostic payload
+  raw feature/debug dumps
+```
+
+---
+
+## Main code areas
+
+```text
+src/detection/occurrences/Occurrence.h
+src/detection/occurrences/InspectedOccurrence.h
+src/detection/inspector/*
+src/detection/patterns/PatternMatcher.*
+src/detection/patterns/PatternAssembler.*
+src/detection/patterns/PatternRules.*
+src/detection/patterns/PatternResult.h
+src/detection/DetectorReport.h
+src/modes/analyzer/*
+```
+
+---
+
+## Task Q.1 — Use M2 inventory
+
+Open:
+
+```text
+docs/occurrence_payload_inventory.md
+```
+
+For each field marked:
+
+```text
+MOVE_TO_DETECTOR_REPORT_LATER
+DELETE_LATER
+PATTERN_LEGACY_DETAIL
+ANALYZER_LEGACY_DETAIL
+```
+
+decide:
+
+```text
+MOVE_NOW
+DELETE_NOW
+KEEP_UNTIL_Q2
+KEEP_WITH_COMMENT
+UNKNOWN
+```
+
+---
+
+## Task Q.2 — Trim PatternResult first
+
+PatternResult is usually safer to trim before Occurrence if Analyzer now reads DetectorReport.
+
+Remove or move fields that are actually detector diagnostics.
+
+Detector facts should live in:
+
+```text
+DetectorReport
+RejectedCandidateSummary
+```
+
+Pattern facts should remain in:
+
+```text
+PatternResult
+```
+
+---
+
+## Task Q.3 — Trim Occurrence only where safe
+
+Do not aggressively split types unless needed.
+
+Safe cleanup candidates:
+
+```text
+fields no longer read
+fields duplicated in DetectorReport and not needed downstream
+legacy analyzer-only fields
+wrapper-era source fields
+debug counters
+```
+
+Keep temporarily:
+
+```text
+fields used by Inspector
+fields used by PatternMatcher internals
+typed accepted detail needed for pattern support decisions
+```
+
+---
+
+## Task Q.4 — Preserve behavior-facing meaning
+
+Behavior should still consume pattern-level truth, not detector detail.
+
+Check:
+
+```text
+Behavior input
+PatternResult readers
+field state readers
+```
+
+Do not move behavior-facing support information out of PatternResult unless replacement is clear.
+
+---
+
+## Task Q.5 — Update Analyzer readers
+
+Analyzer should read:
+
+```text
+PatternResult for pattern/classification facts
+DetectorReport for detector facts
+```
+
+not `Occurrence` as a detector diagnostics substitute.
+
+---
+
+## Required documentation
+
+Create:
+
+```text
+docs/pattern_occurrence_payload_trim.md
+```
+
+Required sections:
+
+```text
+# PatternResult / Occurrence Payload Trim
+
+## Purpose
+## Preconditions
+## Occurrence Core Kept
+## Occurrence Typed Detail Kept
+## Occurrence Fields Removed
+## Occurrence Fields Deferred
+## PatternResult Fields Kept
+## PatternResult Fields Removed
+## DetectorReport Fields Used Instead
+## Analyzer Updates
+## Behavior Compatibility
+## What Did Not Change
+## Remaining Payload Debt
+## Recommended Next Pass
+```
+
+Update:
+
+```text
+docs/occurrence_payload_inventory.md
+docs/pattern_matcher_boundary.md
+docs/implementation-status.md
+```
+
+---
+
+## Acceptance criteria
+
+```text
+- PatternResult no longer carries obvious detector diagnostics
+- Occurrence no longer carries obvious analyzer/diagnostic baggage where safe
+- needed typed accepted-event detail remains
+- Analyzer uses DetectorReport for detector facts
+- Behavior still gets needed pattern meaning
+- no detector behavior changes
+- no pattern behavior changes unless explicitly documented
+- build succeeds
+```
+
+---
+
+## Expected report
+
+```text
+Files created
+Files updated
+Occurrence fields removed
+Occurrence fields kept and why
+PatternResult fields removed
+PatternResult fields kept and why
+Fields moved to DetectorReport
+Analyzer reader updates
+Behavior compatibility
+Compile result
+Runtime sanity result if run
+Remaining payload debt
+Recommended next pass
+```
+
+---
+
+## Commit instructions
+
+```bash
+platformio run -e esp32dev-analyzer
+git status
+git diff --stat
+git add src/detection src/modes/analyzer docs
+git commit -m "DetectionCleanup [Q] trim PatternResult and Occurrence payloads"
+```
+
+If Q needs to be split:
+
+```text
+Q1 — Trim PatternResult Payload
+Q2 — Trim Occurrence Payload
+```
+
+---
+
+# Pass R — Clean Profile Routing Names
+
+## Goal
+
+Untangle old occurrence-source routing names from detector/profile routing.
+
+Target vocabulary should distinguish:
+
+```text
+DetectorId          = stable detector identity
+DetectorRole        = runtime role / active detector slot if needed
+DetectorSelection   = profile-selected detector choice
+Occurrence provenance = where an accepted event came from
+DetectionProfile    = composition/config of detection path
+```
+
+Old vocabulary to remove or quarantine as canonical API:
+
+```text
+OccurrenceSourceKind
+SourceId
+SourceReport
+SourceDiagnostics
+ScalarOccurrenceSource
+FrequencyOccurrenceSource
+source summary as detector identity
+```
+
+Some old names may remain in legacy docs/files only.
+
+---
+
+## Preconditions
+
+Start R after:
+
+```text
+- DetectorReport access is generic
+- detector-owned occurrence emission exists for scalar/frequency
+- PatternMatcher boundary exists
+- legacy diagnostics are quarantined
+```
+
+If old wrapper objects still exist, R may rename/quarantine references but should not reintroduce them as canonical concepts.
+
+---
+
+## Main code areas
+
+```text
+src/detection/DetectionRuntime.h
+src/detection/DetectionRuntime.cpp
+src/detection/DetectionProfile*
+src/detection/DetectorId*
+src/detection/DetectorDescriptor*
+src/detection/occurrences/*
+src/detection/detectors/*
+src/modes/analyzer/*
+src/modes/resonant/*
+docs/*
+```
+
+Search terms:
+
+```text
+OccurrenceSourceKind
+SourceId
+SourceKind
+SourceReport
+SourceDiagnostics
+sourceKind
+occurrenceSource
+ScalarOccurrenceSource
+FrequencyOccurrenceSource
+```
+
+---
+
+## Task R.1 — Inventory routing names
+
+Classify each occurrence-source/source use:
+
+```text
+DETECTOR_IDENTITY
+PROFILE_SELECTION
+RUNTIME_ROLE
+OCCURRENCE_PROVENANCE
+LEGACY_COMPAT
+DELETE_NOW
+UNKNOWN
+```
+
+---
+
+## Task R.2 — Choose minimal new names
+
+Do not overbuild.
+
+Preferred minimal target:
+
+```text
+DetectorId
+DetectorSelection
+OccurrenceProvenance or occurrence.detectorId
+```
+
+Only add `DetectorRole` if the code truly has multiple roles/slots independent of detector identity.
+
+---
+
+## Task R.3 — Rename or wrap old routing names
+
+Replace canonical references to `OccurrenceSourceKind` with the chosen detector/profile vocabulary.
+
+If a full rename is too risky:
+
+```text
+- keep old enum as compatibility
+- add conversion helpers
+- mark old enum LEGACY
+- prevent new code from using it
+```
+
+---
+
+## Task R.4 — Update commands/help/docs
+
+Update any user-visible command/help text if it exposes old vocabulary.
+
+Keep profile names stable unless specifically scoped.
+
+Do not change stable user profile names like:
+
+```text
+TonalPulse
+ChirpExperimental
+```
+
+unless existing docs require a wording correction.
+
+---
+
+## Required documentation
+
+Create:
+
+```text
+docs/detector_routing_name_cleanup.md
+```
+
+Required sections:
+
+```text
+# Detector Routing Name Cleanup
+
+## Purpose
+## Old Routing Vocabulary
+## New Routing Vocabulary
+## Detector Identity
+## Profile Selection
+## Runtime Role
+## Occurrence Provenance
+## Legacy Names Kept
+## Names Removed / Replaced
+## Command / Help Text Changes
+## What Did Not Change
+## Remaining Routing Debt
+## Recommended Next Pass
+```
+
+---
+
+## Acceptance criteria
+
+```text
+- canonical code no longer presents OccurrenceSourceKind as the main detector-routing concept
+- detector identity and profile selection are clearer
+- old source names are deleted or marked legacy
+- user-visible help/docs use current vocabulary
+- no behavior/tuning changes
+- build succeeds
+```
+
+---
+
+## Expected report
+
+```text
+Files created
+Files updated
+Old names found
+Names replaced
+Names kept as legacy
+New vocabulary introduced
+Command/help changes
+Docs updated
+Compile result
+Runtime sanity result if run
+Remaining routing debt
+Recommended next pass
+```
+
+---
+
+## Commit instructions
+
+```bash
+platformio run -e esp32dev-analyzer
+git status
+git diff --stat
+git add src/detection src/modes docs
+git commit -m "DetectionCleanup [R] clean detector routing names"
+```
+
+---
+
+# Pass S — Remove Legacy Sediment
+
+## Goal
+
+Delete obsolete wrappers, duplicate summaries, old aliases, stale compatibility branches, stale comments, and dead docs after clean architecture is in place.
+
+This is the final cleanup pass for this refactor sequence.
+
+---
+
+## Preconditions
+
+Start S only after:
+
+```text
+- O/O2 legacy diagnostics are quarantined
+- P PatternMatcher boundary exists
+- Q payload trimming has landed or explicitly deferred remaining debt
+- R routing names are clean
+- implementation-status docs identify remaining legacy clearly
+```
+
+If significant legacy systems are still active, split S into smaller deletion passes.
+
+---
+
+## Main targets
+
+Possible deletion candidates:
+
+```text
+unused ScalarOccurrenceSource wrapper
+unused FrequencyOccurrenceSource wrapper
+old SourceCandidateSummary / SourceCandidateSnapshot if fully replaced
+old Analyzer legacy fallback structs if fully replaced
+old DetectionDiagnostics fields if fully unused
+old aliases for source/detector names
+temporary migration comments that are resolved
+stale docs claiming old architecture
+duplicate report builders
+duplicate summary printers if clean summary is accepted
+```
+
+Do not delete active legacy output if still intentionally supported.
+
+---
+
+## Task S.1 — Create final deletion inventory
+
+Search for:
+
+```text
+LEGACY
+TEMP
+TODO
+COMPAT
+OccurrenceSource
+SourceCandidate
+DetectionDiagnostics
+AnalyzerLegacy
+refreshScalarDetectorReport
+refreshFrequencyDetectorReport
+```
+
+Classify:
+
+```text
+DELETE_NOW
+KEEP_LEGACY_SUPPORTED
+KEEP_RUNTIME_PRIVATE
+KEEP_DOC_ARCHIVE
+UNKNOWN
+```
+
+---
+
+## Task S.2 — Delete only resolved sediment
+
+Delete only items that are:
+
+```text
+unused
+replaced by canonical path
+documented as no longer needed
+compile-safe to remove
+```
+
+Avoid deleting:
+
+```text
+supported legacy command aliases
+manual/archive docs intentionally retained
+debug tools still useful
+runtime-private diagnostics still intentionally kept
+```
+
+---
+
+## Task S.3 — Clean comments and docs
+
+Remove or update stale comments like:
+
+```text
+temporary bridge
+TODO migrate to DetectorReport
+legacy until Pass X
+placeholder
+```
+
+Only keep comments that are still true.
+
+Archive old docs if needed:
+
+```text
+docs/archive/
+```
+
+or mark them historical.
+
+---
+
+## Task S.4 — Final build and sanity
+
+Run compile.
+
+If hardware is available, run short sanity:
+
+```text
+canonical SEQ_TRIAL
+canonical SEQ_INSPECT
+clean SEQ_SUMMARY
+stable profile detection
+legacy output only if still intentionally supported
+```
+
+---
+
+## Required documentation
+
+Create or update:
+
+```text
+docs/detection_refactor_final_cleanup.md
+docs/implementation-status.md
+docs/roadmaps/roadmap_detection.md
+```
+
+Required sections for final cleanup doc:
+
+```text
+# Detection Refactor Final Cleanup
+
+## Purpose
+## Deleted Legacy Items
+## Legacy Items Intentionally Kept
+## Canonical Runtime Path
+## Canonical Analyzer Path
+## Remaining Known Debt
+## Manual / Docs Status
+## Final Sanity Checks
+```
+
+---
+
+## Acceptance criteria
+
+```text
+- obsolete wrappers/aliases/summaries are deleted or explicitly kept
+- stale comments/docs are removed or corrected
+- canonical detector/analyzer/pattern vocabulary is dominant
+- build succeeds
+- no accidental behavior/tuning changes
+- remaining debt is explicit
+```
+
+---
+
+## Expected report
+
+```text
+Files created
+Files updated
+Files deleted
+Legacy items removed
+Legacy items intentionally kept
+Old aliases removed
+Stale comments removed
+Docs updated
+Compile result
+Runtime sanity result if run
+Remaining known debt
+Recommended next major roadmap item
+```
+
+---
+
+## Commit instructions
+
+```bash
+platformio run -e esp32dev-analyzer
+git status
+git diff --stat
+git add -A
+git commit -m "DetectionCleanup [S] remove legacy detection sediment"
+```
+
+If S is split:
+
+```text
+S1 — Delete obsolete source wrappers
+S2 — Delete obsolete analyzer legacy structs
+S3 — Clean docs/comments
+```

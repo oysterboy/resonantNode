@@ -33,6 +33,7 @@ Status vocabulary:
 | PatternResult trim Q1 | landed | Pass Q1 removed the duplicate `PatternResult.freq` packet, added compact primary-occurrence summary fields, and moved behavior/non-legacy analyzer timing reads off `PatternResult.candidate`. |
 | Occurrence trim Q2 | landed | Pass Q2 removed unused accepted-event baggage (`candidateHoldWindows`, `ampEvidencePresent`) while deferring still-active legacy identity and typed detail payload. |
 | Detector routing names | landed | Pass R promoted `DetectorSelection` / `setDetectorSelection(...)` as the active profile/runtime routing vocabulary and kept `OccurrenceSourceKind` as explicit compatibility alias only. |
+| Legacy cleanup S1 | landed | Pass S1 deleted the temporary source-routing compatibility aliases (`OccurrenceSourceKind`, `occurrenceSourceKindName(...)`, `setOccurrenceSource(...)`) after active code had moved onto detector-selection naming. |
 | BehaviorRuntime | deferred | Future behavior architecture work. |
 | OutputDispatcher | deferred | Future behavior/output separation. |
 | Full Chirp PatternRules | roadmap only | Not part of stable runtime. |

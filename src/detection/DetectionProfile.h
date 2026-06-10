@@ -46,9 +46,6 @@ enum class DetectorSelection {
     ScalarTransient,
 };
 
-// Legacy routing name retained as a compatibility alias only.
-using OccurrenceSourceKind = DetectorSelection;
-
 enum class DetectionProfileKind {
     TonalPulse,
     Amp,
@@ -377,11 +374,6 @@ inline const char* detectorSelectionName(DetectorSelection kind) {
             return "ScalarTransient";
     }
     return "unknown";
-}
-
-// Legacy compatibility helper for older source-routing naming.
-inline const char* occurrenceSourceKindName(OccurrenceSourceKind kind) {
-    return detectorSelectionName(kind);
 }
 
 // Parse profile names from user-facing text.

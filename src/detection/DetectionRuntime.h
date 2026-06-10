@@ -271,8 +271,6 @@ public:
     void setFrequencyMatchConfig(const FrequencyMatchConfig& config);
     void setScalarTransientConfig(const ScalarTransientConfig& config);
     void setDetectorSelection(DetectorSelection selection);
-    // Legacy compatibility wrapper for older occurrence-source naming.
-    void setOccurrenceSource(OccurrenceSourceKind kind);
     void setInspectionPlan(const InspectionPlan& plan);
     void setPatternRulesConfig(const PatternRulesConfig& config);
     void setFieldStateConfig(const FieldStateConfig& config);

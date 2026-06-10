@@ -737,7 +737,8 @@ Current implementation note after Pass R:
 ```text
 Active profile/runtime routing now uses DetectorSelection and
 setDetectorSelection(...).
-OccurrenceSourceKind remains only as a compatibility alias.
+The temporary OccurrenceSourceKind compatibility bridge has now been deleted in
+S1.
 ```
 
 ---

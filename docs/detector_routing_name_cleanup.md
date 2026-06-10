@@ -2,8 +2,9 @@
 
 ## Purpose
 
-Pass R promotes `DetectorSelection` as the canonical profile-routing concept
-and demotes `OccurrenceSourceKind` to an explicit compatibility alias.
+Pass R promoted `DetectorSelection` as the canonical profile-routing concept.
+Pass S1 then deleted the temporary source-routing aliases that had been left as
+bridges.
 
 ## Old Routing Vocabulary
 
@@ -48,18 +49,22 @@ Pass R does not trim those occurrence fields.
 
 ## Legacy Names Kept
 
-- `OccurrenceSourceKind` as a compatibility alias to `DetectorSelection`
-- `occurrenceSourceKindName(...)` as a legacy wrapper helper
-- `setOccurrenceSource(...)` as a compatibility wrapper that forwards to
-  `setDetectorSelection(...)`
+None in active code for the routing selector itself.
+
+Deleted in S1:
+
+- `OccurrenceSourceKind`
+- `occurrenceSourceKindName(...)`
+- `setOccurrenceSource(...)`
 
 ## Names Removed / Replaced
 
-Active code replacements in Pass R:
+Active code replacements across Pass R / S1:
 
 - `DetectionProfile.occurrenceSource` -> `DetectionProfile.detectorSelection`
 - `DetectionRuntime::_occurrenceSourceKind` -> `_detectorSelection`
 - active callers now use `setDetectorSelection(...)`
+- temporary source-routing aliases are deleted
 
 ## Command / Help Text Changes
 

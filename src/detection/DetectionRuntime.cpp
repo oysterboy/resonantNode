@@ -568,10 +568,6 @@ void DetectionRuntime::setDetectorSelection(DetectorSelection selection) {
     _detectorReport = {};
 }
 
-void DetectionRuntime::setOccurrenceSource(OccurrenceSourceKind kind) {
-    setDetectorSelection(kind);
-}
-
 void DetectionRuntime::setInspectionPlan(const InspectionPlan& plan) {
     _inspectionPlan = plan;
     _occurrenceInspector.configure(_inspectionPlan);

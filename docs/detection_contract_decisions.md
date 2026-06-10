@@ -270,8 +270,8 @@ Current implementation note after Pass R:
 
 - active profile/runtime routing now uses `DetectorSelection` /
   `setDetectorSelection(...)`
-- `OccurrenceSourceKind` remains only as a compatibility alias and should not
-  be extended as canonical vocabulary
+- the old `OccurrenceSourceKind` / `setOccurrenceSource(...)` compatibility
+  bridge has now been deleted in S1
 
 ## Open Decisions Deferred to Implementation Passes
 

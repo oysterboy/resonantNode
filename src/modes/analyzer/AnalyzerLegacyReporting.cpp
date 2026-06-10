@@ -3064,13 +3064,13 @@ void AnalyzerApp::legacyPrintSequenceSummaryLeg() const {
     Serial.print("  metadata: profile=");
     Serial.print(summary.profileName != nullptr ? summary.profileName : "unknown");
     Serial.print(" source=");
-    Serial.print(selectedProfile.occurrenceSource == detection::OccurrenceSourceKind::FrequencyMatch
-        ? "FrequencyMatchSource"
-        : "ScalarTransientSource");
+    Serial.print(selectedProfile.detectorSelection == detection::DetectorSelection::FrequencyMatch
+        ? "FrequencyMatch"
+        : "ScalarTransient");
     Serial.print(" detector=");
-    Serial.print(selectedProfile.occurrenceSource == detection::OccurrenceSourceKind::FrequencyMatch
-        ? "FrequencyMatchSource"
-        : "ScalarTransientSource");
+    Serial.print(selectedProfile.detectorSelection == detection::DetectorSelection::FrequencyMatch
+        ? "FrequencyMatch"
+        : "ScalarTransient");
     Serial.print(" required_support_target=");
     Serial.print(supportTargetDisplayName(
         selectedProfile.patternRulesConfig.requiredSupportTarget,

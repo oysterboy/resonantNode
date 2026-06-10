@@ -32,6 +32,7 @@ Status vocabulary:
 | PatternMatcher boundary | landed | Pass P introduced `PatternMatcher` as the public pattern-stage facade, routed `DetectionRuntime` through it, and left `PatternAssembler` / `PatternRules` as internal helpers. |
 | PatternResult trim Q1 | landed | Pass Q1 removed the duplicate `PatternResult.freq` packet, added compact primary-occurrence summary fields, and moved behavior/non-legacy analyzer timing reads off `PatternResult.candidate`. |
 | Occurrence trim Q2 | landed | Pass Q2 removed unused accepted-event baggage (`candidateHoldWindows`, `ampEvidencePresent`) while deferring still-active legacy identity and typed detail payload. |
+| Detector routing names | landed | Pass R promoted `DetectorSelection` / `setDetectorSelection(...)` as the active profile/runtime routing vocabulary and kept `OccurrenceSourceKind` as explicit compatibility alias only. |
 | BehaviorRuntime | deferred | Future behavior architecture work. |
 | OutputDispatcher | deferred | Future behavior/output separation. |
 | Full Chirp PatternRules | roadmap only | Not part of stable runtime. |

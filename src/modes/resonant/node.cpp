@@ -141,7 +141,7 @@ const char* detectionProfileKindName(detection::DetectionProfileKind kind) {
 
 void printProfileComposition(const detection::DetectionProfile& profile) {
     Serial.print(" emitters=");
-    Serial.print(detection::occurrenceSourceKindName(profile.occurrenceSource));
+    Serial.print(detection::detectorSelectionName(profile.detectorSelection));
     Serial.print(" inspectionPlan=");
     Serial.print(inspectionPlanName(profile.inspectionPlan));
     Serial.print(" fieldStateConfig=");
@@ -154,8 +154,8 @@ void printDetectionProfileDetails(const detection::DetectionProfile& profile) {
     Serial.println("RB DETECT");
     Serial.print("  kind=");
     Serial.println(detection::detectionProfileName(profile.kind));
-    Serial.print("  occurrenceSource=");
-    Serial.println(detection::occurrenceSourceKindName(profile.occurrenceSource));
+    Serial.print("  detectorSelection=");
+    Serial.println(detection::detectorSelectionName(profile.detectorSelection));
     Serial.print("  inspectionPlan=");
     Serial.println(inspectionPlanName(profile.inspectionPlan));
     Serial.print("  freqMatch.releaseDebounceMs=");
@@ -852,7 +852,7 @@ void Node::handleDetectCommand(const char* line) {
     Serial.print("RB STATUS profile=");
     Serial.print(detection::detectionProfileName(detectionProfile.kind));
     Serial.print(" emitters=");
-    Serial.print(detection::occurrenceSourceKindName(detectionProfile.occurrenceSource));
+    Serial.print(detection::detectorSelectionName(detectionProfile.detectorSelection));
     Serial.print(" inspectionPlan=");
     Serial.print(inspectionPlanName(detectionProfile.inspectionPlan));
     Serial.print(" requireSupportForAcceptance=");
@@ -976,7 +976,7 @@ void Node::applyActiveProfiles() {
 void Node::applyActiveDetectionProfile() {
     const detection::DetectionProfile& detectionProfile = activeDetectionProfile();
 
-    _detection.setOccurrenceSource(detectionProfile.occurrenceSource);
+    _detection.setDetectorSelection(detectionProfile.detectorSelection);
     _detection.setFrequencyMatchConfig(detectionProfile.frequencyMatch);
     _detection.setScalarTransientConfig(detectionProfile.scalarTransient);
     _detection.setInspectionPlan(detectionProfile.inspectionPlan);

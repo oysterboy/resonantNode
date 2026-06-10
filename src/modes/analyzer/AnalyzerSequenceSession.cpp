@@ -121,7 +121,7 @@ void AnalyzerApp::startSequenceTest(const PendingSequenceStart& pending) {
     _detection.resetState();
     _detection.setFrequencyMatchConfig(selectedProfile.frequencyMatch);
     _detection.setScalarTransientConfig(selectedProfile.scalarTransient);
-    _detection.setOccurrenceSource(selectedProfile.occurrenceSource);
+    _detection.setDetectorSelection(selectedProfile.detectorSelection);
     _detection.setInspectionPlan(selectedProfile.inspectionPlan);
     _detection.setPatternRulesConfig(selectedProfile.patternRulesConfig);
     _detection.setFieldStateConfig(selectedProfile.fieldStateConfig);
@@ -281,9 +281,9 @@ void AnalyzerApp::startSequenceTest(const PendingSequenceStart& pending) {
         Serial.print(" profile=");
         Serial.print(detection::detectionProfileName(_sequenceTest.profileKind));
         Serial.print(" source=");
-        Serial.print(detection::occurrenceSourceKindName(selectedProfile.occurrenceSource));
+        Serial.print(detection::detectorSelectionName(selectedProfile.detectorSelection));
         Serial.print(" detector=");
-        Serial.print(detection::occurrenceSourceKindName(selectedProfile.occurrenceSource));
+        Serial.print(detection::detectorSelectionName(selectedProfile.detectorSelection));
         Serial.print(" required_support_target=");
         Serial.print(supportTargetDisplayName(
             selectedProfile.patternRulesConfig.requiredSupportTarget,

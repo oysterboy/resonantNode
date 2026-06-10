@@ -35,11 +35,11 @@ float selectedScalarValue(const AudioSamplePacket& audioSamplePacket, const Freq
     }
 }
 
-const char* occurrenceSourceName(OccurrenceSourceKind kind) {
+const char* detectorSelectionNameForRuntime(DetectorSelection kind) {
     switch (kind) {
-        case OccurrenceSourceKind::FrequencyMatch:
+        case DetectorSelection::FrequencyMatch:
             return "frequency_match";
-        case OccurrenceSourceKind::ScalarTransient:
+        case DetectorSelection::ScalarTransient:
             return "scalar_transient";
         default:
             return "unknown";
@@ -173,11 +173,11 @@ void DetectionRuntime::refreshDetectorReports(unsigned long nowMs) {
 
     // DetectionRuntime coordinates detector-owned report snapshots. It must
     // not become the permanent home of detector-specific report assembly.
-    switch (_occurrenceSourceKind) {
-        case OccurrenceSourceKind::FrequencyMatch:
+    switch (_detectorSelection) {
+        case DetectorSelection::FrequencyMatch:
             _frequencyDetector.buildReport(_detectorReport, nowMs);
             break;
-        case OccurrenceSourceKind::ScalarTransient:
+        case DetectorSelection::ScalarTransient:
             _scalarDetector.buildReport(_detectorReport, nowMs);
             break;
     }
@@ -193,7 +193,7 @@ void DetectionRuntime::captureDiagnostics() {
 
     _diagnostics = {};
     _diagnostics.observedAtMs = _latestPipelineResult.timestampMs;
-    _diagnostics.occurrenceSource = occurrenceSourceName(_occurrenceSourceKind);
+    _diagnostics.occurrenceSource = detectorSelectionNameForRuntime(_detectorSelection);
     const bool acceptedPresent = _lastOccurrence.present && _lastOccurrence.source == OccurrenceSource::Frequency;
     _diagnostics.acceptedPresent = acceptedPresent;
     if (acceptedPresent) {
@@ -213,7 +213,7 @@ void DetectionRuntime::captureDiagnostics() {
 
     _diagnostics.scalarOnsetRejectReason = _scalarDetector.lastOnsetRejectReasonName();
     _diagnostics.scalarTransientRejectReason = _scalarDetector.lastTransientRejectReasonName();
-    if (_occurrenceSourceKind == OccurrenceSourceKind::ScalarTransient) {
+    if (_detectorSelection == DetectorSelection::ScalarTransient) {
         populateScalarLegacyDiagnosticsFromReport(_diagnostics, _detectorReport);
     } else {
         const auto& scalarReportDetail = _scalarDetector.reportDetail();
@@ -241,7 +241,7 @@ void DetectionRuntime::captureDiagnostics() {
     _diagnostics.sourceSummary = {};
     _diagnostics.sourceLastCandidate = {};
 
-    if (_occurrenceSourceKind == OccurrenceSourceKind::FrequencyMatch) {
+    if (_detectorSelection == DetectorSelection::FrequencyMatch) {
         const auto& detector = _frequencyDetector;
         populateFrequencyLegacyDiagnosticsFromReport(_diagnostics, _detectorReport);
         _diagnostics.frequencyPresent = detector.diagnosticsObservedCount > 0;
@@ -547,7 +547,7 @@ void DetectionRuntime::captureDiagnostics() {
         _diagnostics.frequencyPeakSampleCount = 0;
     }
     _diagnostics.patternResultQueueOverflowCount = _resultQueueOverflowCount;
-    _diagnostics.detectorKind = _occurrenceSourceKind == OccurrenceSourceKind::FrequencyMatch
+    _diagnostics.detectorKind = _detectorSelection == DetectorSelection::FrequencyMatch
         ? "frequency_match"
         : "scalar_transient";
 }
@@ -561,11 +561,15 @@ void DetectionRuntime::setScalarTransientConfig(const ScalarTransientConfig& con
     applyScalarTransientConfig(_scalarDetector, _scalarTransientConfig);
 }
 
-void DetectionRuntime::setOccurrenceSource(OccurrenceSourceKind kind) {
-    _occurrenceSourceKind = kind;
+void DetectionRuntime::setDetectorSelection(DetectorSelection selection) {
+    _detectorSelection = selection;
     resetOccurrenceSources();
     applyScalarTransientConfig(_scalarDetector, _scalarTransientConfig);
     _detectorReport = {};
+}
+
+void DetectionRuntime::setOccurrenceSource(OccurrenceSourceKind kind) {
+    setDetectorSelection(kind);
 }
 
 void DetectionRuntime::setInspectionPlan(const InspectionPlan& plan) {
@@ -599,8 +603,8 @@ void DetectionRuntime::observeFrame(
     FeatureExtractor::observeFrame(audioSamplePacket, _featureHistory);
     FeatureExtractor::observeFrequencyMeasurementPacket(frequencyEvidence, nowMs, _featureHistory);
 
-    switch (_occurrenceSourceKind) {
-        case OccurrenceSourceKind::FrequencyMatch:
+    switch (_detectorSelection) {
+        case DetectorSelection::FrequencyMatch:
             if (!frequencyEvidence.present || !frequencyEvidence.fresh) {
                 break;
             }
@@ -621,7 +625,7 @@ void DetectionRuntime::observeFrame(
                     _frequencyMatchConfig.minDurationMs);
             }
             break;
-        case OccurrenceSourceKind::ScalarTransient:
+        case DetectorSelection::ScalarTransient:
             if (streamRequiresFreshFrequency(_scalarTransientConfig.observedStream) && !frequencyEvidence.fresh) {
                 break;
             }
@@ -697,8 +701,8 @@ const FeatureHistory& DetectionRuntime::featureHistory() const {
 void DetectionRuntime::drainOccurrenceSources(unsigned long nowMs) {
     Occurrence candidate;
 
-    switch (_occurrenceSourceKind) {
-        case OccurrenceSourceKind::FrequencyMatch:
+    switch (_detectorSelection) {
+        case DetectorSelection::FrequencyMatch:
             while (_frequencyDetector.popOccurrence(candidate)) {
                 _fieldStateTracker.observeOccurrence(candidate, nowMs);
                 const InspectedOccurrence inspected = _occurrenceInspector.inspectWithHistory(candidate, &_featureHistory);
@@ -708,7 +712,7 @@ void DetectionRuntime::drainOccurrenceSources(unsigned long nowMs) {
                 _patternMatcher.acceptOccurrence(inspected);
             }
             break;
-        case OccurrenceSourceKind::ScalarTransient:
+        case DetectorSelection::ScalarTransient:
             while (_scalarDetector.popOccurrence(candidate)) {
                 _fieldStateTracker.observeOccurrence(candidate, nowMs);
                 const InspectedOccurrence inspected = _occurrenceInspector.inspectWithHistory(candidate, &_featureHistory);

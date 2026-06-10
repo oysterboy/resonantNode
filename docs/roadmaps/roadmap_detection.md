@@ -732,6 +732,14 @@ DetectionRuntime must not grow one permanent drainXXDetectorOccurrence() helper 
 OccurrenceSourceKind remains temporary routing vocabulary until later cleanup.
 ```
 
+Current implementation note after Pass R:
+
+```text
+Active profile/runtime routing now uses DetectorSelection and
+setDetectorSelection(...).
+OccurrenceSourceKind remains only as a compatibility alias.
+```
+
 ---
 
 ### 1.10 PatternMatcher target rule

@@ -23,7 +23,7 @@ Common enum / selector types used in this file:
 
 ```text
 DetectionProfileKind { TonalPulse, Amp, ChirpExperimental, ScalarFreqExperimental }
-OccurrenceSourceKind { FrequencyMatch, ScalarTransient }
+DetectorSelection { FrequencyMatch, ScalarTransient }
 FeatureStreamId { AmpEnvelope, FrequencyScore, FrequencyContrast, AmbientFloor }
 EvidenceTarget { None, AmpStrength, FrequencyScoreStrength, FrequencyContrastQuality, TargetBandStrength }
 StrengthClass { Unknown, None, Weak, Medium, Strong }
@@ -40,12 +40,14 @@ New profile checklist:
 - update node help/parser and behavior mapping if RB should accept it
 */
 
-enum class OccurrenceSourceKind {
-    // Legacy profile routing selector retained during migration.
-    // Canonical detector boundary remains the detector core, not this wrapper choice.
+enum class DetectorSelection {
+    // Canonical profile-selected detector choice.
     FrequencyMatch,
     ScalarTransient,
 };
+
+// Legacy routing name retained as a compatibility alias only.
+using OccurrenceSourceKind = DetectorSelection;
 
 enum class DetectionProfileKind {
     TonalPulse,
@@ -79,7 +81,7 @@ struct ScalarTransientConfig {
 struct DetectionProfile {
     // Identity and composition.
     DetectionProfileKind kind = DetectionProfileKind::TonalPulse;
-    OccurrenceSourceKind occurrenceSource = OccurrenceSourceKind::FrequencyMatch;
+    DetectorSelection detectorSelection = DetectorSelection::FrequencyMatch;
 
     // Stage configuration.
     FrequencyMatchConfig frequencyMatch = {};
@@ -107,7 +109,7 @@ inline DetectionProfile makeTonalPulseProfile() {
 
     // Identity and occurrence routing.
     profile.kind = DetectionProfileKind::TonalPulse;
-    profile.occurrenceSource = OccurrenceSourceKind::FrequencyMatch;
+    profile.detectorSelection = DetectorSelection::FrequencyMatch;
 
     // Frequency path tuning.
     profile.frequencyMatch.attackScoreMin = 18000.0f;
@@ -179,7 +181,7 @@ inline DetectionProfile makeAmpProfile() {
 
     // Identity and occurrence routing.
     profile.kind = DetectionProfileKind::Amp;
-    profile.occurrenceSource = OccurrenceSourceKind::ScalarTransient;
+    profile.detectorSelection = DetectorSelection::ScalarTransient;
     profile.scalarTransient.observedStream = FeatureStreamId::AmpEnvelope;
     applyAmpEnvelopeScalarTransientTuning(profile.scalarTransient);
     // Analyzer retune: recent AMP trials produced stable 29..38 peak-strength
@@ -248,7 +250,7 @@ inline DetectionProfile makeChirpExperimentalProfile() {
 
     // Identity and occurrence routing.
     profile.kind = DetectionProfileKind::ChirpExperimental;
-    profile.occurrenceSource = OccurrenceSourceKind::ScalarTransient;
+    profile.detectorSelection = DetectorSelection::ScalarTransient;
     profile.scalarTransient.observedStream = FeatureStreamId::AmpEnvelope;
     applyAmpEnvelopeScalarTransientTuning(profile.scalarTransient);
 
@@ -286,7 +288,7 @@ inline DetectionProfile makeScalarFreqExperimentalProfile() {
 
     // Identity and occurrence routing.
     profile.kind = DetectionProfileKind::ScalarFreqExperimental;
-    profile.occurrenceSource = OccurrenceSourceKind::ScalarTransient;
+    profile.detectorSelection = DetectorSelection::ScalarTransient;
     profile.scalarTransient.observedStream = FeatureStreamId::FrequencyScore;
 
     // This profile is intentionally experimental and compares frequency-derived
@@ -366,15 +368,20 @@ inline const char* detectionProfileName(DetectionProfileKind kind) {
     return "unknown";
 }
 
-// Human-readable names for occurrence sources used in logs and help text.
-inline const char* occurrenceSourceKindName(OccurrenceSourceKind kind) {
+// Human-readable names for profile-selected detector routing.
+inline const char* detectorSelectionName(DetectorSelection kind) {
     switch (kind) {
-        case OccurrenceSourceKind::FrequencyMatch:
-            return "FrequencyMatchSource";
-        case OccurrenceSourceKind::ScalarTransient:
-            return "ScalarTransientSource";
+        case DetectorSelection::FrequencyMatch:
+            return "FrequencyMatch";
+        case DetectorSelection::ScalarTransient:
+            return "ScalarTransient";
     }
     return "unknown";
+}
+
+// Legacy compatibility helper for older source-routing naming.
+inline const char* occurrenceSourceKindName(OccurrenceSourceKind kind) {
+    return detectorSelectionName(kind);
 }
 
 // Parse profile names from user-facing text.

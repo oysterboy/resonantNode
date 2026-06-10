@@ -1690,8 +1690,8 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
 
     report.profileDetail.namespaceName = analyzerProfileDetailNamespace(_sequenceTest.profileKind);
     report.profileDetail.summary = analyzerProfileDetailSummary(_sequenceTest.profileKind);
-    report.profileDetail.emitter = detection::occurrenceSourceKindName(selectedProfile.occurrenceSource);
-    report.profileDetail.inspectionAcceptance = detection::occurrenceSourceKindName(selectedProfile.occurrenceSource);
+    report.profileDetail.emitter = detection::detectorSelectionName(selectedProfile.detectorSelection);
+    report.profileDetail.inspectionAcceptance = detection::detectorSelectionName(selectedProfile.detectorSelection);
     report.profileDetail.inspectionPlan = inspectionPlanName(selectedProfile.inspectionPlan);
     report.profileDetail.inspectionModules = inspectionModulesName(selectedProfile.inspectionPlan);
     report.profileDetail.inspectionModuleCount = selectedProfile.inspectionPlan.count;
@@ -2208,7 +2208,7 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
         report.source.frequencyMatch.runtimeOccurrenceReceived = false;
     }
 
-    const bool scalarProfile = selectedProfile.occurrenceSource == detection::OccurrenceSourceKind::ScalarTransient;
+    const bool scalarProfile = selectedProfile.detectorSelection == detection::DetectorSelection::ScalarTransient;
     if (scalarProfile) {
         const auto& scalarAccepted = scalarDetectorReport.accepted;
         const auto& scalarAcceptedDetail = scalarDetectorReport.scalar.accepted;
@@ -2445,9 +2445,9 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
         report.source.scalarTransient.inconsistent = report.classification.result == AnalyzerResult::Miss && report.source.scalarTransient.acceptedPresent;
     }
 
-    const bool frequencySource = selectedProfile.occurrenceSource == detection::OccurrenceSourceKind::FrequencyMatch;
+    const bool frequencySource = selectedProfile.detectorSelection == detection::DetectorSelection::FrequencyMatch;
     report.source.sourceKind = frequencySource ? "frequency_match" : "scalar_transient";
-    report.source.sourceName = detection::occurrenceSourceKindName(selectedProfile.occurrenceSource);
+    report.source.sourceName = detection::detectorSelectionName(selectedProfile.detectorSelection);
     if (frequencySource) {
         report.source.acceptedPresent = report.source.frequencyMatch.acceptedPresent;
         report.source.sourceOccurrenceEmitted = report.source.frequencyMatch.sourceOccurrenceEmitted;

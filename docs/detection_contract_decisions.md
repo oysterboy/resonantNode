@@ -266,6 +266,13 @@ Current implementation note after Pass O:
 - adapter direction is canonical detector/runtime facts -> legacy analyzer
   compatibility structs, not the reverse
 
+Current implementation note after Pass R:
+
+- active profile/runtime routing now uses `DetectorSelection` /
+  `setDetectorSelection(...)`
+- `OccurrenceSourceKind` remains only as a compatibility alias and should not
+  be extended as canonical vocabulary
+
 ## Open Decisions Deferred to Implementation Passes
 
 - exact `DetectorReport` payload stabilization beyond the current scalar/frequency migration bridges

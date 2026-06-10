@@ -36,8 +36,8 @@ Consumes AudioSamplePacket and FrequencyBandMeasurementPacket.
 Produces PatternResult and FieldState.
 Does not decide behavior or output.
 Feature producers fan out fresh samples to FeatureHistory and the selected
-OccurrenceSource in parallel; FeatureHistory is for retrospective inspection,
-not a live pipe into occurrence emission.
+detector path in parallel; FeatureHistory is for retrospective inspection, not
+a live pipe into occurrence emission.
 */
 struct DetectionPipelineResult {
     bool hasPattern = false;
@@ -270,6 +270,8 @@ public:
 
     void setFrequencyMatchConfig(const FrequencyMatchConfig& config);
     void setScalarTransientConfig(const ScalarTransientConfig& config);
+    void setDetectorSelection(DetectorSelection selection);
+    // Legacy compatibility wrapper for older occurrence-source naming.
     void setOccurrenceSource(OccurrenceSourceKind kind);
     void setInspectionPlan(const InspectionPlan& plan);
     void setPatternRulesConfig(const PatternRulesConfig& config);
@@ -317,7 +319,7 @@ private:
     FrequencyMatchConfig _frequencyMatchConfig = {};
     ScalarTransientConfig _scalarTransientConfig = {};
     // Profile configuration applied at fixed runtime stages.
-    OccurrenceSourceKind _occurrenceSourceKind = OccurrenceSourceKind::FrequencyMatch;
+    DetectorSelection _detectorSelection = DetectorSelection::FrequencyMatch;
     InspectionPlan _inspectionPlan = {};
     PatternRulesConfig _patternRulesConfig = {};
     const char* _profileName = "unknown";

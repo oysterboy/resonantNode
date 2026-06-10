@@ -83,6 +83,40 @@ void populateScalarLegacyDiagnosticsFromReport(DetectionDiagnostics& diagnostics
     diagnostics.scalarPeakStrength = report.scalar.inspect.peakStrength;
 }
 
+void populateFrequencyLegacyDiagnosticsFromReport(DetectionDiagnostics& diagnostics, const DetectorReport& report) {
+    diagnostics.acceptedPresent = report.accepted.present;
+    diagnostics.acceptedStartMs = report.accepted.startMs;
+    diagnostics.acceptedPeakMs = report.accepted.peakMs;
+    diagnostics.acceptedReleaseMs = report.accepted.endMs;
+    diagnostics.acceptedDurationMs = report.accepted.durationMs;
+    diagnostics.acceptedStrength = report.accepted.strength;
+    diagnostics.acceptedScore = report.frequency.accepted.score;
+    diagnostics.acceptedContrast = report.frequency.accepted.contrast;
+    diagnostics.frequencyScoreOkFrames = report.frequency.aggregates.scoreOkCount;
+    diagnostics.frequencyContrastOkFrames = report.frequency.aggregates.contrastOkCount;
+    diagnostics.frequencyBothOkFrames = report.frequency.aggregates.bothOkCount;
+    diagnostics.frequencyMatchFrames = report.frequency.aggregates.matchCount;
+    diagnostics.frequencyScoreThreshold = report.frequency.thresholds.scoreThreshold;
+    diagnostics.frequencyContrastThreshold = report.frequency.thresholds.contrastThreshold;
+    diagnostics.frequencyRejectReason = report.frequency.inspect.rejectReason;
+    diagnostics.frequencyNoEmitReason = report.frequency.inspect.noEmitReason;
+    diagnostics.frequencyGateReason = report.frequency.inspect.gateReason;
+    diagnostics.frequencyCandidateState = report.frequency.inspect.candidateState;
+    diagnostics.frequencyReadyOk = report.frequency.inspect.readyOk;
+    diagnostics.frequencyGateOpen = report.frequency.inspect.gateOpen;
+    diagnostics.frequencyOpened = report.frequency.inspect.opened;
+    diagnostics.frequencyReleased = report.frequency.inspect.released;
+    diagnostics.frequencyEmitted = report.frequency.inspect.emitted;
+    diagnostics.frequencyValidRelease = report.frequency.inspect.validRelease;
+    diagnostics.frequencyEmitAllowed = report.frequency.inspect.emitAllowed;
+    diagnostics.frequencyOpenMs = report.frequency.inspect.openMs;
+    diagnostics.frequencyPeakMs = report.frequency.inspect.peakMs;
+    diagnostics.frequencyReleaseMs = report.frequency.inspect.releaseMs;
+    diagnostics.frequencyDurationMs = report.frequency.inspect.durationMs;
+    diagnostics.frequencyMinDurationMs = report.thresholds.minDurationMs;
+    diagnostics.frequencyMaxDurationMs = report.thresholds.maxDurationMs;
+}
+
 } // namespace
 
 void DetectionRuntime::resetState() {
@@ -96,7 +130,7 @@ void DetectionRuntime::resetDiagnostics() {
 
 void DetectionRuntime::resetDiagnosticsCounters() {
     _diagnostics = {};
-    _scalarDetectorReport = {};
+    _detectorReport = {};
     _resultQueueOverflowCount = 0;
     _frequencyEmitter.detector().resetDiagnosticsSummary();
 }
@@ -127,7 +161,7 @@ void DetectionRuntime::resetDetectionState() {
     _hasLatestPipelineResult = false;
     _lastOccurrence = {};
     _lastInspectedOccurrence = {};
-    _scalarDetectorReport = {};
+    _detectorReport = {};
 }
 
 void DetectionRuntime::setDiagnosticsEnabled(bool enabled) {
@@ -137,15 +171,18 @@ void DetectionRuntime::setDiagnosticsEnabled(bool enabled) {
 }
 
 void DetectionRuntime::refreshDetectorReports(unsigned long nowMs) {
-    _scalarDetectorReport = {};
-    if (_occurrenceSourceKind != OccurrenceSourceKind::ScalarTransient) {
-        return;
-    }
+    _detectorReport = {};
 
-    const ScalarTransientDetector& scalarDetector = _scalarDetector;
-    // DetectorRuntime coordinates detector-owned report snapshots. It must not
-    // become the permanent home of detector-specific report assembly.
-    scalarDetector.buildReport(_scalarDetectorReport, nowMs);
+    // DetectionRuntime coordinates detector-owned report snapshots. It must
+    // not become the permanent home of detector-specific report assembly.
+    switch (_occurrenceSourceKind) {
+        case OccurrenceSourceKind::FrequencyMatch:
+            _frequencyEmitter.detector().buildReport(_detectorReport, nowMs);
+            break;
+        case OccurrenceSourceKind::ScalarTransient:
+            _scalarDetector.buildReport(_detectorReport, nowMs);
+            break;
+    }
 }
 
 void DetectionRuntime::captureDiagnostics() {
@@ -179,7 +216,7 @@ void DetectionRuntime::captureDiagnostics() {
     _diagnostics.scalarOnsetRejectReason = _scalarDetector.lastOnsetRejectReasonName();
     _diagnostics.scalarTransientRejectReason = _scalarDetector.lastTransientRejectReasonName();
     if (_occurrenceSourceKind == OccurrenceSourceKind::ScalarTransient) {
-        populateScalarLegacyDiagnosticsFromReport(_diagnostics, _scalarDetectorReport);
+        populateScalarLegacyDiagnosticsFromReport(_diagnostics, _detectorReport);
     } else {
         const auto& scalarReportDetail = _scalarDetector.reportDetail();
         const auto& scalarDetail = scalarReportDetail.inspect;
@@ -208,6 +245,7 @@ void DetectionRuntime::captureDiagnostics() {
 
     if (_occurrenceSourceKind == OccurrenceSourceKind::FrequencyMatch) {
         const auto& detector = _frequencyEmitter.detector();
+        populateFrequencyLegacyDiagnosticsFromReport(_diagnostics, _detectorReport);
         _diagnostics.frequencyPresent = detector.diagnosticsObservedCount > 0;
         _diagnostics.frequencyValidWindow = detector.evidenceOk;
         _diagnostics.frequencyMatched = detector.diagnosticsMatchedCount > 0;
@@ -377,10 +415,10 @@ void DetectionRuntime::captureDiagnostics() {
         _diagnostics.frequencyPeakSampleCount = detector.candidatePeakSampleCount;
     } else {
         const auto& scalarLegacySummary = _scalarDetector.legacyRejectSummary();
-        const bool scalarSelectedRejectPresent = _scalarDetectorReport.selectedReject.present;
-        const auto& scalarSelectedReject = _scalarDetectorReport.selectedReject;
-        const auto& scalarDetail = _scalarDetectorReport.scalar.inspect;
-        populateScalarLegacyDiagnosticsFromReport(_diagnostics, _scalarDetectorReport);
+        const bool scalarSelectedRejectPresent = _detectorReport.selectedReject.present;
+        const auto& scalarSelectedReject = _detectorReport.selectedReject;
+        const auto& scalarDetail = _detectorReport.scalar.inspect;
+        populateScalarLegacyDiagnosticsFromReport(_diagnostics, _detectorReport);
         _diagnostics.sourceSummary.present = scalarLegacySummary.rejectedCandidateCount > 0;
         _diagnostics.sourceSummary.candidateCount = scalarLegacySummary.rejectedCandidateCount;
         _diagnostics.sourceSummary.rejectCount = scalarLegacySummary.rejectedCandidateCount;
@@ -531,7 +569,7 @@ void DetectionRuntime::setOccurrenceSource(OccurrenceSourceKind kind) {
     resetOccurrenceSources();
     _frequencyEmitter.setConfig(_frequencyMatchConfig);
     applyScalarTransientConfig(_scalarDetector, _scalarTransientConfig);
-    _scalarDetectorReport = {};
+    _detectorReport = {};
 }
 
 void DetectionRuntime::setInspectionPlan(const InspectionPlan& plan) {
@@ -611,7 +649,13 @@ const DetectionDiagnostics& DetectionRuntime::diagnostics() const {
 }
 
 const DetectorReport& DetectionRuntime::scalarDetectorReport() const {
-    return _scalarDetectorReport;
+    static const DetectorReport kEmptyReport = {};
+    return _detectorReport.detectorId == DetectorId::ScalarTransient ? _detectorReport : kEmptyReport;
+}
+
+const DetectorReport& DetectionRuntime::frequencyDetectorReport() const {
+    static const DetectorReport kEmptyReport = {};
+    return _detectorReport.detectorId == DetectorId::FrequencyMatch ? _detectorReport : kEmptyReport;
 }
 
 const FrequencyOccurrenceSource& DetectionRuntime::frequencyEmitter() const {

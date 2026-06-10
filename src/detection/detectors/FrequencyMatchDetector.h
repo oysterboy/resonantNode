@@ -2,6 +2,7 @@
 
 #include <stdint.h>
 
+#include "../DetectorReport.h"
 #include "../features/FrequencyMatchEvaluation.h"
 #include "../occurrences/Occurrence.h"
 
@@ -98,6 +99,7 @@ public:
     float bestContrast = 0.0f;
     unsigned long bestPeakSampleCount = 0;
     unsigned long candidateCount = 0;
+    unsigned long acceptedCount = 0;
     unsigned long rejectedCount = 0;
     unsigned long bestDurationMs = 0;
     unsigned long secondBestDurationMs = 0;
@@ -168,6 +170,7 @@ public:
                 unsigned long releaseDebounceMs,
                 unsigned long cooldownAfterReleaseMs,
                 unsigned long minDurationMs);
+    void buildReport(detection::DetectorReport& out, unsigned long nowMs) const;
 
     float diagnosticsScoreMean() const;
     float diagnosticsContrastMean() const;

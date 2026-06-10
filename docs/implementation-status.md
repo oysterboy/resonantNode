@@ -20,6 +20,7 @@ Status vocabulary:
 | Pass H checkpoint | landed | Pass G2c documented report-access limits, wrapper-era occurrence emission ownership, and Pass H non-goals. |
 | Scalar occurrence emission cleanup | landed | Pass H moved accepted scalar `Occurrence` emission into `ScalarTransientDetector`; runtime now drains the detector-owned payload. |
 | ScalarOccurrenceSource runtime cleanup | landed | Pass H2 moved remaining scalar reject-summary compatibility ownership into `ScalarTransientDetector`, rewired runtime directly to the detector, and deleted `ScalarOccurrenceSource`. |
+| Frequency DetectorReport path | landed | Pass I added detector-owned `FrequencyMatchDetector::buildReport(...)`, runtime now snapshots the active detector report, and legacy `DetectionDiagnostics` remains as compatibility only. |
 | BehaviorRuntime | deferred | Future behavior architecture work. |
 | OutputDispatcher | deferred | Future behavior/output separation. |
 | Full Chirp PatternRules | roadmap only | Not part of stable runtime. |

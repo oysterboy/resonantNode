@@ -660,6 +660,13 @@ during the implementation phase.
 ScalarOccurrenceSource has already been removed after Pass H2.
 ```
 
+Current implementation note after Pass I:
+
+```text
+FrequencyMatchDetector now also exposes a detector-owned DetectorReport path.
+FrequencyOccurrenceSource still temporarily owns accepted Occurrence emission.
+```
+
 ### 1.9a Detector Genericity Rule
 
 Detector is a shared architectural role, not necessarily one forced C++ base
@@ -832,7 +839,7 @@ exact header locations
 which current class survives
 which files are deleted
 how DetectionDiagnostics is split
-whether current FrequencyOccurrenceSource or FrequencyMatchDetector is canonical
+when FrequencyOccurrenceSource can be deleted after detector-owned occurrence/report migration
 how many report structs remain
 which aliases can be removed immediately
 which old output modes are still needed temporarily

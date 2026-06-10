@@ -41,8 +41,8 @@ Current implementation bridge:
 
 - `DetectionDiagnostics` remains the temporary shared diagnostic dump
 - legacy analyzer source reports remain temporary report surrogates
-- `DetectorReport` and `SelectedRejectSummary` now exist as canonical contract types, with the scalar path already using a sectioned active shape while frequency still remains on legacy diagnostics
-- readers stay generic; detector-specific detail belongs in detector-owned report sections such as `report.scalar.*`
+- `DetectorReport` and `SelectedRejectSummary` now exist as canonical contract types, with scalar and frequency both exposing sectioned detector-owned report paths while `DetectionDiagnostics` remains a temporary compatibility bridge
+- readers stay generic; detector-specific detail belongs in detector-owned report sections such as `report.scalar.*` and `report.frequency.*`
 
 ## Final Public Vocabulary
 
@@ -237,8 +237,8 @@ Legacy analyzer source reports and detector pointers remain temporary migration 
 
 ## Open Decisions Deferred to Implementation Passes
 
-- exact `DetectorReport` payload shape beyond the minimal placeholder
-- exact detector-specific detail sections beyond the current scalar-first `SelectedRejectSummary` shell
+- exact `DetectorReport` payload stabilization beyond the current scalar/frequency migration bridges
+- exact detector-specific detail sections beyond the current sectioned `report.scalar.*` / `report.frequency.*` shells
 - when `DetectionRuntime` stops reading from occurrence-source wrappers directly
 - detector genericity / runtime report-refresh boundary beyond the current scalar migration bridge
 - how `DetectionDiagnostics` gets split and retired

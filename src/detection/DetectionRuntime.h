@@ -3,8 +3,9 @@
 #include <stddef.h>
 
 // Keep the canonical detector-report contract compiled through the active
-// runtime header chain during migration. DetectionRuntime only populates the
-// scalar path so far; frequency still routes through legacy diagnostics.
+// runtime header chain during migration. DetectionRuntime now snapshots
+// scalar and frequency detector reports while legacy diagnostics still remain
+// active as compatibility output.
 #include "DetectorReport.h"
 #include "../io/AudioSignal.h"
 #include "DetectionProfile.h"
@@ -281,6 +282,7 @@ public:
     const DetectionPipelineResult& latestPipelineResult() const;
     const DetectionDiagnostics& diagnostics() const;
     const DetectorReport& scalarDetectorReport() const;
+    const DetectorReport& frequencyDetectorReport() const;
     const FrequencyOccurrenceSource& frequencyEmitter() const;
     const FieldState& fieldState() const;
     const FeatureHistory& featureHistory() const;
@@ -324,7 +326,7 @@ private:
     DetectionPipelineResult _latestPipelineResult = {};
     bool _hasLatestPipelineResult = false;
     DetectionDiagnostics _diagnostics = {};
-    DetectorReport _scalarDetectorReport = {};
+    DetectorReport _detectorReport = {};
     bool _diagnosticsEnabled = true;
     Occurrence _lastOccurrence = {};
     InspectedOccurrence _lastInspectedOccurrence = {};

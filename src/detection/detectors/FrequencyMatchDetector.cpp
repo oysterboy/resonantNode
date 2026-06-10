@@ -40,6 +40,33 @@ FrequencyReleaseFailCause frequencyReleaseFailCauseFromReason(FrequencyMatchEval
     }
 }
 
+const char* frequencyRejectReasonFromState(const FrequencyMatchDetector& detector) {
+    if (detector.candidateEmitted) {
+        return "none";
+    }
+    if (detector.candidateClosed) {
+        return detector.noEmitReason[0] != '\0' ? detector.noEmitReason : "unknown";
+    }
+    return detector.gateReason[0] != '\0' ? detector.gateReason : "unknown";
+}
+
+detection::DetectorRejectClass frequencyRejectClassFromReason(const char* reason) {
+    if (reason == nullptr || strcmp(reason, "none") == 0) {
+        return detection::DetectorRejectClass::None;
+    }
+    if (strcmp(reason, "duration_too_short") == 0 || strcmp(reason, "duration_too_long") == 0) {
+        return detection::DetectorRejectClass::Timing;
+    }
+    if (strcmp(reason, "refractory") == 0) {
+        return detection::DetectorRejectClass::Cooldown;
+    }
+    if (strstr(reason, "score") != nullptr || strstr(reason, "contrast") != nullptr || strstr(reason, "frequency") != nullptr) {
+        return detection::DetectorRejectClass::Threshold;
+    }
+
+    return detection::DetectorRejectClass::Unknown;
+}
+
 } // namespace
 
 void FrequencyMatchDetector::resetState() {
@@ -96,6 +123,7 @@ void FrequencyMatchDetector::resetState() {
     bestContrast = 0.0f;
     bestPeakSampleCount = 0;
     candidateCount = 0;
+    acceptedCount = 0;
     rejectedCount = 0;
     bestDurationMs = 0;
     secondBestDurationMs = 0;
@@ -134,6 +162,7 @@ void FrequencyMatchDetector::resetState() {
 
 void FrequencyMatchDetector::resetRejectSummary() {
     candidateCount = 0;
+    acceptedCount = 0;
     rejectedCount = 0;
     bestDurationMs = 0;
     secondBestDurationMs = 0;
@@ -373,6 +402,7 @@ void FrequencyMatchDetector::update(const detection::FrequencyBandMeasurementPac
         candidateCloseCause = lastReleaseFailCause;
         lastCandidateId = currentCandidateId;
         if (accepted) {
+            ++acceptedCount;
             acceptedCandidateId = currentCandidateId;
         } else {
             selectedRejectCandidateId = currentCandidateId;
@@ -623,6 +653,81 @@ void FrequencyMatchDetector::update(const detection::FrequencyBandMeasurementPac
         } else {
             ++diagnosticsReleaseNoEvidenceCount;
         }
+    }
+}
+
+void FrequencyMatchDetector::buildReport(detection::DetectorReport& out, unsigned long nowMs) const {
+    out = {};
+    out.detectorId = detection::DetectorId::FrequencyMatch;
+    out.thresholds.minDurationMs = candidateMinDurationMs;
+    out.thresholds.maxDurationMs = candidateMaxDurationMs;
+    out.aggregates.acceptedCount = acceptedCount;
+    out.aggregates.rejectedCount = rejectedCount;
+
+    const bool acceptedPresent = candidateEmitted && frequencyCandidate.valid;
+    if (acceptedPresent) {
+        out.accepted.present = true;
+        out.accepted.startMs = frequencyCandidate.startMs;
+        out.accepted.peakMs = frequencyCandidate.peakMs;
+        out.accepted.endMs = frequencyCandidate.endMs;
+        out.accepted.durationMs = frequencyCandidate.durationMs;
+        out.accepted.strength = frequencyCandidate.strength;
+        out.accepted.confidence = frequencyCandidate.confidence;
+        out.frequency.accepted.score = frequencyCandidate.score;
+        out.frequency.accepted.contrast = frequencyCandidate.contrast;
+    }
+
+    const bool selectedRejectPresent =
+        rejectedCount > 0 &&
+        (bestOpenMs > 0 || bestPeakMs > 0 || bestCloseMs > 0 || bestDurationMs > 0 || bestPeakScore > 0.0f ||
+         bestPeakContrast > 0.0f || (bestRejectReason != nullptr && strcmp(bestRejectReason, "none") != 0));
+    if (selectedRejectPresent) {
+        out.selectedReject.present = true;
+        out.selectedReject.rejectClass = frequencyRejectClassFromReason(bestRejectReason);
+        out.selectedReject.detectorReason = bestRejectReason;
+        out.selectedReject.startMs = bestOpenMs;
+        out.selectedReject.peakMs = bestPeakMs;
+        out.selectedReject.endMs = bestCloseMs;
+        out.selectedReject.durationMs = bestDurationMs;
+        out.selectedReject.strength = bestPeakScore;
+        out.selectedReject.confidence = 0.0f;
+        out.frequency.selectedReject.score = bestPeakScore;
+        out.frequency.selectedReject.contrast = bestPeakContrast;
+    }
+
+    out.frequency.thresholds.scoreThreshold = attackScoreThreshold;
+    out.frequency.thresholds.contrastThreshold = attackContrastThreshold;
+    out.frequency.aggregates.scoreOkCount = diagnosticsScoreOkCount;
+    out.frequency.aggregates.contrastOkCount = diagnosticsContrastOkCount;
+    out.frequency.aggregates.bothOkCount = diagnosticsBothOkCount;
+    out.frequency.aggregates.matchCount = diagnosticsMatchedCount;
+    out.frequency.inspect.rejectReason = frequencyRejectReasonFromState(*this);
+    out.frequency.inspect.noEmitReason = noEmitReason;
+    out.frequency.inspect.gateReason = gateReason;
+    out.frequency.inspect.candidateState = candidateState;
+    out.frequency.inspect.readyOk = evidenceOk;
+    out.frequency.inspect.gateOpen = attackOk;
+    out.frequency.inspect.opened = candidateActive || candidateClosed || candidateEmitted || candidateOpenMs > 0;
+    out.frequency.inspect.released = candidateClosed || candidateCloseMs > 0;
+    out.frequency.inspect.emitted = candidateEmitted;
+    out.frequency.inspect.validRelease = validRelease;
+    out.frequency.inspect.emitAllowed = emitAllowed;
+    out.frequency.inspect.openMs = candidateOpenMs;
+    out.frequency.inspect.peakMs = candidatePeakMs;
+    out.frequency.inspect.releaseMs = candidateCloseMs;
+    out.frequency.inspect.durationMs = candidateDurationMs;
+
+    // Mirror the scalar report window precedence exactly:
+    // accepted event first, then active/open lifecycle, then selected reject.
+    if (out.accepted.present) {
+        out.reportStartMs = out.accepted.startMs;
+        out.reportEndMs = out.accepted.endMs;
+    } else if (out.frequency.inspect.opened) {
+        out.reportStartMs = out.frequency.inspect.openMs;
+        out.reportEndMs = out.frequency.inspect.released ? out.frequency.inspect.releaseMs : nowMs;
+    } else if (out.selectedReject.present) {
+        out.reportStartMs = out.selectedReject.startMs;
+        out.reportEndMs = out.selectedReject.endMs;
     }
 }
 

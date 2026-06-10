@@ -44,6 +44,7 @@ public:
 
     void begin();
     void resetState();
+    void resetAcceptedOccurrenceSummary();
     void resetSelectedRejectSummary();
     void update(float signalLevel, uint32_t sampleTimeUs);
 
@@ -84,6 +85,8 @@ public:
     unsigned long maxTransientDurationMs() const;
     float minTransientPeakStrength() const;
     unsigned long releaseDebounceMs() const;
+    bool acceptedOccurrencePresent() const;
+    const detection::AcceptedOccurrenceSummary& acceptedOccurrence() const;
     const detection::ScalarDetectorReportDetail& reportDetail() const;
     bool selectedRejectPresent() const;
     const detection::RejectedCandidateSummary& selectedReject() const;
@@ -91,6 +94,7 @@ public:
 private:
     void updateOnsetStage(unsigned long nowUs, float signalMagnitude, bool aboveAttackThreshold, bool onsetCooldownElapsed);
     void updateTransientStage(unsigned long nowUs, float signalMagnitude, bool aboveReleaseThreshold);
+    void captureAcceptedOccurrence(unsigned long releaseObservedUs, unsigned long peakDurationUs);
     void captureSelectedReject(unsigned long releaseObservedUs);
     void refreshReportDetail();
     void printTransientStatsIfDue(unsigned long nowUs);
@@ -139,6 +143,8 @@ private:
     const char* _diagnosticsLabel = "EVT";
 
     // Canonical scalar-report facts owned directly by the detector core.
+    bool _acceptedOccurrencePresent = false;
+    detection::AcceptedOccurrenceSummary _acceptedOccurrence = {};
     detection::ScalarDetectorReportDetail _reportDetail = {};
     bool _selectedRejectPresent = false;
     detection::RejectedCandidateSummary _selectedReject = {};

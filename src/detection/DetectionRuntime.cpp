@@ -136,22 +136,15 @@ void DetectionRuntime::refreshScalarDetectorReport(unsigned long nowMs) {
 
     // TEMP_SCALAR_REPORT_BRIDGE:
     // Canonical scalar detector-truth fields now come directly from
-    // ScalarTransientDetector. ScalarOccurrenceSource still remains in the path
-    // for Occurrence emission and for legacy aggregate reject diagnostics.
-    report.scalarTransient = scalarDetector.reportDetail();
-
-    report.acceptedPresent = _lastOccurrence.present
-        && _lastOccurrence.detectorKind == OccurrenceDetectorKind::Transient;
+    // ScalarTransientDetector, including accepted occurrence, scalar detail,
+    // and selected reject facts. ScalarOccurrenceSource remains only for
+    // Occurrence emission and legacy aggregate reject diagnostics compatibility.
+    report.acceptedPresent = scalarDetector.acceptedOccurrencePresent();
     if (report.acceptedPresent) {
-        report.acceptedOccurrence.startMs = _lastOccurrence.startMs;
-        report.acceptedOccurrence.peakMs = _lastOccurrence.peakMs;
-        report.acceptedOccurrence.endMs = _lastOccurrence.releaseMs;
-        report.acceptedOccurrence.durationMs = _lastOccurrence.durationMs;
-        report.acceptedOccurrence.strength = _lastOccurrence.strength;
-        report.acceptedOccurrence.score = _lastOccurrence.score;
-        report.acceptedOccurrence.contrast = _lastOccurrence.contrast;
-        report.acceptedOccurrence.confidence = _lastOccurrence.confidence;
+        report.acceptedOccurrence = scalarDetector.acceptedOccurrence();
     }
+
+    report.scalarTransient = scalarDetector.reportDetail();
 
     report.selectedRejectPresent = scalarDetector.selectedRejectPresent();
     if (report.selectedRejectPresent) {

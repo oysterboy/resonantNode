@@ -12,6 +12,9 @@ void ScalarOccurrenceSource::reset() {
 }
 
 void ScalarOccurrenceSource::resetRejectSummary() {
+    // Analyzer SEQ uses this wrapper reset point as the per-trial scalar
+    // report boundary, so clear both detector-owned canonical summaries here.
+    _detector.resetAcceptedOccurrenceSummary();
     _detector.resetSelectedRejectSummary();
     _rejectedCandidateCount = 0;
     _rejectedBestDurationMs = 0;

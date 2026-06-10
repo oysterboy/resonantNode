@@ -26,6 +26,7 @@ Responsibilities:
 Does NOT:
 - decide pattern meaning
 - own frequency-specific scoring
+- own canonical DetectorReport truth for scalar accepted/detail/reject fields
 - own Analyzer SEQ reporting
 - own source-specific evidence extraction
 - define the final public detector boundary

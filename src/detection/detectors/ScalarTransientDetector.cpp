@@ -56,7 +56,13 @@ void ScalarTransientDetector::resetState() {
     _onsetRejectedCount = 0;
     _transientRejectedCount = 0;
     _reportDetail = {};
+    resetAcceptedOccurrenceSummary();
     resetSelectedRejectSummary();
+}
+
+void ScalarTransientDetector::resetAcceptedOccurrenceSummary() {
+    _acceptedOccurrencePresent = false;
+    _acceptedOccurrence = {};
 }
 
 void ScalarTransientDetector::resetSelectedRejectSummary() {
@@ -149,6 +155,7 @@ void ScalarTransientDetector::updateTransientStage(unsigned long nowUs, float si
             _lastTransientRejectReason = TransientRejectReason::None;
             _lastTransientRejectedDurationMs = 0;
             _lastTransientRejectedStrength = 0.0f;
+            captureAcceptedOccurrence(releaseObservedUs, peakDurationUs);
         } else {
             _lastTransientRejectedDurationMs = peakDurationUs / 1000UL;
             _lastTransientRejectedStrength = _peakStrength;
@@ -178,6 +185,18 @@ void ScalarTransientDetector::updateTransientStage(unsigned long nowUs, float si
         _releaseObservedUs = 0;
         _peakStrength = 0.0f;
     }
+}
+
+void ScalarTransientDetector::captureAcceptedOccurrence(unsigned long releaseObservedUs, unsigned long peakDurationUs) {
+    _acceptedOccurrencePresent = true;
+    _acceptedOccurrence.startMs = _peakStartedUs / 1000UL;
+    _acceptedOccurrence.peakMs = _peakStrengthObservedUs / 1000UL;
+    _acceptedOccurrence.endMs = releaseObservedUs / 1000UL;
+    _acceptedOccurrence.durationMs = peakDurationUs / 1000UL;
+    _acceptedOccurrence.strength = _peakStrength;
+    _acceptedOccurrence.score = _peakStrength;
+    _acceptedOccurrence.contrast = 0.0f;
+    _acceptedOccurrence.confidence = 1.0f;
 }
 
 void ScalarTransientDetector::captureSelectedReject(unsigned long releaseObservedUs) {
@@ -391,6 +410,14 @@ float ScalarTransientDetector::minTransientPeakStrength() const {
 
 unsigned long ScalarTransientDetector::releaseDebounceMs() const {
     return _releaseDebounceMs;
+}
+
+bool ScalarTransientDetector::acceptedOccurrencePresent() const {
+    return _acceptedOccurrencePresent;
+}
+
+const detection::AcceptedOccurrenceSummary& ScalarTransientDetector::acceptedOccurrence() const {
+    return _acceptedOccurrence;
 }
 
 const detection::ScalarDetectorReportDetail& ScalarTransientDetector::reportDetail() const {

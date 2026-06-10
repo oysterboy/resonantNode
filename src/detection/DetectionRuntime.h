@@ -98,9 +98,21 @@ struct SourceCandidateSnapshot {
     const char* scope = "unknown";
 };
 
+// DETECTION_DIAGNOSTICS_TRANSITIONAL
+//
+// DetectionDiagnostics is a temporary shared diagnostic dump retained for
+// legacy Analyzer output and migration safety.
+//
+// Do not add new detector-stage truth here.
+//
+// Canonical target:
+//   DetectorReport owns detector-stage accepted/rejected truth.
+//   RejectedCandidateSummary owns selected rejected candidate details.
+//   AnalyzerReport owns trial classification only.
+//
+// This struct should shrink and disappear after DetectorReport-based
+// detector reporting is active.
 struct DetectionDiagnostics {
-    // Legacy shared truth dump retained until Pass C / DetectorReport migration.
-    // Do not treat this as canonical contract vocabulary.
     unsigned long observedAtMs = 0;
 
     const char* occurrenceSource = "unknown";

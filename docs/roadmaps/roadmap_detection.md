@@ -647,6 +647,44 @@ ScalarOccurrenceSource and FrequencyOccurrenceSource are temporary wrappers
 scheduled for removal during the implementation phase.
 ```
 
+### 1.9a Detector Genericity Rule
+
+Detector is a shared architectural role, not necessarily one forced C++ base
+class yet.
+
+Shared outward detector contract:
+
+```text
+stable DetectorId / DetectorDescriptor
+accepted Occurrence emission
+DetectorReport exposure
+selected rejected candidate exposure through RejectedCandidateSummary
+generic reject class through DetectorRejectClass
+```
+
+Allowed specialized internals:
+
+```text
+feature input type
+update method shape
+candidate lifecycle state
+lifecycle implementation
+detector-specific reject reasons
+typed report detail
+typed occurrence detail
+```
+
+Runtime rule:
+
+```text
+DetectionRuntime coordinates detectors.
+DetectionRuntime must not grow one refreshXXDetectorReport() function per detector type.
+Detector-specific report production belongs to detector cores or detector-local helpers.
+```
+
+This does not require a forced `IDetector` base class or type-erased feature
+input yet.
+
 ---
 
 ### 1.10 PatternMatcher target rule

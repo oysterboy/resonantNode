@@ -139,6 +139,9 @@ void DetectionRuntime::refreshScalarDetectorReport(unsigned long nowMs) {
     // ScalarTransientDetector, including accepted occurrence, scalar detail,
     // and selected reject facts. ScalarOccurrenceSource remains only for
     // Occurrence emission and legacy aggregate reject diagnostics compatibility.
+    // DetectionRuntime must not grow one refreshXXDetectorReport() function per
+    // detector. Long-term report production belongs to detector cores or
+    // detector-local helpers.
     report.acceptedPresent = scalarDetector.acceptedOccurrencePresent();
     if (report.acceptedPresent) {
         report.acceptedOccurrence = scalarDetector.acceptedOccurrence();

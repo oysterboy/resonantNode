@@ -134,6 +134,33 @@ Rejected as target public contracts:
 
 Those wrapper classes may remain temporarily during migration, but they must not gain new architectural responsibilities and must not become the final detector boundary.
 
+## Detector Genericity Rule
+
+`Detector` is a shared architectural role, not necessarily a forced base class yet.
+
+Generic outward contract:
+
+- `DetectorId`
+- `DetectorDescriptor`
+- `Occurrence` emission
+- `DetectorReport`
+- `RejectedCandidateSummary`
+- `DetectorRejectClass`
+
+Specialized internals allowed:
+
+- feature input type
+- update method shape
+- candidate lifecycle implementation
+- typed occurrence detail
+- typed report detail
+
+DetectionRuntime must not grow one `refreshXXDetectorReport()` function per detector type.
+
+Detector-specific report building belongs to the detector core or a detector-local helper.
+
+DetectionRuntime coordinates detectors; it must not become the owner of detector-specific truth.
+
 ## OccurrenceSource Wrapper Deletion Target
 
 `ScalarOccurrenceSource` and `FrequencyOccurrenceSource` are temporary migration wrappers and must disappear as part of this clean refactor.
@@ -194,6 +221,7 @@ Legacy analyzer source reports and detector pointers remain temporary migration 
 - exact `DetectorReport` payload shape beyond the minimal placeholder
 - exact `RejectedCandidateSummary` fields per detector type
 - when `DetectionRuntime` stops reading from occurrence-source wrappers directly
+- detector genericity / runtime report-refresh boundary beyond the current scalar migration bridge
 - how `DetectionDiagnostics` gets split and retired
 - how much of current `Occurrence` survives after trimming
 - how much of current `PatternResult` survives after trimming

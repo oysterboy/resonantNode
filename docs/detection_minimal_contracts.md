@@ -43,9 +43,9 @@ Detector
 
 Current closest mapping:
 
-- detector truth is split across `FrequencyMatchDetector`, `ScalarOccurrenceSource`, `DetectionDiagnostics`, and analyzer legacy source report structs
-- no canonical `DetectorReport` exists yet
-- no canonical `RejectedCandidateSummary` exists yet
+- detector truth is still split across detector cores, `DetectionDiagnostics`, and analyzer legacy source report structs
+- the scalar path now has a canonical `DetectorReport` / `RejectedCandidateSummary` bridge, but frequency still does not
+- analyzer compatibility output still depends on legacy report synthesis alongside the canonical scalar bridge
 
 ## Minimal Runtime Contracts
 
@@ -76,6 +76,28 @@ Current best fit:
 Current gap:
 
 - the public detector boundary is hidden behind `FrequencyOccurrenceSource` / `ScalarOccurrenceSource` wrappers and ad hoc runtime diagnostics
+
+Genericity rule:
+
+`Detector` is a shared runtime role and contract vocabulary, not necessarily one generic C++ interface yet.
+
+The shared detector contract is:
+
+- emits accepted `Occurrence`
+- exposes `DetectorReport`
+- exposes selected rejected candidate through `RejectedCandidateSummary`
+- has stable `DetectorId` / `DetectorDescriptor`
+
+Detector-specific parts may remain specialized:
+
+- input feature shape
+- `update(...)` signature
+- candidate state
+- lifecycle logic
+- typed report detail
+- typed occurrence detail
+
+Do not introduce a generic detector interface that forces unnatural feature-input type erasure unless the codebase clearly needs it.
 
 ### Occurrence
 

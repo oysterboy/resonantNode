@@ -99,6 +99,13 @@ Detector-specific parts may remain specialized:
 
 Do not introduce a generic detector interface that forces unnatural feature-input type erasure unless the codebase clearly needs it.
 
+Near-term occurrence-emission rule:
+
+- accepted-occurrence ownership should move into detector cores
+- runtime may keep temporary routing/switching while migration is incomplete
+- runtime should not accumulate one permanent occurrence-drain helper per detector type
+- this still does not require a forced `IDetector`
+
 ### Occurrence
 
 Accepted detector-level event facts only:

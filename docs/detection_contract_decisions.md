@@ -161,6 +161,12 @@ Detector-specific report building belongs to the detector core or a detector-loc
 
 DetectionRuntime coordinates detectors; it must not become the owner of detector-specific truth.
 
+The same rule applies to accepted-occurrence drain ownership:
+
+- detector-specific input/update wiring may remain specialized during migration
+- detector-specific accepted-occurrence emission should converge on a detector-owned outward pattern
+- `DetectionRuntime` must not grow one permanent `drainXXDetectorOccurrence()` helper per detector type as the final architecture
+
 ## OccurrenceSource Wrapper Deletion Target
 
 `ScalarOccurrenceSource` and `FrequencyOccurrenceSource` are temporary migration wrappers and must disappear as part of this clean refactor.

@@ -685,6 +685,15 @@ Detector-specific report production belongs to detector cores or detector-local 
 This does not require a forced `IDetector` base class or type-erased feature
 input yet.
 
+Occurrence-emission rule:
+
+```text
+Detector-specific input/update wiring may remain specialized during migration.
+Accepted Occurrence emission should converge on a detector-owned outward pattern.
+DetectionRuntime must not grow one permanent drainXXDetectorOccurrence() helper per detector type.
+OccurrenceSourceKind remains temporary routing vocabulary until later cleanup.
+```
+
 ---
 
 ### 1.10 PatternMatcher target rule

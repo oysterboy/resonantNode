@@ -96,6 +96,33 @@ snapshot, including:
 Detector-specific report construction belongs to detector cores or
 detector-local helpers, not to detector-specific runtime refresh functions.
 
+## Runtime Report Access Implication
+
+The current runtime report accessor is still scalar-specific:
+
+```text
+DetectionRuntime::scalarDetectorReport()
+```
+
+There is no generic runtime report accessor yet such as:
+
+```text
+detectorReport(DetectorId)
+activeDetectorReport()
+```
+
+This is acceptable as a migration step, but it should be treated as temporary
+scalar naming rather than the template for future detector report access.
+
+Frequency migration should not automatically copy this into:
+
+```text
+DetectionRuntime::frequencyDetectorReport()
+```
+
+unless a later pass explicitly decides that per-detector report accessors are
+the final outward pattern.
+
 ## Frequency Migration Implication
 
 Frequency migration should not copy the old scalar bridge shape into:
@@ -137,6 +164,8 @@ Temporary bridge work still remains in the scalar path:
   diagnostics compatibility
 - `DetectionRuntime` still stores the scalar report snapshot and copies legacy
   scalar compatibility values into `DetectionDiagnostics`
+- runtime report access is still scalar-specific through
+  `scalarDetectorReport()`
 - frequency still has no migrated `DetectorReport` path
 
 ## Recommended Next Pass

@@ -28,6 +28,7 @@ Status vocabulary:
 | FrequencyOccurrenceSource removal | landed | Pass M1 moved the shell-only frequency routing duties into `DetectionRuntime`, added direct `frequencyDetector()` access, and deleted `FrequencyOccurrenceSource`. |
 | Generic DetectorReport access | landed | Pass N added `DetectionRuntime::detectorReport(DetectorId)` plus `activeDetectorReport()`, rewired Analyzer to the generic access path, and kept typed report accessors as transitional wrappers only. |
 | Analyzer run summary split | landed | Pass N2 made `SEQ SUMMARY` the clean canonical-summary path, renamed the old summary to `SEQ SUMMARY LEG`, and kept legacy aggregate counters off the clean printer. |
+| Legacy diagnostics containment | landed | Pass O documented the hard exclusion list for clean paths, marked the canonical-to-legacy adapter boundary in code, and kept `DetectionDiagnostics` as explicit compatibility-only infrastructure. |
 | BehaviorRuntime | deferred | Future behavior architecture work. |
 | OutputDispatcher | deferred | Future behavior/output separation. |
 | Full Chirp PatternRules | roadmap only | Not part of stable runtime. |

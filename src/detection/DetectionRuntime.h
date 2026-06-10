@@ -59,6 +59,10 @@ struct DetectionPipelineResult {
 struct SourceCandidateSummary {
     // Legacy compatibility summary name. Planned canonical target:
     // RejectedCandidateSummary inside DetectorReport.
+    //
+    // Clean Analyzer paths must not depend on this shape directly.
+    // Adapter direction is canonical DetectorReport -> legacy summary, not the
+    // reverse.
     bool present = false;
     unsigned long candidateCount = 0;
     unsigned long rejectCount = 0;
@@ -89,6 +93,8 @@ struct SourceCandidateSummary {
 struct SourceCandidateSnapshot {
     // Legacy compatibility snapshot name. Planned canonical target:
     // folded into RejectedCandidateSummary during DetectorReport migration.
+    //
+    // Keep this out of canonical Analyzer/report contracts.
     bool present = false;
     unsigned long peakMs = 0;
     unsigned long durationMs = 0;
@@ -280,6 +286,9 @@ public:
     bool popPatternResult(PatternResult& out);
     bool hasLatestPipelineResult() const;
     const DetectionPipelineResult& latestPipelineResult() const;
+    // Legacy compatibility dump only. Canonical Analyzer/report code should
+    // prefer DetectorReport accessors and treat DetectionDiagnostics as a
+    // transitional adapter source for old reporting paths.
     const DetectionDiagnostics& diagnostics() const;
     // Generic report access is the canonical upward path. Keep the typed
     // wrappers below only as migration compatibility until callers are updated.

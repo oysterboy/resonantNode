@@ -801,6 +801,15 @@ SEQ_SUMMARY_LEG is the explicit legacy aggregate path.
 Clean summary must not read DetectionDiagnostics or legacy analyzer diagnostic structs.
 ```
 
+Current implementation note after Pass O:
+
+```text
+Clean SEQ_INSPECT / SEQ_EXPLAIN / SEQ_SUMMARY now have an explicit hard
+exclusion rule against DetectionDiagnostics and analyzer-local legacy
+diagnostic structs.
+Legacy adapter direction is canonical -> legacy.
+```
+
 Future generic `SEQ_TRIAL` may show:
 
 ```text

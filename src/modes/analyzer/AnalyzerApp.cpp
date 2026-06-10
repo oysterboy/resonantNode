@@ -1755,6 +1755,14 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
     const detection::DetectionDiagnostics* runtimeDiag = nullptr;
     const FrequencyMatchDetector* frequencyDetector = nullptr;
     if (diagnosticsRequested) {
+        // LEGACY_DIAGNOSTICS_COMPAT
+        //
+        // The clean Analyzer paths above consume PatternResult +
+        // DetectorReport + expected-window facts only.
+        //
+        // Everything below this capture point exists to populate legacy
+        // analyzer compatibility structs and printers. Do not route new
+        // canonical output through DetectionDiagnostics.
         _detection.captureDiagnostics();
         runtimeDiag = &_detection.diagnostics();
         frequencyDetector = &_detection.frequencyDetector();
@@ -1763,6 +1771,8 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
         ? runtimeDiag->patternResultQueueOverflowCount
         : 0UL;
 
+    // Legacy analyzer compatibility adapter:
+    // canonical/runtime facts -> legacy source/detector summary structs.
     report.source.frequencyMatch.currentTrialId = report.context.trial;
     report.source.frequencyMatch.windowStartMs = _sequenceTest.currentTrialStartMs;
     report.source.frequencyMatch.windowEndMs = _sequenceTest.currentTrialEndMs;

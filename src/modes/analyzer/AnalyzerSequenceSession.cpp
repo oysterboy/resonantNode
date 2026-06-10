@@ -521,6 +521,9 @@ void AnalyzerApp::finalizeSequenceTrial(unsigned long now) {
     updateCleanSequenceSummary(*finalizedReport);
     _sequenceTest.completedTrials++;
     _sequenceTest.totalPatternConfidence += finalizedReport->primaryPattern.confidence;
+    // Legacy summary compatibility only:
+    // fragmentedAccepted still derives from legacy source-summary gap/island
+    // facts and feeds SEQ_SUMMARY_LEG, not the clean summary path.
     if (finalizedReport->source.acceptedPresent &&
         (finalizedReport->source.sourceSummary.totalGapMs > 0 ||
          finalizedReport->source.sourceSummary.islandCount > 1)) {

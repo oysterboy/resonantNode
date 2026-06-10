@@ -252,6 +252,14 @@ Canonical Analyzer boundary rule:
 
 Legacy analyzer source reports and detector pointers remain temporary migration structures only.
 
+Current implementation note after Pass O:
+
+- clean `SEQ_SUMMARY`, `SEQ_INSPECT`, and `SEQ_EXPLAIN` are now explicitly
+  fenced away from `DetectionDiagnostics` and analyzer-local legacy diagnostic
+  structs
+- adapter direction is canonical detector/runtime facts -> legacy analyzer
+  compatibility structs, not the reverse
+
 ## Open Decisions Deferred to Implementation Passes
 
 - exact `DetectorReport` payload stabilization beyond the current scalar/frequency migration bridges

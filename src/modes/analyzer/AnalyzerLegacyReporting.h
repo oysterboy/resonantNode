@@ -412,6 +412,8 @@ struct AnalyzerDebugSummary {
 
 // Legacy analyzer-local selected-reject summary copy.
 // Planned canonical target: RejectedCandidateSummary inside DetectorReport.
+//
+// Clean Analyzer outputs must not read this struct.
 struct AnalyzerSourceCandidateSummary {
     bool present = false;
     const char* origin = "unknown";
@@ -443,6 +445,8 @@ struct AnalyzerSourceCandidateSummary {
 
 // Legacy analyzer-local selected-reject snapshot copy.
 // Planned canonical target: folded into RejectedCandidateSummary.
+//
+// Clean Analyzer outputs must not read this struct.
 struct AnalyzerSourceCandidateSnapshot {
     bool present = false;
     unsigned long peakMs = 0;
@@ -457,6 +461,8 @@ struct AnalyzerSourceCandidateSnapshot {
 
 // Legacy analyzer-local detector diagnostic surrogate.
 // Planned canonical target: FrequencyMatch detector detail inside DetectorReport.
+//
+// Clean Analyzer outputs must not read this struct.
 struct AnalyzerFrequencyDiagnostic {
     unsigned long currentTrialId = 0;
     unsigned long acceptedTrialId = 0;
@@ -619,6 +625,8 @@ struct AnalyzerFrequencyDiagnostic {
 
 // Legacy analyzer-local detector diagnostic surrogate.
 // Planned canonical target: ScalarTransient detector detail inside DetectorReport.
+//
+// Clean Analyzer outputs must not read this struct.
 struct AnalyzerScalarDiagnostic {
     unsigned long currentTrialId = 0;
     unsigned long acceptedTrialId = 0;
@@ -678,6 +686,8 @@ struct AnalyzerScalarDiagnostic {
 
 // Legacy analyzer-local source-stage truth bundle.
 // Planned canonical target: DetectorReport.
+//
+// Clean Analyzer outputs must not read this struct.
 struct AnalyzerSourceStageReport {
     const char* sourceKind = "unknown";
     const char* sourceName = "unknown";
@@ -764,7 +774,9 @@ struct AnalyzerCleanSummary {
 struct AnalyzerReport {
     AnalyzerRunContext context;
     AnalyzerExpectedEvent expected;
+    // Canonical detector-stage truth for clean inspect/explain/summary paths.
     const detection::DetectorReport* detectorReport = nullptr;
+    // Legacy source-stage compatibility bundle. Keep clean outputs off this.
     AnalyzerSourceStageReport source;
     const FrequencyMatchDetector* frequencyDetector = nullptr;
 
@@ -777,6 +789,7 @@ struct AnalyzerReport {
     AnalyzerClassification classification;
     AnalyzerProfileDetail profileDetail;
     AnalyzerDebugSummary debug;
+    // Legacy detector diagnostic surrogates retained for old reporting paths.
     AnalyzerScalarDiagnostic scalar;
 };
 

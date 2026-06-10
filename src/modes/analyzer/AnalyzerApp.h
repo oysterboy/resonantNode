@@ -392,6 +392,9 @@ private:
         unsigned long misses = 0;
         unsigned long unexpected = 0;
         unsigned long duplicates = 0;
+        // Legacy-only aggregate used by SEQ_SUMMARY_LEG. This currently still
+        // depends on legacy source summary facts and is intentionally excluded
+        // from the clean summary path.
         unsigned long fragmentedAccepted = 0;
         unsigned long invalidAudio = 0;
         unsigned long startupArtifacts = 0;

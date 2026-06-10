@@ -15,6 +15,14 @@ Historical naming note:
 
 `DetectionDiagnostics` is currently the live shared diagnostic dump produced by `DetectionRuntime::captureDiagnostics()` in [DetectionRuntime.cpp](/c:/Users/malte/Documents/PlatformIO/Projects/ESP32_learn01/src/detection/DetectionRuntime.cpp).
 
+Current state after Pass O:
+
+- clean `SEQ_SUMMARY`, `SEQ_INSPECT`, and `SEQ_EXPLAIN` are explicitly fenced
+  away from this structure
+- `DetectionDiagnostics` remains for legacy compatibility output only
+- adapter direction is canonical detector/runtime facts -> legacy diagnostics,
+  not the reverse
+
 Today it serves three jobs at once:
 
 - detector-stage accepted/rejected truth cache
@@ -25,7 +33,6 @@ Active flow today:
 
 ```text
 ScalarTransientDetector / FrequencyMatchDetector
--> ScalarOccurrenceSource / FrequencyOccurrenceSource
 -> DetectionRuntime::captureDiagnostics()
 -> DetectionDiagnostics
 -> AnalyzerApp legacy report synthesis

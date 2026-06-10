@@ -655,19 +655,18 @@ Public detector boundary decision:
 
 ```text
 Detector cores are canonical.
-FrequencyOccurrenceSource remains a temporary wrapper scheduled for removal
-during the implementation phase.
-ScalarOccurrenceSource has already been removed after Pass H2.
+FrequencyOccurrenceSource has been removed after Pass M1.
+ScalarOccurrenceSource was already removed after Pass H2.
 ```
 
-Current implementation note after Pass I:
+Current implementation note after Pass M1:
 
 ```text
 FrequencyMatchDetector now also exposes a detector-owned DetectorReport path.
 After Pass M, FrequencyMatchDetector also owns pending accepted Occurrence
 emission directly.
-FrequencyOccurrenceSource remains only as a temporary shell for specialized
-routing/config forwarding.
+After Pass M1, DetectionRuntime owns the remaining specialized frequency
+routing/config forwarding directly and the wrapper is gone.
 ```
 
 ### 1.9a Detector Genericity Rule

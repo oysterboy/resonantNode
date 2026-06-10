@@ -1754,7 +1754,7 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
     if (diagnosticsRequested) {
         _detection.captureDiagnostics();
         runtimeDiag = &_detection.diagnostics();
-        frequencyDetector = &_detection.frequencyEmitter().detector();
+        frequencyDetector = &_detection.frequencyDetector();
     }
     report.debug.patternResultQueueOverflowCount = runtimeDiag != nullptr
         ? runtimeDiag->patternResultQueueOverflowCount

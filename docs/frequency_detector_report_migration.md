@@ -11,7 +11,6 @@ Before this pass, the live frequency path looked like:
 
 ```text
 FrequencyMatchDetector
--> FrequencyOccurrenceSource
 -> DetectionRuntime
 -> DetectionDiagnostics.frequency*
 -> Analyzer legacy frequency reporting
@@ -178,11 +177,12 @@ That work is deferred to Pass J.
 
 ## FrequencyOccurrenceSource Status
 
-`FrequencyOccurrenceSource` still exists and still owns accepted frequency
-`Occurrence` emission on the active runtime path.
+Historical note:
 
-This pass does not delete it and does not move accepted frequency occurrence
-construction into `FrequencyMatchDetector`.
+- at the time of this pass, `FrequencyOccurrenceSource` still owned accepted
+  frequency `Occurrence` emission
+- that ownership moved into `FrequencyMatchDetector` in Pass M
+- the wrapper itself was removed in Pass M1
 
 ## What Did Not Change
 
@@ -198,7 +198,7 @@ construction into `FrequencyMatchDetector`.
 
 - `DetectionRuntime` still performs `DetectionDiagnostics` compatibility copies
 - analyzer frequency output still depends on legacy bridge data
-- `FrequencyOccurrenceSource` still wraps accepted occurrence emission
+- wrapper removal was deferred beyond this pass and has now landed in Pass M1
 - frequency selected reject still uses string-based detector reasons
 
 ## Recommended Next Pass

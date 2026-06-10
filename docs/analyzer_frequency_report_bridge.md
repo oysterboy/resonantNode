@@ -129,7 +129,7 @@ The bridge only changes where overlapping truth is sourced from.
 - analyzer still keeps a large fallback dependency on `DetectionDiagnostics`
 - `DetectorReport` still lacks several rich frequency stats and compatibility
   counters that analyzer legacy output expects
-- `FrequencyOccurrenceSource` still owns accepted occurrence emission
+- accepted frequency occurrence emission now lives in `FrequencyMatchDetector`
 - canonical inspect/explain output is still pending
 
 ## Recommended Next Pass

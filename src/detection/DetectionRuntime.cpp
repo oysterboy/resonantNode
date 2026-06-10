@@ -2,8 +2,6 @@
 
 #include <string.h>
 
-#include "detectors/FrequencyMatchDetector.h"
-
 // DetectionRuntime pipeline execution in source order.
 namespace detection {
 
@@ -132,16 +130,16 @@ void DetectionRuntime::resetDiagnosticsCounters() {
     _diagnostics = {};
     _detectorReport = {};
     _resultQueueOverflowCount = 0;
-    _frequencyEmitter.detector().resetDiagnosticsSummary();
+    _frequencyDetector.resetDiagnosticsSummary();
 }
 
 void DetectionRuntime::resetOccurrenceSources() {
-    _frequencyEmitter.reset();
+    _frequencyDetector.resetState();
     _scalarDetector.resetState();
 }
 
 void DetectionRuntime::resetSourceRejectSummaries() {
-    _frequencyEmitter.detector().resetRejectSummary();
+    _frequencyDetector.resetRejectSummary();
     _scalarDetector.resetAcceptedOccurrenceSummary();
     _scalarDetector.resetSelectedRejectSummary();
     _scalarDetector.resetLegacyRejectSummary();
@@ -166,7 +164,7 @@ void DetectionRuntime::resetDetectionState() {
 
 void DetectionRuntime::setDiagnosticsEnabled(bool enabled) {
     _diagnosticsEnabled = enabled;
-    _frequencyEmitter.setDiagnosticsEnabled(enabled);
+    _frequencyDetector.setDiagnosticsEnabled(enabled);
     _scalarDetector.setDiagnosticsEnabled(enabled);
 }
 
@@ -177,7 +175,7 @@ void DetectionRuntime::refreshDetectorReports(unsigned long nowMs) {
     // not become the permanent home of detector-specific report assembly.
     switch (_occurrenceSourceKind) {
         case OccurrenceSourceKind::FrequencyMatch:
-            _frequencyEmitter.detector().buildReport(_detectorReport, nowMs);
+            _frequencyDetector.buildReport(_detectorReport, nowMs);
             break;
         case OccurrenceSourceKind::ScalarTransient:
             _scalarDetector.buildReport(_detectorReport, nowMs);
@@ -244,7 +242,7 @@ void DetectionRuntime::captureDiagnostics() {
     _diagnostics.sourceLastCandidate = {};
 
     if (_occurrenceSourceKind == OccurrenceSourceKind::FrequencyMatch) {
-        const auto& detector = _frequencyEmitter.detector();
+        const auto& detector = _frequencyDetector;
         populateFrequencyLegacyDiagnosticsFromReport(_diagnostics, _detectorReport);
         _diagnostics.frequencyPresent = detector.diagnosticsObservedCount > 0;
         _diagnostics.frequencyValidWindow = detector.evidenceOk;
@@ -556,7 +554,6 @@ void DetectionRuntime::captureDiagnostics() {
 
 void DetectionRuntime::setFrequencyMatchConfig(const FrequencyMatchConfig& config) {
     _frequencyMatchConfig = config;
-    _frequencyEmitter.setConfig(_frequencyMatchConfig);
 }
 
 void DetectionRuntime::setScalarTransientConfig(const ScalarTransientConfig& config) {
@@ -567,7 +564,6 @@ void DetectionRuntime::setScalarTransientConfig(const ScalarTransientConfig& con
 void DetectionRuntime::setOccurrenceSource(OccurrenceSourceKind kind) {
     _occurrenceSourceKind = kind;
     resetOccurrenceSources();
-    _frequencyEmitter.setConfig(_frequencyMatchConfig);
     applyScalarTransientConfig(_scalarDetector, _scalarTransientConfig);
     _detectorReport = {};
 }
@@ -605,7 +601,25 @@ void DetectionRuntime::observeFrame(
 
     switch (_occurrenceSourceKind) {
         case OccurrenceSourceKind::FrequencyMatch:
-            _frequencyEmitter.observeFrame(audioSamplePacket, frequencyEvidence);
+            if (!frequencyEvidence.present || !frequencyEvidence.fresh) {
+                break;
+            }
+            {
+                FrequencyMatchEvaluation::Values frequencyTuning = {};
+                frequencyTuning.attackScoreMin = _frequencyMatchConfig.attackScoreMin;
+                frequencyTuning.releaseScoreMin = _frequencyMatchConfig.releaseScoreMin;
+                frequencyTuning.attackContrastMin = _frequencyMatchConfig.attackContrastMin;
+                frequencyTuning.releaseContrastMin = _frequencyMatchConfig.releaseContrastMin;
+                _frequencyDetector.update(
+                    frequencyEvidence,
+                    audioSamplePacket,
+                    audioSamplePacket.timeMs,
+                    audioSamplePacket.sampleIndex,
+                    frequencyTuning,
+                    _frequencyMatchConfig.releaseDebounceMs,
+                    _frequencyMatchConfig.cooldownAfterReleaseMs,
+                    _frequencyMatchConfig.minDurationMs);
+            }
             break;
         case OccurrenceSourceKind::ScalarTransient:
             if (streamRequiresFreshFrequency(_scalarTransientConfig.observedStream) && !frequencyEvidence.fresh) {
@@ -658,8 +672,8 @@ const DetectorReport& DetectionRuntime::frequencyDetectorReport() const {
     return _detectorReport.detectorId == DetectorId::FrequencyMatch ? _detectorReport : kEmptyReport;
 }
 
-const FrequencyOccurrenceSource& DetectionRuntime::frequencyEmitter() const {
-    return _frequencyEmitter;
+const FrequencyMatchDetector& DetectionRuntime::frequencyDetector() const {
+    return _frequencyDetector;
 }
 
 const FieldState& DetectionRuntime::fieldState() const {
@@ -675,7 +689,7 @@ void DetectionRuntime::drainOccurrenceSources(unsigned long nowMs) {
 
     switch (_occurrenceSourceKind) {
         case OccurrenceSourceKind::FrequencyMatch:
-            while (_frequencyEmitter.detector().popOccurrence(candidate)) {
+            while (_frequencyDetector.popOccurrence(candidate)) {
                 _fieldStateTracker.observeOccurrence(candidate, nowMs);
                 const InspectedOccurrence inspected = _occurrenceInspector.inspectWithHistory(candidate, &_featureHistory);
                 _fieldStateTracker.observeInspectedOccurrence(inspected, nowMs);

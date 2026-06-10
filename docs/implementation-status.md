@@ -25,6 +25,7 @@ Status vocabulary:
 | Canonical SEQ_INSPECT / SEQ_EXPLAIN | landed | Pass K renamed the legacy inspect/explain labels to `*_LEG`, routed plain `inspect` / `explain` to canonical detector-report printers, and dispatched detector detail by `DetectorId`. |
 | Analyzer trial truth canonical inputs | landed | Pass L keeps `AnalyzerClassification` generic, makes clean inspect/explain prefer finalized-trial `PatternResult` snapshots plus `DetectorReport`, and keeps synthesized fallback detail off the canonical path. |
 | Frequency occurrence emission migration | landed | Pass M moved pending accepted frequency `Occurrence` construction and `popOccurrence(...)` into `FrequencyMatchDetector`; `FrequencyOccurrenceSource` remains as a thin shell only. |
+| FrequencyOccurrenceSource removal | landed | Pass M1 moved the shell-only frequency routing duties into `DetectionRuntime`, added direct `frequencyDetector()` access, and deleted `FrequencyOccurrenceSource`. |
 | BehaviorRuntime | deferred | Future behavior architecture work. |
 | OutputDispatcher | deferred | Future behavior/output separation. |
 | Full Chirp PatternRules | roadmap only | Not part of stable runtime. |

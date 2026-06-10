@@ -46,11 +46,11 @@ shape remains intact.
 
 ## FrequencyOccurrenceSource Status
 
-`FrequencyOccurrenceSource` remains temporarily, but now only as a thin shell:
+Historical note:
 
-- forwards specialized frequency input and config into the detector
-- applies the fresh-only lifecycle gate before detector update
-- delegates `popOccurrence(...)` back to the detector for compatibility
+- in Pass M, `FrequencyOccurrenceSource` remained temporarily as a thin shell
+- in Pass M1, that shell was removed and its remaining routing/config duties
+  moved into `DetectionRuntime`
 
 It no longer owns accepted frequency occurrence construction or pending state.
 
@@ -107,7 +107,7 @@ Analyzer, inspector, and pattern stages remain unchanged in behavior:
 
 ## Remaining Temporary Bridges
 
-- `FrequencyOccurrenceSource` still exists as a thin routing/config shell
+- wrapper deletion was deferred beyond this pass and landed in Pass M1
 - `OccurrenceSourceKind::FrequencyMatch` still routes through the wrapper name
 - Analyzer still uses legacy diagnostic bridges outside the clean detector
   report / occurrence contracts where not yet migrated

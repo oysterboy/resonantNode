@@ -9,8 +9,8 @@
 #include "DetectorReport.h"
 #include "../io/AudioSignal.h"
 #include "DetectionProfile.h"
+#include "detectors/FrequencyMatchDetector.h"
 #include "detectors/ScalarTransientDetector.h"
-#include "occurrences/FrequencyOccurrenceSource.h"
 #include "inspector/OccurrenceInspector.h"
 #include "inspector/InspectorTypes.h"
 #include "patterns/PatternAssembler.h"
@@ -283,7 +283,7 @@ public:
     const DetectionDiagnostics& diagnostics() const;
     const DetectorReport& scalarDetectorReport() const;
     const DetectorReport& frequencyDetectorReport() const;
-    const FrequencyOccurrenceSource& frequencyEmitter() const;
+    const FrequencyMatchDetector& frequencyDetector() const;
     const FieldState& fieldState() const;
     const FeatureHistory& featureHistory() const;
 
@@ -310,7 +310,7 @@ private:
     PatternRulesConfig _patternRulesConfig = {};
     const char* _profileName = "unknown";
 
-    FrequencyOccurrenceSource _frequencyEmitter;
+    FrequencyMatchDetector _frequencyDetector;
     ScalarTransientDetector _scalarDetector;
     OccurrenceInspector _occurrenceInspector;
     PatternAssembler _patternAssembler;

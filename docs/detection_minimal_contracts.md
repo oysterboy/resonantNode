@@ -76,7 +76,7 @@ Current best fit:
 
 Current gap:
 
-- the frequency public detector boundary is still hidden behind `FrequencyOccurrenceSource` and ad hoc runtime diagnostics
+- the frequency public detector boundary now sits on `FrequencyMatchDetector`, while legacy diagnostics remain transitional
 - the scalar path is already detector-owned, but compatibility diagnostics are still transitional
 
 Genericity rule:

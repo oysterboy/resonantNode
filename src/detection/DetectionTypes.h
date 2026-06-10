@@ -37,8 +37,8 @@ namespace detection {
 // OccurrenceType or in DetectorReport.
 //
 // Migration note:
-//   FrequencyOccurrenceSource is still a temporary wrapper. ScalarTransientDetector
-//   already owns scalar Occurrence + DetectorReport directly.
+//   ScalarTransientDetector and FrequencyMatchDetector now both own accepted
+//   Occurrence emission plus DetectorReport directly.
 
 /*
 DetectionTypes

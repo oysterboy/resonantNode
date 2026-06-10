@@ -134,12 +134,12 @@ Accepted detector-stage objects:
 
 Rejected as target public contracts:
 
-- `FrequencyOccurrenceSource`
+- `FrequencyOccurrenceSource` (now deleted in Pass M1)
 
 Historical note:
 
-- `ScalarOccurrenceSource` was already removed after Pass H2
-- `FrequencyOccurrenceSource` remains the only active temporary occurrence-source wrapper, but after Pass M it is shell-only and no longer owns accepted occurrence emission
+- `ScalarOccurrenceSource` was removed after Pass H2
+- `FrequencyOccurrenceSource` was removed in Pass M1 after frequency accepted occurrence emission moved into `FrequencyMatchDetector`
 
 Any remaining wrapper class may exist only temporarily during migration. It must not gain new architectural responsibilities and must not become the final detector boundary.
 
@@ -178,12 +178,12 @@ The same rule applies to accepted-occurrence drain ownership:
 
 ## OccurrenceSource Wrapper Deletion Target
 
-`FrequencyOccurrenceSource` is still a temporary migration wrapper and must disappear as part of this clean refactor.
+`FrequencyOccurrenceSource` was a temporary migration wrapper and has now been removed.
 
 Historical note:
 
-- `ScalarOccurrenceSource` already disappeared during Pass H2 after scalar detector ownership became direct
-- `FrequencyOccurrenceSource` remains temporarily only for specialized routing/config forwarding after Pass M
+- `ScalarOccurrenceSource` disappeared during Pass H2 after scalar detector ownership became direct
+- `FrequencyOccurrenceSource` disappeared during Pass M1 after its remaining routing/config duties moved into `DetectionRuntime`
 
 Deletion target:
 

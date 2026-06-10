@@ -579,6 +579,9 @@ void AnalyzerApp::finalizeSequenceTrial(unsigned long now) {
         legacyPrintSequenceSampleDump(_sequenceTest.currentTrial);
     }
     if (shouldPrintSequenceInspect(*finalizedReport)) {
+        printSequenceInspectCanonical(*finalizedReport);
+    }
+    if (shouldPrintLegacySequenceInspect(*finalizedReport)) {
         legacyPrintSequenceInspect(*finalizedReport);
     }
     if (shouldPrintSequenceSource(*finalizedReport)) {
@@ -594,6 +597,9 @@ void AnalyzerApp::finalizeSequenceTrial(unsigned long now) {
         printSystemHealth(*finalizedReport);
     }
     if (shouldPrintSequenceExplain(*finalizedReport)) {
+        printSequenceExplainCanonical(*finalizedReport);
+    }
+    if (shouldPrintLegacySequenceExplain(*finalizedReport)) {
         legacyPrintSequenceCandidateLogs(_sequenceTest.currentTrial, diagnostics);
         legacyPrintSequenceExplain(*finalizedReport);
     }

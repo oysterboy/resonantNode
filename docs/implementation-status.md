@@ -22,6 +22,7 @@ Status vocabulary:
 | ScalarOccurrenceSource runtime cleanup | landed | Pass H2 moved remaining scalar reject-summary compatibility ownership into `ScalarTransientDetector`, rewired runtime directly to the detector, and deleted `ScalarOccurrenceSource`. |
 | Frequency DetectorReport path | landed | Pass I added detector-owned `FrequencyMatchDetector::buildReport(...)`, runtime now snapshots the active detector report, and legacy `DetectionDiagnostics` remains as compatibility only. |
 | Analyzer frequency DetectorReport bridge | landed | Pass J moved overlapping frequency analyzer source fields onto `DetectionRuntime::frequencyDetectorReport()` while leaving `DetectionDiagnostics` as fallback for richer legacy-only stats. |
+| Canonical SEQ_INSPECT / SEQ_EXPLAIN | landed | Pass K renamed the legacy inspect/explain labels to `*_LEG`, routed plain `inspect` / `explain` to canonical detector-report printers, and dispatched detector detail by `DetectorId`. |
 | BehaviorRuntime | deferred | Future behavior architecture work. |
 | OutputDispatcher | deferred | Future behavior/output separation. |
 | Full Chirp PatternRules | roadmap only | Not part of stable runtime. |

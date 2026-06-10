@@ -47,8 +47,10 @@ public:
         System,
         Source,
         Inspect,
+        LegacyInspect,
         Pattern,
         Explain,
+        LegacyExplain,
     };
 
     enum class SeqOutputWhen {
@@ -507,6 +509,8 @@ private:
     void legacyPrintDetectionParameters() const;
     void legacyPrintTransientAcceptedDebug(unsigned long now, float strength, unsigned long durationMs) const;
     void legacyPrintTransientStatsDebug(unsigned long now) const;
+    void printSequenceExplainCanonical(const AnalyzerReport& report) const;
+    void printSequenceInspectCanonical(const AnalyzerReport& report) const;
     void legacyPrintSequenceExplain(const AnalyzerReport& report) const;
     void legacyPrintSequenceDiagnostics(const AnalyzerReport& report) const;
     void legacyPrintSequenceScalarDiagnostics(const AnalyzerReport& report) const;
@@ -546,9 +550,11 @@ private:
     bool shouldPrintSequenceStreak(const AnalyzerReport& report) const;
     bool shouldPrintSequenceSource(const AnalyzerReport& report) const;
     bool shouldPrintSequenceInspect(const AnalyzerReport& report) const;
+    bool shouldPrintLegacySequenceInspect(const AnalyzerReport& report) const;
     bool shouldPrintSequencePattern(const AnalyzerReport& report) const;
     bool shouldPrintSequenceSystem(const AnalyzerReport& report) const;
     bool shouldPrintSequenceExplain(const AnalyzerReport& report) const;
+    bool shouldPrintLegacySequenceExplain(const AnalyzerReport& report) const;
     bool shouldPrintHardwareDiagnostics() const;
     static const char* sequenceOutputModeName(SeqOutputMode mode);
     static const char* sequenceOutputWhenName(SeqOutputWhen value);

@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include <string.h>
 
+#include "../../detection/DetectorReport.h"
 #include "../../detection/inspector/InspectorTypes.h"
 
 class FrequencyMatchDetector;
@@ -21,6 +22,8 @@ Does not own detection or behavior decisions.
 //
 // Current legacy Analyzer output is retained for temporary diagnostics and
 // migration reference only. Do not add new detection/source fields here.
+// Where canonical replacements now exist, the legacy printers emit *_LEG
+// labels so the old and new surfaces can coexist during migration.
 //
 // Future canonical output targets:
 //
@@ -721,6 +724,7 @@ struct AnalyzerSummary {
 struct AnalyzerReport {
     AnalyzerRunContext context;
     AnalyzerExpectedEvent expected;
+    const detection::DetectorReport* detectorReport = nullptr;
     AnalyzerSourceStageReport source;
     const FrequencyMatchDetector* frequencyDetector = nullptr;
 

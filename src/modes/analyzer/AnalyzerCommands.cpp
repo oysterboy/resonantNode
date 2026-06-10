@@ -45,14 +45,16 @@ void AnalyzerApp::printSequenceHelp() {
     Serial.println("SEQ IN: OBS start [N|tries=N] [period=2000] [window=1800] [freq=HZ] [dur=MS] [delay=MS] [report_settle=MS] [test=LABEL]");
     Serial.println("SEQ IN: TRIES N");
     Serial.println("SEQ IN: [profile=tonalpulse|amp|chirp_experimental|scalar_freq_experimental]");
-    Serial.println("SEQ IN: MODE quiet|LEG_trial|LEG_compact|LEG_signalcheck|LEG_streak|LEG_full|LEG_system|LEG_source|LEG_inspect|LEG_pattern|LEG_explain|LEG_dump");
+    Serial.println("SEQ IN: MODE quiet|inspect|explain|LEG_trial|LEG_compact|LEG_signalcheck|LEG_streak|LEG_full|LEG_system|LEG_source|LEG_inspect|LEG_pattern|LEG_explain|LEG_dump");
     Serial.println("SEQ IN: MODE quiet = no sequence output");
     Serial.println("SEQ IN: MODE trial|compact = compact trial view");
     Serial.println("SEQ IN: MODE signalcheck = compact trial view + audio health snapshot");
     Serial.println("SEQ IN: MODE streak = miss/duplicate streak diagnostics");
     Serial.println("SEQ IN: MODE full = readable staged diagnostics; V2 exposes deep dumps");
     Serial.println("SEQ IN: MODE system = trial verdict + system health");
-    Serial.println("SEQ IN: MODE LEG_explain|LEG_dump = deep developer dump");
+    Serial.println("SEQ IN: MODE inspect = canonical detector report inspect");
+    Serial.println("SEQ IN: MODE explain = canonical detector report explain");
+    Serial.println("SEQ IN: MODE LEG_inspect|LEG_explain|LEG_dump = legacy developer inspect/explain");
     Serial.println("SEQ IN: PROFILE tonalpulse|amp|chirp_experimental|scalar_freq_experimental");
     Serial.println("SEQ IN: DIAG on|off");
     Serial.println("SEQ IN: FREQBAND on|off");
@@ -63,7 +65,7 @@ void AnalyzerApp::printSequenceHelp() {
     Serial.println("SEQ IN: STATUS");
     Serial.println("SEQ IN: [dumpSamples=0|1] [curveFormat=off|samples]");
     Serial.println("SEQ IN: [sampleFirst=N] [sampleEvery=N] [sampleLead=MS] [sampleTail=MS] [sampleStep=MS] [sampleMax=N]");
-    Serial.println("SEQ OUT: SEQ start / SEQ running / SEQ_PATTERN / SEQ_TRIAL / SEQ_STREAK / SEQ_INSPECT / SEQ_SOURCE / SEQ_DUMP / SEQ_SUMMARY / AUDIO run / SIGNALCHECK");
+    Serial.println("SEQ OUT: SEQ start / SEQ running / SEQ_PATTERN / SEQ_TRIAL / SEQ_STREAK / SEQ_INSPECT / SEQ_INSPECT_LEG / SEQ_EXPLAIN / SEQ_EXPLAIN_LEG / SEQ_SOURCE / SEQ_SUMMARY / AUDIO run / SIGNALCHECK");
     Serial.println("SEQ OUT: candidate fields include onset_sample peak_sample release_sample peak_ms dur end_dt_ms freq_*");
     Serial.println("SEQ OBS: passive observe mode for an already-running external emitter");
     Serial.println("SEQ IN: PROFILE tonalpulse|amp|chirp_experimental|scalar_freq_experimental");
@@ -334,7 +336,7 @@ void AnalyzerApp::handleUsbLine(const char* line) {
             bool valid = false;
             const AnalyzerApp::SeqOutputMode mode = AnalyzerApp::sequenceOutputModeFromToken(modeToken, &valid);
             if (!valid) {
-                Serial.println("ERR SEQ unknown mode use MODE quiet|LEG_trial|LEG_compact|LEG_signalcheck|LEG_streak|LEG_full|LEG_system|LEG_source|LEG_inspect|LEG_pattern|LEG_explain|LEG_dump");
+                Serial.println("ERR SEQ unknown mode use MODE quiet|inspect|explain|LEG_trial|LEG_compact|LEG_signalcheck|LEG_streak|LEG_full|LEG_system|LEG_source|LEG_inspect|LEG_pattern|LEG_explain|LEG_dump");
                 return;
             }
             _seqOutputConfig.mode = mode;
@@ -536,7 +538,7 @@ void AnalyzerApp::handleUsbLine(const char* line) {
                     if (!valid) {
                         Serial.print("ERR SEQ unknown mode=");
                         Serial.print(token + 5);
-                        Serial.println(" use mode=quiet, mode=LEG_trial, mode=LEG_compact, mode=LEG_signalcheck, mode=LEG_streak, mode=LEG_full, mode=LEG_system, mode=LEG_source, mode=LEG_inspect, mode=LEG_pattern or mode=LEG_explain");
+                        Serial.println(" use mode=quiet, mode=inspect, mode=explain, mode=LEG_trial, mode=LEG_compact, mode=LEG_signalcheck, mode=LEG_streak, mode=LEG_full, mode=LEG_system, mode=LEG_source, mode=LEG_inspect, mode=LEG_pattern or mode=LEG_explain");
                         return;
                     }
                     if (_seqOutputConfig.mode == AnalyzerApp::SeqOutputMode::Quiet) {

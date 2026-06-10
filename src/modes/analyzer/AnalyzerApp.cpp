@@ -388,7 +388,7 @@ bool AnalyzerApp::shouldPrintHardwareDiagnostics() const {
     return _sequenceTest.outputConfig.diagnosticsEnabled &&
            _sequenceTest.outputConfig.verbosity >= 2U &&
            (_sequenceTest.outputConfig.mode == SeqOutputMode::System ||
-            _sequenceTest.outputConfig.mode == SeqOutputMode::Explain);
+            _sequenceTest.outputConfig.mode == SeqOutputMode::LegacyExplain);
 }
 
 bool AnalyzerApp::shouldPrintSequenceTrial() const {
@@ -421,7 +421,7 @@ bool AnalyzerApp::shouldPrintSequenceSource(const AnalyzerReport& report) const 
 
     switch (_sequenceTest.outputConfig.mode) {
         case SeqOutputMode::Source:
-        case SeqOutputMode::Explain:
+        case SeqOutputMode::LegacyExplain:
             return sequenceOutputWhenEnabled(_sequenceTest.outputConfig.when, report.classification.result);
         case SeqOutputMode::Full:
             return true;
@@ -446,6 +446,20 @@ bool AnalyzerApp::shouldPrintSequenceInspect(const AnalyzerReport& report) const
     }
 }
 
+bool AnalyzerApp::shouldPrintLegacySequenceInspect(const AnalyzerReport& report) const {
+    if (_valMode || !_sequenceTest.outputConfig.diagnosticsEnabled) {
+        return false;
+    }
+
+    switch (_sequenceTest.outputConfig.mode) {
+        case SeqOutputMode::LegacyInspect:
+        case SeqOutputMode::LegacyExplain:
+            return sequenceOutputWhenEnabled(_sequenceTest.outputConfig.when, report.classification.result);
+        default:
+            return false;
+    }
+}
+
 bool AnalyzerApp::shouldPrintSequencePattern(const AnalyzerReport& report) const {
     if (_valMode || !_sequenceTest.outputConfig.diagnosticsEnabled) {
         return false;
@@ -453,7 +467,7 @@ bool AnalyzerApp::shouldPrintSequencePattern(const AnalyzerReport& report) const
 
     switch (_sequenceTest.outputConfig.mode) {
         case SeqOutputMode::Pattern:
-        case SeqOutputMode::Explain:
+        case SeqOutputMode::LegacyExplain:
             return sequenceOutputWhenEnabled(_sequenceTest.outputConfig.when, report.classification.result);
         case SeqOutputMode::Full:
             return true;
@@ -469,7 +483,7 @@ bool AnalyzerApp::shouldPrintSequenceSystem(const AnalyzerReport& report) const 
 
     switch (_sequenceTest.outputConfig.mode) {
         case SeqOutputMode::System:
-        case SeqOutputMode::Explain:
+        case SeqOutputMode::LegacyExplain:
             return sequenceOutputWhenEnabled(_sequenceTest.outputConfig.when, report.classification.result);
         case SeqOutputMode::Full:
             return _sequenceTest.outputConfig.verbosity >= 2U;
@@ -482,6 +496,13 @@ bool AnalyzerApp::shouldPrintSequenceExplain(const AnalyzerReport& report) const
     return !_valMode &&
            _sequenceTest.outputConfig.diagnosticsEnabled &&
            _sequenceTest.outputConfig.mode == SeqOutputMode::Explain &&
+           sequenceOutputWhenEnabled(_sequenceTest.outputConfig.when, report.classification.result);
+}
+
+bool AnalyzerApp::shouldPrintLegacySequenceExplain(const AnalyzerReport& report) const {
+    return !_valMode &&
+           _sequenceTest.outputConfig.diagnosticsEnabled &&
+           _sequenceTest.outputConfig.mode == SeqOutputMode::LegacyExplain &&
            sequenceOutputWhenEnabled(_sequenceTest.outputConfig.when, report.classification.result);
 }
 
@@ -870,10 +891,14 @@ const char* seqOutputModeName(AnalyzerApp::SeqOutputMode mode) {
         case AnalyzerApp::SeqOutputMode::Source:
             return "LEG_source";
         case AnalyzerApp::SeqOutputMode::Inspect:
+            return "inspect";
+        case AnalyzerApp::SeqOutputMode::LegacyInspect:
             return "LEG_inspect";
         case AnalyzerApp::SeqOutputMode::Pattern:
             return "LEG_pattern";
         case AnalyzerApp::SeqOutputMode::Explain:
+            return "explain";
+        case AnalyzerApp::SeqOutputMode::LegacyExplain:
             return "LEG_explain";
         default:
             return "LEG_trial";
@@ -949,14 +974,20 @@ AnalyzerApp::SeqOutputMode seqOutputModeFromToken(const char* token, bool* valid
     if (equalsIgnoreCase(token, "source") || equalsIgnoreCase(token, "LEG_source")) {
         return AnalyzerApp::SeqOutputMode::Source;
     }
-    if (equalsIgnoreCase(token, "inspect") || equalsIgnoreCase(token, "LEG_inspect")) {
+    if (equalsIgnoreCase(token, "inspect")) {
         return AnalyzerApp::SeqOutputMode::Inspect;
+    }
+    if (equalsIgnoreCase(token, "LEG_inspect")) {
+        return AnalyzerApp::SeqOutputMode::LegacyInspect;
     }
     if (equalsIgnoreCase(token, "pattern") || equalsIgnoreCase(token, "LEG_pattern")) {
         return AnalyzerApp::SeqOutputMode::Pattern;
     }
-    if (equalsIgnoreCase(token, "dump") || equalsIgnoreCase(token, "explain") || equalsIgnoreCase(token, "LEG_dump") || equalsIgnoreCase(token, "LEG_explain")) {
+    if (equalsIgnoreCase(token, "explain")) {
         return AnalyzerApp::SeqOutputMode::Explain;
+    }
+    if (equalsIgnoreCase(token, "dump") || equalsIgnoreCase(token, "LEG_dump") || equalsIgnoreCase(token, "LEG_explain")) {
+        return AnalyzerApp::SeqOutputMode::LegacyExplain;
     }
     if (equalsIgnoreCase(token, "quiet")) {
         return AnalyzerApp::SeqOutputMode::Quiet;
@@ -1035,7 +1066,7 @@ void AnalyzerApp::begin() {
     _controlClaimAtMs = 0;
 
     Serial.println("EVT analyzer_ready");
-    Serial.println("EVT analyzer_help type='HELP', 'BASE', 'PARAM freqScore=18000 freqContrast=50.0 freqReleaseScore=12000 freqReleaseContrast=50.0', 'TEST', 'RAW trigger f=3200 dur=100 post=1000 dump=bin', 'SEQ MODE quiet|LEG_trial|LEG_compact|LEG_signalcheck|LEG_streak|LEG_full|LEG_system|LEG_source|LEG_inspect|LEG_pattern|LEG_explain|LEG_dump WHEN off|miss|all VERBOSE 0|1|2 STATUS', 'CAP', 'DET AMP', 'VAL', 'VAL OFF'");
+    Serial.println("EVT analyzer_help type='HELP', 'BASE', 'PARAM freqScore=18000 freqContrast=50.0 freqReleaseScore=12000 freqReleaseContrast=50.0', 'TEST', 'RAW trigger f=3200 dur=100 post=1000 dump=bin', 'SEQ MODE quiet|inspect|explain|LEG_trial|LEG_compact|LEG_signalcheck|LEG_streak|LEG_full|LEG_system|LEG_source|LEG_inspect|LEG_pattern|LEG_explain|LEG_dump WHEN off|miss|all VERBOSE 0|1|2 STATUS', 'CAP', 'DET AMP', 'VAL', 'VAL OFF'");
 }
 
 void AnalyzerApp::configureParameters() {
@@ -1073,14 +1104,20 @@ bool AnalyzerApp::sequenceOutputModeEnabled(SeqOutputMode configured, SeqOutputM
     }
     if (requested == SeqOutputMode::System) {
         return configured == SeqOutputMode::System ||
-               configured == SeqOutputMode::Explain;
+               configured == SeqOutputMode::LegacyExplain;
     }
     if (requested == SeqOutputMode::Explain) {
         return configured == SeqOutputMode::Explain;
     }
+    if (requested == SeqOutputMode::LegacyExplain) {
+        return configured == SeqOutputMode::LegacyExplain;
+    }
     if (requested == SeqOutputMode::Source ||
-        requested == SeqOutputMode::Inspect ||
+        requested == SeqOutputMode::LegacyInspect ||
         requested == SeqOutputMode::Pattern) {
+        return configured == requested || configured == SeqOutputMode::LegacyExplain;
+    }
+    if (requested == SeqOutputMode::Inspect) {
         return configured == requested || configured == SeqOutputMode::Explain;
     }
     return configured == requested;
@@ -1492,6 +1529,11 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
     const bool scalarDetectorReportAvailable = analyzerHasScalarDetectorReport(scalarDetectorReport);
     const detection::DetectorReport& frequencyDetectorReport = _detection.frequencyDetectorReport();
     const bool frequencyDetectorReportAvailable = analyzerHasFrequencyDetectorReport(frequencyDetectorReport);
+    if (selectedProfile.occurrenceSource == detection::OccurrenceSourceKind::ScalarTransient && scalarDetectorReportAvailable) {
+        report.detectorReport = &scalarDetectorReport;
+    } else if (selectedProfile.occurrenceSource == detection::OccurrenceSourceKind::FrequencyMatch && frequencyDetectorReportAvailable) {
+        report.detectorReport = &frequencyDetectorReport;
+    }
     const bool trialHasPipelineEvidence = actualPipelineAvailable
         && runtimePatternResult != nullptr
         && diagnostics.rawCandidateCount > 0;

@@ -75,7 +75,8 @@ Current best fit:
 
 Current gap:
 
-- the public detector boundary is hidden behind `FrequencyOccurrenceSource` / `ScalarOccurrenceSource` wrappers and ad hoc runtime diagnostics
+- the frequency public detector boundary is still hidden behind `FrequencyOccurrenceSource` and ad hoc runtime diagnostics
+- the scalar path is already detector-owned, but compatibility diagnostics are still transitional
 
 Genericity rule:
 
@@ -111,11 +112,11 @@ Near-term occurrence-emission rule:
 Accepted detector-level event facts only:
 
 - detector identity
-- occurrence type
+- public occurrence type
 - timing
 - strength
 - confidence
-- typed accepted-event detail
+- accepted-event detail implied by `OccurrenceType`
 
 Current best fit:
 
@@ -124,6 +125,8 @@ Current best fit:
 Current gap:
 
 - it still carries too much copied evidence and detector-specific detail
+- the lean canonical `OccurrenceType` contract is `None`, `Transient`, `FrequencyMatch`
+- carrier/source feature identity still needs to stay separate from `OccurrenceType`
 
 ### InspectedOccurrence
 

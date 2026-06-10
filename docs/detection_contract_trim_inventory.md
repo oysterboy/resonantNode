@@ -8,6 +8,9 @@ Reference rules used during inspection:
 
 - `FeatureSample / FeatureFrame` stays measurement-only.
 - `Detector` owns candidate lifecycle and emits accepted `Occurrence`.
+- `DetectorId` identifies the detector implementation/family.
+- `OccurrenceType` identifies the public event category.
+- occurrence payload layout is implied by `OccurrenceType`; there is no canonical `OccurrenceDetailKind`.
 - `InspectedOccurrence` adds retrospective inspection evidence.
 - `PatternMatcher` owns pattern interpretation.
 - `PatternResult` carries behavior-facing meaning only.
@@ -16,9 +19,9 @@ Reference rules used during inspection:
 
 Current best central contract marker:
 
-- file: `src/detection/patterns/PatternResult.h`
+- file: `src/detection/DetectionTypes.h`
 - marker: `DETECTION_MINIMAL_CONTRACTS`
-- reason for placement: no single `DetectionTypes.h` exists yet, and `PatternResult.h` is currently the most central cross-stage contract header shared by runtime and analyzer code
+- reason for placement: `DetectionTypes.h` now holds the lean canonical detector/occurrence vocabulary without pulling in runtime or analyzer implementation details
 
 ## 1. Existing Contract Candidates
 
@@ -28,9 +31,8 @@ Current best central contract marker:
 | `FeatureHistory` | `src/detection/features/FeatureHistory.h` | class | `detection` | `DetectionRuntime`, `OccurrenceInspector`, analyzer diagnostics | bounded sample history and counts | retrospective support | diagnostic detail | `KEEP_PUBLIC_CONTRACT` | Fits the roadmap vocabulary already; not a live pipeline stage |
 | `FrequencyBandMeasurementPacket` | `src/detection/inspector/InspectorTypes.h` | struct | `detection` | `DetectionRuntime`, `FrequencyMatchDetector`, `PatternResult`, analyzer reports | score, contrast, power bands, freshness, timing window | feature input | runtime truth + diagnostic detail | `KEEP_PUBLIC_CONTRACT` | Good typed frequency frame, but currently leaks upward into reports and results |
 | `FrequencyMatchDetector` | `src/detection/detectors/FrequencyMatchDetector.h` | class | `detection` | `FrequencyOccurrenceSource`, analyzer legacy reporting, runtime diagnostics | `update`, candidate lifecycle, accept/reject, counters, selected reject details | detector | runtime truth + diagnostic detail | `KEEP_PUBLIC_CONTRACT` | Strong detector core, but public surface is too diagnostic-heavy |
-| `ScalarTransientDetector` | `src/detection/detectors/ScalarTransientDetector.h` | class | `detection` | `ScalarOccurrenceSource`, runtime diagnostics | transient lifecycle, gates, duration tests | detector | runtime truth + diagnostic detail | `KEEP_PUBLIC_CONTRACT` | Cleaner than the frequency path, but still not yet the final public detector boundary |
+| `ScalarTransientDetector` | `src/detection/detectors/ScalarTransientDetector.h` | class | `detection` | `DetectionRuntime`, runtime diagnostics | transient lifecycle, gates, duration tests | detector | runtime truth + diagnostic detail | `KEEP_PUBLIC_CONTRACT` | Scalar path is now direct-detector owned; temporary compatibility summary state still remains in the detector during migration |
 | `FrequencyOccurrenceSource` | `src/detection/occurrences/FrequencyOccurrenceSource.h` | class | `detection` | `DetectionRuntime`, analyzer direct detector access via emitter | wraps detector, emits `Occurrence`, exposes detector reference | detector wrapper | runtime truth + old compatibility | `DETECTOR_INTERNAL` | Transitional wrapper obscures whether detector or wrapper is the canonical stage |
-| `ScalarOccurrenceSource` | `src/detection/occurrences/ScalarOccurrenceSource.h` | class | `detection` | `DetectionRuntime`, runtime diagnostics | wraps scalar lifecycle, selected reject tracking, emits `Occurrence` | detector wrapper | runtime truth + diagnostic detail | `DETECTOR_INTERNAL` | Carries too much selected-reject/report state for a long-term public boundary |
 | `OccurrenceKind` / `OccurrenceSource` / `OccurrenceDetectorKind` | `src/detection/occurrences/Occurrence.h` | enums | `detection` | `Occurrence`, analyzer reporting, runtime plumbing | accepted-event type and source naming | accepted event vocabulary | runtime truth | `UNKNOWN` | `OccurrenceSource` is especially legacy-loaded because roadmap wants `DetectorId` vocabulary |
 | `Occurrence` | `src/detection/occurrences/Occurrence.h` | struct | `detection` | occurrence sources, inspector, runtime latest result, analyzer reporting | kind/source, validity, timing, strength, score, contrast, amp and frequency evidence payloads | accepted event | runtime truth | `KEEP_PUBLIC_CONTRACT` | Right stage, but too wide: includes lifecycle leftovers and detector-specific evidence payloads |
 | `InspectedOccurrence` | `src/detection/occurrences/InspectedOccurrence.h` | struct | `detection` | `OccurrenceInspector`, `PatternAssembler`, `PatternResult` | `Occurrence` plus inspection decision, support classes, scalar observations | inspection output | runtime truth | `KEEP_PUBLIC_CONTRACT` | Closest current match to target contract; may only need light trimming |
@@ -58,7 +60,7 @@ Current best central contract marker:
 | `FeatureSample / FeatureFrame` | `FeatureStream`, `FrequencyBandMeasurementPacket` | `src/detection/features/FeatureStream.h`, `src/detection/inspector/InspectorTypes.h` | `FeatureStream`: mostly yes. `FrequencyBandMeasurementPacket`: no | Later, yes | Yes | No immediate move required | Yes | Keep `FeatureStream` as the scalar sample baseline and treat `FrequencyBandMeasurementPacket` as typed frequency-frame input rather than generic report data |
 | `Detector` | `FrequencyMatchDetector`, `ScalarTransientDetector` | `src/detection/detectors/*` | No | Maybe | Yes | Maybe | Yes | Make detector classes the canonical stage and push wrappers internal unless inventory later proves the wrapper is the cleaner outside shape |
 | `DetectorId` | `OccurrenceSource`, `OccurrenceSourceKind`, detector-name strings | `src/detection/occurrences/Occurrence.h`, `src/detection/DetectionProfile.h`, analyzer headers | No | Yes | Yes | Yes | Yes | Introduce a clean detector-identity enum/type; do not canonize `OccurrenceSource` naming |
-| `DetectorDescriptor` | none stable today; closest are analyzer `sourceName` strings and profile config names | analyzer legacy headers, profile config | No | Yes | Yes | Yes | Yes | Define fresh later; current code only has strings and ad hoc descriptors |
+| `DetectorDescriptor` | `DetectorDescriptor` | `src/detection/DetectorDescriptor.h` | Partially | Maybe | Yes | No immediate move required | Medium | Keep the canonical descriptor shell, but grow it carefully and avoid reintroducing detail-kind split fields |
 | `Occurrence` | `Occurrence` | `src/detection/occurrences/Occurrence.h` | No | Maybe later | Yes | No | Yes | Keep the type, trim it to accepted-event facts only |
 | `InspectedOccurrence` | `InspectedOccurrence` | `src/detection/occurrences/InspectedOccurrence.h` | Largely yes | No | Maybe light trimming | No | Low | Keep as canonical inspection output |
 | `PatternMatcher` | `PatternAssembler` + `PatternRules` | `src/detection/patterns/*` | No | Yes | Yes | Maybe | Yes | Collapse the split into one canonical matcher boundary and keep helper types internal |
@@ -74,14 +76,14 @@ Current best central contract marker:
 | Overlap | Current carriers | Problem | Canonical target | Fate of the others |
 | --- | --- | --- | --- | --- |
 | Frequency detector lifecycle | `FrequencyMatchDetector`, `FrequencyOccurrenceSource`, `DetectionDiagnostics`, `AnalyzerFrequencyDiagnostic` | Same open/release/emit truth appears in detector, runtime dump, and analyzer dump | `Detector` + `DetectorReport` | Keep lifecycle in detector, move one report view into `DetectorReport`, delete analyzer/runtime duplicates later |
-| Scalar detector lifecycle | `ScalarTransientDetector`, `ScalarOccurrenceSource`, `DetectionDiagnostics`, `AnalyzerScalarDiagnostic` | Same reject and duration facts appear at multiple layers | `Detector` + `DetectorReport` | Keep detector truth low, collapse report copies into one detector report |
+| Scalar detector lifecycle | `ScalarTransientDetector`, `DetectionDiagnostics`, `AnalyzerScalarDiagnostic` | Same reject and duration facts appear at multiple layers | `Detector` + `DetectorReport` | Keep detector truth low, collapse report copies into one detector report |
 | Accepted event payload | `Occurrence`, `PatternCandidate`, `PatternResult`, analyzer occurrence summaries | Timing, strength, and evidence facts are copied across layers | `Occurrence` | Trim `Occurrence` to accepted-event facts and let later layers reference or summarize it instead of recopying |
 | Pattern-stage public boundary | `PatternAssembler` + `PatternRules` | One logical stage is split across two public names | `PatternMatcher` | Internalize the split and expose one matcher concept |
 | Detector diagnostics | `DetectionDiagnostics`, `AnalyzerSourceStageReport`, `AnalyzerFrequencyDiagnostic`, `AnalyzerScalarDiagnostic` | Runtime and analyzer both own large report copies | `DetectorReport` | Replace the shared dump plus analyzer-local surrogates with one typed detector report boundary |
 | Selected reject summary | `SourceCandidateSummary`, `SourceCandidateSnapshot`, analyzer summary/snapshot duplicates | Selected reject info is split by shape and then duplicated into analyzer structs | `RejectedCandidateSummary` | Merge into one compact contract and delete analyzer copies after migration |
 | Pattern meaning | `PatternCandidate`, `PatternResult` | `PatternResult` still carries candidate internals wholesale | `PatternResult` | Keep the result name, internalize candidate payloads |
 | Trial truth | `DetectionPipelineResult`, `AnalyzerReport` | Latest runtime snapshot and analyzer trial truth overlap in carried fields | `AnalyzerReport` | Keep `DetectionPipelineResult` runtime-internal only |
-| Source naming | `OccurrenceSourceKind`, `OccurrenceSource`, `FrequencyOccurrenceSource`, `ScalarOccurrenceSource`, analyzer `source*` report names | "Source" currently means stage, routing selector, and report vocabulary at once | `Detector` / `DetectorId` / `DetectorReport` | Rename or internalize legacy source terms after canonical contracts are chosen |
+| Source naming | `OccurrenceSourceKind`, `OccurrenceSource`, `FrequencyOccurrenceSource`, analyzer `source*` report names | "Source" currently means stage, routing selector, and report vocabulary at once | `Detector` / `DetectorId` / `DetectorReport` | Rename or internalize legacy source terms after canonical contracts are chosen |
 
 ## 4. Ownership Problems
 
@@ -89,7 +91,6 @@ Current best central contract marker:
 | --- | --- | --- | --- |
 | `PatternResult` | `src/detection/patterns/PatternResult.h` | behavior-facing meaning + full `PatternCandidate` + `InspectedOccurrence` + frequency packet | Move detector/occurrence provenance out; keep result meaning only |
 | `DetectionDiagnostics` | `src/detection/DetectionRuntime.h` | detector counters + selected reject info + accepted occurrence facts + analyzer-friendly labels | Split into future `DetectorReport` plus smaller runtime-private counters |
-| `ScalarOccurrenceSource` | `src/detection/occurrences/ScalarOccurrenceSource.h` | candidate lifecycle + reject aggregates + occurrence emission wrapper | Keep temporarily, later internalize reject summaries into `DetectorReport` |
 | `FrequencyMatchDetector` | `src/detection/detectors/FrequencyMatchDetector.h` | lifecycle + accepted occurrence draft + detailed analyzer/report counters | Keep detector core, trim public report surface later |
 | `AnalyzerReport` | `src/modes/analyzer/AnalyzerLegacyReporting.h` | trial truth + detector/source dumps + profile detail + legacy output concerns | Move detector/source truth to `DetectorReport`, keep trial classification here |
 | `AnalyzerApp::buildSequenceAnalyzerReport` path | `src/modes/analyzer/AnalyzerApp.cpp` | reads runtime diagnostics, detector internals, feature history, and analyzer trial state together | Keep as transitional bridge, then rebuild against `PatternResult + DetectorReport` |
@@ -136,7 +137,6 @@ Current best central contract marker:
 | `FrequencyMatchDetector` | Keep public detector candidate | Strong current detector core |
 | `ScalarTransientDetector` | Keep public detector candidate | Good reusable scalar detector core |
 | `FrequencyOccurrenceSource` | Internalize later | Transitional wrapper once detector contract becomes direct |
-| `ScalarOccurrenceSource` | Internalize later | Transitional lifecycle wrapper with too much report state |
 | `Occurrence` | Keep public, trim | Canonical accepted-event candidate |
 | `InspectedOccurrence` | Keep public | Canonical inspection-stage candidate |
 | `OccurrenceInspector` | Keep public | Canonical inspector stage object |
@@ -175,7 +175,8 @@ Recommended first refactor pass:
 
 - `PatternResult` is in the best current location for the single contract marker, but the struct itself is still too heavy to represent the final minimal contract.
 - `DetectionDiagnostics` is convenient today, but it is the largest ownership leak in the current pipeline and the main blocker to a clean `DetectorReport`.
-- `FrequencyOccurrenceSource` and `ScalarOccurrenceSource` are useful runtime wrappers, but they still blur whether the canonical public stage should be the wrapper or the detector.
+- `FrequencyOccurrenceSource` is still a useful runtime wrapper, but it still blurs whether the canonical public stage should be the wrapper or the detector.
+- scalar already crossed that boundary: `ScalarTransientDetector` is the direct public detector-stage owner after Pass H2.
 - `OccurrenceSource` naming is deeply embedded in current enums, profile config, and analyzer prints, so the eventual `DetectorId` rename needs to be staged carefully.
 - `PatternRules` already behaves like the meaning stage, but the roadmap target name is `PatternMatcher`; the rename should wait until the public split with `PatternAssembler` is resolved.
 - Analyzer legacy output still depends on detector internals, feature history, copied runtime diagnostics, and analyzer-local copies of reject summaries. That is acceptable for now, but it is the highest-risk migration area.

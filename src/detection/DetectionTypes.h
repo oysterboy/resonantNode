@@ -33,7 +33,8 @@ namespace detection {
 //   trial-level classification
 //
 // Do not add detector-specific fields to PatternResult or AnalyzerReport.
-// Detector-specific details belong in typed Occurrence detail or DetectorReport.
+// Detector-specific details belong in Occurrence payloads selected by
+// OccurrenceType or in DetectorReport.
 //
 // Migration note:
 //   FrequencyOccurrenceSource is still a temporary wrapper. ScalarTransientDetector
@@ -52,18 +53,16 @@ enum class DetectorId : uint8_t {
     FrequencyMatch,
 };
 
+// Public accepted-event category.
+//
+// DetectorId identifies which detector family produced the occurrence.
+// OccurrenceType identifies the public event category consumed above the
+// detector layer. Carrier feature identity remains separate from this enum.
+// The accepted Occurrence payload layout is implied by OccurrenceType for now.
 enum class OccurrenceType : uint8_t {
     None = 0,
-    AmpTransient,
+    Transient,
     FrequencyMatch,
-    BroadbandTransient,
-};
-
-enum class OccurrenceDetailKind : uint8_t {
-    None = 0,
-    ScalarTransient,
-    FrequencyBand,
-    BroadbandTransient,
 };
 
 } // namespace detection

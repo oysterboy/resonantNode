@@ -88,7 +88,6 @@ Minimal canonical types added in these headers:
 
 - `DetectorId`
 - `OccurrenceType`
-- `OccurrenceDetailKind`
 - `DetectorDescriptor`
 - `DetectorRejectClass`
 - `RejectedCandidateSummary`
@@ -99,6 +98,11 @@ Decision notes:
 - These shapes are intentionally minimal and forward-compatible.
 - They do not replace current runtime structs yet.
 - They exist to freeze vocabulary and ownership boundaries before rename and migration passes.
+- `OccurrenceType` is the lean public event-category enum for the current contract:
+  `None`, `Transient`, `FrequencyMatch`
+- occurrence payload layout is implied by `OccurrenceType` for now
+- carrier/source feature identity remains separate from `OccurrenceType`
+- `OccurrenceDetailKind` is intentionally not part of the current canonical contract
 
 ## Ownership Rules
 
@@ -129,10 +133,14 @@ Accepted detector-stage objects:
 
 Rejected as target public contracts:
 
-- `ScalarOccurrenceSource`
 - `FrequencyOccurrenceSource`
 
-Those wrapper classes may remain temporarily during migration, but they must not gain new architectural responsibilities and must not become the final detector boundary.
+Historical note:
+
+- `ScalarOccurrenceSource` was already removed after Pass H2
+- `FrequencyOccurrenceSource` remains the only active temporary occurrence-source wrapper
+
+Any remaining wrapper class may exist only temporarily during migration. It must not gain new architectural responsibilities and must not become the final detector boundary.
 
 ## Detector Genericity Rule
 
@@ -169,11 +177,15 @@ The same rule applies to accepted-occurrence drain ownership:
 
 ## OccurrenceSource Wrapper Deletion Target
 
-`ScalarOccurrenceSource` and `FrequencyOccurrenceSource` are temporary migration wrappers and must disappear as part of this clean refactor.
+`FrequencyOccurrenceSource` is still a temporary migration wrapper and must disappear as part of this clean refactor.
+
+Historical note:
+
+- `ScalarOccurrenceSource` already disappeared during Pass H2 after scalar detector ownership became direct
 
 Deletion target:
 
-- keep them only long enough to bridge current `DetectionRuntime` wiring
+- keep remaining wrappers only long enough to bridge current `DetectionRuntime` wiring
 - do not extend them into permanent wrappers
 - delete or internalize them after detector cores expose `Occurrence + DetectorReport` directly
 

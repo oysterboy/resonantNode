@@ -307,8 +307,7 @@ occurrenceType
 timing
 strength
 confidence
-detailKind
-typed accepted-event detail
+accepted-event detail implied by occurrenceType
 ```
 
 Does not own:
@@ -325,6 +324,13 @@ candidate lifecycle internals
 ```
 
 Rule:
+
+```text
+DetectorId identifies the detector implementation/family.
+OccurrenceType identifies the public event category.
+Carrier/source feature identity remains separate from OccurrenceType.
+OccurrenceDetailKind is intentionally not part of the current contract.
+```
 
 ```text
 Occurrence detail may contain accepted-event facts needed by PatternMatcher.

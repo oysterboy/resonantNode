@@ -96,28 +96,13 @@ inline DetectorId detectorIdFromLegacyOccurrenceSource(OccurrenceSource source) 
 inline OccurrenceType occurrenceTypeFromLegacyOccurrenceKind(OccurrenceKind kind) {
     switch (kind) {
         case OccurrenceKind::AmpTransient:
-            return OccurrenceType::AmpTransient;
+        case OccurrenceKind::BroadbandTransient:
+            return OccurrenceType::Transient;
         case OccurrenceKind::FrequencyMatch:
             return OccurrenceType::FrequencyMatch;
-        case OccurrenceKind::BroadbandTransient:
-            return OccurrenceType::BroadbandTransient;
         case OccurrenceKind::None:
         default:
             return OccurrenceType::None;
-    }
-}
-
-inline OccurrenceDetailKind occurrenceDetailKindFromLegacyOccurrenceKind(OccurrenceKind kind) {
-    switch (kind) {
-        case OccurrenceKind::AmpTransient:
-            return OccurrenceDetailKind::ScalarTransient;
-        case OccurrenceKind::FrequencyMatch:
-            return OccurrenceDetailKind::FrequencyBand;
-        case OccurrenceKind::BroadbandTransient:
-            return OccurrenceDetailKind::BroadbandTransient;
-        case OccurrenceKind::None:
-        default:
-            return OccurrenceDetailKind::None;
     }
 }
 

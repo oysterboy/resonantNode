@@ -13,7 +13,6 @@ Runtime code may still rely on legacy source naming during migration.
 struct DetectorDescriptor {
     DetectorId detectorId = DetectorId::Unknown;
     OccurrenceType occurrenceType = OccurrenceType::None;
-    OccurrenceDetailKind detailKind = OccurrenceDetailKind::None;
     const char* name = "unknown";
 };
 

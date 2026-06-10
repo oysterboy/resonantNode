@@ -51,14 +51,23 @@ Applied code-side bridges:
 
 - `detectorIdFromLegacyOccurrenceSource(...)` in `src/detection/occurrences/Occurrence.h`
 - `occurrenceTypeFromLegacyOccurrenceKind(...)` in `src/detection/occurrences/Occurrence.h`
-- `occurrenceDetailKindFromLegacyOccurrenceKind(...)` in `src/detection/occurrences/Occurrence.h`
+
+Pass H3 contract correction:
+
+- `OccurrenceType` is now the lean public event-category enum
+- transient-like legacy occurrence kinds now collapse into `OccurrenceType::Transient`
+- `OccurrenceDetailKind` is no longer part of the canonical contract
 
 Applied code-side legacy markers:
 
 - `OccurrenceKind`, `OccurrenceSource`, and `OccurrenceDetectorKind` are explicitly commented as legacy or detector-local migration names
 - `SourceCandidateSummary`, `SourceCandidateSnapshot`, and `DetectionDiagnostics` are explicitly commented as migration-era compatibility names in `DetectionRuntime.h`
-- `ScalarOccurrenceSource` and `FrequencyOccurrenceSource` are explicitly commented as temporary migration wrappers, not public detector boundaries
+- `FrequencyOccurrenceSource` is explicitly commented as a temporary migration wrapper, not a public detector boundary
 - analyzer-local source and detector diagnostic structs are explicitly commented as legacy surrogates for future `DetectorReport` content
+
+Historical note:
+
+- `ScalarOccurrenceSource` was removed after Pass H2
 
 Required mapping table:
 
@@ -110,16 +119,16 @@ These names may remain temporarily, but they must not be extended as target arch
 - `AnalyzerSourceCandidateSnapshot`
 - `AnalyzerFrequencyDiagnostic`
 - `AnalyzerScalarDiagnostic`
-- `ScalarOccurrenceSource`
 - `FrequencyOccurrenceSource`
 - `PatternAssembler` as public stage
 - `PatternRules` as public stage
 
 Wrapper policy remains explicit:
 
-- `ScalarOccurrenceSource` and `FrequencyOccurrenceSource` are temporary migration wrappers
-- they are scheduled for deletion after detector cores emit `Occurrence + DetectorReport` directly
-- they are not a public detector boundary
+- `FrequencyOccurrenceSource` remains a temporary migration wrapper
+- it is scheduled for deletion after detector cores emit `Occurrence + DetectorReport` directly
+- it is not a public detector boundary
+- `ScalarOccurrenceSource` already reached that deletion target during Pass H2
 
 ## Remaining Risks
 

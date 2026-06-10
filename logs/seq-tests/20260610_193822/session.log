@@ -1,0 +1,234 @@
+19:38:22.237 Opened COM6 @ 115200
+19:38:24.070 >> SEQ HELP
+19:38:24.203 CMD: SEQ help
+19:38:24.203 CMD: SEQ
+19:38:24.203 CMD: SEQ stop
+19:38:24.203 SEQ IN: start [N|tries=N] [period=MS] [window=MS] [freq=HZ] [dur=MS] [delay=MS] [report_settle=MS] [test=LABEL]
+19:38:24.220 SEQ IN: OBS start [N|tries=N] [period=2000] [window=1800] [freq=HZ] [dur=MS] [delay=MS] [report_settle=MS] [test=LABEL]
+19:38:24.220 SEQ IN: TRIES N
+19:38:24.220 SEQ IN: [profile=tonalpulse|amp|chirp_experimental|scalar_freq_experimental]
+19:38:24.220 SEQ IN: MODE quiet|inspect|explain|LEG_trial|LEG_compact|LEG_signalcheck|LEG_streak|LEG_full|LEG_system|LEG_source|LEG_inspect|LEG_pattern|LEG_explain|LEG_dump
+19:38:24.220 SEQ IN: MODE quiet = no sequence output
+19:38:24.220 SEQ IN: MODE trial|compact = compact trial view
+19:38:24.220 SEQ IN: MODE signalcheck = compact trial view + audio health snapshot
+19:38:24.220 SEQ IN: MODE streak = miss/duplicate streak diagnostics
+19:38:24.220 SEQ IN: MODE full = readable staged diagnostics; V2 exposes deep dumps
+19:38:24.220 SEQ IN: MODE system = trial verdict + system health
+19:38:24.236 SEQ IN: MODE inspect = canonical detector report inspect
+19:38:24.236 SEQ IN: MODE explain = canonical detector report explain
+19:38:24.236 SEQ IN: MODE LEG_inspect|LEG_explain|LEG_dump = legacy developer inspect/explain
+19:38:24.236 SEQ IN: PROFILE tonalpulse|amp|chirp_experimental|scalar_freq_experimental
+19:38:24.236 SEQ IN: DIAG on|off
+19:38:24.236 SEQ IN: FREQBAND on|off
+19:38:24.236 SEQ IN: FREQUPDATEEVERYSAMPLES 1|4|8|16
+19:38:24.236 SEQ IN: WHEN off|miss|all
+19:38:24.236 SEQ IN: VERBOSE 0|1|2 (0=compact, 1=summary, 2=deep debug)
+19:38:24.236 SEQ IN: SUMMARY [LEG]
+19:38:24.236 SEQ IN: TRIES N
+19:38:24.236 SEQ IN: STATUS
+19:38:24.236 SEQ IN: [dumpSamples=0|1] [curveFormat=off|samples]
+19:38:24.252 SEQ IN: [sampleFirst=N] [sampleEvery=N] [sampleLead=MS] [sampleTail=MS] [sampleStep=MS] [sampleMax=N]
+19:38:24.255 SEQ OUT: SEQ start / SEQ running / SEQ_PATTERN / SEQ_TRIAL / SEQ_STREAK / SEQ_INSPECT / SEQ_INSPECT_LEG / SEQ_EXPLAIN / SEQ_EXPLAIN_LEG / SEQ_SOURCE / SEQ_SUMMARY / SEQ_SUMMARY_LEG / AUDIO run / SIGNALCHECK
+19:38:24.255 SEQ OUT: candidate fields include onset_sample peak_sample release_sample peak_ms dur end_dt_ms freq_*
+19:38:24.255 SEQ OBS: passive observe mode for an already-running external emitter
+19:38:24.255 SEQ IN: PROFILE tonalpulse|amp|chirp_experimental|scalar_freq_experimental
+19:38:24.255 SEQ PROFILE tonalpulse
+19:38:24.255 SEQ PROFILE amp
+19:38:24.255 SEQ PROFILE chirp_experimental
+19:38:24.268 SEQ PROFILE scalar_freq_experimental
+19:38:24.268 SEQ PARAM: freqScore=18000 freqContrast=50.0 freqReleaseScore=12000 freqReleaseContrast=50.0
+19:38:25.075 ==== PROFILE tonalpulse ====
+19:38:25.079 >> SEQ PROFILE tonalpulse
+19:38:25.203 OK SEQ PROFILE TonalPulse
+19:38:25.357 >> SEQ MODE inspect
+19:38:25.505 OK SEQ MODE inspect
+19:38:25.652 >> SEQ WHEN all
+19:38:25.787 OK SEQ WHEN all
+19:38:25.938 >> SEQ VERBOSE 1
+19:38:26.072 OK SEQ VERBOSE 1
+19:38:26.222 >> SEQ START tries=3 period=1800 window=1500 freq=3200 dur=100 delay=600 report_settle=400 profile=tonalpulse mode=inspect when=all verbose=1 test=tonalpulse
+19:38:26.356 OK SEQ
+19:38:26.656 >> SEQ SUMMARY
+19:38:27.788 SEQ remote claim: send=82057ms ack=83557ms wait=1500ms status=timeout
+19:38:27.889 SEQ rebase: start=83557ms end=83658ms elapsed=102ms
+19:38:27.889 AUDIO stats reset
+19:38:27.889 SEQ start test=default startup_delay_ms=600 report_settle_ms=400 loopDelayMs=0 logStress=0
+19:38:27.940 SEQ start source=I2S probe=AMP profile=TonalPulse source=FrequencyMatch detector=FrequencyMatch required_support_target=diagnostic_only:AmpStrength support_gate=disabled freq_min_duration_ms=60 freq_release_debounce_ms=30 freq_cooldown_ms=0 freq_attack_score_min=18000.0 freq_release_score_min=12000.0 freq_attack_contrast_min=50.0 freq_release_contrast_min=50.0 mode=SEQ test=default startup_delay_ms=600 report_settle_ms=400 loopDelayMs=0 logStress=0 quiet=0 tries=3 period_ms=1800 window_start_ms=0 window_end_ms=1500 freq_hz=3200 dur_ms=100
+19:38:27.940 SEQ tuning freqScore=18000.0 freqReleaseScore=12000.0 freqContrast=50.0 freqReleaseContrast=50.0 transientDetector=fixed
+19:38:27.945 SEQ freqmatch: min_duration_ms=60 release_debounce_ms=30 cooldown_ms=0 attack_score_min=18000.0 release_score_min=12000.0 attack_contrast_min=50.0 release_contrast_min=50.0
+19:38:27.990 FREQBAND runtime: freq.window_samples=64 freq.window_ms=4.00 freq.update_every_samples=4 freq.update_period_ms=0.250 freq.target_hz=3200 freq.produced_fresh_packet=0 freq.packet_age_samples=0 freq.packet_age_ms=0.000
+19:38:27.991 SEQ running
+19:38:27.991 SEQ_SUMMARY profile=unknown detector=unknown trials=0 completed=0 expected=0 early=0 late=0 miss=0 duplicate=0 unexpected=0 rejected=0 ambiguous=0 too_dense=0 invalid_audio=0 detector_accepted=0 detector_rejects=0 patterns_valid=0 patterns_rejected=0 avg_dt_ms=-1 avg_conf=0.00
+19:38:27.991 #1 ----------------
+19:38:27.991 >> SEQ SUMMARY LEG
+19:38:28.122 SEQ_SUMMARY_LEG counts: expected=0 early=0 late=0 miss=0 duplicate=0 unexpected=0 rejected=0 ambiguous=0 too_dense=0 invalid_audio=0 startup_artifacts=0
+19:38:28.125   metadata: profile=TonalPulse source=FrequencyMatch detector=FrequencyMatch required_support_target=diagnostic_only:AmpStrength support_gate=disabled diag_mode=trial trials=3 completed=1 avg_pattern_confidence=0.00 avg_dt=-1ms avg_dur=-1ms
+19:38:28.127   details: A_rates: duplicate=0.00 unexpected=0.00 main_miss_reason=none main_reject_reason=none
+19:38:28.129   miss_reason_counts: none=0 result_expected_window=0 result_before_window=0 result_after_window=0 no_occurrence=0 occ_rejected=0 inspection_failed=0 pattern_rejected=0
+19:38:28.129   freq_evidence_class_counts: accepted=0 strong_no_occurrence=0 partial=0 weak=0 none=0
+19:38:28.129   reject_reason_counts: dup_after_primary=0 unexpected_without_trigger=0 invalid_audio=0
+19:38:28.129   longest_miss_streak=0 first_miss_trial=0
+19:38:28.186   A_profile_summary: matched_expected=0 unmatched_expected=0 matched_duplicates=0 unmatched_duplicates=0 matched_unexpected=0 unmatched_unexpected=0 freq_reject_score=0 freq_reject_contrast=0 freq_reject_both=0 freq_reject_no_evidence=0
+19:38:28.186 SEQ tuning freqScore=18000.0 freqReleaseScore=12000.0 freqContrast=50.0 freqReleaseContrast=50.0 transientDetector=fixed
+19:38:28.186 SEQ freqmatch: min_duration_ms=60 release_debounce_ms=30 cooldown_ms=0 attack_score_min=18000.0 release_score_min=12000.0 attack_contrast_min=50.0 release_contrast_min=50.0
+19:38:28.234 FREQBAND runtime: freq.window_samples=64 freq.window_ms=4.00 freq.update_every_samples=4 freq.update_period_ms=0.250 freq.target_hz=3200 freq.produced_fresh_packet=1 freq.packet_age_samples=0 freq.packet_age_ms=0.000
+19:38:28.234 AUDIO summary:
+19:38:28.234 reads=67 readBytes=8704 zeroReads=50 shortReads=0 maxReadBytes=512 noSampleLoops=50 readErrors=0 overflow=0 droppedBlocks=0 totalSamples=2176
+19:38:28.234 OCCURRENCE summary:
+19:38:28.234 blocks=1088 samples=1088 lastBlockStart=1087 lastBlockCount=1 lastBlockMicros=83856933
+19:38:28.440 SEQ_TRIAL trial=1 profile=TonalPulse result=late reason=result_after_window dt=1156ms confidence=1.00 candidate_count=1 duplicate_count=0
+19:38:28.489 SEQ_INSPECT trial=1 detector=frequency_match window.start_ms=83813 window.end_ms=84093 accepted.present=0 accepted.start_ms=0 accepted.peak_ms=0 accepted.end_ms=0 accepted.duration_ms=0 accepted.strength=0.0 accepted.confidence=0.00 reject.present=0 reject.class=none reject.detector_reason=none reject.start_ms=0 reject.peak_ms=0 reject.end_ms=0 reject.duration_ms=0 reject.strength=0.0 reject.confidence=0.00 threshold.min_duration_ms=60 threshold.max_duration_ms=0 aggregate.accepted_count=1 aggregate.rejected_count=0
+19:38:28.593 SEQ_INSPECT detail.frequency.accepted.score=0.00 detail.frequency.accepted.contrast=0.00 detail.frequency.reject.score=0.00 detail.frequency.reject.contrast=0.00 detail.frequency.threshold.score_min=18000.00 detail.frequency.threshold.contrast_min=50.00 detail.frequency.aggregate.score_ok=470 detail.frequency.aggregate.contrast_ok=450 detail.frequency.aggregate.both_ok=450 detail.frequency.aggregate.match=470 detail.frequency.inspect.reject_reason=none detail.frequency.inspect.no_emit_reason=none detail.frequency.inspect.gate_reason=none detail.frequency.inspect.candidate_state=closed detail.frequency.inspect.ready_ok=1 detail.frequency.inspect.gate_open=1 detail.frequency.inspect.opened=1 detail.frequency.inspect.released=1 detail.frequency.inspect.emitted=1 detail.frequency.inspect.valid_release=0 detail.frequency.inspect.emit_allowed=0 detail.frequency.inspect.open_ms=83813 detail.frequency.inspect.peak_ms=83823 detail.frequency.inspect.release_ms=84093 detail.frequency.inspect.duration_ms=280
+19:38:28.593 SEQ_INSPECT expected.start_ms=82657 expected.end_ms=84157 pattern.type=valid_pattern pattern.valid=1 pattern.reason=from_occurrence analyzer.result=late analyzer.reason=result_after_window analyzer.dt_ms=1156
+19:38:28.807 #2 ----------------
+19:38:30.308 ==== PROFILE amp ====
+19:38:30.310 >> SEQ PROFILE amp
+19:38:30.443 SEQ_TRIAL trial=2 profile=TonalPulse result=expected reason=result_in_expected_window dt=16ms confidence=1.00 candidate_count=1 duplicate_count=0
+19:38:30.444 SEQ_INSPECT trial=2 detector=frequency_match window.start_ms=84580 window.end_ms=84735 accepted.present=0 accepted.start_ms=0 accepted.peak_ms=0 accepted.end_ms=0 accepted.duration_ms=0 accepted.strength=0.0 accepted.confidence=0.00 reject.present=0 reject.class=none reject.detector_reason=none reject.start_ms=0 reject.peak_ms=0 reject.end_ms=0 reject.duration_ms=0 reject.strength=0.0 reject.confidence=0.00 threshold.min_duration_ms=60 threshold.max_duration_ms=0 aggregate.accepted_count=1 aggregate.rejected_count=0
+19:38:30.542 SEQ_INSPECT detail.frequency.accepted.score=0.00 detail.frequency.accepted.contrast=0.00 detail.frequency.reject.score=0.00 detail.frequency.reject.contrast=0.00 detail.frequency.threshold.score_min=18000.00 detail.frequency.threshold.contrast_min=50.00 detail.frequency.aggregate.score_ok=3035 detail.frequency.aggregate.contrast_ok=3026 detail.frequency.aggregate.both_ok=3026 detail.frequency.aggregate.match=3035 detail.frequency.inspect.reject_reason=none detail.frequency.inspect.no_emit_reason=none detail.frequency.inspect.gate_reason=none detail.frequency.inspect.candidate_state=closed detail.frequency.inspect.ready_ok=1 detail.frequency.inspect.gate_open=1 detail.frequency.inspect.opened=1 detail.frequency.inspect.released=1 detail.frequency.inspect.emitted=1 detail.frequency.inspect.valid_release=0 detail.frequency.inspect.emit_allowed=0 detail.frequency.inspect.open_ms=84580 detail.frequency.inspect.peak_ms=84677 detail.frequency.inspect.release_ms=84735 detail.frequency.inspect.duration_ms=155
+19:38:30.542 SEQ_INSPECT expected.start_ms=84564 expected.end_ms=86064 pattern.type=valid_pattern pattern.valid=1 pattern.reason=from_occurrence analyzer.result=expected analyzer.reason=result_in_expected_window analyzer.dt_ms=16
+19:38:30.557 OK SEQ PROFILE Amp
+19:38:30.611 >> SEQ MODE inspect
+19:38:30.742 OK SEQ MODE inspect
+19:38:30.742 #3 ----------------
+19:38:30.893 >> SEQ WHEN all
+19:38:31.026 OK SEQ WHEN all
+19:38:31.176 >> SEQ VERBOSE 1
+19:38:31.310 OK SEQ VERBOSE 1
+19:38:31.460 >> SEQ START tries=3 period=1800 window=1500 freq=3200 dur=100 delay=600 report_settle=400 profile=amp mode=inspect when=all verbose=1 test=amp
+19:38:31.592 OK SEQ
+19:38:31.594 SEQ remote claim: send=87337ms ack=87343ms wait=6ms status=ok
+19:38:31.641 SEQ rebase: start=87343ms end=87445ms elapsed=102ms
+19:38:31.641 AUDIO stats reset
+19:38:31.650 SEQ start test=default startup_delay_ms=600 report_settle_ms=400 loopDelayMs=0 logStress=0
+19:38:31.705 SEQ start source=I2S probe=AMP profile=Amp source=ScalarTransient detector=ScalarTransient required_support_target=diagnostic_only:FrequencyScoreStrength support_gate=disabled freq_min_duration_ms=60 freq_release_debounce_ms=30 freq_cooldown_ms=0 freq_attack_score_min=18000.0 freq_release_score_min=12000.0 freq_attack_contrast_min=50.0 freq_release_contrast_min=50.0 mode=SEQ test=default startup_delay_ms=600 report_settle_ms=400 loopDelayMs=0 logStress=0 quiet=0 tries=3 period_ms=1800 window_start_ms=0 window_end_ms=1500 freq_hz=3200 dur_ms=100
+19:38:31.705 SEQ tuning freqScore=18000.0 freqReleaseScore=12000.0 freqContrast=50.0 freqReleaseContrast=50.0 transientDetector=fixed
+19:38:31.753 SEQ freqmatch: min_duration_ms=60 release_debounce_ms=30 cooldown_ms=0 attack_score_min=18000.0 release_score_min=12000.0 attack_contrast_min=50.0 release_contrast_min=50.0
+19:38:31.753 FREQBAND runtime: freq.window_samples=64 freq.window_ms=4.00 freq.update_every_samples=4 freq.update_period_ms=0.250 freq.target_hz=3200 freq.produced_fresh_packet=0 freq.packet_age_samples=0 freq.packet_age_ms=0.000
+19:38:31.753 SEQ running
+19:38:31.910 >> SEQ SUMMARY
+19:38:32.044 SEQ_SUMMARY profile=unknown detector=unknown trials=0 completed=0 expected=0 early=0 late=0 miss=0 duplicate=0 unexpected=0 rejected=0 ambiguous=0 too_dense=0 invalid_audio=0 detector_accepted=0 detector_rejects=0 patterns_valid=0 patterns_rejected=0 avg_dt_ms=-1 avg_conf=0.00
+19:38:32.144 #1 ----------------
+19:38:33.294 >> SEQ SUMMARY LEG
+19:38:33.425 SEQ_SUMMARY_LEG counts: expected=0 early=0 late=0 miss=0 duplicate=0 unexpected=0 rejected=0 ambiguous=0 too_dense=0 invalid_audio=0 startup_artifacts=0
+19:38:33.425   metadata: profile=Amp source=ScalarTransient detector=ScalarTransient required_support_target=diagnostic_only:FrequencyScoreStrength support_gate=disabled diag_mode=trial trials=3 completed=1 avg_pattern_confidence=0.00 avg_dt=-1ms avg_dur=-1ms
+19:38:33.431   details: A_rates: duplicate=0.00 unexpected=0.00 main_miss_reason=none main_reject_reason=none
+19:38:33.435   miss_reason_counts: none=0 result_expected_window=0 result_before_window=0 result_after_window=0 no_occurrence=0 occ_rejected=0 inspection_failed=0 pattern_rejected=0
+19:38:33.437   freq_evidence_class_counts: accepted=0 strong_no_occurrence=0 partial=0 weak=0 none=0
+19:38:33.439   reject_reason_counts: dup_after_primary=0 unexpected_without_trigger=0 invalid_audio=0
+19:38:33.441   longest_miss_streak=0 first_miss_trial=0
+19:38:33.444   A_profile_summary: matched_expected=1 unmatched_expected=0 matched_duplicates=0 unmatched_duplicates=0 matched_unexpected=0 unmatched_unexpected=0 freq_reject_score=0 freq_reject_contrast=0 freq_reject_both=0 freq_reject_no_evidence=1
+19:38:33.496 SEQ tuning freqScore=18000.0 freqReleaseScore=12000.0 freqContrast=50.0 freqReleaseContrast=50.0 transientDetector=fixed
+19:38:33.498 SEQ freqmatch: min_duration_ms=60 release_debounce_ms=30 cooldown_ms=0 attack_score_min=18000.0 release_score_min=12000.0 attack_contrast_min=50.0 release_contrast_min=50.0
+19:38:33.500 FREQBAND runtime: freq.window_samples=64 freq.window_ms=4.00 freq.update_every_samples=4 freq.update_period_ms=0.250 freq.target_hz=3200 freq.produced_fresh_packet=1 freq.packet_age_samples=0 freq.packet_age_ms=0.000
+19:38:33.502 AUDIO summary:
+19:38:33.504 reads=4175 readBytes=100352 zeroReads=3979 shortReads=0 maxReadBytes=512 noSampleLoops=3979 readErrors=0 overflow=0 droppedBlocks=0 totalSamples=25088
+19:38:33.507 OCCURRENCE summary:
+19:38:33.561 blocks=12544 samples=12544 lastBlockStart=12543 lastBlockCount=1 lastBlockMicros=89150774
+19:38:33.760 SEQ_TRIAL trial=1 profile=Amp result=expected reason=result_in_expected_window dt=26ms confidence=1.00 duration_ms=101 candidate_count=1 duplicate_count=0
+19:38:33.808 SEQ_INSPECT trial=1 detector=scalar_transient window.start_ms=87963 window.end_ms=88064 accepted.present=1 accepted.start_ms=87963 accepted.peak_ms=87965 accepted.end_ms=88064 accepted.duration_ms=100 accepted.strength=30.0 accepted.confidence=1.00 reject.present=0 reject.class=none reject.detector_reason=none reject.start_ms=0 reject.peak_ms=0 reject.end_ms=0 reject.duration_ms=0 reject.strength=0.0 reject.confidence=0.00 threshold.min_duration_ms=60 threshold.max_duration_ms=240 aggregate.accepted_count=1 aggregate.rejected_count=0
+19:38:33.914 SEQ_INSPECT detail.scalar.accepted.value=30.0 detail.scalar.accepted.baseline=2038.3 detail.scalar.accepted.lift=-2008.3 detail.scalar.accepted.normalized=0.00 detail.scalar.reject.value=0.0 detail.scalar.reject.baseline=0.0 detail.scalar.reject.lift=0.0 detail.scalar.reject.normalized=0.00 detail.scalar.reject.opened=0 detail.scalar.reject.crossed_onset=0 detail.scalar.reject.crossed_release=0 detail.scalar.threshold.onset=23.0 detail.scalar.threshold.release=20.0 detail.scalar.threshold.min_strength=28.0 detail.scalar.aggregate.too_short=0 detail.scalar.aggregate.too_long=0 detail.scalar.aggregate.strength_too_low=0 detail.scalar.aggregate.max_rejected_lift=0.0 detail.scalar.aggregate.best_rejected_value=0.0 detail.scalar.inspect.reject_reason=below_threshold detail.scalar.inspect.no_emit_reason=below_threshold detail.scalar.inspect.gate_reason=below_threshold detail.scalar.inspect.opened=0 detail.scalar.inspect.released=0 detail.scalar.inspect.valid_release=0 detail.scalar.inspect.emit_allowed=0 detail.scalar.inspect.open_ms=0 detail.scalar.inspect.peak_ms=0 detail.scalar.inspect.release_ms=0 detail.scalar.inspect.duration_ms=0 detail.scalar.inspect.peak_strength=0.0
+19:38:33.916 SEQ_INSPECT expected.start_ms=87937 expected.end_ms=89437 pattern.type=valid_pattern pattern.valid=1 pattern.reason=from_occurrence analyzer.result=expected analyzer.reason=result_in_expected_window analyzer.dt_ms=26
+19:38:34.061 #2 ----------------
+19:38:35.464 ==== PROFILE chirp_experimental ====
+19:38:35.464 >> SEQ PROFILE chirp_experimental
+19:38:35.598 OK SEQ PROFILE ChirpExperimental
+19:38:35.697 SEQ_TRIAL trial=2 profile=Amp result=miss reason=occurrence_seen_but_rejected dt=-1ms confidence=0.00 failed_at=source candidate_count=0 duplicate_count=0 miss_streak=1
+19:38:35.700 SEQ_INSPECT trial=2 detector=scalar_transient window.start_ms=89894 window.end_ms=89975 accepted.present=0 accepted.start_ms=0 accepted.peak_ms=0 accepted.end_ms=0 accepted.duration_ms=0 accepted.strength=0.0 accepted.confidence=0.00 reject.present=1 reject.class=strength reject.detector_reason=strength_too_low reject.start_ms=89894 reject.peak_ms=89911 reject.end_ms=89975 reject.duration_ms=80 reject.strength=27.0 reject.confidence=0.00 threshold.min_duration_ms=60 threshold.max_duration_ms=240 aggregate.accepted_count=1 aggregate.rejected_count=1
+19:38:35.744 >> SEQ MODE inspect
+19:38:35.879 SEQ_INSPECT detail.scalar.accepted.value=0.0 detail.scalar.accepted.baseline=0.0 detail.scalar.accepted.lift=0.0 detail.scalar.accepted.normalized=0.00 detail.scalar.reject.value=27.0 detail.scalar.reject.baseline=0.0 detail.scalar.reject.lift=0.0 detail.scalar.reject.normalized=0.00 detail.scalar.reject.opened=1 detail.scalar.reject.crossed_onset=1 detail.scalar.reject.crossed_release=1 detail.scalar.threshold.onset=23.0 detail.scalar.threshold.release=20.0 detail.scalar.threshold.min_strength=28.0 detail.scalar.aggregate.too_short=0 detail.scalar.aggregate.too_long=0 detail.scalar.aggregate.strength_too_low=1 detail.scalar.aggregate.max_rejected_lift=0.0 detail.scalar.aggregate.best_rejected_value=27.0 detail.scalar.inspect.reject_reason=strength_too_low detail.scalar.inspect.no_emit_reason=strength_too_low detail.scalar.inspect.gate_reason=strength_too_low detail.scalar.inspect.opened=0 detail.scalar.inspect.released=0 detail.scalar.inspect.valid_release=0 detail.scalar.inspect.emit_allowed=0 detail.scalar.inspect.open_ms=0 detail.scalar.inspect.peak_ms=0 detail.scalar.inspect.release_ms=0 detail.scalar.inspect.duration_ms=0 detail.scalar.inspect.peak_strength=0.0
+19:38:35.882 SEQ_INSPECT expected.start_ms=89853 expected.end_ms=91353 pattern.type=none pattern.valid=0 pattern.reason=none analyzer.result=miss analyzer.reason=occurrence_seen_but_rejected analyzer.dt_ms=-1
+19:38:35.882 OK SEQ MODE inspect
+19:38:35.980 #3 ----------------
+19:38:36.031 >> SEQ WHEN all
+19:38:36.163 OK SEQ WHEN all
+19:38:36.314 >> SEQ VERBOSE 1
+19:38:36.447 OK SEQ VERBOSE 1
+19:38:36.597 >> SEQ START tries=3 period=1800 window=1500 freq=3200 dur=100 delay=600 report_settle=400 profile=chirp_experimental mode=inspect when=all verbose=1 test=chirp_experimental
+19:38:36.731 OK SEQ
+19:38:36.731 SEQ remote claim: send=92443ms ack=92449ms wait=6ms status=ok
+19:38:36.780 SEQ rebase: start=92449ms end=92550ms elapsed=101ms
+19:38:36.780 AUDIO stats reset
+19:38:36.780 SEQ start test=default startup_delay_ms=600 report_settle_ms=400 loopDelayMs=0 logStress=0
+19:38:36.830 SEQ start source=I2S probe=AMP profile=ChirpExperimental source=ScalarTransient detector=ScalarTransient required_support_target=diagnostic_only:AmpStrength support_gate=disabled freq_min_duration_ms=60 freq_release_debounce_ms=30 freq_cooldown_ms=0 freq_attack_score_min=18000.0 freq_release_score_min=12000.0 freq_attack_contrast_min=50.0 freq_release_contrast_min=50.0 mode=SEQ test=default startup_delay_ms=600 report_settle_ms=400 loopDelayMs=0 logStress=0 quiet=0 tries=3 period_ms=1800 window_start_ms=0 window_end_ms=1500 freq_hz=3200 dur_ms=100
+19:38:36.830 SEQ tuning freqScore=18000.0 freqReleaseScore=12000.0 freqContrast=50.0 freqReleaseContrast=50.0 transientDetector=fixed
+19:38:36.830 SEQ freqmatch: min_duration_ms=60 release_debounce_ms=30 cooldown_ms=0 attack_score_min=18000.0 release_score_min=12000.0 attack_contrast_min=50.0 release_contrast_min=50.0
+19:38:36.881 FREQBAND runtime: freq.window_samples=64 freq.window_ms=4.00 freq.update_every_samples=4 freq.update_period_ms=0.250 freq.target_hz=3200 freq.produced_fresh_packet=0 freq.packet_age_samples=0 freq.packet_age_ms=0.000
+19:38:36.881 SEQ running
+19:38:37.032 >> SEQ SUMMARY
+19:38:37.161 SEQ_SUMMARY profile=unknown detector=unknown trials=0 completed=0 expected=0 early=0 late=0 miss=0 duplicate=0 unexpected=0 rejected=0 ambiguous=0 too_dense=0 invalid_audio=0 detector_accepted=0 detector_rejects=0 patterns_valid=0 patterns_rejected=0 avg_dt_ms=-1 avg_conf=0.00
+19:38:37.264 #1 ----------------
+19:38:38.365 >> SEQ SUMMARY LEG
+19:38:38.498 SEQ_SUMMARY_LEG counts: expected=0 early=0 late=0 miss=0 duplicate=0 unexpected=0 rejected=0 ambiguous=0 too_dense=0 invalid_audio=0 startup_artifacts=0
+19:38:38.498   metadata: profile=ChirpExperimental source=ScalarTransient detector=ScalarTransient required_support_target=diagnostic_only:AmpStrength support_gate=disabled diag_mode=trial trials=3 completed=1 avg_pattern_confidence=0.00 avg_dt=-1ms avg_dur=-1ms
+19:38:38.498   details: A_rates: duplicate=0.00 unexpected=0.00 main_miss_reason=none main_reject_reason=none
+19:38:38.498   miss_reason_counts: none=0 result_expected_window=0 result_before_window=0 result_after_window=0 no_occurrence=0 occ_rejected=0 inspection_failed=0 pattern_rejected=0
+19:38:38.498   freq_evidence_class_counts: accepted=0 strong_no_occurrence=0 partial=0 weak=0 none=0
+19:38:38.498   reject_reason_counts: dup_after_primary=0 unexpected_without_trigger=0 invalid_audio=0
+19:38:38.514   longest_miss_streak=0 first_miss_trial=0
+19:38:38.514   A_profile_summary: matched_expected=0 unmatched_expected=0 matched_duplicates=0 unmatched_duplicates=0 matched_unexpected=0 unmatched_unexpected=0 freq_reject_score=0 freq_reject_contrast=0 freq_reject_both=0 freq_reject_no_evidence=0
+19:38:38.514 SEQ tuning freqScore=18000.0 freqReleaseScore=12000.0 freqContrast=50.0 freqReleaseContrast=50.0 transientDetector=fixed
+19:38:38.514 SEQ freqmatch: min_duration_ms=60 release_debounce_ms=30 cooldown_ms=0 attack_score_min=18000.0 release_score_min=12000.0 attack_contrast_min=50.0 release_contrast_min=50.0
+19:38:38.514 FREQBAND runtime: freq.window_samples=64 freq.window_ms=4.00 freq.update_every_samples=4 freq.update_period_ms=0.250 freq.target_hz=3200 freq.produced_fresh_packet=1 freq.packet_age_samples=0 freq.packet_age_ms=0.000
+19:38:38.514 AUDIO summary:
+19:38:38.565 reads=4146 readBytes=92160 zeroReads=3966 shortReads=0 maxReadBytes=512 noSampleLoops=3966 readErrors=0 overflow=0 droppedBlocks=0 totalSamples=23040
+19:38:38.567 OCCURRENCE summary:
+19:38:38.567 blocks=11520 samples=11520 lastBlockStart=11519 lastBlockCount=1 lastBlockMicros=94181778
+19:38:38.865 SEQ_TRIAL trial=1 profile=ChirpExperimental result=miss reason=occurrence_seen_but_rejected dt=-1ms confidence=0.00 failed_at=source candidate_count=0 duplicate_count=0
+19:38:38.915 SEQ_INSPECT trial=1 detector=scalar_transient window.start_ms=93075 window.end_ms=93164 accepted.present=0 accepted.start_ms=0 accepted.peak_ms=0 accepted.end_ms=0 accepted.duration_ms=0 accepted.strength=0.0 accepted.confidence=0.00 reject.present=1 reject.class=strength reject.detector_reason=strength_too_low reject.start_ms=93075 reject.peak_ms=93093 reject.end_ms=93164 reject.duration_ms=89 reject.strength=26.0 reject.confidence=0.00 threshold.min_duration_ms=60 threshold.max_duration_ms=240 aggregate.accepted_count=1 aggregate.rejected_count=1
+19:38:39.011 SEQ_INSPECT detail.scalar.accepted.value=0.0 detail.scalar.accepted.baseline=0.0 detail.scalar.accepted.lift=0.0 detail.scalar.accepted.normalized=0.00 detail.scalar.reject.value=26.0 detail.scalar.reject.baseline=0.0 detail.scalar.reject.lift=0.0 detail.scalar.reject.normalized=0.00 detail.scalar.reject.opened=1 detail.scalar.reject.crossed_onset=1 detail.scalar.reject.crossed_release=1 detail.scalar.threshold.onset=23.0 detail.scalar.threshold.release=20.0 detail.scalar.threshold.min_strength=40.0 detail.scalar.aggregate.too_short=0 detail.scalar.aggregate.too_long=0 detail.scalar.aggregate.strength_too_low=1 detail.scalar.aggregate.max_rejected_lift=0.0 detail.scalar.aggregate.best_rejected_value=26.0 detail.scalar.inspect.reject_reason=strength_too_low detail.scalar.inspect.no_emit_reason=strength_too_low detail.scalar.inspect.gate_reason=strength_too_low detail.scalar.inspect.opened=0 detail.scalar.inspect.released=0 detail.scalar.inspect.valid_release=0 detail.scalar.inspect.emit_allowed=0 detail.scalar.inspect.open_ms=0 detail.scalar.inspect.peak_ms=0 detail.scalar.inspect.release_ms=0 detail.scalar.inspect.duration_ms=0 detail.scalar.inspect.peak_strength=0.0
+19:38:39.015 SEQ_INSPECT expected.start_ms=93042 expected.end_ms=94542 pattern.type=none pattern.valid=0 pattern.reason=none analyzer.result=miss analyzer.reason=occurrence_seen_but_rejected analyzer.dt_ms=-1
+19:38:39.163 #2 ----------------
+19:38:40.550 ==== PROFILE scalar_freq_experimental ====
+19:38:40.550 >> SEQ PROFILE scalar_freq_experimental
+19:38:40.684 OK SEQ PROFILE scalar_freq_experimental
+19:38:40.781 SEQ_TRIAL trial=2 profile=ChirpExperimental result=miss reason=occurrence_seen_but_rejected dt=-1ms confidence=0.00 failed_at=source candidate_count=0 duplicate_count=0 miss_streak=1
+19:38:40.829 SEQ_INSPECT trial=2 detector=scalar_transient window.start_ms=95027 window.end_ms=95102 accepted.present=0 accepted.start_ms=0 accepted.peak_ms=0 accepted.end_ms=0 accepted.duration_ms=0 accepted.strength=0.0 accepted.confidence=0.00 reject.present=1 reject.class=strength reject.detector_reason=strength_too_low reject.start_ms=95027 reject.peak_ms=95033 reject.end_ms=95102 reject.duration_ms=75 reject.strength=29.0 reject.confidence=0.00 threshold.min_duration_ms=60 threshold.max_duration_ms=240 aggregate.accepted_count=1 aggregate.rejected_count=2
+19:38:40.834 >> SEQ MODE inspect
+19:38:40.966 SEQ_INSPECT detail.scalar.accepted.value=0.0 detail.scalar.accepted.baseline=0.0 detail.scalar.accepted.lift=0.0 detail.scalar.accepted.normalized=0.00 detail.scalar.reject.value=29.0 detail.scalar.reject.baseline=0.0 detail.scalar.reject.lift=0.0 detail.scalar.reject.normalized=0.00 detail.scalar.reject.opened=1 detail.scalar.reject.crossed_onset=1 detail.scalar.reject.crossed_release=1 detail.scalar.threshold.onset=23.0 detail.scalar.threshold.release=20.0 detail.scalar.threshold.min_strength=40.0 detail.scalar.aggregate.too_short=0 detail.scalar.aggregate.too_long=0 detail.scalar.aggregate.strength_too_low=2 detail.scalar.aggregate.max_rejected_lift=0.0 detail.scalar.aggregate.best_rejected_value=29.0 detail.scalar.inspect.reject_reason=strength_too_low detail.scalar.inspect.no_emit_reason=strength_too_low detail.scalar.inspect.gate_reason=strength_too_low detail.scalar.inspect.opened=0 detail.scalar.inspect.released=0 detail.scalar.inspect.valid_release=0 detail.scalar.inspect.emit_allowed=0 detail.scalar.inspect.open_ms=0 detail.scalar.inspect.peak_ms=0 detail.scalar.inspect.release_ms=0 detail.scalar.inspect.duration_ms=0 detail.scalar.inspect.peak_strength=0.0
+19:38:40.966 SEQ_INSPECT expected.start_ms=94966 expected.end_ms=96466 pattern.type=none pattern.valid=0 pattern.reason=none analyzer.result=miss analyzer.reason=occurrence_seen_but_rejected analyzer.dt_ms=-1
+19:38:40.966 OK SEQ MODE inspect
+19:38:41.118 #3 ----------------
+19:38:41.118 >> SEQ WHEN all
+19:38:41.250 OK SEQ WHEN all
+19:38:41.401 >> SEQ VERBOSE 1
+19:38:41.534 OK SEQ VERBOSE 1
+19:38:41.685 >> SEQ START tries=3 period=1800 window=1500 freq=3200 dur=100 delay=600 report_settle=400 profile=scalar_freq_experimental mode=inspect when=all verbose=1 test=scalar_freq_experimental
+19:38:41.817 OK SEQ
+19:38:41.817 SEQ remote claim: send=97586ms ack=97592ms wait=6ms status=ok
+19:38:41.918 SEQ rebase: start=97592ms end=97694ms elapsed=102ms
+19:38:41.921 AUDIO stats reset
+19:38:41.921 SEQ start test=default startup_delay_ms=600 report_settle_ms=400 loopDelayMs=0 logStress=0
+19:38:41.968 SEQ start source=I2S probe=AMP profile=scalar_freq_experimental source=ScalarTransient detector=ScalarTransient required_support_target=diagnostic_only:FrequencyScoreStrength support_gate=disabled freq_min_duration_ms=60 freq_release_debounce_ms=30 freq_cooldown_ms=0 freq_attack_score_min=18000.0 freq_release_score_min=12000.0 freq_attack_contrast_min=50.0 freq_release_contrast_min=50.0 mode=SEQ test=default startup_delay_ms=600 report_settle_ms=400 loopDelayMs=0 logStress=0 quiet=0 tries=3 period_ms=1800 window_start_ms=0 window_end_ms=1500 freq_hz=3200 dur_ms=100
+19:38:41.968 SEQ tuning freqScore=18000.0 freqReleaseScore=12000.0 freqContrast=50.0 freqReleaseContrast=50.0 transientDetector=fixed
+19:38:41.968 SEQ freqmatch: min_duration_ms=60 release_debounce_ms=30 cooldown_ms=0 attack_score_min=18000.0 release_score_min=12000.0 attack_contrast_min=50.0 release_contrast_min=50.0
+19:38:42.019 FREQBAND runtime: freq.window_samples=64 freq.window_ms=4.00 freq.update_every_samples=4 freq.update_period_ms=0.250 freq.target_hz=3200 freq.produced_fresh_packet=0 freq.packet_age_samples=0 freq.packet_age_ms=0.000
+19:38:42.019 SEQ running
+19:38:42.118 >> SEQ SUMMARY
+19:38:42.247 SEQ_SUMMARY profile=unknown detector=unknown trials=0 completed=0 expected=0 early=0 late=0 miss=0 duplicate=0 unexpected=0 rejected=0 ambiguous=0 too_dense=0 invalid_audio=0 detector_accepted=0 detector_rejects=0 patterns_valid=0 patterns_rejected=0 avg_dt_ms=-1 avg_conf=0.00
+19:38:42.401 #1 ----------------
+19:38:43.454 >> SEQ SUMMARY LEG
+19:38:43.587 SEQ_SUMMARY_LEG counts: expected=0 early=0 late=0 miss=0 duplicate=0 unexpected=0 rejected=0 ambiguous=0 too_dense=0 invalid_audio=0 startup_artifacts=0
+19:38:43.587   metadata: profile=scalar_freq_experimental source=ScalarTransient detector=ScalarTransient required_support_target=diagnostic_only:FrequencyScoreStrength support_gate=disabled diag_mode=trial trials=3 completed=1 avg_pattern_confidence=0.00 avg_dt=-1ms avg_dur=-1ms
+19:38:43.587   details: A_rates: duplicate=0.00 unexpected=0.00 main_miss_reason=none main_reject_reason=none
+19:38:43.587   miss_reason_counts: none=0 result_expected_window=0 result_before_window=0 result_after_window=0 no_occurrence=0 occ_rejected=0 inspection_failed=0 pattern_rejected=0
+19:38:43.587   freq_evidence_class_counts: accepted=0 strong_no_occurrence=0 partial=0 weak=0 none=0
+19:38:43.587   reject_reason_counts: dup_after_primary=0 unexpected_without_trigger=0 invalid_audio=0
+19:38:43.587   longest_miss_streak=0 first_miss_trial=0
+19:38:43.653   A_profile_summary: matched_expected=1 unmatched_expected=0 matched_duplicates=1 unmatched_duplicates=0 matched_unexpected=0 unmatched_unexpected=0 freq_reject_score=0 freq_reject_contrast=0 freq_reject_both=0 freq_reject_no_evidence=2
+19:38:43.653 SEQ tuning freqScore=18000.0 freqReleaseScore=12000.0 freqContrast=50.0 freqReleaseContrast=50.0 transientDetector=fixed
+19:38:43.653 SEQ freqmatch: min_duration_ms=60 release_debounce_ms=30 cooldown_ms=0 attack_score_min=18000.0 release_score_min=12000.0 attack_contrast_min=50.0 release_contrast_min=50.0
+19:38:43.720 FREQBAND runtime: freq.window_samples=64 freq.window_ms=4.00 freq.update_every_samples=4 freq.update_period_ms=0.250 freq.target_hz=3200 freq.produced_fresh_packet=1 freq.packet_age_samples=0 freq.packet_age_ms=0.000
+19:38:43.720 AUDIO summary:
+19:38:43.720 reads=4160 readBytes=96256 zeroReads=3972 shortReads=0 maxReadBytes=512 noSampleLoops=3972 readErrors=0 overflow=0 droppedBlocks=0 totalSamples=24064
+19:38:43.720 OCCURRENCE summary:
+19:38:43.720 blocks=12032 samples=12032 lastBlockStart=12031 lastBlockCount=1 lastBlockMicros=99323283
+19:38:43.969 SEQ_TRIAL trial=1 profile=scalar_freq_experimental result=late reason=result_after_window dt=531ms confidence=1.00 duration_ms=1 candidate_count=2 duplicate_count=1
+19:38:44.020 SEQ_INSPECT trial=1 detector=scalar_transient window.start_ms=99217 window.end_ms=99267 accepted.present=1 accepted.start_ms=99217 accepted.peak_ms=99259 accepted.end_ms=99267 accepted.duration_ms=49 accepted.strength=233.1 accepted.confidence=1.00 reject.present=1 reject.class=timing reject.detector_reason=duration_too_long reject.start_ms=98203 reject.peak_ms=98288 reject.end_ms=98549 reject.duration_ms=345 reject.strength=393095.5 reject.confidence=0.00 threshold.min_duration_ms=0 threshold.max_duration_ms=120 aggregate.accepted_count=3 aggregate.rejected_count=1
+19:38:44.117 SEQ_INSPECT detail.scalar.accepted.value=233.1 detail.scalar.accepted.baseline=0.0 detail.scalar.accepted.lift=0.0 detail.scalar.accepted.normalized=0.00 detail.scalar.reject.value=393095.5 detail.scalar.reject.baseline=0.0 detail.scalar.reject.lift=0.0 detail.scalar.reject.normalized=0.00 detail.scalar.reject.opened=1 detail.scalar.reject.crossed_onset=1 detail.scalar.reject.crossed_release=1 detail.scalar.threshold.onset=75.0 detail.scalar.threshold.release=67.5 detail.scalar.threshold.min_strength=0.0 detail.scalar.aggregate.too_short=0 detail.scalar.aggregate.too_long=1 detail.scalar.aggregate.strength_too_low=0 detail.scalar.aggregate.max_rejected_lift=0.0 detail.scalar.aggregate.best_rejected_value=393095.5 detail.scalar.inspect.reject_reason=below_threshold detail.scalar.inspect.no_emit_reason=below_threshold detail.scalar.inspect.gate_reason=below_threshold detail.scalar.inspect.opened=0 detail.scalar.inspect.released=0 detail.scalar.inspect.valid_release=0 detail.scalar.inspect.emit_allowed=0 detail.scalar.inspect.open_ms=0 detail.scalar.inspect.peak_ms=0 detail.scalar.inspect.release_ms=0 detail.scalar.inspect.duration_ms=0 detail.scalar.inspect.peak_strength=0.0
+19:38:44.166 SEQ_INSPECT expected.start_ms=98185 expected.end_ms=99685 pattern.type=valid_pattern pattern.valid=1 pattern.reason=from_occurrence analyzer.result=late analyzer.reason=result_after_window analyzer.dt_ms=531
+19:38:44.304 #2 ----------------
+19:38:45.954 SEQ_TRIAL trial=2 profile=scalar_freq_experimental result=late reason=result_after_window dt=365ms confidence=1.00 duration_ms=24 candidate_count=3 duplicate_count=2
+19:38:46.005 SEQ_INSPECT trial=2 detector=scalar_transient window.start_ms=101466 window.end_ms=101542 accepted.present=1 accepted.start_ms=101466 accepted.peak_ms=101466 accepted.end_ms=101542 accepted.duration_ms=75 accepted.strength=269.9 accepted.confidence=1.00 reject.present=1 reject.class=timing reject.detector_reason=duration_too_long reject.start_ms=99948 reject.peak_ms=100135 reject.end_ms=100431 reject.duration_ms=482 reject.strength=489743.3 reject.confidence=0.00 threshold.min_duration_ms=0 threshold.max_duration_ms=120 aggregate.accepted_count=6 aggregate.rejected_count=2
+19:38:46.105 SEQ_INSPECT detail.scalar.accepted.value=269.9 detail.scalar.accepted.baseline=0.0 detail.scalar.accepted.lift=0.0 detail.scalar.accepted.normalized=0.00 detail.scalar.reject.value=489743.3 detail.scalar.reject.baseline=0.0 detail.scalar.reject.lift=0.0 detail.scalar.reject.normalized=0.00 detail.scalar.reject.opened=1 detail.scalar.reject.crossed_onset=1 detail.scalar.reject.crossed_release=1 detail.scalar.threshold.onset=75.0 detail.scalar.threshold.release=67.5 detail.scalar.threshold.min_strength=0.0 detail.scalar.aggregate.too_short=0 detail.scalar.aggregate.too_long=2 detail.scalar.aggregate.strength_too_low=0 detail.scalar.aggregate.max_rejected_lift=0.0 detail.scalar.aggregate.best_rejected_value=489743.3 detail.scalar.inspect.reject_reason=below_threshold detail.scalar.inspect.no_emit_reason=below_threshold detail.scalar.inspect.gate_reason=below_threshold detail.scalar.inspect.opened=0 detail.scalar.inspect.released=0 detail.scalar.inspect.valid_release=0 detail.scalar.inspect.emit_allowed=0 detail.scalar.inspect.open_ms=0 detail.scalar.inspect.peak_ms=0 detail.scalar.inspect.release_ms=0 detail.scalar.inspect.duration_ms=0 detail.scalar.inspect.peak_strength=0.0
+19:38:46.105 SEQ_INSPECT expected.start_ms=100091 expected.end_ms=101591 pattern.type=valid_pattern pattern.valid=1 pattern.reason=from_occurrence analyzer.result=late analyzer.reason=result_after_window analyzer.dt_ms=365

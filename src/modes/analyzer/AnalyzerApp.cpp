@@ -407,8 +407,6 @@ bool AnalyzerApp::shouldPrintSequenceSource(const AnalyzerReport& report) const 
     switch (_sequenceTest.outputConfig.mode) {
         case SeqOutputMode::Source:
             return sequenceOutputWhenEnabled(_sequenceTest.outputConfig.when, report.classification.result);
-        case SeqOutputMode::Full:
-            return true;
         default:
             return false;
     }
@@ -423,8 +421,6 @@ bool AnalyzerApp::shouldPrintSequenceInspect(const AnalyzerReport& report) const
         case SeqOutputMode::Inspect:
         case SeqOutputMode::Explain:
             return sequenceOutputWhenEnabled(_sequenceTest.outputConfig.when, report.classification.result);
-        case SeqOutputMode::Full:
-            return true;
         default:
             return false;
     }
@@ -438,8 +434,6 @@ bool AnalyzerApp::shouldPrintSequenceSystem(const AnalyzerReport& report) const 
     switch (_sequenceTest.outputConfig.mode) {
         case SeqOutputMode::System:
             return sequenceOutputWhenEnabled(_sequenceTest.outputConfig.when, report.classification.result);
-        case SeqOutputMode::Full:
-            return _sequenceTest.outputConfig.verbosity >= 2U;
         default:
             return false;
     }
@@ -607,15 +601,11 @@ const char* inspectionEvidenceTargetsName(const detection::InspectionPlan& plan)
 }
 
 const char* seqOutputModeName(AnalyzerApp::SeqOutputMode mode) {
-    // Legacy alias surface: keep the old SEQ names for compatibility until the
-    // canonical output contract fully replaces them.
     switch (mode) {
         case AnalyzerApp::SeqOutputMode::Quiet:
             return "quiet";
         case AnalyzerApp::SeqOutputMode::Trial:
-            return "LEG_trial";
-        case AnalyzerApp::SeqOutputMode::Full:
-            return "LEG_full";
+            return "trial";
         case AnalyzerApp::SeqOutputMode::System:
             return "system";
         case AnalyzerApp::SeqOutputMode::Source:
@@ -625,7 +615,7 @@ const char* seqOutputModeName(AnalyzerApp::SeqOutputMode mode) {
         case AnalyzerApp::SeqOutputMode::Explain:
             return "explain";
         default:
-            return "LEG_trial";
+            return "trial";
     }
 }
 
@@ -678,18 +668,13 @@ AnalyzerApp::SeqOutputMode seqOutputModeFromToken(const char* token, bool* valid
         }
         return AnalyzerApp::SeqOutputMode::Trial;
     }
-    // Legacy alias surface: accept the old and LEG_* spellings during the
-    // migration window so existing scripts keep working.
-    if (equalsIgnoreCase(token, "compact") || equalsIgnoreCase(token, "trial") || equalsIgnoreCase(token, "LEG_compact") || equalsIgnoreCase(token, "LEG_trial")) {
+    if (equalsIgnoreCase(token, "trial")) {
         return AnalyzerApp::SeqOutputMode::Trial;
     }
-    if (equalsIgnoreCase(token, "full") || equalsIgnoreCase(token, "LEG_full")) {
-        return AnalyzerApp::SeqOutputMode::Full;
-    }
-    if (equalsIgnoreCase(token, "system") || equalsIgnoreCase(token, "LEG_system")) {
+    if (equalsIgnoreCase(token, "system")) {
         return AnalyzerApp::SeqOutputMode::System;
     }
-    if (equalsIgnoreCase(token, "source") || equalsIgnoreCase(token, "LEG_source")) {
+    if (equalsIgnoreCase(token, "source")) {
         return AnalyzerApp::SeqOutputMode::Source;
     }
     if (equalsIgnoreCase(token, "inspect")) {
@@ -775,7 +760,7 @@ void AnalyzerApp::begin() {
     _controlClaimAtMs = 0;
 
     Serial.println("EVT analyzer_ready");
-    Serial.println("EVT analyzer_help type='HELP', 'BASE', 'PARAM freqScore=18000 freqContrast=50.0 freqReleaseScore=12000 freqReleaseContrast=50.0', 'TEST', 'RAW trigger f=3200 dur=100 post=1000 dump=bin', 'SEQ MODE quiet|inspect|source|system|explain|LEG_trial|LEG_compact|LEG_full|LEG_system|LEG_source WHEN off|miss|all VERBOSE 0|1|2 STATUS REPORT', 'CAP', 'DET AMP', 'VAL', 'VAL OFF'");
+    Serial.println("EVT analyzer_help type='HELP', 'BASE', 'PARAM freqScore=18000 freqContrast=50.0 freqReleaseScore=12000 freqReleaseContrast=50.0', 'TEST', 'RAW trigger f=3200 dur=100 post=1000 dump=bin', 'SEQ MODE quiet|trial|inspect|source|system|explain WHEN off|miss|all VERBOSE 0|1|2 STATUS REPORT', 'CAP', 'DET AMP', 'VAL', 'VAL OFF'");
 }
 
 void AnalyzerApp::configureParameters() {

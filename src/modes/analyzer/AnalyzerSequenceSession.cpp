@@ -584,11 +584,7 @@ void AnalyzerApp::finalizeSequenceTrial(unsigned long now) {
         printSequenceInspectCanonical(*finalizedReport);
     }
     if (shouldPrintSequenceSource(*finalizedReport)) {
-        if (_sequenceTest.outputConfig.mode == AnalyzerApp::SeqOutputMode::Source) {
-            printSequenceSourceCanonical(*finalizedReport);
-        } else {
-            legacyPrintSequenceDiagnostics(*finalizedReport);
-        }
+        printSequenceSourceCanonical(*finalizedReport);
     }
     if (shouldPrintSequenceSystem(*finalizedReport)) {
         printSystemHealth(*finalizedReport);

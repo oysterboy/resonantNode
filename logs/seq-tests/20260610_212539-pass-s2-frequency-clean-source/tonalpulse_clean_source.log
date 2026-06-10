@@ -1,0 +1,52 @@
+21:25:43.209 ==== PROFILE tonalpulse MODE source ====
+21:25:43.244 >> SEQ STOP
+21:25:43.287 SEQ_SUMMARY profile=unknown detector=unknown trials=0 completed=0 expected=0 early=0 late=0 miss=0 duplicate=0 unexpected=0 rejected=0 ambiguous=0 too_dense=0 invalid_audio=0 detector_accepted=0 detector_rejects=0 patterns_valid=0 patterns_rejected=0 avg_dt_ms=-1 avg_conf=0.00
+21:25:43.295 OK SEQ STOP
+21:25:44.306 >> SEQ PROFILE tonalpulse
+21:25:44.316 OK SEQ PROFILE TonalPulse
+21:25:45.125 >> SEQ MODE source
+21:25:45.141 OK SEQ MODE source
+21:25:45.948 >> SEQ WHEN all
+21:25:45.956 OK SEQ WHEN all
+21:25:46.761 >> SEQ VERBOSE 2
+21:25:46.769 OK SEQ VERBOSE 2
+21:25:47.582 >> SEQ START tries=2 period=1800 window=1500 freq=3200 dur=100 delay=600 report_settle=400 profile=tonalpulse mode=source when=all verbose=2 test=tonalpulse_clean_source
+21:25:47.606 OK SEQ
+21:25:49.113 SEQ remote claim: send=52795ms ack=54295ms wait=1500ms status=timeout
+21:25:49.213 SEQ rebase: start=54295ms end=54396ms elapsed=101ms
+21:25:49.216 AUDIO stats reset
+21:25:49.222 SEQ start test=default startup_delay_ms=600 report_settle_ms=400 loopDelayMs=0 logStress=0
+21:25:49.271 SEQ start source=I2S probe=AMP profile=TonalPulse source=FrequencyMatch detector=FrequencyMatch required_support_target=diagnostic_only:AmpStrength support_gate=disabled freq_min_duration_ms=60 freq_release_debounce_ms=30 freq_cooldown_ms=0 freq_attack_score_min=18000.0 freq_release_score_min=12000.0 freq_attack_contrast_min=50.0 freq_release_contrast_min=50.0 mode=SEQ test=default startup_delay_ms=600 report_settle_ms=400 loopDelayMs=0 logStress=0 quiet=0 tries=2 period_ms=1800 window_start_ms=0 window_end_ms=1500 freq_hz=3200 dur_ms=100
+21:25:49.282 SEQ tuning freqScore=18000.0 freqReleaseScore=12000.0 freqContrast=50.0 freqReleaseContrast=50.0 transientDetector=fixed
+21:25:49.294 SEQ freqmatch: min_duration_ms=60 release_debounce_ms=30 cooldown_ms=0 attack_score_min=18000.0 release_score_min=12000.0 attack_contrast_min=50.0 release_contrast_min=50.0
+21:25:49.315 FREQBAND runtime: freq.window_samples=64 freq.window_ms=4.00 freq.update_every_samples=4 freq.update_period_ms=0.250 freq.target_hz=3200 freq.produced_fresh_packet=0 freq.packet_age_samples=0 freq.packet_age_ms=0.000
+21:25:49.319 SEQ running
+21:25:49.321 #1 ----------------
+21:25:49.727 SEQ_TRIAL trial=1 profile=TonalPulse result=late reason=result_after_window dt=1127ms confidence=1.00 duration_ms=183 detector=frequency_match pattern=valid_pattern
+21:25:49.772 SEQ_SOURCE trial=1 detector=frequency_match window.start_ms=54522 window.end_ms=54705 accepted.present=1 accepted.start_ms=54522 accepted.peak_ms=54545 accepted.end_ms=54705 accepted.duration_ms=183 accepted.strength=789102.0 accepted.confidence=1.00 reject.present=0 reject.class=none reject.detector_reason=none reject.start_ms=0 reject.peak_ms=0 reject.end_ms=0 reject.duration_ms=0 reject.strength=0.0 reject.confidence=0.00 threshold.min_duration_ms=60 threshold.max_duration_ms=0 aggregate.accepted_count=1 aggregate.rejected_count=0
+21:25:49.861 SEQ_SOURCE detail.frequency.accepted.score=789102.00 detail.frequency.accepted.contrast=1511.93 detail.frequency.reject.score=0.00 detail.frequency.reject.contrast=0.00 detail.frequency.threshold.score_min=18000.00 detail.frequency.threshold.contrast_min=50.00 detail.frequency.aggregate.score_ok=750 detail.frequency.aggregate.contrast_ok=738 detail.frequency.aggregate.both_ok=738 detail.frequency.aggregate.match=750 detail.frequency.inspect.reject_reason=none detail.frequency.inspect.no_emit_reason=none detail.frequency.inspect.gate_reason=none detail.frequency.inspect.candidate_state=closed detail.frequency.inspect.ready_ok=1 detail.frequency.inspect.gate_open=1 detail.frequency.inspect.opened=1 detail.frequency.inspect.released=1 detail.frequency.inspect.emitted=1 detail.frequency.inspect.valid_release=0 detail.frequency.inspect.emit_allowed=0 detail.frequency.inspect.open_ms=54522 detail.frequency.inspect.peak_ms=54545 detail.frequency.inspect.release_ms=54705 detail.frequency.inspect.duration_ms=183
+21:25:49.896 SEQ_SOURCE occurrence.kind=frequency_match occurrence.source=frequency occurrence.present=1 occurrence.valid=1 occurrence.start_ms=54522 occurrence.peak_ms=54545 occurrence.release_ms=54705 occurrence.duration_ms=183 occurrence.strength=789102.0 occurrence.confidence=1.00 occurrence.reject_reason=none occurrence.total=1 occurrence.accepted_count=1 occurrence.rejected_count=0 detector.reason=none
+21:25:49.923 SEQ_SOURCE expected.start_ms=53395 expected.end_ms=54895 pattern.type=valid_pattern pattern.valid=1 pattern.reason=from_occurrence analyzer.result=late analyzer.reason=result_after_window analyzer.dt_ms=1127 occurrence.present=1 occurrence.source=frequency inspection.target=amp_strength inspection.strength=none
+21:25:50.111 #2 ----------------
+21:25:51.629 SEQ_TRIAL trial=2 profile=TonalPulse result=expected reason=result_in_expected_window dt=17ms confidence=1.00 duration_ms=167 detector=frequency_match pattern=valid_pattern
+21:25:51.677 SEQ_SOURCE trial=2 detector=frequency_match window.start_ms=55314 window.end_ms=55481 accepted.present=1 accepted.start_ms=55314 accepted.peak_ms=55324 accepted.end_ms=55481 accepted.duration_ms=167 accepted.strength=849836.8 accepted.confidence=1.00 reject.present=0 reject.class=none reject.detector_reason=none reject.start_ms=0 reject.peak_ms=0 reject.end_ms=0 reject.duration_ms=0 reject.strength=0.0 reject.confidence=0.00 threshold.min_duration_ms=60 threshold.max_duration_ms=0 aggregate.accepted_count=1 aggregate.rejected_count=0
+21:25:51.766 SEQ_SOURCE detail.frequency.accepted.score=849836.75 detail.frequency.accepted.contrast=780.77 detail.frequency.reject.score=0.00 detail.frequency.reject.contrast=0.00 detail.frequency.threshold.score_min=18000.00 detail.frequency.threshold.contrast_min=50.00 detail.frequency.aggregate.score_ok=2974 detail.frequency.aggregate.contrast_ok=2962 detail.frequency.aggregate.both_ok=2962 detail.frequency.aggregate.match=2974 detail.frequency.inspect.reject_reason=none detail.frequency.inspect.no_emit_reason=none detail.frequency.inspect.gate_reason=none detail.frequency.inspect.candidate_state=closed detail.frequency.inspect.ready_ok=1 detail.frequency.inspect.gate_open=1 detail.frequency.inspect.opened=1 detail.frequency.inspect.released=1 detail.frequency.inspect.emitted=1 detail.frequency.inspect.valid_release=0 detail.frequency.inspect.emit_allowed=0 detail.frequency.inspect.open_ms=55314 detail.frequency.inspect.peak_ms=55324 detail.frequency.inspect.release_ms=55481 detail.frequency.inspect.duration_ms=167
+21:25:51.801 SEQ_SOURCE occurrence.kind=frequency_match occurrence.source=frequency occurrence.present=1 occurrence.valid=1 occurrence.start_ms=55314 occurrence.peak_ms=55324 occurrence.release_ms=55481 occurrence.duration_ms=167 occurrence.strength=849836.8 occurrence.confidence=1.00 occurrence.reject_reason=none occurrence.total=1 occurrence.accepted_count=1 occurrence.rejected_count=0 detector.reason=none
+21:25:51.830 SEQ_SOURCE expected.start_ms=55297 expected.end_ms=56797 pattern.type=valid_pattern pattern.valid=1 pattern.reason=from_occurrence analyzer.result=expected analyzer.reason=result_in_expected_window analyzer.dt_ms=17 occurrence.present=1 occurrence.source=frequency inspection.target=amp_strength inspection.strength=none
+21:25:51.854 SEQ_SUMMARY profile=TonalPulse detector=frequency_match trials=2 completed=2 expected=1 early=0 late=1 miss=0 duplicate=0 unexpected=0 rejected=0 ambiguous=0 too_dense=0 invalid_audio=0 detector_accepted=2 detector_rejects=0 patterns_valid=2 patterns_rejected=0 avg_dt_ms=572 avg_conf=1.00
+21:25:54.476 >> SEQ REPORT
+21:25:54.499 SEQ tuning freqScore=18000.0 freqReleaseScore=12000.0 freqContrast=50.0 freqReleaseContrast=50.0 transientDetector=fixed
+21:25:54.511 SEQ freqmatch: min_duration_ms=60 release_debounce_ms=30 cooldown_ms=0 attack_score_min=18000.0 release_score_min=12000.0 attack_contrast_min=50.0 release_contrast_min=50.0
+21:25:54.532 FREQBAND runtime: freq.window_samples=64 freq.window_ms=4.00 freq.update_every_samples=4 freq.update_period_ms=0.250 freq.target_hz=3200 freq.produced_fresh_packet=1 freq.packet_age_samples=0 freq.packet_age_ms=0.000
+21:25:54.534 AUDIO summary:
+21:25:54.545 reads=60019 readBytes=308224 zeroReads=59417 shortReads=0 maxReadBytes=512 noSampleLoops=59417 readErrors=0 overflow=0 droppedBlocks=0 totalSamples=77056
+21:25:54.551 OCCURRENCE summary:
+21:25:54.556 blocks=38528 samples=38528 lastBlockStart=38527 lastBlockCount=1 lastBlockMicros=59669217
+21:25:54.559 AUDIO run:
+21:25:54.576 run_elapsed_ms=6943 expected_samples=111088 processed_samples=38528 processed_ratio=0.347 max_available_bytes=2048 avg_available_bytes=510 max_block_age_ms=3 max_update_loop_us=1712340 max_processing_lag_ms=6
+21:25:54.579 FREQBAND config: freqband=on updateEverySamples=4
+21:25:54.591 FREQBAND profile: observe_calls=38528 avg_observe_us=12.08 compute_calls=9617 avg_compute_us=43.99 avg_energy_us=5.63 avg_goertzel_us=26.30
+21:25:54.604 FREQBAND freshness: fresh_frames=9617 held_frames=28911 age_samples=0 computed_at_sample=64 history_score_records=128 history_contrast_records=128
+21:25:56.217 >> SEQ STOP
+21:25:56.249 SEQ_SUMMARY profile=TonalPulse detector=frequency_match trials=2 completed=2 expected=1 early=0 late=1 miss=0 duplicate=0 unexpected=0 rejected=0 ambiguous=0 too_dense=0 invalid_audio=0 detector_accepted=2 detector_rejects=0 patterns_valid=2 patterns_rejected=0 avg_dt_ms=572 avg_conf=1.00
+21:25:56.252 OK SEQ STOP

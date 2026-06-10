@@ -40,8 +40,6 @@ public:
     enum class SeqOutputMode {
         Quiet,
         Trial,
-        Compact = Trial,
-        Full,
         System,
         Source,
         Inspect,
@@ -511,8 +509,6 @@ private:
     void printSequenceExplainCanonical(const AnalyzerReport& report) const;
     void printSequenceInspectCanonical(const AnalyzerReport& report) const;
     void printSequenceSourceCanonical(const AnalyzerReport& report) const;
-    void legacyPrintSequenceDiagnostics(const AnalyzerReport& report) const;
-    void legacyPrintSequenceScalarDiagnostics(const AnalyzerReport& report) const;
     void printSequenceStatus() const;
     void printSequenceTrialHeader(unsigned long trialNumber) const;
     void printSequenceTrial(const AnalyzerReport& report) const;

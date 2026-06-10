@@ -1,368 +1,283 @@
-# Pass G2a — Clarify Detector Genericity Contract
-
-Status: Codex instruction  
-Scope: ResonantNode / Resonanzraum Detection Refactor  
-Phase: Phase 3 architecture hygiene, before continuing deeper implementation  
-Primary goal: clarify the intended genericity level of `Detector` so future passes avoid both under-generalization and premature over-abstraction
-
----
-
-## Goal
-
-Clarify the `Detector` contract before continuing with deeper implementation passes.
-
-The current docs correctly say:
-
-```text
-Detector owns candidate lifecycle, accept/reject, selected reject, occurrence emission, and detector-stage diagnostics.
-```
-
-But they do not yet state clearly enough:
-
-```text
-The detector report/output boundary is generic.
-The detector feature input/update internals may remain detector-specific.
-DetectionRuntime must not grow detector-specific report-refresh functions.
-A forced generic IDetector interface is not required yet.
-```
-
-This pass is documentation-first and should have little or no runtime code impact.
-
----
-
-## Why this pass exists
-
-During scalar report migration, `DetectionRuntime::refreshScalarDetectorReport()` appeared as a useful migration bridge.
-
-Concern:
-
-```text
-If copied forward, this could become:
-  refreshScalarDetectorReport()
-  refreshFrequencyDetectorReport()
-  refreshChirpDetectorReport()
-  refreshKnockDetectorReport()
-  refreshNoiseDetectorReport()
-```
-
-That is not the target architecture.
-
-Opposite concern:
-
-```text
-Codex might over-correct by introducing a forced generic IDetector interface
-with awkward type-erased feature input before the codebase needs it.
-```
-
-The intended middle path is:
-
-```text
-Generic outward contract.
-Specialized detector input/update internals.
-Detector-owned report production.
-DetectionRuntime coordination only.
-```
-
----
-
-## Required input docs
-
-Read these before editing:
-
-```text
-docs/detection_contract_decisions.md
-docs/detection_minimal_contracts.md
-docs/detector_report_scalar_path.md
-docs/generic_detector_report_refresh_boundary.md
-docs/roadmaps/roadmap_detection.md
-```
-
-If `docs/generic_detector_report_refresh_boundary.md` does not exist yet, create/update it as part of this pass or note that it will be created by Pass G2.
-
----
-
-## Core rule to document
-
-Add this rule, using wording close to the following:
-
-```text
-Detector is a shared architectural role, not necessarily one forced C++ base class yet.
-
-The shared outward detector contract is:
-- stable DetectorId / DetectorDescriptor
-- accepted Occurrence emission
-- DetectorReport exposure
-- selected rejected candidate exposure through RejectedCandidateSummary
-- generic reject class through DetectorRejectClass
-
-The detector-specific internals may remain specialized:
-- feature input type
-- update method shape
-- candidate lifecycle state
-- lifecycle implementation
-- detector-specific reject reasons
-- typed report detail
-- typed occurrence detail
-
-The long-term runtime pattern is:
-  detector.update(detector-specific feature input)
-  detector.pollOccurrence(...)
-  detector.report()
-
-or an equivalent detector-local report builder.
-
-The long-term runtime pattern is not:
-  DetectionRuntime::refreshScalarDetectorReport()
-  DetectionRuntime::refreshFrequencyDetectorReport()
-  DetectionRuntime::refreshChirpDetectorReport()
-
-Detector-specific detail is allowed inside detector-owned reports.
-Detector-specific report assembly in DetectionRuntime is migration-only.
-DetectionRuntime coordinates detectors; it must not become the owner of detector-specific truth.
-```
-
----
-
-## Tasks
-
-### 01. Update `docs/detection_contract_decisions.md`
-
-Add a new section:
-
-```text
-## Detector Genericity Rule
-```
-
-Required content:
-
-```text
-- Detector is a shared architectural role, not necessarily a forced base class yet.
-- Generic outward contract:
-  - DetectorId
-  - DetectorDescriptor
-  - Occurrence emission
-  - DetectorReport
-  - RejectedCandidateSummary
-  - DetectorRejectClass
-- Specialized internals allowed:
-  - feature input type
-  - update method shape
-  - candidate lifecycle implementation
-  - typed occurrence detail
-  - typed report detail
-- DetectionRuntime must not grow one refreshXXDetectorReport() function per detector type.
-- Detector-specific report building belongs to the detector core or detector-local helper.
-```
-
-Also add `Detector genericity / runtime report-refresh boundary` to the open/active implementation concerns if useful.
-
----
-
-### 02. Update `docs/detection_minimal_contracts.md`
-
-Under the `### Detector` section, add a concise `Genericity rule`.
-
-Required content:
-
-```text
-Detector is a shared runtime role and contract vocabulary, not necessarily one generic C++ interface yet.
-
-The shared detector contract is:
-- emits accepted Occurrence
-- exposes DetectorReport
-- exposes selected rejected candidate through RejectedCandidateSummary
-- has stable DetectorId / DetectorDescriptor
-
-Detector-specific parts may remain specialized:
-- input feature shape
-- update(...) signature
-- candidate state
-- lifecycle logic
-- typed report detail
-- typed occurrence detail
-
-Do not introduce a generic detector interface that forces unnatural feature-input type erasure unless the codebase clearly needs it.
-```
-
----
-
-### 03. Update `docs/detector_report_scalar_path.md`
-
-Add a warning section:
-
-```text
-## Temporary Runtime Refresh Warning
-```
-
-Required content:
-
-```text
-DetectionRuntime::refreshScalarDetectorReport() is a scalar migration bridge only.
-
-It must not become the pattern for future detectors.
-
-Future detector reports should be produced by detector cores or detector-local helpers,
-then exposed through a generic DetectorReport access path.
-```
-
-If `refreshScalarDetectorReport()` has already been removed or renamed by Pass G / G2 work, update the wording to reference the historical bridge and current equivalent.
-
----
-
-### 04. Update or create `docs/generic_detector_report_refresh_boundary.md`
-
-If this file exists, add or verify a section:
-
-```text
-## Detector Genericity Rule
-```
-
-If it does not exist, create a short document with these sections:
-
-```text
-# Generic Detector Report Refresh Boundary
+# DetectionDiagnostics Containment
 
 ## Purpose
 
-## Problem
+Contain `DetectionDiagnostics` as a transitional migration structure and prepare the smallest safe path toward a real `DetectorReport` boundary.
 
-## Detector Genericity Rule
+This pass does not migrate active runtime or analyzer behavior. It classifies the current field groups and documents where they should end up.
 
-## Accepted Long-Term Pattern
+Historical naming note:
 
-## Rejected Long-Term Pattern
+- this document predates the current sectioned `DetectorReport` shape
+- where it says `RejectedCandidateSummary`, read that as the earlier name for the current `DetectorReport.selectedReject` / `SelectedRejectSummary` direction
 
-## DetectionRuntime Responsibility
+## Current Role of DetectionDiagnostics
 
-## What This Means for Frequency Migration
+`DetectionDiagnostics` is currently the live shared diagnostic dump produced by `DetectionRuntime::captureDiagnostics()` in [DetectionRuntime.cpp](/c:/Users/malte/Documents/PlatformIO/Projects/ESP32_learn01/src/detection/DetectionRuntime.cpp).
 
-## What This Does Not Require Yet
-```
+Current state after Pass O:
 
-The section `What This Does Not Require Yet` must explicitly say:
+- clean `SEQ_SUMMARY`, `SEQ_INSPECT`, and `SEQ_EXPLAIN` are explicitly fenced
+  away from this structure
+- `DetectionDiagnostics` remains for legacy compatibility output only
+- adapter direction is canonical detector/runtime facts -> legacy diagnostics,
+  not the reverse
 
-```text
-This does not require a forced IDetector base class or type-erased feature input yet.
-```
+Today it serves three jobs at once:
 
----
+- detector-stage accepted/rejected truth cache
+- wrapper-derived selected reject summary cache
+- analyzer-facing convenience dump used by `AnalyzerApp` while building legacy analyzer report structs
 
-### 05. Optional in-code comment
-
-Only if there is a clear current migration function such as:
-
-```cpp
-refreshScalarDetectorReport(...)
-```
-
-or equivalent, add a short comment near it:
-
-```cpp
-// Temporary scalar migration bridge.
-// DetectionRuntime must not grow one refreshXXDetectorReport() function per detector.
-// Long-term report production belongs to detector cores or detector-local helpers.
-```
-
-Do not scatter comments.
-
-Do not add this if Pass G2 already removed or clearly quarantined the function.
-
----
-
-## Do not do in this pass
-
-Do **not**:
+Active flow today:
 
 ```text
-- introduce IDetector
-- introduce type-erased feature input
-- migrate FrequencyMatch
-- remove ScalarOccurrenceSource
-- delete DetectionDiagnostics
-- change runtime behavior
-- change Analyzer output
-- change profiles / thresholds / timing
-- change PatternMatcher / PatternResult
+ScalarTransientDetector / FrequencyMatchDetector
+-> DetectionRuntime::captureDiagnostics()
+-> DetectionDiagnostics
+-> AnalyzerApp legacy report synthesis
+-> AnalyzerSourceStageReport / AnalyzerFrequencyDiagnostic / AnalyzerScalarDiagnostic
+-> AnalyzerLegacyReporting print helpers
 ```
 
-This is primarily a documentation and boundary-clarification pass.
+## Why It Is Transitional
 
----
+`DetectionDiagnostics` is transitional because it mixes multiple ownership layers that the canonical architecture separates:
 
-## Compile and test checkpoint
+- detector accepted-event truth
+- selected rejected candidate details
+- detector-specific counters and thresholds
+- wrapper-era source summary vocabulary
+- analyzer-friendly labels and miss hints
+- runtime-private queue/debug counters
 
-If only docs were changed:
+That makes it useful as a migration bridge, but not acceptable as the long-term detector diagnostic contract.
+
+## Pass B Deferred Names Covered Here
+
+This pass directly covers the Pass B deferred diagnostic/reporting names:
+
+- `SourceCandidateSummary`
+- `SourceCandidateSnapshot`
+- `DetectionDiagnostics`
+- `AnalyzerSourceStageReport`
+- `AnalyzerSourceCandidateSummary`
+- `AnalyzerSourceCandidateSnapshot`
+- `AnalyzerFrequencyDiagnostic`
+- `AnalyzerScalarDiagnostic`
+
+## Field Ownership Inventory
+
+| Field / group | Current file | Current writer | Current readers | Current meaning | Canonical owner | Move now? yes/no | Reason if deferred | Target pass |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| `observedAtMs`, `occurrenceSource`, `detectorKind` | `src/detection/DetectionRuntime.h` | `DetectionRuntime::captureDiagnostics()` | `AnalyzerApp` | runtime timestamp plus legacy source/detector labels | `DETECTOR_REPORT` | no | still emitted as shared dump labels and tied to legacy source naming | Pass D |
+| accepted occurrence summary: `acceptedPresent`, `acceptedStartMs`, `acceptedPeakMs`, `acceptedReleaseMs`, `acceptedDurationMs`, `acceptedStrength`, `acceptedScore`, `acceptedContrast` | `src/detection/DetectionRuntime.h` | `DetectionRuntime::captureDiagnostics()` from `_lastOccurrence` | `AnalyzerApp` | detector-level accepted occurrence facts | `DETECTOR_REPORT` | no | analyzer still reads them from `DetectionDiagnostics` rather than `DetectorReport` | Pass D |
+| wrapper selected reject aggregate: `sourceSummary` | `src/detection/DetectionRuntime.h` | `DetectionRuntime::captureDiagnostics()` from frequency detector or scalar wrapper getters | `AnalyzerApp` | best rejected candidate aggregate summary | `REJECTED_CANDIDATE_SUMMARY` | no | still wrapped in legacy `SourceCandidateSummary` shape and copied into analyzer structs | Pass D |
+| wrapper selected reject snapshot: `sourceLastCandidate` | `src/detection/DetectionRuntime.h` | `DetectionRuntime::captureDiagnostics()` from frequency detector or scalar wrapper lifecycle | `AnalyzerApp` | last/current rejected candidate snapshot | `REJECTED_CANDIDATE_SUMMARY` | no | still wrapped in legacy `SourceCandidateSnapshot` shape and copied into analyzer structs | Pass D |
+| frequency observation counters: `frequencyFrames`, `frequencyValidFrames`, `frequencyScoreOkFrames`, `frequencyContrastOkFrames`, `frequencyBothOkFrames`, `frequencyMatchFrames`, `frequencyRejectFrames`, release frame counters, longest streak fields | `src/detection/DetectionRuntime.h` | `DetectionRuntime::captureDiagnostics()` from `FrequencyMatchDetector` counters | `AnalyzerApp` | frequency detector activity and gate/counter telemetry | `DETECTOR_REPORT` | no | active analyzer inspect path still reads these through the shared dump | Pass D |
+| frequency aggregate metrics: score/contrast means/min/max, band power means/maxima, neighbor/lower/upper score stats, peak score/contrast/sample count | `src/detection/DetectionRuntime.h` | `DetectionRuntime::captureDiagnostics()` from `FrequencyMatchDetector` diagnostics | `AnalyzerApp` | detector-specific frequency detail | `DETECTOR_REPORT` | no | should move as typed frequency detail under `DetectorReport`, but analyzer still consumes them directly | Pass D or later frequency-specific report expansion |
+| frequency thresholds and gate labels: `frequencyScoreThreshold`, `frequencyContrastThreshold`, `frequencyRejectReason`, `frequencyNoEmitReason`, `frequencyGateReason`, `frequencyWouldCandidateReason`, `frequencyCandidateState`, `frequencyReadyOk`, `frequencyGateOpen` | `src/detection/DetectionRuntime.h` | `DetectionRuntime::captureDiagnostics()` from `FrequencyMatchDetector` | `AnalyzerApp` | frequency gate/explain state for legacy inspect/explain output | `DETECTOR_REPORT` | no | still part of legacy explain path and not yet represented by `DetectorReport` | Pass D |
+| frequency lifecycle ids and timing: `frequencyOpened`, `frequencyReleased`, `frequencyEmitted`, `frequencyValidRelease`, `frequencyEmitAllowed`, candidate ids, `frequencyLastMatchMs`, duration-used/reported fields, open/peak/release/duration/min/max timing, duration inconsistency flags | `src/detection/DetectionRuntime.h` | `DetectionRuntime::captureDiagnostics()` from `FrequencyMatchDetector` | `AnalyzerApp` | frequency candidate lifecycle truth and selected reject timing | `DETECTOR_REPORT` | no | this is the heaviest frequency-specific detector truth block and needs a typed report shape first | later frequency detector report migration |
+| frequency near-miss classification: `frequencyNearMiss`, `frequencyNearMissReason` | `src/detection/DetectionRuntime.h` | `DetectionRuntime::captureDiagnostics()` | `AnalyzerApp` | analyzer-friendly miss explanation synthesized from detector counters | `LEGACY_OUTPUT_ONLY` | no | wording is analyzer-facing convenience, not clean detector contract truth | later analyzer output migration |
+| scalar gate/reject labels: `scalarOnsetRejectReason`, `scalarTransientRejectReason`, `scalarRejectReason`, `scalarNoEmitReason`, `scalarGateReason` | `src/detection/DetectionRuntime.h` | `DetectionRuntime::captureDiagnostics()` from `ScalarOccurrenceSource` getters | `AnalyzerApp` | scalar detector reject and no-emit explanation | `DETECTOR_REPORT` | no | active analyzer path still reads them via the shared dump, but they already resemble detector-report fields | Pass D |
+| scalar lifecycle summary: `scalarOpened`, `scalarReleased`, `scalarValidRelease`, `scalarEmitAllowed`, `scalarOpenMs`, `scalarPeakMs`, `scalarReleaseMs`, `scalarDurationMs`, `scalarMinDurationMs`, `scalarMaxDurationMs`, `scalarPeakStrength` | `src/detection/DetectionRuntime.h` | `DetectionRuntime::captureDiagnostics()` from `ScalarOccurrenceSource` | `AnalyzerApp` | scalar candidate lifecycle truth | `DETECTOR_REPORT` | no | good first migration candidate, but runtime still routes through wrapper and `DetectionDiagnostics` | Pass D |
+| scalar rejected candidate detail: `scalarTransientRejectedDurationMs`, `scalarTransientRejectedStrength` | `src/detection/DetectionRuntime.h` | `DetectionRuntime::captureDiagnostics()` from `ScalarOccurrenceSource` | `AnalyzerApp` | selected scalar rejected candidate payload | `REJECTED_CANDIDATE_SUMMARY` | no | only a subset of the future selected reject contract exists now | Pass D |
+| AMP snapshot fields: `ampCenteredMagnitude`, `ampLevel`, `ampBaseline`, `ampLift` | `src/detection/DetectionRuntime.h` | `DetectionRuntime::captureDiagnostics()` from `_lastOccurrence` | `AnalyzerApp` | support/debug scalar evidence values used in legacy reporting | `LEGACY_OUTPUT_ONLY` | no | analyzer-facing convenience values, not stable detector report essentials | later analyzer output migration |
+| queue/debug counter: `patternResultQueueOverflowCount` | `src/detection/DetectionRuntime.h` | `DetectionRuntime::captureDiagnostics()` from `_resultQueueOverflowCount` | `AnalyzerApp` | runtime queue pressure counter | `RUNTIME_PRIVATE` | no | useful debug counter, but not detector-stage truth | later runtime/debug cleanup |
+| `AnalyzerSourceCandidateSummary` | `src/modes/analyzer/AnalyzerLegacyReporting.h` | `AnalyzerApp::buildSequenceAnalyzerReport()` | `AnalyzerLegacyReporting.cpp` | analyzer-local copy of `sourceSummary` for legacy output formatting | `LEGACY_OUTPUT_ONLY` | no | pure legacy output surrogate around future selected reject data | later analyzer output migration |
+| `AnalyzerSourceCandidateSnapshot` | `src/modes/analyzer/AnalyzerLegacyReporting.h` | `AnalyzerApp::buildSequenceAnalyzerReport()` | `AnalyzerLegacyReporting.cpp` | analyzer-local copy of `sourceLastCandidate` for legacy output formatting | `LEGACY_OUTPUT_ONLY` | no | pure legacy output surrogate around future selected reject data | later analyzer output migration |
+| `AnalyzerFrequencyDiagnostic` | `src/modes/analyzer/AnalyzerLegacyReporting.h` | `AnalyzerApp::buildSequenceAnalyzerReport()` from `DetectionDiagnostics`, `FeatureHistory`, `FrequencyMatchDetector`, and analyzer trial data | `AnalyzerLegacyReporting.cpp` | analyzer-local frequency detector report surrogate | `DETECTOR_REPORT` | no | mixes detector truth with analyzer-only additions like window framing and miss wording | later analyzer output migration after Pass D |
+| `AnalyzerScalarDiagnostic` | `src/modes/analyzer/AnalyzerLegacyReporting.h` | `AnalyzerApp::buildSequenceAnalyzerReport()` from `DetectionDiagnostics` and analyzer trial data | `AnalyzerLegacyReporting.cpp` | analyzer-local scalar detector report surrogate | `DETECTOR_REPORT` | no | smaller than frequency, but still mixed with analyzer framing and synthesized source summary | later analyzer output migration after Pass D |
+| `AnalyzerSourceStageReport` | `src/modes/analyzer/AnalyzerLegacyReporting.h` | `AnalyzerApp::buildSequenceAnalyzerReport()` | `AnalyzerLegacyReporting.cpp` | analyzer-local stage truth wrapper that selects frequency or scalar detail | `LEGACY_OUTPUT_ONLY` | no | belongs to legacy analyzer output surface, not the canonical runtime contract | later analyzer output migration |
+
+## DetectorReport Candidates
+
+Strong `DetectorReport` candidate groups:
+
+- accepted occurrence summary
+- detector identity / report window labels
+- frequency observation counters
+- frequency aggregate metrics
+- frequency thresholds, gates, and lifecycle state
+- scalar reject labels and scalar lifecycle state
+
+Minimal first-pass `DetectorReport` shape that the current code already points toward:
+
+- `detectorId`
+- `reportStartMs`
+- `reportEndMs`
+- `acceptedPresent`
+- accepted occurrence timing/strength facts
+- `selectedRejectPresent`
+- `selectedReject`
+- detector-specific gate/reject fields
+
+## RejectedCandidateSummary Candidates
+
+Strong `RejectedCandidateSummary` candidate groups:
+
+- `sourceSummary` aggregate fields
+- `sourceLastCandidate` timing/strength/reason snapshot
+- scalar rejected duration and rejected strength
+- frequency selected reject duration/id/gate reason fields
+
+Minimum useful fields for the first migration:
+
+- reject class
+- detector-specific reason
+- start/open time
+- peak time
+- end/release time
+- duration
+- required minimum duration where relevant
+- strength
+- confidence if available later
+
+## AnalyzerReport Candidates
+
+Only a small subset of current diagnostic-derived fields really belongs at analyzer-trial level:
+
+- analyzer miss/explain wording
+- trial window framing
+- accepted dt relative to expected window
+- high-level summary labels such as early/late/miss/rejected
+
+Most detector counters and gate labels currently copied into analyzer structs should not remain here long-term.
+
+## Runtime-Private Candidates
+
+Current likely runtime-private groups:
+
+- `patternResultQueueOverflowCount`
+- any future queue-pressure or cache-pressure counters
+- helper timing/counter fields only needed to debug `DetectionRuntime` itself
+
+These do not belong in the stable detector contract unless a later pass proves they are needed for developer inspection output.
+
+## Legacy Output-Only Candidates
+
+Legacy output-only groups today:
+
+- analyzer-local copies: `AnalyzerSourceCandidateSummary`, `AnalyzerSourceCandidateSnapshot`
+- analyzer-local source wrapper: `AnalyzerSourceStageReport`
+- analyzer convenience wording such as near-miss text and source-scope labels
+- AMP convenience/debug fields currently printed through legacy analyzer paths
+
+These should survive only as long as the old analyzer output surface survives.
+
+## Delete-After-Migration Candidates
+
+Strong delete-after-migration candidates:
+
+- `DetectionDiagnostics` as a monolithic shared truth object
+- legacy `SourceCandidateSummary` / `SourceCandidateSnapshot` names
+- analyzer-local duplicated selected-reject summary/snapshot structs
+- analyzer-local source-stage wrapper struct once `DetectorReport` and rebuilt analyzer outputs exist
+
+## Recommended First DetectorReport Migration Path
+
+Recommended first migration target:
+
+- `ScalarTransientDetector`
+
+Why scalar first:
+
+- smaller detector surface than `FrequencyMatchDetector`
+- fewer detector-specific aggregates
+- no frequency band power/statistics explosion
+- selected reject shape is already close to a compact reject summary
+- analyzer currently synthesizes scalar source summaries from a smaller set of runtime fields
+
+Current path:
 
 ```text
-Compile not required.
+ScalarTransientDetector
+-> ScalarOccurrenceSource
+-> DetectionRuntime::captureDiagnostics()
+-> DetectionDiagnostics.scalar* + sourceSummary/sourceLastCandidate
+-> AnalyzerApp::buildSequenceAnalyzerReport()
+-> AnalyzerScalarDiagnostic / AnalyzerSourceStageReport
 ```
 
-If any code comment/include/code was touched:
+Current detector core:
 
-```text
-platformio run -e esp32dev-analyzer
-```
+- `ScalarTransientDetector`
 
-Expected:
+Current wrapper involvement:
 
-```text
-success
-```
+- `ScalarOccurrenceSource` owns the active bridge to `Occurrence`
+- it also owns rejected candidate summary getters used by `DetectionDiagnostics`
 
-Runtime behavior change:
+Current diagnostics source:
 
-```text
-expected none
-```
+- `DetectionRuntime::captureDiagnostics()` reads scalar lifecycle and reject fields from `ScalarOccurrenceSource`
 
----
+Current selected reject source:
 
-## Expected output report
+- `ScalarOccurrenceSource::bestRejected*`, `lastTransientRejected*`, and related getters
 
-After completing this pass, report:
+Minimal `DetectorReport` fields needed first:
 
-```text
-Files created
-Files updated
-Where Detector Genericity Rule was added
-Whether generic_detector_report_refresh_boundary.md exists/was updated
-Whether any code comment was added
-Compile result if code was touched
-Runtime behavior change: expected none
-Remaining risks
-Recommended next pass
-```
+- `detectorId = ScalarTransient`
+- report window start/end
+- accepted present flag
+- scalar gate/reject reason
+- scalar lifecycle state: opened/released/validRelease/emitAllowed
+- scalar open/peak/release/duration timing
+- scalar peak strength
+- selected reject presence and compact reject payload
 
----
+Minimal `RejectedCandidateSummary` fields needed first:
 
-## Acceptance criteria
+- reject class
+- scalar reject reason
+- open/start ms
+- peak ms
+- release/end ms
+- duration ms
+- required min/max duration where relevant
+- peak strength
 
-This pass is accepted if:
+Runtime touchpoints:
 
-```text
-- docs clearly distinguish generic report/output contract from detector-specific input/update internals
-- docs say DetectionRuntime must not grow one refreshXXDetectorReport() function per detector
-- docs say a forced IDetector / type-erased input interface is not required yet
-- detector-owned or detector-local report production is stated as the long-term pattern
-- no runtime behavior changed
-```
+- `DetectionRuntime::captureDiagnostics()`
+- `DetectionRuntime::observeFrame()`
+- `DetectionRuntime::drainOccurrenceSources()`
+- `ScalarOccurrenceSource` lifecycle and reject-summary getters
+- `ScalarTransientDetector` reject reasons and duration thresholds
 
----
+Analyzer touchpoints:
 
-## Recommended next pass
+- `AnalyzerApp::buildSequenceAnalyzerReport()`
+- `AnalyzerScalarDiagnostic`
+- `AnalyzerSourceStageReport`
+- `AnalyzerLegacyReporting.cpp` print helpers that consume scalar analyzer structs
 
-After this clarification, continue with:
+Why not `FrequencyMatchDetector` first:
 
-```text
-Pass G2 — Generic Detector Report Refresh Boundary
-```
+- frequency path also drags in large metric sets, band power stats, near-miss wording, history counts, and additional lifecycle/id fields
+- frequency detector migration is higher risk and a worse first proving ground for `DetectorReport`
 
-if not already complete.
+## Risks and Open Questions
 
-If G2 is already complete, continue with the next implementation pass:
+- `DetectionDiagnostics` still fuses accepted occurrence facts and selected reject facts into one shared dump.
+- `AnalyzerApp` still reconstructs a large part of detector truth from `DetectionDiagnostics`, detector internals, and feature history simultaneously.
+- scalar selected-reject data is split between wrapper summary getters and scalar rejected-duration helpers instead of one compact contract.
+- frequency path still mixes true detector detail with analyzer-only near-miss wording and raw metric summaries.
+- `OccurrenceSourceKind` and wrapper-era routing names remain in the runtime path, so the first `DetectorReport` migration will still have to bridge through wrapper code.
 
-```text
-Pass H — Route Scalar Occurrence Emission Directly from ScalarTransientDetector
-```
+## Recommended Next Pass
 
-or the currently agreed next pass in the roadmap.
+Recommended next pass:
+
+- `Pass D - Build First DetectorReport Path`
+
+Likely target:
+
+- `ScalarTransientDetector`
+
+Pass D should aim to:
+
+- build one real `DetectorReport` path for scalar detector truth
+- keep legacy analyzer output alive by adapting from `DetectorReport` where needed
+- avoid touching the larger frequency diagnostic surface until the scalar path proves the pattern

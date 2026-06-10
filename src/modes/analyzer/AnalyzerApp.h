@@ -14,7 +14,7 @@
 #include "../../detection/occurrences/Occurrence.h"
 #include "../../hal/AudioSource.h"
 #include "../../RuntimeDefaults.h"
-#include "AnalyzerReporting.h"
+#include "AnalyzerLegacyReporting.h"
 
 /*
 AnalyzerApp
@@ -332,6 +332,7 @@ private:
         unsigned long reportSettleMs = 500;
         char setupLabel[48] = TEST_SETUP_LABEL;
 
+        // Legacy sample-dump subpath retained for the current Analyzer output.
         bool sampleDumpEnabled = false;
         unsigned long sampleDumpFirstTrials = 2;
         unsigned long sampleDumpEveryNth = 0;
@@ -409,6 +410,10 @@ private:
         unsigned long maxProcessingLagMs = 0;
         unsigned long totalHitStrengthScaled = 0;
         unsigned long totalHitDurationMs = 0;
+
+        // Legacy output bookkeeping for the current SEQ trial / summary path.
+        // These counters will be trimmed or replaced when the canonical output
+        // rebuild lands.
         unsigned long patternMatchedExpected = 0;
         unsigned long patternUnmatchedExpected = 0;
         unsigned long patternMatchedDuplicates = 0;
@@ -417,22 +422,24 @@ private:
         unsigned long patternUnmatchedUnexpected = 0;
         unsigned long freqRejectScore = 0;
         unsigned long freqRejectContrast = 0;
-            unsigned long freqRejectBoth = 0;
-            unsigned long freqRejectNoEvidence = 0;
-            unsigned long totalPatternDtMs = 0;
-            unsigned long totalPatternDurationMs = 0;
+        unsigned long freqRejectBoth = 0;
+        unsigned long freqRejectNoEvidence = 0;
+        unsigned long totalPatternDtMs = 0;
+        unsigned long totalPatternDurationMs = 0;
         float totalPatternConfidence = 0.0f;
         unsigned long patternDtCount = 0;
         unsigned long patternDurationCount = 0;
         unsigned long completedTrials = 0;
         unsigned long missReasonCounts[static_cast<size_t>(AnalyzerReason::Unknown) + 1U] = {};
         unsigned long rejectReasonCounts[static_cast<size_t>(AnalyzerReason::Unknown) + 1U] = {};
+        // Legacy frequency-evidence bucket tally retained for compatibility
+        // reporting until the old analyzer summary path is retired.
         unsigned long freqEvidenceClassCounts[5] = {};
         unsigned long currentMissStreak = 0;
-            unsigned long longestMissStreak = 0;
-            unsigned long firstMissTrial = 0;
+        unsigned long longestMissStreak = 0;
+        unsigned long firstMissTrial = 0;
 
-            AnalyzerScalarDiagnostic scalar = {};
+        AnalyzerScalarDiagnostic scalar = {};
         };
 
     struct PendingSequenceStart {
@@ -476,15 +483,15 @@ private:
     void startBaseSession(unsigned long durationMs, bool quiet = false);
     void stopBaseSession();
     void updateBaseSession(unsigned long now);
-    void printBaseSummary() const;
-    void printBaseHints() const;
+    void legacyPrintBaseSummary() const;
+    void legacyPrintBaseHints() const;
 
     // Sequence-test workflows.
     void startSequenceTest(const PendingSequenceStart& pending);
     void stopSequenceTest();
     void updateSequenceTest(unsigned long now);
     void finalizeSequenceTrial(unsigned long now);
-    void printCaptureSummary() const;
+    void legacyPrintCaptureSummary() const;
     void startCaptureSession(unsigned long totalTrials, unsigned long periodMs, unsigned long windowEndOffsetMs, unsigned long toneHz, unsigned long durationMs, bool quiet = false);
     void stopCaptureSession();
     void updateCaptureSession(unsigned long now);
@@ -493,26 +500,26 @@ private:
     void finalizeCaptureTrial(unsigned long now);
     void runRawTrigger(unsigned long toneHz, unsigned long durationMs, unsigned long postMs, unsigned long preMs, unsigned long decim, bool dumpChunks, bool dumpBinary);
     void runRawBandTrigger(unsigned long toneHz, unsigned long durationMs, unsigned long postMs, unsigned long preMs, unsigned long decim);
-    void printAudioSourceSummary() const;
-    void printAudioRunSummary() const;
-    void printOccurrenceSummary() const;
-    void printCaptureHints() const;
-    void printDetectionParameters() const;
-    void printTransientAcceptedDebug(unsigned long now, float strength, unsigned long durationMs) const;
-    void printTransientStatsDebug(unsigned long now) const;
-    void printSequenceExplain(const AnalyzerReport& report) const;
-    void printSequenceDiagnostics(const AnalyzerReport& report) const;
-    void printSequenceScalarDiagnostics(const AnalyzerReport& report) const;
-    void printSequenceInspect(const AnalyzerReport& report) const;
-    void printSequencePattern(const AnalyzerReport& report) const;
-    void printSequenceStreak(const AnalyzerReport& report) const;
-    void printSequenceStatus() const;
-    void printSignalCheck() const;
-    void printSequenceTrialHeader(unsigned long trialNumber) const;
-    void printSequenceCandidateLogs(unsigned long trialNumber, const SequenceTest::TrialDiagnostics& diagnostics) const;
-    void printSequenceTrialResult(const AnalyzerReport& report) const;
-    void printSequenceFinalOutput() const;
-    void printSequenceSummary() const;
+    void legacyPrintAudioSourceSummary() const;
+    void legacyPrintAudioRunSummary() const;
+    void legacyPrintOccurrenceSummary() const;
+    void legacyPrintCaptureHints() const;
+    void legacyPrintDetectionParameters() const;
+    void legacyPrintTransientAcceptedDebug(unsigned long now, float strength, unsigned long durationMs) const;
+    void legacyPrintTransientStatsDebug(unsigned long now) const;
+    void legacyPrintSequenceExplain(const AnalyzerReport& report) const;
+    void legacyPrintSequenceDiagnostics(const AnalyzerReport& report) const;
+    void legacyPrintSequenceScalarDiagnostics(const AnalyzerReport& report) const;
+    void legacyPrintSequenceInspect(const AnalyzerReport& report) const;
+    void legacyPrintSequencePattern(const AnalyzerReport& report) const;
+    void legacyPrintSequenceStreak(const AnalyzerReport& report) const;
+    void legacyPrintSequenceStatus() const;
+    void legacyPrintSignalCheck() const;
+    void legacyPrintSequenceTrialHeader(unsigned long trialNumber) const;
+    void legacyPrintSequenceCandidateLogs(unsigned long trialNumber, const SequenceTest::TrialDiagnostics& diagnostics) const;
+    void legacyPrintSequenceTrialResult(const AnalyzerReport& report) const;
+    void legacyPrintSequenceFinalOutput() const;
+    void legacyPrintSequenceSummary() const;
     const char* activeAnalyzerProfileName() const;
     AnalyzerReport* sequenceReportScratch();
     void buildSequenceAnalyzerReport(AnalyzerReport& report, unsigned long trialNumber, AnalyzerResult result, long dtMs, long durMs, float strength, bool audioOverflow, unsigned long duplicateCount, const SequenceTest::TrialDiagnostics& diagnostics) const;
@@ -525,7 +532,7 @@ private:
     void clearSequenceSampleDump();
     void recordSequenceSample(const CurveSnapshot& snapshot);
     void flushSequenceSampleHistory(unsigned long currentSampleMs);
-    void printSequenceSampleDump(unsigned long trialNumber) const;
+    void legacyPrintSequenceSampleDump(unsigned long trialNumber) const;
     bool sequenceSampleDumpSelected(unsigned long trialNumber) const;
     unsigned long sequenceSampleDumpEstimatedRows(unsigned long selectedTrials) const;
     static void sequenceCurveSampleCallback(const CurveSnapshot& snapshot, void* context);
@@ -533,8 +540,8 @@ private:
     const char* sequenceTrialClassificationName(const char* result, long dtMs, long durMs, const SequenceTest::TrialDiagnostics& diagnostics) const;
 
     // Miscellaneous output helpers.
-    void printValueFrame(unsigned long now) const;
-    void printValueModeBanner() const;
+    void legacyPrintValueFrame(unsigned long now) const;
+    void legacyPrintValueModeBanner() const;
     bool shouldPrintSequenceTrial() const;
     bool shouldPrintSequenceStreak(const AnalyzerReport& report) const;
     bool shouldPrintSequenceSource(const AnalyzerReport& report) const;

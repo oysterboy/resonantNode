@@ -7,6 +7,15 @@
 #include "../../detection/features/FrequencyMatchEvaluation.h"
 #include "../../detection/patterns/PatternNames.h"
 
+/*
+AnalyzerSequenceHelpers
+
+Mixed Analyzer helper plumbing for the current transition.
+The sample-dump path and classifier bookkeeping remain legacy output
+subpaths until the canonical Analyzer output rebuild replaces them.
+Keep new detector contract work out of this file.
+*/
+
 namespace {
 
 constexpr long kLateOnsetMinMs = 200L;
@@ -193,7 +202,9 @@ void AnalyzerApp::beginSequenceSampleDump(unsigned long trialNumber) {
     }
 }
 
-void AnalyzerApp::printSequenceSampleDump(unsigned long trialNumber) const {
+// Legacy output subpath: sample dumps stay here until RAW_SAMPLE_CAPTURE
+// becomes the canonical separate diagnostic path.
+void AnalyzerApp::legacyPrintSequenceSampleDump(unsigned long trialNumber) const {
     if (!_sequenceTest.sampleDumpEnabled || !_sequenceTest.sampleDumpSelectedForTrial || _sequenceTest.sampleDumpCurrentTrial != trialNumber) {
         return;
     }
@@ -258,6 +269,8 @@ void AnalyzerApp::recordSequenceClassifierOutcome(const detection::PatternResult
         return;
     }
 
+    // Legacy output accounting: these counters feed the old SEQ summary and
+    // compatibility diagnostics, not the future canonical detection contract.
     const auto freqEval = FrequencyMatchEvaluation::evaluate(patternResult.freq, _frequencyEvidenceTuning);
     const bool patternMatched = patternResult.valid;
 

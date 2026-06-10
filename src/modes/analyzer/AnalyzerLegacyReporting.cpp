@@ -311,7 +311,7 @@ constexpr AnalyzerFieldDescriptor kScalarTransientRejectField{nullptr, "transien
 constexpr AnalyzerFieldDescriptor kScalarTransientRejectDurField{nullptr, "transient_reject_dur"};
 constexpr AnalyzerFieldDescriptor kScalarTransientRejectStrengthField{nullptr, "transient_reject_strength"};
 
-const char* sourceCandidateScopeName(unsigned long peakMs, unsigned long windowStartMs, unsigned long windowEndMs) {
+const char* legacySourceCandidateScopeName(unsigned long peakMs, unsigned long windowStartMs, unsigned long windowEndMs) {
     if (peakMs == 0UL || windowEndMs < windowStartMs) {
         return "unknown";
     }
@@ -328,11 +328,11 @@ unsigned long sourceGapCount(const AnalyzerSourceCandidateSummary& summary) {
     return summary.islandCount > 0 ? summary.islandCount - 1UL : 0UL;
 }
 
-bool sourceFragmented(const AnalyzerSourceCandidateSummary& summary) {
+bool legacySourceFragmented(const AnalyzerSourceCandidateSummary& summary) {
     return sourceGapCount(summary) > 0 || summary.totalGapMs > 0;
 }
 
-void printCompactGapFields(const AnalyzerSourceCandidateSummary& summary, bool alwaysPrintIslands = false) {
+void legacyPrintCompactGapFields(const AnalyzerSourceCandidateSummary& summary, bool alwaysPrintIslands = false) {
     const unsigned long gapCount = sourceGapCount(summary);
     if (gapCount > 0 || summary.totalGapMs > 0 || summary.maxGapMs > 0 || summary.candidateCount > 1) {
         Serial.print(" gap_count=");
@@ -344,12 +344,12 @@ void printCompactGapFields(const AnalyzerSourceCandidateSummary& summary, bool a
         Serial.print(" islands=");
         Serial.print(summary.islandCount > 0 ? summary.islandCount : 1UL);
     }
-    if (sourceFragmented(summary)) {
+    if (legacySourceFragmented(summary)) {
         Serial.print(" fragmented=1");
     }
 }
 
-void printSourceRejectSummaryLine(
+void legacyPrintSourceRejectSummaryLine(
     const char* label,
     unsigned long trialId,
     const AnalyzerSourceCandidateSummary& summary,
@@ -364,7 +364,7 @@ void printSourceRejectSummaryLine(
         ? summary.bestGateReason
         : "None";
     const char* scope = hasRejects
-        ? sourceCandidateScopeName(summary.bestPeakMs, windowStartMs, windowEndMs)
+        ? legacySourceCandidateScopeName(summary.bestPeakMs, windowStartMs, windowEndMs)
         : "unknown";
 
     Serial.println(label);
@@ -421,7 +421,7 @@ void printSourceRejectSummaryLine(
     Serial.println();
 }
 
-void printCompactFrequencySourceSummary(
+void legacyPrintCompactFrequencySourceSummary(
     const AnalyzerReport& report,
     const AnalyzerSourceStageReport& source,
     const AnalyzerFrequencyDiagnostic& frequencySource
@@ -450,14 +450,14 @@ void printCompactFrequencySourceSummary(
     Serial.print(" rejects=");
     Serial.print(summary.rejectCount);
     if (accepted) {
-        printCompactGapFields(summary, true);
+        legacyPrintCompactGapFields(summary, true);
     }
     Serial.print(" close=");
     Serial.print(closeCause);
     Serial.println();
 }
 
-void printCompactFrequencySourceExtras(
+void legacyPrintCompactFrequencySourceExtras(
     const AnalyzerReport& report,
     const AnalyzerSourceStageReport& source,
     const AnalyzerFrequencyDiagnostic& frequencySource
@@ -528,7 +528,7 @@ void printCompactFrequencySourceExtras(
     }
 }
 
-void printCompactScalarSourceSummary(
+void legacyPrintCompactScalarSourceSummary(
     const AnalyzerReport& report,
     const AnalyzerSourceStageReport& source,
     const AnalyzerScalarDiagnostic& scalarSource
@@ -552,14 +552,14 @@ void printCompactScalarSourceSummary(
     Serial.print(" rejects=");
     Serial.print(summary.rejectCount);
     if (accepted) {
-        printCompactGapFields(summary, true);
+        legacyPrintCompactGapFields(summary, true);
     }
     Serial.print(" close=");
     Serial.print(summary.closeCause != nullptr ? summary.closeCause : "none");
     Serial.println();
 }
 
-void printCompactScalarSourceExtras(
+void legacyPrintCompactScalarSourceExtras(
     const AnalyzerReport& report,
     const AnalyzerSourceStageReport& source,
     const AnalyzerScalarDiagnostic& scalarSource
@@ -623,7 +623,7 @@ void printCompactScalarSourceExtras(
     }
 }
 
-void printSequenceSourcePreamble(
+void legacyPrintSequenceSourcePreamble(
     bool scalarProfile,
     const AnalyzerSourceStageReport& source,
     unsigned long currentTrialId,
@@ -681,7 +681,7 @@ void printSequenceSourcePreamble(
     }
     Serial.println();
 
-    printSourceRejectSummaryLine(
+    legacyPrintSourceRejectSummaryLine(
         "SEQ_SOURCE_REJECTS",
         currentTrialId,
         source.sourceSummary,
@@ -690,7 +690,7 @@ void printSequenceSourcePreamble(
     );
 }
 
-void printSequenceSourceLifecycleDetail(
+void legacyPrintSequenceSourceLifecycleDetail(
     const AnalyzerReport& report,
     const AnalyzerSourceStageReport& source,
     const AnalyzerFrequencyDiagnostic& frequencySource
@@ -739,7 +739,7 @@ void printSequenceSourceLifecycleDetail(
     Serial.println();
 }
 
-void printFrequencyMatchSourceDetail(
+void legacyPrintFrequencyMatchSourceDetail(
     const AnalyzerReport& report,
     const AnalyzerSourceStageReport& source,
     const AnalyzerFrequencyDiagnostic& frequencySource,
@@ -1151,7 +1151,7 @@ void printFrequencyMatchSourceDetail(
     Serial.println();
 }
 
-void printScalarTransientSourceDetail(
+void legacyPrintScalarTransientSourceDetail(
     const AnalyzerReport& report,
     const AnalyzerSourceStageReport& source,
     const AnalyzerScalarDiagnostic& scalarSource,
@@ -1313,7 +1313,7 @@ void printScalarTransientSourceDetail(
     Serial.println();
 }
 
-const char* analyzerProfileDetailNamespace(detection::DetectionProfileKind profileKind) {
+const char* legacyAnalyzerProfileDetailNamespace(detection::DetectionProfileKind profileKind) {
     switch (profileKind) {
         case detection::DetectionProfileKind::Amp:
             return "amp";
@@ -1327,7 +1327,7 @@ const char* analyzerProfileDetailNamespace(detection::DetectionProfileKind profi
     }
 }
 
-const char* analyzerProfileDetailSummary(detection::DetectionProfileKind profileKind) {
+const char* legacyAnalyzerProfileDetailSummary(detection::DetectionProfileKind profileKind) {
     switch (profileKind) {
         case detection::DetectionProfileKind::Amp:
             return "amp scalar profile view";
@@ -1341,7 +1341,7 @@ const char* analyzerProfileDetailSummary(detection::DetectionProfileKind profile
     }
 }
 
-const char* occurrenceSourceName(detection::OccurrenceSource source) {
+const char* legacyOccurrenceSourceName(detection::OccurrenceSource source) {
     switch (source) {
         case detection::OccurrenceSource::Amp:
             return "amp";
@@ -1355,7 +1355,7 @@ const char* occurrenceSourceName(detection::OccurrenceSource source) {
     }
 }
 
-const char* occurrenceRejectReasonName(detection::OccurrenceRejectReason reason) {
+const char* legacyOccurrenceRejectReasonName(detection::OccurrenceRejectReason reason) {
     switch (reason) {
         case detection::OccurrenceRejectReason::None:
             return "none";
@@ -1383,7 +1383,7 @@ const char* occurrenceRejectReasonName(detection::OccurrenceRejectReason reason)
     }
 }
 
-const char* strengthClassName(detection::StrengthClass value) {
+const char* legacyStrengthClassName(detection::StrengthClass value) {
     switch (value) {
         case detection::StrengthClass::None:
             return "none";
@@ -1399,7 +1399,7 @@ const char* strengthClassName(detection::StrengthClass value) {
     }
 }
 
-void printScalarObservation(const detection::ScalarInspectionObservation& observation) {
+void legacyPrintScalarObservation(const detection::ScalarInspectionObservation& observation) {
     Serial.print(" scalar.inspect");
     Serial.print(" ");
     printField(kInspectorStreamField, detection::featureStreamName(observation.stream));
@@ -1514,20 +1514,20 @@ void printScalarObservation(const detection::ScalarInspectionObservation& observ
     Serial.print("@");
     printField(kInspectorSustainedThresholdField, observation.sustainedThreshold, 1);
     Serial.print(" ");
-    printField(kInspectorStrengthField, strengthClassName(observation.strength));
+    printField(kInspectorStrengthField, legacyStrengthClassName(observation.strength));
     Serial.print(" ");
 }
 
-void printInspectionScalarDetails(const AnalyzerReport& report) {
+void legacyPrintInspectionScalarDetails(const AnalyzerReport& report) {
     if (!report.profileDetail.scalarObservation.available) {
         Serial.print(" scalar.inspect stream=unknown mode=unknown value=unknown");
         return;
     }
 
-    printScalarObservation(report.profileDetail.scalarObservation);
+    legacyPrintScalarObservation(report.profileDetail.scalarObservation);
 }
 
-const char* sequenceTrialDurationClass(long durMs) {
+const char* legacySequenceTrialDurationClass(long durMs) {
     if (durMs < 0) {
         return "invalid";
     }
@@ -1543,11 +1543,11 @@ const char* sequenceTrialDurationClass(long durMs) {
     return "too_long";
 }
 
-size_t analyzerReasonIndex(AnalyzerReason value) {
+size_t legacyAnalyzerReasonIndex(AnalyzerReason value) {
     return static_cast<size_t>(value);
 }
 
-const char* sequenceDiagModeName(AnalyzerApp::SequenceDiagMode mode) {
+const char* legacySequenceDiagModeName(AnalyzerApp::SequenceDiagMode mode) {
     switch (mode) {
         case AnalyzerApp::SequenceDiagMode::Miss:
             return "miss";
@@ -1559,7 +1559,7 @@ const char* sequenceDiagModeName(AnalyzerApp::SequenceDiagMode mode) {
     }
 }
 
-const char* sequenceFaultClassNameFromMiss(
+const char* legacySequenceFaultClassNameFromMiss(
     const AnalyzerReport& report,
     const char* rawHealthClass,
     bool audioPresent,
@@ -1632,7 +1632,7 @@ unsigned int sequenceDetailLevel(const AnalyzerApp::SeqOutputConfig& outputConfi
     return outputConfig.verbosity >= 2U ? 2U : outputConfig.verbosity >= 1U ? 1U : 0U;
 }
 
-const char* rejectStageName(const AnalyzerReport& report) {
+const char* legacyRejectStageName(const AnalyzerReport& report) {
     switch (report.classification.reason) {
         case AnalyzerReason::MissingPipelineResult:
         case AnalyzerReason::NoOccurrence:
@@ -1657,7 +1657,7 @@ const char* rejectStageName(const AnalyzerReport& report) {
     }
 }
 
-const char* analyzerEvidenceTargetName(detection::EvidenceTarget value) {
+const char* legacyAnalyzerEvidenceTargetName(detection::EvidenceTarget value) {
     switch (value) {
         case detection::EvidenceTarget::AmpStrength:
             return "AmpStrength";
@@ -1673,7 +1673,7 @@ const char* analyzerEvidenceTargetName(detection::EvidenceTarget value) {
     }
 }
 
-bool sequenceDiagnosticsShouldPrint(AnalyzerApp::SequenceDiagMode mode, AnalyzerResult result) {
+bool legacySequenceDiagnosticsShouldPrint(AnalyzerApp::SequenceDiagMode mode, AnalyzerResult result) {
     if (mode == AnalyzerApp::SequenceDiagMode::Trial) {
         return true;
     }
@@ -1700,7 +1700,7 @@ bool sequenceDiagnosticsShouldPrint(AnalyzerApp::SequenceDiagMode mode, Analyzer
 
 } // namespace
 
-void AnalyzerApp::printSequenceTrialResult(const AnalyzerReport& report) const {
+void AnalyzerApp::legacyPrintSequenceTrialResult(const AnalyzerReport& report) const {
     if (_valMode) {
         return;
     }
@@ -1736,7 +1736,7 @@ void AnalyzerApp::printSequenceTrialResult(const AnalyzerReport& report) const {
     Serial.print(_sequenceTest.currentTrialDiagnostics.candidateCount);
     Serial.print(" duplicate_count=");
     Serial.print(_sequenceTest.currentTrialDiagnostics.duplicateCount);
-    printCompactGapFields(report.source.sourceSummary);
+    legacyPrintCompactGapFields(report.source.sourceSummary);
     if (_sequenceTest.outputConfig.verbosity > 0U) {
         if (_sequenceTest.currentMissStreak > 0) {
             Serial.print(" miss_streak=");
@@ -1746,7 +1746,7 @@ void AnalyzerApp::printSequenceTrialResult(const AnalyzerReport& report) const {
     Serial.println();
 }
 
-void AnalyzerApp::printSequenceStreak(const AnalyzerReport& report) const {
+void AnalyzerApp::legacyPrintSequenceStreak(const AnalyzerReport& report) const {
     if (_valMode) {
         return;
     }
@@ -1811,7 +1811,7 @@ void AnalyzerApp::printSequenceStreak(const AnalyzerReport& report) const {
     const bool audioPresent = diagnostics.audioFrames > 0;
     const bool timingBacklog = _sequenceTest.maxProcessingLagMs > 250UL;
     const char* faultClass = result == AnalyzerResult::Miss
-        ? sequenceFaultClassNameFromMiss(
+        ? legacySequenceFaultClassNameFromMiss(
             report,
             rawHealthClass,
             audioPresent,
@@ -1986,7 +1986,7 @@ void AnalyzerApp::printSequenceStreak(const AnalyzerReport& report) const {
     Serial.println();
 }
 
-void AnalyzerApp::printSequenceTrialHeader(unsigned long trialNumber) const {
+void AnalyzerApp::legacyPrintSequenceTrialHeader(unsigned long trialNumber) const {
     if (_valMode) {
         return;
     }
@@ -1998,7 +1998,7 @@ void AnalyzerApp::printSequenceTrialHeader(unsigned long trialNumber) const {
     Serial.println();
 }
 
-void AnalyzerApp::printSequenceInspect(const AnalyzerReport& report) const {
+void AnalyzerApp::legacyPrintSequenceInspect(const AnalyzerReport& report) const {
     if (_valMode) {
         return;
     }
@@ -2018,7 +2018,7 @@ void AnalyzerApp::printSequenceInspect(const AnalyzerReport& report) const {
     for (size_t i = 0; i < moduleCount; ++i) {
         const auto& module = selectedProfile.inspectionPlan.modules[i];
         const auto& observation = report.profileDetail.inspectionObservations[i];
-        const char* targetName = analyzerEvidenceTargetName(module.target);
+        const char* targetName = legacyAnalyzerEvidenceTargetName(module.target);
         const char* streamName = detection::featureStreamName(module.scalar.stream);
 
         Serial.print("SEQ_INSPECT");
@@ -2048,7 +2048,7 @@ void AnalyzerApp::printSequenceInspect(const AnalyzerReport& report) const {
         }
         if (observation.available) {
             Serial.print(" strength=");
-            Serial.print(strengthClassName(observation.strength));
+            Serial.print(legacyStrengthClassName(observation.strength));
             Serial.print(" note=");
             Serial.print(detection::scalarInspectionNoteName(observation.note));
         }
@@ -2101,7 +2101,7 @@ void AnalyzerApp::printSequenceInspect(const AnalyzerReport& report) const {
 }
 
 
-void AnalyzerApp::printSequencePattern(const AnalyzerReport& report) const {
+void AnalyzerApp::legacyPrintSequencePattern(const AnalyzerReport& report) const {
     if (_valMode) {
         return;
     }
@@ -2142,7 +2142,7 @@ void AnalyzerApp::printSequencePattern(const AnalyzerReport& report) const {
     Serial.println();
 }
 
-void AnalyzerApp::printSequenceExplain(const AnalyzerReport& report) const {
+void AnalyzerApp::legacyPrintSequenceExplain(const AnalyzerReport& report) const {
     if (_valMode) {
         return;
     }
@@ -2249,7 +2249,7 @@ void AnalyzerApp::printSequenceExplain(const AnalyzerReport& report) const {
     Serial.print(report.inspection.moduleStrengthClass != nullptr ? report.inspection.moduleStrengthClass : "unknown");
     Serial.print(" module_count=");
     Serial.print(report.profileDetail.inspectionModuleCount);
-    printInspectionScalarDetails(report);
+    legacyPrintInspectionScalarDetails(report);
     Serial.print(" evidence=");
     Serial.print(report.inspection.primaryEvidence != nullptr ? report.inspection.primaryEvidence : "none");
     Serial.print(" inspected=");
@@ -2366,7 +2366,7 @@ void AnalyzerApp::printSequenceExplain(const AnalyzerReport& report) const {
     }
 }
 
-void AnalyzerApp::printSequenceCandidateLogs(unsigned long trialNumber, const SequenceTest::TrialDiagnostics& diagnostics) const {
+void AnalyzerApp::legacyPrintSequenceCandidateLogs(unsigned long trialNumber, const SequenceTest::TrialDiagnostics& diagnostics) const {
     if (_valMode) {
         return;
     }
@@ -2428,7 +2428,7 @@ void AnalyzerApp::printSequenceCandidateLogs(unsigned long trialNumber, const Se
     }
 }
 
-void AnalyzerApp::printSequenceDiagnostics(const AnalyzerReport& report) const {
+void AnalyzerApp::legacyPrintSequenceDiagnostics(const AnalyzerReport& report) const {
     if (_valMode) {
         return;
     }
@@ -2437,21 +2437,21 @@ void AnalyzerApp::printSequenceDiagnostics(const AnalyzerReport& report) const {
     }
     const unsigned int detailLevel = sequenceDetailLevel(_sequenceTest.outputConfig);
     if (report.profileDetail.emitter != nullptr && strcmp(report.profileDetail.emitter, "ScalarTransientSource") == 0) {
-        printSequenceScalarDiagnostics(report);
+        legacyPrintSequenceScalarDiagnostics(report);
         return;
     }
     const auto& source = report.source;
     const auto& frequencySource = source.frequencyMatch;
     if (detailLevel == 0U) {
-        printCompactFrequencySourceSummary(report, source, frequencySource);
+        legacyPrintCompactFrequencySourceSummary(report, source, frequencySource);
         return;
     }
     if (detailLevel == 1U) {
-        printCompactFrequencySourceSummary(report, source, frequencySource);
-        printCompactFrequencySourceExtras(report, source, frequencySource);
+        legacyPrintCompactFrequencySourceSummary(report, source, frequencySource);
+        legacyPrintCompactFrequencySourceExtras(report, source, frequencySource);
         return;
     }
-    printSequenceSourcePreamble(
+    legacyPrintSequenceSourcePreamble(
         false,
         source,
         frequencySource.currentTrialId,
@@ -2465,11 +2465,11 @@ void AnalyzerApp::printSequenceDiagnostics(const AnalyzerReport& report) const {
         frequencySource.windowStartMs,
         frequencySource.windowEndMs
     );
-    printSequenceSourceLifecycleDetail(report, source, frequencySource);
-    printFrequencyMatchSourceDetail(report, source, frequencySource, detailLevel, false);
+    legacyPrintSequenceSourceLifecycleDetail(report, source, frequencySource);
+    legacyPrintFrequencyMatchSourceDetail(report, source, frequencySource, detailLevel, false);
 }
 
-void AnalyzerApp::printSequenceScalarDiagnostics(const AnalyzerReport& report) const {
+void AnalyzerApp::legacyPrintSequenceScalarDiagnostics(const AnalyzerReport& report) const {
     if (_valMode) {
         return;
     }
@@ -2481,16 +2481,16 @@ void AnalyzerApp::printSequenceScalarDiagnostics(const AnalyzerReport& report) c
     const auto& source = report.source;
     const auto& scalarSource = source.scalarTransient;
     if (detailLevel == 0U) {
-        printCompactScalarSourceSummary(report, source, scalarSource);
+        legacyPrintCompactScalarSourceSummary(report, source, scalarSource);
         return;
     }
     if (detailLevel == 1U) {
-        printCompactScalarSourceSummary(report, source, scalarSource);
-        printCompactScalarSourceExtras(report, source, scalarSource);
+        legacyPrintCompactScalarSourceSummary(report, source, scalarSource);
+        legacyPrintCompactScalarSourceExtras(report, source, scalarSource);
         return;
     }
 
-    printSequenceSourcePreamble(
+    legacyPrintSequenceSourcePreamble(
         true,
         source,
         scalarSource.currentTrialId,
@@ -2504,10 +2504,10 @@ void AnalyzerApp::printSequenceScalarDiagnostics(const AnalyzerReport& report) c
         scalarSource.windowStartMs,
         scalarSource.windowEndMs
     );
-    printScalarTransientSourceDetail(report, source, scalarSource, detailLevel);
+    legacyPrintScalarTransientSourceDetail(report, source, scalarSource, detailLevel);
 }
 
-void AnalyzerApp::printDetectionParameters() const {
+void AnalyzerApp::legacyPrintDetectionParameters() const {
     if (_valMode) {
         return;
     }
@@ -2572,7 +2572,7 @@ void AnalyzerApp::printDetectionParameters() const {
     Serial.println(ageMs, 3);
 }
 
-void AnalyzerApp::printTransientAcceptedDebug(unsigned long now, float strength, unsigned long durationMs) const {
+void AnalyzerApp::legacyPrintTransientAcceptedDebug(unsigned long now, float strength, unsigned long durationMs) const {
     if (_valMode) {
         return;
     }
@@ -2584,7 +2584,7 @@ void AnalyzerApp::printTransientAcceptedDebug(unsigned long now, float strength,
     Serial.println(strength, 1);
 }
 
-void AnalyzerApp::printTransientStatsDebug(unsigned long now) const {
+void AnalyzerApp::legacyPrintTransientStatsDebug(unsigned long now) const {
     if (_valMode) {
         return;
     }
@@ -2603,7 +2603,7 @@ void AnalyzerApp::printTransientStatsDebug(unsigned long now) const {
     Serial.println("%");
 }
 
-void AnalyzerApp::printSequenceSummary() const {
+void AnalyzerApp::legacyPrintSequenceSummary() const {
     if (_valMode) {
         return;
     }
@@ -2728,7 +2728,7 @@ void AnalyzerApp::printSequenceSummary() const {
     Serial.print(" support_gate=");
     Serial.print(selectedProfile.patternRulesConfig.requireSupportForAcceptance ? "enabled" : "disabled");
     Serial.print(" diag_mode=");
-    Serial.print(sequenceDiagModeName(_sequenceTest.diagMode));
+    Serial.print(legacySequenceDiagModeName(_sequenceTest.diagMode));
     Serial.print(" trials=");
     Serial.print(summary.trials);
     Serial.print(" completed=");
@@ -2761,21 +2761,21 @@ void AnalyzerApp::printSequenceSummary() const {
     Serial.println(analyzerReasonName(summary.mainRejectReason));
 
     Serial.print("  miss_reason_counts: none=");
-    Serial.print(_sequenceTest.missReasonCounts[analyzerReasonIndex(AnalyzerReason::None)]);
+    Serial.print(_sequenceTest.missReasonCounts[legacyAnalyzerReasonIndex(AnalyzerReason::None)]);
     Serial.print(" result_expected_window=");
-    Serial.print(_sequenceTest.missReasonCounts[analyzerReasonIndex(AnalyzerReason::ValidPatternInExpectedWindow)]);
+    Serial.print(_sequenceTest.missReasonCounts[legacyAnalyzerReasonIndex(AnalyzerReason::ValidPatternInExpectedWindow)]);
     Serial.print(" result_before_window=");
-    Serial.print(_sequenceTest.missReasonCounts[analyzerReasonIndex(AnalyzerReason::ValidPatternBeforeWindow)]);
+    Serial.print(_sequenceTest.missReasonCounts[legacyAnalyzerReasonIndex(AnalyzerReason::ValidPatternBeforeWindow)]);
     Serial.print(" result_after_window=");
-    Serial.print(_sequenceTest.missReasonCounts[analyzerReasonIndex(AnalyzerReason::ValidPatternAfterWindow)]);
+    Serial.print(_sequenceTest.missReasonCounts[legacyAnalyzerReasonIndex(AnalyzerReason::ValidPatternAfterWindow)]);
     Serial.print(" no_occurrence=");
-    Serial.print(_sequenceTest.missReasonCounts[analyzerReasonIndex(AnalyzerReason::NoOccurrence)]);
+    Serial.print(_sequenceTest.missReasonCounts[legacyAnalyzerReasonIndex(AnalyzerReason::NoOccurrence)]);
     Serial.print(" occ_rejected=");
-    Serial.print(_sequenceTest.missReasonCounts[analyzerReasonIndex(AnalyzerReason::OccurrenceSeenButRejected)]);
+    Serial.print(_sequenceTest.missReasonCounts[legacyAnalyzerReasonIndex(AnalyzerReason::OccurrenceSeenButRejected)]);
     Serial.print(" inspection_failed=");
-    Serial.print(_sequenceTest.missReasonCounts[analyzerReasonIndex(AnalyzerReason::InspectionFailed)]);
+    Serial.print(_sequenceTest.missReasonCounts[legacyAnalyzerReasonIndex(AnalyzerReason::InspectionFailed)]);
     Serial.print(" pattern_rejected=");
-    Serial.print(_sequenceTest.missReasonCounts[analyzerReasonIndex(AnalyzerReason::PatternCandidateRejected)]);
+    Serial.print(_sequenceTest.missReasonCounts[legacyAnalyzerReasonIndex(AnalyzerReason::PatternCandidateRejected)]);
     Serial.println();
 
     Serial.print("  freq_evidence_class_counts: accepted=");
@@ -2790,11 +2790,11 @@ void AnalyzerApp::printSequenceSummary() const {
     Serial.println(_sequenceTest.freqEvidenceClassCounts[4]);
 
     Serial.print("  reject_reason_counts: dup_after_primary=");
-    Serial.print(_sequenceTest.rejectReasonCounts[analyzerReasonIndex(AnalyzerReason::DuplicatePatternAfterPrimary)]);
+    Serial.print(_sequenceTest.rejectReasonCounts[legacyAnalyzerReasonIndex(AnalyzerReason::DuplicatePatternAfterPrimary)]);
     Serial.print(" unexpected_without_trigger=");
-    Serial.print(_sequenceTest.rejectReasonCounts[analyzerReasonIndex(AnalyzerReason::UnexpectedValidPatternWithoutTrigger)]);
+    Serial.print(_sequenceTest.rejectReasonCounts[legacyAnalyzerReasonIndex(AnalyzerReason::UnexpectedValidPatternWithoutTrigger)]);
     Serial.print(" invalid_audio=");
-    Serial.println(_sequenceTest.rejectReasonCounts[analyzerReasonIndex(AnalyzerReason::InvalidAudio)]);
+    Serial.println(_sequenceTest.rejectReasonCounts[legacyAnalyzerReasonIndex(AnalyzerReason::InvalidAudio)]);
 
     Serial.print("  longest_miss_streak=");
     Serial.print(_sequenceTest.longestMissStreak);
@@ -2825,27 +2825,27 @@ void AnalyzerApp::printSequenceSummary() const {
         Serial.println();
     }
     if (_sequenceTest.showDetails) {
-        printDetectionParameters();
+        legacyPrintDetectionParameters();
     }
     if (_sequenceTest.outputConfig.verbosity > 0U || _sequenceTest.outputConfig.mode == SeqOutputMode::Explain) {
-        printAudioSourceSummary();
-        printOccurrenceSummary();
+        legacyPrintAudioSourceSummary();
+        legacyPrintOccurrenceSummary();
     }
 }
 
-void AnalyzerApp::printSequenceFinalOutput() const {
+void AnalyzerApp::legacyPrintSequenceFinalOutput() const {
     if (_valMode) {
         return;
     }
-    printSequenceSummary();
+    legacyPrintSequenceSummary();
     if (_sequenceTest.outputConfig.verbosity > 0U ||
         _sequenceTest.outputConfig.mode == SeqOutputMode::System ||
         _sequenceTest.outputConfig.mode == SeqOutputMode::Explain) {
-        printAudioRunSummary();
+        legacyPrintAudioRunSummary();
     }
 }
 
-void AnalyzerApp::printSequenceStatus() const {
+void AnalyzerApp::legacyPrintSequenceStatus() const {
     if (_valMode) {
         return;
     }
@@ -2869,7 +2869,7 @@ void AnalyzerApp::printSequenceStatus() const {
     Serial.println();
 }
 
-void AnalyzerApp::printSignalCheck() const {
+void AnalyzerApp::legacyPrintSignalCheck() const {
     if (_valMode) {
         return;
     }
@@ -2973,7 +2973,7 @@ void AnalyzerApp::printSignalCheck() const {
     Serial.println();
 }
 
-void AnalyzerApp::printBaseSummary() const {
+void AnalyzerApp::legacyPrintBaseSummary() const {
     const unsigned long samples = _baseSession.samples;
     const unsigned long rawAvg = samples > 0 ? _baseSession.rawSum / samples : 0;
     const float deltaAvg = samples > 0 ? _baseSession.deltaSum / static_cast<float>(samples) : 0.0f;
@@ -3029,12 +3029,12 @@ void AnalyzerApp::printBaseSummary() const {
     Serial.print(deltaSwing, 1);
     Serial.print(" quiet_centeredSample_peak=");
     Serial.println(deltaQuietPeak, 1);
-    printBaseHints();
-    printAudioSourceSummary();
-    printOccurrenceSummary();
+    legacyPrintBaseHints();
+    legacyPrintAudioSourceSummary();
+    legacyPrintOccurrenceSummary();
 }
 
-void AnalyzerApp::printBaseHints() const {
+void AnalyzerApp::legacyPrintBaseHints() const {
     const float quietDeltaPeak = _baseSession.deltaMax >= 0.0f ? _baseSession.deltaMax : -_baseSession.deltaMax;
     const float quietDeltaFloor = _baseSession.deltaMin <= 0.0f ? -_baseSession.deltaMin : _baseSession.deltaMin;
     const float quietNoisePeak = quietDeltaPeak > quietDeltaFloor ? quietDeltaPeak : quietDeltaFloor;
@@ -3056,7 +3056,7 @@ void AnalyzerApp::printBaseHints() const {
     Serial.println(suggestedRelease);
 }
 
-void AnalyzerApp::printCaptureSummary() const {
+void AnalyzerApp::legacyPrintCaptureSummary() const {
     const unsigned long completed = _captureSession.completed;
     const float avgRawSwing = completed > 0 ? static_cast<float>(_captureSession.totalRawSwing) / static_cast<float>(completed) : 0.0f;
     const float avgDeltaSwing = completed > 0 ? _captureSession.totalDeltaSwing / static_cast<float>(completed) : 0.0f;
@@ -3083,12 +3083,12 @@ void AnalyzerApp::printCaptureSummary() const {
     Serial.print(quietDeltaAvg, 1);
     Serial.print(" centeredSample_peak=");
     Serial.println(_captureSession.quietDeltaMax, 1);
-    printCaptureHints();
-    printAudioSourceSummary();
-    printOccurrenceSummary();
+    legacyPrintCaptureHints();
+    legacyPrintAudioSourceSummary();
+    legacyPrintOccurrenceSummary();
 }
 
-void AnalyzerApp::printCaptureHints() const {
+void AnalyzerApp::legacyPrintCaptureHints() const {
     const unsigned long quietRawAvg = _captureSession.quietRawSamples > 0 ? _captureSession.quietRawSum / _captureSession.quietRawSamples : 0;
     const float quietDeltaPeak = _captureSession.quietDeltaMax >= 0.0f ? _captureSession.quietDeltaMax : -_captureSession.quietDeltaMax;
     const float quietDeltaFloor = _captureSession.quietDeltaMin <= 0.0f ? -_captureSession.quietDeltaMin : _captureSession.quietDeltaMin;
@@ -3109,7 +3109,7 @@ void AnalyzerApp::printCaptureHints() const {
     Serial.println(quietNoisePeak, 1);
 }
 
-void AnalyzerApp::printAudioSourceSummary() const {
+void AnalyzerApp::legacyPrintAudioSourceSummary() const {
     const AudioSourceStats& stats = _audioSource.stats();
     Serial.println("AUDIO summary:");
     Serial.print("reads=");
@@ -3134,7 +3134,7 @@ void AnalyzerApp::printAudioSourceSummary() const {
     Serial.println(static_cast<unsigned long long>(stats.totalSamplesRead));
 }
 
-void AnalyzerApp::printAudioRunSummary() const {
+void AnalyzerApp::legacyPrintAudioRunSummary() const {
     if (!_sequenceTest.active && _sequenceTest.completedTrials == 0) {
         return;
     }
@@ -3237,7 +3237,7 @@ void AnalyzerApp::printAudioRunSummary() const {
     Serial.println(freqHistoryContrastRecords);
 }
 
-void AnalyzerApp::printOccurrenceSummary() const {
+void AnalyzerApp::legacyPrintOccurrenceSummary() const {
     const AudioSignalStats& stats = _audioSignal.stats();
     Serial.println("OCCURRENCE summary:");
     Serial.print("blocks=");
@@ -3252,7 +3252,7 @@ void AnalyzerApp::printOccurrenceSummary() const {
     Serial.println(_audioSignal.lastBlockApproxStartMicros());
 }
 
-void AnalyzerApp::printValueFrame(unsigned long now) const {
+void AnalyzerApp::legacyPrintValueFrame(unsigned long now) const {
     if (_lastPrintMs != 0 && !timing::elapsedSince(now, _lastPrintMs, kPrintIntervalMs)) {
         return;
     }

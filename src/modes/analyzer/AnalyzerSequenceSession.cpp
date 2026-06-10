@@ -36,25 +36,6 @@ size_t analyzerReasonIndex(AnalyzerReason value) {
     return static_cast<size_t>(value);
 }
 
-FrequencyEvidenceClass frequencyEvidenceClassFromClassName(const char* className) {
-    if (className == nullptr || className[0] == '\0') {
-        return FrequencyEvidenceClass::None;
-    }
-    if (strcmp(className, "accepted") == 0) {
-        return FrequencyEvidenceClass::Accepted;
-    }
-    if (strcmp(className, "strong_no_occurrence") == 0) {
-        return FrequencyEvidenceClass::StrongNoOccurrence;
-    }
-    if (strcmp(className, "partial") == 0) {
-        return FrequencyEvidenceClass::Partial;
-    }
-    if (strcmp(className, "weak") == 0) {
-        return FrequencyEvidenceClass::Weak;
-    }
-    return FrequencyEvidenceClass::None;
-}
-
 
 } // namespace
 
@@ -346,7 +327,7 @@ void AnalyzerApp::startSequenceTest(const PendingSequenceStart& pending) {
         Serial.print(toneHz);
         Serial.print(" dur_ms=");
         Serial.println(durationMs);
-        printDetectionParameters();
+        legacyPrintDetectionParameters();
         if (!_sequenceTest.quiet) {
             Serial.println(_sequenceTest.externalEmitter ? "OBS running" : "SEQ running");
         }
@@ -427,7 +408,7 @@ void AnalyzerApp::updateSequenceTest(unsigned long now) {
     _sequenceTest.updateLoopCount = 0;
     _detection.resetSourceRejectSummaries();
     resetLoopHealthWindow();
-    printSequenceTrialHeader(trialNumber);
+    legacyPrintSequenceTrialHeader(trialNumber);
     if (_sequenceTest.outputConfig.diagnosticsEnabled) {
         _detection.resetDiagnosticsCounters();
     }
@@ -577,42 +558,44 @@ void AnalyzerApp::finalizeSequenceTrial(unsigned long now) {
             _sequenceTest.rejectReasonCounts[reasonIndex]++;
         }
     }
+    // Legacy quarantine: keep the old frequency-evidence class tally here until
+    // the canonical detector/report pipeline replaces this compatibility field.
     _sequenceTest.freqEvidenceClassCounts[
         frequencyEvidenceClassIndex(
-            frequencyEvidenceClassFromClassName(finalizedReport->source.frequencyMatch.freqEvidenceClass)
+            legacyFrequencyEvidenceClassFromClassName(finalizedReport->source.frequencyMatch.freqEvidenceClass)
         )
     ]++;
     flushSequenceSampleHistory(now + 1UL);
     if (shouldPrintSequenceTrial()) {
-        printSequenceTrialResult(*finalizedReport);
+        legacyPrintSequenceTrialResult(*finalizedReport);
     }
     if (_sequenceTest.outputConfig.mode == AnalyzerApp::SeqOutputMode::SignalCheck) {
-        printSignalCheck();
+        legacyPrintSignalCheck();
     }
     if (shouldPrintSequenceStreak(*finalizedReport)) {
-        printSequenceStreak(*finalizedReport);
+        legacyPrintSequenceStreak(*finalizedReport);
     }
     if (_sequenceTest.sampleDumpEnabled) {
-        printSequenceSampleDump(_sequenceTest.currentTrial);
+        legacyPrintSequenceSampleDump(_sequenceTest.currentTrial);
     }
     if (shouldPrintSequenceInspect(*finalizedReport)) {
-        printSequenceInspect(*finalizedReport);
+        legacyPrintSequenceInspect(*finalizedReport);
     }
     if (shouldPrintSequenceSource(*finalizedReport)) {
-        printSequenceDiagnostics(*finalizedReport);
+        legacyPrintSequenceDiagnostics(*finalizedReport);
     }
     const bool patternStageReached =
         finalizedReport->classification.primaryStage == AnalyzerStage::Pattern ||
         finalizedReport->classification.primaryStage == AnalyzerStage::Analyzer;
     if (patternStageReached && shouldPrintSequencePattern(*finalizedReport)) {
-        printSequencePattern(*finalizedReport);
+        legacyPrintSequencePattern(*finalizedReport);
     }
     if (shouldPrintSequenceSystem(*finalizedReport)) {
         printSystemHealth(*finalizedReport);
     }
     if (shouldPrintSequenceExplain(*finalizedReport)) {
-        printSequenceCandidateLogs(_sequenceTest.currentTrial, diagnostics);
-        printSequenceExplain(*finalizedReport);
+        legacyPrintSequenceCandidateLogs(_sequenceTest.currentTrial, diagnostics);
+        legacyPrintSequenceExplain(*finalizedReport);
     }
     if (_sequenceTest.currentTrial < _sequenceTest.totalTrials) {
         const unsigned long settleUntilMs = now + _sequenceTest.reportSettleMs;
@@ -623,7 +606,7 @@ void AnalyzerApp::finalizeSequenceTrial(unsigned long now) {
     _sequenceTest.currentTrialFinalized = true;
 
     if (_sequenceTest.currentTrial >= _sequenceTest.totalTrials) {
-        printSequenceFinalOutput();
+        legacyPrintSequenceFinalOutput();
         stopSequenceTest();
     }
 

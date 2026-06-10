@@ -2,19 +2,46 @@
 
 #include <stddef.h>
 #include <stdint.h>
+#include <string.h>
 
 #include "../../detection/inspector/InspectorTypes.h"
 
 class FrequencyMatchDetector;
 
 /*
-AnalyzerReporting
+AnalyzerLegacyReporting
 
-Analyzer report data model and print helpers.
+Legacy analyzer report data model and print helpers.
 Reports DetectionRuntime gate-chain output, trial classification, field state,
 and diagnostic details.
 Does not own detection or behavior decisions.
 */
+
+// ANALYZER_OUTPUT_BOUNDARY
+//
+// Current legacy Analyzer output is retained for temporary diagnostics and
+// migration reference only. Do not add new detection/source fields here.
+//
+// Future canonical output targets:
+//
+// SEQ_TRIAL:
+//   Generic trial truth only.
+//   Source: AnalyzerReport + PatternResult.
+//   No detector-specific fields.
+//
+// SEQ_INSPECT:
+//   Detector-stage acceptance/rejection explanation.
+//   Source: DetectorReport / RejectedCandidateSummary.
+//   May include namespaced detector detail.
+//
+// SEQ_SUMMARY:
+//   Aggregate trial result counts and generic reject classes.
+//
+// SEQ_EXPLAIN:
+//   Deep developer chain, rebuilt later from scoped reports.
+//
+// RAW_SAMPLE_CAPTURE:
+//   Separate diagnostic tool, not a SEQ reporting mode.
 enum class AnalyzerResult {
     Expected,
     Early,
@@ -179,6 +206,28 @@ inline size_t frequencyEvidenceClassIndex(FrequencyEvidenceClass value) {
         default:
             return 4U;
     }
+}
+
+// Legacy quarantine: AnalyzerSequenceSession still maps the old frequency
+// evidence class strings into bucket counts for compatibility reporting.
+// Keep this helper here until the legacy sequence reporting path is retired.
+inline FrequencyEvidenceClass legacyFrequencyEvidenceClassFromClassName(const char* className) {
+    if (className == nullptr || className[0] == '\0') {
+        return FrequencyEvidenceClass::None;
+    }
+    if (strcmp(className, "accepted") == 0) {
+        return FrequencyEvidenceClass::Accepted;
+    }
+    if (strcmp(className, "strong_no_occurrence") == 0) {
+        return FrequencyEvidenceClass::StrongNoOccurrence;
+    }
+    if (strcmp(className, "partial") == 0) {
+        return FrequencyEvidenceClass::Partial;
+    }
+    if (strcmp(className, "weak") == 0) {
+        return FrequencyEvidenceClass::Weak;
+    }
+    return FrequencyEvidenceClass::None;
 }
 
 inline const char* supportTargetDisplayName(detection::EvidenceTarget value, bool supportGateEnabled) {

@@ -268,7 +268,7 @@ void AnalyzerApp::finalizeCaptureTrial(unsigned long now) {
 
     if (_captureSession.currentTrial >= _captureSession.totalTrials) {
         stopCaptureSession();
-        printCaptureSummary();
+        legacyPrintCaptureSummary();
         Serial.println("CAP stopped");
     }
 }

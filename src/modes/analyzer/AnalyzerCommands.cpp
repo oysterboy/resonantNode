@@ -36,6 +36,8 @@ const char* onOffName(bool value) {
 } // namespace
 
 void AnalyzerApp::printSequenceHelp() {
+    // Legacy alias help: show the LEG_* surface while preserving compatibility
+    // with older command spellings handled by the parser.
     Serial.println("CMD: SEQ help");
     Serial.println("CMD: SEQ");
     Serial.println("CMD: SEQ stop");
@@ -43,14 +45,14 @@ void AnalyzerApp::printSequenceHelp() {
     Serial.println("SEQ IN: OBS start [N|tries=N] [period=2000] [window=1800] [freq=HZ] [dur=MS] [delay=MS] [report_settle=MS] [test=LABEL]");
     Serial.println("SEQ IN: TRIES N");
     Serial.println("SEQ IN: [profile=tonalpulse|amp|chirp_experimental|scalar_freq_experimental]");
-    Serial.println("SEQ IN: MODE quiet|trial|compact|signalcheck|streak|full|system|source|inspect|pattern|explain|dump");
+    Serial.println("SEQ IN: MODE quiet|LEG_trial|LEG_compact|LEG_signalcheck|LEG_streak|LEG_full|LEG_system|LEG_source|LEG_inspect|LEG_pattern|LEG_explain|LEG_dump");
     Serial.println("SEQ IN: MODE quiet = no sequence output");
     Serial.println("SEQ IN: MODE trial|compact = compact trial view");
     Serial.println("SEQ IN: MODE signalcheck = compact trial view + audio health snapshot");
     Serial.println("SEQ IN: MODE streak = miss/duplicate streak diagnostics");
     Serial.println("SEQ IN: MODE full = readable staged diagnostics; V2 exposes deep dumps");
     Serial.println("SEQ IN: MODE system = trial verdict + system health");
-    Serial.println("SEQ IN: MODE explain|dump = deep developer dump");
+    Serial.println("SEQ IN: MODE LEG_explain|LEG_dump = deep developer dump");
     Serial.println("SEQ IN: PROFILE tonalpulse|amp|chirp_experimental|scalar_freq_experimental");
     Serial.println("SEQ IN: DIAG on|off");
     Serial.println("SEQ IN: FREQBAND on|off");
@@ -132,7 +134,7 @@ void AnalyzerApp::handleUsbLine(const char* line) {
         }
 
         _frequencyEvidenceTuning = freqTuning;
-        printDetectionParameters();
+        legacyPrintDetectionParameters();
         Serial.println("OK PARAM");
         return;
     }
@@ -265,7 +267,7 @@ void AnalyzerApp::handleUsbLine(const char* line) {
         }
 
     if (equalsIgnoreCase(token, "STATUS")) {
-        printSequenceStatus();
+        legacyPrintSequenceStatus();
         return;
     }
 
@@ -325,12 +327,14 @@ void AnalyzerApp::handleUsbLine(const char* line) {
         return;
     }
 
+        // Legacy alias surface: accept old SEQ mode spellings and LEG_* shims
+        // until the canonical output contract fully replaces them.
         if (equalsIgnoreCase(token, "MODE")) {
             const char* modeToken = strtok_r(nullptr, " ", &savePtr);
             bool valid = false;
             const AnalyzerApp::SeqOutputMode mode = AnalyzerApp::sequenceOutputModeFromToken(modeToken, &valid);
             if (!valid) {
-                Serial.println("ERR SEQ unknown mode use MODE quiet|trial|compact|signalcheck|streak|full|system|source|inspect|pattern|explain|dump");
+                Serial.println("ERR SEQ unknown mode use MODE quiet|LEG_trial|LEG_compact|LEG_signalcheck|LEG_streak|LEG_full|LEG_system|LEG_source|LEG_inspect|LEG_pattern|LEG_explain|LEG_dump");
                 return;
             }
             _seqOutputConfig.mode = mode;
@@ -445,7 +449,7 @@ void AnalyzerApp::handleUsbLine(const char* line) {
         }
 
         if (equalsIgnoreCase(token, "STOP")) {
-            printSequenceSummary();
+            legacyPrintSequenceSummary();
             stopSequenceTest();
             Serial.println("OK SEQ STOP");
             return;
@@ -524,13 +528,15 @@ void AnalyzerApp::handleUsbLine(const char* line) {
                         Serial.println(" use profile=tonalpulse, profile=amp, profile=chirp_experimental or profile=scalar_freq_experimental");
                         return;
                     }
+                // Legacy alias surface: keep parser compatibility for older
+                // command forms while the new LEG_* labels settle.
                 } else if (startsWithTokenIgnoreCase(token, "mode=")) {
                     bool valid = false;
                     _seqOutputConfig.mode = AnalyzerApp::sequenceOutputModeFromToken(token + 5, &valid);
                     if (!valid) {
                         Serial.print("ERR SEQ unknown mode=");
                         Serial.print(token + 5);
-                        Serial.println(" use mode=quiet, mode=compact, mode=signalcheck, mode=streak, mode=full, mode=source, mode=inspect, mode=pattern or mode=explain");
+                        Serial.println(" use mode=quiet, mode=LEG_trial, mode=LEG_compact, mode=LEG_signalcheck, mode=LEG_streak, mode=LEG_full, mode=LEG_system, mode=LEG_source, mode=LEG_inspect, mode=LEG_pattern or mode=LEG_explain");
                         return;
                     }
                     if (_seqOutputConfig.mode == AnalyzerApp::SeqOutputMode::Quiet) {

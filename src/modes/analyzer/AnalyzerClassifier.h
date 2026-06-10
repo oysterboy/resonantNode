@@ -1,20 +1,25 @@
 #pragma once
 
-#include "AnalyzerReporting.h"
+#include "AnalyzerLegacyReporting.h"
 
 /*
 AnalyzerClassifier
 
-Small helper for Analyzer trial classification reasons.
-Consumes AnalyzerResult plus trial metadata.
-Does not re-evaluate DetectionRuntime pattern validity.
-The AMP transient reject reason is used only as a diagnostic reason input.
+Legacy Analyzer classification bridge.
+Consumes AnalyzerResult plus trial metadata and maps it into AnalyzerReason
+without becoming the canonical detector contract.
+Keep this small and internal until the output rebuild replaces it.
 */
 struct AnalyzerSequenceClassificationInput {
+    // Legacy trial result from the current Analyzer pipeline.
     AnalyzerResult result = AnalyzerResult::Unknown;
+    // Legacy time delta used by the old reason mapping.
     long dtMs = -1;
+    // Legacy candidate count from sequence bookkeeping.
     unsigned long rawCandidateCount = 0;
+    // Legacy overflow flag from the current Analyzer path.
     bool audioOverflow = false;
+    // Legacy gate: false keeps MissingPipelineResult semantics.
     bool patternAvailable = false;
 };
 

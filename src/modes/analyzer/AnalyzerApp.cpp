@@ -811,29 +811,31 @@ const char* inspectionEvidenceTargetsName(const detection::InspectionPlan& plan)
 }
 
 const char* seqOutputModeName(AnalyzerApp::SeqOutputMode mode) {
+    // Legacy alias surface: keep the old SEQ names for compatibility until the
+    // canonical output contract fully replaces them.
     switch (mode) {
         case AnalyzerApp::SeqOutputMode::Quiet:
             return "quiet";
         case AnalyzerApp::SeqOutputMode::Trial:
-            return "trial";
+            return "LEG_trial";
         case AnalyzerApp::SeqOutputMode::SignalCheck:
-            return "signalcheck";
+            return "LEG_signalcheck";
         case AnalyzerApp::SeqOutputMode::Streak:
-            return "streak";
+            return "LEG_streak";
         case AnalyzerApp::SeqOutputMode::Full:
-            return "full";
+            return "LEG_full";
         case AnalyzerApp::SeqOutputMode::System:
-            return "system";
+            return "LEG_system";
         case AnalyzerApp::SeqOutputMode::Source:
-            return "source";
+            return "LEG_source";
         case AnalyzerApp::SeqOutputMode::Inspect:
-            return "inspect";
+            return "LEG_inspect";
         case AnalyzerApp::SeqOutputMode::Pattern:
-            return "pattern";
+            return "LEG_pattern";
         case AnalyzerApp::SeqOutputMode::Explain:
-            return "explain";
+            return "LEG_explain";
         default:
-            return "trial";
+            return "LEG_trial";
     }
 }
 
@@ -886,31 +888,33 @@ AnalyzerApp::SeqOutputMode seqOutputModeFromToken(const char* token, bool* valid
         }
         return AnalyzerApp::SeqOutputMode::Trial;
     }
-    if (equalsIgnoreCase(token, "compact") || equalsIgnoreCase(token, "trial")) {
+    // Legacy alias surface: accept the old and LEG_* spellings during the
+    // migration window so existing scripts keep working.
+    if (equalsIgnoreCase(token, "compact") || equalsIgnoreCase(token, "trial") || equalsIgnoreCase(token, "LEG_compact") || equalsIgnoreCase(token, "LEG_trial")) {
         return AnalyzerApp::SeqOutputMode::Trial;
     }
-    if (equalsIgnoreCase(token, "signalcheck")) {
+    if (equalsIgnoreCase(token, "signalcheck") || equalsIgnoreCase(token, "LEG_signalcheck")) {
         return AnalyzerApp::SeqOutputMode::SignalCheck;
     }
-    if (equalsIgnoreCase(token, "streak")) {
+    if (equalsIgnoreCase(token, "streak") || equalsIgnoreCase(token, "LEG_streak")) {
         return AnalyzerApp::SeqOutputMode::Streak;
     }
-    if (equalsIgnoreCase(token, "full")) {
+    if (equalsIgnoreCase(token, "full") || equalsIgnoreCase(token, "LEG_full")) {
         return AnalyzerApp::SeqOutputMode::Full;
     }
-    if (equalsIgnoreCase(token, "system")) {
+    if (equalsIgnoreCase(token, "system") || equalsIgnoreCase(token, "LEG_system")) {
         return AnalyzerApp::SeqOutputMode::System;
     }
-    if (equalsIgnoreCase(token, "source")) {
+    if (equalsIgnoreCase(token, "source") || equalsIgnoreCase(token, "LEG_source")) {
         return AnalyzerApp::SeqOutputMode::Source;
     }
-    if (equalsIgnoreCase(token, "inspect")) {
+    if (equalsIgnoreCase(token, "inspect") || equalsIgnoreCase(token, "LEG_inspect")) {
         return AnalyzerApp::SeqOutputMode::Inspect;
     }
-    if (equalsIgnoreCase(token, "pattern")) {
+    if (equalsIgnoreCase(token, "pattern") || equalsIgnoreCase(token, "LEG_pattern")) {
         return AnalyzerApp::SeqOutputMode::Pattern;
     }
-    if (equalsIgnoreCase(token, "dump") || equalsIgnoreCase(token, "explain")) {
+    if (equalsIgnoreCase(token, "dump") || equalsIgnoreCase(token, "explain") || equalsIgnoreCase(token, "LEG_dump") || equalsIgnoreCase(token, "LEG_explain")) {
         return AnalyzerApp::SeqOutputMode::Explain;
     }
     if (equalsIgnoreCase(token, "quiet")) {
@@ -990,7 +994,7 @@ void AnalyzerApp::begin() {
     _controlClaimAtMs = 0;
 
     Serial.println("EVT analyzer_ready");
-    Serial.println("EVT analyzer_help type='HELP', 'BASE', 'PARAM freqScore=18000 freqContrast=50.0 freqReleaseScore=12000 freqReleaseContrast=50.0', 'TEST', 'RAW trigger f=3200 dur=100 post=1000 dump=bin', 'SEQ MODE quiet|trial|compact|signalcheck|streak|full|system|source|inspect|pattern|explain|dump WHEN off|miss|all VERBOSE 0|1|2 STATUS', 'CAP', 'DET AMP', 'VAL', 'VAL OFF'");
+    Serial.println("EVT analyzer_help type='HELP', 'BASE', 'PARAM freqScore=18000 freqContrast=50.0 freqReleaseScore=12000 freqReleaseContrast=50.0', 'TEST', 'RAW trigger f=3200 dur=100 post=1000 dump=bin', 'SEQ MODE quiet|LEG_trial|LEG_compact|LEG_signalcheck|LEG_streak|LEG_full|LEG_system|LEG_source|LEG_inspect|LEG_pattern|LEG_explain|LEG_dump WHEN off|miss|all VERBOSE 0|1|2 STATUS', 'CAP', 'DET AMP', 'VAL', 'VAL OFF'");
 }
 
 void AnalyzerApp::configureParameters() {
@@ -1196,7 +1200,7 @@ void AnalyzerApp::update() {
     pollUsbConsole();
     pollEmitterSerial();
     if (_valMode) {
-        printValueFrame(now);
+        legacyPrintValueFrame(now);
     }
 
 #if TEST_LOG_STRESS
@@ -1333,7 +1337,7 @@ void AnalyzerApp::updateBaseSession(unsigned long now) {
     }
 
     if (timing::elapsedSince(now, _baseSession.startedAtMs, _baseSession.durationMs)) {
-        printBaseSummary();
+    legacyPrintBaseSummary();
         stopBaseSession();
         Serial.println("BASE stopped");
     }
@@ -1344,14 +1348,14 @@ void AnalyzerApp::updateBaseSession(unsigned long now) {
 // Raw trigger and value-mode helpers
 // -----------------------------------------------------------------------------
 
-void AnalyzerApp::printValueModeBanner() const {
+void AnalyzerApp::legacyPrintValueModeBanner() const {
     if (_valMode) {
         return;
     }
     Serial.print("EVT analyzer_val on source=");
     Serial.print("I2S");
     Serial.println(" probe=AMP");
-    printDetectionParameters();
+    legacyPrintDetectionParameters();
 }
 
 // -----------------------------------------------------------------------------

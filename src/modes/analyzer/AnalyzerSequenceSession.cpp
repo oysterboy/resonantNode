@@ -331,7 +331,7 @@ void AnalyzerApp::startSequenceTest(const PendingSequenceStart& pending) {
         Serial.print(toneHz);
         Serial.print(" dur_ms=");
         Serial.println(durationMs);
-        legacyPrintDetectionParameters();
+        printDetectionParameters();
         if (!_sequenceTest.quiet) {
             Serial.println(_sequenceTest.externalEmitter ? "OBS running" : "SEQ running");
         }
@@ -412,7 +412,7 @@ void AnalyzerApp::updateSequenceTest(unsigned long now) {
     _sequenceTest.updateLoopCount = 0;
     _detection.resetSourceRejectSummaries();
     resetLoopHealthWindow();
-    legacyPrintSequenceTrialHeader(trialNumber);
+    printSequenceTrialHeader(trialNumber);
     if (_sequenceTest.outputConfig.diagnosticsEnabled) {
         _detection.resetDiagnosticsCounters();
     }
@@ -575,41 +575,26 @@ void AnalyzerApp::finalizeSequenceTrial(unsigned long now) {
     ]++;
     flushSequenceSampleHistory(now + 1UL);
     if (shouldPrintSequenceTrial()) {
-        legacyPrintSequenceTrialResult(*finalizedReport);
-    }
-    if (_sequenceTest.outputConfig.mode == AnalyzerApp::SeqOutputMode::SignalCheck) {
-        legacyPrintSignalCheck();
-    }
-    if (shouldPrintSequenceStreak(*finalizedReport)) {
-        legacyPrintSequenceStreak(*finalizedReport);
+        printSequenceTrial(*finalizedReport);
     }
     if (_sequenceTest.sampleDumpEnabled) {
-        legacyPrintSequenceSampleDump(_sequenceTest.currentTrial);
+        printSequenceSampleReport(_sequenceTest.currentTrial);
     }
     if (shouldPrintSequenceInspect(*finalizedReport)) {
         printSequenceInspectCanonical(*finalizedReport);
     }
-    if (shouldPrintLegacySequenceInspect(*finalizedReport)) {
-        legacyPrintSequenceInspect(*finalizedReport);
-    }
     if (shouldPrintSequenceSource(*finalizedReport)) {
-        legacyPrintSequenceDiagnostics(*finalizedReport);
-    }
-    const bool patternStageReached =
-        finalizedReport->classification.primaryStage == AnalyzerStage::Pattern ||
-        finalizedReport->classification.primaryStage == AnalyzerStage::Analyzer;
-    if (patternStageReached && shouldPrintSequencePattern(*finalizedReport)) {
-        legacyPrintSequencePattern(*finalizedReport);
+        if (_sequenceTest.outputConfig.mode == AnalyzerApp::SeqOutputMode::Source) {
+            printSequenceSourceCanonical(*finalizedReport);
+        } else {
+            legacyPrintSequenceDiagnostics(*finalizedReport);
+        }
     }
     if (shouldPrintSequenceSystem(*finalizedReport)) {
         printSystemHealth(*finalizedReport);
     }
     if (shouldPrintSequenceExplain(*finalizedReport)) {
         printSequenceExplainCanonical(*finalizedReport);
-    }
-    if (shouldPrintLegacySequenceExplain(*finalizedReport)) {
-        legacyPrintSequenceCandidateLogs(_sequenceTest.currentTrial, diagnostics);
-        legacyPrintSequenceExplain(*finalizedReport);
     }
     if (_sequenceTest.currentTrial < _sequenceTest.totalTrials) {
         const unsigned long settleUntilMs = now + _sequenceTest.reportSettleMs;
@@ -620,7 +605,7 @@ void AnalyzerApp::finalizeSequenceTrial(unsigned long now) {
     _sequenceTest.currentTrialFinalized = true;
 
     if (_sequenceTest.currentTrial >= _sequenceTest.totalTrials) {
-        legacyPrintSequenceFinalOutput();
+        printSequenceSummaryClean();
         stopSequenceTest();
     }
 

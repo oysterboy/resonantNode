@@ -202,9 +202,8 @@ void AnalyzerApp::beginSequenceSampleDump(unsigned long trialNumber) {
     }
 }
 
-// Legacy output subpath: sample dumps stay here until RAW_SAMPLE_CAPTURE
-// becomes the canonical separate diagnostic path.
-void AnalyzerApp::legacyPrintSequenceSampleDump(unsigned long trialNumber) const {
+// Sample-dump tooling path: explicit diagnostic report, not analyzer truth.
+void AnalyzerApp::printSequenceSampleReport(unsigned long trialNumber) const {
     if (!_sequenceTest.sampleDumpEnabled || !_sequenceTest.sampleDumpSelectedForTrial || _sequenceTest.sampleDumpCurrentTrial != trialNumber) {
         return;
     }

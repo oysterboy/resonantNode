@@ -41,16 +41,11 @@ public:
         Quiet,
         Trial,
         Compact = Trial,
-        SignalCheck,
-        Streak,
         Full,
         System,
         Source,
         Inspect,
-        LegacyInspect,
-        Pattern,
         Explain,
-        LegacyExplain,
     };
 
     enum class SeqOutputWhen {
@@ -82,6 +77,8 @@ public:
 private:
     void updateSequenceAudioHealth(const AudioSamplePacket& audioSamplePacket);
     void printSystemHealth(const AnalyzerReport& report) const;
+    uint32_t analyzerBootCount() const;
+    const char* currentResetReasonName() const;
     unsigned long activeRunStartMs() const;
     unsigned long activeRunEndMs() const;
     void resetLoopHealthWindow();
@@ -506,29 +503,21 @@ private:
     void finalizeCaptureTrial(unsigned long now);
     void runRawTrigger(unsigned long toneHz, unsigned long durationMs, unsigned long postMs, unsigned long preMs, unsigned long decim, bool dumpChunks, bool dumpBinary);
     void runRawBandTrigger(unsigned long toneHz, unsigned long durationMs, unsigned long postMs, unsigned long preMs, unsigned long decim);
-    void legacyPrintAudioSourceSummary() const;
-    void legacyPrintAudioRunSummary() const;
-    void legacyPrintOccurrenceSummary() const;
+    void printAudioSourceSummary() const;
+    void printAudioRunSummary() const;
+    void printOccurrenceSummary() const;
     void legacyPrintCaptureHints() const;
-    void legacyPrintDetectionParameters() const;
-    void legacyPrintTransientAcceptedDebug(unsigned long now, float strength, unsigned long durationMs) const;
-    void legacyPrintTransientStatsDebug(unsigned long now) const;
+    void printDetectionParameters() const;
     void printSequenceExplainCanonical(const AnalyzerReport& report) const;
     void printSequenceInspectCanonical(const AnalyzerReport& report) const;
-    void legacyPrintSequenceExplain(const AnalyzerReport& report) const;
+    void printSequenceSourceCanonical(const AnalyzerReport& report) const;
     void legacyPrintSequenceDiagnostics(const AnalyzerReport& report) const;
     void legacyPrintSequenceScalarDiagnostics(const AnalyzerReport& report) const;
-    void legacyPrintSequenceInspect(const AnalyzerReport& report) const;
-    void legacyPrintSequencePattern(const AnalyzerReport& report) const;
-    void legacyPrintSequenceStreak(const AnalyzerReport& report) const;
-    void legacyPrintSequenceStatus() const;
-    void legacyPrintSignalCheck() const;
-    void legacyPrintSequenceTrialHeader(unsigned long trialNumber) const;
-    void legacyPrintSequenceCandidateLogs(unsigned long trialNumber, const SequenceTest::TrialDiagnostics& diagnostics) const;
-    void legacyPrintSequenceTrialResult(const AnalyzerReport& report) const;
-    void legacyPrintSequenceFinalOutput() const;
-    void legacyPrintSequenceSummaryLeg() const;
+    void printSequenceStatus() const;
+    void printSequenceTrialHeader(unsigned long trialNumber) const;
+    void printSequenceTrial(const AnalyzerReport& report) const;
     void printSequenceSummaryClean() const;
+    void printSequenceReport() const;
     const char* activeAnalyzerProfileName() const;
     AnalyzerReport* sequenceReportScratch();
     void buildSequenceAnalyzerReport(AnalyzerReport& report, unsigned long trialNumber, AnalyzerResult result, long dtMs, long durMs, float strength, bool audioOverflow, unsigned long duplicateCount, const SequenceTest::TrialDiagnostics& diagnostics) const;
@@ -542,7 +531,7 @@ private:
     void clearSequenceSampleDump();
     void recordSequenceSample(const CurveSnapshot& snapshot);
     void flushSequenceSampleHistory(unsigned long currentSampleMs);
-    void legacyPrintSequenceSampleDump(unsigned long trialNumber) const;
+    void printSequenceSampleReport(unsigned long trialNumber) const;
     bool sequenceSampleDumpSelected(unsigned long trialNumber) const;
     unsigned long sequenceSampleDumpEstimatedRows(unsigned long selectedTrials) const;
     static void sequenceCurveSampleCallback(const CurveSnapshot& snapshot, void* context);
@@ -553,14 +542,10 @@ private:
     void legacyPrintValueFrame(unsigned long now) const;
     void legacyPrintValueModeBanner() const;
     bool shouldPrintSequenceTrial() const;
-    bool shouldPrintSequenceStreak(const AnalyzerReport& report) const;
     bool shouldPrintSequenceSource(const AnalyzerReport& report) const;
     bool shouldPrintSequenceInspect(const AnalyzerReport& report) const;
-    bool shouldPrintLegacySequenceInspect(const AnalyzerReport& report) const;
-    bool shouldPrintSequencePattern(const AnalyzerReport& report) const;
     bool shouldPrintSequenceSystem(const AnalyzerReport& report) const;
     bool shouldPrintSequenceExplain(const AnalyzerReport& report) const;
-    bool shouldPrintLegacySequenceExplain(const AnalyzerReport& report) const;
     bool shouldPrintHardwareDiagnostics() const;
     static const char* sequenceOutputModeName(SeqOutputMode mode);
     static const char* sequenceOutputWhenName(SeqOutputWhen value);

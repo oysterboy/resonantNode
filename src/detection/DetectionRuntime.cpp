@@ -48,6 +48,53 @@ const char* occurrenceSourceName(OccurrenceSourceKind kind) {
     }
 }
 
+bool reasonIsNone(const char* reason) {
+    return reason == nullptr || strcmp(reason, "none") == 0;
+}
+
+const char* scalarRejectReasonOrFallback(const char* transientRejectReason, const char* onsetRejectReason) {
+    return !reasonIsNone(transientRejectReason) ? transientRejectReason : onsetRejectReason;
+}
+
+DetectorRejectClass scalarRejectClassFromReason(const char* reason) {
+    if (reasonIsNone(reason)) {
+        return DetectorRejectClass::None;
+    }
+    if (strcmp(reason, "below_threshold") == 0) {
+        return DetectorRejectClass::Threshold;
+    }
+    if (strcmp(reason, "cooldown_active") == 0) {
+        return DetectorRejectClass::Cooldown;
+    }
+    if (strcmp(reason, "duration_too_short") == 0 || strcmp(reason, "duration_too_long") == 0) {
+        return DetectorRejectClass::Timing;
+    }
+    if (strcmp(reason, "strength_too_low") == 0) {
+        return DetectorRejectClass::Strength;
+    }
+    if (strcmp(reason, "peak_active") == 0 || strcmp(reason, "peak_still_active") == 0) {
+        return DetectorRejectClass::State;
+    }
+    return DetectorRejectClass::Unknown;
+}
+
+void populateScalarLegacyDiagnosticsFromReport(DetectionDiagnostics& diagnostics, const DetectorReport& report) {
+    diagnostics.scalarRejectReason = report.scalarTransient.rejectReason;
+    diagnostics.scalarNoEmitReason = report.scalarTransient.noEmitReason;
+    diagnostics.scalarGateReason = report.scalarTransient.gateReason;
+    diagnostics.scalarOpened = report.scalarTransient.opened;
+    diagnostics.scalarReleased = report.scalarTransient.released;
+    diagnostics.scalarValidRelease = report.scalarTransient.validRelease;
+    diagnostics.scalarEmitAllowed = report.scalarTransient.emitAllowed;
+    diagnostics.scalarOpenMs = report.scalarTransient.openMs;
+    diagnostics.scalarPeakMs = report.scalarTransient.peakMs;
+    diagnostics.scalarReleaseMs = report.scalarTransient.releaseMs;
+    diagnostics.scalarDurationMs = report.scalarTransient.durationMs;
+    diagnostics.scalarMinDurationMs = report.scalarTransient.minDurationMs;
+    diagnostics.scalarMaxDurationMs = report.scalarTransient.maxDurationMs;
+    diagnostics.scalarPeakStrength = report.scalarTransient.peakStrength;
+}
+
 } // namespace
 
 void DetectionRuntime::resetState() {
@@ -61,6 +108,7 @@ void DetectionRuntime::resetDiagnostics() {
 
 void DetectionRuntime::resetDiagnosticsCounters() {
     _diagnostics = {};
+    _scalarDetectorReport = {};
     _resultQueueOverflowCount = 0;
     _frequencyEmitter.detector().resetDiagnosticsSummary();
 }
@@ -89,6 +137,7 @@ void DetectionRuntime::resetDetectionState() {
     _hasLatestPipelineResult = false;
     _lastOccurrence = {};
     _lastInspectedOccurrence = {};
+    _scalarDetectorReport = {};
 }
 
 void DetectionRuntime::setDiagnosticsEnabled(bool enabled) {
@@ -97,7 +146,83 @@ void DetectionRuntime::setDiagnosticsEnabled(bool enabled) {
     _scalarEmitter.setDiagnosticsEnabled(enabled);
 }
 
+void DetectionRuntime::refreshScalarDetectorReport(unsigned long nowMs) {
+    _scalarDetectorReport = {};
+    if (_occurrenceSourceKind != OccurrenceSourceKind::ScalarTransient) {
+        return;
+    }
+
+    DetectorReport& report = _scalarDetectorReport;
+    report.detectorId = DetectorId::ScalarTransient;
+
+    const char* onsetRejectReason = _scalarEmitter.lastOnsetRejectReasonName();
+    const char* transientRejectReason = _scalarEmitter.lastTransientRejectReasonName();
+    const char* scalarRejectReason = scalarRejectReasonOrFallback(transientRejectReason, onsetRejectReason);
+
+    // TEMP_SCALAR_REPORT_BRIDGE:
+    // This report is still assembled through ScalarOccurrenceSource while runtime
+    // wiring is migrated. The final target is ScalarTransientDetector -> DetectorReport.
+    report.scalarTransient.rejectReason = scalarRejectReason;
+    report.scalarTransient.noEmitReason = scalarRejectReason;
+    report.scalarTransient.gateReason = scalarRejectReason;
+    report.scalarTransient.opened = _scalarEmitter.candidateActive()
+        || _scalarEmitter.releaseObserved()
+        || _scalarEmitter.candidateFirstSeenMs() > 0;
+    report.scalarTransient.released = _scalarEmitter.releaseObserved()
+        || _scalarEmitter.candidateReleaseObservedMs() > 0;
+    report.scalarTransient.validRelease = report.scalarTransient.released && reasonIsNone(scalarRejectReason);
+    report.scalarTransient.emitAllowed = report.scalarTransient.validRelease;
+    report.scalarTransient.openMs = _scalarEmitter.candidateFirstSeenMs();
+    report.scalarTransient.peakMs = _scalarEmitter.candidatePeakMs();
+    report.scalarTransient.releaseMs = _scalarEmitter.candidateReleaseObservedMs();
+    report.scalarTransient.durationMs = report.scalarTransient.released && report.scalarTransient.releaseMs >= report.scalarTransient.openMs
+        ? report.scalarTransient.releaseMs - report.scalarTransient.openMs
+        : 0UL;
+    report.scalarTransient.minDurationMs = _scalarTransientConfig.minTransientDurationMs;
+    report.scalarTransient.maxDurationMs = _scalarTransientConfig.maxTransientDurationMs;
+    report.scalarTransient.peakStrength = _scalarEmitter.candidatePeakStrength();
+
+    report.acceptedPresent = _lastOccurrence.present
+        && _lastOccurrence.detectorKind == OccurrenceDetectorKind::Transient;
+    if (report.acceptedPresent) {
+        report.acceptedOccurrence.startMs = _lastOccurrence.startMs;
+        report.acceptedOccurrence.peakMs = _lastOccurrence.peakMs;
+        report.acceptedOccurrence.endMs = _lastOccurrence.releaseMs;
+        report.acceptedOccurrence.durationMs = _lastOccurrence.durationMs;
+        report.acceptedOccurrence.strength = _lastOccurrence.strength;
+        report.acceptedOccurrence.score = _lastOccurrence.score;
+        report.acceptedOccurrence.contrast = _lastOccurrence.contrast;
+        report.acceptedOccurrence.confidence = _lastOccurrence.confidence;
+    }
+
+    report.selectedRejectPresent = _scalarEmitter.rejectedCandidateCount() > 0;
+    if (report.selectedRejectPresent) {
+        report.selectedReject.rejectClass = scalarRejectClassFromReason(_scalarEmitter.bestRejectedReasonName());
+        report.selectedReject.detectorReason = _scalarEmitter.bestRejectedReasonName();
+        report.selectedReject.startMs = _scalarEmitter.bestRejectedOpenMs();
+        report.selectedReject.peakMs = _scalarEmitter.bestRejectedPeakMs();
+        report.selectedReject.endMs = _scalarEmitter.bestRejectedCloseMs();
+        report.selectedReject.durationMs = _scalarEmitter.bestRejectedDurationMs();
+        report.selectedReject.requiredMinDurationMs = _scalarTransientConfig.minTransientDurationMs;
+        report.selectedReject.requiredMaxDurationMs = _scalarTransientConfig.maxTransientDurationMs;
+        report.selectedReject.strength = _scalarEmitter.bestRejectedPeakStrength();
+    }
+
+    if (report.acceptedPresent) {
+        report.reportStartMs = report.acceptedOccurrence.startMs;
+        report.reportEndMs = report.acceptedOccurrence.endMs;
+    } else if (report.scalarTransient.opened) {
+        report.reportStartMs = report.scalarTransient.openMs;
+        report.reportEndMs = report.scalarTransient.released ? report.scalarTransient.releaseMs : nowMs;
+    } else if (report.selectedRejectPresent) {
+        report.reportStartMs = report.selectedReject.startMs;
+        report.reportEndMs = report.selectedReject.endMs;
+    }
+}
+
 void DetectionRuntime::captureDiagnostics() {
+    refreshScalarDetectorReport(_latestPipelineResult.timestampMs);
+
     if (!_diagnosticsEnabled) {
         _diagnostics = {};
         return;
@@ -125,29 +250,32 @@ void DetectionRuntime::captureDiagnostics() {
 
     _diagnostics.scalarOnsetRejectReason = _scalarEmitter.lastOnsetRejectReasonName();
     _diagnostics.scalarTransientRejectReason = _scalarEmitter.lastTransientRejectReasonName();
-    _diagnostics.scalarRejectReason = _diagnostics.scalarTransientRejectReason != nullptr && strcmp(_diagnostics.scalarTransientRejectReason, "none") != 0
-        ? _diagnostics.scalarTransientRejectReason
-        : _diagnostics.scalarOnsetRejectReason;
-    _diagnostics.scalarNoEmitReason = _diagnostics.scalarRejectReason;
-    _diagnostics.scalarGateReason = _diagnostics.scalarRejectReason;
-    _diagnostics.scalarOpened = _scalarEmitter.candidateActive()
-        || _scalarEmitter.releaseObserved()
-        || _scalarEmitter.candidateFirstSeenMs() > 0;
-    _diagnostics.scalarReleased = _scalarEmitter.releaseObserved()
-        || _scalarEmitter.candidateReleaseObservedMs() > 0;
-    _diagnostics.scalarValidRelease = _diagnostics.scalarReleased
-        && _diagnostics.scalarRejectReason != nullptr
-        && strcmp(_diagnostics.scalarRejectReason, "none") == 0;
-    _diagnostics.scalarEmitAllowed = _diagnostics.scalarValidRelease;
-    _diagnostics.scalarOpenMs = _scalarEmitter.candidateFirstSeenMs();
-    _diagnostics.scalarPeakMs = _scalarEmitter.candidatePeakMs();
-    _diagnostics.scalarReleaseMs = _scalarEmitter.candidateReleaseObservedMs();
-    _diagnostics.scalarDurationMs = _diagnostics.scalarReleased && _diagnostics.scalarReleaseMs >= _diagnostics.scalarOpenMs
-        ? _diagnostics.scalarReleaseMs - _diagnostics.scalarOpenMs
-        : 0UL;
-    _diagnostics.scalarMinDurationMs = _scalarTransientConfig.minTransientDurationMs;
-    _diagnostics.scalarMaxDurationMs = _scalarTransientConfig.maxTransientDurationMs;
-    _diagnostics.scalarPeakStrength = _scalarEmitter.candidatePeakStrength();
+    if (_occurrenceSourceKind == OccurrenceSourceKind::ScalarTransient) {
+        populateScalarLegacyDiagnosticsFromReport(_diagnostics, _scalarDetectorReport);
+    } else {
+        _diagnostics.scalarRejectReason = scalarRejectReasonOrFallback(
+            _diagnostics.scalarTransientRejectReason,
+            _diagnostics.scalarOnsetRejectReason
+        );
+        _diagnostics.scalarNoEmitReason = _diagnostics.scalarRejectReason;
+        _diagnostics.scalarGateReason = _diagnostics.scalarRejectReason;
+        _diagnostics.scalarOpened = _scalarEmitter.candidateActive()
+            || _scalarEmitter.releaseObserved()
+            || _scalarEmitter.candidateFirstSeenMs() > 0;
+        _diagnostics.scalarReleased = _scalarEmitter.releaseObserved()
+            || _scalarEmitter.candidateReleaseObservedMs() > 0;
+        _diagnostics.scalarValidRelease = _diagnostics.scalarReleased && reasonIsNone(_diagnostics.scalarRejectReason);
+        _diagnostics.scalarEmitAllowed = _diagnostics.scalarValidRelease;
+        _diagnostics.scalarOpenMs = _scalarEmitter.candidateFirstSeenMs();
+        _diagnostics.scalarPeakMs = _scalarEmitter.candidatePeakMs();
+        _diagnostics.scalarReleaseMs = _scalarEmitter.candidateReleaseObservedMs();
+        _diagnostics.scalarDurationMs = _diagnostics.scalarReleased && _diagnostics.scalarReleaseMs >= _diagnostics.scalarOpenMs
+            ? _diagnostics.scalarReleaseMs - _diagnostics.scalarOpenMs
+            : 0UL;
+        _diagnostics.scalarMinDurationMs = _scalarTransientConfig.minTransientDurationMs;
+        _diagnostics.scalarMaxDurationMs = _scalarTransientConfig.maxTransientDurationMs;
+        _diagnostics.scalarPeakStrength = _scalarEmitter.candidatePeakStrength();
+    }
     _diagnostics.scalarTransientRejectedDurationMs = _scalarEmitter.lastTransientRejectedDurationMs();
     _diagnostics.scalarTransientRejectedStrength = _scalarEmitter.lastTransientRejectedStrength();
     _diagnostics.sourceSummary = {};
@@ -323,9 +451,7 @@ void DetectionRuntime::captureDiagnostics() {
         _diagnostics.frequencyPeakContrast = detector.candidatePeakContrast;
         _diagnostics.frequencyPeakSampleCount = detector.candidatePeakSampleCount;
     } else {
-        _diagnostics.scalarRejectReason = _scalarEmitter.lastTransientRejectReasonName();
-        _diagnostics.scalarNoEmitReason = _diagnostics.scalarRejectReason;
-        _diagnostics.scalarGateReason = _diagnostics.scalarRejectReason;
+        populateScalarLegacyDiagnosticsFromReport(_diagnostics, _scalarDetectorReport);
         _diagnostics.sourceSummary.present = _scalarEmitter.rejectedCandidateCount() > 0;
         _diagnostics.sourceSummary.candidateCount = _scalarEmitter.rejectedCandidateCount();
         _diagnostics.sourceSummary.rejectCount = _scalarEmitter.rejectedCandidateCount();
@@ -358,27 +484,9 @@ void DetectionRuntime::captureDiagnostics() {
         _diagnostics.sourceLastCandidate.sampleCount = 0;
         _diagnostics.sourceLastCandidate.peakPrimary = _scalarEmitter.candidatePeakStrength();
         _diagnostics.sourceLastCandidate.peakSecondary = 0.0f;
-        _diagnostics.sourceLastCandidate.reason = _scalarEmitter.lastTransientRejectReasonName();
-        _diagnostics.sourceLastCandidate.gateReason = _scalarEmitter.lastTransientRejectReasonName();
+        _diagnostics.sourceLastCandidate.reason = _scalarDetectorReport.scalarTransient.rejectReason;
+        _diagnostics.sourceLastCandidate.gateReason = _scalarDetectorReport.scalarTransient.gateReason;
         _diagnostics.sourceLastCandidate.scope = "unknown";
-        _diagnostics.scalarOpened = _scalarEmitter.candidateActive()
-            || _scalarEmitter.releaseObserved()
-            || _scalarEmitter.candidateFirstSeenMs() > 0;
-        _diagnostics.scalarReleased = _scalarEmitter.releaseObserved()
-            || _scalarEmitter.candidateReleaseObservedMs() > 0;
-        _diagnostics.scalarValidRelease = _diagnostics.scalarReleased
-            && _diagnostics.scalarRejectReason != nullptr
-            && strcmp(_diagnostics.scalarRejectReason, "none") == 0;
-        _diagnostics.scalarEmitAllowed = _diagnostics.scalarValidRelease;
-        _diagnostics.scalarOpenMs = _scalarEmitter.candidateFirstSeenMs();
-        _diagnostics.scalarPeakMs = _scalarEmitter.candidatePeakMs();
-        _diagnostics.scalarReleaseMs = _scalarEmitter.candidateReleaseObservedMs();
-        _diagnostics.scalarDurationMs = _diagnostics.scalarReleased && _diagnostics.scalarReleaseMs >= _diagnostics.scalarOpenMs
-            ? _diagnostics.scalarReleaseMs - _diagnostics.scalarOpenMs
-            : 0UL;
-        _diagnostics.scalarMinDurationMs = _scalarTransientConfig.minTransientDurationMs;
-        _diagnostics.scalarMaxDurationMs = _scalarTransientConfig.maxTransientDurationMs;
-        _diagnostics.scalarPeakStrength = _scalarEmitter.candidatePeakStrength();
         _diagnostics.scalarTransientRejectedDurationMs = _scalarEmitter.lastTransientRejectedDurationMs();
         _diagnostics.scalarTransientRejectedStrength = _scalarEmitter.lastTransientRejectedStrength();
         _diagnostics.frequencyPresent = false;
@@ -486,6 +594,7 @@ void DetectionRuntime::setOccurrenceSource(OccurrenceSourceKind kind) {
     resetOccurrenceSources();
     _frequencyEmitter.setConfig(_frequencyMatchConfig);
     _scalarEmitter.setConfig(_scalarTransientConfig);
+    _scalarDetectorReport = {};
 }
 
 void DetectionRuntime::setInspectionPlan(const InspectionPlan& plan) {
@@ -538,6 +647,7 @@ void DetectionRuntime::observeFrame(
 
     drainOccurrenceSources(nowMs);
     drainPatternAssembler(nowMs);
+    refreshScalarDetectorReport(nowMs);
 }
 
 bool DetectionRuntime::popPatternResult(PatternResult& out) {
@@ -561,6 +671,10 @@ const DetectionPipelineResult& DetectionRuntime::latestPipelineResult() const {
 
 const DetectionDiagnostics& DetectionRuntime::diagnostics() const {
     return _diagnostics;
+}
+
+const DetectorReport& DetectionRuntime::scalarDetectorReport() const {
+    return _scalarDetectorReport;
 }
 
 const FrequencyOccurrenceSource& DetectionRuntime::frequencyEmitter() const {

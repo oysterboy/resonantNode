@@ -195,6 +195,12 @@ private:
     bool _diagnosticsHaveStats = false;
     bool _diagnosticsHaveBandStats = false;
 
+    // Canonical detector-owned accepted summary for the active trial window.
+    // This mirrors scalar report ownership so DetectorReport does not lose
+    // accepted facts once the live candidate state advances.
+    detection::AcceptedOccurrenceSummary _acceptedOccurrence = {};
+    detection::FrequencyAcceptedDetail _acceptedDetail = {};
+
     // Detector-owned accepted-occurrence emission state. Frequency now mirrors
     // the scalar ownership pattern while preserving the current Occurrence
     // payload shape expected by inspector/pattern/analyzer consumers.

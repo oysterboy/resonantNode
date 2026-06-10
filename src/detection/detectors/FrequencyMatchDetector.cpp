@@ -157,6 +157,8 @@ void FrequencyMatchDetector::resetState() {
     strncpy(noEmitReason, "none", sizeof(noEmitReason) - 1);
     noEmitReason[sizeof(noEmitReason) - 1] = '\0';
     memset(&frequencyCandidate, 0, sizeof(frequencyCandidate));
+    _acceptedOccurrence = {};
+    _acceptedDetail = {};
     _pendingOccurrencePresent = false;
     _pendingOccurrence = {};
     _lastEmittedOccurrenceCloseMs = 0;
@@ -200,6 +202,11 @@ void FrequencyMatchDetector::resetRejectSummary() {
     candidateDurationInconsistent = false;
     lastReleaseFailCause = FrequencyReleaseFailCause::None;
     candidateCloseCause = FrequencyReleaseFailCause::None;
+    _acceptedOccurrence = {};
+    _acceptedDetail = {};
+    _pendingOccurrencePresent = false;
+    _pendingOccurrence = {};
+    _lastEmittedOccurrenceCloseMs = 0;
 }
 
 void FrequencyMatchDetector::setDiagnosticsEnabled(bool enabled) {
@@ -341,6 +348,17 @@ void FrequencyMatchDetector::capturePendingOccurrence(const AudioSamplePacket& a
     _pendingOccurrence.frequency.targetHz = candidateEvidence.targetHz;
     _pendingOccurrence.transient.present = false;
     _pendingOccurrencePresent = _pendingOccurrence.valid;
+    if (_pendingOccurrencePresent) {
+        _acceptedOccurrence.present = true;
+        _acceptedOccurrence.startMs = _pendingOccurrence.startMs;
+        _acceptedOccurrence.peakMs = _pendingOccurrence.peakMs;
+        _acceptedOccurrence.endMs = _pendingOccurrence.endMs;
+        _acceptedOccurrence.durationMs = _pendingOccurrence.durationMs;
+        _acceptedOccurrence.strength = _pendingOccurrence.strength;
+        _acceptedOccurrence.confidence = _pendingOccurrence.confidence;
+        _acceptedDetail.score = _pendingOccurrence.score;
+        _acceptedDetail.contrast = _pendingOccurrence.contrast;
+    }
 }
 
 void FrequencyMatchDetector::update(const detection::FrequencyBandMeasurementPacket& evidence,
@@ -685,25 +703,15 @@ void FrequencyMatchDetector::update(const detection::FrequencyBandMeasurementPac
 void FrequencyMatchDetector::buildReport(detection::DetectorReport& out, unsigned long nowMs) const {
     out = {};
     out.detectorId = detection::DetectorId::FrequencyMatch;
+    out.accepted = _acceptedOccurrence;
+    out.frequency.accepted = _acceptedDetail;
     out.thresholds.minDurationMs = candidateMinDurationMs;
     out.thresholds.maxDurationMs = candidateMaxDurationMs;
     out.aggregates.acceptedCount = acceptedCount;
     out.aggregates.rejectedCount = rejectedCount;
 
-    const bool acceptedPresent = candidateEmitted && frequencyCandidate.valid;
-    if (acceptedPresent) {
-        out.accepted.present = true;
-        out.accepted.startMs = frequencyCandidate.startMs;
-        out.accepted.peakMs = frequencyCandidate.peakMs;
-        out.accepted.endMs = frequencyCandidate.endMs;
-        out.accepted.durationMs = frequencyCandidate.durationMs;
-        out.accepted.strength = frequencyCandidate.strength;
-        out.accepted.confidence = frequencyCandidate.confidence;
-        out.frequency.accepted.score = frequencyCandidate.score;
-        out.frequency.accepted.contrast = frequencyCandidate.contrast;
-    }
-
     const bool selectedRejectPresent =
+        !out.accepted.present &&
         rejectedCount > 0 &&
         (bestOpenMs > 0 || bestPeakMs > 0 || bestCloseMs > 0 || bestDurationMs > 0 || bestPeakScore > 0.0f ||
          bestPeakContrast > 0.0f || (bestRejectReason != nullptr && strcmp(bestRejectReason, "none") != 0));

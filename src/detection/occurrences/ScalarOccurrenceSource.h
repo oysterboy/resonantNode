@@ -12,6 +12,7 @@ namespace detection {
 /*
 ScalarOccurrenceSource
 
+Temporary migration wrapper around the canonical ScalarTransientDetector core.
 Owns the reusable scalar candidate lifecycle around ScalarTransientDetector.
 It keeps the generic open/peak/release bookkeeping shared by AMP and
 frequency sources, while source-specific wrappers only provide the stream
@@ -27,6 +28,7 @@ Does NOT:
 - own frequency-specific scoring
 - own Analyzer SEQ reporting
 - own source-specific evidence extraction
+- define the final public detector boundary
 */
 class ScalarOccurrenceSource {
 public:

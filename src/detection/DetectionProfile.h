@@ -41,6 +41,8 @@ New profile checklist:
 */
 
 enum class OccurrenceSourceKind {
+    // Legacy profile routing selector retained during migration.
+    // Canonical detector boundary remains the detector core, not this wrapper choice.
     FrequencyMatch,
     ScalarTransient,
 };

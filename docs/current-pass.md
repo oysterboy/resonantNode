@@ -1,920 +1,427 @@
-# Current Pass — Pass 1: Detection Contract Trim Inventory
+# Pass B — Canonical Type Anchors and Legacy Name Mapping
 
-## Status
-
-Pass 0 — Analyzer Output Boundary is accepted as-is.
-
-The current Analyzer output/reporting layer is now explicitly treated as legacy. Existing SEQ output may remain callable temporarily, but new Detection refactor work must not depend on the legacy mixed output surface as the canonical contract.
-
-This pass is the next step after `docs/analyzer_output_boundary.md`.
+Status: Codex instruction  
+Scope: ResonantNode / Resonanzraum Detection Refactor  
+Phase: early Phase 3 implementation, conservative type/vocabulary anchoring  
+Primary goal: connect the new canonical contract names to the existing codebase without changing runtime behavior
 
 ---
 
 ## Goal
 
-Inventory the existing Detection / Analyzer contract types before changing them.
+Begin using the canonical contract vocabulary introduced in Pass A, but only where it is safe and low-risk.
 
-Find which current structs, classes, enums, reports, summaries, and helper objects already correspond to the intended minimal contracts, which ones are duplicates or legacy fossils, and which ones mix ownership boundaries.
+This pass should reduce ambiguity between old source/occurrence naming and the new detector-contract naming.
 
-This is an inspection, mapping, and documentation pass.
-
-Do **not** implement the new architecture in this pass.
+This pass must **not** perform the larger runtime migration yet.
 
 ---
 
-## Non-goals
+## Context
 
-Do **not**:
-
-- rename public Detection types yet
-- delete old files
-- delete legacy Analyzer output modes
-- split `DetectionDiagnostics` yet
-- implement `DetectorReport` if it does not already exist
-- migrate Scalar detection
-- migrate FrequencyMatch detection
-- change detector thresholds
-- change profile defaults
-- change Analyzer classification behavior
-- change PatternResult validity logic
-- change SEQ output behavior
-- refactor PatternAssembler / PatternRules yet
-- create future detector implementations such as Chirp / Noise
-
-Compile-only fixes are allowed only if required by the documentation/comment addition, but the preferred output is documentation only.
-
----
-
-## Target architecture reference
-
-Use the Phase 1 roadmap as the reference direction.
-
-Runtime chain:
+Previous passes are accepted:
 
 ```text
-AudioSignalFrame
-→ FeatureExtractor
-→ FeatureSample / FeatureFrame
-→ Detector
-→ Occurrence
-→ Inspector
-→ InspectedOccurrence
-→ PatternMatcher
-→ PatternResult
-→ Behavior
-→ OutputRequest
+Pass 0 — Analyzer Output Boundary
+Pass 1 — Detection Contract Trim Inventory
+Pass A — Choose Canonical Contracts
 ```
 
-Diagnostic sidechain:
-
-```text
-Detector
-→ DetectorReport / RejectedCandidateSummary
-→ Analyzer SEQ_INSPECT / SEQ_EXPLAIN
-```
-
-Analyzer trial truth:
-
-```text
-PatternResult + DetectorReport + expected window
-→ AnalyzerReport
-→ SEQ_TRIAL / SEQ_SUMMARY
-```
-
----
-
-## Final vocabulary target
-
-Treat these as the target names:
-
-```text
-Detector
-DetectorId
-DetectorDescriptor
-DetectorReport
-DetectorRejectClass
-RejectedCandidateSummary
-Occurrence
-InspectedOccurrence
-Inspector
-PatternMatcher
-PatternResult
-AnalyzerReport
-FeatureSample
-FeatureFrame
-FeatureHistory
-```
-
-Treat these as migration / legacy vocabulary unless inventory proves otherwise:
-
-```text
-OccurrenceSource
-SourceId
-SourceDescriptor
-SourceReport
-SourceDiagnostics
-SourceStageReport
-SourceRejectClass
-PatternRules as public stage
-PatternAssembler as public stage
-DetectionDiagnostics as shared truth object
-AnalyzerLegacyReporting as legacy output
-AnalyzerClassifier as legacy bridge
-```
-
-Important:
-
-- Do not perform the rename yet.
-- The inventory may recommend how each old name should migrate.
-
----
-
-## Intended minimal contracts
-
-Use these target contracts when inspecting the current code.
-
-### FeatureSample / FeatureFrame
-
-Purpose:
-
-```text
-Measured or derived feature input.
-```
-
-Examples:
-
-```text
-AmpFeatureSample
-FrequencyFeatureFrame
-FrequencyBandFrame
-ScalarFeatureSample
-```
-
-May contain feature-specific measurement data:
-
-```text
-value
-score
-contrast
-targetHz
-targetGeneration
-fresh
-windowMs
-updateStepMs
-timestamp
-```
-
-Rule:
-
-```text
-FeatureSample / FeatureFrame is input evidence, not an event.
-```
-
----
-
-### Detector
-
-Purpose:
-
-```text
-Active source-stage module that turns feature input into accepted Occurrences.
-```
-
-Owns:
-
-```text
-candidate lifecycle
-open / hold / release logic
-accept / reject decision
-detector-specific reject reason
-selected reject
-detector diagnostics
-```
-
-Exposes:
-
-```text
-update(feature input)
-pollOccurrence()
-getDetectorReport()
-```
-
-Rule:
-
-```text
-Detector is a module/class, not merely a data struct.
-Final target should have one public Detector object per detector type.
-```
-
----
-
-### Occurrence
-
-Purpose:
-
-```text
-Compact accepted detector-level event.
-```
-
-Minimal common fields:
-
-```text
-id
-detectorId
-occurrenceType
-timing: startMs / peakMs / endMs / durationMs
-strength
-confidence
-detailKind
-typed detail payload
-```
-
-Rule:
-
-```text
-Occurrence contains accepted-event facts only.
-Occurrence is not a diagnostic dump and not a rejected candidate summary.
-```
-
-Typed detail is allowed only for accepted-event facts needed by `PatternMatcher`.
-
-Not allowed in `Occurrence`:
-
-```text
-all rejected candidates
-threshold dumps
-raw windows
-debug counters
-Analyzer result labels
-trial classification
-full feature history
-candidate lifecycle internals
-```
-
----
-
-### InspectedOccurrence
-
-Purpose:
-
-```text
-Occurrence plus retrospective inspection evidence.
-```
-
-May contain:
-
-```text
-original Occurrence
-inspection evidence
-support classes
-duplicate risk
-inspection accept/reject status
-inspection reject class/reason
-```
-
-Should not contain:
-
-```text
-Analyzer trial classification
-SEQ formatting
-Behavior decisions
-Pattern semantic meaning
-```
-
-Rule:
-
-```text
-InspectedOccurrence belongs between Occurrence and PatternMatcher.
-```
-
----
-
-### PatternMatcher
-
-Purpose:
-
-```text
-Profile-selected pattern-stage module.
-```
-
-It may internally use:
-
-```text
-PatternCandidate
-PatternAssembler
-PatternRules
-MatchPolicies
-SupportRequirement
-TimingGate
-ConfidenceScorer
-PatternRejectReason
-```
-
-Rule:
-
-```text
-PatternMatcher is the public pattern stage.
-PatternAssembler and PatternRules are internal helpers, not public pipeline stages.
-```
-
----
-
-### PatternResult
-
-Purpose:
-
-```text
-Behavior-facing semantic pattern meaning.
-```
-
-Minimal common fields:
-
-```text
-patternType
-valid
-timing
-strength
-confidence
-primaryOccurrenceId
-patternReason
-semanticKind
-typed semantic payload
-```
-
-Rule:
-
-```text
-Behavior consumes PatternResult semantics, not detector internals.
-PatternResult is not a detector dump.
-```
-
----
-
-### DetectorReport
-
-Purpose:
-
-```text
-Detector-stage truth and diagnostics for Analyzer / SEQ_INSPECT.
-```
-
-Minimal fields:
-
-```text
-detectorId
-stage / report window
-acceptedPresent
-acceptedOccurrence
-selectedRejectPresent
-selectedReject
-rejectAggregates
-typed detector diagnostics
-```
-
-Used by:
-
-```text
-Analyzer SEQ_INSPECT
-Analyzer miss explanation
-developer diagnostics
-```
-
-Rule:
-
-```text
-DetectorReport explains what the Detector did.
-Analyzer should not reconstruct detector truth from private detector internals.
-```
-
----
-
-### RejectedCandidateSummary
-
-Purpose:
-
-```text
-Compact report of a selected rejected detector candidate.
-```
-
-Minimal fields:
-
-```text
-rejectClass
-detectorSpecificReason
-startMs
-peakMs
-endMs
-durationMs
-requiredMinDurationMs where relevant
-peakStrength
-confidence
-selected detail fields where relevant
-```
-
-Rule:
-
-```text
-RejectedCandidateSummary belongs inside DetectorReport.
-It is not an Occurrence.
-```
-
----
-
-### AnalyzerReport
-
-Purpose:
-
-```text
-Trial-level classification and readable Analyzer result.
-```
-
-Minimal fields:
-
-```text
-trialId
-profileName
-expectedWindow
-primaryPattern
-classification result
-classification reason
-dt
-summary values
-references to DetectorReport / PatternResult where needed
-```
-
-Analyzer owns:
-
-```text
-expected / miss / early / late / duplicate / unexpected / rejected classification
-```
-
-Analyzer should not own:
-
-```text
-candidate lifecycle
-detector accept/reject truth
-pattern validity
-behavior decision
-```
-
-Rule:
-
-```text
-AnalyzerReport explains the trial.
-DetectorReport explains the detector/source stage.
-PatternResult explains the pattern.
-```
-
----
-
-## Search scope
-
-Inspect all files related to:
-
-```text
-detection
-analyzer
-feature frames / feature history
-occurrence / signal / candidate
-inspector
-pattern
-diagnostics
-SEQ output
-profile-specific detection code
-```
-
-Search especially for names containing:
-
-```text
-FeatureFrame
-FeatureSample
-Occurrence
-Occurence
-Signal
-Candidate
-Inspected
-Inspector
-PatternResult
-PatternCandidate
-Detector
-Diagnostics
-Summary
-Report
-Reject
-Reason
-SEQ
-Trial
-Source
-```
-
-Include misspellings such as:
-
-```text
-Occurence
-```
-
----
-
-## Required inventory tables
-
-Create tables for the following.
-
-### 1. Existing contract candidates
-
-For every relevant struct, class, enum, or major report object, list:
-
-```text
-Name
-File path
-Kind: struct / class / enum / function group
-Current owner / namespace
-Current users
-Main fields
-What layer it seems to belong to
-Whether it is runtime truth, diagnostic detail, analyzer formatting, or old compatibility
-Recommended fate
-Notes / risks
-```
-
-Use this fate vocabulary:
-
-```text
-KEEP_PUBLIC_CONTRACT
-DETECTOR_INTERNAL
-INSPECTOR_INTERNAL
-PATTERN_INTERNAL
-ANALYZER_INTERNAL
-DIAGNOSTIC_ONLY
-MERGE_INTO_OCCURRENCE
-MERGE_INTO_DETECTOR_REPORT
-MERGE_INTO_ANALYZER_REPORT
-DELETE_AFTER_MIGRATION
-TEMP_LEGACY
-UNKNOWN
-```
-
----
-
-### 2. Target concept mapping
-
-For each intended minimal contract, identify the existing best candidate, if any:
-
-```text
-FeatureSample / FeatureFrame
-Detector
-DetectorId
-DetectorDescriptor
-Occurrence
-InspectedOccurrence
-PatternMatcher
-PatternResult
-DetectorReport
-RejectedCandidateSummary
-AnalyzerReport
-DetectorRejectClass
-Detector-specific reject reason
-```
-
-For each target concept, answer:
-
-```text
-Existing candidate type
-Current file
-Can be reused as-is?
-Needs rename?
-Needs field trimming?
-Needs relocation?
-Has duplicate competitors?
-Recommendation
-```
-
----
-
-### 3. Duplicate / overlapping types
-
-Flag cases where multiple objects carry the same meaning.
-
-Examples:
-
-```text
-Occurrence vs OccurrenceSummary
-CandidateSummary vs RejectedCandidateSummary
-DetectionDiagnostics vs DetectorReport
-PatternObservation vs PatternResult
-TrialBrief vs AnalyzerReport
-Signal vs Occurrence
-OccurrenceSource vs Detector
-PatternRules / PatternAssembler vs PatternMatcher
-```
-
-For each overlap, decide which object should become canonical and what happens to the others.
-
-Use this rule:
-
-```text
-Accepted detector event → Occurrence
-Rejected detector candidate → DetectorReport.selectedReject
-Detector-stage truth / diagnostics → DetectorReport
-Trial classification → AnalyzerReport
-Behavior-facing meaning → PatternResult
-Temporary print formatting → Analyzer-internal only
-```
-
----
-
-### 4. Ownership problems
-
-Flag objects or functions that combine multiple layers, for example:
-
-```text
-detector candidate lifecycle
-+ pattern validity
-+ analyzer trial result
-+ SEQ formatting
-+ profile-specific fields
-```
-
-For each problem, recommend:
-
-```text
-keep
-split
-move field to Occurrence
-move field to DetectorReport
-move field to PatternResult
-move field to AnalyzerReport
-move to legacy output only
-delete after migration
-unknown
-```
-
----
-
-### 5. Analyzer dependency problems
-
-Find Analyzer functions that read directly from:
-
-```text
-detector internals
-candidate internals
-feature history
-profile-specific diagnostic structs
-old frequency / AMP counters
-legacy DetectionDiagnostics fields
-```
-
-Mark each dependency as:
-
-```text
-KEEP for scoped diagnostic
-MOVE to DetectorReport
-MOVE to PatternResult
-MOVE to AnalyzerReport
-DELETE_AFTER_MIGRATION
-TEMP_LEGACY
-UNKNOWN
-```
-
-Especially inspect old output modes and aliases such as:
-
-```text
-trialbrief
-triallite
-raw
-raw_debug
-liveraw
-freq_class
-freq_diag
-amp_diag
-report variants
-legacy explain modes
-SEQ_TRIAL
-SEQ_INSPECT
-SEQ_PATTERN
-SEQ_EXPLAIN
-SEQ_SUMMARY
-```
-
-Do not remove them yet.
-
----
-
-## Required docs output
-
-Create or update exactly two markdown files in the repository docs folder.
-
-### 1. `docs/detection_contract_trim_inventory.md`
-
-Required sections:
-
-```text
-# Detection Contract Trim Inventory
-
-## 0. Intended Minimal Contracts Used as Reference
-
-## 1. Existing Contract Candidates
-
-## 2. Target Concept Mapping
-
-## 3. Duplicate / Overlapping Types
-
-## 4. Ownership Problems
-
-## 5. Analyzer Dependency Problems
-
-## 6. Recommended Canonical Contracts
-
-## 7. Types to Keep / Merge / Internalize / Delete Later
-
-## 8. Proposed Trimming Path
-
-## 9. Risks and Open Questions
-```
-
-This report must contain actual findings from the codebase.
-
-It must include tables for:
-
-```text
-existing contract candidates
-target concept mapping
-duplicate / overlapping types
-recommended canonical contracts
-types to keep / merge / internalize / delete later
-```
-
----
-
-### 2. `docs/detection_minimal_contracts.md`
-
-Required sections:
-
-```text
-# Detection Minimal Contracts
-
-## Purpose
-
-## Runtime Chain
-
-## Diagnostic Sidechain
-
-## Minimal Runtime Contracts
-
-### FeatureSample / FeatureFrame
-
-### Detector
-
-### Occurrence
-
-### InspectedOccurrence
-
-### PatternMatcher
-
-### PatternResult
-
-### DetectorReport
-
-### RejectedCandidateSummary
-
-### AnalyzerReport
-
-## Ownership Rules
-
-## What Belongs Where
-
-## What Must Not Leak Upward
-
-## Migration Vocabulary
-
-## Next Refactor Step
-```
-
-This note should summarize the intended minimal contracts.
-
-It should not contain the full inventory table.
-
----
-
-## In-code documentation
-
-Add exactly one short in-code comment near the most central detection contract header or namespace selected during inventory.
-
-Suggested target if available:
+Pass A added canonical headers:
 
 ```text
 src/detection/DetectionTypes.h
+src/detection/DetectorDescriptor.h
+src/detection/DetectorReject.h
+src/detection/DetectorReport.h
 ```
 
-or the closest existing central contract file, such as the current file containing the best candidate for `Occurrence` or `PatternResult`.
+Pass A locked the vocabulary:
 
-Use this marker:
+```text
+Detector
+DetectorId
+DetectorDescriptor
+DetectorReport
+DetectorRejectClass
+RejectedCandidateSummary
+OccurrenceType
+OccurrenceDetailKind
+PatternMatcher
+AnalyzerReport
+```
+
+Pass A also locked the public detector-boundary decision:
+
+```text
+ScalarTransientDetector and FrequencyMatchDetector are the canonical detector cores.
+ScalarOccurrenceSource and FrequencyOccurrenceSource are temporary migration wrappers and must disappear later.
+```
+
+This pass must respect that decision.
+
+---
+
+## Main purpose of this pass
+
+Create stable anchors between existing legacy names and the new canonical names.
+
+This pass should answer:
+
+```text
+Which legacy names can be mapped safely now?
+Which legacy names must remain temporarily?
+Which files now include/use the canonical headers?
+Where do old source names still leak upward?
+Which future pass should remove or migrate each remaining legacy name?
+```
+
+---
+
+## Important caution
+
+Do **not** do a broad rename sweep.
+
+This is a conservative mapping pass.
+
+Avoid changes that force runtime rewiring or detector behavior changes.
+
+If a rename touches too many files, changes active logic, or risks semantic confusion, do not perform it yet. Document it in the report instead.
+
+---
+
+## Target vocabulary
+
+Canonical names:
+
+```text
+DetectorId
+DetectorDescriptor
+DetectorReport
+DetectorRejectClass
+RejectedCandidateSummary
+OccurrenceType
+OccurrenceDetailKind
+```
+
+Legacy / migration names to inspect:
+
+```text
+OccurrenceKind
+OccurrenceSource
+OccurrenceSourceKind
+OccurrenceDetectorKind
+SourceCandidateSummary
+SourceCandidateSnapshot
+DetectionDiagnostics
+AnalyzerSourceStageReport
+AnalyzerSourceCandidateSummary
+AnalyzerSourceCandidateSnapshot
+AnalyzerFrequencyDiagnostic
+AnalyzerScalarDiagnostic
+```
+
+Not all of these should be renamed in this pass.
+
+---
+
+## Tasks
+
+### 01. Inspect canonical header integration
+
+Inspect where these headers are currently included:
+
+```text
+DetectionTypes.h
+DetectorDescriptor.h
+DetectorReject.h
+DetectorReport.h
+```
+
+Confirm:
+
+```text
+- they compile cleanly
+- they do not introduce circular includes
+- they are not pulling in heavy runtime/analyzer dependencies
+- they remain minimal contract headers
+```
+
+If include anchors were added to `Occurrence.h` or `DetectionRuntime.h`, verify they are intentional and harmless.
+
+---
+
+### 02. Create a legacy-to-canonical mapping table
+
+Create or update:
+
+```text
+docs/detection_contract_name_mapping.md
+```
+
+Required sections:
+
+```text
+# Detection Contract Name Mapping
+
+## Purpose
+
+## Canonical Type Anchors
+
+## Legacy Names Still Present
+
+## Safe Mappings Applied in Pass B
+
+## Mappings Deferred
+
+## Names That Must Not Become Canonical
+
+## Remaining Risks
+
+## Recommended Next Pass
+```
+
+Required table:
+
+```text
+Legacy name
+Current file
+Current meaning
+Canonical target
+Applied in Pass B? yes/no
+Reason if deferred
+Planned removal / migration pass
+```
+
+This table should include at least:
+
+```text
+OccurrenceKind
+OccurrenceSource
+OccurrenceSourceKind
+OccurrenceDetectorKind
+SourceCandidateSummary
+SourceCandidateSnapshot
+DetectionDiagnostics
+AnalyzerSourceStageReport
+AnalyzerFrequencyDiagnostic
+AnalyzerScalarDiagnostic
+PatternAssembler as public stage
+PatternRules as public stage
+```
+
+---
+
+### 03. Add safe conversion helpers only if useful
+
+If there are obvious low-risk bridge helpers, add them.
+
+Examples:
 
 ```cpp
-// DETECTION_MINIMAL_CONTRACTS
-//
-// Public detection contracts should remain small and layered:
-//
-// FeatureSample / FeatureFrame:
-//   measured or derived feature input
-//
-// Detector:
-//   module that owns candidate lifecycle and emits accepted Occurrences
-//
-// Occurrence:
-//   accepted detector-level event
-//
-// InspectedOccurrence:
-//   Occurrence plus retrospective inspection evidence
-//
-// PatternMatcher:
-//   profile-selected pattern interpretation stage
-//
-// PatternResult:
-//   behavior-facing pattern meaning
-//
-// DetectorReport:
-//   detector-stage truth and diagnostics for Analyzer inspection output
-//
-// AnalyzerReport:
-//   trial-level classification
-//
-// Do not add detector-specific fields to PatternResult or AnalyzerReport.
-// Detector-specific details belong in typed Occurrence detail or DetectorReport.
+DetectorId detectorIdFromLegacyOccurrenceSource(...);
+OccurrenceType occurrenceTypeFromLegacyOccurrenceKind(...);
+OccurrenceDetailKind occurrenceDetailKindFromLegacyOccurrence(...);
 ```
 
-If no central contract file exists yet, add this comment to the file that currently contains the best candidate for `Occurrence` or `PatternResult`, and note the location in the inventory report.
+Rules:
 
-Do not scatter this comment across multiple files.
+```text
+- Helpers must be small and pure.
+- Helpers must not change runtime behavior.
+- Helpers must not replace the full migration.
+- Helpers must not make legacy names look canonical.
+- Prefer placing them near the current legacy enum or in a small dedicated bridge header/source.
+```
+
+Possible file names, only if needed:
+
+```text
+src/detection/DetectionTypeMapping.h
+src/detection/DetectionTypeMapping.cpp
+```
+
+Do not create these files if no helper is needed yet.
 
 ---
 
-## Proposed trimming path to derive
+### 04. Avoid duplicate canonical concepts
 
-The inventory should propose an ordered path with small passes.
+If current files already contain names or enums that duplicate new canonical names, do not create another version.
 
-Use this structure as the starting point and adapt it to actual findings:
+Instead:
 
 ```text
-Pass A — Choose canonical contracts
-Pass B — Rename / relocate only canonical types
-Pass C — Mark duplicate types as deprecated / internal
-Pass D — Build one clean Detector path against canonical contracts
-Pass E — Route one Detector path through Occurrence → PatternResult
-Pass F — Add DetectorReport-based SEQ_INSPECT
-Pass G — Move Analyzer trial truth to PatternResult + DetectorReport
-Pass H — Internalize PatternAssembler / PatternRules under PatternMatcher
-Pass I — Migrate FrequencyMatch into same Detector contract
-Pass J — Remove duplicate summaries and old output aliases
+- note the duplicate
+- decide which one is canonical
+- defer risky renames
 ```
 
-For each proposed pass, include:
+The Pass A headers are canonical. Legacy names may stay only as temporary compatibility.
+
+---
+
+### 05. Protect OccurrenceSource wrapper deletion target
+
+Ensure documentation remains explicit that these are temporary:
 
 ```text
-Files likely touched
-Types affected
-Behavior change expected: yes/no
-Risk level
-Compile checkpoint
-Runtime/log checkpoint
+ScalarOccurrenceSource
+FrequencyOccurrenceSource
+```
+
+If any code comments, docs, or mapping tables describe them, use language like:
+
+```text
+temporary migration wrapper
+scheduled for deletion after detector cores emit Occurrence + DetectorReport directly
+not a public detector boundary
+```
+
+Do not add new responsibilities to these wrappers.
+
+Do not add new Analyzer reporting contracts around these wrappers.
+
+---
+
+### 06. Keep PatternMatcher migration deferred
+
+Do not rename or restructure pattern code yet.
+
+For now, document mapping only:
+
+```text
+PatternAssembler + PatternRules
+  → future PatternMatcher public stage
+```
+
+Rules:
+
+```text
+- do not create PatternMatcher yet unless there is already a trivial non-invasive alias
+- do not move PatternAssembler or PatternRules files
+- do not change pattern logic
+- do not change PatternResult behavior
 ```
 
 ---
 
-## Expected report after Codex completes the pass
+### 07. Keep DetectorReport placeholder inactive
 
-Report back with:
+Do not migrate `DetectionDiagnostics` into `DetectorReport` yet.
+
+This pass may reference `DetectorReport` in mapping docs, but it must not:
 
 ```text
-Path of docs/detection_contract_trim_inventory.md
-Path of docs/detection_minimal_contracts.md
-Location of DETECTION_MINIMAL_CONTRACTS comment
-Number of existing contract candidates found
-Number of duplicate / overlapping types found
-Recommended canonical contracts
-Recommended first trimming pass
-Compile result if code was touched
-Open risks
+- split DetectionDiagnostics
+- populate active DetectorReport from runtime
+- change Analyzer report build path
+- replace AnalyzerSourceStageReport
 ```
 
-Recommended next pass after this inventory:
+That belongs to a later pass.
+
+---
+
+## Allowed code changes
+
+Allowed:
 
 ```text
-Pass A — Choose canonical contracts
+- include cleanup around canonical headers
+- harmless forward declarations
+- small pure mapping helpers
+- small comments marking legacy names as migration-only
+- documentation updates
+```
+
+Not allowed:
+
+```text
+- runtime rewiring
+- detector behavior changes
+- deleting occurrence-source wrappers
+- deleting legacy analyzer structs
+- changing SEQ output behavior
+- changing profile defaults
+- changing thresholds
+- changing PatternResult semantics
+- broad rename sweep across runtime/analyzer
+```
+
+---
+
+## Compile and test checkpoint
+
+Run:
+
+```text
+platformio run -e esp32dev-analyzer
+```
+
+Expected:
+
+```text
+success
+```
+
+Runtime behavior change:
+
+```text
+expected none
+```
+
+If no runtime test is run, state that clearly.
+
+---
+
+## Expected output report
+
+After completing this pass, report:
+
+```text
+Files created
+Files updated
+Canonical headers touched
+Legacy-to-canonical mappings applied
+Legacy names intentionally deferred
+Whether mapping helpers were added
+Location of docs/detection_contract_name_mapping.md
+Compile result
+Runtime behavior change: expected none
+Remaining risks
+Recommended next pass
 ```
 
 ---
 
 ## Acceptance criteria
 
-This pass is accepted when:
+This pass is accepted if:
 
 ```text
-docs/detection_contract_trim_inventory.md exists and contains actual codebase findings
-docs/detection_minimal_contracts.md exists and summarizes the minimal contract model
-one DETECTION_MINIMAL_CONTRACTS comment exists in the best central contract location
-no runtime behavior was intentionally changed
-no old Analyzer output mode was deleted
-no detector threshold/profile default changed
-recommended canonical contracts are clearly listed
-recommended first trimming pass is clearly stated
+- docs/detection_contract_name_mapping.md exists and is specific to the current source
+- canonical names remain the only target vocabulary
+- legacy names are mapped or explicitly deferred
+- ScalarOccurrenceSource and FrequencyOccurrenceSource remain documented as deletion targets
+- no runtime behavior changed
+- no broad migration was attempted
+```
+
+---
+
+## Recommended next pass
+
+Recommended next pass after review:
+
+```text
+Pass C — Contain DetectionDiagnostics / Prepare DetectorReport Migration
+```
+
+Purpose of Pass C:
+
+```text
+Stop treating DetectionDiagnostics as canonical shared truth.
+Identify the smallest active DetectorReport migration path.
+Prepare DetectorReport population from one detector core without yet deleting legacy diagnostics.
 ```

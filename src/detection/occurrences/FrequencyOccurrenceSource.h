@@ -11,7 +11,9 @@ namespace detection {
 /*
 FrequencyOccurrenceSource
 
-Owns the frequency-match occurrence candidate path.
+Temporary migration wrapper around the canonical FrequencyMatchDetector core.
+Owns the frequency-match occurrence candidate path until detector cores emit
+Occurrence + DetectorReport directly.
 Wraps FrequencyMatchDetector to produce frequency candidates from AudioSamplePacket
 and FrequencyBandMeasurementPacket input.
 Does not decide pattern meaning or behavior.

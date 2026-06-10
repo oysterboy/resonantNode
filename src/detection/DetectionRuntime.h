@@ -2,6 +2,9 @@
 
 #include <stddef.h>
 
+// Keep the canonical detector-report placeholder compiled through the active
+// runtime header chain during migration. DetectionRuntime does not populate it yet.
+#include "DetectorReport.h"
 #include "../io/AudioSignal.h"
 #include "DetectionProfile.h"
 #include "occurrences/FrequencyOccurrenceSource.h"
@@ -52,6 +55,8 @@ struct DetectionPipelineResult {
 };
 
 struct SourceCandidateSummary {
+    // Legacy compatibility summary name. Planned canonical target:
+    // RejectedCandidateSummary inside DetectorReport.
     bool present = false;
     unsigned long candidateCount = 0;
     unsigned long rejectCount = 0;
@@ -80,6 +85,8 @@ struct SourceCandidateSummary {
 };
 
 struct SourceCandidateSnapshot {
+    // Legacy compatibility snapshot name. Planned canonical target:
+    // folded into RejectedCandidateSummary during DetectorReport migration.
     bool present = false;
     unsigned long peakMs = 0;
     unsigned long durationMs = 0;
@@ -92,6 +99,8 @@ struct SourceCandidateSnapshot {
 };
 
 struct DetectionDiagnostics {
+    // Legacy shared truth dump retained until Pass C / DetectorReport migration.
+    // Do not treat this as canonical contract vocabulary.
     unsigned long observedAtMs = 0;
 
     const char* occurrenceSource = "unknown";

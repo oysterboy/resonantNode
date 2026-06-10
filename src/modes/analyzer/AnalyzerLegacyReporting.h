@@ -395,6 +395,8 @@ struct AnalyzerDebugSummary {
 
 };
 
+// Legacy analyzer-local selected-reject summary copy.
+// Planned canonical target: RejectedCandidateSummary inside DetectorReport.
 struct AnalyzerSourceCandidateSummary {
     bool present = false;
     const char* origin = "unknown";
@@ -424,6 +426,8 @@ struct AnalyzerSourceCandidateSummary {
     unsigned long islandCount = 0;
 };
 
+// Legacy analyzer-local selected-reject snapshot copy.
+// Planned canonical target: folded into RejectedCandidateSummary.
 struct AnalyzerSourceCandidateSnapshot {
     bool present = false;
     unsigned long peakMs = 0;
@@ -436,6 +440,8 @@ struct AnalyzerSourceCandidateSnapshot {
     const char* scope = "unknown";
 };
 
+// Legacy analyzer-local detector diagnostic surrogate.
+// Planned canonical target: FrequencyMatch detector detail inside DetectorReport.
 struct AnalyzerFrequencyDiagnostic {
     unsigned long currentTrialId = 0;
     unsigned long acceptedTrialId = 0;
@@ -596,6 +602,8 @@ struct AnalyzerFrequencyDiagnostic {
     bool liveFreqMatch = false;
 };
 
+// Legacy analyzer-local detector diagnostic surrogate.
+// Planned canonical target: ScalarTransient detector detail inside DetectorReport.
 struct AnalyzerScalarDiagnostic {
     unsigned long currentTrialId = 0;
     unsigned long acceptedTrialId = 0;
@@ -653,6 +661,8 @@ struct AnalyzerScalarDiagnostic {
     bool liveScalarMatch = false;
 };
 
+// Legacy analyzer-local source-stage truth bundle.
+// Planned canonical target: DetectorReport.
 struct AnalyzerSourceStageReport {
     const char* sourceKind = "unknown";
     const char* sourceName = "unknown";

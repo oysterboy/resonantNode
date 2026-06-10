@@ -639,6 +639,14 @@ Detector emits Occurrence.
 Detector exposes DetectorReport.
 ```
 
+Public detector boundary decision:
+
+```text
+Detector cores are canonical.
+ScalarOccurrenceSource and FrequencyOccurrenceSource are temporary wrappers
+scheduled for removal during the implementation phase.
+```
+
 ---
 
 ### 1.10 PatternMatcher target rule

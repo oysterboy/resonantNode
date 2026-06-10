@@ -92,6 +92,13 @@ const char* inspectionPlanName(const detection::InspectionPlan& plan) {
                 return "amp_strength";
         }
     }
+    if (plan.count == 2 &&
+        plan.modules[0].kind == detection::InspectionModuleKind::ScalarFeatureStrength &&
+        plan.modules[0].target == detection::EvidenceTarget::FrequencyScoreStrength &&
+        plan.modules[1].kind == detection::InspectionModuleKind::ScalarFeatureStrength &&
+        plan.modules[1].target == detection::EvidenceTarget::FrequencyContrastQuality) {
+        return "frequency_score_contrast";
+    }
 
     return "custom";
 }
@@ -624,7 +631,7 @@ void Node::handleSerialLine(const char* line) {
         Serial.println("RB CMD: RB PROFILE name=tonalpulse");
         Serial.println("RB CMD(ALT): RB PROFILE name=tonalpulse");
         Serial.println("RB CMD(AMP): RB PROFILE name=amp");
-        Serial.println("RB CMD(EXP): RB PROFILE name=chirp_experimental (experimental)");
+        Serial.println("RB CMD(EXP): RB PROFILE name=scalar_freq_experimental (experimental)");
         Serial.println("RB CMD: RB rebase");
         Serial.println("RB CMD: RB rebase force");
         Serial.println("RB CMD: RB log off|minimal|full");
@@ -925,7 +932,7 @@ void Node::handleProfileCommand(const char* line) {
         printProfileComposition(activeDetectionProfile());
         Serial.println();
     } else {
-        Serial.println("RB PROFILE usage=name=tonalpulse|amp|chirp_experimental");
+        Serial.println("RB PROFILE usage=name=tonalpulse|amp|chirp_experimental|scalar_freq_experimental");
     }
 }
 
@@ -953,6 +960,7 @@ const BehaviorGateConfig& Node::activeBehaviorProfile() const {
     static const BehaviorGateConfig kTonalPulseProfile = makeTonalPulseBehaviorProfile();
 
     switch (_profileKind) {
+        case detection::DetectionProfileKind::ScalarFreqExperimental:
         case detection::DetectionProfileKind::ChirpExperimental:
         case detection::DetectionProfileKind::TonalPulse:
         default:

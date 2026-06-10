@@ -782,6 +782,13 @@ const char* inspectionPlanName(const detection::InspectionPlan& plan) {
                 return "amp_strength";
         }
     }
+    if (plan.count == 2 &&
+        plan.modules[0].kind == detection::InspectionModuleKind::ScalarFeatureStrength &&
+        plan.modules[0].target == detection::EvidenceTarget::FrequencyScoreStrength &&
+        plan.modules[1].kind == detection::InspectionModuleKind::ScalarFeatureStrength &&
+        plan.modules[1].target == detection::EvidenceTarget::FrequencyContrastQuality) {
+        return "frequency_score_contrast";
+    }
 
     return "custom";
 }
@@ -1370,6 +1377,8 @@ const char* analyzerProfileDetailNamespace(detection::DetectionProfileKind profi
             return "amp";
         case detection::DetectionProfileKind::ChirpExperimental:
             return "chirp_experimental";
+        case detection::DetectionProfileKind::ScalarFreqExperimental:
+            return "scalar_freq_experimental";
         case detection::DetectionProfileKind::TonalPulse:
         default:
             return "tonal_pulse";
@@ -1382,6 +1391,8 @@ const char* analyzerProfileDetailSummary(detection::DetectionProfileKind profile
             return "amp scalar profile view";
         case detection::DetectionProfileKind::ChirpExperimental:
             return "chirp_experimental profile view";
+        case detection::DetectionProfileKind::ScalarFreqExperimental:
+            return "scalar_freq_experimental experimental profile view";
         case detection::DetectionProfileKind::TonalPulse:
         default:
             return "generic tonal pulse profile view";

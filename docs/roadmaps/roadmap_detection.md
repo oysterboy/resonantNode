@@ -410,6 +410,13 @@ PatternMatcher is public.
 PatternAssembler and PatternRules may exist only as internal helpers.
 ```
 
+Current implementation note after Pass P:
+
+```text
+DetectionRuntime now routes through a PatternMatcher facade.
+PatternAssembler and PatternRules remain active internal helpers behind it.
+```
+
 ---
 
 #### PatternResult

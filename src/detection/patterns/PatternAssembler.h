@@ -11,6 +11,7 @@ namespace detection {
 /*
 PatternAssembler
 
+Internal helper under PatternMatcher.
 Owns the current pattern-candidate assembly queue.
 Consumes inspected occurrences and produces PatternCandidate records.
 Does not decide pattern validity or support gates.

@@ -148,7 +148,7 @@ void DetectionRuntime::resetSourceRejectSummaries() {
 void DetectionRuntime::resetDetectionState() {
     resetOccurrenceSources();
     _occurrenceInspector.reset();
-    _patternAssembler.reset();
+    _patternMatcher.reset();
     _fieldStateTracker.reset();
     _featureHistory.reset();
     _resultQueue[0] = {};
@@ -575,7 +575,7 @@ void DetectionRuntime::setInspectionPlan(const InspectionPlan& plan) {
 
 void DetectionRuntime::setPatternRulesConfig(const PatternRulesConfig& config) {
     _patternRulesConfig = config;
-    _patternRules.configure(_patternRulesConfig);
+    _patternMatcher.configure(_patternRulesConfig);
 }
 
 void DetectionRuntime::setFieldStateConfig(const FieldStateConfig& config) {
@@ -635,7 +635,7 @@ void DetectionRuntime::observeFrame(
     }
 
     drainOccurrenceSources(nowMs);
-    drainPatternAssembler(nowMs);
+    drainPatternMatcher(nowMs);
     refreshDetectorReports(nowMs);
 }
 
@@ -705,7 +705,7 @@ void DetectionRuntime::drainOccurrenceSources(unsigned long nowMs) {
                 _fieldStateTracker.observeInspectedOccurrence(inspected, nowMs);
                 _lastOccurrence = candidate;
                 _lastInspectedOccurrence = inspected;
-                _patternAssembler.acceptOccurrence(inspected);
+                _patternMatcher.acceptOccurrence(inspected);
             }
             break;
         case OccurrenceSourceKind::ScalarTransient:
@@ -715,7 +715,7 @@ void DetectionRuntime::drainOccurrenceSources(unsigned long nowMs) {
                 _fieldStateTracker.observeInspectedOccurrence(inspected, nowMs);
                 _lastOccurrence = candidate;
                 _lastInspectedOccurrence = inspected;
-                _patternAssembler.acceptOccurrence(inspected);
+                _patternMatcher.acceptOccurrence(inspected);
             }
             break;
     }
@@ -723,10 +723,9 @@ void DetectionRuntime::drainOccurrenceSources(unsigned long nowMs) {
     (void)nowMs;
 }
 
-void DetectionRuntime::drainPatternAssembler(unsigned long nowMs) {
-    PatternCandidate candidate;
-    while (_patternAssembler.popPatternCandidate(candidate)) {
-        PatternResult result = _patternRules.evaluate(candidate, nowMs);
+void DetectionRuntime::drainPatternMatcher(unsigned long nowMs) {
+    PatternResult result = {};
+    while (_patternMatcher.popPatternResult(nowMs, result)) {
         if (_lastInspectedOccurrence.occurrence.present) {
             result.inspectedOccurrence = _lastInspectedOccurrence;
         }

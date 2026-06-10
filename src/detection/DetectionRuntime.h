@@ -13,8 +13,7 @@
 #include "detectors/ScalarTransientDetector.h"
 #include "inspector/OccurrenceInspector.h"
 #include "inspector/InspectorTypes.h"
-#include "patterns/PatternAssembler.h"
-#include "patterns/PatternRules.h"
+#include "patterns/PatternMatcher.h"
 #include "patterns/PatternResult.h"
 #include "occurrences/Occurrence.h"
 #include "occurrences/InspectedOccurrence.h"
@@ -30,8 +29,8 @@ namespace detection {
 DetectionRuntime
 
 Owns the active detection pipeline wiring:
-feature observation, occurrence emission, occurrence inspection, pattern assembly,
-pattern rules, field-state tracking, and PatternResult queueing.
+feature observation, occurrence emission, occurrence inspection, pattern
+matching, field-state tracking, and PatternResult queueing.
 
 Consumes AudioSamplePacket and FrequencyBandMeasurementPacket.
 Produces PatternResult and FieldState.
@@ -305,7 +304,7 @@ private:
 
     // Pipeline stages in execution order.
     void drainOccurrenceSources(unsigned long nowMs);
-    void drainPatternAssembler(unsigned long nowMs);
+    void drainPatternMatcher(unsigned long nowMs);
     bool pushPatternResult(const PatternResult& result);
     void capturePipelineResult(
         const PatternResult& result,
@@ -326,8 +325,7 @@ private:
     FrequencyMatchDetector _frequencyDetector;
     ScalarTransientDetector _scalarDetector;
     OccurrenceInspector _occurrenceInspector;
-    PatternAssembler _patternAssembler;
-    PatternRules _patternRules;
+    PatternMatcher _patternMatcher;
     FieldStateTracker _fieldStateTracker;
     FeatureHistory _featureHistory;
 

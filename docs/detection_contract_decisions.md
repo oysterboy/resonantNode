@@ -231,6 +231,12 @@ InspectedOccurrence
 -> PatternResult
 ```
 
+Current implementation note after Pass P:
+
+- `DetectionRuntime` now routes through a `PatternMatcher` facade
+- `PatternAssembler` and `PatternRules` remain active as internal helper types
+  owned by that facade
+
 ## Analyzer Boundary Rule
 
 `AnalyzerReport` remains the accepted trial-level result name, but Analyzer is not the place to reconstruct detector truth from private detector internals.

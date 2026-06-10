@@ -7,6 +7,7 @@ namespace detection {
 /*
 PatternRules
 
+Internal helper under PatternMatcher.
 Interprets PatternCandidates into PatternResults.
 Owns patternMatched, supportMatched, valid, confidence, and pattern rejection reasons.
 Does not inspect raw signals directly and does not decide behavior eligibility.

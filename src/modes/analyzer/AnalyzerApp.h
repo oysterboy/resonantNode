@@ -387,10 +387,6 @@ private:
         unsigned long misses = 0;
         unsigned long unexpected = 0;
         unsigned long duplicates = 0;
-        // Legacy-only aggregate used by SEQ_SUMMARY_LEG. This currently still
-        // depends on legacy source summary facts and is intentionally excluded
-        // from the clean summary path.
-        unsigned long fragmentedAccepted = 0;
         unsigned long invalidAudio = 0;
         unsigned long startupArtifacts = 0;
         unsigned long samplesProcessed = 0;
@@ -411,9 +407,7 @@ private:
         unsigned long totalHitStrengthScaled = 0;
         unsigned long totalHitDurationMs = 0;
 
-        // Legacy output bookkeeping for the current SEQ trial / summary path.
-        // These counters will be trimmed or replaced when the canonical output
-        // rebuild lands.
+        // Compatibility counters retained for analyzer summary reporting.
         unsigned long patternMatchedExpected = 0;
         unsigned long patternUnmatchedExpected = 0;
         unsigned long patternMatchedDuplicates = 0;

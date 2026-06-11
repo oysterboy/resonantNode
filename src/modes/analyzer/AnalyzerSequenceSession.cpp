@@ -179,7 +179,6 @@ void AnalyzerApp::startSequenceTest(const PendingSequenceStart& pending) {
     _sequenceTest.misses = 0;
     _sequenceTest.unexpected = 0;
     _sequenceTest.duplicates = 0;
-    _sequenceTest.fragmentedAccepted = 0;
     _sequenceTest.invalidAudio = 0;
     _sequenceTest.startupArtifacts = 0;
     _sequenceTest.samplesProcessed = 0;
@@ -521,14 +520,6 @@ void AnalyzerApp::finalizeSequenceTrial(unsigned long now) {
     updateCleanSequenceSummary(*finalizedReport);
     _sequenceTest.completedTrials++;
     _sequenceTest.totalPatternConfidence += finalizedReport->primaryPattern.confidence;
-    // Legacy summary compatibility only:
-    // fragmentedAccepted still derives from legacy source-summary gap/island
-    // facts and feeds SEQ_SUMMARY_LEG, not the clean summary path.
-    if (finalizedReport->source.acceptedPresent &&
-        (finalizedReport->source.sourceSummary.totalGapMs > 0 ||
-         finalizedReport->source.sourceSummary.islandCount > 1)) {
-        _sequenceTest.fragmentedAccepted++;
-    }
     if (finalizedReport->classification.dtMs >= 0) {
         _sequenceTest.totalPatternDtMs += static_cast<unsigned long>(finalizedReport->classification.dtMs);
         _sequenceTest.patternDtCount++;

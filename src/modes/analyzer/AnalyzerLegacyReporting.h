@@ -20,10 +20,8 @@ Does not own detection or behavior decisions.
 
 // ANALYZER_OUTPUT_BOUNDARY
 //
-// Current legacy Analyzer output is retained for temporary diagnostics and
-// migration reference only. Do not add new detection/source fields here.
-// Where canonical replacements now exist, the legacy printers emit *_LEG
-// labels so the old and new surfaces can coexist during migration.
+// Legacy Analyzer output is retained only for the still-supported
+// compatibility views. Do not add new detection/source fields here.
 //
 // Future canonical output targets:
 //
@@ -39,10 +37,6 @@ Does not own detection or behavior decisions.
 //
 // SEQ_SUMMARY:
 //   Canonical aggregate trial result counts.
-//
-// SEQ_SUMMARY_LEG:
-//   Legacy aggregate output retained only for migration comparison and
-//   quarantine work.
 //
 // SEQ_EXPLAIN:
 //   Deep developer chain, rebuilt later from scoped reports.

@@ -1,9 +1,18 @@
 # Detection Refactor Roadmap - Pass U
 
-Status: implementation roadmap / Codex pass sequence  
+Status: completed in repo state on 2026-06-11  
 Scope: Analyzer / SEQ output cleanup after Pass T  
 Position: after legacy comparison-printer removal and TonalPulse clean-vs-legacy compare run  
 Purpose: retire the remaining legacy source-summary/source-detail ownership without reintroducing removed legacy compare surfaces
+
+## Pass U Result
+
+Pass U is now applied in the repo:
+
+- the remaining legacy source-summary helper family was removed from `AnalyzerLegacyReporting.cpp`
+- the legacy `fragmentedAccepted` summary aggregate and its accumulation were removed
+- clean SEQ source output remains available through `SEQ_SOURCE`
+- the remaining documented `LEG_*` source/full cleanup intent is now historical rather than active work
 
 ---
 

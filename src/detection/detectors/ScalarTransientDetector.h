@@ -28,10 +28,9 @@ Does NOT:
 class ScalarTransientDetector {
 public:
     // TEMP_SCALAR_DIAGNOSTIC_COMPAT:
-    // Legacy scalar reject-summary aggregates still needed by
-    // DetectionDiagnostics / Analyzer while scalar output migration is in
-    // progress. These are detector-owned temporary compatibility facts, not
-    // canonical DetectorReport fields.
+    // Legacy scalar reject-summary aggregates are still copied into
+    // DetectionDiagnostics / Analyzer compatibility output. These remain
+    // detector-owned compatibility facts, not canonical DetectorReport fields.
     struct LegacyRejectSummaryCompat {
         unsigned long rejectedCandidateCount = 0;
         unsigned long bestRejectedDurationMs = 0;

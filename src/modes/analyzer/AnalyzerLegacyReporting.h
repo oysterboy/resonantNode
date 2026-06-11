@@ -211,7 +211,8 @@ inline size_t frequencyEvidenceClassIndex(FrequencyEvidenceClass value) {
 
 // Legacy quarantine: AnalyzerSequenceSession still maps the old frequency
 // evidence class strings into bucket counts for compatibility reporting.
-// Keep this helper here until the legacy sequence reporting path is retired.
+// Keep this helper here until the remaining sequence compatibility path is
+// retired.
 inline FrequencyEvidenceClass legacyFrequencyEvidenceClassFromClassName(const char* className) {
     if (className == nullptr || className[0] == '\0') {
         return FrequencyEvidenceClass::None;

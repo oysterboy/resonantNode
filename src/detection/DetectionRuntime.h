@@ -107,8 +107,8 @@ struct SourceCandidateSnapshot {
 
 // DETECTION_DIAGNOSTICS_TRANSITIONAL
 //
-// DetectionDiagnostics is a temporary shared diagnostic dump retained for
-// legacy Analyzer output and migration safety.
+// DetectionDiagnostics is a compatibility-only shared diagnostic dump
+// retained for legacy Analyzer output and migration safety.
 //
 // Do not add new detector-stage truth here.
 //

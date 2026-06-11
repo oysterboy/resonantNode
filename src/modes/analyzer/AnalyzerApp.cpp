@@ -1443,9 +1443,8 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
         // The clean Analyzer paths above consume PatternResult +
         // DetectorReport + expected-window facts only.
         //
-        // Everything below this capture point exists to populate legacy
-        // analyzer compatibility structs and printers. Do not route new
-        // canonical output through DetectionDiagnostics.
+        // This capture populates compatibility structs and printers only.
+        // Do not route new canonical output through DetectionDiagnostics.
         _detection.captureDiagnostics();
         runtimeDiag = &_detection.diagnostics();
         frequencyDetector = &_detection.frequencyDetector();

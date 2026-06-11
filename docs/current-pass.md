@@ -1,301 +1,430 @@
-# Detection Refactor Roadmap - Pass U
 
-Status: completed in repo state on 2026-06-11  
-Scope: Analyzer / SEQ output cleanup after Pass T  
-Position: after legacy comparison-printer removal and TonalPulse clean-vs-legacy compare run  
-Purpose: retire the remaining legacy source-summary/source-detail ownership without reintroducing removed legacy compare surfaces
 
-## Pass U Result
 
-Pass U is now applied in the repo:
+## Goal
 
-- the remaining legacy source-summary helper family was removed from `AnalyzerLegacyReporting.cpp`
-- the legacy `fragmentedAccepted` summary aggregate and its accumulation were removed
-- clean SEQ source output remains available through `SEQ_SOURCE`
-- the remaining documented `LEG_*` source/full cleanup intent is now historical rather than active work
+Untangle old occurrence-source routing names from detector/profile routing.
+
+Target vocabulary should distinguish:
+
+```text
+DetectorId          = stable detector identity
+DetectorRole        = runtime role / active detector slot if needed
+DetectorSelection   = profile-selected detector choice
+Occurrence provenance = where an accepted event came from
+DetectionProfile    = composition/config of detection path
+```
+
+Old vocabulary to remove or quarantine as canonical API:
+
+```text
+OccurrenceSourceKind
+SourceId
+SourceReport
+SourceDiagnostics
+ScalarOccurrenceSource
+FrequencyOccurrenceSource
+source summary as detector identity
+```
+
+Some old names may remain in legacy docs/files only.
 
 ---
 
-## Why Pass U Exists
+## Preconditions
 
-Pass T proved the big split:
-
-```text
-- clean analyzer truth now lives on the clean path
-- neutral runtime/system output now has explicit non-legacy ownership
-- old legacy comparison printers are gone
-```
-
-The TonalPulse comparison run on 2026-06-10 also clarified what is left:
+Start R after:
 
 ```text
-LEG_full no longer adds a separate legacy trial/inspect/explain truth path.
-It mainly appends the old source-summary/source-detail family and system/runtime
-context.
+- DetectorReport access is generic
+- detector-owned occurrence emission exists for scalar/frequency
+- PatternMatcher boundary exists
+- legacy diagnostics are quarantined
 ```
 
-So Pass U is not another broad printer audit.
-
-Pass U is the focused removal pass for the remaining legacy SEQ source-summary
-family.
+If old wrapper objects still exist, R may rename/quarantine references but should not reintroduce them as canonical concepts.
 
 ---
 
-## Core Rule
+## Main code areas
 
 ```text
-Command compatibility is allowed temporarily.
-Legacy printer ownership is not.
+src/detection/DetectionRuntime.h
+src/detection/DetectionRuntime.cpp
+src/detection/DetectionProfile*
+src/detection/DetectorId*
+src/detection/DetectorDescriptor*
+src/detection/occurrences/*
+src/detection/detectors/*
+src/modes/analyzer/*
+src/modes/resonant/*
+docs/*
 ```
 
-Also:
+Search terms:
 
 ```text
-If an output cannot be produced from canonical detector/pattern/analyzer facts,
-it is not part of the clean analyzer output path.
+OccurrenceSourceKind
+SourceId
+SourceKind
+SourceReport
+SourceDiagnostics
+sourceKind
+occurrenceSource
+ScalarOccurrenceSource
+FrequencyOccurrenceSource
 ```
-
-Neutral runtime/system/tooling output may remain useful, but it must stay
-clearly separate from analyzer truth.
 
 ---
 
-## Pass U Goal
+## Task R.1 — Inventory routing names
 
-Retire the remaining legacy source-summary/source-detail family used by:
+Classify each occurrence-source/source use:
 
-- `SEQ MODE LEG_source`
-- the legacy appendage inside `SEQ MODE LEG_full`
-
-without:
-
-- reviving removed legacy comparison printers
-- copying legacy source-summary carriers into clean printers
-- changing detector behavior or thresholds
+```text
+DETECTOR_IDENTITY
+PROFILE_SELECTION
+RUNTIME_ROLE
+OCCURRENCE_PROVENANCE
+LEGACY_COMPAT
+DELETE_NOW
+UNKNOWN
+```
 
 ---
 
-## Evidence From The Comparison Run
+## Task R.2 — Choose minimal new names
 
-Reference:
+Do not overbuild.
 
-- `docs/tonalpulse_clean_vs_legacy_compare_20260610.md`
-
-What the run showed:
+Preferred minimal target:
 
 ```text
-- clean inspect already carries the important analyzer truth
-- scalar clean inspect already explains duration_too_long timing rejects
-- LEG_full mainly adds source.freq.* summary/detail blocks and system/runtime
-  context
-- the remaining legacy value is formatting + old source-carrier dumps, not
-  missing analyzer truth
+DetectorId
+DetectorSelection
+OccurrenceProvenance or occurrence.detectorId
 ```
 
-This supports direct removal rather than another rebuild cycle.
+Only add `DetectorRole` if the code truly has multiple roles/slots independent of detector identity.
 
 ---
 
-## In Scope
+## Task R.3 — Rename or wrap old routing names
 
-### U1. Remove remaining legacy source-summary entry points
+Replace canonical references to `OccurrenceSourceKind` with the chosen detector/profile vocabulary.
 
-Primary targets:
+If a full rename is too risky:
 
 ```text
-legacyPrintSequenceDiagnostics(const AnalyzerReport&)
-legacyPrintSequenceScalarDiagnostics(const AnalyzerReport&)
+- keep old enum as compatibility
+- add conversion helpers
+- mark old enum LEGACY
+- prevent new code from using it
 ```
 
-Acceptance:
+---
+
+## Task R.4 — Update commands/help/docs
+
+Update any user-visible command/help text if it exposes old vocabulary.
+
+Keep profile names stable unless specifically scoped.
+
+Do not change stable user profile names like:
 
 ```text
-- no SEQ path still calls these printers
+TonalPulse
+ChirpExperimental
+```
+
+unless existing docs require a wording correction.
+
+---
+
+## Required documentation
+
+Create:
+
+```text
+docs/detector_routing_name_cleanup.md
+```
+
+Required sections:
+
+```text
+# Detector Routing Name Cleanup
+
+## Purpose
+## Old Routing Vocabulary
+## New Routing Vocabulary
+## Detector Identity
+## Profile Selection
+## Runtime Role
+## Occurrence Provenance
+## Legacy Names Kept
+## Names Removed / Replaced
+## Command / Help Text Changes
+## What Did Not Change
+## Remaining Routing Debt
+## Recommended Next Pass
+```
+
+---
+
+## Acceptance criteria
+
+```text
+- canonical code no longer presents OccurrenceSourceKind as the main detector-routing concept
+- detector identity and profile selection are clearer
+- old source names are deleted or marked legacy
+- user-visible help/docs use current vocabulary
+- no behavior/tuning changes
 - build succeeds
 ```
 
-### U2. Remove the source-summary helper family
+---
 
-Primary targets:
-
-```text
-legacyPrintCompactGapFields(...)
-legacyPrintSourceRejectSummaryLine(...)
-legacyPrintCompactFrequencySourceSummary(...)
-legacyPrintCompactFrequencySourceExtras(...)
-legacyPrintCompactScalarSourceSummary(...)
-legacyPrintCompactScalarSourceExtras(...)
-legacyPrintSequenceSourcePreamble(...)
-legacyPrintSequenceSourceLifecycleDetail(...)
-legacyPrintFrequencyMatchSourceDetail(...)
-legacyPrintScalarTransientSourceDetail(...)
-legacyPrintScalarObservation(...)
-legacyPrintInspectionScalarDetails(...)
-```
-
-Acceptance:
+## Expected report
 
 ```text
-- helper family becomes unreachable and deleted
-- no clean printer depends on analyzer-local source-summary carriers
-```
-
-### U3. Remove LEG_* routing
-
-Decision:
-
-```text
-LEG_* command compatibility should disappear.
-```
-
-Implement this shape:
-
-```text
-- remove LEG_source entirely
-- remove LEG_full entirely
-- remove any remaining LEG_* parser aliases tied to SEQ output modes
-- keep only the clean/neutral mode surface
-```
-
-Acceptance:
-
-```text
-- no LEG_* SEQ mode remains reachable
-- no command token implies legacy SEQ printer ownership
-```
-
-### U4. Refresh docs after removal
-
-Update:
-
-```text
-docs/legacy_printer_inventory.md
-docs/legacy_printer_decision_map.md
-docs/tonalpulse_clean_vs_legacy_compare_20260610.md (only if findings need addendum)
-docs/current-pass.md
-```
-
-Acceptance:
-
-```text
-- docs describe only what still exists
-- removed legacy source-summary ownership is no longer described as active
+Files created
+Files updated
+Old names found
+Names replaced
+Names kept as legacy
+New vocabulary introduced
+Command/help changes
+Docs updated
+Compile result
+Runtime sanity result if run
+Remaining routing debt
+Recommended next pass
 ```
 
 ---
 
-## Out Of Scope
-
-Do not mix these into Pass U:
-
-```text
-- detector/report consistency bug:
-  TonalPulse summary still shows detector_accepted=0 despite valid pattern/trial results
-- threshold or profile tuning
-- scalar/frequency behavior retuning
-- base/capture/value tooling cleanup
-- new analyzer UX expansion
-```
-
-Those belong to later passes.
-
----
-
-## Files To Touch
-
-Likely code files:
-
-```text
-src/modes/analyzer/AnalyzerApp.h
-src/modes/analyzer/AnalyzerApp.cpp
-src/modes/analyzer/AnalyzerCommands.cpp
-src/modes/analyzer/AnalyzerSequenceSession.cpp
-src/modes/analyzer/AnalyzerLegacyReporting.cpp
-src/modes/analyzer/AnalyzerReporting.cpp
-```
-
-Likely docs:
-
-```text
-docs/legacy_printer_inventory.md
-docs/legacy_printer_decision_map.md
-docs/current-pass.md
-docs/tonalpulse_clean_vs_legacy_compare_20260610.md
-```
-
----
-
-## Safety Rules
-
-```text
-- Runtime behavior change: expected none beyond output/routing cleanup.
-- No detector logic changes.
-- No threshold/profile changes.
-- Do not recreate removed legacy compare surfaces.
-- Prefer deletion over transitional wrappers when clean ownership already exists.
-- Compile after each implementation step.
-```
-
-Standard checkpoint:
+## Commit instructions
 
 ```bash
 platformio run -e esp32dev-analyzer
 git status
 git diff --stat
+git add src/detection src/modes docs
+git commit -m "DetectionCleanup [R] clean detector routing names"
 ```
 
 ---
 
-## Acceptance Criteria
+# Pass V — Remove Legacy Sediment
 
-Pass U is complete if:
+## Goal
+
+Delete obsolete wrappers, duplicate summaries, old aliases, stale compatibility branches, stale comments, and dead docs after clean architecture is in place.
+
+This is the final cleanup pass for this refactor sequence.
+
+---
+
+## Preconditions
+
+Start V only after:
 
 ```text
-- the remaining legacy source-summary/source-detail printers are removed
-- LEG_* SEQ modes are removed
-- clean analyzer truth remains:
-  - SEQ_TRIAL
-  - SEQ_INSPECT
-  - SEQ_EXPLAIN
-  - SEQ_SOURCE
-  - SEQ_SUMMARY
-- neutral output remains explicit:
-  - SEQ REPORT
-  - SEQ STATUS
-  - SYSTEM_HEALTH
-  - AUDIO/FREQBAND/OCCURRENCE summaries
-- docs are refreshed to the post-removal state
+- O/O2 legacy diagnostics are quarantined
+- P PatternMatcher boundary exists
+- Q payload trimming has landed or explicitly deferred remaining debt
+- R routing names are clean
+- implementation-status docs identify remaining legacy clearly
+```
+
+If significant legacy systems are still active, split S into smaller deletion passes.
+
+---
+
+## Main targets
+
+Possible deletion candidates:
+
+```text
+unused ScalarOccurrenceSource wrapper
+unused FrequencyOccurrenceSource wrapper
+old SourceCandidateSummary / SourceCandidateSnapshot if fully replaced
+old Analyzer legacy fallback structs if fully replaced
+old DetectionDiagnostics fields if fully unused
+old aliases for source/detector names
+temporary migration comments that are resolved
+stale docs claiming old architecture
+duplicate report builders
+duplicate summary printers if clean summary is accepted
+```
+
+Do not delete active legacy output if still intentionally supported.
+
+---
+
+## Task V.1 — Create final deletion inventory
+
+Search for:
+
+```text
+LEGACY
+TEMP
+TODO
+COMPAT
+OccurrenceSource
+SourceCandidate
+DetectionDiagnostics
+AnalyzerLegacy
+refreshScalarDetectorReport
+refreshFrequencyDetectorReport
+```
+
+Classify:
+
+```text
+DELETE_NOW
+KEEP_LEGACY_SUPPORTED
+KEEP_RUNTIME_PRIVATE
+KEEP_DOC_ARCHIVE
+UNKNOWN
 ```
 
 ---
 
-## Suggested Execution Order
+## Task V.2 — Delete only resolved sediment
+
+Delete only items that are:
 
 ```text
-U1 - remove legacy source-summary entry points
-U2 - delete their helper family
-U3 - remove LEG_* routing
-U4 - compile
-U5 - refresh docs
-U6 - commit
+unused
+replaced by canonical path
+documented as no longer needed
+compile-safe to remove
+```
+
+Avoid deleting:
+
+```text
+supported legacy command aliases
+manual/archive docs intentionally retained
+debug tools still useful
+runtime-private diagnostics still intentionally kept
 ```
 
 ---
 
-## Post-U Follow-Up
+## Task V.3 — Clean comments and docs
 
-Once Pass U is done, the next likely cleanup becomes:
-
-```text
-investigate detector/report consistency issues separately
-```
-
-First candidate:
+Remove or update stale comments like:
 
 ```text
-TonalPulse:
-SEQ_SUMMARY detector_accepted=0 despite valid clean trial/pattern results
+temporary bridge
+TODO migrate to DetectorReport
+legacy until Pass X
+placeholder
 ```
 
-That should be handled as a report-contract/runtime issue, not as a legacy
-printer cleanup issue.
+Only keep comments that are still true.
+
+Archive old docs if needed:
+
+```text
+docs/archive/
+```
+
+or mark them historical.
+
+---
+
+## Task V.4 — Final build and sanity
+
+Run compile.
+
+If hardware is available, run short sanity:
+
+```text
+canonical SEQ_TRIAL
+canonical SEQ_INSPECT
+clean SEQ_SUMMARY
+stable profile detection
+legacy output only if still intentionally supported
+```
+
+---
+
+## Required documentation
+
+Create or update:
+
+```text
+docs/detection_refactor_final_cleanup.md
+docs/implementation-status.md
+docs/roadmaps/roadmap_detection.md
+```
+
+Required sections for final cleanup doc:
+
+```text
+# Detection Refactor Final Cleanup
+
+## Purpose
+## Deleted Legacy Items
+## Legacy Items Intentionally Kept
+## Canonical Runtime Path
+## Canonical Analyzer Path
+## Remaining Known Debt
+## Manual / Docs Status
+## Final Sanity Checks
+```
+
+---
+
+## Acceptance criteria
+
+```text
+- obsolete wrappers/aliases/summaries are deleted or explicitly kept
+- stale comments/docs are removed or corrected
+- canonical detector/analyzer/pattern vocabulary is dominant
+- build succeeds
+- no accidental behavior/tuning changes
+- remaining debt is explicit
+```
+
+---
+
+## Expected report
+
+```text
+Files created
+Files updated
+Files deleted
+Legacy items removed
+Legacy items intentionally kept
+Old aliases removed
+Stale comments removed
+Docs updated
+Compile result
+Runtime sanity result if run
+Remaining known debt
+Recommended next major roadmap item
+```
+
+---
+
+## Commit instructions
+
+```bash
+platformio run -e esp32dev-analyzer
+git status
+git diff --stat
+git add -A
+git commit -m "DetectionCleanup [V] remove legacy detection sediment"
+```
+
+If V is split:
+
+```text
+V1 — Delete obsolete source wrappers
+V2 — Delete obsolete analyzer legacy structs
+V3 — Clean docs/comments
+```

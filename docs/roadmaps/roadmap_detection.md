@@ -994,7 +994,7 @@ Detailed Codex instructions belong in separate pass documents, not in this roadm
 
 ## Phase 3 — Implementation
 
-Status: placeholder.
+Status: deferred until inventory passes have a clean handoff.
 
 Likely implementation sequence after inventory:
 
@@ -1012,7 +1012,8 @@ Exact file changes are deferred until after inventory.
 
 ## Phase 4 — Legacy Removal
 
-Status: placeholder.
+Status: deferred; see `docs/detection_refactor_final_cleanup.md` for the
+current remaining debt.
 
 Remove only after canonical equivalents exist:
 

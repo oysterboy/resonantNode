@@ -357,7 +357,7 @@ legacy output only if still intentionally supported
 Create or update:
 
 ```text
-docs/detection_refactor_final_cleanup.md
+docs/archive/260512_detection-Refactor/reports/detection_refactor_final_cleanup.md
 docs/implementation-status.md
 docs/roadmaps/roadmap_detection.md
 ```

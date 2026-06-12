@@ -1,10 +1,8 @@
-# ResonantNode Architecture Spec v0.2.4 — Cleanup Candidate
+# ResonantNode Firmware Architecture Spec v0.3.0
 
-Status: draft replacement / cleanup candidate.
-
-Purpose: document the currently landed architecture without carrying old refactor targets or removed implementation paths.
-
-This candidate is based on the inspected source tree and should replace or heavily simplify the active detection/analyzer sections of `docs/myspec.md`.
+Status: current architecture spec / replacement candidate  
+Scope: whole firmware architecture, with updated Detection & Analyzer boundaries  
+Date context: after Detection/Analyzer clean reporting refactor and S2 verification
 
 ---
 
@@ -25,10 +23,12 @@ The firmware structure should stay reusable:
 
 ```text
 HAL
-resource wrappers
-audio/signal processing
+audio and signal processing
+feature extraction
 detection runtime
-pattern result contract
+detector reports
+pattern results
+field state
 behavior boundary
 output boundary
 analyzer/reporting
@@ -36,40 +36,47 @@ params/commands/state/events later
 VEKTOR exposure later
 ```
 
+This document describes the current intended architecture and the boundaries that should guide future cleanup.
+
+It is not a pass-by-pass refactor history.
+
 ---
 
-## 2. Current Architecture Principle
+## 2. Architecture Principle
 
 ```text
-Detection reports.
+Detection produces facts.
+Analyzer reports and classifies trials.
 Behavior decides.
 SoundOutput performs output.
-Analyzer measures.
 ```
 
 Core ownership:
 
 ```text
 AudioSignal:
-    continuous signal material
+    continuous audio material and low-level signal snapshots
 
-FeatureStream / FeatureHistory:
-    scalar feature history and retrospective windows
+FeatureExtractor / FeatureStream / FeatureHistory:
+    derived scalar/feature values and retrospective windows
 
-OccurrenceSource:
-    bounded source-level candidate emission
+Detector:
+    candidate lifecycle, accepted Occurrence emission, DetectorReport production
 
-OccurrenceInspector:
+Occurrence:
+    accepted detector event with generic core plus temporary typed accepted-event detail
+
+Inspector:
     candidate-relative evidence annotation
 
-PatternAssembler:
-    occurrence(s) → PatternCandidate
-
-PatternRules:
-    PatternCandidate → PatternResult
+PatternMatcher:
+    public pattern-stage boundary
 
 FieldStateTracker:
     acoustic context
+
+Analyzer:
+    trial setup, expected windows, clean reports, summaries, diagnostics
 
 Behavior:
     reaction policy
@@ -78,28 +85,52 @@ SoundOutput:
     output execution
 ```
 
----
-
-## 3. Landed Detection Runtime Flow
-
-Current source implements this runtime flow:
+Primary rule:
 
 ```text
-AudioSamplePacket
-+ FrequencyBandMeasurementPacket
-→ FeatureExtractor
-→ FeatureHistory
-→ selected OccurrenceSource
-→ Occurrence
-→ OccurrenceInspector
-→ InspectedOccurrence
-→ PatternAssembler
-→ PatternCandidate
-→ PatternRules
-→ PatternResult queue
+DetectionRuntime coordinates.
+It must not reconstruct detector truth.
 ```
 
-In parallel:
+---
+
+## 3. Top-Level Runtime Chain
+
+Target runtime chain:
+
+```text
+AudioSignalFrame
+→ FeatureExtractor
+→ FeatureSample / FeatureFrame
+→ Detector
+→ Occurrence
+→ Inspector
+→ InspectedOccurrence
+→ PatternMatcher
+→ PatternResult
+→ Behavior
+→ OutputRequest
+```
+
+Diagnostic sidechain:
+
+```text
+Detector
+→ DetectorReport / RejectedCandidateSummary
+→ Analyzer SEQ_SOURCE / SEQ_INSPECT / SEQ_EXPLAIN / SEQ_SUMMARY
+```
+
+Analyzer trial truth:
+
+```text
+PatternResult
++ DetectorReport
++ expected trial/window facts
+→ AnalyzerReport
+→ SEQ_TRIAL / clean summaries
+```
+
+Parallel acoustic context path:
 
 ```text
 Occurrence
@@ -109,617 +140,784 @@ Occurrence
 → FieldState
 ```
 
-`DetectionRuntime` owns the active runtime wiring:
+Behavior consumes:
 
 ```text
-FrequencyOccurrenceSource
-ScalarOccurrenceSource
-OccurrenceInspector
-PatternAssembler
-PatternRules
-FieldStateTracker
-FeatureHistory
-PatternResult queue
-latest DetectionPipelineResult
+PatternResult
+FieldState
+OutputStatus
+behavior state/timers
+params/config
 ```
 
-Behavior consumes `PatternResult` and `FieldState`, not detector internals.
+Behavior must not consume raw detector internals.
 
 ---
 
-## 4. DetectionProfile Contract
+## 4. Module Ownership Overview
 
-`DetectionProfile` is the code-defined composition shell for the active detection profile.
+### DetectionRuntime
 
-Current profile identity:
-
-```text
-DetectionProfileKind:
-    TonalPulse
-    Amp
-    ChirpExperimental
-```
-
-Current occurrence source selection:
+Owns wiring and loop coordination:
 
 ```text
-OccurrenceSourceKind:
-    FrequencyMatch
-    ScalarTransient
-```
-
-Current profile fields:
-
-```text
-kind
-occurrenceSource
-frequencyMatch
-scalarTransient
-patternRulesConfig
-inspectionPlan
-fieldStateConfig
-```
-
-Apply points:
-
-```text
-DetectionRuntime       <- occurrenceSource
-FrequencyOccurrenceSource <- frequencyMatch config
-ScalarOccurrenceSource <- scalarTransient config
-OccurrenceInspector    <- inspectionPlan
-PatternRules           <- patternRulesConfig
-FieldStateTracker      <- fieldStateConfig
-```
-
-Rule:
-
-```text
-DetectionProfile selects coherent profile composition.
-Runtime config may tune exposed values later.
-Runtime config should not freely rebuild the detection graph.
-```
-
----
-
-## 5. Current Profiles
-
-### TonalPulse
-
-Current stable active profile.
-
-Composition:
-
-```text
-occurrenceSource = FrequencyMatch
-FrequencyOccurrenceSource uses FrequencyMatchDetector
-InspectionPlan:
-    ScalarFeatureStrength over AmpEnvelope
-    target = AmpStrength
-PatternRules:
-    requireSupportForAcceptance = true
-    requiredSupportTarget = AmpStrength
-FieldStateConfig:
-    tuned occurrence/pattern windows
-```
-
-Meaning:
-
-```text
-TonalPulse detects a short tonal pulse-like event.
-AMP strength is used as required support evidence.
-```
-
-### Amp
-
-Current proof / alternate profile.
-
-Composition:
-
-```text
-occurrenceSource = ScalarTransient
-scalarTransient.observedStream = AmpEnvelope
-InspectionPlan:
-    ScalarFeatureStrength over FrequencyScore
-    target = FrequencyScoreStrength
-PatternRules:
-    requiredSupportTarget = FrequencyScoreStrength
-```
-
-Status:
-
-```text
-available in code
-less central than TonalPulse
-use mainly as profile comparison / proof path
-```
-
-### ChirpExperimental
-
-Selectable experimental proof profile.
-
-Composition is currently still simple:
-
-```text
-occurrenceSource = ScalarTransient
-scalarTransient.observedStream = AmpEnvelope
-PatternRules support requirement disabled
-InspectionPlan includes AmpStrength
-```
-
-Status:
-
-```text
-experimental only
-not mature pulsed chirp detection
-not the normal runtime target
-```
-
----
-
-## 6. Occurrence Sources
-
-### FrequencyOccurrenceSource
-
-Specialized occurrence source.
-
-Owns:
-
-```text
-FrequencyMatchDetector lifecycle
-frequency match candidate emission
-FrequencyMatch occurrence timing/evidence
+active DetectionProfile
+feature extraction / feature routing
+active detector update calls
+accepted Occurrence draining
+Inspector call
+PatternMatcher call
+FieldStateTracker update
+latest PatternResult queue/snapshot
+DetectorReport snapshot/routing
+Analyzer-facing report access
 ```
 
 Does not own:
 
 ```text
-AMP support
+candidate lifecycle truth
+accepted detector truth
+selected reject truth
 pattern meaning
-pattern assembly
 behavior decisions
+output execution
 ```
 
-Status:
+### Detector cores
 
-```text
-first accepted specialized OccurrenceSource
-current TonalPulse source
-```
-
-### ScalarOccurrenceSource
-
-Generic scalar transient occurrence source.
-
-Owns:
+Current canonical detector cores:
 
 ```text
 ScalarTransientDetector
-observed FeatureStreamId
-scalar onset/release candidate lifecycle
-source/kind tagging
+FrequencyMatchDetector
 ```
 
-Can observe streams such as:
+Detector owns:
 
 ```text
-AmpEnvelope
-FrequencyScore
-FrequencyContrast
+candidate lifecycle
+accepted Occurrence emission
+selected rejected candidate summary
+DetectorReport production
+detector-specific detail fields
 ```
 
-Status:
+Detector does not own:
 
 ```text
-landed generic scalar source
-used by Amp and ChirpExperimental profiles
+inspection support meaning
+pattern validity
+Analyzer classification
+Behavior reaction policy
 ```
 
-Rule:
-
-```text
-Scalar-first, specialized-by-exception.
-```
-
-FrequencyMatch remains specialized because its current lifecycle/evidence behavior is useful and not yet worth forcing through the scalar abstraction.
-
----
-
-## 7. FeatureHistory and Scalar Windows
-
-`FeatureHistory` stores scalar projections over time.
-
-Current FeatureStream examples:
-
-```text
-AmpEnvelope
-FrequencyScore
-FrequencyContrast
-```
-
-`ScalarWindow` summarizes candidate-relative intervals of FeatureHistory.
-
-Inspection modules may use:
-
-```text
-FeatureHistory
-+ ScalarWindow
-+ thresholds
-→ evidence strength classification
-```
-
-Future useful frequency projections may include:
-
-```text
-FrequencyTargetPower
-FrequencyNeighborPower
-FrequencyTotalEnergy
-FrequencyWindowValid
-TargetBandStrength
-```
-
-These are roadmap items unless already implemented in source.
-
----
-
-## 8. InspectionPlan / OccurrenceInspector
-
-`OccurrenceInspector` is a coordinator over an ordered `InspectionPlan`.
-
-Current inspection module kind:
-
-```text
-InspectionModuleKind::ScalarFeatureStrength
-```
-
-Current evidence targets:
-
-```text
-AmpStrength
-FrequencyScoreStrength
-FrequencyContrastQuality
-TargetBandStrength
-```
-
-`TargetBandStrength` exists as an evidence target slot but is not implemented as a full feature path yet.
-
-Inspection modules:
-
-```text
-read configured FeatureHistory stream
-measure candidate-relative ScalarWindow
-classify strength
-write evidence to configured EvidenceTarget
-```
-
-Rule:
-
-```text
-Inspectors produce evidence.
-PatternRules decide support.
-```
-
-Inspection must not decide final pattern validity except through candidate-level acceptance/rejection facts.
-
----
-
-## 9. PatternAssembler
-
-`PatternAssembler` currently does simple one-occurrence assembly:
-
-```text
-accepted InspectedOccurrence
-→ SinglePulse PatternCandidate
-```
-
-It carries through:
-
-```text
-timing
-strength
-frequency feature frame
-AMP strength evidence
-evidence target strengths
-occurrence slot summary
-```
-
-Status:
-
-```text
-landed v0
-one-occurrence assembly
-multi-occurrence pulse/chirp grouping is roadmap
-```
-
-Rule:
-
-```text
-PatternAssembler groups and copies evidence.
-PatternAssembler does not decide pattern validity or support.
-```
-
----
-
-## 10. PatternRules / PatternResult
-
-`PatternRules` interprets `PatternCandidate` into `PatternResult`.
-
-Current support model:
-
-```text
-PatternRulesConfig.requireSupportForAcceptance
-PatternRulesConfig.requiredSupportTarget
-PatternRulesConfig.minimumSupportStrength
-```
-
-PatternRules checks the configured evidence target:
-
-```text
-AmpStrength
-FrequencyScoreStrength
-FrequencyContrastQuality
-TargetBandStrength
-```
-
-and sets:
-
-```text
-patternCandidateAccepted
-patternMatched
-supportMatched
-valid
-confidence
-rejectReason
-```
-
-Current implementation still has some result-kind vocabulary that should be cleaned:
-
-```text
-Valid
-Invalid
-TooDense
-Rejected
-```
-
-Target vocabulary should become more generic:
-
-```text
-Valid
-Invalid
-Rejected
-Ambiguous
-TooDense
-DuplicateAfterPrimary
-UnexpectedNoise
-```
-
-Until code cleanup lands, `PatternResult.valid` is the primary behavior/analyzer gate.
-
----
-
-## 11. FieldState
-
-`FieldState` is acoustic context, not pattern meaning.
-
-It tracks:
-
-```text
-recentOccurrenceCount
-recentAcceptedOccurrenceCount
-recentPatternCount
-lastOccurrenceMs
-lastInspectedOccurrenceMs
-lastPatternMs
-quiet
-active
-dense
-activity
-density
-noiseFloor
-```
-
-Current code now uses `OccurrenceCount` wording in the field-state config and tracker internals.
-
-Rule:
-
-```text
-FieldState can influence behavior.
-FieldState does not directly trigger output.
-```
-
----
-
-## 12. Analyzer Contract
-
-Analyzer is a stable measurement and reporting layer over the selected `DetectionProfile`.
+### Analyzer
 
 Analyzer owns:
 
 ```text
 trial setup
 expected windows
-measurement classification
-summary statistics
-report formatting
-SEQ_TRIAL
-SEQ_SOURCE
-SEQ_SOURCE_REJECTS
-SEQ_SOURCE_LAST_CANDIDATE
-SEQ_SOURCE_DIAG
-SEQ_INSPECT
-SEQ_PATTERN
-SEQ_DUMP
-SEQ_SUMMARY
+trial classification
+clean reporting
+summary aggregation
+neutral tooling output
 ```
 
 Analyzer does not own:
 
 ```text
 detection
+candidate lifecycle
 inspection
-pattern assembly
-pattern rules
+pattern matching
 field-state tracking
 behavior
-output dispatch
+output
 ```
-
-Current report shape:
-
-```text
-AnalyzerReport
-RunContext
-ExpectedEvent
-PatternObservation
-OccurrenceObservation
-InspectionObservation
-FieldObservation
-AnalyzerClassification
-ProfileDetail
-DebugSummary
-AnalyzerSummary
-```
-
-`RAW_SAMPLE_CAPTURE` remains separate from SEQ reporting.
-
-Current landed SEQ output contract is intentionally compact and scoped:
-
-```text
-SEQ_TRIAL    compact truth, default output
-SEQ_SOURCE   compact source summary
-SEQ_SOURCE_REJECTS  selected reject summary + aggregates
-SEQ_SOURCE_LAST_CANDIDATE  detector snapshot / lifecycle evidence
-SEQ_SOURCE_DIAG  candidate-independent deep evidence
-SEQ_INSPECT  per-module inspector evidence
-SEQ_PATTERN  pattern assembly / rules contract
-SEQ_DUMP     deep verbose developer fallback
-SEQ_SUMMARY  aggregate run comparison
-```
-
-Command/state controls:
-
-```text
-SEQ PROFILE <tonalpulse|amp|chirp_experimental>
-SEQ MODE <quiet|trial|compact|signalcheck|streak|full|system|source|inspect|pattern|explain|dump>
-SEQ WHEN <off|miss|all>
-SEQ VERBOSE <0|1|2>
-SEQ TRIES <N>
-SEQ STATUS
-```
-
-Verbosity contract:
-
-```text
-VERBOSE 0 = compact trial output plus compact anomaly fields
-VERBOSE 1 = readable stage summary
-VERBOSE 2 = namespaced deep detail
-MODE full stays readable at V0/V1; deep dumps move to V2/explain
-MODE explain|dump remains the raw developer fallback
-```
-
-Rejected detector/source candidates are kept as compact bounded summaries. Analyzer owns aggregation and readable selection; detector/source owns candidate lifecycle and reject reasons. `SEQ_SOURCE_DIAG` stays candidate-independent and can include frame/evidence freshness facts even when no candidate exists. `SEQ_SOURCE` and `SEQ_TRIAL` stay compact, while `SEQ_SOURCE_LAST_CANDIDATE` and `SEQ_SOURCE_DIAG` are reserved for deeper source evidence.
-
-Roadmap names such as `SEQ_SOURCE_FREQ` and `SEQ_EXPLAIN` may still appear in planning docs as a conceptual split for frequency evidence and structured explanation. In the landed runtime, those deeper diagnostics are represented by the compact `SEQ_SOURCE_*` family plus the `explain` / `dump` deep mode, so the spec should not imply a separate active top-level output mode unless the code actually adds one.
-
-Analyzer display labels are owned by the analyzer reporting descriptor layer. Detectors and inspectors keep semantic data; the analyzer maps that data into stable namespaced output. New profiles extend those namespace mappings instead of adding ad hoc printer strings in the runtime pipeline.
 
 ---
 
-## 13. Analyzer Profile Detail Contract
+## 5. Detection & Analyzer
 
-Analyzer output uses one stable outer report shape across detection profiles.
+This section is the main architecture chapter for the detection/analyzer subsystem.
 
-Every `DetectionProfile` must provide an analyzer-readable generic view:
+It covers:
+
+```text
+DetectionProfile
+Feature extraction / FeatureHistory
+Detector boundary
+Occurrence boundary
+DetectorReport boundary
+Inspector boundary
+PatternMatcher boundary
+FieldState
+Analyzer / reporting boundary
+```
+
+---
+
+### 5.1 DetectionProfile / Profile Selection
+
+`DetectionProfile` is the code-defined composition shell for an active detection profile.
+
+It selects coherent detection behavior, not arbitrary runtime graph rebuilding.
+
+DetectionProfile should define or imply:
 
 ```text
 profile kind
-pattern family
-PatternResult kind
-valid / invalid / rejected / ambiguous
-confidence if meaningful
-timing
-reason
-primary occurrence / source summary
-field state summary
+profile label
+detector selection / detector id
+detector config
+inspection plan
+pattern rule config
+field-state config
+analyzer-facing profile family/detail namespace
 ```
 
-Profiles may additionally provide profile-specific detail payloads.
+Preferred canonical vocabulary:
+
+```text
+DetectionProfile
+DetectorId
+DetectorSelection
+InspectionPlan
+PatternRulesConfig
+FieldStateConfig
+```
+
+Old source-selection vocabulary such as `OccurrenceSourceKind` is not canonical architecture vocabulary.
+
+If remnants of old source-wrapper naming remain in code, they are compatibility/migration residue and should not be used in new docs or new clean paths.
+
+Current important profiles:
+
+```text
+TonalPulse
+scalar_freq_experimental / Amp-like scalar proof path
+ChirpExperimental
+```
+
+#### TonalPulse
+
+Stable active profile.
+
+Current meaning:
+
+```text
+detect a short tonal pulse-like event
+detector = FrequencyMatchDetector
+AMP evidence is inspected as required/meaningful support
+PatternResult.valid is the behavior/analyzer gate
+```
+
+Current conceptual composition:
+
+```text
+FrequencyMatchDetector
+InspectionPlan:
+    ScalarFeatureStrength over AmpEnvelope
+    target = AmpStrength
+PatternRules:
+    support requirement configured for AmpStrength
+FieldStateConfig:
+    tuned occurrence/pattern windows
+```
+
+#### scalar_freq_experimental / Amp-like scalar proof path
+
+Experimental/proof comparison path.
+
+Current meaning:
+
+```text
+use ScalarTransientDetector over a scalar feature stream
+compare scalar-first detection against specialized FrequencyMatch behavior
+```
+
+Possible observed stream examples:
+
+```text
+AmpEnvelope
+FrequencyScore
+FrequencyContrast
+```
+
+Status:
+
+```text
+useful for comparison and proving shared detector/report contracts
+not the primary stable TonalPulse path
+```
+
+#### ChirpExperimental
+
+Selectable experimental profile.
+
+Status:
+
+```text
+developer / experimental only
+not mature pulsed chirp grouping
+not stable user-facing runtime target
+```
+
+---
+
+### 5.2 Feature Extraction / FeatureHistory
+
+Feature extraction turns raw/audio-domain data into explicit feature-domain values.
+
+Important distinction:
+
+```text
+AudioSignalFrame:
+    source-domain/raw or near-raw audio transport
+
+FeatureSample / FeatureFrame:
+    derived-domain feature transport
+```
 
 Examples:
 
 ```text
-detail.tonalPulse.*
-detail.pulsedChirp.*
-detail.chime.*
-detail.noise.*
+AmpEnvelope
+FrequencyScore
+FrequencyContrast
+FrequencyBandFrame
 ```
 
-Analyzer may format known profile detail namespaces, but it must not require a separate report type per profile.
+`FeatureHistory` stores feature values over time so inspectors, diagnostics, and field state can look backward over windows.
 
-`DetectionProfile` defines which detail kind a profile produces.
+Rule:
 
-`PatternResult`, `PatternObservation`, or `ProfileDetail` carries the runtime values observed for a specific detection.
+```text
+FeatureHistory is time-based storage, not the canonical live detector pipe.
+```
 
-Analyzer consumes the generic view first and profile detail second.
+Preferred flow:
 
-The landed analyzer detail shape is profile-neutral at the outer level:
+```text
+fresh feature value
+→ Detector update path
+→ FeatureHistory storage
+```
 
-- `FrequencyMatch` and `Scalar` share the same outer trial/report vocabulary.
-- Profile-specific evidence lives in profile-specific fields, not separate report types.
-- `SEQ_SUMMARY` aggregates result counts, reason counts, and selected-best reject context.
+not:
+
+```text
+FeatureHistory as the normal live detector input
+```
+
+Inspectors may read FeatureHistory retrospectively.
+
+Detectors should usually consume fresh feature values from the feature producer / runtime fan-out.
+
+Feature values should carry enough timestamp/freshness information for window diagnostics.
 
 ---
 
-## 14. DetectionProfile Analyzer Contract
+### 5.3 Detector Boundary
 
-`DetectionProfile` defines analyzer-facing profile identity and detail family.
+Detector is the canonical source-stage boundary.
 
-It should expose or imply:
+Detector owns:
 
 ```text
-profile kind
-pattern family
-occurrence source family
-inspection plan / module targets
-pattern rule family
-profile detail kind
-human-readable profile label
+candidate lifecycle
+open/hold/release/accept/reject logic
+accepted Occurrence construction
+accepted Occurrence polling
+selected rejected candidate summary
+DetectorReport production
+detector-specific report detail
 ```
 
-`DetectionProfile` does not store runtime analyzer evidence.
-
-Runtime evidence belongs to:
+Detector output surfaces:
 
 ```text
-OccurrenceObservation
-InspectionObservation
-PatternObservation
-ProfileDetail
-DebugSummary
+Occurrence
+DetectorReport
+RejectedCandidateSummary
+```
+
+Detector input/update internals may remain specialized.
+
+This is allowed:
+
+```text
+ScalarTransientDetector::update(scalar feature sample)
+FrequencyMatchDetector::update(frequency measurement/frame)
+```
+
+This is not required yet:
+
+```text
+forced IDetector
+type-erased feature input
+fully generic detector graph
+runtime plugin detector composition
+```
+
+Outward contract should converge on:
+
+```text
+DetectorId
+DetectorDescriptor
+Occurrence
+DetectorReport
+RejectedCandidateSummary
+DetectorRejectClass
 ```
 
 Rule:
 
 ```text
-DetectionProfile defines what kind of evidence/result this profile produces.
-PatternResult / ProfileDetail carries what this specific detection actually measured.
-Analyzer formats the generic result plus the profile detail.
+Generic outward contract.
+Specialized detector internals.
 ```
 
-Landed profile behavior in analyzer terms:
+#### ScalarTransientDetector
 
-- `TonalPulse` currently uses `FrequencyMatch` as the source path.
-- `Amp` currently uses `ScalarTransient` as the source path.
-- `SEQ_SOURCE`, `SEQ_INSPECT`, and `SEQ_PATTERN` stay separated so source, inspector, and pattern diagnosis do not mix.
-- `SEQ_SOURCE_REJECTS` reports trial-local best reject context plus aggregate reject statistics.
-- `SEQ_SOURCE_LAST_CANDIDATE` reports detector snapshot and lifecycle evidence, not trial truth.
-- `SEQ_SOURCE_DIAG` reports window-level evidence facts, including freshness and threshold-hit frames.
-- `SEQ_DUMP` remains the verbose mixed developer fallback, typically used at V2 or under `explain`.
+Canonical scalar detector core.
 
-When adding a new detection profile, also add or extend its analyzer namespace mapping so the staged output stays useful and profile-generic. Do not hardcode analyzer display labels in detectors or inspectors.
+Owns scalar candidate lifecycle and accepted scalar Occurrence emission.
+
+May observe scalar streams such as:
+
+```text
+AmpEnvelope
+FrequencyScore
+FrequencyContrast
+```
+
+Used by scalar experimental / proof profiles.
+
+#### FrequencyMatchDetector
+
+Canonical specialized frequency detector core.
+
+Owns frequency-match candidate lifecycle and accepted frequency Occurrence emission.
+
+Used by TonalPulse.
+
+FrequencyMatch remains specialized because its score/contrast/lifecycle behavior is useful and should not be forced into scalar abstraction prematurely.
 
 ---
 
-## 15. Behavior Boundary
+### 5.4 Occurrence Boundary
+
+`Occurrence` is an accepted detector event.
+
+Current allowed shape:
+
+```text
+generic accepted-event core
++ transitional typed accepted-event detail
+```
+
+Generic accepted-event core should include:
+
+```text
+detector id / provenance
+occurrence type
+start / peak / end timing
+duration
+strength
+confidence
+```
+
+Typed accepted-event detail may temporarily include scalar or frequency accepted-event facts still needed by:
+
+```text
+Inspector
+PatternMatcher internals
+PatternResult construction
+Analyzer compatibility
+```
+
+Important rule:
+
+```text
+Occurrence may carry accepted-event detail.
+Occurrence must not become a detector diagnostics dump.
+```
+
+Do not add these to Occurrence:
+
+```text
+selected rejected candidates
+threshold dumps
+detector counters
+analyzer labels
+near-miss explanations
+full feature-history windows
+debug dumps
+```
+
+Those belong to:
+
+```text
+DetectorReport
+RejectedCandidateSummary
+neutral tooling output
+```
+
+Occurrence payload trimming is deferred until after PatternMatcher / PatternResult cleanup.
+
+---
+
+### 5.5 DetectorReport / RejectedCandidateSummary Boundary
+
+`DetectorReport` is canonical detector-stage truth.
+
+It answers:
+
+```text
+Which detector was active?
+Did it emit an accepted Occurrence?
+What were accepted timing/strength/confidence facts?
+If it did not emit, what selected rejected candidate best explains the miss?
+What detector thresholds/gate facts matter for clean reporting?
+```
+
+`RejectedCandidateSummary` is canonical selected-reject truth.
+
+It may include:
+
+```text
+present flag
+DetectorRejectClass
+detector reason
+start / peak / end timing
+duration
+required min/max duration
+strength
+confidence
+score / contrast where relevant
+```
+
+DetectorReport may include typed detector detail:
+
+```text
+detail.scalar.*
+detail.frequency.*
+```
+
+Rule:
+
+```text
+DetectorReport is for detector truth.
+AnalyzerReport is for trial classification/reporting.
+PatternResult is for pattern meaning.
+Occurrence is for accepted-event transport.
+```
+
+Clean Analyzer output must read DetectorReport / RejectedCandidateSummary, not `DetectionDiagnostics`.
+
+`DetectionDiagnostics`, if still present, is compatibility-only.
+
+---
+
+### 5.6 Inspector Boundary
+
+Inspector annotates accepted Occurrences with evidence.
+
+Current intended shape:
+
+```text
+Occurrence
++ FeatureHistory / ScalarWindow
++ InspectionPlan
+→ InspectedOccurrence
+```
+
+`OccurrenceInspector` coordinates an ordered `InspectionPlan`.
+
+Current inspection module concept:
+
+```text
+ScalarFeatureStrength
+```
+
+Current evidence targets may include:
+
+```text
+AmpStrength
+FrequencyScoreStrength
+FrequencyContrastQuality
+TargetBandStrength
+```
+
+Inspectors produce evidence.
+
+PatternMatcher / PatternRules decide whether evidence satisfies pattern support requirements.
+
+Rule:
+
+```text
+Inspectors produce support/evidence facts.
+They do not own final pattern meaning.
+```
+
+---
+
+### 5.7 PatternMatcher Boundary
+
+`PatternMatcher` is the public pattern-stage boundary.
+
+Public conceptual flow:
+
+```text
+InspectedOccurrence
+→ PatternMatcher
+→ PatternResult
+```
+
+`PatternAssembler` and `PatternRules` may still exist internally.
+
+They should be treated as implementation helpers:
+
+```text
+PatternAssembler:
+    groups/copies inspected occurrence facts into pattern candidates
+
+PatternRules:
+    interprets pattern candidates and configured support requirements
+```
+
+Current simple implementation may still be one-occurrence / single-pulse oriented.
+
+That is acceptable.
+
+Public code and docs should prefer:
+
+```text
+PatternMatcher
+PatternResult
+```
+
+over presenting `PatternAssembler` / `PatternRules` as separate public runtime stages.
+
+`PatternResult.valid` remains the primary behavior/analyzer gate until a more detailed pattern vocabulary is fully settled.
+
+PatternResult should carry pattern-level meaning, not detector diagnostics.
+
+---
+
+### 5.8 FieldState
+
+`FieldState` is acoustic context, not pattern meaning.
+
+It may track:
+
+```text
+recent occurrence count
+recent accepted occurrence count
+recent pattern count
+last occurrence ms
+last inspected occurrence ms
+last pattern ms
+quiet / active / dense
+activity / density
+noise floor or ambient measures
+```
+
+FieldState may consume:
+
+```text
+Occurrence activity
+InspectedOccurrence activity
+PatternResult activity
+FeatureStream / feature-level context where explicitly configured
+```
+
+FieldState may influence behavior.
+
+FieldState must not decide:
+
+```text
+detector acceptance
+pattern validity
+output action
+```
+
+Rule:
+
+```text
+FieldState describes acoustic context.
+PatternMatcher decides pattern meaning.
+Behavior decides reaction.
+```
+
+---
+
+### 5.9 Analyzer / Reporting Boundary
+
+Analyzer is the measurement and reporting layer over the selected DetectionProfile.
+
+Analyzer owns:
+
+```text
+trial setup
+expected windows
+trial classification
+clean stage output
+summary aggregation
+neutral tooling output
+legacy compatibility output if still present
+```
+
+Analyzer does not own:
+
+```text
+detector candidate lifecycle
+accepted occurrence emission
+inspection evidence production
+pattern matching
+field-state tracking
+behavior decisions
+output execution
+```
+
+Clean Analyzer truth:
+
+```text
+SEQ_TRIAL
+SEQ_SOURCE
+SEQ_INSPECT
+SEQ_EXPLAIN
+SEQ_SUMMARY
+```
+
+Clean source/stage facts come from:
+
+```text
+DetectorReport
+RejectedCandidateSummary
+PatternResult
+AnalyzerReport canonical classification
+expected trial/window facts
+```
+
+Clean output must not read:
+
+```text
+DetectionDiagnostics
+AnalyzerScalarDiagnostic
+AnalyzerFrequencyDiagnostic
+AnalyzerSourceStageReport
+legacy source-summary structs
+legacy near-miss text
+```
+
+#### SEQ_TRIAL
+
+Compact trial truth.
+
+Answers:
+
+```text
+Was the expected event detected?
+Was it expected / early / late / missed / duplicate / unexpected?
+What was the final trial classification?
+```
+
+#### SEQ_SOURCE
+
+Clean detector/source-stage view.
+
+Answers:
+
+```text
+Which detector was active?
+Did it emit an accepted Occurrence?
+What accepted timing/duration/strength/confidence facts exist?
+If no accepted occurrence, what selected reject explains the miss?
+What compact thresholds/gate facts matter?
+```
+
+#### SEQ_INSPECT
+
+Clean inspection-stage view.
+
+Answers:
+
+```text
+What support/evidence was found for the accepted Occurrence?
+Which evidence targets were measured?
+Did inspection facts support the later pattern decision?
+```
+
+#### SEQ_EXPLAIN
+
+Clean joined explanation view.
+
+Answers:
+
+```text
+How did detector facts, inspection evidence, pattern result, and analyzer classification combine for this trial?
+```
+
+#### SEQ_SUMMARY
+
+Clean run aggregate.
+
+Answers:
+
+```text
+How many trials completed?
+How many expected / early / late / miss / duplicate / unexpected?
+How many detector accepted / rejected?
+How many valid / rejected patterns?
+What aggregate timing/confidence values were observed?
+```
+
+#### Neutral / tooling output
+
+Neutral output may stay useful but is not clean analyzer truth:
+
+```text
+SEQ REPORT
+SEQ STATUS
+SYSTEM_HEALTH
+AUDIO summary
+OCCURRENCE summary
+AUDIO run
+SAMPLES_BEGIN / SAMPLES_END
+RAW capture
+BASE / CAP / VAL tooling
+detection parameters / runtime summaries
+```
+
+Neutral output may use runtime/system/perf/sample facts.
+
+It must not be presented as detector/pattern/analyzer truth.
+
+#### SEQ sample dump / curve tooling
+
+SEQ sample dump / curve is neutral developer tooling.
+
+It prints bounded `CurveSnapshot` rows around selected sequence trials:
+
+```text
+SAMPLES_BEGIN trial=<n> trigger_ms=<ms> sample_rate_ms=<step> fields=t,current,env,peak,open
+...
+SAMPLES_END trial=<n>
+```
+
+It is useful for rough amplitude/envelope visualization.
+
+It is not raw audio capture, not DetectorReport, and not canonical Analyzer truth.
+
+---
+
+## 6. Behavior
+
+### 6.1 Behavior Boundary
 
 Behavior consumes:
 
@@ -730,7 +928,7 @@ local timers
 current behavior state
 parameters / config
 commands / mode flags
-output status when available
+OutputStatus where available
 ```
 
 Behavior must not consume:
@@ -743,6 +941,7 @@ raw detector flags
 live FeatureStreams
 AudioSignal internals
 RawSampleHistory
+DetectionDiagnostics
 ```
 
 If detector or inspection details should affect behavior, they must first be promoted into:
@@ -753,9 +952,29 @@ FieldState
 behavior-facing status/config
 ```
 
+Rule:
+
+```text
+Behavior owns artistic and timing decisions.
+Detection owns facts.
+Output owns execution.
+```
+
+Behavior owns decisions such as:
+
+```text
+response probability
+refractory timing
+self-suppression meaning
+idle response
+response limiting
+field mood interpretation
+blocking reasons
+```
+
 ---
 
-## 16. Behavior Modulation and Intended Drift
+### 6.2 Behavior Modulation and Intended Drift
 
 Behavior programs may intentionally vary output parameters around configured centers.
 
@@ -767,6 +986,8 @@ duration shortening
 gain variation
 response probability shifts
 field-dependent response changes
+node-specific variation
+slow time drift
 ```
 
 These variations belong to behavior configuration and behavior decision logic.
@@ -775,16 +996,16 @@ They do not belong to:
 
 ```text
 Node
-OutputDispatcher
 SoundOutput hardware layer
+Detector
 DetectionProfile
 ```
 
-`SoundOutput` executes requested frequency, duration, gain, or output profile variants, but it does not decide artistic modulation.
+`SoundOutput` executes requested frequency, duration, gain, or output variants.
+
+It does not decide artistic modulation.
 
 Detection tolerance must be configured separately from emitted-output variation.
-
-If behavior emits variable frequencies or durations, the matching `DetectionProfile` / `PatternRules` must explicitly define the accepted recognition range.
 
 Example:
 
@@ -797,9 +1018,11 @@ dense field behavior:     shorten beep and increase frequency spread
 
 ---
 
-## 17. Output Boundary
+## 7. Output
 
-`SoundOutput` is a resource.
+### 7.1 Output Boundary
+
+`SoundOutput` is a resource / actuator layer.
 
 Behavior requests sound.
 
@@ -830,82 +1053,41 @@ Behavior should not care which output hardware path is active.
 
 ---
 
-## 18. Current File / Module Map
+### 7.2 OutputRequest / OutputStatus
+
+Longer-term output boundary should separate:
 
 ```text
-Feature history, streams, feature packets:
-    src/detection/features/*
+OutputRequest:
+    behavior-requested output action
 
-Occurrence emission and sources:
-    src/detection/occurrences/*
+OutputStatus:
+    busy / active / done / rejected / error status
 
-Reusable/source-specific detectors:
-    src/detection/detectors/*
-
-Inspection coordinator and evidence types:
-    src/detection/inspector/*
-
-Pattern assembly/rules/result:
-    src/detection/patterns/*
-
-Field state:
-    src/detection/field/*
-
-Detection profile composition:
-    src/detection/DetectionProfile.h
-
-Detection runtime:
-    src/detection/DetectionRuntime.*
-
-Analyzer report/output:
-    src/modes/analyzer/*
-
-Resonant node orchestration:
-    src/modes/resonant/*
+SoundOutput:
+    hardware execution
 ```
+
+Behavior may use `OutputStatus` to avoid overlapping actions or to interpret self-suppression.
+
+SoundOutput must not decide pattern meaning or artistic response policy.
 
 ---
 
-## 19. Current Cleanup Notes
+## 8. Current Roadmap Pointer
 
-The active source is more modern than older spec sections.
-
-Do not carry forward as active architecture:
+Current future items are tracked in:
 
 ```text
-FrequencyWindowProbe
-RawWindow
-OccurrenceWindowEvaluator
-AmpDiagnosticProbe
-old SignalCandidate / SignalEmitter / SignalInspector names
+docs/roadmaps/roadmap-master.md
 ```
 
-These may remain only in archive/history.
+`docs/myspec.md` should stay focused on current architecture and not carry the
+future roadmap backlog inline.
 
 ---
 
-## 20. Roadmap Boundary
-
-Keep in roadmap, not active spec:
-
-```text
-TargetBandStrength implementation
-PulseSequence / pulsed chirp grouping
-CandidateCorrelator / cross-source relation facts
-continuous tonal chirp trajectory
-glass chime / resonant decay
-woodblock / knock
-white-noise / broadband profile
-full ParamRegistry
-CommandRouter
-BehaviorRuntime
-OutputProfile / OutputDispatcher
-VEKTOR exposure
-```
-
----
-
-## 21. One-Sentence Definition
+## 9. One-Sentence Definition
 
 ```text
 ResonantNode is an autonomous VEKTOR-compatible acoustic node firmware that detects, classifies, and reacts to sound locally, while serving as the first reusable firmware architecture for future VEKTOR nodes.

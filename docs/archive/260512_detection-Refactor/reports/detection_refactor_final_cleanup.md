@@ -3,27 +3,30 @@
 ## Purpose
 
 Track the final resolved legacy deletions after the detector/report/pattern
-refactor passes.
-
-This document is incremental while Pass S is split.
+refactor passes and record what compatibility debt remains intentionally in
+place.
 
 ## Deleted Legacy Items
 
-Deleted in S1:
+Deleted in earlier passes:
 
 - `OccurrenceSourceKind`
 - `occurrenceSourceKindName(...)`
 - `DetectionRuntime::setOccurrenceSource(...)`
+- `FrequencyOccurrenceSource`
+- `ScalarOccurrenceSource`
+- the legacy SEQ source-summary/source-detail printer family removed in Pass U
+- the `fragmentedAccepted` legacy summary carryover removed in Pass U
 
 ## Legacy Items Intentionally Kept
 
 Still intentionally kept:
 
-- legacy analyzer `SEQ_*_LEG` output surfaces
 - `DetectionDiagnostics`
 - analyzer-local legacy diagnostic structs
-- legacy `Occurrence` identity/payload aliases still used by analyzer/pattern
-  compatibility code
+- compatibility-side analyzer output helpers for base/capture/value views
+- legacy `Occurrence` identity and payload compatibility fields
+- compatibility-only legacy analyzer report data used by active migration docs
 
 ## Canonical Runtime Path
 
@@ -42,24 +45,25 @@ DetectionProfile.detectorSelection
 ```text
 PatternResult + DetectorReport + expected window
 -> AnalyzerReport
--> SEQ_INSPECT / SEQ_EXPLAIN / SEQ_SUMMARY
+-> SEQ_TRIAL / SEQ_INSPECT / SEQ_EXPLAIN / SEQ_SOURCE / SEQ_SUMMARY
 ```
 
 ## Remaining Known Debt
 
-- `DetectionDiagnostics` containment is still compatibility-only, not deleted
-- analyzer legacy output structs still exist
-- `Occurrence` still carries deferred legacy identity/detail payload
-- legacy source-oriented analyzer output naming still exists on compatibility
-  paths
+- `DetectionDiagnostics` is still a compatibility-only bridge
+- analyzer legacy output structs still exist for supported compatibility views
+- some active comments still mention compatibility or legacy migration state
+- archived docs still contain historical source/routing vocabulary
+- AnalyzerBridge was introduced as a temporary measure only
 
 ## Manual / Docs Status
 
-- routing cleanup docs are updated through Pass R / S1
-- current root docs still include historical/archive material that should stay
-  archived rather than be treated as active architecture
+- `docs/current-pass.md` documents the current pass sequence and the Pass U
+  completion state
+- `docs/roadmaps/roadmap_detection.md` remains the high-level roadmap
+- historical pass documents are kept in `docs/archive/`
 
 ## Final Sanity Checks
 
-- `platformio run -e esp32dev-analyzer` passed after S1
-- no runtime hardware sanity run in this pass
+- `platformio run -e esp32dev-analyzer` passed after Pass U cleanup
+- no runtime hardware sanity run was performed in this pass

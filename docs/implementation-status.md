@@ -4,20 +4,24 @@ Status vocabulary:
 
 - stable active
 - selectable experimental
-- landed
+- planned
 - deferred
 - historical
+
+This file tracks current implementation posture and future work buckets.
+Completed pass history lives in the archive docs and cleanup notes, not in this
+status table.
 
 | Item | Status | Notes |
 |---|---|---|
 | TonalPulseProfile | stable active | Main runtime profile. |
-| ChirpExperimental | selectable experimental | Proof profile, not stable normal runtime. |
-| Detector routing rename cleanup | landed | `DetectorSelection` is now the canonical routing vocabulary. |
-| Pass S1 deletion | landed | Temporary source-routing compatibility aliases were removed. |
-| Pass U printer cleanup | landed | Legacy SEQ source-summary/source-detail printers were removed. |
-| Final cleanup docs | landed | Active final-cleanup and implementation-status docs now exist in `docs/`. |
-| DetectionDiagnostics | deferred | Still compatibility-only; not yet deleted. |
-| Analyzer legacy compatibility output | deferred | Supported compatibility views remain in Analyzer. |
-| Detection refactor final sediment pass | deferred | Remaining deletions are now mostly documentation/comment debt. |
-| BehaviorRuntime | deferred | Future behavior architecture work. |
-| OutputDispatcher | deferred | Future behavior/output separation. |
+| ChirpExperimental | selectable experimental | Proof profile; not stable normal runtime. |
+| Scalar experimental profiles | selectable experimental | `amp` and `scalar_freq_experimental` remain proof/debug paths. |
+| Detector/report consistency | planned | Investigate clean-summary acceptance mismatches without retuning thresholds. |
+| Pattern/detection expansion | planned | Future `TargetBandStrength`, pulse/chirp grouping, cross-source correlation, and added acoustic profiles. |
+| DetectionDiagnostics retirement | deferred | Still compatibility-only; delete when Analyzer no longer needs the bridge. |
+| Analyzer compatibility cleanup | deferred | Supported base/capture/value compatibility views and local legacy structs remain intentionally present. |
+| Detection refactor final sediment pass | deferred | Remaining deletions are mostly comments, migration notes, and historical vocabulary cleanup. |
+| Behavior/output boundary | deferred | `BehaviorRuntime`, `OutputProfile`, and `OutputDispatcher` remain future architecture work. |
+| Params/commands/config | deferred | `ParamRegistry`, `CommandRouter`, persistent config, remote params, and typed tuning structs are not implemented yet. |
+| VEKTOR/fleet/OTA exposure | deferred | Later integration after local module boundaries stabilize. |

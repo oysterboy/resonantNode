@@ -997,8 +997,11 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
     }
     const bool trialHasPipelineEvidence = reportPatternResult != nullptr
         && diagnostics.rawPendingCount > 0;
+    const long trialOnsetAnchorMs = _sequenceTest.currentTrialDiagnostics.emitStartSeen
+        ? static_cast<long>(_sequenceTest.currentTrialStartMs) + static_cast<long>(_sequenceTest.currentTrialDiagnostics.emitStartDtMs)
+        : static_cast<long>(_sequenceTest.currentTrialScheduledAtMs);
     const long reportPatternDtMs = reportPatternResult != nullptr
-        ? static_cast<long>(reportPatternResult->primaryStartMs) - static_cast<long>(_sequenceTest.currentTrialScheduledAtMs)
+        ? static_cast<long>(reportPatternResult->primaryStartMs) - trialOnsetAnchorMs
         : dtMs;
     const unsigned long reportPatternDurationMs = reportPatternResult != nullptr
         ? reportPatternResult->primaryDurationMs
@@ -1050,9 +1053,11 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
         report.primaryPattern = pattern;
     }
 
-    report.occurrences.total = diagnostics.rawPendingCount;
-    report.occurrences.accepted = trialHasPipelineEvidence && reportPatternResult->valid ? 1U : 0U;
-    report.occurrences.rejected = diagnostics.rawPendingCount > report.occurrences.accepted ? diagnostics.rawPendingCount - report.occurrences.accepted : 0U;
+    report.occurrences.accepted = trialHasPipelineEvidence && reportPatternResult->valid
+        ? 1U + static_cast<unsigned int>(diagnostics.duplicateCount)
+        : 0U;
+    report.occurrences.rejected = _sequenceTest.currentTrialRejected;
+    report.occurrences.total = report.occurrences.accepted + report.occurrences.rejected;
     if (trialHasPipelineEvidence && reportInspectedOccurrence != nullptr && reportInspectedOccurrence->occurrence.present) {
         const detection::Occurrence& occurrence = reportInspectedOccurrence->occurrence;
         report.occurrences.kind = occurrenceTypeName(occurrence.occurrenceType);
@@ -1063,7 +1068,7 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
         report.occurrences.startMs = occurrence.startMs;
         report.occurrences.peakMs = occurrence.peakMs;
         report.occurrences.releaseMs = occurrence.releaseMs;
-        report.occurrences.primaryDtMs = static_cast<long>(occurrence.startMs) - static_cast<long>(_sequenceTest.currentTrialScheduledAtMs);
+        report.occurrences.primaryDtMs = static_cast<long>(occurrence.startMs) - trialOnsetAnchorMs;
         report.occurrences.primaryDurationMs = occurrence.durationMs;
         report.occurrences.primaryStrength = occurrence.strength;
         report.occurrences.contrast = occurrence.occurrenceType == detection::OccurrenceType::Frequency
@@ -1096,7 +1101,7 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
 
     report.inspection.inspected = diagnostics.rawPendingCount;
     report.inspection.accepted = report.occurrences.accepted;
-    report.inspection.rejected = diagnostics.rawPendingCount > report.inspection.accepted ? diagnostics.rawPendingCount - report.inspection.accepted : 0U;
+    report.inspection.rejected = report.occurrences.rejected;
     if (trialHasPipelineEvidence && reportInspectedOccurrence != nullptr && reportInspectedOccurrence->occurrence.present) {
         report.inspection.primaryEvidence = occurrenceSourceName(reportInspectedOccurrence->occurrence.detectorId);
         switch (selectedProfile.patternMatcherConfig.requiredSupportTarget) {
@@ -1156,14 +1161,14 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
     if (report.occurrences.present &&
         reportInspectedOccurrence != nullptr &&
         reportInspectedOccurrence->occurrence.occurrenceType == detection::OccurrenceType::Frequency) {
-        report.profileDetail.freqScore = reportInspectedOccurrence->occurrence.frequency.score;
-        report.profileDetail.freqContrast = reportInspectedOccurrence->occurrence.frequency.contrast;
+        report.profileDetail.supportScore = reportInspectedOccurrence->occurrence.frequency.score;
+        report.profileDetail.supportContrast = reportInspectedOccurrence->occurrence.frequency.contrast;
     } else {
-        report.profileDetail.freqScore = 0.0f;
-        report.profileDetail.freqContrast = 0.0f;
+        report.profileDetail.supportScore = 0.0f;
+        report.profileDetail.supportContrast = 0.0f;
     }
-    report.profileDetail.freqScoreMin = selectedProfile.frequencyMatch.attackScoreMin;
-    report.profileDetail.freqContrastMin = selectedProfile.frequencyMatch.attackContrastMin;
+    report.profileDetail.supportScoreMin = selectedProfile.frequencyMatch.attackScoreMin;
+    report.profileDetail.supportContrastMin = selectedProfile.frequencyMatch.attackContrastMin;
     report.profileDetail.ampCenteredMagnitude = report.occurrences.primaryStrength;
     report.profileDetail.ampLevel = report.profileDetail.ampCenteredMagnitude;
     report.profileDetail.ampBase = diagnostics.acceptedAmbientBaseline;

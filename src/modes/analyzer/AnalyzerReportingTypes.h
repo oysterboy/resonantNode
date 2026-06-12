@@ -292,10 +292,10 @@ struct AnalyzerProfileDetail {
     size_t inspectionObservationCount = 0;
     detection::ScalarInspectionObservation inspectionObservations[detection::kMaxInspectionModules] = {};
 
-    float freqScore = 0.0f;
-    float freqContrast = 0.0f;
-    float freqScoreMin = 0.0f;
-    float freqContrastMin = 0.0f;
+    float supportScore = 0.0f;
+    float supportContrast = 0.0f;
+    float supportScoreMin = 0.0f;
+    float supportContrastMin = 0.0f;
 
     float ampCenteredMagnitude = 0.0f;
     float ampLevel = 0.0f;
@@ -339,24 +339,24 @@ struct AnalyzerCleanSummary {
 
     unsigned int trials = 0;
     unsigned int completed = 0;
-    unsigned int expected = 0;
-    unsigned int early = 0;
-    unsigned int late = 0;
-    unsigned int miss = 0;
-    unsigned int duplicate = 0;
-    unsigned int unexpected = 0;
-    unsigned int rejected = 0;
-    unsigned int ambiguous = 0;
-    unsigned int tooDense = 0;
-    unsigned int bufferOverrun = 0;
+    unsigned int expectedTrials = 0;
+    unsigned int earlyTrials = 0;
+    unsigned int lateTrials = 0;
+    unsigned int missTrials = 0;
+    unsigned int duplicateTrials = 0;
+    unsigned int unexpectedTrials = 0;
+    unsigned int rejectedTrials = 0;
+    unsigned int bufferOverrunTrials = 0;
 
-    unsigned int detectorAccepted = 0;
-    unsigned int detectorSelectedReject = 0;
-    unsigned int validPattern = 0;
-    unsigned int rejectedPattern = 0;
+    unsigned int detectorAcceptedTrials = 0;
+    unsigned int detectorSelectedRejectTrials = 0;
+    unsigned int patternValidTrials = 0;
+    unsigned int patternRejectedTrials = 0;
 
     long totalDtMs = 0;
     unsigned int dtCount = 0;
+    float totalStrength = 0.0f;
+    unsigned int strengthCount = 0;
     float totalConfidence = 0.0f;
     unsigned int confidenceCount = 0;
 };

@@ -69,9 +69,9 @@ struct FrequencyMatchConfig {
 struct ScalarTransientConfig {
     // Configuration and defaults.
     FeatureStreamId observedStream = FeatureStreamId::AmpEnvelope;
-    float onsetDetectionThreshold = 75.0f;
-    float onsetReleaseThreshold = 67.5f;
-    unsigned long cooldownAfterOnsetMs = 500;
+    float onsetDetectionThreshold = 100.0f;
+    float onsetReleaseThreshold = 50.5f;
+    unsigned long cooldownAfterOnsetMs = 50;
     unsigned long minTransientDurationMs = 0;
     unsigned long maxTransientDurationMs = 120;
     float minTransientPeakStrength = 0.0f;
@@ -109,6 +109,13 @@ inline DetectionProfile makeTonalPulseScalarProfile() {
     profile.kind = DetectionProfileKind::TonalPulseScalar;
     profile.detectorSelection = DetectorSelection::ScalarTransient;
     profile.scalarTransient.observedStream = FeatureStreamId::FrequencyScore;
+    profile.scalarTransient.onsetDetectionThreshold = 20000.0f;
+    profile.scalarTransient.onsetReleaseThreshold = 5000.0f;
+    profile.scalarTransient.cooldownAfterOnsetMs = 50;
+    profile.scalarTransient.minTransientDurationMs = 60;
+    profile.scalarTransient.maxTransientDurationMs = 300;
+    profile.scalarTransient.minTransientPeakStrength = 0.0f;
+    profile.scalarTransient.releaseDebounceMs = 30;
 
     // This profile is intentionally experimental and compares frequency-derived
     // scalar evidence through the existing scalar transient lifecycle.

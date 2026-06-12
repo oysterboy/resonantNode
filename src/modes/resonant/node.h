@@ -94,7 +94,7 @@ private:
     AudioSignal _audioSignal;
     FreqBandStream _freqBandStream;
     detection::DetectionRuntime _detection;
-    detection::DetectionProfile _activeDetectionProfile = detection::makeTonalPulseFreqProfile();
+    detection::DetectionProfile _activeDetectionProfile = detection::makeTonalPulseScalarProfile();
     ResonantBehavior _behavior;
 
     // Debug / logging support.
@@ -113,7 +113,7 @@ private:
     unsigned long _rbLastLoggedOnsetRejectCount = 0;
     unsigned long _rbLastLoggedTransientRejectCount = 0;
     RbLogMode _rbLogMode = RbLogMode::Minimal;
-    detection::DetectionProfileKind _profileKind = detection::DetectionProfileKind::TonalPulseFreq;
+    detection::DetectionProfileKind _profileKind = detection::DetectionProfileKind::TonalPulseScalar;
     bool _wasSelfChirpSuppressed = false;
     unsigned long _rbLastWouldEmitHeardMs = 0;
     ResonantBehavior::BehaviorDecision _rbLastWouldEmitDecision = ResonantBehavior::BehaviorDecision::None;

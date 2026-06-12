@@ -158,6 +158,7 @@ void AnalyzerApp::startSequenceTest(const PendingSequenceStart& pending) {
     _sequenceTest.currentTrialPatternDetectedMs = 0;
     _sequenceTest.primaryValidPatternCaptured = false;
     _sequenceTest.primaryValidPattern = {};
+    _sequenceTest.primaryValidInspectedOccurrence = {};
     _sequenceTest.primaryValidPatternDtMs = -1;
     _sequenceTest.rejectedInWindowCount = 0;
     _sequenceTest.bestRejectedPatternCaptured = false;
@@ -266,13 +267,13 @@ void AnalyzerApp::startSequenceTest(const PendingSequenceStart& pending) {
         Serial.print(selectedProfile.frequencyMatch.releaseDebounceMs);
         Serial.print(" freq_cooldown_ms=");
         Serial.print(selectedProfile.frequencyMatch.cooldownAfterReleaseMs);
-        Serial.print(" freq_attack_score_min=");
+        Serial.print(" support_attack_score_min=");
         Serial.print(selectedProfile.frequencyMatch.attackScoreMin, 1);
-        Serial.print(" freq_release_score_min=");
+        Serial.print(" support_release_score_min=");
         Serial.print(selectedProfile.frequencyMatch.releaseScoreMin, 1);
-        Serial.print(" freq_attack_contrast_min=");
+        Serial.print(" support_attack_contrast_min=");
         Serial.print(selectedProfile.frequencyMatch.attackContrastMin, 1);
-        Serial.print(" freq_release_contrast_min=");
+        Serial.print(" support_release_contrast_min=");
         Serial.print(selectedProfile.frequencyMatch.releaseContrastMin, 1);
         Serial.print(" mode=");
         Serial.print(_sequenceTest.externalEmitter ? "OBS" : "SEQ");
@@ -343,6 +344,7 @@ void AnalyzerApp::updateSequenceTest(unsigned long now) {
     _sequenceTest.currentTrialPatternDetectedMs = 0;
     _sequenceTest.primaryValidPatternCaptured = false;
     _sequenceTest.primaryValidPattern = {};
+    _sequenceTest.primaryValidInspectedOccurrence = {};
     _sequenceTest.primaryValidPatternDtMs = -1;
     _sequenceTest.rejectedInWindowCount = 0;
     _sequenceTest.bestRejectedPatternCaptured = false;
@@ -427,6 +429,9 @@ void AnalyzerApp::finalizeSequenceTrial(unsigned long now) {
     const bool hitTrial = _sequenceTest.primaryValidPatternCaptured;
     const bool rejectedTrial = _sequenceTest.rejectedInWindowCount > 0;
     const bool unexpectedTrial = _sequenceTest.currentTrialUnexpected > 0;
+    const long trialOnsetAnchorMs = _sequenceTest.currentTrialDiagnostics.emitStartSeen
+        ? static_cast<long>(_sequenceTest.currentTrialStartMs) + static_cast<long>(_sequenceTest.currentTrialDiagnostics.emitStartDtMs)
+        : static_cast<long>(_sequenceTest.currentTrialScheduledAtMs);
 
     AnalyzerResult result = AnalyzerResult::Miss;
     long dtMs = -1;
@@ -435,7 +440,8 @@ void AnalyzerApp::finalizeSequenceTrial(unsigned long now) {
 
     if (hitTrial) {
         _sequenceTest.hits++;
-        dtMs = _sequenceTest.primaryValidPatternDtMs;
+        dtMs = static_cast<long>(_sequenceTest.primaryValidPattern.primaryStartMs) - trialOnsetAnchorMs;
+        _sequenceTest.primaryValidPatternDtMs = dtMs;
         durMs = static_cast<long>(_sequenceTest.primaryValidPattern.primaryDurationMs);
         strength = _sequenceTest.primaryValidPattern.primaryStrength;
         if (dtMs >= kLateOnsetMinMs) {
@@ -515,59 +521,59 @@ void AnalyzerApp::updateCleanSequenceSummary(const AnalyzerReport& report) {
 
     switch (report.classification.result) {
         case AnalyzerResult::Expected:
-            ++summary.expected;
+            ++summary.expectedTrials;
             break;
         case AnalyzerResult::Early:
-            ++summary.early;
+            ++summary.earlyTrials;
             break;
         case AnalyzerResult::Late:
-            ++summary.late;
+            ++summary.lateTrials;
             break;
         case AnalyzerResult::Miss:
-            ++summary.miss;
-            break;
-        case AnalyzerResult::Duplicate:
-            ++summary.duplicate;
+            ++summary.missTrials;
             break;
         case AnalyzerResult::Unexpected:
-            ++summary.unexpected;
+            ++summary.unexpectedTrials;
             break;
         case AnalyzerResult::Rejected:
-            ++summary.rejected;
-            break;
-        case AnalyzerResult::Ambiguous:
-            ++summary.ambiguous;
-            break;
-        case AnalyzerResult::TooDense:
-            ++summary.tooDense;
+            ++summary.rejectedTrials;
             break;
         case AnalyzerResult::Unknown:
         default:
             break;
     }
 
+    if (report.debug.duplicates > 0) {
+        ++summary.duplicateTrials;
+    }
+
     if (report.debug.bufferOverrun) {
-        ++summary.bufferOverrun;
+        ++summary.bufferOverrunTrials;
     }
 
     if (report.detectorReport != nullptr) {
         if (report.detectorReport->accepted.present) {
-            ++summary.detectorAccepted;
+            ++summary.detectorAcceptedTrials;
         }
         if (report.detectorReport->selectedReject.present) {
-            ++summary.detectorSelectedReject;
+            ++summary.detectorSelectedRejectTrials;
         }
     }
 
     if (report.primaryPattern.accepted) {
-        ++summary.validPattern;
+        ++summary.patternValidTrials;
     } else if (report.primaryPattern.patternAccepted || report.classification.result == AnalyzerResult::Rejected) {
-        ++summary.rejectedPattern;
+        ++summary.patternRejectedTrials;
     }
 
     if (report.classification.dtMs >= 0) {
         summary.totalDtMs += report.classification.dtMs;
         ++summary.dtCount;
+    }
+
+    if (report.occurrences.primaryStrength > 0.0f) {
+        summary.totalStrength += report.occurrences.primaryStrength;
+        ++summary.strengthCount;
     }
 
     if (report.primaryPattern.confidence > 0.0f) {

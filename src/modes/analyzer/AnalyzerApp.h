@@ -56,7 +56,7 @@ public:
         SeqOutputWhen when = SeqOutputWhen::Miss;
         uint8_t verbosity = 0;
         unsigned long totalTrials = 100;
-        detection::DetectionProfileKind profileKind = detection::DetectionProfileKind::TonalPulseFreq;
+        detection::DetectionProfileKind profileKind = detection::DetectionProfileKind::TonalPulseScalar;
         bool diagnosticsEnabled = true;
         bool frequencyBandEnabled = true;
         unsigned long frequencyUpdateEverySamples = 4;
@@ -251,7 +251,7 @@ private:
         SequenceDiagMode diagMode = SequenceDiagMode::Off;
         SeqOutputConfig outputConfig = {};
         bool externalEmitter = false;
-        detection::DetectionProfileKind profileKind = detection::DetectionProfileKind::TonalPulseFreq;
+        detection::DetectionProfileKind profileKind = detection::DetectionProfileKind::TonalPulseScalar;
         bool progressLineStarted = false;
         unsigned long totalTrials = 100;
         unsigned long periodMs = 2500;
@@ -365,7 +365,7 @@ private:
         unsigned long sampleDumpStepMs = 0;
         unsigned long sampleDumpMaxRows = 0;
         unsigned long startupDelayMs = 1000;
-        detection::DetectionProfileKind profileKind = detection::DetectionProfileKind::TonalPulseFreq;
+        detection::DetectionProfileKind profileKind = detection::DetectionProfileKind::TonalPulseScalar;
         bool externalEmitter = false;
         char setupLabelStorage[96] = {};
     };

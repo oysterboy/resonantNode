@@ -55,16 +55,6 @@ Do not retune thresholds as part of this pass.
 Keep the remaining cleanup separate from legacy-printer work.
 ```
 
-### DET-002 - behavior / output boundary clarification
-
-Status: DEFERRED
-
-```text
-Keep behavior focused on reaction policy.
-Keep output execution separate.
-Add a dispatcher only if it becomes clearly necessary.
-```
-
 ### DET-003 - inspection target / payload split
 
 Status: TODO

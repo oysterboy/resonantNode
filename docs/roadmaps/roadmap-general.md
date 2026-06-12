@@ -27,7 +27,6 @@ roadmap text that belongs in the domain-specific files.
 [NEXT] BEH-001 Keep behavior status and hardcoded defaults visible.
 [NEXT] OUT-001 Keep the current output path visible and minimal.
 [NEXT] PAR-001 Keep hardcoded config values visible in status.
-[NEXT] VEK-001 Keep VEKTOR exposure deferred until local boundaries settle.
 ```
 
 ## Notes

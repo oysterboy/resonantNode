@@ -1,107 +1,158 @@
-# Detection Refactor Roadmap
+# Roadmap - Detection and Analyzer
 
-Status: future items only
-Scope: ResonantNode / Resonanzraum Detection Refactor
-Purpose: track detection-specific future work as a slice of
-[docs/roadmaps/roadmap-master.md](/c:/Users/malte/Documents/PlatformIO/Projects/ESP32_learn01/docs/roadmaps/roadmap-master.md).
-
-This file only lists unresolved detection follow-up work. Landed architecture
-notes live in the archive snapshot.
+Status: active roadmap.
+Scope: detection pipeline cleanup and analyzer follow-up work.
+Purpose: keep detection and analyzer work together where the same runtime
+facts are shared.
 
 ---
 
-## Phase 3 - Remaining Implementation
-
-### 3.1 Detector / report consistency
-
-Status: open
-
-Follow-up bug work, not a structural refactor:
-
-- investigate why some clean summaries can still report detector acceptance
-  inconsistently
-- keep this separate from legacy-printer cleanup
-- do not retune thresholds as part of this pass
-
-### 3.2 Behavior / output boundary
-
-Status: deferred
-
-Future work may still be needed to make the behavior/output seam clearer:
-
-- keep behavior focused on reaction policy
-- keep output execution separate
-- add a dispatcher only if it becomes clearly necessary
-
-### 3.3 PatternMatcher multi-occurrence proposals
-
-Status: planned
-
-Future pattern matching should support patterns made from groups of
-occurrences, not only one occurrence at a time:
-
-- keep occurrence grouping and competing hypotheses private to `PatternMatcher`
-- allow multiple proposed occurrence groups to be evaluated concurrently
-- select the best matched pattern when more than one proposal fits
-- keep `PatternResult` compact and behavior-facing
-- expose only compact explanation facts through `PatternMatcherReport`
-- do not reintroduce public `PatternCandidate`, `PatternAssembler`, or
-  `PatternRules` boundaries
-
-### 3.4 Inspection target / payload split
-
-Status: planned
-
-Do now:
-
-- keep one simple selector for "what must be inspected for acceptance"
-- keep source-specific payload fields inside the module config / payload type
-- do not split the current path unless a second payload shape is actually needed
-
-Roadmap later:
-
-- split the acceptance target from the payload kind if modules start producing
-  materially different payload shapes
-- keep the target selector compact and acceptance-focused
-- model payload typing separately only when it becomes necessary
-- accept multiple required support modules for acceptance when the matcher
-  needs more than one gate
-
-### 3.5 Field state for detection and reporting
-
-Status: planned
-
-Track actual use of field state for detection and reporting.
-
-### 3.6 Detector reason-model parity
-
-Status: planned
-
-Make frequency detector internal reason handling as explicit and typed as scalar
-reject handling, or clearly keep the asymmetry documented if string-based
-reasoning remains intentional.
-
----
-
-## Phase 4 - Legacy Removal
-
-Status: deferred; see [docs/archive/260512_detection-Refactor/reports/detection_refactor_final_cleanup.md](/c:/Users/malte/Documents/PlatformIO/Projects/ESP32_learn01/docs/archive/260512_detection-Refactor/reports/detection_refactor_final_cleanup.md) for the current remaining debt.
-
-Remaining cleanup targets:
-
-- retire `DetectionDiagnostics` when the compatibility bridge is no longer needed
-- retire analyzer legacy compatibility structs only after their supported views
-  are no longer required
-- remove stale bridge comments and migration notes that no longer describe
-  live code
-- keep archive material historical instead of duplicating it in the active
-  roadmap
-
-Final success condition:
+## Status legend
 
 ```text
-No legacy output is treated as canonical.
-No old source/report naming remains as architecture vocabulary.
-No detector internals leak into PatternResult, AnalyzerReport, or Behavior.
-Detection behavior remains explainable through compact runtime contracts and scoped reports.
+[LANDED]    Verified in current code.
+[PARTIAL]   Present, but not yet in the intended final shape.
+[TODO]      Next implementation step.
+[DEFERRED]  Intentionally later.
+[REMOVED]   No longer part of the active plan.
+```
+
+## Architecture goal
+
+```text
+Detection produces facts.
+Analyzer reports and classifies trials.
+PatternMatcher decides pattern meaning.
+Behavior consumes PatternResult and FieldState.
+Clean analyzer output should read canonical runtime contracts only.
+```
+
+## Source-verified current status
+
+```text
+[LANDED] DetectionRuntime exists.
+[LANDED] DetectorReport exists.
+[LANDED] RejectedCandidateSummary exists.
+[LANDED] PatternMatcher exists.
+[LANDED] PatternMatcherReport exists.
+[LANDED] OccurrenceInspector exists.
+[LANDED] FieldStateTracker exists.
+[LANDED] Clean analyzer outputs exist: SEQ_TRIAL, SEQ_SOURCE, SEQ_INSPECT, SEQ_EXPLAIN, SEQ_SUMMARY.
+[PARTIAL] DetectionDiagnostics and analyzer legacy compatibility remain as compatibility residue.
+[PARTIAL] PatternMatcher currently stays single-proposal oriented.
+[PARTIAL] Frequency reason handling is still string-backed internally.
+```
+
+## Implementation order
+
+### DET-001 - detector / report consistency
+
+Status: TODO
+
+```text
+Keep detector and clean-summary truth aligned.
+Do not retune thresholds as part of this pass.
+Keep the remaining cleanup separate from legacy-printer work.
+```
+
+### DET-002 - behavior / output boundary clarification
+
+Status: DEFERRED
+
+```text
+Keep behavior focused on reaction policy.
+Keep output execution separate.
+Add a dispatcher only if it becomes clearly necessary.
+```
+
+### DET-003 - inspection target / payload split
+
+Status: TODO
+
+```text
+Keep one simple selector for what must be inspected for acceptance.
+Keep source-specific payload fields inside the module config or payload type.
+Do not split the current path unless a second payload shape is actually needed.
+```
+
+### DET-004 - field state for detection and reporting
+
+Status: TODO
+
+```text
+Track actual use of field state for detection and reporting.
+Keep the field-state view separate from detector truth.
+```
+
+### DET-005 - detector reason-model parity
+
+Status: TODO
+
+```text
+Make frequency detector internal reason handling as explicit and typed as the
+scalar reject handling, or document the asymmetry if string-based reasoning is
+still intentional.
+```
+
+### ANA-001 - analyzer stage vocabulary cleanup
+
+Status: TODO
+
+```text
+Keep clean SEQ_TRIAL / SEQ_SOURCE / SEQ_INSPECT / SEQ_EXPLAIN / SEQ_SUMMARY
+on canonical detector-report and inspected-occurrence facts.
+Do not rebuild detector truth in AnalyzerRuntime.
+Keep the analyzer display layer on canonical report fields.
+```
+
+### ANA-002 - multi-occurrence pattern proposals
+
+Status: DEFERRED
+
+```text
+Allow patterns made from groups of occurrences, not only one occurrence at a
+time.
+Keep competing hypotheses private to PatternMatcher.
+Keep PatternResult compact and behavior-facing.
+Expose only compact explanation facts through PatternMatcherReport.
+```
+
+### ANA-003 - legacy removal and compatibility cleanup
+
+Status: DEFERRED
+
+```text
+Retire DetectionDiagnostics when the compatibility bridge is no longer needed.
+Retire analyzer legacy compatibility structs only after their supported views
+are no longer required.
+Remove stale bridge comments and migration notes that no longer describe live
+code.
+```
+
+## Current / first cleanup pass
+
+```text
+Keep the clean analyzer outputs on canonical runtime facts.
+Keep legacy or compatibility details fenced away from the clean path.
+Keep the remaining work in the detection / analyzer layer before broader
+behavior or output changes.
+```
+
+## Spec candidates
+
+```text
+DetectorReport is the detector-stage truth.
+PatternMatcher is the public pattern-stage boundary.
+AnalyzerReport stays on canonical trial classification plus scoped details.
+Clean analyzer output should not read retired legacy diagnostics.
+```
+
+## Non-goals now
+
+```text
+Threshold retuning.
+Behavior rewrite.
+Output rewrite.
+New command system.
+Pattern helper types as public architecture boundaries.
 ```

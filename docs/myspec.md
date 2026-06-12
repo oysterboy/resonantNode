@@ -92,6 +92,17 @@ DetectionRuntime coordinates.
 It must not reconstruct detector truth.
 ```
 
+Current landed state:
+
+```text
+DetectorReport is the active detector-stage report contract.
+PatternMatcher is the public pattern-stage boundary.
+Analyzer already prints clean SEQ_TRIAL / SEQ_SOURCE / SEQ_INSPECT /
+SEQ_EXPLAIN / SEQ_SUMMARY output.
+ResonantBehavior consumes PatternResult and FieldState.
+ChirpOutput remains the current output path.
+```
+
 ---
 
 ## 3. Top-Level Runtime Chain
@@ -285,7 +296,7 @@ DetectionProfile
 DetectorId
 DetectorSelection
 InspectionPlan
-PatternRulesConfig
+PatternMatcherConfig
 FieldStateConfig
 ```
 
@@ -321,7 +332,7 @@ FrequencyMatchDetector
 InspectionPlan:
     ScalarFeatureStrength over AmpEnvelope
     target = AmpStrength
-PatternRules:
+PatternMatcherConfig:
     support requirement configured for AmpStrength
 FieldStateConfig:
     tuned occurrence/pattern windows
@@ -654,7 +665,7 @@ TargetBandStrength
 
 Inspectors produce evidence.
 
-PatternMatcher / PatternRules decide whether evidence satisfies pattern support requirements.
+PatternMatcher decides whether evidence satisfies pattern support requirements.
 
 Rule:
 
@@ -677,20 +688,10 @@ InspectedOccurrence
 → PatternResult
 ```
 
-`PatternAssembler` and `PatternRules` may still exist internally.
+Any internal assembly or rule helpers are implementation details, not public
+architecture boundaries.
 
-They should be treated as implementation helpers:
-
-```text
-PatternAssembler:
-    groups/copies inspected occurrence facts into pattern candidates
-
-PatternRules:
-    interprets pattern candidates and configured support requirements
-```
-
-Current simple implementation may still be one-occurrence / single-pulse oriented.
-
+Current simple implementation is still one-occurrence / single-pulse oriented.
 That is acceptable.
 
 Public code and docs should prefer:
@@ -700,7 +701,7 @@ PatternMatcher
 PatternResult
 ```
 
-over presenting `PatternAssembler` / `PatternRules` as separate public runtime stages.
+over presenting additional pattern helper types as separate public runtime stages.
 
 `PatternResult.valid` remains the primary behavior/analyzer gate until a more detailed pattern vocabulary is fully settled.
 
@@ -1080,6 +1081,7 @@ Current future items are tracked in:
 
 ```text
 docs/roadmaps/roadmap-master.md
+docs/archive/roadmaps/roadmap-changelog.md
 ```
 
 `docs/myspec.md` should stay focused on current architecture and not carry the

@@ -14,6 +14,11 @@ status table.
 
 | Item | Status | Notes |
 |---|---|---|
+| Clean analyzer reporting | stable active | `SEQ_TRIAL`, `SEQ_SOURCE`, `SEQ_INSPECT`, `SEQ_EXPLAIN`, and `SEQ_SUMMARY` read canonical report data. |
+| DetectorReport / RejectedCandidateSummary | stable active | Detector-stage truth lives in detector-owned report contracts. |
+| PatternMatcher public boundary | stable active | `PatternMatcher` is the public pattern-stage boundary. |
+| Behavior / output current path | stable active | `ResonantBehavior` consumes `PatternResult` and `FieldState`; `ChirpOutput` remains the current output path. |
+| Hardcoded config baseline | stable active | `DetectionProfile` and `BehaviorGateConfig` defaults are present and visible. |
 | TonalPulseProfile | stable active | Main runtime profile. |
 | ChirpExperimental | selectable experimental | Proof profile; not stable normal runtime. |
 | Scalar experimental profiles | selectable experimental | `amp` and `scalar_freq_experimental` remain proof/debug paths. |

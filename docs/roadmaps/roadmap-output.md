@@ -1,17 +1,21 @@
-# Roadmap — Output
+# Roadmap - Output
 
-Status: future-supporting roadmap. Scope: SoundOutput / ChirpOutput boundary, later OutputStatus and OutputProfile.
+Status: future-supporting roadmap.
+Scope: SoundOutput / ChirpOutput boundary, later OutputStatus and OutputProfile.
+Purpose: keep the current output path understandable while the behavior/output
+split stays simple.
+
+---
 
 ## Status legend
 
 ```text
-[LANDED]    Verified in current src.zip.
-[PARTIAL]   Partly present in source, but not yet the intended final shape.
-[TODO]      Next or later implementation work.
-[DEFERRED]  Intentionally later / not for the current test slice.
-[REMOVED]   Confirmed absent from current source or intentionally removed.
+[LANDED]    Verified in current code.
+[PARTIAL]   Present, but not yet in the intended final shape.
+[TODO]      Next implementation step.
+[DEFERRED]  Intentionally later.
+[REMOVED]   No longer part of the active plan.
 ```
-
 
 ## Architecture goal
 
@@ -22,14 +26,12 @@ OutputStatus reports availability.
 OutputProfile later defines available emitted sound shapes.
 ```
 
-Detection should not trigger output directly. Behavior decides modulation / drift. Output executes.
-
 ## Source-verified current status
 
 ```text
 [LANDED] ChirpOutput exists.
 [LANDED] HAL tone output classes exist.
-[LANDED] Node starts/updates ChirpOutput from ResonantBehavior.
+[LANDED] Node starts and updates ChirpOutput from ResonantBehavior.
 [PARTIAL] Behavior has outputBusy state, but no stable OutputStatus object.
 [TODO] OutputStatus is not landed.
 [TODO] OutputRequest is not landed.
@@ -39,40 +41,49 @@ Detection should not trigger output directly. Behavior decides modulation / drif
 
 ## Implementation order
 
-### O1 — first cleanup pass: name current output path
+### OUT-001 - name the current output path
+
+Status: TODO
 
 ```text
-[TODO] Document current output path as current ChirpOutput path.
-[TODO] Keep output generation unchanged for 5-node tests.
-[TODO] Expose busy / last-start / last-finished only if already cheap.
-[TODO] Ensure behavior remains owner of response decision.
+Document the current output path as the ChirpOutput path.
+Keep output generation unchanged for 5-node tests.
+Expose busy / last-start / last-finished only if already cheap.
+Keep behavior as the owner of the response decision.
 ```
 
-### O2 — minimal OutputStatus
+### OUT-002 - minimal OutputStatus
+
+Status: DEFERRED
 
 ```text
-[DEFERRED] Add OutputStatus only when behavior/status needs it.
+Add OutputStatus only when behavior/status needs it.
 Fields may include busy, lastStartMs, lastDoneMs, currentPattern.
 ```
 
-### O3 — OutputRequest
+### OUT-003 - OutputRequest
+
+Status: DEFERRED
 
 ```text
-[DEFERRED] Behavior emits OutputRequest / BehaviorAction.
-[DEFERRED] Output executes request and validates physical limits.
+Behavior emits OutputRequest / BehaviorAction.
+Output executes request and validates physical limits.
 ```
 
-### O4 — OutputProfile
+### OUT-004 - OutputProfile
+
+Status: DEFERRED
 
 ```text
-[DEFERRED] Add OutputProfile / ChirpProfile only after behavior variations prove needed.
-[DEFERRED] Connect later to ResonantProgram.
+Add OutputProfile / ChirpProfile only after behavior variations prove needed.
+Connect later to ResonantProgram.
 ```
 
 ## Current / first cleanup pass
 
 ```text
-No output refactor before the 5-node TonalPulse tests unless status visibility is needed.
+No output refactor before the 5-node TonalPulse tests unless status visibility
+is needed.
 ```
 
 ## Spec candidates

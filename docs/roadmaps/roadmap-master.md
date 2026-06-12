@@ -1,68 +1,24 @@
 # Roadmap Master
 
-Status: future roadmap index
-Scope: ResonantNode / Resonanzraum
-Purpose: centralize future work that should no longer live inline in
-`docs/myspec.md`.
+Status: future roadmap index.
+Scope: ResonantNode / Resonanzraum.
+Purpose: point at the active roadmap files without repeating their detail.
 
 ---
 
-## Detection / Analyzer Follow-Up
+## Active roadmaps
 
-Primary detection backlog:
-
-- detector / report consistency bug work
-- behavior / output boundary clarification
-- legacy removal and compatibility cleanup
-
-See:
-
+- [docs/roadmaps/roadmap-general.md](/c:/Users/malte/Documents/PlatformIO/Projects/ESP32_learn01/docs/roadmaps/roadmap-general.md)
 - [docs/roadmaps/roadmap_detection.md](/c:/Users/malte/Documents/PlatformIO/Projects/ESP32_learn01/docs/roadmaps/roadmap_detection.md)
-- [docs/archive/260512_detection-Refactor/reports/detection_refactor_final_cleanup.md](/c:/Users/malte/Documents/PlatformIO/Projects/ESP32_learn01/docs/archive/260512_detection-Refactor/reports/detection_refactor_final_cleanup.md)
+- [docs/roadmaps/roadmap-node.md](/c:/Users/malte/Documents/PlatformIO/Projects/ESP32_learn01/docs/roadmaps/roadmap-node.md)
+- [docs/roadmaps/roadmap-behavior.md](/c:/Users/malte/Documents/PlatformIO/Projects/ESP32_learn01/docs/roadmaps/roadmap-behavior.md)
+- [docs/roadmaps/roadmap-output.md](/c:/Users/malte/Documents/PlatformIO/Projects/ESP32_learn01/docs/roadmaps/roadmap-output.md)
+- [docs/roadmaps/roadmap-param-config.md](/c:/Users/malte/Documents/PlatformIO/Projects/ESP32_learn01/docs/roadmaps/roadmap-param-config.md)
+- [docs/roadmaps/roadmap-vektor-later.md](/c:/Users/malte/Documents/PlatformIO/Projects/ESP32_learn01/docs/roadmaps/roadmap-vektor-later.md)
 
----
+## Archive boundary
 
-## Pattern / Detection Expansion
-
-Future detector and pattern work:
-
-- `PatternMatcher` multi-occurrence and competing-proposal matching
-- `TargetBandStrength` full implementation
-- `PulseSequence` / pulsed chirp grouping
-- `CandidateCorrelator` / cross-source relation facts
-- continuous tonal chirp trajectory
-- glass chime / resonant decay
-- woodblock / knock
-- white-noise / broadband profile
-
----
-
-## Params / Commands / Config
-
-Future control-surface and tuning work:
-
-- full `ParamRegistry`
-- `CommandRouter`
-- remote param update
-- persistent config / params
-- typed tuning structs for modules
-
----
-
-## Behavior / Output
-
-Future reaction and actuation work:
-
-- `BehaviorRuntime` extraction
-- `OutputProfile` / `OutputDispatcher`
-- fleet / OTA / VEKTOR exposure
-
----
-
-## Archive Boundary
-
-Already-landed architecture notes live in:
-
+- [docs/archive/roadmaps/roadmap-changelog.md](/c:/Users/malte/Documents/PlatformIO/Projects/ESP32_learn01/docs/archive/roadmaps/roadmap-changelog.md)
 - [docs/archive/260512_detection-Refactor/detection_roadmap.md](/c:/Users/malte/Documents/PlatformIO/Projects/ESP32_learn01/docs/archive/260512_detection-Refactor/detection_roadmap.md)
 
 The active spec should stay focused on current architecture, not roadmap

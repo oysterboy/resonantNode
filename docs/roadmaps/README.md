@@ -1,44 +1,38 @@
-# ResonantNode Roadmaps — Normalized Package
+# Roadmaps
 
-Status: generated from the uploaded roadmap files and verified against the uploaded `src.zip`.
-
-Purpose: keep all roadmaps in the same shape so `myspec.md` can later be updated from source reality plus roadmap intent.
-
-`myspec.md` is not regenerated here.
+Status: roadmap guide.
+Scope: active roadmap files.
+Purpose: keep the active roadmaps in one style and explain how to move landed
+items into the archive changelog.
 
 ---
 
-## Status legend
+## Roadmap files
 
 ```text
-[LANDED]    Verified in current src.zip.
-[PARTIAL]   Partly present in source, but not yet the intended final shape.
-[TODO]      Next or later implementation work.
-[DEFERRED]  Intentionally later / not for the current test slice.
-[REMOVED]   Confirmed absent from current source or intentionally removed.
-```
+roadmap-general.md
+    Short next-step index only.
 
+roadmap_detection.md
+    Detection and analyzer follow-up work.
 
-## Roadmap file roles
-
-```text
-roadmap-general-node.md
-    Cross-roadmap sequencing and shared infrastructure.
-
-roadmap-detection.md
-    Detection pipeline cleanup and future detection features.
+roadmap-node.md
+    Cross-roadmap node infrastructure details.
 
 roadmap-behavior.md
-    Behavior boundary and future BehaviorProgram architecture.
+    Behavior boundary and future behavior architecture.
 
 roadmap-output.md
     SoundOutput / OutputStatus / OutputProfile boundary.
 
 roadmap-param-config.md
-    Param/config workflow and future persistence/fleet config.
+    Param/config workflow and future persistence / fleet config.
 
 roadmap-vektor-later.md
     Later VEKTOR exposure after local boundaries stabilize.
+
+roadmap-master.md
+    Pointer to the active roadmap set.
 
 current-pass.md
     The next implementation pass only.
@@ -46,44 +40,38 @@ current-pass.md
 
 ## Shared shape
 
-Every roadmap uses:
+Keep the active roadmaps in this shape:
 
 ```text
+Status
+Scope
+Purpose
+Status legend
 Architecture goal
 Source-verified current status
 Implementation order
 Current / first cleanup pass
-Later
-Non-goals
 Spec candidates
+Non-goals
 ```
 
-## Current cross-roadmap priority
+## Procedure
 
 ```text
-1. Detection: land remaining architecture cleanup around InspectionPlan and names.
-2. General Node: status baseline for 5-node TonalPulse tests.
-3. Param/config: keep hardcoded workflow; make key values visible.
-4. Behavior: simple explicit behavior variations only if needed for tests.
-5. Output: keep current output path; expose minimal status only if needed.
-6. VEKTOR: no implementation yet.
+Use short project-wide IDs in the active roadmaps.
+Keep roadmap-general.md lean and future-focused.
+Put the detailed steps in the domain roadmap for that area.
+Move fully landed items to docs/archive/roadmaps/roadmap-changelog.md.
+Keep myspec.md and implementation status aligned with the current code.
 ```
 
-## Source verification summary
-
-Verified in uploaded `src.zip`:
+## ID prefixes
 
 ```text
-DetectionRuntime exists.
-DetectionProfile exists.
-StrengthClass exists.
-AmpStrengthEvidence exists.
-FrequencyBandMeasurementPacket exists.
-ScalarTransientDetector and ScalarOccurrenceSource exist.
-AmpOccurrenceSource uses ScalarOccurrenceSource over frame.level.
-FrequencyOccurrenceSource remains specialized and uses FrequencyMatchDetector.
-FeatureHistory and ScalarWindow exist.
-OccurrenceInspector exists, but is not yet InspectionPlan-based.
-PatternSupportSource exists, but still uses BroadAmp / TargetBand naming.
-ParamRegistry, ConfigStore, CommandRouter, BehaviorHost, OutputStatus, OutputProfile, ResonantProgram, and VEKTOR exposure are not landed.
+NODE  cross-roadmap node infrastructure
+DET   detection and analyzer
+BEH   behavior
+OUT   output
+PAR   params / config
+VEK   VEKTOR later
 ```

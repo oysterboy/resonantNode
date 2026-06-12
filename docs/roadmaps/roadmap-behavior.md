@@ -1,22 +1,27 @@
-# Roadmap — Behavior
+# Roadmap - Behavior
 
-Status: active roadmap. Scope: current behavior visibility and future behavior architecture.
+Status: active roadmap.
+Scope: current behavior visibility and future behavior architecture.
+Purpose: keep the behavior boundary clear while the current behavior stays
+easy to inspect in 5-node tests.
+
+---
 
 ## Status legend
 
 ```text
-[LANDED]    Verified in current src.zip.
-[PARTIAL]   Partly present in source, but not yet the intended final shape.
-[TODO]      Next or later implementation work.
-[DEFERRED]  Intentionally later / not for the current test slice.
-[REMOVED]   Confirmed absent from current source or intentionally removed.
+[LANDED]    Verified in current code.
+[PARTIAL]   Present, but not yet in the intended final shape.
+[TODO]      Next implementation step.
+[DEFERRED]  Intentionally later.
+[REMOVED]   No longer part of the active plan.
 ```
-
 
 ## Architecture goal
 
 ```text
-Behavior consumes PatternResult + FieldState + timers/state + params/commands + later OutputStatus.
+Behavior consumes PatternResult + FieldState + timers/state + params/commands
+and later OutputStatus.
 Behavior decides reaction.
 SoundOutput / ChirpOutput performs output.
 Behavior does not inspect detector internals.
@@ -27,54 +32,61 @@ Behavior does not inspect detector internals.
 ```text
 [LANDED] ResonantBehavior exists.
 [LANDED] BehaviorGateConfig exists.
-[LANDED] Behavior has decisions/block reasons/counters.
 [LANDED] Behavior consumes PatternResult and FieldState.
-[PARTIAL] Behavior requests chirp via current ChirpOutput path, not an OutputRequest object.
-[PARTIAL] RB BEHAV serial command exists as ad-hoc runtime tuning, not ParamRegistry.
+[LANDED] Behavior has decision and block-reason state.
+[PARTIAL] Behavior requests chirp via the current ChirpOutput path.
+[PARTIAL] RB BEHAV is runtime tuning, not durable ParamRegistry state.
 [TODO] BehaviorHost is not landed.
-[TODO] BehaviorProgram is not landed.
+[TODO] BehaviorInput is not landed.
 [TODO] BehaviorRuntime is not landed.
-[TODO] BehaviorInput object is not landed.
+[TODO] BehaviorProgram is not landed.
 [TODO] OutputStatus integration is not landed.
 ```
 
 ## Implementation order
 
-### B1 — first cleanup pass: behavior status + naming
+### BEH-001 - status and naming visibility
+
+Status: TODO
 
 ```text
-[TODO] Keep current behavior logic unchanged.
-[TODO] Make current behavior mode/state/decision visible in STATUS/logs for 5-node tests.
-[TODO] Make hardcoded behavior defaults visible.
-[TODO] Keep BehaviorGateConfig as owner of timing/gating defaults.
-[TODO] Mark RB BEHAV command as runtime tuning / diagnostic, not durable ParamRegistry.
+Keep current behavior logic unchanged.
+Make current behavior mode, state, and decision visible in STATUS/logs.
+Make hardcoded defaults visible.
+Keep BehaviorGateConfig as owner of timing and gating defaults.
+Keep RB BEHAV as runtime tuning only.
 ```
 
-### B2 — minimal test variations
+### BEH-002 - minimal test variants
+
+Status: TODO
 
 ```text
-[TODO] Add only explicit simple behavior variants if immediately tested.
-Examples: listenOnly, simpleResponse, delayedResponse, idlePulse.
-[TODO] Keep variants hardcoded/profile-owned first.
+Add only explicit simple behavior variants if immediately tested.
+Keep variants profile-owned first.
 ```
 
-### B3 — first architecture extraction
+### BEH-003 - behavior input extraction
+
+Status: DEFERRED
 
 ```text
-[DEFERRED] Introduce BehaviorInput / BehaviorContext.
-[DEFERRED] Include PatternResult, FieldState, nowMs, and later OutputStatus.
-[DEFERRED] Preserve current behavior decisions exactly.
+Introduce BehaviorInput / BehaviorContext.
+Include PatternResult, FieldState, nowMs, and later OutputStatus.
+Preserve current behavior decisions exactly.
 ```
 
-### B4 — later behavior architecture
+### BEH-004 - later behavior architecture
+
+Status: DEFERRED
 
 ```text
-[DEFERRED] BehaviorDecision object.
-[DEFERRED] BehaviorHost.
-[DEFERRED] first explicit BehaviorProgram.
-[DEFERRED] structured block reasons for DebugReporter.
-[DEFERRED] behavior modulation / intended drift config.
-[DEFERRED] OutputRequest / BehaviorAction.
+BehaviorDecision object.
+BehaviorHost.
+first explicit BehaviorProgram.
+structured block reasons for DebugReporter.
+behavior modulation / intended drift config.
+OutputRequest / BehaviorAction.
 ```
 
 ## Current / first cleanup pass

@@ -1,17 +1,21 @@
-# Roadmap — Param / Config Infrastructure
+# Roadmap - Param / Config Infrastructure
 
-Status: active roadmap. Scope: hardcoded config workflow now, runtime params later.
+Status: active roadmap.
+Scope: hardcoded config workflow now, runtime params later.
+Purpose: keep module-owned defaults visible while the registry layer stays
+deferred.
+
+---
 
 ## Status legend
 
 ```text
-[LANDED]    Verified in current src.zip.
-[PARTIAL]   Partly present in source, but not yet the intended final shape.
-[TODO]      Next or later implementation work.
-[DEFERRED]  Intentionally later / not for the current test slice.
-[REMOVED]   Confirmed absent from current source or intentionally removed.
+[LANDED]    Verified in current code.
+[PARTIAL]   Present, but not yet in the intended final shape.
+[TODO]      Next implementation step.
+[DEFERRED]  Intentionally later.
+[REMOVED]   No longer part of the active plan.
 ```
-
 
 ## Architecture goal
 
@@ -30,57 +34,67 @@ Installation config provides overrides.
 ```text
 [LANDED] Hardcoded DetectionProfile defaults exist.
 [LANDED] BehaviorGateConfig defaults exist.
-[PARTIAL] RB PARAM command can tune frequency thresholds at runtime.
-[PARTIAL] RB BEHAV command can tune behavior values at runtime.
+[PARTIAL] RB PARAM can tune frequency thresholds at runtime.
+[PARTIAL] RB BEHAV can tune behavior values at runtime.
 [TODO] ParamRegistry is not landed.
 [TODO] ParamDescriptor is not landed.
 [TODO] ConfigStore / persistence is not landed.
 [TODO] PARAM SAVE / LOAD / VERIFY is not landed.
-[TODO] Fleet/OTA param workflow is not landed.
+[TODO] Fleet / OTA param workflow is not landed.
 ```
 
 ## Implementation order
 
-### P1 — first cleanup pass: status-visible hardcoded workflow
+### PAR-001 - status-visible hardcoded workflow
+
+Status: TODO
 
 ```text
-[TODO] Keep hardcoded config as primary 5-node workflow.
-[TODO] Make active hardcoded/test values visible in STATUS.
-[TODO] Mark RB PARAM / RB BEHAV as temporary runtime tuning, not durable config.
-[TODO] Ensure changed runtime values are visible so invisible drift is reduced during tests.
+Keep hardcoded config as the primary 5-node workflow.
+Make active hardcoded/test values visible in STATUS.
+Keep RB PARAM and RB BEHAV as temporary runtime tuning, not durable config.
+Make changed runtime values visible so drift is obvious during tests.
 ```
 
-### P2 — Param LIST/GET only if needed
+### PAR-002 - Param LIST / GET only if needed
+
+Status: DEFERRED
 
 ```text
-[DEFERRED] Add ParamDescriptor.
-[DEFERRED] Add ParamRegistry.
-[DEFERRED] Let 1–2 real modules register 3–5 params.
-[DEFERRED] Add PARAM LIST and PARAM GET.
+Add ParamDescriptor.
+Add ParamRegistry.
+Let 1-2 real modules register 3-5 params.
+Add PARAM LIST and PARAM GET.
 ```
 
-### P3 — SET with validation
+### PAR-003 - SET with validation
+
+Status: DEFERRED
 
 ```text
-[DEFERRED] Add PARAM SET only after LIST/GET is useful.
-[DEFERRED] Add validation and clear error result.
+Add PARAM SET only after LIST / GET is useful.
+Add validation and a clear error result.
 ```
 
-### P4 — persistence / verification
+### PAR-004 - persistence and verification
+
+Status: DEFERRED
 
 ```text
-[DEFERRED] Add PARAM SAVE / LOAD / RESET.
-[DEFERRED] Add VERIFY / STATUS confirmation.
-[DEFERRED] Only then rely on runtime params for multi-node workflow.
+Add PARAM SAVE / LOAD / RESET.
+Add VERIFY / STATUS confirmation.
+Only then rely on runtime params for multi-node workflow.
 ```
 
-### P5 — fleet / install config
+### PAR-005 - fleet / install config
+
+Status: DEFERRED
 
 ```text
-[DEFERRED] Bulk apply.
-[DEFERRED] verify.
-[DEFERRED] export/import.
-[DEFERRED] VEKTOR exposure later.
+Bulk apply.
+verify.
+export / import.
+VEKTOR exposure later.
 ```
 
 ## Current / first cleanup pass
@@ -88,15 +102,17 @@ Installation config provides overrides.
 ```text
 No ParamRegistry now.
 Make hardcoded and ad-hoc runtime values visible.
-Keep ownership with DetectionProfile / BehaviorGateConfig / output config.
+Keep ownership with DetectionProfile, BehaviorGateConfig, and output config.
 ```
 
 ## Spec candidates
 
 ```text
 Params attach to subsystem owners, not Node glue.
-Runtime PARAM SET is not useful for 5-node workflow unless paired with SAVE/LOAD or fleet apply/verify.
-Hardcoded params are acceptable only when they live with the correct module/profile owner.
+Runtime PARAM SET is not useful for the 5-node workflow unless paired with
+SAVE / LOAD or fleet apply / verify.
+Hardcoded params are acceptable only when they live with the correct
+module/profile owner.
 ```
 
 ## Non-goals now
@@ -104,7 +120,7 @@ Hardcoded params are acceptable only when they live with the correct module/prof
 ```text
 Generic reflection framework.
 Persistence.
-Bulk/fleet update.
+Bulk / fleet update.
 VEKTOR param exposure.
 Complex nested schemas.
 Node-owned param switchboard.

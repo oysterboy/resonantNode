@@ -653,10 +653,10 @@ AnalyzerApp::AnalyzerApp(int inputPin)
       _audioSource(_i2sSource),
       _audioSignal(_audioSource),
       _freqBandStream() {
-    _frequencyEvidenceTuning.attackScoreMin = detection::detectionProfileForKind(detection::DetectionProfileKind::TonalPulse).frequencyMatch.attackScoreMin;
-    _frequencyEvidenceTuning.releaseScoreMin = detection::detectionProfileForKind(detection::DetectionProfileKind::TonalPulse).frequencyMatch.releaseScoreMin;
-    _frequencyEvidenceTuning.attackContrastMin = detection::detectionProfileForKind(detection::DetectionProfileKind::TonalPulse).frequencyMatch.attackContrastMin;
-    _frequencyEvidenceTuning.releaseContrastMin = detection::detectionProfileForKind(detection::DetectionProfileKind::TonalPulse).frequencyMatch.releaseContrastMin;
+    _frequencyEvidenceTuning.attackScoreMin = detection::detectionProfileForKind(detection::DetectionProfileKind::TonalPulseFreq).frequencyMatch.attackScoreMin;
+    _frequencyEvidenceTuning.releaseScoreMin = detection::detectionProfileForKind(detection::DetectionProfileKind::TonalPulseFreq).frequencyMatch.releaseScoreMin;
+    _frequencyEvidenceTuning.attackContrastMin = detection::detectionProfileForKind(detection::DetectionProfileKind::TonalPulseFreq).frequencyMatch.attackContrastMin;
+    _frequencyEvidenceTuning.releaseContrastMin = detection::detectionProfileForKind(detection::DetectionProfileKind::TonalPulseFreq).frequencyMatch.releaseContrastMin;
 }
 
 void AnalyzerApp::begin() {
@@ -685,7 +685,7 @@ void AnalyzerApp::begin() {
     _controlClaimAtMs = 0;
 
     Serial.println("EVT analyzer_ready");
-    Serial.println("EVT analyzer_help type='HELP', 'PARAM freqScore=18000 freqContrast=50.0 freqReleaseScore=12000 freqReleaseContrast=50.0', 'RAW trigger f=3200 dur=100 post=1000 dump=bin', 'SEQ MODE quiet|trial|inspect|source|system|explain WHEN off|miss|all VERBOSE 0|1|2 STATUS REPORT', 'DET AMP'");
+    Serial.println("EVT analyzer_help type='HELP', 'PARAM freqScore=18000 freqContrast=50.0 freqReleaseScore=12000 freqReleaseContrast=50.0', 'RAW trigger f=3200 dur=100 post=1000 dump=bin', 'SEQ MODE quiet|trial|inspect|source|system|explain WHEN off|miss|all VERBOSE 0|1|2 STATUS REPORT', 'DET PROFILE TonalPulseFreq|TonalPulseScalar|AmpExperimental'");
 }
 
 void AnalyzerApp::configureParameters() {
@@ -920,29 +920,25 @@ const char* AnalyzerApp::activeAnalyzerProfileName() const {
 
 const char* analyzerProfileDetailNamespace(detection::DetectionProfileKind profileKind) {
     switch (profileKind) {
-        case detection::DetectionProfileKind::Amp:
-            return "amp";
-        case detection::DetectionProfileKind::ChirpExperimental:
-            return "chirp_experimental";
-        case detection::DetectionProfileKind::ScalarFreqExperimental:
-            return "scalar_freq_experimental";
-        case detection::DetectionProfileKind::TonalPulse:
+        case detection::DetectionProfileKind::AmpExperimental:
+            return "amp_experimental";
+        case detection::DetectionProfileKind::TonalPulseScalar:
+            return "tonal_pulse_scalar";
+        case detection::DetectionProfileKind::TonalPulseFreq:
         default:
-            return "tonal_pulse";
+            return "tonal_pulse_freq";
     }
 }
 
 const char* analyzerProfileDetailSummary(detection::DetectionProfileKind profileKind) {
     switch (profileKind) {
-        case detection::DetectionProfileKind::Amp:
-            return "amp scalar profile view";
-        case detection::DetectionProfileKind::ChirpExperimental:
-            return "chirp_experimental profile view";
-        case detection::DetectionProfileKind::ScalarFreqExperimental:
-            return "scalar_freq_experimental experimental profile view";
-        case detection::DetectionProfileKind::TonalPulse:
+        case detection::DetectionProfileKind::AmpExperimental:
+            return "amp experimental profile view";
+        case detection::DetectionProfileKind::TonalPulseScalar:
+            return "tonal pulse scalar profile view";
+        case detection::DetectionProfileKind::TonalPulseFreq:
         default:
-            return "generic tonal pulse profile view";
+            return "tonal pulse freq profile view";
     }
 }
 

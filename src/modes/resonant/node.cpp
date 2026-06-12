@@ -628,10 +628,10 @@ void Node::handleSerialLine(const char* line) {
         Serial.println("RB CMD: RB PARAM freqScore=18000 freqContrast=50.0 freqReleaseScore=12000 freqReleaseContrast=50.0");
         Serial.println("RB CMD: RB BEHAV wait=100 refractory=0 suppressSelfChirp=250 detectionSuppressTail=0 idleTimeout=20000 idleTimeoutVariation=10000 idleBlockedAfterHeard=3000 idleBlockedAfterOwnEmit=5000");
         Serial.println("RB CMD: RB STATUS");
-        Serial.println("RB CMD: RB PROFILE name=tonalpulse");
-        Serial.println("RB CMD(ALT): RB PROFILE name=tonalpulse");
-        Serial.println("RB CMD(AMP): RB PROFILE name=amp");
-        Serial.println("RB CMD(EXP): RB PROFILE name=scalar_freq_experimental (experimental)");
+        Serial.println("RB CMD: RB PROFILE name=TonalPulseFreq");
+        Serial.println("RB CMD(ALT): RB PROFILE name=TonalPulseFreq");
+        Serial.println("RB CMD: RB PROFILE name=TonalPulseScalar");
+        Serial.println("RB CMD: RB PROFILE name=AmpExperimental");
         Serial.println("RB CMD: RB rebase");
         Serial.println("RB CMD: RB rebase force");
         Serial.println("RB CMD: RB log off|minimal|full");
@@ -932,7 +932,7 @@ void Node::handleProfileCommand(const char* line) {
         printProfileComposition(activeDetectionProfile());
         Serial.println();
     } else {
-        Serial.println("RB PROFILE usage=name=tonalpulse|amp|chirp_experimental|scalar_freq_experimental");
+        Serial.println("RB PROFILE usage=name=TonalPulseFreq|TonalPulseScalar|AmpExperimental");
     }
 }
 
@@ -960,9 +960,9 @@ const BehaviorGateConfig& Node::activeBehaviorProfile() const {
     static const BehaviorGateConfig kTonalPulseProfile = makeTonalPulseBehaviorProfile();
 
     switch (_profileKind) {
-        case detection::DetectionProfileKind::ScalarFreqExperimental:
-        case detection::DetectionProfileKind::ChirpExperimental:
-        case detection::DetectionProfileKind::TonalPulse:
+        case detection::DetectionProfileKind::TonalPulseScalar:
+        case detection::DetectionProfileKind::AmpExperimental:
+        case detection::DetectionProfileKind::TonalPulseFreq:
         default:
             return kTonalPulseProfile;
     }

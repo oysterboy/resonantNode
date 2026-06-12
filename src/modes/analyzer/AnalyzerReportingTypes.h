@@ -8,7 +8,7 @@
 #include "../../detection/inspector/InspectorTypes.h"
 
 /*
-AnalyzerLegacyReporting
+AnalyzerReportingTypes
 
 Analyzer report data model and print helper declarations.
 Reports canonical detector-stage output, trial classification, field state, and

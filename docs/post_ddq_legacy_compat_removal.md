@@ -15,7 +15,7 @@ Scope: `src/detection` and `src/modes/analyzer`
   - `AnalyzerApp.h`
   - `AnalyzerSequenceHelpers.cpp`
   - `AnalyzerReporting.cpp`
-  - `AnalyzerLegacyReporting.h`
+  - `AnalyzerReportingTypes.h`
 - Removed the dead `SEQ SUMMARY LEG|LEGACY` compatibility error branch from `AnalyzerCommands.cpp`.
 - Removed scalar legacy reject-summary residue:
   - `LegacyRejectSummaryCompat`
@@ -30,7 +30,7 @@ Scope: `src/detection` and `src/modes/analyzer`
 - `Occurrence` legacy/transitional payload fields and bridge helpers.
 - `PatternResult` transitional candidate/inspection payload.
 - `OccurrenceSource` usage in active runtime, detector, pattern, and analyzer logic.
-- `AnalyzerLegacyReporting.h` filename and include path.
+- `AnalyzerReportingTypes.h` report model/header split.
 - Clean SEQ output labels and emitted field names.
 
 ## Compile fixes
@@ -42,11 +42,11 @@ Scope: `src/detection` and `src/modes/analyzer`
 - `src/detection/occurrences/Occurrence.h`: legacy/transitional payload remains active and protected by this pass guardrail.
 - `src/detection/patterns/PatternResult.h`: transitional payload remains active and protected by this pass guardrail.
 - `src/detection/detectors/ScalarTransientDetector.cpp`: `detectorIdFromLegacyOccurrenceSource` and `occurrenceTypeFromLegacyOccurrenceKind` remain active until the occurrence payload is redesigned.
-- `src/modes/analyzer/AnalyzerLegacyReporting.h`: filename is misleading but contents are now the active analyzer report model.
+- `src/modes/analyzer/AnalyzerReportingTypes.h`: contents are the active analyzer report model.
 
 ## Next recommended pass
 
-- Rename `AnalyzerLegacyReporting.h` to a neutral analyzer report model filename.
+- Keep `AnalyzerReportingTypes.h` focused on report data/types; move printer-only helpers to reporting implementation when practical.
 - Plan a dedicated `Occurrence` payload cleanup pass.
 - After `Occurrence` cleanup, revisit `PatternResult` payload trimming.
 

@@ -136,7 +136,7 @@ Unchanged boundaries:
 - `PatternRules`
 - `PatternResult`
 - `AnalyzerApp`
-- `AnalyzerLegacyReporting`
+- `AnalyzerReportingTypes`
 
 Analyzer scalar report synthesis still reads `scalarDetectorReport()` first and
 still falls back to `DetectionDiagnostics` for remaining legacy-only scalar

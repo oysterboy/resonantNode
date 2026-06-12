@@ -15,7 +15,7 @@ DELETE_NOW:
 - `src/modes/analyzer/AnalyzerClassifier.h`: stale "compatibility classification" comment.
 - `src/modes/analyzer/AnalyzerApp.h`: stale "Legacy sample-dump" comment.
 - `src/modes/analyzer/AnalyzerSequenceHelpers.cpp`: stale file comment describing sample dump/classifier bookkeeping as legacy output.
-- `src/modes/analyzer/AnalyzerReporting.cpp`: stale `AnalyzerLegacyReporting` ownership comments.
+- `src/modes/analyzer/AnalyzerReporting.cpp`: stale analyzer reporting ownership comments.
 
 ## Deleted hits
 
@@ -39,7 +39,7 @@ KEEP_NEUTRAL_TOOLING:
 ## Roadmap-later hits
 
 ROADMAP_LATER:
-- `AnalyzerLegacyReporting.h` filename and include path still contain "Legacy" even though the remaining contents are the active analyzer report model. Rename later as a mechanical file-move pass.
+- `AnalyzerReportingTypes.h` now owns the active analyzer report model and small inline name helpers.
 - `PatternResult` transitional payload comments should be revisited after pattern/analyzer payload trimming.
 - `DetectorReport::detectorReason` string reason comment should become a reason-enum roadmap item if enum unification becomes valuable.
 
@@ -59,6 +59,6 @@ Run X1-R now:
 - rebuild analyzer and default targets.
 
 Future pass:
-- rename `AnalyzerLegacyReporting.h` to a neutral analyzer report model name,
+- keep `AnalyzerReportingTypes.h` focused on report data/types,
 - design and execute an `Occurrence` payload trim,
 - then revisit `PatternResult` transitional payload comments.

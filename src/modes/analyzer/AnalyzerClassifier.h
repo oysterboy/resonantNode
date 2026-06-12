@@ -1,6 +1,6 @@
 #pragma once
 
-#include "AnalyzerLegacyReporting.h"
+#include "AnalyzerReportingTypes.h"
 
 /*
 AnalyzerClassifier

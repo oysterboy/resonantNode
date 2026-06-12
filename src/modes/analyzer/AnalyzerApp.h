@@ -14,7 +14,7 @@
 #include "../../detection/occurrences/Occurrence.h"
 #include "../../hal/AudioSource.h"
 #include "../../RuntimeDefaults.h"
-#include "AnalyzerLegacyReporting.h"
+#include "AnalyzerReportingTypes.h"
 
 /*
 AnalyzerApp

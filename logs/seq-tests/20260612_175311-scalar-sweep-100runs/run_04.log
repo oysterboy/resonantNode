@@ -1,0 +1,161 @@
+OK SEQ
+SEQ remote claim: send=408605ms ack=408611ms wait=6ms status=ok
+SEQ rebase: start=408611ms end=408713ms elapsed=102ms
+AUDIO stats reset
+SEQ start test=default startup_delay_ms=1000 report_settle_ms=500 loopDelayMs=0 logStress=0
+SEQ start source=I2S probe=AMP profile=TonalPulseScalar source=ScalarTransient detector=ScalarTransient required_support_target=diagnostic_only:FrequencyScoreStrength support_gate=disabled freq_min_duration_ms=60 freq_release_debounce_ms=30 freq_cooldown_ms=0 freq_attack_score_min=18000.0 freq_release_score_min=12000.0 freq_attack_contrast_min=50.0 freq_release_contrast_min=50.0 mode=SEQ test=default startup_delay_ms=1000 report_settle_ms=500 loopDelayMs=0 logStress=0 quiet=0 tries=50 period_ms=2500 window_start_ms=0 window_end_ms=2200 freq_hz=3200 dur_ms=100
+SEQ tuning freqScore=18000.0 freqReleaseScore=12000.0 freqContrast=50.0 freqReleaseContrast=50.0 transientDetector=fixed
+SEQ freqmatch: min_duration_ms=60 release_debounce_ms=30 cooldown_ms=0 attack_score_min=18000.0 release_score_min=12000.0 attack_contrast_min=50.0 release_contrast_min=50.0
+FREQBAND runtime: freq.window_samples=64 freq.window_ms=4.00 freq.update_every_samples=4 freq.update_period_ms=0.250 freq.target_hz=3200 freq.produced_fresh_packet=0 freq.packet_age_samples=0 freq.packet_age_ms=0.000
+SEQ running
+
+#1 ----------------
+SEQ_TRIAL trial=1 result=expected dt=0ms duration_ms=139 strength=358631.1 confidence=1.00 dup=0 src_total=1 src_acc=1 src_rej=0 buffer_overrun=0 profile=TonalPulseScalar
+
+#2 ----------------
+SEQ_TRIAL trial=2 result=expected dt=-1ms duration_ms=135 strength=214037.6 confidence=1.00 dup=0 src_total=1 src_acc=1 src_rej=0 buffer_overrun=0 profile=TonalPulseScalar
+
+#3 ----------------
+SEQ_TRIAL trial=3 result=expected dt=-1ms duration_ms=141 strength=357076.5 confidence=1.00 dup=0 src_total=1 src_acc=1 src_rej=0 buffer_overrun=0 profile=TonalPulseScalar
+
+#4 ----------------
+SEQ_TRIAL trial=4 result=expected dt=-1ms duration_ms=138 strength=235808.0 confidence=1.00 dup=0 src_total=1 src_acc=1 src_rej=0 buffer_overrun=0 profile=TonalPulseScalar
+
+#5 ----------------
+SEQ_TRIAL trial=5 result=expected dt=-1ms duration_ms=138 strength=192888.7 confidence=1.00 dup=0 src_total=1 src_acc=1 src_rej=0 buffer_overrun=0 profile=TonalPulseScalar
+
+#6 ----------------
+SEQ_TRIAL trial=6 result=expected dt=6ms duration_ms=127 strength=183230.9 confidence=1.00 dup=0 src_total=1 src_acc=1 src_rej=0 buffer_overrun=0 profile=TonalPulseScalar
+
+#7 ----------------
+SEQ_TRIAL trial=7 result=expected dt=-1ms duration_ms=142 strength=238558.8 confidence=1.00 dup=0 src_total=1 src_acc=1 src_rej=0 buffer_overrun=0 profile=TonalPulseScalar
+
+#8 ----------------
+SEQ_TRIAL trial=8 result=expected dt=-1ms duration_ms=143 strength=215278.4 confidence=1.00 dup=0 src_total=1 src_acc=1 src_rej=0 buffer_overrun=0 profile=TonalPulseScalar
+
+#9 ----------------
+SEQ_TRIAL trial=9 result=expected dt=-1ms duration_ms=135 strength=236693.5 confidence=1.00 dup=0 src_total=1 src_acc=1 src_rej=0 buffer_overrun=0 profile=TonalPulseScalar
+
+#10 ----------------
+SEQ_TRIAL trial=10 result=expected dt=-1ms duration_ms=142 strength=284457.8 confidence=1.00 dup=0 src_total=1 src_acc=1 src_rej=0 buffer_overrun=0 profile=TonalPulseScalar
+
+#11 ----------------
+SEQ_TRIAL trial=11 result=expected dt=0ms duration_ms=144 strength=267801.7 confidence=1.00 dup=0 src_total=1 src_acc=1 src_rej=0 buffer_overrun=0 profile=TonalPulseScalar
+
+#12 ----------------
+SEQ_TRIAL trial=12 result=expected dt=-1ms duration_ms=142 strength=369936.6 confidence=1.00 dup=0 src_total=1 src_acc=1 src_rej=0 buffer_overrun=0 profile=TonalPulseScalar
+
+#13 ----------------
+SEQ_TRIAL trial=13 result=expected dt=-1ms duration_ms=144 strength=262510.7 confidence=1.00 dup=0 src_total=1 src_acc=1 src_rej=0 buffer_overrun=0 profile=TonalPulseScalar
+
+#14 ----------------
+SEQ_TRIAL trial=14 result=expected dt=-1ms duration_ms=144 strength=255219.9 confidence=1.00 dup=0 src_total=1 src_acc=1 src_rej=0 buffer_overrun=0 profile=TonalPulseScalar
+
+#15 ----------------
+SEQ_TRIAL trial=15 result=expected dt=6ms duration_ms=142 strength=269375.7 confidence=1.00 dup=0 src_total=1 src_acc=1 src_rej=0 buffer_overrun=0 profile=TonalPulseScalar
+
+#16 ----------------
+SEQ_TRIAL trial=16 result=expected dt=0ms duration_ms=143 strength=256030.8 confidence=1.00 dup=0 src_total=1 src_acc=1 src_rej=0 buffer_overrun=0 profile=TonalPulseScalar
+
+#17 ----------------
+SEQ_TRIAL trial=17 result=expected dt=0ms duration_ms=134 strength=247401.8 confidence=1.00 dup=0 src_total=1 src_acc=1 src_rej=0 buffer_overrun=0 profile=TonalPulseScalar
+
+#18 ----------------
+SEQ_TRIAL trial=18 result=expected dt=-1ms duration_ms=142 strength=361645.5 confidence=1.00 dup=0 src_total=1 src_acc=1 src_rej=0 buffer_overrun=0 profile=TonalPulseScalar
+
+#19 ----------------
+SEQ_TRIAL trial=19 result=expected dt=-1ms duration_ms=144 strength=243191.3 confidence=1.00 dup=0 src_total=1 src_acc=1 src_rej=0 buffer_overrun=0 profile=TonalPulseScalar
+
+#20 ----------------
+SEQ_TRIAL trial=20 result=expected dt=-1ms duration_ms=144 strength=240332.8 confidence=1.00 dup=0 src_total=1 src_acc=1 src_rej=0 buffer_overrun=0 profile=TonalPulseScalar
+
+#21 ----------------
+SEQ_TRIAL trial=21 result=expected dt=-1ms duration_ms=143 strength=221854.2 confidence=1.00 dup=0 src_total=1 src_acc=1 src_rej=0 buffer_overrun=0 profile=TonalPulseScalar
+
+#22 ----------------
+SEQ_TRIAL trial=22 result=expected dt=6ms duration_ms=126 strength=235283.7 confidence=1.00 dup=0 src_total=1 src_acc=1 src_rej=0 buffer_overrun=0 profile=TonalPulseScalar
+
+#23 ----------------
+SEQ_TRIAL trial=23 result=expected dt=0ms duration_ms=134 strength=242987.4 confidence=1.00 dup=0 src_total=1 src_acc=1 src_rej=0 buffer_overrun=0 profile=TonalPulseScalar
+
+#24 ----------------
+SEQ_TRIAL trial=24 result=expected dt=-1ms duration_ms=198 strength=362516.0 confidence=1.00 dup=0 src_total=1 src_acc=1 src_rej=0 buffer_overrun=0 profile=TonalPulseScalar
+
+#25 ----------------
+SEQ_TRIAL trial=25 result=expected dt=-1ms duration_ms=191 strength=223559.6 confidence=1.00 dup=0 src_total=1 src_acc=1 src_rej=0 buffer_overrun=0 profile=TonalPulseScalar
+
+#26 ----------------
+SEQ_TRIAL trial=26 result=expected dt=-1ms duration_ms=137 strength=212479.6 confidence=1.00 dup=0 src_total=1 src_acc=1 src_rej=0 buffer_overrun=0 profile=TonalPulseScalar
+
+#27 ----------------
+SEQ_TRIAL trial=27 result=expected dt=6ms duration_ms=126 strength=201615.4 confidence=1.00 dup=0 src_total=1 src_acc=1 src_rej=0 buffer_overrun=0 profile=TonalPulseScalar
+
+#28 ----------------
+SEQ_TRIAL trial=28 result=expected dt=0ms duration_ms=133 strength=211188.8 confidence=1.00 dup=0 src_total=1 src_acc=1 src_rej=0 buffer_overrun=0 profile=TonalPulseScalar
+
+#29 ----------------
+SEQ_TRIAL trial=29 result=expected dt=0ms duration_ms=133 strength=217035.7 confidence=1.00 dup=0 src_total=1 src_acc=1 src_rej=0 buffer_overrun=0 profile=TonalPulseScalar
+
+#30 ----------------
+SEQ_TRIAL trial=30 result=expected dt=-1ms duration_ms=136 strength=358184.4 confidence=1.00 dup=0 src_total=1 src_acc=1 src_rej=0 buffer_overrun=0 profile=TonalPulseScalar
+
+#31 ----------------
+SEQ_TRIAL trial=31 result=expected dt=-1ms duration_ms=113 strength=193117.8 confidence=1.00 dup=0 src_total=1 src_acc=1 src_rej=0 buffer_overrun=0 profile=TonalPulseScalar
+
+#32 ----------------
+SEQ_TRIAL trial=32 result=expected dt=-1ms duration_ms=136 strength=187470.3 confidence=1.00 dup=0 src_total=1 src_acc=1 src_rej=0 buffer_overrun=0 profile=TonalPulseScalar
+
+#33 ----------------
+SEQ_TRIAL trial=33 result=expected dt=6ms duration_ms=122 strength=195464.7 confidence=1.00 dup=0 src_total=1 src_acc=1 src_rej=0 buffer_overrun=0 profile=TonalPulseScalar
+
+#34 ----------------
+SEQ_TRIAL trial=34 result=expected dt=0ms duration_ms=133 strength=191127.8 confidence=1.00 dup=0 src_total=1 src_acc=1 src_rej=0 buffer_overrun=0 profile=TonalPulseScalar
+
+#35 ----------------
+SEQ_TRIAL trial=35 result=expected dt=-1ms duration_ms=134 strength=189094.4 confidence=1.00 dup=0 src_total=1 src_acc=1 src_rej=0 buffer_overrun=0 profile=TonalPulseScalar
+
+#36 ----------------
+SEQ_TRIAL trial=36 result=expected dt=-1ms duration_ms=134 strength=200451.4 confidence=1.00 dup=0 src_total=1 src_acc=1 src_rej=0 buffer_overrun=0 profile=TonalPulseScalar
+
+#37 ----------------
+SEQ_TRIAL trial=37 result=expected dt=-1ms duration_ms=135 strength=195478.4 confidence=1.00 dup=0 src_total=1 src_acc=1 src_rej=0 buffer_overrun=0 profile=TonalPulseScalar
+
+#38 ----------------
+SEQ_TRIAL trial=38 result=expected dt=-1ms duration_ms=134 strength=196195.4 confidence=1.00 dup=0 src_total=1 src_acc=1 src_rej=0 buffer_overrun=0 profile=TonalPulseScalar
+
+#39 ----------------
+SEQ_TRIAL trial=39 result=expected dt=-1ms duration_ms=134 strength=198592.0 confidence=1.00 dup=0 src_total=1 src_acc=1 src_rej=0 buffer_overrun=0 profile=TonalPulseScalar
+
+#40 ----------------
+SEQ_TRIAL trial=40 result=expected dt=-1ms duration_ms=134 strength=196189.6 confidence=1.00 dup=0 src_total=1 src_acc=1 src_rej=0 buffer_overrun=0 profile=TonalPulseScalar
+
+#41 ----------------
+SEQ_TRIAL trial=41 result=expected dt=-1ms duration_ms=134 strength=190641.3 confidence=1.00 dup=0 src_total=1 src_acc=1 src_rej=0 buffer_overrun=0 profile=TonalPulseScalar
+
+#42 ----------------
+SEQ_TRIAL trial=42 result=expected dt=-1ms duration_ms=135 strength=196551.5 confidence=1.00 dup=0 src_total=1 src_acc=1 src_rej=0 buffer_overrun=0 profile=TonalPulseScalar
+
+#43 ----------------
+SEQ_TRIAL trial=43 result=expected dt=-1ms duration_ms=143 strength=195890.4 confidence=1.00 dup=0 src_total=1 src_acc=1 src_rej=0 buffer_overrun=0 profile=TonalPulseScalar
+
+#44 ----------------
+SEQ_TRIAL trial=44 result=expected dt=-1ms duration_ms=134 strength=189971.5 confidence=1.00 dup=0 src_total=1 src_acc=1 src_rej=0 buffer_overrun=0 profile=TonalPulseScalar
+
+#45 ----------------
+SEQ_TRIAL trial=45 result=expected dt=-1ms duration_ms=134 strength=180532.3 confidence=1.00 dup=0 src_total=1 src_acc=1 src_rej=0 buffer_overrun=0 profile=TonalPulseScalar
+
+#46 ----------------
+SEQ_TRIAL trial=46 result=expected dt=0ms duration_ms=141 strength=376972.0 confidence=1.00 dup=0 src_total=1 src_acc=1 src_rej=0 buffer_overrun=0 profile=TonalPulseScalar
+
+#47 ----------------
+SEQ_TRIAL trial=47 result=expected dt=-1ms duration_ms=144 strength=185177.3 confidence=1.00 dup=0 src_total=1 src_acc=1 src_rej=0 buffer_overrun=0 profile=TonalPulseScalar
+
+#48 ----------------
+SEQ_TRIAL trial=48 result=expected dt=-1ms duration_ms=144 strength=153195.0 confidence=1.00 dup=0 src_total=1 src_acc=1 src_rej=0 buffer_overrun=0 profile=TonalPulseScalar
+
+#49 ----------------
+SEQ_TRIAL trial=49 result=expected dt=6ms duration_ms=138 strength=236632.3 confidence=1.00 dup=0 src_total=1 src_acc=1 src_rej=0 buffer_overrun=0 profile=TonalPulseScalar
+
+#50 ----------------
+SEQ_TRIAL trial=50 result=expected dt=-1ms duration_ms=144 strength=175125.0 confidence=1.00 dup=0 src_total=1 src_acc=1 src_rej=0 buffer_overrun=0 profile=TonalPulseScalar
+SEQ_SUMMARY profile=TonalPulseScalar detector=scalar_transient trials=50 completed=50 expected_trials=50 early_trials=0 late_trials=0 miss_trials=0 duplicate_trials=0 unexpected_trials=0 rejected_trials=0 buffer_overrun_trials=0 detector_accepted_trials=50 detector_reject_trials=0 pattern_valid_trials=50 pattern_rejected_trials=0 avg_dt_ms=2 avg_strength=236013.6 avg_conf=1.00

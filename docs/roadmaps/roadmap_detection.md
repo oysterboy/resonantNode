@@ -45,6 +45,16 @@ Clean analyzer output should read canonical runtime contracts only.
 
 ## Implementation order
 
+### DET-006  Move detector-specific Analyzer output detail into detection-side report printer/name helpers.
+
+Goal: adding a new detector should require changes in:
+
+detector class
+detector config/profile wiring
+detector report detail definition/printer
+
+but not in Analyzer core report assembly.
+
 ### DET-001 - detector / report consistency
 
 Status: TODO

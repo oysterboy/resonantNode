@@ -573,7 +573,6 @@ bool seqOutputWhenEnabled(AnalyzerApp::SeqOutputWhen configured, AnalyzerResult 
                 case AnalyzerResult::Rejected:
                 case AnalyzerResult::Ambiguous:
                 case AnalyzerResult::TooDense:
-                case AnalyzerResult::InvalidAudio:
                     return true;
                 case AnalyzerResult::Expected:
                 case AnalyzerResult::Early:
@@ -839,12 +838,15 @@ void AnalyzerApp::update() {
                 detection::PatternResult runtimePatternResult = {};
                 while (_detection.popPatternResult(runtimePatternResult)) {
                     const detection::DetectionPipelineResult& runtimePipelineResult = _detection.latestPipelineResult();
+                    const detection::InspectedOccurrence* selectedInspectedOccurrence = nullptr;
+                    if (runtimePipelineResult.hasPatternInspectedOccurrence
+                        && runtimePipelineResult.patternInspectedOccurrence.occurrence.present) {
+                        selectedInspectedOccurrence = &runtimePipelineResult.patternInspectedOccurrence;
+                    }
                     _sequenceTest.currentTrialDiagnostics.runtimePatternCaptured = true;
                     handleSequencePending(
                         runtimePatternResult,
-                        runtimePipelineResult.hasPattern && runtimePipelineResult.inspectedOccurrence.occurrence.present
-                            ? &runtimePipelineResult.inspectedOccurrence
-                            : nullptr,
+                        selectedInspectedOccurrence,
                         &runtimeFrequencyMeasurementPacket
                     );
                 }
@@ -953,7 +955,7 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
                                               long dtMs,
                                               long durMs,
                                               float strength,
-                                              bool audioOverflow,
+                                              bool bufferOverrun,
                                               unsigned long duplicateCount,
                                               const SequenceTest::TrialDiagnostics& diagnostics) const {
     report = makeEmptyAnalyzerReport();
@@ -975,16 +977,16 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
     const detection::PatternResult* selectedTrialPatternResult = nullptr;
     if (_sequenceTest.primaryValidPatternCaptured) {
         selectedTrialPatternResult = &_sequenceTest.primaryValidPattern;
-    } else if (_sequenceTest.rejectedInWindowCount > 0) {
-        selectedTrialPatternResult = &_sequenceTest.firstRejectedInWindow;
+    } else if (_sequenceTest.bestRejectedPatternCaptured) {
+        selectedTrialPatternResult = &_sequenceTest.bestRejectedInWindow;
     }
     // Use the captured trial snapshot for the final analyzer report.
     const detection::PatternResult* reportPatternResult = selectedTrialPatternResult;
     const detection::InspectedOccurrence* reportInspectedOccurrence = nullptr;
     if (_sequenceTest.primaryValidPatternCaptured && _sequenceTest.primaryValidInspectedOccurrence.occurrence.present) {
         reportInspectedOccurrence = &_sequenceTest.primaryValidInspectedOccurrence;
-    } else if (_sequenceTest.rejectedInWindowCount > 0 && _sequenceTest.firstRejectedInspectedOccurrence.occurrence.present) {
-        reportInspectedOccurrence = &_sequenceTest.firstRejectedInspectedOccurrence;
+    } else if (_sequenceTest.bestRejectedPatternCaptured && _sequenceTest.bestRejectedInspectedOccurrence.occurrence.present) {
+        reportInspectedOccurrence = &_sequenceTest.bestRejectedInspectedOccurrence;
     }
     const detection::FieldState* runtimeFieldState = &_detection.fieldState();
     const detection::DetectionProfile& selectedProfile = detection::detectionProfileForKind(_sequenceTest.profileKind);
@@ -1020,7 +1022,7 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
     classificationInput.result = result;
     classificationInput.dtMs = reportPatternDtMs;
     classificationInput.rawPendingCount = diagnostics.rawPendingCount;
-    classificationInput.audioOverflow = audioOverflow;
+    classificationInput.bufferOverrun = bufferOverrun;
     classificationInput.patternAvailable = reportPatternResult != nullptr;
     classificationInput.detectorReportAvailable = report.detectorReport != nullptr;
     classificationInput.detectorAcceptedPresent = report.detectorReport != nullptr && report.detectorReport->accepted.present;
@@ -1190,6 +1192,7 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
     report.debug.duplicates = duplicateCount;
     report.debug.unexpected = result == AnalyzerResult::Unexpected ? 1U : 0U;
     report.debug.startupArtifact = startupArtifact;
+    report.debug.bufferOverrun = bufferOverrun;
     report.debug.artifactCaptured = trialHasPipelineEvidence;
     report.debug.artifactFallback = !trialHasPipelineEvidence;
     report.debug.artifactState = startupArtifact ? "STARTUP_ARTIFACT" : (trialHasPipelineEvidence ? "CAPTURED" : "MISSING_PIPELINE");

@@ -160,7 +160,9 @@ void AnalyzerApp::startSequenceTest(const PendingSequenceStart& pending) {
     _sequenceTest.primaryValidPattern = {};
     _sequenceTest.primaryValidPatternDtMs = -1;
     _sequenceTest.rejectedInWindowCount = 0;
-    _sequenceTest.firstRejectedInWindow = {};
+    _sequenceTest.bestRejectedPatternCaptured = false;
+    _sequenceTest.bestRejectedInWindow = {};
+    _sequenceTest.bestRejectedInspectedOccurrence = {};
     _sequenceTest.currentTrialFinalized = false;
     _sequenceTest.currentTrialUnexpected = 0;
     _sequenceTest.currentTrialRejected = 0;
@@ -171,7 +173,6 @@ void AnalyzerApp::startSequenceTest(const PendingSequenceStart& pending) {
     _sequenceTest.misses = 0;
     _sequenceTest.unexpected = 0;
     _sequenceTest.duplicates = 0;
-    _sequenceTest.invalidAudio = 0;
     _sequenceTest.startupArtifacts = 0;
     _sequenceTest.samplesProcessed = 0;
     _sequenceTest.currentTrialSamplesProcessed = 0;
@@ -344,11 +345,13 @@ void AnalyzerApp::updateSequenceTest(unsigned long now) {
     _sequenceTest.primaryValidPattern = {};
     _sequenceTest.primaryValidPatternDtMs = -1;
     _sequenceTest.rejectedInWindowCount = 0;
-    _sequenceTest.firstRejectedInWindow = {};
+    _sequenceTest.bestRejectedPatternCaptured = false;
+    _sequenceTest.bestRejectedInWindow = {};
+    _sequenceTest.bestRejectedInspectedOccurrence = {};
     _sequenceTest.currentTrialFinalized = false;
     _sequenceTest.currentTrialUnexpected = 0;
     _sequenceTest.currentTrialRejected = 0;
-    _sequenceTest.trialHadAudioOverflow = false;
+    _sequenceTest.bufferOverrun = false;
     _sequenceTest.trialOverflowCountAtStart = _audioSource.stats().overflowCount;
     _sequenceTest.currentTrialDiagnostics = {};
     _sequenceTest.currentTrialDiagnostics.acceptedAmbientBaseline = _audioSignal.baseline();
@@ -419,21 +422,18 @@ void AnalyzerApp::finalizeSequenceTrial(unsigned long now) {
     const uint32_t finalizeStartUs = micros();
     auto& diagnostics = _sequenceTest.currentTrialDiagnostics;
 
-    const bool invalidAudioTrial = _sequenceTest.trialHadAudioOverflow
-                                   || _audioSource.stats().overflowCount != _sequenceTest.trialOverflowCountAtStart;
-    const bool hitTrial = !invalidAudioTrial && _sequenceTest.primaryValidPatternCaptured;
-    const bool rejectedTrial = !invalidAudioTrial && _sequenceTest.rejectedInWindowCount > 0;
-    const bool unexpectedTrial = !invalidAudioTrial && _sequenceTest.currentTrialUnexpected > 0;
+    const bool bufferOverrunTrial = _sequenceTest.bufferOverrun
+                                    || _audioSource.stats().overflowCount != _sequenceTest.trialOverflowCountAtStart;
+    const bool hitTrial = _sequenceTest.primaryValidPatternCaptured;
+    const bool rejectedTrial = _sequenceTest.rejectedInWindowCount > 0;
+    const bool unexpectedTrial = _sequenceTest.currentTrialUnexpected > 0;
 
     AnalyzerResult result = AnalyzerResult::Miss;
     long dtMs = -1;
     long durMs = -1;
     float strength = 0.0f;
 
-    if (invalidAudioTrial) {
-        _sequenceTest.invalidAudio++;
-        result = AnalyzerResult::InvalidAudio;
-    } else if (hitTrial) {
+    if (hitTrial) {
         _sequenceTest.hits++;
         dtMs = _sequenceTest.primaryValidPatternDtMs;
         durMs = static_cast<long>(_sequenceTest.primaryValidPattern.primaryDurationMs);
@@ -456,7 +456,7 @@ void AnalyzerApp::finalizeSequenceTrial(unsigned long now) {
 
     _sequenceTest.duplicates += diagnostics.duplicateCount;
     AnalyzerReport* finalizedReport = sequenceReportScratch();
-    buildSequenceAnalyzerReport(*finalizedReport, _sequenceTest.currentTrial, result, dtMs, durMs, strength, invalidAudioTrial, diagnostics.duplicateCount, diagnostics);
+    buildSequenceAnalyzerReport(*finalizedReport, _sequenceTest.currentTrial, result, dtMs, durMs, strength, bufferOverrunTrial, diagnostics.duplicateCount, diagnostics);
     updateCleanSequenceSummary(*finalizedReport);
     _sequenceTest.completedTrials++;
     if (result == AnalyzerResult::Miss) {
@@ -541,12 +541,13 @@ void AnalyzerApp::updateCleanSequenceSummary(const AnalyzerReport& report) {
         case AnalyzerResult::TooDense:
             ++summary.tooDense;
             break;
-        case AnalyzerResult::InvalidAudio:
-            ++summary.invalidAudio;
-            break;
         case AnalyzerResult::Unknown:
         default:
             break;
+    }
+
+    if (report.debug.bufferOverrun) {
+        ++summary.bufferOverrun;
     }
 
     if (report.detectorReport != nullptr) {

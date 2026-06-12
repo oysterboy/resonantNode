@@ -25,7 +25,7 @@ public:
     // no proposal/result is emitted for this occurrence.
     PatternResult update(const InspectedOccurrence& occurrence, unsigned long nowMs);
 
-    void acceptOccurrence(const InspectedOccurrence& occurrence);
+    bool acceptOccurrence(const InspectedOccurrence& occurrence);
     bool popPatternResult(unsigned long nowMs, PatternResult& out);
 
 private:

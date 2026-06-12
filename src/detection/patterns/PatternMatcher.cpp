@@ -197,9 +197,9 @@ PatternResult PatternMatcher::update(const InspectedOccurrence& occurrence, unsi
     return {};
 }
 
-void PatternMatcher::acceptOccurrence(const InspectedOccurrence& occurrence) {
+bool PatternMatcher::acceptOccurrence(const InspectedOccurrence& occurrence) {
     if (occurrence.decision != OccurrenceDecision::Accepted || !occurrence.occurrence.present) {
-        return;
+        return false;
     }
 
     switch (occurrence.occurrence.occurrenceType) {
@@ -208,15 +208,17 @@ void PatternMatcher::acceptOccurrence(const InspectedOccurrence& occurrence) {
             if (occurrence.occurrence.valid) {
                 const PatternProposal proposal = makePatternProposalFromOccurrence(occurrence);
                 if (proposal.durationMs > 0 || proposal.peakStrength != 0.0f || proposal.onsetStrength != 0.0f) {
-                    pushInspectedOccurrence(occurrence);
+                    return pushInspectedOccurrence(occurrence);
                 }
             }
-            break;
+            return false;
 
         case OccurrenceType::None:
         default:
-            break;
+            return false;
     }
+
+    return false;
 }
 
 bool PatternMatcher::popPatternResult(unsigned long nowMs, PatternResult& out) {

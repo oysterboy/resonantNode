@@ -249,9 +249,6 @@ const char* AnalyzerApp::sequenceTrialClassificationName(const char* result, lon
     (void)dtMs;
     (void)durMs;
     (void)diagnostics;
-    if (strcmp(result, "invalid_audio") == 0) {
-        return "invalid_audio";
-    }
     if (strcmp(result, "unexpected") == 0) {
         return "unexpected";
     }
@@ -263,7 +260,7 @@ const char* AnalyzerApp::sequenceTrialClassificationName(const char* result, lon
 
 void AnalyzerApp::handleSequencePending(
     const detection::PatternResult& patternResult,
-    const detection::InspectedOccurrence* inspectedOccurrence,
+    const detection::InspectedOccurrence* selectedInspectedOccurrence,
     const detection::FrequencyBandMeasurementPacket* liveFrequencyMeasurementPacket
 ) {
     if (!_sequenceTest.active || _sequenceTest.currentTrial == 0) {
@@ -277,10 +274,10 @@ void AnalyzerApp::handleSequencePending(
     const long dtFromTriggerMs = static_cast<long>(onsetMs) - static_cast<long>(_sequenceTest.currentTrialScheduledAtMs);
     const long dtFromTrialStartMs = static_cast<long>(onsetMs) - static_cast<long>(_sequenceTest.currentTrialStartMs);
 
-    const bool overflowSeenNow = patternResult.primaryAudioOverflow
-                                 || _audioSource.stats().overflowCount != _sequenceTest.trialOverflowCountAtStart;
-    if (overflowSeenNow) {
-        _sequenceTest.trialHadAudioOverflow = true;
+    const bool bufferOverrunSeenNow = patternResult.primaryAudioOverflow
+                                      || _audioSource.stats().overflowCount != _sequenceTest.trialOverflowCountAtStart;
+    if (bufferOverrunSeenNow) {
+        _sequenceTest.bufferOverrun = true;
     }
 
     const bool preWindow = onsetMs < _sequenceTest.currentTrialStartMs + _sequenceTest.windowStartOffsetMs;
@@ -340,7 +337,7 @@ void AnalyzerApp::handleSequencePending(
     }
 
     if (!inWindow) {
-        if (!_sequenceTest.trialHadAudioOverflow) {
+        if (!_sequenceTest.bufferOverrun) {
             _sequenceTest.unexpected++;
             _sequenceTest.currentTrialUnexpected++;
         }
@@ -348,10 +345,14 @@ void AnalyzerApp::handleSequencePending(
     }
 
     if (!patternResult.valid) {
-        if (_sequenceTest.currentTrialRejected == 0) {
-            _sequenceTest.firstRejectedInWindow = patternResult;
-            if (inspectedOccurrence != nullptr && inspectedOccurrence->occurrence.present) {
-                _sequenceTest.firstRejectedInspectedOccurrence = *inspectedOccurrence;
+        const bool shouldUpdateBestRejected = !_sequenceTest.bestRejectedPatternCaptured
+            || patternResult.primaryStrength > _sequenceTest.bestRejectedInWindow.primaryStrength;
+        if (shouldUpdateBestRejected) {
+            _sequenceTest.bestRejectedPatternCaptured = true;
+            _sequenceTest.bestRejectedInWindow = patternResult;
+            _sequenceTest.bestRejectedInspectedOccurrence = {};
+            if (selectedInspectedOccurrence != nullptr && selectedInspectedOccurrence->occurrence.present) {
+                _sequenceTest.bestRejectedInspectedOccurrence = *selectedInspectedOccurrence;
             }
         }
         _sequenceTest.rejectedInWindowCount++;
@@ -364,8 +365,8 @@ void AnalyzerApp::handleSequencePending(
     if (!hadPrimaryBeforePending) {
         _sequenceTest.primaryValidPatternCaptured = true;
         _sequenceTest.primaryValidPattern = patternResult;
-        if (inspectedOccurrence != nullptr && inspectedOccurrence->occurrence.present) {
-            _sequenceTest.primaryValidInspectedOccurrence = *inspectedOccurrence;
+        if (selectedInspectedOccurrence != nullptr && selectedInspectedOccurrence->occurrence.present) {
+            _sequenceTest.primaryValidInspectedOccurrence = *selectedInspectedOccurrence;
         }
         _sequenceTest.primaryValidPatternDtMs = dtFromTriggerMs;
     }

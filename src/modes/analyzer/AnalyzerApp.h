@@ -305,12 +305,13 @@ private:
         detection::InspectedOccurrence primaryValidInspectedOccurrence = {};
         long primaryValidPatternDtMs = -1;
         unsigned long rejectedInWindowCount = 0;
-        detection::PatternResult firstRejectedInWindow = {};
-        detection::InspectedOccurrence firstRejectedInspectedOccurrence = {};
+        bool bestRejectedPatternCaptured = false;
+        detection::PatternResult bestRejectedInWindow = {};
+        detection::InspectedOccurrence bestRejectedInspectedOccurrence = {};
         bool currentTrialFinalized = false;
         unsigned long currentTrialUnexpected = 0;
         unsigned long currentTrialRejected = 0;
-        bool trialHadAudioOverflow = false;
+        bool bufferOverrun = false;
         unsigned long trialOverflowCountAtStart = 0;
         unsigned long trialTransientRejectTooShortCountAtStart = 0;
         unsigned long trialTransientRejectTooLongCountAtStart = 0;
@@ -323,7 +324,6 @@ private:
         unsigned long misses = 0;
         unsigned long unexpected = 0;
         unsigned long duplicates = 0;
-        unsigned long invalidAudio = 0;
         unsigned long startupArtifacts = 0;
         unsigned long samplesProcessed = 0;
         unsigned long currentTrialSamplesProcessed = 0;
@@ -396,6 +396,7 @@ private:
     void printSequenceExplainCanonical(const AnalyzerReport& report) const;
     void printSequenceInspectCanonical(const AnalyzerReport& report) const;
     void printSequenceSourceCanonical(const AnalyzerReport& report) const;
+    void printSequenceSourceSpecCanonical(const AnalyzerReport& report) const;
     void printSequenceStatus() const;
     void printSequenceTrialHeader(unsigned long trialNumber) const;
     void printSequenceTrial(const AnalyzerReport& report) const;
@@ -403,10 +404,10 @@ private:
     void printSequenceReport() const;
     const char* activeAnalyzerProfileName() const;
     AnalyzerReport* sequenceReportScratch();
-    void buildSequenceAnalyzerReport(AnalyzerReport& report, unsigned long trialNumber, AnalyzerResult result, long dtMs, long durMs, float strength, bool audioOverflow, unsigned long duplicateCount, const SequenceTest::TrialDiagnostics& diagnostics) const;
+    void buildSequenceAnalyzerReport(AnalyzerReport& report, unsigned long trialNumber, AnalyzerResult result, long dtMs, long durMs, float strength, bool bufferOverrun, unsigned long duplicateCount, const SequenceTest::TrialDiagnostics& diagnostics) const;
     void handleSequencePending(
         const PatternResult& patternResult,
-        const detection::InspectedOccurrence* inspectedOccurrence = nullptr,
+        const detection::InspectedOccurrence* selectedInspectedOccurrence = nullptr,
         const detection::FrequencyBandMeasurementPacket* liveFrequencyMeasurementPacket = nullptr
     );
     void updateSequenceAmbientStats(unsigned long nowMs);

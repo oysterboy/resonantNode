@@ -295,6 +295,16 @@ void AnalyzerApp::printSequenceTrial(const AnalyzerReport& report) const {
     } else {
         Serial.print("-1ms");
     }
+    Serial.print(" dup=");
+    Serial.print(report.debug.duplicates);
+    Serial.print(" src_total=");
+    Serial.print(report.occurrences.total);
+    Serial.print(" src_acc=");
+    Serial.print(report.occurrences.accepted);
+    Serial.print(" src_rej=");
+    Serial.print(report.occurrences.rejected);
+    Serial.print(" buffer_overrun=");
+    Serial.print(report.debug.bufferOverrun ? 1 : 0);
     Serial.print(" confidence=");
     Serial.print(report.primaryPattern.confidence, 2);
     if (report.classification.result != AnalyzerResult::Expected &&
@@ -326,11 +336,37 @@ void AnalyzerApp::printSequenceInspectCanonical(const AnalyzerReport& report) co
         return;
     }
 
-    printCanonicalDetectorReportGenericLine("SEQ_INSPECT", report);
-    if (report.detectorReport != nullptr && report.detectorReport->detectorId != detection::DetectorId::Unknown) {
-        printCanonicalDetectorDetailLine("SEQ_INSPECT", report);
-    }
-    printCanonicalStageLine("SEQ_INSPECT", report, false);
+    Serial.print("SEQ_INSPECT");
+    Serial.print(" inspect.kind=");
+    Serial.print(report.occurrences.kind != nullptr ? report.occurrences.kind : "none");
+    Serial.print(" inspect.source=");
+    Serial.print(report.occurrences.primarySource != nullptr ? report.occurrences.primarySource : "none");
+    Serial.print(" inspect.present=");
+    Serial.print(report.occurrences.present ? 1 : 0);
+    Serial.print(" inspect.valid=");
+    Serial.print(report.occurrences.valid ? 1 : 0);
+    Serial.print(" inspect.start_ms=");
+    Serial.print(report.occurrences.startMs);
+    Serial.print(" inspect.peak_ms=");
+    Serial.print(report.occurrences.peakMs);
+    Serial.print(" inspect.release_ms=");
+    Serial.print(report.occurrences.releaseMs);
+    Serial.print(" inspect.duration_ms=");
+    Serial.print(report.occurrences.primaryDurationMs);
+    Serial.print(" inspect.strength=");
+    Serial.print(report.occurrences.primaryStrength, 1);
+    Serial.print(" inspect.confidence=");
+    Serial.print(report.occurrences.confidence, 2);
+    Serial.print(" inspect.reject_reason=");
+    Serial.print(report.occurrences.rejectReason != nullptr ? report.occurrences.rejectReason : "none");
+    Serial.print(" inspect.primary_evidence=");
+    Serial.print(report.inspection.primaryEvidence != nullptr ? report.inspection.primaryEvidence : "none");
+    Serial.print(" inspect.target=");
+    Serial.print(report.inspection.moduleTarget != nullptr ? report.inspection.moduleTarget : "unknown");
+    Serial.print(" inspect.strength_class=");
+    Serial.print(report.inspection.moduleStrengthClass != nullptr ? report.inspection.moduleStrengthClass : "unknown");
+    Serial.print(" inspect.main_reject_reason=");
+    Serial.println(report.inspection.mainRejectReason != nullptr ? report.inspection.mainRejectReason : "none");
 }
 
 void AnalyzerApp::printSequenceSourceCanonical(const AnalyzerReport& report) const {
@@ -338,46 +374,45 @@ void AnalyzerApp::printSequenceSourceCanonical(const AnalyzerReport& report) con
         return;
     }
 
-    printCanonicalDetectorReportGenericLine("SEQ_SOURCE", report);
-    if (report.detectorReport != nullptr && report.detectorReport->detectorId != detection::DetectorId::Unknown) {
-        printCanonicalDetectorDetailLine("SEQ_SOURCE", report);
-    }
-
     Serial.print("SEQ_SOURCE");
-    Serial.print(" occurrence.kind=");
+    Serial.print(" source.kind=");
     Serial.print(report.occurrences.kind != nullptr ? report.occurrences.kind : "none");
-    Serial.print(" occurrence.source=");
+    Serial.print(" source.source=");
     Serial.print(report.occurrences.primarySource != nullptr ? report.occurrences.primarySource : "none");
-    Serial.print(" occurrence.present=");
+    Serial.print(" source.present=");
     Serial.print(report.occurrences.present ? 1 : 0);
-    Serial.print(" occurrence.valid=");
+    Serial.print(" source.valid=");
     Serial.print(report.occurrences.valid ? 1 : 0);
-    Serial.print(" occurrence.start_ms=");
+    Serial.print(" source.start_ms=");
     Serial.print(report.occurrences.startMs);
-    Serial.print(" occurrence.peak_ms=");
+    Serial.print(" source.peak_ms=");
     Serial.print(report.occurrences.peakMs);
-    Serial.print(" occurrence.release_ms=");
+    Serial.print(" source.release_ms=");
     Serial.print(report.occurrences.releaseMs);
-    Serial.print(" occurrence.duration_ms=");
+    Serial.print(" source.duration_ms=");
     Serial.print(report.occurrences.primaryDurationMs);
-    Serial.print(" occurrence.strength=");
+    Serial.print(" source.strength=");
     Serial.print(report.occurrences.primaryStrength, 1);
-    Serial.print(" occurrence.confidence=");
+    Serial.print(" source.confidence=");
     Serial.print(report.occurrences.confidence, 2);
-    Serial.print(" occurrence.reject_reason=");
+    Serial.print(" source.reject_reason=");
     Serial.print(report.occurrences.rejectReason != nullptr ? report.occurrences.rejectReason : "none");
-    Serial.print(" occurrence.total=");
+    Serial.print(" source.total=");
     Serial.print(report.occurrences.total);
-    Serial.print(" occurrence.accepted_count=");
+    Serial.print(" source.accepted_count=");
     Serial.print(report.occurrences.accepted);
-    Serial.print(" occurrence.rejected_count=");
+    Serial.print(" source.rejected_count=");
     Serial.print(report.occurrences.rejected);
-    Serial.print(" detector.reason=");
-    Serial.println(report.detectorReport != nullptr && report.detectorReport->selectedReject.detectorReason != nullptr
-        ? report.detectorReport->selectedReject.detectorReason
-        : "none");
+    Serial.println();
 
-    printCanonicalStageLine("SEQ_SOURCE", report, true);
+    printSequenceSourceSpecCanonical(report);
+}
+
+void AnalyzerApp::printSequenceSourceSpecCanonical(const AnalyzerReport& report) const {
+    printCanonicalDetectorReportGenericLine("SEQ_SOURCE_SPEC", report);
+    if (report.detectorReport != nullptr && report.detectorReport->detectorId != detection::DetectorId::Unknown) {
+        printCanonicalDetectorDetailLine("SEQ_SOURCE_SPEC", report);
+    }
 }
 
 void AnalyzerApp::printSequenceExplainCanonical(const AnalyzerReport& report) const {
@@ -849,8 +884,8 @@ void AnalyzerApp::printSequenceSummaryClean() const {
     Serial.print(summary.ambiguous);
     Serial.print(" too_dense=");
     Serial.print(summary.tooDense);
-    Serial.print(" invalid_audio=");
-    Serial.print(summary.invalidAudio);
+    Serial.print(" buffer_overrun=");
+    Serial.print(summary.bufferOverrun);
     Serial.print(" detector_accepted=");
     Serial.print(summary.detectorAccepted);
     Serial.print(" detector_rejects=");

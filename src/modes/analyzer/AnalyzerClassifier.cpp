@@ -1,10 +1,6 @@
 ﻿#include "AnalyzerClassifier.h"
 
 AnalyzerReason analyzerReasonFromSequenceOutcome(const AnalyzerSequenceClassificationInput& input) {
-    if (input.audioOverflow) {
-        return AnalyzerReason::InvalidAudio;
-    }
-
     switch (input.result) {
         case AnalyzerResult::Expected:
             return AnalyzerReason::ValidPatternInExpectedWindow;
@@ -14,8 +10,6 @@ AnalyzerReason analyzerReasonFromSequenceOutcome(const AnalyzerSequenceClassific
             return AnalyzerReason::UnexpectedValidPatternWithoutTrigger;
         case AnalyzerResult::Duplicate:
             return AnalyzerReason::DuplicatePatternAfterPrimary;
-        case AnalyzerResult::InvalidAudio:
-            return AnalyzerReason::InvalidAudio;
         case AnalyzerResult::Miss:
             if (input.detectorSelectedRejectPresent) {
                 return AnalyzerReason::OccurrenceSeenButRejected;
@@ -61,7 +55,6 @@ AnalyzerStage analyzerPrimaryStageFromReason(AnalyzerReason reason) {
         case AnalyzerReason::MultipleCompetingPatterns:
             return AnalyzerStage::Pattern;
         case AnalyzerReason::FieldTooDense:
-        case AnalyzerReason::InvalidAudio:
             return AnalyzerStage::Field;
         case AnalyzerReason::ValidPatternInExpectedWindow:
         case AnalyzerReason::ValidPatternBeforeWindow:

@@ -44,10 +44,11 @@ struct DetectionPipelineResult {
     bool hasPatternReport = false;
     PatternMatcherReport patternReport = {};
 
+    bool hasPatternInspectedOccurrence = false;
+    InspectedOccurrence patternInspectedOccurrence = {};
+
     bool hasOccurrence = false;
     Occurrence occurrence = {};
-
-    InspectedOccurrence inspectedOccurrence = {};
 
     bool hasField = false;
     FieldState field = {};
@@ -98,9 +99,11 @@ private:
     void drainDetectors(unsigned long nowMs);
     void drainPatternMatcher(unsigned long nowMs);
     bool pushPatternResult(const PatternResult& result);
+    bool pushPatternInspectedOccurrence(const InspectedOccurrence& occurrence);
+    bool popPatternInspectedOccurrence(InspectedOccurrence& out);
     void capturePipelineResult(
         const PatternResult& result,
-        const InspectedOccurrence* inspectedOccurrence,
+        const InspectedOccurrence* matchedInspectedOccurrence,
         unsigned long nowMs
     );
     void refreshDetectorReports(unsigned long nowMs);
@@ -127,7 +130,9 @@ private:
     DetectionPipelineResult _latestPipelineResult = {};
     bool _hasLatestPipelineResult = false;
     DetectorReport _detectorReport = {};
-    InspectedOccurrence _lastInspectedOccurrence = {};
+    InspectedOccurrence _patternInspectedQueue[kResultQueueCapacity] = {};
+    size_t _patternInspectedReadIndex = 0;
+    size_t _patternInspectedCount = 0;
 };
 
 } // namespace detection

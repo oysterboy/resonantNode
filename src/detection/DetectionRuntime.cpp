@@ -71,7 +71,9 @@ void DetectionRuntime::resetDetectionState() {
     _resultCount = 0;
     _latestPipelineResult = {};
     _hasLatestPipelineResult = false;
-    _lastInspectedOccurrence = {};
+    _patternInspectedQueue[0] = {};
+    _patternInspectedReadIndex = 0;
+    _patternInspectedCount = 0;
     _detectorReport = {};
 }
 
@@ -108,6 +110,9 @@ void DetectionRuntime::setDetectorSelection(DetectorSelection selection) {
     _detectorSelection = selection;
     resetDetectors();
     applyScalarTransientConfig(_scalarDetector, _scalarTransientConfig);
+    _patternInspectedQueue[0] = {};
+    _patternInspectedReadIndex = 0;
+    _patternInspectedCount = 0;
     _detectorReport = {};
 }
 
@@ -224,8 +229,9 @@ void DetectionRuntime::drainDetectors(unsigned long nowMs) {
                 _fieldStateTracker.observeOccurrence(occurrence, nowMs);
                 const InspectedOccurrence inspected = _occurrenceInspector.inspectWithHistory(occurrence, &_featureHistory);
                 _fieldStateTracker.observeInspectedOccurrence(inspected, nowMs);
-                _lastInspectedOccurrence = inspected;
-                _patternMatcher.acceptOccurrence(inspected);
+                if (_patternMatcher.acceptOccurrence(inspected)) {
+                    pushPatternInspectedOccurrence(inspected);
+                }
             }
             break;
         case DetectorSelection::ScalarTransient:
@@ -233,8 +239,9 @@ void DetectionRuntime::drainDetectors(unsigned long nowMs) {
                 _fieldStateTracker.observeOccurrence(occurrence, nowMs);
                 const InspectedOccurrence inspected = _occurrenceInspector.inspectWithHistory(occurrence, &_featureHistory);
                 _fieldStateTracker.observeInspectedOccurrence(inspected, nowMs);
-                _lastInspectedOccurrence = inspected;
-                _patternMatcher.acceptOccurrence(inspected);
+                if (_patternMatcher.acceptOccurrence(inspected)) {
+                    pushPatternInspectedOccurrence(inspected);
+                }
             }
             break;
     }
@@ -245,8 +252,14 @@ void DetectionRuntime::drainDetectors(unsigned long nowMs) {
 void DetectionRuntime::drainPatternMatcher(unsigned long nowMs) {
     PatternResult result = {};
     while (_patternMatcher.popPatternResult(nowMs, result)) {
+        InspectedOccurrence matchedInspectedOccurrence = {};
+        const bool hasMatchedInspectedOccurrence = popPatternInspectedOccurrence(matchedInspectedOccurrence);
         _fieldStateTracker.observePatternResult(result, nowMs);
-        capturePipelineResult(result, &_lastInspectedOccurrence, nowMs);
+        capturePipelineResult(
+            result,
+            hasMatchedInspectedOccurrence ? &matchedInspectedOccurrence : nullptr,
+            nowMs
+        );
         pushPatternResult(result);
     }
 }
@@ -264,7 +277,7 @@ bool DetectionRuntime::pushPatternResult(const PatternResult& result) {
 
 void DetectionRuntime::capturePipelineResult(
     const PatternResult& result,
-    const InspectedOccurrence* inspectedOccurrence,
+    const InspectedOccurrence* matchedInspectedOccurrence,
     unsigned long nowMs
 ) {
     _latestPipelineResult = {};
@@ -272,16 +285,39 @@ void DetectionRuntime::capturePipelineResult(
     _latestPipelineResult.pattern = result;
     _latestPipelineResult.hasPatternReport = true;
     _latestPipelineResult.patternReport = _patternMatcher.report();
-    if (inspectedOccurrence != nullptr && inspectedOccurrence->occurrence.present) {
+    if (matchedInspectedOccurrence != nullptr && matchedInspectedOccurrence->occurrence.present) {
+        _latestPipelineResult.hasPatternInspectedOccurrence = true;
+        _latestPipelineResult.patternInspectedOccurrence = *matchedInspectedOccurrence;
         _latestPipelineResult.hasOccurrence = true;
-        _latestPipelineResult.occurrence = inspectedOccurrence->occurrence;
-        _latestPipelineResult.inspectedOccurrence = *inspectedOccurrence;
+        _latestPipelineResult.occurrence = matchedInspectedOccurrence->occurrence;
     }
     _latestPipelineResult.hasField = true;
     _latestPipelineResult.field = _fieldStateTracker.state();
     _latestPipelineResult.profileName = _profileName;
     _latestPipelineResult.timestampMs = nowMs;
     _hasLatestPipelineResult = true;
+}
+
+bool DetectionRuntime::pushPatternInspectedOccurrence(const InspectedOccurrence& occurrence) {
+    if (_patternInspectedCount == kResultQueueCapacity) {
+        return false;
+    }
+
+    const size_t writeIndex = (_patternInspectedReadIndex + _patternInspectedCount) % kResultQueueCapacity;
+    _patternInspectedQueue[writeIndex] = occurrence;
+    ++_patternInspectedCount;
+    return true;
+}
+
+bool DetectionRuntime::popPatternInspectedOccurrence(InspectedOccurrence& out) {
+    if (_patternInspectedCount == 0) {
+        return false;
+    }
+
+    out = _patternInspectedQueue[_patternInspectedReadIndex];
+    _patternInspectedReadIndex = (_patternInspectedReadIndex + 1) % kResultQueueCapacity;
+    --_patternInspectedCount;
+    return true;
 }
 
 } // namespace detection

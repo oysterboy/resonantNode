@@ -51,7 +51,6 @@ enum class AnalyzerResult {
     Rejected,
     Ambiguous,
     TooDense,
-    InvalidAudio,
     Unknown,
 };
 
@@ -70,7 +69,6 @@ enum class AnalyzerReason {
     FieldTooDense,
     UnexpectedValidPatternWithoutTrigger,
     DuplicatePatternAfterPrimary,
-    InvalidAudio,
     Unknown,
 };
 
@@ -103,8 +101,6 @@ inline const char* analyzerResultName(AnalyzerResult value) {
             return "ambiguous";
         case AnalyzerResult::TooDense:
             return "too_dense";
-        case AnalyzerResult::InvalidAudio:
-            return "invalid_audio";
         case AnalyzerResult::Unknown:
         default:
             return "unknown";
@@ -141,8 +137,6 @@ inline const char* analyzerReasonName(AnalyzerReason value) {
             return "unexpected_valid_pattern_without_trigger";
         case AnalyzerReason::DuplicatePatternAfterPrimary:
             return "duplicate_pattern_after_primary";
-        case AnalyzerReason::InvalidAudio:
-            return "invalid_audio";
         case AnalyzerReason::Unknown:
         default:
             return "unknown";
@@ -326,6 +320,7 @@ struct AnalyzerDebugSummary {
     unsigned int duplicates = 0;
     unsigned int unexpected = 0;
     bool startupArtifact = false;
+    bool bufferOverrun = false;
 
     bool artifactCaptured = false;
     bool artifactFallback = false;
@@ -353,7 +348,7 @@ struct AnalyzerCleanSummary {
     unsigned int rejected = 0;
     unsigned int ambiguous = 0;
     unsigned int tooDense = 0;
-    unsigned int invalidAudio = 0;
+    unsigned int bufferOverrun = 0;
 
     unsigned int detectorAccepted = 0;
     unsigned int detectorSelectedReject = 0;

@@ -18,8 +18,8 @@ struct AnalyzerSequenceClassificationInput {
     long dtMs = -1;
     // Runtime-private pending count used by trial classification.
     unsigned long rawPendingCount = 0;
-    // Runtime-private overflow flag.
-    bool audioOverflow = false;
+    // Runtime-private buffer overrun flag.
+    bool bufferOverrun = false;
     // Canonical PatternResult availability for the finalized trial snapshot.
     // This remains generic; detector/pattern-specific reasons live elsewhere.
     bool patternAvailable = false;

@@ -393,47 +393,37 @@ void buildFrequencyFailReason(const detection::FrequencyBandMeasurementPacket& e
     FrequencyMatchEvaluation::buildFailReason(evidence, tuning, out, outSize);
 }
 
-const char* occurrenceKindName(detection::OccurrenceKind kind) {
-    switch (kind) {
-        case detection::OccurrenceKind::AmpTransient:
-            return "amp_transient";
-        case detection::OccurrenceKind::FrequencyMatch:
-            return "frequency_match";
-        case detection::OccurrenceKind::BroadbandTransient:
-            return "broadband_transient";
-        case detection::OccurrenceKind::None:
-        default:
-            return "none";
-    }
-}
-
-const char* occurrenceSourceName(detection::OccurrenceSource source) {
-    switch (source) {
-        case detection::OccurrenceSource::Amp:
-            return "amp";
-        case detection::OccurrenceSource::Frequency:
+const char* occurrenceTypeName(detection::OccurrenceType type) {
+    switch (type) {
+        case detection::OccurrenceType::Scalar:
+            return "scalar";
+        case detection::OccurrenceType::Frequency:
             return "frequency";
-        case detection::OccurrenceSource::Broadband:
-            return "broadband";
-        case detection::OccurrenceSource::None:
+        case detection::OccurrenceType::None:
         default:
             return "none";
     }
 }
 
-const char* occurrenceDetectorKindName(detection::OccurrenceDetectorKind kind) {
-    switch (kind) {
-        case detection::OccurrenceDetectorKind::Transient:
-            return "transient";
-        case detection::OccurrenceDetectorKind::FrequencyMatch:
+const char* occurrenceSourceName(detection::DetectorId detectorId) {
+    switch (detectorId) {
+        case detection::DetectorId::ScalarTransient:
+            return "scalar";
+        case detection::DetectorId::FrequencyMatch:
+            return "frequency";
+        case detection::DetectorId::Unknown:
+        default:
+            return "none";
+    }
+}
+
+const char* occurrenceDetectorKindName(detection::DetectorId detectorId) {
+    switch (detectorId) {
+        case detection::DetectorId::ScalarTransient:
+            return "scalar_transient";
+        case detection::DetectorId::FrequencyMatch:
             return "frequency_match";
-        case detection::OccurrenceDetectorKind::Dip:
-            return "dip";
-        case detection::OccurrenceDetectorKind::Plateau:
-            return "plateau";
-        case detection::OccurrenceDetectorKind::ThresholdCrossing:
-            return "threshold_crossing";
-        case detection::OccurrenceDetectorKind::Unknown:
+        case detection::DetectorId::Unknown:
         default:
             return "unknown";
     }
@@ -1070,9 +1060,9 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
     report.occurrences.rejected = diagnostics.rawCandidateCount > report.occurrences.accepted ? diagnostics.rawCandidateCount - report.occurrences.accepted : 0U;
     if (trialHasPipelineEvidence && reportInspectedOccurrence != nullptr && reportInspectedOccurrence->occurrence.present) {
         const detection::Occurrence& occurrence = reportInspectedOccurrence->occurrence;
-        report.occurrences.kind = occurrenceKindName(occurrence.kind);
-        report.occurrences.primarySource = occurrenceSourceName(occurrence.source);
-        report.occurrences.detectorKind = occurrenceDetectorKindName(occurrence.detectorKind);
+        report.occurrences.kind = occurrenceTypeName(occurrence.occurrenceType);
+        report.occurrences.primarySource = occurrenceSourceName(occurrence.detectorId);
+        report.occurrences.detectorKind = occurrenceDetectorKindName(occurrence.detectorId);
         report.occurrences.present = occurrence.present;
         report.occurrences.valid = occurrence.valid;
         report.occurrences.startMs = occurrence.startMs;
@@ -1081,8 +1071,9 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
         report.occurrences.primaryDtMs = static_cast<long>(occurrence.startMs) - static_cast<long>(_sequenceTest.currentTrialScheduledAtMs);
         report.occurrences.primaryDurationMs = occurrence.durationMs;
         report.occurrences.primaryStrength = occurrence.strength;
-        report.occurrences.score = occurrence.score;
-        report.occurrences.contrast = occurrence.contrast;
+        report.occurrences.contrast = occurrence.occurrenceType == detection::OccurrenceType::Frequency
+            ? occurrence.frequency.contrast
+            : 0.0f;
         report.occurrences.strength = occurrence.strength;
         report.occurrences.confidence = occurrence.confidence;
         report.occurrences.mainRejectReason = reportInspectedOccurrence->decision == detection::OccurrenceDecision::Rejected
@@ -1101,7 +1092,6 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
         report.occurrences.primaryDtMs = reportPatternDtMs;
         report.occurrences.primaryDurationMs = reportPatternDurationMs;
         report.occurrences.primaryStrength = reportPatternStrength;
-        report.occurrences.score = 0.0f;
         report.occurrences.contrast = 0.0f;
         report.occurrences.strength = reportPatternStrength;
         report.occurrences.confidence = trialHasPipelineEvidence ? reportPatternResult->confidence : 0.0f;
@@ -1113,20 +1103,20 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
     report.inspection.accepted = report.occurrences.accepted;
     report.inspection.rejected = diagnostics.rawCandidateCount > report.inspection.accepted ? diagnostics.rawCandidateCount - report.inspection.accepted : 0U;
     if (trialHasPipelineEvidence && reportInspectedOccurrence != nullptr && reportInspectedOccurrence->occurrence.present) {
-        report.inspection.primaryEvidence = occurrenceSourceName(reportInspectedOccurrence->occurrence.source);
+        report.inspection.primaryEvidence = occurrenceSourceName(reportInspectedOccurrence->occurrence.detectorId);
         switch (selectedProfile.patternRulesConfig.requiredSupportTarget) {
             case detection::EvidenceTarget::FrequencyScoreStrength:
                 report.inspection.moduleTarget = "frequency_score";
-                report.inspection.moduleStrengthClass = strengthClassName(reportInspectedOccurrence->occurrence.frequencyScoreStrength);
+                report.inspection.moduleStrengthClass = strengthClassName(reportInspectedOccurrence->occurrence.frequency.scoreStrength);
                 break;
             case detection::EvidenceTarget::TargetBandStrength:
                 report.inspection.moduleTarget = "target_band";
-                report.inspection.moduleStrengthClass = strengthClassName(reportInspectedOccurrence->occurrence.targetBandStrength);
+                report.inspection.moduleStrengthClass = strengthClassName(reportInspectedOccurrence->occurrence.frequency.targetBandStrength);
                 break;
             case detection::EvidenceTarget::AmpStrength:
             default:
                 report.inspection.moduleTarget = "amp_strength";
-                report.inspection.moduleStrengthClass = strengthClassName(reportInspectedOccurrence->occurrence.ampStrength);
+                report.inspection.moduleStrengthClass = strengthClassName(reportInspectedOccurrence->occurrence.scalar.strengthClass);
                 break;
         }
         report.inspection.mainRejectReason = reportInspectedOccurrence->decision == detection::OccurrenceDecision::Rejected ? occurrenceRejectReasonName(reportInspectedOccurrence->rejectReason) : "none";
@@ -1168,9 +1158,11 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
     report.profileDetail.ampStrength = selectedProfile.patternRulesConfig.requireSupportForAcceptance ? "enabled" : "disabled";
     report.profileDetail.ampStrengthMin = strengthClassName(selectedProfile.patternRulesConfig.minimumSupportStrength);
     report.profileDetail.requireSupportForAcceptance = selectedProfile.patternRulesConfig.requireSupportForAcceptance;
-    if (report.occurrences.present) {
-        report.profileDetail.freqScore = report.occurrences.score;
-        report.profileDetail.freqContrast = report.occurrences.contrast;
+    if (report.occurrences.present &&
+        reportInspectedOccurrence != nullptr &&
+        reportInspectedOccurrence->occurrence.occurrenceType == detection::OccurrenceType::Frequency) {
+        report.profileDetail.freqScore = reportInspectedOccurrence->occurrence.frequency.score;
+        report.profileDetail.freqContrast = reportInspectedOccurrence->occurrence.frequency.contrast;
     } else {
         report.profileDetail.freqScore = 0.0f;
         report.profileDetail.freqContrast = 0.0f;
@@ -1183,8 +1175,8 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
     report.profileDetail.ampLift = report.profileDetail.ampCenteredMagnitude - report.profileDetail.ampBase;
     const detection::ScalarInspectionObservation emptyScalarObservation{};
     const detection::ScalarInspectionObservation& selectedScalarObservation =
-        trialHasPipelineEvidence && reportInspectedOccurrence != nullptr && reportInspectedOccurrence->occurrence.scalarEvidence.available
-            ? reportInspectedOccurrence->occurrence.scalarEvidence
+        trialHasPipelineEvidence && reportInspectedOccurrence != nullptr && reportInspectedOccurrence->occurrence.scalar.evidence.available
+            ? reportInspectedOccurrence->occurrence.scalar.evidence
             : emptyScalarObservation;
     report.profileDetail.scalarObservation = selectedScalarObservation;
     report.profileDetail.inspectionObservationCount = 0;

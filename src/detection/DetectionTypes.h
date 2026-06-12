@@ -61,8 +61,8 @@ enum class DetectorId : uint8_t {
 // The accepted Occurrence payload layout is implied by OccurrenceType for now.
 enum class OccurrenceType : uint8_t {
     None = 0,
-    Transient,
-    FrequencyMatch,
+    Scalar,
+    Frequency,
 };
 
 } // namespace detection

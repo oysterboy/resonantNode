@@ -45,8 +45,8 @@ struct PatternResult {
     float primaryStrength = 0.0f;
     bool primaryAudioOverflow = false;
 
-    // Transitional payload carried through while legacy analyzer paths and
-    // later payload-trim passes still depend on candidate/inspection detail.
+    // Transitional payload carried through while later payload-trim passes
+    // still depend on candidate/inspection detail.
     PatternCandidate candidate = {};
     InspectedOccurrence inspectedOccurrence = {};
     bool patternCandidateAccepted = false;

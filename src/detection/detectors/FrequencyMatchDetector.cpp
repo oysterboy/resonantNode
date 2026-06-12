@@ -179,20 +179,18 @@ void FrequencyMatchDetector::recordRejectedCandidate() {
 void FrequencyMatchDetector::capturePendingOccurrence(const AudioSamplePacket& audioSamplePacket) {
     _pendingOccurrence = frequencyCandidate;
     _pendingOccurrence.detectorId = detection::DetectorId::FrequencyMatch;
-    _pendingOccurrence.occurrenceType = detection::OccurrenceType::FrequencyMatch;
-    _pendingOccurrence.kind = detection::OccurrenceKind::FrequencyMatch;
-    _pendingOccurrence.source = detection::OccurrenceSource::Frequency;
-    _pendingOccurrence.detectorKind = detection::OccurrenceDetectorKind::FrequencyMatch;
+    _pendingOccurrence.occurrenceType = detection::OccurrenceType::Frequency;
     _pendingOccurrence.present = true;
     _pendingOccurrence.confidence = _pendingOccurrence.valid ? 1.0f : 0.0f;
-    _pendingOccurrence.ampLevel = audioSamplePacket.audioMagnitudeValue;
-    _pendingOccurrence.ampBaseline = audioSamplePacket.baseline;
-    _pendingOccurrence.frequency = candidateEvidence;
     _pendingOccurrence.frequency.present = true;
-    _pendingOccurrence.frequency.matched = frequencyCandidate.valid;
-    _pendingOccurrence.frequency.observedAtMs = audioSamplePacket.timeMs;
-    _pendingOccurrence.frequency.targetHz = candidateEvidence.targetHz;
-    _pendingOccurrence.transient.present = false;
+    _pendingOccurrence.frequency.measurement = candidateEvidence;
+    _pendingOccurrence.frequency.measurement.present = true;
+    _pendingOccurrence.frequency.measurement.matched = frequencyCandidate.valid;
+    _pendingOccurrence.frequency.measurement.observedAtMs = audioSamplePacket.timeMs;
+    _pendingOccurrence.frequency.measurement.targetHz = candidateEvidence.targetHz;
+    _pendingOccurrence.scalar.value = audioSamplePacket.audioMagnitudeValue;
+    _pendingOccurrence.scalar.baseline = audioSamplePacket.baseline;
+    _pendingOccurrence.scalar.lift = _pendingOccurrence.scalar.value - _pendingOccurrence.scalar.baseline;
     _pendingOccurrencePresent = _pendingOccurrence.valid;
     if (_pendingOccurrencePresent) {
         _acceptedOccurrence.present = true;
@@ -202,8 +200,8 @@ void FrequencyMatchDetector::capturePendingOccurrence(const AudioSamplePacket& a
         _acceptedOccurrence.durationMs = _pendingOccurrence.durationMs;
         _acceptedOccurrence.strength = _pendingOccurrence.strength;
         _acceptedOccurrence.confidence = _pendingOccurrence.confidence;
-        _acceptedDetail.score = _pendingOccurrence.score;
-        _acceptedDetail.contrast = _pendingOccurrence.contrast;
+        _acceptedDetail.score = _pendingOccurrence.frequency.score;
+        _acceptedDetail.contrast = _pendingOccurrence.frequency.contrast;
     }
 }
 
@@ -240,10 +238,9 @@ void FrequencyMatchDetector::update(const detection::FrequencyBandMeasurementPac
     candidateMinDurationMs = minDurationMs;
     candidateMaxDurationMs = 0;
 
+    frequencyCandidate.detectorId = detection::DetectorId::FrequencyMatch;
+    frequencyCandidate.occurrenceType = detection::OccurrenceType::Frequency;
     frequencyCandidate.present = evidence.present;
-    frequencyCandidate.kind = detection::OccurrenceKind::FrequencyMatch;
-    frequencyCandidate.source = detection::OccurrenceSource::Frequency;
-    frequencyCandidate.detectorKind = detection::OccurrenceDetectorKind::FrequencyMatch;
     frequencyCandidate.valid = false;
 
     const auto closeCandidate = [&](unsigned long minDurationMs) {
@@ -329,8 +326,9 @@ void FrequencyMatchDetector::update(const detection::FrequencyBandMeasurementPac
                     frequencyCandidate.endMs = 0;
                     frequencyCandidate.durationMs = 0;
                     frequencyCandidate.strength = evidence.targetBandScoreValue;
-                    frequencyCandidate.score = evidence.targetBandScoreValue;
-                    frequencyCandidate.contrast = evidence.targetBandContrastValue;
+                    frequencyCandidate.frequency.present = true;
+                    frequencyCandidate.frequency.score = evidence.targetBandScoreValue;
+                    frequencyCandidate.frequency.contrast = evidence.targetBandContrastValue;
                     frequencyCandidate.confidence = 0.0f;
                     strncpy(candidateState, "open", sizeof(candidateState) - 1);
                     candidateState[sizeof(candidateState) - 1] = '\0';
@@ -358,8 +356,8 @@ void FrequencyMatchDetector::update(const detection::FrequencyBandMeasurementPac
                     frequencyCandidate.peakMs = now;
                     frequencyCandidate.peakSample = currentSample;
                     frequencyCandidate.strength = evidence.targetBandScoreValue;
-                    frequencyCandidate.score = evidence.targetBandScoreValue;
-                    frequencyCandidate.contrast = evidence.targetBandContrastValue;
+                    frequencyCandidate.frequency.score = evidence.targetBandScoreValue;
+                    frequencyCandidate.frequency.contrast = evidence.targetBandContrastValue;
                 }
                 frequencyCandidate.durationMs = candidateDurationMs;
                 frequencyCandidate.valid = false;

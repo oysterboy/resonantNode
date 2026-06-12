@@ -82,9 +82,7 @@ void ScalarTransientDetector::resetSelectedRejectSummary() {
 
 void ScalarTransientDetector::update(
     const AudioSamplePacket& audioSamplePacket,
-    float signalMagnitude,
-    detection::OccurrenceKind kind,
-    detection::OccurrenceSource source
+    float signalMagnitude
 ) {
     const unsigned long nowUs = audioSamplePacket.timeUs;
     _onsetDetected = false;
@@ -101,7 +99,7 @@ void ScalarTransientDetector::update(
 
     updateOnsetStage(nowUs, signalMagnitude, aboveAttackThreshold, onsetCooldownElapsed);
     updateTransientStage(nowUs, signalMagnitude, aboveReleaseThreshold);
-    updateAcceptedOccurrenceCandidate(audioSamplePacket, signalMagnitude, kind, source);
+    updateAcceptedOccurrenceCandidate(audioSamplePacket, signalMagnitude);
     refreshReportDetail();
     printTransientStatsIfDue(nowUs);
 }
@@ -252,14 +250,10 @@ void ScalarTransientDetector::captureSelectedReject(unsigned long releaseObserve
 
 void ScalarTransientDetector::updateAcceptedOccurrenceCandidate(
     const AudioSamplePacket& audioSamplePacket,
-    float signalMagnitude,
-    detection::OccurrenceKind kind,
-    detection::OccurrenceSource source
+    float signalMagnitude
 ) {
     if (_onsetDetected) {
         _acceptedOccurrenceCandidateActive = true;
-        _acceptedOccurrenceKind = kind;
-        _acceptedOccurrenceSource = source;
         _acceptedOccurrenceStartSample = audioSamplePacket.sampleIndex;
         _acceptedOccurrencePeakSample = audioSamplePacket.sampleIndex;
         _acceptedOccurrenceStartMs = audioSamplePacket.timeMs;
@@ -292,13 +286,8 @@ void ScalarTransientDetector::updateAcceptedOccurrenceCandidate(
 
 void ScalarTransientDetector::capturePendingOccurrence(const AudioSamplePacket& audioSamplePacket) {
     _pendingOccurrence = {};
-    _pendingOccurrence.detectorId = detection::detectorIdFromLegacyOccurrenceSource(_acceptedOccurrenceSource);
-    _pendingOccurrence.occurrenceType = detection::occurrenceTypeFromLegacyOccurrenceKind(_acceptedOccurrenceKind);
-    _pendingOccurrence.kind = _acceptedOccurrenceKind;
-    _pendingOccurrence.source = _acceptedOccurrenceSource;
-    _pendingOccurrence.detectorKind = _acceptedOccurrenceKind == detection::OccurrenceKind::FrequencyMatch
-        ? detection::OccurrenceDetectorKind::FrequencyMatch
-        : detection::OccurrenceDetectorKind::Transient;
+    _pendingOccurrence.detectorId = detection::DetectorId::ScalarTransient;
+    _pendingOccurrence.occurrenceType = detection::OccurrenceType::Scalar;
     _pendingOccurrence.present = true;
     _pendingOccurrence.valid = true;
     _pendingOccurrence.startSample = _acceptedOccurrenceStartSample;
@@ -312,43 +301,26 @@ void ScalarTransientDetector::capturePendingOccurrence(const AudioSamplePacket& 
         ? _pendingOccurrence.releaseMs - _pendingOccurrence.startMs
         : 0UL;
     _pendingOccurrence.strength = _acceptedOccurrencePeakStrength;
-    _pendingOccurrence.score = _acceptedOccurrencePeakStrength;
-    _pendingOccurrence.contrast = 0.0f;
     _pendingOccurrence.confidence = 1.0f;
     _pendingOccurrence.scalar.present = true;
     _pendingOccurrence.scalar.value = _acceptedOccurrencePeakStrength;
+    _pendingOccurrence.scalar.baseline = audioSamplePacket.baseline;
+    _pendingOccurrence.scalar.lift = _pendingOccurrence.scalar.value - _pendingOccurrence.scalar.baseline;
     _pendingOccurrence.scalar.strength = _acceptedOccurrencePeakStrength;
-    if (_acceptedOccurrenceSource == detection::OccurrenceSource::Amp) {
-        _pendingOccurrence.scalar.baseline = audioSamplePacket.baseline;
-        _pendingOccurrence.scalar.lift = _pendingOccurrence.scalar.value - _pendingOccurrence.scalar.baseline;
-    }
+    _pendingOccurrence.scalar.onsetStrength = _acceptedOccurrenceOnsetStrength;
+    _pendingOccurrence.scalar.peakStrength = _acceptedOccurrencePeakStrength;
+    _pendingOccurrence.scalar.releaseStrength = _acceptedOccurrenceCurrentStrength;
+    _pendingOccurrence.scalar.audioOverflowDuringCandidate = audioSamplePacket.overflowDuringBlock;
     _reportDetail.accepted.present = true;
     _reportDetail.accepted.value = _pendingOccurrence.scalar.value;
     _reportDetail.accepted.baseline = _pendingOccurrence.scalar.baseline;
     _reportDetail.accepted.lift = _pendingOccurrence.scalar.lift;
     _reportDetail.accepted.normalized = 0.0f;
-    _pendingOccurrence.ampLevel = audioSamplePacket.audioMagnitudeValue;
-    _pendingOccurrence.ampBaseline = audioSamplePacket.baseline;
-    _pendingOccurrence.transient.present = true;
-    _pendingOccurrence.transient.onsetSample = _acceptedOccurrenceStartSample;
-    _pendingOccurrence.transient.peakSample = _acceptedOccurrencePeakSample;
-    _pendingOccurrence.transient.releaseSample = audioSamplePacket.sampleIndex;
-    _pendingOccurrence.transient.startMs = _acceptedOccurrenceStartMs;
-    _pendingOccurrence.transient.heardAtMs = _pendingOccurrence.releaseMs;
-    _pendingOccurrence.transient.acceptedMs = _pendingOccurrence.releaseMs;
-    _pendingOccurrence.transient.durationMs = _pendingOccurrence.durationMs;
-    _pendingOccurrence.transient.onsetStrength = _acceptedOccurrenceOnsetStrength;
-    _pendingOccurrence.transient.peakStrength = _acceptedOccurrencePeakStrength;
-    _pendingOccurrence.transient.releaseStrength = _acceptedOccurrenceCurrentStrength;
-    _pendingOccurrence.transient.ambientBaseline = audioSamplePacket.baseline;
-    _pendingOccurrence.transient.audioOverflowDuringCandidate = audioSamplePacket.overflowDuringBlock;
     _pendingOccurrencePresent = true;
 }
 
 void ScalarTransientDetector::resetAcceptedOccurrenceCandidate() {
     _acceptedOccurrenceCandidateActive = false;
-    _acceptedOccurrenceKind = detection::OccurrenceKind::None;
-    _acceptedOccurrenceSource = detection::OccurrenceSource::None;
     _acceptedOccurrenceStartSample = 0;
     _acceptedOccurrencePeakSample = 0;
     _acceptedOccurrenceStartMs = 0;

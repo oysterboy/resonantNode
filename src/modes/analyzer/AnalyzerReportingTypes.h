@@ -18,8 +18,8 @@ Does not own detection or behavior decisions.
 
 // ANALYZER_OUTPUT_BOUNDARY
 //
-// Analyzer output should stay on canonical report inputs. Do not add
-// legacy diagnostics bridge fields here.
+// Analyzer output should stay on canonical report inputs. Do not add retired
+// diagnostics bridge fields here.
 //
 // Future canonical output targets:
 //
@@ -241,7 +241,6 @@ struct AnalyzerOccurrenceObservation {
     long primaryDtMs = -1;
     unsigned long primaryDurationMs = 0;
     float primaryStrength = 0.0f;
-    float score = 0.0f;
     float contrast = 0.0f;
     float strength = 0.0f;
     float confidence = 0.0f;

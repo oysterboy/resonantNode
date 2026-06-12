@@ -1,674 +1,475 @@
-# Pass X1 — Delete DetectionDiagnostics and Legacy Analyzer Bridge
+# Pass X2 - Occurrence Payload Cleanup
 
 Status: Codex instruction  
-Scope: current code in `ESP32_learn01.zip`  
-Goal: delete unnecessary compatibility/tooling residue, keep the canonical Analyzer Bridge, delete the DetectionDiagnostics-backed legacy Analyzer Bridge, and remove DetectionDiagnostics entirely.
+Scope: active `src/detection` and `src/modes/analyzer` occurrence chain  
+Goal: remove the legacy/transitional `Occurrence` payload spillover by moving active consumers onto the canonical occurrence shell plus scoped detail blocks.
 
 ---
 
-## Decisions to apply
+## Starting point
+
+X1 removed `DetectionDiagnostics`, the legacy Analyzer bridge, BASE/CAP/VAL tooling, and post-DDQ residue.
+
+Remaining UNKNOWN from X1-R:
 
 ```text
-1. BASE tooling                              -> delete now
-2. CAP tooling                               -> delete now
-3. VAL tooling                               -> delete now
-4. Deep FrequencyMatch legacy diagnostics    -> remove now; document future FREQ_DIAG only
-5. Analyzer legacy source/frequency/scalar   -> delete, do not quarantine
-6. Old sequence compatibility counters       -> delete all unused
-7. SEQ REPORT neutral runtime summaries      -> keep
-8. SEQ STATUS                                -> keep
-9. SYSTEM_HEALTH                             -> keep
-10. SEQ sample dump / curve                  -> keep
+src/detection/occurrences/Occurrence.h
+src/detection/patterns/PatternResult.h
+src/detection/detectors/ScalarTransientDetector.cpp
+OccurrenceSource usage in runtime/detector/pattern/analyzer logic
 ```
 
-Also:
-
-```text
-patternResultQueueOverflowCount -> delete now
-Canonical Analyzer Bridge -> keep
-DetectionDiagnostics-backed legacy Analyzer Bridge -> delete
-DetectionDiagnostics -> delete
-```
+This pass handles only the `Occurrence` payload. `PatternResult` trimming is a follow-up pass unless a trivial compile-only change becomes necessary.
 
 ---
 
-## Analyzer Bridge rule
+## Current problem
 
-Do not remove the Analyzer Bridge.
-
-Split the concept:
-
-```text
-Canonical Analyzer Bridge:
-    DetectorReport / RejectedCandidateSummary / PatternResult / expected window facts
-    -> AnalyzerReport clean fields
-    KEEP
-
-Legacy Analyzer Bridge:
-    DetectionDiagnostics / old source structs / AnalyzerFrequencyDiagnostic / AnalyzerScalarDiagnostic
-    -> AnalyzerReport compatibility fields
-    DELETE
-```
-
-Allowed canonical bridge inputs:
-
-```text
-DetectorReport
-RejectedCandidateSummary
-PatternResult
-canonical Occurrence / InspectedOccurrence summaries where already used
-expected trial/window facts
-run context / profile facts
-```
-
-Forbidden canonical bridge inputs:
-
-```text
-DetectionDiagnostics
-DetectionDiagnosticsCompat
-AnalyzerSourceStageReport
-AnalyzerFrequencyDiagnostic
-AnalyzerScalarDiagnostic
-legacy source-summary fields
-legacy near-miss text
-deep frequency diagnostic dumps
-```
-
-Preferred canonical fill shape:
+`Occurrence` still contains a canonical shell plus legacy payload:
 
 ```cpp
-fillAnalyzerRunContext(report, ...);
-fillAnalyzerDetectorStage(report, detectorReport);
-fillAnalyzerInspectionStage(report, inspectionResult);
-fillAnalyzerPatternStage(report, patternResult);
-fillAnalyzerClassification(report, expectedWindow, patternResult, detectorReport);
+DetectorId detectorId;
+OccurrenceType occurrenceType;
+bool present;
+bool valid;
+start/peak/release/end samples and ms;
+strength;
+confidence;
+ScalarOccurrenceDetail scalar;
+
+// legacy / transitional spillover
+OccurrenceKind kind;
+OccurrenceSource source;
+OccurrenceDetectorKind detectorKind;
+score;
+contrast;
+ampStrength;
+scalarEvidence;
+frequencyScoreStrength;
+frequencyContrastQuality;
+targetBandStrength;
+ampLevel;
+ampBaseline;
+TransientEvidence transient;
+FrequencyBandMeasurementPacket frequency;
 ```
 
-Not allowed:
+The active chain still reads old identity fields and old wide payload fields in:
+
+```text
+DetectionRuntime
+ScalarTransientDetector
+FrequencyMatchDetector
+OccurrenceInspector
+PatternAssembler
+AnalyzerApp
+AnalyzerReportingTypes
+```
+
+---
+
+## Desired end state
+
+`Occurrence` should become a compact accepted-event contract:
 
 ```cpp
-captureDiagnostics();
-copy DetectionDiagnostics into report.source/frequency/scalar;
-clean printers read fields from mixed legacy report;
+struct Occurrence {
+    DetectorId detectorId;
+    OccurrenceType occurrenceType;
+    bool present;
+    bool valid;
+
+    uint64_t startSample;
+    uint64_t peakSample;
+    uint64_t releaseSample;
+
+    unsigned long startMs;
+    unsigned long peakMs;
+    unsigned long releaseMs;
+    unsigned long endMs;
+    unsigned long durationMs;
+
+    float strength;
+    float confidence;
+
+    ScalarOccurrenceDetail scalar;
+    FrequencyOccurrenceDetail frequency;
+};
 ```
+
+No active code should read:
+
+```text
+OccurrenceKind
+OccurrenceSource
+OccurrenceDetectorKind
+detectorIdFromLegacyOccurrenceSource()
+occurrenceTypeFromLegacyOccurrenceKind()
+Occurrence::score
+Occurrence::contrast
+Occurrence::ampStrength
+Occurrence::scalarEvidence
+Occurrence::frequencyScoreStrength
+Occurrence::frequencyContrastQuality
+Occurrence::targetBandStrength
+Occurrence::ampLevel
+Occurrence::ampBaseline
+Occurrence::transient
+```
+
+Legacy aliases and bridge helpers should be removed from `Occurrence.h` only after all active producers and consumers are migrated.
 
 ---
 
-## Clean path rule
-
-Clean Analyzer truth:
-
-```text
-SEQ_TRIAL
-SEQ_SOURCE
-SEQ_INSPECT
-SEQ_EXPLAIN
-SEQ_SUMMARY
-```
-
-may read only:
-
-```text
-DetectorReport
-RejectedCandidateSummary
-PatternResult
-AnalyzerReport canonical classification
-expected trial/window facts
-```
-
-It must not read:
-
-```text
-DetectionDiagnostics
-DetectionDiagnosticsCompat
-AnalyzerSourceStageReport
-AnalyzerFrequencyDiagnostic
-AnalyzerScalarDiagnostic
-old sequence compatibility counters
-BASE / CAP / VAL tooling state
-deep frequency diagnostic dumps
-```
-
----
-
-## X1-1 — Delete obsolete tooling and counters
-
-### Delete pattern result queue overflow counter
-
-Search:
-
-```text
-patternResultQueueOverflowCount
-queueOverflow
-PatternResultQueue
-overflowCount
-```
-
-Remove:
-
-```text
-field
-increment
-AnalyzerReport/debug assignment
-summary/status/output references
-```
-
-Do not replace with an accessor.
-
----
-
-### Delete BASE tooling
-
-Search:
-
-```text
-legacyPrintBaseSummary
-legacyPrintBaseHints
-BASE done
-BASE quiet
-BASE
-TEST
-```
-
-Remove:
-
-```text
-legacyPrintBaseSummary()
-legacyPrintBaseHints()
-related BASE/TEST summary calls
-related hints
-dead command/session glue if no longer useful
-```
-
----
-
-### Delete CAP tooling
-
-Search:
-
-```text
-legacyPrintCaptureSummary
-legacyPrintCaptureHints
-CAP done
-CAP quiet
-CAP
-```
-
-Remove:
-
-```text
-legacyPrintCaptureSummary()
-legacyPrintCaptureHints()
-CAP summary calls
-CAP hints
-dead CAP command/session glue if no longer useful
-```
-
-Do not delete separate RAW capture unless confirmed identical and obsolete.
-
----
-
-### Delete VAL tooling
-
-Search:
-
-```text
-legacyPrintValueFrame
-legacyPrintValueModeBanner
-VAL
-value frame
-```
-
-Remove:
-
-```text
-legacyPrintValueFrame(...)
-legacyPrintValueModeBanner()
-VAL mode/banner/update-loop calls
-dead VAL command parsing if no longer useful
-```
-
-Do not delete clean SEQ sample dump / curve.
-
----
-
-### Delete old unused sequence compatibility counters
-
-Search examples:
-
-```text
-patternMatchedExpected
-patternUnmatchedExpected
-patternMatchedDuplicates
-patternUnmatchedDuplicates
-patternMatchedUnexpected
-patternUnmatchedUnexpected
-freqRejectScore
-freqRejectContrast
-freqRejectBoth
-freqRejectNoEvidence
-freqEvidenceClassCounts
-totalPatternDtMs
-totalPatternDurationMs
-totalPatternConfidence
-patternDtCount
-patternDurationCount
-missReasonCounts
-rejectReasonCounts
-currentMissStreak
-longestMissStreak
-firstMissTrial
-legacyFrequencyEvidenceClassFromClassName
-frequencyEvidenceClassIndex
-classifyFrequencyEvidence
-legacySequenceFaultClassNameFromMiss
-```
-
-Remove every counter/helper that is:
-
-```text
-written-only
-reset-only
-only used by deleted compatibility output
-not used by printSequenceSummaryClean()
-not part of AnalyzerCleanSummary
-```
-
-Keep only counters actively used by the current clean summary.
-
----
-
-## X1-2 — Delete Legacy Analyzer Bridge
-
-Delete:
-
-```text
-AnalyzerSourceStageReport
-AnalyzerFrequencyDiagnostic
-AnalyzerScalarDiagnostic
-AnalyzerLegacySummary if unused
-legacy source/frequency/scalar report population
-legacy evidence class helper functions if unused
-legacy miss/reject helper functions if unused
-```
-
-Required:
-
-```text
-Canonical Analyzer Bridge remains.
-DetectionDiagnostics-backed legacy bridge is removed from report building.
-```
-
-Allowed:
-
-```text
-direct canonical bridge from DetectorReport / PatternResult / expected window into AnalyzerReport
-```
-
-Not allowed:
-
-```text
-AnalyzerCompat* replacement structs
-silent compatibility population during normal AnalyzerReport construction
-clean printers reading legacy structs
-clean summary counters using legacy structs
-```
-
----
-
-## X1-3 — Delete DetectionDiagnostics
-
-Targets:
-
-```text
-DetectionDiagnostics
-DetectionRuntime::captureDiagnostics()
-DetectionRuntime::diagnostics()
-DetectionRuntime::_diagnostics
-populateScalarLegacyDiagnosticsFromReport(...)
-populateFrequencyLegacyDiagnosticsFromReport(...)
-AnalyzerApp runtimeDiag path
-```
-
-Remove from canonical Analyzer Bridge:
-
-```cpp
-_detection.captureDiagnostics();
-runtimeDiag = &_detection.diagnostics();
-```
-
-Final state should be:
-
-```text
-No DetectionDiagnostics references in src/.
-```
-
----
-
-## X1-4 — Future FREQ_DIAG note
-
-Deep fields to remove from DetectionDiagnostics / clean AnalyzerReport:
-
-```text
-frequencyScoreMean
-frequencyContrastMean
-target power mean/max
-lower/upper neighbor power mean/max
-release reject frame counters
-longest match streak
-deep frequency candidate/frame summaries
-legacy near-miss frequency dumps
-```
-
-Do not copy these into:
-
-```text
-SEQ_SOURCE
-SEQ_INSPECT
-SEQ_EXPLAIN
-SEQ_SUMMARY
-```
-
-Add a short doc note only if useful:
-
-```text
-Future FREQ_DIAG may expose deep FrequencyMatch tuning diagnostics directly from FrequencyMatchDetector / frequency feature tooling.
-```
-
-Suggested doc:
-
-```text
-docs/tooling/future_freq_diag.md
-```
-
-or:
-
-```text
-docs/roadmaps/roadmap_frequency_tooling.md
-```
-
----
-
-## Keep unchanged
-
-Do not delete:
-
-```text
-printSequenceReport()
-printSequenceStatus()
-printSystemHealth(...)
-printSequenceSampleReport(...)
-RAW capture if separate
-SEQ_SOURCE
-SEQ_INSPECT
-SEQ_EXPLAIN
-SEQ_SUMMARY
-canonical Analyzer Bridge
-```
+## Guardrails
 
 Do not change:
 
 ```text
-detector thresholds
 detector behavior
-PatternResult validity semantics
-Occurrence payload
-PatternMatcher
-Behavior
-Output
+thresholds
+PatternMatcher internals
+PatternResult semantics, except compile fixes caused by occurrence field moves
+Behavior / Output
+clean SEQ output labels
+emitted event label strings
+timing math
+accept/reject decisions
 ```
+
+Do not remove:
+
+```text
+DetectorReport
+RejectedCandidateSummary
+AnalyzerReport / AnalyzerReportingTypes
+RAW/sample dump tooling
+SEQ REPORT
+SEQ STATUS
+SYSTEM_HEALTH
+```
+
+If a field is unclear, keep it and classify it as `UNKNOWN`.
 
 ---
 
-## Required output report
+## Classification labels
 
-Report:
-
-```text
-Deleted:
-- patternResultQueueOverflowCount
-- BASE tooling
-- CAP tooling
-- VAL tooling
-- unused counters
-- Analyzer source/frequency/scalar legacy structs
-- DetectionDiagnostics
-
-Kept:
-- canonical Analyzer Bridge
-- SEQ REPORT
-- SEQ STATUS
-- SYSTEM_HEALTH
-- SEQ sample dump / curve
-- RAW capture if separate
-
-Removed from clean path:
-- runtimeDiag
-- captureDiagnostics()
-- diagnostics()
-- legacy Analyzer Bridge
-
-Moved to future docs:
-- deep FrequencyMatch FREQ_DIAG material
-
-Build:
-- command run
-- result
-```
-
----
-
-## Acceptance criteria
-
-Pass accepted if:
+Use only these labels in reports:
 
 ```text
-- canonical Analyzer Bridge still exists and builds AnalyzerReport from canonical runtime facts
-- no patternResultQueueOverflowCount references remain
-- BASE/CAP/VAL legacy tooling is gone
-- unused old sequence counters are gone
-- Analyzer legacy source/frequency/scalar structs are gone
-- no clean SEQ path reads DetectionDiagnostics
-- DetectionDiagnostics is gone
-- deep frequency diagnostics are not copied into clean output
-- SEQ REPORT still works
-- SEQ STATUS still works
-- SYSTEM_HEALTH still works
-- SEQ sample dump / curve still works
-- build passes
-```
-
-Strong accepted state:
-
-```text
-No `DetectionDiagnostics` references remain in `src/`.
-No `AnalyzerSourceStageReport` references remain.
-No `AnalyzerFrequencyDiagnostic` references remain.
-No `AnalyzerScalarDiagnostic` references remain.
-```
-
----
-
-## Recommended commit messages
-
-For one combined pass:
-
-```bash
-git commit -m "DetectionCleanup delete legacy diagnostics bridge"
-```
-
-If split:
-
-```bash
-git commit -m "AnalyzerCleanup remove obsolete base cap val tooling"
-git commit -m "AnalyzerCleanup delete unused sequence compatibility counters"
-git commit -m "AnalyzerCleanup delete legacy analyzer bridge"
-git commit -m "DetectionCleanup delete DetectionDiagnostics"
-```
-
----
-
-## X1-F - Post-X1 Legacy / Compat Chain Sweep
-
-Status: follow-up check after X1  
-Scope: analyzer/detector chain only  
-Goal: find remaining legacy, compat, temporary, or "for now" residue after `DetectionDiagnostics` and legacy Analyzer bridge deletion.
-
-### Search terms
-
-Search the full `src/detection` and `src/modes/analyzer` tree for:
-
-```text
-legacy
-Legacy
-compat
-Compat
-for now
-temporary
-transitional
-TODO
-FIXME
-old
-source
-OccurrenceSource
-DetectionDiagnostics
-AnalyzerSourceStageReport
-AnalyzerFrequencyDiagnostic
-AnalyzerScalarDiagnostic
-runtimeDiag
-freqEvidenceClass
-nearMiss
-diagnostic
-```
-
-Classify each hit with only these labels:
-
-```text
+MOVE_NOW
 DELETE_NOW
 KEEP_CANONICAL
 KEEP_NEUTRAL_TOOLING
 ROADMAP_LATER
-DOC_COMMENT_ONLY
 BUG_RISK
 UNKNOWN
 ```
 
-### Main checks
+Meanings:
 
-Verify:
+```text
+MOVE_NOW          active payload should move to canonical/scoped detail
+DELETE_NOW        dead legacy alias/helper after all reads are gone
+KEEP_CANONICAL    part of the desired occurrence contract
+KEEP_NEUTRAL_TOOLING output/tooling fact, but not analyzer truth
+ROADMAP_LATER     belongs to PatternResult or later report cleanup
+BUG_RISK          changing it may affect behavior/timing/output semantics
+UNKNOWN           not enough certainty; leave untouched
+```
 
-1. Clean SEQ_TRIAL / SOURCE / INSPECT / EXPLAIN / SUMMARY do not read legacy/compat structs.
-2. DetectorReport is the only detector-stage report source.
-3. RejectedCandidateSummary is the only selected-reject source.
-4. AnalyzerReport is built from canonical bridge inputs only.
-5. No old source-stage / OccurrenceSource naming remains in active analyzer/detector logic.
-6. Neutral tooling is clearly separate from analyzer truth.
-7. Remaining "temporary" comments either become roadmap notes or are deleted.
+---
 
-Do not change:
+## X2-A - Occurrence payload audit
 
-- detector behavior
-- thresholds
-- PatternResult semantics
-- Occurrence payload
-- PatternMatcher internals
-- Behavior / Output
+Search:
+
+```text
+OccurrenceKind
+OccurrenceSource
+OccurrenceDetectorKind
+detectorIdFromLegacyOccurrenceSource
+occurrenceTypeFromLegacyOccurrenceKind
+.kind
+.source
+.detectorKind
+.score
+.contrast
+.ampStrength
+.scalarEvidence
+.frequencyScoreStrength
+.frequencyContrastQuality
+.targetBandStrength
+.ampLevel
+.ampBaseline
+.transient
+.frequency
+```
+
+Scope:
+
+```text
+src/detection
+src/modes/analyzer
+```
 
 Create:
 
 ```text
-docs/post_ddq_legacy_compat_sweep.md
+docs/occurrence_payload_cleanup_audit.md
 ```
 
 Include:
 
 ```text
-## Remaining active legacy/compat hits
-## Deleted hits
-## Kept canonical hits
-## Kept neutral tooling hits
-## Roadmap-later hits
-## Unknown / needs decision
-## Recommended next cleanup pass
+## Active producers
+## Active consumers
+## MOVE_NOW
+## DELETE_NOW
+## KEEP_CANONICAL
+## KEEP_NEUTRAL_TOOLING
+## ROADMAP_LATER
+## BUG_RISK
+## UNKNOWN
+## Proposed migration order
 ```
 
 Acceptance:
 
-- No active clean analyzer/detector chain depends on legacy/compat names.
-- Remaining legacy/compat terms are either deleted, tooling-only, roadmap-only, or explicitly documented.
-- Build passes.
+```text
+Every active legacy/transitional Occurrence field read/write is classified.
+No code changes are required in X2-A except the audit doc.
+```
 
 ---
 
-## X1-R - Post-X1 Legacy / Compat Removal
+## X2-B - Define scoped occurrence details
 
-Status: short cleanup pass after `X1-F` sweep  
-Scope: analyzer/detector chain only  
-Goal: remove all `DELETE_NOW` residue found in `docs/post_ddq_legacy_compat_sweep.md`.
+Extend `Occurrence.h` with explicit scoped detail blocks before moving users:
 
-Read:
+```cpp
+struct ScalarOccurrenceDetail {
+    bool present;
+    float value;
+    float baseline;
+    float lift;
+    float strength;
+    float onsetStrength;
+    float peakStrength;
+    float releaseStrength;
+    bool audioOverflowDuringCandidate;
+    ScalarEvidence evidence;
+    StrengthClass strengthClass;
+};
 
-```text
-docs/post_ddq_legacy_compat_sweep.md
+struct FrequencyOccurrenceDetail {
+    bool present;
+    float score;
+    float contrast;
+    StrengthClass scoreStrength;
+    StrengthClass contrastQuality;
+    StrengthClass targetBandStrength;
+    FrequencyBandMeasurementPacket measurement;
+};
 ```
 
-Only act on entries classified:
+Do not introduce a third `TransientOccurrenceDetail` occurrence family. The old
+transient lifecycle payload belongs to scalar occurrence detail because the
+active occurrence families are scalar and frequency only.
+
+Rules:
 
 ```text
-DELETE_NOW
+Do not remove old fields in X2-B.
+Add new fields beside the existing compatibility payload.
+Keep defaults zero/false/Unknown.
+Build after adding the structs.
 ```
 
-Do not touch:
+Acceptance:
 
 ```text
-KEEP_CANONICAL
-KEEP_NEUTRAL_TOOLING
-ROADMAP_LATER
-DOC_COMMENT_ONLY
-BUG_RISK
-UNKNOWN
+Occurrence has canonical scoped detail blocks for scalar and frequency facts.
+Scalar detail includes the old transient lifecycle facts needed by current
+pattern/analyzer consumers.
+No active behavior/output changes.
+Build passes.
 ```
 
-Removal targets:
+---
 
-- dead legacy helpers
-- unused compat structs
-- stale transitional aliases
-- dead comments that describe removed code
-- unused includes caused by removed legacy code
-- unused counters / fields / enum values
-- dead command branches if classified DELETE_NOW
+## X2-C - Move producers to canonical/scoped fields
 
-Guardrails:
+Migrate producers to fill canonical fields first.
 
-- do not change detector behavior
-- do not change thresholds
-- do not change PatternResult semantics
-- do not change Occurrence payload
-- do not change PatternMatcher internals
-- do not change Behavior / Output
-- do not change clean SEQ output labels
-- do not clean up uncertain items
-
-If an item is not obviously safe, move it back to:
+Producer targets:
 
 ```text
-UNKNOWN
+FrequencyMatchDetector::capturePendingOccurrence()
+ScalarTransientDetector::capturePendingOccurrence()
+DetectionRuntime scalar update call sites
+OccurrenceInspector scalar annotation, if it currently backfills legacy fields
 ```
 
-and leave it.
-
-Update or create:
+Producer mapping:
 
 ```text
-docs/post_ddq_legacy_compat_removal.md
+kind/source/detectorKind
+    -> detectorId / occurrenceType
+
+score / contrast
+    -> occurrence.frequency.score / occurrence.frequency.contrast
+
+frequencyScoreStrength / frequencyContrastQuality / targetBandStrength
+    -> occurrence.frequency.scoreStrength / contrastQuality / targetBandStrength
+
+frequency
+    -> occurrence.frequency.measurement
+
+ampLevel / ampBaseline / scalarEvidence / ampStrength
+    -> occurrence.scalar.value / baseline / evidence / strengthClass
+
+transient
+    -> occurrence.scalar onset/peak/release lifecycle fields
+```
+
+Rules:
+
+```text
+During X2-C, keep writing old fields too if consumers still need them.
+Prefer helper fill functions to duplicated assignments if the mapping repeats.
+Do not change emitted values.
+```
+
+Acceptance:
+
+```text
+Canonical/scoped fields are fully populated by occurrence producers.
+Old fields may still be written for compatibility.
+Build passes.
+```
+
+---
+
+## X2-D - Move consumers off legacy fields
+
+Migrate active consumers to read canonical/scoped fields.
+
+Consumer targets:
+
+```text
+PatternAssembler
+AnalyzerApp occurrence display helpers and report fill
+OccurrenceInspector
+AnalyzerReportingTypes fields, if they duplicate old names
+```
+
+Consumer mapping:
+
+```text
+source.kind
+    -> source.occurrenceType
+
+source.source
+    -> source.detectorId
+
+source.detectorKind
+    -> source.detectorId or a scoped detail only if truly needed
+
+source.score / source.contrast
+    -> source.frequency.score / source.frequency.contrast
+
+source.ampStrength
+    -> source.scalar.strengthClass
+
+source.scalarEvidence
+    -> source.scalar.evidence
+
+source.frequencyScoreStrength
+    -> source.frequency.scoreStrength
+
+source.frequencyContrastQuality
+    -> source.frequency.contrastQuality
+
+source.targetBandStrength
+    -> source.frequency.targetBandStrength
+
+source.ampLevel / source.ampBaseline
+    -> source.scalar.value / source.scalar.baseline
+
+source.transient
+    -> source.scalar onset/peak/release lifecycle fields
+
+source.frequency
+    -> source.frequency.measurement
+```
+
+Rules:
+
+```text
+Do not change output labels unless a label names the removed internal field.
+Do not change PatternCandidate semantics.
+If PatternAssembler requires old-shaped data, add local adapter helpers rather than keeping legacy fields on Occurrence.
+```
+
+Acceptance:
+
+```text
+No active consumer reads legacy Occurrence identity or payload aliases.
+Build passes.
+SEQ outputs retain their labels and meanings.
+```
+
+---
+
+## X2-E - Delete legacy Occurrence aliases
+
+Only after X2-D passes, remove from `Occurrence.h`:
+
+```text
+OccurrenceKind
+OccurrenceSource
+OccurrenceDetectorKind
+detectorIdFromLegacyOccurrenceSource()
+occurrenceTypeFromLegacyOccurrenceKind()
+kind
+source
+detectorKind
+score
+contrast
+ampStrength
+scalarEvidence
+frequencyScoreStrength
+frequencyContrastQuality
+targetBandStrength
+ampLevel
+ampBaseline
+legacy/transitional comments
+```
+
+Do not remove:
+
+```text
+Occurrence::frequency
+```
+
+once it is the canonical `FrequencyOccurrenceDetail` block. Remove only the old
+packet-shaped frequency payload after all consumers have moved to
+`Occurrence::frequency.measurement`.
+
+Create:
+
+```text
+docs/occurrence_payload_cleanup_removal.md
 ```
 
 Include:
 
 ```text
-## Removed
-## Left untouched
+## Removed aliases
+## Fields kept canonical
+## Consumers migrated
 ## Compile fixes
 ## Remaining UNKNOWN
 ## Next recommended pass
@@ -676,12 +477,60 @@ Include:
 
 Acceptance:
 
-- All DELETE_NOW items from the sweep are removed or explicitly downgraded to UNKNOWN.
-- No clean analyzer/detector chain legacy dependency remains.
-- Build passes.
+```text
+No active references remain to deleted aliases/helpers/enums.
+Occurrence.h no longer contains legacy/transitional payload comments.
+Build passes.
+```
 
-Commit:
+---
+
+## Required scans
+
+Before and after X2-E:
 
 ```bash
-git commit -m "AnalyzerCleanup remove post-DDQ legacy residue"
+rg -n "OccurrenceKind|OccurrenceSource|OccurrenceDetectorKind|detectorIdFromLegacyOccurrenceSource|occurrenceTypeFromLegacyOccurrenceKind" src/detection src/modes/analyzer
+rg -n "\\.(kind|source|detectorKind|score|contrast|ampStrength|scalarEvidence|frequencyScoreStrength|frequencyContrastQuality|targetBandStrength|ampLevel|ampBaseline)\\b" src/detection src/modes/analyzer
+rg -n "legacy|Legacy|compat|Compat|temporary|transitional|TODO|FIXME" src/detection/occurrences src/detection/patterns src/modes/analyzer
+```
+
+Expected final result:
+
+```text
+No legacy Occurrence identity enum/helper references remain.
+No old wide Occurrence payload alias reads remain.
+Only ROADMAP_LATER PatternResult transitional comments may remain.
+```
+
+---
+
+## Build validation
+
+Run after each implementation phase:
+
+```bash
+platformio run -e esp32dev-analyzer
+platformio run
+```
+
+Pass accepted only if both builds pass.
+
+---
+
+## Commit style
+
+Suggested split:
+
+```bash
+git commit -m "DetectionCleanup audit occurrence payload"
+git commit -m "DetectionCleanup add scoped occurrence details"
+git commit -m "DetectionCleanup migrate occurrence payload consumers"
+git commit -m "DetectionCleanup remove legacy occurrence payload"
+```
+
+If implemented as one pass:
+
+```bash
+git commit -m "DetectionCleanup clean occurrence payload"
 ```

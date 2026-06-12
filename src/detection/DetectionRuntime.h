@@ -61,7 +61,7 @@ public:
     void resetState();
     void resetDiagnostics();
     void resetDiagnosticsCounters();
-    void resetOccurrenceSources();
+    void resetDetectors();
     void resetSourceRejectSummaries();
     void resetDetectionState();
     void setDiagnosticsEnabled(bool enabled);
@@ -92,7 +92,7 @@ private:
     static constexpr size_t kResultQueueCapacity = 4;
 
     // Pipeline stages in execution order.
-    void drainOccurrenceSources(unsigned long nowMs);
+    void drainDetectors(unsigned long nowMs);
     void drainPatternMatcher(unsigned long nowMs);
     bool pushPatternResult(const PatternResult& result);
     void capturePipelineResult(

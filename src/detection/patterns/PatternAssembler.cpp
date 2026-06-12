@@ -6,6 +6,24 @@ namespace {
 using PatternCandidate = detection::PatternCandidate;
 using PatternCandidateKind = detection::PatternCandidateKind;
 
+detection::TransientEvidence scalarTransientEvidenceFromOccurrence(const detection::Occurrence& source) {
+    detection::TransientEvidence transient = {};
+    transient.present = source.scalar.present;
+    transient.onsetSample = source.startSample;
+    transient.peakSample = source.peakSample;
+    transient.releaseSample = source.releaseSample;
+    transient.startMs = source.startMs;
+    transient.heardAtMs = source.releaseMs != 0 ? source.releaseMs : source.peakMs;
+    transient.acceptedMs = transient.heardAtMs;
+    transient.durationMs = source.durationMs;
+    transient.onsetStrength = source.scalar.onsetStrength;
+    transient.peakStrength = source.scalar.peakStrength;
+    transient.releaseStrength = source.scalar.releaseStrength;
+    transient.ambientBaseline = source.scalar.baseline;
+    transient.audioOverflowDuringCandidate = source.scalar.audioOverflowDuringCandidate;
+    return transient;
+}
+
 PatternCandidate makePatternCandidateFromSignal(const detection::InspectedOccurrence& occurrence) {
     PatternCandidate candidate = {};
     const detection::Occurrence& source = occurrence.occurrence;
@@ -17,8 +35,8 @@ PatternCandidate makePatternCandidateFromSignal(const detection::InspectedOccurr
     candidate.occurrenceCount = 1;
     candidate.pulseCount = 1;
     candidate.occurrenceSlotCount = 1;
-    switch (source.kind) {
-        case detection::OccurrenceKind::FrequencyMatch:
+    switch (source.occurrenceType) {
+        case detection::OccurrenceType::Frequency:
             candidate.onsetSample = source.startSample;
             candidate.peakSample = source.peakSample;
             candidate.releaseSample = source.releaseSample;
@@ -26,33 +44,33 @@ PatternCandidate makePatternCandidateFromSignal(const detection::InspectedOccurr
             candidate.heardAtMs = source.releaseMs != 0 ? source.releaseMs : source.peakMs;
             candidate.acceptedMs = candidate.heardAtMs;
             candidate.durationMs = source.durationMs;
-            candidate.onsetStrength = source.contrast;
-            candidate.peakStrength = source.score;
-            candidate.releaseStrength = source.contrast;
+            candidate.onsetStrength = source.frequency.contrast;
+            candidate.peakStrength = source.frequency.score;
+            candidate.releaseStrength = source.frequency.contrast;
             candidate.ambientBaseline = 0.0f;
-            candidate.ampStrength = source.ampStrength;
-            candidate.scalarEvidence = source.scalarEvidence;
-            candidate.frequencyScoreStrength = source.frequencyScoreStrength;
-            candidate.frequencyContrastQuality = source.frequencyContrastQuality;
-            candidate.targetBandStrength = source.targetBandStrength;
+            candidate.ampStrength = source.scalar.strengthClass;
+            candidate.scalarEvidence = source.scalar.evidence;
+            candidate.frequencyScoreStrength = source.frequency.scoreStrength;
+            candidate.frequencyContrastQuality = source.frequency.contrastQuality;
+            candidate.targetBandStrength = source.frequency.targetBandStrength;
             candidate.firstPulseMs = candidate.acceptedMs;
             candidate.lastPulseMs = candidate.acceptedMs;
-            candidate.occurrenceSlots[0].kindTag = static_cast<uint8_t>(source.kind);
-            candidate.occurrenceSlots[0].sourceTag = static_cast<uint8_t>(source.source);
+            candidate.occurrenceSlots[0].kindTag = static_cast<uint8_t>(source.occurrenceType);
+            candidate.occurrenceSlots[0].sourceTag = static_cast<uint8_t>(source.detectorId);
             candidate.occurrenceSlots[0].onsetSample = source.startSample;
             candidate.occurrenceSlots[0].peakSample = source.peakSample;
             candidate.occurrenceSlots[0].releaseSample = source.releaseSample;
             candidate.occurrenceSlots[0].startMs = source.startMs;
             candidate.occurrenceSlots[0].peakMs = source.peakMs;
             candidate.occurrenceSlots[0].releaseMs = source.releaseMs;
-            candidate.occurrenceSlots[0].strength = source.score;
+            candidate.occurrenceSlots[0].strength = source.frequency.score;
             // Frequency score/contrast are mapped into the candidate strength fields used by reporting.
-            candidate.frequency = source.frequency;
-            candidate.frequencyFull = source.frequency;
+            candidate.frequency = source.frequency.measurement;
+            candidate.frequencyFull = source.frequency.measurement;
             candidate.transient.present = false;
             break;
 
-        case detection::OccurrenceKind::AmpTransient:
+        case detection::OccurrenceType::Scalar:
             candidate.onsetSample = source.startSample;
             candidate.peakSample = source.peakSample;
             candidate.releaseSample = source.releaseSample;
@@ -60,19 +78,19 @@ PatternCandidate makePatternCandidateFromSignal(const detection::InspectedOccurr
             candidate.heardAtMs = source.releaseMs != 0 ? source.releaseMs : source.startMs;
             candidate.acceptedMs = candidate.heardAtMs;
             candidate.durationMs = source.durationMs;
-            candidate.onsetStrength = source.transient.onsetStrength;
+            candidate.onsetStrength = source.scalar.onsetStrength;
             candidate.peakStrength = source.strength;
-            candidate.releaseStrength = source.transient.releaseStrength;
-            candidate.ambientBaseline = source.transient.ambientBaseline;
-            candidate.ampStrength = source.ampStrength;
-            candidate.scalarEvidence = source.scalarEvidence;
-            candidate.frequencyScoreStrength = source.frequencyScoreStrength;
-            candidate.frequencyContrastQuality = source.frequencyContrastQuality;
-            candidate.targetBandStrength = source.targetBandStrength;
+            candidate.releaseStrength = source.scalar.releaseStrength;
+            candidate.ambientBaseline = source.scalar.baseline;
+            candidate.ampStrength = source.scalar.strengthClass;
+            candidate.scalarEvidence = source.scalar.evidence;
+            candidate.frequencyScoreStrength = source.frequency.scoreStrength;
+            candidate.frequencyContrastQuality = source.frequency.contrastQuality;
+            candidate.targetBandStrength = source.frequency.targetBandStrength;
             candidate.firstPulseMs = candidate.acceptedMs;
             candidate.lastPulseMs = candidate.acceptedMs;
-            candidate.occurrenceSlots[0].kindTag = static_cast<uint8_t>(source.kind);
-            candidate.occurrenceSlots[0].sourceTag = static_cast<uint8_t>(source.source);
+            candidate.occurrenceSlots[0].kindTag = static_cast<uint8_t>(source.occurrenceType);
+            candidate.occurrenceSlots[0].sourceTag = static_cast<uint8_t>(source.detectorId);
             candidate.occurrenceSlots[0].onsetSample = source.startSample;
             candidate.occurrenceSlots[0].peakSample = source.peakSample;
             candidate.occurrenceSlots[0].releaseSample = source.releaseSample;
@@ -80,12 +98,12 @@ PatternCandidate makePatternCandidateFromSignal(const detection::InspectedOccurr
             candidate.occurrenceSlots[0].peakMs = source.peakMs;
             candidate.occurrenceSlots[0].releaseMs = source.releaseMs;
             candidate.occurrenceSlots[0].strength = source.strength;
-            candidate.transient = source.transient;
-            candidate.frequency = source.frequency;
-            candidate.frequencyFull = source.frequency;
+            candidate.transient = scalarTransientEvidenceFromOccurrence(source);
+            candidate.frequency = source.frequency.measurement;
+            candidate.frequencyFull = source.frequency.measurement;
             break;
 
-        case detection::OccurrenceKind::None:
+        case detection::OccurrenceType::None:
         default:
             candidate.kind = PatternCandidateKind::Unknown;
             break;
@@ -123,9 +141,9 @@ size_t PatternAssembler::acceptOccurrences(const InspectedOccurrence* occurrence
             continue;
         }
 
-        switch (occurrence.occurrence.kind) {
-            case OccurrenceKind::AmpTransient:
-            case OccurrenceKind::FrequencyMatch:
+        switch (occurrence.occurrence.occurrenceType) {
+            case OccurrenceType::Scalar:
+            case OccurrenceType::Frequency:
                 if (occurrence.occurrence.valid) {
                     const PatternCandidate candidate = makePatternCandidateFromSignal(occurrence);
                     if (candidate.transient.present || candidate.frequency.present || candidate.durationMs > 0 || candidate.peakStrength != 0.0f || candidate.onsetStrength != 0.0f) {
@@ -137,7 +155,7 @@ size_t PatternAssembler::acceptOccurrences(const InspectedOccurrence* occurrence
                 }
                 break;
 
-            case OccurrenceKind::None:
+            case OccurrenceType::None:
             default:
                 // Unsupported kinds are ignored in this pass.
                 break;

@@ -50,9 +50,7 @@ public:
     void resetSelectedRejectSummary();
     void update(
         const AudioSamplePacket& audioSamplePacket,
-        float signalLevel,
-        detection::OccurrenceKind kind,
-        detection::OccurrenceSource source
+        float signalLevel
     );
 
     void setOnsetDetectionThreshold(float value);
@@ -77,9 +75,7 @@ private:
     void captureSelectedReject(unsigned long releaseObservedUs);
     void updateAcceptedOccurrenceCandidate(
         const AudioSamplePacket& audioSamplePacket,
-        float signalMagnitude,
-        detection::OccurrenceKind kind,
-        detection::OccurrenceSource source
+        float signalMagnitude
     );
     void capturePendingOccurrence(const AudioSamplePacket& audioSamplePacket);
     void resetAcceptedOccurrenceCandidate();
@@ -141,8 +137,6 @@ private:
     // current scalar Occurrence payload shape while keeping scalar Occurrence
     // construction inside the detector core.
     bool _acceptedOccurrenceCandidateActive = false;
-    detection::OccurrenceKind _acceptedOccurrenceKind = detection::OccurrenceKind::None;
-    detection::OccurrenceSource _acceptedOccurrenceSource = detection::OccurrenceSource::None;
     uint64_t _acceptedOccurrenceStartSample = 0;
     uint64_t _acceptedOccurrencePeakSample = 0;
     unsigned long _acceptedOccurrenceStartMs = 0;

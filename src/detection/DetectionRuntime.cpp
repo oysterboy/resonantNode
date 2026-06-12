@@ -9,18 +9,6 @@ DetectionRuntime::DetectionRuntime() = default;
 
 namespace {
 
-OccurrenceSource occurrenceSourceForStream(FeatureStreamId stream) {
-    switch (stream) {
-        case FeatureStreamId::FrequencyScore:
-        case FeatureStreamId::FrequencyContrast:
-            return OccurrenceSource::Frequency;
-        case FeatureStreamId::AmpEnvelope:
-        case FeatureStreamId::Unknown:
-        default:
-            return OccurrenceSource::Amp;
-    }
-}
-
 float selectedScalarValue(const AudioSamplePacket& audioSamplePacket, const FrequencyBandMeasurementPacket& frequencyEvidence, FeatureStreamId stream) {
     switch (stream) {
         case FeatureStreamId::AmpEnvelope:
@@ -61,7 +49,7 @@ void DetectionRuntime::resetDiagnosticsCounters() {
     _frequencyDetector.resetDiagnosticsSummary();
 }
 
-void DetectionRuntime::resetOccurrenceSources() {
+void DetectionRuntime::resetDetectors() {
     _frequencyDetector.resetState();
     _scalarDetector.resetState();
 }
@@ -73,7 +61,7 @@ void DetectionRuntime::resetSourceRejectSummaries() {
 }
 
 void DetectionRuntime::resetDetectionState() {
-    resetOccurrenceSources();
+    resetDetectors();
     _occurrenceInspector.reset();
     _patternMatcher.reset();
     _fieldStateTracker.reset();
@@ -119,7 +107,7 @@ void DetectionRuntime::setScalarTransientConfig(const ScalarTransientConfig& con
 
 void DetectionRuntime::setDetectorSelection(DetectorSelection selection) {
     _detectorSelection = selection;
-    resetOccurrenceSources();
+    resetDetectors();
     applyScalarTransientConfig(_scalarDetector, _scalarTransientConfig);
     _detectorReport = {};
 }
@@ -183,14 +171,12 @@ void DetectionRuntime::observeFrame(
             }
             _scalarDetector.update(
                 audioSamplePacket,
-                selectedScalarValue(audioSamplePacket, frequencyEvidence, _scalarTransientConfig.observedStream),
-                OccurrenceKind::AmpTransient,
-                occurrenceSourceForStream(_scalarTransientConfig.observedStream)
+                selectedScalarValue(audioSamplePacket, frequencyEvidence, _scalarTransientConfig.observedStream)
             );
             break;
     }
 
-    drainOccurrenceSources(nowMs);
+    drainDetectors(nowMs);
     drainPatternMatcher(nowMs);
     refreshDetectorReports(nowMs);
 }
@@ -226,7 +212,7 @@ const FeatureHistory& DetectionRuntime::featureHistory() const {
     return _featureHistory;
 }
 
-void DetectionRuntime::drainOccurrenceSources(unsigned long nowMs) {
+void DetectionRuntime::drainDetectors(unsigned long nowMs) {
     Occurrence candidate;
 
     switch (_detectorSelection) {

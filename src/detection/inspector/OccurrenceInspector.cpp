@@ -213,18 +213,16 @@ void OccurrenceInspector::annotateAmpStrength(
             ? (out.occurrence.scalar.value - out.occurrence.scalar.baseline)
             : 0.0f;
         out.occurrence.scalar.strength = observation.available ? observation.classificationValue : 0.0f;
-        out.occurrence.ampLevel = observation.available ? observation.classificationValue : 0.0f;
-        out.occurrence.ampBaseline = observation.available ? observation.mean : 0.0f;
-        out.occurrence.ampStrength = observation.strength;
+        out.occurrence.scalar.strengthClass = observation.strength;
     } else if (target == detection::EvidenceTarget::FrequencyScoreStrength) {
-        out.occurrence.frequencyScoreStrength = observation.strength;
+        out.occurrence.frequency.scoreStrength = observation.strength;
     } else if (target == detection::EvidenceTarget::FrequencyContrastQuality) {
-        out.occurrence.frequencyContrastQuality = observation.strength;
+        out.occurrence.frequency.contrastQuality = observation.strength;
     } else if (target == detection::EvidenceTarget::TargetBandStrength) {
-        out.occurrence.targetBandStrength = observation.strength;
+        out.occurrence.frequency.targetBandStrength = observation.strength;
     }
 
-    out.occurrence.scalarEvidence = observation;
+    out.occurrence.scalar.evidence = observation;
 }
 
 void OccurrenceInspector::runInspectionModule(

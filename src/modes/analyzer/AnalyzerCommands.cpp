@@ -97,26 +97,16 @@ void AnalyzerApp::pollUsbConsole() {
 
 void AnalyzerApp::handleUsbLine(const char* line) {
     if (equalsIgnoreCase(line, "HELP")) {
-        if (_valMode) {
-            return;
-        }
-        Serial.println("CMD: BASE dur=10000 quiet");
-        Serial.println("CMD: BASE stop");
         Serial.println("CMD: PARAM freqScore=18000 freqContrast=50.0 freqReleaseScore=12000 freqReleaseContrast=50.0");
         Serial.println("CMD: EMIT CHIRP freq=3200 dur=100");
         Serial.println("CMD: EMIT MODE REMOTE");
         Serial.println("CMD: EMIT MODE AUTO interval=2000 freq=3200 dur=100");
         Serial.println("CMD: EMIT SWEEP start=3000 stop=3500 step=100 dur=80 pause=1000");
-        Serial.println("CMD: TEST");
         Serial.println("CMD: RAWBAND contrast f=3200 dur=100 post=1000 decim=4");
         Serial.println("CMD: RAW trigger f=3200 dur=100 post=1000 dump=bin");
         Serial.println("CMD: SEQ");
         Serial.println("CMD: SEQ help");
         Serial.println("CMD: SEQ stop");
-        Serial.println("CMD: CAP");
-        Serial.println("CMD: CAP stop");
-        Serial.println("CMD: VAL");
-        Serial.println("CMD: VAL OFF");
         return;
     }
 
@@ -135,40 +125,6 @@ void AnalyzerApp::handleUsbLine(const char* line) {
         _frequencyEvidenceTuning = freqTuning;
         printDetectionParameters();
         Serial.println("OK PARAM");
-        return;
-    }
-
-    if (startsWithTokenIgnoreCase(line, "BASE")) {
-        strncpy(_commandScratch, line, sizeof(_commandScratch));
-        _commandScratch[sizeof(_commandScratch) - 1] = '\0';
-
-        bool quiet = false;
-        unsigned long durationMs = 10000;
-
-        char* savePtr = nullptr;
-        char* token = strtok_r(_commandScratch, " ", &savePtr);
-        while ((token = strtok_r(nullptr, " ", &savePtr)) != nullptr) {
-            if (equalsIgnoreCase(token, "quiet")) {
-                quiet = true;
-            } else if (startsWithTokenIgnoreCase(token, "dur=")) {
-                durationMs = static_cast<unsigned long>(strtoul(token + 4, nullptr, 10));
-            }
-        }
-
-        startBaseSession(durationMs, quiet);
-        Serial.println("OK BASE");
-        return;
-    }
-
-    if (equalsIgnoreCase(line, "BASE STOP")) {
-        stopBaseSession();
-        Serial.println("OK BASE STOP");
-        return;
-    }
-
-    if (startsWithTokenIgnoreCase(line, "TEST")) {
-        startBaseSession(12000, false);
-        Serial.println("OK TEST");
         return;
     }
 
@@ -446,12 +402,6 @@ void AnalyzerApp::handleUsbLine(const char* line) {
         }
 
         if (equalsIgnoreCase(token, "SUMMARY")) {
-            const char* summaryMode = strtok_r(nullptr, " ", &savePtr);
-            if (summaryMode != nullptr &&
-                (equalsIgnoreCase(summaryMode, "LEG") || equalsIgnoreCase(summaryMode, "LEGACY"))) {
-                Serial.println("ERR SEQ SUMMARY LEG removed use SEQ SUMMARY");
-                return;
-            }
             printSequenceSummaryClean();
             return;
         }
@@ -630,30 +580,6 @@ void AnalyzerApp::handleUsbLine(const char* line) {
 
     }
 
-    if (equalsIgnoreCase(line, "CAP")) {
-        startCaptureSession(20, 2500, 500, runtime::kDefaultChirpFrequencyHz, 100, false);
-        Serial.println("OK CAP");
-        return;
-    }
-
-    if (equalsIgnoreCase(line, "CAP STOP")) {
-        stopCaptureSession();
-        Serial.println("OK CAP STOP");
-        return;
-    }
-
-    if (equalsIgnoreCase(line, "VAL")) {
-        _valMode = true;
-        Serial.println("OK VAL");
-        return;
-    }
-
-    if (equalsIgnoreCase(line, "VAL OFF")) {
-        _valMode = false;
-        Serial.println("OK VAL OFF");
-        return;
-    }
-
     if (startsWithTokenIgnoreCase(line, "EMIT ")) {
         if (startsWithTokenIgnoreCase(line, "EMIT CHIRP")) {
             sendEmitterCommand(line + 5);
@@ -675,10 +601,6 @@ void AnalyzerApp::handleUsbLine(const char* line) {
             Serial.println("OK EMIT SWEEP");
             return;
         }
-    }
-
-    if (_valMode) {
-        return;
     }
 
     Serial.print("EVT analyzer_unknown_cmd line=");

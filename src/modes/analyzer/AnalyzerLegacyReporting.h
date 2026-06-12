@@ -7,32 +7,30 @@
 #include "../../detection/DetectorReport.h"
 #include "../../detection/inspector/InspectorTypes.h"
 
-class FrequencyMatchDetector;
-
 /*
 AnalyzerLegacyReporting
 
-Legacy analyzer report data model and print helpers.
-Reports DetectionRuntime gate-chain output, trial classification, field state,
-and diagnostic details.
+Analyzer report data model and print helper declarations.
+Reports canonical detector-stage output, trial classification, field state, and
+neutral diagnostic details.
 Does not own detection or behavior decisions.
 */
 
 // ANALYZER_OUTPUT_BOUNDARY
 //
-// Legacy Analyzer output is retained only for the still-supported
-// compatibility views. Do not add new detection/source fields here.
+// Analyzer output should stay on canonical report inputs. Do not add
+// legacy diagnostics bridge fields here.
 //
 // Future canonical output targets:
 //
 // SEQ_TRIAL:
 //   Generic trial truth only.
-//   Source: AnalyzerReport + PatternResult.
+//   Input: AnalyzerReport + PatternResult.
 //   No detector-specific fields.
 //
 // SEQ_INSPECT:
 //   Detector-stage acceptance/rejection explanation.
-//   Source: DetectorReport / RejectedCandidateSummary.
+//   Input: DetectorReport / RejectedCandidateSummary.
 //   May include namespaced detector detail.
 //
 // SEQ_SUMMARY:
@@ -83,14 +81,6 @@ enum class AnalyzerStage {
     Pattern,
     Analyzer,
     Field,
-};
-
-enum class FrequencyEvidenceClass {
-    Accepted,
-    StrongNoOccurrence,
-    Partial,
-    Weak,
-    None,
 };
 
 inline const char* analyzerResultName(AnalyzerResult value) {
@@ -177,61 +167,6 @@ inline const char* analyzerStageName(AnalyzerStage value) {
     }
 }
 
-inline const char* frequencyEvidenceClassLabel(FrequencyEvidenceClass value) {
-    switch (value) {
-        case FrequencyEvidenceClass::Accepted:
-            return "accepted";
-        case FrequencyEvidenceClass::StrongNoOccurrence:
-            return "strong_no_occurrence";
-        case FrequencyEvidenceClass::Partial:
-            return "partial";
-        case FrequencyEvidenceClass::Weak:
-            return "weak";
-        case FrequencyEvidenceClass::None:
-        default:
-            return "none";
-    }
-}
-
-inline size_t frequencyEvidenceClassIndex(FrequencyEvidenceClass value) {
-    switch (value) {
-        case FrequencyEvidenceClass::Accepted:
-            return 0U;
-        case FrequencyEvidenceClass::StrongNoOccurrence:
-            return 1U;
-        case FrequencyEvidenceClass::Partial:
-            return 2U;
-        case FrequencyEvidenceClass::Weak:
-            return 3U;
-        case FrequencyEvidenceClass::None:
-        default:
-            return 4U;
-    }
-}
-
-// Legacy quarantine: AnalyzerSequenceSession still maps the old frequency
-// evidence class strings into bucket counts for compatibility reporting.
-// Keep this helper here until the remaining sequence compatibility path is
-// retired.
-inline FrequencyEvidenceClass legacyFrequencyEvidenceClassFromClassName(const char* className) {
-    if (className == nullptr || className[0] == '\0') {
-        return FrequencyEvidenceClass::None;
-    }
-    if (strcmp(className, "accepted") == 0) {
-        return FrequencyEvidenceClass::Accepted;
-    }
-    if (strcmp(className, "strong_no_occurrence") == 0) {
-        return FrequencyEvidenceClass::StrongNoOccurrence;
-    }
-    if (strcmp(className, "partial") == 0) {
-        return FrequencyEvidenceClass::Partial;
-    }
-    if (strcmp(className, "weak") == 0) {
-        return FrequencyEvidenceClass::Weak;
-    }
-    return FrequencyEvidenceClass::None;
-}
-
 inline const char* supportTargetDisplayName(detection::EvidenceTarget value, bool supportGateEnabled) {
     switch (value) {
         case detection::EvidenceTarget::AmpStrength:
@@ -287,8 +222,8 @@ struct AnalyzerPatternObservation {
     unsigned int involvedOccurrences = 0;
 };
 
-// Keep Analyzer-specific for now; later shared AudioReporting may reuse the
-// snapshot-style observation vocabulary without pulling in classification logic.
+// Keep Analyzer-specific so shared audio reporting does not pull in analyzer
+// classification logic.
 struct AnalyzerOccurrenceObservation {
     // Occurrence / InspectedOccurrence-owned occurrence-stage truth.
     unsigned int total = 0;
@@ -401,341 +336,7 @@ struct AnalyzerDebugSummary {
     const char* pipelineSource = "actual_pipeline";
     bool pipelineFallback = false;
     const char* mainRejectReason = "none";
-    unsigned long patternResultQueueOverflowCount = 0;
 
-};
-
-// Legacy analyzer-local selected-reject summary copy.
-// Planned canonical target: RejectedCandidateSummary inside DetectorReport.
-//
-// Clean Analyzer outputs must not read this struct.
-struct AnalyzerSourceCandidateSummary {
-    bool present = false;
-    const char* origin = "unknown";
-    unsigned long candidateCount = 0;
-    unsigned long rejectCount = 0;
-    unsigned long bestDurationMs = 0;
-    unsigned long secondBestDurationMs = 0;
-    unsigned long bestOpenMs = 0;
-    unsigned long bestPeakMs = 0;
-    unsigned long bestLastMatchMs = 0;
-    unsigned long bestCloseMs = 0;
-    float bestPeakPrimary = 0.0f;
-    float bestPeakSecondary = 0.0f;
-    const char* bestRejectReason = "none";
-    const char* bestGateReason = "none";
-    const char* closeCause = "none";
-    unsigned long scoreTooLowFrames = 0;
-    unsigned long contrastTooLowFrames = 0;
-    unsigned long scoreAndContrastTooLowFrames = 0;
-    float maxPeakPrimary = 0.0f;
-    unsigned long maxPeakPrimaryMs = 0;
-    float maxPeakSecondary = 0.0f;
-    unsigned long maxPeakSecondaryMs = 0;
-    unsigned long totalMatchMs = 0;
-    unsigned long totalGapMs = 0;
-    unsigned long maxGapMs = 0;
-    unsigned long islandCount = 0;
-};
-
-// Legacy analyzer-local selected-reject snapshot copy.
-// Planned canonical target: folded into RejectedCandidateSummary.
-//
-// Clean Analyzer outputs must not read this struct.
-struct AnalyzerSourceCandidateSnapshot {
-    bool present = false;
-    unsigned long peakMs = 0;
-    unsigned long durationMs = 0;
-    unsigned long sampleCount = 0;
-    float peakPrimary = 0.0f;
-    float peakSecondary = 0.0f;
-    const char* reason = "none";
-    const char* gateReason = "none";
-    const char* scope = "unknown";
-};
-
-// Legacy analyzer-local detector diagnostic surrogate.
-// Planned canonical target: FrequencyMatch detector detail inside DetectorReport.
-//
-// Clean Analyzer outputs must not read this struct.
-struct AnalyzerFrequencyDiagnostic {
-    unsigned long currentTrialId = 0;
-    unsigned long acceptedTrialId = 0;
-    const char* acceptedSource = "none";
-    unsigned long windowStartMs = 0;
-    unsigned long windowEndMs = 0;
-    unsigned long diagFirstFrameMs = 0;
-    unsigned long diagLastFrameMs = 0;
-    unsigned long expectedWindowMs = 0;
-    unsigned long expectedFrameCountEstimate = 0;
-    bool diagFrameCountOk = false;
-    bool acceptedPresent = false;
-    long acceptedDtMs = -1;
-    unsigned long acceptedStartMs = 0;
-    unsigned long acceptedPeakMs = 0;
-    unsigned long acceptedReleaseMs = 0;
-    unsigned long acceptedDurationMs = 0;
-    float acceptedStrength = 0.0f;
-    float acceptedScore = 0.0f;
-    float acceptedContrast = 0.0f;
-
-    unsigned long frames = 0;
-    unsigned long validFrames = 0;
-    unsigned long freshFrames = 0;
-    unsigned long heldFrames = 0;
-    unsigned long historyScoreRecords = 0;
-    unsigned long historyContrastRecords = 0;
-    unsigned long scoreOkUpdates = 0;
-    unsigned long contrastOkUpdates = 0;
-    unsigned long bothOkUpdates = 0;
-    unsigned long matchFrames = 0;
-    unsigned long rejectFrames = 0;
-    unsigned long releaseScoreOkFrames = 0;
-    unsigned long releaseContrastOkFrames = 0;
-    unsigned long releaseBothOkFrames = 0;
-    unsigned long releaseScoreTooLowFrames = 0;
-    unsigned long releaseContrastTooLowFrames = 0;
-    unsigned long releaseScoreAndContrastTooLowFrames = 0;
-    unsigned long releaseNoEvidenceFrames = 0;
-    unsigned long diagLongestMatchStreakFrames = 0;
-    unsigned long diagLongestMatchStreakMs = 0;
-    unsigned long diagCurrentMatchStreakFrames = 0;
-    unsigned long diagCurrentMatchStreakStartMs = 0;
-    unsigned long windowMs = 0;
-    unsigned long updateStepMs = 0;
-    float overlapRatio = 0.0f;
-    unsigned long bucketCount = 0;
-    unsigned long valueCount = 0;
-    unsigned long spanMs = 0;
-    unsigned long latestValueAgeMs = 0;
-    unsigned long freshUpdateCount = 0;
-    unsigned long heldUpdateCount = 0;
-    unsigned long matchedUpdateCount = 0;
-    unsigned long candidateDurationMs = 0;
-    unsigned long matchedSpanMs = 0;
-    unsigned long matchedCoverageMs = 0;
-    float freshCoverageRatio = 0.0f;
-    const char* audioHealth = "unknown";
-    unsigned long audioZeroishFrames = 0;
-    unsigned long audioFlatlineFrames = 0;
-    unsigned long audioLargeJumpFrames = 0;
-    unsigned long audioRmsTooLowFrames = 0;
-    unsigned long audioRmsTooHighFrames = 0;
-    unsigned long audioMaxAbsDelta = 0;
-
-    float sumScore = 0.0f;
-    float sumContrast = 0.0f;
-    float meanScore = 0.0f;
-    float meanContrast = 0.0f;
-    float scoreThreshold = 0.0f;
-    float contrastThreshold = 0.0f;
-    float maxScore = 0.0f;
-    unsigned long maxScoreMs = 0;
-    float maxContrast = 0.0f;
-    unsigned long maxContrastMs = 0;
-    float targetPowerMean = 0.0f;
-    float lowerPowerMean = 0.0f;
-    float upperPowerMean = 0.0f;
-    float neighborPowerMean = 0.0f;
-    float neighborPowerMaxMean = 0.0f;
-    float targetPowerMax = 0.0f;
-    float lowerPowerMax = 0.0f;
-    float upperPowerMax = 0.0f;
-    float neighborPowerMeanMax = 0.0f;
-    float neighborPowerMaxMax = 0.0f;
-    unsigned long targetPowerMaxMs = 0;
-    unsigned long lowerPowerMaxMs = 0;
-    unsigned long upperPowerMaxMs = 0;
-    unsigned long neighborPowerMeanMaxMs = 0;
-    unsigned long neighborPowerMaxMaxMs = 0;
-    float lowerScoreMean = 0.0f;
-    float upperScoreMean = 0.0f;
-    float lowerScoreMax = 0.0f;
-    float upperScoreMax = 0.0f;
-    unsigned long lowerScoreMaxMs = 0;
-    unsigned long upperScoreMaxMs = 0;
-    float ampPeak = 0.0f;
-    float ampMean = 0.0f;
-    unsigned long ampPeakMs = 0;
-    float minScore = 0.0f;
-    float minContrast = 0.0f;
-    float peakScore = 0.0f;
-    float peakContrast = 0.0f;
-    unsigned long peakSampleCount = 0;
-    const char* targetEvidenceClass = "none";
-    bool targetPresent = false;
-    bool weakTarget = false;
-    bool noTarget = true;
-    AnalyzerSourceCandidateSummary sourceSummary = {};
-    AnalyzerSourceCandidateSnapshot sourceLastCandidate = {};
-
-    const char* analyzerMissReason = "none";
-    bool nearMiss = false;
-    const char* nearMissReason = "none";
-    const char* freqEvidenceClass = "none";
-    const char* sourceLastRejectReason = "none";
-    const char* selectedRejectReason = "none";
-    const char* selectedRejectGateReason = "none";
-    bool fmOpened = false;
-    bool fmReleased = false;
-    bool fmEmitted = false;
-    bool fmDurationOk = false;
-    bool fmValidRelease = false;
-    bool fmEmitAllowed = false;
-    unsigned long acceptedCandidateId = 0;
-    unsigned long selectedRejectCandidateId = 0;
-    unsigned long lastCandidateId = 0;
-    unsigned long lifecycleCandidateId = 0;
-    unsigned long candidateLastMatchMs = 0;
-    unsigned long fmDurationUsedMs = 0;
-    unsigned long fmDurationPrintedMs = 0;
-    unsigned long fmMinDurationUsedMs = 0;
-    unsigned long fmMinDurationReportedMs = 0;
-    bool fmDurationInconsistent = false;
-    bool fmPrintedDurationInconsistent = false;
-    const char* fmCloseCause = "none";
-    unsigned long fmOpenMs = 0;
-    unsigned long fmPeakMs = 0;
-    unsigned long fmReleaseMs = 0;
-    unsigned long fmDurationMs = 0;
-    unsigned long fmMinDurationMs = 0;
-    unsigned long fmMaxDurationMs = 0;
-    bool sourceOccurrenceEmitted = false;
-    bool runtimeEvidenceSeen = false;
-    bool runtimeOccurrenceReceived = false;
-    bool analyzerSeenOccurrence = false;
-    bool detectionGateBlocked = false;
-    const char* detectionGateReason = "none";
-    bool inconsistent = false;
-
-    const char* liveFreqReason = "none";
-    const char* liveFreqWould = "none";
-    const char* liveFreqState = "none";
-    bool liveFreqReady = false;
-    bool liveFreqGate = false;
-    bool liveFreqPresent = false;
-    bool liveFreqValid = false;
-    bool liveFreqMatch = false;
-};
-
-// Legacy analyzer-local detector diagnostic surrogate.
-// Planned canonical target: ScalarTransient detector detail inside DetectorReport.
-//
-// Clean Analyzer outputs must not read this struct.
-struct AnalyzerScalarDiagnostic {
-    unsigned long currentTrialId = 0;
-    unsigned long acceptedTrialId = 0;
-    const char* acceptedSource = "none";
-    unsigned long windowStartMs = 0;
-    unsigned long windowEndMs = 0;
-    unsigned long expectedWindowMs = 0;
-    unsigned long expectedFrameCountEstimate = 0;
-    bool diagFrameCountOk = false;
-    bool acceptedPresent = false;
-    long acceptedDtMs = -1;
-    unsigned long acceptedStartMs = 0;
-    unsigned long acceptedPeakMs = 0;
-    unsigned long acceptedReleaseMs = 0;
-    unsigned long acceptedDurationMs = 0;
-    float acceptedStrength = 0.0f;
-    float acceptedScore = 0.0f;
-    float acceptedContrast = 0.0f;
-
-    AnalyzerSourceCandidateSummary sourceSummary = {};
-    AnalyzerSourceCandidateSnapshot sourceLastCandidate = {};
-
-    const char* trialMissReason = "unknown";
-    const char* scalarRejectReason = "none";
-    const char* scalarNoEmitReason = "none";
-    const char* scalarGateReason = "none";
-    bool scalarOpened = false;
-    bool scalarReleased = false;
-    bool scalarEmitted = false;
-    bool scalarValidRelease = false;
-    bool scalarEmitAllowed = false;
-    unsigned long scalarOpenMs = 0;
-    unsigned long scalarPeakMs = 0;
-    unsigned long scalarReleaseMs = 0;
-    unsigned long scalarDurationMs = 0;
-    unsigned long scalarMinDurationMs = 0;
-    unsigned long scalarMaxDurationMs = 0;
-    float scalarPeakStrength = 0.0f;
-
-    bool sourceOccurrenceEmitted = false;
-    bool runtimeEvidenceSeen = false;
-    bool runtimeOccurrenceReceived = false;
-    bool analyzerSeenOccurrence = false;
-    bool detectionGateBlocked = false;
-    const char* detectionGateReason = "none";
-    bool inconsistent = false;
-
-    const char* liveScalarReason = "none";
-    const char* liveScalarWould = "none";
-    const char* liveScalarState = "none";
-    bool liveScalarReady = false;
-    bool liveScalarGate = false;
-    bool liveScalarPresent = false;
-    bool liveScalarValid = false;
-    bool liveScalarMatch = false;
-};
-
-// Legacy analyzer-local source-stage truth bundle.
-// Planned canonical target: DetectorReport.
-//
-// Clean Analyzer outputs must not read this struct.
-struct AnalyzerSourceStageReport {
-    const char* sourceKind = "unknown";
-    const char* sourceName = "unknown";
-
-    bool acceptedPresent = false;
-    bool sourceOccurrenceEmitted = false;
-    bool runtimeEvidenceSeen = false;
-    bool runtimeOccurrenceReceived = false;
-    bool analyzerSeen = false;
-
-    bool detectionGateBlocked = false;
-    const char* detectionGateReason = "none";
-
-    AnalyzerSourceCandidateSummary sourceSummary = {};
-    AnalyzerSourceCandidateSnapshot lastCandidate = {};
-
-    bool activeAtTrialStart = false;
-    bool activeAtTrialEnd = false;
-    bool openedThisTrial = false;
-    bool closedThisTrial = false;
-    bool emittedThisTrial = false;
-    bool rejectedThisTrial = false;
-
-    AnalyzerFrequencyDiagnostic frequencyMatch = {};
-    AnalyzerScalarDiagnostic scalarTransient = {};
-};
-
-struct AnalyzerLegacySummary {
-    const char* profileName = "unknown";
-
-    unsigned int trials = 0;
-    unsigned int completed = 0;
-    unsigned int expected = 0;
-    unsigned int early = 0;
-    unsigned int late = 0;
-    unsigned int miss = 0;
-    unsigned int duplicate = 0;
-    unsigned int unexpected = 0;
-    unsigned int rejected = 0;
-    unsigned int ambiguous = 0;
-    unsigned int tooDense = 0;
-    unsigned int invalidAudio = 0;
-    unsigned int startupArtifacts = 0;
-
-    float avgDtMs = -1.0f;
-    float avgDurationMs = -1.0f;
-    float avgConfidence = 0.0f;
-
-    float duplicateRate = 0.0f;
-    float unexpectedRate = 0.0f;
-
-    AnalyzerReason mainMissReason = AnalyzerReason::None;
-    AnalyzerReason mainRejectReason = AnalyzerReason::None;
 };
 
 struct AnalyzerCleanSummary {
@@ -771,38 +372,16 @@ struct AnalyzerReport {
     AnalyzerExpectedEvent expected;
     // Canonical detector-stage truth for clean inspect/explain/summary paths.
     const detection::DetectorReport* detectorReport = nullptr;
-    // Legacy source-stage compatibility bundle. Keep clean outputs off this.
-    AnalyzerSourceStageReport source;
-    const FrequencyMatchDetector* frequencyDetector = nullptr;
 
     AnalyzerPatternObservation primaryPattern;
     AnalyzerOccurrenceObservation occurrences;
     AnalyzerInspectionObservation inspection;
     AnalyzerFieldObservation field;
-    AnalyzerFrequencyDiagnostic frequency;
 
     AnalyzerClassification classification;
     AnalyzerProfileDetail profileDetail;
     AnalyzerDebugSummary debug;
-    // Legacy detector diagnostic surrogates retained for old reporting paths.
-    AnalyzerScalarDiagnostic scalar;
 };
-
-inline FrequencyEvidenceClass classifyFrequencyEvidence(const AnalyzerReport& report) {
-    if (report.frequency.acceptedPresent) {
-        return FrequencyEvidenceClass::Accepted;
-    }
-    if (report.frequency.fmOpened && report.frequency.fmReleased && !report.frequency.fmEmitted) {
-        return FrequencyEvidenceClass::StrongNoOccurrence;
-    }
-    if (report.frequency.scoreOkUpdates > 0 || report.frequency.contrastOkUpdates > 0) {
-        return FrequencyEvidenceClass::Partial;
-    }
-    if (report.frequency.maxScore > 0.0f) {
-        return FrequencyEvidenceClass::Weak;
-    }
-    return FrequencyEvidenceClass::None;
-}
 
 inline AnalyzerReport makeEmptyAnalyzerReport() {
     return AnalyzerReport{};

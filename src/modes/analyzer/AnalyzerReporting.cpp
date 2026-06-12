@@ -268,18 +268,10 @@ void printCanonicalStageLine(const char* prefix, const AnalyzerReport& report, b
 }
 
 /*
-Non-legacy analyzer reporting surface.
-
-These printers are intentionally separate from AnalyzerLegacyReporting so clean
-or neutral-supported output does not remain owned by the legacy comparison
-layer.
+Canonical and neutral analyzer reporting surface.
 */
 
 void AnalyzerApp::printSequenceTrialHeader(unsigned long trialNumber) const {
-    if (_valMode) {
-        return;
-    }
-
     Serial.println();
     Serial.print("#");
     Serial.print(trialNumber);
@@ -288,10 +280,6 @@ void AnalyzerApp::printSequenceTrialHeader(unsigned long trialNumber) const {
 }
 
 void AnalyzerApp::printSequenceTrial(const AnalyzerReport& report) const {
-    if (_valMode) {
-        return;
-    }
-
     Serial.print("SEQ_TRIAL trial=");
     Serial.print(report.context.trial);
     Serial.print(" profile=");
@@ -334,9 +322,6 @@ void AnalyzerApp::printSequenceTrial(const AnalyzerReport& report) const {
 }
 
 void AnalyzerApp::printSequenceInspectCanonical(const AnalyzerReport& report) const {
-    if (_valMode) {
-        return;
-    }
     if (!shouldPrintSequenceInspect(report)) {
         return;
     }
@@ -349,9 +334,6 @@ void AnalyzerApp::printSequenceInspectCanonical(const AnalyzerReport& report) co
 }
 
 void AnalyzerApp::printSequenceSourceCanonical(const AnalyzerReport& report) const {
-    if (_valMode) {
-        return;
-    }
     if (!shouldPrintSequenceSource(report)) {
         return;
     }
@@ -399,9 +381,6 @@ void AnalyzerApp::printSequenceSourceCanonical(const AnalyzerReport& report) con
 }
 
 void AnalyzerApp::printSequenceExplainCanonical(const AnalyzerReport& report) const {
-    if (_valMode) {
-        return;
-    }
     if (!shouldPrintSequenceExplain(report)) {
         return;
     }
@@ -419,9 +398,6 @@ void AnalyzerApp::printSequenceExplainCanonical(const AnalyzerReport& report) co
 }
 
 void AnalyzerApp::printDetectionParameters() const {
-    if (_valMode) {
-        return;
-    }
     Serial.print("SEQ tuning freqScore=");
     Serial.print(_frequencyEvidenceTuning.attackScoreMin, 1);
     Serial.print(" freqReleaseScore=");
@@ -839,10 +815,6 @@ void AnalyzerApp::printSystemHealth(const AnalyzerReport& report) const {
 }
 
 void AnalyzerApp::printSequenceSummaryClean() const {
-    if (_valMode) {
-        return;
-    }
-
     const auto& summary = _sequenceTest.cleanSummary;
     const long avgDtRounded = summary.dtCount > 0
         ? static_cast<long>(static_cast<float>(summary.totalDtMs) / static_cast<float>(summary.dtCount) + 0.5f)
@@ -898,10 +870,6 @@ void AnalyzerApp::printSequenceSummaryClean() const {
 }
 
 void AnalyzerApp::printSequenceReport() const {
-    if (_valMode) {
-        return;
-    }
-
     if (_sequenceTest.showDetails) {
         printDetectionParameters();
     }
@@ -918,10 +886,6 @@ void AnalyzerApp::printSequenceReport() const {
 }
 
 void AnalyzerApp::printSequenceStatus() const {
-    if (_valMode) {
-        return;
-    }
-
     Serial.print("SEQ_STATUS mode=");
     Serial.print(sequenceOutputModeName(_sequenceTest.outputConfig.mode));
     Serial.print(" when=");

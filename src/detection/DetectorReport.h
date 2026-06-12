@@ -1,6 +1,6 @@
 #pragma once
 
-#include "DetectorDescriptor.h"
+#include "DetectionTypes.h"
 #include "DetectorReject.h"
 
 namespace detection {
@@ -25,8 +25,7 @@ struct AcceptedOccurrenceSummary {
 SelectedRejectSummary
 
 Generic selected-reject shell frozen into DetectorReport.
-`detectorReason` stays string-based for now to avoid disruptive reason-enum
-plumbing during the scalar-first migration.
+`detectorReason` stays string-based until detector reason enums are unified.
 */
 struct SelectedRejectSummary {
     bool present = false;
@@ -119,7 +118,7 @@ struct ScalarAggregateDetail {
 ScalarInspectEvidence
 
 Bounded scalar detector evidence needed for Analyzer / SEQ_INSPECT while the
-legacy scalar output still expects gate/lifecycle truth.
+canonical report keeps scalar gate/lifecycle truth detector-owned.
 */
 struct ScalarInspectEvidence {
     const char* rejectReason = "none";
@@ -184,8 +183,7 @@ struct FrequencyThresholdDetail {
 /*
 FrequencyAggregateDetail
 
-Bounded frequency counters already used by legacy diagnostics and suitable for
-detector-owned report snapshots.
+Bounded frequency counters suitable for detector-owned report snapshots.
 */
 struct FrequencyAggregateDetail {
     unsigned long scoreOkCount = 0;
@@ -197,8 +195,8 @@ struct FrequencyAggregateDetail {
 /*
 FrequencyInspectEvidence
 
-Bounded frequency lifecycle/gate facts needed by Analyzer and transitional
-DetectionDiagnostics compatibility.
+Bounded frequency lifecycle/gate facts needed by Analyzer and detector-owned
+reporting.
 */
 struct FrequencyInspectEvidence {
     const char* rejectReason = "none";

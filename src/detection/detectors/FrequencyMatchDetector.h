@@ -7,23 +7,6 @@
 #include "../occurrences/Occurrence.h"
 #include "../../io/AudioSignal.h"
 
-enum class FrequencyReleaseFailCause {
-    None,
-    NoEvidence,
-    ScoreLow,
-    ContrastLow,
-    ScoreAndContrastLow,
-};
-
-const char* frequencyReleaseFailCauseName(FrequencyReleaseFailCause cause);
-
-struct FrequencyBandDiagnosticStats {
-    float sum = 0.0f;
-    float min = 0.0f;
-    float max = 0.0f;
-    unsigned long maxMs = 0;
-};
-
 /*
 FrequencyMatchDetector
 
@@ -85,25 +68,10 @@ public:
     unsigned long lastCandidateId = 0;
     unsigned long candidateMinDurationMs = 0;
     unsigned long candidateMaxDurationMs = 0;
-    unsigned long candidateDecisionDurationMs = 0;
-    unsigned long candidateDecisionMinDurationMs = 0;
-    bool candidateDecisionDurationOk = false;
     bool candidateDurationInconsistent = false;
-    unsigned long diagCurrentMatchStreakFrames = 0;
-    unsigned long diagCurrentMatchStreakStartMs = 0;
-    unsigned long diagLongestMatchStreakFrames = 0;
-    unsigned long diagLongestMatchStreakStartMs = 0;
-    unsigned long diagLongestMatchStreakEndMs = 0;
-    unsigned long bestObservedAtMs = 0;
-    uint64_t bestObservedSample = 0;
-    float bestScore = 0.0f;
-    float bestContrast = 0.0f;
-    unsigned long bestPeakSampleCount = 0;
-    unsigned long candidateCount = 0;
     unsigned long acceptedCount = 0;
     unsigned long rejectedCount = 0;
     unsigned long bestDurationMs = 0;
-    unsigned long secondBestDurationMs = 0;
     unsigned long bestOpenMs = 0;
     unsigned long bestPeakMs = 0;
     unsigned long bestLastMatchMs = 0;
@@ -112,10 +80,6 @@ public:
     float bestPeakContrast = 0.0f;
     const char* bestRejectReason = "none";
     const char* bestGateReason = "none";
-    unsigned long totalMatchMs = 0;
-    unsigned long totalGapMs = 0;
-    unsigned long maxGapMs = 0;
-    unsigned long islandCount = 0;
     detection::FrequencyBandMeasurementPacket bestEvidence = {};
     detection::FrequencyBandMeasurementPacket candidateEvidence = {};
     char candidateState[16] = "none";
@@ -123,41 +87,10 @@ public:
     char wouldCandidateReason[48] = "none";
     char noEmitReason[48] = "none";
     detection::Occurrence frequencyCandidate = {};
-    unsigned long diagnosticsObservedCount = 0;
-    unsigned long diagnosticsValidCount = 0;
     unsigned long diagnosticsScoreOkCount = 0;
     unsigned long diagnosticsContrastOkCount = 0;
     unsigned long diagnosticsBothOkCount = 0;
     unsigned long diagnosticsMatchedCount = 0;
-    unsigned long diagnosticsRejectedCount = 0;
-    unsigned long diagnosticsScoreTooLowCount = 0;
-    unsigned long diagnosticsContrastTooLowCount = 0;
-    unsigned long diagnosticsScoreAndContrastTooLowCount = 0;
-    unsigned long diagnosticsReleaseScoreOkCount = 0;
-    unsigned long diagnosticsReleaseContrastOkCount = 0;
-    unsigned long diagnosticsReleaseBothOkCount = 0;
-    unsigned long diagnosticsReleaseScoreTooLowCount = 0;
-    unsigned long diagnosticsReleaseContrastTooLowCount = 0;
-    unsigned long diagnosticsReleaseScoreAndContrastTooLowCount = 0;
-    unsigned long diagnosticsReleaseNoEvidenceCount = 0;
-    float diagnosticsScoreSum = 0.0f;
-    float diagnosticsScoreMin = 0.0f;
-    float diagnosticsScoreMax = 0.0f;
-    unsigned long diagnosticsScoreMaxMs = 0;
-    float diagnosticsContrastSum = 0.0f;
-    float diagnosticsContrastMin = 0.0f;
-    float diagnosticsContrastMax = 0.0f;
-    unsigned long diagnosticsContrastMaxMs = 0;
-    FrequencyBandDiagnosticStats diagnosticsTargetPower = {};
-    FrequencyBandDiagnosticStats diagnosticsLowerPower = {};
-    FrequencyBandDiagnosticStats diagnosticsUpperPower = {};
-    FrequencyBandDiagnosticStats diagnosticsNeighborPowerMean = {};
-    FrequencyBandDiagnosticStats diagnosticsNeighborPowerMax = {};
-    FrequencyBandDiagnosticStats diagnosticsLowerScore = {};
-    FrequencyBandDiagnosticStats diagnosticsUpperScore = {};
-    unsigned long lastRejectedCloseMs = 0;
-    FrequencyReleaseFailCause lastReleaseFailCause = FrequencyReleaseFailCause::None;
-    FrequencyReleaseFailCause candidateCloseCause = FrequencyReleaseFailCause::None;
 
     void resetState();
     void resetRejectSummary();
@@ -175,25 +108,12 @@ public:
     void buildReport(detection::DetectorReport& out, unsigned long nowMs) const;
     bool popOccurrence(detection::Occurrence& out);
 
-    float diagnosticsScoreMean() const;
-    float diagnosticsContrastMean() const;
-    float diagnosticsTargetPowerMean() const;
-    float diagnosticsLowerPowerMean() const;
-    float diagnosticsUpperPowerMean() const;
-    float diagnosticsNeighborPowerMeanValue() const;
-    float diagnosticsNeighborPowerMaxMean() const;
-    float diagnosticsLowerScoreMean() const;
-    float diagnosticsUpperScoreMean() const;
-
-    void observeClosedCandidate(bool accepted);
-
 private:
     void updateBestRejectedCandidate();
+    void recordRejectedCandidate();
     void capturePendingOccurrence(const AudioSamplePacket& audioSamplePacket);
 
     bool _diagnosticsEnabled = false;
-    bool _diagnosticsHaveStats = false;
-    bool _diagnosticsHaveBandStats = false;
 
     // Canonical detector-owned accepted summary for the active trial window.
     // This mirrors scalar report ownership so DetectorReport does not lose

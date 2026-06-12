@@ -63,7 +63,6 @@ void ScalarTransientDetector::resetState() {
     resetAcceptedOccurrenceCandidate();
     resetAcceptedOccurrenceSummary();
     resetSelectedRejectSummary();
-    resetLegacyRejectSummary();
 }
 
 void ScalarTransientDetector::resetAcceptedOccurrenceSummary() {
@@ -79,11 +78,6 @@ void ScalarTransientDetector::resetSelectedRejectSummary() {
     _selectedRejectPresent = false;
     _selectedReject = {};
     _reportDetail.selectedReject = {};
-}
-
-void ScalarTransientDetector::resetLegacyRejectSummary() {
-    _legacyRejectSummary = {};
-    _lastRejectedCloseMs = 0;
 }
 
 void ScalarTransientDetector::update(
@@ -199,7 +193,6 @@ void ScalarTransientDetector::updateTransientStage(unsigned long nowUs, float si
                 _lastTransientRejectReason = TransientRejectReason::None;
             }
             captureSelectedReject(releaseObservedUs);
-            captureLegacyRejectSummary(releaseObservedUs);
         }
 
         _peakActive = false;
@@ -255,52 +248,6 @@ void ScalarTransientDetector::captureSelectedReject(unsigned long releaseObserve
     _reportDetail.selectedReject.opened = true;
     _reportDetail.selectedReject.crossedOnset = true;
     _reportDetail.selectedReject.crossedRelease = true;
-}
-
-void ScalarTransientDetector::captureLegacyRejectSummary(unsigned long releaseObservedUs) {
-    if (_lastTransientRejectReason == TransientRejectReason::None) {
-        return;
-    }
-
-    const unsigned long candidateStartMs = _peakStartedUs / 1000UL;
-    const unsigned long candidatePeakMs = _peakStrengthObservedUs / 1000UL;
-    const unsigned long candidateCloseMs = releaseObservedUs != 0
-        ? releaseObservedUs / 1000UL
-        : candidatePeakMs;
-    const unsigned long candidateDurationMs = _lastTransientRejectedDurationMs;
-    const float candidatePeakStrength = _lastTransientRejectedStrength;
-
-    if (_lastRejectedCloseMs > 0 && candidateStartMs > _lastRejectedCloseMs) {
-        const unsigned long gapMs = candidateStartMs - _lastRejectedCloseMs;
-        _legacyRejectSummary.totalRejectedGapMs += gapMs;
-        if (gapMs > _legacyRejectSummary.maxRejectedGapMs) {
-            _legacyRejectSummary.maxRejectedGapMs = gapMs;
-        }
-    }
-    _lastRejectedCloseMs = candidateCloseMs;
-
-    ++_legacyRejectSummary.rejectedCandidateCount;
-    ++_legacyRejectSummary.rejectedIslandCount;
-    _legacyRejectSummary.totalRejectedMatchMs += candidateDurationMs;
-
-    if (candidatePeakStrength >= _legacyRejectSummary.maxRejectedPeakStrength) {
-        _legacyRejectSummary.maxRejectedPeakStrength = candidatePeakStrength;
-        _legacyRejectSummary.maxRejectedPeakStrengthMs = candidatePeakMs;
-    }
-
-    if (candidateDurationMs >= _legacyRejectSummary.bestRejectedDurationMs) {
-        _legacyRejectSummary.secondBestRejectedDurationMs = _legacyRejectSummary.bestRejectedDurationMs;
-        _legacyRejectSummary.bestRejectedDurationMs = candidateDurationMs;
-        _legacyRejectSummary.bestRejectedOpenMs = candidateStartMs;
-        _legacyRejectSummary.bestRejectedPeakMs = candidatePeakMs;
-        _legacyRejectSummary.bestRejectedLastMatchMs = candidateCloseMs;
-        _legacyRejectSummary.bestRejectedCloseMs = candidateCloseMs;
-        _legacyRejectSummary.bestRejectedPeakStrength = candidatePeakStrength;
-        _legacyRejectSummary.bestRejectedReason = lastTransientRejectReasonName();
-        _legacyRejectSummary.bestRejectedGateReason = lastTransientRejectReasonName();
-    } else if (candidateDurationMs > _legacyRejectSummary.secondBestRejectedDurationMs) {
-        _legacyRejectSummary.secondBestRejectedDurationMs = candidateDurationMs;
-    }
 }
 
 void ScalarTransientDetector::updateAcceptedOccurrenceCandidate(
@@ -441,7 +388,7 @@ void ScalarTransientDetector::refreshReportDetail() {
     _reportDetail.aggregates.tooLongCount = _transientRejectedDurationTooLongCount;
     _reportDetail.aggregates.strengthTooLowCount = _transientRejectedStrengthTooLowCount;
     _reportDetail.aggregates.maxRejectedLift = 0.0f;
-    _reportDetail.aggregates.bestRejectedValue = _legacyRejectSummary.bestRejectedPeakStrength;
+    _reportDetail.aggregates.bestRejectedValue = _selectedRejectPresent ? _selectedReject.strength : 0.0f;
 }
 
 void ScalarTransientDetector::printTransientStatsIfDue(unsigned long nowUs) {
@@ -473,14 +420,6 @@ void ScalarTransientDetector::printTransientStatsIfDue(unsigned long nowUs) {
     }
 }
 
-bool ScalarTransientDetector::onsetDetected() const {
-    return _onsetDetected;
-}
-
-float ScalarTransientDetector::onsetStrength() const {
-    return _onsetStrength;
-}
-
 const char* ScalarTransientDetector::lastOnsetRejectReasonName() const {
     switch (_lastOnsetRejectReason) {
         case OnsetRejectReason::None:
@@ -494,42 +433,6 @@ const char* ScalarTransientDetector::lastOnsetRejectReasonName() const {
     }
 
     return "none";
-}
-
-bool ScalarTransientDetector::transientDetected() const {
-    return _transientDetected;
-}
-
-float ScalarTransientDetector::transientStrength() const {
-    return _transientStrength;
-}
-
-unsigned long ScalarTransientDetector::transientDurationMs() const {
-    return _transientDurationMs;
-}
-
-bool ScalarTransientDetector::peakActive() const {
-    return _peakActive;
-}
-
-bool ScalarTransientDetector::releaseObserved() const {
-    return _releaseCandidateStartedUs != 0;
-}
-
-float ScalarTransientDetector::peakStrength() const {
-    return _peakStrength;
-}
-
-unsigned long ScalarTransientDetector::onsetStartedUs() const {
-    return _peakStartedUs;
-}
-
-unsigned long ScalarTransientDetector::peakStartedUs() const {
-    return _peakStartedUs;
-}
-
-unsigned long ScalarTransientDetector::releaseObservedUs() const {
-    return _releaseObservedUs;
 }
 
 const char* ScalarTransientDetector::lastTransientRejectReasonName() const {
@@ -547,62 +450,6 @@ const char* ScalarTransientDetector::lastTransientRejectReasonName() const {
     }
 
     return "none";
-}
-
-unsigned long ScalarTransientDetector::lastTransientRejectedDurationMs() const {
-    return _lastTransientRejectedDurationMs;
-}
-
-float ScalarTransientDetector::lastTransientRejectedStrength() const {
-    return _lastTransientRejectedStrength;
-}
-
-unsigned long ScalarTransientDetector::onsetRejectedCount() const {
-    return _onsetRejectedCount;
-}
-
-unsigned long ScalarTransientDetector::transientRejectedCount() const {
-    return _transientRejectedCount;
-}
-
-unsigned long ScalarTransientDetector::transientRejectedDurationTooShortCount() const {
-    return _transientRejectedDurationTooShortCount;
-}
-
-unsigned long ScalarTransientDetector::transientRejectedDurationTooLongCount() const {
-    return _transientRejectedDurationTooLongCount;
-}
-
-unsigned long ScalarTransientDetector::transientRejectedStrengthTooLowCount() const {
-    return _transientRejectedStrengthTooLowCount;
-}
-
-float ScalarTransientDetector::onsetDetectionThreshold() const {
-    return _onsetDetectionThreshold;
-}
-
-float ScalarTransientDetector::onsetReleaseThreshold() const {
-    return _onsetReleaseThreshold;
-}
-
-unsigned long ScalarTransientDetector::cooldownAfterOnsetMs() const {
-    return _cooldownAfterOnsetMs;
-}
-
-unsigned long ScalarTransientDetector::minTransientDurationMs() const {
-    return _minTransientDurationMs;
-}
-
-unsigned long ScalarTransientDetector::maxTransientDurationMs() const {
-    return _maxTransientDurationMs;
-}
-
-float ScalarTransientDetector::minTransientPeakStrength() const {
-    return _minTransientPeakStrength;
-}
-
-unsigned long ScalarTransientDetector::releaseDebounceMs() const {
-    return _releaseDebounceMs;
 }
 
 void ScalarTransientDetector::buildReport(detection::DetectorReport& out, unsigned long nowMs) const {
@@ -628,30 +475,6 @@ void ScalarTransientDetector::buildReport(detection::DetectorReport& out, unsign
         out.reportStartMs = out.selectedReject.startMs;
         out.reportEndMs = out.selectedReject.endMs;
     }
-}
-
-bool ScalarTransientDetector::acceptedOccurrencePresent() const {
-    return _acceptedOccurrencePresent;
-}
-
-const detection::AcceptedOccurrenceSummary& ScalarTransientDetector::acceptedOccurrence() const {
-    return _acceptedOccurrence;
-}
-
-const detection::ScalarDetectorReportDetail& ScalarTransientDetector::reportDetail() const {
-    return _reportDetail;
-}
-
-bool ScalarTransientDetector::selectedRejectPresent() const {
-    return _selectedRejectPresent;
-}
-
-const detection::SelectedRejectSummary& ScalarTransientDetector::selectedReject() const {
-    return _selectedReject;
-}
-
-const ScalarTransientDetector::LegacyRejectSummaryCompat& ScalarTransientDetector::legacyRejectSummary() const {
-    return _legacyRejectSummary;
 }
 
 bool ScalarTransientDetector::popOccurrence(detection::Occurrence& out) {
@@ -699,8 +522,4 @@ void ScalarTransientDetector::setMinTransientPeakStrength(float value) {
 
 void ScalarTransientDetector::setDiagnosticsEnabled(bool enabled) {
     _diagnosticsEnabled = enabled;
-}
-
-void ScalarTransientDetector::setDiagnosticsLabel(const char* value) {
-    _diagnosticsLabel = value == nullptr ? "EVT" : value;
 }

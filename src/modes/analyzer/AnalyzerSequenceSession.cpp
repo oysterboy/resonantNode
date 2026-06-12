@@ -3,7 +3,6 @@
 #include <Arduino.h>
 #include <new>
 #include <stdlib.h>
-#include <string.h>
 
 #include "../../AudioDebugConfig.h"
 #include "../../TimingUtils.h"
@@ -30,10 +29,6 @@ unsigned long countSelectedSampleDumpTrials(unsigned long totalTrials, unsigned 
     }
 
     return selected;
-}
-
-size_t analyzerReasonIndex(AnalyzerReason value) {
-    return static_cast<size_t>(value);
 }
 
 detection::DetectorId cleanSummaryDetectorId(const AnalyzerReport& report) {
@@ -64,9 +59,6 @@ void AnalyzerApp::startSequenceTest(const PendingSequenceStart& pending) {
     detection::DetectionProfileKind profileKind = pending.profileKind;
     bool externalEmitter = pending.externalEmitter;
 
-    if (_valMode) {
-        return;
-    }
     if (totalTrials == 0) {
         totalTrials = 1;
     }
@@ -196,30 +188,7 @@ void AnalyzerApp::startSequenceTest(const PendingSequenceStart& pending) {
     _sequenceTest.maxSampleWorkUs = 0;
     _sequenceTest.maxFinalizeTrialUs = 0;
     _sequenceTest.maxProcessingLagMs = 0;
-    _sequenceTest.totalHitStrengthScaled = 0;
-    _sequenceTest.totalHitDurationMs = 0;
-    _sequenceTest.patternMatchedExpected = 0;
-    _sequenceTest.patternUnmatchedExpected = 0;
-    _sequenceTest.patternMatchedDuplicates = 0;
-    _sequenceTest.patternUnmatchedDuplicates = 0;
-    _sequenceTest.patternMatchedUnexpected = 0;
-    _sequenceTest.patternUnmatchedUnexpected = 0;
-    _sequenceTest.freqRejectScore = 0;
-    _sequenceTest.freqRejectContrast = 0;
-    _sequenceTest.freqRejectBoth = 0;
-    _sequenceTest.freqRejectNoEvidence = 0;
-    _sequenceTest.totalPatternDtMs = 0;
-    _sequenceTest.totalPatternDurationMs = 0;
-    _sequenceTest.totalPatternConfidence = 0.0f;
-    _sequenceTest.patternDtCount = 0;
-    _sequenceTest.patternDurationCount = 0;
     _sequenceTest.completedTrials = 0;
-    memset(_sequenceTest.missReasonCounts, 0, sizeof(_sequenceTest.missReasonCounts));
-    memset(_sequenceTest.rejectReasonCounts, 0, sizeof(_sequenceTest.rejectReasonCounts));
-    memset(_sequenceTest.freqEvidenceClassCounts, 0, sizeof(_sequenceTest.freqEvidenceClassCounts));
-    _sequenceTest.currentMissStreak = 0;
-    _sequenceTest.longestMissStreak = 0;
-    _sequenceTest.firstMissTrial = 0;
     _sequenceTest.cleanSummary = {};
 
     if (!_sequenceTest.externalEmitter) {
@@ -343,9 +312,6 @@ void AnalyzerApp::stopSequenceTest() {
 }
 
 void AnalyzerApp::updateSequenceTest(unsigned long now) {
-    if (_valMode) {
-        return;
-    }
     if (!_sequenceTest.active) {
         return;
     }
@@ -387,24 +353,6 @@ void AnalyzerApp::updateSequenceTest(unsigned long now) {
     _sequenceTest.currentTrialDiagnostics = {};
     _sequenceTest.currentTrialDiagnostics.acceptedAmbientBaseline = _audioSignal.baseline();
     _sequenceTest.currentTrialDiagnostics.runtimePatternCaptured = false;
-    _sequenceTest.currentTrialDiagnostics.frequency = {};
-    _sequenceTest.currentTrialDiagnostics.frequency.currentTrialId = trialNumber;
-    _sequenceTest.currentTrialDiagnostics.frequency.windowStartMs = _sequenceTest.currentTrialStartMs;
-    _sequenceTest.currentTrialDiagnostics.frequency.windowEndMs = _sequenceTest.currentTrialEndMs;
-    _sequenceTest.currentTrialDiagnostics.frequency.expectedWindowMs = _sequenceTest.currentTrialEndMs >= _sequenceTest.currentTrialStartMs
-        ? _sequenceTest.currentTrialEndMs - _sequenceTest.currentTrialStartMs
-        : 0UL;
-    _sequenceTest.currentTrialDiagnostics.frequency.expectedFrameCountEstimate =
-        static_cast<unsigned long>((_sequenceTest.currentTrialDiagnostics.frequency.expectedWindowMs
-            * static_cast<unsigned long>(_audioSource.sampleRateHz() > 0 ? _audioSource.sampleRateHz() : 16000UL)) / 1000UL);
-    _sequenceTest.currentTrialDiagnostics.frequency.diagFrameCountOk = false;
-    _sequenceTest.currentTrialDiagnostics.scalar = {};
-    _sequenceTest.currentTrialDiagnostics.scalar.currentTrialId = trialNumber;
-    _sequenceTest.currentTrialDiagnostics.scalar.windowStartMs = _sequenceTest.currentTrialStartMs;
-    _sequenceTest.currentTrialDiagnostics.scalar.windowEndMs = _sequenceTest.currentTrialEndMs;
-    _sequenceTest.currentTrialDiagnostics.scalar.expectedWindowMs = _sequenceTest.currentTrialDiagnostics.frequency.expectedWindowMs;
-    _sequenceTest.currentTrialDiagnostics.scalar.expectedFrameCountEstimate = _sequenceTest.currentTrialDiagnostics.frequency.expectedFrameCountEstimate;
-    _sequenceTest.currentTrialDiagnostics.scalar.diagFrameCountOk = false;
     _sequenceTest.currentTrialSamplesProcessed = 0;
     _sequenceTest.currentTrialUpdateLoopMaxUs = 0;
     _sequenceTest.totalUpdateLoopUs = 0;
@@ -427,9 +375,6 @@ void AnalyzerApp::updateSequenceTest(unsigned long now) {
 }
 
 void AnalyzerApp::updateSequenceAmbientStats(unsigned long nowMs) {
-    if (_valMode) {
-        return;
-    }
     if (!_sequenceTest.active || _sequenceTest.currentTrial == 0 || _sequenceTest.currentTrialFinalized) {
         return;
     }
@@ -461,9 +406,6 @@ void AnalyzerApp::updateSequenceAmbientStats(unsigned long nowMs) {
 }
 
 void AnalyzerApp::finalizeSequenceTrial(unsigned long now) {
-    if (_valMode) {
-        return;
-    }
     if (_sequenceTest.currentTrial == 0) {
         return;
     }
@@ -503,8 +445,6 @@ void AnalyzerApp::finalizeSequenceTrial(unsigned long now) {
             result = AnalyzerResult::Expected;
             _sequenceTest.expectedHits++;
         }
-        _sequenceTest.totalHitStrengthScaled += static_cast<unsigned long>(_sequenceTest.primaryValidPattern.primaryStrength * 100.0f);
-        _sequenceTest.totalHitDurationMs += _sequenceTest.primaryValidPattern.primaryDurationMs;
     } else if (rejectedTrial) {
         result = AnalyzerResult::Rejected;
     } else if (unexpectedTrial) {
@@ -519,51 +459,13 @@ void AnalyzerApp::finalizeSequenceTrial(unsigned long now) {
     buildSequenceAnalyzerReport(*finalizedReport, _sequenceTest.currentTrial, result, dtMs, durMs, strength, invalidAudioTrial, diagnostics.duplicateCount, diagnostics);
     updateCleanSequenceSummary(*finalizedReport);
     _sequenceTest.completedTrials++;
-    _sequenceTest.totalPatternConfidence += finalizedReport->primaryPattern.confidence;
-    if (finalizedReport->classification.dtMs >= 0) {
-        _sequenceTest.totalPatternDtMs += static_cast<unsigned long>(finalizedReport->classification.dtMs);
-        _sequenceTest.patternDtCount++;
-    }
-    if (finalizedReport->occurrences.primaryDurationMs > 0) {
-        _sequenceTest.totalPatternDurationMs += finalizedReport->occurrences.primaryDurationMs;
-        _sequenceTest.patternDurationCount++;
-    }
     if (result == AnalyzerResult::Miss) {
         if (finalizedReport->debug.startupArtifact) {
             _sequenceTest.startupArtifacts++;
         } else {
             _sequenceTest.misses++;
-            const size_t reasonIndex = analyzerReasonIndex(finalizedReport->classification.reason);
-            if (reasonIndex < static_cast<size_t>(AnalyzerReason::Unknown) + 1U) {
-                _sequenceTest.missReasonCounts[reasonIndex]++;
-            }
-            _sequenceTest.currentMissStreak++;
-            if (_sequenceTest.firstMissTrial == 0) {
-                _sequenceTest.firstMissTrial = _sequenceTest.currentTrial;
-            }
-            if (_sequenceTest.currentMissStreak > _sequenceTest.longestMissStreak) {
-                _sequenceTest.longestMissStreak = _sequenceTest.currentMissStreak;
-            }
-        }
-    } else {
-        _sequenceTest.currentMissStreak = 0;
-    }
-    if (result == AnalyzerResult::Rejected ||
-        result == AnalyzerResult::Ambiguous ||
-        result == AnalyzerResult::TooDense ||
-        result == AnalyzerResult::InvalidAudio) {
-        const size_t reasonIndex = analyzerReasonIndex(finalizedReport->classification.reason);
-        if (reasonIndex < static_cast<size_t>(AnalyzerReason::Unknown) + 1U) {
-            _sequenceTest.rejectReasonCounts[reasonIndex]++;
         }
     }
-    // Legacy quarantine: keep the old frequency-evidence class tally here until
-    // the canonical detector/report pipeline replaces this compatibility field.
-    _sequenceTest.freqEvidenceClassCounts[
-        frequencyEvidenceClassIndex(
-            legacyFrequencyEvidenceClassFromClassName(finalizedReport->source.frequencyMatch.freqEvidenceClass)
-        )
-    ]++;
     flushSequenceSampleHistory(now + 1UL);
     if (shouldPrintSequenceTrial()) {
         printSequenceTrial(*finalizedReport);

@@ -27,29 +27,6 @@ Does NOT:
 */
 class ScalarTransientDetector {
 public:
-    // TEMP_SCALAR_DIAGNOSTIC_COMPAT:
-    // Legacy scalar reject-summary aggregates are still copied into
-    // DetectionDiagnostics / Analyzer compatibility output. These remain
-    // detector-owned compatibility facts, not canonical DetectorReport fields.
-    struct LegacyRejectSummaryCompat {
-        unsigned long rejectedCandidateCount = 0;
-        unsigned long bestRejectedDurationMs = 0;
-        unsigned long secondBestRejectedDurationMs = 0;
-        unsigned long bestRejectedOpenMs = 0;
-        unsigned long bestRejectedPeakMs = 0;
-        unsigned long bestRejectedLastMatchMs = 0;
-        unsigned long bestRejectedCloseMs = 0;
-        float bestRejectedPeakStrength = 0.0f;
-        float maxRejectedPeakStrength = 0.0f;
-        unsigned long maxRejectedPeakStrengthMs = 0;
-        const char* bestRejectedReason = "none";
-        const char* bestRejectedGateReason = "none";
-        unsigned long totalRejectedMatchMs = 0;
-        unsigned long totalRejectedGapMs = 0;
-        unsigned long maxRejectedGapMs = 0;
-        unsigned long rejectedIslandCount = 0;
-    };
-
     enum class TransientRejectReason {
         None,
         DurationTooShort,
@@ -71,7 +48,6 @@ public:
     void resetState();
     void resetAcceptedOccurrenceSummary();
     void resetSelectedRejectSummary();
-    void resetLegacyRejectSummary();
     void update(
         const AudioSamplePacket& audioSamplePacket,
         float signalLevel,
@@ -87,50 +63,18 @@ public:
     void setMinTransientPeakStrength(float value);
     void setReleaseDebounceMs(unsigned long value);
     void setDiagnosticsEnabled(bool enabled);
-    void setDiagnosticsLabel(const char* value);
 
-    bool onsetDetected() const;
-    float onsetStrength() const;
-    const char* lastOnsetRejectReasonName() const;
-    bool transientDetected() const;
-    float transientStrength() const;
-    unsigned long transientDurationMs() const;
-    bool peakActive() const;
-    bool releaseObserved() const;
-    float peakStrength() const;
-    unsigned long onsetStartedUs() const;
-    unsigned long peakStartedUs() const;
-    unsigned long releaseObservedUs() const;
-    const char* lastTransientRejectReasonName() const;
-    unsigned long lastTransientRejectedDurationMs() const;
-    float lastTransientRejectedStrength() const;
-    unsigned long onsetRejectedCount() const;
-    unsigned long transientRejectedCount() const;
-    unsigned long transientRejectedDurationTooShortCount() const;
-    unsigned long transientRejectedDurationTooLongCount() const;
-    unsigned long transientRejectedStrengthTooLowCount() const;
-    float onsetDetectionThreshold() const;
-    float onsetReleaseThreshold() const;
-    unsigned long cooldownAfterOnsetMs() const;
-    unsigned long minTransientDurationMs() const;
-    unsigned long maxTransientDurationMs() const;
-    float minTransientPeakStrength() const;
-    unsigned long releaseDebounceMs() const;
     void buildReport(detection::DetectorReport& out, unsigned long nowMs) const;
-    bool acceptedOccurrencePresent() const;
-    const detection::AcceptedOccurrenceSummary& acceptedOccurrence() const;
-    const detection::ScalarDetectorReportDetail& reportDetail() const;
-    bool selectedRejectPresent() const;
-    const detection::SelectedRejectSummary& selectedReject() const;
-    const LegacyRejectSummaryCompat& legacyRejectSummary() const;
     bool popOccurrence(detection::Occurrence& out);
 
 private:
+    const char* lastOnsetRejectReasonName() const;
+    const char* lastTransientRejectReasonName() const;
+
     void updateOnsetStage(unsigned long nowUs, float signalMagnitude, bool aboveAttackThreshold, bool onsetCooldownElapsed);
     void updateTransientStage(unsigned long nowUs, float signalMagnitude, bool aboveReleaseThreshold);
     void captureAcceptedOccurrence(unsigned long releaseObservedUs, unsigned long peakDurationUs);
     void captureSelectedReject(unsigned long releaseObservedUs);
-    void captureLegacyRejectSummary(unsigned long releaseObservedUs);
     void updateAcceptedOccurrenceCandidate(
         const AudioSamplePacket& audioSamplePacket,
         float signalMagnitude,
@@ -210,11 +154,4 @@ private:
     unsigned long _lastObservedAcceptedOccurrenceRejectedCount = 0;
     bool _pendingOccurrencePresent = false;
     detection::Occurrence _pendingOccurrence = {};
-
-    // TEMP_SCALAR_DIAGNOSTIC_COMPAT:
-    // These legacy reject aggregates are still copied into DetectionDiagnostics
-    // for Analyzer compatibility. They remain intentionally separate from the
-    // minimal canonical DetectorReport contract.
-    LegacyRejectSummaryCompat _legacyRejectSummary = {};
-    unsigned long _lastRejectedCloseMs = 0;
 };

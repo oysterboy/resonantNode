@@ -3,9 +3,8 @@
 #include <stddef.h>
 
 // Keep the canonical detector-report contract compiled through the active
-// runtime header chain during migration. DetectionRuntime now snapshots
-// scalar and frequency detector reports while legacy diagnostics still remain
-// active as compatibility output.
+// runtime header chain. DetectionRuntime snapshots scalar and frequency
+// detector reports for analyzer/report consumers.
 #include "DetectorReport.h"
 #include "../io/AudioSignal.h"
 #include "DetectionProfile.h"
@@ -55,206 +54,6 @@ struct DetectionPipelineResult {
     unsigned long timestampMs = 0;
 };
 
-struct SourceCandidateSummary {
-    // Legacy compatibility summary name. Planned canonical target:
-    // RejectedCandidateSummary inside DetectorReport.
-    //
-    // Clean Analyzer paths must not depend on this shape directly.
-    // Adapter direction is canonical DetectorReport -> legacy summary, not the
-    // reverse.
-    bool present = false;
-    unsigned long candidateCount = 0;
-    unsigned long rejectCount = 0;
-    unsigned long bestDurationMs = 0;
-    unsigned long secondBestDurationMs = 0;
-    unsigned long bestOpenMs = 0;
-    unsigned long bestPeakMs = 0;
-    unsigned long bestLastMatchMs = 0;
-    unsigned long bestCloseMs = 0;
-    float bestPeakPrimary = 0.0f;
-    float bestPeakSecondary = 0.0f;
-    const char* bestRejectReason = "none";
-    const char* bestGateReason = "none";
-    const char* closeCause = "none";
-    unsigned long scoreTooLowFrames = 0;
-    unsigned long contrastTooLowFrames = 0;
-    unsigned long scoreAndContrastTooLowFrames = 0;
-    float maxPeakPrimary = 0.0f;
-    unsigned long maxPeakPrimaryMs = 0;
-    float maxPeakSecondary = 0.0f;
-    unsigned long maxPeakSecondaryMs = 0;
-    unsigned long totalMatchMs = 0;
-    unsigned long totalGapMs = 0;
-    unsigned long maxGapMs = 0;
-    unsigned long islandCount = 0;
-};
-
-struct SourceCandidateSnapshot {
-    // Legacy compatibility snapshot name. Planned canonical target:
-    // folded into RejectedCandidateSummary during DetectorReport migration.
-    //
-    // Keep this out of canonical Analyzer/report contracts.
-    bool present = false;
-    unsigned long peakMs = 0;
-    unsigned long durationMs = 0;
-    unsigned long sampleCount = 0;
-    float peakPrimary = 0.0f;
-    float peakSecondary = 0.0f;
-    const char* reason = "none";
-    const char* gateReason = "none";
-    const char* scope = "unknown";
-};
-
-// DETECTION_DIAGNOSTICS_TRANSITIONAL
-//
-// DetectionDiagnostics is a compatibility-only shared diagnostic dump
-// retained for legacy Analyzer output and migration safety.
-//
-// Do not add new detector-stage truth here.
-//
-// Canonical target:
-//   DetectorReport owns detector-stage accepted/rejected truth.
-//   RejectedCandidateSummary owns selected rejected candidate details.
-//   AnalyzerReport owns trial classification only.
-//
-// This struct should shrink and disappear after DetectorReport-based
-// detector reporting is active.
-struct DetectionDiagnostics {
-    unsigned long observedAtMs = 0;
-
-    const char* occurrenceSource = "unknown";
-    const char* detectorKind = "unknown";
-
-    bool acceptedPresent = false;
-    unsigned long acceptedStartMs = 0;
-    unsigned long acceptedPeakMs = 0;
-    unsigned long acceptedReleaseMs = 0;
-    unsigned long acceptedDurationMs = 0;
-    float acceptedStrength = 0.0f;
-    float acceptedScore = 0.0f;
-    float acceptedContrast = 0.0f;
-
-    unsigned long frequencyFrames = 0;
-    unsigned long frequencyValidFrames = 0;
-    unsigned long frequencyScoreOkFrames = 0;
-    unsigned long frequencyContrastOkFrames = 0;
-    unsigned long frequencyBothOkFrames = 0;
-    unsigned long frequencyMatchFrames = 0;
-    unsigned long frequencyRejectFrames = 0;
-    unsigned long frequencyReleaseScoreOkFrames = 0;
-    unsigned long frequencyReleaseContrastOkFrames = 0;
-    unsigned long frequencyReleaseBothOkFrames = 0;
-    unsigned long frequencyReleaseScoreTooLowFrames = 0;
-    unsigned long frequencyReleaseContrastTooLowFrames = 0;
-    unsigned long frequencyReleaseScoreAndContrastTooLowFrames = 0;
-    unsigned long frequencyReleaseNoEvidenceFrames = 0;
-    unsigned long frequencyDiagLongestMatchStreakFrames = 0;
-    unsigned long frequencyDiagLongestMatchStreakStartMs = 0;
-    unsigned long frequencyDiagLongestMatchStreakEndMs = 0;
-
-    float frequencyScoreMean = 0.0f;
-    float frequencyContrastMean = 0.0f;
-    float frequencyScoreMin = 0.0f;
-    float frequencyContrastMin = 0.0f;
-    float frequencyScoreMax = 0.0f;
-    float frequencyContrastMax = 0.0f;
-    unsigned long frequencyScoreMaxMs = 0;
-    unsigned long frequencyContrastMaxMs = 0;
-    float frequencyTargetPowerMean = 0.0f;
-    float frequencyLowerPowerMean = 0.0f;
-    float frequencyUpperPowerMean = 0.0f;
-    float frequencyNeighborPowerMean = 0.0f;
-    float frequencyNeighborPowerMaxMean = 0.0f;
-    float frequencyTargetPowerMax = 0.0f;
-    float frequencyLowerPowerMax = 0.0f;
-    float frequencyUpperPowerMax = 0.0f;
-    float frequencyNeighborPowerMeanMax = 0.0f;
-    float frequencyNeighborPowerMaxMax = 0.0f;
-    unsigned long frequencyTargetPowerMaxMs = 0;
-    unsigned long frequencyLowerPowerMaxMs = 0;
-    unsigned long frequencyUpperPowerMaxMs = 0;
-    unsigned long frequencyNeighborPowerMeanMaxMs = 0;
-    unsigned long frequencyNeighborPowerMaxMaxMs = 0;
-    float frequencyLowerScoreMean = 0.0f;
-    float frequencyUpperScoreMean = 0.0f;
-    float frequencyLowerScoreMax = 0.0f;
-    float frequencyUpperScoreMax = 0.0f;
-    unsigned long frequencyLowerScoreMaxMs = 0;
-    unsigned long frequencyUpperScoreMaxMs = 0;
-    float frequencyPeakScore = 0.0f;
-    float frequencyPeakContrast = 0.0f;
-    unsigned long frequencyPeakSampleCount = 0;
-    SourceCandidateSummary sourceSummary = {};
-    SourceCandidateSnapshot sourceLastCandidate = {};
-    float frequencyScoreThreshold = 0.0f;
-    float frequencyContrastThreshold = 0.0f;
-
-    bool frequencyNearMiss = false;
-    const char* frequencyNearMissReason = "none";
-
-    bool frequencyPresent = false;
-    bool frequencyValidWindow = false;
-    bool frequencyMatched = false;
-    bool frequencyScoreOk = false;
-    bool frequencyContrastOk = false;
-    const char* frequencyRejectReason = "none";
-    const char* frequencyNoEmitReason = "none";
-    const char* frequencyGateReason = "none";
-    const char* frequencyWouldCandidateReason = "none";
-    const char* frequencyCandidateState = "none";
-    bool frequencyReadyOk = false;
-    bool frequencyGateOpen = false;
-    bool frequencyOpened = false;
-    bool frequencyReleased = false;
-    bool frequencyEmitted = false;
-    bool frequencyValidRelease = false;
-    bool frequencyEmitAllowed = false;
-    unsigned long frequencyAcceptedCandidateId = 0;
-    unsigned long frequencySelectedRejectCandidateId = 0;
-    unsigned long frequencyLastCandidateId = 0;
-    unsigned long frequencyLifecycleCandidateId = 0;
-    unsigned long frequencyLastMatchMs = 0;
-    unsigned long frequencyDurationUsedMs = 0;
-    unsigned long frequencyDurationPrintedMs = 0;
-    unsigned long frequencyMinDurationUsedMs = 0;
-    unsigned long frequencyMinDurationReportedMs = 0;
-    bool frequencyDurationOk = false;
-    bool frequencyDurationInconsistent = false;
-    bool frequencyPrintedDurationInconsistent = false;
-    unsigned long frequencyOpenMs = 0;
-    unsigned long frequencyPeakMs = 0;
-    unsigned long frequencyReleaseMs = 0;
-    unsigned long frequencyDurationMs = 0;
-    unsigned long frequencyMinDurationMs = 0;
-    unsigned long frequencyMaxDurationMs = 0;
-    unsigned long patternResultQueueOverflowCount = 0;
-
-    const char* scalarRejectReason = "none";
-    const char* scalarNoEmitReason = "none";
-    const char* scalarGateReason = "none";
-    bool scalarOpened = false;
-    bool scalarReleased = false;
-    bool scalarValidRelease = false;
-    bool scalarEmitAllowed = false;
-    unsigned long scalarOpenMs = 0;
-    unsigned long scalarPeakMs = 0;
-    unsigned long scalarReleaseMs = 0;
-    unsigned long scalarDurationMs = 0;
-    unsigned long scalarMinDurationMs = 0;
-    unsigned long scalarMaxDurationMs = 0;
-    float scalarPeakStrength = 0.0f;
-
-    const char* scalarOnsetRejectReason = "none";
-    const char* scalarTransientRejectReason = "none";
-    unsigned long scalarTransientRejectedDurationMs = 0;
-    float scalarTransientRejectedStrength = 0.0f;
-
-    float ampCenteredMagnitude = 0.0f;
-    float ampLevel = 0.0f;
-    float ampBaseline = 0.0f;
-    float ampLift = 0.0f;
-};
-
 class DetectionRuntime {
 public:
     DetectionRuntime();
@@ -266,7 +65,6 @@ public:
     void resetSourceRejectSummaries();
     void resetDetectionState();
     void setDiagnosticsEnabled(bool enabled);
-    void captureDiagnostics();
 
     void setFrequencyMatchConfig(const FrequencyMatchConfig& config);
     void setScalarTransientConfig(const ScalarTransientConfig& config);
@@ -285,17 +83,8 @@ public:
     bool popPatternResult(PatternResult& out);
     bool hasLatestPipelineResult() const;
     const DetectionPipelineResult& latestPipelineResult() const;
-    // Legacy compatibility dump only. Canonical Analyzer/report code should
-    // prefer DetectorReport accessors and treat DetectionDiagnostics as a
-    // transitional adapter source for old reporting paths.
-    const DetectionDiagnostics& diagnostics() const;
-    // Generic report access is the canonical upward path. Keep the typed
-    // wrappers below only as migration compatibility until callers are updated.
-    const DetectorReport* detectorReport(DetectorId id) const;
+    // Generic report access is the canonical upward path.
     const DetectorReport& activeDetectorReport() const;
-    const DetectorReport& scalarDetectorReport() const;
-    const DetectorReport& frequencyDetectorReport() const;
-    const FrequencyMatchDetector& frequencyDetector() const;
     const FieldState& fieldState() const;
     const FeatureHistory& featureHistory() const;
 
@@ -332,13 +121,10 @@ private:
     PatternResult _resultQueue[kResultQueueCapacity] = {};
     size_t _resultReadIndex = 0;
     size_t _resultCount = 0;
-    unsigned long _resultQueueOverflowCount = 0;
 
     DetectionPipelineResult _latestPipelineResult = {};
     bool _hasLatestPipelineResult = false;
-    DetectionDiagnostics _diagnostics = {};
     DetectorReport _detectorReport = {};
-    bool _diagnosticsEnabled = true;
     Occurrence _lastOccurrence = {};
     InspectedOccurrence _lastInspectedOccurrence = {};
 };

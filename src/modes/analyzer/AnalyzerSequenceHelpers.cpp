@@ -10,10 +10,8 @@
 /*
 AnalyzerSequenceHelpers
 
-Mixed Analyzer helper plumbing for the current transition.
-The sample-dump path and classifier bookkeeping remain legacy output
-subpaths until the canonical Analyzer output rebuild replaces them.
-Keep new detector contract work out of this file.
+Analyzer helper plumbing for sample-dump tooling and classifier bookkeeping.
+Canonical detector output lives in AnalyzerReporting.
 */
 
 namespace {
@@ -263,67 +261,7 @@ const char* AnalyzerApp::sequenceTrialClassificationName(const char* result, lon
     return result;
 }
 
-void AnalyzerApp::recordSequenceClassifierOutcome(const detection::PatternResult& patternResult, bool duplicateCandidate, bool unexpectedCandidate) {
-    if (_valMode || !patternResult.patternCandidateAccepted) {
-        return;
-    }
-
-    // Legacy output accounting: these counters feed the old SEQ summary and
-    // compatibility diagnostics, not the future canonical detection contract.
-    const auto freqPacket = patternResult.inspectedOccurrence.occurrence.frequency.present
-        ? patternResult.inspectedOccurrence.occurrence.frequency
-        : patternResult.candidate.frequency;
-    const auto freqEval = FrequencyMatchEvaluation::evaluate(freqPacket, _frequencyEvidenceTuning);
-    const bool patternMatched = patternResult.valid;
-
-    if (unexpectedCandidate) {
-        if (patternMatched) {
-            ++_sequenceTest.patternMatchedUnexpected;
-        } else {
-            ++_sequenceTest.patternUnmatchedUnexpected;
-        }
-    } else if (duplicateCandidate) {
-        if (patternMatched) {
-            ++_sequenceTest.patternMatchedDuplicates;
-        } else {
-            ++_sequenceTest.patternUnmatchedDuplicates;
-        }
-    } else {
-        if (patternMatched) {
-            ++_sequenceTest.patternMatchedExpected;
-        } else {
-            ++_sequenceTest.patternUnmatchedExpected;
-        }
-    }
-
-    switch (freqEval.attackReason) {
-        case FrequencyMatchEvaluation::Reason::None:
-            break;
-        case FrequencyMatchEvaluation::Reason::NoEvidence:
-            ++_sequenceTest.freqRejectNoEvidence;
-            break;
-        case FrequencyMatchEvaluation::Reason::AttackScoreTooLow:
-            ++_sequenceTest.freqRejectScore;
-            break;
-        case FrequencyMatchEvaluation::Reason::AttackContrastTooLow:
-            ++_sequenceTest.freqRejectContrast;
-            break;
-        case FrequencyMatchEvaluation::Reason::AttackScoreAndContrastTooLow:
-            ++_sequenceTest.freqRejectBoth;
-            break;
-        case FrequencyMatchEvaluation::Reason::ReleaseScoreTooLow:
-        case FrequencyMatchEvaluation::Reason::ReleaseContrastTooLow:
-        case FrequencyMatchEvaluation::Reason::ReleaseScoreAndContrastTooLow:
-            ++_sequenceTest.freqRejectBoth;
-            break;
-    }
-}
-
 void AnalyzerApp::handleSequenceCandidate(const detection::PatternResult& patternResult, const detection::FrequencyBandMeasurementPacket* liveFrequencyMeasurementPacket) {
-    if (_valMode) {
-        return;
-    }
-
     if (!_sequenceTest.active || _sequenceTest.currentTrial == 0) {
         return;
     }
@@ -393,8 +331,6 @@ void AnalyzerApp::handleSequenceCandidate(const detection::PatternResult& patter
     } else {
         diagnostics.candidatePostWindowCount++;
     }
-
-    recordSequenceClassifierOutcome(patternResult, duplicateCandidate, !inWindow);
 
     if (!diagnostics.bestCandidateAccepted || candidate.peakStrength > diagnostics.bestCandidateStrength) {
         diagnostics.bestCandidateAccepted = true;

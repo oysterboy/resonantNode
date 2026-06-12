@@ -44,12 +44,7 @@ void AnalyzerApp::runRawBandTrigger(unsigned long toneHz,
                                     unsigned long postMs,
                                     unsigned long preMs,
                                     unsigned long decim) {
-    if (_valMode) {
-        return;
-    }
-
     stopSequenceTest();
-    stopCaptureSession();
     resetAudioSignalState();
     _audioSource.resetStats();
     _audioSignal.resetSignalState();
@@ -245,12 +240,7 @@ void AnalyzerApp::runRawTrigger(unsigned long toneHz,
                                 unsigned long decim,
                                 bool dumpChunks,
                                 bool dumpBinary) {
-    if (_valMode) {
-        return;
-    }
-
     stopSequenceTest();
-    stopCaptureSession();
     resetAudioSignalState();
     _audioSource.resetStats();
 

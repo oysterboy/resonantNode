@@ -4,41 +4,7 @@
 
 #include "../../TimingUtils.h"
 
-const char* frequencyReleaseFailCauseName(FrequencyReleaseFailCause cause) {
-    switch (cause) {
-        case FrequencyReleaseFailCause::None:
-            return "none";
-        case FrequencyReleaseFailCause::NoEvidence:
-            return "no_frequency_evidence";
-        case FrequencyReleaseFailCause::ScoreLow:
-            return "freq_release_score_too_low";
-        case FrequencyReleaseFailCause::ContrastLow:
-            return "freq_release_contrast_too_low";
-        case FrequencyReleaseFailCause::ScoreAndContrastLow:
-            return "freq_release_score_and_contrast_too_low";
-    }
-
-    return "unknown";
-}
-
 namespace {
-
-FrequencyReleaseFailCause frequencyReleaseFailCauseFromReason(FrequencyMatchEvaluation::Reason reason) {
-    switch (reason) {
-        case FrequencyMatchEvaluation::Reason::NoEvidence:
-            return FrequencyReleaseFailCause::NoEvidence;
-        case FrequencyMatchEvaluation::Reason::ReleaseScoreTooLow:
-            return FrequencyReleaseFailCause::ScoreLow;
-        case FrequencyMatchEvaluation::Reason::None:
-        case FrequencyMatchEvaluation::Reason::AttackScoreTooLow:
-        case FrequencyMatchEvaluation::Reason::AttackContrastTooLow:
-        case FrequencyMatchEvaluation::Reason::AttackScoreAndContrastTooLow:
-        case FrequencyMatchEvaluation::Reason::ReleaseContrastTooLow:
-        case FrequencyMatchEvaluation::Reason::ReleaseScoreAndContrastTooLow:
-        default:
-            return FrequencyReleaseFailCause::None;
-    }
-}
 
 const char* frequencyRejectReasonFromState(const FrequencyMatchDetector& detector) {
     if (detector.candidateEmitted) {
@@ -112,21 +78,9 @@ void FrequencyMatchDetector::resetState() {
     lastCandidateId = 0;
     candidateMinDurationMs = 0;
     candidateMaxDurationMs = 0;
-    diagCurrentMatchStreakFrames = 0;
-    diagCurrentMatchStreakStartMs = 0;
-    diagLongestMatchStreakFrames = 0;
-    diagLongestMatchStreakStartMs = 0;
-    diagLongestMatchStreakEndMs = 0;
-    bestObservedAtMs = 0;
-    bestObservedSample = 0;
-    bestScore = 0.0f;
-    bestContrast = 0.0f;
-    bestPeakSampleCount = 0;
-    candidateCount = 0;
     acceptedCount = 0;
     rejectedCount = 0;
     bestDurationMs = 0;
-    secondBestDurationMs = 0;
     bestOpenMs = 0;
     bestPeakMs = 0;
     bestLastMatchMs = 0;
@@ -135,13 +89,6 @@ void FrequencyMatchDetector::resetState() {
     bestPeakContrast = 0.0f;
     bestRejectReason = "none";
     bestGateReason = "none";
-    totalMatchMs = 0;
-    totalGapMs = 0;
-    maxGapMs = 0;
-    islandCount = 0;
-    lastRejectedCloseMs = 0;
-    lastReleaseFailCause = FrequencyReleaseFailCause::None;
-    candidateCloseCause = FrequencyReleaseFailCause::None;
     memset(&bestEvidence, 0, sizeof(bestEvidence));
     memset(&candidateEvidence, 0, sizeof(candidateEvidence));
     memset(candidateState, 0, sizeof(candidateState));
@@ -166,11 +113,9 @@ void FrequencyMatchDetector::resetState() {
 }
 
 void FrequencyMatchDetector::resetRejectSummary() {
-    candidateCount = 0;
     acceptedCount = 0;
     rejectedCount = 0;
     bestDurationMs = 0;
-    secondBestDurationMs = 0;
     bestOpenMs = 0;
     bestPeakMs = 0;
     bestLastMatchMs = 0;
@@ -179,29 +124,14 @@ void FrequencyMatchDetector::resetRejectSummary() {
     bestPeakContrast = 0.0f;
     bestRejectReason = "none";
     bestGateReason = "none";
-    totalMatchMs = 0;
-    totalGapMs = 0;
-    maxGapMs = 0;
-    islandCount = 0;
-    lastRejectedCloseMs = 0;
     memset(&bestEvidence, 0, sizeof(bestEvidence));
     memset(&candidateEvidence, 0, sizeof(candidateEvidence));
-    bestObservedAtMs = 0;
-    bestObservedSample = 0;
-    bestScore = 0.0f;
-    bestContrast = 0.0f;
-    bestPeakSampleCount = 0;
     candidateLifecycleId = 0;
     currentCandidateId = 0;
     acceptedCandidateId = 0;
     selectedRejectCandidateId = 0;
     lastCandidateId = 0;
-    candidateDecisionDurationMs = 0;
-    candidateDecisionMinDurationMs = 0;
-    candidateDecisionDurationOk = false;
     candidateDurationInconsistent = false;
-    lastReleaseFailCause = FrequencyReleaseFailCause::None;
-    candidateCloseCause = FrequencyReleaseFailCause::None;
     _acceptedOccurrence = {};
     _acceptedDetail = {};
     _pendingOccurrencePresent = false;
@@ -217,76 +147,10 @@ void FrequencyMatchDetector::setDiagnosticsEnabled(bool enabled) {
 }
 
 void FrequencyMatchDetector::resetDiagnosticsSummary() {
-    diagnosticsObservedCount = 0;
-    diagnosticsValidCount = 0;
     diagnosticsScoreOkCount = 0;
     diagnosticsContrastOkCount = 0;
     diagnosticsBothOkCount = 0;
     diagnosticsMatchedCount = 0;
-    diagnosticsRejectedCount = 0;
-    diagnosticsScoreTooLowCount = 0;
-    diagnosticsContrastTooLowCount = 0;
-    diagnosticsScoreAndContrastTooLowCount = 0;
-    diagnosticsReleaseScoreOkCount = 0;
-    diagnosticsReleaseContrastOkCount = 0;
-    diagnosticsReleaseBothOkCount = 0;
-    diagnosticsReleaseScoreTooLowCount = 0;
-    diagnosticsReleaseContrastTooLowCount = 0;
-    diagnosticsReleaseScoreAndContrastTooLowCount = 0;
-    diagnosticsReleaseNoEvidenceCount = 0;
-    diagnosticsScoreSum = 0.0f;
-    diagnosticsScoreMin = 0.0f;
-    diagnosticsScoreMax = 0.0f;
-    diagnosticsScoreMaxMs = 0;
-    diagnosticsContrastSum = 0.0f;
-    diagnosticsContrastMin = 0.0f;
-    diagnosticsContrastMax = 0.0f;
-    diagnosticsContrastMaxMs = 0;
-    diagnosticsTargetPower = {};
-    diagnosticsLowerPower = {};
-    diagnosticsUpperPower = {};
-    diagnosticsNeighborPowerMean = {};
-    diagnosticsNeighborPowerMax = {};
-    diagnosticsLowerScore = {};
-    diagnosticsUpperScore = {};
-    _diagnosticsHaveStats = false;
-    _diagnosticsHaveBandStats = false;
-}
-
-float FrequencyMatchDetector::diagnosticsScoreMean() const {
-    return diagnosticsObservedCount > 0 ? diagnosticsScoreSum / static_cast<float>(diagnosticsObservedCount) : 0.0f;
-}
-
-float FrequencyMatchDetector::diagnosticsContrastMean() const {
-    return diagnosticsObservedCount > 0 ? diagnosticsContrastSum / static_cast<float>(diagnosticsObservedCount) : 0.0f;
-}
-
-float FrequencyMatchDetector::diagnosticsTargetPowerMean() const {
-    return diagnosticsObservedCount > 0 ? diagnosticsTargetPower.sum / static_cast<float>(diagnosticsObservedCount) : 0.0f;
-}
-
-float FrequencyMatchDetector::diagnosticsLowerPowerMean() const {
-    return diagnosticsObservedCount > 0 ? diagnosticsLowerPower.sum / static_cast<float>(diagnosticsObservedCount) : 0.0f;
-}
-
-float FrequencyMatchDetector::diagnosticsUpperPowerMean() const {
-    return diagnosticsObservedCount > 0 ? diagnosticsUpperPower.sum / static_cast<float>(diagnosticsObservedCount) : 0.0f;
-}
-
-float FrequencyMatchDetector::diagnosticsNeighborPowerMeanValue() const {
-    return diagnosticsObservedCount > 0 ? diagnosticsNeighborPowerMean.sum / static_cast<float>(diagnosticsObservedCount) : 0.0f;
-}
-
-float FrequencyMatchDetector::diagnosticsNeighborPowerMaxMean() const {
-    return diagnosticsObservedCount > 0 ? diagnosticsNeighborPowerMax.sum / static_cast<float>(diagnosticsObservedCount) : 0.0f;
-}
-
-float FrequencyMatchDetector::diagnosticsLowerScoreMean() const {
-    return diagnosticsObservedCount > 0 ? diagnosticsLowerScore.sum / static_cast<float>(diagnosticsObservedCount) : 0.0f;
-}
-
-float FrequencyMatchDetector::diagnosticsUpperScoreMean() const {
-    return diagnosticsObservedCount > 0 ? diagnosticsUpperScore.sum / static_cast<float>(diagnosticsObservedCount) : 0.0f;
 }
 
 void FrequencyMatchDetector::updateBestRejectedCandidate() {
@@ -295,7 +159,6 @@ void FrequencyMatchDetector::updateBestRejectedCandidate() {
     }
 
     if (candidateDurationMs >= bestDurationMs) {
-        secondBestDurationMs = bestDurationMs;
         bestDurationMs = candidateDurationMs;
         bestOpenMs = candidateOpenMs;
         bestPeakMs = candidatePeakMs;
@@ -305,28 +168,11 @@ void FrequencyMatchDetector::updateBestRejectedCandidate() {
         bestPeakContrast = candidatePeakContrast;
         bestRejectReason = noEmitReason[0] != '\0' ? noEmitReason : "unknown";
         bestGateReason = gateReason[0] != '\0' ? gateReason : "unknown";
-    } else if (candidateDurationMs > secondBestDurationMs) {
-        secondBestDurationMs = candidateDurationMs;
     }
 }
 
-void FrequencyMatchDetector::observeClosedCandidate(bool accepted) {
-    if (accepted) {
-        return;
-    }
-
-    ++candidateCount;
+void FrequencyMatchDetector::recordRejectedCandidate() {
     ++rejectedCount;
-    if (lastRejectedCloseMs > 0 && candidateOpenMs > lastRejectedCloseMs) {
-        const unsigned long gapMs = candidateOpenMs - lastRejectedCloseMs;
-        totalGapMs += gapMs;
-        if (gapMs > maxGapMs) {
-            maxGapMs = gapMs;
-        }
-    }
-    lastRejectedCloseMs = candidateCloseMs > 0 ? candidateCloseMs : candidateLastMatchedMs;
-    ++islandCount;
-    totalMatchMs += candidateDurationMs;
     updateBestRejectedCandidate();
 }
 
@@ -400,28 +246,6 @@ void FrequencyMatchDetector::update(const detection::FrequencyBandMeasurementPac
     frequencyCandidate.detectorKind = detection::OccurrenceDetectorKind::FrequencyMatch;
     frequencyCandidate.valid = false;
 
-    const auto updateDiagStreak = [&](bool strictMatchOk) {
-        if (strictMatchOk) {
-            if (diagCurrentMatchStreakFrames == 0) {
-                diagCurrentMatchStreakStartMs = now;
-            }
-            ++diagCurrentMatchStreakFrames;
-            if (diagCurrentMatchStreakFrames > diagLongestMatchStreakFrames) {
-                diagLongestMatchStreakFrames = diagCurrentMatchStreakFrames;
-                diagLongestMatchStreakStartMs = diagCurrentMatchStreakStartMs;
-                diagLongestMatchStreakEndMs = now;
-            }
-        } else {
-            if (diagCurrentMatchStreakFrames > diagLongestMatchStreakFrames) {
-                diagLongestMatchStreakFrames = diagCurrentMatchStreakFrames;
-                diagLongestMatchStreakStartMs = diagCurrentMatchStreakStartMs;
-                diagLongestMatchStreakEndMs = candidateLastMatchedMs > 0 ? candidateLastMatchedMs : now;
-            }
-            diagCurrentMatchStreakFrames = 0;
-            diagCurrentMatchStreakStartMs = 0;
-        }
-    };
-
     const auto closeCandidate = [&](unsigned long minDurationMs) {
         candidateActive = false;
         candidateClosed = true;
@@ -441,7 +265,6 @@ void FrequencyMatchDetector::update(const detection::FrequencyBandMeasurementPac
         candidateState[sizeof(candidateState) - 1] = '\0';
         strncpy(noEmitReason, accepted ? "none" : "duration_too_short", sizeof(noEmitReason) - 1);
         noEmitReason[sizeof(noEmitReason) - 1] = '\0';
-        candidateCloseCause = lastReleaseFailCause;
         lastCandidateId = currentCandidateId;
         if (accepted) {
             ++acceptedCount;
@@ -450,9 +273,6 @@ void FrequencyMatchDetector::update(const detection::FrequencyBandMeasurementPac
             selectedRejectCandidateId = currentCandidateId;
         }
         currentCandidateId = 0;
-        candidateDecisionDurationMs = candidateDurationMs;
-        candidateDecisionMinDurationMs = minDurationMs;
-        candidateDecisionDurationOk = durationOk;
         candidateDurationInconsistent = accepted != durationOk;
         frequencyCandidate.valid = accepted;
         frequencyCandidate.releaseMs = candidateCloseMs;
@@ -461,7 +281,7 @@ void FrequencyMatchDetector::update(const detection::FrequencyBandMeasurementPac
         frequencyCandidate.durationMs = candidateDurationMs;
         frequencyCandidate.confidence = accepted ? 1.0f : 0.0f;
         if (!accepted) {
-            observeClosedCandidate(false);
+            recordRejectedCandidate();
         }
     };
 
@@ -473,8 +293,6 @@ void FrequencyMatchDetector::update(const detection::FrequencyBandMeasurementPac
                 firstThresholdCrossingSample = currentSample;
             }
         }
-
-        updateDiagStreak(attackOk);
 
         if (!candidateActive) {
             if (attackOk) {
@@ -519,7 +337,6 @@ void FrequencyMatchDetector::update(const detection::FrequencyBandMeasurementPac
                 }
             } else {
                 wouldProduceCandidate = false;
-                lastReleaseFailCause = FrequencyReleaseFailCause::None;
                 strncpy(wouldCandidateReason, FrequencyMatchEvaluation::reasonName(gates.attackReason), sizeof(wouldCandidateReason) - 1);
                 wouldCandidateReason[sizeof(wouldCandidateReason) - 1] = '\0';
             }
@@ -546,33 +363,25 @@ void FrequencyMatchDetector::update(const detection::FrequencyBandMeasurementPac
                 }
                 frequencyCandidate.durationMs = candidateDurationMs;
                 frequencyCandidate.valid = false;
-                lastReleaseFailCause = FrequencyReleaseFailCause::None;
             } else {
-                lastReleaseFailCause = frequencyReleaseFailCauseFromReason(gates.releaseReason);
                 if (candidateLastMatchedMs > 0 && timing::elapsedSince(now, candidateLastMatchedMs, releaseDebounceMs)) {
                     closeCandidate(minDurationMs);
                 }
             }
         }
     } else {
-        updateDiagStreak(false);
         if (candidateActive && candidateLastMatchedMs > 0 && timing::elapsedSince(now, candidateLastMatchedMs, releaseDebounceMs)) {
-            lastReleaseFailCause = FrequencyReleaseFailCause::NoEvidence;
             closeCandidate(minDurationMs);
         }
     }
 
     if (_diagnosticsEnabled) {
         const bool better = !bestEvidence.present
-            || evidence.targetBandScoreValue > bestScore
-            || (evidence.targetBandScoreValue == bestScore && evidence.targetBandContrastValue > bestContrast);
+            || evidence.targetBandScoreValue > bestEvidence.targetBandScoreValue
+            || (evidence.targetBandScoreValue == bestEvidence.targetBandScoreValue
+                && evidence.targetBandContrastValue > bestEvidence.targetBandContrastValue);
         if (evidence.present && better) {
             bestEvidence = evidence;
-            bestObservedAtMs = now;
-            bestObservedSample = currentSample;
-            bestScore = evidence.targetBandScoreValue;
-            bestContrast = evidence.targetBandContrastValue;
-            bestPeakSampleCount = 0;
         }
 
         const auto bestEval = FrequencyMatchEvaluation::evaluate(bestEvidence, tuning);
@@ -600,97 +409,18 @@ void FrequencyMatchDetector::update(const detection::FrequencyBandMeasurementPac
         wouldCandidateReason[sizeof(wouldCandidateReason) - 1] = '\0';
 
         if (evidence.present) {
-            const bool firstBandStats = !_diagnosticsHaveBandStats;
-            const auto updateBandStats = [&](FrequencyBandDiagnosticStats& stats, float value) {
-                stats.sum += value;
-                if (firstBandStats) {
-                    stats.min = value;
-                    stats.max = value;
-                    stats.maxMs = now;
-                    return;
-                }
-                if (value < stats.min) {
-                    stats.min = value;
-                }
-                if (value > stats.max) {
-                    stats.max = value;
-                    stats.maxMs = now;
-                }
-            };
-
-            ++diagnosticsObservedCount;
-            ++diagnosticsValidCount;
             if (attackScoreOk) {
                 ++diagnosticsScoreOkCount;
-            } else {
-                ++diagnosticsScoreTooLowCount;
             }
             if (attackContrastOk) {
                 ++diagnosticsContrastOkCount;
-            } else {
-                ++diagnosticsContrastTooLowCount;
             }
             if (attackScoreOk && attackContrastOk) {
                 ++diagnosticsBothOkCount;
-            } else if (!attackScoreOk && !attackContrastOk) {
-                ++diagnosticsScoreAndContrastTooLowCount;
-            }
-            diagnosticsScoreSum += evidence.targetBandScoreValue;
-            diagnosticsContrastSum += evidence.targetBandContrastValue;
-            updateBandStats(diagnosticsTargetPower, evidence.targetBandPowerValue);
-            updateBandStats(diagnosticsLowerPower, evidence.lowerBandPowerValue);
-            updateBandStats(diagnosticsUpperPower, evidence.upperBandPowerValue);
-            updateBandStats(diagnosticsNeighborPowerMean, evidence.neighborBandPowerValue);
-            updateBandStats(diagnosticsNeighborPowerMax, evidence.neighborBandPowerMaxValue);
-            updateBandStats(diagnosticsLowerScore, evidence.lowerBandScoreValue);
-            updateBandStats(diagnosticsUpperScore, evidence.upperBandScoreValue);
-            _diagnosticsHaveBandStats = true;
-            if (!_diagnosticsHaveStats) {
-                diagnosticsScoreMin = evidence.targetBandScoreValue;
-                diagnosticsScoreMax = evidence.targetBandScoreValue;
-                diagnosticsContrastMin = evidence.targetBandContrastValue;
-                diagnosticsContrastMax = evidence.targetBandContrastValue;
-                diagnosticsScoreMaxMs = now;
-                diagnosticsContrastMaxMs = now;
-                _diagnosticsHaveStats = true;
-            } else {
-                if (evidence.targetBandScoreValue < diagnosticsScoreMin) {
-                    diagnosticsScoreMin = evidence.targetBandScoreValue;
-                }
-                if (evidence.targetBandScoreValue > diagnosticsScoreMax) {
-                    diagnosticsScoreMax = evidence.targetBandScoreValue;
-                    diagnosticsScoreMaxMs = now;
-                }
-                if (evidence.targetBandContrastValue < diagnosticsContrastMin) {
-                    diagnosticsContrastMin = evidence.targetBandContrastValue;
-                }
-                if (evidence.targetBandContrastValue > diagnosticsContrastMax) {
-                    diagnosticsContrastMax = evidence.targetBandContrastValue;
-                    diagnosticsContrastMaxMs = now;
-                }
             }
             if (attackOk) {
                 ++diagnosticsMatchedCount;
-            } else {
-                ++diagnosticsRejectedCount;
             }
-            if (releaseScoreOk) {
-                ++diagnosticsReleaseScoreOkCount;
-            } else {
-                ++diagnosticsReleaseScoreTooLowCount;
-            }
-            if (releaseContrastOk) {
-                ++diagnosticsReleaseContrastOkCount;
-            } else {
-                ++diagnosticsReleaseContrastTooLowCount;
-            }
-            if (releaseScoreOk && releaseContrastOk) {
-                ++diagnosticsReleaseBothOkCount;
-            } else if (!releaseScoreOk && !releaseContrastOk) {
-                ++diagnosticsReleaseScoreAndContrastTooLowCount;
-            }
-        } else {
-            ++diagnosticsReleaseNoEvidenceCount;
         }
     }
 

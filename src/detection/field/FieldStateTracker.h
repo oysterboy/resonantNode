@@ -10,7 +10,7 @@ namespace detection {
 /*
 FieldStateTracker
 
-Observes occurrence candidates, inspected signals, and PatternResults to maintain
+Observes occurrences, inspected signals, and PatternResults to maintain
 recent acoustic context.
 Does not classify patterns and does not trigger output.
 */

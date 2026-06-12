@@ -23,7 +23,7 @@ AnalyzerReason analyzerReasonFromSequenceOutcome(const AnalyzerSequenceClassific
             if (input.detectorAcceptedPresent) {
                 return AnalyzerReason::InspectionFailed;
             }
-            if (input.detectorReportAvailable || input.rawCandidateCount == 0) {
+            if (input.detectorReportAvailable || input.rawPendingCount == 0) {
                 return AnalyzerReason::NoOccurrence;
             }
             return AnalyzerReason::MissingPipelineResult;

@@ -13,7 +13,7 @@ FeatureHistory
 
 Bounded history for measured feature streams used by retrospective inspection.
 Stores feature values and window summaries by timestamp.
-Does not decide candidate validity or pattern meaning.
+Does not decide occurrence validity or pattern meaning.
 */
 class FeatureHistory {
 public:

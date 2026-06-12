@@ -124,7 +124,7 @@ inline const char* analyzerReasonName(AnalyzerReason value) {
         case AnalyzerReason::MissingPipelineResult:
             return "missing_pipeline_result";
         case AnalyzerReason::NoOccurrence:
-            return "no_occurrence_candidate";
+            return "no_occurrence_pending";
         case AnalyzerReason::OccurrenceSeenButRejected:
             return "occurrence_seen_but_rejected";
         case AnalyzerReason::InspectionFailed:

@@ -145,8 +145,8 @@ void printCanonicalDetectorDetailLine(const char* prefix, const AnalyzerReport& 
             Serial.print(frequency.inspect.noEmitReason != nullptr ? frequency.inspect.noEmitReason : "none");
             Serial.print(" detail.frequency.inspect.gate_reason=");
             Serial.print(frequency.inspect.gateReason != nullptr ? frequency.inspect.gateReason : "none");
-            Serial.print(" detail.frequency.inspect.candidate_state=");
-            Serial.print(frequency.inspect.candidateState != nullptr ? frequency.inspect.candidateState : "none");
+            Serial.print(" detail.frequency.inspect.pending_state=");
+            Serial.print(frequency.inspect.pendingState != nullptr ? frequency.inspect.pendingState : "none");
             Serial.print(" detail.frequency.inspect.ready_ok=");
             Serial.print(frequency.inspect.readyOk ? 1 : 0);
             Serial.print(" detail.frequency.inspect.gate_open=");

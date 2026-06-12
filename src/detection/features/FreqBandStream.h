@@ -8,7 +8,7 @@
 FreqBandStream
 
 Owns the rolling narrow-band frequency evidence stream for a configured tone.
-This is the live stream layer, not the retrospective candidate-window probe.
+This is the live stream layer, not the retrospective occurrence-window probe.
 
 Responsibilities:
 - accept centered samples from the audio stream
@@ -18,8 +18,8 @@ Responsibilities:
 Does NOT:
 - decide behavior or output timing
 - own transient/onset decisions
-- own candidate assembly
-- own retrospective candidate-window probing
+- own occurrence assembly
+- own retrospective occurrence-window probing
 */
 class FreqBandStream {
 public:

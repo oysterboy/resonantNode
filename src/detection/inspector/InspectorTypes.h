@@ -136,7 +136,7 @@ struct InspectionPlan {
     size_t count = 0;
 };
 
-// Scalar evidence captured by the inspector for a single candidate.
+// Scalar evidence captured by the inspector for a single occurrence.
 // This is runtime evidence, not configuration.
 struct ScalarInspectionObservation {
     // Label-like fields are enum-backed; string rendering happens in
@@ -216,10 +216,10 @@ struct TransientEvidence {
     float releaseStrength = 0.0f;
     float ambientBaseline = 0.0f;
 
-    bool audioOverflowDuringCandidate = false;
+    bool audioOverflowDuringOccurrence = false;
 };
 
-// Frequency band measurement packet carried alongside a candidate for measurement and reporting.
+// Frequency band measurement packet carried alongside an occurrence for measurement and reporting.
 // Decision fields belong to the detector / gate result, not the measurement packet.
 struct FrequencyBandMeasurementPacket {
     bool present = false;

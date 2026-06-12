@@ -22,7 +22,7 @@ public:
     const PatternMatcherReport& report() const;
 
     // Convenience single-occurrence path. Returns a default PatternResult when
-    // no candidate/result is emitted for this occurrence.
+    // no proposal/result is emitted for this occurrence.
     PatternResult update(const InspectedOccurrence& occurrence, unsigned long nowMs);
 
     void acceptOccurrence(const InspectedOccurrence& occurrence);

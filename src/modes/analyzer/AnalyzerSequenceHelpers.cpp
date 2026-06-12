@@ -18,7 +18,7 @@ namespace {
 
 constexpr long kLateOnsetMinMs = 200L;
 
-enum class SequenceCandidateClass : uint8_t {
+enum class SequencePendingClass : uint8_t {
     Unknown = 0,
     ExpectedPrimary,
     Late,
@@ -26,32 +26,32 @@ enum class SequenceCandidateClass : uint8_t {
     Duplicate,
 };
 
-uint8_t sequenceCandidateClass(bool duplicateCandidate, bool inWindow, long dtFromTriggerMs) {
-    if (duplicateCandidate) {
-        return static_cast<uint8_t>(SequenceCandidateClass::Duplicate);
+uint8_t sequencePendingClass(bool duplicatePending, bool inWindow, long dtFromTriggerMs) {
+    if (duplicatePending) {
+        return static_cast<uint8_t>(SequencePendingClass::Duplicate);
     }
     if (!inWindow) {
-        return static_cast<uint8_t>(SequenceCandidateClass::UnexpectedNoise);
+        return static_cast<uint8_t>(SequencePendingClass::UnexpectedNoise);
     }
     if (dtFromTriggerMs >= kLateOnsetMinMs) {
-        return static_cast<uint8_t>(SequenceCandidateClass::Late);
+        return static_cast<uint8_t>(SequencePendingClass::Late);
     }
-    return static_cast<uint8_t>(SequenceCandidateClass::ExpectedPrimary);
+    return static_cast<uint8_t>(SequencePendingClass::ExpectedPrimary);
 }
 
 } // namespace
 
-const char* sequenceCandidateClassName(uint8_t value) {
-    switch (static_cast<SequenceCandidateClass>(value)) {
-        case SequenceCandidateClass::ExpectedPrimary:
+const char* sequencePendingClassName(uint8_t value) {
+    switch (static_cast<SequencePendingClass>(value)) {
+        case SequencePendingClass::ExpectedPrimary:
             return "expected_primary";
-        case SequenceCandidateClass::Late:
+        case SequencePendingClass::Late:
             return "late";
-        case SequenceCandidateClass::UnexpectedNoise:
+        case SequencePendingClass::UnexpectedNoise:
             return "unexpected_noise";
-        case SequenceCandidateClass::Duplicate:
+        case SequencePendingClass::Duplicate:
             return "duplicate";
-        case SequenceCandidateClass::Unknown:
+        case SequencePendingClass::Unknown:
         default:
             return "unknown";
     }
@@ -261,13 +261,13 @@ const char* AnalyzerApp::sequenceTrialClassificationName(const char* result, lon
     return result;
 }
 
-void AnalyzerApp::handleSequenceCandidate(const detection::PatternResult& patternResult, const detection::FrequencyBandMeasurementPacket* liveFrequencyMeasurementPacket) {
+void AnalyzerApp::handleSequencePending(const detection::PatternResult& patternResult, const detection::FrequencyBandMeasurementPacket* liveFrequencyMeasurementPacket) {
     if (!_sequenceTest.active || _sequenceTest.currentTrial == 0) {
         return;
     }
 
     auto& diagnostics = _sequenceTest.currentTrialDiagnostics;
-    diagnostics.rawCandidateCount++;
+    diagnostics.rawPendingCount++;
 
     const unsigned long onsetMs = patternResult.primaryStartMs;
     const long dtFromTriggerMs = static_cast<long>(onsetMs) - static_cast<long>(_sequenceTest.currentTrialScheduledAtMs);
@@ -282,22 +282,22 @@ void AnalyzerApp::handleSequenceCandidate(const detection::PatternResult& patter
     const bool preWindow = onsetMs < _sequenceTest.currentTrialStartMs + _sequenceTest.windowStartOffsetMs;
     const bool postWindow = onsetMs > _sequenceTest.currentTrialEndMs;
     const bool inWindow = !preWindow && !postWindow;
-    const bool duplicateCandidate = _sequenceTest.primaryValidPatternCaptured && inWindow;
-    const auto candidateClass = sequenceCandidateClass(duplicateCandidate, inWindow, dtFromTriggerMs);
+    const bool duplicatePending = _sequenceTest.primaryValidPatternCaptured && inWindow;
+    const auto pendingClass = sequencePendingClass(duplicatePending, inWindow, dtFromTriggerMs);
 
-    const SequenceTest::CandidateOrigin origin = preWindow
-        ? SequenceTest::CandidateOrigin::PreWindow
+    const SequenceTest::PendingOrigin origin = preWindow
+        ? SequenceTest::PendingOrigin::PreWindow
         : postWindow
-            ? SequenceTest::CandidateOrigin::PostWindow
-            : SequenceTest::CandidateOrigin::InWindow;
+            ? SequenceTest::PendingOrigin::PostWindow
+            : SequenceTest::PendingOrigin::InWindow;
 
-    if (diagnostics.firstCandidateMs == 0) {
-        diagnostics.firstCandidateMs = onsetMs;
+    if (diagnostics.firstPendingMs == 0) {
+        diagnostics.firstPendingMs = onsetMs;
     }
 
-    if (diagnostics.candidateCount < SequenceTest::kMaxTrialCandidates) {
-        auto& entry = diagnostics.candidates[diagnostics.candidateCount++];
-        entry.candidateMs = onsetMs;
+    if (diagnostics.pendingCount < SequenceTest::kMaxTrialPending) {
+        auto& entry = diagnostics.pendingSamples[diagnostics.pendingCount++];
+        entry.pendingMs = onsetMs;
         entry.dtFromTriggerMs = dtFromTriggerMs;
         entry.dtFromTrialStartMs = dtFromTrialStartMs;
         entry.durationMs = patternResult.primaryDurationMs;
@@ -310,29 +310,29 @@ void AnalyzerApp::handleSequenceCandidate(const detection::PatternResult& patter
         entry.patternMatched = patternResult.patternMatched;
         entry.supportMatched = patternResult.supportMatched;
         entry.behaviorEligible = patternResult.valid;
-        entry.duplicateCandidate = duplicateCandidate;
-        entry.candidateClass = candidateClass;
+        entry.duplicatePending = duplicatePending;
+        entry.pendingClass = pendingClass;
         entry.patternType = patternResult.type;
         entry.reasonCode = patternResult.reasonCode;
         entry.rejectReasonCode = patternResult.rejectReason;
     } else {
-        diagnostics.candidateOverflowCount++;
+        diagnostics.pendingOverflowCount++;
     }
 
-    if (origin == SequenceTest::CandidateOrigin::PreWindow) {
-        diagnostics.candidatePreWindowCount++;
-    } else if (origin == SequenceTest::CandidateOrigin::InWindow) {
-        diagnostics.candidateInWindowCount++;
+    if (origin == SequenceTest::PendingOrigin::PreWindow) {
+        diagnostics.pendingPreWindowCount++;
+    } else if (origin == SequenceTest::PendingOrigin::InWindow) {
+        diagnostics.pendingInWindowCount++;
     } else {
-        diagnostics.candidatePostWindowCount++;
+        diagnostics.pendingPostWindowCount++;
     }
 
-    if (!diagnostics.bestCandidateAccepted || patternResult.primaryStrength > diagnostics.bestCandidateStrength) {
-        diagnostics.bestCandidateAccepted = true;
-        diagnostics.bestCandidateDtFromTriggerMs = dtFromTriggerMs;
-        diagnostics.bestCandidateDurationMs = patternResult.primaryDurationMs;
-        diagnostics.bestCandidateStrength = patternResult.primaryStrength;
-        diagnostics.bestCandidateOrigin = origin;
+    if (!diagnostics.bestPendingAccepted || patternResult.primaryStrength > diagnostics.bestPendingStrength) {
+        diagnostics.bestPendingAccepted = true;
+        diagnostics.bestPendingDtFromTriggerMs = dtFromTriggerMs;
+        diagnostics.bestPendingDurationMs = patternResult.primaryDurationMs;
+        diagnostics.bestPendingStrength = patternResult.primaryStrength;
+        diagnostics.bestPendingOrigin = origin;
     }
 
     if (!inWindow) {
@@ -352,9 +352,9 @@ void AnalyzerApp::handleSequenceCandidate(const detection::PatternResult& patter
         return;
     }
 
-    const bool hadPrimaryBeforeCandidate = _sequenceTest.primaryValidPatternCaptured;
+    const bool hadPrimaryBeforePending = _sequenceTest.primaryValidPatternCaptured;
 
-    if (!hadPrimaryBeforeCandidate) {
+    if (!hadPrimaryBeforePending) {
         _sequenceTest.primaryValidPatternCaptured = true;
         _sequenceTest.primaryValidPattern = patternResult;
         _sequenceTest.primaryValidPatternDtMs = dtFromTriggerMs;
@@ -369,7 +369,7 @@ void AnalyzerApp::handleSequenceCandidate(const detection::PatternResult& patter
         _sequenceTest.currentTrialOnsetDetectedMs = onsetMs;
     }
 
-    if (hadPrimaryBeforeCandidate) {
+    if (hadPrimaryBeforePending) {
         if (diagnostics.duplicateCount == 0) {
             diagnostics.duplicatePatternMs = onsetMs;
             diagnostics.duplicatePatternStrength = patternResult.primaryStrength;

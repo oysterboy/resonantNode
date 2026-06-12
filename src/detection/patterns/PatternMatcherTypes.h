@@ -14,7 +14,7 @@ struct PatternMatcherConfig {
 };
 
 struct PatternMatcherReport {
-    bool candidatePresent = false;
+    bool proposalPresent = false;
     bool patternMatched = false;
     bool supportMatched = false;
     bool valid = false;

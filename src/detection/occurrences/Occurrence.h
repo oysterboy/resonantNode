@@ -27,7 +27,7 @@ struct ScalarOccurrenceDetail {
     float onsetStrength = 0.0f;
     float peakStrength = 0.0f;
     float releaseStrength = 0.0f;
-    bool audioOverflowDuringCandidate = false;
+    bool audioOverflowDuringOccurrence = false;
     ScalarEvidence evidence = {};
     StrengthClass strengthClass = StrengthClass::Unknown;
 };

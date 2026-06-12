@@ -37,8 +37,8 @@ struct AudioSamplePacket {
     bool overflowDuringBlock = false;
 };
 
-struct DetectorCandidate {
-    // Legacy/diagnostic candidate shape used by retrospective probes.
+struct DetectorOccurrenceDetail {
+    // Legacy/diagnostic occurrence shape used by retrospective probes.
     uint64_t onsetSample = 0;
     uint64_t peakSample = 0;
     uint64_t releaseSample = 0;
@@ -54,7 +54,7 @@ struct DetectorCandidate {
     float ambientBaseline = 0.0f;
     uint32_t durationMs = 0;
 
-    bool audioOverflowDuringCandidate = false;
+    bool audioOverflowDuringOccurrence = false;
 };
 
 struct RawSampleHistory {
@@ -155,7 +155,7 @@ Does not:
 - decide when the node should chirp
 - own pattern meaning
 - own higher-level behavior or pattern-classification decisions
-- own candidate queues or candidate validity policy
+- own occurrence queues or occurrence validity policy
 */
 
 class AudioSignal {

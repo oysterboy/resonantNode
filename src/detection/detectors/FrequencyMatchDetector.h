@@ -21,7 +21,7 @@ Responsibilities:
 Does NOT:
 - read audio directly
 - own behavior decisions
-- own AMP candidate state
+- own AMP pending state
 - own retrospective window-probe comparisons
 */
 class FrequencyMatchDetector {
@@ -29,22 +29,22 @@ public:
     bool evidencePresent = false;
     bool liveFrequencyOnly = false;
     bool firstThresholdCrossingSeen = false;
-    bool wouldProduceCandidate = false;
-    bool candidateActive = false;
-    bool candidateEmitted = false;
-    bool candidateClosed = false;
-    unsigned long candidateRefractoryUntilMs = 0;
+    bool wouldProducePending = false;
+    bool pendingActive = false;
+    bool pendingAccepted = false;
+    bool pendingClosed = false;
+    unsigned long pendingRefractoryUntilMs = 0;
     unsigned long firstThresholdCrossingMs = 0;
     uint64_t firstThresholdCrossingSample = 0;
-    unsigned long candidateOpenMs = 0;
-    uint64_t candidateOpenSample = 0;
-    unsigned long candidatePeakMs = 0;
-    uint64_t candidatePeakSample = 0;
-    unsigned long candidateCloseMs = 0;
-    uint64_t candidateCloseSample = 0;
-    unsigned long candidateHoldUpdates = 0;
-    unsigned long candidateDurationMs = 0;
-    unsigned long candidateLastMatchedMs = 0;
+    unsigned long pendingOpenMs = 0;
+    uint64_t pendingOpenSample = 0;
+    unsigned long pendingPeakMs = 0;
+    uint64_t pendingPeakSample = 0;
+    unsigned long pendingCloseMs = 0;
+    uint64_t pendingCloseSample = 0;
+    unsigned long pendingHoldUpdates = 0;
+    unsigned long pendingDurationMs = 0;
+    unsigned long pendingLastMatchedMs = 0;
     float attackScoreThreshold = 0.0f;
     float releaseScoreThreshold = 0.0f;
     float attackContrastThreshold = 0.0f;
@@ -58,17 +58,17 @@ public:
     bool releaseOk = false;
     bool emitAllowed = false;
     bool validRelease = false;
-    float candidatePeakScore = 0.0f;
-    float candidatePeakContrast = 0.0f;
-    unsigned long candidatePeakSampleCount = 0;
-    unsigned long candidateLifecycleId = 0;
-    unsigned long currentCandidateId = 0;
-    unsigned long acceptedCandidateId = 0;
-    unsigned long selectedRejectCandidateId = 0;
-    unsigned long lastCandidateId = 0;
-    unsigned long candidateMinDurationMs = 0;
-    unsigned long candidateMaxDurationMs = 0;
-    bool candidateDurationInconsistent = false;
+    float pendingPeakScore = 0.0f;
+    float pendingPeakContrast = 0.0f;
+    unsigned long pendingPeakSampleCount = 0;
+    unsigned long pendingLifecycleId = 0;
+    unsigned long currentPendingId = 0;
+    unsigned long acceptedOccurrenceId = 0;
+    unsigned long selectedRejectOccurrenceId = 0;
+    unsigned long lastPendingId = 0;
+    unsigned long pendingMinDurationMs = 0;
+    unsigned long pendingMaxDurationMs = 0;
+    bool pendingDurationInconsistent = false;
     unsigned long acceptedCount = 0;
     unsigned long rejectedCount = 0;
     unsigned long bestDurationMs = 0;
@@ -81,12 +81,12 @@ public:
     const char* bestRejectReason = "none";
     const char* bestGateReason = "none";
     detection::FrequencyBandMeasurementPacket bestEvidence = {};
-    detection::FrequencyBandMeasurementPacket candidateEvidence = {};
-    char candidateState[16] = "none";
+    detection::FrequencyBandMeasurementPacket pendingEvidence = {};
+    char pendingState[16] = "none";
     char gateReason[48] = "none";
-    char wouldCandidateReason[48] = "none";
+    char wouldPendingReason[48] = "none";
     char noEmitReason[48] = "none";
-    detection::Occurrence frequencyCandidate = {};
+    detection::Occurrence pendingOccurrence = {};
     unsigned long diagnosticsScoreOkCount = 0;
     unsigned long diagnosticsContrastOkCount = 0;
     unsigned long diagnosticsBothOkCount = 0;
@@ -109,15 +109,15 @@ public:
     bool popOccurrence(detection::Occurrence& out);
 
 private:
-    void updateBestRejectedCandidate();
-    void recordRejectedCandidate();
+    void updateBestRejectedPending();
+    void recordRejectedPending();
     void capturePendingOccurrence(const AudioSamplePacket& audioSamplePacket);
 
     bool _diagnosticsEnabled = false;
 
     // Canonical detector-owned accepted summary for the active trial window.
     // This mirrors scalar report ownership so DetectorReport does not lose
-    // accepted facts once the live candidate state advances.
+    // accepted facts once the live pending state advances.
     detection::AcceptedOccurrenceSummary _acceptedOccurrence = {};
     detection::FrequencyAcceptedDetail _acceptedDetail = {};
 

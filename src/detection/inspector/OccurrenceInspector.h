@@ -19,40 +19,40 @@ public:
     void reset();
 
     InspectedOccurrence inspect(
-        const Occurrence& candidate
+        const Occurrence& occurrence
     ) const;
 
     InspectedOccurrence inspectWithHistory(
-        const Occurrence& candidate,
+        const Occurrence& occurrence,
         const FeatureHistory* featureHistory
     ) const;
 
 private:
     void inspectAcceptedOccurrence(
         InspectedOccurrence& out,
-        const Occurrence& candidate,
+        const Occurrence& occurrence,
         const FeatureHistory* featureHistory
     ) const;
     void annotateAmpStrength(
         InspectedOccurrence& out,
-        const Occurrence& candidate,
+        const Occurrence& occurrence,
         const FeatureHistory* featureHistory,
         const ScalarFeatureInspectionConfig& config,
         EvidenceTarget target
     ) const;
     void runInspectionModule(
         InspectedOccurrence& out,
-        const Occurrence& candidate,
+        const Occurrence& occurrence,
         const FeatureHistory* featureHistory,
         const InspectionModuleConfig& module
     ) const;
     InspectedOccurrence inspectImpl(
-        const Occurrence& candidate,
+        const Occurrence& occurrence,
         const FeatureHistory* featureHistory
     ) const;
 
     InspectedOccurrence inspectAcceptedOccurrenceResult(
-        const Occurrence& candidate,
+        const Occurrence& occurrence,
         const FeatureHistory* featureHistory
     ) const;
 

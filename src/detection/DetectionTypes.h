@@ -12,7 +12,7 @@ namespace detection {
 //   measured or derived feature input
 //
 // Detector:
-//   module that owns candidate lifecycle and emits accepted Occurrences
+//   module that owns occurrence lifecycle and emits accepted Occurrences
 //
 // Occurrence:
 //   accepted detector-level event

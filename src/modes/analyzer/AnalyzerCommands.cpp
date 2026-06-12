@@ -63,7 +63,7 @@ void AnalyzerApp::printSequenceHelp() {
     Serial.println("SEQ IN: [dumpSamples=0|1] [curveFormat=off|samples]");
     Serial.println("SEQ IN: [sampleFirst=N] [sampleEvery=N] [sampleLead=MS] [sampleTail=MS] [sampleStep=MS] [sampleMax=N]");
     Serial.println("SEQ OUT: SEQ start / SEQ running / SEQ_TRIAL / SEQ_INSPECT / SEQ_EXPLAIN / SEQ_SOURCE / SEQ_SUMMARY / SEQ REPORT / AUDIO run");
-    Serial.println("SEQ OUT: candidate fields include onset_sample peak_sample release_sample peak_ms dur end_dt_ms freq_*");
+    Serial.println("SEQ OUT: pending fields include onset_sample peak_sample release_sample peak_ms dur end_dt_ms freq_*");
     Serial.println("SEQ OBS: passive observe mode for an already-running external emitter");
     Serial.println("SEQ IN: PROFILE tonalpulse|amp|chirp_experimental|scalar_freq_experimental");
     Serial.println("SEQ PROFILE tonalpulse");

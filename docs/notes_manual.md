@@ -87,7 +87,7 @@ Short operator notes for running RB and Analyzer with the current detection stac
 Current profile gate shape:
 
 ```txt
-candidateAccepted -> patternMatched -> supportMatched -> behaviorEligible
+patternAccepted -> patternMatched -> supportMatched -> behaviorEligible
 ```
 
 ## Behavior Profiles
@@ -171,8 +171,8 @@ Node               -> status/log exposure only
 
 ## Current Implementation
 
-- `patternCandidateAccepted` means the inspector/pattern chain accepted a real, usable candidate.
-- `patternMatched` means the candidate matched the profile rules.
+- `patternAccepted` means the inspector/pattern chain accepted a real, usable pattern result.
+- `patternMatched` means the pending occurrence group matched the profile rules.
 - `supportMatched` means the profile-specific support gate passed.
 - `behaviorEligible` is the final gate used by RB to decide whether to react.
 
@@ -181,14 +181,14 @@ Node               -> status/log exposure only
 - `AudioSignalFrame` is built from the live I2S stream.
 - The detector produces occurrence evidence once.
 - `OccurrenceInspector` adds AMP support and amp-window evidence.
-- `PatternRules` turns the candidate into a `PatternResult`.
+- `PatternMatcher` turns the pending occurrence group into a `PatternResult`.
 - For `TonalPulse`, the result is valid only when:
   - the frequency path matched
   - the profile-owned support gate allows acceptance
   - `AmpSupportLevel >= Medium` when support is required
 - `DetectionRuntime` forwards the `PatternResult` and `FieldState` to RB.
 - `ResonantBehavior` decides whether to react now:
-  - reject if `patternCandidateAccepted` is false
+  - reject if `patternAccepted` is false
   - reject if the pattern is ambiguous
   - reject if `patternMatched` is false
   - reject if `supportMatched` is false

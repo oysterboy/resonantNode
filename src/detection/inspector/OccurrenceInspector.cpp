@@ -9,7 +9,7 @@ void setRejected(detection::InspectedOccurrence& out, detection::OccurrenceRejec
 
 void fillScalarObservation(
     detection::ScalarInspectionObservation& obs,
-    const detection::Occurrence& candidate,
+    const detection::Occurrence& occurrence,
     const detection::ScalarWindow& scalarWindow,
     const detection::ScalarWindow& preFloorWindow,
     detection::ScalarInspectionAnchor preFloorAnchor,
@@ -66,16 +66,16 @@ void fillScalarObservation(
     const bool preferPeakAnchor = config.mode == detection::ScalarInspectionMode::PeakCentered ||
         config.mode == detection::ScalarInspectionMode::PeakCenteredLift;
     detection::ScalarInspectionAnchor eventAnchor = preferPeakAnchor
-        ? (candidate.peakMs != 0
+        ? (occurrence.peakMs != 0
             ? detection::ScalarInspectionAnchor::Peak
-            : (candidate.startMs != 0
+            : (occurrence.startMs != 0
                 ? detection::ScalarInspectionAnchor::Start
-                : (candidate.releaseMs != 0 ? detection::ScalarInspectionAnchor::Release : detection::ScalarInspectionAnchor::Fallback)))
-        : (candidate.startMs != 0
+                : (occurrence.releaseMs != 0 ? detection::ScalarInspectionAnchor::Release : detection::ScalarInspectionAnchor::Fallback)))
+        : (occurrence.startMs != 0
             ? detection::ScalarInspectionAnchor::Start
-            : (candidate.releaseMs != 0
+            : (occurrence.releaseMs != 0
                 ? detection::ScalarInspectionAnchor::Release
-                : (candidate.peakMs != 0 ? detection::ScalarInspectionAnchor::Peak : detection::ScalarInspectionAnchor::Fallback)));
+                : (occurrence.peakMs != 0 ? detection::ScalarInspectionAnchor::Peak : detection::ScalarInspectionAnchor::Fallback)));
     obs.available = available;
     obs.stream = scalarWindow.stream;
     obs.mode = config.mode;
@@ -123,7 +123,7 @@ void fillScalarObservation(
     obs.sustainedThreshold = sustainedThreshold;
     obs.strength = strength;
 
-    (void)candidate;
+    (void)occurrence;
 }
 
 } // namespace
@@ -139,43 +139,43 @@ void OccurrenceInspector::reset() {
 
 void OccurrenceInspector::inspectAcceptedOccurrence(
     InspectedOccurrence& out,
-    const Occurrence& candidate,
+    const Occurrence& occurrence,
     const FeatureHistory* featureHistory
 ) const {
     out.scalarObservationCount = 0;
 
     for (size_t i = 0; i < _inspectionPlan.count; ++i) {
-        runInspectionModule(out, candidate, featureHistory, _inspectionPlan.modules[i]);
+        runInspectionModule(out, occurrence, featureHistory, _inspectionPlan.modules[i]);
     }
 }
 
 void OccurrenceInspector::annotateAmpStrength(
     InspectedOccurrence& out,
-    const Occurrence& candidate,
+    const Occurrence& occurrence,
     const FeatureHistory* featureHistory,
     const ScalarFeatureInspectionConfig& config,
     EvidenceTarget target
 ) const {
     const bool peakCenteredWindow = config.mode == detection::ScalarInspectionMode::PeakCentered;
     const unsigned long anchorMs = peakCenteredWindow
-        ? candidate.peakMs
-        : candidate.startMs;
+        ? occurrence.peakMs
+        : occurrence.startMs;
     const unsigned long startMs = anchorMs > config.windowPreMs ? anchorMs - config.windowPreMs : 0UL;
     const unsigned long endMs = peakCenteredWindow
-        ? candidate.peakMs + config.windowPostMs
-        : (candidate.endMs != 0
-            ? candidate.endMs + config.windowPostMs
-            : (candidate.releaseMs != 0 ? candidate.releaseMs + config.windowPostMs : candidate.peakMs + config.windowPostMs));
-    const unsigned long preFloorAnchorMs = candidate.peakMs != 0
-        ? candidate.peakMs
-        : (candidate.startMs != 0
-            ? candidate.startMs
-            : (candidate.releaseMs != 0 ? candidate.releaseMs : candidate.endMs));
-    const detection::ScalarInspectionAnchor preFloorAnchorValue = candidate.peakMs != 0
+        ? occurrence.peakMs + config.windowPostMs
+        : (occurrence.endMs != 0
+            ? occurrence.endMs + config.windowPostMs
+            : (occurrence.releaseMs != 0 ? occurrence.releaseMs + config.windowPostMs : occurrence.peakMs + config.windowPostMs));
+    const unsigned long preFloorAnchorMs = occurrence.peakMs != 0
+        ? occurrence.peakMs
+        : (occurrence.startMs != 0
+            ? occurrence.startMs
+            : (occurrence.releaseMs != 0 ? occurrence.releaseMs : occurrence.endMs));
+    const detection::ScalarInspectionAnchor preFloorAnchorValue = occurrence.peakMs != 0
         ? detection::ScalarInspectionAnchor::Peak
-        : (candidate.startMs != 0
+        : (occurrence.startMs != 0
             ? detection::ScalarInspectionAnchor::Start
-            : (candidate.releaseMs != 0 ? detection::ScalarInspectionAnchor::Release : detection::ScalarInspectionAnchor::Fallback));
+            : (occurrence.releaseMs != 0 ? detection::ScalarInspectionAnchor::Release : detection::ScalarInspectionAnchor::Fallback));
     const unsigned long preFloorStartMs = preFloorAnchorMs > config.preFloorWindowPreMs ? preFloorAnchorMs - config.preFloorWindowPreMs : 0UL;
     const unsigned long preFloorEndMs = preFloorAnchorMs > config.preFloorWindowPostMs ? preFloorAnchorMs - config.preFloorWindowPostMs : 0UL;
     ScalarInspectionObservation observation = {};
@@ -191,7 +191,7 @@ void OccurrenceInspector::annotateAmpStrength(
         const ScalarWindow scalarWindow = featureHistory->getWindow(config.stream, startMs, endMs, sustainedThreshold);
         preFloorWindow = featureHistory->getWindow(config.stream, preFloorStartMs, preFloorEndMs, 0.0f);
         if (scalarWindow.valid) {
-            fillScalarObservation(observation, candidate, scalarWindow, preFloorWindow, preFloorAnchorValue, true, config);
+            fillScalarObservation(observation, occurrence, scalarWindow, preFloorWindow, preFloorAnchorValue, true, config);
         } else {
             observation.note = detection::ScalarInspectionNote::WindowInvalid;
         }
@@ -227,7 +227,7 @@ void OccurrenceInspector::annotateAmpStrength(
 
 void OccurrenceInspector::runInspectionModule(
     InspectedOccurrence& out,
-    const Occurrence& candidate,
+    const Occurrence& occurrence,
     const FeatureHistory* featureHistory,
     const InspectionModuleConfig& module
 ) const {
@@ -237,7 +237,7 @@ void OccurrenceInspector::runInspectionModule(
                 module.target == EvidenceTarget::FrequencyScoreStrength ||
                 module.target == EvidenceTarget::FrequencyContrastQuality ||
                 module.target == EvidenceTarget::TargetBandStrength) {
-                annotateAmpStrength(out, candidate, featureHistory, module.scalar, module.target);
+                annotateAmpStrength(out, occurrence, featureHistory, module.scalar, module.target);
             }
             break;
         case InspectionModuleKind::None:
@@ -247,56 +247,56 @@ void OccurrenceInspector::runInspectionModule(
 }
 
 InspectedOccurrence OccurrenceInspector::inspectImpl(
-    const Occurrence& candidate,
+    const Occurrence& occurrence,
     const FeatureHistory* featureHistory
 ) const {
-    if (!candidate.present) {
+    if (!occurrence.present) {
         InspectedOccurrence out;
-        out.occurrence = candidate;
+        out.occurrence = occurrence;
         setRejected(out, OccurrenceRejectReason::UnsupportedKind);
         return out;
     }
 
-    if (!candidate.valid) {
+    if (!occurrence.valid) {
         InspectedOccurrence out;
-        out.occurrence = candidate;
+        out.occurrence = occurrence;
         setRejected(out, OccurrenceRejectReason::InvalidTiming);
         return out;
     }
 
-    if (candidate.valid) {
-        return inspectAcceptedOccurrenceResult(candidate, featureHistory);
+    if (occurrence.valid) {
+        return inspectAcceptedOccurrenceResult(occurrence, featureHistory);
     }
 
     InspectedOccurrence out;
-    out.occurrence = candidate;
+    out.occurrence = occurrence;
     setRejected(out, OccurrenceRejectReason::UnsupportedKind);
     return out;
 }
 
 InspectedOccurrence OccurrenceInspector::inspect(
-    const Occurrence& candidate
+    const Occurrence& occurrence
 ) const {
-    return inspectImpl(candidate, nullptr);
+    return inspectImpl(occurrence, nullptr);
 }
 
 InspectedOccurrence OccurrenceInspector::inspectWithHistory(
-    const Occurrence& candidate,
+    const Occurrence& occurrence,
     const FeatureHistory* featureHistory
 ) const {
-    return inspectImpl(candidate, featureHistory);
+    return inspectImpl(occurrence, featureHistory);
 }
 
 InspectedOccurrence OccurrenceInspector::inspectAcceptedOccurrenceResult(
-    const Occurrence& candidate,
+    const Occurrence& occurrence,
     const FeatureHistory* featureHistory
 ) const {
     InspectedOccurrence out;
-    out.occurrence = candidate;
-    out.occurrence.confidence = candidate.confidence > 0.0f ? candidate.confidence : 1.0f;
+    out.occurrence = occurrence;
+    out.occurrence.confidence = occurrence.confidence > 0.0f ? occurrence.confidence : 1.0f;
     out.decision = OccurrenceDecision::Accepted;
     out.rejectReason = OccurrenceRejectReason::None;
-    inspectAcceptedOccurrence(out, candidate, featureHistory);
+    inspectAcceptedOccurrence(out, occurrence, featureHistory);
     return out;
 }
 

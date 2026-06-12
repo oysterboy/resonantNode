@@ -16,8 +16,8 @@ struct AnalyzerSequenceClassificationInput {
     AnalyzerResult result = AnalyzerResult::Unknown;
     // Generic timing delta for the selected trial PatternResult when present.
     long dtMs = -1;
-    // Runtime-private candidate count used by trial classification.
-    unsigned long rawCandidateCount = 0;
+    // Runtime-private pending count used by trial classification.
+    unsigned long rawPendingCount = 0;
     // Runtime-private overflow flag.
     bool audioOverflow = false;
     // Canonical PatternResult availability for the finalized trial snapshot.

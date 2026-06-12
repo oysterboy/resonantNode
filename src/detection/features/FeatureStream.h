@@ -8,7 +8,7 @@ namespace detection {
 FeatureStream
 
 Shared identifiers and values for measured occurrence features.
-Feature streams are measurements, not candidates and not pattern meanings.
+Feature streams are measurements, not occurrences and not pattern meanings.
 */
 enum class FeatureStreamId {
     Unknown,

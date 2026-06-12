@@ -2,7 +2,7 @@
 
 namespace {
 
-enum class CandidateShape {
+enum class ProposalShape {
     Unknown,
     SinglePulse,
     PulseSequence,
@@ -12,7 +12,7 @@ enum class CandidateShape {
 // future matcher logic may keep several proposals and select the best pattern
 // over a group of occurrences.
 struct PatternProposal {
-    CandidateShape shape = CandidateShape::Unknown;
+    ProposalShape shape = ProposalShape::Unknown;
     uint32_t lineageId = 0;
     uint8_t primarySlotIndex = 0;
     uint8_t occurrenceCount = 0;
@@ -42,7 +42,7 @@ struct PatternProposal {
     detection::StrengthClass frequencyScoreStrength = detection::StrengthClass::Unknown;
     detection::StrengthClass frequencyContrastQuality = detection::StrengthClass::Unknown;
     detection::StrengthClass targetBandStrength = detection::StrengthClass::Unknown;
-    bool audioOverflowDuringCandidate = false;
+    bool audioOverflowDuringProposal = false;
 };
 
 detection::TransientEvidence scalarTransientEvidenceFromOccurrence(const detection::Occurrence& source) {
@@ -59,99 +59,99 @@ detection::TransientEvidence scalarTransientEvidenceFromOccurrence(const detecti
     transient.peakStrength = source.scalar.peakStrength;
     transient.releaseStrength = source.scalar.releaseStrength;
     transient.ambientBaseline = source.scalar.baseline;
-    transient.audioOverflowDuringCandidate = source.scalar.audioOverflowDuringCandidate;
+    transient.audioOverflowDuringOccurrence = source.scalar.audioOverflowDuringOccurrence;
     return transient;
 }
 
-PatternProposal makePatternProposalFromSignal(const detection::InspectedOccurrence& occurrence) {
-    PatternProposal candidate = {};
+PatternProposal makePatternProposalFromOccurrence(const detection::InspectedOccurrence& occurrence) {
+    PatternProposal proposal = {};
     const detection::Occurrence& source = occurrence.occurrence;
-    candidate.valid = source.valid;
-    candidate.shape = CandidateShape::SinglePulse;
-    candidate.lineageId = static_cast<uint32_t>(source.startSample & 0xFFFFFFFFu);
-    candidate.primarySlotIndex = 0;
-    candidate.occurrenceCount = 1;
-    candidate.pulseCount = 1;
+    proposal.valid = source.valid;
+    proposal.shape = ProposalShape::SinglePulse;
+    proposal.lineageId = static_cast<uint32_t>(source.startSample & 0xFFFFFFFFu);
+    proposal.primarySlotIndex = 0;
+    proposal.occurrenceCount = 1;
+    proposal.pulseCount = 1;
 
     switch (source.occurrenceType) {
         case detection::OccurrenceType::Frequency:
-            candidate.onsetSample = source.startSample;
-            candidate.peakSample = source.peakSample;
-            candidate.releaseSample = source.releaseSample;
-            candidate.startMs = source.startMs;
-            candidate.peakMs = source.peakMs;
-            candidate.heardAtMs = source.releaseMs != 0 ? source.releaseMs : source.peakMs;
-            candidate.acceptedMs = candidate.heardAtMs;
-            candidate.durationMs = source.durationMs;
-            candidate.onsetStrength = source.frequency.contrast;
-            candidate.peakStrength = source.frequency.score;
-            candidate.releaseStrength = source.frequency.contrast;
-            candidate.ambientBaseline = 0.0f;
-            candidate.ampStrength = source.scalar.strengthClass;
-            candidate.scalarEvidence = source.scalar.evidence;
-            candidate.frequencyScoreStrength = source.frequency.scoreStrength;
-            candidate.frequencyContrastQuality = source.frequency.contrastQuality;
-            candidate.targetBandStrength = source.frequency.targetBandStrength;
-            candidate.firstPulseMs = candidate.acceptedMs;
-            candidate.lastPulseMs = candidate.acceptedMs;
+            proposal.onsetSample = source.startSample;
+            proposal.peakSample = source.peakSample;
+            proposal.releaseSample = source.releaseSample;
+            proposal.startMs = source.startMs;
+            proposal.peakMs = source.peakMs;
+            proposal.heardAtMs = source.releaseMs != 0 ? source.releaseMs : source.peakMs;
+            proposal.acceptedMs = proposal.heardAtMs;
+            proposal.durationMs = source.durationMs;
+            proposal.onsetStrength = source.frequency.contrast;
+            proposal.peakStrength = source.frequency.score;
+            proposal.releaseStrength = source.frequency.contrast;
+            proposal.ambientBaseline = 0.0f;
+            proposal.ampStrength = source.scalar.strengthClass;
+            proposal.scalarEvidence = source.scalar.evidence;
+            proposal.frequencyScoreStrength = source.frequency.scoreStrength;
+            proposal.frequencyContrastQuality = source.frequency.contrastQuality;
+            proposal.targetBandStrength = source.frequency.targetBandStrength;
+            proposal.firstPulseMs = proposal.acceptedMs;
+            proposal.lastPulseMs = proposal.acceptedMs;
             break;
 
         case detection::OccurrenceType::Scalar: {
             const detection::TransientEvidence transient = scalarTransientEvidenceFromOccurrence(source);
-            candidate.onsetSample = source.startSample;
-            candidate.peakSample = source.peakSample;
-            candidate.releaseSample = source.releaseSample;
-            candidate.startMs = source.startMs;
-            candidate.peakMs = source.peakMs;
-            candidate.heardAtMs = source.releaseMs != 0 ? source.releaseMs : source.startMs;
-            candidate.acceptedMs = candidate.heardAtMs;
-            candidate.durationMs = source.durationMs;
-            candidate.onsetStrength = transient.onsetStrength;
-            candidate.peakStrength = source.strength;
-            candidate.releaseStrength = transient.releaseStrength;
-            candidate.ambientBaseline = transient.ambientBaseline;
-            candidate.ampStrength = source.scalar.strengthClass;
-            candidate.scalarEvidence = source.scalar.evidence;
-            candidate.frequencyScoreStrength = source.frequency.scoreStrength;
-            candidate.frequencyContrastQuality = source.frequency.contrastQuality;
-            candidate.targetBandStrength = source.frequency.targetBandStrength;
-            candidate.audioOverflowDuringCandidate = transient.audioOverflowDuringCandidate;
-            candidate.firstPulseMs = candidate.acceptedMs;
-            candidate.lastPulseMs = candidate.acceptedMs;
+            proposal.onsetSample = source.startSample;
+            proposal.peakSample = source.peakSample;
+            proposal.releaseSample = source.releaseSample;
+            proposal.startMs = source.startMs;
+            proposal.peakMs = source.peakMs;
+            proposal.heardAtMs = source.releaseMs != 0 ? source.releaseMs : source.startMs;
+            proposal.acceptedMs = proposal.heardAtMs;
+            proposal.durationMs = source.durationMs;
+            proposal.onsetStrength = transient.onsetStrength;
+            proposal.peakStrength = source.strength;
+            proposal.releaseStrength = transient.releaseStrength;
+            proposal.ambientBaseline = transient.ambientBaseline;
+            proposal.ampStrength = source.scalar.strengthClass;
+            proposal.scalarEvidence = source.scalar.evidence;
+            proposal.frequencyScoreStrength = source.frequency.scoreStrength;
+            proposal.frequencyContrastQuality = source.frequency.contrastQuality;
+            proposal.targetBandStrength = source.frequency.targetBandStrength;
+            proposal.audioOverflowDuringProposal = source.scalar.audioOverflowDuringOccurrence;
+            proposal.firstPulseMs = proposal.acceptedMs;
+            proposal.lastPulseMs = proposal.acceptedMs;
             break;
         }
 
         case detection::OccurrenceType::None:
         default:
-            candidate.shape = CandidateShape::Unknown;
+            proposal.shape = ProposalShape::Unknown;
             break;
     }
 
-    return candidate;
+    return proposal;
 }
 
-detection::StrengthClass supportStrengthForTarget(const PatternProposal& candidate, detection::EvidenceTarget target) {
+detection::StrengthClass supportStrengthForTarget(const PatternProposal& proposal, detection::EvidenceTarget target) {
     switch (target) {
         case detection::EvidenceTarget::AmpStrength:
-            return candidate.ampStrength;
+            return proposal.ampStrength;
         case detection::EvidenceTarget::FrequencyScoreStrength:
-            return candidate.frequencyScoreStrength;
+            return proposal.frequencyScoreStrength;
         case detection::EvidenceTarget::FrequencyContrastQuality:
-            return candidate.frequencyContrastQuality;
+            return proposal.frequencyContrastQuality;
         case detection::EvidenceTarget::TargetBandStrength:
-            return candidate.targetBandStrength;
+            return proposal.targetBandStrength;
         case detection::EvidenceTarget::None:
         default:
             return detection::StrengthClass::Unknown;
     }
 }
 
-detection::PatternResultKind resultKindFromCandidate(const PatternProposal& candidate) {
-    if (candidate.shape == CandidateShape::PulseSequence || candidate.occurrenceCount > 1 || candidate.pulseCount > 1) {
-        if (candidate.maxGapMs > 0 && candidate.maxGapMs < 20UL) {
+detection::PatternResultKind resultKindFromProposal(const PatternProposal& proposal) {
+    if (proposal.shape == ProposalShape::PulseSequence || proposal.occurrenceCount > 1 || proposal.pulseCount > 1) {
+        if (proposal.maxGapMs > 0 && proposal.maxGapMs < 20UL) {
             return detection::PatternResultKind::TooDense;
         }
-        if (candidate.maxGapMs > 0 && candidate.maxGapMs > 250UL) {
+        if (proposal.maxGapMs > 0 && proposal.maxGapMs > 250UL) {
             return detection::PatternResultKind::Invalid;
         }
         return detection::PatternResultKind::Valid;
@@ -166,36 +166,36 @@ detection::PatternRejectReason supportRejectReason(detection::StrengthClass supp
         : detection::PatternRejectReason::SupportTooLow;
 }
 
-void fillResultFromCandidate(detection::PatternResult& result, const PatternProposal& candidate, unsigned long nowMs) {
+void fillResultFromProposal(detection::PatternResult& result, const PatternProposal& proposal, unsigned long nowMs) {
     result.processedAtMs = nowMs;
-    result.lineageId = candidate.lineageId;
-    result.primarySlotIndex = candidate.primarySlotIndex;
-    result.occurrenceCount = candidate.occurrenceCount;
-    result.pulseCount = candidate.pulseCount;
-    result.firstPulseMs = candidate.firstPulseMs;
-    result.lastPulseMs = candidate.lastPulseMs;
-    result.minGapMs = candidate.minGapMs;
-    result.maxGapMs = candidate.maxGapMs;
-    result.primaryStartMs = candidate.startMs;
-    result.primaryPeakMs = candidate.peakMs;
-    result.primaryHeardAtMs = candidate.heardAtMs;
-    result.primaryAcceptedMs = candidate.acceptedMs;
-    result.primaryDurationMs = candidate.durationMs;
-    result.primaryStrength = candidate.peakStrength;
-    result.primaryOnsetStrength = candidate.onsetStrength;
-    result.primaryReleaseStrength = candidate.releaseStrength;
-    result.primaryAmbientBaseline = candidate.ambientBaseline;
-    result.primaryAudioOverflow = candidate.audioOverflowDuringCandidate;
-    result.ampStrength = candidate.ampStrength;
-    result.scalarEvidence = candidate.scalarEvidence;
-    result.frequencyScoreStrength = candidate.frequencyScoreStrength;
-    result.frequencyContrastQuality = candidate.frequencyContrastQuality;
-    result.targetBandStrength = candidate.targetBandStrength;
+    result.lineageId = proposal.lineageId;
+    result.primarySlotIndex = proposal.primarySlotIndex;
+    result.occurrenceCount = proposal.occurrenceCount;
+    result.pulseCount = proposal.pulseCount;
+    result.firstPulseMs = proposal.firstPulseMs;
+    result.lastPulseMs = proposal.lastPulseMs;
+    result.minGapMs = proposal.minGapMs;
+    result.maxGapMs = proposal.maxGapMs;
+    result.primaryStartMs = proposal.startMs;
+    result.primaryPeakMs = proposal.peakMs;
+    result.primaryHeardAtMs = proposal.heardAtMs;
+    result.primaryAcceptedMs = proposal.acceptedMs;
+    result.primaryDurationMs = proposal.durationMs;
+    result.primaryStrength = proposal.peakStrength;
+    result.primaryOnsetStrength = proposal.onsetStrength;
+    result.primaryReleaseStrength = proposal.releaseStrength;
+    result.primaryAmbientBaseline = proposal.ambientBaseline;
+    result.primaryAudioOverflow = proposal.audioOverflowDuringProposal;
+    result.ampStrength = proposal.ampStrength;
+    result.scalarEvidence = proposal.scalarEvidence;
+    result.frequencyScoreStrength = proposal.frequencyScoreStrength;
+    result.frequencyContrastQuality = proposal.frequencyContrastQuality;
+    result.targetBandStrength = proposal.targetBandStrength;
 }
 
-detection::PatternResult makeInvalidResult(const PatternProposal& candidate, unsigned long nowMs) {
+detection::PatternResult makeInvalidResult(const PatternProposal& proposal, unsigned long nowMs) {
     detection::PatternResult result = {};
-    fillResultFromCandidate(result, candidate, nowMs);
+    fillResultFromProposal(result, proposal, nowMs);
     result.type = detection::PatternType::Invalid;
     result.kind = detection::PatternResultKind::Rejected;
     result.reasonCode = detection::PatternReasonCode::FromOccurrence;
@@ -209,29 +209,29 @@ detection::PatternResult makeInvalidResult(const PatternProposal& candidate, uns
     return result;
 }
 
-detection::PatternResult evaluateTonalPulse(
-    const PatternProposal& candidate,
+detection::PatternResult evaluateSinglePulse(
+    const PatternProposal& proposal,
     const detection::PatternMatcherConfig& config,
     unsigned long nowMs
 ) {
     detection::PatternResult result = {};
-    fillResultFromCandidate(result, candidate, nowMs);
+    fillResultFromProposal(result, proposal, nowMs);
     result.patternAccepted = true;
     result.patternMatched = true;
     result.supportMatched = true;
     result.valid = true;
     result.type = detection::PatternType::SinglePulse;
-    result.kind = resultKindFromCandidate(candidate);
+    result.kind = resultKindFromProposal(proposal);
     result.reasonCode = detection::PatternReasonCode::FromOccurrence;
     result.rejectReason = detection::PatternRejectReason::None;
     result.supportMatched = true;
     if (config.requireSupportForAcceptance) {
-        const detection::StrengthClass supportStrength = supportStrengthForTarget(candidate, config.requiredSupportTarget);
+        const detection::StrengthClass supportStrength = supportStrengthForTarget(proposal, config.requiredSupportTarget);
         result.supportMatched = supportStrength >= config.minimumSupportStrength;
     }
     if (!result.supportMatched) {
         result.kind = detection::PatternResultKind::Rejected;
-        result.rejectReason = supportRejectReason(supportStrengthForTarget(candidate, config.requiredSupportTarget));
+        result.rejectReason = supportRejectReason(supportStrengthForTarget(proposal, config.requiredSupportTarget));
         result.reasonCode = detection::PatternReasonCode::UnsupportedPattern;
     }
     result.valid = result.patternMatched && result.supportMatched;
@@ -246,18 +246,6 @@ detection::PatternResult evaluateTonalPulse(
         result.rejectReason = detection::PatternRejectReason::UnexpectedTiming;
     }
     return result;
-}
-
-detection::PatternResult evaluatePattern(
-    const PatternProposal& candidate,
-    const detection::PatternMatcherConfig& config,
-    unsigned long nowMs
-) {
-    if (!candidate.valid) {
-        return makeInvalidResult(candidate, nowMs);
-    }
-
-    return evaluateTonalPulse(candidate, config, nowMs);
 }
 
 } // namespace
@@ -296,8 +284,8 @@ void PatternMatcher::acceptOccurrence(const InspectedOccurrence& occurrence) {
         case OccurrenceType::Scalar:
         case OccurrenceType::Frequency:
             if (occurrence.occurrence.valid) {
-                const PatternProposal candidate = makePatternProposalFromSignal(occurrence);
-                if (candidate.durationMs > 0 || candidate.peakStrength != 0.0f || candidate.onsetStrength != 0.0f) {
+                const PatternProposal proposal = makePatternProposalFromOccurrence(occurrence);
+                if (proposal.durationMs > 0 || proposal.peakStrength != 0.0f || proposal.onsetStrength != 0.0f) {
                     pushInspectedOccurrence(occurrence);
                 }
             }
@@ -311,7 +299,7 @@ void PatternMatcher::acceptOccurrence(const InspectedOccurrence& occurrence) {
 
 bool PatternMatcher::popPatternResult(unsigned long nowMs, PatternResult& out) {
     if (_count == 0) {
-        _report.candidatePresent = false;
+        _report.proposalPresent = false;
         return false;
     }
 
@@ -319,10 +307,10 @@ bool PatternMatcher::popPatternResult(unsigned long nowMs, PatternResult& out) {
     _readIndex = (_readIndex + 1) % kQueueCapacity;
     --_count;
 
-    const PatternProposal candidate = makePatternProposalFromSignal(occurrence);
-    out = evaluatePattern(candidate, _config, nowMs);
+    const PatternProposal proposal = makePatternProposalFromOccurrence(occurrence);
+    out = evaluateSinglePulse(proposal, _config, nowMs);
 
-    _report.candidatePresent = true;
+    _report.proposalPresent = true;
     _report.patternMatched = out.patternMatched;
     _report.supportMatched = out.supportMatched;
     _report.valid = out.valid;

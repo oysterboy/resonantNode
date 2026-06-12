@@ -182,7 +182,7 @@ inline DetectionProfile makeAmpProfile() {
     profile.scalarTransient.observedStream = FeatureStreamId::AmpEnvelope;
     applyAmpEnvelopeScalarTransientTuning(profile.scalarTransient);
     // Analyzer retune: recent AMP trials produced stable 29..38 peak-strength
-    // candidates, so keep the duration gate and lower only the peak gate here.
+    // occurrences, so keep the duration gate and lower only the peak gate here.
     profile.scalarTransient.minTransientPeakStrength = 28.0f;
 
     // Inspector composition.

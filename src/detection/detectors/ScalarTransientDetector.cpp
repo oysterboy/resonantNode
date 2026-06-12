@@ -60,7 +60,7 @@ void ScalarTransientDetector::resetState() {
     _transientRejectedCount = 0;
     _lastObservedAcceptedOccurrenceRejectedCount = 0;
     _reportDetail = {};
-    resetAcceptedOccurrenceCandidate();
+    resetAcceptedOccurrencePending();
     resetAcceptedOccurrenceSummary();
     resetSelectedRejectSummary();
 }
@@ -99,7 +99,7 @@ void ScalarTransientDetector::update(
 
     updateOnsetStage(nowUs, signalMagnitude, aboveAttackThreshold, onsetCooldownElapsed);
     updateTransientStage(nowUs, signalMagnitude, aboveReleaseThreshold);
-    updateAcceptedOccurrenceCandidate(audioSamplePacket, signalMagnitude);
+    updateAcceptedOccurrencePending(audioSamplePacket, signalMagnitude);
     refreshReportDetail();
     printTransientStatsIfDue(nowUs);
 }
@@ -219,12 +219,12 @@ void ScalarTransientDetector::captureSelectedReject(unsigned long releaseObserve
         return;
     }
 
-    const unsigned long candidateStartMs = _peakStartedUs / 1000UL;
-    const unsigned long candidatePeakMs = _peakStrengthObservedUs / 1000UL;
-    const unsigned long candidateEndMs = releaseObservedUs / 1000UL;
-    const unsigned long candidateDurationMs = _lastTransientRejectedDurationMs;
+    const unsigned long rejectStartMs = _peakStartedUs / 1000UL;
+    const unsigned long rejectPeakMs = _peakStrengthObservedUs / 1000UL;
+    const unsigned long rejectEndMs = releaseObservedUs / 1000UL;
+    const unsigned long rejectDurationMs = _lastTransientRejectedDurationMs;
 
-    if (_selectedRejectPresent && candidateDurationMs < _selectedReject.durationMs) {
+    if (_selectedRejectPresent && rejectDurationMs < _selectedReject.durationMs) {
         return;
     }
 
@@ -232,10 +232,10 @@ void ScalarTransientDetector::captureSelectedReject(unsigned long releaseObserve
     _selectedReject.present = true;
     _selectedReject.rejectClass = scalarTransientRejectClass(_lastTransientRejectReason);
     _selectedReject.detectorReason = lastTransientRejectReasonName();
-    _selectedReject.startMs = candidateStartMs;
-    _selectedReject.peakMs = candidatePeakMs;
-    _selectedReject.endMs = candidateEndMs;
-    _selectedReject.durationMs = candidateDurationMs;
+    _selectedReject.startMs = rejectStartMs;
+    _selectedReject.peakMs = rejectPeakMs;
+    _selectedReject.endMs = rejectEndMs;
+    _selectedReject.durationMs = rejectDurationMs;
     _selectedReject.strength = _lastTransientRejectedStrength;
     _selectedReject.confidence = 0.0f;
     _reportDetail.selectedReject.present = true;
@@ -248,12 +248,12 @@ void ScalarTransientDetector::captureSelectedReject(unsigned long releaseObserve
     _reportDetail.selectedReject.crossedRelease = true;
 }
 
-void ScalarTransientDetector::updateAcceptedOccurrenceCandidate(
+void ScalarTransientDetector::updateAcceptedOccurrencePending(
     const AudioSamplePacket& audioSamplePacket,
     float signalMagnitude
 ) {
     if (_onsetDetected) {
-        _acceptedOccurrenceCandidateActive = true;
+        _acceptedOccurrencePendingActive = true;
         _acceptedOccurrenceStartSample = audioSamplePacket.sampleIndex;
         _acceptedOccurrencePeakSample = audioSamplePacket.sampleIndex;
         _acceptedOccurrenceStartMs = audioSamplePacket.timeMs;
@@ -262,7 +262,7 @@ void ScalarTransientDetector::updateAcceptedOccurrenceCandidate(
         _acceptedOccurrenceOnsetStrength = signalMagnitude;
         _acceptedOccurrencePeakStrength = signalMagnitude;
         _acceptedOccurrenceCurrentStrength = signalMagnitude;
-    } else if (_acceptedOccurrenceCandidateActive) {
+    } else if (_acceptedOccurrencePendingActive) {
         ++_acceptedOccurrenceHoldWindows;
         if (signalMagnitude > _acceptedOccurrencePeakStrength) {
             _acceptedOccurrencePeakStrength = signalMagnitude;
@@ -272,15 +272,15 @@ void ScalarTransientDetector::updateAcceptedOccurrenceCandidate(
         _acceptedOccurrenceCurrentStrength = signalMagnitude;
     }
 
-    if (_acceptedOccurrenceCandidateActive && _transientRejectedCount > _lastObservedAcceptedOccurrenceRejectedCount) {
+    if (_acceptedOccurrencePendingActive && _transientRejectedCount > _lastObservedAcceptedOccurrenceRejectedCount) {
         _lastObservedAcceptedOccurrenceRejectedCount = _transientRejectedCount;
-        resetAcceptedOccurrenceCandidate();
+        resetAcceptedOccurrencePending();
         return;
     }
 
-    if (_acceptedOccurrenceCandidateActive && _transientDetected) {
+    if (_acceptedOccurrencePendingActive && _transientDetected) {
         capturePendingOccurrence(audioSamplePacket);
-        resetAcceptedOccurrenceCandidate();
+        resetAcceptedOccurrencePending();
     }
 }
 
@@ -310,7 +310,7 @@ void ScalarTransientDetector::capturePendingOccurrence(const AudioSamplePacket& 
     _pendingOccurrence.scalar.onsetStrength = _acceptedOccurrenceOnsetStrength;
     _pendingOccurrence.scalar.peakStrength = _acceptedOccurrencePeakStrength;
     _pendingOccurrence.scalar.releaseStrength = _acceptedOccurrenceCurrentStrength;
-    _pendingOccurrence.scalar.audioOverflowDuringCandidate = audioSamplePacket.overflowDuringBlock;
+    _pendingOccurrence.scalar.audioOverflowDuringOccurrence = audioSamplePacket.overflowDuringBlock;
     _reportDetail.accepted.present = true;
     _reportDetail.accepted.value = _pendingOccurrence.scalar.value;
     _reportDetail.accepted.baseline = _pendingOccurrence.scalar.baseline;
@@ -319,8 +319,8 @@ void ScalarTransientDetector::capturePendingOccurrence(const AudioSamplePacket& 
     _pendingOccurrencePresent = true;
 }
 
-void ScalarTransientDetector::resetAcceptedOccurrenceCandidate() {
-    _acceptedOccurrenceCandidateActive = false;
+void ScalarTransientDetector::resetAcceptedOccurrencePending() {
+    _acceptedOccurrencePendingActive = false;
     _acceptedOccurrenceStartSample = 0;
     _acceptedOccurrencePeakSample = 0;
     _acceptedOccurrenceStartMs = 0;

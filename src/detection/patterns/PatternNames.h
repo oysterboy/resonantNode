@@ -63,8 +63,8 @@ inline const char* patternRejectReasonName(PatternRejectReason reason) {
     switch (reason) {
         case PatternRejectReason::None:
             return "none";
-        case PatternRejectReason::NoCandidate:
-            return "no_candidate";
+        case PatternRejectReason::NoProposal:
+            return "no_proposal";
         case PatternRejectReason::InvalidOccurrence:
             return "invalid_occurrence";
         case PatternRejectReason::NoFrequencyEvidence:

@@ -10,9 +10,9 @@
 
 ## Public boundary after
 
-- `PatternMatcher` owns pattern draft assembly, evaluation, result queueing, and compact reporting.
+- `PatternMatcher` owns pattern proposal assembly, evaluation, result queueing, and compact reporting.
 - Public pattern-stage types are `PatternMatcher`, `PatternMatcherConfig`, `PatternMatcherReport`, `PatternResult`, `PatternType`, and pattern reason/reject enums.
-- `PatternResult` carries compact primary timing/strength facts directly instead of exposing draft payload state.
+- `PatternResult` carries compact primary timing/strength facts directly instead of exposing proposal payload state.
 - `PatternType::SinglePulse` is the current semantic pattern category.
 
 ## Folded assembler responsibility

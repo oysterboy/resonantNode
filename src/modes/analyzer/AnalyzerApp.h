@@ -111,22 +111,22 @@ private:
     };
 
     struct SequenceTest {
-        static constexpr size_t kMaxTrialCandidates = 5;
+        static constexpr size_t kMaxTrialPending = 5;
         static constexpr size_t kMaxDuplicateDts = 8;
-        enum class CandidateOrigin {
+        enum class PendingOrigin {
             PreWindow,
             InWindow,
             PostWindow,
         };
 
-        // Per-trial candidate snapshots and reports.
-        struct CandidateSample {
-            unsigned long candidateMs = 0;
+        // Per-trial pending snapshots and reports.
+        struct PendingSample {
+            unsigned long pendingMs = 0;
             long dtFromTriggerMs = 0;
             long dtFromTrialStartMs = 0;
             unsigned long durationMs = 0;
             float strength = 0.0f;
-            CandidateOrigin origin = CandidateOrigin::InWindow;
+            PendingOrigin origin = PendingOrigin::InWindow;
             unsigned long peakMs = 0;
             long endDtMs = -1;
             bool patternValid = false;
@@ -134,8 +134,8 @@ private:
             bool patternMatched = false;
             bool supportMatched = false;
             bool behaviorEligible = false;
-            bool duplicateCandidate = false;
-            uint8_t candidateClass = 0;
+            bool duplicatePending = false;
+            uint8_t pendingClass = 0;
             detection::PatternType patternType = detection::PatternType::None;
             detection::PatternReasonCode reasonCode = detection::PatternReasonCode::None;
             detection::PatternRejectReason rejectReasonCode = detection::PatternRejectReason::None;
@@ -205,19 +205,19 @@ private:
             bool duplicateOriginWindow = false;
             char duplicateReason[32] = "none";
 
-            unsigned long rawCandidateCount = 0;
-            unsigned long candidatePreWindowCount = 0;
-            unsigned long candidateInWindowCount = 0;
-            unsigned long candidatePostWindowCount = 0;
-            CandidateSample candidates[kMaxTrialCandidates] = {};
-            unsigned long candidateCount = 0;
-            unsigned long candidateOverflowCount = 0;
-            unsigned long firstCandidateMs = 0;
-            bool bestCandidateAccepted = false;
-            long bestCandidateDtFromTriggerMs = 0;
-            unsigned long bestCandidateDurationMs = 0;
-            float bestCandidateStrength = 0.0f;
-            CandidateOrigin bestCandidateOrigin = CandidateOrigin::InWindow;
+            unsigned long rawPendingCount = 0;
+            unsigned long pendingPreWindowCount = 0;
+            unsigned long pendingInWindowCount = 0;
+            unsigned long pendingPostWindowCount = 0;
+            PendingSample pendingSamples[kMaxTrialPending] = {};
+            unsigned long pendingCount = 0;
+            unsigned long pendingOverflowCount = 0;
+            unsigned long firstPendingMs = 0;
+            bool bestPendingAccepted = false;
+            long bestPendingDtFromTriggerMs = 0;
+            unsigned long bestPendingDurationMs = 0;
+            float bestPendingStrength = 0.0f;
+            PendingOrigin bestPendingOrigin = PendingOrigin::InWindow;
 
             unsigned long ambientBaselineSamples = 0;
             float ambientBaselineSum = 0.0f;
@@ -402,7 +402,7 @@ private:
     const char* activeAnalyzerProfileName() const;
     AnalyzerReport* sequenceReportScratch();
     void buildSequenceAnalyzerReport(AnalyzerReport& report, unsigned long trialNumber, AnalyzerResult result, long dtMs, long durMs, float strength, bool audioOverflow, unsigned long duplicateCount, const SequenceTest::TrialDiagnostics& diagnostics) const;
-    void handleSequenceCandidate(const PatternResult& patternResult, const detection::FrequencyBandMeasurementPacket* liveFrequencyMeasurementPacket = nullptr);
+    void handleSequencePending(const PatternResult& patternResult, const detection::FrequencyBandMeasurementPacket* liveFrequencyMeasurementPacket = nullptr);
     void updateSequenceAmbientStats(unsigned long nowMs);
     void updateCleanSequenceSummary(const AnalyzerReport& report);
 
@@ -469,7 +469,7 @@ private:
     static constexpr unsigned long kPrintIntervalMs = 100;
 };
 
-const char* sequenceCandidateClassName(uint8_t value);
+const char* sequencePendingClassName(uint8_t value);
 
 constexpr size_t AnalyzerApp::debugSequenceTestSize() {
     return sizeof(SequenceTest);

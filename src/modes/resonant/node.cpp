@@ -347,13 +347,13 @@ void Node::startRbQuietBaseline() {
 }
 
 void Node::resetRbCounters() {
-    _rbCandidateCount = 0;
+    _rbPendingCount = 0;
     _rbPatternAcceptedCount = 0;
     _rbValidPatternCount = 0;
     _rbChirpStartedCount = 0;
-    _rbOverflowCandidates = 0;
-    _rbLastCandidateMs = 0;
-    _rbHaveLastCandidateMs = false;
+    _rbOverflowPending = 0;
+    _rbLastPendingMs = 0;
+    _rbHaveLastPendingMs = false;
     _rbStrengthSumScaled = 0;
     _rbDurationSumMs = 0;
 }
@@ -1005,7 +1005,7 @@ void Node::processDetectionFrame(const AudioSamplePacket& audioSamplePacket,
             sawPatternThisLoop = true;
         }
 
-        ++_rbCandidateCount;
+        ++_rbPendingCount;
         if (patternResult.patternAccepted) {
             ++_rbPatternAcceptedCount;
         }
@@ -1014,12 +1014,12 @@ void Node::processDetectionFrame(const AudioSamplePacket& audioSamplePacket,
         }
 
         if (patternResult.primaryAudioOverflow) {
-            ++_rbOverflowCandidates;
+            ++_rbOverflowPending;
         }
         _rbStrengthSumScaled += static_cast<unsigned long>(patternResult.primaryStrength * 100.0f);
         _rbDurationSumMs += patternResult.primaryDurationMs;
-        _rbHaveLastCandidateMs = true;
-        _rbLastCandidateMs = patternResult.primaryHeardAtMs;
+        _rbHaveLastPendingMs = true;
+        _rbLastPendingMs = patternResult.primaryHeardAtMs;
 
         if (rbShouldLogDetail()) {
             Serial.print("RB pattern=");
@@ -1067,20 +1067,20 @@ detection::FrequencyBandMeasurementPacket Node::captureFrequencyMeasurementPacke
 }
 
 void Node::printRbSummary() const {
-    const float avgStrength = _rbCandidateCount > 0 ? (static_cast<float>(_rbStrengthSumScaled) / 100.0f) / static_cast<float>(_rbCandidateCount) : 0.0f;
-    const float avgDuration = _rbCandidateCount > 0 ? static_cast<float>(_rbDurationSumMs) / static_cast<float>(_rbCandidateCount) : 0.0f;
+    const float avgStrength = _rbPendingCount > 0 ? (static_cast<float>(_rbStrengthSumScaled) / 100.0f) / static_cast<float>(_rbPendingCount) : 0.0f;
+    const float avgDuration = _rbPendingCount > 0 ? static_cast<float>(_rbDurationSumMs) / static_cast<float>(_rbPendingCount) : 0.0f;
     const AudioSignalStats& stats = _audioSignal.stats();
 
-    Serial.print("RB summary: candidates=");
-    Serial.print(_rbCandidateCount);
+    Serial.print("RB summary: pending=");
+    Serial.print(_rbPendingCount);
     Serial.print(" patternAccepted=");
     Serial.print(_rbPatternAcceptedCount);
     Serial.print(" validPatterns=");
     Serial.print(_rbValidPatternCount);
     Serial.print(" chirpStarted=");
     Serial.print(_rbChirpStartedCount);
-    Serial.print(" overflowCandidates=");
-    Serial.print(_rbOverflowCandidates);
+    Serial.print(" overflowPending=");
+    Serial.print(_rbOverflowPending);
     Serial.print(" avg_strength=");
     Serial.print(avgStrength, 1);
     Serial.print(" avg_duration=");

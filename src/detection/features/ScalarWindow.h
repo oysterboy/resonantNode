@@ -10,7 +10,7 @@ namespace detection {
 ScalarWindow
 
 Summary of one feature-history interval.
-Used by OccurrenceInspector for candidate-relative support evidence.
+Used by OccurrenceInspector for occurrence-relative support evidence.
 */
 struct ScalarWindow {
     bool present = false;

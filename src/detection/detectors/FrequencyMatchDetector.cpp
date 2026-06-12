@@ -7,10 +7,10 @@
 namespace {
 
 const char* frequencyRejectReasonFromState(const FrequencyMatchDetector& detector) {
-    if (detector.candidateEmitted) {
+    if (detector.pendingAccepted) {
         return "none";
     }
-    if (detector.candidateClosed) {
+    if (detector.pendingClosed) {
         return detector.noEmitReason[0] != '\0' ? detector.noEmitReason : "unknown";
     }
     return detector.gateReason[0] != '\0' ? detector.gateReason : "unknown";
@@ -39,22 +39,22 @@ void FrequencyMatchDetector::resetState() {
     evidencePresent = false;
     liveFrequencyOnly = false;
     firstThresholdCrossingSeen = false;
-    wouldProduceCandidate = false;
-    candidateActive = false;
-    candidateEmitted = false;
-    candidateClosed = false;
-    candidateRefractoryUntilMs = 0;
+    wouldProducePending = false;
+    pendingActive = false;
+    pendingAccepted = false;
+    pendingClosed = false;
+    pendingRefractoryUntilMs = 0;
     firstThresholdCrossingMs = 0;
     firstThresholdCrossingSample = 0;
-    candidateOpenMs = 0;
-    candidateOpenSample = 0;
-    candidatePeakMs = 0;
-    candidatePeakSample = 0;
-    candidateCloseMs = 0;
-    candidateCloseSample = 0;
-    candidateHoldUpdates = 0;
-    candidateDurationMs = 0;
-    candidateLastMatchedMs = 0;
+    pendingOpenMs = 0;
+    pendingOpenSample = 0;
+    pendingPeakMs = 0;
+    pendingPeakSample = 0;
+    pendingCloseMs = 0;
+    pendingCloseSample = 0;
+    pendingHoldUpdates = 0;
+    pendingDurationMs = 0;
+    pendingLastMatchedMs = 0;
     attackScoreThreshold = 0.0f;
     releaseScoreThreshold = 0.0f;
     attackContrastThreshold = 0.0f;
@@ -68,16 +68,16 @@ void FrequencyMatchDetector::resetState() {
     releaseOk = false;
     emitAllowed = false;
     validRelease = false;
-    candidatePeakScore = 0.0f;
-    candidatePeakContrast = 0.0f;
-    candidatePeakSampleCount = 0;
-    candidateLifecycleId = 0;
-    currentCandidateId = 0;
-    acceptedCandidateId = 0;
-    selectedRejectCandidateId = 0;
-    lastCandidateId = 0;
-    candidateMinDurationMs = 0;
-    candidateMaxDurationMs = 0;
+    pendingPeakScore = 0.0f;
+    pendingPeakContrast = 0.0f;
+    pendingPeakSampleCount = 0;
+    pendingLifecycleId = 0;
+    currentPendingId = 0;
+    acceptedOccurrenceId = 0;
+    selectedRejectOccurrenceId = 0;
+    lastPendingId = 0;
+    pendingMinDurationMs = 0;
+    pendingMaxDurationMs = 0;
     acceptedCount = 0;
     rejectedCount = 0;
     bestDurationMs = 0;
@@ -90,20 +90,20 @@ void FrequencyMatchDetector::resetState() {
     bestRejectReason = "none";
     bestGateReason = "none";
     memset(&bestEvidence, 0, sizeof(bestEvidence));
-    memset(&candidateEvidence, 0, sizeof(candidateEvidence));
-    memset(candidateState, 0, sizeof(candidateState));
-    strncpy(candidateState, "none", sizeof(candidateState) - 1);
-    candidateState[sizeof(candidateState) - 1] = '\0';
+    memset(&pendingEvidence, 0, sizeof(pendingEvidence));
+    memset(pendingState, 0, sizeof(pendingState));
+    strncpy(pendingState, "none", sizeof(pendingState) - 1);
+    pendingState[sizeof(pendingState) - 1] = '\0';
     memset(gateReason, 0, sizeof(gateReason));
     strncpy(gateReason, "none", sizeof(gateReason) - 1);
     gateReason[sizeof(gateReason) - 1] = '\0';
-    memset(wouldCandidateReason, 0, sizeof(wouldCandidateReason));
-    strncpy(wouldCandidateReason, "none", sizeof(wouldCandidateReason) - 1);
-    wouldCandidateReason[sizeof(wouldCandidateReason) - 1] = '\0';
+    memset(wouldPendingReason, 0, sizeof(wouldPendingReason));
+    strncpy(wouldPendingReason, "none", sizeof(wouldPendingReason) - 1);
+    wouldPendingReason[sizeof(wouldPendingReason) - 1] = '\0';
     memset(noEmitReason, 0, sizeof(noEmitReason));
     strncpy(noEmitReason, "none", sizeof(noEmitReason) - 1);
     noEmitReason[sizeof(noEmitReason) - 1] = '\0';
-    memset(&frequencyCandidate, 0, sizeof(frequencyCandidate));
+    memset(&pendingOccurrence, 0, sizeof(pendingOccurrence));
     _acceptedOccurrence = {};
     _acceptedDetail = {};
     _pendingOccurrencePresent = false;
@@ -125,13 +125,13 @@ void FrequencyMatchDetector::resetRejectSummary() {
     bestRejectReason = "none";
     bestGateReason = "none";
     memset(&bestEvidence, 0, sizeof(bestEvidence));
-    memset(&candidateEvidence, 0, sizeof(candidateEvidence));
-    candidateLifecycleId = 0;
-    currentCandidateId = 0;
-    acceptedCandidateId = 0;
-    selectedRejectCandidateId = 0;
-    lastCandidateId = 0;
-    candidateDurationInconsistent = false;
+    memset(&pendingEvidence, 0, sizeof(pendingEvidence));
+    pendingLifecycleId = 0;
+    currentPendingId = 0;
+    acceptedOccurrenceId = 0;
+    selectedRejectOccurrenceId = 0;
+    lastPendingId = 0;
+    pendingDurationInconsistent = false;
     _acceptedOccurrence = {};
     _acceptedDetail = {};
     _pendingOccurrencePresent = false;
@@ -153,41 +153,41 @@ void FrequencyMatchDetector::resetDiagnosticsSummary() {
     diagnosticsMatchedCount = 0;
 }
 
-void FrequencyMatchDetector::updateBestRejectedCandidate() {
-    if (!candidateClosed || candidateEmitted) {
+void FrequencyMatchDetector::updateBestRejectedPending() {
+    if (!pendingClosed || pendingAccepted) {
         return;
     }
 
-    if (candidateDurationMs >= bestDurationMs) {
-        bestDurationMs = candidateDurationMs;
-        bestOpenMs = candidateOpenMs;
-        bestPeakMs = candidatePeakMs;
-        bestLastMatchMs = candidateLastMatchedMs;
-        bestCloseMs = candidateCloseMs;
-        bestPeakScore = candidatePeakScore;
-        bestPeakContrast = candidatePeakContrast;
+    if (pendingDurationMs >= bestDurationMs) {
+        bestDurationMs = pendingDurationMs;
+        bestOpenMs = pendingOpenMs;
+        bestPeakMs = pendingPeakMs;
+        bestLastMatchMs = pendingLastMatchedMs;
+        bestCloseMs = pendingCloseMs;
+        bestPeakScore = pendingPeakScore;
+        bestPeakContrast = pendingPeakContrast;
         bestRejectReason = noEmitReason[0] != '\0' ? noEmitReason : "unknown";
         bestGateReason = gateReason[0] != '\0' ? gateReason : "unknown";
     }
 }
 
-void FrequencyMatchDetector::recordRejectedCandidate() {
+void FrequencyMatchDetector::recordRejectedPending() {
     ++rejectedCount;
-    updateBestRejectedCandidate();
+    updateBestRejectedPending();
 }
 
 void FrequencyMatchDetector::capturePendingOccurrence(const AudioSamplePacket& audioSamplePacket) {
-    _pendingOccurrence = frequencyCandidate;
+    _pendingOccurrence = pendingOccurrence;
     _pendingOccurrence.detectorId = detection::DetectorId::FrequencyMatch;
     _pendingOccurrence.occurrenceType = detection::OccurrenceType::Frequency;
     _pendingOccurrence.present = true;
     _pendingOccurrence.confidence = _pendingOccurrence.valid ? 1.0f : 0.0f;
     _pendingOccurrence.frequency.present = true;
-    _pendingOccurrence.frequency.measurement = candidateEvidence;
+    _pendingOccurrence.frequency.measurement = pendingEvidence;
     _pendingOccurrence.frequency.measurement.present = true;
-    _pendingOccurrence.frequency.measurement.matched = frequencyCandidate.valid;
+    _pendingOccurrence.frequency.measurement.matched = pendingOccurrence.valid;
     _pendingOccurrence.frequency.measurement.observedAtMs = audioSamplePacket.timeMs;
-    _pendingOccurrence.frequency.measurement.targetHz = candidateEvidence.targetHz;
+    _pendingOccurrence.frequency.measurement.targetHz = pendingEvidence.targetHz;
     _pendingOccurrence.scalar.value = audioSamplePacket.audioMagnitudeValue;
     _pendingOccurrence.scalar.baseline = audioSamplePacket.baseline;
     _pendingOccurrence.scalar.lift = _pendingOccurrence.scalar.value - _pendingOccurrence.scalar.baseline;
@@ -233,52 +233,52 @@ void FrequencyMatchDetector::update(const detection::FrequencyBandMeasurementPac
     emitAllowed = false;
     validRelease = false;
     gateReason[0] = '\0';
-    wouldCandidateReason[0] = '\0';
+    wouldPendingReason[0] = '\0';
 
-    candidateMinDurationMs = minDurationMs;
-    candidateMaxDurationMs = 0;
+    pendingMinDurationMs = minDurationMs;
+    pendingMaxDurationMs = 0;
 
-    frequencyCandidate.detectorId = detection::DetectorId::FrequencyMatch;
-    frequencyCandidate.occurrenceType = detection::OccurrenceType::Frequency;
-    frequencyCandidate.present = evidence.present;
-    frequencyCandidate.valid = false;
+    pendingOccurrence.detectorId = detection::DetectorId::FrequencyMatch;
+    pendingOccurrence.occurrenceType = detection::OccurrenceType::Frequency;
+    pendingOccurrence.present = evidence.present;
+    pendingOccurrence.valid = false;
 
-    const auto closeCandidate = [&](unsigned long minDurationMs) {
-        candidateActive = false;
-        candidateClosed = true;
-        candidateCloseMs = now;
-        candidateCloseSample = currentSample;
-        candidateDurationMs = candidateCloseMs >= candidateOpenMs
-            ? candidateCloseMs - candidateOpenMs
+    const auto closePending = [&](unsigned long minDurationMs) {
+        pendingActive = false;
+        pendingClosed = true;
+        pendingCloseMs = now;
+        pendingCloseSample = currentSample;
+        pendingDurationMs = pendingCloseMs >= pendingOpenMs
+            ? pendingCloseMs - pendingOpenMs
             : 0UL;
-        const bool durationOk = candidateDurationMs >= minDurationMs;
+        const bool durationOk = pendingDurationMs >= minDurationMs;
         const bool accepted = durationOk;
-        candidateState[0] = '\0';
-        candidateEmitted = accepted;
+        pendingState[0] = '\0';
+        pendingAccepted = accepted;
         validRelease = accepted;
         emitAllowed = accepted;
-        candidateRefractoryUntilMs = now + cooldownAfterReleaseMs;
-        strncpy(candidateState, accepted ? "closed" : "rejected", sizeof(candidateState) - 1);
-        candidateState[sizeof(candidateState) - 1] = '\0';
+        pendingRefractoryUntilMs = now + cooldownAfterReleaseMs;
+        strncpy(pendingState, accepted ? "closed" : "rejected", sizeof(pendingState) - 1);
+        pendingState[sizeof(pendingState) - 1] = '\0';
         strncpy(noEmitReason, accepted ? "none" : "duration_too_short", sizeof(noEmitReason) - 1);
         noEmitReason[sizeof(noEmitReason) - 1] = '\0';
-        lastCandidateId = currentCandidateId;
+        lastPendingId = currentPendingId;
         if (accepted) {
             ++acceptedCount;
-            acceptedCandidateId = currentCandidateId;
+            acceptedOccurrenceId = currentPendingId;
         } else {
-            selectedRejectCandidateId = currentCandidateId;
+            selectedRejectOccurrenceId = currentPendingId;
         }
-        currentCandidateId = 0;
-        candidateDurationInconsistent = accepted != durationOk;
-        frequencyCandidate.valid = accepted;
-        frequencyCandidate.releaseMs = candidateCloseMs;
-        frequencyCandidate.releaseSample = candidateCloseSample;
-        frequencyCandidate.endMs = candidateCloseMs;
-        frequencyCandidate.durationMs = candidateDurationMs;
-        frequencyCandidate.confidence = accepted ? 1.0f : 0.0f;
+        currentPendingId = 0;
+        pendingDurationInconsistent = accepted != durationOk;
+        pendingOccurrence.valid = accepted;
+        pendingOccurrence.releaseMs = pendingCloseMs;
+        pendingOccurrence.releaseSample = pendingCloseSample;
+        pendingOccurrence.endMs = pendingCloseMs;
+        pendingOccurrence.durationMs = pendingDurationMs;
+        pendingOccurrence.confidence = accepted ? 1.0f : 0.0f;
         if (!accepted) {
-            recordRejectedCandidate();
+            recordRejectedPending();
         }
     };
 
@@ -291,85 +291,85 @@ void FrequencyMatchDetector::update(const detection::FrequencyBandMeasurementPac
             }
         }
 
-        if (!candidateActive) {
+        if (!pendingActive) {
             if (attackOk) {
-                if (timing::beforeDeadline(now, candidateRefractoryUntilMs)) {
+                if (timing::beforeDeadline(now, pendingRefractoryUntilMs)) {
                     strncpy(gateReason, "refractory", sizeof(gateReason) - 1);
                     gateReason[sizeof(gateReason) - 1] = '\0';
-                    wouldProduceCandidate = false;
-                    strncpy(wouldCandidateReason, "refractory", sizeof(wouldCandidateReason) - 1);
-                    wouldCandidateReason[sizeof(wouldCandidateReason) - 1] = '\0';
+                    wouldProducePending = false;
+                    strncpy(wouldPendingReason, "refractory", sizeof(wouldPendingReason) - 1);
+                    wouldPendingReason[sizeof(wouldPendingReason) - 1] = '\0';
                 } else {
-                    wouldProduceCandidate = true;
-                    candidateActive = true;
-                    candidateClosed = false;
-                    candidateEmitted = false;
-                    currentCandidateId = ++candidateLifecycleId;
-                    lastCandidateId = currentCandidateId;
-                    candidateOpenMs = now;
-                    candidateOpenSample = currentSample;
-                    candidatePeakMs = now;
-                    candidatePeakSample = currentSample;
-                    candidatePeakScore = evidence.targetBandScoreValue;
-                    candidatePeakContrast = evidence.targetBandContrastValue;
-                    candidatePeakSampleCount = 0;
-                    candidateHoldUpdates = 1;
-                    candidateDurationMs = 0;
-                    candidateLastMatchedMs = now;
-                    candidateEvidence = evidence;
-                    frequencyCandidate.startMs = now;
-                    frequencyCandidate.startSample = currentSample;
-                    frequencyCandidate.peakMs = now;
-                    frequencyCandidate.peakSample = currentSample;
-                    frequencyCandidate.releaseMs = 0;
-                    frequencyCandidate.releaseSample = 0;
-                    frequencyCandidate.endMs = 0;
-                    frequencyCandidate.durationMs = 0;
-                    frequencyCandidate.strength = evidence.targetBandScoreValue;
-                    frequencyCandidate.frequency.present = true;
-                    frequencyCandidate.frequency.score = evidence.targetBandScoreValue;
-                    frequencyCandidate.frequency.contrast = evidence.targetBandContrastValue;
-                    frequencyCandidate.confidence = 0.0f;
-                    strncpy(candidateState, "open", sizeof(candidateState) - 1);
-                    candidateState[sizeof(candidateState) - 1] = '\0';
+                    wouldProducePending = true;
+                    pendingActive = true;
+                    pendingClosed = false;
+                    pendingAccepted = false;
+                    currentPendingId = ++pendingLifecycleId;
+                    lastPendingId = currentPendingId;
+                    pendingOpenMs = now;
+                    pendingOpenSample = currentSample;
+                    pendingPeakMs = now;
+                    pendingPeakSample = currentSample;
+                    pendingPeakScore = evidence.targetBandScoreValue;
+                    pendingPeakContrast = evidence.targetBandContrastValue;
+                    pendingPeakSampleCount = 0;
+                    pendingHoldUpdates = 1;
+                    pendingDurationMs = 0;
+                    pendingLastMatchedMs = now;
+                    pendingEvidence = evidence;
+                    pendingOccurrence.startMs = now;
+                    pendingOccurrence.startSample = currentSample;
+                    pendingOccurrence.peakMs = now;
+                    pendingOccurrence.peakSample = currentSample;
+                    pendingOccurrence.releaseMs = 0;
+                    pendingOccurrence.releaseSample = 0;
+                    pendingOccurrence.endMs = 0;
+                    pendingOccurrence.durationMs = 0;
+                    pendingOccurrence.strength = evidence.targetBandScoreValue;
+                    pendingOccurrence.frequency.present = true;
+                    pendingOccurrence.frequency.score = evidence.targetBandScoreValue;
+                    pendingOccurrence.frequency.contrast = evidence.targetBandContrastValue;
+                    pendingOccurrence.confidence = 0.0f;
+                    strncpy(pendingState, "open", sizeof(pendingState) - 1);
+                    pendingState[sizeof(pendingState) - 1] = '\0';
                 }
             } else {
-                wouldProduceCandidate = false;
-                strncpy(wouldCandidateReason, FrequencyMatchEvaluation::reasonName(gates.attackReason), sizeof(wouldCandidateReason) - 1);
-                wouldCandidateReason[sizeof(wouldCandidateReason) - 1] = '\0';
+                wouldProducePending = false;
+                strncpy(wouldPendingReason, FrequencyMatchEvaluation::reasonName(gates.attackReason), sizeof(wouldPendingReason) - 1);
+                wouldPendingReason[sizeof(wouldPendingReason) - 1] = '\0';
             }
         } else {
             if (releaseOk) {
-                candidateLastMatchedMs = now;
-                ++candidateHoldUpdates;
-                candidateDurationMs = candidateLastMatchedMs >= candidateOpenMs
-                    ? candidateLastMatchedMs - candidateOpenMs
+                pendingLastMatchedMs = now;
+                ++pendingHoldUpdates;
+                pendingDurationMs = pendingLastMatchedMs >= pendingOpenMs
+                    ? pendingLastMatchedMs - pendingOpenMs
                     : 0UL;
-                if (evidence.targetBandScoreValue > candidatePeakScore
-                    || (evidence.targetBandScoreValue == candidatePeakScore && evidence.targetBandContrastValue > candidatePeakContrast)) {
-                    candidatePeakMs = now;
-                    candidatePeakSample = currentSample;
-                    candidatePeakScore = evidence.targetBandScoreValue;
-                    candidatePeakContrast = evidence.targetBandContrastValue;
-                    candidatePeakSampleCount = 0;
-                    candidateEvidence = evidence;
-                    frequencyCandidate.peakMs = now;
-                    frequencyCandidate.peakSample = currentSample;
-                    frequencyCandidate.strength = evidence.targetBandScoreValue;
-                    frequencyCandidate.frequency.score = evidence.targetBandScoreValue;
-                    frequencyCandidate.frequency.contrast = evidence.targetBandContrastValue;
+                if (evidence.targetBandScoreValue > pendingPeakScore
+                    || (evidence.targetBandScoreValue == pendingPeakScore && evidence.targetBandContrastValue > pendingPeakContrast)) {
+                    pendingPeakMs = now;
+                    pendingPeakSample = currentSample;
+                    pendingPeakScore = evidence.targetBandScoreValue;
+                    pendingPeakContrast = evidence.targetBandContrastValue;
+                    pendingPeakSampleCount = 0;
+                    pendingEvidence = evidence;
+                    pendingOccurrence.peakMs = now;
+                    pendingOccurrence.peakSample = currentSample;
+                    pendingOccurrence.strength = evidence.targetBandScoreValue;
+                    pendingOccurrence.frequency.score = evidence.targetBandScoreValue;
+                    pendingOccurrence.frequency.contrast = evidence.targetBandContrastValue;
                 }
-                frequencyCandidate.durationMs = candidateDurationMs;
-                frequencyCandidate.valid = false;
+                pendingOccurrence.durationMs = pendingDurationMs;
+                pendingOccurrence.valid = false;
             } else {
-                if (candidateLastMatchedMs > 0 && timing::elapsedSince(now, candidateLastMatchedMs, releaseDebounceMs)) {
-                    closeCandidate(minDurationMs);
+                if (pendingLastMatchedMs > 0 && timing::elapsedSince(now, pendingLastMatchedMs, releaseDebounceMs)) {
+                    closePending(minDurationMs);
                 }
             }
         }
     } else {
-        if (candidateActive && candidateLastMatchedMs > 0 && timing::elapsedSince(now, candidateLastMatchedMs, releaseDebounceMs)) {
-            closeCandidate(minDurationMs);
+        if (pendingActive && pendingLastMatchedMs > 0 && timing::elapsedSince(now, pendingLastMatchedMs, releaseDebounceMs)) {
+            closePending(minDurationMs);
         }
     }
 
@@ -402,9 +402,9 @@ void FrequencyMatchDetector::update(const detection::FrequencyBandMeasurementPac
         strncpy(gateReason, suppress, sizeof(gateReason) - 1);
         gateReason[sizeof(gateReason) - 1] = '\0';
 
-        const char* wouldCandidate = wouldProduceCandidate ? "matched" : suppress;
-        strncpy(wouldCandidateReason, wouldCandidate, sizeof(wouldCandidateReason) - 1);
-        wouldCandidateReason[sizeof(wouldCandidateReason) - 1] = '\0';
+        const char* wouldPending = wouldProducePending ? "matched" : suppress;
+        strncpy(wouldPendingReason, wouldPending, sizeof(wouldPendingReason) - 1);
+        wouldPendingReason[sizeof(wouldPendingReason) - 1] = '\0';
 
         if (evidence.present) {
             if (attackScoreOk) {
@@ -422,9 +422,9 @@ void FrequencyMatchDetector::update(const detection::FrequencyBandMeasurementPac
         }
     }
 
-    if (candidateEmitted && candidateCloseMs != _lastEmittedOccurrenceCloseMs) {
+    if (pendingAccepted && pendingCloseMs != _lastEmittedOccurrenceCloseMs) {
         capturePendingOccurrence(audioSamplePacket);
-        _lastEmittedOccurrenceCloseMs = candidateCloseMs;
+        _lastEmittedOccurrenceCloseMs = pendingCloseMs;
     }
 }
 
@@ -433,8 +433,8 @@ void FrequencyMatchDetector::buildReport(detection::DetectorReport& out, unsigne
     out.detectorId = detection::DetectorId::FrequencyMatch;
     out.accepted = _acceptedOccurrence;
     out.frequency.accepted = _acceptedDetail;
-    out.thresholds.minDurationMs = candidateMinDurationMs;
-    out.thresholds.maxDurationMs = candidateMaxDurationMs;
+    out.thresholds.minDurationMs = pendingMinDurationMs;
+    out.thresholds.maxDurationMs = pendingMaxDurationMs;
     out.aggregates.acceptedCount = acceptedCount;
     out.aggregates.rejectedCount = rejectedCount;
 
@@ -466,18 +466,18 @@ void FrequencyMatchDetector::buildReport(detection::DetectorReport& out, unsigne
     out.frequency.inspect.rejectReason = frequencyRejectReasonFromState(*this);
     out.frequency.inspect.noEmitReason = noEmitReason;
     out.frequency.inspect.gateReason = gateReason;
-    out.frequency.inspect.candidateState = candidateState;
+    out.frequency.inspect.pendingState = pendingState;
     out.frequency.inspect.readyOk = evidenceOk;
     out.frequency.inspect.gateOpen = attackOk;
-    out.frequency.inspect.opened = candidateActive || candidateClosed || candidateEmitted || candidateOpenMs > 0;
-    out.frequency.inspect.released = candidateClosed || candidateCloseMs > 0;
-    out.frequency.inspect.emitted = candidateEmitted;
+    out.frequency.inspect.opened = pendingActive || pendingClosed || pendingAccepted || pendingOpenMs > 0;
+    out.frequency.inspect.released = pendingClosed || pendingCloseMs > 0;
+    out.frequency.inspect.emitted = pendingAccepted;
     out.frequency.inspect.validRelease = validRelease;
     out.frequency.inspect.emitAllowed = emitAllowed;
-    out.frequency.inspect.openMs = candidateOpenMs;
-    out.frequency.inspect.peakMs = candidatePeakMs;
-    out.frequency.inspect.releaseMs = candidateCloseMs;
-    out.frequency.inspect.durationMs = candidateDurationMs;
+    out.frequency.inspect.openMs = pendingOpenMs;
+    out.frequency.inspect.peakMs = pendingPeakMs;
+    out.frequency.inspect.releaseMs = pendingCloseMs;
+    out.frequency.inspect.durationMs = pendingDurationMs;
 
     // Mirror the scalar report window precedence exactly:
     // accepted event first, then active/open lifecycle, then selected reject.

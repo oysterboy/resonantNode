@@ -24,7 +24,7 @@ enum class PatternReasonCode {
 // Pattern rejection reasons are kept separate from result kinds.
 enum class PatternRejectReason {
     None,
-    NoCandidate,
+    NoProposal,
     InvalidOccurrence,
     NoFrequencyEvidence,
     FrequencyWindowInvalid,

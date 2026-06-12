@@ -202,7 +202,7 @@ struct FrequencyInspectEvidence {
     const char* rejectReason = "none";
     const char* noEmitReason = "none";
     const char* gateReason = "none";
-    const char* candidateState = "none";
+    const char* pendingState = "none";
     bool readyOk = false;
     bool gateOpen = false;
     bool opened = false;

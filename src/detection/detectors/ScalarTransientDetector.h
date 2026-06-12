@@ -73,12 +73,12 @@ private:
     void updateTransientStage(unsigned long nowUs, float signalMagnitude, bool aboveReleaseThreshold);
     void captureAcceptedOccurrence(unsigned long releaseObservedUs, unsigned long peakDurationUs);
     void captureSelectedReject(unsigned long releaseObservedUs);
-    void updateAcceptedOccurrenceCandidate(
+    void updateAcceptedOccurrencePending(
         const AudioSamplePacket& audioSamplePacket,
         float signalMagnitude
     );
     void capturePendingOccurrence(const AudioSamplePacket& audioSamplePacket);
-    void resetAcceptedOccurrenceCandidate();
+    void resetAcceptedOccurrencePending();
     void refreshReportDetail();
     void printTransientStatsIfDue(unsigned long nowUs);
 
@@ -133,10 +133,10 @@ private:
     bool _selectedRejectPresent = false;
     detection::SelectedRejectSummary _selectedReject = {};
 
-    // Detector-owned accepted-occurrence emission state. This preserves the
-    // current scalar Occurrence payload shape while keeping scalar Occurrence
-    // construction inside the detector core.
-    bool _acceptedOccurrenceCandidateActive = false;
+    // Detector-owned pending accepted-occurrence emission state. This
+    // preserves the current scalar Occurrence payload shape while keeping
+    // scalar Occurrence construction inside the detector core.
+    bool _acceptedOccurrencePendingActive = false;
     uint64_t _acceptedOccurrenceStartSample = 0;
     uint64_t _acceptedOccurrencePeakSample = 0;
     unsigned long _acceptedOccurrenceStartMs = 0;

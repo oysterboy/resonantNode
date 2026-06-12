@@ -278,7 +278,7 @@ target / lower / upper power means
 neighbor power stats
 release reject frame counts
 longest match streak
-frequency deep frame/candidate summaries
+frequency deep frame/pending summaries
 ```
 
 Decision:
@@ -430,7 +430,7 @@ AnalyzerSourceStageReport
 AnalyzerFrequencyDiagnostic
 AnalyzerScalarDiagnostic
 BASE / CAP / VAL tooling
-deep FREQ_DIAG candidate data
+deep FREQ_DIAG pending data
 old sequence compatibility counters
 ```
 

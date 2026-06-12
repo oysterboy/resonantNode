@@ -8,10 +8,10 @@
 FeatureExtractor
 
 Small helper namespace that derives feature-history samples from AudioSamplePacket.
-It measures feature streams only; it does not emit candidates or classify patterns.
+It measures feature streams only; it does not emit occurrences or classify patterns.
 Producer emits a fresh feature sample or packet, sends it to FeatureHistory, and
 sends it to the selected detector in parallel. FeatureHistory is not the live
-pipe into detector candidate state.
+pipe into detector occurrence state.
 */
 namespace detection::FeatureExtractor {
 

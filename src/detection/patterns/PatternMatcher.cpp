@@ -136,20 +136,6 @@ void fillResultFromProposal(detection::PatternResult& result, const PatternPropo
     result.primaryAudioOverflow = proposal.audioOverflowDuringProposal;
 }
 
-detection::PatternResult makeInvalidResult(const PatternProposal& proposal, unsigned long nowMs) {
-    detection::PatternResult result = {};
-    fillResultFromProposal(result, proposal, nowMs);
-    result.type = detection::PatternType::Invalid;
-    result.reasonCode = detection::PatternReasonCode::FromOccurrence;
-    result.rejectReason = detection::PatternRejectReason::InvalidOccurrence;
-    result.confidence = 0.0f;
-    result.patternAccepted = false;
-    result.patternMatched = false;
-    result.supportMatched = false;
-    result.valid = false;
-    return result;
-}
-
 detection::PatternResult evaluateSinglePulse(
     const PatternProposal& proposal,
     const detection::PatternMatcherConfig& config,

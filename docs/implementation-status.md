@@ -19,13 +19,11 @@ status table.
 | PatternMatcher public boundary | stable active | `PatternMatcher` is the public pattern-stage boundary. |
 | Behavior / output current path | stable active | `ResonantBehavior` consumes `PatternResult` and `FieldState`; `ChirpOutput` remains the current output path. |
 | Hardcoded config baseline | stable active | `DetectionProfile` and `BehaviorGateConfig` defaults are present and visible. |
-| TonalPulseProfile | stable active | Main runtime profile. |
-| ChirpExperimental | selectable experimental | Proof profile; not stable normal runtime. |
-| Scalar experimental profiles | selectable experimental | `amp` and `scalar_freq_experimental` remain proof/debug paths. |
+| TonalPulseFreq | stable active | Main runtime profile. |
+| TonalPulseScalar | selectable experimental | Scalar proof path. |
+| AmpExperimental | selectable experimental | AMP scalar proof/debug path. |
 | Detector/report consistency | planned | Investigate clean-summary acceptance mismatches without retuning thresholds. |
 | Pattern/detection expansion | planned | Future `TargetBandStrength`, pulse/chirp grouping, cross-source correlation, and added acoustic profiles. |
-| DetectionDiagnostics retirement | deferred | Still compatibility-only; delete when Analyzer no longer needs the bridge. |
-| Analyzer compatibility cleanup | deferred | Supported base/capture/value compatibility views and local legacy structs remain intentionally present. |
 | Detection refactor final sediment pass | deferred | Remaining deletions are mostly comments, migration notes, and historical vocabulary cleanup. |
 | Behavior/output boundary | deferred | `BehaviorRuntime`, `OutputProfile`, and `OutputDispatcher` remain future architecture work. |
 | Params/commands/config | deferred | `ParamRegistry`, `CommandRouter`, persistent config, remote params, and typed tuning structs are not implemented yet. |

@@ -307,12 +307,12 @@ If remnants of old source-wrapper naming remain in code, they are compatibility/
 Current important profiles:
 
 ```text
-TonalPulse
-scalar_freq_experimental / Amp-like scalar proof path
-ChirpExperimental
+TonalPulseFreq
+TonalPulseScalar
+AmpExperimental
 ```
 
-#### TonalPulse
+#### TonalPulseFreq
 
 Stable active profile.
 
@@ -321,7 +321,7 @@ Current meaning:
 ```text
 detect a short tonal pulse-like event
 detector = FrequencyMatchDetector
-AMP evidence is inspected as required/meaningful support
+support evidence is inspected as required/meaningful support
 PatternResult.valid is the behavior/analyzer gate
 ```
 
@@ -331,14 +331,14 @@ Current conceptual composition:
 FrequencyMatchDetector
 InspectionPlan:
     ScalarFeatureStrength over AmpEnvelope
-    target = AmpStrength
+    target = SupportStrength
 PatternMatcherConfig:
-    support requirement configured for AmpStrength
+    support requirement configured for SupportStrength
 FieldStateConfig:
     tuned occurrence/pattern windows
 ```
 
-#### scalar_freq_experimental / Amp-like scalar proof path
+#### TonalPulseScalar
 
 Experimental/proof comparison path.
 
@@ -361,10 +361,10 @@ Status:
 
 ```text
 useful for comparison and proving shared detector/report contracts
-not the primary stable TonalPulse path
+not the primary stable TonalPulseFreq path
 ```
 
-#### ChirpExperimental
+#### AmpExperimental
 
 Selectable experimental profile.
 
@@ -372,7 +372,7 @@ Status:
 
 ```text
 developer / experimental only
-not mature pulsed chirp grouping
+AMP scalar proof/debug path
 not stable user-facing runtime target
 ```
 
@@ -506,6 +506,7 @@ FrequencyContrast
 ```
 
 Used by scalar experimental / proof profiles.
+Used by `TonalPulseScalar` and `AmpExperimental`.
 
 #### FrequencyMatchDetector
 
@@ -513,7 +514,7 @@ Canonical specialized frequency detector core.
 
 Owns frequency-match candidate lifecycle and accepted frequency Occurrence emission.
 
-Used by TonalPulse.
+Used by `TonalPulseFreq`.
 
 FrequencyMatch remains specialized because its score/contrast/lifecycle behavior is useful and should not be forced into scalar abstraction prematurely.
 
@@ -627,9 +628,9 @@ PatternResult is for pattern meaning.
 Occurrence is for accepted-event transport.
 ```
 
-Clean Analyzer output must read DetectorReport / RejectedCandidateSummary, not `DetectionDiagnostics`.
+Clean Analyzer output must read DetectorReport / RejectedCandidateSummary.
 
-`DetectionDiagnostics`, if still present, is compatibility-only.
+`DetectionDiagnostics` is historical archive material, not active source code.
 
 ---
 
@@ -657,7 +658,7 @@ ScalarFeatureStrength
 Current evidence targets may include:
 
 ```text
-AmpStrength
+SupportStrength
 FrequencyScoreStrength
 FrequencyContrastQuality
 TargetBandStrength
@@ -807,10 +808,7 @@ expected trial/window facts
 Clean output must not read:
 
 ```text
-DetectionDiagnostics
-AnalyzerScalarDiagnostic
-AnalyzerFrequencyDiagnostic
-AnalyzerSourceStageReport
+legacy analyzer bridge structs
 legacy source-summary structs
 legacy near-miss text
 ```
@@ -890,7 +888,6 @@ OCCURRENCE summary
 AUDIO run
 SAMPLES_BEGIN / SAMPLES_END
 RAW capture
-BASE / CAP / VAL tooling
 detection parameters / runtime summaries
 ```
 
@@ -942,7 +939,7 @@ raw detector flags
 live FeatureStreams
 AudioSignal internals
 RawSampleHistory
-DetectionDiagnostics
+legacy analyzer bridge data
 ```
 
 If detector or inspection details should affect behavior, they must first be promoted into:

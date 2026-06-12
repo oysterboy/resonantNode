@@ -38,7 +38,7 @@ Clean analyzer output should read canonical runtime contracts only.
 [LANDED] OccurrenceInspector exists.
 [LANDED] FieldStateTracker exists.
 [LANDED] Clean analyzer outputs exist: SEQ_TRIAL, SEQ_SOURCE, SEQ_INSPECT, SEQ_EXPLAIN, SEQ_SUMMARY.
-[PARTIAL] DetectionDiagnostics and analyzer legacy compatibility remain as compatibility residue.
+[REMOVED] DetectionDiagnostics and analyzer legacy compatibility are removed from src.
 [PARTIAL] PatternMatcher currently stays single-proposal oriented.
 [PARTIAL] Frequency reason handling is still string-backed internally.
 ```
@@ -107,23 +107,10 @@ Keep PatternResult compact and behavior-facing.
 Expose only compact explanation facts through PatternMatcherReport.
 ```
 
-### ANA-003 - legacy removal and compatibility cleanup
-
-Status: DEFERRED
-
-```text
-Retire DetectionDiagnostics when the compatibility bridge is no longer needed.
-Retire analyzer legacy compatibility structs only after their supported views
-are no longer required.
-Remove stale bridge comments and migration notes that no longer describe live
-code.
-```
-
 ## Current / first cleanup pass
 
 ```text
 Keep the clean analyzer outputs on canonical runtime facts.
-Keep legacy or compatibility details fenced away from the clean path.
 Keep the remaining work in the detection / analyzer layer before broader
 behavior or output changes.
 ```

@@ -4,6 +4,7 @@
 
 #include "../../TimingUtils.h"
 
+// Frequency reason helpers and lifecycle classification.
 namespace {
 
 const char* frequencyRejectReasonFromState(const FrequencyMatchDetector& detector) {
@@ -35,6 +36,7 @@ detection::DetectorRejectClass frequencyRejectClassFromReason(const char* reason
 
 } // namespace
 
+// Lifecycle / summaries.
 void FrequencyMatchDetector::resetState() {
     evidencePresent = false;
     liveFrequencyOnly = false;
@@ -153,7 +155,10 @@ void FrequencyMatchDetector::resetDiagnosticsSummary() {
     diagnosticsMatchedCount = 0;
 }
 
+// Best rejected pending lifecycle.
 void FrequencyMatchDetector::updateBestRejectedPending() {
+    // Keep the best rejected lifecycle snapshot in detector-owned report state.
+    // Frequency still uses its own string-backed reason model internally.
     if (!pendingClosed || pendingAccepted) {
         return;
     }
@@ -176,7 +181,9 @@ void FrequencyMatchDetector::recordRejectedPending() {
     updateBestRejectedPending();
 }
 
+// Accepted occurrence emission.
 void FrequencyMatchDetector::capturePendingOccurrence(const AudioSamplePacket& audioSamplePacket) {
+    // Keep accepted occurrence construction inside the detector core.
     _pendingOccurrence = pendingOccurrence;
     _pendingOccurrence.detectorId = detection::DetectorId::FrequencyMatch;
     _pendingOccurrence.occurrenceType = detection::OccurrenceType::Frequency;
@@ -205,6 +212,7 @@ void FrequencyMatchDetector::capturePendingOccurrence(const AudioSamplePacket& a
     }
 }
 
+// Main detector update.
 void FrequencyMatchDetector::update(const detection::FrequencyBandMeasurementPacket& evidence,
                                     const AudioSamplePacket& audioSamplePacket,
                                     unsigned long now,
@@ -428,7 +436,10 @@ void FrequencyMatchDetector::update(const detection::FrequencyBandMeasurementPac
     }
 }
 
+// Report snapshot.
 void FrequencyMatchDetector::buildReport(detection::DetectorReport& out, unsigned long nowMs) const {
+    // Keep detector-specific report assembly local to the detector so
+    // DetectionRuntime only coordinates report snapshots.
     out = {};
     out.detectorId = detection::DetectorId::FrequencyMatch;
     out.accepted = _acceptedOccurrence;
@@ -493,6 +504,7 @@ void FrequencyMatchDetector::buildReport(detection::DetectorReport& out, unsigne
     }
 }
 
+// Pending emission.
 bool FrequencyMatchDetector::popOccurrence(detection::Occurrence& out) {
     if (!_pendingOccurrencePresent) {
         return false;

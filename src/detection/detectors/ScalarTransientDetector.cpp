@@ -3,10 +3,31 @@
 #include <Arduino.h>
 #include <string.h>
 
+// Scalar reason helpers and lifecycle classification.
 namespace {
 
 bool detectorReasonIsNone(const char* reason) {
     return reason == nullptr || strcmp(reason, "none") == 0;
+}
+
+bool scalarRejectCandidateBeatsCurrent(
+    const detection::SelectedRejectSummary& current,
+    unsigned long candidateDurationMs,
+    float candidateStrength
+) {
+    if (!current.present) {
+        return true;
+    }
+
+    if (candidateDurationMs != current.durationMs) {
+        return candidateDurationMs > current.durationMs;
+    }
+
+    if (candidateStrength != current.strength) {
+        return candidateStrength > current.strength;
+    }
+
+    return false;
 }
 
 detection::DetectorRejectClass scalarTransientRejectClass(ScalarTransientDetector::TransientRejectReason reason) {
@@ -26,6 +47,7 @@ detection::DetectorRejectClass scalarTransientRejectClass(ScalarTransientDetecto
 
 } // namespace
 
+// Lifecycle / summaries.
 ScalarTransientDetector::ScalarTransientDetector() = default;
 
 void ScalarTransientDetector::begin() {
@@ -80,30 +102,7 @@ void ScalarTransientDetector::resetSelectedRejectSummary() {
     _reportDetail.selectedReject = {};
 }
 
-void ScalarTransientDetector::update(
-    const AudioSamplePacket& audioSamplePacket,
-    float signalMagnitude
-) {
-    const unsigned long nowUs = audioSamplePacket.timeUs;
-    _onsetDetected = false;
-    _onsetStrength = 0.0f;
-
-    _transientDetected = false;
-    _transientStrength = 0.0f;
-    _acceptedOccurrenceReleaseMs = 0;
-
-    const bool aboveAttackThreshold = signalMagnitude > _onsetDetectionThreshold;
-    const bool aboveReleaseThreshold = signalMagnitude > _onsetReleaseThreshold;
-    const unsigned long cooldownAfterOnsetUs = _cooldownAfterOnsetMs * 1000UL;
-    const bool onsetCooldownElapsed = nowUs - _lastOnsetUs >= cooldownAfterOnsetUs;
-
-    updateOnsetStage(nowUs, signalMagnitude, aboveAttackThreshold, onsetCooldownElapsed);
-    updateTransientStage(nowUs, signalMagnitude, aboveReleaseThreshold);
-    updateAcceptedOccurrencePending(audioSamplePacket, signalMagnitude);
-    refreshReportDetail();
-    printTransientStatsIfDue(nowUs);
-}
-
+// Core lifecycle helpers.
 void ScalarTransientDetector::updateOnsetStage(unsigned long nowUs, float signalMagnitude, bool aboveAttackThreshold, bool onsetCooldownElapsed) {
     // Use raw magnitude for the edge so short bursts are not delayed by smoothing.
     // The separate release threshold keeps the peak stable when the occurrence wobbles near the edge.
@@ -202,6 +201,7 @@ void ScalarTransientDetector::updateTransientStage(unsigned long nowUs, float si
     }
 }
 
+// Accepted / rejected snapshots.
 void ScalarTransientDetector::captureAcceptedOccurrence(unsigned long releaseObservedUs, unsigned long peakDurationUs) {
     _acceptedOccurrencePresent = true;
     _acceptedOccurrenceReleaseMs = releaseObservedUs / 1000UL;
@@ -215,6 +215,7 @@ void ScalarTransientDetector::captureAcceptedOccurrence(unsigned long releaseObs
 }
 
 void ScalarTransientDetector::captureSelectedReject(unsigned long releaseObservedUs) {
+    // Keep the best rejected lifecycle snapshot in detector-owned report state.
     if (_lastTransientRejectReason == TransientRejectReason::None) {
         return;
     }
@@ -224,7 +225,7 @@ void ScalarTransientDetector::captureSelectedReject(unsigned long releaseObserve
     const unsigned long rejectEndMs = releaseObservedUs / 1000UL;
     const unsigned long rejectDurationMs = _lastTransientRejectedDurationMs;
 
-    if (_selectedRejectPresent && rejectDurationMs < _selectedReject.durationMs) {
+    if (!scalarRejectCandidateBeatsCurrent(_selectedReject, rejectDurationMs, _lastTransientRejectedStrength)) {
         return;
     }
 
@@ -284,7 +285,9 @@ void ScalarTransientDetector::updateAcceptedOccurrencePending(
     }
 }
 
+// Accepted occurrence emission.
 void ScalarTransientDetector::capturePendingOccurrence(const AudioSamplePacket& audioSamplePacket) {
+    // Keep scalar accepted occurrence construction inside the detector core.
     _pendingOccurrence = {};
     _pendingOccurrence.detectorId = detection::DetectorId::ScalarTransient;
     _pendingOccurrence.occurrenceType = detection::OccurrenceType::Scalar;
@@ -331,6 +334,7 @@ void ScalarTransientDetector::resetAcceptedOccurrencePending() {
     _acceptedOccurrenceCurrentStrength = 0.0f;
 }
 
+// Report detail / diagnostics.
 void ScalarTransientDetector::refreshReportDetail() {
     const char* onsetRejectReason = lastOnsetRejectReasonName();
     const char* transientRejectReason = lastTransientRejectReasonName();
@@ -424,18 +428,50 @@ const char* ScalarTransientDetector::lastTransientRejectReasonName() const {
     return "none";
 }
 
+// Main detector update.
+void ScalarTransientDetector::update(
+    const AudioSamplePacket& audioSamplePacket,
+    float signalMagnitude
+) {
+    const unsigned long nowUs = audioSamplePacket.timeUs;
+    _onsetDetected = false;
+    _onsetStrength = 0.0f;
+
+    _transientDetected = false;
+    _transientStrength = 0.0f;
+    _acceptedOccurrenceReleaseMs = 0;
+
+    const bool aboveAttackThreshold = signalMagnitude > _onsetDetectionThreshold;
+    const bool aboveReleaseThreshold = signalMagnitude > _onsetReleaseThreshold;
+    const unsigned long cooldownAfterOnsetUs = _cooldownAfterOnsetMs * 1000UL;
+    const bool onsetCooldownElapsed = nowUs - _lastOnsetUs >= cooldownAfterOnsetUs;
+
+    updateOnsetStage(nowUs, signalMagnitude, aboveAttackThreshold, onsetCooldownElapsed);
+    updateTransientStage(nowUs, signalMagnitude, aboveReleaseThreshold);
+    updateAcceptedOccurrencePending(audioSamplePacket, signalMagnitude);
+    refreshReportDetail();
+    printTransientStatsIfDue(nowUs);
+}
+
+// Report snapshot.
 void ScalarTransientDetector::buildReport(detection::DetectorReport& out, unsigned long nowMs) const {
     // Keep detector-specific report assembly local to the detector so
     // DetectionRuntime only coordinates report snapshots.
     out = {};
     out.detectorId = detection::DetectorId::ScalarTransient;
     out.accepted = _acceptedOccurrence;
-    out.selectedReject = _selectedReject;
     out.thresholds.minDurationMs = _minTransientDurationMs;
     out.thresholds.maxDurationMs = _maxTransientDurationMs;
     out.aggregates.acceptedCount = _peakAcceptedCount;
     out.aggregates.rejectedCount = _transientRejectedCount;
     out.scalar = _reportDetail;
+
+    const bool selectedRejectPresent = !out.accepted.present && _selectedRejectPresent;
+    if (selectedRejectPresent) {
+        out.selectedReject = _selectedReject;
+    } else {
+        out.scalar.selectedReject = {};
+    }
 
     if (out.accepted.present) {
         out.reportStartMs = out.accepted.startMs;
@@ -449,6 +485,7 @@ void ScalarTransientDetector::buildReport(detection::DetectorReport& out, unsign
     }
 }
 
+// Pending emission.
 bool ScalarTransientDetector::popOccurrence(detection::Occurrence& out) {
     if (!_pendingOccurrencePresent) {
         return false;

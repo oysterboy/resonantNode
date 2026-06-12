@@ -10,12 +10,15 @@
 /*
 FrequencyMatchDetector
 
-Owns the live frequency proposer lifecycle and the transition from frequency
-evidence into a timestamped Occurrence record.
+Owns the reusable frequency-stream gate and accepted-occurrence lifecycle.
+This is the detector-core implementation for frequency evidence, not a public
+behavior boundary.
 
 Responsibilities:
 - observe live frequency evidence windows from the frequency stream path
 - track threshold crossings, hold/release, and peak timing
+- own best-rejected lifecycle reporting for the active trial window
+- emit accepted Occurrence values for inspector/pattern/analyzer consumers
 - expose compact live diagnostics for Analyzer / Resonant logging
 
 Does NOT:
@@ -26,6 +29,7 @@ Does NOT:
 */
 class FrequencyMatchDetector {
 public:
+    // Live frequency gate / lifecycle state.
     bool evidencePresent = false;
     bool liveFrequencyOnly = false;
     bool firstThresholdCrossingSeen = false;
@@ -69,8 +73,15 @@ public:
     unsigned long pendingMinDurationMs = 0;
     unsigned long pendingMaxDurationMs = 0;
     bool pendingDurationInconsistent = false;
+
+    // Canonical detector-report facts for the active trial window.
+    // This should be on par with the scalar detector's canonical report
+    // facts, even though the internal gate/reason model stays frequency-
+    // specific.
     unsigned long acceptedCount = 0;
     unsigned long rejectedCount = 0;
+
+    // Detector-owned best rejected pending lifecycle snapshot.
     unsigned long bestDurationMs = 0;
     unsigned long bestOpenMs = 0;
     unsigned long bestPeakMs = 0;
@@ -78,15 +89,20 @@ public:
     unsigned long bestCloseMs = 0;
     float bestPeakScore = 0.0f;
     float bestPeakContrast = 0.0f;
+    // Frequency keeps its internal reason model string-backed for now.
     const char* bestRejectReason = "none";
     const char* bestGateReason = "none";
     detection::FrequencyBandMeasurementPacket bestEvidence = {};
     detection::FrequencyBandMeasurementPacket pendingEvidence = {};
+
+    // Detector-owned pending accepted-occurrence emission state.
     char pendingState[16] = "none";
     char gateReason[48] = "none";
     char wouldPendingReason[48] = "none";
     char noEmitReason[48] = "none";
     detection::Occurrence pendingOccurrence = {};
+
+    // Detector-owned diagnostics counters for analyzer logging.
     unsigned long diagnosticsScoreOkCount = 0;
     unsigned long diagnosticsContrastOkCount = 0;
     unsigned long diagnosticsBothOkCount = 0;
@@ -116,14 +132,14 @@ private:
     bool _diagnosticsEnabled = false;
 
     // Canonical detector-owned accepted summary for the active trial window.
-    // This mirrors scalar report ownership so DetectorReport does not lose
-    // accepted facts once the live pending state advances.
+    // Keeps accepted facts in detector-owned report state so DetectorReport
+    // does not lose them once the live pending state advances.
     detection::AcceptedOccurrenceSummary _acceptedOccurrence = {};
     detection::FrequencyAcceptedDetail _acceptedDetail = {};
 
-    // Detector-owned accepted-occurrence emission state. Frequency now mirrors
-    // the scalar ownership pattern while preserving the current Occurrence
-    // payload shape expected by inspector/pattern/analyzer consumers.
+    // Detector-owned accepted-occurrence emission state for the current
+    // frequency path. The downstream Occurrence payload shape stays shared,
+    // but the internal gate/reason model is still frequency-specific.
     bool _pendingOccurrencePresent = false;
     detection::Occurrence _pendingOccurrence = {};
     unsigned long _lastEmittedOccurrenceCloseMs = 0;

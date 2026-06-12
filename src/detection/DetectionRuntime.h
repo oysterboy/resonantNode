@@ -100,7 +100,6 @@ private:
     bool pushPatternResult(const PatternResult& result);
     void capturePipelineResult(
         const PatternResult& result,
-        const Occurrence* occurrence,
         const InspectedOccurrence* inspectedOccurrence,
         unsigned long nowMs
     );
@@ -128,7 +127,6 @@ private:
     DetectionPipelineResult _latestPipelineResult = {};
     bool _hasLatestPipelineResult = false;
     DetectorReport _detectorReport = {};
-    Occurrence _lastOccurrence = {};
     InspectedOccurrence _lastInspectedOccurrence = {};
 };
 

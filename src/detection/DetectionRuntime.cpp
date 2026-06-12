@@ -71,7 +71,6 @@ void DetectionRuntime::resetDetectionState() {
     _resultCount = 0;
     _latestPipelineResult = {};
     _hasLatestPipelineResult = false;
-    _lastOccurrence = {};
     _lastInspectedOccurrence = {};
     _detectorReport = {};
 }
@@ -225,7 +224,6 @@ void DetectionRuntime::drainDetectors(unsigned long nowMs) {
                 _fieldStateTracker.observeOccurrence(occurrence, nowMs);
                 const InspectedOccurrence inspected = _occurrenceInspector.inspectWithHistory(occurrence, &_featureHistory);
                 _fieldStateTracker.observeInspectedOccurrence(inspected, nowMs);
-                _lastOccurrence = occurrence;
                 _lastInspectedOccurrence = inspected;
                 _patternMatcher.acceptOccurrence(inspected);
             }
@@ -235,7 +233,6 @@ void DetectionRuntime::drainDetectors(unsigned long nowMs) {
                 _fieldStateTracker.observeOccurrence(occurrence, nowMs);
                 const InspectedOccurrence inspected = _occurrenceInspector.inspectWithHistory(occurrence, &_featureHistory);
                 _fieldStateTracker.observeInspectedOccurrence(inspected, nowMs);
-                _lastOccurrence = occurrence;
                 _lastInspectedOccurrence = inspected;
                 _patternMatcher.acceptOccurrence(inspected);
             }
@@ -249,7 +246,7 @@ void DetectionRuntime::drainPatternMatcher(unsigned long nowMs) {
     PatternResult result = {};
     while (_patternMatcher.popPatternResult(nowMs, result)) {
         _fieldStateTracker.observePatternResult(result, nowMs);
-        capturePipelineResult(result, &_lastOccurrence, &_lastInspectedOccurrence, nowMs);
+        capturePipelineResult(result, &_lastInspectedOccurrence, nowMs);
         pushPatternResult(result);
     }
 }
@@ -267,7 +264,6 @@ bool DetectionRuntime::pushPatternResult(const PatternResult& result) {
 
 void DetectionRuntime::capturePipelineResult(
     const PatternResult& result,
-    const Occurrence* occurrence,
     const InspectedOccurrence* inspectedOccurrence,
     unsigned long nowMs
 ) {
@@ -276,11 +272,9 @@ void DetectionRuntime::capturePipelineResult(
     _latestPipelineResult.pattern = result;
     _latestPipelineResult.hasPatternReport = true;
     _latestPipelineResult.patternReport = _patternMatcher.report();
-    _latestPipelineResult.hasOccurrence = occurrence != nullptr && occurrence->present;
-    if (_latestPipelineResult.hasOccurrence && occurrence != nullptr) {
-        _latestPipelineResult.occurrence = *occurrence;
-    }
     if (inspectedOccurrence != nullptr && inspectedOccurrence->occurrence.present) {
+        _latestPipelineResult.hasOccurrence = true;
+        _latestPipelineResult.occurrence = inspectedOccurrence->occurrence;
         _latestPipelineResult.inspectedOccurrence = *inspectedOccurrence;
     }
     _latestPipelineResult.hasField = true;

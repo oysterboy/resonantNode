@@ -10,7 +10,7 @@
 /*
 AnalyzerSequenceHelpers
 
-Analyzer helper plumbing for sample-dump tooling and classifier bookkeeping.
+Sample-dump plumbing and trial bookkeeping.
 Canonical detector output lives in AnalyzerReporting.
 */
 
@@ -200,7 +200,7 @@ void AnalyzerApp::beginSequenceSampleDump(unsigned long trialNumber) {
     }
 }
 
-// Sample-dump tooling path: explicit diagnostic report, not analyzer truth.
+// Sample-dump output is diagnostic-only.
 void AnalyzerApp::printSequenceSampleReport(unsigned long trialNumber) const {
     if (!_sequenceTest.sampleDumpEnabled || !_sequenceTest.sampleDumpSelectedForTrial || _sequenceTest.sampleDumpCurrentTrial != trialNumber) {
         return;

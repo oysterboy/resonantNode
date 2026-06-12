@@ -976,20 +976,13 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
     report.expected.patternType = "sequence_trial";
     report.expected.expectedSource = _sequenceTest.externalEmitter ? "external" : "local";
 
-    const detection::DetectionPipelineResult* pipelineResult = _detection.hasLatestPipelineResult()
-        ? &_detection.latestPipelineResult()
-        : nullptr;
-    const bool runtimeReceivedOccurrence = pipelineResult != nullptr && pipelineResult->hasOccurrence;
-    const bool actualPipelineAvailable = pipelineResult != nullptr && pipelineResult->hasPattern;
     const detection::PatternResult* selectedTrialPatternResult = nullptr;
     if (_sequenceTest.primaryValidPatternCaptured) {
         selectedTrialPatternResult = &_sequenceTest.primaryValidPattern;
     } else if (_sequenceTest.rejectedInWindowCount > 0) {
         selectedTrialPatternResult = &_sequenceTest.firstRejectedInWindow;
     }
-    // Canonical Analyzer path: only the PatternResult snapshot captured for
-    // this finalized trial is allowed onto the clean inspect/explain path.
-    // Latest-runtime fallbacks stay out of the canonical trial truth model.
+    // Use the captured trial snapshot for the final analyzer report.
     const detection::PatternResult* reportPatternResult = selectedTrialPatternResult;
     const detection::InspectedOccurrence* reportInspectedOccurrence = nullptr;
     if (_sequenceTest.primaryValidPatternCaptured && _sequenceTest.primaryValidInspectedOccurrence.occurrence.present) {
@@ -997,9 +990,7 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
     } else if (_sequenceTest.rejectedInWindowCount > 0 && _sequenceTest.firstRejectedInspectedOccurrence.occurrence.present) {
         reportInspectedOccurrence = &_sequenceTest.firstRejectedInspectedOccurrence;
     }
-    const detection::FieldState* runtimeFieldState = actualPipelineAvailable && pipelineResult->hasField
-        ? &pipelineResult->field
-        : nullptr;
+    const detection::FieldState* runtimeFieldState = &_detection.fieldState();
     const detection::DetectionProfile& selectedProfile = detection::detectionProfileForKind(_sequenceTest.profileKind);
     const detection::DetectorReport& activeDetectorReport = _detection.activeDetectorReport();
     const bool activeDetectorReportAvailable = activeDetectorReport.detectorId != detection::DetectorId::Unknown;
@@ -1018,7 +1009,7 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
         ? reportPatternResult->primaryStrength
         : strength;
     const auto artifactReason = [&]() -> const char* {
-        if (reportPatternResult != nullptr || actualPipelineAvailable) {
+        if (reportPatternResult != nullptr || report.detectorReport != nullptr) {
             return "captured_from_runtime_pipeline";
         }
         return "missing_pipeline_result";
@@ -1026,7 +1017,7 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
     const bool startupArtifact = result == AnalyzerResult::Miss
         && _sequenceTest.currentTrial == 1
         && !trialHasPipelineEvidence
-        && !actualPipelineAvailable
+        && report.detectorReport == nullptr
         && strcmp(artifactReason, "missing_pipeline_result") == 0;
 
     AnalyzerSequenceClassificationInput classificationInput;
@@ -1040,8 +1031,7 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
     classificationInput.detectorSelectedRejectPresent = report.detectorReport != nullptr && report.detectorReport->selectedReject.present;
     report.classification = classifySequenceTrial(classificationInput);
     {
-        // Analyzer consumes the PatternResult produced by DetectionRuntime.
-        // Analyzer does not re-run occurrence inspection or pattern interpretation.
+        // Analyzer formats the runtime PatternResult; it does not reinterpret it.
         AnalyzerPatternObservation pattern = {};
         pattern.type = trialHasPipelineEvidence ? detection::patternTypeName(reportPatternResult->type) : "none";
         pattern.accepted = trialHasPipelineEvidence
@@ -1134,7 +1124,7 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
         report.inspection.mainRejectReason = analyzerReasonName(report.classification.reason);
     }
 
-    if (actualPipelineAvailable && runtimeFieldState != nullptr) {
+    if (runtimeFieldState != nullptr) {
         report.field.state = runtimeFieldState->dense ? "dense" : (runtimeFieldState->active ? (runtimeFieldState->quiet ? "quiet" : "active") : "unknown");
         report.field.rawActivity = runtimeFieldState->activity;
         report.field.validPatternActivity = runtimeFieldState->density;

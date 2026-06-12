@@ -10,13 +10,15 @@
 /*
 ScalarTransientDetector
 
-Owns the reusable scalar-stream onset and transient state machine.
-This is the shared implementation core for amplitude-envelope and
-frequency-stream detectors, not a public behavior boundary.
+Owns the reusable scalar-stream gate and transient lifecycle.
+This is the detector-core implementation for scalar evidence, not a public
+behavior boundary.
 
 Responsibilities:
 - derive one-shot onset events from a scalar evidence stream
 - hold a peak open until release conditions are stable
+- own best-rejected lifecycle reporting for the active trial window
+- emit accepted Occurrence values for inspector/pattern/analyzer consumers
 - qualify peaks as transient events after measuring duration and strength
 
 Does NOT:
@@ -27,6 +29,8 @@ Does NOT:
 */
 class ScalarTransientDetector {
 public:
+    // Scalar keeps typed internal reject reasons to make the lifecycle easy
+    // to inspect and keep on par with the detector-report snapshot.
     enum class TransientRejectReason {
         None,
         DurationTooShort,
@@ -126,10 +130,14 @@ private:
     const char* _diagnosticsLabel = "EVT";
 
     // Canonical scalar-report facts owned directly by the detector core.
+    // This should be on par with the frequency detector's canonical report
+    // facts, even though the internal reason model stays scalar-specific.
     bool _acceptedOccurrencePresent = false;
     detection::AcceptedOccurrenceSummary _acceptedOccurrence = {};
     unsigned long _acceptedOccurrenceReleaseMs = 0;
     detection::ScalarDetectorReportDetail _reportDetail = {};
+
+    // Detector-owned best rejected pending lifecycle snapshot.
     bool _selectedRejectPresent = false;
     detection::SelectedRejectSummary _selectedReject = {};
 

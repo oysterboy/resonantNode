@@ -67,6 +67,20 @@ Roadmap later:
 - accept multiple required support modules for acceptance when the matcher
   needs more than one gate
 
+### 3.5 Field state for detection and reporting
+
+Status: planned
+
+Track actual use of field state for detection and reporting.
+
+### 3.6 Detector reason-model parity
+
+Status: planned
+
+Make frequency detector internal reason handling as explicit and typed as scalar
+reject handling, or clearly keep the asymmetry documented if string-based
+reasoning remains intentional.
+
 ---
 
 ## Phase 4 - Legacy Removal

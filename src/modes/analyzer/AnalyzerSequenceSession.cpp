@@ -414,7 +414,7 @@ void AnalyzerApp::finalizeSequenceTrial(unsigned long now) {
         return;
     }
 
-    // Drain any late emitter markers before we snapshot the trial report.
+    // Flush late emitter markers before snapshotting the trial.
     pollEmitterSerial();
     const uint32_t finalizeStartUs = micros();
     auto& diagnostics = _sequenceTest.currentTrialDiagnostics;

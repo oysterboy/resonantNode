@@ -268,7 +268,7 @@ void printCanonicalStageLine(const char* prefix, const AnalyzerReport& report, b
 }
 
 /*
-Canonical and neutral analyzer reporting surface.
+Canonical analyzer reporting surface.
 */
 
 void AnalyzerApp::printSequenceTrialHeader(unsigned long trialNumber) const {

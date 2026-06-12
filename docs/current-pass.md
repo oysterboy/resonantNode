@@ -1,8 +1,8 @@
-# Pass X5 - PatternResult Payload Decision
+# Pass X5 - PatternResult Payload Cleanup
 
-Status: decision pass before implementation  
+Status: implemented  
 Scope: pattern-stage outward contract  
-Goal: decide the compact `PatternResult` payload now that `PatternMatcher` is the public pattern boundary.
+Goal: keep `PatternResult` compact now that `PatternMatcher` is the public pattern boundary.
 
 ---
 
@@ -20,7 +20,6 @@ Goal: decide the compact `PatternResult` payload now that `PatternMatcher` is th
 - compact timing: start, peak, accepted, duration
 - compact strength and confidence
 - compact primary accepted-occurrence summary
-- `inspectedOccurrence` only if existing behavior or analyzer paths still need it
 
 ## Move out of PatternResult
 
@@ -29,6 +28,7 @@ Goal: decide the compact `PatternResult` payload now that `PatternMatcher` is th
 - internal matcher proposal data
 - rule and assembly debug details
 - debug labels and strings
+- `inspectedOccurrence` snapshot data, which now lives in runtime/analyzer-local snapshot paths
 
 ## Report contract
 
@@ -46,7 +46,6 @@ Goal: decide the compact `PatternResult` payload now that `PatternMatcher` is th
 
 - Every current `PatternResult` field is classified.
 - No heavy matcher construction data is copied into outward runtime payloads.
+- `PatternResult` no longer carries `inspectedOccurrence`.
 - Behavior and SEQ sanity stay equivalent.
 - Build passes.
-
-This is a decision pass; implementation follows only after the payload split is settled.

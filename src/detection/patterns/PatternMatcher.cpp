@@ -8,24 +8,18 @@ enum class ProposalShape {
     PulseSequence,
 };
 
+enum class ProposalEvaluationKind {
+    Invalid,
+    Valid,
+};
+
 // Private matcher proposal state. This is deliberately not a public contract:
 // future matcher logic may keep several proposals and select the best pattern
 // over a group of occurrences.
 struct PatternProposal {
     ProposalShape shape = ProposalShape::Unknown;
-    uint32_t lineageId = 0;
-    uint8_t primarySlotIndex = 0;
     uint8_t occurrenceCount = 0;
-    uint8_t pulseCount = 0;
-    unsigned long firstPulseMs = 0;
-    unsigned long lastPulseMs = 0;
-    unsigned long minGapMs = 0;
-    unsigned long maxGapMs = 0;
     bool valid = false;
-
-    uint64_t onsetSample = 0;
-    uint64_t peakSample = 0;
-    uint64_t releaseSample = 0;
 
     unsigned long startMs = 0;
     unsigned long peakMs = 0;
@@ -37,11 +31,7 @@ struct PatternProposal {
     float peakStrength = 0.0f;
     float releaseStrength = 0.0f;
     float ambientBaseline = 0.0f;
-    detection::StrengthClass ampStrength = detection::StrengthClass::Unknown;
-    detection::ScalarEvidence scalarEvidence = {};
-    detection::StrengthClass frequencyScoreStrength = detection::StrengthClass::Unknown;
-    detection::StrengthClass frequencyContrastQuality = detection::StrengthClass::Unknown;
-    detection::StrengthClass targetBandStrength = detection::StrengthClass::Unknown;
+    detection::StrengthClass supportStrength = detection::StrengthClass::Unknown;
     bool audioOverflowDuringProposal = false;
 };
 
@@ -68,16 +58,10 @@ PatternProposal makePatternProposalFromOccurrence(const detection::InspectedOccu
     const detection::Occurrence& source = occurrence.occurrence;
     proposal.valid = source.valid;
     proposal.shape = ProposalShape::SinglePulse;
-    proposal.lineageId = static_cast<uint32_t>(source.startSample & 0xFFFFFFFFu);
-    proposal.primarySlotIndex = 0;
     proposal.occurrenceCount = 1;
-    proposal.pulseCount = 1;
 
     switch (source.occurrenceType) {
         case detection::OccurrenceType::Frequency:
-            proposal.onsetSample = source.startSample;
-            proposal.peakSample = source.peakSample;
-            proposal.releaseSample = source.releaseSample;
             proposal.startMs = source.startMs;
             proposal.peakMs = source.peakMs;
             proposal.heardAtMs = source.releaseMs != 0 ? source.releaseMs : source.peakMs;
@@ -87,20 +71,11 @@ PatternProposal makePatternProposalFromOccurrence(const detection::InspectedOccu
             proposal.peakStrength = source.frequency.score;
             proposal.releaseStrength = source.frequency.contrast;
             proposal.ambientBaseline = 0.0f;
-            proposal.ampStrength = source.scalar.strengthClass;
-            proposal.scalarEvidence = source.scalar.evidence;
-            proposal.frequencyScoreStrength = source.frequency.scoreStrength;
-            proposal.frequencyContrastQuality = source.frequency.contrastQuality;
-            proposal.targetBandStrength = source.frequency.targetBandStrength;
-            proposal.firstPulseMs = proposal.acceptedMs;
-            proposal.lastPulseMs = proposal.acceptedMs;
+            proposal.supportStrength = source.scalar.strengthClass;
             break;
 
         case detection::OccurrenceType::Scalar: {
             const detection::TransientEvidence transient = scalarTransientEvidenceFromOccurrence(source);
-            proposal.onsetSample = source.startSample;
-            proposal.peakSample = source.peakSample;
-            proposal.releaseSample = source.releaseSample;
             proposal.startMs = source.startMs;
             proposal.peakMs = source.peakMs;
             proposal.heardAtMs = source.releaseMs != 0 ? source.releaseMs : source.startMs;
@@ -110,14 +85,8 @@ PatternProposal makePatternProposalFromOccurrence(const detection::InspectedOccu
             proposal.peakStrength = source.strength;
             proposal.releaseStrength = transient.releaseStrength;
             proposal.ambientBaseline = transient.ambientBaseline;
-            proposal.ampStrength = source.scalar.strengthClass;
-            proposal.scalarEvidence = source.scalar.evidence;
-            proposal.frequencyScoreStrength = source.frequency.scoreStrength;
-            proposal.frequencyContrastQuality = source.frequency.contrastQuality;
-            proposal.targetBandStrength = source.frequency.targetBandStrength;
+            proposal.supportStrength = source.scalar.strengthClass;
             proposal.audioOverflowDuringProposal = source.scalar.audioOverflowDuringOccurrence;
-            proposal.firstPulseMs = proposal.acceptedMs;
-            proposal.lastPulseMs = proposal.acceptedMs;
             break;
         }
 
@@ -132,32 +101,19 @@ PatternProposal makePatternProposalFromOccurrence(const detection::InspectedOccu
 
 detection::StrengthClass supportStrengthForTarget(const PatternProposal& proposal, detection::EvidenceTarget target) {
     switch (target) {
-        case detection::EvidenceTarget::AmpStrength:
-            return proposal.ampStrength;
-        case detection::EvidenceTarget::FrequencyScoreStrength:
-            return proposal.frequencyScoreStrength;
-        case detection::EvidenceTarget::FrequencyContrastQuality:
-            return proposal.frequencyContrastQuality;
-        case detection::EvidenceTarget::TargetBandStrength:
-            return proposal.targetBandStrength;
+        case detection::EvidenceTarget::SupportStrength:
+            return proposal.supportStrength;
         case detection::EvidenceTarget::None:
         default:
             return detection::StrengthClass::Unknown;
     }
 }
 
-detection::PatternResultKind resultKindFromProposal(const PatternProposal& proposal) {
-    if (proposal.shape == ProposalShape::PulseSequence || proposal.occurrenceCount > 1 || proposal.pulseCount > 1) {
-        if (proposal.maxGapMs > 0 && proposal.maxGapMs < 20UL) {
-            return detection::PatternResultKind::TooDense;
-        }
-        if (proposal.maxGapMs > 0 && proposal.maxGapMs > 250UL) {
-            return detection::PatternResultKind::Invalid;
-        }
-        return detection::PatternResultKind::Valid;
+ProposalEvaluationKind resultKindFromProposal(const PatternProposal& proposal) {
+    if (proposal.shape == ProposalShape::Unknown) {
+        return ProposalEvaluationKind::Invalid;
     }
-
-    return detection::PatternResultKind::Valid;
+    return ProposalEvaluationKind::Valid;
 }
 
 detection::PatternRejectReason supportRejectReason(detection::StrengthClass supportStrength) {
@@ -167,15 +123,7 @@ detection::PatternRejectReason supportRejectReason(detection::StrengthClass supp
 }
 
 void fillResultFromProposal(detection::PatternResult& result, const PatternProposal& proposal, unsigned long nowMs) {
-    result.processedAtMs = nowMs;
-    result.lineageId = proposal.lineageId;
-    result.primarySlotIndex = proposal.primarySlotIndex;
     result.occurrenceCount = proposal.occurrenceCount;
-    result.pulseCount = proposal.pulseCount;
-    result.firstPulseMs = proposal.firstPulseMs;
-    result.lastPulseMs = proposal.lastPulseMs;
-    result.minGapMs = proposal.minGapMs;
-    result.maxGapMs = proposal.maxGapMs;
     result.primaryStartMs = proposal.startMs;
     result.primaryPeakMs = proposal.peakMs;
     result.primaryHeardAtMs = proposal.heardAtMs;
@@ -186,22 +134,15 @@ void fillResultFromProposal(detection::PatternResult& result, const PatternPropo
     result.primaryReleaseStrength = proposal.releaseStrength;
     result.primaryAmbientBaseline = proposal.ambientBaseline;
     result.primaryAudioOverflow = proposal.audioOverflowDuringProposal;
-    result.ampStrength = proposal.ampStrength;
-    result.scalarEvidence = proposal.scalarEvidence;
-    result.frequencyScoreStrength = proposal.frequencyScoreStrength;
-    result.frequencyContrastQuality = proposal.frequencyContrastQuality;
-    result.targetBandStrength = proposal.targetBandStrength;
 }
 
 detection::PatternResult makeInvalidResult(const PatternProposal& proposal, unsigned long nowMs) {
     detection::PatternResult result = {};
     fillResultFromProposal(result, proposal, nowMs);
     result.type = detection::PatternType::Invalid;
-    result.kind = detection::PatternResultKind::Rejected;
     result.reasonCode = detection::PatternReasonCode::FromOccurrence;
     result.rejectReason = detection::PatternRejectReason::InvalidOccurrence;
     result.confidence = 0.0f;
-    result.ampStrength = detection::StrengthClass::Unknown;
     result.patternAccepted = false;
     result.patternMatched = false;
     result.supportMatched = false;
@@ -221,26 +162,21 @@ detection::PatternResult evaluateSinglePulse(
     result.supportMatched = true;
     result.valid = true;
     result.type = detection::PatternType::SinglePulse;
-    result.kind = resultKindFromProposal(proposal);
     result.reasonCode = detection::PatternReasonCode::FromOccurrence;
     result.rejectReason = detection::PatternRejectReason::None;
     result.supportMatched = true;
+    const ProposalEvaluationKind proposalKind = resultKindFromProposal(proposal);
     if (config.requireSupportForAcceptance) {
         const detection::StrengthClass supportStrength = supportStrengthForTarget(proposal, config.requiredSupportTarget);
         result.supportMatched = supportStrength >= config.minimumSupportStrength;
     }
     if (!result.supportMatched) {
-        result.kind = detection::PatternResultKind::Rejected;
         result.rejectReason = supportRejectReason(supportStrengthForTarget(proposal, config.requiredSupportTarget));
         result.reasonCode = detection::PatternReasonCode::UnsupportedPattern;
     }
     result.valid = result.patternMatched && result.supportMatched;
     result.confidence = result.valid ? 1.0f : 0.0f;
-    if (result.kind == detection::PatternResultKind::TooDense) {
-        result.type = detection::PatternType::Ambiguous;
-        result.valid = false;
-        result.rejectReason = detection::PatternRejectReason::UnexpectedTiming;
-    } else if (result.kind == detection::PatternResultKind::Invalid) {
+    if (proposalKind == ProposalEvaluationKind::Invalid) {
         result.type = detection::PatternType::Invalid;
         result.valid = false;
         result.rejectReason = detection::PatternRejectReason::UnexpectedTiming;

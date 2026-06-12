@@ -169,8 +169,8 @@ inline const char* analyzerStageName(AnalyzerStage value) {
 
 inline const char* supportTargetDisplayName(detection::EvidenceTarget value, bool supportGateEnabled) {
     switch (value) {
-        case detection::EvidenceTarget::AmpStrength:
-            return supportGateEnabled ? "AmpStrength" : "diagnostic_only:AmpStrength";
+        case detection::EvidenceTarget::SupportStrength:
+            return supportGateEnabled ? "SupportStrength" : "diagnostic_only:SupportStrength";
         case detection::EvidenceTarget::FrequencyScoreStrength:
             return supportGateEnabled ? "FrequencyScoreStrength" : "diagnostic_only:FrequencyScoreStrength";
         case detection::EvidenceTarget::FrequencyContrastQuality:
@@ -215,7 +215,7 @@ struct AnalyzerPatternObservation {
     float confidence = 0.0f;
     long dtMs = -1;
 
-    const char* ampStrength = "unknown";
+    const char* supportStrength = "unknown";
     const char* reason = "none";
     const char* rejectReason = "none";
 
@@ -291,8 +291,8 @@ struct AnalyzerProfileDetail {
     size_t inspectionModuleCount = 0;
     const char* evidenceTargets = "unknown";
     const char* requiredSupportTarget = "unknown";
-    const char* ampStrength = "unknown";
-    const char* ampStrengthMin = "medium";
+    const char* supportGate = "unknown";
+    const char* supportStrengthMin = "medium";
     bool requireSupportForAcceptance = true;
     detection::ScalarInspectionObservation scalarObservation = {};
     size_t inspectionObservationCount = 0;

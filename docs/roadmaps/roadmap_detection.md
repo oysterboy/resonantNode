@@ -48,6 +48,25 @@ occurrences, not only one occurrence at a time:
 - do not reintroduce public `PatternCandidate`, `PatternAssembler`, or
   `PatternRules` boundaries
 
+### 3.4 Inspection target / payload split
+
+Status: planned
+
+Do now:
+
+- keep one simple selector for "what must be inspected for acceptance"
+- keep source-specific payload fields inside the module config / payload type
+- do not split the current path unless a second payload shape is actually needed
+
+Roadmap later:
+
+- split the acceptance target from the payload kind if modules start producing
+  materially different payload shapes
+- keep the target selector compact and acceptance-focused
+- model payload typing separately only when it becomes necessary
+- accept multiple required support modules for acceptance when the matcher
+  needs more than one gate
+
 ---
 
 ## Phase 4 - Legacy Removal

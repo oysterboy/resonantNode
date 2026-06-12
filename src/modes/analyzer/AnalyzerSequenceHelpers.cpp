@@ -261,7 +261,11 @@ const char* AnalyzerApp::sequenceTrialClassificationName(const char* result, lon
     return result;
 }
 
-void AnalyzerApp::handleSequencePending(const detection::PatternResult& patternResult, const detection::FrequencyBandMeasurementPacket* liveFrequencyMeasurementPacket) {
+void AnalyzerApp::handleSequencePending(
+    const detection::PatternResult& patternResult,
+    const detection::InspectedOccurrence* inspectedOccurrence,
+    const detection::FrequencyBandMeasurementPacket* liveFrequencyMeasurementPacket
+) {
     if (!_sequenceTest.active || _sequenceTest.currentTrial == 0) {
         return;
     }
@@ -346,6 +350,9 @@ void AnalyzerApp::handleSequencePending(const detection::PatternResult& patternR
     if (!patternResult.valid) {
         if (_sequenceTest.currentTrialRejected == 0) {
             _sequenceTest.firstRejectedInWindow = patternResult;
+            if (inspectedOccurrence != nullptr && inspectedOccurrence->occurrence.present) {
+                _sequenceTest.firstRejectedInspectedOccurrence = *inspectedOccurrence;
+            }
         }
         _sequenceTest.rejectedInWindowCount++;
         _sequenceTest.currentTrialRejected++;
@@ -357,6 +364,9 @@ void AnalyzerApp::handleSequencePending(const detection::PatternResult& patternR
     if (!hadPrimaryBeforePending) {
         _sequenceTest.primaryValidPatternCaptured = true;
         _sequenceTest.primaryValidPattern = patternResult;
+        if (inspectedOccurrence != nullptr && inspectedOccurrence->occurrence.present) {
+            _sequenceTest.primaryValidInspectedOccurrence = *inspectedOccurrence;
+        }
         _sequenceTest.primaryValidPatternDtMs = dtFromTriggerMs;
     }
 

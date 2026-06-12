@@ -4,23 +4,6 @@
 
 namespace detection {
 
-inline const char* patternResultKindName(PatternResultKind kind) {
-    switch (kind) {
-        case PatternResultKind::Unknown:
-            return "unknown";
-        case PatternResultKind::Valid:
-            return "valid";
-        case PatternResultKind::Invalid:
-            return "invalid";
-        case PatternResultKind::TooDense:
-            return "too_dense";
-        case PatternResultKind::Rejected:
-            return "rejected";
-    }
-
-    return "unknown";
-}
-
 inline const char* patternTypeName(PatternType type) {
     switch (type) {
         case PatternType::None:

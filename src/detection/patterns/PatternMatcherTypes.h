@@ -9,7 +9,7 @@ namespace detection {
 
 struct PatternMatcherConfig {
     bool requireSupportForAcceptance = true;
-    EvidenceTarget requiredSupportTarget = EvidenceTarget::AmpStrength;
+    EvidenceTarget requiredSupportTarget = EvidenceTarget::SupportStrength;
     StrengthClass minimumSupportStrength = StrengthClass::Medium;
 };
 

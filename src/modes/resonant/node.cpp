@@ -65,8 +65,8 @@ uint32_t sampleOffsetUs(uint32_t sampleOffset, uint32_t sampleRateHz) {
 
 const char* evidenceTargetName(detection::EvidenceTarget value) {
     switch (value) {
-        case detection::EvidenceTarget::AmpStrength:
-            return "AmpStrength";
+        case detection::EvidenceTarget::SupportStrength:
+            return "SupportStrength";
         case detection::EvidenceTarget::FrequencyScoreStrength:
             return "FrequencyScoreStrength";
         case detection::EvidenceTarget::FrequencyContrastQuality:
@@ -87,9 +87,9 @@ const char* inspectionPlanName(const detection::InspectionPlan& plan) {
                 return "frequency_score";
             case detection::EvidenceTarget::TargetBandStrength:
                 return "target_band";
-            case detection::EvidenceTarget::AmpStrength:
+            case detection::EvidenceTarget::SupportStrength:
             default:
-                return "amp_strength";
+                return "support_strength";
         }
     }
     if (plan.count == 2 &&

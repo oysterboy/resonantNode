@@ -248,9 +248,6 @@ void DetectionRuntime::drainDetectors(unsigned long nowMs) {
 void DetectionRuntime::drainPatternMatcher(unsigned long nowMs) {
     PatternResult result = {};
     while (_patternMatcher.popPatternResult(nowMs, result)) {
-        if (_lastInspectedOccurrence.occurrence.present) {
-            result.inspectedOccurrence = _lastInspectedOccurrence;
-        }
         _fieldStateTracker.observePatternResult(result, nowMs);
         capturePipelineResult(result, &_lastOccurrence, &_lastInspectedOccurrence, nowMs);
         pushPatternResult(result);
@@ -285,11 +282,6 @@ void DetectionRuntime::capturePipelineResult(
     }
     if (inspectedOccurrence != nullptr && inspectedOccurrence->occurrence.present) {
         _latestPipelineResult.inspectedOccurrence = *inspectedOccurrence;
-    } else if (result.inspectedOccurrence.occurrence.present) {
-        _latestPipelineResult.inspectedOccurrence = result.inspectedOccurrence;
-    }
-    if (_latestPipelineResult.inspectedOccurrence.occurrence.present) {
-        _latestPipelineResult.pattern.inspectedOccurrence = _latestPipelineResult.inspectedOccurrence;
     }
     _latestPipelineResult.hasField = true;
     _latestPipelineResult.field = _fieldStateTracker.state();

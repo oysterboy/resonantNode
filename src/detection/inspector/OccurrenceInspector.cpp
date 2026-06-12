@@ -32,12 +32,12 @@ void fillScalarObservation(
         case detection::ScalarInspectionMode::PeakAbsolute:
             classificationValue = peak;
             supportBasis = detection::ScalarInspectionBasis::PeakAbsolute;
-            strength = available ? classifyAmpStrength(classificationValue, available, config.strength) : detection::StrengthClass::Unknown;
+            strength = available ? classifySupportStrength(classificationValue, available, config.supportStrength) : detection::StrengthClass::Unknown;
             break;
         case detection::ScalarInspectionMode::MeanAbsolute:
             classificationValue = mean;
             supportBasis = detection::ScalarInspectionBasis::MeanAbsolute;
-            strength = available ? classifyAmpStrength(classificationValue, available, config.strength) : detection::StrengthClass::Unknown;
+            strength = available ? classifySupportStrength(classificationValue, available, config.supportStrength) : detection::StrengthClass::Unknown;
             break;
         case detection::ScalarInspectionMode::SustainedAboveThreshold:
             classificationValue = peak;
@@ -48,18 +48,18 @@ void fillScalarObservation(
                     : static_cast<size_t>(config.minSustainedMs > 0 ? config.minSustainedMs : 1U);
                 const bool sustainedEnough = sustainedCount >= requiredSustainedCount;
                 classified = available && sustainedEnough;
-                strength = classified ? classifyAmpStrength(classificationValue, available, config.strength) : detection::StrengthClass::Unknown;
+                strength = classified ? classifySupportStrength(classificationValue, available, config.supportStrength) : detection::StrengthClass::Unknown;
             }
             break;
         case detection::ScalarInspectionMode::PeakCentered:
             classificationValue = mean;
             supportBasis = detection::ScalarInspectionBasis::PeakCenteredMean;
-            strength = available ? classifyAmpStrength(classificationValue, available, config.strength) : detection::StrengthClass::Unknown;
+            strength = available ? classifySupportStrength(classificationValue, available, config.supportStrength) : detection::StrengthClass::Unknown;
             break;
         case detection::ScalarInspectionMode::PeakCenteredLift:
             classificationValue = peak - mean;
             supportBasis = detection::ScalarInspectionBasis::PeakCenteredLift;
-            strength = available ? classifyAmpStrength(classificationValue, available, config.strength) : detection::StrengthClass::Unknown;
+            strength = available ? classifySupportStrength(classificationValue, available, config.supportStrength) : detection::StrengthClass::Unknown;
             break;
     }
 
@@ -149,7 +149,7 @@ void OccurrenceInspector::inspectAcceptedOccurrence(
     }
 }
 
-void OccurrenceInspector::annotateAmpStrength(
+void OccurrenceInspector::annotateSupportStrength(
     InspectedOccurrence& out,
     const Occurrence& occurrence,
     const FeatureHistory* featureHistory,
@@ -186,7 +186,7 @@ void OccurrenceInspector::annotateAmpStrength(
     ScalarWindow preFloorWindow = {};
     if (config.enabled && featureHistory != nullptr) {
         const float sustainedThreshold = config.mode == detection::ScalarInspectionMode::SustainedAboveThreshold
-            ? config.strength.weakPeakThreshold
+            ? config.supportStrength.weakPeakThreshold
             : 0.0f;
         const ScalarWindow scalarWindow = featureHistory->getWindow(config.stream, startMs, endMs, sustainedThreshold);
         preFloorWindow = featureHistory->getWindow(config.stream, preFloorStartMs, preFloorEndMs, 0.0f);
@@ -205,7 +205,7 @@ void OccurrenceInspector::annotateAmpStrength(
         out.scalarObservations[out.scalarObservationCount++] = observation;
     }
 
-    if (target == detection::EvidenceTarget::AmpStrength) {
+    if (target == detection::EvidenceTarget::SupportStrength) {
         out.occurrence.scalar.present = observation.available;
         out.occurrence.scalar.value = observation.available ? observation.classificationValue : 0.0f;
         out.occurrence.scalar.baseline = observation.available ? observation.mean : 0.0f;
@@ -233,11 +233,11 @@ void OccurrenceInspector::runInspectionModule(
 ) const {
     switch (module.kind) {
     case InspectionModuleKind::ScalarFeatureStrength:
-            if (module.target == EvidenceTarget::AmpStrength ||
+            if (module.target == EvidenceTarget::SupportStrength ||
                 module.target == EvidenceTarget::FrequencyScoreStrength ||
                 module.target == EvidenceTarget::FrequencyContrastQuality ||
                 module.target == EvidenceTarget::TargetBandStrength) {
-                annotateAmpStrength(out, occurrence, featureHistory, module.scalar, module.target);
+                annotateSupportStrength(out, occurrence, featureHistory, module.scalar, module.target);
             }
             break;
         case InspectionModuleKind::None:

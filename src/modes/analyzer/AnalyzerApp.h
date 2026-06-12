@@ -302,9 +302,11 @@ private:
         unsigned long currentTrialPatternDetectedMs = 0;
         bool primaryValidPatternCaptured = false;
         detection::PatternResult primaryValidPattern = {};
+        detection::InspectedOccurrence primaryValidInspectedOccurrence = {};
         long primaryValidPatternDtMs = -1;
         unsigned long rejectedInWindowCount = 0;
         detection::PatternResult firstRejectedInWindow = {};
+        detection::InspectedOccurrence firstRejectedInspectedOccurrence = {};
         bool currentTrialFinalized = false;
         unsigned long currentTrialUnexpected = 0;
         unsigned long currentTrialRejected = 0;
@@ -402,7 +404,11 @@ private:
     const char* activeAnalyzerProfileName() const;
     AnalyzerReport* sequenceReportScratch();
     void buildSequenceAnalyzerReport(AnalyzerReport& report, unsigned long trialNumber, AnalyzerResult result, long dtMs, long durMs, float strength, bool audioOverflow, unsigned long duplicateCount, const SequenceTest::TrialDiagnostics& diagnostics) const;
-    void handleSequencePending(const PatternResult& patternResult, const detection::FrequencyBandMeasurementPacket* liveFrequencyMeasurementPacket = nullptr);
+    void handleSequencePending(
+        const PatternResult& patternResult,
+        const detection::InspectedOccurrence* inspectedOccurrence = nullptr,
+        const detection::FrequencyBandMeasurementPacket* liveFrequencyMeasurementPacket = nullptr
+    );
     void updateSequenceAmbientStats(unsigned long nowMs);
     void updateCleanSequenceSummary(const AnalyzerReport& report);
 

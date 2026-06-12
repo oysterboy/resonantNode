@@ -471,8 +471,8 @@ const char* strengthClassName(detection::StrengthClass value) {
 
 const char* evidenceTargetName(detection::EvidenceTarget value) {
     switch (value) {
-        case detection::EvidenceTarget::AmpStrength:
-            return "AmpStrength";
+        case detection::EvidenceTarget::SupportStrength:
+            return "SupportStrength";
         case detection::EvidenceTarget::FrequencyScoreStrength:
             return "FrequencyScoreStrength";
         case detection::EvidenceTarget::FrequencyContrastQuality:
@@ -493,9 +493,9 @@ const char* inspectionPlanName(const detection::InspectionPlan& plan) {
                 return "frequency_score";
             case detection::EvidenceTarget::TargetBandStrength:
                 return "target_band";
-            case detection::EvidenceTarget::AmpStrength:
+            case detection::EvidenceTarget::SupportStrength:
             default:
-                return "amp_strength";
+                return "support_strength";
         }
     }
     if (plan.count == 2 &&
@@ -838,8 +838,15 @@ void AnalyzerApp::update() {
                 _detection.observeFrame(audioSamplePacket, runtimeFrequencyMeasurementPacket, audioSamplePacket.timeMs);
                 detection::PatternResult runtimePatternResult = {};
                 while (_detection.popPatternResult(runtimePatternResult)) {
+                    const detection::DetectionPipelineResult& runtimePipelineResult = _detection.latestPipelineResult();
                     _sequenceTest.currentTrialDiagnostics.runtimePatternCaptured = true;
-                    handleSequencePending(runtimePatternResult, &runtimeFrequencyMeasurementPacket);
+                    handleSequencePending(
+                        runtimePatternResult,
+                        runtimePipelineResult.hasPattern && runtimePipelineResult.inspectedOccurrence.occurrence.present
+                            ? &runtimePipelineResult.inspectedOccurrence
+                            : nullptr,
+                        &runtimeFrequencyMeasurementPacket
+                    );
                 }
                 updateSequenceAmbientStats(audioSamplePacket.timeMs);
             }
@@ -985,8 +992,10 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
     // Latest-runtime fallbacks stay out of the canonical trial truth model.
     const detection::PatternResult* reportPatternResult = selectedTrialPatternResult;
     const detection::InspectedOccurrence* reportInspectedOccurrence = nullptr;
-    if (reportPatternResult != nullptr && reportPatternResult->inspectedOccurrence.occurrence.present) {
-        reportInspectedOccurrence = &reportPatternResult->inspectedOccurrence;
+    if (_sequenceTest.primaryValidPatternCaptured && _sequenceTest.primaryValidInspectedOccurrence.occurrence.present) {
+        reportInspectedOccurrence = &_sequenceTest.primaryValidInspectedOccurrence;
+    } else if (_sequenceTest.rejectedInWindowCount > 0 && _sequenceTest.firstRejectedInspectedOccurrence.occurrence.present) {
+        reportInspectedOccurrence = &_sequenceTest.firstRejectedInspectedOccurrence;
     }
     const detection::FieldState* runtimeFieldState = actualPipelineAvailable && pipelineResult->hasField
         ? &pipelineResult->field
@@ -1044,7 +1053,9 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
         pattern.behaviorEligible = pattern.accepted;
         pattern.confidence = trialHasPipelineEvidence ? reportPatternResult->confidence : 0.0f;
         pattern.dtMs = report.classification.dtMs;
-        pattern.ampStrength = trialHasPipelineEvidence ? strengthClassName(reportPatternResult->ampStrength) : "unknown";
+        pattern.supportStrength = trialHasPipelineEvidence && reportInspectedOccurrence != nullptr
+            ? strengthClassName(reportInspectedOccurrence->occurrence.scalar.strengthClass)
+            : "unknown";
         pattern.reason = trialHasPipelineEvidence ? detection::patternReasonName(reportPatternResult->reasonCode) : "none";
         pattern.rejectReason = trialHasPipelineEvidence ? detection::patternRejectReasonName(reportPatternResult->rejectReason) : "none";
         pattern.involvedOccurrences = trialHasPipelineEvidence ? reportPatternResult->occurrenceCount : 0U;
@@ -1109,9 +1120,9 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
                 report.inspection.moduleTarget = "target_band";
                 report.inspection.moduleStrengthClass = strengthClassName(reportInspectedOccurrence->occurrence.frequency.targetBandStrength);
                 break;
-            case detection::EvidenceTarget::AmpStrength:
+            case detection::EvidenceTarget::SupportStrength:
             default:
-                report.inspection.moduleTarget = "amp_strength";
+                report.inspection.moduleTarget = "support_strength";
                 report.inspection.moduleStrengthClass = strengthClassName(reportInspectedOccurrence->occurrence.scalar.strengthClass);
                 break;
         }
@@ -1151,8 +1162,8 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
         selectedProfile.patternMatcherConfig.requiredSupportTarget,
         selectedProfile.patternMatcherConfig.requireSupportForAcceptance
     );
-    report.profileDetail.ampStrength = selectedProfile.patternMatcherConfig.requireSupportForAcceptance ? "enabled" : "disabled";
-    report.profileDetail.ampStrengthMin = strengthClassName(selectedProfile.patternMatcherConfig.minimumSupportStrength);
+    report.profileDetail.supportGate = selectedProfile.patternMatcherConfig.requireSupportForAcceptance ? "enabled" : "disabled";
+    report.profileDetail.supportStrengthMin = strengthClassName(selectedProfile.patternMatcherConfig.minimumSupportStrength);
     report.profileDetail.requireSupportForAcceptance = selectedProfile.patternMatcherConfig.requireSupportForAcceptance;
     if (report.occurrences.present &&
         reportInspectedOccurrence != nullptr &&

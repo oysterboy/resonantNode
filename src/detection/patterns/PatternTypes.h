@@ -38,13 +38,4 @@ enum class PatternRejectReason {
     UnexpectedNoise,
 };
 
-// Result kinds describe the rule-level outcome.
-enum class PatternResultKind {
-    Unknown,
-    Valid,
-    Invalid,
-    TooDense,
-    Rejected,
-};
-
 } // namespace detection

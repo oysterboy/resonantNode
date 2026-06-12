@@ -70,14 +70,14 @@ inline const char* scalarInspectionModeName(ScalarInspectionMode mode) {
     return "unknown";
 }
 
-// Shared thresholds for amplitude strength classification.
-struct AmpStrengthConfig {
+// Shared thresholds for support strength classification.
+struct SupportStrengthConfig {
     float strongPeakThreshold = 60.0f;
     float mediumPeakThreshold = 30.0f;
     float weakPeakThreshold = 15.0f;
 };
 
-inline StrengthClass classifyAmpStrength(float peak, bool evidenceValid, const AmpStrengthConfig& config) {
+inline StrengthClass classifySupportStrength(float peak, bool evidenceValid, const SupportStrengthConfig& config) {
     if (!evidenceValid) {
         return StrengthClass::Unknown;
     }
@@ -104,7 +104,7 @@ enum class InspectionModuleKind {
 
 enum class EvidenceTarget {
     None,
-    AmpStrength,
+    SupportStrength,
     FrequencyScoreStrength,
     FrequencyContrastQuality,
     TargetBandStrength,
@@ -114,7 +114,7 @@ struct ScalarFeatureInspectionConfig {
     bool enabled = true;
     FeatureStreamId stream = FeatureStreamId::AmpEnvelope;
     ScalarInspectionMode mode = ScalarInspectionMode::PeakAbsolute;
-    AmpStrengthConfig strength = {};
+    SupportStrengthConfig supportStrength = {};
     uint32_t windowPreMs = 20;
     uint32_t windowPostMs = 120;
     uint32_t preFloorWindowPreMs = 250;

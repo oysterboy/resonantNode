@@ -25,7 +25,7 @@ Common enum / selector types used in this file:
 DetectionProfileKind { TonalPulse, Amp, ChirpExperimental, ScalarFreqExperimental }
 DetectorSelection { FrequencyMatch, ScalarTransient }
 FeatureStreamId { AmpEnvelope, FrequencyScore, FrequencyContrast, AmbientFloor }
-EvidenceTarget { None, AmpStrength, FrequencyScoreStrength, FrequencyContrastQuality, TargetBandStrength }
+EvidenceTarget { None, SupportStrength, FrequencyScoreStrength, FrequencyContrastQuality, TargetBandStrength }
 StrengthClass { Unknown, None, Weak, Medium, Strong }
 InspectionModuleKind { None, ScalarFeatureStrength }
 ```
@@ -121,12 +121,12 @@ inline DetectionProfile makeTonalPulseProfile() {
 
     profile.inspectionPlan = {};
     profile.inspectionPlan.modules[0].kind = InspectionModuleKind::ScalarFeatureStrength;
-    profile.inspectionPlan.modules[0].target = EvidenceTarget::AmpStrength;
+    profile.inspectionPlan.modules[0].target = EvidenceTarget::SupportStrength;
     profile.inspectionPlan.modules[0].scalar.stream = FeatureStreamId::AmpEnvelope;
     profile.inspectionPlan.modules[0].scalar.mode = ScalarInspectionMode::PeakCentered;
-    profile.inspectionPlan.modules[0].scalar.strength.strongPeakThreshold = 70.0f;
-    profile.inspectionPlan.modules[0].scalar.strength.mediumPeakThreshold = 40.0f;
-    profile.inspectionPlan.modules[0].scalar.strength.weakPeakThreshold = 20.0f;
+    profile.inspectionPlan.modules[0].scalar.supportStrength.strongPeakThreshold = 70.0f;
+    profile.inspectionPlan.modules[0].scalar.supportStrength.mediumPeakThreshold = 40.0f;
+    profile.inspectionPlan.modules[0].scalar.supportStrength.weakPeakThreshold = 20.0f;
     profile.inspectionPlan.modules[0].scalar.windowPreMs = 10;
     profile.inspectionPlan.modules[0].scalar.windowPostMs = 90;
     profile.inspectionPlan.modules[0].scalar.preFloorWindowPreMs = 250;
@@ -136,9 +136,9 @@ inline DetectionProfile makeTonalPulseProfile() {
     profile.inspectionPlan.modules[1].target = EvidenceTarget::FrequencyScoreStrength;
     profile.inspectionPlan.modules[1].scalar.stream = FeatureStreamId::FrequencyScore;
     profile.inspectionPlan.modules[1].scalar.mode = ScalarInspectionMode::PeakCentered;
-    profile.inspectionPlan.modules[1].scalar.strength.strongPeakThreshold = 25000.0f;
-    profile.inspectionPlan.modules[1].scalar.strength.mediumPeakThreshold = 15000.0f;
-    profile.inspectionPlan.modules[1].scalar.strength.weakPeakThreshold = 8000.0f;
+    profile.inspectionPlan.modules[1].scalar.supportStrength.strongPeakThreshold = 25000.0f;
+    profile.inspectionPlan.modules[1].scalar.supportStrength.mediumPeakThreshold = 15000.0f;
+    profile.inspectionPlan.modules[1].scalar.supportStrength.weakPeakThreshold = 8000.0f;
     profile.inspectionPlan.modules[1].scalar.windowPreMs = 10;
     profile.inspectionPlan.modules[1].scalar.windowPostMs = 90;
     profile.inspectionPlan.modules[1].scalar.preFloorWindowPreMs = 250;
@@ -148,9 +148,9 @@ inline DetectionProfile makeTonalPulseProfile() {
     profile.inspectionPlan.modules[2].target = EvidenceTarget::FrequencyContrastQuality;
     profile.inspectionPlan.modules[2].scalar.stream = FeatureStreamId::FrequencyContrast;
     profile.inspectionPlan.modules[2].scalar.mode = ScalarInspectionMode::PeakCentered;
-    profile.inspectionPlan.modules[2].scalar.strength.strongPeakThreshold = 80.0f;
-    profile.inspectionPlan.modules[2].scalar.strength.mediumPeakThreshold = 50.0f;
-    profile.inspectionPlan.modules[2].scalar.strength.weakPeakThreshold = 25.0f;
+    profile.inspectionPlan.modules[2].scalar.supportStrength.strongPeakThreshold = 80.0f;
+    profile.inspectionPlan.modules[2].scalar.supportStrength.mediumPeakThreshold = 50.0f;
+    profile.inspectionPlan.modules[2].scalar.supportStrength.weakPeakThreshold = 25.0f;
     profile.inspectionPlan.modules[2].scalar.windowPreMs = 10;
     profile.inspectionPlan.modules[2].scalar.windowPostMs = 90;
     profile.inspectionPlan.modules[2].scalar.preFloorWindowPreMs = 250;
@@ -159,7 +159,7 @@ inline DetectionProfile makeTonalPulseProfile() {
 
     // Pattern rules.
     profile.patternMatcherConfig.requireSupportForAcceptance = false;
-    profile.patternMatcherConfig.requiredSupportTarget = EvidenceTarget::AmpStrength;
+    profile.patternMatcherConfig.requiredSupportTarget = EvidenceTarget::SupportStrength;
     profile.patternMatcherConfig.minimumSupportStrength = StrengthClass::Medium;
 
     // Field-state windowing.
@@ -189,12 +189,12 @@ inline DetectionProfile makeAmpProfile() {
 
 
     profile.inspectionPlan.modules[0].kind = InspectionModuleKind::ScalarFeatureStrength;
-    profile.inspectionPlan.modules[0].target = EvidenceTarget::AmpStrength;
+    profile.inspectionPlan.modules[0].target = EvidenceTarget::SupportStrength;
     profile.inspectionPlan.modules[0].scalar.stream = FeatureStreamId::AmpEnvelope;
     profile.inspectionPlan.modules[0].scalar.mode = ScalarInspectionMode::PeakCentered;
-    profile.inspectionPlan.modules[0].scalar.strength.strongPeakThreshold = 70.0f;
-    profile.inspectionPlan.modules[0].scalar.strength.mediumPeakThreshold = 40.0f;
-    profile.inspectionPlan.modules[0].scalar.strength.weakPeakThreshold = 20.0f;
+    profile.inspectionPlan.modules[0].scalar.supportStrength.strongPeakThreshold = 70.0f;
+    profile.inspectionPlan.modules[0].scalar.supportStrength.mediumPeakThreshold = 40.0f;
+    profile.inspectionPlan.modules[0].scalar.supportStrength.weakPeakThreshold = 20.0f;
     profile.inspectionPlan.modules[0].scalar.windowPreMs = 10;
     profile.inspectionPlan.modules[0].scalar.windowPostMs = 90;
     profile.inspectionPlan.modules[0].scalar.preFloorWindowPreMs = 250;
@@ -204,9 +204,9 @@ inline DetectionProfile makeAmpProfile() {
     profile.inspectionPlan.modules[1].target = EvidenceTarget::FrequencyScoreStrength;
     profile.inspectionPlan.modules[1].scalar.stream = FeatureStreamId::FrequencyScore;
     profile.inspectionPlan.modules[1].scalar.mode = ScalarInspectionMode::PeakCentered;
-    profile.inspectionPlan.modules[1].scalar.strength.strongPeakThreshold = 25000.0f;
-    profile.inspectionPlan.modules[1].scalar.strength.mediumPeakThreshold = 15000.0f;
-    profile.inspectionPlan.modules[1].scalar.strength.weakPeakThreshold = 8000.0f;
+    profile.inspectionPlan.modules[1].scalar.supportStrength.strongPeakThreshold = 25000.0f;
+    profile.inspectionPlan.modules[1].scalar.supportStrength.mediumPeakThreshold = 15000.0f;
+    profile.inspectionPlan.modules[1].scalar.supportStrength.weakPeakThreshold = 8000.0f;
     profile.inspectionPlan.modules[1].scalar.windowPreMs = 10;
     profile.inspectionPlan.modules[1].scalar.windowPostMs = 90;
     profile.inspectionPlan.modules[1].scalar.preFloorWindowPreMs = 250;
@@ -217,9 +217,9 @@ inline DetectionProfile makeAmpProfile() {
     profile.inspectionPlan.modules[2].target = EvidenceTarget::FrequencyContrastQuality;
     profile.inspectionPlan.modules[2].scalar.stream = FeatureStreamId::FrequencyContrast;
     profile.inspectionPlan.modules[2].scalar.mode = ScalarInspectionMode::PeakCentered;
-    profile.inspectionPlan.modules[2].scalar.strength.strongPeakThreshold = 80.0f;
-    profile.inspectionPlan.modules[2].scalar.strength.mediumPeakThreshold = 50.0f;
-    profile.inspectionPlan.modules[2].scalar.strength.weakPeakThreshold = 25.0f;
+    profile.inspectionPlan.modules[2].scalar.supportStrength.strongPeakThreshold = 80.0f;
+    profile.inspectionPlan.modules[2].scalar.supportStrength.mediumPeakThreshold = 50.0f;
+    profile.inspectionPlan.modules[2].scalar.supportStrength.weakPeakThreshold = 25.0f;
     profile.inspectionPlan.modules[2].scalar.windowPreMs = 10;
     profile.inspectionPlan.modules[2].scalar.windowPostMs = 90;
     profile.inspectionPlan.modules[2].scalar.preFloorWindowPreMs = 250;
@@ -253,18 +253,18 @@ inline DetectionProfile makeChirpExperimentalProfile() {
 
     // Pattern rules.
     profile.patternMatcherConfig.requireSupportForAcceptance = false;
-    profile.patternMatcherConfig.requiredSupportTarget = EvidenceTarget::AmpStrength;
+    profile.patternMatcherConfig.requiredSupportTarget = EvidenceTarget::SupportStrength;
     profile.patternMatcherConfig.minimumSupportStrength = StrengthClass::Medium;
 
     // Inspector composition.
     profile.inspectionPlan = {};
     profile.inspectionPlan.modules[0].kind = InspectionModuleKind::ScalarFeatureStrength;
-    profile.inspectionPlan.modules[0].target = EvidenceTarget::AmpStrength;
+    profile.inspectionPlan.modules[0].target = EvidenceTarget::SupportStrength;
     profile.inspectionPlan.modules[0].scalar.stream = FeatureStreamId::AmpEnvelope;
     profile.inspectionPlan.modules[0].scalar.mode = ScalarInspectionMode::PeakAbsolute;
-    profile.inspectionPlan.modules[0].scalar.strength.strongPeakThreshold = 70.0f;
-    profile.inspectionPlan.modules[0].scalar.strength.mediumPeakThreshold = 40.0f;
-    profile.inspectionPlan.modules[0].scalar.strength.weakPeakThreshold = 20.0f;
+    profile.inspectionPlan.modules[0].scalar.supportStrength.strongPeakThreshold = 70.0f;
+    profile.inspectionPlan.modules[0].scalar.supportStrength.mediumPeakThreshold = 40.0f;
+    profile.inspectionPlan.modules[0].scalar.supportStrength.weakPeakThreshold = 20.0f;
     profile.inspectionPlan.modules[0].scalar.windowPreMs = 20;
     profile.inspectionPlan.modules[0].scalar.windowPostMs = 120;
     profile.inspectionPlan.modules[0].scalar.preFloorWindowPreMs = 250;
@@ -295,9 +295,9 @@ inline DetectionProfile makeScalarFreqExperimentalProfile() {
     profile.inspectionPlan.modules[0].target = EvidenceTarget::FrequencyScoreStrength;
     profile.inspectionPlan.modules[0].scalar.stream = FeatureStreamId::FrequencyScore;
     profile.inspectionPlan.modules[0].scalar.mode = ScalarInspectionMode::PeakCentered;
-    profile.inspectionPlan.modules[0].scalar.strength.strongPeakThreshold = 25000.0f;
-    profile.inspectionPlan.modules[0].scalar.strength.mediumPeakThreshold = 15000.0f;
-    profile.inspectionPlan.modules[0].scalar.strength.weakPeakThreshold = 8000.0f;
+    profile.inspectionPlan.modules[0].scalar.supportStrength.strongPeakThreshold = 25000.0f;
+    profile.inspectionPlan.modules[0].scalar.supportStrength.mediumPeakThreshold = 15000.0f;
+    profile.inspectionPlan.modules[0].scalar.supportStrength.weakPeakThreshold = 8000.0f;
     profile.inspectionPlan.modules[0].scalar.windowPreMs = 10;
     profile.inspectionPlan.modules[0].scalar.windowPostMs = 90;
     profile.inspectionPlan.modules[0].scalar.preFloorWindowPreMs = 250;
@@ -307,9 +307,9 @@ inline DetectionProfile makeScalarFreqExperimentalProfile() {
     profile.inspectionPlan.modules[1].target = EvidenceTarget::FrequencyContrastQuality;
     profile.inspectionPlan.modules[1].scalar.stream = FeatureStreamId::FrequencyContrast;
     profile.inspectionPlan.modules[1].scalar.mode = ScalarInspectionMode::PeakCentered;
-    profile.inspectionPlan.modules[1].scalar.strength.strongPeakThreshold = 80.0f;
-    profile.inspectionPlan.modules[1].scalar.strength.mediumPeakThreshold = 50.0f;
-    profile.inspectionPlan.modules[1].scalar.strength.weakPeakThreshold = 25.0f;
+    profile.inspectionPlan.modules[1].scalar.supportStrength.strongPeakThreshold = 80.0f;
+    profile.inspectionPlan.modules[1].scalar.supportStrength.mediumPeakThreshold = 50.0f;
+    profile.inspectionPlan.modules[1].scalar.supportStrength.weakPeakThreshold = 25.0f;
     profile.inspectionPlan.modules[1].scalar.windowPreMs = 10;
     profile.inspectionPlan.modules[1].scalar.windowPostMs = 90;
     profile.inspectionPlan.modules[1].scalar.preFloorWindowPreMs = 250;

@@ -652,10 +652,26 @@ AnalyzerApp::AnalyzerApp(int inputPin)
       _audioSource(_i2sSource),
       _audioSignal(_audioSource),
       _freqBandStream() {
-    _frequencyEvidenceTuning.attackScoreMin = detection::detectionProfileForKind(detection::DetectionProfileKind::TonalPulseFreq).frequencyMatch.attackScoreMin;
-    _frequencyEvidenceTuning.releaseScoreMin = detection::detectionProfileForKind(detection::DetectionProfileKind::TonalPulseFreq).frequencyMatch.releaseScoreMin;
-    _frequencyEvidenceTuning.attackContrastMin = detection::detectionProfileForKind(detection::DetectionProfileKind::TonalPulseFreq).frequencyMatch.attackContrastMin;
-    _frequencyEvidenceTuning.releaseContrastMin = detection::detectionProfileForKind(detection::DetectionProfileKind::TonalPulseFreq).frequencyMatch.releaseContrastMin;
+    //PARAM TUNING TEMPORARY
+    const detection::DetectionProfile& freqProfile = detection::detectionProfileForKind(detection::DetectionProfileKind::TonalPulseFreq);
+    _analyzerTuning.frequencyMatch.attackScoreMin = freqProfile.frequencyMatch.attackScoreMin;
+    _analyzerTuning.frequencyMatch.releaseScoreMin = freqProfile.frequencyMatch.releaseScoreMin;
+    _analyzerTuning.frequencyMatch.attackContrastMin = freqProfile.frequencyMatch.attackContrastMin;
+    _analyzerTuning.frequencyMatch.releaseContrastMin = freqProfile.frequencyMatch.releaseContrastMin;
+    _analyzerTuning.scalarTransient = detection::detectionProfileForKind(detection::DetectionProfileKind::TonalPulseScalar).scalarTransient;
+}
+
+detection::DetectionProfile AnalyzerApp::effectiveSequenceProfile() const {
+    //PARAM TUNING TEMPORARY
+    detection::DetectionProfile profile = detection::detectionProfileForKind(_sequenceTest.profileKind);
+    profile.frequencyMatch.attackScoreMin = _analyzerTuning.frequencyMatch.attackScoreMin;
+    profile.frequencyMatch.releaseScoreMin = _analyzerTuning.frequencyMatch.releaseScoreMin;
+    profile.frequencyMatch.attackContrastMin = _analyzerTuning.frequencyMatch.attackContrastMin;
+    profile.frequencyMatch.releaseContrastMin = _analyzerTuning.frequencyMatch.releaseContrastMin;
+    if (_sequenceTest.profileKind == detection::DetectionProfileKind::TonalPulseScalar) {
+        profile.scalarTransient = _analyzerTuning.scalarTransient;
+    }
+    return profile;
 }
 
 void AnalyzerApp::begin() {

@@ -24,7 +24,7 @@ Common enum / selector types used in this file:
 ```text
 DetectionProfileKind { TonalPulseFreq, AmpExperimental, TonalPulseScalar }
 DetectorSelection { FrequencyMatch, ScalarTransient }
-FeatureStreamId { AmpEnvelope, FrequencyScore, FrequencyContrast, AmbientFloor }
+FeatureStreamId { AmpEnvelope, FrequencyScore, FrequencyContrast }
 EvidenceTarget { None, SupportStrength, FrequencyScoreStrength, FrequencyContrastQuality, TargetBandStrength }
 StrengthClass { Unknown, None, Weak, Medium, Strong }
 InspectionModuleKind { None, ScalarFeatureStrength }
@@ -101,6 +101,7 @@ struct DetectionProfile {
 };
 
 // Actual profiles. These are the concrete profile definitions used at runtime.
+//PARAM TUNING TEMPORARY
 
 inline DetectionProfile makeTonalPulseScalarProfile() {
     DetectionProfile profile;
@@ -239,7 +240,7 @@ inline DetectionProfile makeAmpExperimentalProfile() {
     profile.detectorSelection = DetectorSelection::ScalarTransient;
     profile.scalarTransient.observedStream = FeatureStreamId::AmpEnvelope;
     // Lab-calibrated AMP thresholds: the default scalar detector thresholds are
-    // too high for the current AmpEnvelope magnitude range on analyzer runs.
+    // too high for the current scalar magnitude range on analyzer runs.
     profile.scalarTransient.onsetDetectionThreshold = 23.0f;
     profile.scalarTransient.onsetReleaseThreshold = 20.0f;
     profile.scalarTransient.cooldownAfterOnsetMs = 300;

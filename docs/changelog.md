@@ -1,3 +1,24 @@
+# 2026-06-12 - Analyzer tuning surface PAR-001
+
+### Context
+
+Analyzer sequence runs needed a small, module-owned tuning surface for the
+`TonalPulseScalar` profile, without jumping to the full ParamRegistry design.
+
+### Changed
+
+- added `AnalyzerTuning` as the analyzer-owned runtime tuning surface
+- wired `PARAM` parsing to update scalar transient tuning values
+- merged the active sequence profile from the tuning surface before runtime
+- printed scalar profile parameters in the sequence header and `SEQ` report
+- kept `AmpEnvelope` as the internal stream name while showing `Scalar` in analyzer-facing text
+
+### Verification
+
+- `platformio run -e esp32dev-analyzer` passes
+
+---
+
 # 2026-05-26 - 5-node slow circle stabilization
 
 ### Context

@@ -88,7 +88,7 @@ void AnalyzerApp::startSequenceTest(const PendingSequenceStart& pending) {
     _sequenceTest.showDetails = showDetails;
     _sequenceTest.externalEmitter = externalEmitter;
     _sequenceTest.profileKind = profileKind;
-    const detection::DetectionProfile& selectedProfile = detection::detectionProfileForKind(_sequenceTest.profileKind);
+    const detection::DetectionProfile selectedProfile = effectiveSequenceProfile();
     _sequenceTest.outputConfig = _seqOutputConfig;
     _sequenceTest.diagMode = sequenceDiagModeFromOutputWhen(_sequenceTest.outputConfig.when);
     _sequenceTest.progressLineStarted = false;
@@ -275,6 +275,23 @@ void AnalyzerApp::startSequenceTest(const PendingSequenceStart& pending) {
         Serial.print(selectedProfile.frequencyMatch.attackContrastMin, 1);
         Serial.print(" support_release_contrast_min=");
         Serial.print(selectedProfile.frequencyMatch.releaseContrastMin, 1);
+        //PARAM TUNING TEMPORARY
+        Serial.print(" scalar_observed_stream=");
+        Serial.print(scalarObservedStreamDisplayName(selectedProfile.scalarTransient.observedStream));
+        Serial.print(" scalar_onset_threshold=");
+        Serial.print(selectedProfile.scalarTransient.onsetDetectionThreshold, 1);
+        Serial.print(" scalar_release_threshold=");
+        Serial.print(selectedProfile.scalarTransient.onsetReleaseThreshold, 1);
+        Serial.print(" scalar_cooldown_ms=");
+        Serial.print(selectedProfile.scalarTransient.cooldownAfterOnsetMs);
+        Serial.print(" scalar_min_duration_ms=");
+        Serial.print(selectedProfile.scalarTransient.minTransientDurationMs);
+        Serial.print(" scalar_max_duration_ms=");
+        Serial.print(selectedProfile.scalarTransient.maxTransientDurationMs);
+        Serial.print(" scalar_min_peak_strength=");
+        Serial.print(selectedProfile.scalarTransient.minTransientPeakStrength, 1);
+        Serial.print(" scalar_release_debounce_ms=");
+        Serial.print(selectedProfile.scalarTransient.releaseDebounceMs);
         Serial.print(" mode=");
         Serial.print(_sequenceTest.externalEmitter ? "OBS" : "SEQ");
         Serial.print(" test=");

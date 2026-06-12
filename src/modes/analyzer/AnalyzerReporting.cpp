@@ -426,18 +426,40 @@ void AnalyzerApp::printSequenceExplainCanonical(const AnalyzerReport& report) co
 }
 
 void AnalyzerApp::printDetectionParameters() const {
+    //PARAM TUNING TEMPORARY
+    const detection::DetectionProfile activeProfile = effectiveSequenceProfile();
+
     Serial.print("SEQ tuning supportScore=");
-    Serial.print(_frequencyEvidenceTuning.attackScoreMin, 1);
+    Serial.print(_analyzerTuning.frequencyMatch.attackScoreMin, 1);
     Serial.print(" supportReleaseScore=");
-    Serial.print(_frequencyEvidenceTuning.releaseScoreMin, 1);
+    Serial.print(_analyzerTuning.frequencyMatch.releaseScoreMin, 1);
     Serial.print(" supportContrast=");
-    Serial.print(_frequencyEvidenceTuning.attackContrastMin, 1);
+    Serial.print(_analyzerTuning.frequencyMatch.attackContrastMin, 1);
     Serial.print(" supportReleaseContrast=");
-    Serial.print(_frequencyEvidenceTuning.releaseContrastMin, 1);
+    Serial.print(_analyzerTuning.frequencyMatch.releaseContrastMin, 1);
     Serial.print(" transientDetector=fixed");
     Serial.println();
 
-    const detection::DetectionProfile& selectedProfile = detection::detectionProfileForKind(_sequenceTest.profileKind);
+    const detection::ScalarTransientConfig& scalar = activeProfile.scalarTransient;
+    Serial.print("SEQ scalar:");
+    Serial.print(" observed_stream=");
+    Serial.print(scalarObservedStreamDisplayName(scalar.observedStream));
+    Serial.print(" onset_threshold=");
+    Serial.print(scalar.onsetDetectionThreshold, 1);
+    Serial.print(" release_threshold=");
+    Serial.print(scalar.onsetReleaseThreshold, 1);
+    Serial.print(" cooldown_ms=");
+    Serial.print(scalar.cooldownAfterOnsetMs);
+    Serial.print(" min_duration_ms=");
+    Serial.print(scalar.minTransientDurationMs);
+    Serial.print(" max_duration_ms=");
+    Serial.print(scalar.maxTransientDurationMs);
+    Serial.print(" min_peak_strength=");
+    Serial.print(scalar.minTransientPeakStrength, 1);
+    Serial.print(" release_debounce_ms=");
+    Serial.println(scalar.releaseDebounceMs);
+
+    const detection::DetectionProfile& selectedProfile = activeProfile;
     Serial.print("SEQ support:");
     Serial.print(" min_duration_ms=");
     Serial.print(selectedProfile.frequencyMatch.minDurationMs);

@@ -62,6 +62,12 @@ public:
         unsigned long frequencyUpdateEverySamples = 4;
     };
 
+    //PARAM TUNING TEMPORARY
+    struct AnalyzerTuning {
+        FrequencyMatchEvaluation::Values frequencyMatch = {};
+        detection::ScalarTransientConfig scalarTransient = {};
+    };
+
     AnalyzerApp(int inputPin = 34);
 
     void begin();
@@ -403,6 +409,7 @@ private:
     void printSequenceSummaryClean() const;
     void printSequenceReport() const;
     const char* activeAnalyzerProfileName() const;
+    detection::DetectionProfile effectiveSequenceProfile() const;
     AnalyzerReport* sequenceReportScratch();
     void buildSequenceAnalyzerReport(AnalyzerReport& report, unsigned long trialNumber, AnalyzerResult result, long dtMs, long durMs, float strength, bool bufferOverrun, unsigned long duplicateCount, const SequenceTest::TrialDiagnostics& diagnostics) const;
     void handleSequencePending(
@@ -447,7 +454,7 @@ private:
     AudioSignal _audioSignal;
     mutable detection::DetectionRuntime _detection;
     FreqBandStream _freqBandStream;
-    FrequencyMatchEvaluation::Values _frequencyEvidenceTuning = {};
+    AnalyzerTuning _analyzerTuning = {};
     SeqOutputConfig _seqOutputConfig = {};
     PendingSequenceStart _pendingSequenceStart = {};
 

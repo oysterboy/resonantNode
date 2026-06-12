@@ -177,6 +177,21 @@ inline const char* supportTargetDisplayName(detection::EvidenceTarget value, boo
     }
 }
 
+//PARAM TUNING TEMPORARY
+inline const char* scalarObservedStreamDisplayName(detection::FeatureStreamId value) {
+    switch (value) {
+        case detection::FeatureStreamId::AmpEnvelope:
+            return "Scalar";
+        case detection::FeatureStreamId::FrequencyScore:
+            return "FrequencyScore";
+        case detection::FeatureStreamId::FrequencyContrast:
+            return "FrequencyContrast";
+        case detection::FeatureStreamId::Unknown:
+        default:
+            return "unknown";
+    }
+}
+
 struct AnalyzerRunContext {
     const char* profile = "none";
     const char* mode = "SEQ";

@@ -27,17 +27,11 @@ Behavior consumes PatternResult and FieldState.
 Clean analyzer output should read canonical runtime contracts only.
 ```
 
-## Source-verified current status
+Landed items from this area now live in `docs/archive/roadmaps/roadmap-changelog.md`.
+
+## Current code state
 
 ```text
-[LANDED] DetectionRuntime exists.
-[LANDED] DetectorReport exists.
-[LANDED] RejectedCandidateSummary exists.
-[LANDED] PatternMatcher exists.
-[LANDED] PatternMatcherReport exists.
-[LANDED] OccurrenceInspector exists.
-[LANDED] FieldStateTracker exists.
-[LANDED] Clean analyzer outputs exist: SEQ_TRIAL, SEQ_SOURCE, SEQ_INSPECT, SEQ_EXPLAIN, SEQ_SUMMARY.
 [REMOVED] DetectionDiagnostics and analyzer legacy compatibility are removed from src.
 [PARTIAL] PatternMatcher currently stays single-proposal oriented.
 [PARTIAL] Frequency reason handling is still string-backed internally.

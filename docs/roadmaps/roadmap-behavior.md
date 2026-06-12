@@ -27,13 +27,11 @@ SoundOutput / ChirpOutput performs output.
 Behavior does not inspect detector internals.
 ```
 
-## Source-verified current status
+Landed items from this area now live in `docs/archive/roadmaps/roadmap-changelog.md`.
+
+## Current code state
 
 ```text
-[LANDED] ResonantBehavior exists.
-[LANDED] BehaviorGateConfig exists.
-[LANDED] Behavior consumes PatternResult and FieldState.
-[LANDED] Behavior has decision and block-reason state.
 [PARTIAL] Behavior requests chirp via the current ChirpOutput path.
 [PARTIAL] RB BEHAV is runtime tuning, not durable ParamRegistry state.
 [TODO] BehaviorHost is not landed.

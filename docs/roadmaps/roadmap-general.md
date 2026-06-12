@@ -20,13 +20,16 @@ roadmap text that belongs in the domain-specific files.
 ## Next steps
 
 ```text
-[NEXT] NODE-001 Keep the current 5-node status baseline visible.
-[NEXT] DET-001 Keep detector/report consistency and naming aligned with code.
-[NEXT] DET-003 Keep inspection target / payload selection simple for now.
-[NEXT] DET-004 Track field state where detection and reporting use it.
-[NEXT] BEH-001 Keep behavior status and hardcoded defaults visible.
-[NEXT] OUT-001 Keep the current output path visible and minimal.
-[NEXT] PAR-001 Keep hardcoded config values visible in status.
+[NEXT] NODE-001
+[NEXT] DET-006
+[NEXT] DET-001
+[NEXT] DET-003
+[NEXT] DET-004
+[NEXT] DET-005
+[NEXT] ANA-001
+[NEXT] BEH-001
+[NEXT] OUT-001
+[NEXT] PAR-001
 ```
 
 ## Notes

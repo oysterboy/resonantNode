@@ -48,7 +48,7 @@ Scope
 Purpose
 Status legend
 Architecture goal
-Source-verified current status
+Current code state
 Implementation order
 Current / first cleanup pass
 Spec candidates

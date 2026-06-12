@@ -27,15 +27,11 @@ Profiles and programs choose compatible module behavior.
 Installation config stores chosen values later.
 ```
 
-## Source-verified current status
+Landed items from this area now live in `docs/archive/roadmaps/roadmap-changelog.md`.
+
+## Current code state
 
 ```text
-[LANDED] DetectionRuntime exists.
-[LANDED] DetectionProfile exists.
-[LANDED] Analyzer app/reporting exists.
-[LANDED] FieldStateTracker exists.
-[LANDED] ResonantBehavior exists and consumes PatternResult / FieldState.
-[LANDED] ChirpOutput / current output path exists.
 [PARTIAL] Node still owns serial command handling and runtime tuning commands directly.
 [TODO] ParamRegistry is not landed.
 [TODO] ConfigStore is not landed.

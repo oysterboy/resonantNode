@@ -92,13 +92,12 @@ DetectionRuntime coordinates.
 It must not reconstruct detector truth.
 ```
 
-Current landed state:
+Current code state:
 
 ```text
 DetectorReport is the active detector-stage report contract.
 PatternMatcher is the public pattern-stage boundary.
-Analyzer already prints clean SEQ_TRIAL / SEQ_SOURCE / SEQ_INSPECT /
-SEQ_EXPLAIN / SEQ_SUMMARY output.
+Analyzer prints clean SEQ_TRIAL / SEQ_SOURCE / SEQ_INSPECT / SEQ_EXPLAIN / SEQ_SUMMARY output.
 ResonantBehavior consumes PatternResult and FieldState.
 ChirpOutput remains the current output path.
 ```

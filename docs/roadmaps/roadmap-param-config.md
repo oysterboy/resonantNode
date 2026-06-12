@@ -29,11 +29,11 @@ Profiles provide defaults.
 Installation config provides overrides.
 ```
 
-## Source-verified current status
+Landed items from this area now live in `docs/archive/roadmaps/roadmap-changelog.md`.
+
+## Current code state
 
 ```text
-[LANDED] Hardcoded DetectionProfile defaults exist.
-[LANDED] BehaviorGateConfig defaults exist.
 [PARTIAL] RB PARAM can tune frequency thresholds at runtime.
 [PARTIAL] RB BEHAV can tune behavior values at runtime.
 [TODO] ParamRegistry is not landed.

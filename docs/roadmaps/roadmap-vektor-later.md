@@ -27,11 +27,10 @@ The node can behave autonomously.
 
 VEKTOR must not drive premature local architecture.
 
-## Source-verified current status
+## Current code state
 
 ```text
 [TODO] No VEKTOR implementation is landed in current code.
-[LANDED] Local concepts exist that may later be exposed: DetectionRuntime, PatternResult, FieldState, ResonantBehavior, ChirpOutput.
 [TODO] ParamRegistry, CommandRouter, and a state registry are not landed.
 [TODO] No transport, OSC, DESCRIBE, or hub protocol is landed.
 ```

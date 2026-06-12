@@ -10,10 +10,16 @@ history in one place.
 ## Detection / Analyzer
 
 ```text
-[LANDED] Clean analyzer reporting exists with SEQ_TRIAL / SEQ_SOURCE / SEQ_INSPECT / SEQ_EXPLAIN / SEQ_SUMMARY.
+[LANDED] DetectionRuntime coordinates the current detection chain.
 [LANDED] DetectorReport is the active detector-stage report contract.
+[LANDED] RejectedCandidateSummary is the selected reject contract.
 [LANDED] PatternMatcher is the public pattern-stage boundary.
+[LANDED] PatternMatcherReport is available for compact pattern facts.
+[LANDED] OccurrenceInspector is available for inspection evidence.
 [LANDED] FieldStateTracker is available for acoustic context reporting.
+[LANDED] Clean analyzer reporting exists with SEQ_TRIAL / SEQ_SOURCE / SEQ_INSPECT / SEQ_EXPLAIN / SEQ_SUMMARY.
+[LANDED] DetectionDiagnostics and analyzer legacy compatibility were removed from src.
+[LANDED] Analyzer app/reporting exists.
 ```
 
 ## Behavior / Output
@@ -22,6 +28,7 @@ history in one place.
 [LANDED] ResonantBehavior owns the current behavior decision path.
 [LANDED] ChirpOutput remains the current output path.
 [LANDED] Behavior consumes PatternResult and FieldState.
+[LANDED] ResonantBehavior exists.
 ```
 
 ## Params / Config
@@ -29,13 +36,14 @@ history in one place.
 ```text
 [LANDED] Hardcoded DetectionProfile defaults exist.
 [LANDED] BehaviorGateConfig defaults exist.
+[LANDED] DetectionProfile exists.
 ```
 
 ## Node / Runtime
 
 ```text
-[LANDED] DetectionRuntime coordinates the current detection chain.
-[LANDED] Analyzer app/reporting exists.
+[LANDED] FieldStateTracker exists.
+[LANDED] ChirpOutput / current output path exists.
 ```
 
 ## Procedure

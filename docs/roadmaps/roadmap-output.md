@@ -26,12 +26,11 @@ OutputStatus reports availability.
 OutputProfile later defines available emitted sound shapes.
 ```
 
-## Source-verified current status
+Landed items from this area now live in `docs/archive/roadmaps/roadmap-changelog.md`.
+
+## Current code state
 
 ```text
-[LANDED] ChirpOutput exists.
-[LANDED] HAL tone output classes exist.
-[LANDED] Node starts and updates ChirpOutput from ResonantBehavior.
 [PARTIAL] Behavior has outputBusy state, but no stable OutputStatus object.
 [TODO] OutputStatus is not landed.
 [TODO] OutputRequest is not landed.

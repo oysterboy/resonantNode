@@ -269,16 +269,11 @@ void AnalyzerApp::handleSequenceCandidate(const detection::PatternResult& patter
     auto& diagnostics = _sequenceTest.currentTrialDiagnostics;
     diagnostics.rawCandidateCount++;
 
-    const auto& candidate = patternResult.candidate;
-    const unsigned long onsetMs = candidate.startMs;
+    const unsigned long onsetMs = patternResult.primaryStartMs;
     const long dtFromTriggerMs = static_cast<long>(onsetMs) - static_cast<long>(_sequenceTest.currentTrialScheduledAtMs);
     const long dtFromTrialStartMs = static_cast<long>(onsetMs) - static_cast<long>(_sequenceTest.currentTrialStartMs);
-    const uint32_t sampleRateHz = _audioSource.sampleRateHz() > 0 ? _audioSource.sampleRateHz() : 16000UL;
-    const unsigned long peakOffsetMs = candidate.peakSample >= candidate.onsetSample
-        ? static_cast<unsigned long>(((candidate.peakSample - candidate.onsetSample) * 1000ULL) / static_cast<uint64_t>(sampleRateHz))
-        : 0UL;
 
-    const bool overflowSeenNow = candidate.audioOverflowDuringCandidate
+    const bool overflowSeenNow = patternResult.primaryAudioOverflow
                                  || _audioSource.stats().overflowCount != _sequenceTest.trialOverflowCountAtStart;
     if (overflowSeenNow) {
         _sequenceTest.trialHadAudioOverflow = true;
@@ -305,13 +300,13 @@ void AnalyzerApp::handleSequenceCandidate(const detection::PatternResult& patter
         entry.candidateMs = onsetMs;
         entry.dtFromTriggerMs = dtFromTriggerMs;
         entry.dtFromTrialStartMs = dtFromTrialStartMs;
-        entry.durationMs = candidate.durationMs;
-        entry.strength = candidate.peakStrength;
+        entry.durationMs = patternResult.primaryDurationMs;
+        entry.strength = patternResult.primaryStrength;
         entry.origin = origin;
-        entry.peakMs = candidate.startMs + peakOffsetMs;
-        entry.endDtMs = dtFromTriggerMs >= 0 ? dtFromTriggerMs + static_cast<long>(candidate.durationMs) : -1;
+        entry.peakMs = patternResult.primaryPeakMs;
+        entry.endDtMs = dtFromTriggerMs >= 0 ? dtFromTriggerMs + static_cast<long>(patternResult.primaryDurationMs) : -1;
         entry.patternValid = patternResult.valid;
-        entry.candidateAccepted = patternResult.patternCandidateAccepted;
+        entry.patternAccepted = patternResult.patternAccepted;
         entry.patternMatched = patternResult.patternMatched;
         entry.supportMatched = patternResult.supportMatched;
         entry.behaviorEligible = patternResult.valid;
@@ -332,11 +327,11 @@ void AnalyzerApp::handleSequenceCandidate(const detection::PatternResult& patter
         diagnostics.candidatePostWindowCount++;
     }
 
-    if (!diagnostics.bestCandidateAccepted || candidate.peakStrength > diagnostics.bestCandidateStrength) {
+    if (!diagnostics.bestCandidateAccepted || patternResult.primaryStrength > diagnostics.bestCandidateStrength) {
         diagnostics.bestCandidateAccepted = true;
         diagnostics.bestCandidateDtFromTriggerMs = dtFromTriggerMs;
-        diagnostics.bestCandidateDurationMs = candidate.durationMs;
-        diagnostics.bestCandidateStrength = candidate.peakStrength;
+        diagnostics.bestCandidateDurationMs = patternResult.primaryDurationMs;
+        diagnostics.bestCandidateStrength = patternResult.primaryStrength;
         diagnostics.bestCandidateOrigin = origin;
     }
 
@@ -377,10 +372,10 @@ void AnalyzerApp::handleSequenceCandidate(const detection::PatternResult& patter
     if (hadPrimaryBeforeCandidate) {
         if (diagnostics.duplicateCount == 0) {
             diagnostics.duplicatePatternMs = onsetMs;
-            diagnostics.duplicatePatternStrength = candidate.peakStrength;
-            diagnostics.duplicatePatternDurationMs = candidate.durationMs;
-            diagnostics.duplicatePatternPeakMs = candidate.startMs + peakOffsetMs;
-            diagnostics.duplicatePatternReleaseMs = candidate.startMs + candidate.durationMs;
+            diagnostics.duplicatePatternStrength = patternResult.primaryStrength;
+            diagnostics.duplicatePatternDurationMs = patternResult.primaryDurationMs;
+            diagnostics.duplicatePatternPeakMs = patternResult.primaryPeakMs;
+            diagnostics.duplicatePatternReleaseMs = patternResult.primaryStartMs + patternResult.primaryDurationMs;
             diagnostics.duplicateDeltaFromPrimaryMs = diagnostics.patternAccepted
                 ? static_cast<long>(onsetMs) - static_cast<long>(diagnostics.acceptedPatternMs)
                 : 0;
@@ -398,13 +393,13 @@ void AnalyzerApp::handleSequenceCandidate(const detection::PatternResult& patter
 
     _sequenceTest.currentTrialDiagnostics.patternAccepted = true;
     _sequenceTest.currentTrialDiagnostics.acceptedPatternMs = onsetMs;
-    _sequenceTest.currentTrialDiagnostics.acceptedPatternOnsetStrength = candidate.onsetStrength;
-    _sequenceTest.currentTrialDiagnostics.acceptedPatternStrength = candidate.peakStrength;
-    _sequenceTest.currentTrialDiagnostics.acceptedPatternDurationMs = candidate.durationMs;
-    _sequenceTest.currentTrialDiagnostics.acceptedPatternReleaseStrength = candidate.releaseStrength;
-    _sequenceTest.currentTrialDiagnostics.acceptedPatternPeakMs = candidate.startMs + peakOffsetMs;
-    _sequenceTest.currentTrialDiagnostics.acceptedPatternReleaseMs = candidate.startMs + candidate.durationMs;
-    _sequenceTest.currentTrialDiagnostics.acceptedAmbientBaseline = candidate.ambientBaseline;
+    _sequenceTest.currentTrialDiagnostics.acceptedPatternOnsetStrength = patternResult.primaryOnsetStrength;
+    _sequenceTest.currentTrialDiagnostics.acceptedPatternStrength = patternResult.primaryStrength;
+    _sequenceTest.currentTrialDiagnostics.acceptedPatternDurationMs = patternResult.primaryDurationMs;
+    _sequenceTest.currentTrialDiagnostics.acceptedPatternReleaseStrength = patternResult.primaryReleaseStrength;
+    _sequenceTest.currentTrialDiagnostics.acceptedPatternPeakMs = patternResult.primaryPeakMs;
+    _sequenceTest.currentTrialDiagnostics.acceptedPatternReleaseMs = patternResult.primaryStartMs + patternResult.primaryDurationMs;
+    _sequenceTest.currentTrialDiagnostics.acceptedAmbientBaseline = patternResult.primaryAmbientBaseline;
     _sequenceTest.currentTrialDiagnostics.lastRejectStrength = 0.0f;
     _sequenceTest.currentTrialDiagnostics.lastRejectDurationMs = 0;
     _sequenceTest.currentTrialPatternDetectedMs = onsetMs;

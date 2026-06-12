@@ -46,8 +46,8 @@ const char* patternTypeName(detection::PatternType type) {
     switch (type) {
         case detection::PatternType::None:
             return "none";
-        case detection::PatternType::ValidPattern:
-            return "valid_pattern";
+        case detection::PatternType::SinglePulse:
+            return "single_pulse";
         case detection::PatternType::Invalid:
             return "invalid";
         case detection::PatternType::Ambiguous:
@@ -121,7 +121,7 @@ ResonantBehavior::BehaviorDecision ResonantBehavior::handlePatternResult(const d
     _wouldEmit = false;
     _outputBusy = _state == State::Chirping;
 
-    if (!result.patternCandidateAccepted) {
+    if (!result.patternAccepted) {
         _behaviorEligible = false;
         if (result.type == detection::PatternType::Ambiguous) {
             _lastDecision = BehaviorDecision::IgnoredAmbiguousPattern;

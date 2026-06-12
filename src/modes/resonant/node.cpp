@@ -1006,7 +1006,7 @@ void Node::processDetectionFrame(const AudioSamplePacket& audioSamplePacket,
         }
 
         ++_rbCandidateCount;
-        if (patternResult.patternCandidateAccepted) {
+        if (patternResult.patternAccepted) {
             ++_rbPatternAcceptedCount;
         }
         if (patternResult.valid) {

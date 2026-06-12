@@ -207,7 +207,7 @@ struct AnalyzerPatternObservation {
     // not in AnalyzerClassification.
     const char* type = "none";
     bool accepted = false;
-    bool candidateAccepted = false;
+    bool patternAccepted = false;
     bool patternMatched = false;
     bool supportMatched = false;
     bool behaviorEligible = false;

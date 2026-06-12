@@ -33,6 +33,21 @@ Future work may still be needed to make the behavior/output seam clearer:
 - keep output execution separate
 - add a dispatcher only if it becomes clearly necessary
 
+### 3.3 PatternMatcher multi-occurrence proposals
+
+Status: planned
+
+Future pattern matching should support patterns made from groups of
+occurrences, not only one occurrence at a time:
+
+- keep occurrence grouping and competing hypotheses private to `PatternMatcher`
+- allow multiple proposed occurrence groups to be evaluated concurrently
+- select the best matched pattern when more than one proposal fits
+- keep `PatternResult` compact and behavior-facing
+- expose only compact explanation facts through `PatternMatcherReport`
+- do not reintroduce public `PatternCandidate`, `PatternAssembler`, or
+  `PatternRules` boundaries
+
 ---
 
 ## Phase 4 - Legacy Removal

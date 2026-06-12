@@ -560,7 +560,7 @@ void AnalyzerApp::updateCleanSequenceSummary(const AnalyzerReport& report) {
 
     if (report.primaryPattern.accepted) {
         ++summary.validPattern;
-    } else if (report.primaryPattern.candidateAccepted || report.classification.result == AnalyzerResult::Rejected) {
+    } else if (report.primaryPattern.patternAccepted || report.classification.result == AnalyzerResult::Rejected) {
         ++summary.rejectedPattern;
     }
 

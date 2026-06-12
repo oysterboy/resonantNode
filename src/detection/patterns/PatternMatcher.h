@@ -1,17 +1,19 @@
 #pragma once
 
-#include "PatternAssembler.h"
+#include <stddef.h>
+
+#include "../occurrences/InspectedOccurrence.h"
 #include "PatternMatcherTypes.h"
-#include "PatternRules.h"
+#include "PatternResult.h"
 
 namespace detection {
 
 /*
 PatternMatcher
 
-Public pattern-stage facade.
-Consumes inspected occurrences and emits PatternResults while keeping
-PatternAssembler and PatternRules as internal implementation helpers.
+Public pattern-stage owner.
+Consumes inspected occurrences, assembles compact pattern state, evaluates
+pattern validity, and emits PatternResults.
 */
 class PatternMatcher {
 public:
@@ -27,9 +29,15 @@ public:
     bool popPatternResult(unsigned long nowMs, PatternResult& out);
 
 private:
-    PatternAssembler _assembler;
-    PatternRules _rules;
+    static constexpr size_t kQueueCapacity = 4;
+
+    bool pushInspectedOccurrence(const InspectedOccurrence& occurrence);
+
+    PatternMatcherConfig _config = {};
     PatternMatcherReport _report = {};
+    InspectedOccurrence _queue[kQueueCapacity] = {};
+    size_t _readIndex = 0;
+    size_t _count = 0;
 };
 
 } // namespace detection

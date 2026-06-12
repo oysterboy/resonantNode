@@ -9,7 +9,7 @@ namespace detection {
 InspectedOccurrence
 
 Occurrence plus OccurrenceInspector decision and added evidence.
-Owns candidateAccepted and occurrence-stage rejection reason.
+Owns the occurrence-stage decision and rejection reason.
 */
 enum class OccurrenceDecision {
     None,

@@ -2,7 +2,6 @@
 
 #include "../occurrences/InspectedOccurrence.h"
 #include "PatternTypes.h"
-#include "PatternCandidate.h"
 namespace detection {
 
 /*
@@ -39,17 +38,18 @@ struct PatternResult {
     // Compact primary accepted-occurrence summary used by behavior and
     // canonical analyzer/report readers.
     unsigned long primaryStartMs = 0;
+    unsigned long primaryPeakMs = 0;
     unsigned long primaryHeardAtMs = 0;
     unsigned long primaryAcceptedMs = 0;
     unsigned long primaryDurationMs = 0;
     float primaryStrength = 0.0f;
+    float primaryOnsetStrength = 0.0f;
+    float primaryReleaseStrength = 0.0f;
+    float primaryAmbientBaseline = 0.0f;
     bool primaryAudioOverflow = false;
 
-    // Transitional payload carried through while later payload-trim passes
-    // still depend on candidate/inspection detail.
-    PatternCandidate candidate = {};
     InspectedOccurrence inspectedOccurrence = {};
-    bool patternCandidateAccepted = false;
+    bool patternAccepted = false;
     bool patternMatched = false;
     bool supportMatched = false;
     bool valid = false;

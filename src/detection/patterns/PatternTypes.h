@@ -5,7 +5,7 @@ namespace detection {
 // Core pattern labels and reasons.
 enum class PatternType {
     None,
-    ValidPattern,
+    SinglePulse,
     DuplicateAfterPrimary,
     UnexpectedNoise,
     Invalid,
@@ -36,15 +36,6 @@ enum class PatternRejectReason {
     DuplicateAfterPrimary,
     UnexpectedTiming,
     UnexpectedNoise,
-};
-
-// Candidate kinds describe the pre-rule shape of the candidate.
-enum class PatternCandidateKind {
-    Unknown,
-    SinglePulse,
-    PulseSequence,
-    NoiseBurst,
-    ObjectHit,
 };
 
 // Result kinds describe the rule-level outcome.

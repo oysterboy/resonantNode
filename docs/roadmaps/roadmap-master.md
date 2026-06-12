@@ -26,6 +26,7 @@ See:
 
 Future detector and pattern work:
 
+- `PatternMatcher` multi-occurrence and competing-proposal matching
 - `TargetBandStrength` full implementation
 - `PulseSequence` / pulsed chirp grouping
 - `CandidateCorrelator` / cross-source relation facts

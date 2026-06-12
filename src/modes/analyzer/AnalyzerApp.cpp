@@ -1038,7 +1038,7 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
         pattern.accepted = trialHasPipelineEvidence
             ? reportPatternResult->valid
             : false;
-        pattern.candidateAccepted = trialHasPipelineEvidence ? reportPatternResult->patternCandidateAccepted : false;
+        pattern.patternAccepted = trialHasPipelineEvidence ? reportPatternResult->patternAccepted : false;
         pattern.patternMatched = trialHasPipelineEvidence ? reportPatternResult->patternMatched : false;
         pattern.supportMatched = trialHasPipelineEvidence ? reportPatternResult->supportMatched : false;
         pattern.behaviorEligible = pattern.accepted;

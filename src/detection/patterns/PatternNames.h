@@ -4,23 +4,6 @@
 
 namespace detection {
 
-inline const char* patternCandidateKindName(PatternCandidateKind kind) {
-    switch (kind) {
-        case PatternCandidateKind::Unknown:
-            return "unknown";
-        case PatternCandidateKind::SinglePulse:
-            return "single_pulse";
-        case PatternCandidateKind::PulseSequence:
-            return "pulse_sequence";
-        case PatternCandidateKind::NoiseBurst:
-            return "noise_burst";
-        case PatternCandidateKind::ObjectHit:
-            return "object_hit";
-    }
-
-    return "unknown";
-}
-
 inline const char* patternResultKindName(PatternResultKind kind) {
     switch (kind) {
         case PatternResultKind::Unknown:
@@ -42,8 +25,8 @@ inline const char* patternTypeName(PatternType type) {
     switch (type) {
         case PatternType::None:
             return "none";
-        case PatternType::ValidPattern:
-            return "valid_pattern";
+        case PatternType::SinglePulse:
+            return "single_pulse";
         case PatternType::DuplicateAfterPrimary:
             return "duplicate_after_primary";
         case PatternType::UnexpectedNoise:

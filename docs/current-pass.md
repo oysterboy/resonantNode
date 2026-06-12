@@ -1,342 +1,138 @@
-# Pass X3 - PatternMatcher Boundary + Pattern Stage Snapshot
+# Pass X4 - Fold Pattern Assembly and Rules into PatternMatcher
 
-Status: planned pass after occurrence cleanup  
-Scope: detection pattern stage only  
-Includes: X3-A + X3-B  
-Goal: make `PatternMatcher` the public pattern-stage boundary and keep pattern explainability without exposing `PatternAssembler` / `PatternRules` as public runtime contracts.
-
----
-
-## Context
-
-Current target architecture:
-
-```text
-Detector
--> Occurrence
--> Inspector
--> InspectedOccurrence
--> PatternMatcher
--> PatternResult
--> Behavior
-```
-
-Target boundary:
-
-```text
-PatternMatcher = public pattern-stage module
-PatternAssembler = internal helper
-PatternRules = internal helper
-PatternResult = compact outward result
-```
-
-This pass prepares later `PatternResult` payload trimming.
-
-Do this before trimming `PatternResult`, because the public pattern-stage boundary must be settled first.
+Status: planned pass after X3  
+Scope: pattern stage only  
+Goal: make `PatternMatcher` the real pattern-stage owner, not just a wrapper around public `PatternAssembler` / `PatternRules`.
 
 ---
 
-## X3-A - PatternMatcher public boundary
+## Target
 
-### Goal
-
-Make `PatternMatcher` the only active public pattern-stage API.
-
-Detection/runtime code should conceptually call:
-
-```cpp
-PatternResult result = patternMatcher.update(...);
-```
-
-or an equivalent current-project shape.
-
-It should not externally orchestrate:
-
-```cpp
-PatternAssembler
-PatternRules
-PatternCandidate
-```
-
-as separate public stages.
-
----
-
-### Required checks
-
-Inspect current pattern path and identify:
-
-```text
-DetectionRuntime -> PatternAssembler
-DetectionRuntime -> PatternRules
-Analyzer -> PatternAssembler
-Analyzer -> PatternRules
-external includes of PatternAssembler / PatternRules
-public PatternCandidate usage outside pattern stage
-```
-
-Then refactor so:
-
-```text
-PatternMatcher owns assembly + rule evaluation flow.
-PatternAssembler becomes internal helper.
-PatternRules becomes internal helper.
-PatternCandidate becomes internal pattern-stage construction data.
-DetectionRuntime depends on PatternMatcher, not PatternAssembler/PatternRules directly.
-Behavior consumes PatternResult only.
-FieldState consumes compact pattern facts only.
-```
-
----
-
-### Allowed public pattern-stage types
-
-Allowed outside pattern stage:
+Public pattern-stage API:
 
 ```text
 PatternMatcher
 PatternMatcherConfig
 PatternMatcherReport
 PatternResult
-PatternEvent if currently used as compact outward result
-PatternType / PatternId / PatternStatus enums if canonical
-PatternRejectReason / PatternReason if canonical
+PatternType
+PatternRejectReason / PatternReason if still needed
 ```
 
-Internal-only after this pass:
+No longer public conceptual modules:
 
 ```text
 PatternAssembler
 PatternRules
-PatternRulesConfig as a public runtime/profile-facing name
 PatternCandidate
-full InspectedOccurrence grouping mechanics
-rule scoring internals
+PatternRulesKind
+PatternRuleKind
 ```
 
 ---
 
-### Analyzer access rule
+## Required changes
 
-Analyzer may explain the pattern stage, but not by owning the inner pipeline.
+### X4-A - Fold assembler responsibility into PatternMatcher
 
-Allowed:
+Move candidate assembly responsibility into `PatternMatcher`.
+
+Before:
 
 ```text
-Analyzer reads PatternResult.
-Analyzer reads PatternMatcher snapshot/report if explicitly provided.
-Analyzer reads canonical pattern-stage report facts.
+PatternAssembler builds PatternCandidate.
+PatternRules evaluates PatternCandidate.
+PatternMatcher coordinates.
 ```
 
-Not allowed:
+After:
 
 ```text
-Analyzer directly calls PatternAssembler.
-Analyzer directly calls PatternRules.
-Analyzer reconstructs PatternCandidate ownership.
-Analyzer depends on internal assembly/rule details as runtime truth.
+PatternMatcher receives inspected occurrences.
+PatternMatcher internally assembles whatever temporary candidate data it needs.
+PatternMatcher evaluates match validity.
+PatternMatcher emits PatternResult.
 ```
 
----
+`PatternAssembler` may temporarily remain as a private file/helper during compile-safe migration, but it must not remain a public architecture boundary.
 
-### Non-goals
+Deleting public `PatternCandidate` must not imply that only one occurrence or
+one pattern hypothesis can be considered forever. Future matcher internals may
+hold multiple private drafts, evaluate competing occurrence groups concurrently,
+and select the best matched pattern. X4 only removes that draft state from the
+public contract.
 
-Do not:
+### X4-B - Fold rules responsibility into PatternMatcher
 
-```text
-trim PatternResult payload yet
-redesign rule semantics
-change detection validity
-change behavior timing/output
-rename every file unless required
-remove Analyzer explainability
-```
+Move rule evaluation into `PatternMatcher`.
 
----
-
-### X3-A acceptance
-
-```text
-DetectionRuntime uses PatternMatcher as the public pattern-stage boundary.
-PatternAssembler is not called as an external runtime stage.
-PatternRules is not called as an external runtime stage.
-PatternCandidate is not passed beyond pattern-stage internals except possibly temporary debug snapshots.
-Behavior receives PatternResult only.
-Current TonalPulse behavior and SEQ results remain equivalent.
-Build passes.
-```
-
----
-
-## X3-B - Pattern stage snapshot / report for Analyzer
-
-### Goal
-
-Keep Analyzer explainability while preventing `PatternResult` from carrying all pattern construction internals.
-
-Add or clarify a pattern-stage snapshot/report owned by `PatternMatcher`.
-
-This is not behavior-facing runtime data.
-
----
-
-### Preferred shape
-
-Add a lightweight report/snapshot if needed:
+Allowed internal shape:
 
 ```cpp
-struct PatternMatcherReport {
-    bool candidatePresent;
-    bool patternMatched;
-    bool supportMatched;
-    bool valid;
-
-    PatternType patternType;
-    PatternRejectReason rejectReason;
-
-    uint32_t startMs;
-    uint32_t peakMs;
-    uint32_t endMs;
-    uint32_t durationMs;
-
-    float confidence;
-    float strength;
-
-    uint8_t occurrenceCount;
-    uint8_t acceptedOccurrenceCount;
-};
+PatternMatcher::assembleCandidate(...)
+PatternMatcher::evaluateTonalPulse(...)
+PatternMatcher::evaluatePattern(...)
 ```
 
-Exact fields may differ; keep it compact and canonical.
+or private/internal helper functions.
+
+Not allowed after this pass:
+
+```text
+DetectionRuntime calls PatternRules.
+Analyzer calls PatternRules.
+PatternRules is described as a public stage.
+PatternResult depends on public PatternRules types.
+```
+
+### X4-C - Rename rule-kind naming to PatternType
+
+Rename any naming that describes the recognized pattern, not the implementation rule:
+
+```text
+PatternRulesKind -> PatternType
+PatternRuleKind  -> PatternType
+ruleKind         -> patternType
+rulesKind        -> patternType
+```
+
+Use `PatternType` for semantic pattern categories:
+
+```text
+SinglePulse
+PulseSequence
+Chirp
+WhiteNoiseBurst
+Knock
+Unknown / None
+```
+
+Do not use `PatternType` for reject reasons or rule internals.
+
+If a value really describes the evaluator implementation, use internal naming:
+
+```text
+PatternEvaluatorKind
+PatternRuleId
+```
+
+but avoid unless needed.
 
 ---
 
-### Report ownership
+## Search terms
 
 ```text
-PatternMatcher owns PatternMatcherReport.
-Analyzer may snapshot/read it.
-Behavior must not depend on it.
-FieldState must not depend on it.
-PatternResult remains the outward runtime result.
-```
-
----
-
-### What may go into PatternMatcherReport
-
-Allowed:
-
-```text
-candidate present/missing
-matched / not matched
-valid / invalid
-reason / reject class
-pattern type
-support matched
-main timing
-main strength/confidence
-small occurrence counts
-selected compact internal stage fact
-```
-
-Avoid:
-
-```text
-full PatternCandidate copies
-full InspectedOccurrence arrays
-raw detector evidence
-DetectorReport copies
-FrequencyBandMeasurementPacket copies
-deep scoring internals
-large history windows
-strings
-heap allocation
-```
-
----
-
-### Analyzer output mapping
-
-After this pass:
-
-```text
-SEQ_PATTERN or SEQ_EXPLAIN may use PatternMatcherReport.
-SEQ_TRIAL / SEQ_SUMMARY should still use PatternResult + Analyzer classification.
-Behavior should still use PatternResult only.
-```
-
-If no `SEQ_PATTERN` exists yet, do not create broad new output unless needed.
-
-For now, it is enough that `SEQ_EXPLAIN` can access clean pattern-stage facts without reaching into `PatternAssembler` / `PatternRules`.
-
----
-
-### Non-goals
-
-Do not:
-
-```text
-build a large diagnostics subsystem
-turn PatternMatcherReport into another DetectionDiagnostics
-duplicate DetectorReport
-add heap-heavy snapshots
-expose PatternMatcherReport to Behavior
-```
-
----
-
-### X3-B acceptance
-
-```text
-Analyzer can explain pattern-stage outcome through PatternMatcher / PatternResult-owned facts.
-Analyzer does not call PatternAssembler / PatternRules directly.
-PatternMatcherReport, if added, is compact and pattern-stage-owned.
-No heavy PatternCandidate / InspectedOccurrence copies are pushed into Behavior-facing data.
-Build passes.
-```
-
----
-
-## Combined acceptance
-
-Pass X3 is accepted when:
-
-```text
-PatternMatcher is the only public pattern-stage boundary.
-PatternAssembler and PatternRules are internal helpers.
-DetectionRuntime no longer publicly orchestrates assembler + rules as separate stages.
-Analyzer explainability is preserved through PatternMatcher / PatternResult / compact report facts.
-Behavior consumes PatternResult only.
-FieldState consumes compact pattern facts only.
-PatternResult payload trimming is now safe to plan as next pass.
-TonalPulse clean SEQ_TRIAL / SOURCE / INSPECT / EXPLAIN / SUMMARY still build and remain semantically equivalent.
-Build passes.
-```
-
----
-
-## Suggested files to inspect
-
-```text
-src/detection/patterns/*
-src/detection/DetectionRuntime.*
-src/modes/analyzer/*
-```
-
-Search terms:
-
-```text
-PatternMatcher
 PatternAssembler
 PatternRules
 PatternCandidate
-PatternResult
-PatternEvent
-InspectedOccurrence
-patternMatched
-supportMatched
-pattern.valid
+PatternRulesKind
+PatternRuleKind
+ruleKind
+rulesKind
+patternKind
+PatternKind
+PatternType
 ```
 
 ---
@@ -346,15 +142,34 @@ pattern.valid
 Do not change:
 
 ```text
-detector thresholds
-detector candidate lifecycle
-Occurrence emission
-Inspector acceptance logic
-Pattern validity semantics
-Behavior response logic
-Output generation
-SEQ clean output labels unless required by compile
+pattern validity semantics
+TonalPulse acceptance behavior
+DetectorReport
+Occurrence / InspectedOccurrence contracts
+Behavior output behavior
+SEQ clean output labels unless compile requires type-name update
 ```
+
+---
+
+## Analyzer rule
+
+Analyzer may use:
+
+```text
+PatternResult
+PatternMatcherReport
+```
+
+Analyzer must not use:
+
+```text
+PatternAssembler
+PatternRules
+PatternCandidate
+```
+
+If Analyzer still needs explanation details, expose compact facts through `PatternMatcherReport`.
 
 ---
 
@@ -363,7 +178,7 @@ SEQ clean output labels unless required by compile
 Create or update:
 
 ```text
-docs/pass_X3_patternmatcher_boundary.md
+docs/pass_X4_patternmatcher_fold.md
 ```
 
 Include:
@@ -371,23 +186,35 @@ Include:
 ```text
 ## Public boundary before
 ## Public boundary after
-## Internalized helpers
+## Folded assembler responsibility
+## Folded rule responsibility
+## PatternType naming result
 ## Analyzer access path
-## PatternMatcherReport decision
 ## Files touched
 ## Behavior unchanged check
 ## SEQ sanity result
-## Remaining payload-trim candidates for Pass X4
+## Remaining payload-trim candidates
 ```
 
 ---
 
-## Next pass
-
-After Pass X3:
+## Acceptance
 
 ```text
-Pass X4 - PatternResult payload trimming
+PatternMatcher owns assembly + evaluation conceptually.
+PatternAssembler is deleted or private/internal-only.
+PatternRules is deleted or private/internal-only.
+No runtime/analyzer code calls PatternAssembler or PatternRules directly.
+Public result/category naming is PatternType, not PatternRulesKind / PatternRuleKind.
+PatternResult still builds.
+Existing TonalPulse SEQ sanity results remain equivalent.
+Build passes.
 ```
 
-Pass X4 should only start after the PatternMatcher boundary is stable.
+---
+
+## Commit
+
+```bash
+git commit -m "PatternCleanup fold pattern assembly and rules into matcher"
+```

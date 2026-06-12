@@ -130,7 +130,7 @@ private:
             unsigned long peakMs = 0;
             long endDtMs = -1;
             bool patternValid = false;
-            bool candidateAccepted = false;
+            bool patternAccepted = false;
             bool patternMatched = false;
             bool supportMatched = false;
             bool behaviorEligible = false;

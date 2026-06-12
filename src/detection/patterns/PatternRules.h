@@ -1,5 +1,6 @@
 #pragma once
 
+#include "PatternMatcherTypes.h"
 #include "PatternResult.h"
 
 namespace detection {
@@ -12,15 +13,9 @@ Interprets PatternCandidates into PatternResults.
 Owns patternMatched, supportMatched, valid, confidence, and pattern rejection reasons.
 Does not inspect raw signals directly and does not decide behavior eligibility.
 */
-struct PatternRulesConfig {
-    bool requireSupportForAcceptance = true;
-    EvidenceTarget requiredSupportTarget = EvidenceTarget::AmpStrength;
-    StrengthClass minimumSupportStrength = StrengthClass::Medium;
-};
-
 class PatternRules {
 public:
-    void configure(const PatternRulesConfig& config);
+    void configure(const PatternMatcherConfig& config);
 
     PatternResult evaluate(
         const PatternCandidate& candidate,
@@ -33,7 +28,7 @@ private:
         unsigned long nowMs
     ) const;
 
-    PatternRulesConfig _config = {};
+    PatternMatcherConfig _config = {};
 };
 
 } // namespace detection

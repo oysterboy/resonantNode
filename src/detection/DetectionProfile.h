@@ -6,7 +6,7 @@
 
 #include "field/FieldState.h"
 #include "inspector/InspectorTypes.h"
-#include "patterns/PatternRules.h"
+#include "patterns/PatternMatcherTypes.h"
 
 namespace detection {
 
@@ -83,7 +83,7 @@ struct DetectionProfile {
     // Stage configuration.
     FrequencyMatchConfig frequencyMatch = {};
     ScalarTransientConfig scalarTransient = {};
-    PatternRulesConfig patternRulesConfig = {};
+    PatternMatcherConfig patternMatcherConfig = {};
     InspectionPlan inspectionPlan = {};
     FieldStateConfig fieldStateConfig = {};
 };
@@ -158,9 +158,9 @@ inline DetectionProfile makeTonalPulseProfile() {
     profile.inspectionPlan.count = 3;
 
     // Pattern rules.
-    profile.patternRulesConfig.requireSupportForAcceptance = false;
-    profile.patternRulesConfig.requiredSupportTarget = EvidenceTarget::AmpStrength;
-    profile.patternRulesConfig.minimumSupportStrength = StrengthClass::Medium;
+    profile.patternMatcherConfig.requireSupportForAcceptance = false;
+    profile.patternMatcherConfig.requiredSupportTarget = EvidenceTarget::AmpStrength;
+    profile.patternMatcherConfig.minimumSupportStrength = StrengthClass::Medium;
 
     // Field-state windowing.
     profile.fieldStateConfig.occurrenceWindowMs = 3500;
@@ -229,9 +229,9 @@ inline DetectionProfile makeAmpProfile() {
     profile.inspectionPlan.count = 3;
 
     // Pattern rules.
-    profile.patternRulesConfig.requireSupportForAcceptance = false;
-    profile.patternRulesConfig.requiredSupportTarget = EvidenceTarget::FrequencyScoreStrength;
-    profile.patternRulesConfig.minimumSupportStrength = StrengthClass::Medium;
+    profile.patternMatcherConfig.requireSupportForAcceptance = false;
+    profile.patternMatcherConfig.requiredSupportTarget = EvidenceTarget::FrequencyScoreStrength;
+    profile.patternMatcherConfig.minimumSupportStrength = StrengthClass::Medium;
 
     // Field-state windowing.
     profile.fieldStateConfig.occurrenceWindowMs = 4000;
@@ -252,9 +252,9 @@ inline DetectionProfile makeChirpExperimentalProfile() {
     applyAmpEnvelopeScalarTransientTuning(profile.scalarTransient);
 
     // Pattern rules.
-    profile.patternRulesConfig.requireSupportForAcceptance = false;
-    profile.patternRulesConfig.requiredSupportTarget = EvidenceTarget::AmpStrength;
-    profile.patternRulesConfig.minimumSupportStrength = StrengthClass::Medium;
+    profile.patternMatcherConfig.requireSupportForAcceptance = false;
+    profile.patternMatcherConfig.requiredSupportTarget = EvidenceTarget::AmpStrength;
+    profile.patternMatcherConfig.minimumSupportStrength = StrengthClass::Medium;
 
     // Inspector composition.
     profile.inspectionPlan = {};
@@ -317,9 +317,9 @@ inline DetectionProfile makeScalarFreqExperimentalProfile() {
     profile.inspectionPlan.count = 2;
 
     // Pattern rules.
-    profile.patternRulesConfig.requireSupportForAcceptance = false;
-    profile.patternRulesConfig.requiredSupportTarget = EvidenceTarget::FrequencyScoreStrength;
-    profile.patternRulesConfig.minimumSupportStrength = StrengthClass::Medium;
+    profile.patternMatcherConfig.requireSupportForAcceptance = false;
+    profile.patternMatcherConfig.requiredSupportTarget = EvidenceTarget::FrequencyScoreStrength;
+    profile.patternMatcherConfig.minimumSupportStrength = StrengthClass::Medium;
 
     // Field-state windowing.
     profile.fieldStateConfig.occurrenceWindowMs = 4000;

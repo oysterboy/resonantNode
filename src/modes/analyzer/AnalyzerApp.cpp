@@ -10,9 +10,7 @@
 #include "../../TimingUtils.h"
 #include "AnalyzerTextUtils.h"
 #include "AnalyzerHealthHelpers.h"
-#include "../../detection/patterns/PatternAssembler.h"
 #include "../../detection/patterns/PatternNames.h"
-#include "../../detection/patterns/PatternRules.h"
 #include "../../detection/occurrences/Occurrence.h"
 #include "AnalyzerClassifier.h"
 #include "../../detection/inspector/OccurrenceInspector.h"
@@ -98,10 +96,8 @@ void printRuntimeSize() {
     Serial.println(static_cast<unsigned long>(sizeof(detection::Occurrence)));
     Serial.print("  SIZE InspectedOccurrence=");
     Serial.println(static_cast<unsigned long>(sizeof(detection::InspectedOccurrence)));
-    Serial.print("  SIZE PatternAssembler=");
-    Serial.println(static_cast<unsigned long>(sizeof(detection::PatternAssembler)));
-    Serial.print("  SIZE PatternCandidate=");
-    Serial.println(static_cast<unsigned long>(sizeof(detection::PatternCandidate)));
+    Serial.print("  SIZE PatternMatcher=");
+    Serial.println(static_cast<unsigned long>(sizeof(detection::PatternMatcher)));
     Serial.print("  SIZE PatternResult=");
     Serial.println(static_cast<unsigned long>(sizeof(detection::PatternResult)));
     Serial.print("SIZE AudioSignal=");
@@ -1104,7 +1100,7 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
     report.inspection.rejected = diagnostics.rawCandidateCount > report.inspection.accepted ? diagnostics.rawCandidateCount - report.inspection.accepted : 0U;
     if (trialHasPipelineEvidence && reportInspectedOccurrence != nullptr && reportInspectedOccurrence->occurrence.present) {
         report.inspection.primaryEvidence = occurrenceSourceName(reportInspectedOccurrence->occurrence.detectorId);
-        switch (selectedProfile.patternRulesConfig.requiredSupportTarget) {
+        switch (selectedProfile.patternMatcherConfig.requiredSupportTarget) {
             case detection::EvidenceTarget::FrequencyScoreStrength:
                 report.inspection.moduleTarget = "frequency_score";
                 report.inspection.moduleStrengthClass = strengthClassName(reportInspectedOccurrence->occurrence.frequency.scoreStrength);
@@ -1152,12 +1148,12 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
     report.profileDetail.inspectionModuleCount = selectedProfile.inspectionPlan.count;
     report.profileDetail.evidenceTargets = inspectionEvidenceTargetsName(selectedProfile.inspectionPlan);
     report.profileDetail.requiredSupportTarget = supportTargetDisplayName(
-        selectedProfile.patternRulesConfig.requiredSupportTarget,
-        selectedProfile.patternRulesConfig.requireSupportForAcceptance
+        selectedProfile.patternMatcherConfig.requiredSupportTarget,
+        selectedProfile.patternMatcherConfig.requireSupportForAcceptance
     );
-    report.profileDetail.ampStrength = selectedProfile.patternRulesConfig.requireSupportForAcceptance ? "enabled" : "disabled";
-    report.profileDetail.ampStrengthMin = strengthClassName(selectedProfile.patternRulesConfig.minimumSupportStrength);
-    report.profileDetail.requireSupportForAcceptance = selectedProfile.patternRulesConfig.requireSupportForAcceptance;
+    report.profileDetail.ampStrength = selectedProfile.patternMatcherConfig.requireSupportForAcceptance ? "enabled" : "disabled";
+    report.profileDetail.ampStrengthMin = strengthClassName(selectedProfile.patternMatcherConfig.minimumSupportStrength);
+    report.profileDetail.requireSupportForAcceptance = selectedProfile.patternMatcherConfig.requireSupportForAcceptance;
     if (report.occurrences.present &&
         reportInspectedOccurrence != nullptr &&
         reportInspectedOccurrence->occurrence.occurrenceType == detection::OccurrenceType::Frequency) {

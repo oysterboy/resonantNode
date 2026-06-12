@@ -11,7 +11,7 @@
 FrequencyMatchEvaluation
 
 Threshold parsing and evaluation helpers for frequency-match evidence.
-This is occurrence/profile tuning support, not PatternRules.
+This is occurrence/profile tuning support, not pattern matching.
 */
 namespace FrequencyMatchEvaluation {
 

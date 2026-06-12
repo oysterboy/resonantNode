@@ -3,7 +3,7 @@
 // PatternRules converts PatternCandidates into PatternResults.
 namespace detection {
 
-void PatternRules::configure(const PatternRulesConfig& config) {
+void PatternRules::configure(const PatternMatcherConfig& config) {
     _config = config;
 }
 

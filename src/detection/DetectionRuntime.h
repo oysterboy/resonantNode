@@ -41,6 +41,8 @@ a live pipe into occurrence emission.
 struct DetectionPipelineResult {
     bool hasPattern = false;
     PatternResult pattern = {};
+    bool hasPatternReport = false;
+    PatternMatcherReport patternReport = {};
 
     bool hasOccurrence = false;
     Occurrence occurrence = {};
@@ -70,7 +72,7 @@ public:
     void setScalarTransientConfig(const ScalarTransientConfig& config);
     void setDetectorSelection(DetectorSelection selection);
     void setInspectionPlan(const InspectionPlan& plan);
-    void setPatternRulesConfig(const PatternRulesConfig& config);
+    void setPatternMatcherConfig(const PatternMatcherConfig& config);
     void setFieldStateConfig(const FieldStateConfig& config);
     void setProfileName(const char* profileName);
 
@@ -85,6 +87,7 @@ public:
     const DetectionPipelineResult& latestPipelineResult() const;
     // Generic report access is the canonical upward path.
     const DetectorReport& activeDetectorReport() const;
+    const PatternMatcherReport& activePatternMatcherReport() const;
     const FieldState& fieldState() const;
     const FeatureHistory& featureHistory() const;
 
@@ -108,7 +111,7 @@ private:
     // Profile configuration applied at fixed runtime stages.
     DetectorSelection _detectorSelection = DetectorSelection::FrequencyMatch;
     InspectionPlan _inspectionPlan = {};
-    PatternRulesConfig _patternRulesConfig = {};
+    PatternMatcherConfig _patternMatcherConfig = {};
     const char* _profileName = "unknown";
 
     FrequencyMatchDetector _frequencyDetector;

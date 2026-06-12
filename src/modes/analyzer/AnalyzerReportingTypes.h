@@ -64,7 +64,7 @@ enum class AnalyzerReason {
     NoOccurrence,
     OccurrenceSeenButRejected,
     InspectionFailed,
-    PatternCandidateRejected,
+    PatternRejected,
     MultipleValidPatterns,
     MultipleCompetingPatterns,
     FieldTooDense,
@@ -129,8 +129,8 @@ inline const char* analyzerReasonName(AnalyzerReason value) {
             return "occurrence_seen_but_rejected";
         case AnalyzerReason::InspectionFailed:
             return "inspection_failed";
-        case AnalyzerReason::PatternCandidateRejected:
-            return "pattern_candidate_rejected";
+        case AnalyzerReason::PatternRejected:
+            return "pattern_rejected";
         case AnalyzerReason::MultipleValidPatterns:
             return "multiple_valid_patterns";
         case AnalyzerReason::MultipleCompetingPatterns:

@@ -194,9 +194,9 @@ void printDetectionProfileDetails(const detection::DetectionProfile& profile) {
         }
     }
     Serial.print("  pattern.requireSupportForAcceptance=");
-    Serial.println(profile.patternRulesConfig.requireSupportForAcceptance ? 1 : 0);
+    Serial.println(profile.patternMatcherConfig.requireSupportForAcceptance ? 1 : 0);
     Serial.print("  pattern.requiredSupportTarget=");
-    Serial.println(evidenceTargetName(profile.patternRulesConfig.requiredSupportTarget));
+    Serial.println(evidenceTargetName(profile.patternMatcherConfig.requiredSupportTarget));
     Serial.print("  fieldState.occurrenceWindowMs=");
     Serial.println(profile.fieldStateConfig.occurrenceWindowMs);
     Serial.print("  fieldState.patternWindowMs=");
@@ -856,9 +856,9 @@ void Node::handleDetectCommand(const char* line) {
     Serial.print(" inspectionPlan=");
     Serial.print(inspectionPlanName(detectionProfile.inspectionPlan));
     Serial.print(" requireSupportForAcceptance=");
-    Serial.print(detectionProfile.patternRulesConfig.requireSupportForAcceptance ? 1 : 0);
+    Serial.print(detectionProfile.patternMatcherConfig.requireSupportForAcceptance ? 1 : 0);
     Serial.print(" requiredSupportTarget=");
-    Serial.print(evidenceTargetName(detectionProfile.patternRulesConfig.requiredSupportTarget));
+    Serial.print(evidenceTargetName(detectionProfile.patternMatcherConfig.requiredSupportTarget));
     Serial.print(" freqScore=");
     Serial.print(detectionProfile.frequencyMatch.attackScoreMin, 0);
     Serial.print(" freqContrast=");
@@ -980,7 +980,7 @@ void Node::applyActiveDetectionProfile() {
     _detection.setFrequencyMatchConfig(detectionProfile.frequencyMatch);
     _detection.setScalarTransientConfig(detectionProfile.scalarTransient);
     _detection.setInspectionPlan(detectionProfile.inspectionPlan);
-    _detection.setPatternRulesConfig(detectionProfile.patternRulesConfig);
+    _detection.setPatternMatcherConfig(detectionProfile.patternMatcherConfig);
     _detection.setFieldStateConfig(detectionProfile.fieldStateConfig);
     _detection.setProfileName(detection::detectionProfileName(detectionProfile.kind));
     _freqBandStream.setSampleRateHz(_audioSource.sampleRateHz());

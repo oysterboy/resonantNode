@@ -1,123 +1,343 @@
-# Pass X2 - Occurrence Payload Cleanup
+# Pass X3 - PatternMatcher Boundary + Pattern Stage Snapshot
 
-Status: Codex instruction  
-Scope: active `src/detection` and `src/modes/analyzer` occurrence chain  
-Goal: remove the legacy/transitional `Occurrence` payload spillover by moving active consumers onto the canonical occurrence shell plus scoped detail blocks.
+Status: planned pass after occurrence cleanup  
+Scope: detection pattern stage only  
+Includes: X3-A + X3-B  
+Goal: make `PatternMatcher` the public pattern-stage boundary and keep pattern explainability without exposing `PatternAssembler` / `PatternRules` as public runtime contracts.
 
 ---
 
-## Starting point
+## Context
 
-X1 removed `DetectionDiagnostics`, the legacy Analyzer bridge, BASE/CAP/VAL tooling, and post-DDQ residue.
-
-Remaining UNKNOWN from X1-R:
+Current target architecture:
 
 ```text
-src/detection/occurrences/Occurrence.h
-src/detection/patterns/PatternResult.h
-src/detection/detectors/ScalarTransientDetector.cpp
-OccurrenceSource usage in runtime/detector/pattern/analyzer logic
+Detector
+-> Occurrence
+-> Inspector
+-> InspectedOccurrence
+-> PatternMatcher
+-> PatternResult
+-> Behavior
 ```
 
-This pass handles only the `Occurrence` payload. `PatternResult` trimming is a follow-up pass unless a trivial compile-only change becomes necessary.
+Target boundary:
+
+```text
+PatternMatcher = public pattern-stage module
+PatternAssembler = internal helper
+PatternRules = internal helper
+PatternResult = compact outward result
+```
+
+This pass prepares later `PatternResult` payload trimming.
+
+Do this before trimming `PatternResult`, because the public pattern-stage boundary must be settled first.
 
 ---
 
-## Current problem
+## X3-A - PatternMatcher public boundary
 
-`Occurrence` still contains a canonical shell plus legacy payload:
+### Goal
+
+Make `PatternMatcher` the only active public pattern-stage API.
+
+Detection/runtime code should conceptually call:
 
 ```cpp
-DetectorId detectorId;
-OccurrenceType occurrenceType;
-bool present;
-bool valid;
-start/peak/release/end samples and ms;
-strength;
-confidence;
-ScalarOccurrenceDetail scalar;
-
-// legacy / transitional spillover
-OccurrenceKind kind;
-OccurrenceSource source;
-OccurrenceDetectorKind detectorKind;
-score;
-contrast;
-ampStrength;
-scalarEvidence;
-frequencyScoreStrength;
-frequencyContrastQuality;
-targetBandStrength;
-ampLevel;
-ampBaseline;
-TransientEvidence transient;
-FrequencyBandMeasurementPacket frequency;
+PatternResult result = patternMatcher.update(...);
 ```
 
-The active chain still reads old identity fields and old wide payload fields in:
+or an equivalent current-project shape.
 
-```text
-DetectionRuntime
-ScalarTransientDetector
-FrequencyMatchDetector
-OccurrenceInspector
+It should not externally orchestrate:
+
+```cpp
 PatternAssembler
-AnalyzerApp
-AnalyzerReportingTypes
+PatternRules
+PatternCandidate
+```
+
+as separate public stages.
+
+---
+
+### Required checks
+
+Inspect current pattern path and identify:
+
+```text
+DetectionRuntime -> PatternAssembler
+DetectionRuntime -> PatternRules
+Analyzer -> PatternAssembler
+Analyzer -> PatternRules
+external includes of PatternAssembler / PatternRules
+public PatternCandidate usage outside pattern stage
+```
+
+Then refactor so:
+
+```text
+PatternMatcher owns assembly + rule evaluation flow.
+PatternAssembler becomes internal helper.
+PatternRules becomes internal helper.
+PatternCandidate becomes internal pattern-stage construction data.
+DetectionRuntime depends on PatternMatcher, not PatternAssembler/PatternRules directly.
+Behavior consumes PatternResult only.
+FieldState consumes compact pattern facts only.
 ```
 
 ---
 
-## Desired end state
+### Allowed public pattern-stage types
 
-`Occurrence` should become a compact accepted-event contract:
+Allowed outside pattern stage:
+
+```text
+PatternMatcher
+PatternMatcherConfig
+PatternMatcherReport
+PatternResult
+PatternEvent if currently used as compact outward result
+PatternType / PatternId / PatternStatus enums if canonical
+PatternRejectReason / PatternReason if canonical
+```
+
+Internal-only after this pass:
+
+```text
+PatternAssembler
+PatternRules
+PatternRulesConfig as a public runtime/profile-facing name
+PatternCandidate
+full InspectedOccurrence grouping mechanics
+rule scoring internals
+```
+
+---
+
+### Analyzer access rule
+
+Analyzer may explain the pattern stage, but not by owning the inner pipeline.
+
+Allowed:
+
+```text
+Analyzer reads PatternResult.
+Analyzer reads PatternMatcher snapshot/report if explicitly provided.
+Analyzer reads canonical pattern-stage report facts.
+```
+
+Not allowed:
+
+```text
+Analyzer directly calls PatternAssembler.
+Analyzer directly calls PatternRules.
+Analyzer reconstructs PatternCandidate ownership.
+Analyzer depends on internal assembly/rule details as runtime truth.
+```
+
+---
+
+### Non-goals
+
+Do not:
+
+```text
+trim PatternResult payload yet
+redesign rule semantics
+change detection validity
+change behavior timing/output
+rename every file unless required
+remove Analyzer explainability
+```
+
+---
+
+### X3-A acceptance
+
+```text
+DetectionRuntime uses PatternMatcher as the public pattern-stage boundary.
+PatternAssembler is not called as an external runtime stage.
+PatternRules is not called as an external runtime stage.
+PatternCandidate is not passed beyond pattern-stage internals except possibly temporary debug snapshots.
+Behavior receives PatternResult only.
+Current TonalPulse behavior and SEQ results remain equivalent.
+Build passes.
+```
+
+---
+
+## X3-B - Pattern stage snapshot / report for Analyzer
+
+### Goal
+
+Keep Analyzer explainability while preventing `PatternResult` from carrying all pattern construction internals.
+
+Add or clarify a pattern-stage snapshot/report owned by `PatternMatcher`.
+
+This is not behavior-facing runtime data.
+
+---
+
+### Preferred shape
+
+Add a lightweight report/snapshot if needed:
 
 ```cpp
-struct Occurrence {
-    DetectorId detectorId;
-    OccurrenceType occurrenceType;
-    bool present;
+struct PatternMatcherReport {
+    bool candidatePresent;
+    bool patternMatched;
+    bool supportMatched;
     bool valid;
 
-    uint64_t startSample;
-    uint64_t peakSample;
-    uint64_t releaseSample;
+    PatternType patternType;
+    PatternRejectReason rejectReason;
 
-    unsigned long startMs;
-    unsigned long peakMs;
-    unsigned long releaseMs;
-    unsigned long endMs;
-    unsigned long durationMs;
+    uint32_t startMs;
+    uint32_t peakMs;
+    uint32_t endMs;
+    uint32_t durationMs;
 
-    float strength;
     float confidence;
+    float strength;
 
-    ScalarOccurrenceDetail scalar;
-    FrequencyOccurrenceDetail frequency;
+    uint8_t occurrenceCount;
+    uint8_t acceptedOccurrenceCount;
 };
 ```
 
-No active code should read:
+Exact fields may differ; keep it compact and canonical.
+
+---
+
+### Report ownership
 
 ```text
-OccurrenceKind
-OccurrenceSource
-OccurrenceDetectorKind
-detectorIdFromLegacyOccurrenceSource()
-occurrenceTypeFromLegacyOccurrenceKind()
-Occurrence::score
-Occurrence::contrast
-Occurrence::ampStrength
-Occurrence::scalarEvidence
-Occurrence::frequencyScoreStrength
-Occurrence::frequencyContrastQuality
-Occurrence::targetBandStrength
-Occurrence::ampLevel
-Occurrence::ampBaseline
-Occurrence::transient
+PatternMatcher owns PatternMatcherReport.
+Analyzer may snapshot/read it.
+Behavior must not depend on it.
+FieldState must not depend on it.
+PatternResult remains the outward runtime result.
 ```
 
-Legacy aliases and bridge helpers should be removed from `Occurrence.h` only after all active producers and consumers are migrated.
+---
+
+### What may go into PatternMatcherReport
+
+Allowed:
+
+```text
+candidate present/missing
+matched / not matched
+valid / invalid
+reason / reject class
+pattern type
+support matched
+main timing
+main strength/confidence
+small occurrence counts
+selected compact internal stage fact
+```
+
+Avoid:
+
+```text
+full PatternCandidate copies
+full InspectedOccurrence arrays
+raw detector evidence
+DetectorReport copies
+FrequencyBandMeasurementPacket copies
+deep scoring internals
+large history windows
+strings
+heap allocation
+```
+
+---
+
+### Analyzer output mapping
+
+After this pass:
+
+```text
+SEQ_PATTERN or SEQ_EXPLAIN may use PatternMatcherReport.
+SEQ_TRIAL / SEQ_SUMMARY should still use PatternResult + Analyzer classification.
+Behavior should still use PatternResult only.
+```
+
+If no `SEQ_PATTERN` exists yet, do not create broad new output unless needed.
+
+For now, it is enough that `SEQ_EXPLAIN` can access clean pattern-stage facts without reaching into `PatternAssembler` / `PatternRules`.
+
+---
+
+### Non-goals
+
+Do not:
+
+```text
+build a large diagnostics subsystem
+turn PatternMatcherReport into another DetectionDiagnostics
+duplicate DetectorReport
+add heap-heavy snapshots
+expose PatternMatcherReport to Behavior
+```
+
+---
+
+### X3-B acceptance
+
+```text
+Analyzer can explain pattern-stage outcome through PatternMatcher / PatternResult-owned facts.
+Analyzer does not call PatternAssembler / PatternRules directly.
+PatternMatcherReport, if added, is compact and pattern-stage-owned.
+No heavy PatternCandidate / InspectedOccurrence copies are pushed into Behavior-facing data.
+Build passes.
+```
+
+---
+
+## Combined acceptance
+
+Pass X3 is accepted when:
+
+```text
+PatternMatcher is the only public pattern-stage boundary.
+PatternAssembler and PatternRules are internal helpers.
+DetectionRuntime no longer publicly orchestrates assembler + rules as separate stages.
+Analyzer explainability is preserved through PatternMatcher / PatternResult / compact report facts.
+Behavior consumes PatternResult only.
+FieldState consumes compact pattern facts only.
+PatternResult payload trimming is now safe to plan as next pass.
+TonalPulse clean SEQ_TRIAL / SOURCE / INSPECT / EXPLAIN / SUMMARY still build and remain semantically equivalent.
+Build passes.
+```
+
+---
+
+## Suggested files to inspect
+
+```text
+src/detection/patterns/*
+src/detection/DetectionRuntime.*
+src/modes/analyzer/*
+```
+
+Search terms:
+
+```text
+PatternMatcher
+PatternAssembler
+PatternRules
+PatternCandidate
+PatternResult
+PatternEvent
+InspectedOccurrence
+patternMatched
+supportMatched
+pattern.valid
+```
 
 ---
 
@@ -126,411 +346,48 @@ Legacy aliases and bridge helpers should be removed from `Occurrence.h` only aft
 Do not change:
 
 ```text
-detector behavior
-thresholds
-PatternMatcher internals
-PatternResult semantics, except compile fixes caused by occurrence field moves
-Behavior / Output
-clean SEQ output labels
-emitted event label strings
-timing math
-accept/reject decisions
-```
-
-Do not remove:
-
-```text
-DetectorReport
-RejectedCandidateSummary
-AnalyzerReport / AnalyzerReportingTypes
-RAW/sample dump tooling
-SEQ REPORT
-SEQ STATUS
-SYSTEM_HEALTH
-```
-
-If a field is unclear, keep it and classify it as `UNKNOWN`.
-
----
-
-## Classification labels
-
-Use only these labels in reports:
-
-```text
-MOVE_NOW
-DELETE_NOW
-KEEP_CANONICAL
-KEEP_NEUTRAL_TOOLING
-ROADMAP_LATER
-BUG_RISK
-UNKNOWN
-```
-
-Meanings:
-
-```text
-MOVE_NOW          active payload should move to canonical/scoped detail
-DELETE_NOW        dead legacy alias/helper after all reads are gone
-KEEP_CANONICAL    part of the desired occurrence contract
-KEEP_NEUTRAL_TOOLING output/tooling fact, but not analyzer truth
-ROADMAP_LATER     belongs to PatternResult or later report cleanup
-BUG_RISK          changing it may affect behavior/timing/output semantics
-UNKNOWN           not enough certainty; leave untouched
+detector thresholds
+detector candidate lifecycle
+Occurrence emission
+Inspector acceptance logic
+Pattern validity semantics
+Behavior response logic
+Output generation
+SEQ clean output labels unless required by compile
 ```
 
 ---
 
-## X2-A - Occurrence payload audit
+## Output report
 
-Search:
-
-```text
-OccurrenceKind
-OccurrenceSource
-OccurrenceDetectorKind
-detectorIdFromLegacyOccurrenceSource
-occurrenceTypeFromLegacyOccurrenceKind
-.kind
-.source
-.detectorKind
-.score
-.contrast
-.ampStrength
-.scalarEvidence
-.frequencyScoreStrength
-.frequencyContrastQuality
-.targetBandStrength
-.ampLevel
-.ampBaseline
-.transient
-.frequency
-```
-
-Scope:
+Create or update:
 
 ```text
-src/detection
-src/modes/analyzer
-```
-
-Create:
-
-```text
-docs/occurrence_payload_cleanup_audit.md
+docs/pass_X3_patternmatcher_boundary.md
 ```
 
 Include:
 
 ```text
-## Active producers
-## Active consumers
-## MOVE_NOW
-## DELETE_NOW
-## KEEP_CANONICAL
-## KEEP_NEUTRAL_TOOLING
-## ROADMAP_LATER
-## BUG_RISK
-## UNKNOWN
-## Proposed migration order
-```
-
-Acceptance:
-
-```text
-Every active legacy/transitional Occurrence field read/write is classified.
-No code changes are required in X2-A except the audit doc.
+## Public boundary before
+## Public boundary after
+## Internalized helpers
+## Analyzer access path
+## PatternMatcherReport decision
+## Files touched
+## Behavior unchanged check
+## SEQ sanity result
+## Remaining payload-trim candidates for Pass X4
 ```
 
 ---
 
-## X2-B - Define scoped occurrence details
+## Next pass
 
-Extend `Occurrence.h` with explicit scoped detail blocks before moving users:
-
-```cpp
-struct ScalarOccurrenceDetail {
-    bool present;
-    float value;
-    float baseline;
-    float lift;
-    float strength;
-    float onsetStrength;
-    float peakStrength;
-    float releaseStrength;
-    bool audioOverflowDuringCandidate;
-    ScalarEvidence evidence;
-    StrengthClass strengthClass;
-};
-
-struct FrequencyOccurrenceDetail {
-    bool present;
-    float score;
-    float contrast;
-    StrengthClass scoreStrength;
-    StrengthClass contrastQuality;
-    StrengthClass targetBandStrength;
-    FrequencyBandMeasurementPacket measurement;
-};
-```
-
-Do not introduce a third `TransientOccurrenceDetail` occurrence family. The old
-transient lifecycle payload belongs to scalar occurrence detail because the
-active occurrence families are scalar and frequency only.
-
-Rules:
+After Pass X3:
 
 ```text
-Do not remove old fields in X2-B.
-Add new fields beside the existing compatibility payload.
-Keep defaults zero/false/Unknown.
-Build after adding the structs.
+Pass X4 - PatternResult payload trimming
 ```
 
-Acceptance:
-
-```text
-Occurrence has canonical scoped detail blocks for scalar and frequency facts.
-Scalar detail includes the old transient lifecycle facts needed by current
-pattern/analyzer consumers.
-No active behavior/output changes.
-Build passes.
-```
-
----
-
-## X2-C - Move producers to canonical/scoped fields
-
-Migrate producers to fill canonical fields first.
-
-Producer targets:
-
-```text
-FrequencyMatchDetector::capturePendingOccurrence()
-ScalarTransientDetector::capturePendingOccurrence()
-DetectionRuntime scalar update call sites
-OccurrenceInspector scalar annotation, if it currently backfills legacy fields
-```
-
-Producer mapping:
-
-```text
-kind/source/detectorKind
-    -> detectorId / occurrenceType
-
-score / contrast
-    -> occurrence.frequency.score / occurrence.frequency.contrast
-
-frequencyScoreStrength / frequencyContrastQuality / targetBandStrength
-    -> occurrence.frequency.scoreStrength / contrastQuality / targetBandStrength
-
-frequency
-    -> occurrence.frequency.measurement
-
-ampLevel / ampBaseline / scalarEvidence / ampStrength
-    -> occurrence.scalar.value / baseline / evidence / strengthClass
-
-transient
-    -> occurrence.scalar onset/peak/release lifecycle fields
-```
-
-Rules:
-
-```text
-During X2-C, keep writing old fields too if consumers still need them.
-Prefer helper fill functions to duplicated assignments if the mapping repeats.
-Do not change emitted values.
-```
-
-Acceptance:
-
-```text
-Canonical/scoped fields are fully populated by occurrence producers.
-Old fields may still be written for compatibility.
-Build passes.
-```
-
----
-
-## X2-D - Move consumers off legacy fields
-
-Migrate active consumers to read canonical/scoped fields.
-
-Consumer targets:
-
-```text
-PatternAssembler
-AnalyzerApp occurrence display helpers and report fill
-OccurrenceInspector
-AnalyzerReportingTypes fields, if they duplicate old names
-```
-
-Consumer mapping:
-
-```text
-source.kind
-    -> source.occurrenceType
-
-source.source
-    -> source.detectorId
-
-source.detectorKind
-    -> source.detectorId or a scoped detail only if truly needed
-
-source.score / source.contrast
-    -> source.frequency.score / source.frequency.contrast
-
-source.ampStrength
-    -> source.scalar.strengthClass
-
-source.scalarEvidence
-    -> source.scalar.evidence
-
-source.frequencyScoreStrength
-    -> source.frequency.scoreStrength
-
-source.frequencyContrastQuality
-    -> source.frequency.contrastQuality
-
-source.targetBandStrength
-    -> source.frequency.targetBandStrength
-
-source.ampLevel / source.ampBaseline
-    -> source.scalar.value / source.scalar.baseline
-
-source.transient
-    -> source.scalar onset/peak/release lifecycle fields
-
-source.frequency
-    -> source.frequency.measurement
-```
-
-Rules:
-
-```text
-Do not change output labels unless a label names the removed internal field.
-Do not change PatternCandidate semantics.
-If PatternAssembler requires old-shaped data, add local adapter helpers rather than keeping legacy fields on Occurrence.
-```
-
-Acceptance:
-
-```text
-No active consumer reads legacy Occurrence identity or payload aliases.
-Build passes.
-SEQ outputs retain their labels and meanings.
-```
-
----
-
-## X2-E - Delete legacy Occurrence aliases
-
-Only after X2-D passes, remove from `Occurrence.h`:
-
-```text
-OccurrenceKind
-OccurrenceSource
-OccurrenceDetectorKind
-detectorIdFromLegacyOccurrenceSource()
-occurrenceTypeFromLegacyOccurrenceKind()
-kind
-source
-detectorKind
-score
-contrast
-ampStrength
-scalarEvidence
-frequencyScoreStrength
-frequencyContrastQuality
-targetBandStrength
-ampLevel
-ampBaseline
-legacy/transitional comments
-```
-
-Do not remove:
-
-```text
-Occurrence::frequency
-```
-
-once it is the canonical `FrequencyOccurrenceDetail` block. Remove only the old
-packet-shaped frequency payload after all consumers have moved to
-`Occurrence::frequency.measurement`.
-
-Create:
-
-```text
-docs/occurrence_payload_cleanup_removal.md
-```
-
-Include:
-
-```text
-## Removed aliases
-## Fields kept canonical
-## Consumers migrated
-## Compile fixes
-## Remaining UNKNOWN
-## Next recommended pass
-```
-
-Acceptance:
-
-```text
-No active references remain to deleted aliases/helpers/enums.
-Occurrence.h no longer contains legacy/transitional payload comments.
-Build passes.
-```
-
----
-
-## Required scans
-
-Before and after X2-E:
-
-```bash
-rg -n "OccurrenceKind|OccurrenceSource|OccurrenceDetectorKind|detectorIdFromLegacyOccurrenceSource|occurrenceTypeFromLegacyOccurrenceKind" src/detection src/modes/analyzer
-rg -n "\\.(kind|source|detectorKind|score|contrast|ampStrength|scalarEvidence|frequencyScoreStrength|frequencyContrastQuality|targetBandStrength|ampLevel|ampBaseline)\\b" src/detection src/modes/analyzer
-rg -n "legacy|Legacy|compat|Compat|temporary|transitional|TODO|FIXME" src/detection/occurrences src/detection/patterns src/modes/analyzer
-```
-
-Expected final result:
-
-```text
-No legacy Occurrence identity enum/helper references remain.
-No old wide Occurrence payload alias reads remain.
-Only ROADMAP_LATER PatternResult transitional comments may remain.
-```
-
----
-
-## Build validation
-
-Run after each implementation phase:
-
-```bash
-platformio run -e esp32dev-analyzer
-platformio run
-```
-
-Pass accepted only if both builds pass.
-
----
-
-## Commit style
-
-Suggested split:
-
-```bash
-git commit -m "DetectionCleanup audit occurrence payload"
-git commit -m "DetectionCleanup add scoped occurrence details"
-git commit -m "DetectionCleanup migrate occurrence payload consumers"
-git commit -m "DetectionCleanup remove legacy occurrence payload"
-```
-
-If implemented as one pass:
-
-```bash
-git commit -m "DetectionCleanup clean occurrence payload"
-```
+Pass X4 should only start after the PatternMatcher boundary is stable.

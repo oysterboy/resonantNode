@@ -115,7 +115,7 @@ void AnalyzerApp::startSequenceTest(const PendingSequenceStart& pending) {
     _detection.setScalarTransientConfig(selectedProfile.scalarTransient);
     _detection.setDetectorSelection(selectedProfile.detectorSelection);
     _detection.setInspectionPlan(selectedProfile.inspectionPlan);
-    _detection.setPatternRulesConfig(selectedProfile.patternRulesConfig);
+    _detection.setPatternMatcherConfig(selectedProfile.patternMatcherConfig);
     _detection.setFieldStateConfig(selectedProfile.fieldStateConfig);
     _detection.setProfileName(detection::detectionProfileName(selectedProfile.kind));
     _detection.setDiagnosticsEnabled(_sequenceTest.outputConfig.diagnosticsEnabled);
@@ -254,11 +254,11 @@ void AnalyzerApp::startSequenceTest(const PendingSequenceStart& pending) {
         Serial.print(detection::detectorSelectionName(selectedProfile.detectorSelection));
         Serial.print(" required_support_target=");
         Serial.print(supportTargetDisplayName(
-            selectedProfile.patternRulesConfig.requiredSupportTarget,
-            selectedProfile.patternRulesConfig.requireSupportForAcceptance
+            selectedProfile.patternMatcherConfig.requiredSupportTarget,
+            selectedProfile.patternMatcherConfig.requireSupportForAcceptance
         ));
         Serial.print(" support_gate=");
-        Serial.print(selectedProfile.patternRulesConfig.requireSupportForAcceptance ? "enabled" : "disabled");
+        Serial.print(selectedProfile.patternMatcherConfig.requireSupportForAcceptance ? "enabled" : "disabled");
         Serial.print(" freq_min_duration_ms=");
         Serial.print(selectedProfile.frequencyMatch.minDurationMs);
         Serial.print(" freq_release_debounce_ms=");

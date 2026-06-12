@@ -1,6 +1,7 @@
 #pragma once
 
 #include "PatternAssembler.h"
+#include "PatternMatcherTypes.h"
 #include "PatternRules.h"
 
 namespace detection {
@@ -15,7 +16,8 @@ PatternAssembler and PatternRules as internal implementation helpers.
 class PatternMatcher {
 public:
     void reset();
-    void configure(const PatternRulesConfig& config);
+    void configure(const PatternMatcherConfig& config);
+    const PatternMatcherReport& report() const;
 
     // Convenience single-occurrence path. Returns a default PatternResult when
     // no candidate/result is emitted for this occurrence.
@@ -27,6 +29,7 @@ public:
 private:
     PatternAssembler _assembler;
     PatternRules _rules;
+    PatternMatcherReport _report = {};
 };
 
 } // namespace detection

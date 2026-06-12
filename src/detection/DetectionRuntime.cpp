@@ -117,9 +117,9 @@ void DetectionRuntime::setInspectionPlan(const InspectionPlan& plan) {
     _occurrenceInspector.configure(_inspectionPlan);
 }
 
-void DetectionRuntime::setPatternRulesConfig(const PatternRulesConfig& config) {
-    _patternRulesConfig = config;
-    _patternMatcher.configure(_patternRulesConfig);
+void DetectionRuntime::setPatternMatcherConfig(const PatternMatcherConfig& config) {
+    _patternMatcherConfig = config;
+    _patternMatcher.configure(_patternMatcherConfig);
 }
 
 void DetectionRuntime::setFieldStateConfig(const FieldStateConfig& config) {
@@ -204,6 +204,10 @@ const DetectorReport& DetectionRuntime::activeDetectorReport() const {
     return _detectorReport;
 }
 
+const PatternMatcherReport& DetectionRuntime::activePatternMatcherReport() const {
+    return _patternMatcher.report();
+}
+
 const FieldState& DetectionRuntime::fieldState() const {
     return _fieldStateTracker.state();
 }
@@ -273,6 +277,8 @@ void DetectionRuntime::capturePipelineResult(
     _latestPipelineResult = {};
     _latestPipelineResult.hasPattern = true;
     _latestPipelineResult.pattern = result;
+    _latestPipelineResult.hasPatternReport = true;
+    _latestPipelineResult.patternReport = _patternMatcher.report();
     _latestPipelineResult.hasOccurrence = occurrence != nullptr && occurrence->present;
     if (_latestPipelineResult.hasOccurrence && occurrence != nullptr) {
         _latestPipelineResult.occurrence = *occurrence;

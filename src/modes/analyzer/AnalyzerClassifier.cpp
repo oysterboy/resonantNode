@@ -29,7 +29,7 @@ AnalyzerReason analyzerReasonFromSequenceOutcome(const AnalyzerSequenceClassific
             return AnalyzerReason::MissingPipelineResult;
         case AnalyzerResult::Rejected:
             if (input.patternAvailable) {
-                return AnalyzerReason::PatternCandidateRejected;
+                return AnalyzerReason::PatternRejected;
             }
             if (input.detectorSelectedRejectPresent) {
                 return AnalyzerReason::OccurrenceSeenButRejected;
@@ -56,7 +56,7 @@ AnalyzerStage analyzerPrimaryStageFromReason(AnalyzerReason reason) {
             return AnalyzerStage::Source;
         case AnalyzerReason::InspectionFailed:
             return AnalyzerStage::Inspect;
-        case AnalyzerReason::PatternCandidateRejected:
+        case AnalyzerReason::PatternRejected:
         case AnalyzerReason::MultipleValidPatterns:
         case AnalyzerReason::MultipleCompetingPatterns:
             return AnalyzerStage::Pattern;

@@ -1,3 +1,23 @@
+# 2026-06-13 - LOG-001 tuning-run logger
+
+### Context
+
+The scalar tuning workflow needs a reproducible, log-first batch scaffold around the `PARAM` command surface.
+
+### Changed
+
+- added the LOG-001 tuning helper under `tools/`
+- documented the `SEQ start profile=TonalPulseScalar tries=50 mode=source when=all verbose=1` workflow
+- updated the seq-tests batch layout to include `README.md`, `session.log`, `run_01.log` through `run_10.log`, and `block_01_summary.md` through `block_10_summary.md`
+- recorded the `Codex-run` and `User-run` workflow split
+- added resume support for interrupted batches via `-BatchRoot` and `-StartRun`
+- added single-instance batch locking plus resume-state snapshots for LOG-001 tuning runs
+
+### Verification
+
+- the analyzer command surface already supports `PARAM` and `PARAM STATUS`
+- no detector semantics change is required for this documentation/helper pass
+
 # 2026-06-12 - Analyzer tuning surface PAR-001
 
 ### Context

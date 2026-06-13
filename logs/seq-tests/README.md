@@ -1,70 +1,83 @@
-# Scalar Tuning Run Set
+# LOG-001 Seq Tests Guide
 
-Status: ready to launch
+Status: active
 
 ## Goal
 
-- Reduce misses to zero
-- Keep duplicates at zero
-- Then tighten duration and hysteresis gradually
-- Run a 100-trial sweep with small, controlled parameter shifts
-
-## Current settings
-
-- Profile: `TonalPulseScalar`
-- Max duration: `300 ms`
-- Onset threshold: `20000.0`
-- Release threshold: `5000.0`
-- Release debounce: `30 ms`
-- Min duration: `60 ms`
-- Min peak strength: `0.0`
-
-## Analyzer command
+- Keep the scalar tuning workflow log-first and reproducible.
+- Use the canonical launch shape:
 
 ```text
-SEQ start profile=TonalPulseScalar tries=50 mode=source when=miss verbose=1
+SEQ start profile=TonalPulseScalar tries=50 mode=source when=all verbose=1
 ```
 
-For this batch, run 100 total sequences as 10 blocks of 10 runs.
-Keep the command shape the same unless the profile settings below change.
+- Tune from saved batch folders instead of pasted serial snippets.
 
-## Logging
+## Current focus
 
-- Capture one log file per run as `run_01.log` through `run_10.log`
-- Capture the serial session transcript in `session.log`
-- Keep the batch folder self-contained
+- Profile: `TonalPulseScalar`
+- Default tuning target: `Scalar`
+- Active command surface: `PARAM` and `PARAM STATUS`
+- Run planning: 100 launches in 10 launch blocks
+- Block size: 10 launches
+
+## Logging layout
+
+Each batch folder should contain:
+
+- `README.md`
+- `session.log`
+- `heartbeat.md`
+- `campaign.lock`
+- `campaign_state.json`
+- `run_01.log` through `run_10.log`
+- `block_01_summary.md` through `block_10_summary.md`
+- `progress.md`
+
+The batch README should capture:
+
+- the parameter snapshot
+- the launch command
+- the port and baud rate
+- the decision rule for the next block
+- the failure and resume markers if the batch stops early
+
+## What to capture
+
+Capture and compare:
+
+- miss count
+- duplicate count
+- late count
+- `avg_dt_ms`
+- `avg_strength`
+
+Keep `PARAM STATUS` snapshots:
+
+- before each block
+- after each parameter change
+- after each block decision if the tuning changes
+
+## Workflow modes
+
+- `Codex-run`: Codex or the helper launches the block, reads the summary, and applies the next `PARAM` shift.
+- `User-run`: the helper prints the exact commands and log targets for manual execution.
+- Interrupted batches can be resumed from the saved folder with `-BatchRoot` and `-StartRun`.
+- If a run stops unexpectedly, check `session.log`, `progress.md`, `campaign_state.json`, and `heartbeat.md` together.
+
+## Tuning rule of thumb
+
+- First remove misses.
+- Then tighten `maxTransientDurationMs` and hysteresis in small steps.
+- Keep duplicates at zero if possible.
+- Avoid changing more than one knob at a time unless the block is clearly unstable.
+
+## Helper
+
+Use the checked-in helper under `tools/` to create the batch scaffold and write the README and summary placeholders in the expected layout.
 
 ## Notes
 
-- Use the updated generic support labels in analyzer output.
-- Do not compare against pasted console text alone; use the saved logs.
-- When a run finishes, summarize misses, duplicates, late results, `avg_dt_ms`, and `avg_strength` before adjusting tuning.
-
-## Suggested shift ladder
-
-Use one block per shift and keep the previous block as the comparison baseline.
-
-| Block | Max duration | Onset | Release | Release debounce | Notes |
-| --- | --- | --- | --- | --- | --- |
-| 1 | 300 | 20000 | 5000 | 30 | Baseline after the current flash |
-| 2 | 280 | 20000 | 5000 | 30 | Tighten duration first |
-| 3 | 260 | 20000 | 5000 | 30 | Keep watching for misses |
-| 4 | 240 | 20000 | 5000 | 30 | Stop if duplicates reappear |
-| 5 | 220 | 20000 | 5000 | 30 | Keep hysteresis unchanged |
-| 6 | 220 | 20000 | 5000 | 20 | Reduce debounce if miss-free |
-| 7 | 220 | 19000 | 4800 | 20 | Slightly lower entry/exit gate |
-| 8 | 220 | 18000 | 4500 | 20 | Only if the previous block stayed clean |
-| 9 | 200 | 18000 | 4500 | 20 | Go tighter only if duplicates stay at zero |
-| 10 | 200 | 18000 | 4500 | 15 | Final tightening pass if still stable |
-
-If a block gets worse, keep the last good values and use the next block to test a smaller adjustment instead of jumping again.
-
-## Knob playbook
-
-- `onsetDetectionThreshold`: move down if valid events are missed before opening; move up if weak noise opens too often.
-- `onsetReleaseThreshold`: move down if peaks close too early; move up if release hangs too long.
-- `cooldownAfterOnsetMs`: move up if the same acoustic event retriggers; move down if nearby valid events are being suppressed.
-- `minTransientDurationMs`: move down if valid short bursts are rejected; move up if very short noise bursts pass through.
-- `maxTransientDurationMs`: move down if long lingering peaks create duplicates or late cleanup; move up if valid events are being cut off.
-- `minTransientPeakStrength`: move up if weak ambient peaks are accepted; move down if valid but weaker bursts are missed.
-- `releaseDebounceMs`: move up if release chatters or duplicates appear; move down if real events are being held open too long.
+- Do not depend on ad-hoc pasted serial text for tuning comparisons.
+- Keep each batch folder self-contained.
+- If a block regresses, keep the last good values and shrink the next adjustment.

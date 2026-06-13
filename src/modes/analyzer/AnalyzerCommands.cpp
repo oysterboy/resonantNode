@@ -34,6 +34,36 @@ const char* onOffName(bool value) {
     return value ? "on" : "off";
 }
 
+void printParamFieldStart(bool& firstField) {
+    if (!firstField) {
+        Serial.print("PARAM ");
+    } else {
+        Serial.print(" ");
+    }
+    firstField = true;
+}
+
+void printParamField(const char* name, float value, bool& firstField) {
+    printParamFieldStart(firstField);
+    Serial.print(name);
+    Serial.print("=");
+    Serial.print(value, 1);
+}
+
+void printParamField(const char* name, unsigned long value, bool& firstField) {
+    printParamFieldStart(firstField);
+    Serial.print(name);
+    Serial.print("=");
+    Serial.print(value);
+}
+
+void printParamField(const char* name, detection::FeatureStreamId value, bool& firstField) {
+    printParamFieldStart(firstField);
+    Serial.print(name);
+    Serial.print("=");
+    Serial.print(scalarObservedStreamDisplayName(value));
+}
+
 bool parseFeatureStreamToken(const char* token, detection::FeatureStreamId& out) {
     if (token == nullptr) {
         return false;
@@ -54,8 +84,8 @@ bool parseFeatureStreamToken(const char* token, detection::FeatureStreamId& out)
 }
 
 bool parseScalarTransientToken(const char* token, detection::ScalarTransientConfig& config) {
-    if (startsWithTokenIgnoreCase(token, "scalarObservedStream=") || startsWithTokenIgnoreCase(token, "scalar_observed_stream=") || startsWithTokenIgnoreCase(token, "scalarStream=")) {
-        const char* value = token + (startsWithTokenIgnoreCase(token, "scalarStream=") ? 13 : startsWithTokenIgnoreCase(token, "scalarObservedStream=") ? 21 : 23);
+    if (startsWithTokenIgnoreCase(token, "scalar_observed_stream=") || startsWithTokenIgnoreCase(token, "scalarObservedStream=") || startsWithTokenIgnoreCase(token, "scalarStream=")) {
+        const char* value = token + (startsWithTokenIgnoreCase(token, "scalar_observed_stream=") ? 23 : startsWithTokenIgnoreCase(token, "scalarObservedStream=") ? 21 : 13);
         detection::FeatureStreamId stream = config.observedStream;
         if (parseFeatureStreamToken(value, stream)) {
             config.observedStream = stream;
@@ -63,32 +93,32 @@ bool parseScalarTransientToken(const char* token, detection::ScalarTransientConf
         }
         return false;
     }
-    if (startsWithTokenIgnoreCase(token, "scalarOnsetThreshold=") || startsWithTokenIgnoreCase(token, "scalar_onset_threshold=")) {
-        config.onsetDetectionThreshold = strtof(token + (startsWithTokenIgnoreCase(token, "scalarOnsetThreshold=") ? 21 : 23), nullptr);
+    if (startsWithTokenIgnoreCase(token, "scalar_onset_threshold=") || startsWithTokenIgnoreCase(token, "scalarOnsetThreshold=")) {
+        config.onsetDetectionThreshold = strtof(token + (startsWithTokenIgnoreCase(token, "scalar_onset_threshold=") ? 23 : 21), nullptr);
         return true;
     }
-    if (startsWithTokenIgnoreCase(token, "scalarReleaseThreshold=") || startsWithTokenIgnoreCase(token, "scalar_release_threshold=")) {
-        config.onsetReleaseThreshold = strtof(token + (startsWithTokenIgnoreCase(token, "scalarReleaseThreshold=") ? 23 : 25), nullptr);
+    if (startsWithTokenIgnoreCase(token, "scalar_release_threshold=") || startsWithTokenIgnoreCase(token, "scalarReleaseThreshold=")) {
+        config.onsetReleaseThreshold = strtof(token + (startsWithTokenIgnoreCase(token, "scalar_release_threshold=") ? 25 : 23), nullptr);
         return true;
     }
-    if (startsWithTokenIgnoreCase(token, "scalarCooldownMs=") || startsWithTokenIgnoreCase(token, "scalar_cooldown_ms=")) {
-        config.cooldownAfterOnsetMs = strtoul(token + (startsWithTokenIgnoreCase(token, "scalarCooldownMs=") ? 17 : 19), nullptr, 10);
+    if (startsWithTokenIgnoreCase(token, "scalar_cooldown_ms=") || startsWithTokenIgnoreCase(token, "scalarCooldownMs=")) {
+        config.cooldownAfterOnsetMs = strtoul(token + (startsWithTokenIgnoreCase(token, "scalar_cooldown_ms=") ? 19 : 17), nullptr, 10);
         return true;
     }
-    if (startsWithTokenIgnoreCase(token, "scalarMinDurationMs=") || startsWithTokenIgnoreCase(token, "scalar_min_duration_ms=")) {
-        config.minTransientDurationMs = strtoul(token + (startsWithTokenIgnoreCase(token, "scalarMinDurationMs=") ? 20 : 23), nullptr, 10);
+    if (startsWithTokenIgnoreCase(token, "scalar_min_duration_ms=") || startsWithTokenIgnoreCase(token, "scalarMinDurationMs=")) {
+        config.minTransientDurationMs = strtoul(token + (startsWithTokenIgnoreCase(token, "scalar_min_duration_ms=") ? 23 : 20), nullptr, 10);
         return true;
     }
-    if (startsWithTokenIgnoreCase(token, "scalarMaxDurationMs=") || startsWithTokenIgnoreCase(token, "scalar_max_duration_ms=")) {
-        config.maxTransientDurationMs = strtoul(token + (startsWithTokenIgnoreCase(token, "scalarMaxDurationMs=") ? 20 : 23), nullptr, 10);
+    if (startsWithTokenIgnoreCase(token, "scalar_max_duration_ms=") || startsWithTokenIgnoreCase(token, "scalarMaxDurationMs=")) {
+        config.maxTransientDurationMs = strtoul(token + (startsWithTokenIgnoreCase(token, "scalar_max_duration_ms=") ? 23 : 20), nullptr, 10);
         return true;
     }
-    if (startsWithTokenIgnoreCase(token, "scalarMinPeakStrength=") || startsWithTokenIgnoreCase(token, "scalar_min_peak_strength=")) {
-        config.minTransientPeakStrength = strtof(token + (startsWithTokenIgnoreCase(token, "scalarMinPeakStrength=") ? 22 : 25), nullptr);
+    if (startsWithTokenIgnoreCase(token, "scalar_min_peak_strength=") || startsWithTokenIgnoreCase(token, "scalarMinPeakStrength=")) {
+        config.minTransientPeakStrength = strtof(token + (startsWithTokenIgnoreCase(token, "scalar_min_peak_strength=") ? 25 : 22), nullptr);
         return true;
     }
-    if (startsWithTokenIgnoreCase(token, "scalarReleaseDebounceMs=") || startsWithTokenIgnoreCase(token, "scalar_release_debounce_ms=")) {
-        config.releaseDebounceMs = strtoul(token + (startsWithTokenIgnoreCase(token, "scalarReleaseDebounceMs=") ? 24 : 27), nullptr, 10);
+    if (startsWithTokenIgnoreCase(token, "scalar_release_debounce_ms=") || startsWithTokenIgnoreCase(token, "scalarReleaseDebounceMs=")) {
+        config.releaseDebounceMs = strtoul(token + (startsWithTokenIgnoreCase(token, "scalar_release_debounce_ms=") ? 27 : 24), nullptr, 10);
         return true;
     }
     return false;
@@ -131,7 +161,8 @@ void AnalyzerApp::printSequenceHelp() {
     Serial.println("SEQ PROFILE TonalPulseFreq");
     Serial.println("SEQ PROFILE TonalPulseScalar");
     Serial.println("SEQ PROFILE AmpExperimental");
-    Serial.println("SEQ PARAM: freqScore=18000 freqContrast=50.0 freqReleaseScore=12000 freqReleaseContrast=50.0 scalarObservedStream=Scalar scalarOnsetThreshold=20000 scalarReleaseThreshold=5000 scalarCooldownMs=50 scalarMinDurationMs=60 scalarMaxDurationMs=300 scalarMinPeakStrength=0 scalarReleaseDebounceMs=30");
+    Serial.println("SEQ PARAM: freqScore=18000 freqContrast=50.0 freqReleaseScore=12000 freqReleaseContrast=50.0 scalar_observed_stream=Scalar scalar_onset_threshold=20000 scalar_release_threshold=5000 scalar_cooldown_ms=50 scalar_min_duration_ms=60 scalar_max_duration_ms=300 scalar_min_peak_strength=0 scalar_release_debounce_ms=30");
+    Serial.println("SEQ PARAM STATUS");
 }
 
 void AnalyzerApp::pollUsbConsole() {
@@ -158,7 +189,8 @@ void AnalyzerApp::pollUsbConsole() {
 
 void AnalyzerApp::handleUsbLine(const char* line) {
     if (equalsIgnoreCase(line, "HELP")) {
-        Serial.println("CMD: PARAM freqScore=18000 freqContrast=50.0 freqReleaseScore=12000 freqReleaseContrast=50.0 scalarObservedStream=Scalar scalarOnsetThreshold=20000 scalarReleaseThreshold=5000 scalarCooldownMs=50 scalarMinDurationMs=60 scalarMaxDurationMs=300 scalarMinPeakStrength=0 scalarReleaseDebounceMs=30");
+        Serial.println("CMD: PARAM freqScore=18000 freqContrast=50.0 freqReleaseScore=12000 freqReleaseContrast=50.0 scalar_observed_stream=Scalar scalar_onset_threshold=20000 scalar_release_threshold=5000 scalar_cooldown_ms=50 scalar_min_duration_ms=60 scalar_max_duration_ms=300 scalar_min_peak_strength=0 scalar_release_debounce_ms=30");
+        Serial.println("CMD: PARAM STATUS");
         Serial.println("CMD: EMIT CHIRP freq=3200 dur=100");
         Serial.println("CMD: EMIT MODE REMOTE");
         Serial.println("CMD: EMIT MODE AUTO interval=2000 freq=3200 dur=100");
@@ -178,18 +210,67 @@ void AnalyzerApp::handleUsbLine(const char* line) {
 
         char* savePtr = nullptr;
         char* token = strtok_r(_commandScratch, " ", &savePtr);
+        token = strtok_r(nullptr, " ", &savePtr);
+        if (token == nullptr || equalsIgnoreCase(token, "STATUS")) {
+            printParamStatus();
+            return;
+        }
+
         FrequencyMatchEvaluation::Values freqTuning = _analyzerTuning.frequencyMatch;
         detection::ScalarTransientConfig scalarTuning = _analyzerTuning.scalarTransient;
+        const FrequencyMatchEvaluation::Values oldFreqTuning = freqTuning;
+        const detection::ScalarTransientConfig oldScalarTuning = scalarTuning;
+        bool printedAny = false;
 
-        while ((token = strtok_r(nullptr, " ", &savePtr)) != nullptr) {
+        do {
             FrequencyMatchEvaluation::parseToken(token, freqTuning);
             parseScalarTransientToken(token, scalarTuning);
+        } while ((token = strtok_r(nullptr, " ", &savePtr)) != nullptr);
+
+        if (freqTuning.attackScoreMin != oldFreqTuning.attackScoreMin) {
+            printParamField("freqScore", freqTuning.attackScoreMin, printedAny);
+        }
+        if (freqTuning.attackContrastMin != oldFreqTuning.attackContrastMin) {
+            printParamField("freqContrast", freqTuning.attackContrastMin, printedAny);
+        }
+        if (freqTuning.releaseScoreMin != oldFreqTuning.releaseScoreMin) {
+            printParamField("freqReleaseScore", freqTuning.releaseScoreMin, printedAny);
+        }
+        if (freqTuning.releaseContrastMin != oldFreqTuning.releaseContrastMin) {
+            printParamField("freqReleaseContrast", freqTuning.releaseContrastMin, printedAny);
+        }
+        if (scalarTuning.observedStream != oldScalarTuning.observedStream) {
+            printParamField("scalar_observed_stream", scalarTuning.observedStream, printedAny);
+        }
+        if (scalarTuning.onsetDetectionThreshold != oldScalarTuning.onsetDetectionThreshold) {
+            printParamField("scalar_onset_threshold", scalarTuning.onsetDetectionThreshold, printedAny);
+        }
+        if (scalarTuning.onsetReleaseThreshold != oldScalarTuning.onsetReleaseThreshold) {
+            printParamField("scalar_release_threshold", scalarTuning.onsetReleaseThreshold, printedAny);
+        }
+        if (scalarTuning.cooldownAfterOnsetMs != oldScalarTuning.cooldownAfterOnsetMs) {
+            printParamField("scalar_cooldown_ms", scalarTuning.cooldownAfterOnsetMs, printedAny);
+        }
+        if (scalarTuning.minTransientDurationMs != oldScalarTuning.minTransientDurationMs) {
+            printParamField("scalar_min_duration_ms", scalarTuning.minTransientDurationMs, printedAny);
+        }
+        if (scalarTuning.maxTransientDurationMs != oldScalarTuning.maxTransientDurationMs) {
+            printParamField("scalar_max_duration_ms", scalarTuning.maxTransientDurationMs, printedAny);
+        }
+        if (scalarTuning.minTransientPeakStrength != oldScalarTuning.minTransientPeakStrength) {
+            printParamField("scalar_min_peak_strength", scalarTuning.minTransientPeakStrength, printedAny);
+        }
+        if (scalarTuning.releaseDebounceMs != oldScalarTuning.releaseDebounceMs) {
+            printParamField("scalar_release_debounce_ms", scalarTuning.releaseDebounceMs, printedAny);
         }
 
         _analyzerTuning.frequencyMatch = freqTuning;
         _analyzerTuning.scalarTransient = scalarTuning;
-        printDetectionParameters();
-        Serial.println("OK PARAM");
+        if (printedAny) {
+            Serial.println();
+        } else {
+            Serial.println("PARAM no_change");
+        }
         return;
     }
 

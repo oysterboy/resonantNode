@@ -409,6 +409,7 @@ private:
     void printSequenceSummaryClean() const;
     void printSequenceReport() const;
     const char* activeAnalyzerProfileName() const;
+    void printParamStatus() const;
     detection::DetectionProfile effectiveSequenceProfile() const;
     AnalyzerReport* sequenceReportScratch();
     void buildSequenceAnalyzerReport(AnalyzerReport& report, unsigned long trialNumber, AnalyzerResult result, long dtMs, long durMs, float strength, bool bufferOverrun, unsigned long duplicateCount, const SequenceTest::TrialDiagnostics& diagnostics) const;

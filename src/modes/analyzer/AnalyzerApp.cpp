@@ -700,7 +700,7 @@ void AnalyzerApp::begin() {
     _controlClaimAtMs = 0;
 
     Serial.println("EVT analyzer_ready");
-    Serial.println("EVT analyzer_help type='HELP', 'PARAM freqScore=18000 freqContrast=50.0 freqReleaseScore=12000 freqReleaseContrast=50.0', 'RAW trigger f=3200 dur=100 post=1000 dump=bin', 'SEQ MODE quiet|trial|inspect|source|system|explain WHEN off|miss|all VERBOSE 0|1|2 STATUS REPORT', 'DET PROFILE TonalPulseFreq|TonalPulseScalar|AmpExperimental'");
+    Serial.println("EVT analyzer_help type='HELP', 'PARAM freqScore=18000 freqContrast=50.0 freqReleaseScore=12000 freqReleaseContrast=50.0', 'PARAM STATUS', 'RAW trigger f=3200 dur=100 post=1000 dump=bin', 'SEQ MODE quiet|trial|inspect|source|system|explain WHEN off|miss|all VERBOSE 0|1|2 STATUS REPORT', 'DET PROFILE TonalPulseFreq|TonalPulseScalar|AmpExperimental'");
 }
 
 void AnalyzerApp::configureParameters() {

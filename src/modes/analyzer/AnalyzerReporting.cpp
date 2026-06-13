@@ -429,17 +429,6 @@ void AnalyzerApp::printDetectionParameters() const {
     //PARAM TUNING TEMPORARY
     const detection::DetectionProfile activeProfile = effectiveSequenceProfile();
 
-    Serial.print("SEQ tuning supportScore=");
-    Serial.print(_analyzerTuning.frequencyMatch.attackScoreMin, 1);
-    Serial.print(" supportReleaseScore=");
-    Serial.print(_analyzerTuning.frequencyMatch.releaseScoreMin, 1);
-    Serial.print(" supportContrast=");
-    Serial.print(_analyzerTuning.frequencyMatch.attackContrastMin, 1);
-    Serial.print(" supportReleaseContrast=");
-    Serial.print(_analyzerTuning.frequencyMatch.releaseContrastMin, 1);
-    Serial.print(" transientDetector=fixed");
-    Serial.println();
-
     const detection::ScalarTransientConfig& scalar = activeProfile.scalarTransient;
     Serial.print("SEQ scalar:");
     Serial.print(" observed_stream=");
@@ -458,23 +447,6 @@ void AnalyzerApp::printDetectionParameters() const {
     Serial.print(scalar.minTransientPeakStrength, 1);
     Serial.print(" release_debounce_ms=");
     Serial.println(scalar.releaseDebounceMs);
-
-    const detection::DetectionProfile& selectedProfile = activeProfile;
-    Serial.print("SEQ support:");
-    Serial.print(" min_duration_ms=");
-    Serial.print(selectedProfile.frequencyMatch.minDurationMs);
-    Serial.print(" release_debounce_ms=");
-    Serial.print(selectedProfile.frequencyMatch.releaseDebounceMs);
-    Serial.print(" cooldown_ms=");
-    Serial.print(selectedProfile.frequencyMatch.cooldownAfterReleaseMs);
-    Serial.print(" attack_score_min=");
-    Serial.print(selectedProfile.frequencyMatch.attackScoreMin, 1);
-    Serial.print(" release_score_min=");
-    Serial.print(selectedProfile.frequencyMatch.releaseScoreMin, 1);
-    Serial.print(" attack_contrast_min=");
-    Serial.print(selectedProfile.frequencyMatch.attackContrastMin, 1);
-    Serial.print(" release_contrast_min=");
-    Serial.println(selectedProfile.frequencyMatch.releaseContrastMin, 1);
 
     const unsigned long sampleRateHz = _audioSource.sampleRateHz() > 0 ? _audioSource.sampleRateHz() : 16000UL;
     const unsigned long windowSizeSamples = _freqBandStream.windowSizeSamples();
@@ -507,6 +479,37 @@ void AnalyzerApp::printDetectionParameters() const {
     Serial.print(ageSamples);
     Serial.print(" freq.packet_age_ms=");
     Serial.println(ageMs, 3);
+}
+
+void AnalyzerApp::printParamStatus() const {
+    const detection::DetectionProfile activeProfile = effectiveSequenceProfile();
+
+    const detection::ScalarTransientConfig& scalar = activeProfile.scalarTransient;
+    Serial.print("PARAM scalar_observed_stream=");
+    Serial.print(scalarObservedStreamDisplayName(scalar.observedStream));
+    Serial.print(" scalar_onset_threshold=");
+    Serial.print(scalar.onsetDetectionThreshold, 1);
+    Serial.print(" scalar_release_threshold=");
+    Serial.print(scalar.onsetReleaseThreshold, 1);
+    Serial.print(" scalar_cooldown_ms=");
+    Serial.print(scalar.cooldownAfterOnsetMs);
+    Serial.print(" scalar_min_duration_ms=");
+    Serial.print(scalar.minTransientDurationMs);
+    Serial.print(" scalar_max_duration_ms=");
+    Serial.print(scalar.maxTransientDurationMs);
+    Serial.print(" scalar_min_peak_strength=");
+    Serial.print(scalar.minTransientPeakStrength, 1);
+    Serial.print(" scalar_release_debounce_ms=");
+    Serial.print(scalar.releaseDebounceMs);
+
+    Serial.print(" freqScore=");
+    Serial.print(_analyzerTuning.frequencyMatch.attackScoreMin, 1);
+    Serial.print(" freqContrast=");
+    Serial.print(_analyzerTuning.frequencyMatch.attackContrastMin, 1);
+    Serial.print(" freqReleaseScore=");
+    Serial.print(_analyzerTuning.frequencyMatch.releaseScoreMin, 1);
+    Serial.print(" freqReleaseContrast=");
+    Serial.println(_analyzerTuning.frequencyMatch.releaseContrastMin, 1);
 }
 
 void AnalyzerApp::printAudioSourceSummary() const {

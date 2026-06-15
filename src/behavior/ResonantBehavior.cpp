@@ -1,5 +1,5 @@
 #include "ResonantBehavior.h"
-#include "../TimingUtils.h"
+#include "../app/TimingUtils.h"
 
 /*
 ResonantBehavior

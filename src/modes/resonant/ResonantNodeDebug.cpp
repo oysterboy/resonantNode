@@ -1,0 +1,355 @@
+#include "ResonantNodeDebug.h"
+
+#include "../../behavior/ResonantBehavior.h"
+#include "../../app/AudioDebugConfig.h"
+#include "../../audio/AudioSignal.h"
+#include "../../output/ChirpOutput.h"
+#include "../../app/TimingUtils.h"
+
+#include <Arduino.h>
+
+void NodeDebug::setDebugMode(DebugMode mode) {
+    _debugMode = mode;
+}
+
+NodeDebug::DebugMode NodeDebug::debugMode() const {
+    return _debugMode;
+}
+
+const char* NodeDebug::debugModeName() const {
+    switch (_debugMode) {
+        case DebugMode::Off:
+            return "off";
+        case DebugMode::Events:
+            return "events";
+        case DebugMode::Plot:
+            return "plot";
+    }
+
+    return "unknown";
+}
+
+bool NodeDebug::eventsEnabled() const {
+    return _debugMode == DebugMode::Events;
+}
+
+bool NodeDebug::plotEnabled() const {
+    return _debugMode == DebugMode::Plot;
+}
+
+void NodeDebug::begin(int ledPin) {
+    _lastDebugPrintMs = 0;
+    _loopStartMicros = 0;
+    resetLoopStats();
+    _debugOnsetVisibleUntilMs = 0;
+    _debugTransientVisibleUntilMs = 0;
+    _debugOnsetStrength = 0.0f;
+    _debugTransientStrength = 0.0f;
+    _debugChirpVisibleUntilMs = 0;
+    _lastI2SSignalLogMs = 0;
+    _i2sSignalMin = 0;
+    _i2sSignalMax = 0;
+    _i2sCenteredMin = 0;
+    _i2sCenteredMax = 0;
+    _ledPin = ledPin;
+    _ledPatternPulseStartMs = 0;
+    _ledPatternPulseCount = 0;
+    _ledPatternPulseBrightness = kLedBrightnessOff;
+
+    pinMode(_ledPin, OUTPUT);
+    ledcSetup(kLedPwmChannel, kLedPwmFrequencyHz, kLedPwmResolutionBits);
+    ledcAttachPin(_ledPin, kLedPwmChannel);
+    ledcWrite(kLedPwmChannel, kLedBrightnessOff);
+}
+
+void NodeDebug::markLoopStart(unsigned long nowUs) {
+    _loopStartMicros = nowUs;
+}
+
+unsigned long NodeDebug::loopStartMicros() const {
+    return _loopStartMicros;
+}
+
+void NodeDebug::updatePulse(unsigned long now,
+                            bool detected,
+                            float strength,
+                            unsigned long& visibleUntilMs,
+                            float& storedStrength) {
+    if (detected) {
+        visibleUntilMs = now + _debugPulseHoldMs;
+        storedStrength = strength;
+    }
+
+    if (timing::atOrAfter(now, visibleUntilMs)) {
+        storedStrength = 0.0f;
+    }
+}
+
+void NodeDebug::resetLoopStats() {
+    _coreLoopUsMin = 0;
+    _coreLoopUsMax = 0;
+    _coreLoopUsSum = 0;
+    _coreLoopSamples = 0;
+    _fullLoopUsMin = 0;
+    _fullLoopUsMax = 0;
+    _fullLoopUsSum = 0;
+    _fullLoopSamples = 0;
+}
+
+void NodeDebug::noteCoreLoopUs(unsigned long nowUs) {
+    const unsigned long coreLoopUs = nowUs - _loopStartMicros;
+
+    if (_coreLoopSamples == 0 || coreLoopUs < _coreLoopUsMin) {
+        _coreLoopUsMin = coreLoopUs;
+    }
+    if (coreLoopUs > _coreLoopUsMax) {
+        _coreLoopUsMax = coreLoopUs;
+    }
+    _coreLoopUsSum += coreLoopUs;
+    _coreLoopSamples++;
+}
+
+void NodeDebug::endLoop(unsigned long nowUs) {
+    const unsigned long fullLoopUs = nowUs - _loopStartMicros;
+
+    if (_fullLoopSamples == 0 || fullLoopUs < _fullLoopUsMin) {
+        _fullLoopUsMin = fullLoopUs;
+    }
+    if (fullLoopUs > _fullLoopUsMax) {
+        _fullLoopUsMax = fullLoopUs;
+    }
+    _fullLoopUsSum += fullLoopUs;
+    _fullLoopSamples++;
+
+    _loopStartMicros = nowUs;
+}
+
+void NodeDebug::observeOnset(unsigned long now, bool onsetDetected, float onsetStrength) {
+    updatePulse(now, onsetDetected, onsetStrength, _debugOnsetVisibleUntilMs, _debugOnsetStrength);
+}
+
+void NodeDebug::observeTransient(unsigned long now, bool transientDetected, float transientStrength, bool suppressed) {
+    if (suppressed) {
+        if (timing::atOrAfter(now, _debugTransientVisibleUntilMs)) {
+            _debugTransientStrength = 0.0f;
+        }
+        return;
+    }
+
+    updatePulse(now, transientDetected, transientStrength, _debugTransientVisibleUntilMs, _debugTransientStrength);
+}
+
+void NodeDebug::observePatternPulse(unsigned long now, bool fullPulse, bool patternMatched) {
+    _ledPatternPulseStartMs = now;
+    _ledPatternPulseCount = fullPulse ? kLedTransientPulseCount : 1;
+    _ledPatternPulseBrightness = patternMatched ? kLedBrightnessFull : kLedBrightnessHalf;
+}
+
+void NodeDebug::observeBehaviorGate(unsigned long now,
+                                    const ResonantBehavior& behavior,
+                                    bool transientDetected,
+                                    bool selfChirpSuppressed) {
+    if (!AUDIO_VERBOSE_DEBUG || !eventsEnabled()) {
+        return;
+    }
+
+    const unsigned long waitRemainingMs = behavior.waitRemainingMs(now);
+    const unsigned long refractoryRemainingMs = behavior.refractoryRemainingMs(now);
+    const unsigned long selfIgnoreRemainingMs = behavior.behaviorSuppressRemainingMs(now);
+    const int state = behavior.stateCode();
+
+    const bool gateActive = transientDetected || selfChirpSuppressed || waitRemainingMs > 0 || refractoryRemainingMs > 0 || selfIgnoreRemainingMs > 0;
+    if (!gateActive) {
+        return;
+    }
+
+    const char* reason = "idle";
+    if (selfIgnoreRemainingMs > 0) {
+        reason = "self_ignore";
+    } else if (state == 1 && waitRemainingMs > 0) {
+        reason = "wait";
+    } else if (state == 3 && refractoryRemainingMs > 0) {
+        reason = "refractory";
+    } else if (transientDetected) {
+        reason = "transient";
+    }
+
+    Serial.print("RB gate state=");
+    Serial.print(behavior.stateName());
+    Serial.print(" reason=");
+    Serial.print(reason);
+    Serial.print(" transient=");
+    Serial.print(transientDetected ? 1 : 0);
+    Serial.print(" waitMs=");
+    Serial.print(waitRemainingMs);
+    Serial.print(" selfIgnoreMs=");
+    Serial.print(selfIgnoreRemainingMs);
+    Serial.print(" refractoryMs=");
+    Serial.println(refractoryRemainingMs);
+}
+
+void NodeDebug::observeI2SSignal(unsigned long now, const AudioSignal& audioSignal) {
+    if (!AUDIO_VERBOSE_DEBUG || !eventsEnabled()) {
+        return;
+    }
+
+    const int rawSignal = audioSignal.rawSignal();
+    const int centeredSignal = audioSignal.centeredSignal();
+
+    if (_lastI2SSignalLogMs == 0) {
+        _i2sSignalMin = rawSignal;
+        _i2sSignalMax = rawSignal;
+        _i2sCenteredMin = centeredSignal;
+        _i2sCenteredMax = centeredSignal;
+    } else {
+        if (rawSignal < _i2sSignalMin) _i2sSignalMin = rawSignal;
+        if (rawSignal > _i2sSignalMax) _i2sSignalMax = rawSignal;
+        if (centeredSignal < _i2sCenteredMin) _i2sCenteredMin = centeredSignal;
+        if (centeredSignal > _i2sCenteredMax) _i2sCenteredMax = centeredSignal;
+    }
+
+    if (_lastI2SSignalLogMs != 0 && !timing::elapsedSince(now, _lastI2SSignalLogMs, _i2sSignalLogIntervalMs)) {
+        return;
+    }
+
+    Serial.print("I2S occurrence t=");
+    Serial.print(now);
+    Serial.print(" raw=");
+    Serial.print(rawSignal);
+    Serial.print(" rawMin=");
+    Serial.print(_i2sSignalMin);
+    Serial.print(" rawMax=");
+    Serial.print(_i2sSignalMax);
+    Serial.print(" centered=");
+    Serial.print(centeredSignal);
+    Serial.print(" centeredMin=");
+    Serial.print(_i2sCenteredMin);
+    Serial.print(" centeredMax=");
+    Serial.print(_i2sCenteredMax);
+    Serial.print(" magnitude=");
+    Serial.print(audioSignal.signalMagnitude(), 3);
+    Serial.print(" smooth=");
+    Serial.println(audioSignal.smoothedSignalMagnitude(), 3);
+
+    _lastI2SSignalLogMs = now;
+    _i2sSignalMin = rawSignal;
+    _i2sSignalMax = rawSignal;
+    _i2sCenteredMin = centeredSignal;
+    _i2sCenteredMax = centeredSignal;
+}
+
+void NodeDebug::observeChirpStarted(unsigned long now, const char* sourceName, ChirpOutput::ChirpPattern pattern) {
+    if (!AUDIO_VERBOSE_DEBUG || !eventsEnabled()) {
+        return;
+    }
+
+    _debugChirpVisibleUntilMs = now + _debugChirpEventHoldMs;
+    Serial.print("EVT chirp_started source=");
+    Serial.print(sourceName);
+    Serial.print(" pattern=");
+    switch (pattern) {
+        case ChirpOutput::ChirpPattern::Single:
+            Serial.println("single");
+            break;
+        case ChirpOutput::ChirpPattern::Triple:
+            Serial.println("triple");
+            break;
+        case ChirpOutput::ChirpPattern::Idle:
+            Serial.println("idle");
+            break;
+    }
+}
+
+void NodeDebug::observeChirpFinished(unsigned long now) {
+    if (!AUDIO_VERBOSE_DEBUG || !eventsEnabled()) {
+        return;
+    }
+
+    if (timing::atOrAfter(now, _debugChirpVisibleUntilMs)) {
+        _debugChirpVisibleUntilMs = now + _debugChirpEventHoldMs;
+    }
+    Serial.println("EVT chirp_finished");
+}
+
+void NodeDebug::updateLed(unsigned long now,
+                          const ResonantBehavior& behavior,
+                          const ChirpOutput& chirpOutput,
+                          bool selfChirpSuppressed) {
+    (void)behavior;
+    (void)selfChirpSuppressed;
+    uint8_t ledBrightness = chirpOutput.isActive() ? kLedBrightnessFull : kLedBrightnessOff;
+
+    if (ledBrightness == kLedBrightnessOff && _ledPatternPulseStartMs != 0) {
+        const unsigned long elapsedMs = now - _ledPatternPulseStartMs;
+        const unsigned long pulseIndex = elapsedMs / kLedTransientPulseCycleMs;
+        if (pulseIndex < _ledPatternPulseCount) {
+            const unsigned long phaseMs = elapsedMs % kLedTransientPulseCycleMs;
+            if (phaseMs < kLedTransientPulseOnMs) {
+                ledBrightness = _ledPatternPulseBrightness;
+            }
+        }
+    }
+
+    ledcWrite(kLedPwmChannel, ledBrightness);
+}
+
+void NodeDebug::printPlotValues(unsigned long now,
+                               const AudioSignal& audioSignal,
+                               const ResonantBehavior& behavior,
+                               const ChirpOutput& chirpOutput,
+                               bool selfChirpSuppressed) {
+    if (!plotEnabled()) return;
+    if (timing::beforeDeadline(now, 1000UL)) return;
+    if (!timing::elapsedSince(now, _lastDebugPrintMs, _debugIntervalMs)) return;
+
+    _lastDebugPrintMs = now;
+
+    // Plot the raw occurrence levels so the serial plotter mirrors the actual
+    // acoustic envelope instead of a heavily compressed display scale.
+    const float centeredSignal = static_cast<float>(audioSignal.centeredSignal());
+    const float signalMagnitude = static_cast<float>(audioSignal.signalMagnitude());
+    const float smoothedSignalMagnitude = static_cast<float>(audioSignal.smoothedSignalMagnitude());
+    const float onsetStrength = _debugOnsetStrength;
+    const float transientStrength = _debugTransientStrength;
+    const int onsetPulse = timing::beforeDeadline(now, _debugOnsetVisibleUntilMs) ? 1 : 0;
+    const int transientPulse = timing::beforeDeadline(now, _debugTransientVisibleUntilMs) ? 1 : 0;
+    const unsigned long coreLoopAvgUs = _coreLoopSamples > 0 ? (_coreLoopUsSum / _coreLoopSamples) : 0;
+    const unsigned long fullLoopAvgUs = _fullLoopSamples > 0 ? (_fullLoopUsSum / _fullLoopSamples) : 0;
+    const int state = behavior.stateCode();
+    const int chirp = chirpOutput.isActive() ? 1 : 0;
+
+    Serial.print("centered:");
+    Serial.print(centeredSignal, 3);
+    Serial.print(" magnitude:");
+    Serial.print(signalMagnitude, 3);
+    Serial.print(" smooth:");
+    Serial.print(smoothedSignalMagnitude, 3);
+    Serial.print(" onsetPulse:");
+    Serial.print(onsetPulse);
+    Serial.print(" onset:");
+    Serial.print(onsetStrength, 3);
+    Serial.print(" transientPulse:");
+    Serial.print(transientPulse);
+    Serial.print(" transient:");
+    Serial.print(transientStrength, 3);
+    Serial.print(" behaviorSuppressSelfChirp:");
+    Serial.print(selfChirpSuppressed ? 1 : 0);
+    Serial.print(" coreUs:");
+    Serial.print(coreLoopAvgUs);
+    Serial.print("/");
+    Serial.print(_coreLoopUsMin);
+    Serial.print("/");
+    Serial.print(_coreLoopUsMax);
+    Serial.print(" fullUs:");
+    Serial.print(fullLoopAvgUs);
+    Serial.print("/");
+    Serial.print(_fullLoopUsMin);
+    Serial.print("/");
+    Serial.print(_fullLoopUsMax);
+    Serial.print(" state:");
+    Serial.print(state);
+    Serial.print(" chirp:");
+    Serial.println(chirp);
+
+    resetLoopStats();
+}

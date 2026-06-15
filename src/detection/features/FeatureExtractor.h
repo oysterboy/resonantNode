@@ -1,7 +1,7 @@
 #pragma once
 
-#include "../../io/AudioSignal.h"
-#include "../inspector/InspectorTypes.h"
+#include "../../audio/AudioSignal.h"
+#include "../inspection/InspectorTypes.h"
 #include "FeatureHistory.h"
 
 /*

@@ -5,7 +5,7 @@
 #include <strings.h>
 
 #include "field/FieldState.h"
-#include "inspector/InspectorTypes.h"
+#include "inspection/InspectorTypes.h"
 #include "patterns/PatternMatcherTypes.h"
 
 namespace detection {

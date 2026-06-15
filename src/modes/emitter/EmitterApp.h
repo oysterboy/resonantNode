@@ -1,9 +1,9 @@
 #pragma once
 
-#include "../../RuntimeDefaults.h"
-#include "../../hal/PiezoToneOutputBTL.h"
-#include "../../hal/PiezoToneOutput.h"
-#include "../../io/ChirpOutput.h"
+#include "../../app/RuntimeDefaults.h"
+#include "../../output/PiezoToneOutputBTL.h"
+#include "../../output/PiezoToneOutput.h"
+#include "../../output/ChirpOutput.h"
 
 /*
 EmitterApp

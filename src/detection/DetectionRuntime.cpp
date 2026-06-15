@@ -153,7 +153,7 @@ void DetectionRuntime::observeFrame(
                 break;
             }
             {
-                FrequencyMatchEvaluation::Values frequencyTuning = {};
+                FrequencyMatchCriteria::Values frequencyTuning = {};
                 frequencyTuning.attackScoreMin = _frequencyMatchConfig.attackScoreMin;
                 frequencyTuning.releaseScoreMin = _frequencyMatchConfig.releaseScoreMin;
                 frequencyTuning.attackContrastMin = _frequencyMatchConfig.attackContrastMin;

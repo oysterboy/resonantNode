@@ -2,7 +2,7 @@
 
 #include <stdint.h>
 
-#include "../inspector/InspectorTypes.h"
+#include "../inspection/InspectorTypes.h"
 #include "PatternTypes.h"
 
 namespace detection {

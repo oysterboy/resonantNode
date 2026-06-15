@@ -3,7 +3,7 @@
 #include <Arduino.h>
 
 #include "../DetectionTypes.h"
-#include "../inspector/InspectorTypes.h"
+#include "../inspection/InspectorTypes.h"
 
 namespace detection {
 

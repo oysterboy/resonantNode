@@ -5,13 +5,13 @@
 // Keep the canonical detector-report contract compiled through the active
 // runtime header chain. DetectionRuntime snapshots scalar and frequency
 // detector reports for analyzer/report consumers.
-#include "DetectorReport.h"
-#include "../io/AudioSignal.h"
+#include "detectors/DetectorReport.h"
+#include "../audio/AudioSignal.h"
 #include "DetectionProfile.h"
-#include "detectors/FrequencyMatchDetector.h"
-#include "detectors/ScalarTransientDetector.h"
-#include "inspector/OccurrenceInspector.h"
-#include "inspector/InspectorTypes.h"
+#include "detectors/frequency/FrequencyMatchDetector.h"
+#include "detectors/scalar/ScalarTransientDetector.h"
+#include "inspection/OccurrenceInspector.h"
+#include "inspection/InspectorTypes.h"
 #include "patterns/PatternMatcher.h"
 #include "patterns/PatternResult.h"
 #include "occurrences/Occurrence.h"
@@ -20,7 +20,7 @@
 #include "field/FieldState.h"
 #include "features/FeatureExtractor.h"
 #include "features/FeatureHistory.h"
-#include "features/FrequencyMatchEvaluation.h"
+#include "detectors/frequency/FrequencyMatchCriteria.h"
 
 namespace detection {
 

@@ -3,7 +3,7 @@
 #include <Arduino.h>
 #include <string.h>
 
-#include "../../RuntimeDefaults.h"
+#include "../../app/RuntimeDefaults.h"
 
 namespace {
 bool startsWithToken(const char* line, const char* token) {

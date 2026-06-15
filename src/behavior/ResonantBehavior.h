@@ -4,7 +4,7 @@
 #include "BehaviorProfile.h"
 #include "../detection/field/FieldState.h"
 #include "../detection/patterns/PatternResult.h"
-#include "../io/ChirpOutput.h"
+#include "../output/ChirpOutput.h"
 
 /*
 ResonantBehavior

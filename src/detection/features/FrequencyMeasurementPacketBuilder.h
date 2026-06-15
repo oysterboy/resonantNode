@@ -1,8 +1,8 @@
 #pragma once
 
-#include "../../io/AudioSignal.h"
+#include "../../audio/AudioSignal.h"
 #include "FreqBandStream.h"
-#include "../inspector/InspectorTypes.h"
+#include "../inspection/InspectorTypes.h"
 
 namespace detection {
 

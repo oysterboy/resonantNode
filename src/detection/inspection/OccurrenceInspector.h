@@ -33,7 +33,7 @@ private:
         const Occurrence& occurrence,
         const FeatureHistory* featureHistory
     ) const;
-    void annotateSupportStrength(
+    void annotateScalarFeatureStrength(
         InspectedOccurrence& out,
         const Occurrence& occurrence,
         const FeatureHistory* featureHistory,

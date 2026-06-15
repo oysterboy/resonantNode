@@ -1107,6 +1107,7 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
         const size_t copyCount = availableCount < moduleCount ? availableCount : moduleCount;
         report.profileDetail.inspectionObservationCount = copyCount;
         for (size_t i = 0; i < copyCount; ++i) {
+            report.profileDetail.inspectionObservationTargets[i] = selectedProfile.inspectionPlan.modules[i].target;
             report.profileDetail.inspectionObservations[i] = reportInspectedOccurrence->scalarObservations[i];
         }
     }

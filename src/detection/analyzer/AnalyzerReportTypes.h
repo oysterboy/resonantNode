@@ -305,6 +305,7 @@ struct AnalyzerProfileDetail {
     bool requireSupportForAcceptance = true;
     detection::ScalarInspectionObservation scalarObservation = {};
     size_t inspectionObservationCount = 0;
+    detection::EvidenceTarget inspectionObservationTargets[detection::kMaxInspectionModules] = {};
     detection::ScalarInspectionObservation inspectionObservations[detection::kMaxInspectionModules] = {};
 
     float supportScore = 0.0f;

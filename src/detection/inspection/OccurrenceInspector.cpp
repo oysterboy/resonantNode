@@ -18,7 +18,6 @@ void fillScalarObservation(
 ) {
     const float peak = scalarWindow.peak;
     const float mean = scalarWindow.mean;
-    const float last = scalarWindow.last;
     const size_t sampleCount = scalarWindow.sampleCount;
     const size_t sustainedCount = scalarWindow.sustainedCount;
     const unsigned long sustainedMs = scalarWindow.sustainedMs;
@@ -108,16 +107,22 @@ void fillScalarObservation(
     obs.preFloorP75 = preFloorWindow.p75;
     obs.preFloorRms = preFloorWindow.rms;
     obs.preFloorTrimmedMean = preFloorWindow.trimmedMean;
+    obs.first = scalarWindow.first;
+    obs.last = scalarWindow.last;
+    obs.min = scalarWindow.min;
+    obs.max = scalarWindow.max;
     obs.peak = peak;
+    obs.peakTimeMs = scalarWindow.peakTimeMs;
+    obs.rise = scalarWindow.rise;
     obs.mean = mean;
     obs.rms = scalarWindow.rms;
     obs.median = scalarWindow.median;
     obs.p75 = scalarWindow.p75;
     obs.p90 = scalarWindow.p90;
     obs.trimmedMean = scalarWindow.trimmedMean;
-    obs.last = last;
     obs.classificationValue = classificationValue;
     obs.sampleCount = sampleCount;
+    obs.freshValueCount = scalarWindow.freshValueCount;
     obs.sustainedCount = sustainedCount;
     obs.sustainedMs = sustainedMs;
     obs.sustainedThreshold = sustainedThreshold;
@@ -149,7 +154,7 @@ void OccurrenceInspector::inspectAcceptedOccurrence(
     }
 }
 
-void OccurrenceInspector::annotateSupportStrength(
+void OccurrenceInspector::annotateScalarFeatureStrength(
     InspectedOccurrence& out,
     const Occurrence& occurrence,
     const FeatureHistory* featureHistory,
@@ -237,7 +242,7 @@ void OccurrenceInspector::runInspectionModule(
                 module.target == EvidenceTarget::FrequencyScoreStrength ||
                 module.target == EvidenceTarget::FrequencyContrastQuality ||
                 module.target == EvidenceTarget::TargetBandStrength) {
-                annotateSupportStrength(out, occurrence, featureHistory, module.scalar, module.target);
+                annotateScalarFeatureStrength(out, occurrence, featureHistory, module.scalar, module.target);
             }
             break;
         case InspectionModuleKind::None:

@@ -30,6 +30,8 @@ struct PatternResult {
     float primaryReleaseStrength = 0.0f;
     float primaryAmbientBaseline = 0.0f;
     bool primaryAudioOverflow = false;
+    // TODO: carry only a compact selected support fact here if a later pass
+    // needs it: support target, selected metric, selected value, strength class.
 
     bool patternAccepted = false;
     bool patternMatched = false;

@@ -11,12 +11,13 @@ struct AudioSignalStats {
 };
 
 struct CurveSnapshot {
-    // Diagnostic curve sample time in milliseconds.
+    // Rough envelope/amplitude probe used only by SEQ sample-dump tooling.
+    // This is bounded diagnostic data, not RAW capture or detector truth.
     unsigned long sampleMs = 0;
     int current = 0;
     int env = 0;
-    float peak = 0.0f;
-    bool open = false;
+    float peak = 0.0f; // Smoothed envelope value, not a detector peak.
+    bool open = false; // signalMagnitude > 0, not detector-open state.
 };
 
 struct AudioSamplePacket {

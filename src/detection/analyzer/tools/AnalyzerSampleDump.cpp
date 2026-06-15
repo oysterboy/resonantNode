@@ -146,7 +146,7 @@ void AnalyzerApp::beginSequenceSampleDump(unsigned long trialNumber) {
     }
 }
 
-// Sample-dump output is diagnostic-only.
+// Sample-dump output is rough envelope/amplitude tooling, not detector truth.
 void AnalyzerApp::printSequenceSampleReport(unsigned long trialNumber) const {
     if (!_sequenceTest.sampleDumpEnabled || !_sequenceTest.sampleDumpSelectedForTrial || _sequenceTest.sampleDumpCurrentTrial != trialNumber) {
         return;
@@ -159,6 +159,14 @@ void AnalyzerApp::printSequenceSampleReport(unsigned long trialNumber) const {
     Serial.print(" sample_rate_ms=");
     Serial.print(_sequenceTest.sampleDumpStepMs);
     Serial.print(" fields=t,current,env,peak,open");
+    Serial.println();
+    Serial.print("SAMPLES_NOTE trial=");
+    Serial.print(trialNumber);
+    Serial.print(" rows_cap=");
+    Serial.print(SequenceTest::kMaxSampleRows);
+    Serial.print(" sample_max_budget=");
+    Serial.print(_sequenceTest.sampleDumpMaxRows);
+    Serial.print(" peak=smoothed_env open=signalMagnitude_gt_0");
     Serial.println();
 
     for (size_t i = 0; i < _sequenceTest.sampleRowCount; ++i) {

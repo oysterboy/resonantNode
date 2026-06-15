@@ -898,17 +898,34 @@ It must not be presented as detector/pattern/analyzer truth.
 
 SEQ sample dump / curve is neutral developer tooling.
 
+It is rough envelope / amplitude tooling, not RAW capture, not DetectorReport,
+not SEQ_SOURCE / SEQ_INSPECT / SEQ_EXPLAIN, and not canonical Analyzer truth.
+
 It prints bounded `CurveSnapshot` rows around selected sequence trials:
 
 ```text
 SAMPLES_BEGIN trial=<n> trigger_ms=<ms> sample_rate_ms=<step> fields=t,current,env,peak,open
+SAMPLES_NOTE trial=<n> rows_cap=<fixed> sample_max_budget=<budget> peak=smoothed_env open=signalMagnitude>0
 ...
 SAMPLES_END trial=<n>
 ```
 
-It is useful for rough amplitude/envelope visualization.
+Useful knobs are:
 
-It is not raw audio capture, not DetectorReport, and not canonical Analyzer truth.
+```text
+sampleFirst
+sampleEvery
+sampleLead
+sampleTail
+sampleStep
+sampleMax
+```
+
+`sampleMax` is a preflight row budget, but the emitted rows are still capped by
+the fixed `sampleRows` capacity.
+
+The `peak` column is the smoothed envelope value, not a detector peak.
+The `open` column means `signalMagnitude > 0`, not detector-open state.
 
 ---
 

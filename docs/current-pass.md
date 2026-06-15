@@ -1,622 +1,435 @@
-# File Tree Cleanup Pass — Detection + Analyzer Boundary
+# Detector / Analyzer Combined Split Pass
 
-## Goal
+## Purpose
 
-Make the repository structure readable from the architecture alone, without changing runtime behavior.
+Clean up detector ownership and Analyzer dependencies after the file tree move.
 
-Target mental model:
+This pass combines two related cleanups:
+
+1. Put detector implementations and detector-specific support files into clear `scalar/` and `frequency/` folders.
+2. Move detector-specific naming, formatting, and detail printing out of Analyzer and into detector-owned files.
+
+The intended result:
 
 ```text
-app / modes
-  thin firmware entry points and command shells
-
-audio
-  audio input and signal transport
-
-output
-  tone / piezo / chirp output
-
-detection
-  feature extraction, detectors, occurrences, inspection, patterns, field state,
-  and detection-specific analyzer diagnostics
-
-behavior
-  behavior programs and behavior state
+Analyzer = consumer of DetectorReport
+Detectors = owners of detector-specific detail, names, reject reasons, and print/export formatting
 ```
 
-This pass is a **file tree and naming cleanup only**.
-
-No behavior changes. No detection logic changes. No Analyzer output semantics changes.
+Analyzer may still call detector-side helper functions. It should not define scalar/frequency-specific output fields itself.
 
 ---
 
-## Core Rules
+## Non-Goals
 
-1. Root folders should describe architecture stages, not implementation accidents.
-2. `modes/` contains executable app shells / firmware modes only.
-3. Detection-specific diagnostic logic belongs near Detection, not inside a large mode folder.
-4. Detection runtime must not depend on Analyzer.
-5. Analyzer may depend on Detection.
-6. Keep moves compile-safe and boring.
-7. Do not introduce new contracts unless required for includes/build.
+Do **not** change behavior.
 
-Dependency direction:
+Do **not** change accepted/rejected detection logic.
 
-```text
-modes/analyzer
-  → detection/analyzer
-    → detection/*
-```
+Do **not** change SEQ output keys, field names, or meaning.
 
-Forbidden dependency direction:
+Do **not** split detector lifecycle into tiny files.
 
-```text
-detection/runtime|detectors|patterns|behavior
-  → detection/analyzer
-```
+Do **not** move Analyzer mode/app shell in this pass unless the filetree pass already did so.
+
+Do **not** add a generic detector interface unless already present.
 
 ---
 
-## Target Tree
+## Dependency Rule
+
+Allowed:
 
 ```text
-src/
-  app/
-    main.cpp
-    RuntimeDefaults.h
-    TimingUtils.h
-    AudioDebugConfig.h
-
-  audio/
-    AudioSignal.h
-    AudioSignal.cpp
-    AudioSource.h
-    AudioSource.cpp
-    AudioSourceI2S.h
-    AudioSourceI2S.cpp
-
-  output/
-    ToneOutput.h
-    ToneOutput.cpp
-    PiezoToneOutput.h
-    PiezoToneOutput.cpp
-    PiezoToneOutputBTL.h
-    PiezoToneOutputBTL.cpp
-    ChirpOutput.h
-    ChirpOutput.cpp
-
-  detection/
-    DetectionRuntime.h
-    DetectionRuntime.cpp
-    DetectionProfile.h
-    DetectionTypes.h
-
-    features/
-      FeatureSample.h
-      FeatureFrame.h
-      FeatureHistory.h
-      FeatureHistory.cpp
-      ScalarWindow.h
-      FreqBandStream.h
-      FreqBandStream.cpp
-      FrequencyMeasurementPacketBuilder.h
-
-    detectors/
-      DetectorId.h
-      DetectorDescriptor.h
-      DetectorReport.h
-      DetectorReject.h
-      DetectorNames.h
-
-      scalar/
-        ScalarTransientDetector.h
-        ScalarTransientDetector.cpp
-
-      frequency/
-        FrequencyMatchDetector.h
-        FrequencyMatchDetector.cpp
-        FrequencyMatchCriteria.h
-
-    occurrences/
-      Occurrence.h
-      InspectedOccurrence.h
-
-    inspection/
-      InspectionTypes.h
-      InspectionNames.h
-      OccurrenceInspector.h
-      OccurrenceInspector.cpp
-
-    patterns/
-      PatternTypes.h
-      PatternResult.h
-      PatternNames.h
-      PatternMatcher.h
-      PatternMatcher.cpp
-
-    field/
-      FieldState.h
-      FieldStateTracker.h
-      FieldStateTracker.cpp
-
-    analyzer/
-      AnalyzerReportTypes.h
-      AnalyzerReportBuilder.h
-      AnalyzerReportBuilder.cpp
-      AnalyzerTrialClassifier.h
-      AnalyzerTrialClassifier.cpp
-      AnalyzerSequenceSession.h
-      AnalyzerSequenceSession.cpp
-      AnalyzerSeqOutputMode.h
-      AnalyzerSeqOutputMode.cpp
-      AnalyzerSeqReporter.h
-      AnalyzerSeqReporter.cpp
-      AnalyzerCommands.cpp
-      AnalyzerText.h
-      AnalyzerText.cpp
-
-      tools/
-        AnalyzerSampleDump.h
-        AnalyzerSampleDump.cpp
-        AnalyzerTrialCapture.h
-        AnalyzerTrialCapture.cpp
-        AnalyzerRawCapture.h
-        AnalyzerRawCapture.cpp
-        AnalyzerRawHealth.h
-        AnalyzerRuntimeReporter.h
-        AnalyzerRuntimeReporter.cpp
-        AnalyzerSystemReporter.h
-        AnalyzerSystemReporter.cpp
-
-  behavior/
-    BehaviorProgram.h
-    BehaviorConfig.h
-    ResonantBehavior.h
-    ResonantBehavior.cpp
-
-  modes/
-    analyzer/
-      AnalyzerModeApp.h
-      AnalyzerModeApp.cpp
-
-    resonant/
-      ResonantNodeApp.h
-      ResonantNodeApp.cpp
-      ResonantNodeDebug.h
-      ResonantNodeDebug.cpp
-
-    emitter/
-      EmitterApp.h
-      EmitterApp.cpp
+Analyzer -> detection/analyzer -> detection/detectors -> detection core types
 ```
+
+Forbidden:
+
+```text
+DetectionRuntime -> Analyzer
+Detectors -> Analyzer
+Patterns -> Analyzer
+Behavior -> Analyzer
+```
+
+Detector printer/name helpers must live in detection-side folders, not in Analyzer.
 
 ---
 
-## Pass T1 — Audio / Output Folder Cleanup
-
-Move audio input and signal transport into `src/audio/`.
-
-Suggested moves:
+## Target Detector Tree
 
 ```text
-src/io/AudioSignal.*        → src/audio/AudioSignal.*
-src/hal/AudioSource*        → src/audio/AudioSource*
+src/detection/detectors/
+  DetectorId.h
+  DetectorDescriptor.h
+  DetectorReport.h
+  DetectorReject.h
+  DetectorNames.h
+  DetectorReportPrinter.h
+  DetectorReportPrinter.cpp
+
+  scalar/
+    ScalarTransientDetector.h
+    ScalarTransientDetector.cpp
+    ScalarTransientPrinter.h
+    ScalarTransientPrinter.cpp
+
+  frequency/
+    FrequencyMatchDetector.h
+    FrequencyMatchDetector.cpp
+    FrequencyMatchCriteria.h
+    FrequencyMatchPrinter.h
+    FrequencyMatchPrinter.cpp
 ```
 
-Move output generation into `src/output/`.
+Notes:
 
-Suggested moves:
-
-```text
-src/hal/ToneOutput*         → src/output/ToneOutput*
-src/hal/PiezoToneOutput*    → src/output/PiezoToneOutput*
-src/io/ChirpOutput*         → src/output/ChirpOutput*
-```
-
-Rules:
-
-- Update includes only.
-- Do not rename classes yet unless filename/class mismatch becomes confusing.
-- No output behavior changes.
+- `ScalarTransientDetector.*` remains lifecycle-owned and mostly unsplit.
+- `FrequencyMatchCriteria.h` is the renamed former `FrequencyMatchEvaluation.h`.
+- `ScalarTransientPrinter.*` and `FrequencyMatchPrinter.*` own detector-specific display/export text.
+- `DetectorReportPrinter.*` provides the generic entry point used by Analyzer.
 
 ---
 
-## Pass T2 — Detection Folder Cleanup
+## Step 1 — Move Detector Files into Specific Folders
 
-Keep only public detection facade files at `src/detection/` root.
-
-Allowed root files:
-
-```text
-DetectionRuntime.*
-DetectionProfile.h
-DetectionTypes.h
-```
-
-Move detector contracts into `detection/detectors/`:
-
-```text
-src/detection/DetectorReport.h  → src/detection/detectors/DetectorReport.h
-src/detection/DetectorReject.h  → src/detection/detectors/DetectorReject.h
-src/detection/DetectionNames.h  → src/detection/detectors/DetectorNames.h  // if mostly detector names
-```
-
-Rename inspector folder:
-
-```text
-src/detection/inspector/        → src/detection/inspection/
-src/detection/InspectionNames.h → src/detection/inspection/InspectionNames.h
-```
-
-Rules:
-
-- Update includes/build only.
-- Do not change inspection behavior.
-- Do not change PatternResult behavior.
-
----
-
-## Pass T3 — Detector Subfolders
-
-Create explicit detector-kind folders:
-
-```text
-src/detection/detectors/scalar/
-src/detection/detectors/frequency/
-```
-
-Move scalar detector:
+Move:
 
 ```text
 src/detection/detectors/ScalarTransientDetector.*
-→ src/detection/detectors/scalar/ScalarTransientDetector.*
-```
+-> src/detection/detectors/scalar/ScalarTransientDetector.*
 
-Move frequency detector:
-
-```text
 src/detection/detectors/FrequencyMatchDetector.*
-→ src/detection/detectors/frequency/FrequencyMatchDetector.*
+-> src/detection/detectors/frequency/FrequencyMatchDetector.*
 ```
 
-Rename frequency criteria file:
+Update all includes.
+
+Expected include direction:
+
+```cpp
+#include "detection/detectors/scalar/ScalarTransientDetector.h"
+#include "detection/detectors/frequency/FrequencyMatchDetector.h"
+```
+
+Compile after this step.
+
+---
+
+## Step 2 — Rename FrequencyMatchEvaluation to FrequencyMatchCriteria
+
+Move/rename:
 
 ```text
 src/detection/features/FrequencyMatchEvaluation.h
-→ src/detection/detectors/frequency/FrequencyMatchCriteria.h
+-> src/detection/detectors/frequency/FrequencyMatchCriteria.h
 ```
 
 Rename namespace:
 
 ```cpp
 FrequencyMatchEvaluation
-→ FrequencyMatchCriteria
+-> FrequencyMatchCriteria
 ```
+
+Keep the same logic:
+
+```text
+Values
+Reason
+evaluate()
+passes()
+buildFailReason()
+parseToken()
+reasonName()
+```
+
+Do not change score/contrast gating semantics.
+
+Important current behavior to preserve:
+
+```text
+If contrast fields are calculated but not part of final pass/fail, keep that unchanged.
+```
+
+Compile after this step.
+
+---
+
+## Step 3 — Keep Scalar Criteria Inside ScalarTransientDetector
+
+Do **not** create `ScalarTransientCriteria.h` now.
 
 Reason:
 
 ```text
-FrequencyMatchEvaluation is not feature extraction.
-It contains frequency detector packet/threshold/reason gate logic.
+Scalar transient detection is lifecycle-bound:
+attack threshold -> candidate opens -> peak tracking -> release debounce -> duration gate -> peak gate -> close/accept/reject
 ```
 
-Keep scalar criteria inside `ScalarTransientDetector` for now.
+This is not a clean stateless criteria packet like FrequencyMatch.
 
-Reason:
+Accepted asymmetry:
 
 ```text
-Scalar transient criteria are lifecycle-bound:
-onset → candidate opens → peak tracking → release debounce → duration/strength gates → accept/reject.
+scalar/ScalarTransientDetector.*
+  owns lifecycle + scalar criteria
 
-Frequency criteria are packet-bound and cleanly separable:
-frequency evidence packet + thresholds → pass/fail/reason.
+frequency/FrequencyMatchDetector.*
+  owns lifecycle
+
+frequency/FrequencyMatchCriteria.h
+  owns packet threshold / pass-fail / reason evaluation
 ```
-
-Rules:
-
-- No logic changes.
-- No threshold changes.
-- No reject reason changes.
-- Do not create `ScalarTransientCriteria.h` in this pass.
 
 ---
 
-## Pass T4 — Thin Analyzer Mode Boundary
-
-Make `modes/analyzer/` a thin firmware-mode shell only.
-
-Keep in `src/modes/analyzer/`:
-
-```text
-AnalyzerModeApp.h
-AnalyzerModeApp.cpp
-```
-
-Rename:
-
-```text
-AnalyzerApp.*      → AnalyzerModeApp.*
-AnalyzerTextUtils.* → detection/analyzer/AnalyzerText.*
-```
-
-Responsibilities of `AnalyzerModeApp`:
-
-```text
-begin/setup
-update loop
-calls into detection/analyzer
-owns mode-level wiring only
-```
-
-Responsibilities that must leave `AnalyzerModeApp`:
-
-```text
-SEQ report building
-trial classification
-source/inspect/explain formatting
-serial command parsing and token helpers
-raw/sample dump implementation
-detection-specific display names
-system/runtime reporters
-```
-
-Rules:
-
-- `AnalyzerModeApp` should call into Analyzer core, not implement Analyzer core.
-- Keep command strings and output unchanged.
-- Do not remove commands.
-- Move command parsing and token helper code out of `modes/analyzer`.
-
----
-
-## Pass T5 — Move Analyzer Core into Detection
+## Step 4 — Add Detector-Side Printer / Name Helpers
 
 Create:
 
 ```text
-src/detection/analyzer/
-src/detection/analyzer/tools/
+src/detection/detectors/DetectorReportPrinter.h
+src/detection/detectors/DetectorReportPrinter.cpp
+
+src/detection/detectors/scalar/ScalarTransientPrinter.h
+src/detection/detectors/scalar/ScalarTransientPrinter.cpp
+
+src/detection/detectors/frequency/FrequencyMatchPrinter.h
+src/detection/detectors/frequency/FrequencyMatchPrinter.cpp
 ```
 
-Move SEQ / trial truth logic into `src/detection/analyzer/`:
+Generic entry point example:
+
+```cpp
+namespace detection {
+
+void printDetectorDetailLine(const DetectorReport& report);
+const char* detectorIdName(DetectorId id);
+const char* detectorRejectClassName(DetectorRejectClass rejectClass);
+
+}
+```
+
+Detector-specific helper examples:
+
+```cpp
+namespace detection::scalar {
+
+void printScalarTransientDetailLine(const DetectorReport& report);
+const char* transientRejectReasonName(...);
+const char* onsetRejectReasonName(...);
+
+}
+```
+
+```cpp
+namespace detection::frequency {
+
+void printFrequencyMatchDetailLine(const DetectorReport& report);
+const char* frequencyMatchReasonName(FrequencyMatchCriteria::Reason reason);
+
+}
+```
+
+Exact function names may adapt to existing types, but ownership must follow the rule:
 
 ```text
-AnalyzerReportingTypes.h
-→ detection/analyzer/AnalyzerReportTypes.h
-
-AnalyzerClassifier.*
-→ detection/analyzer/AnalyzerTrialClassifier.*
-
-AnalyzerSequenceSession.cpp
-→ detection/analyzer/AnalyzerSequenceSession.cpp
-
-AnalyzerReporting.cpp
-→ detection/analyzer/AnalyzerSeqReporter.cpp
-
-AnalyzerCommands.cpp
-→ detection/analyzer/AnalyzerCommands.cpp
-
-AnalyzerText.h/.cpp
-→ detection/analyzer/AnalyzerText.h/.cpp
+Detector-specific text lives with detector-specific code.
+Analyzer calls generic detector-side functions.
 ```
 
-Recommended new/split files:
-
-```text
-detection/analyzer/AnalyzerReportBuilder.h/.cpp
-  buildAnalyzerReportForTrial()
-  former buildSequenceAnalyzerReport()
-
-detection/analyzer/AnalyzerSeqOutputMode.h/.cpp
-  SeqOutputMode parsing/naming/filter helpers
-
-detection/analyzer/AnalyzerSeqReporter.h/.cpp
-  printSequenceTrial()
-  printSequenceSourceCanonical()
-  printSequenceInspectCanonical()
-  printSequenceExplainCanonical()
-  printSequenceSummaryClean()
-  printSequenceReport()
-  printSequenceStatus()
-```
-
-Rename functions where touched:
-
-```text
-buildSequenceAnalyzerReport()
-→ buildAnalyzerReportForTrial()
-
-AnalyzerClassifier
-→ AnalyzerTrialClassifier
-
-AnalyzerReportingTypes
-→ AnalyzerReportTypes
-```
-
-Rules:
-
-- Do not change classification semantics.
-- Do not change SEQ output text except include paths/names if unavoidable.
-- Do not change selected occurrence/pattern logic.
+Compile after this step.
 
 ---
 
-## Pass T6 — Move Analyzer Tools into Detection Analyzer Tools
+## Step 5 — Move Detector-Specific Prints out of Analyzer
 
-Split old mixed helper/tooling files into `detection/analyzer/tools/`.
+Search in Analyzer files for scalar/frequency-specific output code, especially in reporter files.
 
-From `AnalyzerSequenceHelpers.cpp`, split into:
-
-```text
-detection/analyzer/tools/AnalyzerSampleDump.h/.cpp
-  sequenceSampleDumpSelected()
-  clearSequenceSampleDump()
-  flushSequenceSampleHistory()
-  recordSequenceSample()
-  beginSequenceSampleDump()
-  printSequenceSampleReport()
-  sequenceCurveSampleCallback()
-
-detection/analyzer/tools/AnalyzerTrialCapture.h/.cpp
-  handleSequencePending()
-  captureFrequencyMeasurementPacket()
-```
-
-Move raw/capture/health/reporting support:
+Move logic such as:
 
 ```text
-AnalyzerRawCapture.*
-→ detection/analyzer/tools/AnalyzerRawCapture.*
-
-AnalyzerHealthHelpers.h
-→ detection/analyzer/tools/AnalyzerRawHealth.h
+detail.scalar.*
+detail.frequency.*
+frequency accepted score/contrast fields
+scalar accepted value/strength fields
+frequency reject reason names
+scalar transient/onset reject reason names
+DetectorId -> printed detector name mappings
+DetectorRejectClass -> printed reject class mappings
 ```
 
-Split non-SEQ reporting from old `AnalyzerReporting.cpp` if present:
+from Analyzer into:
 
 ```text
-detection/analyzer/tools/AnalyzerSystemReporter.h/.cpp
-  printSystemHealth()
-
-detection/analyzer/tools/AnalyzerRuntimeReporter.h/.cpp
-  printDetectionParameters()
-  printAudioSourceSummary()
-  printAudioRunSummary()
-  printOccurrenceSummary()
+src/detection/detectors/DetectorReportPrinter.*
+src/detection/detectors/scalar/ScalarTransientPrinter.*
+src/detection/detectors/frequency/FrequencyMatchPrinter.*
 ```
 
-Emitter control decision:
+Analyzer should become a consumer:
+
+```cpp
+detection::printDetectorDetailLine(report.detectorReport);
+```
+
+or equivalent.
+
+Do not change visible output keys.
+
+Allowed output after refactor must still include the same fields as before, e.g.:
 
 ```text
-AnalyzerEmitterControl.cpp may stay in modes/analyzer if it is pure Serial2 mode wiring.
-Move it to detection/analyzer/tools only if it is used as detection trial tooling independent of mode shell.
+detail.scalar.accepted.*
+detail.frequency.accepted.*
+detail.frequency.inspect.*
 ```
-
-Preferred for now:
-
-```text
-AnalyzerEmitterControl.cpp → detection/analyzer/tools/AnalyzerEmitterControl.cpp
-```
-
-if includes remain clean.
-
-Rules:
-
-- No output behavior changes.
-- No capture behavior changes.
-- No timing behavior changes.
-- Keep old command names and report labels.
 
 ---
 
-## Pass T7 — Resonant / Node Naming Cleanup
+## Step 6 — Move Detector-Specific Names out of Analyzer
 
-Rename overly generic mode files:
+Analyzer should not own these long-term:
 
 ```text
-src/modes/resonant/node.h
-→ src/modes/resonant/ResonantNodeApp.h
-
-src/modes/resonant/node.cpp
-→ src/modes/resonant/ResonantNodeApp.cpp
-
-src/modes/resonant/node_debug.h
-→ src/modes/resonant/ResonantNodeDebug.h
-
-src/modes/resonant/node_debug.cpp
-→ src/modes/resonant/ResonantNodeDebug.cpp
+cleanDetectorIdName()
+occurrenceDetectorKindName()
+occurrenceSourceName()          // if detector-specific
+occurrenceTypeName()            // if used as detector display name
+strengthClassName()             // if detector report detail-specific
+evidenceTargetName()            // if frequency/inspector-specific
+frequency reason names
+scalar reason names
 ```
 
-Rules:
+Move generic detection names to:
 
-- Update includes only.
-- Do not change node behavior.
-- Do not mix this with Node architecture refactor.
+```text
+src/detection/detectors/DetectorNames.h/.cpp
+```
+
+Move frequency-specific names to:
+
+```text
+src/detection/detectors/frequency/FrequencyMatchPrinter.*
+```
+
+Move scalar-specific names to:
+
+```text
+src/detection/detectors/scalar/ScalarTransientPrinter.*
+```
+
+If a name is truly Pattern or Inspection vocabulary, move it to the proper stage instead, not to detectors:
+
+```text
+src/detection/patterns/PatternNames.*
+src/detection/inspection/InspectionNames.*
+```
 
 ---
 
-## Explicit Non-Goals
+## Step 7 — Keep Analyzer Report Assembly Generic
 
-Do not do these in this pass:
-
-```text
-No detector behavior changes.
-No Analyzer output semantic changes.
-No PatternResult refactor.
-No Occurrence payload trimming.
-No new generic Detector interface.
-No new scalar detector.
-No ParamRegistry work.
-No BehaviorProgram work.
-No RAM optimization.
-No VEKTOR integration.
-```
-
-Also do not create speculative future folders such as:
+Analyzer may still assemble trial reports, but should prefer generic data:
 
 ```text
-detection/detectors/chirp/
-detection/detectors/amp/
-detection/analyzer/reporting/deep/subfolders
+DetectorReport
+PatternResult
+Occurrence
+InspectedOccurrence
+FieldState
+ExpectedEvent / TrialWindow
 ```
 
-Only create folders for files actively moved in this pass.
+Avoid new Analyzer fields like:
+
+```text
+freqScore
+freqContrast
+ampLevel
+scalarPeak
+```
+
+unless they are transitional and already present.
+
+If detector-specific facts are needed in output, route them through detector-owned report detail or detector-owned printer/export helpers.
+
+---
+
+## Step 8 — Do Not Split Detector Lifecycle
+
+Do not create files like:
+
+```text
+ScalarTransientLifecycle.cpp
+ScalarTransientCandidate.cpp
+FrequencyMatchLifecycle.cpp
+FrequencyMatchState.cpp
+```
+
+Keep lifecycle in:
+
+```text
+ScalarTransientDetector.cpp
+FrequencyMatchDetector.cpp
+```
+
+Allowed split only:
+
+```text
+Detector.cpp  = lifecycle, update, reset, occurrence creation, accept/reject state
+Criteria.h    = stateless criteria where cleanly separable; currently frequency only
+Printer.cpp   = detector-owned text/export formatting
+Report.cpp    = optional later, only if buildReport() becomes too large
+```
+
+Do not create Report split in this pass unless absolutely necessary for compile hygiene.
 
 ---
 
 ## Acceptance Criteria
 
-Build/compile succeeds after each group of moves.
-
-No behavior/output changes intended.
-
-Search results after pass should show no remaining active references to old paths/names except comments or archived docs:
-
-```text
-src/hal/AudioSource
-src/io/AudioSignal
-src/io/ChirpOutput
-src/detection/inspector
-FrequencyMatchEvaluation
-AnalyzerClassifier
-AnalyzerReportingTypes
-AnalyzerTextUtils
-AnalyzerHealthHelpers
-modes/analyzer/AnalyzerApp
-modes/resonant/node.cpp
-modes/resonant/node_debug.cpp
-```
-
-Analyzer dependency check:
-
-```text
-modes/analyzer may include detection/analyzer.
-detection/analyzer may include detection runtime/report/pattern/inspection/detector headers.
-detection runtime/detectors/patterns/inspection/behavior must not include detection/analyzer.
-```
-
-Report at end:
-
-```text
-Moved files
-Renamed files
-Split files
-Updated includes
-Build result
-Any remaining legacy names/references
-Any files intentionally left unmoved
-```
+- Project compiles.
+- `ScalarTransientDetector.*` lives under `detection/detectors/scalar/`.
+- `FrequencyMatchDetector.*` lives under `detection/detectors/frequency/`.
+- `FrequencyMatchEvaluation.h` no longer exists.
+- `FrequencyMatchCriteria.h` exists under `detection/detectors/frequency/`.
+- Analyzer no longer contains scalar/frequency-specific detector detail print bodies.
+- Analyzer no longer defines detector-specific reason/name helpers that belong to detectors.
+- Detector-specific output fields are still printed with the same keys and meaning.
+- No SEQ output semantics changed.
+- No detection behavior changed.
+- No dependency from detection or detectors back to Analyzer.
 
 ---
 
-## Suggested Commit Message
+## Suggested Greps Before Finish
 
-```text
-Refactor source tree for detection and analyzer boundaries
+```bash
+grep -R "FrequencyMatchEvaluation" -n src
+
+grep -R "detail.frequency" -n src/modes src/detection/analyzer
+
+grep -R "detail.scalar" -n src/modes src/detection/analyzer
+
+grep -R "ScalarTransientDetector" -n src | head -50
+
+grep -R "FrequencyMatchDetector" -n src | head -50
 ```
 
-Longer body:
+Expected:
+
+- `FrequencyMatchEvaluation` returns nothing.
+- `detail.frequency` and `detail.scalar` are printed from detector-side printer files, not Analyzer files.
+- Detector includes point to the new scalar/frequency folders.
+
+---
+
+## Commit Message
 
 ```text
-Move audio/output files into explicit architecture folders, group detector implementations by kind, rename FrequencyMatchEvaluation to FrequencyMatchCriteria, and move Analyzer core diagnostics under detection/analyzer while keeping modes/analyzer as a thin firmware mode shell. No runtime behavior or Analyzer output semantics intended to change.
+Refactor detector folders and move detector-specific Analyzer formatting to detectors
 ```

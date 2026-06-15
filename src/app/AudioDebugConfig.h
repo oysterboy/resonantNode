@@ -4,7 +4,8 @@
 AudioDebugConfig
 
 Shared debug and test defaults used across analyzer, detector, and resonant
-mode code.
+mode code. This stays in the shared app-level layer because it is consumed by
+multiple subsystems, not just Analyzer.
 
 Responsibilities:
 - gate verbose audio-path diagnostics

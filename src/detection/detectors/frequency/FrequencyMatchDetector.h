@@ -89,7 +89,8 @@ public:
     unsigned long bestCloseMs = 0;
     float bestPeakScore = 0.0f;
     float bestPeakContrast = 0.0f;
-    // Frequency keeps its internal reason model string-backed for now.
+    // Frequency keeps its internal reason model string-backed so the current
+    // detector report shape stays stable while the gate logic remains local.
     const char* bestRejectReason = "none";
     const char* bestGateReason = "none";
     detection::FrequencyBandMeasurementPacket bestEvidence = {};

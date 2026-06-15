@@ -8,8 +8,11 @@
 #include "../../app/RuntimeDefaults.h"
 #include "../../app/AudioDebugConfig.h"
 #include "../../app/TimingUtils.h"
+#include "../../detection/detectors/DetectorNames.h"
 #include "../../detection/analyzer/AnalyzerText.h"
 #include "../../detection/analyzer/tools/AnalyzerRawHealth.h"
+#include "../../detection/inspection/InspectionNames.h"
+#include "../../detection/occurrences/OccurrenceNames.h"
 #include "../../detection/patterns/PatternNames.h"
 #include "../../detection/occurrences/Occurrence.h"
 #include "../../detection/analyzer/AnalyzerTrialClassifier.h"
@@ -380,150 +383,6 @@ bool AnalyzerApp::shouldPrintSequenceExplain(const AnalyzerReport& report) const
     return _sequenceTest.outputConfig.diagnosticsEnabled &&
            _sequenceTest.outputConfig.mode == SeqOutputMode::Explain &&
            sequenceOutputWhenEnabled(_sequenceTest.outputConfig.when, report.classification.result);
-}
-
-void buildFrequencyFailReason(const detection::FrequencyBandMeasurementPacket& evidence,
-                              const FrequencyMatchCriteria::Values& tuning,
-                              char* out,
-                              size_t outSize) {
-    FrequencyMatchCriteria::buildFailReason(evidence, tuning, out, outSize);
-}
-
-const char* occurrenceTypeName(detection::OccurrenceType type) {
-    switch (type) {
-        case detection::OccurrenceType::Scalar:
-            return "scalar";
-        case detection::OccurrenceType::Frequency:
-            return "frequency";
-        case detection::OccurrenceType::None:
-        default:
-            return "none";
-    }
-}
-
-const char* occurrenceSourceName(detection::DetectorId detectorId) {
-    switch (detectorId) {
-        case detection::DetectorId::ScalarTransient:
-            return "scalar";
-        case detection::DetectorId::FrequencyMatch:
-            return "frequency";
-        case detection::DetectorId::Unknown:
-        default:
-            return "none";
-    }
-}
-
-const char* occurrenceDetectorKindName(detection::DetectorId detectorId) {
-    switch (detectorId) {
-        case detection::DetectorId::ScalarTransient:
-            return "scalar_transient";
-        case detection::DetectorId::FrequencyMatch:
-            return "frequency_match";
-        case detection::DetectorId::Unknown:
-        default:
-            return "unknown";
-    }
-}
-
-const char* occurrenceRejectReasonName(detection::OccurrenceRejectReason reason) {
-    switch (reason) {
-        case detection::OccurrenceRejectReason::None:
-            return "none";
-        case detection::OccurrenceRejectReason::TooShort:
-            return "too_short";
-        case detection::OccurrenceRejectReason::TooLong:
-            return "too_long";
-        case detection::OccurrenceRejectReason::TooWeak:
-            return "too_weak";
-        case detection::OccurrenceRejectReason::BelowThreshold:
-            return "below_threshold";
-        case detection::OccurrenceRejectReason::Cooldown:
-            return "cooldown";
-        case detection::OccurrenceRejectReason::MissingFrequencyEvidence:
-            return "missing_frequency_evidence";
-        case detection::OccurrenceRejectReason::MissingAmpSupport:
-            return "missing_amp_support";
-        case detection::OccurrenceRejectReason::InvalidTiming:
-            return "invalid_timing";
-        case detection::OccurrenceRejectReason::UnsupportedKind:
-            return "unsupported_kind";
-        case detection::OccurrenceRejectReason::Unknown:
-        default:
-            return "unknown";
-    }
-}
-
-const char* strengthClassName(detection::StrengthClass value) {
-    switch (value) {
-        case detection::StrengthClass::None:
-            return "none";
-        case detection::StrengthClass::Weak:
-            return "weak";
-        case detection::StrengthClass::Medium:
-            return "medium";
-        case detection::StrengthClass::Strong:
-            return "strong";
-        case detection::StrengthClass::Unknown:
-        default:
-            return "unknown";
-    }
-}
-
-const char* evidenceTargetName(detection::EvidenceTarget value) {
-    switch (value) {
-        case detection::EvidenceTarget::SupportStrength:
-            return "SupportStrength";
-        case detection::EvidenceTarget::FrequencyScoreStrength:
-            return "FrequencyScoreStrength";
-        case detection::EvidenceTarget::FrequencyContrastQuality:
-            return "FrequencyContrastQuality";
-        case detection::EvidenceTarget::TargetBandStrength:
-            return "TargetBandStrength";
-        case detection::EvidenceTarget::None:
-        default:
-            return "None";
-    }
-}
-
-const char* inspectionPlanName(const detection::InspectionPlan& plan) {
-    if (plan.count == 1 &&
-        plan.modules[0].kind == detection::InspectionModuleKind::ScalarFeatureStrength) {
-        switch (plan.modules[0].target) {
-            case detection::EvidenceTarget::FrequencyScoreStrength:
-                return "frequency_score";
-            case detection::EvidenceTarget::TargetBandStrength:
-                return "target_band";
-            case detection::EvidenceTarget::SupportStrength:
-            default:
-                return "support_strength";
-        }
-    }
-    if (plan.count == 2 &&
-        plan.modules[0].kind == detection::InspectionModuleKind::ScalarFeatureStrength &&
-        plan.modules[0].target == detection::EvidenceTarget::FrequencyScoreStrength &&
-        plan.modules[1].kind == detection::InspectionModuleKind::ScalarFeatureStrength &&
-        plan.modules[1].target == detection::EvidenceTarget::FrequencyContrastQuality) {
-        return "frequency_score_contrast";
-    }
-
-    return "custom";
-}
-
-const char* inspectionModulesName(const detection::InspectionPlan& plan) {
-    if (plan.count == 1 &&
-        plan.modules[0].kind == detection::InspectionModuleKind::ScalarFeatureStrength) {
-        return "ScalarFeatureStrength";
-    }
-
-    return "custom";
-}
-
-const char* inspectionEvidenceTargetsName(const detection::InspectionPlan& plan) {
-    if (plan.count > 0 && plan.modules[0].kind == detection::InspectionModuleKind::ScalarFeatureStrength) {
-        return evidenceTargetName(plan.modules[0].target);
-    }
-
-    return "none";
 }
 
 const char* seqOutputModeName(AnalyzerApp::SeqOutputMode mode) {
@@ -1073,7 +932,7 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
         pattern.confidence = trialHasPipelineEvidence ? reportPatternResult->confidence : 0.0f;
         pattern.dtMs = report.classification.dtMs;
         pattern.supportStrength = trialHasPipelineEvidence && reportInspectedOccurrence != nullptr
-            ? strengthClassName(reportInspectedOccurrence->occurrence.scalar.strengthClass)
+            ? detection::strengthClassName(reportInspectedOccurrence->occurrence.scalar.strengthClass)
             : "unknown";
         pattern.reason = trialHasPipelineEvidence ? detection::patternReasonName(reportPatternResult->reasonCode) : "none";
         pattern.rejectReason = trialHasPipelineEvidence ? detection::patternRejectReasonName(reportPatternResult->rejectReason) : "none";
@@ -1088,9 +947,9 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
     report.occurrences.total = report.occurrences.accepted + report.occurrences.rejected;
     if (trialHasPipelineEvidence && reportInspectedOccurrence != nullptr && reportInspectedOccurrence->occurrence.present) {
         const detection::Occurrence& occurrence = reportInspectedOccurrence->occurrence;
-        report.occurrences.kind = occurrenceTypeName(occurrence.occurrenceType);
-        report.occurrences.primarySource = occurrenceSourceName(occurrence.detectorId);
-        report.occurrences.detectorKind = occurrenceDetectorKindName(occurrence.detectorId);
+        report.occurrences.kind = detection::occurrenceTypeName(occurrence.occurrenceType);
+        report.occurrences.primarySource = detection::occurrenceSourceName(occurrence.detectorId);
+        report.occurrences.detectorKind = detection::detectorIdName(occurrence.detectorId);
         report.occurrences.present = occurrence.present;
         report.occurrences.valid = occurrence.valid;
         report.occurrences.startMs = occurrence.startMs;
@@ -1105,7 +964,7 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
         report.occurrences.strength = selectedTrial.strength;
         report.occurrences.confidence = reportPatternResult != nullptr ? reportPatternResult->confidence : occurrence.confidence;
         report.occurrences.mainRejectReason = reportInspectedOccurrence->decision == detection::OccurrenceDecision::Rejected
-            ? occurrenceRejectReasonName(reportInspectedOccurrence->rejectReason)
+            ? detection::occurrenceRejectReasonName(reportInspectedOccurrence->rejectReason)
             : "none";
         report.occurrences.rejectReason = report.occurrences.mainRejectReason;
     } else {
@@ -1131,23 +990,23 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
     report.inspection.accepted = report.occurrences.accepted;
     report.inspection.rejected = report.occurrences.rejected;
     if (trialHasPipelineEvidence && reportInspectedOccurrence != nullptr && reportInspectedOccurrence->occurrence.present) {
-        report.inspection.primaryEvidence = occurrenceSourceName(reportInspectedOccurrence->occurrence.detectorId);
+        report.inspection.primaryEvidence = detection::occurrenceSourceName(reportInspectedOccurrence->occurrence.detectorId);
         switch (selectedProfile.patternMatcherConfig.requiredSupportTarget) {
             case detection::EvidenceTarget::FrequencyScoreStrength:
                 report.inspection.moduleTarget = "frequency_score";
-                report.inspection.moduleStrengthClass = strengthClassName(reportInspectedOccurrence->occurrence.frequency.scoreStrength);
+                report.inspection.moduleStrengthClass = detection::strengthClassName(reportInspectedOccurrence->occurrence.frequency.scoreStrength);
                 break;
             case detection::EvidenceTarget::TargetBandStrength:
                 report.inspection.moduleTarget = "target_band";
-                report.inspection.moduleStrengthClass = strengthClassName(reportInspectedOccurrence->occurrence.frequency.targetBandStrength);
+                report.inspection.moduleStrengthClass = detection::strengthClassName(reportInspectedOccurrence->occurrence.frequency.targetBandStrength);
                 break;
             case detection::EvidenceTarget::SupportStrength:
             default:
                 report.inspection.moduleTarget = "support_strength";
-                report.inspection.moduleStrengthClass = strengthClassName(reportInspectedOccurrence->occurrence.scalar.strengthClass);
+                report.inspection.moduleStrengthClass = detection::strengthClassName(reportInspectedOccurrence->occurrence.scalar.strengthClass);
                 break;
         }
-        report.inspection.mainRejectReason = reportInspectedOccurrence->decision == detection::OccurrenceDecision::Rejected ? occurrenceRejectReasonName(reportInspectedOccurrence->rejectReason) : "none";
+        report.inspection.mainRejectReason = reportInspectedOccurrence->decision == detection::OccurrenceDecision::Rejected ? detection::occurrenceRejectReasonName(reportInspectedOccurrence->rejectReason) : "none";
     } else {
         report.inspection.primaryEvidence = "none";
         report.inspection.moduleTarget = "unknown";
@@ -1175,16 +1034,16 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
     report.profileDetail.summary = analyzerProfileDetailSummary(_sequenceTest.profileKind);
     report.profileDetail.emitter = detection::detectorSelectionName(selectedProfile.detectorSelection);
     report.profileDetail.inspectionAcceptance = detection::detectorSelectionName(selectedProfile.detectorSelection);
-    report.profileDetail.inspectionPlan = inspectionPlanName(selectedProfile.inspectionPlan);
-    report.profileDetail.inspectionModules = inspectionModulesName(selectedProfile.inspectionPlan);
+    report.profileDetail.inspectionPlan = detection::inspectionPlanName(selectedProfile.inspectionPlan);
+    report.profileDetail.inspectionModules = detection::inspectionModulesName(selectedProfile.inspectionPlan);
     report.profileDetail.inspectionModuleCount = selectedProfile.inspectionPlan.count;
-    report.profileDetail.evidenceTargets = inspectionEvidenceTargetsName(selectedProfile.inspectionPlan);
+    report.profileDetail.evidenceTargets = detection::inspectionEvidenceTargetsName(selectedProfile.inspectionPlan);
     report.profileDetail.requiredSupportTarget = supportTargetDisplayName(
         selectedProfile.patternMatcherConfig.requiredSupportTarget,
         selectedProfile.patternMatcherConfig.requireSupportForAcceptance
     );
     report.profileDetail.supportGate = selectedProfile.patternMatcherConfig.requireSupportForAcceptance ? "enabled" : "disabled";
-    report.profileDetail.supportStrengthMin = strengthClassName(selectedProfile.patternMatcherConfig.minimumSupportStrength);
+    report.profileDetail.supportStrengthMin = detection::strengthClassName(selectedProfile.patternMatcherConfig.minimumSupportStrength);
     report.profileDetail.requireSupportForAcceptance = selectedProfile.patternMatcherConfig.requireSupportForAcceptance;
     if (report.occurrences.present &&
         reportInspectedOccurrence != nullptr &&
@@ -1233,7 +1092,7 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
     report.debug.pipelineSource = trialHasPipelineEvidence ? "actual_pipeline" : "missing_runtime_pipeline";
     report.debug.pipelineFallback = !trialHasPipelineEvidence;
     report.debug.mainRejectReason = trialHasPipelineEvidence && reportInspectedOccurrence != nullptr
-        ? (reportInspectedOccurrence->decision == detection::OccurrenceDecision::Rejected ? occurrenceRejectReasonName(reportInspectedOccurrence->rejectReason) : "none")
+        ? (reportInspectedOccurrence->decision == detection::OccurrenceDecision::Rejected ? detection::occurrenceRejectReasonName(reportInspectedOccurrence->rejectReason) : "none")
         : analyzerReasonName(report.classification.reason);
 }
 

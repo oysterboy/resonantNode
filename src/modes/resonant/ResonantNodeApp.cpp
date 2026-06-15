@@ -8,6 +8,7 @@
 #include "../../app/TimingUtils.h"
 #include "../../detection/features/FrequencyMeasurementPacketBuilder.h"
 #include "../../detection/detectors/frequency/FrequencyMatchCriteria.h"
+#include "../../detection/inspection/InspectionNames.h"
 #include "../../detection/patterns/PatternNames.h"
 
 #ifndef BUILD_DATE
@@ -63,45 +64,6 @@ uint32_t sampleOffsetUs(uint32_t sampleOffset, uint32_t sampleRateHz) {
     return static_cast<uint32_t>((static_cast<uint64_t>(sampleOffset) * 1000000ULL) / static_cast<uint64_t>(sampleRateHz));
 }
 
-const char* evidenceTargetName(detection::EvidenceTarget value) {
-    switch (value) {
-        case detection::EvidenceTarget::SupportStrength:
-            return "SupportStrength";
-        case detection::EvidenceTarget::FrequencyScoreStrength:
-            return "FrequencyScoreStrength";
-        case detection::EvidenceTarget::FrequencyContrastQuality:
-            return "FrequencyContrastQuality";
-        case detection::EvidenceTarget::TargetBandStrength:
-            return "TargetBandStrength";
-        case detection::EvidenceTarget::None:
-        default:
-            return "None";
-    }
-}
-
-const char* inspectionPlanName(const detection::InspectionPlan& plan) {
-    if (plan.count == 1 &&
-        plan.modules[0].kind == detection::InspectionModuleKind::ScalarFeatureStrength) {
-        switch (plan.modules[0].target) {
-            case detection::EvidenceTarget::FrequencyScoreStrength:
-                return "frequency_score";
-            case detection::EvidenceTarget::TargetBandStrength:
-                return "target_band";
-            case detection::EvidenceTarget::SupportStrength:
-            default:
-                return "support_strength";
-        }
-    }
-    if (plan.count == 2 &&
-        plan.modules[0].kind == detection::InspectionModuleKind::ScalarFeatureStrength &&
-        plan.modules[0].target == detection::EvidenceTarget::FrequencyScoreStrength &&
-        plan.modules[1].kind == detection::InspectionModuleKind::ScalarFeatureStrength &&
-        plan.modules[1].target == detection::EvidenceTarget::FrequencyContrastQuality) {
-        return "frequency_score_contrast";
-    }
-
-    return "custom";
-}
 }
 
 static bool startsWithTokenIgnoreCase(const char* line, const char* token) {
@@ -143,7 +105,7 @@ void printProfileComposition(const detection::DetectionProfile& profile) {
     Serial.print(" emitters=");
     Serial.print(detection::detectorSelectionName(profile.detectorSelection));
     Serial.print(" inspectionPlan=");
-    Serial.print(inspectionPlanName(profile.inspectionPlan));
+    Serial.print(detection::inspectionPlanName(profile.inspectionPlan));
     Serial.print(" fieldStateConfig=");
     Serial.print(profile.fieldStateConfig.occurrenceWindowMs);
     Serial.print("/");
@@ -157,7 +119,7 @@ void printDetectionProfileDetails(const detection::DetectionProfile& profile) {
     Serial.print("  detectorSelection=");
     Serial.println(detection::detectorSelectionName(profile.detectorSelection));
     Serial.print("  inspectionPlan=");
-    Serial.println(inspectionPlanName(profile.inspectionPlan));
+    Serial.println(detection::inspectionPlanName(profile.inspectionPlan));
     Serial.print("  freqMatch.releaseDebounceMs=");
     Serial.println(profile.frequencyMatch.releaseDebounceMs);
     Serial.print("  freqMatch.cooldownAfterReleaseMs=");
@@ -179,7 +141,7 @@ void printDetectionProfileDetails(const detection::DetectionProfile& profile) {
         Serial.print("].kind=");
         Serial.print(module.kind == detection::InspectionModuleKind::ScalarFeatureStrength ? "ScalarFeatureStrength" : "None");
         Serial.print(" target=");
-        Serial.print(evidenceTargetName(module.target));
+        Serial.print(detection::evidenceTargetName(module.target));
         if (module.kind == detection::InspectionModuleKind::ScalarFeatureStrength) {
             Serial.print(" stream=");
             Serial.print(module.scalar.stream == detection::FeatureStreamId::AmpEnvelope ? "AmpEnvelope" :
@@ -196,7 +158,7 @@ void printDetectionProfileDetails(const detection::DetectionProfile& profile) {
     Serial.print("  pattern.requireSupportForAcceptance=");
     Serial.println(profile.patternMatcherConfig.requireSupportForAcceptance ? 1 : 0);
     Serial.print("  pattern.requiredSupportTarget=");
-    Serial.println(evidenceTargetName(profile.patternMatcherConfig.requiredSupportTarget));
+    Serial.println(detection::evidenceTargetName(profile.patternMatcherConfig.requiredSupportTarget));
     Serial.print("  fieldState.occurrenceWindowMs=");
     Serial.println(profile.fieldStateConfig.occurrenceWindowMs);
     Serial.print("  fieldState.patternWindowMs=");
@@ -854,11 +816,11 @@ void Node::handleDetectCommand(const char* line) {
     Serial.print(" emitters=");
     Serial.print(detection::detectorSelectionName(detectionProfile.detectorSelection));
     Serial.print(" inspectionPlan=");
-    Serial.print(inspectionPlanName(detectionProfile.inspectionPlan));
+    Serial.print(detection::inspectionPlanName(detectionProfile.inspectionPlan));
     Serial.print(" requireSupportForAcceptance=");
     Serial.print(detectionProfile.patternMatcherConfig.requireSupportForAcceptance ? 1 : 0);
     Serial.print(" requiredSupportTarget=");
-    Serial.print(evidenceTargetName(detectionProfile.patternMatcherConfig.requiredSupportTarget));
+    Serial.print(detection::evidenceTargetName(detectionProfile.patternMatcherConfig.requiredSupportTarget));
     Serial.print(" freqScore=");
     Serial.print(detectionProfile.frequencyMatch.attackScoreMin, 0);
     Serial.print(" freqContrast=");

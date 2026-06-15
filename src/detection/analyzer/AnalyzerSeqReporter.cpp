@@ -2,233 +2,10 @@
 
 #include <Arduino.h>
 
+#include "../../detection/detectors/DetectorNames.h"
+#include "../../detection/detectors/DetectorReportPrinter.h"
+
 namespace {
-
-const char* cleanDetectorIdName(detection::DetectorId detectorId) {
-    switch (detectorId) {
-        case detection::DetectorId::ScalarTransient:
-            return "scalar_transient";
-        case detection::DetectorId::FrequencyMatch:
-            return "frequency_match";
-        case detection::DetectorId::Unknown:
-        default:
-            return "unknown";
-    }
-}
-
-const char* cleanDetectorRejectClassName(detection::DetectorRejectClass rejectClass) {
-    switch (rejectClass) {
-        case detection::DetectorRejectClass::None:
-            return "none";
-        case detection::DetectorRejectClass::Threshold:
-            return "threshold";
-        case detection::DetectorRejectClass::Timing:
-            return "timing";
-        case detection::DetectorRejectClass::Strength:
-            return "strength";
-        case detection::DetectorRejectClass::Cooldown:
-            return "cooldown";
-        case detection::DetectorRejectClass::State:
-            return "state";
-        case detection::DetectorRejectClass::Window:
-            return "window";
-        case detection::DetectorRejectClass::Unknown:
-        default:
-            return "unknown";
-    }
-}
-
-void printCanonicalDetectorDetailLine(const char* prefix, const AnalyzerReport& report) {
-    if (report.detectorReport == nullptr) {
-        return;
-    }
-
-    const auto& detectorReport = *report.detectorReport;
-    switch (detectorReport.detectorId) {
-        case detection::DetectorId::ScalarTransient: {
-            const auto& scalar = detectorReport.scalar;
-            Serial.print(prefix);
-            Serial.print(" detail.scalar.accepted.value=");
-            Serial.print(scalar.accepted.value, 1);
-            Serial.print(" detail.scalar.accepted.baseline=");
-            Serial.print(scalar.accepted.baseline, 1);
-            Serial.print(" detail.scalar.accepted.lift=");
-            Serial.print(scalar.accepted.lift, 1);
-            Serial.print(" detail.scalar.accepted.normalized=");
-            Serial.print(scalar.accepted.normalized, 2);
-            Serial.print(" detail.scalar.reject.value=");
-            Serial.print(scalar.selectedReject.value, 1);
-            Serial.print(" detail.scalar.reject.baseline=");
-            Serial.print(scalar.selectedReject.baseline, 1);
-            Serial.print(" detail.scalar.reject.lift=");
-            Serial.print(scalar.selectedReject.lift, 1);
-            Serial.print(" detail.scalar.reject.normalized=");
-            Serial.print(scalar.selectedReject.normalized, 2);
-            Serial.print(" detail.scalar.reject.opened=");
-            Serial.print(scalar.selectedReject.opened ? 1 : 0);
-            Serial.print(" detail.scalar.reject.crossed_onset=");
-            Serial.print(scalar.selectedReject.crossedOnset ? 1 : 0);
-            Serial.print(" detail.scalar.reject.crossed_release=");
-            Serial.print(scalar.selectedReject.crossedRelease ? 1 : 0);
-            Serial.print(" detail.scalar.threshold.onset=");
-            Serial.print(scalar.thresholds.onsetThreshold, 1);
-            Serial.print(" detail.scalar.threshold.release=");
-            Serial.print(scalar.thresholds.releaseThreshold, 1);
-            Serial.print(" detail.scalar.threshold.min_strength=");
-            Serial.print(scalar.thresholds.minStrength, 1);
-            Serial.print(" detail.scalar.aggregate.too_short=");
-            Serial.print(scalar.aggregates.tooShortCount);
-            Serial.print(" detail.scalar.aggregate.too_long=");
-            Serial.print(scalar.aggregates.tooLongCount);
-            Serial.print(" detail.scalar.aggregate.strength_too_low=");
-            Serial.print(scalar.aggregates.strengthTooLowCount);
-            Serial.print(" detail.scalar.aggregate.max_rejected_lift=");
-            Serial.print(scalar.aggregates.maxRejectedLift, 1);
-            Serial.print(" detail.scalar.aggregate.best_rejected_value=");
-            Serial.print(scalar.aggregates.bestRejectedValue, 1);
-            Serial.print(" detail.scalar.inspect.reject_reason=");
-            Serial.print(scalar.inspect.rejectReason != nullptr ? scalar.inspect.rejectReason : "none");
-            Serial.print(" detail.scalar.inspect.no_emit_reason=");
-            Serial.print(scalar.inspect.noEmitReason != nullptr ? scalar.inspect.noEmitReason : "none");
-            Serial.print(" detail.scalar.inspect.gate_reason=");
-            Serial.print(scalar.inspect.gateReason != nullptr ? scalar.inspect.gateReason : "none");
-            Serial.print(" detail.scalar.inspect.opened=");
-            Serial.print(scalar.inspect.opened ? 1 : 0);
-            Serial.print(" detail.scalar.inspect.released=");
-            Serial.print(scalar.inspect.released ? 1 : 0);
-            Serial.print(" detail.scalar.inspect.valid_release=");
-            Serial.print(scalar.inspect.validRelease ? 1 : 0);
-            Serial.print(" detail.scalar.inspect.emit_allowed=");
-            Serial.print(scalar.inspect.emitAllowed ? 1 : 0);
-            Serial.print(" detail.scalar.inspect.open_ms=");
-            Serial.print(scalar.inspect.openMs);
-            Serial.print(" detail.scalar.inspect.peak_ms=");
-            Serial.print(scalar.inspect.peakMs);
-            Serial.print(" detail.scalar.inspect.release_ms=");
-            Serial.print(scalar.inspect.releaseMs);
-            Serial.print(" detail.scalar.inspect.duration_ms=");
-            Serial.print(scalar.inspect.durationMs);
-            Serial.print(" detail.scalar.inspect.peak_strength=");
-            Serial.println(scalar.inspect.peakStrength, 1);
-            break;
-        }
-        case detection::DetectorId::FrequencyMatch: {
-            const auto& frequency = detectorReport.frequency;
-            Serial.print(prefix);
-            Serial.print(" detail.frequency.accepted.score=");
-            Serial.print(frequency.accepted.score, 2);
-            Serial.print(" detail.frequency.accepted.contrast=");
-            Serial.print(frequency.accepted.contrast, 2);
-            Serial.print(" detail.frequency.reject.score=");
-            Serial.print(frequency.selectedReject.score, 2);
-            Serial.print(" detail.frequency.reject.contrast=");
-            Serial.print(frequency.selectedReject.contrast, 2);
-            Serial.print(" detail.frequency.threshold.score_min=");
-            Serial.print(frequency.thresholds.scoreThreshold, 2);
-            Serial.print(" detail.frequency.threshold.contrast_min=");
-            Serial.print(frequency.thresholds.contrastThreshold, 2);
-            Serial.print(" detail.frequency.aggregate.score_ok=");
-            Serial.print(frequency.aggregates.scoreOkCount);
-            Serial.print(" detail.frequency.aggregate.contrast_ok=");
-            Serial.print(frequency.aggregates.contrastOkCount);
-            Serial.print(" detail.frequency.aggregate.both_ok=");
-            Serial.print(frequency.aggregates.bothOkCount);
-            Serial.print(" detail.frequency.aggregate.match=");
-            Serial.print(frequency.aggregates.matchCount);
-            Serial.print(" detail.frequency.inspect.reject_reason=");
-            Serial.print(frequency.inspect.rejectReason != nullptr ? frequency.inspect.rejectReason : "none");
-            Serial.print(" detail.frequency.inspect.no_emit_reason=");
-            Serial.print(frequency.inspect.noEmitReason != nullptr ? frequency.inspect.noEmitReason : "none");
-            Serial.print(" detail.frequency.inspect.gate_reason=");
-            Serial.print(frequency.inspect.gateReason != nullptr ? frequency.inspect.gateReason : "none");
-            Serial.print(" detail.frequency.inspect.pending_state=");
-            Serial.print(frequency.inspect.pendingState != nullptr ? frequency.inspect.pendingState : "none");
-            Serial.print(" detail.frequency.inspect.ready_ok=");
-            Serial.print(frequency.inspect.readyOk ? 1 : 0);
-            Serial.print(" detail.frequency.inspect.gate_open=");
-            Serial.print(frequency.inspect.gateOpen ? 1 : 0);
-            Serial.print(" detail.frequency.inspect.opened=");
-            Serial.print(frequency.inspect.opened ? 1 : 0);
-            Serial.print(" detail.frequency.inspect.released=");
-            Serial.print(frequency.inspect.released ? 1 : 0);
-            Serial.print(" detail.frequency.inspect.emitted=");
-            Serial.print(frequency.inspect.emitted ? 1 : 0);
-            Serial.print(" detail.frequency.inspect.valid_release=");
-            Serial.print(frequency.inspect.validRelease ? 1 : 0);
-            Serial.print(" detail.frequency.inspect.emit_allowed=");
-            Serial.print(frequency.inspect.emitAllowed ? 1 : 0);
-            Serial.print(" detail.frequency.inspect.open_ms=");
-            Serial.print(frequency.inspect.openMs);
-            Serial.print(" detail.frequency.inspect.peak_ms=");
-            Serial.print(frequency.inspect.peakMs);
-            Serial.print(" detail.frequency.inspect.release_ms=");
-            Serial.print(frequency.inspect.releaseMs);
-            Serial.print(" detail.frequency.inspect.duration_ms=");
-            Serial.println(frequency.inspect.durationMs);
-            break;
-        }
-        case detection::DetectorId::Unknown:
-        default:
-            break;
-    }
-}
-
-void printCanonicalDetectorReportGenericLine(const char* prefix, const AnalyzerReport& report) {
-    static const detection::DetectorReport kEmptyDetectorReport = {};
-    const auto& detectorReport = report.detectorReport != nullptr ? *report.detectorReport : kEmptyDetectorReport;
-    const auto& accepted = detectorReport.accepted;
-    const auto& selectedReject = detectorReport.selectedReject;
-
-    Serial.print(prefix);
-    Serial.print(" trial=");
-    Serial.print(report.context.trial);
-    Serial.print(" detector=");
-    Serial.print(cleanDetectorIdName(detectorReport.detectorId));
-    Serial.print(" window.start_ms=");
-    Serial.print(detectorReport.reportStartMs);
-    Serial.print(" window.end_ms=");
-    Serial.print(detectorReport.reportEndMs);
-    Serial.print(" accepted.present=");
-    Serial.print(accepted.present ? 1 : 0);
-    Serial.print(" accepted.start_ms=");
-    Serial.print(accepted.startMs);
-    Serial.print(" accepted.peak_ms=");
-    Serial.print(accepted.peakMs);
-    Serial.print(" accepted.end_ms=");
-    Serial.print(accepted.endMs);
-    Serial.print(" accepted.duration_ms=");
-    Serial.print(accepted.durationMs);
-    Serial.print(" accepted.strength=");
-    Serial.print(accepted.strength, 1);
-    Serial.print(" accepted.confidence=");
-    Serial.print(accepted.confidence, 2);
-    Serial.print(" reject.present=");
-    Serial.print(selectedReject.present ? 1 : 0);
-    Serial.print(" reject.class=");
-    Serial.print(cleanDetectorRejectClassName(selectedReject.rejectClass));
-    Serial.print(" reject.detector_reason=");
-    Serial.print(selectedReject.detectorReason != nullptr ? selectedReject.detectorReason : "none");
-    Serial.print(" reject.start_ms=");
-    Serial.print(selectedReject.startMs);
-    Serial.print(" reject.peak_ms=");
-    Serial.print(selectedReject.peakMs);
-    Serial.print(" reject.end_ms=");
-    Serial.print(selectedReject.endMs);
-    Serial.print(" reject.duration_ms=");
-    Serial.print(selectedReject.durationMs);
-    Serial.print(" reject.strength=");
-    Serial.print(selectedReject.strength, 1);
-    Serial.print(" reject.confidence=");
-    Serial.print(selectedReject.confidence, 2);
-    Serial.print(" threshold.min_duration_ms=");
-    Serial.print(detectorReport.thresholds.minDurationMs);
-    Serial.print(" threshold.max_duration_ms=");
-    Serial.print(detectorReport.thresholds.maxDurationMs);
-    Serial.print(" aggregate.accepted_count=");
-    Serial.print(detectorReport.aggregates.acceptedCount);
-    Serial.print(" aggregate.rejected_count=");
-    Serial.println(detectorReport.aggregates.rejectedCount);
-}
 
 void printCanonicalStageLine(const char* prefix, const AnalyzerReport& report, bool extended) {
     Serial.print(prefix);
@@ -398,10 +175,8 @@ void AnalyzerApp::printSequenceSourceCanonical(const AnalyzerReport& report) con
 }
 
 void AnalyzerApp::printSequenceSourceSpecCanonical(const AnalyzerReport& report) const {
-    printCanonicalDetectorReportGenericLine("SEQ_SOURCE_SPEC", report);
-    if (report.detectorReport != nullptr && report.detectorReport->detectorId != detection::DetectorId::Unknown) {
-        printCanonicalDetectorDetailLine("SEQ_SOURCE_SPEC", report);
-    }
+    detection::printDetectorReportGenericLine("SEQ_SOURCE_SPEC", report.context.trial, report.detectorReport);
+    detection::printDetectorDetailLine("SEQ_SOURCE_SPEC", report.detectorReport);
 }
 
 void AnalyzerApp::printSequenceExplainCanonical(const AnalyzerReport& report) const {
@@ -414,10 +189,8 @@ void AnalyzerApp::printSequenceExplainCanonical(const AnalyzerReport& report) co
     Serial.print(report.context.trial);
     Serial.print(" profile=");
     Serial.println(report.context.profile != nullptr ? report.context.profile : "unknown");
-    printCanonicalDetectorReportGenericLine("SEQ_EXPLAIN", report);
-    if (report.detectorReport != nullptr && report.detectorReport->detectorId != detection::DetectorId::Unknown) {
-        printCanonicalDetectorDetailLine("SEQ_EXPLAIN", report);
-    }
+    detection::printDetectorReportGenericLine("SEQ_EXPLAIN", report.context.trial, report.detectorReport);
+    detection::printDetectorDetailLine("SEQ_EXPLAIN", report.detectorReport);
     printCanonicalStageLine("SEQ_EXPLAIN", report, true);
 }
 
@@ -436,7 +209,7 @@ void AnalyzerApp::printSequenceSummaryClean() const {
     Serial.print("SEQ_SUMMARY profile=");
     Serial.print(summary.profileName != nullptr ? summary.profileName : "unknown");
     Serial.print(" detector=");
-    Serial.print(cleanDetectorIdName(summary.detectorId));
+    Serial.print(detection::detectorIdName(summary.detectorId));
     Serial.print(" trials=");
     Serial.print(summary.trials);
     Serial.print(" completed=");

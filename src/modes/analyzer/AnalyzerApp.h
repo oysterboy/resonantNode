@@ -487,10 +487,10 @@ private:
     unsigned long _controlBaudRate = 115200;
     int _controlRxPin = 16;
     int _controlTxPin = 17;
-    char _usbLineBuffer[96];
+    char _usbLineBuffer[256];
     size_t _usbLineLength = 0;
-    char _commandScratch[128];
-    char _emitterLineBuffer[96];
+    char _commandScratch[256];
+    char _emitterLineBuffer[256];
     size_t _emitterLineLength = 0;
 
     bool _controlClaimPending = false;

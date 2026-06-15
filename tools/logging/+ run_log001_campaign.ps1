@@ -208,6 +208,21 @@ function Format-ParamCommand {
     return 'PARAM ' + ($parts -join ' ')
 }
 
+function Get-ScalarTuneLine {
+    param([Parameter(Mandatory = $true)][string]$StatusLine)
+
+    if ([string]::IsNullOrWhiteSpace($StatusLine)) {
+        return $null
+    }
+
+    $freqIndex = $StatusLine.IndexOf(' freqScore=')
+    if ($freqIndex -gt 0) {
+        return $StatusLine.Substring(0, $freqIndex)
+    }
+
+    return $StatusLine
+}
+
 function Format-RunLabel {
     param([Parameter(Mandatory = $true)][int]$Value)
 
@@ -492,10 +507,11 @@ $lockInfo = Open-CampaignLock -Path $lockPath -StatePath $statePath -BatchRootVa
     } else {
         '00'
     }
-    $initialTune = Format-ParamCommand -Snapshot (Get-BlockTuneSnapshot -BlockIndex ([int][math]::Ceiling([double][Math]::Max(1, $StartRun) / [double]$BlockSize)))
+    $initialRequestedTune = Format-ParamCommand -Snapshot (Get-BlockTuneSnapshot -BlockIndex ([int][math]::Ceiling([double][Math]::Max(1, $StartRun) / [double]$BlockSize)))
     $initialRunLabel = Format-RunLabel -Value $resumeCurrentRun
-    Write-CampaignState -Path $statePath -Status 'running' -ProfileName $Profile -BatchRootValue $batchRoot -PidValue $PID -StartRunValue $StartRun -CurrentRunValue $resumeCurrentRun -CurrentBlockValue $resumeCurrentBlock -CurrentTuneValue $initialTune -LatestSummaryValue 'none'
-    Write-CampaignHeartbeat -Path $heartbeatPath -Status 'starting' -ProfileName $Profile -BatchRootValue $batchRoot -CurrentBlockValue $resumeCurrentBlock -CurrentRunValue $initialRunLabel -CurrentTuneValue $initialTune -LatestSummaryValue 'none'
+    $initialAppliedTune = $initialRequestedTune
+    Write-CampaignState -Path $statePath -Status 'running' -ProfileName $Profile -BatchRootValue $batchRoot -PidValue $PID -StartRunValue $StartRun -CurrentRunValue $resumeCurrentRun -CurrentBlockValue $resumeCurrentBlock -CurrentTuneValue $initialAppliedTune -LatestSummaryValue 'none'
+    Write-CampaignHeartbeat -Path $heartbeatPath -Status 'starting' -ProfileName $Profile -BatchRootValue $batchRoot -CurrentBlockValue $resumeCurrentBlock -CurrentRunValue $initialRunLabel -CurrentTuneValue $initialAppliedTune -LatestSummaryValue 'none'
 
     $port = New-Object System.IO.Ports.SerialPort $PortName, $BaudRate, 'None', 8, 'One'
     $port.DtrEnable = $false
@@ -512,9 +528,13 @@ $lockInfo = Open-CampaignLock -Path $lockPath -StatePath $statePath -BatchRootVa
         $line = Try-ReadLine -Port $port
         if ($null -ne $line) {
             Append-TextLine -Path $sessionPath -Line $line
+            if ($line -match '^PARAM\b' -and $line -match 'freqScore=') {
+                $initialAppliedTune = Get-ScalarTuneLine -StatusLine $line
+                $currentTuneCommand = $initialAppliedTune
+            }
         }
     }
-    Write-CampaignHeartbeat -Path $heartbeatPath -Status 'booted' -ProfileName $Profile -BatchRootValue $batchRoot -CurrentBlockValue $resumeCurrentBlock -CurrentRunValue $initialRunLabel -CurrentTuneValue $initialTune -LatestSummaryValue 'none'
+    Write-CampaignHeartbeat -Path $heartbeatPath -Status 'booted' -ProfileName $Profile -BatchRootValue $batchRoot -CurrentBlockValue $resumeCurrentBlock -CurrentRunValue $initialRunLabel -CurrentTuneValue $initialAppliedTune -LatestSummaryValue 'none'
 
     $blockSummaries = @{}
     $resumeTuneBlockIndex = $null
@@ -537,6 +557,7 @@ $lockInfo = Open-CampaignLock -Path $lockPath -StatePath $statePath -BatchRootVa
 
         $port.WriteLine($resumeTuneCommand)
         Append-TextLine -Path $sessionPath -Line ("resume_tune={0}" -f $resumeTuneCommand)
+        $currentTuneCommand = $resumeTuneCommand
         Start-Sleep -Milliseconds 250
         $resumeTuneDeadline = [DateTime]::UtcNow.AddSeconds(2)
         while ([DateTime]::UtcNow -lt $resumeTuneDeadline) {
@@ -547,6 +568,9 @@ $lockInfo = Open-CampaignLock -Path $lockPath -StatePath $statePath -BatchRootVa
             Append-TextLine -Path $sessionPath -Line $line
             if ($line.Length -gt 0) {
                 $blockSummaries[$resumeTuneBlockName].Add($line)
+                if ($line -match '^PARAM\b' -and $line -match 'freqScore=') {
+                    $currentTuneCommand = Get-ScalarTuneLine -StatusLine $line
+                }
             }
         }
 
@@ -562,6 +586,9 @@ $lockInfo = Open-CampaignLock -Path $lockPath -StatePath $statePath -BatchRootVa
             Append-TextLine -Path $sessionPath -Line $line
             if ($line.Length -gt 0) {
                 $blockSummaries[$resumeTuneBlockName].Add($line)
+                if ($line -match '^PARAM\b' -and $line -match 'freqScore=') {
+                    $currentTuneCommand = Get-ScalarTuneLine -StatusLine $line
+                }
             }
         }
     }
@@ -578,6 +605,7 @@ $lockInfo = Open-CampaignLock -Path $lockPath -StatePath $statePath -BatchRootVa
             Append-TextLine -Path $sessionPath -Line ("block={0} start={1}" -f $blockName, (Get-Date -Format o))
             $tuneSnapshot = Get-BlockTuneSnapshot -BlockIndex $blockIndex
             $tuneCommand = Format-ParamCommand -Snapshot $tuneSnapshot
+            $currentTuneCommand = $tuneCommand
             if ($blockIndex -gt 1 -and -not ($resumeTuneBlockIndex -eq $blockIndex)) {
                 $port.WriteLine($tuneCommand)
                 Append-TextLine -Path $sessionPath -Line ("block={0} tune={1}" -f $blockName, $tuneCommand)
@@ -591,6 +619,9 @@ $lockInfo = Open-CampaignLock -Path $lockPath -StatePath $statePath -BatchRootVa
                     Append-TextLine -Path $sessionPath -Line $line
                     if ($line.Length -gt 0) {
                         $blockSummaries[$blockName].Add($line)
+                        if ($line -match '^PARAM\b' -and $line -match 'freqScore=') {
+                            $currentTuneCommand = Get-ScalarTuneLine -StatusLine $line
+                        }
                     }
                 }
             }
@@ -607,6 +638,9 @@ $lockInfo = Open-CampaignLock -Path $lockPath -StatePath $statePath -BatchRootVa
                 Append-TextLine -Path $sessionPath -Line $line
                 if ($line.Length -gt 0) {
                     $blockSummaries[$blockName].Add($line)
+                    if ($line -match '^PARAM\b' -and $line -match 'freqScore=') {
+                        $currentTuneCommand = Get-ScalarTuneLine -StatusLine $line
+                    }
                 }
             }
         }
@@ -664,7 +698,8 @@ $lockInfo = Open-CampaignLock -Path $lockPath -StatePath $statePath -BatchRootVa
             "Status: $(if ($sawSummary) { 'running' } else { 'timeout' })",
             '',
             "Last run: $runName",
-            "Tune: $(Format-ParamCommand -Snapshot (Get-BlockTuneSnapshot -BlockIndex $blockIndex))",
+            "Requested tune: $tuneCommand",
+            "Applied tune: $currentTuneCommand",
             "Summary: $summaryLine",
             '',
             '## Run Summaries'
@@ -677,6 +712,7 @@ $lockInfo = Open-CampaignLock -Path $lockPath -StatePath $statePath -BatchRootVa
         $summaryLines += ''
         $summaryLines += '## Notes'
         $summaryLines += '- This campaign keeps the current scalar parameters unless a later tuning pass changes them.'
+        $summaryLines += '- Applied tune is captured from the confirmed `PARAM STATUS` snapshot.'
         Set-Content -LiteralPath $blockSummaryPath -Value $summaryLines -Encoding utf8
 
         Set-Content -LiteralPath $progressPath -Value @(
@@ -686,13 +722,13 @@ $lockInfo = Open-CampaignLock -Path $lockPath -StatePath $statePath -BatchRootVa
             '',
             "- current_block: $blockName",
             "- current_run: $runName",
-            "- current_tune: $(Format-ParamCommand -Snapshot (Get-BlockTuneSnapshot -BlockIndex $blockIndex))",
+            "- current_tune: $currentTuneCommand",
             "- latest_summary: $summaryLine"
         ) -Encoding utf8
 
-        Write-CampaignHeartbeat -Path $heartbeatPath -Status 'running' -ProfileName $Profile -BatchRootValue $batchRoot -CurrentBlockValue $blockName -CurrentRunValue $runName -CurrentTuneValue (Format-ParamCommand -Snapshot (Get-BlockTuneSnapshot -BlockIndex $blockIndex)) -LatestSummaryValue $summaryLine
+        Write-CampaignHeartbeat -Path $heartbeatPath -Status 'running' -ProfileName $Profile -BatchRootValue $batchRoot -CurrentBlockValue $blockName -CurrentRunValue $runName -CurrentTuneValue $currentTuneCommand -LatestSummaryValue $summaryLine
 
-        Write-CampaignState -Path $statePath -Status 'running' -ProfileName $Profile -BatchRootValue $batchRoot -PidValue $PID -StartRunValue $StartRun -CurrentRunValue $runIndex -CurrentBlockValue $blockName -CurrentTuneValue (Format-ParamCommand -Snapshot (Get-BlockTuneSnapshot -BlockIndex $blockIndex)) -LatestSummaryValue $summaryLine
+        Write-CampaignState -Path $statePath -Status 'running' -ProfileName $Profile -BatchRootValue $batchRoot -PidValue $PID -StartRunValue $StartRun -CurrentRunValue $runIndex -CurrentBlockValue $blockName -CurrentTuneValue $currentTuneCommand -LatestSummaryValue $summaryLine
     }
 
     Set-Content -LiteralPath $progressPath -Value @(
@@ -702,14 +738,14 @@ $lockInfo = Open-CampaignLock -Path $lockPath -StatePath $statePath -BatchRootVa
         '',
         "- current_block: $blockCount",
         "- current_run: $TotalRuns",
-        "- current_tune: $(Format-ParamCommand -Snapshot (Get-BlockTuneSnapshot -BlockIndex $blockCount))",
+        "- current_tune: $currentTuneCommand",
         "- latest_summary: $(($blockSummaries[$('{0:D2}' -f $blockCount)] | Where-Object { $_ -match '^SEQ_SUMMARY\b' } | Select-Object -Last 1))"
     ) -Encoding utf8
 
-    Write-CampaignState -Path $statePath -Status 'complete' -ProfileName $Profile -BatchRootValue $batchRoot -PidValue $PID -StartRunValue $StartRun -CurrentRunValue $TotalRuns -CurrentBlockValue ('{0:D2}' -f $blockCount) -CurrentTuneValue (Format-ParamCommand -Snapshot (Get-BlockTuneSnapshot -BlockIndex $blockCount)) -LatestSummaryValue $(($blockSummaries[$('{0:D2}' -f $blockCount)] | Where-Object { $_ -match '^SEQ_SUMMARY\b' } | Select-Object -Last 1))
+    Write-CampaignState -Path $statePath -Status 'complete' -ProfileName $Profile -BatchRootValue $batchRoot -PidValue $PID -StartRunValue $StartRun -CurrentRunValue $TotalRuns -CurrentBlockValue ('{0:D2}' -f $blockCount) -CurrentTuneValue $currentTuneCommand -LatestSummaryValue $(($blockSummaries[$('{0:D2}' -f $blockCount)] | Where-Object { $_ -match '^SEQ_SUMMARY\b' } | Select-Object -Last 1))
 
     Append-TextLine -Path $sessionPath -Line ("campaign_complete={0}" -f (Get-Date -Format o))
-    Write-CampaignHeartbeat -Path $heartbeatPath -Status 'complete' -ProfileName $Profile -BatchRootValue $batchRoot -CurrentBlockValue ('{0:D2}' -f $blockCount) -CurrentRunValue ('{0:D2}' -f $TotalRuns) -CurrentTuneValue (Format-ParamCommand -Snapshot (Get-BlockTuneSnapshot -BlockIndex $blockCount)) -LatestSummaryValue $(($blockSummaries[$('{0:D2}' -f $blockCount)] | Where-Object { $_ -match '^SEQ_SUMMARY\b' } | Select-Object -Last 1))
+    Write-CampaignHeartbeat -Path $heartbeatPath -Status 'complete' -ProfileName $Profile -BatchRootValue $batchRoot -CurrentBlockValue ('{0:D2}' -f $blockCount) -CurrentRunValue ('{0:D2}' -f $TotalRuns) -CurrentTuneValue $currentTuneCommand -LatestSummaryValue $(($blockSummaries[$('{0:D2}' -f $blockCount)] | Where-Object { $_ -match '^SEQ_SUMMARY\b' } | Select-Object -Last 1))
     $campaignCompleted = $true
 } catch {
     $campaignFailed = $true
@@ -753,7 +789,7 @@ $lockInfo = Open-CampaignLock -Path $lockPath -StatePath $statePath -BatchRootVa
 
     $failureBlockName = if ([string]::IsNullOrWhiteSpace($blockName)) { 'unknown' } else { $blockName }
     $failureRunLabel = if ($null -ne $runIndex) { Format-RunLabel -Value $runIndex } else { 'unknown' }
-    $failureTune = if ($null -ne $tuneCommand) { $tuneCommand } else { 'unknown' }
+    $failureTune = if ($null -ne $currentTuneCommand) { $currentTuneCommand } elseif ($null -ne $tuneCommand) { $tuneCommand } else { 'unknown' }
     $failureSummary = if ($null -ne $summaryLine) { $summaryLine } else { $failureMessage }
     Write-CampaignState -Path $statePath -Status 'failed' -ProfileName $Profile -BatchRootValue $batchRoot -PidValue $PID -StartRunValue $StartRun -CurrentRunValue $(if ($null -ne $runIndex) { $runIndex } else { 0 }) -CurrentBlockValue $failureBlockName -CurrentTuneValue $failureTune -LatestSummaryValue $failureSummary
     Write-CampaignHeartbeat -Path $heartbeatPath -Status 'failed' -ProfileName $Profile -BatchRootValue $batchRoot -CurrentBlockValue $failureBlockName -CurrentRunValue $failureRunLabel -CurrentTuneValue $failureTune -LatestSummaryValue $failureSummary

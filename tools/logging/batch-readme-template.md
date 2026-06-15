@@ -1,6 +1,10 @@
-# LOG-001 Batch Scaffold Template
+# LOG-001 Batch Template
 
 Status: planned
+
+## Batch Template
+
+This template is copied into each new LOG-001 batch folder and describes the expected snapshot, layout, and decision rule.
 
 ## Snapshot
 
@@ -28,6 +32,7 @@ Status: planned
 
 - First compare miss count, duplicate count, and late count.
 - Then compare `avg_dt_ms` and `avg_strength`.
+- Compare the requested tune with the confirmed `PARAM STATUS` snapshot.
 - Keep the current parameter values if the block regresses.
 - If the batch stopped unexpectedly, treat `campaign_failed` and `campaign_stopped_without_completion` as the first clues.
 
@@ -48,3 +53,4 @@ SEQ start profile=TonalPulseScalar tries=50 mode=source when=all verbose=1
 - Keep the saved batch folder self-contained.
 - Do not depend on pasted serial text alone.
 - Update the parameter snapshot before and after each shift.
+- Record the applied tune from `PARAM STATUS` in the block summary.

@@ -1,6 +1,8 @@
-# LOG-001 Tuning Run Process
+# LOG-001 Tuning Process
 
-Purpose: repeatable scalar tuning loop for analyzer runs.
+## Process
+
+This process document describes the repeatable scalar tuning loop, the command shape, and the per-block decision flow for analyzer runs.
 
 ## Current scope
 
@@ -87,6 +89,9 @@ For misses, inspect:
 - `SEQ_SOURCE_SPEC`
 - `detail.scalar.inspect.reject_reason`
 
+Also compare the requested `PARAM` line with the confirmed scalar snapshot from `PARAM STATUS`.
+The block summary should document the applied tune, not just the intended one.
+
 ## Tuning rule of thumb
 
 - First remove misses.
@@ -95,11 +100,12 @@ For misses, inspect:
 
 ## Current helper pattern
 
-Use the checked-in helper under `tools/` to create the batch scaffold and store the log targets in one place.
+Use the scaffold helper (`tools/logging/+ create_log001_batch_scaffold.ps1`) to create the batch scaffold and store the log targets in one place.
 
 The helper now writes a single-instance `campaign.lock` file and a small `campaign_state.json` snapshot so overlapping launches fail fast instead of corrupting the live batch.
 If a second launch is rejected, the error message includes the owning PID from the state snapshot.
 The helper also writes `heartbeat.md` so you can tell whether the runner is still alive even if the terminal goes quiet.
+The helper records both the requested tune and the confirmed applied tune from `PARAM STATUS`.
 
 The helper supports:
 
@@ -109,7 +115,7 @@ The helper supports:
 Interrupted batches can be resumed with:
 
 ```text
-powershell.exe -File tools/run_log001_campaign.ps1 -BatchRoot <saved-batch-folder> -StartRun <next-run>
+powershell.exe -File "tools/logging/+ run_log001_campaign.ps1" -BatchRoot <saved-batch-folder> -StartRun <next-run>
 ```
 
 ## Notes

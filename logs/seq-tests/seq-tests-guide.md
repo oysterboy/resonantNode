@@ -2,6 +2,10 @@
 
 Status: active
 
+## Guide
+
+This guide explains the live LOG-001 sequence-testing workflow, the canonical launch shape, and where the batch artifacts live.
+
 ## Goal
 
 - Keep the scalar tuning workflow log-first and reproducible.
@@ -41,6 +45,7 @@ The batch README should capture:
 - the port and baud rate
 - the decision rule for the next block
 - the failure and resume markers if the batch stops early
+- the confirmed applied tune from `PARAM STATUS`, not just the requested `PARAM`
 
 ## What to capture
 
@@ -58,6 +63,9 @@ Keep `PARAM STATUS` snapshots:
 - after each parameter change
 - after each block decision if the tuning changes
 
+Treat the `PARAM STATUS` line as the source of truth for the applied scalar tune.
+If the requested tune and applied tune differ, the block summary should show both.
+
 ## Workflow modes
 
 - `Codex-run`: Codex or the helper launches the block, reads the summary, and applies the next `PARAM` shift.
@@ -74,7 +82,7 @@ Keep `PARAM STATUS` snapshots:
 
 ## Helper
 
-Use the checked-in helper under `tools/` to create the batch scaffold and write the README and summary placeholders in the expected layout.
+Use the scaffold helper (`tools/logging/+ create_log001_batch_scaffold.ps1`) to create the batch scaffold and write the README and summary placeholders in the expected layout.
 
 ## Notes
 

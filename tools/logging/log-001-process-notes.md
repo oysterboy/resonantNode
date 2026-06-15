@@ -2,10 +2,14 @@
 
 Status: active
 
+## Process Notes
+
+This note file tracks the evolution of the LOG-001 logging workflow, especially when the runner, scaffold, or docs change together.
+
 ## What changed
 
-- Added a checked-in helper for LOG-001 batch scaffolding.
-- Added a batch runner that writes `session.log`, `heartbeat.md`, `run_01.log` through `run_10.log`, `block_01_summary.md`, and `progress.md`.
+- Added the scaffold helper (`tools/logging/+ create_log001_batch_scaffold.ps1`) for LOG-001 batch scaffolding.
+- Added the campaign runner (`tools/logging/+ run_log001_campaign.ps1`) that writes `session.log`, `heartbeat.md`, `run_01.log` through `run_10.log`, `block_01_summary.md`, and `progress.md`.
 - Standardized the launch shape to:
 
 ```text
@@ -14,6 +18,7 @@ SEQ start profile=TonalPulseScalar tries=50 mode=source when=all verbose=1
 
 - Captured `PARAM STATUS` as the canonical full tuning snapshot.
 - Kept `PARAM` echoing only changed fields.
+- Recorded the applied tune from `PARAM STATUS` in the block summaries, so the logs do not confuse intended shifts with confirmed changes.
 
 ## Tuning ladder
 
@@ -29,6 +34,8 @@ The full 100-launch campaign is no longer baseline-only.
 - Block 8: continue duration tightening.
 - Block 9: reduce debounce and thresholds again if still clean.
 - Block 10: final tightening pass if the earlier blocks remain stable.
+
+The block summaries should show the applied tune captured from `PARAM STATUS`, not only the requested `PARAM` command.
 
 ## Known runner notes
 

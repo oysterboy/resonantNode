@@ -139,6 +139,7 @@ $readmeLines = @(
     '',
     '- First compare miss count, duplicate count, and late count.',
     '- Then compare `avg_dt_ms` and `avg_strength`.',
+    '- Compare requested tune against the confirmed `PARAM STATUS` snapshot.',
     '- Keep the current parameter values if the block regresses.',
     '',
     '## Tuning Ladder',
@@ -165,7 +166,8 @@ $readmeLines = @(
     '',
     '- Keep the saved batch folder self-contained.',
     '- Do not depend on pasted serial text alone.',
-    '- Update the parameter snapshot before and after each shift.'
+    '- Update the parameter snapshot before and after each shift.',
+    '- Record the applied tune from `PARAM STATUS` in the block summary.'
 )
 
 $sessionLines = @(

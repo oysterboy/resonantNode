@@ -35,10 +35,12 @@ SEQ start profile=TonalPulseScalar tries=50 mode=source when=all verbose=1
 
 ## Files to update
 
-- `tools/log_seq_tuning.ps1`
-- `logs/seq-tests/README.md`
-- `logs/seq-tests/TUNING_RUN_PROCESS.md`
-- `logs/seq-tests/BATCH_README_TEMPLATE.md`
+- `logs/seq-tests/seq-tests-guide.md` - guide
+- `tools/logging/+ create_log001_batch_scaffold.ps1` - scaffold helper
+- `tools/logging/+ run_log001_campaign.ps1` - campaign runner
+- `tools/logging/tuning-run-process.md` - process doc
+- `tools/logging/batch-readme-template.md` - batch template
+- `tools/logging/log-001-process-notes.md` - process notes
 
 ## Test plan
 

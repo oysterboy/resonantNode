@@ -298,6 +298,7 @@ void ScalarTransientDetector::updateTransientStage(unsigned long nowUs, float si
 }
 
 // Accepted / rejected snapshots.
+#if 0
 void ScalarTransientDetector::captureAcceptedOccurrence(unsigned long releaseObservedUs, unsigned long peakDurationUs) {
     finalizeCandidateFacts(releaseObservedUs);
     const float candidateMean = _candidateSampleCount > 0
@@ -467,8 +468,10 @@ void ScalarTransientDetector::resetAcceptedOccurrencePending() {
     _acceptedOccurrencePeakStrength = 0.0f;
     _acceptedOccurrenceCurrentStrength = 0.0f;
 }
+#endif
 
 // Report detail / diagnostics.
+#if 0
 void ScalarTransientDetector::refreshReportDetail() {
     const char* onsetRejectReason = lastOnsetRejectReasonName();
     const char* transientRejectReason = lastTransientRejectReasonName();
@@ -529,6 +532,7 @@ void ScalarTransientDetector::printTransientStatsIfDue(unsigned long nowUs) {
         _lastStatsPrintUs = nowUs;
     }
 }
+#endif
 
 const char* ScalarTransientDetector::lastOnsetRejectReasonName() const {
     switch (_lastOnsetRejectReason) {
@@ -591,6 +595,7 @@ void ScalarTransientDetector::update(
 }
 
 // Report snapshot.
+#if 0
 void ScalarTransientDetector::buildReport(detection::DetectorReport& out, unsigned long nowMs) const {
     // Keep detector-specific report assembly local to the detector so
     // DetectionRuntime only coordinates report snapshots.
@@ -633,6 +638,7 @@ bool ScalarTransientDetector::popOccurrence(detection::Occurrence& out) {
     _pendingOccurrence = {};
     return true;
 }
+#endif
 
 void ScalarTransientDetector::setOnsetDetectionThreshold(float value) {
     _onsetDetectionThreshold = value;

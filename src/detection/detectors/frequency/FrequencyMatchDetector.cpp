@@ -299,6 +299,7 @@ void FrequencyMatchDetector::recordRejectedPending() {
 }
 
 // Accepted occurrence emission.
+#if 0
 void FrequencyMatchDetector::capturePendingOccurrence(const AudioSamplePacket& audioSamplePacket) {
     // Keep accepted occurrence construction inside the detector core.
     _pendingOccurrence = pendingOccurrence;
@@ -340,6 +341,8 @@ void FrequencyMatchDetector::capturePendingOccurrence(const AudioSamplePacket& a
         _acceptedDetail.contrast = _pendingOccurrence.frequency.contrast;
     }
 }
+
+#endif
 
 // Main detector update.
 void FrequencyMatchDetector::update(const detection::FrequencyBandMeasurementPacket& evidence,
@@ -574,6 +577,7 @@ void FrequencyMatchDetector::update(const detection::FrequencyBandMeasurementPac
 }
 
 // Report snapshot.
+#if 0
 void FrequencyMatchDetector::buildReport(detection::DetectorReport& out, unsigned long nowMs) const {
     // Keep detector-specific report assembly local to the detector so
     // DetectionRuntime only coordinates report snapshots.
@@ -662,4 +666,5 @@ bool FrequencyMatchDetector::popOccurrence(detection::Occurrence& out) {
     _pendingOccurrence = {};
     return true;
 }
+#endif
 

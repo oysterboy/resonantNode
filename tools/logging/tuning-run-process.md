@@ -1,5 +1,7 @@
 # LOG-001 Tuning Process
 
+Status: active
+
 ## Process
 
 This process document describes the repeatable scalar tuning loop, the command shape, and the per-block decision flow for analyzer runs.
@@ -25,6 +27,24 @@ Use the analyzer console command:
 ```text
 SEQ start profile=TonalPulseScalar tries=50 mode=source when=all verbose=1
 ```
+
+## Workflow modes
+
+- `Codex-run`: Codex or the helper launches the block, reads the summary, and applies the next `PARAM` shift.
+- `User-run`: the helper prints the exact commands and log targets for manual execution.
+
+## Helper and resume flow
+
+Use the scaffold helper (`tools/logging/+ create_log001_batch_scaffold.ps1`) to create the batch scaffold and write the README and summary placeholders in the expected layout.
+Use the campaign runner (`tools/logging/+ run_log001_campaign.ps1`) to execute or resume a batch.
+
+Interrupted batches can be resumed with:
+
+```text
+powershell.exe -File "tools/logging/+ run_log001_campaign.ps1" -BatchRoot <saved-batch-folder> -StartRun <next-run>
+```
+
+If a run stops unexpectedly, check `session.log`, `progress.md`, `campaign_state.json`, and `heartbeat.md` together.
 
 ## Log layout
 
@@ -98,29 +118,13 @@ The block summary should document the applied tune, not just the intended one.
 - Then tighten `maxTransientDurationMs` and hysteresis in small steps.
 - Keep duplicates at `0` if possible.
 
-## Current helper pattern
-
-Use the scaffold helper (`tools/logging/+ create_log001_batch_scaffold.ps1`) to create the batch scaffold and store the log targets in one place.
-
-The helper now writes a single-instance `campaign.lock` file and a small `campaign_state.json` snapshot so overlapping launches fail fast instead of corrupting the live batch.
-If a second launch is rejected, the error message includes the owning PID from the state snapshot.
-The helper also writes `heartbeat.md` so you can tell whether the runner is still alive even if the terminal goes quiet.
-The helper records both the requested tune and the confirmed applied tune from `PARAM STATUS`.
-
-The helper supports:
-
-1. `Codex-run`
-2. `User-run`
-
-Interrupted batches can be resumed with:
-
-```text
-powershell.exe -File "tools/logging/+ run_log001_campaign.ps1" -BatchRoot <saved-batch-folder> -StartRun <next-run>
-```
-
 ## Notes
 
 - Do not depend on ad-hoc pasted serial text for tuning comparisons.
 - Keep one folder per tuning variant.
 - When a block is finished, summarize it before changing the next tuning value.
 - If a batch ends early, inspect `session.log` for `campaign_failed` or `campaign_stopped_without_completion`, then compare with `heartbeat.md` and `campaign_state.json`.
+- The helper writes a single-instance `campaign.lock` file and a small `campaign_state.json` snapshot so overlapping launches fail fast instead of corrupting the live batch.
+- If a second launch is rejected, the error message includes the owning PID from the state snapshot.
+- The helper also writes `heartbeat.md` so you can tell whether the runner is still alive even if the terminal goes quiet.
+- The helper records both the requested tune and the confirmed applied tune from `PARAM STATUS`.

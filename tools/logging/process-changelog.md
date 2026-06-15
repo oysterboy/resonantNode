@@ -1,10 +1,10 @@
-# LOG-001 Process Notes
+# LOG-001 Process Changelog
 
 Status: active
 
-## Process Notes
+## Process Changelog
 
-This note file tracks the evolution of the LOG-001 logging workflow, especially when the runner, scaffold, or docs change together.
+This changelog tracks the evolution of the LOG-001 logging workflow, especially when the runner, scaffold, or docs change together.
 
 ## What changed
 

@@ -92,6 +92,21 @@ private:
     unsigned long _releaseCandidateStartedUs = 0;
     unsigned long _releaseObservedUs = 0;
     float _peakStrength = 0.0f;
+    float _candidatePeak = 0.0f;
+    float _candidateSum = 0.0f;
+    float _candidateSumSquares = 0.0f;
+    unsigned long _candidateSampleCount = 0;
+    unsigned long _candidateCoverageAboveAttackMs = 0;
+    unsigned long _candidateCoverageAboveReleaseMs = 0;
+    unsigned long _candidateSustainedMs = 0;
+    unsigned int _candidateIslandCount = 0;
+    unsigned int _candidateGapCount = 0;
+    unsigned long _candidateIslandMaxMs = 0;
+    unsigned long _candidateGapMaxMs = 0;
+    bool _candidateWasAboveRelease = false;
+    unsigned long _candidateCurrentIslandStartUs = 0;
+    unsigned long _candidateCurrentGapStartUs = 0;
+    unsigned long _candidateLastUpdateUs = 0;
 
     // Candidate lifecycle state.
     bool _acceptedOccurrencePendingActive = false;
@@ -140,6 +155,9 @@ private:
     // Private helpers.
     const char* lastOnsetRejectReasonName() const;
     const char* lastTransientRejectReasonName() const;
+    void resetCandidateFacts();
+    void updateCandidateFacts(unsigned long nowUs, float strength, bool aboveAttackThreshold, bool aboveReleaseThreshold);
+    void finalizeCandidateFacts(unsigned long releaseObservedUs);
     void updateOnsetStage(unsigned long nowUs, float signalMagnitude, bool aboveAttackThreshold, bool onsetCooldownElapsed);
     void updateTransientStage(unsigned long nowUs, float signalMagnitude, bool aboveReleaseThreshold);
     void captureAcceptedOccurrence(unsigned long releaseObservedUs, unsigned long peakDurationUs);

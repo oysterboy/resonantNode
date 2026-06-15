@@ -17,8 +17,18 @@ struct AcceptedOccurrenceSummary {
     unsigned long peakMs = 0;
     unsigned long endMs = 0;
     unsigned long durationMs = 0;
-    float strength = 0.0f;
+    float strength = 0.0f; // Compatibility alias for peak in this pass.
     float confidence = 0.0f;
+    float peak = 0.0f;
+    float mean = 0.0f;
+    float rms = 0.0f;
+    unsigned long coverageAboveAttackMs = 0;
+    unsigned long coverageAboveReleaseMs = 0;
+    unsigned long sustainedMs = 0;
+    unsigned int islandCount = 0;
+    unsigned int gapCount = 0;
+    unsigned long islandMaxMs = 0;
+    unsigned long gapMaxMs = 0;
 };
 
 /*
@@ -35,8 +45,18 @@ struct SelectedRejectSummary {
     unsigned long peakMs = 0;
     unsigned long endMs = 0;
     unsigned long durationMs = 0;
-    float strength = 0.0f;
+    float strength = 0.0f; // Compatibility alias for peak in this pass.
     float confidence = 0.0f;
+    float peak = 0.0f;
+    float mean = 0.0f;
+    float rms = 0.0f;
+    unsigned long coverageAboveAttackMs = 0;
+    unsigned long coverageAboveReleaseMs = 0;
+    unsigned long sustainedMs = 0;
+    unsigned int islandCount = 0;
+    unsigned int gapCount = 0;
+    unsigned long islandMaxMs = 0;
+    unsigned long gapMaxMs = 0;
 };
 
 /*

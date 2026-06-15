@@ -72,6 +72,20 @@ public:
     bool validRelease = false;
     float pendingPeakScore = 0.0f;
     float pendingPeakContrast = 0.0f;
+    float pendingSum = 0.0f;
+    float pendingSumSquares = 0.0f;
+    unsigned long pendingSampleCount = 0;
+    unsigned long pendingCoverageAboveAttackMs = 0;
+    unsigned long pendingCoverageAboveReleaseMs = 0;
+    unsigned long pendingSustainedMs = 0;
+    unsigned int pendingIslandCount = 0;
+    unsigned int pendingGapCount = 0;
+    unsigned long pendingIslandMaxMs = 0;
+    unsigned long pendingGapMaxMs = 0;
+    bool pendingWasAboveRelease = false;
+    unsigned long pendingCurrentIslandStartMs = 0;
+    unsigned long pendingCurrentGapStartMs = 0;
+    unsigned long pendingLastUpdateMs = 0;
 
     // Candidate lifecycle state.
     unsigned long pendingPeakSampleCount = 0;
@@ -98,6 +112,15 @@ public:
     unsigned long bestCloseMs = 0;
     float bestPeakScore = 0.0f;
     float bestPeakContrast = 0.0f;
+    float bestMean = 0.0f;
+    float bestRms = 0.0f;
+    unsigned long bestCoverageAboveAttackMs = 0;
+    unsigned long bestCoverageAboveReleaseMs = 0;
+    unsigned long bestSustainedMs = 0;
+    unsigned int bestIslandCount = 0;
+    unsigned int bestGapCount = 0;
+    unsigned long bestIslandMaxMs = 0;
+    unsigned long bestGapMaxMs = 0;
     const char* bestRejectReason = "none";
     const char* bestGateReason = "none";
     detection::FrequencyBandMeasurementPacket bestEvidence = {};
@@ -116,6 +139,11 @@ public:
     void resetRejectSummary();
     void setDiagnosticsEnabled(bool enabled);
     void resetDiagnosticsSummary();
+    void resetPendingFacts();
+    void updatePendingFacts(unsigned long nowMs, float strength, bool aboveAttackThreshold, bool aboveReleaseThreshold);
+    void finalizePendingFacts(unsigned long closeMs);
+    float pendingMean() const;
+    float pendingRms() const;
 
     void update(const detection::FrequencyBandMeasurementPacket& evidence,
                 const AudioSamplePacket& audioSamplePacket,

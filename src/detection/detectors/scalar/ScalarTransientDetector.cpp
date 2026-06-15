@@ -1,6 +1,7 @@
 #include "ScalarTransientDetector.h"
 
 #include <Arduino.h>
+#include <math.h>
 #include <string.h>
 
 // Scalar reason helpers and lifecycle classification.
@@ -78,6 +79,7 @@ void ScalarTransientDetector::resetState() {
     _releaseCandidateStartedUs = 0;
     _releaseObservedUs = 0;
     _peakStrength = 0.0f;
+    resetCandidateFacts();
     _onsetRejectedCount = 0;
     _transientRejectedCount = 0;
     _lastObservedAcceptedOccurrenceRejectedCount = 0;
@@ -102,15 +104,109 @@ void ScalarTransientDetector::resetSelectedRejectSummary() {
     _reportDetail.selectedReject = {};
 }
 
+void ScalarTransientDetector::resetCandidateFacts() {
+    _candidatePeak = 0.0f;
+    _candidateSum = 0.0f;
+    _candidateSumSquares = 0.0f;
+    _candidateSampleCount = 0;
+    _candidateCoverageAboveAttackMs = 0;
+    _candidateCoverageAboveReleaseMs = 0;
+    _candidateSustainedMs = 0;
+    _candidateIslandCount = 0;
+    _candidateGapCount = 0;
+    _candidateIslandMaxMs = 0;
+    _candidateGapMaxMs = 0;
+    _candidateWasAboveRelease = false;
+    _candidateCurrentIslandStartUs = 0;
+    _candidateCurrentGapStartUs = 0;
+    _candidateLastUpdateUs = 0;
+}
+
+void ScalarTransientDetector::updateCandidateFacts(unsigned long nowUs, float strength, bool aboveAttackThreshold, bool aboveReleaseThreshold) {
+    const unsigned long deltaUs = _candidateLastUpdateUs == 0 || nowUs < _candidateLastUpdateUs
+        ? 0UL
+        : nowUs - _candidateLastUpdateUs;
+    const unsigned long deltaMs = deltaUs / 1000UL;
+
+    if (strength > _candidatePeak) {
+        _candidatePeak = strength;
+    }
+    _candidateSum += strength;
+    _candidateSumSquares += strength * strength;
+    ++_candidateSampleCount;
+
+    if (aboveAttackThreshold) {
+        _candidateCoverageAboveAttackMs += deltaMs;
+        _candidateSustainedMs += deltaMs;
+    }
+    if (aboveReleaseThreshold) {
+        _candidateCoverageAboveReleaseMs += deltaMs;
+    }
+
+    if (aboveReleaseThreshold) {
+        if (!_candidateWasAboveRelease) {
+            ++_candidateIslandCount;
+            if (_candidateCurrentGapStartUs != 0 && nowUs >= _candidateCurrentGapStartUs) {
+                const unsigned long gapMs = (nowUs - _candidateCurrentGapStartUs) / 1000UL;
+                if (gapMs > _candidateGapMaxMs) {
+                    _candidateGapMaxMs = gapMs;
+                }
+            }
+            _candidateCurrentIslandStartUs = nowUs;
+            _candidateCurrentGapStartUs = 0;
+        }
+    } else if (_candidateWasAboveRelease) {
+        ++_candidateGapCount;
+        if (_candidateCurrentIslandStartUs != 0 && nowUs >= _candidateCurrentIslandStartUs) {
+            const unsigned long islandMs = (nowUs - _candidateCurrentIslandStartUs) / 1000UL;
+            if (islandMs > _candidateIslandMaxMs) {
+                _candidateIslandMaxMs = islandMs;
+            }
+        }
+        _candidateCurrentGapStartUs = nowUs;
+        _candidateCurrentIslandStartUs = 0;
+    }
+
+    _candidateWasAboveRelease = aboveReleaseThreshold;
+    _candidateLastUpdateUs = nowUs;
+}
+
+void ScalarTransientDetector::finalizeCandidateFacts(unsigned long releaseObservedUs) {
+    if (_candidateWasAboveRelease && _candidateCurrentIslandStartUs != 0 && releaseObservedUs >= _candidateCurrentIslandStartUs) {
+        const unsigned long islandMs = (releaseObservedUs - _candidateCurrentIslandStartUs) / 1000UL;
+        if (islandMs > _candidateIslandMaxMs) {
+            _candidateIslandMaxMs = islandMs;
+        }
+    } else if (!_candidateWasAboveRelease && _candidateCurrentGapStartUs != 0 && releaseObservedUs >= _candidateCurrentGapStartUs) {
+        const unsigned long gapMs = (releaseObservedUs - _candidateCurrentGapStartUs) / 1000UL;
+        if (gapMs > _candidateGapMaxMs) {
+            _candidateGapMaxMs = gapMs;
+        }
+    }
+}
+
 // Core lifecycle helpers.
 void ScalarTransientDetector::updateOnsetStage(unsigned long nowUs, float signalMagnitude, bool aboveAttackThreshold, bool onsetCooldownElapsed) {
     // Use raw magnitude for the edge so short bursts are not delayed by smoothing.
     // The separate release threshold keeps the peak stable when the occurrence wobbles near the edge.
     if (aboveAttackThreshold && !_peakActive && onsetCooldownElapsed) {
+        resetCandidateFacts();
         _peakActive = true;
         _peakStartedUs = nowUs;
         _peakStrengthObservedUs = nowUs;
         _peakStrength = signalMagnitude;
+        _candidatePeak = signalMagnitude;
+        _candidateCoverageAboveAttackMs = 0;
+        _candidateCoverageAboveReleaseMs = 0;
+        _candidateSustainedMs = 0;
+        _candidateIslandCount = 1;
+        _candidateGapCount = 0;
+        _candidateIslandMaxMs = 0;
+        _candidateGapMaxMs = 0;
+        _candidateWasAboveRelease = true;
+        _candidateCurrentIslandStartUs = nowUs;
+        _candidateCurrentGapStartUs = 0;
+        _candidateLastUpdateUs = nowUs;
 
         _onsetDetected = true;
         _onsetStrength = signalMagnitude;
@@ -203,6 +299,14 @@ void ScalarTransientDetector::updateTransientStage(unsigned long nowUs, float si
 
 // Accepted / rejected snapshots.
 void ScalarTransientDetector::captureAcceptedOccurrence(unsigned long releaseObservedUs, unsigned long peakDurationUs) {
+    finalizeCandidateFacts(releaseObservedUs);
+    const float candidateMean = _candidateSampleCount > 0
+        ? _candidateSum / static_cast<float>(_candidateSampleCount)
+        : 0.0f;
+    const float candidateRms = _candidateSampleCount > 0
+        ? sqrtf(_candidateSumSquares / static_cast<float>(_candidateSampleCount))
+        : 0.0f;
+
     _acceptedOccurrencePresent = true;
     _acceptedOccurrenceReleaseMs = releaseObservedUs / 1000UL;
     _acceptedOccurrence.present = true;
@@ -210,8 +314,19 @@ void ScalarTransientDetector::captureAcceptedOccurrence(unsigned long releaseObs
     _acceptedOccurrence.peakMs = _peakStrengthObservedUs / 1000UL;
     _acceptedOccurrence.endMs = _acceptedOccurrenceReleaseMs;
     _acceptedOccurrence.durationMs = peakDurationUs / 1000UL;
-    _acceptedOccurrence.strength = _peakStrength;
+    _acceptedOccurrence.strength = _candidatePeak;
     _acceptedOccurrence.confidence = 1.0f;
+    _acceptedOccurrence.peak = _candidatePeak;
+    _acceptedOccurrence.mean = candidateMean;
+    _acceptedOccurrence.rms = candidateRms;
+    _acceptedOccurrence.coverageAboveAttackMs = _candidateCoverageAboveAttackMs;
+    _acceptedOccurrence.coverageAboveReleaseMs = _candidateCoverageAboveReleaseMs;
+    _acceptedOccurrence.sustainedMs = _candidateSustainedMs;
+    _acceptedOccurrence.islandCount = _candidateIslandCount;
+    _acceptedOccurrence.gapCount = _candidateGapCount;
+    _acceptedOccurrence.islandMaxMs = _candidateIslandMaxMs;
+    _acceptedOccurrence.gapMaxMs = _candidateGapMaxMs;
+    resetCandidateFacts();
 }
 
 void ScalarTransientDetector::captureSelectedReject(unsigned long releaseObservedUs) {
@@ -219,6 +334,14 @@ void ScalarTransientDetector::captureSelectedReject(unsigned long releaseObserve
     if (_lastTransientRejectReason == TransientRejectReason::None) {
         return;
     }
+
+    finalizeCandidateFacts(releaseObservedUs);
+    const float candidateMean = _candidateSampleCount > 0
+        ? _candidateSum / static_cast<float>(_candidateSampleCount)
+        : 0.0f;
+    const float candidateRms = _candidateSampleCount > 0
+        ? sqrtf(_candidateSumSquares / static_cast<float>(_candidateSampleCount))
+        : 0.0f;
 
     const unsigned long rejectStartMs = _peakStartedUs / 1000UL;
     const unsigned long rejectPeakMs = _peakStrengthObservedUs / 1000UL;
@@ -237,8 +360,18 @@ void ScalarTransientDetector::captureSelectedReject(unsigned long releaseObserve
     _selectedReject.peakMs = rejectPeakMs;
     _selectedReject.endMs = rejectEndMs;
     _selectedReject.durationMs = rejectDurationMs;
-    _selectedReject.strength = _lastTransientRejectedStrength;
+    _selectedReject.strength = _candidatePeak;
     _selectedReject.confidence = 0.0f;
+    _selectedReject.peak = _candidatePeak;
+    _selectedReject.mean = candidateMean;
+    _selectedReject.rms = candidateRms;
+    _selectedReject.coverageAboveAttackMs = _candidateCoverageAboveAttackMs;
+    _selectedReject.coverageAboveReleaseMs = _candidateCoverageAboveReleaseMs;
+    _selectedReject.sustainedMs = _candidateSustainedMs;
+    _selectedReject.islandCount = _candidateIslandCount;
+    _selectedReject.gapCount = _candidateGapCount;
+    _selectedReject.islandMaxMs = _candidateIslandMaxMs;
+    _selectedReject.gapMaxMs = _candidateGapMaxMs;
     _reportDetail.selectedReject.present = true;
     _reportDetail.selectedReject.value = _lastTransientRejectedStrength;
     _reportDetail.selectedReject.baseline = 0.0f;
@@ -247,6 +380,7 @@ void ScalarTransientDetector::captureSelectedReject(unsigned long releaseObserve
     _reportDetail.selectedReject.opened = true;
     _reportDetail.selectedReject.crossedOnset = true;
     _reportDetail.selectedReject.crossedRelease = true;
+    resetCandidateFacts();
 }
 
 void ScalarTransientDetector::updateAcceptedOccurrencePending(
@@ -447,6 +581,9 @@ void ScalarTransientDetector::update(
     const bool onsetCooldownElapsed = nowUs - _lastOnsetUs >= cooldownAfterOnsetUs;
 
     updateOnsetStage(nowUs, signalMagnitude, aboveAttackThreshold, onsetCooldownElapsed);
+    if (_peakActive) {
+        updateCandidateFacts(nowUs, signalMagnitude, aboveAttackThreshold, aboveReleaseThreshold);
+    }
     updateTransientStage(nowUs, signalMagnitude, aboveReleaseThreshold);
     updateAcceptedOccurrencePending(audioSamplePacket, signalMagnitude);
     refreshReportDetail();

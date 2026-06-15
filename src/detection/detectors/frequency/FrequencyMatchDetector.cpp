@@ -3,6 +3,7 @@
 #include <string.h>
 
 #include "../../../app/TimingUtils.h"
+#include <math.h>
 
 // Frequency reason helpers and lifecycle classification.
 namespace {
@@ -72,6 +73,7 @@ void FrequencyMatchDetector::resetState() {
     validRelease = false;
     pendingPeakScore = 0.0f;
     pendingPeakContrast = 0.0f;
+    resetPendingFacts();
     pendingPeakSampleCount = 0;
     pendingLifecycleId = 0;
     currentPendingId = 0;
@@ -89,6 +91,15 @@ void FrequencyMatchDetector::resetState() {
     bestCloseMs = 0;
     bestPeakScore = 0.0f;
     bestPeakContrast = 0.0f;
+    bestMean = 0.0f;
+    bestRms = 0.0f;
+    bestCoverageAboveAttackMs = 0;
+    bestCoverageAboveReleaseMs = 0;
+    bestSustainedMs = 0;
+    bestIslandCount = 0;
+    bestGapCount = 0;
+    bestIslandMaxMs = 0;
+    bestGapMaxMs = 0;
     bestRejectReason = "none";
     bestGateReason = "none";
     memset(&bestEvidence, 0, sizeof(bestEvidence));
@@ -139,6 +150,7 @@ void FrequencyMatchDetector::resetRejectSummary() {
     _pendingOccurrencePresent = false;
     _pendingOccurrence = {};
     _lastEmittedOccurrenceCloseMs = 0;
+    resetPendingFacts();
 }
 
 void FrequencyMatchDetector::setDiagnosticsEnabled(bool enabled) {
@@ -155,6 +167,100 @@ void FrequencyMatchDetector::resetDiagnosticsSummary() {
     diagnosticsMatchedCount = 0;
 }
 
+void FrequencyMatchDetector::resetPendingFacts() {
+    pendingPeakScore = 0.0f;
+    pendingPeakContrast = 0.0f;
+    pendingPeakSampleCount = 0;
+    pendingSum = 0.0f;
+    pendingSumSquares = 0.0f;
+    pendingSampleCount = 0;
+    pendingCoverageAboveAttackMs = 0;
+    pendingCoverageAboveReleaseMs = 0;
+    pendingSustainedMs = 0;
+    pendingIslandCount = 0;
+    pendingGapCount = 0;
+    pendingIslandMaxMs = 0;
+    pendingGapMaxMs = 0;
+    pendingWasAboveRelease = false;
+    pendingCurrentIslandStartMs = 0;
+    pendingCurrentGapStartMs = 0;
+    pendingLastUpdateMs = 0;
+}
+
+void FrequencyMatchDetector::updatePendingFacts(unsigned long nowMs, float strength, bool aboveAttackThreshold, bool aboveReleaseThreshold) {
+    const unsigned long deltaMs = pendingLastUpdateMs == 0 || nowMs < pendingLastUpdateMs
+        ? 0UL
+        : nowMs - pendingLastUpdateMs;
+
+    if (strength > pendingPeakScore) {
+        pendingPeakScore = strength;
+    }
+    pendingSum += strength;
+    pendingSumSquares += strength * strength;
+    ++pendingSampleCount;
+
+    if (aboveAttackThreshold) {
+        pendingCoverageAboveAttackMs += deltaMs;
+        pendingSustainedMs += deltaMs;
+    }
+    if (aboveReleaseThreshold) {
+        pendingCoverageAboveReleaseMs += deltaMs;
+    }
+
+    if (aboveReleaseThreshold) {
+        if (!pendingWasAboveRelease) {
+            ++pendingIslandCount;
+            if (pendingCurrentGapStartMs != 0 && nowMs >= pendingCurrentGapStartMs) {
+                const unsigned long gapMs = nowMs - pendingCurrentGapStartMs;
+                if (gapMs > pendingGapMaxMs) {
+                    pendingGapMaxMs = gapMs;
+                }
+            }
+            pendingCurrentIslandStartMs = nowMs;
+            pendingCurrentGapStartMs = 0;
+        }
+    } else if (pendingWasAboveRelease) {
+        ++pendingGapCount;
+        if (pendingCurrentIslandStartMs != 0 && nowMs >= pendingCurrentIslandStartMs) {
+            const unsigned long islandMs = nowMs - pendingCurrentIslandStartMs;
+            if (islandMs > pendingIslandMaxMs) {
+                pendingIslandMaxMs = islandMs;
+            }
+        }
+        pendingCurrentGapStartMs = nowMs;
+        pendingCurrentIslandStartMs = 0;
+    }
+
+    pendingWasAboveRelease = aboveReleaseThreshold;
+    pendingLastUpdateMs = nowMs;
+}
+
+void FrequencyMatchDetector::finalizePendingFacts(unsigned long closeMs) {
+    if (pendingWasAboveRelease && pendingCurrentIslandStartMs != 0 && closeMs >= pendingCurrentIslandStartMs) {
+        const unsigned long islandMs = closeMs - pendingCurrentIslandStartMs;
+        if (islandMs > pendingIslandMaxMs) {
+            pendingIslandMaxMs = islandMs;
+        }
+    } else if (!pendingWasAboveRelease && pendingCurrentGapStartMs != 0 && closeMs >= pendingCurrentGapStartMs) {
+        const unsigned long gapMs = closeMs - pendingCurrentGapStartMs;
+        if (gapMs > pendingGapMaxMs) {
+            pendingGapMaxMs = gapMs;
+        }
+    }
+}
+
+float FrequencyMatchDetector::pendingMean() const {
+    return pendingSampleCount > 0
+        ? pendingSum / static_cast<float>(pendingSampleCount)
+        : 0.0f;
+}
+
+float FrequencyMatchDetector::pendingRms() const {
+    return pendingSampleCount > 0
+        ? sqrtf(pendingSumSquares / static_cast<float>(pendingSampleCount))
+        : 0.0f;
+}
+
 // Best rejected pending lifecycle.
 void FrequencyMatchDetector::updateBestRejectedPending() {
     // Keep the best rejected lifecycle snapshot in detector-owned report state.
@@ -164,6 +270,8 @@ void FrequencyMatchDetector::updateBestRejectedPending() {
     }
 
     if (pendingDurationMs >= bestDurationMs) {
+        const float mean = pendingMean();
+        const float rms = pendingRms();
         bestDurationMs = pendingDurationMs;
         bestOpenMs = pendingOpenMs;
         bestPeakMs = pendingPeakMs;
@@ -171,6 +279,15 @@ void FrequencyMatchDetector::updateBestRejectedPending() {
         bestCloseMs = pendingCloseMs;
         bestPeakScore = pendingPeakScore;
         bestPeakContrast = pendingPeakContrast;
+        bestMean = mean;
+        bestRms = rms;
+        bestCoverageAboveAttackMs = pendingCoverageAboveAttackMs;
+        bestCoverageAboveReleaseMs = pendingCoverageAboveReleaseMs;
+        bestSustainedMs = pendingSustainedMs;
+        bestIslandCount = pendingIslandCount;
+        bestGapCount = pendingGapCount;
+        bestIslandMaxMs = pendingIslandMaxMs;
+        bestGapMaxMs = pendingGapMaxMs;
         bestRejectReason = noEmitReason[0] != '\0' ? noEmitReason : "unknown";
         bestGateReason = gateReason[0] != '\0' ? gateReason : "unknown";
     }
@@ -200,6 +317,8 @@ void FrequencyMatchDetector::capturePendingOccurrence(const AudioSamplePacket& a
     _pendingOccurrence.scalar.lift = _pendingOccurrence.scalar.value - _pendingOccurrence.scalar.baseline;
     _pendingOccurrencePresent = _pendingOccurrence.valid;
     if (_pendingOccurrencePresent) {
+        const float mean = pendingMean();
+        const float rms = pendingRms();
         _acceptedOccurrence.present = true;
         _acceptedOccurrence.startMs = _pendingOccurrence.startMs;
         _acceptedOccurrence.peakMs = _pendingOccurrence.peakMs;
@@ -207,6 +326,16 @@ void FrequencyMatchDetector::capturePendingOccurrence(const AudioSamplePacket& a
         _acceptedOccurrence.durationMs = _pendingOccurrence.durationMs;
         _acceptedOccurrence.strength = _pendingOccurrence.strength;
         _acceptedOccurrence.confidence = _pendingOccurrence.confidence;
+        _acceptedOccurrence.peak = pendingPeakScore;
+        _acceptedOccurrence.mean = mean;
+        _acceptedOccurrence.rms = rms;
+        _acceptedOccurrence.coverageAboveAttackMs = pendingCoverageAboveAttackMs;
+        _acceptedOccurrence.coverageAboveReleaseMs = pendingCoverageAboveReleaseMs;
+        _acceptedOccurrence.sustainedMs = pendingSustainedMs;
+        _acceptedOccurrence.islandCount = pendingIslandCount;
+        _acceptedOccurrence.gapCount = pendingGapCount;
+        _acceptedOccurrence.islandMaxMs = pendingIslandMaxMs;
+        _acceptedOccurrence.gapMaxMs = pendingGapMaxMs;
         _acceptedDetail.score = _pendingOccurrence.frequency.score;
         _acceptedDetail.contrast = _pendingOccurrence.frequency.contrast;
     }
@@ -252,6 +381,7 @@ void FrequencyMatchDetector::update(const detection::FrequencyBandMeasurementPac
     pendingOccurrence.valid = false;
 
     const auto closePending = [&](unsigned long minDurationMs) {
+        finalizePendingFacts(now);
         pendingActive = false;
         pendingClosed = true;
         pendingCloseMs = now;
@@ -318,13 +448,18 @@ void FrequencyMatchDetector::update(const detection::FrequencyBandMeasurementPac
                     pendingOpenSample = currentSample;
                     pendingPeakMs = now;
                     pendingPeakSample = currentSample;
-                    pendingPeakScore = evidence.targetBandScoreValue;
-                    pendingPeakContrast = evidence.targetBandContrastValue;
                     pendingPeakSampleCount = 0;
                     pendingHoldUpdates = 1;
                     pendingDurationMs = 0;
                     pendingLastMatchedMs = now;
                     pendingEvidence = evidence;
+                    resetPendingFacts();
+                    pendingPeakScore = evidence.targetBandScoreValue;
+                    pendingPeakContrast = evidence.targetBandContrastValue;
+                    pendingWasAboveRelease = true;
+                    pendingIslandCount = 1;
+                    pendingCurrentIslandStartMs = now;
+                    pendingLastUpdateMs = now;
                     pendingOccurrence.startMs = now;
                     pendingOccurrence.startSample = currentSample;
                     pendingOccurrence.peakMs = now;
@@ -340,6 +475,7 @@ void FrequencyMatchDetector::update(const detection::FrequencyBandMeasurementPac
                     pendingOccurrence.confidence = 0.0f;
                     strncpy(pendingState, "open", sizeof(pendingState) - 1);
                     pendingState[sizeof(pendingState) - 1] = '\0';
+                    updatePendingFacts(now, evidence.targetBandScoreValue, attackScoreOk, releaseScoreOk);
                 }
             } else {
                 wouldProducePending = false;
@@ -347,6 +483,7 @@ void FrequencyMatchDetector::update(const detection::FrequencyBandMeasurementPac
                 wouldPendingReason[sizeof(wouldPendingReason) - 1] = '\0';
             }
         } else {
+            updatePendingFacts(now, evidence.targetBandScoreValue, attackScoreOk, releaseScoreOk);
             if (releaseOk) {
                 pendingLastMatchedMs = now;
                 ++pendingHoldUpdates;
@@ -464,6 +601,16 @@ void FrequencyMatchDetector::buildReport(detection::DetectorReport& out, unsigne
         out.selectedReject.durationMs = bestDurationMs;
         out.selectedReject.strength = bestPeakScore;
         out.selectedReject.confidence = 0.0f;
+        out.selectedReject.peak = bestPeakScore;
+        out.selectedReject.mean = bestMean;
+        out.selectedReject.rms = bestRms;
+        out.selectedReject.coverageAboveAttackMs = bestCoverageAboveAttackMs;
+        out.selectedReject.coverageAboveReleaseMs = bestCoverageAboveReleaseMs;
+        out.selectedReject.sustainedMs = bestSustainedMs;
+        out.selectedReject.islandCount = bestIslandCount;
+        out.selectedReject.gapCount = bestGapCount;
+        out.selectedReject.islandMaxMs = bestIslandMaxMs;
+        out.selectedReject.gapMaxMs = bestGapMaxMs;
         out.frequency.selectedReject.score = bestPeakScore;
         out.frequency.selectedReject.contrast = bestPeakContrast;
     }

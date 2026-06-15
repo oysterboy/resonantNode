@@ -310,6 +310,9 @@ private:
         detection::PatternResult primaryValidPattern = {};
         detection::InspectedOccurrence primaryValidInspectedOccurrence = {};
         long primaryValidPatternDtMs = -1;
+        bool primaryAcceptedOccurrenceCaptured = false;
+        detection::InspectedOccurrence primaryAcceptedInspectedOccurrence = {};
+        long primaryAcceptedOccurrenceDtMs = -1;
         unsigned long rejectedInWindowCount = 0;
         bool bestRejectedPatternCaptured = false;
         detection::PatternResult bestRejectedInWindow = {};
@@ -413,6 +416,27 @@ private:
     detection::DetectionProfile effectiveSequenceProfile() const;
     AnalyzerReport* sequenceReportScratch();
     void buildSequenceAnalyzerReport(AnalyzerReport& report, unsigned long trialNumber, AnalyzerResult result, long dtMs, long durMs, float strength, bool bufferOverrun, unsigned long duplicateCount, const SequenceTest::TrialDiagnostics& diagnostics) const;
+    struct SequenceTrialSelection {
+        enum class Kind {
+            None,
+            ValidPattern,
+            AcceptedOccurrence,
+            RejectedPattern,
+            Unexpected,
+            Miss,
+        };
+
+        Kind kind = Kind::None;
+        const detection::PatternResult* patternResult = nullptr;
+        const detection::InspectedOccurrence* inspectedOccurrence = nullptr;
+        AnalyzerResult result = AnalyzerResult::Unknown;
+        long dtMs = -1;
+        unsigned long durationMs = 0;
+        float strength = 0.0f;
+    };
+
+    unsigned long sequenceTrialOnsetAnchorMs() const;
+    SequenceTrialSelection selectSequenceTrialSelection(unsigned long trialOnsetAnchorMs) const;
     void handleSequencePending(
         const PatternResult& patternResult,
         const detection::InspectedOccurrence* selectedInspectedOccurrence = nullptr,

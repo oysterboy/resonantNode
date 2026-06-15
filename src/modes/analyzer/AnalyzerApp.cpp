@@ -990,19 +990,34 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
     report.expected.patternType = "sequence_trial";
     report.expected.expectedSource = _sequenceTest.externalEmitter ? "external" : "local";
 
-    const detection::PatternResult* selectedTrialPatternResult = nullptr;
-    if (_sequenceTest.primaryValidPatternCaptured) {
-        selectedTrialPatternResult = &_sequenceTest.primaryValidPattern;
-    } else if (_sequenceTest.bestRejectedPatternCaptured) {
-        selectedTrialPatternResult = &_sequenceTest.bestRejectedInWindow;
-    }
-    // Use the captured trial snapshot for the final analyzer report.
-    const detection::PatternResult* reportPatternResult = selectedTrialPatternResult;
-    const detection::InspectedOccurrence* reportInspectedOccurrence = nullptr;
-    if (_sequenceTest.primaryValidPatternCaptured && _sequenceTest.primaryValidInspectedOccurrence.occurrence.present) {
-        reportInspectedOccurrence = &_sequenceTest.primaryValidInspectedOccurrence;
-    } else if (_sequenceTest.bestRejectedPatternCaptured && _sequenceTest.bestRejectedInspectedOccurrence.occurrence.present) {
-        reportInspectedOccurrence = &_sequenceTest.bestRejectedInspectedOccurrence;
+    const long trialOnsetAnchorMs = static_cast<long>(sequenceTrialOnsetAnchorMs());
+    const SequenceTrialSelection selectedTrial = selectSequenceTrialSelection(trialOnsetAnchorMs);
+    detection::PatternResult synthesizedAcceptedPattern = {};
+    const detection::PatternResult* reportPatternResult = selectedTrial.patternResult;
+    const detection::InspectedOccurrence* reportInspectedOccurrence = selectedTrial.inspectedOccurrence;
+    if (selectedTrial.kind == SequenceTrialSelection::Kind::AcceptedOccurrence
+        && reportInspectedOccurrence != nullptr
+        && reportInspectedOccurrence->occurrence.present) {
+        synthesizedAcceptedPattern.type = detection::PatternType::SinglePulse;
+        synthesizedAcceptedPattern.reasonCode = detection::PatternReasonCode::FromOccurrence;
+        synthesizedAcceptedPattern.rejectReason = detection::PatternRejectReason::None;
+        synthesizedAcceptedPattern.confidence = reportInspectedOccurrence->occurrence.confidence;
+        synthesizedAcceptedPattern.occurrenceCount = 1;
+        synthesizedAcceptedPattern.primaryStartMs = reportInspectedOccurrence->occurrence.startMs;
+        synthesizedAcceptedPattern.primaryPeakMs = reportInspectedOccurrence->occurrence.peakMs;
+        synthesizedAcceptedPattern.primaryHeardAtMs = reportInspectedOccurrence->occurrence.startMs;
+        synthesizedAcceptedPattern.primaryAcceptedMs = reportInspectedOccurrence->occurrence.startMs;
+        synthesizedAcceptedPattern.primaryDurationMs = reportInspectedOccurrence->occurrence.durationMs;
+        synthesizedAcceptedPattern.primaryStrength = reportInspectedOccurrence->occurrence.strength;
+        synthesizedAcceptedPattern.primaryOnsetStrength = reportInspectedOccurrence->occurrence.scalar.onsetStrength;
+        synthesizedAcceptedPattern.primaryReleaseStrength = reportInspectedOccurrence->occurrence.scalar.releaseStrength;
+        synthesizedAcceptedPattern.primaryAmbientBaseline = diagnostics.acceptedAmbientBaseline;
+        synthesizedAcceptedPattern.primaryAudioOverflow = reportInspectedOccurrence->occurrence.scalar.audioOverflowDuringOccurrence;
+        synthesizedAcceptedPattern.patternAccepted = true;
+        synthesizedAcceptedPattern.patternMatched = true;
+        synthesizedAcceptedPattern.supportMatched = true;
+        synthesizedAcceptedPattern.valid = true;
+        reportPatternResult = &synthesizedAcceptedPattern;
     }
     const detection::FieldState* runtimeFieldState = &_detection.fieldState();
     const detection::DetectionProfile& selectedProfile = detection::detectionProfileForKind(_sequenceTest.profileKind);
@@ -1013,17 +1028,14 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
     }
     const bool trialHasPipelineEvidence = reportPatternResult != nullptr
         && diagnostics.rawPendingCount > 0;
-    const long trialOnsetAnchorMs = _sequenceTest.currentTrialDiagnostics.emitStartSeen
-        ? static_cast<long>(_sequenceTest.currentTrialStartMs) + static_cast<long>(_sequenceTest.currentTrialDiagnostics.emitStartDtMs)
-        : static_cast<long>(_sequenceTest.currentTrialScheduledAtMs);
     const long reportPatternDtMs = reportPatternResult != nullptr
-        ? static_cast<long>(reportPatternResult->primaryStartMs) - trialOnsetAnchorMs
+        ? selectedTrial.dtMs
         : dtMs;
     const unsigned long reportPatternDurationMs = reportPatternResult != nullptr
-        ? reportPatternResult->primaryDurationMs
+        ? selectedTrial.durationMs
         : (durMs >= 0 ? static_cast<unsigned long>(durMs) : 0UL);
     const float reportPatternStrength = reportPatternResult != nullptr
-        ? reportPatternResult->primaryStrength
+        ? selectedTrial.strength
         : strength;
     const auto artifactReason = [&]() -> const char* {
         if (reportPatternResult != nullptr || report.detectorReport != nullptr) {
@@ -1084,14 +1096,14 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
         report.occurrences.startMs = occurrence.startMs;
         report.occurrences.peakMs = occurrence.peakMs;
         report.occurrences.releaseMs = occurrence.releaseMs;
-        report.occurrences.primaryDtMs = static_cast<long>(occurrence.startMs) - trialOnsetAnchorMs;
-        report.occurrences.primaryDurationMs = occurrence.durationMs;
-        report.occurrences.primaryStrength = occurrence.strength;
+        report.occurrences.primaryDtMs = selectedTrial.dtMs;
+        report.occurrences.primaryDurationMs = selectedTrial.durationMs;
+        report.occurrences.primaryStrength = selectedTrial.strength;
         report.occurrences.contrast = occurrence.occurrenceType == detection::OccurrenceType::Frequency
             ? occurrence.frequency.contrast
             : 0.0f;
-        report.occurrences.strength = occurrence.strength;
-        report.occurrences.confidence = occurrence.confidence;
+        report.occurrences.strength = selectedTrial.strength;
+        report.occurrences.confidence = reportPatternResult != nullptr ? reportPatternResult->confidence : occurrence.confidence;
         report.occurrences.mainRejectReason = reportInspectedOccurrence->decision == detection::OccurrenceDecision::Rejected
             ? occurrenceRejectReasonName(reportInspectedOccurrence->rejectReason)
             : "none";

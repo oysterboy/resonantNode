@@ -344,6 +344,36 @@ void AnalyzerApp::handleSequencePending(
         return;
     }
 
+    if (selectedInspectedOccurrence != nullptr
+        && selectedInspectedOccurrence->occurrence.present
+        && selectedInspectedOccurrence->decision == detection::OccurrenceDecision::Accepted
+        && !_sequenceTest.primaryValidPatternCaptured
+        && !_sequenceTest.primaryAcceptedOccurrenceCaptured) {
+        _sequenceTest.primaryAcceptedOccurrenceCaptured = true;
+        _sequenceTest.primaryAcceptedInspectedOccurrence = *selectedInspectedOccurrence;
+        _sequenceTest.primaryAcceptedOccurrenceDtMs = dtFromTriggerMs;
+        _sequenceTest.currentTrialDiagnostics.onsetSeen = true;
+        if (_sequenceTest.currentTrialDiagnostics.firstOnsetMs == 0) {
+            _sequenceTest.currentTrialDiagnostics.firstOnsetMs = onsetMs;
+        }
+        _sequenceTest.currentTrialDiagnostics.lastOnsetMs = onsetMs;
+        if (_sequenceTest.currentTrialOnsetDetectedMs == 0) {
+            _sequenceTest.currentTrialOnsetDetectedMs = onsetMs;
+        }
+        _sequenceTest.currentTrialDiagnostics.patternAccepted = true;
+        _sequenceTest.currentTrialDiagnostics.acceptedPatternMs = onsetMs;
+        _sequenceTest.currentTrialDiagnostics.acceptedPatternOnsetStrength = patternResult.primaryOnsetStrength;
+        _sequenceTest.currentTrialDiagnostics.acceptedPatternStrength = patternResult.primaryStrength;
+        _sequenceTest.currentTrialDiagnostics.acceptedPatternDurationMs = patternResult.primaryDurationMs;
+        _sequenceTest.currentTrialDiagnostics.acceptedPatternReleaseStrength = patternResult.primaryReleaseStrength;
+        _sequenceTest.currentTrialDiagnostics.acceptedPatternPeakMs = patternResult.primaryPeakMs;
+        _sequenceTest.currentTrialDiagnostics.acceptedPatternReleaseMs = patternResult.primaryStartMs + patternResult.primaryDurationMs;
+        _sequenceTest.currentTrialDiagnostics.acceptedAmbientBaseline = patternResult.primaryAmbientBaseline;
+        _sequenceTest.currentTrialDiagnostics.lastRejectStrength = 0.0f;
+        _sequenceTest.currentTrialDiagnostics.lastRejectDurationMs = 0;
+        _sequenceTest.currentTrialPatternDetectedMs = onsetMs;
+    }
+
     if (!patternResult.valid) {
         const bool shouldUpdateBestRejected = !_sequenceTest.bestRejectedPatternCaptured
             || patternResult.primaryStrength > _sequenceTest.bestRejectedInWindow.primaryStrength;

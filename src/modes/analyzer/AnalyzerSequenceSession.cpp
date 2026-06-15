@@ -160,6 +160,9 @@ void AnalyzerApp::startSequenceTest(const PendingSequenceStart& pending) {
     _sequenceTest.primaryValidPattern = {};
     _sequenceTest.primaryValidInspectedOccurrence = {};
     _sequenceTest.primaryValidPatternDtMs = -1;
+    _sequenceTest.primaryAcceptedOccurrenceCaptured = false;
+    _sequenceTest.primaryAcceptedInspectedOccurrence = {};
+    _sequenceTest.primaryAcceptedOccurrenceDtMs = -1;
     _sequenceTest.rejectedInWindowCount = 0;
     _sequenceTest.bestRejectedPatternCaptured = false;
     _sequenceTest.bestRejectedInWindow = {};
@@ -348,6 +351,9 @@ void AnalyzerApp::updateSequenceTest(unsigned long now) {
     _sequenceTest.primaryValidPattern = {};
     _sequenceTest.primaryValidInspectedOccurrence = {};
     _sequenceTest.primaryValidPatternDtMs = -1;
+    _sequenceTest.primaryAcceptedOccurrenceCaptured = false;
+    _sequenceTest.primaryAcceptedInspectedOccurrence = {};
+    _sequenceTest.primaryAcceptedOccurrenceDtMs = -1;
     _sequenceTest.rejectedInWindowCount = 0;
     _sequenceTest.bestRejectedPatternCaptured = false;
     _sequenceTest.bestRejectedInWindow = {};
@@ -412,6 +418,56 @@ void AnalyzerApp::updateSequenceAmbientStats(unsigned long nowMs) {
     diagnostics.ambientBaselineSum += static_cast<float>(signalLevel);
 }
 
+AnalyzerApp::SequenceTrialSelection AnalyzerApp::selectSequenceTrialSelection(unsigned long trialOnsetAnchorMs) const {
+    SequenceTrialSelection selection = {};
+
+    if (_sequenceTest.primaryValidPatternCaptured) {
+        selection.kind = SequenceTrialSelection::Kind::ValidPattern;
+        selection.patternResult = &_sequenceTest.primaryValidPattern;
+        selection.inspectedOccurrence = _sequenceTest.primaryValidInspectedOccurrence.occurrence.present
+            ? &_sequenceTest.primaryValidInspectedOccurrence
+            : nullptr;
+        selection.dtMs = static_cast<long>(_sequenceTest.primaryValidPattern.primaryStartMs) - static_cast<long>(trialOnsetAnchorMs);
+        selection.durationMs = _sequenceTest.primaryValidPattern.primaryDurationMs;
+        selection.strength = _sequenceTest.primaryValidPattern.primaryStrength;
+        selection.result = selection.dtMs >= kLateOnsetMinMs ? AnalyzerResult::Late : AnalyzerResult::Expected;
+        return selection;
+    }
+
+    if (_sequenceTest.primaryAcceptedOccurrenceCaptured && _sequenceTest.primaryAcceptedInspectedOccurrence.occurrence.present) {
+        selection.kind = SequenceTrialSelection::Kind::AcceptedOccurrence;
+        selection.inspectedOccurrence = &_sequenceTest.primaryAcceptedInspectedOccurrence;
+        selection.dtMs = static_cast<long>(_sequenceTest.primaryAcceptedInspectedOccurrence.occurrence.startMs) - static_cast<long>(trialOnsetAnchorMs);
+        selection.durationMs = _sequenceTest.primaryAcceptedInspectedOccurrence.occurrence.durationMs;
+        selection.strength = _sequenceTest.primaryAcceptedInspectedOccurrence.occurrence.strength;
+        selection.result = selection.dtMs >= kLateOnsetMinMs ? AnalyzerResult::Late : AnalyzerResult::Expected;
+        return selection;
+    }
+
+    if (_sequenceTest.bestRejectedPatternCaptured) {
+        selection.kind = SequenceTrialSelection::Kind::RejectedPattern;
+        selection.patternResult = &_sequenceTest.bestRejectedInWindow;
+        selection.inspectedOccurrence = _sequenceTest.bestRejectedInspectedOccurrence.occurrence.present
+            ? &_sequenceTest.bestRejectedInspectedOccurrence
+            : nullptr;
+        selection.dtMs = static_cast<long>(_sequenceTest.bestRejectedInWindow.primaryStartMs) - static_cast<long>(trialOnsetAnchorMs);
+        selection.durationMs = _sequenceTest.bestRejectedInWindow.primaryDurationMs;
+        selection.strength = _sequenceTest.bestRejectedInWindow.primaryStrength;
+        selection.result = AnalyzerResult::Rejected;
+        return selection;
+    }
+
+    if (_sequenceTest.currentTrialUnexpected > 0) {
+        selection.kind = SequenceTrialSelection::Kind::Unexpected;
+        selection.result = AnalyzerResult::Unexpected;
+        return selection;
+    }
+
+    selection.kind = SequenceTrialSelection::Kind::Miss;
+    selection.result = AnalyzerResult::Miss;
+    return selection;
+}
+
 void AnalyzerApp::finalizeSequenceTrial(unsigned long now) {
     if (_sequenceTest.currentTrial == 0) {
         return;
@@ -428,29 +484,27 @@ void AnalyzerApp::finalizeSequenceTrial(unsigned long now) {
 
     const bool bufferOverrunTrial = _sequenceTest.bufferOverrun
                                     || _audioSource.stats().overflowCount != _sequenceTest.trialOverflowCountAtStart;
-    const bool hitTrial = _sequenceTest.primaryValidPatternCaptured;
+    const long trialOnsetAnchorMs = static_cast<long>(sequenceTrialOnsetAnchorMs());
+    const SequenceTrialSelection selectedTrial = selectSequenceTrialSelection(trialOnsetAnchorMs);
+    const bool hitTrial = selectedTrial.result == AnalyzerResult::Expected || selectedTrial.result == AnalyzerResult::Late;
     const bool rejectedTrial = _sequenceTest.rejectedInWindowCount > 0;
-    const bool unexpectedTrial = _sequenceTest.currentTrialUnexpected > 0;
-    const long trialOnsetAnchorMs = _sequenceTest.currentTrialDiagnostics.emitStartSeen
-        ? static_cast<long>(_sequenceTest.currentTrialStartMs) + static_cast<long>(_sequenceTest.currentTrialDiagnostics.emitStartDtMs)
-        : static_cast<long>(_sequenceTest.currentTrialScheduledAtMs);
+    const bool unexpectedTrial = selectedTrial.result == AnalyzerResult::Unexpected;
 
-    AnalyzerResult result = AnalyzerResult::Miss;
-    long dtMs = -1;
-    long durMs = -1;
-    float strength = 0.0f;
+    AnalyzerResult result = selectedTrial.result;
+    long dtMs = selectedTrial.dtMs;
+    long durMs = static_cast<long>(selectedTrial.durationMs);
+    float strength = selectedTrial.strength;
 
     if (hitTrial) {
         _sequenceTest.hits++;
-        dtMs = static_cast<long>(_sequenceTest.primaryValidPattern.primaryStartMs) - trialOnsetAnchorMs;
-        _sequenceTest.primaryValidPatternDtMs = dtMs;
-        durMs = static_cast<long>(_sequenceTest.primaryValidPattern.primaryDurationMs);
-        strength = _sequenceTest.primaryValidPattern.primaryStrength;
-        if (dtMs >= kLateOnsetMinMs) {
-            result = AnalyzerResult::Late;
+        if (selectedTrial.kind == SequenceTrialSelection::Kind::ValidPattern) {
+            _sequenceTest.primaryValidPatternDtMs = dtMs;
+        } else if (selectedTrial.kind == SequenceTrialSelection::Kind::AcceptedOccurrence) {
+            _sequenceTest.primaryAcceptedOccurrenceDtMs = dtMs;
+        }
+        if (result == AnalyzerResult::Late) {
             _sequenceTest.lateHits++;
         } else {
-            result = AnalyzerResult::Expected;
             _sequenceTest.expectedHits++;
         }
     } else if (rejectedTrial) {
@@ -582,6 +636,13 @@ void AnalyzerApp::updateCleanSequenceSummary(const AnalyzerReport& report) {
         summary.totalConfidence += report.primaryPattern.confidence;
         ++summary.confidenceCount;
     }
+}
+
+unsigned long AnalyzerApp::sequenceTrialOnsetAnchorMs() const {
+    if (_sequenceTest.currentTrialDiagnostics.emitStartSeen) {
+        return _sequenceTest.currentTrialStartMs + _sequenceTest.currentTrialDiagnostics.emitStartDtMs;
+    }
+    return _sequenceTest.currentTrialScheduledAtMs;
 }
 
 

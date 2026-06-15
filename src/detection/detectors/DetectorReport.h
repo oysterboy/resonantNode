@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../DetectionTypes.h"
+#include "../DetectionCoreTypes.h"
 #include "DetectorReject.h"
 
 namespace detection {

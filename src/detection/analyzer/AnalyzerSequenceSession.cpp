@@ -4,7 +4,7 @@
 #include <new>
 #include <stdlib.h>
 
-#include "../../app/AudioDebugConfig.h"
+#include "../../app/RuntimeDefaults.h"
 #include "../../app/TimingUtils.h"
 
 bool waitForEmitterAck(const char* expectedPrefix, unsigned long timeoutMs);

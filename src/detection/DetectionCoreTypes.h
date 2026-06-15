@@ -41,7 +41,7 @@ namespace detection {
 //   Occurrence emission plus DetectorReport directly.
 
 /*
-DetectionTypes
+DetectionCoreTypes
 
 Pass A canonical vocabulary anchor.
 These enums establish the new detector-facing names without forcing the current

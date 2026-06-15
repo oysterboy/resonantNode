@@ -2,7 +2,7 @@
 
 #include <stdint.h>
 
-#include "../../../app/AudioDebugConfig.h"
+#include "../../../app/RuntimeDefaults.h"
 #include "../../../audio/AudioSignal.h"
 #include "../DetectorReport.h"
 #include "../../occurrences/Occurrence.h"

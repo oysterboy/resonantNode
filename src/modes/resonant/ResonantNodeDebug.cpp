@@ -1,7 +1,7 @@
 #include "ResonantNodeDebug.h"
 
 #include "../../behavior/ResonantBehavior.h"
-#include "../../app/AudioDebugConfig.h"
+#include "../../app/RuntimeDefaults.h"
 #include "../../audio/AudioSignal.h"
 #include "../../output/ChirpOutput.h"
 #include "../../app/TimingUtils.h"
@@ -149,7 +149,7 @@ void NodeDebug::observeBehaviorGate(unsigned long now,
                                     const ResonantBehavior& behavior,
                                     bool transientDetected,
                                     bool selfChirpSuppressed) {
-    if (!AUDIO_VERBOSE_DEBUG || !eventsEnabled()) {
+    if (!RB_VERBOSE_DEBUG || !eventsEnabled()) {
         return;
     }
 
@@ -189,7 +189,7 @@ void NodeDebug::observeBehaviorGate(unsigned long now,
 }
 
 void NodeDebug::observeI2SSignal(unsigned long now, const AudioSignal& audioSignal) {
-    if (!AUDIO_VERBOSE_DEBUG || !eventsEnabled()) {
+    if (!RB_VERBOSE_DEBUG || !eventsEnabled()) {
         return;
     }
 
@@ -239,7 +239,7 @@ void NodeDebug::observeI2SSignal(unsigned long now, const AudioSignal& audioSign
 }
 
 void NodeDebug::observeChirpStarted(unsigned long now, const char* sourceName, ChirpOutput::ChirpPattern pattern) {
-    if (!AUDIO_VERBOSE_DEBUG || !eventsEnabled()) {
+    if (!RB_VERBOSE_DEBUG || !eventsEnabled()) {
         return;
     }
 
@@ -261,7 +261,7 @@ void NodeDebug::observeChirpStarted(unsigned long now, const char* sourceName, C
 }
 
 void NodeDebug::observeChirpFinished(unsigned long now) {
-    if (!AUDIO_VERBOSE_DEBUG || !eventsEnabled()) {
+    if (!RB_VERBOSE_DEBUG || !eventsEnabled()) {
         return;
     }
 

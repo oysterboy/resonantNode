@@ -29,7 +29,19 @@ Does NOT:
 */
 class FrequencyMatchDetector {
 public:
-    // Live frequency gate / lifecycle state.
+    // Compatibility/public diagnostic state.
+    // Analyzer and runtime still read these fields directly, so keep them
+    // public and grouped by lifecycle role for readability.
+
+    // Config / thresholds.
+    float attackScoreThreshold = 0.0f;
+    float releaseScoreThreshold = 0.0f;
+    float attackContrastThreshold = 0.0f;
+    float releaseContrastThreshold = 0.0f;
+    unsigned long pendingMinDurationMs = 0;
+    unsigned long pendingMaxDurationMs = 0;
+
+    // Live gate state.
     bool evidencePresent = false;
     bool liveFrequencyOnly = false;
     bool firstThresholdCrossingSeen = false;
@@ -49,10 +61,6 @@ public:
     unsigned long pendingHoldUpdates = 0;
     unsigned long pendingDurationMs = 0;
     unsigned long pendingLastMatchedMs = 0;
-    float attackScoreThreshold = 0.0f;
-    float releaseScoreThreshold = 0.0f;
-    float attackContrastThreshold = 0.0f;
-    float releaseContrastThreshold = 0.0f;
     bool evidenceOk = false;
     bool attackScoreOk = false;
     bool attackContrastOk = false;
@@ -64,24 +72,25 @@ public:
     bool validRelease = false;
     float pendingPeakScore = 0.0f;
     float pendingPeakContrast = 0.0f;
+
+    // Candidate lifecycle state.
     unsigned long pendingPeakSampleCount = 0;
     unsigned long pendingLifecycleId = 0;
     unsigned long currentPendingId = 0;
     unsigned long acceptedOccurrenceId = 0;
     unsigned long selectedRejectOccurrenceId = 0;
     unsigned long lastPendingId = 0;
-    unsigned long pendingMinDurationMs = 0;
-    unsigned long pendingMaxDurationMs = 0;
     bool pendingDurationInconsistent = false;
+    detection::FrequencyBandMeasurementPacket pendingEvidence = {};
 
-    // Canonical detector-report facts for the active trial window.
-    // This should be on par with the scalar detector's canonical report
-    // facts, even though the internal gate/reason model stays frequency-
-    // specific.
+    // Occurrence emission state.
+    detection::Occurrence pendingOccurrence = {};
+
+    // Detector report state.
     unsigned long acceptedCount = 0;
     unsigned long rejectedCount = 0;
 
-    // Detector-owned best rejected pending lifecycle snapshot.
+    // Reject summary state.
     unsigned long bestDurationMs = 0;
     unsigned long bestOpenMs = 0;
     unsigned long bestPeakMs = 0;
@@ -89,21 +98,15 @@ public:
     unsigned long bestCloseMs = 0;
     float bestPeakScore = 0.0f;
     float bestPeakContrast = 0.0f;
-    // Frequency keeps its internal reason model string-backed so the current
-    // detector report shape stays stable while the gate logic remains local.
     const char* bestRejectReason = "none";
     const char* bestGateReason = "none";
     detection::FrequencyBandMeasurementPacket bestEvidence = {};
-    detection::FrequencyBandMeasurementPacket pendingEvidence = {};
 
-    // Detector-owned pending accepted-occurrence emission state.
+    // Diagnostics state.
     char pendingState[16] = "none";
     char gateReason[48] = "none";
     char wouldPendingReason[48] = "none";
     char noEmitReason[48] = "none";
-    detection::Occurrence pendingOccurrence = {};
-
-    // Detector-owned diagnostics counters for analyzer logging.
     unsigned long diagnosticsScoreOkCount = 0;
     unsigned long diagnosticsContrastOkCount = 0;
     unsigned long diagnosticsBothOkCount = 0;
@@ -126,23 +129,17 @@ public:
     bool popOccurrence(detection::Occurrence& out);
 
 private:
-    void updateBestRejectedPending();
-    void recordRejectedPending();
-    void capturePendingOccurrence(const AudioSamplePacket& audioSamplePacket);
-
+    // Internal detector state.
     bool _diagnosticsEnabled = false;
-
-    // Canonical detector-owned accepted summary for the active trial window.
-    // Keeps accepted facts in detector-owned report state so DetectorReport
-    // does not lose them once the live pending state advances.
     detection::AcceptedOccurrenceSummary _acceptedOccurrence = {};
     detection::FrequencyAcceptedDetail _acceptedDetail = {};
-
-    // Detector-owned accepted-occurrence emission state for the current
-    // frequency path. The downstream Occurrence payload shape stays shared,
-    // but the internal gate/reason model is still frequency-specific.
     bool _pendingOccurrencePresent = false;
     detection::Occurrence _pendingOccurrence = {};
     unsigned long _lastEmittedOccurrenceCloseMs = 0;
+
+    // Private helpers.
+    void updateBestRejectedPending();
+    void recordRejectedPending();
+    void capturePendingOccurrence(const AudioSamplePacket& audioSamplePacket);
 };
 

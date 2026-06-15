@@ -3,6 +3,21 @@
 #include <Arduino.h>
 #include <string.h>
 
+namespace {
+
+const char* detectorInputName(detection::DetectorSelection selection, detection::FeatureStreamId stream) {
+    switch (selection) {
+        case detection::DetectorSelection::FrequencyMatch:
+            return "frequency_power";
+        case detection::DetectorSelection::ScalarTransient:
+            return detection::featureStreamName(stream);
+    }
+
+    return "unknown";
+}
+
+} // namespace
+
 bool AnalyzerApp::sequenceSampleDumpSelected(unsigned long trialNumber) const {
     if (!_sequenceTest.sampleDumpEnabled) {
         return false;
@@ -22,6 +37,8 @@ void AnalyzerApp::clearSequenceSampleDump() {
     _sequenceTest.sampleDumpCaptureStartMs = 0;
     _sequenceTest.sampleDumpCaptureEndMs = 0;
     _sequenceTest.sampleDumpNextEmitMs = 0;
+    _sequenceTest.sampleDumpDetectorSelection = detection::DetectorSelection::FrequencyMatch;
+    _sequenceTest.sampleDumpObservedStream = detection::FeatureStreamId::Unknown;
     _sequenceTest.sampleRowCount = 0;
     _sequenceTest.sampleHistoryStart = 0;
     _sequenceTest.sampleHistoryCount = 0;
@@ -38,7 +55,7 @@ void AnalyzerApp::flushSequenceSampleHistory(unsigned long currentSampleMs) {
         return;
     }
 
-    const CurveSnapshot committed = _sequenceTest.sampleHistoryPending;
+    const DetectorInputSample committed = _sequenceTest.sampleHistoryPending;
     _sequenceTest.sampleHistoryHasPending = false;
     _sequenceTest.sampleHistoryPending = {};
 
@@ -82,22 +99,24 @@ void AnalyzerApp::flushSequenceSampleHistory(unsigned long currentSampleMs) {
     _sequenceTest.sampleDumpNextEmitMs = committed.sampleMs + _sequenceTest.sampleDumpStepMs;
 }
 
-void AnalyzerApp::recordSequenceSample(const CurveSnapshot& snapshot) {
-    const unsigned long sampleMs = snapshot.sampleMs;
+void AnalyzerApp::recordSequenceDetectorInputSample(unsigned long sampleMs, float value) {
+    DetectorInputSample sample;
+    sample.sampleMs = sampleMs;
+    sample.value = value;
 
     if (!_sequenceTest.sampleHistoryHasPending) {
-        _sequenceTest.sampleHistoryPending = snapshot;
+        _sequenceTest.sampleHistoryPending = sample;
         _sequenceTest.sampleHistoryHasPending = true;
         return;
     }
 
     if (sampleMs == _sequenceTest.sampleHistoryPending.sampleMs) {
-        _sequenceTest.sampleHistoryPending = snapshot;
+        _sequenceTest.sampleHistoryPending = sample;
         return;
     }
 
     flushSequenceSampleHistory(sampleMs);
-    _sequenceTest.sampleHistoryPending = snapshot;
+    _sequenceTest.sampleHistoryPending = sample;
     _sequenceTest.sampleHistoryHasPending = true;
 }
 
@@ -146,7 +165,7 @@ void AnalyzerApp::beginSequenceSampleDump(unsigned long trialNumber) {
     }
 }
 
-// Sample-dump output is rough envelope/amplitude tooling, not detector truth.
+// Sample-dump output is detector-input tooling, not detector truth.
 void AnalyzerApp::printSequenceSampleReport(unsigned long trialNumber) const {
     if (!_sequenceTest.sampleDumpEnabled || !_sequenceTest.sampleDumpSelectedForTrial || _sequenceTest.sampleDumpCurrentTrial != trialNumber) {
         return;
@@ -154,19 +173,21 @@ void AnalyzerApp::printSequenceSampleReport(unsigned long trialNumber) const {
 
     Serial.print("SAMPLES_BEGIN trial=");
     Serial.print(trialNumber);
-    Serial.print(" trigger_ms=");
+    Serial.print(" source=detector_input trigger_ms=");
     Serial.print(_sequenceTest.sampleDumpTriggerMs);
     Serial.print(" sample_rate_ms=");
     Serial.print(_sequenceTest.sampleDumpStepMs);
-    Serial.print(" fields=t,current,env,peak,open");
+    Serial.print(" fields=t,value");
     Serial.println();
     Serial.print("SAMPLES_NOTE trial=");
     Serial.print(trialNumber);
+    Serial.print(" input=");
+    Serial.print(detectorInputName(_sequenceTest.sampleDumpDetectorSelection, _sequenceTest.sampleDumpObservedStream));
     Serial.print(" rows_cap=");
     Serial.print(SequenceTest::kMaxSampleRows);
     Serial.print(" sample_max_budget=");
     Serial.print(_sequenceTest.sampleDumpMaxRows);
-    Serial.print(" peak=smoothed_env open=signalMagnitude_gt_0");
+    Serial.print(" value=detector_input_scalar");
     Serial.println();
 
     for (size_t i = 0; i < _sequenceTest.sampleRowCount; ++i) {
@@ -174,23 +195,9 @@ void AnalyzerApp::printSequenceSampleReport(unsigned long trialNumber) const {
         const long tMs = static_cast<long>(sample.sampleMs) - static_cast<long>(_sequenceTest.sampleDumpTriggerSampleMs);
         Serial.print(tMs);
         Serial.print(",");
-        Serial.print(sample.current);
-        Serial.print(",");
-        Serial.print(sample.env);
-        Serial.print(",");
-        Serial.print(sample.peak, 1);
-        Serial.print(",");
-        Serial.println(sample.open ? 1 : 0);
+        Serial.println(sample.value, 3);
     }
 
     Serial.print("SAMPLES_END trial=");
     Serial.println(trialNumber);
-}
-
-void AnalyzerApp::sequenceCurveSampleCallback(const CurveSnapshot& snapshot, void* context) {
-    auto* self = static_cast<AnalyzerApp*>(context);
-    if (self == nullptr) {
-        return;
-    }
-    self->recordSequenceSample(snapshot);
 }

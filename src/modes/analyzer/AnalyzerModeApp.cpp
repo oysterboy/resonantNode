@@ -52,6 +52,30 @@ constexpr unsigned long kRawZeroishAbsThreshold = 4UL;
 
 RTC_DATA_ATTR static uint32_t g_analyzerBootCount = 0;
 
+float sequenceSampleDumpInputValue(detection::DetectorSelection detectorSelection,
+                                   detection::FeatureStreamId observedStream,
+                                   const AudioSamplePacket& audioSamplePacket,
+                                   const detection::FrequencyBandMeasurementPacket& frequencyEvidence) {
+    switch (detectorSelection) {
+        case detection::DetectorSelection::FrequencyMatch:
+            return frequencyEvidence.targetBandPowerValue;
+        case detection::DetectorSelection::ScalarTransient:
+            switch (observedStream) {
+                case detection::FeatureStreamId::AmpEnvelope:
+                    return audioSamplePacket.audioMagnitudeValue;
+                case detection::FeatureStreamId::FrequencyScore:
+                    return frequencyEvidence.targetBandScoreValue;
+                case detection::FeatureStreamId::FrequencyContrast:
+                    return frequencyEvidence.targetBandContrastValue;
+                case detection::FeatureStreamId::Unknown:
+                default:
+                    return audioSamplePacket.audioMagnitudeValue;
+            }
+    }
+
+    return audioSamplePacket.audioMagnitudeValue;
+}
+
 
 uint32_t sampleOffsetUs(uint32_t sampleOffset, uint32_t sampleRateHz) {
     if (sampleRateHz == 0) {
@@ -108,12 +132,12 @@ void printRuntimeSize() {
     Serial.println(static_cast<unsigned long>(sizeof(RawSampleHistory)));
     Serial.print("SIZE AnalyzerApp::SequenceTest=");
     Serial.println(static_cast<unsigned long>(AnalyzerApp::debugSequenceTestSize()));
-    Serial.print("  SIZE CurveSnapshot sampleHistory=");
-    Serial.println(static_cast<unsigned long>(sizeof(CurveSnapshot) * AnalyzerApp::debugSequenceTestSampleHistoryCapacity()));
-    Serial.print("  SIZE CurveSnapshot sampleHistoryPending=");
-    Serial.println(static_cast<unsigned long>(sizeof(CurveSnapshot)));
-    Serial.print("  SIZE CurveSnapshot sampleRows=");
-    Serial.println(static_cast<unsigned long>(sizeof(CurveSnapshot) * AnalyzerApp::debugSequenceTestSampleRowsCapacity()));
+    Serial.print("  SIZE DetectorInputSample sampleHistory=");
+    Serial.println(static_cast<unsigned long>(sizeof(DetectorInputSample) * AnalyzerApp::debugSequenceTestSampleHistoryCapacity()));
+    Serial.print("  SIZE DetectorInputSample sampleHistoryPending=");
+    Serial.println(static_cast<unsigned long>(sizeof(DetectorInputSample)));
+    Serial.print("  SIZE DetectorInputSample sampleRows=");
+    Serial.println(static_cast<unsigned long>(sizeof(DetectorInputSample) * AnalyzerApp::debugSequenceTestSampleRowsCapacity()));
     Serial.print("SIZE AnalyzerReport=");
     Serial.println(static_cast<unsigned long>(sizeof(AnalyzerReport)));
     const uint32_t free8 = static_cast<uint32_t>(heap_caps_get_free_size(MALLOC_CAP_8BIT));
@@ -539,7 +563,6 @@ void AnalyzerApp::begin() {
     configureParameters();
     _audioSource.begin();
     _audioSignal.begin();
-    _audioSignal.setCurveSampleCallback(&AnalyzerApp::sequenceCurveSampleCallback, this);
     _freqBandStream.resetState();
     _freqBandStream.setSampleRateHz(_audioSource.sampleRateHz());
     _freqBandStream.setTargetFrequencyHz(runtime::kDefaultChirpFrequencyHz);
@@ -691,6 +714,24 @@ void AnalyzerApp::update() {
             if (_sequenceTest.outputConfig.frequencyBandEnabled) {
                 _freqBandStream.observeCenteredSample(audioSamplePacket.centeredAudioValue, audioSamplePacket.timeMs);
             }
+            const bool needSequenceFrequencyPacket = _sequenceTest.sampleDumpEnabled || (_sequenceTest.active && _sequenceTest.currentTrial > 0);
+            detection::FrequencyBandMeasurementPacket runtimeFrequencyMeasurementPacket = {};
+            if (needSequenceFrequencyPacket) {
+                if (_sequenceTest.outputConfig.frequencyBandEnabled) {
+                    runtimeFrequencyMeasurementPacket = captureFrequencyMeasurementPacket(audioSamplePacket);
+                } else {
+                    runtimeFrequencyMeasurementPacket.observedAtMs = audioSamplePacket.timeMs;
+                }
+                if (_sequenceTest.sampleDumpEnabled) {
+                    const float detectorInputValue = sequenceSampleDumpInputValue(
+                        _sequenceTest.sampleDumpDetectorSelection,
+                        _sequenceTest.sampleDumpObservedStream,
+                        audioSamplePacket,
+                        runtimeFrequencyMeasurementPacket
+                    );
+                    recordSequenceDetectorInputSample(audioSamplePacket.timeMs, detectorInputValue);
+                }
+            }
             if (_sequenceTest.active && _sequenceTest.currentTrial > 0) {
                 const unsigned long processingLagMs = millis() > audioSamplePacket.timeMs
                     ? millis() - audioSamplePacket.timeMs
@@ -701,12 +742,6 @@ void AnalyzerApp::update() {
                 if (audioSamplePacket.timeMs >= _sequenceTest.currentTrialStartMs &&
                     audioSamplePacket.timeMs <= _sequenceTest.currentTrialEndMs) {
                     ++_sequenceTest.currentTrialSamplesProcessed;
-                }
-                detection::FrequencyBandMeasurementPacket runtimeFrequencyMeasurementPacket = {};
-                if (_sequenceTest.outputConfig.frequencyBandEnabled) {
-                    runtimeFrequencyMeasurementPacket = captureFrequencyMeasurementPacket(audioSamplePacket);
-                } else {
-                    runtimeFrequencyMeasurementPacket.observedAtMs = audioSamplePacket.timeMs;
                 }
                 _detection.observeFrame(audioSamplePacket, runtimeFrequencyMeasurementPacket, audioSamplePacket.timeMs);
                 detection::PatternResult runtimePatternResult = {};

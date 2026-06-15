@@ -16,6 +16,12 @@
 #include "../../app/RuntimeDefaults.h"
 #include "../../detection/analyzer/AnalyzerReportTypes.h"
 
+struct DetectorInputSample {
+    // Bounded detector-input trace used only by the neutral SAMPLES dump.
+    unsigned long sampleMs = 0;
+    float value = 0.0f;
+};
+
 /*
 AnalyzerApp
 
@@ -286,15 +292,17 @@ private:
         unsigned long sampleDumpCaptureStartMs = 0;
         unsigned long sampleDumpCaptureEndMs = 0;
         unsigned long sampleDumpNextEmitMs = 0;
+        detection::DetectorSelection sampleDumpDetectorSelection = detection::DetectorSelection::FrequencyMatch;
+        detection::FeatureStreamId sampleDumpObservedStream = detection::FeatureStreamId::Unknown;
         static constexpr size_t kMaxSampleHistory = 128;
         static constexpr size_t kMaxSampleRows = 256;
-        CurveSnapshot sampleHistory[kMaxSampleHistory] = {};
+        DetectorInputSample sampleHistory[kMaxSampleHistory] = {};
         size_t sampleHistoryStart = 0;
         size_t sampleHistoryCount = 0;
         unsigned long sampleHistoryLastMs = 0;
         bool sampleHistoryHasPending = false;
-        CurveSnapshot sampleHistoryPending = {};
-        CurveSnapshot sampleRows[kMaxSampleRows] = {};
+        DetectorInputSample sampleHistoryPending = {};
+        DetectorInputSample sampleRows[kMaxSampleRows] = {};
         size_t sampleRowCount = 0;
 
         // Trial scheduling and aggregate results.
@@ -448,12 +456,11 @@ private:
     // Sequence sample capture helpers.
     void beginSequenceSampleDump(unsigned long trialNumber);
     void clearSequenceSampleDump();
-    void recordSequenceSample(const CurveSnapshot& snapshot);
+    void recordSequenceDetectorInputSample(unsigned long sampleMs, float value);
     void flushSequenceSampleHistory(unsigned long currentSampleMs);
     void printSequenceSampleReport(unsigned long trialNumber) const;
     bool sequenceSampleDumpSelected(unsigned long trialNumber) const;
     unsigned long sequenceSampleDumpEstimatedRows(unsigned long selectedTrials) const;
-    static void sequenceCurveSampleCallback(const CurveSnapshot& snapshot, void* context);
     detection::FrequencyBandMeasurementPacket captureFrequencyMeasurementPacket(const AudioSamplePacket& audioSamplePacket) const;
     const char* sequenceTrialClassificationName(const char* result, long dtMs, long durMs, const SequenceTest::TrialDiagnostics& diagnostics) const;
 

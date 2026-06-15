@@ -1,435 +1,239 @@
-# Detector / Analyzer Combined Split Pass
+# Pass Tooling-2 MVP — Switch SEQ sample dump to detector input
 
-## Purpose
+## Goal
 
-Clean up detector ownership and Analyzer dependencies after the file tree move.
-
-This pass combines two related cleanups:
-
-1. Put detector implementations and detector-specific support files into clear `scalar/` and `frequency/` folders.
-2. Move detector-specific naming, formatting, and detail printing out of Analyzer and into detector-owned files.
-
-The intended result:
+Keep the existing `SAMPLES_*` tooling path, but change what it displays:
 
 ```text
-Analyzer = consumer of DetectorReport
-Detectors = owners of detector-specific detail, names, reject reasons, and print/export formatting
+AudioSignal envelope curve → detector input scalar curve
 ```
 
-Analyzer may still call detector-side helper functions. It should not define scalar/frequency-specific output fields itself.
+This pass is intentionally small. It does **not** introduce a generalized trace architecture.
 
 ---
 
-## Non-Goals
+## Current problem
 
-Do **not** change behavior.
-
-Do **not** change accepted/rejected detection logic.
-
-Do **not** change SEQ output keys, field names, or meaning.
-
-Do **not** split detector lifecycle into tiny files.
-
-Do **not** move Analyzer mode/app shell in this pass unless the filetree pass already did so.
-
-Do **not** add a generic detector interface unless already present.
-
----
-
-## Dependency Rule
-
-Allowed:
+The existing SEQ sample dump prints curve rows with fields like:
 
 ```text
-Analyzer -> detection/analyzer -> detection/detectors -> detection core types
+fields=t,current,env,peak,open
 ```
 
-Forbidden:
+Those fields came from `AudioSignal` / `CurveSnapshot` and are misleading if the useful diagnostic target is now the detector input.
+
+For detector tuning, the more useful output is a simple scalar time curve:
 
 ```text
-DetectionRuntime -> Analyzer
-Detectors -> Analyzer
-Patterns -> Analyzer
-Behavior -> Analyzer
-```
-
-Detector printer/name helpers must live in detection-side folders, not in Analyzer.
-
----
-
-## Target Detector Tree
-
-```text
-src/detection/detectors/
-  DetectorId.h
-  DetectorDescriptor.h
-  DetectorReport.h
-  DetectorReject.h
-  DetectorNames.h
-  DetectorReportPrinter.h
-  DetectorReportPrinter.cpp
-
-  scalar/
-    ScalarTransientDetector.h
-    ScalarTransientDetector.cpp
-    ScalarTransientPrinter.h
-    ScalarTransientPrinter.cpp
-
-  frequency/
-    FrequencyMatchDetector.h
-    FrequencyMatchDetector.cpp
-    FrequencyMatchCriteria.h
-    FrequencyMatchPrinter.h
-    FrequencyMatchPrinter.cpp
-```
-
-Notes:
-
-- `ScalarTransientDetector.*` remains lifecycle-owned and mostly unsplit.
-- `FrequencyMatchCriteria.h` is the renamed former `FrequencyMatchEvaluation.h`.
-- `ScalarTransientPrinter.*` and `FrequencyMatchPrinter.*` own detector-specific display/export text.
-- `DetectorReportPrinter.*` provides the generic entry point used by Analyzer.
-
----
-
-## Step 1 — Move Detector Files into Specific Folders
-
-Move:
-
-```text
-src/detection/detectors/ScalarTransientDetector.*
--> src/detection/detectors/scalar/ScalarTransientDetector.*
-
-src/detection/detectors/FrequencyMatchDetector.*
--> src/detection/detectors/frequency/FrequencyMatchDetector.*
-```
-
-Update all includes.
-
-Expected include direction:
-
-```cpp
-#include "detection/detectors/scalar/ScalarTransientDetector.h"
-#include "detection/detectors/frequency/FrequencyMatchDetector.h"
-```
-
-Compile after this step.
-
----
-
-## Step 2 — Rename FrequencyMatchEvaluation to FrequencyMatchCriteria
-
-Move/rename:
-
-```text
-src/detection/features/FrequencyMatchEvaluation.h
--> src/detection/detectors/frequency/FrequencyMatchCriteria.h
-```
-
-Rename namespace:
-
-```cpp
-FrequencyMatchEvaluation
--> FrequencyMatchCriteria
-```
-
-Keep the same logic:
-
-```text
-Values
-Reason
-evaluate()
-passes()
-buildFailReason()
-parseToken()
-reasonName()
-```
-
-Do not change score/contrast gating semantics.
-
-Important current behavior to preserve:
-
-```text
-If contrast fields are calculated but not part of final pass/fail, keep that unchanged.
-```
-
-Compile after this step.
-
----
-
-## Step 3 — Keep Scalar Criteria Inside ScalarTransientDetector
-
-Do **not** create `ScalarTransientCriteria.h` now.
-
-Reason:
-
-```text
-Scalar transient detection is lifecycle-bound:
-attack threshold -> candidate opens -> peak tracking -> release debounce -> duration gate -> peak gate -> close/accept/reject
-```
-
-This is not a clean stateless criteria packet like FrequencyMatch.
-
-Accepted asymmetry:
-
-```text
-scalar/ScalarTransientDetector.*
-  owns lifecycle + scalar criteria
-
-frequency/FrequencyMatchDetector.*
-  owns lifecycle
-
-frequency/FrequencyMatchCriteria.h
-  owns packet threshold / pass-fail / reason evaluation
+fields=t,value
 ```
 
 ---
 
-## Step 4 — Add Detector-Side Printer / Name Helpers
+## Target output
 
-Create:
-
-```text
-src/detection/detectors/DetectorReportPrinter.h
-src/detection/detectors/DetectorReportPrinter.cpp
-
-src/detection/detectors/scalar/ScalarTransientPrinter.h
-src/detection/detectors/scalar/ScalarTransientPrinter.cpp
-
-src/detection/detectors/frequency/FrequencyMatchPrinter.h
-src/detection/detectors/frequency/FrequencyMatchPrinter.cpp
-```
-
-Generic entry point example:
-
-```cpp
-namespace detection {
-
-void printDetectorDetailLine(const DetectorReport& report);
-const char* detectorIdName(DetectorId id);
-const char* detectorRejectClassName(DetectorRejectClass rejectClass);
-
-}
-```
-
-Detector-specific helper examples:
-
-```cpp
-namespace detection::scalar {
-
-void printScalarTransientDetailLine(const DetectorReport& report);
-const char* transientRejectReasonName(...);
-const char* onsetRejectReasonName(...);
-
-}
-```
-
-```cpp
-namespace detection::frequency {
-
-void printFrequencyMatchDetailLine(const DetectorReport& report);
-const char* frequencyMatchReasonName(FrequencyMatchCriteria::Reason reason);
-
-}
-```
-
-Exact function names may adapt to existing types, but ownership must follow the rule:
+Replace the current sample row header:
 
 ```text
-Detector-specific text lives with detector-specific code.
-Analyzer calls generic detector-side functions.
+SAMPLES_BEGIN trial=<n> trigger_ms=<ms> sample_rate_ms=<step> fields=t,current,env,peak,open
 ```
 
-Compile after this step.
-
----
-
-## Step 5 — Move Detector-Specific Prints out of Analyzer
-
-Search in Analyzer files for scalar/frequency-specific output code, especially in reporter files.
-
-Move logic such as:
+with:
 
 ```text
-detail.scalar.*
-detail.frequency.*
-frequency accepted score/contrast fields
-scalar accepted value/strength fields
-frequency reject reason names
-scalar transient/onset reject reason names
-DetectorId -> printed detector name mappings
-DetectorRejectClass -> printed reject class mappings
+SAMPLES_BEGIN trial=<n> source=detector_input trigger_ms=<ms> sample_rate_ms=<step> fields=t,value
 ```
 
-from Analyzer into:
+Rows become:
 
 ```text
-src/detection/detectors/DetectorReportPrinter.*
-src/detection/detectors/scalar/ScalarTransientPrinter.*
-src/detection/detectors/frequency/FrequencyMatchPrinter.*
+<t>,<value>
 ```
 
-Analyzer should become a consumer:
-
-```cpp
-detection::printDetectorDetailLine(report.detectorReport);
-```
-
-or equivalent.
-
-Do not change visible output keys.
-
-Allowed output after refactor must still include the same fields as before, e.g.:
+Example:
 
 ```text
-detail.scalar.accepted.*
-detail.frequency.accepted.*
-detail.frequency.inspect.*
+SAMPLES_BEGIN trial=3 source=detector_input trigger_ms=123456 sample_rate_ms=1 fields=t,value
+-50,0.12
+-49,0.13
+...
+0,1.84
+1,2.11
+...
+SAMPLES_END trial=3
 ```
 
 ---
 
-## Step 6 — Move Detector-Specific Names out of Analyzer
+## Keep existing command parameters
 
-Analyzer should not own these long-term:
+Keep and document only the real `sample*` parameters:
 
 ```text
-cleanDetectorIdName()
-occurrenceDetectorKindName()
-occurrenceSourceName()          // if detector-specific
-occurrenceTypeName()            // if used as detector display name
-strengthClassName()             // if detector report detail-specific
-evidenceTargetName()            // if frequency/inspector-specific
-frequency reason names
-scalar reason names
+sampleFirst=<n>
+sampleEvery=<n>
+sampleLead=<ms>
+sampleTail=<ms>
+sampleStep=<ms>
+sampleMax=<n>
 ```
 
-Move generic detection names to:
+Meanings:
 
 ```text
-src/detection/detectors/DetectorNames.h/.cpp
+sampleFirst  dump the first N trials
+sampleEvery  dump every Nth trial
+sampleLead   capture window before trigger, in ms
+sampleTail   capture window after trigger, in ms
+sampleStep   output decimation step, in ms
+sampleMax    requested/effective maximum rows
 ```
 
-Move frequency-specific names to:
+Remove or stop documenting stale/unclear parameters:
 
 ```text
-src/detection/detectors/frequency/FrequencyMatchPrinter.*
-```
-
-Move scalar-specific names to:
-
-```text
-src/detection/detectors/scalar/ScalarTransientPrinter.*
-```
-
-If a name is truly Pattern or Inspection vocabulary, move it to the proper stage instead, not to detectors:
-
-```text
-src/detection/patterns/PatternNames.*
-src/detection/inspection/InspectionNames.*
+dumpSamples
+curveFormat
 ```
 
 ---
 
-## Step 7 — Keep Analyzer Report Assembly Generic
+## Implementation scope
 
-Analyzer may still assemble trial reports, but should prefer generic data:
+### 1. Preserve sample dump mechanics
+
+Keep existing mechanics:
 
 ```text
+trial selection
+lead/tail capture window
+sampleStep decimation
+sampleRows buffer
+SAMPLES_BEGIN / rows / SAMPLES_END printer
+```
+
+Do not rewrite row storage yet.
+
+---
+
+### 2. Change source from AudioSignal to detector input
+
+Stop using the existing `AudioSignal` envelope/current/peak/open snapshot as the printed source.
+
+Instead, feed the sample dump with the current detector input scalar.
+
+The detector/runtime owns what `detector_input` means for the active profile.
+
+Examples:
+
+```text
+TonalPulse / FrequencyMatch: frequency match score or equivalent detector input scalar
+Scalar detector: selected scalar input value
+AMP detector: amp envelope / scalar detector input
+```
+
+Analyzer must not interpret the meaning.
+
+---
+
+### 3. Simplify row shape
+
+Old row shape:
+
+```text
+t,current,env,peak,open
+```
+
+New row shape:
+
+```text
+t,value
+```
+
+No fake `current`, `env`, `peak`, or `open` fields.
+
+---
+
+### 4. Update help/docs
+
+Help/docs must say:
+
+```text
+SAMPLES is detector-input curve tooling.
+It is not raw audio.
+It is not the audio envelope curve.
+It is not DetectorReport.
+It is not SEQ_SOURCE / SEQ_INSPECT / SEQ_EXPLAIN.
+It is not canonical Analyzer truth.
+```
+
+Also document the actual row cap behavior:
+
+```text
+sampleMax must be clamped to the real sampleRows capacity.
+The printed/effective max should not imply more rows than storage allows.
+```
+
+---
+
+## Non-goals
+
+Do not add in this pass:
+
+```text
+curve=audio_env|detector_input selection
+fresh-only trace mode
+every-N-fresh decimation
+compact timestamp storage
+multi-channel trace rows
+feature registry
+DetectorReport changes
+PatternResult changes
+SEQ_SOURCE changes
+SEQ_INSPECT changes
+SEQ_EXPLAIN changes
+Analyzer classification changes
+```
+
+---
+
+## Guardrails
+
+Analyzer remains a dumb recorder/printer:
+
+```text
+Detector/runtime produces detector input value.
+Analyzer records/windows/decimates/prints it.
+Analyzer does not derive trial truth from SAMPLES.
+```
+
+Canonical analyzer truth remains:
+
+```text
+SEQ_TRIAL
+SEQ_SOURCE
+SEQ_INSPECT
+SEQ_EXPLAIN
+SEQ_SUMMARY
 DetectorReport
+RejectedCandidateSummary
 PatternResult
-Occurrence
-InspectedOccurrence
-FieldState
-ExpectedEvent / TrialWindow
 ```
 
-Avoid new Analyzer fields like:
-
-```text
-freqScore
-freqContrast
-ampLevel
-scalarPeak
-```
-
-unless they are transitional and already present.
-
-If detector-specific facts are needed in output, route them through detector-owned report detail or detector-owned printer/export helpers.
+`SAMPLES_*` remains neutral diagnostic tooling.
 
 ---
 
-## Step 8 — Do Not Split Detector Lifecycle
-
-Do not create files like:
+## Minimal Codex goal mode
 
 ```text
-ScalarTransientLifecycle.cpp
-ScalarTransientCandidate.cpp
-FrequencyMatchLifecycle.cpp
-FrequencyMatchState.cpp
+Switch the existing SEQ sample dump tooling from AudioSignal curve snapshots to the current detector input scalar. Simplify SAMPLES output fields from t,current,env,peak,open to t,value. Preserve the existing sample dump command parameters: sampleFirst, sampleEvery, sampleLead, sampleTail, sampleStep, sampleMax. Update help/docs so SAMPLES is described as detector-input curve tooling, not raw audio, not audio envelope, and not Analyzer truth. Do not add selectable curve sources, fresh-only tracing, compact storage redesign, feature registry, or DetectorReport changes in this pass.
 ```
-
-Keep lifecycle in:
-
-```text
-ScalarTransientDetector.cpp
-FrequencyMatchDetector.cpp
-```
-
-Allowed split only:
-
-```text
-Detector.cpp  = lifecycle, update, reset, occurrence creation, accept/reject state
-Criteria.h    = stateless criteria where cleanly separable; currently frequency only
-Printer.cpp   = detector-owned text/export formatting
-Report.cpp    = optional later, only if buildReport() becomes too large
-```
-
-Do not create Report split in this pass unless absolutely necessary for compile hygiene.
 
 ---
 
-## Acceptance Criteria
-
-- Project compiles.
-- `ScalarTransientDetector.*` lives under `detection/detectors/scalar/`.
-- `FrequencyMatchDetector.*` lives under `detection/detectors/frequency/`.
-- `FrequencyMatchEvaluation.h` no longer exists.
-- `FrequencyMatchCriteria.h` exists under `detection/detectors/frequency/`.
-- Analyzer no longer contains scalar/frequency-specific detector detail print bodies.
-- Analyzer no longer defines detector-specific reason/name helpers that belong to detectors.
-- Detector-specific output fields are still printed with the same keys and meaning.
-- No SEQ output semantics changed.
-- No detection behavior changed.
-- No dependency from detection or detectors back to Analyzer.
-
----
-
-## Suggested Greps Before Finish
-
-```bash
-grep -R "FrequencyMatchEvaluation" -n src
-
-grep -R "detail.frequency" -n src/modes src/detection/analyzer
-
-grep -R "detail.scalar" -n src/modes src/detection/analyzer
-
-grep -R "ScalarTransientDetector" -n src | head -50
-
-grep -R "FrequencyMatchDetector" -n src | head -50
-```
-
-Expected:
-
-- `FrequencyMatchEvaluation` returns nothing.
-- `detail.frequency` and `detail.scalar` are printed from detector-side printer files, not Analyzer files.
-- Detector includes point to the new scalar/frequency folders.
-
----
-
-## Commit Message
+## Commit message
 
 ```text
-Refactor detector folders and move detector-specific Analyzer formatting to detectors
+AnalyzerTooling: show detector input in SEQ sample dump
 ```

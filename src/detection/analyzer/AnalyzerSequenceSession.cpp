@@ -107,6 +107,9 @@ void AnalyzerApp::startSequenceTest(const PendingSequenceStart& pending) {
     _sequenceTest.sampleDumpTailMs = sampleDumpTailMs;
     _sequenceTest.sampleDumpStepMs = sampleDumpStepMs;
     _sequenceTest.sampleDumpMaxRows = sampleDumpMaxRows == 0 ? 1 : sampleDumpMaxRows;
+    if (_sequenceTest.sampleDumpMaxRows > SequenceTest::kMaxSampleRows) {
+        _sequenceTest.sampleDumpMaxRows = SequenceTest::kMaxSampleRows;
+    }
     _sequenceTest.sampleDumpWarned = false;
     clearSequenceSampleDump();
 
@@ -119,6 +122,8 @@ void AnalyzerApp::startSequenceTest(const PendingSequenceStart& pending) {
     _detection.setFieldStateConfig(selectedProfile.fieldStateConfig);
     _detection.setProfileName(detection::detectionProfileName(selectedProfile.kind));
     _detection.setDiagnosticsEnabled(_sequenceTest.outputConfig.diagnosticsEnabled);
+    _sequenceTest.sampleDumpDetectorSelection = selectedProfile.detectorSelection;
+    _sequenceTest.sampleDumpObservedStream = selectedProfile.scalarTransient.observedStream;
     _freqBandStream.setSampleRateHz(_audioSource.sampleRateHz());
     _freqBandStream.setTargetFrequencyHz(toneHz);
     _freqBandStream.setFrequencyUpdateEverySamples(_sequenceTest.outputConfig.frequencyUpdateEverySamples);

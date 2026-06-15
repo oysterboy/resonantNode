@@ -153,11 +153,11 @@ void AnalyzerApp::printSequenceHelp() {
     Serial.println("SEQ IN: TRIES N");
     Serial.println("SEQ IN: STATUS");
     Serial.println("SEQ IN: [sampleFirst=N] [sampleEvery=N] [sampleLead=MS] [sampleTail=MS] [sampleStep=MS] [sampleMax=N]");
-    Serial.println("SEQ IN: sample dump is rough envelope/amplitude tooling, not RAW capture, not DetectorReport, not SEQ_SOURCE / SEQ_INSPECT / SEQ_EXPLAIN, and not canonical Analyzer truth");
+    Serial.println("SEQ IN: sample dump is detector-input curve tooling, not RAW capture, not the audio envelope curve, not DetectorReport, not SEQ_SOURCE / SEQ_INSPECT / SEQ_EXPLAIN, and not canonical Analyzer truth");
     Serial.println("SEQ IN: sampleMax is a preflight row budget; emitted rows are still capped by the fixed sampleRows capacity");
     Serial.println("SEQ OUT: SEQ start / SEQ running / SEQ_TRIAL / SEQ_INSPECT / SEQ_EXPLAIN / SEQ_SOURCE / SEQ_SUMMARY / SEQ REPORT / AUDIO run");
     Serial.println("SEQ OUT: SAMPLES_BEGIN / SAMPLES_NOTE / SAMPLES_END");
-    Serial.println("SEQ OUT: sample fields are t,current,env,peak,open (peak=smoothed envelope, open=signalMagnitude>0)");
+    Serial.println("SEQ OUT: sample fields are t,value (value is the selected detector input stream)");
     Serial.println("SEQ OBS: passive observe mode for an already-running external emitter");
     Serial.println("SEQ IN: PROFILE TonalPulseFreq|TonalPulseScalar|AmpExperimental");
     Serial.println("SEQ PROFILE TonalPulseFreq");

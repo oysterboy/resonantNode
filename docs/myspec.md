@@ -898,14 +898,15 @@ It must not be presented as detector/pattern/analyzer truth.
 
 SEQ sample dump / curve is neutral developer tooling.
 
-It is rough envelope / amplitude tooling, not RAW capture, not DetectorReport,
-not SEQ_SOURCE / SEQ_INSPECT / SEQ_EXPLAIN, and not canonical Analyzer truth.
+It is detector-input curve tooling, not RAW capture, not the audio envelope
+curve, not DetectorReport, not SEQ_SOURCE / SEQ_INSPECT / SEQ_EXPLAIN, and not
+canonical Analyzer truth.
 
-It prints bounded `CurveSnapshot` rows around selected sequence trials:
+It prints bounded detector-input rows around selected sequence trials:
 
 ```text
-SAMPLES_BEGIN trial=<n> trigger_ms=<ms> sample_rate_ms=<step> fields=t,current,env,peak,open
-SAMPLES_NOTE trial=<n> rows_cap=<fixed> sample_max_budget=<budget> peak=smoothed_env open=signalMagnitude>0
+SAMPLES_BEGIN trial=<n> source=detector_input trigger_ms=<ms> sample_rate_ms=<step> fields=t,value
+SAMPLES_NOTE trial=<n> input=<selected_detector_input> rows_cap=<fixed> sample_max_budget=<budget> value=detector_input_scalar
 ...
 SAMPLES_END trial=<n>
 ```
@@ -923,9 +924,6 @@ sampleMax
 
 `sampleMax` is a preflight row budget, but the emitted rows are still capped by
 the fixed `sampleRows` capacity.
-
-The `peak` column is the smoothed envelope value, not a detector peak.
-The `open` column means `signalMagnitude > 0`, not detector-open state.
 
 ---
 

@@ -1,0 +1,26 @@
+﻿# LOG-001 Batch Run
+
+Status: running
+
+## Snapshot
+- Profile: `TonalPulseScalar`
+- Mode: Codex-run
+- Launch command: `SEQ start profile=TonalPulseScalar tries=3 mode=source when=all verbose=1`
+- Param snapshot command: `PARAM STATUS`
+- Port: `COM6`
+- Baud: `115200`
+- Total launches: `2`
+- Block size: `1`
+- Blocks: `2`
+
+## Log Layout
+
+- `session.log` records the full serial session.
+- `run_01.log` through `run_10.log` capture the block transcripts.
+- `block_01_summary.md` through `block_10_summary.md` capture the block decisions.
+- `progress.md` is updated while the campaign runs.
+
+## Notes
+
+- The campaign uses the current scalar snapshot unless a block decision changes it later.
+- Keep the saved batch folder self-contained.

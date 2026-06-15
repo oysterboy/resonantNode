@@ -208,6 +208,26 @@ function Format-ParamCommand {
     return 'PARAM ' + ($parts -join ' ')
 }
 
+function Format-RunLabel {
+    param([Parameter(Mandatory = $true)][int]$Value)
+
+    if ($Value -gt 0) {
+        return '{0:D2}' -f $Value
+    }
+
+    return '00'
+}
+
+function Get-LatestBlockName {
+    param([Parameter(Mandatory = $true)][System.Collections.IDictionary]$BlockSummaries)
+
+    if ($BlockSummaries.Keys.Count -gt 0) {
+        return (($BlockSummaries.Keys | Sort-Object | Select-Object -Last 1))
+    }
+
+    return 'unknown'
+}
+
 function Try-ReadLine {
     param(
         [Parameter(Mandatory = $true)]$Port
@@ -473,8 +493,9 @@ $lockInfo = Open-CampaignLock -Path $lockPath -StatePath $statePath -BatchRootVa
         '00'
     }
     $initialTune = Format-ParamCommand -Snapshot (Get-BlockTuneSnapshot -BlockIndex ([int][math]::Ceiling([double][Math]::Max(1, $StartRun) / [double]$BlockSize)))
+    $initialRunLabel = Format-RunLabel -Value $resumeCurrentRun
     Write-CampaignState -Path $statePath -Status 'running' -ProfileName $Profile -BatchRootValue $batchRoot -PidValue $PID -StartRunValue $StartRun -CurrentRunValue $resumeCurrentRun -CurrentBlockValue $resumeCurrentBlock -CurrentTuneValue $initialTune -LatestSummaryValue 'none'
-    Write-CampaignHeartbeat -Path $heartbeatPath -Status 'starting' -ProfileName $Profile -BatchRootValue $batchRoot -CurrentBlockValue $resumeCurrentBlock -CurrentRunValue (if ($resumeCurrentRun -gt 0) { '{0:D2}' -f $resumeCurrentRun } else { '00' }) -CurrentTuneValue $initialTune -LatestSummaryValue 'none'
+    Write-CampaignHeartbeat -Path $heartbeatPath -Status 'starting' -ProfileName $Profile -BatchRootValue $batchRoot -CurrentBlockValue $resumeCurrentBlock -CurrentRunValue $initialRunLabel -CurrentTuneValue $initialTune -LatestSummaryValue 'none'
 
     $port = New-Object System.IO.Ports.SerialPort $PortName, $BaudRate, 'None', 8, 'One'
     $port.DtrEnable = $false
@@ -493,7 +514,7 @@ $lockInfo = Open-CampaignLock -Path $lockPath -StatePath $statePath -BatchRootVa
             Append-TextLine -Path $sessionPath -Line $line
         }
     }
-    Write-CampaignHeartbeat -Path $heartbeatPath -Status 'booted' -ProfileName $Profile -BatchRootValue $batchRoot -CurrentBlockValue $resumeCurrentBlock -CurrentRunValue (if ($resumeCurrentRun -gt 0) { '{0:D2}' -f $resumeCurrentRun } else { '00' }) -CurrentTuneValue $initialTune -LatestSummaryValue 'none'
+    Write-CampaignHeartbeat -Path $heartbeatPath -Status 'booted' -ProfileName $Profile -BatchRootValue $batchRoot -CurrentBlockValue $resumeCurrentBlock -CurrentRunValue $initialRunLabel -CurrentTuneValue $initialTune -LatestSummaryValue 'none'
 
     $blockSummaries = @{}
     $resumeTuneBlockIndex = $null
@@ -730,23 +751,29 @@ $lockInfo = Open-CampaignLock -Path $lockPath -StatePath $statePath -BatchRootVa
         "- failure_message: $failureMessage"
     ) -Encoding utf8
 
-    Write-CampaignState -Path $statePath -Status 'failed' -ProfileName $Profile -BatchRootValue $batchRoot -PidValue $PID -StartRunValue $StartRun -CurrentRunValue $(if ($null -ne $runIndex) { $runIndex } else { 0 }) -CurrentBlockValue $(if ([string]::IsNullOrWhiteSpace($blockName)) { 'unknown' } else { $blockName }) -CurrentTuneValue $(if ($null -ne $tuneCommand) { $tuneCommand } else { 'unknown' }) -LatestSummaryValue $(if ($null -ne $summaryLine) { $summaryLine } else { $failureMessage })
-    Write-CampaignHeartbeat -Path $heartbeatPath -Status 'failed' -ProfileName $Profile -BatchRootValue $batchRoot -CurrentBlockValue $(if ([string]::IsNullOrWhiteSpace($blockName)) { 'unknown' } else { $blockName }) -CurrentRunValue $(if ($null -ne $runIndex) { '{0:D2}' -f $runIndex } else { 'unknown' }) -CurrentTuneValue $(if ($null -ne $tuneCommand) { $tuneCommand } else { 'unknown' }) -LatestSummaryValue $(if ($null -ne $summaryLine) { $summaryLine } else { $failureMessage })
+    $failureBlockName = if ([string]::IsNullOrWhiteSpace($blockName)) { 'unknown' } else { $blockName }
+    $failureRunLabel = if ($null -ne $runIndex) { Format-RunLabel -Value $runIndex } else { 'unknown' }
+    $failureTune = if ($null -ne $tuneCommand) { $tuneCommand } else { 'unknown' }
+    $failureSummary = if ($null -ne $summaryLine) { $summaryLine } else { $failureMessage }
+    Write-CampaignState -Path $statePath -Status 'failed' -ProfileName $Profile -BatchRootValue $batchRoot -PidValue $PID -StartRunValue $StartRun -CurrentRunValue $(if ($null -ne $runIndex) { $runIndex } else { 0 }) -CurrentBlockValue $failureBlockName -CurrentTuneValue $failureTune -LatestSummaryValue $failureSummary
+    Write-CampaignHeartbeat -Path $heartbeatPath -Status 'failed' -ProfileName $Profile -BatchRootValue $batchRoot -CurrentBlockValue $failureBlockName -CurrentRunValue $failureRunLabel -CurrentTuneValue $failureTune -LatestSummaryValue $failureSummary
     throw
 } finally {
     if (-not $campaignCompleted -and -not $campaignFailed) {
         Append-TextLine -Path $sessionPath -Line ("campaign_stopped_without_completion={0}" -f (Get-Date -Format o))
+        $stoppedBlockName = Get-LatestBlockName -BlockSummaries $blockSummaries
+        $stoppedRunLabel = if ($StartRun) { Format-RunLabel -Value ([Math]::Max(0, $StartRun - 1)) } else { 'unknown' }
         Set-Content -LiteralPath $progressPath -Value @(
             '# LOG-001 Progress',
             '',
             'Status: stopped',
             '',
-            "- current_block: $(if ($blockSummaries.Keys.Count -gt 0) { (($blockSummaries.Keys | Sort-Object | Select-Object -Last 1)) } else { 'unknown' })",
-            "- current_run: $(if ($StartRun) { '{0:D2}' -f ([Math]::Max(0, $StartRun - 1)) } else { 'unknown' })",
+            "- current_block: $stoppedBlockName",
+            "- current_run: $stoppedRunLabel",
             "- latest_summary: unknown"
         ) -Encoding utf8
-        Write-CampaignState -Path $statePath -Status 'stopped' -ProfileName $Profile -BatchRootValue $batchRoot -PidValue $PID -StartRunValue $StartRun -CurrentRunValue $(if ($StartRun) { [Math]::Max(0, $StartRun - 1) } else { 0 }) -CurrentBlockValue $(if ($blockSummaries.Keys.Count -gt 0) { (($blockSummaries.Keys | Sort-Object | Select-Object -Last 1)) } else { 'unknown' }) -CurrentTuneValue 'unknown' -LatestSummaryValue 'unknown'
-        Write-CampaignHeartbeat -Path $heartbeatPath -Status 'stopped' -ProfileName $Profile -BatchRootValue $batchRoot -CurrentBlockValue $(if ($blockSummaries.Keys.Count -gt 0) { (($blockSummaries.Keys | Sort-Object | Select-Object -Last 1)) } else { 'unknown' }) -CurrentRunValue $(if ($StartRun) { '{0:D2}' -f ([Math]::Max(0, $StartRun - 1)) } else { 'unknown' }) -CurrentTuneValue 'unknown' -LatestSummaryValue 'unknown'
+        Write-CampaignState -Path $statePath -Status 'stopped' -ProfileName $Profile -BatchRootValue $batchRoot -PidValue $PID -StartRunValue $StartRun -CurrentRunValue $(if ($StartRun) { [Math]::Max(0, $StartRun - 1) } else { 0 }) -CurrentBlockValue $stoppedBlockName -CurrentTuneValue 'unknown' -LatestSummaryValue 'unknown'
+        Write-CampaignHeartbeat -Path $heartbeatPath -Status 'stopped' -ProfileName $Profile -BatchRootValue $batchRoot -CurrentBlockValue $stoppedBlockName -CurrentRunValue $stoppedRunLabel -CurrentTuneValue 'unknown' -LatestSummaryValue 'unknown'
     }
     if ($lockWriter -ne $null) {
         $lockWriter.Dispose()

@@ -1,0 +1,19 @@
+﻿root=C:\Users\malte\Documents\PlatformIO\Projects\ESP32_learn01\tools\..\logs\seq-tests\20260613_223020-log-001-tonal-pulse-scalar
+mode=Codex-run
+profile=TonalPulseScalar
+port=COM6
+baud=115200
+total_runs=100
+block_size=10
+start_run=1
+launch_command=SEQ start profile=TonalPulseScalar tries=50 mode=source when=all verbose=1
+param_status_command=PARAM STATUS
+resume_mode=False
+started_at=2026-06-13T22:30:20.1227947+02:00
+campaign_failed=2026-06-13T22:30:20.2779984+02:00
+campaign_failed_type=System.Management.Automation.CommandNotFoundException
+campaign_failed_message=Die Benennung "if" wurde nicht als Name eines Cmdlet, einer Funktion, einer Skriptdatei oder eines ausführbaren Programms erkannt. Überprüfen Sie die Schreibweise des Namens, oder ob der Pfad korrekt ist (sofern enthalten), und wiederholen Sie den Vorgang.
+campaign_failed_location=line=477 column=175
+campaign_failed_stack_begin
+bei <ScriptBlock>, C:\Users\malte\Documents\PlatformIO\Projects\ESP32_learn01\tools\run_log001_campaign.ps1: Zeile 477
+campaign_failed_stack_end

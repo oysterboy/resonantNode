@@ -243,9 +243,6 @@ struct FrequencyBandMeasurementPacket {
     float neighborBandPowerValue = 0.0f;
     float lowerBandPowerValue = 0.0f;
     float upperBandPowerValue = 0.0f;
-    float lowerBandScoreValue = 0.0f;
-    float upperBandScoreValue = 0.0f;
-    float neighborBandPowerMaxValue = 0.0f;
     float totalEnergyValue = 0.0f;
     float targetBandContrastValue = 0.0f;
 };

@@ -36,10 +36,7 @@ public:
     float lastTargetBandPowerValue() const;
     float lastLowerBandPowerValue() const;
     float lastUpperBandPowerValue() const;
-    float lastLowerBandScoreValue() const;
-    float lastUpperBandScoreValue() const;
     float lastNeighborBandPowerValue() const;
-    float lastNeighborBandPowerMaxValue() const;
     float lastTotalEnergyValue() const;
     float lastTargetBandContrastValue() const;
     float bandSpacingHz() const;
@@ -83,10 +80,7 @@ private:
     float _lastTargetBandPowerValue = 0.0f;
     float _lastLowerBandPowerValue = 0.0f;
     float _lastUpperBandPowerValue = 0.0f;
-    float _lastLowerBandScoreValue = 0.0f;
-    float _lastUpperBandScoreValue = 0.0f;
     float _lastNeighborBandPowerValue = 0.0f;
-    float _lastNeighborBandPowerMaxValue = 0.0f;
     float _lastTotalEnergyValue = 0.0f;
     float _lastTargetBandContrastValue = 0.0f;
 

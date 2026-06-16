@@ -74,7 +74,9 @@ float exactTrimmedMean(const float* values, size_t count, float trimFraction) {
 bool FeatureHistory::isSupportedStream(FeatureStreamId stream) {
     switch (stream) {
         case FeatureStreamId::AmpEnvelope:
+        case FeatureStreamId::FrequencyTarget:
         case FeatureStreamId::FrequencyScore:
+        case FeatureStreamId::FrequencyTargetBand:
         case FeatureStreamId::FrequencyContrast:
             return true;
         case FeatureStreamId::Unknown:
@@ -87,10 +89,14 @@ size_t FeatureHistory::streamIndex(FeatureStreamId stream) {
     switch (stream) {
         case FeatureStreamId::AmpEnvelope:
             return 0U;
-        case FeatureStreamId::FrequencyScore:
+        case FeatureStreamId::FrequencyTarget:
             return 1U;
-        case FeatureStreamId::FrequencyContrast:
+        case FeatureStreamId::FrequencyScore:
             return 2U;
+        case FeatureStreamId::FrequencyTargetBand:
+            return 3U;
+        case FeatureStreamId::FrequencyContrast:
+            return 4U;
         case FeatureStreamId::Unknown:
         default:
             return 0U;

@@ -24,7 +24,7 @@ Common enum / selector types used in this file:
 ```text
 DetectionProfileKind { TonalPulseFreq, AmpExperimental, TonalPulseScalar }
 DetectorSelection { FrequencyMatch, ScalarTransient }
-FeatureStreamId { AmpEnvelope, FrequencyScore, FrequencyContrast }
+FeatureStreamId { AmpEnvelope, FrequencyTarget, FrequencyScore, FrequencyTargetBand, FrequencyContrast }
 EvidenceTarget { None, SupportStrength, FrequencyScoreStrength, FrequencyContrastQuality, TargetBandStrength }
 StrengthClass { Unknown, None, Weak, Medium, Strong }
 InspectionModuleKind { None, ScalarFeatureStrength }
@@ -109,7 +109,7 @@ inline DetectionProfile makeTonalPulseScalarProfile() {
     // Identity and occurrence routing.
     profile.kind = DetectionProfileKind::TonalPulseScalar;
     profile.detectorSelection = DetectorSelection::ScalarTransient;
-    profile.scalarTransient.observedStream = FeatureStreamId::FrequencyScore;
+    profile.scalarTransient.observedStream = FeatureStreamId::FrequencyTargetBand;
     profile.scalarTransient.onsetDetectionThreshold = 20000.0f;
     profile.scalarTransient.onsetReleaseThreshold = 5000.0f;
     profile.scalarTransient.cooldownAfterOnsetMs = 50;
@@ -123,7 +123,7 @@ inline DetectionProfile makeTonalPulseScalarProfile() {
     profile.inspectionPlan = {};
     profile.inspectionPlan.modules[0].kind = InspectionModuleKind::ScalarFeatureStrength;
     profile.inspectionPlan.modules[0].target = EvidenceTarget::FrequencyScoreStrength;
-    profile.inspectionPlan.modules[0].scalar.stream = FeatureStreamId::FrequencyScore;
+    profile.inspectionPlan.modules[0].scalar.stream = FeatureStreamId::FrequencyTargetBand;
     profile.inspectionPlan.modules[0].scalar.mode = ScalarInspectionMode::PeakCentered;
     profile.inspectionPlan.modules[0].scalar.supportStrength.strongPeakThreshold = 25000.0f;
     profile.inspectionPlan.modules[0].scalar.supportStrength.mediumPeakThreshold = 15000.0f;

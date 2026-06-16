@@ -203,6 +203,10 @@ void AnalyzerApp::printAudioRunSummary() const {
         : 0UL;
     const unsigned long freqHistoryScoreRecords =
         _detection.featureHistory().sampleCount(detection::FeatureStreamId::FrequencyScore);
+    const unsigned long freqHistoryTargetRecords =
+        _detection.featureHistory().sampleCount(detection::FeatureStreamId::FrequencyTarget);
+    const unsigned long freqHistoryTargetBandRecords =
+        _detection.featureHistory().sampleCount(detection::FeatureStreamId::FrequencyTargetBand);
     const unsigned long freqHistoryContrastRecords =
         _detection.featureHistory().sampleCount(detection::FeatureStreamId::FrequencyContrast);
 
@@ -215,8 +219,12 @@ void AnalyzerApp::printAudioRunSummary() const {
     Serial.print(freqAgeSamples);
     Serial.print(" computed_at_sample=");
     Serial.print(freqComputedAtSample);
+    Serial.print(" history_target_records=");
+    Serial.print(freqHistoryTargetRecords);
     Serial.print(" history_score_records=");
     Serial.print(freqHistoryScoreRecords);
+    Serial.print(" history_target_band_records=");
+    Serial.print(freqHistoryTargetBandRecords);
     Serial.print(" history_contrast_records=");
     Serial.println(freqHistoryContrastRecords);
 }

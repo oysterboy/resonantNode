@@ -1,66 +1,72 @@
-# TonalPulseScalar - Use Existing FrequencyScore Path
+# TonalPulseScalar 3-Bin Logging Campaign
 
 ## Goal
 
-Update the current scalar pass so `TonalPulseScalar` can use the already-selectable frequency-score stream:
+Run the next LOG-001-style scalar logging campaign with `TonalPulseScalar` using the new 3-bin frequency-score stream.
+
+The campaign should use the existing selector path:
 
 - `profile.scalarTransient.observedStream = FeatureStreamId::FrequencyScore`
 
-Do not add a new `ScalarInputMode` selection layer in this pass. The selector already exists; the work now is to route the scalar through the 3-bin frequency-score path cleanly.
-
 ## Scope
 
-This pass is only about the immediate scalar input wiring.
+This pass is for the next logging campaign only.
 
 In scope:
 
-- keep the existing `scalarTransient.observedStream` selection mechanism
-- make `TonalPulseScalar` use the 3-bin frequency-score input path instead of the older frequency-strength path
-- keep the change narrow enough to compare against the current scalar behavior
+- one campaign folder for the whole run
+- 10 blocks of 1 launch
+- `TonalPulseScalar` as the active profile
+- the existing 3-bin `FrequencyScore` scalar stream
+- the standard LOG-001 summary files and per-run logs
+- recording the requested tune and the applied tune per block
 
-Out of scope for this pass:
+Out of scope:
 
-- new analyzer/log fields for 3-bin facts
-- new `featureOk` dominance/quality rules
+- new detector logic
+- new analyzer fields
+- new `ScalarInputMode` plumbing
 - Hann windowing
-- broad DSP abstractions
-- generic plugin or registry work
-- detector lifecycle changes outside the scalar input path
+- broad refactors outside the logging workflow
 
 ## Allowed Files
 
-- `src/detection/DetectionProfile.h`
-- `src/detection/DetectionRuntime.cpp`
-- `src/detection/features/FreqBandStream.h`
-- `src/detection/features/FrequencyMeasurementPacketBuilder.h`
-- `src/detection/inspection/InspectorTypes.h`
-- `src/detection/detectors/frequency/FrequencyMatchCriteria.h`
-- `src/detection/detectors/frequency/FrequencyMatchDetector.cpp`
-- `src/detection/analyzer/AnalyzerSequenceSession.cpp`
-- `src/detection/analyzer/AnalyzerCommands.cpp`
+- `tools/logging/+ create_log001_batch_scaffold.ps1`
+- `tools/logging/+ run_log001_campaign.ps1`
+- `tools/logging/tuning-run-process.md`
+- `tools/logging/process-changelog.md`
+- generated files under `tools/logs/seq-tests/<campaign-folder>/`
 
 ## Forbidden Files
 
 - `docs/myspec.md`
-- `docs/changelog.md`
-- unrelated behavior/output modules
-- any generic refactor outside the scalar input path
+- unrelated detection source files
+- unrelated behavior/output code
+- any broad refactor outside the campaign runner and its generated logs
 
 ## Exact Changes
 
-1. Keep `TonalPulseScalar` wired through the existing `scalarTransient.observedStream` selection.
-2. Confirm the scalar uses the frequency-score input path already exposed by the frequency measurement pipeline.
-3. If a code path still reads as "frequency strength" for this profile, redirect it to the existing 3-bin score source rather than introducing a second selector.
-4. Leave the later 3-bin quality booleans, logging fields, and analyzer report expansion for a follow-up pass.
+1. Create one new campaign folder for this pass.
+2. Use 10 blocks of 1 launch.
+3. Keep the run shape aligned with the current LOG-001 process:
+   - `SEQ start profile=TonalPulseScalar tries=50 mode=source when=all verbose=1`
+4. Keep the scalar profile on the existing 3-bin frequency-score path.
+5. Use the current two-phase tuning ladder:
+   - blocks 1-5: hold `scalar_max_duration_ms=220` and `scalar_onset_threshold=19000`, then sweep `scalar_release_debounce_ms` from `30` down to `10`
+   - blocks 6-10: keep the best debounce from phase 1, then sweep `scalar_release_threshold` from `5000` down to `1000`
+6. Record the requested tune and the confirmed applied tune in each block summary.
 
 ## Success Criteria
 
-- `TonalPulseScalar` uses the existing `FeatureStreamId::FrequencyScore` selection path.
-- No new `ScalarInputMode` plumbing is introduced.
-- The pass stays small enough that we can compare the old and new scalar input behavior directly.
+- The campaign is organized as one folder with 10 blocks of 1.
+- The active profile is `TonalPulseScalar`.
+- The scalar input uses `FeatureStreamId::FrequencyScore`.
+- Each block summary reflects the applied tune, not just the requested tune.
+- The run artifacts include `README.md`, `session.log`, `heartbeat.md`, `campaign_state.json`, `progress.md`, `run_01.log` through `run_10.log`, and `block_01_summary.md` through `block_10_summary.md`.
 
 ## Verification
 
-- build the analyzer/runtime targets that touch scalar detection
-- confirm the scalar profile still selects `FeatureStreamId::FrequencyScore`
-- sanity-check the current sequence/analyzer output for the scalar profile
+- confirm the scaffold/runner created a single campaign folder
+- confirm the block summaries show the requested and applied tuning values
+- confirm the per-run logs are present for all 10 blocks
+- sanity-check that the campaign stayed on `TonalPulseScalar` with `FrequencyScore`

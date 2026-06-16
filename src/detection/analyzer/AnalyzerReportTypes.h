@@ -182,8 +182,12 @@ inline const char* scalarObservedStreamDisplayName(detection::FeatureStreamId va
     switch (value) {
         case detection::FeatureStreamId::AmpEnvelope:
             return "Scalar";
+        case detection::FeatureStreamId::FrequencyTarget:
+            return "FrequencyTarget";
         case detection::FeatureStreamId::FrequencyScore:
             return "FrequencyScore";
+        case detection::FeatureStreamId::FrequencyTargetBand:
+            return "FrequencyTargetBand";
         case detection::FeatureStreamId::FrequencyContrast:
             return "FrequencyContrast";
         case detection::FeatureStreamId::Unknown:

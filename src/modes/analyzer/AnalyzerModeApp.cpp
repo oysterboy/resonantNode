@@ -63,7 +63,11 @@ float sequenceSampleDumpInputValue(detection::DetectorSelection detectorSelectio
             switch (observedStream) {
                 case detection::FeatureStreamId::AmpEnvelope:
                     return audioSamplePacket.audioMagnitudeValue;
+                case detection::FeatureStreamId::FrequencyTarget:
+                    return frequencyEvidence.targetBandPowerValue;
                 case detection::FeatureStreamId::FrequencyScore:
+                    return frequencyEvidence.targetBandScoreValue;
+                case detection::FeatureStreamId::FrequencyTargetBand:
                     return frequencyEvidence.targetBandScoreValue;
                 case detection::FeatureStreamId::FrequencyContrast:
                     return frequencyEvidence.targetBandContrastValue;

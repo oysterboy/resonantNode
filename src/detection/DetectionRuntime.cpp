@@ -13,7 +13,11 @@ float selectedScalarValue(const AudioSamplePacket& audioSamplePacket, const Freq
     switch (stream) {
         case FeatureStreamId::AmpEnvelope:
             return audioSamplePacket.audioMagnitudeValue;
+        case FeatureStreamId::FrequencyTarget:
+            return frequencyEvidence.targetBandPowerValue;
         case FeatureStreamId::FrequencyScore:
+            return frequencyEvidence.targetBandScoreValue;
+        case FeatureStreamId::FrequencyTargetBand:
             return frequencyEvidence.targetBandScoreValue;
         case FeatureStreamId::FrequencyContrast:
             return frequencyEvidence.targetBandContrastValue;

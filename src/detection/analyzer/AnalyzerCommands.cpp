@@ -5,6 +5,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+bool waitForEmitterAck(const char* expectedPrefix, unsigned long timeoutMs);
+
 namespace {
 
 //PARAM TUNING TEMPORARY
@@ -722,6 +724,11 @@ void AnalyzerApp::handleUsbLine(const char* line) {
 
     if (startsWithTokenIgnoreCase(line, "EMIT ")) {
         if (startsWithTokenIgnoreCase(line, "EMIT CHIRP")) {
+            sendEmitterCommand("MODE REMOTE");
+            if (!waitForEmitterAck("OK MODE REMOTE", 1500)) {
+                Serial.println("ERR EMIT CHIRP emitter_remote_claim_timeout");
+                return;
+            }
             sendEmitterCommand(line + 5);
             Serial.println("OK EMIT CHIRP");
             return;

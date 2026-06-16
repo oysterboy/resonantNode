@@ -6,6 +6,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+bool waitForEmitterAck(const char* expectedPrefix, unsigned long timeoutMs);
+
 namespace {
 
 constexpr unsigned long kRawCaptureFlushSamples = 256;
@@ -102,6 +104,17 @@ void AnalyzerApp::runRawBandTrigger(unsigned long toneHz,
     uint32_t discardedSampleTimeUs = 0;
     while (flushedSamples < kRawCaptureFlushSamples && _audioSource.readRawSample(discardedSample, discardedSampleTimeUs)) {
         ++flushedSamples;
+    }
+
+    auto claimEmitterRemoteControl = [&]() -> bool {
+        sendEmitterCommand("MODE REMOTE");
+        return waitForEmitterAck("OK MODE REMOTE", 1500);
+    };
+
+    if (!claimEmitterRemoteControl()) {
+        Serial.println("RAWBAND_ERR emitter_remote_claim_timeout");
+        free(rawBuffer);
+        return;
     }
 
     const unsigned long captureId = ++_rawCaptureSequenceId;
@@ -324,6 +337,24 @@ void AnalyzerApp::runRawTrigger(unsigned long toneHz,
     uint32_t discardedSampleTimeUs = 0;
     while (flushedSamples < kRawCaptureFlushSamples && _audioSource.readRawSample(discardedSample, discardedSampleTimeUs)) {
         ++flushedSamples;
+    }
+
+    auto claimEmitterRemoteControl = [&]() -> bool {
+        sendEmitterCommand("MODE REMOTE");
+        return waitForEmitterAck("OK MODE REMOTE", 1500);
+    };
+
+    if (!claimEmitterRemoteControl()) {
+        Serial.println("RAW_ERR emitter_remote_claim_timeout");
+        if (preRingBuffer != nullptr) {
+            free(preRingBuffer);
+        }
+        if (preRingTimeBuffer != nullptr) {
+            free(preRingTimeBuffer);
+        }
+        free(rawBuffer);
+        free(sampleTimeMsBuffer);
+        return;
     }
 
     const unsigned long captureId = ++_rawCaptureSequenceId;

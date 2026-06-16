@@ -1,1 +1,0 @@
-Physical setup: 70cm distance, directional. Some more out side nois in last 10 runs.

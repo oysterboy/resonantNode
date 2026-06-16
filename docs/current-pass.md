@@ -1,178 +1,66 @@
-# Codex Instruction — Detector Internal Responsibility Split
+# TonalPulseScalar - Use Existing FrequencyScore Path
 
 ## Goal
 
-Clean up detector implementation structure after moving detector-specific Analyzer details into detector-owned code.
+Update the current scalar pass so `TonalPulseScalar` can use the already-selectable frequency-score stream:
 
-Detectors should continue to own:
-- actual detection lifecycle
-- occurrence emission
-- detector-specific diagnostics
-- detector-specific names / text export / printer helpers
+- `profile.scalarTransient.observedStream = FeatureStreamId::FrequencyScore`
 
-But internally, each detector should be split by responsibility so the code is easier to read and maintain.
+Do not add a new `ScalarInputMode` selection layer in this pass. The selector already exists; the work now is to route the scalar through the 3-bin frequency-score path cleanly.
 
-## Target file shape
+## Scope
 
-```text
-src/detection/detectors/scalar/
-  ScalarTransientDetector.h
-  ScalarTransientDetector.cpp
-  ScalarTransientOccurrence.cpp
-  ScalarTransientReport.cpp
-  ScalarTransientText.cpp
+This pass is only about the immediate scalar input wiring.
 
-src/detection/detectors/frequency/
-  FrequencyMatchDetector.h
-  FrequencyMatchDetector.cpp
-  FrequencyMatchCriteria.h
-  FrequencyMatchOccurrence.cpp
-  FrequencyMatchReport.cpp
-  FrequencyMatchText.cpp
-Responsibility rules
-*Detector.cpp
+In scope:
 
-Keep the live decision machine here.
+- keep the existing `scalarTransient.observedStream` selection mechanism
+- make `TonalPulseScalar` use the 3-bin frequency-score input path instead of the older frequency-strength path
+- keep the change narrow enough to compare against the current scalar behavior
 
-Contains:
+Out of scope for this pass:
 
-constructor / reset / begin if present
-update(...)
-candidate lifecycle
-threshold / gate application
-actual accept / reject decision flow
-detector state transitions
-private lifecycle helpers such as updateOnsetStage(...), updateTransientStage(...), pending open/hold/close logic
+- new analyzer/log fields for 3-bin facts
+- new `featureOk` dominance/quality rules
+- Hann windowing
+- broad DSP abstractions
+- generic plugin or registry work
+- detector lifecycle changes outside the scalar input path
 
-Do not split lifecycle into tiny state-machine files.
+## Allowed Files
 
-*Occurrence.cpp
+- `src/detection/DetectionProfile.h`
+- `src/detection/DetectionRuntime.cpp`
+- `src/detection/features/FreqBandStream.h`
+- `src/detection/features/FrequencyMeasurementPacketBuilder.h`
+- `src/detection/inspection/InspectorTypes.h`
+- `src/detection/detectors/frequency/FrequencyMatchCriteria.h`
+- `src/detection/detectors/frequency/FrequencyMatchDetector.cpp`
+- `src/detection/analyzer/AnalyzerSequenceSession.cpp`
+- `src/detection/analyzer/AnalyzerCommands.cpp`
 
-Move accepted occurrence construction and emission here.
+## Forbidden Files
 
-Contains:
+- `docs/myspec.md`
+- `docs/changelog.md`
+- unrelated behavior/output modules
+- any generic refactor outside the scalar input path
 
-construction of Occurrence
-pending occurrence snapshot/copy
-occurrence id / timing / strength fields copied into compact occurrence
-popOccurrence(...)
-accepted occurrence pending reset/update helpers
+## Exact Changes
 
-Keep behavior identical.
+1. Keep `TonalPulseScalar` wired through the existing `scalarTransient.observedStream` selection.
+2. Confirm the scalar uses the frequency-score input path already exposed by the frequency measurement pipeline.
+3. If a code path still reads as "frequency strength" for this profile, redirect it to the existing 3-bin score source rather than introducing a second selector.
+4. Leave the later 3-bin quality booleans, logging fields, and analyzer report expansion for a follow-up pass.
 
-*Report.cpp
+## Success Criteria
 
-Move detector diagnostic report construction here.
+- `TonalPulseScalar` uses the existing `FeatureStreamId::FrequencyScore` selection path.
+- No new `ScalarInputMode` plumbing is introduced.
+- The pass stays small enough that we can compare the old and new scalar input behavior directly.
 
-Contains:
+## Verification
 
-buildReport(...)
-accepted/rejected report detail population
-selected reject summary population
-report reset helpers where report-specific
-copying detector-owned diagnostic fields into DetectorReport
-
-Do not change report field names, values, or output semantics.
-
-*Text.cpp
-
-Move detector-specific text/export helpers here.
-
-Contains:
-
-detector-specific reason names
-reject class names
-field labels
-detector-specific detail printer/export helpers used by Analyzer
-scalar/frequency-specific text that Analyzer should not define directly
-
-Analyzer may call detector-owned text/printer helpers, but Analyzer must not know scalar/frequency field semantics.
-
-FrequencyMatchCriteria.h
-
-Keep as the stateless frequency gate/criteria sidecar.
-
-Contains:
-
-Values
-Reason
-evaluate(...)
-passes(...)
-reason classification helpers
-parsing helpers only if already present and not worth moving yet
-
-Do not create ScalarTransientCriteria.h in this pass. Scalar criteria are lifecycle-bound and stay in ScalarTransientDetector.cpp.
-
-Dependency rule
-
-Detector ownership remains:
-
-Analyzer -> detector-owned reports/text helpers -> detector internals
-
-Never:
-
-Detector -> Analyzer
-
-Analyzer should consume:
-
-generic DetectorReport
-compact Occurrence
-detector-owned text/printer APIs
-
-Analyzer should not directly define:
-
-scalar detail labels
-frequency detail labels
-detector-specific reject reason strings
-detector-specific print logic
-RB / node compile concern
-
-Keep detector runtime core separable from heavy text/printer strings.
-
-Where practical, guard text/printer code with:
-
-#if RESONANT_ENABLE_DETECTION_TEXT
-...
-#endif
-
-or equivalent existing build flag.
-
-Do not force RB/runtime node builds to link large Analyzer-only text/printer code unless currently unavoidable.
-
-Non-goals
-
-Do not:
-
-change detection behavior
-retune thresholds
-change output keys
-change report values
-change public Analyzer output semantics
-introduce new runtime classes/objects unless absolutely necessary
-move detector responsibility back into Analyzer
-split lifecycle into many tiny files
-make public fields private in this pass
-redesign DetectorReport
-Suggested order
-Split scalar detector implementation:
-keep lifecycle in ScalarTransientDetector.cpp
-move occurrence emission to ScalarTransientOccurrence.cpp
-move report construction to ScalarTransientReport.cpp
-move names/printer helpers to ScalarTransientText.cpp
-Split frequency detector implementation:
-keep lifecycle in FrequencyMatchDetector.cpp
-keep criteria in FrequencyMatchCriteria.h
-move occurrence emission to FrequencyMatchOccurrence.cpp
-move report construction to FrequencyMatchReport.cpp
-move names/printer helpers to FrequencyMatchText.cpp
-Update includes and build references.
-Compile.
-Verify Analyzer output remains byte/field compatible where possible.
-Acceptance criteria
-Project compiles.
-Detection behavior unchanged.
-Analyzer output keys unchanged.
-Analyzer no longer owns detector-specific scalar/frequency print logic where moved.
-Detector-specific strings/printers live in detector-specific folders.
-Detector.cpp files read primarily as lifecycle / actual detection logic.
-Occurrence emission and report construction are easier to find.
+- build the analyzer/runtime targets that touch scalar detection
+- confirm the scalar profile still selects `FeatureStreamId::FrequencyScore`
+- sanity-check the current sequence/analyzer output for the scalar profile

@@ -322,8 +322,9 @@ void AnalyzerApp::handleUsbLine(const char* line) {
             }
         }
 
-        runRawTrigger(toneHz, durationMs, postMs, preMs, decim, dumpChunks, dumpBinary, dumpCsv);
-        Serial.println("OK RAW");
+        if (runRawTrigger(toneHz, durationMs, postMs, preMs, decim, dumpChunks, dumpBinary, dumpCsv)) {
+            Serial.println("OK RAW");
+        }
         return;
     }
 

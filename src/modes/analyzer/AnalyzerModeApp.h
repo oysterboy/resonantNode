@@ -404,7 +404,7 @@ private:
     void stopSequenceTest();
     void updateSequenceTest(unsigned long now);
     void finalizeSequenceTrial(unsigned long now);
-    void runRawTrigger(unsigned long toneHz, unsigned long durationMs, unsigned long postMs, unsigned long preMs, unsigned long decim, bool dumpChunks, bool dumpBinary, bool dumpCsv);
+    bool runRawTrigger(unsigned long toneHz, unsigned long durationMs, unsigned long postMs, unsigned long preMs, unsigned long decim, bool dumpChunks, bool dumpBinary, bool dumpCsv);
     void printAudioSourceSummary() const;
     void printAudioRunSummary() const;
     void printOccurrenceSummary() const;

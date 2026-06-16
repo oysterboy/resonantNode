@@ -1,4 +1,5 @@
 #include "../../../modes/analyzer/AnalyzerModeApp.h"
+#include "../AnalyzerText.h"
 
 #include <Arduino.h>
 #include <math.h>
@@ -239,7 +240,8 @@ void AnalyzerApp::runRawTrigger(unsigned long toneHz,
                                 unsigned long preMs,
                                 unsigned long decim,
                                 bool dumpChunks,
-                                bool dumpBinary) {
+                                bool dumpBinary,
+                                bool dumpCsv) {
     stopSequenceTest();
     resetAudioSignalState();
     _audioSource.resetStats();
@@ -258,6 +260,8 @@ void AnalyzerApp::runRawTrigger(unsigned long toneHz,
     }
     if (dumpChunks) {
         Serial.println("RAW_INFO dump=chunks");
+    } else if (dumpCsv) {
+        Serial.println("RAW_INFO dump=csv");
     }
 
     const uint32_t sampleRateHz = _audioSource.sampleRateHz() > 0 ? _audioSource.sampleRateHz() : 16000UL;
@@ -281,17 +285,40 @@ void AnalyzerApp::runRawTrigger(unsigned long toneHz,
     if (preWantedSamples == 0 && postWantedSamples == 0) {
         postWantedSamples = 1;
     }
-    const unsigned long captureSamples = preWantedSamples + postWantedSamples;
+
     int16_t* preRingBuffer = nullptr;
+    uint32_t* preRingTimeBuffer = nullptr;
     if (preWantedSamples > 0) {
         preRingBuffer = static_cast<int16_t*>(malloc(static_cast<size_t>(preWantedSamples) * sizeof(int16_t)));
-        if (preRingBuffer == nullptr) {
+        preRingTimeBuffer = static_cast<uint32_t*>(malloc(static_cast<size_t>(preWantedSamples) * sizeof(uint32_t)));
+        if (preRingBuffer == nullptr || preRingTimeBuffer == nullptr) {
+            if (preRingBuffer != nullptr) {
+                free(preRingBuffer);
+            }
+            if (preRingTimeBuffer != nullptr) {
+                free(preRingTimeBuffer);
+            }
             Serial.println("RAW_ERR memory=pre_ring_alloc_failed");
             return;
         }
     }
 
-    static int16_t rawBuffer[16000];
+    int16_t* rawBuffer = static_cast<int16_t*>(malloc(static_cast<size_t>(maxSamples) * sizeof(int16_t)));
+    uint32_t* sampleTimeMsBuffer = static_cast<uint32_t*>(malloc(static_cast<size_t>(maxSamples) * sizeof(uint32_t)));
+    if (rawBuffer == nullptr || sampleTimeMsBuffer == nullptr) {
+        if (preRingBuffer != nullptr) {
+            free(preRingBuffer);
+        }
+        if (preRingTimeBuffer != nullptr) {
+            free(preRingTimeBuffer);
+        }
+        if (sampleTimeMsBuffer != nullptr) {
+            free(sampleTimeMsBuffer);
+        }
+        Serial.println("RAW_ERR memory=raw_buffer_alloc_failed");
+        return;
+    }
+
     unsigned long flushedSamples = 0;
     int discardedSample = 0;
     uint32_t discardedSampleTimeUs = 0;
@@ -300,49 +327,160 @@ void AnalyzerApp::runRawTrigger(unsigned long toneHz,
     }
 
     const unsigned long captureId = ++_rawCaptureSequenceId;
-    unsigned long preCaptured = 0;
-    unsigned long preWriteIndex = 0;
-    const unsigned long preDeadlineMs = millis() + preMs + kRawCaptureTimeoutSlackMs;
-    while (preCaptured < preWantedSamples && millis() <= preDeadlineMs) {
-        int rawSample = 0;
-        uint32_t sampleTimeUs = 0;
-        if (_audioSource.readRawSample(rawSample, sampleTimeUs)) {
-            preRingBuffer[preWriteIndex] = rawCaptureSampleToInt16(rawSample);
-            preWriteIndex = (preWriteIndex + 1UL) % (preWantedSamples > 0 ? preWantedSamples : 1UL);
-            ++preCaptured;
-        } else {
-            delay(1);
-        }
-    }
-    if (preCaptured > 0) {
-        const unsigned long preStartIndex = preCaptured == preWantedSamples ? preWriteIndex : 0UL;
-        for (unsigned long i = 0; i < preCaptured; ++i) {
-            const unsigned long ringIndex = (preStartIndex + i) % (preCaptured > 0 ? preCaptured : 1UL);
-            rawBuffer[i] = preRingBuffer[ringIndex];
-        }
-    }
-
-    const unsigned long triggerMs = millis();
+    const unsigned long commandMs = millis();
     char emitterCommand[96];
     snprintf(emitterCommand, sizeof(emitterCommand), "CHIRP freq=%lu dur=%lu", toneHz, durationMs);
     sendEmitterCommand(emitterCommand);
     Serial2.flush();
 
+    char emitterLineBuffer[96];
+    size_t emitterLineLength = 0;
+    bool emitStarted = false;
+    bool emitDone = false;
+    bool preWindowCopied = false;
+    unsigned long emitStartMs = 0;
+    unsigned long emitDoneMs = 0;
+    unsigned long preCapturedTotal = 0;
+    unsigned long preWindowSamples = 0;
+    unsigned long preWriteIndex = 0;
     unsigned long postCaptured = 0;
-    const unsigned long postDeadlineMs = triggerMs + postMs + kRawCaptureTimeoutSlackMs;
-    while (postCaptured < postWantedSamples && millis() <= postDeadlineMs) {
+
+    auto copyPreWindow = [&]() {
+        if (preWindowCopied || preRingBuffer == nullptr || preWantedSamples == 0) {
+            preWindowCopied = true;
+            return;
+        }
+
+        preWindowSamples = preCapturedTotal < preWantedSamples ? preCapturedTotal : preWantedSamples;
+        if (preWindowSamples == 0) {
+            preWindowCopied = true;
+            return;
+        }
+
+        const unsigned long startIndex = preCapturedTotal < preWantedSamples ? 0UL : preWriteIndex;
+        for (unsigned long i = 0; i < preWindowSamples; ++i) {
+            rawBuffer[i] = preRingBuffer[(startIndex + i) % preWantedSamples];
+            sampleTimeMsBuffer[i] = preRingTimeBuffer[(startIndex + i) % preWantedSamples];
+        }
+        preWindowCopied = true;
+    };
+
+    auto noteEmitterLine = [&](const char* line) {
+        if (line == nullptr || *line == '\0') {
+            return;
+        }
+
+        const bool startLine = startsWithTokenIgnoreCase(line, "EMIT_START") || startsWithTokenIgnoreCase(line, "EMIT_DRIVE_ON");
+        const bool doneLine = startsWithTokenIgnoreCase(line, "EMIT_DONE") || startsWithTokenIgnoreCase(line, "EMIT_DRIVE_OFF");
+        if (startLine && !emitStarted) {
+            emitStarted = true;
+            emitStartMs = millis();
+            copyPreWindow();
+            if (!dumpBinary) {
+                Serial.print("RAW_EMIT_START id=");
+                Serial.print(captureId);
+                Serial.print(" t_ms=");
+                Serial.print(emitStartMs);
+                Serial.print(" line=");
+                Serial.println(line);
+            }
+        } else if (doneLine && !emitDone) {
+            emitDone = true;
+            emitDoneMs = millis();
+            if (!dumpBinary) {
+                Serial.print("RAW_EMIT_DONE id=");
+                Serial.print(captureId);
+                Serial.print(" t_ms=");
+                Serial.print(emitDoneMs);
+                Serial.print(" line=");
+                Serial.println(line);
+            }
+        }
+    };
+
+    auto pumpEmitterSerial = [&]() {
+        while (Serial2.available() > 0) {
+            const char c = static_cast<char>(Serial2.read());
+            if (c == '\r') {
+                continue;
+            }
+
+            if (c == '\n') {
+                emitterLineBuffer[emitterLineLength] = '\0';
+                if (emitterLineLength > 0) {
+                    noteEmitterLine(emitterLineBuffer);
+                }
+                emitterLineLength = 0;
+                continue;
+            }
+
+            if (emitterLineLength < sizeof(emitterLineBuffer) - 1) {
+                emitterLineBuffer[emitterLineLength++] = c;
+            }
+        }
+    };
+
+    auto captureSample = [&]() -> bool {
         int rawSample = 0;
         uint32_t sampleTimeUs = 0;
-        if (_audioSource.readRawSample(rawSample, sampleTimeUs)) {
-            rawBuffer[preCaptured + postCaptured] = rawCaptureSampleToInt16(rawSample);
+        if (!_audioSource.readRawSample(rawSample, sampleTimeUs)) {
+            return false;
+        }
+
+        AudioSamplePacket audioSamplePacket = {};
+        if (!_audioSignal.update(rawSample, sampleTimeUs, audioSamplePacket)) {
+            return false;
+        }
+
+        const int centeredSample = audioSamplePacket.centeredAudioValue;
+        if (!emitStarted) {
+            if (preRingBuffer != nullptr && preWantedSamples > 0) {
+                preRingBuffer[preWriteIndex] = rawCaptureSampleToInt16(centeredSample);
+                preRingTimeBuffer[preWriteIndex] = audioSamplePacket.timeMs;
+                preWriteIndex = (preWriteIndex + 1UL) % preWantedSamples;
+            }
+            ++preCapturedTotal;
+        } else if (postCaptured < postWantedSamples) {
+            rawBuffer[preWindowSamples + postCaptured] = rawCaptureSampleToInt16(centeredSample);
+            sampleTimeMsBuffer[preWindowSamples + postCaptured] = audioSamplePacket.timeMs;
             ++postCaptured;
-        } else {
+        }
+
+        return true;
+    };
+
+    const unsigned long overallDeadlineMs = commandMs + preMs + postMs + kRawCaptureTimeoutSlackMs;
+    while (millis() <= overallDeadlineMs) {
+        pumpEmitterSerial();
+
+        if (emitStarted && preWindowCopied && postCaptured >= postWantedSamples) {
+            break;
+        }
+
+        if (!captureSample()) {
             delay(1);
         }
     }
 
-    const unsigned long capturedSamples = preCaptured + postCaptured;
-    const unsigned long droppedSamples = captureSamples > capturedSamples ? (captureSamples - capturedSamples) : 0;
+    pumpEmitterSerial();
+    if (!emitStarted) {
+        copyPreWindow();
+    }
+    if (emitStarted && !emitDone) {
+        const unsigned long emitDoneDeadlineMs = emitStartMs + postMs + kRawCaptureTimeoutSlackMs;
+        while (millis() <= emitDoneDeadlineMs && !emitDone) {
+            pumpEmitterSerial();
+            if (!emitDone) {
+                delay(1);
+            }
+        }
+        pumpEmitterSerial();
+    }
+
+    const unsigned long capturedSamples = preWindowSamples + postCaptured;
+    const unsigned long droppedSamples = (preWantedSamples + postWantedSamples) > capturedSamples
+        ? (preWantedSamples + postWantedSamples) - capturedSamples
+        : 0;
 
     float env = 0.0f;
     float maxEnv = 0.0f;
@@ -368,7 +506,15 @@ void AnalyzerApp::runRawTrigger(unsigned long toneHz,
     Serial.print(" sr=");
     Serial.print(sampleRateHz);
     Serial.print(" trigger_ms=");
-    Serial.print(triggerMs);
+    Serial.print(emitStarted ? emitStartMs : commandMs);
+    Serial.print(" command_ms=");
+    Serial.print(commandMs);
+    Serial.print(" emit_seen=");
+    Serial.print(emitStarted ? 1 : 0);
+    Serial.print(" emit_start_ms=");
+    Serial.print(emitStartMs);
+    Serial.print(" emit_done_ms=");
+    Serial.print(emitDoneMs);
     Serial.print(" f=");
     Serial.print(toneHz);
     Serial.print(" dur=");
@@ -380,7 +526,7 @@ void AnalyzerApp::runRawTrigger(unsigned long toneHz,
     Serial.print(" decim=");
     Serial.print(decim);
     Serial.print(" pre_samples=");
-    Serial.print(preCaptured);
+    Serial.print(preWindowSamples);
     Serial.print(" post_samples=");
     Serial.print(postCaptured);
     if (dumpBinary) {
@@ -404,6 +550,21 @@ void AnalyzerApp::runRawTrigger(unsigned long toneHz,
     if (dumpBinary) {
         Serial.write(reinterpret_cast<const uint8_t*>(rawBuffer), capturedSamples * sizeof(int16_t));
         Serial.println();
+    } else if (dumpCsv) {
+        Serial.println("ms,raw,abs,env");
+        float csvEnv = 0.0f;
+        for (unsigned long i = 0; i < capturedSamples; ++i) {
+            const int sample = static_cast<int>(rawBuffer[i]);
+            const int absSample = sample < 0 ? -sample : sample;
+            csvEnv = csvEnv * 0.95f + static_cast<float>(absSample) * 0.05f;
+            Serial.print(sampleTimeMsBuffer[i]);
+            Serial.print(",");
+            Serial.print(sample);
+            Serial.print(",");
+            Serial.print(absSample);
+            Serial.print(",");
+            Serial.println(csvEnv, 1);
+        }
     } else if (dumpChunks) {
         const unsigned long emittedSamples = (capturedSamples + decim - 1UL) / decim;
         const unsigned long chunkSamples = rawCaptureChunkSize(sampleRateHz, decim);
@@ -443,9 +604,9 @@ void AnalyzerApp::runRawTrigger(unsigned long toneHz,
             }
             const double meanAbs = static_cast<double>(sumAbs) / static_cast<double>(chunkCount);
             const double rms = sqrt(static_cast<double>(sumSquares) / static_cast<double>(chunkCount));
-            const long i0 = static_cast<long>(emittedStart * decim) - static_cast<long>(preCaptured);
+            const long i0 = static_cast<long>(emittedStart * decim) - static_cast<long>(preWindowSamples);
             const unsigned long lastRawIndex = (emittedEnd - 1UL) * decim;
-            const long i1 = static_cast<long>(lastRawIndex < capturedSamples ? lastRawIndex : (capturedSamples - 1UL)) - static_cast<long>(preCaptured);
+            const long i1 = static_cast<long>(lastRawIndex < capturedSamples ? lastRawIndex : (capturedSamples - 1UL)) - static_cast<long>(preWindowSamples);
             Serial.print("RAW_CHUNK i0=");
             Serial.print(i0);
             Serial.print(" i1=");
@@ -495,4 +656,11 @@ void AnalyzerApp::runRawTrigger(unsigned long toneHz,
     if (preRingBuffer != nullptr) {
         free(preRingBuffer);
     }
+    if (preRingTimeBuffer != nullptr) {
+        free(preRingTimeBuffer);
+    }
+    if (sampleTimeMsBuffer != nullptr) {
+        free(sampleTimeMsBuffer);
+    }
+    free(rawBuffer);
 }

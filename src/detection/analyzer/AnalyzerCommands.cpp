@@ -206,7 +206,7 @@ void AnalyzerApp::handleUsbLine(const char* line) {
         Serial.println("CMD: EMIT MODE AUTO interval=2000 freq=3200 dur=100");
         Serial.println("CMD: EMIT SWEEP start=3000 stop=3500 step=100 dur=80 pause=1000");
         Serial.println("CMD: RAWBAND contrast f=3200 dur=100 post=1000 decim=4");
-        Serial.println("CMD: RAW trigger f=3200 dur=100 post=1000 dump=bin");
+        Serial.println("CMD: RAW trigger f=3200 dur=100 post=1000 dump=csv|dump=raw|dump=text|dump=chunks|dump=bin");
         Serial.println("CMD: SEQ");
         Serial.println("CMD: SEQ help");
         Serial.println("CMD: SEQ stop");
@@ -334,6 +334,7 @@ void AnalyzerApp::handleUsbLine(const char* line) {
         unsigned long decim = 1;
         bool dumpChunks = false;
         bool dumpBinary = false;
+        bool dumpCsv = false;
 
         char* savePtr = nullptr;
         char* token = strtok_r(_commandScratch, " ", &savePtr);
@@ -352,10 +353,14 @@ void AnalyzerApp::handleUsbLine(const char* line) {
                 dumpBinary = true;
             } else if (equalsIgnoreCase(token, "dump=chunks")) {
                 dumpChunks = true;
+            } else if (equalsIgnoreCase(token, "dump=csv")) {
+                dumpCsv = true;
+            } else if (equalsIgnoreCase(token, "dump=raw") || equalsIgnoreCase(token, "dump=text") || equalsIgnoreCase(token, "dump=full")) {
+                dumpBinary = false;
             }
         }
 
-        runRawTrigger(toneHz, durationMs, postMs, preMs, decim, dumpChunks, dumpBinary);
+        runRawTrigger(toneHz, durationMs, postMs, preMs, decim, dumpChunks, dumpBinary, dumpCsv);
         Serial.println("OK RAW");
         return;
     }

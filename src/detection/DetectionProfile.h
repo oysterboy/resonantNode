@@ -112,11 +112,11 @@ inline DetectionProfile makeTonalPulseScalarProfile() {
     profile.scalarTransient.observedStream = FeatureStreamId::FrequencyTargetBand;
     profile.scalarTransient.onsetDetectionThreshold = 20000.0f;
     profile.scalarTransient.onsetReleaseThreshold = 5000.0f;
-    profile.scalarTransient.cooldownAfterOnsetMs = 50;
     profile.scalarTransient.minTransientDurationMs = 60;
-    profile.scalarTransient.maxTransientDurationMs = 300;
-    profile.scalarTransient.minTransientPeakStrength = 0.0f;
-    profile.scalarTransient.releaseDebounceMs = 30;
+    profile.scalarTransient.maxTransientDurationMs = 220;
+    profile.scalarTransient.minTransientPeakStrength = 50.0f; // conservaive value, reduce duplicates
+    profile.scalarTransient.releaseDebounceMs = 20;
+    profile.scalarTransient.cooldownAfterOnsetMs = 50; // refractory phase
 
     // This profile is intentionally experimental and compares frequency-derived
     // scalar evidence through the existing scalar transient lifecycle.

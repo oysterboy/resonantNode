@@ -115,8 +115,8 @@ function Get-BlockTuneSnapshot {
     switch ($BlockIndex) {
         1 {
             return [ordered]@{
-                scalar_max_duration_ms = 300
-                scalar_onset_threshold = 20000
+                scalar_max_duration_ms = 220
+                scalar_onset_threshold = 19000
                 scalar_release_threshold = 5000
                 scalar_cooldown_ms = 50
                 scalar_release_debounce_ms = 30
@@ -126,33 +126,33 @@ function Get-BlockTuneSnapshot {
         }
         2 {
             return [ordered]@{
-                scalar_max_duration_ms = 280
-                scalar_onset_threshold = 20000
+                scalar_max_duration_ms = 220
+                scalar_onset_threshold = 19000
                 scalar_release_threshold = 5000
                 scalar_cooldown_ms = 50
-                scalar_release_debounce_ms = 30
+                scalar_release_debounce_ms = 25
                 scalar_min_duration_ms = 60
                 scalar_min_peak_strength = 0
             }
         }
         3 {
             return [ordered]@{
-                scalar_max_duration_ms = 260
-                scalar_onset_threshold = 20000
+                scalar_max_duration_ms = 220
+                scalar_onset_threshold = 19000
                 scalar_release_threshold = 5000
                 scalar_cooldown_ms = 50
-                scalar_release_debounce_ms = 25
+                scalar_release_debounce_ms = 20
                 scalar_min_duration_ms = 60
                 scalar_min_peak_strength = 0
             }
         }
         4 {
             return [ordered]@{
-                scalar_max_duration_ms = 240
-                scalar_onset_threshold = 20000
+                scalar_max_duration_ms = 220
+                scalar_onset_threshold = 19000
                 scalar_release_threshold = 5000
                 scalar_cooldown_ms = 50
-                scalar_release_debounce_ms = 25
+                scalar_release_debounce_ms = 15
                 scalar_min_duration_ms = 60
                 scalar_min_peak_strength = 0
             }
@@ -161,20 +161,22 @@ function Get-BlockTuneSnapshot {
             return [ordered]@{
                 scalar_max_duration_ms = 220
                 scalar_onset_threshold = 19000
-                scalar_release_threshold = 4800
+                scalar_release_threshold = 5000
                 scalar_cooldown_ms = 50
-                scalar_release_debounce_ms = 25
+                scalar_release_debounce_ms = 10
                 scalar_min_duration_ms = 60
                 scalar_min_peak_strength = 0
             }
         }
         6 {
             return [ordered]@{
+                # Phase 2 starts from the best debounce found in phase 1.
+                # Update this value before block 6 if phase 1 selects a value other than 10.
                 scalar_max_duration_ms = 220
                 scalar_onset_threshold = 19000
-                scalar_release_threshold = 4800
+                scalar_release_threshold = 5000
                 scalar_cooldown_ms = 50
-                scalar_release_debounce_ms = 20
+                scalar_release_debounce_ms = 10
                 scalar_min_duration_ms = 60
                 scalar_min_peak_strength = 0
             }
@@ -182,43 +184,43 @@ function Get-BlockTuneSnapshot {
         7 {
             return [ordered]@{
                 scalar_max_duration_ms = 220
-                scalar_onset_threshold = 18000
-                scalar_release_threshold = 4500
+                scalar_onset_threshold = 19000
+                scalar_release_threshold = 4000
                 scalar_cooldown_ms = 50
-                scalar_release_debounce_ms = 20
+                scalar_release_debounce_ms = 10
                 scalar_min_duration_ms = 60
                 scalar_min_peak_strength = 0
             }
         }
         8 {
             return [ordered]@{
-                scalar_max_duration_ms = 200
-                scalar_onset_threshold = 18000
-                scalar_release_threshold = 4500
+                scalar_max_duration_ms = 220
+                scalar_onset_threshold = 19000
+                scalar_release_threshold = 3000
                 scalar_cooldown_ms = 50
-                scalar_release_debounce_ms = 20
+                scalar_release_debounce_ms = 10
                 scalar_min_duration_ms = 60
                 scalar_min_peak_strength = 0
             }
         }
         9 {
             return [ordered]@{
-                scalar_max_duration_ms = 200
-                scalar_onset_threshold = 17500
-                scalar_release_threshold = 4200
+                scalar_max_duration_ms = 220
+                scalar_onset_threshold = 19000
+                scalar_release_threshold = 2000
                 scalar_cooldown_ms = 50
-                scalar_release_debounce_ms = 15
+                scalar_release_debounce_ms = 10
                 scalar_min_duration_ms = 60
                 scalar_min_peak_strength = 0
             }
         }
         default {
             return [ordered]@{
-                scalar_max_duration_ms = 180
-                scalar_onset_threshold = 17500
-                scalar_release_threshold = 4200
+                scalar_max_duration_ms = 220
+                scalar_onset_threshold = 19000
+                scalar_release_threshold = 1000
                 scalar_cooldown_ms = 50
-                scalar_release_debounce_ms = 15
+                scalar_release_debounce_ms = 10
                 scalar_min_duration_ms = 60
                 scalar_min_peak_strength = 0
             }
@@ -634,7 +636,7 @@ $lockInfo = Open-CampaignLock -Path $lockPath -StatePath $statePath -BatchRootVa
             $tuneSnapshot = Get-BlockTuneSnapshot -BlockIndex $blockIndex
             $tuneCommand = Format-ParamCommand -Snapshot $tuneSnapshot
             $currentTuneCommand = $tuneCommand
-            if ($blockIndex -gt 1 -and -not ($resumeTuneBlockIndex -eq $blockIndex)) {
+            if (-not ($resumeTuneBlockIndex -eq $blockIndex)) {
                 $port.WriteLine($tuneCommand)
                 Append-TextLine -Path $sessionPath -Line ("block={0} tune={1}" -f $blockName, $tuneCommand)
                 Start-Sleep -Milliseconds 250

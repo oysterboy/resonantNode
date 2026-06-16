@@ -1,0 +1,24 @@
+﻿# Block 05 Transcript
+
+Status: planned
+
+## Commands
+
+```text
+PARAM STATUS
+SEQ start profile=TonalPulseScalar tries=50 mode=source when=all verbose=1
+```
+
+## Capture Checklist
+
+- miss count
+- duplicate count
+- late count
+- avg_dt_ms
+- avg_strength
+
+## Decision
+
+- keep the current values if the block is stable
+- shift one knob at a time if the block regresses
+- record the decision in the block summary

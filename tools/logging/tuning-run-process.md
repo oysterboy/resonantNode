@@ -9,7 +9,7 @@ This process document describes the repeatable scalar tuning loop, the command s
 ## Current scope
 
 - Focus profile: `TonalPulseScalar`
-- Goal: zero misses first, then tighten duration and hysteresis without bringing back duplicates
+- Goal: fix `scalar_max_duration_ms=220` and `scalar_onset_threshold=19000`, then first find the lowest stable `scalar_release_debounce_ms`, then sweep `scalar_release_threshold`
 - Launch batch size: `50` trials per launch
 - Working session target: about `30` minutes
 
@@ -115,7 +115,8 @@ The block summary should document the applied tune, not just the intended one.
 ## Tuning rule of thumb
 
 - First remove misses.
-- Then tighten `maxTransientDurationMs` and hysteresis in small steps.
+- Then sweep `scalar_release_debounce_ms` downward in small steps while keeping `scalar_max_duration_ms` and `scalar_onset_threshold` fixed.
+- After the best debounce value is known, sweep `scalar_release_threshold` downward in small steps.
 - Keep duplicates at `0` if possible.
 
 ## Notes

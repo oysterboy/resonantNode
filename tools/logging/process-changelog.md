@@ -22,18 +22,10 @@ SEQ start profile=TonalPulseScalar tries=50 mode=source when=all verbose=1
 
 ## Tuning ladder
 
-The full 100-launch campaign is no longer baseline-only.
+The current 20-launch campaign is now split into two clear phases.
 
-- Block 1: baseline snapshot.
-- Block 2: shorten `scalar_max_duration_ms`.
-- Block 3: lower `scalar_release_debounce_ms`.
-- Block 4: shorten `scalar_max_duration_ms` again.
-- Block 5: begin lowering `scalar_onset_threshold` and `scalar_release_threshold`.
-- Block 6: reduce `scalar_release_debounce_ms` again.
-- Block 7: continue threshold tightening.
-- Block 8: continue duration tightening.
-- Block 9: reduce debounce and thresholds again if still clean.
-- Block 10: final tightening pass if the earlier blocks remain stable.
+- Blocks 1-5: hold `scalar_max_duration_ms=220` and `scalar_onset_threshold=19000`, then sweep `scalar_release_debounce_ms` from `30` down to `10`.
+- Blocks 6-10: keep the best debounce found in phase 1, then sweep `scalar_release_threshold` from `5000` down to `1000`.
 
 The block summaries should show the applied tune captured from `PARAM STATUS`, not only the requested `PARAM` command.
 
@@ -47,7 +39,7 @@ The block summaries should show the applied tune captured from `PARAM STATUS`, n
 
 ## Current target
 
-- 100 sequence launches total.
+- 20 sequence launches total.
 - 50 trials per launch.
 - `mode source`.
 - `when all`.

@@ -369,6 +369,7 @@ bool AnalyzerApp::shouldPrintSequenceSource(const AnalyzerReport& report) const 
 
     switch (_sequenceTest.outputConfig.mode) {
         case SeqOutputMode::Source:
+        case SeqOutputMode::Detail:
             return sequenceOutputWhenEnabled(_sequenceTest.outputConfig.when, report.classification.result);
         default:
             return false;
@@ -382,7 +383,7 @@ bool AnalyzerApp::shouldPrintSequenceInspect(const AnalyzerReport& report) const
 
     switch (_sequenceTest.outputConfig.mode) {
         case SeqOutputMode::Inspect:
-        case SeqOutputMode::Explain:
+        case SeqOutputMode::Detail:
             return sequenceOutputWhenEnabled(_sequenceTest.outputConfig.when, report.classification.result);
         default:
             return false;
@@ -402,9 +403,9 @@ bool AnalyzerApp::shouldPrintSequenceSystem(const AnalyzerReport& report) const 
     }
 }
 
-bool AnalyzerApp::shouldPrintSequenceExplain(const AnalyzerReport& report) const {
+bool AnalyzerApp::shouldPrintSequenceDetail(const AnalyzerReport& report) const {
     return _sequenceTest.outputConfig.diagnosticsEnabled &&
-           _sequenceTest.outputConfig.mode == SeqOutputMode::Explain &&
+           _sequenceTest.outputConfig.mode == SeqOutputMode::Detail &&
            sequenceOutputWhenEnabled(_sequenceTest.outputConfig.when, report.classification.result);
 }
 
@@ -420,8 +421,8 @@ const char* seqOutputModeName(AnalyzerApp::SeqOutputMode mode) {
             return "source";
         case AnalyzerApp::SeqOutputMode::Inspect:
             return "inspect";
-        case AnalyzerApp::SeqOutputMode::Explain:
-            return "explain";
+        case AnalyzerApp::SeqOutputMode::Detail:
+            return "detail";
         default:
             return "trial";
     }
@@ -487,8 +488,8 @@ AnalyzerApp::SeqOutputMode seqOutputModeFromToken(const char* token, bool* valid
     if (equalsIgnoreCase(token, "inspect")) {
         return AnalyzerApp::SeqOutputMode::Inspect;
     }
-    if (equalsIgnoreCase(token, "explain")) {
-        return AnalyzerApp::SeqOutputMode::Explain;
+    if (equalsIgnoreCase(token, "detail") || equalsIgnoreCase(token, "explain")) {
+        return AnalyzerApp::SeqOutputMode::Detail;
     }
     if (equalsIgnoreCase(token, "quiet")) {
         return AnalyzerApp::SeqOutputMode::Quiet;
@@ -581,7 +582,7 @@ void AnalyzerApp::begin() {
     _controlClaimAtMs = 0;
 
     Serial.println("EVT analyzer_ready");
-    Serial.println("EVT analyzer_help type='HELP', 'PARAM freqScore=18000 freqContrast=50.0 freqReleaseScore=12000 freqReleaseContrast=50.0', 'PARAM STATUS', 'RAW trigger f=3200 dur=100 post=1000 dump=bin', 'SEQ MODE quiet|trial|inspect|source|system|explain WHEN off|miss|all VERBOSE 0|1|2 STATUS REPORT', 'DET PROFILE TonalPulseFreq|TonalPulseScalar|AmpExperimental'");
+    Serial.println("EVT analyzer_help type='HELP', 'PARAM freqScore=18000 freqContrast=50.0 freqReleaseScore=12000 freqReleaseContrast=50.0', 'PARAM STATUS', 'RAW trigger f=3200 dur=100 post=1000 dump=bin', 'SEQ MODE quiet|trial|inspect|source|system|detail WHEN off|miss|all VERBOSE 0|1|2 STATUS REPORT', 'DET PROFILE TonalPulseFreq|TonalPulseScalar|AmpExperimental'");
 }
 
 void AnalyzerApp::configureParameters() {
@@ -612,14 +613,14 @@ bool AnalyzerApp::sequenceOutputModeEnabled(SeqOutputMode configured, SeqOutputM
     if (requested == SeqOutputMode::System) {
         return configured == SeqOutputMode::System;
     }
-    if (requested == SeqOutputMode::Explain) {
-        return configured == SeqOutputMode::Explain;
-    }
     if (requested == SeqOutputMode::Source) {
         return configured == requested;
     }
     if (requested == SeqOutputMode::Inspect) {
-        return configured == requested || configured == SeqOutputMode::Explain;
+        return configured == requested || configured == SeqOutputMode::Detail;
+    }
+    if (requested == SeqOutputMode::Detail) {
+        return configured == SeqOutputMode::Detail;
     }
     return configured == requested;
 }

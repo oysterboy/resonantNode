@@ -104,46 +104,17 @@ void AnalyzerApp::printSequenceInspectCanonical(const AnalyzerReport& report) co
         return;
     }
 
+    const bool detailMode = _sequenceTest.outputConfig.mode == SeqOutputMode::Detail;
     const size_t observationCount = report.profileDetail.inspectionObservationCount;
-    if (observationCount == 0) {
-        Serial.print("SEQ_INSPECT_FULL");
-        Serial.print(" inspect.kind=");
-        Serial.print(report.occurrences.kind != nullptr ? report.occurrences.kind : "none");
-        Serial.print(" inspect.source=");
-        Serial.print(report.occurrences.primarySource != nullptr ? report.occurrences.primarySource : "none");
-        Serial.print(" inspect.present=");
-        Serial.print(report.occurrences.present ? 1 : 0);
-        Serial.print(" inspect.valid=");
-        Serial.print(report.occurrences.valid ? 1 : 0);
-        Serial.print(" inspect.start_ms=");
-        Serial.print(report.occurrences.startMs);
-        Serial.print(" inspect.peak_ms=");
-        Serial.print(report.occurrences.peakMs);
-        Serial.print(" inspect.release_ms=");
-        Serial.print(report.occurrences.releaseMs);
-        Serial.print(" inspect.duration_ms=");
-        Serial.print(report.occurrences.primaryDurationMs);
-        Serial.print(" inspect.strength=");
-        Serial.print(report.occurrences.primaryStrength, 1);
-        Serial.print(" inspect.confidence=");
-        Serial.print(report.occurrences.confidence, 2);
-        Serial.print(" inspect.reject_reason=");
-        Serial.print(report.occurrences.rejectReason != nullptr ? report.occurrences.rejectReason : "none");
-        Serial.print(" inspect.primary_evidence=");
-        Serial.print(report.inspection.primaryEvidence != nullptr ? report.inspection.primaryEvidence : "none");
-        Serial.print(" inspect.target=");
-        Serial.print(report.inspection.moduleTarget != nullptr ? report.inspection.moduleTarget : "unknown");
-        Serial.print(" inspect.strength_class=");
-        Serial.print(report.inspection.moduleStrengthClass != nullptr ? report.inspection.moduleStrengthClass : "unknown");
-        Serial.print(" inspect.main_reject_reason=");
-        Serial.println(report.inspection.mainRejectReason != nullptr ? report.inspection.mainRejectReason : "none");
-        return;
-    }
 
-    for (size_t i = 0; i < observationCount; ++i) {
-        const detection::ScalarInspectionObservation& observation = report.profileDetail.inspectionObservations[i];
-        const detection::EvidenceTarget target = report.profileDetail.inspectionObservationTargets[i];
-        Serial.print("SEQ_INSPECT_FULL");
+    auto printInspectCore = [&report, observationCount](const detection::ScalarInspectionObservation* observation,
+                                                        detection::EvidenceTarget target,
+                                                        size_t observationIndex) {
+        Serial.print("SEQ_INSPECT");
+        Serial.print(" inspect.observation_index=");
+        Serial.print(static_cast<unsigned long>(observationIndex));
+        Serial.print(" inspect.observation_count=");
+        Serial.print(static_cast<unsigned long>(observationCount));
         Serial.print(" inspect.kind=");
         Serial.print(report.occurrences.kind != nullptr ? report.occurrences.kind : "none");
         Serial.print(" inspect.source=");
@@ -174,43 +145,139 @@ void AnalyzerApp::printSequenceInspectCanonical(const AnalyzerReport& report) co
         Serial.print(report.inspection.moduleStrengthClass != nullptr ? report.inspection.moduleStrengthClass : "unknown");
         Serial.print(" inspect.main_reject_reason=");
         Serial.print(report.inspection.mainRejectReason != nullptr ? report.inspection.mainRejectReason : "none");
+        if (observation != nullptr) {
+            Serial.print(" compare.target=");
+            Serial.print(detection::evidenceTargetName(target));
+            Serial.print(" compare.stream=");
+            Serial.print(scalarObservedStreamDisplayName(observation->stream));
+            Serial.print(" compare.mode=");
+            Serial.print(detection::scalarInspectionModeName(observation->mode));
+            Serial.print(" compare.value=");
+            Serial.print(observation->classificationValue, 3);
+            Serial.print(" compare.strength=");
+            Serial.print(detection::strengthClassName(observation->strength));
+            Serial.print(" compare.peak=");
+            Serial.print(observation->peak, 3);
+            Serial.print(" compare.mean=");
+            Serial.print(observation->mean, 3);
+            Serial.print(" compare.rms=");
+            Serial.print(observation->rms, 3);
+            Serial.print(" compare.median=");
+            Serial.print(observation->median, 3);
+            Serial.print(" compare.p75=");
+            Serial.print(observation->p75, 3);
+            Serial.print(" compare.p90=");
+            Serial.print(observation->p90, 3);
+            Serial.print(" compare.trimmed_mean=");
+            Serial.print(observation->trimmedMean, 3);
+            Serial.print(" compare.coverage=");
+            Serial.print(observation->coverageRatio, 3);
+            Serial.print(" compare.sample_count=");
+            Serial.print(static_cast<unsigned long>(observation->sampleCount));
+            Serial.print(" compare.pre_floor_available=");
+            Serial.print(observation->preFloorAvailable ? 1 : 0);
+            Serial.print(" compare.lift_p75=");
+            Serial.print(detection::scalarInspectionLiftP75(*observation), 3);
+            Serial.print(" compare.lift_rms=");
+            Serial.print(detection::scalarInspectionLiftRms(*observation), 3);
+            Serial.print(" compare.lift_trimmed_mean=");
+            Serial.print(detection::scalarInspectionLiftTrimmedMean(*observation), 3);
+        }
+        Serial.println();
+    };
+
+    if (detailMode) {
+        if (observationCount == 0) {
+            printInspectCore(nullptr, detection::EvidenceTarget::None, 0);
+            return;
+        }
+
+        for (size_t i = 0; i < observationCount; ++i) {
+            printInspectCore(&report.profileDetail.inspectionObservations[i],
+                             report.profileDetail.inspectionObservationTargets[i],
+                             i + 1U);
+        }
+        return;
+    }
+
+    const detection::ScalarInspectionObservation* observation = nullptr;
+    detection::EvidenceTarget target = detection::EvidenceTarget::None;
+    if (observationCount > 0) {
+        observation = &report.profileDetail.inspectionObservations[0];
+        target = report.profileDetail.inspectionObservationTargets[0];
+    }
+    Serial.print("SEQ_INSPECT_FULL");
+    Serial.print(" inspect.observation_count=");
+    Serial.print(static_cast<unsigned long>(observationCount));
+    Serial.print(" inspect.kind=");
+    Serial.print(report.occurrences.kind != nullptr ? report.occurrences.kind : "none");
+    Serial.print(" inspect.source=");
+    Serial.print(report.occurrences.primarySource != nullptr ? report.occurrences.primarySource : "none");
+    Serial.print(" inspect.present=");
+    Serial.print(report.occurrences.present ? 1 : 0);
+    Serial.print(" inspect.valid=");
+    Serial.print(report.occurrences.valid ? 1 : 0);
+    Serial.print(" inspect.start_ms=");
+    Serial.print(report.occurrences.startMs);
+    Serial.print(" inspect.peak_ms=");
+    Serial.print(report.occurrences.peakMs);
+    Serial.print(" inspect.release_ms=");
+    Serial.print(report.occurrences.releaseMs);
+    Serial.print(" inspect.duration_ms=");
+    Serial.print(report.occurrences.primaryDurationMs);
+    Serial.print(" inspect.strength=");
+    Serial.print(report.occurrences.primaryStrength, 1);
+    Serial.print(" inspect.confidence=");
+    Serial.print(report.occurrences.confidence, 2);
+    Serial.print(" inspect.reject_reason=");
+    Serial.print(report.occurrences.rejectReason != nullptr ? report.occurrences.rejectReason : "none");
+    Serial.print(" inspect.primary_evidence=");
+    Serial.print(report.inspection.primaryEvidence != nullptr ? report.inspection.primaryEvidence : "none");
+    Serial.print(" inspect.target=");
+    Serial.print(report.inspection.moduleTarget != nullptr ? report.inspection.moduleTarget : "unknown");
+    Serial.print(" inspect.strength_class=");
+    Serial.print(report.inspection.moduleStrengthClass != nullptr ? report.inspection.moduleStrengthClass : "unknown");
+    Serial.print(" inspect.main_reject_reason=");
+    Serial.print(report.inspection.mainRejectReason != nullptr ? report.inspection.mainRejectReason : "none");
+    if (observation != nullptr) {
         Serial.print(" compare.target=");
         Serial.print(detection::evidenceTargetName(target));
         Serial.print(" compare.stream=");
-        Serial.print(scalarObservedStreamDisplayName(observation.stream));
+        Serial.print(scalarObservedStreamDisplayName(observation->stream));
         Serial.print(" compare.mode=");
-        Serial.print(detection::scalarInspectionModeName(observation.mode));
+        Serial.print(detection::scalarInspectionModeName(observation->mode));
         Serial.print(" compare.value=");
-        Serial.print(observation.classificationValue, 3);
+        Serial.print(observation->classificationValue, 3);
         Serial.print(" compare.strength=");
-        Serial.print(detection::strengthClassName(observation.strength));
+        Serial.print(detection::strengthClassName(observation->strength));
         Serial.print(" compare.peak=");
-        Serial.print(observation.peak, 3);
+        Serial.print(observation->peak, 3);
         Serial.print(" compare.mean=");
-        Serial.print(observation.mean, 3);
+        Serial.print(observation->mean, 3);
         Serial.print(" compare.rms=");
-        Serial.print(observation.rms, 3);
+        Serial.print(observation->rms, 3);
         Serial.print(" compare.median=");
-        Serial.print(observation.median, 3);
+        Serial.print(observation->median, 3);
         Serial.print(" compare.p75=");
-        Serial.print(observation.p75, 3);
+        Serial.print(observation->p75, 3);
         Serial.print(" compare.p90=");
-        Serial.print(observation.p90, 3);
+        Serial.print(observation->p90, 3);
         Serial.print(" compare.trimmed_mean=");
-        Serial.print(observation.trimmedMean, 3);
+        Serial.print(observation->trimmedMean, 3);
         Serial.print(" compare.coverage=");
-        Serial.print(observation.coverageRatio, 3);
+        Serial.print(observation->coverageRatio, 3);
         Serial.print(" compare.sample_count=");
-        Serial.print(static_cast<unsigned long>(observation.sampleCount));
+        Serial.print(static_cast<unsigned long>(observation->sampleCount));
         Serial.print(" compare.pre_floor_available=");
-        Serial.print(observation.preFloorAvailable ? 1 : 0);
+        Serial.print(observation->preFloorAvailable ? 1 : 0);
         Serial.print(" compare.lift_p75=");
-        Serial.print(detection::scalarInspectionLiftP75(observation), 3);
+        Serial.print(detection::scalarInspectionLiftP75(*observation), 3);
         Serial.print(" compare.lift_rms=");
-        Serial.print(detection::scalarInspectionLiftRms(observation), 3);
+        Serial.print(detection::scalarInspectionLiftRms(*observation), 3);
         Serial.print(" compare.lift_trimmed_mean=");
-        Serial.println(detection::scalarInspectionLiftTrimmedMean(observation), 3);
+        Serial.print(detection::scalarInspectionLiftTrimmedMean(*observation), 3);
     }
+    Serial.println();
 }
 
 void AnalyzerApp::printSequenceSourceCanonical(const AnalyzerReport& report) const {
@@ -249,27 +316,28 @@ void AnalyzerApp::printSequenceSourceCanonical(const AnalyzerReport& report) con
     Serial.print(report.occurrences.rejected);
     Serial.println();
 
+    printSequenceSourceCoreCanonical(report);
     printSequenceSourceSpecCanonical(report);
 }
 
+void AnalyzerApp::printSequenceSourceCoreCanonical(const AnalyzerReport& report) const {
+    detection::printDetectorReportGenericLine("SEQ_SOURCE_CORE", report.context.trial, report.detectorReport);
+}
+
 void AnalyzerApp::printSequenceSourceSpecCanonical(const AnalyzerReport& report) const {
-    detection::printDetectorReportGenericLine("SEQ_SOURCE_SPEC", report.context.trial, report.detectorReport);
     detection::printDetectorDetailLine("SEQ_SOURCE_SPEC", report.detectorReport);
 }
 
-void AnalyzerApp::printSequenceExplainCanonical(const AnalyzerReport& report) const {
-    if (!shouldPrintSequenceExplain(report)) {
+void AnalyzerApp::printSequenceDetailCanonical(const AnalyzerReport& report) const {
+    if (!shouldPrintSequenceDetail(report)) {
         return;
     }
 
-    Serial.print("SEQ_EXPLAIN");
+    Serial.print("SEQ_DETAIL");
     Serial.print(" trial=");
     Serial.print(report.context.trial);
     Serial.print(" profile=");
     Serial.println(report.context.profile != nullptr ? report.context.profile : "unknown");
-    detection::printDetectorReportGenericLine("SEQ_EXPLAIN", report.context.trial, report.detectorReport);
-    detection::printDetectorDetailLine("SEQ_EXPLAIN", report.detectorReport);
-    printCanonicalStageLine("SEQ_EXPLAIN", report, true);
 }
 
 void AnalyzerApp::printSequenceSummaryClean() const {
@@ -333,13 +401,13 @@ void AnalyzerApp::printSequenceReport() const {
         printDetectionParameters();
     }
     if (_sequenceTest.outputConfig.verbosity > 0U ||
-        _sequenceTest.outputConfig.mode == SeqOutputMode::Explain) {
+        _sequenceTest.outputConfig.mode == SeqOutputMode::Detail) {
         printAudioSourceSummary();
         printOccurrenceSummary();
     }
     if (_sequenceTest.outputConfig.verbosity > 0U ||
         _sequenceTest.outputConfig.mode == SeqOutputMode::System ||
-        _sequenceTest.outputConfig.mode == SeqOutputMode::Explain) {
+        _sequenceTest.outputConfig.mode == SeqOutputMode::Detail) {
         printAudioRunSummary();
     }
 }

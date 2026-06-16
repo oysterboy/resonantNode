@@ -36,7 +36,7 @@ Does not own detection or behavior decisions.
 // SEQ_SUMMARY:
 //   Canonical aggregate trial result counts.
 //
-// SEQ_EXPLAIN:
+// SEQ_DETAIL:
 //   Deep developer chain, rebuilt later from scoped reports.
 //
 // RAW_SAMPLE_CAPTURE:
@@ -380,7 +380,7 @@ struct AnalyzerCleanSummary {
 struct AnalyzerReport {
     AnalyzerRunContext context;
     AnalyzerExpectedEvent expected;
-    // Canonical detector-stage truth for clean inspect/explain/summary paths.
+    // Canonical detector-stage truth for clean inspect/detail/summary paths.
     const detection::DetectorReport* detectorReport = nullptr;
 
     AnalyzerPatternObservation primaryPattern;

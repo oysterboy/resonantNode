@@ -48,7 +48,7 @@ public:
         System,
         Source,
         Inspect,
-        Explain,
+        Detail,
     };
 
     enum class SeqOutputWhen {
@@ -410,9 +410,10 @@ private:
     void printAudioRunSummary() const;
     void printOccurrenceSummary() const;
     void printDetectionParameters() const;
-    void printSequenceExplainCanonical(const AnalyzerReport& report) const;
+    void printSequenceDetailCanonical(const AnalyzerReport& report) const;
     void printSequenceInspectCanonical(const AnalyzerReport& report) const;
     void printSequenceSourceCanonical(const AnalyzerReport& report) const;
+    void printSequenceSourceCoreCanonical(const AnalyzerReport& report) const;
     void printSequenceSourceSpecCanonical(const AnalyzerReport& report) const;
     void printSequenceStatus() const;
     void printSequenceTrialHeader(unsigned long trialNumber) const;
@@ -469,7 +470,7 @@ private:
     bool shouldPrintSequenceSource(const AnalyzerReport& report) const;
     bool shouldPrintSequenceInspect(const AnalyzerReport& report) const;
     bool shouldPrintSequenceSystem(const AnalyzerReport& report) const;
-    bool shouldPrintSequenceExplain(const AnalyzerReport& report) const;
+    bool shouldPrintSequenceDetail(const AnalyzerReport& report) const;
     bool shouldPrintHardwareDiagnostics() const;
     static const char* sequenceOutputModeName(SeqOutputMode mode);
     static const char* sequenceOutputWhenName(SeqOutputWhen value);

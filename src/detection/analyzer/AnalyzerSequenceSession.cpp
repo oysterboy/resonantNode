@@ -549,8 +549,8 @@ void AnalyzerApp::finalizeSequenceTrial(unsigned long now) {
     if (shouldPrintSequenceSystem(*finalizedReport)) {
         printSystemHealth(*finalizedReport);
     }
-    if (shouldPrintSequenceExplain(*finalizedReport)) {
-        printSequenceExplainCanonical(*finalizedReport);
+    if (shouldPrintSequenceDetail(*finalizedReport)) {
+        printSequenceDetailCanonical(*finalizedReport);
     }
     if (_sequenceTest.currentTrial < _sequenceTest.totalTrials) {
         const unsigned long settleUntilMs = now + _sequenceTest.reportSettleMs;

@@ -135,13 +135,13 @@ void AnalyzerApp::printSequenceHelp() {
     Serial.println("SEQ IN: OBS start [N|tries=N] [period=2000] [window=1800] [freq=HZ] [dur=MS] [delay=MS] [report_settle=MS] [test=LABEL]");
     Serial.println("SEQ IN: TRIES N");
     Serial.println("SEQ IN: [profile=TonalPulseFreq|TonalPulseScalar|AmpExperimental]");
-    Serial.println("SEQ IN: MODE quiet|trial|inspect|source|system|explain");
+    Serial.println("SEQ IN: MODE quiet|trial|inspect|source|system|detail");
     Serial.println("SEQ IN: MODE quiet = no sequence output");
     Serial.println("SEQ IN: MODE trial = trial verdict view");
     Serial.println("SEQ IN: MODE system = trial verdict + system health");
-    Serial.println("SEQ IN: MODE source = canonical detector source view");
+    Serial.println("SEQ IN: MODE source = source wrapper, then SEQ_SOURCE_CORE and SEQ_SOURCE_SPEC");
     Serial.println("SEQ IN: MODE inspect = canonical detector report inspect");
-    Serial.println("SEQ IN: MODE explain = canonical detector report explain");
+    Serial.println("SEQ IN: MODE detail = canonical trial/source/inspect report");
     Serial.println("SEQ IN: PROFILE TonalPulseFreq|TonalPulseScalar|AmpExperimental");
     Serial.println("SEQ IN: DIAG on|off");
     Serial.println("SEQ IN: FREQBAND on|off");
@@ -153,9 +153,9 @@ void AnalyzerApp::printSequenceHelp() {
     Serial.println("SEQ IN: TRIES N");
     Serial.println("SEQ IN: STATUS");
     Serial.println("SEQ IN: [sampleFirst=N] [sampleEvery=N] [sampleLead=MS] [sampleTail=MS] [sampleStep=MS] [sampleMax=N]");
-    Serial.println("SEQ IN: sample dump is detector-input curve tooling, not RAW capture, not the audio envelope curve, not DetectorReport, not SEQ_SOURCE / SEQ_INSPECT / SEQ_EXPLAIN, and not canonical Analyzer truth");
+    Serial.println("SEQ IN: sample dump is detector-input curve tooling, not RAW capture, not the audio envelope curve, not DetectorReport, not SEQ_SOURCE / SEQ_INSPECT / SEQ_DETAIL, and not canonical Analyzer truth");
     Serial.println("SEQ IN: sampleMax is a preflight row budget; emitted rows are still capped by the fixed sampleRows capacity");
-    Serial.println("SEQ OUT: SEQ start / SEQ running / SEQ_TRIAL / SEQ_INSPECT / SEQ_EXPLAIN / SEQ_SOURCE / SEQ_SUMMARY / SEQ REPORT / AUDIO run");
+    Serial.println("SEQ OUT: SEQ start / SEQ running / SEQ_TRIAL / SEQ_INSPECT / SEQ_DETAIL / SEQ_SOURCE / SEQ_SOURCE_CORE / SEQ_SOURCE_SPEC / SEQ_SUMMARY / SEQ REPORT / AUDIO run");
     Serial.println("SEQ OUT: SAMPLES_BEGIN / SAMPLES_NOTE / SAMPLES_END");
     Serial.println("SEQ OUT: sample fields are t,value (value is the selected detector input stream)");
     Serial.println("SEQ OBS: passive observe mode for an already-running external emitter");
@@ -435,7 +435,7 @@ void AnalyzerApp::handleUsbLine(const char* line) {
             bool valid = false;
             const AnalyzerApp::SeqOutputMode mode = AnalyzerApp::sequenceOutputModeFromToken(modeToken, &valid);
             if (!valid) {
-                Serial.println("ERR SEQ unknown mode use MODE quiet|trial|inspect|source|system|explain");
+            Serial.println("ERR SEQ unknown mode use MODE quiet|trial|inspect|source|system|detail");
                 return;
             }
             _seqOutputConfig.mode = mode;
@@ -624,7 +624,7 @@ void AnalyzerApp::handleUsbLine(const char* line) {
                     if (!valid) {
                         Serial.print("ERR SEQ unknown mode=");
                         Serial.print(token + 5);
-                        Serial.println(" use mode=quiet, mode=trial, mode=inspect, mode=source, mode=system or mode=explain");
+                    Serial.println(" use mode=quiet, mode=trial, mode=inspect, mode=source, mode=system or mode=detail");
                         return;
                     }
                     if (_seqOutputConfig.mode == AnalyzerApp::SeqOutputMode::Quiet) {

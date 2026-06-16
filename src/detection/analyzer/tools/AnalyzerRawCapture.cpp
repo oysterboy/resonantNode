@@ -551,19 +551,42 @@ void AnalyzerApp::runRawTrigger(unsigned long toneHz,
         Serial.write(reinterpret_cast<const uint8_t*>(rawBuffer), capturedSamples * sizeof(int16_t));
         Serial.println();
     } else if (dumpCsv) {
-        Serial.println("ms,raw,abs,env");
+        Serial.println("ms,raw,abs,env,score,contrast,target_power,neighbor_power,total_energy,updated,age_samples");
+        FreqBandStream csvBand;
+        csvBand.resetState();
+        csvBand.setTargetFrequencyHz(_freqBandStream.targetFrequencyHz());
+        csvBand.setSampleRateHz(sampleRateHz);
+        csvBand.setWindowSizeSamples(_freqBandStream.windowSizeSamples());
+        csvBand.setFrequencyUpdateEverySamples(1);
+
         float csvEnv = 0.0f;
         for (unsigned long i = 0; i < capturedSamples; ++i) {
             const int sample = static_cast<int>(rawBuffer[i]);
             const int absSample = sample < 0 ? -sample : sample;
             csvEnv = csvEnv * 0.95f + static_cast<float>(absSample) * 0.05f;
+            csvBand.observeCenteredSample(sample, sampleTimeMsBuffer[i]);
+
             Serial.print(sampleTimeMsBuffer[i]);
             Serial.print(",");
             Serial.print(sample);
             Serial.print(",");
             Serial.print(absSample);
             Serial.print(",");
-            Serial.println(csvEnv, 1);
+            Serial.print(csvEnv, 1);
+            Serial.print(",");
+            Serial.print(csvBand.lastTargetBandScoreValue(), 2);
+            Serial.print(",");
+            Serial.print(csvBand.lastTargetBandContrastValue(), 2);
+            Serial.print(",");
+            Serial.print(csvBand.lastTargetBandPowerValue(), 1);
+            Serial.print(",");
+            Serial.print(csvBand.lastNeighborBandPowerValue(), 1);
+            Serial.print(",");
+            Serial.print(csvBand.lastTotalEnergyValue(), 1);
+            Serial.print(",");
+            Serial.print(csvBand.producedFreshPacketOnLastObserve() ? 1 : 0);
+            Serial.print(",");
+            Serial.println(csvBand.lastPacketAgeSamples());
         }
     } else if (dumpChunks) {
         const unsigned long emittedSamples = (capturedSamples + decim - 1UL) / decim;

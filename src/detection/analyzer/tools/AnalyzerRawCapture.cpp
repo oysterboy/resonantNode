@@ -13,6 +13,27 @@ namespace {
 constexpr unsigned long kRawCaptureFlushSamples = 256;
 constexpr unsigned long kRawCaptureTimeoutSlackMs = 2000;
 
+int16_t toInt16(int32_t value) {
+    if (value > 32767) {
+        return 32767;
+    }
+    if (value < -32768) {
+        return -32768;
+    }
+    return static_cast<int16_t>(value);
+}
+
+int16_t toInt16(float value) {
+    const long rounded = static_cast<long>(lroundf(value));
+    if (rounded > 32767L) {
+        return 32767;
+    }
+    if (rounded < -32768L) {
+        return -32768;
+    }
+    return static_cast<int16_t>(rounded);
+}
+
 unsigned long rawCaptureChunkSize(unsigned long sampleRateHz, unsigned long decim) {
     const unsigned long baseChunk = sampleRateHz / 20UL;
     const unsigned long decimatedChunk = decim > 0 ? baseChunk / decim : baseChunk;
@@ -21,7 +42,7 @@ unsigned long rawCaptureChunkSize(unsigned long sampleRateHz, unsigned long deci
 
 } // namespace
 
-void AnalyzerApp::runRawTrigger(unsigned long toneHz,
+bool AnalyzerApp::runRawTrigger(unsigned long toneHz,
                                 unsigned long durationMs,
                                 unsigned long postMs,
                                 unsigned long preMs,
@@ -52,7 +73,7 @@ void AnalyzerApp::runRawTrigger(unsigned long toneHz,
     }
 
     const uint32_t sampleRateHz = _audioSource.sampleRateHz() > 0 ? _audioSource.sampleRateHz() : 16000UL;
-    const unsigned long maxSamples = 16000UL;
+    const unsigned long maxSamples = 8000UL;
     unsigned long preWantedSamples = static_cast<unsigned long>((static_cast<uint64_t>(preMs) * static_cast<uint64_t>(sampleRateHz)) / 1000ULL);
     unsigned long postWantedSamples = static_cast<unsigned long>((static_cast<uint64_t>(postMs) * static_cast<uint64_t>(sampleRateHz)) / 1000ULL);
     if (preWantedSamples > maxSamples) {
@@ -73,10 +94,10 @@ void AnalyzerApp::runRawTrigger(unsigned long toneHz,
         postWantedSamples = 1;
     }
 
-    int32_t* preRingBuffer = nullptr;
+    int16_t* preRingBuffer = nullptr;
     uint32_t* preRingTimeBuffer = nullptr;
     if (preWantedSamples > 0) {
-        preRingBuffer = static_cast<int32_t*>(malloc(static_cast<size_t>(preWantedSamples) * sizeof(int32_t)));
+        preRingBuffer = static_cast<int16_t*>(malloc(static_cast<size_t>(preWantedSamples) * sizeof(int16_t)));
         preRingTimeBuffer = static_cast<uint32_t*>(malloc(static_cast<size_t>(preWantedSamples) * sizeof(uint32_t)));
         if (preRingBuffer == nullptr || preRingTimeBuffer == nullptr) {
             if (preRingBuffer != nullptr) {
@@ -86,11 +107,11 @@ void AnalyzerApp::runRawTrigger(unsigned long toneHz,
                 free(preRingTimeBuffer);
             }
             Serial.println("RAW_ERR memory=pre_ring_alloc_failed");
-            return;
+            return false;
         }
     }
 
-    int32_t* rawBuffer = static_cast<int32_t*>(malloc(static_cast<size_t>(maxSamples) * sizeof(int32_t)));
+    int16_t* rawBuffer = static_cast<int16_t*>(malloc(static_cast<size_t>(maxSamples) * sizeof(int16_t)));
     uint32_t* sampleTimeMsBuffer = static_cast<uint32_t*>(malloc(static_cast<size_t>(maxSamples) * sizeof(uint32_t)));
     if (rawBuffer == nullptr || sampleTimeMsBuffer == nullptr) {
         if (preRingBuffer != nullptr) {
@@ -103,7 +124,7 @@ void AnalyzerApp::runRawTrigger(unsigned long toneHz,
             free(sampleTimeMsBuffer);
         }
         Serial.println("RAW_ERR memory=raw_buffer_alloc_failed");
-        return;
+        return false;
     }
 
     unsigned long flushedSamples = 0;
@@ -128,7 +149,7 @@ void AnalyzerApp::runRawTrigger(unsigned long toneHz,
         }
         free(rawBuffer);
         free(sampleTimeMsBuffer);
-        return;
+        return false;
     }
 
     const unsigned long captureId = ++_rawCaptureSequenceId;
@@ -237,16 +258,16 @@ void AnalyzerApp::runRawTrigger(unsigned long toneHz,
             return false;
         }
 
-        const int centeredSample = audioSamplePacket.centeredAudioValue;
+        const int16_t ampSample = toInt16(audioSamplePacket.audioMagnitudeValue);
         if (!emitStarted) {
             if (preRingBuffer != nullptr && preWantedSamples > 0) {
-                preRingBuffer[preWriteIndex] = static_cast<int32_t>(centeredSample);
+                preRingBuffer[preWriteIndex] = ampSample;
                 preRingTimeBuffer[preWriteIndex] = audioSamplePacket.timeMs;
                 preWriteIndex = (preWriteIndex + 1UL) % preWantedSamples;
             }
             ++preCapturedTotal;
         } else if (postCaptured < postWantedSamples) {
-            rawBuffer[preWindowSamples + postCaptured] = static_cast<int32_t>(centeredSample);
+            rawBuffer[preWindowSamples + postCaptured] = ampSample;
             sampleTimeMsBuffer[preWindowSamples + postCaptured] = audioSamplePacket.timeMs;
             ++postCaptured;
         }
@@ -335,12 +356,12 @@ void AnalyzerApp::runRawTrigger(unsigned long toneHz,
     Serial.print(" post_samples=");
     Serial.print(postCaptured);
     if (dumpBinary) {
-        Serial.print(" fields=raw32");
+        Serial.print(" fields=raw16");
         Serial.print(" dump=bin");
         Serial.print(" samples=");
         Serial.print(capturedSamples);
         Serial.print(" bytes=");
-        Serial.print(capturedSamples * sizeof(int32_t));
+        Serial.print(capturedSamples * sizeof(int16_t));
     } else if (dumpChunks) {
         Serial.print(" fields=min,max,rms,mean_abs");
         Serial.print(" dump=chunks");
@@ -353,10 +374,10 @@ void AnalyzerApp::runRawTrigger(unsigned long toneHz,
     Serial.println();
 
     if (dumpBinary) {
-        Serial.write(reinterpret_cast<const uint8_t*>(rawBuffer), capturedSamples * sizeof(int32_t));
+        Serial.write(reinterpret_cast<const uint8_t*>(rawBuffer), capturedSamples * sizeof(int16_t));
         Serial.println();
     } else if (dumpCsv) {
-        Serial.println("ms,raw,abs,env,score,contrast,target_power,neighbor_power,total_energy,updated,age_samples");
+        Serial.println("ms,amp,env,target_score");
         FreqBandStream csvBand;
         csvBand.resetState();
         csvBand.setTargetFrequencyHz(_freqBandStream.targetFrequencyHz());
@@ -366,7 +387,7 @@ void AnalyzerApp::runRawTrigger(unsigned long toneHz,
 
         float csvEnv = 0.0f;
         for (unsigned long i = 0; i < capturedSamples; ++i) {
-            const int32_t sample = rawBuffer[i];
+            const int sample = static_cast<int>(rawBuffer[i]);
             const int absSample = sample < 0 ? -sample : sample;
             csvEnv = csvEnv * 0.95f + static_cast<float>(absSample) * 0.05f;
             csvBand.observeCenteredSample(sample, sampleTimeMsBuffer[i]);
@@ -375,23 +396,9 @@ void AnalyzerApp::runRawTrigger(unsigned long toneHz,
             Serial.print(",");
             Serial.print(sample);
             Serial.print(",");
-            Serial.print(absSample);
-            Serial.print(",");
             Serial.print(csvEnv, 1);
             Serial.print(",");
-            Serial.print(csvBand.lastTargetBandScoreValue(), 2);
-            Serial.print(",");
-            Serial.print(csvBand.lastTargetBandContrastValue(), 2);
-            Serial.print(",");
-            Serial.print(csvBand.lastTargetBandPowerValue(), 1);
-            Serial.print(",");
-            Serial.print(csvBand.lastNeighborBandPowerValue(), 1);
-            Serial.print(",");
-            Serial.print(csvBand.lastTotalEnergyValue(), 1);
-            Serial.print(",");
-            Serial.print(csvBand.producedFreshPacketOnLastObserve() ? 1 : 0);
-            Serial.print(",");
-            Serial.println(csvBand.lastPacketAgeSamples());
+            Serial.println(csvBand.lastTargetBandScoreValue(), 2);
         }
     } else if (dumpChunks) {
         const unsigned long emittedSamples = (capturedSamples + decim - 1UL) / decim;
@@ -408,7 +415,7 @@ void AnalyzerApp::runRawTrigger(unsigned long toneHz,
                 if (rawIndex >= capturedSamples) {
                     break;
                 }
-                const int32_t sample = rawBuffer[rawIndex];
+                const int sample = static_cast<int>(rawBuffer[rawIndex]);
                 const long absSample = sample < 0 ? -static_cast<long>(sample) : static_cast<long>(sample);
                 if (first) {
                     chunkMin = sample;
@@ -444,27 +451,27 @@ void AnalyzerApp::runRawTrigger(unsigned long toneHz,
             Serial.print(" max=");
             Serial.print(chunkMax);
             Serial.print(" rms=");
-            Serial.print(rms, 1);
+            Serial.print(toInt16(static_cast<float>(rms)));
             Serial.print(" mean_abs=");
-            Serial.print(meanAbs, 1);
+            Serial.print(toInt16(static_cast<float>(meanAbs)));
             Serial.print(" count=");
             Serial.println(chunkCount);
         }
     } else {
         float envelope = 0.0f;
         for (unsigned long i = 0; i < capturedSamples; ++i) {
-            const int32_t sample = rawBuffer[i];
+            const int sample = static_cast<int>(rawBuffer[i]);
             const int absSample = sample < 0 ? -sample : sample;
             envelope = envelope * 0.95f + static_cast<float>(absSample) * 0.05f;
-        Serial.print("RAW_SAMPLE i=");
-        Serial.print(i);
-        Serial.print(" value=");
-        Serial.print(sample);
-        Serial.print(" abs=");
-        Serial.print(absSample);
-        Serial.print(" env=");
-        Serial.println(envelope, 1);
-    }
+            Serial.print("RAW_SAMPLE i=");
+            Serial.print(i);
+            Serial.print(" value=");
+            Serial.print(sample);
+            Serial.print(" abs=");
+            Serial.print(absSample);
+            Serial.print(" env=");
+            Serial.println(toInt16(envelope));
+        }
     }
 
     Serial.print("RAW_SUMMARY id=");
@@ -491,4 +498,5 @@ void AnalyzerApp::runRawTrigger(unsigned long toneHz,
         free(sampleTimeMsBuffer);
     }
     free(rawBuffer);
+    return true;
 }

@@ -9,7 +9,7 @@ This process document describes the repeatable scalar tuning loop, the command s
 ## Current scope
 
 - Focus profile: `TonalPulseScalar`
-- Goal: fix `scalar_max_duration_ms=220` and `scalar_onset_threshold=19000`, then first find the lowest stable `scalar_release_debounce_ms`, then sweep `scalar_release_threshold`
+- Goal: hold current defaults steady, sweep `scalar_release_threshold` upward from `5000` to `15000`, then sweep `scalar_onset_threshold` upward in `1000` steps
 - Launch batch size: `50` trials per launch
 - Working session target: about `30` minutes
 
@@ -78,7 +78,7 @@ Example:
 Suggested value order:
 
 ```text
-maxDuration-onsetThreshold-releaseThreshold-releaseDebounce
+releaseThreshold-onsetThreshold
 ```
 
 ## What to capture
@@ -115,8 +115,8 @@ The block summary should document the applied tune, not just the intended one.
 ## Tuning rule of thumb
 
 - First remove misses.
-- Then sweep `scalar_release_debounce_ms` downward in small steps while keeping `scalar_max_duration_ms` and `scalar_onset_threshold` fixed.
-- After the best debounce value is known, sweep `scalar_release_threshold` downward in small steps.
+- Then sweep `scalar_release_threshold` upward in small steps while keeping the current attack defaults fixed.
+- After the release sweep is stable, sweep `scalar_onset_threshold` upward in `1000`-point steps.
 - Keep duplicates at `0` if possible.
 
 ## Notes

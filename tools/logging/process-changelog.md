@@ -22,10 +22,10 @@ SEQ start profile=TonalPulseScalar tries=50 mode=source when=all verbose=1
 
 ## Tuning ladder
 
-The current 20-launch campaign is now split into two clear phases.
+The current 10-launch campaign is now split into two clear phases.
 
-- Blocks 1-5: hold `scalar_max_duration_ms=220` and `scalar_onset_threshold=19000`, then sweep `scalar_release_debounce_ms` from `30` down to `10`.
-- Blocks 6-10: keep the best debounce found in phase 1, then sweep `scalar_release_threshold` from `5000` down to `1000`.
+- Blocks 1-5: hold the current attack defaults steady, then sweep `scalar_release_threshold` upward from `5000` to `15000` in `2500`-point steps.
+- Blocks 6-10: keep the release value fixed from phase 1, then sweep `scalar_onset_threshold` upward in `1000`-point steps.
 
 The block summaries should show the applied tune captured from `PARAM STATUS`, not only the requested `PARAM` command.
 
@@ -39,7 +39,7 @@ The block summaries should show the applied tune captured from `PARAM STATUS`, n
 
 ## Current target
 
-- 20 sequence launches total.
+- 10 sequence launches total.
 - 50 trials per launch.
 - `mode source`.
 - `when all`.

@@ -128,7 +128,7 @@ function Get-BlockTuneSnapshot {
             return [ordered]@{
                 scalar_max_duration_ms = 220
                 scalar_onset_threshold = 19000
-                scalar_release_threshold = 5000
+                scalar_release_threshold = 7500
                 scalar_cooldown_ms = 50
                 scalar_release_debounce_ms = 25
                 scalar_min_duration_ms = 60
@@ -139,7 +139,7 @@ function Get-BlockTuneSnapshot {
             return [ordered]@{
                 scalar_max_duration_ms = 220
                 scalar_onset_threshold = 19000
-                scalar_release_threshold = 5000
+                scalar_release_threshold = 10000
                 scalar_cooldown_ms = 50
                 scalar_release_debounce_ms = 20
                 scalar_min_duration_ms = 60
@@ -150,7 +150,7 @@ function Get-BlockTuneSnapshot {
             return [ordered]@{
                 scalar_max_duration_ms = 220
                 scalar_onset_threshold = 19000
-                scalar_release_threshold = 5000
+                scalar_release_threshold = 12500
                 scalar_cooldown_ms = 50
                 scalar_release_debounce_ms = 15
                 scalar_min_duration_ms = 60
@@ -161,7 +161,7 @@ function Get-BlockTuneSnapshot {
             return [ordered]@{
                 scalar_max_duration_ms = 220
                 scalar_onset_threshold = 19000
-                scalar_release_threshold = 5000
+                scalar_release_threshold = 15000
                 scalar_cooldown_ms = 50
                 scalar_release_debounce_ms = 10
                 scalar_min_duration_ms = 60
@@ -170,11 +170,10 @@ function Get-BlockTuneSnapshot {
         }
         6 {
             return [ordered]@{
-                # Phase 2 starts from the best debounce found in phase 1.
-                # Update this value before block 6 if phase 1 selects a value other than 10.
+                # Phase 2 starts from the release value chosen at the end of phase 1.
                 scalar_max_duration_ms = 220
                 scalar_onset_threshold = 19000
-                scalar_release_threshold = 5000
+                scalar_release_threshold = 15000
                 scalar_cooldown_ms = 50
                 scalar_release_debounce_ms = 10
                 scalar_min_duration_ms = 60
@@ -184,8 +183,8 @@ function Get-BlockTuneSnapshot {
         7 {
             return [ordered]@{
                 scalar_max_duration_ms = 220
-                scalar_onset_threshold = 19000
-                scalar_release_threshold = 4000
+                scalar_onset_threshold = 20000
+                scalar_release_threshold = 15000
                 scalar_cooldown_ms = 50
                 scalar_release_debounce_ms = 10
                 scalar_min_duration_ms = 60
@@ -195,8 +194,8 @@ function Get-BlockTuneSnapshot {
         8 {
             return [ordered]@{
                 scalar_max_duration_ms = 220
-                scalar_onset_threshold = 19000
-                scalar_release_threshold = 3000
+                scalar_onset_threshold = 21000
+                scalar_release_threshold = 15000
                 scalar_cooldown_ms = 50
                 scalar_release_debounce_ms = 10
                 scalar_min_duration_ms = 60
@@ -206,8 +205,8 @@ function Get-BlockTuneSnapshot {
         9 {
             return [ordered]@{
                 scalar_max_duration_ms = 220
-                scalar_onset_threshold = 19000
-                scalar_release_threshold = 2000
+                scalar_onset_threshold = 22000
+                scalar_release_threshold = 15000
                 scalar_cooldown_ms = 50
                 scalar_release_debounce_ms = 10
                 scalar_min_duration_ms = 60
@@ -217,8 +216,8 @@ function Get-BlockTuneSnapshot {
         default {
             return [ordered]@{
                 scalar_max_duration_ms = 220
-                scalar_onset_threshold = 19000
-                scalar_release_threshold = 1000
+                scalar_onset_threshold = 23000
+                scalar_release_threshold = 15000
                 scalar_cooldown_ms = 50
                 scalar_release_debounce_ms = 10
                 scalar_min_duration_ms = 60
@@ -485,11 +484,8 @@ $lockInfo = Open-CampaignLock -Path $lockPath -StatePath $statePath -BatchRootVa
         '',
         '## Tuning Ladder',
         '',
-        '- Block 1: baseline snapshot.',
-        '- Block 2: shorten max duration first.',
-        '- Block 3: lower release debounce a little.',
-        '- Block 4: continue duration tightening.',
-        '- Block 5 and later: lower onset / release thresholds gradually if the earlier blocks stay clean.',
+        '- Blocks 1-5: hold the current attack defaults steady, then sweep `scalar_release_threshold` upward from `5000` to `15000` in `2500`-point steps.',
+        '- Blocks 6-10: keep the release value fixed from phase 1, then sweep `scalar_onset_threshold` upward in `1000`-point steps.',
         '',
         '## Notes',
         '',

@@ -56,7 +56,35 @@ function Append-TextLine {
         [string]$Line
     )
 
-    Add-Content -LiteralPath $Path -Value $Line -Encoding utf8
+    $attempt = 0
+    while ($true) {
+        try {
+            $stream = [System.IO.File]::Open(
+                $Path,
+                [System.IO.FileMode]::Append,
+                [System.IO.FileAccess]::Write,
+                [System.IO.FileShare]::ReadWrite
+            )
+            try {
+                $writer = New-Object System.IO.StreamWriter($stream, [System.Text.UTF8Encoding]::new($false))
+                try {
+                    $writer.AutoFlush = $true
+                    $writer.WriteLine($Line)
+                } finally {
+                    $writer.Dispose()
+                }
+            } finally {
+                $stream.Dispose()
+            }
+            return
+        } catch [System.IO.IOException] {
+            $attempt++
+            if ($attempt -ge 25) {
+                throw
+            }
+            Start-Sleep -Milliseconds 100
+        }
+    }
 }
 
 function ConvertTo-ProfileSlug {

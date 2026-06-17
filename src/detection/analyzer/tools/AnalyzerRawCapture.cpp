@@ -267,6 +267,10 @@ bool AnalyzerApp::runRawTrigger(unsigned long toneHz,
     unsigned long preWriteIndex = 0;
     unsigned long postCaptured = 0;
     const bool useFeatureStream = rawCaptureUsesFeatureStream(mode);
+    int64_t rawWindowSum = 0;
+    uint64_t rawWindowAbsSum = 0;
+    int32_t rawWindowMin = INT32_MAX;
+    int32_t rawWindowMax = INT32_MIN;
 
     auto copyPreWindow = [&]() {
         if (preWindowCopied || preWantedSamples == 0) {
@@ -361,6 +365,15 @@ bool AnalyzerApp::runRawTrigger(unsigned long toneHz,
 
         const unsigned long sampleTimeMs = sampleTimeUs / 1000UL;
         const uint16_t sampleTimeOffsetMs = rawCaptureOffsetMs(sampleTimeMs, captureBaseMs);
+        const int32_t signedRawSample = static_cast<int32_t>(rawSample);
+        rawWindowSum += static_cast<int64_t>(signedRawSample);
+        rawWindowAbsSum += static_cast<uint64_t>(signedRawSample < 0 ? -static_cast<int64_t>(signedRawSample) : static_cast<int64_t>(signedRawSample));
+        if (signedRawSample < rawWindowMin) {
+            rawWindowMin = signedRawSample;
+        }
+        if (signedRawSample > rawWindowMax) {
+            rawWindowMax = signedRawSample;
+        }
         if (useFeatureStream) {
             AudioSamplePacket audioSamplePacket = {};
             // Feature dumps must mirror the live detector path, so we derive the
@@ -458,6 +471,10 @@ bool AnalyzerApp::runRawTrigger(unsigned long toneHz,
     const unsigned long droppedSamples = (preWantedSamples + postWantedSamples) > capturedSamples
         ? (preWantedSamples + postWantedSamples) - capturedSamples
         : 0;
+    const float rawWindowMean = capturedSamples > 0 ? static_cast<float>(rawWindowSum) / static_cast<float>(capturedSamples) : 0.0f;
+    const float rawWindowAbsMean = capturedSamples > 0 ? static_cast<float>(rawWindowAbsSum) / static_cast<float>(capturedSamples) : 0.0f;
+    const int32_t rawWindowMinOut = capturedSamples > 0 ? rawWindowMin : 0;
+    const int32_t rawWindowMaxOut = capturedSamples > 0 ? rawWindowMax : 0;
 
     float maxAmp = 0.0f;
     int32_t maxPcmAbs = 0;
@@ -577,6 +594,16 @@ bool AnalyzerApp::runRawTrigger(unsigned long toneHz,
         Serial.print(" max_amp=");
         Serial.print(maxAmp, 1);
     }
+    Serial.print(" raw_mean=");
+    Serial.print(rawWindowMean, 1);
+    Serial.print(" raw_abs_mean=");
+    Serial.print(rawWindowAbsMean, 1);
+    Serial.print(" raw_min=");
+    Serial.print(rawWindowMinOut);
+    Serial.print(" raw_max=");
+    Serial.print(rawWindowMaxOut);
+    Serial.print(" baseline=");
+    Serial.print(_audioSignal.baseline(), 1);
     Serial.println();
 
     if (prePcmRingBuffer != nullptr) {

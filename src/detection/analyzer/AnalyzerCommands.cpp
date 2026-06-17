@@ -207,7 +207,7 @@ void AnalyzerApp::handleUsbLine(const char* line) {
         Serial.println("CMD: EMIT MODE REMOTE");
         Serial.println("CMD: EMIT MODE AUTO interval=2000 freq=3200 dur=100");
         Serial.println("CMD: EMIT SWEEP start=3000 stop=3500 step=100 dur=80 pause=1000");
-        Serial.println("CMD: RAW trigger f=3200 dur=100 post=1000 dump=csv|dump=raw|dump=text|dump=chunks|dump=bin");
+        Serial.println("CMD: RAW trigger f=3200 dur=100 post=1000 mode=feat (default)|mode=pcm|mode=both");
         Serial.println("CMD: SEQ");
         Serial.println("CMD: SEQ help");
         Serial.println("CMD: SEQ stop");
@@ -294,9 +294,7 @@ void AnalyzerApp::handleUsbLine(const char* line) {
         unsigned long postMs = 1000;
         unsigned long preMs = 0;
         unsigned long decim = 1;
-        bool dumpChunks = false;
-        bool dumpBinary = false;
-        bool dumpCsv = false;
+        AnalyzerApp::RawCaptureMode rawMode = AnalyzerApp::RawCaptureMode::Features;
 
         char* savePtr = nullptr;
         char* token = strtok_r(_commandScratch, " ", &savePtr);
@@ -311,18 +309,19 @@ void AnalyzerApp::handleUsbLine(const char* line) {
                 preMs = static_cast<unsigned long>(strtoul(token + 4, nullptr, 10));
             } else if (startsWithTokenIgnoreCase(token, "decim=")) {
                 decim = static_cast<unsigned long>(strtoul(token + 6, nullptr, 10));
-            } else if (equalsIgnoreCase(token, "dump=bin")) {
-                dumpBinary = true;
-            } else if (equalsIgnoreCase(token, "dump=chunks")) {
-                dumpChunks = true;
-            } else if (equalsIgnoreCase(token, "dump=csv")) {
-                dumpCsv = true;
-            } else if (equalsIgnoreCase(token, "dump=raw") || equalsIgnoreCase(token, "dump=text") || equalsIgnoreCase(token, "dump=full")) {
-                dumpBinary = false;
+            } else if (startsWithTokenIgnoreCase(token, "mode=")) {
+                const char* modeValue = token + 5;
+                if (equalsIgnoreCase(modeValue, "feat") || equalsIgnoreCase(modeValue, "features") || equalsIgnoreCase(modeValue, "csv")) {
+                    rawMode = AnalyzerApp::RawCaptureMode::Features;
+                } else if (equalsIgnoreCase(modeValue, "pcm") || equalsIgnoreCase(modeValue, "raw")) {
+                    rawMode = AnalyzerApp::RawCaptureMode::Pcm;
+                } else if (equalsIgnoreCase(modeValue, "both")) {
+                    rawMode = AnalyzerApp::RawCaptureMode::Both;
+                }
             }
         }
 
-        if (runRawTrigger(toneHz, durationMs, postMs, preMs, decim, dumpChunks, dumpBinary, dumpCsv)) {
+        if (runRawTrigger(toneHz, durationMs, postMs, preMs, decim, rawMode)) {
             Serial.println("OK RAW");
         }
         return;

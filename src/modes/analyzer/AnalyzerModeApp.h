@@ -57,6 +57,12 @@ public:
         All,
     };
 
+    enum class RawCaptureMode {
+        Pcm,
+        Features,
+        Both,
+    };
+
     struct SeqOutputConfig {
         SeqOutputMode mode = SeqOutputMode::Trial;
         SeqOutputWhen when = SeqOutputWhen::Miss;
@@ -404,7 +410,7 @@ private:
     void stopSequenceTest();
     void updateSequenceTest(unsigned long now);
     void finalizeSequenceTrial(unsigned long now);
-    bool runRawTrigger(unsigned long toneHz, unsigned long durationMs, unsigned long postMs, unsigned long preMs, unsigned long decim, bool dumpChunks, bool dumpBinary, bool dumpCsv);
+    bool runRawTrigger(unsigned long toneHz, unsigned long durationMs, unsigned long postMs, unsigned long preMs, unsigned long decim, RawCaptureMode mode);
     void printAudioSourceSummary() const;
     void printAudioRunSummary() const;
     void printOccurrenceSummary() const;

@@ -4,7 +4,7 @@
 #include <stdint.h>
 #include <memory>
 
-#include "AudioSource.h"
+#include "../audio/AudioSource.h"
 
 struct AudioSlotDiagnostics {
     bool present = false;

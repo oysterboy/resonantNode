@@ -105,16 +105,21 @@ struct DetectionProfile {
 
 inline DetectionProfile makeTonalPulseScalarProfile() {
     DetectionProfile profile;
+    constexpr float kAmplitudeScale = 16.0f;
+    constexpr float kPowerScale = kAmplitudeScale * kAmplitudeScale;
 
     // Identity and occurrence routing.
     profile.kind = DetectionProfileKind::TonalPulseScalar;
     profile.detectorSelection = DetectorSelection::ScalarTransient;
+    // This profile observes a frequency-derived scalar stream, not raw PCM.
+    // The stream is power-like, so upstream amplitude changes retune these
+    // values quadratically rather than linearly.
     profile.scalarTransient.observedStream = FeatureStreamId::FrequencyTargetBand;
-    profile.scalarTransient.onsetDetectionThreshold = 20000.0f;
-    profile.scalarTransient.onsetReleaseThreshold = 5000.0f;
+    profile.scalarTransient.onsetDetectionThreshold = 20000.0f * kPowerScale;
+    profile.scalarTransient.onsetReleaseThreshold = 5000.0f * kPowerScale;
     profile.scalarTransient.minTransientDurationMs = 60;
     profile.scalarTransient.maxTransientDurationMs = 220;
-    profile.scalarTransient.minTransientPeakStrength = 50.0f; // conservaive value, reduce duplicates
+    profile.scalarTransient.minTransientPeakStrength = 50.0f * kPowerScale; // conservative value, reduce duplicates
     profile.scalarTransient.releaseDebounceMs = 20;
     profile.scalarTransient.cooldownAfterOnsetMs = 50; // refractory phase
 

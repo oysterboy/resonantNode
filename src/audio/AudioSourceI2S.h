@@ -8,7 +8,7 @@
 
 struct AudioSlotDiagnostics {
     bool present = false;
-    const char* slotDiagSource = "post_mono_normalized";
+    const char* slotDiagSource = "post_mono_pcm";
     unsigned long slotCount[2] = {0, 0};
     int slotMin[2] = {0, 0};
     int slotMax[2] = {0, 0};

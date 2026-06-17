@@ -5,13 +5,35 @@
 #include <new>
 
 namespace {
-int normalizeToAdcScale(int32_t rawSample) {
-    // The analog path feeds 12-bit ADC-style values around 0..4095.
-    // Map the signed I2S sample into the same range so the rest of the
-    // pipeline can reuse the analog tuning unchanged.
-    const int32_t signed12 = rawSample >> 20;
-    const int32_t clamped = signed12 < -2048 ? -2048 : (signed12 > 2047 ? 2047 : signed12);
-    return static_cast<int>(clamped + 2048);
+int decodePcmSample(const uint8_t* samplePtr, int bytesPerSample) {
+    if (samplePtr == nullptr || bytesPerSample <= 0) {
+        return 0;
+    }
+
+    if (bytesPerSample >= static_cast<int>(sizeof(int32_t))) {
+        int32_t sample32 = 0;
+        memcpy(&sample32, samplePtr, sizeof(sample32));
+        return static_cast<int>(sample32);
+    }
+
+    if (bytesPerSample == 3) {
+        uint32_t packed = 0;
+        memcpy(&packed, samplePtr, 3);
+        if ((packed & 0x00800000UL) != 0) {
+            packed |= 0xFF000000UL;
+        }
+        return static_cast<int>(static_cast<int32_t>(packed));
+    }
+
+    if (bytesPerSample == 2) {
+        int16_t sample16 = 0;
+        memcpy(&sample16, samplePtr, sizeof(sample16));
+        return static_cast<int>(sample16);
+    }
+
+    int8_t sample8 = 0;
+    memcpy(&sample8, samplePtr, sizeof(sample8));
+    return static_cast<int>(sample8);
 }
 
 uint32_t sampleOffsetUs(uint32_t sampleOffset, uint32_t sampleRateHz) {
@@ -102,9 +124,7 @@ bool AudioSourceI2S::readRawSample(int& sample, uint32_t& sampleTimeUs) {
         return false;
     }
 
-    int32_t rawSample = 0;
-    memcpy(&rawSample, rawBytes, static_cast<size_t>(bytesPerSample));
-    sample = static_cast<int>(rawSample);
+    sample = decodePcmSample(rawBytes, bytesPerSample);
     sampleTimeUs = micros();
     _stats.totalSamplesRead += 1;
     return true;
@@ -170,7 +190,7 @@ void AudioSourceI2S::resetStats() {
     _selectedSlotIndex = -1;
     _stats = {};
     _slotDiagnostics = {};
-    _slotDiagnostics.slotDiagSource = "raw_i2s_words";
+    _slotDiagnostics.slotDiagSource = "pcm_i2s_words";
 }
 
 void AudioSourceI2S::recordReadAttempt(int requestedBytes, int bytesRead, bool readError) {
@@ -256,27 +276,12 @@ bool AudioSourceI2S::refillBlock() {
     _blockStartSampleIndex = _outputSampleIndex;
     _blockOverflowBeforeBlock = _droppedSamples > 0;
     for (size_t i = 0; i < samplesToProcess; ++i) {
-        int rawSample = 0;
         const uint8_t* samplePtr = rawBytes + (i * sampleBytes);
-        if (bytesPerSample == 4) {
-            int32_t sample32 = 0;
-            memcpy(&sample32, samplePtr, sizeof(sample32));
-            rawSample = sample32;
-        } else if (bytesPerSample == 2) {
-            int16_t sample16 = 0;
-            memcpy(&sample16, samplePtr, sizeof(sample16));
-            rawSample = sample16;
-        } else if (bytesPerSample == 1) {
-            int8_t sample8 = 0;
-            memcpy(&sample8, samplePtr, sizeof(sample8));
-            rawSample = sample8;
-        } else {
-            memcpy(&rawSample, samplePtr, sampleBytes);
-        }
+        const int rawSample = decodePcmSample(samplePtr, bytesPerSample);
 
         rawSamples[i] = rawSample;
 
-        const int sample = normalizeToAdcScale(rawSample);
+        const int sample = rawSample;
         const size_t slotIndex = i % 2U;
         const size_t diagSlotIndex = slotIndex < 2U ? slotIndex : 1U;
         slotSumSquares[diagSlotIndex] += static_cast<double>(sample) * static_cast<double>(sample);
@@ -319,7 +324,7 @@ bool AudioSourceI2S::refillBlock() {
     }
     _stats.totalSamplesRead += static_cast<uint64_t>(fullSamplesRead);
     _slotDiagnostics.present = slotCount[0] > 0 || slotCount[1] > 0;
-    _slotDiagnostics.slotDiagSource = "raw_i2s_words";
+    _slotDiagnostics.slotDiagSource = "pcm_i2s_words";
     for (size_t slot = 0; slot < 2; ++slot) {
         _slotDiagnostics.slotCount[slot] = slotCount[slot];
         _slotDiagnostics.slotMin[slot] = slotHasValue[slot] ? slotMin[slot] : 0;
@@ -375,7 +380,7 @@ bool AudioSourceI2S::refillBlock() {
         if (rawIndex >= samplesToProcess) {
             break;
         }
-        _blockSamples[_blockCount++] = normalizeToAdcScale(rawSamples[rawIndex]);
+        _blockSamples[_blockCount++] = rawSamples[rawIndex];
     }
     _outputSampleIndex += static_cast<uint64_t>(_blockCount);
     return _blockCount > 0;

@@ -3,7 +3,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#include "../../audio/AudioSourceI2S.h"
+#include "../../hal/AudioSourceI2S.h"
 #include "../../detection/DetectionProfile.h"
 #include "../../audio/AudioSignal.h"
 #include "../../detection/DetectionRuntime.h"
@@ -58,9 +58,9 @@ public:
     };
 
     enum class RawCaptureMode {
-        Pcm,
-        Features,
-        Both,
+        Pcm,      // Raw PCM row output only.
+        Features, // Detector-owned feature rows only.
+        Both,     // PCM rows plus detector-owned feature rows.
     };
 
     struct SeqOutputConfig {
@@ -486,38 +486,38 @@ private:
     static SequenceDiagMode sequenceDiagModeFromOutputWhen(SeqOutputWhen when);
 
     // Hardware and occurrence chain.
-    int _inputPin;
-    AudioSourceI2S _i2sSource;
-    AudioSource& _audioSource;
-    AudioSignal _audioSignal;
-    mutable detection::DetectionRuntime _detection;
-    FreqBandStream _freqBandStream;
-    AnalyzerTuning _analyzerTuning = {};
-    SeqOutputConfig _seqOutputConfig = {};
-    PendingSequenceStart _pendingSequenceStart = {};
+    int _inputPin; // I2S input pin used by the active audio source.
+    AudioSourceI2S _i2sSource; // Concrete audio transport for analyzer mode.
+    AudioSource& _audioSource; // Common audio-source view used by shared helpers.
+    AudioSignal _audioSignal; // Legacy audio framing helper for detector input packets.
+    mutable detection::DetectionRuntime _detection; // Canonical detector runtime and feature history.
+    FreqBandStream _freqBandStream; // Live frequency-band stream used by analyzer diagnostics.
+    AnalyzerTuning _analyzerTuning = {}; // Temporary tuning overrides from console commands.
+    SeqOutputConfig _seqOutputConfig = {}; // Sequence-report output policy.
+    PendingSequenceStart _pendingSequenceStart = {}; // Deferred sequence start request.
 
     // Console and emitter control.
-    unsigned long _controlBaudRate = 115200;
-    int _controlRxPin = 16;
-    int _controlTxPin = 17;
-    char _usbLineBuffer[256];
-    size_t _usbLineLength = 0;
-    char _commandScratch[256];
-    char _emitterLineBuffer[256];
-    size_t _emitterLineLength = 0;
+    unsigned long _controlBaudRate = 115200; // USB serial baud rate.
+    int _controlRxPin = 16; // UART RX pin for emitter control.
+    int _controlTxPin = 17; // UART TX pin for emitter control.
+    char _usbLineBuffer[256]; // Buffered USB command line input.
+    size_t _usbLineLength = 0; // Current USB line length.
+    char _commandScratch[256]; // Mutable scratch buffer for token parsing.
+    char _emitterLineBuffer[256]; // Buffered emitter response line input.
+    size_t _emitterLineLength = 0; // Current emitter line length.
 
-    bool _controlClaimPending = false;
-    bool _controlClaimSent = false;
-    unsigned long _controlClaimAtMs = 0;
+    bool _controlClaimPending = false; // Waiting to request emitter control.
+    bool _controlClaimSent = false; // Control claim has already been sent.
+    unsigned long _controlClaimAtMs = 0; // When the claim was queued.
 
     // Session state.
-    SequenceTest _sequenceTest;
-    unsigned long _rawCaptureSequenceId = 0;
-    AnalyzerReport _sequenceReportScratch = {};
+    SequenceTest _sequenceTest; // Current sequence-test execution state.
+    unsigned long _rawCaptureSequenceId = 0; // Monotonic RAW capture identifier.
+    AnalyzerReport _sequenceReportScratch = {}; // Reusable scratch report buffer.
 
-    uint32_t _loopLastUs = 0;
-    unsigned long _loopMaxSinceBootUs = 0;
-    mutable LoopHealthStats _loopHealth;
+    uint32_t _loopLastUs = 0; // Previous loop timestamp for timing diagnostics.
+    unsigned long _loopMaxSinceBootUs = 0; // Worst loop duration since boot.
+    mutable LoopHealthStats _loopHealth; // Rolling loop health statistics.
     static constexpr unsigned long kPrintIntervalMs = 100;
 };
 

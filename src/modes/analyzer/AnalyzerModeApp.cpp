@@ -250,12 +250,12 @@ void AnalyzerApp::updateSequenceAudioHealth(const AudioSamplePacket& audioSample
     }
 
     auto& diagnostics = _sequenceTest.currentTrialDiagnostics;
-    const long centeredSample = static_cast<long>(audioSamplePacket.centeredAudioValue);
+    const long baselineCorrectedSample = static_cast<long>(audioSamplePacket.baselineCorrectedValue);
     const long rawSample = static_cast<long>(audioSamplePacket.rawAudioValue);
-    const unsigned long absCentered = static_cast<unsigned long>(centeredSample >= 0 ? centeredSample : -centeredSample);
+    const unsigned long absCentered = static_cast<unsigned long>(baselineCorrectedSample >= 0 ? baselineCorrectedSample : -baselineCorrectedSample);
     const unsigned long absRaw = static_cast<unsigned long>(rawSample >= 0 ? rawSample : -rawSample);
     const unsigned long delta = diagnostics.audioHasLastCenteredSample
-        ? static_cast<unsigned long>(labs(centeredSample - diagnostics.audioLastCenteredSample))
+        ? static_cast<unsigned long>(labs(baselineCorrectedSample - diagnostics.audioLastCenteredSample))
         : 0UL;
 
     ++diagnostics.audioFrames;
@@ -263,7 +263,7 @@ void AnalyzerApp::updateSequenceAudioHealth(const AudioSamplePacket& audioSample
     if (absCentered <= static_cast<unsigned long>(kAudioZeroishAbsThreshold)) {
         ++diagnostics.audioZeroishFrames;
     }
-    if (diagnostics.audioHasLastCenteredSample && centeredSample == diagnostics.audioLastCenteredSample) {
+    if (diagnostics.audioHasLastCenteredSample && baselineCorrectedSample == diagnostics.audioLastCenteredSample) {
         ++diagnostics.audioFlatlineRunFrames;
         if (diagnostics.audioFlatlineRunFrames >= kAudioFlatlineStreakFrames) {
             ++diagnostics.audioFlatlineFrames;
@@ -333,7 +333,7 @@ void AnalyzerApp::updateSequenceAudioHealth(const AudioSamplePacket& audioSample
         diagnostics.audioRmsTooLowFrames,
         diagnostics.audioRmsTooHighFrames
     );
-    diagnostics.audioLastCenteredSample = centeredSample;
+    diagnostics.audioLastCenteredSample = baselineCorrectedSample;
     diagnostics.audioHasLastCenteredSample = true;
 }
 
@@ -717,7 +717,7 @@ void AnalyzerApp::update() {
             _audioSignal.update(static_cast<int>(block.samples[i]), sampleTimeUs, audioSamplePacket);
             updateSequenceAudioHealth(audioSamplePacket);
             if (_sequenceTest.outputConfig.frequencyBandEnabled) {
-                _freqBandStream.observeCenteredSample(audioSamplePacket.centeredAudioValue, audioSamplePacket.timeMs);
+                _freqBandStream.observeCenteredSample(audioSamplePacket.baselineCorrectedValue, audioSamplePacket.timeMs);
             }
             const bool needSequenceFrequencyPacket = _sequenceTest.sampleDumpEnabled || (_sequenceTest.active && _sequenceTest.currentTrial > 0);
             detection::FrequencyBandMeasurementPacket runtimeFrequencyMeasurementPacket = {};

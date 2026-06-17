@@ -245,7 +245,7 @@ bool AnalyzerApp::runRawTrigger(unsigned long toneHz,
             audioSamplePacket.timeMs = sample.timeMs;
             audioSamplePacket.sampleRateHz = sampleRateHz;
             audioSamplePacket.rawAudioValue = rawSample;
-            audioSamplePacket.centeredAudioValue = rawSample;
+            audioSamplePacket.baselineCorrectedValue = rawSample;
             audioSamplePacket.audioMagnitudeValue = static_cast<float>(rawSample < 0 ? -rawSample : rawSample);
             audioSamplePacket.level = rawSample < 0 ? -rawSample : rawSample;
             audioSamplePacket.smoothedLevel = audioSamplePacket.level;
@@ -253,7 +253,7 @@ bool AnalyzerApp::runRawTrigger(unsigned long toneHz,
             audioSamplePacket.valid = true;
             audioSamplePacket.rawHistoryReady = true;
 
-            _freqBandStream.observeCenteredSample(audioSamplePacket.centeredAudioValue, audioSamplePacket.timeMs);
+            _freqBandStream.observeCenteredSample(audioSamplePacket.baselineCorrectedValue, audioSamplePacket.timeMs);
             const detection::FrequencyBandMeasurementPacket frequencyEvidence = captureFrequencyMeasurementPacket(audioSamplePacket);
             _detection.observeFrame(audioSamplePacket, frequencyEvidence, audioSamplePacket.timeMs);
 

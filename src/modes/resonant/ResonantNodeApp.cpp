@@ -472,7 +472,7 @@ void Node::update() {
             _audioSignal.update(static_cast<int>(block.samples[i]), sampleTimeUs, audioSamplePacket);
             const bool ownEmitSuppressed = audioSamplePacket.timeMs < _behavior.ownEmitDetectionSuppressUntilMs();
             if (!ownEmitSuppressed) {
-                _freqBandStream.observeCenteredSample(audioSamplePacket.centeredAudioValue, audioSamplePacket.timeMs);
+                _freqBandStream.observeCenteredSample(audioSamplePacket.baselineCorrectedValue, audioSamplePacket.timeMs);
                 processDetectionFrame(audioSamplePacket, now, selfChirpSuppressed, sawPatternThisLoop);
             }
         }

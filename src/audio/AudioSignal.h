@@ -21,20 +21,31 @@ struct CurveSnapshot {
 };
 
 struct AudioSamplePacket {
+    // Monotonic sample index for the source stream.
     uint64_t sampleIndex = 0;
     // Wall-clock-derived sample time for this frame.
     uint32_t timeUs = 0;
     // Runtime event time used by detection/analyzer/behavior.
     uint32_t timeMs = 0;
+    // Source sample rate in Hz for the frame.
     unsigned long sampleRateHz = 0;
+    // Decoded PCM sample as read from transport.
     int rawAudioValue = 0;
-    int centeredAudioValue = 0;
+    // Raw sample after baseline subtraction.
+    int baselineCorrectedValue = 0;
+    // Absolute value of the baseline-corrected sample.
     float audioMagnitudeValue = 0.0f;
+    // Quiet-gated integer magnitude used by some detector paths.
     int level = 0;
+    // Smoothed version of the quiet-gated magnitude.
     int smoothedLevel = 0;
+    // Slow quiet-floor estimate used for centering.
     float baseline = 0.0f;
+    // Frame validity flag from the signal layer.
     bool valid = false;
+    // True when the raw sample history has at least one sample.
     bool rawHistoryReady = false;
+    // True when the underlying transport block overflowed.
     bool overflowDuringBlock = false;
 };
 
@@ -198,28 +209,49 @@ public:
 private:
     AudioSource& _source;
 
+    // Processes one sample and updates the internal signal state.
     void processSample(int sample, uint32_t sampleTimeUs, uint64_t sampleIndex, uint32_t sampleRateHz, bool blockOverflow);
+    // Copies the current signal state into a public frame.
     void emitFrame(AudioSamplePacket& outFrame, uint64_t sampleIndex, uint32_t sampleTimeUs, uint32_t sampleTimeMs, unsigned long sampleRateHz, bool blockOverflow);
+    // Optional bounded curve snapshot callback for diagnostics.
     void emitCurveSample(uint32_t sampleTimeUs);
 
+    // Last decoded source sample.
     int _rawSignal = 0;
+    // Baseline-corrected sample value.
     int _centeredSignal = 0;
+    // Quiet-gated magnitude for the current sample.
     int _signalMagnitude = 0;
+    // Timestamp of the most recent sample in microseconds.
     uint32_t _sampleTimeUs = 0;
+    // Slow quiet-floor estimate.
     float _baseline = 2000.0f;
+    // Smoothed magnitude used for diagnostics.
     float _smoothedSignalMagnitude = 0.0f;
+    // Most recent emitted frame.
     AudioSamplePacket _latestFrame;
+    // Most recent transport block metadata.
     AudioBlock _lastBlock;
+    // First sample index in the most recent block.
     uint64_t _lastBlockStartSample = 0;
+    // Sample count in the most recent block.
     uint16_t _lastBlockSampleCount = 0;
+    // Approximate block start timestamp in microseconds.
     uint32_t _lastBlockApproxStartMicros = 0;
+    // Cumulative audio-signal stats.
     AudioSignalStats _stats;
+    // Bounded raw centered-sample history.
     RawSampleHistory _rawSampleHistory;
 
     // Tuning knobs for baseline tracking and smoothing.
+    // Magnitude below which baseline tracking is considered quiet.
     int _baselineTrackingQuietThreshold = 40;
+    // Low-pass factor for the smoothed magnitude.
     float _smoothingFactor = 0.5f;
+    // Baseline update factor during quiet periods.
     float _baselineUpdateFactor = 0.005f;
+    // Optional diagnostics callback.
     CurveSampleCallback _curveSampleCallback = nullptr;
+    // Context pointer passed to the diagnostics callback.
     void* _curveSampleCallbackContext = nullptr;
 };

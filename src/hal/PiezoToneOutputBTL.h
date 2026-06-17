@@ -1,7 +1,7 @@
 #pragma once
 
 #include "../app/RuntimeDefaults.h"
-#include "ToneOutput.h"
+#include "../output/ToneOutput.h"
 
 /*
 PiezoToneOutputBTL

@@ -1,8 +1,8 @@
 #pragma once
 
 #include "../../app/RuntimeDefaults.h"
-#include "../../output/PiezoToneOutputBTL.h"
-#include "../../output/PiezoToneOutput.h"
+#include "../../hal/PiezoToneOutputBTL.h"
+#include "../../hal/PiezoToneOutput.h"
 #include "../../output/ChirpOutput.h"
 
 /*

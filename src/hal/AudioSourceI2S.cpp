@@ -5,6 +5,8 @@
 #include <new>
 
 namespace {
+constexpr bool kPassThroughRawWords = true;
+
 int decodePcmSample(const uint8_t* samplePtr, int bytesPerSample) {
     if (samplePtr == nullptr || bytesPerSample <= 0) {
         return 0;
@@ -13,7 +15,9 @@ int decodePcmSample(const uint8_t* samplePtr, int bytesPerSample) {
     if (bytesPerSample >= static_cast<int>(sizeof(int32_t))) {
         int32_t sample32 = 0;
         memcpy(&sample32, samplePtr, sizeof(sample32));
-        return static_cast<int>(sample32);
+        // The left-justified transport appears to place the useful sample in bits [23:8].
+        // Preserve the sign while discarding the empty low byte.
+        return static_cast<int>(sample32 >> 8);
     }
 
     if (bytesPerSample == 3) {
@@ -72,7 +76,8 @@ void AudioSourceI2S::begin() {
 
     I2S.end();
     I2S.setAllPins(_sckPin, _fsPin, _dataInPin, I2S_PIN_NO_CHANGE, I2S_PIN_NO_CHANGE);
-    const int beginResult = I2S.begin(I2S_PHILIPS_MODE, _sampleRate, _bitsPerSample);
+    // Mono-mode probe: left-justified framing is the stronger candidate so far.
+    const int beginResult = I2S.begin(I2S_LEFT_JUSTIFIED_MODE, _sampleRate, _bitsPerSample);
     _started = beginResult != 0;
 }
 
@@ -367,20 +372,34 @@ bool AudioSourceI2S::refillBlock() {
         _slotDiagnostics.chosenSlot = slotName(static_cast<size_t>(_selectedSlotIndex));
         _slotDiagnostics.activeSlot = (alive0 && alive1) ? "both" : slotName(static_cast<size_t>(_selectedSlotIndex));
     }
-    const size_t chosenSlotIndex = _selectedSlotIndex == 1 ? 1U : 0U;
-    const size_t selectedFrameCount = samplesToProcess / 2U;
     const uint32_t fillEndUs = micros();
-    const uint32_t selectedFrameAge = selectedFrameCount > 0 ? static_cast<uint32_t>(selectedFrameCount - 1U) : 0U;
-    _blockApproxStartMicros = fillEndUs > sampleOffsetUs(selectedFrameAge, static_cast<uint32_t>(_sampleRate))
-        ? fillEndUs - sampleOffsetUs(selectedFrameAge, static_cast<uint32_t>(_sampleRate))
-        : 0U;
-    _blockCount = 0;
-    for (size_t frame = 0; frame < selectedFrameCount && _blockCount < kRefillBatchSize; ++frame) {
-        const size_t rawIndex = (frame * 2U) + chosenSlotIndex;
-        if (rawIndex >= samplesToProcess) {
-            break;
+    if (kPassThroughRawWords) {
+        _blockCount = 0;
+        for (size_t i = 0; i < samplesToProcess && _blockCount < kRefillBatchSize; ++i) {
+            _blockSamples[_blockCount++] = rawSamples[i];
         }
-        _blockSamples[_blockCount++] = rawSamples[rawIndex];
+        const uint32_t selectedFrameAge = _blockCount > 0 ? static_cast<uint32_t>(_blockCount - 1U) : 0U;
+        _blockApproxStartMicros = fillEndUs > sampleOffsetUs(selectedFrameAge, static_cast<uint32_t>(_sampleRate))
+            ? fillEndUs - sampleOffsetUs(selectedFrameAge, static_cast<uint32_t>(_sampleRate))
+            : 0U;
+        _slotDiagnostics.chosenSlot = "raw_passthrough";
+        _slotDiagnostics.activeSlot = "raw_passthrough";
+        _slotDiagnostics.slotSelectionReason = "temporary_raw_passthrough";
+    } else {
+        const size_t chosenSlotIndex = _selectedSlotIndex == 1 ? 1U : 0U;
+        const size_t selectedFrameCount = samplesToProcess / 2U;
+        const uint32_t selectedFrameAge = selectedFrameCount > 0 ? static_cast<uint32_t>(selectedFrameCount - 1U) : 0U;
+        _blockApproxStartMicros = fillEndUs > sampleOffsetUs(selectedFrameAge, static_cast<uint32_t>(_sampleRate))
+            ? fillEndUs - sampleOffsetUs(selectedFrameAge, static_cast<uint32_t>(_sampleRate))
+            : 0U;
+        _blockCount = 0;
+        for (size_t frame = 0; frame < selectedFrameCount && _blockCount < kRefillBatchSize; ++frame) {
+            const size_t rawIndex = (frame * 2U) + chosenSlotIndex;
+            if (rawIndex >= samplesToProcess) {
+                break;
+            }
+            _blockSamples[_blockCount++] = rawSamples[rawIndex];
+        }
     }
     _outputSampleIndex += static_cast<uint64_t>(_blockCount);
     return _blockCount > 0;

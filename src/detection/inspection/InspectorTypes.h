@@ -236,9 +236,11 @@ struct FrequencyBandMeasurementPacket {
     unsigned long observedAtMs = 0;
     unsigned long ageSamples = 0;
 
+    // Normalized band score on the shared 0..32767 magnitude-like scale.
     float targetBandScoreValue = 0.0f;
     float confidence = 0.0f;
 
+    // Raw Goertzel power retained for diagnostics and debugging.
     float targetBandPowerValue = 0.0f;
     float neighborBandPowerValue = 0.0f;
     float lowerBandPowerValue = 0.0f;

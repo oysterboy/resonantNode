@@ -58,9 +58,9 @@ public:
     };
 
     enum class RawCaptureMode {
-        Pcm,      // Raw PCM row output only.
-        Features, // Detector-owned feature rows only.
-        Both,     // PCM rows plus detector-owned feature rows.
+        Pcm,      // Transport decode only: raw I2S PCM for offset/lane debugging.
+        Features, // Detector view only: centered/normalized values from the live pipeline.
+        Both,     // Raw PCM plus detector view in one dump.
     };
 
     struct SeqOutputConfig {

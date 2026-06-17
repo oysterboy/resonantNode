@@ -3,6 +3,11 @@
 #include <Arduino.h>
 #include <math.h>
 
+namespace {
+constexpr float kNormalizedBandScoreScale = 32767.0f;
+constexpr float kNormalizedBandScoreEpsilon = 1.0f;
+}
+
 // FreqBandStream maintains the rolling narrow-band frequency evidence stream.
 void FreqBandStream::resetState() {
     _sampleCount = 0;
@@ -191,10 +196,15 @@ float FreqBandStream::computeFrequencyScore() {
     const float lowerPower = computeGoertzelPowerAtFrequency(_cachedLowerFrequencyHz);
     const float upperPower = computeGoertzelPowerAtFrequency(_cachedUpperFrequencyHz);
     const float neighborPower = (lowerPower + upperPower) * 0.5f;
-    const float absoluteScore = targetPower;
+    const float normalizedDenominator = (totalEnergy * static_cast<float>(_windowSizeSamples)) + kNormalizedBandScoreEpsilon;
+    const float normalizedRatio = normalizedDenominator > 0.0f
+        ? (2.0f * fmaxf(targetPower, 0.0f)) / normalizedDenominator
+        : 0.0f;
+    const float absoluteScore = sqrtf(fmaxf(normalizedRatio, 0.0f)) * kNormalizedBandScoreScale;
+    const float normalizedScore = absoluteScore > kNormalizedBandScoreScale ? kNormalizedBandScoreScale : absoluteScore;
     const float contrast = targetPower / (neighborPower + 1.0f);
 
-    _lastTargetBandScoreValue = absoluteScore;
+    _lastTargetBandScoreValue = normalizedScore;
     _lastTargetBandPowerValue = targetPower;
     _lastLowerBandPowerValue = lowerPower;
     _lastUpperBandPowerValue = upperPower;
@@ -204,7 +214,7 @@ float FreqBandStream::computeFrequencyScore() {
     ++_profileComputeCalls;
     _profileComputeTotalUs += static_cast<unsigned long>(micros() - profileStartUs);
 
-    return absoluteScore;
+    return normalizedScore;
 }
 
 float FreqBandStream::lastTargetBandScoreValue() const {

@@ -16,8 +16,8 @@ This is occurrence/profile tuning support, not pattern matching.
 namespace FrequencyMatchCriteria {
 
 struct Values {
-    float attackScoreMin = 5000.0f;
-    float releaseScoreMin = 4000.0f;
+    float attackScoreMin = 18000.0f;
+    float releaseScoreMin = 12000.0f;
     float attackContrastMin = 50.0f;
     float releaseContrastMin = 50.0f;
 };
@@ -115,18 +115,18 @@ inline const char* reasonName(Reason reason) {
 inline FrequencyMatchGateResult evaluate(const detection::FrequencyBandMeasurementPacket& evidence, const Values& values) {
     FrequencyMatchGateResult out;
     out.evidenceOk = evidence.present;
-    out.score = evidence.targetBandPowerValue;
+    out.score = evidence.targetBandScoreValue;
     out.contrast = evidence.targetBandContrastValue;
     out.attackScoreMin = values.attackScoreMin;
     out.releaseScoreMin = values.releaseScoreMin;
     out.attackContrastMin = values.attackContrastMin;
     out.releaseContrastMin = values.releaseContrastMin;
 
-    out.attackScoreOk = evidence.targetBandPowerValue >= values.attackScoreMin;
+    out.attackScoreOk = evidence.targetBandScoreValue >= values.attackScoreMin;
     out.attackContrastOk = evidence.targetBandContrastValue >= values.attackContrastMin;
     out.attackOk = out.evidenceOk && out.attackScoreOk;
 
-    out.releaseScoreOk = evidence.targetBandPowerValue >= values.releaseScoreMin;
+    out.releaseScoreOk = evidence.targetBandScoreValue >= values.releaseScoreMin;
     out.releaseContrastOk = evidence.targetBandContrastValue >= values.releaseContrastMin;
     out.releaseOk = out.evidenceOk && out.releaseScoreOk;
 

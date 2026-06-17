@@ -58,13 +58,13 @@ float sequenceSampleDumpInputValue(detection::DetectorSelection detectorSelectio
                                    const detection::FrequencyBandMeasurementPacket& frequencyEvidence) {
     switch (detectorSelection) {
         case detection::DetectorSelection::FrequencyMatch:
-            return frequencyEvidence.targetBandPowerValue;
+            return frequencyEvidence.targetBandScoreValue;
         case detection::DetectorSelection::ScalarTransient:
             switch (observedStream) {
                 case detection::FeatureStreamId::AmpEnvelope:
                     return audioSamplePacket.audioMagnitudeValue;
                 case detection::FeatureStreamId::FrequencyTarget:
-                    return frequencyEvidence.targetBandPowerValue;
+                    return frequencyEvidence.targetBandScoreValue;
                 case detection::FeatureStreamId::FrequencyScore:
                     return frequencyEvidence.targetBandScoreValue;
                 case detection::FeatureStreamId::FrequencyTargetBand:

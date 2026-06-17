@@ -69,12 +69,12 @@ struct FrequencyMatchConfig {
 struct ScalarTransientConfig {
     // Configuration and defaults.
     FeatureStreamId observedStream = FeatureStreamId::AmpEnvelope;
-    float onsetDetectionThreshold = 100.0f;
-    float onsetReleaseThreshold = 50.5f;
+    float onsetDetectionThreshold = 18000.0f;
+    float onsetReleaseThreshold = 12000.0f;
     unsigned long cooldownAfterOnsetMs = 50;
     unsigned long minTransientDurationMs = 0;
     unsigned long maxTransientDurationMs = 120;
-    float minTransientPeakStrength = 0.0f;
+    float minTransientPeakStrength = 8000.0f;
     unsigned long releaseDebounceMs = 20;
 };
 
@@ -105,21 +105,18 @@ struct DetectionProfile {
 
 inline DetectionProfile makeTonalPulseScalarProfile() {
     DetectionProfile profile;
-    constexpr float kAmplitudeScale = 16.0f;
-    constexpr float kPowerScale = kAmplitudeScale * kAmplitudeScale;
 
     // Identity and occurrence routing.
     profile.kind = DetectionProfileKind::TonalPulseScalar;
     profile.detectorSelection = DetectorSelection::ScalarTransient;
     // This profile observes a frequency-derived scalar stream, not raw PCM.
-    // The stream is power-like, so upstream amplitude changes retune these
-    // values quadratically rather than linearly.
+    // The stream is now a normalized magnitude-like score on a 0..32767 scale.
     profile.scalarTransient.observedStream = FeatureStreamId::FrequencyTargetBand;
-    profile.scalarTransient.onsetDetectionThreshold = 20000.0f * kPowerScale;
-    profile.scalarTransient.onsetReleaseThreshold = 5000.0f * kPowerScale;
+    profile.scalarTransient.onsetDetectionThreshold = 18000.0f;
+    profile.scalarTransient.onsetReleaseThreshold = 12000.0f;
     profile.scalarTransient.minTransientDurationMs = 60;
     profile.scalarTransient.maxTransientDurationMs = 220;
-    profile.scalarTransient.minTransientPeakStrength = 50.0f * kPowerScale; // conservative value, reduce duplicates
+    profile.scalarTransient.minTransientPeakStrength = 15000.0f; // conservative value, reduce duplicates
     profile.scalarTransient.releaseDebounceMs = 20;
     profile.scalarTransient.cooldownAfterOnsetMs = 50; // refractory phase
 
@@ -130,8 +127,8 @@ inline DetectionProfile makeTonalPulseScalarProfile() {
     profile.inspectionPlan.modules[0].target = EvidenceTarget::FrequencyScoreStrength;
     profile.inspectionPlan.modules[0].scalar.stream = FeatureStreamId::FrequencyTargetBand;
     profile.inspectionPlan.modules[0].scalar.mode = ScalarInspectionMode::PeakCentered;
-    profile.inspectionPlan.modules[0].scalar.supportStrength.strongPeakThreshold = 25000.0f;
-    profile.inspectionPlan.modules[0].scalar.supportStrength.mediumPeakThreshold = 15000.0f;
+    profile.inspectionPlan.modules[0].scalar.supportStrength.strongPeakThreshold = 18000.0f;
+    profile.inspectionPlan.modules[0].scalar.supportStrength.mediumPeakThreshold = 12000.0f;
     profile.inspectionPlan.modules[0].scalar.supportStrength.weakPeakThreshold = 8000.0f;
     profile.inspectionPlan.modules[0].scalar.windowPreMs = 10;
     profile.inspectionPlan.modules[0].scalar.windowPostMs = 90;
@@ -188,9 +185,9 @@ inline DetectionProfile makeTonalPulseFreqProfile() {
     profile.inspectionPlan.modules[0].target = EvidenceTarget::SupportStrength;
     profile.inspectionPlan.modules[0].scalar.stream = FeatureStreamId::AmpEnvelope;
     profile.inspectionPlan.modules[0].scalar.mode = ScalarInspectionMode::PeakCentered;
-    profile.inspectionPlan.modules[0].scalar.supportStrength.strongPeakThreshold = 70.0f;
-    profile.inspectionPlan.modules[0].scalar.supportStrength.mediumPeakThreshold = 40.0f;
-    profile.inspectionPlan.modules[0].scalar.supportStrength.weakPeakThreshold = 20.0f;
+    profile.inspectionPlan.modules[0].scalar.supportStrength.strongPeakThreshold = 18000.0f;
+    profile.inspectionPlan.modules[0].scalar.supportStrength.mediumPeakThreshold = 12000.0f;
+    profile.inspectionPlan.modules[0].scalar.supportStrength.weakPeakThreshold = 8000.0f;
     profile.inspectionPlan.modules[0].scalar.windowPreMs = 10;
     profile.inspectionPlan.modules[0].scalar.windowPostMs = 90;
     profile.inspectionPlan.modules[0].scalar.preFloorWindowPreMs = 250;
@@ -200,8 +197,8 @@ inline DetectionProfile makeTonalPulseFreqProfile() {
     profile.inspectionPlan.modules[1].target = EvidenceTarget::FrequencyScoreStrength;
     profile.inspectionPlan.modules[1].scalar.stream = FeatureStreamId::FrequencyScore;
     profile.inspectionPlan.modules[1].scalar.mode = ScalarInspectionMode::PeakCentered;
-    profile.inspectionPlan.modules[1].scalar.supportStrength.strongPeakThreshold = 25000.0f;
-    profile.inspectionPlan.modules[1].scalar.supportStrength.mediumPeakThreshold = 15000.0f;
+    profile.inspectionPlan.modules[1].scalar.supportStrength.strongPeakThreshold = 18000.0f;
+    profile.inspectionPlan.modules[1].scalar.supportStrength.mediumPeakThreshold = 12000.0f;
     profile.inspectionPlan.modules[1].scalar.supportStrength.weakPeakThreshold = 8000.0f;
     profile.inspectionPlan.modules[1].scalar.windowPreMs = 10;
     profile.inspectionPlan.modules[1].scalar.windowPostMs = 90;
@@ -246,16 +243,16 @@ inline DetectionProfile makeAmpExperimentalProfile() {
     profile.scalarTransient.observedStream = FeatureStreamId::AmpEnvelope;
     // Lab-calibrated AMP thresholds: the default scalar detector thresholds are
     // too high for the current scalar magnitude range on analyzer runs.
-    profile.scalarTransient.onsetDetectionThreshold = 23.0f;
-    profile.scalarTransient.onsetReleaseThreshold = 20.0f;
+    profile.scalarTransient.onsetDetectionThreshold = 18000.0f;
+    profile.scalarTransient.onsetReleaseThreshold = 12000.0f;
     profile.scalarTransient.cooldownAfterOnsetMs = 300;
     profile.scalarTransient.minTransientDurationMs = 60;
     profile.scalarTransient.maxTransientDurationMs = 240;
-    profile.scalarTransient.minTransientPeakStrength = 40.0f;
+    profile.scalarTransient.minTransientPeakStrength = 15000.0f;
     profile.scalarTransient.releaseDebounceMs = 30;
-    // Analyzer retune: recent AMP trials produced stable 29..38 peak-strength
-    // occurrences, so keep the duration gate and lower only the peak gate here.
-    profile.scalarTransient.minTransientPeakStrength = 28.0f;
+    // Analyzer retune: keep the duration gate and use the normalized magnitude
+    // scale so AMP-driven occurrences are compared on the same 0..32767 band.
+    profile.scalarTransient.minTransientPeakStrength = 15000.0f;
 
     // Inspector composition.
 
@@ -264,9 +261,9 @@ inline DetectionProfile makeAmpExperimentalProfile() {
     profile.inspectionPlan.modules[0].target = EvidenceTarget::SupportStrength;
     profile.inspectionPlan.modules[0].scalar.stream = FeatureStreamId::AmpEnvelope;
     profile.inspectionPlan.modules[0].scalar.mode = ScalarInspectionMode::PeakCentered;
-    profile.inspectionPlan.modules[0].scalar.supportStrength.strongPeakThreshold = 70.0f;
-    profile.inspectionPlan.modules[0].scalar.supportStrength.mediumPeakThreshold = 40.0f;
-    profile.inspectionPlan.modules[0].scalar.supportStrength.weakPeakThreshold = 20.0f;
+    profile.inspectionPlan.modules[0].scalar.supportStrength.strongPeakThreshold = 18000.0f;
+    profile.inspectionPlan.modules[0].scalar.supportStrength.mediumPeakThreshold = 12000.0f;
+    profile.inspectionPlan.modules[0].scalar.supportStrength.weakPeakThreshold = 8000.0f;
     profile.inspectionPlan.modules[0].scalar.windowPreMs = 10;
     profile.inspectionPlan.modules[0].scalar.windowPostMs = 90;
     profile.inspectionPlan.modules[0].scalar.preFloorWindowPreMs = 250;
@@ -276,8 +273,8 @@ inline DetectionProfile makeAmpExperimentalProfile() {
     profile.inspectionPlan.modules[1].target = EvidenceTarget::FrequencyScoreStrength;
     profile.inspectionPlan.modules[1].scalar.stream = FeatureStreamId::FrequencyScore;
     profile.inspectionPlan.modules[1].scalar.mode = ScalarInspectionMode::PeakCentered;
-    profile.inspectionPlan.modules[1].scalar.supportStrength.strongPeakThreshold = 25000.0f;
-    profile.inspectionPlan.modules[1].scalar.supportStrength.mediumPeakThreshold = 15000.0f;
+    profile.inspectionPlan.modules[1].scalar.supportStrength.strongPeakThreshold = 18000.0f;
+    profile.inspectionPlan.modules[1].scalar.supportStrength.mediumPeakThreshold = 12000.0f;
     profile.inspectionPlan.modules[1].scalar.supportStrength.weakPeakThreshold = 8000.0f;
     profile.inspectionPlan.modules[1].scalar.windowPreMs = 10;
     profile.inspectionPlan.modules[1].scalar.windowPostMs = 90;

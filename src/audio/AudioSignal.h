@@ -5,6 +5,15 @@
 
 #include "AudioSource.h"
 
+inline int normalizeDetectorMagnitude(int centeredSample) {
+    const int64_t signedSample = static_cast<int64_t>(centeredSample);
+    const int64_t magnitude = signedSample < 0 ? -signedSample : signedSample;
+    // The transport path is currently treated as 24-bit-ish PCM in a 32-bit
+    // container, so rescale to a 16-bit-like detector band instead of hard-clipping.
+    const int64_t normalized = (magnitude + 128LL) >> 8;
+    return normalized > 32767LL ? 32767 : static_cast<int>(normalized);
+}
+
 struct AudioSignalStats {
     uint32_t blocksProcessed = 0;
     uint64_t samplesProcessed = 0;
@@ -33,11 +42,11 @@ struct AudioSamplePacket {
     int rawAudioValue = 0;
     // Raw sample after baseline subtraction.
     int baselineCorrectedValue = 0;
-    // Absolute value of the baseline-corrected sample.
+    // Absolute value of the baseline-corrected sample on the shared detector scale.
     float audioMagnitudeValue = 0.0f;
     // Quiet-gated integer magnitude used by some detector paths.
     int level = 0;
-    // Smoothed version of the quiet-gated magnitude.
+    // Smoothed version of the quiet-gated magnitude on the shared detector scale.
     int smoothedLevel = 0;
     // Slow quiet-floor estimate used for centering.
     float baseline = 0.0f;

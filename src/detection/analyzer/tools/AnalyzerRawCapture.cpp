@@ -363,18 +363,9 @@ bool AnalyzerApp::runRawTrigger(unsigned long toneHz,
         const uint16_t sampleTimeOffsetMs = rawCaptureOffsetMs(sampleTimeMs, captureBaseMs);
         if (useFeatureStream) {
             AudioSamplePacket audioSamplePacket = {};
-            audioSamplePacket.sampleIndex = sampleTimeUs;
-            audioSamplePacket.timeUs = sampleTimeUs;
-            audioSamplePacket.timeMs = sampleTimeMs;
-            audioSamplePacket.sampleRateHz = sampleRateHz;
-            audioSamplePacket.rawAudioValue = rawSample;
-            audioSamplePacket.baselineCorrectedValue = rawSample;
-            audioSamplePacket.audioMagnitudeValue = static_cast<float>(rawSample < 0 ? -rawSample : rawSample);
-            audioSamplePacket.level = rawSample < 0 ? -rawSample : rawSample;
-            audioSamplePacket.smoothedLevel = audioSamplePacket.level;
-            audioSamplePacket.baseline = 0.0f;
-            audioSamplePacket.valid = true;
-            audioSamplePacket.rawHistoryReady = true;
+            // Feature dumps must mirror the live detector path, so we derive the
+            // packet through AudioSignal rather than rebuilding it from transport raw.
+            _audioSignal.update(rawSample, sampleTimeUs, audioSamplePacket);
 
             _freqBandStream.observeCenteredSample(audioSamplePacket.baselineCorrectedValue, audioSamplePacket.timeMs);
             const detection::FrequencyBandMeasurementPacket frequencyEvidence = captureFrequencyMeasurementPacket(audioSamplePacket);
@@ -415,6 +406,8 @@ bool AnalyzerApp::runRawTrigger(unsigned long toneHz,
 
         if (!emitStarted) {
             if (mode == RawCaptureMode::Pcm && prePcmRingBuffer != nullptr) {
+                // PCM mode intentionally stays transport-centric and keeps the raw
+                // decoded word so DC offset and decode issues remain visible.
                 prePcmRingBuffer[preWriteIndex].timeOffsetMs = sampleTimeOffsetMs;
                 prePcmRingBuffer[preWriteIndex].pcm = static_cast<int32_t>(rawSample);
                 preWriteIndex = (preWriteIndex + 1UL) % preWantedSamples;
@@ -422,6 +415,8 @@ bool AnalyzerApp::runRawTrigger(unsigned long toneHz,
             ++preCapturedTotal;
         } else if (postCaptured < postWantedSamples) {
             if (mode == RawCaptureMode::Pcm && pcmCaptureBuffer != nullptr) {
+                // Leave PCM untouched here as well; feature normalization happens only
+                // on the detector-facing path above.
                 pcmCaptureBuffer[preWindowSamples + postCaptured].timeOffsetMs = sampleTimeOffsetMs;
                 pcmCaptureBuffer[preWindowSamples + postCaptured].pcm = static_cast<int32_t>(rawSample);
             }

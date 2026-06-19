@@ -5,7 +5,6 @@
 #include <new>
 
 namespace {
-constexpr bool kPassThroughRawWords = true;
 
 int decodePcmSample(const uint8_t* samplePtr, int bytesPerSample) {
     if (samplePtr == nullptr || bytesPerSample <= 0) {
@@ -63,7 +62,8 @@ AudioSourceI2S::AudioSourceI2S(int sckPin, int fsPin, int dataInPin, int sampleR
       _dataInPin(dataInPin),
       _sampleRate(sampleRate),
       _bitsPerSample(bitsPerSample),
-      _blockSamples(new (std::nothrow) int32_t[kRefillBatchSize] {}) {}
+      _blockSamples(new (std::nothrow) int32_t[kRefillBatchSize] {}),
+      _blockRawWords(new (std::nothrow) uint32_t[kRefillBatchSize] {}) {}
 
 void AudioSourceI2S::begin() {
     // Keep the public contract sample-based even though I2S may buffer internally.
@@ -71,13 +71,20 @@ void AudioSourceI2S::begin() {
     if (!_blockSamples) {
         _blockSamples.reset(new (std::nothrow) int32_t[kRefillBatchSize] {});
     }
+    if (!_blockRawWords) {
+        _blockRawWords.reset(new (std::nothrow) uint32_t[kRefillBatchSize] {});
+    }
     _started = false;
     _samplePeriodUs = _sampleRate > 0 ? static_cast<uint32_t>(1000000UL / static_cast<uint32_t>(_sampleRate)) : 0;
 
     I2S.end();
     I2S.setAllPins(_sckPin, _fsPin, _dataInPin, I2S_PIN_NO_CHANGE, I2S_PIN_NO_CHANGE);
-    // Mono-mode probe: left-justified framing is the stronger candidate so far.
-    const int beginResult = I2S.begin(I2S_LEFT_JUSTIFIED_MODE, _sampleRate, _bitsPerSample);
+    const bool carryAllSlots = _frameMode == I2SFrameMode::LeftJustifiedAllSlots;
+    // Mode 1 keeps the left-justified transport and carries both slots.
+    // Mode 2 switches to Philips framing and keeps only the left slot.
+    const int beginResult = I2S.begin(carryAllSlots ? I2S_LEFT_JUSTIFIED_MODE : I2S_PHILIPS_MODE,
+                                      _sampleRate,
+                                      carryAllSlots ? _bitsPerSample : 32);
     _started = beginResult != 0;
 }
 
@@ -87,6 +94,30 @@ bool AudioSourceI2S::available() {
 
 int AudioSourceI2S::availableBytes() const {
     return I2S.available();
+}
+
+uint32_t AudioSourceI2S::lastRawWord() const {
+    return _lastRawWord;
+}
+
+bool AudioSourceI2S::setI2SFrameMode(I2SFrameMode mode) {
+    if (_frameMode == mode) {
+        return false;
+    }
+
+    _frameMode = mode;
+    if (_started) {
+        begin();
+    }
+    return true;
+}
+
+AudioSourceI2S::I2SFrameMode AudioSourceI2S::i2sFrameMode() const {
+    return _frameMode;
+}
+
+bool AudioSourceI2S::lastSampleWasBlockStart() const {
+    return _lastReadWasBlockStart;
 }
 
 bool AudioSourceI2S::readSample(int& sample, uint32_t& sampleTimeUs) {
@@ -99,12 +130,17 @@ bool AudioSourceI2S::readSample(int& sample, uint32_t& sampleTimeUs) {
     }
 
     const size_t index = _blockCursor++;
+    _lastReadWasBlockStart = index == 0;
     sample = static_cast<int>(_blockSamples[index]);
+    if (_blockRawWords) {
+        _lastRawWord = _blockRawWords[index];
+    }
     sampleTimeUs = _blockApproxStartMicros + sampleOffsetUs(static_cast<uint32_t>(index), static_cast<uint32_t>(_sampleRate));
     return true;
 }
 
 bool AudioSourceI2S::readRawSample(int& sample, uint32_t& sampleTimeUs) {
+    // Debug/raw-capture compatibility path; normal detector and RAW CSV should use readSample().
     if (!_started) {
         recordReadAttempt(0, 0, true);
         return false;
@@ -130,6 +166,12 @@ bool AudioSourceI2S::readRawSample(int& sample, uint32_t& sampleTimeUs) {
     }
 
     sample = decodePcmSample(rawBytes, bytesPerSample);
+    {
+        uint32_t rawWord = 0;
+        memcpy(&rawWord, rawBytes, bytesPerSample < static_cast<int>(sizeof(rawWord)) ? static_cast<size_t>(bytesPerSample) : sizeof(rawWord));
+        _lastRawWord = rawWord;
+    }
+    _lastReadWasBlockStart = false;
     sampleTimeUs = micros();
     _stats.totalSamplesRead += 1;
     return true;
@@ -155,6 +197,7 @@ bool AudioSourceI2S::readBlock(AudioBlock& block) {
     block.startSampleIndex = _blockStartSampleIndex + _blockCursor;
     block.approxStartMicros = _blockApproxStartMicros + sampleOffsetUs(static_cast<uint32_t>(_blockCursor), static_cast<uint32_t>(_sampleRate));
     block.overflowBeforeBlock = _blockOverflowBeforeBlock;
+    _lastReadWasBlockStart = _blockCursor == 0;
     _blockCursor = _blockCount;
     return true;
 }
@@ -193,6 +236,8 @@ void AudioSourceI2S::resetStats() {
     _maxBufferedSamples = 0;
     _outputSampleIndex = 0;
     _selectedSlotIndex = -1;
+    _lastRawWord = 0;
+    _lastReadWasBlockStart = false;
     _stats = {};
     _slotDiagnostics = {};
     _slotDiagnostics.slotDiagSource = "pcm_i2s_words";
@@ -268,6 +313,7 @@ bool AudioSourceI2S::refillBlock() {
     const size_t sampleBytes = static_cast<size_t>(bytesPerSample);
     const size_t samplesToProcess = fullSamplesRead;
     int32_t rawSamples[kRefillBatchSize] = {};
+    uint32_t rawWords[kRefillBatchSize] = {};
     double slotSumSquares[2] = {0.0, 0.0};
     unsigned long slotCount[2] = {0, 0};
     int slotMin[2] = {0, 0};
@@ -285,6 +331,9 @@ bool AudioSourceI2S::refillBlock() {
         const int rawSample = decodePcmSample(samplePtr, bytesPerSample);
 
         rawSamples[i] = rawSample;
+        uint32_t rawWord = 0;
+        memcpy(&rawWord, samplePtr, sampleBytes < static_cast<int>(sizeof(rawWord)) ? static_cast<size_t>(sampleBytes) : sizeof(rawWord));
+        rawWords[i] = rawWord;
 
         const int sample = rawSample;
         const size_t slotIndex = i % 2U;
@@ -373,10 +422,13 @@ bool AudioSourceI2S::refillBlock() {
         _slotDiagnostics.activeSlot = (alive0 && alive1) ? "both" : slotName(static_cast<size_t>(_selectedSlotIndex));
     }
     const uint32_t fillEndUs = micros();
-    if (kPassThroughRawWords) {
+    const bool carryAllSlots = _frameMode == I2SFrameMode::LeftJustifiedAllSlots;
+    if (carryAllSlots) {
         _blockCount = 0;
         for (size_t i = 0; i < samplesToProcess && _blockCount < kRefillBatchSize; ++i) {
             _blockSamples[_blockCount++] = rawSamples[i];
+            _blockRawWords[_blockCount - 1] = rawWords[i];
+            _lastRawWord = rawWords[i];
         }
         const uint32_t selectedFrameAge = _blockCount > 0 ? static_cast<uint32_t>(_blockCount - 1U) : 0U;
         _blockApproxStartMicros = fillEndUs > sampleOffsetUs(selectedFrameAge, static_cast<uint32_t>(_sampleRate))
@@ -384,7 +436,7 @@ bool AudioSourceI2S::refillBlock() {
             : 0U;
         _slotDiagnostics.chosenSlot = "raw_passthrough";
         _slotDiagnostics.activeSlot = "raw_passthrough";
-        _slotDiagnostics.slotSelectionReason = "temporary_raw_passthrough";
+        _slotDiagnostics.slotSelectionReason = "left_justified_all_slots";
     } else {
         const size_t chosenSlotIndex = _selectedSlotIndex == 1 ? 1U : 0U;
         const size_t selectedFrameCount = samplesToProcess / 2U;
@@ -398,8 +450,14 @@ bool AudioSourceI2S::refillBlock() {
             if (rawIndex >= samplesToProcess) {
                 break;
             }
-            _blockSamples[_blockCount++] = rawSamples[rawIndex];
+            _blockSamples[_blockCount] = rawSamples[rawIndex];
+            _blockRawWords[_blockCount] = rawWords[rawIndex];
+            _lastRawWord = rawWords[rawIndex];
+            ++_blockCount;
         }
+        _slotDiagnostics.chosenSlot = "slot0";
+        _slotDiagnostics.activeSlot = "slot0";
+        _slotDiagnostics.slotSelectionReason = "philips_left_slot";
     }
     _outputSampleIndex += static_cast<uint64_t>(_blockCount);
     return _blockCount > 0;

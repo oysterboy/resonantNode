@@ -37,6 +37,11 @@ struct AudioBlock {
 
 class AudioSource {
 public:
+    enum class I2SFrameMode {
+        LeftJustifiedAllSlots,
+        PhilipsLeftOnly,
+    };
+
     virtual ~AudioSource() = default;
     virtual void begin() = 0;
     virtual bool available() = 0;
@@ -47,6 +52,10 @@ public:
     virtual unsigned long droppedSamples() const { return 0; }
     virtual unsigned long bufferedSamplesMax() const { return 0; }
     virtual uint32_t sampleRateHz() const { return 0; }
+    virtual uint32_t lastRawWord() const { return 0; }
+    virtual bool setI2SFrameMode(I2SFrameMode mode) { (void)mode; return false; }
+    virtual I2SFrameMode i2sFrameMode() const { return I2SFrameMode::LeftJustifiedAllSlots; }
+    virtual bool lastSampleWasBlockStart() const { return false; }
     virtual const AudioSourceStats& stats() const {
         static const AudioSourceStats emptyStats{};
         return emptyStats;

@@ -40,6 +40,10 @@ public:
     unsigned long droppedSamples() const override;
     unsigned long bufferedSamplesMax() const override;
     uint32_t sampleRateHz() const override;
+    uint32_t lastRawWord() const override;
+    bool setI2SFrameMode(I2SFrameMode mode) override;
+    I2SFrameMode i2sFrameMode() const override;
+    bool lastSampleWasBlockStart() const override;
     const AudioSourceStats& stats() const override;
     const AudioSlotDiagnostics& slotDiagnostics() const;
     void resetStats() override;
@@ -57,6 +61,7 @@ private:
     bool _started = false;
     static constexpr size_t kRefillBatchSize = 128;
     std::unique_ptr<int32_t[]> _blockSamples;
+    std::unique_ptr<uint32_t[]> _blockRawWords;
     size_t _blockCount = 0;
     size_t _blockCursor = 0;
     uint64_t _blockStartSampleIndex = 0;
@@ -67,6 +72,9 @@ private:
     uint32_t _samplePeriodUs = 0;
     uint64_t _outputSampleIndex = 0;
     int _selectedSlotIndex = -1;
+    uint32_t _lastRawWord = 0;
+    bool _lastReadWasBlockStart = false;
+    I2SFrameMode _frameMode = I2SFrameMode::LeftJustifiedAllSlots;
     AudioSourceStats _stats;
     AudioSlotDiagnostics _slotDiagnostics;
 };

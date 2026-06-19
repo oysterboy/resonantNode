@@ -208,6 +208,7 @@ void AnalyzerApp::handleUsbLine(const char* line) {
         Serial.println("CMD: EMIT MODE AUTO interval=2000 freq=3200 dur=100");
         Serial.println("CMD: EMIT SWEEP start=3000 stop=3500 step=100 dur=80 pause=1000");
         Serial.println("CMD: RAW trigger f=3200 dur=100 post=1000 mode=feat (default)|mode=pcm|mode=both");
+        Serial.println("CMD: RAW trigger ... i2s=left|philips");
         Serial.println("CMD: SEQ");
         Serial.println("CMD: SEQ help");
         Serial.println("CMD: SEQ stop");
@@ -295,6 +296,7 @@ void AnalyzerApp::handleUsbLine(const char* line) {
         unsigned long preMs = 0;
         unsigned long decim = 1;
         AnalyzerApp::RawCaptureMode rawMode = AnalyzerApp::RawCaptureMode::Features;
+        AudioSource::I2SFrameMode i2sFrameMode = AudioSource::I2SFrameMode::LeftJustifiedAllSlots;
 
         char* savePtr = nullptr;
         char* token = strtok_r(_commandScratch, " ", &savePtr);
@@ -318,9 +320,17 @@ void AnalyzerApp::handleUsbLine(const char* line) {
                 } else if (equalsIgnoreCase(modeValue, "both")) {
                     rawMode = AnalyzerApp::RawCaptureMode::Both;
                 }
+            } else if (startsWithTokenIgnoreCase(token, "i2s=") || startsWithTokenIgnoreCase(token, "frame=")) {
+                const char* modeValue = token + (startsWithTokenIgnoreCase(token, "i2s=") ? 4 : 6);
+                if (equalsIgnoreCase(modeValue, "mode1") || equalsIgnoreCase(modeValue, "left") || equalsIgnoreCase(modeValue, "leftall") || equalsIgnoreCase(modeValue, "leftaligned") || equalsIgnoreCase(modeValue, "legacy") || equalsIgnoreCase(modeValue, "allslots")) {
+                    i2sFrameMode = AudioSource::I2SFrameMode::LeftJustifiedAllSlots;
+                } else if (equalsIgnoreCase(modeValue, "mode2") || equalsIgnoreCase(modeValue, "philips") || equalsIgnoreCase(modeValue, "philipsslot1") || equalsIgnoreCase(modeValue, "leftonly")) {
+                    i2sFrameMode = AudioSource::I2SFrameMode::PhilipsLeftOnly;
+                }
             }
         }
 
+        _audioSource.setI2SFrameMode(i2sFrameMode);
         if (runRawTrigger(toneHz, durationMs, postMs, preMs, decim, rawMode)) {
             Serial.println("OK RAW");
         }

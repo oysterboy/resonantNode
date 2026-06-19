@@ -13,10 +13,12 @@ namespace {
 
 constexpr unsigned long kRawCaptureFlushSamples = 256;
 constexpr unsigned long kRawCaptureTimeoutSlackMs = 2000;
+constexpr unsigned long kRawCaptureI2SWarmupMs = 50UL;
 constexpr int32_t kRawCaptureFixedPointScale = 1000;
 
 struct RawCapturePcmSample {
     uint16_t timeOffsetMs = 0;
+    uint32_t rawWord = 0;
     int32_t pcm = 0;
 };
 
@@ -60,6 +62,12 @@ uint16_t rawCaptureOffsetMs(unsigned long sampleMs, unsigned long baseMs) {
 
 int32_t rawCaptureToFixedPoint(float value) {
     return static_cast<int32_t>(lroundf(value * static_cast<float>(kRawCaptureFixedPointScale)));
+}
+
+void printRawWordHex(uint32_t rawWord) {
+    char rawHex[9];
+    snprintf(rawHex, sizeof(rawHex), "%08lX", static_cast<unsigned long>(rawWord));
+    Serial.print(rawHex);
 }
 
 void printRawMemoryState(const char* label) {
@@ -109,6 +117,8 @@ bool AnalyzerApp::runRawTrigger(unsigned long toneHz,
     Serial.print("RAW_INFO mode=");
     Serial.print(rawCaptureModeName(mode));
     Serial.println(" output=csv");
+    Serial.print("RAW_INFO i2s_mode=");
+    Serial.println(_audioSource.i2sFrameMode() == AudioSource::I2SFrameMode::LeftJustifiedAllSlots ? "left" : "philips");
     Serial.print("RAW_INFO row_size=");
     if (mode == RawCaptureMode::Pcm) {
         Serial.print(sizeof(RawCapturePcmSample));
@@ -214,7 +224,7 @@ bool AnalyzerApp::runRawTrigger(unsigned long toneHz,
     unsigned long flushedSamples = 0;
     int discardedSample = 0;
     uint32_t discardedSampleTimeUs = 0;
-    while (flushedSamples < kRawCaptureFlushSamples && _audioSource.readRawSample(discardedSample, discardedSampleTimeUs)) {
+    while (flushedSamples < kRawCaptureFlushSamples && _audioSource.readSample(discardedSample, discardedSampleTimeUs)) {
         ++flushedSamples;
     }
 
@@ -249,11 +259,6 @@ bool AnalyzerApp::runRawTrigger(unsigned long toneHz,
 
     const unsigned long captureId = ++_rawCaptureSequenceId;
     const unsigned long commandMs = millis();
-    const unsigned long captureBaseMs = commandMs;
-    char emitterCommand[96];
-    snprintf(emitterCommand, sizeof(emitterCommand), "CHIRP freq=%lu dur=%lu", toneHz, durationMs);
-    sendEmitterCommand(emitterCommand);
-    Serial2.flush();
 
     char emitterLineBuffer[96];
     size_t emitterLineLength = 0;
@@ -267,6 +272,11 @@ bool AnalyzerApp::runRawTrigger(unsigned long toneHz,
     unsigned long preWriteIndex = 0;
     unsigned long postCaptured = 0;
     const bool useFeatureStream = rawCaptureUsesFeatureStream(mode);
+    const unsigned long rawWarmupDeadlineMs = commandMs + kRawCaptureI2SWarmupMs;
+    bool rawCaptureArmed = kRawCaptureI2SWarmupMs == 0UL;
+    bool emitterCommandSent = false;
+    bool emitStartNeedsPreWindowCopy = false;
+    unsigned long captureBaseMs = commandMs;
     int64_t rawWindowSum = 0;
     uint64_t rawWindowAbsSum = 0;
     int32_t rawWindowMin = INT32_MAX;
@@ -301,6 +311,39 @@ bool AnalyzerApp::runRawTrigger(unsigned long toneHz,
         preWindowCopied = true;
     };
 
+    auto armRawCapture = [&](unsigned long sampleTimeMs) {
+        rawCaptureArmed = true;
+        captureBaseMs = sampleTimeMs;
+        preCapturedTotal = 0;
+        preWindowSamples = 0;
+        preWriteIndex = 0;
+        preWindowCopied = false;
+        postCaptured = 0;
+        rawWindowSum = 0;
+        rawWindowAbsSum = 0;
+        rawWindowMin = INT32_MAX;
+        rawWindowMax = INT32_MIN;
+        if (emitStarted && emitStartNeedsPreWindowCopy && !preWindowCopied) {
+            copyPreWindow();
+            emitStartNeedsPreWindowCopy = false;
+        }
+    };
+
+    auto maybeSendEmitterCommand = [&]() {
+        if (emitterCommandSent || !rawCaptureArmed) {
+            return;
+        }
+        if (preWantedSamples > 0 && preCapturedTotal < preWantedSamples) {
+            return;
+        }
+
+        char emitterCommand[96];
+        snprintf(emitterCommand, sizeof(emitterCommand), "CHIRP freq=%lu dur=%lu", toneHz, durationMs);
+        sendEmitterCommand(emitterCommand);
+        Serial2.flush();
+        emitterCommandSent = true;
+    };
+
     auto noteEmitterLine = [&](const char* line) {
         if (line == nullptr || *line == '\0') {
             return;
@@ -311,7 +354,11 @@ bool AnalyzerApp::runRawTrigger(unsigned long toneHz,
         if (startLine && !emitStarted) {
             emitStarted = true;
             emitStartMs = millis();
-            copyPreWindow();
+            if (rawCaptureArmed) {
+                copyPreWindow();
+            } else {
+                emitStartNeedsPreWindowCopy = true;
+            }
             if (mode != RawCaptureMode::Pcm) {
                 Serial.print("RAW_EMIT_START id=");
                 Serial.print(captureId);
@@ -359,21 +406,24 @@ bool AnalyzerApp::runRawTrigger(unsigned long toneHz,
     auto captureSample = [&]() -> bool {
         int rawSample = 0;
         uint32_t sampleTimeUs = 0;
-        if (!_audioSource.readRawSample(rawSample, sampleTimeUs)) {
+        if (!_audioSource.readSample(rawSample, sampleTimeUs)) {
             return false;
         }
 
         const unsigned long sampleTimeMs = sampleTimeUs / 1000UL;
+        if (!rawCaptureArmed) {
+            if (sampleTimeMs < rawWarmupDeadlineMs || !_audioSource.lastSampleWasBlockStart()) {
+                return true;
+            }
+            armRawCapture(sampleTimeMs);
+        }
+
         const uint16_t sampleTimeOffsetMs = rawCaptureOffsetMs(sampleTimeMs, captureBaseMs);
-        const int32_t signedRawSample = static_cast<int32_t>(rawSample);
-        rawWindowSum += static_cast<int64_t>(signedRawSample);
-        rawWindowAbsSum += static_cast<uint64_t>(signedRawSample < 0 ? -static_cast<int64_t>(signedRawSample) : static_cast<int64_t>(signedRawSample));
-        if (signedRawSample < rawWindowMin) {
-            rawWindowMin = signedRawSample;
+        if (emitStartNeedsPreWindowCopy && !preWindowCopied) {
+            copyPreWindow();
+            emitStartNeedsPreWindowCopy = false;
         }
-        if (signedRawSample > rawWindowMax) {
-            rawWindowMax = signedRawSample;
-        }
+
         if (useFeatureStream) {
             AudioSamplePacket audioSamplePacket = {};
             // Feature dumps must mirror the live detector path, so we derive the
@@ -401,6 +451,7 @@ bool AnalyzerApp::runRawTrigger(unsigned long toneHz,
                     preWriteIndex = (preWriteIndex + 1UL) % preWantedSamples;
                 }
                 ++preCapturedTotal;
+                maybeSendEmitterCommand();
             } else if (postCaptured < postWantedSamples) {
                 if (mode == RawCaptureMode::Features && featureCaptureBuffer != nullptr) {
                     featureCaptureBuffer[preWindowSamples + postCaptured].timeOffsetMs = sampleTimeOffsetMs;
@@ -417,20 +468,33 @@ bool AnalyzerApp::runRawTrigger(unsigned long toneHz,
             return true;
         }
 
+        const int32_t signedRawSample = static_cast<int32_t>(rawSample);
+        rawWindowSum += static_cast<int64_t>(signedRawSample);
+        rawWindowAbsSum += static_cast<uint64_t>(signedRawSample < 0 ? -static_cast<int64_t>(signedRawSample) : static_cast<int64_t>(signedRawSample));
+        if (signedRawSample < rawWindowMin) {
+            rawWindowMin = signedRawSample;
+        }
+        if (signedRawSample > rawWindowMax) {
+            rawWindowMax = signedRawSample;
+        }
+
         if (!emitStarted) {
             if (mode == RawCaptureMode::Pcm && prePcmRingBuffer != nullptr) {
                 // PCM mode intentionally stays transport-centric and keeps the raw
                 // decoded word so DC offset and decode issues remain visible.
                 prePcmRingBuffer[preWriteIndex].timeOffsetMs = sampleTimeOffsetMs;
+                prePcmRingBuffer[preWriteIndex].rawWord = _audioSource.lastRawWord();
                 prePcmRingBuffer[preWriteIndex].pcm = static_cast<int32_t>(rawSample);
                 preWriteIndex = (preWriteIndex + 1UL) % preWantedSamples;
-            }
-            ++preCapturedTotal;
-        } else if (postCaptured < postWantedSamples) {
-            if (mode == RawCaptureMode::Pcm && pcmCaptureBuffer != nullptr) {
-                // Leave PCM untouched here as well; feature normalization happens only
-                // on the detector-facing path above.
+                }
+                ++preCapturedTotal;
+                maybeSendEmitterCommand();
+            } else if (postCaptured < postWantedSamples) {
+                if (mode == RawCaptureMode::Pcm && pcmCaptureBuffer != nullptr) {
+                    // Leave PCM untouched here as well; feature normalization happens only
+                    // on the detector-facing path above.
                 pcmCaptureBuffer[preWindowSamples + postCaptured].timeOffsetMs = sampleTimeOffsetMs;
+                pcmCaptureBuffer[preWindowSamples + postCaptured].rawWord = _audioSource.lastRawWord();
                 pcmCaptureBuffer[preWindowSamples + postCaptured].pcm = static_cast<int32_t>(rawSample);
             }
             ++postCaptured;
@@ -536,7 +600,7 @@ bool AnalyzerApp::runRawTrigger(unsigned long toneHz,
     Serial.print(rawCaptureModeName(mode));
     Serial.print(" output=csv");
     if (mode == RawCaptureMode::Pcm) {
-        Serial.print(" fields=ms,pcm");
+        Serial.print(" fields=ms,raw_hex,pcm");
     } else if (mode == RawCaptureMode::Features) {
         Serial.print(" fields=ms,amp,env,target_score,target_fresh");
     } else {
@@ -545,10 +609,12 @@ bool AnalyzerApp::runRawTrigger(unsigned long toneHz,
     Serial.println();
 
     if (mode == RawCaptureMode::Pcm) {
-        Serial.println("ms,pcm");
+        Serial.println("ms,raw_hex,pcm");
         for (unsigned long i = 0; i < capturedSamples; ++i) {
             const RawCapturePcmSample& sample = pcmCaptureBuffer[i];
             Serial.print(static_cast<unsigned long>(sample.timeOffsetMs) + captureBaseMs);
+            Serial.print(",");
+            printRawWordHex(sample.rawWord);
             Serial.print(",");
             Serial.println(sample.pcm);
         }

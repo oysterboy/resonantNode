@@ -252,6 +252,22 @@ function Get-ScalarTuneLine {
     return $StatusLine
 }
 
+function Get-LaunchSlackMs {
+    param(
+        [Parameter(Mandatory = $true)][string]$CommandText,
+        [Parameter(Mandatory = $true)][int]$TryCount,
+        [Parameter(Mandatory = $true)][int]$BaudRateValue
+    )
+
+    $wireMs = 0
+    if ($BaudRateValue -gt 0) {
+        $wireMs = [int][math]::Ceiling((($CommandText.Length + 4) * 10.0 * 1000.0) / [double]$BaudRateValue)
+    }
+
+    $runMs = [int][math]::Max(1500.0, [math]::Min(6000.0, [double]$TryCount * 35.0))
+    return [int][math]::Max($wireMs + 250, $runMs)
+}
+
 function Format-RunLabel {
     param([Parameter(Mandatory = $true)][int]$Value)
 
@@ -673,6 +689,9 @@ $lockInfo = Open-CampaignLock -Path $lockPath -StatePath $statePath -BatchRootVa
 
         $port.WriteLine($launchCommand)
         Append-TextLine -Path $sessionPath -Line ("run={0} cmd={1}" -f $runName, $launchCommand)
+        $launchSlackMs = Get-LaunchSlackMs -CommandText $launchCommand -TryCount $Tries -BaudRateValue $BaudRate
+        Append-TextLine -Path $sessionPath -Line ("run={0} launch_slack_ms={1}" -f $runName, $launchSlackMs)
+        Start-Sleep -Milliseconds $launchSlackMs
         New-TextFile -Path $runPath -Lines @(
             "# Run $runName",
             '',

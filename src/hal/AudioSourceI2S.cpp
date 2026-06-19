@@ -6,6 +6,9 @@
 
 namespace {
 
+constexpr bool kPhilipsBoundaryDiagnosticsEnabled = true;
+constexpr size_t kPhilipsDiagnosticReadLimit = 5;
+
 int decodePcmSample(const uint8_t* samplePtr, int bytesPerSample) {
     if (samplePtr == nullptr || bytesPerSample <= 0) {
         return 0;
@@ -54,6 +57,16 @@ const char* slotName(size_t slotIndex) {
 bool slotHasMeaningfulVariation(unsigned long count, long signedRange) {
     return count > 0 && signedRange > 0;
 }
+
+bool isPhilipsBoundarySample(uint64_t globalSelectedIndex) {
+    const uint64_t phase = globalSelectedIndex % 64ULL;
+    return (phase >= 30ULL && phase <= 34ULL)
+        || phase == 62ULL
+        || phase == 63ULL
+        || phase == 0ULL
+        || phase == 1ULL
+        || phase == 2ULL;
+}
 }
 
 AudioSourceI2S::AudioSourceI2S(int sckPin, int fsPin, int dataInPin, int sampleRate, int bitsPerSample)
@@ -86,6 +99,61 @@ void AudioSourceI2S::begin() {
                                       _sampleRate,
                                       carryAllSlots ? _bitsPerSample : 32);
     _started = beginResult != 0;
+}
+
+bool AudioSourceI2S::shouldLogPhilipsBoundarySample(size_t,
+                                                    size_t,
+                                                    size_t,
+                                                    uint64_t) const {
+    return false;
+}
+
+void AudioSourceI2S::logPhilipsReadHeader(size_t readCallIndex,
+                                          int requestedBytes,
+                                          int bytesRead,
+                                          size_t wordsRead,
+                                          size_t frameCount,
+                                          size_t remainderBytes,
+                                          size_t remainderWords,
+                                          size_t firstExpectedSlotPhase,
+                                          size_t lastConsumedSlotPhase,
+                                          size_t emittedSamples) const {
+    (void)readCallIndex;
+    (void)requestedBytes;
+    (void)bytesRead;
+    (void)wordsRead;
+    (void)frameCount;
+    (void)remainderBytes;
+    (void)remainderWords;
+    (void)firstExpectedSlotPhase;
+    (void)lastConsumedSlotPhase;
+    (void)emittedSamples;
+}
+
+void AudioSourceI2S::logPhilipsBoundarySample(size_t readCallIndex,
+                                              size_t selectedIndexInRead,
+                                              size_t rawWordIndexInRead,
+                                              size_t selectedSlotIndex,
+                                              uint32_t slot0RawWord,
+                                              uint32_t slot1RawWord,
+                                              int decodedPcm,
+                                              int previousDecodedPcm,
+                                              size_t bytesRequested,
+                                              int bytesRead,
+                                              size_t wordsRead,
+                                              size_t frameCount) const {
+    (void)readCallIndex;
+    (void)selectedIndexInRead;
+    (void)rawWordIndexInRead;
+    (void)selectedSlotIndex;
+    (void)slot0RawWord;
+    (void)slot1RawWord;
+    (void)decodedPcm;
+    (void)previousDecodedPcm;
+    (void)bytesRequested;
+    (void)bytesRead;
+    (void)wordsRead;
+    (void)frameCount;
 }
 
 bool AudioSourceI2S::available() {
@@ -226,6 +294,10 @@ const AudioSlotDiagnostics& AudioSourceI2S::slotDiagnostics() const {
     return _slotDiagnostics;
 }
 
+const AudioPhilipsDiagnostics& AudioSourceI2S::philipsDiagnostics() const {
+    return _philipsDiagnostics;
+}
+
 void AudioSourceI2S::resetStats() {
     _blockCursor = 0;
     _blockCount = 0;
@@ -238,6 +310,12 @@ void AudioSourceI2S::resetStats() {
     _selectedSlotIndex = -1;
     _lastRawWord = 0;
     _lastReadWasBlockStart = false;
+    _debugReadCallIndex = 0;
+    _debugPhilipsSelectedSampleIndex = 0;
+    _debugPhilipsPrevDecodedPcm = 0;
+    _debugPhilipsHasPrevDecodedPcm = false;
+    _debugPhilipsExpectedSlotPhase = 0;
+    _philipsDiagnostics = {};
     _stats = {};
     _slotDiagnostics = {};
     _slotDiagnostics.slotDiagSource = "pcm_i2s_words";
@@ -309,9 +387,15 @@ bool AudioSourceI2S::refillBlock() {
         return false;
     }
 
+    const size_t readCallIndex = _debugReadCallIndex++;
+
     const size_t fullSamplesRead = static_cast<size_t>(bytesRead) / static_cast<size_t>(bytesPerSample);
     const size_t sampleBytes = static_cast<size_t>(bytesPerSample);
     const size_t samplesToProcess = fullSamplesRead;
+    const size_t wordsRead = fullSamplesRead;
+    const size_t frameCount = wordsRead / 2U;
+    const size_t remainderBytes = static_cast<size_t>(bytesRead % 8);
+    const size_t remainderWords = wordsRead % 2U;
     int32_t rawSamples[kRefillBatchSize] = {};
     uint32_t rawWords[kRefillBatchSize] = {};
     double slotSumSquares[2] = {0.0, 0.0};
@@ -439,25 +523,60 @@ bool AudioSourceI2S::refillBlock() {
         _slotDiagnostics.slotSelectionReason = "left_justified_all_slots";
     } else {
         const size_t chosenSlotIndex = _selectedSlotIndex == 1 ? 1U : 0U;
-        const size_t selectedFrameCount = samplesToProcess / 2U;
+        const size_t selectedFrameCount = frameCount;
         const uint32_t selectedFrameAge = selectedFrameCount > 0 ? static_cast<uint32_t>(selectedFrameCount - 1U) : 0U;
         _blockApproxStartMicros = fillEndUs > sampleOffsetUs(selectedFrameAge, static_cast<uint32_t>(_sampleRate))
             ? fillEndUs - sampleOffsetUs(selectedFrameAge, static_cast<uint32_t>(_sampleRate))
             : 0U;
         _blockCount = 0;
+        _philipsDiagnostics.present = true;
+        int previousSelectedPcm = _debugPhilipsHasPrevDecodedPcm ? _debugPhilipsPrevDecodedPcm : 0;
+        bool hasPreviousSelectedPcm = _debugPhilipsHasPrevDecodedPcm;
         for (size_t frame = 0; frame < selectedFrameCount && _blockCount < kRefillBatchSize; ++frame) {
             const size_t rawIndex = (frame * 2U) + chosenSlotIndex;
             if (rawIndex >= samplesToProcess) {
                 break;
             }
-            _blockSamples[_blockCount] = rawSamples[rawIndex];
+            const int currentSelectedPcm = rawSamples[rawIndex];
+            const uint64_t globalSelectedIndex = _debugPhilipsSelectedSampleIndex + static_cast<uint64_t>(frame);
+            const size_t phase = static_cast<size_t>(globalSelectedIndex % 64ULL);
+            if (hasPreviousSelectedPcm) {
+                const int delta = currentSelectedPcm - previousSelectedPcm;
+                const unsigned long absDelta = static_cast<unsigned long>(delta < 0 ? -static_cast<int64_t>(delta) : static_cast<int64_t>(delta));
+                ++_philipsDiagnostics.sampleCount;
+                ++_philipsDiagnostics.phaseCount[phase];
+                _philipsDiagnostics.phaseAbsDeltaSum[phase] += static_cast<double>(absDelta);
+                if (static_cast<int>(absDelta) > _philipsDiagnostics.phaseMaxAbsDelta[phase]) {
+                    _philipsDiagnostics.phaseMaxAbsDelta[phase] = static_cast<int>(absDelta);
+                }
+                if (absDelta > _philipsDiagnostics.maxDeltaAbs) {
+                    _philipsDiagnostics.maxDeltaAbs = absDelta;
+                    _philipsDiagnostics.maxDelta = delta;
+                    _philipsDiagnostics.maxDeltaGlobalIndex = globalSelectedIndex;
+                    _philipsDiagnostics.maxDeltaMod64 = phase;
+                    _philipsDiagnostics.maxDeltaReadIndex = static_cast<unsigned long>(readCallIndex);
+                    _philipsDiagnostics.maxDeltaSelectedInRead = static_cast<unsigned long>(frame);
+                    _philipsDiagnostics.rawBefore = previousSelectedPcm;
+                    _philipsDiagnostics.rawAfter = currentSelectedPcm;
+                }
+            }
+            _blockSamples[_blockCount] = currentSelectedPcm;
             _blockRawWords[_blockCount] = rawWords[rawIndex];
             _lastRawWord = rawWords[rawIndex];
             ++_blockCount;
+            previousSelectedPcm = currentSelectedPcm;
+            hasPreviousSelectedPcm = true;
+            _debugPhilipsPrevDecodedPcm = currentSelectedPcm;
+            _debugPhilipsHasPrevDecodedPcm = true;
         }
         _slotDiagnostics.chosenSlot = "slot0";
         _slotDiagnostics.activeSlot = "slot0";
         _slotDiagnostics.slotSelectionReason = "philips_left_slot";
+
+        if (_blockCount > 0) {
+            _debugPhilipsExpectedSlotPhase = chosenSlotIndex;
+            _debugPhilipsSelectedSampleIndex += static_cast<uint64_t>(_blockCount);
+        }
     }
     _outputSampleIndex += static_cast<uint64_t>(_blockCount);
     return _blockCount > 0;

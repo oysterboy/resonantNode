@@ -90,6 +90,45 @@ unsigned long rawCaptureChunkSize(unsigned long sampleRateHz, unsigned long deci
     return decimatedChunk > 0 ? decimatedChunk : 1UL;
 }
 
+void printPhilipsDiagnosticsSummary(const AudioPhilipsDiagnostics& diag) {
+    if (!diag.present || diag.sampleCount == 0) {
+        return;
+    }
+
+    Serial.print("RAW_PHILIPS_SUMMARY max_delta=");
+    Serial.print(diag.maxDelta);
+    Serial.print(" max_delta_global_idx=");
+    Serial.print(static_cast<unsigned long>(diag.maxDeltaGlobalIndex));
+    Serial.print(" max_delta_mod64=");
+    Serial.print(static_cast<unsigned long>(diag.maxDeltaMod64));
+    Serial.print(" raw_before=");
+    Serial.print(diag.rawBefore);
+    Serial.print(" raw_after=");
+    Serial.print(diag.rawAfter);
+    Serial.print(" read_idx=");
+    Serial.print(diag.maxDeltaReadIndex);
+    Serial.print(" selected_in_read=");
+    Serial.print(diag.maxDeltaSelectedInRead);
+    Serial.print(" max_delta_abs=");
+    Serial.print(diag.maxDeltaAbs);
+    Serial.println();
+
+    for (size_t phase = 0; phase < 64; ++phase) {
+        const unsigned long count = diag.phaseCount[phase];
+        const double meanAbsDelta = count > 0
+            ? diag.phaseAbsDeltaSum[phase] / static_cast<double>(count)
+            : 0.0;
+        Serial.print("RAW_PHASE phase=");
+        Serial.print(static_cast<unsigned long>(phase));
+        Serial.print(" count=");
+        Serial.print(count);
+        Serial.print(" mean_abs_delta=");
+        Serial.print(meanAbsDelta, 1);
+        Serial.print(" max_abs_delta=");
+        Serial.println(diag.phaseMaxAbsDelta[phase]);
+    }
+}
+
 } // namespace
 
 bool AnalyzerApp::runRawTrigger(unsigned long toneHz,
@@ -671,6 +710,10 @@ bool AnalyzerApp::runRawTrigger(unsigned long toneHz,
     Serial.print(" baseline=");
     Serial.print(_audioSignal.baseline(), 1);
     Serial.println();
+
+    if (_audioSource.i2sFrameMode() == AudioSource::I2SFrameMode::PhilipsLeftOnly) {
+        printPhilipsDiagnosticsSummary(_i2sSource.philipsDiagnostics());
+    }
 
     if (prePcmRingBuffer != nullptr) {
         free(prePcmRingBuffer);

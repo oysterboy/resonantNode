@@ -20,6 +20,22 @@ struct AudioSlotDiagnostics {
     const char* slotSelectionReason = "none";
 };
 
+struct AudioPhilipsDiagnostics {
+    bool present = false;
+    unsigned long sampleCount = 0;
+    unsigned long phaseCount[64] = {0};
+    double phaseAbsDeltaSum[64] = {0.0};
+    int phaseMaxAbsDelta[64] = {0};
+    int maxDelta = 0;
+    unsigned long maxDeltaAbs = 0;
+    uint64_t maxDeltaGlobalIndex = 0;
+    size_t maxDeltaMod64 = 0;
+    unsigned long maxDeltaReadIndex = 0;
+    unsigned long maxDeltaSelectedInRead = 0;
+    int rawBefore = 0;
+    int rawAfter = 0;
+};
+
 /*
 AudioSourceI2S
 
@@ -46,12 +62,39 @@ public:
     bool lastSampleWasBlockStart() const override;
     const AudioSourceStats& stats() const override;
     const AudioSlotDiagnostics& slotDiagnostics() const;
+    const AudioPhilipsDiagnostics& philipsDiagnostics() const;
     void resetStats() override;
     uint32_t samplePeriodUs() const;
 
 private:
     bool refillBlock();
     void recordReadAttempt(int requestedBytes, int bytesRead, bool readError);
+    void logPhilipsReadHeader(size_t readCallIndex,
+                              int requestedBytes,
+                              int bytesRead,
+                              size_t wordsRead,
+                              size_t frameCount,
+                              size_t remainderBytes,
+                              size_t remainderWords,
+                              size_t firstExpectedSlotPhase,
+                              size_t lastConsumedSlotPhase,
+                              size_t emittedSamples) const;
+    void logPhilipsBoundarySample(size_t readCallIndex,
+                                  size_t selectedIndexInRead,
+                                  size_t rawWordIndexInRead,
+                                  size_t selectedSlotIndex,
+                                  uint32_t slot0RawWord,
+                                  uint32_t slot1RawWord,
+                                  int decodedPcm,
+                                  int previousDecodedPcm,
+                                  size_t bytesRequested,
+                                  int bytesRead,
+                                  size_t wordsRead,
+                                  size_t frameCount) const;
+    bool shouldLogPhilipsBoundarySample(size_t readCallIndex,
+                                       size_t selectedIndexInRead,
+                                       size_t rawWordIndexInRead,
+                                       uint64_t globalSelectedIndex) const;
 
     int _sckPin;
     int _fsPin;
@@ -75,6 +118,12 @@ private:
     uint32_t _lastRawWord = 0;
     bool _lastReadWasBlockStart = false;
     I2SFrameMode _frameMode = I2SFrameMode::LeftJustifiedAllSlots;
+    uint64_t _debugReadCallIndex = 0;
+    uint64_t _debugPhilipsSelectedSampleIndex = 0;
+    int _debugPhilipsPrevDecodedPcm = 0;
+    bool _debugPhilipsHasPrevDecodedPcm = false;
+    size_t _debugPhilipsExpectedSlotPhase = 0;
+    AudioPhilipsDiagnostics _philipsDiagnostics;
     AudioSourceStats _stats;
     AudioSlotDiagnostics _slotDiagnostics;
 };

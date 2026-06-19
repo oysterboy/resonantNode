@@ -45,6 +45,11 @@ Does not know about AudioSignal, DetectionRuntime, Analyzer, or Behavior.
 */
 class AudioSourceI2S : public AudioSource {
 public:
+    enum class TransportMode {
+        ArduinoWrapper,
+        DirectDriver,
+    };
+
     AudioSourceI2S(int sckPin, int fsPin, int dataInPin, int sampleRate = 16000, int bitsPerSample = 32);
 
     void begin() override;
@@ -63,6 +68,12 @@ public:
     const AudioSourceStats& stats() const override;
     const AudioSlotDiagnostics& slotDiagnostics() const;
     const AudioPhilipsDiagnostics& philipsDiagnostics() const;
+    void setTransportMode(TransportMode mode);
+    TransportMode transportMode() const;
+    void setReadChunkBytes(size_t bytes);
+    size_t readChunkBytes() const;
+    void setDmaBufferFrames(size_t frames);
+    size_t dmaBufferFrames() const;
     void resetStats() override;
     uint32_t samplePeriodUs() const;
 
@@ -102,7 +113,8 @@ private:
     int _sampleRate;
     int _bitsPerSample;
     bool _started = false;
-    static constexpr size_t kRefillBatchSize = 128;
+    // Large enough for a 1024-byte Philips read: 256 decoded 32-bit words.
+    static constexpr size_t kRefillBatchSize = 256;
     std::unique_ptr<int32_t[]> _blockSamples;
     std::unique_ptr<uint32_t[]> _blockRawWords;
     size_t _blockCount = 0;
@@ -123,6 +135,9 @@ private:
     int _debugPhilipsPrevDecodedPcm = 0;
     bool _debugPhilipsHasPrevDecodedPcm = false;
     size_t _debugPhilipsExpectedSlotPhase = 0;
+    TransportMode _transportMode = TransportMode::ArduinoWrapper;
+    size_t _readChunkBytes = 512;
+    size_t _dmaBufferFrames = 128;
     AudioPhilipsDiagnostics _philipsDiagnostics;
     AudioSourceStats _stats;
     AudioSlotDiagnostics _slotDiagnostics;

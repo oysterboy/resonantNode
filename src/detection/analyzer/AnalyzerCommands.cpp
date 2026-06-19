@@ -93,6 +93,21 @@ bool parseFeatureStreamToken(const char* token, detection::FeatureStreamId& out)
     return false;
 }
 
+bool parseTransportModeToken(const char* token, AudioSourceI2S::TransportMode& out) {
+    if (token == nullptr) {
+        return false;
+    }
+    if (equalsIgnoreCase(token, "arduino") || equalsIgnoreCase(token, "wrapper") || equalsIgnoreCase(token, "arduino_i2s")) {
+        out = AudioSourceI2S::TransportMode::ArduinoWrapper;
+        return true;
+    }
+    if (equalsIgnoreCase(token, "direct") || equalsIgnoreCase(token, "espidf") || equalsIgnoreCase(token, "idf")) {
+        out = AudioSourceI2S::TransportMode::DirectDriver;
+        return true;
+    }
+    return false;
+}
+
 bool parseScalarTransientToken(const char* token, detection::ScalarTransientConfig& config) {
     if (startsWithTokenIgnoreCase(token, "scalar_observed_stream=") || startsWithTokenIgnoreCase(token, "scalarObservedStream=") || startsWithTokenIgnoreCase(token, "scalarStream=")) {
         const char* value = token + (startsWithTokenIgnoreCase(token, "scalar_observed_stream=") ? 23 : startsWithTokenIgnoreCase(token, "scalarObservedStream=") ? 21 : 13);
@@ -295,6 +310,9 @@ void AnalyzerApp::handleUsbLine(const char* line) {
         unsigned long postMs = 1000;
         unsigned long preMs = 0;
         unsigned long decim = 1;
+        AudioSourceI2S::TransportMode transportMode = _i2sSource.transportMode();
+        size_t readChunkBytes = _i2sSource.readChunkBytes();
+        size_t dmaBufferFrames = _i2sSource.dmaBufferFrames();
         AnalyzerApp::RawCaptureMode rawMode = AnalyzerApp::RawCaptureMode::Features;
         AudioSource::I2SFrameMode i2sFrameMode = AudioSource::I2SFrameMode::LeftJustifiedAllSlots;
 
@@ -327,9 +345,26 @@ void AnalyzerApp::handleUsbLine(const char* line) {
                 } else if (equalsIgnoreCase(modeValue, "mode2") || equalsIgnoreCase(modeValue, "philips") || equalsIgnoreCase(modeValue, "philipsslot1") || equalsIgnoreCase(modeValue, "leftonly")) {
                     i2sFrameMode = AudioSource::I2SFrameMode::PhilipsLeftOnly;
                 }
+            } else if (startsWithTokenIgnoreCase(token, "transport=")) {
+                parseTransportModeToken(token + 10, transportMode);
+            } else if (startsWithTokenIgnoreCase(token, "read=") || startsWithTokenIgnoreCase(token, "chunk=")) {
+                const char* value = token + (startsWithTokenIgnoreCase(token, "read=") ? 5 : 6);
+                const unsigned long parsed = strtoul(value, nullptr, 10);
+                if (parsed > 0UL) {
+                    readChunkBytes = static_cast<size_t>(parsed);
+                }
+            } else if (startsWithTokenIgnoreCase(token, "buf=") || startsWithTokenIgnoreCase(token, "dma=")) {
+                const char* value = token + (startsWithTokenIgnoreCase(token, "buf=") ? 4 : 4);
+                const unsigned long parsed = strtoul(value, nullptr, 10);
+                if (parsed > 0UL) {
+                    dmaBufferFrames = static_cast<size_t>(parsed);
+                }
             }
         }
 
+        _i2sSource.setTransportMode(transportMode);
+        _i2sSource.setReadChunkBytes(readChunkBytes);
+        _i2sSource.setDmaBufferFrames(dmaBufferFrames);
         _audioSource.setI2SFrameMode(i2sFrameMode);
         if (runRawTrigger(toneHz, durationMs, postMs, preMs, decim, rawMode)) {
             Serial.println("OK RAW");

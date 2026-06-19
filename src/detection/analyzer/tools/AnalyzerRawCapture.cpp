@@ -129,6 +129,16 @@ void printPhilipsDiagnosticsSummary(const AudioPhilipsDiagnostics& diag) {
     }
 }
 
+const char* i2sTransportModeName(AudioSourceI2S::TransportMode mode) {
+    switch (mode) {
+        case AudioSourceI2S::TransportMode::DirectDriver:
+            return "direct";
+        case AudioSourceI2S::TransportMode::ArduinoWrapper:
+        default:
+            return "arduino";
+    }
+}
+
 } // namespace
 
 bool AnalyzerApp::runRawTrigger(unsigned long toneHz,
@@ -158,6 +168,12 @@ bool AnalyzerApp::runRawTrigger(unsigned long toneHz,
     Serial.println(" output=csv");
     Serial.print("RAW_INFO i2s_mode=");
     Serial.println(_audioSource.i2sFrameMode() == AudioSource::I2SFrameMode::LeftJustifiedAllSlots ? "left" : "philips");
+    Serial.print("RAW_INFO transport=");
+    Serial.println(i2sTransportModeName(_i2sSource.transportMode()));
+    Serial.print("RAW_INFO read_chunk_bytes=");
+    Serial.println(_i2sSource.readChunkBytes());
+    Serial.print("RAW_INFO dma_buffer_frames=");
+    Serial.println(_i2sSource.dmaBufferFrames());
     Serial.print("RAW_INFO row_size=");
     if (mode == RawCaptureMode::Pcm) {
         Serial.print(sizeof(RawCapturePcmSample));

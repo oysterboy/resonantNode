@@ -1,5 +1,6 @@
 #include "AudioSourceI2S.h"
 #include <I2S.h>
+#include <driver/i2s.h>
 #include <math.h>
 #include <string.h>
 #include <new>
@@ -8,6 +9,8 @@ namespace {
 
 constexpr bool kPhilipsBoundaryDiagnosticsEnabled = true;
 constexpr size_t kPhilipsDiagnosticReadLimit = 5;
+constexpr size_t kPhilipsMaxReadBytes = 1024U;
+constexpr size_t kPhilipsMaxReadSamples = kPhilipsMaxReadBytes / sizeof(int32_t);
 
 int decodePcmSample(const uint8_t* samplePtr, int bytesPerSample) {
     if (samplePtr == nullptr || bytesPerSample <= 0) {
@@ -78,6 +81,49 @@ AudioSourceI2S::AudioSourceI2S(int sckPin, int fsPin, int dataInPin, int sampleR
       _blockSamples(new (std::nothrow) int32_t[kRefillBatchSize] {}),
       _blockRawWords(new (std::nothrow) uint32_t[kRefillBatchSize] {}) {}
 
+void AudioSourceI2S::setTransportMode(TransportMode mode) {
+    if (_transportMode == mode) {
+        return;
+    }
+
+    _transportMode = mode;
+    if (_started) {
+        begin();
+    }
+}
+
+AudioSourceI2S::TransportMode AudioSourceI2S::transportMode() const {
+    return _transportMode;
+}
+
+void AudioSourceI2S::setReadChunkBytes(size_t bytes) {
+    if (bytes == 0) {
+        bytes = 1;
+    }
+    _readChunkBytes = bytes;
+}
+
+size_t AudioSourceI2S::readChunkBytes() const {
+    return _readChunkBytes;
+}
+
+void AudioSourceI2S::setDmaBufferFrames(size_t frames) {
+    if (frames < 8U) {
+        frames = 8U;
+    }
+    if (frames > 1024U) {
+        frames = 1024U;
+    }
+    _dmaBufferFrames = frames;
+    if (_started) {
+        begin();
+    }
+}
+
+size_t AudioSourceI2S::dmaBufferFrames() const {
+    return _dmaBufferFrames;
+}
+
 void AudioSourceI2S::begin() {
     // Keep the public contract sample-based even though I2S may buffer internally.
     resetStats();
@@ -90,15 +136,73 @@ void AudioSourceI2S::begin() {
     _started = false;
     _samplePeriodUs = _sampleRate > 0 ? static_cast<uint32_t>(1000000UL / static_cast<uint32_t>(_sampleRate)) : 0;
 
-    I2S.end();
-    I2S.setAllPins(_sckPin, _fsPin, _dataInPin, I2S_PIN_NO_CHANGE, I2S_PIN_NO_CHANGE);
     const bool carryAllSlots = _frameMode == I2SFrameMode::LeftJustifiedAllSlots;
-    // Mode 1 keeps the left-justified transport and carries both slots.
-    // Mode 2 switches to Philips framing and keeps only the left slot.
-    const int beginResult = I2S.begin(carryAllSlots ? I2S_LEFT_JUSTIFIED_MODE : I2S_PHILIPS_MODE,
-                                      _sampleRate,
-                                      carryAllSlots ? _bitsPerSample : 32);
-    _started = beginResult != 0;
+    const bool useWrapper = _transportMode == TransportMode::ArduinoWrapper;
+
+    if (useWrapper) {
+        I2S.end();
+        I2S.setAllPins(_sckPin, _fsPin, _dataInPin, I2S_PIN_NO_CHANGE, I2S_PIN_NO_CHANGE);
+        if (_dmaBufferFrames > 0) {
+            I2S.setBufferSize(static_cast<int>(_dmaBufferFrames));
+        }
+        // Mode 1 keeps the left-justified transport and carries both slots.
+        // Mode 2 switches to Philips framing and keeps only the left slot.
+        const int beginResult = I2S.begin(carryAllSlots ? I2S_LEFT_JUSTIFIED_MODE : I2S_PHILIPS_MODE,
+                                          _sampleRate,
+                                          carryAllSlots ? _bitsPerSample : 32);
+        _started = beginResult != 0;
+        return;
+    }
+
+    I2S.end();
+    const esp_i2s::i2s_port_t port = static_cast<esp_i2s::i2s_port_t>(0);
+    esp_i2s::i2s_config_t config = {};
+    config.mode = static_cast<esp_i2s::i2s_mode_t>(esp_i2s::I2S_MODE_MASTER | esp_i2s::I2S_MODE_RX);
+    config.sample_rate = _sampleRate;
+    config.bits_per_sample = static_cast<esp_i2s::i2s_bits_per_sample_t>(_bitsPerSample);
+    config.channel_format = esp_i2s::I2S_CHANNEL_FMT_RIGHT_LEFT;
+    config.communication_format = esp_i2s::I2S_COMM_FORMAT_STAND_I2S;
+    config.intr_alloc_flags = ESP_INTR_FLAG_LEVEL2;
+    config.dma_buf_count = 2;
+    config.dma_buf_len = static_cast<int>(_dmaBufferFrames);
+    config.use_apll = false;
+    config.tx_desc_auto_clear = false;
+    config.fixed_mclk = 0;
+    if (esp_i2s::i2s_driver_uninstall(port) != ESP_OK) {
+        // Ignore uninstall failures; the direct path may already be clean.
+    }
+    if (esp_i2s::i2s_driver_install(port, &config, 0, nullptr) != ESP_OK) {
+        _started = false;
+        return;
+    }
+
+    esp_i2s::i2s_pin_config_t pinConfig = {};
+    pinConfig.bck_io_num = digitalPinToGPIONumber(_sckPin);
+    pinConfig.ws_io_num = digitalPinToGPIONumber(_fsPin);
+    pinConfig.data_out_num = I2S_PIN_NO_CHANGE;
+    pinConfig.data_in_num = digitalPinToGPIONumber(_dataInPin);
+    if (esp_i2s::i2s_set_pin(port, &pinConfig) != ESP_OK) {
+        esp_i2s::i2s_driver_uninstall(port);
+        _started = false;
+        return;
+    }
+
+    if (esp_i2s::i2s_set_clk(port,
+                             _sampleRate,
+                             static_cast<uint32_t>(_bitsPerSample),
+                             static_cast<esp_i2s::i2s_channel_t>(esp_i2s::I2S_CHANNEL_STEREO)) != ESP_OK) {
+        esp_i2s::i2s_driver_uninstall(port);
+        _started = false;
+        return;
+    }
+
+    if (esp_i2s::i2s_start(port) != ESP_OK) {
+        esp_i2s::i2s_driver_uninstall(port);
+        _started = false;
+        return;
+    }
+
+    _started = true;
 }
 
 bool AudioSourceI2S::shouldLogPhilipsBoundarySample(size_t,
@@ -363,14 +467,11 @@ bool AudioSourceI2S::refillBlock() {
         return false;
     }
 
-    const int availableBytes = I2S.available();
-    if (availableBytes <= 0) {
-        recordReadAttempt(0, 0, false);
-        return false;
+    const int maxBatchBytes = static_cast<int>(kPhilipsMaxReadBytes);
+    int requestedBytes = static_cast<int>(_readChunkBytes);
+    if (requestedBytes <= 0) {
+        requestedBytes = bytesPerSample;
     }
-
-    int requestedBytes = availableBytes;
-    const int maxBatchBytes = static_cast<int>(kRefillBatchSize) * bytesPerSample;
     if (requestedBytes > maxBatchBytes) {
         requestedBytes = maxBatchBytes;
     }
@@ -380,8 +481,37 @@ bool AudioSourceI2S::refillBlock() {
         return false;
     }
 
-    uint8_t rawBytes[kRefillBatchSize * sizeof(int32_t)] = {};
-    const int bytesRead = I2S.read(rawBytes, static_cast<size_t>(requestedBytes));
+    uint8_t rawBytes[kPhilipsMaxReadBytes] = {};
+    int bytesRead = 0;
+    if (_transportMode == TransportMode::DirectDriver) {
+        size_t bytesReadSize = 0;
+        const esp_err_t readResult = esp_i2s::i2s_read(static_cast<esp_i2s::i2s_port_t>(0), rawBytes, static_cast<size_t>(requestedBytes), &bytesReadSize, portMAX_DELAY);
+        if (readResult != ESP_OK) {
+            recordReadAttempt(requestedBytes, 0, true);
+            return false;
+        }
+        bytesRead = static_cast<int>(bytesReadSize);
+    } else {
+        int availableBytes = I2S.available();
+        uint32_t waitBudgetMs = 250U;
+        while (availableBytes < requestedBytes && waitBudgetMs > 0U) {
+            delay(1);
+            --waitBudgetMs;
+            availableBytes = I2S.available();
+        }
+        if (availableBytes <= 0) {
+            recordReadAttempt(requestedBytes, 0, false);
+            return false;
+        }
+        if (availableBytes < requestedBytes) {
+            requestedBytes = availableBytes - (availableBytes % bytesPerSample);
+            if (requestedBytes <= 0) {
+                recordReadAttempt(0, 0, false);
+                return false;
+            }
+        }
+        bytesRead = I2S.read(rawBytes, static_cast<size_t>(requestedBytes));
+    }
     recordReadAttempt(requestedBytes, bytesRead, bytesRead <= 0);
     if (bytesRead <= 0) {
         return false;
@@ -396,8 +526,8 @@ bool AudioSourceI2S::refillBlock() {
     const size_t frameCount = wordsRead / 2U;
     const size_t remainderBytes = static_cast<size_t>(bytesRead % 8);
     const size_t remainderWords = wordsRead % 2U;
-    int32_t rawSamples[kRefillBatchSize] = {};
-    uint32_t rawWords[kRefillBatchSize] = {};
+    int32_t rawSamples[kPhilipsMaxReadSamples] = {};
+    uint32_t rawWords[kPhilipsMaxReadSamples] = {};
     double slotSumSquares[2] = {0.0, 0.0};
     unsigned long slotCount[2] = {0, 0};
     int slotMin[2] = {0, 0};
@@ -449,7 +579,7 @@ bool AudioSourceI2S::refillBlock() {
             }
             slotLastValue[diagSlotIndex] = sample;
         }
-        if (i < kRefillBatchSize) {
+        if (i < kPhilipsMaxReadSamples) {
             _blockSamples[i] = sample;
             _blockCount++;
             if (_blockCount > _maxBufferedSamples) {

@@ -412,7 +412,7 @@ bool AnalyzerApp::runRawTrigger(unsigned long toneHz,
 
         const unsigned long sampleTimeMs = sampleTimeUs / 1000UL;
         if (!rawCaptureArmed) {
-            if (sampleTimeMs < rawWarmupDeadlineMs || !_audioSource.lastSampleWasBlockStart()) {
+            if (millis() < rawWarmupDeadlineMs) {
                 return true;
             }
             armRawCapture(sampleTimeMs);

@@ -38,13 +38,15 @@ function Add-Log {
 function Get-SerialDrainSlackMs {
     param(
         [Parameter(Mandatory = $true)][int]$CapturedSamples,
-        [Parameter(Mandatory = $true)][int]$BaudRateValue
+        [Parameter(Mandatory = $true)][int]$BaudRateValue,
+        [Parameter(Mandatory = $true)][string]$CommandText
     )
 
     $estimatedRowBytes = 40.0
     $payloadBytes = [double]$CapturedSamples * $estimatedRowBytes
     $wireMs = [int][math]::Ceiling(($payloadBytes * 10.0 * 1000.0) / [double]$BaudRateValue)
-    return [int][math]::Max(1500, [math]::Min(12000, $wireMs + 500))
+    $modeBias = if ($CommandText -match 'i2s=left') { 3500 } else { 1500 }
+    return [int][math]::Max($modeBias, [math]::Min(15000, $wireMs + 750))
 }
 
 $port = New-Object System.IO.Ports.SerialPort
@@ -116,10 +118,10 @@ try {
             break
         }
 
-        $slackMs = Get-SerialDrainSlackMs -CapturedSamples $capturedSamples -BaudRateValue $BaudRate
+        $slackMs = Get-SerialDrainSlackMs -CapturedSamples $capturedSamples -BaudRateValue $BaudRate -CommandText $Command
         Add-Log ('CAPTURE ' + $i + ' captured=' + $capturedSamples + ' drain_slack_ms=' + $slackMs)
         Start-Sleep -Milliseconds $slackMs
-        Start-Sleep -Milliseconds 250
+        Start-Sleep -Milliseconds 500
     }
 } finally {
     if ($port.IsOpen) {

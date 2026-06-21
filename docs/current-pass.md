@@ -1,76 +1,121 @@
-# TonalPulseScalar Two-Sweep Logging Campaign
-
-## Goal
-
-Run the next LOG-001 scalar campaign as a 10-block, 1-launch-per-block pass for `TonalPulseScalar`.
-
-Keep the current scalar defaults in place except for the two sweeps below.
+Implement a minimal, firmware-selectable PCM de-accumulation step directly inside `AudioSourceI2s`.
 
 ## Scope
 
-This pass is only for the next logging campaign.
+Apply preprocessing immediately after incoming I²S samples have been decoded into the normal PCM sample type, before they enter:
 
-In scope:
+* `AudioSourceFrame`
+* feature extraction
+* feature history
+* detectors
+* inspectors
+* Analyzer processing
 
-- one campaign folder for the whole run
-- 10 blocks of 1 launch
-- `TonalPulseScalar` as the active profile
-- the current 3-bin frequency stream wiring
-- the standard LOG-001 summary files and per-run logs
-- recording the requested tune and the applied tune per block
+Do not move this logic into downstream modules.
 
-Out of scope:
+## Required design
 
-- new detector logic
-- new analyzer fields
-- new `ScalarInputMode` plumbing
-- Hann windowing
-- broad refactors outside the logging workflow
+Add an explicit preprocessing mode:
 
-## Allowed Files
+```cpp
+enum class PcmPreprocessMode : uint8_t {
+    None,
+    FirstDifference
+};
+```
 
-- `tools/logging/+ create_log001_batch_scaffold.ps1`
-- `tools/logging/+ run_log001_campaign.ps1`
-- `tools/logging/tuning-run-process.md`
-- `tools/logging/process-changelog.md`
-- generated files under `tools/logs/seq-tests/<campaign-folder>/`
+Add one firmware/default selection close to the existing I²S configuration:
 
-## Forbidden Files
+```cpp
+constexpr PcmPreprocessMode kPcmPreprocessMode =
+    PcmPreprocessMode::FirstDifference;
+```
 
-- `docs/myspec.md`
-- unrelated detection source files
-- unrelated behavior/output code
-- any broad refactor outside the campaign runner and its generated logs
+Changing this to `None` must restore the original unchanged PCM path.
 
-## Exact Changes
+## Processing
 
-1. Create one new campaign folder for this pass.
-2. Use 10 blocks of 1 launch.
-3. Keep the run shape aligned with the current LOG-001 process:
-   - `SEQ start profile=TonalPulseScalar tries=50 mode=source when=all verbose=1`
-4. Keep all non-swept scalar defaults fixed.
-5. Sweep 1, release threshold:
-   - hold the other scalar settings steady
-   - move `scalar_release_threshold` upward from `5000` to `15000`
-   - use 5 blocks with `2500`-point steps: `5000`, `7500`, `10000`, `12500`, `15000`
-6. Sweep 2, attack threshold:
-   - keep the release value chosen from sweep 1 fixed
-   - increase `scalar_onset_threshold` in `1000`-point steps
-   - keep the remaining scalar settings fixed
-   - use 5 blocks starting from the current onset default and stepping up by `1000` each block: `19000`, `20000`, `21000`, `22000`, `23000`
-7. Record the requested tune and the confirmed applied tune in each block summary.
+For every decoded PCM sample, in true stream order:
 
-## Success Criteria
+```cpp
+output = current - previous;
+previous = current;
+```
 
-- The campaign is organized as one folder with 10 blocks of 1.
-- The active profile is `TonalPulseScalar`.
-- The campaign performs the release-threshold sweep first and the attack-threshold sweep second.
-- Each block summary reflects the applied tune, not just the requested tune.
-- The run artifacts include `README.md`, `session.log`, `heartbeat.md`, `campaign_state.json`, `progress.md`, `run_01.log` through `run_10.log`, and `block_01_summary.md` through `block_10_summary.md`.
+Requirements:
+
+* previous-sample state persists across DMA/read-buffer boundaries
+* use a wider intermediate type to avoid overflow
+* clamp to the valid output PCM range if necessary
+* initialize from the first valid incoming sample
+* output `0` for the first `FirstDifference` sample to avoid a startup spike
+* reset state whenever `AudioSourceI2s` is initialized, restarted, reconfigured, or stopped
+
+Example shape:
+
+```cpp
+int32_t AudioSourceI2s::preprocessSample(int32_t current) {
+    if (preprocessMode_ == PcmPreprocessMode::None) {
+        return current;
+    }
+
+    if (!hasPreviousSample_) {
+        previousSample_ = current;
+        hasPreviousSample_ = true;
+        return 0;
+    }
+
+    const int64_t diff =
+        static_cast<int64_t>(current) -
+        static_cast<int64_t>(previousSample_);
+
+    previousSample_ = current;
+
+    return clampToPcmRange(diff);
+}
+```
+
+Adapt names and types to the actual codebase. Do not introduce unnecessary abstractions.
+
+## Diagnostics
+
+Preserve the distinction between:
+
+* direct decoded I²S PCM before preprocessing
+* processed PCM passed into `AudioSourceFrame`
+
+`RAW mode=i2s` should continue to show preprocessed-input truth from the driver side.
+
+`RAW mode=pcm` should show the processed PCM that actually enters the runtime pipeline.
+
+Do not silently label processed samples as raw I²S samples.
+
+## Non-goals
+
+Do not add or modify:
+
+* high-pass filters
+* baseline subtraction
+* baseline tracking
+* startup compensation
+* smoothing
+* interpolation
+* detector tuning
+* inspector tuning
+* Analyzer architecture
+* runtime Param infrastructure
+* I²S driver configuration
 
 ## Verification
 
-- confirm the scaffold/runner created a single campaign folder
-- confirm the block summaries show the requested and applied tuning values
-- confirm the per-run logs are present for all 10 blocks
-- sanity-check that the campaign stayed on `TonalPulseScalar`
+Verify:
+
+1. Build succeeds.
+2. `None` reproduces the previous PCM stream exactly.
+3. `FirstDifference` removes the slow accumulated drift.
+4. No discontinuity appears at DMA/read boundaries.
+5. No artificial first-sample spike appears.
+6. The 3.2 kHz test tone remains visible and usable.
+7. Downstream pipeline APIs remain unchanged.
+
+Keep the patch small, explicit, local to `AudioSourceI2s`, and easy to remove later.

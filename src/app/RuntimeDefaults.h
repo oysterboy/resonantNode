@@ -81,6 +81,11 @@ These are defaults, not live profile state.
 
 namespace runtime {
 
+enum class PcmPreprocessMode : uint8_t {
+    None,
+    FirstDifference,
+};
+
 constexpr uint32_t kDefaultChirpFrequencyHz = 3200UL;
 constexpr unsigned long kDefaultChirpDurationMs = 100UL;
 constexpr uint32_t kDefaultAudioI2SSampleRateHz = AUDIO_I2S_SAMPLE_RATE_HZ;
@@ -91,6 +96,7 @@ constexpr int kDefaultAudioI2SDataPin = AUDIO_I2S_DATA_PIN;
 constexpr size_t kDefaultAudioI2SReadBytes = I2S_READ_BYTES;
 constexpr int kDefaultAudioI2SDmaBufLen = I2S_DMA_BUF_LEN;
 constexpr int kDefaultAudioI2SDmaBufCount = I2S_DMA_BUF_COUNT;
+constexpr PcmPreprocessMode kPcmPreprocessMode = PcmPreprocessMode::FirstDifference;
 constexpr unsigned long kDefaultAudioSignalStartupWarmupMs = 2000UL;
 
 } // namespace runtime

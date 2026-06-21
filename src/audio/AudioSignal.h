@@ -38,7 +38,7 @@ struct AudioSamplePacket {
     uint32_t timeMs = 0;
     // Source sample rate in Hz for the frame.
     unsigned long sampleRateHz = 0;
-    // Decoded PCM sample as read from transport.
+    // PCM sample as delivered into the runtime pipeline after source preprocessing.
     int rawAudioValue = 0;
     // Raw sample after baseline subtraction.
     int baselineCorrectedValue = 0;

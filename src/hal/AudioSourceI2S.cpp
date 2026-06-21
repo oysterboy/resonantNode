@@ -9,6 +9,16 @@
 namespace {
 constexpr i2s_port_t kI2sPort = I2S_NUM_0;
 
+int32_t clampToPcmRange(int64_t value) {
+    if (value > static_cast<int64_t>(INT32_MAX)) {
+        return INT32_MAX;
+    }
+    if (value < static_cast<int64_t>(INT32_MIN)) {
+        return INT32_MIN;
+    }
+    return static_cast<int32_t>(value);
+}
+
 int decodePcmSample(const uint8_t* samplePtr, int bytesPerSample) {
     if (samplePtr == nullptr || bytesPerSample <= 0) {
         return 0;
@@ -56,10 +66,12 @@ AudioSourceI2S::AudioSourceI2S(int sckPin, int fsPin, int dataInPin, int sampleR
       _dataInPin(dataInPin),
       _sampleRate(sampleRate),
       _bitsPerSample(bitsPerSample),
+      _preprocessMode(runtime::kPcmPreprocessMode),
       _blockSamples(new (std::nothrow) int32_t[kRefillBatchSize] {}) {}
 
 void AudioSourceI2S::begin() {
     resetStats();
+    resetPreprocessState();
     if (!_blockSamples) {
         _blockSamples.reset(new (std::nothrow) int32_t[kRefillBatchSize] {});
     }
@@ -203,6 +215,27 @@ void AudioSourceI2S::resetStats() {
     _stats = {};
 }
 
+int32_t AudioSourceI2S::preprocessSample(int32_t current) {
+    if (_preprocessMode == runtime::PcmPreprocessMode::None) {
+        return current;
+    }
+
+    if (!_hasPreviousSample) {
+        _previousSample = current;
+        _hasPreviousSample = true;
+        return 0;
+    }
+
+    const int64_t diff = static_cast<int64_t>(current) - static_cast<int64_t>(_previousSample);
+    _previousSample = current;
+    return clampToPcmRange(diff);
+}
+
+void AudioSourceI2S::resetPreprocessState() {
+    _previousSample = 0;
+    _hasPreviousSample = false;
+}
+
 void AudioSourceI2S::recordReadAttempt(int requestedBytes, int bytesRead, bool readError) {
     ++_stats.reads;
     if (bytesRead < 0) {
@@ -256,12 +289,14 @@ bool AudioSourceI2S::refillBlock() {
     _blockCount = 0;
     for (size_t i = 0; i < samplesToProcess; ++i) {
         const uint8_t* samplePtr = rawBytes + (i * static_cast<size_t>(bytesPerSample));
-        _blockSamples[_blockCount++] = decodePcmSample(samplePtr, bytesPerSample);
+        const int32_t decodedSample = static_cast<int32_t>(decodePcmSample(samplePtr, bytesPerSample));
+        _blockSamples[_blockCount++] = preprocessSample(decodedSample);
     }
 
     const uint32_t selectedFrameAge = _blockCount > 0 ? static_cast<uint32_t>(_blockCount - 1U) : 0U;
     const uint32_t offsetUs = sampleOffsetUs(selectedFrameAge, static_cast<uint32_t>(_sampleRate));
     _blockApproxStartMicros = fillEndUs > offsetUs ? fillEndUs - offsetUs : 0U;
     _outputSampleIndex += static_cast<uint64_t>(_blockCount);
+    _stats.totalSamplesRead += static_cast<uint64_t>(_blockCount);
     return _blockCount > 0;
 }

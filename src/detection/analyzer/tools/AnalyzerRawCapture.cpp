@@ -221,7 +221,10 @@ bool AnalyzerApp::runRawTrigger(unsigned long toneHz,
     unsigned long flushedSamples = 0;
     int discardedSample = 0;
     uint32_t discardedSampleTimeUs = 0;
-    while (flushedSamples < kRawCaptureFlushSamples && _audioSource.readRawSample(discardedSample, discardedSampleTimeUs)) {
+    const bool useSignalView = rawCaptureUsesSignalView(mode);
+    while (flushedSamples < kRawCaptureFlushSamples &&
+           (useSignalView ? _audioSource.readSample(discardedSample, discardedSampleTimeUs)
+                          : _audioSource.readRawSample(discardedSample, discardedSampleTimeUs))) {
         ++flushedSamples;
     }
 
@@ -273,7 +276,6 @@ bool AnalyzerApp::runRawTrigger(unsigned long toneHz,
     unsigned long preWindowSamples = 0;
     unsigned long preWriteIndex = 0;
     unsigned long postCaptured = 0;
-    const bool useSignalView = rawCaptureUsesSignalView(mode);
     int64_t rawWindowSum = 0;
     uint64_t rawWindowAbsSum = 0;
     int32_t rawWindowMin = INT32_MAX;
@@ -364,15 +366,16 @@ bool AnalyzerApp::runRawTrigger(unsigned long toneHz,
     };
 
     auto captureSample = [&]() -> bool {
-        int rawSample = 0;
+        int sourceSample = 0;
         uint32_t sampleTimeUs = 0;
-        if (!_audioSource.readRawSample(rawSample, sampleTimeUs)) {
+        if (!(useSignalView ? _audioSource.readSample(sourceSample, sampleTimeUs)
+                            : _audioSource.readRawSample(sourceSample, sampleTimeUs))) {
             return false;
         }
 
         const unsigned long sampleTimeMs = sampleTimeUs / 1000UL;
         const uint16_t sampleTimeOffsetMs = rawCaptureOffsetMs(sampleTimeMs, captureBaseMs);
-        const int32_t signedRawSample = static_cast<int32_t>(rawSample);
+        const int32_t signedRawSample = static_cast<int32_t>(sourceSample);
         rawWindowSum += static_cast<int64_t>(signedRawSample);
         rawWindowAbsSum += static_cast<uint64_t>(signedRawSample < 0 ? -static_cast<int64_t>(signedRawSample) : static_cast<int64_t>(signedRawSample));
         if (signedRawSample < rawWindowMin) {
@@ -383,7 +386,7 @@ bool AnalyzerApp::runRawTrigger(unsigned long toneHz,
         }
         if (useSignalView) {
             AudioSamplePacket audioSamplePacket = {};
-            _audioSignal.update(rawSample, sampleTimeUs, audioSamplePacket);
+            _audioSignal.update(sourceSample, sampleTimeUs, audioSamplePacket);
 
             if (mode == RawCaptureMode::Pcm) {
                 if (!emitStarted) {
@@ -421,7 +424,7 @@ bool AnalyzerApp::runRawTrigger(unsigned long toneHz,
                     preWriteIndex = (preWriteIndex + 1UL) % preWantedSamples;
                 } else if (mode == RawCaptureMode::Both && preBothRingBuffer != nullptr) {
                     preBothRingBuffer[preWriteIndex].timeOffsetMs = sampleTimeOffsetMs;
-                    preBothRingBuffer[preWriteIndex].pcm = static_cast<int32_t>(rawSample);
+                    preBothRingBuffer[preWriteIndex].pcm = static_cast<int32_t>(sourceSample);
                     preBothRingBuffer[preWriteIndex].amp = ampFixed;
                     preWriteIndex = (preWriteIndex + 1UL) % preWantedSamples;
                 }
@@ -434,7 +437,7 @@ bool AnalyzerApp::runRawTrigger(unsigned long toneHz,
                     featureCaptureBuffer[preWindowSamples + postCaptured].targetFresh = frequencyEvidence.fresh ? 1U : 0U;
                 } else if (mode == RawCaptureMode::Both && bothCaptureBuffer != nullptr) {
                     bothCaptureBuffer[preWindowSamples + postCaptured].timeOffsetMs = sampleTimeOffsetMs;
-                    bothCaptureBuffer[preWindowSamples + postCaptured].pcm = static_cast<int32_t>(rawSample);
+                    bothCaptureBuffer[preWindowSamples + postCaptured].pcm = static_cast<int32_t>(sourceSample);
                     bothCaptureBuffer[preWindowSamples + postCaptured].amp = ampFixed;
                 }
                 ++postCaptured;
@@ -445,14 +448,14 @@ bool AnalyzerApp::runRawTrigger(unsigned long toneHz,
         if (!emitStarted) {
             if (mode == RawCaptureMode::I2s && prePcmRingBuffer != nullptr) {
                 prePcmRingBuffer[preWriteIndex].timeOffsetMs = sampleTimeOffsetMs;
-                prePcmRingBuffer[preWriteIndex].pcm = static_cast<int32_t>(rawSample);
+                prePcmRingBuffer[preWriteIndex].pcm = static_cast<int32_t>(sourceSample);
                 preWriteIndex = (preWriteIndex + 1UL) % preWantedSamples;
             }
             ++preCapturedTotal;
         } else if (postCaptured < postWantedSamples) {
             if (mode == RawCaptureMode::I2s && pcmCaptureBuffer != nullptr) {
                 pcmCaptureBuffer[preWindowSamples + postCaptured].timeOffsetMs = sampleTimeOffsetMs;
-                pcmCaptureBuffer[preWindowSamples + postCaptured].pcm = static_cast<int32_t>(rawSample);
+                pcmCaptureBuffer[preWindowSamples + postCaptured].pcm = static_cast<int32_t>(sourceSample);
             }
             ++postCaptured;
         }
@@ -488,9 +491,13 @@ bool AnalyzerApp::runRawTrigger(unsigned long toneHz,
         pumpEmitterSerial();
     }
 
+    const unsigned long requestedSamples = preWantedSamples + postWantedSamples;
     const unsigned long capturedSamples = preWindowSamples + postCaptured;
-    const unsigned long droppedSamples = (preWantedSamples + postWantedSamples) > capturedSamples
-        ? (preWantedSamples + postWantedSamples) - capturedSamples
+    const unsigned long droppedSamples = requestedSamples > capturedSamples
+        ? requestedSamples - capturedSamples
+        : 0;
+    const unsigned long unusedCapacitySamples = maxSamples > capturedSamples
+        ? maxSamples - capturedSamples
         : 0;
     const float rawWindowMean = capturedSamples > 0 ? static_cast<float>(rawWindowSum) / static_cast<float>(capturedSamples) : 0.0f;
     const float rawWindowAbsMean = capturedSamples > 0 ? static_cast<float>(rawWindowAbsSum) / static_cast<float>(capturedSamples) : 0.0f;
@@ -619,10 +626,14 @@ bool AnalyzerApp::runRawTrigger(unsigned long toneHz,
 
     Serial.print("RAW_SUMMARY id=");
     Serial.print(captureId);
+    Serial.print(" requested=");
+    Serial.print(requestedSamples);
     Serial.print(" captured=");
     Serial.print(capturedSamples);
     Serial.print(" dropped=");
     Serial.print(droppedSamples);
+    Serial.print(" unused_capacity=");
+    Serial.print(unusedCapacitySamples);
     Serial.print(" max_pcm_abs=");
     Serial.print(maxPcmAbs);
     if (rawCaptureUsesFeatureStream(mode)) {

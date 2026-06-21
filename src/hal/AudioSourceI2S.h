@@ -33,6 +33,8 @@ public:
     void resetStats() override;
 
 private:
+    int32_t preprocessSample(int32_t current);
+    void resetPreprocessState();
     bool refillBlock();
     void recordReadAttempt(int requestedBytes, int bytesRead, bool readError);
 
@@ -41,6 +43,7 @@ private:
     int _dataInPin;
     int _sampleRate;
     int _bitsPerSample;
+    runtime::PcmPreprocessMode _preprocessMode = runtime::kPcmPreprocessMode;
     bool _started = false;
     static constexpr size_t kRefillBatchSize = static_cast<size_t>(I2S_READ_BYTES / sizeof(int32_t));
     std::unique_ptr<int32_t[]> _blockSamples;
@@ -50,5 +53,7 @@ private:
     uint32_t _blockApproxStartMicros = 0;
     bool _blockOverflowBeforeBlock = false;
     uint64_t _outputSampleIndex = 0;
+    int32_t _previousSample = 0;
+    bool _hasPreviousSample = false;
     AudioSourceStats _stats;
 };

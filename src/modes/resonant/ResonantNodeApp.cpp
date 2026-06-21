@@ -52,6 +52,7 @@ File structure:
 namespace {
 constexpr int kMaxSamplesPerLoop = 512;
 constexpr int kRbStartupQuietThreshold = 20;
+constexpr unsigned long kRbStartupMicWarmupMs = runtime::kDefaultAudioSignalStartupWarmupMs;
 constexpr unsigned long kRbStartupQuietHoldMs = 1000;
 constexpr unsigned long kRbStartupBaselineTimeoutMs = 8000;
 constexpr unsigned long kRbPostRebaseSettleMs = 500;
@@ -374,7 +375,15 @@ const char* Node::rbBaselineStateName() const {
 void Node::updateRbBaselineState(unsigned long now) {
     switch (_rbBaselineState) {
         case RBBaselineState::Boot:
-            startRbQuietBaseline();
+            if (timing::elapsedSince(now, _rbBaselineStateStartedMs, kRbStartupMicWarmupMs)) {
+                startRbQuietBaseline();
+            } else if (_rbBaselineLastLogMs == 0 || timing::elapsedSince(now, _rbBaselineLastLogMs, 1000UL)) {
+                _rbBaselineLastLogMs = now;
+                Serial.print("RB warmup waiting ms=");
+                Serial.print(now - _rbBaselineStateStartedMs);
+                Serial.print(" of ");
+                Serial.println(kRbStartupMicWarmupMs);
+            }
             break;
 
         case RBBaselineState::ListenForQuiet: {

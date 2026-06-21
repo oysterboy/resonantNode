@@ -207,7 +207,7 @@ void AnalyzerApp::handleUsbLine(const char* line) {
         Serial.println("CMD: EMIT MODE REMOTE");
         Serial.println("CMD: EMIT MODE AUTO interval=2000 freq=3200 dur=100");
         Serial.println("CMD: EMIT SWEEP start=3000 stop=3500 step=100 dur=80 pause=1000");
-        Serial.println("CMD: RAW trigger f=3200 dur=100 post=1000 mode=feat (default)|mode=pcm|mode=both");
+        Serial.println("CMD: RAW trigger f=3200 dur=100 post=1000 mode=feat (default)|mode=pcm|mode=i2s|mode=both");
         Serial.println("CMD: SEQ");
         Serial.println("CMD: SEQ help");
         Serial.println("CMD: SEQ stop");
@@ -313,8 +313,10 @@ void AnalyzerApp::handleUsbLine(const char* line) {
                 const char* modeValue = token + 5;
                 if (equalsIgnoreCase(modeValue, "feat") || equalsIgnoreCase(modeValue, "features") || equalsIgnoreCase(modeValue, "csv")) {
                     rawMode = AnalyzerApp::RawCaptureMode::Features;
-                } else if (equalsIgnoreCase(modeValue, "pcm") || equalsIgnoreCase(modeValue, "raw")) {
+                } else if (equalsIgnoreCase(modeValue, "pcm")) {
                     rawMode = AnalyzerApp::RawCaptureMode::Pcm;
+                } else if (equalsIgnoreCase(modeValue, "i2s") || equalsIgnoreCase(modeValue, "raw")) {
+                    rawMode = AnalyzerApp::RawCaptureMode::I2s;
                 } else if (equalsIgnoreCase(modeValue, "both")) {
                     rawMode = AnalyzerApp::RawCaptureMode::Both;
                 }

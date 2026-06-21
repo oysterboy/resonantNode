@@ -58,7 +58,8 @@ public:
     };
 
     enum class RawCaptureMode {
-        Pcm,      // Transport decode only: raw I2S PCM for offset/lane debugging.
+        Pcm,      // Analyzer-facing PCM: raw sample plus current baseline and centered value.
+        I2s,      // Transport decode only: raw I2S PCM for offset/lane debugging.
         Features, // Detector view only: centered/normalized values from the live pipeline.
         Both,     // Raw PCM plus detector view in one dump.
     };

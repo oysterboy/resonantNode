@@ -18,6 +18,7 @@ constexpr int32_t kRawCaptureFixedPointScale = 1000;
 struct RawCapturePcmSample {
     uint16_t timeOffsetMs = 0;
     int32_t pcm = 0;
+    float baseline = 0.0f;
 };
 
 struct RawCaptureFeatureSample {
@@ -39,6 +40,8 @@ const char* rawCaptureModeName(AnalyzerApp::RawCaptureMode mode) {
             return "feat";
         case AnalyzerApp::RawCaptureMode::Both:
             return "both";
+        case AnalyzerApp::RawCaptureMode::I2s:
+            return "i2s";
         case AnalyzerApp::RawCaptureMode::Pcm:
         default:
             return "pcm";
@@ -47,6 +50,10 @@ const char* rawCaptureModeName(AnalyzerApp::RawCaptureMode mode) {
 
 bool rawCaptureUsesFeatureStream(AnalyzerApp::RawCaptureMode mode) {
     return mode == AnalyzerApp::RawCaptureMode::Features || mode == AnalyzerApp::RawCaptureMode::Both;
+}
+
+bool rawCaptureUsesSignalView(AnalyzerApp::RawCaptureMode mode) {
+    return mode == AnalyzerApp::RawCaptureMode::Pcm || rawCaptureUsesFeatureStream(mode);
 }
 
 uint16_t rawCaptureOffsetMs(unsigned long sampleMs, unsigned long baseMs) {
@@ -110,7 +117,7 @@ bool AnalyzerApp::runRawTrigger(unsigned long toneHz,
     Serial.print(rawCaptureModeName(mode));
     Serial.println(" output=csv");
     Serial.print("RAW_INFO row_size=");
-    if (mode == RawCaptureMode::Pcm) {
+    if (mode == RawCaptureMode::Pcm || mode == RawCaptureMode::I2s) {
         Serial.print(sizeof(RawCapturePcmSample));
     } else if (mode == RawCaptureMode::Features) {
         Serial.print(sizeof(RawCaptureFeatureSample));
@@ -152,7 +159,7 @@ bool AnalyzerApp::runRawTrigger(unsigned long toneHz,
         return rowCount > 0 ? malloc(rowCount * rowSize) : nullptr;
     };
 
-    if (mode == RawCaptureMode::Pcm) {
+    if (mode == RawCaptureMode::Pcm || mode == RawCaptureMode::I2s) {
         if (preWantedSamples > 0) {
             prePcmRingBuffer = static_cast<RawCapturePcmSample*>(allocRows(preWantedSamples, sizeof(RawCapturePcmSample)));
             if (prePcmRingBuffer == nullptr) {
@@ -266,7 +273,7 @@ bool AnalyzerApp::runRawTrigger(unsigned long toneHz,
     unsigned long preWindowSamples = 0;
     unsigned long preWriteIndex = 0;
     unsigned long postCaptured = 0;
-    const bool useFeatureStream = rawCaptureUsesFeatureStream(mode);
+    const bool useSignalView = rawCaptureUsesSignalView(mode);
     int64_t rawWindowSum = 0;
     uint64_t rawWindowAbsSum = 0;
     int32_t rawWindowMin = INT32_MAX;
@@ -285,7 +292,7 @@ bool AnalyzerApp::runRawTrigger(unsigned long toneHz,
         }
 
         const unsigned long startIndex = preCapturedTotal < preWantedSamples ? 0UL : preWriteIndex;
-        if (mode == RawCaptureMode::Pcm && prePcmRingBuffer != nullptr && pcmCaptureBuffer != nullptr) {
+        if ((mode == RawCaptureMode::Pcm || mode == RawCaptureMode::I2s) && prePcmRingBuffer != nullptr && pcmCaptureBuffer != nullptr) {
             for (unsigned long i = 0; i < preWindowSamples; ++i) {
                 pcmCaptureBuffer[i] = prePcmRingBuffer[(startIndex + i) % preWantedSamples];
             }
@@ -312,7 +319,7 @@ bool AnalyzerApp::runRawTrigger(unsigned long toneHz,
             emitStarted = true;
             emitStartMs = millis();
             copyPreWindow();
-            if (mode != RawCaptureMode::Pcm) {
+            if (mode != RawCaptureMode::Pcm && mode != RawCaptureMode::I2s) {
                 Serial.print("RAW_EMIT_START id=");
                 Serial.print(captureId);
                 Serial.print(" t_ms=");
@@ -323,7 +330,7 @@ bool AnalyzerApp::runRawTrigger(unsigned long toneHz,
         } else if (doneLine && !emitDone) {
             emitDone = true;
             emitDoneMs = millis();
-            if (mode != RawCaptureMode::Pcm) {
+            if (mode != RawCaptureMode::Pcm && mode != RawCaptureMode::I2s) {
                 Serial.print("RAW_EMIT_DONE id=");
                 Serial.print(captureId);
                 Serial.print(" t_ms=");
@@ -374,11 +381,29 @@ bool AnalyzerApp::runRawTrigger(unsigned long toneHz,
         if (signedRawSample > rawWindowMax) {
             rawWindowMax = signedRawSample;
         }
-        if (useFeatureStream) {
+        if (useSignalView) {
             AudioSamplePacket audioSamplePacket = {};
-            // Feature dumps must mirror the live detector path, so we derive the
-            // packet through AudioSignal rather than rebuilding it from transport raw.
             _audioSignal.update(rawSample, sampleTimeUs, audioSamplePacket);
+
+            if (mode == RawCaptureMode::Pcm) {
+                if (!emitStarted) {
+                    if (prePcmRingBuffer != nullptr) {
+                        prePcmRingBuffer[preWriteIndex].timeOffsetMs = sampleTimeOffsetMs;
+                        prePcmRingBuffer[preWriteIndex].pcm = audioSamplePacket.rawAudioValue;
+                        prePcmRingBuffer[preWriteIndex].baseline = audioSamplePacket.baseline;
+                        preWriteIndex = (preWriteIndex + 1UL) % preWantedSamples;
+                    }
+                    ++preCapturedTotal;
+                } else if (postCaptured < postWantedSamples) {
+                    if (pcmCaptureBuffer != nullptr) {
+                        pcmCaptureBuffer[preWindowSamples + postCaptured].timeOffsetMs = sampleTimeOffsetMs;
+                        pcmCaptureBuffer[preWindowSamples + postCaptured].pcm = audioSamplePacket.rawAudioValue;
+                        pcmCaptureBuffer[preWindowSamples + postCaptured].baseline = audioSamplePacket.baseline;
+                    }
+                    ++postCaptured;
+                }
+                return true;
+            }
 
             _freqBandStream.observeCenteredSample(audioSamplePacket.baselineCorrectedValue, audioSamplePacket.timeMs);
             const detection::FrequencyBandMeasurementPacket frequencyEvidence = captureFrequencyMeasurementPacket(audioSamplePacket);
@@ -418,18 +443,14 @@ bool AnalyzerApp::runRawTrigger(unsigned long toneHz,
         }
 
         if (!emitStarted) {
-            if (mode == RawCaptureMode::Pcm && prePcmRingBuffer != nullptr) {
-                // PCM mode intentionally stays transport-centric and keeps the raw
-                // decoded word so DC offset and decode issues remain visible.
+            if (mode == RawCaptureMode::I2s && prePcmRingBuffer != nullptr) {
                 prePcmRingBuffer[preWriteIndex].timeOffsetMs = sampleTimeOffsetMs;
                 prePcmRingBuffer[preWriteIndex].pcm = static_cast<int32_t>(rawSample);
                 preWriteIndex = (preWriteIndex + 1UL) % preWantedSamples;
             }
             ++preCapturedTotal;
         } else if (postCaptured < postWantedSamples) {
-            if (mode == RawCaptureMode::Pcm && pcmCaptureBuffer != nullptr) {
-                // Leave PCM untouched here as well; feature normalization happens only
-                // on the detector-facing path above.
+            if (mode == RawCaptureMode::I2s && pcmCaptureBuffer != nullptr) {
                 pcmCaptureBuffer[preWindowSamples + postCaptured].timeOffsetMs = sampleTimeOffsetMs;
                 pcmCaptureBuffer[preWindowSamples + postCaptured].pcm = static_cast<int32_t>(rawSample);
             }
@@ -479,7 +500,7 @@ bool AnalyzerApp::runRawTrigger(unsigned long toneHz,
     float maxAmp = 0.0f;
     int32_t maxPcmAbs = 0;
     for (unsigned long i = 0; i < capturedSamples; ++i) {
-        if (mode == RawCaptureMode::Pcm) {
+        if (mode == RawCaptureMode::Pcm || mode == RawCaptureMode::I2s) {
             const RawCapturePcmSample& sample = pcmCaptureBuffer[i];
             const int32_t absPcm = sample.pcm < 0 ? -sample.pcm : sample.pcm;
             if (absPcm > maxPcmAbs) {
@@ -536,6 +557,8 @@ bool AnalyzerApp::runRawTrigger(unsigned long toneHz,
     Serial.print(rawCaptureModeName(mode));
     Serial.print(" output=csv");
     if (mode == RawCaptureMode::Pcm) {
+        Serial.print(" fields=ms,pcm,baseline");
+    } else if (mode == RawCaptureMode::I2s) {
         Serial.print(" fields=ms,pcm");
     } else if (mode == RawCaptureMode::Features) {
         Serial.print(" fields=ms,amp,env,target_score,target_fresh");
@@ -545,6 +568,18 @@ bool AnalyzerApp::runRawTrigger(unsigned long toneHz,
     Serial.println();
 
     if (mode == RawCaptureMode::Pcm) {
+        Serial.println("ms,pcm,baseline,centered");
+        for (unsigned long i = 0; i < capturedSamples; ++i) {
+            const RawCapturePcmSample& sample = pcmCaptureBuffer[i];
+            Serial.print(static_cast<unsigned long>(sample.timeOffsetMs) + captureBaseMs);
+            Serial.print(",");
+            Serial.print(sample.pcm);
+            Serial.print(",");
+            Serial.print(sample.baseline, 1);
+            Serial.print(",");
+            Serial.println(sample.pcm - static_cast<int32_t>(sample.baseline));
+        }
+    } else if (mode == RawCaptureMode::I2s) {
         Serial.println("ms,pcm");
         for (unsigned long i = 0; i < capturedSamples; ++i) {
             const RawCapturePcmSample& sample = pcmCaptureBuffer[i];
@@ -590,7 +625,7 @@ bool AnalyzerApp::runRawTrigger(unsigned long toneHz,
     Serial.print(droppedSamples);
     Serial.print(" max_pcm_abs=");
     Serial.print(maxPcmAbs);
-    if (useFeatureStream) {
+    if (rawCaptureUsesFeatureStream(mode)) {
         Serial.print(" max_amp=");
         Serial.print(maxAmp, 1);
     }

@@ -1,6 +1,7 @@
 #include "AudioSignal.h"
 
 #include <Arduino.h>
+#include "../app/RuntimeDefaults.h"
 
 namespace {
 uint32_t sampleOffsetUs(uint32_t sampleOffset, uint32_t sampleRateHz) {
@@ -22,6 +23,7 @@ AudioSignal::AudioSignal(AudioSource& source)
 void AudioSignal::begin(bool doRebase) {
     resetStats();
     if (doRebase) {
+        delay(runtime::kDefaultAudioSignalStartupWarmupMs);
         rebase();
     }
 }

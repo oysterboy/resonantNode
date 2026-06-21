@@ -112,8 +112,6 @@ void AnalyzerApp::printAudioSourceSummary() const {
     Serial.print(stats.readErrors);
     Serial.print(" overflow=");
     Serial.print(stats.overflowCount);
-    Serial.print(" droppedBlocks=");
-    Serial.print(stats.droppedBlockCount);
     Serial.print(" totalSamples=");
     Serial.println(static_cast<unsigned long long>(stats.totalSamplesRead));
 }

@@ -1,11 +1,13 @@
 #include "AudioSourceI2S.h"
-#include <I2S.h>
+
+#include <Arduino.h>
+#include <driver/i2s.h>
 #include <math.h>
-#include <string.h>
 #include <new>
+#include <string.h>
 
 namespace {
-constexpr bool kPassThroughRawWords = true;
+constexpr i2s_port_t kI2sPort = I2S_NUM_0;
 
 int decodePcmSample(const uint8_t* samplePtr, int bytesPerSample) {
     if (samplePtr == nullptr || bytesPerSample <= 0) {
@@ -15,8 +17,6 @@ int decodePcmSample(const uint8_t* samplePtr, int bytesPerSample) {
     if (bytesPerSample >= static_cast<int>(sizeof(int32_t))) {
         int32_t sample32 = 0;
         memcpy(&sample32, samplePtr, sizeof(sample32));
-        // The left-justified transport appears to place the useful sample in bits [23:8].
-        // Preserve the sign while discarding the empty low byte.
         return static_cast<int>(sample32 >> 8);
     }
 
@@ -48,14 +48,7 @@ uint32_t sampleOffsetUs(uint32_t sampleOffset, uint32_t sampleRateHz) {
     return static_cast<uint32_t>((static_cast<uint64_t>(sampleOffset) * 1000000ULL) / static_cast<uint64_t>(sampleRateHz));
 }
 
-const char* slotName(size_t slotIndex) {
-    return slotIndex == 0 ? "slot0" : "slot1";
-}
-
-bool slotHasMeaningfulVariation(unsigned long count, long signedRange) {
-    return count > 0 && signedRange > 0;
-}
-}
+} // namespace
 
 AudioSourceI2S::AudioSourceI2S(int sckPin, int fsPin, int dataInPin, int sampleRate, int bitsPerSample)
     : _sckPin(sckPin),
@@ -66,19 +59,51 @@ AudioSourceI2S::AudioSourceI2S(int sckPin, int fsPin, int dataInPin, int sampleR
       _blockSamples(new (std::nothrow) int32_t[kRefillBatchSize] {}) {}
 
 void AudioSourceI2S::begin() {
-    // Keep the public contract sample-based even though I2S may buffer internally.
     resetStats();
     if (!_blockSamples) {
         _blockSamples.reset(new (std::nothrow) int32_t[kRefillBatchSize] {});
     }
-    _started = false;
-    _samplePeriodUs = _sampleRate > 0 ? static_cast<uint32_t>(1000000UL / static_cast<uint32_t>(_sampleRate)) : 0;
 
-    I2S.end();
-    I2S.setAllPins(_sckPin, _fsPin, _dataInPin, I2S_PIN_NO_CHANGE, I2S_PIN_NO_CHANGE);
-    // Mono-mode probe: left-justified framing is the stronger candidate so far.
-    const int beginResult = I2S.begin(I2S_LEFT_JUSTIFIED_MODE, _sampleRate, _bitsPerSample);
-    _started = beginResult != 0;
+    _started = false;
+    (void)i2s_driver_uninstall(kI2sPort);
+
+    i2s_config_t config = {};
+    config.mode = static_cast<i2s_mode_t>(I2S_CAPTURE_MODE);
+    config.sample_rate = static_cast<uint32_t>(_sampleRate);
+    config.bits_per_sample = static_cast<i2s_bits_per_sample_t>(_bitsPerSample);
+    config.channel_format = static_cast<i2s_channel_fmt_t>(I2S_CHANNEL_FORMAT_VALUE);
+    config.communication_format = static_cast<i2s_comm_format_t>(I2S_COMM_FORMAT_VALUE);
+    config.intr_alloc_flags = ESP_INTR_FLAG_LEVEL2;
+    config.dma_buf_count = I2S_DMA_BUF_COUNT;
+    config.dma_buf_len = I2S_DMA_BUF_LEN;
+    config.use_apll = I2S_USE_APLL != 0;
+    config.tx_desc_auto_clear = false;
+    config.fixed_mclk = config.use_apll ? 512 * _sampleRate : 0;
+    config.mclk_multiple = I2S_MCLK_MULTIPLE_DEFAULT;
+    config.bits_per_chan = I2S_BITS_PER_CHAN_DEFAULT;
+
+    if (i2s_driver_install(kI2sPort, &config, 0, nullptr) != ESP_OK) {
+        return;
+    }
+
+    i2s_pin_config_t pinConfig = {};
+    pinConfig.mck_io_num = I2S_PIN_NO_CHANGE;
+    pinConfig.bck_io_num = _sckPin;
+    pinConfig.ws_io_num = _fsPin;
+    pinConfig.data_out_num = I2S_PIN_NO_CHANGE;
+    pinConfig.data_in_num = _dataInPin;
+    if (i2s_set_pin(kI2sPort, &pinConfig) != ESP_OK) {
+        (void)i2s_driver_uninstall(kI2sPort);
+        return;
+    }
+
+    if (i2s_set_clk(kI2sPort, static_cast<uint32_t>(_sampleRate), static_cast<uint32_t>(_bitsPerSample), I2S_CHANNEL_MONO) != ESP_OK) {
+        (void)i2s_driver_uninstall(kI2sPort);
+        return;
+    }
+
+    (void)i2s_zero_dma_buffer(kI2sPort);
+    _started = true;
 }
 
 bool AudioSourceI2S::available() {
@@ -86,7 +111,12 @@ bool AudioSourceI2S::available() {
 }
 
 int AudioSourceI2S::availableBytes() const {
-    return I2S.available();
+    if (_blockCursor >= _blockCount) {
+        return 0;
+    }
+
+    const size_t bytesPerSample = static_cast<size_t>(_bitsPerSample / 8);
+    return static_cast<int>((_blockCount - _blockCursor) * bytesPerSample);
 }
 
 bool AudioSourceI2S::readSample(int& sample, uint32_t& sampleTimeUs) {
@@ -116,16 +146,11 @@ bool AudioSourceI2S::readRawSample(int& sample, uint32_t& sampleTimeUs) {
         return false;
     }
 
-    const int availableBytes = I2S.available();
-    if (availableBytes < bytesPerSample) {
-        recordReadAttempt(0, 0, false);
-        return false;
-    }
-
     uint8_t rawBytes[sizeof(int32_t)] = {};
-    const int bytesRead = I2S.read(rawBytes, static_cast<size_t>(bytesPerSample));
-    recordReadAttempt(bytesPerSample, bytesRead, bytesRead <= 0);
-    if (bytesRead < bytesPerSample) {
+    size_t bytesRead = 0;
+    const esp_err_t readResult = i2s_read(kI2sPort, rawBytes, static_cast<size_t>(bytesPerSample), &bytesRead, 0);
+    recordReadAttempt(bytesPerSample, static_cast<int>(bytesRead), readResult != ESP_OK && readResult != ESP_ERR_TIMEOUT);
+    if (bytesRead < static_cast<size_t>(bytesPerSample)) {
         return false;
     }
 
@@ -137,16 +162,17 @@ bool AudioSourceI2S::readRawSample(int& sample, uint32_t& sampleTimeUs) {
 
 bool AudioSourceI2S::readBlock(AudioBlock& block) {
     if (!_blockSamples) {
-        block.samples = nullptr;
-        block.sampleCount = 0;
+        block = {};
         return false;
     }
 
     if (_blockCursor >= _blockCount && !refillBlock()) {
+        block = {};
         return false;
     }
 
     if (_blockCursor >= _blockCount) {
+        block = {};
         return false;
     }
 
@@ -154,33 +180,17 @@ bool AudioSourceI2S::readBlock(AudioBlock& block) {
     block.sampleCount = static_cast<uint16_t>(_blockCount - _blockCursor);
     block.startSampleIndex = _blockStartSampleIndex + _blockCursor;
     block.approxStartMicros = _blockApproxStartMicros + sampleOffsetUs(static_cast<uint32_t>(_blockCursor), static_cast<uint32_t>(_sampleRate));
-    block.overflowBeforeBlock = _blockOverflowBeforeBlock;
+    block.overflowBeforeBlock = false;
     _blockCursor = _blockCount;
     return true;
-}
-
-unsigned long AudioSourceI2S::droppedSamples() const {
-    return _droppedSamples;
-}
-
-unsigned long AudioSourceI2S::bufferedSamplesMax() const {
-    return static_cast<unsigned long>(_maxBufferedSamples);
 }
 
 uint32_t AudioSourceI2S::sampleRateHz() const {
     return static_cast<uint32_t>(_sampleRate);
 }
 
-uint32_t AudioSourceI2S::samplePeriodUs() const {
-    return _samplePeriodUs;
-}
-
 const AudioSourceStats& AudioSourceI2S::stats() const {
     return _stats;
-}
-
-const AudioSlotDiagnostics& AudioSourceI2S::slotDiagnostics() const {
-    return _slotDiagnostics;
 }
 
 void AudioSourceI2S::resetStats() {
@@ -189,17 +199,12 @@ void AudioSourceI2S::resetStats() {
     _blockStartSampleIndex = 0;
     _blockApproxStartMicros = 0;
     _blockOverflowBeforeBlock = false;
-    _droppedSamples = 0;
-    _maxBufferedSamples = 0;
     _outputSampleIndex = 0;
-    _selectedSlotIndex = -1;
     _stats = {};
-    _slotDiagnostics = {};
-    _slotDiagnostics.slotDiagSource = "pcm_i2s_words";
 }
 
 void AudioSourceI2S::recordReadAttempt(int requestedBytes, int bytesRead, bool readError) {
-    _stats.reads++;
+    ++_stats.reads;
     if (bytesRead < 0) {
         bytesRead = 0;
     }
@@ -210,26 +215,19 @@ void AudioSourceI2S::recordReadAttempt(int requestedBytes, int bytesRead, bool r
     }
 
     if (bytesRead == 0) {
-        _stats.zeroReads++;
-        _stats.noSampleLoops++;
-    } else {
-        if (requestedBytes > 0 && bytesRead < requestedBytes) {
-            _stats.shortReads++;
-        }
+        ++_stats.zeroReads;
+        ++_stats.noSampleLoops;
+    } else if (requestedBytes > 0 && bytesRead < requestedBytes) {
+        ++_stats.shortReads;
     }
 
     if (readError) {
-        _stats.readErrors++;
+        ++_stats.readErrors;
     }
 }
 
 bool AudioSourceI2S::refillBlock() {
-    if (!_blockSamples) {
-        recordReadAttempt(0, 0, true);
-        return false;
-    }
-
-    if (!_started) {
+    if (!_blockSamples || !_started) {
         recordReadAttempt(0, 0, true);
         return false;
     }
@@ -240,167 +238,30 @@ bool AudioSourceI2S::refillBlock() {
         return false;
     }
 
-    const int availableBytes = I2S.available();
-    if (availableBytes <= 0) {
-        recordReadAttempt(0, 0, false);
-        return false;
-    }
-
-    int requestedBytes = availableBytes;
-    const int maxBatchBytes = static_cast<int>(kRefillBatchSize) * bytesPerSample;
-    if (requestedBytes > maxBatchBytes) {
-        requestedBytes = maxBatchBytes;
-    }
-    requestedBytes -= requestedBytes % bytesPerSample;
-    if (requestedBytes <= 0) {
-        recordReadAttempt(0, 0, false);
-        return false;
-    }
-
     uint8_t rawBytes[kRefillBatchSize * sizeof(int32_t)] = {};
-    const int bytesRead = I2S.read(rawBytes, static_cast<size_t>(requestedBytes));
-    recordReadAttempt(requestedBytes, bytesRead, bytesRead <= 0);
-    if (bytesRead <= 0) {
+    const size_t requestedBytes = static_cast<size_t>(kRefillBatchSize) * static_cast<size_t>(bytesPerSample);
+    size_t bytesRead = 0;
+    const esp_err_t readResult = i2s_read(kI2sPort, rawBytes, requestedBytes, &bytesRead, 0);
+    recordReadAttempt(static_cast<int>(requestedBytes), static_cast<int>(bytesRead), readResult != ESP_OK && readResult != ESP_ERR_TIMEOUT);
+    if (bytesRead == 0) {
         return false;
     }
 
-    const size_t fullSamplesRead = static_cast<size_t>(bytesRead) / static_cast<size_t>(bytesPerSample);
-    const size_t sampleBytes = static_cast<size_t>(bytesPerSample);
-    const size_t samplesToProcess = fullSamplesRead;
-    int32_t rawSamples[kRefillBatchSize] = {};
-    double slotSumSquares[2] = {0.0, 0.0};
-    unsigned long slotCount[2] = {0, 0};
-    int slotMin[2] = {0, 0};
-    int slotMax[2] = {0, 0};
-    bool slotHasValue[2] = {false, false};
-    int slotLastValue[2] = {0, 0};
-    unsigned long slotCurrentRun[2] = {0, 0};
-    unsigned long slotRepeatedRun[2] = {0, 0};
-    _blockCount = 0;
+    const size_t fullSamplesRead = bytesRead / static_cast<size_t>(bytesPerSample);
+    const size_t samplesToProcess = fullSamplesRead < kRefillBatchSize ? fullSamplesRead : kRefillBatchSize;
+    const uint32_t fillEndUs = micros();
+
     _blockCursor = 0;
     _blockStartSampleIndex = _outputSampleIndex;
-    _blockOverflowBeforeBlock = _droppedSamples > 0;
+    _blockCount = 0;
     for (size_t i = 0; i < samplesToProcess; ++i) {
-        const uint8_t* samplePtr = rawBytes + (i * sampleBytes);
-        const int rawSample = decodePcmSample(samplePtr, bytesPerSample);
+        const uint8_t* samplePtr = rawBytes + (i * static_cast<size_t>(bytesPerSample));
+        _blockSamples[_blockCount++] = decodePcmSample(samplePtr, bytesPerSample);
+    }
 
-        rawSamples[i] = rawSample;
-
-        const int sample = rawSample;
-        const size_t slotIndex = i % 2U;
-        const size_t diagSlotIndex = slotIndex < 2U ? slotIndex : 1U;
-        slotSumSquares[diagSlotIndex] += static_cast<double>(sample) * static_cast<double>(sample);
-        ++slotCount[diagSlotIndex];
-        if (!slotHasValue[diagSlotIndex]) {
-            slotHasValue[diagSlotIndex] = true;
-            slotMin[diagSlotIndex] = sample;
-            slotMax[diagSlotIndex] = sample;
-            slotLastValue[diagSlotIndex] = sample;
-            slotCurrentRun[diagSlotIndex] = 1;
-            slotRepeatedRun[diagSlotIndex] = 1;
-        } else {
-            if (sample < slotMin[diagSlotIndex]) {
-                slotMin[diagSlotIndex] = sample;
-            }
-            if (sample > slotMax[diagSlotIndex]) {
-                slotMax[diagSlotIndex] = sample;
-            }
-            if (sample == slotLastValue[diagSlotIndex]) {
-                ++slotCurrentRun[diagSlotIndex];
-            } else {
-                slotCurrentRun[diagSlotIndex] = 1;
-                slotLastValue[diagSlotIndex] = sample;
-            }
-            if (slotCurrentRun[diagSlotIndex] > slotRepeatedRun[diagSlotIndex]) {
-                slotRepeatedRun[diagSlotIndex] = slotCurrentRun[diagSlotIndex];
-            }
-            slotLastValue[diagSlotIndex] = sample;
-        }
-        if (i < kRefillBatchSize) {
-            _blockSamples[i] = sample;
-            _blockCount++;
-            if (_blockCount > _maxBufferedSamples) {
-                _maxBufferedSamples = _blockCount;
-            }
-        } else {
-            ++_droppedSamples;
-            _stats.overflowCount++;
-        }
-    }
-    _stats.totalSamplesRead += static_cast<uint64_t>(fullSamplesRead);
-    _slotDiagnostics.present = slotCount[0] > 0 || slotCount[1] > 0;
-    _slotDiagnostics.slotDiagSource = "pcm_i2s_words";
-    for (size_t slot = 0; slot < 2; ++slot) {
-        _slotDiagnostics.slotCount[slot] = slotCount[slot];
-        _slotDiagnostics.slotMin[slot] = slotHasValue[slot] ? slotMin[slot] : 0;
-        _slotDiagnostics.slotMax[slot] = slotHasValue[slot] ? slotMax[slot] : 0;
-        _slotDiagnostics.slotSumSquares[slot] = slotSumSquares[slot];
-        _slotDiagnostics.slotRepeatedRun[slot] = slotRepeatedRun[slot];
-        _slotDiagnostics.slotSignedRange[slot] = slotHasValue[slot]
-            ? static_cast<long>(slotMax[slot] - slotMin[slot])
-            : 0L;
-    }
-    if (!_slotDiagnostics.present) {
-        _slotDiagnostics.chosenSlot = "none";
-        _slotDiagnostics.activeSlot = "none";
-        _slotDiagnostics.slotSelectionReason = "no_data";
-    } else {
-        const double rms0 = slotCount[0] > 0 ? sqrt(slotSumSquares[0] / static_cast<double>(slotCount[0])) : 0.0;
-        const double rms1 = slotCount[1] > 0 ? sqrt(slotSumSquares[1] / static_cast<double>(slotCount[1])) : 0.0;
-        const long range0 = _slotDiagnostics.slotSignedRange[0];
-        const long range1 = _slotDiagnostics.slotSignedRange[1];
-        const bool alive0 = slotHasMeaningfulVariation(slotCount[0], range0);
-        const bool alive1 = slotHasMeaningfulVariation(slotCount[1], range1);
-        if (_selectedSlotIndex < 0) {
-            if (!alive0 && !alive1) {
-                _selectedSlotIndex = 0;
-                _slotDiagnostics.slotSelectionReason = "dead_slots_fallback_slot0";
-            } else if (alive0 != alive1) {
-                _selectedSlotIndex = alive0 ? 0 : 1;
-                _slotDiagnostics.slotSelectionReason = "reject_dead_slot";
-            } else if (range0 != range1) {
-                _selectedSlotIndex = range0 > range1 ? 0 : 1;
-                _slotDiagnostics.slotSelectionReason = "signed_range";
-            } else if (rms0 >= rms1) {
-                _selectedSlotIndex = 0;
-                _slotDiagnostics.slotSelectionReason = "rms_tie_break";
-            } else {
-                _selectedSlotIndex = 1;
-                _slotDiagnostics.slotSelectionReason = "rms";
-            }
-        }
-        _slotDiagnostics.chosenSlot = slotName(static_cast<size_t>(_selectedSlotIndex));
-        _slotDiagnostics.activeSlot = (alive0 && alive1) ? "both" : slotName(static_cast<size_t>(_selectedSlotIndex));
-    }
-    const uint32_t fillEndUs = micros();
-    if (kPassThroughRawWords) {
-        _blockCount = 0;
-        for (size_t i = 0; i < samplesToProcess && _blockCount < kRefillBatchSize; ++i) {
-            _blockSamples[_blockCount++] = rawSamples[i];
-        }
-        const uint32_t selectedFrameAge = _blockCount > 0 ? static_cast<uint32_t>(_blockCount - 1U) : 0U;
-        _blockApproxStartMicros = fillEndUs > sampleOffsetUs(selectedFrameAge, static_cast<uint32_t>(_sampleRate))
-            ? fillEndUs - sampleOffsetUs(selectedFrameAge, static_cast<uint32_t>(_sampleRate))
-            : 0U;
-        _slotDiagnostics.chosenSlot = "raw_passthrough";
-        _slotDiagnostics.activeSlot = "raw_passthrough";
-        _slotDiagnostics.slotSelectionReason = "temporary_raw_passthrough";
-    } else {
-        const size_t chosenSlotIndex = _selectedSlotIndex == 1 ? 1U : 0U;
-        const size_t selectedFrameCount = samplesToProcess / 2U;
-        const uint32_t selectedFrameAge = selectedFrameCount > 0 ? static_cast<uint32_t>(selectedFrameCount - 1U) : 0U;
-        _blockApproxStartMicros = fillEndUs > sampleOffsetUs(selectedFrameAge, static_cast<uint32_t>(_sampleRate))
-            ? fillEndUs - sampleOffsetUs(selectedFrameAge, static_cast<uint32_t>(_sampleRate))
-            : 0U;
-        _blockCount = 0;
-        for (size_t frame = 0; frame < selectedFrameCount && _blockCount < kRefillBatchSize; ++frame) {
-            const size_t rawIndex = (frame * 2U) + chosenSlotIndex;
-            if (rawIndex >= samplesToProcess) {
-                break;
-            }
-            _blockSamples[_blockCount++] = rawSamples[rawIndex];
-        }
-    }
+    const uint32_t selectedFrameAge = _blockCount > 0 ? static_cast<uint32_t>(_blockCount - 1U) : 0U;
+    const uint32_t offsetUs = sampleOffsetUs(selectedFrameAge, static_cast<uint32_t>(_sampleRate));
+    _blockApproxStartMicros = fillEndUs > offsetUs ? fillEndUs - offsetUs : 0U;
     _outputSampleIndex += static_cast<uint64_t>(_blockCount);
     return _blockCount > 0;
 }

@@ -535,7 +535,11 @@ AnalyzerApp::SeqOutputWhen seqOutputWhenFromToken(const char* token, bool* valid
 
 AnalyzerApp::AnalyzerApp(int inputPin)
     : _inputPin(inputPin),
-      _i2sSource(14, 27, 33, 16000, 32),
+      _i2sSource(runtime::kDefaultAudioI2SSckPin,
+                  runtime::kDefaultAudioI2SWsPin,
+                  runtime::kDefaultAudioI2SDataPin,
+                  static_cast<int>(runtime::kDefaultAudioI2SSampleRateHz),
+                  static_cast<int>(runtime::kDefaultAudioI2SBitsPerSample)),
       _audioSource(_i2sSource),
       _audioSignal(_audioSource),
       _freqBandStream() {

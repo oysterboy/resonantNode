@@ -4,21 +4,8 @@
 #include <stdint.h>
 #include <memory>
 
+#include "../app/RuntimeDefaults.h"
 #include "../audio/AudioSource.h"
-
-struct AudioSlotDiagnostics {
-    bool present = false;
-    const char* slotDiagSource = "post_mono_pcm";
-    unsigned long slotCount[2] = {0, 0};
-    int slotMin[2] = {0, 0};
-    int slotMax[2] = {0, 0};
-    double slotSumSquares[2] = {0.0, 0.0};
-    unsigned long slotRepeatedRun[2] = {0, 0};
-    long slotSignedRange[2] = {0, 0};
-    const char* chosenSlot = "none";
-    const char* activeSlot = "none";
-    const char* slotSelectionReason = "none";
-};
 
 /*
 AudioSourceI2S
@@ -29,7 +16,11 @@ Does not know about AudioSignal, DetectionRuntime, Analyzer, or Behavior.
 */
 class AudioSourceI2S : public AudioSource {
 public:
-    AudioSourceI2S(int sckPin, int fsPin, int dataInPin, int sampleRate = 16000, int bitsPerSample = 32);
+    AudioSourceI2S(int sckPin = runtime::kDefaultAudioI2SSckPin,
+                   int fsPin = runtime::kDefaultAudioI2SWsPin,
+                   int dataInPin = runtime::kDefaultAudioI2SDataPin,
+                   int sampleRate = static_cast<int>(runtime::kDefaultAudioI2SSampleRateHz),
+                   int bitsPerSample = static_cast<int>(runtime::kDefaultAudioI2SBitsPerSample));
 
     void begin() override;
     bool available() override;
@@ -37,13 +28,9 @@ public:
     bool readSample(int& sample, uint32_t& sampleTimeUs) override;
     bool readRawSample(int& sample, uint32_t& sampleTimeUs) override;
     bool readBlock(AudioBlock& block) override;
-    unsigned long droppedSamples() const override;
-    unsigned long bufferedSamplesMax() const override;
     uint32_t sampleRateHz() const override;
     const AudioSourceStats& stats() const override;
-    const AudioSlotDiagnostics& slotDiagnostics() const;
     void resetStats() override;
-    uint32_t samplePeriodUs() const;
 
 private:
     bool refillBlock();
@@ -55,18 +42,13 @@ private:
     int _sampleRate;
     int _bitsPerSample;
     bool _started = false;
-    static constexpr size_t kRefillBatchSize = 128;
+    static constexpr size_t kRefillBatchSize = static_cast<size_t>(I2S_READ_BYTES / sizeof(int32_t));
     std::unique_ptr<int32_t[]> _blockSamples;
     size_t _blockCount = 0;
     size_t _blockCursor = 0;
     uint64_t _blockStartSampleIndex = 0;
     uint32_t _blockApproxStartMicros = 0;
     bool _blockOverflowBeforeBlock = false;
-    unsigned long _droppedSamples = 0;
-    size_t _maxBufferedSamples = 0;
-    uint32_t _samplePeriodUs = 0;
     uint64_t _outputSampleIndex = 0;
-    int _selectedSlotIndex = -1;
     AudioSourceStats _stats;
-    AudioSlotDiagnostics _slotDiagnostics;
 };

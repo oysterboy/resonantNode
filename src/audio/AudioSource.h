@@ -19,7 +19,6 @@ struct AudioSourceStats {
 
     uint32_t readErrors = 0;
     uint32_t overflowCount = 0;
-    uint32_t droppedBlockCount = 0;
 
     uint64_t totalSamplesRead = 0;
 };
@@ -44,8 +43,6 @@ public:
     virtual bool readSample(int& sample, uint32_t& sampleTimeUs) = 0;
     virtual bool readRawSample(int& sample, uint32_t& sampleTimeUs) { return readSample(sample, sampleTimeUs); }
     virtual bool readBlock(AudioBlock& block) { (void)block; return false; }
-    virtual unsigned long droppedSamples() const { return 0; }
-    virtual unsigned long bufferedSamplesMax() const { return 0; }
     virtual uint32_t sampleRateHz() const { return 0; }
     virtual const AudioSourceStats& stats() const {
         static const AudioSourceStats emptyStats{};

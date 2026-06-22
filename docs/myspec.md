@@ -122,6 +122,18 @@ AudioSignalFrame
 → OutputRequest
 ```
 
+Numeric contract through the chain:
+
+```text
+canonical PCM
+→ typed feature domains
+→ detector thresholds in those feature domains
+→ analyzer/reporting without rescaling
+```
+
+This is not RAW-tooling-specific. RAW output is only a diagnostic view of the
+same chain contract.
+
 Diagnostic sidechain:
 
 ```text
@@ -394,11 +406,68 @@ FeatureSample / FeatureFrame:
 Examples:
 
 ```text
+AmpMagnitude
 AmpEnvelope
 FrequencyScore
 FrequencyContrast
 FrequencyBandFrame
 ```
+
+#### Feature numeric contract
+
+Raw PCM stays in the canonical decoded/preprocessed PCM domain.
+
+`AudioSourceI2S` owns:
+
+```text
+I2S transport
+sample-format decode
+sign extension / alignment
+First Difference preprocessing
+```
+
+`AudioSignal` owns baseline/centering.
+
+Feature producers own feature-specific normalization:
+
+```text
+AmpMagnitude : Strength16 / 0..32767
+AmpEnvelope  : Strength16 / 0..32767
+FrequencyScore : FrequencyScore16 / 0..32767
+FrequencyContrast : float quality/ratio domain
+```
+
+AMP normalization uses a fixed gain reference:
+
+```cpp
+kAmpStrengthGainReferencePcm
+```
+
+This is the PCM magnitude that maps to full AMP strength (`32767`). It behaves
+like an inverse gain: a smaller reference gives more AMP gain and earlier
+saturation; a larger reference gives less AMP gain and more headroom. It is not
+a PCM validity limit.
+
+Frequency score is amplitude-like:
+
+```text
+PcmSample -> Goertzel power -> sqrt(power) -> fixed reference scaling -> FrequencyScore16
+```
+
+Detector, Analyzer, and reporting consume these normalized feature values
+directly and must not apply a second private scaling.
+
+Detector thresholds are expressed in the same stable feature domains:
+
+```text
+AMP thresholds use Strength16 values.
+Frequency score thresholds use FrequencyScore16 values.
+Frequency contrast thresholds use the contrast quality domain.
+```
+
+Changing `kAmpStrengthGainReferencePcm` changes AMP gain for the whole
+AMP-derived chain, including feature history, scalar detector input, inspector
+evidence, analyzer output, and RAW feature diagnostics.
 
 `FeatureHistory` stores feature values over time so inspectors, diagnostics, and field state can look backward over windows.
 
@@ -462,6 +531,10 @@ This is allowed:
 ScalarTransientDetector::update(scalar feature sample)
 FrequencyMatchDetector::update(frequency measurement/frame)
 ```
+
+Detector thresholds consume the normalized feature-domain values directly. They
+must not know PCM full-scale, AMP gain references, Goertzel power scaling, or
+Analyzer display formatting.
 
 This is not required yet:
 
@@ -893,6 +966,30 @@ detection parameters / runtime summaries
 Neutral output may use runtime/system/perf/sample facts.
 
 It must not be presented as detector/pattern/analyzer truth.
+
+#### RAW capture
+
+RAW PCM and RAW feature capture are separate diagnostics.
+
+RAW does not define the numeric domains. It prints the same PCM and feature
+values that the runtime chain already uses.
+
+RAW PCM reports canonical PCM-domain values:
+
+```text
+ms,pcm,baseline,centered
+```
+
+RAW feature capture reports normalized feature-domain values directly:
+
+```text
+ms,amp_strength,env_strength,freq_score,freq_fresh
+```
+
+`amp_strength` and `env_strength` are `Strength16` values. `freq_score` is the
+canonical `FrequencyScore16` value, not target power and not a display-only
+fixed-point value. RAW output must not multiply feature values by `1000` or
+rename target-band power as score.
 
 #### SEQ sample dump / curve tooling
 

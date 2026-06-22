@@ -7,7 +7,7 @@
 #include "AudioSource.h"
 
 inline int normalizeDetectorMagnitude(int centeredSample) {
-    return static_cast<int>(audio::pcmMagnitudeToStrength(static_cast<audio::PcmSample>(centeredSample)));
+    return static_cast<int>(audio::pcmMagnitudeToDetectorStrength(static_cast<audio::PcmSample>(centeredSample)));
 }
 
 struct AudioSignalStats {

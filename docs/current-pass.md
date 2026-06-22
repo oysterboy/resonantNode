@@ -91,6 +91,22 @@ Requirements:
 * no microphone-specific magic value such as `100000`
 * no hidden `>> 8` normalization
 
+Detector-facing AMP strength is also a `Strength16` value, but it must still
+represent the full canonical 24-bit PCM domain correctly. Do not choose a
+smaller denominator merely because observed lab captures have not reached full
+scale yet. If real tones land around `0…200` after correct full-scale mapping,
+that is a tuning/calibration result, not a reason to redefine the numeric PCM
+domain.
+
+Frequency `target_score` is also a PCM-derived absolute strength value.
+Do not normalize `target_score` relative to the current window energy; that
+makes quiet or ringing windows score high if the remaining energy is narrowband.
+Estimate the target-bin PCM amplitude and map that absolute amplitude into the
+same full-scale `Strength16` domain as AMP.
+
+Frequency `contrast` is a quality/dominance value, not amplitude strength, but
+Analyzer/FEAT output should still bound it into a readable `0…32767` range.
+
 ## 3. Preserve signed waveform history efficiently
 
 Do not store raw `int32_t` PCM history if RAM cost is unnecessary.

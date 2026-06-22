@@ -103,3 +103,25 @@ If the requested tune and applied tune differ, the block summary should show bot
 
 The operational run procedure, helper behavior, and resume flow live in
 [tuning-run-process.md](./tuning-run-process.md).
+
+## RAW PCM Campaign Note
+
+For RAW PCM distance/angle campaigns, use PowerShell directly from the repo root.
+Keep the capture command parameters unchanged unless the test plan says otherwise:
+
+```powershell
+$stamp = Get-Date -Format 'yyyyMMdd_HHmmss'
+$batch = Join-Path (Get-Location) "logs\raw_pcm\50cm_45deg_$stamp"
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File "tools\logging\run_raw_pcm_capture.ps1" -BatchRoot "$batch" -TotalRuns 20 -PreMs 50 -PostMs 200 -Mode pcm -PauseBetweenRunsSec 0
+```
+
+Change only the campaign title prefix, for example `50cm_0deg_` or `50cm_45deg_`.
+The helper writes one consolidated log at `$batch\session.log`, plus `heartbeat.md`,
+`progress.md`, and `capture_state.json`.
+
+Current RAW helper details:
+
+- Run 001 sends the RAW command up to twice if the first attempt times out before `RAW_BEGIN`.
+- Status-file writes retry briefly, so an open `progress.md` tab should not stop a campaign.
+- A good completed run should show 20 `RUN ... COMPLETE` lines, 20 `RAW_BEGIN` lines, 20 `RAW_SUMMARY` lines, and 0 `RAW_ERR` lines.
+- If the first run reports `RAW_ERR emitter_remote_claim_timeout`, check emitter power/control wiring and retry after COM3 opens cleanly.

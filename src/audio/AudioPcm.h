@@ -41,6 +41,10 @@ constexpr Strength16 pcmMagnitudeToStrength(PcmSample sample) {
         kCanonicalPcmMagnitudeMax);
 }
 
+constexpr Strength16 pcmMagnitudeToDetectorStrength(PcmSample sample) {
+    return pcmMagnitudeToStrength(sample);
+}
+
 constexpr HistorySample pcmToHistorySample(PcmSample sample) {
     return sample <= kCanonicalPcmMin
         ? static_cast<HistorySample>(-32768)

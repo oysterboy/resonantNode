@@ -3,9 +3,18 @@
 #include <Arduino.h>
 #include <math.h>
 
+#include "../../audio/AudioPcm.h"
+
 namespace {
 constexpr float kNormalizedBandScoreScale = 32767.0f;
 constexpr float kNormalizedBandScoreEpsilon = 1.0f;
+
+float normalizeContrastQuality(float targetPower, float neighborPower) {
+    const float denominator = fmaxf(targetPower, 0.0f) + fmaxf(neighborPower, 0.0f) + kNormalizedBandScoreEpsilon;
+    return denominator > 0.0f
+        ? (fmaxf(targetPower, 0.0f) / denominator) * kNormalizedBandScoreScale
+        : 0.0f;
+}
 }
 
 // FreqBandStream maintains the rolling narrow-band frequency evidence stream.
@@ -196,13 +205,12 @@ float FreqBandStream::computeFrequencyScore() {
     const float lowerPower = computeGoertzelPowerAtFrequency(_cachedLowerFrequencyHz);
     const float upperPower = computeGoertzelPowerAtFrequency(_cachedUpperFrequencyHz);
     const float neighborPower = (lowerPower + upperPower) * 0.5f;
-    const float normalizedDenominator = (totalEnergy * static_cast<float>(_windowSizeSamples)) + kNormalizedBandScoreEpsilon;
-    const float normalizedRatio = normalizedDenominator > 0.0f
-        ? (2.0f * fmaxf(targetPower, 0.0f)) / normalizedDenominator
-        : 0.0f;
-    const float absoluteScore = sqrtf(fmaxf(normalizedRatio, 0.0f)) * kNormalizedBandScoreScale;
+    const float targetAmplitude = (2.0f * sqrtf(fmaxf(targetPower, 0.0f))) /
+        static_cast<float>(_windowSizeSamples);
+    const float absoluteScore = static_cast<float>(
+        audio::pcmMagnitudeToDetectorStrength(static_cast<audio::PcmSample>(targetAmplitude)));
     const float normalizedScore = absoluteScore > kNormalizedBandScoreScale ? kNormalizedBandScoreScale : absoluteScore;
-    const float contrast = targetPower / (neighborPower + 1.0f);
+    const float contrast = normalizeContrastQuality(targetPower, neighborPower);
 
     _lastTargetBandScoreValue = normalizedScore;
     _lastTargetBandPowerValue = targetPower;

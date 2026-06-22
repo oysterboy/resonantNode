@@ -11,6 +11,7 @@ param(
     [int]$StartupTimeoutSec = 20,
     [int]$IdleTimeoutSec = 15,
     [int]$MaxRunSec = 180,
+    [int]$FirstRunCommandRepeats = 2,
     [string]$Root = '',
     [string]$BatchRoot = ''
 )
@@ -40,6 +41,9 @@ if ($IdleTimeoutSec -lt 1) {
 }
 if ($MaxRunSec -lt 1) {
     throw 'MaxRunSec must be at least 1.'
+}
+if ($FirstRunCommandRepeats -lt 1) {
+    throw 'FirstRunCommandRepeats must be at least 1.'
 }
 
 $repoRoot = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
@@ -86,6 +90,34 @@ function New-TextFile {
     }
 
     Set-Content -LiteralPath $Path -Value $Lines -Encoding utf8
+}
+
+function Set-TextFileWithRetry {
+    param(
+        [Parameter(Mandatory = $true)][string]$Path,
+        [Parameter(Mandatory = $true)]
+        [AllowEmptyString()]
+        [string[]]$Lines
+    )
+
+    $dir = Split-Path -Parent $Path
+    if (-not [string]::IsNullOrWhiteSpace($dir)) {
+        New-Item -ItemType Directory -Force -Path $dir | Out-Null
+    }
+
+    $attempt = 0
+    while ($true) {
+        try {
+            Set-Content -LiteralPath $Path -Value $Lines -Encoding utf8
+            return
+        } catch [System.IO.IOException] {
+            $attempt++
+            if ($attempt -ge 25) {
+                throw
+            }
+            Start-Sleep -Milliseconds 100
+        }
+    }
 }
 
 function Append-TextLine {
@@ -162,7 +194,7 @@ function Write-CaptureStatusFiles {
     $lastLineAtValue = if ($null -eq $script:lastLineAt) { 'none' } else { $script:lastLineAt.ToString('o') }
     $safeLatestLine = ConvertTo-SafeLine -Line $script:latestLine
 
-    Set-Content -LiteralPath $script:heartbeatPath -Value @(
+    Set-TextFileWithRetry -Path $script:heartbeatPath -Lines @(
         '# RAW PCM Capture Heartbeat',
         '',
         "- status: $Status",
@@ -181,9 +213,9 @@ function Write-CaptureStatusFiles {
         "- saw_raw_summary: $script:sawRawSummary",
         "- latest_line: $safeLatestLine",
         "- log_path: $script:sessionPath"
-    ) -Encoding utf8
+    )
 
-    Set-Content -LiteralPath $script:progressPath -Value @(
+    Set-TextFileWithRetry -Path $script:progressPath -Lines @(
         '# RAW PCM Capture Progress',
         '',
         "Status: $Status",
@@ -197,7 +229,7 @@ function Write-CaptureStatusFiles {
         "- saw_raw_summary: $script:sawRawSummary",
         "- latest_line: $safeLatestLine",
         "- session_log: $script:sessionPath"
-    ) -Encoding utf8
+    )
 
     $state = [ordered]@{
         status = $Status
@@ -219,7 +251,7 @@ function Write-CaptureStatusFiles {
         started_at = $script:StartedAt.ToString('o')
         updated_at = $updatedAt
     }
-    Set-Content -LiteralPath $script:statePath -Value ($state | ConvertTo-Json -Depth 4) -Encoding utf8
+    Set-TextFileWithRetry -Path $script:statePath -Lines @($state | ConvertTo-Json -Depth 4)
     $script:lastHeartbeatAt = Get-Date
 }
 
@@ -257,6 +289,7 @@ New-TextFile -Path $sessionPath -Lines @(
     "startup_timeout_sec=$StartupTimeoutSec",
     "idle_timeout_sec=$IdleTimeoutSec",
     "max_run_sec=$MaxRunSec",
+    "first_run_command_repeats=$FirstRunCommandRepeats",
     "command=$command"
 )
 Write-CaptureStatusFiles -Status $currentStatus -CurrentRunValue $currentRun -LastRunStatusValue $lastRunStatus
@@ -292,6 +325,8 @@ try {
         $lastBytesAt = $runStartedAt
         $runStatus = 'running'
         $currentStatus = 'running'
+        $commandAttempt = 1
+        $maxCommandAttempts = if ($runIndex -eq 1) { $FirstRunCommandRepeats } else { 1 }
 
         Append-SessionLine -Line ''
         Append-SessionLine -Line ("RUN {0} START {1}" -f $runLabel, $runStartedAt.ToString('o'))
@@ -320,6 +355,16 @@ try {
             $idleSec = ((Get-Date) - $lastBytesAt).TotalSeconds
 
             if (-not $script:sawRawBegin -and $elapsedSec -ge $StartupTimeoutSec) {
+                if ($commandAttempt -lt $maxCommandAttempts) {
+                    $commandAttempt++
+                    Append-SessionLine -Line ("RUN {0} RETRY attempt={1} reason=startup_timeout cmd={2}" -f $runLabel, $commandAttempt, $command)
+                    $runStartedAt = Get-Date
+                    $lastBytesAt = $runStartedAt
+                    $runStatus = 'running'
+                    $port.WriteLine($command)
+                    Write-CaptureStatusFiles -Status $currentStatus -CurrentRunValue $currentRun -LastRunStatusValue $runStatus
+                    continue
+                }
                 $runStatus = 'startup_timeout'
                 break
             }

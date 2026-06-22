@@ -3,15 +3,11 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include "AudioPcm.h"
 #include "AudioSource.h"
 
 inline int normalizeDetectorMagnitude(int centeredSample) {
-    const int64_t signedSample = static_cast<int64_t>(centeredSample);
-    const int64_t magnitude = signedSample < 0 ? -signedSample : signedSample;
-    // The transport path is currently treated as 24-bit-ish PCM in a 32-bit
-    // container, so rescale to a 16-bit-like detector band instead of hard-clipping.
-    const int64_t normalized = (magnitude + 128LL) >> 8;
-    return normalized > 32767LL ? 32767 : static_cast<int>(normalized);
+    return static_cast<int>(audio::pcmMagnitudeToStrength(static_cast<audio::PcmSample>(centeredSample)));
 }
 
 struct AudioSignalStats {
@@ -40,7 +36,7 @@ struct AudioSamplePacket {
     unsigned long sampleRateHz = 0;
     // PCM sample as delivered into the runtime pipeline after source preprocessing.
     int rawAudioValue = 0;
-    // Raw sample after baseline subtraction.
+    // Processed PCM sample after baseline subtraction, still in canonical PCM units.
     int baselineCorrectedValue = 0;
     // Absolute value of the baseline-corrected sample on the shared detector scale.
     float audioMagnitudeValue = 0.0f;
@@ -97,13 +93,7 @@ struct RawSampleHistory {
             ++_oldestSampleIndex;
         }
 
-        if (centeredSample > 32767) {
-            centeredSample = 32767;
-        } else if (centeredSample < -32768) {
-            centeredSample = -32768;
-        }
-
-        _centeredSamples[_writeIndex] = static_cast<int16_t>(centeredSample);
+        _centeredSamples[_writeIndex] = audio::pcmToHistorySample(static_cast<audio::PcmSample>(centeredSample));
         _writeIndex = (_writeIndex + 1) % kCapacity;
         if (_sampleCount < kCapacity) {
             ++_sampleCount;
@@ -157,7 +147,7 @@ struct RawSampleHistory {
     }
 
 private:
-    int16_t _centeredSamples[kCapacity] = {};
+    audio::HistorySample _centeredSamples[kCapacity] = {};
     uint64_t _oldestSampleIndex = 0;
     size_t _writeIndex = 0;
     size_t _sampleCount = 0;

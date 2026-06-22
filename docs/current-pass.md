@@ -1,121 +1,212 @@
-Implement a minimal, firmware-selectable PCM de-accumulation step directly inside `AudioSourceI2s`.
+Refactor PCM scaling into a permanent, format-derived signal contract. Do not normalize against an observed runtime peak such as `100000`.
 
-## Scope
+## Goal
 
-Apply preprocessing immediately after incoming I²S samples have been decoded into the normal PCM sample type, before they enter:
+Establish one canonical PCM representation and one canonical feature-strength representation:
 
-* `AudioSourceFrame`
-* feature extraction
-* feature history
-* detectors
-* inspectors
-* Analyzer processing
+* `PcmSample`: signed `int32_t`, with a precisely defined valid range derived from the microphone’s decoded I²S bit depth.
+* `Strength16`: unsigned `uint16_t`, range `0…32767`, used for amplitude-related detector, inspector, history-statistic, and report values.
+* Frequency score may also use `0…32767`.
+* Frequency contrast remains a separate ratio/quality unit and must not be treated as amplitude strength.
 
-Do not move this logic into downstream modules.
+## 1. Define the decoded PCM contract
 
-## Required design
+Inspect the actual microphone format and current I²S decoding.
 
-Add an explicit preprocessing mode:
+Determine explicitly:
+
+* source bit depth, likely 24 valid signed bits
+* position of valid bits inside the 32-bit I²S word
+* sign extension
+* any current shifts applied during decoding
+* whether de-accumulation can increase the theoretical range by one bit
+
+Create one documented canonical type:
 
 ```cpp
-enum class PcmPreprocessMode : uint8_t {
-    None,
-    FirstDifference
-};
+using PcmSample = int32_t;
 ```
 
-Add one firmware/default selection close to the existing I²S configuration:
+Define the theoretical limits from the real decoded format, not from measured captures.
+
+Example for signed 24-bit source PCM:
 
 ```cpp
-constexpr PcmPreprocessMode kPcmPreprocessMode =
-    PcmPreprocessMode::FirstDifference;
+constexpr uint8_t kSourcePcmBits = 24;
+constexpr int32_t kSourcePcmMax =
+    (int32_t{1} << (kSourcePcmBits - 1)) - 1;
+constexpr int32_t kSourcePcmMin =
+    -(int32_t{1} << (kSourcePcmBits - 1));
 ```
 
-Changing this to `None` must restore the original unchanged PCM path.
-
-## Processing
-
-For every decoded PCM sample, in true stream order:
+If First Difference is enabled, calculate its theoretical intermediate range separately:
 
 ```cpp
-output = current - previous;
-previous = current;
+using PcmIntermediate = int64_t;
+```
+
+Do not silently assume that the processed sample has the same theoretical range as the source sample.
+
+Choose and document one permanent output policy for First Difference:
+
+* either preserve the expanded processed range in `int32_t`
+* or apply a fixed mathematically defined shift, for example divide by 2, so the processed signal remains inside the canonical PCM range
+
+Prefer a fixed shift based on bit growth, not clipping based on observed audio.
+
+Example:
+
+```cpp
+diff = current - previous;
+processed = diff / 2;
+```
+
+Use the exact shift justified by the source bit-depth analysis.
+
+## 2. Normalize amplitude from the canonical PCM range
+
+Create one central conversion function:
+
+```cpp
+using Strength16 = uint16_t;
+
+Strength16 pcmMagnitudeToStrength(PcmSample sample);
+```
+
+The mapping must be based on the documented canonical PCM maximum:
+
+```cpp
+strength =
+    min(abs(sample), kCanonicalPcmMagnitudeMax)
+    * 32767
+    / kCanonicalPcmMagnitudeMax;
 ```
 
 Requirements:
 
-* previous-sample state persists across DMA/read-buffer boundaries
-* use a wider intermediate type to avoid overflow
-* clamp to the valid output PCM range if necessary
-* initialize from the first valid incoming sample
-* output `0` for the first `FirstDifference` sample to avoid a startup spike
-* reset state whenever `AudioSourceI2s` is initialized, restarted, reconfigured, or stopped
+* use safe absolute-value handling for signed minimum
+* use a wide intermediate type
+* saturate only at the theoretical canonical maximum
+* no observed-run constants
+* no microphone-specific magic value such as `100000`
+* no hidden `>> 8` normalization
 
-Example shape:
+## 3. Preserve signed waveform history efficiently
+
+Do not store raw `int32_t` PCM history if RAM cost is unnecessary.
+
+Store a mathematically scaled signed 16-bit waveform:
 
 ```cpp
-int32_t AudioSourceI2s::preprocessSample(int32_t current) {
-    if (preprocessMode_ == PcmPreprocessMode::None) {
-        return current;
-    }
-
-    if (!hasPreviousSample_) {
-        previousSample_ = current;
-        hasPreviousSample_ = true;
-        return 0;
-    }
-
-    const int64_t diff =
-        static_cast<int64_t>(current) -
-        static_cast<int64_t>(previousSample_);
-
-    previousSample_ = current;
-
-    return clampToPcmRange(diff);
-}
+using HistorySample = int16_t;
 ```
 
-Adapt names and types to the actual codebase. Do not introduce unnecessary abstractions.
+Convert using the same canonical PCM range:
 
-## Diagnostics
+```cpp
+historySample =
+    clamp(
+        sample * 32767 / kCanonicalPcmMagnitudeMax,
+        -32768,
+        32767
+    );
+```
 
-Preserve the distinction between:
+This preserves:
 
-* direct decoded I²S PCM before preprocessing
-* processed PCM passed into `AudioSourceFrame`
+* waveform polarity
+* relative amplitude
+* Goertzel input shape
+* RMS and window statistics
+* predictable RAM usage
 
-`RAW mode=i2s` should continue to show preprocessed-input truth from the driver side.
+Rename the history or document clearly that it stores normalized signed PCM, not raw hardware PCM.
 
-`RAW mode=pcm` should show the processed PCM that actually enters the runtime pipeline.
+## 4. Separate units explicitly
 
-Do not silently label processed samples as raw I²S samples.
+Use distinct types or clearly named fields:
 
-## Non-goals
+```cpp
+PcmSample
+HistorySample
+Strength16
+FrequencyScore16
+FrequencyContrast
+```
 
-Do not add or modify:
+Do not mix:
 
-* high-pass filters
-* baseline subtraction
-* baseline tracking
-* startup compensation
-* smoothing
-* interpolation
-* detector tuning
-* inspector tuning
-* Analyzer architecture
-* runtime Param infrastructure
-* I²S driver configuration
+* PCM counts
+* normalized amplitude strength
+* normalized frequency score
+* frequency contrast ratio
 
-## Verification
+Update field and tuning names where needed:
 
-Verify:
+```text
+amp_onset_strength
+amp_release_strength
+amp_min_peak_strength
+freq_min_score
+freq_min_contrast
+```
 
-1. Build succeeds.
-2. `None` reproduces the previous PCM stream exactly.
-3. `FirstDifference` removes the slow accumulated drift.
-4. No discontinuity appears at DMA/read boundaries.
-5. No artificial first-sample spike appears.
-6. The 3.2 kHz test tone remains visible and usable.
-7. Downstream pipeline APIs remain unchanged.
+## 5. Tuning values
 
-Keep the patch small, explicit, local to `AudioSourceI2s`, and easy to remove later.
+After the permanent scaling contract is implemented:
+
+* retune AMP thresholds in `Strength16` units
+* retain frequency score in `0…32767`
+* validate frequency contrast independently
+* do not preserve old thresholds merely because they look familiar
+
+Add temporary diagnostic output showing, for the same frame:
+
+```text
+pcm
+pcm_abs
+amp_strength
+freq_score
+freq_contrast
+```
+
+Use this only for validation, then keep or remove according to existing diagnostic architecture.
+
+## 6. Static validation
+
+Add compile-time or unit-level checks for known points:
+
+```text
+PCM 0                         → Strength 0
+PCM half canonical magnitude  → approximately 16384
+PCM canonical maximum         → 32767
+negative and positive values  → equal magnitude strength
+out-of-range intermediate     → safely saturated
+```
+
+Also verify:
+
+* First Difference does not overflow
+* state persists across DMA boundaries
+* no artificial first-sample spike
+* history conversion is symmetric
+* `None` preprocessing preserves the original decoded PCM contract
+
+## 7. Non-goals
+
+Do not add:
+
+* automatic gain control
+* adaptive normalization
+* run-dependent peak calibration
+* dynamic microphone calibration
+* percentile-based scaling
+* baseline retuning
+* detector logic changes beyond unit conversion
+* new parameter infrastructure
+
+## Final architecture rule
+
+Raw and processed PCM scaling must be derived from the actual digital format and mathematically defined preprocessing gain.
+
+Runtime measurements are for tuning thresholds, not for defining the numeric signal domain.

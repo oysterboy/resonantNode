@@ -6,18 +6,10 @@
 #include <new>
 #include <string.h>
 
+#include "../audio/AudioPcm.h"
+
 namespace {
 constexpr i2s_port_t kI2sPort = I2S_NUM_0;
-
-int32_t clampToPcmRange(int64_t value) {
-    if (value > static_cast<int64_t>(INT32_MAX)) {
-        return INT32_MAX;
-    }
-    if (value < static_cast<int64_t>(INT32_MIN)) {
-        return INT32_MIN;
-    }
-    return static_cast<int32_t>(value);
-}
 
 int decodePcmSample(const uint8_t* samplePtr, int bytesPerSample) {
     if (samplePtr == nullptr || bytesPerSample <= 0) {
@@ -27,7 +19,7 @@ int decodePcmSample(const uint8_t* samplePtr, int bytesPerSample) {
     if (bytesPerSample >= static_cast<int>(sizeof(int32_t))) {
         int32_t sample32 = 0;
         memcpy(&sample32, samplePtr, sizeof(sample32));
-        return static_cast<int>(sample32 >> 8);
+        return static_cast<int>(audio::clampToCanonicalPcm(static_cast<audio::PcmIntermediate>(sample32) >> 8));
     }
 
     if (bytesPerSample == 3) {
@@ -36,7 +28,8 @@ int decodePcmSample(const uint8_t* samplePtr, int bytesPerSample) {
         if ((packed & 0x00800000UL) != 0) {
             packed |= 0xFF000000UL;
         }
-        return static_cast<int>(static_cast<int32_t>(packed));
+        const int32_t signedPacked = static_cast<int32_t>(packed);
+        return static_cast<int>(audio::clampToCanonicalPcm(static_cast<audio::PcmIntermediate>(signedPacked)));
     }
 
     if (bytesPerSample == 2) {
@@ -228,7 +221,7 @@ int32_t AudioSourceI2S::preprocessSample(int32_t current) {
 
     const int64_t diff = static_cast<int64_t>(current) - static_cast<int64_t>(_previousSample);
     _previousSample = current;
-    return clampToPcmRange(diff);
+    return audio::clampToCanonicalPcm(diff / 2);
 }
 
 void AudioSourceI2S::resetPreprocessState() {

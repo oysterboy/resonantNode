@@ -2,6 +2,7 @@
 
 #include <stdint.h>
 
+#include "../../audio/AudioPcm.h"
 #include "../../app/RuntimeDefaults.h"
 
 /*
@@ -32,7 +33,7 @@ public:
 
     void observeCenteredSample(int centeredSample, unsigned long sampleTimeMs = 0);
 
-    float lastTargetBandScoreValue() const;
+    audio::FrequencyScore16 lastTargetBandScoreValue() const;
     float lastTargetBandPowerValue() const;
     float lastLowerBandPowerValue() const;
     float lastUpperBandPowerValue() const;
@@ -57,7 +58,7 @@ public:
     unsigned long lastPacketAgeSamples() const;
 
 private:
-    float computeFrequencyScore();
+    audio::FrequencyScore16 computeFrequencyScore();
     float computeGoertzelPowerAtFrequency(float frequencyHz) const;
     float computeGoertzelPowerFromCoeff(float coeff) const;
     void updateCachedGoertzelCoefficients();
@@ -76,7 +77,7 @@ private:
     float _cachedLowerCoeff = 0.0f;
     float _cachedUpperCoeff = 0.0f;
     bool _cachedGoertzelValid = false;
-    float _lastTargetBandScoreValue = 0.0f;
+    audio::FrequencyScore16 _lastTargetBandScoreValue = 0;
     float _lastTargetBandPowerValue = 0.0f;
     float _lastLowerBandPowerValue = 0.0f;
     float _lastUpperBandPowerValue = 0.0f;

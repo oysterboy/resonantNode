@@ -74,6 +74,10 @@ bool parseFeatureStreamToken(const char* token, detection::FeatureStreamId& out)
         out = detection::FeatureStreamId::AmpEnvelope;
         return true;
     }
+    if (equalsIgnoreCase(token, "ampmagnitude") || equalsIgnoreCase(token, "amp_magnitude")) {
+        out = detection::FeatureStreamId::AmpMagnitude;
+        return true;
+    }
     if (equalsIgnoreCase(token, "freqtarget") || equalsIgnoreCase(token, "frequencytarget")) {
         out = detection::FeatureStreamId::FrequencyTarget;
         return true;

@@ -1,4 +1,5 @@
 #include "../../../modes/analyzer/AnalyzerModeApp.h"
+#include "../../../audio/AudioPcm.h"
 #include "../AnalyzerText.h"
 
 #include <Arduino.h>
@@ -13,7 +14,6 @@ namespace {
 
 constexpr unsigned long kRawCaptureFlushSamples = 256;
 constexpr unsigned long kRawCaptureTimeoutSlackMs = 2000;
-constexpr int32_t kRawCaptureFixedPointScale = 1000;
 
 struct RawCapturePcmSample {
     uint16_t timeOffsetMs = 0;
@@ -23,8 +23,9 @@ struct RawCapturePcmSample {
 
 struct RawCaptureFeatureSample {
     uint16_t timeOffsetMs = 0;
-    int32_t amp = 0;
-    int32_t targetScore = 0;
+    uint16_t ampStrength = 0;
+    uint16_t envStrength = 0;
+    uint16_t frequencyScore = 0;
     uint8_t targetFresh : 1;
 };
 
@@ -63,10 +64,6 @@ uint16_t rawCaptureOffsetMs(unsigned long sampleMs, unsigned long baseMs) {
 
     const unsigned long deltaMs = sampleMs - baseMs;
     return deltaMs > 0xFFFFUL ? 0xFFFFU : static_cast<uint16_t>(deltaMs);
-}
-
-int32_t rawCaptureToFixedPoint(float value) {
-    return static_cast<int32_t>(lroundf(value * static_cast<float>(kRawCaptureFixedPointScale)));
 }
 
 void printRawMemoryState(const char* label) {
@@ -412,33 +409,36 @@ bool AnalyzerApp::runRawTrigger(unsigned long toneHz,
             const detection::FrequencyBandMeasurementPacket frequencyEvidence = captureFrequencyMeasurementPacket(audioSamplePacket);
             _detection.observeFrame(audioSamplePacket, frequencyEvidence, audioSamplePacket.timeMs);
 
-            const detection::FeatureHistory& featureHistory = _detection.featureHistory();
-            const int32_t ampFixed = rawCaptureToFixedPoint(featureHistory.latestValue(detection::FeatureStreamId::AmpEnvelope));
+            const uint16_t ampStrength = audioSamplePacket.audioMagnitudeValue;
+            const uint16_t envStrength = audioSamplePacket.smoothedLevel;
+            const uint16_t frequencyScore = frequencyEvidence.targetBandScoreValue;
 
             if (!emitStarted) {
                 if (mode == RawCaptureMode::Features && preFeatureRingBuffer != nullptr) {
                     preFeatureRingBuffer[preWriteIndex].timeOffsetMs = sampleTimeOffsetMs;
-                    preFeatureRingBuffer[preWriteIndex].amp = ampFixed;
-                    preFeatureRingBuffer[preWriteIndex].targetScore = rawCaptureToFixedPoint(featureHistory.latestValue(detection::FeatureStreamId::FrequencyTargetBand));
+                    preFeatureRingBuffer[preWriteIndex].ampStrength = ampStrength;
+                    preFeatureRingBuffer[preWriteIndex].envStrength = envStrength;
+                    preFeatureRingBuffer[preWriteIndex].frequencyScore = frequencyScore;
                     preFeatureRingBuffer[preWriteIndex].targetFresh = frequencyEvidence.fresh ? 1U : 0U;
                     preWriteIndex = (preWriteIndex + 1UL) % preWantedSamples;
                 } else if (mode == RawCaptureMode::Both && preBothRingBuffer != nullptr) {
                     preBothRingBuffer[preWriteIndex].timeOffsetMs = sampleTimeOffsetMs;
                     preBothRingBuffer[preWriteIndex].pcm = static_cast<int32_t>(sourceSample);
-                    preBothRingBuffer[preWriteIndex].amp = ampFixed;
+                    preBothRingBuffer[preWriteIndex].amp = ampStrength;
                     preWriteIndex = (preWriteIndex + 1UL) % preWantedSamples;
                 }
                 ++preCapturedTotal;
             } else if (postCaptured < postWantedSamples) {
                 if (mode == RawCaptureMode::Features && featureCaptureBuffer != nullptr) {
                     featureCaptureBuffer[preWindowSamples + postCaptured].timeOffsetMs = sampleTimeOffsetMs;
-                    featureCaptureBuffer[preWindowSamples + postCaptured].amp = ampFixed;
-                    featureCaptureBuffer[preWindowSamples + postCaptured].targetScore = rawCaptureToFixedPoint(featureHistory.latestValue(detection::FeatureStreamId::FrequencyTargetBand));
+                    featureCaptureBuffer[preWindowSamples + postCaptured].ampStrength = ampStrength;
+                    featureCaptureBuffer[preWindowSamples + postCaptured].envStrength = envStrength;
+                    featureCaptureBuffer[preWindowSamples + postCaptured].frequencyScore = frequencyScore;
                     featureCaptureBuffer[preWindowSamples + postCaptured].targetFresh = frequencyEvidence.fresh ? 1U : 0U;
                 } else if (mode == RawCaptureMode::Both && bothCaptureBuffer != nullptr) {
                     bothCaptureBuffer[preWindowSamples + postCaptured].timeOffsetMs = sampleTimeOffsetMs;
                     bothCaptureBuffer[preWindowSamples + postCaptured].pcm = static_cast<int32_t>(sourceSample);
-                    bothCaptureBuffer[preWindowSamples + postCaptured].amp = ampFixed;
+                    bothCaptureBuffer[preWindowSamples + postCaptured].amp = ampStrength;
                 }
                 ++postCaptured;
             }
@@ -501,7 +501,7 @@ bool AnalyzerApp::runRawTrigger(unsigned long toneHz,
     const int32_t rawWindowMinOut = capturedSamples > 0 ? rawWindowMin : 0;
     const int32_t rawWindowMaxOut = capturedSamples > 0 ? rawWindowMax : 0;
 
-    float maxAmp = 0.0f;
+    uint16_t maxAmp = 0;
     int32_t maxPcmAbs = 0;
     for (unsigned long i = 0; i < capturedSamples; ++i) {
         if (mode == RawCaptureMode::Pcm || mode == RawCaptureMode::I2s) {
@@ -512,9 +512,8 @@ bool AnalyzerApp::runRawTrigger(unsigned long toneHz,
             }
         } else if (mode == RawCaptureMode::Features) {
             const RawCaptureFeatureSample& sample = featureCaptureBuffer[i];
-            const float ampValue = static_cast<float>(sample.amp) / static_cast<float>(kRawCaptureFixedPointScale);
-            if (ampValue > maxAmp) {
-                maxAmp = ampValue;
+            if (sample.ampStrength > maxAmp) {
+                maxAmp = sample.ampStrength;
             }
         } else {
             const RawCaptureBothSample& sample = bothCaptureBuffer[i];
@@ -522,9 +521,8 @@ bool AnalyzerApp::runRawTrigger(unsigned long toneHz,
             if (absPcm > maxPcmAbs) {
                 maxPcmAbs = absPcm;
             }
-            const float ampValue = static_cast<float>(sample.amp) / static_cast<float>(kRawCaptureFixedPointScale);
-            if (ampValue > maxAmp) {
-                maxAmp = ampValue;
+            if (sample.amp > maxAmp) {
+                maxAmp = static_cast<uint16_t>(sample.amp);
             }
         }
     }
@@ -565,7 +563,7 @@ bool AnalyzerApp::runRawTrigger(unsigned long toneHz,
     } else if (mode == RawCaptureMode::I2s) {
         Serial.print(" fields=ms,pcm");
     } else if (mode == RawCaptureMode::Features) {
-        Serial.print(" fields=ms,amp,env,target_score,target_fresh");
+        Serial.print(" fields=ms,amp_strength,env_strength,freq_score,freq_fresh");
     } else {
         Serial.print(" fields=ms,amp,pcm");
     }
@@ -592,20 +590,16 @@ bool AnalyzerApp::runRawTrigger(unsigned long toneHz,
             Serial.println(sample.pcm);
         }
     } else if (mode == RawCaptureMode::Features) {
-        Serial.println("ms,amp,env,target_score,target_fresh");
-        float csvEnv = 0.0f;
+        Serial.println("ms,amp_strength,env_strength,freq_score,freq_fresh");
         for (unsigned long i = 0; i < capturedSamples; ++i) {
             const RawCaptureFeatureSample& sample = featureCaptureBuffer[i];
-            const float ampValue = static_cast<float>(sample.amp) / static_cast<float>(kRawCaptureFixedPointScale);
-            const float targetScoreValue = static_cast<float>(sample.targetScore) / static_cast<float>(kRawCaptureFixedPointScale);
-            csvEnv = csvEnv * 0.95f + ampValue * 0.05f;
             Serial.print(static_cast<unsigned long>(sample.timeOffsetMs) + captureBaseMs);
             Serial.print(",");
-            Serial.print(ampValue, 1);
+            Serial.print(sample.ampStrength);
             Serial.print(",");
-            Serial.print(csvEnv, 1);
+            Serial.print(sample.envStrength);
             Serial.print(",");
-            Serial.print(targetScoreValue, 2);
+            Serial.print(sample.frequencyScore);
             Serial.print(",");
             Serial.println(sample.targetFresh ? 1 : 0);
         }
@@ -615,7 +609,7 @@ bool AnalyzerApp::runRawTrigger(unsigned long toneHz,
             const RawCaptureBothSample& sample = bothCaptureBuffer[i];
             Serial.print(static_cast<unsigned long>(sample.timeOffsetMs) + captureBaseMs);
             Serial.print(",");
-            Serial.print(static_cast<float>(sample.amp) / static_cast<float>(kRawCaptureFixedPointScale), 1);
+            Serial.print(sample.amp);
             Serial.print(",");
             Serial.println(sample.pcm);
         }
@@ -633,7 +627,7 @@ bool AnalyzerApp::runRawTrigger(unsigned long toneHz,
     Serial.print(maxPcmAbs);
     if (rawCaptureUsesFeatureStream(mode)) {
         Serial.print(" max_amp=");
-        Serial.print(maxAmp, 1);
+        Serial.print(maxAmp);
     }
     Serial.print(" raw_mean=");
     Serial.print(rawWindowMean, 1);

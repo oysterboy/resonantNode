@@ -11,8 +11,10 @@ namespace {
 
 float selectedScalarValue(const AudioSamplePacket& audioSamplePacket, const FrequencyBandMeasurementPacket& frequencyEvidence, FeatureStreamId stream) {
     switch (stream) {
+        case FeatureStreamId::AmpMagnitude:
+            return static_cast<float>(audioSamplePacket.audioMagnitudeValue);
         case FeatureStreamId::AmpEnvelope:
-            return audioSamplePacket.audioMagnitudeValue;
+            return static_cast<float>(audioSamplePacket.smoothedLevel);
         case FeatureStreamId::FrequencyTarget:
             return frequencyEvidence.targetBandScoreValue;
         case FeatureStreamId::FrequencyScore:

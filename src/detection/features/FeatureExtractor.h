@@ -20,7 +20,8 @@ inline void observeFrame(const AudioSamplePacket& audioSamplePacket, FeatureHist
         return;
     }
 
-    history.record(FeatureStreamId::AmpEnvelope, audioSamplePacket.timeMs, audioSamplePacket.audioMagnitudeValue);
+    history.record(FeatureStreamId::AmpMagnitude, audioSamplePacket.timeMs, audioSamplePacket.audioMagnitudeValue);
+    history.record(FeatureStreamId::AmpEnvelope, audioSamplePacket.timeMs, audioSamplePacket.smoothedLevel);
 }
 
 inline void observeFrequencyMeasurementPacket(const FrequencyBandMeasurementPacket& evidence, unsigned long nowMs, FeatureHistory& history) {

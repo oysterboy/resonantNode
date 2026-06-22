@@ -3,6 +3,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include "../../audio/AudioPcm.h"
 #include "../features/FeatureStream.h"
 
 namespace detection {
@@ -236,8 +237,8 @@ struct FrequencyBandMeasurementPacket {
     unsigned long observedAtMs = 0;
     unsigned long ageSamples = 0;
 
-    // Normalized band score on the shared 0..32767 magnitude-like scale.
-    float targetBandScoreValue = 0.0f;
+    // Frequency score on the shared 0..32767 magnitude-like scale.
+    audio::FrequencyScore16 targetBandScoreValue = 0;
     float confidence = 0.0f;
 
     // Raw Goertzel power retained for diagnostics and debugging.

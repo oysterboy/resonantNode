@@ -180,6 +180,8 @@ inline const char* supportTargetDisplayName(detection::EvidenceTarget value, boo
 //PARAM TUNING TEMPORARY
 inline const char* scalarObservedStreamDisplayName(detection::FeatureStreamId value) {
     switch (value) {
+        case detection::FeatureStreamId::AmpMagnitude:
+            return "AmpMagnitude";
         case detection::FeatureStreamId::AmpEnvelope:
             return "Scalar";
         case detection::FeatureStreamId::FrequencyTarget:

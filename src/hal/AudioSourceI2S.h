@@ -5,13 +5,15 @@
 #include <memory>
 
 #include "../app/RuntimeDefaults.h"
+#include "../audio/AudioPcm.h"
 #include "../audio/AudioSource.h"
 
 /*
 AudioSourceI2S
 
 ESP32 I2S implementation of AudioSource.
-Owns I2S setup, block reads, raw-sample diagnostics, and approximate block timing.
+Owns I2S setup, block reads, First Difference preprocessing, raw-sample
+diagnostics, and approximate block timing.
 Does not know about AudioSignal, DetectionRuntime, Analyzer, or Behavior.
 */
 class AudioSourceI2S : public AudioSource {

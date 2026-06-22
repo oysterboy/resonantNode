@@ -219,7 +219,8 @@ int32_t AudioSourceI2S::preprocessSample(int32_t current) {
         return 0;
     }
 
-    const int64_t diff = static_cast<int64_t>(current) - static_cast<int64_t>(_previousSample);
+    const audio::PcmIntermediate diff =
+        static_cast<audio::PcmIntermediate>(current) - static_cast<audio::PcmIntermediate>(_previousSample);
     _previousSample = current;
     return audio::clampToCanonicalPcm(diff / 2);
 }

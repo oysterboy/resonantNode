@@ -114,7 +114,7 @@ void AudioSignal::processSample(int sample, uint32_t sampleTimeUs, uint64_t samp
     _centeredSignal = _rawSignal - static_cast<int>(_baseline);
     _rawSampleHistory.push(sampleIndex, _centeredSignal);
 
-    int magnitude = normalizeDetectorMagnitude(_centeredSignal);
+    int magnitude = static_cast<int>(audio::pcmMagnitudeToStrength(static_cast<audio::PcmSample>(_centeredSignal)));
     if (magnitude < _baselineTrackingQuietThreshold) {
         _baseline = _baseline * (1.0f - _baselineUpdateFactor) + _rawSignal * _baselineUpdateFactor;
     }
@@ -206,7 +206,7 @@ void AudioSignal::emitCurveSample(uint32_t sampleTimeUs) {
 
     CurveSnapshot snapshot;
     snapshot.sampleMs = sampleTimeUs / 1000UL;
-    snapshot.current = normalizeDetectorMagnitude(_centeredSignal);
+    snapshot.current = static_cast<int>(audio::pcmMagnitudeToStrength(static_cast<audio::PcmSample>(_centeredSignal)));
     snapshot.env = static_cast<int>(_smoothedSignalMagnitude);
     snapshot.peak = _smoothedSignalMagnitude;
     snapshot.open = _signalMagnitude > 0;
@@ -221,9 +221,9 @@ void AudioSignal::emitFrame(AudioSamplePacket& outFrame, uint64_t sampleIndex, u
     outFrame.sampleRateHz = sampleRateHz;
     outFrame.rawAudioValue = _rawSignal;
     outFrame.baselineCorrectedValue = _centeredSignal;
-    outFrame.audioMagnitudeValue = static_cast<float>(normalizeDetectorMagnitude(_centeredSignal));
+    outFrame.audioMagnitudeValue = audio::pcmMagnitudeToStrength(static_cast<audio::PcmSample>(_centeredSignal));
     outFrame.level = _signalMagnitude;
-    outFrame.smoothedLevel = static_cast<int>(_smoothedSignalMagnitude);
+    outFrame.smoothedLevel = audio::strengthFromFloat(_smoothedSignalMagnitude);
     outFrame.baseline = _baseline;
     outFrame.valid = true;
     outFrame.rawHistoryReady = _rawSampleHistory.sampleCount() > 0;

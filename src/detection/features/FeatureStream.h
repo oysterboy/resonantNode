@@ -12,6 +12,7 @@ Feature streams are measurements, not occurrences and not pattern meanings.
 */
 enum class FeatureStreamId {
     Unknown,
+    AmpMagnitude,
     AmpEnvelope,
     FrequencyTarget,
     FrequencyTargetBand,
@@ -36,6 +37,8 @@ inline const char* featureStreamName(FeatureStreamId value) {
     switch (value) {
         case FeatureStreamId::AmpEnvelope:
             return "amp_envelope";
+        case FeatureStreamId::AmpMagnitude:
+            return "amp_magnitude";
         case FeatureStreamId::FrequencyTarget:
             return "frequency_target";
         case FeatureStreamId::FrequencyTargetBand:

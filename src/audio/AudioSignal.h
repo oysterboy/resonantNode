@@ -6,10 +6,6 @@
 #include "AudioPcm.h"
 #include "AudioSource.h"
 
-inline int normalizeDetectorMagnitude(int centeredSample) {
-    return static_cast<int>(audio::pcmMagnitudeToDetectorStrength(static_cast<audio::PcmSample>(centeredSample)));
-}
-
 struct AudioSignalStats {
     uint32_t blocksProcessed = 0;
     uint64_t samplesProcessed = 0;
@@ -38,12 +34,12 @@ struct AudioSamplePacket {
     int rawAudioValue = 0;
     // Processed PCM sample after baseline subtraction, still in canonical PCM units.
     int baselineCorrectedValue = 0;
-    // Absolute value of the baseline-corrected sample on the shared detector scale.
-    float audioMagnitudeValue = 0.0f;
+    // Absolute value of the baseline-corrected sample in Strength16 units.
+    audio::Strength16 audioMagnitudeValue = 0;
     // Quiet-gated integer magnitude used by some detector paths.
     int level = 0;
-    // Smoothed version of the quiet-gated magnitude on the shared detector scale.
-    int smoothedLevel = 0;
+    // Smoothed version of the quiet-gated magnitude in Strength16 units.
+    audio::Strength16 smoothedLevel = 0;
     // Slow quiet-floor estimate used for centering.
     float baseline = 0.0f;
     // Frame validity flag from the signal layer.

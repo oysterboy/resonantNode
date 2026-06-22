@@ -23,7 +23,7 @@ void FreqBandStream::resetState() {
     _sampleWriteIndex = 0;
     _samplesUntilNextFrequencyUpdate = 0;
     _producedFreshPacketOnLastObserve = false;
-    _lastTargetBandScoreValue = 0.0f;
+    _lastTargetBandScoreValue = 0;
     _lastTargetBandPowerValue = 0.0f;
     _lastLowerBandPowerValue = 0.0f;
     _lastUpperBandPowerValue = 0.0f;
@@ -77,7 +77,7 @@ void FreqBandStream::observeCenteredSample(int centeredSample, unsigned long sam
     _producedFreshPacketOnLastObserve = false;
     pushSample(centeredSample);
     if (_sampleCount < _windowSizeSamples) {
-        _lastTargetBandScoreValue = 0.0f;
+        _lastTargetBandScoreValue = 0;
         _lastTargetBandPowerValue = 0.0f;
         _lastLowerBandPowerValue = 0.0f;
         _lastUpperBandPowerValue = 0.0f;
@@ -178,16 +178,16 @@ float FreqBandStream::computeGoertzelPowerAtFrequency(float frequencyHz) const {
     return computeGoertzelPowerFromCoeff(coeff);
 }
 
-float FreqBandStream::computeFrequencyScore() {
+audio::FrequencyScore16 FreqBandStream::computeFrequencyScore() {
     if (_windowSizeSamples == 0 || _sampleCount < _windowSizeSamples) {
-        _lastTargetBandScoreValue = 0.0f;
+        _lastTargetBandScoreValue = 0;
         _lastTargetBandPowerValue = 0.0f;
         _lastLowerBandPowerValue = 0.0f;
         _lastUpperBandPowerValue = 0.0f;
         _lastNeighborBandPowerValue = 0.0f;
         _lastTotalEnergyValue = 0.0f;
         _lastTargetBandContrastValue = 0.0f;
-        return 0.0f;
+        return 0;
     }
 
     const unsigned long profileStartUs = micros();
@@ -205,11 +205,10 @@ float FreqBandStream::computeFrequencyScore() {
     const float lowerPower = computeGoertzelPowerAtFrequency(_cachedLowerFrequencyHz);
     const float upperPower = computeGoertzelPowerAtFrequency(_cachedUpperFrequencyHz);
     const float neighborPower = (lowerPower + upperPower) * 0.5f;
-    const float targetAmplitude = (2.0f * sqrtf(fmaxf(targetPower, 0.0f))) /
-        static_cast<float>(_windowSizeSamples);
-    const float absoluteScore = static_cast<float>(
-        audio::pcmMagnitudeToDetectorStrength(static_cast<audio::PcmSample>(targetAmplitude)));
-    const float normalizedScore = absoluteScore > kNormalizedBandScoreScale ? kNormalizedBandScoreScale : absoluteScore;
+    const double targetAmplitude =
+        (2.0 * sqrt(static_cast<double>(fmaxf(targetPower, 0.0f)))) /
+        static_cast<double>(_windowSizeSamples);
+    const audio::FrequencyScore16 normalizedScore = audio::frequencyAmplitudeToScore(targetAmplitude);
     const float contrast = normalizeContrastQuality(targetPower, neighborPower);
 
     _lastTargetBandScoreValue = normalizedScore;
@@ -225,7 +224,7 @@ float FreqBandStream::computeFrequencyScore() {
     return normalizedScore;
 }
 
-float FreqBandStream::lastTargetBandScoreValue() const {
+audio::FrequencyScore16 FreqBandStream::lastTargetBandScoreValue() const {
     return _lastTargetBandScoreValue;
 }
 

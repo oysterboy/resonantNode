@@ -61,8 +61,10 @@ float sequenceSampleDumpInputValue(detection::DetectorSelection detectorSelectio
             return frequencyEvidence.targetBandScoreValue;
         case detection::DetectorSelection::ScalarTransient:
             switch (observedStream) {
+                case detection::FeatureStreamId::AmpMagnitude:
+                    return static_cast<float>(audioSamplePacket.audioMagnitudeValue);
                 case detection::FeatureStreamId::AmpEnvelope:
-                    return audioSamplePacket.audioMagnitudeValue;
+                    return static_cast<float>(audioSamplePacket.smoothedLevel);
                 case detection::FeatureStreamId::FrequencyTarget:
                     return frequencyEvidence.targetBandScoreValue;
                 case detection::FeatureStreamId::FrequencyScore:

@@ -493,9 +493,6 @@ bool AnalyzerApp::runRawTrigger(unsigned long toneHz,
 
     const unsigned long requestedSamples = preWantedSamples + postWantedSamples;
     const unsigned long capturedSamples = preWindowSamples + postCaptured;
-    const unsigned long droppedSamples = requestedSamples > capturedSamples
-        ? requestedSamples - capturedSamples
-        : 0;
     const unsigned long unusedCapacitySamples = maxSamples > capturedSamples
         ? maxSamples - capturedSamples
         : 0;
@@ -630,8 +627,6 @@ bool AnalyzerApp::runRawTrigger(unsigned long toneHz,
     Serial.print(requestedSamples);
     Serial.print(" captured=");
     Serial.print(capturedSamples);
-    Serial.print(" dropped=");
-    Serial.print(droppedSamples);
     Serial.print(" unused_capacity=");
     Serial.print(unusedCapacitySamples);
     Serial.print(" max_pcm_abs=");

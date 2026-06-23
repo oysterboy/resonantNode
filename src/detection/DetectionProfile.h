@@ -161,7 +161,7 @@ inline DetectionProfile makeTonalPulseScalarProfile() {
     profile.inspectionPlan.modules[1].kind = InspectionModuleKind::ScalarFeatureStrength; // Scalar inspector module.
     profile.inspectionPlan.modules[1].target = InspectionTarget::Amp; // Route this observation as amplitude evidence.
     profile.inspectionPlan.modules[1].enabled = true; // Enable the module in the matcher.
-    profile.inspectionPlan.modules[1].scalar.stream = FeatureStreamId::AmpEnvelope; // Measure the envelope stream.
+    profile.inspectionPlan.modules[1].scalar.stream = FeatureStreamId::AmpMagnitude; // Measure the magnitude stream.
     profile.inspectionPlan.modules[1].scalar.anchor = ScalarInspectionAnchor::Start; // Window from occurrence start.
     profile.inspectionPlan.modules[1].scalar.windowPreMs = 0; // No look-back before the anchor.
     profile.inspectionPlan.modules[1].scalar.windowPostMs = 100; // Inspect the first 100 ms after onset.

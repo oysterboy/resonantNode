@@ -38,6 +38,9 @@ void ScalarTransientDetector::resetState() {
     _onsetRejectedCount = 0;
     _transientRejectedCount = 0;
     _lastObservedAcceptedOccurrenceRejectedCount = 0;
+    _acceptedOccurrenceId = 0;
+    _selectedRejectOccurrenceId = 0;
+    _currentOccurrenceId = 0;
     _reportDetail = {};
     resetAcceptedOccurrencePending();
     resetAcceptedOccurrenceSummary();
@@ -48,6 +51,7 @@ void ScalarTransientDetector::resetAcceptedOccurrenceSummary() {
     _acceptedOccurrencePresent = false;
     _acceptedOccurrence = {};
     _acceptedOccurrenceReleaseMs = 0;
+    _acceptedOccurrenceId = 0;
     _reportDetail.accepted = {};
     _pendingOccurrencePresent = false;
     _pendingOccurrence = {};
@@ -56,6 +60,7 @@ void ScalarTransientDetector::resetAcceptedOccurrenceSummary() {
 void ScalarTransientDetector::resetSelectedRejectSummary() {
     _selectedRejectPresent = false;
     _selectedReject = {};
+    _selectedRejectOccurrenceId = 0;
     _reportDetail.selectedReject = {};
 }
 

@@ -164,18 +164,22 @@ void AnalyzerApp::startSequenceTest(const PendingSequenceStart& pending) {
     _sequenceTest.primaryValidPatternCaptured = false;
     _sequenceTest.primaryValidPattern = {};
     _sequenceTest.primaryValidInspectedOccurrence = {};
+    _sequenceTest.primaryValidDetectorReport = {};
     _sequenceTest.primaryValidPatternDtMs = -1;
     _sequenceTest.primaryUncertainPatternCaptured = false;
     _sequenceTest.primaryUncertainPattern = {};
     _sequenceTest.primaryUncertainInspectedOccurrence = {};
+    _sequenceTest.primaryUncertainDetectorReport = {};
     _sequenceTest.primaryUncertainPatternDtMs = -1;
     _sequenceTest.primaryAcceptedOccurrenceCaptured = false;
     _sequenceTest.primaryAcceptedInspectedOccurrence = {};
+    _sequenceTest.primaryAcceptedDetectorReport = {};
     _sequenceTest.primaryAcceptedOccurrenceDtMs = -1;
     _sequenceTest.rejectedInWindowCount = 0;
     _sequenceTest.bestRejectedPatternCaptured = false;
     _sequenceTest.bestRejectedInWindow = {};
     _sequenceTest.bestRejectedInspectedOccurrence = {};
+    _sequenceTest.bestRejectedDetectorReport = {};
     _sequenceTest.currentTrialFinalized = false;
     _sequenceTest.currentTrialUnexpected = 0;
     _sequenceTest.currentTrialRejected = 0;
@@ -376,18 +380,22 @@ void AnalyzerApp::updateSequenceTest(unsigned long now) {
     _sequenceTest.primaryValidPatternCaptured = false;
     _sequenceTest.primaryValidPattern = {};
     _sequenceTest.primaryValidInspectedOccurrence = {};
+    _sequenceTest.primaryValidDetectorReport = {};
     _sequenceTest.primaryValidPatternDtMs = -1;
     _sequenceTest.primaryUncertainPatternCaptured = false;
     _sequenceTest.primaryUncertainPattern = {};
     _sequenceTest.primaryUncertainInspectedOccurrence = {};
+    _sequenceTest.primaryUncertainDetectorReport = {};
     _sequenceTest.primaryUncertainPatternDtMs = -1;
     _sequenceTest.primaryAcceptedOccurrenceCaptured = false;
     _sequenceTest.primaryAcceptedInspectedOccurrence = {};
+    _sequenceTest.primaryAcceptedDetectorReport = {};
     _sequenceTest.primaryAcceptedOccurrenceDtMs = -1;
     _sequenceTest.rejectedInWindowCount = 0;
     _sequenceTest.bestRejectedPatternCaptured = false;
     _sequenceTest.bestRejectedInWindow = {};
     _sequenceTest.bestRejectedInspectedOccurrence = {};
+    _sequenceTest.bestRejectedDetectorReport = {};
     _sequenceTest.currentTrialFinalized = false;
     _sequenceTest.currentTrialUnexpected = 0;
     _sequenceTest.currentTrialRejected = 0;
@@ -457,6 +465,15 @@ AnalyzerApp::SequenceTrialSelection AnalyzerApp::selectSequenceTrialSelection(un
         selection.inspectedOccurrence = _sequenceTest.primaryValidInspectedOccurrence.occurrence.present
             ? &_sequenceTest.primaryValidInspectedOccurrence
             : nullptr;
+        selection.detectorReport = _sequenceTest.primaryValidDetectorReport.detectorId != detection::DetectorId::Unknown
+            ? &_sequenceTest.primaryValidDetectorReport
+            : nullptr;
+        selection.occurrenceId = selection.inspectedOccurrence != nullptr
+            ? selection.inspectedOccurrence->occurrence.occurrenceId
+            : 0UL;
+        selection.reportMatched = selection.detectorReport != nullptr &&
+            ((selection.detectorReport->accepted.present && selection.detectorReport->accepted.occurrenceId == selection.occurrenceId) ||
+             (selection.detectorReport->selectedReject.present && selection.detectorReport->selectedReject.occurrenceId == selection.occurrenceId));
         selection.dtMs = static_cast<long>(_sequenceTest.primaryValidPattern.primaryStartMs) - static_cast<long>(trialOnsetAnchorMs);
         selection.durationMs = _sequenceTest.primaryValidPattern.primaryDurationMs;
         selection.strength = _sequenceTest.primaryValidPattern.primaryStrength;
@@ -470,6 +487,15 @@ AnalyzerApp::SequenceTrialSelection AnalyzerApp::selectSequenceTrialSelection(un
         selection.inspectedOccurrence = _sequenceTest.primaryUncertainInspectedOccurrence.occurrence.present
             ? &_sequenceTest.primaryUncertainInspectedOccurrence
             : nullptr;
+        selection.detectorReport = _sequenceTest.primaryUncertainDetectorReport.detectorId != detection::DetectorId::Unknown
+            ? &_sequenceTest.primaryUncertainDetectorReport
+            : nullptr;
+        selection.occurrenceId = selection.inspectedOccurrence != nullptr
+            ? selection.inspectedOccurrence->occurrence.occurrenceId
+            : 0UL;
+        selection.reportMatched = selection.detectorReport != nullptr &&
+            ((selection.detectorReport->accepted.present && selection.detectorReport->accepted.occurrenceId == selection.occurrenceId) ||
+             (selection.detectorReport->selectedReject.present && selection.detectorReport->selectedReject.occurrenceId == selection.occurrenceId));
         selection.dtMs = static_cast<long>(_sequenceTest.primaryUncertainPattern.primaryStartMs) - static_cast<long>(trialOnsetAnchorMs);
         selection.durationMs = _sequenceTest.primaryUncertainPattern.primaryDurationMs;
         selection.strength = _sequenceTest.primaryUncertainPattern.primaryStrength;
@@ -480,6 +506,13 @@ AnalyzerApp::SequenceTrialSelection AnalyzerApp::selectSequenceTrialSelection(un
     if (_sequenceTest.primaryAcceptedOccurrenceCaptured && _sequenceTest.primaryAcceptedInspectedOccurrence.occurrence.present) {
         selection.kind = SequenceTrialSelection::Kind::AcceptedOccurrence;
         selection.inspectedOccurrence = &_sequenceTest.primaryAcceptedInspectedOccurrence;
+        selection.detectorReport = _sequenceTest.primaryAcceptedDetectorReport.detectorId != detection::DetectorId::Unknown
+            ? &_sequenceTest.primaryAcceptedDetectorReport
+            : nullptr;
+        selection.occurrenceId = selection.inspectedOccurrence->occurrence.occurrenceId;
+        selection.reportMatched = selection.detectorReport != nullptr &&
+            ((selection.detectorReport->accepted.present && selection.detectorReport->accepted.occurrenceId == selection.occurrenceId) ||
+             (selection.detectorReport->selectedReject.present && selection.detectorReport->selectedReject.occurrenceId == selection.occurrenceId));
         selection.dtMs = static_cast<long>(_sequenceTest.primaryAcceptedInspectedOccurrence.occurrence.startMs) - static_cast<long>(trialOnsetAnchorMs);
         selection.durationMs = _sequenceTest.primaryAcceptedInspectedOccurrence.occurrence.durationMs;
         selection.strength = _sequenceTest.primaryAcceptedInspectedOccurrence.occurrence.strength;
@@ -493,6 +526,15 @@ AnalyzerApp::SequenceTrialSelection AnalyzerApp::selectSequenceTrialSelection(un
         selection.inspectedOccurrence = _sequenceTest.bestRejectedInspectedOccurrence.occurrence.present
             ? &_sequenceTest.bestRejectedInspectedOccurrence
             : nullptr;
+        selection.detectorReport = _sequenceTest.bestRejectedDetectorReport.detectorId != detection::DetectorId::Unknown
+            ? &_sequenceTest.bestRejectedDetectorReport
+            : nullptr;
+        selection.occurrenceId = selection.inspectedOccurrence != nullptr
+            ? selection.inspectedOccurrence->occurrence.occurrenceId
+            : 0UL;
+        selection.reportMatched = selection.detectorReport != nullptr &&
+            ((selection.detectorReport->accepted.present && selection.detectorReport->accepted.occurrenceId == selection.occurrenceId) ||
+             (selection.detectorReport->selectedReject.present && selection.detectorReport->selectedReject.occurrenceId == selection.occurrenceId));
         selection.dtMs = static_cast<long>(_sequenceTest.bestRejectedInWindow.primaryStartMs) - static_cast<long>(trialOnsetAnchorMs);
         selection.durationMs = _sequenceTest.bestRejectedInWindow.primaryDurationMs;
         selection.strength = _sequenceTest.bestRejectedInWindow.primaryStrength;

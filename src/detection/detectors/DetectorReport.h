@@ -13,6 +13,7 @@ Only keep fields another detector could plausibly expose with the same meaning.
 */
 struct AcceptedOccurrenceSummary {
     bool present = false;
+    unsigned long occurrenceId = 0;
     unsigned long startMs = 0;
     unsigned long peakMs = 0;
     unsigned long endMs = 0;
@@ -45,6 +46,7 @@ struct SelectedRejectSummary {
     bool present = false;
     DetectorRejectClass rejectClass = DetectorRejectClass::None;
     const char* detectorReason = "none";
+    unsigned long occurrenceId = 0;
     unsigned long startMs = 0;
     unsigned long peakMs = 0;
     unsigned long endMs = 0;
@@ -273,6 +275,10 @@ struct DetectorReport {
     DetectorId detectorId = DetectorId::Unknown;
     unsigned long reportStartMs = 0;
     unsigned long reportEndMs = 0;
+    const char* sourceSelection = "none";
+    unsigned long sourceOccurrenceId = 0;
+    unsigned long sourceCandidateId = 0;
+    bool sourceReportMatched = false;
     AcceptedOccurrenceSummary accepted = {};
     SelectedRejectSummary selectedReject = {};
     ThresholdSummary thresholds = {};

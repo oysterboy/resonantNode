@@ -46,6 +46,7 @@ struct Occurrence {
     // Canonical generic accepted-event shell.
     DetectorId detectorId = DetectorId::Unknown;
     OccurrenceType occurrenceType = OccurrenceType::None;
+    unsigned long occurrenceId = 0;
     bool present = false;
     bool valid = false;
 

@@ -899,11 +899,14 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
     const bool hasInspectedOccurrence = reportInspectedOccurrence != nullptr && reportInspectedOccurrence->occurrence.present;
     const detection::FieldState* runtimeFieldState = &_detection.fieldState();
     const detection::DetectionProfile& selectedProfile = detection::detectionProfileForKind(_sequenceTest.profileKind);
-    const detection::DetectorReport& activeDetectorReport = _detection.activeDetectorReport();
-    const bool activeDetectorReportAvailable = activeDetectorReport.detectorId != detection::DetectorId::Unknown;
-    if (activeDetectorReportAvailable) {
-        report.detectorReport = &activeDetectorReport;
-    }
+    report.detectorReport = selectedTrial.detectorReport;
+    report.sourceSelection = selectedTrial.detectorReport != nullptr
+        ? (selectedTrial.kind == SequenceTrialSelection::Kind::RejectedPattern ? "selected_reject"
+           : (selectedTrial.kind == SequenceTrialSelection::Kind::Miss ? "none" : "selected_occurrence"))
+        : "none";
+    report.sourceOccurrenceId = selectedTrial.occurrenceId;
+    report.sourceCandidateId = selectedTrial.occurrenceId;
+    report.sourceReportMatched = selectedTrial.reportMatched;
     const bool trialHasPipelineEvidence = (hasPatternResult || hasInspectedOccurrence)
         && diagnostics.rawPendingCount > 0;
     const long reportPatternDtMs = hasPatternResult

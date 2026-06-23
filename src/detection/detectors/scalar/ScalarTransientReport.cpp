@@ -129,6 +129,7 @@ void ScalarTransientDetector::buildReport(detection::DetectorReport& out, unsign
     out = {};
     out.detectorId = detection::DetectorId::ScalarTransient;
     out.accepted = _acceptedOccurrence;
+    out.accepted.occurrenceId = _acceptedOccurrenceId;
     out.thresholds.minDurationMs = _minTransientDurationMs;
     out.thresholds.maxDurationMs = _maxTransientDurationMs;
     out.aggregates.acceptedCount = _peakAcceptedCount;
@@ -138,6 +139,7 @@ void ScalarTransientDetector::buildReport(detection::DetectorReport& out, unsign
     const bool selectedRejectPresent = !out.accepted.present && _selectedRejectPresent;
     if (selectedRejectPresent) {
         out.selectedReject = _selectedReject;
+        out.selectedReject.occurrenceId = _selectedRejectOccurrenceId;
     } else {
         out.scalar.selectedReject = {};
     }

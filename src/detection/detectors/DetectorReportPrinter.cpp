@@ -20,6 +20,14 @@ void printDetectorReportGenericLine(const char* prefix, unsigned long trial, con
     Serial.print(trial);
     Serial.print(" detector=");
     Serial.print(detectorIdName(detectorReport.detectorId));
+    Serial.print(" source.selection=");
+    Serial.print(detectorReport.sourceSelection != nullptr ? detectorReport.sourceSelection : "none");
+    Serial.print(" source.occurrence_id=");
+    Serial.print(detectorReport.sourceOccurrenceId);
+    Serial.print(" source.candidate_id=");
+    Serial.print(detectorReport.sourceCandidateId);
+    Serial.print(" source.report_matched=");
+    Serial.print(detectorReport.sourceReportMatched ? 1 : 0);
     Serial.print(" window.start_ms=");
     Serial.print(detectorReport.reportStartMs);
     Serial.print(" window.end_ms=");

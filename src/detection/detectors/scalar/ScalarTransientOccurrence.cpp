@@ -60,7 +60,9 @@ void ScalarTransientDetector::captureAcceptedOccurrence(unsigned long releaseObs
 
     _acceptedOccurrencePresent = true;
     _acceptedOccurrenceReleaseMs = releaseObservedUs / 1000UL;
+    _acceptedOccurrenceId = _currentOccurrenceId != 0 ? _currentOccurrenceId : _acceptedOccurrenceReleaseMs;
     _acceptedOccurrence.present = true;
+    _acceptedOccurrence.occurrenceId = _acceptedOccurrenceId;
     _acceptedOccurrence.startMs = _peakStartedUs / 1000UL;
     _acceptedOccurrence.peakMs = _peakStrengthObservedUs / 1000UL;
     _acceptedOccurrence.endMs = _acceptedOccurrenceReleaseMs;
@@ -114,8 +116,10 @@ void ScalarTransientDetector::captureSelectedReject(unsigned long releaseObserve
 
     _selectedRejectPresent = true;
     _selectedReject.present = true;
+    _selectedRejectOccurrenceId = _currentOccurrenceId != 0 ? _currentOccurrenceId : rejectEndMs;
     _selectedReject.rejectClass = scalarTransientRejectClass(_lastTransientRejectReason);
     _selectedReject.detectorReason = lastTransientRejectReasonName();
+    _selectedReject.occurrenceId = _selectedRejectOccurrenceId;
     _selectedReject.startMs = rejectStartMs;
     _selectedReject.peakMs = rejectPeakMs;
     _selectedReject.endMs = rejectEndMs;
@@ -154,6 +158,10 @@ void ScalarTransientDetector::capturePendingOccurrence(const AudioSamplePacket& 
     _pendingOccurrence = {};
     _pendingOccurrence.detectorId = detection::DetectorId::ScalarTransient;
     _pendingOccurrence.occurrenceType = detection::OccurrenceType::Scalar;
+    if (_currentOccurrenceId == 0) {
+        _currentOccurrenceId = _acceptedOccurrenceStartMs != 0 ? _acceptedOccurrenceStartMs : audioSamplePacket.timeMs;
+    }
+    _pendingOccurrence.occurrenceId = _currentOccurrenceId;
     _pendingOccurrence.present = true;
     _pendingOccurrence.valid = true;
     _pendingOccurrence.startSample = _acceptedOccurrenceStartSample;

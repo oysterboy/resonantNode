@@ -145,6 +145,8 @@ void AnalyzerApp::printSequenceInspectCanonical(const AnalyzerReport& report) co
         Serial.print(static_cast<unsigned long>(observationIndex));
         Serial.print(" inspect.observation_count=");
         Serial.print(static_cast<unsigned long>(observationCount));
+        Serial.print(" inspect.occurrence_id=");
+        Serial.print(report.sourceOccurrenceId);
         Serial.print(" inspect.label=");
         Serial.print(detection::inspectionTargetName(target));
         Serial.print(" inspect.stream=");
@@ -209,6 +211,8 @@ void AnalyzerApp::printSequenceInspectCanonical(const AnalyzerReport& report) co
     Serial.print("SEQ_INSPECT_FULL");
     Serial.print(" inspect.observation_count=");
     Serial.print(static_cast<unsigned long>(observationCount));
+    Serial.print(" inspect.occurrence_id=");
+    Serial.print(report.sourceOccurrenceId);
     Serial.print(" inspect.label=");
     Serial.print(observationCount > 0 ? detection::inspectionTargetName(report.profileDetail.inspectionObservationTargets[0]) : "none");
     Serial.print(" inspect.stream=");
@@ -258,6 +262,14 @@ void AnalyzerApp::printSequenceSourceCanonical(const AnalyzerReport& report) con
     }
 
     Serial.print("SEQ_SOURCE");
+    Serial.print(" source.selection=");
+    Serial.print(report.sourceSelection != nullptr ? report.sourceSelection : "none");
+    Serial.print(" source.occurrence_id=");
+    Serial.print(report.sourceOccurrenceId);
+    Serial.print(" source.candidate_id=");
+    Serial.print(report.sourceCandidateId);
+    Serial.print(" source.report_matched=");
+    Serial.print(report.sourceReportMatched ? 1 : 0);
     Serial.print(" source.kind=");
     Serial.print(report.occurrences.kind != nullptr ? report.occurrences.kind : "none");
     Serial.print(" source.source=");
@@ -310,6 +322,12 @@ void AnalyzerApp::printSequenceDetailCanonical(const AnalyzerReport& report) con
     Serial.print(report.context.trial);
     Serial.print(" profile=");
     Serial.print(report.context.profile != nullptr ? report.context.profile : "unknown");
+    Serial.print(" source.selection=");
+    Serial.print(report.sourceSelection != nullptr ? report.sourceSelection : "none");
+    Serial.print(" source.occurrence_id=");
+    Serial.print(report.sourceOccurrenceId);
+    Serial.print(" source.report_matched=");
+    Serial.print(report.sourceReportMatched ? 1 : 0);
     Serial.print(" DETECTOR:");
     Serial.print(" lifecycle=");
     Serial.print(report.detectorReport != nullptr && report.detectorReport->accepted.present ? "valid" : "invalid");

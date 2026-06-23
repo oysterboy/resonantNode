@@ -37,6 +37,7 @@ void FrequencyMatchDetector::buildReport(detection::DetectorReport& out, unsigne
     out = {};
     out.detectorId = detection::DetectorId::FrequencyMatch;
     out.accepted = _acceptedOccurrence;
+    out.accepted.occurrenceId = acceptedOccurrenceId;
     out.frequency.accepted = _acceptedDetail;
     out.thresholds.minDurationMs = pendingMinDurationMs;
     out.thresholds.maxDurationMs = pendingMaxDurationMs;
@@ -52,6 +53,7 @@ void FrequencyMatchDetector::buildReport(detection::DetectorReport& out, unsigne
         out.selectedReject.present = true;
         out.selectedReject.rejectClass = frequencyRejectClassFromReason(bestRejectReason);
         out.selectedReject.detectorReason = bestRejectReason;
+        out.selectedReject.occurrenceId = selectedRejectOccurrenceId;
         out.selectedReject.startMs = bestOpenMs;
         out.selectedReject.peakMs = bestPeakMs;
         out.selectedReject.endMs = bestCloseMs;

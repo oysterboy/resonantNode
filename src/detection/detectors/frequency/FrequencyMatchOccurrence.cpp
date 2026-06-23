@@ -18,6 +18,7 @@ void FrequencyMatchDetector::capturePendingOccurrence(const AudioSamplePacket& a
     _pendingOccurrence = pendingOccurrence;
     _pendingOccurrence.detectorId = detection::DetectorId::FrequencyMatch;
     _pendingOccurrence.occurrenceType = detection::OccurrenceType::Frequency;
+    _pendingOccurrence.occurrenceId = acceptedOccurrenceId != 0 ? acceptedOccurrenceId : lastPendingId;
     _pendingOccurrence.present = true;
     _pendingOccurrence.confidence = _pendingOccurrence.valid ? 1.0f : 0.0f;
     _pendingOccurrence.frequency.present = true;
@@ -34,6 +35,7 @@ void FrequencyMatchDetector::capturePendingOccurrence(const AudioSamplePacket& a
         const float mean = pendingMean();
         const float rms = pendingRms();
         _acceptedOccurrence.present = true;
+        _acceptedOccurrence.occurrenceId = _pendingOccurrence.occurrenceId;
         _acceptedOccurrence.startMs = _pendingOccurrence.startMs;
         _acceptedOccurrence.peakMs = _pendingOccurrence.peakMs;
         _acceptedOccurrence.endMs = _pendingOccurrence.endMs;

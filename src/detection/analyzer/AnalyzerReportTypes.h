@@ -371,6 +371,10 @@ struct AnalyzerReport {
     AnalyzerExpectedEvent expected;
     // Canonical detector-stage truth for clean inspect/detail/summary paths.
     const detection::DetectorReport* detectorReport = nullptr;
+    const char* sourceSelection = "none";
+    unsigned long sourceOccurrenceId = 0;
+    unsigned long sourceCandidateId = 0;
+    bool sourceReportMatched = false;
 
     AnalyzerPatternObservation primaryPattern;
     AnalyzerOccurrenceObservation occurrences;

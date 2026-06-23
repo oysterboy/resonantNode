@@ -35,6 +35,36 @@ detection::DetectorId cleanSummaryDetectorId(const AnalyzerReport& report) {
     return report.detectorReport != nullptr ? report.detectorReport->detectorId : detection::DetectorId::Unknown;
 }
 
+bool detectorReportMatchesOccurrence(const detection::DetectorReport* detectorReport,
+                                    const detection::InspectedOccurrence* inspectedOccurrence) {
+    if (detectorReport == nullptr || inspectedOccurrence == nullptr || !inspectedOccurrence->occurrence.present) {
+        return false;
+    }
+
+    struct SummaryMatch {
+        static bool matches(const detection::AcceptedOccurrenceSummary& summary,
+                            const detection::InspectedOccurrence* occurrence) {
+            return summary.present &&
+                   summary.occurrenceId == occurrence->occurrence.occurrenceId &&
+                   summary.startMs == occurrence->occurrence.startMs &&
+                   summary.endMs == occurrence->occurrence.endMs;
+        }
+
+        static bool matches(const detection::SelectedRejectSummary& summary,
+                            const detection::InspectedOccurrence* occurrence) {
+            return summary.present &&
+                   summary.occurrenceId == occurrence->occurrence.occurrenceId &&
+                   summary.startMs == occurrence->occurrence.startMs &&
+                   summary.endMs == occurrence->occurrence.endMs;
+        }
+    };
+
+    const auto& occurrence = inspectedOccurrence;
+    const bool acceptedMatches = SummaryMatch::matches(detectorReport->accepted, occurrence);
+    const bool rejectedMatches = SummaryMatch::matches(detectorReport->selectedReject, occurrence);
+    return acceptedMatches || rejectedMatches;
+}
+
 } // namespace
 
 void AnalyzerApp::startSequenceTest(const PendingSequenceStart& pending) {
@@ -348,7 +378,11 @@ void AnalyzerApp::updateSequenceTest(unsigned long now) {
         return;
     }
 
-    if (_sequenceTest.currentTrial > 0 && timing::atOrAfter(now, _sequenceTest.currentTrialEndMs)) {
+    if (_sequenceTest.currentTrial > 0 && !_sequenceTest.currentTrialFinalized) {
+        const unsigned long finalizeAtMs = _sequenceTest.currentTrialEndMs + _sequenceTest.reportSettleMs;
+        if (timing::beforeDeadline(now, finalizeAtMs)) {
+            return;
+        }
         finalizeSequenceTrial(now);
     }
 
@@ -461,9 +495,7 @@ AnalyzerApp::SequenceTrialSelection AnalyzerApp::selectSequenceTrialSelection(un
         selection.occurrenceId = selection.inspectedOccurrence != nullptr
             ? selection.inspectedOccurrence->occurrence.occurrenceId
             : 0UL;
-        selection.reportMatched = selection.detectorReport != nullptr &&
-            ((selection.detectorReport->accepted.present && selection.detectorReport->accepted.occurrenceId == selection.occurrenceId) ||
-             (selection.detectorReport->selectedReject.present && selection.detectorReport->selectedReject.occurrenceId == selection.occurrenceId));
+        selection.reportMatched = detectorReportMatchesOccurrence(selection.detectorReport, selection.inspectedOccurrence);
         selection.dtMs = static_cast<long>(_sequenceTest.primaryValidPattern.primaryStartMs) - static_cast<long>(trialOnsetAnchorMs);
         selection.durationMs = _sequenceTest.primaryValidPattern.primaryDurationMs;
         selection.strength = _sequenceTest.primaryValidPattern.primaryStrength;
@@ -483,9 +515,7 @@ AnalyzerApp::SequenceTrialSelection AnalyzerApp::selectSequenceTrialSelection(un
         selection.occurrenceId = selection.inspectedOccurrence != nullptr
             ? selection.inspectedOccurrence->occurrence.occurrenceId
             : 0UL;
-        selection.reportMatched = selection.detectorReport != nullptr &&
-            ((selection.detectorReport->accepted.present && selection.detectorReport->accepted.occurrenceId == selection.occurrenceId) ||
-             (selection.detectorReport->selectedReject.present && selection.detectorReport->selectedReject.occurrenceId == selection.occurrenceId));
+        selection.reportMatched = detectorReportMatchesOccurrence(selection.detectorReport, selection.inspectedOccurrence);
         selection.dtMs = static_cast<long>(_sequenceTest.bestRejectedInWindow.primaryStartMs) - static_cast<long>(trialOnsetAnchorMs);
         selection.durationMs = _sequenceTest.bestRejectedInWindow.primaryDurationMs;
         selection.strength = _sequenceTest.bestRejectedInWindow.primaryStrength;
@@ -500,9 +530,7 @@ AnalyzerApp::SequenceTrialSelection AnalyzerApp::selectSequenceTrialSelection(un
             ? &_sequenceTest.primaryAcceptedDetectorReport
             : nullptr;
         selection.occurrenceId = selection.inspectedOccurrence->occurrence.occurrenceId;
-        selection.reportMatched = selection.detectorReport != nullptr &&
-            ((selection.detectorReport->accepted.present && selection.detectorReport->accepted.occurrenceId == selection.occurrenceId) ||
-             (selection.detectorReport->selectedReject.present && selection.detectorReport->selectedReject.occurrenceId == selection.occurrenceId));
+        selection.reportMatched = detectorReportMatchesOccurrence(selection.detectorReport, selection.inspectedOccurrence);
         selection.dtMs = static_cast<long>(_sequenceTest.primaryAcceptedInspectedOccurrence.occurrence.startMs) - static_cast<long>(trialOnsetAnchorMs);
         selection.durationMs = _sequenceTest.primaryAcceptedInspectedOccurrence.occurrence.durationMs;
         selection.strength = _sequenceTest.primaryAcceptedInspectedOccurrence.occurrence.strength;
@@ -629,7 +657,6 @@ void AnalyzerApp::updateCleanSequenceSummary(const AnalyzerReport& report) {
         summary.detectorId = cleanSummaryDetectorId(report);
     }
     summary.trials = static_cast<unsigned int>(_sequenceTest.totalTrials);
-    summary.completed = static_cast<unsigned int>(_sequenceTest.completedTrials + 1UL);
 
     switch (report.classification.result) {
         case AnalyzerResult::Expected:
@@ -650,12 +677,18 @@ void AnalyzerApp::updateCleanSequenceSummary(const AnalyzerReport& report) {
         case AnalyzerResult::Rejected:
             ++summary.rejectedTrials;
             break;
+        case AnalyzerResult::Ambiguous:
+            ++summary.ambiguousTrials;
+            break;
+        case AnalyzerResult::TooDense:
+            ++summary.tooDenseTrials;
+            break;
         case AnalyzerResult::Unknown:
         default:
             break;
     }
 
-    if (report.debug.duplicates > 0) {
+    if (report.classification.result == AnalyzerResult::Duplicate) {
         ++summary.duplicateTrials;
     }
 
@@ -692,6 +725,17 @@ void AnalyzerApp::updateCleanSequenceSummary(const AnalyzerReport& report) {
         summary.totalConfidence += report.primaryPattern.confidence;
         ++summary.confidenceCount;
     }
+
+    summary.completed =
+        summary.expectedTrials +
+        summary.earlyTrials +
+        summary.lateTrials +
+        summary.missTrials +
+        summary.duplicateTrials +
+        summary.unexpectedTrials +
+        summary.rejectedTrials +
+        summary.ambiguousTrials +
+        summary.tooDenseTrials;
 }
 
 unsigned long AnalyzerApp::sequenceTrialOnsetAnchorMs() const {

@@ -166,7 +166,7 @@ inline const char* scalarObservedStreamDisplayName(detection::FeatureStreamId va
         case detection::FeatureStreamId::AmpMagnitude:
             return "AmpMagnitude";
         case detection::FeatureStreamId::AmpEnvelope:
-            return "Scalar";
+            return "AmpEnvelope";
         case detection::FeatureStreamId::FrequencyTarget:
             return "FrequencyTarget";
         case detection::FeatureStreamId::FrequencyContrast:
@@ -348,6 +348,8 @@ struct AnalyzerCleanSummary {
     unsigned int unexpectedTrials = 0;
     unsigned int rejectedTrials = 0;
     unsigned int bufferOverrunTrials = 0;
+    unsigned int ambiguousTrials = 0;
+    unsigned int tooDenseTrials = 0;
 
     unsigned int detectorAcceptedTrials = 0;
     unsigned int detectorSelectedRejectTrials = 0;
@@ -368,6 +370,7 @@ struct AnalyzerReport {
     // Canonical detector-stage truth for clean inspect/detail/summary paths.
     const detection::DetectorReport* detectorReport = nullptr;
     const char* sourceSelection = "none";
+    const char* sourceReportReason = "none";
     unsigned long sourceOccurrenceId = 0;
     unsigned long sourceCandidateId = 0;
     bool sourceReportMatched = false;

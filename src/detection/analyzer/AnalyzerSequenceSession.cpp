@@ -184,6 +184,11 @@ void AnalyzerApp::startSequenceTest(const PendingSequenceStart& pending) {
     _sequenceTest.currentTrialEndMs = 0;
     _sequenceTest.currentTrialOnsetDetectedMs = 0;
     _sequenceTest.currentTrialPatternDetectedMs = 0;
+    _sequenceTest.sourceCandidateCount = 0;
+    _sequenceTest.sourceAcceptedCount = 0;
+    _sequenceTest.sourceRejectedCount = 0;
+    _sequenceTest.inspectedOccurrenceCount = 0;
+    _sequenceTest.patternResultCount = 0;
     _sequenceTest.primaryValidPatternCaptured = false;
     _sequenceTest.primaryValidPattern = {};
     _sequenceTest.primaryValidInspectedOccurrence = {};
@@ -198,6 +203,8 @@ void AnalyzerApp::startSequenceTest(const PendingSequenceStart& pending) {
     _sequenceTest.bestRejectedInWindow = {};
     _sequenceTest.bestRejectedInspectedOccurrence = {};
     _sequenceTest.bestRejectedDetectorReport = {};
+    _sequenceTest.selectedSourceRejectCaptured = false;
+    _sequenceTest.selectedSourceReject = {};
     _sequenceTest.currentTrialFinalized = false;
     _sequenceTest.currentTrialUnexpected = 0;
     _sequenceTest.currentTrialRejected = 0;
@@ -512,6 +519,19 @@ AnalyzerApp::SequenceTrialSelection AnalyzerApp::selectSequenceTrialSelection(un
         selection.dtMs = static_cast<long>(_sequenceTest.bestRejectedInWindow.primaryStartMs) - static_cast<long>(trialOnsetAnchorMs);
         selection.durationMs = _sequenceTest.bestRejectedInWindow.primaryDurationMs;
         selection.strength = _sequenceTest.bestRejectedInWindow.primaryStrength;
+        selection.result = AnalyzerResult::Rejected;
+        return selection;
+    }
+
+    if (_sequenceTest.selectedSourceRejectCaptured &&
+        _sequenceTest.selectedSourceReject.detectorReport.detectorId != detection::DetectorId::Unknown) {
+        selection.kind = SequenceTrialSelection::Kind::RejectedSourceCandidate;
+        selection.detectorReport = &_sequenceTest.selectedSourceReject.detectorReport;
+        selection.occurrenceId = static_cast<unsigned long>(_sequenceTest.selectedSourceReject.detectorReport.selectedReject.occurrenceId);
+        selection.reportMatched = true;
+        selection.dtMs = static_cast<long>(_sequenceTest.selectedSourceReject.detectorReport.selectedReject.startMs) - static_cast<long>(trialOnsetAnchorMs);
+        selection.durationMs = _sequenceTest.selectedSourceReject.detectorReport.selectedReject.durationMs;
+        selection.strength = _sequenceTest.selectedSourceReject.detectorReport.selectedReject.strength;
         selection.result = AnalyzerResult::Rejected;
         return selection;
     }

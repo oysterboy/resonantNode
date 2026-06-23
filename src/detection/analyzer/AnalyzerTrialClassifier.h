@@ -16,8 +16,13 @@ struct AnalyzerSequenceClassificationInput {
     AnalyzerResult result = AnalyzerResult::Unknown;
     // Generic timing delta for the selected trial PatternResult when present.
     long dtMs = -1;
-    // Runtime-private pending count used by trial classification.
-    unsigned long rawPendingCount = 0;
+    // Trial-local pipeline evidence counts.
+    unsigned long sourceCandidateCount = 0;
+    unsigned long sourceAcceptedCount = 0;
+    unsigned long sourceRejectedCount = 0;
+    unsigned long inspectedOccurrenceCount = 0;
+    unsigned long patternResultCount = 0;
+    unsigned long pipelineQueueOverflowCount = 0;
     // Runtime-private buffer overrun flag.
     bool bufferOverrun = false;
     // Canonical PatternResult availability for the finalized trial snapshot.

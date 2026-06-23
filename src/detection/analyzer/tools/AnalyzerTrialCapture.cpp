@@ -37,8 +37,7 @@ detection::FrequencyBandMeasurementPacket AnalyzerApp::captureFrequencyMeasureme
 }
 
 void AnalyzerApp::handleSequencePending(
-    const detection::PatternResult& patternResult,
-    const detection::InspectedOccurrence* selectedInspectedOccurrence,
+    const detection::DetectionPipelineEvent& event,
     const detection::FrequencyBandMeasurementPacket* liveFrequencyMeasurementPacket
 ) {
     if (!_sequenceTest.active || _sequenceTest.currentTrial == 0) {
@@ -47,19 +46,72 @@ void AnalyzerApp::handleSequencePending(
 
     auto& diagnostics = _sequenceTest.currentTrialDiagnostics;
     diagnostics.rawPendingCount++;
+    ++_sequenceTest.sourceCandidateCount;
+    if (event.hasPatternResult) {
+        ++_sequenceTest.patternResultCount;
+    }
+    if (event.hasInspectedOccurrence && event.inspectedOccurrence.occurrence.present) {
+        ++_sequenceTest.inspectedOccurrenceCount;
+    }
+    if (event.kind == detection::DetectionEventKind::AcceptedPipelineResult) {
+        ++_sequenceTest.sourceAcceptedCount;
+    } else if (event.kind == detection::DetectionEventKind::RejectedSourceCandidate) {
+        ++_sequenceTest.sourceRejectedCount;
+    }
 
-    const unsigned long onsetMs = patternResult.primaryStartMs;
+    const detection::DetectorReport selectedDetectorReport = event.hasSourceRecord
+        ? event.sourceRecord.detectorReport
+        : _detection.activeDetectorReport();
+    const bool selectedDetectorReportAvailable = selectedDetectorReport.detectorId != detection::DetectorId::Unknown;
+    const detection::InspectedOccurrence* selectedInspectedOccurrence =
+        event.hasInspectedOccurrence && event.inspectedOccurrence.occurrence.present
+            ? &event.inspectedOccurrence
+            : nullptr;
+    const detection::PatternResult* patternResult = event.hasPatternResult ? &event.patternResult : nullptr;
+
+    if (event.kind == detection::DetectionEventKind::RejectedSourceCandidate) {
+        if (event.hasSourceRecord) {
+            _sequenceTest.selectedSourceRejectCaptured = true;
+            _sequenceTest.selectedSourceReject = event.sourceRecord;
+        }
+        const unsigned long sourceOnsetMs = selectedDetectorReport.selectedReject.present
+            ? selectedDetectorReport.selectedReject.startMs
+            : 0UL;
+        const long dtFromTriggerMs = sourceOnsetMs > 0
+            ? static_cast<long>(sourceOnsetMs) - static_cast<long>(_sequenceTest.currentTrialScheduledAtMs)
+            : 0L;
+        const bool preWindow = sourceOnsetMs > 0 && sourceOnsetMs < _sequenceTest.currentTrialStartMs + _sequenceTest.windowStartOffsetMs;
+        const bool postWindow = sourceOnsetMs > _sequenceTest.currentTrialEndMs;
+        const bool inWindow = sourceOnsetMs > 0 && !preWindow && !postWindow;
+        if (inWindow) {
+            _sequenceTest.rejectedInWindowCount++;
+            _sequenceTest.currentTrialRejected++;
+        }
+        if (event.hasSourceRecord) {
+            _sequenceTest.selectedSourceReject = event.sourceRecord;
+        }
+        diagnostics.runtimePatternCaptured = diagnostics.runtimePatternCaptured || event.hasPatternResult;
+        (void)dtFromTriggerMs;
+        if (liveFrequencyMeasurementPacket != nullptr) {
+            (void)liveFrequencyMeasurementPacket;
+        }
+        return;
+    }
+
+    if (patternResult == nullptr) {
+        return;
+    }
+
+    const unsigned long onsetMs = patternResult->primaryStartMs;
     const long dtFromTriggerMs = static_cast<long>(onsetMs) - static_cast<long>(_sequenceTest.currentTrialScheduledAtMs);
     const long dtFromTrialStartMs = static_cast<long>(onsetMs) - static_cast<long>(_sequenceTest.currentTrialStartMs);
 
-    const bool bufferOverrunSeenNow = patternResult.primaryAudioOverflow
+    const bool bufferOverrunSeenNow = patternResult->primaryAudioOverflow
                                       || _audioSource.stats().overflowCount != _sequenceTest.trialOverflowCountAtStart;
     if (bufferOverrunSeenNow) {
         _sequenceTest.bufferOverrun = true;
     }
 
-    const detection::DetectorReport selectedDetectorReport = _detection.activeDetectorReport();
-    const bool selectedDetectorReportAvailable = selectedDetectorReport.detectorId != detection::DetectorId::Unknown;
     const char* selectedSourceSelection = selectedInspectedOccurrence != nullptr &&
         selectedInspectedOccurrence->decision == detection::OccurrenceDecision::Rejected
         ? "selected_reject"
@@ -86,21 +138,21 @@ void AnalyzerApp::handleSequencePending(
         entry.pendingMs = onsetMs;
         entry.dtFromTriggerMs = dtFromTriggerMs;
         entry.dtFromTrialStartMs = dtFromTrialStartMs;
-        entry.durationMs = patternResult.primaryDurationMs;
-        entry.strength = patternResult.primaryStrength;
+        entry.durationMs = patternResult->primaryDurationMs;
+        entry.strength = patternResult->primaryStrength;
         entry.origin = origin;
-        entry.peakMs = patternResult.primaryPeakMs;
-        entry.endDtMs = dtFromTriggerMs >= 0 ? dtFromTriggerMs + static_cast<long>(patternResult.primaryDurationMs) : -1;
-        entry.patternValid = patternResult.valid;
-        entry.patternAccepted = patternResult.patternAccepted;
-        entry.patternMatched = patternResult.patternMatched;
-        entry.supportMatched = patternResult.supportMatched;
-        entry.behaviorEligible = patternResult.valid;
+        entry.peakMs = patternResult->primaryPeakMs;
+        entry.endDtMs = dtFromTriggerMs >= 0 ? dtFromTriggerMs + static_cast<long>(patternResult->primaryDurationMs) : -1;
+        entry.patternValid = patternResult->valid;
+        entry.patternAccepted = patternResult->patternAccepted;
+        entry.patternMatched = patternResult->patternMatched;
+        entry.supportMatched = patternResult->supportMatched;
+        entry.behaviorEligible = patternResult->valid;
         entry.duplicatePending = duplicatePending;
         entry.pendingClass = pendingClass;
-        entry.patternType = patternResult.type;
-        entry.reasonCode = patternResult.reasonCode;
-        entry.rejectReasonCode = patternResult.rejectReason;
+        entry.patternType = patternResult->type;
+        entry.reasonCode = patternResult->reasonCode;
+        entry.rejectReasonCode = patternResult->rejectReason;
     } else {
         diagnostics.pendingOverflowCount++;
     }
@@ -113,11 +165,11 @@ void AnalyzerApp::handleSequencePending(
         diagnostics.pendingPostWindowCount++;
     }
 
-    if (!diagnostics.bestPendingAccepted || patternResult.primaryStrength > diagnostics.bestPendingStrength) {
+    if (!diagnostics.bestPendingAccepted || patternResult->primaryStrength > diagnostics.bestPendingStrength) {
         diagnostics.bestPendingAccepted = true;
         diagnostics.bestPendingDtFromTriggerMs = dtFromTriggerMs;
-        diagnostics.bestPendingDurationMs = patternResult.primaryDurationMs;
-        diagnostics.bestPendingStrength = patternResult.primaryStrength;
+        diagnostics.bestPendingDurationMs = patternResult->primaryDurationMs;
+        diagnostics.bestPendingStrength = patternResult->primaryStrength;
         diagnostics.bestPendingOrigin = origin;
     }
 
@@ -132,7 +184,7 @@ void AnalyzerApp::handleSequencePending(
     if (selectedInspectedOccurrence != nullptr
         && selectedInspectedOccurrence->occurrence.present
         && selectedInspectedOccurrence->decision == detection::OccurrenceDecision::Accepted
-        && patternResult.valid
+        && patternResult->valid
         && !_sequenceTest.primaryValidPatternCaptured
         && !_sequenceTest.primaryAcceptedOccurrenceCaptured) {
         _sequenceTest.primaryAcceptedOccurrenceCaptured = true;
@@ -155,24 +207,24 @@ void AnalyzerApp::handleSequencePending(
         }
         _sequenceTest.currentTrialDiagnostics.patternAccepted = true;
         _sequenceTest.currentTrialDiagnostics.acceptedPatternMs = onsetMs;
-        _sequenceTest.currentTrialDiagnostics.acceptedPatternOnsetStrength = patternResult.primaryOnsetStrength;
-        _sequenceTest.currentTrialDiagnostics.acceptedPatternStrength = patternResult.primaryStrength;
-        _sequenceTest.currentTrialDiagnostics.acceptedPatternDurationMs = patternResult.primaryDurationMs;
-        _sequenceTest.currentTrialDiagnostics.acceptedPatternReleaseStrength = patternResult.primaryReleaseStrength;
-        _sequenceTest.currentTrialDiagnostics.acceptedPatternPeakMs = patternResult.primaryPeakMs;
-        _sequenceTest.currentTrialDiagnostics.acceptedPatternReleaseMs = patternResult.primaryStartMs + patternResult.primaryDurationMs;
-        _sequenceTest.currentTrialDiagnostics.acceptedAmbientBaseline = patternResult.primaryAmbientBaseline;
+        _sequenceTest.currentTrialDiagnostics.acceptedPatternOnsetStrength = patternResult->primaryOnsetStrength;
+        _sequenceTest.currentTrialDiagnostics.acceptedPatternStrength = patternResult->primaryStrength;
+        _sequenceTest.currentTrialDiagnostics.acceptedPatternDurationMs = patternResult->primaryDurationMs;
+        _sequenceTest.currentTrialDiagnostics.acceptedPatternReleaseStrength = patternResult->primaryReleaseStrength;
+        _sequenceTest.currentTrialDiagnostics.acceptedPatternPeakMs = patternResult->primaryPeakMs;
+        _sequenceTest.currentTrialDiagnostics.acceptedPatternReleaseMs = patternResult->primaryStartMs + patternResult->primaryDurationMs;
+        _sequenceTest.currentTrialDiagnostics.acceptedAmbientBaseline = patternResult->primaryAmbientBaseline;
         _sequenceTest.currentTrialDiagnostics.lastRejectStrength = 0.0f;
         _sequenceTest.currentTrialDiagnostics.lastRejectDurationMs = 0;
         _sequenceTest.currentTrialPatternDetectedMs = onsetMs;
     }
 
-    if (!patternResult.valid) {
+    if (!patternResult->valid) {
         const bool shouldUpdateBestRejected = !_sequenceTest.bestRejectedPatternCaptured
-            || patternResult.primaryStrength > _sequenceTest.bestRejectedInWindow.primaryStrength;
+            || patternResult->primaryStrength > _sequenceTest.bestRejectedInWindow.primaryStrength;
         if (shouldUpdateBestRejected) {
             _sequenceTest.bestRejectedPatternCaptured = true;
-            _sequenceTest.bestRejectedInWindow = patternResult;
+            _sequenceTest.bestRejectedInWindow = *patternResult;
             _sequenceTest.bestRejectedInspectedOccurrence = {};
             _sequenceTest.bestRejectedDetectorReport = {};
             if (selectedInspectedOccurrence != nullptr && selectedInspectedOccurrence->occurrence.present) {
@@ -186,7 +238,7 @@ void AnalyzerApp::handleSequencePending(
                 }
             }
         }
-        if (!patternResult.valid) {
+        if (!patternResult->valid) {
             _sequenceTest.rejectedInWindowCount++;
             _sequenceTest.currentTrialRejected++;
         }
@@ -197,7 +249,7 @@ void AnalyzerApp::handleSequencePending(
 
     if (!hadPrimaryBeforePending) {
         _sequenceTest.primaryValidPatternCaptured = true;
-        _sequenceTest.primaryValidPattern = patternResult;
+        _sequenceTest.primaryValidPattern = *patternResult;
         if (selectedInspectedOccurrence != nullptr && selectedInspectedOccurrence->occurrence.present) {
             _sequenceTest.primaryValidInspectedOccurrence = *selectedInspectedOccurrence;
             if (selectedDetectorReportAvailable) {
@@ -223,10 +275,10 @@ void AnalyzerApp::handleSequencePending(
     if (hadPrimaryBeforePending) {
         if (diagnostics.duplicateCount == 0) {
             diagnostics.duplicatePatternMs = onsetMs;
-            diagnostics.duplicatePatternStrength = patternResult.primaryStrength;
-            diagnostics.duplicatePatternDurationMs = patternResult.primaryDurationMs;
-            diagnostics.duplicatePatternPeakMs = patternResult.primaryPeakMs;
-            diagnostics.duplicatePatternReleaseMs = patternResult.primaryStartMs + patternResult.primaryDurationMs;
+            diagnostics.duplicatePatternStrength = patternResult->primaryStrength;
+            diagnostics.duplicatePatternDurationMs = patternResult->primaryDurationMs;
+            diagnostics.duplicatePatternPeakMs = patternResult->primaryPeakMs;
+            diagnostics.duplicatePatternReleaseMs = patternResult->primaryStartMs + patternResult->primaryDurationMs;
             diagnostics.duplicateDeltaFromPrimaryMs = diagnostics.patternAccepted
                 ? static_cast<long>(onsetMs) - static_cast<long>(diagnostics.acceptedPatternMs)
                 : 0;
@@ -244,13 +296,13 @@ void AnalyzerApp::handleSequencePending(
 
     _sequenceTest.currentTrialDiagnostics.patternAccepted = true;
     _sequenceTest.currentTrialDiagnostics.acceptedPatternMs = onsetMs;
-    _sequenceTest.currentTrialDiagnostics.acceptedPatternOnsetStrength = patternResult.primaryOnsetStrength;
-    _sequenceTest.currentTrialDiagnostics.acceptedPatternStrength = patternResult.primaryStrength;
-    _sequenceTest.currentTrialDiagnostics.acceptedPatternDurationMs = patternResult.primaryDurationMs;
-    _sequenceTest.currentTrialDiagnostics.acceptedPatternReleaseStrength = patternResult.primaryReleaseStrength;
-    _sequenceTest.currentTrialDiagnostics.acceptedPatternPeakMs = patternResult.primaryPeakMs;
-    _sequenceTest.currentTrialDiagnostics.acceptedPatternReleaseMs = patternResult.primaryStartMs + patternResult.primaryDurationMs;
-    _sequenceTest.currentTrialDiagnostics.acceptedAmbientBaseline = patternResult.primaryAmbientBaseline;
+    _sequenceTest.currentTrialDiagnostics.acceptedPatternOnsetStrength = patternResult->primaryOnsetStrength;
+    _sequenceTest.currentTrialDiagnostics.acceptedPatternStrength = patternResult->primaryStrength;
+    _sequenceTest.currentTrialDiagnostics.acceptedPatternDurationMs = patternResult->primaryDurationMs;
+    _sequenceTest.currentTrialDiagnostics.acceptedPatternReleaseStrength = patternResult->primaryReleaseStrength;
+    _sequenceTest.currentTrialDiagnostics.acceptedPatternPeakMs = patternResult->primaryPeakMs;
+    _sequenceTest.currentTrialDiagnostics.acceptedPatternReleaseMs = patternResult->primaryStartMs + patternResult->primaryDurationMs;
+    _sequenceTest.currentTrialDiagnostics.acceptedAmbientBaseline = patternResult->primaryAmbientBaseline;
     _sequenceTest.currentTrialDiagnostics.lastRejectStrength = 0.0f;
     _sequenceTest.currentTrialDiagnostics.lastRejectDurationMs = 0;
     _sequenceTest.currentTrialPatternDetectedMs = onsetMs;

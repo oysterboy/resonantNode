@@ -321,6 +321,11 @@ private:
         unsigned long currentTrialEndMs = 0;
         unsigned long currentTrialOnsetDetectedMs = 0;
         unsigned long currentTrialPatternDetectedMs = 0;
+        unsigned long sourceCandidateCount = 0;
+        unsigned long sourceAcceptedCount = 0;
+        unsigned long sourceRejectedCount = 0;
+        unsigned long inspectedOccurrenceCount = 0;
+        unsigned long patternResultCount = 0;
         bool primaryValidPatternCaptured = false;
         detection::PatternResult primaryValidPattern = {};
         detection::InspectedOccurrence primaryValidInspectedOccurrence = {};
@@ -335,6 +340,8 @@ private:
         detection::PatternResult bestRejectedInWindow = {};
         detection::InspectedOccurrence bestRejectedInspectedOccurrence = {};
         detection::DetectorReport bestRejectedDetectorReport = {};
+        bool selectedSourceRejectCaptured = false;
+        detection::SourceDiagnosticRecord selectedSourceReject = {};
         bool currentTrialFinalized = false;
         unsigned long currentTrialUnexpected = 0;
         unsigned long currentTrialRejected = 0;
@@ -434,12 +441,13 @@ private:
     detection::DetectionProfile effectiveSequenceProfile() const;
     AnalyzerReport* sequenceReportScratch();
     void buildSequenceAnalyzerReport(AnalyzerReport& report, unsigned long trialNumber, AnalyzerResult result, long dtMs, long durMs, float strength, bool bufferOverrun, unsigned long duplicateCount, const SequenceTest::TrialDiagnostics& diagnostics) const;
-    struct SequenceTrialSelection {
+        struct SequenceTrialSelection {
         enum class Kind {
             None,
             ValidPattern,
             AcceptedOccurrence,
             RejectedPattern,
+            RejectedSourceCandidate,
             Unexpected,
             Miss,
         };
@@ -459,8 +467,7 @@ private:
     unsigned long sequenceTrialOnsetAnchorMs() const;
     SequenceTrialSelection selectSequenceTrialSelection(unsigned long trialOnsetAnchorMs) const;
     void handleSequencePending(
-        const PatternResult& patternResult,
-        const detection::InspectedOccurrence* selectedInspectedOccurrence = nullptr,
+        const detection::DetectionPipelineEvent& event,
         const detection::FrequencyBandMeasurementPacket* liveFrequencyMeasurementPacket = nullptr
     );
     void updateSequenceAmbientStats(unsigned long nowMs);

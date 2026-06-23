@@ -60,6 +60,7 @@ enum class AnalyzerReason {
     ValidPatternBeforeWindow,
     ValidPatternAfterWindow,
     MissingPipelineResult,
+    PipelineQueueOverflow,
     NoOccurrence,
     OccurrenceSeenButRejected,
     InspectionFailed,
@@ -119,6 +120,8 @@ inline const char* analyzerReasonName(AnalyzerReason value) {
             return "result_after_window";
         case AnalyzerReason::MissingPipelineResult:
             return "missing_pipeline_result";
+        case AnalyzerReason::PipelineQueueOverflow:
+            return "pipeline_queue_overflow";
         case AnalyzerReason::NoOccurrence:
             return "no_occurrence_pending";
         case AnalyzerReason::OccurrenceSeenButRejected:
@@ -320,6 +323,7 @@ struct AnalyzerDebugSummary {
     unsigned int rejects = 0;
     unsigned int duplicates = 0;
     unsigned int unexpected = 0;
+    unsigned long pipelineQueueOverflows = 0;
     bool startupArtifact = false;
     bool bufferOverrun = false;
 

@@ -1,337 +1,486 @@
-# Current Pass — Trial Selection, Source Accounting, and Report Consistency
+# Detection Pipeline Reject Handling Fix
 
-## Goal
+## Problem
 
-Fix the remaining Analyzer/reporting inconsistencies without changing detector tuning or the live detector input path.
-
-The detector already consumes the live feature stream. Keep that unchanged.
-
----
-
-## Step 1 — Fix occurrence identity
-
-Each accepted occurrence must receive a new stable `occurrence_id`.
-
-Current bug:
-
-```text
-occurrence_id=34175
-```
-
-is repeated across multiple trials while timestamps change.
-
-Requirements:
-
-* assign a new ID when an occurrence is emitted,
-* never reuse the previous occurrence ID,
-* copy the same ID into:
-
-  * `Occurrence`
-  * `InspectedOccurrence`
-  * `PatternResult`
-  * selected Analyzer trial record,
-  * source diagnostic record.
-
-Add a test ensuring two accepted occurrences have different IDs.
-
----
-
-## Step 2 — Fix selection terminology
-
-A source-accepted occurrence that later fails inspection or pattern rules is not a source reject.
-
-Replace:
-
-```text
-source.selection=selected_reject
-```
-
-with:
-
-```text
-source.selection=selected_occurrence
-```
-
-Use `selected_reject` only for a detector-rejected candidate.
+`missing_pipeline_result` is currently used for trials where the detector actually created and rejected a candidate.
 
 Example:
-
-```text
-trial.result=rejected
-trial.reject_stage=pattern
-trial.reject_reason=inspection_failed
-
-source.selection=selected_occurrence
-source.valid=1
-source.reject_reason=none
-```
-
----
-
-## Step 3 — Make trial source counts real
-
-Current fields are always zero:
-
-```text
-src_total=0
-src_acc=0
-src_rej=0
-```
-
-Populate them from trial-local source activity.
-
-Required meaning:
-
-```text
-src_total   = accepted + rejected candidates in this trial
-src_acc     = accepted source occurrences in this trial
-src_rej     = detector-rejected candidates in this trial
-```
-
-Do not use run-global aggregate counters for these fields.
-
-Keep run counters separately:
-
-```text
-src_run_acc
-src_run_rej
-```
-
-or only in `SEQ_SUMMARY`.
-
----
-
-## Step 4 — Fix trial finalization order
-
-Trial 1 currently reports:
 
 ```text
 result=miss
 reject_reason=missing_pipeline_result
 ```
 
-while the next trial already contains evidence that a candidate from Trial 1 closed late.
-
-Required order:
+while detector aggregates later show:
 
 ```text
-1. stop emission window
-2. continue detector processing through settle period
-3. force-close or finalize active candidate if required by existing lifecycle rules
-4. drain accepted occurrences and rejected candidate records
-5. run inspection and pattern evaluation
-6. build trial selection
-7. print reports
-8. reset trial-local state
+aggregate.rejected_count=1
+aggregate.too_long=1
 ```
 
-Do not reset or classify the trial before the detector has completed its candidate lifecycle.
+This means the detector reject exists, but it is not transported into Analyzer trial bookkeeping.
 
-Add a regression test for a candidate closing near the trial boundary.
+The main gap is between:
+
+```text
+Detector candidate lifecycle
+→ DetectionRuntime
+→ Analyzer trial capture
+```
+
+The Inspector stream is not the cause. The detector continues to consume the live feature stream.
 
 ---
 
-## Step 5 — Make `SEQ_SOURCE_CORE` and `SEQ_SOURCE_SPEC` describe the same record
+## Root Cause
 
-Current contradiction:
+Analyzer currently captures pipeline output primarily through `PatternResult`:
 
-```text
-SEQ_SOURCE_CORE accepted.present=1
+```cpp
+while (_detection.popPatternResult(runtimePatternResult)) {
+    handleSequencePending(...);
+}
 ```
 
-but:
+A detector-rejected candidate does not produce a `PatternResult`.
+
+It only updates:
+
+- detector aggregates,
+- reject summaries,
+- mutable DetectorReport state.
+
+Therefore:
+
+- accepted occurrence → Inspector → PatternResult → Analyzer sees it,
+- detector reject → no PatternResult → Analyzer does not see it.
+
+The trial then falls through to:
 
 ```text
-SEQ_SOURCE_SPEC
-detail.scalar.inspect.reject_reason=below_threshold
-detail.scalar.inspect.valid_release=0
-detail.scalar.inspect.emit_allowed=0
+miss / missing_pipeline_result
 ```
 
-Both lines must come from the same selected accepted candidate record.
-
-Rules:
-
-* printers must not read mutable live detector state,
-* printers must not read `activeDetectorReport()`,
-* resolve the selected accepted/rejected record once,
-* pass that immutable record into both printers.
-
-If a matching diagnostic record is unavailable:
-
-```text
-source.report_matched=0
-```
-
-and omit candidate-specific details.
-
-Never print stale fallback data.
+although a real source-stage rejection occurred.
 
 ---
 
-## Step 6 — Fix source report matching
+## Additional Failure Modes
 
-`source.report_matched=1` is only valid when IDs and timestamps agree.
+### 1. Detector reject reasons are lost
 
-Validate at least:
+Possible lost reasons include:
 
 ```text
-record.occurrence_id == selected.occurrence_id
-record.start_ms == selected.start_ms
-record.end_ms == selected.end_ms
+duration_too_short
+duration_too_long
+strength_too_low
+matched_mean_too_low
+coverage_too_low
+longest_island_too_short
+gap_too_long
+peak_still_active
 ```
 
-If validation fails:
+Expected Analyzer result:
 
 ```text
-source.report_matched=0
-source.report_reason=id_mismatch
-```
-
-Do not silently accept a partially matching report.
-
----
-
-## Step 7 — Clean `SEQ_INSPECT`
-
-Keep only fields that describe the current observation.
-
-Remove:
-
-```text
-inspect.observation_index
-inspect.observation_count
-```
-
-unless needed for machine parsing.
-
-Move `inspect.occurrence_id` to the end.
-
-Preferred order:
-
-```text
-SEQ_INSPECT
-inspect.label=amp
-inspect.value=3646.375
-inspect.strength_class=weak
-inspect.valid=1
-inspect.status=observed
-inspect.sample_count=61
-inspect.coverage=0.610
-inspect.peak=4529.000
-inspect.mean=3547.276
-inspect.rms=3560.729
-inspect.median=3455.625
-inspect.p75=3646.375
-inspect.p90=4064.250
-inspect.trimmed_mean=3507.165
-inspect.input_value_count=884
-inspect.occurrence_id=<id>
-```
-
-Changes:
-
-* rename `inspect.reject_reason=scalar_observed` to:
-
-```text
-inspect.status=observed
-inspect.reject_reason=none
-```
-
-* rename AMP stream output from:
-
-```text
-Scalar
-```
-
-to:
-
-```text
-AmpEnvelope
-```
-
-* rename `fresh_value_count` to `input_value_count` for AMP.
-
----
-
-## Step 8 — Verify Inspector coverage semantics
-
-Current AMP and contrast coverage is only about `0.58–0.61`.
-
-For a roughly 100–123 ms occurrence and 1 ms bins, verify why only about 60 valid bins are selected.
-
-Check:
-
-* actual inspection window length,
-* history lookup start/end semantics,
-* whether only part of the occurrence window is inspected,
-* whether every second bin is skipped,
-* whether bins are overwritten too early,
-* whether current active bin is excluded,
-* whether timestamp comparison is inclusive/exclusive,
-* whether only fresh frequency bins are valid.
-
-Do not tune AMP thresholds until coverage semantics are confirmed.
-
-Expected reporting should include:
-
-```text
-inspect.window_ms
-inspect.expected_bin_count
-inspect.sample_count
-inspect.coverage
+result=rejected
+reject_stage=source
+reject_reason=<detector_reason>
 ```
 
 ---
 
-## Step 9 — Clarify `SEQ_TRIAL` field ownership
+### 2. Candidate may close after trial classification
 
-Rename ambiguous fields:
-
-```text
-strength
-confidence
-```
-
-to:
+Current risk:
 
 ```text
-source_strength
-pattern_confidence
+trial end
+→ Analyzer classifies trial
+→ candidate is still active
+→ candidate closes later
+→ reject appears in next trial aggregates
 ```
 
-For rejected trials:
+This causes:
+
+- `missing_pipeline_result` in Trial N,
+- shifted reject counters in Trial N+1,
+- cross-trial source diagnostics.
+
+---
+
+### 3. Onset-only frames are not candidates
+
+These states must remain distinct:
 
 ```text
-dt=na
+below_threshold
+cooldown_active
+peak_active
 ```
 
-instead of:
+Recommended semantics:
+
+| Condition | Trial result |
+|---|---|
+| No candidate opened | `miss / no_candidate` |
+| Candidate opened and rejected | `rejected / detector_reason` |
+| Candidate still active at trial end | finalize or `rejected / peak_still_active` |
+| Qualified onset blocked by cooldown | `rejected / cooldown_active` |
+| Background remains below threshold | `miss / no_candidate` |
+
+Do not classify every below-threshold frame as a reject.
+
+---
+
+### 4. `rawPendingCount` is not pipeline evidence
+
+If `rawPendingCount` is only incremented after a PatternResult, it cannot represent source-stage activity.
+
+Replace it with explicit counters:
+
+```cpp
+sourceCandidateCount
+sourceAcceptedCount
+sourceRejectedCount
+inspectedOccurrenceCount
+patternResultCount
+```
+
+---
+
+### 5. Pattern and inspection payloads may be mismatched
+
+If Runtime uses:
+
+```cpp
+popPatternResult(...)
+latestPipelineResult()
+```
+
+the popped PatternResult and latest inspected occurrence may belong to different events.
+
+Do not combine a queued result with a mutable “latest” snapshot.
+
+---
+
+### 6. Parallel queues may drift apart
+
+Separate queues for:
 
 ```text
-dt=-1ms
+PatternResult
+InspectedOccurrence
 ```
 
-Keep:
+can become inconsistent if:
+
+- one queue is full,
+- one push fails,
+- one item is drained earlier,
+- return values are ignored.
+
+Use one queued event containing all payloads belonging to the same occurrence.
+
+---
+
+### 7. Queue overflow is currently silent
+
+Queue push failures must produce:
 
 ```text
-trial.result
-trial.reject_stage
-trial.reject_reason
+pipeline_queue_overflow
 ```
 
-Example:
+and increment a diagnostic counter.
+
+Do not convert an internal data-loss error into an ordinary miss.
+
+---
+
+### 8. Mutable DetectorReport may describe another candidate
+
+Reading:
+
+```cpp
+activeDetectorReport()
+```
+
+during Analyzer printing can return:
+
+- a later candidate,
+- a stale candidate,
+- current live detector state.
+
+Source diagnostics must be frozen when the candidate closes and transported with the selected event.
+
+---
+
+## Target Data Contract
+
+Introduce one immutable Runtime event.
+
+```cpp
+enum class DetectionEventKind {
+    AcceptedPipelineResult,
+    RejectedSourceCandidate
+};
+
+struct DetectionPipelineEvent {
+    DetectionEventKind kind;
+
+    uint32_t occurrenceId;
+    uint32_t candidateId;
+
+    bool hasPatternResult;
+    PatternResult patternResult;
+
+    bool hasInspectedOccurrence;
+    InspectedOccurrence inspectedOccurrence;
+
+    bool hasSourceRecord;
+    SourceDiagnosticRecord sourceRecord;
+};
+```
+
+Runtime API:
+
+```cpp
+bool popPipelineEvent(DetectionPipelineEvent& out);
+```
+
+Analyzer must consume this event instead of combining:
+
+```text
+popPatternResult()
+latestPipelineResult()
+activeDetectorReport()
+```
+
+---
+
+## Fix Steps
+
+### Step 1 — Emit detector rejects as real Runtime events
+
+When a detector candidate closes unsuccessfully:
+
+```cpp
+DetectionPipelineEvent event;
+event.kind = DetectionEventKind::RejectedSourceCandidate;
+event.candidateId = reject.candidateId;
+event.hasSourceRecord = true;
+event.sourceRecord = frozenRejectRecord;
+
+pushPipelineEvent(event);
+```
+
+The rejected candidate must be represented as an object, not only as an aggregate counter.
+
+---
+
+### Step 2 — Freeze accepted source diagnostics too
+
+When an occurrence is accepted:
+
+```cpp
+event.kind = DetectionEventKind::AcceptedPipelineResult;
+event.occurrenceId = occurrence.id;
+event.candidateId = candidate.id;
+event.patternResult = patternResult;
+event.inspectedOccurrence = inspectedOccurrence;
+event.sourceRecord = acceptedSourceRecord;
+```
+
+All payloads must refer to the same candidate/occurrence identity.
+
+---
+
+### Step 3 — Use one queue
+
+Replace parallel result/inspection queues with one fixed-size queue:
+
+```cpp
+DetectionPipelineEvent _pipelineEvents[kCapacity];
+```
+
+Requirements:
+
+- fixed capacity,
+- static allocation,
+- checked push result,
+- overflow counter,
+- no silent drops.
+
+---
+
+### Step 4 — Capture events per trial
+
+Analyzer trial state should contain:
+
+```cpp
+uint16_t sourceCandidateCount;
+uint16_t sourceAcceptedCount;
+uint16_t sourceRejectedCount;
+uint16_t inspectedOccurrenceCount;
+uint16_t patternResultCount;
+
+bool selectedSourceRejectCaptured;
+SourceDiagnosticRecord selectedSourceReject;
+```
+
+Capture:
+
+```cpp
+switch (event.kind) {
+    case DetectionEventKind::AcceptedPipelineResult:
+        captureAcceptedPipelineEvent(event);
+        break;
+
+    case DetectionEventKind::RejectedSourceCandidate:
+        captureRejectedSourceEvent(event);
+        break;
+}
+```
+
+---
+
+### Step 5 — Extend trial selection
+
+Recommended selection order:
+
+```text
+1. valid PatternResult
+2. rejected PatternResult
+3. accepted occurrence without PatternResult
+4. selected detector reject
+5. unexpected event
+6. true miss
+```
+
+Detector reject output:
+
+```text
+result=rejected
+reject_stage=source
+reject_reason=duration_too_long
+src_total=1
+src_acc=0
+src_rej=1
+```
+
+---
+
+### Step 6 — Finalize detector lifecycle before classification
+
+Required trial-end order:
+
+```text
+1. continue processing until settle deadline
+2. finalize or inspect active detector candidate
+3. drain all resulting Runtime events
+4. run trial selection
+5. classify trial
+6. print reports
+7. reset trial-local state
+```
+
+Potential Runtime API:
+
+```cpp
+void finalizeTrial(uint32_t trialEndMs);
+bool hasActiveCandidate() const;
+```
+
+Do not accept an invalid candidate artificially.
+
+If an active candidate must be closed at the trial boundary, use the detector’s existing lifecycle semantics, for example:
+
+```text
+peak_still_active
+duration_too_long
+```
+
+---
+
+### Step 7 — Restrict `missing_pipeline_result`
+
+`missing_pipeline_result` should only indicate an internal contract failure:
+
+- event identity exists but payload is absent,
+- queue pairing failed,
+- queue overflow caused data loss,
+- selected occurrence cannot be resolved,
+- event payload is structurally invalid.
+
+It must not represent:
+
+- no candidate,
+- detector reject,
+- inspection reject,
+- pattern reject,
+- active candidate,
+- ordinary miss.
+
+---
+
+## Trial Classification Matrix
+
+| Actual pipeline outcome | Trial result | Reject stage | Reason |
+|---|---|---|---|
+| No candidate opened | `miss` | `none` | `no_candidate` |
+| Candidate too short | `rejected` | `source` | `duration_too_short` |
+| Candidate too long | `rejected` | `source` | `duration_too_long` |
+| Candidate too weak | `rejected` | `source` | `strength_too_low` |
+| Coverage insufficient | `rejected` | `source` | `coverage_too_low` |
+| Candidate remains open | `rejected` | `source` | `peak_still_active` |
+| Source accepted, inspection failed | `rejected` | `inspection` | `inspection_failed` |
+| Pattern requirement failed | `rejected` | `pattern` | `pattern_requirement_failed` |
+| Valid pattern in expected window | `expected` | `none` | `none` |
+| Runtime payload actually missing | `rejected` or `miss` | `pipeline` | `missing_pipeline_result` |
+| Runtime queue overflow | `rejected` or `ambiguous` | `pipeline` | `pipeline_queue_overflow` |
+
+---
+
+## Reporting Requirements
+
+### Detector reject
 
 ```text
 SEQ_TRIAL
-trial=2
+trial=1
 result=rejected
-reject_stage=pattern
+reject_stage=source
+reject_reason=duration_too_long
+src_total=1
+src_acc=0
+src_rej=1
+```
+
+### True miss
+
+```text
+SEQ_TRIAL
+trial=1
+result=miss
+reject_stage=none
+reject_reason=no_candidate
+src_total=0
+src_acc=0
+src_rej=0
+```
+
+### Inspection rejection
+
+```text
+SEQ_TRIAL
+trial=1
+result=rejected
+reject_stage=inspection
 reject_reason=inspection_failed
-contrast_class=strong
-amp_class=weak
-source_strength=26579.0
-pattern_confidence=0.00
 src_total=1
 src_acc=1
 src_rej=0
@@ -339,9 +488,15 @@ src_rej=0
 
 ---
 
-## Step 10 — Enforce summary invariants
+## Counter Invariants
 
-For every completed trial, exactly one primary result counter must increment.
+For each completed trial:
+
+```text
+src_total = src_acc + src_rej
+```
+
+Primary trial results:
 
 ```text
 completed =
@@ -365,37 +520,118 @@ pattern_valid_trials
 pattern_rejected_trials
 ```
 
-A source-accepted but pattern-rejected trial must count as:
+A detector reject must increment:
 
 ```text
 rejected_trials += 1
-detector_accepted_trials += 1
-pattern_rejected_trials += 1
+detector_reject_trials += 1
 ```
 
 It must not increment `miss_trials`.
 
 ---
 
-## Acceptance criteria
+## Acceptance Tests
 
-1. Every accepted occurrence has a unique ID.
-2. The same occurrence ID appears across source, inspect, pattern, and explain output.
-3. `src_total/src_acc/src_rej` reflect trial-local source activity.
-4. Trial 1 is no longer lost due to premature finalization.
-5. `SEQ_SOURCE_CORE` and `SEQ_SOURCE_SPEC` never contradict each other.
-6. `selected_reject` is used only for detector-rejected candidates.
-7. Inspector observations use clear status and stream names.
-8. Inspector coverage is explained and internally consistent.
-9. Every completed trial increments exactly one primary result counter.
-10. No detector thresholds or live detector routing are changed.
+### Test 1 — Duration too long
 
-## Suggested commit sequence
+Expected:
 
 ```text
-AnalyzerFix: assign stable occurrence identities
-AnalyzerFix: finalize trials after detector lifecycle completion
-AnalyzerFix: report trial-local source counts
-AnalyzerFix: bind source core/spec to one selected record
-AnalyzerCleanup: simplify inspect and trial output
+result=rejected
+reject_stage=source
+reject_reason=duration_too_long
+src_total=1
+src_acc=0
+src_rej=1
+```
+
+### Test 2 — Duration too short
+
+Expected:
+
+```text
+result=rejected
+reject_reason=duration_too_short
+```
+
+### Test 3 — Strength too low
+
+Expected:
+
+```text
+result=rejected
+reject_reason=strength_too_low
+```
+
+### Test 4 — No onset
+
+Expected:
+
+```text
+result=miss
+reject_reason=no_candidate
+```
+
+### Test 5 — Candidate closes near trial boundary
+
+The result must remain assigned to the correct trial.
+
+### Test 6 — Candidate remains open at finalization
+
+Expected explicit source reject or continued settling, never `missing_pipeline_result`.
+
+### Test 7 — Source accepted, Inspector fails
+
+Expected:
+
+```text
+result=rejected
+reject_stage=inspection
+reject_reason=inspection_failed
+src_acc=1
+```
+
+### Test 8 — Two events in one trial
+
+PatternResult, InspectedOccurrence and SourceDiagnosticRecord must retain matching IDs.
+
+### Test 9 — Queue overflow
+
+Expected:
+
+```text
+reject_stage=pipeline
+reject_reason=pipeline_queue_overflow
+```
+
+plus an overflow counter.
+
+### Test 10 — No stale cross-trial data
+
+A reject from Trial N must never appear only in Trial N+1 aggregates.
+
+---
+
+## Non-goals
+
+- Do not change detector thresholds.
+- Do not change the live detector input path.
+- Do not tune the Inspector.
+- Do not introduce dynamic allocation.
+- Do not move DetectorReport payloads into Behavior.
+- Do not preserve `missing_pipeline_result` as a generic fallback.
+
+---
+
+## Suggested Commit Sequence
+
+```text
+DetectionRuntime: add unified immutable pipeline event
+DetectionRuntime: emit source reject events
+Analyzer: capture accepted and rejected source events per trial
+Analyzer: finalize detector lifecycle before trial selection
+Analyzer: classify source rejects with detector reason
+Analyzer: restrict missing_pipeline_result to contract failures
+DetectionRuntime: report pipeline queue overflow
 ```

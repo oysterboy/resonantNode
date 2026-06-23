@@ -57,6 +57,30 @@ struct DetectionPipelineResult {
     unsigned long timestampMs = 0;
 };
 
+struct SourceDiagnosticRecord {
+    DetectorReport detectorReport = {};
+};
+
+enum class DetectionEventKind {
+    AcceptedPipelineResult,
+    RejectedSourceCandidate,
+};
+
+struct DetectionPipelineEvent {
+    DetectionEventKind kind = DetectionEventKind::AcceptedPipelineResult;
+    uint32_t occurrenceId = 0;
+    uint32_t candidateId = 0;
+
+    bool hasPatternResult = false;
+    PatternResult patternResult = {};
+
+    bool hasInspectedOccurrence = false;
+    InspectedOccurrence inspectedOccurrence = {};
+
+    bool hasSourceRecord = false;
+    SourceDiagnosticRecord sourceRecord = {};
+};
+
 class DetectionRuntime {
 public:
     DetectionRuntime();
@@ -82,9 +106,11 @@ public:
         unsigned long nowMs
     );
 
+    bool popPipelineEvent(DetectionPipelineEvent& out);
     bool popPatternResult(PatternResult& out);
     bool hasLatestPipelineResult() const;
     const DetectionPipelineResult& latestPipelineResult() const;
+    unsigned long pipelineEventOverflowCount() const;
     // Generic report access is the canonical upward path.
     const DetectorReport& activeDetectorReport() const;
     const PatternMatcherReport& activePatternMatcherReport() const;
@@ -92,9 +118,11 @@ public:
     const FeatureHistory& featureHistory() const;
 
 private:
+    static constexpr size_t kPipelineEventQueueCapacity = 4;
     static constexpr size_t kResultQueueCapacity = 4;
 
     // Pipeline stages in execution order.
+    bool pushPipelineEvent(const DetectionPipelineEvent& event);
     void drainDetectors(unsigned long nowMs);
     void drainPatternMatcher(unsigned long nowMs);
     bool pushPatternResult(const PatternResult& result);
@@ -128,6 +156,12 @@ private:
     DetectionPipelineResult _latestPipelineResult = {};
     bool _hasLatestPipelineResult = false;
     DetectorReport _detectorReport = {};
+    unsigned long _pipelineEventOverflowCount = 0;
+    DetectionPipelineEvent _pipelineEventQueue[kPipelineEventQueueCapacity] = {};
+    size_t _pipelineEventReadIndex = 0;
+    size_t _pipelineEventCount = 0;
+    uint32_t _lastEmittedAcceptedOccurrenceId = 0;
+    uint32_t _lastEmittedSelectedRejectOccurrenceId = 0;
     InspectedOccurrence _patternInspectedQueue[kResultQueueCapacity] = {};
     size_t _patternInspectedReadIndex = 0;
     size_t _patternInspectedCount = 0;

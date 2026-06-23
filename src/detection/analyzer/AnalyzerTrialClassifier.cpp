@@ -1,6 +1,10 @@
 #include "AnalyzerTrialClassifier.h"
 
 AnalyzerReason analyzerReasonFromSequenceOutcome(const AnalyzerSequenceClassificationInput& input) {
+    if (input.pipelineQueueOverflowCount > 0) {
+        return AnalyzerReason::PipelineQueueOverflow;
+    }
+
     switch (input.result) {
         case AnalyzerResult::Expected:
             return AnalyzerReason::ValidPatternInExpectedWindow;
@@ -11,13 +15,13 @@ AnalyzerReason analyzerReasonFromSequenceOutcome(const AnalyzerSequenceClassific
         case AnalyzerResult::Duplicate:
             return AnalyzerReason::DuplicatePatternAfterPrimary;
         case AnalyzerResult::Miss:
-            if (input.detectorSelectedRejectPresent) {
+            if (input.sourceRejectedCount > 0 || input.detectorSelectedRejectPresent) {
                 return AnalyzerReason::OccurrenceSeenButRejected;
             }
-            if (input.detectorAcceptedPresent) {
+            if (input.sourceAcceptedCount > 0 || input.detectorAcceptedPresent) {
                 return AnalyzerReason::InspectionFailed;
             }
-            if (input.detectorReportAvailable || input.rawPendingCount == 0) {
+            if (input.sourceCandidateCount == 0) {
                 return AnalyzerReason::NoOccurrence;
             }
             return AnalyzerReason::MissingPipelineResult;
@@ -25,16 +29,16 @@ AnalyzerReason analyzerReasonFromSequenceOutcome(const AnalyzerSequenceClassific
             if (input.patternInspectionFailed) {
                 return AnalyzerReason::InspectionFailed;
             }
+            if (input.sourceRejectedCount > 0 || input.detectorSelectedRejectPresent) {
+                return AnalyzerReason::OccurrenceSeenButRejected;
+            }
             if (input.patternAvailable) {
                 return AnalyzerReason::PatternRejected;
             }
-            if (input.detectorSelectedRejectPresent) {
-                return AnalyzerReason::OccurrenceSeenButRejected;
-            }
-            if (input.detectorAcceptedPresent) {
+            if (input.sourceAcceptedCount > 0 || input.detectorAcceptedPresent) {
                 return AnalyzerReason::InspectionFailed;
             }
-            return input.detectorReportAvailable ? AnalyzerReason::NoOccurrence : AnalyzerReason::MissingPipelineResult;
+            return input.sourceCandidateCount == 0 ? AnalyzerReason::NoOccurrence : AnalyzerReason::MissingPipelineResult;
         case AnalyzerResult::Ambiguous:
             return AnalyzerReason::MultipleCompetingPatterns;
         case AnalyzerResult::TooDense:
@@ -48,6 +52,7 @@ AnalyzerReason analyzerReasonFromSequenceOutcome(const AnalyzerSequenceClassific
 AnalyzerStage analyzerPrimaryStageFromReason(AnalyzerReason reason) {
     switch (reason) {
         case AnalyzerReason::MissingPipelineResult:
+        case AnalyzerReason::PipelineQueueOverflow:
         case AnalyzerReason::NoOccurrence:
         case AnalyzerReason::OccurrenceSeenButRejected:
             return AnalyzerStage::Source;
@@ -75,7 +80,7 @@ AnalyzerStage analyzerPrimaryStageFromReason(AnalyzerReason reason) {
 AnalyzerClassification classifySequenceTrial(const AnalyzerSequenceClassificationInput& input) {
     AnalyzerClassification classification = {};
     classification.result = input.result;
-    classification.reason = (input.patternAvailable || input.detectorReportAvailable)
+    classification.reason = (input.patternAvailable || input.detectorReportAvailable || input.pipelineQueueOverflowCount > 0)
         ? analyzerReasonFromSequenceOutcome(input)
         : AnalyzerReason::MissingPipelineResult;
     classification.primaryStage = analyzerPrimaryStageFromReason(classification.reason);

@@ -55,6 +55,7 @@ void DetectionRuntime::resetDiagnostics() {
 void DetectionRuntime::resetDiagnosticsCounters() {
     _detectorReport = {};
     _frequencyDetector.resetDiagnosticsSummary();
+    _pipelineEventOverflowCount = 0;
 }
 
 void DetectionRuntime::resetDetectors() {
@@ -79,6 +80,12 @@ void DetectionRuntime::resetDetectionState() {
     _resultCount = 0;
     _latestPipelineResult = {};
     _hasLatestPipelineResult = false;
+    _pipelineEventOverflowCount = 0;
+    _pipelineEventQueue[0] = {};
+    _pipelineEventReadIndex = 0;
+    _pipelineEventCount = 0;
+    _lastEmittedAcceptedOccurrenceId = 0;
+    _lastEmittedSelectedRejectOccurrenceId = 0;
     _patternInspectedQueue[0] = {};
     _patternInspectedReadIndex = 0;
     _patternInspectedCount = 0;
@@ -103,6 +110,19 @@ void DetectionRuntime::refreshDetectorReports(unsigned long nowMs) {
             _scalarDetector.buildReport(_detectorReport, nowMs);
             break;
     }
+
+    if (_detectorReport.selectedReject.present &&
+        _detectorReport.selectedReject.occurrenceId != 0 &&
+        _detectorReport.selectedReject.occurrenceId != _lastEmittedSelectedRejectOccurrenceId) {
+        DetectionPipelineEvent event = {};
+        event.kind = DetectionEventKind::RejectedSourceCandidate;
+        event.candidateId = static_cast<uint32_t>(_detectorReport.selectedReject.occurrenceId);
+        event.hasSourceRecord = true;
+        event.sourceRecord.detectorReport = _detectorReport;
+        if (pushPipelineEvent(event)) {
+            _lastEmittedSelectedRejectOccurrenceId = event.candidateId;
+        }
+    }
 }
 
 void DetectionRuntime::setFrequencyMatchConfig(const FrequencyMatchConfig& config) {
@@ -118,6 +138,11 @@ void DetectionRuntime::setDetectorSelection(DetectorSelection selection) {
     _detectorSelection = selection;
     resetDetectors();
     applyScalarTransientConfig(_scalarDetector, _scalarTransientConfig);
+    _pipelineEventQueue[0] = {};
+    _pipelineEventReadIndex = 0;
+    _pipelineEventCount = 0;
+    _lastEmittedAcceptedOccurrenceId = 0;
+    _lastEmittedSelectedRejectOccurrenceId = 0;
     _patternInspectedQueue[0] = {};
     _patternInspectedReadIndex = 0;
     _patternInspectedCount = 0;
@@ -185,8 +210,20 @@ void DetectionRuntime::observeFrame(
     }
 
     drainDetectors(nowMs);
+    refreshDetectorReports(nowMs);
     drainPatternMatcher(nowMs);
     refreshDetectorReports(nowMs);
+}
+
+bool DetectionRuntime::popPipelineEvent(DetectionPipelineEvent& out) {
+    if (_pipelineEventCount == 0) {
+        return false;
+    }
+
+    out = _pipelineEventQueue[_pipelineEventReadIndex];
+    _pipelineEventReadIndex = (_pipelineEventReadIndex + 1) % kPipelineEventQueueCapacity;
+    --_pipelineEventCount;
+    return true;
 }
 
 bool DetectionRuntime::popPatternResult(PatternResult& out) {
@@ -279,6 +316,22 @@ bool DetectionRuntime::pushPatternResult(const PatternResult& result) {
     return true;
 }
 
+unsigned long DetectionRuntime::pipelineEventOverflowCount() const {
+    return _pipelineEventOverflowCount;
+}
+
+bool DetectionRuntime::pushPipelineEvent(const DetectionPipelineEvent& event) {
+    if (_pipelineEventCount == kPipelineEventQueueCapacity) {
+        ++_pipelineEventOverflowCount;
+        return false;
+    }
+
+    const size_t writeIndex = (_pipelineEventReadIndex + _pipelineEventCount) % kPipelineEventQueueCapacity;
+    _pipelineEventQueue[writeIndex] = event;
+    ++_pipelineEventCount;
+    return true;
+}
+
 void DetectionRuntime::capturePipelineResult(
     const PatternResult& result,
     const InspectedOccurrence* matchedInspectedOccurrence,
@@ -300,6 +353,24 @@ void DetectionRuntime::capturePipelineResult(
     _latestPipelineResult.profileName = _profileName;
     _latestPipelineResult.timestampMs = nowMs;
     _hasLatestPipelineResult = true;
+
+    DetectionPipelineEvent event = {};
+    event.kind = DetectionEventKind::AcceptedPipelineResult;
+    event.occurrenceId = static_cast<uint32_t>(result.occurrenceId);
+    event.candidateId = static_cast<uint32_t>(result.occurrenceId);
+    event.hasPatternResult = true;
+    event.patternResult = result;
+    event.hasSourceRecord = true;
+    event.sourceRecord.detectorReport = _detectorReport;
+    if (matchedInspectedOccurrence != nullptr && matchedInspectedOccurrence->occurrence.present) {
+        event.hasInspectedOccurrence = true;
+        event.inspectedOccurrence = *matchedInspectedOccurrence;
+    }
+    if (_lastEmittedAcceptedOccurrenceId != event.occurrenceId) {
+        if (pushPipelineEvent(event)) {
+            _lastEmittedAcceptedOccurrenceId = event.occurrenceId;
+        }
+    }
 }
 
 bool DetectionRuntime::pushPatternInspectedOccurrence(const InspectedOccurrence& occurrence) {

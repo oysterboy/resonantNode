@@ -40,6 +40,7 @@ void ScalarTransientDetector::resetState() {
     _lastObservedAcceptedOccurrenceRejectedCount = 0;
     _acceptedOccurrenceId = 0;
     _selectedRejectOccurrenceId = 0;
+    _nextOccurrenceId = 0;
     _currentOccurrenceId = 0;
     _reportDetail = {};
     resetAcceptedOccurrencePending();
@@ -156,6 +157,7 @@ void ScalarTransientDetector::updateOnsetStage(unsigned long nowUs, float signal
     // The separate release threshold keeps the peak stable when the occurrence wobbles near the edge.
     if (aboveAttackThreshold && !_peakActive && onsetCooldownElapsed) {
         resetCandidateFacts();
+        _currentOccurrenceId = ++_nextOccurrenceId;
         _peakActive = true;
         _peakStartedUs = nowUs;
         _peakStrengthObservedUs = nowUs;

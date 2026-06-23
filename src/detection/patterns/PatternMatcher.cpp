@@ -22,6 +22,7 @@ struct PatternProposal {
     ProposalShape shape = ProposalShape::Unknown;
     uint8_t occurrenceCount = 0;
     bool valid = false;
+    unsigned long occurrenceId = 0;
 
     unsigned long startMs = 0;
     unsigned long peakMs = 0;
@@ -64,6 +65,7 @@ PatternProposal makePatternProposalFromOccurrence(const detection::InspectedOccu
     proposal.valid = source.valid;
     proposal.shape = ProposalShape::SinglePulse;
     proposal.occurrenceCount = 1;
+    proposal.occurrenceId = source.occurrenceId;
 
     switch (source.occurrenceType) {
         case detection::OccurrenceType::Frequency:
@@ -146,6 +148,7 @@ bool requirementPassed(const PatternProposal& proposal, const detection::Inspect
 
 void fillResultFromProposal(detection::PatternResult& result, const PatternProposal& proposal, unsigned long nowMs) {
     result.occurrenceCount = proposal.occurrenceCount;
+    result.occurrenceId = proposal.occurrenceId;
     result.primaryStartMs = proposal.startMs;
     result.primaryPeakMs = proposal.peakMs;
     result.primaryHeardAtMs = proposal.heardAtMs;

@@ -135,6 +135,7 @@ private:
     unsigned long _acceptedOccurrenceHoldWindows = 0;
     unsigned long _acceptedOccurrenceId = 0;
     unsigned long _selectedRejectOccurrenceId = 0;
+    unsigned long _nextOccurrenceId = 0;
     unsigned long _currentOccurrenceId = 0;
     float _acceptedOccurrenceOnsetStrength = 0.0f;
     float _acceptedOccurrencePeakStrength = 0.0f;

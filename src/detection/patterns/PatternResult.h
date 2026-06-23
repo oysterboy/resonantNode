@@ -18,6 +18,7 @@ struct PatternResult {
     PatternRejectReason rejectReason = PatternRejectReason::None;
     float confidence = 0.0f;
     uint8_t occurrenceCount = 0;
+    unsigned long occurrenceId = 0;
 
     // Compact primary accepted-occurrence summary used by behavior and
     // canonical analyzer/report readers.

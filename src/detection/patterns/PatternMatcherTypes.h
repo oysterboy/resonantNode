@@ -15,7 +15,6 @@ struct PatternMatcherReport {
     bool patternMatched = false;
     bool supportMatched = false;
     bool valid = false;
-    bool uncertain = false;
 
     PatternType patternType = PatternType::None;
     PatternRejectReason rejectReason = PatternRejectReason::None;

@@ -543,7 +543,7 @@ void AnalyzerApp::finalizeSequenceTrial(unsigned long now) {
     const bool unexpectedTrial = selectedTrial.result == AnalyzerResult::Unexpected;
 
     AnalyzerResult result = selectedTrial.result;
-    if (selectedTrial.patternResult != nullptr && selectedTrial.patternResult->uncertain) {
+    if (selectedTrial.patternResult != nullptr && !selectedTrial.patternResult->valid) {
         result = AnalyzerResult::Rejected;
     }
     long dtMs = selectedTrial.dtMs;

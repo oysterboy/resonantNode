@@ -306,4 +306,5 @@ Implemented:
 - `AnalyzerResult::Uncertain` was removed from the analyzer result vocabulary.
 - `SEQ_TRIAL` now prints the real trial result name and `reject_reason=...`.
 - Failed inspection is classified as `Rejected` with `InspectionFailed`.
+- Pattern rejection no longer uses a separate `uncertain` state.
 - The analyzer no longer prefers or prints an `uncertain` trial branch.

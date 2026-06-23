@@ -935,12 +935,12 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
     classificationInput.rawPendingCount = diagnostics.rawPendingCount;
     classificationInput.bufferOverrun = bufferOverrun;
     classificationInput.patternAvailable = hasPatternResult;
-    classificationInput.patternInspectionFailed = hasPatternResult && reportPatternResult->uncertain;
+    classificationInput.patternInspectionFailed = hasPatternResult && !reportPatternResult->valid;
     classificationInput.detectorReportAvailable = report.detectorReport != nullptr;
     classificationInput.detectorAcceptedPresent = report.detectorReport != nullptr && report.detectorReport->accepted.present;
     classificationInput.detectorSelectedRejectPresent = report.detectorReport != nullptr && report.detectorReport->selectedReject.present;
     report.classification = classifySequenceTrial(classificationInput);
-    if (hasPatternResult && reportPatternResult->uncertain) {
+    if (hasPatternResult && !reportPatternResult->valid) {
         report.classification.result = AnalyzerResult::Rejected;
         report.classification.reason = AnalyzerReason::InspectionFailed;
         report.classification.primaryStage = AnalyzerStage::Inspect;
@@ -956,7 +956,6 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
         pattern.patternAccepted = hasPatternResult ? reportPatternResult->patternAccepted : false;
         pattern.patternMatched = hasPatternResult ? reportPatternResult->patternMatched : false;
         pattern.supportMatched = hasPatternResult ? reportPatternResult->supportMatched : false;
-        pattern.uncertain = hasPatternResult ? reportPatternResult->uncertain : false;
         pattern.behaviorEligible = pattern.accepted;
         pattern.confidence = hasPatternResult ? reportPatternResult->confidence : 0.0f;
         pattern.dtMs = report.classification.dtMs;

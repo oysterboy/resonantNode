@@ -171,7 +171,6 @@ detection::PatternResult evaluateSinglePulse(
     result.patternMatched = true;
     result.patternAccepted = false;
     result.supportMatched = true;
-    result.uncertain = false;
     result.valid = false;
     const ProposalEvaluationKind proposalKind = resultKindFromProposal(proposal);
     detection::StrengthClass firstFailedObservedStrength = detection::StrengthClass::Unknown;
@@ -198,9 +197,6 @@ detection::PatternResult evaluateSinglePulse(
                 firstFailedRequiredStrength = requirement.minimumStrength;
                 result.rejectReason = supportRejectReason(observedStrength);
                 result.reasonCode = detection::PatternReasonCode::UnsupportedPattern;
-                if (config.failedRequirementMeansUncertain) {
-                    result.uncertain = true;
-                }
                 break;
             }
         }
@@ -211,7 +207,6 @@ detection::PatternResult evaluateSinglePulse(
     if (result.valid) {
         result.rejectReason = detection::PatternRejectReason::None;
         result.reasonCode = detection::PatternReasonCode::FromOccurrence;
-        result.uncertain = false;
     } else if (proposalKind == ProposalEvaluationKind::Valid && result.reasonCode == detection::PatternReasonCode::None) {
         result.reasonCode = detection::PatternReasonCode::UnsupportedPattern;
     }
@@ -220,7 +215,6 @@ detection::PatternResult evaluateSinglePulse(
         result.valid = false;
         result.patternAccepted = false;
         result.rejectReason = detection::PatternRejectReason::UnexpectedTiming;
-        result.uncertain = false;
         result.supportMatched = false;
     }
     result.firstFailedObservedStrength = firstFailedObservedStrength;
@@ -299,7 +293,6 @@ bool PatternMatcher::popPatternResult(unsigned long nowMs, PatternResult& out) {
     _report.patternMatched = out.patternMatched;
     _report.supportMatched = out.supportMatched;
     _report.valid = out.valid;
-    _report.uncertain = out.uncertain;
     _report.patternType = out.type;
     _report.rejectReason = out.rejectReason;
     _report.firstFailedRequirementTarget = out.firstFailedRequirementTarget;

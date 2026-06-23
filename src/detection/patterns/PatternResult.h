@@ -35,7 +35,6 @@ struct PatternResult {
     bool patternAccepted = false;
     bool patternMatched = false;
     bool supportMatched = false;
-    bool uncertain = false;
     bool valid = false;
 
     InspectionTarget firstFailedRequirementTarget = InspectionTarget::None;

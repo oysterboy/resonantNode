@@ -128,7 +128,7 @@ void AnalyzerApp::handleSequencePending(
     if (selectedInspectedOccurrence != nullptr
         && selectedInspectedOccurrence->occurrence.present
         && selectedInspectedOccurrence->decision == detection::OccurrenceDecision::Accepted
-        && !patternResult.uncertain
+        && patternResult.valid
         && !_sequenceTest.primaryValidPatternCaptured
         && !_sequenceTest.primaryAcceptedOccurrenceCaptured) {
         _sequenceTest.primaryAcceptedOccurrenceCaptured = true;
@@ -182,7 +182,7 @@ void AnalyzerApp::handleSequencePending(
                 }
             }
         }
-        if (!patternResult.uncertain) {
+        if (!patternResult.valid) {
             _sequenceTest.rejectedInWindowCount++;
             _sequenceTest.currentTrialRejected++;
         }

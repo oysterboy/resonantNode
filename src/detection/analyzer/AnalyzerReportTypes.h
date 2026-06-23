@@ -204,7 +204,6 @@ struct AnalyzerPatternObservation {
     bool patternAccepted = false;
     bool patternMatched = false;
     bool supportMatched = false;
-    bool uncertain = false;
     bool behaviorEligible = false;
 
     float confidence = 0.0f;

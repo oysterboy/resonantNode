@@ -59,10 +59,11 @@ void AnalyzerApp::handleSequencePending(
         ++_sequenceTest.sourceRejectedCount;
     }
 
-    const detection::DetectorReport selectedDetectorReport = event.hasSourceRecord
-        ? event.sourceRecord.detectorReport
-        : _detection.activeDetectorReport();
-    const bool selectedDetectorReportAvailable = selectedDetectorReport.detectorId != detection::DetectorId::Unknown;
+    const detection::DetectorReport* selectedDetectorReport = event.hasSourceRecord
+        ? &event.sourceRecord.detectorReport
+        : &_detection.activeDetectorReport();
+    const bool selectedDetectorReportAvailable = selectedDetectorReport != nullptr &&
+        selectedDetectorReport->detectorId != detection::DetectorId::Unknown;
     const detection::InspectedOccurrence* selectedInspectedOccurrence =
         event.hasInspectedOccurrence && event.inspectedOccurrence.occurrence.present
             ? &event.inspectedOccurrence
@@ -74,8 +75,8 @@ void AnalyzerApp::handleSequencePending(
             _sequenceTest.selectedSourceRejectCaptured = true;
             _sequenceTest.selectedSourceReject = event.sourceRecord;
         }
-        const unsigned long sourceOnsetMs = selectedDetectorReport.selectedReject.present
-            ? selectedDetectorReport.selectedReject.startMs
+        const unsigned long sourceOnsetMs = selectedDetectorReport != nullptr && selectedDetectorReport->selectedReject.present
+            ? selectedDetectorReport->selectedReject.startMs
             : 0UL;
         const long dtFromTriggerMs = sourceOnsetMs > 0
             ? static_cast<long>(sourceOnsetMs) - static_cast<long>(_sequenceTest.currentTrialScheduledAtMs)
@@ -86,9 +87,6 @@ void AnalyzerApp::handleSequencePending(
         if (inWindow) {
             _sequenceTest.rejectedInWindowCount++;
             _sequenceTest.currentTrialRejected++;
-        }
-        if (event.hasSourceRecord) {
-            _sequenceTest.selectedSourceReject = event.sourceRecord;
         }
         diagnostics.runtimePatternCaptured = diagnostics.runtimePatternCaptured || event.hasPatternResult;
         (void)dtFromTriggerMs;
@@ -190,7 +188,7 @@ void AnalyzerApp::handleSequencePending(
         _sequenceTest.primaryAcceptedOccurrenceCaptured = true;
             _sequenceTest.primaryAcceptedInspectedOccurrence = *selectedInspectedOccurrence;
             if (selectedDetectorReportAvailable) {
-                _sequenceTest.primaryAcceptedDetectorReport = selectedDetectorReport;
+                _sequenceTest.primaryAcceptedDetectorReport = *selectedDetectorReport;
                 _sequenceTest.primaryAcceptedDetectorReport.sourceSelection = selectedSourceSelection;
                 _sequenceTest.primaryAcceptedDetectorReport.sourceOccurrenceId = selectedInspectedOccurrence->occurrence.occurrenceId;
                 _sequenceTest.primaryAcceptedDetectorReport.sourceCandidateId = selectedInspectedOccurrence->occurrence.occurrenceId;
@@ -230,7 +228,7 @@ void AnalyzerApp::handleSequencePending(
             if (selectedInspectedOccurrence != nullptr && selectedInspectedOccurrence->occurrence.present) {
                 _sequenceTest.bestRejectedInspectedOccurrence = *selectedInspectedOccurrence;
                 if (selectedDetectorReportAvailable) {
-                    _sequenceTest.bestRejectedDetectorReport = selectedDetectorReport;
+                    _sequenceTest.bestRejectedDetectorReport = *selectedDetectorReport;
                     _sequenceTest.bestRejectedDetectorReport.sourceSelection = selectedSourceSelection;
                     _sequenceTest.bestRejectedDetectorReport.sourceOccurrenceId = selectedInspectedOccurrence->occurrence.occurrenceId;
                     _sequenceTest.bestRejectedDetectorReport.sourceCandidateId = selectedInspectedOccurrence->occurrence.occurrenceId;
@@ -253,7 +251,7 @@ void AnalyzerApp::handleSequencePending(
         if (selectedInspectedOccurrence != nullptr && selectedInspectedOccurrence->occurrence.present) {
             _sequenceTest.primaryValidInspectedOccurrence = *selectedInspectedOccurrence;
             if (selectedDetectorReportAvailable) {
-                _sequenceTest.primaryValidDetectorReport = selectedDetectorReport;
+                _sequenceTest.primaryValidDetectorReport = *selectedDetectorReport;
                 _sequenceTest.primaryValidDetectorReport.sourceSelection = selectedSourceSelection;
                 _sequenceTest.primaryValidDetectorReport.sourceOccurrenceId = selectedInspectedOccurrence->occurrence.occurrenceId;
                 _sequenceTest.primaryValidDetectorReport.sourceCandidateId = selectedInspectedOccurrence->occurrence.occurrenceId;

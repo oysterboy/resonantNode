@@ -8,7 +8,7 @@
 
 void AnalyzerApp::printDetectionParameters() const {
     //PARAM TUNING TEMPORARY
-    const detection::DetectionProfile activeProfile = effectiveSequenceProfile();
+    const detection::DetectionProfile& activeProfile = effectiveSequenceProfile();
 
     const detection::ScalarTransientConfig& scalar = activeProfile.scalarTransient;
     Serial.print("SEQ scalar:");
@@ -75,7 +75,7 @@ void AnalyzerApp::printDetectionParameters() const {
 }
 
 void AnalyzerApp::printParamStatus() const {
-    const detection::DetectionProfile activeProfile = effectiveSequenceProfile();
+    const detection::DetectionProfile& activeProfile = effectiveSequenceProfile();
 
     const detection::ScalarTransientConfig& scalar = activeProfile.scalarTransient;
     Serial.print("PARAM scalar_observed_stream=");

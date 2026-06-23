@@ -127,7 +127,7 @@ inline DetectionProfile makeTonalPulseScalarProfile() {
     profile.scalarTransient.onsetDetectionThreshold = 4500.0f; // Attack threshold for candidate start.
     profile.scalarTransient.onsetReleaseThreshold = 3000.0f; // Release threshold for candidate end.
     profile.scalarTransient.minTransientDurationMs = 85; // Reject pulses that are too short.
-    profile.scalarTransient.maxTransientDurationMs = 130; // Reject pulses that are too long.
+    profile.scalarTransient.maxTransientDurationMs = 200; // Reject pulses that are too long.
     profile.scalarTransient.minTransientPeakStrength = 5750.0f; // Minimum peak gate for the carrier.
     profile.scalarTransient.releaseDebounceMs = 10; // Require a short stable release before ending.
     profile.scalarTransient.cooldownAfterOnsetMs = 50; // Avoid immediate re-triggering on the same pulse.
@@ -138,7 +138,7 @@ inline DetectionProfile makeTonalPulseScalarProfile() {
     profile.scalarTransient.requireCarrierQuality = true;
     profile.scalarTransient.minCoverageAboveReleaseMs = 90; // Minimum time above release level.
     profile.scalarTransient.minLongestIslandMs = 80; // Longest continuous island above release level.
-    profile.scalarTransient.maxGapMs = 10; // Largest allowed gap inside the candidate.
+    profile.scalarTransient.maxGapMs = 20; // Largest allowed gap inside the candidate.
 
 
     // Inspection: Frequency Contrast
@@ -167,9 +167,9 @@ inline DetectionProfile makeTonalPulseScalarProfile() {
     profile.inspectionPlan.modules[1].scalar.windowPostMs = 100; // Inspect the first 100 ms after onset.
     profile.inspectionPlan.modules[1].minimumStrength = StrengthClass::Medium; // Require at least medium evidence.
     profile.inspectionPlan.modules[1].scalar.mode = ScalarInspectionMode::P75; // Use a robust percentile summary.
-    profile.inspectionPlan.modules[1].scalar.supportStrength.strongPeakThreshold = 7500.0f; // Strong amplitude threshold.
-    profile.inspectionPlan.modules[1].scalar.supportStrength.mediumPeakThreshold = 5000.0f; // Medium amplitude threshold.
-    profile.inspectionPlan.modules[1].scalar.supportStrength.weakPeakThreshold = 3500.0f; // Weak amplitude threshold.
+    profile.inspectionPlan.modules[1].scalar.supportStrength.strongPeakThreshold = 5000.0f; // Strong amplitude threshold.
+    profile.inspectionPlan.modules[1].scalar.supportStrength.mediumPeakThreshold = 2500.0f; // Medium amplitude threshold.
+    profile.inspectionPlan.modules[1].scalar.supportStrength.weakPeakThreshold = 1000.0f; // Weak amplitude threshold.
     profile.inspectionPlan.count = 2; // This profile uses two inspectors.
 
     profile.inspectionPlan.failedRequirementMeansUncertain = true; // Legacy compatibility flag for failed requirement handling.

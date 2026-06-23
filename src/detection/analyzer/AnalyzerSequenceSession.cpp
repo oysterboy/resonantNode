@@ -111,7 +111,7 @@ void AnalyzerApp::startSequenceTest(const PendingSequenceStart& pending) {
     _sequenceTest.showDetails = showDetails;
     _sequenceTest.externalEmitter = externalEmitter;
     _sequenceTest.profileKind = profileKind;
-    const detection::DetectionProfile selectedProfile = effectiveSequenceProfile();
+    const detection::DetectionProfile& selectedProfile = effectiveSequenceProfile();
     _sequenceTest.outputConfig = _seqOutputConfig;
     _sequenceTest.diagMode = sequenceDiagModeFromOutputWhen(_sequenceTest.outputConfig.when);
     _sequenceTest.progressLineStarted = false;

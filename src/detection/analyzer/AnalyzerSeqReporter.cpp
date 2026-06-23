@@ -64,12 +64,21 @@ void AnalyzerApp::printSequenceTrialHeader(unsigned long trialNumber) const {
 }
 
 void AnalyzerApp::printSequenceTrial(const AnalyzerReport& report) const {
+    const char* trialRejectReason = analyzerReasonName(report.classification.reason);
+    if (report.classification.result == AnalyzerResult::Rejected &&
+        report.occurrences.rejectReason != nullptr &&
+        report.occurrences.rejectReason[0] != '\0' &&
+        strcmp(report.occurrences.rejectReason, "none") != 0 &&
+        strcmp(report.occurrences.rejectReason, trialRejectReason) != 0) {
+        trialRejectReason = report.occurrences.rejectReason;
+    }
+
     Serial.print("SEQ_TRIAL trial=");
     Serial.print(report.context.trial);
     Serial.print(" result=");
     Serial.print(analyzerResultName(report.classification.result));
     Serial.print(" reject_reason=");
-    Serial.print(analyzerReasonName(report.classification.reason));
+    Serial.print(trialRejectReason);
     Serial.print(" dt=");
     if (report.classification.result == AnalyzerResult::Rejected) {
         Serial.print("na");

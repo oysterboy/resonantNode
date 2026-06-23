@@ -551,17 +551,17 @@ AnalyzerApp::AnalyzerApp(int inputPin)
     _analyzerTuning.scalarTransient = detection::detectionProfileForKind(detection::DetectionProfileKind::TonalPulseScalar).scalarTransient;
 }
 
-detection::DetectionProfile AnalyzerApp::effectiveSequenceProfile() const {
+detection::DetectionProfile const& AnalyzerApp::effectiveSequenceProfile() const {
     //PARAM TUNING TEMPORARY
-    detection::DetectionProfile profile = detection::detectionProfileForKind(_sequenceTest.profileKind);
-    profile.frequencyMatch.attackScoreMin = _analyzerTuning.frequencyMatch.attackScoreMin;
-    profile.frequencyMatch.releaseScoreMin = _analyzerTuning.frequencyMatch.releaseScoreMin;
-    profile.frequencyMatch.attackContrastMin = _analyzerTuning.frequencyMatch.attackContrastMin;
-    profile.frequencyMatch.releaseContrastMin = _analyzerTuning.frequencyMatch.releaseContrastMin;
+    _sequenceProfileScratch = detection::detectionProfileForKind(_sequenceTest.profileKind);
+    _sequenceProfileScratch.frequencyMatch.attackScoreMin = _analyzerTuning.frequencyMatch.attackScoreMin;
+    _sequenceProfileScratch.frequencyMatch.releaseScoreMin = _analyzerTuning.frequencyMatch.releaseScoreMin;
+    _sequenceProfileScratch.frequencyMatch.attackContrastMin = _analyzerTuning.frequencyMatch.attackContrastMin;
+    _sequenceProfileScratch.frequencyMatch.releaseContrastMin = _analyzerTuning.frequencyMatch.releaseContrastMin;
     if (_sequenceTest.profileKind == detection::DetectionProfileKind::TonalPulseScalar) {
-        profile.scalarTransient = _analyzerTuning.scalarTransient;
+        _sequenceProfileScratch.scalarTransient = _analyzerTuning.scalarTransient;
     }
-    return profile;
+    return _sequenceProfileScratch;
 }
 
 void AnalyzerApp::begin() {
@@ -723,7 +723,8 @@ void AnalyzerApp::update() {
                 _freqBandStream.observeCenteredSample(audioSamplePacket.baselineCorrectedValue, audioSamplePacket.timeMs);
             }
             const bool needSequenceFrequencyPacket = _sequenceTest.sampleDumpEnabled || (_sequenceTest.active && _sequenceTest.currentTrial > 0);
-            detection::FrequencyBandMeasurementPacket runtimeFrequencyMeasurementPacket = {};
+            detection::FrequencyBandMeasurementPacket& runtimeFrequencyMeasurementPacket = _runtimeFrequencyMeasurementPacketScratch;
+            runtimeFrequencyMeasurementPacket = {};
             if (needSequenceFrequencyPacket) {
                 if (_sequenceTest.outputConfig.frequencyBandEnabled) {
                     runtimeFrequencyMeasurementPacket = captureFrequencyMeasurementPacket(audioSamplePacket);
@@ -752,7 +753,7 @@ void AnalyzerApp::update() {
                     ++_sequenceTest.currentTrialSamplesProcessed;
                 }
                 _detection.observeFrame(audioSamplePacket, runtimeFrequencyMeasurementPacket, audioSamplePacket.timeMs);
-                detection::DetectionPipelineEvent runtimePipelineEvent = {};
+                detection::DetectionPipelineEvent& runtimePipelineEvent = _runtimePipelineEventScratch;
                 while (_detection.popPipelineEvent(runtimePipelineEvent)) {
                     if (runtimePipelineEvent.hasPatternResult) {
                         _sequenceTest.currentTrialDiagnostics.runtimePatternCaptured = true;
@@ -1050,8 +1051,17 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
             ? selectedTrial.strength
             : reportPatternStrength;
         report.occurrences.confidence = hasPatternResult ? reportPatternResult->confidence : 0.0f;
-        report.occurrences.mainRejectReason = report.sourceReportReason;
-        report.occurrences.rejectReason = report.occurrences.mainRejectReason;
+        if (selectedTrial.kind == SequenceTrialSelection::Kind::RejectedSourceCandidate &&
+            selectedDetectorReport != nullptr &&
+            selectedDetectorReport->selectedReject.present &&
+            selectedDetectorReport->selectedReject.detectorReason != nullptr &&
+            selectedDetectorReport->selectedReject.detectorReason[0] != '\0') {
+            report.occurrences.mainRejectReason = selectedDetectorReport->selectedReject.detectorReason;
+            report.occurrences.rejectReason = selectedDetectorReport->selectedReject.detectorReason;
+        } else {
+            report.occurrences.mainRejectReason = report.sourceReportReason;
+            report.occurrences.rejectReason = report.occurrences.mainRejectReason;
+        }
     }
 
     report.inspection.inspected = _sequenceTest.inspectedOccurrenceCount;

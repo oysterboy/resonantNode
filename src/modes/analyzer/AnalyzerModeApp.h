@@ -438,7 +438,7 @@ private:
     void printSequenceReport() const;
     const char* activeAnalyzerProfileName() const;
     void printParamStatus() const;
-    detection::DetectionProfile effectiveSequenceProfile() const;
+    const detection::DetectionProfile& effectiveSequenceProfile() const;
     AnalyzerReport* sequenceReportScratch();
     void buildSequenceAnalyzerReport(AnalyzerReport& report, unsigned long trialNumber, AnalyzerResult result, long dtMs, long durMs, float strength, bool bufferOverrun, unsigned long duplicateCount, const SequenceTest::TrialDiagnostics& diagnostics) const;
         struct SequenceTrialSelection {
@@ -528,6 +528,9 @@ private:
     SequenceTest _sequenceTest; // Current sequence-test execution state.
     unsigned long _rawCaptureSequenceId = 0; // Monotonic RAW capture identifier.
     AnalyzerReport _sequenceReportScratch = {}; // Reusable scratch report buffer.
+    mutable detection::DetectionProfile _sequenceProfileScratch = {}; // Reusable tuned profile scratch buffer.
+    mutable detection::FrequencyBandMeasurementPacket _runtimeFrequencyMeasurementPacketScratch = {}; // Reusable per-sample frequency packet scratch.
+    mutable detection::DetectionPipelineEvent _runtimePipelineEventScratch = {}; // Reusable pipeline event scratch for the loop task.
 
     uint32_t _loopLastUs = 0; // Previous loop timestamp for timing diagnostics.
     unsigned long _loopMaxSinceBootUs = 0; // Worst loop duration since boot.

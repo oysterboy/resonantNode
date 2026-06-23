@@ -297,6 +297,15 @@ void AnalyzerApp::startSequenceTest(const PendingSequenceStart& pending) {
         Serial.print(selectedProfile.scalarTransient.minLongestIslandMs);
         Serial.print(" scalar_max_gap_ms=");
         Serial.print(selectedProfile.scalarTransient.maxGapMs);
+        Serial.print(" history.bin_ms=");
+        Serial.print(1);
+        Serial.print(" history.capacity_bins=");
+        Serial.print(detection::FeatureHistory::kBinsPerStream);
+        Serial.print(" history.coverage_ms=");
+        Serial.print(detection::FeatureHistory::kBinsPerStream);
+        Serial.print(" history.stream=amp aggregation=mean_abs+rms+peak_abs");
+        Serial.print(" history.stream=freq_target aggregation=fresh_only");
+        Serial.print(" history.stream=freq_contrast aggregation=fresh_only");
         Serial.print(" mode=");
         Serial.print(_sequenceTest.externalEmitter ? "OBS" : "SEQ");
         Serial.print(" test=");

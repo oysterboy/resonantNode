@@ -1,7 +1,6 @@
 #include "FeatureHistory.h"
 
 #include <math.h>
-#include <string.h>
 
 namespace detection {
 
@@ -69,6 +68,10 @@ float exactTrimmedMean(const float* values, size_t count, float trimFraction) {
     return keptCount > 0 ? (sum / static_cast<float>(keptCount)) : 0.0f;
 }
 
+float absoluteValue(float value) {
+    return value < 0.0f ? -value : value;
+}
+
 } // namespace
 
 bool FeatureHistory::isSupportedStream(FeatureStreamId stream) {
@@ -100,101 +103,144 @@ size_t FeatureHistory::streamIndex(FeatureStreamId stream) {
     }
 }
 
+bool FeatureHistory::streamRequiresFreshAggregation(FeatureStreamId stream) {
+    return stream == FeatureStreamId::FrequencyTarget
+        || stream == FeatureStreamId::FrequencyContrast;
+}
+
+float FeatureHistory::representativeValueForStream(FeatureStreamId stream, const FeatureHistoryBin& bin) {
+    if (!bin.valid || bin.inputCount == 0) {
+        return 0.0f;
+    }
+
+    switch (stream) {
+        case FeatureStreamId::AmpMagnitude:
+        case FeatureStreamId::AmpEnvelope:
+            return bin.meanAbs;
+        case FeatureStreamId::FrequencyTarget:
+        case FeatureStreamId::FrequencyContrast:
+            return bin.mean;
+        case FeatureStreamId::Unknown:
+        default:
+            return bin.last;
+    }
+}
+
+float FeatureHistory::representativeValueForAccumulator(FeatureStreamId stream, const FeatureBinAccumulator& bin) {
+    if (!bin.valid || bin.inputCount == 0) {
+        return 0.0f;
+    }
+
+    switch (stream) {
+        case FeatureStreamId::AmpMagnitude:
+        case FeatureStreamId::AmpEnvelope:
+            return static_cast<float>(bin.sumAbs / static_cast<double>(bin.inputCount));
+        case FeatureStreamId::FrequencyTarget:
+        case FeatureStreamId::FrequencyContrast:
+            return static_cast<float>(bin.sum / static_cast<double>(bin.inputCount));
+        case FeatureStreamId::Unknown:
+        default:
+            return bin.last;
+    }
+}
+
+void FeatureHistory::resetStream(StreamBuffer& buffer) {
+    buffer = {};
+}
+
 void FeatureHistory::reset() {
     for (size_t i = 0; i < kStreamCount; ++i) {
-        StreamBuffer& buffer = _streams[i];
-        buffer.binCount = 0;
-        buffer.writeIndex = 0;
-        buffer.valueCount = 0;
-        buffer.sampleWriteIndex = 0;
-        memset(buffer.bins, 0, sizeof(buffer.bins));
-        memset(buffer.samples, 0, sizeof(buffer.samples));
+        resetStream(_streams[i]);
     }
 }
 
-void FeatureHistory::pushRawSample(StreamBuffer& buffer, const FeatureStream& sample) {
-    RawSample& rawSample = buffer.samples[buffer.sampleWriteIndex];
-    rawSample.timeMs = sample.timeMs;
-    rawSample.value = sample.value;
-
-    if (buffer.valueCount < kMaxSamplesPerStream) {
-        ++buffer.valueCount;
-    }
-    buffer.sampleWriteIndex = (buffer.sampleWriteIndex + 1U) % kMaxSamplesPerStream;
+void FeatureHistory::startCurrentBin(StreamBuffer& buffer, unsigned long timeMs) {
+    buffer.current = {};
+    buffer.current.startMs = timeMs;
+    buffer.current.valid = true;
+    buffer.hasCurrent = true;
 }
 
-void FeatureHistory::pushSample(StreamBuffer& buffer, const FeatureStream& sample) {
-    FeatureBin& bin = buffer.bins[buffer.writeIndex];
-    if (buffer.binCount < kMaxSamplesPerStream) {
-        ++buffer.binCount;
-    }
-
-    bin.timeMs = sample.timeMs;
-    bin.first = sample.value;
-    bin.last = sample.value;
-    bin.min = sample.value;
-    bin.max = sample.value;
-    bin.sum = sample.value;
-    bin.sumSquares = sample.value * sample.value;
-    bin.count = 1;
-
-    buffer.writeIndex = (buffer.writeIndex + 1U) % kMaxSamplesPerStream;
-}
-
-void FeatureHistory::record(const FeatureStream& sample) {
-    if (!isSupportedStream(sample.id)) {
+void FeatureHistory::accumulateIntoCurrentBin(StreamBuffer& buffer, float value, bool fresh) {
+    if (!buffer.hasCurrent) {
         return;
     }
-    pushRawSample(_streams[streamIndex(sample.id)], sample);
-    pushSample(_streams[streamIndex(sample.id)], sample);
+
+    FeatureBinAccumulator& current = buffer.current;
+    ++current.inputCount;
+    if (fresh) {
+        ++current.freshCount;
+    }
+    current.sum += value;
+    current.sumSquares += static_cast<double>(value) * static_cast<double>(value);
+    current.sumAbs += absoluteValue(value);
+    if (absoluteValue(value) > current.peak) {
+        current.peak = absoluteValue(value);
+    }
+    current.last = value;
 }
 
-void FeatureHistory::record(FeatureStreamId id, unsigned long timeMs, float value) {
+void FeatureHistory::finalizeCurrentBin(StreamBuffer& buffer, FeatureStreamId stream) {
+    if (!buffer.hasCurrent || !buffer.current.valid) {
+        return;
+    }
+
+    FeatureHistoryBin finalized = {};
+    finalized.startMs = buffer.current.startMs;
+    finalized.inputCount = buffer.current.inputCount;
+    finalized.freshCount = buffer.current.freshCount;
+    finalized.last = buffer.current.last;
+    finalized.peak = buffer.current.peak;
+    finalized.mean = finalized.inputCount > 0
+        ? static_cast<float>(buffer.current.sum / static_cast<double>(finalized.inputCount))
+        : 0.0f;
+    finalized.rms = finalized.inputCount > 0
+        ? sqrtf(static_cast<float>(buffer.current.sumSquares / static_cast<double>(finalized.inputCount)))
+        : 0.0f;
+    finalized.meanAbs = finalized.inputCount > 0
+        ? static_cast<float>(buffer.current.sumAbs / static_cast<double>(finalized.inputCount))
+        : 0.0f;
+    finalized.valid = finalized.inputCount > 0;
+
+    if (finalized.valid) {
+        FeatureHistoryBin& slot = buffer.bins[buffer.writeIndex];
+        slot = finalized;
+        buffer.writeIndex = (buffer.writeIndex + 1U) % kBinsPerStream;
+        if (buffer.binCount < kBinsPerStream) {
+            ++buffer.binCount;
+        }
+        buffer.latestTimeMs = finalized.startMs;
+        buffer.latestValue = representativeValueForStream(stream, finalized);
+    }
+
+    buffer.hasCurrent = false;
+    buffer.current = {};
+}
+
+void FeatureHistory::record(const FeatureStream& sample, bool fresh) {
+    record(sample.id, sample.timeMs, sample.value, fresh);
+}
+
+void FeatureHistory::record(FeatureStreamId id, unsigned long timeMs, float value, bool fresh) {
     if (!isSupportedStream(id)) {
         return;
     }
 
-    StreamBuffer& buffer = _streams[streamIndex(id)];
-    if (buffer.binCount > 0) {
-        const size_t latestIndex = (buffer.writeIndex + kMaxSamplesPerStream - 1U) % kMaxSamplesPerStream;
-        FeatureBin& latest = buffer.bins[latestIndex];
-        if (latest.timeMs == timeMs) {
-            if (latest.count == 0) {
-                latest.first = value;
-                latest.min = value;
-                latest.max = value;
-                latest.sum = value;
-                latest.count = 1;
-            } else {
-                if (latest.count == 1) {
-                    latest.first = latest.last;
-                }
-                if (value < latest.min) {
-                    latest.min = value;
-                }
-                if (value > latest.max) {
-                    latest.max = value;
-                }
-                latest.sum += value;
-                latest.sumSquares += value * value;
-                ++latest.count;
-            }
-            latest.last = value;
-            FeatureStream sample;
-            sample.id = id;
-            sample.timeMs = timeMs;
-            sample.value = value;
-            pushRawSample(buffer, sample);
-            return;
-        }
+    if (streamRequiresFreshAggregation(id) && !fresh) {
+        return;
     }
 
-    FeatureStream sample;
-    sample.id = id;
-    sample.timeMs = timeMs;
-    sample.value = value;
-    pushRawSample(buffer, sample);
-    pushSample(buffer, sample);
+    StreamBuffer& buffer = _streams[streamIndex(id)];
+    if (!buffer.hasCurrent) {
+        startCurrentBin(buffer, timeMs);
+    } else if (timeMs != buffer.current.startMs) {
+        finalizeCurrentBin(buffer, id);
+        startCurrentBin(buffer, timeMs);
+    }
+
+    accumulateIntoCurrentBin(buffer, value, fresh);
+    buffer.latestTimeMs = buffer.current.startMs;
+    buffer.latestValue = representativeValueForAccumulator(id, buffer.current);
 }
 
 ScalarWindow FeatureHistory::getWindow(FeatureStreamId stream, unsigned long startMs, unsigned long endMs, float sustainedThreshold) const {
@@ -208,72 +254,99 @@ ScalarWindow FeatureHistory::getWindow(FeatureStreamId stream, unsigned long sta
     }
 
     const StreamBuffer& buffer = _streams[streamIndex(stream)];
-    if (buffer.binCount == 0) {
+    if (buffer.binCount == 0 && !buffer.hasCurrent) {
         return out;
     }
 
-    const size_t oldestIndex = buffer.binCount == kMaxSamplesPerStream ? buffer.writeIndex : 0U;
-    float rawValues[kMaxSamplesPerStream] = {};
-    size_t rawCount = 0;
+    float values[kBinsPerStream + 1U] = {};
+    size_t valueCount = 0;
+    size_t totalInputCount = 0;
+    size_t totalFreshCount = 0;
+    size_t bucketCount = 0;
     float sum = 0.0f;
+    float sumSquares = 0.0f;
+    bool haveWindow = false;
+    float firstValue = 0.0f;
+    float lastValue = 0.0f;
     float minValue = 0.0f;
     float maxValue = 0.0f;
-    bool haveWindow = false;
-    size_t sustainedCount = 0;
-    size_t bucketCount = 0;
-    float sumSquares = 0.0f;
+    float peakValue = 0.0f;
+    unsigned long peakTimeMs = 0;
     unsigned long firstValueMs = 0;
     unsigned long lastValueMs = 0;
+    size_t sustainedCount = 0;
 
-    for (size_t i = 0; i < buffer.binCount; ++i) {
-        const size_t index = (oldestIndex + i) % kMaxSamplesPerStream;
-        const FeatureBin& bin = buffer.bins[index];
-        if (bin.timeMs < startMs || bin.timeMs > endMs) {
-            continue;
+    auto considerBin = [&](const FeatureHistoryBin& bin) {
+        if (!bin.valid || bin.startMs < startMs || bin.startMs > endMs) {
+            return;
+        }
+        if (streamRequiresFreshAggregation(stream) && bin.freshCount == 0) {
+            return;
+        }
+
+        const float representative = representativeValueForStream(stream, bin);
+        if (valueCount < (kBinsPerStream + 1U)) {
+            values[valueCount++] = representative;
         }
         ++bucketCount;
+        totalInputCount += bin.inputCount;
+        totalFreshCount += bin.freshCount;
+        sum += representative;
+        sumSquares += representative * representative;
 
         if (!haveWindow) {
-            out.first = bin.first;
-            out.last = bin.last;
-            minValue = bin.min;
-            maxValue = bin.max;
-            out.peak = bin.max;
-            out.peakTimeMs = bin.timeMs;
-            firstValueMs = bin.timeMs;
+            firstValue = representative;
+            lastValue = representative;
+            minValue = representative;
+            maxValue = representative;
+            peakValue = representative;
+            peakTimeMs = bin.startMs;
+            firstValueMs = bin.startMs;
+            lastValueMs = bin.startMs;
             haveWindow = true;
         } else {
-            out.last = bin.last;
-            if (bin.min < minValue) {
-                minValue = bin.min;
+            lastValue = representative;
+            lastValueMs = bin.startMs;
+            if (representative < minValue) {
+                minValue = representative;
             }
-            if (bin.max > maxValue) {
-                maxValue = bin.max;
+            if (representative > maxValue) {
+                maxValue = representative;
             }
-            if (bin.max > out.peak) {
-                out.peak = bin.max;
-                out.peakTimeMs = bin.timeMs;
+            if (representative > peakValue) {
+                peakValue = representative;
+                peakTimeMs = bin.startMs;
             }
         }
-        lastValueMs = bin.timeMs;
-        if (sustainedThreshold > 0.0f && bin.max >= sustainedThreshold) {
+
+        if (sustainedThreshold > 0.0f && representative >= sustainedThreshold) {
             ++sustainedCount;
         }
+    };
+
+    const size_t oldestIndex = buffer.binCount == kBinsPerStream ? buffer.writeIndex : 0U;
+    for (size_t i = 0; i < buffer.binCount; ++i) {
+        const size_t index = (oldestIndex + i) % kBinsPerStream;
+        considerBin(buffer.bins[index]);
     }
-
-    const size_t oldestSampleIndex = buffer.valueCount == kMaxSamplesPerStream ? buffer.sampleWriteIndex : 0U;
-    for (size_t i = 0; i < buffer.valueCount; ++i) {
-        const size_t index = (oldestSampleIndex + i) % kMaxSamplesPerStream;
-        const RawSample& sample = buffer.samples[index];
-        if (sample.timeMs < startMs || sample.timeMs > endMs) {
-            continue;
-        }
-
-        if (rawCount < kMaxSamplesPerStream) {
-            rawValues[rawCount++] = sample.value;
-        }
-        sum += sample.value;
-        sumSquares += sample.value * sample.value;
+    if (buffer.hasCurrent) {
+        FeatureHistoryBin current = {};
+        current.startMs = buffer.current.startMs;
+        current.inputCount = buffer.current.inputCount;
+        current.freshCount = buffer.current.freshCount;
+        current.mean = buffer.current.inputCount > 0
+            ? static_cast<float>(buffer.current.sum / static_cast<double>(buffer.current.inputCount))
+            : 0.0f;
+        current.rms = buffer.current.inputCount > 0
+            ? sqrtf(static_cast<float>(buffer.current.sumSquares / static_cast<double>(buffer.current.inputCount)))
+            : 0.0f;
+        current.peak = buffer.current.peak;
+        current.meanAbs = buffer.current.inputCount > 0
+            ? static_cast<float>(buffer.current.sumAbs / static_cast<double>(buffer.current.inputCount))
+            : 0.0f;
+        current.last = buffer.current.last;
+        current.valid = buffer.current.inputCount > 0;
+        considerBin(current);
     }
 
     out.valid = haveWindow;
@@ -281,34 +354,38 @@ ScalarWindow FeatureHistory::getWindow(FeatureStreamId stream, unsigned long sta
         return out;
     }
 
+    sortFloatValues(values, valueCount);
+
     out.durationMs = endMs >= startMs ? (endMs - startMs) : 0UL;
-    out.min = minValue;
-    out.max = maxValue;
-    out.mean = rawCount > 0 ? sum / static_cast<float>(rawCount) : 0.0f;
-    out.rms = rawCount > 0 ? sqrtf(sumSquares / static_cast<float>(rawCount)) : 0.0f;
-    out.sampleCount = rawCount;
-    out.valueCount = rawCount;
-    out.freshValueCount = rawCount;
+    out.sampleCount = bucketCount;
+    out.valueCount = totalInputCount;
+    out.freshValueCount = totalFreshCount;
     out.bucketCount = bucketCount;
-    out.valuesPerBucket = bucketCount > 0 ? static_cast<float>(rawCount) / static_cast<float>(bucketCount) : 0.0f;
-    out.spanMs = haveWindow && lastValueMs >= firstValueMs ? lastValueMs - firstValueMs : 0UL;
-    out.coveredMs = out.spanMs;
+    out.valuesPerBucket = bucketCount > 0 ? static_cast<float>(totalInputCount) / static_cast<float>(bucketCount) : 0.0f;
+    out.coveredMs = static_cast<unsigned long>(bucketCount);
     out.coverageRatio = out.durationMs > 0
         ? static_cast<float>(out.coveredMs) / static_cast<float>(out.durationMs)
         : 0.0f;
     out.firstValueMs = firstValueMs;
     out.lastValueMs = lastValueMs;
+    out.spanMs = haveWindow && lastValueMs >= firstValueMs ? lastValueMs - firstValueMs : 0UL;
     out.latestValueAgeMs = haveWindow && endMs >= lastValueMs ? endMs - lastValueMs : 0UL;
+    out.first = firstValue;
+    out.last = lastValue;
+    out.min = minValue;
+    out.max = maxValue;
+    out.mean = valueCount > 0 ? sum / static_cast<float>(valueCount) : 0.0f;
+    out.rms = valueCount > 0 ? sqrtf(sumSquares / static_cast<float>(valueCount)) : 0.0f;
+    out.median = exactQuantile(values, valueCount, 0.50f);
+    out.p75 = exactQuantile(values, valueCount, 0.75f);
+    out.p90 = exactQuantile(values, valueCount, 0.90f);
+    out.trimmedMean = exactTrimmedMean(values, valueCount, 0.10f);
+    out.peak = peakValue;
+    out.peakTimeMs = peakTimeMs;
     out.rise = out.last - out.first;
     out.sustainedThreshold = sustainedThreshold;
     out.sustainedCount = sustainedCount;
     out.sustainedMs = static_cast<unsigned long>(sustainedCount);
-
-    sortFloatValues(rawValues, rawCount);
-    out.median = exactQuantile(rawValues, rawCount, 0.50f);
-    out.p75 = exactQuantile(rawValues, rawCount, 0.75f);
-    out.p90 = exactQuantile(rawValues, rawCount, 0.90f);
-    out.trimmedMean = exactTrimmedMean(rawValues, rawCount, 0.10f);
     return out;
 }
 
@@ -324,20 +401,47 @@ size_t FeatureHistory::copyWindowApproximateValues(
     }
 
     const StreamBuffer& buffer = _streams[streamIndex(stream)];
-    if (buffer.binCount == 0) {
+    if (buffer.binCount == 0 && !buffer.hasCurrent) {
         return 0;
     }
 
-    const size_t oldestSampleIndex = buffer.valueCount == kMaxSamplesPerStream ? buffer.sampleWriteIndex : 0U;
     size_t written = 0;
 
-    for (size_t i = 0; i < buffer.valueCount && written < capacity; ++i) {
-        const size_t index = (oldestSampleIndex + i) % kMaxSamplesPerStream;
-        const RawSample& sample = buffer.samples[index];
-        if (sample.timeMs < startMs || sample.timeMs > endMs) {
-            continue;
+    auto copyBin = [&](const FeatureHistoryBin& bin) {
+        if (!bin.valid || bin.startMs < startMs || bin.startMs > endMs) {
+            return;
         }
-        outValues[written++] = sample.value;
+        if (streamRequiresFreshAggregation(stream) && bin.freshCount == 0) {
+            return;
+        }
+        if (written < capacity) {
+            outValues[written++] = representativeValueForStream(stream, bin);
+        }
+    };
+
+    const size_t oldestIndex = buffer.binCount == kBinsPerStream ? buffer.writeIndex : 0U;
+    for (size_t i = 0; i < buffer.binCount && written < capacity; ++i) {
+        const size_t index = (oldestIndex + i) % kBinsPerStream;
+        copyBin(buffer.bins[index]);
+    }
+    if (buffer.hasCurrent && written < capacity) {
+        FeatureHistoryBin current = {};
+        current.startMs = buffer.current.startMs;
+        current.inputCount = buffer.current.inputCount;
+        current.freshCount = buffer.current.freshCount;
+        current.mean = buffer.current.inputCount > 0
+            ? static_cast<float>(buffer.current.sum / static_cast<double>(buffer.current.inputCount))
+            : 0.0f;
+        current.rms = buffer.current.inputCount > 0
+            ? sqrtf(static_cast<float>(buffer.current.sumSquares / static_cast<double>(buffer.current.inputCount)))
+            : 0.0f;
+        current.peak = buffer.current.peak;
+        current.meanAbs = buffer.current.inputCount > 0
+            ? static_cast<float>(buffer.current.sumAbs / static_cast<double>(buffer.current.inputCount))
+            : 0.0f;
+        current.last = buffer.current.last;
+        current.valid = buffer.current.inputCount > 0;
+        copyBin(current);
     }
 
     return written;
@@ -347,7 +451,9 @@ size_t FeatureHistory::sampleCount(FeatureStreamId stream) const {
     if (!isSupportedStream(stream)) {
         return 0;
     }
-    return _streams[streamIndex(stream)].valueCount;
+
+    const StreamBuffer& buffer = _streams[streamIndex(stream)];
+    return buffer.binCount + (buffer.hasCurrent && buffer.current.inputCount > 0 ? 1U : 0U);
 }
 
 bool FeatureHistory::hasSamples(FeatureStreamId stream) const {
@@ -360,12 +466,16 @@ unsigned long FeatureHistory::latestTimeMs(FeatureStreamId stream) const {
     }
 
     const StreamBuffer& buffer = _streams[streamIndex(stream)];
-    if (buffer.valueCount == 0) {
+    if (buffer.hasCurrent && buffer.current.inputCount > 0) {
+        return buffer.current.startMs;
+    }
+
+    if (buffer.binCount == 0) {
         return 0;
     }
 
-    const size_t latestIndex = (buffer.sampleWriteIndex + kMaxSamplesPerStream - 1U) % kMaxSamplesPerStream;
-    return buffer.samples[latestIndex].timeMs;
+    const size_t latestIndex = (buffer.writeIndex + kBinsPerStream - 1U) % kBinsPerStream;
+    return buffer.bins[latestIndex].startMs;
 }
 
 float FeatureHistory::latestValue(FeatureStreamId stream) const {
@@ -374,12 +484,16 @@ float FeatureHistory::latestValue(FeatureStreamId stream) const {
     }
 
     const StreamBuffer& buffer = _streams[streamIndex(stream)];
-    if (buffer.valueCount == 0) {
+    if (buffer.hasCurrent && buffer.current.inputCount > 0) {
+        return representativeValueForAccumulator(stream, buffer.current);
+    }
+
+    if (buffer.binCount == 0) {
         return 0.0f;
     }
 
-    const size_t latestIndex = (buffer.sampleWriteIndex + kMaxSamplesPerStream - 1U) % kMaxSamplesPerStream;
-    return buffer.samples[latestIndex].value;
+    const size_t latestIndex = (buffer.writeIndex + kBinsPerStream - 1U) % kBinsPerStream;
+    return representativeValueForStream(stream, buffer.bins[latestIndex]);
 }
 
 } // namespace detection

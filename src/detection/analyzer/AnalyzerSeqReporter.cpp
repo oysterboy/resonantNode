@@ -177,7 +177,7 @@ void AnalyzerApp::printSequenceInspectCanonical(const AnalyzerReport& report) co
         Serial.print(report.inspection.mainRejectReason != nullptr ? report.inspection.mainRejectReason : "none");
         if (observation != nullptr) {
             Serial.print(" compare.label=");
-            Serial.print(detection::inspectionTargetName(report.profileDetail.inspectionObservationTargets[observationIndex]));
+            Serial.print(detection::inspectionTargetName(target));
             Serial.print(" compare.stream=");
             Serial.print(scalarObservedStreamDisplayName(observation->stream));
             Serial.print(" compare.mode=");

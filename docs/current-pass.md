@@ -1,228 +1,347 @@
-# Remove `UNCERTAIN` from Trial Classification
+# Current Pass — Trial Selection, Source Accounting, and Report Consistency
 
 ## Goal
 
-Remove `UNCERTAIN` as a trial result.
+Fix the remaining Analyzer/reporting inconsistencies without changing detector tuning or the live detector input path.
 
-A trial must end in one clear classification. The detailed reason field is sufficient to explain why the pipeline failed.
+The detector already consumes the live feature stream. Keep that unchanged.
 
-## New rule
+---
+
+## Step 1 — Fix occurrence identity
+
+Each accepted occurrence must receive a new stable `occurrence_id`.
+
+Current bug:
+
+```text
+occurrence_id=34175
+```
+
+is repeated across multiple trials while timestamps change.
+
+Requirements:
+
+* assign a new ID when an occurrence is emitted,
+* never reuse the previous occurrence ID,
+* copy the same ID into:
+
+  * `Occurrence`
+  * `InspectedOccurrence`
+  * `PatternResult`
+  * selected Analyzer trial record,
+  * source diagnostic record.
+
+Add a test ensuring two accepted occurrences have different IDs.
+
+---
+
+## Step 2 — Fix selection terminology
+
+A source-accepted occurrence that later fails inspection or pattern rules is not a source reject.
 
 Replace:
 
 ```text
-result=uncertain
-reason=inspection_failed
+source.selection=selected_reject
 ```
 
 with:
 
 ```text
-result=rejected
-reject_reason=inspection_failed
+source.selection=selected_occurrence
 ```
 
-More specific reasons should be preferred where available:
+Use `selected_reject` only for a detector-rejected candidate.
+
+Example:
 
 ```text
-result=rejected
-reject_reason=amp_strength_below_required
+trial.result=rejected
+trial.reject_stage=pattern
+trial.reject_reason=inspection_failed
+
+source.selection=selected_occurrence
+source.valid=1
+source.reject_reason=none
 ```
 
-or:
+---
+
+## Step 3 — Make trial source counts real
+
+Current fields are always zero:
 
 ```text
-result=rejected
-reject_reason=contrast_strength_below_required
+src_total=0
+src_acc=0
+src_rej=0
 ```
 
-## Trial result vocabulary
+Populate them from trial-local source activity.
 
-Keep trial classification limited to explicit final outcomes:
-
-```cpp
-enum class AnalyzerResult {
-    Expected,
-    Early,
-    Late,
-    Miss,
-    Rejected,
-    Duplicate,
-    Unexpected,
-    Ambiguous,
-    TooDense
-};
-```
-
-Remove `Uncertain`.
-
-Keep `Ambiguous` only for genuinely competing or non-unique interpretations, for example:
-
-* multiple valid competing patterns,
-* no unique primary pattern,
-* conflicting observations that cannot be resolved.
-
-Do not use `Ambiguous` as a replacement for ordinary inspector or pattern rejection.
-
-## Pipeline mapping
-
-### Accepted source, inspector requirement failed
+Required meaning:
 
 ```text
-result=rejected
-reject_reason=inspection_failed
+src_total   = accepted + rejected candidates in this trial
+src_acc     = accepted source occurrences in this trial
+src_rej     = detector-rejected candidates in this trial
 ```
 
-Prefer the concrete failed requirement:
+Do not use run-global aggregate counters for these fields.
+
+Keep run counters separately:
 
 ```text
-reject_reason=amp_below_required
-reject_label=amp
-observed_class=weak
-required_class=medium
+src_run_acc
+src_run_rej
 ```
 
-### Accepted inspection, pattern rule failed
+or only in `SEQ_SUMMARY`.
 
-```text
-result=rejected
-reject_reason=pattern_requirement_failed
-```
+---
 
-### Detector candidate rejected
+## Step 4 — Fix trial finalization order
 
-```text
-result=rejected
-reject_reason=duration_too_long
-```
-
-### No accepted occurrence
+Trial 1 currently reports:
 
 ```text
 result=miss
-reject_reason=no_accepted_occurrence
+reject_reason=missing_pipeline_result
 ```
 
-Do not classify a detector reject as `uncertain`.
+while the next trial already contains evidence that a candidate from Trial 1 closed late.
 
-## Selection logic
-
-Remove all selection branches that prefer or search for an uncertain PatternResult.
-
-Old pattern:
-
-```cpp
-validPattern
-else uncertainPattern
-else acceptedOccurrence
-```
-
-Replace with:
-
-```cpp
-validPattern
-else rejectedPattern
-else acceptedOccurrenceWithoutPattern
-else selectedDetectorReject
-else miss
-```
-
-The selected rejected PatternResult should carry the concrete failure reason.
-
-## Pattern result status
-
-If `PatternResult` currently contains `Uncertain`, replace it with a simpler status:
-
-```cpp
-enum class PatternStatus {
-    Valid,
-    Rejected
-};
-```
-
-Optional:
-
-```cpp
-PatternRejectReason rejectReason;
-uint8_t firstFailedRequirementIndex;
-StrengthClass observedClass;
-StrengthClass requiredClass;
-```
-
-A pattern that fails one required inspector condition is `Rejected`, not `Uncertain`.
-
-## Reporting
-
-### `SEQ_TRIAL`
-
-Use:
+Required order:
 
 ```text
-SEQ_TRIAL
-trial=5
-result=rejected
-reject_reason=amp_below_required
-contrast_class=strong
-amp_class=weak
+1. stop emission window
+2. continue detector processing through settle period
+3. force-close or finalize active candidate if required by existing lifecycle rules
+4. drain accepted occurrences and rejected candidate records
+5. run inspection and pattern evaluation
+6. build trial selection
+7. print reports
+8. reset trial-local state
 ```
+
+Do not reset or classify the trial before the detector has completed its candidate lifecycle.
+
+Add a regression test for a candidate closing near the trial boundary.
+
+---
+
+## Step 5 — Make `SEQ_SOURCE_CORE` and `SEQ_SOURCE_SPEC` describe the same record
+
+Current contradiction:
+
+```text
+SEQ_SOURCE_CORE accepted.present=1
+```
+
+but:
+
+```text
+SEQ_SOURCE_SPEC
+detail.scalar.inspect.reject_reason=below_threshold
+detail.scalar.inspect.valid_release=0
+detail.scalar.inspect.emit_allowed=0
+```
+
+Both lines must come from the same selected accepted candidate record.
+
+Rules:
+
+* printers must not read mutable live detector state,
+* printers must not read `activeDetectorReport()`,
+* resolve the selected accepted/rejected record once,
+* pass that immutable record into both printers.
+
+If a matching diagnostic record is unavailable:
+
+```text
+source.report_matched=0
+```
+
+and omit candidate-specific details.
+
+Never print stale fallback data.
+
+---
+
+## Step 6 — Fix source report matching
+
+`source.report_matched=1` is only valid when IDs and timestamps agree.
+
+Validate at least:
+
+```text
+record.occurrence_id == selected.occurrence_id
+record.start_ms == selected.start_ms
+record.end_ms == selected.end_ms
+```
+
+If validation fails:
+
+```text
+source.report_matched=0
+source.report_reason=id_mismatch
+```
+
+Do not silently accept a partially matching report.
+
+---
+
+## Step 7 — Clean `SEQ_INSPECT`
+
+Keep only fields that describe the current observation.
 
 Remove:
 
 ```text
-reason=inspection_failed
-result=uncertain
+inspect.observation_index
+inspect.observation_count
 ```
 
-Prefer one stable field name:
+unless needed for machine parsing.
+
+Move `inspect.occurrence_id` to the end.
+
+Preferred order:
 
 ```text
-reject_reason=
+SEQ_INSPECT
+inspect.label=amp
+inspect.value=3646.375
+inspect.strength_class=weak
+inspect.valid=1
+inspect.status=observed
+inspect.sample_count=61
+inspect.coverage=0.610
+inspect.peak=4529.000
+inspect.mean=3547.276
+inspect.rms=3560.729
+inspect.median=3455.625
+inspect.p75=3646.375
+inspect.p90=4064.250
+inspect.trimmed_mean=3507.165
+inspect.input_value_count=884
+inspect.occurrence_id=<id>
 ```
 
-For successful trials:
+Changes:
+
+* rename `inspect.reject_reason=scalar_observed` to:
 
 ```text
-reject_reason=none
+inspect.status=observed
+inspect.reject_reason=none
 ```
 
-### `SEQ_EXPLAIN`
-
-Keep detailed cause:
+* rename AMP stream output from:
 
 ```text
-PATTERN:
+Scalar
+```
+
+to:
+
+```text
+AmpEnvelope
+```
+
+* rename `fresh_value_count` to `input_value_count` for AMP.
+
+---
+
+## Step 8 — Verify Inspector coverage semantics
+
+Current AMP and contrast coverage is only about `0.58–0.61`.
+
+For a roughly 100–123 ms occurrence and 1 ms bins, verify why only about 60 valid bins are selected.
+
+Check:
+
+* actual inspection window length,
+* history lookup start/end semantics,
+* whether only part of the occurrence window is inspected,
+* whether every second bin is skipped,
+* whether bins are overwritten too early,
+* whether current active bin is excluded,
+* whether timestamp comparison is inclusive/exclusive,
+* whether only fresh frequency bins are valid.
+
+Do not tune AMP thresholds until coverage semantics are confirmed.
+
+Expected reporting should include:
+
+```text
+inspect.window_ms
+inspect.expected_bin_count
+inspect.sample_count
+inspect.coverage
+```
+
+---
+
+## Step 9 — Clarify `SEQ_TRIAL` field ownership
+
+Rename ambiguous fields:
+
+```text
+strength
+confidence
+```
+
+to:
+
+```text
+source_strength
+pattern_confidence
+```
+
+For rejected trials:
+
+```text
+dt=na
+```
+
+instead of:
+
+```text
+dt=-1ms
+```
+
+Keep:
+
+```text
+trial.result
+trial.reject_stage
+trial.reject_reason
+```
+
+Example:
+
+```text
+SEQ_TRIAL
+trial=2
 result=rejected
-first_failed_requirement_index=1
-failed_label=amp
-observed_class=weak
-required_class=medium
-reject_reason=amp_below_required
+reject_stage=pattern
+reject_reason=inspection_failed
+contrast_class=strong
+amp_class=weak
+source_strength=26579.0
+pattern_confidence=0.00
+src_total=1
+src_acc=1
+src_rej=0
 ```
 
-### `SEQ_SUMMARY`
+---
 
-Remove uncertain counters.
+## Step 10 — Enforce summary invariants
 
-Add or keep:
-
-```text
-rejected_trials
-pattern_rejected_trials
-```
-
-Optionally aggregate reject reasons:
-
-```text
-rejects.inspection_failed=6
-rejects.duration_too_long=4
-rejects.amp_below_required=6
-```
-
-Ensure every completed trial increments exactly one primary result counter.
-
-## Counter invariants
-
-For every run:
+For every completed trial, exactly one primary result counter must increment.
 
 ```text
 completed =
@@ -237,9 +356,7 @@ ambiguous +
 too_dense
 ```
 
-No trial may be counted simultaneously as both `miss` and `rejected`.
-
-Pipeline counters remain separate:
+Stage counters remain separate:
 
 ```text
 detector_accepted_trials
@@ -248,63 +365,37 @@ pattern_valid_trials
 pattern_rejected_trials
 ```
 
-These are diagnostic stage counters, not primary trial outcomes.
-
-## Acceptance examples
-
-### Inspector too weak
+A source-accepted but pattern-rejected trial must count as:
 
 ```text
-result=rejected
-reject_reason=amp_below_required
+rejected_trials += 1
+detector_accepted_trials += 1
+pattern_rejected_trials += 1
 ```
 
-### Detector duration too long
+It must not increment `miss_trials`.
+
+---
+
+## Acceptance criteria
+
+1. Every accepted occurrence has a unique ID.
+2. The same occurrence ID appears across source, inspect, pattern, and explain output.
+3. `src_total/src_acc/src_rej` reflect trial-local source activity.
+4. Trial 1 is no longer lost due to premature finalization.
+5. `SEQ_SOURCE_CORE` and `SEQ_SOURCE_SPEC` never contradict each other.
+6. `selected_reject` is used only for detector-rejected candidates.
+7. Inspector observations use clear status and stream names.
+8. Inspector coverage is explained and internally consistent.
+9. Every completed trial increments exactly one primary result counter.
+10. No detector thresholds or live detector routing are changed.
+
+## Suggested commit sequence
 
 ```text
-result=rejected
-reject_reason=duration_too_long
+AnalyzerFix: assign stable occurrence identities
+AnalyzerFix: finalize trials after detector lifecycle completion
+AnalyzerFix: report trial-local source counts
+AnalyzerFix: bind source core/spec to one selected record
+AnalyzerCleanup: simplify inspect and trial output
 ```
-
-### No candidate
-
-```text
-result=miss
-reject_reason=no_occurrence_candidate
-```
-
-### Valid detection in expected window
-
-```text
-result=expected
-reject_reason=none
-```
-
-## Non-goals
-
-* Do not change detector thresholds.
-* Do not change inspector thresholds.
-* Do not change pattern requirements.
-* Do not reinterpret ordinary failures as `Ambiguous`.
-* Do not remove detailed stage reporting.
-
-## Suggested commit
-
-```text
-AnalyzerCleanup: remove uncertain trial result
-```
-
-```text
-- classify failed inspection and pattern results as rejected
-- use reject_reason for detailed failure explanation
-- remove uncertain branches and summary counters
-- enforce one primary trial result per completed trial
-```
-
-Implemented:
-
-- `AnalyzerResult::Uncertain` was removed from the analyzer result vocabulary.
-- `SEQ_TRIAL` now prints the real trial result name and `reject_reason=...`.
-- Failed inspection is classified as `Rejected` with `InspectionFailed`.
-- Pattern rejection no longer uses a separate `uncertain` state.
-- The analyzer no longer prefers or prints an `uncertain` trial branch.

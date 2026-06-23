@@ -202,7 +202,7 @@ void AnalyzerApp::printSequenceHelp() {
     Serial.println("SEQ PROFILE TonalPulseFreq");
     Serial.println("SEQ PROFILE TonalPulseScalar");
     Serial.println("SEQ PROFILE AmpExperimental");
-    Serial.println("SEQ PARAM: freqScore=18000 freqContrast=50.0 freqReleaseScore=12000 freqReleaseContrast=50.0 scalar_observed_stream=Scalar|FrequencyTarget scalar_onset_threshold=18000 scalar_release_threshold=12000 scalar_cooldown_ms=50 scalar_min_duration_ms=60 scalar_max_duration_ms=300 scalar_min_peak_strength=15000 scalar_release_debounce_ms=30 scalar_require_carrier_quality=0|1 scalar_require_min_strength=0|1 scalar_min_strength=0 scalar_min_release_coverage_ms=90 scalar_min_longest_island_ms=80 scalar_max_gap_ms=10");
+    Serial.println("SEQ PARAM: freqScore=18000 freqContrast=50.0 freqReleaseScore=12000 freqReleaseContrast=50.0 scalar_observed_stream=AmpEnvelope|FrequencyTarget scalar_onset_threshold=18000 scalar_release_threshold=12000 scalar_cooldown_ms=50 scalar_min_duration_ms=60 scalar_max_duration_ms=300 scalar_min_peak_strength=15000 scalar_release_debounce_ms=30 scalar_require_carrier_quality=0|1 scalar_require_min_strength=0|1 scalar_min_strength=0 scalar_min_release_coverage_ms=90 scalar_min_longest_island_ms=80 scalar_max_gap_ms=10");
     Serial.println("SEQ PARAM STATUS");
 }
 
@@ -230,7 +230,7 @@ void AnalyzerApp::pollUsbConsole() {
 
 void AnalyzerApp::handleUsbLine(const char* line) {
     if (equalsIgnoreCase(line, "HELP")) {
-        Serial.println("CMD: PARAM freqScore=18000 freqContrast=50.0 freqReleaseScore=12000 freqReleaseContrast=50.0 scalar_observed_stream=Scalar|FrequencyTarget scalar_onset_threshold=18000 scalar_release_threshold=12000 scalar_cooldown_ms=50 scalar_min_duration_ms=60 scalar_max_duration_ms=300 scalar_min_peak_strength=15000 scalar_release_debounce_ms=30 scalar_require_carrier_quality=0|1 scalar_require_min_strength=0|1 scalar_min_strength=0 scalar_min_release_coverage_ms=90 scalar_min_longest_island_ms=80 scalar_max_gap_ms=10");
+        Serial.println("CMD: PARAM freqScore=18000 freqContrast=50.0 freqReleaseScore=12000 freqReleaseContrast=50.0 scalar_observed_stream=AmpEnvelope|FrequencyTarget scalar_onset_threshold=18000 scalar_release_threshold=12000 scalar_cooldown_ms=50 scalar_min_duration_ms=60 scalar_max_duration_ms=300 scalar_min_peak_strength=15000 scalar_release_debounce_ms=30 scalar_require_carrier_quality=0|1 scalar_require_min_strength=0|1 scalar_min_strength=0 scalar_min_release_coverage_ms=90 scalar_min_longest_island_ms=80 scalar_max_gap_ms=10");
         Serial.println("CMD: PARAM STATUS");
         Serial.println("CMD: EMIT CHIRP freq=3200 dur=100");
         Serial.println("CMD: EMIT MODE REMOTE");

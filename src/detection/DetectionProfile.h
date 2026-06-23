@@ -128,6 +128,7 @@ inline DetectionProfile makeTonalPulseScalarProfile() {
     profile.scalarTransient.onsetReleaseThreshold = 3000.0f; // Release threshold for candidate end.
     profile.scalarTransient.minTransientDurationMs = 85; // Reject pulses that are too short.
     profile.scalarTransient.maxTransientDurationMs = 130; // Reject pulses that are too long.
+    profile.scalarTransient.minTransientPeakStrength = 5750.0f; // Minimum peak gate for the carrier.
     profile.scalarTransient.releaseDebounceMs = 10; // Require a short stable release before ending.
     profile.scalarTransient.cooldownAfterOnsetMs = 50; // Avoid immediate re-triggering on the same pulse.
     // Minimum strength gate for the matched mean / peak utility switch.
@@ -171,7 +172,7 @@ inline DetectionProfile makeTonalPulseScalarProfile() {
     profile.inspectionPlan.modules[1].scalar.supportStrength.weakPeakThreshold = 3500.0f; // Weak amplitude threshold.
     profile.inspectionPlan.count = 2; // This profile uses two inspectors.
 
-    profile.inspectionPlan.failedRequirementMeansUncertain = true; // Failed inspection requirements downgrade to uncertain.
+    profile.inspectionPlan.failedRequirementMeansUncertain = true; // Legacy compatibility flag for failed requirement handling.
 
     // Field-state windowing.
     profile.fieldStateConfig.occurrenceWindowMs = 4000; // Window for occurrence density tracking.

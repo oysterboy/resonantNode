@@ -48,11 +48,14 @@ detection::DetectorRejectClass scalarTransientRejectClass(ScalarTransientDetecto
 
 void ScalarTransientDetector::captureAcceptedOccurrence(unsigned long releaseObservedUs, unsigned long peakDurationUs) {
     finalizeCandidateFacts(releaseObservedUs);
-    const float candidateMean = _candidateSampleCount > 0
-        ? _candidateSum / static_cast<float>(_candidateSampleCount)
+    const float candidateMean = _candidateStrengthCount > 0
+        ? static_cast<float>(_candidateStrengthSum / static_cast<double>(_candidateStrengthCount))
         : 0.0f;
-    const float candidateRms = _candidateSampleCount > 0
-        ? sqrtf(_candidateSumSquares / static_cast<float>(_candidateSampleCount))
+    const float candidateMatchedMean = _candidateMatchedStrengthCount > 0
+        ? static_cast<float>(_candidateMatchedStrengthSum / static_cast<double>(_candidateMatchedStrengthCount))
+        : 0.0f;
+    const float candidateRms = _candidateStrengthCount > 0
+        ? sqrtf(_candidateSumSquares / static_cast<float>(_candidateStrengthCount))
         : 0.0f;
 
     _acceptedOccurrencePresent = true;
@@ -67,13 +70,20 @@ void ScalarTransientDetector::captureAcceptedOccurrence(unsigned long releaseObs
     _acceptedOccurrence.peak = _candidatePeak;
     _acceptedOccurrence.mean = candidateMean;
     _acceptedOccurrence.rms = candidateRms;
-    _acceptedOccurrence.coverageAboveAttackMs = _candidateCoverageAboveAttackMs;
-    _acceptedOccurrence.coverageAboveReleaseMs = _candidateCoverageAboveReleaseMs;
-    _acceptedOccurrence.sustainedMs = _candidateSustainedMs;
+    _acceptedOccurrence.meanStrength = candidateMean;
+    _acceptedOccurrence.matchedMeanStrength = candidateMatchedMean;
+    _acceptedOccurrence.strengthCount = _candidateStrengthCount;
+    _acceptedOccurrence.matchedStrengthCount = _candidateMatchedStrengthCount;
+    _acceptedOccurrence.coverageAboveAttackMs = static_cast<unsigned long>(_candidateCoverageAboveAttackUs / 1000ULL);
+    _acceptedOccurrence.coverageAboveReleaseMs = static_cast<unsigned long>(_candidateCoverageAboveReleaseUs / 1000ULL);
+    _acceptedOccurrence.sustainedMs = static_cast<unsigned long>(_candidateSustainedUs / 1000ULL);
     _acceptedOccurrence.islandCount = _candidateIslandCount;
     _acceptedOccurrence.gapCount = _candidateGapCount;
     _acceptedOccurrence.islandMaxMs = _candidateIslandMaxMs;
     _acceptedOccurrence.gapMaxMs = _candidateGapMaxMs;
+    _reportDetail.inspect.matchedMeanPassed =
+        !_requireMinStrength ||
+        candidateMatchedMean >= _minMatchedMeanStrength;
     resetCandidateFacts();
 }
 
@@ -83,11 +93,14 @@ void ScalarTransientDetector::captureSelectedReject(unsigned long releaseObserve
     }
 
     finalizeCandidateFacts(releaseObservedUs);
-    const float candidateMean = _candidateSampleCount > 0
-        ? _candidateSum / static_cast<float>(_candidateSampleCount)
+    const float candidateMean = _candidateStrengthCount > 0
+        ? static_cast<float>(_candidateStrengthSum / static_cast<double>(_candidateStrengthCount))
         : 0.0f;
-    const float candidateRms = _candidateSampleCount > 0
-        ? sqrtf(_candidateSumSquares / static_cast<float>(_candidateSampleCount))
+    const float candidateMatchedMean = _candidateMatchedStrengthCount > 0
+        ? static_cast<float>(_candidateMatchedStrengthSum / static_cast<double>(_candidateMatchedStrengthCount))
+        : 0.0f;
+    const float candidateRms = _candidateStrengthCount > 0
+        ? sqrtf(_candidateSumSquares / static_cast<float>(_candidateStrengthCount))
         : 0.0f;
 
     const unsigned long rejectStartMs = _peakStartedUs / 1000UL;
@@ -112,9 +125,13 @@ void ScalarTransientDetector::captureSelectedReject(unsigned long releaseObserve
     _selectedReject.peak = _candidatePeak;
     _selectedReject.mean = candidateMean;
     _selectedReject.rms = candidateRms;
-    _selectedReject.coverageAboveAttackMs = _candidateCoverageAboveAttackMs;
-    _selectedReject.coverageAboveReleaseMs = _candidateCoverageAboveReleaseMs;
-    _selectedReject.sustainedMs = _candidateSustainedMs;
+    _selectedReject.meanStrength = candidateMean;
+    _selectedReject.matchedMeanStrength = candidateMatchedMean;
+    _selectedReject.strengthCount = _candidateStrengthCount;
+    _selectedReject.matchedStrengthCount = _candidateMatchedStrengthCount;
+    _selectedReject.coverageAboveAttackMs = static_cast<unsigned long>(_candidateCoverageAboveAttackUs / 1000ULL);
+    _selectedReject.coverageAboveReleaseMs = static_cast<unsigned long>(_candidateCoverageAboveReleaseUs / 1000ULL);
+    _selectedReject.sustainedMs = static_cast<unsigned long>(_candidateSustainedUs / 1000ULL);
     _selectedReject.islandCount = _candidateIslandCount;
     _selectedReject.gapCount = _candidateGapCount;
     _selectedReject.islandMaxMs = _candidateIslandMaxMs;
@@ -127,6 +144,9 @@ void ScalarTransientDetector::captureSelectedReject(unsigned long releaseObserve
     _reportDetail.selectedReject.opened = true;
     _reportDetail.selectedReject.crossedOnset = true;
     _reportDetail.selectedReject.crossedRelease = true;
+    _reportDetail.inspect.matchedMeanPassed =
+        !_requireMinStrength ||
+        candidateMatchedMean >= _minMatchedMeanStrength;
     resetCandidateFacts();
 }
 

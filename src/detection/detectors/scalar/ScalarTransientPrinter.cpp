@@ -56,6 +56,16 @@ void printScalarTransientDetailLine(const char* prefix, const detection::Detecto
     Serial.print(scalar.inspect.noEmitReason != nullptr ? scalar.inspect.noEmitReason : "none");
     Serial.print(" detail.scalar.inspect.gate_reason=");
     Serial.print(scalar.inspect.gateReason != nullptr ? scalar.inspect.gateReason : "none");
+    Serial.print(" detail.scalar.inspect.min_strength_pass=");
+    Serial.print(scalar.inspect.matchedMeanPassed ? 1 : 0);
+    Serial.print(" detail.scalar.inspect.carrier_quality_required=");
+    Serial.print(scalar.inspect.carrierQualityRequired ? 1 : 0);
+    Serial.print(" detail.scalar.inspect.carrier_coverage_passed=");
+    Serial.print(scalar.inspect.carrierCoveragePassed ? 1 : 0);
+    Serial.print(" detail.scalar.inspect.carrier_island_passed=");
+    Serial.print(scalar.inspect.carrierIslandPassed ? 1 : 0);
+    Serial.print(" detail.scalar.inspect.carrier_gap_passed=");
+    Serial.print(scalar.inspect.carrierGapPassed ? 1 : 0);
     Serial.print(" detail.scalar.inspect.opened=");
     Serial.print(scalar.inspect.opened ? 1 : 0);
     Serial.print(" detail.scalar.inspect.released=");

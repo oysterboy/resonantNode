@@ -27,7 +27,19 @@ void AnalyzerApp::printDetectionParameters() const {
     Serial.print(" min_peak_strength=");
     Serial.print(scalar.minTransientPeakStrength, 1);
     Serial.print(" release_debounce_ms=");
-    Serial.println(scalar.releaseDebounceMs);
+    Serial.print(scalar.releaseDebounceMs);
+    Serial.print(" carrier_quality_required=");
+    Serial.print(scalar.requireCarrierQuality ? 1 : 0);
+    Serial.print(" min_strength_required=");
+    Serial.print(scalar.requireMinStrength ? 1 : 0);
+    Serial.print(" min_strength=");
+    Serial.print(scalar.minMatchedMeanStrength, 1);
+    Serial.print(" min_release_coverage_ms=");
+    Serial.print(scalar.minCoverageAboveReleaseMs);
+    Serial.print(" min_longest_island_ms=");
+    Serial.print(scalar.minLongestIslandMs);
+    Serial.print(" max_gap_ms=");
+    Serial.println(scalar.maxGapMs);
 
     const unsigned long sampleRateHz = _audioSource.sampleRateHz() > 0 ? _audioSource.sampleRateHz() : 16000UL;
     const unsigned long windowSizeSamples = _freqBandStream.windowSizeSamples();
@@ -82,6 +94,18 @@ void AnalyzerApp::printParamStatus() const {
     Serial.print(scalar.minTransientPeakStrength, 1);
     Serial.print(" scalar_release_debounce_ms=");
     Serial.print(scalar.releaseDebounceMs);
+    Serial.print(" scalar_require_carrier_quality=");
+    Serial.print(scalar.requireCarrierQuality ? 1 : 0);
+    Serial.print(" scalar_require_min_strength=");
+    Serial.print(scalar.requireMinStrength ? 1 : 0);
+    Serial.print(" scalar_min_strength=");
+    Serial.print(scalar.minMatchedMeanStrength, 1);
+    Serial.print(" scalar_min_release_coverage_ms=");
+    Serial.print(scalar.minCoverageAboveReleaseMs);
+    Serial.print(" scalar_min_longest_island_ms=");
+    Serial.print(scalar.minLongestIslandMs);
+    Serial.print(" scalar_max_gap_ms=");
+    Serial.print(scalar.maxGapMs);
 
     Serial.print(" freqScore=");
     Serial.print(_analyzerTuning.frequencyMatch.attackScoreMin, 1);
@@ -199,12 +223,8 @@ void AnalyzerApp::printAudioRunSummary() const {
     const unsigned long freqComputedAtSample = _freqBandStream.sampleCount() >= freqAgeSamples
         ? _freqBandStream.sampleCount() - freqAgeSamples
         : 0UL;
-    const unsigned long freqHistoryScoreRecords =
-        _detection.featureHistory().sampleCount(detection::FeatureStreamId::FrequencyScore);
     const unsigned long freqHistoryTargetRecords =
         _detection.featureHistory().sampleCount(detection::FeatureStreamId::FrequencyTarget);
-    const unsigned long freqHistoryTargetBandRecords =
-        _detection.featureHistory().sampleCount(detection::FeatureStreamId::FrequencyTargetBand);
     const unsigned long freqHistoryContrastRecords =
         _detection.featureHistory().sampleCount(detection::FeatureStreamId::FrequencyContrast);
 
@@ -219,10 +239,6 @@ void AnalyzerApp::printAudioRunSummary() const {
     Serial.print(freqComputedAtSample);
     Serial.print(" history_target_records=");
     Serial.print(freqHistoryTargetRecords);
-    Serial.print(" history_score_records=");
-    Serial.print(freqHistoryScoreRecords);
-    Serial.print(" history_target_band_records=");
-    Serial.print(freqHistoryTargetBandRecords);
     Serial.print(" history_contrast_records=");
     Serial.println(freqHistoryContrastRecords);
 }

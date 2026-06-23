@@ -25,6 +25,8 @@ const char* detectorRejectClassName(DetectorRejectClass rejectClass) {
             return "timing";
         case DetectorRejectClass::Strength:
             return "strength";
+        case DetectorRejectClass::Quality:
+            return "quality";
         case DetectorRejectClass::Cooldown:
             return "cooldown";
         case DetectorRejectClass::State:

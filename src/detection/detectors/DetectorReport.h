@@ -22,6 +22,10 @@ struct AcceptedOccurrenceSummary {
     float peak = 0.0f;
     float mean = 0.0f;
     float rms = 0.0f;
+    float meanStrength = 0.0f;
+    float matchedMeanStrength = 0.0f;
+    unsigned int strengthCount = 0;
+    unsigned int matchedStrengthCount = 0;
     unsigned long coverageAboveAttackMs = 0;
     unsigned long coverageAboveReleaseMs = 0;
     unsigned long sustainedMs = 0;
@@ -50,6 +54,10 @@ struct SelectedRejectSummary {
     float peak = 0.0f;
     float mean = 0.0f;
     float rms = 0.0f;
+    float meanStrength = 0.0f;
+    float matchedMeanStrength = 0.0f;
+    unsigned int strengthCount = 0;
+    unsigned int matchedStrengthCount = 0;
     unsigned long coverageAboveAttackMs = 0;
     unsigned long coverageAboveReleaseMs = 0;
     unsigned long sustainedMs = 0;
@@ -144,6 +152,11 @@ struct ScalarInspectEvidence {
     const char* rejectReason = "none";
     const char* noEmitReason = "none";
     const char* gateReason = "none";
+    bool matchedMeanPassed = false;
+    bool carrierQualityRequired = false;
+    bool carrierCoveragePassed = true;
+    bool carrierIslandPassed = true;
+    bool carrierGapPassed = true;
     bool opened = false;
     bool released = false;
     bool validRelease = false;

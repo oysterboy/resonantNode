@@ -23,7 +23,7 @@ void FreqBandStream::resetState() {
     _sampleWriteIndex = 0;
     _samplesUntilNextFrequencyUpdate = 0;
     _producedFreshPacketOnLastObserve = false;
-    _lastTargetBandScoreValue = 0;
+    _lastTargetBandValue = 0;
     _lastTargetBandPowerValue = 0.0f;
     _lastLowerBandPowerValue = 0.0f;
     _lastUpperBandPowerValue = 0.0f;
@@ -77,7 +77,7 @@ void FreqBandStream::observeCenteredSample(int centeredSample, unsigned long sam
     _producedFreshPacketOnLastObserve = false;
     pushSample(centeredSample);
     if (_sampleCount < _windowSizeSamples) {
-        _lastTargetBandScoreValue = 0;
+        _lastTargetBandValue = 0;
         _lastTargetBandPowerValue = 0.0f;
         _lastLowerBandPowerValue = 0.0f;
         _lastUpperBandPowerValue = 0.0f;
@@ -180,7 +180,7 @@ float FreqBandStream::computeGoertzelPowerAtFrequency(float frequencyHz) const {
 
 audio::FrequencyScore16 FreqBandStream::computeFrequencyScore() {
     if (_windowSizeSamples == 0 || _sampleCount < _windowSizeSamples) {
-        _lastTargetBandScoreValue = 0;
+        _lastTargetBandValue = 0;
         _lastTargetBandPowerValue = 0.0f;
         _lastLowerBandPowerValue = 0.0f;
         _lastUpperBandPowerValue = 0.0f;
@@ -211,7 +211,7 @@ audio::FrequencyScore16 FreqBandStream::computeFrequencyScore() {
     const audio::FrequencyScore16 normalizedScore = audio::frequencyAmplitudeToScore(targetAmplitude);
     const float contrast = normalizeContrastQuality(targetPower, neighborPower);
 
-    _lastTargetBandScoreValue = normalizedScore;
+    _lastTargetBandValue = normalizedScore;
     _lastTargetBandPowerValue = targetPower;
     _lastLowerBandPowerValue = lowerPower;
     _lastUpperBandPowerValue = upperPower;
@@ -224,8 +224,8 @@ audio::FrequencyScore16 FreqBandStream::computeFrequencyScore() {
     return normalizedScore;
 }
 
-audio::FrequencyScore16 FreqBandStream::lastTargetBandScoreValue() const {
-    return _lastTargetBandScoreValue;
+audio::FrequencyScore16 FreqBandStream::lastTargetBandValue() const {
+    return _lastTargetBandValue;
 }
 
 float FreqBandStream::lastTargetBandPowerValue() const {

@@ -48,6 +48,7 @@ enum class AnalyzerResult {
     Miss,
     Duplicate,
     Unexpected,
+    Uncertain,
     Rejected,
     Ambiguous,
     TooDense,
@@ -95,6 +96,8 @@ inline const char* analyzerResultName(AnalyzerResult value) {
             return "duplicate";
         case AnalyzerResult::Unexpected:
             return "unexpected";
+        case AnalyzerResult::Uncertain:
+            return "uncertain";
         case AnalyzerResult::Rejected:
             return "rejected";
         case AnalyzerResult::Ambiguous:
@@ -161,23 +164,6 @@ inline const char* analyzerStageName(AnalyzerStage value) {
     }
 }
 
-inline const char* supportTargetDisplayName(detection::EvidenceTarget value, bool supportGateEnabled) {
-    switch (value) {
-        case detection::EvidenceTarget::SupportStrength:
-            return supportGateEnabled ? "SupportStrength" : "diagnostic_only:SupportStrength";
-        case detection::EvidenceTarget::FrequencyScoreStrength:
-            return supportGateEnabled ? "FrequencyScoreStrength" : "diagnostic_only:FrequencyScoreStrength";
-        case detection::EvidenceTarget::FrequencyContrastQuality:
-            return supportGateEnabled ? "FrequencyContrastQuality" : "diagnostic_only:FrequencyContrastQuality";
-        case detection::EvidenceTarget::TargetBandStrength:
-            return supportGateEnabled ? "TargetBandStrength" : "diagnostic_only:TargetBandStrength";
-        case detection::EvidenceTarget::None:
-        default:
-            return supportGateEnabled ? "None" : "diagnostic_only:None";
-    }
-}
-
-//PARAM TUNING TEMPORARY
 inline const char* scalarObservedStreamDisplayName(detection::FeatureStreamId value) {
     switch (value) {
         case detection::FeatureStreamId::AmpMagnitude:
@@ -186,10 +172,6 @@ inline const char* scalarObservedStreamDisplayName(detection::FeatureStreamId va
             return "Scalar";
         case detection::FeatureStreamId::FrequencyTarget:
             return "FrequencyTarget";
-        case detection::FeatureStreamId::FrequencyScore:
-            return "FrequencyScore";
-        case detection::FeatureStreamId::FrequencyTargetBand:
-            return "FrequencyTargetBand";
         case detection::FeatureStreamId::FrequencyContrast:
             return "FrequencyContrast";
         case detection::FeatureStreamId::Unknown:
@@ -225,6 +207,7 @@ struct AnalyzerPatternObservation {
     bool patternAccepted = false;
     bool patternMatched = false;
     bool supportMatched = false;
+    bool uncertain = false;
     bool behaviorEligible = false;
 
     float confidence = 0.0f;
@@ -233,6 +216,10 @@ struct AnalyzerPatternObservation {
     const char* supportStrength = "unknown";
     const char* reason = "none";
     const char* rejectReason = "none";
+    const char* firstFailedLabel = "none";
+    const char* firstFailedObservedStrength = "unknown";
+    const char* firstFailedRequiredStrength = "unknown";
+    unsigned int firstFailedRequirementIndex = 255;
 
     unsigned int involvedOccurrences = 0;
 };
@@ -271,7 +258,7 @@ struct AnalyzerInspectionObservation {
     unsigned int rejected = 0;
 
     const char* primaryEvidence = "none";
-    const char* moduleTarget = "unknown";
+    const char* moduleLabel = "unknown";
     const char* moduleStrengthClass = "unknown";
     const char* mainRejectReason = "none";
 };
@@ -304,14 +291,10 @@ struct AnalyzerProfileDetail {
     const char* inspectionPlan = "unknown";
     const char* inspectionModules = "unknown";
     size_t inspectionModuleCount = 0;
-    const char* evidenceTargets = "unknown";
-    const char* requiredSupportTarget = "unknown";
-    const char* supportGate = "unknown";
-    const char* supportStrengthMin = "medium";
-    bool requireSupportForAcceptance = true;
+    const char* inspectionLabels = "unknown";
     detection::ScalarInspectionObservation scalarObservation = {};
     size_t inspectionObservationCount = 0;
-    detection::EvidenceTarget inspectionObservationTargets[detection::kMaxInspectionModules] = {};
+    const char* inspectionObservationLabels[detection::kMaxInspectionModules] = {};
     detection::ScalarInspectionObservation inspectionObservations[detection::kMaxInspectionModules] = {};
 
     float supportScore = 0.0f;

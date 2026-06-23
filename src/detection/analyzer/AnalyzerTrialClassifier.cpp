@@ -10,6 +10,7 @@ AnalyzerReason analyzerReasonFromSequenceOutcome(const AnalyzerSequenceClassific
             return AnalyzerReason::UnexpectedValidPatternWithoutTrigger;
         case AnalyzerResult::Duplicate:
             return AnalyzerReason::DuplicatePatternAfterPrimary;
+        case AnalyzerResult::Uncertain:
         case AnalyzerResult::Miss:
             if (input.detectorSelectedRejectPresent) {
                 return AnalyzerReason::OccurrenceSeenButRejected;

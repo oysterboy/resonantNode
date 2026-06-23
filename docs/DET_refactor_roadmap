@@ -1,0 +1,778 @@
+# TonalPulseScalar – Zielbild und Implementationsplan
+
+> Current landing note: the active firmware path has already been trimmed to
+> two inspectors for TonalPulseScalar (`FrequencyContrastQuality` and
+> `SupportStrength`). `TargetBandStrength` remains part of the broader target
+> image and is not part of the current live profile.
+
+## 1. Ziel
+
+Ein 3200-Hz-Puls soll:
+
+* bei ungefähr 100 cm frontal zuverlässig erkannt werden,
+* ab 200–250 cm möglichst als `UNCERTAIN` oder `REJECTED` enden,
+* ohne Einführung eines MultiScalarDetectors,
+* mit klarer Trennung zwischen Detector-Lifecycle und nachgelagerter Signalqualität.
+
+Die Entscheidung bleibt konservativ:
+
+```text
+CONFIRMED → Behavior darf reagieren
+UNCERTAIN → keine Reaktion
+REJECTED  → keine Reaktion
+```
+
+`UNCERTAIN` und `REJECTED` bleiben im Analyzer unterscheidbar.
+
+---
+
+## 2. Zielarchitektur
+
+```text
+RAW PCM
+  ↓
+FrequencyBandStream
+  ├─ FrequencyTargetBand / RegionScore
+  ├─ FrequencyContrast
+  └─ AmpEnvelope
+        ↓
+ScalarTransientDetector
+  observedStream = FrequencyTargetBand
+        ↓
+Occurrence
+  inklusive Carrier-Lifecycle-Fakten
+        ↓
+OccurrenceInspector
+  ├─ Target-/Region-Stärke
+  ├─ Frequency-Contrast
+  └─ AMP-Stärke
+        ↓
+PatternMatcher
+  kombiniert Detector- und Inspector-Evidence
+        ↓
+PatternResult
+  Confirmed / Uncertain / Rejected
+```
+
+## 3. Verantwortlichkeiten
+
+### ScalarTransientDetector
+
+Der Detector verarbeitet weiterhin genau **einen Skalarwert**:
+
+```text
+FrequencyTargetBand
+```
+
+Er besitzt:
+
+* Attack-Schwelle
+* Release-Schwelle
+* Release-Debounce
+* Candidate-Start und -Ende
+* minimale/maximale Dauer
+* Peak
+* Carrier-Coverage
+* Carrier-Inseln und Lücken
+* akzeptierten oder abgelehnten Candidate
+
+Er kennt nicht:
+
+* AMP
+* FrequencyContrast
+* mehrere FeatureStreams
+* finale Near-Entscheidung
+
+### OccurrenceInspector
+
+Die Inspectoren werten nachträglich ms-basierte Fenster aus:
+
+* Target-/Region-Stärke
+* FrequencyContrast
+* AmpEnvelope
+
+Pre-floor-Werte bleiben reine Diagnostik.
+
+### PatternMatcher
+
+Der PatternMatcher entscheidet, ob ein vom Detector akzeptiertes Ereignis ausreichend qualifiziert ist:
+
+```text
+Detector lifecycle valid
+AND Carrier quality valid
+AND Contrast valid
+AND AMP valid
+```
+
+Ein fehlgeschlagenes Zusatzkriterium erzeugt zunächst `UNCERTAIN`, nicht zwingend einen Detector-Reject.
+
+---
+
+## 4. Detector-Coverage und Fragmentierung
+
+Die bereits im ScalarTransientDetector erfassten Werte sind die richtigen:
+
+```text
+coverageAboveAttackMs
+coverageAboveReleaseMs
+islandCount
+gapCount
+islandMaxMs
+gapMaxMs
+```
+
+Sie beschreiben die Qualität des Carrier-Skalars und gehören daher zum Detector.
+
+Keine zusätzliche Coverage des AMP- oder Contrast-Inspectors ist zunächst nötig.
+
+### Wichtige Korrektur
+
+Aktuell wird gerechnet:
+
+```cpp
+deltaMs = deltaUs / 1000;
+coverageMs += deltaMs;
+```
+
+Bei Updates unter 1 ms fällt dadurch Zeit verloren.
+
+Intern ändern zu:
+
+```cpp
+uint64_t coverageAboveAttackUs;
+uint64_t coverageAboveReleaseUs;
+uint64_t sustainedUs;
+```
+
+Akkumulation:
+
+```cpp
+coverageAboveReleaseUs += deltaUs;
+```
+
+Erst beim Erstellen von Occurrence und DetectorReport:
+
+```cpp
+coverageAboveReleaseMs =
+    coverageAboveReleaseUs / 1000;
+```
+
+Dasselbe gilt für `sustainedMs`.
+
+Insel- und Gap-Zeiten können weiter aus µs-Zeitstempeln abgeleitet werden.
+
+---
+
+## 5. Erweiterung von ScalarTransientConfig
+
+```cpp
+struct ScalarTransientConfig {
+    FeatureStreamId observedStream;
+
+    float onsetDetectionThreshold;
+    float onsetReleaseThreshold;
+
+    unsigned long releaseDebounceMs;
+    unsigned long cooldownAfterOnsetMs;
+
+    unsigned long minTransientDurationMs;
+    unsigned long maxTransientDurationMs;
+    float minTransientPeakStrength;
+
+    // Neue optionale Carrier-Qualitäts-Gates.
+    bool requireCarrierQuality = false;
+    unsigned long minCoverageAboveReleaseMs = 0;
+    unsigned long minLongestIslandMs = 0;
+    unsigned long maxGapMs = 0;
+};
+```
+
+Kein allgemeines Flag-System und keine frei kombinierbare Detector-Policy.
+
+Die Felder bewerten ausschließlich den bereits beobachteten ScalarStream.
+
+## 6. Detector-Acceptance
+
+Aktuell:
+
+```cpp
+accepted =
+    durationAccepted &&
+    strengthAccepted;
+```
+
+Neu:
+
+```cpp
+const bool coverageAccepted =
+    !config.requireCarrierQuality ||
+    coverageAboveReleaseMs >= config.minCoverageAboveReleaseMs;
+
+const bool islandAccepted =
+    !config.requireCarrierQuality ||
+    islandMaxMs >= config.minLongestIslandMs;
+
+const bool gapAccepted =
+    !config.requireCarrierQuality ||
+    gapMaxMs <= config.maxGapMs;
+
+accepted =
+    durationAccepted &&
+    strengthAccepted &&
+    coverageAccepted &&
+    islandAccepted &&
+    gapAccepted;
+```
+
+Neue Reject-Gründe:
+
+```cpp
+CoverageTooLow
+LongestIslandTooShort
+GapTooLong
+```
+
+Dabei nur den ersten fehlgeschlagenen Hauptgrund speichern; alle Fakten bleiben trotzdem im Report sichtbar.
+
+---
+
+## 7. Inspector-Konfiguration
+
+### Target-/Region-Stärke
+
+```cpp
+target = EvidenceTarget::TargetBandStrength;
+stream = FeatureStreamId::FrequencyTargetBand;
+mode = ScalarInspectionMode::PeakCentered;
+windowPreMs = 0;
+windowPostMs = 100;
+```
+
+Klassifikationsbasis bevorzugt:
+
+```text
+p75 oder RMS
+```
+
+Nicht nur Peak, da Peak-Ausreißer wenig robust sind.
+
+Falls der Inspector derzeit nur `classificationValue` aus festen Modi erzeugt, einen kleinen Modus ergänzen:
+
+```cpp
+ScalarInspectionMode::P75
+ScalarInspectionMode::Rms
+```
+
+### FrequencyContrast
+
+```cpp
+target = EvidenceTarget::FrequencyContrastQuality;
+stream = FeatureStreamId::FrequencyContrast;
+windowPreMs = 0;
+windowPostMs = 100;
+```
+
+Primär:
+
+```text
+median oder p75
+```
+
+Contrast ist Qualitäts-, nicht Distanz-Evidence.
+
+### AMP
+
+```cpp
+target = EvidenceTarget::SupportStrength;
+stream = FeatureStreamId::AmpEnvelope;
+windowPreMs = 0;
+windowPostMs = 100;
+```
+
+Primär:
+
+```text
+p75
+```
+
+Sekundär diagnostisch:
+
+```text
+rms
+peak
+preFloorP75
+preFloorRms
+eventMinusFloor
+```
+
+Pre-floor beeinflusst die Acceptance nicht.
+
+---
+
+## 8. PatternMatcher-Erweiterung
+
+Die aktuelle Einzelbedingung:
+
+```cpp
+requireSupportForAcceptance
+requiredSupportTarget
+minimumSupportStrength
+```
+
+reicht für mehrere Evidence-Ziele nicht aus.
+
+Minimal erweitern, ohne generische Regelmaschine:
+
+```cpp
+struct PatternEvidenceRequirement {
+    bool enabled = false;
+    EvidenceTarget target = EvidenceTarget::None;
+    StrengthClass minimumStrength = StrengthClass::Unknown;
+};
+
+struct PatternMatcherConfig {
+    PatternEvidenceRequirement requirements[3];
+    size_t requirementCount = 0;
+
+    bool failedRequirementMeansUncertain = true;
+};
+```
+
+Für TonalPulseScalar:
+
+```text
+1. TargetBandStrength       >= Medium
+2. FrequencyContrastQuality >= Medium
+3. SupportStrength / AMP    >= Medium
+```
+
+Semantik:
+
+```text
+Detector accepted + alle Anforderungen erfüllt:
+    CONFIRMED
+
+Detector accepted + mindestens eine Zusatzanforderung verfehlt:
+    UNCERTAIN
+
+Detector Candidate selbst ungültig:
+    REJECTED
+```
+
+---
+
+## 9. Startprofil TonalPulseScalar
+
+Die Werte sind aus der aktuellen Messreihe abgeleitete Startwerte, keine finalen universellen Schwellen.
+
+```cpp
+inline DetectionProfile makeTonalPulseScalarProfile() {
+    DetectionProfile profile;
+
+    profile.kind = DetectionProfileKind::TonalPulseScalar;
+    profile.detectorSelection = DetectorSelection::ScalarTransient;
+
+    auto& detector = profile.scalarTransient;
+
+    detector.observedStream =
+        FeatureStreamId::FrequencyTargetBand;
+
+    detector.onsetDetectionThreshold = 9000.0f;
+    detector.onsetReleaseThreshold = 6000.0f;
+
+    detector.releaseDebounceMs = 10;
+    detector.cooldownAfterOnsetMs = 50;
+
+    detector.minTransientDurationMs = 85;
+    detector.maxTransientDurationMs = 130;
+    detector.minTransientPeakStrength = 11500.0f;
+
+    detector.requireCarrierQuality = true;
+    detector.minCoverageAboveReleaseMs = 90;
+    detector.minLongestIslandMs = 80;
+    detector.maxGapMs = 10;
+```
+
+### Warum nicht sofort 96 ms?
+
+Die aktuellen Offline-Daten erlauben ungefähr:
+
+```text
+coverage >= 96 ms
+longest island >= 96 ms
+```
+
+Das ist jedoch fast ohne Hardware-, Raum- oder Timing-Marge.
+
+Für Firmware-Starttuning konservativer:
+
+```text
+coverage >= 90 ms
+longest island >= 80 ms
+max gap <= 10 ms
+```
+
+Danach auf realen SEQ-Runs nachziehen.
+
+---
+
+## 10. Inspector-Startwerte
+
+### TargetBandStrength
+
+```cpp
+strong = 15000;
+medium = 11000;
+weak = 7000;
+```
+
+### FrequencyContrastQuality
+
+Je nach aktueller Contrast-Skala:
+
+```cpp
+strong = 80;
+medium = 50;
+weak = 25;
+```
+
+Aus der aktuellen Messreihe wäre für bestätigte `100cm_0deg` ein Minimum von ungefähr `54` plausibel.
+
+Startwert daher:
+
+```text
+minimum confirmed contrast = Medium ≈ 50
+```
+
+### AMP p75
+
+```cpp
+strong = 15000;
+medium = 10000;
+weak = 7000;
+```
+
+Für das aktuelle Ziel:
+
+```text
+CONFIRMED verlangt mindestens Medium.
+```
+
+AMP bleibt Zusatzqualität. Ein starkes AMP-Signal darf einen schlechten Carrier oder schlechten Contrast nicht retten.
+
+---
+
+## 11. Profilkonfiguration vollständig
+
+```cpp
+profile.inspectionPlan = {};
+
+profile.inspectionPlan.modules[0] = {
+    .kind = InspectionModuleKind::ScalarFeatureStrength,
+    .target = EvidenceTarget::TargetBandStrength,
+    .scalar = {
+        .enabled = true,
+        .stream = FeatureStreamId::FrequencyTargetBand,
+        .mode = ScalarInspectionMode::P75,
+        .supportStrength = {
+            .strongPeakThreshold = 15000.0f,
+            .mediumPeakThreshold = 11000.0f,
+            .weakPeakThreshold = 7000.0f,
+        },
+        .windowPreMs = 0,
+        .windowPostMs = 100,
+    }
+};
+
+profile.inspectionPlan.modules[1] = {
+    .kind = InspectionModuleKind::ScalarFeatureStrength,
+    .target = EvidenceTarget::FrequencyContrastQuality,
+    .scalar = {
+        .enabled = true,
+        .stream = FeatureStreamId::FrequencyContrast,
+        .mode = ScalarInspectionMode::P75,
+        .supportStrength = {
+            .strongPeakThreshold = 80.0f,
+            .mediumPeakThreshold = 50.0f,
+            .weakPeakThreshold = 25.0f,
+        },
+        .windowPreMs = 0,
+        .windowPostMs = 100,
+    }
+};
+
+profile.inspectionPlan.modules[2] = {
+    .kind = InspectionModuleKind::ScalarFeatureStrength,
+    .target = EvidenceTarget::SupportStrength,
+    .scalar = {
+        .enabled = true,
+        .stream = FeatureStreamId::AmpEnvelope,
+        .mode = ScalarInspectionMode::P75,
+        .supportStrength = {
+            .strongPeakThreshold = 15000.0f,
+            .mediumPeakThreshold = 10000.0f,
+            .weakPeakThreshold = 7000.0f,
+        },
+        .windowPreMs = 0,
+        .windowPostMs = 100,
+        .preFloorWindowPreMs = 250,
+        .preFloorWindowPostMs = 50,
+    }
+};
+
+profile.inspectionPlan.count = 3;
+```
+
+Pattern-Anforderungen:
+
+```cpp
+profile.patternMatcherConfig.requirements[0] = {
+    true,
+    EvidenceTarget::TargetBandStrength,
+    StrengthClass::Medium
+};
+
+profile.patternMatcherConfig.requirements[1] = {
+    true,
+    EvidenceTarget::FrequencyContrastQuality,
+    StrengthClass::Medium
+};
+
+profile.patternMatcherConfig.requirements[2] = {
+    true,
+    EvidenceTarget::SupportStrength,
+    StrengthClass::Medium
+};
+
+profile.patternMatcherConfig.requirementCount = 3;
+profile.patternMatcherConfig.failedRequirementMeansUncertain = true;
+```
+
+---
+
+# Implementationsschritte
+
+## Pass 1 – Coverage-Zeitbasis korrigieren
+
+Dateien:
+
+```text
+ScalarTransientDetector.h
+ScalarTransientDetector.cpp
+ScalarTransientOccurrence.cpp
+```
+
+Änderungen:
+
+1. interne Coverage-Felder von ms auf µs ändern,
+2. `deltaUs` direkt akkumulieren,
+3. beim Snapshot in ms umwandeln,
+4. bestehende Report-/Occurrence-Feldnamen zunächst beibehalten,
+5. Tests mit 250-µs-Updates ergänzen.
+
+Abnahmekriterium:
+
+```text
+100 ms kontinuierlich über Release-Schwelle
+→ ungefähr 100 ms Coverage, nicht 0 ms
+```
+
+## Pass 2 – Carrier-Quality-Konfiguration ergänzen
+
+Dateien:
+
+```text
+DetectionProfile.h
+DetectionRuntime.cpp
+ScalarTransientDetector.h/.cpp
+AnalyzerCommands.cpp
+```
+
+Änderungen:
+
+1. neue Config-Felder ergänzen,
+2. Setter im Detector ergänzen,
+3. `applyScalarTransientConfig()` erweitern,
+4. Serial-Tuning-Parser ergänzen,
+5. aktuelle Defaults zunächst deaktiviert lassen.
+
+Neue temporäre Parameter:
+
+```text
+scalar_require_carrier_quality
+scalar_min_release_coverage_ms
+scalar_min_longest_island_ms
+scalar_max_gap_ms
+```
+
+## Pass 3 – Detector-Gates aktivieren
+
+Änderungen:
+
+1. Candidate zuerst vollständig finalisieren,
+2. Duration, Peak, Coverage, Island und Gap getrennt evaluieren,
+3. neue Reject-Gründe ergänzen,
+4. AcceptedOccurrence und SelectedReject mit identischen Fakten füllen,
+5. Analyzer-Ausgabe erweitern.
+
+SEQ-Ausgabe:
+
+```text
+carrier.coverage_release_ms
+carrier.coverage_attack_ms
+carrier.island_count
+carrier.island_max_ms
+carrier.gap_count
+carrier.gap_max_ms
+carrier.quality_pass
+```
+
+## Pass 4 – Inspector-Modi P75 und RMS
+
+Dateien:
+
+```text
+InspectorTypes.h
+OccurrenceInspector.cpp
+ScalarInspectionDerivedValues.h
+InspectionNames.h
+```
+
+Änderungen:
+
+1. `P75` und `Rms` als explizite Modi ergänzen,
+2. `classificationValue` entsprechend setzen,
+3. bestehende Window-Statistiken wiederverwenden,
+4. keine neuen Window- oder Evidence-Strukturen erstellen.
+
+## Pass 5 – Drei Inspector-Module konfigurieren
+
+Im `TonalPulseScalarProfile`:
+
+1. TargetBandStrength,
+2. FrequencyContrastQuality,
+3. SupportStrength über AmpEnvelope.
+
+Pre-floor bleibt vorhanden, beeinflusst aber keine StrengthClass.
+
+## Pass 6 – PatternMatcher auf drei Anforderungen erweitern
+
+Dateien:
+
+```text
+PatternMatcherTypes.h
+PatternMatcher.cpp
+PatternResult.h
+```
+
+Änderungen:
+
+1. feste kleine Requirement-Liste ergänzen,
+2. EvidenceTarget gezielt aus `InspectedOccurrence` lesen,
+3. alle Anforderungen auswerten,
+4. fehlgeschlagene Zusatzqualität als `UNCERTAIN` markieren,
+5. Detector-Reject weiterhin als `REJECTED` behandeln.
+
+Keine generische Ausdruckssprache, keine Callback-Policy.
+
+## Pass 7 – Analyzer-Ausgabe
+
+SEQ_EXPLAIN soll klar trennen:
+
+```text
+DETECTOR:
+  lifecycle valid
+  carrier quality valid/invalid
+
+INSPECT:
+  target strength
+  contrast quality
+  amp support
+
+PATTERN:
+  confirmed / uncertain / rejected
+  first failed requirement
+```
+
+SEQ_TRIAL kompakt:
+
+```text
+result=confirmed|uncertain|rejected
+reason=...
+target_class=...
+contrast_class=...
+amp_class=...
+coverage_ms=...
+island_max_ms=...
+gap_max_ms=...
+```
+
+## Pass 8 – Starttuning validieren
+
+Testreihenfolge:
+
+1. aktuelle 100cm_0deg-Runs,
+2. aktuelle 200cm+-Runs,
+3. Live-SEQUENCE 100cm_0deg,
+4. anderer Mikrofon-Baustein,
+5. anderer Emitter,
+6. leicht veränderte Ausrichtung,
+7. anderer Raum.
+
+Ziel der ersten Iteration:
+
+```text
+100cm_0deg:
+  20/20 confirmed
+
+250cm:
+  0 confirmed
+
+200cm:
+  möglichst wenige confirmed
+  Rest uncertain/rejected
+```
+
+Bei Verlust echter 100-cm-Signale zuerst lockern:
+
+```text
+minLongestIslandMs
+minCoverageAboveReleaseMs
+```
+
+Nicht zuerst Contrast oder AMP senken.
+
+Bei zu vielen 200-cm-Bestätigungen zuerst verschärfen:
+
+```text
+AMP medium threshold
+TargetBand medium threshold
+```
+
+Carrier-Dauer und Release-Debounce nicht zur künstlichen Distanzschwelle machen.
+
+---
+
+## Endzustand
+
+Der ScalarTransientDetector bleibt generisch und single-stream.
+
+Er bewertet:
+
+```text
+Ist dieser eine Scalar-Carrier ein gültiger, stabiler Transient?
+```
+
+Die Inspectoren bewerten:
+
+```text
+Ist das Ereignis tonal plausibel, ausreichend stark und breitbandig unterstützt?
+```
+
+Der PatternMatcher entscheidet:
+
+```text
+Reicht die Gesamtqualität für CONFIRMED?
+```
+
+Damit wird kein MultiScalarDetector eingeführt, aber AMP, Contrast und Carrier-Stabilität können sauber gemeinsam zur konservativen Acceptance beitragen.

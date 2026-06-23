@@ -20,6 +20,10 @@ inline const char* scalarInspectionBasisName(ScalarInspectionBasis value) {
             return "peak_centered_mean";
         case ScalarInspectionBasis::PeakCenteredLift:
             return "peak_centered_lift";
+        case ScalarInspectionBasis::Rms:
+            return "rms";
+        case ScalarInspectionBasis::P75:
+            return "p75";
         case ScalarInspectionBasis::None:
         default:
             return "none";
@@ -38,10 +42,6 @@ inline const char* scalarInspectionNoteName(ScalarInspectionNote value) {
             return "inspection_disabled";
         case ScalarInspectionNote::MissingFeatureHistory:
             return "missing_feature_history";
-        case ScalarInspectionNote::PreFloorObserved:
-            return "pre_floor_observed";
-        case ScalarInspectionNote::PreFloorUnavailable:
-            return "pre_floor_unavailable";
         case ScalarInspectionNote::None:
         default:
             return "none";
@@ -80,41 +80,20 @@ inline const char* strengthClassName(StrengthClass value) {
     }
 }
 
-inline const char* evidenceTargetName(EvidenceTarget value) {
-    switch (value) {
-        case EvidenceTarget::SupportStrength:
-            return "SupportStrength";
-        case EvidenceTarget::FrequencyScoreStrength:
-            return "FrequencyScoreStrength";
-        case EvidenceTarget::FrequencyContrastQuality:
-            return "FrequencyContrastQuality";
-        case EvidenceTarget::TargetBandStrength:
-            return "TargetBandStrength";
-        case EvidenceTarget::None:
-        default:
-            return "None";
-    }
+inline const char* inspectionModuleLabelName(const InspectionModuleConfig& module) {
+    return module.label != nullptr && module.label[0] != '\0' ? module.label : "none";
 }
 
 inline const char* inspectionPlanName(const InspectionPlan& plan) {
-    if (plan.count == 1 &&
-        plan.modules[0].kind == InspectionModuleKind::ScalarFeatureStrength) {
-        switch (plan.modules[0].target) {
-            case EvidenceTarget::FrequencyScoreStrength:
-                return "frequency_score";
-            case EvidenceTarget::TargetBandStrength:
-                return "target_band";
-            case EvidenceTarget::SupportStrength:
-            default:
-                return "support_strength";
-        }
+    if (plan.count == 1 && plan.modules[0].kind == InspectionModuleKind::ScalarFeatureStrength) {
+        return inspectionModuleLabelName(plan.modules[0]);
     }
     if (plan.count == 2 &&
         plan.modules[0].kind == InspectionModuleKind::ScalarFeatureStrength &&
-        plan.modules[0].target == EvidenceTarget::FrequencyScoreStrength &&
         plan.modules[1].kind == InspectionModuleKind::ScalarFeatureStrength &&
-        plan.modules[1].target == EvidenceTarget::FrequencyContrastQuality) {
-        return "frequency_score_contrast";
+        plan.modules[0].label != nullptr &&
+        plan.modules[1].label != nullptr) {
+        return "custom";
     }
 
     return "custom";
@@ -129,9 +108,9 @@ inline const char* inspectionModulesName(const InspectionPlan& plan) {
     return "custom";
 }
 
-inline const char* inspectionEvidenceTargetsName(const InspectionPlan& plan) {
+inline const char* inspectionLabelsName(const InspectionPlan& plan) {
     if (plan.count > 0 && plan.modules[0].kind == InspectionModuleKind::ScalarFeatureStrength) {
-        return evidenceTargetName(plan.modules[0].target);
+        return inspectionModuleLabelName(plan.modules[0]);
     }
 
     return "none";

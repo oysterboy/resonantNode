@@ -115,18 +115,18 @@ inline const char* reasonName(Reason reason) {
 inline FrequencyMatchGateResult evaluate(const detection::FrequencyBandMeasurementPacket& evidence, const Values& values) {
     FrequencyMatchGateResult out;
     out.evidenceOk = evidence.present;
-    out.score = evidence.targetBandScoreValue;
+    out.score = evidence.targetBandValue;
     out.contrast = evidence.targetBandContrastValue;
     out.attackScoreMin = values.attackScoreMin;
     out.releaseScoreMin = values.releaseScoreMin;
     out.attackContrastMin = values.attackContrastMin;
     out.releaseContrastMin = values.releaseContrastMin;
 
-    out.attackScoreOk = evidence.targetBandScoreValue >= values.attackScoreMin;
+    out.attackScoreOk = evidence.targetBandValue >= values.attackScoreMin;
     out.attackContrastOk = evidence.targetBandContrastValue >= values.attackContrastMin;
     out.attackOk = out.evidenceOk && out.attackScoreOk;
 
-    out.releaseScoreOk = evidence.targetBandScoreValue >= values.releaseScoreMin;
+    out.releaseScoreOk = evidence.targetBandValue >= values.releaseScoreMin;
     out.releaseContrastOk = evidence.targetBandContrastValue >= values.releaseContrastMin;
     out.releaseOk = out.evidenceOk && out.releaseScoreOk;
 

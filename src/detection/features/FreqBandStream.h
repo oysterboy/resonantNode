@@ -33,7 +33,7 @@ public:
 
     void observeCenteredSample(int centeredSample, unsigned long sampleTimeMs = 0);
 
-    audio::FrequencyScore16 lastTargetBandScoreValue() const;
+    audio::FrequencyScore16 lastTargetBandValue() const;
     float lastTargetBandPowerValue() const;
     float lastLowerBandPowerValue() const;
     float lastUpperBandPowerValue() const;
@@ -77,7 +77,7 @@ private:
     float _cachedLowerCoeff = 0.0f;
     float _cachedUpperCoeff = 0.0f;
     bool _cachedGoertzelValid = false;
-    audio::FrequencyScore16 _lastTargetBandScoreValue = 0;
+    audio::FrequencyScore16 _lastTargetBandValue = 0;
     float _lastTargetBandPowerValue = 0.0f;
     float _lastLowerBandPowerValue = 0.0f;
     float _lastUpperBandPowerValue = 0.0f;

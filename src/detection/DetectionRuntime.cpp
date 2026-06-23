@@ -16,11 +16,7 @@ float selectedScalarValue(const AudioSamplePacket& audioSamplePacket, const Freq
         case FeatureStreamId::AmpEnvelope:
             return static_cast<float>(audioSamplePacket.smoothedLevel);
         case FeatureStreamId::FrequencyTarget:
-            return frequencyEvidence.targetBandScoreValue;
-        case FeatureStreamId::FrequencyScore:
-            return frequencyEvidence.targetBandScoreValue;
-        case FeatureStreamId::FrequencyTargetBand:
-            return frequencyEvidence.targetBandScoreValue;
+            return frequencyEvidence.targetBandValue;
         case FeatureStreamId::FrequencyContrast:
             return frequencyEvidence.targetBandContrastValue;
         case FeatureStreamId::Unknown:
@@ -37,6 +33,12 @@ void applyScalarTransientConfig(ScalarTransientDetector& detector, const ScalarT
     detector.setMaxTransientDurationMs(config.maxTransientDurationMs);
     detector.setMinTransientPeakStrength(config.minTransientPeakStrength);
     detector.setReleaseDebounceMs(config.releaseDebounceMs);
+    detector.setRequireCarrierQuality(config.requireCarrierQuality);
+    detector.setRequireMinStrength(config.requireMinStrength);
+    detector.setMinMatchedMeanStrength(config.minMatchedMeanStrength);
+    detector.setMinCoverageAboveReleaseMs(config.minCoverageAboveReleaseMs);
+    detector.setMinLongestIslandMs(config.minLongestIslandMs);
+    detector.setMaxGapMs(config.maxGapMs);
 }
 
 } // namespace
@@ -125,11 +127,7 @@ void DetectionRuntime::setDetectorSelection(DetectorSelection selection) {
 void DetectionRuntime::setInspectionPlan(const InspectionPlan& plan) {
     _inspectionPlan = plan;
     _occurrenceInspector.configure(_inspectionPlan);
-}
-
-void DetectionRuntime::setPatternMatcherConfig(const PatternMatcherConfig& config) {
-    _patternMatcherConfig = config;
-    _patternMatcher.configure(_patternMatcherConfig);
+    _patternMatcher.configure(_inspectionPlan);
 }
 
 void DetectionRuntime::setFieldStateConfig(const FieldStateConfig& config) {

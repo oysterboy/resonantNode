@@ -17,21 +17,57 @@ void ScalarTransientDetector::refreshReportDetail() {
     const char* scalarRejectReason = !detectorReasonIsNone(transientRejectReason)
         ? transientRejectReason
         : onsetRejectReason;
-
+    const bool hasAcceptedSummary = _acceptedOccurrencePresent && _acceptedOccurrence.present;
+    const bool hasSelectedRejectSummary = _selectedRejectPresent && _selectedReject.present;
+    const bool hasSummary = hasAcceptedSummary || hasSelectedRejectSummary;
+    const bool useAcceptedSummary = hasAcceptedSummary || !hasSelectedRejectSummary;
+    const float summaryMatchedMeanStrength = useAcceptedSummary
+        ? _acceptedOccurrence.matchedMeanStrength
+        : _selectedReject.matchedMeanStrength;
     _reportDetail.inspect.rejectReason = scalarRejectReason;
     _reportDetail.inspect.noEmitReason = scalarRejectReason;
     _reportDetail.inspect.gateReason = scalarRejectReason;
-    _reportDetail.inspect.opened = _peakActive || _releaseObservedUs != 0 || _peakStartedUs != 0;
-    _reportDetail.inspect.released = _releaseObservedUs != 0;
+    _reportDetail.inspect.matchedMeanPassed = !_requireMinStrength ||
+        (hasSummary ? summaryMatchedMeanStrength >= _minMatchedMeanStrength : false);
+    _reportDetail.inspect.carrierQualityRequired = _requireCarrierQuality;
+    _reportDetail.inspect.carrierCoveragePassed = !_requireCarrierQuality ||
+        !hasSummary ||
+        (hasAcceptedSummary
+            ? _acceptedOccurrence.coverageAboveReleaseMs >= _minCoverageAboveReleaseMs
+            : _selectedReject.coverageAboveReleaseMs >= _minCoverageAboveReleaseMs);
+    _reportDetail.inspect.carrierIslandPassed = !_requireCarrierQuality ||
+        !hasSummary ||
+        (hasAcceptedSummary
+            ? _acceptedOccurrence.islandMaxMs >= _minLongestIslandMs
+            : _selectedReject.islandMaxMs >= _minLongestIslandMs);
+    _reportDetail.inspect.carrierGapPassed = !_requireCarrierQuality ||
+        !hasSummary ||
+        (hasAcceptedSummary
+            ? _acceptedOccurrence.gapMaxMs <= _maxGapMs
+            : _selectedReject.gapMaxMs <= _maxGapMs);
+    _reportDetail.inspect.opened = hasAcceptedSummary
+        ? true
+        : (hasSelectedRejectSummary ? true : (_peakActive || _releaseObservedUs != 0 || _peakStartedUs != 0));
+    _reportDetail.inspect.released = hasAcceptedSummary
+        ? true
+        : (hasSelectedRejectSummary ? true : (_releaseObservedUs != 0));
     _reportDetail.inspect.validRelease = _reportDetail.inspect.released && detectorReasonIsNone(scalarRejectReason);
     _reportDetail.inspect.emitAllowed = _reportDetail.inspect.validRelease;
-    _reportDetail.inspect.openMs = _peakStartedUs / 1000UL;
-    _reportDetail.inspect.peakMs = _peakStrengthObservedUs / 1000UL;
-    _reportDetail.inspect.releaseMs = _releaseObservedUs / 1000UL;
+    _reportDetail.inspect.openMs = hasAcceptedSummary
+        ? _acceptedOccurrence.startMs
+        : (hasSelectedRejectSummary ? _selectedReject.startMs : _peakStartedUs / 1000UL);
+    _reportDetail.inspect.peakMs = hasAcceptedSummary
+        ? _acceptedOccurrence.peakMs
+        : (hasSelectedRejectSummary ? _selectedReject.peakMs : _peakStrengthObservedUs / 1000UL);
+    _reportDetail.inspect.releaseMs = hasAcceptedSummary
+        ? _acceptedOccurrence.endMs
+        : (hasSelectedRejectSummary ? _selectedReject.endMs : _releaseObservedUs / 1000UL);
     _reportDetail.inspect.durationMs = _reportDetail.inspect.released && _reportDetail.inspect.releaseMs >= _reportDetail.inspect.openMs
         ? _reportDetail.inspect.releaseMs - _reportDetail.inspect.openMs
         : 0UL;
-    _reportDetail.inspect.peakStrength = _peakStrength;
+    _reportDetail.inspect.peakStrength = hasAcceptedSummary
+        ? _acceptedOccurrence.peak
+        : (hasSelectedRejectSummary ? _selectedReject.peak : _peakStrength);
     _reportDetail.inspect.rejectReason = scalarRejectReason;
     _reportDetail.thresholds.onsetThreshold = _onsetDetectionThreshold;
     _reportDetail.thresholds.releaseThreshold = _onsetReleaseThreshold;

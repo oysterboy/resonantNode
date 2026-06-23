@@ -1,6 +1,7 @@
 #pragma once
 
 #include "PatternTypes.h"
+#include "../inspection/InspectorTypes.h"
 namespace detection {
 
 /*
@@ -30,13 +31,17 @@ struct PatternResult {
     float primaryReleaseStrength = 0.0f;
     float primaryAmbientBaseline = 0.0f;
     bool primaryAudioOverflow = false;
-    // TODO: carry only a compact selected support fact here if a later pass
-    // needs it: support target, selected metric, selected value, strength class.
 
     bool patternAccepted = false;
     bool patternMatched = false;
     bool supportMatched = false;
+    bool uncertain = false;
     bool valid = false;
+
+    const char* firstFailedRequirementLabel = "none";
+    StrengthClass firstFailedObservedStrength = StrengthClass::Unknown;
+    StrengthClass firstFailedRequiredStrength = StrengthClass::Unknown;
+    uint8_t firstFailedRequirementIndex = 255;
 };
 
 } // namespace detection

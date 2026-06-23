@@ -76,8 +76,6 @@ bool FeatureHistory::isSupportedStream(FeatureStreamId stream) {
         case FeatureStreamId::AmpMagnitude:
         case FeatureStreamId::AmpEnvelope:
         case FeatureStreamId::FrequencyTarget:
-        case FeatureStreamId::FrequencyScore:
-        case FeatureStreamId::FrequencyTargetBand:
         case FeatureStreamId::FrequencyContrast:
             return true;
         case FeatureStreamId::Unknown:
@@ -94,12 +92,8 @@ size_t FeatureHistory::streamIndex(FeatureStreamId stream) {
             return 1U;
         case FeatureStreamId::FrequencyTarget:
             return 2U;
-        case FeatureStreamId::FrequencyScore:
-            return 3U;
-        case FeatureStreamId::FrequencyTargetBand:
-            return 4U;
         case FeatureStreamId::FrequencyContrast:
-            return 5U;
+            return 3U;
         case FeatureStreamId::Unknown:
         default:
             return 0U;

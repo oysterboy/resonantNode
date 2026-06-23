@@ -18,7 +18,7 @@ Does not decide occurrence validity or pattern meaning.
 class FeatureHistory {
 public:
     static constexpr size_t kMaxSamplesPerStream = 128;
-    static constexpr size_t kStreamCount = 6;
+    static constexpr size_t kStreamCount = 4;
     static constexpr size_t debugFeatureBinSize();
 
     void reset();

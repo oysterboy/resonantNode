@@ -118,7 +118,7 @@ void AnalyzerApp::startSequenceTest(const PendingSequenceStart& pending) {
     _detection.setScalarTransientConfig(selectedProfile.scalarTransient);
     _detection.setDetectorSelection(selectedProfile.detectorSelection);
     _detection.setInspectionPlan(selectedProfile.inspectionPlan);
-    _detection.setPatternMatcherConfig(selectedProfile.patternMatcherConfig);
+    _detection.setInspectionPlan(selectedProfile.inspectionPlan);
     _detection.setFieldStateConfig(selectedProfile.fieldStateConfig);
     _detection.setProfileName(detection::detectionProfileName(selectedProfile.kind));
     _detection.setDiagnosticsEnabled(_sequenceTest.outputConfig.diagnosticsEnabled);
@@ -165,6 +165,10 @@ void AnalyzerApp::startSequenceTest(const PendingSequenceStart& pending) {
     _sequenceTest.primaryValidPattern = {};
     _sequenceTest.primaryValidInspectedOccurrence = {};
     _sequenceTest.primaryValidPatternDtMs = -1;
+    _sequenceTest.primaryUncertainPatternCaptured = false;
+    _sequenceTest.primaryUncertainPattern = {};
+    _sequenceTest.primaryUncertainInspectedOccurrence = {};
+    _sequenceTest.primaryUncertainPatternDtMs = -1;
     _sequenceTest.primaryAcceptedOccurrenceCaptured = false;
     _sequenceTest.primaryAcceptedInspectedOccurrence = {};
     _sequenceTest.primaryAcceptedOccurrenceDtMs = -1;
@@ -285,6 +289,14 @@ void AnalyzerApp::startSequenceTest(const PendingSequenceStart& pending) {
         Serial.print(selectedProfile.scalarTransient.minTransientPeakStrength, 1);
         Serial.print(" scalar_release_debounce_ms=");
         Serial.print(selectedProfile.scalarTransient.releaseDebounceMs);
+        Serial.print(" scalar_require_carrier_quality=");
+        Serial.print(selectedProfile.scalarTransient.requireCarrierQuality ? 1 : 0);
+        Serial.print(" scalar_min_release_coverage_ms=");
+        Serial.print(selectedProfile.scalarTransient.minCoverageAboveReleaseMs);
+        Serial.print(" scalar_min_longest_island_ms=");
+        Serial.print(selectedProfile.scalarTransient.minLongestIslandMs);
+        Serial.print(" scalar_max_gap_ms=");
+        Serial.print(selectedProfile.scalarTransient.maxGapMs);
         Serial.print(" mode=");
         Serial.print(_sequenceTest.externalEmitter ? "OBS" : "SEQ");
         Serial.print(" test=");
@@ -356,6 +368,10 @@ void AnalyzerApp::updateSequenceTest(unsigned long now) {
     _sequenceTest.primaryValidPattern = {};
     _sequenceTest.primaryValidInspectedOccurrence = {};
     _sequenceTest.primaryValidPatternDtMs = -1;
+    _sequenceTest.primaryUncertainPatternCaptured = false;
+    _sequenceTest.primaryUncertainPattern = {};
+    _sequenceTest.primaryUncertainInspectedOccurrence = {};
+    _sequenceTest.primaryUncertainPatternDtMs = -1;
     _sequenceTest.primaryAcceptedOccurrenceCaptured = false;
     _sequenceTest.primaryAcceptedInspectedOccurrence = {};
     _sequenceTest.primaryAcceptedOccurrenceDtMs = -1;
@@ -439,6 +455,19 @@ AnalyzerApp::SequenceTrialSelection AnalyzerApp::selectSequenceTrialSelection(un
         return selection;
     }
 
+    if (_sequenceTest.primaryUncertainPatternCaptured) {
+        selection.kind = SequenceTrialSelection::Kind::UncertainPattern;
+        selection.patternResult = &_sequenceTest.primaryUncertainPattern;
+        selection.inspectedOccurrence = _sequenceTest.primaryUncertainInspectedOccurrence.occurrence.present
+            ? &_sequenceTest.primaryUncertainInspectedOccurrence
+            : nullptr;
+        selection.dtMs = static_cast<long>(_sequenceTest.primaryUncertainPattern.primaryStartMs) - static_cast<long>(trialOnsetAnchorMs);
+        selection.durationMs = _sequenceTest.primaryUncertainPattern.primaryDurationMs;
+        selection.strength = _sequenceTest.primaryUncertainPattern.primaryStrength;
+        selection.result = AnalyzerResult::Uncertain;
+        return selection;
+    }
+
     if (_sequenceTest.primaryAcceptedOccurrenceCaptured && _sequenceTest.primaryAcceptedInspectedOccurrence.occurrence.present) {
         selection.kind = SequenceTrialSelection::Kind::AcceptedOccurrence;
         selection.inspectedOccurrence = &_sequenceTest.primaryAcceptedInspectedOccurrence;
@@ -491,16 +520,19 @@ void AnalyzerApp::finalizeSequenceTrial(unsigned long now) {
                                     || _audioSource.stats().overflowCount != _sequenceTest.trialOverflowCountAtStart;
     const long trialOnsetAnchorMs = static_cast<long>(sequenceTrialOnsetAnchorMs());
     const SequenceTrialSelection selectedTrial = selectSequenceTrialSelection(trialOnsetAnchorMs);
-    const bool hitTrial = selectedTrial.result == AnalyzerResult::Expected || selectedTrial.result == AnalyzerResult::Late;
     const bool rejectedTrial = _sequenceTest.rejectedInWindowCount > 0;
     const bool unexpectedTrial = selectedTrial.result == AnalyzerResult::Unexpected;
 
     AnalyzerResult result = selectedTrial.result;
+    if (selectedTrial.patternResult != nullptr && selectedTrial.patternResult->uncertain) {
+        result = AnalyzerResult::Uncertain;
+    }
     long dtMs = selectedTrial.dtMs;
     long durMs = static_cast<long>(selectedTrial.durationMs);
     float strength = selectedTrial.strength;
 
-    if (hitTrial) {
+    const bool confirmedTrial = result == AnalyzerResult::Expected || result == AnalyzerResult::Late;
+    if (confirmedTrial) {
         _sequenceTest.hits++;
         if (selectedTrial.kind == SequenceTrialSelection::Kind::ValidPattern) {
             _sequenceTest.primaryValidPatternDtMs = dtMs;
@@ -512,6 +544,8 @@ void AnalyzerApp::finalizeSequenceTrial(unsigned long now) {
         } else {
             _sequenceTest.expectedHits++;
         }
+    } else if (result == AnalyzerResult::Uncertain) {
+        // Quality-only uncertainty is intentionally not counted as a confirmed hit.
     } else if (rejectedTrial) {
         result = AnalyzerResult::Rejected;
     } else if (unexpectedTrial) {

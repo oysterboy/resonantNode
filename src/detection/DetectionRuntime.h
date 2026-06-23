@@ -73,7 +73,6 @@ public:
     void setScalarTransientConfig(const ScalarTransientConfig& config);
     void setDetectorSelection(DetectorSelection selection);
     void setInspectionPlan(const InspectionPlan& plan);
-    void setPatternMatcherConfig(const PatternMatcherConfig& config);
     void setFieldStateConfig(const FieldStateConfig& config);
     void setProfileName(const char* profileName);
 
@@ -113,7 +112,6 @@ private:
     // Profile configuration applied at fixed runtime stages.
     DetectorSelection _detectorSelection = DetectorSelection::FrequencyMatch;
     InspectionPlan _inspectionPlan = {};
-    PatternMatcherConfig _patternMatcherConfig = {};
     const char* _profileName = "unknown";
 
     FrequencyMatchDetector _frequencyDetector;

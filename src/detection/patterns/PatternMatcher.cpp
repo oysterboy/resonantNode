@@ -1,5 +1,7 @@
 #include "PatternMatcher.h"
 
+#include <string.h>
+
 namespace {
 
 enum class ProposalShape {
@@ -32,6 +34,9 @@ struct PatternProposal {
     float releaseStrength = 0.0f;
     float ambientBaseline = 0.0f;
     detection::StrengthClass supportStrength = detection::StrengthClass::Unknown;
+    detection::StrengthClass scoreStrength = detection::StrengthClass::Unknown;
+    detection::StrengthClass contrastQuality = detection::StrengthClass::Unknown;
+    detection::StrengthClass targetBandStrength = detection::StrengthClass::Unknown;
     bool audioOverflowDuringProposal = false;
 };
 
@@ -72,6 +77,9 @@ PatternProposal makePatternProposalFromOccurrence(const detection::InspectedOccu
             proposal.releaseStrength = source.frequency.contrast;
             proposal.ambientBaseline = 0.0f;
             proposal.supportStrength = source.scalar.strengthClass;
+            proposal.scoreStrength = source.frequency.scoreStrength;
+            proposal.contrastQuality = source.frequency.contrastQuality;
+            proposal.targetBandStrength = source.frequency.targetBandStrength;
             break;
 
         case detection::OccurrenceType::Scalar: {
@@ -86,6 +94,9 @@ PatternProposal makePatternProposalFromOccurrence(const detection::InspectedOccu
             proposal.releaseStrength = transient.releaseStrength;
             proposal.ambientBaseline = transient.ambientBaseline;
             proposal.supportStrength = source.scalar.strengthClass;
+            proposal.scoreStrength = source.frequency.scoreStrength;
+            proposal.contrastQuality = source.frequency.contrastQuality;
+            proposal.targetBandStrength = source.frequency.targetBandStrength;
             proposal.audioOverflowDuringProposal = source.scalar.audioOverflowDuringOccurrence;
             break;
         }
@@ -99,14 +110,23 @@ PatternProposal makePatternProposalFromOccurrence(const detection::InspectedOccu
     return proposal;
 }
 
-detection::StrengthClass supportStrengthForTarget(const PatternProposal& proposal, detection::EvidenceTarget target) {
-    switch (target) {
-        case detection::EvidenceTarget::SupportStrength:
-            return proposal.supportStrength;
-        case detection::EvidenceTarget::None:
-        default:
-            return detection::StrengthClass::Unknown;
+static detection::StrengthClass strengthForLabel(const PatternProposal& proposal, const char* label) {
+    if (label == nullptr) {
+        return detection::StrengthClass::Unknown;
     }
+    if (strcmp(label, "amp") == 0) {
+        return proposal.supportStrength;
+    }
+    if (strcmp(label, "target") == 0) {
+        return proposal.scoreStrength;
+    }
+    if (strcmp(label, "contrast") == 0) {
+        return proposal.contrastQuality;
+    }
+    if (strcmp(label, "band") == 0) {
+        return proposal.targetBandStrength;
+    }
+    return detection::StrengthClass::Unknown;
 }
 
 ProposalEvaluationKind resultKindFromProposal(const PatternProposal& proposal) {
@@ -120,6 +140,11 @@ detection::PatternRejectReason supportRejectReason(detection::StrengthClass supp
     return supportStrength == detection::StrengthClass::Unknown
         ? detection::PatternRejectReason::MissingSupport
         : detection::PatternRejectReason::SupportTooLow;
+}
+
+bool requirementPassed(const PatternProposal& proposal, const detection::InspectionModuleConfig& module, detection::StrengthClass& observedStrength) {
+    observedStrength = strengthForLabel(proposal, module.label);
+    return observedStrength >= module.minimumStrength;
 }
 
 void fillResultFromProposal(detection::PatternResult& result, const PatternProposal& proposal, unsigned long nowMs) {
@@ -143,30 +168,68 @@ detection::PatternResult evaluateSinglePulse(
 ) {
     detection::PatternResult result = {};
     fillResultFromProposal(result, proposal, nowMs);
-    result.patternAccepted = true;
-    result.patternMatched = true;
-    result.supportMatched = true;
-    result.valid = true;
     result.type = detection::PatternType::SinglePulse;
     result.reasonCode = detection::PatternReasonCode::FromOccurrence;
     result.rejectReason = detection::PatternRejectReason::None;
+    result.patternMatched = true;
+    result.patternAccepted = false;
     result.supportMatched = true;
+    result.uncertain = false;
+    result.valid = false;
     const ProposalEvaluationKind proposalKind = resultKindFromProposal(proposal);
-    if (config.requireSupportForAcceptance) {
-        const detection::StrengthClass supportStrength = supportStrengthForTarget(proposal, config.requiredSupportTarget);
-        result.supportMatched = supportStrength >= config.minimumSupportStrength;
+    detection::StrengthClass firstFailedObservedStrength = detection::StrengthClass::Unknown;
+    detection::StrengthClass firstFailedRequiredStrength = detection::StrengthClass::Unknown;
+    const char* firstFailedLabel = "none";
+    uint8_t firstFailedIndex = 255;
+
+    if (proposalKind != ProposalEvaluationKind::Invalid) {
+        const size_t requirementCount = config.count > detection::kMaxInspectionModules
+            ? detection::kMaxInspectionModules
+            : config.count;
+        for (size_t i = 0; i < requirementCount; ++i) {
+            const detection::InspectionModuleConfig& requirement = config.modules[i];
+            if (!requirement.enabled) {
+                continue;
+            }
+            detection::StrengthClass observedStrength = detection::StrengthClass::Unknown;
+            if (!requirementPassed(proposal, requirement, observedStrength)) {
+                result.supportMatched = false;
+                firstFailedIndex = i;
+                firstFailedLabel = requirement.label;
+                firstFailedObservedStrength = observedStrength;
+                firstFailedRequiredStrength = requirement.minimumStrength;
+                result.rejectReason = supportRejectReason(observedStrength);
+                result.reasonCode = detection::PatternReasonCode::UnsupportedPattern;
+                if (config.failedRequirementMeansUncertain) {
+                    result.uncertain = true;
+                }
+                break;
+            }
+        }
     }
-    if (!result.supportMatched) {
-        result.rejectReason = supportRejectReason(supportStrengthForTarget(proposal, config.requiredSupportTarget));
+
+    result.patternAccepted = result.patternMatched && result.supportMatched;
+    result.valid = result.patternAccepted;
+    if (result.valid) {
+        result.rejectReason = detection::PatternRejectReason::None;
+        result.reasonCode = detection::PatternReasonCode::FromOccurrence;
+        result.uncertain = false;
+    } else if (proposalKind == ProposalEvaluationKind::Valid && result.reasonCode == detection::PatternReasonCode::None) {
         result.reasonCode = detection::PatternReasonCode::UnsupportedPattern;
     }
-    result.valid = result.patternMatched && result.supportMatched;
-    result.confidence = result.valid ? 1.0f : 0.0f;
     if (proposalKind == ProposalEvaluationKind::Invalid) {
         result.type = detection::PatternType::Invalid;
         result.valid = false;
+        result.patternAccepted = false;
         result.rejectReason = detection::PatternRejectReason::UnexpectedTiming;
+        result.uncertain = false;
+        result.supportMatched = false;
     }
+    result.firstFailedRequirementLabel = firstFailedLabel;
+    result.firstFailedObservedStrength = firstFailedObservedStrength;
+    result.firstFailedRequiredStrength = firstFailedRequiredStrength;
+    result.firstFailedRequirementIndex = firstFailedIndex;
+    result.confidence = result.valid ? 1.0f : 0.0f;
     return result;
 }
 
@@ -238,8 +301,13 @@ bool PatternMatcher::popPatternResult(unsigned long nowMs, PatternResult& out) {
     _report.patternMatched = out.patternMatched;
     _report.supportMatched = out.supportMatched;
     _report.valid = out.valid;
+    _report.uncertain = out.uncertain;
     _report.patternType = out.type;
     _report.rejectReason = out.rejectReason;
+    _report.firstFailedRequirementLabel = out.firstFailedRequirementLabel;
+    _report.firstFailedObservedStrength = out.firstFailedObservedStrength;
+    _report.firstFailedRequiredStrength = out.firstFailedRequiredStrength;
+    _report.firstFailedRequirementIndex = out.firstFailedRequirementIndex;
     _report.startMs = static_cast<uint32_t>(out.primaryStartMs);
     _report.peakMs = static_cast<uint32_t>(out.primaryPeakMs);
     _report.endMs = static_cast<uint32_t>(out.primaryAcceptedMs);

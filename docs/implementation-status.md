@@ -20,7 +20,7 @@ status table.
 | Behavior / output current path | stable active | `ResonantBehavior` consumes `PatternResult` and `FieldState`; `ChirpOutput` remains the current output path. |
 | Hardcoded config baseline | stable active | `DetectionProfile` and `BehaviorGateConfig` defaults are present and visible. |
 | TonalPulseFreq | stable active | Main runtime profile. |
-| TonalPulseScalar | selectable experimental | Scalar proof path. |
+| TonalPulseScalar | selectable experimental | Current landing is the two-inspector scalar-quality path (`FrequencyContrastQuality` + `SupportStrength`); carrier quality stays in the detector and live board validation remains. |
 | AmpExperimental | selectable experimental | AMP scalar proof/debug path. |
 | Detector/report consistency | planned | Investigate clean-summary acceptance mismatches without retuning thresholds. |
 | Pattern/detection expansion | planned | Future `TargetBandStrength`, pulse/chirp grouping, cross-source correlation, and added acoustic profiles. |

@@ -141,16 +141,28 @@ void printDetectionProfileDetails(const detection::DetectionProfile& profile) {
         Serial.print(static_cast<unsigned int>(i));
         Serial.print("].kind=");
         Serial.print(module.kind == detection::InspectionModuleKind::ScalarFeatureStrength ? "ScalarFeatureStrength" : "None");
-        Serial.print(" target=");
-        Serial.print(detection::evidenceTargetName(module.target));
+        Serial.print(" label=");
+        Serial.print(module.label != nullptr ? module.label : "none");
         if (module.kind == detection::InspectionModuleKind::ScalarFeatureStrength) {
             Serial.print(" stream=");
-            Serial.print(module.scalar.stream == detection::FeatureStreamId::AmpMagnitude ? "AmpMagnitude" :
-                         (module.scalar.stream == detection::FeatureStreamId::AmpEnvelope ? "AmpEnvelope" :
-                         (module.scalar.stream == detection::FeatureStreamId::FrequencyTarget ? "FrequencyTarget" :
-                         (module.scalar.stream == detection::FeatureStreamId::FrequencyScore ? "FrequencyScore" :
-                         (module.scalar.stream == detection::FeatureStreamId::FrequencyTargetBand ? "FrequencyTargetBand" :
-                         (module.scalar.stream == detection::FeatureStreamId::FrequencyContrast ? "FrequencyContrast" : "Unknown"))))));
+            switch (module.scalar.stream) {
+                case detection::FeatureStreamId::AmpMagnitude:
+                    Serial.print("AmpMagnitude");
+                    break;
+                case detection::FeatureStreamId::AmpEnvelope:
+                    Serial.print("AmpEnvelope");
+                    break;
+                case detection::FeatureStreamId::FrequencyTarget:
+                    Serial.print("FrequencyTarget");
+                    break;
+                case detection::FeatureStreamId::FrequencyContrast:
+                    Serial.print("FrequencyContrast");
+                    break;
+                case detection::FeatureStreamId::Unknown:
+                default:
+                    Serial.print("Unknown");
+                    break;
+            }
             Serial.print(" windowPreMs=");
             Serial.print(module.scalar.windowPreMs);
             Serial.print(" windowPostMs=");
@@ -159,10 +171,13 @@ void printDetectionProfileDetails(const detection::DetectionProfile& profile) {
             Serial.println();
         }
     }
-    Serial.print("  pattern.requireSupportForAcceptance=");
-    Serial.println(profile.patternMatcherConfig.requireSupportForAcceptance ? 1 : 0);
-    Serial.print("  pattern.requiredSupportTarget=");
-    Serial.println(detection::evidenceTargetName(profile.patternMatcherConfig.requiredSupportTarget));
+    const detection::InspectionModuleConfig* supportRequirement =
+        detection::patternMatcherFirstEnabledRequirement(profile.inspectionPlan);
+    const bool supportRequired = supportRequirement != nullptr;
+    Serial.print("  pattern.has_requirement=");
+    Serial.println(supportRequired ? 1 : 0);
+    Serial.print("  pattern.required_label=");
+    Serial.println(supportRequired && supportRequirement->label != nullptr ? supportRequirement->label : "none");
     Serial.print("  fieldState.occurrenceWindowMs=");
     Serial.println(profile.fieldStateConfig.occurrenceWindowMs);
     Serial.print("  fieldState.patternWindowMs=");
@@ -833,10 +848,13 @@ void Node::handleDetectCommand(const char* line) {
     Serial.print(detection::detectorSelectionName(detectionProfile.detectorSelection));
     Serial.print(" inspectionPlan=");
     Serial.print(detection::inspectionPlanName(detectionProfile.inspectionPlan));
-    Serial.print(" requireSupportForAcceptance=");
-    Serial.print(detectionProfile.patternMatcherConfig.requireSupportForAcceptance ? 1 : 0);
-    Serial.print(" requiredSupportTarget=");
-    Serial.print(detection::evidenceTargetName(detectionProfile.patternMatcherConfig.requiredSupportTarget));
+    const detection::InspectionModuleConfig* supportRequirement =
+        detection::patternMatcherFirstEnabledRequirement(detectionProfile.inspectionPlan);
+    const bool supportRequired = supportRequirement != nullptr;
+    Serial.print(" has_requirement=");
+    Serial.print(supportRequired ? 1 : 0);
+    Serial.print(" required_label=");
+    Serial.print(supportRequired && supportRequirement->label != nullptr ? supportRequirement->label : "none");
     Serial.print(" freqScore=");
     Serial.print(detectionProfile.frequencyMatch.attackScoreMin, 0);
     Serial.print(" freqContrast=");
@@ -958,7 +976,7 @@ void Node::applyActiveDetectionProfile() {
     _detection.setFrequencyMatchConfig(detectionProfile.frequencyMatch);
     _detection.setScalarTransientConfig(detectionProfile.scalarTransient);
     _detection.setInspectionPlan(detectionProfile.inspectionPlan);
-    _detection.setPatternMatcherConfig(detectionProfile.patternMatcherConfig);
+    _detection.setInspectionPlan(detectionProfile.inspectionPlan);
     _detection.setFieldStateConfig(detectionProfile.fieldStateConfig);
     _detection.setProfileName(detection::detectionProfileName(detectionProfile.kind));
     _freqBandStream.setSampleRateHz(_audioSource.sampleRateHz());

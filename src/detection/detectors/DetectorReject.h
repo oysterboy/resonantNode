@@ -14,6 +14,7 @@ enum class DetectorRejectClass {
     Threshold,
     Timing,
     Strength,
+    Quality,
     Cooldown,
     State,
     Window,

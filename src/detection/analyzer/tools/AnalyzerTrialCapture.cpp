@@ -122,9 +122,19 @@ void AnalyzerApp::handleSequencePending(
         return;
     }
 
+    if (patternResult.uncertain && !_sequenceTest.primaryValidPatternCaptured && !_sequenceTest.primaryUncertainPatternCaptured) {
+        _sequenceTest.primaryUncertainPatternCaptured = true;
+        _sequenceTest.primaryUncertainPattern = patternResult;
+        if (selectedInspectedOccurrence != nullptr && selectedInspectedOccurrence->occurrence.present) {
+            _sequenceTest.primaryUncertainInspectedOccurrence = *selectedInspectedOccurrence;
+        }
+        _sequenceTest.primaryUncertainPatternDtMs = dtFromTriggerMs;
+    }
+
     if (selectedInspectedOccurrence != nullptr
         && selectedInspectedOccurrence->occurrence.present
         && selectedInspectedOccurrence->decision == detection::OccurrenceDecision::Accepted
+        && !patternResult.uncertain
         && !_sequenceTest.primaryValidPatternCaptured
         && !_sequenceTest.primaryAcceptedOccurrenceCaptured) {
         _sequenceTest.primaryAcceptedOccurrenceCaptured = true;
@@ -163,8 +173,10 @@ void AnalyzerApp::handleSequencePending(
                 _sequenceTest.bestRejectedInspectedOccurrence = *selectedInspectedOccurrence;
             }
         }
-        _sequenceTest.rejectedInWindowCount++;
-        _sequenceTest.currentTrialRejected++;
+        if (!patternResult.uncertain) {
+            _sequenceTest.rejectedInWindowCount++;
+            _sequenceTest.currentTrialRejected++;
+        }
         return;
     }
 

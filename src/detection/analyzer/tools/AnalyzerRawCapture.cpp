@@ -411,7 +411,7 @@ bool AnalyzerApp::runRawTrigger(unsigned long toneHz,
 
             const uint16_t ampStrength = audioSamplePacket.audioMagnitudeValue;
             const uint16_t envStrength = audioSamplePacket.smoothedLevel;
-            const uint16_t frequencyScore = frequencyEvidence.targetBandScoreValue;
+            const uint16_t frequencyScore = frequencyEvidence.targetBandValue;
 
             if (!emitStarted) {
                 if (mode == RawCaptureMode::Features && preFeatureRingBuffer != nullptr) {

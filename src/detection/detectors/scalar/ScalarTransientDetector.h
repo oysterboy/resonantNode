@@ -36,6 +36,10 @@ public:
         DurationTooShort,
         DurationTooLong,
         StrengthTooLow,
+        MatchedMeanTooLow,
+        CoverageTooLow,
+        LongestIslandTooShort,
+        GapTooLong,
         PeakStillActive,
     };
 
@@ -64,6 +68,12 @@ public:
     void setMaxTransientDurationMs(unsigned long value);
     void setMinTransientPeakStrength(float value);
     void setReleaseDebounceMs(unsigned long value);
+    void setRequireCarrierQuality(bool value);
+    void setRequireMinStrength(bool value);
+    void setMinMatchedMeanStrength(float value);
+    void setMinCoverageAboveReleaseMs(unsigned long value);
+    void setMinLongestIslandMs(unsigned long value);
+    void setMaxGapMs(unsigned long value);
     void setDiagnosticsEnabled(bool enabled);
 
     void buildReport(detection::DetectorReport& out, unsigned long nowMs) const;
@@ -78,6 +88,12 @@ private:
     unsigned long _maxTransientDurationMs = 120; // Reject peaks that last too long to count as transients.
     float _minTransientPeakStrength = 0.0f; // Ignore weak peaks that are likely ambient noise.
     unsigned long _releaseDebounceMs = 20; // Require a short sustained drop before closing the peak.
+    bool _requireCarrierQuality = false;
+    bool _requireMinStrength = false;
+    float _minMatchedMeanStrength = 0.0f;
+    unsigned long _minCoverageAboveReleaseMs = 0;
+    unsigned long _minLongestIslandMs = 0;
+    unsigned long _maxGapMs = 0;
 
     // Live gate state.
     bool _onsetDetected = false;
@@ -93,12 +109,14 @@ private:
     unsigned long _releaseObservedUs = 0;
     float _peakStrength = 0.0f;
     float _candidatePeak = 0.0f;
-    float _candidateSum = 0.0f;
+    double _candidateStrengthSum = 0.0;
+    uint32_t _candidateStrengthCount = 0;
+    double _candidateMatchedStrengthSum = 0.0;
+    uint32_t _candidateMatchedStrengthCount = 0;
     float _candidateSumSquares = 0.0f;
-    unsigned long _candidateSampleCount = 0;
-    unsigned long _candidateCoverageAboveAttackMs = 0;
-    unsigned long _candidateCoverageAboveReleaseMs = 0;
-    unsigned long _candidateSustainedMs = 0;
+    uint64_t _candidateCoverageAboveAttackUs = 0;
+    uint64_t _candidateCoverageAboveReleaseUs = 0;
+    uint64_t _candidateSustainedUs = 0;
     unsigned int _candidateIslandCount = 0;
     unsigned int _candidateGapCount = 0;
     unsigned long _candidateIslandMaxMs = 0;

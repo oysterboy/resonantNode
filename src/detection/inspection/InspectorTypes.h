@@ -23,6 +23,8 @@ enum class ScalarInspectionMode {
     SustainedAboveThreshold,
     PeakCentered,
     PeakCenteredLift,
+    Rms,
+    P75,
 };
 
 enum class ScalarInspectionBasis {
@@ -33,6 +35,8 @@ enum class ScalarInspectionBasis {
     SustainedAboveThreshold,
     PeakCenteredMean,
     PeakCenteredLift,
+    Rms,
+    P75,
 };
 
 enum class ScalarInspectionNote {
@@ -42,8 +46,6 @@ enum class ScalarInspectionNote {
     WindowInvalid,
     InspectionDisabled,
     MissingFeatureHistory,
-    PreFloorObserved,
-    PreFloorUnavailable,
 };
 
 enum class ScalarInspectionAnchor {
@@ -66,6 +68,10 @@ inline const char* scalarInspectionModeName(ScalarInspectionMode mode) {
             return "peak_centered";
         case ScalarInspectionMode::PeakCenteredLift:
             return "peak_centered_lift";
+        case ScalarInspectionMode::Rms:
+            return "rms";
+        case ScalarInspectionMode::P75:
+            return "p75";
     }
 
     return "unknown";
@@ -103,30 +109,23 @@ enum class InspectionModuleKind {
     ScalarFeatureStrength,
 };
 
-enum class EvidenceTarget {
-    None,
-    SupportStrength,
-    FrequencyScoreStrength,
-    FrequencyContrastQuality,
-    TargetBandStrength,
-};
-
 struct ScalarFeatureInspectionConfig {
     bool enabled = true;
     FeatureStreamId stream = FeatureStreamId::AmpEnvelope;
     ScalarInspectionMode mode = ScalarInspectionMode::PeakAbsolute;
-    SupportStrengthConfig supportStrength = {};
+    ScalarInspectionAnchor anchor = ScalarInspectionAnchor::Peak;
     uint32_t windowPreMs = 20;
     uint32_t windowPostMs = 120;
-    uint32_t preFloorWindowPreMs = 250;
-    uint32_t preFloorWindowPostMs = 50;
+    SupportStrengthConfig supportStrength = {};
     uint32_t minSustainedMs = 0;
     size_t minSustainedCount = 0;
 };
 
 struct InspectionModuleConfig {
     InspectionModuleKind kind = InspectionModuleKind::None;
-    EvidenceTarget target = EvidenceTarget::None;
+    const char* label = "none";
+    bool enabled = false;
+    StrengthClass minimumStrength = StrengthClass::Unknown;
     ScalarFeatureInspectionConfig scalar = {};
 };
 
@@ -135,6 +134,7 @@ static constexpr size_t kMaxInspectionModules = 3;
 struct InspectionPlan {
     InspectionModuleConfig modules[kMaxInspectionModules] = {};
     size_t count = 0;
+    bool failedRequirementMeansUncertain = true;
 };
 
 // Scalar evidence captured by the inspector for a single occurrence.
@@ -160,24 +160,6 @@ struct ScalarInspectionObservation {
     float coverageRatio = 0.0f;
     unsigned long spanMs = 0;
     unsigned long latestValueAgeMs = 0;
-
-    bool preFloorAvailable = false;
-    ScalarInspectionAnchor preFloorAnchor = ScalarInspectionAnchor::Peak;
-    ScalarInspectionNote preFloorNote = ScalarInspectionNote::None;
-    int16_t preFloorWindowStartMs = -250;
-    int16_t preFloorWindowEndMs = -50;
-    unsigned long preFloorWindowMs = 0;
-    size_t preFloorValueCount = 0;
-    size_t preFloorBucketCount = 0;
-    size_t preFloorCoveredMs = 0;
-    float preFloorCoverageRatio = 0.0f;
-    unsigned long preFloorSpanMs = 0;
-    unsigned long preFloorLatestValueAgeMs = 0;
-    // Pre-floor comparison facts.
-    float preFloorMedian = 0.0f;
-    float preFloorP75 = 0.0f;
-    float preFloorRms = 0.0f;
-    float preFloorTrimmedMean = 0.0f;
 
     // Core evidence metrics.
     float first = 0.0f;
@@ -237,8 +219,8 @@ struct FrequencyBandMeasurementPacket {
     unsigned long observedAtMs = 0;
     unsigned long ageSamples = 0;
 
-    // Frequency score on the shared 0..32767 magnitude-like scale.
-    audio::FrequencyScore16 targetBandScoreValue = 0;
+    // Frequency target value on the shared 0..32767 magnitude-like scale.
+    audio::FrequencyScore16 targetBandValue = 0;
     float confidence = 0.0f;
 
     // Raw Goertzel power retained for diagnostics and debugging.

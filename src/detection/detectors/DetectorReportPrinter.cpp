@@ -82,6 +82,25 @@ void printDetectorReportGenericLine(const char* prefix, unsigned long trial, con
     Serial.print(selectedReject.mean, 1);
     Serial.print(" reject.rms=");
     Serial.print(selectedReject.rms, 1);
+    const bool useAcceptedCandidate = accepted.present || !selectedReject.present;
+    const float candidateMeanStrength = useAcceptedCandidate ? accepted.meanStrength : selectedReject.meanStrength;
+    const float candidateMatchedMeanStrength = useAcceptedCandidate
+        ? accepted.matchedMeanStrength
+        : selectedReject.matchedMeanStrength;
+    const unsigned int candidateStrengthCount = useAcceptedCandidate
+        ? accepted.strengthCount
+        : selectedReject.strengthCount;
+    const unsigned int candidateMatchedStrengthCount = useAcceptedCandidate
+        ? accepted.matchedStrengthCount
+        : selectedReject.matchedStrengthCount;
+    Serial.print(" candidate.mean_strength=");
+    Serial.print(candidateMeanStrength, 1);
+    Serial.print(" candidate.min_strength=");
+    Serial.print(candidateMatchedMeanStrength, 1);
+    Serial.print(" candidate.strength_count=");
+    Serial.print(candidateStrengthCount);
+    Serial.print(" candidate.matched_strength_count=");
+    Serial.print(candidateMatchedStrengthCount);
     Serial.print(" reject.coverage_attack_ms=");
     Serial.print(selectedReject.coverageAboveAttackMs);
     Serial.print(" reject.coverage_release_ms=");
@@ -96,6 +115,22 @@ void printDetectorReportGenericLine(const char* prefix, unsigned long trial, con
     Serial.print(selectedReject.islandMaxMs);
     Serial.print(" reject.gap_max_ms=");
     Serial.print(selectedReject.gapMaxMs);
+    Serial.print(" carrier.quality_pass=");
+    if (detectorReport.detectorId == DetectorId::ScalarTransient) {
+        const bool carrierQualityPass = detectorReport.scalar.inspect.carrierQualityRequired
+            ? (detectorReport.scalar.inspect.carrierCoveragePassed &&
+               detectorReport.scalar.inspect.carrierIslandPassed &&
+               detectorReport.scalar.inspect.carrierGapPassed)
+            : true;
+        Serial.print(carrierQualityPass ? 1 : 0);
+    } else if (accepted.present) {
+        Serial.print(1);
+    } else {
+        Serial.print(0);
+    }
+    Serial.print(" candidate.min_strength_pass=");
+    Serial.print(detectorReport.detectorId == DetectorId::ScalarTransient &&
+        detectorReport.scalar.inspect.matchedMeanPassed ? 1 : 0);
     Serial.print(" threshold.min_duration_ms=");
     Serial.print(detectorReport.thresholds.minDurationMs);
     Serial.print(" threshold.max_duration_ms=");

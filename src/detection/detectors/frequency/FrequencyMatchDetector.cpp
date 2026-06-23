@@ -457,7 +457,7 @@ void FrequencyMatchDetector::update(const detection::FrequencyBandMeasurementPac
                     pendingLastMatchedMs = now;
                     pendingEvidence = evidence;
                     resetPendingFacts();
-                    pendingPeakScore = evidence.targetBandScoreValue;
+                    pendingPeakScore = evidence.targetBandValue;
                     pendingPeakContrast = evidence.targetBandContrastValue;
                     pendingWasAboveRelease = true;
                     pendingIslandCount = 1;
@@ -471,14 +471,14 @@ void FrequencyMatchDetector::update(const detection::FrequencyBandMeasurementPac
                     pendingOccurrence.releaseSample = 0;
                     pendingOccurrence.endMs = 0;
                     pendingOccurrence.durationMs = 0;
-                    pendingOccurrence.strength = evidence.targetBandScoreValue;
+                    pendingOccurrence.strength = evidence.targetBandValue;
                     pendingOccurrence.frequency.present = true;
-                    pendingOccurrence.frequency.score = evidence.targetBandScoreValue;
+                    pendingOccurrence.frequency.score = evidence.targetBandValue;
                     pendingOccurrence.frequency.contrast = evidence.targetBandContrastValue;
                     pendingOccurrence.confidence = 0.0f;
                     strncpy(pendingState, "open", sizeof(pendingState) - 1);
                     pendingState[sizeof(pendingState) - 1] = '\0';
-                    updatePendingFacts(now, evidence.targetBandScoreValue, attackScoreOk, releaseScoreOk);
+                    updatePendingFacts(now, evidence.targetBandValue, attackScoreOk, releaseScoreOk);
                 }
             } else {
                 wouldProducePending = false;
@@ -486,25 +486,25 @@ void FrequencyMatchDetector::update(const detection::FrequencyBandMeasurementPac
                 wouldPendingReason[sizeof(wouldPendingReason) - 1] = '\0';
             }
         } else {
-            updatePendingFacts(now, evidence.targetBandScoreValue, attackScoreOk, releaseScoreOk);
+            updatePendingFacts(now, evidence.targetBandValue, attackScoreOk, releaseScoreOk);
             if (releaseOk) {
                 pendingLastMatchedMs = now;
                 ++pendingHoldUpdates;
                 pendingDurationMs = pendingLastMatchedMs >= pendingOpenMs
                     ? pendingLastMatchedMs - pendingOpenMs
                     : 0UL;
-                if (evidence.targetBandScoreValue > pendingPeakScore
-                    || (evidence.targetBandScoreValue == pendingPeakScore && evidence.targetBandContrastValue > pendingPeakContrast)) {
+                if (evidence.targetBandValue > pendingPeakScore
+                    || (evidence.targetBandValue == pendingPeakScore && evidence.targetBandContrastValue > pendingPeakContrast)) {
                     pendingPeakMs = now;
                     pendingPeakSample = currentSample;
-                    pendingPeakScore = evidence.targetBandScoreValue;
+                    pendingPeakScore = evidence.targetBandValue;
                     pendingPeakContrast = evidence.targetBandContrastValue;
                     pendingPeakSampleCount = 0;
                     pendingEvidence = evidence;
                     pendingOccurrence.peakMs = now;
                     pendingOccurrence.peakSample = currentSample;
-                    pendingOccurrence.strength = evidence.targetBandScoreValue;
-                    pendingOccurrence.frequency.score = evidence.targetBandScoreValue;
+                    pendingOccurrence.strength = evidence.targetBandValue;
+                    pendingOccurrence.frequency.score = evidence.targetBandValue;
                     pendingOccurrence.frequency.contrast = evidence.targetBandContrastValue;
                 }
                 pendingOccurrence.durationMs = pendingDurationMs;
@@ -523,8 +523,8 @@ void FrequencyMatchDetector::update(const detection::FrequencyBandMeasurementPac
 
     if (_diagnosticsEnabled) {
         const bool better = !bestEvidence.present
-            || evidence.targetBandScoreValue > bestEvidence.targetBandScoreValue
-            || (evidence.targetBandScoreValue == bestEvidence.targetBandScoreValue
+            || evidence.targetBandValue > bestEvidence.targetBandValue
+            || (evidence.targetBandValue == bestEvidence.targetBandValue
                 && evidence.targetBandContrastValue > bestEvidence.targetBandContrastValue);
         if (evidence.present && better) {
             bestEvidence = evidence;

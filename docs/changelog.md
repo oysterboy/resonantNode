@@ -1,3 +1,28 @@
+# 2026-06-22 - TonalPulseScalar quality path landed
+
+### Context
+
+The TonalPulseScalar scalar-quality refactor reached the landed code state and
+the remaining work shifted to live board validation.
+
+### Changed
+
+- landed carrier-quality gates on the scalar transient detector
+- added explicit `uncertain` pattern flow for inspector-gate failures
+- expanded the TonalPulseScalar inspection plan to target, contrast, and AMP
+- updated canonical analyzer output to report the new quality and pattern
+  evidence fields
+- refreshed `current-pass.md` to describe the live validation step instead of
+  the old implementation checklist
+- updated the implementation status note for TonalPulseScalar
+
+### Verification
+
+- `platformio run -e esp32dev-analyzer` passes
+- `platformio run -e esp32dev` passes
+- the analyzer now flashes successfully on `COM6`
+- live runtime behavior capture is still pending
+
 # 2026-06-13 - LOG-001 tuning-run logger
 
 ### Context

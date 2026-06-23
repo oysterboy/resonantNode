@@ -36,9 +36,7 @@ inline void observeFrequencyMeasurementPacket(const FrequencyBandMeasurementPack
     const unsigned long sampleTimeMs = evidence.observedAtMs != 0 ? evidence.observedAtMs : nowMs;
     // Frequency target, score, and contrast are first-class scalar samples in history.
     // FrequencyBandMeasurementPacket stays the compound packet used by FrequencyMatch.
-    history.record(FeatureStreamId::FrequencyTarget, sampleTimeMs, evidence.targetBandScoreValue);
-    history.record(FeatureStreamId::FrequencyScore, sampleTimeMs, evidence.targetBandScoreValue);
-    history.record(FeatureStreamId::FrequencyTargetBand, sampleTimeMs, evidence.targetBandScoreValue);
+    history.record(FeatureStreamId::FrequencyTarget, sampleTimeMs, evidence.targetBandValue);
     history.record(FeatureStreamId::FrequencyContrast, sampleTimeMs, evidence.targetBandContrastValue);
     // Temporarily disabled to reduce analyzer memory pressure during the current pass.
     // history.record(FeatureStreamId::FrequencyTargetPower, sampleTimeMs, evidence.targetBandPowerValue);

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <stddef.h>
 #include <stdint.h>
 
 #include "../inspection/InspectorTypes.h"
@@ -7,20 +8,21 @@
 
 namespace detection {
 
-struct PatternMatcherConfig {
-    bool requireSupportForAcceptance = true;
-    EvidenceTarget requiredSupportTarget = EvidenceTarget::SupportStrength;
-    StrengthClass minimumSupportStrength = StrengthClass::Medium;
-};
+using PatternMatcherConfig = InspectionPlan;
 
 struct PatternMatcherReport {
     bool proposalPresent = false;
     bool patternMatched = false;
     bool supportMatched = false;
     bool valid = false;
+    bool uncertain = false;
 
     PatternType patternType = PatternType::None;
     PatternRejectReason rejectReason = PatternRejectReason::None;
+    const char* firstFailedRequirementLabel = "none";
+    uint8_t firstFailedRequirementIndex = 255;
+    StrengthClass firstFailedObservedStrength = StrengthClass::Unknown;
+    StrengthClass firstFailedRequiredStrength = StrengthClass::Unknown;
 
     uint32_t startMs = 0;
     uint32_t peakMs = 0;

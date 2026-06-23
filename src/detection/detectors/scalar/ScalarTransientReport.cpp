@@ -1,20 +1,11 @@
 #include "ScalarTransientDetector.h"
 
 #include <Arduino.h>
-#include <string.h>
-
-namespace {
-
-bool detectorReasonIsNone(const char* reason) {
-    return reason == nullptr || strcmp(reason, "none") == 0;
-}
-
-} // namespace
 
 void ScalarTransientDetector::refreshReportDetail() {
     const char* onsetRejectReason = lastOnsetRejectReasonName();
     const char* transientRejectReason = lastTransientRejectReasonName();
-    const char* scalarRejectReason = !detectorReasonIsNone(transientRejectReason)
+    const char* scalarRejectReason = !detection::scalar_transient_detail::detectorReasonIsNone(transientRejectReason)
         ? transientRejectReason
         : onsetRejectReason;
     const bool hasAcceptedSummary = _acceptedOccurrencePresent && _acceptedOccurrence.present;
@@ -51,7 +42,8 @@ void ScalarTransientDetector::refreshReportDetail() {
     _reportDetail.inspect.released = hasAcceptedSummary
         ? true
         : (hasSelectedRejectSummary ? true : (_releaseObservedUs != 0));
-    _reportDetail.inspect.validRelease = _reportDetail.inspect.released && detectorReasonIsNone(scalarRejectReason);
+    _reportDetail.inspect.validRelease = _reportDetail.inspect.released &&
+        detection::scalar_transient_detail::detectorReasonIsNone(scalarRejectReason);
     _reportDetail.inspect.emitAllowed = _reportDetail.inspect.validRelease;
     _reportDetail.inspect.openMs = hasAcceptedSummary
         ? _acceptedOccurrence.startMs

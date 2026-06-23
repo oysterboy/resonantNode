@@ -9,6 +9,7 @@
 #include "../../app/TimingUtils.h"
 #include "../../detection/detectors/DetectorNames.h"
 #include "../../detection/analyzer/AnalyzerText.h"
+#include "../../detection/analyzer/AnalyzerPassRules.h"
 #include "../../detection/analyzer/tools/AnalyzerRawHealth.h"
 #include "../../detection/inspection/InspectionNames.h"
 #include "../../detection/occurrences/OccurrenceNames.h"
@@ -894,18 +895,23 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
     const SequenceTrialSelection selectedTrial = selectSequenceTrialSelection(trialOnsetAnchorMs);
     const detection::PatternResult* reportPatternResult = selectedTrial.patternResult;
     const detection::InspectedOccurrence* reportInspectedOccurrence = selectedTrial.inspectedOccurrence;
+    const detection::DetectorReport* selectedDetectorReport = selectedTrial.detectorReport;
     const bool hasPatternResult = reportPatternResult != nullptr;
     const bool hasInspectedOccurrence = reportInspectedOccurrence != nullptr && reportInspectedOccurrence->occurrence.present;
     const detection::FieldState* runtimeFieldState = &_detection.fieldState();
     const detection::DetectionProfile& selectedProfile = detection::detectionProfileForKind(_sequenceTest.profileKind);
-    report.detectorReport = selectedTrial.detectorReport;
-    report.sourceSelection = selectedTrial.detectorReport != nullptr
-        ? (selectedTrial.kind == SequenceTrialSelection::Kind::RejectedPattern ? "selected_reject"
-           : (selectedTrial.kind == SequenceTrialSelection::Kind::Miss ? "none" : "selected_occurrence"))
-        : "none";
+    report.sourceSelection = selectedTrial.kind == SequenceTrialSelection::Kind::Miss || selectedTrial.kind == SequenceTrialSelection::Kind::Unexpected
+        ? "none"
+        : (reportInspectedOccurrence != nullptr && reportInspectedOccurrence->decision == detection::OccurrenceDecision::Rejected
+            ? "selected_reject"
+            : "selected_occurrence");
     report.sourceOccurrenceId = selectedTrial.occurrenceId;
     report.sourceCandidateId = selectedTrial.occurrenceId;
     report.sourceReportMatched = selectedTrial.reportMatched;
+    report.sourceReportReason = detection::analyzer::sourceReportReason(
+        selectedTrial.reportMatched,
+        selectedDetectorReport != nullptr);
+    report.detectorReport = selectedTrial.reportMatched ? selectedDetectorReport : nullptr;
     const bool trialHasPipelineEvidence = (hasPatternResult || hasInspectedOccurrence)
         && diagnostics.rawPendingCount > 0;
     const long reportPatternDtMs = hasPatternResult
@@ -918,7 +924,7 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
         ? selectedTrial.strength
         : strength;
     const auto artifactReason = [&]() -> const char* {
-        if (hasPatternResult || hasInspectedOccurrence || report.detectorReport != nullptr) {
+        if (hasPatternResult || hasInspectedOccurrence || selectedDetectorReport != nullptr) {
             return "captured_from_runtime_pipeline";
         }
         return "missing_pipeline_result";
@@ -926,7 +932,7 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
     const bool startupArtifact = result == AnalyzerResult::Miss
         && _sequenceTest.currentTrial == 1
         && !trialHasPipelineEvidence
-        && report.detectorReport == nullptr
+        && selectedDetectorReport == nullptr
         && strcmp(artifactReason, "missing_pipeline_result") == 0;
 
     AnalyzerSequenceClassificationInput classificationInput;
@@ -936,9 +942,9 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
     classificationInput.bufferOverrun = bufferOverrun;
     classificationInput.patternAvailable = hasPatternResult;
     classificationInput.patternInspectionFailed = hasPatternResult && !reportPatternResult->valid;
-    classificationInput.detectorReportAvailable = report.detectorReport != nullptr;
-    classificationInput.detectorAcceptedPresent = report.detectorReport != nullptr && report.detectorReport->accepted.present;
-    classificationInput.detectorSelectedRejectPresent = report.detectorReport != nullptr && report.detectorReport->selectedReject.present;
+    classificationInput.detectorReportAvailable = selectedDetectorReport != nullptr;
+    classificationInput.detectorAcceptedPresent = selectedDetectorReport != nullptr && selectedDetectorReport->accepted.present;
+    classificationInput.detectorSelectedRejectPresent = selectedDetectorReport != nullptr && selectedDetectorReport->selectedReject.present;
     report.classification = classifySequenceTrial(classificationInput);
     if (hasPatternResult && !reportPatternResult->valid) {
         report.classification.result = AnalyzerResult::Rejected;
@@ -980,10 +986,18 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
         report.primaryPattern = pattern;
     }
 
-    report.occurrences.accepted = hasPatternResult && reportPatternResult->valid
-        ? 1U + static_cast<unsigned int>(diagnostics.duplicateCount)
+    report.occurrences.accepted = selectedTrial.kind == SequenceTrialSelection::Kind::ValidPattern ||
+        selectedTrial.kind == SequenceTrialSelection::Kind::AcceptedOccurrence ||
+        (selectedTrial.kind == SequenceTrialSelection::Kind::RejectedPattern &&
+         reportInspectedOccurrence != nullptr &&
+         reportInspectedOccurrence->decision == detection::OccurrenceDecision::Accepted)
+        ? 1U
         : 0U;
-    report.occurrences.rejected = _sequenceTest.currentTrialRejected;
+    report.occurrences.rejected = selectedTrial.kind == SequenceTrialSelection::Kind::RejectedPattern &&
+        reportInspectedOccurrence != nullptr &&
+        reportInspectedOccurrence->decision == detection::OccurrenceDecision::Rejected
+        ? 1U
+        : 0U;
     report.occurrences.total = report.occurrences.accepted + report.occurrences.rejected;
     if (trialHasPipelineEvidence && hasInspectedOccurrence) {
         const detection::Occurrence& occurrence = reportInspectedOccurrence->occurrence;
@@ -1022,7 +1036,7 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
         report.occurrences.contrast = 0.0f;
         report.occurrences.strength = reportPatternStrength;
         report.occurrences.confidence = trialHasPipelineEvidence ? reportPatternResult->confidence : 0.0f;
-        report.occurrences.mainRejectReason = analyzerReasonName(report.classification.reason);
+        report.occurrences.mainRejectReason = report.sourceReportReason;
         report.occurrences.rejectReason = report.occurrences.mainRejectReason;
     }
 

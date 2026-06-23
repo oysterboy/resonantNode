@@ -1,11 +1,20 @@
 #pragma once
 
 #include <stdint.h>
+#include <string.h>
 
 #include "../../../app/RuntimeDefaults.h"
 #include "../../../audio/AudioSignal.h"
 #include "../DetectorReport.h"
 #include "../../occurrences/Occurrence.h"
+
+namespace detection::scalar_transient_detail {
+
+inline bool detectorReasonIsNone(const char* reason) {
+    return reason == nullptr || strcmp(reason, "none") == 0;
+}
+
+} // namespace detection::scalar_transient_detail
 
 /*
 ScalarTransientDetector

@@ -3,6 +3,8 @@
 #include <Arduino.h>
 #include <math.h>
 
+#include "../../analyzer/AnalyzerPassRules.h"
+
 // Lifecycle / summaries.
 ScalarTransientDetector::ScalarTransientDetector() = default;
 
@@ -157,7 +159,8 @@ void ScalarTransientDetector::updateOnsetStage(unsigned long nowUs, float signal
     // The separate release threshold keeps the peak stable when the occurrence wobbles near the edge.
     if (aboveAttackThreshold && !_peakActive && onsetCooldownElapsed) {
         resetCandidateFacts();
-        _currentOccurrenceId = ++_nextOccurrenceId;
+        _currentOccurrenceId = detection::analyzer::nextOccurrenceId(_nextOccurrenceId);
+        _nextOccurrenceId = _currentOccurrenceId;
         _peakActive = true;
         _peakStartedUs = nowUs;
         _peakStrengthObservedUs = nowUs;

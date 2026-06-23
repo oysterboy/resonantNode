@@ -3,11 +3,9 @@
 #include <math.h>
 #include <string.h>
 
-namespace {
+#include "../../analyzer/AnalyzerPassRules.h"
 
-bool detectorReasonIsNone(const char* reason) {
-    return reason == nullptr || strcmp(reason, "none") == 0;
-}
+namespace {
 
 bool scalarRejectCandidateBeatsCurrent(
     const detection::SelectedRejectSummary& current,
@@ -60,7 +58,10 @@ void ScalarTransientDetector::captureAcceptedOccurrence(unsigned long releaseObs
 
     _acceptedOccurrencePresent = true;
     _acceptedOccurrenceReleaseMs = releaseObservedUs / 1000UL;
-    _acceptedOccurrenceId = _currentOccurrenceId != 0 ? _currentOccurrenceId : ++_nextOccurrenceId;
+    _acceptedOccurrenceId = _currentOccurrenceId != 0
+        ? _currentOccurrenceId
+        : detection::analyzer::nextOccurrenceId(_nextOccurrenceId);
+    _nextOccurrenceId = _acceptedOccurrenceId;
     _acceptedOccurrence.present = true;
     _acceptedOccurrence.occurrenceId = _acceptedOccurrenceId;
     _acceptedOccurrence.startMs = _peakStartedUs / 1000UL;
@@ -116,7 +117,10 @@ void ScalarTransientDetector::captureSelectedReject(unsigned long releaseObserve
 
     _selectedRejectPresent = true;
     _selectedReject.present = true;
-    _selectedRejectOccurrenceId = _currentOccurrenceId != 0 ? _currentOccurrenceId : ++_nextOccurrenceId;
+    _selectedRejectOccurrenceId = _currentOccurrenceId != 0
+        ? _currentOccurrenceId
+        : detection::analyzer::nextOccurrenceId(_nextOccurrenceId);
+    _nextOccurrenceId = _selectedRejectOccurrenceId;
     _selectedReject.rejectClass = scalarTransientRejectClass(_lastTransientRejectReason);
     _selectedReject.detectorReason = lastTransientRejectReasonName();
     _selectedReject.occurrenceId = _selectedRejectOccurrenceId;
@@ -159,7 +163,8 @@ void ScalarTransientDetector::capturePendingOccurrence(const AudioSamplePacket& 
     _pendingOccurrence.detectorId = detection::DetectorId::ScalarTransient;
     _pendingOccurrence.occurrenceType = detection::OccurrenceType::Scalar;
     if (_currentOccurrenceId == 0) {
-        _currentOccurrenceId = ++_nextOccurrenceId;
+        _currentOccurrenceId = detection::analyzer::nextOccurrenceId(_nextOccurrenceId);
+        _nextOccurrenceId = _currentOccurrenceId;
     }
     _pendingOccurrence.occurrenceId = _currentOccurrenceId;
     _pendingOccurrence.present = true;

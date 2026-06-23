@@ -6,6 +6,7 @@
 
 #include "../../app/RuntimeDefaults.h"
 #include "../../app/TimingUtils.h"
+#include "AnalyzerPassRules.h"
 
 bool waitForEmitterAck(const char* expectedPrefix, unsigned long timeoutMs);
 
@@ -41,28 +42,20 @@ bool detectorReportMatchesOccurrence(const detection::DetectorReport* detectorRe
         return false;
     }
 
-    struct SummaryMatch {
-        static bool matches(const detection::AcceptedOccurrenceSummary& summary,
-                            const detection::InspectedOccurrence* occurrence) {
-            return summary.present &&
-                   summary.occurrenceId == occurrence->occurrence.occurrenceId &&
-                   summary.startMs == occurrence->occurrence.startMs &&
-                   summary.endMs == occurrence->occurrence.endMs;
-        }
-
-        static bool matches(const detection::SelectedRejectSummary& summary,
-                            const detection::InspectedOccurrence* occurrence) {
-            return summary.present &&
-                   summary.occurrenceId == occurrence->occurrence.occurrenceId &&
-                   summary.startMs == occurrence->occurrence.startMs &&
-                   summary.endMs == occurrence->occurrence.endMs;
-        }
-    };
-
-    const auto& occurrence = inspectedOccurrence;
-    const bool acceptedMatches = SummaryMatch::matches(detectorReport->accepted, occurrence);
-    const bool rejectedMatches = SummaryMatch::matches(detectorReport->selectedReject, occurrence);
-    return acceptedMatches || rejectedMatches;
+    return detection::analyzer::sourceReportMatchesIdentity(
+               detectorReport->accepted.occurrenceId,
+               inspectedOccurrence->occurrence.occurrenceId,
+               detectorReport->accepted.startMs,
+               inspectedOccurrence->occurrence.startMs,
+               detectorReport->accepted.endMs,
+               inspectedOccurrence->occurrence.endMs) ||
+           detection::analyzer::sourceReportMatchesIdentity(
+               detectorReport->selectedReject.occurrenceId,
+               inspectedOccurrence->occurrence.occurrenceId,
+               detectorReport->selectedReject.startMs,
+               inspectedOccurrence->occurrence.startMs,
+               detectorReport->selectedReject.endMs,
+               inspectedOccurrence->occurrence.endMs);
 }
 
 } // namespace
@@ -726,16 +719,7 @@ void AnalyzerApp::updateCleanSequenceSummary(const AnalyzerReport& report) {
         ++summary.confidenceCount;
     }
 
-    summary.completed =
-        summary.expectedTrials +
-        summary.earlyTrials +
-        summary.lateTrials +
-        summary.missTrials +
-        summary.duplicateTrials +
-        summary.unexpectedTrials +
-        summary.rejectedTrials +
-        summary.ambiguousTrials +
-        summary.tooDenseTrials;
+    summary.completed = detection::analyzer::completedPrimaryTrialCount(summary);
 }
 
 unsigned long AnalyzerApp::sequenceTrialOnsetAnchorMs() const {

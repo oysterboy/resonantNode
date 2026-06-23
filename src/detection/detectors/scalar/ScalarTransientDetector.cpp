@@ -2,57 +2,6 @@
 
 #include <Arduino.h>
 #include <math.h>
-#include <string.h>
-
-// Scalar reason helpers and lifecycle classification.
-namespace {
-
-bool detectorReasonIsNone(const char* reason) {
-    return reason == nullptr || strcmp(reason, "none") == 0;
-}
-
-bool scalarRejectCandidateBeatsCurrent(
-    const detection::SelectedRejectSummary& current,
-    unsigned long candidateDurationMs,
-    float candidateStrength
-) {
-    if (!current.present) {
-        return true;
-    }
-
-    if (candidateDurationMs != current.durationMs) {
-        return candidateDurationMs > current.durationMs;
-    }
-
-    if (candidateStrength != current.strength) {
-        return candidateStrength > current.strength;
-    }
-
-    return false;
-}
-
-detection::DetectorRejectClass scalarTransientRejectClass(ScalarTransientDetector::TransientRejectReason reason) {
-    switch (reason) {
-        case ScalarTransientDetector::TransientRejectReason::DurationTooShort:
-        case ScalarTransientDetector::TransientRejectReason::DurationTooLong:
-            return detection::DetectorRejectClass::Timing;
-        case ScalarTransientDetector::TransientRejectReason::StrengthTooLow:
-            return detection::DetectorRejectClass::Strength;
-        case ScalarTransientDetector::TransientRejectReason::MatchedMeanTooLow:
-            return detection::DetectorRejectClass::Strength;
-        case ScalarTransientDetector::TransientRejectReason::CoverageTooLow:
-        case ScalarTransientDetector::TransientRejectReason::LongestIslandTooShort:
-        case ScalarTransientDetector::TransientRejectReason::GapTooLong:
-            return detection::DetectorRejectClass::Quality;
-        case ScalarTransientDetector::TransientRejectReason::PeakStillActive:
-            return detection::DetectorRejectClass::State;
-        case ScalarTransientDetector::TransientRejectReason::None:
-        default:
-            return detection::DetectorRejectClass::None;
-    }
-}
-
-} // namespace
 
 // Lifecycle / summaries.
 ScalarTransientDetector::ScalarTransientDetector() = default;

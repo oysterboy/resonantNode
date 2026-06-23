@@ -48,7 +48,6 @@ enum class AnalyzerResult {
     Miss,
     Duplicate,
     Unexpected,
-    Uncertain,
     Rejected,
     Ambiguous,
     TooDense,
@@ -96,8 +95,6 @@ inline const char* analyzerResultName(AnalyzerResult value) {
             return "duplicate";
         case AnalyzerResult::Unexpected:
             return "unexpected";
-        case AnalyzerResult::Uncertain:
-            return "uncertain";
         case AnalyzerResult::Rejected:
             return "rejected";
         case AnalyzerResult::Ambiguous:

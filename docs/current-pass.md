@@ -1,282 +1,309 @@
-# Fix `SEQ_SOURCE_CORE` / `SEQ_SOURCE_SPEC` Trial Selection
+# Remove `UNCERTAIN` from Trial Classification
 
-## Problem
+## Goal
 
-`SEQ_SOURCE_CORE` and `SEQ_SOURCE_SPEC` currently print:
+Remove `UNCERTAIN` as a trial result.
 
-```cpp
-_detection.activeDetectorReport()
+A trial must end in one clear classification. The detailed reason field is sufficient to explain why the pipeline failed.
+
+## New rule
+
+Replace:
+
+```text
+result=uncertain
+reason=inspection_failed
 ```
 
-at trial finalization.
+with:
 
-That report is the detector’s latest/current report, not necessarily the detector report associated with the occurrence selected for:
-
-* `SEQ_TRIAL`
-* `SEQ_INSPECT`
-* `SEQ_EXPLAIN`
-* `SEQ_SOURCE`
-
-If multiple candidates occur in one trial, or a later rejected candidate updates the detector report, source reporting may describe a different candidate than the selected PatternResult.
-
-## Required rule
-
-Every trial must establish one explicit source selection:
-
-```cpp
-selectedOccurrenceId
-selectedDetectorId
-selectedCandidateId // if available
+```text
+result=rejected
+reject_reason=inspection_failed
 ```
 
-All trial-scoped stage reports must use that same selection.
+More specific reasons should be preferred where available:
+
+```text
+result=rejected
+reject_reason=amp_strength_below_required
+```
+
+or:
+
+```text
+result=rejected
+reject_reason=contrast_strength_below_required
+```
+
+## Trial result vocabulary
+
+Keep trial classification limited to explicit final outcomes:
+
+```cpp
+enum class AnalyzerResult {
+    Expected,
+    Early,
+    Late,
+    Miss,
+    Rejected,
+    Duplicate,
+    Unexpected,
+    Ambiguous,
+    TooDense
+};
+```
+
+Remove `Uncertain`.
+
+Keep `Ambiguous` only for genuinely competing or non-unique interpretations, for example:
+
+* multiple valid competing patterns,
+* no unique primary pattern,
+* conflicting observations that cannot be resolved.
+
+Do not use `Ambiguous` as a replacement for ordinary inspector or pattern rejection.
+
+## Pipeline mapping
+
+### Accepted source, inspector requirement failed
+
+```text
+result=rejected
+reject_reason=inspection_failed
+```
+
+Prefer the concrete failed requirement:
+
+```text
+reject_reason=amp_below_required
+reject_label=amp
+observed_class=weak
+required_class=medium
+```
+
+### Accepted inspection, pattern rule failed
+
+```text
+result=rejected
+reject_reason=pattern_requirement_failed
+```
+
+### Detector candidate rejected
+
+```text
+result=rejected
+reject_reason=duration_too_long
+```
+
+### No accepted occurrence
+
+```text
+result=miss
+reject_reason=no_accepted_occurrence
+```
+
+Do not classify a detector reject as `uncertain`.
+
+## Selection logic
+
+Remove all selection branches that prefer or search for an uncertain PatternResult.
+
+Old pattern:
+
+```cpp
+validPattern
+else uncertainPattern
+else acceptedOccurrence
+```
+
+Replace with:
+
+```cpp
+validPattern
+else rejectedPattern
+else acceptedOccurrenceWithoutPattern
+else selectedDetectorReject
+else miss
+```
+
+The selected rejected PatternResult should carry the concrete failure reason.
+
+## Pattern result status
+
+If `PatternResult` currently contains `Uncertain`, replace it with a simpler status:
+
+```cpp
+enum class PatternStatus {
+    Valid,
+    Rejected
+};
+```
+
+Optional:
+
+```cpp
+PatternRejectReason rejectReason;
+uint8_t firstFailedRequirementIndex;
+StrengthClass observedClass;
+StrengthClass requiredClass;
+```
+
+A pattern that fails one required inspector condition is `Rejected`, not `Uncertain`.
+
+## Reporting
+
+### `SEQ_TRIAL`
+
+Use:
 
 ```text
 SEQ_TRIAL
-SEQ_SOURCE
-SEQ_SOURCE_CORE
-SEQ_SOURCE_SPEC
-SEQ_INSPECT
-SEQ_EXPLAIN
+trial=5
+result=rejected
+reject_reason=amp_below_required
+contrast_class=strong
+amp_class=weak
 ```
 
-must refer to the same selected occurrence unless the report explicitly declares a different selection mode.
-
-## Preferred implementation
-
-Extend the trial selection result:
-
-```cpp
-struct SequenceTrialSelection {
-    TrialSelectionKind kind;
-
-    const PatternResult* patternResult = nullptr;
-    const InspectedOccurrence* inspectedOccurrence = nullptr;
-    const Occurrence* occurrence = nullptr;
-
-    OccurrenceId occurrenceId {};
-    DetectorId detectorId {};
-
-    const DetectorReport* detectorReport = nullptr;
-};
-```
-
-When the selected object comes from a PatternResult or InspectedOccurrence:
-
-1. resolve its `occurrenceId`,
-2. resolve the matching detector report or accepted candidate record,
-3. store that resolved pointer/reference in `SequenceTrialSelection`.
-
-Do not re-query `activeDetectorReport()` later during printing.
-
-## Detector report lookup
-
-Detector diagnostics must support selection by occurrence/candidate identity, not only “latest”.
-
-Preferred API shape:
-
-```cpp
-const DetectorReport* findReportForOccurrence(
-    DetectorId detectorId,
-    OccurrenceId occurrenceId) const;
-```
-
-or, if reports contain bounded candidate records:
-
-```cpp
-const AcceptedCandidateRecord* findAcceptedByOccurrenceId(
-    OccurrenceId occurrenceId) const;
-```
-
-The exact API may follow current types, but selection must be identity-based.
-
-## If full report snapshots are not retained
-
-Do not copy the entire mutable detector report into every occurrence.
-
-Instead retain a bounded accepted-candidate diagnostic record containing the source facts required by `SEQ_SOURCE_CORE/SPEC`:
-
-```cpp
-struct AcceptedCandidateRecord {
-    OccurrenceId occurrenceId;
-    DetectorId detectorId;
-
-    uint32_t startMs;
-    uint32_t peakMs;
-    uint32_t endMs;
-    uint32_t durationMs;
-
-    float strength;
-    float confidence;
-
-    CandidateStrengthFacts strengthFacts;
-    DetectorSpecificAcceptedDetail detail;
-};
-```
-
-Store a small fixed-size ring or selected records such as:
-
-* latest accepted
-* previous accepted
-* selected reject
-* last closed
-
-Capacity must be bounded and static.
-
-## Printing behavior
-
-`SEQ_SOURCE_CORE` and `SEQ_SOURCE_SPEC` must receive the resolved selected source record directly:
-
-```cpp
-printSequenceSourceCore(selection);
-printSequenceSourceSpec(selection);
-```
-
-Inside the printer, do not call:
-
-```cpp
-activeDetectorReport()
-latestReport()
-currentReport()
-```
-
-The printer must only format the already selected record.
-
-## Explicit fallback behavior
-
-If the selected occurrence cannot be matched to retained source diagnostics, print:
+Remove:
 
 ```text
-source.selection=selected_occurrence
-source.occurrence_id=<id>
-source.report_matched=0
-source.report_reason=diagnostics_not_retained
+reason=inspection_failed
+result=uncertain
 ```
 
-Do not silently substitute the latest detector report.
-
-If latest-report output is desired as additional diagnostics, print it separately and clearly:
+Prefer one stable field name:
 
 ```text
-SEQ_SOURCE_LATEST ...
-source.selection=latest_detector_report
+reject_reason=
 ```
 
-It must not masquerade as trial-selected source truth.
-
-## Rejected and miss trials
-
-Selection must remain semantic:
-
-### Valid or uncertain PatternResult
-
-Use the source occurrence referenced by the selected PatternResult.
-
-### Accepted occurrence without PatternResult
-
-Use that accepted occurrence and its matching accepted source record.
-
-### Rejected trial
-
-Use the selected rejected candidate record according to the existing trial-selection rule, for example best relevant reject within the expected window.
-
-### Miss
-
-Print no accepted candidate:
+For successful trials:
 
 ```text
-accepted.present=0
-source.report_matched=0
-source.selection=none
+reject_reason=none
 ```
 
-Do not print stale data from the previous trial.
+### `SEQ_EXPLAIN`
 
-## Reporting identity
-
-Add identity fields to all relevant lines:
+Keep detailed cause:
 
 ```text
-trial=<n>
-source.detector=<id>
-source.occurrence_id=<id>
-source.candidate_id=<id>        // if available
-source.selection=selected_occurrence
-source.report_matched=1
+PATTERN:
+result=rejected
+first_failed_requirement_index=1
+failed_label=amp
+observed_class=weak
+required_class=medium
+reject_reason=amp_below_required
 ```
 
-The same `occurrence_id` should appear in:
+### `SEQ_SUMMARY`
+
+Remove uncertain counters.
+
+Add or keep:
 
 ```text
-SEQ_SOURCE
-SEQ_SOURCE_CORE
-SEQ_SOURCE_SPEC
-SEQ_INSPECT
-SEQ_EXPLAIN
+rejected_trials
+pattern_rejected_trials
 ```
 
-where applicable.
-
-## Reset and lifetime
-
-Trial reset may clear trial-local selections, but must not invalidate diagnostics before reporting completes.
-
-Required order:
+Optionally aggregate reject reasons:
 
 ```text
-1. finalize detector/pattern processing
-2. resolve SequenceTrialSelection
-3. print all selected stage reports
-4. reset trial-local state
+rejects.inspection_failed=6
+rejects.duration_too_long=4
+rejects.amp_below_required=6
 ```
 
-Do not reset detector diagnostics before source-report resolution.
+Ensure every completed trial increments exactly one primary result counter.
 
-## Acceptance tests
+## Counter invariants
 
-### Single accepted occurrence
+For every run:
 
-All reports show the same occurrence ID.
+```text
+completed =
+expected +
+early +
+late +
+miss +
+rejected +
+duplicate +
+unexpected +
+ambiguous +
+too_dense
+```
 
-### Accepted occurrence followed by later reject
+No trial may be counted simultaneously as both `miss` and `rejected`.
 
-`SEQ_SOURCE_CORE/SPEC` must still report the accepted occurrence selected by the PatternResult, not the later reject or latest detector state.
+Pipeline counters remain separate:
 
-### Two accepted occurrences
+```text
+detector_accepted_trials
+detector_reject_trials
+pattern_valid_trials
+pattern_rejected_trials
+```
 
-If Pattern selection chooses the second occurrence, all reports must show the second occurrence ID and its timings/strength.
+These are diagnostic stage counters, not primary trial outcomes.
 
-### Miss after successful trial
+## Acceptance examples
 
-Miss trial must not repeat the previous trial’s `SEQ_SOURCE_CORE/SPEC`.
+### Inspector too weak
 
-### Diagnostics record unavailable
+```text
+result=rejected
+reject_reason=amp_below_required
+```
 
-Report `report_matched=0`; never substitute latest data.
+### Detector duration too long
+
+```text
+result=rejected
+reject_reason=duration_too_long
+```
+
+### No candidate
+
+```text
+result=miss
+reject_reason=no_occurrence_candidate
+```
+
+### Valid detection in expected window
+
+```text
+result=expected
+reject_reason=none
+```
 
 ## Non-goals
 
-* Do not move heavy DetectorReport payloads into PatternResult.
-* Do not make Behavior or Field depend on detector diagnostics.
-* Do not add unbounded history.
-* Do not change trial-selection priority in this pass.
-* Do not retune detection.
+* Do not change detector thresholds.
+* Do not change inspector thresholds.
+* Do not change pattern requirements.
+* Do not reinterpret ordinary failures as `Ambiguous`.
+* Do not remove detailed stage reporting.
 
 ## Suggested commit
 
 ```text
-AnalyzerFix: bind source reports to selected occurrence
+AnalyzerCleanup: remove uncertain trial result
 ```
 
 ```text
-- resolve source diagnostics by selected occurrence identity
-- stop SEQ_SOURCE_CORE/SPEC from printing active/latest detector report
-- add explicit source selection and report-match fields
-- prevent stale or cross-candidate trial reporting
+- classify failed inspection and pattern results as rejected
+- use reject_reason for detailed failure explanation
+- remove uncertain branches and summary counters
+- enforce one primary trial result per completed trial
 ```
 
 Implemented:
 
-- `SEQ_SOURCE`, `SEQ_SOURCE_CORE`, and `SEQ_SOURCE_SPEC` now print the selected trial snapshot.
-- Source output includes `source.selection`, `source.occurrence_id`, `source.candidate_id`, and `source.report_matched`.
-- The captured detector report is stored with the trial selection so later detector updates do not overwrite printed source facts.
+- `AnalyzerResult::Uncertain` was removed from the analyzer result vocabulary.
+- `SEQ_TRIAL` now prints the real trial result name and `reject_reason=...`.
+- Failed inspection is classified as `Rejected` with `InspectionFailed`.
+- The analyzer no longer prefers or prints an `uncertain` trial branch.

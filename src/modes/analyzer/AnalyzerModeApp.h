@@ -326,11 +326,6 @@ private:
         detection::InspectedOccurrence primaryValidInspectedOccurrence = {};
         detection::DetectorReport primaryValidDetectorReport = {};
         long primaryValidPatternDtMs = -1;
-        bool primaryUncertainPatternCaptured = false;
-        detection::PatternResult primaryUncertainPattern = {};
-        detection::InspectedOccurrence primaryUncertainInspectedOccurrence = {};
-        detection::DetectorReport primaryUncertainDetectorReport = {};
-        long primaryUncertainPatternDtMs = -1;
         bool primaryAcceptedOccurrenceCaptured = false;
         detection::InspectedOccurrence primaryAcceptedInspectedOccurrence = {};
         detection::DetectorReport primaryAcceptedDetectorReport = {};
@@ -443,7 +438,6 @@ private:
         enum class Kind {
             None,
             ValidPattern,
-            UncertainPattern,
             AcceptedOccurrence,
             RejectedPattern,
             Unexpected,

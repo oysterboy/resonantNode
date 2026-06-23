@@ -64,19 +64,11 @@ void AnalyzerApp::printSequenceTrialHeader(unsigned long trialNumber) const {
 }
 
 void AnalyzerApp::printSequenceTrial(const AnalyzerReport& report) const {
-    const char* trialResult = "rejected";
-    if (report.classification.result == AnalyzerResult::Expected ||
-        report.classification.result == AnalyzerResult::Late) {
-        trialResult = "confirmed";
-    } else if (report.classification.result == AnalyzerResult::Uncertain) {
-        trialResult = "uncertain";
-    }
-
     Serial.print("SEQ_TRIAL trial=");
     Serial.print(report.context.trial);
     Serial.print(" result=");
-    Serial.print(trialResult);
-    Serial.print(" reason=");
+    Serial.print(analyzerResultName(report.classification.result));
+    Serial.print(" reject_reason=");
     Serial.print(analyzerReasonName(report.classification.reason));
     Serial.print(" dt=");
     if (report.classification.dtMs >= 0) {
@@ -361,7 +353,7 @@ void AnalyzerApp::printSequenceDetailCanonical(const AnalyzerReport& report) con
     Serial.print(" result=");
     Serial.print(report.classification.result == AnalyzerResult::Expected || report.classification.result == AnalyzerResult::Late
         ? "confirmed"
-        : (report.classification.result == AnalyzerResult::Uncertain ? "uncertain" : "rejected"));
+        : "rejected");
     Serial.print(" pattern.first_failed_requirement_index=");
     Serial.print(report.primaryPattern.firstFailedRequirementIndex);
     Serial.print(" pattern.first_failed_label=");

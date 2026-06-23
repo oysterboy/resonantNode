@@ -125,22 +125,6 @@ void AnalyzerApp::handleSequencePending(
         return;
     }
 
-    if (patternResult.uncertain && !_sequenceTest.primaryValidPatternCaptured && !_sequenceTest.primaryUncertainPatternCaptured) {
-        _sequenceTest.primaryUncertainPatternCaptured = true;
-        _sequenceTest.primaryUncertainPattern = patternResult;
-        if (selectedInspectedOccurrence != nullptr && selectedInspectedOccurrence->occurrence.present) {
-            _sequenceTest.primaryUncertainInspectedOccurrence = *selectedInspectedOccurrence;
-            if (selectedDetectorReportAvailable) {
-                _sequenceTest.primaryUncertainDetectorReport = selectedDetectorReport;
-                _sequenceTest.primaryUncertainDetectorReport.sourceSelection = "selected_occurrence";
-                _sequenceTest.primaryUncertainDetectorReport.sourceOccurrenceId = selectedInspectedOccurrence->occurrence.occurrenceId;
-                _sequenceTest.primaryUncertainDetectorReport.sourceCandidateId = selectedInspectedOccurrence->occurrence.occurrenceId;
-                _sequenceTest.primaryUncertainDetectorReport.sourceReportMatched = true;
-            }
-        }
-        _sequenceTest.primaryUncertainPatternDtMs = dtFromTriggerMs;
-    }
-
     if (selectedInspectedOccurrence != nullptr
         && selectedInspectedOccurrence->occurrence.present
         && selectedInspectedOccurrence->decision == detection::OccurrenceDecision::Accepted

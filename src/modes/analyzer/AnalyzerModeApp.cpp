@@ -455,7 +455,6 @@ bool seqOutputWhenEnabled(AnalyzerApp::SeqOutputWhen configured, AnalyzerResult 
                 case AnalyzerResult::Late:
                 case AnalyzerResult::Duplicate:
                 case AnalyzerResult::Unexpected:
-                case AnalyzerResult::Uncertain:
                 case AnalyzerResult::Rejected:
                 case AnalyzerResult::Ambiguous:
                 case AnalyzerResult::TooDense:
@@ -936,12 +935,13 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
     classificationInput.rawPendingCount = diagnostics.rawPendingCount;
     classificationInput.bufferOverrun = bufferOverrun;
     classificationInput.patternAvailable = hasPatternResult;
+    classificationInput.patternInspectionFailed = hasPatternResult && reportPatternResult->uncertain;
     classificationInput.detectorReportAvailable = report.detectorReport != nullptr;
     classificationInput.detectorAcceptedPresent = report.detectorReport != nullptr && report.detectorReport->accepted.present;
     classificationInput.detectorSelectedRejectPresent = report.detectorReport != nullptr && report.detectorReport->selectedReject.present;
     report.classification = classifySequenceTrial(classificationInput);
     if (hasPatternResult && reportPatternResult->uncertain) {
-        report.classification.result = AnalyzerResult::Uncertain;
+        report.classification.result = AnalyzerResult::Rejected;
         report.classification.reason = AnalyzerReason::InspectionFailed;
         report.classification.primaryStage = AnalyzerStage::Inspect;
     }

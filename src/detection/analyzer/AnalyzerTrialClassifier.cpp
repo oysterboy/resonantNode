@@ -10,7 +10,6 @@ AnalyzerReason analyzerReasonFromSequenceOutcome(const AnalyzerSequenceClassific
             return AnalyzerReason::UnexpectedValidPatternWithoutTrigger;
         case AnalyzerResult::Duplicate:
             return AnalyzerReason::DuplicatePatternAfterPrimary;
-        case AnalyzerResult::Uncertain:
         case AnalyzerResult::Miss:
             if (input.detectorSelectedRejectPresent) {
                 return AnalyzerReason::OccurrenceSeenButRejected;
@@ -23,6 +22,9 @@ AnalyzerReason analyzerReasonFromSequenceOutcome(const AnalyzerSequenceClassific
             }
             return AnalyzerReason::MissingPipelineResult;
         case AnalyzerResult::Rejected:
+            if (input.patternInspectionFailed) {
+                return AnalyzerReason::InspectionFailed;
+            }
             if (input.patternAvailable) {
                 return AnalyzerReason::PatternRejected;
             }

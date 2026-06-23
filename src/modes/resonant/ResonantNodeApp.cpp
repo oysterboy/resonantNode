@@ -142,7 +142,7 @@ void printDetectionProfileDetails(const detection::DetectionProfile& profile) {
         Serial.print("].kind=");
         Serial.print(module.kind == detection::InspectionModuleKind::ScalarFeatureStrength ? "ScalarFeatureStrength" : "None");
         Serial.print(" label=");
-        Serial.print(module.label != nullptr ? module.label : "none");
+        Serial.print(detection::inspectionTargetName(module.target));
         if (module.kind == detection::InspectionModuleKind::ScalarFeatureStrength) {
             Serial.print(" stream=");
             switch (module.scalar.stream) {
@@ -177,7 +177,7 @@ void printDetectionProfileDetails(const detection::DetectionProfile& profile) {
     Serial.print("  pattern.has_requirement=");
     Serial.println(supportRequired ? 1 : 0);
     Serial.print("  pattern.required_label=");
-    Serial.println(supportRequired && supportRequirement->label != nullptr ? supportRequirement->label : "none");
+    Serial.println(supportRequired ? detection::inspectionTargetName(supportRequirement->target) : "none");
     Serial.print("  fieldState.occurrenceWindowMs=");
     Serial.println(profile.fieldStateConfig.occurrenceWindowMs);
     Serial.print("  fieldState.patternWindowMs=");
@@ -854,7 +854,7 @@ void Node::handleDetectCommand(const char* line) {
     Serial.print(" has_requirement=");
     Serial.print(supportRequired ? 1 : 0);
     Serial.print(" required_label=");
-    Serial.print(supportRequired && supportRequirement->label != nullptr ? supportRequirement->label : "none");
+    Serial.print(supportRequired ? detection::inspectionTargetName(supportRequirement->target) : "none");
     Serial.print(" freqScore=");
     Serial.print(detectionProfile.frequencyMatch.attackScoreMin, 0);
     Serial.print(" freqContrast=");

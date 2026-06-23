@@ -19,7 +19,7 @@ struct PatternMatcherReport {
 
     PatternType patternType = PatternType::None;
     PatternRejectReason rejectReason = PatternRejectReason::None;
-    const char* firstFailedRequirementLabel = "none";
+    InspectionTarget firstFailedRequirementTarget = InspectionTarget::None;
     uint8_t firstFailedRequirementIndex = 255;
     StrengthClass firstFailedObservedStrength = StrengthClass::Unknown;
     StrengthClass firstFailedRequiredStrength = StrengthClass::Unknown;

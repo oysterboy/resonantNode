@@ -80,20 +80,25 @@ inline const char* strengthClassName(StrengthClass value) {
     }
 }
 
-inline const char* inspectionModuleLabelName(const InspectionModuleConfig& module) {
-    return module.label != nullptr && module.label[0] != '\0' ? module.label : "none";
+inline const char* inspectionTargetName(InspectionTarget value) {
+    switch (value) {
+        case InspectionTarget::Amp:
+            return "amp";
+        case InspectionTarget::TargetScore:
+            return "target";
+        case InspectionTarget::Contrast:
+            return "contrast";
+        case InspectionTarget::TargetBand:
+            return "band";
+        case InspectionTarget::None:
+        default:
+            return "none";
+    }
 }
 
 inline const char* inspectionPlanName(const InspectionPlan& plan) {
     if (plan.count == 1 && plan.modules[0].kind == InspectionModuleKind::ScalarFeatureStrength) {
-        return inspectionModuleLabelName(plan.modules[0]);
-    }
-    if (plan.count == 2 &&
-        plan.modules[0].kind == InspectionModuleKind::ScalarFeatureStrength &&
-        plan.modules[1].kind == InspectionModuleKind::ScalarFeatureStrength &&
-        plan.modules[0].label != nullptr &&
-        plan.modules[1].label != nullptr) {
-        return "custom";
+        return inspectionTargetName(plan.modules[0].target);
     }
 
     return "custom";
@@ -106,14 +111,6 @@ inline const char* inspectionModulesName(const InspectionPlan& plan) {
     }
 
     return "custom";
-}
-
-inline const char* inspectionLabelsName(const InspectionPlan& plan) {
-    if (plan.count > 0 && plan.modules[0].kind == InspectionModuleKind::ScalarFeatureStrength) {
-        return inspectionModuleLabelName(plan.modules[0]);
-    }
-
-    return "none";
 }
 
 } // namespace detection

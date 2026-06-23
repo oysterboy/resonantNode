@@ -38,7 +38,7 @@ private:
         const Occurrence& occurrence,
         const FeatureHistory* featureHistory,
         const ScalarFeatureInspectionConfig& config,
-        const char* label
+        InspectionTarget target
     ) const;
     void runInspectionModule(
         InspectedOccurrence& out,

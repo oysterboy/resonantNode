@@ -109,6 +109,14 @@ enum class InspectionModuleKind {
     ScalarFeatureStrength,
 };
 
+enum class InspectionTarget {
+    None,
+    Amp,
+    TargetScore,
+    Contrast,
+    TargetBand,
+};
+
 struct ScalarFeatureInspectionConfig {
     bool enabled = true;
     FeatureStreamId stream = FeatureStreamId::AmpEnvelope;
@@ -123,7 +131,7 @@ struct ScalarFeatureInspectionConfig {
 
 struct InspectionModuleConfig {
     InspectionModuleKind kind = InspectionModuleKind::None;
-    const char* label = "none";
+    InspectionTarget target = InspectionTarget::None;
     bool enabled = false;
     StrengthClass minimumStrength = StrengthClass::Unknown;
     ScalarFeatureInspectionConfig scalar = {};

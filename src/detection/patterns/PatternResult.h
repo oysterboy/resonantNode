@@ -38,7 +38,7 @@ struct PatternResult {
     bool uncertain = false;
     bool valid = false;
 
-    const char* firstFailedRequirementLabel = "none";
+    InspectionTarget firstFailedRequirementTarget = InspectionTarget::None;
     StrengthClass firstFailedObservedStrength = StrengthClass::Unknown;
     StrengthClass firstFailedRequiredStrength = StrengthClass::Unknown;
     uint8_t firstFailedRequirementIndex = 255;

@@ -1,77 +1,87 @@
-# Current Pass - TonalPulseScalar Live Validation
+Codex-Instruktion: Inspector-Strings zentralisieren
 
-## Goal
+Zentralisiere alle Inspector-bezogenen Namen und Labels in:
 
-Validate the landed TonalPulseScalar scalar-quality path on real hardware.
-The firmware-side refactor is already in place; this pass is about proving the
-runtime behavior and keeping the remaining tuning honest.
+src/detection/inspection/InspectionNames.h
+1. Keine semantischen const char* label mehr
 
-## What We Are Verifying
+"amp", "target", "contrast" und "band" werden aktuell als Log-Text und für Programmlogik verwendet. Ersetze:
 
-- `ScalarTransientDetector` still owns the single-carrier lifecycle.
-- Carrier quality gates stay isolated to the observed carrier stream.
-- Inspector evidence remains split across contrast and AMP, with carrier
-  quality staying inside the detector.
-- `PatternMatcher` returns `confirmed`, `uncertain`, or `rejected` with the
-  expected first-failed requirement details.
-- `SEQ_TRIAL`, `SEQ_INSPECT`, and `SEQ_EXPLAIN` report the canonical values.
-- `requireCarrierQuality=false` behaves like the older detector path.
-- `requireCarrierQuality=true` produces quality-based rejects or uncertain
-  results without introducing a second detection pipeline.
+const char* label;
 
-## Build And Flash
+durch:
 
-Known-good build checks:
+enum class InspectionTarget {
+    None,
+    Amp,
+    TargetScore,
+    Contrast,
+    TargetBand,
+};
 
-- `pio run -e esp32dev-analyzer`
-- `pio run -e esp32dev`
+in InspectorTypes.h.
 
-Current runtime state:
+InspectionModuleConfig erhält:
 
-- `esp32dev-analyzer` flashes successfully on `COM6`
-- run the live TonalPulseScalar sequence
-- confirm the expected analyzer output on the actual board
+InspectionTarget target = InspectionTarget::None;
+2. Zentrale Textabbildung
 
-Remaining validation:
+In InspectionNames.h ausschließlich:
 
-- confirm live runtime output on the flashed board
-- capture the observed 100 cm / 200 cm / 250 cm behavior
-- keep tuning within the landed TonalPulseScalar profile only
+const char* inspectionTargetName(InspectionTarget);
+const char* inspectionModuleKindName(InspectionModuleKind);
+const char* scalarInspectionModeName(ScalarInspectionMode);
+const char* scalarInspectionBasisName(ScalarInspectionBasis);
+const char* scalarInspectionNoteName(ScalarInspectionNote);
+const char* scalarInspectionAnchorName(ScalarInspectionAnchor);
+const char* strengthClassName(StrengthClass);
 
-## Live Checks
+scalarInspectionModeName() aus InspectorTypes.h nach InspectionNames.h verschieben. InspectorTypes.h darf keine Ausgabetexte enthalten.
 
-Use the live board to verify:
+3. Stringvergleiche entfernen
 
-1. 100 cm runs still confirm reliably.
-2. 200 cm runs are mostly `uncertain` or `rejected`.
-3. 250 cm runs produce no `confirmed` hits.
-4. `carrier.quality_pass` matches the detector gate state.
-5. `contrast_class` and `amp_class` are reported in `SEQ_TRIAL`.
-6. `contrast.class`, `amp.class`, and the first failed pattern requirement are
-   reported in `SEQ_EXPLAIN`.
+Ersetze alle:
 
-## If The Runtime Mismatches
+strcmp(label, "amp")
+strcmp(label, "target")
+strcmp(label, "contrast")
+strcmp(label, "band")
 
-Calibration note:
+durch switch (target).
 
-- the initial thresholds are deduced from RAW PCM captures, then mapped into
-  the normalized scalar stream
-- do not assume the starting numbers are automatically correct for the live
-  board without measurement
+Betroffene Stellen mindestens:
 
-Only retune within the existing profile boundaries:
+OccurrenceInspector.cpp
+PatternMatcher.cpp
+AnalyzerModeApp.cpp
+AnalyzerSeqReporter.cpp
+DetectionProfile.h
+ResonantNodeApp.cpp
+4. Reports typisiert halten
 
-- first loosen `minCoverageAboveReleaseMs` or `minLongestIslandMs` if true
-  100 cm signals are getting lost
-- first tighten carrier-quality gates or AMP thresholds if too many far-field
-  cases still confirm
-- do not reintroduce a multi-scalar detector
-- do not move AMP or contrast ownership into the carrier detector
+Ersetze Felder wie:
 
-## Done Criteria For This Pass
+const char* inspectionObservationLabels[];
+const char* firstFailedLabel;
 
-- Live upload succeeds on the actual ESP board.
-- The analyzer output matches the landed canonical fields.
-- The observed 100 cm / 200 cm / 250 cm behavior is documented.
-- Any remaining tuning needed by the live board is localized to the existing
-  TonalPulseScalar profile.
+durch enum-basierte Felder:
+
+InspectionTarget inspectionObservationTargets[];
+InspectionTarget firstFailedTarget;
+
+Strings erst beim Serialisieren über inspectionTargetName() erzeugen.
+
+Bestehende Analyzer-Ausgabewerte bleiben kompatibel:
+
+amp
+target
+contrast
+band
+none
+5. Scope
+Keine Detection- oder Pattern-Logik ändern.
+Keine Output-Keys ändern.
+Keine neuen dynamischen Strings.
+Profile setzen Targets per Enum.
+Am Ende nach verbliebenen Inspector-Stringvergleichen und direkten Namen suchen.
+Analyzer- und ResonantNode-Build kompilieren.

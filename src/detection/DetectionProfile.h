@@ -118,67 +118,67 @@ inline DetectionProfile makeTonalPulseScalarProfile() {
     DetectionProfile profile;
 
     // Identity and occurrence routing.
-    profile.kind = DetectionProfileKind::TonalPulseScalar;
-    profile.detectorSelection = DetectorSelection::ScalarTransient;
+    profile.kind = DetectionProfileKind::TonalPulseScalar; // Profile ID for tonal pulse scalar analysis.
+    profile.detectorSelection = DetectorSelection::ScalarTransient; // Use the scalar transient detector path.
     // This profile observes a frequency-derived scalar stream, not raw PCM.
     // "Offline" values here are deduced from RAW PCM captures and then mapped
     // into the normalized magnitude-like 0..32767 scale.
-    profile.scalarTransient.observedStream = FeatureStreamId::FrequencyTarget;
-    profile.scalarTransient.onsetDetectionThreshold = 4500.0f;
-    profile.scalarTransient.onsetReleaseThreshold = 3000.0f;
-    profile.scalarTransient.minTransientDurationMs = 85;
-    profile.scalarTransient.maxTransientDurationMs = 130;
-    profile.scalarTransient.releaseDebounceMs = 10;
-    profile.scalarTransient.cooldownAfterOnsetMs = 50;
-    // min strength.
+    profile.scalarTransient.observedStream = FeatureStreamId::FrequencyTarget; // Track the target-band scalar stream.
+    profile.scalarTransient.onsetDetectionThreshold = 4500.0f; // Attack threshold for candidate start.
+    profile.scalarTransient.onsetReleaseThreshold = 3000.0f; // Release threshold for candidate end.
+    profile.scalarTransient.minTransientDurationMs = 85; // Reject pulses that are too short.
+    profile.scalarTransient.maxTransientDurationMs = 130; // Reject pulses that are too long.
+    profile.scalarTransient.releaseDebounceMs = 10; // Require a short stable release before ending.
+    profile.scalarTransient.cooldownAfterOnsetMs = 50; // Avoid immediate re-triggering on the same pulse.
+    // Minimum strength gate for the matched mean / peak utility switch.
     profile.scalarTransient.requireMinStrength = true;
-    profile.scalarTransient.minMatchedMeanStrength = 0.0f; // Mean over samples above release threshold.
-    // Signal quality / fragmentation.
+    profile.scalarTransient.minMatchedMeanStrength = 0.0f; // Mean over samples above the release threshold.
+    // Carrier quality gates to reject fragmented or weak target-band coverage.
     profile.scalarTransient.requireCarrierQuality = true;
-    profile.scalarTransient.minCoverageAboveReleaseMs = 90;
-    profile.scalarTransient.minLongestIslandMs = 80;
-    profile.scalarTransient.maxGapMs = 10;
+    profile.scalarTransient.minCoverageAboveReleaseMs = 90; // Minimum time above release level.
+    profile.scalarTransient.minLongestIslandMs = 80; // Longest continuous island above release level.
+    profile.scalarTransient.maxGapMs = 10; // Largest allowed gap inside the candidate.
 
 
     // Inspection: Frequency Contrast
     profile.inspectionPlan = {};
-    profile.inspectionPlan.modules[0].kind = InspectionModuleKind::ScalarFeatureStrength;
-    profile.inspectionPlan.modules[0].label = "contrast";
-    profile.inspectionPlan.modules[0].enabled = true;
-    profile.inspectionPlan.modules[0].scalar.stream = FeatureStreamId::FrequencyContrast;
-    profile.inspectionPlan.modules[0].scalar.anchor = ScalarInspectionAnchor::Start;
-    profile.inspectionPlan.modules[0].scalar.windowPreMs = 0;
-    profile.inspectionPlan.modules[0].scalar.windowPostMs = 100;
-    profile.inspectionPlan.modules[0].minimumStrength = StrengthClass::Medium;
-    profile.inspectionPlan.modules[0].scalar.mode = ScalarInspectionMode::P75;
-    profile.inspectionPlan.modules[0].scalar.supportStrength.strongPeakThreshold = 80.0f;
-    profile.inspectionPlan.modules[0].scalar.supportStrength.mediumPeakThreshold = 50.0f;
-    profile.inspectionPlan.modules[0].scalar.supportStrength.weakPeakThreshold = 25.0f;
+    profile.inspectionPlan.modules[0].kind = InspectionModuleKind::ScalarFeatureStrength; // Scalar inspector module.
+    profile.inspectionPlan.modules[0].target = InspectionTarget::Contrast; // Route this observation as contrast evidence.
+    profile.inspectionPlan.modules[0].enabled = true; // Enable the module in the matcher.
+    profile.inspectionPlan.modules[0].scalar.stream = FeatureStreamId::FrequencyContrast; // Measure frequency contrast.
+    profile.inspectionPlan.modules[0].scalar.anchor = ScalarInspectionAnchor::Start; // Window from occurrence start.
+    profile.inspectionPlan.modules[0].scalar.windowPreMs = 0; // No look-back before the anchor.
+    profile.inspectionPlan.modules[0].scalar.windowPostMs = 100; // Inspect the first 100 ms after onset.
+    profile.inspectionPlan.modules[0].minimumStrength = StrengthClass::Medium; // Require at least medium evidence.
+    profile.inspectionPlan.modules[0].scalar.mode = ScalarInspectionMode::P75; // Use a robust percentile summary.
+    profile.inspectionPlan.modules[0].scalar.supportStrength.strongPeakThreshold = 80.0f; // Strong contrast threshold.
+    profile.inspectionPlan.modules[0].scalar.supportStrength.mediumPeakThreshold = 50.0f; // Medium contrast threshold.
+    profile.inspectionPlan.modules[0].scalar.supportStrength.weakPeakThreshold = 25.0f; // Weak contrast threshold.
 
 
     // Secondary Inspection: Amplitude
-    profile.inspectionPlan.modules[1].kind = InspectionModuleKind::ScalarFeatureStrength;
-    profile.inspectionPlan.modules[1].label = "amp";
-    profile.inspectionPlan.modules[1].enabled = true;
-    profile.inspectionPlan.modules[1].scalar.stream = FeatureStreamId::AmpEnvelope;
-    profile.inspectionPlan.modules[1].scalar.anchor = ScalarInspectionAnchor::Start;
-    profile.inspectionPlan.modules[1].scalar.windowPreMs = 0;
-    profile.inspectionPlan.modules[1].scalar.windowPostMs = 100;
-    profile.inspectionPlan.modules[1].minimumStrength = StrengthClass::Medium;
-    profile.inspectionPlan.modules[1].scalar.mode = ScalarInspectionMode::P75;
-    profile.inspectionPlan.modules[1].scalar.supportStrength.strongPeakThreshold = 7500.0f;
-    profile.inspectionPlan.modules[1].scalar.supportStrength.mediumPeakThreshold = 5000.0f;
-    profile.inspectionPlan.modules[1].scalar.supportStrength.weakPeakThreshold = 3500.0f;
-    profile.inspectionPlan.count = 2;
+    profile.inspectionPlan.modules[1].kind = InspectionModuleKind::ScalarFeatureStrength; // Scalar inspector module.
+    profile.inspectionPlan.modules[1].target = InspectionTarget::Amp; // Route this observation as amplitude evidence.
+    profile.inspectionPlan.modules[1].enabled = true; // Enable the module in the matcher.
+    profile.inspectionPlan.modules[1].scalar.stream = FeatureStreamId::AmpEnvelope; // Measure the envelope stream.
+    profile.inspectionPlan.modules[1].scalar.anchor = ScalarInspectionAnchor::Start; // Window from occurrence start.
+    profile.inspectionPlan.modules[1].scalar.windowPreMs = 0; // No look-back before the anchor.
+    profile.inspectionPlan.modules[1].scalar.windowPostMs = 100; // Inspect the first 100 ms after onset.
+    profile.inspectionPlan.modules[1].minimumStrength = StrengthClass::Medium; // Require at least medium evidence.
+    profile.inspectionPlan.modules[1].scalar.mode = ScalarInspectionMode::P75; // Use a robust percentile summary.
+    profile.inspectionPlan.modules[1].scalar.supportStrength.strongPeakThreshold = 7500.0f; // Strong amplitude threshold.
+    profile.inspectionPlan.modules[1].scalar.supportStrength.mediumPeakThreshold = 5000.0f; // Medium amplitude threshold.
+    profile.inspectionPlan.modules[1].scalar.supportStrength.weakPeakThreshold = 3500.0f; // Weak amplitude threshold.
+    profile.inspectionPlan.count = 2; // This profile uses two inspectors.
 
-    profile.inspectionPlan.failedRequirementMeansUncertain = true;
+    profile.inspectionPlan.failedRequirementMeansUncertain = true; // Failed inspection requirements downgrade to uncertain.
 
     // Field-state windowing.
-    profile.fieldStateConfig.occurrenceWindowMs = 4000;
-    profile.fieldStateConfig.patternWindowMs = 4000;
-    profile.fieldStateConfig.busyOccurrenceCountThreshold = 3;
-    profile.fieldStateConfig.denseOccurrenceCountThreshold = 6;
-    profile.fieldStateConfig.busyActivityThreshold = 0.45f;
+    profile.fieldStateConfig.occurrenceWindowMs = 4000; // Window for occurrence density tracking.
+    profile.fieldStateConfig.patternWindowMs = 4000; // Window for pattern density tracking.
+    profile.fieldStateConfig.busyOccurrenceCountThreshold = 3; // Occurrence count considered busy.
+    profile.fieldStateConfig.denseOccurrenceCountThreshold = 6; // Occurrence count considered dense.
+    profile.fieldStateConfig.busyActivityThreshold = 0.45f; // Activity threshold for busy field state.
     return profile;
 }
 
@@ -202,7 +202,7 @@ inline DetectionProfile makeTonalPulseFreqProfile() {
 
     profile.inspectionPlan = {};
     profile.inspectionPlan.modules[0].kind = InspectionModuleKind::ScalarFeatureStrength;
-    profile.inspectionPlan.modules[0].label = "amp";
+    profile.inspectionPlan.modules[0].target = InspectionTarget::Amp;
     profile.inspectionPlan.modules[0].enabled = true;
     profile.inspectionPlan.modules[0].minimumStrength = StrengthClass::Medium;
     profile.inspectionPlan.modules[0].scalar.anchor = ScalarInspectionAnchor::Peak;
@@ -215,7 +215,7 @@ inline DetectionProfile makeTonalPulseFreqProfile() {
     profile.inspectionPlan.modules[0].scalar.supportStrength.weakPeakThreshold = 8000.0f;
 
     profile.inspectionPlan.modules[1].kind = InspectionModuleKind::ScalarFeatureStrength;
-    profile.inspectionPlan.modules[1].label = "target";
+    profile.inspectionPlan.modules[1].target = InspectionTarget::TargetScore;
     profile.inspectionPlan.modules[1].enabled = true;
     profile.inspectionPlan.modules[1].minimumStrength = StrengthClass::Medium;
     profile.inspectionPlan.modules[1].scalar.anchor = ScalarInspectionAnchor::Peak;
@@ -228,7 +228,7 @@ inline DetectionProfile makeTonalPulseFreqProfile() {
     profile.inspectionPlan.modules[1].scalar.supportStrength.weakPeakThreshold = 8000.0f;
 
     profile.inspectionPlan.modules[2].kind = InspectionModuleKind::ScalarFeatureStrength;
-    profile.inspectionPlan.modules[2].label = "contrast";
+    profile.inspectionPlan.modules[2].target = InspectionTarget::Contrast;
     profile.inspectionPlan.modules[2].enabled = true;
     profile.inspectionPlan.modules[2].minimumStrength = StrengthClass::Medium;
     profile.inspectionPlan.modules[2].scalar.anchor = ScalarInspectionAnchor::Peak;
@@ -280,7 +280,7 @@ inline DetectionProfile makeAmpExperimentalProfile() {
 
 
     profile.inspectionPlan.modules[0].kind = InspectionModuleKind::ScalarFeatureStrength;
-    profile.inspectionPlan.modules[0].label = "amp";
+    profile.inspectionPlan.modules[0].target = InspectionTarget::Amp;
     profile.inspectionPlan.modules[0].enabled = true;
     profile.inspectionPlan.modules[0].minimumStrength = StrengthClass::Medium;
     profile.inspectionPlan.modules[0].scalar.anchor = ScalarInspectionAnchor::Peak;
@@ -293,7 +293,7 @@ inline DetectionProfile makeAmpExperimentalProfile() {
     profile.inspectionPlan.modules[0].scalar.supportStrength.weakPeakThreshold = 8000.0f;
 
     profile.inspectionPlan.modules[1].kind = InspectionModuleKind::ScalarFeatureStrength;
-    profile.inspectionPlan.modules[1].label = "target";
+    profile.inspectionPlan.modules[1].target = InspectionTarget::TargetScore;
     profile.inspectionPlan.modules[1].enabled = true;
     profile.inspectionPlan.modules[1].minimumStrength = StrengthClass::Medium;
     profile.inspectionPlan.modules[1].scalar.anchor = ScalarInspectionAnchor::Peak;
@@ -307,7 +307,7 @@ inline DetectionProfile makeAmpExperimentalProfile() {
     //profile.inspectionPlan.modules[1].scalar.minSustainedMs = 25;
     
     profile.inspectionPlan.modules[2].kind = InspectionModuleKind::ScalarFeatureStrength;
-    profile.inspectionPlan.modules[2].label = "contrast";
+    profile.inspectionPlan.modules[2].target = InspectionTarget::Contrast;
     profile.inspectionPlan.modules[2].enabled = true;
     profile.inspectionPlan.modules[2].minimumStrength = StrengthClass::Medium;
     profile.inspectionPlan.modules[2].scalar.anchor = ScalarInspectionAnchor::Peak;

@@ -962,9 +962,9 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
             : "unknown";
         pattern.reason = hasPatternResult ? detection::patternReasonName(reportPatternResult->reasonCode) : "none";
         pattern.rejectReason = hasPatternResult ? detection::patternRejectReasonName(reportPatternResult->rejectReason) : "none";
-        pattern.firstFailedLabel = hasPatternResult
-            ? reportPatternResult->firstFailedRequirementLabel
-            : "none";
+        pattern.firstFailedTarget = hasPatternResult
+            ? reportPatternResult->firstFailedRequirementTarget
+            : detection::InspectionTarget::None;
         pattern.firstFailedObservedStrength = hasPatternResult
             ? detection::strengthClassName(reportPatternResult->firstFailedObservedStrength)
             : "unknown";
@@ -1031,10 +1031,10 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
         detection::patternMatcherFirstEnabledRequirement(selectedProfile.inspectionPlan);
     if (trialHasPipelineEvidence && hasInspectedOccurrence) {
         report.inspection.primaryEvidence = detection::occurrenceSourceName(reportInspectedOccurrence->occurrence.detectorId);
-        report.inspection.moduleLabel = supportRequirement != nullptr ? supportRequirement->label : "unknown";
-        if (supportRequirement != nullptr && supportRequirement->label != nullptr && strcmp(supportRequirement->label, "target") == 0) {
+        report.inspection.moduleTarget = supportRequirement != nullptr ? supportRequirement->target : detection::InspectionTarget::None;
+        if (report.inspection.moduleTarget == detection::InspectionTarget::TargetScore) {
             report.inspection.moduleStrengthClass = detection::strengthClassName(reportInspectedOccurrence->occurrence.frequency.scoreStrength);
-        } else if (supportRequirement != nullptr && supportRequirement->label != nullptr && strcmp(supportRequirement->label, "contrast") == 0) {
+        } else if (report.inspection.moduleTarget == detection::InspectionTarget::Contrast) {
             report.inspection.moduleStrengthClass = detection::strengthClassName(reportInspectedOccurrence->occurrence.frequency.contrastQuality);
         } else {
             report.inspection.moduleStrengthClass = detection::strengthClassName(reportInspectedOccurrence->occurrence.scalar.strengthClass);
@@ -1042,7 +1042,7 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
         report.inspection.mainRejectReason = reportInspectedOccurrence->decision == detection::OccurrenceDecision::Rejected ? detection::occurrenceRejectReasonName(reportInspectedOccurrence->rejectReason) : "none";
     } else {
         report.inspection.primaryEvidence = "none";
-        report.inspection.moduleLabel = "unknown";
+        report.inspection.moduleTarget = detection::InspectionTarget::None;
         report.inspection.moduleStrengthClass = "unsupported";
         report.inspection.mainRejectReason = analyzerReasonName(report.classification.reason);
     }
@@ -1070,7 +1070,6 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
     report.profileDetail.inspectionPlan = detection::inspectionPlanName(selectedProfile.inspectionPlan);
     report.profileDetail.inspectionModules = detection::inspectionModulesName(selectedProfile.inspectionPlan);
     report.profileDetail.inspectionModuleCount = selectedProfile.inspectionPlan.count;
-    report.profileDetail.inspectionLabels = detection::inspectionLabelsName(selectedProfile.inspectionPlan);
     if (report.occurrences.present &&
         reportInspectedOccurrence != nullptr &&
         reportInspectedOccurrence->occurrence.occurrenceType == detection::OccurrenceType::Frequency) {
@@ -1099,7 +1098,7 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
         const size_t copyCount = availableCount < moduleCount ? availableCount : moduleCount;
         report.profileDetail.inspectionObservationCount = copyCount;
         for (size_t i = 0; i < copyCount; ++i) {
-            report.profileDetail.inspectionObservationLabels[i] = selectedProfile.inspectionPlan.modules[i].label;
+            report.profileDetail.inspectionObservationTargets[i] = selectedProfile.inspectionPlan.modules[i].target;
             report.profileDetail.inspectionObservations[i] = reportInspectedOccurrence->scalarObservations[i];
         }
     }

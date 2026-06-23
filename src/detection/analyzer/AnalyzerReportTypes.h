@@ -216,7 +216,7 @@ struct AnalyzerPatternObservation {
     const char* supportStrength = "unknown";
     const char* reason = "none";
     const char* rejectReason = "none";
-    const char* firstFailedLabel = "none";
+    detection::InspectionTarget firstFailedTarget = detection::InspectionTarget::None;
     const char* firstFailedObservedStrength = "unknown";
     const char* firstFailedRequiredStrength = "unknown";
     unsigned int firstFailedRequirementIndex = 255;
@@ -247,6 +247,7 @@ struct AnalyzerOccurrenceObservation {
     float strength = 0.0f;
     float confidence = 0.0f;
 
+    detection::InspectionTarget moduleTarget = detection::InspectionTarget::None;
     const char* mainRejectReason = "none";
     const char* rejectReason = "none";
 };
@@ -258,7 +259,7 @@ struct AnalyzerInspectionObservation {
     unsigned int rejected = 0;
 
     const char* primaryEvidence = "none";
-    const char* moduleLabel = "unknown";
+    detection::InspectionTarget moduleTarget = detection::InspectionTarget::None;
     const char* moduleStrengthClass = "unknown";
     const char* mainRejectReason = "none";
 };
@@ -291,10 +292,9 @@ struct AnalyzerProfileDetail {
     const char* inspectionPlan = "unknown";
     const char* inspectionModules = "unknown";
     size_t inspectionModuleCount = 0;
-    const char* inspectionLabels = "unknown";
     detection::ScalarInspectionObservation scalarObservation = {};
     size_t inspectionObservationCount = 0;
-    const char* inspectionObservationLabels[detection::kMaxInspectionModules] = {};
+    detection::InspectionTarget inspectionObservationTargets[detection::kMaxInspectionModules] = {};
     detection::ScalarInspectionObservation inspectionObservations[detection::kMaxInspectionModules] = {};
 
     float supportScore = 0.0f;

@@ -9,11 +9,9 @@
 
 namespace {
 
-const char* strengthClassForObservationLabel(const AnalyzerReport& report, const char* label) {
+const char* strengthClassForObservationTarget(const AnalyzerReport& report, detection::InspectionTarget target) {
     for (size_t i = 0; i < report.profileDetail.inspectionObservationCount; ++i) {
-        if (report.profileDetail.inspectionObservationLabels[i] != nullptr &&
-            label != nullptr &&
-            strcmp(report.profileDetail.inspectionObservationLabels[i], label) == 0) {
+        if (report.profileDetail.inspectionObservationTargets[i] == target) {
             return detection::strengthClassName(report.profileDetail.inspectionObservations[i].strength);
         }
     }
@@ -44,7 +42,7 @@ void printCanonicalStageLine(const char* prefix, const AnalyzerReport& report, b
         Serial.print(" occurrence.source=");
         Serial.print(report.occurrences.primarySource != nullptr ? report.occurrences.primarySource : "none");
         Serial.print(" inspection.label=");
-        Serial.print(report.inspection.moduleLabel != nullptr ? report.inspection.moduleLabel : "unknown");
+        Serial.print(detection::inspectionTargetName(report.inspection.moduleTarget));
         Serial.print(" inspection.strength=");
         Serial.print(report.inspection.moduleStrengthClass != nullptr ? report.inspection.moduleStrengthClass : "unknown");
     }
@@ -95,9 +93,9 @@ void AnalyzerApp::printSequenceTrial(const AnalyzerReport& report) const {
         Serial.print(report.detectorReport->accepted.durationMs);
     }
     Serial.print(" contrast_class=");
-    Serial.print(strengthClassForObservationLabel(report, "contrast"));
+    Serial.print(strengthClassForObservationTarget(report, detection::InspectionTarget::Contrast));
     Serial.print(" amp_class=");
-    Serial.print(strengthClassForObservationLabel(report, "amp"));
+    Serial.print(strengthClassForObservationTarget(report, detection::InspectionTarget::Amp));
     if (report.detectorReport != nullptr) {
         const auto& accepted = report.detectorReport->accepted;
         const auto& selectedReject = report.detectorReport->selectedReject;
@@ -140,7 +138,7 @@ void AnalyzerApp::printSequenceInspectCanonical(const AnalyzerReport& report) co
     const size_t observationCount = report.profileDetail.inspectionObservationCount;
 
     auto printInspectCore = [&report, observationCount](const detection::ScalarInspectionObservation* observation,
-                                                        const char* label,
+                                                        detection::InspectionTarget target,
                                                         size_t observationIndex) {
         Serial.print("SEQ_INSPECT");
         Serial.print(" inspect.observation_index=");
@@ -172,14 +170,14 @@ void AnalyzerApp::printSequenceInspectCanonical(const AnalyzerReport& report) co
         Serial.print(" inspect.primary_evidence=");
         Serial.print(report.inspection.primaryEvidence != nullptr ? report.inspection.primaryEvidence : "none");
         Serial.print(" inspect.label=");
-        Serial.print(report.inspection.moduleLabel != nullptr ? report.inspection.moduleLabel : "unknown");
+        Serial.print(detection::inspectionTargetName(report.inspection.moduleTarget));
         Serial.print(" inspect.strength_class=");
         Serial.print(report.inspection.moduleStrengthClass != nullptr ? report.inspection.moduleStrengthClass : "unknown");
         Serial.print(" inspect.main_reject_reason=");
         Serial.print(report.inspection.mainRejectReason != nullptr ? report.inspection.mainRejectReason : "none");
         if (observation != nullptr) {
             Serial.print(" compare.label=");
-            Serial.print(label != nullptr ? label : "none");
+            Serial.print(detection::inspectionTargetName(report.profileDetail.inspectionObservationTargets[observationIndex]));
             Serial.print(" compare.stream=");
             Serial.print(scalarObservedStreamDisplayName(observation->stream));
             Serial.print(" compare.mode=");
@@ -212,23 +210,21 @@ void AnalyzerApp::printSequenceInspectCanonical(const AnalyzerReport& report) co
 
     if (detailMode) {
         if (observationCount == 0) {
-            printInspectCore(nullptr, nullptr, 0);
+            printInspectCore(nullptr, detection::InspectionTarget::None, 0);
             return;
         }
 
         for (size_t i = 0; i < observationCount; ++i) {
             printInspectCore(&report.profileDetail.inspectionObservations[i],
-                             report.profileDetail.inspectionObservationLabels[i],
+                             report.profileDetail.inspectionObservationTargets[i],
                              i + 1U);
         }
         return;
     }
 
     const detection::ScalarInspectionObservation* observation = nullptr;
-    const char* label = nullptr;
     if (observationCount > 0) {
         observation = &report.profileDetail.inspectionObservations[0];
-        label = report.profileDetail.inspectionObservationLabels[0];
     }
     Serial.print("SEQ_INSPECT_FULL");
     Serial.print(" inspect.observation_count=");
@@ -258,14 +254,14 @@ void AnalyzerApp::printSequenceInspectCanonical(const AnalyzerReport& report) co
     Serial.print(" inspect.primary_evidence=");
     Serial.print(report.inspection.primaryEvidence != nullptr ? report.inspection.primaryEvidence : "none");
     Serial.print(" inspect.label=");
-    Serial.print(report.inspection.moduleLabel != nullptr ? report.inspection.moduleLabel : "unknown");
+    Serial.print(detection::inspectionTargetName(report.inspection.moduleTarget));
     Serial.print(" inspect.strength_class=");
     Serial.print(report.inspection.moduleStrengthClass != nullptr ? report.inspection.moduleStrengthClass : "unknown");
     Serial.print(" inspect.main_reject_reason=");
     Serial.print(report.inspection.mainRejectReason != nullptr ? report.inspection.mainRejectReason : "none");
     if (observation != nullptr) {
         Serial.print(" compare.label=");
-        Serial.print(label != nullptr ? label : "none");
+        Serial.print(detection::inspectionTargetName(report.profileDetail.inspectionObservationTargets[0]));
         Serial.print(" compare.stream=");
         Serial.print(scalarObservedStreamDisplayName(observation->stream));
         Serial.print(" compare.mode=");
@@ -380,9 +376,9 @@ void AnalyzerApp::printSequenceDetailCanonical(const AnalyzerReport& report) con
     }
     Serial.print(" INSPECT:");
     Serial.print(" contrast.class=");
-    Serial.print(strengthClassForObservationLabel(report, "contrast"));
+    Serial.print(strengthClassForObservationTarget(report, detection::InspectionTarget::Contrast));
     Serial.print(" amp.class=");
-    Serial.print(strengthClassForObservationLabel(report, "amp"));
+    Serial.print(strengthClassForObservationTarget(report, detection::InspectionTarget::Amp));
     Serial.print(" PATTERN:");
     Serial.print(" result=");
     Serial.print(report.classification.result == AnalyzerResult::Expected || report.classification.result == AnalyzerResult::Late
@@ -391,7 +387,7 @@ void AnalyzerApp::printSequenceDetailCanonical(const AnalyzerReport& report) con
     Serial.print(" pattern.first_failed_requirement_index=");
     Serial.print(report.primaryPattern.firstFailedRequirementIndex);
     Serial.print(" pattern.first_failed_label=");
-    Serial.print(report.primaryPattern.firstFailedLabel != nullptr ? report.primaryPattern.firstFailedLabel : "none");
+    Serial.print(detection::inspectionTargetName(report.primaryPattern.firstFailedTarget));
     Serial.print(" pattern.observed_class=");
     Serial.print(report.primaryPattern.firstFailedObservedStrength != nullptr ? report.primaryPattern.firstFailedObservedStrength : "unknown");
     Serial.print(" pattern.required_class=");

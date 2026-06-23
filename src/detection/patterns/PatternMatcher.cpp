@@ -110,23 +110,20 @@ PatternProposal makePatternProposalFromOccurrence(const detection::InspectedOccu
     return proposal;
 }
 
-static detection::StrengthClass strengthForLabel(const PatternProposal& proposal, const char* label) {
-    if (label == nullptr) {
-        return detection::StrengthClass::Unknown;
+static detection::StrengthClass strengthForTarget(const PatternProposal& proposal, detection::InspectionTarget target) {
+    switch (target) {
+        case detection::InspectionTarget::Amp:
+            return proposal.supportStrength;
+        case detection::InspectionTarget::TargetScore:
+            return proposal.scoreStrength;
+        case detection::InspectionTarget::Contrast:
+            return proposal.contrastQuality;
+        case detection::InspectionTarget::TargetBand:
+            return proposal.targetBandStrength;
+        case detection::InspectionTarget::None:
+        default:
+            return detection::StrengthClass::Unknown;
     }
-    if (strcmp(label, "amp") == 0) {
-        return proposal.supportStrength;
-    }
-    if (strcmp(label, "target") == 0) {
-        return proposal.scoreStrength;
-    }
-    if (strcmp(label, "contrast") == 0) {
-        return proposal.contrastQuality;
-    }
-    if (strcmp(label, "band") == 0) {
-        return proposal.targetBandStrength;
-    }
-    return detection::StrengthClass::Unknown;
 }
 
 ProposalEvaluationKind resultKindFromProposal(const PatternProposal& proposal) {
@@ -143,7 +140,7 @@ detection::PatternRejectReason supportRejectReason(detection::StrengthClass supp
 }
 
 bool requirementPassed(const PatternProposal& proposal, const detection::InspectionModuleConfig& module, detection::StrengthClass& observedStrength) {
-    observedStrength = strengthForLabel(proposal, module.label);
+    observedStrength = strengthForTarget(proposal, module.target);
     return observedStrength >= module.minimumStrength;
 }
 
@@ -179,7 +176,7 @@ detection::PatternResult evaluateSinglePulse(
     const ProposalEvaluationKind proposalKind = resultKindFromProposal(proposal);
     detection::StrengthClass firstFailedObservedStrength = detection::StrengthClass::Unknown;
     detection::StrengthClass firstFailedRequiredStrength = detection::StrengthClass::Unknown;
-    const char* firstFailedLabel = "none";
+    detection::InspectionTarget firstFailedTarget = detection::InspectionTarget::None;
     uint8_t firstFailedIndex = 255;
 
     if (proposalKind != ProposalEvaluationKind::Invalid) {
@@ -195,7 +192,8 @@ detection::PatternResult evaluateSinglePulse(
             if (!requirementPassed(proposal, requirement, observedStrength)) {
                 result.supportMatched = false;
                 firstFailedIndex = i;
-                firstFailedLabel = requirement.label;
+                firstFailedTarget = requirement.target;
+                result.firstFailedRequirementTarget = firstFailedTarget;
                 firstFailedObservedStrength = observedStrength;
                 firstFailedRequiredStrength = requirement.minimumStrength;
                 result.rejectReason = supportRejectReason(observedStrength);
@@ -225,10 +223,10 @@ detection::PatternResult evaluateSinglePulse(
         result.uncertain = false;
         result.supportMatched = false;
     }
-    result.firstFailedRequirementLabel = firstFailedLabel;
     result.firstFailedObservedStrength = firstFailedObservedStrength;
     result.firstFailedRequiredStrength = firstFailedRequiredStrength;
     result.firstFailedRequirementIndex = firstFailedIndex;
+    result.firstFailedRequirementTarget = firstFailedTarget;
     result.confidence = result.valid ? 1.0f : 0.0f;
     return result;
 }
@@ -304,7 +302,7 @@ bool PatternMatcher::popPatternResult(unsigned long nowMs, PatternResult& out) {
     _report.uncertain = out.uncertain;
     _report.patternType = out.type;
     _report.rejectReason = out.rejectReason;
-    _report.firstFailedRequirementLabel = out.firstFailedRequirementLabel;
+    _report.firstFailedRequirementTarget = out.firstFailedRequirementTarget;
     _report.firstFailedObservedStrength = out.firstFailedObservedStrength;
     _report.firstFailedRequiredStrength = out.firstFailedRequiredStrength;
     _report.firstFailedRequirementIndex = out.firstFailedRequirementIndex;

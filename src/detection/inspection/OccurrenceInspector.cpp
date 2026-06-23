@@ -179,7 +179,7 @@ void OccurrenceInspector::annotateScalarFeatureStrength(
     const Occurrence& occurrence,
     const FeatureHistory* featureHistory,
     const ScalarFeatureInspectionConfig& config,
-    const char* label
+    InspectionTarget target
 ) const {
     const unsigned long anchorMs = anchorMsForOccurrence(occurrence, config.anchor);
     const unsigned long startMs = anchorMs > config.windowPreMs ? anchorMs - config.windowPreMs : 0UL;
@@ -209,7 +209,8 @@ void OccurrenceInspector::annotateScalarFeatureStrength(
         out.scalarObservations[out.scalarObservationCount++] = observation;
     }
 
-    if (label != nullptr && strcmp(label, "amp") == 0) {
+    switch (target) {
+        case InspectionTarget::Amp:
         out.occurrence.scalar.present = observation.available;
         out.occurrence.scalar.value = observation.available ? observation.classificationValue : 0.0f;
         out.occurrence.scalar.baseline = observation.available ? observation.mean : 0.0f;
@@ -218,12 +219,19 @@ void OccurrenceInspector::annotateScalarFeatureStrength(
             : 0.0f;
         out.occurrence.scalar.strength = observation.available ? observation.classificationValue : 0.0f;
         out.occurrence.scalar.strengthClass = observation.strength;
-    } else if (label != nullptr && strcmp(label, "target") == 0) {
+            break;
+        case InspectionTarget::TargetScore:
         out.occurrence.frequency.scoreStrength = observation.strength;
-    } else if (label != nullptr && strcmp(label, "contrast") == 0) {
+            break;
+        case InspectionTarget::Contrast:
         out.occurrence.frequency.contrastQuality = observation.strength;
-    } else if (label != nullptr && strcmp(label, "band") == 0) {
+            break;
+        case InspectionTarget::TargetBand:
         out.occurrence.frequency.targetBandStrength = observation.strength;
+            break;
+        case InspectionTarget::None:
+        default:
+            break;
     }
 
     out.occurrence.scalar.evidence = observation;
@@ -237,9 +245,7 @@ void OccurrenceInspector::runInspectionModule(
 ) const {
     switch (module.kind) {
     case InspectionModuleKind::ScalarFeatureStrength:
-        if (module.label != nullptr) {
-            annotateScalarFeatureStrength(out, occurrence, featureHistory, module.scalar, module.label);
-        }
+        annotateScalarFeatureStrength(out, occurrence, featureHistory, module.scalar, module.target);
         break;
         case InspectionModuleKind::None:
         default:

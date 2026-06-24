@@ -903,7 +903,7 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
             ? "selected_reject"
             : "selected_occurrence");
     report.sourceOccurrenceId = selectedTrial.occurrenceId;
-    report.sourceCandidateId = selectedTrial.occurrenceId;
+    report.sourceCandidateId = selectedTrial.candidateId;
     report.sourceReportMatched = selectedTrial.reportMatched;
     report.sourceReportReason = detection::analyzer::sourceReportReason(
         selectedTrial.reportMatched,
@@ -940,18 +940,19 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
     classificationInput.sourceRejectedCount = _sequenceTest.sourceRejectedCount;
     classificationInput.inspectedOccurrenceCount = _sequenceTest.inspectedOccurrenceCount;
     classificationInput.patternResultCount = _sequenceTest.patternResultCount;
-    classificationInput.pipelineQueueOverflowCount = _detection.pipelineEventOverflowCount();
+    classificationInput.pipelineQueueOverflowCount = _detection.pipelineEventOverflowCount() > _sequenceTest.trialOverflowCountAtStart
+        ? _detection.pipelineEventOverflowCount() - _sequenceTest.trialOverflowCountAtStart
+        : 0UL;
     classificationInput.bufferOverrun = bufferOverrun;
     classificationInput.patternAvailable = hasPatternResult;
-    classificationInput.patternInspectionFailed = hasPatternResult && !reportPatternResult->valid;
     classificationInput.detectorReportAvailable = selectedDetectorReport != nullptr;
     classificationInput.detectorAcceptedPresent = selectedDetectorReport != nullptr && selectedDetectorReport->accepted.present;
     classificationInput.detectorSelectedRejectPresent = selectedDetectorReport != nullptr && selectedDetectorReport->selectedReject.present;
     report.classification = classifySequenceTrial(classificationInput);
     if (hasPatternResult && !reportPatternResult->valid) {
         report.classification.result = AnalyzerResult::Rejected;
-        report.classification.reason = AnalyzerReason::InspectionFailed;
-        report.classification.primaryStage = AnalyzerStage::Inspect;
+        report.classification.reason = AnalyzerReason::PatternRejected;
+        report.classification.primaryStage = AnalyzerStage::Pattern;
     }
     {
         // Analyzer formats the runtime PatternResult when one exists; it does
@@ -1149,7 +1150,13 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
     report.debug.rejects = report.occurrences.rejected;
     report.debug.duplicates = duplicateCount;
     report.debug.unexpected = result == AnalyzerResult::Unexpected ? 1U : 0U;
-    report.debug.pipelineQueueOverflows = _detection.pipelineEventOverflowCount();
+    report.debug.pipelineQueueOverflows = classificationInput.pipelineQueueOverflowCount;
+    report.debug.patternResultQueueOverflows = _detection.patternResultQueueOverflowCount() > _sequenceTest.trialPatternResultOverflowCountAtStart
+        ? _detection.patternResultQueueOverflowCount() - _sequenceTest.trialPatternResultOverflowCountAtStart
+        : 0UL;
+    report.debug.patternInspectedQueueOverflows = _detection.patternInspectedQueueOverflowCount() > _sequenceTest.trialPatternInspectedOverflowCountAtStart
+        ? _detection.patternInspectedQueueOverflowCount() - _sequenceTest.trialPatternInspectedOverflowCountAtStart
+        : 0UL;
     report.debug.startupArtifact = startupArtifact;
     report.debug.bufferOverrun = bufferOverrun;
     report.debug.artifactCaptured = trialHasPipelineEvidence;

@@ -209,6 +209,9 @@ void AnalyzerApp::startSequenceTest(const PendingSequenceStart& pending) {
     _sequenceTest.currentTrialUnexpected = 0;
     _sequenceTest.currentTrialRejected = 0;
     _sequenceTest.currentTrialDiagnostics = {};
+    _sequenceTest.trialOverflowCountAtStart = 0;
+    _sequenceTest.trialPatternResultOverflowCountAtStart = 0;
+    _sequenceTest.trialPatternInspectedOverflowCountAtStart = 0;
     _sequenceTest.hits = 0;
     _sequenceTest.expectedHits = 0;
     _sequenceTest.lateHits = 0;
@@ -425,6 +428,8 @@ void AnalyzerApp::updateSequenceTest(unsigned long now) {
     _sequenceTest.currentTrialRejected = 0;
     _sequenceTest.bufferOverrun = false;
     _sequenceTest.trialOverflowCountAtStart = _audioSource.stats().overflowCount;
+    _sequenceTest.trialPatternResultOverflowCountAtStart = _detection.patternResultQueueOverflowCount();
+    _sequenceTest.trialPatternInspectedOverflowCountAtStart = _detection.patternInspectedQueueOverflowCount();
     _sequenceTest.currentTrialDiagnostics = {};
     _sequenceTest.currentTrialDiagnostics.acceptedAmbientBaseline = _audioSignal.baseline();
     _sequenceTest.currentTrialDiagnostics.runtimePatternCaptured = false;
@@ -495,6 +500,7 @@ AnalyzerApp::SequenceTrialSelection AnalyzerApp::selectSequenceTrialSelection(un
         selection.occurrenceId = selection.inspectedOccurrence != nullptr
             ? selection.inspectedOccurrence->occurrence.occurrenceId
             : 0UL;
+        selection.candidateId = 0;
         selection.reportMatched = detectorReportMatchesOccurrence(selection.detectorReport, selection.inspectedOccurrence);
         selection.dtMs = static_cast<long>(_sequenceTest.primaryValidPattern.primaryStartMs) - static_cast<long>(trialOnsetAnchorMs);
         selection.durationMs = _sequenceTest.primaryValidPattern.primaryDurationMs;
@@ -515,6 +521,7 @@ AnalyzerApp::SequenceTrialSelection AnalyzerApp::selectSequenceTrialSelection(un
         selection.occurrenceId = selection.inspectedOccurrence != nullptr
             ? selection.inspectedOccurrence->occurrence.occurrenceId
             : 0UL;
+        selection.candidateId = 0;
         selection.reportMatched = detectorReportMatchesOccurrence(selection.detectorReport, selection.inspectedOccurrence);
         selection.dtMs = static_cast<long>(_sequenceTest.bestRejectedInWindow.primaryStartMs) - static_cast<long>(trialOnsetAnchorMs);
         selection.durationMs = _sequenceTest.bestRejectedInWindow.primaryDurationMs;
@@ -527,8 +534,9 @@ AnalyzerApp::SequenceTrialSelection AnalyzerApp::selectSequenceTrialSelection(un
         _sequenceTest.selectedSourceReject.detectorReport.detectorId != detection::DetectorId::Unknown) {
         selection.kind = SequenceTrialSelection::Kind::RejectedSourceCandidate;
         selection.detectorReport = &_sequenceTest.selectedSourceReject.detectorReport;
-        selection.occurrenceId = static_cast<unsigned long>(_sequenceTest.selectedSourceReject.detectorReport.selectedReject.occurrenceId);
-        selection.reportMatched = true;
+        selection.occurrenceId = _sequenceTest.selectedSourceReject.sourceOccurrenceId;
+        selection.candidateId = _sequenceTest.selectedSourceReject.sourceCandidateId;
+        selection.reportMatched = _sequenceTest.selectedSourceReject.sourceReportMatched;
         selection.dtMs = static_cast<long>(_sequenceTest.selectedSourceReject.detectorReport.selectedReject.startMs) - static_cast<long>(trialOnsetAnchorMs);
         selection.durationMs = _sequenceTest.selectedSourceReject.detectorReport.selectedReject.durationMs;
         selection.strength = _sequenceTest.selectedSourceReject.detectorReport.selectedReject.strength;
@@ -543,6 +551,7 @@ AnalyzerApp::SequenceTrialSelection AnalyzerApp::selectSequenceTrialSelection(un
             ? &_sequenceTest.primaryAcceptedDetectorReport
             : nullptr;
         selection.occurrenceId = selection.inspectedOccurrence->occurrence.occurrenceId;
+        selection.candidateId = 0;
         selection.reportMatched = detectorReportMatchesOccurrence(selection.detectorReport, selection.inspectedOccurrence);
         selection.dtMs = static_cast<long>(_sequenceTest.primaryAcceptedInspectedOccurrence.occurrence.startMs) - static_cast<long>(trialOnsetAnchorMs);
         selection.durationMs = _sequenceTest.primaryAcceptedInspectedOccurrence.occurrence.durationMs;

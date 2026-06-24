@@ -19,16 +19,13 @@ AnalyzerReason analyzerReasonFromSequenceOutcome(const AnalyzerSequenceClassific
                 return AnalyzerReason::OccurrenceSeenButRejected;
             }
             if (input.sourceAcceptedCount > 0 || input.detectorAcceptedPresent) {
-                return AnalyzerReason::InspectionFailed;
+                return AnalyzerReason::MissingPatternReport;
             }
             if (input.sourceCandidateCount == 0) {
                 return AnalyzerReason::NoOccurrence;
             }
-            return AnalyzerReason::MissingPipelineResult;
+            return AnalyzerReason::PipelineIncomplete;
         case AnalyzerResult::Rejected:
-            if (input.patternInspectionFailed) {
-                return AnalyzerReason::InspectionFailed;
-            }
             if (input.sourceRejectedCount > 0 || input.detectorSelectedRejectPresent) {
                 return AnalyzerReason::OccurrenceSeenButRejected;
             }
@@ -36,9 +33,9 @@ AnalyzerReason analyzerReasonFromSequenceOutcome(const AnalyzerSequenceClassific
                 return AnalyzerReason::PatternRejected;
             }
             if (input.sourceAcceptedCount > 0 || input.detectorAcceptedPresent) {
-                return AnalyzerReason::InspectionFailed;
+                return AnalyzerReason::MissingPatternReport;
             }
-            return input.sourceCandidateCount == 0 ? AnalyzerReason::NoOccurrence : AnalyzerReason::MissingPipelineResult;
+            return input.sourceCandidateCount == 0 ? AnalyzerReason::NoOccurrence : AnalyzerReason::PipelineIncomplete;
         case AnalyzerResult::Ambiguous:
             return AnalyzerReason::MultipleCompetingPatterns;
         case AnalyzerResult::TooDense:
@@ -53,6 +50,11 @@ AnalyzerStage analyzerPrimaryStageFromReason(AnalyzerReason reason) {
     switch (reason) {
         case AnalyzerReason::MissingPipelineResult:
         case AnalyzerReason::PipelineQueueOverflow:
+        case AnalyzerReason::PipelineIncomplete:
+        case AnalyzerReason::MissingInspectionReport:
+        case AnalyzerReason::MissingPatternReport:
+        case AnalyzerReason::UncorrelatedPipelineEvent:
+        case AnalyzerReason::UnknownStageFailure:
         case AnalyzerReason::NoOccurrence:
         case AnalyzerReason::OccurrenceSeenButRejected:
             return AnalyzerStage::Source;

@@ -422,7 +422,7 @@ only when this affected the final trial outcome.
 
 ---
 
-## 9. Move cross-stage correlation out of DetectorReport
+## 9. Move cross-stage correlation out of DetectorReport [complete]
 
 Remove Analyzer-side mutation in:
 
@@ -490,7 +490,7 @@ repair mismatched stage records
 
 ---
 
-## 10. Stop equating CandidateId with OccurrenceId
+## 10. Stop equating CandidateId with OccurrenceId [complete]
 
 Current code sets:
 
@@ -521,7 +521,7 @@ Do not invent an OccurrenceId for rejected candidates.
 
 ---
 
-## 11. Stop Analyzer from inferring stage failure from counters
+## 11. Stop Analyzer from inferring stage failure from counters [complete]
 
 Audit:
 
@@ -571,7 +571,7 @@ Do not hide missing bookkeeping as an acoustic reject.
 
 ---
 
-## 12. Make Analyzer counters observational only
+## 12. Make Analyzer counters observational only [complete]
 
 Counters such as:
 
@@ -599,7 +599,7 @@ Do not call every `DetectionPipelineEvent` a candidate unless it actually repres
 
 ---
 
-## 13. Make overflow accounting trial-local
+## 13. Make overflow accounting trial-local [complete]
 
 Current Analyzer reads the cumulative value:
 
@@ -623,7 +623,7 @@ Apply the same rule to every cumulative queue/drop counter used by Analyzer.
 
 ---
 
-## 14. Add missing queue overflow counters
+## 14. Add missing queue overflow counters [complete]
 
 Current pipeline-event overflow is counted, but these can fail silently:
 
@@ -648,7 +648,7 @@ Do not reuse one generic counter if the failed queue matters for diagnosis.
 
 ---
 
-## 15. Prevent FIFO-only pattern/inspection correlation
+## 15. Prevent FIFO-only pattern/inspection correlation [complete]
 
 Current runtime behavior:
 
@@ -677,7 +677,7 @@ Do not introduce a large generic `PipelineObservation` framework unless it simpl
 
 ---
 
-## 16. Make queue failure non-destructive
+## 16. Make queue failure non-destructive [complete]
 
 When enqueueing the inspected occurrence accepted by PatternMatcher fails:
 
@@ -698,7 +698,7 @@ Analyzer should receive `PipelineIncomplete` for affected trials rather than a f
 
 ---
 
-## 17. Preserve DetectorReport as detector-owned truth
+## 17. Preserve DetectorReport as detector-owned truth [complete]
 
 `DetectorReport` may contain only detector-stage facts such as:
 
@@ -793,7 +793,7 @@ Analyzer may report these facts but must not reinterpret them as detector, inspe
 
 ---
 
-## 19. Restrict final Analyzer responsibility
+## 19. Restrict final Analyzer responsibility [complete]
 
 After cleanup, Analyzer should only perform:
 

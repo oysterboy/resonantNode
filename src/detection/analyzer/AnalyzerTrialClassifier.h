@@ -28,7 +28,6 @@ struct AnalyzerSequenceClassificationInput {
     // Canonical PatternResult availability for the finalized trial snapshot.
     // This remains generic; detector/pattern-specific reasons live elsewhere.
     bool patternAvailable = false;
-    bool patternInspectionFailed = false;
     // Canonical DetectorReport availability for the active detector path.
     bool detectorReportAvailable = false;
     bool detectorAcceptedPresent = false;

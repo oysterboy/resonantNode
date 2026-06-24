@@ -59,6 +59,32 @@ struct DetectionPipelineResult {
 
 struct SourceDiagnosticRecord {
     DetectorReport detectorReport = {};
+    const char* sourceSelection = "none";
+    unsigned long sourceOccurrenceId = 0;
+    unsigned long sourceCandidateId = 0;
+    bool sourceReportMatched = false;
+};
+
+enum class PipelineIntegrityReason {
+    None,
+    MissingDetectorReport,
+    MissingInspectedOccurrence,
+    MissingPatternResult,
+    OccurrenceIdMismatch,
+    InspectionQueueOverflow,
+    PatternResultQueueOverflow,
+    PipelineEventQueueOverflow,
+};
+
+struct PipelineIntegrity {
+    bool detectorReportPresent = false;
+    bool occurrenceMatched = false;
+    bool inspectionPresent = false;
+    bool patternReportPresent = false;
+    bool patternResultPresent = false;
+    bool correlationComplete = false;
+    bool queueOverflowAffected = false;
+    PipelineIntegrityReason reason = PipelineIntegrityReason::None;
 };
 
 enum class DetectionEventKind {
@@ -68,8 +94,17 @@ enum class DetectionEventKind {
 
 struct DetectionPipelineEvent {
     DetectionEventKind kind = DetectionEventKind::AcceptedPipelineResult;
+    uint32_t eventId = 0;
+    bool hasOccurrenceId = false;
     uint32_t occurrenceId = 0;
+    bool hasCandidateId = false;
     uint32_t candidateId = 0;
+    bool detectorReportPresent = false;
+    bool detectorReportMatched = false;
+    const char* sourceSelection = "none";
+    unsigned long sourceOccurrenceId = 0;
+    unsigned long sourceCandidateId = 0;
+    PipelineIntegrity integrity = {};
 
     bool hasPatternResult = false;
     PatternResult patternResult = {};
@@ -111,6 +146,9 @@ public:
     bool hasLatestPipelineResult() const;
     const DetectionPipelineResult& latestPipelineResult() const;
     unsigned long pipelineEventOverflowCount() const;
+    unsigned long patternResultQueueOverflowCount() const;
+    unsigned long patternInspectedQueueOverflowCount() const;
+    unsigned long patternCorrelationFailureCount() const;
     // Generic report access is the canonical upward path.
     const DetectorReport& activeDetectorReport() const;
     const PatternMatcherReport& activePatternMatcherReport() const;
@@ -127,7 +165,7 @@ private:
     void drainPatternMatcher(unsigned long nowMs);
     bool pushPatternResult(const PatternResult& result);
     bool pushPatternInspectedOccurrence(const InspectedOccurrence& occurrence);
-    bool popPatternInspectedOccurrence(InspectedOccurrence& out);
+    bool popPatternInspectedOccurrence(unsigned long occurrenceId, InspectedOccurrence& out);
     void capturePipelineResult(
         const PatternResult& result,
         const InspectedOccurrence* matchedInspectedOccurrence,
@@ -152,6 +190,7 @@ private:
     PatternResult _resultQueue[kResultQueueCapacity] = {};
     size_t _resultReadIndex = 0;
     size_t _resultCount = 0;
+    unsigned long _patternResultQueueOverflowCount = 0;
 
     DetectionPipelineResult _latestPipelineResult = {};
     bool _hasLatestPipelineResult = false;
@@ -160,11 +199,14 @@ private:
     DetectionPipelineEvent _pipelineEventQueue[kPipelineEventQueueCapacity] = {};
     size_t _pipelineEventReadIndex = 0;
     size_t _pipelineEventCount = 0;
+    unsigned long _pipelineEventSequenceId = 0;
     uint32_t _lastEmittedAcceptedOccurrenceId = 0;
     uint32_t _lastEmittedSelectedRejectOccurrenceId = 0;
     InspectedOccurrence _patternInspectedQueue[kResultQueueCapacity] = {};
     size_t _patternInspectedReadIndex = 0;
     size_t _patternInspectedCount = 0;
+    unsigned long _patternInspectedQueueOverflowCount = 0;
+    unsigned long _patternCorrelationFailureCount = 0;
 };
 
 } // namespace detection

@@ -56,6 +56,8 @@ void DetectionRuntime::resetDiagnosticsCounters() {
     _detectorReport = {};
     _frequencyDetector.resetDiagnosticsSummary();
     _pipelineEventOverflowCount = 0;
+    _patternResultQueueOverflowCount = 0;
+    _patternInspectedQueueOverflowCount = 0;
 }
 
 void DetectionRuntime::resetDetectors() {
@@ -81,14 +83,18 @@ void DetectionRuntime::resetDetectionState() {
     _latestPipelineResult = {};
     _hasLatestPipelineResult = false;
     _pipelineEventOverflowCount = 0;
+    _patternResultQueueOverflowCount = 0;
     _pipelineEventQueue[0] = {};
     _pipelineEventReadIndex = 0;
     _pipelineEventCount = 0;
+    _pipelineEventSequenceId = 0;
     _lastEmittedAcceptedOccurrenceId = 0;
     _lastEmittedSelectedRejectOccurrenceId = 0;
     _patternInspectedQueue[0] = {};
     _patternInspectedReadIndex = 0;
     _patternInspectedCount = 0;
+    _patternInspectedQueueOverflowCount = 0;
+    _patternCorrelationFailureCount = 0;
     _detectorReport = {};
 }
 
@@ -116,9 +122,28 @@ void DetectionRuntime::refreshDetectorReports(unsigned long nowMs) {
         _detectorReport.selectedReject.occurrenceId != _lastEmittedSelectedRejectOccurrenceId) {
         DetectionPipelineEvent event = {};
         event.kind = DetectionEventKind::RejectedSourceCandidate;
+        event.eventId = ++_pipelineEventSequenceId;
+        event.hasCandidateId = true;
         event.candidateId = static_cast<uint32_t>(_detectorReport.selectedReject.occurrenceId);
+        event.hasOccurrenceId = false;
+        event.occurrenceId = 0;
+        event.detectorReportPresent = true;
+        event.detectorReportMatched = true;
+        event.sourceSelection = "selected_reject";
+        event.sourceCandidateId = static_cast<unsigned long>(_detectorReport.selectedReject.occurrenceId);
+        event.sourceOccurrenceId = 0;
+        event.integrity.detectorReportPresent = true;
+        event.integrity.inspectionPresent = true;
+        event.integrity.patternReportPresent = false;
+        event.integrity.patternResultPresent = false;
+        event.integrity.occurrenceMatched = true;
+        event.integrity.correlationComplete = true;
         event.hasSourceRecord = true;
         event.sourceRecord.detectorReport = _detectorReport;
+        event.sourceRecord.sourceSelection = event.sourceSelection;
+        event.sourceRecord.sourceOccurrenceId = event.sourceOccurrenceId;
+        event.sourceRecord.sourceCandidateId = event.sourceCandidateId;
+        event.sourceRecord.sourceReportMatched = true;
         if (pushPipelineEvent(event)) {
             _lastEmittedSelectedRejectOccurrenceId = event.candidateId;
         }
@@ -237,6 +262,14 @@ bool DetectionRuntime::popPatternResult(PatternResult& out) {
     return true;
 }
 
+unsigned long DetectionRuntime::patternResultQueueOverflowCount() const {
+    return _patternResultQueueOverflowCount;
+}
+
+unsigned long DetectionRuntime::patternInspectedQueueOverflowCount() const {
+    return _patternInspectedQueueOverflowCount;
+}
+
 bool DetectionRuntime::hasLatestPipelineResult() const {
     return _hasLatestPipelineResult;
 }
@@ -294,7 +327,7 @@ void DetectionRuntime::drainPatternMatcher(unsigned long nowMs) {
     PatternResult result = {};
     while (_patternMatcher.popPatternResult(nowMs, result)) {
         InspectedOccurrence matchedInspectedOccurrence = {};
-        const bool hasMatchedInspectedOccurrence = popPatternInspectedOccurrence(matchedInspectedOccurrence);
+        const bool hasMatchedInspectedOccurrence = popPatternInspectedOccurrence(result.occurrenceId, matchedInspectedOccurrence);
         _fieldStateTracker.observePatternResult(result, nowMs);
         capturePipelineResult(
             result,
@@ -307,6 +340,7 @@ void DetectionRuntime::drainPatternMatcher(unsigned long nowMs) {
 
 bool DetectionRuntime::pushPatternResult(const PatternResult& result) {
     if (_resultCount == kResultQueueCapacity) {
+        ++_patternResultQueueOverflowCount;
         return false;
     }
 
@@ -318,6 +352,10 @@ bool DetectionRuntime::pushPatternResult(const PatternResult& result) {
 
 unsigned long DetectionRuntime::pipelineEventOverflowCount() const {
     return _pipelineEventOverflowCount;
+}
+
+unsigned long DetectionRuntime::patternCorrelationFailureCount() const {
+    return _patternCorrelationFailureCount;
 }
 
 bool DetectionRuntime::pushPipelineEvent(const DetectionPipelineEvent& event) {
@@ -356,12 +394,40 @@ void DetectionRuntime::capturePipelineResult(
 
     DetectionPipelineEvent event = {};
     event.kind = DetectionEventKind::AcceptedPipelineResult;
+    event.eventId = ++_pipelineEventSequenceId;
+    event.hasOccurrenceId = true;
     event.occurrenceId = static_cast<uint32_t>(result.occurrenceId);
-    event.candidateId = static_cast<uint32_t>(result.occurrenceId);
+    event.hasCandidateId = false;
+    event.candidateId = 0;
+    event.detectorReportPresent = true;
+    event.detectorReportMatched = matchedInspectedOccurrence != nullptr && matchedInspectedOccurrence->occurrence.present;
+    event.sourceSelection = matchedInspectedOccurrence != nullptr && matchedInspectedOccurrence->occurrence.present &&
+        matchedInspectedOccurrence->decision == OccurrenceDecision::Rejected
+        ? "selected_reject"
+        : "selected_occurrence";
+    event.sourceOccurrenceId = matchedInspectedOccurrence != nullptr && matchedInspectedOccurrence->occurrence.present
+        ? matchedInspectedOccurrence->occurrence.occurrenceId
+        : 0UL;
+    event.sourceCandidateId = 0;
+    event.integrity.detectorReportPresent = true;
+    event.integrity.inspectionPresent = event.detectorReportMatched;
+    event.integrity.patternReportPresent = true;
+    event.integrity.patternResultPresent = true;
+    event.integrity.occurrenceMatched = event.detectorReportMatched;
+    event.integrity.correlationComplete = event.integrity.detectorReportPresent && event.integrity.inspectionPresent && event.integrity.patternResultPresent;
+    event.integrity.reason = event.integrity.correlationComplete
+        ? PipelineIntegrityReason::None
+        : (event.integrity.detectorReportPresent
+            ? (event.integrity.inspectionPresent ? PipelineIntegrityReason::MissingPatternResult : PipelineIntegrityReason::MissingInspectedOccurrence)
+            : PipelineIntegrityReason::MissingDetectorReport);
     event.hasPatternResult = true;
     event.patternResult = result;
     event.hasSourceRecord = true;
     event.sourceRecord.detectorReport = _detectorReport;
+    event.sourceRecord.sourceSelection = event.sourceSelection;
+    event.sourceRecord.sourceOccurrenceId = event.sourceOccurrenceId;
+    event.sourceRecord.sourceCandidateId = event.sourceCandidateId;
+    event.sourceRecord.sourceReportMatched = event.detectorReportMatched;
     if (matchedInspectedOccurrence != nullptr && matchedInspectedOccurrence->occurrence.present) {
         event.hasInspectedOccurrence = true;
         event.inspectedOccurrence = *matchedInspectedOccurrence;
@@ -375,6 +441,7 @@ void DetectionRuntime::capturePipelineResult(
 
 bool DetectionRuntime::pushPatternInspectedOccurrence(const InspectedOccurrence& occurrence) {
     if (_patternInspectedCount == kResultQueueCapacity) {
+        ++_patternInspectedQueueOverflowCount;
         return false;
     }
 
@@ -384,13 +451,31 @@ bool DetectionRuntime::pushPatternInspectedOccurrence(const InspectedOccurrence&
     return true;
 }
 
-bool DetectionRuntime::popPatternInspectedOccurrence(InspectedOccurrence& out) {
+bool DetectionRuntime::popPatternInspectedOccurrence(unsigned long occurrenceId, InspectedOccurrence& out) {
     if (_patternInspectedCount == 0) {
         return false;
     }
 
-    out = _patternInspectedQueue[_patternInspectedReadIndex];
-    _patternInspectedReadIndex = (_patternInspectedReadIndex + 1) % kResultQueueCapacity;
+    size_t matchOffset = 0;
+    for (; matchOffset < _patternInspectedCount; ++matchOffset) {
+        const size_t index = (_patternInspectedReadIndex + matchOffset) % kResultQueueCapacity;
+        if (_patternInspectedQueue[index].occurrence.occurrenceId == occurrenceId) {
+            out = _patternInspectedQueue[index];
+            break;
+        }
+    }
+
+    if (matchOffset >= _patternInspectedCount) {
+        ++_patternCorrelationFailureCount;
+        return false;
+    }
+
+    for (size_t i = matchOffset; i + 1 < _patternInspectedCount; ++i) {
+        const size_t from = (_patternInspectedReadIndex + i + 1) % kResultQueueCapacity;
+        const size_t to = (_patternInspectedReadIndex + i) % kResultQueueCapacity;
+        _patternInspectedQueue[to] = _patternInspectedQueue[from];
+    }
+    _patternInspectedReadIndex = (_patternInspectedReadIndex + _patternInspectedCount - 1) % kResultQueueCapacity;
     --_patternInspectedCount;
     return true;
 }

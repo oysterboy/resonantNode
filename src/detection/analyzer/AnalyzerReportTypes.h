@@ -61,6 +61,11 @@ enum class AnalyzerReason {
     ValidPatternAfterWindow,
     MissingPipelineResult,
     PipelineQueueOverflow,
+    PipelineIncomplete,
+    MissingInspectionReport,
+    MissingPatternReport,
+    UncorrelatedPipelineEvent,
+    UnknownStageFailure,
     NoOccurrence,
     OccurrenceSeenButRejected,
     InspectionFailed,
@@ -122,6 +127,16 @@ inline const char* analyzerReasonName(AnalyzerReason value) {
             return "missing_pipeline_result";
         case AnalyzerReason::PipelineQueueOverflow:
             return "pipeline_queue_overflow";
+        case AnalyzerReason::PipelineIncomplete:
+            return "pipeline_incomplete";
+        case AnalyzerReason::MissingInspectionReport:
+            return "missing_inspection_report";
+        case AnalyzerReason::MissingPatternReport:
+            return "missing_pattern_report";
+        case AnalyzerReason::UncorrelatedPipelineEvent:
+            return "uncorrelated_pipeline_event";
+        case AnalyzerReason::UnknownStageFailure:
+            return "unknown_stage_failure";
         case AnalyzerReason::NoOccurrence:
             return "no_occurrence_pending";
         case AnalyzerReason::OccurrenceSeenButRejected:
@@ -324,6 +339,8 @@ struct AnalyzerDebugSummary {
     unsigned int duplicates = 0;
     unsigned int unexpected = 0;
     unsigned long pipelineQueueOverflows = 0;
+    unsigned long patternResultQueueOverflows = 0;
+    unsigned long patternInspectedQueueOverflows = 0;
     bool startupArtifact = false;
     bool bufferOverrun = false;
 

@@ -347,6 +347,8 @@ private:
         unsigned long currentTrialRejected = 0;
         bool bufferOverrun = false;
         unsigned long trialOverflowCountAtStart = 0;
+        unsigned long trialPatternResultOverflowCountAtStart = 0;
+        unsigned long trialPatternInspectedOverflowCountAtStart = 0;
         unsigned long trialTransientRejectTooShortCountAtStart = 0;
         unsigned long trialTransientRejectTooLongCountAtStart = 0;
         unsigned long trialTransientRejectWeakCountAtStart = 0;
@@ -457,6 +459,7 @@ private:
         const detection::InspectedOccurrence* inspectedOccurrence = nullptr;
         const detection::DetectorReport* detectorReport = nullptr;
         unsigned long occurrenceId = 0;
+        unsigned long candidateId = 0;
         bool reportMatched = false;
         AnalyzerResult result = AnalyzerResult::Unknown;
         long dtMs = -1;

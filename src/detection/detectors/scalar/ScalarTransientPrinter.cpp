@@ -11,6 +11,13 @@ void printScalarTransientDetailLine(const char* prefix, const detection::Detecto
     }
 
     const auto& scalar = report->scalar;
+    const bool acceptedSelected = report->accepted.present;
+    const bool rejectSelected = !acceptedSelected && report->selectedReject.present;
+    const char* selectedInspectReason = rejectSelected &&
+        report->selectedReject.detectorReason != nullptr &&
+        report->selectedReject.detectorReason[0] != '\0'
+            ? report->selectedReject.detectorReason
+            : "none";
     Serial.print(prefix);
     Serial.print(" detail.scalar.accepted.value=");
     Serial.print(scalar.accepted.value, 1);
@@ -51,11 +58,11 @@ void printScalarTransientDetailLine(const char* prefix, const detection::Detecto
     Serial.print(" detail.scalar.aggregate.best_rejected_value=");
     Serial.print(scalar.aggregates.bestRejectedValue, 1);
     Serial.print(" detail.scalar.inspect.reject_reason=");
-    Serial.print(scalar.inspect.rejectReason != nullptr ? scalar.inspect.rejectReason : "none");
+    Serial.print(selectedInspectReason);
     Serial.print(" detail.scalar.inspect.no_emit_reason=");
-    Serial.print(scalar.inspect.noEmitReason != nullptr ? scalar.inspect.noEmitReason : "none");
+    Serial.print(selectedInspectReason);
     Serial.print(" detail.scalar.inspect.gate_reason=");
-    Serial.print(scalar.inspect.gateReason != nullptr ? scalar.inspect.gateReason : "none");
+    Serial.print(selectedInspectReason);
     Serial.print(" detail.scalar.inspect.min_strength_pass=");
     Serial.print(scalar.inspect.matchedMeanPassed ? 1 : 0);
     Serial.print(" detail.scalar.inspect.carrier_quality_required=");

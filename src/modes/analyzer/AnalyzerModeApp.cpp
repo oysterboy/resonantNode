@@ -52,7 +52,7 @@ constexpr unsigned long kAudioFlatlineStreakFrames = 32UL;
 constexpr unsigned long kRawFlatlineMaxAbsThreshold = 8UL;
 constexpr unsigned long kRawDcStuckRangeThreshold = 16UL;
 constexpr unsigned long kRawDcStuckMeanAbsThreshold = 6UL;
-constexpr const char* kPatternPipelineVersion = "pattern-pipeline-phase7-event-only-analyzer";
+constexpr const char* kPatternPipelineVersion = "pattern-pipeline-phase8-scalar-reason-cleanup";
 constexpr unsigned long kRawClipThreshold = 32760UL;
 constexpr unsigned long kRawZeroishAbsThreshold = 4UL;
 

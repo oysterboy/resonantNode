@@ -134,9 +134,17 @@ void ScalarTransientDetector::buildReport(detection::DetectorReport& out, unsign
     out.scalar = _reportDetail;
 
     const bool selectedRejectPresent = !out.accepted.present && _selectedRejectPresent;
+    if (out.accepted.present) {
+        out.scalar.inspect.rejectReason = "none";
+        out.scalar.inspect.noEmitReason = "none";
+        out.scalar.inspect.gateReason = "none";
+    }
     if (selectedRejectPresent) {
         out.selectedReject = _selectedReject;
         out.selectedReject.occurrenceId = _selectedRejectOccurrenceId;
+        out.scalar.inspect.rejectReason = out.selectedReject.detectorReason;
+        out.scalar.inspect.noEmitReason = out.selectedReject.detectorReason;
+        out.scalar.inspect.gateReason = out.selectedReject.detectorReason;
     } else {
         out.scalar.selectedReject = {};
     }

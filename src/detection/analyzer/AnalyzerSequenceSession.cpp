@@ -205,6 +205,8 @@ void AnalyzerApp::startSequenceTest(const PendingSequenceStart& pending) {
     _sequenceTest.bestRejectedDetectorReport = {};
     _sequenceTest.selectedSourceRejectCaptured = false;
     _sequenceTest.selectedSourceReject = {};
+    _sequenceTest.consumedSourceRejectEventId = 0;
+    _sequenceTest.consumedSourceRejectReportGeneration = 0;
     _sequenceTest.currentTrialFinalized = false;
     _sequenceTest.currentTrialUnexpected = 0;
     _sequenceTest.currentTrialRejected = 0;
@@ -423,6 +425,8 @@ void AnalyzerApp::updateSequenceTest(unsigned long now) {
     _sequenceTest.bestRejectedInWindow = {};
     _sequenceTest.bestRejectedInspectedOccurrence = {};
     _sequenceTest.bestRejectedDetectorReport = {};
+    _sequenceTest.selectedSourceRejectCaptured = false;
+    _sequenceTest.selectedSourceReject = {};
     _sequenceTest.currentTrialFinalized = false;
     _sequenceTest.currentTrialUnexpected = 0;
     _sequenceTest.currentTrialRejected = 0;
@@ -526,9 +530,13 @@ AnalyzerApp::SequenceTrialSelection AnalyzerApp::selectSequenceTrialSelection(un
     }
 
     if (_sequenceTest.selectedSourceRejectCaptured &&
-        _sequenceTest.selectedSourceReject.detectorReport.detectorId != detection::DetectorId::Unknown) {
+        _sequenceTest.selectedSourceReject.detectorReport.detectorId != detection::DetectorId::Unknown &&
+        _sequenceTest.selectedSourceReject.eventTrialAttribution == _sequenceTest.currentTrial) {
         selection.kind = SequenceTrialSelection::Kind::RejectedSourceCandidate;
         selection.detectorReport = &_sequenceTest.selectedSourceReject.detectorReport;
+        selection.sourceEventId = _sequenceTest.selectedSourceReject.eventId;
+        selection.sourceReportGeneration = _sequenceTest.selectedSourceReject.reportGeneration;
+        selection.sourceEventTrialAttribution = _sequenceTest.selectedSourceReject.eventTrialAttribution;
         selection.occurrenceId = _sequenceTest.selectedSourceReject.sourceOccurrenceId;
         selection.candidateId = _sequenceTest.selectedSourceReject.sourceCandidateId;
         selection.reportMatched = _sequenceTest.selectedSourceReject.sourceReportMatched;

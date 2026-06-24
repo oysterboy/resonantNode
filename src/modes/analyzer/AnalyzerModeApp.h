@@ -342,6 +342,8 @@ private:
         detection::DetectorReport bestRejectedDetectorReport = {};
         bool selectedSourceRejectCaptured = false;
         detection::SourceDiagnosticRecord selectedSourceReject = {};
+        unsigned long consumedSourceRejectEventId = 0;
+        unsigned long consumedSourceRejectReportGeneration = 0;
         bool currentTrialFinalized = false;
         unsigned long currentTrialUnexpected = 0;
         unsigned long currentTrialRejected = 0;
@@ -461,6 +463,9 @@ private:
         unsigned long occurrenceId = 0;
         unsigned long candidateId = 0;
         bool reportMatched = false;
+        unsigned long sourceEventId = 0;
+        unsigned long sourceReportGeneration = 0;
+        unsigned long sourceEventTrialAttribution = 0;
         AnalyzerResult result = AnalyzerResult::Unknown;
         long dtMs = -1;
         unsigned long durationMs = 0;

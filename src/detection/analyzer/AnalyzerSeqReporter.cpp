@@ -273,6 +273,12 @@ void AnalyzerApp::printSequenceSourceCanonical(const AnalyzerReport& report) con
     Serial.print(report.sourceCandidateId);
     Serial.print(" source.report_matched=");
     Serial.print(report.sourceReportMatched ? 1 : 0);
+    Serial.print(" source.event_id=");
+    Serial.print(report.sourceEventId);
+    Serial.print(" source.report_generation=");
+    Serial.print(report.sourceReportGeneration);
+    Serial.print(" source.event_trial_attribution=");
+    Serial.print(report.sourceEventTrialAttribution);
     Serial.print(" source.report_reason=");
     Serial.print(report.sourceReportReason != nullptr ? report.sourceReportReason : "none");
     Serial.print(" source.kind=");
@@ -316,7 +322,13 @@ void AnalyzerApp::printSequenceSourceCanonical(const AnalyzerReport& report) con
 }
 
 void AnalyzerApp::printSequenceSourceCoreCanonical(const AnalyzerReport& report) const {
-    detection::printDetectorReportGenericLine("SEQ_SOURCE_CORE", report.context.trial, report.detectorReport);
+    const detection::DetectorReport* detectorReport = report.detectorReport;
+    detection::DetectorReport correlated = detectorReport != nullptr ? *detectorReport : detection::DetectorReport{};
+    correlated.sourceSelection = report.sourceSelection;
+    correlated.sourceOccurrenceId = report.sourceOccurrenceId;
+    correlated.sourceCandidateId = report.sourceCandidateId;
+    correlated.sourceReportMatched = report.sourceReportMatched;
+    detection::printDetectorReportGenericLine("SEQ_SOURCE_CORE", report.context.trial, &correlated);
 }
 
 void AnalyzerApp::printSequenceSourceSpecCanonical(const AnalyzerReport& report) const {
@@ -337,6 +349,12 @@ void AnalyzerApp::printSequenceDetailCanonical(const AnalyzerReport& report) con
     Serial.print(report.sourceSelection != nullptr ? report.sourceSelection : "none");
     Serial.print(" source.occurrence_id=");
     Serial.print(report.sourceOccurrenceId);
+    Serial.print(" source.event_id=");
+    Serial.print(report.sourceEventId);
+    Serial.print(" source.report_generation=");
+    Serial.print(report.sourceReportGeneration);
+    Serial.print(" source.event_trial_attribution=");
+    Serial.print(report.sourceEventTrialAttribution);
     Serial.print(" source.report_matched=");
     Serial.print(report.sourceReportMatched ? 1 : 0);
     Serial.print(" DETECTOR:");

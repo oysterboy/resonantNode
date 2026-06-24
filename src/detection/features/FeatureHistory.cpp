@@ -393,6 +393,7 @@ ScalarWindow FeatureHistory::getWindow(
     out.max = maxValue;
     out.mean = valueCount > 0 ? sum / static_cast<float>(valueCount) : 0.0f;
     out.rms = valueCount > 0 ? sqrtf(sumSquares / static_cast<float>(valueCount)) : 0.0f;
+    sortFloatValues(values, valueCount);
     out.median = exactQuantile(values, valueCount, 0.50f);
     out.p75 = exactQuantile(values, valueCount, 0.75f);
     out.p90 = exactQuantile(values, valueCount, 0.90f);

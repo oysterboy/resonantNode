@@ -96,7 +96,9 @@ void DetectionRuntime::resetDetectionState() {
     _pipelineEventCount = 0;
     _pipelineEventSequenceId = 0;
     _lastEmittedAcceptedOccurrenceId = 0;
+    _lastEmittedAcceptedReportGeneration = 0;
     _lastEmittedSelectedRejectOccurrenceId = 0;
+    _lastEmittedSelectedRejectReportGeneration = 0;
     _patternInspectedQueue[0] = {};
     _patternInspectedReadIndex = 0;
     _patternInspectedCount = 0;
@@ -142,10 +144,14 @@ void DetectionRuntime::drainDetectorReportEvents(unsigned long nowMs) {
     }
 
     ++_detectorReportRefreshCount;
+    const uint32_t currentReportGeneration = _detectorReport.detectorId == DetectorId::ScalarTransient
+        ? _scalarDetector.reportGeneration()
+        : _frequencyDetector.reportGeneration();
 
     if (_detectorReport.selectedReject.present &&
         _detectorReport.selectedReject.occurrenceId != 0 &&
-        _detectorReport.selectedReject.occurrenceId != _lastEmittedSelectedRejectOccurrenceId) {
+        (_detectorReport.selectedReject.occurrenceId != _lastEmittedSelectedRejectOccurrenceId ||
+         _lastEmittedSelectedRejectReportGeneration != currentReportGeneration)) {
         DetectionPipelineEvent event = {};
         event.kind = DetectionEventKind::RejectedSourceCandidate;
         event.eventId = ++_pipelineEventSequenceId;
@@ -167,11 +173,15 @@ void DetectionRuntime::drainDetectorReportEvents(unsigned long nowMs) {
         event.hasSourceRecord = true;
         event.sourceRecord.detectorReport = _detectorReport;
         event.sourceRecord.sourceSelection = event.sourceSelection;
+        event.sourceRecord.eventId = event.eventId;
+        event.sourceRecord.reportGeneration = currentReportGeneration;
+        event.sourceRecord.eventTrialAttribution = 0;
         event.sourceRecord.sourceOccurrenceId = event.sourceOccurrenceId;
         event.sourceRecord.sourceCandidateId = event.sourceCandidateId;
         event.sourceRecord.sourceReportMatched = true;
         if (pushPipelineEvent(event)) {
             _lastEmittedSelectedRejectOccurrenceId = event.candidateId;
+            _lastEmittedSelectedRejectReportGeneration = currentReportGeneration;
         }
     }
 }
@@ -193,7 +203,9 @@ void DetectionRuntime::setDetectorSelection(DetectorSelection selection) {
     _pipelineEventReadIndex = 0;
     _pipelineEventCount = 0;
     _lastEmittedAcceptedOccurrenceId = 0;
+    _lastEmittedAcceptedReportGeneration = 0;
     _lastEmittedSelectedRejectOccurrenceId = 0;
+    _lastEmittedSelectedRejectReportGeneration = 0;
     _patternInspectedQueue[0] = {};
     _patternInspectedReadIndex = 0;
     _patternInspectedCount = 0;
@@ -547,6 +559,13 @@ void DetectionRuntime::capturePipelineResult(
     event.hasSourceRecord = true;
     event.sourceRecord.detectorReport = matchedDetectorReport != nullptr ? *matchedDetectorReport : DetectorReport{};
     event.sourceRecord.sourceSelection = event.sourceSelection;
+    event.sourceRecord.eventId = event.eventId;
+    event.sourceRecord.reportGeneration = matchedDetectorReport != nullptr
+        ? (matchedDetectorReport->detectorId == DetectorId::ScalarTransient
+            ? _scalarDetector.reportGeneration()
+            : _frequencyDetector.reportGeneration())
+        : 0U;
+    event.sourceRecord.eventTrialAttribution = 0;
     event.sourceRecord.sourceOccurrenceId = event.sourceOccurrenceId;
     event.sourceRecord.sourceCandidateId = event.sourceCandidateId;
     event.sourceRecord.sourceReportMatched = event.detectorReportMatched;
@@ -557,9 +576,11 @@ void DetectionRuntime::capturePipelineResult(
         event.hasInspectedOccurrence = true;
         event.inspectedOccurrence = *matchedInspectedOccurrence;
     }
-    if (_lastEmittedAcceptedOccurrenceId != event.occurrenceId) {
+    if (_lastEmittedAcceptedOccurrenceId != event.occurrenceId ||
+        _lastEmittedAcceptedReportGeneration != event.sourceRecord.reportGeneration) {
         if (pushPipelineEvent(event)) {
             _lastEmittedAcceptedOccurrenceId = event.occurrenceId;
+            _lastEmittedAcceptedReportGeneration = event.sourceRecord.reportGeneration;
         }
     }
 }

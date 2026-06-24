@@ -45,6 +45,19 @@ void AnalyzerApp::handleSequencePending(
     }
 
     auto& diagnostics = _sequenceTest.currentTrialDiagnostics;
+    const bool rejectHasIdentity =
+        event.kind == detection::DetectionEventKind::RejectedSourceCandidate &&
+        event.hasSourceRecord &&
+        event.sourceRecord.eventId != 0 &&
+        event.sourceRecord.reportGeneration != 0;
+    const bool rejectAlreadyConsumed =
+        rejectHasIdentity &&
+        event.sourceRecord.eventId == _sequenceTest.consumedSourceRejectEventId &&
+        event.sourceRecord.reportGeneration == _sequenceTest.consumedSourceRejectReportGeneration;
+    if (rejectAlreadyConsumed) {
+        return;
+    }
+
     diagnostics.rawPendingCount++;
     ++_sequenceTest.sourceCandidateCount;
     if (event.hasPatternResult) {
@@ -57,6 +70,10 @@ void AnalyzerApp::handleSequencePending(
         ++_sequenceTest.sourceAcceptedCount;
     } else if (event.kind == detection::DetectionEventKind::RejectedSourceCandidate) {
         ++_sequenceTest.sourceRejectedCount;
+        if (rejectHasIdentity) {
+            _sequenceTest.consumedSourceRejectEventId = event.sourceRecord.eventId;
+            _sequenceTest.consumedSourceRejectReportGeneration = event.sourceRecord.reportGeneration;
+        }
     }
 
     const detection::DetectorReport* selectedDetectorReport = event.hasSourceRecord
@@ -74,6 +91,9 @@ void AnalyzerApp::handleSequencePending(
         if (event.hasSourceRecord) {
             _sequenceTest.selectedSourceRejectCaptured = true;
             _sequenceTest.selectedSourceReject = event.sourceRecord;
+            _sequenceTest.selectedSourceReject.eventTrialAttribution = _sequenceTest.currentTrial;
+            _sequenceTest.consumedSourceRejectEventId = event.sourceRecord.eventId;
+            _sequenceTest.consumedSourceRejectReportGeneration = event.sourceRecord.reportGeneration;
         }
         const unsigned long sourceOnsetMs = event.hasSourceRecord && event.sourceRecord.detectorReport.selectedReject.present
             ? event.sourceRecord.detectorReport.selectedReject.startMs

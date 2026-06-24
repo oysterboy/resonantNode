@@ -894,6 +894,9 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
            (reportInspectedOccurrence != nullptr && reportInspectedOccurrence->decision == detection::OccurrenceDecision::Rejected)
             ? "selected_reject"
             : "selected_occurrence");
+    report.sourceEventId = selectedTrial.sourceEventId;
+    report.sourceReportGeneration = selectedTrial.sourceReportGeneration;
+    report.sourceEventTrialAttribution = selectedTrial.sourceEventTrialAttribution;
     report.sourceOccurrenceId = selectedTrial.occurrenceId;
     report.sourceCandidateId = selectedTrial.candidateId;
     report.sourceReportMatched = selectedTrial.reportMatched;

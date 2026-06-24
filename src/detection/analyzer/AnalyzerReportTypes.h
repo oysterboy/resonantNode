@@ -403,6 +403,9 @@ struct AnalyzerReport {
     const detection::DetectorReport* detectorReport = nullptr;
     const char* sourceSelection = "none";
     const char* sourceReportReason = "none";
+    unsigned long sourceEventId = 0;
+    unsigned long sourceReportGeneration = 0;
+    unsigned long sourceEventTrialAttribution = 0;
     unsigned long sourceOccurrenceId = 0;
     unsigned long sourceCandidateId = 0;
     bool sourceReportMatched = false;

@@ -60,6 +60,9 @@ struct DetectionPipelineResult {
 struct SourceDiagnosticRecord {
     DetectorReport detectorReport = {};
     const char* sourceSelection = "none";
+    uint32_t eventId = 0;
+    uint32_t reportGeneration = 0;
+    unsigned long eventTrialAttribution = 0;
     unsigned long sourceOccurrenceId = 0;
     unsigned long sourceCandidateId = 0;
     bool sourceReportMatched = false;
@@ -222,7 +225,9 @@ private:
     size_t _pipelineEventCount = 0;
     unsigned long _pipelineEventSequenceId = 0;
     uint32_t _lastEmittedAcceptedOccurrenceId = 0;
+    uint32_t _lastEmittedAcceptedReportGeneration = 0;
     uint32_t _lastEmittedSelectedRejectOccurrenceId = 0;
+    uint32_t _lastEmittedSelectedRejectReportGeneration = 0;
     PendingPatternObservation _patternInspectedQueue[kResultQueueCapacity] = {};
     size_t _patternInspectedReadIndex = 0;
     size_t _patternInspectedCount = 0;

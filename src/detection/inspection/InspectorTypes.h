@@ -43,6 +43,8 @@ enum class ScalarInspectionNote {
     None,
     ScalarObserved,
     ScalarUnavailable,
+    HistoryWindowIncomplete,
+    FutureWindowUnavailable,
     WindowInvalid,
     InspectionDisabled,
     MissingFeatureHistory,

@@ -276,8 +276,6 @@ ScalarWindow FeatureHistory::getWindow(
     float sum = 0.0f;
     float sumSquares = 0.0f;
     bool haveWindow = false;
-    bool coverageKnown = true;
-    unsigned long previousCoveredStartMs = 0;
     float firstValue = 0.0f;
     float lastValue = 0.0f;
     float minValue = 0.0f;
@@ -296,10 +294,6 @@ ScalarWindow FeatureHistory::getWindow(
             return;
         }
 
-        if (haveWindow && bin.startMs > previousCoveredStartMs + kBinDurationMs) {
-            coverageKnown = false;
-        }
-        previousCoveredStartMs = bin.startMs;
         ++coveredDurationMs;
 
         const float representative = representativeValueForStream(stream, bin);
@@ -367,18 +361,18 @@ ScalarWindow FeatureHistory::getWindow(
         considerBin(current);
     }
 
-    out.valid = haveWindow;
     out.hasValues = haveWindow;
-    if (!out.valid) {
-        return out;
-    }
-
-    sortFloatValues(values, valueCount);
-
     out.durationMs = endMs >= startMs ? (endMs - startMs) + 1UL : 0UL;
-    out.coverageComplete = haveWindow && coverageKnown;
     out.requestedFutureAtInspection = endMs > inspectionNowMs;
-    out.coverageComplete = out.coverageComplete && !out.requestedFutureAtInspection;
+    out.availableStartMs = firstValueMs;
+    out.availableEndMs = lastValueMs;
+    out.leftMissingMs = firstValueMs > startMs ? firstValueMs - startMs : 0UL;
+    out.rightMissingMs = endMs > (lastValueMs + kBinDurationMs) ? endMs - (lastValueMs + kBinDurationMs) : 0UL;
+    out.coverageComplete = haveWindow &&
+        out.leftMissingMs == 0UL &&
+        out.rightMissingMs == 0UL &&
+        !out.requestedFutureAtInspection;
+    out.valid = out.coverageComplete && out.hasValues;
     out.coveredDurationMs = coveredDurationMs * kBinDurationMs;
     out.sampleCount = bucketCount;
     out.valueCount = totalInputCount;
@@ -409,11 +403,7 @@ ScalarWindow FeatureHistory::getWindow(
     out.sustainedThreshold = sustainedThreshold;
     out.sustainedCount = sustainedCount;
     out.sustainedMs = static_cast<unsigned long>(sustainedCount) * kBinDurationMs;
-    out.availableStartMs = firstValueMs;
-    out.availableEndMs = lastValueMs;
-    out.leftMissingMs = firstValueMs > startMs ? firstValueMs - startMs : 0UL;
-    out.rightMissingMs = endMs > lastValueMs ? endMs - lastValueMs : 0UL;
-    out.internalCoverageKnown = coverageKnown;
+    out.internalCoverageKnown = true;
     return out;
 }
 

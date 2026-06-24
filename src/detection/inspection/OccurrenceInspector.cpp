@@ -215,15 +215,18 @@ void OccurrenceInspector::annotateScalarFeatureStrength(
             : 0.0f;
         const ScalarWindow scalarWindow = featureHistory->getWindow(config.stream, startMs, endMs, inspectionNowMs, sustainedThreshold);
         if (scalarWindow.valid) {
-            const bool usable = scalarWindow.hasValues && scalarWindow.coverageComplete;
+            const bool usable = scalarWindow.valid;
             fillScalarObservation(observation, occurrence, scalarWindow, usable, config);
-            if (scalarWindow.hasValues && !scalarWindow.coverageComplete) {
-                observation.note = scalarWindow.requestedFutureAtInspection
-                    ? detection::ScalarInspectionNote::WindowInvalid
-                    : detection::ScalarInspectionNote::ScalarUnavailable;
-            }
         } else {
-            observation.note = detection::ScalarInspectionNote::WindowInvalid;
+            if (scalarWindow.requestedFutureAtInspection) {
+                observation.note = detection::ScalarInspectionNote::FutureWindowUnavailable;
+            } else if (!scalarWindow.hasValues) {
+                observation.note = detection::ScalarInspectionNote::ScalarUnavailable;
+            } else if (!scalarWindow.coverageComplete) {
+                observation.note = detection::ScalarInspectionNote::HistoryWindowIncomplete;
+            } else {
+                observation.note = detection::ScalarInspectionNote::ScalarUnavailable;
+            }
         }
     } else if (!config.enabled) {
         observation.note = detection::ScalarInspectionNote::InspectionDisabled;

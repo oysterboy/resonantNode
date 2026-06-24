@@ -36,6 +36,10 @@ inline const char* scalarInspectionNoteName(ScalarInspectionNote value) {
             return "scalar_observed";
         case ScalarInspectionNote::ScalarUnavailable:
             return "scalar_unavailable";
+        case ScalarInspectionNote::HistoryWindowIncomplete:
+            return "history_window_incomplete";
+        case ScalarInspectionNote::FutureWindowUnavailable:
+            return "future_window_unavailable";
         case ScalarInspectionNote::WindowInvalid:
             return "window_invalid";
         case ScalarInspectionNote::InspectionDisabled:

@@ -979,6 +979,7 @@ void Node::applyActiveDetectionProfile() {
     _detection.setInspectionPlan(detectionProfile.inspectionPlan);
     _detection.setFieldStateConfig(detectionProfile.fieldStateConfig);
     _detection.setProfileName(detection::detectionProfileName(detectionProfile.kind));
+    _detection.setPatternResultQueueEnabled(true);
     _freqBandStream.setSampleRateHz(_audioSource.sampleRateHz());
     _freqBandStream.setTargetFrequencyHz(_chirpOutput.toneHz());
 }

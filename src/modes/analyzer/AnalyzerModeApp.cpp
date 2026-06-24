@@ -52,7 +52,7 @@ constexpr unsigned long kAudioFlatlineStreakFrames = 32UL;
 constexpr unsigned long kRawFlatlineMaxAbsThreshold = 8UL;
 constexpr unsigned long kRawDcStuckRangeThreshold = 16UL;
 constexpr unsigned long kRawDcStuckMeanAbsThreshold = 6UL;
-constexpr const char* kPatternPipelineVersion = "pattern-pipeline-phase1-diag-popcounts";
+constexpr const char* kPatternPipelineVersion = "pattern-pipeline-phase7-event-only-analyzer";
 constexpr unsigned long kRawClipThreshold = 32760UL;
 constexpr unsigned long kRawZeroishAbsThreshold = 4UL;
 
@@ -582,6 +582,7 @@ void AnalyzerApp::begin() {
     printRuntimeSize();
     printHeapStatus("begin_before_runtime_alloc");
     _detection.resetState();
+    _detection.setPatternResultQueueEnabled(false);
     _loopLastUs = micros();
     _loopMaxSinceBootUs = 0;
     _loopHealth.reset();
@@ -757,12 +758,6 @@ void AnalyzerApp::update() {
                     );
                 }
             }
-            detection::PatternResult runtimePatternResult = {};
-            while (_detection.popPatternResult(runtimePatternResult)) {
-                if (_sequenceTest.active && _sequenceTest.currentTrial > 0) {
-                    _sequenceTest.currentTrialDiagnostics.runtimePatternCaptured = true;
-                }
-            }
             if (_sequenceTest.active && _sequenceTest.currentTrial > 0) {
                 const unsigned long processingLagMs = millis() > audioSamplePacket.timeMs
                     ? millis() - audioSamplePacket.timeMs
@@ -932,7 +927,6 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
         ? _detection.pipelineEventOverflowCount() - _sequenceTest.trialOverflowCountAtStart
         : 0UL;
     report.integrity.queueOverflowAffected = pipelineOverflowDelta > 0UL ||
-        _detection.patternResultQueueOverflowCount() > _sequenceTest.trialPatternResultOverflowCountAtStart ||
         _detection.patternInspectedQueueOverflowCount() > _sequenceTest.trialPatternInspectedOverflowCountAtStart;
     report.integrity.correlationComplete = selectedTrial.kind == SequenceTrialSelection::Kind::RejectedSourceCandidate
         ? report.integrity.detectorReportPresent
@@ -948,7 +942,7 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
             : "missing_inspected_occurrence";
     } else if (!report.integrity.patternResultPresent && selectedTrial.kind != SequenceTrialSelection::Kind::RejectedSourceCandidate) {
         report.integrity.reason = report.integrity.queueOverflowAffected
-            ? "pattern_result_queue_overflow"
+            ? "pipeline_event_queue_overflow"
             : "missing_pattern_result";
     } else if (!report.integrity.occurrenceMatched && selectedTrial.kind != SequenceTrialSelection::Kind::RejectedSourceCandidate) {
         report.integrity.reason = "occurrence_id_mismatch";
@@ -1197,9 +1191,7 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
     report.debug.duplicates = duplicateCount;
     report.debug.unexpected = result == AnalyzerResult::Unexpected ? 1U : 0U;
     report.debug.pipelineQueueOverflows = classificationInput.pipelineQueueOverflowCount;
-    report.debug.patternResultQueueOverflows = _detection.patternResultQueueOverflowCount() > _sequenceTest.trialPatternResultOverflowCountAtStart
-        ? _detection.patternResultQueueOverflowCount() - _sequenceTest.trialPatternResultOverflowCountAtStart
-        : 0UL;
+    report.debug.patternResultQueueOverflows = 0UL;
     report.debug.patternInspectedQueueOverflows = _detection.patternInspectedQueueOverflowCount() > _sequenceTest.trialPatternInspectedOverflowCountAtStart
         ? _detection.patternInspectedQueueOverflowCount() - _sequenceTest.trialPatternInspectedOverflowCountAtStart
         : 0UL;

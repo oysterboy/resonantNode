@@ -137,6 +137,7 @@ void AnalyzerApp::startSequenceTest(const PendingSequenceStart& pending) {
     clearSequenceSampleDump();
 
     _detection.resetState();
+    _detection.setPatternResultQueueEnabled(false);
     _detection.setPatternDiagnosticsTrial(0);
     _detection.setFrequencyMatchConfig(selectedProfile.frequencyMatch);
     _detection.setScalarTransientConfig(selectedProfile.scalarTransient);
@@ -214,7 +215,6 @@ void AnalyzerApp::startSequenceTest(const PendingSequenceStart& pending) {
     _sequenceTest.currentTrialRejected = 0;
     _sequenceTest.currentTrialDiagnostics = {};
     _sequenceTest.trialOverflowCountAtStart = 0;
-    _sequenceTest.trialPatternResultOverflowCountAtStart = 0;
     _sequenceTest.trialPatternInspectedOverflowCountAtStart = 0;
     _sequenceTest.hits = 0;
     _sequenceTest.expectedHits = 0;
@@ -436,7 +436,6 @@ void AnalyzerApp::updateSequenceTest(unsigned long now) {
     _sequenceTest.currentTrialRejected = 0;
     _sequenceTest.bufferOverrun = false;
     _sequenceTest.trialOverflowCountAtStart = _audioSource.stats().overflowCount;
-    _sequenceTest.trialPatternResultOverflowCountAtStart = _detection.patternResultQueueOverflowCount();
     _sequenceTest.trialPatternInspectedOverflowCountAtStart = _detection.patternInspectedQueueOverflowCount();
     _sequenceTest.currentTrialDiagnostics = {};
     _sequenceTest.currentTrialDiagnostics.acceptedAmbientBaseline = _audioSignal.baseline();

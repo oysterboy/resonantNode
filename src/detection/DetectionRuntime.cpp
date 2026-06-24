@@ -292,6 +292,15 @@ void DetectionRuntime::setPatternDiagnosticsTrial(unsigned long trial) {
     _patternDiagnosticsTrial = trial;
 }
 
+void DetectionRuntime::setPatternResultQueueEnabled(bool enabled) {
+    _patternResultQueueEnabled = enabled;
+    if (!enabled) {
+        _resultQueue[0] = {};
+        _resultReadIndex = 0;
+        _resultCount = 0;
+    }
+}
+
 void DetectionRuntime::observeFrame(
     const AudioSamplePacket& audioSamplePacket,
     const FrequencyBandMeasurementPacket& frequencyEvidence,
@@ -626,11 +635,16 @@ void DetectionRuntime::drainPatternMatcher(unsigned long nowMs) {
             true,
             eventPushed
         );
-        pushPatternResult(result);
+        if (_patternResultQueueEnabled) {
+            pushPatternResult(result);
+        }
     }
 }
 
 bool DetectionRuntime::pushPatternResult(const PatternResult& result) {
+    if (!_patternResultQueueEnabled) {
+        return true;
+    }
     if (_resultCount == kResultQueueCapacity) {
         ++_patternResultQueueOverflowCount;
         return false;

@@ -143,6 +143,7 @@ public:
     void setFieldStateConfig(const FieldStateConfig& config);
     void setProfileName(const char* profileName);
     void setPatternDiagnosticsTrial(unsigned long trial);
+    void setPatternResultQueueEnabled(bool enabled);
 
     void observeFrame(
         const AudioSamplePacket& audioSamplePacket,
@@ -221,6 +222,7 @@ private:
     PatternResult _resultQueue[kResultQueueCapacity] = {};
     size_t _resultReadIndex = 0;
     size_t _resultCount = 0;
+    bool _patternResultQueueEnabled = true;
     unsigned long _patternResultQueueOverflowCount = 0;
 
     DetectionPipelineResult _latestPipelineResult = {};

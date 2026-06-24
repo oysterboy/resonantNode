@@ -137,8 +137,8 @@ inline DetectionProfile makeTonalPulseScalarProfile() {
     profile.scalarTransient.minMatchedMeanStrength = 0.0f; // Mean over samples above the release threshold.
     // Carrier quality gates to reject fragmented or weak target-band coverage.
     profile.scalarTransient.requireCarrierQuality = true;
-    profile.scalarTransient.minCoverageAboveReleaseMs = 90; // Minimum time above release level.
-    profile.scalarTransient.minLongestIslandMs = 80; // Longest continuous island above release level.
+    profile.scalarTransient.minCoverageAboveReleaseMs = 80; // Minimum time above release level.
+    profile.scalarTransient.minLongestIslandMs = 20; // Longest continuous island above release level.
     profile.scalarTransient.maxGapMs = 20; // Largest allowed gap inside the candidate.
 
 

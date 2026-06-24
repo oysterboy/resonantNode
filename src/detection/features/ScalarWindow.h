@@ -15,10 +15,21 @@ Used by OccurrenceInspector for occurrence-relative support evidence.
 struct ScalarWindow {
     bool present = false;
     bool valid = false;
+    bool hasValues = false;
+    bool coverageComplete = false;
+    bool requestedFutureAtInspection = false;
+    bool internalCoverageKnown = true;
 
     FeatureStreamId stream = FeatureStreamId::Unknown;
+    unsigned long inspectionNowMs = 0;
     unsigned long startMs = 0;
     unsigned long endMs = 0;
+    unsigned long requestedStartMs = 0;
+    unsigned long requestedEndMs = 0;
+    unsigned long availableStartMs = 0;
+    unsigned long availableEndMs = 0;
+    unsigned long leftMissingMs = 0;
+    unsigned long rightMissingMs = 0;
     unsigned long durationMs = 0;
     size_t sampleCount = 0;
     size_t valueCount = 0;
@@ -26,6 +37,7 @@ struct ScalarWindow {
     size_t bucketCount = 0;
     float valuesPerBucket = 0.0f;
     unsigned long coveredMs = 0;
+    unsigned long coveredDurationMs = 0;
     float coverageRatio = 0.0f;
     unsigned long firstValueMs = 0;
     unsigned long lastValueMs = 0;

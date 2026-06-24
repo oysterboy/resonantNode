@@ -112,10 +112,22 @@ void fillScalarObservation(
 
     const detection::ScalarInspectionAnchor eventAnchor = resolvedAnchorForOccurrence(occurrence, config.anchor);
     obs.available = available;
+    obs.hasValues = scalarWindow.hasValues;
+    obs.coverageComplete = scalarWindow.coverageComplete;
+    obs.requestedFutureAtInspection = scalarWindow.requestedFutureAtInspection;
     obs.stream = scalarWindow.stream;
     obs.mode = config.mode;
     obs.supportBasis = supportBasis;
     obs.note = available ? detection::ScalarInspectionNote::ScalarObserved : detection::ScalarInspectionNote::ScalarUnavailable;
+    obs.inspectionNowMs = scalarWindow.inspectionNowMs;
+    obs.anchorMs = scalarWindow.requestedStartMs + config.windowPreMs;
+    obs.requestedStartMs = scalarWindow.requestedStartMs;
+    obs.requestedEndMs = scalarWindow.requestedEndMs;
+    obs.availableStartMs = scalarWindow.availableStartMs;
+    obs.availableEndMs = scalarWindow.availableEndMs;
+    obs.leftMissingMs = scalarWindow.leftMissingMs;
+    obs.rightMissingMs = scalarWindow.rightMissingMs;
+    obs.coveredDurationMs = scalarWindow.coveredDurationMs;
     obs.windowStartMs = static_cast<int16_t>(-static_cast<int32_t>(config.windowPreMs));
     obs.windowEndMs = static_cast<int16_t>(config.windowPostMs);
     obs.anchor = eventAnchor;
@@ -125,6 +137,7 @@ void fillScalarObservation(
     obs.coveredMs = scalarWindow.coveredMs;
     obs.valuesPerBucket = scalarWindow.valuesPerBucket;
     obs.coverageRatio = scalarWindow.coverageRatio;
+    obs.internalCoverageKnown = scalarWindow.internalCoverageKnown;
     obs.spanMs = scalarWindow.spanMs;
     obs.latestValueAgeMs = scalarWindow.latestValueAgeMs;
     obs.first = scalarWindow.first;
@@ -165,12 +178,13 @@ void OccurrenceInspector::reset() {
 void OccurrenceInspector::inspectAcceptedOccurrence(
     InspectedOccurrence& out,
     const Occurrence& occurrence,
-    const FeatureHistory* featureHistory
+    const FeatureHistory* featureHistory,
+    unsigned long inspectionNowMs
 ) const {
     out.scalarObservationCount = 0;
 
     for (size_t i = 0; i < _inspectionPlan.count; ++i) {
-        runInspectionModule(out, occurrence, featureHistory, _inspectionPlan.modules[i]);
+        runInspectionModule(out, occurrence, featureHistory, inspectionNowMs, _inspectionPlan.modules[i]);
     }
 }
 
@@ -178,6 +192,7 @@ void OccurrenceInspector::annotateScalarFeatureStrength(
     InspectedOccurrence& out,
     const Occurrence& occurrence,
     const FeatureHistory* featureHistory,
+    unsigned long inspectionNowMs,
     const ScalarFeatureInspectionConfig& config,
     InspectionTarget target
 ) const {
@@ -189,13 +204,24 @@ void OccurrenceInspector::annotateScalarFeatureStrength(
     observation.mode = config.mode;
     observation.supportBasis = detection::ScalarInspectionBasis::CenteredMagnitudePeak;
     observation.note = detection::ScalarInspectionNote::WindowInvalid;
+    observation.inspectionNowMs = inspectionNowMs;
+    observation.anchorMs = anchorMs;
+    observation.requestedStartMs = startMs;
+    observation.requestedEndMs = endMs;
+    observation.requestedFutureAtInspection = endMs > inspectionNowMs;
     if (config.enabled && featureHistory != nullptr) {
         const float sustainedThreshold = config.mode == detection::ScalarInspectionMode::SustainedAboveThreshold
             ? config.supportStrength.weakPeakThreshold
             : 0.0f;
-        const ScalarWindow scalarWindow = featureHistory->getWindow(config.stream, startMs, endMs, sustainedThreshold);
+        const ScalarWindow scalarWindow = featureHistory->getWindow(config.stream, startMs, endMs, inspectionNowMs, sustainedThreshold);
         if (scalarWindow.valid) {
-            fillScalarObservation(observation, occurrence, scalarWindow, true, config);
+            const bool usable = scalarWindow.hasValues && scalarWindow.coverageComplete;
+            fillScalarObservation(observation, occurrence, scalarWindow, usable, config);
+            if (scalarWindow.hasValues && !scalarWindow.coverageComplete) {
+                observation.note = scalarWindow.requestedFutureAtInspection
+                    ? detection::ScalarInspectionNote::WindowInvalid
+                    : detection::ScalarInspectionNote::ScalarUnavailable;
+            }
         } else {
             observation.note = detection::ScalarInspectionNote::WindowInvalid;
         }
@@ -241,11 +267,12 @@ void OccurrenceInspector::runInspectionModule(
     InspectedOccurrence& out,
     const Occurrence& occurrence,
     const FeatureHistory* featureHistory,
+    unsigned long inspectionNowMs,
     const InspectionModuleConfig& module
 ) const {
     switch (module.kind) {
     case InspectionModuleKind::ScalarFeatureStrength:
-        annotateScalarFeatureStrength(out, occurrence, featureHistory, module.scalar, module.target);
+        annotateScalarFeatureStrength(out, occurrence, featureHistory, inspectionNowMs, module.scalar, module.target);
         break;
         case InspectionModuleKind::None:
         default:
@@ -255,7 +282,8 @@ void OccurrenceInspector::runInspectionModule(
 
 InspectedOccurrence OccurrenceInspector::inspectImpl(
     const Occurrence& occurrence,
-    const FeatureHistory* featureHistory
+    const FeatureHistory* featureHistory,
+    unsigned long inspectionNowMs
 ) const {
     if (!occurrence.present) {
         InspectedOccurrence out;
@@ -272,7 +300,7 @@ InspectedOccurrence OccurrenceInspector::inspectImpl(
     }
 
     if (occurrence.valid) {
-        return inspectAcceptedOccurrenceResult(occurrence, featureHistory);
+        return inspectAcceptedOccurrenceResult(occurrence, featureHistory, inspectionNowMs);
     }
 
     InspectedOccurrence out;
@@ -284,26 +312,28 @@ InspectedOccurrence OccurrenceInspector::inspectImpl(
 InspectedOccurrence OccurrenceInspector::inspect(
     const Occurrence& occurrence
 ) const {
-    return inspectImpl(occurrence, nullptr);
+    return inspectImpl(occurrence, nullptr, 0UL);
 }
 
 InspectedOccurrence OccurrenceInspector::inspectWithHistory(
     const Occurrence& occurrence,
-    const FeatureHistory* featureHistory
+    const FeatureHistory* featureHistory,
+    unsigned long inspectionNowMs
 ) const {
-    return inspectImpl(occurrence, featureHistory);
+    return inspectImpl(occurrence, featureHistory, inspectionNowMs);
 }
 
 InspectedOccurrence OccurrenceInspector::inspectAcceptedOccurrenceResult(
     const Occurrence& occurrence,
-    const FeatureHistory* featureHistory
+    const FeatureHistory* featureHistory,
+    unsigned long inspectionNowMs
 ) const {
     InspectedOccurrence out;
     out.occurrence = occurrence;
     out.occurrence.confidence = occurrence.confidence > 0.0f ? occurrence.confidence : 1.0f;
     out.decision = OccurrenceDecision::Accepted;
     out.rejectReason = OccurrenceRejectReason::None;
-    inspectAcceptedOccurrence(out, occurrence, featureHistory);
+    inspectAcceptedOccurrence(out, occurrence, featureHistory, inspectionNowMs);
     return out;
 }
 

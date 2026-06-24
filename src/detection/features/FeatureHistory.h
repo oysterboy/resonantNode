@@ -19,6 +19,7 @@ class FeatureHistory {
 public:
     static constexpr size_t kBinsPerStream = 256;
     static constexpr size_t kStreamCount = 4;
+    static constexpr unsigned long kBinDurationMs = 1UL;
     static constexpr size_t debugFeatureBinSize();
 
     void reset();
@@ -26,7 +27,13 @@ public:
     void record(const FeatureStream& sample, bool fresh = true);
     void record(FeatureStreamId id, unsigned long timeMs, float value, bool fresh = true);
 
-    ScalarWindow getWindow(FeatureStreamId stream, unsigned long startMs, unsigned long endMs, float sustainedThreshold = 0.0f) const;
+    ScalarWindow getWindow(
+        FeatureStreamId stream,
+        unsigned long startMs,
+        unsigned long endMs,
+        unsigned long inspectionNowMs,
+        float sustainedThreshold = 0.0f
+    ) const;
     size_t copyWindowApproximateValues(
         FeatureStreamId stream,
         unsigned long startMs,

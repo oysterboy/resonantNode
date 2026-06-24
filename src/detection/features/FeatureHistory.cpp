@@ -243,11 +243,20 @@ void FeatureHistory::record(FeatureStreamId id, unsigned long timeMs, float valu
     buffer.latestValue = representativeValueForAccumulator(id, buffer.current);
 }
 
-ScalarWindow FeatureHistory::getWindow(FeatureStreamId stream, unsigned long startMs, unsigned long endMs, float sustainedThreshold) const {
+ScalarWindow FeatureHistory::getWindow(
+    FeatureStreamId stream,
+    unsigned long startMs,
+    unsigned long endMs,
+    unsigned long inspectionNowMs,
+    float sustainedThreshold
+) const {
     ScalarWindow out;
     out.stream = stream;
     out.startMs = startMs;
     out.endMs = endMs;
+    out.inspectionNowMs = inspectionNowMs;
+    out.requestedStartMs = startMs;
+    out.requestedEndMs = endMs;
     out.present = isSupportedStream(stream);
     if (!out.present || endMs < startMs) {
         return out;
@@ -263,9 +272,12 @@ ScalarWindow FeatureHistory::getWindow(FeatureStreamId stream, unsigned long sta
     size_t totalInputCount = 0;
     size_t totalFreshCount = 0;
     size_t bucketCount = 0;
+    unsigned long coveredDurationMs = 0;
     float sum = 0.0f;
     float sumSquares = 0.0f;
     bool haveWindow = false;
+    bool coverageKnown = true;
+    unsigned long previousCoveredStartMs = 0;
     float firstValue = 0.0f;
     float lastValue = 0.0f;
     float minValue = 0.0f;
@@ -283,6 +295,12 @@ ScalarWindow FeatureHistory::getWindow(FeatureStreamId stream, unsigned long sta
         if (streamRequiresFreshAggregation(stream) && bin.freshCount == 0) {
             return;
         }
+
+        if (haveWindow && bin.startMs > previousCoveredStartMs + kBinDurationMs) {
+            coverageKnown = false;
+        }
+        previousCoveredStartMs = bin.startMs;
+        ++coveredDurationMs;
 
         const float representative = representativeValueForStream(stream, bin);
         if (valueCount < (kBinsPerStream + 1U)) {
@@ -350,21 +368,26 @@ ScalarWindow FeatureHistory::getWindow(FeatureStreamId stream, unsigned long sta
     }
 
     out.valid = haveWindow;
+    out.hasValues = haveWindow;
     if (!out.valid) {
         return out;
     }
 
     sortFloatValues(values, valueCount);
 
-    out.durationMs = endMs >= startMs ? (endMs - startMs) : 0UL;
+    out.durationMs = endMs >= startMs ? (endMs - startMs) + 1UL : 0UL;
+    out.coverageComplete = haveWindow && coverageKnown;
+    out.requestedFutureAtInspection = endMs > inspectionNowMs;
+    out.coverageComplete = out.coverageComplete && !out.requestedFutureAtInspection;
+    out.coveredDurationMs = coveredDurationMs * kBinDurationMs;
     out.sampleCount = bucketCount;
     out.valueCount = totalInputCount;
     out.freshValueCount = totalFreshCount;
     out.bucketCount = bucketCount;
     out.valuesPerBucket = bucketCount > 0 ? static_cast<float>(totalInputCount) / static_cast<float>(bucketCount) : 0.0f;
-    out.coveredMs = static_cast<unsigned long>(bucketCount);
+    out.coveredMs = out.coveredDurationMs;
     out.coverageRatio = out.durationMs > 0
-        ? static_cast<float>(out.coveredMs) / static_cast<float>(out.durationMs)
+        ? static_cast<float>(out.coveredDurationMs) / static_cast<float>(out.durationMs)
         : 0.0f;
     out.firstValueMs = firstValueMs;
     out.lastValueMs = lastValueMs;
@@ -385,7 +408,12 @@ ScalarWindow FeatureHistory::getWindow(FeatureStreamId stream, unsigned long sta
     out.rise = out.last - out.first;
     out.sustainedThreshold = sustainedThreshold;
     out.sustainedCount = sustainedCount;
-    out.sustainedMs = static_cast<unsigned long>(sustainedCount);
+    out.sustainedMs = static_cast<unsigned long>(sustainedCount) * kBinDurationMs;
+    out.availableStartMs = firstValueMs;
+    out.availableEndMs = lastValueMs;
+    out.leftMissingMs = firstValueMs > startMs ? firstValueMs - startMs : 0UL;
+    out.rightMissingMs = endMs > lastValueMs ? endMs - lastValueMs : 0UL;
+    out.internalCoverageKnown = coverageKnown;
     return out;
 }
 

@@ -146,6 +146,18 @@ void AnalyzerApp::printSequenceInspectCanonical(const AnalyzerReport& report) co
         Serial.print("SEQ_INSPECT");
         Serial.print(" inspect.label=");
         Serial.print(detection::inspectionTargetName(target));
+        Serial.print(" inspect.anchor_ms=");
+        Serial.print(observation != nullptr ? observation->anchorMs : 0UL);
+        Serial.print(" inspect.requested_start_ms=");
+        Serial.print(observation != nullptr ? observation->requestedStartMs : 0UL);
+        Serial.print(" inspect.requested_end_ms=");
+        Serial.print(observation != nullptr ? observation->requestedEndMs : 0UL);
+        Serial.print(" inspect.inspection_now_ms=");
+        Serial.print(observation != nullptr ? observation->inspectionNowMs : 0UL);
+        Serial.print(" inspect.available_start_ms=");
+        Serial.print(observation != nullptr ? observation->availableStartMs : 0UL);
+        Serial.print(" inspect.available_end_ms=");
+        Serial.print(observation != nullptr ? observation->availableEndMs : 0UL);
         Serial.print(" inspect.value=");
         Serial.print(available ? observation->classificationValue : 0.0f, 3);
         Serial.print(" inspect.strength_class=");
@@ -168,6 +180,12 @@ void AnalyzerApp::printSequenceInspectCanonical(const AnalyzerReport& report) co
         Serial.print(observation != nullptr ? static_cast<unsigned long>(observation->sampleCount) : 0UL);
         Serial.print(" inspect.coverage=");
         Serial.print(observation != nullptr ? observation->coverageRatio : 0.0f, 3);
+        Serial.print(" inspect.covered_ms=");
+        Serial.print(observation != nullptr ? observation->coveredDurationMs : 0UL);
+        Serial.print(" inspect.coverage_complete=");
+        Serial.print(observation != nullptr && observation->coverageComplete ? 1 : 0);
+        Serial.print(" inspect.future_unavailable=");
+        Serial.print(observation != nullptr && observation->requestedFutureAtInspection ? 1 : 0);
         Serial.print(" inspect.peak=");
         Serial.print(observation != nullptr ? observation->peak : 0.0f, 3);
         Serial.print(" inspect.mean=");
@@ -303,6 +321,12 @@ void AnalyzerApp::printSequenceDetailCanonical(const AnalyzerReport& report) con
     Serial.print(strengthClassForObservationTarget(report, detection::InspectionTarget::Contrast));
     Serial.print(" amp.class=");
     Serial.print(strengthClassForObservationTarget(report, detection::InspectionTarget::Amp));
+    Serial.print(" coverage.complete=");
+    Serial.print(report.profileDetail.scalarObservation.coverageComplete ? 1 : 0);
+    Serial.print(" coverage.future_unavailable=");
+    Serial.print(report.profileDetail.scalarObservation.requestedFutureAtInspection ? 1 : 0);
+    Serial.print(" coverage.covered_ms=");
+    Serial.print(report.profileDetail.scalarObservation.coveredDurationMs);
     Serial.print(" PATTERN:");
     Serial.print(" result=");
     Serial.print(report.classification.result == AnalyzerResult::Expected || report.classification.result == AnalyzerResult::Late

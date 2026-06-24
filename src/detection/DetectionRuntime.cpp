@@ -268,7 +268,7 @@ void DetectionRuntime::drainDetectors(unsigned long nowMs) {
         case DetectorSelection::FrequencyMatch:
             while (_frequencyDetector.popOccurrence(occurrence)) {
                 _fieldStateTracker.observeOccurrence(occurrence, nowMs);
-                const InspectedOccurrence inspected = _occurrenceInspector.inspectWithHistory(occurrence, &_featureHistory);
+                const InspectedOccurrence inspected = _occurrenceInspector.inspectWithHistory(occurrence, &_featureHistory, nowMs);
                 _fieldStateTracker.observeInspectedOccurrence(inspected, nowMs);
                 if (_patternMatcher.acceptOccurrence(inspected)) {
                     pushPatternInspectedOccurrence(inspected);
@@ -278,7 +278,7 @@ void DetectionRuntime::drainDetectors(unsigned long nowMs) {
         case DetectorSelection::ScalarTransient:
             while (_scalarDetector.popOccurrence(occurrence)) {
                 _fieldStateTracker.observeOccurrence(occurrence, nowMs);
-                const InspectedOccurrence inspected = _occurrenceInspector.inspectWithHistory(occurrence, &_featureHistory);
+                const InspectedOccurrence inspected = _occurrenceInspector.inspectWithHistory(occurrence, &_featureHistory, nowMs);
                 _fieldStateTracker.observeInspectedOccurrence(inspected, nowMs);
                 if (_patternMatcher.acceptOccurrence(inspected)) {
                     pushPatternInspectedOccurrence(inspected);

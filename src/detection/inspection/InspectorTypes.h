@@ -151,11 +151,23 @@ struct ScalarInspectionObservation {
     // Label-like fields are enum-backed; string rendering happens in
     // InspectionNames.h at print time.
     bool available = false;
+    bool hasValues = false;
+    bool coverageComplete = false;
+    bool requestedFutureAtInspection = false;
     FeatureStreamId stream = FeatureStreamId::Unknown;
     ScalarInspectionMode mode = ScalarInspectionMode::PeakAbsolute;
     ScalarInspectionBasis supportBasis = ScalarInspectionBasis::CenteredMagnitudePeak;
     ScalarInspectionNote note = ScalarInspectionNote::None;
 
+    unsigned long inspectionNowMs = 0;
+    unsigned long anchorMs = 0;
+    unsigned long requestedStartMs = 0;
+    unsigned long requestedEndMs = 0;
+    unsigned long availableStartMs = 0;
+    unsigned long availableEndMs = 0;
+    unsigned long leftMissingMs = 0;
+    unsigned long rightMissingMs = 0;
+    unsigned long coveredDurationMs = 0;
     int16_t windowStartMs = -20;
     int16_t windowEndMs = 120;
     ScalarInspectionAnchor anchor = ScalarInspectionAnchor::Peak;
@@ -166,6 +178,7 @@ struct ScalarInspectionObservation {
     size_t coveredMs = 0;
     float valuesPerBucket = 0.0f;
     float coverageRatio = 0.0f;
+    bool internalCoverageKnown = true;
     unsigned long spanMs = 0;
     unsigned long latestValueAgeMs = 0;
 

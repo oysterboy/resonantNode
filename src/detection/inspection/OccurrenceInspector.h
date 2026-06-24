@@ -24,19 +24,22 @@ public:
 
     InspectedOccurrence inspectWithHistory(
         const Occurrence& occurrence,
-        const FeatureHistory* featureHistory
+        const FeatureHistory* featureHistory,
+        unsigned long inspectionNowMs
     ) const;
 
 private:
     void inspectAcceptedOccurrence(
         InspectedOccurrence& out,
         const Occurrence& occurrence,
-        const FeatureHistory* featureHistory
+        const FeatureHistory* featureHistory,
+        unsigned long inspectionNowMs
     ) const;
     void annotateScalarFeatureStrength(
         InspectedOccurrence& out,
         const Occurrence& occurrence,
         const FeatureHistory* featureHistory,
+        unsigned long inspectionNowMs,
         const ScalarFeatureInspectionConfig& config,
         InspectionTarget target
     ) const;
@@ -44,16 +47,19 @@ private:
         InspectedOccurrence& out,
         const Occurrence& occurrence,
         const FeatureHistory* featureHistory,
+        unsigned long inspectionNowMs,
         const InspectionModuleConfig& module
     ) const;
     InspectedOccurrence inspectImpl(
         const Occurrence& occurrence,
-        const FeatureHistory* featureHistory
+        const FeatureHistory* featureHistory,
+        unsigned long inspectionNowMs
     ) const;
 
     InspectedOccurrence inspectAcceptedOccurrenceResult(
         const Occurrence& occurrence,
-        const FeatureHistory* featureHistory
+        const FeatureHistory* featureHistory,
+        unsigned long inspectionNowMs
     ) const;
 
     InspectionPlan _inspectionPlan = {};

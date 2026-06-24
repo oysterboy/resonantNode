@@ -137,6 +137,7 @@ void AnalyzerApp::startSequenceTest(const PendingSequenceStart& pending) {
     clearSequenceSampleDump();
 
     _detection.resetState();
+    _detection.setPatternDiagnosticsTrial(0);
     _detection.setFrequencyMatchConfig(selectedProfile.frequencyMatch);
     _detection.setScalarTransientConfig(selectedProfile.scalarTransient);
     _detection.setDetectorSelection(selectedProfile.detectorSelection);
@@ -377,6 +378,7 @@ void AnalyzerApp::startSequenceTest(const PendingSequenceStart& pending) {
 void AnalyzerApp::stopSequenceTest() {
     _sequenceTest.active = false;
     _sequenceTest.sampleDumpCapturing = false;
+    _detection.setPatternDiagnosticsTrial(0);
 }
 
 void AnalyzerApp::updateSequenceTest(unsigned long now) {
@@ -449,6 +451,7 @@ void AnalyzerApp::updateSequenceTest(unsigned long now) {
     if (_sequenceTest.outputConfig.diagnosticsEnabled) {
         _detection.resetDiagnosticsCounters();
     }
+    _detection.setPatternDiagnosticsTrial(trialNumber);
     _sequenceTest.nextTriggerAtMs = scheduledAtMs + _sequenceTest.periodMs;
 
     beginSequenceSampleDump(trialNumber);
@@ -533,6 +536,13 @@ AnalyzerApp::SequenceTrialSelection AnalyzerApp::selectSequenceTrialSelection(un
         selection.dtMs = static_cast<long>(_sequenceTest.primaryAcceptedInspectedOccurrence.occurrence.startMs) - static_cast<long>(trialOnsetAnchorMs);
         selection.durationMs = _sequenceTest.primaryAcceptedInspectedOccurrence.occurrence.durationMs;
         selection.strength = _sequenceTest.primaryAcceptedInspectedOccurrence.occurrence.strength;
+        if (_sequenceTest.bestRejectedPatternCaptured &&
+            _sequenceTest.bestRejectedInWindow.occurrenceId == selection.occurrenceId) {
+            selection.patternResult = &_sequenceTest.bestRejectedInWindow;
+            selection.dtMs = static_cast<long>(_sequenceTest.bestRejectedInWindow.primaryStartMs) - static_cast<long>(trialOnsetAnchorMs);
+            selection.durationMs = _sequenceTest.bestRejectedInWindow.primaryDurationMs;
+            selection.strength = _sequenceTest.bestRejectedInWindow.primaryStrength;
+        }
         selection.result = selection.dtMs >= kLateOnsetMinMs ? AnalyzerResult::Late : AnalyzerResult::Expected;
         return selection;
     }

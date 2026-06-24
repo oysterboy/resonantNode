@@ -1,5 +1,6 @@
 #include "DetectionRuntime.h"
 
+#include <Arduino.h>
 #include <string.h>
 
 // DetectionRuntime pipeline execution in source order.
@@ -41,6 +42,56 @@ void applyScalarTransientConfig(ScalarTransientDetector& detector, const ScalarT
     detector.setMaxGapMs(config.maxGapMs);
 }
 
+const char* occurrenceDecisionName(OccurrenceDecision decision) {
+    switch (decision) {
+        case OccurrenceDecision::Accepted:
+            return "accepted";
+        case OccurrenceDecision::Rejected:
+            return "rejected";
+        case OccurrenceDecision::None:
+        default:
+            return "missing";
+    }
+}
+
+void printPatternPathLine(
+    unsigned long trial,
+    unsigned long occurrenceId,
+    bool attempt,
+    bool accepted,
+    PatternInputRejectReason rejectReason,
+    OccurrenceDecision inspectionDecision,
+    size_t matcherPending,
+    size_t correlationPending,
+    bool resultProduced,
+    bool eventPushed
+) {
+    if (trial == 0) {
+        return;
+    }
+
+    Serial.print("SEQ_PATTERN_PATH trial=");
+    Serial.print(trial);
+    Serial.print(" occurrence_id=");
+    Serial.print(occurrenceId);
+    Serial.print(" attempt=");
+    Serial.print(attempt ? 1 : 0);
+    Serial.print(" accepted=");
+    Serial.print(accepted ? 1 : 0);
+    Serial.print(" reject_reason=");
+    Serial.print(patternInputRejectReasonName(rejectReason));
+    Serial.print(" inspection_decision=");
+    Serial.print(occurrenceDecisionName(inspectionDecision));
+    Serial.print(" matcher_pending=");
+    Serial.print(static_cast<unsigned long>(matcherPending));
+    Serial.print(" correlation_pending=");
+    Serial.print(static_cast<unsigned long>(correlationPending));
+    Serial.print(" result_produced=");
+    Serial.print(resultProduced ? 1 : 0);
+    Serial.print(" event_pushed=");
+    Serial.println(eventPushed ? 1 : 0);
+}
+
 } // namespace
 
 void DetectionRuntime::resetState() {
@@ -65,6 +116,15 @@ void DetectionRuntime::resetDiagnosticsCounters() {
     _patternDrainCount = 0;
     _detectorReportRefreshCount = 0;
     _noFreshFrequencySkipCount = 0;
+    _detectorOccurrencePoppedCount = 0;
+    _detectorValidOccurrencePoppedCount = 0;
+    _latestPatternInputRejectReason = PatternInputRejectReason::None;
+    _patternAcceptAttemptCount = 0;
+    _patternAcceptSuccessCount = 0;
+    _patternAcceptRejectCount = 0;
+    _patternResultProducedCount = 0;
+    _patternEventPushedCount = 0;
+    _patternEventDroppedCount = 0;
 }
 
 void DetectionRuntime::resetDetectors() {
@@ -228,6 +288,10 @@ void DetectionRuntime::setProfileName(const char* profileName) {
     _profileName = profileName != nullptr ? profileName : "unknown";
 }
 
+void DetectionRuntime::setPatternDiagnosticsTrial(unsigned long trial) {
+    _patternDiagnosticsTrial = trial;
+}
+
 void DetectionRuntime::observeFrame(
     const AudioSamplePacket& audioSamplePacket,
     const FrequencyBandMeasurementPacket& frequencyEvidence,
@@ -356,6 +420,42 @@ uint32_t DetectionRuntime::noFreshFrequencySkipCount() const {
     return _noFreshFrequencySkipCount;
 }
 
+uint32_t DetectionRuntime::detectorOccurrencePoppedCount() const {
+    return _detectorOccurrencePoppedCount;
+}
+
+uint32_t DetectionRuntime::detectorValidOccurrencePoppedCount() const {
+    return _detectorValidOccurrencePoppedCount;
+}
+
+uint32_t DetectionRuntime::patternAcceptAttemptCount() const {
+    return _patternAcceptAttemptCount;
+}
+
+uint32_t DetectionRuntime::patternAcceptSuccessCount() const {
+    return _patternAcceptSuccessCount;
+}
+
+uint32_t DetectionRuntime::patternAcceptRejectCount() const {
+    return _patternAcceptRejectCount;
+}
+
+uint32_t DetectionRuntime::patternResultProducedCount() const {
+    return _patternResultProducedCount;
+}
+
+uint32_t DetectionRuntime::patternEventPushedCount() const {
+    return _patternEventPushedCount;
+}
+
+uint32_t DetectionRuntime::patternEventDroppedCount() const {
+    return _patternEventDroppedCount;
+}
+
+PatternInputRejectReason DetectionRuntime::latestPatternInputRejectReason() const {
+    return _latestPatternInputRejectReason;
+}
+
 uint32_t DetectionRuntime::scalarReportGeneration() const {
     return _scalarDetector.reportGeneration();
 }
@@ -410,6 +510,10 @@ void DetectionRuntime::drainDetectors(unsigned long nowMs) {
     switch (_detectorSelection) {
         case DetectorSelection::FrequencyMatch:
             while (_frequencyDetector.popOccurrence(occurrence)) {
+                ++_detectorOccurrencePoppedCount;
+                if (occurrence.present && occurrence.valid) {
+                    ++_detectorValidOccurrencePoppedCount;
+                }
                 _fieldStateTracker.observeOccurrence(occurrence, nowMs);
                 const InspectedOccurrence inspected = _occurrenceInspector.inspectWithHistory(occurrence, &_featureHistory, nowMs);
                 _fieldStateTracker.observeInspectedOccurrence(inspected, nowMs);
@@ -421,13 +525,39 @@ void DetectionRuntime::drainDetectors(unsigned long nowMs) {
                     observation.detectorReport.accepted.occurrenceId != occurrence.occurrenceId) {
                     ++_detectorReportMismatchCount;
                 }
-                if (_patternMatcher.acceptOccurrence(inspected)) {
-                    pushPatternObservation(observation);
+                ++_patternAcceptAttemptCount;
+                const bool acceptedByMatcher = _patternMatcher.acceptOccurrence(inspected);
+                PatternInputRejectReason rejectReason = _patternMatcher.lastInputRejectReason();
+                if (acceptedByMatcher) {
+                    ++_patternAcceptSuccessCount;
+                    if (!pushPatternObservation(observation)) {
+                        rejectReason = PatternInputRejectReason::CorrelationQueueFull;
+                        _latestPatternInputRejectReason = rejectReason;
+                    }
+                } else {
+                    ++_patternAcceptRejectCount;
+                    _latestPatternInputRejectReason = rejectReason;
                 }
+                printPatternPathLine(
+                    _patternDiagnosticsTrial,
+                    inspected.occurrence.occurrenceId,
+                    true,
+                    acceptedByMatcher,
+                    rejectReason,
+                    inspected.decision,
+                    _patternMatcher.pendingInputCount(),
+                    _patternInspectedCount,
+                    false,
+                    false
+                );
             }
             break;
         case DetectorSelection::ScalarTransient:
             while (_scalarDetector.popOccurrence(occurrence)) {
+                ++_detectorOccurrencePoppedCount;
+                if (occurrence.present && occurrence.valid) {
+                    ++_detectorValidOccurrencePoppedCount;
+                }
                 _fieldStateTracker.observeOccurrence(occurrence, nowMs);
                 const InspectedOccurrence inspected = _occurrenceInspector.inspectWithHistory(occurrence, &_featureHistory, nowMs);
                 _fieldStateTracker.observeInspectedOccurrence(inspected, nowMs);
@@ -439,9 +569,31 @@ void DetectionRuntime::drainDetectors(unsigned long nowMs) {
                     observation.detectorReport.accepted.occurrenceId != occurrence.occurrenceId) {
                     ++_detectorReportMismatchCount;
                 }
-                if (_patternMatcher.acceptOccurrence(inspected)) {
-                    pushPatternObservation(observation);
+                ++_patternAcceptAttemptCount;
+                const bool acceptedByMatcher = _patternMatcher.acceptOccurrence(inspected);
+                PatternInputRejectReason rejectReason = _patternMatcher.lastInputRejectReason();
+                if (acceptedByMatcher) {
+                    ++_patternAcceptSuccessCount;
+                    if (!pushPatternObservation(observation)) {
+                        rejectReason = PatternInputRejectReason::CorrelationQueueFull;
+                        _latestPatternInputRejectReason = rejectReason;
+                    }
+                } else {
+                    ++_patternAcceptRejectCount;
+                    _latestPatternInputRejectReason = rejectReason;
                 }
+                printPatternPathLine(
+                    _patternDiagnosticsTrial,
+                    inspected.occurrence.occurrenceId,
+                    true,
+                    acceptedByMatcher,
+                    rejectReason,
+                    inspected.decision,
+                    _patternMatcher.pendingInputCount(),
+                    _patternInspectedCount,
+                    false,
+                    false
+                );
             }
             break;
     }
@@ -452,14 +604,27 @@ void DetectionRuntime::drainDetectors(unsigned long nowMs) {
 void DetectionRuntime::drainPatternMatcher(unsigned long nowMs) {
     PatternResult result = {};
     while (_patternMatcher.popPatternResult(nowMs, result)) {
+        ++_patternResultProducedCount;
         PendingPatternObservation matchedObservation = {};
         const bool hasMatchedInspectedOccurrence = popPatternObservation(result.occurrenceId, matchedObservation);
         _fieldStateTracker.observePatternResult(result, nowMs);
-        capturePipelineResult(
+        const bool eventPushed = capturePipelineResult(
             result,
             hasMatchedInspectedOccurrence ? &matchedObservation.inspected : nullptr,
             hasMatchedInspectedOccurrence ? &matchedObservation.detectorReport : nullptr,
             nowMs
+        );
+        printPatternPathLine(
+            _patternDiagnosticsTrial,
+            result.occurrenceId,
+            false,
+            false,
+            PatternInputRejectReason::None,
+            hasMatchedInspectedOccurrence ? matchedObservation.inspected.decision : OccurrenceDecision::None,
+            _patternMatcher.pendingInputCount(),
+            _patternInspectedCount,
+            true,
+            eventPushed
         );
         pushPatternResult(result);
     }
@@ -497,7 +662,7 @@ bool DetectionRuntime::pushPipelineEvent(const DetectionPipelineEvent& event) {
     return true;
 }
 
-void DetectionRuntime::capturePipelineResult(
+bool DetectionRuntime::capturePipelineResult(
     const PatternResult& result,
     const InspectedOccurrence* matchedInspectedOccurrence,
     const DetectorReport* matchedDetectorReport,
@@ -576,13 +741,21 @@ void DetectionRuntime::capturePipelineResult(
         event.hasInspectedOccurrence = true;
         event.inspectedOccurrence = *matchedInspectedOccurrence;
     }
+    bool eventPushed = false;
     if (_lastEmittedAcceptedOccurrenceId != event.occurrenceId ||
         _lastEmittedAcceptedReportGeneration != event.sourceRecord.reportGeneration) {
-        if (pushPipelineEvent(event)) {
+        eventPushed = pushPipelineEvent(event);
+        if (eventPushed) {
             _lastEmittedAcceptedOccurrenceId = event.occurrenceId;
             _lastEmittedAcceptedReportGeneration = event.sourceRecord.reportGeneration;
         }
     }
+    if (eventPushed) {
+        ++_patternEventPushedCount;
+    } else {
+        ++_patternEventDroppedCount;
+    }
+    return eventPushed;
 }
 
 bool DetectionRuntime::pushPatternObservation(const PendingPatternObservation& observation) {

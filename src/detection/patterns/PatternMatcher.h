@@ -8,6 +8,19 @@
 
 namespace detection {
 
+enum class PatternInputRejectReason {
+    None,
+    DecisionRejected,
+    MissingOccurrence,
+    InvalidOccurrence,
+    UnsupportedOccurrenceType,
+    EmptyProposal,
+    InputQueueFull,
+    CorrelationQueueFull,
+};
+
+const char* patternInputRejectReasonName(PatternInputRejectReason reason);
+
 /*
 PatternMatcher
 
@@ -27,6 +40,8 @@ public:
 
     bool acceptOccurrence(const InspectedOccurrence& occurrence);
     bool popPatternResult(unsigned long nowMs, PatternResult& out);
+    PatternInputRejectReason lastInputRejectReason() const;
+    size_t pendingInputCount() const;
 
 private:
     static constexpr size_t kQueueCapacity = 4;
@@ -38,6 +53,7 @@ private:
     InspectedOccurrence _queue[kQueueCapacity] = {};
     size_t _readIndex = 0;
     size_t _count = 0;
+    PatternInputRejectReason _lastInputRejectReason = PatternInputRejectReason::None;
 };
 
 } // namespace detection

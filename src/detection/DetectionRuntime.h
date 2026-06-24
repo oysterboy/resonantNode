@@ -142,6 +142,7 @@ public:
     void setInspectionPlan(const InspectionPlan& plan);
     void setFieldStateConfig(const FieldStateConfig& config);
     void setProfileName(const char* profileName);
+    void setPatternDiagnosticsTrial(unsigned long trial);
 
     void observeFrame(
         const AudioSamplePacket& audioSamplePacket,
@@ -164,6 +165,15 @@ public:
     uint32_t patternDrainCount() const;
     uint32_t detectorReportRefreshCount() const;
     uint32_t noFreshFrequencySkipCount() const;
+    uint32_t detectorOccurrencePoppedCount() const;
+    uint32_t detectorValidOccurrencePoppedCount() const;
+    uint32_t patternAcceptAttemptCount() const;
+    uint32_t patternAcceptSuccessCount() const;
+    uint32_t patternAcceptRejectCount() const;
+    uint32_t patternResultProducedCount() const;
+    uint32_t patternEventPushedCount() const;
+    uint32_t patternEventDroppedCount() const;
+    PatternInputRejectReason latestPatternInputRejectReason() const;
     uint32_t scalarReportGeneration() const;
     uint32_t frequencyReportGeneration() const;
     // Generic report access is the canonical upward path.
@@ -187,7 +197,7 @@ private:
     bool hasPendingPatternWork() const;
     bool captureLatestDetectorReportIfChanged();
     void drainDetectorReportEvents(unsigned long nowMs);
-    void capturePipelineResult(
+    bool capturePipelineResult(
         const PatternResult& result,
         const InspectedOccurrence* matchedInspectedOccurrence,
         const DetectorReport* matchedDetectorReport,
@@ -233,6 +243,14 @@ private:
     size_t _patternInspectedCount = 0;
     unsigned long _patternInspectedQueueOverflowCount = 0;
     unsigned long _patternCorrelationFailureCount = 0;
+    unsigned long _patternDiagnosticsTrial = 0;
+    PatternInputRejectReason _latestPatternInputRejectReason = PatternInputRejectReason::None;
+    uint32_t _patternAcceptAttemptCount = 0;
+    uint32_t _patternAcceptSuccessCount = 0;
+    uint32_t _patternAcceptRejectCount = 0;
+    uint32_t _patternResultProducedCount = 0;
+    uint32_t _patternEventPushedCount = 0;
+    uint32_t _patternEventDroppedCount = 0;
 
     uint32_t _observeFrameCount = 0;
     uint32_t _freshDetectorInputCount = 0;
@@ -240,6 +258,8 @@ private:
     uint32_t _patternDrainCount = 0;
     uint32_t _detectorReportRefreshCount = 0;
     uint32_t _noFreshFrequencySkipCount = 0;
+    uint32_t _detectorOccurrencePoppedCount = 0;
+    uint32_t _detectorValidOccurrencePoppedCount = 0;
 };
 
 } // namespace detection

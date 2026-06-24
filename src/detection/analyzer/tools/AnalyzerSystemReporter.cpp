@@ -96,6 +96,24 @@ void AnalyzerApp::printSystemHealth(const AnalyzerReport& report) const {
         Serial.print(_detection.detectorReportMismatchCount());
         Serial.print(" no_fresh_frequency_skip_count=");
         Serial.print(_detection.noFreshFrequencySkipCount());
+        Serial.print(" detector_occurrence_popped_count=");
+        Serial.print(_detection.detectorOccurrencePoppedCount());
+        Serial.print(" detector_valid_occurrence_popped_count=");
+        Serial.print(_detection.detectorValidOccurrencePoppedCount());
+        Serial.print(" pattern_accept_attempt_count=");
+        Serial.print(_detection.patternAcceptAttemptCount());
+        Serial.print(" pattern_accept_success_count=");
+        Serial.print(_detection.patternAcceptSuccessCount());
+        Serial.print(" pattern_accept_reject_count=");
+        Serial.print(_detection.patternAcceptRejectCount());
+        Serial.print(" pattern_result_produced_count=");
+        Serial.print(_detection.patternResultProducedCount());
+        Serial.print(" pattern_event_pushed_count=");
+        Serial.print(_detection.patternEventPushedCount());
+        Serial.print(" pattern_event_dropped_count=");
+        Serial.print(_detection.patternEventDroppedCount());
+        Serial.print(" pattern_latest_reject_reason=");
+        Serial.print(detection::patternInputRejectReasonName(_detection.latestPatternInputRejectReason()));
     }
     Serial.println();
     _loopHealth.reset();

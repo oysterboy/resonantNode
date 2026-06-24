@@ -509,6 +509,36 @@ AnalyzerApp::SequenceTrialSelection AnalyzerApp::selectSequenceTrialSelection(un
         return selection;
     }
 
+    if (_sequenceTest.primaryAcceptedOccurrenceCaptured && _sequenceTest.primaryAcceptedInspectedOccurrence.occurrence.present) {
+        selection.kind = SequenceTrialSelection::Kind::AcceptedOccurrence;
+        selection.inspectedOccurrence = &_sequenceTest.primaryAcceptedInspectedOccurrence;
+        selection.detectorReport = _sequenceTest.primaryAcceptedDetectorReport.detectorId != detection::DetectorId::Unknown
+            ? &_sequenceTest.primaryAcceptedDetectorReport
+            : nullptr;
+        selection.occurrenceId = selection.inspectedOccurrence->occurrence.occurrenceId;
+        selection.candidateId = 0;
+        selection.reportMatched = detectorReportMatchesOccurrence(selection.detectorReport, selection.inspectedOccurrence);
+        selection.dtMs = static_cast<long>(_sequenceTest.primaryAcceptedInspectedOccurrence.occurrence.startMs) - static_cast<long>(trialOnsetAnchorMs);
+        selection.durationMs = _sequenceTest.primaryAcceptedInspectedOccurrence.occurrence.durationMs;
+        selection.strength = _sequenceTest.primaryAcceptedInspectedOccurrence.occurrence.strength;
+        selection.result = selection.dtMs >= kLateOnsetMinMs ? AnalyzerResult::Late : AnalyzerResult::Expected;
+        return selection;
+    }
+
+    if (_sequenceTest.selectedSourceRejectCaptured &&
+        _sequenceTest.selectedSourceReject.detectorReport.detectorId != detection::DetectorId::Unknown) {
+        selection.kind = SequenceTrialSelection::Kind::RejectedSourceCandidate;
+        selection.detectorReport = &_sequenceTest.selectedSourceReject.detectorReport;
+        selection.occurrenceId = _sequenceTest.selectedSourceReject.sourceOccurrenceId;
+        selection.candidateId = _sequenceTest.selectedSourceReject.sourceCandidateId;
+        selection.reportMatched = _sequenceTest.selectedSourceReject.sourceReportMatched;
+        selection.dtMs = static_cast<long>(_sequenceTest.selectedSourceReject.detectorReport.selectedReject.startMs) - static_cast<long>(trialOnsetAnchorMs);
+        selection.durationMs = _sequenceTest.selectedSourceReject.detectorReport.selectedReject.durationMs;
+        selection.strength = _sequenceTest.selectedSourceReject.detectorReport.selectedReject.strength;
+        selection.result = AnalyzerResult::Rejected;
+        return selection;
+    }
+
     if (_sequenceTest.bestRejectedPatternCaptured) {
         selection.kind = SequenceTrialSelection::Kind::RejectedPattern;
         selection.patternResult = &_sequenceTest.bestRejectedInWindow;
@@ -527,36 +557,6 @@ AnalyzerApp::SequenceTrialSelection AnalyzerApp::selectSequenceTrialSelection(un
         selection.durationMs = _sequenceTest.bestRejectedInWindow.primaryDurationMs;
         selection.strength = _sequenceTest.bestRejectedInWindow.primaryStrength;
         selection.result = AnalyzerResult::Rejected;
-        return selection;
-    }
-
-    if (_sequenceTest.selectedSourceRejectCaptured &&
-        _sequenceTest.selectedSourceReject.detectorReport.detectorId != detection::DetectorId::Unknown) {
-        selection.kind = SequenceTrialSelection::Kind::RejectedSourceCandidate;
-        selection.detectorReport = &_sequenceTest.selectedSourceReject.detectorReport;
-        selection.occurrenceId = _sequenceTest.selectedSourceReject.sourceOccurrenceId;
-        selection.candidateId = _sequenceTest.selectedSourceReject.sourceCandidateId;
-        selection.reportMatched = _sequenceTest.selectedSourceReject.sourceReportMatched;
-        selection.dtMs = static_cast<long>(_sequenceTest.selectedSourceReject.detectorReport.selectedReject.startMs) - static_cast<long>(trialOnsetAnchorMs);
-        selection.durationMs = _sequenceTest.selectedSourceReject.detectorReport.selectedReject.durationMs;
-        selection.strength = _sequenceTest.selectedSourceReject.detectorReport.selectedReject.strength;
-        selection.result = AnalyzerResult::Rejected;
-        return selection;
-    }
-
-    if (_sequenceTest.primaryAcceptedOccurrenceCaptured && _sequenceTest.primaryAcceptedInspectedOccurrence.occurrence.present) {
-        selection.kind = SequenceTrialSelection::Kind::AcceptedOccurrence;
-        selection.inspectedOccurrence = &_sequenceTest.primaryAcceptedInspectedOccurrence;
-        selection.detectorReport = _sequenceTest.primaryAcceptedDetectorReport.detectorId != detection::DetectorId::Unknown
-            ? &_sequenceTest.primaryAcceptedDetectorReport
-            : nullptr;
-        selection.occurrenceId = selection.inspectedOccurrence->occurrence.occurrenceId;
-        selection.candidateId = 0;
-        selection.reportMatched = detectorReportMatchesOccurrence(selection.detectorReport, selection.inspectedOccurrence);
-        selection.dtMs = static_cast<long>(_sequenceTest.primaryAcceptedInspectedOccurrence.occurrence.startMs) - static_cast<long>(trialOnsetAnchorMs);
-        selection.durationMs = _sequenceTest.primaryAcceptedInspectedOccurrence.occurrence.durationMs;
-        selection.strength = _sequenceTest.primaryAcceptedInspectedOccurrence.occurrence.strength;
-        selection.result = selection.dtMs >= kLateOnsetMinMs ? AnalyzerResult::Late : AnalyzerResult::Expected;
         return selection;
     }
 
@@ -676,7 +676,13 @@ void AnalyzerApp::updateCleanSequenceSummary(const AnalyzerReport& report) {
     AnalyzerCleanSummary& summary = _sequenceTest.cleanSummary;
     summary.profileName = activeAnalyzerProfileName();
     if (summary.detectorId == detection::DetectorId::Unknown) {
-        summary.detectorId = cleanSummaryDetectorId(report);
+        const detection::DetectionProfile& selectedProfile = detection::detectionProfileForKind(_sequenceTest.profileKind);
+        summary.detectorId = selectedProfile.detectorSelection == detection::DetectorSelection::ScalarTransient
+            ? detection::DetectorId::ScalarTransient
+            : detection::DetectorId::FrequencyMatch;
+        if (report.detectorReport != nullptr && report.detectorReport->detectorId != detection::DetectorId::Unknown) {
+            summary.detectorId = report.detectorReport->detectorId;
+        }
     }
     summary.trials = static_cast<unsigned int>(_sequenceTest.totalTrials);
 

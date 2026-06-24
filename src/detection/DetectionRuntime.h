@@ -65,6 +65,11 @@ struct SourceDiagnosticRecord {
     bool sourceReportMatched = false;
 };
 
+struct PendingPatternObservation {
+    InspectedOccurrence inspected = {};
+    DetectorReport detectorReport = {};
+};
+
 enum class PipelineIntegrityReason {
     None,
     MissingDetectorReport,
@@ -149,6 +154,15 @@ public:
     unsigned long patternResultQueueOverflowCount() const;
     unsigned long patternInspectedQueueOverflowCount() const;
     unsigned long patternCorrelationFailureCount() const;
+    unsigned long detectorReportMismatchCount() const;
+    uint32_t observeFrameCount() const;
+    uint32_t freshDetectorInputCount() const;
+    uint32_t detectorDrainCount() const;
+    uint32_t patternDrainCount() const;
+    uint32_t detectorReportRefreshCount() const;
+    uint32_t noFreshFrequencySkipCount() const;
+    uint32_t scalarReportGeneration() const;
+    uint32_t frequencyReportGeneration() const;
     // Generic report access is the canonical upward path.
     const DetectorReport& activeDetectorReport() const;
     const PatternMatcherReport& activePatternMatcherReport() const;
@@ -164,14 +178,18 @@ private:
     void drainDetectors(unsigned long nowMs);
     void drainPatternMatcher(unsigned long nowMs);
     bool pushPatternResult(const PatternResult& result);
-    bool pushPatternInspectedOccurrence(const InspectedOccurrence& occurrence);
-    bool popPatternInspectedOccurrence(unsigned long occurrenceId, InspectedOccurrence& out);
+    bool pushPatternObservation(const PendingPatternObservation& observation);
+    bool popPatternObservation(unsigned long occurrenceId, PendingPatternObservation& out);
+    bool hasPendingDetectorOutput() const;
+    bool hasPendingPatternWork() const;
+    bool captureLatestDetectorReportIfChanged();
+    void drainDetectorReportEvents(unsigned long nowMs);
     void capturePipelineResult(
         const PatternResult& result,
         const InspectedOccurrence* matchedInspectedOccurrence,
+        const DetectorReport* matchedDetectorReport,
         unsigned long nowMs
     );
-    void refreshDetectorReports(unsigned long nowMs);
 
     FrequencyMatchConfig _frequencyMatchConfig = {};
     ScalarTransientConfig _scalarTransientConfig = {};
@@ -195,18 +213,28 @@ private:
     DetectionPipelineResult _latestPipelineResult = {};
     bool _hasLatestPipelineResult = false;
     DetectorReport _detectorReport = {};
+    uint32_t _lastObservedScalarReportGeneration = 0;
+    uint32_t _lastObservedFrequencyReportGeneration = 0;
     unsigned long _pipelineEventOverflowCount = 0;
+    unsigned long _detectorReportMismatchCount = 0;
     DetectionPipelineEvent _pipelineEventQueue[kPipelineEventQueueCapacity] = {};
     size_t _pipelineEventReadIndex = 0;
     size_t _pipelineEventCount = 0;
     unsigned long _pipelineEventSequenceId = 0;
     uint32_t _lastEmittedAcceptedOccurrenceId = 0;
     uint32_t _lastEmittedSelectedRejectOccurrenceId = 0;
-    InspectedOccurrence _patternInspectedQueue[kResultQueueCapacity] = {};
+    PendingPatternObservation _patternInspectedQueue[kResultQueueCapacity] = {};
     size_t _patternInspectedReadIndex = 0;
     size_t _patternInspectedCount = 0;
     unsigned long _patternInspectedQueueOverflowCount = 0;
     unsigned long _patternCorrelationFailureCount = 0;
+
+    uint32_t _observeFrameCount = 0;
+    uint32_t _freshDetectorInputCount = 0;
+    uint32_t _detectorDrainCount = 0;
+    uint32_t _patternDrainCount = 0;
+    uint32_t _detectorReportRefreshCount = 0;
+    uint32_t _noFreshFrequencySkipCount = 0;
 };
 
 } // namespace detection

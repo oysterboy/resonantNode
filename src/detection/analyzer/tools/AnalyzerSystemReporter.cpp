@@ -82,6 +82,20 @@ void AnalyzerApp::printSystemHealth(const AnalyzerReport& report) const {
         Serial.print(_sequenceTest.maxSampleWorkUs);
         Serial.print(" trial_finalize_max_us=");
         Serial.print(_sequenceTest.maxFinalizeTrialUs);
+        Serial.print(" detector_observe_count=");
+        Serial.print(_detection.observeFrameCount());
+        Serial.print(" detector_fresh_input_count=");
+        Serial.print(_detection.freshDetectorInputCount());
+        Serial.print(" detector_drain_count=");
+        Serial.print(_detection.detectorDrainCount());
+        Serial.print(" pattern_drain_count=");
+        Serial.print(_detection.patternDrainCount());
+        Serial.print(" detector_report_refresh_count=");
+        Serial.print(_detection.detectorReportRefreshCount());
+        Serial.print(" detector_report_mismatch_count=");
+        Serial.print(_detection.detectorReportMismatchCount());
+        Serial.print(" no_fresh_frequency_skip_count=");
+        Serial.print(_detection.noFreshFrequencySkipCount());
     }
     Serial.println();
     _loopHealth.reset();

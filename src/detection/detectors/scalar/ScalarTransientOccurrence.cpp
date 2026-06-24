@@ -87,6 +87,7 @@ void ScalarTransientDetector::captureAcceptedOccurrence(unsigned long releaseObs
     _reportDetail.inspect.matchedMeanPassed =
         !_requireMinStrength ||
         candidateMatchedMean >= _minMatchedMeanStrength;
+    freezeReport(releaseObservedUs / 1000UL);
     resetCandidateFacts();
 }
 
@@ -155,6 +156,7 @@ void ScalarTransientDetector::captureSelectedReject(unsigned long releaseObserve
     _reportDetail.inspect.matchedMeanPassed =
         !_requireMinStrength ||
         candidateMatchedMean >= _minMatchedMeanStrength;
+    freezeReport(releaseObservedUs / 1000UL);
     resetCandidateFacts();
 }
 
@@ -255,4 +257,8 @@ bool ScalarTransientDetector::popOccurrence(detection::Occurrence& out) {
     _pendingOccurrencePresent = false;
     _pendingOccurrence = {};
     return true;
+}
+
+bool ScalarTransientDetector::hasPendingOccurrence() const {
+    return _pendingOccurrencePresent;
 }

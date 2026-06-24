@@ -154,13 +154,18 @@ public:
                 unsigned long cooldownAfterReleaseMs,
                 unsigned long minDurationMs);
     void buildReport(detection::DetectorReport& out, unsigned long nowMs) const;
+    const detection::DetectorReport& latestReport() const;
+    uint32_t reportGeneration() const;
     bool popOccurrence(detection::Occurrence& out);
+    bool hasPendingOccurrence() const;
 
 private:
     // Internal detector state.
     bool _diagnosticsEnabled = false;
     detection::AcceptedOccurrenceSummary _acceptedOccurrence = {};
     detection::FrequencyAcceptedDetail _acceptedDetail = {};
+    detection::DetectorReport _latestReport = {};
+    uint32_t _reportGeneration = 0;
     bool _pendingOccurrencePresent = false;
     detection::Occurrence _pendingOccurrence = {};
     unsigned long _lastEmittedOccurrenceCloseMs = 0;
@@ -169,5 +174,7 @@ private:
     void updateBestRejectedPending();
     void recordRejectedPending();
     void capturePendingOccurrence(const AudioSamplePacket& audioSamplePacket);
+    void freezeReport(unsigned long nowMs);
+    void clearFrozenReport();
 };
 

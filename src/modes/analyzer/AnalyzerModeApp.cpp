@@ -719,26 +719,29 @@ void AnalyzerApp::update() {
             AudioSamplePacket audioSamplePacket;
             _audioSignal.update(static_cast<int>(block.samples[i]), sampleTimeUs, audioSamplePacket);
             updateSequenceAudioHealth(audioSamplePacket);
-            if (_sequenceTest.outputConfig.frequencyBandEnabled) {
-                _freqBandStream.observeCenteredSample(audioSamplePacket.baselineCorrectedValue, audioSamplePacket.timeMs);
-            }
-            const bool needSequenceFrequencyPacket = _sequenceTest.sampleDumpEnabled || (_sequenceTest.active && _sequenceTest.currentTrial > 0);
+            _freqBandStream.observeCenteredSample(audioSamplePacket.baselineCorrectedValue, audioSamplePacket.timeMs);
             detection::FrequencyBandMeasurementPacket& runtimeFrequencyMeasurementPacket = _runtimeFrequencyMeasurementPacketScratch;
-            runtimeFrequencyMeasurementPacket = {};
-            if (needSequenceFrequencyPacket) {
-                if (_sequenceTest.outputConfig.frequencyBandEnabled) {
-                    runtimeFrequencyMeasurementPacket = captureFrequencyMeasurementPacket(audioSamplePacket);
-                } else {
-                    runtimeFrequencyMeasurementPacket.observedAtMs = audioSamplePacket.timeMs;
+            runtimeFrequencyMeasurementPacket = captureFrequencyMeasurementPacket(audioSamplePacket);
+            if (_sequenceTest.sampleDumpEnabled) {
+                const float detectorInputValue = sequenceSampleDumpInputValue(
+                    _sequenceTest.sampleDumpDetectorSelection,
+                    _sequenceTest.sampleDumpObservedStream,
+                    audioSamplePacket,
+                    runtimeFrequencyMeasurementPacket
+                );
+                recordSequenceDetectorInputSample(audioSamplePacket.timeMs, detectorInputValue);
+            }
+            _detection.observeFrame(audioSamplePacket, runtimeFrequencyMeasurementPacket, audioSamplePacket.timeMs);
+            detection::DetectionPipelineEvent& runtimePipelineEvent = _runtimePipelineEventScratch;
+            while (_detection.popPipelineEvent(runtimePipelineEvent)) {
+                if (_sequenceTest.active && _sequenceTest.currentTrial > 0 && runtimePipelineEvent.hasPatternResult) {
+                    _sequenceTest.currentTrialDiagnostics.runtimePatternCaptured = true;
                 }
-                if (_sequenceTest.sampleDumpEnabled) {
-                    const float detectorInputValue = sequenceSampleDumpInputValue(
-                        _sequenceTest.sampleDumpDetectorSelection,
-                        _sequenceTest.sampleDumpObservedStream,
-                        audioSamplePacket,
-                        runtimeFrequencyMeasurementPacket
+                if (_sequenceTest.active && _sequenceTest.currentTrial > 0) {
+                    handleSequencePending(
+                        runtimePipelineEvent,
+                        &runtimeFrequencyMeasurementPacket
                     );
-                    recordSequenceDetectorInputSample(audioSamplePacket.timeMs, detectorInputValue);
                 }
             }
             if (_sequenceTest.active && _sequenceTest.currentTrial > 0) {
@@ -751,17 +754,6 @@ void AnalyzerApp::update() {
                 if (audioSamplePacket.timeMs >= _sequenceTest.currentTrialStartMs &&
                     audioSamplePacket.timeMs <= _sequenceTest.currentTrialEndMs) {
                     ++_sequenceTest.currentTrialSamplesProcessed;
-                }
-                _detection.observeFrame(audioSamplePacket, runtimeFrequencyMeasurementPacket, audioSamplePacket.timeMs);
-                detection::DetectionPipelineEvent& runtimePipelineEvent = _runtimePipelineEventScratch;
-                while (_detection.popPipelineEvent(runtimePipelineEvent)) {
-                    if (runtimePipelineEvent.hasPatternResult) {
-                        _sequenceTest.currentTrialDiagnostics.runtimePatternCaptured = true;
-                    }
-                    handleSequencePending(
-                        runtimePipelineEvent,
-                        &runtimeFrequencyMeasurementPacket
-                    );
                 }
                 updateSequenceAmbientStats(audioSamplePacket.timeMs);
             }
@@ -908,7 +900,7 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
     report.sourceReportReason = detection::analyzer::sourceReportReason(
         selectedTrial.reportMatched,
         selectedDetectorReport != nullptr);
-    report.detectorReport = selectedTrial.reportMatched ? selectedDetectorReport : nullptr;
+    report.detectorReport = selectedDetectorReport;
     report.integrity.detectorReportPresent = selectedDetectorReport != nullptr;
     report.integrity.occurrenceMatched = selectedTrial.reportMatched;
     report.integrity.inspectionPresent = hasInspectedOccurrence;

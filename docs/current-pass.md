@@ -1,959 +1,753 @@
-# Codex Pass — Analyzer / History Coverage / Pipeline Bookkeeping Cleanup
+# Codex Pass — DetectorReport Lifecycle Fix from Current Reverted Code
 
 ## Goal
 
-Fix concrete history-coverage errors and Analyzer bookkeeping boundary violations without changing TonalPulse detection tuning or introducing a new detector architecture.
+Replace the reverted per-sample `DetectorReport` rebuild path with the smallest architecture change that preserves current detector/report contracts and removes the new timing pressure.
 
-Core rules:
-
-```text
-Inspection window = resolved anchor ± configured pre/post range.
-A positive postMs is not automatically future-looking.
-The window is complete when requestedEndMs <= inspectionNowMs.
-
-Detector / Inspector / PatternMatcher own stage truth.
-DetectionRuntime owns correlation and transport.
-Analyzer owns trial-window interpretation, primary/duplicate selection, aggregation, and output.
-```
-
-## Important correction
-
-Do **not** globally set `windowPostMs = 0`.
-
-The active window is:
-
-```cpp
-anchorMs = resolveAnchor(occurrence, config.anchor);
-requestedStartMs = max(0, anchorMs - config.windowPreMs);
-requestedEndMs = anchorMs + config.windowPostMs;
-```
-
-Synchronous inspection is valid when:
-
-```cpp
-requestedEndMs <= inspectionNowMs;
-```
-
-Examples:
+Target behavior:
 
 ```text
-anchor=Start, postMs=100:
-May already be fully retrospective when the occurrence closes after 100 ms.
+Detector closes candidate
+→ detector freezes one current DetectorReport snapshot
 
-anchor=Peak, postMs=90:
-May be fully retrospective if the peak occurred at least 90 ms before inspection.
+DetectionRuntime drains accepted/rejected detector output
+→ copies the already-frozen DetectorReport into DetectionPipelineEvent
 
-anchor=Release, postMs>0:
-Normally requests future history when inspection happens immediately at release.
+Analyzer reads immutable snapshots
+→ no report rebuilding, patching, or ID reconstruction
 ```
 
-Audit the resolved anchor and actual timestamps. Do not infer completeness from `postMs` alone.
+This pass must fix:
+
+```text
+refreshDetectorReports() running twice per audio sample
+stale or mismatched DetectorReport snapshots
+source.report_reason=id_mismatch
+SEQ_SOURCE_CORE detector=unknown
+summary detector=unknown / detector_accepted_trials=0
+```
+
+while preserving:
+
+```text
+detector acceptance/rejection behavior
+Occurrence IDs
+Inspector and PatternMatcher behavior
+current Analyzer output shape where possible
+```
 
 ---
 
-## Scope
+# Current code facts
 
-Primary files:
+The reverted code currently does this in:
 
 ```text
-src/detection/DetectionProfile.h
-src/detection/features/FeatureHistory.h
-src/detection/features/FeatureHistory.cpp
-src/detection/features/ScalarWindow.h
-src/detection/inspection/InspectorTypes.h
-src/detection/inspection/OccurrenceInspector.h
-src/detection/inspection/OccurrenceInspector.cpp
-src/detection/DetectionRuntime.h
 src/detection/DetectionRuntime.cpp
-src/detection/detectors/DetectorReport.h
-src/detection/analyzer/AnalyzerReportTypes.h
-src/detection/analyzer/AnalyzerTrialClassifier.*
-src/detection/analyzer/tools/AnalyzerTrialCapture.*
-src/modes/analyzer/AnalyzerModeApp.*
+DetectionRuntime::observeFrame()
 ```
 
-Also inspect all callers and printers affected by changed fields.
+```cpp
+drainDetectors(nowMs);
+refreshDetectorReports(nowMs);
+drainPatternMatcher(nowMs);
+refreshDetectorReports(nowMs);
+```
 
-## Non-goals
+`refreshDetectorReports()`:
 
 ```text
-No threshold retuning.
-No profile behavior changes unless an active window is proven incomplete.
-No global removal of postMs.
-No generic detector interface.
-No heap allocation.
-No unbounded history.
-No new parallel detection pipeline.
-No broad Analyzer output rename.
-No PatternMatcher redesign beyond the minimum correlation fix.
+clears `_detectorReport`
+calls active detector `buildReport(...)`
+checks selected reject state
+constructs rejected-source pipeline events
 ```
+
+Current detector report builders already exist:
+
+```text
+ScalarTransientDetector::buildReport(...)
+FrequencyMatchDetector::buildReport(...)
+```
+
+Current detector lifecycle already owns stable IDs:
+
+```text
+ScalarTransientDetector:
+    _acceptedOccurrenceId
+    _selectedRejectOccurrenceId
+
+FrequencyMatchDetector:
+    acceptedOccurrenceId
+    selectedRejectOccurrenceId
+```
+
+Current accepted `Occurrence` objects already carry the corresponding real occurrence ID.
+
+Therefore, no new generic event bus or generic detector interface is needed.
 
 ---
 
-# Ordered implementation work
+# Architecture decision
 
-## 1. Make inspection time explicit [complete]
+Use detector-owned frozen report snapshots.
 
-Change the inspection API so the Inspector knows the actual evaluation time.
+Do not implement Runtime-owned dirty flags as the final design.
 
-Current shape is effectively:
+Do not rebuild `DetectorReport` from live detector state on every sample.
 
-```cpp
-inspectWithHistory(occurrence, history)
-```
-
-Target minimum:
-
-```cpp
-inspectWithHistory(
-    const Occurrence& occurrence,
-    const FeatureHistory* history,
-    unsigned long inspectionNowMs
-)
-```
-
-Update `DetectionRuntime::drainDetectors(nowMs)` to pass `nowMs`.
-
-Do not use `millis()` inside the Inspector. Keep time supplied by the runtime.
-
-Acceptance:
+Minimal extension:
 
 ```text
-Every inspection result can compare its requested window end against the exact inspection time.
+Each detector owns:
+    latest frozen DetectorReport
+    one monotonic report generation
+    accepted/rejected generation state
+
+Runtime:
+    asks detector for current frozen report when draining output
+    copies it into DetectionPipelineEvent
 ```
+
+Preferred API:
+
+```cpp
+const detection::DetectorReport& latestReport() const;
+uint32_t reportGeneration() const;
+```
+
+Optional helper:
+
+```cpp
+bool reportChangedSince(uint32_t generation) const;
+```
+
+A separate report-event enum is not required unless implementation genuinely needs it.
 
 ---
 
-## 2. Record requested and available history bounds [complete]
+# Ordered implementation
 
-Extend `ScalarWindow` with explicit temporal coverage facts.
+## 1. Remove per-sample report rebuild calls
 
-Recommended fields:
-
-```cpp
-unsigned long requestedStartMs = 0;
-unsigned long requestedEndMs = 0;
-
-unsigned long availableStartMs = 0;
-unsigned long availableEndMs = 0;
-
-unsigned long coveredDurationMs = 0;
-unsigned long leftMissingMs = 0;
-unsigned long rightMissingMs = 0;
-
-bool hasValues = false;
-bool coverageComplete = false;
-```
-
-Keep existing statistical fields where useful:
-
-```cpp
-sampleCount
-valueCount
-freshValueCount
-bucketCount
-firstValueMs
-lastValueMs
-spanMs
-latestValueAgeMs
-mean
-rms
-p75
-peak
-...
-```
-
-Do not continue using generic `valid` to ambiguously mean both:
+In:
 
 ```text
-some data exists
-window is complete
+src/detection/DetectionRuntime.cpp
+DetectionRuntime::observeFrame()
 ```
 
-Either:
+remove both calls to:
 
 ```cpp
-valid = hasValues;
+refreshDetectorReports(nowMs);
 ```
 
-with explicit `coverageComplete`, or rename `valid` to `hasValues`.
+Target high-level shape:
 
-Preferred: retain `valid` temporarily for compile safety, define it as “usable values exist”, and add `coverageComplete` as the authoritative completeness flag.
+```cpp
+update active detector if relevant input is fresh;
+drainDetectors(nowMs);
+drainPatternMatcher(nowMs);
+```
+
+Do not leave a single unconditional `refreshDetectorReports()` in the per-sample path.
 
 ---
 
-## 3. Correct FeatureHistory temporal coverage [complete]
+## 2. Retire `DetectionRuntime::refreshDetectorReports()`
 
-Current incorrect code includes:
-
-```cpp
-out.coveredMs = static_cast<unsigned long>(bucketCount);
-out.coverageRatio = coveredMs / durationMs;
-out.sustainedMs = static_cast<unsigned long>(sustainedCount);
-```
-
-This assumes one selected bucket equals exactly one millisecond. Remove that assumption.
-
-For each included history bin, determine its real intersecting time range with the requested window.
-
-At minimum, a bin needs a defined temporal interval:
-
-```cpp
-binStartMs
-binEndMs
-```
-
-If bins are fixed one-millisecond bins by contract, encode and document that contract explicitly and calculate intersection durations from timestamps. Do not infer duration from count.
-
-Calculate:
+Current method responsibilities must be split:
 
 ```text
-coveredDurationMs =
-    union of time durations represented by valid selected bins inside
-    [requestedStartMs, requestedEndMs]
+report construction:
+    move fully into detector lifecycle
 
-coverageRatio =
-    coveredDurationMs / requestedDurationMs
+rejected-source event emission:
+    keep in DetectionRuntime, but trigger from detector report generation change
 ```
 
-Avoid double-counting overlapping intervals.
-
-Calculate temporal gaps:
-
-```text
-availableStartMs = earliest covered time
-availableEndMs   = latest covered time
-
-leftMissingMs =
-    max(0, availableStartMs - requestedStartMs)
-
-rightMissingMs =
-    max(0, requestedEndMs - availableEndMs)
-```
-
-Set:
+Remove or reduce:
 
 ```cpp
-coverageComplete =
-    hasValues
-    && leftMissingMs == 0
-    && rightMissingMs == 0
-    && no internal temporal gap exceeds the allowed history-bin contract;
+void DetectionRuntime::refreshDetectorReports(unsigned long nowMs);
 ```
 
-If exact internal-gap coverage cannot be implemented safely in this pass, expose:
+The final Runtime must not call detector `buildReport()` continuously.
 
-```cpp
-internalCoverageKnown = false;
-```
-
-or use a conservative `coverageComplete = false`. Never report uncertain coverage as complete.
+If a temporary wrapper remains during migration, it may only copy `latestReport()`. It must not rebuild detector state.
 
 ---
 
-## 4. Correct sustained duration [complete]
+## 3. Add frozen report storage to ScalarTransientDetector
 
-Current `sustainedMs = sustainedCount` is not a valid generic time calculation.
-
-Replace it with actual duration represented by bins whose selected representative meets the sustained threshold.
-
-Preferred calculation:
+Files:
 
 ```text
-For each qualifying bin:
-    add the duration of the bin/window intersection.
+src/detection/detectors/scalar/ScalarTransientDetector.h
+src/detection/detectors/scalar/ScalarTransientOccurrence.cpp
+src/detection/detectors/scalar/ScalarTransientReport.cpp
+src/detection/detectors/scalar/ScalarTransientDetector.cpp
 ```
 
-If the intention is longest continuous sustained period rather than total qualifying duration, keep these as separate facts:
+Add members:
 
 ```cpp
-unsigned long sustainedTotalMs;
-unsigned long sustainedLongestMs;
+detection::DetectorReport _latestReport = {};
+uint32_t _reportGeneration = 0;
 ```
 
-Do not silently change the semantic meaning of existing Analyzer output. If current output means total duration, retain that meaning and document it.
+Add accessors:
+
+```cpp
+const detection::DetectorReport& latestReport() const;
+uint32_t reportGeneration() const;
+```
+
+Add a private helper:
+
+```cpp
+void freezeReport(unsigned long nowMs);
+```
+
+Implementation may reuse current:
+
+```cpp
+buildReport(_latestReport, nowMs);
+++_reportGeneration;
+```
+
+The existing `buildReport()` logic should stay detector-owned.
 
 ---
 
-## 5. Add coverage facts to inspection observations [complete]
+## 4. Freeze Scalar report exactly when lifecycle truth closes
 
-Extend the scalar inspection observation in `InspectorTypes.h`.
+Call `freezeReport(...)` only after detector-owned accepted/rejected summaries and IDs are final.
 
-Recommended fields:
+Accepted path:
 
-```cpp
-unsigned long inspectionNowMs = 0;
-unsigned long anchorMs = 0;
-unsigned long requestedStartMs = 0;
-unsigned long requestedEndMs = 0;
-unsigned long availableStartMs = 0;
-unsigned long availableEndMs = 0;
-unsigned long leftMissingMs = 0;
-unsigned long rightMissingMs = 0;
-unsigned long coveredDurationMs = 0;
-float coverageRatio = 0.0f;
-
-bool hasValues = false;
-bool coverageComplete = false;
-bool requestedFutureAtInspection = false;
+```text
+captureAcceptedOccurrence(...)
+accepted summary complete
+accepted occurrence ID assigned
+pending Occurrence constructed or immediately constructible
+→ freezeReport(releaseMs)
 ```
 
-Set:
+Rejected path:
 
-```cpp
-requestedFutureAtInspection = requestedEndMs > inspectionNowMs;
+```text
+captureSelectedReject(...)
+selected reject summary complete
+selected reject ID assigned
+→ freezeReport(rejectEndMs)
 ```
 
-This is a diagnostic fact. It must not be guessed later by Analyzer.
+Important:
+
+```text
+Do not freeze before `_acceptedOccurrenceId` or `_selectedRejectOccurrenceId` is assigned.
+Do not freeze from Analyzer or DetectionRuntime.
+Do not freeze on every candidate update.
+```
+
+Verify actual call ordering in:
+
+```text
+ScalarTransientOccurrence.cpp
+ScalarTransientDetector.cpp
+```
+
+The frozen accepted report must carry the same ID as the later popped `Occurrence`.
 
 ---
 
-## 6. Define the synchronous inspection policy [complete]
+## 5. Add frozen report storage to FrequencyMatchDetector
 
-For the current pass, keep inspection synchronous. Do not add a pending-inspection queue yet.
-
-Required policy:
+Files:
 
 ```text
-If requestedEndMs <= inspectionNowMs:
-    Evaluate normally using the requested window.
-
-If requestedEndMs > inspectionNowMs:
-    Mark coverage incomplete and requestedFutureAtInspection=true.
-    Do not silently treat the partial window as a complete normal inspection.
+src/detection/detectors/frequency/FrequencyMatchDetector.h
+src/detection/detectors/frequency/FrequencyMatchDetector.cpp
+src/detection/detectors/frequency/FrequencyMatchOccurrence.cpp
+src/detection/detectors/frequency/FrequencyMatchReport.cpp
 ```
 
-Add a clear result/reason such as:
+Add:
 
 ```cpp
-InspectionAvailability::Complete
-InspectionAvailability::PartialHistory
-InspectionAvailability::FutureWindowUnavailable
-InspectionAvailability::NoHistory
+detection::DetectorReport _latestReport = {};
+uint32_t _reportGeneration = 0;
+
+const detection::DetectorReport& latestReport() const;
+uint32_t reportGeneration() const;
+void freezeReport(unsigned long nowMs);
 ```
 
-If the current matcher needs a boolean, map conservatively:
+Reuse current `buildReport()`.
+
+Freeze only after close classification is complete:
 
 ```text
-FutureWindowUnavailable or NoHistory:
-    inspection requirement not satisfied
-    reason remains coverage/history-related
+accepted:
+    pendingAccepted finalized
+    acceptedOccurrenceId assigned
+    accepted summary complete
+    → freezeReport(pendingCloseMs)
+
+rejected:
+    selectedRejectOccurrenceId assigned
+    selected reject/best reject summary complete
+    → freezeReport(pendingCloseMs)
 ```
 
-Do not classify this as weak acoustic support.
-
-Do not add `WaitForComplete` in this pass unless the active profiles demonstrably require it. First audit whether their windows are already retrospective at occurrence close.
+Do not freeze from live `pendingActive` updates.
 
 ---
 
-## 7. Audit every active profile window [complete]
+## 6. Define reset behavior
 
-Inspect all enabled `InspectionModuleConfig` entries in `DetectionProfile.h`.
-
-Current important combinations include:
+In both detectors:
 
 ```text
-TonalPulseScalar:
-    anchor=Start
-    pre=0
-    post=100
-
-TonalPulseFreq:
-    anchor=Peak
-    pre=10
-    post=90
+resetState()
+resetAcceptedOccurrenceSummary()
+resetSelectedRejectSummary()
+resetRejectSummary()
 ```
 
-For each enabled module, establish from detector lifecycle timing whether:
+must not leave a stale previous report exposed.
+
+Preferred minimal contract:
 
 ```cpp
-resolvedAnchorMs + windowPostMs <= inspectionNowMs
+_latestReport = {};
+_latestReport.detectorId = correct detector id;
+++_reportGeneration;
 ```
 
-normally holds when the accepted Occurrence is drained.
+For diagnostics-only reset methods, preserve current lifecycle truth unless the current method intentionally clears accepted/rejected summary state.
 
-Document the result next to the configuration or in a short audit document:
-
-```text
-profile
-module target
-stream
-anchor
-preMs
-postMs
-typical inspection trigger
-expected complete: yes/no/conditional
-```
-
-Only change profile windows if the audit proves they routinely request unavailable future data.
-
-Do not change thresholds in this pass.
+Do not emit a normal accepted/rejected pipeline event for reset generation changes.
 
 ---
 
-## 8. Keep partial-window output explicit [complete]
+## 7. Keep activeDetectorReport() as a cached Runtime copy
 
-Update `SEQ_INSPECT` / `SEQ_EXPLAIN` fields to show compact coverage truth.
+Current Runtime API:
 
-Recommended output keys:
-
-```text
-anchor_ms
-requested_start_ms
-requested_end_ms
-inspection_now_ms
-available_start_ms
-available_end_ms
-covered_ms
-coverage
-coverage_complete
-future_unavailable
+```cpp
+const DetectorReport& DetectionRuntime::activeDetectorReport() const;
 ```
 
-Do not flood `SEQ_TRIAL`.
+may stay.
 
-`SEQ_TRIAL` may use a compact reason such as:
+But `_detectorReport` must now be updated only when Runtime observes a new detector report generation.
 
-```text
-inspection_history_incomplete
+Add Runtime generation tracking:
+
+```cpp
+uint32_t _lastObservedScalarReportGeneration = 0;
+uint32_t _lastObservedFrequencyReportGeneration = 0;
 ```
 
-only when this affected the final trial outcome.
+Add narrow helper:
+
+```cpp
+bool captureLatestDetectorReportIfChanged();
+```
+
+This helper:
+
+```text
+reads active detector reportGeneration()
+returns false when unchanged
+copies detector.latestReport() into `_detectorReport` when changed
+updates last observed generation
+does not rebuild report
+```
+
+This Runtime generation tracking is transport bookkeeping, not report ownership.
 
 ---
 
-## 9. Move cross-stage correlation out of DetectorReport [complete]
+## 8. Capture accepted report while draining the matching Occurrence
 
-Remove Analyzer-side mutation in:
-
-```text
-src/detection/analyzer/tools/AnalyzerTrialCapture.cpp
-src/modes/analyzer/AnalyzerModeApp.cpp
-```
-
-Current problematic assignments include:
-
-```cpp
-detectorReport.sourceOccurrenceId = inspected.occurrence.occurrenceId;
-detectorReport.sourceCandidateId = inspected.occurrence.occurrenceId;
-detectorReport.sourceReportMatched = true;
-```
-
-Analyzer must not manufacture DetectorReport identity or match truth.
-
-Do not move these cross-stage correlation fields into detector-owned report construction.
-
-Instead:
+In:
 
 ```text
-Detector creates an immutable DetectorReport containing detector-stage facts only.
-DetectionRuntime creates DetectionPipelineEvent containing cross-stage correlation facts.
-Analyzer reads/copies both without modifying either.
+DetectionRuntime::drainDetectors()
 ```
 
-Target minimum shape:
+When an accepted Occurrence is popped:
+
+1. Read the detector's frozen `latestReport()`.
+2. Validate:
 
 ```cpp
-struct DetectionPipelineEvent {
-    uint32_t eventId = 0;
+report.detectorId == occurrence.detectorId
+report.accepted.present
+report.accepted.occurrenceId == occurrence.occurrenceId
+```
 
-    bool hasOccurrenceId = false;
-    uint32_t occurrenceId = 0;
+3. Copy that report alongside the accepted occurrence path.
+4. Continue Inspector and PatternMatcher processing.
 
-    bool hasCandidateId = false;
-    uint32_t candidateId = 0;
+Do not wait until later PatternResult capture to fetch arbitrary live detector state.
 
-    bool detectorReportPresent = false;
-    bool detectorReportMatched = false;
+The accepted report snapshot associated with the Occurrence must survive until `capturePipelineResult()`.
+
+Minimal storage options:
+
+```text
+Preferred:
+    extend the existing fixed-size `_patternInspectedQueue` entry to also carry DetectorReport
+
+Acceptable:
+    add a parallel fixed-size report queue keyed strictly by occurrenceId
+
+Do not:
+    rely on global `_detectorReport` still referring to the same occurrence later
+```
+
+Best minimal shape:
+
+```cpp
+struct PendingPatternObservation {
+    InspectedOccurrence inspected;
     DetectorReport detectorReport;
-
-    bool hasInspectedOccurrence = false;
-    InspectedOccurrence inspectedOccurrence;
-
-    bool hasPatternResult = false;
-    PatternResult patternResult;
 };
 ```
 
-`DetectionRuntime::capturePipelineResult()` or the equivalent event-construction path must populate the correlation fields without modifying the copied `DetectorReport`.
+Replace or adapt:
 
-The event must express truthful correlation state, including mismatch or missing-stage cases.
+```cpp
+_patternInspectedQueue
+pushPatternInspectedOccurrence(...)
+popPatternInspectedOccurrence(...)
+```
 
-Analyzer may copy the complete event into trial storage but must not:
+so the matching `DetectorReport` travels with the inspected occurrence by ID.
+
+No heap.
+
+---
+
+## 9. Use the carried report in capturePipelineResult()
+
+Current code does:
+
+```cpp
+event.sourceRecord.detectorReport = _detectorReport;
+```
+
+This is unsafe because `_detectorReport` may have changed before PatternMatcher emits.
+
+Change `capturePipelineResult()` to receive the exact carried report:
+
+```cpp
+void capturePipelineResult(
+    const PatternResult& result,
+    const InspectedOccurrence* matchedInspectedOccurrence,
+    const DetectorReport* matchedDetectorReport,
+    unsigned long nowMs
+);
+```
+
+Then:
+
+```cpp
+event.detectorReportPresent =
+    matchedDetectorReport != nullptr &&
+    matchedDetectorReport->detectorId != DetectorId::Unknown;
+
+event.detectorReportMatched =
+    event.detectorReportPresent &&
+    matchedInspectedOccurrence != nullptr &&
+    matchedDetectorReport->accepted.present &&
+    matchedDetectorReport->accepted.occurrenceId == result.occurrenceId &&
+    matchedInspectedOccurrence->occurrence.occurrenceId == result.occurrenceId;
+```
+
+Copy:
+
+```cpp
+event.sourceRecord.detectorReport = *matchedDetectorReport;
+```
+
+Do not patch fields inside `DetectorReport`.
+
+Cross-stage match state remains in:
 
 ```text
-rewrite DetectorReport
-insert IDs into DetectorReport
-set detectorReportMatched after capture
-repair mismatched stage records
+DetectionPipelineEvent
+DetectionSourceRecord
+PipelineIntegrity
 ```
 
 ---
 
-## 10. Stop equating CandidateId with OccurrenceId [complete]
+## 10. Emit rejected-source events only on a new rejected report generation
 
-Current code sets:
+Current `refreshDetectorReports()` detects rejects by repeatedly rebuilding the report and comparing:
 
 ```cpp
-event.candidateId = result.occurrenceId;
-sourceCandidateId = occurrenceId;
+selectedReject.occurrenceId != _lastEmittedSelectedRejectOccurrenceId
 ```
 
-Do not keep this unless the detector contract explicitly guarantees identical IDs.
+Keep the ID guard, but trigger only when detector report generation changes.
 
-Minimum safe change:
+Add a Runtime helper called after relevant detector updates:
+
+```cpp
+void drainDetectorReportEvents(unsigned long nowMs);
+```
+
+Behavior:
 
 ```text
-OccurrenceId remains populated for accepted occurrences.
-CandidateId becomes optional/zero when no real candidate ID is exported.
+If active detector reportGeneration unchanged:
+    return immediately
+
+Copy detector.latestReport() to `_detectorReport`
+
+If report.selectedReject.present
+and selectedReject.occurrenceId != 0
+and not already emitted:
+    create one RejectedSourceCandidate DetectionPipelineEvent
 ```
 
-Add a presence flag if required:
+No report rebuilding.
 
-```cpp
-bool hasCandidateId;
-uint32_t candidateId;
-```
+Accepted reports do not need a separate source-only event if they already travel through Occurrence → Inspector → PatternResult.
 
-Rejected candidate records may carry a real CandidateId without any OccurrenceId.
-
-Do not invent an OccurrenceId for rejected candidates.
+If the architecture currently needs accepted source-only events before PatternResult, preserve them only with the same frozen report and occurrence ID; do not invent a second snapshot path.
 
 ---
 
-## 11. Stop Analyzer from inferring stage failure from counters [complete]
+## 11. Gate no-fresh detector work
 
-Audit:
-
-```text
-AnalyzerTrialClassifier.cpp
-AnalyzerModeApp.cpp
-AnalyzerTrialCapture.cpp
-AnalyzerPassRules.h
-```
-
-Remove logic equivalent to:
+In `observeFrame()`:
 
 ```text
-source accepted but no valid pattern
-=> InspectionFailed
+FrequencyMatch:
+    if packet not present/fresh:
+        skip detector update
+
+ScalarTransient on frequency-derived stream:
+    if packet not fresh:
+        skip detector update
 ```
 
-or:
+Do not let `break` merely exit the switch and still execute detector report work.
 
-```text
-invalid PatternResult
-=> InspectionFailed
-```
-
-Stage failure must come from canonical stage output:
-
-```text
-DetectorReport / DetectorRejectClass
-Inspection observation/report availability and reject reason
-PatternMatcherReport / PatternResult reject reason
-Pipeline correlation/integrity status
-```
-
-Analyzer may classify only what is known.
-
-Use neutral reasons when stage truth is unavailable:
+Use:
 
 ```cpp
-PipelineIncomplete
-MissingInspectionReport
-MissingPatternReport
-UncorrelatedPipelineEvent
-UnknownStageFailure
+bool detectorInputProcessed = false;
 ```
 
-Do not hide missing bookkeeping as an acoustic reject.
+Then:
+
+```cpp
+if (detectorInputProcessed) {
+    drainDetectors(nowMs);
+    drainDetectorReportEvents(nowMs);
+}
+```
+
+If pending PatternMatcher output can exist independently, still call:
+
+```cpp
+drainPatternMatcher(nowMs);
+```
+
+or guard it with a constant-time pending check.
+
+No per-sample report rebuild is allowed.
 
 ---
 
-## 12. Make Analyzer counters observational only [complete]
+## 12. Preserve DetectorReport ownership boundaries
 
-Counters such as:
-
-```text
-sourceCandidateCount
-sourceAcceptedCount
-sourceRejectedCount
-inspectedOccurrenceCount
-patternResultCount
-```
-
-may remain for summaries and diagnostics.
-
-They must not be used as substitutes for stage reports or to invent a reject reason.
-
-Rename ambiguous counters if necessary. For example:
+DetectorReport may contain:
 
 ```text
-pipelineEventCount
-observedAcceptedSourceEventCount
-observedPatternResultCount
+detectorId
+accepted summary
+selected reject summary
+thresholds
+aggregate detector counters
+detector-specific details
+report time bounds
 ```
 
-Do not call every `DetectionPipelineEvent` a candidate unless it actually represents one candidate lifecycle record.
-
----
-
-## 13. Make overflow accounting trial-local [complete]
-
-Current Analyzer reads the cumulative value:
-
-```cpp
-_detection.pipelineEventOverflowCount()
-```
-
-Do not classify a trial directly from the lifetime total.
-
-Capture:
-
-```cpp
-overflowCountAtTrialStart
-overflowCountAtTrialEnd
-overflowDelta = end - start
-```
-
-Use only `overflowDelta` for that trial.
-
-Apply the same rule to every cumulative queue/drop counter used by Analyzer.
-
----
-
-## 14. Add missing queue overflow counters [complete]
-
-Current pipeline-event overflow is counted, but these can fail silently:
+DetectorReport must not contain or be patched with:
 
 ```text
-pushPatternResult()
-pushPatternInspectedOccurrence()
+Analyzer primary/best/duplicate state
+cross-stage matched state
+trial selection state
+runtime-correlation repair fields
 ```
 
-Add separate monotonic counters:
-
-```cpp
-patternResultQueueOverflowCount
-patternInspectedQueueOverflowCount
-pipelineEventQueueOverflowCount
-```
-
-Increment on every rejected push.
-
-Expose read-only accessors.
-
-Do not reuse one generic counter if the failed queue matters for diagnosis.
-
----
-
-## 15. Prevent FIFO-only pattern/inspection correlation [complete]
-
-Current runtime behavior:
-
-```cpp
-pushPatternInspectedOccurrence(inspected);
-...
-popPatternResult(result);
-popPatternInspectedOccurrence(matchedInspectedOccurrence);
-```
-
-This assumes identical FIFO cardinality and order.
-
-Minimum safe fix:
-
-1. Ensure `PatternResult` carries `occurrenceId`.
-2. Store pending inspected occurrences with their `occurrenceId`.
-3. When a PatternResult is popped, find/remove the matching inspected occurrence by ID.
-4. If no match exists:
-   - emit a pipeline integrity status,
-   - do not pair it with the next FIFO item,
-   - increment a correlation failure counter.
-
-A fixed-size array/ring is sufficient. No heap.
-
-Do not introduce a large generic `PipelineObservation` framework unless it simplifies the existing code without parallel structures. The immediate requirement is truthful ID-based correlation.
-
----
-
-## 16. Make queue failure non-destructive [complete]
-
-When enqueueing the inspected occurrence accepted by PatternMatcher fails:
+Current cross-stage fields such as:
 
 ```text
-Do not later pair the PatternResult with an unrelated inspected occurrence.
-```
-
-Record:
-
-```cpp
-patternInspectionQueueOverflow
-correlationUnavailable
-```
-
-When enqueueing the final PatternResult fails, record the drop explicitly.
-
-Analyzer should receive `PipelineIncomplete` for affected trials rather than a fabricated stage reject.
-
----
-
-## 17. Preserve DetectorReport as detector-owned truth [complete]
-
-`DetectorReport` may contain only detector-stage facts such as:
-
-```text
-detector id
-detector-owned candidate id, if the detector exposes one
-accepted occurrence facts emitted by the detector
-selected rejected candidate facts
-detector thresholds and gate outcomes
-detector-specific diagnostic detail
-```
-
-It must not contain:
-
-```text
-Analyzer selection state
-trial primary/best/duplicate state
-cross-stage match state
-Inspector or PatternMatcher correlation state
-IDs inserted later by DetectionRuntime or Analyzer
-```
-
-Fields such as:
-
-```cpp
 sourceReportMatched
 sourceSelection
 sourceOccurrenceId
+sourceCandidateId
 ```
 
-must be audited by meaning.
-
-Apply this rule:
-
-```text
-If a field describes what the detector itself produced, it may remain in DetectorReport.
-If a field describes how DetectorReport was paired with Occurrence, Inspection, PatternResult, or a trial, move it to DetectionPipelineEvent or AnalyzerReport.
-```
-
-Canonical boundary:
-
-```text
-DetectorReport:
-    immutable detector-owned stage truth
-
-DetectionPipelineEvent:
-    immutable cross-stage identities, presence flags, correlation and integrity facts
-
-AnalyzerReport:
-    trial assignment, primary/best/duplicate selection and final classification
-```
-
-`DetectionRuntime` may copy a `DetectorReport` into `DetectionPipelineEvent`, but must not alter its contents.
-
-Analyzer may copy/report a `DetectorReport`, but must not alter its contents.
-
-Keep output keys stable where practical. If a moved field changes output ownership or key placement, report that explicitly.
+must remain in pipeline/analyzer structures, not be written into DetectorReport.
 
 ---
 
-## 18. Add explicit pipeline integrity facts [complete]
+# Specific correctness checks
 
-Add a compact integrity block to the existing pipeline event/reporting path:
+## Scalar accepted path
 
-```cpp
-struct PipelineIntegrity {
-    bool detectorReportPresent;
-    bool occurrenceMatched;
-    bool inspectionPresent;
-    bool patternReportPresent;
-    bool patternResultPresent;
-    bool correlationComplete;
-    bool queueOverflowAffected;
-    PipelineIntegrityReason reason;
-};
+Verify for every accepted scalar occurrence:
+
+```text
+popped Occurrence.occurrenceId
+==
+frozen DetectorReport.accepted.occurrenceId
+==
+PatternResult.occurrenceId
 ```
 
-Possible reasons:
+## Frequency accepted path
 
-```cpp
-None
-MissingDetectorReport
-MissingInspectedOccurrence
-MissingPatternResult
-OccurrenceIdMismatch
-InspectionQueueOverflow
-PatternResultQueueOverflow
-PipelineEventQueueOverflow
+Verify the same equality for FrequencyMatch.
+
+## Rejected path
+
+Verify:
+
+```text
+selectedReject.occurrenceId is nonzero
+no accepted Occurrence is fabricated
+candidate ID is not copied into occurrence ID fields
+one rejected-source event per rejected lifecycle
 ```
 
-Analyzer may report these facts but must not reinterpret them as detector, inspection, or pattern rejection.
+## Reset/profile change
+
+Verify:
+
+```text
+activeDetectorReport().detectorId is correct immediately after configuration/reset
+no previous accepted/rejected report leaks into new profile
+generation trackers reset coherently
+```
 
 ---
 
-## 19. Restrict final Analyzer responsibility [complete]
-
-After cleanup, Analyzer should only perform:
+# Non-goals
 
 ```text
-assign pipeline events to trial/expected window
-select primary valid result
-select best rejected/incomplete observation for explanation
-identify duplicate/early/late/unexpected results
-calculate trial-local deltas
-aggregate run summaries
-print SEQ_TRIAL / SEQ_INSPECT / SEQ_EXPLAIN / SEQ_SUMMARY
-```
-
-Analyzer must not:
-
-```text
-modify DetectorReport
-invent CandidateId or OccurrenceId
-infer failed stage from event counts
-pair stage records by assumption
-turn missing history into weak evidence
-turn queue overflow into InspectionFailed
+No Inspector tuning.
+No AMP threshold changes.
+No PatternMatcher changes beyond carrying the matched report snapshot.
+No generic IDetector.
+No global event framework.
+No dynamic allocation.
+No per-sample dirty flag.
+No live-candidate DetectorReport.
+No broad Analyzer cleanup.
+No output field redesign unless required by corrected ownership.
 ```
 
 ---
 
 # Verification
 
-## Compile
+## Build
 
-Build all existing environments relevant to:
-
-```text
-Analyzer mode
-Resonant node mode
-Emitter mode if shared headers changed
-```
-
-Do not stop after Analyzer-only compile.
-
-## Static checks
-
-Search for and review all remaining assignments to:
+Build all firmware environments using DetectionRuntime:
 
 ```text
-sourceOccurrenceId
-sourceCandidateId
-sourceReportMatched
+Analyzer
+Resonant node
+Emitter if shared detection headers are compiled there
 ```
 
-Search for:
+## Runtime
+
+Run the same TonalPulseScalar 25-trial sequence.
+
+Performance expectations:
 
 ```text
-InspectionFailed
-pipelineEventOverflowCount
-coveredMs
-coverageRatio
-sustainedMs
-pushPatternResult
-pushPatternInspectedOccurrence
-popPatternInspectedOccurrence
+loop_avg_us remains near the improved low-hundreds-of-microseconds range
+AUDIO_IO_HEALTH processed_ratio remains 1.000
 ```
 
-Confirm no Analyzer code manufactures source-stage truth.
-
-## Runtime checks
-
-Run short sequence tests covering:
+Correctness expectations:
 
 ```text
-valid expected pulse
-weak/rejected detector candidate
-accepted occurrence with insufficient inspection history
-invalid pattern with valid inspection
-duplicate result
-no signal
-forced queue-overflow or reduced-capacity test
+no source.report_reason=id_mismatch
+no integrity.reason=occurrence_id_mismatch
+SEQ_SOURCE_CORE detector=scalar_transient for scalar accepted events
+SEQ_SUMMARY detector=scalar_transient
+detector_accepted_trials matches accepted source trials
+detector_reject_trials matches rejected source trials
 ```
 
-Required observations:
+Run equivalent FrequencyMatch sequence and verify:
 
 ```text
-Complete retrospective windows report coverage_complete=1.
-Future-requiring windows report future_unavailable=1 and are not silently accepted.
-Weak evidence and missing history have different reasons.
-Pattern reject and inspection reject have different reasons.
-An old cumulative overflow does not mark later clean trials.
-A correlation failure never pairs a PatternResult with the wrong occurrence.
+SEQ_SOURCE_CORE detector=frequency_match
+accepted/rejected IDs correlate correctly
 ```
 
-## Regression requirement
+## Instrumentation
 
-For trials whose inspection windows were already complete before this pass:
+Temporarily report:
 
 ```text
-Detector acceptance
-Occurrence timing
-Pattern validity
-confidence
-strength class
-support class
+scalar.report_generation
+frequency.report_generation
+runtime.report_copies
+runtime.rejected_report_events
+runtime.report_id_mismatch_count
 ```
 
-must remain unchanged except where prior calculations depended on incorrect coverage-duration math.
+Expected:
 
-Report any such changed metrics separately; do not silently retune them.
+```text
+report generation increments on candidate close/reset only
+report generation does not track audio samples
+report_id_mismatch_count = 0
+```
+
+Remove temporary per-trial spam after verification or keep behind developer diagnostics.
 
 ---
 
-# Deliverables
+# Required Codex final report
 
-1. Implement the code changes.
-2. Add a short document:
-
-```text
-docs/detection_history_coverage_audit.md
-```
-
-with:
-
-```text
-active profile/module window table
-anchor/pre/post combinations
-whether complete at synchronous inspection
-coverage semantics
-remaining deferred WaitForComplete cases
-```
-
-3. Update `docs/current-pass.md` with the implemented scope.
-4. Provide a final Codex report containing:
+Provide:
 
 ```text
 files changed
-old incorrect behavior
-new contract
-output-key changes
-tests run
+exact scalar lifecycle points where freezeReport() is called
+exact frequency lifecycle points where freezeReport() is called
+how accepted report travels from Occurrence to PatternResult
+how rejected reports produce pipeline events
+reset/generation contract
+before/after report build count
+before/after loop_avg_us
+before/after processed_ratio
+ID correlation test results
 remaining risks
-deferred work
 ```
 
-## Final ownership check
-
-Before completion, verify this exact ownership split:
+Suggested commit:
 
 ```text
-Detector:
-    builds DetectorReport
-
-DetectionRuntime:
-    builds DetectionPipelineEvent and cross-stage correlation
-
-Analyzer:
-    builds AnalyzerReport and trial classification
-```
-
-No field may be written by more than one of these owners unless it is an explicit immutable copy.
-
-## Suggested commit
-
-```text
-DetectionCleanup: fix inspection history coverage and Analyzer bookkeeping boundaries
+Detection: freeze DetectorReport at lifecycle close and carry matched snapshots
 ```

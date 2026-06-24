@@ -55,6 +55,8 @@ void printCanonicalStageLine(const char* prefix, const AnalyzerReport& report, b
     Serial.print(report.primaryPattern.reason != nullptr ? report.primaryPattern.reason : "none");
     Serial.print(" analyzer.result=");
     Serial.print(analyzerResultName(report.classification.result));
+    Serial.print(" analyzer.stage=");
+    Serial.print(analyzerStageName(report.classification.primaryStage));
     Serial.print(" analyzer.reason=");
     Serial.print(analyzerReasonName(report.classification.reason));
     Serial.print(" analyzer.dt_ms=");
@@ -104,8 +106,14 @@ void AnalyzerApp::printSequenceTrial(const AnalyzerReport& report) const {
     Serial.print(report.context.trial);
     Serial.print(" result=");
     Serial.print(analyzerResultName(report.classification.result));
+    Serial.print(" stage=");
+    Serial.print(analyzerStageName(report.classification.primaryStage));
     Serial.print(" reject_reason=");
     Serial.print(trialRejectReason);
+    Serial.print(" source_selection=");
+    Serial.print(report.sourceSelection != nullptr ? report.sourceSelection : "none");
+    Serial.print(" source_reason=");
+    Serial.print(report.sourceReportReason != nullptr ? report.sourceReportReason : "none");
     Serial.print(" dt=");
     if (report.classification.result == AnalyzerResult::Rejected) {
         Serial.print("na");

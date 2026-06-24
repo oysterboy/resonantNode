@@ -67,3 +67,7 @@ bool FrequencyMatchDetector::popOccurrence(detection::Occurrence& out) {
     _pendingOccurrence = {};
     return true;
 }
+
+bool FrequencyMatchDetector::hasPendingOccurrence() const {
+    return _pendingOccurrencePresent;
+}

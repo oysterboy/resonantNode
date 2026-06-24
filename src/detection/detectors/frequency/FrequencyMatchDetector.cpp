@@ -119,6 +119,7 @@ void FrequencyMatchDetector::resetState() {
     memset(&pendingOccurrence, 0, sizeof(pendingOccurrence));
     _acceptedOccurrence = {};
     _acceptedDetail = {};
+    clearFrozenReport();
     _pendingOccurrencePresent = false;
     _pendingOccurrence = {};
     _lastEmittedOccurrenceCloseMs = 0;
@@ -147,10 +148,17 @@ void FrequencyMatchDetector::resetRejectSummary() {
     pendingDurationInconsistent = false;
     _acceptedOccurrence = {};
     _acceptedDetail = {};
+    clearFrozenReport();
     _pendingOccurrencePresent = false;
     _pendingOccurrence = {};
     _lastEmittedOccurrenceCloseMs = 0;
     resetPendingFacts();
+}
+
+void FrequencyMatchDetector::clearFrozenReport() {
+    _latestReport = {};
+    _latestReport.detectorId = detection::DetectorId::FrequencyMatch;
+    ++_reportGeneration;
 }
 
 void FrequencyMatchDetector::setDiagnosticsEnabled(bool enabled) {
@@ -296,55 +304,9 @@ void FrequencyMatchDetector::updateBestRejectedPending() {
 void FrequencyMatchDetector::recordRejectedPending() {
     ++rejectedCount;
     updateBestRejectedPending();
+    freezeReport(pendingCloseMs);
 }
 
-// Accepted occurrence emission.
-#if 0
-void FrequencyMatchDetector::capturePendingOccurrence(const AudioSamplePacket& audioSamplePacket) {
-    // Keep accepted occurrence construction inside the detector core.
-    _pendingOccurrence = pendingOccurrence;
-    _pendingOccurrence.detectorId = detection::DetectorId::FrequencyMatch;
-    _pendingOccurrence.occurrenceType = detection::OccurrenceType::Frequency;
-    _pendingOccurrence.present = true;
-    _pendingOccurrence.confidence = _pendingOccurrence.valid ? 1.0f : 0.0f;
-    _pendingOccurrence.frequency.present = true;
-    _pendingOccurrence.frequency.measurement = pendingEvidence;
-    _pendingOccurrence.frequency.measurement.present = true;
-    _pendingOccurrence.frequency.measurement.matched = pendingOccurrence.valid;
-    _pendingOccurrence.frequency.measurement.observedAtMs = audioSamplePacket.timeMs;
-    _pendingOccurrence.frequency.measurement.targetHz = pendingEvidence.targetHz;
-    _pendingOccurrence.scalar.value = audioSamplePacket.audioMagnitudeValue;
-    _pendingOccurrence.scalar.baseline = audioSamplePacket.baseline;
-    _pendingOccurrence.scalar.lift = _pendingOccurrence.scalar.value - _pendingOccurrence.scalar.baseline;
-    _pendingOccurrencePresent = _pendingOccurrence.valid;
-    if (_pendingOccurrencePresent) {
-        const float mean = pendingMean();
-        const float rms = pendingRms();
-        _acceptedOccurrence.present = true;
-        _acceptedOccurrence.startMs = _pendingOccurrence.startMs;
-        _acceptedOccurrence.peakMs = _pendingOccurrence.peakMs;
-        _acceptedOccurrence.endMs = _pendingOccurrence.endMs;
-        _acceptedOccurrence.durationMs = _pendingOccurrence.durationMs;
-        _acceptedOccurrence.strength = _pendingOccurrence.strength;
-        _acceptedOccurrence.confidence = _pendingOccurrence.confidence;
-        _acceptedOccurrence.peak = pendingPeakScore;
-        _acceptedOccurrence.mean = mean;
-        _acceptedOccurrence.rms = rms;
-        _acceptedOccurrence.coverageAboveAttackMs = pendingCoverageAboveAttackMs;
-        _acceptedOccurrence.coverageAboveReleaseMs = pendingCoverageAboveReleaseMs;
-        _acceptedOccurrence.sustainedMs = pendingSustainedMs;
-        _acceptedOccurrence.islandCount = pendingIslandCount;
-        _acceptedOccurrence.gapCount = pendingGapCount;
-        _acceptedOccurrence.islandMaxMs = pendingIslandMaxMs;
-        _acceptedOccurrence.gapMaxMs = pendingGapMaxMs;
-        _acceptedDetail.score = _pendingOccurrence.frequency.score;
-        _acceptedDetail.contrast = _pendingOccurrence.frequency.contrast;
-    }
-}
-
-#endif
-
-// Main detector update.
 void FrequencyMatchDetector::update(const detection::FrequencyBandMeasurementPacket& evidence,
                                     const AudioSamplePacket& audioSamplePacket,
                                     unsigned long now,
@@ -576,95 +538,16 @@ void FrequencyMatchDetector::update(const detection::FrequencyBandMeasurementPac
     }
 }
 
-// Report snapshot.
-#if 0
-void FrequencyMatchDetector::buildReport(detection::DetectorReport& out, unsigned long nowMs) const {
-    // Keep detector-specific report assembly local to the detector so
-    // DetectionRuntime only coordinates report snapshots.
-    out = {};
-    out.detectorId = detection::DetectorId::FrequencyMatch;
-    out.accepted = _acceptedOccurrence;
-    out.frequency.accepted = _acceptedDetail;
-    out.thresholds.minDurationMs = pendingMinDurationMs;
-    out.thresholds.maxDurationMs = pendingMaxDurationMs;
-    out.aggregates.acceptedCount = acceptedCount;
-    out.aggregates.rejectedCount = rejectedCount;
-
-    const bool selectedRejectPresent =
-        !out.accepted.present &&
-        rejectedCount > 0 &&
-        (bestOpenMs > 0 || bestPeakMs > 0 || bestCloseMs > 0 || bestDurationMs > 0 || bestPeakScore > 0.0f ||
-         bestPeakContrast > 0.0f || (bestRejectReason != nullptr && strcmp(bestRejectReason, "none") != 0));
-    if (selectedRejectPresent) {
-        out.selectedReject.present = true;
-        out.selectedReject.rejectClass = frequencyRejectClassFromReason(bestRejectReason);
-        out.selectedReject.detectorReason = bestRejectReason;
-        out.selectedReject.startMs = bestOpenMs;
-        out.selectedReject.peakMs = bestPeakMs;
-        out.selectedReject.endMs = bestCloseMs;
-        out.selectedReject.durationMs = bestDurationMs;
-        out.selectedReject.strength = bestPeakScore;
-        out.selectedReject.confidence = 0.0f;
-        out.selectedReject.peak = bestPeakScore;
-        out.selectedReject.mean = bestMean;
-        out.selectedReject.rms = bestRms;
-        out.selectedReject.coverageAboveAttackMs = bestCoverageAboveAttackMs;
-        out.selectedReject.coverageAboveReleaseMs = bestCoverageAboveReleaseMs;
-        out.selectedReject.sustainedMs = bestSustainedMs;
-        out.selectedReject.islandCount = bestIslandCount;
-        out.selectedReject.gapCount = bestGapCount;
-        out.selectedReject.islandMaxMs = bestIslandMaxMs;
-        out.selectedReject.gapMaxMs = bestGapMaxMs;
-        out.frequency.selectedReject.score = bestPeakScore;
-        out.frequency.selectedReject.contrast = bestPeakContrast;
-    }
-
-    out.frequency.thresholds.scoreThreshold = attackScoreThreshold;
-    out.frequency.thresholds.contrastThreshold = attackContrastThreshold;
-    out.frequency.aggregates.scoreOkCount = diagnosticsScoreOkCount;
-    out.frequency.aggregates.contrastOkCount = diagnosticsContrastOkCount;
-    out.frequency.aggregates.bothOkCount = diagnosticsBothOkCount;
-    out.frequency.aggregates.matchCount = diagnosticsMatchedCount;
-    out.frequency.inspect.rejectReason = frequencyRejectReasonFromState(*this);
-    out.frequency.inspect.noEmitReason = noEmitReason;
-    out.frequency.inspect.gateReason = gateReason;
-    out.frequency.inspect.pendingState = pendingState;
-    out.frequency.inspect.readyOk = evidenceOk;
-    out.frequency.inspect.gateOpen = attackOk;
-    out.frequency.inspect.opened = pendingActive || pendingClosed || pendingAccepted || pendingOpenMs > 0;
-    out.frequency.inspect.released = pendingClosed || pendingCloseMs > 0;
-    out.frequency.inspect.emitted = pendingAccepted;
-    out.frequency.inspect.validRelease = validRelease;
-    out.frequency.inspect.emitAllowed = emitAllowed;
-    out.frequency.inspect.openMs = pendingOpenMs;
-    out.frequency.inspect.peakMs = pendingPeakMs;
-    out.frequency.inspect.releaseMs = pendingCloseMs;
-    out.frequency.inspect.durationMs = pendingDurationMs;
-
-    // Mirror the scalar report window precedence exactly:
-    // accepted event first, then active/open lifecycle, then selected reject.
-    if (out.accepted.present) {
-        out.reportStartMs = out.accepted.startMs;
-        out.reportEndMs = out.accepted.endMs;
-    } else if (out.frequency.inspect.opened) {
-        out.reportStartMs = out.frequency.inspect.openMs;
-        out.reportEndMs = out.frequency.inspect.released ? out.frequency.inspect.releaseMs : nowMs;
-    } else if (out.selectedReject.present) {
-        out.reportStartMs = out.selectedReject.startMs;
-        out.reportEndMs = out.selectedReject.endMs;
-    }
+void FrequencyMatchDetector::freezeReport(unsigned long nowMs) {
+    buildReport(_latestReport, nowMs);
+    ++_reportGeneration;
 }
 
-// Pending emission.
-bool FrequencyMatchDetector::popOccurrence(detection::Occurrence& out) {
-    if (!_pendingOccurrencePresent) {
-        return false;
-    }
-
-    out = _pendingOccurrence;
-    _pendingOccurrencePresent = false;
-    _pendingOccurrence = {};
-    return true;
+const detection::DetectorReport& FrequencyMatchDetector::latestReport() const {
+    return _latestReport;
 }
-#endif
+
+uint32_t FrequencyMatchDetector::reportGeneration() const {
+    return _reportGeneration;
+}
 

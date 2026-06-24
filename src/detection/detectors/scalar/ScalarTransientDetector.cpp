@@ -46,8 +46,16 @@ void ScalarTransientDetector::resetState() {
     _currentOccurrenceId = 0;
     _reportDetail = {};
     resetAcceptedOccurrencePending();
-    resetAcceptedOccurrenceSummary();
-    resetSelectedRejectSummary();
+    _acceptedOccurrencePresent = false;
+    _acceptedOccurrence = {};
+    _acceptedOccurrenceReleaseMs = 0;
+    _reportDetail.accepted = {};
+    _pendingOccurrencePresent = false;
+    _pendingOccurrence = {};
+    _selectedRejectPresent = false;
+    _selectedReject = {};
+    _reportDetail.selectedReject = {};
+    clearFrozenReport();
 }
 
 void ScalarTransientDetector::resetAcceptedOccurrenceSummary() {
@@ -58,6 +66,7 @@ void ScalarTransientDetector::resetAcceptedOccurrenceSummary() {
     _reportDetail.accepted = {};
     _pendingOccurrencePresent = false;
     _pendingOccurrence = {};
+    clearFrozenReport();
 }
 
 void ScalarTransientDetector::resetSelectedRejectSummary() {
@@ -65,6 +74,13 @@ void ScalarTransientDetector::resetSelectedRejectSummary() {
     _selectedReject = {};
     _selectedRejectOccurrenceId = 0;
     _reportDetail.selectedReject = {};
+    clearFrozenReport();
+}
+
+void ScalarTransientDetector::clearFrozenReport() {
+    _latestReport = {};
+    _latestReport.detectorId = detection::DetectorId::ScalarTransient;
+    ++_reportGeneration;
 }
 
 void ScalarTransientDetector::resetCandidateFacts() {
@@ -368,6 +384,19 @@ void ScalarTransientDetector::update(
     updateAcceptedOccurrencePending(audioSamplePacket, signalMagnitude);
     refreshReportDetail();
     printTransientStatsIfDue(nowUs);
+}
+
+void ScalarTransientDetector::freezeReport(unsigned long nowMs) {
+    buildReport(_latestReport, nowMs);
+    ++_reportGeneration;
+}
+
+const detection::DetectorReport& ScalarTransientDetector::latestReport() const {
+    return _latestReport;
+}
+
+uint32_t ScalarTransientDetector::reportGeneration() const {
+    return _reportGeneration;
 }
 
 void ScalarTransientDetector::setOnsetDetectionThreshold(float value) {

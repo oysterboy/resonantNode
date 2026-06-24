@@ -86,7 +86,10 @@ public:
     void setDiagnosticsEnabled(bool enabled);
 
     void buildReport(detection::DetectorReport& out, unsigned long nowMs) const;
+    const detection::DetectorReport& latestReport() const;
+    uint32_t reportGeneration() const;
     bool popOccurrence(detection::Occurrence& out);
+    bool hasPendingOccurrence() const;
 
 private:
     // Config / thresholds.
@@ -173,6 +176,8 @@ private:
     unsigned long _transientRejectedCount = 0;
     bool _selectedRejectPresent = false;
     detection::SelectedRejectSummary _selectedReject = {};
+    detection::DetectorReport _latestReport = {};
+    uint32_t _reportGeneration = 0;
 
     // Diagnostics state.
     unsigned long _lastStatsPrintUs = 0;
@@ -199,6 +204,8 @@ private:
     );
     void capturePendingOccurrence(const AudioSamplePacket& audioSamplePacket);
     void resetAcceptedOccurrencePending();
+    void freezeReport(unsigned long nowMs);
+    void clearFrozenReport();
     void refreshReportDetail();
     void printTransientStatsIfDue(unsigned long nowUs);
 };

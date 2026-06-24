@@ -909,6 +909,40 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
         selectedTrial.reportMatched,
         selectedDetectorReport != nullptr);
     report.detectorReport = selectedTrial.reportMatched ? selectedDetectorReport : nullptr;
+    report.integrity.detectorReportPresent = selectedDetectorReport != nullptr;
+    report.integrity.occurrenceMatched = selectedTrial.reportMatched;
+    report.integrity.inspectionPresent = hasInspectedOccurrence;
+    report.integrity.patternReportPresent = hasPatternResult;
+    report.integrity.patternResultPresent = hasPatternResult;
+    const unsigned long pipelineOverflowDelta = _detection.pipelineEventOverflowCount() > _sequenceTest.trialOverflowCountAtStart
+        ? _detection.pipelineEventOverflowCount() - _sequenceTest.trialOverflowCountAtStart
+        : 0UL;
+    report.integrity.queueOverflowAffected = pipelineOverflowDelta > 0UL ||
+        _detection.patternResultQueueOverflowCount() > _sequenceTest.trialPatternResultOverflowCountAtStart ||
+        _detection.patternInspectedQueueOverflowCount() > _sequenceTest.trialPatternInspectedOverflowCountAtStart;
+    report.integrity.correlationComplete = selectedTrial.kind == SequenceTrialSelection::Kind::RejectedSourceCandidate
+        ? report.integrity.detectorReportPresent
+        : (report.integrity.detectorReportPresent &&
+           report.integrity.inspectionPresent &&
+           report.integrity.patternResultPresent &&
+           report.integrity.occurrenceMatched);
+    if (!report.integrity.detectorReportPresent) {
+        report.integrity.reason = "missing_detector_report";
+    } else if (!report.integrity.inspectionPresent) {
+        report.integrity.reason = report.integrity.queueOverflowAffected
+            ? "inspection_queue_overflow"
+            : "missing_inspected_occurrence";
+    } else if (!report.integrity.patternResultPresent && selectedTrial.kind != SequenceTrialSelection::Kind::RejectedSourceCandidate) {
+        report.integrity.reason = report.integrity.queueOverflowAffected
+            ? "pattern_result_queue_overflow"
+            : "missing_pattern_result";
+    } else if (!report.integrity.occurrenceMatched && selectedTrial.kind != SequenceTrialSelection::Kind::RejectedSourceCandidate) {
+        report.integrity.reason = "occurrence_id_mismatch";
+    } else if (report.integrity.queueOverflowAffected) {
+        report.integrity.reason = "pipeline_event_queue_overflow";
+    } else {
+        report.integrity.reason = "none";
+    }
     const bool trialHasPipelineEvidence = (hasPatternResult || hasInspectedOccurrence || _sequenceTest.selectedSourceRejectCaptured)
         && _sequenceTest.sourceCandidateCount > 0;
     const long reportPatternDtMs = hasPatternResult
@@ -940,9 +974,7 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
     classificationInput.sourceRejectedCount = _sequenceTest.sourceRejectedCount;
     classificationInput.inspectedOccurrenceCount = _sequenceTest.inspectedOccurrenceCount;
     classificationInput.patternResultCount = _sequenceTest.patternResultCount;
-    classificationInput.pipelineQueueOverflowCount = _detection.pipelineEventOverflowCount() > _sequenceTest.trialOverflowCountAtStart
-        ? _detection.pipelineEventOverflowCount() - _sequenceTest.trialOverflowCountAtStart
-        : 0UL;
+    classificationInput.pipelineQueueOverflowCount = pipelineOverflowDelta;
     classificationInput.bufferOverrun = bufferOverrun;
     classificationInput.patternAvailable = hasPatternResult;
     classificationInput.detectorReportAvailable = selectedDetectorReport != nullptr;

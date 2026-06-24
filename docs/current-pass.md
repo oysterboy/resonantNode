@@ -759,7 +759,7 @@ Keep output keys stable where practical. If a moved field changes output ownersh
 
 ---
 
-## 18. Add explicit pipeline integrity facts
+## 18. Add explicit pipeline integrity facts [complete]
 
 Add a compact integrity block to the existing pipeline event/reporting path:
 

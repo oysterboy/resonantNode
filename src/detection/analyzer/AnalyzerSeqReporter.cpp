@@ -18,6 +18,29 @@ const char* strengthClassForObservationTarget(const AnalyzerReport& report, dete
     return "unknown";
 }
 
+const char* pipelineIntegrityReasonName(detection::PipelineIntegrityReason reason) {
+    switch (reason) {
+        case detection::PipelineIntegrityReason::None:
+            return "none";
+        case detection::PipelineIntegrityReason::MissingDetectorReport:
+            return "missing_detector_report";
+        case detection::PipelineIntegrityReason::MissingInspectedOccurrence:
+            return "missing_inspected_occurrence";
+        case detection::PipelineIntegrityReason::MissingPatternResult:
+            return "missing_pattern_result";
+        case detection::PipelineIntegrityReason::OccurrenceIdMismatch:
+            return "occurrence_id_mismatch";
+        case detection::PipelineIntegrityReason::InspectionQueueOverflow:
+            return "inspection_queue_overflow";
+        case detection::PipelineIntegrityReason::PatternResultQueueOverflow:
+            return "pattern_result_queue_overflow";
+        case detection::PipelineIntegrityReason::PipelineEventQueueOverflow:
+            return "pipeline_event_queue_overflow";
+        default:
+            return "unknown";
+    }
+}
+
 void printCanonicalStageLine(const char* prefix, const AnalyzerReport& report, bool extended) {
     Serial.print(prefix);
     Serial.print(" expected.start_ms=");
@@ -45,6 +68,10 @@ void printCanonicalStageLine(const char* prefix, const AnalyzerReport& report, b
         Serial.print(detection::inspectionTargetName(report.inspection.moduleTarget));
         Serial.print(" inspection.strength=");
         Serial.print(report.inspection.moduleStrengthClass != nullptr ? report.inspection.moduleStrengthClass : "unknown");
+        Serial.print(" integrity.complete=");
+        Serial.print(report.integrity.correlationComplete ? 1 : 0);
+        Serial.print(" integrity.reason=");
+        Serial.print(report.integrity.reason != nullptr ? report.integrity.reason : "none");
     }
     Serial.println();
 }
@@ -204,6 +231,12 @@ void AnalyzerApp::printSequenceInspectCanonical(const AnalyzerReport& report) co
         Serial.print(observation != nullptr ? static_cast<unsigned long>(observation->freshValueCount) : 0UL);
         Serial.print(" inspect.occurrence_id=");
         Serial.print(report.sourceOccurrenceId);
+        Serial.print(" inspect.integrity_complete=");
+        Serial.print(report.integrity.correlationComplete ? 1 : 0);
+        Serial.print(" inspect.integrity_reason=");
+        Serial.print(report.integrity.reason != nullptr ? report.integrity.reason : "none");
+        Serial.print(" inspect.integrity_queue_overflow=");
+        Serial.print(report.integrity.queueOverflowAffected ? 1 : 0);
         Serial.println();
     };
 
@@ -262,6 +295,12 @@ void AnalyzerApp::printSequenceSourceCanonical(const AnalyzerReport& report) con
     Serial.print(report.occurrences.accepted);
     Serial.print(" source.rejected_count=");
     Serial.print(report.occurrences.rejected);
+    Serial.print(" integrity.complete=");
+    Serial.print(report.integrity.correlationComplete ? 1 : 0);
+    Serial.print(" integrity.queue_overflow=");
+    Serial.print(report.integrity.queueOverflowAffected ? 1 : 0);
+    Serial.print(" integrity.reason=");
+    Serial.print(report.integrity.reason != nullptr ? report.integrity.reason : "none");
     Serial.println();
 
     printSequenceSourceCoreCanonical(report);
@@ -327,6 +366,22 @@ void AnalyzerApp::printSequenceDetailCanonical(const AnalyzerReport& report) con
     Serial.print(report.profileDetail.scalarObservation.requestedFutureAtInspection ? 1 : 0);
     Serial.print(" coverage.covered_ms=");
     Serial.print(report.profileDetail.scalarObservation.coveredDurationMs);
+    Serial.print(" integrity.detector_present=");
+    Serial.print(report.integrity.detectorReportPresent ? 1 : 0);
+    Serial.print(" integrity.occurrence_matched=");
+    Serial.print(report.integrity.occurrenceMatched ? 1 : 0);
+    Serial.print(" integrity.inspection_present=");
+    Serial.print(report.integrity.inspectionPresent ? 1 : 0);
+    Serial.print(" integrity.pattern_report_present=");
+    Serial.print(report.integrity.patternReportPresent ? 1 : 0);
+    Serial.print(" integrity.pattern_result_present=");
+    Serial.print(report.integrity.patternResultPresent ? 1 : 0);
+    Serial.print(" integrity.complete=");
+    Serial.print(report.integrity.correlationComplete ? 1 : 0);
+    Serial.print(" integrity.queue_overflow=");
+    Serial.print(report.integrity.queueOverflowAffected ? 1 : 0);
+    Serial.print(" integrity.reason=");
+    Serial.print(report.integrity.reason != nullptr ? report.integrity.reason : "none");
     Serial.print(" PATTERN:");
     Serial.print(" result=");
     Serial.print(report.classification.result == AnalyzerResult::Expected || report.classification.result == AnalyzerResult::Late

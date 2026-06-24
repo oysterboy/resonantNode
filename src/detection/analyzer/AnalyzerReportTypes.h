@@ -298,6 +298,17 @@ struct AnalyzerClassification {
     long dtMs = -1;
 };
 
+struct AnalyzerPipelineIntegrityObservation {
+    bool detectorReportPresent = false;
+    bool occurrenceMatched = false;
+    bool inspectionPresent = false;
+    bool patternReportPresent = false;
+    bool patternResultPresent = false;
+    bool correlationComplete = false;
+    bool queueOverflowAffected = false;
+    const char* reason = "none";
+};
+
 struct AnalyzerProfileDetail {
     const char* namespaceName = "none";
     const char* summary = "";
@@ -395,6 +406,7 @@ struct AnalyzerReport {
     unsigned long sourceOccurrenceId = 0;
     unsigned long sourceCandidateId = 0;
     bool sourceReportMatched = false;
+    AnalyzerPipelineIntegrityObservation integrity;
 
     AnalyzerPatternObservation primaryPattern;
     AnalyzerOccurrenceObservation occurrences;

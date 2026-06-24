@@ -124,15 +124,16 @@ inline DetectionProfile makeTonalPulseScalarProfile() {
     // "Offline" values here are deduced from RAW PCM captures and then mapped
     // into the normalized magnitude-like 0..32767 scale.
     profile.scalarTransient.observedStream = FeatureStreamId::FrequencyTarget; // Track the target-band scalar stream.
-    profile.scalarTransient.onsetDetectionThreshold = 4500.0f; // Attack threshold for candidate start.
-    profile.scalarTransient.onsetReleaseThreshold = 3000.0f; // Release threshold for candidate end.
+    profile.scalarTransient.onsetDetectionThreshold = 2000.0f; // Attack threshold for candidate start.
+    profile.scalarTransient.onsetReleaseThreshold = 1500.0f; // Release threshold for candidate end.
     profile.scalarTransient.minTransientDurationMs = 85; // Reject pulses that are too short.
     profile.scalarTransient.maxTransientDurationMs = 200; // Reject pulses that are too long.
-    profile.scalarTransient.minTransientPeakStrength = 5750.0f; // Minimum peak gate for the carrier.
+
     profile.scalarTransient.releaseDebounceMs = 10; // Require a short stable release before ending.
     profile.scalarTransient.cooldownAfterOnsetMs = 50; // Avoid immediate re-triggering on the same pulse.
     // Minimum strength gate for the matched mean / peak utility switch.
     profile.scalarTransient.requireMinStrength = true;
+    profile.scalarTransient.minTransientPeakStrength = 3000.0f; // Minimum peak gate for the carrier.
     profile.scalarTransient.minMatchedMeanStrength = 0.0f; // Mean over samples above the release threshold.
     // Carrier quality gates to reject fragmented or weak target-band coverage.
     profile.scalarTransient.requireCarrierQuality = true;
@@ -152,9 +153,9 @@ inline DetectionProfile makeTonalPulseScalarProfile() {
     profile.inspectionPlan.modules[0].scalar.windowPostMs = 100; // Inspect the first 100 ms after onset.
     profile.inspectionPlan.modules[0].minimumStrength = StrengthClass::Medium; // Require at least medium evidence.
     profile.inspectionPlan.modules[0].scalar.mode = ScalarInspectionMode::P75; // Use a robust percentile summary.
-    profile.inspectionPlan.modules[0].scalar.supportStrength.strongPeakThreshold = 80.0f; // Strong contrast threshold.
-    profile.inspectionPlan.modules[0].scalar.supportStrength.mediumPeakThreshold = 50.0f; // Medium contrast threshold.
-    profile.inspectionPlan.modules[0].scalar.supportStrength.weakPeakThreshold = 25.0f; // Weak contrast threshold.
+    profile.inspectionPlan.modules[0].scalar.supportStrength.strongPeakThreshold = 300000.0f; // Strong contrast threshold.
+    profile.inspectionPlan.modules[0].scalar.supportStrength.mediumPeakThreshold = 20000.0f; // Medium contrast threshold.
+    profile.inspectionPlan.modules[0].scalar.supportStrength.weakPeakThreshold = 10000.0f; // Weak contrast threshold.
 
 
     // Secondary Inspection: Amplitude

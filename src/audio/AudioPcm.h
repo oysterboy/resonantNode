@@ -18,7 +18,7 @@ constexpr PcmSample kCanonicalPcmMin = -(PcmSample{1} << (kSourcePcmBits - 1));
 constexpr PcmIntermediate kCanonicalPcmMagnitudeMax = static_cast<PcmIntermediate>(kCanonicalPcmMax);
 constexpr Strength16 kStrength16Max = 32767;
 constexpr PcmSample kAmpStrengthGainReferencePcm = 262143;
-constexpr double kFrequencyAmplitudeReference = 65535.0;
+constexpr double kFrequencyAmplitudeReference = 262143;
 
 constexpr PcmIntermediate pcmMagnitude(PcmSample sample) {
     return static_cast<PcmIntermediate>(sample) < 0

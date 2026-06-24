@@ -94,7 +94,7 @@ size_t FeatureHistory::streamIndex(FeatureStreamId stream) {
         case FeatureStreamId::AmpEnvelope:
             return 1U;
         case FeatureStreamId::FrequencyTarget:
-            return 3U;
+            return 2U;
         case FeatureStreamId::FrequencyContrast:
             return 3U;
         case FeatureStreamId::Unknown:

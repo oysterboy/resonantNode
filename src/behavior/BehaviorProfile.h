@@ -9,8 +9,8 @@ These settings affect behavior eligibility, not pattern validity.
 struct BehaviorGateConfig {
     bool idleEnabled = true;
 
-    unsigned long waitAfterHeardMs = 200;
-    unsigned long refractoryAfterEmitMs = 0;
+    unsigned long waitAfterHeardMs = 100;
+    unsigned long refractoryAfterEmitMs = 400;
     unsigned long behaviorSuppressSelfChirpMs = 100;
     unsigned long detectionSuppressTailMsOwnEmit = 0;
     unsigned long idleTimeoutMs = 20000;

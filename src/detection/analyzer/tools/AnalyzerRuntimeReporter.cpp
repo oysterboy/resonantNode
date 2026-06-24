@@ -186,6 +186,17 @@ void AnalyzerApp::printAudioRunSummary() const {
     Serial.print(" updateEverySamples=");
     Serial.println(_seqOutputConfig.frequencyUpdateEverySamples);
 
+    const unsigned long freqAgeSamples = _freqBandStream.lastPacketAgeSamples();
+    const unsigned long freqComputedAtSample = _freqBandStream.sampleCount() >= freqAgeSamples
+        ? _freqBandStream.sampleCount() - freqAgeSamples
+        : 0UL;
+    const unsigned long freqHistoryTargetRecords =
+        _detection.featureHistory().sampleCount(detection::FeatureStreamId::FrequencyTarget);
+    const unsigned long freqHistoryContrastRecords =
+        _detection.featureHistory().sampleCount(detection::FeatureStreamId::FrequencyContrast);
+
+    Serial.print("FREQBAND profile:");
+#if FREQBAND_ENABLE_PROFILING
     const unsigned long freqObserveCalls = _freqBandStream.profileObserveCalls();
     const unsigned long freqComputeCalls = _freqBandStream.profileComputeCalls();
     const float avgObserveUs = freqObserveCalls > 0
@@ -201,7 +212,6 @@ void AnalyzerApp::printAudioRunSummary() const {
         ? static_cast<float>(_freqBandStream.profileGoertzelTotalUs()) / static_cast<float>(freqComputeCalls)
         : 0.0f;
 
-    Serial.print("FREQBAND profile:");
     Serial.print(" observe_calls=");
     Serial.print(freqObserveCalls);
     Serial.print(" avg_observe_us=");
@@ -214,21 +224,16 @@ void AnalyzerApp::printAudioRunSummary() const {
     Serial.print(avgEnergyUs, 2);
     Serial.print(" avg_goertzel_us=");
     Serial.println(avgGoertzelUs, 2);
+#else
+    Serial.println(" profiling=disabled");
+#endif
 
+    Serial.print("FREQBAND freshness:");
+#if FREQBAND_ENABLE_PROFILING
     const unsigned long freqFreshObserveCalls = _freqBandStream.profileComputeCalls();
     const unsigned long freqHeldObserveCalls = _freqBandStream.profileObserveCalls() > _freqBandStream.profileComputeCalls()
         ? _freqBandStream.profileObserveCalls() - _freqBandStream.profileComputeCalls()
         : 0UL;
-    const unsigned long freqAgeSamples = _freqBandStream.lastPacketAgeSamples();
-    const unsigned long freqComputedAtSample = _freqBandStream.sampleCount() >= freqAgeSamples
-        ? _freqBandStream.sampleCount() - freqAgeSamples
-        : 0UL;
-    const unsigned long freqHistoryTargetRecords =
-        _detection.featureHistory().sampleCount(detection::FeatureStreamId::FrequencyTarget);
-    const unsigned long freqHistoryContrastRecords =
-        _detection.featureHistory().sampleCount(detection::FeatureStreamId::FrequencyContrast);
-
-    Serial.print("FREQBAND freshness:");
     Serial.print(" fresh_frames=");
     Serial.print(freqFreshObserveCalls);
     Serial.print(" held_frames=");
@@ -241,6 +246,17 @@ void AnalyzerApp::printAudioRunSummary() const {
     Serial.print(freqHistoryTargetRecords);
     Serial.print(" history_contrast_records=");
     Serial.println(freqHistoryContrastRecords);
+#else
+    Serial.print(" profiling=disabled");
+    Serial.print(" age_samples=");
+    Serial.print(freqAgeSamples);
+    Serial.print(" computed_at_sample=");
+    Serial.print(freqComputedAtSample);
+    Serial.print(" history_target_records=");
+    Serial.print(freqHistoryTargetRecords);
+    Serial.print(" history_contrast_records=");
+    Serial.println(freqHistoryContrastRecords);
+#endif
 }
 
 void AnalyzerApp::printOccurrenceSummary() const {

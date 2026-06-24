@@ -5,6 +5,10 @@
 
 #include "../../audio/AudioPcm.h"
 
+#ifndef FREQBAND_ENABLE_PROFILING
+#define FREQBAND_ENABLE_PROFILING 0
+#endif
+
 namespace {
 constexpr float kNormalizedBandScoreScale = 32767.0f;
 constexpr float kNormalizedBandScoreEpsilon = 1.0f;
@@ -33,12 +37,14 @@ void FreqBandStream::resetState() {
     for (unsigned long i = 0; i < kMaxWindowSizeSamples; ++i) {
         _sampleBuffer[i] = 0;
     }
+#if FREQBAND_ENABLE_PROFILING
     _profileObserveCalls = 0;
     _profileComputeCalls = 0;
     _profileObserveTotalUs = 0;
     _profileComputeTotalUs = 0;
     _profileEnergyTotalUs = 0;
     _profileGoertzelTotalUs = 0;
+#endif
     updateCachedGoertzelCoefficients();
 }
 
@@ -73,7 +79,6 @@ void FreqBandStream::setFrequencyUpdateEverySamples(unsigned long value) {
 }
 
 void FreqBandStream::observeCenteredSample(int centeredSample, unsigned long sampleTimeMs) {
-    const unsigned long profileStartUs = micros();
     _producedFreshPacketOnLastObserve = false;
     pushSample(centeredSample);
     if (_sampleCount < _windowSizeSamples) {
@@ -84,8 +89,9 @@ void FreqBandStream::observeCenteredSample(int centeredSample, unsigned long sam
         _lastNeighborBandPowerValue = 0.0f;
         _lastTotalEnergyValue = 0.0f;
         _lastTargetBandContrastValue = 0.0f;
+#if FREQBAND_ENABLE_PROFILING
         ++_profileObserveCalls;
-        _profileObserveTotalUs += static_cast<unsigned long>(micros() - profileStartUs);
+#endif
         return;
     }
 
@@ -100,8 +106,9 @@ void FreqBandStream::observeCenteredSample(int centeredSample, unsigned long sam
     if (!_producedFreshPacketOnLastObserve) {
         --_samplesUntilNextFrequencyUpdate;
     }
+#if FREQBAND_ENABLE_PROFILING
     ++_profileObserveCalls;
-    _profileObserveTotalUs += static_cast<unsigned long>(micros() - profileStartUs);
+#endif
 }
 
 void FreqBandStream::pushSample(int sample) {
@@ -139,7 +146,9 @@ float FreqBandStream::computeGoertzelPowerFromCoeff(float coeff) const {
         return 0.0f;
     }
 
+#if FREQBAND_ENABLE_PROFILING
     const unsigned long profileStartUs = micros();
+#endif
     float sPrev = 0.0f;
     float sPrev2 = 0.0f;
 
@@ -154,7 +163,9 @@ float FreqBandStream::computeGoertzelPowerFromCoeff(float coeff) const {
     }
 
     const float power = sPrev2 * sPrev2 + sPrev * sPrev - coeff * sPrev * sPrev2;
+#if FREQBAND_ENABLE_PROFILING
     _profileGoertzelTotalUs += static_cast<unsigned long>(micros() - profileStartUs);
+#endif
     return power;
 }
 
@@ -190,8 +201,10 @@ audio::FrequencyScore16 FreqBandStream::computeFrequencyScore() {
         return 0;
     }
 
+#if FREQBAND_ENABLE_PROFILING
     const unsigned long profileStartUs = micros();
     const unsigned long energyStartUs = micros();
+#endif
     float totalEnergy = 0.0f;
     const unsigned long startIndex = _sampleWriteIndex;
     for (unsigned long i = 0; i < _windowSizeSamples; ++i) {
@@ -199,7 +212,9 @@ audio::FrequencyScore16 FreqBandStream::computeFrequencyScore() {
         const float sample = static_cast<float>(_sampleBuffer[index]);
         totalEnergy += sample * sample;
     }
+#if FREQBAND_ENABLE_PROFILING
     _profileEnergyTotalUs += static_cast<unsigned long>(micros() - energyStartUs);
+#endif
 
     const float targetPower = computeGoertzelPowerAtFrequency(_cachedTargetFrequencyHz);
     const float lowerPower = computeGoertzelPowerAtFrequency(_cachedLowerFrequencyHz);
@@ -218,8 +233,10 @@ audio::FrequencyScore16 FreqBandStream::computeFrequencyScore() {
     _lastNeighborBandPowerValue = neighborPower;
     _lastTotalEnergyValue = totalEnergy;
     _lastTargetBandContrastValue = contrast;
+#if FREQBAND_ENABLE_PROFILING
     ++_profileComputeCalls;
     _profileComputeTotalUs += static_cast<unsigned long>(micros() - profileStartUs);
+#endif
 
     return normalizedScore;
 }
@@ -284,27 +301,59 @@ bool FreqBandStream::windowReady() const {
 }
 
 unsigned long FreqBandStream::profileObserveCalls() const {
+#if FREQBAND_ENABLE_PROFILING
     return _profileObserveCalls;
+#else
+    return 0UL;
+#endif
 }
 
 unsigned long FreqBandStream::profileComputeCalls() const {
+#if FREQBAND_ENABLE_PROFILING
     return _profileComputeCalls;
+#else
+    return 0UL;
+#endif
 }
 
 unsigned long FreqBandStream::profileObserveTotalUs() const {
+#if FREQBAND_ENABLE_PROFILING
     return _profileObserveTotalUs;
+#else
+    return 0UL;
+#endif
 }
 
 unsigned long FreqBandStream::profileComputeTotalUs() const {
+#if FREQBAND_ENABLE_PROFILING
     return _profileComputeTotalUs;
+#else
+    return 0UL;
+#endif
 }
 
 unsigned long FreqBandStream::profileEnergyTotalUs() const {
+#if FREQBAND_ENABLE_PROFILING
     return _profileEnergyTotalUs;
+#else
+    return 0UL;
+#endif
 }
 
 unsigned long FreqBandStream::profileGoertzelTotalUs() const {
+#if FREQBAND_ENABLE_PROFILING
     return _profileGoertzelTotalUs;
+#else
+    return 0UL;
+#endif
+}
+
+bool FreqBandStream::profilingEnabled() const {
+#if FREQBAND_ENABLE_PROFILING
+    return true;
+#else
+    return false;
+#endif
 }
 
 bool FreqBandStream::producedFreshPacketOnLastObserve() const {

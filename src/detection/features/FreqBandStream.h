@@ -2,6 +2,10 @@
 
 #include <stdint.h>
 
+#ifndef FREQBAND_ENABLE_PROFILING
+#define FREQBAND_ENABLE_PROFILING 0
+#endif
+
 #include "../../audio/AudioPcm.h"
 #include "../../app/RuntimeDefaults.h"
 
@@ -54,6 +58,7 @@ public:
     unsigned long profileComputeTotalUs() const;
     unsigned long profileEnergyTotalUs() const;
     unsigned long profileGoertzelTotalUs() const;
+    bool profilingEnabled() const;
     bool producedFreshPacketOnLastObserve() const;
     unsigned long lastPacketAgeSamples() const;
 

@@ -84,10 +84,12 @@ void ScalarTransientDetector::captureAcceptedOccurrence(unsigned long releaseObs
     _acceptedOccurrence.gapCount = _candidateGapCount;
     _acceptedOccurrence.islandMaxMs = _candidateIslandMaxMs;
     _acceptedOccurrence.gapMaxMs = _candidateGapMaxMs;
+    _selectedRejectPresent = false;
+    _selectedReject = {};
+    _reportDetail.selectedReject = {};
     _reportDetail.inspect.matchedMeanPassed =
         !_requireMinStrength ||
         candidateMatchedMean >= _minMatchedMeanStrength;
-    freezeReport(releaseObservedUs / 1000UL);
     resetCandidateFacts();
 }
 
@@ -198,6 +200,8 @@ void ScalarTransientDetector::capturePendingOccurrence(const AudioSamplePacket& 
     _reportDetail.accepted.lift = _pendingOccurrence.scalar.lift;
     _reportDetail.accepted.normalized = 0.0f;
     _pendingOccurrencePresent = true;
+    refreshReportDetail();
+    freezeReport(audioSamplePacket.timeMs);
 }
 
 void ScalarTransientDetector::updateAcceptedOccurrencePending(

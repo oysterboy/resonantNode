@@ -744,6 +744,12 @@ void AnalyzerApp::update() {
                     );
                 }
             }
+            detection::PatternResult runtimePatternResult = {};
+            while (_detection.popPatternResult(runtimePatternResult)) {
+                if (_sequenceTest.active && _sequenceTest.currentTrial > 0) {
+                    _sequenceTest.currentTrialDiagnostics.runtimePatternCaptured = true;
+                }
+            }
             if (_sequenceTest.active && _sequenceTest.currentTrial > 0) {
                 const unsigned long processingLagMs = millis() > audioSamplePacket.timeMs
                     ? millis() - audioSamplePacket.timeMs

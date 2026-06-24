@@ -202,8 +202,6 @@ void AnalyzerApp::handleSequencePending(
     if (selectedInspectedOccurrence != nullptr
         && selectedInspectedOccurrence->occurrence.present
         && selectedInspectedOccurrence->decision == detection::OccurrenceDecision::Accepted
-        && patternResult->valid
-        && !_sequenceTest.primaryValidPatternCaptured
         && !_sequenceTest.primaryAcceptedOccurrenceCaptured) {
         _sequenceTest.primaryAcceptedOccurrenceCaptured = true;
         _sequenceTest.primaryAcceptedInspectedOccurrence = *selectedInspectedOccurrence;

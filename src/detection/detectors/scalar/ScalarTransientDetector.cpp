@@ -44,6 +44,7 @@ void ScalarTransientDetector::resetState() {
     _selectedRejectOccurrenceId = 0;
     _nextOccurrenceId = 0;
     _currentOccurrenceId = 0;
+    _peakAcceptedCount = 0;
     _reportDetail = {};
     resetAcceptedOccurrencePending();
     _acceptedOccurrencePresent = false;

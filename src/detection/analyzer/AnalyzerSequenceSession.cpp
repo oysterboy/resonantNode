@@ -609,7 +609,11 @@ void AnalyzerApp::finalizeSequenceTrial(unsigned long now) {
     const bool unexpectedTrial = selectedTrial.result == AnalyzerResult::Unexpected;
 
     AnalyzerResult result = selectedTrial.result;
-    if (selectedTrial.patternResult != nullptr && !selectedTrial.patternResult->valid) {
+    if (selectedTrial.patternResult == nullptr &&
+        (selectedTrial.kind == SequenceTrialSelection::Kind::ValidPattern ||
+         selectedTrial.kind == SequenceTrialSelection::Kind::AcceptedOccurrence)) {
+        result = AnalyzerResult::Miss;
+    } else if (selectedTrial.patternResult != nullptr && !selectedTrial.patternResult->valid) {
         result = AnalyzerResult::Rejected;
     }
     long dtMs = selectedTrial.dtMs;

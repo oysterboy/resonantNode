@@ -17,7 +17,9 @@ void ScalarTransientDetector::refreshReportDetail() {
         : _selectedReject.matchedMeanStrength;
     const char* summaryRejectReason = hasAcceptedSummary
         ? "none"
-        : scalarRejectReason;
+        : (hasSelectedRejectSummary && _selectedReject.detectorReason != nullptr && _selectedReject.detectorReason[0] != '\0'
+            ? _selectedReject.detectorReason
+            : scalarRejectReason);
     _reportDetail.inspect.rejectReason = summaryRejectReason;
     _reportDetail.inspect.noEmitReason = summaryRejectReason;
     _reportDetail.inspect.gateReason = summaryRejectReason;

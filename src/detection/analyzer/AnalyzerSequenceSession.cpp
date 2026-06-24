@@ -138,7 +138,6 @@ void AnalyzerApp::startSequenceTest(const PendingSequenceStart& pending) {
 
     _detection.resetState();
     _detection.setPatternResultQueueEnabled(false);
-    _detection.setPatternDiagnosticsTrial(0);
     _detection.setFrequencyMatchConfig(selectedProfile.frequencyMatch);
     _detection.setScalarTransientConfig(selectedProfile.scalarTransient);
     _detection.setDetectorSelection(selectedProfile.detectorSelection);
@@ -378,7 +377,6 @@ void AnalyzerApp::startSequenceTest(const PendingSequenceStart& pending) {
 void AnalyzerApp::stopSequenceTest() {
     _sequenceTest.active = false;
     _sequenceTest.sampleDumpCapturing = false;
-    _detection.setPatternDiagnosticsTrial(0);
 }
 
 void AnalyzerApp::updateSequenceTest(unsigned long now) {
@@ -450,7 +448,6 @@ void AnalyzerApp::updateSequenceTest(unsigned long now) {
     if (_sequenceTest.outputConfig.diagnosticsEnabled) {
         _detection.resetDiagnosticsCounters();
     }
-    _detection.setPatternDiagnosticsTrial(trialNumber);
     _sequenceTest.nextTriggerAtMs = scheduledAtMs + _sequenceTest.periodMs;
 
     beginSequenceSampleDump(trialNumber);

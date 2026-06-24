@@ -42,56 +42,6 @@ void applyScalarTransientConfig(ScalarTransientDetector& detector, const ScalarT
     detector.setMaxGapMs(config.maxGapMs);
 }
 
-const char* occurrenceDecisionName(OccurrenceDecision decision) {
-    switch (decision) {
-        case OccurrenceDecision::Accepted:
-            return "accepted";
-        case OccurrenceDecision::Rejected:
-            return "rejected";
-        case OccurrenceDecision::None:
-        default:
-            return "missing";
-    }
-}
-
-void printPatternPathLine(
-    unsigned long trial,
-    unsigned long occurrenceId,
-    bool attempt,
-    bool accepted,
-    PatternInputRejectReason rejectReason,
-    OccurrenceDecision inspectionDecision,
-    size_t matcherPending,
-    size_t correlationPending,
-    bool resultProduced,
-    bool eventPushed
-) {
-    if (trial == 0) {
-        return;
-    }
-
-    Serial.print("SEQ_PATTERN_PATH trial=");
-    Serial.print(trial);
-    Serial.print(" occurrence_id=");
-    Serial.print(occurrenceId);
-    Serial.print(" attempt=");
-    Serial.print(attempt ? 1 : 0);
-    Serial.print(" accepted=");
-    Serial.print(accepted ? 1 : 0);
-    Serial.print(" reject_reason=");
-    Serial.print(patternInputRejectReasonName(rejectReason));
-    Serial.print(" inspection_decision=");
-    Serial.print(occurrenceDecisionName(inspectionDecision));
-    Serial.print(" matcher_pending=");
-    Serial.print(static_cast<unsigned long>(matcherPending));
-    Serial.print(" correlation_pending=");
-    Serial.print(static_cast<unsigned long>(correlationPending));
-    Serial.print(" result_produced=");
-    Serial.print(resultProduced ? 1 : 0);
-    Serial.print(" event_pushed=");
-    Serial.println(eventPushed ? 1 : 0);
-}
-
 } // namespace
 
 void DetectionRuntime::resetState() {
@@ -286,10 +236,6 @@ void DetectionRuntime::setFieldStateConfig(const FieldStateConfig& config) {
 
 void DetectionRuntime::setProfileName(const char* profileName) {
     _profileName = profileName != nullptr ? profileName : "unknown";
-}
-
-void DetectionRuntime::setPatternDiagnosticsTrial(unsigned long trial) {
-    _patternDiagnosticsTrial = trial;
 }
 
 void DetectionRuntime::setPatternResultQueueEnabled(bool enabled) {
@@ -547,18 +493,6 @@ void DetectionRuntime::drainDetectors(unsigned long nowMs) {
                     ++_patternAcceptRejectCount;
                     _latestPatternInputRejectReason = rejectReason;
                 }
-                printPatternPathLine(
-                    _patternDiagnosticsTrial,
-                    inspected.occurrence.occurrenceId,
-                    true,
-                    acceptedByMatcher,
-                    rejectReason,
-                    inspected.decision,
-                    _patternMatcher.pendingInputCount(),
-                    _patternInspectedCount,
-                    false,
-                    false
-                );
             }
             break;
         case DetectorSelection::ScalarTransient:
@@ -591,18 +525,6 @@ void DetectionRuntime::drainDetectors(unsigned long nowMs) {
                     ++_patternAcceptRejectCount;
                     _latestPatternInputRejectReason = rejectReason;
                 }
-                printPatternPathLine(
-                    _patternDiagnosticsTrial,
-                    inspected.occurrence.occurrenceId,
-                    true,
-                    acceptedByMatcher,
-                    rejectReason,
-                    inspected.decision,
-                    _patternMatcher.pendingInputCount(),
-                    _patternInspectedCount,
-                    false,
-                    false
-                );
             }
             break;
     }
@@ -622,18 +544,6 @@ void DetectionRuntime::drainPatternMatcher(unsigned long nowMs) {
             hasMatchedInspectedOccurrence ? &matchedObservation.inspected : nullptr,
             hasMatchedInspectedOccurrence ? &matchedObservation.detectorReport : nullptr,
             nowMs
-        );
-        printPatternPathLine(
-            _patternDiagnosticsTrial,
-            result.occurrenceId,
-            false,
-            false,
-            PatternInputRejectReason::None,
-            hasMatchedInspectedOccurrence ? matchedObservation.inspected.decision : OccurrenceDecision::None,
-            _patternMatcher.pendingInputCount(),
-            _patternInspectedCount,
-            true,
-            eventPushed
         );
         if (_patternResultQueueEnabled) {
             pushPatternResult(result);

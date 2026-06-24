@@ -52,7 +52,6 @@ constexpr unsigned long kAudioFlatlineStreakFrames = 32UL;
 constexpr unsigned long kRawFlatlineMaxAbsThreshold = 8UL;
 constexpr unsigned long kRawDcStuckRangeThreshold = 16UL;
 constexpr unsigned long kRawDcStuckMeanAbsThreshold = 6UL;
-constexpr const char* kPatternPipelineVersion = "pattern-pipeline-phase8-scalar-reason-cleanup";
 constexpr unsigned long kRawClipThreshold = 32760UL;
 constexpr unsigned long kRawZeroishAbsThreshold = 4UL;
 
@@ -600,8 +599,6 @@ void AnalyzerApp::begin() {
     Serial.print(__DATE__);
     Serial.print(" time=");
     Serial.println(__TIME__);
-    Serial.print("PATTERN_PIPELINE_VERSION=");
-    Serial.println(kPatternPipelineVersion);
     Serial.println("EVT analyzer_ready");
     Serial.println("EVT analyzer_help type='HELP', 'PARAM freqScore=18000 freqContrast=50.0 freqReleaseScore=12000 freqReleaseContrast=50.0', 'PARAM STATUS', 'RAW trigger f=3200 dur=100 post=1000 dump=csv|dump=raw|dump=text|dump=chunks|dump=bin', 'SEQ MODE quiet|trial|inspect|source|system|detail WHEN off|miss|all VERBOSE 0|1|2 STATUS REPORT', 'DET PROFILE TonalPulseFreq|TonalPulseScalar|AmpExperimental'");
 }

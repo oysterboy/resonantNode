@@ -142,7 +142,6 @@ public:
     void setInspectionPlan(const InspectionPlan& plan);
     void setFieldStateConfig(const FieldStateConfig& config);
     void setProfileName(const char* profileName);
-    void setPatternDiagnosticsTrial(unsigned long trial);
     void setPatternResultQueueEnabled(bool enabled);
 
     void observeFrame(
@@ -245,7 +244,6 @@ private:
     size_t _patternInspectedCount = 0;
     unsigned long _patternInspectedQueueOverflowCount = 0;
     unsigned long _patternCorrelationFailureCount = 0;
-    unsigned long _patternDiagnosticsTrial = 0;
     PatternInputRejectReason _latestPatternInputRejectReason = PatternInputRejectReason::None;
     uint32_t _patternAcceptAttemptCount = 0;
     uint32_t _patternAcceptSuccessCount = 0;

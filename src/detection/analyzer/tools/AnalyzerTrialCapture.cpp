@@ -210,6 +210,10 @@ void AnalyzerApp::handleSequencePending(
         if (selectedDetectorReportAvailable) {
             _sequenceTest.primaryAcceptedDetectorReport = *selectedDetectorReport;
         }
+        if (event.hasSourceRecord) {
+            _sequenceTest.primaryAcceptedSourceRecord = event.sourceRecord;
+            _sequenceTest.primaryAcceptedSourceRecord.eventTrialAttribution = _sequenceTest.currentTrial;
+        }
         _sequenceTest.primaryAcceptedOccurrenceDtMs = dtFromTriggerMs;
         _sequenceTest.currentTrialDiagnostics.onsetSeen = true;
         if (_sequenceTest.currentTrialDiagnostics.firstOnsetMs == 0) {

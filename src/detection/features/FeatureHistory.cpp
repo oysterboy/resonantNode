@@ -379,6 +379,9 @@ ScalarWindow FeatureHistory::getWindow(
     out.freshValueCount = totalFreshCount;
     out.bucketCount = bucketCount;
     out.valuesPerBucket = bucketCount > 0 ? static_cast<float>(totalInputCount) / static_cast<float>(bucketCount) : 0.0f;
+    if (out.durationMs > 0 && out.coveredDurationMs > out.durationMs) {
+        out.coveredDurationMs = out.durationMs;
+    }
     out.coveredMs = out.coveredDurationMs;
     out.coverageRatio = out.durationMs > 0
         ? static_cast<float>(out.coveredDurationMs) / static_cast<float>(out.durationMs)

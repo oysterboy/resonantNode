@@ -334,6 +334,7 @@ private:
         bool primaryAcceptedOccurrenceCaptured = false;
         detection::InspectedOccurrence primaryAcceptedInspectedOccurrence = {};
         detection::DetectorReport primaryAcceptedDetectorReport = {};
+        detection::SourceDiagnosticRecord primaryAcceptedSourceRecord = {};
         long primaryAcceptedOccurrenceDtMs = -1;
         unsigned long rejectedInWindowCount = 0;
         bool bestRejectedPatternCaptured = false;

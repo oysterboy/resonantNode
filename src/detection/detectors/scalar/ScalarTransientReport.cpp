@@ -15,9 +15,12 @@ void ScalarTransientDetector::refreshReportDetail() {
     const float summaryMatchedMeanStrength = useAcceptedSummary
         ? _acceptedOccurrence.matchedMeanStrength
         : _selectedReject.matchedMeanStrength;
-    _reportDetail.inspect.rejectReason = scalarRejectReason;
-    _reportDetail.inspect.noEmitReason = scalarRejectReason;
-    _reportDetail.inspect.gateReason = scalarRejectReason;
+    const char* summaryRejectReason = hasAcceptedSummary
+        ? "none"
+        : scalarRejectReason;
+    _reportDetail.inspect.rejectReason = summaryRejectReason;
+    _reportDetail.inspect.noEmitReason = summaryRejectReason;
+    _reportDetail.inspect.gateReason = summaryRejectReason;
     _reportDetail.inspect.matchedMeanPassed = !_requireMinStrength ||
         (hasSummary ? summaryMatchedMeanStrength >= _minMatchedMeanStrength : false);
     _reportDetail.inspect.carrierQualityRequired = _requireCarrierQuality;
@@ -43,7 +46,7 @@ void ScalarTransientDetector::refreshReportDetail() {
         ? true
         : (hasSelectedRejectSummary ? true : (_releaseObservedUs != 0));
     _reportDetail.inspect.validRelease = _reportDetail.inspect.released &&
-        detection::scalar_transient_detail::detectorReasonIsNone(scalarRejectReason);
+        detection::scalar_transient_detail::detectorReasonIsNone(summaryRejectReason);
     _reportDetail.inspect.emitAllowed = _reportDetail.inspect.validRelease;
     _reportDetail.inspect.openMs = hasAcceptedSummary
         ? _acceptedOccurrence.startMs
@@ -60,7 +63,7 @@ void ScalarTransientDetector::refreshReportDetail() {
     _reportDetail.inspect.peakStrength = hasAcceptedSummary
         ? _acceptedOccurrence.peak
         : (hasSelectedRejectSummary ? _selectedReject.peak : _peakStrength);
-    _reportDetail.inspect.rejectReason = scalarRejectReason;
+    _reportDetail.inspect.rejectReason = summaryRejectReason;
     _reportDetail.thresholds.onsetThreshold = _onsetDetectionThreshold;
     _reportDetail.thresholds.releaseThreshold = _onsetReleaseThreshold;
     _reportDetail.thresholds.minStrength = _minTransientPeakStrength;

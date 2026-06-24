@@ -35,4 +35,9 @@ inline unsigned int completedPrimaryTrialCount(const AnalyzerCleanSummary& summa
            summary.tooDenseTrials;
 }
 
+inline bool patternRejectedTrial(const AnalyzerReport& report) {
+    return report.classification.result == AnalyzerResult::Rejected &&
+           report.classification.reason == AnalyzerReason::PatternRejected;
+}
+
 } // namespace detection::analyzer

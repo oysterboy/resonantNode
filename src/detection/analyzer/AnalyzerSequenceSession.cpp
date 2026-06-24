@@ -197,6 +197,7 @@ void AnalyzerApp::startSequenceTest(const PendingSequenceStart& pending) {
     _sequenceTest.primaryAcceptedOccurrenceCaptured = false;
     _sequenceTest.primaryAcceptedInspectedOccurrence = {};
     _sequenceTest.primaryAcceptedDetectorReport = {};
+    _sequenceTest.primaryAcceptedSourceRecord = {};
     _sequenceTest.primaryAcceptedOccurrenceDtMs = -1;
     _sequenceTest.rejectedInWindowCount = 0;
     _sequenceTest.bestRejectedPatternCaptured = false;
@@ -419,6 +420,7 @@ void AnalyzerApp::updateSequenceTest(unsigned long now) {
     _sequenceTest.primaryAcceptedOccurrenceCaptured = false;
     _sequenceTest.primaryAcceptedInspectedOccurrence = {};
     _sequenceTest.primaryAcceptedDetectorReport = {};
+    _sequenceTest.primaryAcceptedSourceRecord = {};
     _sequenceTest.primaryAcceptedOccurrenceDtMs = -1;
     _sequenceTest.rejectedInWindowCount = 0;
     _sequenceTest.bestRejectedPatternCaptured = false;
@@ -501,6 +503,9 @@ AnalyzerApp::SequenceTrialSelection AnalyzerApp::selectSequenceTrialSelection(un
         selection.detectorReport = _sequenceTest.primaryValidDetectorReport.detectorId != detection::DetectorId::Unknown
             ? &_sequenceTest.primaryValidDetectorReport
             : nullptr;
+        selection.sourceEventId = _sequenceTest.primaryAcceptedSourceRecord.eventId;
+        selection.sourceReportGeneration = _sequenceTest.primaryAcceptedSourceRecord.reportGeneration;
+        selection.sourceEventTrialAttribution = _sequenceTest.primaryAcceptedSourceRecord.eventTrialAttribution;
         selection.occurrenceId = selection.inspectedOccurrence != nullptr
             ? selection.inspectedOccurrence->occurrence.occurrenceId
             : 0UL;
@@ -519,6 +524,9 @@ AnalyzerApp::SequenceTrialSelection AnalyzerApp::selectSequenceTrialSelection(un
         selection.detectorReport = _sequenceTest.primaryAcceptedDetectorReport.detectorId != detection::DetectorId::Unknown
             ? &_sequenceTest.primaryAcceptedDetectorReport
             : nullptr;
+        selection.sourceEventId = _sequenceTest.primaryAcceptedSourceRecord.eventId;
+        selection.sourceReportGeneration = _sequenceTest.primaryAcceptedSourceRecord.reportGeneration;
+        selection.sourceEventTrialAttribution = _sequenceTest.primaryAcceptedSourceRecord.eventTrialAttribution;
         selection.occurrenceId = selection.inspectedOccurrence->occurrence.occurrenceId;
         selection.candidateId = 0;
         selection.reportMatched = detectorReportMatchesOccurrence(selection.detectorReport, selection.inspectedOccurrence);
@@ -743,7 +751,7 @@ void AnalyzerApp::updateCleanSequenceSummary(const AnalyzerReport& report) {
 
     if (report.primaryPattern.accepted) {
         ++summary.patternValidTrials;
-    } else if (report.primaryPattern.patternAccepted || report.classification.result == AnalyzerResult::Rejected) {
+    } else if (detection::analyzer::patternRejectedTrial(report)) {
         ++summary.patternRejectedTrials;
     }
 

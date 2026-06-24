@@ -142,6 +142,17 @@ void test_feature_history_duplicate_values_quantiles() {
     assertQuantileOrdering(window);
 }
 
+void test_feature_history_coverage_ratio_is_bounded() {
+    detection::FeatureHistory history;
+    for (unsigned long i = 0; i < 32; ++i) {
+        history.record(detection::FeatureStreamId::AmpMagnitude, i, static_cast<float>(i + 1U));
+    }
+
+    const auto window = history.getWindow(detection::FeatureStreamId::AmpMagnitude, 0, 31, 31);
+    TEST_ASSERT_TRUE(window.coverageRatio >= 0.0f);
+    TEST_ASSERT_TRUE_MESSAGE(window.coverageRatio <= 1.0f + kQuantileEpsilon, "coverage ratio should stay bounded");
+}
+
 void test_next_occurrence_ids_are_unique() {
     const unsigned long first = detection::analyzer::nextOccurrenceId(0);
     const unsigned long second = detection::analyzer::nextOccurrenceId(first);
@@ -185,6 +196,36 @@ void test_scalar_detector_emits_distinct_occurrence_ids() {
         "accepted report should match the occurrence identity");
 }
 
+void test_pattern_rejected_helper_excludes_source_rejects() {
+    AnalyzerReport report = makeEmptyAnalyzerReport();
+    report.classification.result = AnalyzerResult::Rejected;
+    report.classification.reason = AnalyzerReason::OccurrenceSeenButRejected;
+    TEST_ASSERT_FALSE(detection::analyzer::patternRejectedTrial(report));
+
+    report.classification.reason = AnalyzerReason::PatternRejected;
+    TEST_ASSERT_TRUE(detection::analyzer::patternRejectedTrial(report));
+}
+
+void test_scalar_detector_accepted_report_clears_stale_reject_reason() {
+    ScalarTransientDetector detector;
+    detector.begin();
+    detector.setCooldownAfterOnsetMs(0);
+    detector.setReleaseDebounceMs(1);
+    detector.setMinTransientDurationMs(0);
+    detector.setMaxTransientDurationMs(1000);
+    detector.setRequireCarrierQuality(false);
+    detector.setRequireMinStrength(false);
+
+    detection::Occurrence acceptedOccurrence = {};
+    detection::DetectorReport acceptedReport = {};
+    driveAcceptedOccurrence(detector, 0, 6, 25, acceptedOccurrence, acceptedReport);
+
+    TEST_ASSERT_TRUE_MESSAGE(acceptedReport.accepted.present, "accepted report should be present");
+    TEST_ASSERT_EQUAL_STRING("none", acceptedReport.scalar.inspect.rejectReason);
+    TEST_ASSERT_EQUAL_STRING("none", acceptedReport.scalar.inspect.noEmitReason);
+    TEST_ASSERT_EQUAL_STRING("none", acceptedReport.scalar.inspect.gateReason);
+}
+
 void setup() {
     delay(100);
     UNITY_BEGIN();
@@ -192,8 +233,11 @@ void setup() {
     RUN_TEST(test_feature_history_single_value_quantiles);
     RUN_TEST(test_feature_history_sorted_and_reverse_sorted_quantiles_match);
     RUN_TEST(test_feature_history_duplicate_values_quantiles);
+    RUN_TEST(test_feature_history_coverage_ratio_is_bounded);
     RUN_TEST(test_next_occurrence_ids_are_unique);
     RUN_TEST(test_scalar_detector_emits_distinct_occurrence_ids);
+    RUN_TEST(test_pattern_rejected_helper_excludes_source_rejects);
+    RUN_TEST(test_scalar_detector_accepted_report_clears_stale_reject_reason);
     UNITY_END();
 }
 

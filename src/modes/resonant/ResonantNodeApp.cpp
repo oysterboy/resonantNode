@@ -6,18 +6,11 @@
 
 #include "../../app/RuntimeDefaults.h"
 #include "../../app/TimingUtils.h"
+#include "../../app/BuildInfo.h"
 #include "../../detection/features/FrequencyMeasurementPacketBuilder.h"
 #include "../../detection/detectors/frequency/FrequencyMatchCriteria.h"
 #include "../../detection/inspection/InspectionNames.h"
 #include "../../detection/patterns/PatternNames.h"
-
-#ifndef BUILD_DATE
-#define BUILD_DATE "unknown-date"
-#endif
-
-#ifndef BUILD_REV
-#define BUILD_REV 0
-#endif
 
 /*
 Node
@@ -121,20 +114,56 @@ void printDetectionProfileDetails(const detection::DetectionProfile& profile) {
     Serial.println(detection::detectorSelectionName(profile.detectorSelection));
     Serial.print("  inspectionPlan=");
     Serial.println(detection::inspectionPlanName(profile.inspectionPlan));
-    Serial.print("  freqMatch.releaseDebounceMs=");
-    Serial.println(profile.frequencyMatch.releaseDebounceMs);
-    Serial.print("  freqMatch.cooldownAfterReleaseMs=");
-    Serial.println(profile.frequencyMatch.cooldownAfterReleaseMs);
-    Serial.print("  freqMatch.minDurationMs=");
-    Serial.println(profile.frequencyMatch.minDurationMs);
-    Serial.print("  freqMatch.attackScoreMin=");
-    Serial.println(profile.frequencyMatch.attackScoreMin, 0);
-    Serial.print("  freqMatch.releaseScoreMin=");
-    Serial.println(profile.frequencyMatch.releaseScoreMin, 0);
-    Serial.print("  freqMatch.attackContrastMin=");
-    Serial.println(profile.frequencyMatch.attackContrastMin, 1);
-    Serial.print("  freqMatch.releaseContrastMin=");
-    Serial.println(profile.frequencyMatch.releaseContrastMin, 1);
+    if (profile.detectorSelection == detection::DetectorSelection::ScalarTransient) {
+        Serial.print("  scalarTransient.observedStream=");
+        switch (profile.scalarTransient.observedStream) {
+            case detection::FeatureStreamId::AmpMagnitude:
+                Serial.println("AmpMagnitude");
+                break;
+            case detection::FeatureStreamId::AmpEnvelope:
+                Serial.println("AmpEnvelope");
+                break;
+            case detection::FeatureStreamId::FrequencyTarget:
+                Serial.println("FrequencyTarget");
+                break;
+            case detection::FeatureStreamId::FrequencyContrast:
+                Serial.println("FrequencyContrast");
+                break;
+            case detection::FeatureStreamId::Unknown:
+            default:
+                Serial.println("Unknown");
+                break;
+        }
+        Serial.print("  scalarTransient.onsetDetectionThreshold=");
+        Serial.println(profile.scalarTransient.onsetDetectionThreshold, 1);
+        Serial.print("  scalarTransient.onsetReleaseThreshold=");
+        Serial.println(profile.scalarTransient.onsetReleaseThreshold, 1);
+        Serial.print("  scalarTransient.cooldownAfterOnsetMs=");
+        Serial.println(profile.scalarTransient.cooldownAfterOnsetMs);
+        Serial.print("  scalarTransient.minTransientDurationMs=");
+        Serial.println(profile.scalarTransient.minTransientDurationMs);
+        Serial.print("  scalarTransient.maxTransientDurationMs=");
+        Serial.println(profile.scalarTransient.maxTransientDurationMs);
+        Serial.print("  scalarTransient.releaseDebounceMs=");
+        Serial.println(profile.scalarTransient.releaseDebounceMs);
+        Serial.print("  scalarTransient.minTransientPeakStrength=");
+        Serial.println(profile.scalarTransient.minTransientPeakStrength, 1);
+    } else {
+        Serial.print("  freqMatch.releaseDebounceMs=");
+        Serial.println(profile.frequencyMatch.releaseDebounceMs);
+        Serial.print("  freqMatch.cooldownAfterReleaseMs=");
+        Serial.println(profile.frequencyMatch.cooldownAfterReleaseMs);
+        Serial.print("  freqMatch.minDurationMs=");
+        Serial.println(profile.frequencyMatch.minDurationMs);
+        Serial.print("  freqMatch.attackScoreMin=");
+        Serial.println(profile.frequencyMatch.attackScoreMin, 0);
+        Serial.print("  freqMatch.releaseScoreMin=");
+        Serial.println(profile.frequencyMatch.releaseScoreMin, 0);
+        Serial.print("  freqMatch.attackContrastMin=");
+        Serial.println(profile.frequencyMatch.attackContrastMin, 1);
+        Serial.print("  freqMatch.releaseContrastMin=");
+        Serial.println(profile.frequencyMatch.releaseContrastMin, 1);
+    }
     for (size_t i = 0; i < profile.inspectionPlan.count; ++i) {
         const auto& module = profile.inspectionPlan.modules[i];
         Serial.print("  inspectionPlan.module[");
@@ -216,17 +245,14 @@ void printBehaviorRuntimeDetails(const ResonantBehavior& behavior) {
     Serial.println(behavior.idleBlockedAfterOwnEmitMs());
 }
 
-void printBuildIdentity() {
+void printNodeBuildIdentity() {
     char nodeIdBuffer[17];
     const uint64_t nodeId = ESP.getEfuseMac();
     snprintf(nodeIdBuffer, sizeof(nodeIdBuffer), "0x%012llX", static_cast<unsigned long long>(nodeId));
 
-    Serial.print(" build=");
-    Serial.print(BUILD_DATE);
-    Serial.print(" rev=");
-    Serial.print(BUILD_REV);
-    Serial.print(" node_id=");
-    Serial.print(nodeIdBuffer);
+    printBuildIdentity(Serial, "node");
+    Serial.print("RB node_id=");
+    Serial.println(nodeIdBuffer);
 }
 
 const char* behaviorGateName(const ResonantBehavior& behavior, unsigned long now, bool patternDetected, bool selfChirpSuppressed) {
@@ -279,6 +305,9 @@ Node::Node(int inputPin, int ledPin, int chirpPin, int chirpBtlPin)
 // --- lifecycle ---
 
 void Node::begin() {
+    printNodeBuildIdentity();
+    Serial.println();
+
     randomSeed(esp_random() ^ millis());
     configureParameters();
     _audioSource.begin();
@@ -313,7 +342,6 @@ void Node::begin() {
     Serial.print("RB PROFILE name=");
     Serial.print(profileName());
     printProfileComposition(activeDetectionProfile());
-    printBuildIdentity();
     Serial.println();
     printDetectionProfileDetails(activeDetectionProfile());
     Serial.println();
@@ -902,7 +930,7 @@ void Node::handleDetectCommand(const char* line) {
     Serial.print(ageSamples);
     Serial.print(" freq.packet_age_ms=");
     Serial.print(ageMs, 3);
-    printBuildIdentity();
+    printBuildIdentity(Serial, "node");
     Serial.println();
 }
 
@@ -1085,7 +1113,7 @@ void Node::printRbSummary() const {
     Serial.print("ms");
     Serial.print(" profile=");
     Serial.print(profileName());
-    printBuildIdentity();
+    printBuildIdentity(Serial, "node");
     Serial.println();
     Serial.print("RB baseline state=");
     Serial.println(rbBaselineStateName());

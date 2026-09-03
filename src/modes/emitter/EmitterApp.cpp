@@ -3,6 +3,7 @@
 #include <Arduino.h>
 #include <string.h>
 
+#include "../../app/BuildInfo.h"
 #include "../../app/RuntimeDefaults.h"
 
 namespace {
@@ -44,6 +45,9 @@ EmitterApp::EmitterApp(int outputPin, int outputBtlPin, int rxPin, int txPin, un
                        : static_cast<ToneOutput&>(_toneOutput)) {}
 
 void EmitterApp::begin() {
+    printBuildIdentity(Serial, "emitter");
+    Serial.println();
+
     Serial2.begin(_baudRate, SERIAL_8N1, _rxPin, _txPin);
     _chirpOutput.begin();
     configureAuto(_autoIntervalMs, _autoToneHz, _autoDurationMs);
@@ -60,7 +64,6 @@ void EmitterApp::begin() {
     Serial.print(_autoToneHz);
     Serial.print(" dur_ms=");
     Serial.println(_autoDurationMs);
-
 }
 
 void EmitterApp::update() {

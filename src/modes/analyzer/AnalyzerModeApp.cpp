@@ -17,10 +17,7 @@
 #include "../../detection/occurrences/Occurrence.h"
 #include "../../detection/analyzer/AnalyzerTrialClassifier.h"
 #include "../../detection/inspection/OccurrenceInspector.h"
-
-#ifndef BUILD_GIT_SHA
-#define BUILD_GIT_SHA "unavailable"
-#endif
+#include "../../app/BuildInfo.h"
 
 /*
 AnalyzerApp
@@ -569,6 +566,9 @@ detection::DetectionProfile const& AnalyzerApp::effectiveSequenceProfile() const
 }
 
 void AnalyzerApp::begin() {
+    printBuildIdentity(Serial, "analyzer");
+    Serial.println();
+
     beginEmitterControl();
     ++g_analyzerBootCount;
 
@@ -593,12 +593,6 @@ void AnalyzerApp::begin() {
     _controlClaimSent = false;
     _controlClaimAtMs = 0;
 
-    Serial.print("BUILD git=");
-    Serial.print(BUILD_GIT_SHA);
-    Serial.print(" date=");
-    Serial.print(__DATE__);
-    Serial.print(" time=");
-    Serial.println(__TIME__);
     Serial.println("EVT analyzer_ready");
     Serial.println("EVT analyzer_help type='HELP', 'PARAM freqScore=18000 freqContrast=50.0 freqReleaseScore=12000 freqReleaseContrast=50.0', 'PARAM STATUS', 'RAW trigger f=3200 dur=100 post=1000 dump=csv|dump=raw|dump=text|dump=chunks|dump=bin', 'SEQ MODE quiet|trial|inspect|source|system|detail WHEN off|miss|all VERBOSE 0|1|2 STATUS REPORT', 'DET PROFILE TonalPulseFreq|TonalPulseScalar|AmpExperimental'");
 }

@@ -1,0 +1,67 @@
+Tested uploaded firmares as node and free emitter.
+Decided to use vertical emission, Vertical mic emissin.
+pickup over more than 25cm distance seems to depend on wall reflections maybe.
+new firmware with verison output at boot.
+
+# Experiments 001-01 and 001_02
+--------------
+exp001_01
+run a seq of at 20cm distnce.
+run a seq at appr. 40cm distance.
+tried a run at approx 60cm. memory error.
+run agin, result appended to log.
+--------------
+exp001_02
+60, 40, 20, 10 wih a fauty wire, 10cm distance.
+
+-------
+findngs:
+60 cm: Detection works 10/10, duration 98–101 ms, strength about 3,494; all rejected at the pattern stage because amp_class=weak.
+40 cm: Signal is too weak/short: 1 miss and 9 rejects. Durations 70–77 ms, below the configured 85 ms minimum; strength about 2,344.
+10 cm: First run was inconsistent: 4/10 accepted. The following run was stable: 10/10 accepted, duration 102–103 ms, strength about 6,922.
+Memory: No memory exhaustion appears during these completed runs. Heap remains healthy and buffer_overrun=0.
+Stack overflow: The earlier Stack canary watchpoint triggered (loopTask) happens after OK SEQ, before trial output. That remains a separate sequence-start/restart-path problem, not something directly caused by moving the device.
+Remote claim: status=timeout is a control-link timing issue, not a memory error. One later claim completed with status=ok.
+
+# exp001-03
+distance ladder 10,20,40,60cm
+memory error at 60cm (at the 4th sequence?)
+
+Distance	Result	Strength	Duration
+10 cm	10/10 expected	avg 6847	103 ms
+20 cm	0/10 expected, 10/10 detector accepted	avg 3279	97–99 ms
+40 cm	0/10 detected	0	no result
+
+
+Interpretation:
+- 10 cm is stable and healthy.
+- 20 cm is detected reliably, but every event is classified amp_class=weak, so the pattern validator rejects it.
+- 40 cm is below the detector’s usable range in this setup. All trials are missing_pipeline_result, not duration rejects.
+- The transition from 10 cm to 20 cm is very large, roughly a 52% strength reduction. This suggests strong acoustic attenuation, orientation, reflections, or emitter/microphone alignment effects.
+- All remote claims succeeded, and there are no buffer overruns.
+- The stack-canary crash occurs after the completed 40 cm sequence, so it remains a separate firmware sequence lifecycle issue, not a direct consequence of signal strength.
+
+# exp001-04
+just runs at 60cm distnce, rying to triger the memory error,
+not al command seem to be accepted y emitter (wiring?)
+mistped commands ssem to trigger memory error. but not consistent?
+memeory error triggerd also by nth SEQ start?
+
+The crash consistently occurs after a sequence completes, around OK SEQ.
+Malformed command fragments are present near some crashes, but they are only a correlation, not proven cause.
+The crash also appears after normal sequence operation and with no audio detected.
+The common factor is the sequence completion/post-sequence loop, not necessarily malformed input.
+Heap remains healthy, while the corrupted loopTask canary points to stack corruption or an invalid return path.
+
+# exp001-05, -06
+memory bug investigation
+Heap exhaustion was not observed. 
+Failures were Stack canary watchpoint triggered (loopTask), 
+sometimes on the first sequence after boot. 
+Diagnostic runs showed stack margin as low as 44 words, 
+The issue is therefore most likely stack exhaustion or stack corruption in the analyzer sequence/reset path.
+increased ARDUINO_LOOP_STACK_SIZE from 12288 to 16384.
+
+
+
+

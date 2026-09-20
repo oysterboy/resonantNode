@@ -451,6 +451,28 @@ void FrequencyMatchDetector::update(const detection::FrequencyBandMeasurementPac
         }
     }
 
+    // attackScoreOk/attackContrastOk/attackOk/releaseScoreOk/releaseContrastOk/
+    // releaseOk/evidenceOk (set from live `gates` above) and gateReason (set
+    // below) are the single source of truth for this call's gate state and
+    // must be written exactly once, from live evidence, regardless of
+    // _diagnosticsEnabled: FrequencyMatchReport::buildReport() and
+    // updateBestRejectedPending() read them, so a debug-only feature must not
+    // change what a trial's DetectorReport says happened. The diagnostics
+    // block below tracks a separate, explicitly diagnostics-only "best
+    // evidence so far" snapshot (bestEvidence/bestEval, local to this block)
+    // for its own summary counters and must not write back into the fields
+    // above.
+    if (gateReason[0] == '\0') {
+        const char* liveReason = "none";
+        if (!gates.evidenceOk) {
+            liveReason = "no_frequency_evidence";
+        } else if (!gates.attackScoreOk) {
+            liveReason = "freq_score_too_low";
+        }
+        strncpy(gateReason, liveReason, sizeof(gateReason) - 1);
+        gateReason[sizeof(gateReason) - 1] = '\0';
+    }
+
     if (_diagnosticsEnabled) {
         const bool better = !bestEvidence.present
             || evidence.targetBandValue > bestEvidence.targetBandValue
@@ -461,40 +483,32 @@ void FrequencyMatchDetector::update(const detection::FrequencyBandMeasurementPac
         }
 
         const auto bestEval = FrequencyMatchCriteria::evaluate(bestEvidence, tuning);
-        attackScoreOk = bestEval.attackScoreOk;
-        attackContrastOk = bestEval.attackContrastOk;
-        attackOk = bestEval.attackOk;
-        releaseScoreOk = bestEval.releaseScoreOk;
-        releaseContrastOk = bestEval.releaseContrastOk;
-        releaseOk = bestEval.releaseOk;
-        evidenceOk = bestEvidence.present ? bestEvidence.present : evidence.present;
+        const bool diagnosticsEvidenceOk = bestEvidence.present ? bestEvidence.present : evidence.present;
 
         const char* suppress = "none";
-        if (!evidenceOk) {
+        if (!diagnosticsEvidenceOk) {
             suppress = "live_window_not_ready";
         } else if (!bestEval.evidenceOk) {
             suppress = "no_frequency_evidence";
         } else if (!bestEval.attackScoreOk) {
             suppress = "freq_score_too_low";
         }
-        strncpy(gateReason, suppress, sizeof(gateReason) - 1);
-        gateReason[sizeof(gateReason) - 1] = '\0';
 
         const char* wouldPending = wouldProducePending ? "matched" : suppress;
         strncpy(wouldPendingReason, wouldPending, sizeof(wouldPendingReason) - 1);
         wouldPendingReason[sizeof(wouldPendingReason) - 1] = '\0';
 
         if (evidence.present) {
-            if (attackScoreOk) {
+            if (bestEval.attackScoreOk) {
                 ++diagnosticsScoreOkCount;
             }
-            if (attackContrastOk) {
+            if (bestEval.attackContrastOk) {
                 ++diagnosticsContrastOkCount;
             }
-            if (attackScoreOk && attackContrastOk) {
+            if (bestEval.attackScoreOk && bestEval.attackContrastOk) {
                 ++diagnosticsBothOkCount;
             }
-            if (attackOk) {
+            if (bestEval.attackOk) {
                 ++diagnosticsMatchedCount;
             }
         }

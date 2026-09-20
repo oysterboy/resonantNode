@@ -143,7 +143,36 @@ this item.
 
 ---
 
-# Item 2 — Fix diagnostics-enabled state mutation in FrequencyMatchDetector::update()
+# Item 2 — Fix diagnostics-enabled state mutation in FrequencyMatchDetector::update() (implemented 2026-09-21, hardware verification outstanding)
+
+**Status:** code change landed. `attackScoreOk`/`attackContrastOk`/`attackOk`/
+`releaseScoreOk`/`releaseContrastOk`/`releaseOk`/`evidenceOk` are now set
+exactly once per call, from live `gates`, and are never touched by the
+`_diagnosticsEnabled` block. `gateReason` is now also set exactly once from
+live evidence (a 2-tier `no_frequency_evidence`/`freq_score_too_low`
+reason, computed unconditionally); the previous 3-tier
+`live_window_not_ready`/`no_frequency_evidence`/`freq_score_too_low`
+classification depended on `bestEvidence`'s cross-call persistence, which is
+inherently diagnostics-only state, so it has no live equivalent and was not
+reproduced. The diagnostics block keeps its own "best evidence so far"
+tracking (`bestEvidence`/`bestEval`, both already diagnostics-scoped) for
+`wouldPendingReason` and the `diagnosticsScoreOkCount`/`ContrastOkCount`/
+`BothOkCount`/`MatchedCount` aggregate counters, unchanged in behavior.
+
+**This changes canonical output.** `DetectorReport.frequency.inspect.gateReason`/
+`readyOk`/`gateOpen` (printed as `SEQ_SOURCE_SPEC`'s
+`detail.frequency.inspect.gate_reason`/`ready_ok`/`gate_open`) previously
+reflected the diagnostics-only best-evidence re-evaluation whenever
+`_diagnosticsEnabled` was true, which defaults to `true`
+(`AnalyzerModeApp.h`'s `diagnosticsEnabled = true`). After this fix they
+always reflect the live per-sample gate state instead. This is the bug
+being fixed, not a regression, but it means `TonalPulseFreq` SEQ trials are
+**not** expected to be byte-identical on these three fields under default
+settings; `accepted`/`selectedReject` truth and every other field should be
+unaffected. Verify with T2 and this item's own Intermediate Verification 2
+(the two-run diagnostics-forced-on/off comparison) before trusting this,
+compilation alone does not confirm the new live reason classification
+matches real trial behavior. Not yet run against hardware.
 
 ## Problem
 

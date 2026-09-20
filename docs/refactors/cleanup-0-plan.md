@@ -155,12 +155,27 @@ Doc: `cleanup.md` Items 2 and 3. Item 1 is withdrawn and is no longer a
 prerequisite; Item 3 still says to re-check for external field access after
 Item 2 lands, that part is unaffected by Item 1's withdrawal.
 
+**Started ahead of Phase 0's formal resolution, 2026-09-21:** Phase 0's field
+trials have not been run (no hardware access this session); per this plan's
+own default ("if undecided after a reasonable number of trials, default to
+keep and proceed with Phase 2"), Item 2 below was implemented since it is a
+real, verified correctness bug independent of the keep/consolidate outcome
+either way, `FrequencyMatchDetector::update()` exists and runs today
+regardless of what Phase 0 eventually decides. If Phase 0 later resolves to
+"consolidate," this fix is still correct, just short-lived.
+
 1. **`cleanup.md` Item 2** — separate the diagnostics-only "best evidence"
    gate snapshot from the live gate state in `FrequencyMatchDetector::update()`.
-   - Test: T1, T2, T4. Additionally: run the same trial with diagnostics
-     forced on and forced off, confirm identical `DetectorReport.accepted`/
-     `selectedReject` truth in both runs (this is the specific bug being
-     fixed, verify it directly, not just via the standard SEQ diff).
+   **Implemented, compiled clean against the real toolchain; hardware
+   verification outstanding.** See `cleanup.md` Item 2's status note for
+   exactly what output this is expected to change under default settings
+   (`DetectorReport.frequency.inspect.gateReason`/`readyOk`/`gateOpen`,
+   i.e. `SEQ_SOURCE_SPEC`'s `gate_reason`/`ready_ok`/`gate_open` fields).
+   - Test: T1 (done), T2, T4 (hardware, outstanding). Additionally: run the
+     same trial with diagnostics forced on and forced off, confirm identical
+     `DetectorReport.accepted`/`selectedReject` truth in both runs (this is
+     the specific bug being fixed, verify it directly, not just via the
+     standard SEQ diff) — also outstanding, requires hardware.
 2. **`cleanup.md` Item 3** — privatize `FrequencyMatchDetector`'s public
    field surface, one logical group at a time (lifecycle state, then
    pending/candidate facts, then best-rejected summary, then diagnostics),
@@ -324,7 +339,7 @@ decision is: consolidate" section instead:
 |---|---|---|---|
 | 0 | consolidation | — (parallel track) | field trials only |
 | 1 | cleanup.md #4 (done), inspector-pattern-scope (done), ~~cleanup.md #1~~ (withdrawn), Magnitude/Band rename (done, out-of-band) | — | T1 (done), T2-T4 (hardware, outstanding) |
-| 2 | cleanup.md #2, #3 | Phase 0 = keep | T1, T2, T4 |
+| 2 | cleanup.md #2 (implemented, hardware verification outstanding), #3 (not started) | Phase 0 = keep | T1 (done), T2, T4 (outstanding) |
 | 3 | cleanup.md #5 | — (Item 1 dependency removed; Phase 2 optional) | T1, T2, T3, T6 |
 | 4 | soak, no doc | Phases 1-3 | T7 |
 | 5a | analyzer-node-isolation | Phases 1-4 | T1, T2, T3, T6, T7, T8 |

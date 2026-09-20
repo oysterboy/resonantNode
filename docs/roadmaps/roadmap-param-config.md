@@ -71,6 +71,23 @@ The ParamRegistry can expose discover/read/write metadata for VEKTOR resources.
 Public paths remain the stable external resource identity.
 ```
 
+Checked against `docs/specs/vektor-spec.md` (VEKTOR Core Spec v1.1):
+
+```text
+A ParamRegistry path + value is a VEKTOR Control Write (spec 2.2), not an
+Action: overwrite semantics, no lifecycle, last write wins, no cmd_id, no
+ACK required. This already matches how ParamRegistry::applyValue and the
+Serial PARAM SET command behave today.
+
+The natural future resource type is SCALAR (spec 3.1: "numeric control"),
+with scalar.set mapping onto ParamRegistry::applyValue and STATE snapshots
+mapping onto ParamRegistry::dump. AXIS/LAMP-style Actions (tracked, ACKed,
+resolved via EVENT) are a different shape and do not apply to Params.
+
+This is a compatibility check, not new scope: no SCALAR/VEKTOR resource
+type, transport, or protocol code is added by this note.
+```
+
 ## Architecture target - near
 
 ```text

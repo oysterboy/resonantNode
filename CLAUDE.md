@@ -148,6 +148,23 @@ the next unit of work — worth flagging rather than assuming silently.
   literal path) with the same one-line `Archived: ...` header used for
   refactor passes.
 
+### Version changelog (`CHANGELOG.md`, repo root)
+
+Separate from both the retired `docs/changelog.md` and the `docs/refactors/`
+engineering record: a root-level `CHANGELOG.md` in Keep-a-Changelog style,
+keyed to `BUILD_VERSION` in `platformio.ini`. It answers "what does this
+version actually do differently at runtime" — nothing else.
+
+- Add an `[Unreleased]` bullet only for runtime/operator-visible changes
+  (new or changed RB/Analyzer/Emitter command, a profile behavior change, a
+  fix that changes detected/emitted behavior, a flash-relevant build
+  change). Internal refactors and doc-only changes don't go here — that's
+  what made the old changelog unsustainable, don't repeat it.
+- When `BUILD_VERSION` is bumped for a milestone (field-test baseline, a
+  pass that changes runtime behavior — not every commit), fold
+  `[Unreleased]` into a new `## [x.y.z] - <date>` section and leave
+  `[Unreleased]` empty.
+
 ### Other docs
 
 - `docs/specs/myspec.md` — canonical architecture spec; see above.

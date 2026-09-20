@@ -12,13 +12,21 @@ changing object lifetime or ownership. This proposal changes ownership: it
 asks whether `DetectionRuntime` should hold two detector objects for the life
 of the program, or one.
 
-Recommended sequencing: complete `cleanup.md` first. Item 1 (tagged detail
-payload) and Item 3 (FrequencyMatchDetector encapsulation) make the change
-described here easier and lower-risk once done, since both reduce the amount
-of detector-owned state that would need to move. Item 5 (unify the
-per-detector switch in `DetectionRuntime`) becomes largely redundant if this
-proposal is adopted, since single-slot ownership removes the two branches it
-was written to merge.
+Recommended sequencing: complete `cleanup.md` first. Item 3
+(FrequencyMatchDetector encapsulation) makes the change described here
+easier and lower-risk once done. Item 5 (unify the per-detector switch in
+`DetectionRuntime`) becomes largely redundant if this proposal is adopted,
+since single-slot ownership removes the two branches it was written to
+merge.
+
+Correction, 2026-09-20: this used to also cite Item 1 (the `Occurrence`/
+`DetectorReport` tagged union) as reducing detector-owned state. Item 1's
+`Occurrence` half was withdrawn as a false premise; see `cleanup.md` Item 1.
+It is unrelated to this proposal regardless: this document's `DetectorStorage`
+union is a union of the two *detector objects* (`FrequencyMatchDetector`/
+`ScalarTransientDetector`), a completely different thing from a union inside
+the `Occurrence`/`DetectorReport` *data* types. That distinction was blurred
+in the original wording; they do not depend on each other.
 
 Do not start this proposal until `cleanup.md` is complete and its
 verification runs pass.
@@ -132,11 +140,12 @@ Node-required detector contract" for the full split.
 
 ### What this does not fix, and is not trying to
 
-- Does not change the shape of `Occurrence` or `DetectorReport` — those
-  still need to carry a generic, detector-agnostic detail payload as events
-  leave the detector and travel through queues, printers, and Analyzer.
-  `cleanup.md` Item 1 is still the fix for that, and is unaffected by
-  whether the detector object itself is single- or dual-resident.
+- Does not change the shape of `Occurrence` or `DetectorReport`. Note:
+  `Occurrence.scalar`/`.frequency` are not a detector-exclusive pair that a
+  future item could still collapse, they are both genuinely populated per
+  occurrence today (see `cleanup.md` Item 1's correction). This proposal
+  does not touch that either way, single- vs. dual-resident detector objects
+  is orthogonal to what shape `Occurrence`/`DetectorReport` carry.
 - Does not introduce a virtual `IDetector` interface or a type-erased
   detector graph. The spec explicitly defers that, and nothing here requires
   it: a union plus a switch on `_detectorSelection` for the handful of

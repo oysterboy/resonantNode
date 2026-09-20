@@ -1,6 +1,11 @@
 # Codex Pass — Remove Unused Inspector/Pattern Extensibility
 
-Status: single-item cleanup pass, ready to implement.
+Status: partially done. The `PatternMatcher` half (`ProposalShape`/
+`PulseSequence`) was implemented and compiles clean against the real
+toolchain on 2026-09-20. The `OccurrenceInspector` half
+(`InspectionModuleKind`) was reviewed and declined, see the note below, not
+because it's wrong, but because doing it exceeds this pass's own
+Non-Goals for negligible benefit.
 Related to: `docs/refactors/cleanup.md` (same house style, adjacent scope).
 Not part of `cleanup.md` itself because its stated scope is the Detector
 layer (`DetectionRuntime`, the two detector cores, `DetectorReport`,
@@ -67,18 +72,24 @@ not a resurrection of code preserved here.
    must still be set to `PatternType::SinglePulse` or
    `PatternType::Invalid` exactly as it is today — this item changes
    internal plumbing, not `PatternResult`'s observable values.
-2. In `OccurrenceInspector.cpp`/`InspectorTypes.h`: simplify
-   `runInspectionModule()` so it no longer switches on a `kind` field with
-   one live case. Either remove `InspectionModuleKind` entirely and call
-   `annotateScalarFeatureStrength()` directly when `module.enabled` is
-   true, or keep `kind` as a still-checked guard if you want an explicit
-   "this module slot is intentionally empty" state distinct from
-   `enabled = false` — pick whichever reads more clearly, this is a
-   judgment call with no behavioral difference either way.
+2. **Declined, 2026-09-20.** `OccurrenceInspector.cpp`/`InspectorTypes.h`:
+   the original plan offered two options, remove `InspectionModuleKind`
+   entirely, or keep it as a still-checked guard. The first option requires
+   changing `InspectionModuleConfig` (removing its `kind` field), which
+   directly contradicts this same document's Non-Goals below ("no change to
+   `InspectionModuleConfig`"), a contradiction present in the plan from the
+   start. Beyond that, `InspectionModuleKind` turns out to be referenced
+   from more places than scoped: `InspectionNames.h`'s display helpers and,
+   more importantly, a diagnostic config-dump print in
+   `ResonantNodeApp.cpp` (the Node binary), both purely for display, never
+   for behavior. Given the contradiction with this document's own Non-Goals
+   and the reach into Node-side code for a cosmetic-only simplification,
+   this half of the item is declined. `runInspectionModule()`'s switch stays
+   as-is.
 3. Do not change `InspectionModuleConfig`, `InspectionPlan`,
    `InspectionTarget`, or any field profiles configure through
    `DetectionProfile.h`. Those are the actual configuration surface and stay
-   as-is.
+   as-is. (This is exactly why step 2 above is declined.)
 
 ## Non-Goals
 
@@ -94,17 +105,20 @@ not a resurrection of code preserved here.
 
 ## Intermediate Verification
 
-1. Build succeeds.
-2. Run the 50-trial `TonalPulseFreq` SEQ test and the 50-trial
-   `TonalPulseScalar` SEQ test. `SEQ_TRIAL`/`SEQ_SOURCE`/`SEQ_INSPECT`/
-   `SEQ_EXPLAIN`/`SEQ_SUMMARY` output must be identical to a pre-change
-   baseline run, since every currently-reachable code path produces the
-   same result as before, only the unreachable branches are gone.
-3. Confirm no other file references `ProposalShape`, `PulseSequence`, or
-   (if removed) `InspectionModuleKind` after the change.
+1. `PatternMatcher.cpp` compiled clean against the real
+   `xtensa-esp32-elf-g++` toolchain after the `ProposalShape` removal.
+2. Still needed before this closes out: run the 50-trial `TonalPulseFreq`
+   SEQ test and the 50-trial `TonalPulseScalar` SEQ test on hardware.
+   `SEQ_TRIAL`/`SEQ_SOURCE`/`SEQ_INSPECT`/`SEQ_EXPLAIN`/`SEQ_SUMMARY` output
+   must be identical to the pre-change baseline, since every
+   currently-reachable code path produces the same result as before, only
+   the unreachable `PulseSequence` branch is gone.
+3. Confirmed by search: no file references `ProposalShape` or
+   `PulseSequence` anymore. `InspectionModuleKind` remains, intentionally,
+   per the decline above.
 
 ## Suggested Commit
 
 ```text
-DetectionCleanup: remove unused PulseSequence/InspectionModuleKind scaffolding
+DetectionCleanup: remove unused PulseSequence/ProposalShape scaffolding
 ```

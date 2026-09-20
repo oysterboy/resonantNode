@@ -60,11 +60,23 @@ with `DetectorId::FrequencyMatch`, `OccurrenceType::Frequency`,
   detector family, `DetectionRuntime` just holds one
   `ScalarTransientDetector`, no union, no adapter, no per-detector switch
   needed at all in `observeFrame()`/`drainDetectors()`.
-- `cleanup.md` Item 1 (tagged detail payload) becomes lower-priority, though
-  not necessarily pointless: it would still matter if a future, different
-  third detector is ever added, but it stops being urgent, since there
-  would be exactly one family and no "always carry both" waste to begin
-  with.
+- **Correction, 2026-09-20:** this used to also claim `cleanup.md` Item 1
+  (a tagged union between `Occurrence.scalar`/`.frequency`) would become
+  unnecessary after consolidation, "no always carry both waste to begin
+  with." That's wrong. `Occurrence.scalar`/`.frequency` are not a
+  detector-exclusive pair, they're separate evidence namespaces (Amp-domain
+  vs. Frequency-domain) that `OccurrenceInspector` populates based on which
+  `InspectionTarget`s a profile configures, independent of which detector
+  produced the occurrence. `TonalPulseScalar` already configures a
+  `Contrast`-target module today, on a `ScalarTransientDetector`-only
+  profile, so `.frequency.contrastQuality` would still be written even in a
+  fully consolidated, single-detector-family world. See `cleanup.md` Item 1
+  for the full evidence; Item 1's `Occurrence` half is withdrawn regardless
+  of what this decision resolves to. Consolidation would only remove
+  `FrequencyOccurrenceDetail`'s detector-native fields specific to
+  `FrequencyMatchDetector` itself (`score`, `contrast`, `measurement`), not
+  the Inspector-written `scoreStrength`/`contrastQuality`/`targetBandStrength`
+  fields in the same struct, which stay load-bearing either way.
 
 **Not proven, and not provable from source code alone:**
 
@@ -117,8 +129,10 @@ open question (weak-class rejection at range) lives.
 - A partial result (better at short range, worse at long range, or vice
   versa) is a real possible outcome and does not have to resolve to a single
   answer immediately. It is fine to leave this decision open and proceed
-  with `cleanup.md` Items 1, 4, 5, 6, and 7 in the meantime, since none of
-  those depend on this decision, only Items 2 and 3 do.
+  with `cleanup.md` Items 4, 5, and 6 in the meantime, since none of those
+  depend on this decision, only Items 2 and 3 do. (Item 1 is withdrawn/
+  unscheduled regardless of this decision; Item 7 is deferred/optional
+  regardless.)
 
 ---
 
@@ -128,18 +142,27 @@ open question (weak-class rejection at range) lives.
    successor profile) is confirmed as the profile actually used going
    forward.
 2. Skip `cleanup.md` Items 2 and 3 entirely; that code is going away.
-3. Re-scope `cleanup.md` Item 1: still worth doing if any future third
-   detector is anticipated, otherwise the tagged-union work can be dropped
-   in favor of simply removing the now-unused `frequency` member from
-   `Occurrence`/`DetectorReport`.
+3. `cleanup.md` Item 1's `Occurrence`/`DetectorReport` union plan does not
+   apply here regardless of this decision, it was withdrawn as a false
+   premise (see that item). Consolidation does not change that: even with
+   only `ScalarTransientDetector`, `TonalPulseScalar` already writes
+   `FrequencyOccurrenceDetail`'s Inspector-owned fields
+   (`scoreStrength`/`contrastQuality`/`targetBandStrength`) via its
+   `Contrast`-target inspection module, so that part of `.frequency` stays
+   needed either way. Only `FrequencyOccurrenceDetail`'s
+   `FrequencyMatchDetector`-native fields (`score`, `contrast`,
+   `measurement`) become removable if `FrequencyMatchDetector` is deleted.
 4. Re-scope `cleanup-detector-ownership.md`: the union-of-two-objects design
    is no longer needed; `DetectionRuntime` simplifies to a single
    `ScalarTransientDetector` member with no per-detector dispatch.
-5. Remove `DetectorId::FrequencyMatch`, `OccurrenceType::Frequency`, and the
-   `frequency` detail members/printers, following the same
-   identical-SEQ-output verification discipline as the other cleanup items,
-   using `TonalPulseScalar`'s own 50-trial baseline as the reference, not
-   `TonalPulseFreq`'s.
+5. Remove `DetectorId::FrequencyMatch`, `OccurrenceType::Frequency`, and
+   `FrequencyOccurrenceDetail`'s detector-native fields (`score`, `contrast`,
+   `measurement`) and their printers, but keep the struct's Inspector-owned
+   fields (`scoreStrength`, `contrastQuality`, `targetBandStrength`), which
+   remain in active use by `TonalPulseScalar`'s `Contrast`-target module.
+   Follow the same identical-SEQ-output verification discipline as the
+   other cleanup items, using `TonalPulseScalar`'s own 50-trial baseline as
+   the reference, not `TonalPulseFreq`'s.
 6. Update `docs/specs/myspec.md`: it currently names `TonalPulseFreq` the
    "Stable active profile" and describes `TonalPulseScalar` as "not the
    primary stable path." If consolidation happens, that section is now

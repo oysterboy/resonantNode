@@ -23,6 +23,15 @@ originally proposed merging bookkeeping between the two detectors and was
 downgraded after review found real, deliberate differences between them (see
 Item 7 for the corrected reasoning) — it is kept last and marked optional.
 
+A second correction, found while implementing rather than while reviewing:
+Item 1's `Occurrence` half was withdrawn on 2026-09-20 after direct evidence
+showed `.scalar`/`.frequency` are both genuinely load-bearing on the same
+occurrence for both stable profiles, not a detector-exclusive pair. See
+Item 1 for the full evidence. Its `DetectorReport` half is unverified and
+not scheduled until re-checked the same way. Both `cleanup-analyzer-node-isolation.md`
+and `cleanup-detector-consolidation.md` referenced the original (wrong)
+`Occurrence` union plan and have been corrected to match.
+
 ---
 
 ## Evidence base
@@ -47,61 +56,78 @@ value until the crash is independently reproduced as gone.
 
 ---
 
-# Item 1 — Collapse always-both detail payloads in Occurrence and DetectorReport (highest urgency)
+# Item 1 — Collapse always-both detail payloads (Occurrence: withdrawn, DetectorReport: needs re-verification)
 
-## Problem
+## Correction (2026-09-20): the `Occurrence` half of this item is wrong, do not implement it
 
-`Occurrence` (`src/detection/occurrences/Occurrence.h`) embeds both
-`ScalarOccurrenceDetail` and `FrequencyOccurrenceDetail` in every instance.
-`DetectorReport` (`src/detection/detectors/DetectorReport.h`) embeds both
-`ScalarDetectorReportDetail` and `FrequencyMatchDetectorReportDetail` in every
-instance. Only one of the two is ever populated, based on `detectorId`/
-`occurrenceType`, but every copy carries both, fully zeroed for the inactive
-family.
+While preparing to implement this item, I found direct evidence that
+`Occurrence.scalar` and `Occurrence.frequency` are not "whichever detector
+produced this" alternatives, they are two independently-used **evidence
+namespaces** (Amp-domain and Frequency-domain) that `OccurrenceInspector`
+populates based on each configured `InspectionTarget`, regardless of which
+detector produced the occurrence, and that `PatternMatcher` reads from
+*both* namespaces for a *single* occurrence:
 
-These structs are copied repeatedly through fixed-capacity queues in
-`DetectionRuntime`: `_pipelineEventQueue`, `_patternInspectedQueue`,
-`_resultQueue`, and `SourceDiagnosticRecord`. Each copy pays for both detail
-blocks regardless of which detector produced the event. This directly
-contributes to the stack pressure documented in the evidence base above.
+- `OccurrenceInspector::annotateScalarFeatureStrength()` switches on
+  `InspectionTarget`, not on `DetectorId`/`OccurrenceType`:
+  `InspectionTarget::Amp` writes `occurrence.scalar.*`;
+  `TargetScore`/`Contrast`/`TargetBand` write `occurrence.frequency.*`.
+- Both current stable profiles configure inspection modules spanning both
+  namespaces on every occurrence they produce: `TonalPulseFreq` uses
+  Amp + TargetScore + Contrast together; `TonalPulseScalar` uses
+  Amp + Contrast together.
+- `PatternMatcher::makePatternProposalFromOccurrence()` reads
+  `source.scalar.strengthClass` **and**
+  `source.frequency.scoreStrength`/`contrastQuality`/`targetBandStrength`
+  in both its `OccurrenceType::Frequency` and `OccurrenceType::Scalar`
+  branches, unconditionally, for the same occurrence.
+- `FrequencyMatchDetector::capturePendingOccurrence()` writes its own
+  `.frequency.score`/`.contrast` **and** a basic AMP reading into
+  `.scalar.value`/`.baseline`/`.lift` on the same occurrence.
 
-## Required Change
+A tagged union between `.scalar` and `.frequency` would silently drop
+whichever one lost the union race, on every occurrence, for both stable
+profiles. This is not a storage-layout change, it would be a real detection
+regression. Withdrawn. Do not implement a union for `Occurrence`.
 
-Replace the two always-present detail members with one tagged union (a
-`union` gated by `detectorId`/`occurrenceType`, or a `std::variant`-style
-manual tag if the toolchain lacks `<variant>` support on this target) in both
-`Occurrence` and `DetectorReport`.
+The measured 72-byte-per-instance figure from the original analysis was
+real as a `sizeof()` fact, but the "only one is ever meaningfully used"
+premise behind proposing a union was false. The two namespaces are both
+load-bearing.
 
-Keep the generic top-level fields (timing, strength, confidence, accepted/
-selectedReject shells, thresholds, aggregates) exactly as they are today —
-only the `scalar`/`frequency` detail members change shape.
+## DetectorReport: plausibly still valid, but unverified, do not implement without redoing this check
 
-Update every read site to switch on the tag before reading `.scalar` or
-`.frequency`. Known read sites to check:
+`DetectorReport.scalar`/`.frequency` are a different pair of types
+(`ScalarDetectorReportDetail`/`FrequencyMatchDetectorReportDetail`) from
+`Occurrence`'s, and initial spot-checking suggests they may genuinely be
+exclusive to whichever detector is active: `DetectorReportPrinter.cpp`
+dispatches on `report->detectorId` before reading either, and
+`FrequencyMatchDetector`/`ScalarTransientDetector` each only ever populate
+their own `.frequency`/`.scalar` sub-struct in their own `buildReport()`.
 
-```text
-DetectorReportPrinter.cpp
-ScalarTransientPrinter.cpp / ScalarTransientReport.cpp / ScalarTransientOccurrence.cpp
-FrequencyMatchPrinter.cpp / FrequencyMatchReport.cpp / FrequencyMatchOccurrence.cpp
-OccurrenceInspector.cpp
-PatternMatcher.cpp
-AnalyzerSeqReporter.cpp and other Analyzer consumers of Occurrence/DetectorReport detail
-```
+But at least one read site does not gate on `detectorId` before reading:
+`AnalyzerSeqReporter.cpp` reads `detector.scalar.inspect.carrierQualityRequired`
+unconditionally whenever a `DetectorReport*` is non-null, regardless of
+`detectorId`. That happens to be harmless today only because the
+unpopulated struct defaults to `false`/`"none"` rather than something
+misleading, not because the code was written to be union-safe.
 
-Do not change any printed field name, printed value, or field ordering in
-SEQ output as part of this item. This is a storage-layout change only.
+Before doing anything with `DetectorReport`, redo the same
+read-site-by-read-site check that caught the `Occurrence` problem: find
+every place that reads `.scalar` or `.frequency` off a `DetectorReport`,
+and confirm every single one either checks `detectorId` first or is
+provably safe to read at its zero-value default. Do not assume the printer
+dispatch pattern extends to every consumer just because it holds for the
+ones already checked. This item stays open, not urgent, and not currently
+scheduled, until that check is done.
 
 ## Intermediate Verification 1
 
-1. Build for both `esp32dev-analyzer` and any other configured environment.
-2. Run the existing 50-trial `TonalPulseFreq` SEQ test and the 50-trial
-   `TonalPulseScalar` SEQ test.
-3. Diff SEQ_TRIAL / SEQ_SOURCE / SEQ_INSPECT / SEQ_EXPLAIN / SEQ_SUMMARY
-   output against a pre-change baseline run. Output must be identical.
-4. Record `sizeof(Occurrence)` and `sizeof(DetectorReport)` before and after
-   in the commit notes.
-
-Do not proceed to Item 2 until output is confirmed identical.
+Not applicable, no code change is made under this item until the
+`DetectorReport` re-verification above is done and shows the union is
+actually safe there. This item is currently a documentation-only correction,
+not a pass to execute. Proceed to Item 2 directly; it does not depend on
+this item.
 
 ---
 
@@ -377,7 +403,6 @@ None required; no code changes are made under this item in this pass.
 # Suggested Commit Sequence
 
 ```text
-DetectionCleanup: collapse scalar/frequency detail into tagged union
 DetectionFix: separate diagnostics gate snapshot from live gate state
 DetectionCleanup: privatize FrequencyMatchDetector public field surface
 DetectionCleanup: remove dead duplicated frequency reason helpers

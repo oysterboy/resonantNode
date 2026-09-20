@@ -93,32 +93,44 @@ below instead of Phase 2.
 These have no dependencies on each other or on Phase 0's outcome. Suggested
 serial order below is by size (fastest win first), not by necessity.
 
+**Status as of 2026-09-20: items 1 and 2 done, item 3 withdrawn/blocked. See
+correction below.**
+
 1. **`cleanup.md` Item 4** — remove the duplicated dead helper functions
    (`frequencyRejectReasonFromState`, `frequencyRejectClassFromReason`) from
-   `FrequencyMatchDetector.cpp`/`FrequencyMatchOccurrence.cpp`.
+   `FrequencyMatchDetector.cpp`/`FrequencyMatchOccurrence.cpp`. **Done.**
+   Compiled clean against the real toolchain.
    - Test: T1, T4 (compile only is sufficient, the removed code was
-     unreachable).
+     unreachable). Hardware-side T4 run still outstanding.
 2. **`cleanup-inspector-pattern-scope.md`** — remove `ProposalShape`/
-   `PulseSequence` from `PatternMatcher.cpp`; simplify `InspectionModuleKind`
-   dispatch in `OccurrenceInspector.cpp`.
-   - Test: T1, T2, T3.
-3. **`cleanup.md` Item 1** — collapse `Occurrence`/`DetectorReport`'s
-   always-both detail payload into a tagged union. This is the most
-   involved item in this phase (many read sites to update), do it last
-   within the phase so the smaller wins land first.
-   - Test: T1, T2, T3, T4, T5.
+   `PulseSequence` from `PatternMatcher.cpp`. **Done**, compiled clean. The
+   `InspectionModuleKind` half of this item was reviewed and declined (it
+   contradicted that document's own Non-Goals and reached into
+   `ResonantNodeApp.cpp`'s display code for no behavioral benefit); see that
+   document for the reasoning.
+   - Test: T1 done. T2, T3 (hardware SEQ runs) still outstanding.
+3. ~~**`cleanup.md` Item 1**~~ — **withdrawn, do not implement.** While
+   preparing this item, direct evidence showed `Occurrence.scalar`/
+   `.frequency` are both genuinely populated and read for the same
+   occurrence by both stable profiles, not a detector-exclusive pair a union
+   could safely choose between. Implementing the originally planned union
+   would have silently dropped real evidence on every occurrence. See
+   `cleanup.md` Item 1 for the full evidence trail. The `DetectorReport`
+   half of the same item is a separate, unverified question, not scheduled
+   until it gets its own read-site check.
 
-**Gate:** none of these block Phase 0. All three should be done before
-starting Phase 2 or Phase 3, since both build on the smaller footprint and
-cleaner state Item 1 leaves behind.
+**Gate:** Phase 1 is as complete as it's going to get without hardware
+access for T2/T3/T4. Phase 2 and Phase 3 do not actually depend on the
+withdrawn Item 1 in any way that survives this correction, see their
+updated notes below.
 
 ---
 
 ## Phase 2 — FrequencyMatchDetector Fixes (gated on Phase 0 = "keep")
 
-Doc: `cleanup.md` Items 2 and 3. Requires Phase 1 Item 1 done first (Item 3
-explicitly says to re-check for external field access after Items 1 and 2
-land).
+Doc: `cleanup.md` Items 2 and 3. Item 1 is withdrawn and is no longer a
+prerequisite; Item 3 still says to re-check for external field access after
+Item 2 lands, that part is unaffected by Item 1's withdrawal.
 
 1. **`cleanup.md` Item 2** — separate the diagnostics-only "best evidence"
    gate snapshot from the live gate state in `FrequencyMatchDetector::update()`.
@@ -140,9 +152,9 @@ rather than `FrequencyMatchDetector` internals directly.
 
 ## Phase 3 — Unify the Per-Detector Switch (`cleanup.md` Item 5)
 
-Requires Phase 1 Item 1. Does not require Phase 2, but doing Phase 2 first
-means `FrequencyMatchDetector`'s surface is already narrow when this item
-touches its call sites.
+Does not require Phase 2, but doing Phase 2 first means
+`FrequencyMatchDetector`'s surface is already narrow when this item touches
+its call sites. (No longer gated on Item 1, which is withdrawn.)
 
 1. Introduce the internal `ActiveDetectorAdapter` (`hasPendingOccurrence`,
    `popOccurrence` only, see the corrected sketch in `cleanup.md` Item 5).
@@ -261,17 +273,22 @@ decision is: consolidate" section instead:
 
 1. Do not delete `FrequencyMatchDetector` until the replacement profile is
    confirmed as the one actually used going forward.
-2. Re-scope Phase 1 Item 1: the tagged union can be simplified to just
-   removing the now-unused `frequency` member, no union needed for a single
-   remaining family (unless Phase 6's third detector is still planned, in
-   which case keep the union, it's needed for that regardless).
+2. Item 1 is withdrawn regardless of this branch, it does not apply here
+   either. `Occurrence.frequency` does not become fully unused even after
+   consolidation: `TonalPulseScalar` already writes
+   `frequency.scoreStrength`/`contrastQuality`/`targetBandStrength` via its
+   `Contrast`-target inspection module today, on a `ScalarTransientDetector`
+   -only profile. Only `FrequencyOccurrenceDetail`'s
+   `FrequencyMatchDetector`-native fields (`score`, `contrast`,
+   `measurement`) become removable.
 3. Re-scope Phase 5b: `DetectionRuntime` simplifies to a single
    `ScalarTransientDetector` member, no union, no per-detector dispatch,
    full stop, unless a third detector (Phase 6) is still planned.
-4. Remove `DetectorId::FrequencyMatch`, `OccurrenceType::Frequency`, and the
-   `frequency` detail members/printers, verified against
-   `TonalPulseScalar`'s own baseline, not `TonalPulseFreq`'s (which no
-   longer exists to compare against).
+4. Remove `DetectorId::FrequencyMatch`, `OccurrenceType::Frequency`, and
+   `FrequencyOccurrenceDetail`'s detector-native fields (`score`, `contrast`,
+   `measurement`) and their printers, keeping the struct's Inspector-owned
+   fields, verified against `TonalPulseScalar`'s own baseline, not
+   `TonalPulseFreq`'s (which no longer exists to compare against).
 5. Correct `docs/specs/myspec.md`, which currently names `TonalPulseFreq`
    the stable path.
 6. Test: T1, T3 (T2 no longer applies, that profile is gone), T4, T6, T7.
@@ -283,9 +300,9 @@ decision is: consolidate" section instead:
 | Phase | Doc | Depends on | Key tests |
 |---|---|---|---|
 | 0 | consolidation | — (parallel track) | field trials only |
-| 1 | cleanup.md #4, inspector-pattern-scope, cleanup.md #1 | — | T1, T2, T3, T4, T5 |
-| 2 | cleanup.md #2, #3 | Phase 0 = keep; Phase 1 | T1, T2, T4 |
-| 3 | cleanup.md #5 | Phase 1 (Phase 2 optional) | T1, T2, T3, T6 |
+| 1 | cleanup.md #4 (done), inspector-pattern-scope (done), ~~cleanup.md #1~~ (withdrawn) | — | T1 (done), T2-T4 (hardware, outstanding) |
+| 2 | cleanup.md #2, #3 | Phase 0 = keep | T1, T2, T4 |
+| 3 | cleanup.md #5 | — (Item 1 dependency removed; Phase 2 optional) | T1, T2, T3, T6 |
 | 4 | soak, no doc | Phases 1-3 | T7 |
 | 5a | analyzer-node-isolation | Phases 1-4 | T1, T2, T3, T6, T7, T8 |
 | 5b | detector-ownership | Phase 5a | T1-T7, T5 |

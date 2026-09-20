@@ -9,11 +9,18 @@ Related to: `docs/refactors/cleanup.md` and
 This is a second bigger, riskier structural proposal, alongside
 `cleanup-detector-ownership.md`. It changes where code lives and how it's
 built, not just struct layout or dead-code removal. Recommended sequencing:
-finish `cleanup.md` first, in particular Item 1 (tagged detail payload),
-Item 3 (`FrequencyMatchDetector` encapsulation), and Item 6 (diagnostic
-counter audit), since all three shrink or clarify the exact state this
-proposal needs to relocate. `cleanup-inspector-pattern-scope.md` is
-independent and can land at any time, before or after this proposal.
+finish `cleanup.md` first, in particular Item 3 (`FrequencyMatchDetector`
+encapsulation) and Item 6 (diagnostic counter audit), since both shrink or
+clarify the exact state this proposal needs to relocate.
+`cleanup-inspector-pattern-scope.md` is independent and can land at any
+time, before or after this proposal.
+
+Correction, 2026-09-20: this used to also list Item 1 (the `Occurrence`/
+`DetectorReport` tagged union) as a prerequisite. Item 1's `Occurrence` half
+was withdrawn, it was based on a false premise (see `cleanup.md` Item 1 for
+the evidence), so it is not a prerequisite for anything. Its `DetectorReport`
+half is unverified and not scheduled. Neither blocks this proposal, which
+does not depend on either struct's detail-payload shape.
 
 Non-negotiable constraint carried over from that discussion: the Node-facing
 API must not change shape. `ResonantNodeApp`/`ResonantBehavior` must

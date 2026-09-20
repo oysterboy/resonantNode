@@ -1,0 +1,390 @@
+# Codex Pass — Detector Layer Cleanup
+
+## Goal
+
+Simplify the Detector layer (`DetectionRuntime`, `ScalarTransientDetector`,
+`FrequencyMatchDetector`, `DetectorReport`, `Occurrence`) without changing
+detection behavior. This pass follows up on the architecture review of
+`docs/specs/myspec.md` vs. the current Detector code.
+
+Items are ordered by urgency, not by file or by detector. Do each item in
+order. Do not start a lower item before the one above it is verified.
+
+Do not change detector thresholds, profile tuning, TonalPulse semantics, or
+pattern/inspection behavior in any item below unless the item explicitly says
+so. Every item must produce byte-for-byte identical SEQ_TRIAL/SEQ_SUMMARY
+output on an unchanged 50-trial run unless noted otherwise.
+
+A note on scope: `ScalarTransientDetector` and `FrequencyMatchDetector` are
+explicitly allowed to diverge internally per the spec ("Generic outward
+contract. Specialized detector internals."). Nothing in this pass asks the
+two detectors' lifecycle, threshold, or gating logic to converge. Item 7
+originally proposed merging bookkeeping between the two detectors and was
+downgraded after review found real, deliberate differences between them (see
+Item 7 for the corrected reasoning) — it is kept last and marked optional.
+
+---
+
+## Evidence base
+
+Two existing lab notes independently confirm the RAM/stack risk targeted by
+Item 1:
+
+- `docs/roadmaps/notes` ("MEMORY STACK ANALYSER") measures
+  `DetectionRuntime::resetDetectionState()` at a 1552-byte stack frame and
+  both detector `resetState()` calls at 416 bytes each, nested directly under
+  it, and names `resetDetectionState()` nesting as one of the two strongest
+  candidates to reduce.
+- `docs/lab/260903_notes` (`exp001-04`, `exp001-05/-06`) records a real
+  `Stack canary watchpoint triggered (loopTask)` crash after sequence
+  completion, with stack margin observed as low as 44 words, on the same
+  reset/sequence-start path.
+
+Item 1 below reduces the size of the structs copied and reset repeatedly on
+that path. It does not by itself prove the crash is fixed; treat it as a
+contributing fix, and keep `ARDUINO_LOOP_STACK_SIZE` at its current increased
+value until the crash is independently reproduced as gone.
+
+---
+
+# Item 1 — Collapse always-both detail payloads in Occurrence and DetectorReport (highest urgency)
+
+## Problem
+
+`Occurrence` (`src/detection/occurrences/Occurrence.h`) embeds both
+`ScalarOccurrenceDetail` and `FrequencyOccurrenceDetail` in every instance.
+`DetectorReport` (`src/detection/detectors/DetectorReport.h`) embeds both
+`ScalarDetectorReportDetail` and `FrequencyMatchDetectorReportDetail` in every
+instance. Only one of the two is ever populated, based on `detectorId`/
+`occurrenceType`, but every copy carries both, fully zeroed for the inactive
+family.
+
+These structs are copied repeatedly through fixed-capacity queues in
+`DetectionRuntime`: `_pipelineEventQueue`, `_patternInspectedQueue`,
+`_resultQueue`, and `SourceDiagnosticRecord`. Each copy pays for both detail
+blocks regardless of which detector produced the event. This directly
+contributes to the stack pressure documented in the evidence base above.
+
+## Required Change
+
+Replace the two always-present detail members with one tagged union (a
+`union` gated by `detectorId`/`occurrenceType`, or a `std::variant`-style
+manual tag if the toolchain lacks `<variant>` support on this target) in both
+`Occurrence` and `DetectorReport`.
+
+Keep the generic top-level fields (timing, strength, confidence, accepted/
+selectedReject shells, thresholds, aggregates) exactly as they are today —
+only the `scalar`/`frequency` detail members change shape.
+
+Update every read site to switch on the tag before reading `.scalar` or
+`.frequency`. Known read sites to check:
+
+```text
+DetectorReportPrinter.cpp
+ScalarTransientPrinter.cpp / ScalarTransientReport.cpp / ScalarTransientOccurrence.cpp
+FrequencyMatchPrinter.cpp / FrequencyMatchReport.cpp / FrequencyMatchOccurrence.cpp
+OccurrenceInspector.cpp
+PatternMatcher.cpp
+AnalyzerSeqReporter.cpp and other Analyzer consumers of Occurrence/DetectorReport detail
+```
+
+Do not change any printed field name, printed value, or field ordering in
+SEQ output as part of this item. This is a storage-layout change only.
+
+## Intermediate Verification 1
+
+1. Build for both `esp32dev-analyzer` and any other configured environment.
+2. Run the existing 50-trial `TonalPulseFreq` SEQ test and the 50-trial
+   `TonalPulseScalar` SEQ test.
+3. Diff SEQ_TRIAL / SEQ_SOURCE / SEQ_INSPECT / SEQ_EXPLAIN / SEQ_SUMMARY
+   output against a pre-change baseline run. Output must be identical.
+4. Record `sizeof(Occurrence)` and `sizeof(DetectorReport)` before and after
+   in the commit notes.
+
+Do not proceed to Item 2 until output is confirmed identical.
+
+---
+
+# Item 2 — Fix diagnostics-enabled state mutation in FrequencyMatchDetector::update()
+
+## Problem
+
+In `FrequencyMatchDetector::update()`
+(`src/detection/detectors/frequency/FrequencyMatchDetector.cpp`), the
+lifecycle decision for the current call uses `attackScoreOk`, `attackOk`,
+`releaseScoreOk`, `releaseOk`, and `gateReason` computed from live evidence
+earlier in the function. Later in the same function, a block gated by
+`if (_diagnosticsEnabled)` re-evaluates `FrequencyMatchCriteria::evaluate()`
+against a separately tracked "best evidence so far" snapshot and overwrites
+those same member fields.
+
+This does not corrupt the decision already made in the current call, but it
+means the detector's persisted gate state between calls differs depending on
+whether diagnostics is enabled, coupling a debug-only feature to detector
+state that report-building and reject-summary code (`updateBestRejectedPending`,
+`buildReport`) may read on a later call.
+
+## Required Change
+
+Introduce a separate, explicitly-named set of fields for the
+diagnostics-only "best evidence" gate snapshot (for example
+`diagnosticsBestAttackScoreOk`, `diagnosticsBestGateReason`, or a small
+`FrequencyDiagnosticsSnapshot` struct). The diagnostics block must write only
+to these new fields. `attackScoreOk`, `attackOk`, `releaseScoreOk`,
+`releaseOk`, and `gateReason` must be written exactly once per `update()`
+call, from live evidence, regardless of `_diagnosticsEnabled`.
+
+Update any diagnostic print path that reads the "best evidence" gate state to
+read the new fields instead.
+
+## Intermediate Verification 2
+
+1. Run the same trial with `_diagnosticsEnabled` forced `true` and forced
+   `false` across two runs with identical input (use a captured/replayed RAW
+   feature log if available, or two consecutive runs of the same physical
+   trial setup).
+2. Confirm `DetectorReport.accepted`/`selectedReject` truth for the trial is
+   identical in both runs.
+3. Confirm diagnostics-only output changes only the diagnostic line, not
+   canonical SEQ_SOURCE/SEQ_INSPECT fields.
+
+---
+
+# Item 3 — Bring FrequencyMatchDetector's public surface in line with ScalarTransientDetector
+
+## Problem
+
+`FrequencyMatchDetector.h` exposes roughly 70 raw public fields (`pendingState`,
+`gateReason`, `bestPeakScore`, `evidencePresent`, and so on), justified by a
+comment claiming external code reads them directly. No code outside the
+class currently reads them (verified by search at review time). This is the
+detector backing the stable production profile (`TonalPulseFreq`), so it is
+the highest-value target for the encapsulation pattern `ScalarTransientDetector`
+already uses: private `_`-prefixed members, a narrow public method surface
+(`update`, `buildReport`, `latestReport`, `reportGeneration`, `popOccurrence`,
+`hasPendingOccurrence`, plus the `set*`/`reset*` methods it needs).
+
+This item is about encapsulation of one detector's own internals, not about
+detector-to-detector divergence — it does not ask `FrequencyMatchDetector` to
+look more like `ScalarTransientDetector` internally, only to stop exposing
+state nothing outside the class reads.
+
+## Required Change
+
+1. Confirm via search that no file outside
+   `src/detection/detectors/frequency/*.cpp` reads any `FrequencyMatchDetector`
+   field directly. Re-run this check after Item 1 and Item 2, since both
+   touch this file.
+2. Move all fields not required by the public contract above to `private`,
+   prefixed with `_` to match `ScalarTransientDetector` convention.
+3. Keep the three `.cpp` files (`FrequencyMatchDetector.cpp`,
+   `FrequencyMatchOccurrence.cpp`, `FrequencyMatchReport.cpp`) working against
+   the now-private members; they are already part of the same class and can
+   access private members directly.
+4. Do this incrementally, one logical group of fields at a time (lifecycle
+   state, then pending/candidate facts, then best-rejected summary, then
+   diagnostics), rebuilding after each group.
+
+## Intermediate Verification 3
+
+1. Build succeeds after each field group is privatized.
+2. Run the 50-trial `TonalPulseFreq` SEQ test; output identical to baseline.
+3. Confirm no new public field was added to compensate — if a field is
+   needed publicly, it should be exposed through `DetectorReport`, not
+   through the detector instance.
+
+---
+
+# Item 4 — Remove duplicated dead helper functions
+
+## Problem
+
+`frequencyRejectReasonFromState` is defined identically in three files:
+`FrequencyMatchDetector.cpp`, `FrequencyMatchOccurrence.cpp`, and
+`FrequencyMatchReport.cpp`. Only the copy in `FrequencyMatchReport.cpp` is
+ever called. `frequencyRejectClassFromReason` is defined identically in
+`FrequencyMatchDetector.cpp` and `FrequencyMatchReport.cpp`; only the
+`FrequencyMatchReport.cpp` copy is called.
+
+This is dead code duplicated within one detector's own files, not divergence
+between the two detectors.
+
+## Required Change
+
+Delete the unused copies in `FrequencyMatchDetector.cpp` and
+`FrequencyMatchOccurrence.cpp`. Keep the single definitions in
+`FrequencyMatchReport.cpp` (or move them to a shared internal header if a
+second call site appears later — not needed today).
+
+## Intermediate Verification 4
+
+Build succeeds; no behavior change is possible from this item since the
+removed code was unreachable. A clean compile with no unused-function
+warnings is sufficient verification.
+
+---
+
+# Item 5 — Unify the per-detector switch statements in DetectionRuntime
+
+## Problem
+
+`DetectionRuntime::observeFrame()` and `DetectionRuntime::drainDetectors()`
+each branch on `_detectorSelection` with two cases that are structurally
+identical, differing only in which detector's `update`/`popOccurrence`/
+`latestReport` is called. `drainDetectors()` in particular repeats about 30
+lines of field-state/inspector/pattern-matcher wiring per branch.
+
+This duplication lives in the coordinator, not in either detector, and it
+already operates on an interface (`popOccurrence`, `hasPendingOccurrence`,
+`latestReport`, `reportGeneration`) that both detectors already implement
+identically today. Removing it does not ask either detector's internals to
+converge.
+
+## Required Change
+
+Introduce a minimal internal adapter used only inside `DetectionRuntime`,
+not a public `IDetector` interface and not a change to either detector's
+public contract:
+
+```cpp
+struct ActiveDetectorAdapter {
+    bool hasPendingOccurrence() const;
+    bool popOccurrence(detection::Occurrence& out);
+};
+```
+
+`latestReport()`/`reportGeneration()` are deliberately not part of this
+adapter. `docs/refactors/cleanup-analyzer-node-isolation.md` found that
+neither `PatternResult` nor `FieldState` is ever built from `DetectorReport`,
+so report access is a diagnostics-only concern, not part of the core drain
+path this item unifies. `drainDetectorReportEvents()`'s use of
+`latestReport()`/`reportGeneration()` stays switch-based (or moves to the
+diagnostics layer entirely, per that document) rather than going through
+this adapter.
+
+Implement it as a small class or a pair of free functions holding a pointer
+to whichever detector is active, selected once in `setDetectorSelection()`.
+Route `observeFrame()`'s detector-specific `update(...)` calls (which have
+genuinely different signatures per detector and should stay specialized)
+through the existing switch, but replace the duplicated drain/report-capture
+logic in `drainDetectors()` with one code path against the adapter.
+
+Do not force `ScalarTransientDetector::update()` and
+`FrequencyMatchDetector::update()` to share a signature. The spec explicitly
+allows their `update()` inputs to remain specialized.
+
+## Intermediate Verification 5
+
+1. Run both 50-trial SEQ tests (`TonalPulseFreq`, `TonalPulseScalar`);
+   output identical to baseline.
+2. Confirm `drainDetectors()` has one drain loop body, not two.
+
+---
+
+# Item 6 — Review DetectionRuntime diagnostic counter load
+
+## Problem
+
+`DetectionRuntime` carries about twenty free-standing diagnostic counters
+plus a `PipelineIntegrity` struct per event. The counters are consumed by
+exactly one debug line (`AnalyzerSystemReporter.cpp`'s `SEQ REPORT` output)
+and one overflow-count read (`AnalyzerSequenceSession.cpp`). This is
+reasonable for an actively-tuned device, but it should be revisited
+periodically rather than left to grow unbounded.
+
+## Required Change (this pass: audit only, no code change required)
+
+Produce a short table in the commit notes listing each counter in
+`DetectionRuntime.h`, its single consumer, and a recommendation: keep,
+consolidate into a single struct, or remove. Do not remove any counter in
+this pass unless it has zero consumers — if a zero-consumer counter is
+found, delete it as part of this item and note it in Intermediate
+Verification 6.
+
+## Intermediate Verification 6
+
+If any counter was deleted: build succeeds, and the `SEQ REPORT` line
+compiles and prints unchanged for all remaining counters.
+
+---
+
+# Item 7 — (Optional, lowest priority) Shared candidate-coverage tracking
+
+## Problem, and why this is downgraded
+
+`ScalarTransientDetector::updateCandidateFacts/resetCandidateFacts/finalizeCandidateFacts`
+and `FrequencyMatchDetector::updatePendingFacts/resetPendingFacts/finalizePendingFacts`
+compute a structurally similar family of statistics: peak, mean, rms,
+coverage time above attack/release thresholds, island count, gap count,
+longest island, largest gap.
+
+This was originally written up as straightforward duplication of one
+algorithm. On closer review that framing was wrong, and this item is kept
+only for completeness:
+
+- `ScalarTransientDetector` operates on `audioSamplePacket.timeUs`,
+  microsecond per-sample timing, because it reacts to raw audio directly.
+  `FrequencyMatchDetector` operates on millisecond evidence-window
+  timestamps, because frequency evidence arrives in coarser measurement
+  packets. The unit difference is a correct reflection of each detector's
+  actual input resolution, not an inconsistency to fix.
+- `ScalarTransientDetector` tracks an additional "matched mean strength"
+  (mean filtered to samples above the release threshold) that
+  `FrequencyMatchDetector` does not, because scalar's `requireMinStrength`/
+  `minMatchedMeanStrength` gating needs it and frequency's gating does not.
+- `FrequencyMatchDetector` tracks two peak dimensions (score and contrast,
+  with a tie-break rule between them) where scalar tracks one.
+
+The two detectors are explicitly allowed to diverge internally per the spec
+("Generic outward contract. Specialized detector internals."), and here they
+already have diverged in real, load-bearing ways. A shared tracker would
+need a time-unit parameter, an optional matched-mean feature, and a
+pluggable peak comparator, which risks becoming a worse abstraction than the
+current duplication.
+
+## Required Change
+
+None for this pass. Do not extract a shared tracker now.
+
+Revisit only if a third detector needs the same family of statistics, or if
+the two detectors' coverage/island/gap bookkeeping turns out to disagree on
+a case where it should agree (a real bug found in the field), whichever
+comes first.
+
+## Intermediate Verification 7
+
+None required; no code changes are made under this item in this pass.
+
+---
+
+# Non-Goals
+
+- No threshold tuning.
+- No changes to carrier-quality rules, AMP class, or contrast class logic.
+- No profile redesign or new `DetectionProfileKind`.
+- No forced `IDetector` interface or type-erased detector graph — the spec
+  explicitly defers this, and Item 5 stays internal to `DetectionRuntime`.
+- No change to `PatternMatcher`, `FieldStateTracker`, or Analyzer
+  classification logic beyond the read-site updates required by Item 1.
+- No merging of `ScalarTransientDetector` and `FrequencyMatchDetector`
+  lifecycle, threshold, or gating logic under any item in this pass.
+- No silent behavior change hidden behind a refactor — every item requires
+  identical SEQ output on the stated verification runs unless the item says
+  otherwise.
+
+---
+
+# Suggested Commit Sequence
+
+```text
+DetectionCleanup: collapse scalar/frequency detail into tagged union
+DetectionFix: separate diagnostics gate snapshot from live gate state
+DetectionCleanup: privatize FrequencyMatchDetector public field surface
+DetectionCleanup: remove dead duplicated frequency reason helpers
+DetectionCleanup: unify per-detector drain path in DetectionRuntime
+DetectionCleanup: audit and trim DetectionRuntime diagnostic counters
+```
+
+Each commit must compile and pass its corresponding Intermediate
+Verification before proceeding to the next item. Item 7 has no commit; it is
+recorded as a deliberately deferred decision.

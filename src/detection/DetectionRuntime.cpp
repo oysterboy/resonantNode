@@ -1,5 +1,7 @@
 #include "DetectionRuntime.h"
 
+#include <string.h>
+
 #include <Arduino.h>
 #include <string.h>
 
@@ -94,27 +96,35 @@ void DetectionRuntime::resetDetectionState() {
     _patternMatcher.reset();
     _fieldStateTracker.reset();
     _featureHistory.reset();
-    _resultQueue[0] = {};
+    resetDetectionQueues();
+    resetDetectionBookkeeping();
+}
+
+void DetectionRuntime::resetDetectionQueues() {
+    memset(&_resultQueue[0], 0, sizeof(_resultQueue[0]));
     _resultReadIndex = 0;
     _resultCount = 0;
-    _latestPipelineResult = {};
-    _hasLatestPipelineResult = false;
-    _pipelineEventOverflowCount = 0;
     _patternResultQueueOverflowCount = 0;
-    _pipelineEventQueue[0] = {};
+    memset(&_pipelineEventQueue[0], 0, sizeof(_pipelineEventQueue[0]));
     _pipelineEventReadIndex = 0;
     _pipelineEventCount = 0;
+    memset(&_patternInspectedQueue[0], 0, sizeof(_patternInspectedQueue[0]));
+    _patternInspectedReadIndex = 0;
+    _patternInspectedCount = 0;
+    _patternInspectedQueueOverflowCount = 0;
+}
+
+void DetectionRuntime::resetDetectionBookkeeping() {
+    memset(&_latestPipelineResult, 0, sizeof(_latestPipelineResult));
+    _hasLatestPipelineResult = false;
+    _pipelineEventOverflowCount = 0;
     _pipelineEventSequenceId = 0;
     _lastEmittedAcceptedOccurrenceId = 0;
     _lastEmittedAcceptedReportGeneration = 0;
     _lastEmittedSelectedRejectOccurrenceId = 0;
     _lastEmittedSelectedRejectReportGeneration = 0;
-    _patternInspectedQueue[0] = {};
-    _patternInspectedReadIndex = 0;
-    _patternInspectedCount = 0;
-    _patternInspectedQueueOverflowCount = 0;
     _patternCorrelationFailureCount = 0;
-    _detectorReport = {};
+    memset(&_detectorReport, 0, sizeof(_detectorReport));
     _lastObservedScalarReportGeneration = 0;
     _lastObservedFrequencyReportGeneration = 0;
 }

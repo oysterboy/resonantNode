@@ -3,6 +3,7 @@
 #include <Arduino.h>
 #include <new>
 #include <stdlib.h>
+#include <string.h>
 
 #include "../../app/RuntimeDefaults.h"
 #include "../../app/TimingUtils.h"
@@ -60,88 +61,63 @@ bool detectorReportMatchesOccurrence(const detection::DetectorReport* detectorRe
 
 } // namespace
 
-void AnalyzerApp::startSequenceTest(const PendingSequenceStart& pending) {
-    unsigned long totalTrials = pending.totalTrials;
-    unsigned long periodMs = pending.periodMs;
-    unsigned long windowEndOffsetMs = pending.windowEndOffsetMs;
-    unsigned long toneHz = pending.toneHz;
-    unsigned long durationMs = pending.durationMs;
-    bool quiet = pending.quiet;
-    bool showDetails = pending.showDetails;
-    SequenceDiagMode diagMode = pending.diagMode;
-    const char* setupLabel = pending.setupLabel;
-    unsigned long reportSettleMs = pending.reportSettleMs;
-    bool sampleDumpEnabled = pending.sampleDumpEnabled;
-    unsigned long sampleDumpFirstTrials = pending.sampleDumpFirstTrials;
-    unsigned long sampleDumpEveryNth = pending.sampleDumpEveryNth;
-    unsigned long sampleDumpLeadMs = pending.sampleDumpLeadMs;
-    unsigned long sampleDumpTailMs = pending.sampleDumpTailMs;
-    unsigned long sampleDumpStepMs = pending.sampleDumpStepMs;
-    unsigned long sampleDumpMaxRows = pending.sampleDumpMaxRows;
-    unsigned long startupDelayMs = pending.startupDelayMs;
-    detection::DetectionProfileKind profileKind = pending.profileKind;
-    bool externalEmitter = pending.externalEmitter;
-
-    if (totalTrials == 0) {
-        totalTrials = 1;
-    }
-    if (periodMs == 0) {
-        periodMs = 1;
-    }
-    if (windowEndOffsetMs < 250) {
-        windowEndOffsetMs = 250;
-    }
-    if (windowEndOffsetMs >= periodMs) {
-        windowEndOffsetMs = periodMs > 250 ? periodMs - 250 : periodMs;
-    }
-    if (externalEmitter && windowEndOffsetMs < durationMs + 500) {
-        windowEndOffsetMs = durationMs + 500;
-    }
-    if (reportSettleMs == 0) {
-        reportSettleMs = 1;
-    }
-    if (sampleDumpStepMs == 0) {
-        sampleDumpStepMs = 1;
-    }
-    if (sampleDumpTailMs < sampleDumpLeadMs) {
-        sampleDumpTailMs = sampleDumpLeadMs;
-    }
+void AnalyzerApp::initializeSequenceTest(const PendingSequenceStart& pending) {
     _sequenceTest.active = true;
-    _sequenceTest.quiet = quiet || _sequenceTest.outputConfig.mode == AnalyzerApp::SeqOutputMode::Quiet;
-    _sequenceTest.showDetails = showDetails;
-    _sequenceTest.externalEmitter = externalEmitter;
-    _sequenceTest.profileKind = profileKind;
-    const detection::DetectionProfile& selectedProfile = effectiveSequenceProfile();
+    _sequenceTest.quiet = pending.quiet || _seqOutputConfig.mode == AnalyzerApp::SeqOutputMode::Quiet;
+    _sequenceTest.showDetails = pending.showDetails;
+    _sequenceTest.externalEmitter = pending.externalEmitter;
+    _sequenceTest.profileKind = pending.profileKind;
     _sequenceTest.outputConfig = _seqOutputConfig;
     _sequenceTest.diagMode = sequenceDiagModeFromOutputWhen(_sequenceTest.outputConfig.when);
     _sequenceTest.progressLineStarted = false;
-    _sequenceTest.totalTrials = totalTrials;
-    _sequenceTest.periodMs = periodMs;
+    _sequenceTest.totalTrials = pending.totalTrials == 0 ? 1 : pending.totalTrials;
+    _sequenceTest.periodMs = pending.periodMs == 0 ? 1 : pending.periodMs;
     _sequenceTest.windowStartOffsetMs = 0;
-    _sequenceTest.windowEndOffsetMs = windowEndOffsetMs;
-    _sequenceTest.toneHz = toneHz;
-    _sequenceTest.durationMs = durationMs;
-    _sequenceTest.startupDelayMs = startupDelayMs;
-    _sequenceTest.reportSettleMs = reportSettleMs;
-    _sequenceTest.sampleDumpEnabled = sampleDumpEnabled;
-    _sequenceTest.sampleDumpFirstTrials = sampleDumpFirstTrials;
-    _sequenceTest.sampleDumpEveryNth = sampleDumpEveryNth;
-    _sequenceTest.sampleDumpLeadMs = sampleDumpLeadMs;
-    _sequenceTest.sampleDumpTailMs = sampleDumpTailMs;
-    _sequenceTest.sampleDumpStepMs = sampleDumpStepMs;
-    _sequenceTest.sampleDumpMaxRows = sampleDumpMaxRows == 0 ? 1 : sampleDumpMaxRows;
+    _sequenceTest.windowEndOffsetMs = pending.windowEndOffsetMs;
+    if (_sequenceTest.windowEndOffsetMs < 250) {
+        _sequenceTest.windowEndOffsetMs = 250;
+    }
+    if (_sequenceTest.windowEndOffsetMs >= _sequenceTest.periodMs) {
+        _sequenceTest.windowEndOffsetMs = _sequenceTest.periodMs > 250 ? _sequenceTest.periodMs - 250 : _sequenceTest.periodMs;
+    }
+    if (_sequenceTest.externalEmitter && _sequenceTest.windowEndOffsetMs < pending.durationMs + 500) {
+        _sequenceTest.windowEndOffsetMs = pending.durationMs + 500;
+    }
+    _sequenceTest.toneHz = pending.toneHz;
+    _sequenceTest.durationMs = pending.durationMs;
+    _sequenceTest.startupDelayMs = pending.startupDelayMs;
+    _sequenceTest.reportSettleMs = pending.reportSettleMs == 0 ? 1 : pending.reportSettleMs;
+    _sequenceTest.sampleDumpEnabled = pending.sampleDumpEnabled;
+    _sequenceTest.sampleDumpFirstTrials = pending.sampleDumpFirstTrials;
+    _sequenceTest.sampleDumpEveryNth = pending.sampleDumpEveryNth;
+    _sequenceTest.sampleDumpLeadMs = pending.sampleDumpLeadMs;
+    _sequenceTest.sampleDumpTailMs = pending.sampleDumpTailMs;
+    _sequenceTest.sampleDumpStepMs = pending.sampleDumpStepMs == 0 ? 1 : pending.sampleDumpStepMs;
+    if (_sequenceTest.sampleDumpTailMs < _sequenceTest.sampleDumpLeadMs) {
+        _sequenceTest.sampleDumpTailMs = _sequenceTest.sampleDumpLeadMs;
+    }
+    _sequenceTest.sampleDumpMaxRows = pending.sampleDumpMaxRows == 0 ? 1 : pending.sampleDumpMaxRows;
     if (_sequenceTest.sampleDumpMaxRows > SequenceTest::kMaxSampleRows) {
         _sequenceTest.sampleDumpMaxRows = SequenceTest::kMaxSampleRows;
     }
     _sequenceTest.sampleDumpWarned = false;
     clearSequenceSampleDump();
+    const char* setupLabel = pending.setupLabel;
+    if (setupLabel != nullptr && setupLabel[0] != '\0') {
+        strncpy(_sequenceTest.setupLabel, setupLabel, sizeof(_sequenceTest.setupLabel));
+    } else {
+        strncpy(_sequenceTest.setupLabel, TEST_SETUP_LABEL, sizeof(_sequenceTest.setupLabel));
+    }
+    _sequenceTest.setupLabel[sizeof(_sequenceTest.setupLabel) - 1] = '\0';
+}
 
+void AnalyzerApp::configureSequenceDetection() {
+    const detection::DetectionProfile& selectedProfile = effectiveSequenceProfile();
     _detection.resetState();
     _detection.setPatternResultQueueEnabled(false);
     _detection.setFrequencyMatchConfig(selectedProfile.frequencyMatch);
     _detection.setScalarTransientConfig(selectedProfile.scalarTransient);
     _detection.setDetectorSelection(selectedProfile.detectorSelection);
-    _detection.setInspectionPlan(selectedProfile.inspectionPlan);
     _detection.setInspectionPlan(selectedProfile.inspectionPlan);
     _detection.setFieldStateConfig(selectedProfile.fieldStateConfig);
     _detection.setProfileName(detection::detectionProfileName(selectedProfile.kind));
@@ -149,36 +125,12 @@ void AnalyzerApp::startSequenceTest(const PendingSequenceStart& pending) {
     _sequenceTest.sampleDumpDetectorSelection = selectedProfile.detectorSelection;
     _sequenceTest.sampleDumpObservedStream = selectedProfile.scalarTransient.observedStream;
     _freqBandStream.setSampleRateHz(_audioSource.sampleRateHz());
-    _freqBandStream.setTargetFrequencyHz(toneHz);
+    _freqBandStream.setTargetFrequencyHz(_sequenceTest.toneHz);
     _freqBandStream.setFrequencyUpdateEverySamples(_sequenceTest.outputConfig.frequencyUpdateEverySamples);
     _freqBandStream.resetState();
-    _sequenceTest.outputConfig = _seqOutputConfig;
+}
 
-    if (setupLabel != nullptr && setupLabel[0] != '\0') {
-        strncpy(_sequenceTest.setupLabel, setupLabel, sizeof(_sequenceTest.setupLabel));
-        _sequenceTest.setupLabel[sizeof(_sequenceTest.setupLabel) - 1] = '\0';
-    } else {
-        strncpy(_sequenceTest.setupLabel, TEST_SETUP_LABEL, sizeof(_sequenceTest.setupLabel));
-        _sequenceTest.setupLabel[sizeof(_sequenceTest.setupLabel) - 1] = '\0';
-    }
-
-    if (_sequenceTest.sampleDumpEnabled) {
-        const unsigned long selectedTrialsEstimate = countSelectedSampleDumpTrials(totalTrials, sampleDumpFirstTrials, sampleDumpEveryNth);
-        const unsigned long rowsPerTrial = ((sampleDumpLeadMs + sampleDumpTailMs) / sampleDumpStepMs) + 1UL;
-        const unsigned long requestedRows = selectedTrialsEstimate * rowsPerTrial;
-        const unsigned long maxAllowedRows = _sequenceTest.sampleDumpMaxRows < SequenceTest::kMaxSampleRows
-            ? _sequenceTest.sampleDumpMaxRows
-            : SequenceTest::kMaxSampleRows;
-        if (requestedRows > _sequenceTest.sampleDumpMaxRows || rowsPerTrial > SequenceTest::kMaxSampleRows) {
-            Serial.print("SAMPLES_WARN reason=too_many_samples requested=");
-            Serial.print(requestedRows);
-            Serial.print(" max_allowed=");
-            Serial.println(maxAllowedRows);
-            _sequenceTest.sampleDumpEnabled = false;
-        }
-    }
-    _sequenceTest.startedAtMs = millis();
-    _sequenceTest.nextTriggerAtMs = _sequenceTest.startedAtMs + _sequenceTest.startupDelayMs;
+void AnalyzerApp::resetSequenceTestRunState() {
     _sequenceTest.currentTrial = 0;
     _sequenceTest.currentTrialScheduledAtMs = 0;
     _sequenceTest.currentTrialStartMs = 0;
@@ -191,28 +143,28 @@ void AnalyzerApp::startSequenceTest(const PendingSequenceStart& pending) {
     _sequenceTest.inspectedOccurrenceCount = 0;
     _sequenceTest.patternResultCount = 0;
     _sequenceTest.primaryValidPatternCaptured = false;
-    _sequenceTest.primaryValidPattern = {};
-    _sequenceTest.primaryValidInspectedOccurrence = {};
-    _sequenceTest.primaryValidDetectorReport = {};
+    memset(&_sequenceTest.primaryValidPattern, 0, sizeof(_sequenceTest.primaryValidPattern));
+    memset(&_sequenceTest.primaryValidInspectedOccurrence, 0, sizeof(_sequenceTest.primaryValidInspectedOccurrence));
+    memset(&_sequenceTest.primaryValidDetectorReport, 0, sizeof(_sequenceTest.primaryValidDetectorReport));
     _sequenceTest.primaryValidPatternDtMs = -1;
     _sequenceTest.primaryAcceptedOccurrenceCaptured = false;
-    _sequenceTest.primaryAcceptedInspectedOccurrence = {};
-    _sequenceTest.primaryAcceptedDetectorReport = {};
-    _sequenceTest.primaryAcceptedSourceRecord = {};
+    memset(&_sequenceTest.primaryAcceptedInspectedOccurrence, 0, sizeof(_sequenceTest.primaryAcceptedInspectedOccurrence));
+    memset(&_sequenceTest.primaryAcceptedDetectorReport, 0, sizeof(_sequenceTest.primaryAcceptedDetectorReport));
+    memset(&_sequenceTest.primaryAcceptedSourceRecord, 0, sizeof(_sequenceTest.primaryAcceptedSourceRecord));
     _sequenceTest.primaryAcceptedOccurrenceDtMs = -1;
     _sequenceTest.rejectedInWindowCount = 0;
     _sequenceTest.bestRejectedPatternCaptured = false;
-    _sequenceTest.bestRejectedInWindow = {};
-    _sequenceTest.bestRejectedInspectedOccurrence = {};
-    _sequenceTest.bestRejectedDetectorReport = {};
+    memset(&_sequenceTest.bestRejectedInWindow, 0, sizeof(_sequenceTest.bestRejectedInWindow));
+    memset(&_sequenceTest.bestRejectedInspectedOccurrence, 0, sizeof(_sequenceTest.bestRejectedInspectedOccurrence));
+    memset(&_sequenceTest.bestRejectedDetectorReport, 0, sizeof(_sequenceTest.bestRejectedDetectorReport));
     _sequenceTest.selectedSourceRejectCaptured = false;
-    _sequenceTest.selectedSourceReject = {};
+    memset(&_sequenceTest.selectedSourceReject, 0, sizeof(_sequenceTest.selectedSourceReject));
     _sequenceTest.consumedSourceRejectEventId = 0;
     _sequenceTest.consumedSourceRejectReportGeneration = 0;
     _sequenceTest.currentTrialFinalized = false;
     _sequenceTest.currentTrialUnexpected = 0;
     _sequenceTest.currentTrialRejected = 0;
-    _sequenceTest.currentTrialDiagnostics = {};
+    memset(&_sequenceTest.currentTrialDiagnostics, 0, sizeof(_sequenceTest.currentTrialDiagnostics));
     _sequenceTest.trialOverflowCountAtStart = 0;
     _sequenceTest.trialPatternInspectedOverflowCountAtStart = 0;
     _sequenceTest.hits = 0;
@@ -238,7 +190,33 @@ void AnalyzerApp::startSequenceTest(const PendingSequenceStart& pending) {
     _sequenceTest.maxFinalizeTrialUs = 0;
     _sequenceTest.maxProcessingLagMs = 0;
     _sequenceTest.completedTrials = 0;
-    _sequenceTest.cleanSummary = {};
+    memset(&_sequenceTest.cleanSummary, 0, sizeof(_sequenceTest.cleanSummary));
+}
+
+void AnalyzerApp::startSequenceTest(const PendingSequenceStart& pending) {
+    initializeSequenceTest(pending);
+    configureSequenceDetection();
+
+    if (_sequenceTest.sampleDumpEnabled) {
+        const unsigned long selectedTrialsEstimate = countSelectedSampleDumpTrials(
+            _sequenceTest.totalTrials, _sequenceTest.sampleDumpFirstTrials, _sequenceTest.sampleDumpEveryNth);
+        const unsigned long rowsPerTrial = ((_sequenceTest.sampleDumpLeadMs + _sequenceTest.sampleDumpTailMs) /
+                                            _sequenceTest.sampleDumpStepMs) + 1UL;
+        const unsigned long requestedRows = selectedTrialsEstimate * rowsPerTrial;
+        const unsigned long maxAllowedRows = _sequenceTest.sampleDumpMaxRows < SequenceTest::kMaxSampleRows
+            ? _sequenceTest.sampleDumpMaxRows
+            : SequenceTest::kMaxSampleRows;
+        if (requestedRows > _sequenceTest.sampleDumpMaxRows || rowsPerTrial > SequenceTest::kMaxSampleRows) {
+            Serial.print("SAMPLES_WARN reason=too_many_samples requested=");
+            Serial.print(requestedRows);
+            Serial.print(" max_allowed=");
+            Serial.println(maxAllowedRows);
+            _sequenceTest.sampleDumpEnabled = false;
+        }
+    }
+    _sequenceTest.startedAtMs = millis();
+    _sequenceTest.nextTriggerAtMs = _sequenceTest.startedAtMs + _sequenceTest.startupDelayMs;
+    resetSequenceTestRunState();
 
     if (!_sequenceTest.externalEmitter) {
         // Rebase before the first trial so every run starts from the quiet floor.
@@ -292,6 +270,7 @@ void AnalyzerApp::startSequenceTest(const PendingSequenceStart& pending) {
     }
 
     if (_sequenceTest.showDetails && !_sequenceTest.quiet) {
+        const detection::DetectionProfile& selectedProfile = effectiveSequenceProfile();
         Serial.print("SEQ start source=");
         Serial.print("I2S");
         Serial.print(" probe=AMP");
@@ -356,17 +335,17 @@ void AnalyzerApp::startSequenceTest(const PendingSequenceStart& pending) {
         Serial.print(" quiet=");
         Serial.print(_sequenceTest.quiet ? 1 : 0);
         Serial.print(" tries=");
-        Serial.print(totalTrials);
+        Serial.print(_sequenceTest.totalTrials);
         Serial.print(" period_ms=");
-        Serial.print(periodMs);
+        Serial.print(_sequenceTest.periodMs);
         Serial.print(" window_start_ms=");
         Serial.print(_sequenceTest.windowStartOffsetMs);
         Serial.print(" window_end_ms=");
-        Serial.print(windowEndOffsetMs);
+        Serial.print(_sequenceTest.windowEndOffsetMs);
         Serial.print(" freq_hz=");
-        Serial.print(toneHz);
+        Serial.print(_sequenceTest.toneHz);
         Serial.print(" dur_ms=");
-        Serial.println(durationMs);
+        Serial.println(_sequenceTest.durationMs);
         printDetectionParameters();
         if (!_sequenceTest.quiet) {
             Serial.println(_sequenceTest.externalEmitter ? "OBS running" : "SEQ running");

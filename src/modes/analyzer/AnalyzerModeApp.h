@@ -422,6 +422,9 @@ private:
 
     // Sequence-test workflows.
     void startSequenceTest(const PendingSequenceStart& pending);
+    void initializeSequenceTest(const PendingSequenceStart& pending);
+    void configureSequenceDetection();
+    void resetSequenceTestRunState();
     void stopSequenceTest();
     void updateSequenceTest(unsigned long now);
     void finalizeSequenceTrial(unsigned long now);

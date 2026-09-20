@@ -203,6 +203,8 @@ private:
         const DetectorReport* matchedDetectorReport,
         unsigned long nowMs
     );
+    void resetDetectionQueues();
+    void resetDetectionBookkeeping();
 
     FrequencyMatchConfig _frequencyMatchConfig = {};
     ScalarTransientConfig _scalarTransientConfig = {};

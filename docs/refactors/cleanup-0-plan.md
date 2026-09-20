@@ -182,6 +182,16 @@ regardless of what Phase 0 eventually decides. If Phase 0 later resolves to
    rebuilding after each group.
    - Test: T1 after each group; T2, T4 after the full item is complete.
 
+**Checkpoint, 2026-09-21: paused here on purpose, not started Item 3 yet.**
+Item 2 is a real, judgment-call fix, not a mechanical rename: it changes
+`SEQ_SOURCE_SPEC`'s `gate_reason`/`ready_ok`/`gate_open` output under
+default settings (see its status note in `cleanup.md`), and the live-only
+`gateReason` classification it introduces was designed without a hardware
+trial to check it against. Building Item 3 (a large, 70-field mechanical
+move) on top of an unverified Item 2 would make it harder to isolate which
+change caused a problem if Item 2's reasoning turns out wrong. Run T2 and
+Item 2's own two-run diagnostics comparison first; only then start Item 3.
+
 **Gate:** Phase 3 can start once this phase is done, or in parallel if
 working with more than one person, since Phase 3 touches `DetectionRuntime`
 rather than `FrequencyMatchDetector` internals directly.

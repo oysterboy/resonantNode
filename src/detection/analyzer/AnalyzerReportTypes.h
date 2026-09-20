@@ -317,10 +317,10 @@ struct AnalyzerProfileDetail {
     const char* inspectionPlan = "unknown";
     const char* inspectionModules = "unknown";
     size_t inspectionModuleCount = 0;
-    detection::ScalarInspectionObservation scalarObservation = {};
+    detection::MagnitudeInspectionObservation magnitudeObservation = {};
     size_t inspectionObservationCount = 0;
     detection::InspectionTarget inspectionObservationTargets[detection::kMaxInspectionModules] = {};
-    detection::ScalarInspectionObservation inspectionObservations[detection::kMaxInspectionModules] = {};
+    detection::MagnitudeInspectionObservation inspectionObservations[detection::kMaxInspectionModules] = {};
 
     float supportScore = 0.0f;
     float supportContrast = 0.0f;

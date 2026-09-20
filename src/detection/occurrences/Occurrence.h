@@ -12,13 +12,29 @@ Occurrence
 
 Low-level detector occurrence event emitted by a detector.
 It is not a pattern result and must not drive behavior directly.
+
+`magnitude` and `band` below are evidence-domain namespaces, not a
+detector-exclusive pair, and deliberately share no vocabulary with
+`DetectorId`/`OccurrenceType`'s `Scalar`/`Frequency` axis, which is a
+separate axis (which detector/lifecycle produced this occurrence). Both
+`magnitude` and `band` may be populated for the same occurrence regardless
+of which detector produced it: `OccurrenceInspector` writes into whichever
+namespace matches each configured `InspectionTarget` (`Amp` -> `magnitude`,
+`TargetScore`/`Contrast`/`TargetBand` -> `band`), and both current stable
+profiles (`TonalPulseFreq`, `TonalPulseScalar`) configure targets spanning
+both namespaces on every occurrence. Do not assume only one is meaningful
+based on `detectorId`/`occurrenceType`; `PatternMatcher` reads both,
+unconditionally, for both occurrence types. This is unlike
+`DetectorReport.scalar`/`.frequency` (see DetectorReport.h), which really
+are exclusive to whichever detector produced that report, that type kept
+its original names because they are accurate for it.
 */
-// Canonical scalar accepted-event detail.
+// Canonical carrier-agnostic single-value accepted-event detail.
 //
-// This shape is intentionally carrier-agnostic: the current scalar carrier may
-// be AMP envelope, frequency score, frequency contrast, or another scalar
+// This shape is intentionally carrier-agnostic: the tracked carrier may be
+// AMP envelope, frequency score, frequency contrast, or another scalar
 // stream. Do not rename this back to an AMP-specific public detail type.
-struct ScalarOccurrenceDetail {
+struct MagnitudeOccurrenceDetail {
     bool present = false;
     float value = 0.0f;
     float baseline = 0.0f;
@@ -28,11 +44,11 @@ struct ScalarOccurrenceDetail {
     float peakStrength = 0.0f;
     float releaseStrength = 0.0f;
     bool audioOverflowDuringOccurrence = false;
-    ScalarEvidence evidence = {};
+    MagnitudeEvidence evidence = {};
     StrengthClass strengthClass = StrengthClass::Unknown;
 };
 
-struct FrequencyOccurrenceDetail {
+struct FrequencyBandOccurrenceDetail {
     bool present = false;
     float score = 0.0f;
     float contrast = 0.0f;
@@ -63,10 +79,10 @@ struct Occurrence {
     float strength = 0.0f;
     float confidence = 0.0f;
 
-    // Canonical scalar accepted-event detail. This is the first compact
-    // reusable detail shape for scalar-transient output.
-    ScalarOccurrenceDetail scalar = {};
-    FrequencyOccurrenceDetail frequency = {};
+    // Canonical carrier-agnostic single-value accepted-event detail. This is
+    // the first compact reusable detail shape for scalar-transient output.
+    MagnitudeOccurrenceDetail magnitude = {};
+    FrequencyBandOccurrenceDetail band = {};
 };
 
 } // namespace detection

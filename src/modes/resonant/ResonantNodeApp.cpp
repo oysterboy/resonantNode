@@ -169,12 +169,12 @@ void printDetectionProfileDetails(const detection::DetectionProfile& profile) {
         Serial.print("  inspectionPlan.module[");
         Serial.print(static_cast<unsigned int>(i));
         Serial.print("].kind=");
-        Serial.print(module.kind == detection::InspectionModuleKind::ScalarFeatureStrength ? "ScalarFeatureStrength" : "None");
+        Serial.print(module.kind == detection::InspectionModuleKind::MagnitudeFeatureStrength ? "MagnitudeFeatureStrength" : "None");
         Serial.print(" label=");
         Serial.print(detection::inspectionTargetName(module.target));
-        if (module.kind == detection::InspectionModuleKind::ScalarFeatureStrength) {
+        if (module.kind == detection::InspectionModuleKind::MagnitudeFeatureStrength) {
             Serial.print(" stream=");
-            switch (module.scalar.stream) {
+            switch (module.magnitude.stream) {
                 case detection::FeatureStreamId::AmpMagnitude:
                     Serial.print("AmpMagnitude");
                     break;
@@ -193,9 +193,9 @@ void printDetectionProfileDetails(const detection::DetectionProfile& profile) {
                     break;
             }
             Serial.print(" windowPreMs=");
-            Serial.print(module.scalar.windowPreMs);
+            Serial.print(module.magnitude.windowPreMs);
             Serial.print(" windowPostMs=");
-            Serial.println(module.scalar.windowPostMs);
+            Serial.println(module.magnitude.windowPostMs);
         } else {
             Serial.println();
         }

@@ -35,12 +35,12 @@ private:
         const FeatureHistory* featureHistory,
         unsigned long inspectionNowMs
     ) const;
-    void annotateScalarFeatureStrength(
+    void annotateMagnitudeFeatureStrength(
         InspectedOccurrence& out,
         const Occurrence& occurrence,
         const FeatureHistory* featureHistory,
         unsigned long inspectionNowMs,
-        const ScalarFeatureInspectionConfig& config,
+        const MagnitudeFeatureInspectionConfig& config,
         InspectionTarget target
     ) const;
     void runInspectionModule(

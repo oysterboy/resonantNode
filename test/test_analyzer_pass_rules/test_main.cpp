@@ -45,7 +45,7 @@ void recordSeries(detection::FeatureHistory& history,
     }
 }
 
-void assertQuantileOrdering(const detection::ScalarWindow& window) {
+void assertQuantileOrdering(const detection::MagnitudeWindow& window) {
     TEST_ASSERT_TRUE_MESSAGE(window.min <= window.median + kQuantileEpsilon, "median should be >= min");
     TEST_ASSERT_TRUE_MESSAGE(window.median <= window.p75 + kQuantileEpsilon, "p75 should be >= median");
     TEST_ASSERT_TRUE_MESSAGE(window.p75 <= window.p90 + kQuantileEpsilon, "p90 should be >= p75");

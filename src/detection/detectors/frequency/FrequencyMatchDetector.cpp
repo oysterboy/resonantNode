@@ -402,9 +402,9 @@ void FrequencyMatchDetector::update(const detection::FrequencyBandMeasurementPac
                     pendingOccurrence.endMs = 0;
                     pendingOccurrence.durationMs = 0;
                     pendingOccurrence.strength = evidence.targetBandValue;
-                    pendingOccurrence.frequency.present = true;
-                    pendingOccurrence.frequency.score = evidence.targetBandValue;
-                    pendingOccurrence.frequency.contrast = evidence.targetBandContrastValue;
+                    pendingOccurrence.band.present = true;
+                    pendingOccurrence.band.score = evidence.targetBandValue;
+                    pendingOccurrence.band.contrast = evidence.targetBandContrastValue;
                     pendingOccurrence.confidence = 0.0f;
                     strncpy(pendingState, "open", sizeof(pendingState) - 1);
                     pendingState[sizeof(pendingState) - 1] = '\0';
@@ -434,8 +434,8 @@ void FrequencyMatchDetector::update(const detection::FrequencyBandMeasurementPac
                     pendingOccurrence.peakMs = now;
                     pendingOccurrence.peakSample = currentSample;
                     pendingOccurrence.strength = evidence.targetBandValue;
-                    pendingOccurrence.frequency.score = evidence.targetBandValue;
-                    pendingOccurrence.frequency.contrast = evidence.targetBandContrastValue;
+                    pendingOccurrence.band.score = evidence.targetBandValue;
+                    pendingOccurrence.band.contrast = evidence.targetBandContrastValue;
                 }
                 pendingOccurrence.durationMs = pendingDurationMs;
                 pendingOccurrence.valid = false;

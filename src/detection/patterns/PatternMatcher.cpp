@@ -44,7 +44,7 @@ struct PatternProposal {
 
 detection::TransientEvidence scalarTransientEvidenceFromOccurrence(const detection::Occurrence& source) {
     detection::TransientEvidence transient = {};
-    transient.present = source.scalar.present;
+    transient.present = source.magnitude.present;
     transient.onsetSample = source.startSample;
     transient.peakSample = source.peakSample;
     transient.releaseSample = source.releaseSample;
@@ -52,11 +52,11 @@ detection::TransientEvidence scalarTransientEvidenceFromOccurrence(const detecti
     transient.heardAtMs = source.releaseMs != 0 ? source.releaseMs : source.peakMs;
     transient.acceptedMs = transient.heardAtMs;
     transient.durationMs = source.durationMs;
-    transient.onsetStrength = source.scalar.onsetStrength;
-    transient.peakStrength = source.scalar.peakStrength;
-    transient.releaseStrength = source.scalar.releaseStrength;
-    transient.ambientBaseline = source.scalar.baseline;
-    transient.audioOverflowDuringOccurrence = source.scalar.audioOverflowDuringOccurrence;
+    transient.onsetStrength = source.magnitude.onsetStrength;
+    transient.peakStrength = source.magnitude.peakStrength;
+    transient.releaseStrength = source.magnitude.releaseStrength;
+    transient.ambientBaseline = source.magnitude.baseline;
+    transient.audioOverflowDuringOccurrence = source.magnitude.audioOverflowDuringOccurrence;
     return transient;
 }
 
@@ -75,14 +75,14 @@ PatternProposal makePatternProposalFromOccurrence(const detection::InspectedOccu
             proposal.heardAtMs = source.releaseMs != 0 ? source.releaseMs : source.peakMs;
             proposal.acceptedMs = proposal.heardAtMs;
             proposal.durationMs = source.durationMs;
-            proposal.onsetStrength = source.frequency.contrast;
-            proposal.peakStrength = source.frequency.score;
-            proposal.releaseStrength = source.frequency.contrast;
+            proposal.onsetStrength = source.band.contrast;
+            proposal.peakStrength = source.band.score;
+            proposal.releaseStrength = source.band.contrast;
             proposal.ambientBaseline = 0.0f;
-            proposal.supportStrength = source.scalar.strengthClass;
-            proposal.scoreStrength = source.frequency.scoreStrength;
-            proposal.contrastQuality = source.frequency.contrastQuality;
-            proposal.targetBandStrength = source.frequency.targetBandStrength;
+            proposal.supportStrength = source.magnitude.strengthClass;
+            proposal.scoreStrength = source.band.scoreStrength;
+            proposal.contrastQuality = source.band.contrastQuality;
+            proposal.targetBandStrength = source.band.targetBandStrength;
             break;
 
         case detection::OccurrenceType::Scalar: {
@@ -96,11 +96,11 @@ PatternProposal makePatternProposalFromOccurrence(const detection::InspectedOccu
             proposal.peakStrength = source.strength;
             proposal.releaseStrength = transient.releaseStrength;
             proposal.ambientBaseline = transient.ambientBaseline;
-            proposal.supportStrength = source.scalar.strengthClass;
-            proposal.scoreStrength = source.frequency.scoreStrength;
-            proposal.contrastQuality = source.frequency.contrastQuality;
-            proposal.targetBandStrength = source.frequency.targetBandStrength;
-            proposal.audioOverflowDuringProposal = source.scalar.audioOverflowDuringOccurrence;
+            proposal.supportStrength = source.magnitude.strengthClass;
+            proposal.scoreStrength = source.band.scoreStrength;
+            proposal.contrastQuality = source.band.contrastQuality;
+            proposal.targetBandStrength = source.band.targetBandStrength;
+            proposal.audioOverflowDuringProposal = source.magnitude.audioOverflowDuringOccurrence;
             break;
         }
 

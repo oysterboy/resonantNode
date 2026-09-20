@@ -1000,7 +1000,7 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
         pattern.confidence = hasPatternResult ? reportPatternResult->confidence : 0.0f;
         pattern.dtMs = report.classification.dtMs;
         pattern.supportStrength = hasInspectedOccurrence
-            ? detection::strengthClassName(reportInspectedOccurrence->occurrence.scalar.strengthClass)
+            ? detection::strengthClassName(reportInspectedOccurrence->occurrence.magnitude.strengthClass)
             : "unknown";
         pattern.reason = hasPatternResult ? detection::patternReasonName(reportPatternResult->reasonCode) : "none";
         pattern.rejectReason = hasPatternResult ? detection::patternRejectReasonName(reportPatternResult->rejectReason) : "none";
@@ -1048,7 +1048,7 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
         report.occurrences.primaryDurationMs = selectedTrial.durationMs;
         report.occurrences.primaryStrength = selectedTrial.strength;
         report.occurrences.contrast = occurrence.occurrenceType == detection::OccurrenceType::Frequency
-            ? occurrence.frequency.contrast
+            ? occurrence.band.contrast
             : 0.0f;
         report.occurrences.strength = selectedTrial.strength;
         report.occurrences.confidence = hasPatternResult ? reportPatternResult->confidence : occurrence.confidence;
@@ -1105,11 +1105,11 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
         report.inspection.primaryEvidence = detection::occurrenceSourceName(reportInspectedOccurrence->occurrence.detectorId);
         report.inspection.moduleTarget = supportRequirement != nullptr ? supportRequirement->target : detection::InspectionTarget::None;
         if (report.inspection.moduleTarget == detection::InspectionTarget::TargetScore) {
-            report.inspection.moduleStrengthClass = detection::strengthClassName(reportInspectedOccurrence->occurrence.frequency.scoreStrength);
+            report.inspection.moduleStrengthClass = detection::strengthClassName(reportInspectedOccurrence->occurrence.band.scoreStrength);
         } else if (report.inspection.moduleTarget == detection::InspectionTarget::Contrast) {
-            report.inspection.moduleStrengthClass = detection::strengthClassName(reportInspectedOccurrence->occurrence.frequency.contrastQuality);
+            report.inspection.moduleStrengthClass = detection::strengthClassName(reportInspectedOccurrence->occurrence.band.contrastQuality);
         } else {
-            report.inspection.moduleStrengthClass = detection::strengthClassName(reportInspectedOccurrence->occurrence.scalar.strengthClass);
+            report.inspection.moduleStrengthClass = detection::strengthClassName(reportInspectedOccurrence->occurrence.magnitude.strengthClass);
         }
         report.inspection.mainRejectReason = reportInspectedOccurrence->decision == detection::OccurrenceDecision::Rejected ? detection::occurrenceRejectReasonName(reportInspectedOccurrence->rejectReason) : "none";
     } else {
@@ -1145,8 +1145,8 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
     if (report.occurrences.present &&
         reportInspectedOccurrence != nullptr &&
         reportInspectedOccurrence->occurrence.occurrenceType == detection::OccurrenceType::Frequency) {
-        report.profileDetail.supportScore = reportInspectedOccurrence->occurrence.frequency.score;
-        report.profileDetail.supportContrast = reportInspectedOccurrence->occurrence.frequency.contrast;
+        report.profileDetail.supportScore = reportInspectedOccurrence->occurrence.band.score;
+        report.profileDetail.supportContrast = reportInspectedOccurrence->occurrence.band.contrast;
     } else {
         report.profileDetail.supportScore = 0.0f;
         report.profileDetail.supportContrast = 0.0f;
@@ -1157,21 +1157,21 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
     report.profileDetail.ampLevel = report.profileDetail.ampCenteredMagnitude;
     report.profileDetail.ampBase = diagnostics.acceptedAmbientBaseline;
     report.profileDetail.ampLift = report.profileDetail.ampCenteredMagnitude - report.profileDetail.ampBase;
-    const detection::ScalarInspectionObservation emptyScalarObservation{};
-    const detection::ScalarInspectionObservation& selectedScalarObservation =
-        trialHasPipelineEvidence && reportInspectedOccurrence != nullptr && reportInspectedOccurrence->occurrence.scalar.evidence.available
-            ? reportInspectedOccurrence->occurrence.scalar.evidence
-            : emptyScalarObservation;
-    report.profileDetail.scalarObservation = selectedScalarObservation;
+    const detection::MagnitudeInspectionObservation emptyMagnitudeObservation{};
+    const detection::MagnitudeInspectionObservation& selectedMagnitudeObservation =
+        trialHasPipelineEvidence && reportInspectedOccurrence != nullptr && reportInspectedOccurrence->occurrence.magnitude.evidence.available
+            ? reportInspectedOccurrence->occurrence.magnitude.evidence
+            : emptyMagnitudeObservation;
+    report.profileDetail.magnitudeObservation = selectedMagnitudeObservation;
     report.profileDetail.inspectionObservationCount = 0;
     if (trialHasPipelineEvidence && reportInspectedOccurrence != nullptr) {
-        const size_t availableCount = reportInspectedOccurrence->scalarObservationCount;
+        const size_t availableCount = reportInspectedOccurrence->magnitudeObservationCount;
         const size_t moduleCount = selectedProfile.inspectionPlan.count;
         const size_t copyCount = availableCount < moduleCount ? availableCount : moduleCount;
         report.profileDetail.inspectionObservationCount = copyCount;
         for (size_t i = 0; i < copyCount; ++i) {
             report.profileDetail.inspectionObservationTargets[i] = selectedProfile.inspectionPlan.modules[i].target;
-            report.profileDetail.inspectionObservations[i] = reportInspectedOccurrence->scalarObservations[i];
+            report.profileDetail.inspectionObservations[i] = reportInspectedOccurrence->magnitudeObservations[i];
         }
     }
 

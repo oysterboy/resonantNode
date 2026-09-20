@@ -278,14 +278,14 @@ decision is: consolidate" section instead:
    consolidation: `TonalPulseScalar` already writes
    `frequency.scoreStrength`/`contrastQuality`/`targetBandStrength` via its
    `Contrast`-target inspection module today, on a `ScalarTransientDetector`
-   -only profile. Only `FrequencyOccurrenceDetail`'s
+   -only profile. Only `FrequencyBandOccurrenceDetail`'s
    `FrequencyMatchDetector`-native fields (`score`, `contrast`,
    `measurement`) become removable.
 3. Re-scope Phase 5b: `DetectionRuntime` simplifies to a single
    `ScalarTransientDetector` member, no union, no per-detector dispatch,
    full stop, unless a third detector (Phase 6) is still planned.
 4. Remove `DetectorId::FrequencyMatch`, `OccurrenceType::Frequency`, and
-   `FrequencyOccurrenceDetail`'s detector-native fields (`score`, `contrast`,
+   `FrequencyBandOccurrenceDetail`'s detector-native fields (`score`, `contrast`,
    `measurement`) and their printers, keeping the struct's Inspector-owned
    fields, verified against `TonalPulseScalar`'s own baseline, not
    `TonalPulseFreq`'s (which no longer exists to compare against).

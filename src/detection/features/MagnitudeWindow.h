@@ -7,12 +7,15 @@
 namespace detection {
 
 /*
-ScalarWindow
+MagnitudeWindow
 
-Summary of one feature-history interval.
+Summary of one feature-history interval, for a single carrier-agnostic
+feature stream (may be AMP-derived or frequency-derived; see
+Occurrence.h's `magnitude`/`band` split for why this isn't called a
+"scalar" window).
 Used by OccurrenceInspector for occurrence-relative support evidence.
 */
-struct ScalarWindow {
+struct MagnitudeWindow {
     bool present = false;
     bool valid = false;
     bool hasValues = false;

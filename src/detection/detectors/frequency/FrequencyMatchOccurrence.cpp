@@ -7,15 +7,15 @@ void FrequencyMatchDetector::capturePendingOccurrence(const AudioSamplePacket& a
     _pendingOccurrence.occurrenceId = acceptedOccurrenceId != 0 ? acceptedOccurrenceId : lastPendingId;
     _pendingOccurrence.present = true;
     _pendingOccurrence.confidence = _pendingOccurrence.valid ? 1.0f : 0.0f;
-    _pendingOccurrence.frequency.present = true;
-    _pendingOccurrence.frequency.measurement = pendingEvidence;
-    _pendingOccurrence.frequency.measurement.present = true;
-    _pendingOccurrence.frequency.measurement.matched = pendingOccurrence.valid;
-    _pendingOccurrence.frequency.measurement.observedAtMs = audioSamplePacket.timeMs;
-    _pendingOccurrence.frequency.measurement.targetHz = pendingEvidence.targetHz;
-    _pendingOccurrence.scalar.value = audioSamplePacket.audioMagnitudeValue;
-    _pendingOccurrence.scalar.baseline = audioSamplePacket.baseline;
-    _pendingOccurrence.scalar.lift = _pendingOccurrence.scalar.value - _pendingOccurrence.scalar.baseline;
+    _pendingOccurrence.band.present = true;
+    _pendingOccurrence.band.measurement = pendingEvidence;
+    _pendingOccurrence.band.measurement.present = true;
+    _pendingOccurrence.band.measurement.matched = pendingOccurrence.valid;
+    _pendingOccurrence.band.measurement.observedAtMs = audioSamplePacket.timeMs;
+    _pendingOccurrence.band.measurement.targetHz = pendingEvidence.targetHz;
+    _pendingOccurrence.magnitude.value = audioSamplePacket.audioMagnitudeValue;
+    _pendingOccurrence.magnitude.baseline = audioSamplePacket.baseline;
+    _pendingOccurrence.magnitude.lift = _pendingOccurrence.magnitude.value - _pendingOccurrence.magnitude.baseline;
     _pendingOccurrencePresent = _pendingOccurrence.valid;
     if (_pendingOccurrencePresent) {
         const float mean = pendingMean();
@@ -38,8 +38,8 @@ void FrequencyMatchDetector::capturePendingOccurrence(const AudioSamplePacket& a
         _acceptedOccurrence.gapCount = pendingGapCount;
         _acceptedOccurrence.islandMaxMs = pendingIslandMaxMs;
         _acceptedOccurrence.gapMaxMs = pendingGapMaxMs;
-        _acceptedDetail.score = _pendingOccurrence.frequency.score;
-        _acceptedDetail.contrast = _pendingOccurrence.frequency.contrast;
+        _acceptedDetail.score = _pendingOccurrence.band.score;
+        _acceptedDetail.contrast = _pendingOccurrence.band.contrast;
     }
 }
 

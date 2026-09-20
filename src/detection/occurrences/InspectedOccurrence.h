@@ -32,14 +32,14 @@ enum class OccurrenceRejectReason {
 };
 
 struct InspectedOccurrence {
-    static constexpr size_t kMaxScalarObservations = kMaxInspectionModules;
+    static constexpr size_t kMaxMagnitudeObservations = kMaxInspectionModules;
 
     Occurrence occurrence = {};
     OccurrenceDecision decision = OccurrenceDecision::None;
 
     OccurrenceRejectReason rejectReason = OccurrenceRejectReason::None;
-    size_t scalarObservationCount = 0;
-    ScalarInspectionObservation scalarObservations[kMaxScalarObservations] = {};
+    size_t magnitudeObservationCount = 0;
+    MagnitudeInspectionObservation magnitudeObservations[kMaxMagnitudeObservations] = {};
 };
 
 } // namespace detection

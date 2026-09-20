@@ -175,7 +175,7 @@ void AnalyzerApp::printSequenceInspectCanonical(const AnalyzerReport& report) co
 
     const size_t observationCount = report.profileDetail.inspectionObservationCount;
 
-    auto printInspectCore = [&report](const detection::ScalarInspectionObservation* observation,
+    auto printInspectCore = [&report](const detection::MagnitudeInspectionObservation* observation,
                                       detection::InspectionTarget target) {
         const bool available = observation != nullptr && observation->available;
         Serial.print("SEQ_INSPECT");
@@ -202,11 +202,11 @@ void AnalyzerApp::printSequenceInspectCanonical(const AnalyzerReport& report) co
         Serial.print(" inspect.status=");
         Serial.print(available ? "observed" : "missing");
         Serial.print(" inspect.reject_reason=");
-        Serial.print(available ? "none" : detection::scalarInspectionNoteName(observation != nullptr ? observation->note : detection::ScalarInspectionNote::WindowInvalid));
+        Serial.print(available ? "none" : detection::magnitudeInspectionNoteName(observation != nullptr ? observation->note : detection::MagnitudeInspectionNote::WindowInvalid));
         Serial.print(" inspect.stream=");
         Serial.print(observation != nullptr ? scalarObservedStreamDisplayName(observation->stream) : "unknown");
         Serial.print(" inspect.metric=");
-        Serial.print(observation != nullptr ? detection::scalarInspectionModeName(observation->mode) : "unknown");
+        Serial.print(observation != nullptr ? detection::magnitudeInspectionModeName(observation->mode) : "unknown");
         Serial.print(" inspect.window_ms=");
         Serial.print(observation != nullptr ? observation->windowMs : 0UL);
         Serial.print(" inspect.expected_bin_count=");
@@ -387,11 +387,11 @@ void AnalyzerApp::printSequenceDetailCanonical(const AnalyzerReport& report) con
     Serial.print(" amp.class=");
     Serial.print(strengthClassForObservationTarget(report, detection::InspectionTarget::Amp));
     Serial.print(" coverage.complete=");
-    Serial.print(report.profileDetail.scalarObservation.coverageComplete ? 1 : 0);
+    Serial.print(report.profileDetail.magnitudeObservation.coverageComplete ? 1 : 0);
     Serial.print(" coverage.future_unavailable=");
-    Serial.print(report.profileDetail.scalarObservation.requestedFutureAtInspection ? 1 : 0);
+    Serial.print(report.profileDetail.magnitudeObservation.requestedFutureAtInspection ? 1 : 0);
     Serial.print(" coverage.covered_ms=");
-    Serial.print(report.profileDetail.scalarObservation.coveredDurationMs);
+    Serial.print(report.profileDetail.magnitudeObservation.coveredDurationMs);
     Serial.print(" integrity.detector_present=");
     Serial.print(report.integrity.detectorReportPresent ? 1 : 0);
     Serial.print(" integrity.occurrence_matched=");

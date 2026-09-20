@@ -2,41 +2,41 @@
 // OccurrenceInspector evidence annotation and inspection in source order.
 namespace {
 
-unsigned long anchorMsForOccurrence(const detection::Occurrence& occurrence, detection::ScalarInspectionAnchor anchor);
+unsigned long anchorMsForOccurrence(const detection::Occurrence& occurrence, detection::MagnitudeInspectionAnchor anchor);
 
-detection::ScalarInspectionAnchor resolvedAnchorForOccurrence(
+detection::MagnitudeInspectionAnchor resolvedAnchorForOccurrence(
     const detection::Occurrence& occurrence,
-    detection::ScalarInspectionAnchor anchor
+    detection::MagnitudeInspectionAnchor anchor
 ) {
     switch (anchor) {
-        case detection::ScalarInspectionAnchor::Start:
-            return occurrence.startMs != 0 ? detection::ScalarInspectionAnchor::Start
-                : (occurrence.peakMs != 0 ? detection::ScalarInspectionAnchor::Peak
-                    : (occurrence.releaseMs != 0 ? detection::ScalarInspectionAnchor::Release : detection::ScalarInspectionAnchor::Fallback));
-        case detection::ScalarInspectionAnchor::Release:
-            return occurrence.releaseMs != 0 ? detection::ScalarInspectionAnchor::Release
-                : (occurrence.peakMs != 0 ? detection::ScalarInspectionAnchor::Peak
-                    : (occurrence.startMs != 0 ? detection::ScalarInspectionAnchor::Start : detection::ScalarInspectionAnchor::Fallback));
-        case detection::ScalarInspectionAnchor::Peak:
-        case detection::ScalarInspectionAnchor::Fallback:
-        case detection::ScalarInspectionAnchor::None:
+        case detection::MagnitudeInspectionAnchor::Start:
+            return occurrence.startMs != 0 ? detection::MagnitudeInspectionAnchor::Start
+                : (occurrence.peakMs != 0 ? detection::MagnitudeInspectionAnchor::Peak
+                    : (occurrence.releaseMs != 0 ? detection::MagnitudeInspectionAnchor::Release : detection::MagnitudeInspectionAnchor::Fallback));
+        case detection::MagnitudeInspectionAnchor::Release:
+            return occurrence.releaseMs != 0 ? detection::MagnitudeInspectionAnchor::Release
+                : (occurrence.peakMs != 0 ? detection::MagnitudeInspectionAnchor::Peak
+                    : (occurrence.startMs != 0 ? detection::MagnitudeInspectionAnchor::Start : detection::MagnitudeInspectionAnchor::Fallback));
+        case detection::MagnitudeInspectionAnchor::Peak:
+        case detection::MagnitudeInspectionAnchor::Fallback:
+        case detection::MagnitudeInspectionAnchor::None:
         default:
-            return occurrence.peakMs != 0 ? detection::ScalarInspectionAnchor::Peak
-                : (occurrence.startMs != 0 ? detection::ScalarInspectionAnchor::Start
-                    : (occurrence.releaseMs != 0 ? detection::ScalarInspectionAnchor::Release : detection::ScalarInspectionAnchor::Fallback));
+            return occurrence.peakMs != 0 ? detection::MagnitudeInspectionAnchor::Peak
+                : (occurrence.startMs != 0 ? detection::MagnitudeInspectionAnchor::Start
+                    : (occurrence.releaseMs != 0 ? detection::MagnitudeInspectionAnchor::Release : detection::MagnitudeInspectionAnchor::Fallback));
     }
 }
 
-unsigned long anchorMsForOccurrence(const detection::Occurrence& occurrence, detection::ScalarInspectionAnchor anchor) {
+unsigned long anchorMsForOccurrence(const detection::Occurrence& occurrence, detection::MagnitudeInspectionAnchor anchor) {
     switch (resolvedAnchorForOccurrence(occurrence, anchor)) {
-        case detection::ScalarInspectionAnchor::Start:
+        case detection::MagnitudeInspectionAnchor::Start:
             return occurrence.startMs;
-        case detection::ScalarInspectionAnchor::Release:
+        case detection::MagnitudeInspectionAnchor::Release:
             return occurrence.releaseMs;
-        case detection::ScalarInspectionAnchor::Peak:
+        case detection::MagnitudeInspectionAnchor::Peak:
             return occurrence.peakMs;
-        case detection::ScalarInspectionAnchor::Fallback:
-        case detection::ScalarInspectionAnchor::None:
+        case detection::MagnitudeInspectionAnchor::Fallback:
+        case detection::MagnitudeInspectionAnchor::None:
         default:
             return occurrence.peakMs != 0 ? occurrence.peakMs : (occurrence.startMs != 0 ? occurrence.startMs : occurrence.releaseMs);
     }
@@ -47,38 +47,38 @@ void setRejected(detection::InspectedOccurrence& out, detection::OccurrenceRejec
     out.rejectReason = reason;
 }
 
-void fillScalarObservation(
-    detection::ScalarInspectionObservation& obs,
+void fillMagnitudeObservation(
+    detection::MagnitudeInspectionObservation& obs,
     const detection::Occurrence& occurrence,
-    const detection::ScalarWindow& scalarWindow,
+    const detection::MagnitudeWindow& magnitudeWindow,
     bool available,
-    const detection::ScalarFeatureInspectionConfig& config
+    const detection::MagnitudeFeatureInspectionConfig& config
 ) {
-    const float peak = scalarWindow.peak;
-    const float mean = scalarWindow.mean;
-    const size_t sampleCount = scalarWindow.sampleCount;
-    const size_t sustainedCount = scalarWindow.sustainedCount;
-    const unsigned long sustainedMs = scalarWindow.sustainedMs;
-    const float sustainedThreshold = scalarWindow.sustainedThreshold;
+    const float peak = magnitudeWindow.peak;
+    const float mean = magnitudeWindow.mean;
+    const size_t sampleCount = magnitudeWindow.sampleCount;
+    const size_t sustainedCount = magnitudeWindow.sustainedCount;
+    const unsigned long sustainedMs = magnitudeWindow.sustainedMs;
+    const float sustainedThreshold = magnitudeWindow.sustainedThreshold;
     float classificationValue = peak;
-    detection::ScalarInspectionBasis supportBasis = detection::ScalarInspectionBasis::PeakAbsolute;
+    detection::MagnitudeInspectionBasis supportBasis = detection::MagnitudeInspectionBasis::PeakAbsolute;
     bool classified = available;
     detection::StrengthClass strength = detection::StrengthClass::Unknown;
 
     switch (config.mode) {
-        case detection::ScalarInspectionMode::PeakAbsolute:
+        case detection::MagnitudeInspectionMode::PeakAbsolute:
             classificationValue = peak;
-            supportBasis = detection::ScalarInspectionBasis::PeakAbsolute;
+            supportBasis = detection::MagnitudeInspectionBasis::PeakAbsolute;
             strength = available ? classifySupportStrength(classificationValue, available, config.supportStrength) : detection::StrengthClass::Unknown;
             break;
-        case detection::ScalarInspectionMode::MeanAbsolute:
+        case detection::MagnitudeInspectionMode::MeanAbsolute:
             classificationValue = mean;
-            supportBasis = detection::ScalarInspectionBasis::MeanAbsolute;
+            supportBasis = detection::MagnitudeInspectionBasis::MeanAbsolute;
             strength = available ? classifySupportStrength(classificationValue, available, config.supportStrength) : detection::StrengthClass::Unknown;
             break;
-        case detection::ScalarInspectionMode::SustainedAboveThreshold:
+        case detection::MagnitudeInspectionMode::SustainedAboveThreshold:
             classificationValue = peak;
-            supportBasis = detection::ScalarInspectionBasis::SustainedAboveThreshold;
+            supportBasis = detection::MagnitudeInspectionBasis::SustainedAboveThreshold;
             {
                 const size_t requiredSustainedCount = config.minSustainedCount > 0
                     ? config.minSustainedCount
@@ -88,74 +88,74 @@ void fillScalarObservation(
                 strength = classified ? classifySupportStrength(classificationValue, available, config.supportStrength) : detection::StrengthClass::Unknown;
             }
             break;
-        case detection::ScalarInspectionMode::PeakCentered:
+        case detection::MagnitudeInspectionMode::PeakCentered:
             classificationValue = mean;
-            supportBasis = detection::ScalarInspectionBasis::PeakCenteredMean;
+            supportBasis = detection::MagnitudeInspectionBasis::PeakCenteredMean;
             strength = available ? classifySupportStrength(classificationValue, available, config.supportStrength) : detection::StrengthClass::Unknown;
             break;
-        case detection::ScalarInspectionMode::PeakCenteredLift:
+        case detection::MagnitudeInspectionMode::PeakCenteredLift:
             classificationValue = peak - mean;
-            supportBasis = detection::ScalarInspectionBasis::PeakCenteredLift;
+            supportBasis = detection::MagnitudeInspectionBasis::PeakCenteredLift;
             strength = available ? classifySupportStrength(classificationValue, available, config.supportStrength) : detection::StrengthClass::Unknown;
             break;
-        case detection::ScalarInspectionMode::Rms:
-            classificationValue = scalarWindow.rms;
-            supportBasis = detection::ScalarInspectionBasis::Rms;
+        case detection::MagnitudeInspectionMode::Rms:
+            classificationValue = magnitudeWindow.rms;
+            supportBasis = detection::MagnitudeInspectionBasis::Rms;
             strength = available ? classifySupportStrength(classificationValue, available, config.supportStrength) : detection::StrengthClass::Unknown;
             break;
-        case detection::ScalarInspectionMode::P75:
-            classificationValue = scalarWindow.p75;
-            supportBasis = detection::ScalarInspectionBasis::P75;
+        case detection::MagnitudeInspectionMode::P75:
+            classificationValue = magnitudeWindow.p75;
+            supportBasis = detection::MagnitudeInspectionBasis::P75;
             strength = available ? classifySupportStrength(classificationValue, available, config.supportStrength) : detection::StrengthClass::Unknown;
             break;
     }
 
-    const detection::ScalarInspectionAnchor eventAnchor = resolvedAnchorForOccurrence(occurrence, config.anchor);
+    const detection::MagnitudeInspectionAnchor eventAnchor = resolvedAnchorForOccurrence(occurrence, config.anchor);
     obs.available = available;
-    obs.hasValues = scalarWindow.hasValues;
-    obs.coverageComplete = scalarWindow.coverageComplete;
-    obs.requestedFutureAtInspection = scalarWindow.requestedFutureAtInspection;
-    obs.stream = scalarWindow.stream;
+    obs.hasValues = magnitudeWindow.hasValues;
+    obs.coverageComplete = magnitudeWindow.coverageComplete;
+    obs.requestedFutureAtInspection = magnitudeWindow.requestedFutureAtInspection;
+    obs.stream = magnitudeWindow.stream;
     obs.mode = config.mode;
     obs.supportBasis = supportBasis;
-    obs.note = available ? detection::ScalarInspectionNote::ScalarObserved : detection::ScalarInspectionNote::ScalarUnavailable;
-    obs.inspectionNowMs = scalarWindow.inspectionNowMs;
-    obs.anchorMs = scalarWindow.requestedStartMs + config.windowPreMs;
-    obs.requestedStartMs = scalarWindow.requestedStartMs;
-    obs.requestedEndMs = scalarWindow.requestedEndMs;
-    obs.availableStartMs = scalarWindow.availableStartMs;
-    obs.availableEndMs = scalarWindow.availableEndMs;
-    obs.leftMissingMs = scalarWindow.leftMissingMs;
-    obs.rightMissingMs = scalarWindow.rightMissingMs;
-    obs.coveredDurationMs = scalarWindow.coveredDurationMs;
+    obs.note = available ? detection::MagnitudeInspectionNote::MagnitudeObserved : detection::MagnitudeInspectionNote::MagnitudeUnavailable;
+    obs.inspectionNowMs = magnitudeWindow.inspectionNowMs;
+    obs.anchorMs = magnitudeWindow.requestedStartMs + config.windowPreMs;
+    obs.requestedStartMs = magnitudeWindow.requestedStartMs;
+    obs.requestedEndMs = magnitudeWindow.requestedEndMs;
+    obs.availableStartMs = magnitudeWindow.availableStartMs;
+    obs.availableEndMs = magnitudeWindow.availableEndMs;
+    obs.leftMissingMs = magnitudeWindow.leftMissingMs;
+    obs.rightMissingMs = magnitudeWindow.rightMissingMs;
+    obs.coveredDurationMs = magnitudeWindow.coveredDurationMs;
     obs.windowStartMs = static_cast<int16_t>(-static_cast<int32_t>(config.windowPreMs));
     obs.windowEndMs = static_cast<int16_t>(config.windowPostMs);
     obs.anchor = eventAnchor;
-    obs.windowMs = scalarWindow.durationMs;
-    obs.valueCount = scalarWindow.valueCount;
-    obs.bucketCount = scalarWindow.bucketCount;
-    obs.coveredMs = scalarWindow.coveredMs;
-    obs.valuesPerBucket = scalarWindow.valuesPerBucket;
-    obs.coverageRatio = scalarWindow.coverageRatio;
-    obs.internalCoverageKnown = scalarWindow.internalCoverageKnown;
-    obs.spanMs = scalarWindow.spanMs;
-    obs.latestValueAgeMs = scalarWindow.latestValueAgeMs;
-    obs.first = scalarWindow.first;
-    obs.last = scalarWindow.last;
-    obs.min = scalarWindow.min;
-    obs.max = scalarWindow.max;
+    obs.windowMs = magnitudeWindow.durationMs;
+    obs.valueCount = magnitudeWindow.valueCount;
+    obs.bucketCount = magnitudeWindow.bucketCount;
+    obs.coveredMs = magnitudeWindow.coveredMs;
+    obs.valuesPerBucket = magnitudeWindow.valuesPerBucket;
+    obs.coverageRatio = magnitudeWindow.coverageRatio;
+    obs.internalCoverageKnown = magnitudeWindow.internalCoverageKnown;
+    obs.spanMs = magnitudeWindow.spanMs;
+    obs.latestValueAgeMs = magnitudeWindow.latestValueAgeMs;
+    obs.first = magnitudeWindow.first;
+    obs.last = magnitudeWindow.last;
+    obs.min = magnitudeWindow.min;
+    obs.max = magnitudeWindow.max;
     obs.peak = peak;
-    obs.peakTimeMs = scalarWindow.peakTimeMs;
-    obs.rise = scalarWindow.rise;
+    obs.peakTimeMs = magnitudeWindow.peakTimeMs;
+    obs.rise = magnitudeWindow.rise;
     obs.mean = mean;
-    obs.rms = scalarWindow.rms;
-    obs.median = scalarWindow.median;
-    obs.p75 = scalarWindow.p75;
-    obs.p90 = scalarWindow.p90;
-    obs.trimmedMean = scalarWindow.trimmedMean;
+    obs.rms = magnitudeWindow.rms;
+    obs.median = magnitudeWindow.median;
+    obs.p75 = magnitudeWindow.p75;
+    obs.p90 = magnitudeWindow.p90;
+    obs.trimmedMean = magnitudeWindow.trimmedMean;
     obs.classificationValue = classificationValue;
     obs.sampleCount = sampleCount;
-    obs.freshValueCount = scalarWindow.freshValueCount;
+    obs.freshValueCount = magnitudeWindow.freshValueCount;
     obs.sustainedCount = sustainedCount;
     obs.sustainedMs = sustainedMs;
     obs.sustainedThreshold = sustainedThreshold;
@@ -181,89 +181,89 @@ void OccurrenceInspector::inspectAcceptedOccurrence(
     const FeatureHistory* featureHistory,
     unsigned long inspectionNowMs
 ) const {
-    out.scalarObservationCount = 0;
+    out.magnitudeObservationCount = 0;
 
     for (size_t i = 0; i < _inspectionPlan.count; ++i) {
         runInspectionModule(out, occurrence, featureHistory, inspectionNowMs, _inspectionPlan.modules[i]);
     }
 }
 
-void OccurrenceInspector::annotateScalarFeatureStrength(
+void OccurrenceInspector::annotateMagnitudeFeatureStrength(
     InspectedOccurrence& out,
     const Occurrence& occurrence,
     const FeatureHistory* featureHistory,
     unsigned long inspectionNowMs,
-    const ScalarFeatureInspectionConfig& config,
+    const MagnitudeFeatureInspectionConfig& config,
     InspectionTarget target
 ) const {
     const unsigned long anchorMs = anchorMsForOccurrence(occurrence, config.anchor);
     const unsigned long startMs = anchorMs > config.windowPreMs ? anchorMs - config.windowPreMs : 0UL;
     const unsigned long endMs = anchorMs + config.windowPostMs;
-    ScalarInspectionObservation observation = {};
+    MagnitudeInspectionObservation observation = {};
     observation.stream = config.stream;
     observation.mode = config.mode;
-    observation.supportBasis = detection::ScalarInspectionBasis::CenteredMagnitudePeak;
-    observation.note = detection::ScalarInspectionNote::WindowInvalid;
+    observation.supportBasis = detection::MagnitudeInspectionBasis::CenteredMagnitudePeak;
+    observation.note = detection::MagnitudeInspectionNote::WindowInvalid;
     observation.inspectionNowMs = inspectionNowMs;
     observation.anchorMs = anchorMs;
     observation.requestedStartMs = startMs;
     observation.requestedEndMs = endMs;
     observation.requestedFutureAtInspection = endMs > inspectionNowMs;
     if (config.enabled && featureHistory != nullptr) {
-        const float sustainedThreshold = config.mode == detection::ScalarInspectionMode::SustainedAboveThreshold
+        const float sustainedThreshold = config.mode == detection::MagnitudeInspectionMode::SustainedAboveThreshold
             ? config.supportStrength.weakPeakThreshold
             : 0.0f;
-        const ScalarWindow scalarWindow = featureHistory->getWindow(config.stream, startMs, endMs, inspectionNowMs, sustainedThreshold);
-        if (scalarWindow.valid) {
-            const bool usable = scalarWindow.valid;
-            fillScalarObservation(observation, occurrence, scalarWindow, usable, config);
+        const MagnitudeWindow magnitudeWindow = featureHistory->getWindow(config.stream, startMs, endMs, inspectionNowMs, sustainedThreshold);
+        if (magnitudeWindow.valid) {
+            const bool usable = magnitudeWindow.valid;
+            fillMagnitudeObservation(observation, occurrence, magnitudeWindow, usable, config);
         } else {
-            if (scalarWindow.requestedFutureAtInspection) {
-                observation.note = detection::ScalarInspectionNote::FutureWindowUnavailable;
-            } else if (!scalarWindow.hasValues) {
-                observation.note = detection::ScalarInspectionNote::ScalarUnavailable;
-            } else if (!scalarWindow.coverageComplete) {
-                observation.note = detection::ScalarInspectionNote::HistoryWindowIncomplete;
+            if (magnitudeWindow.requestedFutureAtInspection) {
+                observation.note = detection::MagnitudeInspectionNote::FutureWindowUnavailable;
+            } else if (!magnitudeWindow.hasValues) {
+                observation.note = detection::MagnitudeInspectionNote::MagnitudeUnavailable;
+            } else if (!magnitudeWindow.coverageComplete) {
+                observation.note = detection::MagnitudeInspectionNote::HistoryWindowIncomplete;
             } else {
-                observation.note = detection::ScalarInspectionNote::ScalarUnavailable;
+                observation.note = detection::MagnitudeInspectionNote::MagnitudeUnavailable;
             }
         }
     } else if (!config.enabled) {
-        observation.note = detection::ScalarInspectionNote::InspectionDisabled;
+        observation.note = detection::MagnitudeInspectionNote::InspectionDisabled;
     } else if (featureHistory == nullptr) {
-        observation.note = detection::ScalarInspectionNote::MissingFeatureHistory;
+        observation.note = detection::MagnitudeInspectionNote::MissingFeatureHistory;
     }
 
-    if (out.scalarObservationCount < kMaxInspectionModules) {
-        out.scalarObservations[out.scalarObservationCount++] = observation;
+    if (out.magnitudeObservationCount < kMaxInspectionModules) {
+        out.magnitudeObservations[out.magnitudeObservationCount++] = observation;
     }
 
     switch (target) {
         case InspectionTarget::Amp:
-        out.occurrence.scalar.present = observation.available;
-        out.occurrence.scalar.value = observation.available ? observation.classificationValue : 0.0f;
-        out.occurrence.scalar.baseline = observation.available ? observation.mean : 0.0f;
-        out.occurrence.scalar.lift = observation.available
-            ? (out.occurrence.scalar.value - out.occurrence.scalar.baseline)
+        out.occurrence.magnitude.present = observation.available;
+        out.occurrence.magnitude.value = observation.available ? observation.classificationValue : 0.0f;
+        out.occurrence.magnitude.baseline = observation.available ? observation.mean : 0.0f;
+        out.occurrence.magnitude.lift = observation.available
+            ? (out.occurrence.magnitude.value - out.occurrence.magnitude.baseline)
             : 0.0f;
-        out.occurrence.scalar.strength = observation.available ? observation.classificationValue : 0.0f;
-        out.occurrence.scalar.strengthClass = observation.strength;
+        out.occurrence.magnitude.strength = observation.available ? observation.classificationValue : 0.0f;
+        out.occurrence.magnitude.strengthClass = observation.strength;
             break;
         case InspectionTarget::TargetScore:
-        out.occurrence.frequency.scoreStrength = observation.strength;
+        out.occurrence.band.scoreStrength = observation.strength;
             break;
         case InspectionTarget::Contrast:
-        out.occurrence.frequency.contrastQuality = observation.strength;
+        out.occurrence.band.contrastQuality = observation.strength;
             break;
         case InspectionTarget::TargetBand:
-        out.occurrence.frequency.targetBandStrength = observation.strength;
+        out.occurrence.band.targetBandStrength = observation.strength;
             break;
         case InspectionTarget::None:
         default:
             break;
     }
 
-    out.occurrence.scalar.evidence = observation;
+    out.occurrence.magnitude.evidence = observation;
 }
 
 void OccurrenceInspector::runInspectionModule(
@@ -274,8 +274,8 @@ void OccurrenceInspector::runInspectionModule(
     const InspectionModuleConfig& module
 ) const {
     switch (module.kind) {
-    case InspectionModuleKind::ScalarFeatureStrength:
-        annotateScalarFeatureStrength(out, occurrence, featureHistory, inspectionNowMs, module.scalar, module.target);
+    case InspectionModuleKind::MagnitudeFeatureStrength:
+        annotateMagnitudeFeatureStrength(out, occurrence, featureHistory, inspectionNowMs, module.magnitude, module.target);
         break;
         case InspectionModuleKind::None:
         default:

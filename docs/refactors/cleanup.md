@@ -58,6 +58,18 @@ value until the crash is independently reproduced as gone.
 
 # Item 1 — Collapse always-both detail payloads (Occurrence: withdrawn, DetectorReport: needs re-verification)
 
+Naming update (2026-09-21): the fields discussed throughout this item as
+`Occurrence.scalar`/`.frequency` have since been renamed to
+`Occurrence.magnitude`/`.band` (types `MagnitudeOccurrenceDetail`/
+`FrequencyBandOccurrenceDetail`), specifically because their old names
+collided with `DetectorId::ScalarTransient`/`FrequencyMatch` and invited the
+exact wrong "detector-exclusive" mental model this item's correction below
+describes. Every mention of `.scalar`/`.frequency` below and in the other
+cleanup docs refers to what is now `.magnitude`/`.band`; not rewritten
+throughout since it's a pure rename with no change to the underlying
+finding. `DetectorReport.scalar`/`.frequency` were not renamed, those names
+are accurate for that type.
+
 ## Correction (2026-09-20): the `Occurrence` half of this item is wrong, do not implement it
 
 While preparing to implement this item, I found direct evidence that

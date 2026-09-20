@@ -243,14 +243,14 @@ void FeatureHistory::record(FeatureStreamId id, unsigned long timeMs, float valu
     buffer.latestValue = representativeValueForAccumulator(id, buffer.current);
 }
 
-ScalarWindow FeatureHistory::getWindow(
+MagnitudeWindow FeatureHistory::getWindow(
     FeatureStreamId stream,
     unsigned long startMs,
     unsigned long endMs,
     unsigned long inspectionNowMs,
     float sustainedThreshold
 ) const {
-    ScalarWindow out;
+    MagnitudeWindow out;
     out.stream = stream;
     out.startMs = startMs;
     out.endMs = endMs;

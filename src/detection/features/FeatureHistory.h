@@ -4,7 +4,7 @@
 #include <stdint.h>
 
 #include "FeatureStream.h"
-#include "ScalarWindow.h"
+#include "MagnitudeWindow.h"
 
 namespace detection {
 
@@ -27,7 +27,7 @@ public:
     void record(const FeatureStream& sample, bool fresh = true);
     void record(FeatureStreamId id, unsigned long timeMs, float value, bool fresh = true);
 
-    ScalarWindow getWindow(
+    MagnitudeWindow getWindow(
         FeatureStreamId stream,
         unsigned long startMs,
         unsigned long endMs,

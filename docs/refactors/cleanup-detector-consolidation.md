@@ -39,7 +39,7 @@ splits the same two facts across two stages instead:
 If that split proves acoustically equivalent, or better, to the joint gate,
 `FrequencyMatchDetector` is not just simplifiable, it is removable, along
 with `DetectorId::FrequencyMatch`, `OccurrenceType::Frequency`,
-`FrequencyOccurrenceDetail`, `FrequencyMatchDetectorReportDetail`,
+`FrequencyBandOccurrenceDetail`, `FrequencyMatchDetectorReportDetail`,
 `FrequencyMatchPrinter`, `FrequencyMatchCriteria`, and the rest of
 `src/detection/detectors/frequency/`.
 
@@ -73,7 +73,7 @@ with `DetectorId::FrequencyMatch`, `OccurrenceType::Frequency`,
   fully consolidated, single-detector-family world. See `cleanup.md` Item 1
   for the full evidence; Item 1's `Occurrence` half is withdrawn regardless
   of what this decision resolves to. Consolidation would only remove
-  `FrequencyOccurrenceDetail`'s detector-native fields specific to
+  `FrequencyBandOccurrenceDetail`'s detector-native fields specific to
   `FrequencyMatchDetector` itself (`score`, `contrast`, `measurement`), not
   the Inspector-written `scoreStrength`/`contrastQuality`/`targetBandStrength`
   fields in the same struct, which stay load-bearing either way.
@@ -146,17 +146,17 @@ open question (weak-class rejection at range) lives.
    apply here regardless of this decision, it was withdrawn as a false
    premise (see that item). Consolidation does not change that: even with
    only `ScalarTransientDetector`, `TonalPulseScalar` already writes
-   `FrequencyOccurrenceDetail`'s Inspector-owned fields
+   `FrequencyBandOccurrenceDetail`'s Inspector-owned fields
    (`scoreStrength`/`contrastQuality`/`targetBandStrength`) via its
    `Contrast`-target inspection module, so that part of `.frequency` stays
-   needed either way. Only `FrequencyOccurrenceDetail`'s
+   needed either way. Only `FrequencyBandOccurrenceDetail`'s
    `FrequencyMatchDetector`-native fields (`score`, `contrast`,
    `measurement`) become removable if `FrequencyMatchDetector` is deleted.
 4. Re-scope `cleanup-detector-ownership.md`: the union-of-two-objects design
    is no longer needed; `DetectionRuntime` simplifies to a single
    `ScalarTransientDetector` member with no per-detector dispatch.
 5. Remove `DetectorId::FrequencyMatch`, `OccurrenceType::Frequency`, and
-   `FrequencyOccurrenceDetail`'s detector-native fields (`score`, `contrast`,
+   `FrequencyBandOccurrenceDetail`'s detector-native fields (`score`, `contrast`,
    `measurement`) and their printers, but keep the struct's Inspector-owned
    fields (`scoreStrength`, `contrastQuality`, `targetBandStrength`), which
    remain in active use by `TonalPulseScalar`'s `Contrast`-target module.

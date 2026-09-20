@@ -26,7 +26,7 @@ DetectionProfileKind { TonalPulseFreq, AmpExperimental, TonalPulseScalar }
 DetectorSelection { FrequencyMatch, ScalarTransient }
 FeatureStreamId { AmpEnvelope, FrequencyTarget, FrequencyContrast }
 StrengthClass { Unknown, None, Weak, Medium, Strong }
-InspectionModuleKind { None, ScalarFeatureStrength }
+InspectionModuleKind { None, MagnitudeFeatureStrength }
 ```
 
 New profile checklist:
@@ -144,33 +144,33 @@ inline DetectionProfile makeTonalPulseScalarProfile() {
 
     // Inspection: Frequency Contrast
     profile.inspectionPlan = {};
-    profile.inspectionPlan.modules[0].kind = InspectionModuleKind::ScalarFeatureStrength; // Scalar inspector module.
+    profile.inspectionPlan.modules[0].kind = InspectionModuleKind::MagnitudeFeatureStrength; // Magnitude inspector module.
     profile.inspectionPlan.modules[0].target = InspectionTarget::Contrast; // Route this observation as contrast evidence.
     profile.inspectionPlan.modules[0].enabled = true; // Enable the module in the matcher.
-    profile.inspectionPlan.modules[0].scalar.stream = FeatureStreamId::FrequencyContrast; // Measure frequency contrast.
-    profile.inspectionPlan.modules[0].scalar.anchor = ScalarInspectionAnchor::Start; // Window from occurrence start.
-    profile.inspectionPlan.modules[0].scalar.windowPreMs = 0; // No look-back before the anchor.
-    profile.inspectionPlan.modules[0].scalar.windowPostMs = 100; // Inspect the first 100 ms after onset.
+    profile.inspectionPlan.modules[0].magnitude.stream = FeatureStreamId::FrequencyContrast; // Measure frequency contrast.
+    profile.inspectionPlan.modules[0].magnitude.anchor = MagnitudeInspectionAnchor::Start; // Window from occurrence start.
+    profile.inspectionPlan.modules[0].magnitude.windowPreMs = 0; // No look-back before the anchor.
+    profile.inspectionPlan.modules[0].magnitude.windowPostMs = 100; // Inspect the first 100 ms after onset.
     profile.inspectionPlan.modules[0].minimumStrength = StrengthClass::Medium; // Require at least medium evidence.
-    profile.inspectionPlan.modules[0].scalar.mode = ScalarInspectionMode::P75; // Use a robust percentile summary.
-    profile.inspectionPlan.modules[0].scalar.supportStrength.strongPeakThreshold = 300000.0f; // Strong contrast threshold.
-    profile.inspectionPlan.modules[0].scalar.supportStrength.mediumPeakThreshold = 20000.0f; // Medium contrast threshold.
-    profile.inspectionPlan.modules[0].scalar.supportStrength.weakPeakThreshold = 10000.0f; // Weak contrast threshold.
+    profile.inspectionPlan.modules[0].magnitude.mode = MagnitudeInspectionMode::P75; // Use a robust percentile summary.
+    profile.inspectionPlan.modules[0].magnitude.supportStrength.strongPeakThreshold = 300000.0f; // Strong contrast threshold.
+    profile.inspectionPlan.modules[0].magnitude.supportStrength.mediumPeakThreshold = 20000.0f; // Medium contrast threshold.
+    profile.inspectionPlan.modules[0].magnitude.supportStrength.weakPeakThreshold = 10000.0f; // Weak contrast threshold.
 
 
     // Secondary Inspection: Amplitude
-    profile.inspectionPlan.modules[1].kind = InspectionModuleKind::ScalarFeatureStrength; // Scalar inspector module.
+    profile.inspectionPlan.modules[1].kind = InspectionModuleKind::MagnitudeFeatureStrength; // Magnitude inspector module.
     profile.inspectionPlan.modules[1].target = InspectionTarget::Amp; // Route this observation as amplitude evidence.
     profile.inspectionPlan.modules[1].enabled = true; // Enable the module in the matcher.
-    profile.inspectionPlan.modules[1].scalar.stream = FeatureStreamId::AmpMagnitude; // Measure the magnitude stream.
-    profile.inspectionPlan.modules[1].scalar.anchor = ScalarInspectionAnchor::Start; // Window from occurrence start.
-    profile.inspectionPlan.modules[1].scalar.windowPreMs = 0; // No look-back before the anchor.
-    profile.inspectionPlan.modules[1].scalar.windowPostMs = 100; // Inspect the first 100 ms after onset.
+    profile.inspectionPlan.modules[1].magnitude.stream = FeatureStreamId::AmpMagnitude; // Measure the magnitude stream.
+    profile.inspectionPlan.modules[1].magnitude.anchor = MagnitudeInspectionAnchor::Start; // Window from occurrence start.
+    profile.inspectionPlan.modules[1].magnitude.windowPreMs = 0; // No look-back before the anchor.
+    profile.inspectionPlan.modules[1].magnitude.windowPostMs = 100; // Inspect the first 100 ms after onset.
     profile.inspectionPlan.modules[1].minimumStrength = StrengthClass::Medium; // Require at least medium evidence.
-    profile.inspectionPlan.modules[1].scalar.mode = ScalarInspectionMode::P75; // Use a robust percentile summary.
-    profile.inspectionPlan.modules[1].scalar.supportStrength.strongPeakThreshold = 5000.0f; // Strong amplitude threshold.
-    profile.inspectionPlan.modules[1].scalar.supportStrength.mediumPeakThreshold = 2500.0f; // Medium amplitude threshold.
-    profile.inspectionPlan.modules[1].scalar.supportStrength.weakPeakThreshold = 1000.0f; // Weak amplitude threshold.
+    profile.inspectionPlan.modules[1].magnitude.mode = MagnitudeInspectionMode::P75; // Use a robust percentile summary.
+    profile.inspectionPlan.modules[1].magnitude.supportStrength.strongPeakThreshold = 5000.0f; // Strong amplitude threshold.
+    profile.inspectionPlan.modules[1].magnitude.supportStrength.mediumPeakThreshold = 2500.0f; // Medium amplitude threshold.
+    profile.inspectionPlan.modules[1].magnitude.supportStrength.weakPeakThreshold = 1000.0f; // Weak amplitude threshold.
     profile.inspectionPlan.count = 2; // This profile uses two inspectors.
 
     profile.inspectionPlan.failedRequirementMeansUncertain = true; // Legacy compatibility flag for failed requirement handling.
@@ -203,44 +203,44 @@ inline DetectionProfile makeTonalPulseFreqProfile() {
     // Inspector composition.
 
     profile.inspectionPlan = {};
-    profile.inspectionPlan.modules[0].kind = InspectionModuleKind::ScalarFeatureStrength;
+    profile.inspectionPlan.modules[0].kind = InspectionModuleKind::MagnitudeFeatureStrength;
     profile.inspectionPlan.modules[0].target = InspectionTarget::Amp;
     profile.inspectionPlan.modules[0].enabled = true;
     profile.inspectionPlan.modules[0].minimumStrength = StrengthClass::Medium;
-    profile.inspectionPlan.modules[0].scalar.anchor = ScalarInspectionAnchor::Peak;
-    profile.inspectionPlan.modules[0].scalar.stream = FeatureStreamId::AmpEnvelope;
-    profile.inspectionPlan.modules[0].scalar.mode = ScalarInspectionMode::PeakCentered;
-    profile.inspectionPlan.modules[0].scalar.windowPreMs = 10;
-    profile.inspectionPlan.modules[0].scalar.windowPostMs = 90;
-    profile.inspectionPlan.modules[0].scalar.supportStrength.strongPeakThreshold = 18000.0f;
-    profile.inspectionPlan.modules[0].scalar.supportStrength.mediumPeakThreshold = 12000.0f;
-    profile.inspectionPlan.modules[0].scalar.supportStrength.weakPeakThreshold = 8000.0f;
+    profile.inspectionPlan.modules[0].magnitude.anchor = MagnitudeInspectionAnchor::Peak;
+    profile.inspectionPlan.modules[0].magnitude.stream = FeatureStreamId::AmpEnvelope;
+    profile.inspectionPlan.modules[0].magnitude.mode = MagnitudeInspectionMode::PeakCentered;
+    profile.inspectionPlan.modules[0].magnitude.windowPreMs = 10;
+    profile.inspectionPlan.modules[0].magnitude.windowPostMs = 90;
+    profile.inspectionPlan.modules[0].magnitude.supportStrength.strongPeakThreshold = 18000.0f;
+    profile.inspectionPlan.modules[0].magnitude.supportStrength.mediumPeakThreshold = 12000.0f;
+    profile.inspectionPlan.modules[0].magnitude.supportStrength.weakPeakThreshold = 8000.0f;
 
-    profile.inspectionPlan.modules[1].kind = InspectionModuleKind::ScalarFeatureStrength;
+    profile.inspectionPlan.modules[1].kind = InspectionModuleKind::MagnitudeFeatureStrength;
     profile.inspectionPlan.modules[1].target = InspectionTarget::TargetScore;
     profile.inspectionPlan.modules[1].enabled = true;
     profile.inspectionPlan.modules[1].minimumStrength = StrengthClass::Medium;
-    profile.inspectionPlan.modules[1].scalar.anchor = ScalarInspectionAnchor::Peak;
-    profile.inspectionPlan.modules[1].scalar.stream = FeatureStreamId::FrequencyTarget;
-    profile.inspectionPlan.modules[1].scalar.mode = ScalarInspectionMode::PeakCentered;
-    profile.inspectionPlan.modules[1].scalar.windowPreMs = 10;
-    profile.inspectionPlan.modules[1].scalar.windowPostMs = 90;
-    profile.inspectionPlan.modules[1].scalar.supportStrength.strongPeakThreshold = 18000.0f;
-    profile.inspectionPlan.modules[1].scalar.supportStrength.mediumPeakThreshold = 12000.0f;
-    profile.inspectionPlan.modules[1].scalar.supportStrength.weakPeakThreshold = 8000.0f;
+    profile.inspectionPlan.modules[1].magnitude.anchor = MagnitudeInspectionAnchor::Peak;
+    profile.inspectionPlan.modules[1].magnitude.stream = FeatureStreamId::FrequencyTarget;
+    profile.inspectionPlan.modules[1].magnitude.mode = MagnitudeInspectionMode::PeakCentered;
+    profile.inspectionPlan.modules[1].magnitude.windowPreMs = 10;
+    profile.inspectionPlan.modules[1].magnitude.windowPostMs = 90;
+    profile.inspectionPlan.modules[1].magnitude.supportStrength.strongPeakThreshold = 18000.0f;
+    profile.inspectionPlan.modules[1].magnitude.supportStrength.mediumPeakThreshold = 12000.0f;
+    profile.inspectionPlan.modules[1].magnitude.supportStrength.weakPeakThreshold = 8000.0f;
 
-    profile.inspectionPlan.modules[2].kind = InspectionModuleKind::ScalarFeatureStrength;
+    profile.inspectionPlan.modules[2].kind = InspectionModuleKind::MagnitudeFeatureStrength;
     profile.inspectionPlan.modules[2].target = InspectionTarget::Contrast;
     profile.inspectionPlan.modules[2].enabled = true;
     profile.inspectionPlan.modules[2].minimumStrength = StrengthClass::Medium;
-    profile.inspectionPlan.modules[2].scalar.anchor = ScalarInspectionAnchor::Peak;
-    profile.inspectionPlan.modules[2].scalar.stream = FeatureStreamId::FrequencyContrast;
-    profile.inspectionPlan.modules[2].scalar.mode = ScalarInspectionMode::PeakCentered;
-    profile.inspectionPlan.modules[2].scalar.windowPreMs = 10;
-    profile.inspectionPlan.modules[2].scalar.windowPostMs = 90;
-    profile.inspectionPlan.modules[2].scalar.supportStrength.strongPeakThreshold = 80.0f;
-    profile.inspectionPlan.modules[2].scalar.supportStrength.mediumPeakThreshold = 50.0f;
-    profile.inspectionPlan.modules[2].scalar.supportStrength.weakPeakThreshold = 25.0f;
+    profile.inspectionPlan.modules[2].magnitude.anchor = MagnitudeInspectionAnchor::Peak;
+    profile.inspectionPlan.modules[2].magnitude.stream = FeatureStreamId::FrequencyContrast;
+    profile.inspectionPlan.modules[2].magnitude.mode = MagnitudeInspectionMode::PeakCentered;
+    profile.inspectionPlan.modules[2].magnitude.windowPreMs = 10;
+    profile.inspectionPlan.modules[2].magnitude.windowPostMs = 90;
+    profile.inspectionPlan.modules[2].magnitude.supportStrength.strongPeakThreshold = 80.0f;
+    profile.inspectionPlan.modules[2].magnitude.supportStrength.mediumPeakThreshold = 50.0f;
+    profile.inspectionPlan.modules[2].magnitude.supportStrength.weakPeakThreshold = 25.0f;
     profile.inspectionPlan.count = 3;
 
     // Pattern rules.
@@ -281,46 +281,46 @@ inline DetectionProfile makeAmpExperimentalProfile() {
     // Inspector composition.
 
 
-    profile.inspectionPlan.modules[0].kind = InspectionModuleKind::ScalarFeatureStrength;
+    profile.inspectionPlan.modules[0].kind = InspectionModuleKind::MagnitudeFeatureStrength;
     profile.inspectionPlan.modules[0].target = InspectionTarget::Amp;
     profile.inspectionPlan.modules[0].enabled = true;
     profile.inspectionPlan.modules[0].minimumStrength = StrengthClass::Medium;
-    profile.inspectionPlan.modules[0].scalar.anchor = ScalarInspectionAnchor::Peak;
-    profile.inspectionPlan.modules[0].scalar.stream = FeatureStreamId::AmpEnvelope;
-    profile.inspectionPlan.modules[0].scalar.mode = ScalarInspectionMode::PeakCentered;
-    profile.inspectionPlan.modules[0].scalar.windowPreMs = 10;
-    profile.inspectionPlan.modules[0].scalar.windowPostMs = 90;
-    profile.inspectionPlan.modules[0].scalar.supportStrength.strongPeakThreshold = 18000.0f;
-    profile.inspectionPlan.modules[0].scalar.supportStrength.mediumPeakThreshold = 12000.0f;
-    profile.inspectionPlan.modules[0].scalar.supportStrength.weakPeakThreshold = 8000.0f;
+    profile.inspectionPlan.modules[0].magnitude.anchor = MagnitudeInspectionAnchor::Peak;
+    profile.inspectionPlan.modules[0].magnitude.stream = FeatureStreamId::AmpEnvelope;
+    profile.inspectionPlan.modules[0].magnitude.mode = MagnitudeInspectionMode::PeakCentered;
+    profile.inspectionPlan.modules[0].magnitude.windowPreMs = 10;
+    profile.inspectionPlan.modules[0].magnitude.windowPostMs = 90;
+    profile.inspectionPlan.modules[0].magnitude.supportStrength.strongPeakThreshold = 18000.0f;
+    profile.inspectionPlan.modules[0].magnitude.supportStrength.mediumPeakThreshold = 12000.0f;
+    profile.inspectionPlan.modules[0].magnitude.supportStrength.weakPeakThreshold = 8000.0f;
 
-    profile.inspectionPlan.modules[1].kind = InspectionModuleKind::ScalarFeatureStrength;
+    profile.inspectionPlan.modules[1].kind = InspectionModuleKind::MagnitudeFeatureStrength;
     profile.inspectionPlan.modules[1].target = InspectionTarget::TargetScore;
     profile.inspectionPlan.modules[1].enabled = true;
     profile.inspectionPlan.modules[1].minimumStrength = StrengthClass::Medium;
-    profile.inspectionPlan.modules[1].scalar.anchor = ScalarInspectionAnchor::Peak;
-    profile.inspectionPlan.modules[1].scalar.stream = FeatureStreamId::FrequencyTarget;
-    profile.inspectionPlan.modules[1].scalar.mode = ScalarInspectionMode::PeakCentered;
-    profile.inspectionPlan.modules[1].scalar.windowPreMs = 10;
-    profile.inspectionPlan.modules[1].scalar.windowPostMs = 90;
-    profile.inspectionPlan.modules[1].scalar.supportStrength.strongPeakThreshold = 18000.0f;
-    profile.inspectionPlan.modules[1].scalar.supportStrength.mediumPeakThreshold = 12000.0f;
-    profile.inspectionPlan.modules[1].scalar.supportStrength.weakPeakThreshold = 8000.0f;
-    //profile.inspectionPlan.modules[1].scalar.minSustainedMs = 25;
+    profile.inspectionPlan.modules[1].magnitude.anchor = MagnitudeInspectionAnchor::Peak;
+    profile.inspectionPlan.modules[1].magnitude.stream = FeatureStreamId::FrequencyTarget;
+    profile.inspectionPlan.modules[1].magnitude.mode = MagnitudeInspectionMode::PeakCentered;
+    profile.inspectionPlan.modules[1].magnitude.windowPreMs = 10;
+    profile.inspectionPlan.modules[1].magnitude.windowPostMs = 90;
+    profile.inspectionPlan.modules[1].magnitude.supportStrength.strongPeakThreshold = 18000.0f;
+    profile.inspectionPlan.modules[1].magnitude.supportStrength.mediumPeakThreshold = 12000.0f;
+    profile.inspectionPlan.modules[1].magnitude.supportStrength.weakPeakThreshold = 8000.0f;
+    //profile.inspectionPlan.modules[1].magnitude.minSustainedMs = 25;
     
-    profile.inspectionPlan.modules[2].kind = InspectionModuleKind::ScalarFeatureStrength;
+    profile.inspectionPlan.modules[2].kind = InspectionModuleKind::MagnitudeFeatureStrength;
     profile.inspectionPlan.modules[2].target = InspectionTarget::Contrast;
     profile.inspectionPlan.modules[2].enabled = true;
     profile.inspectionPlan.modules[2].minimumStrength = StrengthClass::Medium;
-    profile.inspectionPlan.modules[2].scalar.anchor = ScalarInspectionAnchor::Peak;
-    profile.inspectionPlan.modules[2].scalar.stream = FeatureStreamId::FrequencyContrast;
-    profile.inspectionPlan.modules[2].scalar.mode = ScalarInspectionMode::PeakCentered;
-    profile.inspectionPlan.modules[2].scalar.windowPreMs = 10;
-    profile.inspectionPlan.modules[2].scalar.windowPostMs = 90;
-    profile.inspectionPlan.modules[2].scalar.supportStrength.strongPeakThreshold = 80.0f;
-    profile.inspectionPlan.modules[2].scalar.supportStrength.mediumPeakThreshold = 50.0f;
-    profile.inspectionPlan.modules[2].scalar.supportStrength.weakPeakThreshold = 25.0f;
-    //profile.inspectionPlan.modules[2].scalar.minSustainedMs = 25;  
+    profile.inspectionPlan.modules[2].magnitude.anchor = MagnitudeInspectionAnchor::Peak;
+    profile.inspectionPlan.modules[2].magnitude.stream = FeatureStreamId::FrequencyContrast;
+    profile.inspectionPlan.modules[2].magnitude.mode = MagnitudeInspectionMode::PeakCentered;
+    profile.inspectionPlan.modules[2].magnitude.windowPreMs = 10;
+    profile.inspectionPlan.modules[2].magnitude.windowPostMs = 90;
+    profile.inspectionPlan.modules[2].magnitude.supportStrength.strongPeakThreshold = 80.0f;
+    profile.inspectionPlan.modules[2].magnitude.supportStrength.mediumPeakThreshold = 50.0f;
+    profile.inspectionPlan.modules[2].magnitude.supportStrength.weakPeakThreshold = 25.0f;
+    //profile.inspectionPlan.modules[2].magnitude.minSustainedMs = 25;  
     
     profile.inspectionPlan.count = 3;
 

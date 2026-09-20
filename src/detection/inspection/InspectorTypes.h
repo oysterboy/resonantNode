@@ -17,7 +17,14 @@ enum class StrengthClass {
     Strong,
 };
 
-enum class ScalarInspectionMode {
+// `Magnitude*` here names the carrier-agnostic single-value inspection
+// concept (axis: what shape of evidence), not the ScalarTransientDetector
+// (axis: which detector/lifecycle produced an occurrence). These two axes
+// used to share the word "Scalar", which invited reading these types as
+// detector-specific when they apply to any occurrence regardless of which
+// detector produced it. See Occurrence.h for the parallel correction on
+// `magnitude`/`band`.
+enum class MagnitudeInspectionMode {
     PeakAbsolute,
     MeanAbsolute,
     SustainedAboveThreshold,
@@ -27,7 +34,7 @@ enum class ScalarInspectionMode {
     P75,
 };
 
-enum class ScalarInspectionBasis {
+enum class MagnitudeInspectionBasis {
     None,
     CenteredMagnitudePeak,
     PeakAbsolute,
@@ -39,10 +46,10 @@ enum class ScalarInspectionBasis {
     P75,
 };
 
-enum class ScalarInspectionNote {
+enum class MagnitudeInspectionNote {
     None,
-    ScalarObserved,
-    ScalarUnavailable,
+    MagnitudeObserved,
+    MagnitudeUnavailable,
     HistoryWindowIncomplete,
     FutureWindowUnavailable,
     WindowInvalid,
@@ -50,7 +57,7 @@ enum class ScalarInspectionNote {
     MissingFeatureHistory,
 };
 
-enum class ScalarInspectionAnchor {
+enum class MagnitudeInspectionAnchor {
     None,
     Peak,
     Start,
@@ -58,21 +65,21 @@ enum class ScalarInspectionAnchor {
     Fallback,
 };
 
-inline const char* scalarInspectionModeName(ScalarInspectionMode mode) {
+inline const char* magnitudeInspectionModeName(MagnitudeInspectionMode mode) {
     switch (mode) {
-        case ScalarInspectionMode::PeakAbsolute:
+        case MagnitudeInspectionMode::PeakAbsolute:
             return "peak_absolute";
-        case ScalarInspectionMode::MeanAbsolute:
+        case MagnitudeInspectionMode::MeanAbsolute:
             return "mean_absolute";
-        case ScalarInspectionMode::SustainedAboveThreshold:
+        case MagnitudeInspectionMode::SustainedAboveThreshold:
             return "sustained_above_threshold";
-        case ScalarInspectionMode::PeakCentered:
+        case MagnitudeInspectionMode::PeakCentered:
             return "peak_centered";
-        case ScalarInspectionMode::PeakCenteredLift:
+        case MagnitudeInspectionMode::PeakCenteredLift:
             return "peak_centered_lift";
-        case ScalarInspectionMode::Rms:
+        case MagnitudeInspectionMode::Rms:
             return "rms";
-        case ScalarInspectionMode::P75:
+        case MagnitudeInspectionMode::P75:
             return "p75";
     }
 
@@ -108,7 +115,7 @@ inline StrengthClass classifySupportStrength(float peak, bool evidenceValid, con
 
 enum class InspectionModuleKind {
     None,
-    ScalarFeatureStrength,
+    MagnitudeFeatureStrength,
 };
 
 enum class InspectionTarget {
@@ -119,11 +126,11 @@ enum class InspectionTarget {
     TargetBand,
 };
 
-struct ScalarFeatureInspectionConfig {
+struct MagnitudeFeatureInspectionConfig {
     bool enabled = true;
     FeatureStreamId stream = FeatureStreamId::AmpEnvelope;
-    ScalarInspectionMode mode = ScalarInspectionMode::PeakAbsolute;
-    ScalarInspectionAnchor anchor = ScalarInspectionAnchor::Peak;
+    MagnitudeInspectionMode mode = MagnitudeInspectionMode::PeakAbsolute;
+    MagnitudeInspectionAnchor anchor = MagnitudeInspectionAnchor::Peak;
     uint32_t windowPreMs = 20;
     uint32_t windowPostMs = 120;
     SupportStrengthConfig supportStrength = {};
@@ -136,7 +143,7 @@ struct InspectionModuleConfig {
     InspectionTarget target = InspectionTarget::None;
     bool enabled = false;
     StrengthClass minimumStrength = StrengthClass::Unknown;
-    ScalarFeatureInspectionConfig scalar = {};
+    MagnitudeFeatureInspectionConfig magnitude = {};
 };
 
 static constexpr size_t kMaxInspectionModules = 3;
@@ -147,9 +154,9 @@ struct InspectionPlan {
     bool failedRequirementMeansUncertain = true;
 };
 
-// Scalar evidence captured by the inspector for a single occurrence.
+// Magnitude evidence captured by the inspector for a single occurrence.
 // This is runtime evidence, not configuration.
-struct ScalarInspectionObservation {
+struct MagnitudeInspectionObservation {
     // Label-like fields are enum-backed; string rendering happens in
     // InspectionNames.h at print time.
     bool available = false;
@@ -157,9 +164,9 @@ struct ScalarInspectionObservation {
     bool coverageComplete = false;
     bool requestedFutureAtInspection = false;
     FeatureStreamId stream = FeatureStreamId::Unknown;
-    ScalarInspectionMode mode = ScalarInspectionMode::PeakAbsolute;
-    ScalarInspectionBasis supportBasis = ScalarInspectionBasis::CenteredMagnitudePeak;
-    ScalarInspectionNote note = ScalarInspectionNote::None;
+    MagnitudeInspectionMode mode = MagnitudeInspectionMode::PeakAbsolute;
+    MagnitudeInspectionBasis supportBasis = MagnitudeInspectionBasis::CenteredMagnitudePeak;
+    MagnitudeInspectionNote note = MagnitudeInspectionNote::None;
 
     unsigned long inspectionNowMs = 0;
     unsigned long anchorMs = 0;
@@ -172,7 +179,7 @@ struct ScalarInspectionObservation {
     unsigned long coveredDurationMs = 0;
     int16_t windowStartMs = -20;
     int16_t windowEndMs = 120;
-    ScalarInspectionAnchor anchor = ScalarInspectionAnchor::Peak;
+    MagnitudeInspectionAnchor anchor = MagnitudeInspectionAnchor::Peak;
     // These are numeric observation facts, not labels.
     unsigned long windowMs = 0;
     size_t valueCount = 0;
@@ -208,7 +215,7 @@ struct ScalarInspectionObservation {
     StrengthClass strength = StrengthClass::Unknown;
 };
 
-using ScalarEvidence = ScalarInspectionObservation;
+using MagnitudeEvidence = MagnitudeInspectionObservation;
 
 // Raw detector evidence captured for transient-trigger analysis and reporting.
 struct TransientEvidence {

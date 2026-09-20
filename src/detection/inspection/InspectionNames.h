@@ -6,63 +6,68 @@
 // Keep inspection naming here so Analyzer and mode shells do not duplicate it.
 namespace detection {
 
-inline const char* scalarInspectionBasisName(ScalarInspectionBasis value) {
+inline const char* magnitudeInspectionBasisName(MagnitudeInspectionBasis value) {
     switch (value) {
-        case ScalarInspectionBasis::CenteredMagnitudePeak:
+        case MagnitudeInspectionBasis::CenteredMagnitudePeak:
             return "centered_magnitude_peak";
-        case ScalarInspectionBasis::PeakAbsolute:
+        case MagnitudeInspectionBasis::PeakAbsolute:
             return "peak_absolute";
-        case ScalarInspectionBasis::MeanAbsolute:
+        case MagnitudeInspectionBasis::MeanAbsolute:
             return "mean_absolute";
-        case ScalarInspectionBasis::SustainedAboveThreshold:
+        case MagnitudeInspectionBasis::SustainedAboveThreshold:
             return "sustained_above_threshold";
-        case ScalarInspectionBasis::PeakCenteredMean:
+        case MagnitudeInspectionBasis::PeakCenteredMean:
             return "peak_centered_mean";
-        case ScalarInspectionBasis::PeakCenteredLift:
+        case MagnitudeInspectionBasis::PeakCenteredLift:
             return "peak_centered_lift";
-        case ScalarInspectionBasis::Rms:
+        case MagnitudeInspectionBasis::Rms:
             return "rms";
-        case ScalarInspectionBasis::P75:
+        case MagnitudeInspectionBasis::P75:
             return "p75";
-        case ScalarInspectionBasis::None:
+        case MagnitudeInspectionBasis::None:
         default:
             return "none";
     }
 }
 
-inline const char* scalarInspectionNoteName(ScalarInspectionNote value) {
+inline const char* magnitudeInspectionNoteName(MagnitudeInspectionNote value) {
     switch (value) {
-        case ScalarInspectionNote::ScalarObserved:
+        // Printed strings kept as "scalar_*" on purpose: these are live,
+        // reachable values in SEQ_INSPECT output today (the observed/
+        // unavailable case), and this rename is scoped to C++ symbol names,
+        // not wire-format/output text. See Occurrence.h and InspectorTypes.h
+        // for the naming rationale.
+        case MagnitudeInspectionNote::MagnitudeObserved:
             return "scalar_observed";
-        case ScalarInspectionNote::ScalarUnavailable:
+        case MagnitudeInspectionNote::MagnitudeUnavailable:
             return "scalar_unavailable";
-        case ScalarInspectionNote::HistoryWindowIncomplete:
+        case MagnitudeInspectionNote::HistoryWindowIncomplete:
             return "history_window_incomplete";
-        case ScalarInspectionNote::FutureWindowUnavailable:
+        case MagnitudeInspectionNote::FutureWindowUnavailable:
             return "future_window_unavailable";
-        case ScalarInspectionNote::WindowInvalid:
+        case MagnitudeInspectionNote::WindowInvalid:
             return "window_invalid";
-        case ScalarInspectionNote::InspectionDisabled:
+        case MagnitudeInspectionNote::InspectionDisabled:
             return "inspection_disabled";
-        case ScalarInspectionNote::MissingFeatureHistory:
+        case MagnitudeInspectionNote::MissingFeatureHistory:
             return "missing_feature_history";
-        case ScalarInspectionNote::None:
+        case MagnitudeInspectionNote::None:
         default:
             return "none";
     }
 }
 
-inline const char* scalarInspectionAnchorName(ScalarInspectionAnchor value) {
+inline const char* magnitudeInspectionAnchorName(MagnitudeInspectionAnchor value) {
     switch (value) {
-        case ScalarInspectionAnchor::Peak:
+        case MagnitudeInspectionAnchor::Peak:
             return "peak";
-        case ScalarInspectionAnchor::Start:
+        case MagnitudeInspectionAnchor::Start:
             return "start";
-        case ScalarInspectionAnchor::Release:
+        case MagnitudeInspectionAnchor::Release:
             return "release";
-        case ScalarInspectionAnchor::Fallback:
+        case MagnitudeInspectionAnchor::Fallback:
             return "fallback";
-        case ScalarInspectionAnchor::None:
+        case MagnitudeInspectionAnchor::None:
         default:
             return "none";
     }
@@ -101,7 +106,7 @@ inline const char* inspectionTargetName(InspectionTarget value) {
 }
 
 inline const char* inspectionPlanName(const InspectionPlan& plan) {
-    if (plan.count == 1 && plan.modules[0].kind == InspectionModuleKind::ScalarFeatureStrength) {
+    if (plan.count == 1 && plan.modules[0].kind == InspectionModuleKind::MagnitudeFeatureStrength) {
         return inspectionTargetName(plan.modules[0].target);
     }
 
@@ -110,8 +115,8 @@ inline const char* inspectionPlanName(const InspectionPlan& plan) {
 
 inline const char* inspectionModulesName(const InspectionPlan& plan) {
     if (plan.count == 1 &&
-        plan.modules[0].kind == InspectionModuleKind::ScalarFeatureStrength) {
-        return "ScalarFeatureStrength";
+        plan.modules[0].kind == InspectionModuleKind::MagnitudeFeatureStrength) {
+        return "MagnitudeFeatureStrength";
     }
 
     return "custom";

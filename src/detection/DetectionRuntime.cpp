@@ -466,7 +466,13 @@ bool DetectionRuntime::hasPendingDetectorOutput() const {
 }
 
 bool DetectionRuntime::hasPendingPatternWork() const {
-    return _patternInspectedCount > 0;
+    // Query the matcher's own pending-input state directly. The correlation
+    // queue (_patternInspectedCount) is diagnostics-only bookkeeping and can
+    // legitimately diverge from what the matcher itself still has queued
+    // (for example, when pushPatternObservation() fails while
+    // acceptOccurrence() already succeeded), so it must not be the authority
+    // for whether pattern work is pending.
+    return _patternMatcher.hasPendingInput();
 }
 
 void DetectionRuntime::drainDetectors(unsigned long nowMs) {

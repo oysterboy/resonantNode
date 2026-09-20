@@ -325,6 +325,10 @@ size_t PatternMatcher::pendingInputCount() const {
     return _count;
 }
 
+bool PatternMatcher::hasPendingInput() const {
+    return _count > 0;
+}
+
 bool PatternMatcher::popPatternResult(unsigned long nowMs, PatternResult& out) {
     if (_count == 0) {
         _report.proposalPresent = false;

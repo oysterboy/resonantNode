@@ -1,5 +1,19 @@
 # Codex Pass — PatternResult Pipeline Failure Walk and Repair
 
+Archived: re-verified against source on 2026-09-20. Phases 0, 1, 3, 5, 7,
+and 8 are done, some by a different mechanism than originally specified
+(see notes below). Phase 2 was the only clearly outstanding item and has
+been applied directly: `PatternMatcher::hasPendingInput()` was added and
+`DetectionRuntime::hasPendingPatternWork()` now queries it instead of
+inferring from the correlation queue. Phase 4's atomicity gap is confirmed
+still present but downgraded: it only affects the diagnostic
+`DetectionPipelineEvent`'s correlation, not `PatternResult`/`FieldState`
+production, per the finding in `docs/refactors/cleanup-analyzer-node-isolation.md`
+that the correlation queue is diagnostics-only. Phase 6 (Analyzer capture
+timing) and the future-window-unavailable edge case were not re-verified.
+If either becomes relevant again, re-check them against
+`AnalyzerSequenceSession.cpp` before assuming this pass is fully closed.
+
 ## Goal
 
 Find and repair the exact failure path between accepted detector occurrences and `PatternResult`.

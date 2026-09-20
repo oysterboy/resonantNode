@@ -42,6 +42,7 @@ public:
     bool popPatternResult(unsigned long nowMs, PatternResult& out);
     PatternInputRejectReason lastInputRejectReason() const;
     size_t pendingInputCount() const;
+    bool hasPendingInput() const;
 
 private:
     static constexpr size_t kQueueCapacity = 4;

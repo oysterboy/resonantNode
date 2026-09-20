@@ -32,10 +32,9 @@ platformio run -e esp32dev-emitter
 
 This container has no attached ESP32 hardware — compilation is the
 available verification here (`platformio run -e ...`); flashing and live
-runtime capture happen on the developer's machine over PlatformIO/COM, as
-recorded in `docs/changelog.md` entries. Don't claim a change "works" on
-real hardware from this environment — say compilation passed and that live
-validation is still pending.
+runtime capture happen on the developer's machine over PlatformIO/COM. Don't
+claim a change "works" on real hardware from this environment — say
+compilation passed and that live validation is still pending.
 
 Unit tests live under `test/` (PlatformIO/Unity). There's currently one
 suite, `test/test_analyzer_pass_rules`.
@@ -87,36 +86,91 @@ LOG-001 workflow.
 
 ## Docs system (read before large changes, update after)
 
-This project already has a working docs discipline — use it instead of ad
-hoc notes:
+`docs/changelog.md` is **retired as a place to write new entries.** It was a
+hand-maintained "what happened" log, but it stopped being updated after
+2026-06-22 even though dozens of substantive commits followed — the actual
+record of work had already moved into the pass/plan docs below instead. Keep
+it as a read-only historical artifact for anything dated on or before that
+entry; don't add to it, and don't feel obliged to backfill it. **Git commit
+history is the changelog now** — `git log --oneline -- <path>` is more
+reliable than prose that someone has to remember to write.
+
+### Active work: pass / plan docs (`docs/refactors/`)
+
+This is where "what's being worked on right now" actually lives and gets
+edited commit-by-commit — check here before starting related work, not the
+changelog. Two accepted shapes, both directly under `docs/refactors/` (never
+in `archive/` while active):
+
+- **Single-thread work** — one file (the old `current-pass.md` pattern):
+  goal, current evidence, decisions, open/closed status, edited in place as
+  the work progresses.
+- **Multi-phase or multi-topic work** — a master executable plan (goal,
+  ordered items, a standing test/verification battery, explicit
+  don't-touch-this-without-saying-so constraints) plus one file per
+  architectural area it spans. This is the current live example:
+  - `docs/refactors/cleanup.md` — goal + itemized Detector-layer cleanup
+  - `docs/refactors/cleanup-detector-consolidation.md`,
+    `cleanup-inspector-pattern-scope.md`,
+    `cleanup-analyzer-node-isolation.md`, `cleanup-detector-ownership.md` —
+    one topic each, detail lives here
+  - `docs/refactors/cleanup-0-plan.md` — sequences all of the above into
+    ordered phases with gates and a standing test battery; read this first
+    to know whether you're clear to start a given item.
+
+**Closing one out:** prepend a short header — `Archived: <date> — <what
+landed, what's still open, what wasn't re-verified>` — to the master file
+(this is the one habit from the old system that actually worked; see the
+existing header on `docs/refactors/archive/current-pass.md` for the model
+to follow). Then move the whole file or file set into
+`docs/refactors/archive/`. That header line, not a changelog entry, is the
+durable record of what happened on that unit of work — write it honestly,
+including caveats, every time.
+
+If `docs/refactors/` has no active file at the top level, either nothing is
+currently in flight or a pass was archived without a fresh one started for
+the next unit of work — worth flagging rather than assuming silently.
+
+### Roadmaps (`docs/roadmaps/`)
+
+- `roadmap-master.md` stays an index only — links to the per-subsystem
+  files, no plan detail of its own. Some of its links are stale absolute
+  Windows paths from the original dev machine; resolve them relative to
+  `docs/roadmaps/` instead of following them literally.
+- Per-subsystem roadmap files (`roadmap-detection.md`, `roadmap-behavior.md`,
+  etc.) are edited in place as plans change.
+- `implementation-status.md` is a **live table**, not history — edit it in
+  place to reflect current state (stable/experimental/planned/deferred); it
+  should never accumulate dated entries.
+- A roadmap file that's fully superseded or completed moves to
+  `docs/roadmaps/roadmap archive/` (yes, space in the name — leave it,
+  don't rename it as a drive-by fix since other docs may reference the
+  literal path) with the same one-line `Archived: ...` header used for
+  refactor passes.
+
+### Other docs
 
 - `docs/specs/myspec.md` — canonical architecture spec; see above.
-- `docs/changelog.md` — dated entries, newest first, `### Context` /
-  `### Changed` / `### Verification` sections. Add an entry for any
-  nontrivial change.
-- `docs/refactors/archive/current-pass.md` — the currently active
-  refactor/investigation pass, if one is in flight. Check it before
-  starting related work; it records what's still open vs. already closed.
-- `docs/roadmaps/roadmap-master.md` — index of active roadmap files (note:
-  some links in there are stale absolute Windows paths from the original
-  machine; resolve them relative to `docs/roadmaps/` instead).
-- `docs/roadmaps/implementation-status.md` — current status table
-  (stable/experimental/planned/deferred) per subsystem.
-- `docs/lab/` — informal experiment notes.
+- `docs/lab/` — informal experiment notes, append-only, never needs cleanup.
 
 ## Cross-session / cross-surface continuity
 
 Work on this repo happens from both the VS Code extension and Claude Code
 on the web/chat — those are separate sessions with no shared transcript.
-Treat this file plus `docs/changelog.md` and git history as the shared
-memory between them:
+Treat this file, the active `docs/refactors/` pass/plan doc, and git history
+as the shared memory between them — not `docs/changelog.md`, which is
+retired (see above):
 
-- Before starting nontrivial work, check `docs/changelog.md`'s latest
-  entries and `docs/refactors/archive/current-pass.md` for in-flight
-  context from a previous session/surface.
-- After nontrivial work, add a changelog entry and commit — the next
-  session (on either surface) picks up from there, not from this
-  conversation's transcript.
+- Before starting nontrivial work, check `docs/refactors/` for an active
+  pass/plan doc and `docs/roadmaps/implementation-status.md` for current
+  subsystem state — that's the in-flight context from a previous
+  session/surface, not this conversation's transcript.
+- After nontrivial work, update the active pass/plan doc in place (or start
+  one if none exists) and commit with a clear message — the next session,
+  on either surface, picks up from the doc plus `git log`, not from here.
+- When a pass/plan closes, write its `Archived: ...` header before moving it
+  — that one line is what the next session (or the next person) will
+  actually read to find out what happened.
 - Keep this file updated if project-wide conventions change; it's what
   every new session reads first, regardless of which surface started it.
 

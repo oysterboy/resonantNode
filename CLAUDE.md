@@ -40,12 +40,37 @@ validation is still pending.
 Unit tests live under `test/` (PlatformIO/Unity). There's currently one
 suite, `test/test_analyzer_pass_rules`.
 
+## Architecture spec (read this first for anything touching module boundaries)
+
+`docs/specs/myspec.md` is the canonical current architecture spec (v0.3.0),
+not just informal notes. Core rule:
+
+```
+Detection produces facts.
+Analyzer reports and classifies trials.
+Behavior decides.
+SoundOutput performs output.
+```
+
+It defines strict per-module "owns / must not own" boundaries (Detector,
+Occurrence, DetectorReport, Inspector, PatternMatcher, FieldState, Analyzer,
+Behavior, SoundOutput) and a numeric-domain contract for feature values
+(`Strength16`, `FrequencyScore16`, contrast as a float quality domain) that
+must not be rescaled downstream. `DetectionRuntime` coordinates but must
+never reconstruct detector truth. Read the relevant section before changing
+anything that crosses one of these boundaries — most refactor docs in
+`docs/refactors/` exist because a boundary was violated and had to be
+walked back.
+
+`docs/notes_manual.md` is the complementary operator-facing doc: profile
+config sites, reset/apply points, and the
+`patternAccepted -> patternMatched -> supportMatched -> behaviorEligible`
+runtime gate chain. Use it for "where do I change this knob," use
+`myspec.md` for "where does this concept belong."
+
 ## Source layout
 
-See `docs/notes_manual.md` for the full detection/behavior profile
-architecture (profiles, config sites, reset/apply points, the
-`patternAccepted -> patternMatched -> supportMatched -> behaviorEligible`
-gate chain). Short map:
+Short map (see the two docs above for the real architecture):
 
 - `src/detection/` — profiles, detectors, occurrence inspection, pattern
   matching, field-state tracking.
@@ -65,6 +90,7 @@ LOG-001 workflow.
 This project already has a working docs discipline — use it instead of ad
 hoc notes:
 
+- `docs/specs/myspec.md` — canonical architecture spec; see above.
 - `docs/changelog.md` — dated entries, newest first, `### Context` /
   `### Changed` / `### Verification` sections. Add an entry for any
   nontrivial change.

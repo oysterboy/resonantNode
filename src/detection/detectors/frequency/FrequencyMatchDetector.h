@@ -29,112 +29,6 @@ Does NOT:
 */
 class FrequencyMatchDetector {
 public:
-    // Compatibility/public diagnostic state.
-    // Analyzer and runtime still read these fields directly, so keep them
-    // public and grouped by lifecycle role for readability.
-
-    // Config / thresholds.
-    float attackScoreThreshold = 0.0f;
-    float releaseScoreThreshold = 0.0f;
-    float attackContrastThreshold = 0.0f;
-    float releaseContrastThreshold = 0.0f;
-    unsigned long pendingMinDurationMs = 0;
-    unsigned long pendingMaxDurationMs = 0;
-
-    // Live gate state.
-    bool evidencePresent = false;
-    bool liveFrequencyOnly = false;
-    bool firstThresholdCrossingSeen = false;
-    bool wouldProducePending = false;
-    bool pendingActive = false;
-    bool pendingAccepted = false;
-    bool pendingClosed = false;
-    unsigned long pendingRefractoryUntilMs = 0;
-    unsigned long firstThresholdCrossingMs = 0;
-    uint64_t firstThresholdCrossingSample = 0;
-    unsigned long pendingOpenMs = 0;
-    uint64_t pendingOpenSample = 0;
-    unsigned long pendingPeakMs = 0;
-    uint64_t pendingPeakSample = 0;
-    unsigned long pendingCloseMs = 0;
-    uint64_t pendingCloseSample = 0;
-    unsigned long pendingHoldUpdates = 0;
-    unsigned long pendingDurationMs = 0;
-    unsigned long pendingLastMatchedMs = 0;
-    bool evidenceOk = false;
-    bool attackScoreOk = false;
-    bool attackContrastOk = false;
-    bool attackOk = false;
-    bool releaseScoreOk = false;
-    bool releaseContrastOk = false;
-    bool releaseOk = false;
-    bool emitAllowed = false;
-    bool validRelease = false;
-    float pendingPeakScore = 0.0f;
-    float pendingPeakContrast = 0.0f;
-    float pendingSum = 0.0f;
-    float pendingSumSquares = 0.0f;
-    unsigned long pendingSampleCount = 0;
-    unsigned long pendingCoverageAboveAttackMs = 0;
-    unsigned long pendingCoverageAboveReleaseMs = 0;
-    unsigned long pendingSustainedMs = 0;
-    unsigned int pendingIslandCount = 0;
-    unsigned int pendingGapCount = 0;
-    unsigned long pendingIslandMaxMs = 0;
-    unsigned long pendingGapMaxMs = 0;
-    bool pendingWasAboveRelease = false;
-    unsigned long pendingCurrentIslandStartMs = 0;
-    unsigned long pendingCurrentGapStartMs = 0;
-    unsigned long pendingLastUpdateMs = 0;
-
-    // Candidate lifecycle state.
-    unsigned long pendingPeakSampleCount = 0;
-    unsigned long pendingLifecycleId = 0;
-    unsigned long currentPendingId = 0;
-    unsigned long acceptedOccurrenceId = 0;
-    unsigned long selectedRejectOccurrenceId = 0;
-    unsigned long lastPendingId = 0;
-    bool pendingDurationInconsistent = false;
-    detection::FrequencyBandMeasurementPacket pendingEvidence = {};
-
-    // Occurrence emission state.
-    detection::Occurrence pendingOccurrence = {};
-
-    // Detector report state.
-    unsigned long acceptedCount = 0;
-    unsigned long rejectedCount = 0;
-
-    // Reject summary state.
-    unsigned long bestDurationMs = 0;
-    unsigned long bestOpenMs = 0;
-    unsigned long bestPeakMs = 0;
-    unsigned long bestLastMatchMs = 0;
-    unsigned long bestCloseMs = 0;
-    float bestPeakScore = 0.0f;
-    float bestPeakContrast = 0.0f;
-    float bestMean = 0.0f;
-    float bestRms = 0.0f;
-    unsigned long bestCoverageAboveAttackMs = 0;
-    unsigned long bestCoverageAboveReleaseMs = 0;
-    unsigned long bestSustainedMs = 0;
-    unsigned int bestIslandCount = 0;
-    unsigned int bestGapCount = 0;
-    unsigned long bestIslandMaxMs = 0;
-    unsigned long bestGapMaxMs = 0;
-    const char* bestRejectReason = "none";
-    const char* bestGateReason = "none";
-    detection::FrequencyBandMeasurementPacket bestEvidence = {};
-
-    // Diagnostics state.
-    char pendingState[16] = "none";
-    char gateReason[48] = "none";
-    char wouldPendingReason[48] = "none";
-    char noEmitReason[48] = "none";
-    unsigned long diagnosticsScoreOkCount = 0;
-    unsigned long diagnosticsContrastOkCount = 0;
-    unsigned long diagnosticsBothOkCount = 0;
-    unsigned long diagnosticsMatchedCount = 0;
-
     void resetState();
     void resetRejectSummary();
     void setDiagnosticsEnabled(bool enabled);
@@ -160,6 +54,108 @@ public:
     bool hasPendingOccurrence() const;
 
 private:
+    // Diagnostics state.
+    char _pendingState[16] = "none";
+    char _gateReason[48] = "none";
+    char _wouldPendingReason[48] = "none";
+    char _noEmitReason[48] = "none";
+    unsigned long _diagnosticsScoreOkCount = 0;
+    unsigned long _diagnosticsContrastOkCount = 0;
+    unsigned long _diagnosticsBothOkCount = 0;
+    unsigned long _diagnosticsMatchedCount = 0;
+
+    // Reject summary state.
+    unsigned long _bestDurationMs = 0;
+    unsigned long _bestOpenMs = 0;
+    unsigned long _bestPeakMs = 0;
+    unsigned long _bestLastMatchMs = 0;
+    unsigned long _bestCloseMs = 0;
+    float _bestPeakScore = 0.0f;
+    float _bestPeakContrast = 0.0f;
+    float _bestMean = 0.0f;
+    float _bestRms = 0.0f;
+    unsigned long _bestCoverageAboveAttackMs = 0;
+    unsigned long _bestCoverageAboveReleaseMs = 0;
+    unsigned long _bestSustainedMs = 0;
+    unsigned int _bestIslandCount = 0;
+    unsigned int _bestGapCount = 0;
+    unsigned long _bestIslandMaxMs = 0;
+    unsigned long _bestGapMaxMs = 0;
+    const char* _bestRejectReason = "none";
+    const char* _bestGateReason = "none";
+    detection::FrequencyBandMeasurementPacket _bestEvidence = {};
+
+    // Candidate lifecycle state.
+    unsigned long _pendingPeakSampleCount = 0;
+    unsigned long _pendingLifecycleId = 0;
+    unsigned long _currentPendingId = 0;
+    unsigned long _acceptedOccurrenceId = 0;
+    unsigned long _selectedRejectOccurrenceId = 0;
+    unsigned long _lastPendingId = 0;
+    bool _pendingDurationInconsistent = false;
+    detection::FrequencyBandMeasurementPacket _pendingEvidence = {};
+
+    // Occurrence emission state.
+    detection::Occurrence _pendingCandidateOccurrence = {};
+
+    // Detector report state.
+    unsigned long _acceptedCount = 0;
+    unsigned long _rejectedCount = 0;
+
+    // Config / thresholds.
+    float _attackScoreThreshold = 0.0f;
+    float _releaseScoreThreshold = 0.0f;
+    float _attackContrastThreshold = 0.0f;
+    float _releaseContrastThreshold = 0.0f;
+    unsigned long _pendingMinDurationMs = 0;
+    unsigned long _pendingMaxDurationMs = 0;
+
+    // Live gate state.
+    bool _evidencePresent = false;
+    bool _liveFrequencyOnly = false;
+    bool _firstThresholdCrossingSeen = false;
+    bool _wouldProducePending = false;
+    bool _pendingActive = false;
+    bool _pendingAccepted = false;
+    bool _pendingClosed = false;
+    unsigned long _pendingRefractoryUntilMs = 0;
+    unsigned long _firstThresholdCrossingMs = 0;
+    uint64_t _firstThresholdCrossingSample = 0;
+    unsigned long _pendingOpenMs = 0;
+    uint64_t _pendingOpenSample = 0;
+    unsigned long _pendingPeakMs = 0;
+    uint64_t _pendingPeakSample = 0;
+    unsigned long _pendingCloseMs = 0;
+    uint64_t _pendingCloseSample = 0;
+    unsigned long _pendingHoldUpdates = 0;
+    unsigned long _pendingDurationMs = 0;
+    unsigned long _pendingLastMatchedMs = 0;
+    bool _evidenceOk = false;
+    bool _attackScoreOk = false;
+    bool _attackContrastOk = false;
+    bool _attackOk = false;
+    bool _releaseScoreOk = false;
+    bool _releaseContrastOk = false;
+    bool _releaseOk = false;
+    bool _emitAllowed = false;
+    bool _validRelease = false;
+    float _pendingPeakScore = 0.0f;
+    float _pendingPeakContrast = 0.0f;
+    float _pendingSum = 0.0f;
+    float _pendingSumSquares = 0.0f;
+    unsigned long _pendingSampleCount = 0;
+    unsigned long _pendingCoverageAboveAttackMs = 0;
+    unsigned long _pendingCoverageAboveReleaseMs = 0;
+    unsigned long _pendingSustainedMs = 0;
+    unsigned int _pendingIslandCount = 0;
+    unsigned int _pendingGapCount = 0;
+    unsigned long _pendingIslandMaxMs = 0;
+    unsigned long _pendingGapMaxMs = 0;
+    bool _pendingWasAboveRelease = false;
+    unsigned long _pendingCurrentIslandStartMs = 0;
+    unsigned long _pendingCurrentGapStartMs = 0;
+    unsigned long _pendingLastUpdateMs = 0;
+
     // Internal detector state.
     bool _diagnosticsEnabled = false;
     detection::AcceptedOccurrenceSummary _acceptedOccurrence = {};
@@ -176,5 +172,6 @@ private:
     void capturePendingOccurrence(const AudioSamplePacket& audioSamplePacket);
     void freezeReport(unsigned long nowMs);
     void clearFrozenReport();
+    const char* frequencyRejectReasonFromState() const;
 };
 

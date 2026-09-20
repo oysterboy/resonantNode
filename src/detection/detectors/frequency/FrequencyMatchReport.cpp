@@ -2,17 +2,17 @@
 
 #include <cstring>
 
-namespace {
-
-const char* frequencyRejectReasonFromState(const FrequencyMatchDetector& detector) {
-    if (detector.pendingAccepted) {
+const char* FrequencyMatchDetector::frequencyRejectReasonFromState() const {
+    if (_pendingAccepted) {
         return "none";
     }
-    if (detector.pendingClosed) {
-        return detector.noEmitReason[0] != '\0' ? detector.noEmitReason : "unknown";
+    if (_pendingClosed) {
+        return _noEmitReason[0] != '\0' ? _noEmitReason : "unknown";
     }
-    return detector.gateReason[0] != '\0' ? detector.gateReason : "unknown";
+    return _gateReason[0] != '\0' ? _gateReason : "unknown";
 }
+
+namespace {
 
 detection::DetectorRejectClass frequencyRejectClassFromReason(const char* reason) {
     if (reason == nullptr || strcmp(reason, "none") == 0) {
@@ -37,64 +37,64 @@ void FrequencyMatchDetector::buildReport(detection::DetectorReport& out, unsigne
     out = {};
     out.detectorId = detection::DetectorId::FrequencyMatch;
     out.accepted = _acceptedOccurrence;
-    out.accepted.occurrenceId = acceptedOccurrenceId;
+    out.accepted.occurrenceId = _acceptedOccurrenceId;
     out.frequency.accepted = _acceptedDetail;
-    out.thresholds.minDurationMs = pendingMinDurationMs;
-    out.thresholds.maxDurationMs = pendingMaxDurationMs;
-    out.aggregates.acceptedCount = acceptedCount;
-    out.aggregates.rejectedCount = rejectedCount;
+    out.thresholds.minDurationMs = _pendingMinDurationMs;
+    out.thresholds.maxDurationMs = _pendingMaxDurationMs;
+    out.aggregates.acceptedCount = _acceptedCount;
+    out.aggregates.rejectedCount = _rejectedCount;
 
     const bool selectedRejectPresent =
         !out.accepted.present &&
-        rejectedCount > 0 &&
-        (bestOpenMs > 0 || bestPeakMs > 0 || bestCloseMs > 0 || bestDurationMs > 0 || bestPeakScore > 0.0f ||
-         bestPeakContrast > 0.0f || (bestRejectReason != nullptr && strcmp(bestRejectReason, "none") != 0));
+        _rejectedCount > 0 &&
+        (_bestOpenMs > 0 || _bestPeakMs > 0 || _bestCloseMs > 0 || _bestDurationMs > 0 || _bestPeakScore > 0.0f ||
+         _bestPeakContrast > 0.0f || (_bestRejectReason != nullptr && strcmp(_bestRejectReason, "none") != 0));
     if (selectedRejectPresent) {
         out.selectedReject.present = true;
-        out.selectedReject.rejectClass = frequencyRejectClassFromReason(bestRejectReason);
-        out.selectedReject.detectorReason = bestRejectReason;
-        out.selectedReject.occurrenceId = selectedRejectOccurrenceId;
-        out.selectedReject.startMs = bestOpenMs;
-        out.selectedReject.peakMs = bestPeakMs;
-        out.selectedReject.endMs = bestCloseMs;
-        out.selectedReject.durationMs = bestDurationMs;
-        out.selectedReject.strength = bestPeakScore;
+        out.selectedReject.rejectClass = frequencyRejectClassFromReason(_bestRejectReason);
+        out.selectedReject.detectorReason = _bestRejectReason;
+        out.selectedReject.occurrenceId = _selectedRejectOccurrenceId;
+        out.selectedReject.startMs = _bestOpenMs;
+        out.selectedReject.peakMs = _bestPeakMs;
+        out.selectedReject.endMs = _bestCloseMs;
+        out.selectedReject.durationMs = _bestDurationMs;
+        out.selectedReject.strength = _bestPeakScore;
         out.selectedReject.confidence = 0.0f;
-        out.selectedReject.peak = bestPeakScore;
-        out.selectedReject.mean = bestMean;
-        out.selectedReject.rms = bestRms;
-        out.selectedReject.coverageAboveAttackMs = bestCoverageAboveAttackMs;
-        out.selectedReject.coverageAboveReleaseMs = bestCoverageAboveReleaseMs;
-        out.selectedReject.sustainedMs = bestSustainedMs;
-        out.selectedReject.islandCount = bestIslandCount;
-        out.selectedReject.gapCount = bestGapCount;
-        out.selectedReject.islandMaxMs = bestIslandMaxMs;
-        out.selectedReject.gapMaxMs = bestGapMaxMs;
-        out.frequency.selectedReject.score = bestPeakScore;
-        out.frequency.selectedReject.contrast = bestPeakContrast;
+        out.selectedReject.peak = _bestPeakScore;
+        out.selectedReject.mean = _bestMean;
+        out.selectedReject.rms = _bestRms;
+        out.selectedReject.coverageAboveAttackMs = _bestCoverageAboveAttackMs;
+        out.selectedReject.coverageAboveReleaseMs = _bestCoverageAboveReleaseMs;
+        out.selectedReject.sustainedMs = _bestSustainedMs;
+        out.selectedReject.islandCount = _bestIslandCount;
+        out.selectedReject.gapCount = _bestGapCount;
+        out.selectedReject.islandMaxMs = _bestIslandMaxMs;
+        out.selectedReject.gapMaxMs = _bestGapMaxMs;
+        out.frequency.selectedReject.score = _bestPeakScore;
+        out.frequency.selectedReject.contrast = _bestPeakContrast;
     }
 
-    out.frequency.thresholds.scoreThreshold = attackScoreThreshold;
-    out.frequency.thresholds.contrastThreshold = attackContrastThreshold;
-    out.frequency.aggregates.scoreOkCount = diagnosticsScoreOkCount;
-    out.frequency.aggregates.contrastOkCount = diagnosticsContrastOkCount;
-    out.frequency.aggregates.bothOkCount = diagnosticsBothOkCount;
-    out.frequency.aggregates.matchCount = diagnosticsMatchedCount;
-    out.frequency.inspect.rejectReason = frequencyRejectReasonFromState(*this);
-    out.frequency.inspect.noEmitReason = noEmitReason;
-    out.frequency.inspect.gateReason = gateReason;
-    out.frequency.inspect.pendingState = pendingState;
-    out.frequency.inspect.readyOk = evidenceOk;
-    out.frequency.inspect.gateOpen = attackOk;
-    out.frequency.inspect.opened = pendingActive || pendingClosed || pendingAccepted || pendingOpenMs > 0;
-    out.frequency.inspect.released = pendingClosed || pendingCloseMs > 0;
-    out.frequency.inspect.emitted = pendingAccepted;
-    out.frequency.inspect.validRelease = validRelease;
-    out.frequency.inspect.emitAllowed = emitAllowed;
-    out.frequency.inspect.openMs = pendingOpenMs;
-    out.frequency.inspect.peakMs = pendingPeakMs;
-    out.frequency.inspect.releaseMs = pendingCloseMs;
-    out.frequency.inspect.durationMs = pendingDurationMs;
+    out.frequency.thresholds.scoreThreshold = _attackScoreThreshold;
+    out.frequency.thresholds.contrastThreshold = _attackContrastThreshold;
+    out.frequency.aggregates.scoreOkCount = _diagnosticsScoreOkCount;
+    out.frequency.aggregates.contrastOkCount = _diagnosticsContrastOkCount;
+    out.frequency.aggregates.bothOkCount = _diagnosticsBothOkCount;
+    out.frequency.aggregates.matchCount = _diagnosticsMatchedCount;
+    out.frequency.inspect.rejectReason = frequencyRejectReasonFromState();
+    out.frequency.inspect.noEmitReason = _noEmitReason;
+    out.frequency.inspect.gateReason = _gateReason;
+    out.frequency.inspect.pendingState = _pendingState;
+    out.frequency.inspect.readyOk = _evidenceOk;
+    out.frequency.inspect.gateOpen = _attackOk;
+    out.frequency.inspect.opened = _pendingActive || _pendingClosed || _pendingAccepted || _pendingOpenMs > 0;
+    out.frequency.inspect.released = _pendingClosed || _pendingCloseMs > 0;
+    out.frequency.inspect.emitted = _pendingAccepted;
+    out.frequency.inspect.validRelease = _validRelease;
+    out.frequency.inspect.emitAllowed = _emitAllowed;
+    out.frequency.inspect.openMs = _pendingOpenMs;
+    out.frequency.inspect.peakMs = _pendingPeakMs;
+    out.frequency.inspect.releaseMs = _pendingCloseMs;
+    out.frequency.inspect.durationMs = _pendingDurationMs;
 
     if (out.accepted.present) {
         out.reportStartMs = out.accepted.startMs;

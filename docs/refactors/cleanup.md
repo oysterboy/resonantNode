@@ -217,7 +217,41 @@ read the new fields instead.
 
 ---
 
-# Item 3 — Bring FrequencyMatchDetector's public surface in line with ScalarTransientDetector
+# Item 3 — Bring FrequencyMatchDetector's public surface in line with ScalarTransientDetector (implemented 2026-09-21, T2-T4 hardware verification outstanding)
+
+**Status:** implemented. Confirmed via search that no file outside
+`src/detection/detectors/frequency/*.cpp` reads any `FrequencyMatchDetector`
+field directly (only `DetectionRuntime._frequencyDetector`'s method calls:
+`resetState`/`resetRejectSummary`/`setDiagnosticsEnabled`/
+`resetDiagnosticsSummary`/`update`/`latestReport`/`reportGeneration`/
+`popOccurrence`/`hasPendingOccurrence`). All ~70 fields moved to `private`,
+`_`-prefixed, in the four groups this item names (lifecycle/config state,
+candidate/occurrence/report state, best-rejected summary, diagnostics),
+rebuilding after each group. Two design notes:
+
+- `pendingOccurrence` (the in-progress candidate built during `update()`)
+  is renamed `_pendingCandidateOccurrence`, not `_pendingOccurrence`,
+  because that name was already taken by the existing private
+  `_pendingOccurrence` (the captured, ready-to-pop snapshot). These remain
+  two distinct objects, unchanged from before this item; Item 3 is
+  encapsulation only, not a merge of the two.
+- `frequencyRejectReasonFromState()` was a free function in
+  `FrequencyMatchReport.cpp`'s anonymous namespace that read detector state
+  directly; since it isn't a member, privatizing the fields it read broke
+  it. Converted to a private member function
+  (`FrequencyMatchDetector::frequencyRejectReasonFromState() const`) rather
+  than adding a public accessor or a `friend` declaration (friending a
+  same-named anonymous-namespace function is unreliable — the anonymous
+  namespace makes it a distinct entity from a global-scope friend
+  declaration). `frequencyRejectClassFromReason()` needed no change, it
+  only takes a reason string, not a detector reference.
+
+Verification: compiled clean against the real toolchain after each of the
+four groups (syntax-only checks plus a final full real build of all three
+PlatformIO environments — `esp32dev`, `esp32dev-emitter`,
+`esp32dev-analyzer` — all linked and produced a firmware image, satisfying
+T1). No field, public or private, was added to compensate. T2 and T4
+(hardware SEQ/Unity runs) are still outstanding, same as Item 2.
 
 ## Problem
 

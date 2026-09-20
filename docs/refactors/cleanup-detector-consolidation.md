@@ -6,6 +6,12 @@ Related to: `docs/refactors/cleanup.md`,
 `docs/refactors/cleanup-analyzer-node-isolation.md`,
 `docs/refactors/cleanup-inspector-pattern-scope.md`.
 
+Naming update (2026-09-21): `Occurrence.scalar`/`.frequency`, mentioned
+below (including in the 2026-09-20 correction), have since been renamed to
+`Occurrence.magnitude`/`.band`. See `cleanup.md` Item 1's own naming update
+for the rationale; not rewritten throughout here either, same pure-rename
+reasoning applies.
+
 ## Why this sits above the other cleanup docs
 
 This decision must be made before Items 2 and 3 in `cleanup.md` are worked on.

@@ -124,6 +124,29 @@ access for T2/T3/T4. Phase 2 and Phase 3 do not actually depend on the
 withdrawn Item 1 in any way that survives this correction, see their
 updated notes below.
 
+**Out-of-band, 2026-09-21: naming rename, not tracked as a numbered item
+above.** While investigating Item 1's `Occurrence` correction, the
+`.scalar`/`.frequency` field names were found to collide with
+`DetectorId::ScalarTransient`/`FrequencyMatch` and invite exactly the wrong
+"detector-exclusive" mental model the correction above describes. Renamed
+`Occurrence.scalar`/`.frequency` to `.magnitude`/`.band`
+(`MagnitudeOccurrenceDetail`/`FrequencyBandOccurrenceDetail`), then extended
+the same fix to the rest of the same naming collision:
+`ScalarInspectionMode`/`Basis`/`Note`/`Anchor` -> `MagnitudeInspection*`,
+`ScalarFeatureInspectionConfig` -> `MagnitudeFeatureInspectionConfig`,
+`ScalarWindow.h` -> `MagnitudeWindow.h`, and their call sites across
+`InspectorTypes.h`, `OccurrenceInspector.{h,cpp}`, `InspectedOccurrence.h`,
+`InspectionNames.h`, `AnalyzerReportTypes.h`, `AnalyzerSeqReporter.cpp`,
+`DetectionProfile.h`, `AnalyzerModeApp.cpp`, `ResonantNodeApp.cpp`, and
+`test_main.cpp`. `DetectorId::ScalarTransient`/`FrequencyMatch`,
+`OccurrenceType::Scalar`/`Frequency`, `ScalarTransientDetector`/`Config`,
+and `DetectorReport.scalar`/`.frequency` are untouched, those are the
+axis-1 provenance names this rename disambiguates against and are already
+accurate. Compiled clean against the real toolchain for every touched file
+except `AnalyzerModeApp.cpp`/`ResonantNodeApp.cpp` (verified by exhaustive
+grep instead, see commit `0102896`). T2/T3/T4 hardware runs remain
+outstanding, same as the rest of Phase 1.
+
 ---
 
 ## Phase 2 — FrequencyMatchDetector Fixes (gated on Phase 0 = "keep")
@@ -300,7 +323,7 @@ decision is: consolidate" section instead:
 | Phase | Doc | Depends on | Key tests |
 |---|---|---|---|
 | 0 | consolidation | — (parallel track) | field trials only |
-| 1 | cleanup.md #4 (done), inspector-pattern-scope (done), ~~cleanup.md #1~~ (withdrawn) | — | T1 (done), T2-T4 (hardware, outstanding) |
+| 1 | cleanup.md #4 (done), inspector-pattern-scope (done), ~~cleanup.md #1~~ (withdrawn), Magnitude/Band rename (done, out-of-band) | — | T1 (done), T2-T4 (hardware, outstanding) |
 | 2 | cleanup.md #2, #3 | Phase 0 = keep | T1, T2, T4 |
 | 3 | cleanup.md #5 | — (Item 1 dependency removed; Phase 2 optional) | T1, T2, T3, T6 |
 | 4 | soak, no doc | Phases 1-3 | T7 |

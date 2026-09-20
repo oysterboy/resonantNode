@@ -141,9 +141,10 @@ Node-required detector contract" for the full split.
 ### What this does not fix, and is not trying to
 
 - Does not change the shape of `Occurrence` or `DetectorReport`. Note:
-  `Occurrence.scalar`/`.frequency` are not a detector-exclusive pair that a
-  future item could still collapse, they are both genuinely populated per
-  occurrence today (see `cleanup.md` Item 1's correction). This proposal
+  `Occurrence.magnitude`/`.band` (renamed from `.scalar`/`.frequency`, see
+  `cleanup.md` Item 1's naming update) are not a detector-exclusive pair
+  that a future item could still collapse, they are both genuinely
+  populated per occurrence today (see `cleanup.md` Item 1's correction). This proposal
   does not touch that either way, single- vs. dual-resident detector objects
   is orthogonal to what shape `Occurrence`/`DetectorReport` carry.
 - Does not introduce a virtual `IDetector` interface or a type-erased

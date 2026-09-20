@@ -11,6 +11,7 @@
 #include "../../detection/detectors/frequency/FrequencyMatchCriteria.h"
 #include "../../detection/inspection/InspectionNames.h"
 #include "../../detection/patterns/PatternNames.h"
+#include "../../param/ParamRegistry.h"
 
 /*
 Node
@@ -486,6 +487,24 @@ void Node::updateRbBaselineState(unsigned long now) {
 
 void Node::configureParameters() {
     configureI2SParameters();
+    registerDetectionParams();
+}
+
+// Bind the currently-editable detection fields into the flat ParamRegistry.
+// Fields live inside _activeDetectionProfile, which is a stable Node member,
+// so the bound pointers stay valid across profile value changes; switching
+// profiles by kind still replaces the whole struct's contents, same as
+// before this registry existed.
+void Node::registerDetectionParams() {
+    detection::FrequencyMatchConfig& freq = _activeDetectionProfile.frequencyMatch;
+    _paramRegistry.addFloat(param::ParamId::Detection_FreqAttackScoreMin, param::ModuleId::Detection,
+                             "detection.freq_attack_score_min", &freq.attackScoreMin, 0.0f, 200000.0f);
+    _paramRegistry.addFloat(param::ParamId::Detection_FreqReleaseScoreMin, param::ModuleId::Detection,
+                             "detection.freq_release_score_min", &freq.releaseScoreMin, 0.0f, 200000.0f);
+    _paramRegistry.addFloat(param::ParamId::Detection_FreqAttackContrastMin, param::ModuleId::Detection,
+                             "detection.freq_attack_contrast_min", &freq.attackContrastMin, 0.0f, 1000.0f);
+    _paramRegistry.addFloat(param::ParamId::Detection_FreqReleaseContrastMin, param::ModuleId::Detection,
+                             "detection.freq_release_contrast_min", &freq.releaseContrastMin, 0.0f, 1000.0f);
 }
 
 void Node::configureI2SParameters() {
@@ -659,6 +678,10 @@ void Node::handleSerialLine(const char* line) {
         Serial.println("RB CMD: RB debug off|events|plot");
         Serial.println("RB CMD: RB summary");
         Serial.println("RB CMD: RB stop");
+        Serial.println("RB CMD: PARAM LIST");
+        Serial.println("RB CMD: PARAM GET <path>");
+        Serial.println("RB CMD: PARAM SET <path> <value>");
+        Serial.println("RB CMD: PARAM DUMP");
         return;
     }
     if (startsWithTokenIgnoreCase(line, "RB PROFILE")) {
@@ -792,6 +815,10 @@ void Node::handleSerialLine(const char* line) {
         Serial.print(_behavior.idleBlockedAfterOwnEmitMs());
         Serial.print(" idleEnabled=");
         Serial.println(_behavior.idleEnabled() ? 1 : 0);
+        return;
+    }
+    if (startsWithTokenIgnoreCase(line, "PARAM")) {
+        handleParamCommand(line);
         return;
     }
     if (startsWithTokenIgnoreCase(line, "RB rebase force")) {
@@ -957,6 +984,103 @@ void Node::handleProfileCommand(const char* line) {
         Serial.println();
     } else {
         Serial.println("RB PROFILE usage=name=TonalPulseFreq|TonalPulseScalar|AmpExperimental");
+    }
+}
+
+// PARAM LIST / GET / SET / DUMP: the generic ParamRegistry command surface.
+// Kept separate from the ad hoc RB PARAM / RB BEHAV commands until those are
+// deliberately migrated (see docs/roadmaps/roadmap-param-config.md).
+void Node::handleParamCommand(const char* line) {
+    char buffer[96];
+    strncpy(buffer, line, sizeof(buffer));
+    buffer[sizeof(buffer) - 1] = '\0';
+
+    char* savePtr = nullptr;
+    char* token = strtok_r(buffer, " ", &savePtr);
+    token = token != nullptr ? strtok_r(nullptr, " ", &savePtr) : nullptr;
+
+    if (token == nullptr) {
+        Serial.println("PARAM usage=PARAM LIST|GET <path>|SET <path> <value>|DUMP");
+        return;
+    }
+
+    if (equalsIgnoreCase(token, "LIST")) {
+        _paramRegistry.list(Serial);
+        return;
+    }
+
+    if (equalsIgnoreCase(token, "DUMP")) {
+        _paramRegistry.dump(Serial);
+        return;
+    }
+
+    if (equalsIgnoreCase(token, "GET")) {
+        const char* path = strtok_r(nullptr, " ", &savePtr);
+        const param::ParamBinding* binding = path != nullptr ? _paramRegistry.find(path) : nullptr;
+        if (binding == nullptr) {
+            Serial.print("PARAM GET path=");
+            Serial.print(path != nullptr ? path : "");
+            Serial.print(" status=");
+            Serial.println(param::paramSetStatusName(param::ParamSetStatus::UnknownParam));
+            return;
+        }
+        Serial.print("PARAM GET path=");
+        Serial.print(path);
+        Serial.print(" module=");
+        Serial.print(param::moduleName(binding->module));
+        Serial.print(" value=");
+        _paramRegistry.printValue(Serial, *binding);
+        Serial.println();
+        return;
+    }
+
+    if (equalsIgnoreCase(token, "SET")) {
+        const char* path = strtok_r(nullptr, " ", &savePtr);
+        const char* value = strtok_r(nullptr, " ", &savePtr);
+        const param::ParamBinding* binding = path != nullptr ? _paramRegistry.find(path) : nullptr;
+
+        if (binding == nullptr) {
+            Serial.print("PARAM SET path=");
+            Serial.print(path != nullptr ? path : "");
+            Serial.print(" status=");
+            Serial.println(param::paramSetStatusName(param::ParamSetStatus::UnknownParam));
+            return;
+        }
+
+        Serial.print("PARAM SET path=");
+        Serial.print(path);
+        Serial.print(" module=");
+        Serial.print(param::moduleName(binding->module));
+        Serial.print(" old=");
+        _paramRegistry.printValue(Serial, *binding);
+
+        const param::ParamSetStatus status = _paramRegistry.applyValue(*binding, value);
+
+        Serial.print(" new=");
+        _paramRegistry.printValue(Serial, *binding);
+        Serial.print(" status=");
+        Serial.println(param::paramSetStatusName(status));
+
+        if (status == param::ParamSetStatus::Ok) {
+            applyParamModule(binding->module);
+        }
+        return;
+    }
+
+    Serial.println("PARAM usage=PARAM LIST|GET <path>|SET <path> <value>|DUMP");
+}
+
+// Dirty ModuleId apply route: a successful PARAM SET only writes the bound
+// field, so the owning module still needs to be told to pick the change up.
+void Node::applyParamModule(param::ModuleId module) {
+    switch (module) {
+        case param::ModuleId::Detection:
+            applyActiveDetectionProfile();
+            break;
+        case param::ModuleId::Node:
+        case param::ModuleId::Behavior:
+        case param::ModuleId::Output:
+            break;
     }
 }
 

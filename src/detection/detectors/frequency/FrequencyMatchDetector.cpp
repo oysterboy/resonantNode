@@ -5,38 +5,6 @@
 #include "../../../app/TimingUtils.h"
 #include <math.h>
 
-// Frequency reason helpers and lifecycle classification.
-namespace {
-
-const char* frequencyRejectReasonFromState(const FrequencyMatchDetector& detector) {
-    if (detector.pendingAccepted) {
-        return "none";
-    }
-    if (detector.pendingClosed) {
-        return detector.noEmitReason[0] != '\0' ? detector.noEmitReason : "unknown";
-    }
-    return detector.gateReason[0] != '\0' ? detector.gateReason : "unknown";
-}
-
-detection::DetectorRejectClass frequencyRejectClassFromReason(const char* reason) {
-    if (reason == nullptr || strcmp(reason, "none") == 0) {
-        return detection::DetectorRejectClass::None;
-    }
-    if (strcmp(reason, "duration_too_short") == 0 || strcmp(reason, "duration_too_long") == 0) {
-        return detection::DetectorRejectClass::Timing;
-    }
-    if (strcmp(reason, "refractory") == 0) {
-        return detection::DetectorRejectClass::Cooldown;
-    }
-    if (strstr(reason, "score") != nullptr || strstr(reason, "contrast") != nullptr || strstr(reason, "frequency") != nullptr) {
-        return detection::DetectorRejectClass::Threshold;
-    }
-
-    return detection::DetectorRejectClass::Unknown;
-}
-
-} // namespace
-
 // Lifecycle / summaries.
 void FrequencyMatchDetector::resetState() {
     evidencePresent = false;

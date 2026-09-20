@@ -4,12 +4,6 @@
 
 namespace {
 
-enum class ProposalShape {
-    Unknown,
-    SinglePulse,
-    PulseSequence,
-};
-
 enum class ProposalEvaluationKind {
     Invalid,
     Valid,
@@ -18,8 +12,15 @@ enum class ProposalEvaluationKind {
 // Private matcher proposal state. This is deliberately not a public contract:
 // future matcher logic may keep several proposals and select the best pattern
 // over a group of occurrences.
+//
+// `supported` records only whether the source occurrence type was
+// recognized (Scalar/Frequency) vs. not (None/unknown). It does not
+// distinguish pattern shapes: the matcher only ever evaluates single
+// occurrences today. If multi-occurrence pattern matching is added later,
+// that is new capability to design then, not a resurrection of a shape
+// enum that was never exercised.
 struct PatternProposal {
-    ProposalShape shape = ProposalShape::Unknown;
+    bool supported = false;
     uint8_t occurrenceCount = 0;
     bool valid = false;
     unsigned long occurrenceId = 0;
@@ -63,7 +64,7 @@ PatternProposal makePatternProposalFromOccurrence(const detection::InspectedOccu
     PatternProposal proposal = {};
     const detection::Occurrence& source = occurrence.occurrence;
     proposal.valid = source.valid;
-    proposal.shape = ProposalShape::SinglePulse;
+    proposal.supported = true;
     proposal.occurrenceCount = 1;
     proposal.occurrenceId = source.occurrenceId;
 
@@ -105,7 +106,7 @@ PatternProposal makePatternProposalFromOccurrence(const detection::InspectedOccu
 
         case detection::OccurrenceType::None:
         default:
-            proposal.shape = ProposalShape::Unknown;
+            proposal.supported = false;
             break;
     }
 
@@ -129,7 +130,7 @@ static detection::StrengthClass strengthForTarget(const PatternProposal& proposa
 }
 
 ProposalEvaluationKind resultKindFromProposal(const PatternProposal& proposal) {
-    if (proposal.shape == ProposalShape::Unknown) {
+    if (!proposal.supported) {
         return ProposalEvaluationKind::Invalid;
     }
     return ProposalEvaluationKind::Valid;

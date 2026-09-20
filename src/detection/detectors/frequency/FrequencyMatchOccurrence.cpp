@@ -1,19 +1,5 @@
 #include "FrequencyMatchDetector.h"
 
-namespace {
-
-const char* frequencyRejectReasonFromState(const FrequencyMatchDetector& detector) {
-    if (detector.pendingAccepted) {
-        return "none";
-    }
-    if (detector.pendingClosed) {
-        return detector.noEmitReason[0] != '\0' ? detector.noEmitReason : "unknown";
-    }
-    return detector.gateReason[0] != '\0' ? detector.gateReason : "unknown";
-}
-
-} // namespace
-
 void FrequencyMatchDetector::capturePendingOccurrence(const AudioSamplePacket& audioSamplePacket) {
     _pendingOccurrence = pendingOccurrence;
     _pendingOccurrence.detectorId = detection::DetectorId::FrequencyMatch;

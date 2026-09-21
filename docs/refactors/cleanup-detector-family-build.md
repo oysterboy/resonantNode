@@ -76,7 +76,7 @@ Sizes from `xtensa-esp32-elf-g++` on the target, after Phase 5c
 |---|---|---|
 | detector not compiled | -1,440 (`ScalarTransientDetector`) | -1,832 (`FrequencyMatchDetector`) |
 | `FeatureHistory` slots | 3 -> 2 (`TonalPulseFreq` reads 2 streams): **-6,184** | 3 -> 3 (both scalar profiles read 3): 0 |
-| `DetectorSelection` dispatch, profile factory for the other family | flash only | flash only |
+| `DetectorSelection` dispatch, the other family's detector code | flash only | flash only |
 | **RAM, approximately** | **-7,600** | **-1,800** |
 
 The asymmetry matters: `TonalPulseFreq` is the stable production profile
@@ -140,25 +140,89 @@ is excluded from scalar-family builds and `detectors/scalar/` from
 frequency-family builds. "Absent, not merely unreachable," same as the
 Analyzer tooling.
 
-### 2. `DetectionRuntime` holds one detector
+### 2. One header carries the switch: `DetectionFamily.h`
+
+The family flag is inspected in exactly one source file. Everything else
+is family-agnostic by construction, not by discipline.
+
+Today the family leaks into 12 files, but almost all of that is the
+`DetectorSelection` *enum* used as a value: profile tags, `switch`es that
+print a name. That is the axis-1 vocabulary this proposal keeps (section
+5), and a firmware that only ever sees one enum value still compiles a
+`switch` over both. Those files need no directive. The only file that
+touches the detector *classes* is `DetectionRuntime.h/.cpp` (51
+references), and even it can be kept clean by putting the `#if` one level
+down:
 
 ```cpp
+// src/detection/DetectionFamily.h -- the only file that reads DETECTOR_FAMILY_*.
 #if defined(DETECTOR_FAMILY_FREQUENCY)
-    FrequencyMatchDetector _detector;
+  #include "detectors/frequency/FrequencyMatchDetector.h"
+  namespace detection {
+    using ActiveDetector       = FrequencyMatchDetector;
+    using ActiveDetectorConfig = FrequencyMatchConfig;
+    constexpr DetectorSelection kCompiledFamily = DetectorSelection::FrequencyMatch;
+    constexpr size_t kFamilyMaxActiveStreams = 2;   // TonalPulseFreq reads 2 streams
+    // The three places the two detectors genuinely differ, as inline shims:
+    inline void updateActiveDetector(ActiveDetector&, const AudioSamplePacket&,
+        const FrequencyBandMeasurementPacket&, const ActiveDetectorConfig&, unsigned long nowMs);
+    inline void applyActiveDetectorConfig(ActiveDetector&, const ActiveDetectorConfig&);
+    inline void resetActiveDetectorRejectSummaries(ActiveDetector&);
+  }
 #elif defined(DETECTOR_FAMILY_SCALAR)
-    ScalarTransientDetector _detector;
+  #include "detectors/scalar/ScalarTransientDetector.h"
+  namespace detection {
+    using ActiveDetector       = ScalarTransientDetector;
+    using ActiveDetectorConfig = ScalarTransientConfig;
+    constexpr DetectorSelection kCompiledFamily = DetectorSelection::ScalarTransient;
+    constexpr size_t kFamilyMaxActiveStreams = 3;   // both scalar profiles read 3
+    // ...same three shims, scalar bodies
+  }
 #else
-#  error "exactly one DETECTOR_FAMILY_* must be defined"
+#  error "define exactly one of DETECTOR_FAMILY_FREQUENCY / DETECTOR_FAMILY_SCALAR"
 #endif
 ```
 
-`_detectorSelection`, `DetectorSelection`, `ActiveDetectorAdapter`,
-`hasPendingDetectorOutput()`'s switch, `captureLatestDetectorReportIfChanged()`'s
-switch, and both `reportGeneration()` ternaries in the Analyzer layer all
-collapse to direct calls on `_detector`. `observeFrame()`'s per-family
-`update(...)` call, the one place the two detectors genuinely differ in
-signature, becomes an `#if` around one call instead of a `switch` around
-two.
+`DetectionRuntime.h` then says `ActiveDetector _detector;` and holds an
+`ActiveDetectorConfig`. Every call that was already identical across the
+two detectors (`popOccurrence`, `hasPendingOccurrence`, `resetState`,
+`latestReport`, `reportGeneration`, `setDiagnosticsEnabled`) becomes a
+plain method call on `_detector`. `_detectorSelection`,
+`ActiveDetectorAdapter`, `hasPendingDetectorOutput()`'s switch,
+`captureLatestDetectorReportIfChanged()`'s switch, and both
+`reportGeneration()` ternaries in the Analyzer layer are deleted, not
+gated.
+
+The three shims are the only family-specific glue that has to exist, and
+they are exactly the three things today's `switch`es were written around:
+
+- `update()` has a different signature per detector (the spec allows this
+  and this proposal keeps it).
+- config application differs: scalar has `applyScalarTransientConfig()`,
+  frequency builds a `FrequencyMatchCriteria::Values` inline each frame.
+- reject-summary reset uses different method names per detector
+  (`resetRejectSummary()` vs `resetAcceptedOccurrenceSummary()` +
+  `resetSelectedRejectSummary()`).
+
+Each shim's body lives inside the matching `#if` branch of
+`DetectionFamily.h`. `DetectionRuntime.cpp` calls the shim and contains
+no `#if DETECTOR_FAMILY` at all. This is the compile-time descendant of
+Phase 3's runtime adapter: same idea, zero runtime cost, and no second
+branch to keep in sync.
+
+Count, for the record: **one source file** (`DetectionFamily.h`) plus
+`platformio.ini` (build flags and the `build_src_filter` that excludes
+the other family's `detectors/` directory), which is configuration, not
+source.
+
+One temptation to resist, because it would make a second directive site:
+compiling out the other family's profile factories in `DetectionProfile.h`.
+Those factories are small config-struct builders; leaving all of them in
+every build costs a few hundred bytes of flash and no RAM, and it keeps
+the single-header property. The wrong-family profiles are refused at
+runtime by `setDetectorSelection()` (section 3), which is the validation
+hook OTA needs anyway. So `DetectionProfile.h` stays directive-free and
+family-agnostic.
 
 ### 3. The Node-facing API keeps its shape; `setDetectorSelection()` validates
 
@@ -175,11 +239,12 @@ checked against the compiled family before it is stored, not after reboot.
 
 ### 4. Profiles become per-family config, thresholds stay params
 
-`DetectionProfile.h`'s factory table is split by family: the frequency
-build compiles `makeTonalPulseFreqProfile()`, the scalar build compiles
-`makeTonalPulseScalarProfile()` and `makeAmpExperimentalProfile()`. A
-profile gains an explicit family field (or the `DetectorSelection` it
-already carries is treated as one).
+`DetectionProfile.h` is **not** split by family (see the end of section 2:
+that would be a second directive site for no RAM). Every build compiles
+every factory. A profile's `detectorSelection` field is its family tag,
+already present today; `setDetectorSelection()` compares it against
+`kCompiledFamily` and refuses a mismatch. So `TonalPulseFreq` exists in a
+scalar-family firmware as a profile the firmware will name but never run.
 
 The existing `ParamRegistry` (`052b03e`) already binds detection thresholds
 as live params on the Node. Nothing changes there; it is already the
@@ -259,20 +324,27 @@ here in case the cross-family habit turns out to matter.
 
 ## Suggested approach
 
-1. Add the family build flags and the two new envs; make `DetectionRuntime`
-   hold one detector; extend `build_src_filter`. Build all five. This step
-   alone delivers the RAM and the dispatch removal, and is
+1. Write `DetectionFamily.h` (aliases, `kCompiledFamily`,
+   `kFamilyMaxActiveStreams`, the three shims) and add the family build
+   flags and the two new envs; extend `build_src_filter`. Build all five.
+2. Point `DetectionRuntime` at `ActiveDetector`/`ActiveDetectorConfig` and
+   route the three differing calls through the shims; delete
+   `_detectorSelection`, `ActiveDetectorAdapter`, and every `switch` on
+   the selection. `grep -c "DETECTOR_FAMILY" src/` must return exactly 1
+   file when this step is done; if it doesn't, the shim set is incomplete.
+   This step delivers the RAM and the dispatch removal and is
    compile-verifiable end to end.
-2. Make `setDetectorSelection()` validate instead of switch; make
-   `applyActiveDetectionProfile()` check family first. Confirm the Node API
-   is unchanged in shape.
-3. Split the profile factory table by family; make
-   `FeatureHistory::kMaxActiveStreams` per-family, with a per-family assert
-   against the factories.
-4. Measure: `sizeof(DetectionRuntime)` and real linked RAM for both Node
+3. Make `setDetectorSelection()` validate against `kCompiledFamily` instead
+   of switch; make `applyActiveDetectionProfile()` check family first.
+   Confirm the Node API is unchanged in shape. `DetectionProfile.h` is not
+   touched.
+4. Make `FeatureHistory::kMaxActiveStreams` take `kFamilyMaxActiveStreams`,
+   with a per-family `static_assert` against that family's profile
+   factories so under-sizing can't compile.
+5. Measure: `sizeof(DetectionRuntime)` and real linked RAM for both Node
    families, recorded in this document.
-5. Hardware: T2 on the frequency-family Analyzer, T3 on the scalar-family
+6. Hardware: T2 on the frequency-family Analyzer, T3 on the scalar-family
    Analyzer, T7 on the frequency-family Node. T6 (profile switch) becomes
    "reboot into the other profile" for the Node and "switch within family"
    for the Analyzer; the cross-family switch no longer exists to test.
-6. Decide the frequency-duration bound separately, with its own SEQ run.
+7. Decide the frequency-duration bound separately, with its own SEQ run.

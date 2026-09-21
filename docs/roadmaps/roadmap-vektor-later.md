@@ -5,6 +5,11 @@ Scope: future VEKTOR exposure after local firmware boundaries stabilize.
 Purpose: keep the external exposure ideas separate from the local runtime
 design.
 
+Normative reference: `docs/specs/vektor-spec.md` (VEKTOR Core Spec v1.1,
+imported for reference). This roadmap only tracks ResonantNode's own
+readiness and sequencing; the resource/protocol semantics themselves are
+defined there, not here.
+
 ---
 
 ## Status legend
@@ -57,6 +62,26 @@ Use ParamRegistry and CommandRouter if they exist.
 Expose stable PatternResult, FieldState, and Behavior state summaries.
 ```
 
+Concrete mapping candidates against `docs/specs/vektor-spec.md` (no
+implementation yet, listed so VEK-002 has a starting point instead of a
+blank slate):
+
+```text
+ParamRegistry path + value   -> SCALAR.v1 (Control Write: scalar.set)
+                                 ParamRegistry.applyValue() is already
+                                 overwrite/last-write-wins/no-lifecycle,
+                                 i.e. already shaped like a VEKTOR Control
+                                 Write, not an Action.
+PatternResult / FieldState   -> STATE (Observed State, batched snapshot)
+Behavior state summary       -> STATE (Observed State)
+Chirp / output emit          -> could be AXIS-shaped (ACTION, tracked,
+                                 moveComplete-style EVENT) or LAMP-shaped
+                                 (Control Write) depending on whether an
+                                 emit needs tracked completion; decide only
+                                 once Output boundary work lands (see
+                                 roadmap-output.md), not now.
+```
+
 ### VEK-003 - protocol / transport later
 
 Status: DEFERRED
@@ -79,15 +104,15 @@ Keep VEKTOR roadmap aligned with local architecture changes.
 ## Future exposure candidates
 
 ```text
-System / firmware identity
-DetectionProfile state
-PatternResult summary
-FieldState
-Behavior state
-OutputStatus later
-ParamRegistry later
-CommandRouter later
-SoundInput / SoundOutput resources later
+System / firmware identity      -> SYSTEM (see vektor-spec.md 3.1)
+DetectionProfile state          -> STATE
+PatternResult summary           -> STATE
+FieldState                      -> STATE
+Behavior state                  -> STATE
+OutputStatus later              -> AXIS or LAMP, TBD (see VEK-002)
+ParamRegistry later             -> SCALAR Control Writes (see VEK-002)
+CommandRouter later             -> CMD dispatch (WRITE / ACTION split)
+SoundInput / SoundOutput resources later -> SENSOR / LAMP or AXIS, TBD
 ```
 
 ## Spec candidates

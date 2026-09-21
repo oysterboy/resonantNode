@@ -71,6 +71,23 @@ The ParamRegistry can expose discover/read/write metadata for VEKTOR resources.
 Public paths remain the stable external resource identity.
 ```
 
+Checked against `docs/specs/vektor-spec.md` (VEKTOR Core Spec v1.1):
+
+```text
+A ParamRegistry path + value is a VEKTOR Control Write (spec 2.2), not an
+Action: overwrite semantics, no lifecycle, last write wins, no cmd_id, no
+ACK required. This already matches how ParamRegistry::applyValue and the
+Serial PARAM SET command behave today.
+
+The natural future resource type is SCALAR (spec 3.1: "numeric control"),
+with scalar.set mapping onto ParamRegistry::applyValue and STATE snapshots
+mapping onto ParamRegistry::dump. AXIS/LAMP-style Actions (tracked, ACKed,
+resolved via EVENT) are a different shape and do not apply to Params.
+
+This is a compatibility check, not new scope: no SCALAR/VEKTOR resource
+type, transport, or protocol code is added by this note.
+```
+
 ## Architecture target - near
 
 ```text
@@ -121,9 +138,13 @@ PARAM DUMP
 [PARTIAL] RB PARAM can tune frequency thresholds at runtime.
 [PARTIAL] RB BEHAV can tune behavior values at runtime.
 [LANDED] AnalyzerTuning is the active param surface for Analyzer sequence tuning.
-[TODO] Bound Field ParamRegistry is not landed.
-[TODO] Serial PARAM LIST / GET / SET / DUMP is not landed.
-[TODO] Dirty ModuleId apply route is not landed.
+[LANDED] Bound Field ParamRegistry (ParamId, ModuleId, ParamType, ParamBinding,
+ParamRegistry, typed add helpers) in src/param/.
+[LANDED] Node registers Detection frequency-match thresholds as flat params
+under the detection.* namespace (Node::registerDetectionParams).
+[LANDED] Serial PARAM LIST / GET / SET / DUMP, separate from RB PARAM / RB BEHAV.
+[LANDED] Dirty ModuleId apply route for ModuleId::Detection
+(Node::applyParamModule -> applyActiveDetectionProfile).
 [DEFERRED] PARAM SAVE / LOAD / RESET.
 [DEFERRED] ESP32 NVS persistence.
 [DEFERRED] WiFi / ESP-NOW / VEKTOR Param transport.
@@ -154,7 +175,7 @@ updated through the analyzer PARAM surface.
 
 ### PAR-002 - minimal Param core
 
-Status: TODO
+Status: LANDED
 
 ```text
 Add the minimal central Param vocabulary:
@@ -170,6 +191,13 @@ also guard against null field pointers, invalid ranges, and capacity overflow.
 Do not add persistence metadata yet.
 Do not add storageKey yet.
 Do not add ParamStore yet.
+
+Landed in src/param/ParamTypes.h and src/param/ParamRegistry.h/.cpp as a
+fixed-capacity (kMaxParams), no-dynamic-allocation table. addUInt16 /
+addUInt32 / addFloat / addBool reject a null field pointer and a duplicate
+path; capacity overflow is rejected once kMaxParams bindings are registered.
+ParamId duplicate rejection is not enforced by the registry itself yet (paths
+are checked; ParamId values are still assigned by hand per module).
 ```
 
 ### PAR-003 - Analyzer param registration
@@ -197,7 +225,7 @@ scoped.
 
 ### PAR-004 - Serial PARAM command surface
 
-Status: TODO
+Status: LANDED
 
 ```text
 Add the first transport frontend: Serial PARAM commands.
@@ -219,11 +247,18 @@ parse_error
 type_mismatch
 out_of_range
 readonly_or_not_writable later if needed
+
+Landed in Node::handleParamCommand (src/modes/resonant/ResonantNodeApp.cpp),
+kept separate from the existing RB PARAM / RB BEHAV lines per the "current
+focus" note below. type_mismatch and readonly_or_not_writable are not
+reachable yet: every bound field is writable and SET always parses against
+the binding's own type, so the only rejects seen today are unknown_param,
+parse_error, and out_of_range.
 ```
 
 ### PAR-005 - dirty ModuleId apply route
 
-Status: TODO
+Status: LANDED
 
 ```text
 After a successful PARAM SET, the registry writes the bound field and returns
@@ -239,6 +274,13 @@ This apply route is required even if the first Analyzer values are read
 directly. It keeps the architecture ready for params that affect derived
 configs, prepared thresholds, hardware setup, buffers, profile state, or
 multi-module behavior later.
+
+Landed as Node::applyParamModule, dispatching on the ModuleId a successful
+PARAM SET returns. The first pass applies Detection instead of Analyzer
+(ModuleId::Detection -> Node::applyActiveDetectionProfile), since Detection
+already had ad hoc runtime-tunable fields via RB PARAM; ModuleId::Node,
+ModuleId::Behavior, and ModuleId::Output are switched on but currently
+no-ops until PAR-003/PAR-006/PAR-008 register params for them.
 ```
 
 ### PAR-006 - Behavior params
@@ -264,7 +306,7 @@ Behavior remains responsible for what these values mean.
 
 ### PAR-007 - Detection / TonalPulse params
 
-Status: DEFERRED
+Status: PARTIAL
 
 ```text
 Extend the same pattern to Detection / TonalPulse.
@@ -282,6 +324,15 @@ detection.own_emit_suppress_ms
 Some of these values may require a stronger apply step because they can affect
 PatternRulesConfig, inspector thresholds, runtime gates, or Analyzer-visible
 profile state.
+
+First slice landed: Node::registerDetectionParams binds the four
+FrequencyMatchConfig thresholds already exposed by the ad hoc RB PARAM
+command onto the registry under detection.freq_attack_score_min,
+detection.freq_release_score_min, detection.freq_attack_contrast_min,
+detection.freq_release_contrast_min. This intentionally does not yet cover
+ScalarTransientConfig, require_amp_support, own_emit_suppress_ms, or a
+TonalPulse-specific path prefix; those stay DEFERRED until a real need shows
+up, to keep this a small addition rather than a full Detection param sweep.
 ```
 
 ### PAR-008 - Output params
@@ -417,13 +468,16 @@ separate from Params.
 ## Current / first implementation focus
 
 ```text
-Build Analyzer params only.
-Use runtime-only Bound Field ParamRegistry.
-Use Serial PARAM LIST / GET / SET / DUMP.
+Landed: runtime-only Bound Field ParamRegistry, applied first to Detection
+frequency-match thresholds on the Node (resonant) build, with Serial
+PARAM LIST / GET / SET / DUMP.
 No persistence.
 No remote transport.
-Keep current RB PARAM / RB BEHAV separate until deliberately migrated or
+Current RB PARAM / RB BEHAV stay separate until deliberately migrated or
 removed.
+
+Next: Analyzer params (PAR-003) still use the pre-registry AnalyzerTuning
+surface and have not been moved onto ParamRegistry.
 ```
 
 ## Spec candidates

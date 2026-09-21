@@ -1,0 +1,278 @@
+# Architecture Proposal — Detector Family Is a Build, Profile Is Config, Thresholds Are Params
+
+Status: proposal, decided in principle 2026-09-21, not yet implemented.
+Supersedes: `docs/refactors/cleanup-detector-ownership.md` (the union-of-two-
+detectors proposal, deferred on measurement). This gets everything that
+proposal wanted, and more, without any of its lifetime risk.
+Related to: `docs/refactors/cleanup-analyzer-node-isolation.md` (same
+mechanism, same principle), `docs/roadmaps/roadmap-param-config.md`
+(PAR-013, PAR-014: this is that split applied to detection).
+
+---
+
+## The model in one table
+
+| Layer | Decided by | Changes via | Example |
+|---|---|---|---|
+| **Detector family** | build flag | Firmware OTA (FWOTA) | `FrequencyMatch` vs `ScalarTransient` |
+| **Profile** | Config, per node | OTA + reboot to apply | `TonalPulseScalar` vs `AmpExperimental` |
+| **Thresholds** | Params, per node | live, no reboot | `freqAttackScore=18000` |
+
+Each layer changes only what the layer below can't: a family decides which
+detector class exists at all, a profile decides the inspection plan and
+which feature streams are worth recording, params tune numbers inside a
+plan that is already running.
+
+This is not a new idea layered onto the roadmap. `roadmap-param-config.md`
+already draws these lines: PAR-013 keeps *Firmware OTA changes firmware*
+apart from *Remote Param Update changes params*, and PAR-014 says *Config is
+identity, boot, network, hardware, and may require reboot* while *Params are
+live tuning*. A detector family is firmware. A profile is config. That is
+the whole proposal; the rest of this document is what falls out of it.
+
+The two runtime modes differ in what they may switch:
+
+- **Analyzer**: switches profiles *within* the compiled family, live, in one
+  session (`TonalPulseScalar` vs `AmpExperimental`). Cross-family comparison
+  is two firmwares.
+- **Node**: receives a profile as config, stores it, reboots, applies it. A
+  profile carries its family; a node rejects a profile from a family it
+  wasn't built for, instead of silently doing something else.
+
+---
+
+## Why this is the right replacement for the union proposal
+
+`cleanup-detector-ownership.md` measured its own saving at 1,440 bytes and
+found a stale-report dispatch that would be undefined behavior under a
+union on the profile-switch path. It was deferred on those numbers. This
+proposal gets the same object-count reduction by not compiling the other
+detector, which is:
+
+- **the full saving, not `max`**: the family you don't build costs nothing,
+  not `max(1832, 1440)`. Frequency-family Node saves 1,440 (no
+  `ScalarTransientDetector`); scalar-family Node saves 1,832.
+- **no lifetime management**: one concrete member, constructed once, no
+  placement-new, no inactive union member to read by accident. The
+  hazard that sank the union simply has no object to hit.
+- **dispatch removed, not unified**: every `switch (_detectorSelection)`,
+  the `DetectorSelection` runtime state, and Phase 3's
+  `ActiveDetectorAdapter` go away in *both* builds, since the Analyzer is
+  also per-family. Phase 3 unified two branches into one path; this deletes
+  the path's reason to exist.
+- **Phase 0 stops being a deletion decision**: "keep or consolidate
+  `FrequencyMatchDetector`" becomes "which families do we still build." If
+  field data says scalar wins, stop building the frequency firmware. Nothing
+  has to be deleted to find out.
+
+---
+
+## What it saves, measured
+
+Sizes from `xtensa-esp32-elf-g++` on the target, after Phase 5c
+(`FeatureHistory` at 3 slots x 256 bins x 24 bytes):
+
+| | Frequency-family Node | Scalar-family Node |
+|---|---|---|
+| detector not compiled | -1,440 (`ScalarTransientDetector`) | -1,832 (`FrequencyMatchDetector`) |
+| `FeatureHistory` slots | 3 -> 2 (`TonalPulseFreq` reads 2 streams): **-6,184** | 3 -> 3 (both scalar profiles read 3): 0 |
+| `DetectorSelection` dispatch, profile factory for the other family | flash only | flash only |
+| **RAM, approximately** | **-7,600** | **-1,800** |
+
+The asymmetry matters: `TonalPulseFreq` is the stable production profile
+(`implementation-status.md`), so the *production* Node is the frequency
+family and gets the larger saving. Node RAM after this session's other work
+is 59,996 bytes; the frequency-family Node would land around 52,400.
+
+`FeatureHistory::kMaxActiveStreams` becomes a per-family constant: the
+maximum over that family's profiles, still `static_assert`ed against
+`kMaxInspectionModules` so it can't be under-sized.
+
+### What does not shrink: bin depth for the frequency family
+
+`kBinsPerStream = 256` is sized to the longest accepted occurrence (240 ms,
+`AmpExperimental`) plus a 10 ms look-back. One might expect the frequency
+family to need less. It needs *more*, or rather it has no bound to size
+against: `FrequencyMatchDetector::closePending()` accepts on
+`_pendingDurationMs >= minDurationMs` alone. `_pendingMaxDurationMs` is set
+to 0 and reported in `DetectorReport.thresholds.maxDurationMs`, but never
+enforced. A frequency occurrence can run indefinitely.
+
+That means a latent, pre-existing behavior worth recording here even though
+this proposal doesn't change it: a frequency occurrence longer than about
+246 ms already outruns the history buffer, and inspection anchored at its
+start degrades to `HistoryWindowIncomplete`. Nobody has reported it, which
+probably means real frequency occurrences are well under 246 ms in practice;
+but it is unbounded by code, only by acoustics. Either bound it (a
+`maxDurationMs` the detector actually enforces, which changes detection
+behavior and needs its own SEQ run) or accept that frequency-family bin
+depth stays at 256. This proposal takes the second option and leaves the
+first as a separate decision.
+
+---
+
+## Proposed Change
+
+### 1. A build flag per family, one Node and one Analyzer env each
+
+`platformio.ini` grows a family dimension, following the existing
+`ANALYZER_MODE` pattern:
+
+```ini
+[env:esp32dev]               ; Node, frequency family (production default)
+build_flags = ... -D DETECTOR_FAMILY_FREQUENCY
+
+[env:esp32dev-scalar]        ; Node, scalar family
+build_flags = ... -D DETECTOR_FAMILY_SCALAR
+
+[env:esp32dev-analyzer]      ; Analyzer, frequency family
+[env:esp32dev-analyzer-scalar]
+
+[env:esp32dev-emitter]       ; no detection, no family
+```
+
+Five environments instead of three. That is the cost of the design and
+should be stated plainly rather than hidden: T1 becomes "all five link,"
+and the SEQ battery is already per-profile so it doesn't grow.
+
+`build_src_filter` extends the Phase 5a pattern: `detectors/frequency/`
+is excluded from scalar-family builds and `detectors/scalar/` from
+frequency-family builds. "Absent, not merely unreachable," same as the
+Analyzer tooling.
+
+### 2. `DetectionRuntime` holds one detector
+
+```cpp
+#if defined(DETECTOR_FAMILY_FREQUENCY)
+    FrequencyMatchDetector _detector;
+#elif defined(DETECTOR_FAMILY_SCALAR)
+    ScalarTransientDetector _detector;
+#else
+#  error "exactly one DETECTOR_FAMILY_* must be defined"
+#endif
+```
+
+`_detectorSelection`, `DetectorSelection`, `ActiveDetectorAdapter`,
+`hasPendingDetectorOutput()`'s switch, `captureLatestDetectorReportIfChanged()`'s
+switch, and both `reportGeneration()` ternaries in the Analyzer layer all
+collapse to direct calls on `_detector`. `observeFrame()`'s per-family
+`update(...)` call, the one place the two detectors genuinely differ in
+signature, becomes an `#if` around one call instead of a `switch` around
+two.
+
+### 3. The Node-facing API keeps its shape; `setDetectorSelection()` validates
+
+`cleanup-analyzer-node-isolation.md`'s non-negotiable constraint holds:
+`ResonantNodeApp` calls the same methods with the same signatures.
+`setDetectorSelection(DetectorSelection)` stays, but its job changes from
+"switch" to "check": if the requested family is not the compiled one, it
+refuses, loudly (return `false`, or set a rejected-profile flag the mode
+shell prints). `applyActiveDetectionProfile()` checks the family before
+applying anything else, so a mismatched profile never half-applies.
+
+This is the hook the OTA layer needs: a profile arriving over the air is
+checked against the compiled family before it is stored, not after reboot.
+
+### 4. Profiles become per-family config, thresholds stay params
+
+`DetectionProfile.h`'s factory table is split by family: the frequency
+build compiles `makeTonalPulseFreqProfile()`, the scalar build compiles
+`makeTonalPulseScalarProfile()` and `makeAmpExperimentalProfile()`. A
+profile gains an explicit family field (or the `DetectorSelection` it
+already carries is treated as one).
+
+The existing `ParamRegistry` (`052b03e`) already binds detection thresholds
+as live params on the Node. Nothing changes there; it is already the
+"Params" row of the table. What's new is the "Config" row: a persisted
+profile choice, applied at boot. That is PAR-010's persistence backend
+(NVS) applied to one value, and it is explicitly *after* PAR-010 in the
+roadmap's own ordering, so this proposal does not pull persistence forward.
+Until PAR-010 lands, the Node's profile is whatever the build's default
+factory returns, which is what it is today.
+
+### 5. Axis-1 vocabulary stays
+
+`DetectorId::ScalarTransient`/`FrequencyMatch`, `OccurrenceType::Scalar`/
+`Frequency`, and `DetectorReport.scalar`/`.frequency` are unchanged. They
+are shared vocabulary across firmwares: an Analyzer log from a scalar-family
+node and one from a frequency-family node must still name their detector
+the same way. Only the *runtime dispatch* between the two values disappears;
+in any given firmware exactly one value ever appears.
+
+---
+
+## What this does not do
+
+- Does not consolidate to one family. Both remain buildable; which ones are
+  *built* is a release decision, informed by Phase 0's field data.
+- Does not touch detector internals, thresholds, or lifecycle logic.
+- Does not change `Occurrence`, `DetectorReport`, `PatternResult`, or
+  `FieldState` shapes.
+- Does not implement OTA or NVS persistence. It defines what a delivered
+  profile must carry (a family) and where the check goes. PAR-010/PAR-013
+  own the transport and storage.
+- Does not bound frequency occurrence duration (see above). Separate
+  decision, separate SEQ run.
+
+---
+
+## What it removes, said plainly
+
+The Analyzer loses same-session cross-family comparison: `TonalPulseFreq`
+against `TonalPulseScalar` is two flashes, not one command. In practice the
+SEQ battery already runs them as separate 50-trial sessions (T2 and T3), and
+Phase 0's matched-condition trials were never going to interleave the two
+mid-sequence, so nothing in the current verification workflow depends on
+it. But it is a real affordance going away, and if someone is in the habit
+of `RB PROFILE`-flipping between families to eyeball behavior, that habit
+breaks.
+
+The alternative, keeping both detectors in the Analyzer build only, would
+preserve it at the cost of keeping all the `DetectorSelection` dispatch
+alive under `#ifdef ANALYZER_MODE`. That's a coherent design too; it just
+gives up the "dispatch removed, not unified" half of the win and keeps two
+code shapes for `DetectionRuntime` to reason about. Not chosen, recorded
+here in case the cross-family habit turns out to matter.
+
+---
+
+## Risks
+
+- **Environment matrix.** Three envs become five. Every "build all"
+  instruction in the docs and any CI needs updating, and T1 means all five.
+  Manageable, but it is the thing most likely to be forgotten.
+- **The family check must be unmissable.** A profile from the wrong family
+  reaching a node must fail visibly at the point of arrival, not degrade
+  quietly at boot. Until OTA exists this is only `RB PROFILE` on Serial,
+  where a printed refusal is enough.
+- **`FeatureHistory` sizing is now per-family.** Get the per-family maximum
+  wrong and inspection degrades to `HistoryWindowIncomplete` for the profile
+  that needed the extra slot. The `static_assert` against
+  `kMaxInspectionModules` bounds it above; a per-family assert against the
+  actual profile factories would bound it exactly.
+- **Ordering with PAR-010.** The "Config" row is not real until profile
+  choice persists across reboot. Landing this before persistence means the
+  Node's profile is build-default-only, which is today's behavior; that's
+  fine, but don't describe OTA profiles as available until NVS is.
+
+---
+
+## Suggested approach
+
+1. Add the family build flags and the two new envs; make `DetectionRuntime`
+   hold one detector; extend `build_src_filter`. Build all five. This step
+   alone delivers the RAM and the dispatch removal, and is
+   compile-verifiable end to end.
+2. Make `setDetectorSelection()` validate instead of switch; make
+   `applyActiveDetectionProfile()` check family first. Confirm the Node API
+   is unchanged in shape.
+3. Split the profile factory table by family; make
+   `FeatureHistory::kMaxActiveStreams` per-family, with a per-family assert
+   against the factories.
+4. Measure: `sizeof(DetectionRuntime)` and real linked RAM for both Node
+   families, recorded in this document.
+5. Hardware: T2 on the frequency-family Analyzer, T3 on the scalar-family
+   Analyzer, T7 on the frequency-family Node. T6 (profile switch) becomes
+   "reboot into the other profile" for the Node and "switch within family"
+   for the Analyzer; the cross-family switch no longer exists to test.
+6. Decide the frequency-duration bound separately, with its own SEQ run.

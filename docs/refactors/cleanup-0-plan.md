@@ -370,8 +370,30 @@ Analyzer RAM moved in step: 99,564 -> 85,124. Emitter unchanged in RAM.
   plan change, which is the intended behavior, but confirm no inspection
   runs against a just-cleared buffer on the switch frame.
 
-**Gate:** Phase 6 is not gated on 5b any more (5b is deferred, not a
-prerequisite). It is gated on hardware verification of everything above.
+### Phase 5d — `cleanup-detector-family-build.md` (proposal, not started)
+
+Supersedes 5b. Detector family becomes a build flag (one Node and one
+Analyzer env per family), profile becomes per-node config applied at
+reboot, thresholds stay live params — which is `roadmap-param-config.md`'s
+own FWOTA / Config / Params split applied to detection. Gets 5b's full
+saving (the other detector isn't compiled at all) plus deletes every
+`DetectorSelection` dispatch, including Phase 3's adapter, in both builds.
+Measured expectation: frequency-family Node about -7,600 bytes (it also
+drops to 2 `FeatureHistory` slots), scalar-family Node about -1,800.
+
+Also records a pre-existing finding: `FrequencyMatchDetector` has no upper
+duration bound, so its family can't shrink history depth, and a frequency
+occurrence over ~246 ms already outruns the 256-bin buffer today.
+
+Costs: five build environments instead of three, and the Analyzer loses
+same-session cross-family comparison (two flashes instead of one command).
+Both stated in the doc. Decided in principle; implementation is its own
+pass with its own approach list.
+
+**Gate:** Phase 6 is not gated on 5b any more (5b is superseded, not a
+prerequisite). Everything above is gated on hardware verification; 5d is
+additionally gated on deciding whether the environment-matrix cost is
+acceptable, which is a release-process question, not a code one.
 
 ---
 
@@ -446,4 +468,5 @@ decision is: consolidate" section instead:
 | 5a | analyzer-node-isolation (implemented, hardware verification outstanding) | Phases 1-4 | T1, T8 (done); T2, T3, T6, T7 (outstanding) |
 | 5b | detector-ownership (deferred on measurement: 1,440 bytes, UB hazard) | Phase 5a | T5 (done, led to deferral) |
 | 5c | FeatureHistory (two commits, -14,440 bytes; not in a proposal doc) | measured during 5b | T1 (done); T2, T3, T6, T7 (outstanding) |
+| 5d | detector-family-build (proposal; supersedes 5b) | — | not started |
 | 6 | third detector (optional) | Phase 5b | T1, T6, T7 |

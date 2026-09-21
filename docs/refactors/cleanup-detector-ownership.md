@@ -1,7 +1,11 @@
 # Architecture Proposal — Single Active Detector Ownership
 
-Status: **deferred 2026-09-21**, on measurement. Not rejected: revisit when a
-third detector kind exists, per open question 4 below. See "Decision" next.
+Status: **superseded 2026-09-21** by `cleanup-detector-family-build.md`,
+which makes the detector family a build-time choice and so gets this
+proposal's full object-count reduction (not `max`, the whole other detector)
+with no union and no lifetime management. It was first deferred on
+measurement, see "Decision" next; the family-build proposal is what the
+measurement pointed at.
 Related to: `docs/refactors/cleanup.md` (this builds on and is complementary
 to that pass; it does not replace it).
 

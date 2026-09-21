@@ -543,6 +543,35 @@ while (activeDetector.popOccurrence(occurrence)) {
 `drainOccurrenceEvaluator()` and the second drain in `observeFrame()` go
 away with it.
 
+Decide while `makeVerdict()` is being written, because that is where it
+lives: **the verdict is uniform in shape but not in meaning.** Its decision
+fields (`valid`, `accepted`, `supportMatched`, `firstFailedRequirement*`)
+are genuinely detector-agnostic, expressed in `StrengthClass` and
+`InspectionTarget`. Its `primary*` summary fields are not: the `switch` on
+`occurrenceType` in `makeProposalFromOccurrence()` fills the same slot with
+different physical quantities:
+
+| field | scalar occurrence | frequency occurrence |
+|---|---|---|
+| `primaryStrength` | peak amplitude | Goertzel `band.score` |
+| `primaryOnsetStrength` | onset amplitude | `band.contrast` |
+| `primaryReleaseStrength` | release amplitude | `band.contrast` again |
+| `primaryAmbientBaseline` | measured baseline | hardcoded `0.0f` |
+
+Today the only Node-side reader is `ResonantBehavior`, which keeps the max
+`primaryStrength` in a window as `_activityLevel` and reads it only as
+`> 0.0f`. So it is harmless today, and a live wire: the first
+`_activityLevel > <number>` or gain-scaled-by-strength makes the Node
+behave differently per detector family with no visible reason, and under
+Phase 5d that is a bug that appears in one firmware and not the other.
+Either drop the punned strength fields from the verdict (Behavior's one use
+is already implied by `valid`) or normalize them to a `StrengthClass` like
+the decision fields. The timing fields (`primaryStartMs`, `primaryHeardAtMs`,
+`primaryAcceptedMs`, `primaryDurationMs`) are fine, milliseconds are the
+same in every family. Whichever way, the rule for the verdict should be
+stated in `OccurrenceVerdict.h`: **only detector-agnostic quantities
+cross this boundary.**
+
 Order of operations, the one subtlety: today `_fieldStateTracker.observeOccurrenceVerdict()`
 runs in the evaluator drain, after *all* occurrences popped this frame
 have been inspected. After the merge it runs per occurrence, interleaved.

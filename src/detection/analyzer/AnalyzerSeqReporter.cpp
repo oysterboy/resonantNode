@@ -26,14 +26,14 @@ const char* pipelineIntegrityReasonName(detection::PipelineIntegrityReason reaso
             return "missing_detector_report";
         case detection::PipelineIntegrityReason::MissingInspectedOccurrence:
             return "missing_inspected_occurrence";
-        case detection::PipelineIntegrityReason::MissingPatternResult:
-            return "missing_pattern_result";
+        case detection::PipelineIntegrityReason::MissingVerdict:
+            return "missing_verdict";
         case detection::PipelineIntegrityReason::OccurrenceIdMismatch:
             return "occurrence_id_mismatch";
         case detection::PipelineIntegrityReason::InspectionQueueOverflow:
             return "inspection_queue_overflow";
-        case detection::PipelineIntegrityReason::PatternResultQueueOverflow:
-            return "pattern_result_queue_overflow";
+        case detection::PipelineIntegrityReason::VerdictQueueOverflow:
+            return "verdict_queue_overflow";
         case detection::PipelineIntegrityReason::PipelineEventQueueOverflow:
             return "pipeline_event_queue_overflow";
         default:
@@ -47,11 +47,11 @@ void printCanonicalStageLine(const char* prefix, const AnalyzerReport& report, b
     Serial.print(report.expected.windowStartMs);
     Serial.print(" expected.end_ms=");
     Serial.print(report.expected.windowEndMs);
-    Serial.print(" pattern.type=");
+    Serial.print(" verdict.type=");
     Serial.print(report.primaryPattern.type != nullptr ? report.primaryPattern.type : "unknown");
-    Serial.print(" pattern.valid=");
-    Serial.print(report.primaryPattern.accepted ? 1 : 0);
-    Serial.print(" pattern.reason=");
+    Serial.print(" verdict.valid=");
+    Serial.print(report.primaryPattern.valid ? 1 : 0);
+    Serial.print(" verdict.reason=");
     Serial.print(report.primaryPattern.reason != nullptr ? report.primaryPattern.reason : "none");
     Serial.print(" analyzer.result=");
     Serial.print(analyzerResultName(report.classification.result));
@@ -151,7 +151,7 @@ void AnalyzerApp::printSequenceTrial(const AnalyzerReport& report) const {
     }
     Serial.print(" source_strength=");
     Serial.print(report.occurrences.primaryStrength, 1);
-    Serial.print(" pattern_confidence=");
+    Serial.print(" verdict_confidence=");
     Serial.print(report.primaryPattern.confidence, 2);
     Serial.print(" dup=");
     Serial.print(report.debug.duplicates);
@@ -398,10 +398,10 @@ void AnalyzerApp::printSequenceDetailCanonical(const AnalyzerReport& report) con
     Serial.print(report.integrity.occurrenceMatched ? 1 : 0);
     Serial.print(" integrity.inspection_present=");
     Serial.print(report.integrity.inspectionPresent ? 1 : 0);
-    Serial.print(" integrity.pattern_report_present=");
-    Serial.print(report.integrity.patternReportPresent ? 1 : 0);
-    Serial.print(" integrity.pattern_result_present=");
-    Serial.print(report.integrity.patternResultPresent ? 1 : 0);
+    Serial.print(" integrity.evaluator_report_present=");
+    Serial.print(report.integrity.evaluatorReportPresent ? 1 : 0);
+    Serial.print(" integrity.verdict_present=");
+    Serial.print(report.integrity.verdictPresent ? 1 : 0);
     Serial.print(" integrity.complete=");
     Serial.print(report.integrity.correlationComplete ? 1 : 0);
     Serial.print(" integrity.queue_overflow=");
@@ -413,13 +413,13 @@ void AnalyzerApp::printSequenceDetailCanonical(const AnalyzerReport& report) con
     Serial.print(report.classification.result == AnalyzerResult::Expected || report.classification.result == AnalyzerResult::Late
         ? "confirmed"
         : "rejected");
-    Serial.print(" pattern.first_failed_requirement_index=");
+    Serial.print(" verdict.first_failed_requirement_index=");
     Serial.print(report.primaryPattern.firstFailedRequirementIndex);
-    Serial.print(" pattern.first_failed_label=");
+    Serial.print(" verdict.first_failed_label=");
     Serial.print(detection::inspectionTargetName(report.primaryPattern.firstFailedTarget));
-    Serial.print(" pattern.observed_class=");
+    Serial.print(" verdict.observed_class=");
     Serial.print(report.primaryPattern.firstFailedObservedStrength != nullptr ? report.primaryPattern.firstFailedObservedStrength : "unknown");
-    Serial.print(" pattern.required_class=");
+    Serial.print(" verdict.required_class=");
     Serial.print(report.primaryPattern.firstFailedRequiredStrength != nullptr ? report.primaryPattern.firstFailedRequiredStrength : "unknown");
     Serial.println();
 }

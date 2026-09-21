@@ -7,7 +7,7 @@ namespace detection {
 /*
 FieldState
 
-Acoustic context summary used by Behavior alongside PatternResults.
+Acoustic context summary used by Behavior alongside OccurrenceVerdicts.
 FieldState is not a pattern result and does not decide behavior by itself.
 */
 struct FieldStateConfig {

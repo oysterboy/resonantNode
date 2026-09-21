@@ -6,7 +6,7 @@
 
 #include "field/FieldState.h"
 #include "inspection/InspectorTypes.h"
-#include "patterns/PatternMatcherTypes.h"
+#include "evaluation/OccurrenceEvaluatorTypes.h"
 
 namespace detection {
 
@@ -103,7 +103,7 @@ struct DetectionProfile {
     FieldStateConfig fieldStateConfig = {};
 };
 
-inline const InspectionModuleConfig* patternMatcherFirstEnabledRequirement(const InspectionPlan& plan) {
+inline const InspectionModuleConfig* evaluatorFirstEnabledRequirement(const InspectionPlan& plan) {
     const size_t count = plan.count > kMaxInspectionModules ? kMaxInspectionModules : plan.count;
     for (size_t i = 0; i < count; ++i) {
         if (plan.modules[i].enabled) {

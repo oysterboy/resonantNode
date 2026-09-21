@@ -13,7 +13,7 @@
 #include "../../detection/features/FreqBandStream.h"
 #include "../../output/ChirpOutput.h"
 #include "../../behavior/ResonantBehavior.h"
-#include "../../detection/patterns/PatternResult.h"
+#include "../../detection/evaluation/OccurrenceVerdict.h"
 #include "../../param/ParamRegistry.h"
 #include "ResonantNodeDebug.h"
 
@@ -29,7 +29,7 @@ Does not implement behavior decisions, classify patterns, or generate waveforms.
 
 class Node {
 public:
-    using PatternResult = detection::PatternResult;
+    using OccurrenceVerdict = detection::OccurrenceVerdict;
 
     enum class RbLogMode {
         Off,

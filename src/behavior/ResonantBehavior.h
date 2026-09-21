@@ -3,14 +3,14 @@
 
 #include "BehaviorProfile.h"
 #include "../detection/field/FieldState.h"
-#include "../detection/patterns/PatternResult.h"
+#include "../detection/evaluation/OccurrenceVerdict.h"
 #include "../output/ChirpOutput.h"
 
 /*
 ResonantBehavior
 
 Owns the local reaction state machine for ResonantNode.
-Consumes PatternResult and FieldState.
+Consumes OccurrenceVerdict and FieldState.
 Decides behaviorEligible, blocking reasons, idle timing, wait/refractory/self-suppression,
 and requested chirp pattern.
 
@@ -43,8 +43,8 @@ public:
 
     void resetState();
     void configure(const BehaviorGateConfig& profile);
-    BehaviorDecision handlePatternResult(const detection::PatternResult& result, unsigned long now);
-    BehaviorDecision handlePatternResult(const detection::PatternResult& result, const detection::FieldState& field, unsigned long now);
+    BehaviorDecision handleOccurrenceVerdict(const detection::OccurrenceVerdict& result, unsigned long now);
+    BehaviorDecision handleOccurrenceVerdict(const detection::OccurrenceVerdict& result, const detection::FieldState& field, unsigned long now);
     void update(unsigned long now);
     void seedIdleSchedule(unsigned long now);
 
@@ -84,8 +84,8 @@ public:
     BehaviorDecision lastBlockReason() const;
     const char* lastDecisionName() const;
     const char* lastBlockReasonName() const;
-    detection::PatternType lastPatternType() const;
-    const char* lastPatternTypeName() const;
+    detection::VerdictType lastVerdictType() const;
+    const char* lastVerdictTypeName() const;
     unsigned long lastHeardMs() const;
     unsigned long lastEmitMs() const;
     unsigned long waitUntilMs() const;
@@ -140,7 +140,7 @@ private:
     unsigned long _waitUntilMs = 0;
     unsigned long _refractoryUntilMs = 0;
     unsigned long _ownEmitDetectionSuppressUntilMs = 0;
-    detection::PatternType _lastPatternType = detection::PatternType::None;
+    detection::VerdictType _lastVerdictType = detection::VerdictType::None;
     unsigned long _lastPatternHeardAtMs = 0;
     unsigned long _lastDecisionMs = 0;
     BehaviorDecision _lastDecision = BehaviorDecision::None;

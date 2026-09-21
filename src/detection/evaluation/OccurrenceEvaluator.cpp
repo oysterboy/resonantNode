@@ -1,4 +1,4 @@
-#include "PatternMatcher.h"
+#include "OccurrenceEvaluator.h"
 
 #include <string.h>
 
@@ -19,7 +19,7 @@ enum class ProposalEvaluationKind {
 // occurrences today. If multi-occurrence pattern matching is added later,
 // that is new capability to design then, not a resurrection of a shape
 // enum that was never exercised.
-struct PatternProposal {
+struct OccurrenceProposal {
     bool supported = false;
     uint8_t occurrenceCount = 0;
     bool valid = false;
@@ -60,8 +60,8 @@ detection::TransientEvidence scalarTransientEvidenceFromOccurrence(const detecti
     return transient;
 }
 
-PatternProposal makePatternProposalFromOccurrence(const detection::InspectedOccurrence& occurrence) {
-    PatternProposal proposal = {};
+OccurrenceProposal makeProposalFromOccurrence(const detection::InspectedOccurrence& occurrence) {
+    OccurrenceProposal proposal = {};
     const detection::Occurrence& source = occurrence.occurrence;
     proposal.valid = source.valid;
     proposal.supported = true;
@@ -113,7 +113,7 @@ PatternProposal makePatternProposalFromOccurrence(const detection::InspectedOccu
     return proposal;
 }
 
-static detection::StrengthClass strengthForTarget(const PatternProposal& proposal, detection::InspectionTarget target) {
+static detection::StrengthClass strengthForTarget(const OccurrenceProposal& proposal, detection::InspectionTarget target) {
     switch (target) {
         case detection::InspectionTarget::Amp:
             return proposal.supportStrength;
@@ -129,25 +129,25 @@ static detection::StrengthClass strengthForTarget(const PatternProposal& proposa
     }
 }
 
-ProposalEvaluationKind resultKindFromProposal(const PatternProposal& proposal) {
+ProposalEvaluationKind resultKindFromProposal(const OccurrenceProposal& proposal) {
     if (!proposal.supported) {
         return ProposalEvaluationKind::Invalid;
     }
     return ProposalEvaluationKind::Valid;
 }
 
-detection::PatternRejectReason supportRejectReason(detection::StrengthClass supportStrength) {
+detection::VerdictRejectReason supportRejectReason(detection::StrengthClass supportStrength) {
     return supportStrength == detection::StrengthClass::Unknown
-        ? detection::PatternRejectReason::MissingSupport
-        : detection::PatternRejectReason::SupportTooLow;
+        ? detection::VerdictRejectReason::MissingSupport
+        : detection::VerdictRejectReason::SupportTooLow;
 }
 
-bool requirementPassed(const PatternProposal& proposal, const detection::InspectionModuleConfig& module, detection::StrengthClass& observedStrength) {
+bool requirementPassed(const OccurrenceProposal& proposal, const detection::InspectionModuleConfig& module, detection::StrengthClass& observedStrength) {
     observedStrength = strengthForTarget(proposal, module.target);
     return observedStrength >= module.minimumStrength;
 }
 
-void fillResultFromProposal(detection::PatternResult& result, const PatternProposal& proposal, unsigned long nowMs) {
+void fillResultFromProposal(detection::OccurrenceVerdict& result, const OccurrenceProposal& proposal, unsigned long nowMs) {
     result.occurrenceCount = proposal.occurrenceCount;
     result.occurrenceId = proposal.occurrenceId;
     result.primaryStartMs = proposal.startMs;
@@ -162,18 +162,18 @@ void fillResultFromProposal(detection::PatternResult& result, const PatternPropo
     result.primaryAudioOverflow = proposal.audioOverflowDuringProposal;
 }
 
-detection::PatternResult evaluateSinglePulse(
-    const PatternProposal& proposal,
-    const detection::PatternMatcherConfig& config,
+detection::OccurrenceVerdict evaluateSinglePulse(
+    const OccurrenceProposal& proposal,
+    const detection::OccurrenceEvaluatorConfig& config,
     unsigned long nowMs
 ) {
-    detection::PatternResult result = {};
+    detection::OccurrenceVerdict result = {};
     fillResultFromProposal(result, proposal, nowMs);
-    result.type = detection::PatternType::SinglePulse;
-    result.reasonCode = detection::PatternReasonCode::FromOccurrence;
-    result.rejectReason = detection::PatternRejectReason::None;
-    result.patternMatched = true;
-    result.patternAccepted = false;
+    result.type = detection::VerdictType::SinglePulse;
+    result.reasonCode = detection::VerdictReasonCode::FromOccurrence;
+    result.rejectReason = detection::VerdictRejectReason::None;
+    result.proposalMatched = true;
+    result.accepted = false;
     result.supportMatched = true;
     result.valid = false;
     const ProposalEvaluationKind proposalKind = resultKindFromProposal(proposal);
@@ -200,25 +200,25 @@ detection::PatternResult evaluateSinglePulse(
                 firstFailedObservedStrength = observedStrength;
                 firstFailedRequiredStrength = requirement.minimumStrength;
                 result.rejectReason = supportRejectReason(observedStrength);
-                result.reasonCode = detection::PatternReasonCode::UnsupportedPattern;
+                result.reasonCode = detection::VerdictReasonCode::SupportRequirementFailed;
                 break;
             }
         }
     }
 
-    result.patternAccepted = result.patternMatched && result.supportMatched;
-    result.valid = result.patternAccepted;
+    result.accepted = result.proposalMatched && result.supportMatched;
+    result.valid = result.accepted;
     if (result.valid) {
-        result.rejectReason = detection::PatternRejectReason::None;
-        result.reasonCode = detection::PatternReasonCode::FromOccurrence;
-    } else if (proposalKind == ProposalEvaluationKind::Valid && result.reasonCode == detection::PatternReasonCode::None) {
-        result.reasonCode = detection::PatternReasonCode::UnsupportedPattern;
+        result.rejectReason = detection::VerdictRejectReason::None;
+        result.reasonCode = detection::VerdictReasonCode::FromOccurrence;
+    } else if (proposalKind == ProposalEvaluationKind::Valid && result.reasonCode == detection::VerdictReasonCode::None) {
+        result.reasonCode = detection::VerdictReasonCode::SupportRequirementFailed;
     }
     if (proposalKind == ProposalEvaluationKind::Invalid) {
-        result.type = detection::PatternType::Invalid;
+        result.type = detection::VerdictType::Invalid;
         result.valid = false;
-        result.patternAccepted = false;
-        result.rejectReason = detection::PatternRejectReason::UnexpectedTiming;
+        result.accepted = false;
+        result.rejectReason = detection::VerdictRejectReason::UnexpectedTiming;
         result.supportMatched = false;
     }
     result.firstFailedObservedStrength = firstFailedObservedStrength;
@@ -233,61 +233,61 @@ detection::PatternResult evaluateSinglePulse(
 
 namespace detection {
 
-const char* patternInputRejectReasonName(PatternInputRejectReason reason) {
+const char* evaluatorInputRejectReasonName(EvaluatorInputRejectReason reason) {
     switch (reason) {
-        case PatternInputRejectReason::None:
+        case EvaluatorInputRejectReason::None:
             return "none";
-        case PatternInputRejectReason::DecisionRejected:
+        case EvaluatorInputRejectReason::DecisionRejected:
             return "decision_rejected";
-        case PatternInputRejectReason::MissingOccurrence:
+        case EvaluatorInputRejectReason::MissingOccurrence:
             return "missing_occurrence";
-        case PatternInputRejectReason::InvalidOccurrence:
+        case EvaluatorInputRejectReason::InvalidOccurrence:
             return "invalid_occurrence";
-        case PatternInputRejectReason::UnsupportedOccurrenceType:
+        case EvaluatorInputRejectReason::UnsupportedOccurrenceType:
             return "unsupported_occurrence_type";
-        case PatternInputRejectReason::EmptyProposal:
+        case EvaluatorInputRejectReason::EmptyProposal:
             return "empty_proposal";
-        case PatternInputRejectReason::InputQueueFull:
+        case EvaluatorInputRejectReason::InputQueueFull:
             return "input_queue_full";
-        case PatternInputRejectReason::CorrelationQueueFull:
+        case EvaluatorInputRejectReason::CorrelationQueueFull:
             return "correlation_queue_full";
     }
 
     return "unknown";
 }
 
-void PatternMatcher::reset() {
+void OccurrenceEvaluator::reset() {
     _report = {};
     _readIndex = 0;
     _count = 0;
-    _lastInputRejectReason = PatternInputRejectReason::None;
+    _lastInputRejectReason = EvaluatorInputRejectReason::None;
 }
 
-void PatternMatcher::configure(const PatternMatcherConfig& config) {
+void OccurrenceEvaluator::configure(const OccurrenceEvaluatorConfig& config) {
     _config = config;
 }
 
-const PatternMatcherReport& PatternMatcher::report() const {
+const OccurrenceEvaluatorReport& OccurrenceEvaluator::report() const {
     return _report;
 }
 
-PatternResult PatternMatcher::update(const InspectedOccurrence& occurrence, unsigned long nowMs) {
+OccurrenceVerdict OccurrenceEvaluator::update(const InspectedOccurrence& occurrence, unsigned long nowMs) {
     acceptOccurrence(occurrence);
-    PatternResult result = {};
-    if (popPatternResult(nowMs, result)) {
+    OccurrenceVerdict result = {};
+    if (popOccurrenceVerdict(nowMs, result)) {
         return result;
     }
     return {};
 }
 
-bool PatternMatcher::acceptOccurrence(const InspectedOccurrence& occurrence) {
-    _lastInputRejectReason = PatternInputRejectReason::None;
+bool OccurrenceEvaluator::acceptOccurrence(const InspectedOccurrence& occurrence) {
+    _lastInputRejectReason = EvaluatorInputRejectReason::None;
     if (occurrence.decision != OccurrenceDecision::Accepted) {
-        _lastInputRejectReason = PatternInputRejectReason::DecisionRejected;
+        _lastInputRejectReason = EvaluatorInputRejectReason::DecisionRejected;
         return false;
     }
     if (!occurrence.occurrence.present) {
-        _lastInputRejectReason = PatternInputRejectReason::MissingOccurrence;
+        _lastInputRejectReason = EvaluatorInputRejectReason::MissingOccurrence;
         return false;
     }
 
@@ -295,42 +295,42 @@ bool PatternMatcher::acceptOccurrence(const InspectedOccurrence& occurrence) {
         case OccurrenceType::Scalar:
         case OccurrenceType::Frequency:
             if (occurrence.occurrence.valid) {
-                const PatternProposal proposal = makePatternProposalFromOccurrence(occurrence);
+                const OccurrenceProposal proposal = makeProposalFromOccurrence(occurrence);
                 if (proposal.durationMs > 0 || proposal.peakStrength != 0.0f || proposal.onsetStrength != 0.0f) {
                     if (pushInspectedOccurrence(occurrence)) {
                         return true;
                     }
-                    _lastInputRejectReason = PatternInputRejectReason::InputQueueFull;
+                    _lastInputRejectReason = EvaluatorInputRejectReason::InputQueueFull;
                     return false;
                 }
-                _lastInputRejectReason = PatternInputRejectReason::EmptyProposal;
+                _lastInputRejectReason = EvaluatorInputRejectReason::EmptyProposal;
                 return false;
             }
-            _lastInputRejectReason = PatternInputRejectReason::InvalidOccurrence;
+            _lastInputRejectReason = EvaluatorInputRejectReason::InvalidOccurrence;
             return false;
 
         case OccurrenceType::None:
         default:
-            _lastInputRejectReason = PatternInputRejectReason::UnsupportedOccurrenceType;
+            _lastInputRejectReason = EvaluatorInputRejectReason::UnsupportedOccurrenceType;
             return false;
     }
 
     return false;
 }
 
-PatternInputRejectReason PatternMatcher::lastInputRejectReason() const {
+EvaluatorInputRejectReason OccurrenceEvaluator::lastInputRejectReason() const {
     return _lastInputRejectReason;
 }
 
-size_t PatternMatcher::pendingInputCount() const {
+size_t OccurrenceEvaluator::pendingInputCount() const {
     return _count;
 }
 
-bool PatternMatcher::hasPendingInput() const {
+bool OccurrenceEvaluator::hasPendingInput() const {
     return _count > 0;
 }
 
-bool PatternMatcher::popPatternResult(unsigned long nowMs, PatternResult& out) {
+bool OccurrenceEvaluator::popOccurrenceVerdict(unsigned long nowMs, OccurrenceVerdict& out) {
     if (_count == 0) {
         _report.proposalPresent = false;
         return false;
@@ -340,14 +340,14 @@ bool PatternMatcher::popPatternResult(unsigned long nowMs, PatternResult& out) {
     _readIndex = (_readIndex + 1) % kQueueCapacity;
     --_count;
 
-    const PatternProposal proposal = makePatternProposalFromOccurrence(occurrence);
+    const OccurrenceProposal proposal = makeProposalFromOccurrence(occurrence);
     out = evaluateSinglePulse(proposal, _config, nowMs);
 
     _report.proposalPresent = true;
-    _report.patternMatched = out.patternMatched;
+    _report.proposalMatched = out.proposalMatched;
     _report.supportMatched = out.supportMatched;
     _report.valid = out.valid;
-    _report.patternType = out.type;
+    _report.verdictType = out.type;
     _report.rejectReason = out.rejectReason;
     _report.firstFailedRequirementTarget = out.firstFailedRequirementTarget;
     _report.firstFailedObservedStrength = out.firstFailedObservedStrength;
@@ -364,7 +364,7 @@ bool PatternMatcher::popPatternResult(unsigned long nowMs, PatternResult& out) {
     return true;
 }
 
-bool PatternMatcher::pushInspectedOccurrence(const InspectedOccurrence& occurrence) {
+bool OccurrenceEvaluator::pushInspectedOccurrence(const InspectedOccurrence& occurrence) {
     if (_count == kQueueCapacity) {
         return false;
     }

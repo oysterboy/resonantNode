@@ -114,7 +114,7 @@ void AnalyzerApp::initializeSequenceTest(const PendingSequenceStart& pending) {
 void AnalyzerApp::configureSequenceDetection() {
     const detection::DetectionProfile& selectedProfile = effectiveSequenceProfile();
     _detection.resetState();
-    _detection.setPatternResultQueueEnabled(false);
+    _detection.setVerdictQueueEnabled(false);
     _detection.setFrequencyMatchConfig(selectedProfile.frequencyMatch);
     _detection.setScalarTransientConfig(selectedProfile.scalarTransient);
     _detection.setDetectorSelection(selectedProfile.detectorSelection);
@@ -141,7 +141,7 @@ void AnalyzerApp::resetSequenceTestRunState() {
     _sequenceTest.sourceAcceptedCount = 0;
     _sequenceTest.sourceRejectedCount = 0;
     _sequenceTest.inspectedOccurrenceCount = 0;
-    _sequenceTest.patternResultCount = 0;
+    _sequenceTest.verdictCount = 0;
     _sequenceTest.primaryValidPatternCaptured = false;
     memset(&_sequenceTest.primaryValidPattern, 0, sizeof(_sequenceTest.primaryValidPattern));
     memset(&_sequenceTest.primaryValidInspectedOccurrence, 0, sizeof(_sequenceTest.primaryValidInspectedOccurrence));
@@ -413,7 +413,7 @@ void AnalyzerApp::updateSequenceTest(unsigned long now) {
     _sequenceTest.currentTrialRejected = 0;
     _sequenceTest.bufferOverrun = false;
     _sequenceTest.trialOverflowCountAtStart = _audioSource.stats().overflowCount;
-    _sequenceTest.trialPatternInspectedOverflowCountAtStart = _detection.patternInspectedQueueOverflowCount();
+    _sequenceTest.trialPatternInspectedOverflowCountAtStart = _detection.verdictCorrelationQueueOverflowCount();
     _sequenceTest.currentTrialDiagnostics = {};
     _sequenceTest.currentTrialDiagnostics.acceptedAmbientBaseline = _audioSignal.baseline();
     _sequenceTest.currentTrialDiagnostics.runtimePatternCaptured = false;
@@ -474,7 +474,7 @@ AnalyzerApp::SequenceTrialSelection AnalyzerApp::selectSequenceTrialSelection(un
 
     if (_sequenceTest.primaryValidPatternCaptured) {
         selection.kind = SequenceTrialSelection::Kind::ValidPattern;
-        selection.patternResult = &_sequenceTest.primaryValidPattern;
+        selection.verdict = &_sequenceTest.primaryValidPattern;
         selection.inspectedOccurrence = _sequenceTest.primaryValidInspectedOccurrence.occurrence.present
             ? &_sequenceTest.primaryValidInspectedOccurrence
             : nullptr;
@@ -513,7 +513,7 @@ AnalyzerApp::SequenceTrialSelection AnalyzerApp::selectSequenceTrialSelection(un
         selection.strength = _sequenceTest.primaryAcceptedInspectedOccurrence.occurrence.strength;
         if (_sequenceTest.bestRejectedPatternCaptured &&
             _sequenceTest.bestRejectedInWindow.occurrenceId == selection.occurrenceId) {
-            selection.patternResult = &_sequenceTest.bestRejectedInWindow;
+            selection.verdict = &_sequenceTest.bestRejectedInWindow;
             selection.dtMs = static_cast<long>(_sequenceTest.bestRejectedInWindow.primaryStartMs) - static_cast<long>(trialOnsetAnchorMs);
             selection.durationMs = _sequenceTest.bestRejectedInWindow.primaryDurationMs;
             selection.strength = _sequenceTest.bestRejectedInWindow.primaryStrength;
@@ -542,7 +542,7 @@ AnalyzerApp::SequenceTrialSelection AnalyzerApp::selectSequenceTrialSelection(un
 
     if (_sequenceTest.bestRejectedPatternCaptured) {
         selection.kind = SequenceTrialSelection::Kind::RejectedPattern;
-        selection.patternResult = &_sequenceTest.bestRejectedInWindow;
+        selection.verdict = &_sequenceTest.bestRejectedInWindow;
         selection.inspectedOccurrence = _sequenceTest.bestRejectedInspectedOccurrence.occurrence.present
             ? &_sequenceTest.bestRejectedInspectedOccurrence
             : nullptr;
@@ -594,11 +594,11 @@ void AnalyzerApp::finalizeSequenceTrial(unsigned long now) {
     const bool unexpectedTrial = selectedTrial.result == AnalyzerResult::Unexpected;
 
     AnalyzerResult result = selectedTrial.result;
-    if (selectedTrial.patternResult == nullptr &&
+    if (selectedTrial.verdict == nullptr &&
         (selectedTrial.kind == SequenceTrialSelection::Kind::ValidPattern ||
          selectedTrial.kind == SequenceTrialSelection::Kind::AcceptedOccurrence)) {
         result = AnalyzerResult::Miss;
-    } else if (selectedTrial.patternResult != nullptr && !selectedTrial.patternResult->valid) {
+    } else if (selectedTrial.verdict != nullptr && !selectedTrial.verdict->valid) {
         result = AnalyzerResult::Rejected;
     }
     long dtMs = selectedTrial.dtMs;
@@ -738,7 +738,7 @@ void AnalyzerApp::updateCleanSequenceSummary(const AnalyzerReport& report) {
         }
     }
 
-    if (report.primaryPattern.accepted) {
+    if (report.primaryPattern.valid) {
         ++summary.patternValidTrials;
     } else if (detection::analyzer::patternRejectedTrial(report)) {
         ++summary.patternRejectedTrials;

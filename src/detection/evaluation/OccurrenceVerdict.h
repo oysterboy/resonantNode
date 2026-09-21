@@ -1,21 +1,21 @@
 #pragma once
 
-#include "PatternTypes.h"
+#include "VerdictTypes.h"
 #include "../inspection/InspectorTypes.h"
 namespace detection {
 
 /*
-PatternResult
+OccurrenceVerdict
 
 Rule-level summary used by runtime and analyzer reports.
-Owns patternMatched, supportMatched, valid, confidence, and rejection reasons.
+Owns proposalMatched, supportMatched, valid, confidence, and rejection reasons.
 Does not decide behavior eligibility.
 */
-struct PatternResult {
+struct OccurrenceVerdict {
     // Rule output and classification.
-    PatternType type = PatternType::None;
-    PatternReasonCode reasonCode = PatternReasonCode::None;
-    PatternRejectReason rejectReason = PatternRejectReason::None;
+    VerdictType type = VerdictType::None;
+    VerdictReasonCode reasonCode = VerdictReasonCode::None;
+    VerdictRejectReason rejectReason = VerdictRejectReason::None;
     float confidence = 0.0f;
     uint8_t occurrenceCount = 0;
     unsigned long occurrenceId = 0;
@@ -33,8 +33,8 @@ struct PatternResult {
     float primaryAmbientBaseline = 0.0f;
     bool primaryAudioOverflow = false;
 
-    bool patternAccepted = false;
-    bool patternMatched = false;
+    bool accepted = false;
+    bool proposalMatched = false;
     bool supportMatched = false;
     bool valid = false;
 

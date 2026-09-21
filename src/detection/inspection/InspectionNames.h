@@ -32,15 +32,10 @@ inline const char* magnitudeInspectionBasisName(MagnitudeInspectionBasis value) 
 
 inline const char* magnitudeInspectionNoteName(MagnitudeInspectionNote value) {
     switch (value) {
-        // Printed strings kept as "scalar_*" on purpose: these are live,
-        // reachable values in SEQ_INSPECT output today (the observed/
-        // unavailable case), and this rename is scoped to C++ symbol names,
-        // not wire-format/output text. See Occurrence.h and InspectorTypes.h
-        // for the naming rationale.
         case MagnitudeInspectionNote::MagnitudeObserved:
-            return "scalar_observed";
+            return "magnitude_observed";
         case MagnitudeInspectionNote::MagnitudeUnavailable:
-            return "scalar_unavailable";
+            return "magnitude_unavailable";
         case MagnitudeInspectionNote::HistoryWindowIncomplete:
             return "history_window_incomplete";
         case MagnitudeInspectionNote::FutureWindowUnavailable:

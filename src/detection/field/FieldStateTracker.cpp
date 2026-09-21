@@ -54,7 +54,7 @@ void FieldStateTracker::observeInspectedOccurrence(const InspectedOccurrence& oc
     }
 }
 
-void FieldStateTracker::observePatternResult(const PatternResult& result, unsigned long nowMs) {
+void FieldStateTracker::observeOccurrenceVerdict(const OccurrenceVerdict& result, unsigned long nowMs) {
     if (result.valid) {
         _state.lastPatternMs = nowMs;
         ++_patternCountInWindow;

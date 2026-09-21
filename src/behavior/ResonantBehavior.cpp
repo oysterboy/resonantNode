@@ -7,7 +7,7 @@ ResonantBehavior
 Owns the local reaction state machine for the Resonant node.
 
 Responsibilities:
-- consume PatternResult objects from the detection/classification layer
+- consume OccurrenceVerdict objects from the detection/classification layer
 - decide whether a pattern should trigger sound output
 - track wait, refractory, idle, and self-suppression timing
 - expose behavior state and decision metadata for debug / analyzer output
@@ -20,7 +20,7 @@ Does NOT:
 - decide detector thresholds or feature extraction logic
 
 File structure:
-- lifecycle: resetState(), handlePatternResult(), update(now)
+- lifecycle: resetState(), handleOccurrenceVerdict(), update(now)
 - configuration: detection flags and timing setters/getters
 - output / hooks: chirp requests, suppression gates, chirp lifecycle hooks
 - inspection: state, counters, timestamps, and decision names
@@ -42,15 +42,15 @@ unsigned long randomIdleDelayMs(unsigned long minMs, unsigned long maxMs) {
     return minMs + static_cast<unsigned long>(random(static_cast<long>(spanMs)));
 }
 
-const char* patternTypeName(detection::PatternType type) {
+const char* verdictTypeName(detection::VerdictType type) {
     switch (type) {
-        case detection::PatternType::None:
+        case detection::VerdictType::None:
             return "none";
-        case detection::PatternType::SinglePulse:
+        case detection::VerdictType::SinglePulse:
             return "single_pulse";
-        case detection::PatternType::Invalid:
+        case detection::VerdictType::Invalid:
             return "invalid";
-        case detection::PatternType::Ambiguous:
+        case detection::VerdictType::Ambiguous:
             return "ambiguous";
     }
 
@@ -72,7 +72,7 @@ void ResonantBehavior::resetState() {
     _waitUntilMs = 0;
     _refractoryUntilMs = 0;
     _ownEmitDetectionSuppressUntilMs = 0;
-    _lastPatternType = detection::PatternType::None;
+    _lastVerdictType = detection::VerdictType::None;
     _lastPatternHeardAtMs = 0;
     _lastDecisionMs = 0;
     _lastDecision = BehaviorDecision::None;
@@ -108,22 +108,22 @@ void ResonantBehavior::configure(const BehaviorGateConfig& profile) {
     setIdleEnabled(profile.idleEnabled);
 }
 
-ResonantBehavior::BehaviorDecision ResonantBehavior::handlePatternResult(const detection::PatternResult& result, const detection::FieldState& field, unsigned long now) {
+ResonantBehavior::BehaviorDecision ResonantBehavior::handleOccurrenceVerdict(const detection::OccurrenceVerdict& result, const detection::FieldState& field, unsigned long now) {
     _lastFieldState = field;
-    return handlePatternResult(result, now);
+    return handleOccurrenceVerdict(result, now);
 }
 
-ResonantBehavior::BehaviorDecision ResonantBehavior::handlePatternResult(const detection::PatternResult& result, unsigned long now) {
+ResonantBehavior::BehaviorDecision ResonantBehavior::handleOccurrenceVerdict(const detection::OccurrenceVerdict& result, unsigned long now) {
     _patternsReceived++;
-    _lastPatternType = result.type;
+    _lastVerdictType = result.type;
     _lastPatternHeardAtMs = result.primaryHeardAtMs != 0 ? result.primaryHeardAtMs : result.primaryStartMs;
     _lastDecisionMs = now;
     _wouldEmit = false;
     _outputBusy = _state == State::Chirping;
 
-    if (!result.patternAccepted) {
+    if (!result.accepted) {
         _behaviorEligible = false;
-        if (result.type == detection::PatternType::Ambiguous) {
+        if (result.type == detection::VerdictType::Ambiguous) {
             _lastDecision = BehaviorDecision::IgnoredAmbiguousPattern;
             _lastBlockReason = BehaviorDecision::IgnoredAmbiguousPattern;
             _patternsIgnoredAmbiguous++;
@@ -136,7 +136,7 @@ ResonantBehavior::BehaviorDecision ResonantBehavior::handlePatternResult(const d
         return _lastDecision;
     }
 
-    if (result.type == detection::PatternType::Ambiguous) {
+    if (result.type == detection::VerdictType::Ambiguous) {
         _behaviorEligible = false;
         _lastDecision = BehaviorDecision::IgnoredAmbiguousPattern;
         _lastBlockReason = BehaviorDecision::IgnoredAmbiguousPattern;
@@ -146,10 +146,10 @@ ResonantBehavior::BehaviorDecision ResonantBehavior::handlePatternResult(const d
 
     if (!result.valid) {
         _behaviorEligible = false;
-        if (result.rejectReason == detection::PatternRejectReason::MissingSupport) {
+        if (result.rejectReason == detection::VerdictRejectReason::MissingSupport) {
             _lastDecision = BehaviorDecision::IgnoredMissingSupport;
             _lastBlockReason = BehaviorDecision::IgnoredMissingSupport;
-        } else if (result.rejectReason == detection::PatternRejectReason::SupportTooLow) {
+        } else if (result.rejectReason == detection::VerdictRejectReason::SupportTooLow) {
             _lastDecision = BehaviorDecision::IgnoredSupportTooLow;
             _lastBlockReason = BehaviorDecision::IgnoredSupportTooLow;
         } else {
@@ -490,12 +490,12 @@ const char* ResonantBehavior::lastBlockReasonName() const {
     return behaviorDecisionName(_lastBlockReason);
 }
 
-detection::PatternType ResonantBehavior::lastPatternType() const {
-    return _lastPatternType;
+detection::VerdictType ResonantBehavior::lastVerdictType() const {
+    return _lastVerdictType;
 }
 
-const char* ResonantBehavior::lastPatternTypeName() const {
-    return patternTypeName(_lastPatternType);
+const char* ResonantBehavior::lastVerdictTypeName() const {
+    return verdictTypeName(_lastVerdictType);
 }
 
 unsigned long ResonantBehavior::lastHeardMs() const {

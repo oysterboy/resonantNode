@@ -12,8 +12,8 @@
 #include "detectors/scalar/ScalarTransientDetector.h"
 #include "inspection/OccurrenceInspector.h"
 #include "inspection/InspectorTypes.h"
-#include "patterns/PatternMatcher.h"
-#include "patterns/PatternResult.h"
+#include "evaluation/OccurrenceEvaluator.h"
+#include "evaluation/OccurrenceVerdict.h"
 #include "occurrences/Occurrence.h"
 #include "occurrences/InspectedOccurrence.h"
 #include "field/FieldStateTracker.h"
@@ -28,24 +28,24 @@ namespace detection {
 DetectionRuntime
 
 Owns the active detection pipeline wiring:
-feature observation, occurrence emission, occurrence inspection, pattern
-matching, field-state tracking, and PatternResult queueing.
+feature observation, occurrence emission, occurrence inspection, occurrence
+evaluation, field-state tracking, and OccurrenceVerdict queueing.
 
 Consumes AudioSamplePacket and FrequencyBandMeasurementPacket.
-Produces PatternResult and FieldState.
+Produces OccurrenceVerdict and FieldState.
 Does not decide behavior or output.
 Feature producers fan out fresh samples to FeatureHistory and the selected
 detector path in parallel; FeatureHistory is for retrospective inspection, not
 a live pipe into occurrence emission.
 */
 struct DetectionPipelineResult {
-    bool hasPattern = false;
-    PatternResult pattern = {};
-    bool hasPatternReport = false;
-    PatternMatcherReport patternReport = {};
+    bool hasVerdict = false;
+    OccurrenceVerdict verdict = {};
+    bool hasEvaluatorReport = false;
+    OccurrenceEvaluatorReport evaluatorReport = {};
 
-    bool hasPatternInspectedOccurrence = false;
-    InspectedOccurrence patternInspectedOccurrence = {};
+    bool hasVerdictInspectedOccurrence = false;
+    InspectedOccurrence verdictInspectedOccurrence = {};
 
     bool hasOccurrence = false;
     Occurrence occurrence = {};
@@ -68,7 +68,7 @@ struct SourceDiagnosticRecord {
     bool sourceReportMatched = false;
 };
 
-struct PendingPatternObservation {
+struct PendingVerdictObservation {
     InspectedOccurrence inspected = {};
     DetectorReport detectorReport = {};
 };
@@ -77,10 +77,10 @@ enum class PipelineIntegrityReason {
     None,
     MissingDetectorReport,
     MissingInspectedOccurrence,
-    MissingPatternResult,
+    MissingVerdict,
     OccurrenceIdMismatch,
     InspectionQueueOverflow,
-    PatternResultQueueOverflow,
+    VerdictQueueOverflow,
     PipelineEventQueueOverflow,
 };
 
@@ -88,8 +88,8 @@ struct PipelineIntegrity {
     bool detectorReportPresent = false;
     bool occurrenceMatched = false;
     bool inspectionPresent = false;
-    bool patternReportPresent = false;
-    bool patternResultPresent = false;
+    bool evaluatorReportPresent = false;
+    bool verdictPresent = false;
     bool correlationComplete = false;
     bool queueOverflowAffected = false;
     PipelineIntegrityReason reason = PipelineIntegrityReason::None;
@@ -114,8 +114,8 @@ struct DetectionPipelineEvent {
     unsigned long sourceCandidateId = 0;
     PipelineIntegrity integrity = {};
 
-    bool hasPatternResult = false;
-    PatternResult patternResult = {};
+    bool hasVerdict = false;
+    OccurrenceVerdict verdict = {};
 
     bool hasInspectedOccurrence = false;
     InspectedOccurrence inspectedOccurrence = {};
@@ -141,7 +141,7 @@ public:
     void setInspectionPlan(const InspectionPlan& plan);
     void setFieldStateConfig(const FieldStateConfig& config);
     void setProfileName(const char* profileName);
-    void setPatternResultQueueEnabled(bool enabled);
+    void setVerdictQueueEnabled(bool enabled);
 
     void observeFrame(
         const AudioSamplePacket& audioSamplePacket,
@@ -149,7 +149,7 @@ public:
         unsigned long nowMs
     );
 
-    bool popPatternResult(PatternResult& out);
+    bool popOccurrenceVerdict(OccurrenceVerdict& out);
     const FieldState& fieldState() const;
 
     // Analyzer-only diagnostics surface below. None of this is called from
@@ -168,30 +168,30 @@ public:
     bool hasLatestPipelineResult() const;
     const DetectionPipelineResult& latestPipelineResult() const;
     unsigned long pipelineEventOverflowCount() const;
-    unsigned long patternResultQueueOverflowCount() const;
-    unsigned long patternInspectedQueueOverflowCount() const;
-    unsigned long patternCorrelationFailureCount() const;
+    unsigned long verdictQueueOverflowCount() const;
+    unsigned long verdictCorrelationQueueOverflowCount() const;
+    unsigned long verdictCorrelationFailureCount() const;
     unsigned long detectorReportMismatchCount() const;
     uint32_t observeFrameCount() const;
     uint32_t freshDetectorInputCount() const;
     uint32_t detectorDrainCount() const;
-    uint32_t patternDrainCount() const;
+    uint32_t evaluatorDrainCount() const;
     uint32_t detectorReportRefreshCount() const;
     uint32_t noFreshFrequencySkipCount() const;
     uint32_t detectorOccurrencePoppedCount() const;
     uint32_t detectorValidOccurrencePoppedCount() const;
-    uint32_t patternAcceptAttemptCount() const;
-    uint32_t patternAcceptSuccessCount() const;
-    uint32_t patternAcceptRejectCount() const;
-    uint32_t patternResultProducedCount() const;
-    uint32_t patternEventPushedCount() const;
-    uint32_t patternEventDroppedCount() const;
-    PatternInputRejectReason latestPatternInputRejectReason() const;
+    uint32_t evaluatorAcceptAttemptCount() const;
+    uint32_t evaluatorAcceptSuccessCount() const;
+    uint32_t evaluatorAcceptRejectCount() const;
+    uint32_t verdictProducedCount() const;
+    uint32_t verdictEventPushedCount() const;
+    uint32_t verdictEventDroppedCount() const;
+    EvaluatorInputRejectReason latestEvaluatorInputRejectReason() const;
     uint32_t scalarReportGeneration() const;
     uint32_t frequencyReportGeneration() const;
     // Generic report access is the canonical upward path.
     const DetectorReport& activeDetectorReport() const;
-    const PatternMatcherReport& activePatternMatcherReport() const;
+    const OccurrenceEvaluatorReport& activeEvaluatorReport() const;
     const FeatureHistory& featureHistory() const;
 #endif
 
@@ -201,25 +201,25 @@ private:
     static constexpr size_t kPipelineEventQueueCapacity = 4;
 #endif
 
-    // Pipeline stages in execution order. drainDetectors()/drainPatternMatcher()
-    // stay core (they produce PatternResult/FieldState); each has internal
+    // Pipeline stages in execution order. drainDetectors()/drainOccurrenceEvaluator()
+    // stay core (they produce OccurrenceVerdict/FieldState); each has internal
     // ANALYZER_MODE blocks around the diagnostics-only work interleaved in
     // their loop bodies, see the .cpp file.
     void drainDetectors(unsigned long nowMs);
-    void drainPatternMatcher(unsigned long nowMs);
-    bool pushPatternResult(const PatternResult& result);
+    void drainOccurrenceEvaluator(unsigned long nowMs);
+    bool pushOccurrenceVerdict(const OccurrenceVerdict& result);
     bool hasPendingDetectorOutput() const;
-    bool hasPendingPatternWork() const;
+    bool hasPendingEvaluatorWork() const;
     void resetDetectionQueues();
 
 #ifdef ANALYZER_MODE
     bool pushPipelineEvent(const DetectionPipelineEvent& event);
-    bool pushPatternObservation(const PendingPatternObservation& observation);
-    bool popPatternObservation(unsigned long occurrenceId, PendingPatternObservation& out);
+    bool pushVerdictObservation(const PendingVerdictObservation& observation);
+    bool popVerdictObservation(unsigned long occurrenceId, PendingVerdictObservation& out);
     bool captureLatestDetectorReportIfChanged();
     void drainDetectorReportEvents(unsigned long nowMs);
     bool capturePipelineResult(
-        const PatternResult& result,
+        const OccurrenceVerdict& result,
         const InspectedOccurrence* matchedInspectedOccurrence,
         const DetectorReport* matchedDetectorReport,
         unsigned long nowMs
@@ -242,17 +242,17 @@ private:
     FrequencyMatchDetector _frequencyDetector;
     ScalarTransientDetector _scalarDetector;
     OccurrenceInspector _occurrenceInspector;
-    PatternMatcher _patternMatcher;
+    OccurrenceEvaluator _occurrenceEvaluator;
     FieldStateTracker _fieldStateTracker;
     FeatureHistory _featureHistory;
 
-    PatternResult _resultQueue[kResultQueueCapacity] = {};
+    OccurrenceVerdict _resultQueue[kResultQueueCapacity] = {};
     size_t _resultReadIndex = 0;
     size_t _resultCount = 0;
-    bool _patternResultQueueEnabled = true;
+    bool _verdictQueueEnabled = true;
 
 #ifdef ANALYZER_MODE
-    unsigned long _patternResultQueueOverflowCount = 0;
+    unsigned long _verdictQueueOverflowCount = 0;
 
     DetectionPipelineResult _latestPipelineResult = {};
     bool _hasLatestPipelineResult = false;
@@ -269,23 +269,23 @@ private:
     uint32_t _lastEmittedAcceptedReportGeneration = 0;
     uint32_t _lastEmittedSelectedRejectOccurrenceId = 0;
     uint32_t _lastEmittedSelectedRejectReportGeneration = 0;
-    PendingPatternObservation _patternInspectedQueue[kResultQueueCapacity] = {};
-    size_t _patternInspectedReadIndex = 0;
-    size_t _patternInspectedCount = 0;
-    unsigned long _patternInspectedQueueOverflowCount = 0;
-    unsigned long _patternCorrelationFailureCount = 0;
-    PatternInputRejectReason _latestPatternInputRejectReason = PatternInputRejectReason::None;
-    uint32_t _patternAcceptAttemptCount = 0;
-    uint32_t _patternAcceptSuccessCount = 0;
-    uint32_t _patternAcceptRejectCount = 0;
-    uint32_t _patternResultProducedCount = 0;
-    uint32_t _patternEventPushedCount = 0;
-    uint32_t _patternEventDroppedCount = 0;
+    PendingVerdictObservation _verdictCorrelationQueue[kResultQueueCapacity] = {};
+    size_t _verdictCorrelationReadIndex = 0;
+    size_t _verdictCorrelationCount = 0;
+    unsigned long _verdictCorrelationQueueOverflowCount = 0;
+    unsigned long _verdictCorrelationFailureCount = 0;
+    EvaluatorInputRejectReason _latestEvaluatorInputRejectReason = EvaluatorInputRejectReason::None;
+    uint32_t _evaluatorAcceptAttemptCount = 0;
+    uint32_t _evaluatorAcceptSuccessCount = 0;
+    uint32_t _evaluatorAcceptRejectCount = 0;
+    uint32_t _verdictProducedCount = 0;
+    uint32_t _verdictEventPushedCount = 0;
+    uint32_t _verdictEventDroppedCount = 0;
 
     uint32_t _observeFrameCount = 0;
     uint32_t _freshDetectorInputCount = 0;
     uint32_t _detectorDrainCount = 0;
-    uint32_t _patternDrainCount = 0;
+    uint32_t _evaluatorDrainCount = 0;
     uint32_t _detectorReportRefreshCount = 0;
     uint32_t _noFreshFrequencySkipCount = 0;
     uint32_t _detectorOccurrencePoppedCount = 0;

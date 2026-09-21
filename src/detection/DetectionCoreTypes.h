@@ -20,10 +20,10 @@ namespace detection {
 // InspectedOccurrence:
 //   Occurrence plus retrospective inspection evidence
 //
-// PatternMatcher:
+// OccurrenceEvaluator:
 //   profile-selected pattern interpretation stage
 //
-// PatternResult:
+// OccurrenceVerdict:
 //   behavior-facing pattern meaning
 //
 // DetectorReport:
@@ -32,7 +32,7 @@ namespace detection {
 // AnalyzerReport:
 //   trial-level classification
 //
-// Do not add detector-specific fields to PatternResult or AnalyzerReport.
+// Do not add detector-specific fields to OccurrenceVerdict or AnalyzerReport.
 // Detector-specific details belong in Occurrence payloads selected by
 // OccurrenceType or in DetectorReport.
 //

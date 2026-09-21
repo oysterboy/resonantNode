@@ -19,7 +19,7 @@ AnalyzerReason analyzerReasonFromSequenceOutcome(const AnalyzerSequenceClassific
                 return AnalyzerReason::OccurrenceSeenButRejected;
             }
             if (input.sourceAcceptedCount > 0 || input.detectorAcceptedPresent) {
-                return AnalyzerReason::MissingPatternReport;
+                return AnalyzerReason::MissingEvaluatorReport;
             }
             if (input.sourceCandidateCount == 0) {
                 return AnalyzerReason::NoOccurrence;
@@ -33,7 +33,7 @@ AnalyzerReason analyzerReasonFromSequenceOutcome(const AnalyzerSequenceClassific
                 return AnalyzerReason::PatternRejected;
             }
             if (input.sourceAcceptedCount > 0 || input.detectorAcceptedPresent) {
-                return AnalyzerReason::MissingPatternReport;
+                return AnalyzerReason::MissingEvaluatorReport;
             }
             return input.sourceCandidateCount == 0 ? AnalyzerReason::NoOccurrence : AnalyzerReason::PipelineIncomplete;
         case AnalyzerResult::Ambiguous:
@@ -52,7 +52,7 @@ AnalyzerStage analyzerPrimaryStageFromReason(AnalyzerReason reason) {
         case AnalyzerReason::PipelineQueueOverflow:
         case AnalyzerReason::PipelineIncomplete:
         case AnalyzerReason::MissingInspectionReport:
-        case AnalyzerReason::MissingPatternReport:
+        case AnalyzerReason::MissingEvaluatorReport:
         case AnalyzerReason::UncorrelatedPipelineEvent:
         case AnalyzerReason::UnknownStageFailure:
         case AnalyzerReason::NoOccurrence:
@@ -63,7 +63,7 @@ AnalyzerStage analyzerPrimaryStageFromReason(AnalyzerReason reason) {
         case AnalyzerReason::PatternRejected:
         case AnalyzerReason::MultipleValidPatterns:
         case AnalyzerReason::MultipleCompetingPatterns:
-            return AnalyzerStage::Pattern;
+            return AnalyzerStage::Evaluator;
         case AnalyzerReason::FieldTooDense:
             return AnalyzerStage::Field;
         case AnalyzerReason::ValidPatternInExpectedWindow:

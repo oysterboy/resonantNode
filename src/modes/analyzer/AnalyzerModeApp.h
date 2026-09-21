@@ -10,7 +10,7 @@
 #include "../../detection/detectors/frequency/FrequencyMatchCriteria.h"
 #include "../../detection/occurrences/InspectedOccurrence.h"
 #include "../../detection/features/FreqBandStream.h"
-#include "../../detection/patterns/PatternResult.h"
+#include "../../detection/evaluation/OccurrenceVerdict.h"
 #include "../../detection/occurrences/Occurrence.h"
 #include "../../audio/AudioSource.h"
 #include "../../app/RuntimeDefaults.h"
@@ -34,7 +34,7 @@ Analyzer measures DetectionRuntime output against expected events.
 */
 class AnalyzerApp {
 public:
-    using PatternResult = detection::PatternResult;
+    using OccurrenceVerdict = detection::OccurrenceVerdict;
 
     enum class SequenceDiagMode {
         Off,
@@ -148,22 +148,22 @@ private:
             PendingOrigin origin = PendingOrigin::InWindow;
             unsigned long peakMs = 0;
             long endDtMs = -1;
-            bool patternValid = false;
-            bool patternAccepted = false;
-            bool patternMatched = false;
+            bool valid = false;
+            bool accepted = false;
+            bool proposalMatched = false;
             bool supportMatched = false;
             bool behaviorEligible = false;
             bool duplicatePending = false;
             uint8_t pendingClass = 0;
-            detection::PatternType patternType = detection::PatternType::None;
-            detection::PatternReasonCode reasonCode = detection::PatternReasonCode::None;
-            detection::PatternRejectReason rejectReasonCode = detection::PatternRejectReason::None;
+            detection::VerdictType verdictType = detection::VerdictType::None;
+            detection::VerdictReasonCode reasonCode = detection::VerdictReasonCode::None;
+            detection::VerdictRejectReason rejectReasonCode = detection::VerdictRejectReason::None;
         };
 
         // Live per-trial diagnostics and rejection bookkeeping.
         struct TrialDiagnostics {
             bool onsetSeen = false;
-            bool patternAccepted = false;
+            bool accepted = false;
 
             unsigned long firstOnsetMs = 0;
             unsigned long lastOnsetMs = 0;
@@ -325,9 +325,9 @@ private:
         unsigned long sourceAcceptedCount = 0;
         unsigned long sourceRejectedCount = 0;
         unsigned long inspectedOccurrenceCount = 0;
-        unsigned long patternResultCount = 0;
+        unsigned long verdictCount = 0;
         bool primaryValidPatternCaptured = false;
-        detection::PatternResult primaryValidPattern = {};
+        detection::OccurrenceVerdict primaryValidPattern = {};
         detection::InspectedOccurrence primaryValidInspectedOccurrence = {};
         detection::DetectorReport primaryValidDetectorReport = {};
         long primaryValidPatternDtMs = -1;
@@ -338,7 +338,7 @@ private:
         long primaryAcceptedOccurrenceDtMs = -1;
         unsigned long rejectedInWindowCount = 0;
         bool bestRejectedPatternCaptured = false;
-        detection::PatternResult bestRejectedInWindow = {};
+        detection::OccurrenceVerdict bestRejectedInWindow = {};
         detection::InspectedOccurrence bestRejectedInspectedOccurrence = {};
         detection::DetectorReport bestRejectedDetectorReport = {};
         bool selectedSourceRejectCaptured = false;
@@ -461,7 +461,7 @@ private:
         };
 
         Kind kind = Kind::None;
-        const detection::PatternResult* patternResult = nullptr;
+        const detection::OccurrenceVerdict* verdict = nullptr;
         const detection::InspectedOccurrence* inspectedOccurrence = nullptr;
         const detection::DetectorReport* detectorReport = nullptr;
         unsigned long occurrenceId = 0;

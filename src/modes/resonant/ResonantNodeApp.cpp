@@ -10,7 +10,7 @@
 #include "../../detection/features/FrequencyMeasurementPacketBuilder.h"
 #include "../../detection/detectors/frequency/FrequencyMatchCriteria.h"
 #include "../../detection/inspection/InspectionNames.h"
-#include "../../detection/patterns/PatternNames.h"
+#include "../../detection/evaluation/VerdictNames.h"
 #include "../../param/ParamRegistry.h"
 
 /*
@@ -21,7 +21,7 @@ Owns orchestration for the Resonant node.
 Responsibilities:
 - wire hardware sources and outputs
 - feed audio into occurrence and detection layers
-- pass PatternResult objects into ResonantBehavior
+- pass OccurrenceVerdict objects into ResonantBehavior
 - start and finish chirps when behavior requests them
 - manage startup baseline state for the I2S path
 - handle serial commands, logging, and summary reporting
@@ -210,11 +210,11 @@ void printDetectionProfileDetails(const detection::DetectionProfile& profile) {
         }
     }
     const detection::InspectionModuleConfig* supportRequirement =
-        detection::patternMatcherFirstEnabledRequirement(profile.inspectionPlan);
+        detection::evaluatorFirstEnabledRequirement(profile.inspectionPlan);
     const bool supportRequired = supportRequirement != nullptr;
-    Serial.print("  pattern.has_requirement=");
+    Serial.print("  verdict.has_requirement=");
     Serial.println(supportRequired ? 1 : 0);
-    Serial.print("  pattern.required_label=");
+    Serial.print("  verdict.required_label=");
     Serial.println(supportRequired ? detection::inspectionTargetName(supportRequirement->target) : "none");
     Serial.print("  fieldState.occurrenceWindowMs=");
     Serial.println(profile.fieldStateConfig.occurrenceWindowMs);
@@ -579,8 +579,8 @@ void Node::update() {
                                     (_behavior.lastHeardMs() != _rbLastWouldEmitHeardMs ||
                                      _behavior.lastDecision() != _rbLastWouldEmitDecision);
     if (shouldLogWouldEmit) {
-        Serial.print("BEH pattern=");
-        Serial.print(_behavior.lastPatternTypeName());
+        Serial.print("BEH verdict=");
+        Serial.print(_behavior.lastVerdictTypeName());
         Serial.print(" heard=");
         Serial.print(_behavior.lastHeardMs());
         Serial.print(" now=");
@@ -925,7 +925,7 @@ void Node::handleDetectCommand(const char* line) {
     Serial.print(" inspectionPlan=");
     Serial.print(detection::inspectionPlanName(detectionProfile.inspectionPlan));
     const detection::InspectionModuleConfig* supportRequirement =
-        detection::patternMatcherFirstEnabledRequirement(detectionProfile.inspectionPlan);
+        detection::evaluatorFirstEnabledRequirement(detectionProfile.inspectionPlan);
     const bool supportRequired = supportRequirement != nullptr;
     Serial.print(" has_requirement=");
     Serial.print(supportRequired ? 1 : 0);
@@ -1151,7 +1151,7 @@ void Node::applyActiveDetectionProfile() {
     _detection.setInspectionPlan(detectionProfile.inspectionPlan);
     _detection.setFieldStateConfig(detectionProfile.fieldStateConfig);
     _detection.setProfileName(detection::detectionProfileName(detectionProfile.kind));
-    _detection.setPatternResultQueueEnabled(true);
+    _detection.setVerdictQueueEnabled(true);
     _freqBandStream.setSampleRateHz(_audioSource.sampleRateHz());
     _freqBandStream.setTargetFrequencyHz(_chirpOutput.toneHz());
 }
@@ -1167,32 +1167,32 @@ void Node::processDetectionFrame(const AudioSamplePacket& audioSamplePacket,
     const auto liveFrequencyMeasurementPacket = captureFrequencyMeasurementPacket(audioSamplePacket);
     _detection.observeFrame(audioSamplePacket, liveFrequencyMeasurementPacket, audioSamplePacket.timeMs);
 
-    detection::PatternResult patternResult;
-    while (_detection.popPatternResult(patternResult)) {
-        const auto behaviorDecision = _behavior.handlePatternResult(patternResult, _detection.fieldState(), now);
+    detection::OccurrenceVerdict verdict;
+    while (_detection.popOccurrenceVerdict(verdict)) {
+        const auto behaviorDecision = _behavior.handleOccurrenceVerdict(verdict, _detection.fieldState(), now);
         if (behaviorDecision == ResonantBehavior::BehaviorDecision::ConsumedPattern) {
             sawPatternThisLoop = true;
         }
 
         ++_rbPendingCount;
-        if (patternResult.patternAccepted) {
+        if (verdict.accepted) {
             ++_rbPatternAcceptedCount;
         }
-        if (patternResult.valid) {
+        if (verdict.valid) {
             ++_rbValidPatternCount;
         }
 
-        if (patternResult.primaryAudioOverflow) {
+        if (verdict.primaryAudioOverflow) {
             ++_rbOverflowPending;
         }
-        _rbStrengthSumScaled += static_cast<unsigned long>(patternResult.primaryStrength * 100.0f);
-        _rbDurationSumMs += patternResult.primaryDurationMs;
+        _rbStrengthSumScaled += static_cast<unsigned long>(verdict.primaryStrength * 100.0f);
+        _rbDurationSumMs += verdict.primaryDurationMs;
         _rbHaveLastPendingMs = true;
-        _rbLastPendingMs = patternResult.primaryHeardAtMs;
+        _rbLastPendingMs = verdict.primaryHeardAtMs;
 
         if (rbShouldLogDetail()) {
-            Serial.print("RB pattern=");
-            Serial.print(detection::patternTypeName(patternResult.type));
+            Serial.print("RB verdict=");
+            Serial.print(detection::verdictTypeName(verdict.type));
             Serial.print(" fieldQuiet=");
             Serial.print(_detection.fieldState().quiet ? 1 : 0);
             Serial.print(" fieldActive=");
@@ -1204,7 +1204,7 @@ void Node::processDetectionFrame(const AudioSamplePacket& audioSamplePacket,
             Serial.print(" decision=");
             Serial.print(_behavior.lastDecisionName());
             Serial.print(" valid=");
-            Serial.print(patternResult.valid ? 1 : 0);
+            Serial.print(verdict.valid ? 1 : 0);
             Serial.print(" profile=");
             Serial.println(profileName());
         }
@@ -1242,7 +1242,7 @@ void Node::printRbSummary() const {
 
     Serial.print("RB summary: pending=");
     Serial.print(_rbPendingCount);
-    Serial.print(" patternAccepted=");
+    Serial.print(" accepted=");
     Serial.print(_rbPatternAcceptedCount);
     Serial.print(" validPatterns=");
     Serial.print(_rbValidPatternCount);
@@ -1294,7 +1294,7 @@ void Node::printRbBehaviorSummary() const {
     Serial.print(" lastBlock=");
     Serial.print(_behavior.lastBlockReasonName());
     Serial.print(" lastPattern=");
-    Serial.print(_behavior.lastPatternTypeName());
+    Serial.print(_behavior.lastVerdictTypeName());
     Serial.print(" lastHeardMs=");
     Serial.print(_behavior.lastHeardMs());
     Serial.print(" lastEmitMs=");

@@ -11,7 +11,7 @@ namespace detection {
 Occurrence
 
 Low-level detector occurrence event emitted by a detector.
-It is not a pattern result and must not drive behavior directly.
+It is not an occurrence verdict and must not drive behavior directly.
 
 `magnitude` and `band` below are evidence-domain namespaces, not a
 detector-exclusive pair, and deliberately share no vocabulary with
@@ -23,7 +23,7 @@ namespace matches each configured `InspectionTarget` (`Amp` -> `magnitude`,
 `TargetScore`/`Contrast`/`TargetBand` -> `band`), and both current stable
 profiles (`TonalPulseFreq`, `TonalPulseScalar`) configure targets spanning
 both namespaces on every occurrence. Do not assume only one is meaningful
-based on `detectorId`/`occurrenceType`; `PatternMatcher` reads both,
+based on `detectorId`/`occurrenceType`; `OccurrenceEvaluator` reads both,
 unconditionally, for both occurrence types. This is unlike
 `DetectorReport.scalar`/`.frequency` (see DetectorReport.h), which really
 are exclusive to whichever detector produced that report, that type kept

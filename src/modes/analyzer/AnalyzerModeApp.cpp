@@ -13,7 +13,7 @@
 #include "../../detection/analyzer/tools/AnalyzerRawHealth.h"
 #include "../../detection/inspection/InspectionNames.h"
 #include "../../detection/occurrences/OccurrenceNames.h"
-#include "../../detection/patterns/PatternNames.h"
+#include "../../detection/evaluation/VerdictNames.h"
 #include "../../detection/occurrences/Occurrence.h"
 #include "../../detection/analyzer/AnalyzerTrialClassifier.h"
 #include "../../detection/inspection/OccurrenceInspector.h"
@@ -126,10 +126,10 @@ void printRuntimeSize() {
     Serial.println(static_cast<unsigned long>(sizeof(detection::Occurrence)));
     Serial.print("  SIZE InspectedOccurrence=");
     Serial.println(static_cast<unsigned long>(sizeof(detection::InspectedOccurrence)));
-    Serial.print("  SIZE PatternMatcher=");
-    Serial.println(static_cast<unsigned long>(sizeof(detection::PatternMatcher)));
-    Serial.print("  SIZE PatternResult=");
-    Serial.println(static_cast<unsigned long>(sizeof(detection::PatternResult)));
+    Serial.print("  SIZE OccurrenceEvaluator=");
+    Serial.println(static_cast<unsigned long>(sizeof(detection::OccurrenceEvaluator)));
+    Serial.print("  SIZE OccurrenceVerdict=");
+    Serial.println(static_cast<unsigned long>(sizeof(detection::OccurrenceVerdict)));
     Serial.print("SIZE AudioSignal=");
     Serial.println(static_cast<unsigned long>(sizeof(AudioSignal)));
     Serial.print("  SIZE RawSampleHistory=");
@@ -581,7 +581,7 @@ void AnalyzerApp::begin() {
     printRuntimeSize();
     printHeapStatus("begin_before_runtime_alloc");
     _detection.resetState();
-    _detection.setPatternResultQueueEnabled(false);
+    _detection.setVerdictQueueEnabled(false);
     _loopLastUs = micros();
     _loopMaxSinceBootUs = 0;
     _loopHealth.reset();
@@ -739,7 +739,7 @@ void AnalyzerApp::update() {
             _detection.observeFrame(audioSamplePacket, runtimeFrequencyMeasurementPacket, audioSamplePacket.timeMs);
             detection::DetectionPipelineEvent& runtimePipelineEvent = _runtimePipelineEventScratch;
             while (_detection.popPipelineEvent(runtimePipelineEvent)) {
-                if (_sequenceTest.active && _sequenceTest.currentTrial > 0 && runtimePipelineEvent.hasPatternResult) {
+                if (_sequenceTest.active && _sequenceTest.currentTrial > 0 && runtimePipelineEvent.hasVerdict) {
                     _sequenceTest.currentTrialDiagnostics.runtimePatternCaptured = true;
                 }
                 if (_sequenceTest.active && _sequenceTest.currentTrial > 0) {
@@ -881,15 +881,15 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
     report.expected.triggerMs = _sequenceTest.currentTrialStartMs;
     report.expected.windowStartMs = _sequenceTest.currentTrialStartMs;
     report.expected.windowEndMs = _sequenceTest.currentTrialEndMs;
-    report.expected.patternType = "sequence_trial";
+    report.expected.verdictType = "sequence_trial";
     report.expected.expectedSource = _sequenceTest.externalEmitter ? "external" : "local";
 
     const long trialOnsetAnchorMs = static_cast<long>(sequenceTrialOnsetAnchorMs());
     const SequenceTrialSelection selectedTrial = selectSequenceTrialSelection(trialOnsetAnchorMs);
-    const detection::PatternResult* reportPatternResult = selectedTrial.patternResult;
+    const detection::OccurrenceVerdict* reportVerdict = selectedTrial.verdict;
     const detection::InspectedOccurrence* reportInspectedOccurrence = selectedTrial.inspectedOccurrence;
     const detection::DetectorReport* selectedDetectorReport = selectedTrial.detectorReport;
-    const bool hasPatternResult = reportPatternResult != nullptr;
+    const bool hasVerdict = reportVerdict != nullptr;
     const bool hasInspectedOccurrence = reportInspectedOccurrence != nullptr && reportInspectedOccurrence->occurrence.present;
     const detection::FieldState* runtimeFieldState = &_detection.fieldState();
     const detection::DetectionProfile& selectedProfile = detection::detectionProfileForKind(_sequenceTest.profileKind);
@@ -912,18 +912,18 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
     report.integrity.detectorReportPresent = selectedDetectorReport != nullptr;
     report.integrity.occurrenceMatched = selectedTrial.reportMatched;
     report.integrity.inspectionPresent = hasInspectedOccurrence;
-    report.integrity.patternReportPresent = hasPatternResult;
-    report.integrity.patternResultPresent = hasPatternResult;
+    report.integrity.evaluatorReportPresent = hasVerdict;
+    report.integrity.verdictPresent = hasVerdict;
     const unsigned long pipelineOverflowDelta = _detection.pipelineEventOverflowCount() > _sequenceTest.trialOverflowCountAtStart
         ? _detection.pipelineEventOverflowCount() - _sequenceTest.trialOverflowCountAtStart
         : 0UL;
     report.integrity.queueOverflowAffected = pipelineOverflowDelta > 0UL ||
-        _detection.patternInspectedQueueOverflowCount() > _sequenceTest.trialPatternInspectedOverflowCountAtStart;
+        _detection.verdictCorrelationQueueOverflowCount() > _sequenceTest.trialPatternInspectedOverflowCountAtStart;
     report.integrity.correlationComplete = selectedTrial.kind == SequenceTrialSelection::Kind::RejectedSourceCandidate
         ? report.integrity.detectorReportPresent
         : (report.integrity.detectorReportPresent &&
            report.integrity.inspectionPresent &&
-           report.integrity.patternResultPresent &&
+           report.integrity.verdictPresent &&
            report.integrity.occurrenceMatched);
     if (!report.integrity.detectorReportPresent) {
         report.integrity.reason = "missing_detector_report";
@@ -931,10 +931,10 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
         report.integrity.reason = report.integrity.queueOverflowAffected
             ? "inspection_queue_overflow"
             : "missing_inspected_occurrence";
-    } else if (!report.integrity.patternResultPresent && selectedTrial.kind != SequenceTrialSelection::Kind::RejectedSourceCandidate) {
+    } else if (!report.integrity.verdictPresent && selectedTrial.kind != SequenceTrialSelection::Kind::RejectedSourceCandidate) {
         report.integrity.reason = report.integrity.queueOverflowAffected
             ? "pipeline_event_queue_overflow"
-            : "missing_pattern_result";
+            : "missing_verdict";
     } else if (!report.integrity.occurrenceMatched && selectedTrial.kind != SequenceTrialSelection::Kind::RejectedSourceCandidate) {
         report.integrity.reason = "occurrence_id_mismatch";
     } else if (report.integrity.queueOverflowAffected) {
@@ -942,19 +942,19 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
     } else {
         report.integrity.reason = "none";
     }
-    const bool trialHasPipelineEvidence = (hasPatternResult || hasInspectedOccurrence || _sequenceTest.selectedSourceRejectCaptured)
+    const bool trialHasPipelineEvidence = (hasVerdict || hasInspectedOccurrence || _sequenceTest.selectedSourceRejectCaptured)
         && _sequenceTest.sourceCandidateCount > 0;
-    const long reportPatternDtMs = hasPatternResult
+    const long reportPatternDtMs = hasVerdict
         ? selectedTrial.dtMs
         : dtMs;
-    const unsigned long reportPatternDurationMs = hasPatternResult
+    const unsigned long reportPatternDurationMs = hasVerdict
         ? selectedTrial.durationMs
         : (durMs >= 0 ? static_cast<unsigned long>(durMs) : 0UL);
-    const float reportPatternStrength = hasPatternResult
+    const float reportPatternStrength = hasVerdict
         ? selectedTrial.strength
         : strength;
     const auto artifactReason = [&]() -> const char* {
-        if (hasPatternResult || hasInspectedOccurrence || selectedDetectorReport != nullptr) {
+        if (hasVerdict || hasInspectedOccurrence || selectedDetectorReport != nullptr) {
             return "captured_from_runtime_pipeline";
         }
         return "missing_pipeline_result";
@@ -972,51 +972,51 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
     classificationInput.sourceAcceptedCount = _sequenceTest.sourceAcceptedCount;
     classificationInput.sourceRejectedCount = _sequenceTest.sourceRejectedCount;
     classificationInput.inspectedOccurrenceCount = _sequenceTest.inspectedOccurrenceCount;
-    classificationInput.patternResultCount = _sequenceTest.patternResultCount;
+    classificationInput.verdictCount = _sequenceTest.verdictCount;
     classificationInput.pipelineQueueOverflowCount = pipelineOverflowDelta;
     classificationInput.bufferOverrun = bufferOverrun;
-    classificationInput.patternAvailable = hasPatternResult;
+    classificationInput.patternAvailable = hasVerdict;
     classificationInput.detectorReportAvailable = selectedDetectorReport != nullptr;
     classificationInput.detectorAcceptedPresent = selectedDetectorReport != nullptr && selectedDetectorReport->accepted.present;
     classificationInput.detectorSelectedRejectPresent = selectedDetectorReport != nullptr && selectedDetectorReport->selectedReject.present;
     report.classification = classifySequenceTrial(classificationInput);
-    if (hasPatternResult && !reportPatternResult->valid) {
+    if (hasVerdict && !reportVerdict->valid) {
         report.classification.result = AnalyzerResult::Rejected;
         report.classification.reason = AnalyzerReason::PatternRejected;
-        report.classification.primaryStage = AnalyzerStage::Pattern;
+        report.classification.primaryStage = AnalyzerStage::Evaluator;
     }
     {
-        // Analyzer formats the runtime PatternResult when one exists; it does
+        // Analyzer formats the runtime OccurrenceVerdict when one exists; it does
         // not synthesize pattern validity from occurrence acceptance.
-        AnalyzerPatternObservation pattern = {};
-        pattern.type = hasPatternResult ? detection::patternTypeName(reportPatternResult->type) : "none";
-        pattern.accepted = hasPatternResult
-            ? reportPatternResult->valid
+        AnalyzerVerdictObservation pattern = {};
+        pattern.type = hasVerdict ? detection::verdictTypeName(reportVerdict->type) : "none";
+        pattern.valid = hasVerdict
+            ? reportVerdict->valid
             : false;
-        pattern.patternAccepted = hasPatternResult ? reportPatternResult->patternAccepted : false;
-        pattern.patternMatched = hasPatternResult ? reportPatternResult->patternMatched : false;
-        pattern.supportMatched = hasPatternResult ? reportPatternResult->supportMatched : false;
-        pattern.behaviorEligible = pattern.accepted;
-        pattern.confidence = hasPatternResult ? reportPatternResult->confidence : 0.0f;
+        pattern.accepted = hasVerdict ? reportVerdict->accepted : false;
+        pattern.proposalMatched = hasVerdict ? reportVerdict->proposalMatched : false;
+        pattern.supportMatched = hasVerdict ? reportVerdict->supportMatched : false;
+        pattern.behaviorEligible = pattern.valid;
+        pattern.confidence = hasVerdict ? reportVerdict->confidence : 0.0f;
         pattern.dtMs = report.classification.dtMs;
         pattern.supportStrength = hasInspectedOccurrence
             ? detection::strengthClassName(reportInspectedOccurrence->occurrence.magnitude.strengthClass)
             : "unknown";
-        pattern.reason = hasPatternResult ? detection::patternReasonName(reportPatternResult->reasonCode) : "none";
-        pattern.rejectReason = hasPatternResult ? detection::patternRejectReasonName(reportPatternResult->rejectReason) : "none";
-        pattern.firstFailedTarget = hasPatternResult
-            ? reportPatternResult->firstFailedRequirementTarget
+        pattern.reason = hasVerdict ? detection::verdictReasonName(reportVerdict->reasonCode) : "none";
+        pattern.rejectReason = hasVerdict ? detection::verdictRejectReasonName(reportVerdict->rejectReason) : "none";
+        pattern.firstFailedTarget = hasVerdict
+            ? reportVerdict->firstFailedRequirementTarget
             : detection::InspectionTarget::None;
-        pattern.firstFailedObservedStrength = hasPatternResult
-            ? detection::strengthClassName(reportPatternResult->firstFailedObservedStrength)
+        pattern.firstFailedObservedStrength = hasVerdict
+            ? detection::strengthClassName(reportVerdict->firstFailedObservedStrength)
             : "unknown";
-        pattern.firstFailedRequiredStrength = hasPatternResult
-            ? detection::strengthClassName(reportPatternResult->firstFailedRequiredStrength)
+        pattern.firstFailedRequiredStrength = hasVerdict
+            ? detection::strengthClassName(reportVerdict->firstFailedRequiredStrength)
             : "unknown";
-        pattern.firstFailedRequirementIndex = hasPatternResult
-            ? reportPatternResult->firstFailedRequirementIndex
+        pattern.firstFailedRequirementIndex = hasVerdict
+            ? reportVerdict->firstFailedRequirementIndex
             : 255U;
-        pattern.involvedOccurrences = hasPatternResult ? reportPatternResult->occurrenceCount : 0U;
+        pattern.involvedOccurrences = hasVerdict ? reportVerdict->occurrenceCount : 0U;
         report.primaryPattern = pattern;
     }
 
@@ -1051,7 +1051,7 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
             ? occurrence.band.contrast
             : 0.0f;
         report.occurrences.strength = selectedTrial.strength;
-        report.occurrences.confidence = hasPatternResult ? reportPatternResult->confidence : occurrence.confidence;
+        report.occurrences.confidence = hasVerdict ? reportVerdict->confidence : occurrence.confidence;
         report.occurrences.mainRejectReason = reportInspectedOccurrence->decision == detection::OccurrenceDecision::Rejected
             ? detection::occurrenceRejectReasonName(reportInspectedOccurrence->rejectReason)
             : "none";
@@ -1082,7 +1082,7 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
         report.occurrences.strength = selectedTrial.kind == SequenceTrialSelection::Kind::RejectedSourceCandidate
             ? selectedTrial.strength
             : reportPatternStrength;
-        report.occurrences.confidence = hasPatternResult ? reportPatternResult->confidence : 0.0f;
+        report.occurrences.confidence = hasVerdict ? reportVerdict->confidence : 0.0f;
         if (selectedTrial.kind == SequenceTrialSelection::Kind::RejectedSourceCandidate &&
             selectedDetectorReport != nullptr &&
             selectedDetectorReport->selectedReject.present &&
@@ -1100,7 +1100,7 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
     report.inspection.accepted = report.occurrences.accepted;
     report.inspection.rejected = report.occurrences.rejected;
     const detection::InspectionModuleConfig* supportRequirement =
-        detection::patternMatcherFirstEnabledRequirement(selectedProfile.inspectionPlan);
+        detection::evaluatorFirstEnabledRequirement(selectedProfile.inspectionPlan);
     if (trialHasPipelineEvidence && hasInspectedOccurrence) {
         report.inspection.primaryEvidence = detection::occurrenceSourceName(reportInspectedOccurrence->occurrence.detectorId);
         report.inspection.moduleTarget = supportRequirement != nullptr ? supportRequirement->target : detection::InspectionTarget::None;
@@ -1177,14 +1177,14 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
 
     report.debug.occurrences = _sequenceTest.sourceCandidateCount;
     report.debug.inspected = _sequenceTest.inspectedOccurrenceCount;
-    report.debug.patterns = _sequenceTest.patternResultCount;
+    report.debug.patterns = _sequenceTest.verdictCount;
     report.debug.rejects = report.occurrences.rejected;
     report.debug.duplicates = duplicateCount;
     report.debug.unexpected = result == AnalyzerResult::Unexpected ? 1U : 0U;
     report.debug.pipelineQueueOverflows = classificationInput.pipelineQueueOverflowCount;
     report.debug.patternResultQueueOverflows = 0UL;
-    report.debug.patternInspectedQueueOverflows = _detection.patternInspectedQueueOverflowCount() > _sequenceTest.trialPatternInspectedOverflowCountAtStart
-        ? _detection.patternInspectedQueueOverflowCount() - _sequenceTest.trialPatternInspectedOverflowCountAtStart
+    report.debug.patternInspectedQueueOverflows = _detection.verdictCorrelationQueueOverflowCount() > _sequenceTest.trialPatternInspectedOverflowCountAtStart
+        ? _detection.verdictCorrelationQueueOverflowCount() - _sequenceTest.trialPatternInspectedOverflowCountAtStart
         : 0UL;
     report.debug.startupArtifact = startupArtifact;
     report.debug.bufferOverrun = bufferOverrun;

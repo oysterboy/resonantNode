@@ -2,7 +2,7 @@
 
 #include "../occurrences/Occurrence.h"
 #include "../occurrences/InspectedOccurrence.h"
-#include "../patterns/PatternResult.h"
+#include "../evaluation/OccurrenceVerdict.h"
 #include "FieldState.h"
 
 namespace detection {
@@ -10,7 +10,7 @@ namespace detection {
 /*
 FieldStateTracker
 
-Observes occurrences, inspected signals, and PatternResults to maintain
+Observes occurrences, inspected signals, and OccurrenceVerdicts to maintain
 recent acoustic context.
 Does not classify patterns and does not trigger output.
 */
@@ -33,8 +33,8 @@ public:
         unsigned long nowMs
     );
 
-    void observePatternResult(
-        const PatternResult& result,
+    void observeOccurrenceVerdict(
+        const OccurrenceVerdict& result,
         unsigned long nowMs
     );
 

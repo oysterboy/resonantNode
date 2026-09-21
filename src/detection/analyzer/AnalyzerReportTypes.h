@@ -25,7 +25,7 @@ Does not own detection or behavior decisions.
 //
 // SEQ_TRIAL:
 //   Generic trial truth only.
-//   Input: AnalyzerReport + PatternResult.
+//   Input: AnalyzerReport + OccurrenceVerdict.
 //   No detector-specific fields.
 //
 // SEQ_INSPECT:
@@ -63,7 +63,7 @@ enum class AnalyzerReason {
     PipelineQueueOverflow,
     PipelineIncomplete,
     MissingInspectionReport,
-    MissingPatternReport,
+    MissingEvaluatorReport,
     UncorrelatedPipelineEvent,
     UnknownStageFailure,
     NoOccurrence,
@@ -82,7 +82,7 @@ enum class AnalyzerStage {
     None,
     Source,
     Inspect,
-    Pattern,
+    Evaluator,
     Analyzer,
     Field,
 };
@@ -131,8 +131,8 @@ inline const char* analyzerReasonName(AnalyzerReason value) {
             return "pipeline_incomplete";
         case AnalyzerReason::MissingInspectionReport:
             return "missing_inspection_report";
-        case AnalyzerReason::MissingPatternReport:
-            return "missing_pattern_report";
+        case AnalyzerReason::MissingEvaluatorReport:
+            return "missing_evaluator_report";
         case AnalyzerReason::UncorrelatedPipelineEvent:
             return "uncorrelated_pipeline_event";
         case AnalyzerReason::UnknownStageFailure:
@@ -167,8 +167,8 @@ inline const char* analyzerStageName(AnalyzerStage value) {
             return "source";
         case AnalyzerStage::Inspect:
             return "inspect";
-        case AnalyzerStage::Pattern:
-            return "pattern";
+        case AnalyzerStage::Evaluator:
+            return "evaluator";
         case AnalyzerStage::Analyzer:
             return "analyzer";
         case AnalyzerStage::Field:
@@ -209,18 +209,18 @@ struct AnalyzerExpectedEvent {
     unsigned long triggerMs = 0;
     unsigned long windowStartMs = 0;
     unsigned long windowEndMs = 0;
-    const char* patternType = "none";
+    const char* verdictType = "none";
     const char* expectedSource = "none";
 };
 
-struct AnalyzerPatternObservation {
-    // PatternResult-owned pattern truth. Keep detector-specific and
-    // pattern-family-specific detail on PatternResult / canonical detail paths,
+struct AnalyzerVerdictObservation {
+    // OccurrenceVerdict-owned truth, projected for the report. Keep
+    // detector-specific detail on OccurrenceVerdict / canonical detail paths,
     // not in AnalyzerClassification.
     const char* type = "none";
+    bool valid = false;
     bool accepted = false;
-    bool patternAccepted = false;
-    bool patternMatched = false;
+    bool proposalMatched = false;
     bool supportMatched = false;
     bool behaviorEligible = false;
 
@@ -290,7 +290,7 @@ struct AnalyzerFieldObservation {
 struct AnalyzerClassification {
     // Generic trial classification only.
     // Detector-specific, occurrence-specific, and pattern-specific explanations
-    // stay on DetectorReport, Occurrence/InspectedOccurrence, and PatternResult.
+    // stay on DetectorReport, Occurrence/InspectedOccurrence, and OccurrenceVerdict.
     AnalyzerResult result = AnalyzerResult::Unknown;
     AnalyzerReason reason = AnalyzerReason::Unknown;
     AnalyzerStage primaryStage = AnalyzerStage::None;
@@ -302,8 +302,8 @@ struct AnalyzerPipelineIntegrityObservation {
     bool detectorReportPresent = false;
     bool occurrenceMatched = false;
     bool inspectionPresent = false;
-    bool patternReportPresent = false;
-    bool patternResultPresent = false;
+    bool evaluatorReportPresent = false;
+    bool verdictPresent = false;
     bool correlationComplete = false;
     bool queueOverflowAffected = false;
     const char* reason = "none";
@@ -411,7 +411,7 @@ struct AnalyzerReport {
     bool sourceReportMatched = false;
     AnalyzerPipelineIntegrityObservation integrity;
 
-    AnalyzerPatternObservation primaryPattern;
+    AnalyzerVerdictObservation primaryPattern;
     AnalyzerOccurrenceObservation occurrences;
     AnalyzerInspectionObservation inspection;
     AnalyzerFieldObservation field;

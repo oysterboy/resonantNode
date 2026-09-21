@@ -51,7 +51,7 @@ void applyScalarTransientConfig(ScalarTransientDetector& detector, const ScalarT
 // detectors. update() stays switch-based in observeFrame() (genuinely
 // different signatures per detector), and latestReport()/reportGeneration()
 // stay switch-based wherever they're already used (see
-// captureLatestDetectorReportIfChanged()), since neither PatternResult nor
+// captureLatestDetectorReportIfChanged()), since neither OccurrenceVerdict nor
 // FieldState is ever built from DetectorReport, that's a diagnostics-only
 // concern, not part of the drain path this adapter unifies.
 class ActiveDetectorAdapter {
@@ -94,7 +94,7 @@ void DetectionRuntime::resetDetectors() {
 void DetectionRuntime::resetDetectionState() {
     resetDetectors();
     _occurrenceInspector.reset();
-    _patternMatcher.reset();
+    _occurrenceEvaluator.reset();
     _fieldStateTracker.reset();
     _featureHistory.reset();
     resetDetectionQueues();
@@ -108,14 +108,14 @@ void DetectionRuntime::resetDetectionQueues() {
     _resultReadIndex = 0;
     _resultCount = 0;
 #ifdef ANALYZER_MODE
-    _patternResultQueueOverflowCount = 0;
+    _verdictQueueOverflowCount = 0;
     memset(&_pipelineEventQueue[0], 0, sizeof(_pipelineEventQueue[0]));
     _pipelineEventReadIndex = 0;
     _pipelineEventCount = 0;
-    memset(&_patternInspectedQueue[0], 0, sizeof(_patternInspectedQueue[0]));
-    _patternInspectedReadIndex = 0;
-    _patternInspectedCount = 0;
-    _patternInspectedQueueOverflowCount = 0;
+    memset(&_verdictCorrelationQueue[0], 0, sizeof(_verdictCorrelationQueue[0]));
+    _verdictCorrelationReadIndex = 0;
+    _verdictCorrelationCount = 0;
+    _verdictCorrelationQueueOverflowCount = 0;
 #endif
 }
 
@@ -129,24 +129,24 @@ void DetectionRuntime::resetDiagnosticsCounters() {
     _detectorReport = {};
     _frequencyDetector.resetDiagnosticsSummary();
     _pipelineEventOverflowCount = 0;
-    _patternResultQueueOverflowCount = 0;
-    _patternInspectedQueueOverflowCount = 0;
+    _verdictQueueOverflowCount = 0;
+    _verdictCorrelationQueueOverflowCount = 0;
     _detectorReportMismatchCount = 0;
     _observeFrameCount = 0;
     _freshDetectorInputCount = 0;
     _detectorDrainCount = 0;
-    _patternDrainCount = 0;
+    _evaluatorDrainCount = 0;
     _detectorReportRefreshCount = 0;
     _noFreshFrequencySkipCount = 0;
     _detectorOccurrencePoppedCount = 0;
     _detectorValidOccurrencePoppedCount = 0;
-    _latestPatternInputRejectReason = PatternInputRejectReason::None;
-    _patternAcceptAttemptCount = 0;
-    _patternAcceptSuccessCount = 0;
-    _patternAcceptRejectCount = 0;
-    _patternResultProducedCount = 0;
-    _patternEventPushedCount = 0;
-    _patternEventDroppedCount = 0;
+    _latestEvaluatorInputRejectReason = EvaluatorInputRejectReason::None;
+    _evaluatorAcceptAttemptCount = 0;
+    _evaluatorAcceptSuccessCount = 0;
+    _evaluatorAcceptRejectCount = 0;
+    _verdictProducedCount = 0;
+    _verdictEventPushedCount = 0;
+    _verdictEventDroppedCount = 0;
 }
 
 void DetectionRuntime::resetSourceRejectSummaries() {
@@ -164,7 +164,7 @@ void DetectionRuntime::resetDetectionBookkeeping() {
     _lastEmittedAcceptedReportGeneration = 0;
     _lastEmittedSelectedRejectOccurrenceId = 0;
     _lastEmittedSelectedRejectReportGeneration = 0;
-    _patternCorrelationFailureCount = 0;
+    _verdictCorrelationFailureCount = 0;
     memset(&_detectorReport, 0, sizeof(_detectorReport));
     _lastObservedScalarReportGeneration = 0;
     _lastObservedFrequencyReportGeneration = 0;
@@ -227,8 +227,8 @@ void DetectionRuntime::drainDetectorReportEvents(unsigned long nowMs) {
         event.sourceOccurrenceId = 0;
         event.integrity.detectorReportPresent = true;
         event.integrity.inspectionPresent = true;
-        event.integrity.patternReportPresent = false;
-        event.integrity.patternResultPresent = false;
+        event.integrity.evaluatorReportPresent = false;
+        event.integrity.verdictPresent = false;
         event.integrity.occurrenceMatched = true;
         event.integrity.correlationComplete = true;
         event.hasSourceRecord = true;
@@ -270,9 +270,9 @@ void DetectionRuntime::setDetectorSelection(DetectorSelection selection) {
     _lastEmittedAcceptedReportGeneration = 0;
     _lastEmittedSelectedRejectOccurrenceId = 0;
     _lastEmittedSelectedRejectReportGeneration = 0;
-    _patternInspectedQueue[0] = {};
-    _patternInspectedReadIndex = 0;
-    _patternInspectedCount = 0;
+    _verdictCorrelationQueue[0] = {};
+    _verdictCorrelationReadIndex = 0;
+    _verdictCorrelationCount = 0;
     _detectorReport = {};
     _lastObservedScalarReportGeneration = 0;
     _lastObservedFrequencyReportGeneration = 0;
@@ -289,7 +289,7 @@ static_assert(FeatureHistory::kMaxActiveStreams >= kMaxInspectionModules,
 void DetectionRuntime::setInspectionPlan(const InspectionPlan& plan) {
     _inspectionPlan = plan;
     _occurrenceInspector.configure(_inspectionPlan);
-    _patternMatcher.configure(_inspectionPlan);
+    _occurrenceEvaluator.configure(_inspectionPlan);
 
     FeatureStreamId streams[kMaxInspectionModules] = {};
     size_t streamCount = 0;
@@ -310,8 +310,8 @@ void DetectionRuntime::setProfileName(const char* profileName) {
     _profileName = profileName != nullptr ? profileName : "unknown";
 }
 
-void DetectionRuntime::setPatternResultQueueEnabled(bool enabled) {
-    _patternResultQueueEnabled = enabled;
+void DetectionRuntime::setVerdictQueueEnabled(bool enabled) {
+    _verdictQueueEnabled = enabled;
     if (!enabled) {
         _resultQueue[0] = {};
         _resultReadIndex = 0;
@@ -385,7 +385,7 @@ void DetectionRuntime::observeFrame(
     }
 
     const bool detectorHadPendingOutput = hasPendingDetectorOutput();
-    const bool patternHadPendingWork = hasPendingPatternWork();
+    const bool evaluatorHadPendingWork = hasPendingEvaluatorWork();
 
     if (detectorInputProcessed || detectorHadPendingOutput) {
 #ifdef ANALYZER_MODE
@@ -397,15 +397,15 @@ void DetectionRuntime::observeFrame(
 #endif
     }
 
-    if (detectorInputProcessed || detectorHadPendingOutput || patternHadPendingWork) {
+    if (detectorInputProcessed || detectorHadPendingOutput || evaluatorHadPendingWork) {
 #ifdef ANALYZER_MODE
-        ++_patternDrainCount;
+        ++_evaluatorDrainCount;
 #endif
-        drainPatternMatcher(nowMs);
+        drainOccurrenceEvaluator(nowMs);
     }
 }
 
-bool DetectionRuntime::popPatternResult(PatternResult& out) {
+bool DetectionRuntime::popOccurrenceVerdict(OccurrenceVerdict& out) {
     if (_resultCount == 0) {
         return false;
     }
@@ -433,12 +433,12 @@ bool DetectionRuntime::popPipelineEvent(DetectionPipelineEvent& out) {
     return true;
 }
 
-unsigned long DetectionRuntime::patternResultQueueOverflowCount() const {
-    return _patternResultQueueOverflowCount;
+unsigned long DetectionRuntime::verdictQueueOverflowCount() const {
+    return _verdictQueueOverflowCount;
 }
 
-unsigned long DetectionRuntime::patternInspectedQueueOverflowCount() const {
-    return _patternInspectedQueueOverflowCount;
+unsigned long DetectionRuntime::verdictCorrelationQueueOverflowCount() const {
+    return _verdictCorrelationQueueOverflowCount;
 }
 
 unsigned long DetectionRuntime::detectorReportMismatchCount() const {
@@ -457,8 +457,8 @@ uint32_t DetectionRuntime::detectorDrainCount() const {
     return _detectorDrainCount;
 }
 
-uint32_t DetectionRuntime::patternDrainCount() const {
-    return _patternDrainCount;
+uint32_t DetectionRuntime::evaluatorDrainCount() const {
+    return _evaluatorDrainCount;
 }
 
 uint32_t DetectionRuntime::detectorReportRefreshCount() const {
@@ -477,32 +477,32 @@ uint32_t DetectionRuntime::detectorValidOccurrencePoppedCount() const {
     return _detectorValidOccurrencePoppedCount;
 }
 
-uint32_t DetectionRuntime::patternAcceptAttemptCount() const {
-    return _patternAcceptAttemptCount;
+uint32_t DetectionRuntime::evaluatorAcceptAttemptCount() const {
+    return _evaluatorAcceptAttemptCount;
 }
 
-uint32_t DetectionRuntime::patternAcceptSuccessCount() const {
-    return _patternAcceptSuccessCount;
+uint32_t DetectionRuntime::evaluatorAcceptSuccessCount() const {
+    return _evaluatorAcceptSuccessCount;
 }
 
-uint32_t DetectionRuntime::patternAcceptRejectCount() const {
-    return _patternAcceptRejectCount;
+uint32_t DetectionRuntime::evaluatorAcceptRejectCount() const {
+    return _evaluatorAcceptRejectCount;
 }
 
-uint32_t DetectionRuntime::patternResultProducedCount() const {
-    return _patternResultProducedCount;
+uint32_t DetectionRuntime::verdictProducedCount() const {
+    return _verdictProducedCount;
 }
 
-uint32_t DetectionRuntime::patternEventPushedCount() const {
-    return _patternEventPushedCount;
+uint32_t DetectionRuntime::verdictEventPushedCount() const {
+    return _verdictEventPushedCount;
 }
 
-uint32_t DetectionRuntime::patternEventDroppedCount() const {
-    return _patternEventDroppedCount;
+uint32_t DetectionRuntime::verdictEventDroppedCount() const {
+    return _verdictEventDroppedCount;
 }
 
-PatternInputRejectReason DetectionRuntime::latestPatternInputRejectReason() const {
-    return _latestPatternInputRejectReason;
+EvaluatorInputRejectReason DetectionRuntime::latestEvaluatorInputRejectReason() const {
+    return _latestEvaluatorInputRejectReason;
 }
 
 uint32_t DetectionRuntime::scalarReportGeneration() const {
@@ -526,8 +526,8 @@ const DetectorReport& DetectionRuntime::activeDetectorReport() const {
     return _detectorReport;
 }
 
-const PatternMatcherReport& DetectionRuntime::activePatternMatcherReport() const {
-    return _patternMatcher.report();
+const OccurrenceEvaluatorReport& DetectionRuntime::activeEvaluatorReport() const {
+    return _occurrenceEvaluator.report();
 }
 
 const FeatureHistory& DetectionRuntime::featureHistory() const {
@@ -547,14 +547,14 @@ bool DetectionRuntime::hasPendingDetectorOutput() const {
     return false;
 }
 
-bool DetectionRuntime::hasPendingPatternWork() const {
+bool DetectionRuntime::hasPendingEvaluatorWork() const {
     // Query the matcher's own pending-input state directly. The correlation
-    // queue (_patternInspectedCount) is diagnostics-only bookkeeping and can
+    // queue (_verdictCorrelationCount) is diagnostics-only bookkeeping and can
     // legitimately diverge from what the matcher itself still has queued
-    // (for example, when pushPatternObservation() fails while
+    // (for example, when pushVerdictObservation() fails while
     // acceptOccurrence() already succeeded), so it must not be the authority
     // for whether pattern work is pending.
-    return _patternMatcher.hasPendingInput();
+    return _occurrenceEvaluator.hasPendingInput();
 }
 
 void DetectionRuntime::drainDetectors(unsigned long nowMs) {
@@ -574,10 +574,10 @@ void DetectionRuntime::drainDetectors(unsigned long nowMs) {
 #ifdef ANALYZER_MODE
         // The correlation observation exists only to attach a matching
         // DetectorReport/InspectedOccurrence to the diagnostic
-        // DetectionPipelineEvent; neither PatternResult nor FieldState is
+        // DetectionPipelineEvent; neither OccurrenceVerdict nor FieldState is
         // ever built from it. latestReport() stays switch-based rather than
         // going through the adapter, see the adapter's own comment for why.
-        PendingPatternObservation observation = {};
+        PendingVerdictObservation observation = {};
         observation.inspected = inspected;
         observation.detectorReport = _detectorSelection == DetectorSelection::FrequencyMatch
             ? _frequencyDetector.latestReport()
@@ -587,21 +587,21 @@ void DetectionRuntime::drainDetectors(unsigned long nowMs) {
             observation.detectorReport.accepted.occurrenceId != occurrence.occurrenceId) {
             ++_detectorReportMismatchCount;
         }
-        ++_patternAcceptAttemptCount;
+        ++_evaluatorAcceptAttemptCount;
 #endif
-        // Core: feeding the matcher is what eventually produces PatternResult.
-        const bool acceptedByMatcher = _patternMatcher.acceptOccurrence(inspected);
+        // Core: feeding the matcher is what eventually produces OccurrenceVerdict.
+        const bool acceptedByMatcher = _occurrenceEvaluator.acceptOccurrence(inspected);
 #ifdef ANALYZER_MODE
-        PatternInputRejectReason rejectReason = _patternMatcher.lastInputRejectReason();
+        EvaluatorInputRejectReason rejectReason = _occurrenceEvaluator.lastInputRejectReason();
         if (acceptedByMatcher) {
-            ++_patternAcceptSuccessCount;
-            if (!pushPatternObservation(observation)) {
-                rejectReason = PatternInputRejectReason::CorrelationQueueFull;
-                _latestPatternInputRejectReason = rejectReason;
+            ++_evaluatorAcceptSuccessCount;
+            if (!pushVerdictObservation(observation)) {
+                rejectReason = EvaluatorInputRejectReason::CorrelationQueueFull;
+                _latestEvaluatorInputRejectReason = rejectReason;
             }
         } else {
-            ++_patternAcceptRejectCount;
-            _latestPatternInputRejectReason = rejectReason;
+            ++_evaluatorAcceptRejectCount;
+            _latestEvaluatorInputRejectReason = rejectReason;
         }
 #else
         (void)acceptedByMatcher;
@@ -611,17 +611,17 @@ void DetectionRuntime::drainDetectors(unsigned long nowMs) {
     (void)nowMs;
 }
 
-void DetectionRuntime::drainPatternMatcher(unsigned long nowMs) {
-    PatternResult result = {};
-    while (_patternMatcher.popPatternResult(nowMs, result)) {
+void DetectionRuntime::drainOccurrenceEvaluator(unsigned long nowMs) {
+    OccurrenceVerdict result = {};
+    while (_occurrenceEvaluator.popOccurrenceVerdict(nowMs, result)) {
 #ifdef ANALYZER_MODE
-        ++_patternResultProducedCount;
-        PendingPatternObservation matchedObservation = {};
-        const bool hasMatchedInspectedOccurrence = popPatternObservation(result.occurrenceId, matchedObservation);
+        ++_verdictProducedCount;
+        PendingVerdictObservation matchedObservation = {};
+        const bool hasMatchedInspectedOccurrence = popVerdictObservation(result.occurrenceId, matchedObservation);
 #endif
-        // Core: FieldState and the PatternResult queue are built from the
-        // bare PatternResult, independent of any correlation bookkeeping.
-        _fieldStateTracker.observePatternResult(result, nowMs);
+        // Core: FieldState and the OccurrenceVerdict queue are built from the
+        // bare OccurrenceVerdict, independent of any correlation bookkeeping.
+        _fieldStateTracker.observeOccurrenceVerdict(result, nowMs);
 #ifdef ANALYZER_MODE
         capturePipelineResult(
             result,
@@ -630,19 +630,19 @@ void DetectionRuntime::drainPatternMatcher(unsigned long nowMs) {
             nowMs
         );
 #endif
-        if (_patternResultQueueEnabled) {
-            pushPatternResult(result);
+        if (_verdictQueueEnabled) {
+            pushOccurrenceVerdict(result);
         }
     }
 }
 
-bool DetectionRuntime::pushPatternResult(const PatternResult& result) {
-    if (!_patternResultQueueEnabled) {
+bool DetectionRuntime::pushOccurrenceVerdict(const OccurrenceVerdict& result) {
+    if (!_verdictQueueEnabled) {
         return true;
     }
     if (_resultCount == kResultQueueCapacity) {
 #ifdef ANALYZER_MODE
-        ++_patternResultQueueOverflowCount;
+        ++_verdictQueueOverflowCount;
 #endif
         return false;
     }
@@ -659,8 +659,8 @@ unsigned long DetectionRuntime::pipelineEventOverflowCount() const {
     return _pipelineEventOverflowCount;
 }
 
-unsigned long DetectionRuntime::patternCorrelationFailureCount() const {
-    return _patternCorrelationFailureCount;
+unsigned long DetectionRuntime::verdictCorrelationFailureCount() const {
+    return _verdictCorrelationFailureCount;
 }
 
 bool DetectionRuntime::pushPipelineEvent(const DetectionPipelineEvent& event) {
@@ -676,19 +676,19 @@ bool DetectionRuntime::pushPipelineEvent(const DetectionPipelineEvent& event) {
 }
 
 bool DetectionRuntime::capturePipelineResult(
-    const PatternResult& result,
+    const OccurrenceVerdict& result,
     const InspectedOccurrence* matchedInspectedOccurrence,
     const DetectorReport* matchedDetectorReport,
     unsigned long nowMs
 ) {
     _latestPipelineResult = {};
-    _latestPipelineResult.hasPattern = true;
-    _latestPipelineResult.pattern = result;
-    _latestPipelineResult.hasPatternReport = true;
-    _latestPipelineResult.patternReport = _patternMatcher.report();
+    _latestPipelineResult.hasVerdict = true;
+    _latestPipelineResult.verdict = result;
+    _latestPipelineResult.hasEvaluatorReport = true;
+    _latestPipelineResult.evaluatorReport = _occurrenceEvaluator.report();
     if (matchedInspectedOccurrence != nullptr && matchedInspectedOccurrence->occurrence.present) {
-        _latestPipelineResult.hasPatternInspectedOccurrence = true;
-        _latestPipelineResult.patternInspectedOccurrence = *matchedInspectedOccurrence;
+        _latestPipelineResult.hasVerdictInspectedOccurrence = true;
+        _latestPipelineResult.verdictInspectedOccurrence = *matchedInspectedOccurrence;
         _latestPipelineResult.hasOccurrence = true;
         _latestPipelineResult.occurrence = matchedInspectedOccurrence->occurrence;
     }
@@ -723,17 +723,17 @@ bool DetectionRuntime::capturePipelineResult(
     event.sourceCandidateId = 0;
     event.integrity.detectorReportPresent = event.detectorReportPresent;
     event.integrity.inspectionPresent = event.detectorReportMatched;
-    event.integrity.patternReportPresent = true;
-    event.integrity.patternResultPresent = true;
+    event.integrity.evaluatorReportPresent = true;
+    event.integrity.verdictPresent = true;
     event.integrity.occurrenceMatched = event.detectorReportMatched;
-    event.integrity.correlationComplete = event.integrity.detectorReportPresent && event.integrity.inspectionPresent && event.integrity.patternResultPresent;
+    event.integrity.correlationComplete = event.integrity.detectorReportPresent && event.integrity.inspectionPresent && event.integrity.verdictPresent;
     event.integrity.reason = event.integrity.correlationComplete
         ? PipelineIntegrityReason::None
         : (event.integrity.detectorReportPresent
-            ? (event.integrity.inspectionPresent ? PipelineIntegrityReason::MissingPatternResult : PipelineIntegrityReason::MissingInspectedOccurrence)
+            ? (event.integrity.inspectionPresent ? PipelineIntegrityReason::MissingVerdict : PipelineIntegrityReason::MissingInspectedOccurrence)
             : PipelineIntegrityReason::MissingDetectorReport);
-    event.hasPatternResult = true;
-    event.patternResult = result;
+    event.hasVerdict = true;
+    event.verdict = result;
     event.hasSourceRecord = true;
     event.sourceRecord.detectorReport = matchedDetectorReport != nullptr ? *matchedDetectorReport : DetectorReport{};
     event.sourceRecord.sourceSelection = event.sourceSelection;
@@ -764,51 +764,51 @@ bool DetectionRuntime::capturePipelineResult(
         }
     }
     if (eventPushed) {
-        ++_patternEventPushedCount;
+        ++_verdictEventPushedCount;
     } else {
-        ++_patternEventDroppedCount;
+        ++_verdictEventDroppedCount;
     }
     return eventPushed;
 }
 
-bool DetectionRuntime::pushPatternObservation(const PendingPatternObservation& observation) {
-    if (_patternInspectedCount == kResultQueueCapacity) {
-        ++_patternInspectedQueueOverflowCount;
+bool DetectionRuntime::pushVerdictObservation(const PendingVerdictObservation& observation) {
+    if (_verdictCorrelationCount == kResultQueueCapacity) {
+        ++_verdictCorrelationQueueOverflowCount;
         return false;
     }
 
-    const size_t writeIndex = (_patternInspectedReadIndex + _patternInspectedCount) % kResultQueueCapacity;
-    _patternInspectedQueue[writeIndex] = observation;
-    ++_patternInspectedCount;
+    const size_t writeIndex = (_verdictCorrelationReadIndex + _verdictCorrelationCount) % kResultQueueCapacity;
+    _verdictCorrelationQueue[writeIndex] = observation;
+    ++_verdictCorrelationCount;
     return true;
 }
 
-bool DetectionRuntime::popPatternObservation(unsigned long occurrenceId, PendingPatternObservation& out) {
-    if (_patternInspectedCount == 0) {
+bool DetectionRuntime::popVerdictObservation(unsigned long occurrenceId, PendingVerdictObservation& out) {
+    if (_verdictCorrelationCount == 0) {
         return false;
     }
 
     size_t matchOffset = 0;
-    for (; matchOffset < _patternInspectedCount; ++matchOffset) {
-        const size_t index = (_patternInspectedReadIndex + matchOffset) % kResultQueueCapacity;
-        if (_patternInspectedQueue[index].inspected.occurrence.occurrenceId == occurrenceId) {
-            out = _patternInspectedQueue[index];
+    for (; matchOffset < _verdictCorrelationCount; ++matchOffset) {
+        const size_t index = (_verdictCorrelationReadIndex + matchOffset) % kResultQueueCapacity;
+        if (_verdictCorrelationQueue[index].inspected.occurrence.occurrenceId == occurrenceId) {
+            out = _verdictCorrelationQueue[index];
             break;
         }
     }
 
-    if (matchOffset >= _patternInspectedCount) {
-        ++_patternCorrelationFailureCount;
+    if (matchOffset >= _verdictCorrelationCount) {
+        ++_verdictCorrelationFailureCount;
         return false;
     }
 
-    for (size_t i = matchOffset; i + 1 < _patternInspectedCount; ++i) {
-        const size_t from = (_patternInspectedReadIndex + i + 1) % kResultQueueCapacity;
-        const size_t to = (_patternInspectedReadIndex + i) % kResultQueueCapacity;
-        _patternInspectedQueue[to] = _patternInspectedQueue[from];
+    for (size_t i = matchOffset; i + 1 < _verdictCorrelationCount; ++i) {
+        const size_t from = (_verdictCorrelationReadIndex + i + 1) % kResultQueueCapacity;
+        const size_t to = (_verdictCorrelationReadIndex + i) % kResultQueueCapacity;
+        _verdictCorrelationQueue[to] = _verdictCorrelationQueue[from];
     }
-    _patternInspectedReadIndex = (_patternInspectedReadIndex + _patternInspectedCount - 1) % kResultQueueCapacity;
-    --_patternInspectedCount;
+    _verdictCorrelationReadIndex = (_verdictCorrelationReadIndex + _verdictCorrelationCount - 1) % kResultQueueCapacity;
+    --_verdictCorrelationCount;
     return true;
 }
 

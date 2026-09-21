@@ -4,20 +4,20 @@
 #include <stdint.h>
 
 #include "../inspection/InspectorTypes.h"
-#include "PatternTypes.h"
+#include "VerdictTypes.h"
 
 namespace detection {
 
-using PatternMatcherConfig = InspectionPlan;
+using OccurrenceEvaluatorConfig = InspectionPlan;
 
-struct PatternMatcherReport {
+struct OccurrenceEvaluatorReport {
     bool proposalPresent = false;
-    bool patternMatched = false;
+    bool proposalMatched = false;
     bool supportMatched = false;
     bool valid = false;
 
-    PatternType patternType = PatternType::None;
-    PatternRejectReason rejectReason = PatternRejectReason::None;
+    VerdictType verdictType = VerdictType::None;
+    VerdictRejectReason rejectReason = VerdictRejectReason::None;
     InspectionTarget firstFailedRequirementTarget = InspectionTarget::None;
     uint8_t firstFailedRequirementIndex = 255;
     StrengthClass firstFailedObservedStrength = StrengthClass::Unknown;

@@ -3,7 +3,7 @@
 namespace detection {
 
 // Core pattern labels and reasons.
-enum class PatternType {
+enum class VerdictType {
     None,
     SinglePulse,
     DuplicateAfterPrimary,
@@ -12,17 +12,17 @@ enum class PatternType {
     Ambiguous,
 };
 
-enum class PatternReasonCode {
+enum class VerdictReasonCode {
     None,
     FromFrequencyMatch,
     FromOccurrence,
     DetectorRejected,
     AmbiguousEvidence,
-    UnsupportedPattern,
+    SupportRequirementFailed,
 };
 
 // Pattern rejection reasons are kept separate from result kinds.
-enum class PatternRejectReason {
+enum class VerdictRejectReason {
     None,
     NoProposal,
     InvalidOccurrence,

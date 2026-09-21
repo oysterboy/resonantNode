@@ -454,6 +454,126 @@ here in case the cross-family habit turns out to matter.
 
 ---
 
+## Locked shim signatures (2026-09-21 addendum, pre-implementation)
+
+Derived directly from the current `switch (_detectorSelection)` call sites in
+`DetectionRuntime.cpp` (the `update()` dispatch, `applyScalarTransientConfig()`,
+`resetSourceRejectSummaries()`), so the three shims don't get redesigned
+mid-implementation. One of these is a real gap the section-2 sketch didn't
+resolve, not just a formalization.
+
+### `updateActiveDetector` returns `bool`, not `void`
+
+The two branches don't just call `update()` with different signatures, they
+gate it differently first (frequency: `frequencyEvidence.present &&
+frequencyEvidence.fresh`; scalar: `!streamRequiresFreshFrequency(...) ||
+frequencyEvidence.fresh`), and the result drives `detectorInputProcessed`,
+which `observeFrame()` needs to decide whether to drain. The shim has to
+report whether it consumed the frame:
+
+```cpp
+// One family header, per branch:
+inline bool updateActiveDetector(
+    ActiveDetector& detector,
+    const AudioSamplePacket& audioSamplePacket,
+    const FrequencyBandMeasurementPacket& frequencyEvidence,
+    const ActiveDetectorConfig& config,
+    unsigned long nowMs);
+```
+
+Frequency body: gate on `frequencyEvidence.present && frequencyEvidence.fresh`,
+build `FrequencyMatchCriteria::Values` from `config`, call `detector.update(...)`,
+return `true`; else return `false` without calling `update()`.
+Scalar body: gate on `!streamRequiresFreshFrequency(config.observedStream) ||
+frequencyEvidence.fresh`, call
+`detector.update(audioSamplePacket, selectedScalarValue(...))`, return `true`;
+else return `false`.
+
+`observeFrame()` becomes directive-free:
+
+```cpp
+detectorInputProcessed = updateActiveDetector(_detector, audioSamplePacket, frequencyEvidence, _activeDetectorConfig, nowMs);
+#ifdef ANALYZER_MODE
+detectorInputProcessed ? ++_freshDetectorInputCount : ++_noFreshFrequencySkipCount;
+#endif
+```
+
+`selectedScalarValue()`/`streamRequiresFreshFrequency()` are today
+anonymous-namespace helpers in `DetectionRuntime.cpp`; the scalar shim body
+needs them, so they move into `DetectionFamily.h`'s scalar branch. Small, but
+the doc hadn't accounted for moving them.
+
+### `applyActiveDetectorConfig`: config storage does not collapse cleanly
+
+The section-2 sketch has `DetectionRuntime` hold one
+`ActiveDetectorConfig _activeDetectorConfig` member. But
+`setFrequencyMatchConfig(const FrequencyMatchConfig&)` and
+`setScalarTransientConfig(const ScalarTransientConfig&)` are both required,
+unchanged, Node-facing API in *every* family build (the non-negotiable
+constraint from `cleanup-analyzer-node-isolation.md`), and `DetectionProfile.h`
+stays family-agnostic and calls both setters unconditionally through its
+profile factories. So both methods must keep compiling and accepting calls in
+every build, but only one of them is backed by a real detector.
+
+Locked resolution: keep both setter signatures exactly as they are, but
+decide which body actually stores/applies via `if constexpr` type comparison
+against `ActiveDetectorConfig` — not a second `#ifdef`:
+
+```cpp
+void DetectionRuntime::setFrequencyMatchConfig(const FrequencyMatchConfig& config) {
+    if constexpr (std::is_same_v<ActiveDetectorConfig, FrequencyMatchConfig>) {
+        _activeDetectorConfig = config;
+        applyActiveDetectorConfig(_detector, _activeDetectorConfig);
+    }
+}
+void DetectionRuntime::setScalarTransientConfig(const ScalarTransientConfig& config) {
+    if constexpr (std::is_same_v<ActiveDetectorConfig, ScalarTransientConfig>) {
+        _activeDetectorConfig = config;
+        applyActiveDetectorConfig(_detector, _activeDetectorConfig);
+    }
+}
+```
+
+`if constexpr` discards the untaken branch at compile time, so this never
+becomes a real `#ifdef` and compiles in both families. It does mean the
+off-family setter's incoming value is silently dropped rather than stored —
+consistent with the existing principle that a mismatched profile is refused
+by `setDetectorSelection()` (section 3), and confirmed safe by grep: today,
+`_frequencyMatchConfig`/`_scalarTransientConfig` are each only ever read back
+from their own family's branch and their own setter, nothing else reads a
+stored-but-inactive config.
+
+Worth being explicit: `grep -c "DETECTOR_FAMILY" src/` staying at 1 file is a
+promise about the macro, not about all compile-time branching disappearing
+from `DetectionRuntime.cpp`. `if constexpr (std::is_same_v<ActiveDetectorConfig, ...>)`
+never names `DETECTOR_FAMILY_*` directly, it only compares against the alias
+`DetectionFamily.h` already set, so the check still passes — but a reader of
+`DetectionRuntime.cpp` will see two `if constexpr` blocks, not zero
+conditionals.
+
+### `resetActiveDetectorRejectSummaries`: Analyzer-only caller, still family-shaped
+
+```cpp
+inline void resetActiveDetectorRejectSummaries(ActiveDetector& detector);
+```
+
+Frequency body: `detector.resetRejectSummary();`
+Scalar body: `detector.resetAcceptedOccurrenceSummary(); detector.resetSelectedRejectSummary();`
+(two calls, different method names — the asymmetry section 2 already flags).
+
+Confirmed by reading `resetDetectors()`/`resetDetectionState()`/
+`resetDetectionQueues()` (all core, Node-required): none of them call
+`resetSourceRejectSummaries()`. Its only caller is the
+`ANALYZER_MODE`-gated `resetSourceRejectSummaries()` itself
+(`DetectionRuntime.cpp:152`, inside the `#ifdef ANALYZER_MODE` block spanning
+lines 122-250). So this shim is only ever invoked from an Analyzer build; in
+Node builds it is defined (harmless, `inline`, eliminated as dead code) but
+never called. No conflict between the two build axes staying orthogonal — the
+shim exists unconditionally in `DetectionFamily.h`, only its caller is
+`ANALYZER_MODE`-gated, exactly as designed.
+
+---
+
 ## Risks
 
 - **Environment matrix.** Three envs become five. Every "build all"
@@ -478,8 +598,9 @@ here in case the cross-family habit turns out to matter.
 ## Suggested approach
 
 1. Write `DetectionFamily.h` (aliases, `kCompiledFamily`,
-   `kFamilyMaxActiveStreams`, the three shims) and add the family build
-   flags and the two new envs; extend `build_src_filter`. Build all five.
+   `kFamilyMaxActiveStreams`, the three shims per "Locked shim signatures"
+   above) and add the family build flags and the two new envs; extend
+   `build_src_filter`. Build all five.
 2. Point `DetectionRuntime` at `ActiveDetector`/`ActiveDetectorConfig` and
    route the three differing calls through the shims; delete
    `_detectorSelection`, `ActiveDetectorAdapter`, and every `switch` on

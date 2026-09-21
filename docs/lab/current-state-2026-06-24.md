@@ -39,7 +39,7 @@ Reference log:
 - `SEQ_SOURCE source.confidence=0.00`
 - `SEQ_SOURCE_CORE accepted.confidence=1.00`
 
-This suggests the compact source line may use OccurrenceVerdict confidence rather than DetectorReport confidence.
+This suggests the compact source line may use PatternResult confidence rather than DetectorReport confidence.
 
 Deferred deliberately. It does not invalidate current trial classification, source selection, reject attribution or summary counters.
 

@@ -1,3 +1,61 @@
+# 2026-09-21 - Detection cleanup pass: isolation, memory, naming
+
+### Context
+
+A review-driven cleanup of the detection layer, sequenced in
+`docs/refactors/cleanup-0-plan.md`. Every step is build-verified on all
+three environments against the real toolchain; none of it has run on
+hardware yet. The hardware battery (T2/T3 SEQ regression, T4 Unity, T6/T7)
+is the next thing to do before building further.
+
+### Changed
+
+- renamed the evidence-shape vocabulary that collided with detector
+  provenance: `Occurrence.scalar`/`.frequency` -> `.magnitude`/`.band`,
+  `ScalarInspection*` -> `MagnitudeInspection*`, `ScalarWindow` ->
+  `MagnitudeWindow`; printed labels follow (`magnitude_observed` etc.)
+- fixed `FrequencyMatchDetector::update()` letting the diagnostics-only
+  best-evidence snapshot overwrite the live gate state that `buildReport()`
+  reads; this changes `SEQ_SOURCE_SPEC`'s `gate_reason`/`ready_ok`/
+  `gate_open` under default settings, which is the bug being fixed
+- privatized `FrequencyMatchDetector`'s ~70 public fields; unified
+  `DetectionRuntime::drainDetectors()`'s duplicated per-detector loop
+- kept Analyzer diagnostics out of the Node and Emitter binaries:
+  `ANALYZER_MODE` gating inside `DetectionRuntime`, plus a
+  `build_src_filter` so the analyzer tooling is not compiled into them at
+  all (it had been); Node RAM 87,940 -> 74,436
+- `FeatureHistory`: dropped write-only per-bin `rms`/`peak` (bin 32 -> 24
+  bytes), and record only the streams the active inspection plan reads (3
+  slots, tied to `kMaxInspectionModules`); Node RAM -> 59,996, a 31.8%
+  reduction for the day, Analyzer 99,564 -> 85,124
+- renamed `PatternMatcher`/`PatternResult` -> `OccurrenceEvaluator`/
+  `OccurrenceVerdict` (`src/detection/evaluation/`): the stage judges one
+  occurrence against the plan's support requirements and has no temporal
+  logic; "Pattern" is reserved for a future downstream stage. Labels
+  follow (`verdict.valid=`, `analyzer.stage=evaluator`, ...). Trial
+  classifier and Behavior vocabulary (`ValidPatternInExpectedWindow`,
+  `HeardPattern`) deliberately not renamed yet; emission patterns
+  (`ChirpPattern`) are correct as they are
+- deferred the detector-object union (1,440 bytes measured, a UB hazard on
+  profile switch); superseded by `cleanup-detector-family-build.md`:
+  detector family as a build flag, profile as reboot-applied config,
+  thresholds as live params, one `DetectionFamily.h` carrying the switch,
+  and `SimpleThresholdDetector` as the third family and the MVP detector
+  (`mvp-app-structure.md` amended accordingly)
+- recorded, not changed: `FrequencyMatchDetector` enforces no upper
+  duration bound, so a frequency occurrence over ~246 ms already outruns
+  the 256-bin history
+
+### Verification
+
+- `platformio run -e esp32dev -e esp32dev-emitter -e esp32dev-analyzer`
+  passes at every commit
+- the Analyzer translation unit was preprocessed before/after the
+  isolation split and diffed: identical apart from ordering and one dead
+  local
+- the evaluator rename left Node RAM and flash byte-identical
+- no hardware runs; T2/T3/T4/T6/T7 all outstanding
+
 # 2026-06-22 - TonalPulseScalar quality path landed
 
 ### Context
@@ -219,7 +277,7 @@ SignalInspector        → OccurrenceInspector
 InspectedSignal        → InspectedOccurrence
 ```
 
-`PatternCandidate`, `PatternRules`, and `OccurrenceVerdict` stay.
+`PatternCandidate`, `PatternRules`, and `PatternResult` stay.
 
 Profile rename:
 

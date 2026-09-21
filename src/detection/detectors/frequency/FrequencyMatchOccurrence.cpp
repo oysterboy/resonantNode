@@ -1,18 +1,18 @@
 #include "FrequencyMatchDetector.h"
 
 void FrequencyMatchDetector::capturePendingOccurrence(const AudioSamplePacket& audioSamplePacket) {
-    _pendingOccurrence = pendingOccurrence;
+    _pendingOccurrence = _pendingCandidateOccurrence;
     _pendingOccurrence.detectorId = detection::DetectorId::FrequencyMatch;
     _pendingOccurrence.occurrenceType = detection::OccurrenceType::Frequency;
-    _pendingOccurrence.occurrenceId = acceptedOccurrenceId != 0 ? acceptedOccurrenceId : lastPendingId;
+    _pendingOccurrence.occurrenceId = _acceptedOccurrenceId != 0 ? _acceptedOccurrenceId : _lastPendingId;
     _pendingOccurrence.present = true;
     _pendingOccurrence.confidence = _pendingOccurrence.valid ? 1.0f : 0.0f;
     _pendingOccurrence.band.present = true;
-    _pendingOccurrence.band.measurement = pendingEvidence;
+    _pendingOccurrence.band.measurement = _pendingEvidence;
     _pendingOccurrence.band.measurement.present = true;
-    _pendingOccurrence.band.measurement.matched = pendingOccurrence.valid;
+    _pendingOccurrence.band.measurement.matched = _pendingCandidateOccurrence.valid;
     _pendingOccurrence.band.measurement.observedAtMs = audioSamplePacket.timeMs;
-    _pendingOccurrence.band.measurement.targetHz = pendingEvidence.targetHz;
+    _pendingOccurrence.band.measurement.targetHz = _pendingEvidence.targetHz;
     _pendingOccurrence.magnitude.value = audioSamplePacket.audioMagnitudeValue;
     _pendingOccurrence.magnitude.baseline = audioSamplePacket.baseline;
     _pendingOccurrence.magnitude.lift = _pendingOccurrence.magnitude.value - _pendingOccurrence.magnitude.baseline;
@@ -28,16 +28,16 @@ void FrequencyMatchDetector::capturePendingOccurrence(const AudioSamplePacket& a
         _acceptedOccurrence.durationMs = _pendingOccurrence.durationMs;
         _acceptedOccurrence.strength = _pendingOccurrence.strength;
         _acceptedOccurrence.confidence = _pendingOccurrence.confidence;
-        _acceptedOccurrence.peak = pendingPeakScore;
+        _acceptedOccurrence.peak = _pendingPeakScore;
         _acceptedOccurrence.mean = mean;
         _acceptedOccurrence.rms = rms;
-        _acceptedOccurrence.coverageAboveAttackMs = pendingCoverageAboveAttackMs;
-        _acceptedOccurrence.coverageAboveReleaseMs = pendingCoverageAboveReleaseMs;
-        _acceptedOccurrence.sustainedMs = pendingSustainedMs;
-        _acceptedOccurrence.islandCount = pendingIslandCount;
-        _acceptedOccurrence.gapCount = pendingGapCount;
-        _acceptedOccurrence.islandMaxMs = pendingIslandMaxMs;
-        _acceptedOccurrence.gapMaxMs = pendingGapMaxMs;
+        _acceptedOccurrence.coverageAboveAttackMs = _pendingCoverageAboveAttackMs;
+        _acceptedOccurrence.coverageAboveReleaseMs = _pendingCoverageAboveReleaseMs;
+        _acceptedOccurrence.sustainedMs = _pendingSustainedMs;
+        _acceptedOccurrence.islandCount = _pendingIslandCount;
+        _acceptedOccurrence.gapCount = _pendingGapCount;
+        _acceptedOccurrence.islandMaxMs = _pendingIslandMaxMs;
+        _acceptedOccurrence.gapMaxMs = _pendingGapMaxMs;
         _acceptedDetail.score = _pendingOccurrence.band.score;
         _acceptedDetail.contrast = _pendingOccurrence.band.contrast;
     }

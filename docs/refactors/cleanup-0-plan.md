@@ -180,17 +180,20 @@ regardless of what Phase 0 eventually decides. If Phase 0 later resolves to
    field surface, one logical group at a time (lifecycle state, then
    pending/candidate facts, then best-rejected summary, then diagnostics),
    rebuilding after each group.
-   - Test: T1 after each group; T2, T4 after the full item is complete.
+   **Implemented, 2026-09-21.** See `cleanup.md` Item 3's status note for
+   the two design decisions this took (the `_pendingCandidateOccurrence`
+   rename to avoid a name collision, and converting
+   `frequencyRejectReasonFromState()` from a free function to a private
+   member since privatizing broke its direct field access).
+   - Test: T1 done for all three environments, including a full real build
+     (not just syntax-only checks), see below. T2, T4 (hardware) still
+     outstanding.
 
-**Checkpoint, 2026-09-21: paused here on purpose, not started Item 3 yet.**
-Item 2 is a real, judgment-call fix, not a mechanical rename: it changes
-`SEQ_SOURCE_SPEC`'s `gate_reason`/`ready_ok`/`gate_open` output under
-default settings (see its status note in `cleanup.md`), and the live-only
-`gateReason` classification it introduces was designed without a hardware
-trial to check it against. Building Item 3 (a large, 70-field mechanical
-move) on top of an unverified Item 2 would make it harder to isolate which
-change caused a problem if Item 2's reasoning turns out wrong. Run T2 and
-Item 2's own two-run diagnostics comparison first; only then start Item 3.
+**Checkpoint from earlier, superseded:** this plan previously paused before
+starting Item 3, pending Item 2's hardware verification (see git history).
+The user asked to proceed with Item 3 anyway; it's done now, on the same
+verification footing as Item 2, T1 (full build, all three environments)
+passed, T2/T4 still need hardware.
 
 **Gate:** Phase 3 can start once this phase is done, or in parallel if
 working with more than one person, since Phase 3 touches `DetectionRuntime`
@@ -204,11 +207,12 @@ Does not require Phase 2, but doing Phase 2 first means
 `FrequencyMatchDetector`'s surface is already narrow when this item touches
 its call sites. (No longer gated on Item 1, which is withdrawn.)
 
-1. Introduce the internal `ActiveDetectorAdapter` (`hasPendingOccurrence`,
-   `popOccurrence` only, see the corrected sketch in `cleanup.md` Item 5).
-   Route `drainDetectors()` through it. Leave `observeFrame()`'s
-   detector-specific `update(...)` dispatch switch as-is.
-   - Test: T1, T2, T3, T6.
+1. Introduce the internal `ActiveDetectorAdapter` (`popOccurrence` only,
+   see `cleanup.md` Item 5's status note for why `hasPendingOccurrence`
+   wasn't folded in too). Route `drainDetectors()` through it. Leave
+   `observeFrame()`'s detector-specific `update(...)` dispatch switch as-is.
+   **Implemented, 2026-09-21.** T1 done (full build, all three
+   environments); T2, T3, T6 (hardware) still outstanding.
 
 **Note:** this item is deliberately kept even though Phase 5b (ownership
 proposal) will later replace the adapter with a fuller single-slot model.
@@ -349,8 +353,8 @@ decision is: consolidate" section instead:
 |---|---|---|---|
 | 0 | consolidation | — (parallel track) | field trials only |
 | 1 | cleanup.md #4 (done), inspector-pattern-scope (done), ~~cleanup.md #1~~ (withdrawn), Magnitude/Band rename (done, out-of-band) | — | T1 (done), T2-T4 (hardware, outstanding) |
-| 2 | cleanup.md #2 (implemented, hardware verification outstanding), #3 (not started) | Phase 0 = keep | T1 (done), T2, T4 (outstanding) |
-| 3 | cleanup.md #5 | — (Item 1 dependency removed; Phase 2 optional) | T1, T2, T3, T6 |
+| 2 | cleanup.md #2, #3 (both implemented, hardware verification outstanding) | Phase 0 = keep | T1 (done, all 3 envs, full build), T2, T4 (outstanding) |
+| 3 | cleanup.md #5 (implemented, hardware verification outstanding) | — (Item 1 dependency removed; Phase 2 optional) | T1 (done), T2, T3, T6 (outstanding) |
 | 4 | soak, no doc | Phases 1-3 | T7 |
 | 5a | analyzer-node-isolation | Phases 1-4 | T1, T2, T3, T6, T7, T8 |
 | 5b | detector-ownership | Phase 5a | T1-T7, T5 |

@@ -22,9 +22,9 @@ status table.
 | TonalPulseFreq | stable active | Main runtime profile. |
 | TonalPulseScalar | selectable experimental | Current landing is the two-inspector scalar-quality path (`FrequencyContrastQuality` + `SupportStrength`); carrier quality stays in the detector and live board validation remains. |
 | AmpExperimental | selectable experimental | AMP scalar proof/debug path. |
-| Detector/report consistency | planned | Investigate clean-summary acceptance mismatches without retuning thresholds. |
+| Detector/report consistency | stable active | Root cause of the clean-summary acceptance mismatches found and fixed: `FrequencyMatchDetector` was not freezing its `DetectorReport` on the accept path (only on reject), so `DetectionRuntime`'s generation-gated report cache never observed an accepted frequency occurrence. It now calls `freezeReport()` from `capturePendingOccurrence()` like `ScalarTransientDetector` already did. |
 | Pattern/detection expansion | planned | Future `TargetBandStrength`, pulse/chirp grouping, cross-source correlation, and added acoustic profiles. |
 | Detection refactor final sediment pass | deferred | Remaining deletions are mostly comments, migration notes, and historical vocabulary cleanup. |
 | Behavior/output boundary | deferred | `BehaviorRuntime`, `OutputProfile`, and `OutputDispatcher` remain future architecture work. |
-| Params/commands/config | deferred | `ParamRegistry`, `CommandRouter`, persistent config, remote params, and typed tuning structs are not implemented yet. |
+| Params/commands/config | selectable experimental | `ParamRegistry` is implemented and live: `Node::registerDetectionParams()` binds the Detection module's frequency thresholds, reachable via the `PARAM LIST\|GET\|SET\|DUMP` serial commands with range validation. `CommandRouter`, persistent (flash/NVS) config, remote params, and typed tuning structs for other modules are not implemented yet. The older ad hoc `RB PARAM`/`RB BEHAV` token commands still exist in parallel and are not yet migrated onto `ParamRegistry`. |
 | VEKTOR/fleet/OTA exposure | deferred | Later integration after local module boundaries stabilize. |

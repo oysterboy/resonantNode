@@ -41,6 +41,14 @@ void FrequencyMatchDetector::capturePendingOccurrence(const AudioSamplePacket& a
         _acceptedDetail.score = _pendingOccurrence.band.score;
         _acceptedDetail.contrast = _pendingOccurrence.band.contrast;
     }
+
+    // Freeze the DetectorReport on the accept path too, matching
+    // ScalarTransientDetector's capturePendingOccurrence(). Without this,
+    // _latestReport/_reportGeneration were only ever refreshed by
+    // recordRejectedPending() (reject path), so DetectionRuntime's
+    // generation-gated report cache never observed an accepted frequency
+    // occurrence and kept serving the previous (stale) report.
+    freezeReport(audioSamplePacket.timeMs);
 }
 
 bool FrequencyMatchDetector::popOccurrence(detection::Occurrence& out) {

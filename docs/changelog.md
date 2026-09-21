@@ -219,7 +219,7 @@ SignalInspector        → OccurrenceInspector
 InspectedSignal        → InspectedOccurrence
 ```
 
-`PatternCandidate`, `PatternRules`, and `PatternResult` stay.
+`PatternCandidate`, `PatternRules`, and `OccurrenceVerdict` stay.
 
 Profile rename:
 

@@ -69,7 +69,7 @@ Occurrence:
 Inspector:
     candidate-relative evidence annotation
 
-PatternMatcher:
+OccurrenceEvaluator:
     public pattern-stage boundary
 
 FieldStateTracker:
@@ -96,9 +96,9 @@ Current code state:
 
 ```text
 DetectorReport is the active detector-stage report contract.
-PatternMatcher is the public pattern-stage boundary.
+OccurrenceEvaluator is the public pattern-stage boundary.
 Analyzer prints clean SEQ_TRIAL / SEQ_SOURCE / SEQ_INSPECT / SEQ_EXPLAIN / SEQ_SUMMARY output.
-ResonantBehavior consumes PatternResult and FieldState.
+ResonantBehavior consumes OccurrenceVerdict and FieldState.
 ChirpOutput remains the current output path.
 ```
 
@@ -116,8 +116,8 @@ AudioSignalFrame
 → Occurrence
 → Inspector
 → InspectedOccurrence
-→ PatternMatcher
-→ PatternResult
+→ OccurrenceEvaluator
+→ OccurrenceVerdict
 → Behavior
 → OutputRequest
 ```
@@ -145,7 +145,7 @@ Detector
 Analyzer trial truth:
 
 ```text
-PatternResult
+OccurrenceVerdict
 + DetectorReport
 + expected trial/window facts
 → AnalyzerReport
@@ -157,7 +157,7 @@ Parallel acoustic context path:
 ```text
 Occurrence
 + InspectedOccurrence
-+ PatternResult
++ OccurrenceVerdict
 → FieldStateTracker
 → FieldState
 ```
@@ -165,7 +165,7 @@ Occurrence
 Behavior consumes:
 
 ```text
-PatternResult
+OccurrenceVerdict
 FieldState
 OutputStatus
 behavior state/timers
@@ -188,9 +188,9 @@ feature extraction / feature routing
 active detector update calls
 accepted Occurrence draining
 Inspector call
-PatternMatcher call
+OccurrenceEvaluator call
 FieldStateTracker update
-latest PatternResult queue/snapshot
+latest OccurrenceVerdict queue/snapshot
 DetectorReport snapshot/routing
 Analyzer-facing report access
 ```
@@ -274,7 +274,7 @@ Detector boundary
 Occurrence boundary
 DetectorReport boundary
 Inspector boundary
-PatternMatcher boundary
+OccurrenceEvaluator boundary
 FieldState
 Analyzer / reporting boundary
 ```
@@ -307,7 +307,7 @@ DetectionProfile
 DetectorId
 DetectorSelection
 InspectionPlan
-PatternMatcherConfig
+OccurrenceEvaluatorConfig
 FieldStateConfig
 ```
 
@@ -333,7 +333,7 @@ Current meaning:
 detect a short tonal pulse-like event
 detector = FrequencyMatchDetector
 support evidence is inspected as required/meaningful support
-PatternResult.valid is the behavior/analyzer gate
+OccurrenceVerdict.valid is the behavior/analyzer gate
 ```
 
 Current conceptual composition:
@@ -343,7 +343,7 @@ FrequencyMatchDetector
 InspectionPlan:
     ScalarFeatureStrength over AmpEnvelope
     target = SupportStrength
-PatternMatcherConfig:
+OccurrenceEvaluatorConfig:
     support requirement configured for SupportStrength
 FieldStateConfig:
     tuned occurrence/pattern windows
@@ -618,8 +618,8 @@ Typed accepted-event detail may temporarily include scalar or frequency accepted
 
 ```text
 Inspector
-PatternMatcher internals
-PatternResult construction
+OccurrenceEvaluator internals
+OccurrenceVerdict construction
 Analyzer compatibility
 ```
 
@@ -650,7 +650,7 @@ RejectedCandidateSummary
 neutral tooling output
 ```
 
-Occurrence payload trimming is deferred until after PatternMatcher / PatternResult cleanup.
+Occurrence payload trimming is deferred until after OccurrenceEvaluator / OccurrenceVerdict cleanup.
 
 ---
 
@@ -696,7 +696,7 @@ Rule:
 ```text
 DetectorReport is for detector truth.
 AnalyzerReport is for trial classification/reporting.
-PatternResult is for pattern meaning.
+OccurrenceVerdict is for pattern meaning.
 Occurrence is for accepted-event transport.
 ```
 
@@ -738,7 +738,7 @@ TargetBandStrength
 
 Inspectors produce evidence.
 
-PatternMatcher decides whether evidence satisfies pattern support requirements.
+OccurrenceEvaluator decides whether evidence satisfies pattern support requirements.
 
 Rule:
 
@@ -749,36 +749,46 @@ They do not own final pattern meaning.
 
 ---
 
-### 5.7 PatternMatcher Boundary
+### 5.7 OccurrenceEvaluator Boundary
 
-`PatternMatcher` is the public pattern-stage boundary.
+`OccurrenceEvaluator` is the public evaluation-stage boundary: the final
+check before Behavior. It takes one `InspectedOccurrence`, judges it against
+the inspection plan's support requirements (minimum strength per
+`InspectionTarget`), and emits an `OccurrenceVerdict`.
 
 Public conceptual flow:
 
 ```text
 InspectedOccurrence
-→ PatternMatcher
-→ PatternResult
+→ OccurrenceEvaluator
+→ OccurrenceVerdict
 ```
 
 Any internal assembly or rule helpers are implementation details, not public
 architecture boundaries.
 
-Current simple implementation is still one-occurrence / single-pulse oriented.
-That is acceptable.
+Renamed 2026-09-21 from `PatternMatcher` / `PatternResult`. The stage never
+matched patterns: it evaluates exactly one occurrence, with no temporal or
+multi-occurrence logic, and the earlier version of this section already
+said `.valid` was the gate "until a more detailed pattern vocabulary is
+fully settled." That settlement is: a real pattern stage (pulse sequences,
+chirp grouping; see the roadmap) would consume *accepted* occurrences over
+time, so it belongs downstream of this verdict, as its own stage, not in
+place of it. The name "Pattern" is reserved for that stage.
 
 Public code and docs should prefer:
 
 ```text
-PatternMatcher
-PatternResult
+OccurrenceEvaluator
+OccurrenceVerdict
 ```
 
-over presenting additional pattern helper types as separate public runtime stages.
+over presenting additional helper types as separate public runtime stages.
 
-`PatternResult.valid` remains the primary behavior/analyzer gate until a more detailed pattern vocabulary is fully settled.
+`OccurrenceVerdict.valid` is the primary behavior/analyzer gate.
 
-PatternResult should carry pattern-level meaning, not detector diagnostics.
+`OccurrenceVerdict` should carry the verdict on the occurrence (valid or not,
+and which requirement failed first), not detector diagnostics.
 
 ---
 
@@ -805,7 +815,7 @@ FieldState may consume:
 ```text
 Occurrence activity
 InspectedOccurrence activity
-PatternResult activity
+OccurrenceVerdict activity
 FeatureStream / feature-level context where explicitly configured
 ```
 
@@ -823,7 +833,7 @@ Rule:
 
 ```text
 FieldState describes acoustic context.
-PatternMatcher decides pattern meaning.
+OccurrenceEvaluator decides pattern meaning.
 Behavior decides reaction.
 ```
 
@@ -872,7 +882,7 @@ Clean source/stage facts come from:
 ```text
 DetectorReport
 RejectedCandidateSummary
-PatternResult
+OccurrenceVerdict
 AnalyzerReport canonical classification
 expected trial/window facts
 ```
@@ -1031,7 +1041,7 @@ the fixed `sampleRows` capacity.
 Behavior consumes:
 
 ```text
-PatternResult
+OccurrenceVerdict
 FieldState
 local timers
 current behavior state
@@ -1056,7 +1066,7 @@ legacy analyzer bridge data
 If detector or inspection details should affect behavior, they must first be promoted into:
 
 ```text
-PatternResult
+OccurrenceVerdict
 FieldState
 behavior-facing status/config
 ```

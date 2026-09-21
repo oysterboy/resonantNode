@@ -13,12 +13,12 @@ Implemented with two complementary mechanisms, both build-time:
 
 1. **`#ifdef ANALYZER_MODE` inside `DetectionRuntime.h`/`.cpp`** for the
    diagnostics state and logic: the pipeline-event queue, the counter set,
-   `PipelineIntegrity`, the `PendingPatternObservation` correlation queue,
+   `PipelineIntegrity`, the `PendingVerdictObservation` correlation queue,
    `capturePipelineResult()`, `drainDetectorReportEvents()`,
    `captureLatestDetectorReportIfChanged()`, and every diagnostics accessor.
    The core keeps exactly the surface `ResonantNodeApp` calls, re-confirmed
    by search at implementation time: `resetState`, the seven profile
-   setters, `observeFrame`, `popPatternResult`, `fieldState`.
+   setters, `observeFrame`, `popOccurrenceVerdict`, `fieldState`.
 2. **`build_src_filter` in `platformio.ini`** excluding `detection/analyzer/`
    and `modes/analyzer/` from `env:esp32dev` and `env:esp32dev-emitter`.
 
@@ -58,7 +58,7 @@ both figures.
 - The Analyzer-mode translation unit was preprocessed before and after and
   diffed: it is identical apart from statement ordering and one removed
   dead local (`const bool eventPushed = capturePipelineResult(...)` in
-  `drainPatternMatcher()`, which was assigned and never read). Combined
+  `drainOccurrenceEvaluator()`, which was assigned and never read). Combined
   with the identical Analyzer binary size, SEQ output is expected to be
   unchanged, but this is inference from the build, **not** a hardware run.
 - **Not done: step 5.** The Node behavior path and the 50-trial SEQ tests
@@ -75,7 +75,7 @@ built, not just struct layout or dead-code removal. Recommended sequencing:
 finish `cleanup.md` first, in particular Item 3 (`FrequencyMatchDetector`
 encapsulation) and Item 6 (diagnostic counter audit), since both shrink or
 clarify the exact state this proposal needs to relocate.
-`cleanup-inspector-pattern-scope.md` is independent and can land at any
+`cleanup-inspector-evaluator-scope.md` is independent and can land at any
 time, before or after this proposal.
 
 Correction, 2026-09-20: this used to also list Item 1 (the `Occurrence`/
@@ -88,8 +88,8 @@ does not depend on either struct's detail-payload shape.
 Non-negotiable constraint carried over from that discussion: the Node-facing
 API must not change shape. `ResonantNodeApp`/`ResonantBehavior` must
 continue to consume exactly what they consume today, the profile setters,
-`observeFrame()`, `popPatternResult()`, and `fieldState()`, with
-`PatternResult`, `FieldState`, and `DetectionProfile` unchanged in shape.
+`observeFrame()`, `popOccurrenceVerdict()`, and `fieldState()`, with
+`OccurrenceVerdict`, `FieldState`, and `DetectionProfile` unchanged in shape.
 
 ---
 
@@ -114,13 +114,13 @@ Analyzer-only diagnostic machinery unconditionally:
 - the `_pipelineEventQueue` and `DetectionPipelineEvent`/`PipelineIntegrity`
   tracking
 - roughly twenty free-standing counters
-  (`observeFrameCount`, `patternAcceptAttemptCount`, and so on)
-- `activeDetectorReport()`/`activePatternMatcherReport()`/
+  (`observeFrameCount`, `evaluatorAcceptAttemptCount`, and so on)
+- `activeDetectorReport()`/`activeEvaluatorReport()`/
   `popPipelineEvent()`
 
 Checked directly: `ResonantNodeApp.cpp` never calls any of the above. It
 calls only the profile setters, `resetState()`, `observeFrame()`,
-`popPatternResult()`, and `fieldState()`. Every one of the items above is
+`popOccurrenceVerdict()`, and `fieldState()`. Every one of the items above is
 called only from `AnalyzerSystemReporter.cpp` and
 `AnalyzerSequenceSession.cpp`.
 
@@ -132,27 +132,27 @@ production, for a build that will never read it.
 
 ### Additional evidence: it's not just state, it's logic
 
-Tracing what actually feeds `PatternResult` and `FieldState`, the values
+Tracing what actually feeds `OccurrenceVerdict` and `FieldState`, the values
 Node consumes, versus what only feeds the diagnostic
 `DetectionPipelineEvent`, found something bigger than the counters: a
 meaningful piece of `DetectionRuntime`'s own *logic*, not just idle state,
 exists solely to serve diagnostics.
 
-`DetectionRuntime::drainPatternMatcher()` calls
-`pushPatternResult(result)` (which feeds `popPatternResult()`, the thing
-Node actually reads) and `_fieldStateTracker.observePatternResult(result, nowMs)`
-using only the bare `PatternResult`. Neither depends on
+`DetectionRuntime::drainOccurrenceEvaluator()` calls
+`pushOccurrenceVerdict(result)` (which feeds `popOccurrenceVerdict()`, the thing
+Node actually reads) and `_fieldStateTracker.observeOccurrenceVerdict(result, nowMs)`
+using only the bare `OccurrenceVerdict`. Neither depends on
 `hasMatchedInspectedOccurrence` or the matched `DetectorReport`. But the
-`PendingPatternObservation`/`_patternInspectedQueue`/`popPatternObservation`/
-`pushPatternObservation` machinery, arguably the most complex and
+`PendingVerdictObservation`/`_verdictCorrelationQueue`/`popVerdictObservation`/
+`pushVerdictObservation` machinery, arguably the most complex and
 historically bug-prone part of `DetectionRuntime` (it was the actual subject
 of the pipeline-failure investigation in the archived `current-pass.md`
 pass), exists solely to attach a matching `DetectorReport` and
 `InspectedOccurrence` to the diagnostic `DetectionPipelineEvent` inside
-`capturePipelineResult()`. It has no effect on `PatternResult` or
+`capturePipelineResult()`. It has no effect on `OccurrenceVerdict` or
 `FieldState`.
 
-The same is true of `DetectorReport` itself: neither `PatternResult` nor
+The same is true of `DetectorReport` itself: neither `OccurrenceVerdict` nor
 `FieldState` is ever built from it, anywhere. `DetectorReport` is a pure
 diagnostics/reporting type. So `latestReport()`/`reportGeneration()` are not
 needed by the Node-facing behavior path either, only by whatever reads
@@ -179,7 +179,7 @@ methods (spelled differently per detector today:
 diagnostics-only. None of it is called from `ResonantNodeApp` today (checked
 directly: `resetSourceRejectSummaries()` and `setDiagnosticsEnabled()` are
 called only from `AnalyzerSequenceSession.cpp`/`AnalyzerCommands.cpp`), and
-none of it is required for `PatternResult`/`FieldState` to be produced
+none of it is required for `OccurrenceVerdict`/`FieldState` to be produced
 correctly.
 
 This sharpens the split proposed below: the "diagnostics layer" is not just
@@ -202,9 +202,9 @@ Split `DetectionRuntime` into two layers:
 
 1. **A lean core** carrying exactly the surface `ResonantNodeApp` uses
    today: the profile setters, `resetState()`/`resetDetectors()`,
-   `observeFrame()`, `popPatternResult()`, `fieldState()`, and whatever
+   `observeFrame()`, `popOccurrenceVerdict()`, `fieldState()`, and whatever
    internal state (`_frequencyDetector`/`_scalarDetector`,
-   `_occurrenceInspector`, `_patternMatcher`, `_fieldStateTracker`,
+   `_occurrenceInspector`, `_occurrenceEvaluator`, `_fieldStateTracker`,
    `_featureHistory`, `_resultQueue`) is required to make those calls work.
    This is what both the Node and (indirectly) the core detection behavior
    depend on.
@@ -212,10 +212,10 @@ Split `DetectionRuntime` into two layers:
    `ANALYZER_MODE`, adding the pipeline-event queue, `PipelineIntegrity`,
    the counters, the report-access methods (`latestReport()`,
    `reportGeneration()`), and, per the finding above, the
-   `PendingPatternObservation` correlation queue and the report-matching
+   `PendingVerdictObservation` correlation queue and the report-matching
    logic in `capturePipelineResult()`. This layer observes the core's
    outputs, it does not change what the core computes; the core produces
-   `PatternResult`/`FieldState` without any of this machinery running at
+   `OccurrenceVerdict`/`FieldState` without any of this machinery running at
    all.
 
 The mechanism (composition vs. a derived class vs. a build-time
@@ -236,7 +236,7 @@ unreachable, absent.
 
 ### What this does not change
 
-- `PatternResult`, `FieldState`, and `DetectionProfile` field shapes.
+- `OccurrenceVerdict`, `FieldState`, and `DetectionProfile` field shapes.
 - `ResonantNodeApp`'s call sites into `DetectionRuntime` — same method
   names, same signatures, same behavior.
 - Detector internals, thresholds, or lifecycle logic.
@@ -346,7 +346,7 @@ part.
 
 1. Confirm, by search, that `ResonantNodeApp.cpp`'s call list into
    `DetectionRuntime` is still exactly the list in this document (re-check
-   after `cleanup.md` and `cleanup-inspector-pattern-scope.md` land, since
+   after `cleanup.md` and `cleanup-inspector-evaluator-scope.md` land, since
    both touch nearby code).
 2. Identify every `DetectionRuntime` member and method that exists solely to
    serve `AnalyzerSystemReporter.cpp`/`AnalyzerSequenceSession.cpp`, using

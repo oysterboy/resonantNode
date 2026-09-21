@@ -4,7 +4,7 @@ Status: decision pending field validation. Not a code change, not yet.
 Related to: `docs/refactors/cleanup.md`,
 `docs/refactors/cleanup-detector-ownership.md`,
 `docs/refactors/cleanup-analyzer-node-isolation.md`,
-`docs/refactors/cleanup-inspector-pattern-scope.md`.
+`docs/refactors/cleanup-inspector-evaluator-scope.md`.
 
 Naming update (2026-09-21): `Occurrence.scalar`/`.frequency`, mentioned
 below (including in the 2026-09-20 correction), have since been renamed to
@@ -55,11 +55,11 @@ with `DetectorId::FrequencyMatch`, `OccurrenceType::Frequency`,
 
 **Already proven, by reading the code, no field test needed:**
 
-- Node-facing API stability: `PatternMatcher::makePatternProposalFromOccurrence()`
+- Node-facing API stability: `OccurrenceEvaluator::makePatternProposalFromOccurrence()`
   already switches on `OccurrenceType`, not `DetectorId`, and both `Scalar`
   and `Frequency` already funnel into the identical `evaluateSinglePulse()`
   path. Removing `OccurrenceType::Frequency` entirely would not change
-  `PatternResult`, `FieldState`, or anything `ResonantNodeApp`/
+  `OccurrenceVerdict`, `FieldState`, or anything `ResonantNodeApp`/
   `ResonantBehavior` consume.
 - If this consolidation happens, `cleanup-detector-ownership.md`'s
   union-of-two-detector-objects proposal becomes unnecessary: with one

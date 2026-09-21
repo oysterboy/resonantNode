@@ -23,7 +23,7 @@ Then the actual sizes were measured on the target with
 | Member of `DetectionRuntime` | Bytes | Share (Node build) |
 |---|---|---|
 | `_featureHistory` | 33,056 | 80% |
-| `_patternMatcher` | 3,912 | 10% |
+| `_occurrenceEvaluator` | 3,912 | 10% |
 | `_frequencyDetector` | 1,832 | 4.5% |
 | `_scalarDetector` | 1,440 | 3.5% |
 | everything else | ~920 | 2% |
@@ -180,7 +180,7 @@ to converge on one signature.
 
 Note: `latestReport()`/`reportGeneration()` are deliberately not part of
 this adapter's required surface. `docs/refactors/cleanup-analyzer-node-isolation.md`
-found that neither `PatternResult` nor `FieldState` is ever built from
+found that neither `OccurrenceVerdict` nor `FieldState` is ever built from
 `DetectorReport`, so report access is a diagnostics-only concern, not part
 of the core dispatch this proposal unifies. See that document's "minimal
 Node-required detector contract" for the full split.

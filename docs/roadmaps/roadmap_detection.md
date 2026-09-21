@@ -22,8 +22,8 @@ facts are shared.
 ```text
 Detection produces facts.
 Analyzer reports and classifies trials.
-PatternMatcher decides pattern meaning.
-Behavior consumes PatternResult and FieldState.
+OccurrenceEvaluator decides pattern meaning.
+Behavior consumes OccurrenceVerdict and FieldState.
 Clean analyzer output should read canonical runtime contracts only.
 ```
 
@@ -33,7 +33,7 @@ Landed items from this area now live in `docs/archive/roadmaps/roadmap-changelog
 
 ```text
 [REMOVED] DetectionDiagnostics and analyzer legacy compatibility are removed from src.
-[PARTIAL] PatternMatcher currently stays single-proposal oriented.
+[PARTIAL] OccurrenceEvaluator currently stays single-proposal oriented.
 [PARTIAL] Frequency reason handling is still string-backed internally.
 ```
 
@@ -106,9 +106,9 @@ Status: DEFERRED
 ```text
 Allow patterns made from groups of occurrences, not only one occurrence at a
 time.
-Keep competing hypotheses private to PatternMatcher.
-Keep PatternResult compact and behavior-facing.
-Expose only compact explanation facts through PatternMatcherReport.
+Keep competing hypotheses private to OccurrenceEvaluator.
+Keep OccurrenceVerdict compact and behavior-facing.
+Expose only compact explanation facts through OccurrenceEvaluatorReport.
 ```
 
 ## Current / first cleanup pass
@@ -123,7 +123,7 @@ behavior or output changes.
 
 ```text
 DetectorReport is the detector-stage truth.
-PatternMatcher is the public pattern-stage boundary.
+OccurrenceEvaluator is the public pattern-stage boundary.
 AnalyzerReport stays on canonical trial classification plus scoped details.
 Clean analyzer output should not read retired legacy diagnostics.
 ```

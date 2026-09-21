@@ -402,7 +402,7 @@ Two wrinkles, both small. A zero-length array is ill-formed C++, so the
 `FeatureHistory` member becomes conditional on `kFamilyMaxActiveStreams > 0`
 (one more line in the family header, and `featureHistory()` disappears from
 the Analyzer surface for this family). And MVP §2 also drops
-`PatternMatcher` (3,912 bytes) and `FieldStateTracker` (96), but those are
+`OccurrenceEvaluator` (3,912 bytes) and `FieldStateTracker` (96), but those are
 `DetectionRuntime` structure, not family; whether the MVP is a *family* or
 a whole *mode* like `EMITTER_MODE` is a larger question than this document,
 and as a family it already gets the detector and history savings without
@@ -424,7 +424,7 @@ correct, heavier, and it leaves Phase 6's question unanswered.
 - Does not consolidate to one family. Both remain buildable; which ones are
   *built* is a release decision, informed by Phase 0's field data.
 - Does not touch detector internals, thresholds, or lifecycle logic.
-- Does not change `Occurrence`, `DetectorReport`, `PatternResult`, or
+- Does not change `Occurrence`, `DetectorReport`, `OccurrenceVerdict`, or
   `FieldState` shapes.
 - Does not implement OTA or NVS persistence. It defines what a delivered
   profile must carry (a family) and where the check goes. PAR-010/PAR-013

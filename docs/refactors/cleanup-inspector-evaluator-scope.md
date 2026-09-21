@@ -1,6 +1,6 @@
 # Codex Pass — Remove Unused Inspector/Pattern Extensibility
 
-Status: partially done. The `PatternMatcher` half (`ProposalShape`/
+Status: partially done. The `OccurrenceEvaluator` half (`ProposalShape`/
 `PulseSequence`) was implemented and compiles clean against the real
 toolchain on 2026-09-20. The `OccurrenceInspector` half
 (`InspectionModuleKind`) was reviewed and declined, see the note below, not
@@ -9,14 +9,14 @@ Non-Goals for negligible benefit.
 Related to: `docs/refactors/cleanup.md` (same house style, adjacent scope).
 Not part of `cleanup.md` itself because its stated scope is the Detector
 layer (`DetectionRuntime`, the two detector cores, `DetectorReport`,
-`Occurrence`); this pass covers `PatternMatcher` and `OccurrenceInspector`
+`Occurrence`); this pass covers `OccurrenceEvaluator` and `OccurrenceInspector`
 instead.
 
 ## Goal
 
-Remove structure in `PatternMatcher` and `OccurrenceInspector` that
+Remove structure in `OccurrenceEvaluator` and `OccurrenceInspector` that
 anticipates future generality but has never had a second real case: the
-`PulseSequence`/`ProposalShape` distinction in `PatternMatcher.cpp`, and the
+`PulseSequence`/`ProposalShape` distinction in `OccurrenceEvaluator.cpp`, and the
 single-case `InspectionModuleKind` switch in `OccurrenceInspector.cpp`.
 
 This is one combined item, not a phased pass: both changes are small,
@@ -29,7 +29,7 @@ mechanical, and independent of each other, and can land in one commit.
 
 ```text
 DetectionRuntime::observeFrame(...)
-DetectionRuntime::popPatternResult(...)
+DetectionRuntime::popOccurrenceVerdict(...)
 DetectionRuntime::fieldState()
 DetectionProfile (as a value-type config blob passed in via the setters)
 ```
@@ -38,12 +38,12 @@ DetectionProfile (as a value-type config blob passed in via the setters)
 detail below that boundary. Removing them changes nothing Node depends on,
 and does not foreclose reintroducing similar generality later if a second
 Inspector kind or a real multi-occurrence pattern is ever designed — that
-would be new, additive work inside `OccurrenceInspector`/`PatternMatcher`,
+would be new, additive work inside `OccurrenceInspector`/`OccurrenceEvaluator`,
 not a resurrection of code preserved here.
 
 ## Evidence
 
-- `PatternMatcher.cpp` declares
+- `OccurrenceEvaluator.cpp` declares
   `enum class ProposalShape { Unknown, SinglePulse, PulseSequence }`, but
   `PulseSequence` is never constructed or checked anywhere in the codebase.
   Only `SinglePulse` and `Unknown` occur. There is exactly one evaluation
@@ -62,16 +62,16 @@ not a resurrection of code preserved here.
 
 ## Required Change
 
-1. In `PatternMatcher.cpp`: remove `ProposalShape` and the
+1. In `OccurrenceEvaluator.cpp`: remove `ProposalShape` and the
    `PulseSequence`/`Unknown`/`SinglePulse` branching in
    `makePatternProposalFromOccurrence()` and `resultKindFromProposal()`.
    Replace with a simple validity check (was this occurrence type
    supported: `Scalar`/`Frequency` vs `None`) that produces the same
    `ProposalEvaluationKind::Invalid`/`Valid` result the current code
-   produces today for every currently-reachable input. `PatternResult.type`
-   must still be set to `PatternType::SinglePulse` or
-   `PatternType::Invalid` exactly as it is today — this item changes
-   internal plumbing, not `PatternResult`'s observable values.
+   produces today for every currently-reachable input. `OccurrenceVerdict.type`
+   must still be set to `VerdictType::SinglePulse` or
+   `VerdictType::Invalid` exactly as it is today — this item changes
+   internal plumbing, not `OccurrenceVerdict`'s observable values.
 2. **Declined, 2026-09-20.** `OccurrenceInspector.cpp`/`InspectorTypes.h`:
    the original plan offered two options, remove `InspectionModuleKind`
    entirely, or keep it as a still-checked guard. The first option requires
@@ -93,7 +93,7 @@ not a resurrection of code preserved here.
 
 ## Non-Goals
 
-- No change to `PatternResult`, `FieldState`, or `DetectionProfile` field
+- No change to `OccurrenceVerdict`, `FieldState`, or `DetectionProfile` field
   shapes.
 - No change to `InspectionModuleConfig`, `InspectionPlan`, or
   `InspectionTarget`.
@@ -105,7 +105,7 @@ not a resurrection of code preserved here.
 
 ## Intermediate Verification
 
-1. `PatternMatcher.cpp` compiled clean against the real
+1. `OccurrenceEvaluator.cpp` compiled clean against the real
    `xtensa-esp32-elf-g++` toolchain after the `ProposalShape` removal.
 2. Still needed before this closes out: run the 50-trial `TonalPulseFreq`
    SEQ test and the 50-trial `TonalPulseScalar` SEQ test on hardware.

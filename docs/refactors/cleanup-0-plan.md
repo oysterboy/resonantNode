@@ -1,7 +1,7 @@
 # Executable Plan — Sequencing All Detection Cleanup Docs
 
 This sequences everything across `cleanup.md`,
-`cleanup-detector-consolidation.md`, `cleanup-inspector-pattern-scope.md`,
+`cleanup-detector-consolidation.md`, `cleanup-inspector-evaluator-scope.md`,
 `cleanup-analyzer-node-isolation.md`, and `cleanup-detector-ownership.md`
 into one ordered, testable execution plan. It does not repeat each item's
 full detail, those live in their own documents, this states the order,
@@ -102,8 +102,8 @@ correction below.**
    Compiled clean against the real toolchain.
    - Test: T1, T4 (compile only is sufficient, the removed code was
      unreachable). Hardware-side T4 run still outstanding.
-2. **`cleanup-inspector-pattern-scope.md`** — remove `ProposalShape`/
-   `PulseSequence` from `PatternMatcher.cpp`. **Done**, compiled clean. The
+2. **`cleanup-inspector-evaluator-scope.md`** — remove `ProposalShape`/
+   `PulseSequence` from `OccurrenceEvaluator.cpp`. **Done**, compiled clean. The
    `InspectionModuleKind` half of this item was reviewed and declined (it
    contradicted that document's own Non-Goals and reached into
    `ResonantNodeApp.cpp`'s display code for no behavioral benefit); see that
@@ -287,7 +287,7 @@ other.
 2. Identify every member/method serving only
    `AnalyzerSystemReporter.cpp`/`AnalyzerSequenceSession.cpp`: the counters,
    the pipeline-event queue, `PipelineIntegrity`, the
-   `PendingPatternObservation` correlation machinery, `latestReport()`/
+   `PendingVerdictObservation` correlation machinery, `latestReport()`/
    `reportGeneration()`. Fold `cleanup.md` Item 6's counter judgment in here.
    **Done, by per-method caller search across the whole tree.**
 3. Move that state and logic behind an `ANALYZER_MODE`-gated layer.
@@ -426,7 +426,7 @@ Depends on Phase 5d (the family header must exist to add a family to it).
    goes: about -18.6 KB, on top of -3.3 KB for neither existing detector.
    Expected simple-family Node RAM: roughly 38.5 KB, from 88 KB at the
    start of this work.
-4. Confirm it produces `PatternResult`/`FieldState` end-to-end with the
+4. Confirm it produces `OccurrenceVerdict`/`FieldState` end-to-end with the
    Analyzer diagnostics layer never consulted.
 5. Test: T1 (now seven environments), T7 on the simple-family Node. T2/T3
    don't apply (new family, no baseline), so run its own first SEQ set on

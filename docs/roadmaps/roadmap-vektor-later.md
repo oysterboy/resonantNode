@@ -59,7 +59,7 @@ Status: DEFERRED
 ```text
 Define resource, state, and command mapping.
 Use ParamRegistry and CommandRouter if they exist.
-Expose stable PatternResult, FieldState, and Behavior state summaries.
+Expose stable OccurrenceVerdict, FieldState, and Behavior state summaries.
 ```
 
 Concrete mapping candidates against `docs/specs/vektor-spec.md` (no
@@ -72,7 +72,7 @@ ParamRegistry path + value   -> SCALAR.v1 (Control Write: scalar.set)
                                  overwrite/last-write-wins/no-lifecycle,
                                  i.e. already shaped like a VEKTOR Control
                                  Write, not an Action.
-PatternResult / FieldState   -> STATE (Observed State, batched snapshot)
+OccurrenceVerdict / FieldState   -> STATE (Observed State, batched snapshot)
 Behavior state summary       -> STATE (Observed State)
 Chirp / output emit          -> could be AXIS-shaped (ACTION, tracked,
                                  moveComplete-style EVENT) or LAMP-shaped
@@ -106,7 +106,7 @@ Keep VEKTOR roadmap aligned with local architecture changes.
 ```text
 System / firmware identity      -> SYSTEM (see vektor-spec.md 3.1)
 DetectionProfile state          -> STATE
-PatternResult summary           -> STATE
+OccurrenceVerdict summary           -> STATE
 FieldState                      -> STATE
 Behavior state                  -> STATE
 OutputStatus later              -> AXIS or LAMP, TBD (see VEK-002)

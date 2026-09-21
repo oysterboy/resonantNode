@@ -288,7 +288,7 @@ FeatureExtractors
 -> PatternAssembler
 -> PatternCandidates
 -> PatternRules
--> PatternResults
+-> OccurrenceVerdicts
 
 But keep internals mostly pass-through.
 

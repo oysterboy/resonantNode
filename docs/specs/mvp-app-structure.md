@@ -36,8 +36,8 @@ Stages dropped from the full chain, and why they're safe to drop for MVP:
 ```text
 FrequencyMatchDetector   not needed: no target-frequency matching, only "loud burst"
 Inspector                no secondary evidence to gather; strength is already on Occurrence
-PatternMatcher           single-occurrence pattern only; PatternResult.valid := true whenever
-                         an Occurrence was accepted, no sequence/multi-pulse logic
+OccurrenceEvaluator      no support requirements to check; OccurrenceVerdict.valid := true whenever
+                         an Occurrence was accepted
 FieldStateTracker        no acoustic-context-driven behavior yet; Behavior reads Occurrence directly
 Analyzer/SEQ reporting   trial/pass classification is a test-harness concern, not runtime
 ```
@@ -146,7 +146,7 @@ Output (reused):     SoundOutput::emitBeep()
 
 One small new detector, no new HAL driver, no new output primitive — the
 MVP is a *wiring reduction* of the existing chain (`myspec.md` §5.1),
-minus Inspector/PatternMatcher/FieldState, plus a small explicit Behavior
+minus Inspector/OccurrenceEvaluator/FieldState, plus a small explicit Behavior
 rule set instead of `ResonantBehavior`'s full policy surface. Because the
 MVP has no Inspector, its family binds zero feature-history streams, which
 is the single largest RAM saving available to it (about 18.6 KB); the

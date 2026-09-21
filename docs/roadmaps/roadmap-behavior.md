@@ -20,7 +20,7 @@ easy to inspect in 5-node tests.
 ## Architecture goal
 
 ```text
-Behavior consumes PatternResult + FieldState + timers/state + params/commands
+Behavior consumes OccurrenceVerdict + FieldState + timers/state + params/commands
 and later OutputStatus.
 Behavior decides reaction.
 SoundOutput / ChirpOutput performs output.
@@ -70,7 +70,7 @@ Status: DEFERRED
 
 ```text
 Introduce BehaviorInput / BehaviorContext.
-Include PatternResult, FieldState, nowMs, and later OutputStatus.
+Include OccurrenceVerdict, FieldState, nowMs, and later OutputStatus.
 Preserve current behavior decisions exactly.
 ```
 

@@ -77,7 +77,7 @@ While preparing to implement this item, I found direct evidence that
 produced this" alternatives, they are two independently-used **evidence
 namespaces** (Amp-domain and Frequency-domain) that `OccurrenceInspector`
 populates based on each configured `InspectionTarget`, regardless of which
-detector produced the occurrence, and that `PatternMatcher` reads from
+detector produced the occurrence, and that `OccurrenceEvaluator` reads from
 *both* namespaces for a *single* occurrence:
 
 - `OccurrenceInspector::annotateScalarFeatureStrength()` switches on
@@ -88,7 +88,7 @@ detector produced the occurrence, and that `PatternMatcher` reads from
   namespaces on every occurrence they produce: `TonalPulseFreq` uses
   Amp + TargetScore + Contrast together; `TonalPulseScalar` uses
   Amp + Contrast together.
-- `PatternMatcher::makePatternProposalFromOccurrence()` reads
+- `OccurrenceEvaluator::makePatternProposalFromOccurrence()` reads
   `source.scalar.strengthClass` **and**
   `source.frequency.scoreStrength`/`contrastQuality`/`targetBandStrength`
   in both its `OccurrenceType::Frequency` and `OccurrenceType::Scalar`
@@ -391,7 +391,7 @@ struct ActiveDetectorAdapter {
 
 `latestReport()`/`reportGeneration()` are deliberately not part of this
 adapter. `docs/refactors/cleanup-analyzer-node-isolation.md` found that
-neither `PatternResult` nor `FieldState` is ever built from `DetectorReport`,
+neither `OccurrenceVerdict` nor `FieldState` is ever built from `DetectorReport`,
 so report access is a diagnostics-only concern, not part of the core drain
 path this item unifies. `drainDetectorReportEvents()`'s use of
 `latestReport()`/`reportGeneration()` stays switch-based (or moves to the
@@ -500,7 +500,7 @@ None required; no code changes are made under this item in this pass.
 - No profile redesign or new `DetectionProfileKind`.
 - No forced `IDetector` interface or type-erased detector graph — the spec
   explicitly defers this, and Item 5 stays internal to `DetectionRuntime`.
-- No change to `PatternMatcher`, `FieldStateTracker`, or Analyzer
+- No change to `OccurrenceEvaluator`, `FieldStateTracker`, or Analyzer
   classification logic beyond the read-site updates required by Item 1.
 - No merging of `ScalarTransientDetector` and `FrequencyMatchDetector`
   lifecycle, threshold, or gating logic under any item in this pass.

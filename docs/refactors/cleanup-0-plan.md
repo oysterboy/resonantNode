@@ -447,8 +447,126 @@ existing two have.
 ## Phase 7 — Follow-ups from the OccurrenceEvaluator rename (not started)
 
 The `PatternMatcher` -> `OccurrenceEvaluator` rename (`ee4edd2`) stopped at
-the type-coupled boundary on purpose. Two things it left behind, each its
-own small pass, each changing printed output.
+the type-coupled boundary on purpose. Three things it left behind. **Do 7c
+first**: it deletes code that 7a and 7b would otherwise rename.
+
+### 7c — Fold the Evaluator into the Inspector; delete the correlation queue
+
+Decided 2026-09-21. The question that settled it: the Inspector inspects
+and stores the result; the Evaluator checks whether the result met the
+requirement and passes the verdict on. Why can't the Inspector do that?
+The obvious objection, "because there can be multiple inspections," is
+answered by the code: `inspectWithHistory()` already runs every plan module
+and folds all of them into **one** `InspectedOccurrence`
+(`magnitudeObservations[]`). The Evaluator consumes that single object and
+does one comparison per module. Multiplicity is resolved before the
+Evaluator exists.
+
+Four facts, checked:
+
+1. `OccurrenceEvaluatorConfig` is a `using` alias for `InspectionPlan`. The
+   requirement each module checks (`minimumStrength`) is a field of the
+   inspection module config. The Inspector already holds every requirement
+   it would need to apply.
+2. The Inspector already sets `InspectedOccurrence.decision`
+   (`Accepted`/`Rejected`, `OccurrenceInspector.cpp:46`, `:337`). The spec's
+   "inspectors produce facts, they do not own meaning" is already breached
+   in name; today it judges "was inspection performed" instead of "were
+   the requirements met."
+3. The Evaluator has no cross-occurrence state: a 4-slot FIFO filled and
+   drained inside one `observeFrame()`, and an `OccurrenceEvaluatorReport`
+   with zero readers. It is a pure function with a stage's plumbing, and
+   its own `update()` single-occurrence overload says so.
+4. `InspectionPlan.failedRequirementMeansUncertain`, the only *policy* flag
+   on the plan, is never read. There is no hidden "same evidence, different
+   rules" mode that the separation is quietly enabling. The steelman
+   (measure once, judge under several rule sets) would need the Evaluator
+   configured with a different plan than the Inspector, but the plan is
+   also the list of what to measure; the scenario is incoherent with the
+   current types.
+
+What the split costs, and what the merge removes: because the verdict
+leaves as a separate object with no link to its `InspectedOccurrence`, the
+Analyzer needs the `PendingVerdictObservation` correlation queue to
+re-associate them afterwards by `occurrenceId`, the machinery
+`cleanup-analyzer-node-isolation.md` called the most complex and
+historically bug-prone part of `DetectionRuntime`. With the verdict
+rendered as the last step of inspection, `drainDetectors()` holds the
+inspected occurrence, its verdict, and the detector report in one scope,
+synchronously, and all of this has nothing left to do:
+
+- `OccurrenceEvaluator` (class, `.h/.cpp`), `OccurrenceEvaluatorTypes.h`,
+  `OccurrenceEvaluatorReport`, `OccurrenceEvaluatorConfig`
+- `DetectionRuntime::drainOccurrenceEvaluator()`, `hasPendingEvaluatorWork()`,
+  `_occurrenceEvaluator`, the evaluator's input FIFO and
+  `EvaluatorInputRejectReason::InputQueueFull` / `CorrelationQueueFull`
+- Analyzer-only: `PendingVerdictObservation`, `_verdictCorrelationQueue`
+  and its read index / count / overflow counter,
+  `_verdictCorrelationFailureCount`, `pushVerdictObservation()` /
+  `popVerdictObservation()`, `PipelineIntegrity.correlationComplete` and
+  the `MissingInspectedOccurrence` / `OccurrenceIdMismatch` reasons that
+  only correlation failure could produce, `_evaluatorAccept*Count`,
+  `_evaluatorDrainCount`, `activeEvaluatorReport()`
+
+What the merge keeps, deliberately:
+
+- **`OccurrenceVerdict` as the type that is queued and handed to Behavior.**
+  84 bytes against 912 for an `InspectedOccurrence`, and the Node queues
+  four. That is a real reason for the compact type to exist; it was never
+  a reason for a separate class. `ResonantBehavior::handleOccurrenceVerdict()`
+  is unchanged in shape.
+- `OccurrenceInspector::inspectWithHistory()` returns the
+  `InspectedOccurrence` as today, now with the verdict applied. A small
+  `OccurrenceVerdict makeVerdict(const InspectedOccurrence&)` projection
+  (the current `fillResultFromProposal()` + `evaluateSinglePulse()`, minus
+  the queue) lives next to it.
+- The Node-facing `DetectionRuntime` surface: `popOccurrenceVerdict()`,
+  `setVerdictQueueEnabled()`, `fieldState()` unchanged.
+
+Shape of `drainDetectors()` afterwards, core path only:
+
+```cpp
+while (activeDetector.popOccurrence(occurrence)) {
+    _fieldStateTracker.observeOccurrence(occurrence, nowMs);
+    const InspectedOccurrence inspected =
+        _occurrenceInspector.inspectWithHistory(occurrence, &_featureHistory, nowMs);
+    _fieldStateTracker.observeInspectedOccurrence(inspected, nowMs);
+    const OccurrenceVerdict verdict = makeVerdict(inspected);   // was: a whole stage
+    _fieldStateTracker.observeOccurrenceVerdict(verdict, nowMs);
+    if (_verdictQueueEnabled) pushOccurrenceVerdict(verdict);
+#ifdef ANALYZER_MODE
+    capturePipelineResult(verdict, &inspected, &latestDetectorReport());  // no queue, no lookup
+#endif
+}
+```
+
+`drainOccurrenceEvaluator()` and the second drain in `observeFrame()` go
+away with it.
+
+Order of operations, the one subtlety: today `_fieldStateTracker.observeOccurrenceVerdict()`
+runs in the evaluator drain, after *all* occurrences popped this frame
+have been inspected. After the merge it runs per occurrence, interleaved.
+`FieldStateTracker` is a windowed counter; check whether it cares about
+that ordering within a single frame (it shouldn't, the timestamps are the
+same `nowMs`), and say so in the commit either way.
+
+Cost: this deletes an Analyzer diagnostic capability, the
+`integrity.correlation_complete=` / `MissingInspectedOccurrence` /
+`OccurrenceIdMismatch` signals. Those exist to detect the correlation
+queue's own failures; with no queue there is nothing for them to detect.
+Their SEQ labels disappear rather than being renamed. State that in the
+commit as an intentional removal, not a regression.
+
+Sequencing: **before 7a and 7b.** 7b's `VerdictType` question is simpler
+once the projection is one function; 7a's list shrinks by everything
+above. Also before Phase 5d (family build), which restructures
+`DetectionRuntime` anyway and should start from the smaller runtime.
+
+- Test: T1; T2/T3 (expected diff: the removed correlation/evaluator labels
+  only, every verdict value identical); T7 (Behavior consumes the same
+  type through the same call); T5 (`sizeof(DetectionRuntime)` drops by the
+  evaluator's queue, ~3.9 KB Node, plus the correlation queue in the
+  Analyzer).
 
 ### 7a — Derived vocabulary that means "a valid verdict happened"
 
@@ -572,5 +690,6 @@ decision is: consolidate" section instead:
 | 5c | FeatureHistory (two commits, -14,440 bytes; not in a proposal doc) | measured during 5b | T1 (done); T2, T3, T6, T7 (outstanding) |
 | 5d | detector-family-build (proposal; supersedes 5b) | — | not started |
 | 6 | SimpleThresholdDetector family (the MVP detector; 5d acceptance test) | Phase 5d | T1 (seven envs), T7; own first SEQ baseline |
+| 7c | fold Evaluator into Inspector, delete the correlation queue (do first) | — | T1, T2/T3 (removed labels only), T5, T7 |
 | 7a | derived "valid pattern" vocabulary -> verdict/detection wording | Phase 7 note | T1, T2/T3 (labels only), T4 |
 | 7b | vestigial VerdictType/ReasonCode/RejectReason values | Phase 7 note | T1, T2/T3 (labels only), T7 |

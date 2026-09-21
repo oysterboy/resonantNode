@@ -6,6 +6,28 @@
 #include <math.h>
 #include <string.h>
 
+// History is recorded only for the streams the active inspection plan names,
+// so report exactly those rather than a fixed pair: a stream the plan doesn't
+// use has no buffer and would read as 0, which says nothing about the run.
+void AnalyzerApp::printFeatureHistoryRecordCounts() const {
+    const detection::FeatureHistory& history = _detection.featureHistory();
+    Serial.print(" history_records=");
+    const size_t count = history.activeStreamCount();
+    if (count == 0) {
+        Serial.print("none");
+        return;
+    }
+    for (size_t i = 0; i < count; ++i) {
+        const detection::FeatureStreamId stream = history.activeStream(i);
+        if (i > 0) {
+            Serial.print(',');
+        }
+        Serial.print(detection::featureStreamName(stream));
+        Serial.print(':');
+        Serial.print(static_cast<unsigned long>(history.sampleCount(stream)));
+    }
+}
+
 void AnalyzerApp::printDetectionParameters() const {
     //PARAM TUNING TEMPORARY
     const detection::DetectionProfile& activeProfile = effectiveSequenceProfile();
@@ -190,10 +212,6 @@ void AnalyzerApp::printAudioRunSummary() const {
     const unsigned long freqComputedAtSample = _freqBandStream.sampleCount() >= freqAgeSamples
         ? _freqBandStream.sampleCount() - freqAgeSamples
         : 0UL;
-    const unsigned long freqHistoryTargetRecords =
-        _detection.featureHistory().sampleCount(detection::FeatureStreamId::FrequencyTarget);
-    const unsigned long freqHistoryContrastRecords =
-        _detection.featureHistory().sampleCount(detection::FeatureStreamId::FrequencyContrast);
 
     Serial.print("FREQBAND profile:");
 #if FREQBAND_ENABLE_PROFILING
@@ -242,20 +260,16 @@ void AnalyzerApp::printAudioRunSummary() const {
     Serial.print(freqAgeSamples);
     Serial.print(" computed_at_sample=");
     Serial.print(freqComputedAtSample);
-    Serial.print(" history_target_records=");
-    Serial.print(freqHistoryTargetRecords);
-    Serial.print(" history_contrast_records=");
-    Serial.println(freqHistoryContrastRecords);
+    printFeatureHistoryRecordCounts();
+    Serial.println();
 #else
     Serial.print(" profiling=disabled");
     Serial.print(" age_samples=");
     Serial.print(freqAgeSamples);
     Serial.print(" computed_at_sample=");
     Serial.print(freqComputedAtSample);
-    Serial.print(" history_target_records=");
-    Serial.print(freqHistoryTargetRecords);
-    Serial.print(" history_contrast_records=");
-    Serial.println(freqHistoryContrastRecords);
+    printFeatureHistoryRecordCounts();
+    Serial.println();
 #endif
 }
 

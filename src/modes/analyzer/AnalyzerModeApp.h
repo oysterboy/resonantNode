@@ -431,6 +431,7 @@ private:
     bool runRawTrigger(unsigned long toneHz, unsigned long durationMs, unsigned long postMs, unsigned long preMs, unsigned long decim, RawCaptureMode mode);
     void printAudioSourceSummary() const;
     void printAudioRunSummary() const;
+    void printFeatureHistoryRecordCounts() const;
     void printOccurrenceSummary() const;
     void printDetectionParameters() const;
     void printSequenceDetailCanonical(const AnalyzerReport& report) const;

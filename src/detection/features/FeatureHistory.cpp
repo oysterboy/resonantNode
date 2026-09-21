@@ -74,7 +74,7 @@ float absoluteValue(float value) {
 
 } // namespace
 
-bool FeatureHistory::isSupportedStream(FeatureStreamId stream) {
+bool FeatureHistory::isKnownStream(FeatureStreamId stream) {
     switch (stream) {
         case FeatureStreamId::AmpMagnitude:
         case FeatureStreamId::AmpEnvelope:
@@ -87,20 +87,42 @@ bool FeatureHistory::isSupportedStream(FeatureStreamId stream) {
     }
 }
 
-size_t FeatureHistory::streamIndex(FeatureStreamId stream) {
-    switch (stream) {
-        case FeatureStreamId::AmpMagnitude:
-            return 0U;
-        case FeatureStreamId::AmpEnvelope:
-            return 1U;
-        case FeatureStreamId::FrequencyTarget:
-            return 2U;
-        case FeatureStreamId::FrequencyContrast:
-            return 3U;
-        case FeatureStreamId::Unknown:
-        default:
-            return 0U;
+size_t FeatureHistory::slotFor(FeatureStreamId stream) const {
+    for (size_t i = 0; i < _activeStreamCount; ++i) {
+        if (_slotStream[i] == stream) {
+            return i;
+        }
     }
+    return kNoSlot;
+}
+
+size_t FeatureHistory::setActiveStreams(const FeatureStreamId* streams, size_t count) {
+    _activeStreamCount = 0;
+    for (size_t i = 0; i < kMaxActiveStreams; ++i) {
+        _slotStream[i] = FeatureStreamId::Unknown;
+        resetStream(_streams[i]);
+    }
+    if (streams == nullptr) {
+        return 0;
+    }
+
+    for (size_t i = 0; i < count && _activeStreamCount < kMaxActiveStreams; ++i) {
+        const FeatureStreamId stream = streams[i];
+        if (!isKnownStream(stream) || slotFor(stream) != kNoSlot) {
+            continue;
+        }
+        _slotStream[_activeStreamCount] = stream;
+        ++_activeStreamCount;
+    }
+    return _activeStreamCount;
+}
+
+size_t FeatureHistory::activeStreamCount() const {
+    return _activeStreamCount;
+}
+
+FeatureStreamId FeatureHistory::activeStream(size_t slot) const {
+    return slot < _activeStreamCount ? _slotStream[slot] : FeatureStreamId::Unknown;
 }
 
 bool FeatureHistory::streamRequiresFreshAggregation(FeatureStreamId stream) {
@@ -149,7 +171,7 @@ void FeatureHistory::resetStream(StreamBuffer& buffer) {
 }
 
 void FeatureHistory::reset() {
-    for (size_t i = 0; i < kStreamCount; ++i) {
+    for (size_t i = 0; i < kMaxActiveStreams; ++i) {
         resetStream(_streams[i]);
     }
 }
@@ -214,7 +236,8 @@ void FeatureHistory::record(const FeatureStream& sample, bool fresh) {
 }
 
 void FeatureHistory::record(FeatureStreamId id, unsigned long timeMs, float value, bool fresh) {
-    if (!isSupportedStream(id)) {
+    const size_t slot = slotFor(id);
+    if (slot == kNoSlot) {
         return;
     }
 
@@ -222,7 +245,7 @@ void FeatureHistory::record(FeatureStreamId id, unsigned long timeMs, float valu
         return;
     }
 
-    StreamBuffer& buffer = _streams[streamIndex(id)];
+    StreamBuffer& buffer = _streams[slot];
     if (!buffer.hasCurrent) {
         startCurrentBin(buffer, timeMs);
     } else if (timeMs != buffer.current.startMs) {
@@ -249,12 +272,13 @@ MagnitudeWindow FeatureHistory::getWindow(
     out.inspectionNowMs = inspectionNowMs;
     out.requestedStartMs = startMs;
     out.requestedEndMs = endMs;
-    out.present = isSupportedStream(stream);
+    const size_t slot = slotFor(stream);
+    out.present = slot != kNoSlot;
     if (!out.present || endMs < startMs) {
         return out;
     }
 
-    const StreamBuffer& buffer = _streams[streamIndex(stream)];
+    const StreamBuffer& buffer = _streams[slot];
     if (buffer.binCount == 0 && !buffer.hasCurrent) {
         return out;
     }
@@ -406,11 +430,12 @@ size_t FeatureHistory::copyWindowApproximateValues(
     float* outValues,
     size_t capacity
 ) const {
-    if (!isSupportedStream(stream) || outValues == nullptr || capacity == 0 || endMs < startMs) {
+    const size_t slot = slotFor(stream);
+    if (slot == kNoSlot || outValues == nullptr || capacity == 0 || endMs < startMs) {
         return 0;
     }
 
-    const StreamBuffer& buffer = _streams[streamIndex(stream)];
+    const StreamBuffer& buffer = _streams[slot];
     if (buffer.binCount == 0 && !buffer.hasCurrent) {
         return 0;
     }
@@ -454,11 +479,12 @@ size_t FeatureHistory::copyWindowApproximateValues(
 }
 
 size_t FeatureHistory::sampleCount(FeatureStreamId stream) const {
-    if (!isSupportedStream(stream)) {
+    const size_t slot = slotFor(stream);
+    if (slot == kNoSlot) {
         return 0;
     }
 
-    const StreamBuffer& buffer = _streams[streamIndex(stream)];
+    const StreamBuffer& buffer = _streams[slot];
     return buffer.binCount + (buffer.hasCurrent && buffer.current.inputCount > 0 ? 1U : 0U);
 }
 
@@ -467,11 +493,12 @@ bool FeatureHistory::hasSamples(FeatureStreamId stream) const {
 }
 
 unsigned long FeatureHistory::latestTimeMs(FeatureStreamId stream) const {
-    if (!isSupportedStream(stream)) {
+    const size_t slot = slotFor(stream);
+    if (slot == kNoSlot) {
         return 0;
     }
 
-    const StreamBuffer& buffer = _streams[streamIndex(stream)];
+    const StreamBuffer& buffer = _streams[slot];
     if (buffer.hasCurrent && buffer.current.inputCount > 0) {
         return buffer.current.startMs;
     }
@@ -485,11 +512,12 @@ unsigned long FeatureHistory::latestTimeMs(FeatureStreamId stream) const {
 }
 
 float FeatureHistory::latestValue(FeatureStreamId stream) const {
-    if (!isSupportedStream(stream)) {
+    const size_t slot = slotFor(stream);
+    if (slot == kNoSlot) {
         return 0.0f;
     }
 
-    const StreamBuffer& buffer = _streams[streamIndex(stream)];
+    const StreamBuffer& buffer = _streams[slot];
     if (buffer.hasCurrent && buffer.current.inputCount > 0) {
         return representativeValueForAccumulator(stream, buffer.current);
     }

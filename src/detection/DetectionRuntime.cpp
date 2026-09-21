@@ -279,10 +279,27 @@ void DetectionRuntime::setDetectorSelection(DetectorSelection selection) {
 #endif
 }
 
+// FeatureHistory keeps one buffer per inspection module rather than one per
+// known stream; the plan is the only reader of history, so it is also the
+// authority on which streams are worth recording. The header can't depend
+// on InspectorTypes.h, so the bound is enforced here, where both are visible.
+static_assert(FeatureHistory::kMaxActiveStreams >= kMaxInspectionModules,
+    "FeatureHistory must have a slot for every stream an InspectionPlan can name");
+
 void DetectionRuntime::setInspectionPlan(const InspectionPlan& plan) {
     _inspectionPlan = plan;
     _occurrenceInspector.configure(_inspectionPlan);
     _patternMatcher.configure(_inspectionPlan);
+
+    FeatureStreamId streams[kMaxInspectionModules] = {};
+    size_t streamCount = 0;
+    for (size_t i = 0; i < _inspectionPlan.count && i < kMaxInspectionModules; ++i) {
+        const InspectionModuleConfig& module = _inspectionPlan.modules[i];
+        if (module.kind == InspectionModuleKind::MagnitudeFeatureStrength) {
+            streams[streamCount++] = module.magnitude.stream;
+        }
+    }
+    _featureHistory.setActiveStreams(streams, streamCount);
 }
 
 void DetectionRuntime::setFieldStateConfig(const FieldStateConfig& config) {

@@ -14,6 +14,7 @@
 #include "../../output/ChirpOutput.h"
 #include "../../behavior/ResonantBehavior.h"
 #include "../../detection/patterns/PatternResult.h"
+#include "../../param/ParamRegistry.h"
 #include "ResonantNodeDebug.h"
 
 /*
@@ -53,6 +54,9 @@ private:
 
     void configureParameters();
     void configureI2SParameters();
+    void registerDetectionParams();
+    void handleParamCommand(const char* line);
+    void applyParamModule(param::ModuleId module);
     void startRbQuietBaseline();
     void resetRbCounters();
     void resetDetectionState();
@@ -96,6 +100,7 @@ private:
     detection::DetectionRuntime _detection;
     detection::DetectionProfile _activeDetectionProfile = detection::makeTonalPulseScalarProfile();
     ResonantBehavior _behavior;
+    param::ParamRegistry _paramRegistry;
 
     // Debug / logging support.
     NodeDebug _debug;

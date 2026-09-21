@@ -228,6 +228,34 @@ judgment into Phase 5b's own inventory step instead.
 
 ---
 
+## Resume point, 2026-09-21: stopped here, on purpose
+
+Phases 1, 2, and 3 are code-complete and committed (`0102896`, `4280601`,
+`1b4b829`, `4c7658e`, `3fd070e`, `0526ad1`). Every one of them compiles and
+produces a real, linked firmware image on all three PlatformIO environments
+as of this note. None of them have run on real hardware yet.
+
+Before doing anything else in this plan:
+
+1. **Run T2 and T3** — the 50-trial SEQ regression for both
+   `TonalPulseFreq` and `TonalPulseScalar`. Item 2's fix is expected to
+   change `SEQ_SOURCE_SPEC`'s `gate_reason`/`ready_ok`/`gate_open` fields
+   under default settings (see `cleanup.md` Item 2's status note); confirm
+   that's the only thing that moved and that `accepted`/`selectedReject`
+   truth is unchanged.
+2. **Run Item 2's own two-run comparison** — same trial, diagnostics forced
+   on and off, confirm identical `DetectorReport.accepted`/`selectedReject`
+   truth in both runs.
+3. **Run T4** — the Unity suite (`test_analyzer_pass_rules`) on-device.
+
+Only after that: proceed to Phase 4's soak below, then Phase 5. Phase 5 is
+a real step up in risk from everything done so far, it changes object
+lifetime and memory layout, not naming or switch consolidation, so a clean
+compile is much weaker evidence there than it was for Phases 1–3. Don't
+start it on top of still-unverified Phase 2/3 output changes.
+
+---
+
 ## Phase 4 — Let Phase 1–3 Soak
 
 Not a code phase. Run the Node build in normal use for a period before

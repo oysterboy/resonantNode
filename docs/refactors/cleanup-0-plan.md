@@ -568,9 +568,47 @@ Either drop the punned strength fields from the verdict (Behavior's one use
 is already implied by `valid`) or normalize them to a `StrengthClass` like
 the decision fields. The timing fields (`primaryStartMs`, `primaryHeardAtMs`,
 `primaryAcceptedMs`, `primaryDurationMs`) are fine, milliseconds are the
-same in every family. Whichever way, the rule for the verdict should be
-stated in `OccurrenceVerdict.h`: **only detector-agnostic quantities
-cross this boundary.**
+same in every family.
+
+**Resolved 2026-09-21: the verdict boundary rule.** Two channels cross
+from detection to Behavior, and both are handled the same way: the
+detection side computes, Behavior receives something already normalized.
+
+1. **How much.** One number, `confidence` (or `strength`; pick one name),
+   normalized to a declared range, computed by the detection side by
+   whatever means that family has. The slot already exists:
+   `OccurrenceVerdict.confidence` is currently degenerate
+   (`valid ? 1.0f : 0.0f`). Make it real and drop the punned
+   `primary*Strength`/`primaryAmbientBaseline` fields. Behavior never sees
+   units.
+2. **What.** A label, not a measurement. The profile defines the
+   vocabulary of things that can be heard (an `EventClass`-style enum:
+   `AnyBurst`, `ChirpA`, `ChirpB`, `NeighborSignature`, whatever future
+   detection actually distinguishes); the detection side decides which
+   class this occurrence was; the verdict carries the class; Behavior maps
+   class to reaction. The 3200 Hz, the contrast, the onset amplitude stay
+   inside detection, exactly as "how confidence is computed" does.
+
+Why "label, not measurement" is the load-bearing half: under Phase 5d,
+`ResonantBehavior` compiles into every family's firmware. If the verdict
+carried family-shaped fields (`band.targetHz`), Behavior would need
+`#if DETECTOR_FAMILY_*` to read them, a second directive site, the thing
+`DetectionFamily.h` exists to prevent. A class tag is family-agnostic by
+construction: a frequency family and a scalar family can both report
+`ChirpA`, computed differently, and Behavior is one body of code.
+
+So `OccurrenceVerdict` carries: the decision (`valid`, the failed
+requirement), a normalized magnitude, an event class, timing in
+milliseconds, `occurrenceId`, and `detectorId` as axis-1 provenance for the
+Analyzer (Behavior should not need to look at it). Nothing with units,
+nothing family-shaped. State this rule at the top of `OccurrenceVerdict.h`.
+
+The one thing a label cannot carry: a reaction that genuinely needs a
+continuous physical value from detection, "respond at the frequency you
+heard, plus jitter." If that need arrives, it gets its own named,
+unit-declared field (`heardFrequencyHz`, zero from a family that cannot
+measure it), not a reused slot. The name says what it is; that is still
+not punning. Until it arrives, don't add it.
 
 Order of operations, the one subtlety: today `_fieldStateTracker.observeOccurrenceVerdict()`
 runs in the evaluator drain, after *all* occurrences popped this frame

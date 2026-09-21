@@ -1,8 +1,65 @@
 # Architecture Proposal — Single Active Detector Ownership
 
-Status: proposal, not an active implementation pass.
+Status: **deferred 2026-09-21**, on measurement. Not rejected: revisit when a
+third detector kind exists, per open question 4 below. See "Decision" next.
 Related to: `docs/refactors/cleanup.md` (this builds on and is complementary
 to that pass; it does not replace it).
+
+---
+
+## Decision (2026-09-21): defer, with numbers
+
+Step 1 of the approach below (the cross-access re-audit) was run and still
+holds: every `_scalarDetector.`/`_frequencyDetector.` access is inside
+`DetectionRuntime.cpp`, nothing outside it touches either object.
+
+Then the actual sizes were measured on the target with
+`xtensa-esp32-elf-g++`, which settles open question 4:
+
+| Member of `DetectionRuntime` | Bytes | Share (Node build) |
+|---|---|---|
+| `_featureHistory` | 33,056 | 80% |
+| `_patternMatcher` | 3,912 | 10% |
+| `_frequencyDetector` | 1,832 | 4.5% |
+| `_scalarDetector` | 1,440 | 3.5% |
+| everything else | ~920 | 2% |
+| **total** | **41,160** | |
+
+A union holds `max(1832, 1440)`, so this proposal saves **1,440 bytes**: 3.5%
+of `DetectionRuntime`, 1.9% of the Node build's RAM. For scale, Phase 5a
+(`cleanup-analyzer-node-isolation.md`) saved 13,504 bytes, roughly ten times
+more, and `FeatureHistory` alone is 23x this proposal's entire saving.
+
+Against that, the re-audit found a hazard this document had not recorded.
+Two dispatch sites do **not** switch on `_detectorSelection`; they switch on
+a `DetectorReport`'s own `detectorId`:
+
+- `drainDetectorReportEvents()`, picking `reportGeneration()` from
+  `_detectorReport.detectorId`. Safe today: `_detectorReport` is refreshed
+  by `captureLatestDetectorReportIfChanged()`, which does gate on
+  `_detectorSelection`.
+- `capturePipelineResult()`, picking `reportGeneration()` from
+  `matchedDetectorReport->detectorId`. That report is a **copy pulled from
+  the correlation queue**, so it can predate a `setDetectorSelection()`
+  call and name the detector that is no longer selected.
+
+With two resident objects both are harmless. Under a union, the second one
+is a read of the inactive union member: undefined behavior, on the
+profile-switch path specifically, which is also the path with no automated
+coverage (T6 is a hardware test). Implementing the union therefore requires
+resolving both sites against the active selection rather than the report's
+own id, changing what generation number a stale report reports.
+
+1,440 bytes does not buy manual placement-new lifetime management plus that
+fix, today. Revisit if a third detector kind lands (the saving grows with
+each additional kind, since a union stays at `max` while members accumulate)
+or if `DetectionRuntime`'s RAM becomes critical for another reason — in
+which case `_featureHistory` is the target that matters, not this.
+
+Not done as part of this deferral: the two dead accessors
+(`scalarReportGeneration()`/`frequencyReportGeneration()`, confirmed zero
+callers) are still present. They are listed under "What this fixes" below,
+but removing them does not require this proposal.
 
 ## Relationship to cleanup.md
 

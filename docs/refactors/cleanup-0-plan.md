@@ -207,11 +207,12 @@ Does not require Phase 2, but doing Phase 2 first means
 `FrequencyMatchDetector`'s surface is already narrow when this item touches
 its call sites. (No longer gated on Item 1, which is withdrawn.)
 
-1. Introduce the internal `ActiveDetectorAdapter` (`hasPendingOccurrence`,
-   `popOccurrence` only, see the corrected sketch in `cleanup.md` Item 5).
-   Route `drainDetectors()` through it. Leave `observeFrame()`'s
-   detector-specific `update(...)` dispatch switch as-is.
-   - Test: T1, T2, T3, T6.
+1. Introduce the internal `ActiveDetectorAdapter` (`popOccurrence` only,
+   see `cleanup.md` Item 5's status note for why `hasPendingOccurrence`
+   wasn't folded in too). Route `drainDetectors()` through it. Leave
+   `observeFrame()`'s detector-specific `update(...)` dispatch switch as-is.
+   **Implemented, 2026-09-21.** T1 done (full build, all three
+   environments); T2, T3, T6 (hardware) still outstanding.
 
 **Note:** this item is deliberately kept even though Phase 5b (ownership
 proposal) will later replace the adapter with a fuller single-slot model.
@@ -353,7 +354,7 @@ decision is: consolidate" section instead:
 | 0 | consolidation | — (parallel track) | field trials only |
 | 1 | cleanup.md #4 (done), inspector-pattern-scope (done), ~~cleanup.md #1~~ (withdrawn), Magnitude/Band rename (done, out-of-band) | — | T1 (done), T2-T4 (hardware, outstanding) |
 | 2 | cleanup.md #2, #3 (both implemented, hardware verification outstanding) | Phase 0 = keep | T1 (done, all 3 envs, full build), T2, T4 (outstanding) |
-| 3 | cleanup.md #5 | — (Item 1 dependency removed; Phase 2 optional) | T1, T2, T3, T6 |
+| 3 | cleanup.md #5 (implemented, hardware verification outstanding) | — (Item 1 dependency removed; Phase 2 optional) | T1 (done), T2, T3, T6 (outstanding) |
 | 4 | soak, no doc | Phases 1-3 | T7 |
 | 5a | analyzer-node-isolation | Phases 1-4 | T1, T2, T3, T6, T7, T8 |
 | 5b | detector-ownership | Phase 5a | T1-T7, T5 |

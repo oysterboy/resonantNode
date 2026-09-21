@@ -325,7 +325,42 @@ warnings is sufficient verification.
 
 ---
 
-# Item 5 — Unify the per-detector switch statements in DetectionRuntime
+# Item 5 — Unify the per-detector switch statements in DetectionRuntime (implemented 2026-09-21, T2/T3/T6 hardware verification outstanding)
+
+**Status:** implemented, with two deliberate deviations from the sketch
+below:
+
+- `ActiveDetectorAdapter` exposes only `popOccurrence()`, not
+  `hasPendingOccurrence()`. `hasPendingDetectorOutput()`'s existing 6-line
+  switch already matched the shape this item targets, but routing it
+  through the adapter would need the adapter to hand out `const`-safe
+  access too (that method is `const`, `popOccurrence()` isn't), and that
+  method wasn't named as unify-worthy duplication in the Problem statement
+  (it's small, single-branch-per-case, not the ~30-line repeat
+  `drainDetectors()` had). Left it switch-based rather than add
+  const/non-const complexity to the adapter for a case this item didn't
+  ask for.
+- The adapter is a lightweight value constructed fresh inside
+  `drainDetectors()` from `_detectorSelection` and references to both
+  detector members (`ActiveDetectorAdapter activeDetector(_detectorSelection,
+  _frequencyDetector, _scalarDetector);`), not a persistent member bound
+  once in `setDetectorSelection()`. Both detectors are fixed-address
+  members of `DetectionRuntime` for its whole lifetime, so there's no
+  lifecycle to manage; a persistent bound adapter member would need to be
+  re-bound on every `setDetectorSelection()` call for no behavioral
+  benefit over constructing the (2-pointer-sized) view on the stack each
+  time `drainDetectors()` runs.
+
+`observeFrame()`'s `update(...)` dispatch switch is untouched, as
+specified. `latestReport()` inside `drainDetectors()`'s loop stays
+switch-based (a ternary on `_detectorSelection`, not routed through the
+adapter), per this item's own note that report access is diagnostics-only
+and out of scope here.
+
+Verified: compiled clean against the real toolchain, then a full real
+build of all three PlatformIO environments (all linked, all produced a
+firmware image) — satisfies T1. T2, T3 (hardware SEQ regression on both
+profiles) and T6 (profile-switch soak) are still outstanding.
 
 ## Problem
 

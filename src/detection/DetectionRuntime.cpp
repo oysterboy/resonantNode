@@ -44,6 +44,39 @@ void applyScalarTransientConfig(ScalarTransientDetector& detector, const ScalarT
     detector.setMaxGapMs(config.maxGapMs);
 }
 
+// Narrow view over whichever detector is currently selected, used only to
+// collapse drainDetectors()'s duplicated per-branch drain loop into one. Not
+// a general IDetector interface: it deliberately exposes only the one call
+// this loop needs, with a signature and meaning already identical on both
+// detectors. update() stays switch-based in observeFrame() (genuinely
+// different signatures per detector), and latestReport()/reportGeneration()
+// stay switch-based wherever they're already used (see
+// captureLatestDetectorReportIfChanged()), since neither PatternResult nor
+// FieldState is ever built from DetectorReport, that's a diagnostics-only
+// concern, not part of the drain path this adapter unifies.
+class ActiveDetectorAdapter {
+public:
+    ActiveDetectorAdapter(DetectorSelection selection,
+                           FrequencyMatchDetector& frequencyDetector,
+                           ScalarTransientDetector& scalarDetector)
+        : _selection(selection), _frequencyDetector(frequencyDetector), _scalarDetector(scalarDetector) {}
+
+    bool popOccurrence(Occurrence& out) {
+        switch (_selection) {
+            case DetectorSelection::FrequencyMatch:
+                return _frequencyDetector.popOccurrence(out);
+            case DetectorSelection::ScalarTransient:
+                return _scalarDetector.popOccurrence(out);
+        }
+        return false;
+    }
+
+private:
+    DetectorSelection _selection;
+    FrequencyMatchDetector& _frequencyDetector;
+    ScalarTransientDetector& _scalarDetector;
+};
+
 } // namespace
 
 void DetectionRuntime::resetState() {
@@ -477,72 +510,41 @@ bool DetectionRuntime::hasPendingPatternWork() const {
 
 void DetectionRuntime::drainDetectors(unsigned long nowMs) {
     Occurrence occurrence;
+    ActiveDetectorAdapter activeDetector(_detectorSelection, _frequencyDetector, _scalarDetector);
 
-    switch (_detectorSelection) {
-        case DetectorSelection::FrequencyMatch:
-            while (_frequencyDetector.popOccurrence(occurrence)) {
-                ++_detectorOccurrencePoppedCount;
-                if (occurrence.present && occurrence.valid) {
-                    ++_detectorValidOccurrencePoppedCount;
-                }
-                _fieldStateTracker.observeOccurrence(occurrence, nowMs);
-                const InspectedOccurrence inspected = _occurrenceInspector.inspectWithHistory(occurrence, &_featureHistory, nowMs);
-                _fieldStateTracker.observeInspectedOccurrence(inspected, nowMs);
-                PendingPatternObservation observation = {};
-                observation.inspected = inspected;
-                observation.detectorReport = _frequencyDetector.latestReport();
-                if (observation.detectorReport.detectorId != occurrence.detectorId ||
-                    !observation.detectorReport.accepted.present ||
-                    observation.detectorReport.accepted.occurrenceId != occurrence.occurrenceId) {
-                    ++_detectorReportMismatchCount;
-                }
-                ++_patternAcceptAttemptCount;
-                const bool acceptedByMatcher = _patternMatcher.acceptOccurrence(inspected);
-                PatternInputRejectReason rejectReason = _patternMatcher.lastInputRejectReason();
-                if (acceptedByMatcher) {
-                    ++_patternAcceptSuccessCount;
-                    if (!pushPatternObservation(observation)) {
-                        rejectReason = PatternInputRejectReason::CorrelationQueueFull;
-                        _latestPatternInputRejectReason = rejectReason;
-                    }
-                } else {
-                    ++_patternAcceptRejectCount;
-                    _latestPatternInputRejectReason = rejectReason;
-                }
+    while (activeDetector.popOccurrence(occurrence)) {
+        ++_detectorOccurrencePoppedCount;
+        if (occurrence.present && occurrence.valid) {
+            ++_detectorValidOccurrencePoppedCount;
+        }
+        _fieldStateTracker.observeOccurrence(occurrence, nowMs);
+        const InspectedOccurrence inspected = _occurrenceInspector.inspectWithHistory(occurrence, &_featureHistory, nowMs);
+        _fieldStateTracker.observeInspectedOccurrence(inspected, nowMs);
+        PendingPatternObservation observation = {};
+        observation.inspected = inspected;
+        // latestReport() stays switch-based rather than going through the
+        // adapter, see the adapter's own comment for why.
+        observation.detectorReport = _detectorSelection == DetectorSelection::FrequencyMatch
+            ? _frequencyDetector.latestReport()
+            : _scalarDetector.latestReport();
+        if (observation.detectorReport.detectorId != occurrence.detectorId ||
+            !observation.detectorReport.accepted.present ||
+            observation.detectorReport.accepted.occurrenceId != occurrence.occurrenceId) {
+            ++_detectorReportMismatchCount;
+        }
+        ++_patternAcceptAttemptCount;
+        const bool acceptedByMatcher = _patternMatcher.acceptOccurrence(inspected);
+        PatternInputRejectReason rejectReason = _patternMatcher.lastInputRejectReason();
+        if (acceptedByMatcher) {
+            ++_patternAcceptSuccessCount;
+            if (!pushPatternObservation(observation)) {
+                rejectReason = PatternInputRejectReason::CorrelationQueueFull;
+                _latestPatternInputRejectReason = rejectReason;
             }
-            break;
-        case DetectorSelection::ScalarTransient:
-            while (_scalarDetector.popOccurrence(occurrence)) {
-                ++_detectorOccurrencePoppedCount;
-                if (occurrence.present && occurrence.valid) {
-                    ++_detectorValidOccurrencePoppedCount;
-                }
-                _fieldStateTracker.observeOccurrence(occurrence, nowMs);
-                const InspectedOccurrence inspected = _occurrenceInspector.inspectWithHistory(occurrence, &_featureHistory, nowMs);
-                _fieldStateTracker.observeInspectedOccurrence(inspected, nowMs);
-                PendingPatternObservation observation = {};
-                observation.inspected = inspected;
-                observation.detectorReport = _scalarDetector.latestReport();
-                if (observation.detectorReport.detectorId != occurrence.detectorId ||
-                    !observation.detectorReport.accepted.present ||
-                    observation.detectorReport.accepted.occurrenceId != occurrence.occurrenceId) {
-                    ++_detectorReportMismatchCount;
-                }
-                ++_patternAcceptAttemptCount;
-                const bool acceptedByMatcher = _patternMatcher.acceptOccurrence(inspected);
-                PatternInputRejectReason rejectReason = _patternMatcher.lastInputRejectReason();
-                if (acceptedByMatcher) {
-                    ++_patternAcceptSuccessCount;
-                    if (!pushPatternObservation(observation)) {
-                        rejectReason = PatternInputRejectReason::CorrelationQueueFull;
-                        _latestPatternInputRejectReason = rejectReason;
-                    }
-                } else {
-                    ++_patternAcceptRejectCount;
-                    _latestPatternInputRejectReason = rejectReason;
-                }
-            }
-            break;
+        } else {
+            ++_patternAcceptRejectCount;
+            _latestPatternInputRejectReason = rejectReason;
+        }
     }
 
     (void)nowMs;

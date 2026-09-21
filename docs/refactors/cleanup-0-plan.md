@@ -444,6 +444,91 @@ existing two have.
 
 ---
 
+## Phase 7 — Follow-ups from the OccurrenceEvaluator rename (not started)
+
+The `PatternMatcher` -> `OccurrenceEvaluator` rename (`ee4edd2`) stopped at
+the type-coupled boundary on purpose. Two things it left behind, each its
+own small pass, each changing printed output.
+
+### 7a — Derived vocabulary that means "a valid verdict happened"
+
+Identifiers and labels that describe the *outcome* of the evaluator in
+other stages' terms, still saying "pattern":
+
+- Analyzer trial classifier: `AnalyzerReason::ValidPatternInExpectedWindow`
+  / `ValidPatternBeforeWindow` / `ValidPatternAfterWindow` /
+  `PatternRejected` / `MultipleValidPatterns` /
+  `MultipleCompetingPatterns` / `UnexpectedValidPatternWithoutTrigger` /
+  `DuplicatePatternAfterPrimary`; `patternValidTrials`,
+  `patternRejectedTrials`, `patternRejectedTrial()`, `patternAvailable`,
+  `primaryValidPattern*`, `runtimePatternCaptured`,
+  `bestRejectedPatternCaptured`, `SequenceTrialSelection::Kind::ValidPattern`
+- SEQ_SUMMARY labels: `pattern_valid_trials=`, `pattern_rejected_trials=`,
+  and the reason strings `pattern_rejected`, `multiple_valid_patterns`,
+  `unexpected_valid_pattern_without_trigger`, `duplicate_pattern_after_primary`
+- `FieldStateTracker`/`FieldState`: `patternWindowMs`, `_patternCountInWindow`,
+  `recentPatternCount`, `recentValidPatterns`, `validPatternActivity`
+- `ResonantBehavior`: `HeardPattern`, `_pendingHeardPattern*`,
+  `_lastHeardPatternMs`, `patternsReceived`, `patternsIgnored*`,
+  `IgnoredInvalidPattern`, `IgnoredAmbiguousPattern`, `ConsumedPattern`,
+  and the Node's `RB pattern`/`heard_pattern` status strings
+- `test/test_analyzer_pass_rules/test_main.cpp`:
+  `test_pattern_rejected_helper_excludes_source_rejects`
+
+The decision to make first, once, then apply everywhere: does the trial
+classifier say **verdict** ("a valid verdict in the expected window",
+matching the stage that produced it) or **detection** ("a valid detection
+in the expected window", matching what the trial is measuring)? Both read
+well; "detection" is arguably truer for `AnalyzerReason` and `FieldState`
+(they care that something was heard, not which stage said so), "verdict"
+is truer for Behavior (it literally consumes an `OccurrenceVerdict`). Mixed
+is acceptable if the line is that clean. Not: leaving "pattern".
+
+Cost: touches pass-rule semantics by name only (no logic), the Unity test
+name, and SEQ_SUMMARY labels. Byte-identical values, changed labels.
+
+**Never** in this pass: `ChirpPattern`, `_ledPattern*`, `observePatternPulse`
+(also uncalled, see 7b), `chirpPatternName`. Emission patterns are real
+temporal sequences; the word is correct there.
+
+### 7b — Vestigial verdict enum values
+
+Audited 2026-09-21 by counting assignments vs name-only appearances:
+
+| Enum | assigned somewhere | only in name functions / `case` labels |
+|---|---|---|
+| `VerdictType` | `None`, `SinglePulse`, `Invalid` | `DuplicateAfterPrimary`, `UnexpectedNoise`, `Ambiguous` |
+| `VerdictReasonCode` | `None`, `FromOccurrence`, `SupportRequirementFailed` | `FromFrequencyMatch`, `DetectorRejected`, `AmbiguousEvidence` |
+| `VerdictRejectReason` | `None`, `MissingSupport`, `SupportTooLow`, `UnexpectedTiming` | `NoProposal`, `InvalidOccurrence`, `NoFrequencyEvidence`, `FrequencyWindowInvalid`, `FrequencyScoreTooLow`, `FrequencyContrastTooLow`, `FrequencyScoreAndContrastTooLow`, `DuplicateAfterPrimary`, `UnexpectedNoise` |
+
+`VerdictType` therefore distinguishes exactly two reachable states,
+`SinglePulse` vs `Invalid`, which `valid` already encodes, and
+`SinglePulse` is pattern vocabulary. `ResonantBehavior` has an ignore
+branch for `VerdictType::Ambiguous` (`IgnoredAmbiguousPattern`) that
+cannot fire. These are the last leftovers of the original pattern design,
+same lineage as the deleted `ProposalShape`/`PulseSequence`.
+
+Proposed shape, to decide before doing: delete every never-assigned value
+and its name string; either delete `VerdictType` entirely (its information
+is `valid`) or keep it as an honest two-value enum if a third verdict kind
+is genuinely expected; delete Behavior's dead `Ambiguous` branch. Check
+first that nothing in Behavior treats `Invalid` differently from `!valid`
+(today `Invalid` implies `valid == false`, so it shouldn't).
+
+Output change: `verdict.type=` loses `single_pulse` (becomes whatever the
+two-value enum is named, or the field goes away). Behavior change: none in
+practice, the deleted branches are unreachable, but that is exactly the
+claim T7 has to confirm.
+
+Also uncalled, found on the way: `NodeDebug::observePatternPulse()` has no
+callers. Delete with 7b or leave for a dead-code pass; it is not part of
+either rename.
+
+- Test, both: T1; T2/T3 with the changed labels as the only expected diff;
+  T4 (7a renames a test); T7 (7b touches Behavior).
+
+---
+
 ## If Phase 0 Resolves to "Consolidate"
 
 Skip Phase 2 entirely. Follow `cleanup-detector-consolidation.md`'s "If the
@@ -487,3 +572,5 @@ decision is: consolidate" section instead:
 | 5c | FeatureHistory (two commits, -14,440 bytes; not in a proposal doc) | measured during 5b | T1 (done); T2, T3, T6, T7 (outstanding) |
 | 5d | detector-family-build (proposal; supersedes 5b) | — | not started |
 | 6 | SimpleThresholdDetector family (the MVP detector; 5d acceptance test) | Phase 5d | T1 (seven envs), T7; own first SEQ baseline |
+| 7a | derived "valid pattern" vocabulary -> verdict/detection wording | Phase 7 note | T1, T2/T3 (labels only), T4 |
+| 7b | vestigial VerdictType/ReasonCode/RejectReason values | Phase 7 note | T1, T2/T3 (labels only), T7 |

@@ -54,6 +54,13 @@ that path. It does not by itself prove the crash is fixed; treat it as a
 contributing fix, and keep `ARDUINO_LOOP_STACK_SIZE` at its current increased
 value until the crash is independently reproduced as gone.
 
+## Status note (2026-09-21)
+
+Item 5 is in progress in a separate (VS Code) session as of this note. Do
+not start Item 5 here; Items 8 and 9 below both depend on it landing first
+and are written against its pre-unification `drainDetectors()` shape, so
+re-check their line references once Item 5 merges.
+
 ---
 
 # Item 1 — Collapse always-both detail payloads (Occurrence: withdrawn, DetectorReport: needs re-verification)
@@ -424,6 +431,146 @@ None required; no code changes are made under this item in this pass.
 
 ---
 
+# Item 8 — Collapse the pattern-result correlation queue into a single carried unit
+
+## Problem
+
+`DetectionRuntime::drainDetectors()` and `drainPatternMatcher()` push two
+different pieces of what is conceptually one event into two independent
+bounded ring buffers and re-associate them later by `occurrenceId`:
+
+- `drainDetectors()` builds a `PendingPatternObservation` (already a bundle
+  of `InspectedOccurrence` + `DetectorReport`, `DetectionRuntime.h:71-74`)
+  and pushes it onto `_patternInspectedQueue` via `pushPatternObservation()`.
+- `_patternMatcher.acceptOccurrence(inspected)` separately queues the
+  `InspectedOccurrence` inside `PatternMatcher`'s own internal queue.
+- `drainPatternMatcher()` later pops a `PatternResult` from `PatternMatcher`
+  and calls `popPatternObservation(result.occurrenceId, matchedObservation)`
+  (`DetectionRuntime.cpp:713-740`), a linear scan over up to
+  `kResultQueueCapacity` (4) entries matching by ID, to reunite the result
+  with the observation that produced it.
+
+`cleanup-analyzer-node-isolation.md` already identified this exact
+machinery as "arguably the most complex and historically bug-prone part of
+`DetectionRuntime`" and traced that neither `PatternResult` nor `FieldState`
+(the two things `ResonantNodeApp`/`ResonantBehavior` actually consume)
+depend on the result of this correlation at all — `pushPatternResult()` and
+`_fieldStateTracker.observePatternResult()` both run off the bare
+`PatternResult`, before correlation happens. The entire mechanism exists to
+attach a `DetectorReport`/`InspectedOccurrence` to the diagnostic
+`DetectionPipelineEvent` built in `capturePipelineResult()`.
+
+The `hasPendingPatternWork()` comment at `DetectionRuntime.cpp:468-476`
+already documents that this two-queue split can legitimately desync ("the
+correlation queue... can legitimately diverge from what the matcher itself
+still has queued... for example, when `pushPatternObservation()` fails while
+`acceptOccurrence()` already succeeded"), and `_patternCorrelationFailureCount`
+exists specifically to notice when it does. That is a symptom being
+monitored, not a root cause being fixed: correlation can fail because the
+two halves of one event are carried in two independently-sized,
+independently-drained queues instead of one.
+
+This is the same category of problem as the `FrequencyMatchDetector`
+accept-path report-freeze gap fixed separately on this branch: two things
+that must be kept in sync by hand (there, two detector code paths; here,
+two queues) and, per the comment above, are already known to be able to
+fall out of sync.
+
+## Required Change
+
+Scoped to `DetectionRuntime` only — no change to `PatternMatcher`'s public
+contract, `PatternResult`, or `FieldState` shape, and no dependency on the
+larger Node/Analyzer build split proposed in
+`cleanup-analyzer-node-isolation.md`. This item is a smaller, immediately
+actionable step that stays useful whether or not that larger proposal is
+ever adopted; if it is adopted later, this item just means there is less
+correlation machinery left to relocate.
+
+1. Carry the `PendingPatternObservation` alongside the occurrence through
+   the existing drain path instead of pushing it to a second queue keyed by
+   ID — for example, by extending what `_patternMatcher.acceptOccurrence()`
+   queues internally to hold the observation it already has in hand at push
+   time, and returning it unchanged from `popPatternResult()` alongside the
+   `PatternResult`.
+2. Delete `_patternInspectedQueue`, `pushPatternObservation()`,
+   `popPatternObservation()`, and `_patternInspectedQueueOverflowCount`/
+   `_patternCorrelationFailureCount` once nothing reads them.
+3. `capturePipelineResult()` keeps building the same diagnostic
+   `DetectionPipelineEvent` from the (now directly-available) observation;
+   its output should be unchanged.
+
+Do this after Item 5 lands (see status note above) — implementing this item
+against Item 5's pre-unification `drainDetectors()` branches would mean
+redoing the work twice.
+
+## Intermediate Verification 8
+
+1. Run both 50-trial SEQ tests (`TonalPulseFreq`, `TonalPulseScalar`);
+   `SEQ_TRIAL`/`SEQ_SOURCE`/`SEQ_INSPECT`/`SEQ_EXPLAIN`/`SEQ_SUMMARY` output
+   identical to baseline.
+2. Confirm `_patternCorrelationFailureCount` (or its replacement) cannot be
+   nonzero by construction, not just by observation on this run — the queue
+   split it was measuring should no longer exist.
+3. Confirm `PatternResult`/`FieldState` consumption in `ResonantNodeApp.cpp`
+   is byte-for-byte unchanged; this item must not touch the Node-facing
+   contract.
+
+---
+
+# Item 9 — Split Item 6's counter audit: measurement counters vs. correlation/dedup state
+
+## Problem
+
+Item 6 treats `DetectionRuntime`'s roughly twenty diagnostic fields as one
+homogeneous group and asks for a single keep/consolidate/remove table. Two
+different kinds of field are mixed together there:
+
+- **Measurement counters** (`_observeFrameCount`, `_freshDetectorInputCount`,
+  `_detectorDrainCount`, `_patternDrainCount`, `_detectorOccurrencePoppedCount`,
+  and similar): monotonic tallies read by `AnalyzerSystemReporter.cpp`'s
+  `SEQ REPORT` line. These are legitimately a "keep, consolidate, or remove
+  by usefulness" decision, per Item 6 as written.
+- **Correlation/dedup-tracking state** (`_lastObservedScalarReportGeneration`,
+  `_lastObservedFrequencyReportGeneration`, `_lastEmittedAcceptedOccurrenceId`,
+  `_lastEmittedAcceptedReportGeneration`, `_lastEmittedSelectedRejectOccurrenceId`,
+  `_lastEmittedSelectedRejectReportGeneration`): these are not measurements,
+  they are the mechanism `captureLatestDetectorReportIfChanged()` and
+  `capturePipelineResult()`/`drainDetectorReportEvents()` use to decide
+  whether a `DetectorReport`/event has already been emitted. Their
+  usefulness question isn't "is this counter worth keeping" but "does this
+  bookkeeping stop being necessary once Item 8 removes the two-queue
+  correlation it exists to guard against."
+
+Folding both kinds into Item 6's single audit table risks a "keep" verdict
+on the generation-tracking fields for the wrong reason (they have an
+internal consumer, so they look load-bearing) when the actual question is
+whether that consumer itself can go away.
+
+## Required Change (this pass: audit only, no code change required, same as Item 6)
+
+Run Item 6's audit as two separate tables instead of one:
+
+1. Measurement counters, exactly as Item 6 specifies.
+2. Correlation/dedup-tracking fields, with the recommendation column
+   answering "does this field's sole purpose disappear once Item 8 lands,"
+   not "is this field currently read by something." List
+   `captureLatestDetectorReportIfChanged()`'s and `capturePipelineResult()`'s/
+   `drainDetectorReportEvents()`'s generation comparisons explicitly as the
+   consumers to check against.
+
+Do not remove anything under this item; it is a classification pass that
+feeds Item 8 and any future `cleanup-analyzer-node-isolation.md` work, the
+same relationship Item 6 already has to that document's "Suggested
+Approach" step 2.
+
+## Intermediate Verification 9
+
+Two short tables exist in the commit notes (measurement counters;
+correlation/dedup-tracking fields), each field assigned to exactly one
+table, no code change.
+
+---
+
 # Non-Goals
 
 - No threshold tuning.
@@ -449,8 +596,12 @@ DetectionCleanup: privatize FrequencyMatchDetector public field surface
 DetectionCleanup: remove dead duplicated frequency reason helpers
 DetectionCleanup: unify per-detector drain path in DetectionRuntime
 DetectionCleanup: audit and trim DetectionRuntime diagnostic counters
+DetectionCleanup: collapse pattern-result correlation queue in DetectionRuntime
+DetectionDocs: split diagnostic-counter audit into measurement vs. dedup-state tables
 ```
 
 Each commit must compile and pass its corresponding Intermediate
 Verification before proceeding to the next item. Item 7 has no commit; it is
-recorded as a deliberately deferred decision.
+recorded as a deliberately deferred decision. Item 8's commit depends on
+Item 5's landing first (see the 2026-09-21 status note above); Item 9's
+commit is documentation-only, same as Item 6.

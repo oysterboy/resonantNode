@@ -81,8 +81,45 @@ private:
 
 void DetectionRuntime::resetState() {
     resetDetectionState();
+#ifdef ANALYZER_MODE
     resetDiagnosticsCounters();
+#endif
 }
+
+void DetectionRuntime::resetDetectors() {
+    _frequencyDetector.resetState();
+    _scalarDetector.resetState();
+}
+
+void DetectionRuntime::resetDetectionState() {
+    resetDetectors();
+    _occurrenceInspector.reset();
+    _patternMatcher.reset();
+    _fieldStateTracker.reset();
+    _featureHistory.reset();
+    resetDetectionQueues();
+#ifdef ANALYZER_MODE
+    resetDetectionBookkeeping();
+#endif
+}
+
+void DetectionRuntime::resetDetectionQueues() {
+    memset(&_resultQueue[0], 0, sizeof(_resultQueue[0]));
+    _resultReadIndex = 0;
+    _resultCount = 0;
+#ifdef ANALYZER_MODE
+    _patternResultQueueOverflowCount = 0;
+    memset(&_pipelineEventQueue[0], 0, sizeof(_pipelineEventQueue[0]));
+    _pipelineEventReadIndex = 0;
+    _pipelineEventCount = 0;
+    memset(&_patternInspectedQueue[0], 0, sizeof(_patternInspectedQueue[0]));
+    _patternInspectedReadIndex = 0;
+    _patternInspectedCount = 0;
+    _patternInspectedQueueOverflowCount = 0;
+#endif
+}
+
+#ifdef ANALYZER_MODE
 
 void DetectionRuntime::resetDiagnostics() {
     resetDiagnosticsCounters();
@@ -112,39 +149,10 @@ void DetectionRuntime::resetDiagnosticsCounters() {
     _patternEventDroppedCount = 0;
 }
 
-void DetectionRuntime::resetDetectors() {
-    _frequencyDetector.resetState();
-    _scalarDetector.resetState();
-}
-
 void DetectionRuntime::resetSourceRejectSummaries() {
     _frequencyDetector.resetRejectSummary();
     _scalarDetector.resetAcceptedOccurrenceSummary();
     _scalarDetector.resetSelectedRejectSummary();
-}
-
-void DetectionRuntime::resetDetectionState() {
-    resetDetectors();
-    _occurrenceInspector.reset();
-    _patternMatcher.reset();
-    _fieldStateTracker.reset();
-    _featureHistory.reset();
-    resetDetectionQueues();
-    resetDetectionBookkeeping();
-}
-
-void DetectionRuntime::resetDetectionQueues() {
-    memset(&_resultQueue[0], 0, sizeof(_resultQueue[0]));
-    _resultReadIndex = 0;
-    _resultCount = 0;
-    _patternResultQueueOverflowCount = 0;
-    memset(&_pipelineEventQueue[0], 0, sizeof(_pipelineEventQueue[0]));
-    _pipelineEventReadIndex = 0;
-    _pipelineEventCount = 0;
-    memset(&_patternInspectedQueue[0], 0, sizeof(_patternInspectedQueue[0]));
-    _patternInspectedReadIndex = 0;
-    _patternInspectedCount = 0;
-    _patternInspectedQueueOverflowCount = 0;
 }
 
 void DetectionRuntime::resetDetectionBookkeeping() {
@@ -239,6 +247,8 @@ void DetectionRuntime::drainDetectorReportEvents(unsigned long nowMs) {
     }
 }
 
+#endif // ANALYZER_MODE
+
 void DetectionRuntime::setFrequencyMatchConfig(const FrequencyMatchConfig& config) {
     _frequencyMatchConfig = config;
 }
@@ -252,6 +262,7 @@ void DetectionRuntime::setDetectorSelection(DetectorSelection selection) {
     _detectorSelection = selection;
     resetDetectors();
     applyScalarTransientConfig(_scalarDetector, _scalarTransientConfig);
+#ifdef ANALYZER_MODE
     _pipelineEventQueue[0] = {};
     _pipelineEventReadIndex = 0;
     _pipelineEventCount = 0;
@@ -265,6 +276,7 @@ void DetectionRuntime::setDetectorSelection(DetectorSelection selection) {
     _detectorReport = {};
     _lastObservedScalarReportGeneration = 0;
     _lastObservedFrequencyReportGeneration = 0;
+#endif
 }
 
 void DetectionRuntime::setInspectionPlan(const InspectionPlan& plan) {
@@ -295,7 +307,9 @@ void DetectionRuntime::observeFrame(
     const FrequencyBandMeasurementPacket& frequencyEvidence,
     unsigned long nowMs
 ) {
+#ifdef ANALYZER_MODE
     ++_observeFrameCount;
+#endif
     _fieldStateTracker.update(nowMs);
     if (!audioSamplePacket.valid) {
         return;
@@ -309,7 +323,9 @@ void DetectionRuntime::observeFrame(
     switch (_detectorSelection) {
         case DetectorSelection::FrequencyMatch:
             if (!frequencyEvidence.present || !frequencyEvidence.fresh) {
+#ifdef ANALYZER_MODE
                 ++_noFreshFrequencySkipCount;
+#endif
                 break;
             }
             {
@@ -328,12 +344,16 @@ void DetectionRuntime::observeFrame(
                     _frequencyMatchConfig.cooldownAfterReleaseMs,
                     _frequencyMatchConfig.minDurationMs);
                 detectorInputProcessed = true;
+#ifdef ANALYZER_MODE
                 ++_freshDetectorInputCount;
+#endif
             }
             break;
         case DetectorSelection::ScalarTransient:
             if (streamRequiresFreshFrequency(_scalarTransientConfig.observedStream) && !frequencyEvidence.fresh) {
+#ifdef ANALYZER_MODE
                 ++_noFreshFrequencySkipCount;
+#endif
                 break;
             }
             _scalarDetector.update(
@@ -341,7 +361,9 @@ void DetectionRuntime::observeFrame(
                 selectedScalarValue(audioSamplePacket, frequencyEvidence, _scalarTransientConfig.observedStream)
             );
             detectorInputProcessed = true;
+#ifdef ANALYZER_MODE
             ++_freshDetectorInputCount;
+#endif
             break;
     }
 
@@ -349,26 +371,21 @@ void DetectionRuntime::observeFrame(
     const bool patternHadPendingWork = hasPendingPatternWork();
 
     if (detectorInputProcessed || detectorHadPendingOutput) {
+#ifdef ANALYZER_MODE
         ++_detectorDrainCount;
+#endif
         drainDetectors(nowMs);
+#ifdef ANALYZER_MODE
         drainDetectorReportEvents(nowMs);
+#endif
     }
 
     if (detectorInputProcessed || detectorHadPendingOutput || patternHadPendingWork) {
+#ifdef ANALYZER_MODE
         ++_patternDrainCount;
+#endif
         drainPatternMatcher(nowMs);
     }
-}
-
-bool DetectionRuntime::popPipelineEvent(DetectionPipelineEvent& out) {
-    if (_pipelineEventCount == 0) {
-        return false;
-    }
-
-    out = _pipelineEventQueue[_pipelineEventReadIndex];
-    _pipelineEventReadIndex = (_pipelineEventReadIndex + 1) % kPipelineEventQueueCapacity;
-    --_pipelineEventCount;
-    return true;
 }
 
 bool DetectionRuntime::popPatternResult(PatternResult& out) {
@@ -379,6 +396,23 @@ bool DetectionRuntime::popPatternResult(PatternResult& out) {
     out = _resultQueue[_resultReadIndex];
     _resultReadIndex = (_resultReadIndex + 1) % kResultQueueCapacity;
     --_resultCount;
+    return true;
+}
+
+const FieldState& DetectionRuntime::fieldState() const {
+    return _fieldStateTracker.state();
+}
+
+#ifdef ANALYZER_MODE
+
+bool DetectionRuntime::popPipelineEvent(DetectionPipelineEvent& out) {
+    if (_pipelineEventCount == 0) {
+        return false;
+    }
+
+    out = _pipelineEventQueue[_pipelineEventReadIndex];
+    _pipelineEventReadIndex = (_pipelineEventReadIndex + 1) % kPipelineEventQueueCapacity;
+    --_pipelineEventCount;
     return true;
 }
 
@@ -479,13 +513,11 @@ const PatternMatcherReport& DetectionRuntime::activePatternMatcherReport() const
     return _patternMatcher.report();
 }
 
-const FieldState& DetectionRuntime::fieldState() const {
-    return _fieldStateTracker.state();
-}
-
 const FeatureHistory& DetectionRuntime::featureHistory() const {
     return _featureHistory;
 }
+
+#endif // ANALYZER_MODE
 
 bool DetectionRuntime::hasPendingDetectorOutput() const {
     switch (_detectorSelection) {
@@ -513,17 +545,23 @@ void DetectionRuntime::drainDetectors(unsigned long nowMs) {
     ActiveDetectorAdapter activeDetector(_detectorSelection, _frequencyDetector, _scalarDetector);
 
     while (activeDetector.popOccurrence(occurrence)) {
+#ifdef ANALYZER_MODE
         ++_detectorOccurrencePoppedCount;
         if (occurrence.present && occurrence.valid) {
             ++_detectorValidOccurrencePoppedCount;
         }
+#endif
         _fieldStateTracker.observeOccurrence(occurrence, nowMs);
         const InspectedOccurrence inspected = _occurrenceInspector.inspectWithHistory(occurrence, &_featureHistory, nowMs);
         _fieldStateTracker.observeInspectedOccurrence(inspected, nowMs);
+#ifdef ANALYZER_MODE
+        // The correlation observation exists only to attach a matching
+        // DetectorReport/InspectedOccurrence to the diagnostic
+        // DetectionPipelineEvent; neither PatternResult nor FieldState is
+        // ever built from it. latestReport() stays switch-based rather than
+        // going through the adapter, see the adapter's own comment for why.
         PendingPatternObservation observation = {};
         observation.inspected = inspected;
-        // latestReport() stays switch-based rather than going through the
-        // adapter, see the adapter's own comment for why.
         observation.detectorReport = _detectorSelection == DetectorSelection::FrequencyMatch
             ? _frequencyDetector.latestReport()
             : _scalarDetector.latestReport();
@@ -533,7 +571,10 @@ void DetectionRuntime::drainDetectors(unsigned long nowMs) {
             ++_detectorReportMismatchCount;
         }
         ++_patternAcceptAttemptCount;
+#endif
+        // Core: feeding the matcher is what eventually produces PatternResult.
         const bool acceptedByMatcher = _patternMatcher.acceptOccurrence(inspected);
+#ifdef ANALYZER_MODE
         PatternInputRejectReason rejectReason = _patternMatcher.lastInputRejectReason();
         if (acceptedByMatcher) {
             ++_patternAcceptSuccessCount;
@@ -545,6 +586,9 @@ void DetectionRuntime::drainDetectors(unsigned long nowMs) {
             ++_patternAcceptRejectCount;
             _latestPatternInputRejectReason = rejectReason;
         }
+#else
+        (void)acceptedByMatcher;
+#endif
     }
 
     (void)nowMs;
@@ -553,16 +597,22 @@ void DetectionRuntime::drainDetectors(unsigned long nowMs) {
 void DetectionRuntime::drainPatternMatcher(unsigned long nowMs) {
     PatternResult result = {};
     while (_patternMatcher.popPatternResult(nowMs, result)) {
+#ifdef ANALYZER_MODE
         ++_patternResultProducedCount;
         PendingPatternObservation matchedObservation = {};
         const bool hasMatchedInspectedOccurrence = popPatternObservation(result.occurrenceId, matchedObservation);
+#endif
+        // Core: FieldState and the PatternResult queue are built from the
+        // bare PatternResult, independent of any correlation bookkeeping.
         _fieldStateTracker.observePatternResult(result, nowMs);
-        const bool eventPushed = capturePipelineResult(
+#ifdef ANALYZER_MODE
+        capturePipelineResult(
             result,
             hasMatchedInspectedOccurrence ? &matchedObservation.inspected : nullptr,
             hasMatchedInspectedOccurrence ? &matchedObservation.detectorReport : nullptr,
             nowMs
         );
+#endif
         if (_patternResultQueueEnabled) {
             pushPatternResult(result);
         }
@@ -574,7 +624,9 @@ bool DetectionRuntime::pushPatternResult(const PatternResult& result) {
         return true;
     }
     if (_resultCount == kResultQueueCapacity) {
+#ifdef ANALYZER_MODE
         ++_patternResultQueueOverflowCount;
+#endif
         return false;
     }
 
@@ -583,6 +635,8 @@ bool DetectionRuntime::pushPatternResult(const PatternResult& result) {
     ++_resultCount;
     return true;
 }
+
+#ifdef ANALYZER_MODE
 
 unsigned long DetectionRuntime::pipelineEventOverflowCount() const {
     return _pipelineEventOverflowCount;
@@ -740,6 +794,8 @@ bool DetectionRuntime::popPatternObservation(unsigned long occurrenceId, Pending
     --_patternInspectedCount;
     return true;
 }
+
+#endif // ANALYZER_MODE
 
 } // namespace detection
 

@@ -279,22 +279,34 @@ the core, which shrinks what the ownership change has to reason about next.
 Swapping the order is possible if preferred, neither hard-depends on the
 other.
 
-### Phase 5a — `cleanup-analyzer-node-isolation.md`
+### Phase 5a — `cleanup-analyzer-node-isolation.md` — **implemented 2026-09-21**
 
 1. Re-confirm `ResonantNodeApp.cpp`'s call list into `DetectionRuntime`
    matches this document's list (re-check after Phases 1-3, both touch
-   nearby code).
+   nearby code). **Done, list confirmed unchanged.**
 2. Identify every member/method serving only
    `AnalyzerSystemReporter.cpp`/`AnalyzerSequenceSession.cpp`: the counters,
    the pipeline-event queue, `PipelineIntegrity`, the
    `PendingPatternObservation` correlation machinery, `latestReport()`/
    `reportGeneration()`. Fold `cleanup.md` Item 6's counter judgment in here.
+   **Done, by per-method caller search across the whole tree.**
 3. Move that state and logic behind an `ANALYZER_MODE`-gated layer.
+   **Done**, and it needed a second mechanism the proposal didn't
+   anticipate: `platformio.ini` had no `build_src_filter`, so the analyzer
+   tooling `.cpp` files were compiled into the Node/Emitter binaries too and
+   broke the build once the methods they call were gated. Both are in place
+   now; see that document's implementation record.
 4. Test: T1 (all three environments must still link), T2, T3, T6, T7
    (this is the phase where the Node smoke test matters most, it's the
    first change that could plausibly affect the Node binary's behavior if
    the split is done incorrectly), T8 (this is the phase expected to show a
    measurable RAM/flash reduction, record it).
+   **T1 done** (all three link). **T8 done:** Node gives back 13,504 bytes
+   of RAM and 9,240 of flash; the Analyzer binary is byte-identical in size.
+   **T2, T3, T6, T7 outstanding, hardware.** T7 matters more here than
+   anywhere else in this plan: the Node binary is the one that changed, and
+   the Analyzer instrumentation that would normally catch a regression no
+   longer exists inside it.
 
 ### Phase 5b — `cleanup-detector-ownership.md`
 
@@ -384,6 +396,6 @@ decision is: consolidate" section instead:
 | 2 | cleanup.md #2, #3 (both implemented, hardware verification outstanding) | Phase 0 = keep | T1 (done, all 3 envs, full build), T2, T4 (outstanding) |
 | 3 | cleanup.md #5 (implemented, hardware verification outstanding) | — (Item 1 dependency removed; Phase 2 optional) | T1 (done), T2, T3, T6 (outstanding) |
 | 4 | soak, no doc | Phases 1-3 | T7 |
-| 5a | analyzer-node-isolation | Phases 1-4 | T1, T2, T3, T6, T7, T8 |
+| 5a | analyzer-node-isolation (implemented, hardware verification outstanding) | Phases 1-4 | T1, T8 (done); T2, T3, T6, T7 (outstanding) |
 | 5b | detector-ownership | Phase 5a | T1-T7, T5 |
 | 6 | third detector (optional) | Phase 5b | T1, T6, T7 |

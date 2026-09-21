@@ -128,13 +128,12 @@ class DetectionRuntime {
 public:
     DetectionRuntime();
 
+    // Core, Node-required surface. Every method below this point and above
+    // the ANALYZER_MODE block is called by ResonantNodeApp today (confirmed
+    // by search) and must keep working, unchanged in shape, in every build.
     void resetState();
-    void resetDiagnostics();
-    void resetDiagnosticsCounters();
     void resetDetectors();
-    void resetSourceRejectSummaries();
     void resetDetectionState();
-    void setDiagnosticsEnabled(bool enabled);
 
     void setFrequencyMatchConfig(const FrequencyMatchConfig& config);
     void setScalarTransientConfig(const ScalarTransientConfig& config);
@@ -150,8 +149,22 @@ public:
         unsigned long nowMs
     );
 
-    bool popPipelineEvent(DetectionPipelineEvent& out);
     bool popPatternResult(PatternResult& out);
+    const FieldState& fieldState() const;
+
+    // Analyzer-only diagnostics surface below. None of this is called from
+    // ResonantNodeApp or EmitterApp (confirmed by search); it exists to
+    // serve AnalyzerSystemReporter.cpp/AnalyzerSequenceSession.cpp/
+    // AnalyzerModeApp.cpp/AnalyzerTrialCapture.cpp/AnalyzerRuntimeReporter.cpp
+    // alone. Compiled out entirely for env:esp32dev/env:esp32dev-emitter, not
+    // merely unreachable: see cleanup-analyzer-node-isolation.md.
+#ifdef ANALYZER_MODE
+    void resetDiagnostics();
+    void resetDiagnosticsCounters();
+    void resetSourceRejectSummaries();
+    void setDiagnosticsEnabled(bool enabled);
+
+    bool popPipelineEvent(DetectionPipelineEvent& out);
     bool hasLatestPipelineResult() const;
     const DetectionPipelineResult& latestPipelineResult() const;
     unsigned long pipelineEventOverflowCount() const;
@@ -179,22 +192,30 @@ public:
     // Generic report access is the canonical upward path.
     const DetectorReport& activeDetectorReport() const;
     const PatternMatcherReport& activePatternMatcherReport() const;
-    const FieldState& fieldState() const;
     const FeatureHistory& featureHistory() const;
+#endif
 
 private:
-    static constexpr size_t kPipelineEventQueueCapacity = 4;
     static constexpr size_t kResultQueueCapacity = 4;
+#ifdef ANALYZER_MODE
+    static constexpr size_t kPipelineEventQueueCapacity = 4;
+#endif
 
-    // Pipeline stages in execution order.
-    bool pushPipelineEvent(const DetectionPipelineEvent& event);
+    // Pipeline stages in execution order. drainDetectors()/drainPatternMatcher()
+    // stay core (they produce PatternResult/FieldState); each has internal
+    // ANALYZER_MODE blocks around the diagnostics-only work interleaved in
+    // their loop bodies, see the .cpp file.
     void drainDetectors(unsigned long nowMs);
     void drainPatternMatcher(unsigned long nowMs);
     bool pushPatternResult(const PatternResult& result);
-    bool pushPatternObservation(const PendingPatternObservation& observation);
-    bool popPatternObservation(unsigned long occurrenceId, PendingPatternObservation& out);
     bool hasPendingDetectorOutput() const;
     bool hasPendingPatternWork() const;
+    void resetDetectionQueues();
+
+#ifdef ANALYZER_MODE
+    bool pushPipelineEvent(const DetectionPipelineEvent& event);
+    bool pushPatternObservation(const PendingPatternObservation& observation);
+    bool popPatternObservation(unsigned long occurrenceId, PendingPatternObservation& out);
     bool captureLatestDetectorReportIfChanged();
     void drainDetectorReportEvents(unsigned long nowMs);
     bool capturePipelineResult(
@@ -203,14 +224,19 @@ private:
         const DetectorReport* matchedDetectorReport,
         unsigned long nowMs
     );
-    void resetDetectionQueues();
     void resetDetectionBookkeeping();
+#endif
 
     FrequencyMatchConfig _frequencyMatchConfig = {};
     ScalarTransientConfig _scalarTransientConfig = {};
     // Profile configuration applied at fixed runtime stages.
     DetectorSelection _detectorSelection = DetectorSelection::FrequencyMatch;
     InspectionPlan _inspectionPlan = {};
+    // Written by the core setProfileName() Node calls; read only by the
+    // Analyzer-only capturePipelineResult() below. Kept as a plain core
+    // member rather than gated: it is a single pointer with a trivial
+    // always-executed assignment, not the queue/counter/logic weight this
+    // split targets.
     const char* _profileName = "unknown";
 
     FrequencyMatchDetector _frequencyDetector;
@@ -224,6 +250,8 @@ private:
     size_t _resultReadIndex = 0;
     size_t _resultCount = 0;
     bool _patternResultQueueEnabled = true;
+
+#ifdef ANALYZER_MODE
     unsigned long _patternResultQueueOverflowCount = 0;
 
     DetectionPipelineResult _latestPipelineResult = {};
@@ -262,6 +290,7 @@ private:
     uint32_t _noFreshFrequencySkipCount = 0;
     uint32_t _detectorOccurrencePoppedCount = 0;
     uint32_t _detectorValidOccurrencePoppedCount = 0;
+#endif
 };
 
 } // namespace detection

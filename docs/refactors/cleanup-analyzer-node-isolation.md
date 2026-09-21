@@ -1,8 +1,71 @@
 # Architecture Proposal — Analyzer Diagnostics Must Not Cost the Node
 
-Status: proposal, not an active implementation pass.
+Status: **implemented 2026-09-21** (Phase 5a). Hardware verification still
+outstanding, see "Implementation record" below.
 Related to: `docs/refactors/cleanup.md` and
 `docs/refactors/cleanup-detector-ownership.md`.
+
+---
+
+## Implementation record (2026-09-21)
+
+Implemented with two complementary mechanisms, both build-time:
+
+1. **`#ifdef ANALYZER_MODE` inside `DetectionRuntime.h`/`.cpp`** for the
+   diagnostics state and logic: the pipeline-event queue, the counter set,
+   `PipelineIntegrity`, the `PendingPatternObservation` correlation queue,
+   `capturePipelineResult()`, `drainDetectorReportEvents()`,
+   `captureLatestDetectorReportIfChanged()`, and every diagnostics accessor.
+   The core keeps exactly the surface `ResonantNodeApp` calls, re-confirmed
+   by search at implementation time: `resetState`, the seven profile
+   setters, `observeFrame`, `popPatternResult`, `fieldState`.
+2. **`build_src_filter` in `platformio.ini`** excluding `detection/analyzer/`
+   and `modes/analyzer/` from `env:esp32dev` and `env:esp32dev-emitter`.
+
+Mechanism 2 was not anticipated by this document and turned out to be
+required, not optional. `platformio.ini` had no source filter at all, so
+every Analyzer tooling `.cpp` was being compiled into the Node and Emitter
+binaries already — a larger instance of the same problem this document
+describes. That also made mechanism 1 impossible on its own: those files
+call the methods being gated, so the Node build failed to compile until the
+files themselves stopped being part of it. Checked before adding the
+filter: nothing outside those two directories references the analyzer
+translation units, no analyzer code references `modes/resonant` or
+`modes/emitter`, and `AnalyzerPassRules.h` (which `ScalarTransientDetector`
+does depend on) is header-only, so it is unaffected by a source filter and
+remains available in every build.
+
+### Measured result (step 6 of the approach below)
+
+Real linked builds, before at `293f11f` (measured in a clean worktree) and
+after:
+
+| Build | RAM before | RAM after | Flash before | Flash after |
+|---|---|---|---|---|
+| `esp32dev` (Node) | 87,940 | **74,436** | 365,817 | **356,577** |
+| `esp32dev-emitter` | 21,832 | 21,832 | 284,757 | **282,709** |
+| `esp32dev-analyzer` | 99,564 | 99,564 | 403,277 | 403,277 |
+
+The Node build gives back **13,504 bytes of RAM** (15.4% of its previous
+usage) and 9,240 bytes of flash. Emitter RAM is unchanged as expected, it
+never instantiated `DetectionRuntime`; only its flash drops, from no longer
+compiling the analyzer tooling. The Analyzer build is byte-identical in
+both figures.
+
+### Verification
+
+- All three environments compile and link (step 4).
+- The Analyzer-mode translation unit was preprocessed before and after and
+  diffed: it is identical apart from statement ordering and one removed
+  dead local (`const bool eventPushed = capturePipelineResult(...)` in
+  `drainPatternMatcher()`, which was assigned and never read). Combined
+  with the identical Analyzer binary size, SEQ output is expected to be
+  unchanged, but this is inference from the build, **not** a hardware run.
+- **Not done: step 5.** The Node behavior path and the 50-trial SEQ tests
+  for both profiles have not been run on hardware. This is the phase where
+  T7 (Node smoke test) matters most, per `cleanup-0-plan.md`, precisely
+  because the Node binary is the one that changed and the Analyzer
+  instrumentation that would normally verify it no longer exists inside it.
 
 ## Relationship to the other cleanup docs
 

@@ -308,23 +308,70 @@ other.
    the Analyzer instrumentation that would normally catch a regression no
    longer exists inside it.
 
-### Phase 5b — `cleanup-detector-ownership.md`
+### Phase 5b — `cleanup-detector-ownership.md` — **deferred 2026-09-21**
 
-1. Re-run the `_scalarDetector.`/`_frequencyDetector.` cross-access search
-   to confirm the zero-cross-access finding still holds after Phase 5a.
-2. Introduce `DetectorStorage` (tagged union of the two detector objects),
-   route `setDetectorSelection()` through placement-new construction.
-3. Migrate `resetState()`, `popOccurrence()`, `hasPendingOccurrence()`
-   through the single active slot. (`latestReport()`/`reportGeneration()`
-   now live only in the Phase 5a diagnostics layer, which reads whichever
-   detector is currently active by the same selection state.)
-4. Remove the old two-member layout.
-5. Test: T1, T2, T3, T4, T6, T7, T5 (record `sizeof(DetectionRuntime)`
-   before/after this phase specifically, this is the phase expected to
-   roughly halve its resident detector-state size).
+Step 1 was run (cross-access finding still holds) and step 5's `sizeof`
+measurement was taken first, which is what settled it: the union saves
+1,440 bytes, 1.9% of Node RAM, and the re-audit found a stale-report
+dispatch in `capturePipelineResult()` that would be undefined behavior
+under a union on the profile-switch path. Not worth it with two detector
+kinds; see that document's Decision section for the numbers and the
+revisit condition (a third detector kind).
 
-**Gate:** both must be individually verified complete (all listed tests
-passing) before starting Phase 6.
+1. ~~Re-run the cross-access search~~ done, holds.
+2. ~~Introduce `DetectorStorage`~~ deferred.
+3. ~~Migrate lifecycle calls through the single slot~~ deferred.
+4. ~~Remove the old two-member layout~~ deferred.
+5. `sizeof(DetectionRuntime)` was recorded (41,160 bytes at that point);
+   it showed `_featureHistory` at 80% of the object, which redirected the
+   effort to Phase 5c below.
+
+### Phase 5c — FeatureHistory (not in any proposal doc; found by measuring 5b)
+
+Two commits, each independently revertible, both build-verified on all
+three environments, neither hardware-verified:
+
+1. **Drop write-only per-bin aggregates** (`48e4f90`). `FeatureHistoryBin`
+   stored rms and peak that nothing read; the window-level rms/peak are
+   computed across bins from each bin's representative value. Bin 32 -> 24
+   bytes, plus the accumulator state that only fed them. **-8,256 bytes.**
+   Visible change: the Analyzer's `debugFeatureBinSize()` debug line now
+   prints 24, which is the true size.
+2. **Record only the streams the inspection plan reads** (`795f649`). One
+   buffer per inspection module (3) instead of per known stream (4), bound
+   on demand from `setInspectionPlan()`; unbound streams are dropped at
+   `record()`, costing no RAM and no accumulation work. Slot count is tied
+   to `kMaxInspectionModules` by `static_assert`, so a plan can never ask
+   for more than fit. **-6,184 bytes.** Visible change, Analyzer run
+   summary only (`printAudioRunSummary`, not per-trial SEQ): the FREQBAND
+   line reports `history_records=<stream>:N,...` over the recorded streams
+   instead of two hardcoded ones.
+
+Also recorded in `FeatureHistory.h`: `kBinsPerStream = 256` is not a round
+guess. The longest accepted occurrence is 240 ms and inspection looks back
+10 ms before its anchor, so 250 ms must still be resident at inspection
+time. Shrinking it silently degrades long occurrences to
+`HistoryWindowIncomplete`. Leave it.
+
+**Cumulative Node RAM, this session, real linked builds:**
+
+| Step | Node RAM | Delta |
+|---|---|---|
+| baseline `293f11f` | 87,940 | |
+| 5a Analyzer/Node isolation | 74,436 | -13,504 |
+| 5c.1 per-bin aggregates | 66,180 | -8,256 |
+| 5c.2 on-demand streams | 59,996 | -6,184 |
+| **total** | | **-27,944 (31.8%)** |
+
+Analyzer RAM moved in step: 99,564 -> 85,124. Emitter unchanged in RAM.
+
+- Test: T1 done. T2, T3, T7 outstanding (hardware). 5c.2 also wants a
+  profile-switch check (T6): `setActiveStreams()` clears buffers on every
+  plan change, which is the intended behavior, but confirm no inspection
+  runs against a just-cleared buffer on the switch frame.
+
+**Gate:** Phase 6 is not gated on 5b any more (5b is deferred, not a
+prerequisite). It is gated on hardware verification of everything above.
 
 ---
 
@@ -397,5 +444,6 @@ decision is: consolidate" section instead:
 | 3 | cleanup.md #5 (implemented, hardware verification outstanding) | — (Item 1 dependency removed; Phase 2 optional) | T1 (done), T2, T3, T6 (outstanding) |
 | 4 | soak, no doc | Phases 1-3 | T7 |
 | 5a | analyzer-node-isolation (implemented, hardware verification outstanding) | Phases 1-4 | T1, T8 (done); T2, T3, T6, T7 (outstanding) |
-| 5b | detector-ownership | Phase 5a | T1-T7, T5 |
+| 5b | detector-ownership (deferred on measurement: 1,440 bytes, UB hazard) | Phase 5a | T5 (done, led to deferral) |
+| 5c | FeatureHistory (two commits, -14,440 bytes; not in a proposal doc) | measured during 5b | T1 (done); T2, T3, T6, T7 (outstanding) |
 | 6 | third detector (optional) | Phase 5b | T1, T6, T7 |

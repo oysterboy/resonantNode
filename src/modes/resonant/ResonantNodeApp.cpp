@@ -1128,7 +1128,6 @@ void Node::applyActiveDetectionProfile() {
     _detection.setFrequencyMatchConfig(detectionProfile.frequencyMatch);
     _detection.setScalarTransientConfig(detectionProfile.scalarTransient);
     _detection.setInspectionPlan(detectionProfile.inspectionPlan);
-    _detection.setInspectionPlan(detectionProfile.inspectionPlan);
     _detection.setFieldStateConfig(detectionProfile.fieldStateConfig);
     _detection.setProfileName(detection::detectionProfileName(detectionProfile.kind));
     _detection.setPatternResultQueueEnabled(true);

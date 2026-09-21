@@ -48,13 +48,17 @@ public:
     float latestValue(FeatureStreamId stream) const;
 
 private:
+    // Only the fields representativeValueForStream() reads are stored per
+    // bin. This struct is allocated kBinsPerStream * kStreamCount times
+    // (1024 today), so an unread float here costs 4 KB of RAM. Window-level
+    // rms/peak in MagnitudeWindow are computed across bins from each bin's
+    // representative value, not from per-bin aggregates, so per-bin rms and
+    // peak were write-only and are not kept.
     struct FeatureHistoryBin {
         unsigned long startMs = 0;
         uint16_t inputCount = 0;
         uint16_t freshCount = 0;
         float mean = 0.0f;
-        float rms = 0.0f;
-        float peak = 0.0f;
         float meanAbs = 0.0f;
         float last = 0.0f;
         bool valid = false;
@@ -65,9 +69,7 @@ private:
         uint16_t inputCount = 0;
         uint16_t freshCount = 0;
         double sum = 0.0;
-        double sumSquares = 0.0;
         double sumAbs = 0.0;
-        float peak = 0.0f;
         float last = 0.0f;
         bool valid = false;
     };

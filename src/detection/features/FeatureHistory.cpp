@@ -172,11 +172,7 @@ void FeatureHistory::accumulateIntoCurrentBin(StreamBuffer& buffer, float value,
         ++current.freshCount;
     }
     current.sum += value;
-    current.sumSquares += static_cast<double>(value) * static_cast<double>(value);
     current.sumAbs += absoluteValue(value);
-    if (absoluteValue(value) > current.peak) {
-        current.peak = absoluteValue(value);
-    }
     current.last = value;
 }
 
@@ -190,12 +186,8 @@ void FeatureHistory::finalizeCurrentBin(StreamBuffer& buffer, FeatureStreamId st
     finalized.inputCount = buffer.current.inputCount;
     finalized.freshCount = buffer.current.freshCount;
     finalized.last = buffer.current.last;
-    finalized.peak = buffer.current.peak;
     finalized.mean = finalized.inputCount > 0
         ? static_cast<float>(buffer.current.sum / static_cast<double>(finalized.inputCount))
-        : 0.0f;
-    finalized.rms = finalized.inputCount > 0
-        ? sqrtf(static_cast<float>(buffer.current.sumSquares / static_cast<double>(finalized.inputCount)))
         : 0.0f;
     finalized.meanAbs = finalized.inputCount > 0
         ? static_cast<float>(buffer.current.sumAbs / static_cast<double>(finalized.inputCount))
@@ -349,10 +341,6 @@ MagnitudeWindow FeatureHistory::getWindow(
         current.mean = buffer.current.inputCount > 0
             ? static_cast<float>(buffer.current.sum / static_cast<double>(buffer.current.inputCount))
             : 0.0f;
-        current.rms = buffer.current.inputCount > 0
-            ? sqrtf(static_cast<float>(buffer.current.sumSquares / static_cast<double>(buffer.current.inputCount)))
-            : 0.0f;
-        current.peak = buffer.current.peak;
         current.meanAbs = buffer.current.inputCount > 0
             ? static_cast<float>(buffer.current.sumAbs / static_cast<double>(buffer.current.inputCount))
             : 0.0f;
@@ -454,10 +442,6 @@ size_t FeatureHistory::copyWindowApproximateValues(
         current.mean = buffer.current.inputCount > 0
             ? static_cast<float>(buffer.current.sum / static_cast<double>(buffer.current.inputCount))
             : 0.0f;
-        current.rms = buffer.current.inputCount > 0
-            ? sqrtf(static_cast<float>(buffer.current.sumSquares / static_cast<double>(buffer.current.inputCount)))
-            : 0.0f;
-        current.peak = buffer.current.peak;
         current.meanAbs = buffer.current.inputCount > 0
             ? static_cast<float>(buffer.current.sumAbs / static_cast<double>(buffer.current.inputCount))
             : 0.0f;

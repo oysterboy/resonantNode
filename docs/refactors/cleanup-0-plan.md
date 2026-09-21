@@ -397,27 +397,44 @@ acceptable, which is a release-process question, not a code one.
 
 ---
 
-## Phase 6 — Optional: Add the Third Detector as an Acceptance Check
+## Phase 6 — The Third Family: `SimpleThresholdDetector` (the MVP detector)
 
-Not required, but if a third detector is actually wanted, building it now is
-the strongest proof the plan achieved its goal. Reference:
-`cleanup-analyzer-node-isolation.md`'s worked example
-(`SimpleThresholdDetector`).
+No longer optional in the "if a third detector is wanted" sense: it *is*
+wanted, it's the MVP detector. `docs/specs/mvp-app-structure.md` §3
+describes the algorithm; `cleanup-detector-family-build.md`'s worked
+example gives the class, the family wiring, and the reconciliation with
+the MVP doc (which previously said to reuse `ScalarTransientDetector`
+instead; amended 2026-09-21). It is also the acceptance test for Phase 5d:
+the first family added *after* `DetectionFamily.h` exists is the real test
+of that header.
 
-1. Implement the new detector against the four-method core contract
-   (`resetState`, `update`, `hasPendingOccurrence`, `popOccurrence`) only.
-   Do not implement `latestReport()`/`reportGeneration()` yet.
-2. Wire it into `DetectorStorage` (Phase 5b), add its `DetectorId`/
-   `DetectorSelection` value, a config struct in `DetectionProfile.h`, and
-   one profile factory.
-3. Confirm it works end-to-end producing `PatternResult`/`FieldState`
-   without touching the Analyzer diagnostics layer at all.
-4. Test: T1, T6, T7. T2/T3 don't apply (new profile, no baseline to diff
-   against), instead run its own first set of SEQ trials to establish a
-   baseline for future changes to it.
-5. Only after this works, decide whether the new detector is worth
-   exposing to Analyzer diagnostics (`latestReport()`/`reportGeneration()`,
-   a `DetectorReportPrinter` case). If yes, add them as pure additions.
+Depends on Phase 5d (the family header must exist to add a family to it).
+
+1. Implement `SimpleThresholdDetector` against the four-method core
+   contract, with the diagnostics contract stubbed to "no report"
+   (`reportGeneration()` constant 0, `latestReport()` a static empty
+   report). The Analyzer then records `MissingDetectorReport`, an integrity
+   state it already handles. ~150 lines.
+2. Add its `DetectionFamily.h` branch (aliases, `kCompiledFamily`,
+   `kFamilyMaxActiveStreams = 0`, the three shims), its `DetectorId`/
+   `DetectorSelection` values, a config struct and factory in
+   `DetectionProfile.h`, and two envs. `DetectionRuntime` must not change;
+   if it has to, the Phase 5d shim set is incomplete and *that* is the bug.
+3. Make the `FeatureHistory` member conditional on
+   `kFamilyMaxActiveStreams > 0` (a zero-length array is ill-formed); this
+   family has no Inspector, so it binds no streams. That is where the RAM
+   goes: about -18.6 KB, on top of -3.3 KB for neither existing detector.
+   Expected simple-family Node RAM: roughly 38.5 KB, from 88 KB at the
+   start of this work.
+4. Confirm it produces `PatternResult`/`FieldState` end-to-end with the
+   Analyzer diagnostics layer never consulted.
+5. Test: T1 (now seven environments), T7 on the simple-family Node. T2/T3
+   don't apply (new family, no baseline), so run its own first SEQ set on
+   the simple-family Analyzer to establish one.
+6. Only after this works, decide whether it's worth a real
+   `latestReport()` and a `DetectorReportPrinter` case. Add as pure
+   additions if so; the stubs are not a placeholder to be filled, they are
+   the intended shape for a detector nobody needs to inspect.
 
 If this phase reveals the four-method contract was insufficient in
 practice, that's real signal the isolation split (Phase 5a) drew the
@@ -469,4 +486,4 @@ decision is: consolidate" section instead:
 | 5b | detector-ownership (deferred on measurement: 1,440 bytes, UB hazard) | Phase 5a | T5 (done, led to deferral) |
 | 5c | FeatureHistory (two commits, -14,440 bytes; not in a proposal doc) | measured during 5b | T1 (done); T2, T3, T6, T7 (outstanding) |
 | 5d | detector-family-build (proposal; supersedes 5b) | — | not started |
-| 6 | third detector (optional) | Phase 5b | T1, T6, T7 |
+| 6 | SimpleThresholdDetector family (the MVP detector; 5d acceptance test) | Phase 5d | T1 (seven envs), T7; own first SEQ baseline |

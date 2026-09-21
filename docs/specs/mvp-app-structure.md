@@ -66,14 +66,25 @@ One scalar feature, one detector, no frequency analysis, no FFT/Goertzel.
             (merges the tail of one physical event into one Occurrence)
 ```
 
-This is exactly `ScalarTransientDetector`'s shape already in the codebase
-(`src/detection/detectors/scalar/ScalarTransientDetector.h`), run over
-`AmpEnvelope` alone, with `TargetBand`/frequency-domain inputs and the
-Inspector step left disconnected. No new detector class is required for the
-MVP — it's an existing detector, wired with one input and no downstream
-inspection/pattern stages.
+This is implemented as its own detector family, `SimpleThresholdDetector`
+(`src/detection/detectors/simple/`), selected at build time per
+`docs/refactors/cleanup-detector-family-build.md`; see that document's
+"Worked example" for the class and the family wiring. It is a ~150-line
+class that implements steps 1–7 above and nothing else: no carrier-quality
+gating, no coverage/island bookkeeping, no reject summaries, and the
+diagnostics contract stubbed to "no report" (an integrity state the
+Analyzer already handles).
 
-Tunable knobs (all already exist as config on the scalar detector):
+An earlier revision of this section said no new detector class was needed
+and to reuse `ScalarTransientDetector` with one input. That remains a
+correct fallback — the scalar detector's shape is a superset of the steps
+above — but it carries 1,209 lines, 14 config setters, and 1,440 bytes for a
+seven-step algorithm, and it leaves unanswered the question the minimal
+detector exists to answer: whether the four-method core contract
+(`resetState`/`update`/`hasPendingOccurrence`/`popOccurrence`) is
+sufficient on its own. Superseded 2026-09-21.
+
+Tunable knobs (the simple detector's six setters, one per step above):
 
 ```text
 onThreshold / offThreshold   Strength16 (0..32767)
@@ -125,18 +136,21 @@ Reusing existing HAL and output code, the MVP-specific pieces are small:
 HAL (reused):        AudioSourceI2S, PiezoToneOutput
 Signal (reused):     AudioSignal (baseline/centering)
 Feature (reused):    AmpEnvelope producer
-Detector (reused, single-input): ScalarTransientDetector
+Detector (new, minimal): SimpleThresholdDetector, its own build-time family
+                     (~150 lines; see cleanup-detector-family-build.md)
 Occurrence (reused): generic core fields only (no typed detail needed)
 Behavior (new/minimal): refractory timer + probability/jitter rules,
                      ~1 small class or even a function in main loop
 Output (reused):     SoundOutput::emitBeep()
 ```
 
-No new detector, no new HAL driver, no new output primitive — the MVP is a
-*wiring reduction* of the existing `TonalPulseScalar`/`AmpExperimental`
-profile shape (`myspec.md` §5.1), minus Inspector/PatternMatcher/FieldState,
-plus a small explicit Behavior rule set instead of `ResonantBehavior`'s full
-policy surface.
+One small new detector, no new HAL driver, no new output primitive — the
+MVP is a *wiring reduction* of the existing chain (`myspec.md` §5.1),
+minus Inspector/PatternMatcher/FieldState, plus a small explicit Behavior
+rule set instead of `ResonantBehavior`'s full policy surface. Because the
+MVP has no Inspector, its family binds zero feature-history streams, which
+is the single largest RAM saving available to it (about 18.6 KB); the
+detector itself is ~400 bytes.
 
 ---
 

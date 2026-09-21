@@ -266,6 +266,159 @@ in any given firmware exactly one value ever appears.
 
 ---
 
+## Worked example: the third family is the MVP detector
+
+`cleanup-analyzer-node-isolation.md` sketched a `SimpleThresholdDetector`
+as an acceptance test for the four-method core contract, and
+`cleanup-0-plan.md` carries it as Phase 6. `docs/specs/mvp-app-structure.md`
+§3 describes, step by step, the same algorithm, then says in §3 and §5 that
+no new detector class is required: reuse `ScalarTransientDetector` with one
+input. The two documents were written independently and never reconciled.
+This section reconciles them: **the third family is the MVP detector**, and
+`mvp-app-structure.md` is amended to say so (see the note at the end).
+
+### Why not just reuse `ScalarTransientDetector`, as the MVP spec said
+
+It works. It is also a superset, and the size of the superset is the
+argument:
+
+| | `ScalarTransientDetector` | what MVP §3 asks for |
+|---|---|---|
+| source | 1,209 lines across 4 files | ~140 lines |
+| config setters | 14 | 6 |
+| RAM | 1,440 bytes | ~400, of which 360 is the `Occurrence` it hands over |
+| carries | carrier-quality gating, matched-mean strength, coverage/island/gap bookkeeping, best-rejected summary, diagnostics counters | onset, hold, release, duration gate, cooldown |
+
+Reusing it does not answer the question Phase 6 exists to ask, which is
+whether a detector that implements *only* the core contract can run in
+production. A minimal class does, in ~150 lines, and doubles as the MVP
+detector. The first family added *after* `DetectionFamily.h` exists is also
+the real test of that header; the two existing families were refactored
+into it, this one is born into it.
+
+### What the family consists of
+
+```text
+src/detection/detectors/simple/
+  SimpleThresholdDetector.h        the class, ~60 lines
+  SimpleThresholdDetector.cpp      update() / popOccurrence(), ~80 lines
+src/detection/DetectionFamily.h    +1 #elif branch: aliases + the three shims, ~20 lines
+DetectorId / DetectorSelection     +1 enum value each (axis-1 vocabulary, section 5)
+src/detection/DetectionProfile.h   +1 config struct, +1 factory (compiled in every build)
+platformio.ini                     +2 envs (Node, Analyzer), src_filter entries
+DetectorReportPrinter              nothing, unless it should appear in SEQ output
+```
+
+No other file changes. If adding this family touches `DetectionRuntime`,
+the shim set in section 2 was incomplete and that is the bug to fix, not
+the runtime.
+
+### The class, sized to MVP §3
+
+```cpp
+namespace detection {
+
+class SimpleThresholdDetector {
+public:
+    // Core contract: everything the Node build calls.
+    void resetState();
+    void update(float envelope, unsigned long nowMs);   // family-specific input, as the spec allows
+    bool hasPendingOccurrence() const { return _pendingPresent; }
+    bool popOccurrence(Occurrence& out);
+
+    // Diagnostics contract, deliberately trivial. reportGeneration() never
+    // changes, so DetectionRuntime's captureLatestDetectorReportIfChanged()
+    // never fires and the Analyzer records MissingDetectorReport, an
+    // integrity state that already exists and already prints. Zero RAM.
+    const DetectorReport& latestReport() const { static const DetectorReport none{}; return none; }
+    uint32_t reportGeneration() const { return 0; }
+    void setDiagnosticsEnabled(bool) {}
+
+    // MVP §3 knobs, all six.
+    void setOnThreshold(float v)             { _onThreshold = v; }
+    void setOffThreshold(float v)            { _offThreshold = v; }      // < on: hysteresis
+    void setMinOnsetMs(unsigned long v)      { _minOnsetMs = v; }        // debounce a 1-sample spike
+    void setMinDurationMs(unsigned long v)   { _minDurationMs = v; }     // too short: noise
+    void setMaxDurationMs(unsigned long v)   { _maxDurationMs = v; }     // too long: continuous, not a burst
+    void setCooldownMs(unsigned long v)      { _cooldownMs = v; }        // merge one physical event
+
+private:
+    float _onThreshold = 0.0f, _offThreshold = 0.0f;
+    unsigned long _minOnsetMs = 0, _minDurationMs = 0, _maxDurationMs = 0, _cooldownMs = 0;
+
+    bool _above = false;
+    unsigned long _aboveSinceMs = 0, _startMs = 0, _peakMs = 0, _cooldownUntilMs = 0;
+    float _peak = 0.0f;
+
+    bool _pendingPresent = false;
+    Occurrence _pending = {};
+    unsigned long _nextOccurrenceId = 0;
+};
+
+} // namespace detection
+```
+
+`update()` is MVP §3 steps 3–7 literally: crossing `onThreshold` starts a
+candidate once it has held for `minOnsetMs`; dropping below `offThreshold`
+or reaching `maxDurationMs` closes it; a closed candidate with duration in
+`[minDurationMs, maxDurationMs]` becomes `_pending` with
+`startMs`/`peakMs`/`endMs`/`strength = peak`; anything else is dropped;
+either way `_cooldownUntilMs` is set. There is no reject-summary state
+because nothing reads one; the family's `resetActiveDetectorRejectSummaries`
+shim is empty.
+
+The `DetectionFamily.h` branch:
+
+```cpp
+#elif defined(DETECTOR_FAMILY_SIMPLE)
+  #include "detectors/simple/SimpleThresholdDetector.h"
+  namespace detection {
+    using ActiveDetector       = SimpleThresholdDetector;
+    using ActiveDetectorConfig = SimpleThresholdConfig;
+    constexpr DetectorSelection kCompiledFamily = DetectorSelection::SimpleThreshold;
+    constexpr size_t kFamilyMaxActiveStreams = 0;   // MVP has no Inspector; see below
+    inline void updateActiveDetector(ActiveDetector& d, const AudioSamplePacket& p,
+        const FrequencyBandMeasurementPacket&, const ActiveDetectorConfig&, unsigned long nowMs) {
+        d.update(static_cast<float>(p.smoothedLevel), nowMs);   // AmpEnvelope, and only that
+    }
+    inline void applyActiveDetectorConfig(ActiveDetector&, const ActiveDetectorConfig&);  // six setters
+    inline void resetActiveDetectorRejectSummaries(ActiveDetector&) {}
+  }
+```
+
+### What it saves
+
+MVP §2 drops the Inspector, so the simple family has no inspection plan and
+`kFamilyMaxActiveStreams = 0`. That is the number that matters:
+
+| | bytes |
+|---|---|
+| neither existing detector compiled | -3,272 |
+| `FeatureHistory` with zero slots | **-18,616** |
+| `SimpleThresholdDetector` | +~400 |
+| **net, against today's 59,996** | **about -21,500, to roughly 38,500** |
+
+Two wrinkles, both small. A zero-length array is ill-formed C++, so the
+`FeatureHistory` member becomes conditional on `kFamilyMaxActiveStreams > 0`
+(one more line in the family header, and `featureHistory()` disappears from
+the Analyzer surface for this family). And MVP §2 also drops
+`PatternMatcher` (3,912 bytes) and `FieldStateTracker` (96), but those are
+`DetectionRuntime` structure, not family; whether the MVP is a *family* or
+a whole *mode* like `EMITTER_MODE` is a larger question than this document,
+and as a family it already gets the detector and history savings without
+touching the runtime's shape. Leave that one.
+
+### Reconciliation note for `mvp-app-structure.md`
+
+That document's §3 and §5 are amended (same commit as this section) to
+replace "no new detector class is required, reuse `ScalarTransientDetector`
+with one input" with a pointer here. Its algorithm description in §3 is
+unchanged and is the spec this class implements; only the "which class"
+sentence moves. The reuse option is recorded there as the fallback it is:
+correct, heavier, and it leaves Phase 6's question unanswered.
+
+---
+
 ## What this does not do
 
 - Does not consolidate to one family. Both remain buildable; which ones are

@@ -295,9 +295,12 @@ private:
 ```
 
 That's the whole class for a first version: no reject-summary tracking, no
-diagnostics toggle, no report freezing. It plugs into the single-active-slot
-core from `cleanup-detector-ownership.md` the same way the existing two do,
-just with a much shorter list of things it has to get right. If it later
+diagnostics toggle, no report freezing. It plugs in as its own build-time
+family via `cleanup-detector-family-build.md`'s `DetectionFamily.h` (which
+superseded the union-of-detectors idea this sketch originally assumed), the
+same way the existing two do, just with a much shorter list of things it
+has to get right. That document's worked example is the current, fuller
+version of this sketch, sized to `mvp-app-structure.md` §3. If it later
 earns a place in Analyzer/SEQ tooling, `latestReport()`/`reportGeneration()`
 get added then, as pure additions, not as a precondition for it to work in
 the Node at all.

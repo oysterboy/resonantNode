@@ -54,12 +54,14 @@ that path. It does not by itself prove the crash is fixed; treat it as a
 contributing fix, and keep `ARDUINO_LOOP_STACK_SIZE` at its current increased
 value until the crash is independently reproduced as gone.
 
-## Status note (2026-09-21)
+## Status note (2026-09-21, updated same day)
 
-Item 5 is in progress in a separate (VS Code) session as of this note. Do
-not start Item 5 here; Items 8 and 9 below both depend on it landing first
-and are written against its pre-unification `drainDetectors()` shape, so
-re-check their line references once Item 5 merges.
+Item 5 landed (`0526ad1`, separate VS Code session, real PlatformIO build
+verified across all three environments — see Item 5's own status block).
+Items 8 and 9 below were originally written against Item 5's
+pre-unification `drainDetectors()` shape and have been re-checked and
+updated against the merged `ActiveDetectorAdapter` version; both are now
+unblocked.
 
 ---
 
@@ -511,11 +513,17 @@ bounded ring buffers and re-associate them later by `occurrenceId`:
 - `drainDetectors()` builds a `PendingPatternObservation` (already a bundle
   of `InspectedOccurrence` + `DetectorReport`, `DetectionRuntime.h:71-74`)
   and pushes it onto `_patternInspectedQueue` via `pushPatternObservation()`.
+  After Item 5, this happens inside the single unified loop, at the point
+  where `observation.detectorReport` is filled from a
+  `_detectorSelection == DetectorSelection::FrequencyMatch ? ... : ...`
+  ternary (the one piece of per-detector access `Item 5` deliberately left
+  switch-based, since report access is diagnostics-only — see its own
+  comment on `ActiveDetectorAdapter`).
 - `_patternMatcher.acceptOccurrence(inspected)` separately queues the
   `InspectedOccurrence` inside `PatternMatcher`'s own internal queue.
 - `drainPatternMatcher()` later pops a `PatternResult` from `PatternMatcher`
   and calls `popPatternObservation(result.occurrenceId, matchedObservation)`
-  (`DetectionRuntime.cpp:713-740`), a linear scan over up to
+  (`DetectionRuntime.cpp:715-742`), a linear scan over up to
   `kResultQueueCapacity` (4) entries matching by ID, to reunite the result
   with the observation that produced it.
 
@@ -529,7 +537,7 @@ depend on the result of this correlation at all — `pushPatternResult()` and
 attach a `DetectorReport`/`InspectedOccurrence` to the diagnostic
 `DetectionPipelineEvent` built in `capturePipelineResult()`.
 
-The `hasPendingPatternWork()` comment at `DetectionRuntime.cpp:468-476`
+The `hasPendingPatternWork()` comment at `DetectionRuntime.cpp:501-508`
 already documents that this two-queue split can legitimately desync ("the
 correlation queue... can legitimately diverge from what the matcher itself
 still has queued... for example, when `pushPatternObservation()` fails while
@@ -567,10 +575,17 @@ correlation machinery left to relocate.
 3. `capturePipelineResult()` keeps building the same diagnostic
    `DetectionPipelineEvent` from the (now directly-available) observation;
    its output should be unchanged.
+4. This item does not touch `ActiveDetectorAdapter` (Item 5). That adapter
+   deliberately stops at `popOccurrence()`; `latestReport()` access for
+   `observation.detectorReport` stays exactly where Item 5 left it (the
+   `_detectorSelection == DetectorSelection::FrequencyMatch ? ... : ...`
+   ternary), since Item 5's own reasoning for keeping report access
+   switch-based (diagnostics-only, out of scope) applies here too. Don't
+   fold report access into the adapter as a side effect of this item.
 
-Do this after Item 5 lands (see status note above) — implementing this item
-against Item 5's pre-unification `drainDetectors()` branches would mean
-redoing the work twice.
+Item 5 has landed (see status note above), so this item is unblocked. Do
+it against the current unified `drainDetectors()` loop, not the
+pre-Item-5 two-branch version this item was originally written against.
 
 ## Intermediate Verification 8
 
@@ -671,6 +686,6 @@ DetectionDocs: split diagnostic-counter audit into measurement vs. dedup-state t
 
 Each commit must compile and pass its corresponding Intermediate
 Verification before proceeding to the next item. Item 7 has no commit; it is
-recorded as a deliberately deferred decision. Item 8's commit depends on
-Item 5's landing first (see the 2026-09-21 status note above); Item 9's
-commit is documentation-only, same as Item 6.
+recorded as a deliberately deferred decision. Item 8 depended on Item 5
+landing first; that dependency is now satisfied (see the 2026-09-21 status
+note above). Item 9's commit is documentation-only, same as Item 6.

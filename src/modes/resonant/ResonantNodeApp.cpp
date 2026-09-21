@@ -88,6 +88,14 @@ static bool equalsIgnoreCase(const char* a, const char* b) {
     return *a == '\0' && *b == '\0';
 }
 
+// Returns the remainder of `token` after `prefix` if `token` starts with
+// `prefix` (case-insensitive), or nullptr otherwise. Using strlen(prefix)
+// instead of a hand-computed offset means the stripped length can never
+// silently desync from the literal it's stripping.
+static const char* valueAfterPrefix(const char* token, const char* prefix) {
+    return startsWithTokenIgnoreCase(token, prefix) ? token + strlen(prefix) : nullptr;
+}
+
 BehaviorGateConfig makeTonalPulseBehaviorProfile() {
     return BehaviorGateConfig{};
 }
@@ -757,32 +765,45 @@ void Node::handleSerialLine(const char* line) {
         bool idleEnabled = _behavior.idleEnabled();
 
         while ((token = strtok_r(nullptr, " ", &savePtr)) != nullptr) {
-            if (startsWithTokenIgnoreCase(token, "wait=") || startsWithTokenIgnoreCase(token, "waitMs=")) {
-                const char* value = token + (startsWithTokenIgnoreCase(token, "waitMs=") ? 7 : 5);
+            if (const char* value = valueAfterPrefix(token, "waitMs=")) {
                 waitAfterHeardMs = strtoul(value, nullptr, 10);
-            } else if (startsWithTokenIgnoreCase(token, "refractory=") || startsWithTokenIgnoreCase(token, "refractoryMs=")) {
-                const char* value = token + (startsWithTokenIgnoreCase(token, "refractoryMs=") ? 13 : 11);
+            } else if (const char* value = valueAfterPrefix(token, "wait=")) {
+                waitAfterHeardMs = strtoul(value, nullptr, 10);
+            } else if (const char* value = valueAfterPrefix(token, "refractoryMs=")) {
                 refractoryAfterEmitMs = strtoul(value, nullptr, 10);
-            } else if (startsWithTokenIgnoreCase(token, "suppressSelfChirp=") || startsWithTokenIgnoreCase(token, "behaviorSuppressSelfChirpMs=")) {
-                const char* value = token + (startsWithTokenIgnoreCase(token, "behaviorSuppressSelfChirpMs=") ? 28 : 18);
+            } else if (const char* value = valueAfterPrefix(token, "refractory=")) {
+                refractoryAfterEmitMs = strtoul(value, nullptr, 10);
+            } else if (const char* value = valueAfterPrefix(token, "behaviorSuppressSelfChirpMs=")) {
                 behaviorSuppressSelfChirpMs = strtoul(value, nullptr, 10);
-            } else if (startsWithTokenIgnoreCase(token, "detectionSuppressTail=") || startsWithTokenIgnoreCase(token, "detectionSuppressTailMsOwnEmit=")) {
-                const char* value = token + (startsWithTokenIgnoreCase(token, "detectionSuppressTailMsOwnEmit=") ? 31 : 22);
+            } else if (const char* value = valueAfterPrefix(token, "suppressSelfChirp=")) {
+                behaviorSuppressSelfChirpMs = strtoul(value, nullptr, 10);
+            } else if (const char* value = valueAfterPrefix(token, "detectionSuppressTailMsOwnEmit=")) {
                 detectionSuppressTailMsOwnEmit = strtoul(value, nullptr, 10);
-            } else if (startsWithTokenIgnoreCase(token, "idleTimeout=") || startsWithTokenIgnoreCase(token, "idle=") || startsWithTokenIgnoreCase(token, "idleMs=") || startsWithTokenIgnoreCase(token, "idleTimeoutMs=")) {
-                const char* value = token + (startsWithTokenIgnoreCase(token, "idleTimeoutMs=") ? 14 : startsWithTokenIgnoreCase(token, "idleMs=") ? 7 : startsWithTokenIgnoreCase(token, "idleTimeout=") ? 12 : 5);
+            } else if (const char* value = valueAfterPrefix(token, "detectionSuppressTail=")) {
+                detectionSuppressTailMsOwnEmit = strtoul(value, nullptr, 10);
+            } else if (const char* value = valueAfterPrefix(token, "idleTimeoutMs=")) {
                 idleTimeoutMs = strtoul(value, nullptr, 10);
-            } else if (startsWithTokenIgnoreCase(token, "idleTimeoutVariation=") || startsWithTokenIgnoreCase(token, "idleVar=") || startsWithTokenIgnoreCase(token, "idleVariation=")) {
-                const char* value = token + (startsWithTokenIgnoreCase(token, "idleTimeoutVariation=") ? 21 : startsWithTokenIgnoreCase(token, "idleVariation=") ? 14 : 8);
+            } else if (const char* value = valueAfterPrefix(token, "idleMs=")) {
+                idleTimeoutMs = strtoul(value, nullptr, 10);
+            } else if (const char* value = valueAfterPrefix(token, "idleTimeout=")) {
+                idleTimeoutMs = strtoul(value, nullptr, 10);
+            } else if (const char* value = valueAfterPrefix(token, "idle=")) {
+                idleTimeoutMs = strtoul(value, nullptr, 10);
+            } else if (const char* value = valueAfterPrefix(token, "idleTimeoutVariation=")) {
                 idleTimeoutVariationMs = strtoul(value, nullptr, 10);
-            } else if (startsWithTokenIgnoreCase(token, "idleBlockedAfterHeard=") || startsWithTokenIgnoreCase(token, "idleBlockedHeardMs=")) {
-                const char* value = token + (startsWithTokenIgnoreCase(token, "idleBlockedAfterHeard=") ? 22 : 19);
+            } else if (const char* value = valueAfterPrefix(token, "idleVariation=")) {
+                idleTimeoutVariationMs = strtoul(value, nullptr, 10);
+            } else if (const char* value = valueAfterPrefix(token, "idleVar=")) {
+                idleTimeoutVariationMs = strtoul(value, nullptr, 10);
+            } else if (const char* value = valueAfterPrefix(token, "idleBlockedAfterHeard=")) {
                 idleBlockedAfterHeardMs = strtoul(value, nullptr, 10);
-            } else if (startsWithTokenIgnoreCase(token, "idleBlockedAfterOwnEmit=") || startsWithTokenIgnoreCase(token, "idleBlockedOwnEmitMs=")) {
-                const char* value = token + (startsWithTokenIgnoreCase(token, "idleBlockedAfterOwnEmit=") ? 24 : 21);
+            } else if (const char* value = valueAfterPrefix(token, "idleBlockedHeardMs=")) {
+                idleBlockedAfterHeardMs = strtoul(value, nullptr, 10);
+            } else if (const char* value = valueAfterPrefix(token, "idleBlockedAfterOwnEmit=")) {
                 idleBlockedAfterOwnEmitMs = strtoul(value, nullptr, 10);
-            } else if (startsWithTokenIgnoreCase(token, "idleEnabled=")) {
-                const char* value = token + 12;
+            } else if (const char* value = valueAfterPrefix(token, "idleBlockedOwnEmitMs=")) {
+                idleBlockedAfterOwnEmitMs = strtoul(value, nullptr, 10);
+            } else if (const char* value = valueAfterPrefix(token, "idleEnabled=")) {
                 idleEnabled = equalsIgnoreCase(value, "1") || equalsIgnoreCase(value, "on") || equalsIgnoreCase(value, "true");
             }
         }

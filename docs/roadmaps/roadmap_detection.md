@@ -27,13 +27,16 @@ Behavior consumes OccurrenceVerdict and FieldState.
 Clean analyzer output should read canonical runtime contracts only.
 ```
 
-Landed items from this area now live in `docs/archive/roadmaps/roadmap-changelog.md`.
+Landed items from this area now live in `docs/roadmaps/roadmap archive/roadmap-changelog.md`.
 
 ## Current code state
 
 ```text
 [REMOVED] DetectionDiagnostics and analyzer legacy compatibility are removed from src.
 [PARTIAL] OccurrenceEvaluator currently stays single-proposal oriented.
+          Scheduled for removal: cleanup-0-plan.md Phase 7c folds it into
+          OccurrenceInspector (OccurrenceVerdict stays as the Behavior-facing
+          type). ANA-002 and the Evaluator wording in this file change with it.
 [PARTIAL] Frequency reason handling is still string-backed internally.
 ```
 
@@ -51,12 +54,36 @@ but not in Analyzer core report assembly.
 
 ### DET-001 - detector / report consistency
 
-Status: TODO
+Status: PARTIAL
 
 ```text
 Keep detector and clean-summary truth aligned.
 Do not retune thresholds as part of this pass.
 Keep the remaining cleanup separate from legacy-printer work.
+
+Landed in code: FrequencyMatchDetector now freezes its DetectorReport on the
+accept path (FrequencyMatchOccurrence.cpp, capturePendingOccurrence), matching
+ScalarTransientDetector. Hardware confirmation (T2 in cleanup-0-plan.md)
+still outstanding; close this item when it passes.
+```
+
+### DET-007 - decide the Node's production profile
+
+Status: TODO
+
+```text
+Code and docs disagree. The Node boots makeTonalPulseScalarProfile()
+(ResonantNodeApp.h), but implementation-status.md and myspec.md call
+TonalPulseFreq the main runtime profile, and the only detection params the
+Node registers (Node::registerDetectionParams) are frequency-match
+thresholds, which have no effect under the scalar profile it boots.
+
+Decide which profile the Node ships with, using cleanup-0-plan.md Phase 0's
+field trials as the evidence. Then make the code default, the registered
+params, implementation-status.md, and myspec.md agree.
+
+Blocks cleanup-0-plan Phase 5d: it decides which family env:esp32dev builds
+and whether 5d's RAM argument (production = frequency family) holds.
 ```
 
 ### DET-003 - inspection target / payload split
@@ -97,6 +124,21 @@ Keep clean SEQ_TRIAL / SEQ_SOURCE / SEQ_INSPECT / SEQ_EXPLAIN / SEQ_SUMMARY
 on canonical detector-report and inspected-occurrence facts.
 Do not rebuild detector truth in AnalyzerRuntime.
 Keep the analyzer display layer on canonical report fields.
+```
+
+### ANA-003 - move AnalyzerApp out of the detection tree
+
+Status: TODO
+
+```text
+Nine files under src/detection/analyzer/ and src/detection/analyzer/tools/
+define AnalyzerApp:: member functions and include
+modes/analyzer/AnalyzerModeApp.h, so the detection tree depends upward on the
+mode layer. Move those files to src/modes/analyzer/. Keep only the pure parts
+in detection (AnalyzerTrialClassifier, AnalyzerPassRules,
+AnalyzerReportTypes, AnalyzerText).
+File moves only, no behavior change; update build_src_filter to match.
+Enables NODE-007's include-direction check to become an error.
 ```
 
 ### ANA-002 - multi-occurrence pattern proposals

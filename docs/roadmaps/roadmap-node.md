@@ -27,13 +27,17 @@ Profiles and programs choose compatible module behavior.
 Installation config stores chosen values later.
 ```
 
-Landed items from this area now live in `docs/archive/roadmaps/roadmap-changelog.md`.
+Landed items from this area now live in `docs/roadmaps/roadmap archive/roadmap-changelog.md`.
 
 ## Current code state
 
 ```text
 [PARTIAL] Node still owns serial command handling and runtime tuning commands directly.
-[TODO] ParamRegistry is not landed.
+[LANDED] ParamRegistry (src/param/), with Serial PARAM LIST / GET / SET / DUMP;
+         Node registers the four frequency-match thresholds. RB PARAM / RB BEHAV
+         still run in parallel (PAR-015).
+[TODO] No host (native) test env; the one Unity suite runs on-device (NODE-006).
+[TODO] No CI (NODE-007).
 [TODO] ConfigStore is not landed.
 [TODO] CommandRouter is not landed.
 [TODO] BehaviorHost is not landed.
@@ -93,8 +97,7 @@ Do not build a registry before the ownership map is clear.
 Status: DEFERRED
 
 ```text
-Param LIST / GET.
-PARAM SET + SAVE / LOAD / verify.
+PARAM SAVE / LOAD / verify (LIST / GET / SET landed, see roadmap-param-config.md).
 CommandRouter.
 BehaviorInput.
 OutputStatus.
@@ -103,12 +106,62 @@ ResonantProgram bundle.
 VEKTOR exposure.
 ```
 
+### NODE-006 - host test env and replay harness
+
+Status: TODO
+
+```text
+Add a PlatformIO native env ([env:native], platform = native) and move
+test_analyzer_pass_rules (or a copy) onto it.
+Blockers to remove first, all small:
+- <Arduino.h> included but unused in Occurrence.h, FieldState.h,
+  FeatureStream.h, MagnitudeWindow.h, ResonantBehavior.h.
+- ResonantBehavior calls Arduino random(); inject a random source.
+- micros() profiling in ScalarTransientDetector.cpp and FreqBandStream.cpp;
+  inject a clock or compile it out for native.
+Replay harness: feed recorded AudioSamplePacket /
+FrequencyBandMeasurementPacket sequences into the real DetectionRuntime and
+assert on OccurrenceVerdict output. No mock of DetectionRuntime needed; its
+inputs are already plain data.
+Related HAL fix: make AudioSource::readBlock() pure virtual and have Node
+read through _audioSource instead of _i2sSource, so a replay AudioSource is
+a drop-in rather than silently returning no audio.
+```
+
+### NODE-007 - CI build matrix and include-direction check
+
+Status: TODO
+
+```text
+GitHub Actions job: `pio run` for every env in platformio.ini, plus
+`pio test -e native` once NODE-006 exists.
+Add a check that nothing under src/detection/ includes src/modes/ (fails
+today until ANA-003 lands; add it as a warning first).
+Must exist before cleanup-0-plan Phase 5d grows the env matrix.
+```
+
+### NODE-008 - 5-node field trial
+
+Status: TODO
+
+```text
+Depends on NODE-001.
+Run five nodes with the same firmware in one room; record STATUS from each
+and a session log.
+Questions it has to answer: do nodes detect each other at installation
+distances, does own-emit suppression hold with several emitters, does the
+network settle or run away.
+This is the first check of the product behavior rather than single-node
+detection.
+```
+
 ## Current / first cleanup pass
 
 ```text
-After the detection current-pass, add a clear 5-node STATUS baseline.
+Order is in roadmap-general.md. For this file: NODE-006 and NODE-007 first,
+then NODE-001 as the prerequisite for the NODE-008 field trial.
 No new framework.
-No registry.
+No registry beyond the landed ParamRegistry.
 No large Node rewrite.
 ```
 
@@ -125,7 +178,6 @@ subsystem/profile owner.
 ## Non-goals now
 
 ```text
-ParamRegistry.
 CommandRouter.
 BehaviorHost.
 OutputProfile.

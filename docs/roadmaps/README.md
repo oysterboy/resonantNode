@@ -11,7 +11,7 @@ items into the archive changelog.
 
 ```text
 roadmap-general.md
-    Short next-step index only.
+    Ordered next steps across all roadmaps, with a gate per step.
 
 roadmap_detection.md
     Detection and analyzer follow-up work.
@@ -34,9 +34,11 @@ roadmap-vektor-later.md
 roadmap-master.md
     Pointer to the active roadmap set.
 
-current-pass.md
-    The next implementation pass only.
 ```
+
+Active passes and plans no longer live here: they are in `docs/refactors/`
+(see CLAUDE.md). The old `current-pass.md` is archived at
+`docs/refactors/archive/current-pass.md`.
 
 ## Shared shape
 
@@ -61,7 +63,7 @@ Non-goals
 Use short project-wide IDs in the active roadmaps.
 Keep roadmap-general.md lean and future-focused.
 Put the detailed steps in the domain roadmap for that area.
-Move fully landed items to docs/archive/roadmaps/roadmap-changelog.md.
+Move fully landed items to docs/roadmaps/roadmap archive/roadmap-changelog.md.
 Keep myspec.md and implementation status aligned with the current code.
 ```
 

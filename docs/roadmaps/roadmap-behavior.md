@@ -27,7 +27,7 @@ SoundOutput / ChirpOutput performs output.
 Behavior does not inspect detector internals.
 ```
 
-Landed items from this area now live in `docs/archive/roadmaps/roadmap-changelog.md`.
+Landed items from this area now live in `docs/roadmaps/roadmap archive/roadmap-changelog.md`.
 
 ## Current code state
 

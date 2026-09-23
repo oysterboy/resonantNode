@@ -152,9 +152,10 @@ the next unit of work — worth flagging rather than assuming silently.
 ### Roadmaps (`docs/roadmaps/`)
 
 - `roadmap-master.md` stays an index only — links to the per-subsystem
-  files, no plan detail of its own. Some of its links are stale absolute
-  Windows paths from the original dev machine; resolve them relative to
-  `docs/roadmaps/` instead of following them literally.
+  files, no plan detail of its own (links are relative to `docs/roadmaps/`).
+- `roadmap-general.md` is the ordered cross-roadmap sequence, one gate per
+  step. Check it before picking up roadmap work, and update the order there
+  when a step's gate closes.
 - Per-subsystem roadmap files (`roadmap_detection.md`, `roadmap-behavior.md`,
   etc.) are edited in place as plans change.
 - `implementation-status.md` is a **live table**, not history — edit it in

@@ -26,7 +26,7 @@ OutputStatus reports availability.
 OutputProfile later defines available emitted sound shapes.
 ```
 
-Landed items from this area now live in `docs/archive/roadmaps/roadmap-changelog.md`.
+Landed items from this area now live in `docs/roadmaps/roadmap archive/roadmap-changelog.md`.
 
 ## Current code state
 

@@ -465,6 +465,20 @@ Later Config may use similar registry ideas, but it should remain semantically
 separate from Params.
 ```
 
+### PAR-015 - retire RB PARAM / RB BEHAV onto ParamRegistry
+
+Status: TODO
+
+```text
+Two command paths currently set the same knobs: the ad hoc RB PARAM /
+RB BEHAV token parser in ResonantNodeApp.cpp (no range validation) and the
+registry-backed PARAM SET (validated). Register the remaining RB PARAM /
+RB BEHAV fields on the registry (the behavior ones are PAR-006), then remove
+the ad hoc parser, or reduce RB PARAM / RB BEHAV to aliases that call
+ParamRegistry::applyValue.
+Sequenced in roadmap-general.md step 6.
+```
+
 ## Current / first implementation focus
 
 ```text

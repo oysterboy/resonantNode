@@ -479,6 +479,64 @@ ParamRegistry::applyValue.
 Sequenced in roadmap-0-steps.md step 6.
 ```
 
+### PAR-016 - ParamRegistry as an in-repo library
+
+Status: TODO
+
+```text
+Decision (2026-09-23): do NOT split ParamRegistry into its own repo yet.
+Make it a PlatformIO library inside this repo first, so a later split is a
+mechanical move instead of a redesign.
+
+Why not a separate repo now:
+- One consumer (Node build), four registered params, one commit (052b03e).
+- ParamBinding is not stable: PAR-010 adds storageKey / defaultValue /
+  persistent flag / apply policy. Each of those would be a cross-repo
+  release + version bump.
+- Not generic yet: ParamTypes.h hardcodes ResonantNode's ModuleId
+  (Node/Detection/Behavior/Output) and ParamId (Detection_*) enums.
+- roadmap-vektor-later.md: VEKTOR must not drive premature local
+  architecture; VEK-002 is still DEFERRED.
+- Cost with no benefit until a second consumer exists: two repos, pinned
+  tags, two PRs per change, both repos attached per agent session.
+
+Steps:
+- Move src/param/ to lib/ParamRegistry/ with a library.json, so it cannot
+  silently include app headers.
+- Decouple app vocabulary: ModuleId becomes an opaque uint8_t group tag
+  with the name supplied by the app; ParamId values live in the app.
+- Enforce duplicate-ParamId rejection (open note on PAR-002).
+- Harden parsing before any reuse: reject trailing garbage ("12abc"),
+  reject negative input for unsigned types (strtoul wraps "-1"), and do
+  uint32 range checks without a float round-trip (loses precision > 2^24).
+- Optional: put list()/dump() output behind a small interface so the core
+  can be host-unit-tested without Arduino Print.
+
+Verification: all three envs compile; no behavior change on PARAM
+LIST / GET / SET / DUMP beyond the stricter parse rejects.
+```
+
+### PAR-017 - ParamRegistry as a separate repo
+
+Status: DEFERRED
+
+```text
+Extract lib/ParamRegistry/ into its own repo only when all of these hold:
+- PAR-016 landed (library has no ResonantNode-specific types).
+- A second real consumer needs it (e.g. a VEKTOR node firmware or another
+  device), not just an anticipated one.
+- PAR-010 settled the ParamBinding shape (persistence metadata in place).
+
+Mechanics: git subtree split --prefix=lib/ParamRegistry to keep history,
+then consume here via lib_deps = <repo url>#<tag>.
+
+Naming: keep it a param library, not "vektor-*". Under VEKTOR the registry
+is one resource adapter (path + value -> SCALAR Control Write), not the
+node core; a future VEKTOR node library (resource model, DESCRIBE, STATE,
+ACTION/ACK/EVENT, transports) would more likely depend on it than grow out
+of it.
+```
+
 ## Current focus
 
 ```text

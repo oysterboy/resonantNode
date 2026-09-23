@@ -111,6 +111,9 @@ FieldState                      -> STATE
 Behavior state                  -> STATE
 OutputStatus later              -> AXIS or LAMP, TBD (see VEK-002)
 ParamRegistry later             -> SCALAR Control Writes (see VEK-002)
+                                   (packaging: in-repo lib first, separate
+                                   repo only on a 2nd consumer; see
+                                   roadmap-param-config.md PAR-016/017)
 CommandRouter later             -> CMD dispatch (WRITE / ACTION split)
 SoundInput / SoundOutput resources later -> SENSOR / LAMP or AXIS, TBD
 ```

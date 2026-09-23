@@ -574,6 +574,107 @@ shim exists unconditionally in `DetectionFamily.h`, only its caller is
 
 ---
 
+## Decision: no virtual interface for detectors or `DetectionRuntime` (2026-09-23)
+
+Question asked, against general embedded-architecture guidance (layered
+design, SOLID's dependency inversion / open-closed / interface segregation):
+should detector families share an abstract interface, and should
+`DetectionRuntime` have one? Answer, recorded so it isn't re-litigated
+mid-implementation: **no virtual base class for either. Detector families
+share a compile-time contract, enforced by `static_assert` in
+`DetectionFamily.h`.**
+
+### Detector families: a checked contract, not an `IDetector`
+
+- **One implementation per binary.** Under this proposal each firmware
+  compiles exactly one detector. A virtual `IDetector` would have one
+  possible target per build: vtable pointer, indirect call and lost
+  inlining in the per-frame path, for no flexibility. The dependency
+  inversion SOLID asks for already holds: `DetectionRuntime` depends on the
+  `ActiveDetector` alias, not a concrete class, and a new family is one
+  `#elif` branch (the MVP worked example above is the open-closed test).
+- **`update()` cannot be in a shared interface.** Its input is legitimately
+  family-specific (spec allows it; section 2). A common virtual `update()`
+  forces either a lowest-common-denominator input, which `myspec.md` §5.3
+  rules out ("should not be forced into scalar abstraction prematurely"), or
+  downcasts. The `updateActiveDetector` shim is where that difference lives.
+- **The interface is already segregated by consumer**: a core contract
+  (`resetState`, `hasPendingOccurrence`, `popOccurrence`) the Node needs, and
+  a diagnostics contract (`latestReport`, `reportGeneration`,
+  `setDiagnosticsEnabled`) only the Analyzer path reads. That is interface
+  segregation without inheritance.
+- **This is consistent with earlier decisions**: `cleanup.md` Item 5 and
+  `cleanup-detector-ownership.md` both ruled out a public `IDetector` /
+  type-erased detector graph. This proposal removes the last reason one
+  might want it (runtime dispatch between families).
+
+**What was missing, and is now part of step 1:** today the contract exists
+only as prose plus coincidentally matching method names. Nothing makes a
+drifting detector fail to compile. `DetectionFamily.h` adds, once, after the
+`#if` chain (so it covers every family including ones added later):
+
+```cpp
+// Detector contract: every family's ActiveDetector must provide these.
+// Checked at compile time; no vtable, no runtime cost.
+static_assert(std::is_same<decltype(std::declval<ActiveDetector&>().resetState()), void>::value,
+    "ActiveDetector must provide void resetState()");
+static_assert(std::is_same<decltype(std::declval<const ActiveDetector&>().hasPendingOccurrence()), bool>::value,
+    "ActiveDetector must provide bool hasPendingOccurrence() const");
+static_assert(std::is_same<decltype(std::declval<ActiveDetector&>().popOccurrence(std::declval<Occurrence&>())), bool>::value,
+    "ActiveDetector must provide bool popOccurrence(Occurrence&)");
+// Diagnostics contract (SimpleThresholdDetector satisfies it trivially).
+static_assert(std::is_same<decltype(std::declval<const ActiveDetector&>().latestReport()), const DetectorReport&>::value,
+    "ActiveDetector must provide const DetectorReport& latestReport() const");
+static_assert(std::is_same<decltype(std::declval<const ActiveDetector&>().reportGeneration()), uint32_t>::value,
+    "ActiveDetector must provide uint32_t reportGeneration() const");
+static_assert(std::is_same<decltype(std::declval<ActiveDetector&>().setDiagnosticsEnabled(true)), void>::value,
+    "ActiveDetector must provide void setDiagnosticsEnabled(bool)");
+```
+
+Written in C++11 form (`std::is_same<>::value`, `std::declval`, needs
+`<type_traits>`/`<utility>`) on purpose; see the C++ standard risk below.
+C++20 concepts would read better but are not assumed available. The three
+shims are the only allowed exception to the contract; anything else a
+family needs from `DetectionRuntime` means the contract or the shim set is
+incomplete.
+
+### `DetectionRuntime`: no interface
+
+- **One implementation per build, owned by value** by its only two owners,
+  `ResonantNodeApp` and `AnalyzerModeApp`. Those are composition roots;
+  concrete dependencies belong there.
+- **The layer boundary is already inverted through data, not through an
+  abstract class.** `ResonantBehavior.h` includes `OccurrenceVerdict.h` and
+  `FieldState.h`, never `DetectionRuntime.h`. Behavior depends on facts, not
+  on the producer of facts. That is a stronger decoupling than an
+  `IDetectionRuntime` would give, and it is the spec's core rule
+  ("Detection produces facts. Behavior decides.") done correctly.
+- **Its surface is two-shaped** (Node core vs `ANALYZER_MODE` diagnostics).
+  One abstract class would either leak the Analyzer surface into the Node
+  or need two interfaces, which the `#ifdef` split already is.
+- **Virtual dispatch stays at the HAL**, where it already is and where it
+  pays: `AudioSource` and `ToneOutput` have real alternative
+  implementations (hardware vs test/replay).
+
+**Testability, the usual reason to add one, doesn't need it here.**
+`observeFrame()` already takes plain data packets, so a future native
+(host) test env can replay recorded `AudioSamplePacket` /
+`FrequencyBandMeasurementPacket` sequences into the *real* runtime and
+assert on verdicts, with no mocks. A fake detector, if wanted, is a family
+selected by build flag (`SimpleThresholdDetector` is effectively one). No
+native env exists yet (`platformio.ini` has only the three ESP32 envs;
+`test_analyzer_pass_rules` runs on target); that is the gap worth closing,
+separately from this proposal.
+
+**Revisit if:** a second runtime *shape* appears. The open "is the MVP a
+family or a whole mode" question in the worked example above is the
+trigger: if MVP drops `OccurrenceInspector`/`OccurrenceEvaluator` as a mode,
+there are two genuine runtime implementations. Even then, prefer a
+build-selected alias or template parameter (the same mechanism as
+`ActiveDetector`) over virtual dispatch.
+
+---
+
 ## Risks
 
 - **Environment matrix.** Three envs become five. Every "build all"
@@ -588,6 +689,15 @@ shim exists unconditionally in `DetectionFamily.h`, only its caller is
   that needed the extra slot. The `static_assert` against
   `kMaxInspectionModules` bounds it above; a per-family assert against the
   actual profile factories would bound it exactly.
+- **C++ language standard is unverified.** `platformio.ini` sets no
+  `-std=` and pins no platform version, so the standard comes from the
+  installed Arduino-ESP32 core, which on 2.x cores has been `gnu++11`. The
+  locked `setFrequencyMatchConfig`/`setScalarTransientConfig` bodies above
+  use `if constexpr` and `std::is_same_v` (C++17). Check the real flag
+  first (`pio run -e esp32dev -v`); if it is below C++17, either add
+  `build_unflags = -std=gnu++11` / `build_flags = -std=gnu++17` in the base
+  env, or rewrite those two bodies with tag dispatch/overloads. The contract
+  `static_assert`s are C++11-safe either way.
 - **Ordering with PAR-010.** The "Config" row is not real until profile
   choice persists across reboot. Landing this before persistence means the
   Node's profile is build-default-only, which is today's behavior; that's
@@ -599,8 +709,10 @@ shim exists unconditionally in `DetectionFamily.h`, only its caller is
 
 1. Write `DetectionFamily.h` (aliases, `kCompiledFamily`,
    `kFamilyMaxActiveStreams`, the three shims per "Locked shim signatures"
-   above) and add the family build flags and the two new envs; extend
-   `build_src_filter`. Build all five.
+   above, and the detector-contract `static_assert`s per "Decision: no
+   virtual interface" above) and add the family build flags and the two new
+   envs; extend `build_src_filter`. Confirm the C++ standard first (Risks).
+   Build all five.
 2. Point `DetectionRuntime` at `ActiveDetector`/`ActiveDetectorConfig` and
    route the three differing calls through the shims; delete
    `_detectorSelection`, `ActiveDetectorAdapter`, and every `switch` on

@@ -161,7 +161,7 @@ the next unit of work — worth flagging rather than assuming silently.
   `docs/refactors/` orders *within* its item (the detection cleanup is
   DET-008 -> `cleanup-0-plan.md`). On conflict, the steps file decides
   whether and when, the pass doc decides how.
-- Per-subsystem roadmap files (`roadmap_detection.md`, `roadmap-behavior.md`,
+- Per-subsystem roadmap files (`roadmap-detection.md`, `roadmap-behavior.md`,
   etc.) are edited in place as plans change.
 - `implementation-status.md` is a **live table**, not history — edit it in
   place to reflect current state (stable/experimental/planned/deferred); it

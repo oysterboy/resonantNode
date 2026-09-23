@@ -41,7 +41,7 @@ the previous gate open unless the step says it can run in parallel.
    results recorded in cleanup-0-plan.md.
 
 2. [NEXT] Decide the Node's production profile.
-   Where: DET-007 (roadmap_detection.md), with cleanup-0-plan Phase 0.
+   Where: DET-007 (roadmap-detection.md), with cleanup-0-plan Phase 0.
    Why: the Node boots TonalPulseScalar while the docs call TonalPulseFreq
    the main profile. Phase 5d's default env and its RAM case depend on it.
    Gate: one decision, recorded; code default, implementation-status.md,
@@ -70,7 +70,7 @@ the previous gate open unless the step says it can run in parallel.
    family-build doc's Risks).
 
 6. Mode-layer cleanup.
-   Where: ANA-003 (roadmap_detection.md: move AnalyzerApp member files out
+   Where: ANA-003 (roadmap-detection.md: move AnalyzerApp member files out
    of src/detection/analyzer/), PAR-015 (roadmap-param-config.md: retire
    RB PARAM / RB BEHAV onto ParamRegistry), NODE-004 (roadmap-node.md).
    Why: the largest remaining single-responsibility and dependency-direction

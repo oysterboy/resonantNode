@@ -52,8 +52,9 @@ roadmap-0-steps.md
     Ordered next steps across all roadmaps, with a gate per step. Named to
     sort first, same convention as docs/refactors/cleanup-0-plan.md.
 
-roadmap_detection.md
-    Detection and analyzer items (DET, ANA).
+roadmap-detection.md
+    Detection and analyzer items (DET, ANA). Renamed from roadmap_detection.md
+    on 2026-09-23; archived docs still use the old name.
 
 roadmap-node.md
     Node infrastructure, testing / CI, multi-node trials (NODE).

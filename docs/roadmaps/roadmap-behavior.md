@@ -87,11 +87,11 @@ behavior modulation / intended drift config.
 OutputRequest / BehaviorAction.
 ```
 
-## Current / first cleanup pass
+## Current focus
 
 ```text
-Do not build BehaviorRuntime yet.
-First make current behavior state, defaults, and decisions visible for 5-node tests.
+Order: roadmap-0-steps.md. BEH-001 / BEH-002 fold into NODE-001 (step 7);
+BEH-003 / BEH-004 are deferred (step 8).
 ```
 
 ## Spec candidates

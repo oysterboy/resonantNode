@@ -1,9 +1,13 @@
-# Roadmap General
+# Roadmap Steps
 
 Status: active roadmap.
 Scope: next steps across the active roadmaps, in order.
 Purpose: keep the short-term plan visible without repeating the detailed
 roadmap text that belongs in the domain-specific files.
+
+Renamed from roadmap-general.md on 2026-09-23 so it sorts first.
+How this file relates to the domain roadmaps and docs/refactors/: see
+README.md ("Who answers what", "Ordering rule").
 
 Last reordered: 2026-09-23, from an architecture review of the repo against
 embedded-design practice (layering, off-target testing, data-centric
@@ -29,8 +33,8 @@ the previous gate open unless the step says it can run in parallel.
 
 ```text
 1. [NEXT] Clear the hardware verification backlog.
-   Where: docs/refactors/cleanup-0-plan.md (T2, T3, T6, T7 for Phases 1, 2,
-   3, 5a, 5c; T4 on-device).
+   Where: DET-008 -> docs/refactors/cleanup-0-plan.md (T2, T3, T6, T7 for
+   Phases 1, 2, 3, 5a, 5c; T4 on-device).
    Why first: five merged phases have only compile-verified; 7c and 5d
    would stack two more structural changes on an unverified base.
    Gate: T2/T3 diffs match the expected changes, T7 node smoke test passes,
@@ -55,13 +59,13 @@ the previous gate open unless the step says it can run in parallel.
 
 4. Phase 7c: fold OccurrenceEvaluator into OccurrenceInspector, delete the
    correlation queue.
-   Where: docs/refactors/cleanup-0-plan.md Phase 7c.
+   Where: DET-008 -> docs/refactors/cleanup-0-plan.md Phase 7c.
    Gate: as that phase states (T1, T2/T3 label-only diffs, T5, T7).
 
 5. Phase 5d, then Phase 6: detector family as a build flag, then the
    SimpleThresholdDetector (MVP) family.
-   Where: docs/refactors/cleanup-detector-family-build.md,
-   cleanup-0-plan.md Phases 5d and 6.
+   Where: DET-008 -> docs/refactors/cleanup-0-plan.md Phases 5d and 6
+   (design in cleanup-detector-family-build.md).
    Gate: as those phases state; confirm the C++ standard first (see the
    family-build doc's Risks).
 
@@ -103,6 +107,8 @@ PAR-003                                       Analyzer params onto the
 ```text
 This file stays lean.
 Detailed rationale belongs in the specific roadmap file for each domain.
+Every step points at a roadmap ID; an item executed through docs/refactors/
+points on from its ID to the pass doc.
 Update the order here when a step's gate closes; don't let two steps both
 read [NEXT] unless they are marked as parallel.
 ```

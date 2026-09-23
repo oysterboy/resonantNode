@@ -94,11 +94,11 @@ Hub supervision.
 Transport bindings.
 ```
 
-## Current / first cleanup pass
+## Current focus
 
 ```text
-No implementation.
-Keep VEKTOR roadmap aligned with local architecture changes.
+Order: roadmap-0-steps.md. Deferred (step 8). Until then, only keep this
+roadmap aligned with local architecture changes.
 ```
 
 ## Future exposure candidates
@@ -132,4 +132,5 @@ OSC host API.
 Snapshot loop.
 Transport bindings.
 Raw internal exposure.
+Any implementation before roadmap-0-steps.md step 8.
 ```

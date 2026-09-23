@@ -151,11 +151,16 @@ the next unit of work — worth flagging rather than assuming silently.
 
 ### Roadmaps (`docs/roadmaps/`)
 
-- `roadmap-master.md` stays an index only — links to the per-subsystem
-  files, no plan detail of its own (links are relative to `docs/roadmaps/`).
-- `roadmap-general.md` is the ordered cross-roadmap sequence, one gate per
-  step. Check it before picking up roadmap work, and update the order there
-  when a step's gate closes.
+- `README.md` is the index (it absorbed the old `roadmap-master.md`): which
+  file answers which question, and the ordering rule between roadmaps and
+  `docs/refactors/`.
+- `roadmap-0-steps.md` (formerly `roadmap-general.md`) is the ordered
+  cross-roadmap sequence, one gate per step, each pointing at a roadmap ID.
+  Check it before picking up roadmap work, and update the order there when a
+  step's gate closes. It orders *between* items; an active pass/plan doc in
+  `docs/refactors/` orders *within* its item (the detection cleanup is
+  DET-008 -> `cleanup-0-plan.md`). On conflict, the steps file decides
+  whether and when, the pass doc decides how.
 - Per-subsystem roadmap files (`roadmap_detection.md`, `roadmap-behavior.md`,
   etc.) are edited in place as plans change.
 - `implementation-status.md` is a **live table**, not history — edit it in

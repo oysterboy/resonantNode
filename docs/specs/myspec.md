@@ -1198,8 +1198,9 @@ SoundOutput must not decide pattern meaning or artistic response policy.
 Current future items are tracked in:
 
 ```text
-docs/roadmaps/roadmap-master.md
-docs/archive/roadmaps/roadmap-changelog.md
+docs/roadmaps/README.md             index: which file answers which question
+docs/roadmaps/roadmap-0-steps.md    ordered next steps
+docs/roadmaps/roadmap archive/roadmap-changelog.md
 ```
 
 `docs/myspec.md` should stay focused on current architecture and not carry the

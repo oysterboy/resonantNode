@@ -78,11 +78,11 @@ Add OutputProfile / ChirpProfile only after behavior variations prove needed.
 Connect later to ResonantProgram.
 ```
 
-## Current / first cleanup pass
+## Current focus
 
 ```text
-No output refactor before the 5-node TonalPulse tests unless status visibility
-is needed.
+Order: roadmap-0-steps.md. OUT-001 folds into NODE-001 (step 7);
+OUT-002..004 are deferred (step 8).
 ```
 
 ## Spec candidates
@@ -103,4 +103,6 @@ Advanced synthesizer architecture.
 Multi-channel audio engine.
 Generic scheduler.
 Behavior-owned waveform generation.
+Output refactor before the 5-node field trial (NODE-008), unless status
+visibility needs it.
 ```

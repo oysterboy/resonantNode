@@ -476,22 +476,14 @@ registry-backed PARAM SET (validated). Register the remaining RB PARAM /
 RB BEHAV fields on the registry (the behavior ones are PAR-006), then remove
 the ad hoc parser, or reduce RB PARAM / RB BEHAV to aliases that call
 ParamRegistry::applyValue.
-Sequenced in roadmap-general.md step 6.
+Sequenced in roadmap-0-steps.md step 6.
 ```
 
-## Current / first implementation focus
+## Current focus
 
 ```text
-Landed: runtime-only Bound Field ParamRegistry, applied first to Detection
-frequency-match thresholds on the Node (resonant) build, with Serial
-PARAM LIST / GET / SET / DUMP.
-No persistence.
-No remote transport.
-Current RB PARAM / RB BEHAV stay separate until deliberately migrated or
-removed.
-
-Next: Analyzer params (PAR-003) still use the pre-registry AnalyzerTuning
-surface and have not been moved onto ParamRegistry.
+Order: roadmap-0-steps.md. PAR-015 is step 6, then PAR-003.
+PAR-010 / PAR-011 / PAR-013 are deferred (step 8).
 ```
 
 ## Spec candidates

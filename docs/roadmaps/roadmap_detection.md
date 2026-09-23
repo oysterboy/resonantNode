@@ -86,6 +86,23 @@ Blocks cleanup-0-plan Phase 5d: it decides which family env:esp32dev builds
 and whether 5d's RAM argument (production = frequency family) holds.
 ```
 
+### DET-008 - detection-layer cleanup pass
+
+Status: PARTIAL
+
+```text
+Executed in docs/refactors/cleanup-0-plan.md (phase order, T1-T8 test
+battery, gates) with its topic docs (cleanup.md,
+cleanup-detector-family-build.md, cleanup-analyzer-node-isolation.md, ...).
+That plan orders the work within this item; roadmap-0-steps.md decides when
+it runs (steps 1, 4, 5).
+
+Landed in code, hardware-unverified: Phases 1, 2, 3, 5a, 5c.
+Open: hardware backlog (T2/T3/T6/T7), Phase 7c, Phase 5d, Phase 6,
+Phases 7a/7b, Phase 0 (field data, shared with DET-007).
+Close when cleanup-0-plan.md is archived with its "Archived: ..." header.
+```
+
 ### DET-003 - inspection target / payload split
 
 Status: TODO
@@ -153,12 +170,11 @@ Keep OccurrenceVerdict compact and behavior-facing.
 Expose only compact explanation facts through OccurrenceEvaluatorReport.
 ```
 
-## Current / first cleanup pass
+## Current focus
 
 ```text
-Keep the clean analyzer outputs on canonical runtime facts.
-Keep the remaining work in the detection / analyzer layer before broader
-behavior or output changes.
+Order: roadmap-0-steps.md. DET-008 (the cleanup pass) is steps 1, 4, 5;
+DET-007 is step 2; ANA-003 is step 6. The rest is unsequenced.
 ```
 
 ## Spec candidates

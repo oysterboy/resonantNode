@@ -155,14 +155,11 @@ This is the first check of the product behavior rather than single-node
 detection.
 ```
 
-## Current / first cleanup pass
+## Current focus
 
 ```text
-Order is in roadmap-general.md. For this file: NODE-006 and NODE-007 first,
-then NODE-001 as the prerequisite for the NODE-008 field trial.
-No new framework.
-No registry beyond the landed ParamRegistry.
-No large Node rewrite.
+Order: roadmap-0-steps.md. NODE-006 and NODE-007 are step 3; NODE-004 is
+part of step 6; NODE-001 then NODE-008 are step 7.
 ```
 
 ## Spec candidates
@@ -184,4 +181,5 @@ OutputProfile.
 ResonantProgram.
 VEKTOR.
 Large Node rewrite.
+New framework.
 ```

@@ -493,7 +493,24 @@ None required; no code changes are made under this item in this pass.
 
 ---
 
-# Item 8 — Collapse the verdict correlation queue into a single carried unit
+# Item 8 — Collapse the verdict correlation queue into a single carried unit (superseded by Phase 7c)
+
+**Superseded, 2026-10-05.** `cleanup-0-plan.md` Phase 7c ("fold the Evaluator
+into the Inspector; delete the correlation queue," decided 2026-09-21 —
+already on `main` before this item was ported here, a cross-check this port
+missed at the time) subsumes this item entirely rather than overlapping it.
+Item 8 kept `OccurrenceEvaluator` as a separate stage and proposed carrying
+`PendingVerdictObservation` through instead of re-queuing it; Phase 7c
+removes the second stage altogether, computing the `OccurrenceVerdict`
+inline inside `drainDetectors()`'s existing scope. With no second object
+ever created, there is nothing to correlate, by construction, not by a
+better-carried observation. Phase 7c's own "what the merge removes" list
+(`cleanup-0-plan.md` Phase 7c) names every symbol Item 8's step 2 named for
+deletion (`_verdictCorrelationQueue`, `pushVerdictObservation()`,
+`popVerdictObservation()`, `_verdictCorrelationFailureCount`) plus
+`OccurrenceEvaluator` itself. Do Phase 7c; do not implement Item 8 as
+written below — kept for the problem statement's evidence trail, not as a
+live task.
 
 ## Problem
 
@@ -602,7 +619,32 @@ unified `drainDetectors()` loop.
 
 ---
 
-# Item 9 — Split Item 6's counter audit: measurement counters vs. correlation/dedup state
+# Item 9 — Split Item 6's counter audit: measurement counters vs. correlation/dedup state (narrowed by Phase 7c)
+
+**Update, 2026-10-05.** Item 9 depended on Item 8; Item 8 is superseded by
+Phase 7c (above), so re-point the dependency there, not retire Item 9
+outright — the two correlation/dedup categories below don't fare the same
+under Phase 7c:
+
+- `OccurrenceEvaluator`-specific fields (`_evaluatorAccept*Count`,
+  `_evaluatorDrainCount`, `activeEvaluatorReport()`, and the correlation
+  queue's own overflow/failure counters) are named in Phase 7c's own
+  deletion list — gone outright, not merely reclassified. No audit
+  question left to ask about them.
+- The detector-report generation-dedup fields this item actually lists
+  below (`_lastObservedScalarReportGeneration` and siblings, owned by
+  `captureLatestDetectorReportIfChanged()`) are a *different* mechanism —
+  dedup on `DetectorReport`, not on the verdict/evaluator correlation — and
+  Phase 7c's write-up doesn't name them either way. Its new
+  `drainDetectors()` sketch calls `capturePipelineResult(verdict, &inspected,
+  &latestDetectorReport())` unconditionally per iteration, which reads as if
+  the generation-dedup check might not survive in that shape, but that's an
+  inference from the sketch, not something Phase 7c states. Check at Phase
+  7c implementation time whether `captureLatestDetectorReportIfChanged()`
+  and its fields are still called from the new `drainDetectors()`; if they
+  are, this item's audit of them still stands and should run after Phase 7c
+  lands, with "does Phase 7c's own change make this bookkeeping
+  unnecessary" as the question in place of the Item 8 framing below.
 
 ## Problem
 
@@ -681,12 +723,16 @@ DetectionCleanup: privatize FrequencyMatchDetector public field surface
 DetectionCleanup: remove dead duplicated frequency reason helpers
 DetectionCleanup: unify per-detector drain path in DetectionRuntime
 DetectionCleanup: audit and trim DetectionRuntime diagnostic counters
-DetectionCleanup: collapse verdict correlation queue in DetectionRuntime
-DetectionDocs: split diagnostic-counter audit into measurement vs. dedup-state tables
 ```
+
+`cleanup-0-plan.md` Phase 7c replaces Item 8's commit (fold
+`OccurrenceEvaluator` into `OccurrenceInspector`, delete the correlation
+queue — see Item 8's superseded note above); do it there, not as a
+`DetectionCleanup: collapse verdict correlation queue` commit against this
+item. Item 9's commit, if its surviving half (the detector-report
+generation-dedup audit) still has something to audit after Phase 7c lands,
+is documentation-only, same as Item 6.
 
 Each commit must compile and pass its corresponding Intermediate
 Verification before proceeding to the next item. Item 7 has no commit; it is
-recorded as a deliberately deferred decision. Item 8 depended on Item 5
-landing first; that dependency is satisfied. Item 9's commit is
-documentation-only, same as Item 6.
+recorded as a deliberately deferred decision.

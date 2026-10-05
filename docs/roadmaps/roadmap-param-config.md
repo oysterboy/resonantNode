@@ -514,6 +514,7 @@ Steps:
 
 Verification: all three envs compile; no behavior change on PARAM
 LIST / GET / SET / DUMP beyond the stricter parse rejects.
+Sequenced in roadmap-0-steps.md step 6, before PAR-015.
 ```
 
 ### PAR-017 - ParamRegistry as a separate repo

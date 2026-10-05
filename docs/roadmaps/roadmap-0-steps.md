@@ -72,11 +72,14 @@ the previous gate open unless the step says it can run in parallel.
 6. Mode-layer cleanup.
    Where: ANA-003 (roadmap-detection.md: move AnalyzerApp member files out
    of src/detection/analyzer/), PAR-015 (roadmap-param-config.md: retire
-   RB PARAM / RB BEHAV onto ParamRegistry), NODE-004 (roadmap-node.md).
+   RB PARAM / RB BEHAV onto ParamRegistry), PAR-016 (roadmap-param-config.md:
+   ParamRegistry to lib/ParamRegistry/, app enums out, stricter parsing;
+   do it before PAR-015 so the retired RB fields register on the decoupled
+   API), NODE-004 (roadmap-node.md).
    Why: the largest remaining single-responsibility and dependency-direction
    problems are in ResonantNodeApp / AnalyzerApp, not in detection.
    Gate: nothing under src/detection/ includes src/modes/; one param path
-   per knob.
+   per knob; lib/ParamRegistry/ includes nothing from src/.
 
 7. Multi-node field trial.
    Where: NODE-001 (STATUS baseline, prerequisite), NODE-008 (5-node trial),
@@ -87,7 +90,8 @@ the previous gate open unless the step says it can run in parallel.
 
 8. [DEFERRED] Everything else until step 7 has run: PAR-010/011
    persistence, OutputStatus / OutputProfile (OUT-002..004), BehaviorRuntime
-   (BEH-003/004), CommandRouter and the rest of NODE-005, VEKTOR (VEK-*).
+   (BEH-003/004), CommandRouter and the rest of NODE-005, VEKTOR (VEK-*),
+   ParamRegistry as its own repo (PAR-017).
 ```
 
 ## Still open, not sequenced

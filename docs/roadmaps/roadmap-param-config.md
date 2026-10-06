@@ -476,7 +476,7 @@ registry-backed PARAM SET (validated). Register the remaining RB PARAM /
 RB BEHAV fields on the registry (the behavior ones are PAR-006), then remove
 the ad hoc parser, or reduce RB PARAM / RB BEHAV to aliases that call
 ParamRegistry::applyValue.
-Sequenced in roadmap-0-steps.md step 6.
+Sequenced in roadmap-0-steps.md step 10.
 ```
 
 ### PAR-016 - ParamRegistry as an in-repo library
@@ -514,7 +514,7 @@ Steps:
 
 Verification: all three envs compile; no behavior change on PARAM
 LIST / GET / SET / DUMP beyond the stricter parse rejects.
-Sequenced in roadmap-0-steps.md step 6, before PAR-015.
+Sequenced in roadmap-0-steps.md step 10, before PAR-015.
 ```
 
 ### PAR-017 - ParamRegistry as a separate repo
@@ -541,8 +541,8 @@ of it.
 ## Current focus
 
 ```text
-Order: roadmap-0-steps.md. PAR-015 is step 6, then PAR-003.
-PAR-010 / PAR-011 / PAR-013 are deferred (step 8).
+Order: roadmap-0-steps.md. PAR-015 is step 10, then PAR-003.
+PAR-010 / PAR-011 / PAR-013 are deferred (step 11).
 ```
 
 ## Spec candidates

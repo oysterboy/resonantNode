@@ -155,11 +155,57 @@ This is the first check of the product behavior rather than single-node
 detection.
 ```
 
+### NODE-009 - D-AMP board support in firmware
+
+Status: TODO (issue #19)
+
+```text
+Decision: docs/decisions/2026-10-06-damp-output-hardware.md.
+Pins: move the hardcoded pins in src/app/main.cpp into build macros, with
+today's piezo values as defaults (piezo builds must not change).
+Board variant: BOARD_DAMP and env:esp32dev-damp, plus Analyzer and Emitter
+variants.
+D-AMP pinout (from oysterboy/echoSpace): 25 = I2S WS and 26 = BCLK, shared
+by mic and amp; 32 = amp DIN; 33 = mic data. UART2 16/17 stays free.
+HAL: one class owning I2S_NUM_0 full-duplex (RX+TX), providing both
+AudioSource (mic) and ToneOutput (sine, short on/off ramp). The amp can't be
+a separate output: it shares BCLK/WS with the mic.
+Keep 16 kHz. TX never blocks the detection loop; silence when idle. Pick the
+mic channel explicitly (piezo build reads ONLY_RIGHT; echoSpace reads
+stereo with the mic on channel 0).
+```
+
+### NODE-010 - piezo vs D-AMP bench A/B
+
+Status: TODO (issue #20)
+
+```text
+Confirms the D-AMP decision and measures the new signal; it doesn't choose.
+One emitter, one listener, Phase 0's distance ladder (10/20/40/60 cm), piezo
+emitter then D-AMP emitter; accept rate and score/contrast from the
+Analyzer. Plus self-echo against the suppression window and class-D noise
+at the mic with the amp idle.
+If D-AMP is less detectable at any distance, stop and revisit the decision.
+Results: (dated line here)
+```
+
+### NODE-011 - switch to D-AMP
+
+Status: TODO (issue #21)
+
+```text
+D-AMP becomes the default node hardware; all five D-AMP nodes on one build.
+Piezo build kept compiling as the legacy baseline until the field trial is
+done. Update implementation-status.md, CLAUDE.md build commands, and
+myspec.md section 7 if its output list changes.
+```
+
 ## Current focus
 
 ```text
-Order: roadmap-0-steps.md. NODE-006 and NODE-007 are step 3; NODE-004 is
-part of step 6; NODE-001 then NODE-008 are step 7.
+Order: roadmap-0-steps.md. NODE-009, NODE-010, NODE-011 are steps 2-4
+(D-AMP); NODE-001 then NODE-008 are step 6 (field trial, on D-AMP);
+NODE-006 and NODE-007 are step 7; NODE-004 is part of step 10.
 ```
 
 ## Spec candidates

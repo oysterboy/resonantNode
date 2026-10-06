@@ -97,7 +97,7 @@ Transport bindings.
 ## Current focus
 
 ```text
-Order: roadmap-0-steps.md. Deferred (step 8). Until then, only keep this
+Order: roadmap-0-steps.md. Deferred (step 11). Until then, only keep this
 roadmap aligned with local architecture changes.
 ```
 
@@ -135,5 +135,5 @@ OSC host API.
 Snapshot loop.
 Transport bindings.
 Raw internal exposure.
-Any implementation before roadmap-0-steps.md step 8.
+Any implementation before roadmap-0-steps.md step 11.
 ```

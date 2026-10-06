@@ -81,8 +81,9 @@ Connect later to ResonantProgram.
 ## Current focus
 
 ```text
-Order: roadmap-0-steps.md. OUT-001 folds into NODE-001 (step 7);
-OUT-002..004 are deferred (step 8).
+Order: roadmap-0-steps.md. OUT-001 folds into NODE-001 (step 6);
+OUT-002..004 are deferred (step 11). The D-AMP output (a sine ToneOutput
+over I2S) is NODE-009, step 2: hardware, not output architecture.
 ```
 
 ## Spec candidates

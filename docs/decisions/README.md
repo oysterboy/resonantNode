@@ -51,6 +51,7 @@ what replaced it.
 | 2026-09-21 | [Fold OccurrenceEvaluator into OccurrenceInspector (Phase 7c, not yet implemented)](2026-09-21-fold-evaluator-into-inspector.md) |
 | 2026-09-23 | [Detector family is a build flag; no virtual detector or runtime interface](2026-09-23-no-virtual-detector-interface.md) |
 | 2026-09-23 | [Keep ParamRegistry in this repo as a PlatformIO library](2026-09-23-keep-paramregistry-in-repo.md) |
+| 2026-10-06 | [Nodes move to D-AMP output (MAX98357A over I2S); board is a build variant](2026-10-06-damp-output-hardware.md) |
 
 ## Open
 
@@ -59,9 +60,9 @@ question is tracked; a file is added here when one resolves.
 
 | Question | Tracked in |
 |---|---|
-| Which detection profile the Node ships with (`TonalPulseFreq` vs `TonalPulseScalar`) | DET-007 in `docs/roadmaps/roadmap-detection.md`; step 2 of `roadmap-0-steps.md` |
+| Which detection profile the Node ships with (`TonalPulseFreq` vs `TonalPulseScalar`) | DET-007 in `docs/roadmaps/roadmap-detection.md`; step 5 of `roadmap-0-steps.md`, decided on D-AMP |
 | Keep or consolidate `FrequencyMatchDetector` (needs the matched-condition field trials) | `docs/refactors/cleanup-0-plan.md` Phase 0; working assumption is "keep" |
 | Which metrics belong in the generic `Occurrence` core vs detector-specific detail | `docs/specs/myspec.md` §5 ("temporary typed accepted-event detail"); DET-003..006 |
 | How much `FeatureHistory` to retain on-device | `docs/refactors/cleanup-0-plan.md` Phase 5c (33 KB, 80% of `DetectionRuntime` at last measurement) |
 | Exact boundary between analyzer-only and runtime diagnostics | `docs/refactors/cleanup-analyzer-node-isolation.md`; Phase 5a landed the first cut |
-| Persistent (flash/NVS) config | PAR-010 / PAR-011, deferred until after the field trial (step 8) |
+| Persistent (flash/NVS) config | PAR-010 / PAR-011, deferred until after the field trial (step 11) |

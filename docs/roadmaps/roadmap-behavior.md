@@ -90,8 +90,8 @@ OutputRequest / BehaviorAction.
 ## Current focus
 
 ```text
-Order: roadmap-0-steps.md. BEH-001 / BEH-002 fold into NODE-001 (step 7);
-BEH-003 / BEH-004 are deferred (step 8).
+Order: roadmap-0-steps.md. BEH-001 / BEH-002 fold into NODE-001 (step 6);
+BEH-003 / BEH-004 are deferred (step 11).
 ```
 
 ## Spec candidates

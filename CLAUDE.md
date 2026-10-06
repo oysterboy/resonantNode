@@ -172,6 +172,16 @@ the next unit of work — worth flagging rather than assuming silently.
   literal path) with the same one-line `Archived: ...` header used for
   refactor passes.
 
+### Decisions (`docs/decisions/`)
+
+One short file per deliberate fork (what was chosen, why, what it rules
+out, when to revisit), plus an index with the still-open ones. Pass docs
+get archived; the decisions made inside them live on here. Check the index
+before proposing something that touches detector interfaces, param
+ownership or the evaluator/inspector split — it may already be decided.
+When a pass doc records a new decision, add a file here in the same
+commit; when a pass closes, its decisions are already safe.
+
 ### Other docs
 
 - `docs/specs/myspec.md` — canonical architecture spec; see above.

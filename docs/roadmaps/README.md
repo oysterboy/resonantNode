@@ -16,6 +16,7 @@ Where does a concept belong?    docs/specs/myspec.md
 What next, in what order?       roadmap-0-steps.md
 What exactly is item X?         the domain roadmap that owns its ID
 How is a big item executed?     its pass / plan doc in docs/refactors/
+Why was it built this way?      docs/decisions/ (forks taken, and open ones)
 What happened?                  docs/changelog.md, git log
 ```
 

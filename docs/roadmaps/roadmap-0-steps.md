@@ -5,6 +5,19 @@ Scope: next steps across the active roadmaps, in order.
 Purpose: keep the short-term plan visible without repeating the detailed
 roadmap text that belongs in the domain-specific files.
 
+## Goal of the current phase
+
+Five nodes with the same firmware in one room, hearing and answering each
+other, with a recorded session that says whether they did (NODE-008). Done
+means: a STATUS line from every node naming its build, profile and
+thresholds (NODE-001), and a session log that answers the trial's three
+questions: do nodes detect each other at installation distances, does
+own-emit suppression hold with several emitters, does the network settle
+or run away. Everything in steps 1-6 is there because it stands between
+the current code and that trial; step 8 is everything that doesn't. When
+an item doesn't shorten the path to the trial, it waits, however
+well-reasoned it is.
+
 Renamed from roadmap-general.md on 2026-09-23 so it sorts first.
 How this file relates to the domain roadmaps and docs/refactors/: see
 README.md ("Who answers what", "Ordering rule").
@@ -32,7 +45,7 @@ Do these in order. Each step names its gate; don't start the next step with
 the previous gate open unless the step says it can run in parallel.
 
 ```text
-1. [NEXT] Clear the hardware verification backlog.
+1. [NEXT] Clear the hardware verification backlog. (issue #7)
    Where: DET-008 -> docs/refactors/cleanup-0-plan.md (T2, T3, T6, T7 for
    Phases 1, 2, 3, 5a, 5c; T4 on-device).
    Why first: five merged phases have only compile-verified; 7c and 5d
@@ -40,7 +53,7 @@ the previous gate open unless the step says it can run in parallel.
    Gate: T2/T3 diffs match the expected changes, T7 node smoke test passes,
    results recorded in cleanup-0-plan.md.
 
-2. [NEXT] Decide the Node's production profile.
+2. [NEXT] Decide the Node's production profile. (issue #8)
    Where: DET-007 (roadmap-detection.md), with cleanup-0-plan Phase 0.
    Why: the Node boots TonalPulseScalar while the docs call TonalPulseFreq
    the main profile. Phase 5d's default env and its RAM case depend on it.
@@ -48,7 +61,7 @@ the previous gate open unless the step says it can run in parallel.
    and the Node's registered params all agree with it.
    Can run in parallel with step 1 (same hardware sessions).
 
-3. [NEXT] Off-target tests and CI.
+3. [NEXT] Off-target tests and CI. (issues #9, #10)
    Where: NODE-006 (host test env + replay harness), NODE-007 (CI build
    matrix + include-direction check), roadmap-node.md.
    Why: makes the T2/T3 class of check runnable without a board, and puts
@@ -58,18 +71,18 @@ the previous gate open unless the step says it can run in parallel.
    Can run in parallel with steps 1-2 (needs no hardware).
 
 4. Phase 7c: fold OccurrenceEvaluator into OccurrenceInspector, delete the
-   correlation queue.
+   correlation queue. (issue #11)
    Where: DET-008 -> docs/refactors/cleanup-0-plan.md Phase 7c.
    Gate: as that phase states (T1, T2/T3 label-only diffs, T5, T7).
 
 5. Phase 5d, then Phase 6: detector family as a build flag, then the
-   SimpleThresholdDetector (MVP) family.
+   SimpleThresholdDetector (MVP) family. (issue #12)
    Where: DET-008 -> docs/refactors/cleanup-0-plan.md Phases 5d and 6
    (design in cleanup-detector-family-build.md).
    Gate: as those phases state; confirm the C++ standard first (see the
    family-build doc's Risks).
 
-6. Mode-layer cleanup.
+6. Mode-layer cleanup. (issues #13, #14, #15)
    Where: ANA-003 (roadmap-detection.md: move AnalyzerApp member files out
    of src/detection/analyzer/), PAR-015 (roadmap-param-config.md: retire
    RB PARAM / RB BEHAV onto ParamRegistry), PAR-016 (roadmap-param-config.md:
@@ -81,7 +94,7 @@ the previous gate open unless the step says it can run in parallel.
    Gate: nothing under src/detection/ includes src/modes/; one param path
    per knob; lib/ParamRegistry/ includes nothing from src/.
 
-7. Multi-node field trial.
+7. Multi-node field trial. (issue #16)
    Where: NODE-001 (STATUS baseline, prerequisite), NODE-008 (5-node trial),
    roadmap-node.md.
    Why: the product is several nodes hearing each other; nothing verified

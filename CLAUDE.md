@@ -172,6 +172,36 @@ the next unit of work — worth flagging rather than assuming silently.
   literal path) with the same one-line `Archived: ...` header used for
   refactor passes.
 
+### Decisions (`docs/decisions/`)
+
+One short file per deliberate fork (what was chosen, why, what it rules
+out, when to revisit), plus an index with the still-open ones. Pass docs
+get archived; the decisions made inside them live on here. Check the index
+before proposing something that touches detector interfaces, param
+ownership or the evaluator/inspector split — it may already be decided.
+When a pass doc records a new decision, add a file here in the same
+commit; when a pass closes, its decisions are already safe.
+
+### GitHub issues: bench log and inbox, not the record
+
+One issue per step of `roadmap-0-steps.md` (the step links its issue
+number). Issues exist because the owner logs board sessions and drops notes
+from the phone; nothing is written *only* there. Three rules:
+
+1. **Starting a step: read its issue first**, body and comments, and fold
+   anything not yet in the pass doc into it — ticked checkboxes become a
+   dated results line, a comment becomes a sentence in the doc or a
+   `docs/decisions/` file. Then work from the doc.
+2. **Closing a step: close its issue in the same cycle** that writes the
+   gate results into the pass doc, with a one-line comment naming the
+   commit.
+3. **Nothing is decided in an issue.** A thread that reaches a decision
+   gets a `docs/decisions/` file; the issue links to it.
+
+Titles carry `[Step N]`; retitle when the steps file is reordered. Don't
+open issues below step granularity (7a/7b, DET-003..006 live in the
+roadmaps), and don't add Projects boards or milestones.
+
 ### Other docs
 
 - `docs/specs/myspec.md` — canonical architecture spec; see above.

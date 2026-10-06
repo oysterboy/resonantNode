@@ -5,6 +5,19 @@ Scope: next steps across the active roadmaps, in order.
 Purpose: keep the short-term plan visible without repeating the detailed
 roadmap text that belongs in the domain-specific files.
 
+## Goal of the current phase
+
+Five nodes with the same firmware in one room, hearing and answering each
+other, with a recorded session that says whether they did (NODE-008). Done
+means: a STATUS line from every node naming its build, profile and
+thresholds (NODE-001), and a session log that answers the trial's three
+questions: do nodes detect each other at installation distances, does
+own-emit suppression hold with several emitters, does the network settle
+or run away. Everything in steps 1-6 is there because it stands between
+the current code and that trial; step 8 is everything that doesn't. When
+an item doesn't shorten the path to the trial, it waits, however
+well-reasoned it is.
+
 Renamed from roadmap-general.md on 2026-09-23 so it sorts first.
 How this file relates to the domain roadmaps and docs/refactors/: see
 README.md ("Who answers what", "Ordering rule").

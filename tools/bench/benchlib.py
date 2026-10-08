@@ -5,7 +5,8 @@ import os
 import re
 
 KV = re.compile(r"(\S+?)=(\S*)")
-BANNER = re.compile(r"^BUILD role=(\S+) git=(\S+) .*version=(\S+)")
+# Board boot banner, or the "# firmware:" header seqrun/import write into run logs.
+BANNER = re.compile(r"^(?:BUILD|# firmware:) role=(\S+) git=(\S+) .*version=(\S+)")
 LINE_TYPES = ("SEQ_TRIAL", "SEQ_SOURCE_CORE", "SEQ_SOURCE_SPEC", "SEQ_SOURCE",
               "SEQ_INSPECT", "SEQ_EXPLAIN", "SEQ_DETAIL", "SEQ_SUMMARY", "SEQ REPORT")
 

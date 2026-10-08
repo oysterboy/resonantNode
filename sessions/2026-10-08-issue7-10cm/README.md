@@ -39,3 +39,50 @@ Findings:
   identified. FeatureHistory changed in `48e4f90` and `795f649` (Phase 5c).
 - Field names: only the planned pattern -> verdict rename labels differ,
   same as at 40 cm.
+
+## Follow-up runs, same setup
+
+### TonalPulseFreq with a runtime threshold override
+
+`PARAM freqScore=12000 freqReleaseScore=8000` before each run (analyzer
+runtime override, same mechanism on both firmware; `DetectionProfile.h`
+unchanged).
+
+| Run | FW | Result | Det. accepted | Empty-history inspections |
+|---|---|---|---|---|
+| T2_freq12k | 847b1ef | 50 rejected (verdict, amp) | 0 | 45 trials |
+| T2_freq12k | 828f455 | 50 rejected (verdict, amp) | 50 | 24 trials |
+| I2_diag_off_freq12k | 828f455 | 30 rejected (verdict, amp) | 30 | 0 |
+| I2_diag_on_freq12k | 828f455 | 30 rejected (verdict, amp) | 30 | 14 trials |
+
+- With the override the detector fires on every chirp on both firmware.
+  Every trial is then rejected by the verdict on the amp requirement
+  (amp class weak or unknown), so the verdict outcome is unchanged.
+- Detector accept truth differs as expected: the baseline never froze its
+  DetectorReport on accept (`accepted.present=0`), fixed in `7d33fed`.
+- Item 2: diag off vs on gives identical detector truth (30/30 accepted,
+  `accepted.present=1`, no rejects). Inspection differs: empty-history
+  windows appear only with diagnostics on.
+
+(`828f455` has the same firmware source as `62a949e` and `fbbc2db`.)
+
+### Bisect of the empty-history inspections (TonalPulseScalar, 50 trials)
+
+`git bisect run` over firmware commits `847b1ef..62a949e`; "failing" = any
+`history_window_incomplete` in 50 trials. Runs are `BIS_scalar.<hash>.log`.
+
+| Commit | Empty-history lines | Expected |
+|---|---|---|
+| 3e807ac | 14 | 43/50 |
+| 0526ad1 | 7 | 46/50 |
+| 41deebc | 23 | 38/50 |
+| 48e4f90 | 15 | 42/50 |
+| 795f649 | 0 | 50/50 |
+
+First fixed commit: `795f649` "FeatureHistory: record only the streams the
+inspection plan reads". It removed per-sample accumulation work for unread
+streams; its message expected no inspection change. Together with the
+diag-on/off result above, the failure looks load-dependent: inspection runs
+before the history window has any samples when the loop is busy. It is
+reduced, not gone: the Freq profile with diagnostics on still shows it on
+current firmware.

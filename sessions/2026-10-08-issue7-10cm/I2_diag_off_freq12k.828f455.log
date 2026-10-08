@@ -1,0 +1,110 @@
+# run: I2_diag_off_freq12k
+# firmware: role=analyzer git=828f455 version=0.4.0
+# started: 2026-10-08T17:26:16
+>> PARAM freqScore=12000 freqReleaseScore=8000
+PARAM no_change
+>> PARAM STATUS
+PARAM scalar_observed_stream=AmpEnvelope scalar_onset_threshold=18000.0 scalar_release_threshold=12000.0 scalar_cooldown_ms=50 scalar_min_duration_ms=0 scalar_max_duration_ms=120 scalar_min_peak_strength=8000.0 scalar_release_debounce_ms=20 scalar_require_carrier_quality=0 scalar_require_min_strength=0 scalar_min_strength=0.0 scalar_min_release_coverage_ms=0 scalar_min_longest_island_ms=0 scalar_max_gap_ms=0 freqScore=12000.0 freqContrast=50.0 freqReleaseScore=8000.0 freqReleaseContrast=50.0
+>> SEQ DIAG off
+OK SEQ DIAG off
+>> SEQ start profile=TonalPulseFreq tries=30 mode=detail when=all verbose=1
+OK SEQ
+SEQ remote claim: send=179315ms ack=179320ms wait=5ms status=ok
+SEQ rebase: start=179320ms end=179421ms elapsed=101ms
+AUDIO stats reset
+SEQ start test=default startup_delay_ms=1000 report_settle_ms=500 loopDelayMs=0 logStress=0
+SEQ start source=I2S probe=AMP profile=TonalPulseFreq source=FrequencyMatch detector=FrequencyMatch freq_min_duration_ms=60 freq_release_debounce_ms=30 freq_cooldown_ms=0 scalar_observed_stream=AmpEnvelope scalar_onset_threshold=18000.0 scalar_release_threshold=12000.0 scalar_cooldown_ms=50 scalar_min_duration_ms=0 scalar_max_duration_ms=120 scalar_min_peak_strength=8000.0 scalar_release_debounce_ms=20 scalar_require_carrier_quality=0 scalar_min_release_coverage_ms=0 scalar_min_longest_island_ms=0 scalar_max_gap_ms=0 history.bin_ms=1 history.capacity_bins=256 history.coverage_ms=256 history.stream=amp aggregation=mean_abs+rms+peak_abs history.stream=freq_target aggregation=fresh_only history.stream=freq_contrast aggregation=fresh_only mode=SEQ test=default startup_delay_ms=1000 report_settle_ms=500 loopDelayMs=0 logStress=0 quiet=0 tries=30 period_ms=2500 window_start_ms=0 window_end_ms=2200 freq_hz=3200 dur_ms=100
+SEQ scalar: observed_stream=AmpEnvelope onset_threshold=18000.0 release_threshold=12000.0 cooldown_ms=50 min_duration_ms=0 max_duration_ms=120 min_peak_strength=8000.0 release_debounce_ms=20 carrier_quality_required=0 min_strength_required=0 min_strength=0.0 min_release_coverage_ms=0 min_longest_island_ms=0 max_gap_ms=0
+FREQBAND runtime: freq.window_samples=64 freq.window_ms=4.00 freq.update_every_samples=4 freq.update_period_ms=0.250 freq.target_hz=3200 freq.produced_fresh_packet=0 freq.packet_age_samples=0 freq.packet_age_ms=0.000
+SEQ running
+
+#1 ----------------
+SEQ_TRIAL trial=1 result=rejected stage=evaluator reject_reason=pattern_rejected source_selection=selected_occurrence source_reason=none dt=na duration_ms=138 contrast_class=strong amp_class=weak coverage_ms=103 island_max_ms=34 gap_max_ms=29 source_strength=17664.0 verdict_confidence=0.00 dup=0 src_total=1 src_acc=1 src_rej=0 buffer_overrun=0 profile=TonalPulseFreq
+
+#2 ----------------
+SEQ_TRIAL trial=2 result=rejected stage=evaluator reject_reason=pattern_rejected source_selection=selected_occurrence source_reason=none dt=na duration_ms=137 contrast_class=unknown amp_class=unknown coverage_ms=103 island_max_ms=33 gap_max_ms=30 source_strength=17656.0 verdict_confidence=0.00 dup=0 src_total=1 src_acc=1 src_rej=0 buffer_overrun=0 profile=TonalPulseFreq
+
+#3 ----------------
+SEQ_TRIAL trial=3 result=rejected stage=evaluator reject_reason=pattern_rejected source_selection=selected_occurrence source_reason=none dt=na duration_ms=137 contrast_class=strong amp_class=weak coverage_ms=103 island_max_ms=33 gap_max_ms=30 source_strength=17327.0 verdict_confidence=0.00 dup=0 src_total=1 src_acc=1 src_rej=0 buffer_overrun=0 profile=TonalPulseFreq
+
+#4 ----------------
+SEQ_TRIAL trial=4 result=rejected stage=evaluator reject_reason=pattern_rejected source_selection=selected_occurrence source_reason=none dt=na duration_ms=138 contrast_class=strong amp_class=weak coverage_ms=102 island_max_ms=34 gap_max_ms=30 source_strength=17711.0 verdict_confidence=0.00 dup=0 src_total=1 src_acc=1 src_rej=0 buffer_overrun=0 profile=TonalPulseFreq
+
+#5 ----------------
+SEQ_TRIAL trial=5 result=rejected stage=evaluator reject_reason=pattern_rejected source_selection=selected_occurrence source_reason=none dt=na duration_ms=138 contrast_class=strong amp_class=weak coverage_ms=103 island_max_ms=34 gap_max_ms=30 source_strength=17629.0 verdict_confidence=0.00 dup=0 src_total=1 src_acc=1 src_rej=0 buffer_overrun=0 profile=TonalPulseFreq
+
+#6 ----------------
+SEQ_TRIAL trial=6 result=rejected stage=evaluator reject_reason=pattern_rejected source_selection=selected_occurrence source_reason=none dt=na duration_ms=137 contrast_class=strong amp_class=weak coverage_ms=102 island_max_ms=33 gap_max_ms=30 source_strength=17755.0 verdict_confidence=0.00 dup=0 src_total=1 src_acc=1 src_rej=0 buffer_overrun=0 profile=TonalPulseFreq
+
+#7 ----------------
+SEQ_TRIAL trial=7 result=rejected stage=evaluator reject_reason=pattern_rejected source_selection=selected_occurrence source_reason=none dt=na duration_ms=137 contrast_class=strong amp_class=weak coverage_ms=103 island_max_ms=33 gap_max_ms=30 source_strength=17740.0 verdict_confidence=0.00 dup=0 src_total=1 src_acc=1 src_rej=0 buffer_overrun=0 profile=TonalPulseFreq
+
+#8 ----------------
+SEQ_TRIAL trial=8 result=rejected stage=evaluator reject_reason=pattern_rejected source_selection=selected_occurrence source_reason=none dt=na duration_ms=137 contrast_class=strong amp_class=weak coverage_ms=103 island_max_ms=33 gap_max_ms=30 source_strength=17370.0 verdict_confidence=0.00 dup=0 src_total=1 src_acc=1 src_rej=0 buffer_overrun=0 profile=TonalPulseFreq
+
+#9 ----------------
+SEQ_TRIAL trial=9 result=rejected stage=evaluator reject_reason=pattern_rejected source_selection=selected_occurrence source_reason=none dt=na duration_ms=138 contrast_class=strong amp_class=weak coverage_ms=104 island_max_ms=33 gap_max_ms=30 source_strength=17708.0 verdict_confidence=0.00 dup=0 src_total=1 src_acc=1 src_rej=0 buffer_overrun=0 profile=TonalPulseFreq
+
+#10 ----------------
+SEQ_TRIAL trial=10 result=rejected stage=evaluator reject_reason=pattern_rejected source_selection=selected_occurrence source_reason=none dt=na duration_ms=138 contrast_class=strong amp_class=weak coverage_ms=102 island_max_ms=33 gap_max_ms=29 source_strength=17668.0 verdict_confidence=0.00 dup=0 src_total=1 src_acc=1 src_rej=0 buffer_overrun=0 profile=TonalPulseFreq
+
+#11 ----------------
+SEQ_TRIAL trial=11 result=rejected stage=evaluator reject_reason=pattern_rejected source_selection=selected_occurrence source_reason=none dt=na duration_ms=138 contrast_class=strong amp_class=weak coverage_ms=102 island_max_ms=33 gap_max_ms=29 source_strength=17639.0 verdict_confidence=0.00 dup=0 src_total=1 src_acc=1 src_rej=0 buffer_overrun=0 profile=TonalPulseFreq
+
+#12 ----------------
+SEQ_TRIAL trial=12 result=rejected stage=evaluator reject_reason=pattern_rejected source_selection=selected_occurrence source_reason=none dt=na duration_ms=138 contrast_class=strong amp_class=weak coverage_ms=102 island_max_ms=33 gap_max_ms=29 source_strength=17294.0 verdict_confidence=0.00 dup=0 src_total=1 src_acc=1 src_rej=0 buffer_overrun=0 profile=TonalPulseFreq
+
+#13 ----------------
+SEQ_TRIAL trial=13 result=rejected stage=evaluator reject_reason=pattern_rejected source_selection=selected_occurrence source_reason=none dt=na duration_ms=138 contrast_class=strong amp_class=weak coverage_ms=104 island_max_ms=33 gap_max_ms=29 source_strength=17771.0 verdict_confidence=0.00 dup=0 src_total=1 src_acc=1 src_rej=0 buffer_overrun=0 profile=TonalPulseFreq
+
+#14 ----------------
+SEQ_TRIAL trial=14 result=rejected stage=evaluator reject_reason=pattern_rejected source_selection=selected_occurrence source_reason=none dt=na duration_ms=138 contrast_class=strong amp_class=weak coverage_ms=102 island_max_ms=34 gap_max_ms=29 source_strength=17749.0 verdict_confidence=0.00 dup=0 src_total=1 src_acc=1 src_rej=0 buffer_overrun=0 profile=TonalPulseFreq
+
+#15 ----------------
+SEQ_TRIAL trial=15 result=rejected stage=evaluator reject_reason=pattern_rejected source_selection=selected_occurrence source_reason=none dt=na duration_ms=137 contrast_class=strong amp_class=weak coverage_ms=103 island_max_ms=33 gap_max_ms=30 source_strength=16930.0 verdict_confidence=0.00 dup=0 src_total=1 src_acc=1 src_rej=0 buffer_overrun=0 profile=TonalPulseFreq
+
+#16 ----------------
+SEQ_TRIAL trial=16 result=rejected stage=evaluator reject_reason=pattern_rejected source_selection=selected_occurrence source_reason=none dt=na duration_ms=138 contrast_class=strong amp_class=weak coverage_ms=102 island_max_ms=33 gap_max_ms=29 source_strength=17759.0 verdict_confidence=0.00 dup=0 src_total=1 src_acc=1 src_rej=0 buffer_overrun=0 profile=TonalPulseFreq
+
+#17 ----------------
+SEQ_TRIAL trial=17 result=rejected stage=evaluator reject_reason=pattern_rejected source_selection=selected_occurrence source_reason=none dt=na duration_ms=137 contrast_class=strong amp_class=weak coverage_ms=102 island_max_ms=34 gap_max_ms=30 source_strength=17435.0 verdict_confidence=0.00 dup=0 src_total=1 src_acc=1 src_rej=0 buffer_overrun=0 profile=TonalPulseFreq
+
+#18 ----------------
+SEQ_TRIAL trial=18 result=rejected stage=evaluator reject_reason=pattern_rejected source_selection=selected_occurrence source_reason=none dt=na duration_ms=138 contrast_class=strong amp_class=weak coverage_ms=103 island_max_ms=34 gap_max_ms=30 source_strength=17652.0 verdict_confidence=0.00 dup=0 src_total=1 src_acc=1 src_rej=0 buffer_overrun=0 profile=TonalPulseFreq
+
+#19 ----------------
+SEQ_TRIAL trial=19 result=rejected stage=evaluator reject_reason=pattern_rejected source_selection=selected_occurrence source_reason=none dt=na duration_ms=137 contrast_class=unknown amp_class=unknown coverage_ms=103 island_max_ms=33 gap_max_ms=30 source_strength=17617.0 verdict_confidence=0.00 dup=0 src_total=1 src_acc=1 src_rej=0 buffer_overrun=0 profile=TonalPulseFreq
+
+#20 ----------------
+SEQ_TRIAL trial=20 result=rejected stage=evaluator reject_reason=pattern_rejected source_selection=selected_occurrence source_reason=none dt=na duration_ms=137 contrast_class=strong amp_class=weak coverage_ms=103 island_max_ms=33 gap_max_ms=30 source_strength=17330.0 verdict_confidence=0.00 dup=0 src_total=1 src_acc=1 src_rej=0 buffer_overrun=0 profile=TonalPulseFreq
+
+#21 ----------------
+SEQ_TRIAL trial=21 result=rejected stage=evaluator reject_reason=pattern_rejected source_selection=selected_occurrence source_reason=none dt=na duration_ms=137 contrast_class=unknown amp_class=unknown coverage_ms=103 island_max_ms=33 gap_max_ms=30 source_strength=17761.0 verdict_confidence=0.00 dup=0 src_total=1 src_acc=1 src_rej=0 buffer_overrun=0 profile=TonalPulseFreq
+
+#22 ----------------
+SEQ_TRIAL trial=22 result=rejected stage=evaluator reject_reason=pattern_rejected source_selection=selected_occurrence source_reason=none dt=na duration_ms=137 contrast_class=unknown amp_class=unknown coverage_ms=102 island_max_ms=33 gap_max_ms=29 source_strength=17766.0 verdict_confidence=0.00 dup=0 src_total=1 src_acc=1 src_rej=0 buffer_overrun=0 profile=TonalPulseFreq
+
+#23 ----------------
+SEQ_TRIAL trial=23 result=rejected stage=evaluator reject_reason=pattern_rejected source_selection=selected_occurrence source_reason=none dt=na duration_ms=137 contrast_class=strong amp_class=weak coverage_ms=103 island_max_ms=33 gap_max_ms=29 source_strength=16957.0 verdict_confidence=0.00 dup=0 src_total=1 src_acc=1 src_rej=0 buffer_overrun=0 profile=TonalPulseFreq
+
+#24 ----------------
+SEQ_TRIAL trial=24 result=rejected stage=evaluator reject_reason=pattern_rejected source_selection=selected_occurrence source_reason=none dt=na duration_ms=137 contrast_class=strong amp_class=weak coverage_ms=103 island_max_ms=33 gap_max_ms=29 source_strength=17705.0 verdict_confidence=0.00 dup=0 src_total=1 src_acc=1 src_rej=0 buffer_overrun=0 profile=TonalPulseFreq
+
+#25 ----------------
+SEQ_TRIAL trial=25 result=rejected stage=evaluator reject_reason=pattern_rejected source_selection=selected_occurrence source_reason=none dt=na duration_ms=137 contrast_class=strong amp_class=weak coverage_ms=103 island_max_ms=33 gap_max_ms=30 source_strength=17452.0 verdict_confidence=0.00 dup=0 src_total=1 src_acc=1 src_rej=0 buffer_overrun=0 profile=TonalPulseFreq
+
+#26 ----------------
+SEQ_TRIAL trial=26 result=rejected stage=evaluator reject_reason=pattern_rejected source_selection=selected_occurrence source_reason=none dt=na duration_ms=137 contrast_class=unknown amp_class=unknown coverage_ms=101 island_max_ms=34 gap_max_ms=29 source_strength=17626.0 verdict_confidence=0.00 dup=0 src_total=1 src_acc=1 src_rej=0 buffer_overrun=0 profile=TonalPulseFreq
+
+#27 ----------------
+SEQ_TRIAL trial=27 result=rejected stage=evaluator reject_reason=pattern_rejected source_selection=selected_occurrence source_reason=none dt=na duration_ms=137 contrast_class=unknown amp_class=unknown coverage_ms=103 island_max_ms=33 gap_max_ms=30 source_strength=17650.0 verdict_confidence=0.00 dup=0 src_total=1 src_acc=1 src_rej=0 buffer_overrun=0 profile=TonalPulseFreq
+
+#28 ----------------
+SEQ_TRIAL trial=28 result=rejected stage=evaluator reject_reason=pattern_rejected source_selection=selected_occurrence source_reason=none dt=na duration_ms=137 contrast_class=strong amp_class=weak coverage_ms=103 island_max_ms=33 gap_max_ms=29 source_strength=17319.0 verdict_confidence=0.00 dup=0 src_total=1 src_acc=1 src_rej=0 buffer_overrun=0 profile=TonalPulseFreq
+
+#29 ----------------
+SEQ_TRIAL trial=29 result=rejected stage=evaluator reject_reason=pattern_rejected source_selection=selected_occurrence source_reason=none dt=na duration_ms=137 contrast_class=strong amp_class=weak coverage_ms=103 island_max_ms=33 gap_max_ms=29 source_strength=17793.0 verdict_confidence=0.00 dup=0 src_total=1 src_acc=1 src_rej=0 buffer_overrun=0 profile=TonalPulseFreq
+
+#30 ----------------
+SEQ_TRIAL trial=30 result=rejected stage=evaluator reject_reason=pattern_rejected source_selection=selected_occurrence source_reason=none dt=na duration_ms=138 contrast_class=strong amp_class=weak coverage_ms=103 island_max_ms=33 gap_max_ms=30 source_strength=17740.0 verdict_confidence=0.00 dup=0 src_total=1 src_acc=1 src_rej=0 buffer_overrun=0 profile=TonalPulseFreq
+SEQ_SUMMARY profile=TonalPulseFreq detector=frequency_match trials=30 completed=30 expected_trials=0 early_trials=0 late_trials=0 miss_trials=0 duplicate_trials=0 unexpected_trials=0 rejected_trials=30 buffer_overrun_trials=0 ambiguous_trials=0 too_dense_trials=0 detector_accepted_trials=30 detector_reject_trials=0 pattern_valid_trials=0 pattern_rejected_trials=30 avg_dt_ms=-1 avg_strength=17572.4 avg_conf=0.00

@@ -86,6 +86,9 @@ Chirp / output emit          -> could be AXIS-shaped (ACTION, tracked,
 
 Status: DEFERRED
 
+ESP-NOW shape decided: `docs/decisions/2026-10-08-espnow-vektor-subset.md`
+(WRITE + polled STATE + one APPLY action, plus a broadcast nodeId extension).
+
 ```text
 DESCRIBE.
 State and event exposure.

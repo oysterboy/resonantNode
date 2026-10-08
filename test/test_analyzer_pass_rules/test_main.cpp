@@ -1,5 +1,6 @@
 #include <Arduino.h>
 #include <initializer_list>
+#include <memory>
 #include <unity.h>
 
 #include "../../src/audio/AudioSignal.h"
@@ -34,6 +35,16 @@ AudioSamplePacket makePacket(unsigned long timeMs, uint64_t sampleIndex, int lev
     packet.rawHistoryReady = true;
     packet.overflowDuringBlock = false;
     return packet;
+}
+
+// FeatureHistory is about 18.6 KB, more than the 16 KB loop-task stack the
+// tests run on, so tests keep it on the heap. It also records only streams
+// bound with setActiveStreams() (since 795f649), so bind the one under test.
+std::unique_ptr<detection::FeatureHistory> makeHistory(
+    detection::FeatureStreamId stream = detection::FeatureStreamId::AmpMagnitude) {
+    std::unique_ptr<detection::FeatureHistory> history(new detection::FeatureHistory());
+    history->setActiveStreams(&stream, 1);
+    return history;
 }
 
 void recordSeries(detection::FeatureHistory& history,
@@ -77,7 +88,8 @@ void driveAcceptedOccurrence(ScalarTransientDetector& detector,
 } // namespace
 
 void test_feature_history_empty_window() {
-    detection::FeatureHistory history;
+    auto historyOwner = makeHistory();
+    detection::FeatureHistory& history = *historyOwner;
     const auto window = history.getWindow(
         detection::FeatureStreamId::AmpMagnitude,
         0,
@@ -95,7 +107,8 @@ void test_feature_history_empty_window() {
 }
 
 void test_feature_history_single_value_quantiles() {
-    detection::FeatureHistory history;
+    auto historyOwner = makeHistory();
+    detection::FeatureHistory& history = *historyOwner;
     recordSeries(history, {42.0f});
     const auto window = history.getWindow(detection::FeatureStreamId::AmpMagnitude, 0, 0, 0);
 
@@ -110,8 +123,10 @@ void test_feature_history_single_value_quantiles() {
 }
 
 void test_feature_history_sorted_and_reverse_sorted_quantiles_match() {
-    detection::FeatureHistory sortedHistory;
-    detection::FeatureHistory reverseHistory;
+    auto sortedHistoryOwner = makeHistory();
+    detection::FeatureHistory& sortedHistory = *sortedHistoryOwner;
+    auto reverseHistoryOwner = makeHistory();
+    detection::FeatureHistory& reverseHistory = *reverseHistoryOwner;
     recordSeries(sortedHistory, {1.0f, 2.0f, 3.0f, 4.0f});
     recordSeries(reverseHistory, {4.0f, 3.0f, 2.0f, 1.0f});
 
@@ -131,7 +146,8 @@ void test_feature_history_sorted_and_reverse_sorted_quantiles_match() {
 }
 
 void test_feature_history_duplicate_values_quantiles() {
-    detection::FeatureHistory history;
+    auto historyOwner = makeHistory();
+    detection::FeatureHistory& history = *historyOwner;
     recordSeries(history, {2.0f, 2.0f, 2.0f, 2.0f});
     const auto window = history.getWindow(detection::FeatureStreamId::AmpMagnitude, 0, 3, 3);
 
@@ -143,7 +159,8 @@ void test_feature_history_duplicate_values_quantiles() {
 }
 
 void test_feature_history_coverage_ratio_is_bounded() {
-    detection::FeatureHistory history;
+    auto historyOwner = makeHistory();
+    detection::FeatureHistory& history = *historyOwner;
     for (unsigned long i = 0; i < 32; ++i) {
         history.record(detection::FeatureStreamId::AmpMagnitude, i, static_cast<float>(i + 1U));
     }

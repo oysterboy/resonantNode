@@ -24,10 +24,8 @@ BENCH_ROOT = os.path.join(REPO_ROOT, "bench")
 
 if not os.path.isfile(os.path.join(BENCH_ROOT, "README.md")):
     raise SystemExit(
-        "bench/ is not checked out. Bench data lives on the orphan branch 'bench':
-"
-        "  git fetch origin bench && git worktree add bench bench
-"
+        "bench/ is not checked out. Bench data lives on the orphan branch 'bench':\n"
+        "  git fetch origin bench && git worktree add bench bench\n"
         "(run from the main checkout; see docs/decisions/2026-10-08-bench-data-in-repo.md)")
 
 

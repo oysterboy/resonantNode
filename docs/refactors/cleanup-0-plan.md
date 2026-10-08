@@ -256,6 +256,55 @@ start it on top of still-unverified Phase 2/3 output changes.
 
 ---
 
+## Hardware results, 2026-10-08 (issue #7, piezo boards)
+
+Baseline `847b1ef` (parent of `0102896`) vs current `62a949e` (same firmware
+source as `828f455`/`fbbc2db`), analyzer + piezo emitter over UART2. Raw logs,
+setup and per-run firmware hashes: branch `bench`, sessions
+`2026-10-08-issue7-70cm`, `-40cm`, `-10cm` (commit `10a166c`).
+
+- **T2 (TonalPulseFreq): not evaluable at profile defaults.** The detector
+  never opens on this hardware: `attackScoreMin = 18000`, measured peak
+  frequency score about 16,000 at 10 cm, 7,000 at 70 cm. 50/50 miss on both
+  firmware at 10/40/70 cm. With a runtime override (`PARAM freqScore=12000
+  freqReleaseScore=8000`, both firmware), every trial is detected and then
+  rejected by the verdict on the amp requirement on both firmware. Verdict
+  outcome unchanged. Detector truth changed as `7d33fed` intended: the
+  baseline never set `accepted.present` on accept, current does (50/50).
+- **T3 (TonalPulseScalar): one behavior change, bisected.** Detector accepts
+  50/50 on both firmware at every distance. The baseline intermittently
+  inspects an empty history window (`history_window_incomplete`,
+  `available_start_ms=0`), rejecting 2-12 of 50 trials; current shows it in
+  0 of 130 scalar trials. `git bisect` pins the change to `795f649` (5c.2,
+  FeatureHistory records only plan streams), whose message expected no
+  inspection change. Likely load-dependent, see Item 2 below.
+- **Item 2 two-run comparison: detector truth identical.** Diagnostics off
+  vs on (Freq with the override, 30 trials each): 30/30 accepted, no
+  rejects, both runs. Inspection is not identical: empty-history windows
+  appear in 14/30 trials with diagnostics on, 0/30 off. So the empty-history
+  failure is reduced by `795f649` but not gone; it tracks loop load.
+- **T6: pass.** Freq -> Scalar -> Freq within one boot, 30 trials each, no
+  stale state; each profile behaves as after a fresh boot.
+- **T7: pass, by observation.** Node (`env:esp32dev`, TonalPulseScalar)
+  responds to the emitter at 10 cm about 100% (owner observed on bench).
+  The Node printed no event lines over serial with `RB debug events`, so
+  there is no log of it.
+- **T4: pass after a test fix.** The suite had never run on-device: each
+  test put an 18.6 KB `FeatureHistory` on the 16 KB loop stack (stack
+  canary panic before the first assertion; 24.8 KB before 5c, so this
+  predates the cleanup). Since `795f649` the history also drops unbound
+  streams, which these tests never bound. Tests now heap-allocate and bind
+  `AmpMagnitude`; 9/9 pass.
+- Field names: only the planned pattern -> verdict rename labels differ.
+  The first emitter remote claim after each analyzer boot times out.
+
+**Gate status: not closed.** T2 and T3 moved for reasons outside "Item 2's
+gate fields only": `7d33fed` (intended fix) and `795f649` (unintended,
+beneficial). Accepting both, and opening a follow-up for the load-dependent
+empty-history inspection, is the owner's call.
+
+---
+
 ## Phase 4 — Let Phase 1–3 Soak
 
 Not a code phase. Run the Node build in normal use for a period before

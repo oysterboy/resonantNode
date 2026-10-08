@@ -1,0 +1,119 @@
+{
+  "purpose": "issue #7 T2/T3 baseline attempt; Freq profile does not hear the emitter at this distance",
+  "created": "2026-10-08T16:26:49",
+  "setup": {
+    "distance_cm": 70.0,
+    "orientation": "vertical emit, vertical mic",
+    "emitter_fw": "62a949e",
+    "notes": []
+  },
+  "runs": [
+    {
+      "name": "T2_freq",
+      "file": "T2_freq.847b1ef.log",
+      "firmware": {
+        "role": "analyzer",
+        "git": "847b1ef",
+        "version": "0.4.0"
+      },
+      "started": "2026-10-08T16:08:40",
+      "summary": {
+        "profile": "TonalPulseFreq",
+        "detector": "frequency_match",
+        "complete": true,
+        "trial_results": {
+          "miss": 49,
+          "rejected": 1
+        },
+        "line_counts": {
+          "SEQ_TRIAL": 50,
+          "SEQ_INSPECT": 50,
+          "SEQ_SOURCE": 50,
+          "SEQ_SOURCE_CORE": 50,
+          "SEQ_EXPLAIN": 50,
+          "SEQ_SOURCE_SPEC": 1,
+          "SEQ_SUMMARY": 1
+        },
+        "trials": "50",
+        "completed": "50",
+        "expected_trials": "0",
+        "early_trials": "0",
+        "late_trials": "0",
+        "miss_trials": "49",
+        "duplicate_trials": "0",
+        "unexpected_trials": "0",
+        "rejected_trials": "1",
+        "buffer_overrun_trials": "0",
+        "detector_accepted_trials": "0",
+        "detector_reject_trials": "1",
+        "pattern_valid_trials": "0",
+        "pattern_rejected_trials": "0",
+        "avg_dt_ms": "1892",
+        "avg_strength": "20878.0",
+        "avg_conf": "0.00"
+      }
+    },
+    {
+      "name": "T3_scalar",
+      "file": "T3_scalar.847b1ef.log",
+      "firmware": {
+        "role": "analyzer",
+        "git": "847b1ef",
+        "version": "0.4.0"
+      },
+      "started": "2026-10-08T16:11:28",
+      "summary": {
+        "profile": "TonalPulseScalar",
+        "detector": "scalar_transient",
+        "complete": true,
+        "trial_results": {
+          "expected": 48,
+          "rejected": 2
+        },
+        "line_counts": {
+          "SEQ_TRIAL": 50,
+          "SEQ_INSPECT": 100,
+          "SEQ_SOURCE": 50,
+          "SEQ_SOURCE_CORE": 50,
+          "SEQ_SOURCE_SPEC": 50,
+          "SEQ_EXPLAIN": 50,
+          "SEQ_SUMMARY": 1
+        },
+        "trials": "50",
+        "completed": "50",
+        "expected_trials": "48",
+        "early_trials": "0",
+        "late_trials": "0",
+        "miss_trials": "0",
+        "duplicate_trials": "0",
+        "unexpected_trials": "0",
+        "rejected_trials": "2",
+        "buffer_overrun_trials": "0",
+        "detector_accepted_trials": "50",
+        "detector_reject_trials": "0",
+        "pattern_valid_trials": "48",
+        "pattern_rejected_trials": "2",
+        "avg_dt_ms": "-1",
+        "avg_strength": "7025.8",
+        "avg_conf": "1.00"
+      }
+    },
+    {
+      "name": "RAW_feat_3200",
+      "file": "RAW_feat_3200.847b1ef.log",
+      "firmware": {
+        "role": "analyzer",
+        "git": "847b1ef",
+        "version": "0.4.0"
+      },
+      "started": "2026-10-08T16:12:02",
+      "summary": {
+        "profile": null,
+        "detector": null,
+        "complete": false,
+        "trial_results": {},
+        "line_counts": {}
+      }
+    }
+  ]
+}

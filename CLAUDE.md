@@ -208,6 +208,15 @@ roadmaps), and don't add Projects boards or milestones.
 - `docs/specs/vektor-spec.md`, `docs/roadmaps/roadmap-vektor-later.md` —
   future VEKTOR exposure surface; not active runtime behavior.
 - `docs/lab/` — informal experiment notes, append-only, never needs cleanup.
+- `bench/` — committed hardware-run evidence (SEQ logs + setup + firmware
+  hash per session, `baselines.csv`, generated `index.csv`). It is the
+  orphan branch `bench`, checked out as a worktree at `bench/` (gitignored
+  on `main`): `git fetch origin bench && git worktree add bench bench`;
+  commit there with `git -C bench`, never bench data on `main`. See its
+  `README.md`. Run SEQ tests with `tools/bench/seqrun.py`, compare
+  with `tools/bench/seqcmp.py`. A gate result or lab finding cites a
+  `bench/sessions/...` path, never a run that only exists in gitignored
+  `logs/`.
 
 ## Cross-session / cross-surface continuity
 

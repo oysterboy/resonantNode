@@ -17,9 +17,21 @@ plus status back. On the wire it uses a subset of VEKTOR v1
   `CMD(ACTION)`: `cmd_id`, ACK, must resolve.
 - Confirmation of writes comes from `STATE` (node reports a version /
   checksum of its params), not from per-write ACKs.
+- On / off → `CMD(WRITE)` of a state (e.g. `SYSTEM.enabled = 0|1`),
+  never a toggle, so repeated or duplicated packets are harmless.
+  Confirmed via `STATE`; the hub re-sends to nodes that still differ.
 - Extension, documented as part of the ESP-NOW transport binding:
   a broadcast / group `nodeId`, sent as one ESP-NOW broadcast, repeated
   2–3× with a sequence number for de-duplication.
+- Broadcast APPLY: a node with nothing staged treats APPLY as a no-op
+  and reports no error. A node cannot tell "not addressed" from "missed
+  the SET", so the hub checks that the addressed nodes report the
+  expected staged version before sending APPLY. A broadcast APPLY
+  resolves through the next polled `STATE` (active version), not through
+  per-node ACKs, which would collide. This deviates from VEKTOR's
+  "action must be ACKed" and belongs to the broadcast extension.
+- Fallback: a node that hears no hub poll for a few seconds goes to a
+  safe state (off).
 
 Continuous multi-channel streaming (e.g. 5 channels × 100 nodes at
 50 Hz, 3 channels back) is outside this decision and outside VEKTOR v1.

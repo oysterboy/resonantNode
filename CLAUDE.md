@@ -214,7 +214,11 @@ roadmaps), and don't add Projects boards or milestones.
 - `docs/specs/myspec.md` — canonical architecture spec; see above.
 - `docs/specs/vektor-spec.md`, `docs/roadmaps/roadmap-vektor-later.md` —
   future VEKTOR exposure surface; not active runtime behavior.
-- `docs/lab/` — informal experiment notes, append-only, never needs cleanup.
+- `docs/lab/` — notes and research, append-only: `notes_lab.md` running
+  notebook, `experiments/ENNN_<topic>.md` one file per study (protocol +
+  dated log citing bench sessions), raw notes as `YYYY-MM-DD-<slug>.md`.
+  Conventions in `docs/lab/README.md`. Roadmap items point at an
+  experiment for the protocol; the roadmap keeps the when.
 - `bench/` — committed hardware-run evidence (SEQ logs + setup + firmware
   hash per session, `baselines.csv`, generated `index.csv`). It is the
   orphan branch `bench`, checked out as a worktree at `bench/` (gitignored

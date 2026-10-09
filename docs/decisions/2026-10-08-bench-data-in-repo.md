@@ -18,7 +18,7 @@ setup; `bench/index.csv` is generated. `logs/` stays gitignored scratch.
   pre-cleanup commit `847b1ef` just to have something to compare against.
 - Setup decides the result: the same 50-trial TonalPulseFreq run missed
   49/50 at 70 cm and 50/50 at 40 cm, while TonalPulseScalar passed 48/50 at
-  70 cm. The September distance ladder (`docs/lab/260903_notes`) recorded
+  70 cm. The September distance ladder (`docs/lab/2026-09-03-exp001-notes.md`) recorded
   distance only in prose and no firmware hash.
 - Logs lived on one machine; web sessions and other surfaces could not see
   any evidence behind a results line.

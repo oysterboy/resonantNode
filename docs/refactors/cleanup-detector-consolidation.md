@@ -91,7 +91,7 @@ with `DetectorId::FrequencyMatch`, `OccurrenceType::Frequency`,
   per-sample gate. This is a real detection-quality question, not a
   structural one.
 - The most recent relevant field evidence is inconclusive in the direction
-  that matters here: `docs/lab/260903_notes` (`exp001-01`/`exp001-03`)
+  that matters here: `docs/lab/2026-09-03-exp001-notes.md` (`exp001-01`/`exp001-03`)
   records `TonalPulseScalar`-style runs producing `amp_class=weak`
   rejections at the pattern stage at 20-40cm, and the most recent commit
   (`exp001 - distance ladder, inconclusive`) explicitly labels that

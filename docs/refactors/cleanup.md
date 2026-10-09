@@ -39,12 +39,12 @@ and `cleanup-detector-consolidation.md` referenced the original (wrong)
 Two existing lab notes independently confirm the RAM/stack risk targeted by
 Item 1:
 
-- `docs/roadmaps/notes` ("MEMORY STACK ANALYSER") measures
+- `docs/lab/2026-09-memory-stack-analysis.md` ("MEMORY STACK ANALYSER") measures
   `DetectionRuntime::resetDetectionState()` at a 1552-byte stack frame and
   both detector `resetState()` calls at 416 bytes each, nested directly under
   it, and names `resetDetectionState()` nesting as one of the two strongest
   candidates to reduce.
-- `docs/lab/260903_notes` (`exp001-04`, `exp001-05/-06`) records a real
+- `docs/lab/2026-09-03-exp001-notes.md` (`exp001-04`, `exp001-05/-06`) records a real
   `Stack canary watchpoint triggered (loopTask)` crash after sequence
   completion, with stack margin observed as low as 44 words, on the same
   reset/sequence-start path.

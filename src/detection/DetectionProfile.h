@@ -168,9 +168,9 @@ inline DetectionProfile makeTonalPulseScalarProfile() {
     profile.inspectionPlan.modules[1].magnitude.windowPostMs = 100; // Inspect the first 100 ms after onset.
     profile.inspectionPlan.modules[1].minimumStrength = StrengthClass::Medium; // Require at least medium evidence.
     profile.inspectionPlan.modules[1].magnitude.mode = MagnitudeInspectionMode::P75; // Use a robust percentile summary.
-    profile.inspectionPlan.modules[1].magnitude.supportStrength.strongPeakThreshold = 5000.0f; // Strong amplitude threshold.
-    profile.inspectionPlan.modules[1].magnitude.supportStrength.mediumPeakThreshold = 2500.0f; // Medium amplitude threshold.
-    profile.inspectionPlan.modules[1].magnitude.supportStrength.weakPeakThreshold = 1000.0f; // Weak amplitude threshold.
+    profile.inspectionPlan.modules[1].magnitude.supportStrength.strongPeakThreshold = 2000.0f; // Strong amplitude threshold.
+    profile.inspectionPlan.modules[1].magnitude.supportStrength.mediumPeakThreshold = 1000.0f; // Medium amplitude threshold.
+    profile.inspectionPlan.modules[1].magnitude.supportStrength.weakPeakThreshold = 500.0f; // Weak amplitude threshold.
     profile.inspectionPlan.count = 2; // This profile uses two inspectors.
 
     profile.inspectionPlan.failedRequirementMeansUncertain = true; // Legacy compatibility flag for failed requirement handling.
@@ -212,9 +212,9 @@ inline DetectionProfile makeTonalPulseFreqProfile() {
     profile.inspectionPlan.modules[0].magnitude.mode = MagnitudeInspectionMode::PeakCentered;
     profile.inspectionPlan.modules[0].magnitude.windowPreMs = 10;
     profile.inspectionPlan.modules[0].magnitude.windowPostMs = 90;
-    profile.inspectionPlan.modules[0].magnitude.supportStrength.strongPeakThreshold = 18000.0f;
-    profile.inspectionPlan.modules[0].magnitude.supportStrength.mediumPeakThreshold = 12000.0f;
-    profile.inspectionPlan.modules[0].magnitude.supportStrength.weakPeakThreshold = 8000.0f;
+    profile.inspectionPlan.modules[0].magnitude.supportStrength.strongPeakThreshold = 4000.0f;
+    profile.inspectionPlan.modules[0].magnitude.supportStrength.mediumPeakThreshold = 2500.0f;
+    profile.inspectionPlan.modules[0].magnitude.supportStrength.weakPeakThreshold = 1200.0f;
 
     profile.inspectionPlan.modules[1].kind = InspectionModuleKind::MagnitudeFeatureStrength;
     profile.inspectionPlan.modules[1].target = InspectionTarget::TargetScore;
@@ -225,9 +225,9 @@ inline DetectionProfile makeTonalPulseFreqProfile() {
     profile.inspectionPlan.modules[1].magnitude.mode = MagnitudeInspectionMode::PeakCentered;
     profile.inspectionPlan.modules[1].magnitude.windowPreMs = 10;
     profile.inspectionPlan.modules[1].magnitude.windowPostMs = 90;
-    profile.inspectionPlan.modules[1].magnitude.supportStrength.strongPeakThreshold = 18000.0f;
-    profile.inspectionPlan.modules[1].magnitude.supportStrength.mediumPeakThreshold = 12000.0f;
-    profile.inspectionPlan.modules[1].magnitude.supportStrength.weakPeakThreshold = 8000.0f;
+    profile.inspectionPlan.modules[1].magnitude.supportStrength.strongPeakThreshold = 4000.0f;
+    profile.inspectionPlan.modules[1].magnitude.supportStrength.mediumPeakThreshold = 2500.0f;
+    profile.inspectionPlan.modules[1].magnitude.supportStrength.weakPeakThreshold = 1200.0f;
 
     profile.inspectionPlan.modules[2].kind = InspectionModuleKind::MagnitudeFeatureStrength;
     profile.inspectionPlan.modules[2].target = InspectionTarget::Contrast;

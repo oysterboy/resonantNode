@@ -48,14 +48,33 @@ Do these in order. Each step names its gate; don't start the next step with
 the previous gate open unless the step says it can run in parallel.
 
 ```text
-1. [NEXT] Clear the hardware verification backlog, on the piezo nodes.
-   (issue #7)
+1. [LANDED 2026-10-09] Clear the hardware verification backlog, on the
+   piezo nodes. (issue #7, closed)
    Where: DET-008 -> docs/refactors/cleanup-0-plan.md (T2, T3, T6, T7 for
    Phases 1, 2, 3, 5a, 5c; T4 on-device).
    Why on piezo: the pre-phase SEQ baselines were recorded on piezo nodes;
    the check compares firmware before/after on the same hardware.
    Gate: T2/T3 diffs match the expected changes, T7 node smoke test passes,
    results recorded in cleanup-0-plan.md.
+   Closed: results in cleanup-0-plan.md "Hardware results, 2026-10-08";
+   the two T2/T3 changes (7d33fed, 795f649) accepted by the owner. Raw runs
+   on branch `bench`. Left behind: steps 1a and 1b.
+
+1a. [NEXT] Inspection reads an empty FeatureHistory window under loop load.
+   (issue #26)
+   Where: DET-009 (roadmap-detection.md).
+   Why before step 2: found by step 1; load-dependent, and the D-AMP HAL
+   changes both the audio path and the loop load, so fix and verify it on
+   the hardware the evidence came from.
+   Gate: mechanism written up, fix committed, 0 empty-history inspections
+   on the reproducer (Freq + diagnostics on) and on TonalPulseScalar, T1,
+   T4.
+
+1b. [NEXT] Classify the I2S MEMS drift (mic LF output vs an integrating
+   stage). (issue #24)
+   Where: docs/refactors/i2s-first-difference-revisit.md.
+   Why before step 2: decides which PCM preprocessor the D-AMP HAL carries.
+   Gate: as issue #24 states. Runs in parallel with 1a (same bench).
 
 2. [NEXT] D-AMP board support in firmware. (issue #19)
    Where: NODE-009 (roadmap-node.md).
@@ -64,8 +83,9 @@ the previous gate open unless the step says it can run in parallel.
    AudioSource and a sine ToneOutput (mic and amp share BCLK/WS on 26/25).
    Gate: all piezo and D-AMP envs build, piezo builds unchanged, a D-AMP
    node reads the mic and chirps on bench.
-   Can run in parallel with step 1. Needs a working PlatformIO build
-   (VS Code, or the registry hosts allowed in the cloud env).
+   Starts after steps 1a and 1b (owner's call, 2026-10-09). Needs a working
+   PlatformIO build (VS Code, or the registry hosts allowed in the cloud
+   env).
 
 3. Piezo vs D-AMP bench A/B. (issue #20)
    Where: NODE-010 (roadmap-node.md); same bench session as

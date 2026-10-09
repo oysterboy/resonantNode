@@ -298,10 +298,11 @@ setup and per-run firmware hashes: branch `bench`, sessions
 - Field names: only the planned pattern -> verdict rename labels differ.
   The first emitter remote claim after each analyzer boot times out.
 
-**Gate status: not closed.** T2 and T3 moved for reasons outside "Item 2's
-gate fields only": `7d33fed` (intended fix) and `795f649` (unintended,
-beneficial). Accepting both, and opening a follow-up for the load-dependent
-empty-history inspection, is the owner's call.
+**Gate: closed 2026-10-09.** T2 and T3 moved for reasons outside "Item
+2's gate fields only": `7d33fed` (intended fix) and `795f649` (unintended,
+beneficial). The owner accepted both as the expected changes. The
+load-dependent empty-history inspection that remains is its own item:
+DET-009, step 1a, issue #26.
 
 ---
 
@@ -797,13 +798,13 @@ decision is: consolidate" section instead:
 | Phase | Doc | Depends on | Key tests |
 |---|---|---|---|
 | 0 | consolidation | — (parallel track) | field trials only |
-| 1 | cleanup.md #4 (done), inspector-pattern-scope (done), ~~cleanup.md #1~~ (withdrawn), Magnitude/Band rename (done, out-of-band) | — | T1 (done), T2-T4 (hardware, outstanding) |
-| 2 | cleanup.md #2, #3 (both implemented, hardware verification outstanding) | Phase 0 = keep | T1 (done, all 3 envs, full build), T2, T4 (outstanding) |
-| 3 | cleanup.md #5 (implemented, hardware verification outstanding) | — (Item 1 dependency removed; Phase 2 optional) | T1 (done), T2, T3, T6 (outstanding) |
+| 1 | cleanup.md #4 (done), inspector-pattern-scope (done), ~~cleanup.md #1~~ (withdrawn), Magnitude/Band rename (done, out-of-band) | — | T1-T4 (done, hardware 2026-10-08) |
+| 2 | cleanup.md #2, #3 (implemented, hardware-verified 2026-10-08) | Phase 0 = keep | T1, T2, T4 (done) |
+| 3 | cleanup.md #5 (implemented, hardware-verified 2026-10-08) | — (Item 1 dependency removed; Phase 2 optional) | T1, T2, T3, T6 (done) |
 | 4 | soak, no doc | Phases 1-3 | T7 |
-| 5a | analyzer-node-isolation (implemented, hardware verification outstanding) | Phases 1-4 | T1, T8 (done); T2, T3, T6, T7 (outstanding) |
+| 5a | analyzer-node-isolation (implemented, hardware-verified 2026-10-08) | Phases 1-4 | T1, T8, T2, T3, T6, T7 (done) |
 | 5b | detector-ownership (deferred on measurement: 1,440 bytes, UB hazard) | Phase 5a | T5 (done, led to deferral) |
-| 5c | FeatureHistory (two commits, -14,440 bytes; not in a proposal doc) | measured during 5b | T1 (done); T2, T3, T6, T7 (outstanding) |
+| 5c | FeatureHistory (two commits, -14,440 bytes; not in a proposal doc) | measured during 5b | T1, T2, T3, T6, T7 (done; T3 changed, see DET-009) |
 | 5d | detector-family-build (proposal; supersedes 5b) | — | not started |
 | 6 | SimpleThresholdDetector family (the MVP detector; 5d acceptance test) | Phase 5d | T1 (seven envs), T7; own first SEQ baseline |
 | 7c | fold Evaluator into Inspector, delete the correlation queue (do first) | — | T1, T2/T3 (removed labels only), T5, T7 |

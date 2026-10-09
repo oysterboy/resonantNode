@@ -97,10 +97,23 @@ cleanup-detector-family-build.md, cleanup-analyzer-node-isolation.md, ...).
 That plan orders the work within this item; roadmap-0-steps.md decides when
 it runs (steps 1, 8, 9).
 
-Landed in code, hardware-unverified: Phases 1, 2, 3, 5a, 5c.
-Open: hardware backlog (T2/T3/T6/T7), Phase 7c, Phase 5d, Phase 6,
-Phases 7a/7b, Phase 0 (field data, shared with DET-007).
+Landed and hardware-verified on piezo (2026-10-08, issue #7): Phases 1,
+2, 3, 5a, 5c. Open: Phase 7c, Phase 5d, Phase 6, Phases 7a/7b, Phase 0
+(field data, shared with DET-007).
 Close when cleanup-0-plan.md is archived with its "Archived: ..." header.
+```
+
+### DET-009 - inspection reads an empty FeatureHistory window under load
+
+Status: TODO (step 1a, issue #26)
+
+```text
+Found by the issue #7 hardware runs: an accepted occurrence is inspected
+against a history window holding no samples (history_window_incomplete,
+available_start/end = 0), so the verdict rejects a strong chirp. Reduced by
+795f649, still reproducible with TonalPulseFreq and diagnostics on (14/30),
+absent with diagnostics off. Fix the mechanism; widening the window or
+passing the incomplete case is not a fix.
 ```
 
 ### DET-003 - inspection target / payload split

@@ -137,6 +137,10 @@ void AnalyzerApp::printSequenceTrial(const AnalyzerReport& report) const {
         Serial.print(audioStats.sampleClockCorrections);
         Serial.print(" clock_max_correction_us=");
         Serial.print(audioStats.maxSampleClockCorrectionUs);
+        Serial.print(" emit_marker_seen=");
+        Serial.print(_sequenceTest.currentTrialDiagnostics.emitStartSeen ? 1 : 0);
+        Serial.print(" emit_marker_dt_ms=");
+        Serial.print(_sequenceTest.currentTrialDiagnostics.emitStartDtMs);
         Serial.print(" dropped_dma_buffers=");
         Serial.print(audioStats.droppedDmaBuffers);
         Serial.print(" clock_rate_mhz=");

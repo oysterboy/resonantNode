@@ -38,7 +38,7 @@ Issue body (2026-10-06):
   | 33 | mic SD | mic SD |
   | 14 / 27 | - | mic BCLK / WS |
   | 16 / 17 | UART2 Analyzer <-> Emitter | same |
-  | 2 | LED | LED |
+  | 2 | none (no LED fitted, owner 2026-10-09) | LED |
 
 - Pins out of `src/app/main.cpp` into build macros, piezo values as
   defaults: `Node app(34, 2, 25, 26)`, `EmitterApp app(25, 26, 16, 17,
@@ -157,4 +157,14 @@ V3 Bench      Item 6, on one D-AMP node.
 
 ## 7. Results
 
-(dated lines here)
+2026-10-09 wiring check, both D-AMP boards (COM6 MAC 24:dc:c3:4a:b0:50,
+COM10 MAC 24:dc:c3:49:b7:38), throwaway full-duplex sketch outside the
+repo (16 kHz, 32-bit, RIGHT_LEFT, STAND_I2S, 3200 Hz at 0.1 FS, 300 ms on
+per second): owner hears the tone; mic answers in slot 0 only (slot 1
+always 0, L/R to GND); tone windows about 16-19 dB above the quiet floor
+(rms ~40k vs 250-380k of 24-bit FS). Large mic DC offset settles over the
+first seconds after boot. Heard tone lags the generator label by ~200 ms,
+unexplained by DMA depth: measure in item 6. Informal, not a gate result.
+UART2 link: raw ping both ways OK, each GPIO16 sees the other TX (wiring
+crossed correctly); but the Emitter firmware ignores MODE REMOTE on Serial2
+(its own markers do arrive at the other board). Open, firmware side.

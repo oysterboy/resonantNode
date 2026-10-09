@@ -13,7 +13,8 @@ walk seen on the piezo nodes in #24?).
   - COM6, MAC 24:dc:c3:4a:b0:50: Emitter.
   - COM10, MAC 24:dc:c3:49:b7:38: Analyzer, later Node.
 - UART2 cable between them (16/17 crossed). Both on USB from one PC.
-- Distance and orientation between the boards: not recorded (desk).
+- Distance between the boards: 30 cm throughout (owner, 2026-10-09).
+  Orientation not recorded.
 - Firmware: `main` 17295c9 (board=damp), 16 kHz, 32-bit stereo slots, mic
   slot 0, STAND_I2S with RX MSB realigned, First Difference in the runtime
   path (RAW mode=i2s bypasses it), tone 0.1 FS with 5 ms ramp.

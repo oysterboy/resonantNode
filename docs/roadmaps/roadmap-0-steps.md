@@ -99,7 +99,8 @@ the previous gate open unless the step says it can run in parallel.
    sub-30 Hz mic wander (First Difference stays).
 
 3. [NEXT] D-AMP bench check. (issue #20)
-   Where: NODE-010 (roadmap-node.md); same bench session as
+   Where: NODE-010 (roadmap-node.md) -> docs/refactors/damp-bench-check.md;
+   same bench session as
    cleanup-0-plan Phase 0's distance ladder.
    Why: measures the new signal before thresholds are judged on it;
    checks self-echo and class-D noise. Compared against the piezo SEQ runs

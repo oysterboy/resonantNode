@@ -178,7 +178,7 @@ stereo with the mic on channel 0).
 
 ### NODE-010 - D-AMP bench check
 
-Status: TODO (issue #20)
+Status: IN PROGRESS (issue #20, docs/refactors/damp-bench-check.md)
 
 ```text
 Measures the D-AMP signal; no live piezo A/B (piezo discontinued,

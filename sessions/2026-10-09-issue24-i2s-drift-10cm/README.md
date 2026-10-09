@@ -39,3 +39,33 @@ trial), with the D-AMP HAL carrying First Difference unchanged meanwhile.
 
 Not done here (needs the owner): clap test, capture on a second piezo node.
 The drift (`dc`) wanders between captures (-69k to +15k within minutes).
+
+## Follow-up: capture-path variations (same bench, 10:29-10:43)
+
+Firmware `9f584bb` built with the flags below (the file hash does not show
+flags). `cfg_*` files are the full captures; slope and band numbers are from
+the quiet tail (emit_done + 20 ms onward). `c*`, `undecoded`, `msb` used a
+1 ms chirp. Band columns: raw / first-differenced, dB.
+
+| Config | Flags | 125-250 Hz | 1-2 kHz | Note |
+|---|---|---|---|---|
+| right (control) | none (ONLY_RIGHT, STAND_I2S, 16 kHz) | 106-108 / 76-79 | 89 / 78 | random walk below 1 kHz |
+| left | `I2S_CHANNEL_FORMAT_VALUE=I2S_CHANNEL_FMT_ONLY_LEFT` | - | - | all zeros: undriven slot reads 0, not floating |
+| stereo | `...=I2S_CHANNEL_FMT_RIGHT_LEFT` | 107-114 / 76-86 | 92-95 | both word positions identical; 4-8 kHz artifact |
+| c16k_apll | `I2S_USE_APLL=1` | 112 / 84 (2nd capture) | 104 / 93 | drift unchanged |
+| c32k | `AUDIO_I2S_SAMPLE_RATE_HZ=32000` | 111-116 / 76-81 | 96-100 | drift unchanged |
+| c48k | `AUDIO_I2S_SAMPLE_RATE_HZ=48000` | 113-117 / 74-78 | 98 | drift unchanged (BCLK 3.07 MHz) |
+| undecoded | `RAW_I2S_UNDECODED` | 107 / 78 | 95 / 84 | low byte always 0; **bit 8 always 0** |
+| msb | `RAW_I2S_UNDECODED`, `I2S_COMM_FORMAT_VALUE=I2S_COMM_FORMAT_STAND_MSB` | 104-105 / 76 | 90 / 80 | bit 8 toggles: full 24 bits; drift unchanged |
+
+Findings:
+- Not slot selection, not sample rate, not the clock source, not framing:
+  the random walk below 1 kHz (~28-35 dB above the differenced level) is
+  in the mic's own 24-bit output in every configuration.
+- Separate bug: with `I2S_COMM_FORMAT_STAND_I2S` the ESP32 reads each word
+  one bit late (data in bits 31..9, bit 8 always 0): values are doubled and
+  the mic's sign bit is dropped (harmless below half scale). On this IDF
+  4.4 build `I2S_COMM_FORMAT_STAND_MSB` frames the INMP441 correctly.
+  Switching halves all levels, so it is a threshold-relevant change.
+- Level: the low-frequency part is -49 to -35 dBFS in a quiet room, far
+  above what an INMP441 should output there.

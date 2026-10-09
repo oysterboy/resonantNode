@@ -19,7 +19,7 @@ SUMMARY_FIELDS = ("trials", "completed", "expected_trials", "early_trials", "lat
                   "avg_strength", "avg_conf")
 
 INDEX_COLUMNS = ("session", "run", "date", "firmware", "role", "profile", "detector",
-                 "distance_cm", "purpose") + SUMMARY_FIELDS
+                 "distance_cm", "purpose", "complete") + SUMMARY_FIELDS
 
 REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 BENCH_ROOT = os.path.join(REPO_ROOT, "bench")
@@ -87,6 +87,11 @@ def summarize_run(path):
     for k in SUMMARY_FIELDS:
         if k in s:
             out[k] = s[k]
+    if not s and parsed["trials"]:
+        # Cut before SEQ_SUMMARY (ANA-006): keep what the trial lines say.
+        out["trials"] = str(len(parsed["trials"]))
+        for r, n in results.items():
+            out[f"{r}_trials"] = str(n)
     return out
 
 
@@ -112,7 +117,9 @@ def rebuild_index():
         data = load_session(sdir)
         setup = data.get("setup", {})
         for run in data.get("runs", []):
-            summ = run.get("summary", {})
+            # Re-read the log so a summarize_run change reaches old runs too.
+            log_path = os.path.join(sdir, run["file"])
+            summ = summarize_run(log_path) if os.path.isfile(log_path) else run.get("summary", {})
             row = {
                 "session": name,
                 "run": run["name"],
@@ -123,6 +130,7 @@ def rebuild_index():
                 "detector": summ.get("detector", ""),
                 "distance_cm": setup.get("distance_cm", ""),
                 "purpose": data.get("purpose", ""),
+                "complete": "1" if summ.get("complete") else "0",
             }
             for k in SUMMARY_FIELDS:
                 row[k] = summ.get(k, "")

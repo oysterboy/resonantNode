@@ -11,6 +11,24 @@ decisions 2026-09-21-defer-single-detector-union.md ->
 2026-09-23-no-virtual-detector-interface.md (detector family as a build
 flag).
 
+## 2026-10-09 (D-AMP bring-up and tuning, Claude; pointers, details live where linked)
+
+- Mic low-frequency wander is on D-AMP too, below 30 Hz, and no I2S read
+  setup removes it (echoSpace-equivalent read included). Home:
+  docs/refactors/i2s-first-difference-revisit.md section 7, decision
+  2026-10-09-damp-keep-first-difference.md, bench:sessions/2026-10-09-
+  issue19-damp-bringup (drift5a_*). Mic VCC (5 V per echoSpace wiring)
+  not yet measured.
+- toneOn -> own mic ~32 ms, echo ends 33-54 ms after toneOff (TX queue 3 x
+  8 ms + one rendered block). Same session, tone_latency_20.
+- D-AMP Node floor: smoothed magnitude ~230-250 in a quiet room, above the
+  piezo-era startup quiet threshold 20 (now 400 on D-AMP, b6e99b0).
+  bench:sessions/2026-10-09-issue20-damp-110cm-b, node_quiet_boot_selfecho.
+- The COM6 board's amp/speaker went silent after the boards were moved
+  (its own mic no longer heard its beep). Cause not found; wiring
+  suspected. bench:sessions/2026-10-09-issue20-damp-110cm README.
+- Distance, level and frequency results: E001 phase 2b.
+
 ## 2026-10-09
 
 Day-to-day level change at a fixed setup (piezo, 10 cm, vertical emit /

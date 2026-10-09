@@ -2,6 +2,7 @@
 
   python tools/bench/seqcmp.py A.log B.log
   python tools/bench/seqcmp.py --session bench/sessions/<name>   # pair runs by name across firmware
+  python tools/bench/seqcmp.py --table bench/sessions/<name> [name-prefix ...]   # one row per run
 
 Field-name differences per line type are listed separately: renames are
 allowed to change labels, never values (see cleanup-0-plan.md T2/T3).
@@ -38,8 +39,30 @@ def compare(a, b):
     print()
 
 
+TABLE = (("trials", "n"), ("expected_trials", "exp"), ("miss_trials", "miss"),
+         ("rejected_trials", "rej"), ("early_trials", "early"), ("late_trials", "late"),
+         ("duplicate_trials", "dup"), ("unexpected_trials", "unexp"),
+         ("detector_accepted_trials", "det"), ("pattern_valid_trials", "valid"),
+         ("buffer_overrun_trials", "ovr"), ("avg_strength", "str"))
+
+
+def table(session_dir, prefixes):
+    """One row per run in session order; '*' marks a run cut before SEQ_SUMMARY."""
+    data = benchlib.load_session(session_dir)
+    print(f"{'run':36} " + " ".join(f"{h:>6}" for _, h in TABLE))
+    for r in data["runs"]:
+        if prefixes and not any(r["name"].startswith(p) for p in prefixes):
+            continue
+        path = os.path.join(session_dir, r["file"])
+        s = benchlib.summarize_run(path) if os.path.isfile(path) else r.get("summary", {})
+        name = r["name"] + ("" if s.get("complete") else " *")
+        print(f"{name:36} " + " ".join(f"{str(s.get(k, '0')):>6}" for k, _ in TABLE))
+
+
 if __name__ == "__main__":
-    if sys.argv[1] == "--session":
+    if sys.argv[1] == "--table":
+        table(sys.argv[2], sys.argv[3:])
+    elif sys.argv[1] == "--session":
         data = benchlib.load_session(sys.argv[2])
         by_name = {}
         for r in data["runs"]:

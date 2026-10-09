@@ -37,7 +37,8 @@ ap.add_argument("--emitter-fw", help="emitter firmware git hash, if known")
 ap.add_argument("--note", action="append", default=[], help="free-form setup note (repeatable)")
 ap.add_argument("--run", nargs=2, action="append", metavar=("NAME", "COMMANDS"), required=True)
 ap.add_argument("--no-reset", action="store_true", help="skip reset (firmware read from session)")
-ap.add_argument("--timeout", type=int, default=600, help="per-run timeout seconds")
+ap.add_argument("--timeout", type=int, default=600,
+                help="per-run timeout floor in seconds; raised to fit tries x period (ANA-006)")
 args = ap.parse_args()
 
 session_dir = os.path.abspath(args.session)
@@ -83,6 +84,20 @@ def log(msg):
         f.write(line + "\n")
 
 
+def run_timeout(command):
+    """Seconds a SEQ run may take: tries x (period + per-trial overhead) + slack.
+
+    A fixed timeout cut 150- and 400-window OBS runs before SEQ_SUMMARY
+    (ANA-006). Per-trial overhead measured 2026-10-09: ~0.9 s over period.
+    """
+    import re
+    tries = re.search(r"(?:tries=|start )(\d+)", command)
+    period = re.search(r"period=(\d+)", command)
+    n = int(tries.group(1)) if tries else 50
+    period_s = int(period.group(1)) / 1000.0 if period else 2.4
+    return max(args.timeout, int(n * (period_s + 1.5)) + 60)
+
+
 firmware = None
 if not args.no_reset:
     s.rts = True
@@ -113,8 +128,9 @@ for name, commands in args.run:
     body.append(f">> {cmds[-1]}\n")
     log(f"start {name}: {' ; '.join(cmds)}")
     t0 = time.time()
+    timeout_s = run_timeout(cmds[-1])
     buf, done_at = "", None
-    while time.time() - t0 < args.timeout:
+    while time.time() - t0 < timeout_s:
         buf += read_for(1)
         if done_at is None and "SEQ_SUMMARY" in buf:
             done_at = time.time()
@@ -132,6 +148,9 @@ for name, commands in args.run:
     summ = run["summary"]
     log(f"done {name} ({run['duration_s']}s): complete={summ['complete']} "
         f"results={summ['trial_results']}")
+    if not summ["complete"]:
+        log(f"WARNING {name}: no SEQ_SUMMARY within {timeout_s}s; the index keeps the "
+            f"{sum(summ['trial_results'].values())} trials seen, marked incomplete")
     read_for(2)
 
 s.close()

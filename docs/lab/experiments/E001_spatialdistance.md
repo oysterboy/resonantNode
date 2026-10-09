@@ -56,6 +56,12 @@ detector, is the lever at 3200 Hz). Same 110 cm, 0.3 FS: 4000 / 4800 /
 ~790 silent windows, empty building only. Self-echo ~30 to ~135-155 ms after
 toneOn on the desk (bench:sessions/2026-10-09-issue19-damp-bringup).
 
+2026-10-09 (later) - own-emit suppression now covers the whole chirp plus
+60 ms (b6e99b0, decision 2026-10-09-own-emit-suppression-whole-chirp.md);
+tone default 0.3 FS (decision 2026-10-09-damp-tone-level-0p3.md); chirp
+stays 3200 Hz (decision 2026-10-09-chirp-frequency-stays-3200.md). Not yet
+re-measured on the bench (damp-bench-check.md R1).
+
 ## Findings (2026-10-09)
 
 - Received level, not detection logic, is the first limit: at 110 cm the

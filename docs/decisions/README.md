@@ -55,6 +55,9 @@ what replaced it.
 | 2026-10-08 | [Commit cited hardware runs under bench/, with setup and firmware hash](2026-10-08-bench-data-in-repo.md) |
 | 2026-10-09 | [Flash at 80 MHz QIO; I2S sample time comes from the sample index](2026-10-09-flash-qio80-and-i2s-sample-clock.md) |
 | 2026-10-09 | [Piezo discontinued: D-AMP is the default board, piezo a fallback build (`BOARD_PIEZO`)](2026-10-09-discontinue-piezo.md) |
+| 2026-10-09 | [D-AMP tone level 0.3 of full scale](2026-10-09-damp-tone-level-0p3.md) |
+| 2026-10-09 | [The chirp stays at 3200 Hz on D-AMP](2026-10-09-chirp-frequency-stays-3200.md) |
+| 2026-10-09 | [Own-emit detection suppression covers the whole chirp plus a tail](2026-10-09-own-emit-suppression-whole-chirp.md) |
 | 2026-10-09 | [D-AMP keeps First Difference as the PCM preprocessor until after the field trial](2026-10-09-damp-keep-first-difference.md) |
 | 2026-10-09 | [D-AMP I2S HAL: extend AudioSourceI2S, TX task, stereo slots, Philips framing with RX realigned](2026-10-09-damp-i2s-hal-shape.md) |
 
@@ -71,3 +74,4 @@ question is tracked; a file is added here when one resolves.
 | How much `FeatureHistory` to retain on-device | `docs/refactors/cleanup-0-plan.md` Phase 5c (33 KB, 80% of `DetectionRuntime` at last measurement) |
 | Exact boundary between analyzer-only and runtime diagnostics | `docs/refactors/cleanup-analyzer-node-isolation.md`; Phase 5a landed the first cut |
 | Persistent (flash/NVS) config | PAR-010 / PAR-011, deferred until after the field trial (step 11) |
+| Lower TonalPulseScalar's amp inspector (medium 2500 -> ~1000) for range | `docs/refactors/damp-bench-check.md` sections 5-7: owner wants noise false-positive runs first (R4) |

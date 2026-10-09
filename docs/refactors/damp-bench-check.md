@@ -191,7 +191,10 @@ main).
 
 Owner decisions on section 6 (2026-10-09): 1 yes, 2 no (stay at 3200 Hz),
 3 yes but only after more research (noise false-positive runs first),
-4 yes, 5 yes, 6 yes. 1, 5 and 6 landed in b6e99b0 (tone 0.3 FS; startup
+4 yes, 5 yes, 6 yes. Decision files: 1 `docs/decisions/2026-10-09-damp-
+tone-level-0p3.md`, 2 `...-chirp-frequency-stays-3200.md`, 6 `...-own-emit-
+suppression-whole-chirp.md`; 3 is an open row in docs/decisions/README.md;
+4 and 5 are tuning values (code comments, this doc). 1, 5 and 6 landed in b6e99b0 (tone 0.3 FS; startup
 quiet threshold 400 on D-AMP; own-emit detection suppression for the whole
 chirp + 60 ms tail); compiles on all six envs, bench verification pending
 (section 7, R1). 4 needs runs (R3), 3 needs noise runs (R4).

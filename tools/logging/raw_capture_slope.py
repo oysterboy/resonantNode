@@ -4,6 +4,12 @@ something integrating the stream.
 
 Usage:
     python3 tools/logging/raw_capture_slope.py <serial-log> [--tone-hz 3200]
+    python3 tools/logging/raw_capture_slope.py <serial-log> --windows 20 [--tone-hz 3200]
+
+--windows MS prints, instead of the drift report, one row per MS-ms window:
+mean (DC), AC rms, the tone amplitude at --tone-hz (Goertzel) and how often
+bit 0 of the decoded word is set (raw bit 8; stuck at 0 = one-bit-late
+framing, #24). Used for chirp onset/level checks in #19/#20.
 
 Feed it the serial log of one `RAW ... mode=i2s` capture (the i2s mode reads
 decoded words straight from the driver, so it bypasses preprocessSample() and
@@ -116,6 +122,25 @@ def band_db(freqs, mags, lo, hi, exclude=None):
     return 10 * math.log10(acc / cnt)
 
 
+def tone_windows(rows, sr, tone, window_ms):
+    n = max(8, int(sr * window_ms / 1000.0))
+    k = 2 * math.cos(2 * math.pi * tone / sr)
+    t0 = rows[0]["ms"]
+    print("t_ms      dc   ac_rms  tone_amp  bit0_set")
+    for i in range(0, len(rows) - n + 1, n):
+        x = [r["pcm"] for r in rows[i:i + n]]
+        m = sum(x) / n
+        s1 = s2 = 0.0
+        for v in x:
+            s0 = (v - m) + k * s1 - s2
+            s2, s1 = s1, s0
+        amp = 2 * math.sqrt(max(s1 * s1 + s2 * s2 - k * s1 * s2, 0.0)) / n
+        ac = math.sqrt(sum((v - m) ** 2 for v in x) / n)
+        bit0 = sum(1 for v in x if int(v) & 1) / n
+        print("%4d %9.0f %8.0f %9.0f %8.2f" % (rows[i]["ms"] - t0, m, ac, amp, bit0))
+    return 0
+
+
 def main(argv):
     if len(argv) < 2:
         print(__doc__)
@@ -126,6 +151,8 @@ def main(argv):
         tone = float(argv[argv.index("--tone-hz") + 1])
     header, fields, rows = parse_capture(path)
     sr = float(header.get("sr", 16000))
+    if "--windows" in argv:
+        return tone_windows(rows, sr, tone, float(argv[argv.index("--windows") + 1]))
     trigger_ms = float(header.get("trigger_ms", "nan"))
 
     pcm = [r["pcm"] for r in rows]

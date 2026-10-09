@@ -227,7 +227,7 @@ meanwhile. Either send the claim or drop the message. Pre-existing.
 
 ### ANA-006 - bench runner timeout cuts long runs silently
 
-Status: TODO (found 2026-10-09, #20)
+Status: DONE 2026-10-09 (seqrun sizes the timeout from tries x period and warns on a cut run; index keeps partial counts with complete=0)
 
 ```text
 tools/bench/seqrun.py stops a run at --timeout (default 600 s) and moves

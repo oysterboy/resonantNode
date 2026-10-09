@@ -28,6 +28,13 @@ Phases 1-2 were run ad hoc (see the log). Phase 3 follows the plan in
 
 ## Log
 
+2026-05-15 - phase 0, piezo, AMP-detector firmware (pre-refactor, commit
+unknown), 100 trials, 3200 Hz / 100 ms. Not a bench session; room,
+speaker, orientation unknown (anecdote). Raw: docs/lab/notes_lab.md
+"2026-05-15 / Detection Refactor Baseline - Pass 0". 70 cm 95/100,
+140 cm 85/100; no late hits, no duplicates; misses were candidates that
+never formed (short/refractory frequency fragments).
+
 2026-09-03 - phase 1, piezo, desk, `logs/` only (anecdote, no bench
 session). Raw: `docs/lab/2026-09-03-exp001-notes.md`. 10 cm 10/10; 20 cm
 detected but amp_class weak -> rejected; 40 cm nothing (exp001-03); a
@@ -58,4 +65,8 @@ toneOn on the desk (bench:sessions/2026-10-09-issue19-damp-bringup).
 
 ## Open threads
 
+- Phase 0 (May, AMP detector) reached 140 cm at 85/100 on piezo; phase 2a
+  (October) got 10-14/50 at 40 cm on piezo. Different detector path,
+  thresholds and unknown setup, so not comparable as is; worth knowing
+  whether the gap is firmware or setup before blaming distance.
 - Mic supply (5 V) as a drift cause; class-D idle floor at the far rungs.

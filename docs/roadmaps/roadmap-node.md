@@ -153,6 +153,9 @@ distances, does own-emit suppression hold with several emitters, does the
 network settle or run away.
 This is the first check of the product behavior rather than single-node
 detection.
+Prior observation: docs/lab/notes_lab.md 2026-05-26, "stable 5-node slow
+circle" on piezo with the profile/gate values listed there (pre-refactor
+firmware, no bench session, no STATUS lines).
 ```
 
 ### NODE-009 - D-AMP board support in firmware

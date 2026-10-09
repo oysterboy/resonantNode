@@ -48,6 +48,8 @@ A note whose ideas were all promoted or abandoned gets `promoted` or
 ## Index
 
 ```text
-acoustic-test-suite.md   rooms x speakers x distance test design
-                         (promoted: NODE-012; observations in lab E001)
+acoustic-test-suite.md         rooms x speakers x distance test design
+                               (promoted: NODE-012; observations in lab E001)
+tonalpulse-scalar-target.md    TonalPulseScalar target design + passes 1-8
+                               (German; partly landed, not reviewed)
 ```

@@ -4,6 +4,13 @@ FrequencyEvidenceEvaluation
 FrequencyMtchDEtector
 need both?
 
+2026-10-09: this is a research question, not an observation. It went to
+cleanup-0-plan.md Phase 0 (keep or consolidate FrequencyMatchDetector,
+detail in docs/refactors/cleanup-detector-consolidation.md) and the
+decisions 2026-09-21-defer-single-detector-union.md ->
+2026-09-23-no-virtual-detector-interface.md (detector family as a build
+flag).
+
 ## 2026-05-26
 
 Stable 5-node slow circle configuration, with the committed defaults now coming from `DetectionProfile.h` and `BehaviorProfile.h`:

@@ -93,3 +93,21 @@ Board note: after the owner re-wired the mic (board powered), the 80 MHz
 QIO image boot-looped; 40 MHz DIO and 80 MHz DIO images booted, and a fresh
 flash of the same QIO image (`7ac8855`) then booted 3/3 with unchanged
 wiring. A one-off, not a QIO problem; nothing on the flash pins.
+
+## Second piezo node (12:00)
+
+Node 2 (MAC 24:dc:c3:4a:ef:58), placed by the owner on the bench in place of
+node 1 on COM6, emitter on UART2. Same analyzer firmware (`1c743a2`, see file
+names; 80 MHz QIO, booted 3/3). `node2_1..3`: 1 ms chirp, quiet tail;
+`node2_chirp100`: 100 ms chirp (peak 160,576).
+
+| | Node 1 | Node 2 |
+|---|---|---|
+| 125-250 Hz raw / diff (dB) | 106-111 / 76-81 | 106-110 / 77-82 |
+| raw RMS of quiet tail | 29k-43k | 19k-55k |
+| dc between captures | wanders | wanders (-28k to +12k) |
+
+Node 2 shows the same random walk below 1 kHz. Not a single bad mic unit:
+systematic to the piezo node design or to this repo's capture firmware,
+which both boards run. `node2_3` also caught broadband sound (all bands up).
+Next discriminator: the D-AMP mic read through this repo's HAL (#19).

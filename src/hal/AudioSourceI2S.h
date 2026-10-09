@@ -6,6 +6,7 @@
 
 #include <freertos/FreeRTOS.h>
 #include <freertos/queue.h>
+#include <freertos/semphr.h>
 
 #include "../app/RuntimeDefaults.h"
 #include "../audio/AudioPcm.h"
@@ -15,9 +16,13 @@
 AudioSourceI2S
 
 ESP32 I2S implementation of AudioSource.
-Owns I2S setup, block reads, First Difference preprocessing, raw-sample
-diagnostics, and approximate block timing.
-Does not know about AudioSignal, DetectionRuntime, Analyzer, or Behavior.
+Owns I2S_NUM_0: setup, block reads, mic slot selection, First Difference
+preprocessing, raw-sample diagnostics, and approximate block timing.
+On a full-duplex board (D-AMP, see BoardConfig.h) it also installs the TX
+side and lets one writer (I2sToneOutput) feed it through writeTx(); the
+port mutex keeps a writer out while begin() reinstalls the driver.
+Does not know about AudioSignal, DetectionRuntime, Analyzer, or Behavior,
+and does not generate output audio.
 */
 class AudioSourceI2S : public AudioSource {
 public:
@@ -25,7 +30,8 @@ public:
                    int fsPin = runtime::kDefaultAudioI2SWsPin,
                    int dataInPin = runtime::kDefaultAudioI2SDataPin,
                    int sampleRate = static_cast<int>(runtime::kDefaultAudioI2SSampleRateHz),
-                   int bitsPerSample = static_cast<int>(runtime::kDefaultAudioI2SBitsPerSample));
+                   int bitsPerSample = static_cast<int>(runtime::kDefaultAudioI2SBitsPerSample),
+                   int dataOutPin = runtime::kDefaultAudioI2SDataOutPin);
 
     void begin() override;
     bool available() override;
@@ -37,7 +43,14 @@ public:
     const AudioSourceStats& stats() const override;
     void resetStats() override;
 
+    // TX side of a full-duplex port. False when the board has no TX or the
+    // port is not (or no longer) installed; never blocks longer than
+    // timeoutMs. Called from the tone output task, not the detection loop.
+    bool txEnabled() const;
+    bool writeTx(const void* data, size_t bytes, size_t& bytesWritten, uint32_t timeoutMs);
+
 private:
+    bool installPort();
     int32_t preprocessSample(int32_t current);
     void resetPreprocessState();
     bool refillBlock();
@@ -46,11 +59,17 @@ private:
     int _sckPin;
     int _fsPin;
     int _dataInPin;
+    int _dataOutPin;
     int _sampleRate;
     int _bitsPerSample;
     runtime::PcmPreprocessMode _preprocessMode = runtime::kPcmPreprocessMode;
     bool _started = false;
+    // Mic samples per block; on a stereo board the read covers that many
+    // frames (kFrameSlots words each) and keeps the mic slot.
     static constexpr size_t kRefillBatchSize = static_cast<size_t>(I2S_READ_BYTES / sizeof(int32_t));
+    static constexpr size_t kFrameSlots = static_cast<size_t>(AUDIO_I2S_FRAME_SLOTS);
+    static constexpr size_t kMicSlot = static_cast<size_t>(AUDIO_I2S_MIC_SLOT);
+    SemaphoreHandle_t _portMutex = nullptr;
     std::unique_ptr<int32_t[]> _blockSamples;
     size_t _blockCount = 0;
     size_t _blockCursor = 0;

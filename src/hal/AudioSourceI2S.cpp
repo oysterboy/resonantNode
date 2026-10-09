@@ -2,6 +2,7 @@
 
 #include <Arduino.h>
 #include <driver/i2s.h>
+#include <soc/i2s_struct.h>
 #include <math.h>
 #include <new>
 #include <stdint.h>
@@ -11,6 +12,7 @@
 
 namespace {
 constexpr i2s_port_t kI2sPort = I2S_NUM_0;
+constexpr bool kPortHasTx = ((I2S_CAPTURE_MODE) & I2S_MODE_TX) != 0;
 
 int decodePcmSample(const uint8_t* samplePtr, int bytesPerSample) {
     if (samplePtr == nullptr || bytesPerSample <= 0) {
@@ -54,10 +56,11 @@ uint32_t sampleOffsetUs(uint32_t sampleOffset, uint32_t sampleRateHz) {
 
 } // namespace
 
-AudioSourceI2S::AudioSourceI2S(int sckPin, int fsPin, int dataInPin, int sampleRate, int bitsPerSample)
+AudioSourceI2S::AudioSourceI2S(int sckPin, int fsPin, int dataInPin, int sampleRate, int bitsPerSample, int dataOutPin)
     : _sckPin(sckPin),
       _fsPin(fsPin),
       _dataInPin(dataInPin),
+      _dataOutPin(dataOutPin),
       _sampleRate(sampleRate),
       _bitsPerSample(bitsPerSample),
       _preprocessMode(runtime::kPcmPreprocessMode),
@@ -70,7 +73,21 @@ void AudioSourceI2S::begin() {
         _blockSamples.reset(new (std::nothrow) int32_t[kRefillBatchSize] {});
     }
 
-    _started = false;
+    // A TX writer (I2sToneOutput's task) may be inside i2s_write(); keep it
+    // out while the driver is torn down and reinstalled.
+    if (_portMutex == nullptr) {
+        _portMutex = xSemaphoreCreateMutex();
+    }
+    if (_portMutex != nullptr) {
+        xSemaphoreTake(_portMutex, portMAX_DELAY);
+    }
+    _started = installPort();
+    if (_portMutex != nullptr) {
+        xSemaphoreGive(_portMutex);
+    }
+}
+
+bool AudioSourceI2S::installPort() {
     (void)i2s_driver_uninstall(kI2sPort);
 
     i2s_config_t config = {};
@@ -83,41 +100,77 @@ void AudioSourceI2S::begin() {
     config.dma_buf_count = I2S_DMA_BUF_COUNT;
     config.dma_buf_len = I2S_DMA_BUF_LEN;
     config.use_apll = I2S_USE_APLL != 0;
-    config.tx_desc_auto_clear = false;
+    // TX underrun sends silence instead of repeating the last buffer.
+    config.tx_desc_auto_clear = kPortHasTx;
     config.fixed_mclk = config.use_apll ? 512 * _sampleRate : 0;
     config.mclk_multiple = I2S_MCLK_MULTIPLE_DEFAULT;
     config.bits_per_chan = I2S_BITS_PER_CHAN_DEFAULT;
 
-    // One second of events (RX_DONE per buffer) so a long loop stall does
-    // not overflow the event queue and hide an RX_Q_OVF.
+    // One second of events (RX_DONE per buffer, plus TX_DONE on a
+    // full-duplex port) so a long loop stall does not overflow the event
+    // queue and hide an RX_Q_OVF.
     _i2sEvents = nullptr;
 #ifndef I2S_EVENT_QUEUE_DISABLED
-    const int eventQueueLength = (_sampleRate / I2S_DMA_BUF_LEN) + 4;
+    const int eventQueueLength = (kPortHasTx ? 2 : 1) * (_sampleRate / I2S_DMA_BUF_LEN) + 4;
     if (i2s_driver_install(kI2sPort, &config, eventQueueLength, &_i2sEvents) != ESP_OK) {
 #else
     if (i2s_driver_install(kI2sPort, &config, 0, nullptr) != ESP_OK) {
 #endif
-        return;
+        return false;
     }
 
     i2s_pin_config_t pinConfig = {};
     pinConfig.mck_io_num = I2S_PIN_NO_CHANGE;
     pinConfig.bck_io_num = _sckPin;
     pinConfig.ws_io_num = _fsPin;
-    pinConfig.data_out_num = I2S_PIN_NO_CHANGE;
+    pinConfig.data_out_num = (kPortHasTx && _dataOutPin >= 0) ? _dataOutPin : I2S_PIN_NO_CHANGE;
     pinConfig.data_in_num = _dataInPin;
     if (i2s_set_pin(kI2sPort, &pinConfig) != ESP_OK) {
         (void)i2s_driver_uninstall(kI2sPort);
-        return;
+        return false;
     }
 
-    if (i2s_set_clk(kI2sPort, static_cast<uint32_t>(_sampleRate), static_cast<uint32_t>(_bitsPerSample), I2S_CHANNEL_MONO) != ESP_OK) {
+    const i2s_channel_t channels = kFrameSlots >= 2 ? I2S_CHANNEL_STEREO : I2S_CHANNEL_MONO;
+    if (i2s_set_clk(kI2sPort, static_cast<uint32_t>(_sampleRate), static_cast<uint32_t>(_bitsPerSample), channels) != ESP_OK) {
         (void)i2s_driver_uninstall(kI2sPort);
-        return;
+        return false;
     }
+
+#if I2S_RX_MSB_ALIGN
+    // STAND_I2S (Philips) is what the MAX98357A expects on TX, but on this
+    // IDF 4.4 build it reads the INMP441 one bit late (bit 8 always 0,
+    // values doubled, sign bit lost; issue #24). The legacy driver sets RX
+    // and TX framing together, so clear the RX MSB shift alone: RX then
+    // gets the STAND_MSB alignment, TX stays Philips.
+    // docs/decisions/2026-10-09-damp-i2s-hal-shape.md
+    (void)i2s_stop(kI2sPort);
+    I2S0.conf.rx_msb_shift = 0;
+    (void)i2s_start(kI2sPort);
+#endif
 
     (void)i2s_zero_dma_buffer(kI2sPort);
-    _started = true;
+    return true;
+}
+
+bool AudioSourceI2S::txEnabled() const {
+    return kPortHasTx && _dataOutPin >= 0;
+}
+
+bool AudioSourceI2S::writeTx(const void* data, size_t bytes, size_t& bytesWritten, uint32_t timeoutMs) {
+    bytesWritten = 0;
+    if (!txEnabled() || _portMutex == nullptr) {
+        return false;
+    }
+    const TickType_t timeoutTicks = pdMS_TO_TICKS(timeoutMs);
+    if (xSemaphoreTake(_portMutex, timeoutTicks) != pdTRUE) {
+        return false;
+    }
+    bool ok = false;
+    if (_started) {
+        ok = i2s_write(kI2sPort, data, bytes, &bytesWritten, timeoutTicks) == ESP_OK;
+    }
+    xSemaphoreGive(_portMutex);
+    return ok;
 }
 
 bool AudioSourceI2S::available() {
@@ -160,13 +213,18 @@ bool AudioSourceI2S::readRawSample(int& sample, uint32_t& sampleTimeUs) {
         return false;
     }
 
-    uint8_t rawBytes[sizeof(int32_t)] = {};
+    uint8_t frameBytes[kFrameSlots * sizeof(int32_t)] = {};
+    const size_t frameSize = kFrameSlots * static_cast<size_t>(bytesPerSample);
     size_t bytesRead = 0;
-    const esp_err_t readResult = i2s_read(kI2sPort, rawBytes, static_cast<size_t>(bytesPerSample), &bytesRead, 0);
-    recordReadAttempt(bytesPerSample, static_cast<int>(bytesRead), readResult != ESP_OK && readResult != ESP_ERR_TIMEOUT);
-    if (bytesRead < static_cast<size_t>(bytesPerSample)) {
+    const esp_err_t readResult = i2s_read(kI2sPort, frameBytes, frameSize, &bytesRead, 0);
+    recordReadAttempt(static_cast<int>(frameSize), static_cast<int>(bytesRead), readResult != ESP_OK && readResult != ESP_ERR_TIMEOUT);
+    if (bytesRead < frameSize) {
         return false;
     }
+    const uint8_t* rawBytes = frameBytes + kMicSlot * static_cast<size_t>(bytesPerSample);
+    // Keep the First Difference state current, so the next block does not
+    // difference across the RAW gap and emit one spurious spike.
+    (void)preprocessSample(static_cast<int32_t>(decodePcmSample(rawBytes, bytesPerSample)));
 
 #ifdef RAW_I2S_UNDECODED
     // Diagnostic build only (issue #24): hand RAW mode=i2s the undecoded
@@ -370,8 +428,9 @@ bool AudioSourceI2S::refillBlock() {
         return false;
     }
 
-    uint8_t rawBytes[kRefillBatchSize * sizeof(int32_t)] = {};
-    const size_t requestedBytes = static_cast<size_t>(kRefillBatchSize) * static_cast<size_t>(bytesPerSample);
+    uint8_t rawBytes[kRefillBatchSize * kFrameSlots * sizeof(int32_t)] = {};
+    const size_t frameSize = kFrameSlots * static_cast<size_t>(bytesPerSample);
+    const size_t requestedBytes = static_cast<size_t>(kRefillBatchSize) * frameSize;
     size_t bytesRead = 0;
     const esp_err_t readResult = i2s_read(kI2sPort, rawBytes, requestedBytes, &bytesRead, 0);
     recordReadAttempt(static_cast<int>(requestedBytes), static_cast<int>(bytesRead), readResult != ESP_OK && readResult != ESP_ERR_TIMEOUT);
@@ -391,7 +450,7 @@ bool AudioSourceI2S::refillBlock() {
         _outputSampleIndex += static_cast<uint64_t>(droppedBuffers) * static_cast<uint64_t>(I2S_DMA_BUF_LEN);
     }
 
-    const size_t fullSamplesRead = bytesRead / static_cast<size_t>(bytesPerSample);
+    const size_t fullSamplesRead = bytesRead / frameSize;
     const size_t samplesToProcess = fullSamplesRead < kRefillBatchSize ? fullSamplesRead : kRefillBatchSize;
     const uint32_t fillEndUs = micros();
 
@@ -399,7 +458,7 @@ bool AudioSourceI2S::refillBlock() {
     _blockStartSampleIndex = _outputSampleIndex;
     _blockCount = 0;
     for (size_t i = 0; i < samplesToProcess; ++i) {
-        const uint8_t* samplePtr = rawBytes + (i * static_cast<size_t>(bytesPerSample));
+        const uint8_t* samplePtr = rawBytes + (i * frameSize) + kMicSlot * static_cast<size_t>(bytesPerSample);
         const int32_t decodedSample = static_cast<int32_t>(decodePcmSample(samplePtr, bytesPerSample));
         _blockSamples[_blockCount++] = preprocessSample(decodedSample);
     }

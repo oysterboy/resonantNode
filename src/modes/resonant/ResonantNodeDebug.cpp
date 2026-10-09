@@ -56,6 +56,9 @@ void NodeDebug::begin(int ledPin) {
     _ledPatternPulseCount = 0;
     _ledPatternPulseBrightness = kLedBrightnessOff;
 
+    if (_ledPin < 0) {
+        return; // no LED fitted (D-AMP)
+    }
     pinMode(_ledPin, OUTPUT);
     ledcSetup(kLedPwmChannel, kLedPwmFrequencyHz, kLedPwmResolutionBits);
     ledcAttachPin(_ledPin, kLedPwmChannel);
@@ -290,7 +293,9 @@ void NodeDebug::updateLed(unsigned long now,
         }
     }
 
-    ledcWrite(kLedPwmChannel, ledBrightness);
+    if (_ledPin >= 0) {
+        ledcWrite(kLedPwmChannel, ledBrightness);
+    }
 }
 
 void NodeDebug::printPlotValues(unsigned long now,

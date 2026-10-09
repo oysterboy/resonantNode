@@ -526,9 +526,9 @@ private:
     PendingSequenceStart _pendingSequenceStart = {}; // Deferred sequence start request.
 
     // Console and emitter control.
-    unsigned long _controlBaudRate = 115200; // USB serial baud rate.
-    int _controlRxPin = 16; // UART RX pin for emitter control.
-    int _controlTxPin = 17; // UART TX pin for emitter control.
+    unsigned long _controlBaudRate = EMITTER_UART_BAUD; // Serial2 baud rate to the emitter.
+    int _controlRxPin = EMITTER_UART_RX_PIN; // UART RX pin for emitter control.
+    int _controlTxPin = EMITTER_UART_TX_PIN; // UART TX pin for emitter control.
     char _usbLineBuffer[256]; // Buffered USB command line input.
     size_t _usbLineLength = 0; // Current USB line length.
     char _commandScratch[256]; // Mutable scratch buffer for token parsing.

@@ -295,21 +295,30 @@ const char* chirpPatternName(ChirpOutput::ChirpPattern pattern) {
 
 // --- constructors ---
 
-Node::Node(int inputPin, int ledPin, int chirpPin, int chirpBtlPin)
+Node::Node(int ledPin, int chirpPin, int chirpBtlPin)
     : _ledPin(ledPin),
       _i2sSource(runtime::kDefaultAudioI2SSckPin,
                   runtime::kDefaultAudioI2SWsPin,
                   runtime::kDefaultAudioI2SDataPin,
                   static_cast<int>(runtime::kDefaultAudioI2SSampleRateHz),
-                  static_cast<int>(runtime::kDefaultAudioI2SBitsPerSample)),
+                  static_cast<int>(runtime::kDefaultAudioI2SBitsPerSample),
+                  runtime::kDefaultAudioI2SDataOutPin),
       _audioSource(_i2sSource),
       _audioSignal(_audioSource),
       _freqBandStream(),
+#if defined(BOARD_PIEZO)
       _toneOutput(chirpPin),
       _toneOutputBTL(chirpPin, chirpBtlPin),
       _chirpOutput(chirpBtlPin >= 0
                        ? static_cast<ToneOutput&>(_toneOutputBTL)
                        : static_cast<ToneOutput&>(_toneOutput)) {}
+#else
+      _toneOutput(_i2sSource),
+      _chirpOutput(_toneOutput) {
+    (void)chirpPin;
+    (void)chirpBtlPin;
+}
+#endif
 
 // --- lifecycle ---
 

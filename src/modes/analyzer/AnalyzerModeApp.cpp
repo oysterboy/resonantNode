@@ -539,7 +539,8 @@ AnalyzerApp::AnalyzerApp(int inputPin)
                   runtime::kDefaultAudioI2SWsPin,
                   runtime::kDefaultAudioI2SDataPin,
                   static_cast<int>(runtime::kDefaultAudioI2SSampleRateHz),
-                  static_cast<int>(runtime::kDefaultAudioI2SBitsPerSample)),
+                  static_cast<int>(runtime::kDefaultAudioI2SBitsPerSample),
+                  runtime::kDefaultAudioI2SDataOutPin),
       _audioSource(_i2sSource),
       _audioSignal(_audioSource),
       _freqBandStream() {

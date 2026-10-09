@@ -1,5 +1,7 @@
 #include <Arduino.h>
 
+#include "app/BoardConfig.h"
+
 // Select exactly one runtime mode at compile time:
 // - ANALYZER_MODE for occurrence analysis
 // - EMITTER_MODE for the standalone output device
@@ -12,12 +14,13 @@
 #include "modes/resonant/ResonantNodeApp.h"
 #endif
 
+// Pins come from app/BoardConfig.h (D-AMP by default, BOARD_PIEZO fallback).
 #if defined(ANALYZER_MODE)
 AnalyzerModeApp app;
 #elif defined(EMITTER_MODE)
-EmitterApp app(25, 26, 16, 17, 115200);
+EmitterApp app(CHIRP_PIN, CHIRP_BTL_PIN, EMITTER_UART_RX_PIN, EMITTER_UART_TX_PIN, EMITTER_UART_BAUD);
 #else
-Node app(34, 2, 25, 26);
+Node app(STATUS_LED_PIN, CHIRP_PIN, CHIRP_BTL_PIN);
 #endif
 
 void setup() {

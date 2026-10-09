@@ -54,7 +54,7 @@ for spec in args.runs:
     fname = f"{name}.{fw['git']}.log"
     started = datetime.datetime.fromtimestamp(os.path.getmtime(src)).isoformat(timespec="seconds")
     with open(os.path.join(sdir, fname), "w", encoding="utf-8", newline="\n") as f:
-        f.write(f"# run: {name}\n# firmware: role={fw['role']} git={fw['git']} version={fw['version']}\n"
+        f.write(f"# run: {name}\n# firmware: role={fw['role']} git={fw['git']} version={fw['version']} board={fw['board']}\n"
                 f"# imported-from: {os.path.basename(src)} (mtime {started})\n")
         f.write(text.replace("\r\n", "\n"))
     data["runs"] = [r for r in data["runs"] if r["file"] != fname]

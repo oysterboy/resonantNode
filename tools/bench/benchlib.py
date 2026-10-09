@@ -6,7 +6,8 @@ import re
 
 KV = re.compile(r"(\S+?)=(\S*)")
 # Board boot banner, or the "# firmware:" header seqrun/import write into run logs.
-BANNER = re.compile(r"^(?:BUILD|# firmware:) role=(\S+) git=(\S+) .*version=(\S+)")
+# board= was added 2026-10-09 (D-AMP); every earlier firmware was piezo-only.
+BANNER = re.compile(r"^(?:BUILD|# firmware:) role=(\S+) git=(\S+) .*version=(\S+)(?: board=(\S+))?")
 LINE_TYPES = ("SEQ_TRIAL", "SEQ_SOURCE_CORE", "SEQ_SOURCE_SPEC", "SEQ_SOURCE",
               "SEQ_INSPECT", "SEQ_EXPLAIN", "SEQ_DETAIL", "SEQ_SUMMARY", "SEQ REPORT")
 
@@ -41,7 +42,8 @@ def parse_banner(text):
     for line in text.splitlines():
         m = BANNER.match(line.strip())
         if m:
-            return {"role": m.group(1), "git": m.group(2), "version": m.group(3)}
+            return {"role": m.group(1), "git": m.group(2), "version": m.group(3),
+                    "board": m.group(4) or "piezo"}
     return None
 
 

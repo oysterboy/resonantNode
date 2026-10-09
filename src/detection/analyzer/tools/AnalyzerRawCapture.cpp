@@ -1,6 +1,7 @@
 #include "../../../modes/analyzer/AnalyzerModeApp.h"
 #include "../../../audio/AudioPcm.h"
 #include "../AnalyzerText.h"
+#include "../../../app/SerialLine.h"
 
 #include <Arduino.h>
 #include <math.h>
@@ -348,7 +349,7 @@ bool AnalyzerApp::runRawTrigger(unsigned long toneHz,
     auto pumpEmitterSerial = [&]() {
         while (Serial2.available() > 0) {
             const char c = static_cast<char>(Serial2.read());
-            if (c == '\r') {
+            if (serial_line::dropByte(c)) {
                 continue;
             }
 

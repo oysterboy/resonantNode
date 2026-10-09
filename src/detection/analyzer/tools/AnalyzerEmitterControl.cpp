@@ -1,5 +1,6 @@
 #include "../../../modes/analyzer/AnalyzerModeApp.h"
 #include "../AnalyzerText.h"
+#include "../../../app/SerialLine.h"
 
 #include <Arduino.h>
 #include <stdlib.h>
@@ -28,7 +29,7 @@ bool waitForEmitterAck(const char* expectedPrefix, unsigned long timeoutMs) {
     while (millis() - startMs < timeoutMs) {
         while (Serial2.available() > 0) {
             const char c = static_cast<char>(Serial2.read());
-            if (c == '\r') {
+            if (serial_line::dropByte(c)) {
                 continue;
             }
 
@@ -63,7 +64,7 @@ void AnalyzerApp::beginEmitterControl() {
 void AnalyzerApp::pollEmitterSerial() {
     while (Serial2.available() > 0) {
         const char c = static_cast<char>(Serial2.read());
-        if (c == '\r') {
+        if (serial_line::dropByte(c)) {
             continue;
         }
 
@@ -107,5 +108,8 @@ void AnalyzerApp::pollEmitterSerial() {
 }
 
 void AnalyzerApp::sendEmitterCommand(const char* command) {
+    // Leading newline: ends any partial junk line on the Emitter side (see
+    // app/SerialLine.h) so this command always starts a fresh line.
+    Serial2.print('\n');
     Serial2.println(command);
 }

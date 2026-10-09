@@ -104,7 +104,7 @@ for name, commands in args.run:
         sys.exit(f"run file {fname} already exists in this session; pick another name")
     started = datetime.datetime.now().isoformat(timespec="seconds")
     header = [f"# run: {name}", f"# firmware: role={firmware['role']} git={firmware['git']} "
-              f"version={firmware['version']}", f"# started: {started}"]
+              f"version={firmware['version']} board={firmware['board']}", f"# started: {started}"]
     body = []
     for c in cmds[:-1]:
         s.write((c + "\n").encode())

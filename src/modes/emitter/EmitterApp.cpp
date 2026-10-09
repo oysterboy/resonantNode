@@ -5,6 +5,7 @@
 
 #include "../../app/BuildInfo.h"
 #include "../../app/RuntimeDefaults.h"
+#include "../../app/SerialLine.h"
 
 namespace {
 bool startsWithToken(const char* line, const char* token) {
@@ -38,17 +39,31 @@ EmitterApp::EmitterApp(int outputPin, int outputBtlPin, int rxPin, int txPin, un
       _rxPin(rxPin),
       _txPin(txPin),
       _baudRate(baudRate),
+#if defined(BOARD_PIEZO)
       _toneOutput(outputPin),
       _toneOutputBTL(outputPin, outputBtlPin),
       _chirpOutput(outputBtlPin >= 0
                        ? static_cast<ToneOutput&>(_toneOutputBTL)
                        : static_cast<ToneOutput&>(_toneOutput)) {}
+#else
+      _i2sPort(runtime::kDefaultAudioI2SSckPin,
+               runtime::kDefaultAudioI2SWsPin,
+               runtime::kDefaultAudioI2SDataPin,
+               static_cast<int>(runtime::kDefaultAudioI2SSampleRateHz),
+               static_cast<int>(runtime::kDefaultAudioI2SBitsPerSample),
+               runtime::kDefaultAudioI2SDataOutPin),
+      _toneOutput(_i2sPort),
+      _chirpOutput(_toneOutput) {}
+#endif
 
 void EmitterApp::begin() {
     printBuildIdentity(Serial, "emitter");
     Serial.println();
 
     Serial2.begin(_baudRate, SERIAL_8N1, _rxPin, _txPin);
+#if !defined(BOARD_PIEZO)
+    _i2sPort.begin();
+#endif
     _chirpOutput.begin();
     configureAuto(_autoIntervalMs, _autoToneHz, _autoDurationMs);
     setMode(EmitterMode::Auto);
@@ -96,7 +111,7 @@ void EmitterApp::update() {
 void EmitterApp::pollControlSerial() {
     while (Serial2.available() > 0) {
         const char c = static_cast<char>(Serial2.read());
-        if (c == '\r') {
+        if (serial_line::dropByte(c)) {
             continue;
         }
 
@@ -116,6 +131,11 @@ void EmitterApp::pollControlSerial() {
 }
 
 void EmitterApp::handleLine(const char* line) {
+    // Echo every control line to USB so the Serial2 link can be checked from
+    // the Emitter's own console.
+    Serial.print("EVT emitter_cmd line=");
+    Serial.println(line);
+
     char buffer[96];
     strncpy(buffer, line, sizeof(buffer));
     buffer[sizeof(buffer) - 1] = '\0';

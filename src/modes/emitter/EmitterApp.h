@@ -1,8 +1,13 @@
 #pragma once
 
 #include "../../app/RuntimeDefaults.h"
+#if defined(BOARD_PIEZO)
 #include "../../hal/PiezoToneOutputBTL.h"
 #include "../../hal/PiezoToneOutput.h"
+#else
+#include "../../hal/AudioSourceI2S.h"
+#include "../../hal/I2sToneOutput.h"
+#endif
 #include "../../output/ChirpOutput.h"
 
 /*
@@ -70,8 +75,15 @@ private:
     unsigned long _sweepCurrentHz = 1800;
     unsigned long _nextSweepStepAtMs = 0;
     unsigned long _activeTrialId = 0;
+#if defined(BOARD_PIEZO)
     PiezoToneOutput _toneOutput;
     PiezoToneOutputBTL _toneOutputBTL;
+#else
+    // The amp shares the mic's I2S port; the Emitter owns the port through
+    // the same class as the Node and never reads the mic.
+    AudioSourceI2S _i2sPort;
+    I2sToneOutput _toneOutput;
+#endif
     ChirpOutput _chirpOutput;
     char _lineBuffer[96];
     size_t _lineLength = 0;

@@ -2,6 +2,8 @@
 
 #include <Arduino.h>
 
+#include "BoardConfig.h"
+
 #ifndef BUILD_VERSION
 #define BUILD_VERSION "unknown-version"
 #endif
@@ -20,5 +22,7 @@ inline void printBuildIdentity(Print& out, const char* role) {
     out.print(" time=");
     out.print(__TIME__);
     out.print(" version=");
-    out.println(BUILD_VERSION);
+    out.print(BUILD_VERSION);
+    out.print(" board=");
+    out.println(BOARD_NAME);
 }

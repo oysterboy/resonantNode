@@ -7,8 +7,12 @@
 #include "../../detection/DetectionProfile.h"
 #include "../../behavior/BehaviorProfile.h"
 #include "../../hal/AudioSourceI2S.h"
+#if defined(BOARD_PIEZO)
 #include "../../hal/PiezoToneOutputBTL.h"
 #include "../../hal/PiezoToneOutput.h"
+#else
+#include "../../hal/I2sToneOutput.h"
+#endif
 #include "../../audio/AudioSignal.h"
 #include "../../detection/features/FreqBandStream.h"
 #include "../../output/ChirpOutput.h"
@@ -37,7 +41,9 @@ public:
         Minimal,
     };
 
-    Node(int inputPin, int ledPin, int chirpPin, int chirpBtlPin);
+    // ledPin < 0: no status LED. chirpPin / chirpBtlPin drive the piezo
+    // (BOARD_PIEZO only; the D-AMP chirp goes out over the I2S port).
+    Node(int ledPin, int chirpPin, int chirpBtlPin);
 
     void begin();
     void update();
@@ -90,8 +96,12 @@ private:
     int _ledPin;
     AudioSourceI2S _i2sSource;
     AudioSource& _audioSource;
+#if defined(BOARD_PIEZO)
     PiezoToneOutput _toneOutput;
     PiezoToneOutputBTL _toneOutputBTL;
+#else
+    I2sToneOutput _toneOutput;
+#endif
     ChirpOutput _chirpOutput;
 
     // Occurrence / detection / behavior pipeline.

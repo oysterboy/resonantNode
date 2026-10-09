@@ -3,6 +3,8 @@
 #include <cstddef>
 #include <stdint.h>
 
+#include "BoardConfig.h"
+
 /*
 RuntimeDefaults
 
@@ -39,18 +41,6 @@ These are defaults, not live profile state.
 #define AUDIO_I2S_BITS_PER_SAMPLE 32
 #endif
 
-#ifndef AUDIO_I2S_SCK_PIN
-#define AUDIO_I2S_SCK_PIN 14
-#endif
-
-#ifndef AUDIO_I2S_WS_PIN
-#define AUDIO_I2S_WS_PIN 27
-#endif
-
-#ifndef AUDIO_I2S_DATA_PIN
-#define AUDIO_I2S_DATA_PIN 33
-#endif
-
 #ifndef I2S_READ_BYTES
 #define I2S_READ_BYTES 512
 #endif
@@ -63,16 +53,8 @@ These are defaults, not live profile state.
 #define I2S_DMA_BUF_COUNT 3
 #endif
 
-#ifndef I2S_CAPTURE_MODE
-#define I2S_CAPTURE_MODE (I2S_MODE_MASTER | I2S_MODE_RX)
-#endif
-
 #ifndef I2S_USE_APLL
 #define I2S_USE_APLL 0
-#endif
-
-#ifndef I2S_CHANNEL_FORMAT_VALUE
-#define I2S_CHANNEL_FORMAT_VALUE I2S_CHANNEL_FMT_ONLY_RIGHT
 #endif
 
 #ifndef I2S_COMM_FORMAT_VALUE
@@ -93,10 +75,17 @@ constexpr uint32_t kDefaultAudioI2SBitsPerSample = AUDIO_I2S_BITS_PER_SAMPLE;
 constexpr int kDefaultAudioI2SSckPin = AUDIO_I2S_SCK_PIN;
 constexpr int kDefaultAudioI2SWsPin = AUDIO_I2S_WS_PIN;
 constexpr int kDefaultAudioI2SDataPin = AUDIO_I2S_DATA_PIN;
+constexpr int kDefaultAudioI2SDataOutPin = AUDIO_I2S_DOUT_PIN;
 constexpr size_t kDefaultAudioI2SReadBytes = I2S_READ_BYTES;
 constexpr int kDefaultAudioI2SDmaBufLen = I2S_DMA_BUF_LEN;
 constexpr int kDefaultAudioI2SDmaBufCount = I2S_DMA_BUF_COUNT;
 constexpr PcmPreprocessMode kPcmPreprocessMode = PcmPreprocessMode::FirstDifference;
 constexpr unsigned long kDefaultAudioSignalStartupWarmupMs = 2000UL;
+// I2S tone output (D-AMP): sine peak as a fraction of full scale, and the
+// on/off ramp. 0.1 is what the 2026-10-09 wiring check played (audible,
+// heard about 16-19 dB over the room floor at the node's own mic); the
+// level for detection distances is measured in step 3 (#20).
+constexpr float kDefaultI2sToneAmplitude = 0.1f;
+constexpr uint32_t kDefaultI2sToneRampMs = 5UL;
 
 } // namespace runtime

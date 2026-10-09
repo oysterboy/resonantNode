@@ -222,11 +222,28 @@ speaker); the NODE-008 room is another. The rest waits until it shortens
 the path to the trial or the trial is done.
 ```
 
+### NODE-013 - 24-hour bench soak on D-AMP
+
+Status: TODO (step 3a, issue #27)
+
+```text
+Research: docs/research/soak-24h.md (design, gate, open points).
+Observations: docs/lab/notes_lab.md 2026-10-09 (day-to-day level change);
+results go to a bench session and a docs/lab/ entry.
+One Emitter -> Analyzer pair at a fixed distance, boards fixed in place,
+short SEQ blocks every 15 min for 24 h via tools/bench/soak.py (to write),
+one soak.csv row per block. D-AMP at the default tone level (0.3 FS since
+b6e99b0). Blocks in an Analyzer mode without dropped DMA buffers, or the
+drops counted per block (ANA-004). Check the amp wiring first: a loose
+wire silenced one board's amp on 2026-10-09.
+Runs in parallel with NODE-010; doesn't gate NODE-011.
+```
+
 ## Current focus
 
 ```text
 Order: roadmap-0-steps.md. NODE-009, NODE-010, NODE-011 are steps 2-4
-(D-AMP); NODE-001 then NODE-008 are step 6 (field trial, on D-AMP);
+(D-AMP), NODE-013 is step 3a (soak, parallel to step 3); NODE-001 then NODE-008 are step 6 (field trial, on D-AMP);
 NODE-006 and NODE-007 are step 7; NODE-004 is part of step 10.
 ```
 

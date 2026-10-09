@@ -22,7 +22,8 @@ Renamed from roadmap-general.md on 2026-09-23 so it sorts first.
 How this file relates to the domain roadmaps and docs/refactors/: see
 README.md ("Who answers what", "Ordering rule").
 
-Last reordered: 2026-10-09. Piezo discontinued (decision
+Last reordered: 2026-10-09. Soak (#27) added as step 3a on D-AMP
+(drafted as "1c" on piezo). Before that, same day: piezo discontinued (decision
 `docs/decisions/2026-10-09-discontinue-piezo.md`): D-AMP becomes the
 default board in step 2, step 3 is a D-AMP bench check against the
 recorded piezo runs instead of a live A/B, piezo stays as a fallback
@@ -109,6 +110,19 @@ the previous gate open unless the step says it can run in parallel.
    recorded piezo runs, self-echo inside the suppression window (or the
    needed window measured). If D-AMP is a dud, go back to piezo
    (BOARD_PIEZO build) and revisit the decision.
+
+3a. [NEXT, parallel to step 3] 24-hour bench soak on D-AMP: does the room
+   change signal and detection? (issue #27; was "1c" on piezo)
+   Where: NODE-013 (roadmap-node.md); design in docs/research/soak-24h.md.
+   Why: the same nominal 10 cm setup moved from strength median 17,300 to
+   12,800 between two days (docs/lab/notes_lab.md 2026-10-09); every
+   threshold and every E001 comparison needs to know the block-to-block
+   and hour-to-hour spread. Rescoped 2026-10-09 to D-AMP: piezo is
+   discontinued, and the soak should measure the field-trial hardware.
+   Gate: 24 h of blocks with at most a few missing, soak.csv and logs on
+   bench, and a written answer: does strength / accept rate vary by more
+   than block-to-block noise, and does it track time of day or a noted
+   condition. Doesn't gate step 4; the boards are free again afterwards.
 
 4. Switch to D-AMP. (issue #21)
    Where: NODE-011 (roadmap-node.md).

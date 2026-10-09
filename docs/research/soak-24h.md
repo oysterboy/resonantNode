@@ -1,10 +1,9 @@
 # 24-hour bench soak: does the room change signal and detection?
 
 ```text
-Status:  idea (2026-10-09; folded in from issue #27, opened the same day)
-Became:  nothing yet. Issue #27 is titled "[Step 1c]", but
-         roadmap-0-steps.md has no step 1c; the owner decides whether it
-         becomes a step or a roadmap item
+Status:  promoted (2026-10-09; folded in from issue #27, opened the same day)
+Became:  NODE-013 (roadmap-node.md), step 3a in roadmap-0-steps.md,
+         rescoped from piezo to D-AMP (2026-10-09, owner)
 Lab:     docs/lab/notes_lab.md 2026-10-09 (day-to-day level change at
          10 cm); bench:sessions/2026-10-09-issue26-10cm
 ```
@@ -18,6 +17,9 @@ went from 17,300 (2026-10-08) to 12,800 (2026-10-09) at the same nominal
 setup, and we can't tell whether the room or a bumped board caused it.
 
 ## Design (from #27, as written 2026-10-09)
+
+-> promoted to NODE-013 / step 3a, 2026-10-09, on D-AMP instead of the
+piezo bench named below
 
 - One unattended runner for 24 h, `tools/bench/soak.py` (to write, on top
   of `seqrun.py`). Every 15 min a short block: e.g. 10 x TonalPulseScalar,
@@ -42,9 +44,12 @@ of day or a noted condition.
 
 ## Still open (2026-10-09, Claude review)
 
-- #27 planned the run on the piezo bench (Sunday 2026-10-11). Piezo was
-  discontinued the same day (decisions/2026-10-09-discontinue-piezo.md);
-  a soak on D-AMP measures the hardware the field trial will use.
+- Resolved 2026-10-09: #27 planned the run on the piezo bench (Sunday
+  2026-10-11); piezo was discontinued the same day, and the owner rescoped
+  the soak to D-AMP (step 3a). Date not re-confirmed.
+- Profiles per block on D-AMP: TonalPulseScalar at stock; TonalPulseFreq
+  needs a rescale on D-AMP (damp-bench-check.md section 6) - include it
+  only with a documented override, or drop it.
 - Prerequisite in #27 ("land #26 first") is done (e69aa09).
 - Analyzer `mode=detail` drops ~22 DMA buffers per detected trial (ANA-004);
   the blocks should run in a mode without drops, or count them per block.

@@ -82,7 +82,7 @@ the previous gate open unless the step says it can run in parallel.
    and the D-AMP comparison move to step 2 (#19).
 
 2. [NEXT] D-AMP board support in firmware. (issue #19)
-   Where: NODE-009 (roadmap-node.md).
+   Where: NODE-009 (roadmap-node.md) -> docs/refactors/damp-board-support.md.
    What: pins out of main.cpp into build macros (piezo defaults unchanged),
    BOARD_DAMP envs, one full-duplex I2S HAL class giving both the mic
    AudioSource and a sine ToneOutput (mic and amp share BCLK/WS on 26/25).

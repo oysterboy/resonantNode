@@ -160,10 +160,9 @@ main).
   (g_drops_*). Corrected the same night: not D-AMP-specific. The clean
   piezo reference `V_scalar50` (#26) ran with `SEQ DIAG off` (772 bytes
   per trial vs ~6.9 KB here); #26 piezo runs with diagnostics on dropped
-  too. Scalar trials were not hit (buffer_overrun 0), but the 14
-  TonalPulseFreq rejections in e_T2v_s2500_a030_f3200 are this: their
-  inspection windows had holes (coverage incomplete, values 0). Tracked
-  as ANA-004 (roadmap-detection.md). Ladder runs use the #26 baseline
+  too. No trial was hit (buffer_overrun 0). Tracked as ANA-004
+  (roadmap-detection.md). The TonalPulseFreq rejections are not this:
+  see R3 below (DET-010). Ladder runs use the #26 baseline
   settings: `SEQ DIAG off`, `mode=detail`.
 
 ## 6. Recommendations (owner decides; nothing changed on main)
@@ -219,3 +218,14 @@ R4 [ ] Noise false positives (decision 3, owner present): phone playing
        OBS runs at stock vs the lowered amp inspector (medium 1000), and
        signal runs under the same noise (masking). Decide 3 from that.
 ```
+
+2026-10-09 R3, TonalPulseFreq rescale (decision 4), 110 cm, 3200 Hz, 0.3 FS,
+Analyzer tune/issue20-damp (inspector medium 2500), mode=system, 0 dropped
+buffers: freqScore/release 2500/1800 -> 36/50, 2000/1400 -> 40/50,
+1500/1000 -> 37/50; detector 50/50 each; 0 false positives in 3 x 50
+silent windows. The score threshold does not matter in that range. The
+10-14 rejections per run are DET-010 (peak-centered inspection taken
+before its window has arrived: future_window_unavailable), not drops and
+not the thresholds. Rescale applied on main: score 2500 / release 1800,
+AmpEnvelope and FrequencyTarget inspectors 4000 / 2500 / 1200. Margin on
+amp evidence is thin: AmpEnvelope median ~2818 vs medium 2500 at 110 cm.

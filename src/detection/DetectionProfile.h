@@ -192,8 +192,11 @@ inline DetectionProfile makeTonalPulseFreqProfile() {
     profile.detectorSelection = DetectorSelection::FrequencyMatch;
 
     // Frequency path tuning.
-    profile.frequencyMatch.attackScoreMin = 18000.0f;
-    profile.frequencyMatch.releaseScoreMin = 12000.0f;
+    // Rescaled for D-AMP 2026-10-09 (#20 R3): 18000 / 12000 were never
+    // reached (FrequencyTarget peaks ~5000 at 110 cm, 0.3 FS). 1500-2500
+    // all gave detector 50/50 and 0 false positives in silent controls.
+    profile.frequencyMatch.attackScoreMin = 2500.0f;
+    profile.frequencyMatch.releaseScoreMin = 1800.0f;
     profile.frequencyMatch.attackContrastMin = 50.0f;
     profile.frequencyMatch.releaseContrastMin = 50.0f;
     profile.frequencyMatch.minDurationMs = 60;
@@ -212,9 +215,9 @@ inline DetectionProfile makeTonalPulseFreqProfile() {
     profile.inspectionPlan.modules[0].magnitude.mode = MagnitudeInspectionMode::PeakCentered;
     profile.inspectionPlan.modules[0].magnitude.windowPreMs = 10;
     profile.inspectionPlan.modules[0].magnitude.windowPostMs = 90;
-    profile.inspectionPlan.modules[0].magnitude.supportStrength.strongPeakThreshold = 18000.0f;
-    profile.inspectionPlan.modules[0].magnitude.supportStrength.mediumPeakThreshold = 12000.0f;
-    profile.inspectionPlan.modules[0].magnitude.supportStrength.weakPeakThreshold = 8000.0f;
+    profile.inspectionPlan.modules[0].magnitude.supportStrength.strongPeakThreshold = 4000.0f; // D-AMP rescale, #20 R3
+    profile.inspectionPlan.modules[0].magnitude.supportStrength.mediumPeakThreshold = 2500.0f;
+    profile.inspectionPlan.modules[0].magnitude.supportStrength.weakPeakThreshold = 1200.0f;
 
     profile.inspectionPlan.modules[1].kind = InspectionModuleKind::MagnitudeFeatureStrength;
     profile.inspectionPlan.modules[1].target = InspectionTarget::TargetScore;
@@ -225,9 +228,9 @@ inline DetectionProfile makeTonalPulseFreqProfile() {
     profile.inspectionPlan.modules[1].magnitude.mode = MagnitudeInspectionMode::PeakCentered;
     profile.inspectionPlan.modules[1].magnitude.windowPreMs = 10;
     profile.inspectionPlan.modules[1].magnitude.windowPostMs = 90;
-    profile.inspectionPlan.modules[1].magnitude.supportStrength.strongPeakThreshold = 18000.0f;
-    profile.inspectionPlan.modules[1].magnitude.supportStrength.mediumPeakThreshold = 12000.0f;
-    profile.inspectionPlan.modules[1].magnitude.supportStrength.weakPeakThreshold = 8000.0f;
+    profile.inspectionPlan.modules[1].magnitude.supportStrength.strongPeakThreshold = 4000.0f; // D-AMP rescale, #20 R3
+    profile.inspectionPlan.modules[1].magnitude.supportStrength.mediumPeakThreshold = 2500.0f;
+    profile.inspectionPlan.modules[1].magnitude.supportStrength.weakPeakThreshold = 1200.0f;
 
     profile.inspectionPlan.modules[2].kind = InspectionModuleKind::MagnitudeFeatureStrength;
     profile.inspectionPlan.modules[2].target = InspectionTarget::Contrast;

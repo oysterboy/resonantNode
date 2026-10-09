@@ -116,6 +116,27 @@ absent with diagnostics off. Fix the mechanism; widening the window or
 passing the incomplete case is not a fix.
 ```
 
+### DET-010 - peak-centered inspection runs before its window has arrived
+
+Status: TODO (found 2026-10-09, #20)
+
+```text
+TonalPulseFreq inspects PeakCentered windows (peak -10 .. +90 ms). The
+inspection is taken when the occurrence ends; when the peak comes late in
+a long occurrence (D-AMP at 0.3 FS: 146-149 ms occurrences), the window's
+end is still in the future, the module reports status=missing /
+future_window_unavailable (available_start/end 0), every class is
+unknown, and the verdict rejects a strong, clean chirp.
+Example: anchor 17623, requested 17613-17713, inspection_now 17663.
+Rate at 110 cm, 3200 Hz: 10-14 of 50 trials, independent of the detector
+score threshold (1500-2500) and with 0 dropped DMA buffers
+(bench:sessions/2026-10-09-issue20-damp-110cm-b h_T2v_*,
+e_T2v_s2500_a030_f3200). TonalPulseScalar (Start-anchored, 0..+100 ms)
+was not hit. Same family as DET-009. Fix the mechanism (defer the
+inspection until the window end is available, or anchor the window
+inside the occurrence); passing the incomplete case is not a fix.
+```
+
 ### DET-003 - inspection target / payload split
 
 Status: TODO
@@ -183,10 +204,10 @@ detection, mode=trial/system, or SEQ DIAG off: 0 drops. Seen on D-AMP
 (bench:sessions/2026-10-09-issue20-damp-110cm-b g_drops_*) and on piezo
 (issue #26 F3_diag_on / F5 runs); the clean piezo reference V_scalar50 ran
 with SEQ DIAG off (772 bytes per trial).
-Effect: when the hole lands in an inspection window the trial is rejected
-with incomplete coverage (TonalPulseFreq 14/50 at 110 cm,
-e_T2v_s2500_a030_f3200); TonalPulseScalar trials were not hit
-(buffer_overrun_trials=0) but are not guaranteed safe.
+Effect on results: none shown so far (buffer_overrun_trials=0 in every
+#20 run), but a hole landing in an inspection window would reject the
+trial. (The TonalPulseFreq rejections first blamed on this are DET-010:
+they recur with 0 drops.)
 Until fixed: comparable runs use SEQ DIAG off (as the #26 baselines) or
 mode=system, and record dropped_dma_buffers. Fix direction: bound or
 defer the report output (print from a queue between trials), or flag the

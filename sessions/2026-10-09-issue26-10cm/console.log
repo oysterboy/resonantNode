@@ -1,0 +1,107 @@
+[08:18:13] boot banner: {'role': 'analyzer', 'git': '05da661', 'version': '0.4.0'}
+[08:18:15] warmup: ERR EMIT CHIRP emitter_remote_claim_timeout
+[08:18:17] start R_diag_on_freq12k: PARAM freqScore=12000 freqReleaseScore=8000 ; SEQ DIAG on ; SEQ start profile=TonalPulseFreq tries=30 mode=detail when=all verbose=1
+[08:19:57] done R_diag_on_freq12k (101s): complete=True results={'rejected': 30}
+[08:20:01] start R_diag_off_freq12k: PARAM freqScore=12000 freqReleaseScore=8000 ; SEQ DIAG off ; SEQ start profile=TonalPulseFreq tries=30 mode=detail when=all verbose=1
+[08:21:42] done R_diag_off_freq12k (101s): complete=True results={'rejected': 30}
+[08:21:44] session updated, index rebuilt
+[08:22:07] boot banner: {'role': 'analyzer', 'git': '05da661', 'version': '0.4.0'}
+[08:22:09] warmup: OK EMIT CHIRP
+[08:22:11] start R_diag_on_v2_freq12k: PARAM freqScore=12000 freqReleaseScore=8000 ; SEQ DIAG on ; SEQ start profile=TonalPulseFreq tries=50 mode=detail when=all verbose=2
+[08:24:56] done R_diag_on_v2_freq12k (165s): complete=True results={'rejected': 50}
+[08:24:59] start R_diag_on_v1_freq12k_b: PARAM freqScore=12000 freqReleaseScore=8000 ; SEQ DIAG on ; SEQ start profile=TonalPulseFreq tries=50 mode=detail when=all verbose=1
+[08:27:44] done R_diag_on_v1_freq12k_b (165s): complete=True results={'rejected': 50}
+[08:27:46] session updated, index rebuilt
+[08:30:07] boot banner: {'role': 'analyzer', 'git': '05da661', 'version': '0.4.0'}
+[08:30:09] warmup: ERR EMIT CHIRP emitter_remote_claim_timeout
+[08:30:10] start R_loopdelay10_scalar: SEQ DIAG off ; SEQ start profile=TonalPulseScalar tries=30 mode=detail when=all verbose=1
+[08:31:51] done R_loopdelay10_scalar (101s): complete=True results={'expected': 28, 'rejected': 2}
+[08:31:53] session updated, index rebuilt
+[08:36:15] boot banner: {'role': 'analyzer', 'git': '705f120', 'version': '0.4.0'}
+[08:36:17] warmup: ERR EMIT CHIRP emitter_remote_claim_timeout
+[08:36:18] start F_loopdelay10_scalar: SEQ DIAG off ; SEQ start profile=TonalPulseScalar tries=30 mode=detail when=all verbose=1
+[08:37:59] done F_loopdelay10_scalar (101s): complete=True results={'expected': 5, 'unexpected': 25}
+[08:38:01] session updated, index rebuilt
+[08:39:41] boot banner: {'role': 'analyzer', 'git': '705f120', 'version': '0.4.0'}
+[08:39:43] warmup: ERR EMIT CHIRP emitter_remote_claim_timeout
+[08:39:44] start F_normal_scalar: SEQ DIAG off ; SEQ start profile=TonalPulseScalar tries=30 mode=detail when=all verbose=1
+[08:41:25] done F_normal_scalar (101s): complete=True results={'expected': 1, 'unexpected': 29}
+[08:41:27] session updated, index rebuilt
+[08:45:45] boot banner: {'role': 'analyzer', 'git': '846dd0b', 'version': '0.4.0'}
+[08:45:47] warmup: ERR EMIT CHIRP emitter_remote_claim_timeout
+[08:45:48] start F2_normal_scalar: SEQ DIAG off ; SEQ start profile=TonalPulseScalar tries=30 mode=detail when=all verbose=1
+[08:47:28] done F2_normal_scalar (101s): complete=True results={'rejected': 30}
+[08:47:32] start F2_diag_on_freq12k: PARAM freqScore=12000 freqReleaseScore=8000 ; SEQ DIAG on ; SEQ start profile=TonalPulseFreq tries=30 mode=detail when=all verbose=1
+[08:49:14] done F2_diag_on_freq12k (102s): complete=True results={'rejected': 19, 'miss': 11}
+[08:49:16] session updated, index rebuilt
+[08:53:12] boot banner: {'role': 'analyzer', 'git': 'ce2e3e8', 'version': '0.4.0'}
+[08:53:14] warmup: ERR EMIT CHIRP emitter_remote_claim_timeout
+[08:53:14] start F3_normal_scalar: SEQ DIAG off ; SEQ start profile=TonalPulseScalar tries=30 mode=detail when=all verbose=1
+[08:54:55] done F3_normal_scalar (101s): complete=True results={'expected': 30}
+[08:54:59] start F3_diag_on_freq12k: PARAM freqScore=12000 freqReleaseScore=8000 ; SEQ DIAG on ; SEQ start profile=TonalPulseFreq tries=30 mode=detail when=all verbose=1
+[08:56:40] done F3_diag_on_freq12k (102s): complete=True results={'rejected': 24, 'miss': 6}
+[08:56:43] session updated, index rebuilt
+[08:59:35] boot banner: {'role': 'analyzer', 'git': '6550714', 'version': '0.4.0'}
+[08:59:37] warmup: ERR EMIT CHIRP emitter_remote_claim_timeout
+[08:59:38] start F4_scalar_anchor: SEQ DIAG off ; SEQ start profile=TonalPulseScalar tries=15 mode=detail when=all verbose=1
+[09:00:31] done F4_scalar_anchor (53s): complete=True results={'expected': 12, 'rejected': 3}
+[09:00:33] session updated, index rebuilt
+[09:02:49] boot banner: {'role': 'analyzer', 'git': 'ce9c62d', 'version': '0.4.0'}
+[09:02:51] warmup: ERR EMIT CHIRP emitter_remote_claim_timeout
+[09:02:52] start F5_scalar: SEQ DIAG off ; SEQ start profile=TonalPulseScalar tries=30 mode=detail when=all verbose=1
+[09:04:34] done F5_scalar (102s): complete=True results={'expected': 27, 'rejected': 3}
+[09:04:38] start F5_diag_on_freq12k: PARAM freqScore=12000 freqReleaseScore=8000 ; SEQ DIAG on ; SEQ start profile=TonalPulseFreq tries=30 mode=detail when=all verbose=1
+[09:06:19] done F5_diag_on_freq12k (102s): complete=True results={'miss': 26, 'rejected': 4}
+[09:06:21] session updated, index rebuilt
+[09:07:17] boot banner: {'role': 'analyzer', 'git': 'ce9c62d', 'version': '0.4.0'}
+[09:07:19] warmup: OK EMIT CHIRP
+[09:07:20] start F6_scalar_system: SEQ DIAG off ; SEQ start profile=TonalPulseScalar tries=10 mode=system when=all verbose=1
+[09:07:57] done F6_scalar_system (36s): complete=True results={'expected': 10}
+[09:07:59] session updated, index rebuilt
+[09:09:30] boot banner: {'role': 'analyzer', 'git': '1f45158', 'version': '0.4.0'}
+[09:09:32] warmup: ERR EMIT CHIRP emitter_remote_claim_timeout
+[09:09:33] start G_evq_on: SEQ DIAG off ; SEQ start profile=TonalPulseScalar tries=8 mode=detail when=all verbose=1
+[09:10:03] done G_evq_on (30s): complete=True results={'expected': 8}
+[09:10:05] session updated, index rebuilt
+[09:10:49] boot banner: {'role': 'analyzer', 'git': '1f45158', 'version': '0.4.0'}
+[09:10:51] warmup: ERR EMIT CHIRP emitter_remote_claim_timeout
+[09:10:52] start G_evq_off: SEQ DIAG off ; SEQ start profile=TonalPulseScalar tries=8 mode=detail when=all verbose=1
+[09:11:22] done G_evq_off (30s): complete=True results={'rejected': 2, 'miss': 6}
+[09:11:24] session updated, index rebuilt
+[09:13:24] boot banner: {'role': 'analyzer', 'git': 'f72bd69', 'version': '0.4.0'}
+[09:13:26] warmup: ERR EMIT CHIRP emitter_remote_claim_timeout
+[09:13:27] start H_cost_TonalPulseScalar: SEQ DIAG off ; SEQ start profile=TonalPulseScalar tries=6 mode=detail when=all verbose=1
+[09:13:51] done H_cost_TonalPulseScalar (24s): complete=True results={'expected': 6}
+[09:13:53] session updated, index rebuilt
+[09:13:58] boot banner: {'role': 'analyzer', 'git': 'f72bd69', 'version': '0.4.0'}
+[09:14:00] warmup: OK EMIT CHIRP
+[09:14:00] start H_cost_TonalPulseFreq: SEQ DIAG off ; SEQ start profile=TonalPulseFreq tries=6 mode=detail when=all verbose=1
+[09:14:24] done H_cost_TonalPulseFreq (24s): complete=True results={'miss': 6}
+[09:14:26] session updated, index rebuilt
+[09:15:30] boot banner: {'role': 'analyzer', 'git': 'f72bd69', 'version': '0.4.0'}
+[09:15:32] warmup: ERR EMIT CHIRP emitter_remote_claim_timeout
+[09:15:33] start H_freqprof_scalar: SEQ DIAG off ; SEQ start profile=TonalPulseScalar tries=6 mode=detail when=all verbose=1
+[09:15:57] done H_freqprof_scalar (24s): complete=True results={'expected': 6}
+[09:15:59] session updated, index rebuilt
+[09:17:16] boot banner: {'role': 'analyzer', 'git': 'f72bd69', 'version': '0.4.0'}
+[09:17:18] warmup: ERR EMIT CHIRP emitter_remote_claim_timeout
+[09:17:19] start H_cost2_scalar: SEQ DIAG off ; SEQ start profile=TonalPulseScalar tries=6 mode=detail when=all verbose=1
+[09:17:43] done H_cost2_scalar (24s): complete=True results={'expected': 4, 'rejected': 2}
+[09:17:45] session updated, index rebuilt
+[09:19:25] boot banner: {'role': 'analyzer', 'git': 'f72bd69', 'version': '0.4.0'}
+[09:19:27] warmup: ERR EMIT CHIRP emitter_remote_claim_timeout
+[09:19:28] start H_qio80_scalar: SEQ DIAG off ; SEQ start profile=TonalPulseScalar tries=6 mode=detail when=all verbose=1
+[09:19:52] done H_qio80_scalar (24s): complete=True results={'expected': 6}
+[09:19:54] session updated, index rebuilt
+[09:21:02] boot banner: {'role': 'analyzer', 'git': 'f72bd69', 'version': '0.4.0'}
+[09:21:04] warmup: ERR EMIT CHIRP emitter_remote_claim_timeout
+[09:21:05] start H_dio80_scalar: SEQ DIAG off ; SEQ start profile=TonalPulseScalar tries=6 mode=detail when=all verbose=1
+[09:21:28] done H_dio80_scalar (24s): complete=True results={'expected': 6}
+[09:21:31] session updated, index rebuilt
+[09:25:01] boot banner: {'role': 'analyzer', 'git': '464b8fc', 'version': '0.4.0'}
+[09:25:03] warmup: ERR EMIT CHIRP emitter_remote_claim_timeout
+[09:25:03] start V_scalar50: SEQ DIAG off ; SEQ start profile=TonalPulseScalar tries=50 mode=detail when=all verbose=1
+[09:27:47] done V_scalar50 (164s): complete=True results={'expected': 50}
+[09:27:51] start V_diag_on_freq12k50: PARAM freqScore=12000 freqReleaseScore=8000 ; SEQ DIAG on ; SEQ start profile=TonalPulseFreq tries=50 mode=detail when=all verbose=1
+[09:30:36] done V_diag_on_freq12k50 (165s): complete=True results={'rejected': 50}
+[09:30:38] session updated, index rebuilt

@@ -57,6 +57,13 @@ These are defaults, not live profile state.
 #define I2S_USE_APLL 0
 #endif
 
+// Sine peak of the D-AMP tone as a fraction of full scale (see
+// kDefaultI2sToneAmplitude below); a build flag so a bench run can try
+// another level without editing the default.
+#ifndef I2S_TONE_AMPLITUDE
+#define I2S_TONE_AMPLITUDE 0.1f
+#endif
+
 #ifndef I2S_COMM_FORMAT_VALUE
 #define I2S_COMM_FORMAT_VALUE I2S_COMM_FORMAT_STAND_I2S
 #endif
@@ -85,7 +92,7 @@ constexpr unsigned long kDefaultAudioSignalStartupWarmupMs = 2000UL;
 // on/off ramp. 0.1 is what the 2026-10-09 wiring check played (audible,
 // heard about 16-19 dB over the room floor at the node's own mic); the
 // level for detection distances is measured in step 3 (#20).
-constexpr float kDefaultI2sToneAmplitude = 0.1f;
+constexpr float kDefaultI2sToneAmplitude = I2S_TONE_AMPLITUDE;
 constexpr uint32_t kDefaultI2sToneRampMs = 5UL;
 
 } // namespace runtime

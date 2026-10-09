@@ -21,6 +21,11 @@ struct AudioSourceStats {
     uint32_t overflowCount = 0;
 
     uint64_t totalSamplesRead = 0;
+
+    // Blocks whose estimated start time lies before the previous block's
+    // estimated end, i.e. sample time went backwards between two blocks.
+    uint32_t timestampBacksteps = 0;
+    uint32_t maxTimestampBackstepUs = 0;
 };
 
 struct AudioBlock {

@@ -290,6 +290,18 @@ bool AudioSourceI2S::refillBlock() {
     const uint32_t selectedFrameAge = _blockCount > 0 ? static_cast<uint32_t>(_blockCount - 1U) : 0U;
     const uint32_t offsetUs = sampleOffsetUs(selectedFrameAge, static_cast<uint32_t>(_sampleRate));
     _blockApproxStartMicros = fillEndUs > offsetUs ? fillEndUs - offsetUs : 0U;
+    if (_haveLastBlockEnd) {
+        const int32_t deltaUs = static_cast<int32_t>(_blockApproxStartMicros - _lastBlockEndMicros);
+        if (deltaUs < 0) {
+            ++_stats.timestampBacksteps;
+            const uint32_t backstepUs = static_cast<uint32_t>(-deltaUs);
+            if (backstepUs > _stats.maxTimestampBackstepUs) {
+                _stats.maxTimestampBackstepUs = backstepUs;
+            }
+        }
+    }
+    _lastBlockEndMicros = _blockApproxStartMicros + sampleOffsetUs(static_cast<uint32_t>(_blockCount), static_cast<uint32_t>(_sampleRate));
+    _haveLastBlockEnd = true;
     _outputSampleIndex += static_cast<uint64_t>(_blockCount);
     _stats.totalSamplesRead += static_cast<uint64_t>(_blockCount);
     return _blockCount > 0;

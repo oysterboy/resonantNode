@@ -68,6 +68,11 @@ public:
     ) const;
 
     size_t sampleCount(FeatureStreamId stream) const;
+    // Diagnostics: span of the resident ring for a stream, and how often a
+    // record() arrived with a time earlier than the bin being filled.
+    unsigned long oldestBinTimeMs(FeatureStreamId stream) const;
+    size_t binCount(FeatureStreamId stream) const;
+    uint32_t outOfOrderRecordCount() const;
     bool hasSamples(FeatureStreamId stream) const;
     unsigned long latestTimeMs(FeatureStreamId stream) const;
     float latestValue(FeatureStreamId stream) const;
@@ -121,6 +126,7 @@ private:
 
     FeatureStreamId _slotStream[kMaxActiveStreams] = {};
     size_t _activeStreamCount = 0;
+    uint32_t _outOfOrderRecords = 0;
     StreamBuffer _streams[kMaxActiveStreams] = {};
 };
 

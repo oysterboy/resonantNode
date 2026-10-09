@@ -53,6 +53,8 @@ private:
     size_t _blockCursor = 0;
     uint64_t _blockStartSampleIndex = 0;
     uint32_t _blockApproxStartMicros = 0;
+    uint32_t _lastBlockEndMicros = 0;
+    bool _haveLastBlockEnd = false;
     bool _blockOverflowBeforeBlock = false;
     uint64_t _outputSampleIndex = 0;
     int32_t _previousSample = 0;

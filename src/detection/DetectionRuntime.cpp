@@ -132,6 +132,7 @@ void DetectionRuntime::resetDiagnosticsCounters() {
     _verdictQueueOverflowCount = 0;
     _verdictCorrelationQueueOverflowCount = 0;
     _detectorReportMismatchCount = 0;
+    _historyIncomplete = {};
     _observeFrameCount = 0;
     _freshDetectorInputCount = 0;
     _detectorDrainCount = 0;
@@ -445,6 +446,10 @@ unsigned long DetectionRuntime::detectorReportMismatchCount() const {
     return _detectorReportMismatchCount;
 }
 
+const DetectionRuntime::HistoryIncompleteSnapshot& DetectionRuntime::historyIncompleteSnapshot() const {
+    return _historyIncomplete;
+}
+
 uint32_t DetectionRuntime::observeFrameCount() const {
     return _observeFrameCount;
 }
@@ -572,6 +577,22 @@ void DetectionRuntime::drainDetectors(unsigned long nowMs) {
         const InspectedOccurrence inspected = _occurrenceInspector.inspectWithHistory(occurrence, &_featureHistory, nowMs);
         _fieldStateTracker.observeInspectedOccurrence(inspected, nowMs);
 #ifdef ANALYZER_MODE
+        for (size_t i = 0; i < inspected.magnitudeObservationCount; ++i) {
+            const MagnitudeInspectionObservation& obs = inspected.magnitudeObservations[i];
+            if (obs.note != MagnitudeInspectionNote::HistoryWindowIncomplete) {
+                continue;
+            }
+            ++_historyIncomplete.count;
+            _historyIncomplete.stream = obs.stream;
+            _historyIncomplete.requestedStartMs = obs.requestedStartMs;
+            _historyIncomplete.requestedEndMs = obs.requestedEndMs;
+            _historyIncomplete.inspectionNowMs = obs.inspectionNowMs;
+            _historyIncomplete.ringOldestMs = _featureHistory.oldestBinTimeMs(obs.stream);
+            _historyIncomplete.ringNewestMs = _featureHistory.latestTimeMs(obs.stream);
+            _historyIncomplete.ringBins = _featureHistory.binCount(obs.stream);
+            _historyIncomplete.outOfOrderRecords = _featureHistory.outOfOrderRecordCount();
+            break;
+        }
         // The correlation observation exists only to attach a matching
         // DetectorReport/InspectedOccurrence to the diagnostic
         // DetectionPipelineEvent; neither OccurrenceVerdict nor FieldState is

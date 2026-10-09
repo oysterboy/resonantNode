@@ -174,6 +174,26 @@ void FeatureHistory::reset() {
     for (size_t i = 0; i < kMaxActiveStreams; ++i) {
         resetStream(_streams[i]);
     }
+    _outOfOrderRecords = 0;
+}
+
+unsigned long FeatureHistory::oldestBinTimeMs(FeatureStreamId stream) const {
+    const size_t slot = slotFor(stream);
+    if (slot == kNoSlot || _streams[slot].binCount == 0) {
+        return 0;
+    }
+    const StreamBuffer& buffer = _streams[slot];
+    const size_t oldestIndex = buffer.binCount == kBinsPerStream ? buffer.writeIndex : 0U;
+    return buffer.bins[oldestIndex].startMs;
+}
+
+size_t FeatureHistory::binCount(FeatureStreamId stream) const {
+    const size_t slot = slotFor(stream);
+    return slot == kNoSlot ? 0U : _streams[slot].binCount;
+}
+
+uint32_t FeatureHistory::outOfOrderRecordCount() const {
+    return _outOfOrderRecords;
 }
 
 void FeatureHistory::startCurrentBin(StreamBuffer& buffer, unsigned long timeMs) {
@@ -246,6 +266,9 @@ void FeatureHistory::record(FeatureStreamId id, unsigned long timeMs, float valu
     }
 
     StreamBuffer& buffer = _streams[slot];
+    if (buffer.hasCurrent && timeMs < buffer.current.startMs) {
+        ++_outOfOrderRecords;
+    }
     if (!buffer.hasCurrent) {
         startCurrentBin(buffer, timeMs);
     } else if (timeMs != buffer.current.startMs) {

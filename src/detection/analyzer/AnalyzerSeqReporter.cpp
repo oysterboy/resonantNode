@@ -93,6 +93,48 @@ void AnalyzerApp::printSequenceTrialHeader(unsigned long trialNumber) const {
 }
 
 void AnalyzerApp::printSequenceTrial(const AnalyzerReport& report) const {
+    // Issue #26 diagnostics: one line whenever an inspection found its
+    // history window incomplete since the previous trial line.
+    const detection::DetectionRuntime::HistoryIncompleteSnapshot& hist = _detection.historyIncompleteSnapshot();
+    if (hist.count < _lastPrintedHistoryIncompleteCount) {
+        _lastPrintedHistoryIncompleteCount = 0;
+    }
+    {
+        const AudioSourceStats& audioStats = _audioSource.stats();
+        Serial.print("SEQ_HISTDBG trial=");
+        Serial.print(report.context.trial);
+        Serial.print(" incomplete_total=");
+        Serial.print(hist.count);
+        Serial.print(" new=");
+        Serial.print(hist.count - _lastPrintedHistoryIncompleteCount);
+        if (hist.count != _lastPrintedHistoryIncompleteCount) {
+            Serial.print(" stream=");
+            Serial.print(detection::featureStreamName(hist.stream));
+            Serial.print(" req=");
+            Serial.print(hist.requestedStartMs);
+            Serial.print("..");
+            Serial.print(hist.requestedEndMs);
+            Serial.print(" now=");
+            Serial.print(hist.inspectionNowMs);
+            Serial.print(" ring=");
+            Serial.print(hist.ringOldestMs);
+            Serial.print("..");
+            Serial.print(hist.ringNewestMs);
+            Serial.print(" ring_bins=");
+            Serial.print(static_cast<unsigned long>(hist.ringBins));
+            Serial.print(" out_of_order_at_fail=");
+            Serial.print(hist.outOfOrderRecords);
+        }
+        Serial.print(" out_of_order_total=");
+        Serial.print(_detection.featureHistory().outOfOrderRecordCount());
+        Serial.print(" i2s_backsteps=");
+        Serial.print(audioStats.timestampBacksteps);
+        Serial.print(" i2s_max_backstep_us=");
+        Serial.print(audioStats.maxTimestampBackstepUs);
+        Serial.print(" i2s_overflows=");
+        Serial.println(audioStats.overflowCount);
+        _lastPrintedHistoryIncompleteCount = hist.count;
+    }
     const char* trialRejectReason = analyzerReasonName(report.classification.reason);
     if (report.classification.result == AnalyzerResult::Rejected &&
         report.occurrences.rejectReason != nullptr &&

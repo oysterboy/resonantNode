@@ -193,6 +193,21 @@ public:
     const DetectorReport& activeDetectorReport() const;
     const OccurrenceEvaluatorReport& activeEvaluatorReport() const;
     const FeatureHistory& featureHistory() const;
+
+    // Snapshot of the history ring at the latest inspection that found its
+    // window incomplete (issue #26 diagnostics).
+    struct HistoryIncompleteSnapshot {
+        uint32_t count = 0;
+        FeatureStreamId stream = FeatureStreamId::Unknown;
+        unsigned long requestedStartMs = 0;
+        unsigned long requestedEndMs = 0;
+        unsigned long inspectionNowMs = 0;
+        unsigned long ringOldestMs = 0;
+        unsigned long ringNewestMs = 0;
+        size_t ringBins = 0;
+        uint32_t outOfOrderRecords = 0;
+    };
+    const HistoryIncompleteSnapshot& historyIncompleteSnapshot() const;
 #endif
 
 private:
@@ -261,6 +276,7 @@ private:
     uint32_t _lastObservedFrequencyReportGeneration = 0;
     unsigned long _pipelineEventOverflowCount = 0;
     unsigned long _detectorReportMismatchCount = 0;
+    HistoryIncompleteSnapshot _historyIncomplete = {};
     DetectionPipelineEvent _pipelineEventQueue[kPipelineEventQueueCapacity] = {};
     size_t _pipelineEventReadIndex = 0;
     size_t _pipelineEventCount = 0;

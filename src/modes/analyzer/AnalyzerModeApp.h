@@ -517,6 +517,7 @@ private:
     AudioSource& _audioSource; // Common audio-source view used by shared helpers.
     AudioSignal _audioSignal; // Legacy audio framing helper for detector input packets.
     mutable detection::DetectionRuntime _detection; // Canonical detector runtime and feature history.
+    mutable uint32_t _lastPrintedHistoryIncompleteCount = 0; // Issue #26 diagnostics: last SEQ_HISTDBG count printed.
     FreqBandStream _freqBandStream; // Live frequency-band stream used by analyzer diagnostics.
     AnalyzerTuning _analyzerTuning = {}; // Temporary tuning overrides from console commands.
     SeqOutputConfig _seqOutputConfig = {}; // Sequence-report output policy.

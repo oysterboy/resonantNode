@@ -145,6 +145,10 @@ void AnalyzerApp::printSequenceTrial(const AnalyzerReport& report) const {
         Serial.print(millis());
         Serial.print(" samples_read=");
         Serial.print(static_cast<unsigned long>(audioStats.totalSamplesRead));
+        Serial.print(" us_per_sample=");
+        Serial.print(_diagSamplesWorked > 0
+            ? static_cast<float>(_diagSampleWorkUs) / static_cast<float>(_diagSamplesWorked)
+            : 0.0f, 2);
         Serial.print(" dropped_dma_buffers=");
         Serial.print(audioStats.droppedDmaBuffers);
         Serial.print(" clock_rate_mhz=");

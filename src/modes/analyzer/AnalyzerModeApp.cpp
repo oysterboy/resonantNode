@@ -769,6 +769,10 @@ void AnalyzerApp::update() {
         }
     }
     const unsigned long sampleWorkUs = static_cast<unsigned long>(micros() - sampleWorkStartUs);
+    if (processedSamples > 0) {
+        _diagSampleWorkUs += sampleWorkUs;
+        _diagSamplesWorked += static_cast<uint64_t>(processedSamples);
+    }
     if (_sequenceTest.active && sampleWorkUs > _sequenceTest.maxSampleWorkUs) {
         _sequenceTest.maxSampleWorkUs = sampleWorkUs;
     }

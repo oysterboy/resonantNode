@@ -21,6 +21,13 @@ Node app(34, 2, 25, 26);
 #endif
 
 void setup() {
+#if defined(ANALYZER_MODE)
+    // A SEQ trial report is several KB. With the default TX buffer every
+    // print waits for the UART (115200 baud, ~11.5 KB/s), stalling the loop
+    // far longer than the I2S DMA queue covers (16-24 ms); the dropped audio
+    // then shows up as gaps in FeatureHistory (issue #26). Queue it instead.
+    Serial.setTxBufferSize(16384);
+#endif
     Serial.begin(115200);
     app.begin();
 }

@@ -184,3 +184,32 @@ main).
 6. Own-emit: detection suppression until ~60 ms after toneOff would keep
    own chirps out of field activity (measured echo ends 33-54 ms after
    toneOff). Step 6's multi-emitter question.
+
+Owner decisions on section 6 (2026-10-09): 1 yes, 2 no (stay at 3200 Hz),
+3 yes but only after more research (noise false-positive runs first),
+4 yes, 5 yes, 6 yes. 1, 5 and 6 landed in b6e99b0 (tone 0.3 FS; startup
+quiet threshold 400 on D-AMP; own-emit detection suppression for the whole
+chirp + 60 ms tail); compiles on all six envs, bench verification pending
+(section 7, R1). 4 needs runs (R3), 3 needs noise runs (R4).
+
+## 7. Run plan (from 2026-10-09)
+
+```text
+R0 [ ] Owner: fix the COM6 amp/speaker wiring; verify with the beep sketch
+       (both boards hear their own beep).
+R1 [ ] Verify b6e99b0 at 110 cm: Emitter -> Analyzer T3 stock, both
+       directions, mode=system (expect 50/50 at 0.3 FS); Node quiet boot
+       on each board with nothing sounding (expect "rebase done", not
+       FAILED_NO_QUIET); Node idle chirps no longer produce own verdicts.
+R2 [ ] Ladder at 0.3 FS, stock Scalar, mode=system: 10 / 40 / 70 cm (the
+       piezo records) T3 + 50 silent OBS windows per distance; dropped
+       buffers recorded. This is the #20 gate.
+R3 [ ] TonalPulseFreq rescale (decision 4): at 110 cm, 0.3 FS, 3200 Hz,
+       freqScore 2500 / 2000 / 1500 with the inspector variant
+       (tune/issue20-damp), each with a silent OBS control; pick, then
+       put the values in DetectionProfile.h.
+R4 [ ] Noise false positives (decision 3, owner present): phone playing
+       speech, then music, ~50 cm from the Analyzer; claps; a door. Silent
+       OBS runs at stock vs the lowered amp inspector (medium 1000), and
+       signal runs under the same noise (masking). Decide 3 from that.
+```

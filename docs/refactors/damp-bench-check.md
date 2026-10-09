@@ -156,10 +156,15 @@ main).
   detected by the node's own mic as a valid pattern (~19.7k) and blocked
   only by `refractory_after_emit`; it counts as field activity.
 - Dropped DMA buffers (4a): 21-22 per detected trial in `mode=detail`
-  runs, 0 in `mode=trial` / `mode=system` (g_drops_*). Analyzer report
-  output, not detection; no trial was marked buffer_overrun. Piezo
-  `V_scalar50` (#26) had 0 in detail mode: why D-AMP stalls there is open.
-  Ladder runs use `mode=system`.
+  runs with SEQ diagnostics on, 0 in `mode=trial` / `mode=system`
+  (g_drops_*). Corrected the same night: not D-AMP-specific. The clean
+  piezo reference `V_scalar50` (#26) ran with `SEQ DIAG off` (772 bytes
+  per trial vs ~6.9 KB here); #26 piezo runs with diagnostics on dropped
+  too. Scalar trials were not hit (buffer_overrun 0), but the 14
+  TonalPulseFreq rejections in e_T2v_s2500_a030_f3200 are this: their
+  inspection windows had holes (coverage incomplete, values 0). Tracked
+  as ANA-004 (roadmap-detection.md). Ladder runs use the #26 baseline
+  settings: `SEQ DIAG off`, `mode=detail`.
 
 ## 6. Recommendations (owner decides; nothing changed on main)
 
@@ -201,7 +206,8 @@ R1 [ ] Verify b6e99b0 at 110 cm: Emitter -> Analyzer T3 stock, both
        directions, mode=system (expect 50/50 at 0.3 FS); Node quiet boot
        on each board with nothing sounding (expect "rebase done", not
        FAILED_NO_QUIET); Node idle chirps no longer produce own verdicts.
-R2 [ ] Ladder at 0.3 FS, stock Scalar, mode=system: 10 / 40 / 70 cm (the
+R2 [ ] Ladder at 0.3 FS, stock Scalar, SEQ DIAG off + mode=detail (the #26
+       baseline settings; ANA-004): 10 / 40 / 70 cm (the
        piezo records) T3 + 50 silent OBS windows per distance; dropped
        buffers recorded. This is the #20 gate.
 R3 [ ] TonalPulseFreq rescale (decision 4): at 110 cm, 0.3 FS, 3200 Hz,

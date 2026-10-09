@@ -171,6 +171,51 @@ File moves only, no behavior change; update build_src_filter to match.
 Enables NODE-007's include-direction check to become an error.
 ```
 
+### ANA-004 - diagnostic SEQ reports stall the loop and drop audio
+
+Status: TODO (found 2026-10-09, #20)
+
+```text
+With SEQ diagnostics on (the default) and mode=detail, each trial that
+has a detection prints ~6.9 KB; the loop stalls and the I2S driver drops
+~21-22 DMA buffers (~170 ms of audio) per detected trial. Trials with no
+detection, mode=trial/system, or SEQ DIAG off: 0 drops. Seen on D-AMP
+(bench:sessions/2026-10-09-issue20-damp-110cm-b g_drops_*) and on piezo
+(issue #26 F3_diag_on / F5 runs); the clean piezo reference V_scalar50 ran
+with SEQ DIAG off (772 bytes per trial).
+Effect: when the hole lands in an inspection window the trial is rejected
+with incomplete coverage (TonalPulseFreq 14/50 at 110 cm,
+e_T2v_s2500_a030_f3200); TonalPulseScalar trials were not hit
+(buffer_overrun_trials=0) but are not guaranteed safe.
+Until fixed: comparable runs use SEQ DIAG off (as the #26 baselines) or
+mode=system, and record dropped_dma_buffers. Fix direction: bound or
+defer the report output (print from a queue between trials), or flag the
+trial when drops land in its windows.
+```
+
+### ANA-005 - Analyzer never sends its boot control claim
+
+Status: TODO (found 2026-10-09, #19)
+
+```text
+AnalyzerApp prints "EVT analyzer_control_claim scheduled" at boot, but
+_controlClaimPending is never set, so MODE REMOTE is not sent until the
+first EMIT or SEQ command. The Emitter stays in AUTO (chirping every 2 s)
+meanwhile. Either send the claim or drop the message. Pre-existing.
+```
+
+### ANA-006 - bench runner timeout cuts long runs silently
+
+Status: TODO (found 2026-10-09, #20)
+
+```text
+tools/bench/seqrun.py stops a run at --timeout (default 600 s) and moves
+on; a 150- or 400-window SEQ OBS run (~2.9 s per window) is cut before
+SEQ_SUMMARY, and the index then has no row for it (two #20 soak runs).
+Derive the timeout from tries x period, or warn loudly and keep the
+partial trial count in the index.
+```
+
 ### ANA-002 - multi-occurrence pattern proposals
 
 Status: DEFERRED

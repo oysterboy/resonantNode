@@ -1,0 +1,158 @@
+# run: node_vs_emitter_auto_30s
+# firmware: role=node+emitter git=17295c9 version=0.4.0 board=damp
+# started: 2026-10-09T17:53:02+02:00
+   0.00 NODE | ets Jul 29 2019 12:21:46
+   0.00 NODE | 
+   0.00 NODE | rst:0x1 (POWERON_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)
+   0.00 NODE | configsip: 0, SPIWP:0xee
+   0.00 NODE | clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
+   0.00 NODE | mode:DIO, clock div:1
+   0.00 NODE | load:0x3fff0030,len:1344
+   0.00 NODE | load:0x40078000,len:13964
+   0.00 NODE | load:0x40080400,len:3600
+   0.00 NODE | entry 0x400805f0
+   0.01 EMIT | ets Jul 29 2019 12:21:46
+   0.01 EMIT | 
+   0.01 EMIT | rst:0x1 (POWERON_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)
+   0.01 EMIT | configsip: 0, SPIWP:0xee
+   0.02 EMIT | clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
+   0.02 EMIT | mode:DIO, clock div:1
+   0.02 EMIT | load:0x3fff0030,len:1344
+   0.03 EMIT | load:0x40078000,len:13964
+   0.03 EMIT | load:0x40080400,len:3600
+   0.03 EMIT | entry 0x400805f0
+   0.07 NODE | BUILD role=node git=17295c9 date=Oct  9 2026 time=17:51:52 version=0.4.0 board=damp
+   0.07 NODE | RB node_id=0x38B749C3DC24
+   0.07 NODE | 
+   0.09 NODE | E (9) I2S: i2s_driver_uninstall(2048): I2S port 0 has not installed
+   0.10 NODE | RB PROFILE name=TonalPulseScalar emitters=ScalarTransient inspectionPlan=custom fieldStateConfig=4000/4000
+   0.10 NODE | RB DETECT
+   0.10 NODE |   kind=TonalPulseScalar
+   0.10 NODE |   detectorSelection=ScalarTransient
+   0.10 NODE |   inspectionPlan=custom
+   0.11 NODE |   scalarTransient.observedStream=FrequencyTarget
+   0.11 NODE |   scalarTransient.onsetDetectionThreshold=2000.0
+   0.12 NODE |   scalarTransient.onsetReleaseThreshold=1500.0
+   0.12 NODE |   scalarTransient.cooldownAfterOnsetMs=50
+   0.12 NODE |   scalarTransient.minTransientDurationMs=85
+   0.13 NODE |   scalarTransient.maxTransientDurationMs=200
+   0.13 NODE |   scalarTransient.releaseDebounceMs=10
+   0.14 NODE |   scalarTransient.minTransientPeakStrength=3000.0
+   0.15 NODE |   inspectionPlan.module[0].kind=MagnitudeFeatureStrength label=contrast stream=FrequencyContrast windowPreMs=0 windowPostMs=100
+   0.16 NODE |   inspectionPlan.module[1].kind=MagnitudeFeatureStrength label=amp stream=AmpMagnitude windowPreMs=0 windowPostMs=100
+   0.16 NODE |   verdict.has_requirement=1
+   0.16 NODE |   verdict.required_label=contrast
+   0.16 NODE |   fieldState.occurrenceWindowMs=4000
+   0.16 EMIT | BUILD role=emitter git=17295c9 date=Oct  9 2026 time=17:49:49 version=0.4.0 board=damp
+   0.16 EMIT | 
+   0.17 NODE |   fieldState.patternWindowMs=4000
+   0.17 NODE |   fieldState.busyOccurrenceCountThreshold=3
+   0.17 EMIT | E (9) I2S: i2s_driver_uninstall(2048): I2S port 0 has not installed
+   0.17 EMIT | EVT emitter_ready mode=AUTO interval_ms=2000 freq_hz=3200 dur_ms=100
+   0.18 NODE |   fieldState.denseOccurrenceCountThreshold=6
+   0.18 NODE |   fieldState.quietOccurrenceCountThreshold=0
+   0.18 NODE |   fieldState.quietActivityThreshold=0.00
+   0.19 NODE |   fieldState.busyActivityThreshold=0.45
+   0.19 NODE | 
+   0.19 NODE | RB BEHAV
+   0.19 NODE |   idleEnabled=1
+   0.19 NODE |   waitAfterHeardMs=100
+   0.19 NODE |   refractoryAfterEmitMs=400
+   0.20 NODE |   behaviorSuppressSelfChirpMs=100
+   0.20 NODE |   detectionSuppressTailMsOwnEmit=0
+   0.20 NODE |   idleTimeoutMs=20000
+   0.20 NODE |   idleTimeVariationMs=5000
+   0.21 NODE |   idleBlockedAfterHeardMs=1000
+   0.21 NODE |   idleBlockedAfterOwnEmitMs=500
+   0.21 NODE | 
+   0.21 NODE | RB startup baseline=LISTEN_FOR_QUIET
+   0.26 EMIT | EVT emitter_chirp_finished
+   1.01 >>>> NODE: RB log full
+   1.02 NODE | RB log mode=full
+   2.27 EMIT | EVT emitter_chirp_finished
+   2.33 NODE | RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=ignored_invalid_pattern valid=0 profile=TonalPulseScalar
+   4.27 EMIT | EVT emitter_chirp_finished
+   4.34 NODE | RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=ignored_invalid_pattern valid=0 profile=TonalPulseScalar
+   6.19 EMIT | EVT emitter_cmd line=@EMIT_START trial=0HEMIT_DONE tr@W(Nh@ PPhP @EMIT_START trial=0}EMIT_DONE trial=0 t_mX@ @@@P @@
+   6.27 EMIT | EVT emitter_chirp_finished
+   6.28 EMIT | EVT emitter_cmd line=EMITiKK(iZEMIT_DONE trial=0 t_ms=6125
+   6.34 NODE | RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=ignored_invalid_pattern valid=0 profile=TonalPulseScalar
+   8.08 NODE | RB rebase skipped reason=no_quiet smooth=520.0
+   8.19 EMIT | EVT emitter_cmd line=EMIT_D)kk{k@@@S@#2P#@@@BPZJk)EMIT_START trial=0 t_ms=8025
+   8.26 EMIT | EVT emitter_chirp_finished
+   8.28 EMIT | EVT emitter_cmd line=EMIT_DRIVE_EMIT_DONE trial=0 t_ms=8125
+   8.34 NODE | RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 profile=TonalPulseScalar
+   8.43 NODE | BEH verdict=single_pulse heard=8250 now=8366 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+   8.45 NODE | BEH emit start now=8366 source=heard_pattern state=Chirping pattern=single
+   8.45 NODE | RB emit accepted source=heard_pattern state=Chirping gate=Chirping pattern=single
+  10.19 EMIT | EVT emitter_cmd line=EMIT_DRIVE_O@IIKk)$/T! ` @(@@@EMIT_START trial=0 t_ms=10025
+  10.27 EMIT | EVT emitter_chirp_finished
+  10.29 EMIT | EVT emitter_cmd line=EMIT_DRIVE_ON trial=0 EMIT_DONE trial=0 t_ms=10125
+  10.34 NODE | RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=ignored_invalid_pattern valid=0 profile=TonalPulseScalar
+  12.19 EMIT | EVT emitter_cmd line=EMIT_DRIVE_OFF trial=0 t([@:@~EMIT_START trial=0 t_ms=12025
+  12.20 EMIT | EVT emitter_cmd line=EMIT_DRIVE_ON trial=0 t_ms=12025
+  12.26 EMIT | EVT emitter_chirp_finished
+  12.29 EMIT | EVT emitter_cmd line=EMIT_DONE trial=0 t_ms=12125
+  12.30 EMIT | EVT emitter_cmd line=EMIT_DRIVE_OFF trial=0 t_ms=12125
+  12.34 NODE | RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=ignored_invalid_pattern valid=0 profile=TonalPulseScalar
+  14.19 EMIT | EVT emitter_cmd line=`H@@ @@ EMIT_START trial=0 t_ms=14025
+  14.19 EMIT | EVT emitter_cmd line=EMIT_DRIVE_ON trial=0 t_ms=14025
+  14.27 EMIT | EVT emitter_chirp_finished
+  14.28 EMIT | EVT emitter_cmd line=OK CHIRP freq~EMIT_DONE trial=0 t_ms=14125
+  14.29 EMIT | EVT emitter_cmd line=EMIT_DRIVE_OFF trial=0 t_ms=14125
+  14.34 NODE | RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=ignored_invalid_pattern valid=0 profile=TonalPulseScalar
+  16.19 EMIT | EVT emitter_cmd line=@zR)ib"3SP@o~EMIT_START trial=0 t_ms=16025
+  16.19 EMIT | EVT emitter_cmd line=EMIT_DRIVE_ON trial=0 t_ms=16026
+  16.27 EMIT | EVT emitter_chirp_finished
+  16.28 EMIT | EVT emitter_cmd line=OK CHIRP freq=3200 dur=10EMIT_DONE trial=0 t_ms=16125
+  16.28 EMIT | EVT emitter_cmd line=EMIT_DRIVE_OFF trial=0 t_ms=16126
+  16.34 NODE | RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=ignored_invalid_pattern valid=0 profile=TonalPulseScalar
+  18.17 EMIT | EVT emitter_cmd line=HJJ)Iw@#@B@A7@z H@IQtrial=0 t_ms=18025
+  18.19 EMIT | EVT emitter_cmd line=EMIT_DRIVE_ON trial=0 t_ms=18025
+  18.19 EMIT | EVT emitter_cmd line=OK CHIRP freq=3200 dur=100
+  18.27 EMIT | EVT emitter_chirp_finished
+  18.27 EMIT | EVT emitter_cmd line=(trial=0 t_ms=18125
+  18.28 EMIT | EVT emitter_cmd line=EMIT_DRIVE_OFF trial=0 t_ms=18125
+  18.33 NODE | RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=ignored_invalid_pattern valid=0 profile=TonalPulseScalar
+  20.18 EMIT | EVT emitter_cmd line=3@@ D0 t_ms=20025
+  20.19 EMIT | EVT emitter_cmd line=EMIT_DRIVE_ON trial=0 t_ms=20025
+  20.19 EMIT | EVT emitter_cmd line=OK CHIRP freq=3200 dur=100
+  20.26 EMIT | EVT emitter_chirp_finished
+  20.27 EMIT | EVT emitter_cmd line=ial=0 t_ms=20125
+  20.27 EMIT | EVT emitter_cmd line=EMIT_DRIVE_OFF trial=0 t_ms=20125
+  20.34 NODE | RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=ignored_invalid_pattern valid=0 profile=TonalPulseScalar
+  22.17 EMIT | EVT emitter_cmd line= @@+Bzs=22025
+  22.18 EMIT | EVT emitter_cmd line=EMIT_DRIVE_ON trial=0 t_ms=22025
+  22.18 EMIT | EVT emitter_cmd line=OK CHIRP freq=3200 dur=100
+  22.27 EMIT | EVT emitter_chirp_finished
+  22.28 EMIT | EVT emitter_cmd line==22125
+  22.28 EMIT | EVT emitter_cmd line=EMIT_DRIVE_OFF trial=0 t_ms=22125
+  22.34 NODE | RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=ignored_invalid_pattern valid=0 profile=TonalPulseScalar
+  23.37 EMIT | EVT emitter_cmd line=@@P@d@
+  24.18 EMIT | EVT emitter_cmd line=@@@{DRIVE_ON trial=0 t_ms=24025
+  24.18 EMIT | EVT emitter_cmd line=OK CHIRP freq=3200 dur=100
+  24.27 EMIT | EVT emitter_chirp_finished
+  24.28 EMIT | EVT emitter_cmd line=%Y}=trial=0 t_ms=24125
+  24.34 NODE | RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=ignored_invalid_pattern valid=0 profile=TonalPulseScalar
+  25.98 NODE | BEH verdict=single_pulse heard=24251 now=25918 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+  25.99 NODE | BEH emit start now=25918 source=idle state=Chirping pattern=idle
+  25.99 NODE | RB emit accepted source=idle state=Chirping gate=Chirping pattern=idle
+  26.18 EMIT | EVT emitter_cmd line=}~ @  X}26025
+  26.18 EMIT | EVT emitter_cmd line=OK CHIRP freq=3200 dur=100
+  26.27 EMIT | EVT emitter_chirp_finished
+  26.28 EMIT | EVT emitter_cmd line==0 t_ms=26125
+  26.87 NODE | RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=refractory_after_emit valid=1 profile=TonalPulseScalar
+  28.18 EMIT | EVT emitter_cmd line=H@@P@@25
+  28.18 EMIT | EVT emitter_cmd line=OK CHIRP freq=3200 dur=100
+  28.27 EMIT | EVT emitter_chirp_finished
+  28.33 NODE | RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=ignored_invalid_pattern valid=0 profile=TonalPulseScalar
+  30.01 >>>> NODE: RB summary
+  30.04 NODE | RB summary: pending=15 accepted=2 validPatterns=2 chirpStarted=2 overflowPending=0 avg_strength=3896.5 avg_duration=104.1ms profile=TonalPulseScalarBUILD role=node git=17295c9 date=Oct  9 2026 time=17:51:52 version=0.4.0 board=damp
+  30.04 NODE | 
+  30.04 NODE | RB baseline state=FAILED_NO_QUIET
+  30.04 NODE | RB log mode=full
+  30.10 NODE | RB behavior idle=1 wait=100 refractory=400 suppressSelfChirp=100 detectionSuppressTail=0 idleTimeout=20000 idleTimeoutVariation=5000 idleBlockedHeard=1000 idleBlockedOwnEmit=500 idleEnabled=1 lastDecision=ignored_invalid_pattern lastBlock=ignored_invalid_pattern lastPattern=single_pulse lastHeardMs=28251 lastEmitMs=25918 waitUntilMs=8366 refractoryUntilMs=27138 ownEmitDetectionSuppressUntilMs=26738 outputBusy=0 patternsReceived=15 ignoredInvalid=13 ignoredAmbiguous=0 blockedOutputBusy=0 blockedWaiting=0 blockedRefractory=1 blockedSelfSuppressed=0 wouldEmit=2 emitted=2
+  30.10 NODE | RB occurrence baseline=1882.4 mag=1618 smooth=1077
+  30.18 EMIT | EVT emitter_cmd line=@ @q=3200 dur=100
+  30.27 EMIT | EVT emitter_chirp_finished
+  30.33 NODE | RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=ignored_invalid_pattern valid=0 profile=TonalPulseScalar

@@ -85,19 +85,20 @@ the previous gate open unless the step says it can run in parallel.
    integrator (clap settles <50 ms); likely electrical. Preprocessor choice
    and the D-AMP comparison move to step 2 (#19).
 
-2. [NEXT] D-AMP board support in firmware. (issue #19)
-   Where: NODE-009 (roadmap-node.md) -> docs/refactors/damp-board-support.md.
+2. [LANDED 2026-10-09] D-AMP board support in firmware. (issue #19, closed)
+   Where: NODE-009 (roadmap-node.md) -> docs/refactors/archive/damp-board-support.md.
    What: pins out of main.cpp into build macros, D-AMP as the default
    board (plain env names) and piezo as BOARD_PIEZO fallback envs, the
    full-duplex I2S HAL (AudioSourceI2S RX + I2sToneOutput TX; mic and amp
    share BCLK/WS on 26/25).
    Gate: all D-AMP and piezo envs build; a D-AMP node reads the mic and
    chirps on bench; Analyzer <-> Emitter link works on D-AMP.
-   Starts after steps 1a and 1b (owner's call, 2026-10-09). Needs a working
-   PlatformIO build (VS Code, or the registry hosts allowed in the cloud
-   env).
+   Closed: 17295c9; results and archive header in
+   docs/refactors/archive/damp-board-support.md. Handed to step 3: own-emit
+   windows end before the measured self-echo (~30-155 ms after toneOn),
+   sub-30 Hz mic wander (First Difference stays).
 
-3. D-AMP bench check. (issue #20)
+3. [NEXT] D-AMP bench check. (issue #20)
    Where: NODE-010 (roadmap-node.md); same bench session as
    cleanup-0-plan Phase 0's distance ladder.
    Why: measures the new signal before thresholds are judged on it;

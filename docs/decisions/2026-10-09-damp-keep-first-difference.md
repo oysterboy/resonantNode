@@ -38,7 +38,7 @@ flat gain above ~100 Hz, plus a retune.
 
 ## Source
 
-Proposed as fork D6 in `docs/refactors/damp-board-support.md` section 4
+Proposed as fork D6 in `docs/refactors/archive/damp-board-support.md` section 4
 (2026-10-09), not objected to by the owner; evidence from item 5a the same
 day. Closes the open row "Keep First Difference ... or replace it with a DC
 blocker" in `docs/decisions/README.md`.

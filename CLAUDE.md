@@ -30,6 +30,13 @@ platformio run -e esp32dev            # RB / resonant node
 platformio run -e esp32dev-emitter
 ```
 
+These build the D-AMP board (MAX98357A + I2S mic on one full-duplex port),
+the node hardware since 2026-10-09. The discontinued piezo nodes build as
+`esp32dev-piezo`, `esp32dev-piezo-analyzer`, `esp32dev-piezo-emitter`
+(`-D BOARD_PIEZO`), kept compiling as the fallback. Pins and I2S slot
+setup per board: `src/app/BoardConfig.h`. Never flash a piezo build onto a
+D-AMP board or the reverse: the pinouts collide on GPIO 25/26.
+
 This container has no attached ESP32 hardware — compilation is the
 available verification here (`platformio run -e ...`); flashing and live
 runtime capture happen on the developer's machine over PlatformIO/COM. Don't

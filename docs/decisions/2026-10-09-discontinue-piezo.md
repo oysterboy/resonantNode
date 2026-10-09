@@ -22,7 +22,7 @@ and `BOARD_DAMP` as the board flag.
 
 Owner, 2026-10-09: piezo is expected to be discontinued. Both D-AMP boards
 on the bench play the tone and hear it through their own mic (wiring check
-in `docs/refactors/damp-board-support.md` section 7). Keeping piezo
+in `docs/refactors/archive/damp-board-support.md` section 7). Keeping piezo
 byte-identical and running a live A/B costs bench time on hardware that is
 on its way out.
 
@@ -42,4 +42,4 @@ noise the suppression window can't cover. Then go back to piezo; the
 
 Owner in session, 2026-10-09 ("yes to all. if damp is a dud, we go back to
 piezo"), answering the plan change proposed in
-`docs/refactors/damp-board-support.md`.
+`docs/refactors/archive/damp-board-support.md`.

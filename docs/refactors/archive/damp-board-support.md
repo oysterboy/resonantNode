@@ -1,6 +1,20 @@
 # D-AMP board support in firmware (step 2, issue #19)
 
-Status: active, bench validation. Prep 2026-10-09: issue #19 body and
+Archived: 2026-10-09 - Landed: D-AMP as the default board (17295c9):
+BoardConfig.h pins, full-duplex AudioSourceI2S (stereo, mic slot 0,
+STAND_I2S with RX MSB realign, writeTx behind a port mutex), I2sToneOutput
+on its own task, piezo kept as BOARD_PIEZO fallback envs (compile only),
+Serial2 junk-byte fix, board= in the BUILD banner. Decisions: HAL shape,
+piezo discontinued, keep First Difference. Gate met on two boards at 30 cm:
+all six envs build; link, chirp (heard), mic, framing, Node hears/answers;
+toneOn -> own mic median 32 ms. Not verified: the piezo fallback on piezo
+hardware (built, never flashed); any board other than COM6/COM10; mic VCC
+(echoSpace wiring says 5 V). Open, handed on: sub-30 Hz mic wander (cause
+unknown; First Difference hides it), own-emit windows shorter than the
+measured self-echo and all detection numbers (step 3, #20), Analyzer's
+boot control claim never sent (pre-existing).
+
+Status: closed 2026-10-09 (archived). Prep 2026-10-09: issue #19 body and
 comments folded in below, piezo baseline binaries built, HAL forks D2-D5
 decided (section 4). Code landed 17295c9 (items 2-5); bench bring-up and
 drift A/B (5a) done; next: close (item 7).
@@ -159,7 +173,7 @@ D7 Analyzer on    [proposed] Same HAL and port config as the Node, TX idle,
        Done 2026-10-09 (section 7): link, chirp, mic, framing, node hears
        and emits; owner heard the firmware chirp; toneOn latency measured
        (median 32 ms, section 7).
-7. [ ] Close: gate results here, preprocessor decision file (closes the
+7. [x] Close: gate results here, preprocessor decision file (closes the
        open row in docs/decisions/README.md), NODE-009 status, close #19.
 ```
 

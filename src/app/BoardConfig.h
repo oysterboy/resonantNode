@@ -102,7 +102,7 @@ from platformio.ini.
 #define AUDIO_I2S_FRAME_SLOTS 2
 #endif
 // Mic L/R is tied to GND; it answers in the first word of each frame
-// (wiring check 2026-10-09, docs/refactors/damp-board-support.md).
+// (wiring check 2026-10-09, docs/refactors/archive/damp-board-support.md).
 #ifndef AUDIO_I2S_MIC_SLOT
 #define AUDIO_I2S_MIC_SLOT 0
 #endif

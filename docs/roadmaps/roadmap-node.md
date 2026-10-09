@@ -157,7 +157,7 @@ detection.
 
 ### NODE-009 - D-AMP board support in firmware
 
-Status: IN PROGRESS (issue #19, docs/refactors/damp-board-support.md)
+Status: LANDED 2026-10-09 (issue #19 closed, 17295c9; docs/refactors/archive/damp-board-support.md)
 
 ```text
 Decision: docs/decisions/2026-10-06-damp-output-hardware.md.

@@ -27,8 +27,13 @@ partial read (32 stereo frames = 32 selected samples) breaking slot phase,
 and said explicitly: *"de-accumulation / first difference is diagnostic
 only and must not become a production fix."*
 
-**B. Slow drift.** The decoded PCM wandered slowly ("accumulated drift"),
-separate from A. The 2026-06-19 doc lists it as a known, separate thing.
+**B. Slow drift.** The decoded PCM read straight from the mic over I2S
+wandered slowly, as if the stream were an accumulated (integrated) signal;
+differencing it recovered usable audio. Separate from A; the 2026-06-19 doc
+lists it as a known, separate thing. Owner, 2026-10-09: the first-difference
+preprocessor is a stopgap that removes it. The open question is where the
+accumulation is introduced. Section 8 is the answer as far as it can be
+given without a capture.
 
 ## 2. What landed, in order
 
@@ -143,16 +148,26 @@ compile-time choice, no runtime switching.
 
 ## 6. Smallest next test (needs a piezo node and one bench session)
 
-Two Analyzer captures, same room, same node, no code change except the
-`kPcmPreprocessMode` constant:
+No rebuild needed: `RAW ... mode=i2s` reads decoded words straight from the
+driver and bypasses `preprocessSample()` (section 4.4), so it already shows
+the un-differenced stream. Capture with a long quiet pre-window, e.g.
+`RAW trigger f=3200 dur=100 pre=500 post=200 mode=i2s`, save the serial log,
+and run:
 
-1. `RAW ... mode=i2s` and `mode=pcm` with `FirstDifference` (today's
-   build): confirm the stream is spike-free mod 64 on the direct driver.
-2. Same with `None`: report the raw DC offset at start, its slope over
-   30 s of quiet (PCM per second), and whether `AudioSignal.baseline`
-   follows it. A slope that is roughly constant and small, with the
-   baseline parked, is MEMS DC wander plus 4.3. A monotonic ramp that does
-   not level off is a decode or slot fault and goes back to section 4.7.
+```
+python3 tools/logging/raw_capture_slope.py <serial-log>
+```
+
+It reports DC offset, drift slope in PCM per second, octave-band levels of
+the raw and differenced stream, and the noise-floor slope between 1 kHz and
+7 kHz with the tone band excluded. The slope is the verdict (section 8):
+near 0 dB per octave means the drift is low-frequency mic output; near
+-6 dB per octave means something integrates. Verified on synthetic data:
+flat white noise plus DC wander reads 0.4, a cumulative sum reads -5.1.
+
+Bench-only cross-check, no tooling: clap once near the mic while watching
+the raw level. A healthy mic returns to its previous level within tens of
+milliseconds. An integrated stream steps and stays at a new level.
 
 Commit the capture logs under `tools/logs/` this time, and write the
 installed `espressif32` platform and Arduino-ESP32 versions into this
@@ -161,7 +176,8 @@ file.
 ## 7. Open / closed
 
 ```text
-[OPEN]   Classify drift B (MEMS DC wander vs decode / slot fault). Section 6.
+[OPEN]   Classify drift B: mic low-frequency output vs an integrating stage.
+         Sections 6 and 8; one capture plus raw_capture_slope.py decides.
 [OPEN]   Decide the preprocessor for the D-AMP HAL. Section 5; listed in
          docs/decisions/README.md as an open decision.
 [OPEN]   Fix 4.4 (readRawSample bypasses preprocessor state). Small; needs
@@ -174,3 +190,57 @@ file.
          2026-06-24 checkpoint; not re-verified here.
 [NOTE]   4.5 is correct as is. Do not reset the preprocessor in resetStats().
 ```
+
+## 8. Where could an accumulation be introduced
+
+Walk the path from the MEMS element to `decodePcmSample()` and ask of each
+stage: does it carry state from one sample into the next? Only a stage
+with memory can integrate.
+
+| Stage | Memory across samples | Can it integrate? |
+|---|---|---|
+| Acoustic pressure at the port | n/a | Not a pipeline stage, but see below. |
+| MEMS element + ASIC analog front end | DC bias, 1/f noise | Produces offset and low-frequency content; does not integrate. |
+| Mic-internal sigma-delta + decimation filter (CIC) | Yes, by design | Integrator stages exist here, but they are paired with the comb stages inside the sealed part. Only a defective or wrongly clocked part would leak an unpaired integrator. |
+| I2S shift register (mic side) | none | No. |
+| Wire, BCLK / WS edges | none | Bit slips scramble or scale a word; they do not sum words. |
+| ESP32 I2S peripheral RX (Philips, 32-bit slot) | none | No. Its PDM RX mode does contain integrators, but `I2S_MODE_PDM` is not set. |
+| DMA into the ring buffer | none | Copies words. |
+| Legacy driver `i2s_read()` | none | Copies bytes. No 24-bit expansion in the 32-bit config. |
+| `decodePcmSample()`: `>> 8`, clamp | none | No. |
+| `AudioSignal` baseline | slow EMA | Subtracts a tracked offset; it does not sum the input. Not in the `RAW mode=i2s` path anyway. |
+
+Nothing between the mic's own decimator and the decoded word has a
+summing stage. So there are two candidates:
+
+**Candidate 1, the mundane one.** The stream is not integrated. It is a
+small 3.2 kHz tone riding on the mic's legitimate low-frequency output: a
+DC offset that the part does not specify as zero, 1/f noise, and room
+infrasound (doors, HVAC, the node's own enclosure moving), all of which a
+MEMS mic flat to roughly 60 Hz passes at amplitudes far above a weak test
+tone. At 24-bit resolution that looks on a time plot exactly like a random
+walk under a ripple, and a first difference "fixes" it because it is a
+high-pass with a zero at DC. A sine of any frequency has the same shape
+whether integrated or not, so the tone alone cannot tell the two cases
+apart. The noise floor can: a mic floor is flat from a few hundred Hz to
+Nyquist, an integrated one falls 6 dB per octave. Section 6 measures that.
+
+**Candidate 2, a real integrator.** If the slope test shows a falling
+floor, the only stages with integrators are the mic's internal decimation
+filter and the ESP32's PDM RX mode. Check, in this order: that the build
+really does not enable PDM mode on the port (`I2S_CAPTURE_MODE` in
+`RuntimeDefaults.h`, and nothing else calling `i2s_driver_install`); that
+BCLK and WS are within the mic's specified ranges at 16 kHz with 32-bit
+slots (BCLK 1.024 MHz; the INMP441 needs WS between 7 kHz and 55 kHz and a
+clean 64x BCLK); and that the mic sees a stable supply, since a sigma-delta
+front end on a dipping rail misbehaves at low frequencies first. If all
+three hold and the floor still falls, swap the mic for another unit before
+looking further at firmware.
+
+**Why this matters beyond the stopgap.** Under candidate 1 the right fix is
+a DC blocker or a modest high-pass at 100 to 200 Hz, which removes the
+drift without the spectrum tilt in section 4.1, and the D-AMP HAL should
+plan for it (section 5, option 2). Under candidate 2 there is a hardware
+or configuration fault that a differentiator merely hides, and the D-AMP
+mic, a different part on a different board, may or may not share it.
+Either way the answer comes from one capture, not from more code.

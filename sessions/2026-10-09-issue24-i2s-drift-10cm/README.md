@@ -114,6 +114,10 @@ Next discriminator: the D-AMP mic read through this repo's HAL (#19).
 
 ## Clap test, node 2 (12:15-12:35)
 
+Firmware note: the `clap_r*` files carry `1c743a2` in their names (taken
+from node 2's earlier boot log), but both rounds ran on `a3c717d` (adds
+`decim` for mode=i2s), round 2 built with the STAND_MSB flag below.
+
 `RAW trigger f=3200 dur=100 pre=0 post=3000 decim=8 mode=i2s` (3 s at an
 effective 2 kHz; `decim` for mode=i2s added in this session). The 100 ms
 beep at the start is the owner's cue; one clap about 1 s later per capture.

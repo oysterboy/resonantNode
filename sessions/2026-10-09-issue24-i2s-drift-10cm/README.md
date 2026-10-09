@@ -69,3 +69,27 @@ Findings:
   Switching halves all levels, so it is a threshold-relevant change.
 - Level: the low-frequency part is -49 to -35 dBFS in a quiet room, far
   above what an INMP441 should output there.
+
+## Cover test (11:33-11:40)
+
+Mic port packed with cotton and taped by the owner. Firmware `b253dd5`
+built at 40 MHz DIO (the committed 80 MHz QIO image boot-looped on this
+board after the mic was re-wired, see below). `cover_sealed_1..3`: 1 ms
+chirp, quiet tail; `cover_sealed_chirp100`: normal 100 ms chirp.
+
+| | Open (earlier) | Sealed |
+|---|---|---|
+| 100 ms chirp peak (PCM) | ~292,000 | ~127,000-158,000 (-6 to -7 dB) |
+| 125-250 Hz raw / diff (dB) | 108-111 / 78-81 | 108-117 / 78-88 |
+| raw RMS of quiet tail | 29k-43k | 28k-75k |
+
+The seal leaks (tone down only 6-7 dB) and cotton blocks low frequencies
+less than high ones, so this cannot fully exclude acoustic LF. But the LF
+random walk did not drop at all, and its level (about 70-85 dB SPL
+equivalent) is implausible for a quiet room: consistent with an electrical
+source. Decisive next: a second mic unit, or the D-AMP mic (#19).
+
+Board note: after the owner re-wired the mic, the 80 MHz **QIO** image
+boot-looped (second-stage bootloader, rst:0x3 SW_RESET, ~8/s); 40 MHz DIO
+and 80 MHz DIO images boot normally with the same wiring. QIO also uses
+flash lines GPIO 9/10 (SD2/SD3 on most dev boards), which DIO leaves free.

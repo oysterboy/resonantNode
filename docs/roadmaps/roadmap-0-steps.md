@@ -72,11 +72,14 @@ the previous gate open unless the step says it can run in parallel.
    Closed: docs/refactors/archive/i2s-sample-clock.md (sample clock from
    the I2S index, dropped DMA buffers counted, flash at 80 MHz QIO).
 
-1b. [NEXT] Classify the I2S MEMS drift (mic LF output vs an integrating
-   stage). (issue #24)
+1b. [LANDED 2026-10-09] Classify the I2S MEMS drift (mic LF output vs an
+   integrating stage). (issue #24, closed)
    Where: docs/refactors/i2s-first-difference-revisit.md.
    Why before step 2: decides which PCM preprocessor the D-AMP HAL carries.
    Gate: as issue #24 states. Runs in parallel with 1a (same bench).
+   Closed: additive low-frequency random walk on both piezo nodes, not an
+   integrator (clap settles <50 ms); likely electrical. Preprocessor choice
+   and the D-AMP comparison move to step 2 (#19).
 
 2. [NEXT] D-AMP board support in firmware. (issue #19)
    Where: NODE-009 (roadmap-node.md).

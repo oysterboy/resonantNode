@@ -1,6 +1,6 @@
 # I2S First Difference ("MEMS de-accumulation") revisit
 
-Status: open, investigation pass (no code change yet). Bench tests: issue #24.
+Status: open, investigation pass. Drift B classified 2026-10-09 (section 7); preprocessor choice moves to issue #19. Bench tests: issue #24 (closed).
 Started: 2026-10-09, from the owner's request to revisit the "MEMS first
 diff bug" ahead of the D-AMP HAL work (issue #19).
 Scope: `src/hal/AudioSourceI2S.cpp` `preprocessSample()`, the
@@ -176,31 +176,24 @@ file.
 ## 7. Open / closed
 
 ```text
-[OPEN]   Classify drift B. 2026-10-09 piezo captures (RAW mode=i2s, quiet
-         tail after the chirp; branch `bench`, session
-         2026-10-09-issue24-i2s-drift-10cm): raw floor flat 1-7 kHz
-         (-1.2..-1.9 dB/oct), BUT below 1 kHz it falls ~6 dB/oct
-         (125-250 Hz ~104 dB, 500-1k ~91 dB) and the first-differenced
-         spectrum is flat there (73-75 dB). That is integrated white noise
-         (a random walk) plus a white floor on top, not mic 1/f or room
-         noise. Level: quiet-room RMS ~82k PCM (about -40 dBFS) against an
-         INMP441 self-noise near -87 dBFS. raw_capture_slope.py only tests
-         1-7 kHz and called it "flat floor"; that verdict is withdrawn.
-         Firmware-side causes tested and excluded the same day (bench
-         session README, "capture-path variations"): slot selection
-         (ONLY_LEFT reads exact zeros, so no floating slot), sample rate
-         (16/32/48 kHz), clock source (APLL), framing. The random walk is
-         in the mic's own 24-bit output in every configuration. Remaining:
-         the mic unit or the piezo board (supply, ground, wiring), or real
-         low-frequency sound. Cover test (cotton + tape, same day): tone
-         down 6-7 dB, LF random walk not reduced at all; the seal leaks and
-         cotton passes LF, so not conclusive, but consistent with an
-         electrical source. Second piezo node (same day, same firmware):
-         same random walk (125-250 Hz 106-110 raw vs 77-82 differenced).
-         Not one bad mic unit; systematic to the piezo node design or to
-         this repo's capture firmware (both boards run it). Decided by the
-         D-AMP mic read through this repo's HAL in #19: no random walk
-         there -> piezo design; random walk there too -> our firmware.
+[CLOSED] Classify drift B (2026-10-09, issue #24). The drift is an
+         additive low-frequency random walk on the piezo nodes' mic output
+         (raw falls ~6 dB/oct below 1 kHz, flat after one difference), not
+         an integration of the audio: a clap at 2-17% FS settles within one
+         50 ms window with correct framing. Not slot, rate, clock source or
+         framing (all tested); survives sealing the mic port; level about
+         -49..-35 dBFS (implausible as room sound); same on a second piezo
+         node. Most likely electrical and systematic to the piezo node
+         design (mic model, supply, ground, wiring). First Difference acts
+         as a crude high-pass on it, not as the inverse of a fault; the
+         right replacement is a DC blocker / 100-200 Hz high-pass (retune,
+         after the field trial). Whether D-AMP needs either is decided in
+         #19 (D-AMP mic through this repo's HAL). Bench: branch `bench`,
+         session 2026-10-09-issue24-i2s-drift-10cm (slope, slot/rate/
+         framing variations, cover test, node 2, clap rounds).
+         Capture recipe: RAW trigger f=3200 dur=100 pre=0 post=350
+         mode=i2s for spectra (pre=500/300 fail: fixed 72 KB buffer vs a
+         110 KB largest heap block); decim=N for multi-second captures.
 [OPEN]   Framing bug found while testing: with I2S_COMM_FORMAT_STAND_I2S
          the ESP32 reads each INMP441 word one bit late (bit 8 always 0;
          values doubled, mic sign bit dropped). I2S_COMM_FORMAT_STAND_MSB

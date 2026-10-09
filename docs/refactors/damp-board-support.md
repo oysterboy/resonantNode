@@ -7,7 +7,7 @@ Roadmap: `docs/roadmaps/roadmap-0-steps.md` step 2 -> NODE-009
 (`roadmap-node.md`). Decision: `docs/decisions/2026-10-06-damp-output-hardware.md`.
 Carries over from: `docs/refactors/i2s-first-difference-revisit.md`
 section 7 (preprocessor choice, framing bug, 4.4 fix).
-Next: step 3, piezo vs D-AMP A/B (issue #20).
+Next: step 3, D-AMP bench check (issue #20).
 
 Do not retune `DetectionProfile.h` / `BehaviorProfile.h` from this pass.
 Thresholds are judged on D-AMP in steps 3 and 5.
@@ -19,9 +19,11 @@ Thresholds are judged on D-AMP in steps 3 and 5.
 Five D-AMP nodes (MAX98357A + I2S MEMS mic, one shared I2S port) run this
 repo's firmware: Node, Analyzer and Emitter, each as a build variant.
 
-Gate (from the issue): all piezo and D-AMP envs build; piezo builds
-unchanged (same pins, same binary behavior); a D-AMP node prints mic
-levels and plays a 3200 Hz chirp on bench.
+Gate: all D-AMP and piezo envs build; a D-AMP node prints mic levels and
+plays a 3200 Hz chirp on bench; the Analyzer <-> Emitter link works on
+D-AMP. The issue's "piezo builds unchanged" was dropped 2026-10-09: piezo
+is discontinued and kept only as a compiling fallback
+(`docs/decisions/2026-10-09-discontinue-piezo.md`).
 
 ## 2. Inputs folded in from issue #19
 
@@ -86,10 +88,11 @@ D2-D5 decided by the owner 2026-10-09, all as recommended:
 `docs/decisions/2026-10-09-damp-i2s-hal-shape.md`.
 
 ```text
-D1 Pins           [proposed] src/app/BoardPins.h: one #if defined(BOARD_DAMP)
-                  block and a piezo default block; every pin an #ifndef
-                  macro so platformio.ini can still override one. Envs set
-                  only -D BOARD_DAMP. main.cpp uses the macros.
+D1 Pins           [DECIDED 2026-10-09] src/app/BoardPins.h: D-AMP block by
+                  default, piezo block under #if defined(BOARD_PIEZO);
+                  every pin an #ifndef macro so platformio.ini can still
+                  override one. Plain envs are D-AMP, esp32dev-piezo* set
+                  -D BOARD_PIEZO. main.cpp uses the macros.
 D2 HAL shape      [DECIDED] AudioSourceI2S stays the one RX implementation
                   (keeps the issue #26 sample clock) and owns the port,
                   installing full duplex on BOARD_DAMP; a thin
@@ -123,14 +126,17 @@ D7 Analyzer on    [proposed] Same HAL and port config as the Node, TX idle,
 ```text
 1. [x] Settle D2-D5 with the owner (2026-10-09, decisions/
        2026-10-09-damp-i2s-hal-shape.md).
-2. [ ] Pins into macros (D1). Piezo envs must stay byte-identical apart
-       from the version string (battery V2).
-3. [ ] BOARD_DAMP envs: esp32dev-damp, esp32dev-damp-analyzer,
-       esp32dev-damp-emitter.
+1a.[x] Piezo discontinued (2026-10-09, decisions/
+       2026-10-09-discontinue-piezo.md): D-AMP default, piezo fallback.
+2. [ ] Pins into macros (D1).
+3. [ ] Envs: esp32dev, esp32dev-analyzer, esp32dev-emitter build D-AMP;
+       esp32dev-piezo, esp32dev-piezo-analyzer, esp32dev-piezo-emitter
+       build the fallback.
 4. [ ] HAL: full-duplex port, stereo RX slot pick, framing, TX tone with
        ramp, non-blocking. Fold in revisit-doc 4.4 (readRawSample must
        keep the preprocessor state) while in the class.
-5. [ ] Node / Emitter / Analyzer wiring for BOARD_DAMP.
+5. [ ] Node / Emitter / Analyzer wiring for D-AMP. Fix the Emitter
+       ignoring commands on Serial2 (section 7).
 6. [ ] Bench, D-AMP node: mic level prints, 3200 Hz chirp audible, RAW
        mode=i2s capture below 1 kHz (drift check, comment 2), bit-8 framing
        check, toneOn latency. Session under bench/sessions/.
@@ -142,16 +148,10 @@ D7 Analyzer on    [proposed] Same HAL and port config as the Node, TX idle,
 
 ```text
 V1 Build      pio run for all six envs (3 piezo, 3 D-AMP).
-V2 Piezo      Piezo env binaries vs the baseline in
-   unchanged  logs/step2-baseline-7f67fef/ (built 2026-10-09 from 7f67fef):
-              same size, `cmp -l` differs only in the app-desc ELF hash
-              (0xb0-0xcf), two build-time bytes near 0x230 and the image
-              hash at the end (67 bytes on an unchanged clean rebuild of
-              esp32dev-emitter), plus the 7-byte git SHA string.
-              logs/ is gitignored; if missing, rebuild the three
-              piezo envs at 7f67fef.
-              Baseline sizes: esp32dev 357517 flash / 60076 RAM;
-              analyzer 405385 / 85268; emitter 282733 / 21832.
+V2 Piezo      The piezo fallback envs compile. (Byte-identity against the
+   compiles   7f67fef baseline in logs/step2-baseline-7f67fef/ was the
+              plan until piezo was discontinued; the baseline stays
+              there as a reference for the way back.)
 V3 Bench      Item 6, on one D-AMP node.
 ```
 

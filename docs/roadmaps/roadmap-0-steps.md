@@ -22,7 +22,11 @@ Renamed from roadmap-general.md on 2026-09-23 so it sorts first.
 How this file relates to the domain roadmaps and docs/refactors/: see
 README.md ("Who answers what", "Ordering rule").
 
-Last reordered: 2026-10-06. Output hardware moves to D-AMP (decision
+Last reordered: 2026-10-09. Piezo discontinued (decision
+`docs/decisions/2026-10-09-discontinue-piezo.md`): D-AMP becomes the
+default board in step 2, step 3 is a D-AMP bench check against the
+recorded piezo runs instead of a live A/B, piezo stays as a fallback
+build. Previous: 2026-10-06. Output hardware moves to D-AMP (decision
 `docs/decisions/2026-10-06-damp-output-hardware.md`): verification continues
 on the piezo nodes, D-AMP support is built and A/B-checked, then the nodes
 switch. The field trial moved ahead of the refactors (Phase 7c, 5d/6,
@@ -83,28 +87,32 @@ the previous gate open unless the step says it can run in parallel.
 
 2. [NEXT] D-AMP board support in firmware. (issue #19)
    Where: NODE-009 (roadmap-node.md) -> docs/refactors/damp-board-support.md.
-   What: pins out of main.cpp into build macros (piezo defaults unchanged),
-   BOARD_DAMP envs, one full-duplex I2S HAL class giving both the mic
-   AudioSource and a sine ToneOutput (mic and amp share BCLK/WS on 26/25).
-   Gate: all piezo and D-AMP envs build, piezo builds unchanged, a D-AMP
-   node reads the mic and chirps on bench.
+   What: pins out of main.cpp into build macros, D-AMP as the default
+   board (plain env names) and piezo as BOARD_PIEZO fallback envs, the
+   full-duplex I2S HAL (AudioSourceI2S RX + I2sToneOutput TX; mic and amp
+   share BCLK/WS on 26/25).
+   Gate: all D-AMP and piezo envs build; a D-AMP node reads the mic and
+   chirps on bench; Analyzer <-> Emitter link works on D-AMP.
    Starts after steps 1a and 1b (owner's call, 2026-10-09). Needs a working
    PlatformIO build (VS Code, or the registry hosts allowed in the cloud
    env).
 
-3. Piezo vs D-AMP bench A/B. (issue #20)
+3. D-AMP bench check. (issue #20)
    Where: NODE-010 (roadmap-node.md); same bench session as
    cleanup-0-plan Phase 0's distance ladder.
-   Why: confirms the decision and measures the new signal before
-   thresholds are judged on it; checks self-echo and class-D noise.
-   Gate: D-AMP at least as detectable as piezo at every distance,
-   self-echo inside the suppression window (or the needed window measured).
-   If D-AMP is worse, stop and revisit the decision.
+   Why: measures the new signal before thresholds are judged on it;
+   checks self-echo and class-D noise. Compared against the piezo SEQ runs
+   already in bench/, no new piezo runs.
+   Gate: D-AMP detected at every ladder distance at least as well as the
+   recorded piezo runs, self-echo inside the suppression window (or the
+   needed window measured). If D-AMP is a dud, go back to piezo
+   (BOARD_PIEZO build) and revisit the decision.
 
 4. Switch to D-AMP. (issue #21)
    Where: NODE-011 (roadmap-node.md).
    Gate: five D-AMP nodes on one build; docs name D-AMP as the node
-   hardware; piezo build kept compiling as the legacy baseline.
+   hardware. (Default board and piezo fallback envs already land in
+   step 2.)
 
 5. Decide the Node's production profile, on D-AMP. (issue #8)
    Where: DET-007 (roadmap-detection.md), with cleanup-0-plan Phase 0.

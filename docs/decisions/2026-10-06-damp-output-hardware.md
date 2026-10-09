@@ -1,8 +1,10 @@
 # Nodes move to D-AMP output (MAX98357A over I2S)
 
-Status: decided, not yet implemented. Firmware support is step 2 of
-`roadmap-0-steps.md` (issue #19), the confirming A/B step 3 (#20), the
-switch step 4 (#21).
+Status: decided, not yet implemented; partly superseded 2026-10-09 by
+`2026-10-09-discontinue-piezo.md` (piezo is a fallback build, not a kept
+baseline; no live A/B; the board flag is `BOARD_PIEZO`, D-AMP the default).
+Firmware support is step 2 of `roadmap-0-steps.md` (issue #19), the D-AMP
+bench check step 3 (#20), the switch step 4 (#21).
 Date: 2026-10-06.
 
 ## Decision

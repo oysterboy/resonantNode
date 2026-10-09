@@ -161,10 +161,11 @@ Status: IN PROGRESS (issue #19, docs/refactors/damp-board-support.md)
 
 ```text
 Decision: docs/decisions/2026-10-06-damp-output-hardware.md.
-Pins: move the hardcoded pins in src/app/main.cpp into build macros, with
-today's piezo values as defaults (piezo builds must not change).
-Board variant: BOARD_DAMP and env:esp32dev-damp, plus Analyzer and Emitter
-variants.
+Pins: move the hardcoded pins in src/app/main.cpp into build macros, one
+set per board.
+Board variant: D-AMP is the default (plain env names); piezo is
+BOARD_PIEZO in esp32dev-piezo* envs, kept compiling as the fallback
+(decisions/2026-10-09-discontinue-piezo.md).
 D-AMP pinout (from oysterboy/echoSpace): 25 = I2S WS and 26 = BCLK, shared
 by mic and amp; 32 = amp DIN; 33 = mic data. UART2 16/17 stays free.
 HAL: one class owning I2S_NUM_0 full-duplex (RX+TX), providing both
@@ -175,17 +176,18 @@ mic channel explicitly (piezo build reads ONLY_RIGHT; echoSpace reads
 stereo with the mic on channel 0).
 ```
 
-### NODE-010 - piezo vs D-AMP bench A/B
+### NODE-010 - D-AMP bench check
 
 Status: TODO (issue #20)
 
 ```text
-Confirms the D-AMP decision and measures the new signal; it doesn't choose.
-One emitter, one listener, Phase 0's distance ladder (10/20/40/60 cm), piezo
-emitter then D-AMP emitter; accept rate and score/contrast from the
-Analyzer. Plus self-echo against the suppression window and class-D noise
-at the mic with the amp idle.
-If D-AMP is less detectable at any distance, stop and revisit the decision.
+Measures the D-AMP signal; no live piezo A/B (piezo discontinued,
+decisions/2026-10-09-discontinue-piezo.md). One emitter, one listener,
+Phase 0's distance ladder (10/20/40/60 cm), D-AMP emitter; accept rate and
+score/contrast from the Analyzer, compared against the piezo SEQ runs
+already in bench/. Plus self-echo against the suppression window and
+class-D noise at the mic with the amp idle.
+If D-AMP is a dud, go back to piezo (BOARD_PIEZO) and revisit.
 Results: (dated line here)
 ```
 
@@ -194,9 +196,8 @@ Results: (dated line here)
 Status: TODO (issue #21)
 
 ```text
-D-AMP becomes the default node hardware; all five D-AMP nodes on one build.
-Piezo build kept compiling as the legacy baseline until the field trial is
-done. Update implementation-status.md, CLAUDE.md build commands, and
+All five D-AMP nodes on one build. (D-AMP as the default build and the
+BOARD_PIEZO fallback envs land in NODE-009.) Update implementation-status.md, CLAUDE.md build commands, and
 myspec.md section 7 if its output list changes.
 ```
 

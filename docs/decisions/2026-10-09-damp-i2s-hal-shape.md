@@ -6,7 +6,8 @@ Date: 2026-10-09.
 ## Decision
 
 - **Shape.** `AudioSourceI2S` stays the one I2S RX implementation and owns
-  `I2S_NUM_0`; on `BOARD_DAMP` it installs the port full duplex. A thin
+  `I2S_NUM_0`; on the D-AMP board (the default build) it installs the port
+  full duplex. A thin
   `I2sToneOutput : ToneOutput` writes the TX side. No second class
   re-implementing RX.
 - **TX feeding.** A small FreeRTOS task blocks on `i2s_write` and renders

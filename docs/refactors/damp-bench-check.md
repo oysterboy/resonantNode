@@ -1,6 +1,8 @@
 # D-AMP bench check (step 3, issue #20)
 
-Status: active, planning the bench session. Started 2026-10-09.
+Status: active. Bench 2026-10-09: 70 / 200 / 110 cm and an overnight tuning
+run at 110 cm (section 5, 6). Next: owner reads section 6; 10 / 40 cm
+rungs; COM6 amp wiring. Started 2026-10-09.
 Roadmap: `docs/roadmaps/roadmap-0-steps.md` step 3 -> NODE-010
 (`roadmap-node.md`). Decisions: `docs/decisions/2026-10-06-damp-output-hardware.md`,
 `docs/decisions/2026-10-09-discontinue-piezo.md`.
@@ -103,4 +105,82 @@ also in `bench:sessions/2026-10-09-issue19-damp-bringup/README.md`.
   piezo fallback build still reads one bit late, `I2S_RX_MSB_ALIGN=0`).
 
 
-(dated lines here)
+## 5. Results
+
+2026-10-09 70 cm (bench:sessions/2026-10-09-issue20-damp-70cm, Emitter COM6
+-> Analyzer COM10, speaker faces mic, firmware 0566cc1, 0.1 FS): T3 46/50
+expected (detector 50/50; 4 weakest dropped by the contrast/amp verdict),
+piezo record 48/50; T2 0/50 (as piezo).
+
+2026-10-09 200 cm (bench:sessions/2026-10-09-issue20-damp-200cm): T3 0/50 at
+0.1 FS (onsets ~2000 < min peak 3000). The 0.4 FS run is invalid: the COM6
+amp had gone silent.
+
+2026-10-09 110 cm, COM6 emitting (bench:sessions/2026-10-09-issue20-damp-
+110cm): invalid as detection data. COM6's amp/speaker produced no sound at
+any level after the boards were moved (its own mic no longer heard its
+beep); likely a loose breadboard wire. Its silent OBS controls (100
+windows, 0 detections) stand.
+
+2026-10-09 110 cm, roles swapped, overnight with the owner away (bench:
+sessions/2026-10-09-issue20-damp-110cm-b, bench 39f8a9b; full table in its
+README). Emitter COM10 -> Analyzer COM6; COM10 speaker -> COM6 mic
+orientation not checked. Tuning variants on branch tune/issue20-damp (not
+main).
+- Level is the lever at 3200 Hz. 0.1 FS: tone ~40 dB over the floor, but
+  peak ~1800 < min peak 3000 and amp evidence ~1060 < medium 2500 -> 0/50
+  at stock settings; lowering only the detector thresholds gives detector
+  50/50 and pattern 0/50 (amp). 0.3 FS: 50/50 at stock settings (strength
+  5479-5721, amp evidence ~3320, i.e. +2.4 dB over medium).
+- Frequency (stock Scalar, 0.3 FS): 2400 / 1600 / 1200 / 600 Hz 0/50
+  (`duration_too_short`, strength 2175-2915), 800 Hz 0/50 (amp evidence
+  1803), 300 Hz nothing; 4000 / 4800 / 5600 / 6400 Hz 50/50 each, strength
+  9823 / 9160 / 12958 / 12636 vs 5588 at 3200 (+4 to +7 dB). About 3.6 dB of
+  the 5600 Hz gain is First Difference's tilt (gain 0.89 vs 0.59).
+- In both profiles the limiting check is amp evidence (broadband level);
+  the tone-specific contrast evidence saturates (~32757). Scalar with the
+  amp inspector at medium 1000 (variant): 50/50 at 0.1 FS / 5600 Hz with
+  stock detector thresholds; at 3200 Hz it needs detector x0.5 and amp sits
+  at ~1050 vs 1000 (no margin).
+- TonalPulseFreq: stock score 18000 and inspector medium 12000 are
+  unreachable on D-AMP. With score 2500 / release 1800 and inspector medium
+  2500 (variant): 36/50 at 3200 Hz, 50/50 at 5600 Hz (0.3 FS); 0/50 at 0.1
+  FS (AmpEnvelope weak).
+- False positives: 0 detector accepts in ~790 silent windows (~38 min)
+  across stock and lowered thresholds (down to x0.2 detector, variant
+  inspectors) at 3200 / 4000 / 5600 Hz. Empty quiet building only.
+- Node (4724fd6, nothing else sounding): `FAILED_NO_QUIET` again, smooth
+  233-254 vs `kRbStartupQuietThreshold` 20: the D-AMP floor is above the
+  piezo-era threshold, so the review's open question (4a) is answered: it
+  is the floor, not the setup. Self-echo: every own idle chirp (5/5) is
+  detected by the node's own mic as a valid pattern (~19.7k) and blocked
+  only by `refractory_after_emit`; it counts as field activity.
+- Dropped DMA buffers (4a): 21-22 per detected trial in `mode=detail`
+  runs, 0 in `mode=trial` / `mode=system` (g_drops_*). Analyzer report
+  output, not detection; no trial was marked buffer_overrun. Piezo
+  `V_scalar50` (#26) had 0 in detail mode: why D-AMP stalls there is open.
+  Ladder runs use `mode=system`.
+
+## 6. Recommendations (owner decides; nothing changed on main)
+
+1. Tone level 0.1 -> 0.3 FS (`I2S_TONE_AMPLITUDE`). Stock Scalar goes
+   0/50 -> 50/50 at 110 cm; COM10's amp is linear at 0.3. Check every
+   node's amp wiring first (COM6 went silent after a move).
+2. Tone frequency: consider 4000-5600 Hz instead of 3200 (+4 to +7 dB
+   margin, same false-positive result). Part of it is First Difference's
+   tilt, which goes if the preprocessor changes after the field trial;
+   higher tones beam more narrowly, so check off-axis before choosing.
+   Lower frequencies are worse on this hardware. A decision file if taken
+   (CHIRP_FREQUENCY_HZ, all nodes).
+3. TonalPulseScalar thresholds: no change needed at 110 cm with 0.3 FS.
+   For more range, lower the amp inspector (medium 2500 -> 1000) rather
+   than the detector; contrast stays the discriminator. Only with a
+   noise false-positive run (speech, doors) first.
+4. TonalPulseFreq: if it stays, its thresholds need rescaling for D-AMP
+   (score ~2500, inspectors medium ~2500); it showed no advantage over
+   Scalar. Part of step 5 (DET-007).
+5. `kRbStartupQuietThreshold` 20 is unreachable on D-AMP (floor ~240):
+   set it from the D-AMP floor (e.g. ~400) or make it relative.
+6. Own-emit: detection suppression until ~60 ms after toneOff would keep
+   own chirps out of field activity (measured echo ends 33-54 ms after
+   toneOff). Step 6's multi-emitter question.

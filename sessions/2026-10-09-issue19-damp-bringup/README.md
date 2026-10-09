@@ -85,3 +85,29 @@ Results:
   mic's own sub-30 Hz output, its supply (the echoSpace wiring doc puts mic
   VCC on 5 V; not measured here), or mechanics. Sub-30 Hz is inaudible and
   hard to see in short windows, which may be why echoSpace looked clean.
+
+## toneOn -> own mic latency (same sitting, COM10 alone)
+
+Method: throwaway sketch `latency-sketch/` built on the repo's
+`AudioSourceI2S` + `I2sToneOutput` (copied unchanged from `main` 4b06814;
+default D-AMP config: 16 kHz, DMA 3x128, tone 0.1 FS, 5 ms ramp). 20 trials:
+100 ms quiet, `toneOn()` at T0, `toneOff()` at T0+100 ms, 200 ms tail. Mic
+sample times from the sample clock (the detector's time base). Envelope =
+moving max of |x| over 6 samples of the First-Differenced stream; plateau =
+mean envelope 50-90 ms after T0. Log: `tone_latency_20.throwaway.log`.
+
+| Measure | min | median | max |
+|---|---|---|---|
+| toneOn -> envelope at 10% of plateau | 28.9 ms | 31.9 ms | 35.9 ms |
+| toneOn -> 50% (ramp included) | 30.9 ms | 34.2 ms | 38.2 ms |
+| toneOff -> under 10% for 2 ms | 33.1 ms | 37.2 ms | 53.7 ms |
+| own-chirp level over the quiet floor | 35.1 dB | 43.6 dB | 44.9 dB |
+
+Reading: the delay is the TX queue (3 DMA buffers x 8 ms = 24 ms) plus the
+block being rendered (0-8 ms; the 7 ms spread is that quantum), plus the
+5 ms ramp for the 50% point. Acoustic path on the board is negligible. A
+100 ms chirp is therefore heard on the node's own mic from ~30 ms to ~135-
+155 ms after `toneOn()`, about 45 dB over the floor. The Node's current
+own-emit windows (`behaviorSuppressSelfChirpMs=100`,
+`detectionSuppressTailMsOwnEmit=0`, from the node log above) end before
+that sound does: for step 3 (#20), not changed here.

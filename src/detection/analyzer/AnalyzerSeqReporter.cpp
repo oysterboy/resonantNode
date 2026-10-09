@@ -132,7 +132,11 @@ void AnalyzerApp::printSequenceTrial(const AnalyzerReport& report) const {
         Serial.print(" i2s_max_backstep_us=");
         Serial.print(audioStats.maxTimestampBackstepUs);
         Serial.print(" i2s_overflows=");
-        Serial.println(audioStats.overflowCount);
+        Serial.print(audioStats.overflowCount);
+        Serial.print(" clock_corrections=");
+        Serial.print(audioStats.sampleClockCorrections);
+        Serial.print(" clock_max_correction_us=");
+        Serial.println(audioStats.maxSampleClockCorrectionUs);
         _lastPrintedHistoryIncompleteCount = hist.count;
     }
     const char* trialRejectReason = analyzerReasonName(report.classification.reason);

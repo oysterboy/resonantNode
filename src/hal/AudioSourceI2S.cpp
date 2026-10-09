@@ -4,6 +4,7 @@
 #include <driver/i2s.h>
 #include <math.h>
 #include <new>
+#include <stdint.h>
 #include <string.h>
 
 #include "../audio/AudioPcm.h"
@@ -198,7 +199,66 @@ const AudioSourceStats& AudioSourceI2S::stats() const {
     return _stats;
 }
 
+// Block timestamps come from the sample index on a clock anchored to
+// micros(), not from the time a block happens to be read.
+//
+// i2s_read() hands over whole DMA buffers (128 samples, 8 ms) that may have
+// been waiting for a while. Stamping each block as "its last sample arrived
+// now" turned every late read into a jump forward and every catch-up read
+// into a jump back, so the sample time base had holes and overlaps whenever
+// the loop ran behind. FeatureHistory bins by that time, and an inspection
+// window with a hole at its edge was reported HistoryWindowIncomplete
+// (issue #26).
+//
+// The clock: time(index) = anchorUs + (index - anchorIndex) / rate. Read
+// latency (read time minus the clock's time for the block's last sample) is
+// never negative for a correct clock and its minimum over a window is the
+// clock's offset from the true arrival time. About once a second the anchor
+// moves by that minimum: it absorbs I2S-vs-CPU clock drift (sub-ms per
+// second) and closes real gaps after dropped samples, without letting
+// per-read jitter into the time base.
+uint32_t AudioSourceI2S::stampBlock(uint64_t blockStartIndex, size_t blockCount, uint32_t readAtUs) {
+    const uint32_t rate = static_cast<uint32_t>(_sampleRate);
+    const uint32_t lastOffsetUs = blockCount > 0
+        ? sampleOffsetUs(static_cast<uint32_t>(blockCount - 1U), rate)
+        : 0U;
+    if (!_clockAnchored) {
+        _clockAnchorIndex = blockStartIndex;
+        _clockAnchorUs = readAtUs - lastOffsetUs;
+        _clockWindowMinLatencyUs = INT32_MAX;
+        _clockWindowSamples = 0;
+        _clockAnchored = true;
+    }
+
+    const uint32_t startUs = _clockAnchorUs
+        + sampleOffsetUs(static_cast<uint32_t>(blockStartIndex - _clockAnchorIndex), rate);
+    const int32_t latencyUs = static_cast<int32_t>(readAtUs - (startUs + lastOffsetUs));
+    if (latencyUs < _clockWindowMinLatencyUs) {
+        _clockWindowMinLatencyUs = latencyUs;
+    }
+    _clockWindowSamples += static_cast<uint32_t>(blockCount);
+
+    if (_clockWindowSamples >= rate) {
+        const uint64_t nextIndex = blockStartIndex + static_cast<uint64_t>(blockCount);
+        _clockAnchorUs = _clockAnchorUs
+            + sampleOffsetUs(static_cast<uint32_t>(nextIndex - _clockAnchorIndex), rate)
+            + static_cast<uint32_t>(_clockWindowMinLatencyUs);
+        _clockAnchorIndex = nextIndex;
+        ++_stats.sampleClockCorrections;
+        const uint32_t correctionUs = static_cast<uint32_t>(
+            _clockWindowMinLatencyUs < 0 ? -_clockWindowMinLatencyUs : _clockWindowMinLatencyUs);
+        if (correctionUs > _stats.maxSampleClockCorrectionUs) {
+            _stats.maxSampleClockCorrectionUs = correctionUs;
+        }
+        _clockWindowMinLatencyUs = INT32_MAX;
+        _clockWindowSamples = 0;
+    }
+    return startUs;
+}
+
 void AudioSourceI2S::resetStats() {
+    _clockAnchored = false;
+    _haveLastBlockEnd = false;
     _blockCursor = 0;
     _blockCount = 0;
     _blockStartSampleIndex = 0;
@@ -287,9 +347,7 @@ bool AudioSourceI2S::refillBlock() {
         _blockSamples[_blockCount++] = preprocessSample(decodedSample);
     }
 
-    const uint32_t selectedFrameAge = _blockCount > 0 ? static_cast<uint32_t>(_blockCount - 1U) : 0U;
-    const uint32_t offsetUs = sampleOffsetUs(selectedFrameAge, static_cast<uint32_t>(_sampleRate));
-    _blockApproxStartMicros = fillEndUs > offsetUs ? fillEndUs - offsetUs : 0U;
+    _blockApproxStartMicros = stampBlock(_blockStartSampleIndex, _blockCount, fillEndUs);
     if (_haveLastBlockEnd) {
         const int32_t deltaUs = static_cast<int32_t>(_blockApproxStartMicros - _lastBlockEndMicros);
         if (deltaUs < 0) {

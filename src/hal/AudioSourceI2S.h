@@ -55,6 +55,15 @@ private:
     uint32_t _blockApproxStartMicros = 0;
     uint32_t _lastBlockEndMicros = 0;
     bool _haveLastBlockEnd = false;
+
+    // Sample clock: block times come from the sample index, not from when the
+    // block happened to be read. See stampBlock() in AudioSourceI2S.cpp.
+    uint32_t stampBlock(uint64_t blockStartIndex, size_t blockCount, uint32_t readAtUs);
+    bool _clockAnchored = false;
+    uint64_t _clockAnchorIndex = 0;
+    uint32_t _clockAnchorUs = 0;
+    int32_t _clockWindowMinLatencyUs = 0;
+    uint32_t _clockWindowSamples = 0;
     bool _blockOverflowBeforeBlock = false;
     uint64_t _outputSampleIndex = 0;
     int32_t _previousSample = 0;

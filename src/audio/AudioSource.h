@@ -26,6 +26,11 @@ struct AudioSourceStats {
     // estimated end, i.e. sample time went backwards between two blocks.
     uint32_t timestampBacksteps = 0;
     uint32_t maxTimestampBackstepUs = 0;
+
+    // Sample-clock re-anchors (about once a second) and the largest single
+    // correction applied, in either direction.
+    uint32_t sampleClockCorrections = 0;
+    uint32_t maxSampleClockCorrectionUs = 0;
 };
 
 struct AudioBlock {

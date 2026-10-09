@@ -185,7 +185,18 @@ file.
          registry access). Do it with the D-AMP HAL work or the next
          hardware session.
 [OPEN]   Document the INMP441 L/R wiring of the piezo nodes (4.7).
-[OPEN]   Pin or record the espressif32 platform version.
+[OPEN]   Pin the espressif32 platform version. Recorded 2026-10-09 on the
+         owner's machine: platform espressif32 6.13.0, framework
+         arduinoespressif32 3.20017.241212 (Arduino-ESP32 2.0.17, IDF 4.4).
+[NOTE]   Owner, 2026-10-09: the echoSpace D-AMP build did not show the
+         drift. Differences: other pinout, MAX98357A on the same I2S bus
+         (full duplex), stereo read with the mic on channel 0, 48 kHz.
+         Points at this repo's capture setup (mono ONLY_RIGHT read, 16 kHz,
+         decode, wiring) more than at the mic model; the issue #24 captures
+         still decide. Unrelated change on the same class the same day:
+         AudioSourceI2S now stamps blocks from the sample index and counts
+         dropped DMA buffers (i2s-sample-clock.md, issue #26); decode and
+         preprocess are untouched.
 [CLOSED] Spike A on the direct driver is treated as resolved per the
          2026-06-24 checkpoint; not re-verified here.
 [NOTE]   4.5 is correct as is. Do not reset the preprocessor in resetStats().

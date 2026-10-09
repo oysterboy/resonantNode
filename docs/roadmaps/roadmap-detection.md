@@ -105,7 +105,7 @@ Close when cleanup-0-plan.md is archived with its "Archived: ..." header.
 
 ### DET-009 - inspection reads an empty FeatureHistory window under load
 
-Status: TODO (step 1a, issue #26)
+Status: DONE 2026-10-09 (step 1a, issue #26; docs/refactors/archive/i2s-sample-clock.md)
 
 ```text
 Found by the issue #7 hardware runs: an accepted occurrence is inspected

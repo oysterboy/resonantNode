@@ -60,8 +60,8 @@ the previous gate open unless the step says it can run in parallel.
    the two T2/T3 changes (7d33fed, 795f649) accepted by the owner. Raw runs
    on branch `bench`. Left behind: steps 1a and 1b.
 
-1a. [NEXT] Inspection reads an empty FeatureHistory window under loop load.
-   (issue #26)
+1a. [LANDED 2026-10-09] Inspection reads an empty FeatureHistory window
+   under loop load. (issue #26, closed)
    Where: DET-009 (roadmap-detection.md).
    Why before step 2: found by step 1; load-dependent, and the D-AMP HAL
    changes both the audio path and the loop load, so fix and verify it on
@@ -69,6 +69,8 @@ the previous gate open unless the step says it can run in parallel.
    Gate: mechanism written up, fix committed, 0 empty-history inspections
    on the reproducer (Freq + diagnostics on) and on TonalPulseScalar, T1,
    T4.
+   Closed: docs/refactors/archive/i2s-sample-clock.md (sample clock from
+   the I2S index, dropped DMA buffers counted, flash at 80 MHz QIO).
 
 1b. [NEXT] Classify the I2S MEMS drift (mic LF output vs an integrating
    stage). (issue #24)

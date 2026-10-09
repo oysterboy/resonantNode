@@ -56,3 +56,32 @@ walk seen on the piezo nodes in #24?).
   Detection numbers are for step 3 (#20), not judged here.
 
 Not done: speaker level vs distance, self-echo, class-D idle noise (step 3).
+
+## Item 5a: drift, firmware read config vs board (same sitting, COM10)
+
+Question (#19 owner comment 15:35Z): the same mic was drift-free under
+echoSpace's firmware on a D-AMP node, so is it our read setup?
+
+Method: throwaway sketch `drifttest-sketch/` (not repo firmware, so the run
+files carry `git=throwaway`). D-AMP pinout, full duplex with TX silent,
+stereo 32-bit, mic slot 0. Per config: reinstall the port, wait 10 s, two
+quiet captures of 16384 samples 3 s apart. Configs: A = ours (16 kHz, RX
+MSB realign, DMA 3x128), B = echoSpace (48 kHz, plain STAND_I2S, DMA 4x128),
+C = 48 kHz + realign, D = 16 kHz without realign, A2 = ours again at the end.
+Analysis: `drifttest-sketch/drift_analyze.py`, output `drift5a_summary.txt`
+(dBFS of the 24-bit word, framing-corrected).
+
+Results:
+- Framing: without the realign raw bit 8 is 0 in every sample at 16 and
+  48 kHz; with it ~50%. Confirms #24 on this board.
+- The wander is **below 30 Hz**: 1-30 Hz band -39 to -59 dBFS; 30-100 Hz
+  -73 to -78; every band from 100 Hz up -76 to -92 dBFS (mic floor). First
+  difference sits at -85 to -90 dBFS.
+- **No read config removes it.** B (echoSpace-equivalent) shows it like A:
+  1-30 Hz -56 dBFS in both B captures, -57 to -59 in A, -39 / -49 in A2.
+  The spread between captures of the same config (A vs A2: 20 dB) is larger
+  than any difference between configs.
+- So it is not our rate, framing, or DMA setup. Candidates left: the
+  mic's own sub-30 Hz output, its supply (the echoSpace wiring doc puts mic
+  VCC on 5 V; not measured here), or mechanics. Sub-30 Hz is inaudible and
+  hard to see in short windows, which may be why echoSpace looked clean.

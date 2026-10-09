@@ -32,8 +32,8 @@ struct AudioSourceStats {
     uint32_t sampleClockCorrections = 0;
     uint32_t maxSampleClockCorrectionUs = 0;
     // DMA buffers the driver dropped because the reader fell behind (each
-    // advances the sample index by one buffer), and the sample rate the
-    // clock has measured, in mHz.
+    // advances the sample index by one buffer; also counted in
+    // overflowCount), and the sample rate the clock has measured, in mHz.
     uint32_t droppedDmaBuffers = 0;
     uint32_t sampleClockRateMilliHz = 0;
 };

@@ -375,6 +375,10 @@ bool AudioSourceI2S::refillBlock() {
     const uint32_t droppedBuffers = drainDroppedBuffers();
     if (droppedBuffers > 0) {
         _stats.droppedDmaBuffers += droppedBuffers;
+        // overflowCount had no producer before; dropped buffers are exactly
+        // what it was meant to report (Analyzer marks such trials
+        // buffer_overrun instead of judging a chirp with missing audio).
+        _stats.overflowCount += droppedBuffers;
         _outputSampleIndex += static_cast<uint64_t>(droppedBuffers) * static_cast<uint64_t>(I2S_DMA_BUF_LEN);
     }
 

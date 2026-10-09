@@ -978,6 +978,14 @@ void Node::handleDetectCommand(const char* line) {
     Serial.print(ageSamples);
     Serial.print(" freq.packet_age_ms=");
     Serial.print(ageMs, 3);
+    const AudioSourceStats& audioStats = _audioSource.stats();
+    Serial.print(" i2s.samples_read=");
+    Serial.print(static_cast<unsigned long>(audioStats.totalSamplesRead));
+    Serial.print(" i2s.dropped_dma_buffers=");
+    Serial.print(audioStats.droppedDmaBuffers);
+    Serial.print(" i2s.clock_rate_mhz=");
+    Serial.print(audioStats.sampleClockRateMilliHz);
+    Serial.print(" ");
     printBuildIdentity(Serial, "node");
     Serial.println();
 }

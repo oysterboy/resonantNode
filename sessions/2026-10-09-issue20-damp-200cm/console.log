@@ -1,0 +1,10 @@
+[18:39:29] boot banner: {'role': 'analyzer', 'git': '0566cc1', 'version': '0.4.0', 'board': 'damp'}
+[18:39:31] warmup: OK EMIT CHIRP
+[18:39:31] start T3_scalar: SEQ start profile=TonalPulseScalar tries=50 mode=detail when=all verbose=1
+[18:42:16] done T3_scalar (165s): complete=True results={'rejected': 15, 'miss': 35}
+[18:42:18] session updated, index rebuilt
+[18:43:36] boot banner: {'role': 'analyzer', 'git': '0566cc1', 'version': '0.4.0', 'board': 'damp'}
+[18:43:38] warmup: OK EMIT CHIRP
+[18:43:38] start T3_scalar_amp040: SEQ start profile=TonalPulseScalar tries=50 mode=detail when=all verbose=1
+[18:46:23] done T3_scalar_amp040 (164s): complete=True results={'miss': 50}
+[18:46:25] session updated, index rebuilt

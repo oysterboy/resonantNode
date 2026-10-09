@@ -1,0 +1,105 @@
+[19:09:45] boot banner: {'role': 'analyzer', 'git': '943ec31', 'version': '0.4.0', 'board': 'damp'}
+[19:09:47] warmup: OK EMIT CHIRP
+[19:09:47] start p0_probe: SEQ start profile=TonalPulseScalar tries=5 mode=detail when=all verbose=1
+[19:10:08] done p0_probe (21s): complete=True results={'miss': 5}
+[19:10:10] session updated, index rebuilt
+[19:11:25] boot banner: {'role': 'analyzer', 'git': '943ec31', 'version': '0.4.0', 'board': 'damp'}
+[19:11:27] warmup: OK EMIT CHIRP
+[19:11:27] start a_def_T3: SEQ start profile=TonalPulseScalar tries=50 mode=detail when=all verbose=1
+[19:14:11] done a_def_T3 (164s): complete=True results={'miss': 50}
+[19:14:14] start a_def_OBS: EMIT MODE REMOTE ; SEQ OBS start tries=50 period=2000 window=1800 profile=TonalPulseScalar mode=detail when=all verbose=1
+[19:16:39] done a_def_OBS (145s): complete=True results={'miss': 50}
+[19:16:42] start a_x05_T3: PARAM scalar_onset_threshold=1000 scalar_release_threshold=750 scalar_min_peak_strength=1500 ; SEQ start profile=TonalPulseScalar tries=50 mode=detail when=all verbose=1
+[19:19:27] done a_x05_T3 (165s): complete=True results={'rejected': 50}
+[19:19:30] start a_x05_OBS: PARAM scalar_onset_threshold=1000 scalar_release_threshold=750 scalar_min_peak_strength=1500 ; EMIT MODE REMOTE ; SEQ OBS start tries=50 period=2000 window=1800 profile=TonalPulseScalar mode=detail when=all verbose=1
+[19:21:55] done a_x05_OBS (145s): complete=True results={'miss': 50}
+[19:21:58] start a_x03_T3: PARAM scalar_onset_threshold=600 scalar_release_threshold=450 scalar_min_peak_strength=900 ; SEQ start profile=TonalPulseScalar tries=50 mode=detail when=all verbose=1
+[19:24:43] done a_x03_T3 (165s): complete=True results={'rejected': 50}
+[19:24:47] start a_x03_OBS: PARAM scalar_onset_threshold=600 scalar_release_threshold=450 scalar_min_peak_strength=900 ; EMIT MODE REMOTE ; SEQ OBS start tries=50 period=2000 window=1800 profile=TonalPulseScalar mode=detail when=all verbose=1
+[19:27:12] done a_x03_OBS (145s): complete=True results={'miss': 50}
+[19:27:15] start a_x02_T3: PARAM scalar_onset_threshold=400 scalar_release_threshold=300 scalar_min_peak_strength=600 ; SEQ start profile=TonalPulseScalar tries=50 mode=detail when=all verbose=1
+[19:29:59] done a_x02_T3 (165s): complete=True results={'rejected': 50}
+[19:30:03] start a_x02_OBS: PARAM scalar_onset_threshold=400 scalar_release_threshold=300 scalar_min_peak_strength=600 ; EMIT MODE REMOTE ; SEQ OBS start tries=50 period=2000 window=1800 profile=TonalPulseScalar mode=detail when=all verbose=1
+[19:32:28] done a_x02_OBS (145s): complete=True results={'miss': 50}
+[19:32:30] session updated, index rebuilt
+[19:34:02] boot banner: {'role': 'analyzer', 'git': '943ec31', 'version': '0.4.0', 'board': 'damp'}
+[19:34:04] warmup: OK EMIT CHIRP
+[19:34:04] start b_a030_def_T3: SEQ start profile=TonalPulseScalar tries=50 mode=detail when=all verbose=1
+[19:36:49] done b_a030_def_T3 (165s): complete=True results={'expected': 50}
+[19:36:51] start b_a030_def_T2: SEQ start profile=TonalPulseFreq tries=50 mode=detail when=all verbose=1
+[19:39:36] done b_a030_def_T2 (165s): complete=True results={'miss': 50}
+[19:39:38] session updated, index rebuilt
+[19:40:00] boot banner: {'role': 'analyzer', 'git': '943ec31', 'version': '0.4.0', 'board': 'damp'}
+[19:40:02] warmup: OK EMIT CHIRP
+[19:40:02] start c_f2400_T3: SEQ start profile=TonalPulseScalar tries=50 freq=2400 mode=detail when=all verbose=1
+[19:42:47] done c_f2400_T3 (165s): complete=True results={'rejected': 50}
+[19:42:49] start c_f1600_T3: SEQ start profile=TonalPulseScalar tries=50 freq=1600 mode=detail when=all verbose=1
+[19:45:34] done c_f1600_T3 (165s): complete=True results={'rejected': 50}
+[19:45:36] start c_f1200_T3: SEQ start profile=TonalPulseScalar tries=50 freq=1200 mode=detail when=all verbose=1
+[19:48:20] done c_f1200_T3 (165s): complete=True results={'rejected': 50}
+[19:48:22] start c_f800_T3: SEQ start profile=TonalPulseScalar tries=50 freq=800 mode=detail when=all verbose=1
+[19:51:07] done c_f800_T3 (165s): complete=True results={'rejected': 50}
+[19:51:09] start c_f600_T3: SEQ start profile=TonalPulseScalar tries=50 freq=600 mode=detail when=all verbose=1
+[19:53:54] done c_f600_T3 (165s): complete=True results={'rejected': 50}
+[19:53:56] start c_f300_T3: SEQ start profile=TonalPulseScalar tries=50 freq=300 mode=detail when=all verbose=1
+[19:56:41] done c_f300_T3 (165s): complete=True results={'miss': 50}
+[19:56:43] session updated, index rebuilt
+[19:57:19] boot banner: {'role': 'analyzer', 'git': '943ec31', 'version': '0.4.0', 'board': 'damp'}
+[19:57:21] warmup: OK EMIT CHIRP
+[19:57:21] start c_f4000_T3: SEQ start profile=TonalPulseScalar tries=50 freq=4000 mode=detail when=all verbose=1
+[20:00:06] done c_f4000_T3 (165s): complete=True results={'expected': 50}
+[20:00:08] start c_f4800_T3: SEQ start profile=TonalPulseScalar tries=50 freq=4800 mode=detail when=all verbose=1
+[20:02:53] done c_f4800_T3 (165s): complete=True results={'expected': 50}
+[20:02:55] session updated, index rebuilt
+[20:03:11] boot banner: {'role': 'analyzer', 'git': '943ec31', 'version': '0.4.0', 'board': 'damp'}
+[20:03:13] warmup: OK EMIT CHIRP
+[20:03:13] start c_f5600_T3: SEQ start profile=TonalPulseScalar tries=50 freq=5600 mode=detail when=all verbose=1
+[20:05:57] done c_f5600_T3 (165s): complete=True results={'expected': 50}
+[20:05:59] start c_f6400_T3: SEQ start profile=TonalPulseScalar tries=50 freq=6400 mode=detail when=all verbose=1
+[20:08:44] done c_f6400_T3 (165s): complete=True results={'expected': 50}
+[20:08:47] session updated, index rebuilt
+[20:09:05] boot banner: {'role': 'analyzer', 'git': '943ec31', 'version': '0.4.0', 'board': 'damp'}
+[20:09:07] warmup: OK EMIT CHIRP
+[20:09:08] start c_f4000_OBS: EMIT MODE REMOTE ; SEQ OBS start tries=50 period=2000 window=1800 freq=4000 profile=TonalPulseScalar mode=detail when=all verbose=1
+[20:11:32] done c_f4000_OBS (144s): complete=True results={'miss': 50}
+[20:11:35] start c_f5600_OBS: EMIT MODE REMOTE ; SEQ OBS start tries=50 period=2000 window=1800 freq=5600 profile=TonalPulseScalar mode=detail when=all verbose=1
+[20:14:00] done c_f5600_OBS (145s): complete=True results={'miss': 50}
+[20:14:02] session updated, index rebuilt
+[20:15:17] boot banner: {'role': 'analyzer', 'git': '8669838', 'version': '0.4.0', 'board': 'damp'}
+[20:15:19] warmup: OK EMIT CHIRP
+[20:15:19] start d_T3v_def_f5600: SEQ start profile=TonalPulseScalar tries=50 freq=5600 mode=detail when=all verbose=1
+[20:18:04] done d_T3v_def_f5600 (165s): complete=True results={'expected': 50}
+[20:18:07] start d_T3v_x05_f3200: PARAM scalar_onset_threshold=1000 scalar_release_threshold=750 scalar_min_peak_strength=1500 ; SEQ start profile=TonalPulseScalar tries=50 freq=3200 mode=detail when=all verbose=1
+[20:20:52] done d_T3v_x05_f3200 (165s): complete=True results={'expected': 50}
+[20:20:55] start d_T3v_x05_f5600: PARAM scalar_onset_threshold=1000 scalar_release_threshold=750 scalar_min_peak_strength=1500 ; SEQ start profile=TonalPulseScalar tries=50 freq=5600 mode=detail when=all verbose=1
+[20:23:40] done d_T3v_x05_f5600 (165s): complete=True results={'expected': 50}
+[20:23:42] start d_T2v_s1000_f3200: PARAM freqScore=1000 freqReleaseScore=700 ; SEQ start profile=TonalPulseFreq tries=50 freq=3200 mode=detail when=all verbose=1
+[20:26:27] done d_T2v_s1000_f3200 (165s): complete=True results={'rejected': 50}
+[20:26:30] start d_T2v_s2500_f5600: PARAM freqScore=2500 freqReleaseScore=1800 ; SEQ start profile=TonalPulseFreq tries=50 freq=5600 mode=detail when=all verbose=1
+[20:29:15] done d_T2v_s2500_f5600 (165s): complete=True results={'rejected': 50}
+[20:29:19] start d_T3v_x05_OBS_f3200: PARAM scalar_onset_threshold=1000 scalar_release_threshold=750 scalar_min_peak_strength=1500 ; EMIT MODE REMOTE ; SEQ OBS start tries=150 period=2000 window=1800 freq=3200 profile=TonalPulseScalar mode=detail when=all verbose=1
+[20:35:59] done d_T3v_x05_OBS_f3200 (401s): complete=False results={'miss': 142}
+[20:36:03] start d_T2v_s1000_OBS_f3200: PARAM freqScore=1000 freqReleaseScore=700 ; EMIT MODE REMOTE ; SEQ OBS start tries=100 period=2000 window=1800 freq=3200 profile=TonalPulseFreq mode=detail when=all verbose=1
+[20:40:48] done d_T2v_s1000_OBS_f3200 (285s): complete=True results={'miss': 101}
+[20:40:50] session updated, index rebuilt
+[20:42:11] boot banner: {'role': 'analyzer', 'git': '8669838', 'version': '0.4.0', 'board': 'damp'}
+[20:42:13] warmup: OK EMIT CHIRP
+[20:42:14] start e_T2v_s2500_a030_f3200: PARAM freqScore=2500 freqReleaseScore=1800 ; SEQ start profile=TonalPulseFreq tries=50 freq=3200 mode=detail when=all verbose=1
+[20:44:59] done e_T2v_s2500_a030_f3200 (165s): complete=True results={'expected': 36, 'rejected': 14}
+[20:45:01] start e_T2v_s2500_a030_f5600: PARAM freqScore=2500 freqReleaseScore=1800 ; SEQ start profile=TonalPulseFreq tries=50 freq=5600 mode=detail when=all verbose=1
+[20:47:46] done e_T2v_s2500_a030_f5600 (165s): complete=True results={'expected': 50}
+[20:47:48] session updated, index rebuilt
+[20:52:01] boot banner: {'role': 'analyzer', 'git': '8669838', 'version': '0.4.0', 'board': 'damp'}
+[20:52:03] warmup: OK EMIT CHIRP
+[20:52:05] start f_soak_T3v_x03_f3200: PARAM scalar_onset_threshold=600 scalar_release_threshold=450 scalar_min_peak_strength=900 ; EMIT MODE REMOTE ; SEQ OBS start tries=400 period=2000 window=1800 freq=3200 profile=TonalPulseScalar mode=detail when=all verbose=1
+[20:58:46] done f_soak_T3v_x03_f3200 (401s): complete=False results={'miss': 143}
+[20:58:48] session updated, index rebuilt
+[20:59:23] boot banner: {'role': 'analyzer', 'git': '8669838', 'version': '0.4.0', 'board': 'damp'}
+[20:59:25] warmup: OK EMIT CHIRP
+[20:59:25] start g_drops_trial: SEQ start profile=TonalPulseScalar tries=10 freq=5600 mode=trial when=all verbose=1
+[21:00:01] done g_drops_trial (36s): complete=True results={'expected': 10}
+[21:00:03] start g_drops_system: SEQ start profile=TonalPulseScalar tries=10 freq=5600 mode=system when=all verbose=1
+[21:00:40] done g_drops_system (36s): complete=True results={'expected': 10}
+[21:00:42] start g_drops_detail: SEQ start profile=TonalPulseScalar tries=10 freq=5600 mode=detail when=all verbose=1
+[21:01:19] done g_drops_detail (37s): complete=True results={'expected': 10}
+[21:01:21] session updated, index rebuilt

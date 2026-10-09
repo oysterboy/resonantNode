@@ -1,0 +1,16 @@
+[18:49:48] boot banner: {'role': 'analyzer', 'git': '0566cc1', 'version': '0.4.0', 'board': 'damp'}
+[18:49:50] warmup: OK EMIT CHIRP
+[18:49:51] start probe_obs5: EMIT MODE REMOTE ; SEQ OBS start tries=5 period=2000 window=1800 profile=TonalPulseScalar mode=detail when=all verbose=1
+[18:50:09] done probe_obs5 (19s): complete=True results={'miss': 5}
+[18:50:11] session updated, index rebuilt
+[18:50:38] boot banner: {'role': 'analyzer', 'git': '0566cc1', 'version': '0.4.0', 'board': 'damp'}
+[18:50:40] warmup: OK EMIT CHIRP
+[18:50:40] start p1_T3_a040: SEQ start profile=TonalPulseScalar tries=50 mode=detail when=all verbose=1
+[18:53:24] done p1_T3_a040 (164s): complete=True results={'miss': 50}
+[18:53:26] start p1_T2_a040: SEQ start profile=TonalPulseFreq tries=50 mode=detail when=all verbose=1
+[18:56:10] done p1_T2_a040 (164s): complete=True results={'miss': 50}
+[18:56:13] start p1_OBS_T3_def: EMIT MODE REMOTE ; SEQ OBS start tries=50 period=2000 window=1800 profile=TonalPulseScalar mode=detail when=all verbose=1
+[18:58:38] done p1_OBS_T3_def (145s): complete=True results={'miss': 50}
+[18:58:41] start p1_OBS_T2_def: EMIT MODE REMOTE ; SEQ OBS start tries=50 period=2000 window=1800 profile=TonalPulseFreq mode=detail when=all verbose=1
+[19:01:06] done p1_OBS_T2_def (145s): complete=True results={'miss': 50}
+[19:01:08] session updated, index rebuilt

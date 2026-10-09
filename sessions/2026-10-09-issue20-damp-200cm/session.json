@@ -1,0 +1,112 @@
+{
+  "purpose": "issue #20 D-AMP bench check, 200 cm (beyond any piezo record)",
+  "created": "2026-10-09T18:39:25",
+  "setup": {
+    "distance_cm": 200.0,
+    "orientation": "speaker faces mic, same height (assumed unchanged from 70 cm)",
+    "emitter_fw": "0566cc1",
+    "notes": [
+      "D-AMP boards: Emitter COM6, Analyzer COM10; tone 0.1 FS, 5 ms ramp; TonalPulseScalar only (owner's time)"
+    ]
+  },
+  "runs": [
+    {
+      "name": "T3_scalar",
+      "file": "T3_scalar.0566cc1.log",
+      "firmware": {
+        "role": "analyzer",
+        "git": "0566cc1",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "commands": [
+        "SEQ start profile=TonalPulseScalar tries=50 mode=detail when=all verbose=1"
+      ],
+      "started": "2026-10-09T18:39:31",
+      "duration_s": 165,
+      "summary": {
+        "profile": "TonalPulseScalar",
+        "detector": "scalar_transient",
+        "complete": true,
+        "trial_results": {
+          "rejected": 15,
+          "miss": 35
+        },
+        "line_counts": {
+          "SEQ_TRIAL": 50,
+          "SEQ_INSPECT": 50,
+          "SEQ_SOURCE": 50,
+          "SEQ_SOURCE_CORE": 50,
+          "SEQ_SOURCE_SPEC": 15,
+          "SEQ_EXPLAIN": 50,
+          "SEQ_SUMMARY": 1
+        },
+        "trials": "50",
+        "completed": "50",
+        "expected_trials": "0",
+        "early_trials": "0",
+        "late_trials": "0",
+        "miss_trials": "35",
+        "duplicate_trials": "0",
+        "unexpected_trials": "0",
+        "rejected_trials": "15",
+        "buffer_overrun_trials": "0",
+        "detector_accepted_trials": "0",
+        "detector_reject_trials": "15",
+        "pattern_valid_trials": "0",
+        "pattern_rejected_trials": "0",
+        "avg_dt_ms": "51",
+        "avg_strength": "2021.7",
+        "avg_conf": "0.00"
+      }
+    },
+    {
+      "name": "T3_scalar_amp040",
+      "file": "T3_scalar_amp040.0566cc1.log",
+      "firmware": {
+        "role": "analyzer",
+        "git": "0566cc1",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "commands": [
+        "SEQ start profile=TonalPulseScalar tries=50 mode=detail when=all verbose=1"
+      ],
+      "started": "2026-10-09T18:43:38",
+      "duration_s": 164,
+      "summary": {
+        "profile": "TonalPulseScalar",
+        "detector": "scalar_transient",
+        "complete": true,
+        "trial_results": {
+          "miss": 50
+        },
+        "line_counts": {
+          "SEQ_TRIAL": 50,
+          "SEQ_INSPECT": 50,
+          "SEQ_SOURCE": 50,
+          "SEQ_SOURCE_CORE": 50,
+          "SEQ_EXPLAIN": 50,
+          "SEQ_SUMMARY": 1
+        },
+        "trials": "50",
+        "completed": "50",
+        "expected_trials": "0",
+        "early_trials": "0",
+        "late_trials": "0",
+        "miss_trials": "50",
+        "duplicate_trials": "0",
+        "unexpected_trials": "0",
+        "rejected_trials": "0",
+        "buffer_overrun_trials": "0",
+        "detector_accepted_trials": "0",
+        "detector_reject_trials": "0",
+        "pattern_valid_trials": "0",
+        "pattern_rejected_trials": "0",
+        "avg_dt_ms": "-1",
+        "avg_strength": "0.0",
+        "avg_conf": "0.00"
+      }
+    }
+  ]
+}

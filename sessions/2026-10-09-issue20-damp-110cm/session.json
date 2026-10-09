@@ -1,0 +1,257 @@
+{
+  "purpose": "issue #20 D-AMP tuning at 110 cm: level, frequency, thresholds, false-positive controls (owner away, recommend only)",
+  "created": "2026-10-09T18:49:43",
+  "setup": {
+    "distance_cm": 110.0,
+    "orientation": "speaker faces mic, same height",
+    "emitter_fw": "943ec31 -D I2S_TONE_AMPLITUDE=0.4f",
+    "notes": [
+      "Emitter COM6, Analyzer COM10. Silent controls: SEQ OBS with the Emitter in REMOTE (no emission); any accept = false positive."
+    ]
+  },
+  "runs": [
+    {
+      "name": "probe_obs5",
+      "file": "probe_obs5.0566cc1.log",
+      "firmware": {
+        "role": "analyzer",
+        "git": "0566cc1",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "commands": [
+        "EMIT MODE REMOTE",
+        "SEQ OBS start tries=5 period=2000 window=1800 profile=TonalPulseScalar mode=detail when=all verbose=1"
+      ],
+      "started": "2026-10-09T18:49:50",
+      "duration_s": 19,
+      "summary": {
+        "profile": "TonalPulseScalar",
+        "detector": "scalar_transient",
+        "complete": true,
+        "trial_results": {
+          "miss": 5
+        },
+        "line_counts": {
+          "SEQ_TRIAL": 5,
+          "SEQ_INSPECT": 5,
+          "SEQ_SOURCE": 5,
+          "SEQ_SOURCE_CORE": 5,
+          "SEQ_EXPLAIN": 5,
+          "SEQ_SUMMARY": 1
+        },
+        "trials": "5",
+        "completed": "5",
+        "expected_trials": "0",
+        "early_trials": "0",
+        "late_trials": "0",
+        "miss_trials": "5",
+        "duplicate_trials": "0",
+        "unexpected_trials": "0",
+        "rejected_trials": "0",
+        "buffer_overrun_trials": "0",
+        "detector_accepted_trials": "0",
+        "detector_reject_trials": "0",
+        "pattern_valid_trials": "0",
+        "pattern_rejected_trials": "0",
+        "avg_dt_ms": "-1",
+        "avg_strength": "0.0",
+        "avg_conf": "0.00"
+      }
+    },
+    {
+      "name": "p1_T3_a040",
+      "file": "p1_T3_a040.0566cc1.log",
+      "firmware": {
+        "role": "analyzer",
+        "git": "0566cc1",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "commands": [
+        "SEQ start profile=TonalPulseScalar tries=50 mode=detail when=all verbose=1"
+      ],
+      "started": "2026-10-09T18:50:40",
+      "duration_s": 164,
+      "summary": {
+        "profile": "TonalPulseScalar",
+        "detector": "scalar_transient",
+        "complete": true,
+        "trial_results": {
+          "miss": 50
+        },
+        "line_counts": {
+          "SEQ_TRIAL": 50,
+          "SEQ_INSPECT": 50,
+          "SEQ_SOURCE": 50,
+          "SEQ_SOURCE_CORE": 50,
+          "SEQ_EXPLAIN": 50,
+          "SEQ_SUMMARY": 1
+        },
+        "trials": "50",
+        "completed": "50",
+        "expected_trials": "0",
+        "early_trials": "0",
+        "late_trials": "0",
+        "miss_trials": "50",
+        "duplicate_trials": "0",
+        "unexpected_trials": "0",
+        "rejected_trials": "0",
+        "buffer_overrun_trials": "0",
+        "detector_accepted_trials": "0",
+        "detector_reject_trials": "0",
+        "pattern_valid_trials": "0",
+        "pattern_rejected_trials": "0",
+        "avg_dt_ms": "-1",
+        "avg_strength": "0.0",
+        "avg_conf": "0.00"
+      }
+    },
+    {
+      "name": "p1_T2_a040",
+      "file": "p1_T2_a040.0566cc1.log",
+      "firmware": {
+        "role": "analyzer",
+        "git": "0566cc1",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "commands": [
+        "SEQ start profile=TonalPulseFreq tries=50 mode=detail when=all verbose=1"
+      ],
+      "started": "2026-10-09T18:53:26",
+      "duration_s": 164,
+      "summary": {
+        "profile": "TonalPulseFreq",
+        "detector": "frequency_match",
+        "complete": true,
+        "trial_results": {
+          "miss": 50
+        },
+        "line_counts": {
+          "SEQ_TRIAL": 50,
+          "SEQ_INSPECT": 50,
+          "SEQ_SOURCE": 50,
+          "SEQ_SOURCE_CORE": 50,
+          "SEQ_EXPLAIN": 50,
+          "SEQ_SUMMARY": 1
+        },
+        "trials": "50",
+        "completed": "50",
+        "expected_trials": "0",
+        "early_trials": "0",
+        "late_trials": "0",
+        "miss_trials": "50",
+        "duplicate_trials": "0",
+        "unexpected_trials": "0",
+        "rejected_trials": "0",
+        "buffer_overrun_trials": "0",
+        "detector_accepted_trials": "0",
+        "detector_reject_trials": "0",
+        "pattern_valid_trials": "0",
+        "pattern_rejected_trials": "0",
+        "avg_dt_ms": "-1",
+        "avg_strength": "0.0",
+        "avg_conf": "0.00"
+      }
+    },
+    {
+      "name": "p1_OBS_T3_def",
+      "file": "p1_OBS_T3_def.0566cc1.log",
+      "firmware": {
+        "role": "analyzer",
+        "git": "0566cc1",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "commands": [
+        "EMIT MODE REMOTE",
+        "SEQ OBS start tries=50 period=2000 window=1800 profile=TonalPulseScalar mode=detail when=all verbose=1"
+      ],
+      "started": "2026-10-09T18:56:12",
+      "duration_s": 145,
+      "summary": {
+        "profile": "TonalPulseScalar",
+        "detector": "scalar_transient",
+        "complete": true,
+        "trial_results": {
+          "miss": 50
+        },
+        "line_counts": {
+          "SEQ_TRIAL": 50,
+          "SEQ_INSPECT": 50,
+          "SEQ_SOURCE": 50,
+          "SEQ_SOURCE_CORE": 50,
+          "SEQ_EXPLAIN": 50,
+          "SEQ_SUMMARY": 1
+        },
+        "trials": "50",
+        "completed": "50",
+        "expected_trials": "0",
+        "early_trials": "0",
+        "late_trials": "0",
+        "miss_trials": "50",
+        "duplicate_trials": "0",
+        "unexpected_trials": "0",
+        "rejected_trials": "0",
+        "buffer_overrun_trials": "0",
+        "detector_accepted_trials": "0",
+        "detector_reject_trials": "0",
+        "pattern_valid_trials": "0",
+        "pattern_rejected_trials": "0",
+        "avg_dt_ms": "-1",
+        "avg_strength": "0.0",
+        "avg_conf": "0.00"
+      }
+    },
+    {
+      "name": "p1_OBS_T2_def",
+      "file": "p1_OBS_T2_def.0566cc1.log",
+      "firmware": {
+        "role": "analyzer",
+        "git": "0566cc1",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "commands": [
+        "EMIT MODE REMOTE",
+        "SEQ OBS start tries=50 period=2000 window=1800 profile=TonalPulseFreq mode=detail when=all verbose=1"
+      ],
+      "started": "2026-10-09T18:58:40",
+      "duration_s": 145,
+      "summary": {
+        "profile": "TonalPulseFreq",
+        "detector": "frequency_match",
+        "complete": true,
+        "trial_results": {
+          "miss": 50
+        },
+        "line_counts": {
+          "SEQ_TRIAL": 50,
+          "SEQ_INSPECT": 50,
+          "SEQ_SOURCE": 50,
+          "SEQ_SOURCE_CORE": 50,
+          "SEQ_EXPLAIN": 50,
+          "SEQ_SUMMARY": 1
+        },
+        "trials": "50",
+        "completed": "50",
+        "expected_trials": "0",
+        "early_trials": "0",
+        "late_trials": "0",
+        "miss_trials": "50",
+        "duplicate_trials": "0",
+        "unexpected_trials": "0",
+        "rejected_trials": "0",
+        "buffer_overrun_trials": "0",
+        "detector_accepted_trials": "0",
+        "detector_reject_trials": "0",
+        "pattern_valid_trials": "0",
+        "pattern_rejected_trials": "0",
+        "avg_dt_ms": "-1",
+        "avg_strength": "0.0",
+        "avg_conf": "0.00"
+      }
+    }
+  ]
+}

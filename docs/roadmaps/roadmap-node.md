@@ -201,6 +201,56 @@ BOARD_PIEZO fallback envs land in NODE-009.) Update implementation-status.md, CL
 myspec.md section 7 if its output list changes.
 ```
 
+### NODE-012 - acoustic test suite: spaces x speaker types x distance
+
+Status: TODO (noted 2026-10-09, owner request; not sequenced)
+
+```text
+Why: every bench number so far comes from one desk, one speaker, a few
+distances, with setup varying between sessions (the piezo T3 counts are
+not monotonic in distance). Installation spacing, suppression windows and
+the tone level depend on the room and the speaker; one desk can't answer
+them.
+
+Matrix (one bench session per cell, cells added as hardware/rooms exist):
+  space:    desk/bench (reference), small room, large room or hall,
+            installation site; outdoor only if it becomes a use case.
+  speaker:  stock D-AMP 3 W / 8 ohm, other drivers or enclosures/mounts as
+            they come up; piezo (BOARD_PIEZO) only as a reference point.
+  distance: series 10 / 20 / 40 / 70 / 100 / 150 / 200 / 300 cm plus the
+            installation spacing; same orientation inside a series.
+
+Per cell, measure (don't tune; thresholds are their own pass):
+  pickup     T3 (TonalPulseScalar) and T2 (TonalPulseFreq), SEQ 50 trials
+             mode=detail: accept count, score/contrast. Compare counts,
+             not strength, across firmware/board.
+  loudness   tone level setting, received level at the listener, and the
+             emitted level once per speaker (SPL at 10 cm; phone meter is
+             enough). Per space: the far rung at 2-3 tone levels to tell
+             level-limited from detector-limited.
+  self-echo  Node on one board: toneOn -> own-mic onset, end of the tail
+             (room reverb lengthens it) vs behaviorSuppressSelfChirpMs,
+             detectionSuppressTailMsOwnEmit and refractoryAfterEmitMs.
+  floor      ambient + class-D idle noise with amp idle; sub-30 Hz drift.
+  response   speaker output at the profile tone(s): a driver resonance or
+             dip near the target frequency changes everything above.
+  health     dropped DMA buffers per run; a run with drops is not
+             comparable.
+
+Output: per space x speaker, the longest distance with reliable pickup
+(e.g. >= 45/50 T3), the self-echo tail, and the floor; feeds the tone
+level and installation spacing for NODE-008 and the production profile
+(DET-007).
+
+Tooling first: session.json gets `space`, `speaker`, `tone_level` fields
+(bench/README.md: add fields when a variable starts to matter) and
+seqrun.py the matching flags, so index.csv can be filtered per cell.
+
+Relation to the steps: NODE-010 (step 3) is the first cell (desk, stock
+speaker, short ladder); the NODE-008 room is another. The rest waits until
+it shortens the path to the trial or the trial is done.
+```
+
 ## Current focus
 
 ```text

@@ -182,6 +182,10 @@ BEH-001, BEH-002, OUT-001                     small visibility items; fold
                                               into NODE-001.
 PAR-003                                       Analyzer params onto the
                                               registry; after PAR-015.
+NODE-012                                      acoustic test suite (spaces x
+                                              speakers x distance); step 3
+                                              and the step 6 room are its
+                                              first cells.
 ```
 
 ## Notes

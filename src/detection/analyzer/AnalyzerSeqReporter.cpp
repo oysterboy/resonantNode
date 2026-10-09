@@ -137,8 +137,8 @@ void AnalyzerApp::printSequenceTrial(const AnalyzerReport& report) const {
         Serial.print(audioStats.sampleClockCorrections);
         Serial.print(" clock_max_correction_us=");
         Serial.print(audioStats.maxSampleClockCorrectionUs);
-        Serial.print(" clock_resyncs=");
-        Serial.print(audioStats.sampleClockResyncs);
+        Serial.print(" dropped_dma_buffers=");
+        Serial.print(audioStats.droppedDmaBuffers);
         Serial.print(" clock_rate_mhz=");
         Serial.println(audioStats.sampleClockRateMilliHz);
         _lastPrintedHistoryIncompleteCount = hist.count;

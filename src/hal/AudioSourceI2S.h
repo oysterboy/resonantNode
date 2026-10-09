@@ -4,6 +4,9 @@
 #include <stdint.h>
 #include <memory>
 
+#include <freertos/FreeRTOS.h>
+#include <freertos/queue.h>
+
 #include "../app/RuntimeDefaults.h"
 #include "../audio/AudioPcm.h"
 #include "../audio/AudioSource.h"
@@ -65,7 +68,9 @@ private:
     double _clockUsPerSample = 0.0;
     int32_t _clockWindowMinLatencyUs = 0;
     uint32_t _clockWindowSamples = 0;
-    uint8_t _clockResyncBlocksLeft = 0;
+    // Driver event queue; I2S_EVENT_RX_Q_OVF marks a dropped DMA buffer.
+    QueueHandle_t _i2sEvents = nullptr;
+    uint32_t drainDroppedBuffers();
     bool _blockOverflowBeforeBlock = false;
     uint64_t _outputSampleIndex = 0;
     int32_t _previousSample = 0;

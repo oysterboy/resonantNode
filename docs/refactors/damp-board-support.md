@@ -185,7 +185,7 @@ UART2 link: raw ping both ways OK, each GPIO16 sees the other TX (wiring
 crossed correctly); but the Emitter firmware ignores MODE REMOTE on Serial2
 (its own markers do arrive at the other board). Open, firmware side.
 
-2026-10-09 firmware bring-up at 17295c9, bench:sessions/
+2026-10-09 firmware bring-up at 17295c9, boards 30 cm apart, bench:sessions/
 2026-10-09-issue19-damp-bringup (bench 41483a6). Link: works; the Emitter
 had ignored commands because a board reset's junk bytes (no newline) sat in
 front of the next line; fixed. Chirp: the Analyzer's mic sees the Emitter's

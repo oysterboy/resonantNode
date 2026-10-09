@@ -101,7 +101,31 @@ python tools/bench/seqcmp.py A.log B.log
 # 3. import runs made some other way; rebuild the index after a merge conflict
 python tools/bench/import_session.py --session ... --distance-cm 40 --purpose "..." NAME=path.log
 python tools/bench/import_session.py --reindex-only
+
+# 4. one row per run of a session (* = cut before SEQ_SUMMARY)
+python tools/bench/seqcmp.py --table bench/sessions/<name> [run-name-prefix ...]
+
+# 5. Node / Emitter consoles, link checks (several boards, resets, timed commands)
+python tools/bench/serialwatch.py --port NODE=COM10 --reset NODE --seconds 60 --send "NODE@1=RB log full"
+
+# 6. RAW capture: drift report, or per-window tone level / framing bit
+python tools/logging/raw_capture_slope.py <run.log> [--windows 20 --tone-hz 3200]
 ```
+
+Run conventions learned in #19/#20 (2026-10-09):
+
+- Comparable SEQ runs use `SEQ DIAG off` (as the #26 baselines): with
+  diagnostics on, `mode=detail` drops audio on every detection (ANA-004).
+  Check `dropped_dma_buffers` in `SEQ_HISTDBG`.
+- Silent false-positive control: `EMIT MODE REMOTE; SEQ OBS start tries=N
+  period=2000 window=1800 ...` (nothing is emitted; any detector accept is a
+  false positive).
+- seqrun sizes each run's timeout from tries x period (ANA-006); a run that
+  still ends without `SEQ_SUMMARY` is logged as a WARNING and indexed with
+  `complete=0` and the trials it saw.
+- Runtime threshold changes go in the run's commands (`PARAM ...;SEQ
+  start ...`); they persist across runs within one seqrun call (the board
+  is reset only at its start).
 
 Use the PlatformIO Python (`~/.platformio/penv/Scripts/python.exe`), it
 already has `pyserial`. The tools use nothing else outside the stdlib.

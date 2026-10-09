@@ -1,0 +1,168 @@
+{
+  "purpose": "issue #24: classify the I2S MEMS drift (mic LF output vs integrating stage), RAW mode=i2s captures",
+  "created": "2026-10-09T09:45:51",
+  "setup": {
+    "distance_cm": 10.0,
+    "orientation": "vertical emit, vertical mic",
+    "emitter_fw": "62a949e",
+    "notes": [
+      "quiet room, emitter in remote mode (silent outside the 100 ms chirp)",
+      "slope computed on the tail from emit_done+20 ms to the end (trimmed copies)"
+    ]
+  },
+  "runs": [
+    {
+      "name": "RAW_i2s_pre150_1",
+      "file": "RAW_i2s_pre150_1.464b8fc.log",
+      "firmware": {
+        "role": "analyzer",
+        "git": "464b8fc",
+        "version": "0.4.0"
+      },
+      "started": "2026-10-09T09:44:00",
+      "summary": {
+        "profile": null,
+        "detector": null,
+        "complete": false,
+        "trial_results": {},
+        "line_counts": {}
+      }
+    },
+    {
+      "name": "RAW_i2s_pre150_2",
+      "file": "RAW_i2s_pre150_2.464b8fc.log",
+      "firmware": {
+        "role": "analyzer",
+        "git": "464b8fc",
+        "version": "0.4.0"
+      },
+      "started": "2026-10-09T09:44:07",
+      "summary": {
+        "profile": null,
+        "detector": null,
+        "complete": false,
+        "trial_results": {},
+        "line_counts": {}
+      }
+    },
+    {
+      "name": "RAW_i2s_pre150_3",
+      "file": "RAW_i2s_pre150_3.464b8fc.log",
+      "firmware": {
+        "role": "analyzer",
+        "git": "464b8fc",
+        "version": "0.4.0"
+      },
+      "started": "2026-10-09T09:44:14",
+      "summary": {
+        "profile": null,
+        "detector": null,
+        "complete": false,
+        "trial_results": {},
+        "line_counts": {}
+      }
+    },
+    {
+      "name": "RAW_i2s_post350_1",
+      "file": "RAW_i2s_post350_1.464b8fc.log",
+      "firmware": {
+        "role": "analyzer",
+        "git": "464b8fc",
+        "version": "0.4.0"
+      },
+      "started": "2026-10-09T09:45:00",
+      "summary": {
+        "profile": null,
+        "detector": null,
+        "complete": false,
+        "trial_results": {},
+        "line_counts": {}
+      }
+    },
+    {
+      "name": "RAW_i2s_post350_2",
+      "file": "RAW_i2s_post350_2.464b8fc.log",
+      "firmware": {
+        "role": "analyzer",
+        "git": "464b8fc",
+        "version": "0.4.0"
+      },
+      "started": "2026-10-09T09:45:12",
+      "summary": {
+        "profile": null,
+        "detector": null,
+        "complete": false,
+        "trial_results": {},
+        "line_counts": {}
+      }
+    },
+    {
+      "name": "RAW_i2s_post350_3",
+      "file": "RAW_i2s_post350_3.464b8fc.log",
+      "firmware": {
+        "role": "analyzer",
+        "git": "464b8fc",
+        "version": "0.4.0"
+      },
+      "started": "2026-10-09T09:45:24",
+      "summary": {
+        "profile": null,
+        "detector": null,
+        "complete": false,
+        "trial_results": {},
+        "line_counts": {}
+      }
+    },
+    {
+      "name": "RAW_i2s_post350_1_quiettail",
+      "file": "RAW_i2s_post350_1_quiettail.464b8fc.log",
+      "firmware": {
+        "role": "analyzer",
+        "git": "464b8fc",
+        "version": "0.4.0"
+      },
+      "started": "2026-10-09T09:45:00",
+      "summary": {
+        "profile": null,
+        "detector": null,
+        "complete": false,
+        "trial_results": {},
+        "line_counts": {}
+      }
+    },
+    {
+      "name": "RAW_i2s_post350_2_quiettail",
+      "file": "RAW_i2s_post350_2_quiettail.464b8fc.log",
+      "firmware": {
+        "role": "analyzer",
+        "git": "464b8fc",
+        "version": "0.4.0"
+      },
+      "started": "2026-10-09T09:45:12",
+      "summary": {
+        "profile": null,
+        "detector": null,
+        "complete": false,
+        "trial_results": {},
+        "line_counts": {}
+      }
+    },
+    {
+      "name": "RAW_i2s_post350_3_quiettail",
+      "file": "RAW_i2s_post350_3_quiettail.464b8fc.log",
+      "firmware": {
+        "role": "analyzer",
+        "git": "464b8fc",
+        "version": "0.4.0"
+      },
+      "started": "2026-10-09T09:45:24",
+      "summary": {
+        "profile": null,
+        "detector": null,
+        "complete": false,
+        "trial_results": {},
+        "line_counts": {}
+      }
+    }
+  ]
+}

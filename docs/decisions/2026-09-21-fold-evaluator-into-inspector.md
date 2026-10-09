@@ -1,7 +1,8 @@
 # Fold OccurrenceEvaluator into OccurrenceInspector; delete the correlation queue
 
-Status: decided, not yet implemented (step 4 of `roadmap-0-steps.md`,
-issue #11). Gated on the hardware verification backlog (step 1).
+Status: decided, not yet implemented (step 8 of `roadmap-0-steps.md`,
+issue #11). Runs after the field trial (step 6) and once CI is in place
+(step 7).
 Date: 2026-09-21.
 
 ## Decision

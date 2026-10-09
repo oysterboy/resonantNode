@@ -18,6 +18,7 @@ status table.
 | DetectorReport / RejectedCandidateSummary | stable active | Detector-stage truth lives in detector-owned report contracts. |
 | OccurrenceEvaluator public boundary | stable active | `OccurrenceEvaluator` is the current pattern-stage boundary. Scheduled for removal: `cleanup-0-plan.md` Phase 7c folds it into `OccurrenceInspector`; `OccurrenceVerdict` stays as the Behavior-facing type. |
 | Behavior / output current path | stable active | `ResonantBehavior` consumes `OccurrenceVerdict` and `FieldState`; `ChirpOutput` remains the current output path. |
+| Output hardware | piezo (current), D-AMP decided | Nodes run piezo output (LEDC square wave on 25/26, single or BTL). Decided 2026-10-06: move to D-AMP (MAX98357A over I2S, mic and amp sharing one full-duplex port; `docs/decisions/2026-10-06-damp-output-hardware.md`). No firmware support yet (NODE-009); five D-AMP nodes are built. |
 | Hardcoded config baseline | stable active | `DetectionProfile` and `BehaviorGateConfig` defaults are present and visible. |
 | TonalPulseFreq | stable active | Documented as the main runtime profile, but the Node does not boot it: `ResonantNodeApp.h` defaults to `TonalPulseScalar`. Which one ships is open (DET-007). |
 | TonalPulseScalar | selectable experimental | Current Node boot default (`ResonantNodeApp.h`), despite this status; see DET-007. Current landing is the two-inspector scalar-quality path (`FrequencyContrastQuality` + `SupportStrength`); carrier quality stays in the detector and live board validation remains. |

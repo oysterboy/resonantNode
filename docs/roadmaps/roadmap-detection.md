@@ -95,7 +95,7 @@ Executed in docs/refactors/cleanup-0-plan.md (phase order, T1-T8 test
 battery, gates) with its topic docs (cleanup.md,
 cleanup-detector-family-build.md, cleanup-analyzer-node-isolation.md, ...).
 That plan orders the work within this item; roadmap-0-steps.md decides when
-it runs (steps 1, 4, 5).
+it runs (steps 1, 8, 9).
 
 Landed in code, hardware-unverified: Phases 1, 2, 3, 5a, 5c.
 Open: hardware backlog (T2/T3/T6/T7), Phase 7c, Phase 5d, Phase 6,
@@ -173,8 +173,9 @@ Expose only compact explanation facts through OccurrenceEvaluatorReport.
 ## Current focus
 
 ```text
-Order: roadmap-0-steps.md. DET-008 (the cleanup pass) is steps 1, 4, 5;
-DET-007 is step 2; ANA-003 is step 6. The rest is unsequenced.
+Order: roadmap-0-steps.md. DET-008 (the cleanup pass) is steps 1, 8, 9;
+DET-007 is step 5 (decided on D-AMP); ANA-003 is step 10. The rest is
+unsequenced.
 ```
 
 ## Spec candidates

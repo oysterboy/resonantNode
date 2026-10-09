@@ -1,8 +1,8 @@
 # Keep ParamRegistry in this repo as a PlatformIO library
 
-Status: decided; the library move (PAR-016) is step 6 of
+Status: decided; the library move (PAR-016) is step 10 of
 `roadmap-0-steps.md`, issue #14; the separate-repo split (PAR-017) is
-deferred to step 8.
+deferred to step 11.
 Date: 2026-09-23.
 
 ## Decision
@@ -31,7 +31,7 @@ has settled `ParamBinding`.
 
 - Starting a `ParamRegistry` repository now.
 - Letting `lib/ParamRegistry/` include anything from `src/` (the gate for
-  step 6).
+  step 10).
 
 ## Revisit when
 

@@ -1,6 +1,6 @@
 # Detector family is a build flag; no virtual interface for detectors or DetectionRuntime
 
-Status: decided in principle, not yet implemented (step 5 of
+Status: decided in principle, not yet implemented (step 9 of
 `roadmap-0-steps.md`, issue #12).
 Date: 2026-09-21 (family as build flag), 2026-09-23 (no virtual interface).
 

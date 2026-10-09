@@ -1,8 +1,8 @@
 # D-AMP board support in firmware (step 2, issue #19)
 
 Status: active, not started in code. Prep 2026-10-09: issue #19 body and
-comments folded in below, piezo baseline binaries built, open design forks
-listed in section 4.
+comments folded in below, piezo baseline binaries built, HAL forks D2-D5
+decided (section 4). Next: item 2 (pins into macros).
 Roadmap: `docs/roadmaps/roadmap-0-steps.md` step 2 -> NODE-009
 (`roadmap-node.md`). Decision: `docs/decisions/2026-10-06-damp-output-hardware.md`.
 Carries over from: `docs/refactors/i2s-first-difference-revisit.md`
@@ -80,37 +80,35 @@ Hardware note from the same doc: the mic breakout's VCC is wired to the
 INMP441 is rated 1.62-3.63 V. Check the D-AMP nodes' mic supply before the
 bench session (a wrong supply is also a candidate for LF noise).
 
-## 4. Design forks (to settle before code)
+## 4. Design forks
+
+D2-D5 decided by the owner 2026-10-09, all as recommended:
+`docs/decisions/2026-10-09-damp-i2s-hal-shape.md`.
 
 ```text
 D1 Pins           [proposed] src/app/BoardPins.h: one #if defined(BOARD_DAMP)
                   block and a piezo default block; every pin an #ifndef
                   macro so platformio.ini can still override one. Envs set
                   only -D BOARD_DAMP. main.cpp uses the macros.
-D2 HAL shape      [open] (a) one new class implementing both AudioSource and
-                  ToneOutput (issue wording; duplicates ~300 lines of RX,
-                  incl. the issue #26 sample clock), or (b) AudioSourceI2S
-                  stays the one RX implementation and becomes the port
-                  owner (full-duplex install when the board has a TX pin),
-                  plus a thin I2sToneOutput : ToneOutput writing TX.
-                  Recommended: (b). Emitter on D-AMP then owns the port via
-                  the same class with TX only.
-D3 TX feeding     [open] (a) from loop() via a service call, or (b) a small
-                  FreeRTOS task blocking on i2s_write that renders sine or
-                  zeros; toneOn/toneOff only set state. Recommended: (b);
-                  loop stalls (SEQ report prints) would otherwise cut
-                  chirps. Measure toneOn -> sound latency (TX DMA depth)
-                  for the own-emit suppression window (#20).
-D4 Slots          [open] Stereo RIGHT_LEFT both ways, RX picks the mic slot
-                  explicitly, TX writes both slots (echoSpace). Avoids
-                  the IDF's unstable ONLY_RIGHT/ONLY_LEFT naming and the
-                  amp's SD_MODE channel select. Recommended.
-D5 Framing        [open] STAND_MSB per #24, but MAX98357A (the A part)
-                  expects Philips I2S framing, and the legacy driver sets
-                  RX and TX framing together. Options: STAND_MSB for both
-                  and accept/measure the TX shift, or STAND_I2S install +
-                  set RX msb_shift off by register. Bench check either
-                  way: bit 8 toggles (RAW_I2S_UNDECODED), amp tone clean.
+D2 HAL shape      [DECIDED] AudioSourceI2S stays the one RX implementation
+                  (keeps the issue #26 sample clock) and owns the port,
+                  installing full duplex on BOARD_DAMP; a thin
+                  I2sToneOutput : ToneOutput writes TX. Rejected: a new
+                  class implementing both (duplicates ~300 lines of RX).
+                  Emitter on D-AMP owns the port through the same class.
+D3 TX feeding     [DECIDED] Own FreeRTOS task blocking on i2s_write, rendering
+                  ramped sine or zeros; toneOn/toneOff/setToneHz only set
+                  state. Measure toneOn -> sound latency (TX DMA depth) for
+                  the own-emit suppression window (#20).
+D4 Slots          [DECIDED] Stereo RIGHT_LEFT both ways; RX picks the mic
+                  slot explicitly, TX writes the same sample to both slots
+                  (echoSpace). Avoids the IDF's unstable ONLY_RIGHT/
+                  ONLY_LEFT naming and the amp's SD_MODE channel select.
+D5 Framing        [DECIDED] Install STAND_I2S (Philips, what the MAX98357A
+                  expects) and clear the RX MSB shift by register after
+                  i2s_set_clk, so RX gets the STAND_MSB alignment from #24
+                  and TX stays Philips. Bench check: bit 8 toggles
+                  (RAW_I2S_UNDECODED), amp tone clean at expected level.
 D6 Preprocessor   [proposed] Carry First Difference unchanged (revisit doc
                   section 5, option 1), as a build flag. The D-AMP raw
                   capture (item 6) decides whether a DC blocker is needed
@@ -123,8 +121,8 @@ D7 Analyzer on    [proposed] Same HAL and port config as the Node, TX idle,
 ## 5. Items, in order
 
 ```text
-1. [ ] Settle D2-D5 with the owner; record in this doc (and a decisions/
-       file for D2 and D5).
+1. [x] Settle D2-D5 with the owner (2026-10-09, decisions/
+       2026-10-09-damp-i2s-hal-shape.md).
 2. [ ] Pins into macros (D1). Piezo envs must stay byte-identical apart
        from the version string (battery V2).
 3. [ ] BOARD_DAMP envs: esp32dev-damp, esp32dev-damp-analyzer,

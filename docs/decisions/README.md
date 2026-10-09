@@ -54,6 +54,7 @@ what replaced it.
 | 2026-10-06 | [Nodes move to D-AMP output (MAX98357A over I2S); board is a build variant](2026-10-06-damp-output-hardware.md) |
 | 2026-10-08 | [Commit cited hardware runs under bench/, with setup and firmware hash](2026-10-08-bench-data-in-repo.md) |
 | 2026-10-09 | [Flash at 80 MHz QIO; I2S sample time comes from the sample index](2026-10-09-flash-qio80-and-i2s-sample-clock.md) |
+| 2026-10-09 | [D-AMP I2S HAL: extend AudioSourceI2S, TX task, stereo slots, Philips framing with RX realigned](2026-10-09-damp-i2s-hal-shape.md) |
 
 ## Open
 

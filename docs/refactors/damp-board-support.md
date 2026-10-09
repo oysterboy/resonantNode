@@ -1,8 +1,9 @@
 # D-AMP board support in firmware (step 2, issue #19)
 
-Status: active, not started in code. Prep 2026-10-09: issue #19 body and
+Status: active, bench validation. Prep 2026-10-09: issue #19 body and
 comments folded in below, piezo baseline binaries built, HAL forks D2-D5
-decided (section 4). Next: item 2 (pins into macros).
+decided (section 4). Code landed 17295c9 (items 2-5); bench bring-up done;
+next: item 5a (drift: firmware vs board), then close.
 Roadmap: `docs/roadmaps/roadmap-0-steps.md` step 2 -> NODE-009
 (`roadmap-node.md`). Decision: `docs/decisions/2026-10-06-damp-output-hardware.md`.
 Carries over from: `docs/refactors/i2s-first-difference-revisit.md`
@@ -59,6 +60,13 @@ Comment 1 (carry-over from #24): capture the D-AMP mic raw below 1 kHz,
 in this repo's read config and in echoSpace's (stereo, channel 0). Keep
 First Difference behind a build flag so `RAW mode=i2s` still sees the
 raw stream.
+
+Comment 3 (2026-10-09 15:35Z): if the D-AMP board shows no
+first-difference walk, test later with a MEMS from a piezo board. A MEMS
+that showed the weird behavior was tested on the echoSpace / D-AMP node and
+worked without the drift there, so something in wiring or firmware causes
+it. (Answer, section 7: the D-AMP board does show the walk with this repo's
+firmware; item 5a.)
 
 Comment 2 (after #24 closed): the piezo drift is in the piezo mic's own
 output, not the read config, so the 2x2 reduces to one capture: if the
@@ -128,18 +136,26 @@ D7 Analyzer on    [proposed] Same HAL and port config as the Node, TX idle,
        2026-10-09-damp-i2s-hal-shape.md).
 1a.[x] Piezo discontinued (2026-10-09, decisions/
        2026-10-09-discontinue-piezo.md): D-AMP default, piezo fallback.
-2. [ ] Pins into macros (D1).
-3. [ ] Envs: esp32dev, esp32dev-analyzer, esp32dev-emitter build D-AMP;
+2. [x] Pins into macros (D1): src/app/BoardConfig.h (17295c9).
+3. [x] Envs: esp32dev, esp32dev-analyzer, esp32dev-emitter build D-AMP;
        esp32dev-piezo, esp32dev-piezo-analyzer, esp32dev-piezo-emitter
        build the fallback.
-4. [ ] HAL: full-duplex port, stereo RX slot pick, framing, TX tone with
+4. [x] HAL: full-duplex port, stereo RX slot pick, framing, TX tone with
        ramp, non-blocking. Fold in revisit-doc 4.4 (readRawSample must
        keep the preprocessor state) while in the class.
-5. [ ] Node / Emitter / Analyzer wiring for D-AMP. Fix the Emitter
-       ignoring commands on Serial2 (section 7).
-6. [ ] Bench, D-AMP node: mic level prints, 3200 Hz chirp audible, RAW
+5. [x] Node / Emitter / Analyzer wiring for D-AMP. Fix the Emitter
+       ignoring commands on Serial2 (section 7): reset junk bytes, fixed in
+       17295c9 (app/SerialLine.h, leading newline from the Analyzer).
+5a.[ ] Firmware vs board for the drift (owner comment 15:35Z): same D-AMP
+       board, quiet raw capture under an echoSpace-equivalent read (48 kHz,
+       stereo, plain STAND_I2S, DMA 4x128) vs this repo's read. If only
+       ours drifts, bisect rate / MSB realign / DMA / decode.
+6. [~] Bench, D-AMP node: mic level prints, 3200 Hz chirp audible, RAW
        mode=i2s capture below 1 kHz (drift check, comment 2), bit-8 framing
        check, toneOn latency. Session under bench/sessions/.
+       Done 2026-10-09 (section 7): link, chirp, mic, framing, node hears
+       and emits. Open: owner hears the D-AMP chirp from firmware (only the
+       throwaway sketch was heard), toneOn latency beyond "~15 ms".
 7. [ ] Close: gate results here, preprocessor decision file (closes the
        open row in docs/decisions/README.md), NODE-009 status, close #19.
 ```
@@ -168,3 +184,20 @@ unexplained by DMA depth: measure in item 6. Informal, not a gate result.
 UART2 link: raw ping both ways OK, each GPIO16 sees the other TX (wiring
 crossed correctly); but the Emitter firmware ignores MODE REMOTE on Serial2
 (its own markers do arrive at the other board). Open, firmware side.
+
+2026-10-09 firmware bring-up at 17295c9, bench:sessions/
+2026-10-09-issue19-damp-bringup (bench 41483a6). Link: works; the Emitter
+had ignored commands because a board reset's junk bytes (no newline) sat in
+front of the next line; fixed. Chirp: the Analyzer's mic sees the Emitter's
+3200 Hz chirp ~15 ms after the trigger, ~30 dB over the floor. Framing: raw
+bit 8 toggles ~50% (RX MSB realign works). Drift: quiet raw rms 10-12k
+(about -57 dBFS), first difference 0.7-1.0k, floor slope -8.0 / -2.8 dB/oct;
+dirty-build captures earlier the same afternoon gave 30-60k. So with this
+repo's firmware the D-AMP mic walks too; owner reports none under
+echoSpace's firmware: item 5a. Node on D-AMP: hears the Emitter (15
+verdicts, 2 valid patterns), emits twice (heard + idle); startup baseline
+never quiet (smooth 240-520 vs 20, FAILED_NO_QUIET). Detection numbers
+belong to step 3.
+Noted, not fixed: the Analyzer prints "analyzer_control_claim scheduled"
+at boot but never sends the claim (_controlClaimPending is never set), so
+the Emitter stays in AUTO until the first EMIT command. Pre-existing.

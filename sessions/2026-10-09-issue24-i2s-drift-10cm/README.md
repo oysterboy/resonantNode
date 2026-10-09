@@ -111,3 +111,23 @@ Node 2 shows the same random walk below 1 kHz. Not a single bad mic unit:
 systematic to the piezo node design or to this repo's capture firmware,
 which both boards run. `node2_3` also caught broadband sound (all bands up).
 Next discriminator: the D-AMP mic read through this repo's HAL (#19).
+
+## Clap test, node 2 (12:15-12:35)
+
+`RAW trigger f=3200 dur=100 pre=0 post=3000 decim=8 mode=i2s` (3 s at an
+effective 2 kHz; `decim` for mode=i2s added in this session). The 100 ms
+beep at the start is the owner's cue; one clap about 1 s later per capture.
+
+- **Round 1** (`clap_r1_*`, standard framing, claps at 30-50 cm): peaks at
+  ~half of the true mic full scale, so the one-bit framing bug wrapped sign
+  (16M sample jumps). 50 ms means then jumped +-2..6M, decayed over ~250 ms
+  and left a +-0.5..1M offset. Not usable: wrap + near-overload.
+- **Round 2** (`clap_r2_msb_*`, built with
+  `I2S_COMM_FORMAT_VALUE=I2S_COMM_FORMAT_STAND_MSB`, clap from 1.5-2 m):
+  peaks 2-17% FS. 50 ms means stay inside the pre-clap drift band; at the
+  largest clap (1.47M peak) the 50 ms deviation is 33k. **The level returns
+  within one 50 ms window: the chain does not integrate the audio.**
+
+Conclusion for #24: the drift is an additive low-frequency random walk, not
+an integration of the audio; with the cover test, its level, and node 2,
+most likely electrical and systematic to the piezo node design.

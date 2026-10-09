@@ -192,9 +192,11 @@ file.
          (16/32/48 kHz), clock source (APLL), framing. The random walk is
          in the mic's own 24-bit output in every configuration. Remaining:
          the mic unit or the piezo board (supply, ground, wiring), or real
-         low-frequency sound. Next, needs the owner: cover/box test (seal
-         the mic port; acoustic LF drops, electrical stays), second piezo
-         node, mic swap; then D-AMP in #19 with this repo's HAL.
+         low-frequency sound. Cover test (cotton + tape, same day): tone
+         down 6-7 dB, LF random walk not reduced at all; the seal leaks and
+         cotton passes LF, so not conclusive, but consistent with an
+         electrical source. Next, needs the owner: second piezo node or mic
+         swap; then D-AMP in #19 with this repo's HAL.
 [OPEN]   Framing bug found while testing: with I2S_COMM_FORMAT_STAND_I2S
          the ESP32 reads each INMP441 word one bit late (bit 8 always 0;
          values doubled, mic sign bit dropped). I2S_COMM_FORMAT_STAND_MSB

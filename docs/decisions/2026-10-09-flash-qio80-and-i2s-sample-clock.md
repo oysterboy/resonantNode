@@ -26,6 +26,16 @@ the time a block is read.
 - A new audio source (D-AMP HAL, #19) that stamps blocks by read time or
   ignores dropped buffers.
 
+## Caveat found the same day
+
+After the mic on the piezo analyzer was re-wired, the 80 MHz QIO image
+boot-looped (second-stage bootloader resets) while 40 MHz DIO and 80 MHz
+DIO images booted normally with the same wiring. QIO also needs flash lines
+GPIO 9/10 (SD2/SD3 on dev-board headers); anything touching or loading
+them breaks QIO only. Check the D-AMP boards boot QIO before relying on it.
+Fallback if QIO is not dependable: 80 MHz DIO (~58 us/sample, 3-4% drops
+in the Analyzer) plus cutting per-sample work.
+
 ## Revisit when
 
 A board in use cannot boot QIO flash (fall back to 80 MHz DIO and cut

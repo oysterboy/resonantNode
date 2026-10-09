@@ -38,7 +38,7 @@ node's own mic ~30 to ~135-155 ms after toneOn, ~44 dB over the floor.
 Current windows (`behaviorSuppressSelfChirpMs=100`,
 `detectionSuppressTailMsOwnEmit=0`) end before that.
 
-## 3. Piezo reference (recorded, bench:sessions/2026-10-08-issue7-*)
+## 3. Piezo reference (recorded, bench:sessions/2026-10-08-issue7-*, bench 08e602f)
 
 TonalPulseScalar (T3, 50 trials), trials judged `expected`:
 
@@ -54,6 +54,8 @@ distance (setup and orientation varied between sessions), so they are a
 floor to beat, not a curve. Strength values are not comparable: piezo
 firmware read the mic one bit late (levels x2) and its square wave put
 aliased harmonics in band.
+The three T3 runs are named in `bench/baselines.csv` (preliminary, see
+section 4a).
 
 ## 4. Plan (draft)
 
@@ -75,6 +77,30 @@ aliased harmonics in band.
 6. [ ] Results line in NODE-010, close #20.
 ```
 
-## 5. Results
+## 4a. Preliminary review findings (Claude, 2026-10-09)
+
+From a Claude Code review of the `bench` sessions (bench `08e602f`), checked
+against the logs and the code; preliminary until the owner confirms. Notes
+also in `bench:sessions/2026-10-09-issue19-damp-bringup/README.md`.
+
+- Self-echo (plan item 3): detection suppression ends at toneOff (tail 0),
+  before the own chirp fades (~135-155 ms after toneOn), but
+  `refractoryAfterEmitMs=400` from toneOff (`ResonantBehavior.cpp`
+  `notifyChirpFinished`) keeps the behavior from reacting to it; no
+  own-echo verdict in the step 2 node log. The open risk is the echo
+  counting as field activity and, with several emitters, step 6's
+  suppression question, not a node re-triggering itself.
+- `FAILED_NO_QUIET` (step 2 node run): not in this doc's inputs until now.
+  One committed reading (`smooth=520` vs threshold 20); the Emitter was in
+  AUTO during the node's whole 8 s quiet search, so the run cannot tell a
+  high D-AMP floor from the setup. Add a node boot with the Emitter silent
+  before item 3; until then outputs run without a quiet baseline.
+- CPU load: no D-AMP run reports dropped DMA buffers. The Analyzer path
+  costs 51-54 us of the 62.5 us per-sample budget (issue #26), and D-AMP
+  adds TX on the same port. Record the dropped-buffer count in every
+  ladder run (item 2); a run with drops is not comparable.
+- Compare counts, not strength, against section 3 (piezo levels x2; the
+  piezo fallback build still reads one bit late, `I2S_RX_MSB_ALIGN=0`).
+
 
 (dated lines here)

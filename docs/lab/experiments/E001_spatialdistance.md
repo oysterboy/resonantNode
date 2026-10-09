@@ -50,7 +50,10 @@ Reference rows in bench/baselines.csv (preliminary).
 2026-10-09 - phase 2b, D-AMP, desk, step 3 (results in
 docs/refactors/damp-bench-check.md section 5). 70 cm T3 46/50 at 0.1 FS;
 200 cm 0/50 at 0.1 FS; 110 cm 50/50 at 0.3 FS, 0/50 at 0.1 FS (level, not
-detector, is the lever at 3200 Hz). Self-echo ~30 to ~135-155 ms after
+detector, is the lever at 3200 Hz). Same 110 cm, 0.3 FS: 4000 / 4800 /
+5600 / 6400 Hz 50/50 each, +4..+7 dB over 3200; 300-2400 Hz worse
+(bench:sessions/2026-10-09-issue20-damp-110cm-b). 0 detector accepts in
+~790 silent windows, empty building only. Self-echo ~30 to ~135-155 ms after
 toneOn on the desk (bench:sessions/2026-10-09-issue19-damp-bringup).
 
 ## Findings (2026-10-09)

@@ -11,6 +11,15 @@ decisions 2026-09-21-defer-single-detector-union.md ->
 2026-09-23-no-virtual-detector-interface.md (detector family as a build
 flag).
 
+## 2026-10-09
+
+Day-to-day level change at a fixed setup (piezo, 10 cm, vertical emit /
+vertical mic): TonalPulseFreq strength median 17,300 on 2026-10-08,
+12,800 on 2026-10-09 (bench:sessions/2026-10-08-issue7-10cm,
+bench:sessions/2026-10-09-issue26-10cm README). Boards likely moved in
+between; room effect not ruled out. Folded in from issue #27; the soak
+that would answer it: docs/research/soak-24h.md.
+
 ## 2026-05-26
 
 Stable 5-node slow circle configuration, with the committed defaults now coming from `DetectionProfile.h` and `BehaviorProfile.h`:

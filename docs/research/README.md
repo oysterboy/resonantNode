@@ -50,6 +50,8 @@ A note whose ideas were all promoted or abandoned gets `promoted` or
 ```text
 acoustic-test-suite.md         rooms x speakers x distance test design
                                (promoted: NODE-012; observations in lab E001)
+soak-24h.md                    24 h unattended soak: room vs signal (idea,
+                               from issue #27; no roadmap item yet)
 tonalpulse-scalar-target.md    TonalPulseScalar target design + passes 1-8
                                (German; partly landed, not reviewed)
 ```

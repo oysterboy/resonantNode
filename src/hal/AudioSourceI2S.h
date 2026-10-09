@@ -62,8 +62,10 @@ private:
     bool _clockAnchored = false;
     uint64_t _clockAnchorIndex = 0;
     uint32_t _clockAnchorUs = 0;
+    double _clockUsPerSample = 0.0;
     int32_t _clockWindowMinLatencyUs = 0;
     uint32_t _clockWindowSamples = 0;
+    uint8_t _clockResyncBlocksLeft = 0;
     bool _blockOverflowBeforeBlock = false;
     uint64_t _outputSampleIndex = 0;
     int32_t _previousSample = 0;

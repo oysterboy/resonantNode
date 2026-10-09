@@ -199,7 +199,7 @@ const AudioSourceStats& AudioSourceI2S::stats() const {
     return _stats;
 }
 
-// Block timestamps come from the sample index on a clock anchored to
+// Block timestamps come from the sample index on a clock locked to
 // micros(), not from the time a block happens to be read.
 //
 // i2s_read() hands over whole DMA buffers (128 samples, 8 ms) that may have
@@ -210,46 +210,93 @@ const AudioSourceStats& AudioSourceI2S::stats() const {
 // window with a hole at its edge was reported HistoryWindowIncomplete
 // (issue #26).
 //
-// The clock: time(index) = anchorUs + (index - anchorIndex) / rate. Read
-// latency (read time minus the clock's time for the block's last sample) is
-// never negative for a correct clock and its minimum over a window is the
-// clock's offset from the true arrival time. About once a second the anchor
-// moves by that minimum: it absorbs I2S-vs-CPU clock drift (sub-ms per
-// second) and closes real gaps after dropped samples, without letting
-// per-read jitter into the time base.
+// The clock: time(index) = anchorUs + (index - anchorIndex) * usPerSample.
+// Read latency (read time minus the clock's time for a block's last sample)
+// is never negative for a correct clock, and its minimum over a window is
+// the clock's error. Every kClockWindowMs the anchor absorbs that error and
+// half of it goes into usPerSample, so a steady rate offset (the I2S clock
+// measures about 0.8% slow on the piezo boards) settles to near-zero
+// corrections instead of a jump per window. A block older than the DMA
+// queue can hold means samples were dropped; the clock then re-anchors from
+// the next few blocks instead of lagging until the window ends.
+namespace {
+constexpr uint32_t kClockWindowMs = 500;
+constexpr double kClockRateGain = 0.5;
+constexpr double kClockMaxRateDeviation = 0.02;
+}
+
 uint32_t AudioSourceI2S::stampBlock(uint64_t blockStartIndex, size_t blockCount, uint32_t readAtUs) {
+    const double nominalUsPerSample = _sampleRate > 0 ? 1000000.0 / static_cast<double>(_sampleRate) : 0.0;
     const uint32_t rate = static_cast<uint32_t>(_sampleRate);
-    const uint32_t lastOffsetUs = blockCount > 0
-        ? sampleOffsetUs(static_cast<uint32_t>(blockCount - 1U), rate)
-        : 0U;
+    const uint32_t windowSamples = (rate * kClockWindowMs) / 1000U;
     if (!_clockAnchored) {
+        _clockUsPerSample = nominalUsPerSample;
         _clockAnchorIndex = blockStartIndex;
-        _clockAnchorUs = readAtUs - lastOffsetUs;
+        _clockAnchorUs = readAtUs - static_cast<uint32_t>(
+            static_cast<double>(blockCount > 0 ? blockCount - 1U : 0U) * _clockUsPerSample);
         _clockWindowMinLatencyUs = INT32_MAX;
         _clockWindowSamples = 0;
+        _clockResyncBlocksLeft = 0;
         _clockAnchored = true;
     }
 
-    const uint32_t startUs = _clockAnchorUs
-        + sampleOffsetUs(static_cast<uint32_t>(blockStartIndex - _clockAnchorIndex), rate);
-    const int32_t latencyUs = static_cast<int32_t>(readAtUs - (startUs + lastOffsetUs));
+    const uint32_t startUs = _clockAnchorUs + static_cast<uint32_t>(
+        static_cast<double>(blockStartIndex - _clockAnchorIndex) * _clockUsPerSample);
+    const uint32_t lastUs = startUs + static_cast<uint32_t>(
+        static_cast<double>(blockCount > 0 ? blockCount - 1U : 0U) * _clockUsPerSample);
+    const int32_t latencyUs = static_cast<int32_t>(readAtUs - lastUs);
+
+    // The DMA queue holds I2S_DMA_BUF_COUNT buffers; data older than that
+    // plus one buffer of slack cannot exist unless samples were dropped.
+    const int32_t lossLatencyUs = static_cast<int32_t>(
+        static_cast<double>((I2S_DMA_BUF_COUNT + 1) * I2S_DMA_BUF_LEN) * nominalUsPerSample);
+    if (_clockResyncBlocksLeft == 0 && latencyUs > lossLatencyUs) {
+        _clockResyncBlocksLeft = static_cast<uint8_t>(I2S_DMA_BUF_COUNT + 1);
+        _clockWindowMinLatencyUs = INT32_MAX;
+        _clockWindowSamples = 0;
+    }
+
     if (latencyUs < _clockWindowMinLatencyUs) {
         _clockWindowMinLatencyUs = latencyUs;
     }
     _clockWindowSamples += static_cast<uint32_t>(blockCount);
 
-    if (_clockWindowSamples >= rate) {
-        const uint64_t nextIndex = blockStartIndex + static_cast<uint64_t>(blockCount);
-        _clockAnchorUs = _clockAnchorUs
-            + sampleOffsetUs(static_cast<uint32_t>(nextIndex - _clockAnchorIndex), rate)
-            + static_cast<uint32_t>(_clockWindowMinLatencyUs);
+    const uint64_t nextIndex = blockStartIndex + static_cast<uint64_t>(blockCount);
+    const uint32_t nextUs = _clockAnchorUs + static_cast<uint32_t>(
+        static_cast<double>(nextIndex - _clockAnchorIndex) * _clockUsPerSample);
+
+    bool reanchor = false;
+    bool updateRate = false;
+    if (_clockResyncBlocksLeft > 0) {
+        --_clockResyncBlocksLeft;
+        if (_clockResyncBlocksLeft == 0) {
+            reanchor = true;
+            ++_stats.sampleClockResyncs;
+        }
+    } else if (_clockWindowSamples >= windowSamples) {
+        reanchor = true;
+        updateRate = true;
+    }
+
+    if (reanchor) {
+        const int32_t correctionUs = _clockWindowMinLatencyUs;
+        if (updateRate && _clockWindowSamples > 0) {
+            _clockUsPerSample += kClockRateGain * static_cast<double>(correctionUs)
+                / static_cast<double>(_clockWindowSamples);
+            const double lo = nominalUsPerSample * (1.0 - kClockMaxRateDeviation);
+            const double hi = nominalUsPerSample * (1.0 + kClockMaxRateDeviation);
+            _clockUsPerSample = _clockUsPerSample < lo ? lo : (_clockUsPerSample > hi ? hi : _clockUsPerSample);
+        }
+        _clockAnchorUs = nextUs + static_cast<uint32_t>(correctionUs);
         _clockAnchorIndex = nextIndex;
         ++_stats.sampleClockCorrections;
-        const uint32_t correctionUs = static_cast<uint32_t>(
-            _clockWindowMinLatencyUs < 0 ? -_clockWindowMinLatencyUs : _clockWindowMinLatencyUs);
-        if (correctionUs > _stats.maxSampleClockCorrectionUs) {
-            _stats.maxSampleClockCorrectionUs = correctionUs;
+        const uint32_t magnitudeUs = static_cast<uint32_t>(correctionUs < 0 ? -correctionUs : correctionUs);
+        if (updateRate && magnitudeUs > _stats.maxSampleClockCorrectionUs) {
+            _stats.maxSampleClockCorrectionUs = magnitudeUs;
         }
+        _stats.sampleClockRateMilliHz = _clockUsPerSample > 0.0
+            ? static_cast<uint32_t>(1000000000.0 / _clockUsPerSample)
+            : 0U;
         _clockWindowMinLatencyUs = INT32_MAX;
         _clockWindowSamples = 0;
     }

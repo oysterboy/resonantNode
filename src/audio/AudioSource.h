@@ -31,6 +31,10 @@ struct AudioSourceStats {
     // correction applied, in either direction.
     uint32_t sampleClockCorrections = 0;
     uint32_t maxSampleClockCorrectionUs = 0;
+    // Re-anchors forced by a block older than the DMA queue can hold, i.e.
+    // samples were dropped, and the measured sample rate in mHz.
+    uint32_t sampleClockResyncs = 0;
+    uint32_t sampleClockRateMilliHz = 0;
 };
 
 struct AudioBlock {

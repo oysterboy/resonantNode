@@ -136,7 +136,11 @@ void AnalyzerApp::printSequenceTrial(const AnalyzerReport& report) const {
         Serial.print(" clock_corrections=");
         Serial.print(audioStats.sampleClockCorrections);
         Serial.print(" clock_max_correction_us=");
-        Serial.println(audioStats.maxSampleClockCorrectionUs);
+        Serial.print(audioStats.maxSampleClockCorrectionUs);
+        Serial.print(" clock_resyncs=");
+        Serial.print(audioStats.sampleClockResyncs);
+        Serial.print(" clock_rate_mhz=");
+        Serial.println(audioStats.sampleClockRateMilliHz);
         _lastPrintedHistoryIncompleteCount = hist.count;
     }
     const char* trialRejectReason = analyzerReasonName(report.classification.reason);

@@ -63,5 +63,24 @@ Dropped DMA buffers: 21-22 per *detected* trial in `mode=detail` runs
 (0 in runs without detections); `g_drops_*`: 0 with `mode=trial` and
 `mode=system`, 198 / 10 trials with `mode=detail`. Analyzer report
 output, not the detection path; no trial was marked buffer_overrun.
-Piezo `V_scalar50` (issue #26) had 0 in `mode=detail`: why D-AMP stalls
-on the detail report is open.
+Correction (same night): not D-AMP-specific. Piezo `V_scalar50` (#26) ran
+with `SEQ DIAG off` (772 bytes per trial vs ~6.9 KB here); #26 piezo runs
+with diagnostics on dropped too. Tracked as ANA-004 on main. (The 14
+rejections in `e_T2v_s2500_a030_f3200` are not drops: they recur with 0
+drops in `h_T2v_*`; inspector timing, DET-010.)
+
+## R3: TonalPulseFreq rescale (later the same night)
+
+Emitter COM10 at the new default 0.3 FS (main b6e99b0), Analyzer
+tune/issue20-damp 8669838, 3200 Hz, mode=system (0 drops):
+
+| Run | Expected / 50 | Silent control |
+|---|---|---|
+| h_T2v_s2500 (2500/1800) | 36 | 0 / 50 |
+| h_T2v_s2000 (2000/1400) | 40 | 0 / 50 |
+| h_T2v_s1500 (1500/1000) | 37 | 0 / 50 |
+| h_T2v_s2000_detail_diagoff (20 trials) | 15 / 20 | - |
+
+Detector 50/50 in each; the rejected trials are 146-149 ms occurrences
+whose peak-centered inspection was taken before its window arrived
+(`future_window_unavailable`, DET-010 on main).

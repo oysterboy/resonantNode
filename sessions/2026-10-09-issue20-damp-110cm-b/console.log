@@ -103,3 +103,23 @@
 [21:00:42] start g_drops_detail: SEQ start profile=TonalPulseScalar tries=10 freq=5600 mode=detail when=all verbose=1
 [21:01:19] done g_drops_detail (37s): complete=True results={'expected': 10}
 [21:01:21] session updated, index rebuilt
+[22:17:29] boot banner: {'role': 'analyzer', 'git': '8669838', 'version': '0.4.0', 'board': 'damp'}
+[22:17:31] warmup: OK EMIT CHIRP
+[22:17:32] start h_T2v_s2500: PARAM freqScore=2500 freqReleaseScore=1800 ; SEQ start profile=TonalPulseFreq tries=50 freq=3200 mode=system when=all verbose=1
+[22:20:16] done h_T2v_s2500 (165s): complete=True results={'rejected': 14, 'expected': 36}
+[22:20:20] start h_T2v_s2500_OBS: PARAM freqScore=2500 freqReleaseScore=1800 ; EMIT MODE REMOTE ; SEQ OBS start tries=50 period=2000 window=1800 freq=3200 profile=TonalPulseFreq mode=system when=all verbose=1
+[22:22:44] done h_T2v_s2500_OBS (144s): complete=True results={'miss': 50}
+[22:22:47] start h_T2v_s2000: PARAM freqScore=2000 freqReleaseScore=1400 ; SEQ start profile=TonalPulseFreq tries=50 freq=3200 mode=system when=all verbose=1
+[22:25:31] done h_T2v_s2000 (164s): complete=True results={'expected': 40, 'rejected': 10}
+[22:25:35] start h_T2v_s2000_OBS: PARAM freqScore=2000 freqReleaseScore=1400 ; EMIT MODE REMOTE ; SEQ OBS start tries=50 period=2000 window=1800 freq=3200 profile=TonalPulseFreq mode=system when=all verbose=1
+[22:27:59] done h_T2v_s2000_OBS (144s): complete=True results={'miss': 50}
+[22:28:02] start h_T2v_s1500: PARAM freqScore=1500 freqReleaseScore=1000 ; SEQ start profile=TonalPulseFreq tries=50 freq=3200 mode=system when=all verbose=1
+[22:30:46] done h_T2v_s1500 (164s): complete=True results={'rejected': 13, 'expected': 37}
+[22:30:49] start h_T2v_s1500_OBS: PARAM freqScore=1500 freqReleaseScore=1000 ; EMIT MODE REMOTE ; SEQ OBS start tries=50 period=2000 window=1800 freq=3200 profile=TonalPulseFreq mode=system when=all verbose=1
+[22:33:13] done h_T2v_s1500_OBS (144s): complete=True results={'miss': 50}
+[22:33:15] session updated, index rebuilt
+[22:33:52] boot banner: {'role': 'analyzer', 'git': '8669838', 'version': '0.4.0', 'board': 'damp'}
+[22:33:54] warmup: OK EMIT CHIRP
+[22:33:56] start h_T2v_s2000_detail_diagoff: SEQ DIAG off ; PARAM freqScore=2000 freqReleaseScore=1400 ; SEQ start profile=TonalPulseFreq tries=20 freq=3200 mode=detail when=all verbose=1
+[22:35:04] done h_T2v_s2000_detail_diagoff (68s): complete=True results={'rejected': 5, 'expected': 15}
+[22:35:06] session updated, index rebuilt

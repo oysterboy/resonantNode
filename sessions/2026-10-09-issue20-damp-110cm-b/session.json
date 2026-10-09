@@ -1740,6 +1740,329 @@
         "avg_strength": "4053.8",
         "avg_conf": "1.00"
       }
+    },
+    {
+      "name": "h_T2v_s2500",
+      "file": "h_T2v_s2500.8669838.log",
+      "firmware": {
+        "role": "analyzer",
+        "git": "8669838",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "commands": [
+        "PARAM freqScore=2500 freqReleaseScore=1800",
+        "SEQ start profile=TonalPulseFreq tries=50 freq=3200 mode=system when=all verbose=1"
+      ],
+      "started": "2026-10-09T22:17:31",
+      "duration_s": 165,
+      "summary": {
+        "profile": "TonalPulseFreq",
+        "detector": "frequency_match",
+        "complete": true,
+        "trial_results": {
+          "rejected": 14,
+          "expected": 36
+        },
+        "line_counts": {
+          "SEQ_TRIAL": 50,
+          "SEQ_SUMMARY": 1
+        },
+        "trials": "50",
+        "completed": "50",
+        "expected_trials": "36",
+        "early_trials": "0",
+        "late_trials": "0",
+        "miss_trials": "0",
+        "duplicate_trials": "0",
+        "unexpected_trials": "0",
+        "rejected_trials": "14",
+        "buffer_overrun_trials": "0",
+        "detector_accepted_trials": "50",
+        "detector_reject_trials": "0",
+        "pattern_valid_trials": "36",
+        "pattern_rejected_trials": "14",
+        "avg_dt_ms": "25",
+        "avg_strength": "5017.7",
+        "avg_conf": "1.00"
+      }
+    },
+    {
+      "name": "h_T2v_s2500_OBS",
+      "file": "h_T2v_s2500_OBS.8669838.log",
+      "firmware": {
+        "role": "analyzer",
+        "git": "8669838",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "commands": [
+        "PARAM freqScore=2500 freqReleaseScore=1800",
+        "EMIT MODE REMOTE",
+        "SEQ OBS start tries=50 period=2000 window=1800 freq=3200 profile=TonalPulseFreq mode=system when=all verbose=1"
+      ],
+      "started": "2026-10-09T22:20:18",
+      "duration_s": 144,
+      "summary": {
+        "profile": "TonalPulseFreq",
+        "detector": "frequency_match",
+        "complete": true,
+        "trial_results": {
+          "miss": 50
+        },
+        "line_counts": {
+          "SEQ_TRIAL": 50,
+          "SEQ_SUMMARY": 1
+        },
+        "trials": "50",
+        "completed": "50",
+        "expected_trials": "0",
+        "early_trials": "0",
+        "late_trials": "0",
+        "miss_trials": "50",
+        "duplicate_trials": "0",
+        "unexpected_trials": "0",
+        "rejected_trials": "0",
+        "buffer_overrun_trials": "0",
+        "detector_accepted_trials": "0",
+        "detector_reject_trials": "0",
+        "pattern_valid_trials": "0",
+        "pattern_rejected_trials": "0",
+        "avg_dt_ms": "-1",
+        "avg_strength": "0.0",
+        "avg_conf": "0.00"
+      }
+    },
+    {
+      "name": "h_T2v_s2000",
+      "file": "h_T2v_s2000.8669838.log",
+      "firmware": {
+        "role": "analyzer",
+        "git": "8669838",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "commands": [
+        "PARAM freqScore=2000 freqReleaseScore=1400",
+        "SEQ start profile=TonalPulseFreq tries=50 freq=3200 mode=system when=all verbose=1"
+      ],
+      "started": "2026-10-09T22:22:46",
+      "duration_s": 164,
+      "summary": {
+        "profile": "TonalPulseFreq",
+        "detector": "frequency_match",
+        "complete": true,
+        "trial_results": {
+          "expected": 40,
+          "rejected": 10
+        },
+        "line_counts": {
+          "SEQ_TRIAL": 50,
+          "SEQ_SUMMARY": 1
+        },
+        "trials": "50",
+        "completed": "50",
+        "expected_trials": "40",
+        "early_trials": "0",
+        "late_trials": "0",
+        "miss_trials": "0",
+        "duplicate_trials": "0",
+        "unexpected_trials": "0",
+        "rejected_trials": "10",
+        "buffer_overrun_trials": "0",
+        "detector_accepted_trials": "50",
+        "detector_reject_trials": "0",
+        "pattern_valid_trials": "40",
+        "pattern_rejected_trials": "10",
+        "avg_dt_ms": "23",
+        "avg_strength": "4997.2",
+        "avg_conf": "1.00"
+      }
+    },
+    {
+      "name": "h_T2v_s2000_OBS",
+      "file": "h_T2v_s2000_OBS.8669838.log",
+      "firmware": {
+        "role": "analyzer",
+        "git": "8669838",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "commands": [
+        "PARAM freqScore=2000 freqReleaseScore=1400",
+        "EMIT MODE REMOTE",
+        "SEQ OBS start tries=50 period=2000 window=1800 freq=3200 profile=TonalPulseFreq mode=system when=all verbose=1"
+      ],
+      "started": "2026-10-09T22:25:33",
+      "duration_s": 144,
+      "summary": {
+        "profile": "TonalPulseFreq",
+        "detector": "frequency_match",
+        "complete": true,
+        "trial_results": {
+          "miss": 50
+        },
+        "line_counts": {
+          "SEQ_TRIAL": 50,
+          "SEQ_SUMMARY": 1
+        },
+        "trials": "50",
+        "completed": "50",
+        "expected_trials": "0",
+        "early_trials": "0",
+        "late_trials": "0",
+        "miss_trials": "50",
+        "duplicate_trials": "0",
+        "unexpected_trials": "0",
+        "rejected_trials": "0",
+        "buffer_overrun_trials": "0",
+        "detector_accepted_trials": "0",
+        "detector_reject_trials": "0",
+        "pattern_valid_trials": "0",
+        "pattern_rejected_trials": "0",
+        "avg_dt_ms": "-1",
+        "avg_strength": "0.0",
+        "avg_conf": "0.00"
+      }
+    },
+    {
+      "name": "h_T2v_s1500",
+      "file": "h_T2v_s1500.8669838.log",
+      "firmware": {
+        "role": "analyzer",
+        "git": "8669838",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "commands": [
+        "PARAM freqScore=1500 freqReleaseScore=1000",
+        "SEQ start profile=TonalPulseFreq tries=50 freq=3200 mode=system when=all verbose=1"
+      ],
+      "started": "2026-10-09T22:28:01",
+      "duration_s": 164,
+      "summary": {
+        "profile": "TonalPulseFreq",
+        "detector": "frequency_match",
+        "complete": true,
+        "trial_results": {
+          "rejected": 13,
+          "expected": 37
+        },
+        "line_counts": {
+          "SEQ_TRIAL": 50,
+          "SEQ_SUMMARY": 1
+        },
+        "trials": "50",
+        "completed": "50",
+        "expected_trials": "37",
+        "early_trials": "0",
+        "late_trials": "0",
+        "miss_trials": "0",
+        "duplicate_trials": "0",
+        "unexpected_trials": "0",
+        "rejected_trials": "13",
+        "buffer_overrun_trials": "0",
+        "detector_accepted_trials": "50",
+        "detector_reject_trials": "0",
+        "pattern_valid_trials": "37",
+        "pattern_rejected_trials": "13",
+        "avg_dt_ms": "22",
+        "avg_strength": "5022.8",
+        "avg_conf": "1.00"
+      }
+    },
+    {
+      "name": "h_T2v_s1500_OBS",
+      "file": "h_T2v_s1500_OBS.8669838.log",
+      "firmware": {
+        "role": "analyzer",
+        "git": "8669838",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "commands": [
+        "PARAM freqScore=1500 freqReleaseScore=1000",
+        "EMIT MODE REMOTE",
+        "SEQ OBS start tries=50 period=2000 window=1800 freq=3200 profile=TonalPulseFreq mode=system when=all verbose=1"
+      ],
+      "started": "2026-10-09T22:30:48",
+      "duration_s": 144,
+      "summary": {
+        "profile": "TonalPulseFreq",
+        "detector": "frequency_match",
+        "complete": true,
+        "trial_results": {
+          "miss": 50
+        },
+        "line_counts": {
+          "SEQ_TRIAL": 50,
+          "SEQ_SUMMARY": 1
+        },
+        "trials": "50",
+        "completed": "50",
+        "expected_trials": "0",
+        "early_trials": "0",
+        "late_trials": "0",
+        "miss_trials": "50",
+        "duplicate_trials": "0",
+        "unexpected_trials": "0",
+        "rejected_trials": "0",
+        "buffer_overrun_trials": "0",
+        "detector_accepted_trials": "0",
+        "detector_reject_trials": "0",
+        "pattern_valid_trials": "0",
+        "pattern_rejected_trials": "0",
+        "avg_dt_ms": "-1",
+        "avg_strength": "0.0",
+        "avg_conf": "0.00"
+      }
+    },
+    {
+      "name": "h_T2v_s2000_detail_diagoff",
+      "file": "h_T2v_s2000_detail_diagoff.8669838.log",
+      "firmware": {
+        "role": "analyzer",
+        "git": "8669838",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "commands": [
+        "SEQ DIAG off",
+        "PARAM freqScore=2000 freqReleaseScore=1400",
+        "SEQ start profile=TonalPulseFreq tries=20 freq=3200 mode=detail when=all verbose=1"
+      ],
+      "started": "2026-10-09T22:33:54",
+      "duration_s": 68,
+      "summary": {
+        "profile": "TonalPulseFreq",
+        "detector": "frequency_match",
+        "complete": true,
+        "trial_results": {
+          "rejected": 5,
+          "expected": 15
+        },
+        "line_counts": {
+          "SEQ_TRIAL": 20,
+          "SEQ_SUMMARY": 1
+        },
+        "trials": "20",
+        "completed": "20",
+        "expected_trials": "15",
+        "early_trials": "0",
+        "late_trials": "0",
+        "miss_trials": "0",
+        "duplicate_trials": "0",
+        "unexpected_trials": "0",
+        "rejected_trials": "5",
+        "buffer_overrun_trials": "0",
+        "detector_accepted_trials": "20",
+        "detector_reject_trials": "0",
+        "pattern_valid_trials": "15",
+        "pattern_rejected_trials": "5",
+        "avg_dt_ms": "23",
+        "avg_strength": "5014.8",
+        "avg_conf": "1.00"
+      }
     }
   ]
 }

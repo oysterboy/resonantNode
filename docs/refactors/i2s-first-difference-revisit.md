@@ -176,8 +176,17 @@ file.
 ## 7. Open / closed
 
 ```text
-[OPEN]   Classify drift B: mic low-frequency output vs an integrating stage.
-         Sections 6 and 8; one capture plus raw_capture_slope.py decides.
+[PARTIAL] Classify drift B: mic low-frequency output vs an integrating
+         stage. 2026-10-09, piezo analyzer, RAW mode=i2s, quiet tail after
+         the chirp: slope 1k->7k -1.2 to -1.9 dB/oct in 3 captures (an
+         integrator would be about -6), floor flat above 1 kHz, rising below
+         it. Classified as mic low-frequency output; nothing integrates.
+         Bench: branch `bench`, session 2026-10-09-issue24-i2s-drift-10cm.
+         Still open from issue #24: clap test, second piezo node.
+         Capture limit: RAW allocates a fixed 72 KB buffer plus the pre
+         ring against a 110 KB largest heap block, so pre=500 / pre=300
+         fail; the pre ring returned only 256 samples at pre=150. Use
+         pre=0 post=350 and analyse the tail after the chirp.
 [OPEN]   Decide the preprocessor for the D-AMP HAL. Section 5; listed in
          docs/decisions/README.md as an open decision.
 [OPEN]   Fix 4.4 (readRawSample bypasses preprocessor state). Small; needs

@@ -186,14 +186,21 @@ file.
          noise. Level: quiet-room RMS ~82k PCM (about -40 dBFS) against an
          INMP441 self-noise near -87 dBFS. raw_capture_slope.py only tests
          1-7 kHz and called it "flat floor"; that verdict is withdrawn.
-         Suspect not in the section 8 table: reading the slot the mic does
-         not drive (INMP441 tri-states SD in the other slot; a floating
-         input charged by leakage is an RC integrator). The resonantNode
-         HAL reads ONLY_RIGHT; echoSpace reads stereo with the mic on
-         channel 0 and shows no drift (owner). Next tests: (1) piezo, no
-         physical change: capture both slots (stereo) and ONLY_LEFT;
-         (2) D-AMP in #19 as a 2x2: board (piezo / D-AMP) x read config
-         (resonantNode mono 16 kHz / echoSpace-style stereo).
+         Firmware-side causes tested and excluded the same day (bench
+         session README, "capture-path variations"): slot selection
+         (ONLY_LEFT reads exact zeros, so no floating slot), sample rate
+         (16/32/48 kHz), clock source (APLL), framing. The random walk is
+         in the mic's own 24-bit output in every configuration. Remaining:
+         the mic unit or the piezo board (supply, ground, wiring), or real
+         low-frequency sound. Next, needs the owner: cover/box test (seal
+         the mic port; acoustic LF drops, electrical stays), second piezo
+         node, mic swap; then D-AMP in #19 with this repo's HAL.
+[OPEN]   Framing bug found while testing: with I2S_COMM_FORMAT_STAND_I2S
+         the ESP32 reads each INMP441 word one bit late (bit 8 always 0;
+         values doubled, mic sign bit dropped). I2S_COMM_FORMAT_STAND_MSB
+         frames it correctly on this IDF 4.4 build. Halves all levels, so
+         piezo thresholds would need a retune; the D-AMP HAL (#19) should
+         start with correct framing since #20 re-tunes anyway.
          Still open from issue #24: clap test, second piezo node.
          Capture limit: RAW allocates a fixed 72 KB buffer plus the pre
          ring against a 110 KB largest heap block, so pre=500 / pre=300

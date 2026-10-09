@@ -55,6 +55,7 @@ what replaced it.
 | 2026-10-08 | [Commit cited hardware runs under bench/, with setup and firmware hash](2026-10-08-bench-data-in-repo.md) |
 | 2026-10-09 | [Flash at 80 MHz QIO; I2S sample time comes from the sample index](2026-10-09-flash-qio80-and-i2s-sample-clock.md) |
 | 2026-10-09 | [Piezo discontinued: D-AMP is the default board, piezo a fallback build (`BOARD_PIEZO`)](2026-10-09-discontinue-piezo.md) |
+| 2026-10-09 | [D-AMP keeps First Difference as the PCM preprocessor until after the field trial](2026-10-09-damp-keep-first-difference.md) |
 | 2026-10-09 | [D-AMP I2S HAL: extend AudioSourceI2S, TX task, stereo slots, Philips framing with RX realigned](2026-10-09-damp-i2s-hal-shape.md) |
 
 ## Open
@@ -70,4 +71,3 @@ question is tracked; a file is added here when one resolves.
 | How much `FeatureHistory` to retain on-device | `docs/refactors/cleanup-0-plan.md` Phase 5c (33 KB, 80% of `DetectionRuntime` at last measurement) |
 | Exact boundary between analyzer-only and runtime diagnostics | `docs/refactors/cleanup-analyzer-node-isolation.md`; Phase 5a landed the first cut |
 | Persistent (flash/NVS) config | PAR-010 / PAR-011, deferred until after the field trial (step 11) |
-| Keep First Difference as the I2S PCM preprocessor on the D-AMP HAL, or replace it with a DC blocker (retune) | `docs/refactors/i2s-first-difference-revisit.md` section 7: drift classified (additive LF noise on piezo, not an integrator); decided in issue #19 by the D-AMP capture |

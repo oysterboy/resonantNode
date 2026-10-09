@@ -2,8 +2,8 @@
 
 Status: active, bench validation. Prep 2026-10-09: issue #19 body and
 comments folded in below, piezo baseline binaries built, HAL forks D2-D5
-decided (section 4). Code landed 17295c9 (items 2-5); bench bring-up done;
-next: item 5a (drift: firmware vs board), then close.
+decided (section 4). Code landed 17295c9 (items 2-5); bench bring-up and
+drift A/B (5a) done; next: close (item 7).
 Roadmap: `docs/roadmaps/roadmap-0-steps.md` step 2 -> NODE-009
 (`roadmap-node.md`). Decision: `docs/decisions/2026-10-06-damp-output-hardware.md`.
 Carries over from: `docs/refactors/i2s-first-difference-revisit.md`
@@ -120,7 +120,8 @@ D5 Framing        [DECIDED] Install STAND_I2S (Philips, what the MAX98357A
                   i2s_set_clk, so RX gets the STAND_MSB alignment from #24
                   and TX stays Philips. Bench check: bit 8 toggles
                   (RAW_I2S_UNDECODED), amp tone clean at expected level.
-D6 Preprocessor   [proposed] Carry First Difference unchanged (revisit doc
+D6 Preprocessor   [DECIDED 2026-10-09, decisions/2026-10-09-damp-keep-
+                  first-difference.md] Carry First Difference unchanged (revisit doc
                   section 5, option 1), as a build flag. The D-AMP raw
                   capture (item 6) decides whether a DC blocker is needed
                   later; that is a retune pass after the field trial.
@@ -146,10 +147,12 @@ D7 Analyzer on    [proposed] Same HAL and port config as the Node, TX idle,
 5. [x] Node / Emitter / Analyzer wiring for D-AMP. Fix the Emitter
        ignoring commands on Serial2 (section 7): reset junk bytes, fixed in
        17295c9 (app/SerialLine.h, leading newline from the Analyzer).
-5a.[ ] Firmware vs board for the drift (owner comment 15:35Z): same D-AMP
+5a.[x] Firmware vs board for the drift (owner comment 15:35Z): same D-AMP
        board, quiet raw capture under an echoSpace-equivalent read (48 kHz,
        stereo, plain STAND_I2S, DMA 4x128) vs this repo's read. If only
        ours drifts, bisect rate / MSB realign / DMA / decode.
+       Done 2026-10-09: no read config removes it; it is below 30 Hz
+       (section 7).
 6. [~] Bench, D-AMP node: mic level prints, 3200 Hz chirp audible, RAW
        mode=i2s capture below 1 kHz (drift check, comment 2), bit-8 framing
        check, toneOn latency. Session under bench/sessions/.
@@ -201,3 +204,16 @@ belong to step 3.
 Noted, not fixed: the Analyzer prints "analyzer_control_claim scheduled"
 at boot but never sends the claim (_controlClaimPending is never set), so
 the Emitter stays in AUTO until the first EMIT command. Pre-existing.
+
+2026-10-09 item 5a, same sitting (bench:sessions/2026-10-09-issue19-damp-
+bringup, drift5a_*; throwaway sketch, source in the session). Quiet
+captures on COM10 under five read setups: ours (16 kHz, RX realign, DMA
+3x128) twice, echoSpace-equivalent (48 kHz, plain STAND_I2S, DMA 4x128),
+48 kHz + realign, 16 kHz without realign. The wander is below 30 Hz (1-30 Hz
+at -39 to -59 dBFS; 30-100 Hz -73 to -78; 100 Hz and up at the mic floor,
+-76 to -92 dBFS) and present in every setup; the spread between two runs of
+the same setup (20 dB) exceeds any difference between setups. Not our read
+config. Left: the mic's own sub-30 Hz output, its supply (echoSpace wiring
+puts mic VCC on 5 V; unmeasured), mechanics. Without realign raw bit 8 is
+0 in every sample at 16 and 48 kHz; with it ~50%. Preprocessor: First
+Difference stays (D6, decision file).

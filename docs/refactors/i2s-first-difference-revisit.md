@@ -194,7 +194,11 @@ file.
          Capture recipe: RAW trigger f=3200 dur=100 pre=0 post=350
          mode=i2s for spectra (pre=500/300 fail: fixed 72 KB buffer vs a
          110 KB largest heap block); decim=N for multi-second captures.
-[OPEN]   Framing bug found while testing: with I2S_COMM_FORMAT_STAND_I2S
+[CLOSED] Framing on D-AMP (2026-10-09, 17295c9): STAND_I2S for the amp
+         with the RX MSB shift cleared by register; raw bit 8 toggles ~50%
+         (bench:sessions/2026-10-09-issue19-damp-bringup). The piezo
+         fallback build keeps the late read. Original note:
+[NOTE]   Framing bug found while testing: with I2S_COMM_FORMAT_STAND_I2S
          the ESP32 reads each INMP441 word one bit late (bit 8 always 0;
          values doubled, mic sign bit dropped). I2S_COMM_FORMAT_STAND_MSB
          frames it correctly on this IDF 4.4 build. Halves all levels, so
@@ -205,12 +209,13 @@ file.
          ring against a 110 KB largest heap block, so pre=500 / pre=300
          fail; the pre ring returned only 256 samples at pre=150. Use
          pre=0 post=350 and analyse the tail after the chirp.
-[OPEN]   Decide the preprocessor for the D-AMP HAL. Section 5; listed in
-         docs/decisions/README.md as an open decision.
-[OPEN]   Fix 4.4 (readRawSample bypasses preprocessor state). Small; needs
-         a compile, which this cloud environment cannot do (no PlatformIO
-         registry access). Do it with the D-AMP HAL work or the next
-         hardware session.
+[CLOSED] Preprocessor for the D-AMP HAL (2026-10-09): keep First
+         Difference until after the field trial,
+         docs/decisions/2026-10-09-damp-keep-first-difference.md. Evidence
+         (#19 item 5a): on D-AMP the wander is below 30 Hz (1-30 Hz at -39
+         to -59 dBFS, mic floor from 100 Hz up) and no read setup removes
+         it, echoSpace-equivalent read included.
+[CLOSED] Fix 4.4 (readRawSample keeps the preprocessor state), 17295c9.
 [OPEN]   Document the INMP441 L/R wiring of the piezo nodes (4.7).
 [OPEN]   Pin the espressif32 platform version. Recorded 2026-10-09 on the
          owner's machine: platform espressif32 6.13.0, framework

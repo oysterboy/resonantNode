@@ -91,8 +91,12 @@ void AudioSourceI2S::begin() {
     // One second of events (RX_DONE per buffer) so a long loop stall does
     // not overflow the event queue and hide an RX_Q_OVF.
     _i2sEvents = nullptr;
+#ifndef I2S_EVENT_QUEUE_DISABLED
     const int eventQueueLength = (_sampleRate / I2S_DMA_BUF_LEN) + 4;
     if (i2s_driver_install(kI2sPort, &config, eventQueueLength, &_i2sEvents) != ESP_OK) {
+#else
+    if (i2s_driver_install(kI2sPort, &config, 0, nullptr) != ESP_OK) {
+#endif
         return;
     }
 

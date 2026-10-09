@@ -141,6 +141,10 @@ void AnalyzerApp::printSequenceTrial(const AnalyzerReport& report) const {
         Serial.print(_sequenceTest.currentTrialDiagnostics.emitStartSeen ? 1 : 0);
         Serial.print(" emit_marker_dt_ms=");
         Serial.print(_sequenceTest.currentTrialDiagnostics.emitStartDtMs);
+        Serial.print(" uptime_ms=");
+        Serial.print(millis());
+        Serial.print(" samples_read=");
+        Serial.print(static_cast<unsigned long>(audioStats.totalSamplesRead));
         Serial.print(" dropped_dma_buffers=");
         Serial.print(audioStats.droppedDmaBuffers);
         Serial.print(" clock_rate_mhz=");

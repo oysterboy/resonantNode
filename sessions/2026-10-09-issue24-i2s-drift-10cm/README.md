@@ -89,7 +89,7 @@ random walk did not drop at all, and its level (about 70-85 dB SPL
 equivalent) is implausible for a quiet room: consistent with an electrical
 source. Decisive next: a second mic unit, or the D-AMP mic (#19).
 
-Board note: after the owner re-wired the mic, the 80 MHz **QIO** image
-boot-looped (second-stage bootloader, rst:0x3 SW_RESET, ~8/s); 40 MHz DIO
-and 80 MHz DIO images boot normally with the same wiring. QIO also uses
-flash lines GPIO 9/10 (SD2/SD3 on most dev boards), which DIO leaves free.
+Board note: after the owner re-wired the mic (board powered), the 80 MHz
+QIO image boot-looped; 40 MHz DIO and 80 MHz DIO images booted, and a fresh
+flash of the same QIO image (`7ac8855`) then booted 3/3 with unchanged
+wiring. A one-off, not a QIO problem; nothing on the flash pins.

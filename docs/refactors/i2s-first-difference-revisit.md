@@ -1,6 +1,6 @@
 # I2S First Difference ("MEMS de-accumulation") revisit
 
-Status: open, investigation pass (no code change yet).
+Status: open, investigation pass (no code change yet). Bench tests: issue #24.
 Started: 2026-10-09, from the owner's request to revisit the "MEMS first
 diff bug" ahead of the D-AMP HAL work (issue #19).
 Scope: `src/hal/AudioSourceI2S.cpp` `preprocessSample()`, the
@@ -146,7 +146,7 @@ Whichever is chosen, put the preprocessor behind the same build-flag rule
 as the board (`docs/decisions/2026-10-06-damp-output-hardware.md`): one
 compile-time choice, no runtime switching.
 
-## 6. Smallest next test (needs a piezo node and one bench session)
+## 6. Smallest next test (needs a piezo node and one bench session; checklist in issue #24)
 
 No rebuild needed: `RAW ... mode=i2s` reads decoded words straight from the
 driver and bypasses `preprocessSample()` (section 4.4), so it already shows

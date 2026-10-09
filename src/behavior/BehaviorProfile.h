@@ -12,7 +12,10 @@ struct BehaviorGateConfig {
     unsigned long waitAfterHeardMs = 100;
     unsigned long refractoryAfterEmitMs = 400;
     unsigned long behaviorSuppressSelfChirpMs = 100;
-    unsigned long detectionSuppressTailMsOwnEmit = 0;
+    // After toneOff the own chirp is still heard for 33-54 ms on D-AMP (TX
+    // queue + room; #19 latency measurement), so detection stays off a bit
+    // longer than that.
+    unsigned long detectionSuppressTailMsOwnEmit = 60;
     unsigned long idleTimeoutMs = 20000;
     unsigned long idleTimeVariationMs = 5000;
     unsigned long idleBlockedAfterHeardMs = 1000;

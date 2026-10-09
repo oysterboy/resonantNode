@@ -45,7 +45,14 @@ File structure:
 
 namespace {
 constexpr int kMaxSamplesPerLoop = 512;
+// Smoothed signal magnitude under which the startup baseline counts as
+// quiet. The D-AMP mic's floor sits at ~230-250 in a quiet room (#20,
+// 2026-10-09), so the piezo-era 20 was never reached there.
+#if defined(BOARD_PIEZO)
 constexpr int kRbStartupQuietThreshold = 20;
+#else
+constexpr int kRbStartupQuietThreshold = 400;
+#endif
 constexpr unsigned long kRbStartupMicWarmupMs = runtime::kDefaultAudioSignalStartupWarmupMs;
 constexpr unsigned long kRbStartupQuietHoldMs = 1000;
 constexpr unsigned long kRbStartupBaselineTimeoutMs = 8000;
@@ -563,7 +570,7 @@ void Node::update() {
             const uint32_t sampleTimeUs = block.approxStartMicros + sampleOffsetUs(static_cast<uint32_t>(i), sampleRateHz);
             AudioSamplePacket audioSamplePacket;
             _audioSignal.update(static_cast<int>(block.samples[i]), sampleTimeUs, audioSamplePacket);
-            const bool ownEmitSuppressed = audioSamplePacket.timeMs < _behavior.ownEmitDetectionSuppressUntilMs();
+            const bool ownEmitSuppressed = _behavior.ownEmitDetectionSuppressed(audioSamplePacket.timeMs);
             if (!ownEmitSuppressed) {
                 _freqBandStream.observeCenteredSample(audioSamplePacket.baselineCorrectedValue, audioSamplePacket.timeMs);
                 processDetectionFrame(audioSamplePacket, now, selfChirpSuppressed, sawPatternThisLoop);

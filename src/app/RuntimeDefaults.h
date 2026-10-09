@@ -61,7 +61,7 @@ These are defaults, not live profile state.
 // kDefaultI2sToneAmplitude below); a build flag so a bench run can try
 // another level without editing the default.
 #ifndef I2S_TONE_AMPLITUDE
-#define I2S_TONE_AMPLITUDE 0.1f
+#define I2S_TONE_AMPLITUDE 0.3f
 #endif
 
 #ifndef I2S_COMM_FORMAT_VALUE
@@ -89,9 +89,10 @@ constexpr int kDefaultAudioI2SDmaBufCount = I2S_DMA_BUF_COUNT;
 constexpr PcmPreprocessMode kPcmPreprocessMode = PcmPreprocessMode::FirstDifference;
 constexpr unsigned long kDefaultAudioSignalStartupWarmupMs = 2000UL;
 // I2S tone output (D-AMP): sine peak as a fraction of full scale, and the
-// on/off ramp. 0.1 is what the 2026-10-09 wiring check played (audible,
-// heard about 16-19 dB over the room floor at the node's own mic); the
-// level for detection distances is measured in step 3 (#20).
+// on/off ramp. 0.3 since 2026-10-09 (#20): at 110 cm the stock
+// TonalPulseScalar profile goes from 0/50 at 0.1 to 50/50 at 0.3 (amp
+// evidence is the limit, not the tone itself); the amp is linear at 0.3.
+// docs/refactors/damp-bench-check.md section 5.
 constexpr float kDefaultI2sToneAmplitude = I2S_TONE_AMPLITUDE;
 constexpr uint32_t kDefaultI2sToneRampMs = 5UL;
 

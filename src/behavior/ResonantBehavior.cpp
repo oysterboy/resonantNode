@@ -518,6 +518,13 @@ unsigned long ResonantBehavior::ownEmitDetectionSuppressUntilMs() const {
     return _ownEmitDetectionSuppressUntilMs;
 }
 
+bool ResonantBehavior::ownEmitDetectionSuppressed(unsigned long sampleTimeMs) const {
+    // The start-time window alone (behaviorSuppressSelfChirpMs or
+    // idleBlockedAfterOwnEmitMs) ends inside longer patterns: the 1.2 s idle
+    // pattern's second pulse was heard as a valid occurrence (#20).
+    return _state == State::Chirping || sampleTimeMs < _ownEmitDetectionSuppressUntilMs;
+}
+
 unsigned long ResonantBehavior::patternsReceived() const {
     return _patternsReceived;
 }

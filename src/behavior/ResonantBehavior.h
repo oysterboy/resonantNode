@@ -91,6 +91,9 @@ public:
     unsigned long waitUntilMs() const;
     unsigned long refractoryUntilMs() const;
     unsigned long ownEmitDetectionSuppressUntilMs() const;
+    // True while the node's own chirp may be in the given sample: for the
+    // whole chirp (any pattern length) and the tail after it.
+    bool ownEmitDetectionSuppressed(unsigned long sampleTimeMs) const;
     unsigned long patternsReceived() const;
     unsigned long patternsIgnoredInvalid() const;
     unsigned long patternsIgnoredAmbiguous() const;

@@ -195,8 +195,12 @@ file.
          low-frequency sound. Cover test (cotton + tape, same day): tone
          down 6-7 dB, LF random walk not reduced at all; the seal leaks and
          cotton passes LF, so not conclusive, but consistent with an
-         electrical source. Next, needs the owner: second piezo node or mic
-         swap; then D-AMP in #19 with this repo's HAL.
+         electrical source. Second piezo node (same day, same firmware):
+         same random walk (125-250 Hz 106-110 raw vs 77-82 differenced).
+         Not one bad mic unit; systematic to the piezo node design or to
+         this repo's capture firmware (both boards run it). Decided by the
+         D-AMP mic read through this repo's HAL in #19: no random walk
+         there -> piezo design; random walk there too -> our firmware.
 [OPEN]   Framing bug found while testing: with I2S_COMM_FORMAT_STAND_I2S
          the ESP32 reads each INMP441 word one bit late (bit 8 always 0;
          values doubled, mic sign bit dropped). I2S_COMM_FORMAT_STAND_MSB

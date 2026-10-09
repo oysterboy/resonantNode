@@ -168,7 +168,16 @@ bool AudioSourceI2S::readRawSample(int& sample, uint32_t& sampleTimeUs) {
         return false;
     }
 
+#ifdef RAW_I2S_UNDECODED
+    // Diagnostic build only (issue #24): hand RAW mode=i2s the undecoded
+    // 32-bit slot word so framing (the INMP441's unused low byte) can be
+    // checked offline.
+    int32_t undecoded = 0;
+    memcpy(&undecoded, rawBytes, sizeof(undecoded));
+    sample = static_cast<int>(undecoded);
+#else
     sample = decodePcmSample(rawBytes, bytesPerSample);
+#endif
     sampleTimeUs = micros();
     _stats.totalSamplesRead += 1;
     return true;

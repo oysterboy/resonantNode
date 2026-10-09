@@ -125,8 +125,13 @@ bool AnalyzerApp::runRawTrigger(unsigned long toneHz,
 
     const uint32_t sampleRateHz = _audioSource.sampleRateHz() > 0 ? _audioSource.sampleRateHz() : 16000UL;
     const unsigned long maxSamples = 6000UL;
-    unsigned long preWantedSamples = static_cast<unsigned long>((static_cast<uint64_t>(preMs) * static_cast<uint64_t>(sampleRateHz)) / 1000ULL);
-    unsigned long postWantedSamples = static_cast<unsigned long>((static_cast<uint64_t>(postMs) * static_cast<uint64_t>(sampleRateHz)) / 1000ULL);
+    // mode=i2s with decim=N keeps every Nth word, so the fixed row budget
+    // covers N times longer (e.g. a clap test over seconds). Other modes
+    // keep using decim for output chunking only.
+    const unsigned long i2sKeepEvery = (mode == RawCaptureMode::I2s && decim > 1) ? decim : 1UL;
+    const uint32_t storedRateHz = sampleRateHz / i2sKeepEvery;
+    unsigned long preWantedSamples = static_cast<unsigned long>((static_cast<uint64_t>(preMs) * static_cast<uint64_t>(storedRateHz)) / 1000ULL);
+    unsigned long postWantedSamples = static_cast<unsigned long>((static_cast<uint64_t>(postMs) * static_cast<uint64_t>(storedRateHz)) / 1000ULL);
     if (preWantedSamples > maxSamples) {
         preWantedSamples = maxSamples;
     }
@@ -362,12 +367,16 @@ bool AnalyzerApp::runRawTrigger(unsigned long toneHz,
         }
     };
 
+    unsigned long i2sDecimCounter = 0;
     auto captureSample = [&]() -> bool {
         int sourceSample = 0;
         uint32_t sampleTimeUs = 0;
         if (!(useSignalView ? _audioSource.readSample(sourceSample, sampleTimeUs)
                             : _audioSource.readRawSample(sourceSample, sampleTimeUs))) {
             return false;
+        }
+        if (i2sKeepEvery > 1 && (i2sDecimCounter++ % i2sKeepEvery) != 0) {
+            return true;
         }
 
         const unsigned long sampleTimeMs = sampleTimeUs / 1000UL;
@@ -530,7 +539,7 @@ bool AnalyzerApp::runRawTrigger(unsigned long toneHz,
     Serial.print("RAW_BEGIN id=");
     Serial.print(captureId);
     Serial.print(" sr=");
-    Serial.print(sampleRateHz);
+    Serial.print(storedRateHz);
     Serial.print(" trigger_ms=");
     Serial.print(emitStarted ? emitStartMs : commandMs);
     Serial.print(" command_ms=");

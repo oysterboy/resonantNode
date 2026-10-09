@@ -153,12 +153,12 @@ D7 Analyzer on    [proposed] Same HAL and port config as the Node, TX idle,
        ours drifts, bisect rate / MSB realign / DMA / decode.
        Done 2026-10-09: no read config removes it; it is below 30 Hz
        (section 7).
-6. [~] Bench, D-AMP node: mic level prints, 3200 Hz chirp audible, RAW
+6. [x] Bench, D-AMP node: mic level prints, 3200 Hz chirp audible, RAW
        mode=i2s capture below 1 kHz (drift check, comment 2), bit-8 framing
        check, toneOn latency. Session under bench/sessions/.
        Done 2026-10-09 (section 7): link, chirp, mic, framing, node hears
-       and emits. Open: owner hears the D-AMP chirp from firmware (only the
-       throwaway sketch was heard), toneOn latency beyond "~15 ms".
+       and emits; owner heard the firmware chirp; toneOn latency measured
+       (median 32 ms, section 7).
 7. [ ] Close: gate results here, preprocessor decision file (closes the
        open row in docs/decisions/README.md), NODE-009 status, close #19.
 ```
@@ -217,3 +217,14 @@ config. Left: the mic's own sub-30 Hz output, its supply (echoSpace wiring
 puts mic VCC on 5 V; unmeasured), mechanics. Without realign raw bit 8 is
 0 in every sample at 16 and 48 kHz; with it ~50%. Preprocessor: First
 Difference stays (D6, decision file).
+
+2026-10-09 toneOn -> own-mic latency, same sitting (bench:sessions/
+2026-10-09-issue19-damp-bringup, tone_latency_20; throwaway sketch on the
+repo's AudioSourceI2S + I2sToneOutput from 4b06814, 20 trials, sample-clock
+times). toneOn -> 10% of plateau: 28.9 / 31.9 / 35.9 ms (min / median /
+max); toneOff -> under 10%: 33.1 / 37.2 / 53.7 ms; own chirp ~44 dB over the
+floor. The delay is the TX queue (3 x 8 ms) plus the block being rendered
+(0-8 ms). So a 100 ms chirp sounds at the node's own mic from ~30 ms to
+~135-155 ms after toneOn; the Node's current own-emit windows
+(behaviorSuppressSelfChirpMs=100, detectionSuppressTailMsOwnEmit=0) end
+before that. Not retuned here: step 3 (#20).

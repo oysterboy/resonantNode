@@ -1,0 +1,303 @@
+{
+  "purpose": "issue #19: D-AMP bring-up (link, chirp, mic, node), item 5a drift A/B, toneOn -> own-mic latency",
+  "created": "2026-10-09T17:53:02+02:00",
+  "setup": {
+    "distance_cm": 30.0,
+    "orientation": "not recorded",
+    "emitter_fw": "17295c9",
+    "notes": [
+      "session.json written after the fact from the run-log headers (2026-10-09); logs not modified",
+      "throwaway runs are standalone sketches (drifttest-sketch/, latency-sketch/), not repo firmware"
+    ]
+  },
+  "runs": [
+    {
+      "name": "RAW_i2s_chirp100",
+      "file": "RAW_i2s_chirp100.17295c9.log",
+      "firmware": {
+        "role": "analyzer",
+        "git": "17295c9",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "started": "2026-10-09T17:53:02+02:00",
+      "summary": {
+        "profile": null,
+        "detector": null,
+        "complete": false,
+        "trial_results": {},
+        "line_counts": {}
+      }
+    },
+    {
+      "name": "RAW_i2s_quiet_1",
+      "file": "RAW_i2s_quiet_1.17295c9.log",
+      "firmware": {
+        "role": "analyzer",
+        "git": "17295c9",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "started": "2026-10-09T17:53:02+02:00",
+      "summary": {
+        "profile": null,
+        "detector": null,
+        "complete": false,
+        "trial_results": {},
+        "line_counts": {}
+      }
+    },
+    {
+      "name": "RAW_i2s_quiet_2",
+      "file": "RAW_i2s_quiet_2.17295c9.log",
+      "firmware": {
+        "role": "analyzer",
+        "git": "17295c9",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "started": "2026-10-09T17:53:02+02:00",
+      "summary": {
+        "profile": null,
+        "detector": null,
+        "complete": false,
+        "trial_results": {},
+        "line_counts": {}
+      }
+    },
+    {
+      "name": "drift5a_A2_ours_16k_align_1",
+      "file": "drift5a_A2_ours_16k_align_1.throwaway.log",
+      "firmware": {
+        "role": "drifttest",
+        "git": "throwaway",
+        "version": "sketch",
+        "board": "damp"
+      },
+      "started": "2026-10-09T18:07:58+02:00",
+      "summary": {
+        "profile": null,
+        "detector": null,
+        "complete": false,
+        "trial_results": {},
+        "line_counts": {}
+      }
+    },
+    {
+      "name": "drift5a_A2_ours_16k_align_2",
+      "file": "drift5a_A2_ours_16k_align_2.throwaway.log",
+      "firmware": {
+        "role": "drifttest",
+        "git": "throwaway",
+        "version": "sketch",
+        "board": "damp"
+      },
+      "started": "2026-10-09T18:07:58+02:00",
+      "summary": {
+        "profile": null,
+        "detector": null,
+        "complete": false,
+        "trial_results": {},
+        "line_counts": {}
+      }
+    },
+    {
+      "name": "drift5a_A_ours_16k_align_1",
+      "file": "drift5a_A_ours_16k_align_1.throwaway.log",
+      "firmware": {
+        "role": "drifttest",
+        "git": "throwaway",
+        "version": "sketch",
+        "board": "damp"
+      },
+      "started": "2026-10-09T18:07:58+02:00",
+      "summary": {
+        "profile": null,
+        "detector": null,
+        "complete": false,
+        "trial_results": {},
+        "line_counts": {}
+      }
+    },
+    {
+      "name": "drift5a_A_ours_16k_align_2",
+      "file": "drift5a_A_ours_16k_align_2.throwaway.log",
+      "firmware": {
+        "role": "drifttest",
+        "git": "throwaway",
+        "version": "sketch",
+        "board": "damp"
+      },
+      "started": "2026-10-09T18:07:58+02:00",
+      "summary": {
+        "profile": null,
+        "detector": null,
+        "complete": false,
+        "trial_results": {},
+        "line_counts": {}
+      }
+    },
+    {
+      "name": "drift5a_B_echo_48k_noalign_1",
+      "file": "drift5a_B_echo_48k_noalign_1.throwaway.log",
+      "firmware": {
+        "role": "drifttest",
+        "git": "throwaway",
+        "version": "sketch",
+        "board": "damp"
+      },
+      "started": "2026-10-09T18:07:58+02:00",
+      "summary": {
+        "profile": null,
+        "detector": null,
+        "complete": false,
+        "trial_results": {},
+        "line_counts": {}
+      }
+    },
+    {
+      "name": "drift5a_B_echo_48k_noalign_2",
+      "file": "drift5a_B_echo_48k_noalign_2.throwaway.log",
+      "firmware": {
+        "role": "drifttest",
+        "git": "throwaway",
+        "version": "sketch",
+        "board": "damp"
+      },
+      "started": "2026-10-09T18:07:58+02:00",
+      "summary": {
+        "profile": null,
+        "detector": null,
+        "complete": false,
+        "trial_results": {},
+        "line_counts": {}
+      }
+    },
+    {
+      "name": "drift5a_C_48k_align_1",
+      "file": "drift5a_C_48k_align_1.throwaway.log",
+      "firmware": {
+        "role": "drifttest",
+        "git": "throwaway",
+        "version": "sketch",
+        "board": "damp"
+      },
+      "started": "2026-10-09T18:07:58+02:00",
+      "summary": {
+        "profile": null,
+        "detector": null,
+        "complete": false,
+        "trial_results": {},
+        "line_counts": {}
+      }
+    },
+    {
+      "name": "drift5a_C_48k_align_2",
+      "file": "drift5a_C_48k_align_2.throwaway.log",
+      "firmware": {
+        "role": "drifttest",
+        "git": "throwaway",
+        "version": "sketch",
+        "board": "damp"
+      },
+      "started": "2026-10-09T18:07:58+02:00",
+      "summary": {
+        "profile": null,
+        "detector": null,
+        "complete": false,
+        "trial_results": {},
+        "line_counts": {}
+      }
+    },
+    {
+      "name": "drift5a_D_16k_noalign_1",
+      "file": "drift5a_D_16k_noalign_1.throwaway.log",
+      "firmware": {
+        "role": "drifttest",
+        "git": "throwaway",
+        "version": "sketch",
+        "board": "damp"
+      },
+      "started": "2026-10-09T18:07:58+02:00",
+      "summary": {
+        "profile": null,
+        "detector": null,
+        "complete": false,
+        "trial_results": {},
+        "line_counts": {}
+      }
+    },
+    {
+      "name": "drift5a_D_16k_noalign_2",
+      "file": "drift5a_D_16k_noalign_2.throwaway.log",
+      "firmware": {
+        "role": "drifttest",
+        "git": "throwaway",
+        "version": "sketch",
+        "board": "damp"
+      },
+      "started": "2026-10-09T18:07:58+02:00",
+      "summary": {
+        "profile": null,
+        "detector": null,
+        "complete": false,
+        "trial_results": {},
+        "line_counts": {}
+      }
+    },
+    {
+      "name": "link_test",
+      "file": "link_test.17295c9.log",
+      "firmware": {
+        "role": "analyzer+emitter",
+        "git": "17295c9",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "started": "2026-10-09T17:53:02+02:00",
+      "summary": {
+        "profile": null,
+        "detector": null,
+        "complete": false,
+        "trial_results": {},
+        "line_counts": {}
+      }
+    },
+    {
+      "name": "node_vs_emitter_auto_30s",
+      "file": "node_vs_emitter_auto_30s.17295c9.log",
+      "firmware": {
+        "role": "node+emitter",
+        "git": "17295c9",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "started": "2026-10-09T17:53:02+02:00",
+      "summary": {
+        "profile": null,
+        "detector": null,
+        "complete": false,
+        "trial_results": {},
+        "line_counts": {}
+      }
+    },
+    {
+      "name": "tone_latency_20",
+      "file": "tone_latency_20.throwaway.log",
+      "firmware": {
+        "role": "latency",
+        "git": "throwaway",
+        "version": "sketch",
+        "board": "damp"
+      },
+      "started": "2026-10-09T18:18:37+02:00",
+      "summary": {
+        "profile": null,
+        "detector": null,
+        "complete": false,
+        "trial_results": {},
+        "line_counts": {}
+      }
+    }
+  ]
+}

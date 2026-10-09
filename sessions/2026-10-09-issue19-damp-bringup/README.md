@@ -111,3 +111,28 @@ block being rendered (0-8 ms; the 7 ms spread is that quantum), plus the
 own-emit windows (`behaviorSuppressSelfChirpMs=100`,
 `detectionSuppressTailMsOwnEmit=0`, from the node log above) end before
 that sound does: for step 3 (#20), not changed here.
+
+## Review notes (Claude, 2026-10-09, preliminary)
+
+Added after the fact by a Claude Code review of this folder; the run logs
+are unchanged. Owner to confirm.
+
+- `session.json` and the `index.csv` rows were written from the run-log
+  headers, so `seqcmp.py` and the index see this session. The throwaway
+  runs are listed with `git=throwaway`.
+- "Startup baseline never found quiet (`smooth` 240-520)": the committed
+  node log has one reading, `RB rebase skipped reason=no_quiet
+  smooth=520.0` at 8.08 s. The 240 comes from a run that is not committed.
+  The Emitter was in AUTO (a chirp every 2 s) for the node's whole 8 s
+  quiet search (`smooth < 20` held for 1 s, `ResonantNodeApp.cpp`), so
+  this run cannot tell a high D-AMP floor from the setup. The 520 came
+  1.8 s after a chirp with smoothing factor 0.5, which points at the floor,
+  but needs a run with the Emitter silent.
+- Own-emit windows: detection suppression ends at toneOff (tail 0) while
+  the own chirp is heard until ~135-155 ms after toneOn, but
+  `refractoryAfterEmitMs=400` from toneOff blocks the behavior from
+  reacting to it. Neither of the two emits in the node log produced a
+  verdict from its own echo.
+- No run here reports dropped DMA buffers, so full-duplex load on D-AMP
+  against the 51-54 us/sample (of 62.5 us) Analyzer cost from issue #26 is
+  unmeasured.

@@ -176,12 +176,24 @@ file.
 ## 7. Open / closed
 
 ```text
-[PARTIAL] Classify drift B: mic low-frequency output vs an integrating
-         stage. 2026-10-09, piezo analyzer, RAW mode=i2s, quiet tail after
-         the chirp: slope 1k->7k -1.2 to -1.9 dB/oct in 3 captures (an
-         integrator would be about -6), floor flat above 1 kHz, rising below
-         it. Classified as mic low-frequency output; nothing integrates.
-         Bench: branch `bench`, session 2026-10-09-issue24-i2s-drift-10cm.
+[OPEN]   Classify drift B. 2026-10-09 piezo captures (RAW mode=i2s, quiet
+         tail after the chirp; branch `bench`, session
+         2026-10-09-issue24-i2s-drift-10cm): raw floor flat 1-7 kHz
+         (-1.2..-1.9 dB/oct), BUT below 1 kHz it falls ~6 dB/oct
+         (125-250 Hz ~104 dB, 500-1k ~91 dB) and the first-differenced
+         spectrum is flat there (73-75 dB). That is integrated white noise
+         (a random walk) plus a white floor on top, not mic 1/f or room
+         noise. Level: quiet-room RMS ~82k PCM (about -40 dBFS) against an
+         INMP441 self-noise near -87 dBFS. raw_capture_slope.py only tests
+         1-7 kHz and called it "flat floor"; that verdict is withdrawn.
+         Suspect not in the section 8 table: reading the slot the mic does
+         not drive (INMP441 tri-states SD in the other slot; a floating
+         input charged by leakage is an RC integrator). The resonantNode
+         HAL reads ONLY_RIGHT; echoSpace reads stereo with the mic on
+         channel 0 and shows no drift (owner). Next tests: (1) piezo, no
+         physical change: capture both slots (stereo) and ONLY_LEFT;
+         (2) D-AMP in #19 as a 2x2: board (piezo / D-AMP) x read config
+         (resonantNode mono 16 kHz / echoSpace-style stereo).
          Still open from issue #24: clap test, second piezo node.
          Capture limit: RAW allocates a fixed 72 KB buffer plus the pre
          ring against a 110 KB largest heap block, so pre=500 / pre=300

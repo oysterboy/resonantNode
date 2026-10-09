@@ -1,7 +1,7 @@
 # 2026-10-09 issue #19: D-AMP bring-up (link, chirp, mic, node)
 
 Purpose: first run of the D-AMP firmware (step 2, issue #19,
-`docs/refactors/damp-board-support.md` on `main`): Analyzer <-> Emitter UART
+`docs/refactors/archive/damp-board-support.md` on `main`): Analyzer <-> Emitter UART
 link, I2S chirp out, mic in, Node on D-AMP. Also the drift check from #19
 comment 2 (does the D-AMP mic through this repo's HAL show the low-frequency
 walk seen on the piezo nodes in #24?).

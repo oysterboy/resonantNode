@@ -1,8 +1,8 @@
 # E001 - Detection over distance, rooms and speakers
 
-Status: open. Phase 1-2 logged, phase 3 (acoustic suite) planned.
-Roadmap: NODE-012 (`docs/roadmaps/roadmap-node.md`) holds the when; this
-file holds the protocol and results. Step 3 (`docs/refactors/damp-bench-check.md`,
+Status: open. Phases 1-2 logged; phase 3 (acoustic suite) planned in
+`docs/research/acoustic-test-suite.md`, scheduled as NODE-012.
+This file holds observations only. Step 3 (`docs/refactors/damp-bench-check.md`,
 issue #20) is the current D-AMP slice.
 
 ## Question
@@ -21,48 +21,10 @@ Same orientation inside one distance series.
 Firmware hash from the boot banner; one bench session per physical setup.
 ```
 
-## Protocol (phase 3, acoustic suite)
+## Protocol
 
-Matrix, one bench session per cell; cells are added as rooms and hardware
-exist, not all up front:
-
-```text
-space:    desk/bench (reference), small room, large room or hall,
-          installation site; outdoor only if it becomes a use case.
-speaker:  stock D-AMP 3 W / 8 ohm; other drivers, enclosures or mounts as
-          they come up; piezo (BOARD_PIEZO) only as a reference point.
-distance: 10 / 20 / 40 / 70 / 100 / 150 / 200 / 300 cm plus the
-          installation spacing.
-```
-
-Per cell, measure (don't tune; thresholds are their own pass):
-
-```text
-pickup     T3 (TonalPulseScalar) and T2 (TonalPulseFreq), SEQ 50 trials
-           mode=detail when=all verbose=1: accept count, detector count,
-           score/contrast. Compare counts, not strength, across
-           firmware/board (piezo levels were x2, one-bit-late read).
-loudness   tone level setting; received level at the listener; emitted
-           level once per speaker (SPL at 10 cm, a phone meter is enough).
-           At the far rung, 2-3 tone levels to tell level-limited from
-           detector-limited.
-self-echo  Node on one board: toneOn -> own-mic onset, end of the tail
-           (room reverb lengthens it) vs behaviorSuppressSelfChirpMs,
-           detectionSuppressTailMsOwnEmit, refractoryAfterEmitMs.
-floor      ambient and class-D idle noise with the amp idle; sub-30 Hz
-           drift.
-response   speaker output at the profile tone(s): a driver resonance or
-           dip near the target frequency changes everything above.
-health     dropped DMA buffers per run; a run with drops is not
-           comparable.
-```
-
-Before the first phase 3 cell: add `space`, `speaker`, `tone_level` to
-session.json and the matching `seqrun.py` flags, so `index.csv` filters per
-cell (bench/README.md: add a field when a variable starts to matter).
-
-Output per space x speaker: the longest distance with reliable pickup
-(e.g. >= 45/50 T3), the self-echo tail, the floor.
+Phases 1-2 were run ad hoc (see the log). Phase 3 follows the plan in
+`docs/research/acoustic-test-suite.md`; this file logs what it observes.
 
 ## Log
 
@@ -96,6 +58,4 @@ toneOn on the desk (bench:sessions/2026-10-09-issue19-damp-bringup).
 
 ## Open threads
 
-- Which rooms and speakers are actually available (owner).
-- Installation spacing for the field trial (owner) -> the top rung.
 - Mic supply (5 V) as a drift cause; class-D idle floor at the far rungs.

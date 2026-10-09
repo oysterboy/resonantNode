@@ -1,9 +1,10 @@
 # Lab
 
-Informal notes and research: observations, hypotheses, experiment
-protocols, half-formed ideas. Append-only; nothing here is the
-implementation contract (that's `docs/specs/myspec.md`) or a decision
-(that's `docs/decisions/`).
+Observations: what was measured, seen or heard on the bench, with dates
+and the bench sessions behind it. Append-only. Thinking about how a topic
+could be addressed (options, test designs, plans) is research and goes in
+`docs/research/`; nothing here is the implementation contract
+(`docs/specs/myspec.md`) or a decision (`docs/decisions/`).
 
 ## Where things go
 
@@ -16,6 +17,9 @@ docs/lab/YYYY-MM-DD-<slug>.md       a raw note or analysis kept as written
                                     (session scribbles, a one-off analysis)
 bench/sessions/...                  the data (branch `bench`); lab notes cite
                                     it, never paste raw output
+docs/research/                      how a topic could be addressed; a lab
+                                    observation that raises a question
+                                    links to the research note
 docs/decisions/                     a fork that got decided; the lab note
                                     links to it
 GitHub issues                       inbox from the phone / bench; fold into
@@ -31,16 +35,16 @@ GitHub issues                       inbox from the phone / bench; fold into
 Question      what we want to know, in one or two sentences
 Status        open / paused / answered (date) - and where the answer went
 Setup         hardware, firmware, what is held fixed
-Protocol      what to run, per cell, so someone else can repeat it
+Protocol      what was run, or a pointer to the research note that
+              designs it
 Log           dated entries, newest last, each citing bench sessions or raw
               notes; append, don't rewrite
 Findings      current best answer, with caveats; may be revised (say when)
 Open threads  what's still unclear
 ```
 
-A roadmap item or pass doc that depends on an experiment points at the
-file; the experiment file holds the protocol and results, the roadmap
-holds the when.
+The experiment file holds what was observed. The design of a study lives
+in its research note; the roadmap item holds the when.
 
 ## Rules
 
@@ -56,7 +60,8 @@ holds the when.
 
 ```text
 experiments/E001_spatialdistance.md   detection over distance, rooms and
-                                      speakers (NODE-012)
+                                      speakers (design: research/
+                                      acoustic-test-suite.md)
 2026-09-03-exp001-notes.md            raw notes, E001 phase 1 + stack crash
 2026-09-memory-stack-analysis.md      analyzer/reset stack frame sizes
 current-state-2026-06-24.md           checkpoint snapshot

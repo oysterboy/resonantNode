@@ -206,8 +206,9 @@ myspec.md section 7 if its output list changes.
 Status: TODO (noted 2026-10-09, owner request; not sequenced)
 
 ```text
-Protocol, matrix and results: docs/lab/experiments/E001_spatialdistance.md
-(phase 3). This entry only holds the when.
+Research: docs/research/acoustic-test-suite.md (test design, matrix).
+Observations: docs/lab/experiments/E001_spatialdistance.md (phase 3).
+This entry only holds the when.
 Why: every bench number so far comes from one desk and one speaker;
 installation spacing, suppression windows and the tone level depend on
 the room and the speaker.

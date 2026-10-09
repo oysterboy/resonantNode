@@ -17,6 +17,8 @@ What next, in what order?       roadmap-0-steps.md
 What exactly is item X?         the domain roadmap that owns its ID
 How is a big item executed?     its pass / plan doc in docs/refactors/
 Why was it built this way?      docs/decisions/ (forks taken, and open ones)
+How could X be done?            docs/research/ (options, designs; marks what got promoted)
+What did we observe?            docs/lab/, bench/ sessions
 What happened?                  docs/changelog.md, git log
 ```
 

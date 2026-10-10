@@ -1,0 +1,25 @@
+[11:45:41] boot banner: {'role': 'analyzer', 'git': '246029b', 'version': '0.4.0', 'board': 'damp'}
+[11:45:43] warmup: OK EMIT CHIRP
+[11:45:43] start OBS_speech_stock: EMIT MODE REMOTE ; SEQ DIAG off ; SEQ OBS start tries=50 period=2000 window=1800 profile=TonalPulseScalar mode=detail when=all verbose=1
+[11:48:09] done OBS_speech_stock (146s): complete=True results={'rejected': 38, 'miss': 9, 'unexpected': 1, 'late': 2}
+[11:48:13] session updated, index rebuilt
+[11:50:52] boot banner: {'role': 'analyzer', 'git': '246029b', 'version': '0.4.0', 'board': 'damp'}
+[11:50:54] warmup: OK EMIT CHIRP
+[11:50:54] start OBS_music_stock: EMIT MODE REMOTE ; SEQ DIAG off ; SEQ OBS start tries=50 period=2000 window=1800 profile=TonalPulseScalar mode=detail when=all verbose=1
+[11:53:20] done OBS_music_stock (146s): complete=True results={'miss': 3, 'rejected': 41, 'late': 4, 'expected': 2}
+[11:53:25] session updated, index rebuilt
+[11:54:21] boot banner: {'role': 'analyzer', 'git': '246029b', 'version': '0.4.0', 'board': 'damp'}
+[11:54:23] warmup: OK EMIT CHIRP
+[11:54:23] start OBS_claps_door_stock: EMIT MODE REMOTE ; SEQ DIAG off ; SEQ OBS start tries=50 period=2000 window=1800 profile=TonalPulseScalar mode=detail when=all verbose=1
+[11:56:49] done OBS_claps_door_stock (146s): complete=True results={'rejected': 10, 'miss': 39, 'late': 1}
+[11:56:53] session updated, index rebuilt
+[12:02:16] boot banner: {'role': 'analyzer', 'git': '246029b', 'version': '0.4.0', 'board': 'damp'}
+[12:02:18] warmup: OK EMIT CHIRP
+[12:02:18] start T3_speech_stock: EMIT MODE REMOTE ; SEQ DIAG off ; SEQ start profile=TonalPulseScalar tries=50 mode=detail when=all verbose=1
+[12:05:04] done T3_speech_stock (166s): complete=True results={'expected': 48, 'rejected': 2}
+[12:05:10] session updated, index rebuilt
+[12:06:05] boot banner: {'role': 'analyzer', 'git': '04f948f', 'version': '0.4.0', 'board': 'damp'}
+[12:06:07] warmup: OK EMIT CHIRP
+[12:06:07] start OBS_music_variant: EMIT MODE REMOTE ; SEQ DIAG off ; SEQ OBS start tries=50 period=2000 window=1800 profile=TonalPulseScalar mode=detail when=all verbose=1
+[12:08:33] done OBS_music_variant (146s): complete=True results={'rejected': 44, 'miss': 5, 'late': 1}
+[12:08:38] session updated, index rebuilt

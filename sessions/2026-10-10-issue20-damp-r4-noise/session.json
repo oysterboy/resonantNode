@@ -1,0 +1,255 @@
+{
+  "purpose": "issue #20 R4 noise false positives: silent OBS under speech, music, claps/door; stock vs Scalar amp inspector medium 1000 (tune/issue20-r4 04f948f); T3 under speech (masking)",
+  "created": "2026-10-10T11:45:37",
+  "setup": {
+    "distance_cm": 70.0,
+    "orientation": "speaker faces mic, same height; phone noise source ~50 cm from the Analyzer",
+    "emitter_fw": "965737a",
+    "notes": [
+      "D-AMP: Emitter E3 COM4 (24:dc:c3:49:b7:38), Analyzer E2 COM3 (24:dc:c3:4b:4c:e8); tone 0.3 FS, 3200 Hz; office empty except owner"
+    ]
+  },
+  "runs": [
+    {
+      "name": "OBS_speech_stock",
+      "file": "OBS_speech_stock.246029b.log",
+      "firmware": {
+        "role": "analyzer",
+        "git": "246029b",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "commands": [
+        "EMIT MODE REMOTE",
+        "SEQ DIAG off",
+        "SEQ OBS start tries=50 period=2000 window=1800 profile=TonalPulseScalar mode=detail when=all verbose=1"
+      ],
+      "started": "2026-10-10T11:45:43",
+      "duration_s": 146,
+      "summary": {
+        "profile": "TonalPulseScalar",
+        "detector": "scalar_transient",
+        "complete": true,
+        "trial_results": {
+          "rejected": 38,
+          "miss": 9,
+          "unexpected": 1,
+          "late": 2
+        },
+        "line_counts": {
+          "SEQ_TRIAL": 50,
+          "SEQ_SUMMARY": 1
+        },
+        "trials": "50",
+        "completed": "50",
+        "expected_trials": "0",
+        "early_trials": "0",
+        "late_trials": "2",
+        "miss_trials": "9",
+        "duplicate_trials": "0",
+        "unexpected_trials": "1",
+        "rejected_trials": "38",
+        "buffer_overrun_trials": "0",
+        "detector_accepted_trials": "3",
+        "detector_reject_trials": "42",
+        "pattern_valid_trials": "2",
+        "pattern_rejected_trials": "1",
+        "avg_dt_ms": "1177",
+        "avg_strength": "2944.2",
+        "avg_conf": "1.00"
+      }
+    },
+    {
+      "name": "OBS_music_stock",
+      "file": "OBS_music_stock.246029b.log",
+      "firmware": {
+        "role": "analyzer",
+        "git": "246029b",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "commands": [
+        "EMIT MODE REMOTE",
+        "SEQ DIAG off",
+        "SEQ OBS start tries=50 period=2000 window=1800 profile=TonalPulseScalar mode=detail when=all verbose=1"
+      ],
+      "started": "2026-10-10T11:50:54",
+      "duration_s": 146,
+      "summary": {
+        "profile": "TonalPulseScalar",
+        "detector": "scalar_transient",
+        "complete": true,
+        "trial_results": {
+          "miss": 3,
+          "rejected": 41,
+          "late": 4,
+          "expected": 2
+        },
+        "line_counts": {
+          "SEQ_TRIAL": 50,
+          "SEQ_SUMMARY": 1
+        },
+        "trials": "50",
+        "completed": "50",
+        "expected_trials": "2",
+        "early_trials": "0",
+        "late_trials": "4",
+        "miss_trials": "3",
+        "duplicate_trials": "0",
+        "unexpected_trials": "0",
+        "rejected_trials": "41",
+        "buffer_overrun_trials": "0",
+        "detector_accepted_trials": "6",
+        "detector_reject_trials": "43",
+        "pattern_valid_trials": "6",
+        "pattern_rejected_trials": "0",
+        "avg_dt_ms": "954",
+        "avg_strength": "3918.4",
+        "avg_conf": "1.00"
+      }
+    },
+    {
+      "name": "OBS_claps_door_stock",
+      "file": "OBS_claps_door_stock.246029b.log",
+      "firmware": {
+        "role": "analyzer",
+        "git": "246029b",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "commands": [
+        "EMIT MODE REMOTE",
+        "SEQ DIAG off",
+        "SEQ OBS start tries=50 period=2000 window=1800 profile=TonalPulseScalar mode=detail when=all verbose=1"
+      ],
+      "started": "2026-10-10T11:54:23",
+      "duration_s": 146,
+      "summary": {
+        "profile": "TonalPulseScalar",
+        "detector": "scalar_transient",
+        "complete": true,
+        "trial_results": {
+          "rejected": 10,
+          "miss": 39,
+          "late": 1
+        },
+        "line_counts": {
+          "SEQ_TRIAL": 50,
+          "SEQ_SUMMARY": 1
+        },
+        "trials": "50",
+        "completed": "50",
+        "expected_trials": "0",
+        "early_trials": "0",
+        "late_trials": "1",
+        "miss_trials": "39",
+        "duplicate_trials": "0",
+        "unexpected_trials": "0",
+        "rejected_trials": "10",
+        "buffer_overrun_trials": "0",
+        "detector_accepted_trials": "1",
+        "detector_reject_trials": "15",
+        "pattern_valid_trials": "1",
+        "pattern_rejected_trials": "0",
+        "avg_dt_ms": "1334",
+        "avg_strength": "11425.7",
+        "avg_conf": "1.00"
+      }
+    },
+    {
+      "name": "T3_speech_stock",
+      "file": "T3_speech_stock.246029b.log",
+      "firmware": {
+        "role": "analyzer",
+        "git": "246029b",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "commands": [
+        "EMIT MODE REMOTE",
+        "SEQ DIAG off",
+        "SEQ start profile=TonalPulseScalar tries=50 mode=detail when=all verbose=1"
+      ],
+      "started": "2026-10-10T12:02:18",
+      "duration_s": 166,
+      "summary": {
+        "profile": "TonalPulseScalar",
+        "detector": "scalar_transient",
+        "complete": true,
+        "trial_results": {
+          "expected": 48,
+          "rejected": 2
+        },
+        "line_counts": {
+          "SEQ_TRIAL": 50,
+          "SEQ_SUMMARY": 1
+        },
+        "trials": "50",
+        "completed": "50",
+        "expected_trials": "48",
+        "early_trials": "0",
+        "late_trials": "0",
+        "miss_trials": "0",
+        "duplicate_trials": "0",
+        "unexpected_trials": "0",
+        "rejected_trials": "2",
+        "buffer_overrun_trials": "0",
+        "detector_accepted_trials": "48",
+        "detector_reject_trials": "2",
+        "pattern_valid_trials": "48",
+        "pattern_rejected_trials": "0",
+        "avg_dt_ms": "22",
+        "avg_strength": "15754.7",
+        "avg_conf": "1.00"
+      }
+    },
+    {
+      "name": "OBS_music_variant",
+      "file": "OBS_music_variant.04f948f.log",
+      "firmware": {
+        "role": "analyzer",
+        "git": "04f948f",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "commands": [
+        "EMIT MODE REMOTE",
+        "SEQ DIAG off",
+        "SEQ OBS start tries=50 period=2000 window=1800 profile=TonalPulseScalar mode=detail when=all verbose=1"
+      ],
+      "started": "2026-10-10T12:06:07",
+      "duration_s": 146,
+      "summary": {
+        "profile": "TonalPulseScalar",
+        "detector": "scalar_transient",
+        "complete": true,
+        "trial_results": {
+          "rejected": 44,
+          "miss": 5,
+          "late": 1
+        },
+        "line_counts": {
+          "SEQ_TRIAL": 50,
+          "SEQ_SUMMARY": 1
+        },
+        "trials": "50",
+        "completed": "50",
+        "expected_trials": "0",
+        "early_trials": "0",
+        "late_trials": "1",
+        "miss_trials": "5",
+        "duplicate_trials": "0",
+        "unexpected_trials": "0",
+        "rejected_trials": "44",
+        "buffer_overrun_trials": "0",
+        "detector_accepted_trials": "1",
+        "detector_reject_trials": "47",
+        "pattern_valid_trials": "1",
+        "pattern_rejected_trials": "0",
+        "avg_dt_ms": "1172",
+        "avg_strength": "5837.7",
+        "avg_conf": "1.00"
+      }
+    }
+  ]
+}

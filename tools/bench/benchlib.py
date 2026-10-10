@@ -1,8 +1,10 @@
-"""Shared parsing for bench session logs (stdlib only)."""
+"""Shared parsing for bench session logs, plus the serial exchange used by
+seqrun.py and soak.py (stdlib only; the serial helpers take an open pyserial port)."""
 import csv
 import json
 import os
 import re
+import time
 
 KV = re.compile(r"(\S+?)=(\S*)")
 # Board boot banner, or the "# firmware:" header seqrun/import write into run logs.
@@ -141,3 +143,65 @@ def rebuild_index():
         w.writeheader()
         w.writerows(rows)
     return path, len(rows)
+
+
+def read_for(ser, seconds):
+    end = time.time() + seconds
+    buf = b""
+    while time.time() < end:
+        buf += ser.read(65536)
+    return buf.decode(errors="replace")
+
+
+def run_timeout(command, floor):
+    """Seconds a SEQ run may take: tries x (period + per-trial overhead) + slack.
+
+    A fixed timeout cut 150- and 400-window OBS runs before SEQ_SUMMARY
+    (ANA-006). Per-trial overhead measured 2026-10-09: ~0.9 s over period.
+    """
+    tries = re.search(r"(?:tries=|start )(\d+)", command)
+    period = re.search(r"period=(\d+)", command)
+    n = int(tries.group(1)) if tries else 50
+    period_s = int(period.group(1)) / 1000.0 if period else 2.4
+    return max(floor, int(n * (period_s + 1.5)) + 60)
+
+
+def reset_board(ser, seconds=4):
+    """Pulse RTS (EN) and return what the board prints while booting."""
+    ser.rts = True
+    time.sleep(0.1)
+    ser.rts = False
+    return read_for(ser, seconds)
+
+
+def warmup_emitter(ser):
+    """The first emitter claim after boot tends to time out; spend it here."""
+    ser.write(b"EMIT CHIRP freq=3200 dur=100\n")
+    return read_for(ser, 2)
+
+
+def run_commands(ser, cmds, timeout_s, body=None, abort_on=None):
+    """Send cmds[:-1], then the SEQ start cmds[-1]; read until SEQ_SUMMARY + 3 s or timeout.
+
+    The transcript goes into body (a list, returned), so a caller that passes
+    its own list keeps what was read when the port fails mid-run. abort_on
+    (e.g. "BUILD role=", a reboot) ends the wait early.
+    """
+    body = [] if body is None else body
+    for c in cmds[:-1]:
+        ser.write((c + "\n").encode())
+        body.append(f">> {c}\n" + read_for(ser, 0.8))
+    ser.write((cmds[-1] + "\n").encode())
+    body.append(f">> {cmds[-1]}\n")
+    t0 = time.time()
+    done_at = None
+    while time.time() - t0 < timeout_s:
+        body.append(read_for(ser, 1))
+        if abort_on and abort_on in body[-2] + body[-1]:
+            body.append(read_for(ser, 3))  # rest of the boot output
+            break
+        if done_at is None and "SEQ_SUMMARY" in body[-2] + body[-1]:
+            done_at = time.time()
+        if done_at is not None and time.time() - done_at > 3:
+            break
+    return body

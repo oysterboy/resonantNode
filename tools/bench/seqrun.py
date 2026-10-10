@@ -69,14 +69,6 @@ s.rts = False
 s.open()
 
 
-def read_for(seconds):
-    end = time.time() + seconds
-    buf = b""
-    while time.time() < end:
-        buf += s.read(65536)
-    return buf.decode(errors="replace")
-
-
 def log(msg):
     line = f"[{time.strftime('%H:%M:%S')}] {msg}"
     print(line, flush=True)
@@ -84,31 +76,11 @@ def log(msg):
         f.write(line + "\n")
 
 
-def run_timeout(command):
-    """Seconds a SEQ run may take: tries x (period + per-trial overhead) + slack.
-
-    A fixed timeout cut 150- and 400-window OBS runs before SEQ_SUMMARY
-    (ANA-006). Per-trial overhead measured 2026-10-09: ~0.9 s over period.
-    """
-    import re
-    tries = re.search(r"(?:tries=|start )(\d+)", command)
-    period = re.search(r"period=(\d+)", command)
-    n = int(tries.group(1)) if tries else 50
-    period_s = int(period.group(1)) / 1000.0 if period else 2.4
-    return max(args.timeout, int(n * (period_s + 1.5)) + 60)
-
-
 firmware = None
 if not args.no_reset:
-    s.rts = True
-    time.sleep(0.1)
-    s.rts = False
-    boot = read_for(4)
-    firmware = benchlib.parse_banner(boot)
+    firmware = benchlib.parse_banner(benchlib.reset_board(s))
     log(f"boot banner: {firmware}")
-    # The first emitter claim after boot tends to time out; spend it here.
-    s.write(b"EMIT CHIRP freq=3200 dur=100\n")
-    log("warmup: " + read_for(2).strip().replace("\n", " | "))
+    log("warmup: " + benchlib.warmup_emitter(s).strip().replace("\n", " | "))
 if firmware is None:
     sys.exit("no BUILD banner seen; cannot tag runs with firmware (reset the board or check the port)")
 
@@ -120,23 +92,10 @@ for name, commands in args.run:
     started = datetime.datetime.now().isoformat(timespec="seconds")
     header = [f"# run: {name}", f"# firmware: role={firmware['role']} git={firmware['git']} "
               f"version={firmware['version']} board={firmware['board']}", f"# started: {started}"]
-    body = []
-    for c in cmds[:-1]:
-        s.write((c + "\n").encode())
-        body.append(f">> {c}\n" + read_for(0.8))
-    s.write((cmds[-1] + "\n").encode())
-    body.append(f">> {cmds[-1]}\n")
     log(f"start {name}: {' ; '.join(cmds)}")
     t0 = time.time()
-    timeout_s = run_timeout(cmds[-1])
-    buf, done_at = "", None
-    while time.time() - t0 < timeout_s:
-        buf += read_for(1)
-        if done_at is None and "SEQ_SUMMARY" in buf:
-            done_at = time.time()
-        if done_at is not None and time.time() - done_at > 3:
-            break
-    body.append(buf)
+    timeout_s = benchlib.run_timeout(cmds[-1], args.timeout)
+    body = benchlib.run_commands(s, cmds, timeout_s)
     path = os.path.join(session_dir, fname)
     with open(path, "w", encoding="utf-8", newline="\n") as f:
         f.write("\n".join(header) + "\n" + "".join(body).replace("\r\n", "\n"))
@@ -151,7 +110,7 @@ for name, commands in args.run:
     if not summ["complete"]:
         log(f"WARNING {name}: no SEQ_SUMMARY within {timeout_s}s; the index keeps the "
             f"{sum(summ['trial_results'].values())} trials seen, marked incomplete")
-    read_for(2)
+    benchlib.read_for(s, 2)
 
 s.close()
 benchlib.rebuild_index()

@@ -278,7 +278,7 @@ analyse the tail; decim=N for multi-second captures (a3c717d). Fix: size
 the buffer from the request (post + pre) and report what was actually
 allocated, or capture pre-trigger audio from the sample clock's ring
 instead of a second buffer.
-Source: docs/refactors/i2s-first-difference-revisit.md section 7.
+Source: docs/refactors/archive/i2s-first-difference-revisit.md section 7.
 ```
 
 ### ANA-009 - invalid inspection windows print available_start/end = 0

@@ -15,7 +15,7 @@ flag).
 
 - Mic low-frequency wander is on D-AMP too, below 30 Hz, and no I2S read
   setup removes it (echoSpace-equivalent read included). Home:
-  docs/refactors/i2s-first-difference-revisit.md section 7, decision
+  docs/refactors/archive/i2s-first-difference-revisit.md section 7, decision
   2026-10-09-damp-keep-first-difference.md, bench:sessions/2026-10-09-
   issue19-damp-bringup (drift5a_*). Mic VCC (5 V per echoSpace wiring)
   not yet measured.

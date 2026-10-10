@@ -1,6 +1,17 @@
 # I2S First Difference ("MEMS de-accumulation") revisit
 
-Status: open, investigation pass. Drift B classified 2026-10-09 (section 7); preprocessor choice moves to issue #19. Bench tests: issue #24 (closed).
+Archived: 2026-10-10 - Drift classified (additive low-frequency wander, not
+an integrator; #24) and shown on D-AMP too, below 30 Hz and independent of
+the read setup (#19 item 5a); preprocessor decided: First Difference stays
+until after the field trial (decisions/2026-10-09-damp-keep-first-
+difference.md); framing fixed on D-AMP by the RX MSB realign (17295c9); 4.4
+fixed (17295c9). Left open: the cause of the wander (mic VCC on 5 V not
+measured; lab notes 2026-10-09), the piezo fallback still reads one bit
+late (not worth fixing while piezo is discontinued), the piezo L/R wiring
+note is moot, pinning the espressif32 platform moved to NODE-014. Not
+re-verified: the RAW capture limits (now ANA-008).
+
+Status: closed 2026-10-10 (archived; see the header). Bench tests: issue #24 (closed).
 Started: 2026-10-09, from the owner's request to revisit the "MEMS first
 diff bug" ahead of the D-AMP HAL work (issue #19).
 Scope: `src/hal/AudioSourceI2S.cpp` `preprocessSample()`, the

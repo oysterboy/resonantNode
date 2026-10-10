@@ -222,6 +222,19 @@ speaker); the NODE-008 room is another. The rest waits until it shortens
 the path to the trial or the trial is done.
 ```
 
+### NODE-014 - pin the espressif32 platform version
+
+Status: TODO (from docs/refactors/archive/i2s-first-difference-revisit.md, 2026-10-10)
+
+```text
+platformio.ini pins no espressif32 version, so the I2S legacy driver (and
+its RX/TX framing behavior the D-AMP HAL relies on: RX MSB realign, #24)
+is whatever the build machine has. Recorded 2026-10-09: espressif32 6.13.0,
+arduinoespressif32 3.20017.241212 (Arduino-ESP32 2.0.17, IDF 4.4.7).
+Pin it in [env:esp32dev]; rerun the framing check (raw bit 8 toggles) on
+any upgrade.
+```
+
 ### NODE-013 - 24-hour bench soak on D-AMP
 
 Status: TODO (step 3a, issue #27)

@@ -51,4 +51,4 @@ I2S driver, which configures RX and TX channels separately.
 
 Owner choices in session, 2026-10-09, on forks D2-D5 of
 `docs/refactors/archive/damp-board-support.md` section 4. Framing evidence:
-`docs/refactors/i2s-first-difference-revisit.md` section 7, issue #24.
+`docs/refactors/archive/i2s-first-difference-revisit.md` section 7, issue #24.

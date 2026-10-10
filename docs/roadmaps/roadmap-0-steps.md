@@ -79,7 +79,7 @@ the previous gate open unless the step says it can run in parallel.
 
 1b. [LANDED 2026-10-09] Classify the I2S MEMS drift (mic LF output vs an
    integrating stage). (issue #24, closed)
-   Where: docs/refactors/i2s-first-difference-revisit.md.
+   Where: docs/refactors/archive/i2s-first-difference-revisit.md.
    Why before step 2: decides which PCM preprocessor the D-AMP HAL carries.
    Gate: as issue #24 states. Runs in parallel with 1a (same bench).
    Closed: additive low-frequency random walk on both piezo nodes, not an

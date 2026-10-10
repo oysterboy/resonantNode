@@ -61,6 +61,8 @@ section 4a).
 
 ## 4. Plan (draft)
 
+Superseded 2026-10-09 by section 7 (run plan R0-R4): kept for the record.
+
 ```text
 1. [ ] Distances: 10 / 40 / 70 cm (the piezo records) plus 100 / 150 cm
        (beyond the piezo range). Top rung = the installation spacing

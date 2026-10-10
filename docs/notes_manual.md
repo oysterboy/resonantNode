@@ -2,6 +2,28 @@
 
 Short operator notes for running RB and Analyzer with the current detection stack.
 
+> **Drift check 2026-10-10: much of this file predates the 2026-09 cleanup
+> and the D-AMP switch.** Profile names (`TonalPulse`, `ChirpExperimental`),
+> knob names (`requireSupportForAcceptance`, `inspectionConfig`,
+> `PatternRules`, `_ampDiagnosticProbe`) and paths (`node.cpp`,
+> `AnalyzerApp.cpp`) below no longer exist; the RB BEHAV example values are
+> not the defaults. Current facts until the rewrite:
+>
+> - Profiles: `TonalPulseScalar` (Node boot default), `TonalPulseFreq`,
+>   `AmpExperimental` (`src/detection/DetectionProfile.h`); which ships is
+>   DET-007.
+> - Behavior defaults (`src/behavior/BehaviorProfile.h`): wait 100,
+>   refractory 400, suppressSelfChirp 100, detectionSuppressTail 60, idle
+>   timeout 20000 +- 5000, idleBlockedAfterHeard 1000, idleBlockedAfterOwnEmit
+>   500. Own-emit detection is off for the whole chirp plus the tail
+>   (`ResonantBehavior::ownEmitDetectionSuppressed()`).
+> - Node startup quiet threshold: `kRbStartupQuietThreshold` in
+>   `src/modes/resonant/ResonantNodeApp.cpp` (400 on D-AMP, 20 on piezo).
+> - Board, pins, I2S slots: `src/app/BoardConfig.h`; tone level
+>   `I2S_TONE_AMPLITUDE` (0.3 FS) in `src/app/RuntimeDefaults.h`.
+> - Analyzer: `src/modes/analyzer/AnalyzerModeApp.*`,
+>   `src/detection/analyzer/` (commands in `AnalyzerCommands.cpp`).
+
 ## Using RB And Analyzer
 
 - Use **RB** for live behavior checks.

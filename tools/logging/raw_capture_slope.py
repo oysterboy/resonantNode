@@ -194,7 +194,7 @@ def main(argv):
         print("            nothing in the pipeline integrates. Fix shape: DC blocker / high-pass, not a differentiator.")
     else:
         print("verdict   : falling floor, consistent with an integrated stream. Something between mic and")
-        print("            decode accumulates; see docs/refactors/i2s-first-difference-revisit.md section 8.")
+        print("            decode accumulates; see docs/refactors/archive/i2s-first-difference-revisit.md section 8.")
     return 0
 
 

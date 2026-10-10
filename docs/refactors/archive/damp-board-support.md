@@ -20,7 +20,7 @@ decided (section 4). Code landed 17295c9 (items 2-5); bench bring-up and
 drift A/B (5a) done; next: close (item 7).
 Roadmap: `docs/roadmaps/roadmap-0-steps.md` step 2 -> NODE-009
 (`roadmap-node.md`). Decision: `docs/decisions/2026-10-06-damp-output-hardware.md`.
-Carries over from: `docs/refactors/i2s-first-difference-revisit.md`
+Carries over from: `docs/refactors/archive/i2s-first-difference-revisit.md`
 section 7 (preprocessor choice, framing bug, 4.4 fix).
 Next: step 3, D-AMP bench check (issue #20).
 

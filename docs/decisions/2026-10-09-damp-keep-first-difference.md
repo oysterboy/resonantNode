@@ -20,7 +20,7 @@ trial (step 6).
   3x128 vs 4x128, including an echoSpace-equivalent read. So it is not a
   firmware read fault that a preprocessor would be papering over.
 - Every threshold in `DetectionProfile.h` was tuned on the differenced
-  signal (`docs/refactors/i2s-first-difference-revisit.md` 4.1). Changing
+  signal (`docs/refactors/archive/i2s-first-difference-revisit.md` 4.1). Changing
   the preprocessor now would mix a retune into the hardware switch.
 
 ## Rules out

@@ -134,6 +134,20 @@ Then write the session `README.md` by hand: purpose, setup, the comparison
 table, and the conclusion. Cite the session path from the pass doc's
 dated results line, from the issue, or from `docs/lab/`.
 
+## Boards
+
+Physical label -> chip MAC (read with `esptool.py --port COMx read_mac`).
+COM numbers depend on the USB port, so sessions name boards by label and
+MAC; the COM port goes in the session's setup notes.
+
+| Label | Hardware | MAC | Notes |
+|---|---|---|---|
+| E3 | D-AMP | 24:dc:c3:49:b7:38 | COM10 on 2026-10-10. Amp/speaker OK. |
+| E1 | D-AMP | 24:dc:c3:4a:b0:50 | COM6 on 2026-10-10 (label inferred: the other board; owner confirmed E3). Amp/speaker silent since 2026-10-09 evening; mic OK. |
+
+Sessions before 2026-10-10 name these boards by COM port only:
+COM6 = E1, COM10 = E3 (same MACs).
+
 ## Rules
 
 1. A run without a firmware hash and a distance is not committed.

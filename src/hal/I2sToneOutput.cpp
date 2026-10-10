@@ -28,8 +28,25 @@ void I2sToneOutput::begin() {
     if (_task != nullptr) {
         return;
     }
+    _stopRequested = false;
+    TaskHandle_t task = nullptr;
     xTaskCreatePinnedToCore(&I2sToneOutput::taskEntry, "i2s_tone", kTaskStackBytes, this,
-                            kTaskPriority, &_task, kTaskCore);
+                            kTaskPriority, &task, kTaskCore);
+    _task = task;
+}
+
+void I2sToneOutput::end() {
+    _on = false;
+    if (_task == nullptr) {
+        return;
+    }
+    // Let the ramp reach zero, then ask the task to leave after its next
+    // block (one block is 8 ms; a write waits at most kWriteTimeoutMs).
+    delay(_rampMs + 20);
+    _stopRequested = true;
+    for (int i = 0; i < 40 && _task != nullptr; ++i) {
+        delay(5);
+    }
 }
 
 void I2sToneOutput::setToneHz(uint32_t toneHz) {
@@ -51,6 +68,13 @@ void I2sToneOutput::taskEntry(void* self) {
 void I2sToneOutput::run() {
     int32_t frames[kBlockFrames * 2];
     for (;;) {
+        if (_stopRequested) {
+            _stopRequested = false;
+            _phase = 0;
+            _envelope = 0.0f;
+            _task = nullptr;
+            vTaskDelete(nullptr);
+        }
         renderBlock(frames, kBlockFrames);
         size_t written = 0;
         if (!_port.writeTx(frames, sizeof(frames), written, kWriteTimeoutMs)) {

@@ -245,6 +245,11 @@ any upgrade.
 
 Status: IN PROGRESS (step 3b, issue #28; owner request 2026-10-10; firmware work started 2026-10-10 evening, covers the #20 R1 leftovers)
 
+Pass doc: `docs/refactors/selftest.md` (output format, checks and
+criteria, runner, what is compile-verified vs pending hardware). Firmware
+(Node, Analyzer, Emitter builds) and `tools/bench/selftest.py` written
+2026-10-10, all six envs compile; not yet run on a board.
+
 ```text
 A SELFTEST serial command in the shipped Node and Analyzer builds, one
 PASS/FAIL line per check, plus a tools/bench/ runner that calls it on

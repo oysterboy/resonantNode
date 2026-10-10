@@ -45,6 +45,11 @@ public:
 
 private:
     void pollControlSerial();
+    // USB console: SELFTEST (NODE-015) and "EMIT <control line>", which runs
+    // a control line as if it came over Serial2 (the Analyzer's EMIT syntax;
+    // e.g. EMIT MODE REMOTE stops AUTO chirps from the USB side).
+    void pollUsbSerial();
+    void handleSelfTestCommand(const char* line);
     void handleLine(const char* line);
     void handleChirpCommand(const char* line);
     void handleModeCommand(const char* line);
@@ -87,4 +92,6 @@ private:
     ChirpOutput _chirpOutput;
     char _lineBuffer[96];
     size_t _lineLength = 0;
+    char _usbLineBuffer[96];
+    size_t _usbLineLength = 0;
 };

@@ -19,6 +19,7 @@
 #include "../../behavior/ResonantBehavior.h"
 #include "../../detection/evaluation/OccurrenceVerdict.h"
 #include "../../param/ParamRegistry.h"
+#include "../../selftest/SelfTestReport.h"
 #include "ResonantNodeDebug.h"
 
 /*
@@ -92,6 +93,69 @@ private:
     void printRbDetectorSummary() const;
     void printRbBehaviorSummary() const;
 
+    // SELFTEST (NODE-015, ResonantNodeSelfTest.cpp). The hardware checks
+    // block; the runtime smoke checks run as phases of the normal loop and
+    // only watch its public outputs (verdicts popped from DetectionRuntime,
+    // chirp start/finish), never detector internals.
+    enum class RbRebaseResult : uint8_t {
+        Pending,
+        Done,
+        NoQuiet,
+    };
+    struct SelfTestState {
+        enum class Phase : uint8_t {
+            Idle,
+            QuietBoot,
+            Hardware,
+            Settle,
+            OwnChirp,
+            OwnChirpTail,
+            External,
+            ExternalTail,
+        };
+        static constexpr uint8_t kWindows = 8;
+
+        Phase phase = Phase::Idle;
+        selftest::Command command;
+        selftest::Tally tally;
+        unsigned long phaseStartMs = 0;
+        unsigned long deadlineMs = 0;
+        uint8_t chirpsRequested = 0;
+        uint8_t chirpsStarted = 0;
+        uint8_t chirpsFinished = 0;
+        bool waitingForChirp = false;
+        bool selfTestChirpSounding = false;
+        unsigned long nextChirpAtMs = 0;
+        // Own chirps (any source) seen while a SELFTEST runs: start / finish
+        // times (0 = still sounding), a small ring.
+        unsigned long chirpStartMs[kWindows] = {};
+        unsigned long chirpEndMs[kWindows] = {};
+        uint8_t windowNext = 0;
+        uint8_t windowCount = 0;
+        unsigned long ownVerdicts = 0;
+        unsigned long ownValid = 0;
+        unsigned long otherVerdicts = 0;
+        unsigned long otherValid = 0;
+        unsigned long firstOtherValidMs = 0;
+        unsigned long responses = 0;
+    };
+
+    void handleSelfTestCommand(const char* line);
+    void updateSelfTest(unsigned long now);
+    void runSelfTestHardware(unsigned long now);
+    void restoreAfterSelfTestHardware();
+    void printSelfTestQuietBoot();
+    void startSelfTestChirps(SelfTestState::Phase phase, unsigned long now);
+    void driveSelfTestChirps(unsigned long now);
+    void finishSelfTestOwnChirp(bool timedOut);
+    void finishSelfTestExternal(unsigned long now);
+    void finishSelfTest();
+    bool selfTestVerdictIsOwn(unsigned long heardMs) const;
+    void selfTestObserveVerdict(const OccurrenceVerdict& verdict, unsigned long now);
+    void selfTestNoteChirpStarted(unsigned long now, const char* sourceName);
+    void selfTestNoteChirpFinished(unsigned long now);
+    void noteRebaseResult(RbRebaseResult result);
+
     // Hardware wiring.
     int _ledPin;
     AudioSourceI2S _i2sSource;
@@ -139,4 +203,14 @@ private:
     unsigned long _rbBaselineQuietSinceMs = 0;
     unsigned long _rbBaselineLastLogMs = 0;
     unsigned long _rbBaselineSettleUntilMs = 0;
+    // Outcome of the quiet-gated rebase: the one at boot and the latest one
+    // (a later "RB rebase" repeats it); "RB rebase force" is counted apart.
+    RbRebaseResult _rbBootRebaseResult = RbRebaseResult::Pending;
+    RbRebaseResult _rbLastRebaseResult = RbRebaseResult::Pending;
+    unsigned long _rbLastRebaseAtMs = 0;
+    unsigned long _rbQuietRebaseCount = 0;
+    unsigned long _rbForcedRebaseCount = 0;
+    float _rbLastRebaseSmooth = 0.0f;
+
+    SelfTestState _selfTest;
 };

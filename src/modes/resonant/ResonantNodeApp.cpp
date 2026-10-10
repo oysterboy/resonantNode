@@ -468,6 +468,8 @@ void Node::updateRbBaselineState(unsigned long now) {
                     performRbRebase();
                     _rbBaselineState = RBBaselineState::Settle;
                     _rbBaselineSettleUntilMs = now + kRbPostRebaseSettleMs;
+                    _rbLastRebaseSmooth = smooth;
+                    noteRebaseResult(RbRebaseResult::Done);
                     Serial.print("RB rebase done quietMs=");
                     Serial.print(quietMs);
                     Serial.print(" baseline=");
@@ -485,6 +487,8 @@ void Node::updateRbBaselineState(unsigned long now) {
                 _rbBaselineQuietSinceMs = 0;
                 if (timing::elapsedSince(now, _rbBaselineStateStartedMs, kRbStartupBaselineTimeoutMs)) {
                     _rbBaselineState = RBBaselineState::FailedNoQuiet;
+                    _rbLastRebaseSmooth = smooth;
+                    noteRebaseResult(RbRebaseResult::NoQuiet);
                     Serial.print("RB rebase skipped reason=no_quiet smooth=");
                     Serial.println(smooth, 1);
                 }
@@ -649,6 +653,7 @@ void Node::update() {
     _chirpOutput.start(chirpPattern);
     _behavior.notifyChirpStarted(now);
     ++_rbChirpStartedCount;
+    selfTestNoteChirpStarted(now, sourceName);
     }
 
     _chirpOutput.update();
@@ -656,9 +661,14 @@ void Node::update() {
     if (_chirpOutput.finished()) {
         _behavior.notifyChirpFinished(now);
         _debug.observeChirpFinished(now);
+        selfTestNoteChirpFinished(now);
     }
 
     _debug.updateLed(now, _behavior, _chirpOutput, selfChirpSuppressed);
+
+    if (_selfTest.phase != SelfTestState::Phase::Idle) {
+        updateSelfTest(millis());
+    }
 
     _debug.endLoop(micros());
 }
@@ -706,6 +716,11 @@ void Node::handleSerialLine(const char* line) {
         Serial.println("RB CMD: PARAM GET <path>");
         Serial.println("RB CMD: PARAM SET <path> <value>");
         Serial.println("RB CMD: PARAM DUMP");
+        Serial.println("RB CMD: SELFTEST | SELFTEST external wait_ms=10000 | SELFTEST chirp n=5 | SELFTEST help");
+        return;
+    }
+    if (startsWithTokenIgnoreCase(line, "SELFTEST")) {
+        handleSelfTestCommand(line);
         return;
     }
     if (startsWithTokenIgnoreCase(line, "RB PROFILE")) {
@@ -863,6 +878,7 @@ void Node::handleSerialLine(const char* line) {
         performRbRebase();
         _rbBaselineState = RBBaselineState::Settle;
         _rbBaselineSettleUntilMs = millis() + kRbPostRebaseSettleMs;
+        ++_rbForcedRebaseCount;
         Serial.println("RB rebase forced");
         return;
     }
@@ -1213,6 +1229,9 @@ void Node::processDetectionFrame(const AudioSamplePacket& audioSamplePacket,
         _rbDurationSumMs += verdict.primaryDurationMs;
         _rbHaveLastPendingMs = true;
         _rbLastPendingMs = verdict.primaryHeardAtMs;
+        if (_selfTest.phase != SelfTestState::Phase::Idle) {
+            selfTestObserveVerdict(verdict, now);
+        }
 
         if (rbShouldLogDetail()) {
             Serial.print("RB verdict=");

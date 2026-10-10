@@ -240,6 +240,12 @@ void AnalyzerApp::handleUsbLine(const char* line) {
         Serial.println("CMD: SEQ");
         Serial.println("CMD: SEQ help");
         Serial.println("CMD: SEQ stop");
+        Serial.println("CMD: SELFTEST | SELFTEST chirp n=5 gap_ms=1500 | SELFTEST help");
+        return;
+    }
+
+    if (startsWithTokenIgnoreCase(line, "SELFTEST")) {
+        handleSelfTestCommand(line);
         return;
     }
 

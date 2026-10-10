@@ -83,6 +83,7 @@ void ResonantBehavior::resetState() {
     _chirpRequested = false;
     _chirpRequestSource = ChirpRequestSource::None;
     _chirpPattern = ChirpOutput::ChirpPattern::Single;
+    _testChirpPending = false;
     _patternsReceived = 0;
     _patternsIgnoredInvalid = 0;
     _patternsIgnoredAmbiguous = 0;
@@ -238,6 +239,15 @@ void ResonantBehavior::update(unsigned long now) {
                 _state = State::HeardPattern;
                 _waitUntilMs = now + _waitAfterHeardMs;
             }
+            else if (_testChirpPending) {
+                _testChirpPending = false;
+                _chirpRequested = true;
+                _chirpRequestSource = ChirpRequestSource::SelfTest;
+                _chirpPattern = ChirpOutput::ChirpPattern::Single;
+                _lastEmitMs = now;
+                _outputBusy = true;
+                _state = State::Chirping;
+            }
             else if (canIdle(now)) {
                 _wouldEmit = true;
                 _lastDecision = BehaviorDecision::WouldEmit;
@@ -385,9 +395,23 @@ const char* ResonantBehavior::chirpRequestSourceName() const {
             return "heard_pattern";
         case ChirpRequestSource::Idle:
             return "idle";
+        case ChirpRequestSource::SelfTest:
+            return "selftest";
     }
 
     return "unknown";
+}
+
+void ResonantBehavior::requestTestChirp() {
+    _testChirpPending = true;
+}
+
+void ResonantBehavior::cancelTestChirp() {
+    _testChirpPending = false;
+}
+
+bool ResonantBehavior::testChirpPending() const {
+    return _testChirpPending;
 }
 
 ChirpOutput::ChirpPattern ResonantBehavior::chirpPattern() const {

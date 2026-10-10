@@ -39,6 +39,12 @@ public:
     void toneOn() override;
     void toneOff() override;
 
+    // Stops the writer task (tone off first; returns once the task is gone,
+    // at most ~100 ms). begin() starts it again. For a build that needs the
+    // tone only briefly (the Analyzer's SELFTEST amp check) and should not
+    // keep a TX writer running afterwards.
+    void end();
+
 private:
     static void taskEntry(void* self);
     void run();
@@ -47,7 +53,8 @@ private:
     AudioSourceI2S& _port;
     float _amplitude;
     uint32_t _rampMs;
-    TaskHandle_t _task = nullptr;
+    TaskHandle_t volatile _task = nullptr;
+    volatile bool _stopRequested = false;
 
     // Written by the caller, read by the task (32-bit stores are atomic).
     volatile uint32_t _toneHz = runtime::kDefaultChirpFrequencyHz;

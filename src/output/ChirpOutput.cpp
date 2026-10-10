@@ -116,6 +116,10 @@ bool ChirpOutput::isActive() const {
     return _active;
 }
 
+ToneOutput& ChirpOutput::toneOutput() {
+    return _toneOutput;
+}
+
 bool ChirpOutput::finished() {
     const bool wasFinished = _finished;
     _finished = false;

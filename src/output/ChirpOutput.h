@@ -34,6 +34,11 @@ public:
     bool isActive() const;
     bool finished();
 
+    // The device this output drives. SELFTEST's amp check plays its test
+    // tones through it directly (fixed 100 ms tones, timed by the check);
+    // nothing else should bypass start()/update().
+    ToneOutput& toneOutput();
+
 private:
     ToneOutput& _toneOutput;
     bool _active = false;

@@ -1,0 +1,33 @@
+# FABRICATED SAMPLE - not a hardware run. Shows the SELFTEST output format
+# (docs/refactors/selftest.md) for `selftest.py --selfcheck`; every number is made up.
+# run: selftest E2 (COM3)
+# firmware: role=node git=0000000 version=0.4.0 board=damp
+# started: 2026-10-10T21:00:00
+# mac: 24:dc:c3:4b:4c:e8
+# port: COM3
+
+>> EMIT MODE REMOTE
+
+>> SELFTEST
+SELFTEST_BEGIN role=node mode=full board=damp
+SELFTEST check=board result=PASS mac=24:dc:c3:4b:4c:e8 board=damp role=node version=0.4.0 git=0000000 built=Oct_10_2026 built_time=20:55:00 uptime_ms=61234
+SELFTEST check=quiet_boot result=PASS state=ACTIVE boot=done last=done last_at_ms=3512 smooth_at_rebase=231.5 quiet_rebases=1 forced_rebases=0 baseline=-3.2
+SELFTEST check=mic result=PASS frames=12000 nonzero_pct=99.9 span=41234 floor_mean=412 floor_peak=1630 bit8_pct=49.7 framing=ok slot=0
+SELFTEST_AMP n=1 floor=1010 tone=301233 snr_db=49.5 samples=6528 valid=1
+SELFTEST_AMP n=2 floor=980 tone=298760 snr_db=49.7 samples=6528 valid=1
+SELFTEST_AMP n=3 floor=4120 tone=300120 snr_db=37.2 samples=6400 valid=1
+SELFTEST_AMP n=4 floor=1100 tone=299004 snr_db=48.7 samples=6528 valid=1
+SELFTEST_AMP n=5 floor=950 tone=302551 snr_db=50.1 samples=6528 valid=1
+SELFTEST check=amp result=PASS chirps=5 valid=5 freq_hz=3200 tone_ms=100 path=i2s tone=300120 floor=1010 snr_db=49.5 snr_min_db=37.2 snr_max_db=50.1 pass_db=30.0
+SELFTEST_RESTORE detection=reset baseline=SETTLE
+RB baseline active
+SELFTEST check=own_chirp_suppressed result=PASS chirps=5 started=5 verdicts=0 valid=0 other_verdicts=0 other_valid=0 echo_window_ms=300 suppress_tail_ms=60
+SELFTEST check=external_chirp result=SKIP reason=not_requested
+SELFTEST_SUMMARY result=PASS pass=5 fail=0 skip=1 role=node
+
+>> SELFTEST external wait_ms=10000
+SELFTEST_BEGIN role=node mode=external board=damp
+SELFTEST check=board result=PASS mac=24:dc:c3:4b:4c:e8 board=damp role=node version=0.4.0 git=0000000 built=Oct_10_2026 built_time=20:55:00 uptime_ms=98765
+SELFTEST_EXTERNAL waiting wait_ms=10000
+SELFTEST check=external_chirp result=PASS wait_ms=10000 latency_ms=842 valid=1 verdicts=1 own_verdicts=0 responded=1 baseline=ACTIVE
+SELFTEST_SUMMARY result=PASS pass=2 fail=0 skip=0 role=node

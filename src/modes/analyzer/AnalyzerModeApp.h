@@ -4,6 +4,9 @@
 #include <stdint.h>
 
 #include "../../hal/AudioSourceI2S.h"
+#if !defined(BOARD_PIEZO)
+#include "../../hal/I2sToneOutput.h"
+#endif
 #include "../../detection/DetectionProfile.h"
 #include "../../audio/AudioSignal.h"
 #include "../../detection/DetectionRuntime.h"
@@ -416,6 +419,9 @@ private:
     void pollUsbConsole();
     void pollEmitterSerial();
     void handleUsbLine(const char* line);
+    // SELFTEST (NODE-015, AnalyzerSelfTest.cpp): board, mic, amp; blocking.
+    void handleSelfTestCommand(const char* line);
+    void restoreAfterSelfTest();
     void printSequenceHelp();
     void sendEmitterCommand(const char* command);
     void resetAudioSignalState();
@@ -515,6 +521,11 @@ private:
     int _inputPin; // I2S input pin used by the active audio source.
     AudioSourceI2S _i2sSource; // Concrete audio transport for analyzer mode.
     AudioSource& _audioSource; // Common audio-source view used by shared helpers.
+#if !defined(BOARD_PIEZO)
+    // SELFTEST amp check only: the D-AMP tone on this port's TX side. Its
+    // writer task runs only during a SELFTEST (begin() ... end()).
+    I2sToneOutput _selfTestTone;
+#endif
     AudioSignal _audioSignal; // Legacy audio framing helper for detector input packets.
     mutable detection::DetectionRuntime _detection; // Canonical detector runtime and feature history.
     mutable uint32_t _lastPrintedHistoryIncompleteCount = 0; // Issue #26 diagnostics: last SEQ_HISTDBG count printed.

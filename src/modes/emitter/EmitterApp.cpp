@@ -6,6 +6,8 @@
 #include "../../app/BuildInfo.h"
 #include "../../app/RuntimeDefaults.h"
 #include "../../app/SerialLine.h"
+#include "../../selftest/AudioSelfTest.h"
+#include "../../selftest/SelfTestReport.h"
 
 namespace {
 bool startsWithToken(const char* line, const char* token) {
@@ -70,6 +72,8 @@ void EmitterApp::begin() {
     _nextAutoChirpAtMs = millis();
     _lineLength = 0;
     _lineBuffer[0] = '\0';
+    _usbLineLength = 0;
+    _usbLineBuffer[0] = '\0';
 
     Serial.print("EVT emitter_ready mode=");
     Serial.print(modeName());
@@ -83,6 +87,7 @@ void EmitterApp::begin() {
 
 void EmitterApp::update() {
     pollControlSerial();
+    pollUsbSerial();
     _chirpOutput.update();
 
     if (_chirpOutput.finished()) {
@@ -128,6 +133,76 @@ void EmitterApp::pollControlSerial() {
             _lineBuffer[_lineLength++] = c;
         }
     }
+}
+
+void EmitterApp::pollUsbSerial() {
+    while (Serial.available() > 0) {
+        const char c = static_cast<char>(Serial.read());
+        if (serial_line::dropByte(c)) {
+            continue;
+        }
+        if (c != '\n') {
+            if (_usbLineLength < sizeof(_usbLineBuffer) - 1) {
+                _usbLineBuffer[_usbLineLength++] = c;
+            }
+            continue;
+        }
+        _usbLineBuffer[_usbLineLength] = '\0';
+        _usbLineLength = 0;
+        if (strncmp(_usbLineBuffer, "SELFTEST", 8) == 0 || strncmp(_usbLineBuffer, "selftest", 8) == 0) {
+            handleSelfTestCommand(_usbLineBuffer);
+        } else if (strncmp(_usbLineBuffer, "EMIT ", 5) == 0) {
+            handleLine(_usbLineBuffer + 5);
+        }
+    }
+}
+
+void EmitterApp::handleSelfTestCommand(const char* line) {
+    const selftest::Command command = selftest::parseCommand(line);
+    if (command.kind == selftest::Command::Kind::None) {
+        return;
+    }
+    if (command.kind == selftest::Command::Kind::Help || command.kind == selftest::Command::Kind::Unknown) {
+        selftest::printHelp(Serial, false);
+        return;
+    }
+    // Blocking: no AUTO / sweep chirp may start meanwhile; stop one in flight.
+    if (_chirpOutput.isActive()) {
+        _chirpOutput.stop();
+        _activeTrialId = 0;
+    }
+
+#if defined(BOARD_PIEZO)
+    AudioSourceI2S* mic = nullptr;  // the piezo Emitter build does not own the mic port
+#else
+    AudioSourceI2S* mic = &_i2sPort;
+#endif
+
+    if (command.kind == selftest::Command::Kind::Chirp) {
+        selftest::emitChirpsBlocking(Serial, mic, _chirpOutput.toneOutput(), runtime::kDefaultChirpFrequencyHz,
+                                     command.chirps, command.durMs, command.gapMs);
+    } else {
+        selftest::Tally tally;
+        const bool external = command.kind == selftest::Command::Kind::External;
+        selftest::printBegin(Serial, "emitter", external ? "external" : "full");
+        selftest::printBoard(Serial, tally, "emitter");
+        if (external) {
+            selftest::skip(Serial, tally, "external_chirp", "not_node");
+        } else if (mic == nullptr) {
+            selftest::skip(Serial, tally, "mic", "no_mic_in_build");
+            selftest::skip(Serial, tally, "amp", "no_mic_in_build");
+        } else {
+            selftest::runMicCheck(Serial, tally, *mic);
+            selftest::runAmpCheck(Serial, tally, *mic, _chirpOutput.toneOutput(),
+                                  runtime::kDefaultChirpFrequencyHz, "i2s");
+        }
+        selftest::printSummary(Serial, tally, "emitter");
+    }
+
+    // Back to the configured tone; AUTO resumes one interval from now.
+    _chirpOutput.setToneHz(static_cast<uint32_t>(_mode == EmitterMode::Sweep ? _sweepCurrentHz : _autoToneHz));
+    _nextAutoChirpAtMs = millis() + _autoIntervalMs;
+    _nextSweepStepAtMs = millis() + _sweepPauseMs;
 }
 
 void EmitterApp::handleLine(const char* line) {

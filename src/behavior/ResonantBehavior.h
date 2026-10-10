@@ -104,6 +104,15 @@ public:
     unsigned long wouldEmitCount() const;
     unsigned long emittedCount() const;
 
+    // Operator-requested chirp (SELFTEST, NODE-015). Behavior takes it the
+    // next time update() runs in Idle, as a single chirp with the same
+    // request -> Chirping -> notifyChirpFinished path and own-emit
+    // suppression as a heard-pattern response; it never preempts a pending
+    // response, a chirp or the refractory time.
+    void requestTestChirp();
+    void cancelTestChirp();
+    bool testChirpPending() const;
+
     // ACTION request (SOUND resource)
     bool shouldStartChirp();
     const char* chirpRequestSourceName() const;
@@ -170,8 +179,11 @@ private:
     enum class ChirpRequestSource {
         None,
         HeardPattern,
-        Idle
+        Idle,
+        SelfTest
     };
+
+    bool _testChirpPending = false;
 
     ChirpRequestSource _chirpRequestSource = ChirpRequestSource::None;
     ChirpOutput::ChirpPattern _chirpPattern = ChirpOutput::ChirpPattern::Single;

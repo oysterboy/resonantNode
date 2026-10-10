@@ -542,6 +542,9 @@ AnalyzerApp::AnalyzerApp(int inputPin)
                   static_cast<int>(runtime::kDefaultAudioI2SBitsPerSample),
                   runtime::kDefaultAudioI2SDataOutPin),
       _audioSource(_i2sSource),
+#if !defined(BOARD_PIEZO)
+      _selfTestTone(_i2sSource),
+#endif
       _audioSignal(_audioSource),
       _freqBandStream() {
     //PARAM TUNING TEMPORARY

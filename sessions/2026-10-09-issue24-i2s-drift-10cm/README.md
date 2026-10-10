@@ -1,7 +1,7 @@
 # 2026-10-09 issue #24, I2S drift classification, piezo analyzer
 
 Purpose: classify the slow drift in the raw INMP441 stream (issue #24,
-`docs/refactors/i2s-first-difference-revisit.md` sections 6 and 8).
+`docs/refactors/archive/i2s-first-difference-revisit.md` sections 6 and 8).
 Analyzer `464b8fc` (80 MHz QIO flash, sample-clock fix in place; decode and
 preprocess unchanged), `RAW ... mode=i2s` (decoded words straight from the
 driver, bypassing First Difference). Quiet room, emitter in remote mode.

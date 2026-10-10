@@ -280,3 +280,12 @@ before its window has arrived: future_window_unavailable), not drops and
 not the thresholds. Rescale applied on main: score 2500 / release 1800,
 AmpEnvelope and FrequencyTarget inspectors 4000 / 2500 / 1200. Margin on
 amp evidence is thin: AmpEnvelope median ~2818 vs medium 2500 at 110 cm.
+
+2026-10-10 R2, 10 cm rung (bench:sessions/2026-10-10-issue20-damp-10cm, bench 4e9636c):
+Emitter E3 -> Analyzer E2, speaker faces mic, firmware 965737a, 0.3 FS,
+SEQ DIAG off + mode=detail. T3 50/50 expected (detector 50/50, 0 rejected,
+avg strength 22,480, dt 21 ms) vs piezo baseline 50/50: rung passes.
+Silent OBS 0/50 detections. 0 dropped DMA buffers. AC start and end pass
+on both boards (E2 43.5-51.7 dB, E3 51.6-61.3 dB). Also counts toward R1
+(b6e99b0 at stock settings and 0.3 FS works), one direction only.
+Left: 40 and 70 cm rungs, R1's 110 cm both directions and Node checks, R4, R5.

@@ -1,0 +1,81 @@
+# run: quiet_boot_selfecho
+# firmware: role=node git=60b111f version=0.4.0 board=damp
+# imported-from: node_quiet_boot_selfecho.log (mtime 2026-10-10T11:25:50)
+    0.00 ets Jul 29 2019 12:21:46
+    0.01 rst:0x1 (POWERON_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)
+    0.01 configsip: 0, SPIWP:0xee
+    0.02 clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
+    0.02 mode:DIO, clock div:1
+    0.02 load:0x3fff0030,len:1344
+    0.02 load:0x40078000,len:13964
+    0.03 load:0x40080400,len:3600
+    0.03 entry 0x400805f0
+    0.17 BUILD role=node git=60b111f date=Oct 10 2026 time=11:20:01 version=0.4.0 board=damp
+    0.17 RB node_id=0xE84C4BC3DC24
+    0.18 E (9) I2S: i2s_driver_uninstall(2048): I2S port 0 has not installed
+    0.19 RB PROFILE name=TonalPulseScalar emitters=ScalarTransient inspectionPlan=custom fieldStateConfig=4000/4000
+    0.19 RB DETECT
+    0.19   kind=TonalPulseScalar
+    0.20   detectorSelection=ScalarTransient
+    0.20   inspectionPlan=custom
+    0.21   scalarTransient.observedStream=FrequencyTarget
+    0.21   scalarTransient.onsetDetectionThreshold=2000.0
+    0.21   scalarTransient.onsetReleaseThreshold=1500.0
+    0.21   scalarTransient.cooldownAfterOnsetMs=50
+    0.22   scalarTransient.minTransientDurationMs=85
+    0.22   scalarTransient.maxTransientDurationMs=200
+    0.22   scalarTransient.releaseDebounceMs=10
+    0.23   scalarTransient.minTransientPeakStrength=3000.0
+    0.24   inspectionPlan.module[0].kind=MagnitudeFeatureStrength label=contrast stream=FrequencyContrast windowPreMs=0 windowPostMs=100
+    0.25   inspectionPlan.module[1].kind=MagnitudeFeatureStrength label=amp stream=AmpMagnitude windowPreMs=0 windowPostMs=100
+    0.25   verdict.has_requirement=1
+    0.26   verdict.required_label=contrast
+    0.26   fieldState.occurrenceWindowMs=4000
+    0.26   fieldState.patternWindowMs=4000
+    0.27   fieldState.busyOccurrenceCountThreshold=3
+    0.27   fieldState.denseOccurrenceCountThreshold=6
+    0.27   fieldState.quietOccurrenceCountThreshold=0
+    0.28   fieldState.quietActivityThreshold=0.00
+    0.28   fieldState.busyActivityThreshold=0.45
+    0.28 RB BEHAV
+    0.28   idleEnabled=1
+    0.29   waitAfterHeardMs=100
+    0.29   refractoryAfterEmitMs=400
+    0.29   behaviorSuppressSelfChirpMs=100
+    0.29   detectionSuppressTailMsOwnEmit=60
+    0.30   idleTimeoutMs=20000
+    0.30   idleTimeVariationMs=5000
+    0.30   idleBlockedAfterHeardMs=1000
+    0.30   idleBlockedAfterOwnEmitMs=500
+    0.31 RB startup baseline=LISTEN_FOR_QUIET
+    0.33 RB rebase waiting smooth=381.0 quietMs=0
+    1.33 RB rebase waiting smooth=284.0 quietMs=800
+    1.54 RB rebase done quietMs=1000 baseline=16.9 smooth=0
+    2.02 RB baseline active
+    2.43 RB log mode=full
+    2.43 RB debug mode=events
+   19.05 BEH verdict=none heard=0 now=18888 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+   19.06 BEH emit start now=18888 source=idle state=Chirping pattern=idle
+   19.06 RB emit accepted source=idle state=Chirping gate=Chirping pattern=idle
+   41.16 BEH emit start now=41006 source=idle state=Chirping pattern=idle
+   41.17 RB emit accepted source=idle state=Chirping gate=Chirping pattern=idle
+   57.76 BEH emit start now=57606 source=idle state=Chirping pattern=idle
+   57.77 RB emit accepted source=idle state=Chirping gate=Chirping pattern=idle
+   77.51 BEH emit start now=77350 source=idle state=Chirping pattern=idle
+   77.51 RB emit accepted source=idle state=Chirping gate=Chirping pattern=idle
+   95.68 BEH emit start now=95518 source=idle state=Chirping pattern=idle
+   95.68 RB emit accepted source=idle state=Chirping gate=Chirping pattern=idle
+  119.59 BEH emit start now=119426 source=idle state=Chirping pattern=idle
+  119.59 RB emit accepted source=idle state=Chirping gate=Chirping pattern=idle
+  138.66 BEH emit start now=138502 source=idle state=Chirping pattern=idle
+  138.67 RB emit accepted source=idle state=Chirping gate=Chirping pattern=idle
+  161.40 BEH emit start now=161238 source=idle state=Chirping pattern=idle
+  161.40 RB emit accepted source=idle state=Chirping gate=Chirping pattern=idle
+  179.80 BEH emit start now=179639 source=idle state=Chirping pattern=idle
+  179.81 RB emit accepted source=idle state=Chirping gate=Chirping pattern=idle
+  201.90 BEH emit start now=201742 source=idle state=Chirping pattern=idle
+  201.91 RB emit accepted source=idle state=Chirping gate=Chirping pattern=idle
+  216.93 BEH emit start now=216762 source=idle state=Chirping pattern=idle
+  216.93 RB emit accepted source=idle state=Chirping gate=Chirping pattern=idle
+  237.09 BEH emit start now=236929 source=idle state=Chirping pattern=idle
+  237.10 RB emit accepted source=idle state=Chirping gate=Chirping pattern=idle

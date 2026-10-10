@@ -1,0 +1,51 @@
+{
+  "purpose": "issue #20 R1 Node checks on D-AMP E2: quiet boot (startup threshold 400) and own-emit suppression (b6e99b0), with an external positive control",
+  "created": "2026-10-10T11:25:58",
+  "setup": {
+    "distance_cm": null,
+    "orientation": "",
+    "emitter_fw": "",
+    "notes": [
+      "Node E2 COM3 (MAC 24:dc:c3:4b:4c:e8), firmware 60b111f env esp32dev, TonalPulseScalar; E3 COM4 held in reset (EN via RTS) for the 240 s capture, released for the 30 s control (amp-check sketch: 100 ms 3200 Hz chirp every ~0.8 s)",
+      "RB log full + RB debug events; script node_check.py"
+    ]
+  },
+  "runs": [
+    {
+      "name": "quiet_boot_selfecho",
+      "file": "quiet_boot_selfecho.60b111f.log",
+      "firmware": {
+        "role": "node",
+        "git": "60b111f",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "started": "2026-10-10T11:25:50",
+      "summary": {
+        "profile": null,
+        "detector": null,
+        "complete": false,
+        "trial_results": {},
+        "line_counts": {}
+      }
+    },
+    {
+      "name": "external_control",
+      "file": "external_control.60b111f.log",
+      "firmware": {
+        "role": "node",
+        "git": "60b111f",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "started": "2026-10-10T11:25:50",
+      "summary": {
+        "profile": null,
+        "detector": null,
+        "complete": false,
+        "trial_results": {},
+        "line_counts": {}
+      }
+    }
+  ]
+}

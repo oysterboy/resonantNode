@@ -209,9 +209,14 @@ Effect on results: none shown so far (buffer_overrun_trials=0 in every
 trial. (The TonalPulseFreq rejections first blamed on this are DET-010:
 they recur with 0 drops.)
 Until fixed: comparable runs use SEQ DIAG off (as the #26 baselines) or
-mode=system, and record dropped_dma_buffers. Fix direction: bound or
-defer the report output (print from a queue between trials), or flag the
-trial when drops land in its windows.
+mode=system, and record dropped_dma_buffers.
+Fix direction (2026-10-10): a report task. The loop pushes one compact
+record per trial into a FreeRTOS queue; a low-priority task on core 0
+formats and prints it, so the audio loop never formats text or waits on
+the UART. First measure where the ~170 ms goes (formatting vs UART), then
+record struct, task, unchanged text format for the bench tools. Done when
+a detail + diagnostics run shows 0 dropped buffers on detected trials.
+Research: docs/research/freertos-tasks.md (candidate 1; steps there).
 ```
 
 ### ANA-005 - Analyzer never sends its boot control claim

@@ -1,0 +1,7 @@
+[10:26:42] boot banner: {'role': 'analyzer', 'git': 'e5c65b0', 'version': '0.4.0', 'board': 'damp'}
+[10:26:44] warmup: OK EMIT CHIRP
+[10:26:46] start T3_scalar: EMIT MODE REMOTE ; SEQ DIAG off ; SEQ start profile=TonalPulseScalar tries=50 mode=detail when=all verbose=1
+[10:29:30] done T3_scalar (164s): complete=True results={'expected': 50}
+[10:29:34] start OBS_silent: EMIT MODE REMOTE ; SEQ DIAG off ; SEQ OBS start tries=50 period=2000 window=1800 profile=TonalPulseScalar mode=detail when=all verbose=1
+[10:31:58] done OBS_silent (144s): complete=True results={'miss': 50}
+[10:32:03] session updated, index rebuilt

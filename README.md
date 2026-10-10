@@ -142,8 +142,8 @@ MAC; the COM port goes in the session's setup notes.
 
 | Label | Hardware | MAC | Notes |
 |---|---|---|---|
-| E3 | D-AMP | 24:dc:c3:49:b7:38 | COM10 on 2026-10-10 morning, COM4 later. Amp/speaker OK; amp check 2026-10-10 pass, 51-58 dB. |
-| E2 | D-AMP | 24:dc:c3:4b:4c:e8 | Joined the bench 2026-10-10 (COM3). Mic read 0 until re-seated; amp check 2026-10-10 pass, 36-50 dB. |
+| E3 | D-AMP | 24:dc:c3:49:b7:38 | COM10 on 2026-10-10 morning, COM4 later. Amp/speaker OK; amp check 2026-10-10 pass, 51-61 dB. **USB auto-reset cannot enter download mode** (GPIO 0 side faulty, not timing; see sessions/2026-10-10-issue20-damp-70cm): flash with BOOT held + EN tapped, esptool `--before no_reset --flash_mode dio`. Kept as the permanent Emitter. |
+| E2 | D-AMP | 24:dc:c3:4b:4c:e8 | Joined the bench 2026-10-10 (COM3). Mic read 0 until re-seated; amp check 2026-10-10 pass all day (tone 297k-348k). Quiet floor rises during sessions (850-1,100 at start, up to 5,900 after). Analyzer. |
 | E1 | D-AMP | 24:dc:c3:4a:b0:50 | COM6 on 2026-10-10 morning, COM3 later (label inferred: the other board; owner confirmed E3). Amp/speaker silent since 2026-10-09 evening, still silent after re-wire (amp check 2026-10-10 fail, -19..+2 dB); mic OK. **Faulty, in storage since 2026-10-10.** |
 
 Sessions before 2026-10-10 name these boards by COM port only:

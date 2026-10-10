@@ -352,3 +352,12 @@ door 1; variant music 1. Chirps under speech (stock T3): 48/50.
   only with one fixed audio clip played into both builds.
 Left for #20: R1 on E3 and E2 -> E3 at 110 cm, R5 (VIN-unplug half needs
 the owner; moved to the end of the soak, 2026-10-11).
+
+2026-10-10 evening, re-plan (owner): the R1 leftovers (Node check on E3,
+E2 -> E3 at 110 cm) are not run as separate bench items. SELFTEST (step 3b,
+#28) checks every board's mic, own amp, quiet boot, own-chirp suppression
+and external-chirp response, which covers both. #20 closes after R5 and the
+diagnosis of the soak fault (bench:sessions/2026-10-10-soak24h-70cm: from
+13:32 the Analyzer heard nothing; E3 amp or E2 mic). Gate status: detection
+half passed (R2), self-echo half passed on E2 (R1); E3's self-echo is
+checked by SELFTEST before step 4.

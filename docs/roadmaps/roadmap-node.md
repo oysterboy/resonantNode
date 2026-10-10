@@ -243,7 +243,7 @@ any upgrade.
 
 ### NODE-015 - node self-test (SELFTEST)
 
-Status: TODO (step 3b, issue #28; owner request 2026-10-10)
+Status: IN PROGRESS (step 3b, issue #28; owner request 2026-10-10; firmware work started 2026-10-10 evening, covers the #20 R1 leftovers)
 
 ```text
 A SELFTEST serial command in the shipped Node and Analyzer builds, one
@@ -269,7 +269,7 @@ Gate: passes on every board going into NODE-011, logged on bench.
 
 ### NODE-013 - 24-hour bench soak on D-AMP
 
-Status: TODO (step 3a, issue #27)
+Status: TODO (step 3a, issue #27; first attempt 2026-10-10 aborted after 5 good blocks by an amp or mic fault, bench:sessions/2026-10-10-soak24h-70cm; restart after SELFTEST passes on the pair)
 
 ```text
 Research: docs/research/soak-24h.md (design, gate, open points).

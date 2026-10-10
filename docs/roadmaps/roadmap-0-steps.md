@@ -126,7 +126,7 @@ the previous gate open unless the step says it can run in parallel.
    than block-to-block noise, and does it track time of day or a noted
    condition. Doesn't gate step 4; the boards are free again afterwards.
 
-3b. [TODO] Node self-test: SELFTEST for hardware I/O and node runtime.
+3b. [NEXT] Node self-test: SELFTEST for hardware I/O and node runtime.
    (issue #28)
    Where: NODE-015 (roadmap-node.md).
    Why before step 4: on 2026-10-10 two of three D-AMP boards failed basic

@@ -266,7 +266,7 @@ R3 [ ] TonalPulseFreq rescale (decision 4): at 110 cm, 0.3 FS, 3200 Hz,
        freqScore 2500 / 2000 / 1500 with the inspector variant
        (tune/issue20-damp), each with a silent OBS control; pick, then
        put the values in DetectionProfile.h.
-R4 [ ] Noise false positives (decision 3, owner present): phone playing
+R4 [x] Noise false positives (decision 3, owner present): phone playing
        speech, then music, ~50 cm from the Analyzer; claps; a door. Silent
        OBS runs at stock vs the lowered amp inspector (medium 1000), and
        signal runs under the same noise (masking). Decide 3 from that.
@@ -332,3 +332,23 @@ Positive control with E3 chirping: 29 verdicts in 30 s, each answered. **The
 self-echo half of the gate passes on E2**: own chirps stay inside the
 suppression window (whole chirp + 60 ms). Not yet: the same on E3 (BOOT + EN
 per flash), R1 110 cm E2 -> E3, R4, R5.
+
+2026-10-10 R4, noise false positives at 70 cm (bench:sessions/2026-10-10-
+issue20-damp-r4-noise, bench dce727f; Analyzer stock 246029b, variant
+tune/issue20-r4 04f948f = Scalar amp inspector medium 1000; phone ~50 cm
+from the Analyzer, owner present). Silent OBS, 50 windows each,
+pattern-valid verdicts = false positives: stock speech 2, music 6, claps +
+door 1; variant music 1. Chirps under speech (stock T3): 48/50.
+- **Stock TonalPulseScalar answers speech and music.** The false positives
+  pass both inspectors (100-176 ms, contrast medium, amp medium/strong,
+  strength 4,200-8,200). Input for step 5 (production profile, DET-007) and
+  step 6 (field trial): an installation with people talking or music will
+  trigger nodes.
+- Impulses (claps, door) are mostly rejected by duration/coverage.
+- Decision 3 (lower the amp inspector) stays open: the variant run is not
+  comparable to stock because the music differed between runs (the
+  unchanged detector stage accepted 6 vs 1 candidates). Per candidate the
+  variant can only be more permissive. Recommendation: keep stock; compare
+  only with one fixed audio clip played into both builds.
+Left for #20: R1 on E3 and E2 -> E3 at 110 cm, R5 (VIN-unplug half needs
+the owner; moved to the end of the soak, 2026-10-11).

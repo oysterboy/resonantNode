@@ -135,6 +135,8 @@ e_T2v_s2500_a030_f3200). TonalPulseScalar (Start-anchored, 0..+100 ms)
 was not hit. Same family as DET-009. Fix the mechanism (defer the
 inspection until the window end is available, or anchor the window
 inside the occurrence); passing the incomplete case is not a fix.
+(The available_start/end = 0 in those lines is ANA-009's print artifact;
+the cause is the reject_reason.)
 ```
 
 ### DET-003 - inspection target / payload split
@@ -228,6 +230,11 @@ AnalyzerApp prints "EVT analyzer_control_claim scheduled" at boot, but
 _controlClaimPending is never set, so MODE REMOTE is not sent until the
 first EMIT or SEQ command. The Emitter stays in AUTO (chirping every 2 s)
 meanwhile. Either send the claim or drop the message. Pre-existing.
+Related, likely already fixed: "the first emitter remote claim after each
+Analyzer boot times out" (step 1 / #26 side finding; tools/bench/seqrun.py
+spends a warm-up EMIT CHIRP on it) fits the reset-junk-byte bug fixed in
+17295c9 (app/SerialLine.h). Not re-tested; if the first claim now
+succeeds, the warm-up can go.
 ```
 
 ### ANA-006 - bench runner timeout cuts long runs silently
@@ -240,6 +247,52 @@ on; a 150- or 400-window SEQ OBS run (~2.9 s per window) is cut before
 SEQ_SUMMARY, and the index then has no row for it (two #20 soak runs).
 Derive the timeout from tries x period, or warn loudly and keep the
 partial trial count in the index.
+```
+
+### ANA-007 - trial dt is anchored on a late-polled marker
+
+Status: TODO (found 2026-10-09, #26 side finding; item added 2026-10-10)
+
+```text
+SEQ trial dt is measured against the Emitter's EMIT_START marker at the
+time the Analyzer polls it, after the sample loop. With the sample clock
+fixed (#26) onsets read ~38 ms before that anchor on piezo, while onset
+minus the planned trigger was +63 ms: the CHIRP command itself left ~60 ms
+late in detail mode because the previous trial's report printed first
+(ANA-004). On D-AMP dt also contains the ~32 ms TX queue (#19 latency).
+Fix: anchor dt on the time the CHIRP command was sent (or timestamp the
+marker on receipt); until then compare dt only within one firmware and
+one board type.
+Source: docs/refactors/archive/i2s-sample-clock.md "Side findings".
+```
+
+### ANA-008 - RAW capture memory limits
+
+Status: TODO (found 2026-10-09, #24; item added 2026-10-10)
+
+```text
+RAW allocates a fixed 72 KB capture buffer plus the pre-trigger ring
+against a ~110 KB largest heap block: pre=500 and pre=300 fail, and
+pre=150 returned only 256 pre samples. Workaround: pre=0 post=350 and
+analyse the tail; decim=N for multi-second captures (a3c717d). Fix: size
+the buffer from the request (post + pre) and report what was actually
+allocated, or capture pre-trigger audio from the sample clock's ring
+instead of a second buffer.
+Source: docs/refactors/i2s-first-difference-revisit.md section 7.
+```
+
+### ANA-009 - invalid inspection windows print available_start/end = 0
+
+Status: TODO (found 2026-10-09, #26; item added 2026-10-10)
+
+```text
+SEQ_INSPECT prints inspect.available_start_ms=0 available_end_ms=0 for
+any window that is not valid (incomplete history edge, future window,
+missing stream), because the inspector fills the available range only for
+a valid window. It reads as "empty history" and misled two analyses (#26,
+and the first DET-010 write-up). Fix: print the range the history did
+hold (or "na") and keep inspect.reject_reason as the cause.
+Source: docs/refactors/archive/i2s-sample-clock.md "Symptom".
 ```
 
 ### ANA-002 - multi-occurrence pattern proposals

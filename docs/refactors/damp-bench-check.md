@@ -3,8 +3,10 @@
 Status: active. Bench 2026-10-09: 70 / 200 / 110 cm and an overnight tuning
 run at 110 cm (section 5, 6); owner decisions and R3 done. 2026-10-10: E1
 (ex-COM6) failed the amp check after its re-wire and went to storage; the
-bench pair is now E2 + E3, both passing (R0, AC). Next: R1 (verify b6e99b0),
-R2 ladder (the gate), R4.
+bench pair is now E2 + E3, both passing (R0, AC). R2 ladder done: D-AMP
+50/50 at 10 / 40 / 70 cm, at least as good as piezo at every rung, 0 false
+positives (detection half of the gate passes). Next: R1 Node checks
+(self-echo half of the gate), R4, R5.
 Started 2026-10-09.
 Roadmap: `docs/roadmaps/roadmap-0-steps.md` step 3 -> NODE-010
 (`roadmap-node.md`). Decisions: `docs/decisions/2026-10-06-damp-output-hardware.md`,
@@ -230,21 +232,32 @@ R0 [x] Owner: fix the COM6 amp/speaker wiring; verify with the beep sketch
        the session that runs R1.
 AC     Amp check, standing (owner, 2026-10-10): a loose wire silenced
        COM6's amp mid-session on 2026-10-09 and invalidated two runs
-       without any error. Run on every board at the start and end of each
-       bench session and after any board is moved or re-wired; record the
-       result in the session README.
-       How: the step 2 own-mic sketch (bench:sessions/2026-10-09-issue19-
-       damp-bringup/latency-sketch/, 3200 Hz) on each board; the board
-       must hear its own chirp. Pass: own chirp >= ~30 dB over the quiet
-       floor (step 2 measured ~44 dB at 0.1 FS). Fail or a drop of more
-       than ~10 dB vs the session's start check: runs since the last pass
-       are invalid; fix the wiring and repeat them.
-       A 0/50 ladder rung counts only with a passing AC check after it.
+       without any error. Record every result in the session README.
+       When (revised by the owner 2026-10-10, after the R2 ladder):
+       - on every board at the start of a session and after any board is
+         moved or re-wired;
+       - after a run only when it fails or degrades (fewer expected trials
+         or clearly lower strength than comparable runs), before the low
+         number is trusted. A passing Emitter -> Analyzer run needs no
+         closing check: every expected trial proves the emitter's amp and
+         the listener's mic.
+       How: the step 2 own-mic sketch (bench:sessions/2026-10-10-issue20-
+       damp-10cm/amp-check/sketch, looped, prints PASS/FAIL) on each board.
+       Pass: own chirp >= ~30 dB over the quiet floor AND the chirp level
+       (plateau) not more than 10 dB (x0.32) below the board's session
+       start. Judged on the tone level, not on SNR: E2's floor rises during
+       sessions (850 -> 5,900) while its tone stays within 3%, which the
+       first, SNR-based version of this rule misread as a 14.6 dB drop
+       (70 cm session). Fail: runs since the last pass are invalid; fix
+       the wiring and repeat them.
+       E3 stays the Emitter: its auto-reset cannot enter download mode, so
+       every flash needs BOOT + EN (bench README). Replaced by SELFTEST
+       once step 3b (#28) lands.
 R1 [ ] Verify b6e99b0 at 110 cm: Emitter -> Analyzer T3 stock, both
        directions, mode=system (expect 50/50 at 0.3 FS); Node quiet boot
        on each board with nothing sounding (expect "rebase done", not
        FAILED_NO_QUIET); Node idle chirps no longer produce own verdicts.
-R2 [ ] Ladder at 0.3 FS, stock Scalar, SEQ DIAG off + mode=detail (the #26
+R2 [x] Ladder at 0.3 FS, stock Scalar, SEQ DIAG off + mode=detail (the #26
        baseline settings; ANA-004): 10 / 40 / 70 cm (the
        piezo records) T3 + 50 silent OBS windows per distance; dropped
        buffers recorded. This is the #20 gate.
@@ -288,4 +301,23 @@ avg strength 22,480, dt 21 ms) vs piezo baseline 50/50: rung passes.
 Silent OBS 0/50 detections. 0 dropped DMA buffers. AC start and end pass
 on both boards (E2 43.5-51.7 dB, E3 51.6-61.3 dB). Also counts toward R1
 (b6e99b0 at stock settings and 0.3 FS works), one direction only.
-Left: 40 and 70 cm rungs, R1's 110 cm both directions and Node checks, R4, R5.
+
+2026-10-10 R2, 40 and 70 cm rungs (bench:sessions/2026-10-10-issue20-damp-
+40cm, bench a21c421; ...-70cm, bench 9891b49), same boards and settings,
+Analyzer git=e5c65b0 (same source as 965737a):
+
+| Distance | D-AMP T3 (0.3 FS) | piezo baseline | silent OBS | strength |
+|---|---|---|---|---|
+| 10 cm | 50/50 | 50/50 (fbbc2db) | 0/50 | 22,480 |
+| 40 cm | 50/50 | 10/50 (62a949e) | 0/50 | 9,586 |
+| 70 cm | 50/50 | 48/50 (847b1ef) | 0/50 | 15,781 |
+
+0 rejected, 0 dropped DMA buffers in every run. **The R2 detection gate
+passes: D-AMP detected at every ladder distance at least as well as the
+recorded piezo runs.** Strength is not monotonic in distance (setup varies
+per rung, as on piezo). AC start checks pass at every rung; the 70 cm end
+check on E2 dropped 14.6 dB in SNR from a floor rise with the tone
+unchanged, and the runs stand (owner; AC rule revised to judge the tone,
+see AC above).
+Left for #20: self-echo half of the gate (R1 Node checks), R1 110 cm
+other direction (E2 -> E3), R4, R5.

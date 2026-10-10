@@ -37,11 +37,22 @@ the node hardware since 2026-10-09. The discontinued piezo nodes build as
 setup per board: `src/app/BoardConfig.h`. Never flash a piezo build onto a
 D-AMP board or the reverse: the pinouts collide on GPIO 25/26.
 
-This container has no attached ESP32 hardware — compilation is the
-available verification here (`platformio run -e ...`); flashing and live
-runtime capture happen on the developer's machine over PlatformIO/COM. Don't
-claim a change "works" on real hardware from this environment — say
-compilation passed and that live validation is still pending.
+Which surface you're on decides what you can verify:
+
+- **Web / cloud container** — no attached ESP32 hardware; compilation is the
+  available verification (`platformio run -e ...`). Don't claim a change
+  "works" on real hardware from there — say compilation passed and that
+  live validation is still pending.
+- **Developer's Windows machine (VS Code extension)** — boards may or may
+  not be attached, and which ones varies by session. Check with
+  `pio device list` (CP210x USB-UART bridges; COM numbers vary by board and
+  port) before assuming any hardware is there; with none attached, fall
+  back to the compile-only rule above. `pio`/`platformio` is not on PATH
+  here: call `"$env:USERPROFILE\.platformio\penv\Scripts\pio.exe"`
+  (PowerShell) or the same path under `~/.platformio/penv/Scripts/` (Bash),
+  or use the PlatformIO IDE terminal. Flashing or opening a serial port
+  touches the owner's bench — ask before uploading, and confirm which board
+  build (D-AMP vs piezo) and mode goes on which port.
 
 Unit tests live under `test/` (PlatformIO/Unity). There's currently one
 suite, `test/test_analyzer_pass_rules`.

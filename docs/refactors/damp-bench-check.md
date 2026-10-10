@@ -1,8 +1,9 @@
 # D-AMP bench check (step 3, issue #20)
 
 Status: active. Bench 2026-10-09: 70 / 200 / 110 cm and an overnight tuning
-run at 110 cm (section 5, 6). Next: owner reads section 6; 10 / 40 cm
-rungs; COM6 amp wiring. Started 2026-10-09.
+run at 110 cm (section 5, 6); owner decisions and R3 done, COM6 amp wiring
+fixed 2026-10-10 (R0). Next: R1 (verify b6e99b0), R2 ladder (the gate), R4.
+Started 2026-10-09.
 Roadmap: `docs/roadmaps/roadmap-0-steps.md` step 3 -> NODE-010
 (`roadmap-node.md`). Decisions: `docs/decisions/2026-10-06-damp-output-hardware.md`,
 `docs/decisions/2026-10-09-discontinue-piezo.md`.
@@ -46,9 +47,13 @@ TonalPulseScalar (T3, 50 trials), trials judged `expected`:
 
 | Distance | firmware | expected / 50 |
 |---|---|---|
-| 10 cm | 847b1ef / fbbc2db | 38 / 50 |
-| 40 cm | 847b1ef / 62a949e | 14 / 10 |
-| 70 cm | 847b1ef | 48 |
+| 10 cm | 847b1ef | 38 |
+| 10 cm | fbbc2db (baseline) | 50 |
+| 40 cm | 847b1ef | 14 |
+| 40 cm | 62a949e (baseline) | 10 |
+| 70 cm | 847b1ef (baseline) | 48 |
+
+"baseline" = the run named in `bench/baselines.csv`.
 
 TonalPulseFreq (T2) at profile defaults: 0/50 at every distance ("not
 evaluable", cleanup-0-plan.md). The piezo numbers are not monotonic in
@@ -204,8 +209,22 @@ chirp + 60 ms tail); compiles on all six envs, bench verification pending
 ## 7. Run plan (from 2026-10-09)
 
 ```text
-R0 [ ] Owner: fix the COM6 amp/speaker wiring; verify with the beep sketch
+R0 [x] Owner: fix the COM6 amp/speaker wiring; verify with the beep sketch
        (both boards hear their own beep).
+       2026-10-10: owner reports the COM6 wiring fixed. Beep-sketch result
+       not recorded; the first AC check below is that record.
+AC     Amp check, standing (owner, 2026-10-10): a loose wire silenced
+       COM6's amp mid-session on 2026-10-09 and invalidated two runs
+       without any error. Run on every board at the start and end of each
+       bench session and after any board is moved or re-wired; record the
+       result in the session README.
+       How: the step 2 own-mic sketch (bench:sessions/2026-10-09-issue19-
+       damp-bringup/latency-sketch/, 3200 Hz) on each board; the board
+       must hear its own chirp. Pass: own chirp >= ~30 dB over the quiet
+       floor (step 2 measured ~44 dB at 0.1 FS). Fail or a drop of more
+       than ~10 dB vs the session's start check: runs since the last pass
+       are invalid; fix the wiring and repeat them.
+       A 0/50 ladder rung counts only with a passing AC check after it.
 R1 [ ] Verify b6e99b0 at 110 cm: Emitter -> Analyzer T3 stock, both
        directions, mode=system (expect 50/50 at 0.3 FS); Node quiet boot
        on each board with nothing sounding (expect "rebase done", not
@@ -222,7 +241,19 @@ R4 [ ] Noise false positives (decision 3, owner present): phone playing
        speech, then music, ~50 cm from the Analyzer; claps; a door. Silent
        OBS runs at stock vs the lowered amp inspector (medium 1000), and
        signal runs under the same noise (masking). Decide 3 from that.
+R5 [ ] Class-D idle noise (issue #20 item; owner chose an explicit run
+       2026-10-10): in the R2 session, RAW mode=pcm on the listener with
+       its own amp idle (TX zeros) and the emitter silent; then the same
+       with the amp's VIN unplugged for the no-amp floor. Spectrum
+       100 Hz-8 kHz and the 3200 Hz band, against the step 2 numbers
+       (-76..-92 dBFS). Answer: does the idle amp raise the floor where
+       the detector looks.
 ```
+
+Ladder (owner, 2026-10-10): R2's 10 / 40 / 70 cm is the #20 gate ladder,
+because those are the distances with piezo records to compare against.
+The 10/20/40/60 cm ladder in cleanup-0-plan Phase 0 is that phase's own
+exercise and is not the #20 gate.
 
 2026-10-09 R3, TonalPulseFreq rescale (decision 4), 110 cm, 3200 Hz, 0.3 FS,
 Analyzer tune/issue20-damp (inspector medium 2500), mode=system, 0 dropped

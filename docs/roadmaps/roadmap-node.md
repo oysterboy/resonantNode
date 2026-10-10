@@ -186,10 +186,11 @@ Status: IN PROGRESS (issue #20, docs/refactors/damp-bench-check.md)
 ```text
 Measures the D-AMP signal; no live piezo A/B (piezo discontinued,
 decisions/2026-10-09-discontinue-piezo.md). One emitter, one listener,
-Phase 0's distance ladder (10/20/40/60 cm), D-AMP emitter; accept rate and
-score/contrast from the Analyzer, compared against the piezo SEQ runs
-already in bench/. Plus self-echo against the suppression window and
-class-D noise at the mic with the amp idle.
+ladder 10/40/70 cm (the distances with piezo records; owner 2026-10-10),
+D-AMP emitter at 0.3 FS; accept rate and score/contrast from the
+Analyzer, compared against the piezo SEQ runs already in bench/. Plus
+self-echo against the suppression window and class-D noise at the mic
+with the amp idle (explicit RAW run, pass doc R5).
 If D-AMP is a dud, go back to piezo (BOARD_PIEZO) and revisit.
 Results: (dated line here)
 ```

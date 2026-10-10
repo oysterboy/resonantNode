@@ -1,0 +1,3072 @@
+{
+  "purpose": "NODE-013 24 h soak (step 3a, issue #27)",
+  "created": "2026-10-10T12:17:43",
+  "setup": {
+    "distance_cm": 70.0,
+    "orientation": "speaker faces mic, same height",
+    "emitter_fw": "965737a",
+    "notes": [
+      "D-AMP: Emitter E3 COM4 (24:dc:c3:49:b7:38) fixed, Analyzer E2 COM3 (24:dc:c3:4b:4c:e8) firmware 246029b; tone 0.3 FS, 3200 Hz; boards untouched for 24 h",
+      "Office empty from ~12:35 2026-10-10 (owner leaving); room conditions not recorded at start"
+    ]
+  },
+  "runs": [
+    {
+      "name": "T3_b001_1217",
+      "file": "T3_b001_1217.246029b.log",
+      "firmware": {
+        "role": "analyzer",
+        "git": "246029b",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "commands": [
+        "EMIT MODE REMOTE",
+        "SEQ DIAG off",
+        "SEQ start profile=TonalPulseScalar tries=10 mode=detail when=all verbose=1"
+      ],
+      "started": "2026-10-10T12:17:49",
+      "duration_s": 38,
+      "summary": {
+        "profile": "TonalPulseScalar",
+        "detector": "scalar_transient",
+        "complete": true,
+        "trial_results": {
+          "expected": 10
+        },
+        "line_counts": {
+          "SEQ_TRIAL": 10,
+          "SEQ_SUMMARY": 1
+        },
+        "trials": "10",
+        "completed": "10",
+        "expected_trials": "10",
+        "early_trials": "0",
+        "late_trials": "0",
+        "miss_trials": "0",
+        "duplicate_trials": "0",
+        "unexpected_trials": "0",
+        "rejected_trials": "0",
+        "buffer_overrun_trials": "0",
+        "detector_accepted_trials": "10",
+        "detector_reject_trials": "0",
+        "pattern_valid_trials": "10",
+        "pattern_rejected_trials": "0",
+        "avg_dt_ms": "26",
+        "avg_strength": "17047.1",
+        "avg_conf": "1.00"
+      }
+    },
+    {
+      "name": "OBS_b001_1217",
+      "file": "OBS_b001_1217.246029b.log",
+      "firmware": {
+        "role": "analyzer",
+        "git": "246029b",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "commands": [
+        "EMIT MODE REMOTE",
+        "SEQ DIAG off",
+        "SEQ OBS start tries=5 period=2000 window=1800 profile=TonalPulseScalar mode=detail when=all verbose=1"
+      ],
+      "started": "2026-10-10T12:18:30",
+      "duration_s": 20,
+      "summary": {
+        "profile": "TonalPulseScalar",
+        "detector": "scalar_transient",
+        "complete": true,
+        "trial_results": {
+          "miss": 5
+        },
+        "line_counts": {
+          "SEQ_TRIAL": 5,
+          "SEQ_SUMMARY": 1
+        },
+        "trials": "5",
+        "completed": "5",
+        "expected_trials": "0",
+        "early_trials": "0",
+        "late_trials": "0",
+        "miss_trials": "5",
+        "duplicate_trials": "0",
+        "unexpected_trials": "0",
+        "rejected_trials": "0",
+        "buffer_overrun_trials": "0",
+        "detector_accepted_trials": "0",
+        "detector_reject_trials": "0",
+        "pattern_valid_trials": "0",
+        "pattern_rejected_trials": "0",
+        "avg_dt_ms": "-1",
+        "avg_strength": "0.0",
+        "avg_conf": "0.00"
+      }
+    },
+    {
+      "name": "T3_b002_1232",
+      "file": "T3_b002_1232.246029b.log",
+      "firmware": {
+        "role": "analyzer",
+        "git": "246029b",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "commands": [
+        "EMIT MODE REMOTE",
+        "SEQ DIAG off",
+        "SEQ start profile=TonalPulseScalar tries=10 mode=detail when=all verbose=1"
+      ],
+      "started": "2026-10-10T12:32:47",
+      "duration_s": 38,
+      "summary": {
+        "profile": "TonalPulseScalar",
+        "detector": "scalar_transient",
+        "complete": true,
+        "trial_results": {
+          "expected": 10
+        },
+        "line_counts": {
+          "SEQ_TRIAL": 10,
+          "SEQ_SUMMARY": 1
+        },
+        "trials": "10",
+        "completed": "10",
+        "expected_trials": "10",
+        "early_trials": "0",
+        "late_trials": "0",
+        "miss_trials": "0",
+        "duplicate_trials": "0",
+        "unexpected_trials": "0",
+        "rejected_trials": "0",
+        "buffer_overrun_trials": "0",
+        "detector_accepted_trials": "10",
+        "detector_reject_trials": "0",
+        "pattern_valid_trials": "10",
+        "pattern_rejected_trials": "0",
+        "avg_dt_ms": "26",
+        "avg_strength": "16512.5",
+        "avg_conf": "1.00"
+      }
+    },
+    {
+      "name": "OBS_b002_1232",
+      "file": "OBS_b002_1232.246029b.log",
+      "firmware": {
+        "role": "analyzer",
+        "git": "246029b",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "commands": [
+        "EMIT MODE REMOTE",
+        "SEQ DIAG off",
+        "SEQ OBS start tries=5 period=2000 window=1800 profile=TonalPulseScalar mode=detail when=all verbose=1"
+      ],
+      "started": "2026-10-10T12:33:28",
+      "duration_s": 20,
+      "summary": {
+        "profile": "TonalPulseScalar",
+        "detector": "scalar_transient",
+        "complete": true,
+        "trial_results": {
+          "miss": 5
+        },
+        "line_counts": {
+          "SEQ_TRIAL": 5,
+          "SEQ_SUMMARY": 1
+        },
+        "trials": "5",
+        "completed": "5",
+        "expected_trials": "0",
+        "early_trials": "0",
+        "late_trials": "0",
+        "miss_trials": "5",
+        "duplicate_trials": "0",
+        "unexpected_trials": "0",
+        "rejected_trials": "0",
+        "buffer_overrun_trials": "0",
+        "detector_accepted_trials": "0",
+        "detector_reject_trials": "0",
+        "pattern_valid_trials": "0",
+        "pattern_rejected_trials": "0",
+        "avg_dt_ms": "-1",
+        "avg_strength": "0.0",
+        "avg_conf": "0.00"
+      }
+    },
+    {
+      "name": "T3_b003_1247",
+      "file": "T3_b003_1247.246029b.log",
+      "firmware": {
+        "role": "analyzer",
+        "git": "246029b",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "commands": [
+        "EMIT MODE REMOTE",
+        "SEQ DIAG off",
+        "SEQ start profile=TonalPulseScalar tries=10 mode=detail when=all verbose=1"
+      ],
+      "started": "2026-10-10T12:47:47",
+      "duration_s": 38,
+      "summary": {
+        "profile": "TonalPulseScalar",
+        "detector": "scalar_transient",
+        "complete": true,
+        "trial_results": {
+          "expected": 10
+        },
+        "line_counts": {
+          "SEQ_TRIAL": 10,
+          "SEQ_SUMMARY": 1
+        },
+        "trials": "10",
+        "completed": "10",
+        "expected_trials": "10",
+        "early_trials": "0",
+        "late_trials": "0",
+        "miss_trials": "0",
+        "duplicate_trials": "0",
+        "unexpected_trials": "0",
+        "rejected_trials": "0",
+        "buffer_overrun_trials": "0",
+        "detector_accepted_trials": "10",
+        "detector_reject_trials": "0",
+        "pattern_valid_trials": "10",
+        "pattern_rejected_trials": "0",
+        "avg_dt_ms": "25",
+        "avg_strength": "16382.5",
+        "avg_conf": "1.00"
+      }
+    },
+    {
+      "name": "OBS_b003_1247",
+      "file": "OBS_b003_1247.246029b.log",
+      "firmware": {
+        "role": "analyzer",
+        "git": "246029b",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "commands": [
+        "EMIT MODE REMOTE",
+        "SEQ DIAG off",
+        "SEQ OBS start tries=5 period=2000 window=1800 profile=TonalPulseScalar mode=detail when=all verbose=1"
+      ],
+      "started": "2026-10-10T12:48:27",
+      "duration_s": 20,
+      "summary": {
+        "profile": "TonalPulseScalar",
+        "detector": "scalar_transient",
+        "complete": true,
+        "trial_results": {
+          "miss": 5
+        },
+        "line_counts": {
+          "SEQ_TRIAL": 5,
+          "SEQ_SUMMARY": 1
+        },
+        "trials": "5",
+        "completed": "5",
+        "expected_trials": "0",
+        "early_trials": "0",
+        "late_trials": "0",
+        "miss_trials": "5",
+        "duplicate_trials": "0",
+        "unexpected_trials": "0",
+        "rejected_trials": "0",
+        "buffer_overrun_trials": "0",
+        "detector_accepted_trials": "0",
+        "detector_reject_trials": "0",
+        "pattern_valid_trials": "0",
+        "pattern_rejected_trials": "0",
+        "avg_dt_ms": "-1",
+        "avg_strength": "0.0",
+        "avg_conf": "0.00"
+      }
+    },
+    {
+      "name": "T3_b004_1302",
+      "file": "T3_b004_1302.246029b.log",
+      "firmware": {
+        "role": "analyzer",
+        "git": "246029b",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "commands": [
+        "EMIT MODE REMOTE",
+        "SEQ DIAG off",
+        "SEQ start profile=TonalPulseScalar tries=10 mode=detail when=all verbose=1"
+      ],
+      "started": "2026-10-10T13:02:47",
+      "duration_s": 38,
+      "summary": {
+        "profile": "TonalPulseScalar",
+        "detector": "scalar_transient",
+        "complete": true,
+        "trial_results": {
+          "expected": 10
+        },
+        "line_counts": {
+          "SEQ_TRIAL": 10,
+          "SEQ_SUMMARY": 1
+        },
+        "trials": "10",
+        "completed": "10",
+        "expected_trials": "10",
+        "early_trials": "0",
+        "late_trials": "0",
+        "miss_trials": "0",
+        "duplicate_trials": "0",
+        "unexpected_trials": "0",
+        "rejected_trials": "0",
+        "buffer_overrun_trials": "0",
+        "detector_accepted_trials": "10",
+        "detector_reject_trials": "0",
+        "pattern_valid_trials": "10",
+        "pattern_rejected_trials": "0",
+        "avg_dt_ms": "20",
+        "avg_strength": "16832.5",
+        "avg_conf": "1.00"
+      }
+    },
+    {
+      "name": "OBS_b004_1302",
+      "file": "OBS_b004_1302.246029b.log",
+      "firmware": {
+        "role": "analyzer",
+        "git": "246029b",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "commands": [
+        "EMIT MODE REMOTE",
+        "SEQ DIAG off",
+        "SEQ OBS start tries=5 period=2000 window=1800 profile=TonalPulseScalar mode=detail when=all verbose=1"
+      ],
+      "started": "2026-10-10T13:03:28",
+      "duration_s": 20,
+      "summary": {
+        "profile": "TonalPulseScalar",
+        "detector": "scalar_transient",
+        "complete": true,
+        "trial_results": {
+          "miss": 5
+        },
+        "line_counts": {
+          "SEQ_TRIAL": 5,
+          "SEQ_SUMMARY": 1
+        },
+        "trials": "5",
+        "completed": "5",
+        "expected_trials": "0",
+        "early_trials": "0",
+        "late_trials": "0",
+        "miss_trials": "5",
+        "duplicate_trials": "0",
+        "unexpected_trials": "0",
+        "rejected_trials": "0",
+        "buffer_overrun_trials": "0",
+        "detector_accepted_trials": "0",
+        "detector_reject_trials": "0",
+        "pattern_valid_trials": "0",
+        "pattern_rejected_trials": "0",
+        "avg_dt_ms": "-1",
+        "avg_strength": "0.0",
+        "avg_conf": "0.00"
+      }
+    },
+    {
+      "name": "T3_b005_1317",
+      "file": "T3_b005_1317.246029b.log",
+      "firmware": {
+        "role": "analyzer",
+        "git": "246029b",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "commands": [
+        "EMIT MODE REMOTE",
+        "SEQ DIAG off",
+        "SEQ start profile=TonalPulseScalar tries=10 mode=detail when=all verbose=1"
+      ],
+      "started": "2026-10-10T13:17:47",
+      "duration_s": 38,
+      "summary": {
+        "profile": "TonalPulseScalar",
+        "detector": "scalar_transient",
+        "complete": true,
+        "trial_results": {
+          "expected": 10
+        },
+        "line_counts": {
+          "SEQ_TRIAL": 10,
+          "SEQ_SUMMARY": 1
+        },
+        "trials": "10",
+        "completed": "10",
+        "expected_trials": "10",
+        "early_trials": "0",
+        "late_trials": "0",
+        "miss_trials": "0",
+        "duplicate_trials": "0",
+        "unexpected_trials": "0",
+        "rejected_trials": "0",
+        "buffer_overrun_trials": "0",
+        "detector_accepted_trials": "10",
+        "detector_reject_trials": "0",
+        "pattern_valid_trials": "10",
+        "pattern_rejected_trials": "0",
+        "avg_dt_ms": "21",
+        "avg_strength": "15365.6",
+        "avg_conf": "1.00"
+      }
+    },
+    {
+      "name": "OBS_b005_1317",
+      "file": "OBS_b005_1317.246029b.log",
+      "firmware": {
+        "role": "analyzer",
+        "git": "246029b",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "commands": [
+        "EMIT MODE REMOTE",
+        "SEQ DIAG off",
+        "SEQ OBS start tries=5 period=2000 window=1800 profile=TonalPulseScalar mode=detail when=all verbose=1"
+      ],
+      "started": "2026-10-10T13:18:27",
+      "duration_s": 20,
+      "summary": {
+        "profile": "TonalPulseScalar",
+        "detector": "scalar_transient",
+        "complete": true,
+        "trial_results": {
+          "miss": 5
+        },
+        "line_counts": {
+          "SEQ_TRIAL": 5,
+          "SEQ_SUMMARY": 1
+        },
+        "trials": "5",
+        "completed": "5",
+        "expected_trials": "0",
+        "early_trials": "0",
+        "late_trials": "0",
+        "miss_trials": "5",
+        "duplicate_trials": "0",
+        "unexpected_trials": "0",
+        "rejected_trials": "0",
+        "buffer_overrun_trials": "0",
+        "detector_accepted_trials": "0",
+        "detector_reject_trials": "0",
+        "pattern_valid_trials": "0",
+        "pattern_rejected_trials": "0",
+        "avg_dt_ms": "-1",
+        "avg_strength": "0.0",
+        "avg_conf": "0.00"
+      }
+    },
+    {
+      "name": "T3_b006_1332",
+      "file": "T3_b006_1332.246029b.log",
+      "firmware": {
+        "role": "analyzer",
+        "git": "246029b",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "commands": [
+        "EMIT MODE REMOTE",
+        "SEQ DIAG off",
+        "SEQ start profile=TonalPulseScalar tries=10 mode=detail when=all verbose=1"
+      ],
+      "started": "2026-10-10T13:32:47",
+      "duration_s": 38,
+      "summary": {
+        "profile": "TonalPulseScalar",
+        "detector": "scalar_transient",
+        "complete": true,
+        "trial_results": {
+          "unexpected": 10
+        },
+        "line_counts": {
+          "SEQ_TRIAL": 10,
+          "SEQ_SUMMARY": 1
+        },
+        "trials": "10",
+        "completed": "10",
+        "expected_trials": "0",
+        "early_trials": "0",
+        "late_trials": "0",
+        "miss_trials": "0",
+        "duplicate_trials": "0",
+        "unexpected_trials": "10",
+        "rejected_trials": "0",
+        "buffer_overrun_trials": "0",
+        "detector_accepted_trials": "0",
+        "detector_reject_trials": "0",
+        "pattern_valid_trials": "0",
+        "pattern_rejected_trials": "0",
+        "avg_dt_ms": "-1",
+        "avg_strength": "0.0",
+        "avg_conf": "0.00"
+      }
+    },
+    {
+      "name": "OBS_b006_1332",
+      "file": "OBS_b006_1332.246029b.log",
+      "firmware": {
+        "role": "analyzer",
+        "git": "246029b",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "commands": [
+        "EMIT MODE REMOTE",
+        "SEQ DIAG off",
+        "SEQ OBS start tries=5 period=2000 window=1800 profile=TonalPulseScalar mode=detail when=all verbose=1"
+      ],
+      "started": "2026-10-10T13:33:28",
+      "duration_s": 20,
+      "summary": {
+        "profile": "TonalPulseScalar",
+        "detector": "scalar_transient",
+        "complete": true,
+        "trial_results": {
+          "miss": 5
+        },
+        "line_counts": {
+          "SEQ_TRIAL": 5,
+          "SEQ_SUMMARY": 1
+        },
+        "trials": "5",
+        "completed": "5",
+        "expected_trials": "0",
+        "early_trials": "0",
+        "late_trials": "0",
+        "miss_trials": "5",
+        "duplicate_trials": "0",
+        "unexpected_trials": "0",
+        "rejected_trials": "0",
+        "buffer_overrun_trials": "0",
+        "detector_accepted_trials": "0",
+        "detector_reject_trials": "0",
+        "pattern_valid_trials": "0",
+        "pattern_rejected_trials": "0",
+        "avg_dt_ms": "-1",
+        "avg_strength": "0.0",
+        "avg_conf": "0.00"
+      }
+    },
+    {
+      "name": "T3_b007_1347",
+      "file": "T3_b007_1347.246029b.log",
+      "firmware": {
+        "role": "analyzer",
+        "git": "246029b",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "commands": [
+        "EMIT MODE REMOTE",
+        "SEQ DIAG off",
+        "SEQ start profile=TonalPulseScalar tries=10 mode=detail when=all verbose=1"
+      ],
+      "started": "2026-10-10T13:47:47",
+      "duration_s": 38,
+      "summary": {
+        "profile": "TonalPulseScalar",
+        "detector": "scalar_transient",
+        "complete": true,
+        "trial_results": {
+          "unexpected": 10
+        },
+        "line_counts": {
+          "SEQ_TRIAL": 10,
+          "SEQ_SUMMARY": 1
+        },
+        "trials": "10",
+        "completed": "10",
+        "expected_trials": "0",
+        "early_trials": "0",
+        "late_trials": "0",
+        "miss_trials": "0",
+        "duplicate_trials": "0",
+        "unexpected_trials": "10",
+        "rejected_trials": "0",
+        "buffer_overrun_trials": "0",
+        "detector_accepted_trials": "0",
+        "detector_reject_trials": "0",
+        "pattern_valid_trials": "0",
+        "pattern_rejected_trials": "0",
+        "avg_dt_ms": "-1",
+        "avg_strength": "0.0",
+        "avg_conf": "0.00"
+      }
+    },
+    {
+      "name": "OBS_b007_1347",
+      "file": "OBS_b007_1347.246029b.log",
+      "firmware": {
+        "role": "analyzer",
+        "git": "246029b",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "commands": [
+        "EMIT MODE REMOTE",
+        "SEQ DIAG off",
+        "SEQ OBS start tries=5 period=2000 window=1800 profile=TonalPulseScalar mode=detail when=all verbose=1"
+      ],
+      "started": "2026-10-10T13:48:27",
+      "duration_s": 20,
+      "summary": {
+        "profile": "TonalPulseScalar",
+        "detector": "scalar_transient",
+        "complete": true,
+        "trial_results": {
+          "miss": 5
+        },
+        "line_counts": {
+          "SEQ_TRIAL": 5,
+          "SEQ_SUMMARY": 1
+        },
+        "trials": "5",
+        "completed": "5",
+        "expected_trials": "0",
+        "early_trials": "0",
+        "late_trials": "0",
+        "miss_trials": "5",
+        "duplicate_trials": "0",
+        "unexpected_trials": "0",
+        "rejected_trials": "0",
+        "buffer_overrun_trials": "0",
+        "detector_accepted_trials": "0",
+        "detector_reject_trials": "0",
+        "pattern_valid_trials": "0",
+        "pattern_rejected_trials": "0",
+        "avg_dt_ms": "-1",
+        "avg_strength": "0.0",
+        "avg_conf": "0.00"
+      }
+    },
+    {
+      "name": "T3_b008_1402",
+      "file": "T3_b008_1402.246029b.log",
+      "firmware": {
+        "role": "analyzer",
+        "git": "246029b",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "commands": [
+        "EMIT MODE REMOTE",
+        "SEQ DIAG off",
+        "SEQ start profile=TonalPulseScalar tries=10 mode=detail when=all verbose=1"
+      ],
+      "started": "2026-10-10T14:02:47",
+      "duration_s": 38,
+      "summary": {
+        "profile": "TonalPulseScalar",
+        "detector": "scalar_transient",
+        "complete": true,
+        "trial_results": {
+          "unexpected": 10
+        },
+        "line_counts": {
+          "SEQ_TRIAL": 10,
+          "SEQ_SUMMARY": 1
+        },
+        "trials": "10",
+        "completed": "10",
+        "expected_trials": "0",
+        "early_trials": "0",
+        "late_trials": "0",
+        "miss_trials": "0",
+        "duplicate_trials": "0",
+        "unexpected_trials": "10",
+        "rejected_trials": "0",
+        "buffer_overrun_trials": "0",
+        "detector_accepted_trials": "0",
+        "detector_reject_trials": "0",
+        "pattern_valid_trials": "0",
+        "pattern_rejected_trials": "0",
+        "avg_dt_ms": "-1",
+        "avg_strength": "0.0",
+        "avg_conf": "0.00"
+      }
+    },
+    {
+      "name": "OBS_b008_1402",
+      "file": "OBS_b008_1402.246029b.log",
+      "firmware": {
+        "role": "analyzer",
+        "git": "246029b",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "commands": [
+        "EMIT MODE REMOTE",
+        "SEQ DIAG off",
+        "SEQ OBS start tries=5 period=2000 window=1800 profile=TonalPulseScalar mode=detail when=all verbose=1"
+      ],
+      "started": "2026-10-10T14:03:28",
+      "duration_s": 20,
+      "summary": {
+        "profile": "TonalPulseScalar",
+        "detector": "scalar_transient",
+        "complete": true,
+        "trial_results": {
+          "miss": 5
+        },
+        "line_counts": {
+          "SEQ_TRIAL": 5,
+          "SEQ_SUMMARY": 1
+        },
+        "trials": "5",
+        "completed": "5",
+        "expected_trials": "0",
+        "early_trials": "0",
+        "late_trials": "0",
+        "miss_trials": "5",
+        "duplicate_trials": "0",
+        "unexpected_trials": "0",
+        "rejected_trials": "0",
+        "buffer_overrun_trials": "0",
+        "detector_accepted_trials": "0",
+        "detector_reject_trials": "0",
+        "pattern_valid_trials": "0",
+        "pattern_rejected_trials": "0",
+        "avg_dt_ms": "-1",
+        "avg_strength": "0.0",
+        "avg_conf": "0.00"
+      }
+    },
+    {
+      "name": "T3_b009_1417",
+      "file": "T3_b009_1417.246029b.log",
+      "firmware": {
+        "role": "analyzer",
+        "git": "246029b",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "commands": [
+        "EMIT MODE REMOTE",
+        "SEQ DIAG off",
+        "SEQ start profile=TonalPulseScalar tries=10 mode=detail when=all verbose=1"
+      ],
+      "started": "2026-10-10T14:17:47",
+      "duration_s": 38,
+      "summary": {
+        "profile": "TonalPulseScalar",
+        "detector": "scalar_transient",
+        "complete": true,
+        "trial_results": {
+          "unexpected": 10
+        },
+        "line_counts": {
+          "SEQ_TRIAL": 10,
+          "SEQ_SUMMARY": 1
+        },
+        "trials": "10",
+        "completed": "10",
+        "expected_trials": "0",
+        "early_trials": "0",
+        "late_trials": "0",
+        "miss_trials": "0",
+        "duplicate_trials": "0",
+        "unexpected_trials": "10",
+        "rejected_trials": "0",
+        "buffer_overrun_trials": "0",
+        "detector_accepted_trials": "0",
+        "detector_reject_trials": "0",
+        "pattern_valid_trials": "0",
+        "pattern_rejected_trials": "0",
+        "avg_dt_ms": "-1",
+        "avg_strength": "0.0",
+        "avg_conf": "0.00"
+      }
+    },
+    {
+      "name": "OBS_b009_1417",
+      "file": "OBS_b009_1417.246029b.log",
+      "firmware": {
+        "role": "analyzer",
+        "git": "246029b",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "commands": [
+        "EMIT MODE REMOTE",
+        "SEQ DIAG off",
+        "SEQ OBS start tries=5 period=2000 window=1800 profile=TonalPulseScalar mode=detail when=all verbose=1"
+      ],
+      "started": "2026-10-10T14:18:28",
+      "duration_s": 20,
+      "summary": {
+        "profile": "TonalPulseScalar",
+        "detector": "scalar_transient",
+        "complete": true,
+        "trial_results": {
+          "miss": 5
+        },
+        "line_counts": {
+          "SEQ_TRIAL": 5,
+          "SEQ_SUMMARY": 1
+        },
+        "trials": "5",
+        "completed": "5",
+        "expected_trials": "0",
+        "early_trials": "0",
+        "late_trials": "0",
+        "miss_trials": "5",
+        "duplicate_trials": "0",
+        "unexpected_trials": "0",
+        "rejected_trials": "0",
+        "buffer_overrun_trials": "0",
+        "detector_accepted_trials": "0",
+        "detector_reject_trials": "0",
+        "pattern_valid_trials": "0",
+        "pattern_rejected_trials": "0",
+        "avg_dt_ms": "-1",
+        "avg_strength": "0.0",
+        "avg_conf": "0.00"
+      }
+    },
+    {
+      "name": "T3_b010_1432",
+      "file": "T3_b010_1432.246029b.log",
+      "firmware": {
+        "role": "analyzer",
+        "git": "246029b",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "commands": [
+        "EMIT MODE REMOTE",
+        "SEQ DIAG off",
+        "SEQ start profile=TonalPulseScalar tries=10 mode=detail when=all verbose=1"
+      ],
+      "started": "2026-10-10T14:32:47",
+      "duration_s": 38,
+      "summary": {
+        "profile": "TonalPulseScalar",
+        "detector": "scalar_transient",
+        "complete": true,
+        "trial_results": {
+          "unexpected": 10
+        },
+        "line_counts": {
+          "SEQ_TRIAL": 10,
+          "SEQ_SUMMARY": 1
+        },
+        "trials": "10",
+        "completed": "10",
+        "expected_trials": "0",
+        "early_trials": "0",
+        "late_trials": "0",
+        "miss_trials": "0",
+        "duplicate_trials": "0",
+        "unexpected_trials": "10",
+        "rejected_trials": "0",
+        "buffer_overrun_trials": "0",
+        "detector_accepted_trials": "0",
+        "detector_reject_trials": "0",
+        "pattern_valid_trials": "0",
+        "pattern_rejected_trials": "0",
+        "avg_dt_ms": "-1",
+        "avg_strength": "0.0",
+        "avg_conf": "0.00"
+      }
+    },
+    {
+      "name": "OBS_b010_1432",
+      "file": "OBS_b010_1432.246029b.log",
+      "firmware": {
+        "role": "analyzer",
+        "git": "246029b",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "commands": [
+        "EMIT MODE REMOTE",
+        "SEQ DIAG off",
+        "SEQ OBS start tries=5 period=2000 window=1800 profile=TonalPulseScalar mode=detail when=all verbose=1"
+      ],
+      "started": "2026-10-10T14:33:28",
+      "duration_s": 20,
+      "summary": {
+        "profile": "TonalPulseScalar",
+        "detector": "scalar_transient",
+        "complete": true,
+        "trial_results": {
+          "miss": 5
+        },
+        "line_counts": {
+          "SEQ_TRIAL": 5,
+          "SEQ_SUMMARY": 1
+        },
+        "trials": "5",
+        "completed": "5",
+        "expected_trials": "0",
+        "early_trials": "0",
+        "late_trials": "0",
+        "miss_trials": "5",
+        "duplicate_trials": "0",
+        "unexpected_trials": "0",
+        "rejected_trials": "0",
+        "buffer_overrun_trials": "0",
+        "detector_accepted_trials": "0",
+        "detector_reject_trials": "0",
+        "pattern_valid_trials": "0",
+        "pattern_rejected_trials": "0",
+        "avg_dt_ms": "-1",
+        "avg_strength": "0.0",
+        "avg_conf": "0.00"
+      }
+    },
+    {
+      "name": "T3_b011_1447",
+      "file": "T3_b011_1447.246029b.log",
+      "firmware": {
+        "role": "analyzer",
+        "git": "246029b",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "commands": [
+        "EMIT MODE REMOTE",
+        "SEQ DIAG off",
+        "SEQ start profile=TonalPulseScalar tries=10 mode=detail when=all verbose=1"
+      ],
+      "started": "2026-10-10T14:47:47",
+      "duration_s": 38,
+      "summary": {
+        "profile": "TonalPulseScalar",
+        "detector": "scalar_transient",
+        "complete": true,
+        "trial_results": {
+          "unexpected": 10
+        },
+        "line_counts": {
+          "SEQ_TRIAL": 10,
+          "SEQ_SUMMARY": 1
+        },
+        "trials": "10",
+        "completed": "10",
+        "expected_trials": "0",
+        "early_trials": "0",
+        "late_trials": "0",
+        "miss_trials": "0",
+        "duplicate_trials": "0",
+        "unexpected_trials": "10",
+        "rejected_trials": "0",
+        "buffer_overrun_trials": "0",
+        "detector_accepted_trials": "0",
+        "detector_reject_trials": "0",
+        "pattern_valid_trials": "0",
+        "pattern_rejected_trials": "0",
+        "avg_dt_ms": "-1",
+        "avg_strength": "0.0",
+        "avg_conf": "0.00"
+      }
+    },
+    {
+      "name": "OBS_b011_1447",
+      "file": "OBS_b011_1447.246029b.log",
+      "firmware": {
+        "role": "analyzer",
+        "git": "246029b",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "commands": [
+        "EMIT MODE REMOTE",
+        "SEQ DIAG off",
+        "SEQ OBS start tries=5 period=2000 window=1800 profile=TonalPulseScalar mode=detail when=all verbose=1"
+      ],
+      "started": "2026-10-10T14:48:28",
+      "duration_s": 20,
+      "summary": {
+        "profile": "TonalPulseScalar",
+        "detector": "scalar_transient",
+        "complete": true,
+        "trial_results": {
+          "miss": 5
+        },
+        "line_counts": {
+          "SEQ_TRIAL": 5,
+          "SEQ_SUMMARY": 1
+        },
+        "trials": "5",
+        "completed": "5",
+        "expected_trials": "0",
+        "early_trials": "0",
+        "late_trials": "0",
+        "miss_trials": "5",
+        "duplicate_trials": "0",
+        "unexpected_trials": "0",
+        "rejected_trials": "0",
+        "buffer_overrun_trials": "0",
+        "detector_accepted_trials": "0",
+        "detector_reject_trials": "0",
+        "pattern_valid_trials": "0",
+        "pattern_rejected_trials": "0",
+        "avg_dt_ms": "-1",
+        "avg_strength": "0.0",
+        "avg_conf": "0.00"
+      }
+    },
+    {
+      "name": "T3_b012_1502",
+      "file": "T3_b012_1502.246029b.log",
+      "firmware": {
+        "role": "analyzer",
+        "git": "246029b",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "commands": [
+        "EMIT MODE REMOTE",
+        "SEQ DIAG off",
+        "SEQ start profile=TonalPulseScalar tries=10 mode=detail when=all verbose=1"
+      ],
+      "started": "2026-10-10T15:02:47",
+      "duration_s": 38,
+      "summary": {
+        "profile": "TonalPulseScalar",
+        "detector": "scalar_transient",
+        "complete": true,
+        "trial_results": {
+          "unexpected": 10
+        },
+        "line_counts": {
+          "SEQ_TRIAL": 10,
+          "SEQ_SUMMARY": 1
+        },
+        "trials": "10",
+        "completed": "10",
+        "expected_trials": "0",
+        "early_trials": "0",
+        "late_trials": "0",
+        "miss_trials": "0",
+        "duplicate_trials": "0",
+        "unexpected_trials": "10",
+        "rejected_trials": "0",
+        "buffer_overrun_trials": "0",
+        "detector_accepted_trials": "0",
+        "detector_reject_trials": "0",
+        "pattern_valid_trials": "0",
+        "pattern_rejected_trials": "0",
+        "avg_dt_ms": "-1",
+        "avg_strength": "0.0",
+        "avg_conf": "0.00"
+      }
+    },
+    {
+      "name": "OBS_b012_1502",
+      "file": "OBS_b012_1502.246029b.log",
+      "firmware": {
+        "role": "analyzer",
+        "git": "246029b",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "commands": [
+        "EMIT MODE REMOTE",
+        "SEQ DIAG off",
+        "SEQ OBS start tries=5 period=2000 window=1800 profile=TonalPulseScalar mode=detail when=all verbose=1"
+      ],
+      "started": "2026-10-10T15:03:27",
+      "duration_s": 20,
+      "summary": {
+        "profile": "TonalPulseScalar",
+        "detector": "scalar_transient",
+        "complete": true,
+        "trial_results": {
+          "miss": 5
+        },
+        "line_counts": {
+          "SEQ_TRIAL": 5,
+          "SEQ_SUMMARY": 1
+        },
+        "trials": "5",
+        "completed": "5",
+        "expected_trials": "0",
+        "early_trials": "0",
+        "late_trials": "0",
+        "miss_trials": "5",
+        "duplicate_trials": "0",
+        "unexpected_trials": "0",
+        "rejected_trials": "0",
+        "buffer_overrun_trials": "0",
+        "detector_accepted_trials": "0",
+        "detector_reject_trials": "0",
+        "pattern_valid_trials": "0",
+        "pattern_rejected_trials": "0",
+        "avg_dt_ms": "-1",
+        "avg_strength": "0.0",
+        "avg_conf": "0.00"
+      }
+    },
+    {
+      "name": "T3_b013_1517",
+      "file": "T3_b013_1517.246029b.log",
+      "firmware": {
+        "role": "analyzer",
+        "git": "246029b",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "commands": [
+        "EMIT MODE REMOTE",
+        "SEQ DIAG off",
+        "SEQ start profile=TonalPulseScalar tries=10 mode=detail when=all verbose=1"
+      ],
+      "started": "2026-10-10T15:17:47",
+      "duration_s": 38,
+      "summary": {
+        "profile": "TonalPulseScalar",
+        "detector": "scalar_transient",
+        "complete": true,
+        "trial_results": {
+          "unexpected": 10
+        },
+        "line_counts": {
+          "SEQ_TRIAL": 10,
+          "SEQ_SUMMARY": 1
+        },
+        "trials": "10",
+        "completed": "10",
+        "expected_trials": "0",
+        "early_trials": "0",
+        "late_trials": "0",
+        "miss_trials": "0",
+        "duplicate_trials": "0",
+        "unexpected_trials": "10",
+        "rejected_trials": "0",
+        "buffer_overrun_trials": "0",
+        "detector_accepted_trials": "0",
+        "detector_reject_trials": "0",
+        "pattern_valid_trials": "0",
+        "pattern_rejected_trials": "0",
+        "avg_dt_ms": "-1",
+        "avg_strength": "0.0",
+        "avg_conf": "0.00"
+      }
+    },
+    {
+      "name": "OBS_b013_1517",
+      "file": "OBS_b013_1517.246029b.log",
+      "firmware": {
+        "role": "analyzer",
+        "git": "246029b",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "commands": [
+        "EMIT MODE REMOTE",
+        "SEQ DIAG off",
+        "SEQ OBS start tries=5 period=2000 window=1800 profile=TonalPulseScalar mode=detail when=all verbose=1"
+      ],
+      "started": "2026-10-10T15:18:28",
+      "duration_s": 20,
+      "summary": {
+        "profile": "TonalPulseScalar",
+        "detector": "scalar_transient",
+        "complete": true,
+        "trial_results": {
+          "miss": 5
+        },
+        "line_counts": {
+          "SEQ_TRIAL": 5,
+          "SEQ_SUMMARY": 1
+        },
+        "trials": "5",
+        "completed": "5",
+        "expected_trials": "0",
+        "early_trials": "0",
+        "late_trials": "0",
+        "miss_trials": "5",
+        "duplicate_trials": "0",
+        "unexpected_trials": "0",
+        "rejected_trials": "0",
+        "buffer_overrun_trials": "0",
+        "detector_accepted_trials": "0",
+        "detector_reject_trials": "0",
+        "pattern_valid_trials": "0",
+        "pattern_rejected_trials": "0",
+        "avg_dt_ms": "-1",
+        "avg_strength": "0.0",
+        "avg_conf": "0.00"
+      }
+    },
+    {
+      "name": "T3_b014_1532",
+      "file": "T3_b014_1532.246029b.log",
+      "firmware": {
+        "role": "analyzer",
+        "git": "246029b",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "commands": [
+        "EMIT MODE REMOTE",
+        "SEQ DIAG off",
+        "SEQ start profile=TonalPulseScalar tries=10 mode=detail when=all verbose=1"
+      ],
+      "started": "2026-10-10T15:32:47",
+      "duration_s": 38,
+      "summary": {
+        "profile": "TonalPulseScalar",
+        "detector": "scalar_transient",
+        "complete": true,
+        "trial_results": {
+          "unexpected": 10
+        },
+        "line_counts": {
+          "SEQ_TRIAL": 10,
+          "SEQ_SUMMARY": 1
+        },
+        "trials": "10",
+        "completed": "10",
+        "expected_trials": "0",
+        "early_trials": "0",
+        "late_trials": "0",
+        "miss_trials": "0",
+        "duplicate_trials": "0",
+        "unexpected_trials": "10",
+        "rejected_trials": "0",
+        "buffer_overrun_trials": "0",
+        "detector_accepted_trials": "0",
+        "detector_reject_trials": "0",
+        "pattern_valid_trials": "0",
+        "pattern_rejected_trials": "0",
+        "avg_dt_ms": "-1",
+        "avg_strength": "0.0",
+        "avg_conf": "0.00"
+      }
+    },
+    {
+      "name": "OBS_b014_1532",
+      "file": "OBS_b014_1532.246029b.log",
+      "firmware": {
+        "role": "analyzer",
+        "git": "246029b",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "commands": [
+        "EMIT MODE REMOTE",
+        "SEQ DIAG off",
+        "SEQ OBS start tries=5 period=2000 window=1800 profile=TonalPulseScalar mode=detail when=all verbose=1"
+      ],
+      "started": "2026-10-10T15:33:28",
+      "duration_s": 20,
+      "summary": {
+        "profile": "TonalPulseScalar",
+        "detector": "scalar_transient",
+        "complete": true,
+        "trial_results": {
+          "miss": 5
+        },
+        "line_counts": {
+          "SEQ_TRIAL": 5,
+          "SEQ_SUMMARY": 1
+        },
+        "trials": "5",
+        "completed": "5",
+        "expected_trials": "0",
+        "early_trials": "0",
+        "late_trials": "0",
+        "miss_trials": "5",
+        "duplicate_trials": "0",
+        "unexpected_trials": "0",
+        "rejected_trials": "0",
+        "buffer_overrun_trials": "0",
+        "detector_accepted_trials": "0",
+        "detector_reject_trials": "0",
+        "pattern_valid_trials": "0",
+        "pattern_rejected_trials": "0",
+        "avg_dt_ms": "-1",
+        "avg_strength": "0.0",
+        "avg_conf": "0.00"
+      }
+    },
+    {
+      "name": "T3_b015_1547",
+      "file": "T3_b015_1547.246029b.log",
+      "firmware": {
+        "role": "analyzer",
+        "git": "246029b",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "commands": [
+        "EMIT MODE REMOTE",
+        "SEQ DIAG off",
+        "SEQ start profile=TonalPulseScalar tries=10 mode=detail when=all verbose=1"
+      ],
+      "started": "2026-10-10T15:47:47",
+      "duration_s": 38,
+      "summary": {
+        "profile": "TonalPulseScalar",
+        "detector": "scalar_transient",
+        "complete": true,
+        "trial_results": {
+          "unexpected": 10
+        },
+        "line_counts": {
+          "SEQ_TRIAL": 10,
+          "SEQ_SUMMARY": 1
+        },
+        "trials": "10",
+        "completed": "10",
+        "expected_trials": "0",
+        "early_trials": "0",
+        "late_trials": "0",
+        "miss_trials": "0",
+        "duplicate_trials": "0",
+        "unexpected_trials": "10",
+        "rejected_trials": "0",
+        "buffer_overrun_trials": "0",
+        "detector_accepted_trials": "0",
+        "detector_reject_trials": "0",
+        "pattern_valid_trials": "0",
+        "pattern_rejected_trials": "0",
+        "avg_dt_ms": "-1",
+        "avg_strength": "0.0",
+        "avg_conf": "0.00"
+      }
+    },
+    {
+      "name": "OBS_b015_1547",
+      "file": "OBS_b015_1547.246029b.log",
+      "firmware": {
+        "role": "analyzer",
+        "git": "246029b",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "commands": [
+        "EMIT MODE REMOTE",
+        "SEQ DIAG off",
+        "SEQ OBS start tries=5 period=2000 window=1800 profile=TonalPulseScalar mode=detail when=all verbose=1"
+      ],
+      "started": "2026-10-10T15:48:27",
+      "duration_s": 20,
+      "summary": {
+        "profile": "TonalPulseScalar",
+        "detector": "scalar_transient",
+        "complete": true,
+        "trial_results": {
+          "miss": 5
+        },
+        "line_counts": {
+          "SEQ_TRIAL": 5,
+          "SEQ_SUMMARY": 1
+        },
+        "trials": "5",
+        "completed": "5",
+        "expected_trials": "0",
+        "early_trials": "0",
+        "late_trials": "0",
+        "miss_trials": "5",
+        "duplicate_trials": "0",
+        "unexpected_trials": "0",
+        "rejected_trials": "0",
+        "buffer_overrun_trials": "0",
+        "detector_accepted_trials": "0",
+        "detector_reject_trials": "0",
+        "pattern_valid_trials": "0",
+        "pattern_rejected_trials": "0",
+        "avg_dt_ms": "-1",
+        "avg_strength": "0.0",
+        "avg_conf": "0.00"
+      }
+    },
+    {
+      "name": "T3_b016_1602",
+      "file": "T3_b016_1602.246029b.log",
+      "firmware": {
+        "role": "analyzer",
+        "git": "246029b",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "commands": [
+        "EMIT MODE REMOTE",
+        "SEQ DIAG off",
+        "SEQ start profile=TonalPulseScalar tries=10 mode=detail when=all verbose=1"
+      ],
+      "started": "2026-10-10T16:02:47",
+      "duration_s": 38,
+      "summary": {
+        "profile": "TonalPulseScalar",
+        "detector": "scalar_transient",
+        "complete": true,
+        "trial_results": {
+          "unexpected": 10
+        },
+        "line_counts": {
+          "SEQ_TRIAL": 10,
+          "SEQ_SUMMARY": 1
+        },
+        "trials": "10",
+        "completed": "10",
+        "expected_trials": "0",
+        "early_trials": "0",
+        "late_trials": "0",
+        "miss_trials": "0",
+        "duplicate_trials": "0",
+        "unexpected_trials": "10",
+        "rejected_trials": "0",
+        "buffer_overrun_trials": "0",
+        "detector_accepted_trials": "0",
+        "detector_reject_trials": "0",
+        "pattern_valid_trials": "0",
+        "pattern_rejected_trials": "0",
+        "avg_dt_ms": "-1",
+        "avg_strength": "0.0",
+        "avg_conf": "0.00"
+      }
+    },
+    {
+      "name": "OBS_b016_1602",
+      "file": "OBS_b016_1602.246029b.log",
+      "firmware": {
+        "role": "analyzer",
+        "git": "246029b",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "commands": [
+        "EMIT MODE REMOTE",
+        "SEQ DIAG off",
+        "SEQ OBS start tries=5 period=2000 window=1800 profile=TonalPulseScalar mode=detail when=all verbose=1"
+      ],
+      "started": "2026-10-10T16:03:28",
+      "duration_s": 20,
+      "summary": {
+        "profile": "TonalPulseScalar",
+        "detector": "scalar_transient",
+        "complete": true,
+        "trial_results": {
+          "miss": 5
+        },
+        "line_counts": {
+          "SEQ_TRIAL": 5,
+          "SEQ_SUMMARY": 1
+        },
+        "trials": "5",
+        "completed": "5",
+        "expected_trials": "0",
+        "early_trials": "0",
+        "late_trials": "0",
+        "miss_trials": "5",
+        "duplicate_trials": "0",
+        "unexpected_trials": "0",
+        "rejected_trials": "0",
+        "buffer_overrun_trials": "0",
+        "detector_accepted_trials": "0",
+        "detector_reject_trials": "0",
+        "pattern_valid_trials": "0",
+        "pattern_rejected_trials": "0",
+        "avg_dt_ms": "-1",
+        "avg_strength": "0.0",
+        "avg_conf": "0.00"
+      }
+    },
+    {
+      "name": "T3_b017_1617",
+      "file": "T3_b017_1617.246029b.log",
+      "firmware": {
+        "role": "analyzer",
+        "git": "246029b",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "commands": [
+        "EMIT MODE REMOTE",
+        "SEQ DIAG off",
+        "SEQ start profile=TonalPulseScalar tries=10 mode=detail when=all verbose=1"
+      ],
+      "started": "2026-10-10T16:17:47",
+      "duration_s": 38,
+      "summary": {
+        "profile": "TonalPulseScalar",
+        "detector": "scalar_transient",
+        "complete": true,
+        "trial_results": {
+          "unexpected": 10
+        },
+        "line_counts": {
+          "SEQ_TRIAL": 10,
+          "SEQ_SUMMARY": 1
+        },
+        "trials": "10",
+        "completed": "10",
+        "expected_trials": "0",
+        "early_trials": "0",
+        "late_trials": "0",
+        "miss_trials": "0",
+        "duplicate_trials": "0",
+        "unexpected_trials": "10",
+        "rejected_trials": "0",
+        "buffer_overrun_trials": "0",
+        "detector_accepted_trials": "0",
+        "detector_reject_trials": "0",
+        "pattern_valid_trials": "0",
+        "pattern_rejected_trials": "0",
+        "avg_dt_ms": "-1",
+        "avg_strength": "0.0",
+        "avg_conf": "0.00"
+      }
+    },
+    {
+      "name": "OBS_b017_1617",
+      "file": "OBS_b017_1617.246029b.log",
+      "firmware": {
+        "role": "analyzer",
+        "git": "246029b",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "commands": [
+        "EMIT MODE REMOTE",
+        "SEQ DIAG off",
+        "SEQ OBS start tries=5 period=2000 window=1800 profile=TonalPulseScalar mode=detail when=all verbose=1"
+      ],
+      "started": "2026-10-10T16:18:28",
+      "duration_s": 20,
+      "summary": {
+        "profile": "TonalPulseScalar",
+        "detector": "scalar_transient",
+        "complete": true,
+        "trial_results": {
+          "miss": 5
+        },
+        "line_counts": {
+          "SEQ_TRIAL": 5,
+          "SEQ_SUMMARY": 1
+        },
+        "trials": "5",
+        "completed": "5",
+        "expected_trials": "0",
+        "early_trials": "0",
+        "late_trials": "0",
+        "miss_trials": "5",
+        "duplicate_trials": "0",
+        "unexpected_trials": "0",
+        "rejected_trials": "0",
+        "buffer_overrun_trials": "0",
+        "detector_accepted_trials": "0",
+        "detector_reject_trials": "0",
+        "pattern_valid_trials": "0",
+        "pattern_rejected_trials": "0",
+        "avg_dt_ms": "-1",
+        "avg_strength": "0.0",
+        "avg_conf": "0.00"
+      }
+    },
+    {
+      "name": "T3_b018_1632",
+      "file": "T3_b018_1632.246029b.log",
+      "firmware": {
+        "role": "analyzer",
+        "git": "246029b",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "commands": [
+        "EMIT MODE REMOTE",
+        "SEQ DIAG off",
+        "SEQ start profile=TonalPulseScalar tries=10 mode=detail when=all verbose=1"
+      ],
+      "started": "2026-10-10T16:32:47",
+      "duration_s": 38,
+      "summary": {
+        "profile": "TonalPulseScalar",
+        "detector": "scalar_transient",
+        "complete": true,
+        "trial_results": {
+          "unexpected": 10
+        },
+        "line_counts": {
+          "SEQ_TRIAL": 10,
+          "SEQ_SUMMARY": 1
+        },
+        "trials": "10",
+        "completed": "10",
+        "expected_trials": "0",
+        "early_trials": "0",
+        "late_trials": "0",
+        "miss_trials": "0",
+        "duplicate_trials": "0",
+        "unexpected_trials": "10",
+        "rejected_trials": "0",
+        "buffer_overrun_trials": "0",
+        "detector_accepted_trials": "0",
+        "detector_reject_trials": "0",
+        "pattern_valid_trials": "0",
+        "pattern_rejected_trials": "0",
+        "avg_dt_ms": "-1",
+        "avg_strength": "0.0",
+        "avg_conf": "0.00"
+      }
+    },
+    {
+      "name": "OBS_b018_1632",
+      "file": "OBS_b018_1632.246029b.log",
+      "firmware": {
+        "role": "analyzer",
+        "git": "246029b",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "commands": [
+        "EMIT MODE REMOTE",
+        "SEQ DIAG off",
+        "SEQ OBS start tries=5 period=2000 window=1800 profile=TonalPulseScalar mode=detail when=all verbose=1"
+      ],
+      "started": "2026-10-10T16:33:28",
+      "duration_s": 20,
+      "summary": {
+        "profile": "TonalPulseScalar",
+        "detector": "scalar_transient",
+        "complete": true,
+        "trial_results": {
+          "miss": 5
+        },
+        "line_counts": {
+          "SEQ_TRIAL": 5,
+          "SEQ_SUMMARY": 1
+        },
+        "trials": "5",
+        "completed": "5",
+        "expected_trials": "0",
+        "early_trials": "0",
+        "late_trials": "0",
+        "miss_trials": "5",
+        "duplicate_trials": "0",
+        "unexpected_trials": "0",
+        "rejected_trials": "0",
+        "buffer_overrun_trials": "0",
+        "detector_accepted_trials": "0",
+        "detector_reject_trials": "0",
+        "pattern_valid_trials": "0",
+        "pattern_rejected_trials": "0",
+        "avg_dt_ms": "-1",
+        "avg_strength": "0.0",
+        "avg_conf": "0.00"
+      }
+    },
+    {
+      "name": "T3_b019_1647",
+      "file": "T3_b019_1647.246029b.log",
+      "firmware": {
+        "role": "analyzer",
+        "git": "246029b",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "commands": [
+        "EMIT MODE REMOTE",
+        "SEQ DIAG off",
+        "SEQ start profile=TonalPulseScalar tries=10 mode=detail when=all verbose=1"
+      ],
+      "started": "2026-10-10T16:47:47",
+      "duration_s": 38,
+      "summary": {
+        "profile": "TonalPulseScalar",
+        "detector": "scalar_transient",
+        "complete": true,
+        "trial_results": {
+          "unexpected": 10
+        },
+        "line_counts": {
+          "SEQ_TRIAL": 10,
+          "SEQ_SUMMARY": 1
+        },
+        "trials": "10",
+        "completed": "10",
+        "expected_trials": "0",
+        "early_trials": "0",
+        "late_trials": "0",
+        "miss_trials": "0",
+        "duplicate_trials": "0",
+        "unexpected_trials": "10",
+        "rejected_trials": "0",
+        "buffer_overrun_trials": "0",
+        "detector_accepted_trials": "0",
+        "detector_reject_trials": "0",
+        "pattern_valid_trials": "0",
+        "pattern_rejected_trials": "0",
+        "avg_dt_ms": "-1",
+        "avg_strength": "0.0",
+        "avg_conf": "0.00"
+      }
+    },
+    {
+      "name": "OBS_b019_1647",
+      "file": "OBS_b019_1647.246029b.log",
+      "firmware": {
+        "role": "analyzer",
+        "git": "246029b",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "commands": [
+        "EMIT MODE REMOTE",
+        "SEQ DIAG off",
+        "SEQ OBS start tries=5 period=2000 window=1800 profile=TonalPulseScalar mode=detail when=all verbose=1"
+      ],
+      "started": "2026-10-10T16:48:28",
+      "duration_s": 20,
+      "summary": {
+        "profile": "TonalPulseScalar",
+        "detector": "scalar_transient",
+        "complete": true,
+        "trial_results": {
+          "miss": 5
+        },
+        "line_counts": {
+          "SEQ_TRIAL": 5,
+          "SEQ_SUMMARY": 1
+        },
+        "trials": "5",
+        "completed": "5",
+        "expected_trials": "0",
+        "early_trials": "0",
+        "late_trials": "0",
+        "miss_trials": "5",
+        "duplicate_trials": "0",
+        "unexpected_trials": "0",
+        "rejected_trials": "0",
+        "buffer_overrun_trials": "0",
+        "detector_accepted_trials": "0",
+        "detector_reject_trials": "0",
+        "pattern_valid_trials": "0",
+        "pattern_rejected_trials": "0",
+        "avg_dt_ms": "-1",
+        "avg_strength": "0.0",
+        "avg_conf": "0.00"
+      }
+    },
+    {
+      "name": "T3_b020_1702",
+      "file": "T3_b020_1702.246029b.log",
+      "firmware": {
+        "role": "analyzer",
+        "git": "246029b",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "commands": [
+        "EMIT MODE REMOTE",
+        "SEQ DIAG off",
+        "SEQ start profile=TonalPulseScalar tries=10 mode=detail when=all verbose=1"
+      ],
+      "started": "2026-10-10T17:02:47",
+      "duration_s": 38,
+      "summary": {
+        "profile": "TonalPulseScalar",
+        "detector": "scalar_transient",
+        "complete": true,
+        "trial_results": {
+          "unexpected": 10
+        },
+        "line_counts": {
+          "SEQ_TRIAL": 10,
+          "SEQ_SUMMARY": 1
+        },
+        "trials": "10",
+        "completed": "10",
+        "expected_trials": "0",
+        "early_trials": "0",
+        "late_trials": "0",
+        "miss_trials": "0",
+        "duplicate_trials": "0",
+        "unexpected_trials": "10",
+        "rejected_trials": "0",
+        "buffer_overrun_trials": "0",
+        "detector_accepted_trials": "0",
+        "detector_reject_trials": "0",
+        "pattern_valid_trials": "0",
+        "pattern_rejected_trials": "0",
+        "avg_dt_ms": "-1",
+        "avg_strength": "0.0",
+        "avg_conf": "0.00"
+      }
+    },
+    {
+      "name": "OBS_b020_1702",
+      "file": "OBS_b020_1702.246029b.log",
+      "firmware": {
+        "role": "analyzer",
+        "git": "246029b",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "commands": [
+        "EMIT MODE REMOTE",
+        "SEQ DIAG off",
+        "SEQ OBS start tries=5 period=2000 window=1800 profile=TonalPulseScalar mode=detail when=all verbose=1"
+      ],
+      "started": "2026-10-10T17:03:28",
+      "duration_s": 20,
+      "summary": {
+        "profile": "TonalPulseScalar",
+        "detector": "scalar_transient",
+        "complete": true,
+        "trial_results": {
+          "miss": 5
+        },
+        "line_counts": {
+          "SEQ_TRIAL": 5,
+          "SEQ_SUMMARY": 1
+        },
+        "trials": "5",
+        "completed": "5",
+        "expected_trials": "0",
+        "early_trials": "0",
+        "late_trials": "0",
+        "miss_trials": "5",
+        "duplicate_trials": "0",
+        "unexpected_trials": "0",
+        "rejected_trials": "0",
+        "buffer_overrun_trials": "0",
+        "detector_accepted_trials": "0",
+        "detector_reject_trials": "0",
+        "pattern_valid_trials": "0",
+        "pattern_rejected_trials": "0",
+        "avg_dt_ms": "-1",
+        "avg_strength": "0.0",
+        "avg_conf": "0.00"
+      }
+    },
+    {
+      "name": "T3_b021_1717",
+      "file": "T3_b021_1717.246029b.log",
+      "firmware": {
+        "role": "analyzer",
+        "git": "246029b",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "commands": [
+        "EMIT MODE REMOTE",
+        "SEQ DIAG off",
+        "SEQ start profile=TonalPulseScalar tries=10 mode=detail when=all verbose=1"
+      ],
+      "started": "2026-10-10T17:17:47",
+      "duration_s": 38,
+      "summary": {
+        "profile": "TonalPulseScalar",
+        "detector": "scalar_transient",
+        "complete": true,
+        "trial_results": {
+          "unexpected": 10
+        },
+        "line_counts": {
+          "SEQ_TRIAL": 10,
+          "SEQ_SUMMARY": 1
+        },
+        "trials": "10",
+        "completed": "10",
+        "expected_trials": "0",
+        "early_trials": "0",
+        "late_trials": "0",
+        "miss_trials": "0",
+        "duplicate_trials": "0",
+        "unexpected_trials": "10",
+        "rejected_trials": "0",
+        "buffer_overrun_trials": "0",
+        "detector_accepted_trials": "0",
+        "detector_reject_trials": "0",
+        "pattern_valid_trials": "0",
+        "pattern_rejected_trials": "0",
+        "avg_dt_ms": "-1",
+        "avg_strength": "0.0",
+        "avg_conf": "0.00"
+      }
+    },
+    {
+      "name": "OBS_b021_1717",
+      "file": "OBS_b021_1717.246029b.log",
+      "firmware": {
+        "role": "analyzer",
+        "git": "246029b",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "commands": [
+        "EMIT MODE REMOTE",
+        "SEQ DIAG off",
+        "SEQ OBS start tries=5 period=2000 window=1800 profile=TonalPulseScalar mode=detail when=all verbose=1"
+      ],
+      "started": "2026-10-10T17:18:28",
+      "duration_s": 20,
+      "summary": {
+        "profile": "TonalPulseScalar",
+        "detector": "scalar_transient",
+        "complete": true,
+        "trial_results": {
+          "miss": 5
+        },
+        "line_counts": {
+          "SEQ_TRIAL": 5,
+          "SEQ_SUMMARY": 1
+        },
+        "trials": "5",
+        "completed": "5",
+        "expected_trials": "0",
+        "early_trials": "0",
+        "late_trials": "0",
+        "miss_trials": "5",
+        "duplicate_trials": "0",
+        "unexpected_trials": "0",
+        "rejected_trials": "0",
+        "buffer_overrun_trials": "0",
+        "detector_accepted_trials": "0",
+        "detector_reject_trials": "0",
+        "pattern_valid_trials": "0",
+        "pattern_rejected_trials": "0",
+        "avg_dt_ms": "-1",
+        "avg_strength": "0.0",
+        "avg_conf": "0.00"
+      }
+    },
+    {
+      "name": "T3_b022_1732",
+      "file": "T3_b022_1732.246029b.log",
+      "firmware": {
+        "role": "analyzer",
+        "git": "246029b",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "commands": [
+        "EMIT MODE REMOTE",
+        "SEQ DIAG off",
+        "SEQ start profile=TonalPulseScalar tries=10 mode=detail when=all verbose=1"
+      ],
+      "started": "2026-10-10T17:32:47",
+      "duration_s": 38,
+      "summary": {
+        "profile": "TonalPulseScalar",
+        "detector": "scalar_transient",
+        "complete": true,
+        "trial_results": {
+          "unexpected": 10
+        },
+        "line_counts": {
+          "SEQ_TRIAL": 10,
+          "SEQ_SUMMARY": 1
+        },
+        "trials": "10",
+        "completed": "10",
+        "expected_trials": "0",
+        "early_trials": "0",
+        "late_trials": "0",
+        "miss_trials": "0",
+        "duplicate_trials": "0",
+        "unexpected_trials": "10",
+        "rejected_trials": "0",
+        "buffer_overrun_trials": "0",
+        "detector_accepted_trials": "0",
+        "detector_reject_trials": "0",
+        "pattern_valid_trials": "0",
+        "pattern_rejected_trials": "0",
+        "avg_dt_ms": "-1",
+        "avg_strength": "0.0",
+        "avg_conf": "0.00"
+      }
+    },
+    {
+      "name": "OBS_b022_1732",
+      "file": "OBS_b022_1732.246029b.log",
+      "firmware": {
+        "role": "analyzer",
+        "git": "246029b",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "commands": [
+        "EMIT MODE REMOTE",
+        "SEQ DIAG off",
+        "SEQ OBS start tries=5 period=2000 window=1800 profile=TonalPulseScalar mode=detail when=all verbose=1"
+      ],
+      "started": "2026-10-10T17:33:28",
+      "duration_s": 20,
+      "summary": {
+        "profile": "TonalPulseScalar",
+        "detector": "scalar_transient",
+        "complete": true,
+        "trial_results": {
+          "miss": 5
+        },
+        "line_counts": {
+          "SEQ_TRIAL": 5,
+          "SEQ_SUMMARY": 1
+        },
+        "trials": "5",
+        "completed": "5",
+        "expected_trials": "0",
+        "early_trials": "0",
+        "late_trials": "0",
+        "miss_trials": "5",
+        "duplicate_trials": "0",
+        "unexpected_trials": "0",
+        "rejected_trials": "0",
+        "buffer_overrun_trials": "0",
+        "detector_accepted_trials": "0",
+        "detector_reject_trials": "0",
+        "pattern_valid_trials": "0",
+        "pattern_rejected_trials": "0",
+        "avg_dt_ms": "-1",
+        "avg_strength": "0.0",
+        "avg_conf": "0.00"
+      }
+    },
+    {
+      "name": "T3_b023_1747",
+      "file": "T3_b023_1747.246029b.log",
+      "firmware": {
+        "role": "analyzer",
+        "git": "246029b",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "commands": [
+        "EMIT MODE REMOTE",
+        "SEQ DIAG off",
+        "SEQ start profile=TonalPulseScalar tries=10 mode=detail when=all verbose=1"
+      ],
+      "started": "2026-10-10T17:47:47",
+      "duration_s": 38,
+      "summary": {
+        "profile": "TonalPulseScalar",
+        "detector": "scalar_transient",
+        "complete": true,
+        "trial_results": {
+          "unexpected": 10
+        },
+        "line_counts": {
+          "SEQ_TRIAL": 10,
+          "SEQ_SUMMARY": 1
+        },
+        "trials": "10",
+        "completed": "10",
+        "expected_trials": "0",
+        "early_trials": "0",
+        "late_trials": "0",
+        "miss_trials": "0",
+        "duplicate_trials": "0",
+        "unexpected_trials": "10",
+        "rejected_trials": "0",
+        "buffer_overrun_trials": "0",
+        "detector_accepted_trials": "0",
+        "detector_reject_trials": "0",
+        "pattern_valid_trials": "0",
+        "pattern_rejected_trials": "0",
+        "avg_dt_ms": "-1",
+        "avg_strength": "0.0",
+        "avg_conf": "0.00"
+      }
+    },
+    {
+      "name": "OBS_b023_1747",
+      "file": "OBS_b023_1747.246029b.log",
+      "firmware": {
+        "role": "analyzer",
+        "git": "246029b",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "commands": [
+        "EMIT MODE REMOTE",
+        "SEQ DIAG off",
+        "SEQ OBS start tries=5 period=2000 window=1800 profile=TonalPulseScalar mode=detail when=all verbose=1"
+      ],
+      "started": "2026-10-10T17:48:28",
+      "duration_s": 20,
+      "summary": {
+        "profile": "TonalPulseScalar",
+        "detector": "scalar_transient",
+        "complete": true,
+        "trial_results": {
+          "miss": 5
+        },
+        "line_counts": {
+          "SEQ_TRIAL": 5,
+          "SEQ_SUMMARY": 1
+        },
+        "trials": "5",
+        "completed": "5",
+        "expected_trials": "0",
+        "early_trials": "0",
+        "late_trials": "0",
+        "miss_trials": "5",
+        "duplicate_trials": "0",
+        "unexpected_trials": "0",
+        "rejected_trials": "0",
+        "buffer_overrun_trials": "0",
+        "detector_accepted_trials": "0",
+        "detector_reject_trials": "0",
+        "pattern_valid_trials": "0",
+        "pattern_rejected_trials": "0",
+        "avg_dt_ms": "-1",
+        "avg_strength": "0.0",
+        "avg_conf": "0.00"
+      }
+    },
+    {
+      "name": "T3_b024_1802",
+      "file": "T3_b024_1802.246029b.log",
+      "firmware": {
+        "role": "analyzer",
+        "git": "246029b",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "commands": [
+        "EMIT MODE REMOTE",
+        "SEQ DIAG off",
+        "SEQ start profile=TonalPulseScalar tries=10 mode=detail when=all verbose=1"
+      ],
+      "started": "2026-10-10T18:02:47",
+      "duration_s": 38,
+      "summary": {
+        "profile": "TonalPulseScalar",
+        "detector": "scalar_transient",
+        "complete": true,
+        "trial_results": {
+          "unexpected": 10
+        },
+        "line_counts": {
+          "SEQ_TRIAL": 10,
+          "SEQ_SUMMARY": 1
+        },
+        "trials": "10",
+        "completed": "10",
+        "expected_trials": "0",
+        "early_trials": "0",
+        "late_trials": "0",
+        "miss_trials": "0",
+        "duplicate_trials": "0",
+        "unexpected_trials": "10",
+        "rejected_trials": "0",
+        "buffer_overrun_trials": "0",
+        "detector_accepted_trials": "0",
+        "detector_reject_trials": "0",
+        "pattern_valid_trials": "0",
+        "pattern_rejected_trials": "0",
+        "avg_dt_ms": "-1",
+        "avg_strength": "0.0",
+        "avg_conf": "0.00"
+      }
+    },
+    {
+      "name": "OBS_b024_1802",
+      "file": "OBS_b024_1802.246029b.log",
+      "firmware": {
+        "role": "analyzer",
+        "git": "246029b",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "commands": [
+        "EMIT MODE REMOTE",
+        "SEQ DIAG off",
+        "SEQ OBS start tries=5 period=2000 window=1800 profile=TonalPulseScalar mode=detail when=all verbose=1"
+      ],
+      "started": "2026-10-10T18:03:28",
+      "duration_s": 20,
+      "summary": {
+        "profile": "TonalPulseScalar",
+        "detector": "scalar_transient",
+        "complete": true,
+        "trial_results": {
+          "miss": 5
+        },
+        "line_counts": {
+          "SEQ_TRIAL": 5,
+          "SEQ_SUMMARY": 1
+        },
+        "trials": "5",
+        "completed": "5",
+        "expected_trials": "0",
+        "early_trials": "0",
+        "late_trials": "0",
+        "miss_trials": "5",
+        "duplicate_trials": "0",
+        "unexpected_trials": "0",
+        "rejected_trials": "0",
+        "buffer_overrun_trials": "0",
+        "detector_accepted_trials": "0",
+        "detector_reject_trials": "0",
+        "pattern_valid_trials": "0",
+        "pattern_rejected_trials": "0",
+        "avg_dt_ms": "-1",
+        "avg_strength": "0.0",
+        "avg_conf": "0.00"
+      }
+    },
+    {
+      "name": "T3_b025_1817",
+      "file": "T3_b025_1817.246029b.log",
+      "firmware": {
+        "role": "analyzer",
+        "git": "246029b",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "commands": [
+        "EMIT MODE REMOTE",
+        "SEQ DIAG off",
+        "SEQ start profile=TonalPulseScalar tries=10 mode=detail when=all verbose=1"
+      ],
+      "started": "2026-10-10T18:17:47",
+      "duration_s": 38,
+      "summary": {
+        "profile": "TonalPulseScalar",
+        "detector": "scalar_transient",
+        "complete": true,
+        "trial_results": {
+          "unexpected": 10
+        },
+        "line_counts": {
+          "SEQ_TRIAL": 10,
+          "SEQ_SUMMARY": 1
+        },
+        "trials": "10",
+        "completed": "10",
+        "expected_trials": "0",
+        "early_trials": "0",
+        "late_trials": "0",
+        "miss_trials": "0",
+        "duplicate_trials": "0",
+        "unexpected_trials": "10",
+        "rejected_trials": "0",
+        "buffer_overrun_trials": "0",
+        "detector_accepted_trials": "0",
+        "detector_reject_trials": "0",
+        "pattern_valid_trials": "0",
+        "pattern_rejected_trials": "0",
+        "avg_dt_ms": "-1",
+        "avg_strength": "0.0",
+        "avg_conf": "0.00"
+      }
+    },
+    {
+      "name": "OBS_b025_1817",
+      "file": "OBS_b025_1817.246029b.log",
+      "firmware": {
+        "role": "analyzer",
+        "git": "246029b",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "commands": [
+        "EMIT MODE REMOTE",
+        "SEQ DIAG off",
+        "SEQ OBS start tries=5 period=2000 window=1800 profile=TonalPulseScalar mode=detail when=all verbose=1"
+      ],
+      "started": "2026-10-10T18:18:28",
+      "duration_s": 20,
+      "summary": {
+        "profile": "TonalPulseScalar",
+        "detector": "scalar_transient",
+        "complete": true,
+        "trial_results": {
+          "miss": 5
+        },
+        "line_counts": {
+          "SEQ_TRIAL": 5,
+          "SEQ_SUMMARY": 1
+        },
+        "trials": "5",
+        "completed": "5",
+        "expected_trials": "0",
+        "early_trials": "0",
+        "late_trials": "0",
+        "miss_trials": "5",
+        "duplicate_trials": "0",
+        "unexpected_trials": "0",
+        "rejected_trials": "0",
+        "buffer_overrun_trials": "0",
+        "detector_accepted_trials": "0",
+        "detector_reject_trials": "0",
+        "pattern_valid_trials": "0",
+        "pattern_rejected_trials": "0",
+        "avg_dt_ms": "-1",
+        "avg_strength": "0.0",
+        "avg_conf": "0.00"
+      }
+    },
+    {
+      "name": "T3_b026_1832",
+      "file": "T3_b026_1832.246029b.log",
+      "firmware": {
+        "role": "analyzer",
+        "git": "246029b",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "commands": [
+        "EMIT MODE REMOTE",
+        "SEQ DIAG off",
+        "SEQ start profile=TonalPulseScalar tries=10 mode=detail when=all verbose=1"
+      ],
+      "started": "2026-10-10T18:32:47",
+      "duration_s": 38,
+      "summary": {
+        "profile": "TonalPulseScalar",
+        "detector": "scalar_transient",
+        "complete": true,
+        "trial_results": {
+          "unexpected": 10
+        },
+        "line_counts": {
+          "SEQ_TRIAL": 10,
+          "SEQ_SUMMARY": 1
+        },
+        "trials": "10",
+        "completed": "10",
+        "expected_trials": "0",
+        "early_trials": "0",
+        "late_trials": "0",
+        "miss_trials": "0",
+        "duplicate_trials": "0",
+        "unexpected_trials": "10",
+        "rejected_trials": "0",
+        "buffer_overrun_trials": "0",
+        "detector_accepted_trials": "0",
+        "detector_reject_trials": "0",
+        "pattern_valid_trials": "0",
+        "pattern_rejected_trials": "0",
+        "avg_dt_ms": "-1",
+        "avg_strength": "0.0",
+        "avg_conf": "0.00"
+      }
+    },
+    {
+      "name": "OBS_b026_1832",
+      "file": "OBS_b026_1832.246029b.log",
+      "firmware": {
+        "role": "analyzer",
+        "git": "246029b",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "commands": [
+        "EMIT MODE REMOTE",
+        "SEQ DIAG off",
+        "SEQ OBS start tries=5 period=2000 window=1800 profile=TonalPulseScalar mode=detail when=all verbose=1"
+      ],
+      "started": "2026-10-10T18:33:28",
+      "duration_s": 20,
+      "summary": {
+        "profile": "TonalPulseScalar",
+        "detector": "scalar_transient",
+        "complete": true,
+        "trial_results": {
+          "miss": 5
+        },
+        "line_counts": {
+          "SEQ_TRIAL": 5,
+          "SEQ_SUMMARY": 1
+        },
+        "trials": "5",
+        "completed": "5",
+        "expected_trials": "0",
+        "early_trials": "0",
+        "late_trials": "0",
+        "miss_trials": "5",
+        "duplicate_trials": "0",
+        "unexpected_trials": "0",
+        "rejected_trials": "0",
+        "buffer_overrun_trials": "0",
+        "detector_accepted_trials": "0",
+        "detector_reject_trials": "0",
+        "pattern_valid_trials": "0",
+        "pattern_rejected_trials": "0",
+        "avg_dt_ms": "-1",
+        "avg_strength": "0.0",
+        "avg_conf": "0.00"
+      }
+    },
+    {
+      "name": "T3_b027_1847",
+      "file": "T3_b027_1847.246029b.log",
+      "firmware": {
+        "role": "analyzer",
+        "git": "246029b",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "commands": [
+        "EMIT MODE REMOTE",
+        "SEQ DIAG off",
+        "SEQ start profile=TonalPulseScalar tries=10 mode=detail when=all verbose=1"
+      ],
+      "started": "2026-10-10T18:47:47",
+      "duration_s": 38,
+      "summary": {
+        "profile": "TonalPulseScalar",
+        "detector": "scalar_transient",
+        "complete": true,
+        "trial_results": {
+          "unexpected": 10
+        },
+        "line_counts": {
+          "SEQ_TRIAL": 10,
+          "SEQ_SUMMARY": 1
+        },
+        "trials": "10",
+        "completed": "10",
+        "expected_trials": "0",
+        "early_trials": "0",
+        "late_trials": "0",
+        "miss_trials": "0",
+        "duplicate_trials": "0",
+        "unexpected_trials": "10",
+        "rejected_trials": "0",
+        "buffer_overrun_trials": "0",
+        "detector_accepted_trials": "0",
+        "detector_reject_trials": "0",
+        "pattern_valid_trials": "0",
+        "pattern_rejected_trials": "0",
+        "avg_dt_ms": "-1",
+        "avg_strength": "0.0",
+        "avg_conf": "0.00"
+      }
+    },
+    {
+      "name": "OBS_b027_1847",
+      "file": "OBS_b027_1847.246029b.log",
+      "firmware": {
+        "role": "analyzer",
+        "git": "246029b",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "commands": [
+        "EMIT MODE REMOTE",
+        "SEQ DIAG off",
+        "SEQ OBS start tries=5 period=2000 window=1800 profile=TonalPulseScalar mode=detail when=all verbose=1"
+      ],
+      "started": "2026-10-10T18:48:28",
+      "duration_s": 20,
+      "summary": {
+        "profile": "TonalPulseScalar",
+        "detector": "scalar_transient",
+        "complete": true,
+        "trial_results": {
+          "miss": 5
+        },
+        "line_counts": {
+          "SEQ_TRIAL": 5,
+          "SEQ_SUMMARY": 1
+        },
+        "trials": "5",
+        "completed": "5",
+        "expected_trials": "0",
+        "early_trials": "0",
+        "late_trials": "0",
+        "miss_trials": "5",
+        "duplicate_trials": "0",
+        "unexpected_trials": "0",
+        "rejected_trials": "0",
+        "buffer_overrun_trials": "0",
+        "detector_accepted_trials": "0",
+        "detector_reject_trials": "0",
+        "pattern_valid_trials": "0",
+        "pattern_rejected_trials": "0",
+        "avg_dt_ms": "-1",
+        "avg_strength": "0.0",
+        "avg_conf": "0.00"
+      }
+    },
+    {
+      "name": "T3_b028_1902",
+      "file": "T3_b028_1902.246029b.log",
+      "firmware": {
+        "role": "analyzer",
+        "git": "246029b",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "commands": [
+        "EMIT MODE REMOTE",
+        "SEQ DIAG off",
+        "SEQ start profile=TonalPulseScalar tries=10 mode=detail when=all verbose=1"
+      ],
+      "started": "2026-10-10T19:02:47",
+      "duration_s": 38,
+      "summary": {
+        "profile": "TonalPulseScalar",
+        "detector": "scalar_transient",
+        "complete": true,
+        "trial_results": {
+          "unexpected": 10
+        },
+        "line_counts": {
+          "SEQ_TRIAL": 10,
+          "SEQ_SUMMARY": 1
+        },
+        "trials": "10",
+        "completed": "10",
+        "expected_trials": "0",
+        "early_trials": "0",
+        "late_trials": "0",
+        "miss_trials": "0",
+        "duplicate_trials": "0",
+        "unexpected_trials": "10",
+        "rejected_trials": "0",
+        "buffer_overrun_trials": "0",
+        "detector_accepted_trials": "0",
+        "detector_reject_trials": "0",
+        "pattern_valid_trials": "0",
+        "pattern_rejected_trials": "0",
+        "avg_dt_ms": "-1",
+        "avg_strength": "0.0",
+        "avg_conf": "0.00"
+      }
+    },
+    {
+      "name": "OBS_b028_1902",
+      "file": "OBS_b028_1902.246029b.log",
+      "firmware": {
+        "role": "analyzer",
+        "git": "246029b",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "commands": [
+        "EMIT MODE REMOTE",
+        "SEQ DIAG off",
+        "SEQ OBS start tries=5 period=2000 window=1800 profile=TonalPulseScalar mode=detail when=all verbose=1"
+      ],
+      "started": "2026-10-10T19:03:28",
+      "duration_s": 20,
+      "summary": {
+        "profile": "TonalPulseScalar",
+        "detector": "scalar_transient",
+        "complete": true,
+        "trial_results": {
+          "miss": 5
+        },
+        "line_counts": {
+          "SEQ_TRIAL": 5,
+          "SEQ_SUMMARY": 1
+        },
+        "trials": "5",
+        "completed": "5",
+        "expected_trials": "0",
+        "early_trials": "0",
+        "late_trials": "0",
+        "miss_trials": "5",
+        "duplicate_trials": "0",
+        "unexpected_trials": "0",
+        "rejected_trials": "0",
+        "buffer_overrun_trials": "0",
+        "detector_accepted_trials": "0",
+        "detector_reject_trials": "0",
+        "pattern_valid_trials": "0",
+        "pattern_rejected_trials": "0",
+        "avg_dt_ms": "-1",
+        "avg_strength": "0.0",
+        "avg_conf": "0.00"
+      }
+    },
+    {
+      "name": "T3_b029_1917",
+      "file": "T3_b029_1917.246029b.log",
+      "firmware": {
+        "role": "analyzer",
+        "git": "246029b",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "commands": [
+        "EMIT MODE REMOTE",
+        "SEQ DIAG off",
+        "SEQ start profile=TonalPulseScalar tries=10 mode=detail when=all verbose=1"
+      ],
+      "started": "2026-10-10T19:17:47",
+      "duration_s": 38,
+      "summary": {
+        "profile": "TonalPulseScalar",
+        "detector": "scalar_transient",
+        "complete": true,
+        "trial_results": {
+          "unexpected": 10
+        },
+        "line_counts": {
+          "SEQ_TRIAL": 10,
+          "SEQ_SUMMARY": 1
+        },
+        "trials": "10",
+        "completed": "10",
+        "expected_trials": "0",
+        "early_trials": "0",
+        "late_trials": "0",
+        "miss_trials": "0",
+        "duplicate_trials": "0",
+        "unexpected_trials": "10",
+        "rejected_trials": "0",
+        "buffer_overrun_trials": "0",
+        "detector_accepted_trials": "0",
+        "detector_reject_trials": "0",
+        "pattern_valid_trials": "0",
+        "pattern_rejected_trials": "0",
+        "avg_dt_ms": "-1",
+        "avg_strength": "0.0",
+        "avg_conf": "0.00"
+      }
+    },
+    {
+      "name": "OBS_b029_1917",
+      "file": "OBS_b029_1917.246029b.log",
+      "firmware": {
+        "role": "analyzer",
+        "git": "246029b",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "commands": [
+        "EMIT MODE REMOTE",
+        "SEQ DIAG off",
+        "SEQ OBS start tries=5 period=2000 window=1800 profile=TonalPulseScalar mode=detail when=all verbose=1"
+      ],
+      "started": "2026-10-10T19:18:28",
+      "duration_s": 20,
+      "summary": {
+        "profile": "TonalPulseScalar",
+        "detector": "scalar_transient",
+        "complete": true,
+        "trial_results": {
+          "miss": 5
+        },
+        "line_counts": {
+          "SEQ_TRIAL": 5,
+          "SEQ_SUMMARY": 1
+        },
+        "trials": "5",
+        "completed": "5",
+        "expected_trials": "0",
+        "early_trials": "0",
+        "late_trials": "0",
+        "miss_trials": "5",
+        "duplicate_trials": "0",
+        "unexpected_trials": "0",
+        "rejected_trials": "0",
+        "buffer_overrun_trials": "0",
+        "detector_accepted_trials": "0",
+        "detector_reject_trials": "0",
+        "pattern_valid_trials": "0",
+        "pattern_rejected_trials": "0",
+        "avg_dt_ms": "-1",
+        "avg_strength": "0.0",
+        "avg_conf": "0.00"
+      }
+    },
+    {
+      "name": "T3_b030_1932",
+      "file": "T3_b030_1932.246029b.log",
+      "firmware": {
+        "role": "analyzer",
+        "git": "246029b",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "commands": [
+        "EMIT MODE REMOTE",
+        "SEQ DIAG off",
+        "SEQ start profile=TonalPulseScalar tries=10 mode=detail when=all verbose=1"
+      ],
+      "started": "2026-10-10T19:32:47",
+      "duration_s": 38,
+      "summary": {
+        "profile": "TonalPulseScalar",
+        "detector": "scalar_transient",
+        "complete": true,
+        "trial_results": {
+          "unexpected": 10
+        },
+        "line_counts": {
+          "SEQ_TRIAL": 10,
+          "SEQ_SUMMARY": 1
+        },
+        "trials": "10",
+        "completed": "10",
+        "expected_trials": "0",
+        "early_trials": "0",
+        "late_trials": "0",
+        "miss_trials": "0",
+        "duplicate_trials": "0",
+        "unexpected_trials": "10",
+        "rejected_trials": "0",
+        "buffer_overrun_trials": "0",
+        "detector_accepted_trials": "0",
+        "detector_reject_trials": "0",
+        "pattern_valid_trials": "0",
+        "pattern_rejected_trials": "0",
+        "avg_dt_ms": "-1",
+        "avg_strength": "0.0",
+        "avg_conf": "0.00"
+      }
+    },
+    {
+      "name": "OBS_b030_1932",
+      "file": "OBS_b030_1932.246029b.log",
+      "firmware": {
+        "role": "analyzer",
+        "git": "246029b",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "commands": [
+        "EMIT MODE REMOTE",
+        "SEQ DIAG off",
+        "SEQ OBS start tries=5 period=2000 window=1800 profile=TonalPulseScalar mode=detail when=all verbose=1"
+      ],
+      "started": "2026-10-10T19:33:28",
+      "duration_s": 20,
+      "summary": {
+        "profile": "TonalPulseScalar",
+        "detector": "scalar_transient",
+        "complete": true,
+        "trial_results": {
+          "miss": 5
+        },
+        "line_counts": {
+          "SEQ_TRIAL": 5,
+          "SEQ_SUMMARY": 1
+        },
+        "trials": "5",
+        "completed": "5",
+        "expected_trials": "0",
+        "early_trials": "0",
+        "late_trials": "0",
+        "miss_trials": "5",
+        "duplicate_trials": "0",
+        "unexpected_trials": "0",
+        "rejected_trials": "0",
+        "buffer_overrun_trials": "0",
+        "detector_accepted_trials": "0",
+        "detector_reject_trials": "0",
+        "pattern_valid_trials": "0",
+        "pattern_rejected_trials": "0",
+        "avg_dt_ms": "-1",
+        "avg_strength": "0.0",
+        "avg_conf": "0.00"
+      }
+    },
+    {
+      "name": "T3_b031_1947",
+      "file": "T3_b031_1947.246029b.log",
+      "firmware": {
+        "role": "analyzer",
+        "git": "246029b",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "commands": [
+        "EMIT MODE REMOTE",
+        "SEQ DIAG off",
+        "SEQ start profile=TonalPulseScalar tries=10 mode=detail when=all verbose=1"
+      ],
+      "started": "2026-10-10T19:47:47",
+      "duration_s": 38,
+      "summary": {
+        "profile": "TonalPulseScalar",
+        "detector": "scalar_transient",
+        "complete": true,
+        "trial_results": {
+          "unexpected": 10
+        },
+        "line_counts": {
+          "SEQ_TRIAL": 10,
+          "SEQ_SUMMARY": 1
+        },
+        "trials": "10",
+        "completed": "10",
+        "expected_trials": "0",
+        "early_trials": "0",
+        "late_trials": "0",
+        "miss_trials": "0",
+        "duplicate_trials": "0",
+        "unexpected_trials": "10",
+        "rejected_trials": "0",
+        "buffer_overrun_trials": "0",
+        "detector_accepted_trials": "0",
+        "detector_reject_trials": "0",
+        "pattern_valid_trials": "0",
+        "pattern_rejected_trials": "0",
+        "avg_dt_ms": "-1",
+        "avg_strength": "0.0",
+        "avg_conf": "0.00"
+      }
+    },
+    {
+      "name": "OBS_b031_1947",
+      "file": "OBS_b031_1947.246029b.log",
+      "firmware": {
+        "role": "analyzer",
+        "git": "246029b",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "commands": [
+        "EMIT MODE REMOTE",
+        "SEQ DIAG off",
+        "SEQ OBS start tries=5 period=2000 window=1800 profile=TonalPulseScalar mode=detail when=all verbose=1"
+      ],
+      "started": "2026-10-10T19:48:28",
+      "duration_s": 20,
+      "summary": {
+        "profile": "TonalPulseScalar",
+        "detector": "scalar_transient",
+        "complete": true,
+        "trial_results": {
+          "miss": 5
+        },
+        "line_counts": {
+          "SEQ_TRIAL": 5,
+          "SEQ_SUMMARY": 1
+        },
+        "trials": "5",
+        "completed": "5",
+        "expected_trials": "0",
+        "early_trials": "0",
+        "late_trials": "0",
+        "miss_trials": "5",
+        "duplicate_trials": "0",
+        "unexpected_trials": "0",
+        "rejected_trials": "0",
+        "buffer_overrun_trials": "0",
+        "detector_accepted_trials": "0",
+        "detector_reject_trials": "0",
+        "pattern_valid_trials": "0",
+        "pattern_rejected_trials": "0",
+        "avg_dt_ms": "-1",
+        "avg_strength": "0.0",
+        "avg_conf": "0.00"
+      }
+    },
+    {
+      "name": "T3_b032_2002",
+      "file": "T3_b032_2002.246029b.log",
+      "firmware": {
+        "role": "analyzer",
+        "git": "246029b",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "commands": [
+        "EMIT MODE REMOTE",
+        "SEQ DIAG off",
+        "SEQ start profile=TonalPulseScalar tries=10 mode=detail when=all verbose=1"
+      ],
+      "started": "2026-10-10T20:02:47",
+      "duration_s": 38,
+      "summary": {
+        "profile": "TonalPulseScalar",
+        "detector": "scalar_transient",
+        "complete": true,
+        "trial_results": {
+          "unexpected": 10
+        },
+        "line_counts": {
+          "SEQ_TRIAL": 10,
+          "SEQ_SUMMARY": 1
+        },
+        "trials": "10",
+        "completed": "10",
+        "expected_trials": "0",
+        "early_trials": "0",
+        "late_trials": "0",
+        "miss_trials": "0",
+        "duplicate_trials": "0",
+        "unexpected_trials": "10",
+        "rejected_trials": "0",
+        "buffer_overrun_trials": "0",
+        "detector_accepted_trials": "0",
+        "detector_reject_trials": "0",
+        "pattern_valid_trials": "0",
+        "pattern_rejected_trials": "0",
+        "avg_dt_ms": "-1",
+        "avg_strength": "0.0",
+        "avg_conf": "0.00"
+      }
+    },
+    {
+      "name": "OBS_b032_2002",
+      "file": "OBS_b032_2002.246029b.log",
+      "firmware": {
+        "role": "analyzer",
+        "git": "246029b",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "commands": [
+        "EMIT MODE REMOTE",
+        "SEQ DIAG off",
+        "SEQ OBS start tries=5 period=2000 window=1800 profile=TonalPulseScalar mode=detail when=all verbose=1"
+      ],
+      "started": "2026-10-10T20:03:28",
+      "duration_s": 20,
+      "summary": {
+        "profile": "TonalPulseScalar",
+        "detector": "scalar_transient",
+        "complete": true,
+        "trial_results": {
+          "miss": 5
+        },
+        "line_counts": {
+          "SEQ_TRIAL": 5,
+          "SEQ_SUMMARY": 1
+        },
+        "trials": "5",
+        "completed": "5",
+        "expected_trials": "0",
+        "early_trials": "0",
+        "late_trials": "0",
+        "miss_trials": "5",
+        "duplicate_trials": "0",
+        "unexpected_trials": "0",
+        "rejected_trials": "0",
+        "buffer_overrun_trials": "0",
+        "detector_accepted_trials": "0",
+        "detector_reject_trials": "0",
+        "pattern_valid_trials": "0",
+        "pattern_rejected_trials": "0",
+        "avg_dt_ms": "-1",
+        "avg_strength": "0.0",
+        "avg_conf": "0.00"
+      }
+    },
+    {
+      "name": "T3_b033_2017",
+      "file": "T3_b033_2017.246029b.log",
+      "firmware": {
+        "role": "analyzer",
+        "git": "246029b",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "commands": [
+        "EMIT MODE REMOTE",
+        "SEQ DIAG off",
+        "SEQ start profile=TonalPulseScalar tries=10 mode=detail when=all verbose=1"
+      ],
+      "started": "2026-10-10T20:17:47",
+      "duration_s": 38,
+      "summary": {
+        "profile": "TonalPulseScalar",
+        "detector": "scalar_transient",
+        "complete": true,
+        "trial_results": {
+          "unexpected": 10
+        },
+        "line_counts": {
+          "SEQ_TRIAL": 10,
+          "SEQ_SUMMARY": 1
+        },
+        "trials": "10",
+        "completed": "10",
+        "expected_trials": "0",
+        "early_trials": "0",
+        "late_trials": "0",
+        "miss_trials": "0",
+        "duplicate_trials": "0",
+        "unexpected_trials": "10",
+        "rejected_trials": "0",
+        "buffer_overrun_trials": "0",
+        "detector_accepted_trials": "0",
+        "detector_reject_trials": "0",
+        "pattern_valid_trials": "0",
+        "pattern_rejected_trials": "0",
+        "avg_dt_ms": "-1",
+        "avg_strength": "0.0",
+        "avg_conf": "0.00"
+      }
+    },
+    {
+      "name": "OBS_b033_2017",
+      "file": "OBS_b033_2017.246029b.log",
+      "firmware": {
+        "role": "analyzer",
+        "git": "246029b",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "commands": [
+        "EMIT MODE REMOTE",
+        "SEQ DIAG off",
+        "SEQ OBS start tries=5 period=2000 window=1800 profile=TonalPulseScalar mode=detail when=all verbose=1"
+      ],
+      "started": "2026-10-10T20:18:28",
+      "duration_s": 20,
+      "summary": {
+        "profile": "TonalPulseScalar",
+        "detector": "scalar_transient",
+        "complete": true,
+        "trial_results": {
+          "miss": 5
+        },
+        "line_counts": {
+          "SEQ_TRIAL": 5,
+          "SEQ_SUMMARY": 1
+        },
+        "trials": "5",
+        "completed": "5",
+        "expected_trials": "0",
+        "early_trials": "0",
+        "late_trials": "0",
+        "miss_trials": "5",
+        "duplicate_trials": "0",
+        "unexpected_trials": "0",
+        "rejected_trials": "0",
+        "buffer_overrun_trials": "0",
+        "detector_accepted_trials": "0",
+        "detector_reject_trials": "0",
+        "pattern_valid_trials": "0",
+        "pattern_rejected_trials": "0",
+        "avg_dt_ms": "-1",
+        "avg_strength": "0.0",
+        "avg_conf": "0.00"
+      }
+    }
+  ],
+  "soak": [
+    {
+      "started": "2026-10-10T12:17:43",
+      "port": "COM3",
+      "hours": 24.0,
+      "interval_min": 15.0,
+      "first_block": 1,
+      "blocks": 96,
+      "csv": "soak.csv",
+      "t3_commands": [
+        "EMIT MODE REMOTE",
+        "SEQ DIAG off",
+        "SEQ start profile=TonalPulseScalar tries=10 mode=detail when=all verbose=1"
+      ],
+      "obs_commands": [
+        "EMIT MODE REMOTE",
+        "SEQ DIAG off",
+        "SEQ OBS start tries=5 period=2000 window=1800 profile=TonalPulseScalar mode=detail when=all verbose=1"
+      ]
+    }
+  ]
+}

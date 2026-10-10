@@ -1,8 +1,10 @@
 # D-AMP bench check (step 3, issue #20)
 
 Status: active. Bench 2026-10-09: 70 / 200 / 110 cm and an overnight tuning
-run at 110 cm (section 5, 6); owner decisions and R3 done, COM6 amp wiring
-fixed 2026-10-10 (R0). Next: R1 (verify b6e99b0), R2 ladder (the gate), R4.
+run at 110 cm (section 5, 6); owner decisions and R3 done. 2026-10-10: E1
+(ex-COM6) failed the amp check after its re-wire and went to storage; the
+bench pair is now E2 + E3, both passing (R0, AC). Next: R1 (verify b6e99b0),
+R2 ladder (the gate), R4.
 Started 2026-10-09.
 Roadmap: `docs/roadmaps/roadmap-0-steps.md` step 3 -> NODE-010
 (`roadmap-node.md`). Decisions: `docs/decisions/2026-10-06-damp-output-hardware.md`,
@@ -213,6 +215,19 @@ R0 [x] Owner: fix the COM6 amp/speaker wiring; verify with the beep sketch
        (both boards hear their own beep).
        2026-10-10: owner reports the COM6 wiring fixed. Beep-sketch result
        not recorded; the first AC check below is that record.
+       2026-10-10 AC, first run (latency sketch on main's HAL at 0436644,
+       0.3 FS, 3200 Hz, 20 trials each; boards by MAC):
+       - E3 24:dc:c3:49:b7:38: pass, 51-58 dB (median ~55.5), toneOn ->
+         own mic 29-36 ms.
+       - E1 24:dc:c3:4a:b0:50: FAIL, -19..+2 dB in 19/20 trials (one +10.5
+         dB); mic floor normal, so the tone does not reach the speaker.
+         Re-seating found nothing; owner: E1 marked faulty, to storage.
+       - E2 24:dc:c3:4b:4c:e8 (new on this bench, D-AMP): first mic read 0
+         in both I2S slots (amp audible); after owner re-seated the mic,
+         pass, 36-50 dB (plateau steady 292-296k; low trials are a higher
+         pre-tone floor, not a weaker tone).
+       Bench pair from here: E2 + E3. Not yet in a bench session: logs in
+       the session that runs R1.
 AC     Amp check, standing (owner, 2026-10-10): a loose wire silenced
        COM6's amp mid-session on 2026-10-09 and invalidated two runs
        without any error. Run on every board at the start and end of each

@@ -22,7 +22,9 @@ Renamed from roadmap-general.md on 2026-09-23 so it sorts first.
 How this file relates to the domain roadmaps and docs/refactors/: see
 README.md ("Who answers what", "Ordering rule").
 
-Last reordered: 2026-10-09. Soak (#27) added as step 3a on D-AMP
+Last reordered: 2026-10-10. Node self-test (#28) added as step 3b, gating
+step 4, after two of three D-AMP boards failed basic I/O on the bench.
+Previous: 2026-10-09. Soak (#27) added as step 3a on D-AMP
 (drafted as "1c" on piezo). Before that, same day: piezo discontinued (decision
 `docs/decisions/2026-10-09-discontinue-piezo.md`): D-AMP becomes the
 default board in step 2, step 3 is a D-AMP bench check against the
@@ -124,10 +126,21 @@ the previous gate open unless the step says it can run in parallel.
    than block-to-block noise, and does it track time of day or a noted
    condition. Doesn't gate step 4; the boards are free again afterwards.
 
+3b. [TODO] Node self-test: SELFTEST for hardware I/O and node runtime.
+   (issue #28)
+   Where: NODE-015 (roadmap-node.md).
+   Why before step 4: on 2026-10-10 two of three D-AMP boards failed basic
+   I/O (E1 amp silent, E2 mic reading 0) and the shipped firmware noticed
+   neither; five boards go into the trial, each has to prove it works.
+   Firmware work can start any time; the gate run needs the boards free of
+   steps 3 / 3a.
+   Gate: SELFTEST passes on every board going into step 4, logged in a
+   bench session.
+
 4. Switch to D-AMP. (issue #21)
    Where: NODE-011 (roadmap-node.md).
-   Gate: five D-AMP nodes on one build; docs name D-AMP as the node
-   hardware. (Default board and piezo fallback envs already land in
+   Gate: five D-AMP nodes on one build, each passing SELFTEST (step 3b);
+   docs name D-AMP as the node hardware. (Default board and piezo fallback envs already land in
    step 2.)
 
 5. Decide the Node's production profile, on D-AMP. (issue #8)

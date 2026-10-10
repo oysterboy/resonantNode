@@ -192,6 +192,8 @@ Analyzer, compared against the piezo SEQ runs already in bench/. Plus
 self-echo against the suppression window and class-D noise at the mic
 with the amp idle (explicit RAW run, pass doc R5).
 If D-AMP is a dud, go back to piezo (BOARD_PIEZO) and revisit.
+Boards: E2 + E3 from 2026-10-10 (E1 failed the amp check, in storage);
+every session starts and ends with the amp check (pass doc AC).
 Results: (dated line here)
 ```
 
@@ -203,6 +205,9 @@ Status: TODO (issue #21)
 All five D-AMP nodes on one build. (D-AMP as the default build and the
 BOARD_PIEZO fallback envs land in NODE-009.) Update implementation-status.md, CLAUDE.md build commands, and
 myspec.md section 7 if its output list changes.
+Open 2026-10-10: E1 (24:dc:c3:4a:b0:50) is faulty (amp/speaker silent,
+in storage), so five nodes need E1 repaired or another D-AMP board.
+Every node passes the amp check (damp-bench-check.md AC) before the trial.
 ```
 
 ### NODE-012 - acoustic test suite: spaces x speaker types x distance
@@ -236,6 +241,32 @@ Pin it in [env:esp32dev]; rerun the framing check (raw bit 8 toggles) on
 any upgrade.
 ```
 
+### NODE-015 - node self-test (SELFTEST)
+
+Status: TODO (step 3b, issue #28; owner request 2026-10-10)
+
+```text
+A SELFTEST serial command in the shipped Node and Analyzer builds, one
+PASS/FAIL line per check, plus a tools/bench/ runner that calls it on
+every attached port and logs to a bench session (MAC -> label from
+bench/README.md).
+Hardware I/O:
+  board ID: MAC, BOARD_NAME, build version
+  mic: non-zero samples, quiet floor in range, I2S framing (raw bit 8
+    toggles, #24)
+  amp/speaker: own chirp >= ~30 dB over the floor (the #20 amp check, AC)
+Node runtime smoke (automates cleanup-0-plan T7):
+  quiet baseline reached at boot (no FAILED_NO_QUIET)
+  external chirp (Emitter) -> verdict -> the node responds
+  own chirp produces no verdict (own-emit suppression)
+Out of scope: two-node interaction (NODE-008), UART2 link.
+Why: 2026-10-10 E1's amp was silent and E2's mic read 0; the firmware
+reported neither, and E1's silence had invalidated two #20 runs.
+Relation: replaces the throwaway AC sketch once landed; NODE-001's STATUS
+line stays the informational report, SELFTEST is the pass/fail one.
+Gate: passes on every board going into NODE-011, logged on bench.
+```
+
 ### NODE-013 - 24-hour bench soak on D-AMP
 
 Status: TODO (step 3a, issue #27)
@@ -248,8 +279,9 @@ One Emitter -> Analyzer pair at a fixed distance, boards fixed in place,
 short SEQ blocks every 15 min for 24 h via tools/bench/soak.py (to write),
 one soak.csv row per block. D-AMP at the default tone level (0.3 FS since
 b6e99b0). Blocks in an Analyzer mode without dropped DMA buffers, or the
-drops counted per block (ANA-004). Check the amp wiring first: a loose
-wire silenced one board's amp on 2026-10-09.
+drops counted per block (ANA-004). Both boards pass the amp check
+(damp-bench-check.md AC) at the start and the end of the soak: a loose
+wire silenced E1's amp on 2026-10-09, and E1 is in storage since 2026-10-10.
 Runs in parallel with NODE-010; doesn't gate NODE-011.
 ```
 

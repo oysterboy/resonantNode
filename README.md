@@ -142,8 +142,9 @@ MAC; the COM port goes in the session's setup notes.
 
 | Label | Hardware | MAC | Notes |
 |---|---|---|---|
-| E3 | D-AMP | 24:dc:c3:49:b7:38 | COM10 on 2026-10-10. Amp/speaker OK. |
-| E1 | D-AMP | 24:dc:c3:4a:b0:50 | COM6 on 2026-10-10 (label inferred: the other board; owner confirmed E3). Amp/speaker silent since 2026-10-09 evening; mic OK. |
+| E3 | D-AMP | 24:dc:c3:49:b7:38 | COM10 on 2026-10-10 morning, COM4 later. Amp/speaker OK; amp check 2026-10-10 pass, 51-58 dB. |
+| E2 | D-AMP | 24:dc:c3:4b:4c:e8 | Joined the bench 2026-10-10 (COM3). Mic read 0 until re-seated; amp check 2026-10-10 pass, 36-50 dB. |
+| E1 | D-AMP | 24:dc:c3:4a:b0:50 | COM6 on 2026-10-10 morning, COM3 later (label inferred: the other board; owner confirmed E3). Amp/speaker silent since 2026-10-09 evening, still silent after re-wire (amp check 2026-10-10 fail, -19..+2 dB); mic OK. **Faulty, in storage since 2026-10-10.** |
 
 Sessions before 2026-10-10 name these boards by COM port only:
 COM6 = E1, COM10 = E3 (same MACs).

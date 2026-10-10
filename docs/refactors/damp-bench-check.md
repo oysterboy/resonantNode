@@ -5,8 +5,9 @@ run at 110 cm (section 5, 6); owner decisions and R3 done. 2026-10-10: E1
 (ex-COM6) failed the amp check after its re-wire and went to storage; the
 bench pair is now E2 + E3, both passing (R0, AC). R2 ladder done: D-AMP
 50/50 at 10 / 40 / 70 cm, at least as good as piezo at every rung, 0 false
-positives (detection half of the gate passes). Next: R1 Node checks
-(self-echo half of the gate), R4, R5.
+positives (detection half of the gate passes). R1 Node checks on E2 pass
+(quiet boot, 0 own-echo verdicts; self-echo half of the gate). Next: R1 on
+E3 and the E2 -> E3 direction, R4, R5.
 Started 2026-10-09.
 Roadmap: `docs/roadmaps/roadmap-0-steps.md` step 3 -> NODE-010
 (`roadmap-node.md`). Decisions: `docs/decisions/2026-10-06-damp-output-hardware.md`,
@@ -321,3 +322,13 @@ unchanged, and the runs stand (owner; AC rule revised to judge the tone,
 see AC above).
 Left for #20: self-echo half of the gate (R1 Node checks), R1 110 cm
 other direction (E2 -> E3), R4, R5.
+
+2026-10-10 R1 Node checks on E2 (bench:sessions/2026-10-10-issue20-damp-
+node-r1, bench edb8765; firmware 60b111f, TonalPulseScalar, E3 held in
+reset): quiet boot `RB rebase done` after 1.5 s (was FAILED_NO_QUIET at
+4724fd6; startup threshold 400 since b6e99b0). 12 own idle chirps in 240 s,
+0 verdicts (was one `refractory_after_emit` verdict after every own chirp).
+Positive control with E3 chirping: 29 verdicts in 30 s, each answered. **The
+self-echo half of the gate passes on E2**: own chirps stay inside the
+suppression window (whole chirp + 60 ms). Not yet: the same on E3 (BOOT + EN
+per flash), R1 110 cm E2 -> E3, R4, R5.

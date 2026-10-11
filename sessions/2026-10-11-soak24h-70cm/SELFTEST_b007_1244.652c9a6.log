@@ -1,0 +1,12 @@
+>> SELFTEST
+SELFTEST_BEGIN role=analyzer mode=full board=damp
+SELFTEST check=board result=PASS mac=24:dc:c3:4b:4c:e8 board=damp role=analyzer version=0.4.0 git=652c9a6 built=Oct_11_2026 built_time=10:48:32 uptime_ms=5466009
+SELFTEST check=mic result=PASS frames=12000 nonzero_pct=100.0 span=37540 floor_mean=522 floor_peak=5567 bit8_pct=50.4 framing=ok slot=0
+SELFTEST_AMP n=1 floor=0 tone=0 snr_db=0.0 samples=6400 valid=0
+SELFTEST_AMP n=2 floor=769 tone=489039 snr_db=56.1 samples=6400 valid=1
+SELFTEST_AMP n=3 floor=860 tone=488357 snr_db=55.1 samples=6400 valid=1
+SELFTEST_AMP n=4 floor=867 tone=488742 snr_db=55.0 samples=6400 valid=1
+SELFTEST_AMP n=5 floor=980 tone=488408 snr_db=53.9 samples=6400 valid=1
+SELFTEST check=amp result=PASS chirps=5 valid=4 freq_hz=3200 tone_ms=100 path=i2s tone=488575 floor=864 snr_db=55.0 snr_min_db=53.9 snr_max_db=56.1 pass_db=30.0
+SELFTEST_RESTORE detection=reset
+SELFTEST_SUMMARY result=PASS pass=3 fail=0 skip=0 role=analyzer

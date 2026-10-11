@@ -30,3 +30,13 @@ Lesson: a run that only counts detections cannot tell "nothing heard" from
 "nothing played". soak.py should flag a block with 0 detector candidates as
 an error, and the next soak starts only after SELFTEST (#28) passes on both
 boards.
+
+## Correction 2026-10-11: firmware, not hardware
+
+The "E3 amp or E2 mic" reading above was wrong. The second soak
+(2026-10-11-soak24h-70cm) failed identically at block 6, and the Analyzer
+SELFTEST run on its first silent block reported mic PASS, amp PASS. In both
+soaks the last good block ended at Analyzer uptime 3,638 s and the first
+silent one started at 4,509 s; micros() wraps at 4,295 s. The sample-time
+ms derived from the 32-bit microsecond clock restart near 0 after the wrap
+while millis()-based windows keep counting (NODE-016 in roadmap-node.md).

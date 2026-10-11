@@ -39,4 +39,4 @@ SELFTEST run on its first silent block reported mic PASS, amp PASS. In both
 soaks the last good block ended at Analyzer uptime 3,638 s and the first
 silent one started at 4,509 s; micros() wraps at 4,295 s. The sample-time
 ms derived from the 32-bit microsecond clock restart near 0 after the wrap
-while millis()-based windows keep counting (NODE-016 in roadmap-node.md).
+while millis()-based windows keep counting (NODE-017 in roadmap-node.md; first filed as NODE-016, renumbered: that ID is the status LED).

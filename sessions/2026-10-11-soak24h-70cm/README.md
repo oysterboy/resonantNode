@@ -19,4 +19,4 @@ Block 6 started at Analyzer uptime 4,509 s, block 5 ended at 3,638 s:
 micros() wrapped at 4,295 s in between, exactly as in the 2026-10-10 soak.
 The automatic SELFTEST (new in f460680) proved mic and amp fine, which
 turned the earlier "loose contact" reading into a firmware finding:
-NODE-016.
+NODE-017 (first filed as NODE-016; renumbered).

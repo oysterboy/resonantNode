@@ -22,7 +22,9 @@ Renamed from roadmap-general.md on 2026-09-23 so it sorts first.
 How this file relates to the domain roadmaps and docs/refactors/: see
 README.md ("Who answers what", "Ordering rule").
 
-Last reordered: 2026-10-10. Node self-test (#28) added as step 3b, gating
+Last reordered: 2026-10-11. Micros-wrap bug (#30) added as step 3c, gating
+the soak (3a) and the field trial (6): both soaks went deaf 71.6 min after
+boot. Previous: 2026-10-10. Node self-test (#28) added as step 3b, gating
 step 4, after two of three D-AMP boards failed basic I/O on the bench.
 Previous: 2026-10-09. Soak (#27) added as step 3a on D-AMP
 (drafted as "1c" on piezo). Before that, same day: piezo discontinued (decision
@@ -141,6 +143,15 @@ the previous gate open unless the step says it can run in parallel.
    steps 3 / 3a.
    Gate: SELFTEST passes on every board going into step 4, logged in a
    bench session.
+
+3c. [NEXT] Detection goes deaf 71.6 min after boot (32-bit micros wrap).
+   (issue #30)
+   Where: NODE-016 (roadmap-node.md).
+   Why now: found by both soak attempts (#27); the Node runs the same audio
+   path, so a field node would go deaf after ~72 min. Blocks step 3a (soak)
+   and step 6 (field trial); can run in parallel with step 3b.
+   Gate: Analyzer and Node keep detecting across the wrap (offset test and
+   one real run past 72 min).
 
 4. Switch to D-AMP. (issue #21)
    Where: NODE-011 (roadmap-node.md).

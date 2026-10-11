@@ -300,9 +300,37 @@ line stays the informational report, SELFTEST is the pass/fail one.
 Gate: passes on every board going into NODE-011, logged on bench.
 ```
 
+### NODE-016 - detection goes deaf 71.6 min after boot (32-bit micros wrap)
+
+Status: TODO (step 3c, issue #30; found 2026-10-11; blocks NODE-013 and the field trial NODE-008)
+
+```text
+Symptom: both soaks (bench:sessions/2026-10-10-soak24h-70cm,
+2026-10-11-soak24h-70cm) lost every detection between Analyzer uptime
+3,638 s and 4,509 s and never recovered; link, Emitter markers, sampling
+and the Analyzer's own SELFTEST (mic, amp) stayed fine. micros() wraps at
+2^32 us = 4,295 s.
+Cause (code reading): the sample clock is a 32-bit microsecond value
+(AudioSourceI2S block stamps, AudioSignal sampleTimeUs) and absolute times
+in ms are derived from it by /1000 (AudioSignal.cpp:71,103,208; scalar
+detector occurrence/report times; RAW capture), then compared with
+millis()-based windows (trial windows, own-emit suppression
+ResonantBehavior::ownEmitDetectionSuppressed). After the wrap the derived
+ms restart near 0 while millis() keeps counting. Some comparisons are not
+wrap-safe either (AnalyzerModeApp.cpp:709 `micros() > start`).
+The Node build runs the same audio path: a deployed node very likely goes
+deaf ~72 min after power-on. No bench run so far lasted 72 min after a reset.
+Fix direction: one time base for audio and detection (64-bit or
+wrap-consistent with millis()), absolute us -> ms through it, wrap-safe
+comparisons (app/TimingUtils.h), and a debug build flag that offsets that
+one time base so a wrap test takes minutes, not 72.
+Gate: Analyzer and Node keep detecting across the (offset) wrap on the
+bench, and a run past 72 min of real uptime.
+```
+
 ### NODE-013 - 24-hour bench soak on D-AMP
 
-Status: TODO (step 3a, issue #27; first attempt 2026-10-10 aborted after 5 good blocks by an amp or mic fault, bench:sessions/2026-10-10-soak24h-70cm; restart after SELFTEST passes on the pair)
+Status: BLOCKED by NODE-016 (step 3a, issue #27; both attempts, 2026-10-10 and 2026-10-11, went deaf 71.6 min after the Analyzer booted: 32-bit micros wrap, not hardware; bench:sessions/2026-10-10-soak24h-70cm, bench:sessions/2026-10-11-soak24h-70cm; restart after NODE-016 lands and SELFTEST passes on the pair)
 
 ```text
 Research: docs/research/soak-24h.md (design, gate, open points).

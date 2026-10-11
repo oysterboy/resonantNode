@@ -14,7 +14,7 @@ broadband only). Not done here, moved to SELFTEST (step 3b, #28): R1 on E3
 and the E2 -> E3 direction (owner re-plan 2026-10-10). Not re-verified: R1
 110 cm both directions; the ladder ran one direction (E3 -> E2) only. Boards:
 E1 faulty (amp silent, in storage), E3 auto-reset cannot enter download mode,
-a marginal contact silenced the 2026-10-10 soak. AC amp-check rule superseded
+the 2026-10-10 soak went deaf after 71.6 min (firmware: 32-bit micros wrap, found 2026-10-11 - not a contact, see the correction at the end). AC amp-check rule superseded
 by SELFTEST.
 
 Status: active. Bench 2026-10-09: 70 / 200 / 110 cm and an overnight tuning
@@ -392,3 +392,14 @@ the boards slightly. Most likely a marginal contact that the move closed.
 SELFTEST then caught a real fault before the soak restart (E3 amp VIN left
 unplugged after R5: amp FAIL -58.7 dB); soak restarted after the gate passed
 (bench:sessions/2026-10-11-soak24h-70cm, #27).
+
+Correction 2026-10-11 afternoon: the soak fault was NOT a marginal contact.
+The second soak (bench:sessions/2026-10-11-soak24h-70cm) failed the same way
+at block 6, and the Analyzer SELFTEST that soak.py runs on a block with no
+detection reported mic PASS and amp PASS. Both soaks lost detection between
+Analyzer uptime 3,638 s and 4,509 s; micros() (32-bit) wraps at 4,295 s.
+AudioSignal derives the sample time in ms from the 32-bit microsecond
+sample clock (sampleTimeUs / 1000), so after the wrap sample times restart
+near 0 while millis()-based windows keep counting: no detector candidate
+forms again. Tracked as NODE-016. Every #20 result above is unaffected:
+all runs were well under 71 min after a reset.

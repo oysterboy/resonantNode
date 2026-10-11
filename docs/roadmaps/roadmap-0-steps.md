@@ -143,6 +143,16 @@ the previous gate open unless the step says it can run in parallel.
    docs name D-AMP as the node hardware. (Default board and piezo fallback envs already land in
    step 2.)
 
+4a. Status LED on D-AMP: 1 flash on detect, 2 on emit. (issue #29,
+   sub-issue of #21)
+   Where: NODE-016 (roadmap-node.md).
+   Why: D-AMP has no LED pin (STATUS_LED_PIN -1) and the detect flash has
+   had no caller since 2d54d41; trial nodes give no visible sign of what
+   they hear or do. Small firmware change; can land any time before the
+   five nodes are flashed in step 4.
+   Gate: on a D-AMP node the LED flashes once on an external chirp and
+   twice when the node emits.
+
 5. Decide the Node's production profile, on D-AMP. (issue #8)
    Where: DET-007 (roadmap-detection.md), with cleanup-0-plan Phase 0.
    Why: the Node boots TonalPulseScalar while the docs call TonalPulseFreq

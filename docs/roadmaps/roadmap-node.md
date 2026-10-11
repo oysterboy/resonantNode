@@ -210,6 +210,29 @@ in storage), so five nodes need E1 repaired or another D-AMP board.
 Every node passes the amp check (damp-bench-check.md AC) before the trial.
 ```
 
+### NODE-016 - status LED on D-AMP
+
+Status: TODO (step 4a, issue #29, sub-issue of #21; owner request 2026-10-11)
+
+```text
+Today: STATUS_LED_PIN is -1 on D-AMP (BoardConfig.h); NodeDebug's detect
+flash (observePatternPulse) lost its caller in 2d54d41 (2026-05-19), so
+the LED only stays on while a chirp plays, and only on piezo.
+Target: 1 flash on detect, 2 flashes on emit, 80 ms on / 120 ms off, a new
+call restarts the sequence.
+Plan:
+  BoardConfig.h: D-AMP STATUS_LED_PIN = GPIO 2 (free; DevKit onboard LED).
+    External LED GPIO 2 -> ~330 R -> LED -> GND (strapping pin: pull to
+    GND only). Update the pin list in 2026-10-06-damp-output-hardware.md.
+  NodeDebug: observePatternPulse -> flashLed(now, count); drop the
+    solid-while-chirping mode and the unused brightness constants.
+  ResonantNodeApp.cpp: flashLed(now, 1) on verdict.accepted in
+    processDetectionFrame; flashLed(now, 2) at chirp start.
+Open: detect = verdict.accepted (proposed) or behavior ConsumedPattern;
+one LED or two (detect / emit, second on e.g. GPIO 4).
+Gate: on a D-AMP node, 1 flash on an external chirp, 2 when it emits.
+```
+
 ### NODE-012 - acoustic test suite: spaces x speaker types x distance
 
 Status: TODO (noted 2026-10-09, owner request; not sequenced)
@@ -294,7 +317,7 @@ Runs in parallel with NODE-010; doesn't gate NODE-011.
 
 ```text
 Order: roadmap-0-steps.md. NODE-009, NODE-010, NODE-011 are steps 2-4
-(D-AMP), NODE-013 is step 3a (soak, parallel to step 3); NODE-001 then NODE-008 are step 6 (field trial, on D-AMP);
+(D-AMP), NODE-013 is step 3a (soak, parallel to step 3), NODE-016 is step 4a (status LED); NODE-001 then NODE-008 are step 6 (field trial, on D-AMP);
 NODE-006 and NODE-007 are step 7; NODE-004 is part of step 10.
 ```
 

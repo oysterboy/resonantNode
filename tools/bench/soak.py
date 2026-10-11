@@ -315,6 +315,26 @@ def run_block(b, slot, row, errors):
         raise
     finally:
         row.update(block_row(paths.get("T3"), paths.get("OBS")))
+    # A T3 run with no detector candidate at all cannot tell "nothing heard"
+    # from "nothing played" (2026-10-10 soak: 28 such blocks logged without an
+    # error). Flag it and let the Analyzer's SELFTEST say whether its mic and
+    # amp still work.
+    if row.get("t3_completed") not in ("", "0") and row.get("t3_detector_accepted") == "0" \
+            and row.get("t3_expected") == "0" and port is not None:
+        errors.append("no_detection")
+        try:
+            body = []
+            benchlib.run_commands(port, ["SELFTEST"], 60, body, abort_on="BUILD role=", done_on="SELFTEST_SUMMARY")
+            text = "".join(body).replace("\r\n", "\n")
+            with open(os.path.join(session_dir, f"SELFTEST_b{b:03d}_{hhmm}.{firmware['git']}.log"),
+                      "w", encoding="utf-8", newline="\n") as f:
+                f.write(text)
+            for line in text.splitlines():
+                if line.startswith("SELFTEST check=mic") or line.startswith("SELFTEST check=amp"):
+                    errors.append(" ".join(line.split()[1:4]))
+            log("no detection: " + "; ".join(errors[-2:]))
+        except (serial.SerialException, OSError) as e:
+            errors.append(f"selftest serial error ({e})")
 
 
 def wait_for_slot(slot_t, errors):

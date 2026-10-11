@@ -180,8 +180,8 @@ def warmup_emitter(ser):
     return read_for(ser, 2)
 
 
-def run_commands(ser, cmds, timeout_s, body=None, abort_on=None):
-    """Send cmds[:-1], then the SEQ start cmds[-1]; read until SEQ_SUMMARY + 3 s or timeout.
+def run_commands(ser, cmds, timeout_s, body=None, abort_on=None, done_on="SEQ_SUMMARY"):
+    """Send cmds[:-1], then the SEQ start cmds[-1]; read until done_on (SEQ_SUMMARY) + 3 s or timeout.
 
     The transcript goes into body (a list, returned), so a caller that passes
     its own list keeps what was read when the port fails mid-run. abort_on
@@ -200,7 +200,7 @@ def run_commands(ser, cmds, timeout_s, body=None, abort_on=None):
         if abort_on and abort_on in body[-2] + body[-1]:
             body.append(read_for(ser, 3))  # rest of the boot output
             break
-        if done_at is None and "SEQ_SUMMARY" in body[-2] + body[-1]:
+        if done_at is None and done_on in body[-2] + body[-1]:
             done_at = time.time()
         if done_at is not None and time.time() - done_at > 3:
             break

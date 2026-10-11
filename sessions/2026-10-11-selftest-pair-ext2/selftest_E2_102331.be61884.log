@@ -1,0 +1,35 @@
+# run: selftest E2 (COM3)
+# firmware: role=node git=be61884 version=0.4.0 board=damp
+# started: 2026-10-11T10:23:31
+# mac: 24:dc:c3:4b:4c:e8
+# port: COM3
+
+>> EMIT MODE REMOTE
+
+>> SELFTEST
+SELFTEST_BEGIN role=node mode=full board=damp
+SELFTEST check=board result=PASS mac=24:dc:c3:4b:4c:e8 board=damp role=node version=0.4.0 git=be61884 built=Oct_11_2026 built_time=09:50:57 uptime_ms=203177
+SELFTEST check=quiet_boot result=PASS state=ACTIVE boot=done last=done last_at_ms=1282 smooth_at_rebase=230.0 quiet_rebases=1 forced_rebases=0 baseline=-28.7
+SELFTEST check=mic result=PASS frames=12000 nonzero_pct=100.0 span=177844 floor_mean=12859 floor_peak=73048 bit8_pct=50.4 framing=ok slot=0
+SELFTEST_AMP n=1 floor=0 tone=0 snr_db=0.0 samples=6400 valid=0
+SELFTEST_AMP n=2 floor=63394 tone=523471 snr_db=18.3 samples=6400 valid=1
+SELFTEST_AMP n=3 floor=146292 tone=530163 snr_db=11.2 samples=6400 valid=1
+SELFTEST_AMP n=4 floor=27253 tone=520739 snr_db=25.6 samples=6400 valid=1
+SELFTEST_AMP n=5 floor=971 tone=514855 snr_db=54.5 samples=6400 valid=1
+SELFTEST check=amp result=FAIL reason=low_snr chirps=5 valid=4 freq_hz=3200 tone_ms=100 path=i2s tone=522105 floor=45324 snr_db=22.0 snr_min_db=11.2 snr_max_db=54.5 pass_db=30.0
+SELFTEST_RESTORE detection=reset baseline=SETTLE
+RB baseline active
+SELFTEST check=own_chirp_suppressed result=PASS chirps=5 started=5 verdicts=0 valid=0 other_verdicts=5 other_valid=5 echo_window_ms=300 suppress_tail_ms=60
+SELFTEST check=external_chirp result=SKIP reason=not_requested
+SELFTEST_SUMMARY result=FAIL pass=4 fail=1 skip=1 role=node
+
+>> SELFTEST external wait_ms=10000
+SELFTEST_BEGIN role=node mode=external board=damp
+SELFTEST check=board result=PASS mac=24:dc:c3:4b:4c:e8 board=damp role=node version=0.4.0 git=be61884 built=Oct_11_2026 built_time=09:50:57 uptime_ms=236163
+SELFTEST_EXTERNAL waiting wait_ms=10000
+SELFTEST check=external_chirp result=PASS wait_ms=10000 latency_ms=565 valid=1 verdicts=1 own_verdicts=0 responded=1 baseline=ACTIVE
+SELFTEST_SUMMARY result=PASS pass=2 fail=0 skip=0 role=node
+
+>> SELFTEST chirp n=5 gap_ms=1500
+SELFTEST_CHIRP start n=5 freq_hz=3200 path=behavior gap_ms=1500
+SELFTEST_CHIRP done n=5 started=5

@@ -1,0 +1,31 @@
+# run: selftest E2 (COM3)
+# firmware: role=node git=be61884 version=0.4.0 board=damp
+# started: 2026-10-11T10:21:11
+# mac: 24:dc:c3:4b:4c:e8
+# port: COM3
+
+>> EMIT MODE REMOTE
+
+>> SELFTEST
+SELFTEST_BEGIN role=node mode=full board=damp
+SELFTEST check=board result=PASS mac=24:dc:c3:4b:4c:e8 board=damp role=node version=0.4.0 git=be61884 built=Oct_11_2026 built_time=09:50:57 uptime_ms=62737
+SELFTEST check=quiet_boot result=PASS state=ACTIVE boot=done last=done last_at_ms=1282 smooth_at_rebase=230.0 quiet_rebases=1 forced_rebases=0 baseline=-27.1
+SELFTEST check=mic result=PASS frames=12000 nonzero_pct=100.0 span=205035 floor_mean=654 floor_peak=1904 bit8_pct=50.6 framing=ok slot=0
+SELFTEST_AMP n=1 floor=0 tone=0 snr_db=0.0 samples=6400 valid=0
+SELFTEST_AMP n=2 floor=1005 tone=514761 snr_db=54.2 samples=6400 valid=1
+SELFTEST_AMP n=3 floor=1061 tone=513765 snr_db=53.7 samples=6400 valid=1
+SELFTEST_AMP n=4 floor=952 tone=513342 snr_db=54.6 samples=6400 valid=1
+SELFTEST_AMP n=5 floor=937 tone=513028 snr_db=54.8 samples=6400 valid=1
+SELFTEST check=amp result=PASS chirps=5 valid=4 freq_hz=3200 tone_ms=100 path=i2s tone=513554 floor=979 snr_db=54.4 snr_min_db=53.7 snr_max_db=54.8 pass_db=30.0
+SELFTEST_RESTORE detection=reset baseline=SETTLE
+RB baseline active
+SELFTEST check=own_chirp_suppressed result=PASS chirps=5 started=5 verdicts=0 valid=0 other_verdicts=5 other_valid=5 echo_window_ms=300 suppress_tail_ms=60
+SELFTEST check=external_chirp result=SKIP reason=not_requested
+SELFTEST_SUMMARY result=PASS pass=5 fail=0 skip=1 role=node
+
+>> SELFTEST external wait_ms=10000
+SELFTEST_BEGIN role=node mode=external board=damp
+SELFTEST check=board result=PASS mac=24:dc:c3:4b:4c:e8 board=damp role=node version=0.4.0 git=be61884 built=Oct_11_2026 built_time=09:50:57 uptime_ms=95710
+SELFTEST_EXTERNAL waiting wait_ms=10000
+SELFTEST check=external_chirp result=PASS wait_ms=10000 latency_ms=554 valid=1 verdicts=1 own_verdicts=0 responded=1 baseline=ACTIVE
+SELFTEST_SUMMARY result=PASS pass=2 fail=0 skip=0 role=node

@@ -68,6 +68,8 @@ def parse_args(argv=None):
     ap.add_argument("--no-compare", action="store_true", help="skip the tone comparison with earlier sessions")
     ap.add_argument("--keep-emitters", action="store_true",
                     help=f"do not send '{QUIET_EMITTERS}' to every port first (Emitters stay in AUTO)")
+    ap.add_argument("--no-hold", action="store_true",
+                    help="do not hold the other boards in reset (EN via RTS) while one board runs SELFTEST")
     ap.add_argument("--dry-run", action="store_true", help="print the plan, open nothing")
     ap.add_argument("--selfcheck", nargs="+", metavar="LOG",
                     help="offline: parse SELFTEST log(s) and print the table (no ports, no session)")
@@ -340,7 +342,33 @@ def live(args):
             pump(boards, 3.0)
 
         # Pass 1: full SELFTEST, one board at a time so test chirps do not overlap.
+        # The other boards are held in reset (EN low via RTS) while one board
+        # tests: a running Node answers the test chirps, and its answers land in
+        # the quiet windows (floor 1k -> 45k) and in the own-echo window
+        # (2026-10-11 pair-ext2 run). A released board reboots, so wait for its
+        # banner before talking to it.
+        held = set()
+
+        def hold(board):
+            board.ser.rts = True
+            held.add(board.port_name)
+
+        def release(board):
+            since_boot = len("".join(board.chunks))
+            board.ser.rts = False
+            held.discard(board.port_name)
+            wait_for(boards, board, "BUILD role=", 10, since_boot)
+
         for b in boards:
+            if not args.no_hold:
+                for other in boards:
+                    if other is not b and other.port_name not in held:
+                        hold(other)
+                if b.port_name in held:
+                    release(b)
+                    if not args.keep_emitters:
+                        b.send(QUIET_EMITTERS)
+                    pump(boards, 2.0)
             since = len("".join(b.chunks))
             b.send("SELFTEST")
             print(f"[{time.strftime('%H:%M:%S')}] {b.port_name}: SELFTEST ...", flush=True)
@@ -353,6 +381,13 @@ def live(args):
             print(f"[{time.strftime('%H:%M:%S')}] {b.port_name}: "
                   f"{b.parsed['summary'].get('result', 'INCOMPLETE')}", flush=True)
 
+        for b in boards:
+            if b.port_name in held:
+                release(b)
+                if not args.keep_emitters:
+                    b.send(QUIET_EMITTERS)
+        pump(boards, 2.0)
+
         # Pass 2: external_chirp on each Node, the next board in the list chirping.
         if args.external and len(boards) >= 2:
             for i, a in enumerate(boards):
@@ -361,14 +396,24 @@ def live(args):
                 helper = boards[(i + 1) % len(boards)]
                 since = len("".join(a.chunks))
                 a.send(f"SELFTEST external wait_ms={args.external_wait_ms}")
-                if wait_for(boards, a, "SELFTEST_EXTERNAL waiting", 30, since):
+                started = wait_for(boards, a, "SELFTEST_EXTERNAL waiting", 30, since)
+                helper_since = len("".join(helper.chunks))
+                if started:
                     helper.send(f"SELFTEST chirp n={args.chirps} gap_ms={CHIRP_GAP_MS}")
                 else:
                     a.chunks.append("\n# selftest runner: Node never reported SELFTEST_EXTERNAL waiting\n")
                 wait_for(boards, a, "SELFTEST_SUMMARY", args.external_wait_ms / 1000.0 + 30,
                          len("".join(a.chunks)))
+                # The helper must finish its chirps before it is asked anything
+                # else: a board still chirping answers the next command with
+                # `SELFTEST busy` (2026-10-11 pair-ext run).
+                if started:
+                    wait_for(boards, helper, "SELFTEST_CHIRP done", args.chirps * CHIRP_GAP_MS / 1000.0 + 10,
+                             helper_since)
                 pump(boards, 1.0)
                 a.parsed = parse_selftest(a.text())
+                if not started:
+                    a.parsed["checks"]["external_chirp"] = {"result": "FAIL", "reason": "not_started"}
                 ext = a.parsed["checks"].get("external_chirp", {})
                 print(f"[{time.strftime('%H:%M:%S')}] {a.port_name}: external_chirp "
                       f"{ext.get('result', '?')} (helper {helper.port_name})", flush=True)

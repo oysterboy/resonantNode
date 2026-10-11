@@ -181,7 +181,7 @@ stereo with the mic on channel 0).
 
 ### NODE-010 - D-AMP bench check
 
-Status: IN PROGRESS (issue #20, docs/refactors/damp-bench-check.md)
+Status: LANDED 2026-10-11 (issue #20 closed, docs/refactors/archive/damp-bench-check.md)
 
 ```text
 Measures the D-AMP signal; no live piezo A/B (piezo discontinued,
@@ -194,7 +194,12 @@ with the amp idle (explicit RAW run, pass doc R5).
 If D-AMP is a dud, go back to piezo (BOARD_PIEZO) and revisit.
 Boards: E2 + E3 from 2026-10-10 (E1 failed the amp check, in storage);
 every session starts and ends with the amp check (pass doc AC).
-Results: (dated line here)
+Results: 2026-10-10/11 - E3 -> E2, 0.3 FS, stock TonalPulseScalar: 50/50 at
+10 / 40 / 70 cm (piezo 50 / 10 / 48), 0 false positives in 150 silent
+windows, 0 dropped buffers; Node on E2: quiet boot OK, 0 own-echo verdicts
+in 12 idle chirps; idle class-D amp does not raise the mic floor; stock
+Scalar answers speech 2/50 and music 6/50 silent windows (R4). Sessions:
+bench sessions/2026-10-10-issue20-damp-*, 2026-10-11-selftest-r5-*.
 ```
 
 ### NODE-011 - switch to D-AMP

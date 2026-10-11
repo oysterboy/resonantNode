@@ -1,3 +1,31 @@
+# 2026-10-11 - D-AMP bench check (step 3, #20) closed
+
+### Context
+
+Piezo was discontinued for the D-AMP board (MAX98357A + I2S mic on one
+full-duplex port). Step 3 measured the D-AMP signal against the recorded
+piezo runs before thresholds were judged on it.
+
+### Changed
+
+- tone 0.3 FS, startup quiet threshold 400 on D-AMP, own-emit detection
+  suppression over the whole chirp + 60 ms (b6e99b0); TonalPulseFreq
+  thresholds rescaled for D-AMP (52e0c98)
+- bench tooling: `tools/bench/soak.py` (24 h runner, flags blocks with no
+  detection and runs SELFTEST), `tools/bench/selftest.py`, SELFTEST command
+  in all three builds (be61884, step 3b in progress)
+
+### Verification
+
+- E3 -> E2 at 10 / 40 / 70 cm: 50/50 each (piezo 50 / 10 / 48), 0 false
+  positives in silence, 0 dropped buffers
+- Node on E2: quiet boot OK, 0 own-echo verdicts, external chirps answered
+- stock TonalPulseScalar answers speech (2/50) and music (6/50) silent
+  windows: input for the production profile (step 5)
+- archive: `docs/refactors/archive/damp-bench-check.md`; sessions on `bench`
+
+---
+
 # 2026-09-21 - Detection cleanup pass: isolation, memory, naming
 
 ### Context

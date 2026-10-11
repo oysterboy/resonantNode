@@ -16,7 +16,7 @@ so it ended inside longer patterns: the idle pattern's second pulse was
 detected as a valid occurrence every time and only refractory kept the
 node from answering itself; it still counted as field activity. The echo
 lasts 33-54 ms after toneOff on D-AMP (TX queue + room).
-Numbers: `docs/refactors/damp-bench-check.md` section 5,
+Numbers: `docs/refactors/archive/damp-bench-check.md` section 5,
 bench:sessions/2026-10-09-issue19-damp-bringup (latency).
 
 ## Rules out

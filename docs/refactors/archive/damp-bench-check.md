@@ -1,5 +1,22 @@
 # D-AMP bench check (step 3, issue #20)
 
+Archived: 2026-10-11 - Gate met: D-AMP detected at every ladder distance at
+least as well as the recorded piezo runs (R2: 50/50 at 10 / 40 / 70 cm vs
+piezo 50 / 10 / 48, 0 false positives in 150 silent windows, 0 dropped
+buffers), and own chirps stay inside the suppression window (R1 on E2: 0
+own-echo verdicts in 12 idle chirps, quiet boot OK, external control
+answered). Landed on main: tone 0.3 FS, startup quiet threshold 400 on D-AMP,
+own-emit suppression whole chirp + 60 ms (b6e99b0), TonalPulseFreq rescale
+(52e0c98). Also: R3 (Freq rescale; DET-010 limits it to 36-40/50 at 110 cm),
+R4 (stock TonalPulseScalar answers speech 2/50 and music 6/50 silent windows;
+decision 3 open), R5 (idle class-D amp does not raise the mic floor;
+broadband only). Not done here, moved to SELFTEST (step 3b, #28): R1 on E3
+and the E2 -> E3 direction (owner re-plan 2026-10-10). Not re-verified: R1
+110 cm both directions; the ladder ran one direction (E3 -> E2) only. Boards:
+E1 faulty (amp silent, in storage), E3 auto-reset cannot enter download mode,
+a marginal contact silenced the 2026-10-10 soak. AC amp-check rule superseded
+by SELFTEST.
+
 Status: active. Bench 2026-10-09: 70 / 200 / 110 cm and an overnight tuning
 run at 110 cm (section 5, 6); owner decisions and R3 done. 2026-10-10: E1
 (ex-COM6) failed the amp check after its re-wire and went to storage; the
@@ -270,7 +287,7 @@ R4 [x] Noise false positives (decision 3, owner present): phone playing
        speech, then music, ~50 cm from the Analyzer; claps; a door. Silent
        OBS runs at stock vs the lowered amp inspector (medium 1000), and
        signal runs under the same noise (masking). Decide 3 from that.
-R5 [ ] Class-D idle noise (issue #20 item; owner chose an explicit run
+R5 [x] Class-D idle noise (issue #20 item; owner chose an explicit run
        2026-10-10): in the R2 session, RAW mode=pcm on the listener with
        its own amp idle (TX zeros) and the emitter silent; then the same
        with the amp's VIN unplugged for the no-amp floor. Spectrum
@@ -361,3 +378,17 @@ diagnosis of the soak fault (bench:sessions/2026-10-10-soak24h-70cm: from
 13:32 the Analyzer heard nothing; E3 amp or E2 mic). Gate status: detection
 half passed (R2), self-echo half passed on E2 (R1); E3's self-echo is
 checked by SELFTEST before step 4.
+
+2026-10-11 R5 (bench:sessions/2026-10-11-selftest-r5-amp-idle-1 README,
+bench 953a785): measured with SELFTEST's mic check on E3 (Node, TX writer
+running, zeros when idle) instead of a RAW spectrum (RAW needs a linked
+Emitter). Quiet floor mean: amp idle 963 / 1,168, amp VIN unplugged
+1,018 / 1,078. **The idle class-D amp does not raise the mic floor.** Caveat:
+broadband floor, not the planned band spectrum.
+
+2026-10-11 soak fault (2026-10-10, blocks 6-33 silent): SELFTEST on both
+boards the next morning passed (E2 54.5 dB, E3 57.1 dB); the owner had moved
+the boards slightly. Most likely a marginal contact that the move closed.
+SELFTEST then caught a real fault before the soak restart (E3 amp VIN left
+unplugged after R5: amp FAIL -58.7 dB); soak restarted after the gate passed
+(bench:sessions/2026-10-11-soak24h-70cm, #27).

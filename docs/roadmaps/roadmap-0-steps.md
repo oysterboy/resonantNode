@@ -101,8 +101,8 @@ the previous gate open unless the step says it can run in parallel.
    windows end before the measured self-echo (~30-155 ms after toneOn),
    sub-30 Hz mic wander (First Difference stays).
 
-3. [NEXT] D-AMP bench check. (issue #20)
-   Where: NODE-010 (roadmap-node.md) -> docs/refactors/damp-bench-check.md;
+3. [LANDED 2026-10-11] D-AMP bench check. (issue #20, closed)
+   Where: NODE-010 (roadmap-node.md) -> docs/refactors/archive/damp-bench-check.md;
    same bench session as
    cleanup-0-plan Phase 0's distance ladder.
    Why: measures the new signal before thresholds are judged on it;
@@ -112,6 +112,11 @@ the previous gate open unless the step says it can run in parallel.
    recorded piezo runs, self-echo inside the suppression window (or the
    needed window measured). If D-AMP is a dud, go back to piezo
    (BOARD_PIEZO build) and revisit the decision.
+   Closed: gate met (archive header of damp-bench-check.md): 50/50 at
+   10 / 40 / 70 cm vs piezo 50 / 10 / 48, 0 false positives, own chirps
+   suppressed on E2. Handed on: R1 on E3 and the other direction to SELFTEST
+   (step 3b); stock Scalar answers speech/music (R4) to step 5; decision 3
+   (amp inspector) open.
 
 3a. [NEXT, parallel to step 3] 24-hour bench soak on D-AMP: does the room
    change signal and detection? (issue #27; was "1c" on piezo)

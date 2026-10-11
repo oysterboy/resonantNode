@@ -13,7 +13,7 @@ The D-AMP chirp plays at 0.3 FS (`I2S_TONE_AMPLITUDE`, default in
 At 110 cm the stock TonalPulseScalar profile goes from 0/50 to 50/50
 between 0.1 and 0.3 FS; what limits it is the received level (amp
 evidence), not the detector or the room floor. The amp is linear at 0.3.
-Numbers: `docs/refactors/damp-bench-check.md` section 5,
+Numbers: `docs/refactors/archive/damp-bench-check.md` section 5,
 bench:sessions/2026-10-09-issue20-damp-110cm-b.
 
 ## Rules out

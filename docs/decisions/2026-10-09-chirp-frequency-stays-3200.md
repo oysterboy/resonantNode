@@ -14,7 +14,7 @@ margin and the same false-positive result, but part of that is First
 Difference's tilt (it goes if the preprocessor changes after the field
 trial) and higher tones beam more narrowly; 3200 Hz already reaches
 50/50 at 110 cm with 0.3 FS. Lower tones (300-2400 Hz) were worse.
-Numbers: `docs/refactors/damp-bench-check.md` section 5.
+Numbers: `docs/refactors/archive/damp-bench-check.md` section 5.
 
 ## Rules out
 

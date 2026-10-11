@@ -2,7 +2,7 @@
 
 Status: open. Phases 1-2 logged; phase 3 (acoustic suite) planned in
 `docs/research/acoustic-test-suite.md`, scheduled as NODE-012.
-This file holds observations only. Step 3 (`docs/refactors/damp-bench-check.md`,
+This file holds observations only. Step 3 (`docs/refactors/archive/damp-bench-check.md`,
 issue #20) is the current D-AMP slice.
 
 ## Question
@@ -48,7 +48,7 @@ monotonic, setup varied between sessions. T2 0/50 everywhere at defaults.
 Reference rows in bench/baselines.csv (preliminary).
 
 2026-10-09 - phase 2b, D-AMP, desk, step 3 (results in
-docs/refactors/damp-bench-check.md section 5). 70 cm T3 46/50 at 0.1 FS;
+docs/refactors/archive/damp-bench-check.md section 5). 70 cm T3 46/50 at 0.1 FS;
 200 cm 0/50 at 0.1 FS; 110 cm 50/50 at 0.3 FS, 0/50 at 0.1 FS (level, not
 detector, is the lever at 3200 Hz). Same 110 cm, 0.3 FS: 4000 / 4800 /
 5600 / 6400 Hz 50/50 each, +4..+7 dB over 3200; 300-2400 Hz worse

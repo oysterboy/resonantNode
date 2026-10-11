@@ -74,4 +74,4 @@ question is tracked; a file is added here when one resolves.
 | How much `FeatureHistory` to retain on-device | `docs/refactors/cleanup-0-plan.md` Phase 5c (33 KB, 80% of `DetectionRuntime` at last measurement) |
 | Exact boundary between analyzer-only and runtime diagnostics | `docs/refactors/cleanup-analyzer-node-isolation.md`; Phase 5a landed the first cut |
 | Persistent (flash/NVS) config | PAR-010 / PAR-011, deferred until after the field trial (step 11) |
-| Lower TonalPulseScalar's amp inspector (medium 2500 -> ~1000) for range | `docs/refactors/damp-bench-check.md` sections 5-7: owner wants noise false-positive runs first (R4) |
+| Lower TonalPulseScalar's amp inspector (medium 2500 -> ~1000) for range | `docs/refactors/archive/damp-bench-check.md` sections 5-7: owner wants noise false-positive runs first (R4) |

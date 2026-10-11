@@ -1,0 +1,143 @@
+# run: selftest E3 (COM4)
+# firmware: role=node git=be61884 version=0.4.0 board=damp
+# started: 2026-10-11T10:47:01
+# mac: 24:dc:c3:49:b7:38
+# port: COM4
+ets Jul 29 2019 12:21:46
+
+rst:0x1 (POWERON_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)
+configsip: 0, SPIWP:0xee
+clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
+mode:DIO, clock div:1
+load:0x3fff0030,len:1344
+load:0x40078000,len:13964
+load:0x40080400,len:3600
+entry 0x400805f0
+BUILD role=node git=be61884 date=Oct 11 2026 time=09:50:54 version=0.4.0 board=damp
+RB node_id=0x38B749C3DC24
+
+E (9) I2S: i2s_driver_uninstall(2048): I2S port 0 has not installed
+RB PROFILE name=TonalPulseScalar emitters=ScalarTransient inspectionPlan=custom fieldStateConfig=4000/4000
+RB DETECT
+  kind=TonalPulseScalar
+  detectorSelection=ScalarTransient
+  inspectionPlan=custom
+  scalarTransient.observedStream=FrequencyTarget
+  scalarTransient.onsetDetectionThreshold=2000.0
+  scalarTransient.onsetReleaseThreshold=1500.0
+  scalarTransient.cooldownAfterOnsetMs=50
+  scalarTransient.minTransientDurationMs=85
+  scalarTransient.maxTransientDurationMs=200
+  scalarTransient.releaseDebounceMs=10
+  scalarTransient.minTransientPeakStrength=3000.0
+  inspectionPlan.module[0].kind=MagnitudeFeatureStrength label=contrast stream=FrequencyContrast windowPreMs=0 windowPostMs=100
+  inspectionPlan.module[1].kind=MagnitudeFeatureStrength label=amp stream=AmpMagnitude windowPreMs=0 windowPostMs=100
+  verdict.has_requirement=1
+  verdict.required_label=contrast
+  fieldState.occurrenceWindowMs=4000
+  fieldState.patternWindowMs=4000
+  fieldState.busyOccurrenceCountThreshold=3
+  fieldState.denseOccurrenceCountThreshold=6
+  fieldState.quietOccurrenceCountThreshold=0
+  fieldState.quietActivityThreshold=0.00
+  fieldState.busyActivityThreshold=0.45
+
+RB BEHAV
+  idleEnabled=1
+  waitAfterHeardMs=100
+  refractoryAfterEmitMs=400
+  behaviorSuppressSelfChirpMs=100
+  detectionSuppressTailMsOwnEmit=60
+  idleTimeoutMs=20000
+  idleTimeVariationMs=5000
+  idleBlockedAfterHeardMs=1000
+  idleBlockedAfterOwnEmitMs=500
+
+RB startup baseline=LISTEN_FOR_QUIET
+RB rebase waiting smooth=339.0 quietMs=0
+RB rebase waiting smooth=137.0 quietMs=0
+RB rebase waiting smooth=366.0 quietMs=0
+RB rebase waiting smooth=345.0 quietMs=0
+
+>> EMIT MODE REMOTE
+RB rebase waiting smooth=200.0 quietMs=0
+RB rebase waiting smooth=194.0 quietMs=0
+RB rebase waiting smooth=364.0 quietMs=0
+ets Jul 29 2019 12:21:46
+
+rst:0x1 (POWERON_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)
+configsip: 0, SPIWP:0xee
+clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
+mode:DIO, clock div:1
+load:0x3fff0030,len:1344
+load:0x40078000,len:13964
+load:0x40080400,len:3600
+entry 0x400805f0
+BUILD role=node git=be61884 date=Oct 11 2026 time=09:50:54 version=0.4.0 board=damp
+RB node_id=0x38B749C3DC24
+
+E (9) I2S: i2s_driver_uninstall(2048): I2S port 0 has not installed
+RB PROFILE name=TonalPulseScalar emitters=ScalarTransient inspectionPlan=custom fieldStateConfig=4000/4000
+RB DETECT
+  kind=TonalPulseScalar
+  detectorSelection=ScalarTransient
+  inspectionPlan=custom
+  scalarTransient.observedStream=FrequencyTarget
+  scalarTransient.onsetDetectionThreshold=2000.0
+  scalarTransient.onsetReleaseThreshold=1500.0
+  scalarTransient.cooldownAfterOnsetMs=50
+  scalarTransient.minTransientDurationMs=85
+  scalarTransient.maxTransientDurationMs=200
+  scalarTransient.releaseDebounceMs=10
+  scalarTransient.minTransientPeakStrength=3000.0
+  inspectionPlan.module[0].kind=MagnitudeFeatureStrength label=contrast stream=FrequencyContrast windowPreMs=0 windowPostMs=100
+  inspectionPlan.module[1].kind=MagnitudeFeatureStrength label=amp stream=AmpMagnitude windowPreMs=0 windowPostMs=100
+  verdict.has_requirement=1
+  verdict.required_label=contrast
+  fieldState.occurrenceWindowMs=4000
+  fieldState.patternWindowMs=4000
+  fieldState.busyOccurrenceCountThreshold=3
+  fieldState.denseOccurrenceCountThreshold=6
+  fieldState.quietOccurrenceCountThreshold=0
+  fieldState.quietActivityThreshold=0.00
+  fieldState.busyActivityThreshold=0.45
+
+RB BEHAV
+  idleEnabled=1
+  waitAfterHeardMs=100
+  refractoryAfterEmitMs=400
+  behaviorSuppressSelfChirpMs=100
+  detectionSuppressTailMsOwnEmit=60
+  idleTimeoutMs=20000
+  idleTimeVariationMs=5000
+  idleBlockedAfterHeardMs=1000
+  idleBlockedAfterOwnEmitMs=500
+
+RB startup baseline=LISTEN_FOR_QUIET
+RB rebase waiting smooth=245.0 quietMs=0
+
+>> EMIT MODE REMOTE
+RB rebase waiting smooth=368.0 quietMs=0
+R
+>> SELFTEST
+B rebase waiting smooth=309.0 quietMs=0
+SELFTEST_BEGIN role=node mode=full board=damp
+SELFTEST check=board result=PASS mac=24:dc:c3:49:b7:38 board=damp role=node version=0.4.0 git=be61884 built=Oct_11_2026 built_time=09:50:57 uptime_ms=2291
+RB rebase waiting smooth=320.0 quietMs=0
+RB rebase waiting smooth=379.0 quietMs=0
+RB rebase waiting smooth=253.0 quietMs=0
+RB rebase waiting smooth=321.0 quietMs=0
+RB rebase waiting smooth=276.0 quietMs=24
+RB rebase skipped reason=no_quiet smooth=734.0
+SELFTEST check=quiet_boot result=FAIL reason=no_quiet state=FAILED_NO_QUIET boot=no_quiet last=no_quiet last_at_ms=8021 smooth_at_rebase=734.0 quiet_rebases=1 forced_rebases=0 baseline=1983.9
+SELFTEST check=mic result=PASS frames=12000 nonzero_pct=100.0 span=439344 floor_mean=9956 floor_peak=100583 bit8_pct=49.7 framing=ok slot=0
+SELFTEST_AMP n=1 floor=0 tone=0 snr_db=0.0 samples=6400 valid=0
+SELFTEST_AMP n=2 floor=21140 tone=867545 snr_db=32.3 samples=6400 valid=1
+SELFTEST_AMP n=3 floor=31142 tone=868911 snr_db=28.9 samples=6400 valid=1
+SELFTEST_AMP n=4 floor=16912 tone=871016 snr_db=34.2 samples=6400 valid=1
+SELFTEST_AMP n=5 floor=32872 tone=872276 snr_db=28.5 samples=6400 valid=1
+SELFTEST check=amp result=PASS chirps=5 valid=4 freq_hz=3200 tone_ms=100 path=i2s tone=869963 floor=26141 snr_db=30.6 snr_min_db=28.5 snr_max_db=34.2 pass_db=30.0
+SELFTEST_RESTORE detection=reset baseline=FAILED_NO_QUIET
+SELFTEST check=own_chirp_suppressed result=PASS chirps=5 started=5 verdicts=0 valid=0 other_verdicts=0 other_valid=0 echo_window_ms=300 suppress_tail_ms=60
+SELFTEST check=external_chirp result=SKIP reason=not_requested
+SELFTEST_SUMMARY result=FAIL pass=4 fail=1 skip=1 role=node

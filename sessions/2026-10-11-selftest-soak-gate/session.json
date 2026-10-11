@@ -1,0 +1,236 @@
+{
+  "purpose": "NODE-015 SELFTEST (step 3b, issue #28)",
+  "created": "2026-10-11T11:12:08",
+  "setup": {
+    "distance_cm": "",
+    "orientation": "",
+    "emitter_fw": "",
+    "notes": []
+  },
+  "runs": [],
+  "selftest": [
+    {
+      "label": "E2",
+      "mac": "24:dc:c3:4b:4c:e8",
+      "port": "COM3",
+      "file": "selftest_E2_111135.652c9a6.log",
+      "firmware": {
+        "role": "analyzer",
+        "git": "652c9a6",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "started": "2026-10-11T11:11:35",
+      "duration_s": 33,
+      "result": "PASS",
+      "summary": {
+        "result": "PASS",
+        "pass": "3",
+        "fail": "0",
+        "skip": "0",
+        "runs": "1",
+        "role": "analyzer"
+      },
+      "checks": {
+        "board": {
+          "check": "board",
+          "result": "PASS",
+          "mac": "24:dc:c3:4b:4c:e8",
+          "board": "damp",
+          "role": "analyzer",
+          "version": "0.4.0",
+          "git": "652c9a6",
+          "built": "Oct_11_2026",
+          "built_time": "10:48:32",
+          "uptime_ms": "11580"
+        },
+        "mic": {
+          "check": "mic",
+          "result": "PASS",
+          "frames": "12000",
+          "nonzero_pct": "100.0",
+          "span": "73258",
+          "floor_mean": "904",
+          "floor_peak": "2136",
+          "bit8_pct": "50.0",
+          "framing": "ok",
+          "slot": "0"
+        },
+        "amp": {
+          "check": "amp",
+          "result": "PASS",
+          "chirps": "5",
+          "valid": "4",
+          "freq_hz": "3200",
+          "tone_ms": "100",
+          "path": "i2s",
+          "tone": "501325",
+          "floor": "1987",
+          "snr_db": "48.1",
+          "snr_min_db": "46.8",
+          "snr_max_db": "49.1",
+          "pass_db": "30.0"
+        }
+      },
+      "amp_trials": [
+        {
+          "n": "1",
+          "floor": "0",
+          "tone": "0",
+          "snr_db": "0.0",
+          "samples": "6400",
+          "valid": "0"
+        },
+        {
+          "n": "2",
+          "floor": "2300",
+          "tone": "501155",
+          "snr_db": "46.8",
+          "samples": "6400",
+          "valid": "1"
+        },
+        {
+          "n": "3",
+          "floor": "1774",
+          "tone": "501060",
+          "snr_db": "49.0",
+          "samples": "6400",
+          "valid": "1"
+        },
+        {
+          "n": "4",
+          "floor": "2199",
+          "tone": "501600",
+          "snr_db": "47.2",
+          "samples": "6400",
+          "valid": "1"
+        },
+        {
+          "n": "5",
+          "floor": "1752",
+          "tone": "501496",
+          "snr_db": "49.1",
+          "samples": "6400",
+          "valid": "1"
+        }
+      ],
+      "tone_reference": {
+        "tone": 497884.0,
+        "session": "2026-10-11-selftest-r5-amp-vin-off-2",
+        "started": "2026-10-11T10:58:57"
+      }
+    },
+    {
+      "label": "E3",
+      "mac": "24:dc:c3:49:b7:38",
+      "port": "COM4",
+      "file": "selftest_E3_111135.8fd6b6f.log",
+      "firmware": {
+        "role": "emitter",
+        "git": "8fd6b6f",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "started": "2026-10-11T11:11:35",
+      "duration_s": 33,
+      "result": "FAIL",
+      "summary": {
+        "result": "FAIL",
+        "pass": "2",
+        "fail": "1",
+        "skip": "0",
+        "runs": "1",
+        "role": "emitter"
+      },
+      "checks": {
+        "board": {
+          "check": "board",
+          "result": "PASS",
+          "mac": "24:dc:c3:49:b7:38",
+          "board": "damp",
+          "role": "emitter",
+          "version": "0.4.0",
+          "git": "8fd6b6f",
+          "built": "Oct_10_2026",
+          "built_time": "20:40:14",
+          "uptime_ms": "2248"
+        },
+        "mic": {
+          "check": "mic",
+          "result": "PASS",
+          "frames": "12000",
+          "nonzero_pct": "100.0",
+          "span": "150468",
+          "floor_mean": "1029",
+          "floor_peak": "2634",
+          "bit8_pct": "50.1",
+          "framing": "ok",
+          "slot": "0"
+        },
+        "amp": {
+          "check": "amp",
+          "result": "FAIL",
+          "reason": "low_snr",
+          "chirps": "5",
+          "valid": "4",
+          "freq_hz": "3200",
+          "tone_ms": "100",
+          "path": "i2s",
+          "tone": "947",
+          "floor": "2147",
+          "snr_db": "-7.1",
+          "snr_min_db": "-7.5",
+          "snr_max_db": "-6.0",
+          "pass_db": "30.0"
+        }
+      },
+      "amp_trials": [
+        {
+          "n": "1",
+          "floor": "0",
+          "tone": "0",
+          "snr_db": "0.0",
+          "samples": "6400",
+          "valid": "0"
+        },
+        {
+          "n": "2",
+          "floor": "2190",
+          "tone": "947",
+          "snr_db": "-7.3",
+          "samples": "6400",
+          "valid": "1"
+        },
+        {
+          "n": "3",
+          "floor": "2103",
+          "tone": "955",
+          "snr_db": "-6.9",
+          "samples": "6400",
+          "valid": "1"
+        },
+        {
+          "n": "4",
+          "floor": "2204",
+          "tone": "934",
+          "snr_db": "-7.5",
+          "samples": "6400",
+          "valid": "1"
+        },
+        {
+          "n": "5",
+          "floor": "1888",
+          "tone": "947",
+          "snr_db": "-6.0",
+          "samples": "6400",
+          "valid": "1"
+        }
+      ],
+      "tone_reference": {
+        "tone": 812812.0,
+        "session": "2026-10-11-selftest-r5-amp-idle-2",
+        "started": "2026-10-11T10:56:57"
+      }
+    }
+  ]
+}

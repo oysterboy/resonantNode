@@ -4,6 +4,7 @@
 #include <string.h>
 
 #include "../../analyzer/AnalyzerPassRules.h"
+#include "../../../app/TimingUtils.h"
 
 namespace {
 
@@ -44,7 +45,7 @@ detection::DetectorRejectClass scalarTransientRejectClass(ScalarTransientDetecto
 
 } // namespace
 
-void ScalarTransientDetector::captureAcceptedOccurrence(unsigned long releaseObservedUs, unsigned long peakDurationUs) {
+void ScalarTransientDetector::captureAcceptedOccurrence(uint64_t releaseObservedUs, unsigned long peakDurationUs) {
     finalizeCandidateFacts(releaseObservedUs);
     const float candidateMean = _candidateStrengthCount > 0
         ? static_cast<float>(_candidateStrengthSum / static_cast<double>(_candidateStrengthCount))
@@ -57,15 +58,15 @@ void ScalarTransientDetector::captureAcceptedOccurrence(unsigned long releaseObs
         : 0.0f;
 
     _acceptedOccurrencePresent = true;
-    _acceptedOccurrenceReleaseMs = releaseObservedUs / 1000UL;
+    _acceptedOccurrenceReleaseMs = timebase::msFromUs64(releaseObservedUs);
     _acceptedOccurrenceId = _currentOccurrenceId != 0
         ? _currentOccurrenceId
         : detection::analyzer::nextOccurrenceId(_nextOccurrenceId);
     _nextOccurrenceId = _acceptedOccurrenceId;
     _acceptedOccurrence.present = true;
     _acceptedOccurrence.occurrenceId = _acceptedOccurrenceId;
-    _acceptedOccurrence.startMs = _peakStartedUs / 1000UL;
-    _acceptedOccurrence.peakMs = _peakStrengthObservedUs / 1000UL;
+    _acceptedOccurrence.startMs = timebase::msFromUs64(_peakStartedUs);
+    _acceptedOccurrence.peakMs = timebase::msFromUs64(_peakStrengthObservedUs);
     _acceptedOccurrence.endMs = _acceptedOccurrenceReleaseMs;
     _acceptedOccurrence.durationMs = peakDurationUs / 1000UL;
     _acceptedOccurrence.strength = _candidatePeak;
@@ -93,7 +94,7 @@ void ScalarTransientDetector::captureAcceptedOccurrence(unsigned long releaseObs
     resetCandidateFacts();
 }
 
-void ScalarTransientDetector::captureSelectedReject(unsigned long releaseObservedUs) {
+void ScalarTransientDetector::captureSelectedReject(uint64_t releaseObservedUs) {
     if (_lastTransientRejectReason == TransientRejectReason::None) {
         return;
     }
@@ -109,9 +110,9 @@ void ScalarTransientDetector::captureSelectedReject(unsigned long releaseObserve
         ? sqrtf(_candidateSumSquares / static_cast<float>(_candidateStrengthCount))
         : 0.0f;
 
-    const unsigned long rejectStartMs = _peakStartedUs / 1000UL;
-    const unsigned long rejectPeakMs = _peakStrengthObservedUs / 1000UL;
-    const unsigned long rejectEndMs = releaseObservedUs / 1000UL;
+    const unsigned long rejectStartMs = timebase::msFromUs64(_peakStartedUs);
+    const unsigned long rejectPeakMs = timebase::msFromUs64(_peakStrengthObservedUs);
+    const unsigned long rejectEndMs = timebase::msFromUs64(releaseObservedUs);
     const unsigned long rejectDurationMs = _lastTransientRejectedDurationMs;
 
     if (!scalarRejectCandidateBeatsCurrent(_selectedReject, rejectDurationMs, _lastTransientRejectedStrength)) {
@@ -158,7 +159,7 @@ void ScalarTransientDetector::captureSelectedReject(unsigned long releaseObserve
     _reportDetail.inspect.matchedMeanPassed =
         !_requireMinStrength ||
         candidateMatchedMean >= _minMatchedMeanStrength;
-    freezeReport(releaseObservedUs / 1000UL);
+    freezeReport(timebase::msFromUs64(releaseObservedUs));
     resetCandidateFacts();
 }
 
@@ -180,7 +181,7 @@ void ScalarTransientDetector::capturePendingOccurrence(const AudioSamplePacket& 
     _pendingOccurrence.peakMs = _acceptedOccurrencePeakMs;
     _pendingOccurrence.releaseMs = _acceptedOccurrenceReleaseMs != 0 ? _acceptedOccurrenceReleaseMs : audioSamplePacket.timeMs;
     _pendingOccurrence.endMs = _pendingOccurrence.releaseMs;
-    _pendingOccurrence.durationMs = _pendingOccurrence.releaseMs >= _pendingOccurrence.startMs
+    _pendingOccurrence.durationMs = timing::atOrAfter(_pendingOccurrence.releaseMs, _pendingOccurrence.startMs)
         ? _pendingOccurrence.releaseMs - _pendingOccurrence.startMs
         : 0UL;
     _pendingOccurrence.strength = _acceptedOccurrencePeakStrength;

@@ -1,5 +1,6 @@
 #include "ChirpOutput.h"
 #include <Arduino.h>
+#include "../app/TimeBase.h"
 
 ChirpOutput::ChirpOutput(ToneOutput& toneOutput, uint32_t toneHz)
     : _toneOutput(toneOutput),
@@ -45,7 +46,7 @@ void ChirpOutput::start(ChirpPattern pattern) {
         _activeChirpOnMs = _chirpOnMs;
         _activeChirpPauseMs = _chirpPauseMs;
     }
-    _phaseStartMs = millis();
+    _phaseStartMs = timebase::nowMs();
     if (pattern == ChirpPattern::Idle) {
         _toneOutput.setToneHz(_idleFirstPulseToneHz);
     } else {
@@ -60,13 +61,13 @@ void ChirpOutput::stop() {
     _finished = false;
     _activePattern = ChirpPattern::Single;
     _phase = 0;
-    _phaseStartMs = millis();
+    _phaseStartMs = timebase::nowMs();
 }
 
 void ChirpOutput::update() {
     if (!_active) return;
 
-    const unsigned long now = millis();
+    const unsigned long now = timebase::nowMs();
     const unsigned long elapsed = now - _phaseStartMs;
 
     switch (_phase) {

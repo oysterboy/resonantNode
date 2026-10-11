@@ -4,13 +4,14 @@
 #include <math.h>
 
 #include "../../analyzer/AnalyzerPassRules.h"
+#include "../../../app/TimeBase.h"
 
 // Lifecycle / summaries.
 ScalarTransientDetector::ScalarTransientDetector() = default;
 
 void ScalarTransientDetector::begin() {
     resetState();
-    _statsStartUs = micros();
+    _statsStartUs = timebase::nowUs64();
     _lastStatsPrintUs = 0;
     _peakAcceptedCount = 0;
 }
@@ -104,10 +105,10 @@ void ScalarTransientDetector::resetCandidateFacts() {
     _candidateLastUpdateUs = 0;
 }
 
-void ScalarTransientDetector::updateCandidateFacts(unsigned long nowUs, float strength, bool aboveAttackThreshold, bool aboveReleaseThreshold) {
+void ScalarTransientDetector::updateCandidateFacts(uint64_t nowUs, float strength, bool aboveAttackThreshold, bool aboveReleaseThreshold) {
     const unsigned long deltaUs = _candidateLastUpdateUs == 0 || nowUs < _candidateLastUpdateUs
         ? 0UL
-        : nowUs - _candidateLastUpdateUs;
+        : static_cast<unsigned long>(nowUs - _candidateLastUpdateUs);
 
     if (strength > _candidatePeak) {
         _candidatePeak = strength;
@@ -132,7 +133,7 @@ void ScalarTransientDetector::updateCandidateFacts(unsigned long nowUs, float st
         if (!_candidateWasAboveRelease) {
             ++_candidateIslandCount;
             if (_candidateCurrentGapStartUs != 0 && nowUs >= _candidateCurrentGapStartUs) {
-                const unsigned long gapMs = (nowUs - _candidateCurrentGapStartUs) / 1000UL;
+                const unsigned long gapMs = static_cast<unsigned long>((nowUs - _candidateCurrentGapStartUs) / 1000ULL);
                 if (gapMs > _candidateGapMaxMs) {
                     _candidateGapMaxMs = gapMs;
                 }
@@ -143,7 +144,7 @@ void ScalarTransientDetector::updateCandidateFacts(unsigned long nowUs, float st
     } else if (_candidateWasAboveRelease) {
         ++_candidateGapCount;
         if (_candidateCurrentIslandStartUs != 0 && nowUs >= _candidateCurrentIslandStartUs) {
-            const unsigned long islandMs = (nowUs - _candidateCurrentIslandStartUs) / 1000UL;
+            const unsigned long islandMs = static_cast<unsigned long>((nowUs - _candidateCurrentIslandStartUs) / 1000ULL);
             if (islandMs > _candidateIslandMaxMs) {
                 _candidateIslandMaxMs = islandMs;
             }
@@ -156,14 +157,14 @@ void ScalarTransientDetector::updateCandidateFacts(unsigned long nowUs, float st
     _candidateLastUpdateUs = nowUs;
 }
 
-void ScalarTransientDetector::finalizeCandidateFacts(unsigned long releaseObservedUs) {
+void ScalarTransientDetector::finalizeCandidateFacts(uint64_t releaseObservedUs) {
     if (_candidateWasAboveRelease && _candidateCurrentIslandStartUs != 0 && releaseObservedUs >= _candidateCurrentIslandStartUs) {
-        const unsigned long islandMs = (releaseObservedUs - _candidateCurrentIslandStartUs) / 1000UL;
+        const unsigned long islandMs = static_cast<unsigned long>((releaseObservedUs - _candidateCurrentIslandStartUs) / 1000ULL);
         if (islandMs > _candidateIslandMaxMs) {
             _candidateIslandMaxMs = islandMs;
         }
     } else if (!_candidateWasAboveRelease && _candidateCurrentGapStartUs != 0 && releaseObservedUs >= _candidateCurrentGapStartUs) {
-        const unsigned long gapMs = (releaseObservedUs - _candidateCurrentGapStartUs) / 1000UL;
+        const unsigned long gapMs = static_cast<unsigned long>((releaseObservedUs - _candidateCurrentGapStartUs) / 1000ULL);
         if (gapMs > _candidateGapMaxMs) {
             _candidateGapMaxMs = gapMs;
         }
@@ -171,7 +172,7 @@ void ScalarTransientDetector::finalizeCandidateFacts(unsigned long releaseObserv
 }
 
 // Core lifecycle helpers.
-void ScalarTransientDetector::updateOnsetStage(unsigned long nowUs, float signalMagnitude, bool aboveAttackThreshold, bool onsetCooldownElapsed) {
+void ScalarTransientDetector::updateOnsetStage(uint64_t nowUs, float signalMagnitude, bool aboveAttackThreshold, bool onsetCooldownElapsed) {
     // Use raw magnitude for the edge so short bursts are not delayed by smoothing.
     // The separate release threshold keeps the peak stable when the occurrence wobbles near the edge.
     if (aboveAttackThreshold && !_peakActive && onsetCooldownElapsed) {
@@ -210,7 +211,7 @@ void ScalarTransientDetector::updateOnsetStage(unsigned long nowUs, float signal
     }
 }
 
-void ScalarTransientDetector::updateTransientStage(unsigned long nowUs, float signalMagnitude, bool aboveReleaseThreshold) {
+void ScalarTransientDetector::updateTransientStage(uint64_t nowUs, float signalMagnitude, bool aboveReleaseThreshold) {
     if (_peakActive && signalMagnitude > _peakStrength) {
         _peakStrength = signalMagnitude;
         _peakStrengthObservedUs = nowUs;
@@ -234,8 +235,8 @@ void ScalarTransientDetector::updateTransientStage(unsigned long nowUs, float si
     // threshold for long enough to count as a real end of burst.
     const unsigned long releaseDebounceUs = _releaseDebounceMs * 1000UL;
     if (_peakActive && _releaseCandidateStartedUs != 0 && nowUs - _releaseCandidateStartedUs >= releaseDebounceUs) {
-        const unsigned long releaseObservedUs = _releaseObservedUs != 0 ? _releaseObservedUs : nowUs;
-        const unsigned long peakDurationUs = releaseObservedUs - _peakStartedUs;
+        const uint64_t releaseObservedUs = _releaseObservedUs != 0 ? _releaseObservedUs : nowUs;
+        const unsigned long peakDurationUs = static_cast<unsigned long>(releaseObservedUs - _peakStartedUs);
         const unsigned long minTransientDurationUs = _minTransientDurationMs * 1000UL;
         const unsigned long maxTransientDurationUs = _maxTransientDurationMs * 1000UL;
         const bool durationAccepted = peakDurationUs >= minTransientDurationUs && peakDurationUs <= maxTransientDurationUs;
@@ -364,7 +365,7 @@ void ScalarTransientDetector::update(
     const AudioSamplePacket& audioSamplePacket,
     float signalMagnitude
 ) {
-    const unsigned long nowUs = audioSamplePacket.timeUs;
+    const uint64_t nowUs = audioSamplePacket.timeUs64;
     _onsetDetected = false;
     _onsetStrength = 0.0f;
 

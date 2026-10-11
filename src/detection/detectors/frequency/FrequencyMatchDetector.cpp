@@ -164,7 +164,7 @@ void FrequencyMatchDetector::resetPendingFacts() {
 }
 
 void FrequencyMatchDetector::updatePendingFacts(unsigned long nowMs, float strength, bool aboveAttackThreshold, bool aboveReleaseThreshold) {
-    const unsigned long deltaMs = _pendingLastUpdateMs == 0 || nowMs < _pendingLastUpdateMs
+    const unsigned long deltaMs = _pendingLastUpdateMs == 0 || timing::beforeDeadline(nowMs, _pendingLastUpdateMs)
         ? 0UL
         : nowMs - _pendingLastUpdateMs;
 
@@ -186,7 +186,7 @@ void FrequencyMatchDetector::updatePendingFacts(unsigned long nowMs, float stren
     if (aboveReleaseThreshold) {
         if (!_pendingWasAboveRelease) {
             ++_pendingIslandCount;
-            if (_pendingCurrentGapStartMs != 0 && nowMs >= _pendingCurrentGapStartMs) {
+            if (_pendingCurrentGapStartMs != 0 && timing::atOrAfter(nowMs, _pendingCurrentGapStartMs)) {
                 const unsigned long gapMs = nowMs - _pendingCurrentGapStartMs;
                 if (gapMs > _pendingGapMaxMs) {
                     _pendingGapMaxMs = gapMs;
@@ -197,7 +197,7 @@ void FrequencyMatchDetector::updatePendingFacts(unsigned long nowMs, float stren
         }
     } else if (_pendingWasAboveRelease) {
         ++_pendingGapCount;
-        if (_pendingCurrentIslandStartMs != 0 && nowMs >= _pendingCurrentIslandStartMs) {
+        if (_pendingCurrentIslandStartMs != 0 && timing::atOrAfter(nowMs, _pendingCurrentIslandStartMs)) {
             const unsigned long islandMs = nowMs - _pendingCurrentIslandStartMs;
             if (islandMs > _pendingIslandMaxMs) {
                 _pendingIslandMaxMs = islandMs;
@@ -212,12 +212,12 @@ void FrequencyMatchDetector::updatePendingFacts(unsigned long nowMs, float stren
 }
 
 void FrequencyMatchDetector::finalizePendingFacts(unsigned long closeMs) {
-    if (_pendingWasAboveRelease && _pendingCurrentIslandStartMs != 0 && closeMs >= _pendingCurrentIslandStartMs) {
+    if (_pendingWasAboveRelease && _pendingCurrentIslandStartMs != 0 && timing::atOrAfter(closeMs, _pendingCurrentIslandStartMs)) {
         const unsigned long islandMs = closeMs - _pendingCurrentIslandStartMs;
         if (islandMs > _pendingIslandMaxMs) {
             _pendingIslandMaxMs = islandMs;
         }
-    } else if (!_pendingWasAboveRelease && _pendingCurrentGapStartMs != 0 && closeMs >= _pendingCurrentGapStartMs) {
+    } else if (!_pendingWasAboveRelease && _pendingCurrentGapStartMs != 0 && timing::atOrAfter(closeMs, _pendingCurrentGapStartMs)) {
         const unsigned long gapMs = closeMs - _pendingCurrentGapStartMs;
         if (gapMs > _pendingGapMaxMs) {
             _pendingGapMaxMs = gapMs;
@@ -319,7 +319,7 @@ void FrequencyMatchDetector::update(const detection::FrequencyBandMeasurementPac
         _pendingClosed = true;
         _pendingCloseMs = now;
         _pendingCloseSample = currentSample;
-        _pendingDurationMs = _pendingCloseMs >= _pendingOpenMs
+        _pendingDurationMs = timing::atOrAfter(_pendingCloseMs, _pendingOpenMs)
             ? _pendingCloseMs - _pendingOpenMs
             : 0UL;
         const bool durationOk = _pendingDurationMs >= minDurationMs;
@@ -420,7 +420,7 @@ void FrequencyMatchDetector::update(const detection::FrequencyBandMeasurementPac
             if (_releaseOk) {
                 _pendingLastMatchedMs = now;
                 ++_pendingHoldUpdates;
-                _pendingDurationMs = _pendingLastMatchedMs >= _pendingOpenMs
+                _pendingDurationMs = timing::atOrAfter(_pendingLastMatchedMs, _pendingOpenMs)
                     ? _pendingLastMatchedMs - _pendingOpenMs
                     : 0UL;
                 if (evidence.targetBandValue > _pendingPeakScore

@@ -5,6 +5,8 @@
 #include <Arduino.h>
 #include <math.h>
 #include <string.h>
+#include "../../../app/TimeBase.h"
+#include "../../../app/TimingUtils.h"
 
 // History is recorded only for the streams the active inspection plan names,
 // so report exactly those rather than a fixed pair: a stream the plan doesn't
@@ -167,10 +169,10 @@ void AnalyzerApp::printAudioRunSummary() const {
         return;
     }
 
-    const unsigned long now = millis();
+    const unsigned long now = timebase::nowMs();
     const unsigned long sampleRateHz = _audioSource.sampleRateHz() > 0 ? _audioSource.sampleRateHz() : 16000UL;
     const unsigned long runElapsedMs = _sequenceTest.startedAtMs > 0
-        ? (now >= _sequenceTest.startedAtMs ? now - _sequenceTest.startedAtMs : 0UL)
+        ? timing::elapsedOrZero(now, _sequenceTest.startedAtMs)
         : 0UL;
     const unsigned long expectedSamples = static_cast<unsigned long>(
         (static_cast<unsigned long long>(runElapsedMs) * static_cast<unsigned long long>(sampleRateHz)) / 1000ULL);
@@ -285,5 +287,5 @@ void AnalyzerApp::printOccurrenceSummary() const {
     Serial.print(" lastBlockCount=");
     Serial.print(_audioSignal.lastBlockSampleCount());
     Serial.print(" lastBlockMicros=");
-    Serial.println(_audioSignal.lastBlockApproxStartMicros());
+    Serial.println(static_cast<unsigned long>(_audioSignal.lastBlockApproxStartUs64()));
 }

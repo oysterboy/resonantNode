@@ -8,6 +8,7 @@
 #include <stdint.h>
 #include <string.h>
 
+#include "../app/TimeBase.h"
 #include "../audio/AudioPcm.h"
 
 namespace {
@@ -186,7 +187,7 @@ int AudioSourceI2S::availableBytes() const {
     return static_cast<int>((_blockCount - _blockCursor) * bytesPerSample);
 }
 
-bool AudioSourceI2S::readSample(int& sample, uint32_t& sampleTimeUs) {
+bool AudioSourceI2S::readSample(int& sample, uint64_t& sampleTimeUs64) {
     if (_blockCursor >= _blockCount && !refillBlock()) {
         return false;
     }
@@ -197,11 +198,11 @@ bool AudioSourceI2S::readSample(int& sample, uint32_t& sampleTimeUs) {
 
     const size_t index = _blockCursor++;
     sample = static_cast<int>(_blockSamples[index]);
-    sampleTimeUs = _blockApproxStartMicros + sampleOffsetUs(static_cast<uint32_t>(index), static_cast<uint32_t>(_sampleRate));
+    sampleTimeUs64 = _blockApproxStartUs64 + sampleOffsetUs(static_cast<uint32_t>(index), static_cast<uint32_t>(_sampleRate));
     return true;
 }
 
-bool AudioSourceI2S::readRawSample(int& sample, uint32_t& sampleTimeUs) {
+bool AudioSourceI2S::readRawSample(int& sample, uint64_t& sampleTimeUs64) {
     if (!_started) {
         recordReadAttempt(0, 0, true);
         return false;
@@ -236,7 +237,7 @@ bool AudioSourceI2S::readRawSample(int& sample, uint32_t& sampleTimeUs) {
 #else
     sample = decodePcmSample(rawBytes, bytesPerSample);
 #endif
-    sampleTimeUs = micros();
+    sampleTimeUs64 = timebase::nowUs64();
     _stats.totalSamplesRead += 1;
     return true;
 }
@@ -260,7 +261,7 @@ bool AudioSourceI2S::readBlock(AudioBlock& block) {
     block.samples = _blockSamples.get() + _blockCursor;
     block.sampleCount = static_cast<uint16_t>(_blockCount - _blockCursor);
     block.startSampleIndex = _blockStartSampleIndex + _blockCursor;
-    block.approxStartMicros = _blockApproxStartMicros + sampleOffsetUs(static_cast<uint32_t>(_blockCursor), static_cast<uint32_t>(_sampleRate));
+    block.approxStartUs64 = _blockApproxStartUs64 + sampleOffsetUs(static_cast<uint32_t>(_blockCursor), static_cast<uint32_t>(_sampleRate));
     block.overflowBeforeBlock = false;
     _blockCursor = _blockCount;
     return true;
@@ -275,7 +276,7 @@ const AudioSourceStats& AudioSourceI2S::stats() const {
 }
 
 // Block timestamps come from the sample index on a clock locked to
-// micros(), not from the time a block happens to be read.
+// timebase::nowUs64(), not from the time a block happens to be read.
 //
 // i2s_read() hands over whole DMA buffers (128 samples, 8 ms) that may have
 // been waiting for a while. Stamping each block as "its last sample arrived
@@ -313,23 +314,23 @@ uint32_t AudioSourceI2S::drainDroppedBuffers() {
     return dropped;
 }
 
-uint32_t AudioSourceI2S::stampBlock(uint64_t blockStartIndex, size_t blockCount, uint32_t readAtUs) {
+uint64_t AudioSourceI2S::stampBlock(uint64_t blockStartIndex, size_t blockCount, uint64_t readAtUs) {
     const double nominalUsPerSample = _sampleRate > 0 ? 1000000.0 / static_cast<double>(_sampleRate) : 0.0;
     const uint32_t windowSamples = (static_cast<uint32_t>(_sampleRate) * kClockWindowMs) / 1000U;
     const double lastOffsetSamples = static_cast<double>(blockCount > 0 ? blockCount - 1U : 0U);
     if (!_clockAnchored) {
         _clockUsPerSample = nominalUsPerSample;
         _clockAnchorIndex = blockStartIndex;
-        _clockAnchorUs = readAtUs - static_cast<uint32_t>(lastOffsetSamples * _clockUsPerSample);
+        _clockAnchorUs = readAtUs - static_cast<uint64_t>(lastOffsetSamples * _clockUsPerSample);
         _clockWindowMinLatencyUs = INT32_MAX;
         _clockWindowSamples = 0;
         _clockAnchored = true;
     }
 
-    const uint32_t startUs = _clockAnchorUs + static_cast<uint32_t>(
+    const uint64_t startUs = _clockAnchorUs + static_cast<uint64_t>(
         static_cast<double>(blockStartIndex - _clockAnchorIndex) * _clockUsPerSample);
-    const uint32_t lastUs = startUs + static_cast<uint32_t>(lastOffsetSamples * _clockUsPerSample);
-    const int32_t latencyUs = static_cast<int32_t>(readAtUs - lastUs);
+    const uint64_t lastUs = startUs + static_cast<uint64_t>(lastOffsetSamples * _clockUsPerSample);
+    const int32_t latencyUs = static_cast<int32_t>(static_cast<int64_t>(readAtUs - lastUs));
     if (latencyUs < _clockWindowMinLatencyUs) {
         _clockWindowMinLatencyUs = latencyUs;
     }
@@ -338,14 +339,14 @@ uint32_t AudioSourceI2S::stampBlock(uint64_t blockStartIndex, size_t blockCount,
     if (_clockWindowSamples >= windowSamples) {
         const int32_t correctionUs = _clockWindowMinLatencyUs;
         const uint64_t nextIndex = blockStartIndex + static_cast<uint64_t>(blockCount);
-        const uint32_t nextUs = _clockAnchorUs + static_cast<uint32_t>(
+        const uint64_t nextUs = _clockAnchorUs + static_cast<uint64_t>(
             static_cast<double>(nextIndex - _clockAnchorIndex) * _clockUsPerSample);
         _clockUsPerSample += kClockRateGain * static_cast<double>(correctionUs)
             / static_cast<double>(_clockWindowSamples);
         const double lo = nominalUsPerSample * (1.0 - kClockMaxRateDeviation);
         const double hi = nominalUsPerSample * (1.0 + kClockMaxRateDeviation);
         _clockUsPerSample = _clockUsPerSample < lo ? lo : (_clockUsPerSample > hi ? hi : _clockUsPerSample);
-        _clockAnchorUs = nextUs + static_cast<uint32_t>(correctionUs);
+        _clockAnchorUs = nextUs + static_cast<uint64_t>(static_cast<int64_t>(correctionUs));
         _clockAnchorIndex = nextIndex;
         ++_stats.sampleClockCorrections;
         const uint32_t magnitudeUs = static_cast<uint32_t>(correctionUs < 0 ? -correctionUs : correctionUs);
@@ -365,7 +366,7 @@ void AudioSourceI2S::resetStats() {
     _blockCursor = 0;
     _blockCount = 0;
     _blockStartSampleIndex = 0;
-    _blockApproxStartMicros = 0;
+    _blockApproxStartUs64 = 0;
     _blockOverflowBeforeBlock = false;
     _outputSampleIndex = 0;
     _stats = {};
@@ -452,7 +453,7 @@ bool AudioSourceI2S::refillBlock() {
 
     const size_t fullSamplesRead = bytesRead / frameSize;
     const size_t samplesToProcess = fullSamplesRead < kRefillBatchSize ? fullSamplesRead : kRefillBatchSize;
-    const uint32_t fillEndUs = micros();
+    const uint64_t fillEndUs = timebase::nowUs64();
 
     _blockCursor = 0;
     _blockStartSampleIndex = _outputSampleIndex;
@@ -463,9 +464,9 @@ bool AudioSourceI2S::refillBlock() {
         _blockSamples[_blockCount++] = preprocessSample(decodedSample);
     }
 
-    _blockApproxStartMicros = stampBlock(_blockStartSampleIndex, _blockCount, fillEndUs);
+    _blockApproxStartUs64 = stampBlock(_blockStartSampleIndex, _blockCount, fillEndUs);
     if (_haveLastBlockEnd) {
-        const int32_t deltaUs = static_cast<int32_t>(_blockApproxStartMicros - _lastBlockEndMicros);
+        const int32_t deltaUs = static_cast<int32_t>(static_cast<int64_t>(_blockApproxStartUs64 - _lastBlockEndUs64));
         if (deltaUs < 0) {
             ++_stats.timestampBacksteps;
             const uint32_t backstepUs = static_cast<uint32_t>(-deltaUs);
@@ -474,7 +475,7 @@ bool AudioSourceI2S::refillBlock() {
             }
         }
     }
-    _lastBlockEndMicros = _blockApproxStartMicros + static_cast<uint32_t>(static_cast<double>(_blockCount) * _clockUsPerSample);
+    _lastBlockEndUs64 = _blockApproxStartUs64 + static_cast<uint64_t>(static_cast<double>(_blockCount) * _clockUsPerSample);
     _haveLastBlockEnd = true;
     _outputSampleIndex += static_cast<uint64_t>(_blockCount);
     _stats.totalSamplesRead += static_cast<uint64_t>(_blockCount);

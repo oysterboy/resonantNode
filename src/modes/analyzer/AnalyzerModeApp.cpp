@@ -18,6 +18,7 @@
 #include "../../detection/analyzer/AnalyzerTrialClassifier.h"
 #include "../../detection/inspection/OccurrenceInspector.h"
 #include "../../app/BuildInfo.h"
+#include "../../app/TimeBase.h"
 
 /*
 AnalyzerApp
@@ -348,12 +349,12 @@ unsigned long AnalyzerApp::activeRunEndMs() const {
     if (_sequenceTest.active && _sequenceTest.currentTrialEndMs > 0) {
         return _sequenceTest.currentTrialEndMs;
     }
-    return millis();
+    return timebase::nowMs();
 }
 
 void AnalyzerApp::resetLoopHealthWindow() {
     _loopHealth.reset();
-    _loopLastUs = micros();
+    _loopLastUs = timebase::nowUs();
 }
 
 bool AnalyzerApp::shouldPrintHardwareDiagnostics() const {
@@ -586,7 +587,7 @@ void AnalyzerApp::begin() {
     printHeapStatus("begin_before_runtime_alloc");
     _detection.resetState();
     _detection.setVerdictQueueEnabled(false);
-    _loopLastUs = micros();
+    _loopLastUs = timebase::nowUs();
     _loopMaxSinceBootUs = 0;
     _loopHealth.reset();
     _usbLineLength = 0;
@@ -670,7 +671,7 @@ AnalyzerApp::SequenceDiagMode AnalyzerApp::sequenceDiagModeFromOutputWhen(SeqOut
 // -----------------------------------------------------------------------------
 
 void AnalyzerApp::update() {
-    const uint32_t nowUs = micros();
+    const uint32_t nowUs = timebase::nowUs();
     if (_loopLastUs != 0) {
         const uint32_t loopUs = nowUs - _loopLastUs;
         _loopHealth.record(loopUs);
@@ -681,13 +682,13 @@ void AnalyzerApp::update() {
     _loopLastUs = nowUs;
 
     const unsigned long updateLoopStartUs = nowUs;
-    const unsigned long now = millis();
+    const unsigned long now = timebase::nowMs();
 
     processPendingSequenceStart();
 
     int processedSamples = 0;
     AudioBlock block;
-    const uint32_t sampleWorkStartUs = micros();
+    const uint32_t sampleWorkStartUs = timebase::nowUs();
     while (processedSamples < kMaxSamplesPerLoop) {
         const int availableBytesBeforeRead = _audioSource.availableBytes();
         if (!_i2sSource.readBlock(block)) {
@@ -706,8 +707,10 @@ void AnalyzerApp::update() {
                     _sequenceTest.maxAvailableBytes = availableBytes;
                 }
             }
-            const unsigned long blockAgeMs = micros() > block.approxStartMicros
-                ? static_cast<unsigned long>((micros() - block.approxStartMicros) / 1000UL)
+            // Wrap-safe: 64-bit block time vs the same 64-bit clock (#30).
+            const uint64_t blockReadAtUs64 = timebase::nowUs64();
+            const unsigned long blockAgeMs = blockReadAtUs64 > block.approxStartUs64
+                ? static_cast<unsigned long>((blockReadAtUs64 - block.approxStartUs64) / 1000ULL)
                 : 0UL;
             if (blockAgeMs > _sequenceTest.maxBlockAgeMs) {
                 _sequenceTest.maxBlockAgeMs = blockAgeMs;
@@ -724,9 +727,9 @@ void AnalyzerApp::update() {
             diagnostics.rawLastBlockHash = blockHash;
         }
         for (uint16_t i = 0; i < block.sampleCount; ++i) {
-            const uint32_t sampleTimeUs = block.approxStartMicros + sampleOffsetUs(static_cast<uint32_t>(i), sampleRateHz);
+            const uint64_t sampleTimeUs64 = block.approxStartUs64 + sampleOffsetUs(static_cast<uint32_t>(i), sampleRateHz);
             AudioSamplePacket audioSamplePacket;
-            _audioSignal.update(static_cast<int>(block.samples[i]), sampleTimeUs, audioSamplePacket);
+            _audioSignal.update(static_cast<int>(block.samples[i]), sampleTimeUs64, audioSamplePacket);
             updateSequenceAudioHealth(audioSamplePacket);
             _freqBandStream.observeCenteredSample(audioSamplePacket.baselineCorrectedValue, audioSamplePacket.timeMs);
             detection::FrequencyBandMeasurementPacket& runtimeFrequencyMeasurementPacket = _runtimeFrequencyMeasurementPacketScratch;
@@ -754,14 +757,12 @@ void AnalyzerApp::update() {
                 }
             }
             if (_sequenceTest.active && _sequenceTest.currentTrial > 0) {
-                const unsigned long processingLagMs = millis() > audioSamplePacket.timeMs
-                    ? millis() - audioSamplePacket.timeMs
-                    : 0UL;
+                const unsigned long processingLagMs = timing::elapsedOrZero(timebase::nowMs(), audioSamplePacket.timeMs);
                 if (processingLagMs > _sequenceTest.maxProcessingLagMs) {
                     _sequenceTest.maxProcessingLagMs = processingLagMs;
                 }
-                if (audioSamplePacket.timeMs >= _sequenceTest.currentTrialStartMs &&
-                    audioSamplePacket.timeMs <= _sequenceTest.currentTrialEndMs) {
+                if (timing::atOrAfter(audioSamplePacket.timeMs, _sequenceTest.currentTrialStartMs) &&
+                    timing::atOrBefore(audioSamplePacket.timeMs, _sequenceTest.currentTrialEndMs)) {
                     ++_sequenceTest.currentTrialSamplesProcessed;
                 }
                 updateSequenceAmbientStats(audioSamplePacket.timeMs);
@@ -772,7 +773,7 @@ void AnalyzerApp::update() {
             processedSamples = kMaxSamplesPerLoop;
         }
     }
-    const unsigned long sampleWorkUs = static_cast<unsigned long>(micros() - sampleWorkStartUs);
+    const unsigned long sampleWorkUs = static_cast<unsigned long>(timebase::nowUs() - sampleWorkStartUs);
     if (processedSamples > 0) {
         _diagSampleWorkUs += sampleWorkUs;
         _diagSamplesWorked += static_cast<uint64_t>(processedSamples);
@@ -785,7 +786,7 @@ void AnalyzerApp::update() {
     if (static_cast<unsigned long>(processedSamples) > _sequenceTest.maxSamplesPerLoop) {
         _sequenceTest.maxSamplesPerLoop = static_cast<unsigned long>(processedSamples);
     }
-    const unsigned long updateLoopUs = micros() - updateLoopStartUs;
+    const unsigned long updateLoopUs = timebase::nowUs() - updateLoopStartUs;
     if (_sequenceTest.active) {
         _sequenceTest.totalUpdateLoopUs += updateLoopUs;
         ++_sequenceTest.updateLoopCount;

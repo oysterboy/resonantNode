@@ -3,6 +3,7 @@
 #include <Arduino.h>
 #include <string.h>
 
+#include "../../../app/TimingUtils.h"
 #include "../../features/FrequencyMeasurementPacketBuilder.h"
 
 namespace {
@@ -99,10 +100,10 @@ void AnalyzerApp::handleSequencePending(
             ? event.sourceRecord.detectorReport.selectedReject.startMs
             : 0UL;
         const long dtFromTriggerMs = sourceOnsetMs > 0
-            ? static_cast<long>(sourceOnsetMs) - static_cast<long>(_sequenceTest.currentTrialScheduledAtMs)
+            ? static_cast<long>(timing::delta(sourceOnsetMs, _sequenceTest.currentTrialScheduledAtMs))
             : 0L;
-        const bool preWindow = sourceOnsetMs > 0 && sourceOnsetMs < _sequenceTest.currentTrialStartMs + _sequenceTest.windowStartOffsetMs;
-        const bool postWindow = sourceOnsetMs > _sequenceTest.currentTrialEndMs;
+        const bool preWindow = sourceOnsetMs > 0 && timing::beforeDeadline(sourceOnsetMs, _sequenceTest.currentTrialStartMs + _sequenceTest.windowStartOffsetMs);
+        const bool postWindow = timing::after(sourceOnsetMs, _sequenceTest.currentTrialEndMs);
         const bool inWindow = sourceOnsetMs > 0 && !preWindow && !postWindow;
         if (inWindow) {
             _sequenceTest.rejectedInWindowCount++;
@@ -121,8 +122,8 @@ void AnalyzerApp::handleSequencePending(
     }
 
     const unsigned long onsetMs = verdict->primaryStartMs;
-    const long dtFromTriggerMs = static_cast<long>(onsetMs) - static_cast<long>(_sequenceTest.currentTrialScheduledAtMs);
-    const long dtFromTrialStartMs = static_cast<long>(onsetMs) - static_cast<long>(_sequenceTest.currentTrialStartMs);
+    const long dtFromTriggerMs = static_cast<long>(timing::delta(onsetMs, _sequenceTest.currentTrialScheduledAtMs));
+    const long dtFromTrialStartMs = static_cast<long>(timing::delta(onsetMs, _sequenceTest.currentTrialStartMs));
 
     const bool bufferOverrunSeenNow = verdict->primaryAudioOverflow
                                       || _audioSource.stats().overflowCount != _sequenceTest.trialOverflowCountAtStart;
@@ -135,8 +136,8 @@ void AnalyzerApp::handleSequencePending(
         ? "selected_reject"
         : "selected_occurrence";
 
-    const bool preWindow = onsetMs < _sequenceTest.currentTrialStartMs + _sequenceTest.windowStartOffsetMs;
-    const bool postWindow = onsetMs > _sequenceTest.currentTrialEndMs;
+    const bool preWindow = timing::beforeDeadline(onsetMs, _sequenceTest.currentTrialStartMs + _sequenceTest.windowStartOffsetMs);
+    const bool postWindow = timing::after(onsetMs, _sequenceTest.currentTrialEndMs);
     const bool inWindow = !preWindow && !postWindow;
     const bool duplicatePending = _sequenceTest.primaryValidPatternCaptured && inWindow;
     const auto pendingClass = sequencePendingClass(duplicatePending, inWindow, dtFromTriggerMs);
@@ -288,16 +289,15 @@ void AnalyzerApp::handleSequencePending(
             diagnostics.duplicatePatternPeakMs = verdict->primaryPeakMs;
             diagnostics.duplicatePatternReleaseMs = verdict->primaryStartMs + verdict->primaryDurationMs;
             diagnostics.duplicateDeltaFromPrimaryMs = diagnostics.accepted
-                ? static_cast<long>(onsetMs) - static_cast<long>(diagnostics.acceptedPatternMs)
+                ? static_cast<long>(timing::delta(onsetMs, diagnostics.acceptedPatternMs))
                 : 0;
             strncpy(diagnostics.duplicateReason, "duplicate_after_primary", sizeof(diagnostics.duplicateReason) - 1);
             diagnostics.duplicateReason[sizeof(diagnostics.duplicateReason) - 1] = '\0';
         }
         _sequenceTest.currentTrialDiagnostics.duplicateCount++;
         if (_sequenceTest.currentTrialDiagnostics.duplicateDtCount < SequenceTest::kMaxDuplicateDts) {
-            _sequenceTest.currentTrialDiagnostics.duplicateDts[_sequenceTest.currentTrialDiagnostics.duplicateDtCount++] = onsetMs >= _sequenceTest.currentTrialPatternDetectedMs
-                ? onsetMs - _sequenceTest.currentTrialPatternDetectedMs
-                : 0;
+            _sequenceTest.currentTrialDiagnostics.duplicateDts[_sequenceTest.currentTrialDiagnostics.duplicateDtCount++] =
+                timing::elapsedOrZero(onsetMs, _sequenceTest.currentTrialPatternDetectedMs);
         }
         return;
     }

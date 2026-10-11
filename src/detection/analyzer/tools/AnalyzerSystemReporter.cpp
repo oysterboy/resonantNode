@@ -6,6 +6,8 @@
 #include <Arduino.h>
 #include <math.h>
 #include <string.h>
+#include "../../../app/TimeBase.h"
+#include "../../../app/TimingUtils.h"
 
 void AnalyzerApp::printSystemHealth(const AnalyzerReport& report) const {
     const AudioSourceStats& sourceStats = _audioSource.stats();
@@ -14,14 +16,14 @@ void AnalyzerApp::printSystemHealth(const AnalyzerReport& report) const {
     const bool compactHealth = _sequenceTest.outputConfig.verbosity == 0U;
     const bool hasTrialWindow = _sequenceTest.active
         && _sequenceTest.currentTrial > 0
-        && _sequenceTest.currentTrialEndMs >= _sequenceTest.currentTrialStartMs;
+        && timing::atOrAfter(_sequenceTest.currentTrialEndMs, _sequenceTest.currentTrialStartMs);
     const unsigned long windowStartMs = hasTrialWindow
         ? _sequenceTest.currentTrialStartMs
         : activeRunStartMs();
     const unsigned long windowEndMs = hasTrialWindow
         ? _sequenceTest.currentTrialEndMs
         : activeRunEndMs();
-    const unsigned long windowElapsedMs = windowStartMs > 0 && windowEndMs >= windowStartMs ? windowEndMs - windowStartMs : 0UL;
+    const unsigned long windowElapsedMs = windowStartMs > 0 ? timing::elapsedOrZero(windowEndMs, windowStartMs) : 0UL;
     const unsigned long expectedSamples = static_cast<unsigned long>(
         (static_cast<unsigned long long>(windowElapsedMs) * static_cast<unsigned long long>(sampleRateHz)) / 1000ULL);
     const unsigned long processedSamples = hasTrialWindow
@@ -47,7 +49,7 @@ void AnalyzerApp::printSystemHealth(const AnalyzerReport& report) const {
         Serial.print(" t_ms=");
         Serial.print(report.context.timestampMs);
         Serial.print(" uptime_ms=");
-        Serial.print(millis());
+        Serial.print(timebase::nowMs());
         Serial.print(" boot_count=");
         Serial.print(analyzerBootCount());
         Serial.print(" reset_reason=");

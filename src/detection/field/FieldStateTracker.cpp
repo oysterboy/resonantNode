@@ -1,5 +1,7 @@
 #include "FieldStateTracker.h"
 
+#include "../../app/TimingUtils.h"
+
 namespace detection {
 
 void FieldStateTracker::setConfig(const FieldStateConfig& config) {
@@ -22,7 +24,7 @@ void FieldStateTracker::reset() {
 void FieldStateTracker::update(unsigned long nowMs) {
     if (_occurrenceWindowStartMs == 0) {
         _occurrenceWindowStartMs = nowMs;
-    } else if (nowMs >= _occurrenceWindowStartMs && nowMs - _occurrenceWindowStartMs >= _config.occurrenceWindowMs) {
+    } else if (timing::atOrAfter(nowMs, _occurrenceWindowStartMs) && nowMs - _occurrenceWindowStartMs >= _config.occurrenceWindowMs) {
         _occurrenceCountInWindow = 0;
         _acceptedOccurrenceCountInWindow = 0;
         _occurrenceWindowStartMs = nowMs;
@@ -30,7 +32,7 @@ void FieldStateTracker::update(unsigned long nowMs) {
 
     if (_patternWindowStartMs == 0) {
         _patternWindowStartMs = nowMs;
-    } else if (nowMs >= _patternWindowStartMs && nowMs - _patternWindowStartMs >= _config.patternWindowMs) {
+    } else if (timing::atOrAfter(nowMs, _patternWindowStartMs) && nowMs - _patternWindowStartMs >= _config.patternWindowMs) {
         _patternCountInWindow = 0;
         _patternWindowStartMs = nowMs;
     }

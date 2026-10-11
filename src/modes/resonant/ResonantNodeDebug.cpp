@@ -304,7 +304,9 @@ void NodeDebug::printPlotValues(unsigned long now,
                                const ChirpOutput& chirpOutput,
                                bool selfChirpSuppressed) {
     if (!plotEnabled()) return;
-    if (timing::beforeDeadline(now, 1000UL)) return;
+    // First second after boot (an uptime check, not a deadline: a wrap-safe
+    // compare against 1000 read true for half of every 49.7-day ms cycle).
+    if (now < 1000UL) return;
     if (!timing::elapsedSince(now, _lastDebugPrintMs, _debugIntervalMs)) return;
 
     _lastDebugPrintMs = now;

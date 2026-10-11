@@ -401,5 +401,5 @@ Analyzer uptime 3,638 s and 4,509 s; micros() (32-bit) wraps at 4,295 s.
 AudioSignal derives the sample time in ms from the 32-bit microsecond
 sample clock (sampleTimeUs / 1000), so after the wrap sample times restart
 near 0 while millis()-based windows keep counting: no detector candidate
-forms again. Tracked as NODE-016. Every #20 result above is unaffected:
+forms again. Tracked as NODE-017. Every #20 result above is unaffected:
 all runs were well under 71 min after a reset.

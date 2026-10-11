@@ -43,8 +43,9 @@ struct AudioBlock {
     uint16_t sampleCount = 0;
 
     uint64_t startSampleIndex = 0;
-    // Approximate wall-clock time of samples[0].
-    uint32_t approxStartMicros = 0;
+    // Approximate time of samples[0] on the 64-bit time base (app/TimeBase.h).
+    // Absolute ms: timebase::msFromUs64(); never (us32 / 1000) (issue #30).
+    uint64_t approxStartUs64 = 0;
 
     bool overflowBeforeBlock = false;
 };
@@ -55,8 +56,9 @@ public:
     virtual void begin() = 0;
     virtual bool available() = 0;
     virtual int availableBytes() const { return -1; }
-    virtual bool readSample(int& sample, uint32_t& sampleTimeUs) = 0;
-    virtual bool readRawSample(int& sample, uint32_t& sampleTimeUs) { return readSample(sample, sampleTimeUs); }
+    // sampleTimeUs64: the sample's time on the 64-bit time base (app/TimeBase.h).
+    virtual bool readSample(int& sample, uint64_t& sampleTimeUs64) = 0;
+    virtual bool readRawSample(int& sample, uint64_t& sampleTimeUs64) { return readSample(sample, sampleTimeUs64); }
     virtual bool readBlock(AudioBlock& block) { (void)block; return false; }
     virtual uint32_t sampleRateHz() const { return 0; }
     virtual const AudioSourceStats& stats() const {

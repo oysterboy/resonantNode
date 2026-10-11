@@ -110,15 +110,15 @@ private:
     // Live gate state.
     bool _onsetDetected = false;
     float _onsetStrength = 0.0f;
-    unsigned long _lastOnsetUs = 0;
+    uint64_t _lastOnsetUs = 0;
     bool _transientDetected = false;
     float _transientStrength = 0.0f;
     unsigned long _transientDurationMs = 0;
     bool _peakActive = false;
-    unsigned long _peakStartedUs = 0;
-    unsigned long _peakStrengthObservedUs = 0;
-    unsigned long _releaseCandidateStartedUs = 0;
-    unsigned long _releaseObservedUs = 0;
+    uint64_t _peakStartedUs = 0;
+    uint64_t _peakStrengthObservedUs = 0;
+    uint64_t _releaseCandidateStartedUs = 0;
+    uint64_t _releaseObservedUs = 0;
     float _peakStrength = 0.0f;
     float _candidatePeak = 0.0f;
     double _candidateStrengthSum = 0.0;
@@ -134,9 +134,9 @@ private:
     unsigned long _candidateIslandMaxMs = 0;
     unsigned long _candidateGapMaxMs = 0;
     bool _candidateWasAboveRelease = false;
-    unsigned long _candidateCurrentIslandStartUs = 0;
-    unsigned long _candidateCurrentGapStartUs = 0;
-    unsigned long _candidateLastUpdateUs = 0;
+    uint64_t _candidateCurrentIslandStartUs = 0;
+    uint64_t _candidateCurrentGapStartUs = 0;
+    uint64_t _candidateLastUpdateUs = 0;
 
     // Candidate lifecycle state.
     bool _acceptedOccurrencePendingActive = false;
@@ -180,8 +180,8 @@ private:
     uint32_t _reportGeneration = 0;
 
     // Diagnostics state.
-    unsigned long _lastStatsPrintUs = 0;
-    unsigned long _statsStartUs = 0;
+    uint64_t _lastStatsPrintUs = 0;
+    uint64_t _statsStartUs = 0;
     unsigned long _peakAcceptedCount = 0;
     unsigned long _statsPrintIntervalMs = 10000; // Report cumulative detector success once every 10 seconds.
     unsigned long _expectedTransientPeriodMs = 2000; // Rough cadence we expect from the external source.
@@ -192,12 +192,12 @@ private:
     const char* lastOnsetRejectReasonName() const;
     const char* lastTransientRejectReasonName() const;
     void resetCandidateFacts();
-    void updateCandidateFacts(unsigned long nowUs, float strength, bool aboveAttackThreshold, bool aboveReleaseThreshold);
-    void finalizeCandidateFacts(unsigned long releaseObservedUs);
-    void updateOnsetStage(unsigned long nowUs, float signalMagnitude, bool aboveAttackThreshold, bool onsetCooldownElapsed);
-    void updateTransientStage(unsigned long nowUs, float signalMagnitude, bool aboveReleaseThreshold);
-    void captureAcceptedOccurrence(unsigned long releaseObservedUs, unsigned long peakDurationUs);
-    void captureSelectedReject(unsigned long releaseObservedUs);
+    void updateCandidateFacts(uint64_t nowUs, float strength, bool aboveAttackThreshold, bool aboveReleaseThreshold);
+    void finalizeCandidateFacts(uint64_t releaseObservedUs);
+    void updateOnsetStage(uint64_t nowUs, float signalMagnitude, bool aboveAttackThreshold, bool onsetCooldownElapsed);
+    void updateTransientStage(uint64_t nowUs, float signalMagnitude, bool aboveReleaseThreshold);
+    void captureAcceptedOccurrence(uint64_t releaseObservedUs, unsigned long peakDurationUs);
+    void captureSelectedReject(uint64_t releaseObservedUs);
     void updateAcceptedOccurrencePending(
         const AudioSamplePacket& audioSamplePacket,
         float signalMagnitude
@@ -207,5 +207,5 @@ private:
     void freezeReport(unsigned long nowMs);
     void clearFrozenReport();
     void refreshReportDetail();
-    void printTransientStatsIfDue(unsigned long nowUs);
+    void printTransientStatsIfDue(uint64_t nowUs);
 };

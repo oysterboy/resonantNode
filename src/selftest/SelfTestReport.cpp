@@ -6,6 +6,7 @@
 #include <string.h>
 
 #include "../app/BuildInfo.h"
+#include "../app/TimeBase.h"
 
 namespace selftest {
 
@@ -144,7 +145,7 @@ void printBoard(Print& out, Tally& tally, const char* role) {
     field(out, "git", BUILD_GIT_SHA);
     field(out, "built", date);
     field(out, "built_time", __TIME__);
-    field(out, "uptime_ms", static_cast<unsigned long>(millis()));
+    field(out, "uptime_ms", static_cast<unsigned long>(timebase::nowMs()));
     end(out);
 }
 

@@ -300,9 +300,15 @@ line stays the informational report, SELFTEST is the pass/fail one.
 Gate: passes on every board going into NODE-011, logged on bench.
 ```
 
-### NODE-016 - detection goes deaf 71.6 min after boot (32-bit micros wrap)
+### NODE-017 - detection goes deaf 71.6 min after boot (32-bit micros wrap)
 
-Status: TODO (step 3c, issue #30; found 2026-10-11; blocks NODE-013 and the field trial NODE-008)
+Status: IN PROGRESS (step 3c, issue #30; found 2026-10-11; blocks NODE-013 and the field trial NODE-008).
+Pass doc: docs/refactors/micros-wrap.md (audit, design, wraptest envs, bench plan).
+2026-10-11: fix written, compile-verified only: one 64-bit time base
+(src/app/TimeBase.h) for the sample clock and every millis()/micros() read,
+absolute ms from 64-bit us, wrap-safe comparisons; envs esp32dev-wraptest and
+esp32dev-analyzer-wraptest put the us wrap 180 s after boot. Next: the bench
+plan in the pass doc (Analyzer E2 + Emitter E3, then Node on E2).
 
 ```text
 Symptom: both soaks (bench:sessions/2026-10-10-soak24h-70cm,
@@ -330,7 +336,7 @@ bench, and a run past 72 min of real uptime.
 
 ### NODE-013 - 24-hour bench soak on D-AMP
 
-Status: BLOCKED by NODE-016 (step 3a, issue #27; both attempts, 2026-10-10 and 2026-10-11, went deaf 71.6 min after the Analyzer booted: 32-bit micros wrap, not hardware; bench:sessions/2026-10-10-soak24h-70cm, bench:sessions/2026-10-11-soak24h-70cm; restart after NODE-016 lands and SELFTEST passes on the pair)
+Status: BLOCKED by NODE-017 (step 3a, issue #27; both attempts, 2026-10-10 and 2026-10-11, went deaf 71.6 min after the Analyzer booted: 32-bit micros wrap, not hardware; bench:sessions/2026-10-10-soak24h-70cm, bench:sessions/2026-10-11-soak24h-70cm; restart after NODE-016 lands and SELFTEST passes on the pair)
 
 ```text
 Research: docs/research/soak-24h.md (design, gate, open points).

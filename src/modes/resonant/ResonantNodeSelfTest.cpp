@@ -4,6 +4,7 @@
 #include <string.h>
 
 #include "../../selftest/AudioSelfTest.h"
+#include "../../app/TimeBase.h"
 
 /*
 Node SELFTEST (NODE-015, docs/refactors/selftest.md)
@@ -58,7 +59,7 @@ void Node::noteRebaseResult(RbRebaseResult result) {
         _rbBootRebaseResult = result;
     }
     _rbLastRebaseResult = result;
-    _rbLastRebaseAtMs = millis();
+    _rbLastRebaseAtMs = timebase::nowMs();
     ++_rbQuietRebaseCount;
 }
 
@@ -76,7 +77,7 @@ void Node::handleSelfTestCommand(const char* line) {
         return;
     }
 
-    const unsigned long now = millis();
+    const unsigned long now = timebase::nowMs();
     _selfTest = SelfTestState{};
     _selfTest.command = command;
     _selfTest.phaseStartMs = now;
@@ -125,7 +126,7 @@ void Node::updateSelfTest(unsigned long now) {
         case SelfTestState::Phase::Hardware:
             runSelfTestHardware(now);
             st.phase = SelfTestState::Phase::Settle;
-            st.deadlineMs = millis() + kOutputsWaitMs;
+            st.deadlineMs = timebase::nowMs() + kOutputsWaitMs;
             return;
 
         case SelfTestState::Phase::Settle:
@@ -243,9 +244,9 @@ void Node::restoreAfterSelfTestHardware() {
 
     if (_rbBaselineState == RBBaselineState::Active || _rbBaselineState == RBBaselineState::Settle) {
         _rbBaselineState = RBBaselineState::Settle;
-        _rbBaselineSettleUntilMs = millis() + kSettleAfterHardwareMs;
+        _rbBaselineSettleUntilMs = timebase::nowMs() + kSettleAfterHardwareMs;
     }
-    _debug.markLoopStart(micros());
+    _debug.markLoopStart(timebase::nowUs());
     Serial.print("SELFTEST_RESTORE detection=reset baseline=");
     Serial.println(rbBaselineStateName());
 }

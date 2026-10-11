@@ -3,6 +3,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include "../app/TimeBase.h"
 #include "AudioPcm.h"
 #include "AudioSource.h"
 
@@ -24,9 +25,11 @@ struct CurveSnapshot {
 struct AudioSamplePacket {
     // Monotonic sample index for the source stream.
     uint64_t sampleIndex = 0;
-    // Wall-clock-derived sample time for this frame.
-    uint32_t timeUs = 0;
-    // Runtime event time used by detection/analyzer/behavior.
+    // Sample time on the 64-bit time base (app/TimeBase.h); never wraps.
+    uint64_t timeUs64 = 0;
+    // Runtime event time used by detection/analyzer/behavior:
+    // timebase::msFromUs64(timeUs64), the same axis as timebase::nowMs().
+    // 32-bit ms wraps after 49.7 days: compare with app/TimingUtils.h.
     uint32_t timeMs = 0;
     // Source sample rate in Hz for the frame.
     unsigned long sampleRateHz = 0;
@@ -171,7 +174,7 @@ public:
 
     void begin(bool doRebase = true);
     void rebase();
-    bool update(int sample, uint32_t sampleTimeUs, AudioSamplePacket& outFrame);
+    bool update(int sample, uint64_t sampleTimeUs64, AudioSamplePacket& outFrame);
     void processBlock(const AudioBlock& block);
 
     void setBaselineTrackingQuietThreshold(int value);
@@ -185,12 +188,12 @@ public:
     int centeredSignal() const;
     int signalMagnitude() const;
     int smoothedSignalMagnitude() const;
-    uint32_t sampleTimeUs() const;
+    uint64_t sampleTimeUs64() const;
     const AudioSamplePacket& latestFrame() const;
     const AudioBlock& lastBlock() const;
     uint64_t lastBlockStartSample() const;
     uint16_t lastBlockSampleCount() const;
-    uint32_t lastBlockApproxStartMicros() const;
+    uint64_t lastBlockApproxStartUs64() const;
     const AudioSignalStats& stats() const;
     bool rawSampleHistoryAvailable(uint64_t startSampleIndex, uint64_t endSampleIndex) const;
     size_t copyRawSampleHistory(uint64_t startSampleIndex, uint64_t endSampleIndex, int16_t* outSamples, size_t outCapacity) const;
@@ -205,11 +208,11 @@ private:
     AudioSource& _source;
 
     // Processes one sample and updates the internal signal state.
-    void processSample(int sample, uint32_t sampleTimeUs, uint64_t sampleIndex, uint32_t sampleRateHz, bool blockOverflow);
+    void processSample(int sample, uint64_t sampleTimeUs64, uint64_t sampleIndex, uint32_t sampleRateHz, bool blockOverflow);
     // Copies the current signal state into a public frame.
-    void emitFrame(AudioSamplePacket& outFrame, uint64_t sampleIndex, uint32_t sampleTimeUs, uint32_t sampleTimeMs, unsigned long sampleRateHz, bool blockOverflow);
+    void emitFrame(AudioSamplePacket& outFrame, uint64_t sampleIndex, uint64_t sampleTimeUs64, uint32_t sampleTimeMs, unsigned long sampleRateHz, bool blockOverflow);
     // Optional bounded curve snapshot callback for diagnostics.
-    void emitCurveSample(uint32_t sampleTimeUs);
+    void emitCurveSample(uint32_t sampleTimeMs);
 
     // Last decoded source sample.
     int _rawSignal = 0;
@@ -217,8 +220,10 @@ private:
     int _centeredSignal = 0;
     // Quiet-gated magnitude for the current sample.
     int _signalMagnitude = 0;
-    // Timestamp of the most recent sample in microseconds.
-    uint32_t _sampleTimeUs = 0;
+    // Time of the most recent sample on the 64-bit time base.
+    uint64_t _sampleTimeUs64 = 0;
+    // Sample time us -> ms without a 64-bit divide per sample.
+    timebase::MsFromUs64 _msFromUs;
     // Slow quiet-floor estimate.
     float _baseline = 2000.0f;
     // Smoothed magnitude used for diagnostics.
@@ -231,8 +236,8 @@ private:
     uint64_t _lastBlockStartSample = 0;
     // Sample count in the most recent block.
     uint16_t _lastBlockSampleCount = 0;
-    // Approximate block start timestamp in microseconds.
-    uint32_t _lastBlockApproxStartMicros = 0;
+    // Approximate block start time on the 64-bit time base.
+    uint64_t _lastBlockApproxStartUs64 = 0;
     // Cumulative audio-signal stats.
     AudioSignalStats _stats;
     // Bounded raw centered-sample history.

@@ -32,8 +32,8 @@ void AudioSignal::rebase() {
     long sum = 0;
     for (int i = 0; i < 200; ) {
         int sample = 0;
-        uint32_t sampleTimeUs = 0;
-        if (_source.readSample(sample, sampleTimeUs)) {
+        uint64_t sampleTimeUs64 = 0;
+        if (_source.readSample(sample, sampleTimeUs64)) {
             sum += sample;
             ++i;
         } else {
@@ -53,23 +53,24 @@ void AudioSignal::rebase() {
 // Sample and block processing
 // -----------------------------------------------------------------------------
 
-bool AudioSignal::update(int sample, uint32_t sampleTimeUs, AudioSamplePacket& outFrame) {
+bool AudioSignal::update(int sample, uint64_t sampleTimeUs64, AudioSamplePacket& outFrame) {
     _lastBlock.samples = nullptr;
     _lastBlock.sampleCount = 1;
     const uint64_t sampleIndex = _stats.samplesProcessed;
     _lastBlock.startSampleIndex = sampleIndex;
-    _lastBlock.approxStartMicros = sampleTimeUs;
+    _lastBlock.approxStartUs64 = sampleTimeUs64;
     _lastBlock.overflowBeforeBlock = false;
     _lastBlockStartSample = sampleIndex;
     _lastBlockSampleCount = 1;
-    _lastBlockApproxStartMicros = sampleTimeUs;
+    _lastBlockApproxStartUs64 = sampleTimeUs64;
 
-    processSample(sample, sampleTimeUs, sampleIndex, 0, false);
+    processSample(sample, sampleTimeUs64, sampleIndex, 0, false);
     _stats.blocksProcessed++;
     _stats.samplesProcessed++;
 
-    emitFrame(outFrame, sampleIndex, sampleTimeUs, sampleTimeUs / 1000UL, _source.sampleRateHz(), false);
-    emitCurveSample(sampleTimeUs);
+    const uint32_t sampleTimeMs = _msFromUs(sampleTimeUs64);
+    emitFrame(outFrame, sampleIndex, sampleTimeUs64, sampleTimeMs, _source.sampleRateHz(), false);
+    emitCurveSample(sampleTimeMs);
     return true;
 }
 
@@ -78,15 +79,15 @@ void AudioSignal::processBlock(const AudioBlock& block) {
     if (block.sampleCount > 0) {
         _lastBlock.sampleCount = block.sampleCount;
         _lastBlock.startSampleIndex = block.startSampleIndex;
-        _lastBlock.approxStartMicros = block.approxStartMicros;
+        _lastBlock.approxStartUs64 = block.approxStartUs64;
         _lastBlock.overflowBeforeBlock = block.overflowBeforeBlock;
         _lastBlockStartSample = block.startSampleIndex;
         _lastBlockSampleCount = block.sampleCount;
-        _lastBlockApproxStartMicros = block.approxStartMicros;
+        _lastBlockApproxStartUs64 = block.approxStartUs64;
     } else {
         _lastBlock.sampleCount = 0;
         _lastBlock.startSampleIndex = 0;
-        _lastBlock.approxStartMicros = 0;
+        _lastBlock.approxStartUs64 = 0;
         _lastBlock.overflowBeforeBlock = false;
     }
 
@@ -99,18 +100,18 @@ void AudioSignal::processBlock(const AudioBlock& block) {
     for (uint16_t i = 0; i < block.sampleCount; ++i) {
         const uint64_t sampleIndex = block.startSampleIndex + static_cast<uint64_t>(i);
         const uint32_t sampleTimeOffsetUs = sampleOffsetUs(static_cast<uint32_t>(i), sampleRateHz);
-        const uint32_t sampleTimeUs = block.approxStartMicros + sampleTimeOffsetUs;
-        const uint32_t sampleTimeMs = sampleTimeUs / 1000UL;
-        processSample(static_cast<int>(block.samples[i]), sampleTimeUs, sampleIndex, sampleRateHz, block.overflowBeforeBlock);
+        const uint64_t sampleTimeUs64 = block.approxStartUs64 + sampleTimeOffsetUs;
+        const uint32_t sampleTimeMs = _msFromUs(sampleTimeUs64);
+        processSample(static_cast<int>(block.samples[i]), sampleTimeUs64, sampleIndex, sampleRateHz, block.overflowBeforeBlock);
         _stats.samplesProcessed++;
-        emitFrame(_latestFrame, sampleIndex, sampleTimeUs, sampleTimeMs, sampleRateHz, block.overflowBeforeBlock);
-        emitCurveSample(sampleTimeUs);
+        emitFrame(_latestFrame, sampleIndex, sampleTimeUs64, sampleTimeMs, sampleRateHz, block.overflowBeforeBlock);
+        emitCurveSample(sampleTimeMs);
     }
 }
 
-void AudioSignal::processSample(int sample, uint32_t sampleTimeUs, uint64_t sampleIndex, uint32_t sampleRateHz, bool blockOverflow) {
+void AudioSignal::processSample(int sample, uint64_t sampleTimeUs64, uint64_t sampleIndex, uint32_t sampleRateHz, bool blockOverflow) {
     _rawSignal = sample;
-    _sampleTimeUs = sampleTimeUs;
+    _sampleTimeUs64 = sampleTimeUs64;
     _centeredSignal = _rawSignal - static_cast<int>(_baseline);
     _rawSampleHistory.push(sampleIndex, _centeredSignal);
 
@@ -175,8 +176,8 @@ int AudioSignal::smoothedSignalMagnitude() const {
     return static_cast<int>(_smoothedSignalMagnitude);
 }
 
-uint32_t AudioSignal::sampleTimeUs() const {
-    return _sampleTimeUs;
+uint64_t AudioSignal::sampleTimeUs64() const {
+    return _sampleTimeUs64;
 }
 
 const AudioSamplePacket& AudioSignal::latestFrame() const {
@@ -195,17 +196,17 @@ uint16_t AudioSignal::lastBlockSampleCount() const {
     return _lastBlockSampleCount;
 }
 
-uint32_t AudioSignal::lastBlockApproxStartMicros() const {
-    return _lastBlockApproxStartMicros;
+uint64_t AudioSignal::lastBlockApproxStartUs64() const {
+    return _lastBlockApproxStartUs64;
 }
 
-void AudioSignal::emitCurveSample(uint32_t sampleTimeUs) {
+void AudioSignal::emitCurveSample(uint32_t sampleTimeMs) {
     if (_curveSampleCallback == nullptr) {
         return;
     }
 
     CurveSnapshot snapshot;
-    snapshot.sampleMs = sampleTimeUs / 1000UL;
+    snapshot.sampleMs = sampleTimeMs;
     snapshot.current = static_cast<int>(audio::pcmMagnitudeToStrength(static_cast<audio::PcmSample>(_centeredSignal)));
     snapshot.env = static_cast<int>(_smoothedSignalMagnitude);
     snapshot.peak = _smoothedSignalMagnitude;
@@ -213,10 +214,10 @@ void AudioSignal::emitCurveSample(uint32_t sampleTimeUs) {
     _curveSampleCallback(snapshot, _curveSampleCallbackContext);
 }
 
-void AudioSignal::emitFrame(AudioSamplePacket& outFrame, uint64_t sampleIndex, uint32_t sampleTimeUs, uint32_t sampleTimeMs, unsigned long sampleRateHz, bool blockOverflow) {
+void AudioSignal::emitFrame(AudioSamplePacket& outFrame, uint64_t sampleIndex, uint64_t sampleTimeUs64, uint32_t sampleTimeMs, unsigned long sampleRateHz, bool blockOverflow) {
     outFrame = {};
     outFrame.sampleIndex = sampleIndex;
-    outFrame.timeUs = sampleTimeUs;
+    outFrame.timeUs64 = sampleTimeUs64;
     outFrame.timeMs = sampleTimeMs;
     outFrame.sampleRateHz = sampleRateHz;
     outFrame.rawAudioValue = _rawSignal;
@@ -269,7 +270,8 @@ void AudioSignal::resetStats() {
     _lastBlock = {};
     _lastBlockStartSample = 0;
     _lastBlockSampleCount = 0;
-    _lastBlockApproxStartMicros = 0;
+    _lastBlockApproxStartUs64 = 0;
+    _msFromUs.reset();
     _latestFrame = {};
 }
 

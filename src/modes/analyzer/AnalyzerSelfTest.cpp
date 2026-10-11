@@ -3,6 +3,7 @@
 #include <Arduino.h>
 
 #include "../../selftest/AudioSelfTest.h"
+#include "../../app/TimeBase.h"
 
 /*
 Analyzer SELFTEST (NODE-015, docs/refactors/selftest.md)
@@ -74,6 +75,6 @@ void AnalyzerApp::restoreAfterSelfTest() {
     _freqBandStream.setSampleRateHz(_audioSource.sampleRateHz());
     _freqBandStream.setTargetFrequencyHz(runtime::kDefaultChirpFrequencyHz);
     // The check held the loop for seconds; keep it out of the loop health.
-    _loopLastUs = micros();
+    _loopLastUs = timebase::nowUs();
     Serial.println("SELFTEST_RESTORE detection=reset");
 }

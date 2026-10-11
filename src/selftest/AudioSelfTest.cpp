@@ -3,6 +3,7 @@
 #include <math.h>
 
 #include "../app/RuntimeDefaults.h"
+#include "../app/TimeBase.h"
 
 namespace selftest {
 
@@ -71,7 +72,7 @@ AmpTrial runAmpTrial(AudioSourceI2S& source, ToneOutput& tone) {
     drainSource(source, 0);
     Envelope envelope;
     const uint32_t rateHz = source.sampleRateHz() > 0 ? source.sampleRateHz() : 16000U;
-    const uint32_t start = micros();
+    const uint32_t start = timebase::nowUs();
     const uint32_t t0 = start + kAmpLeadUs;
     const uint32_t t1 = t0 + kAmpToneMs * 1000U;
     const uint32_t stop = t1 + kAmpTailUs;
@@ -80,8 +81,8 @@ AmpTrial runAmpTrial(AudioSourceI2S& source, ToneOutput& tone) {
     double plateauSum = 0.0;
     uint32_t plateauCount = 0;
 
-    while (static_cast<int32_t>(micros() - stop) < 0) {
-        const uint32_t now = micros();
+    while (static_cast<int32_t>(timebase::nowUs() - stop) < 0) {
+        const uint32_t now = timebase::nowUs();
         if (!on && static_cast<int32_t>(now - t0) >= 0) {
             tone.toneOn();
             on = true;
@@ -96,7 +97,7 @@ AmpTrial runAmpTrial(AudioSourceI2S& source, ToneOutput& tone) {
             continue;
         }
         for (uint16_t i = 0; i < block.sampleCount; ++i) {
-            const uint32_t t = block.approxStartMicros
+            const uint32_t t = timebase::lowUs32(block.approxStartUs64)
                 + static_cast<uint32_t>((static_cast<uint64_t>(i) * 1000000ULL) / rateHz);
             const float env = envelope.push(block.samples[i]);
             ++trial.samples;
@@ -122,12 +123,12 @@ AmpTrial runAmpTrial(AudioSourceI2S& source, ToneOutput& tone) {
 } // namespace
 
 void drainSource(AudioSourceI2S& source, uint32_t ms) {
-    const uint32_t until = millis() + ms;
+    const uint32_t until = timebase::nowMs() + ms;
     AudioBlock block;
     for (;;) {
         while (source.readBlock(block)) {
         }
-        if (static_cast<int32_t>(millis() - until) >= 0) {
+        if (static_cast<int32_t>(timebase::nowMs() - until) >= 0) {
             return;
         }
         delay(1);
@@ -138,7 +139,7 @@ Result runMicCheck(Print& out, Tally& tally, AudioSourceI2S& source, uint32_t ca
     drainSource(source, 0);
     const uint32_t rateHz = source.sampleRateHz() > 0 ? source.sampleRateHz() : 16000U;
     const uint32_t target = (rateHz * captureMs) / 1000U;
-    const uint32_t deadline = millis() + 2U * captureMs + 200U;
+    const uint32_t deadline = timebase::nowMs() + 2U * captureMs + 200U;
 
     uint32_t frames = 0;
     uint32_t nonZero = 0;
@@ -152,10 +153,10 @@ Result runMicCheck(Print& out, Tally& tally, AudioSourceI2S& source, uint32_t ca
     uint32_t floorCount = 0;
     float floorPeak = 0.0f;
 
-    while (frames < target && static_cast<int32_t>(millis() - deadline) < 0) {
+    while (frames < target && static_cast<int32_t>(timebase::nowMs() - deadline) < 0) {
         int sample = 0;
-        uint32_t sampleTimeUs = 0;
-        if (!source.readRawSample(sample, sampleTimeUs)) {
+        uint64_t sampleTimeUs64 = 0;
+        if (!source.readRawSample(sample, sampleTimeUs64)) {
             delay(1);
             continue;
         }

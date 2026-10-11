@@ -1,4 +1,6 @@
 #include "OccurrenceInspector.h"
+
+#include "../../app/TimingUtils.h"
 // OccurrenceInspector evidence annotation and inspection in source order.
 namespace {
 
@@ -208,7 +210,7 @@ void OccurrenceInspector::annotateMagnitudeFeatureStrength(
     observation.anchorMs = anchorMs;
     observation.requestedStartMs = startMs;
     observation.requestedEndMs = endMs;
-    observation.requestedFutureAtInspection = endMs > inspectionNowMs;
+    observation.requestedFutureAtInspection = timing::after(endMs, inspectionNowMs);
     if (config.enabled && featureHistory != nullptr) {
         const float sustainedThreshold = config.mode == detection::MagnitudeInspectionMode::SustainedAboveThreshold
             ? config.supportStrength.weakPeakThreshold

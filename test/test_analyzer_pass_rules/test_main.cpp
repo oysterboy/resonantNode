@@ -22,7 +22,7 @@ constexpr float kQuantileEpsilon = 0.0001f;
 AudioSamplePacket makePacket(unsigned long timeMs, uint64_t sampleIndex, int level) {
     AudioSamplePacket packet = {};
     packet.sampleIndex = sampleIndex;
-    packet.timeUs = timeMs * 1000UL;
+    packet.timeUs64 = static_cast<uint64_t>(timeMs) * 1000ULL;
     packet.timeMs = timeMs;
     packet.sampleRateHz = 1000UL;
     packet.rawAudioValue = level;

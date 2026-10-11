@@ -2,6 +2,8 @@
 
 #include <Arduino.h>
 
+#include "../../../app/TimingUtils.h"
+
 void ScalarTransientDetector::refreshReportDetail() {
     const char* onsetRejectReason = lastOnsetRejectReasonName();
     const char* transientRejectReason = lastTransientRejectReasonName();
@@ -52,14 +54,14 @@ void ScalarTransientDetector::refreshReportDetail() {
     _reportDetail.inspect.emitAllowed = _reportDetail.inspect.validRelease;
     _reportDetail.inspect.openMs = hasAcceptedSummary
         ? _acceptedOccurrence.startMs
-        : (hasSelectedRejectSummary ? _selectedReject.startMs : _peakStartedUs / 1000UL);
+        : (hasSelectedRejectSummary ? _selectedReject.startMs : timebase::msFromUs64(_peakStartedUs));
     _reportDetail.inspect.peakMs = hasAcceptedSummary
         ? _acceptedOccurrence.peakMs
-        : (hasSelectedRejectSummary ? _selectedReject.peakMs : _peakStrengthObservedUs / 1000UL);
+        : (hasSelectedRejectSummary ? _selectedReject.peakMs : timebase::msFromUs64(_peakStrengthObservedUs));
     _reportDetail.inspect.releaseMs = hasAcceptedSummary
         ? _acceptedOccurrence.endMs
-        : (hasSelectedRejectSummary ? _selectedReject.endMs : _releaseObservedUs / 1000UL);
-    _reportDetail.inspect.durationMs = _reportDetail.inspect.released && _reportDetail.inspect.releaseMs >= _reportDetail.inspect.openMs
+        : (hasSelectedRejectSummary ? _selectedReject.endMs : timebase::msFromUs64(_releaseObservedUs));
+    _reportDetail.inspect.durationMs = _reportDetail.inspect.released && timing::atOrAfter(_reportDetail.inspect.releaseMs, _reportDetail.inspect.openMs)
         ? _reportDetail.inspect.releaseMs - _reportDetail.inspect.openMs
         : 0UL;
     _reportDetail.inspect.peakStrength = hasAcceptedSummary
@@ -76,7 +78,7 @@ void ScalarTransientDetector::refreshReportDetail() {
     _reportDetail.aggregates.bestRejectedValue = _selectedRejectPresent ? _selectedReject.strength : 0.0f;
 }
 
-void ScalarTransientDetector::printTransientStatsIfDue(unsigned long nowUs) {
+void ScalarTransientDetector::printTransientStatsIfDue(uint64_t nowUs) {
     if (!_diagnosticsEnabled || !AUDIO_VERBOSE_DEBUG) {
         return;
     }
@@ -86,13 +88,13 @@ void ScalarTransientDetector::printTransientStatsIfDue(unsigned long nowUs) {
     }
 
     if (_lastStatsPrintUs == 0 || nowUs - _lastStatsPrintUs >= _statsPrintIntervalMs * 1000UL) {
-        const unsigned long elapsedMs = (nowUs - _statsStartUs) / 1000UL;
+        const unsigned long elapsedMs = static_cast<unsigned long>((nowUs - _statsStartUs) / 1000ULL);
         const unsigned long expectedCount = (elapsedMs + (_expectedTransientPeriodMs / 2)) / _expectedTransientPeriodMs;
         const unsigned long successRate = expectedCount > 0 ? ((_peakAcceptedCount * 100UL) / expectedCount) : 0;
 
         Serial.print(_diagnosticsLabel);
         Serial.print(" transient success t=");
-        Serial.print(nowUs / 1000UL);
+        Serial.print(timebase::msFromUs64(nowUs));
         Serial.print(" accepted=");
         Serial.print(_peakAcceptedCount);
         Serial.print(" expected=");

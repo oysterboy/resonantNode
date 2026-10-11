@@ -5,6 +5,8 @@
 #include <Arduino.h>
 #include <stdlib.h>
 #include <string.h>
+#include "../../../app/TimeBase.h"
+#include "../../../app/TimingUtils.h"
 
 namespace {
 
@@ -21,12 +23,12 @@ unsigned long parseUnsignedTokenValue(const char* line, const char* key, unsigne
 } // namespace
 
 bool waitForEmitterAck(const char* expectedPrefix, unsigned long timeoutMs) {
-    const unsigned long startMs = millis();
+    const unsigned long startMs = timebase::nowMs();
     char line[96];
     size_t lineLength = 0;
 
     // Wait synchronously for the emitter to acknowledge remote mode.
-    while (millis() - startMs < timeoutMs) {
+    while (timebase::nowMs() - startMs < timeoutMs) {
         while (Serial2.available() > 0) {
             const char c = static_cast<char>(Serial2.read());
             if (serial_line::dropByte(c)) {
@@ -69,7 +71,7 @@ void AnalyzerApp::pollEmitterSerial() {
         }
 
         if (c == '\n') {
-            const unsigned long now = millis();
+            const unsigned long now = timebase::nowMs();
             _emitterLineBuffer[_emitterLineLength] = '\0';
             const bool emitStartLine = startsWithTokenIgnoreCase(_emitterLineBuffer, "EMIT_START");
             const bool emitDoneLine = startsWithTokenIgnoreCase(_emitterLineBuffer, "EMIT_DONE");
@@ -85,12 +87,12 @@ void AnalyzerApp::pollEmitterSerial() {
                         trialDiag.emitStartSeen = true;
                         trialDiag.emitDriveSeen = true;
                         trialDiag.emitStartTrialId = markerTrial;
-                        trialDiag.emitStartDtMs = now >= _sequenceTest.currentTrialStartMs ? now - _sequenceTest.currentTrialStartMs : 0UL;
+                        trialDiag.emitStartDtMs = timing::elapsedOrZero(now, _sequenceTest.currentTrialStartMs);
                     }
                     if (emitDoneLine || emitDriveOffLine) {
                         trialDiag.emitDoneSeen = true;
                         trialDiag.emitDoneTrialId = markerTrial;
-                        trialDiag.emitDoneDtMs = now >= _sequenceTest.currentTrialStartMs ? now - _sequenceTest.currentTrialStartMs : 0UL;
+                        trialDiag.emitDoneDtMs = timing::elapsedOrZero(now, _sequenceTest.currentTrialStartMs);
                         trialDiag.emitDurationMs = trialDiag.emitDoneDtMs >= trialDiag.emitStartDtMs
                             ? trialDiag.emitDoneDtMs - trialDiag.emitStartDtMs
                             : 0UL;

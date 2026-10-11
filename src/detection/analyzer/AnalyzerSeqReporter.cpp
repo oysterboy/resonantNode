@@ -6,6 +6,7 @@
 #include "../../detection/detectors/DetectorNames.h"
 #include "../../detection/detectors/DetectorReportPrinter.h"
 #include "../../detection/inspection/InspectionNames.h"
+#include "../../app/TimeBase.h"
 
 namespace {
 
@@ -142,7 +143,7 @@ void AnalyzerApp::printSequenceTrial(const AnalyzerReport& report) const {
         Serial.print(" emit_marker_dt_ms=");
         Serial.print(_sequenceTest.currentTrialDiagnostics.emitStartDtMs);
         Serial.print(" uptime_ms=");
-        Serial.print(millis());
+        Serial.print(timebase::nowMs());
         Serial.print(" samples_read=");
         Serial.print(static_cast<unsigned long>(audioStats.totalSamplesRead));
         Serial.print(" us_per_sample=");

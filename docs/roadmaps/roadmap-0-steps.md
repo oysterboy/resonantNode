@@ -146,7 +146,7 @@ the previous gate open unless the step says it can run in parallel.
 
 3c. [NEXT] Detection goes deaf 71.6 min after boot (32-bit micros wrap).
    (issue #30)
-   Where: NODE-016 (roadmap-node.md).
+   Where: NODE-017 (roadmap-node.md).
    Why now: found by both soak attempts (#27); the Node runs the same audio
    path, so a field node would go deaf after ~72 min. Blocks step 3a (soak)
    and step 6 (field trial); can run in parallel with step 3b.

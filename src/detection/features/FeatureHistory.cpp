@@ -2,6 +2,8 @@
 
 #include <math.h>
 
+#include "../../app/TimingUtils.h"
+
 namespace detection {
 
 namespace {
@@ -266,7 +268,7 @@ void FeatureHistory::record(FeatureStreamId id, unsigned long timeMs, float valu
     }
 
     StreamBuffer& buffer = _streams[slot];
-    if (buffer.hasCurrent && timeMs < buffer.current.startMs) {
+    if (buffer.hasCurrent && timing::beforeDeadline(timeMs, buffer.current.startMs)) {
         ++_outOfOrderRecords;
     }
     if (!buffer.hasCurrent) {
@@ -297,7 +299,7 @@ MagnitudeWindow FeatureHistory::getWindow(
     out.requestedEndMs = endMs;
     const size_t slot = slotFor(stream);
     out.present = slot != kNoSlot;
-    if (!out.present || endMs < startMs) {
+    if (!out.present || timing::beforeDeadline(endMs, startMs)) {
         return out;
     }
 
@@ -326,7 +328,7 @@ MagnitudeWindow FeatureHistory::getWindow(
     size_t sustainedCount = 0;
 
     auto considerBin = [&](const FeatureHistoryBin& bin) {
-        if (!bin.valid || bin.startMs < startMs || bin.startMs > endMs) {
+        if (!bin.valid || !timing::inWindow(bin.startMs, startMs, endMs)) {
             return;
         }
         if (streamRequiresFreshAggregation(stream) && bin.freshCount == 0) {
@@ -397,12 +399,12 @@ MagnitudeWindow FeatureHistory::getWindow(
     }
 
     out.hasValues = haveWindow;
-    out.durationMs = endMs >= startMs ? (endMs - startMs) + 1UL : 0UL;
-    out.requestedFutureAtInspection = endMs > inspectionNowMs;
+    out.durationMs = timing::atOrAfter(endMs, startMs) ? (endMs - startMs) + 1UL : 0UL;
+    out.requestedFutureAtInspection = timing::after(endMs, inspectionNowMs);
     out.availableStartMs = firstValueMs;
     out.availableEndMs = lastValueMs;
-    out.leftMissingMs = firstValueMs > startMs ? firstValueMs - startMs : 0UL;
-    out.rightMissingMs = endMs > (lastValueMs + kBinDurationMs) ? endMs - (lastValueMs + kBinDurationMs) : 0UL;
+    out.leftMissingMs = timing::after(firstValueMs, startMs) ? firstValueMs - startMs : 0UL;
+    out.rightMissingMs = timing::after(endMs, lastValueMs + kBinDurationMs) ? endMs - (lastValueMs + kBinDurationMs) : 0UL;
     out.coverageComplete = haveWindow &&
         out.leftMissingMs == 0UL &&
         out.rightMissingMs == 0UL &&
@@ -423,8 +425,8 @@ MagnitudeWindow FeatureHistory::getWindow(
         : 0.0f;
     out.firstValueMs = firstValueMs;
     out.lastValueMs = lastValueMs;
-    out.spanMs = haveWindow && lastValueMs >= firstValueMs ? lastValueMs - firstValueMs : 0UL;
-    out.latestValueAgeMs = haveWindow && endMs >= lastValueMs ? endMs - lastValueMs : 0UL;
+    out.spanMs = haveWindow && timing::atOrAfter(lastValueMs, firstValueMs) ? lastValueMs - firstValueMs : 0UL;
+    out.latestValueAgeMs = haveWindow && timing::atOrAfter(endMs, lastValueMs) ? endMs - lastValueMs : 0UL;
     out.first = firstValue;
     out.last = lastValue;
     out.min = minValue;
@@ -454,7 +456,7 @@ size_t FeatureHistory::copyWindowApproximateValues(
     size_t capacity
 ) const {
     const size_t slot = slotFor(stream);
-    if (slot == kNoSlot || outValues == nullptr || capacity == 0 || endMs < startMs) {
+    if (slot == kNoSlot || outValues == nullptr || capacity == 0 || timing::beforeDeadline(endMs, startMs)) {
         return 0;
     }
 
@@ -466,7 +468,7 @@ size_t FeatureHistory::copyWindowApproximateValues(
     size_t written = 0;
 
     auto copyBin = [&](const FeatureHistoryBin& bin) {
-        if (!bin.valid || bin.startMs < startMs || bin.startMs > endMs) {
+        if (!bin.valid || !timing::inWindow(bin.startMs, startMs, endMs)) {
             return;
         }
         if (streamRequiresFreshAggregation(stream) && bin.freshCount == 0) {

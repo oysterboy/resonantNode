@@ -4,6 +4,7 @@
 #include <math.h>
 
 #include "../../audio/AudioPcm.h"
+#include "../../app/TimeBase.h"
 
 #ifndef FREQBAND_ENABLE_PROFILING
 #define FREQBAND_ENABLE_PROFILING 0
@@ -147,7 +148,7 @@ float FreqBandStream::computeGoertzelPowerFromCoeff(float coeff) const {
     }
 
 #if FREQBAND_ENABLE_PROFILING
-    const unsigned long profileStartUs = micros();
+    const unsigned long profileStartUs = timebase::nowUs();
 #endif
     float sPrev = 0.0f;
     float sPrev2 = 0.0f;
@@ -164,7 +165,7 @@ float FreqBandStream::computeGoertzelPowerFromCoeff(float coeff) const {
 
     const float power = sPrev2 * sPrev2 + sPrev * sPrev - coeff * sPrev * sPrev2;
 #if FREQBAND_ENABLE_PROFILING
-    _profileGoertzelTotalUs += static_cast<unsigned long>(micros() - profileStartUs);
+    _profileGoertzelTotalUs += static_cast<unsigned long>(timebase::nowUs() - profileStartUs);
 #endif
     return power;
 }
@@ -202,8 +203,8 @@ audio::FrequencyScore16 FreqBandStream::computeFrequencyScore() {
     }
 
 #if FREQBAND_ENABLE_PROFILING
-    const unsigned long profileStartUs = micros();
-    const unsigned long energyStartUs = micros();
+    const unsigned long profileStartUs = timebase::nowUs();
+    const unsigned long energyStartUs = timebase::nowUs();
 #endif
     float totalEnergy = 0.0f;
     const unsigned long startIndex = _sampleWriteIndex;
@@ -213,7 +214,7 @@ audio::FrequencyScore16 FreqBandStream::computeFrequencyScore() {
         totalEnergy += sample * sample;
     }
 #if FREQBAND_ENABLE_PROFILING
-    _profileEnergyTotalUs += static_cast<unsigned long>(micros() - energyStartUs);
+    _profileEnergyTotalUs += static_cast<unsigned long>(timebase::nowUs() - energyStartUs);
 #endif
 
     const float targetPower = computeGoertzelPowerAtFrequency(_cachedTargetFrequencyHz);
@@ -235,7 +236,7 @@ audio::FrequencyScore16 FreqBandStream::computeFrequencyScore() {
     _lastTargetBandContrastValue = contrast;
 #if FREQBAND_ENABLE_PROFILING
     ++_profileComputeCalls;
-    _profileComputeTotalUs += static_cast<unsigned long>(micros() - profileStartUs);
+    _profileComputeTotalUs += static_cast<unsigned long>(timebase::nowUs() - profileStartUs);
 #endif
 
     return normalizedScore;

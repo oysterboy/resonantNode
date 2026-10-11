@@ -3,6 +3,9 @@
 #include <Arduino.h>
 #include <string.h>
 
+#include "../../../app/TimeBase.h"
+#include "../../../app/TimingUtils.h"
+
 namespace {
 
 const char* detectorInputName(detection::DetectorSelection selection, detection::FeatureStreamId stream) {
@@ -51,7 +54,7 @@ void AnalyzerApp::flushSequenceSampleHistory(unsigned long currentSampleMs) {
     if (!_sequenceTest.sampleHistoryHasPending) {
         return;
     }
-    if (_sequenceTest.sampleHistoryPending.sampleMs >= currentSampleMs) {
+    if (timing::atOrAfter(_sequenceTest.sampleHistoryPending.sampleMs, currentSampleMs)) {
         return;
     }
 
@@ -76,10 +79,10 @@ void AnalyzerApp::flushSequenceSampleHistory(unsigned long currentSampleMs) {
         return;
     }
 
-    if (committed.sampleMs < _sequenceTest.sampleDumpCaptureStartMs || committed.sampleMs > _sequenceTest.sampleDumpCaptureEndMs) {
+    if (!timing::inWindow(committed.sampleMs, _sequenceTest.sampleDumpCaptureStartMs, _sequenceTest.sampleDumpCaptureEndMs)) {
         return;
     }
-    if (committed.sampleMs < _sequenceTest.sampleDumpNextEmitMs) {
+    if (timing::beforeDeadline(committed.sampleMs, _sequenceTest.sampleDumpNextEmitMs)) {
         return;
     }
 
@@ -125,7 +128,7 @@ void AnalyzerApp::beginSequenceSampleDump(unsigned long trialNumber) {
     _sequenceTest.sampleDumpCurrentTrial = trialNumber;
     _sequenceTest.sampleDumpCapturing = _sequenceTest.sampleDumpSelectedForTrial;
     _sequenceTest.sampleDumpTriggerMs = _sequenceTest.currentTrialStartMs;
-    _sequenceTest.sampleDumpTriggerSampleMs = _audioSignal.sampleTimeUs() / 1000UL;
+    _sequenceTest.sampleDumpTriggerSampleMs = timebase::msFromUs64(_audioSignal.sampleTimeUs64());
     _sequenceTest.sampleDumpCaptureStartMs = _sequenceTest.sampleDumpTriggerSampleMs > _sequenceTest.sampleDumpLeadMs
         ? _sequenceTest.sampleDumpTriggerSampleMs - _sequenceTest.sampleDumpLeadMs
         : 0;
@@ -142,13 +145,13 @@ void AnalyzerApp::beginSequenceSampleDump(unsigned long trialNumber) {
     for (size_t i = 0; i < _sequenceTest.sampleHistoryCount; ++i) {
         const size_t index = (_sequenceTest.sampleHistoryStart + i) % SequenceTest::kMaxSampleHistory;
         const auto& snapshot = _sequenceTest.sampleHistory[index];
-        if (snapshot.sampleMs < _sequenceTest.sampleDumpCaptureStartMs) {
+        if (timing::beforeDeadline(snapshot.sampleMs, _sequenceTest.sampleDumpCaptureStartMs)) {
             continue;
         }
-        if (snapshot.sampleMs > _sequenceTest.sampleDumpTriggerSampleMs) {
+        if (timing::after(snapshot.sampleMs, _sequenceTest.sampleDumpTriggerSampleMs)) {
             break;
         }
-        if (snapshot.sampleMs >= _sequenceTest.sampleDumpNextEmitMs) {
+        if (timing::atOrAfter(snapshot.sampleMs, _sequenceTest.sampleDumpNextEmitMs)) {
             if (_sequenceTest.sampleRowCount < SequenceTest::kMaxSampleRows) {
                 _sequenceTest.sampleRows[_sequenceTest.sampleRowCount++] = snapshot;
                 _sequenceTest.sampleDumpNextEmitMs = snapshot.sampleMs + _sequenceTest.sampleDumpStepMs;
@@ -192,7 +195,7 @@ void AnalyzerApp::printSequenceSampleReport(unsigned long trialNumber) const {
 
     for (size_t i = 0; i < _sequenceTest.sampleRowCount; ++i) {
         const auto& sample = _sequenceTest.sampleRows[i];
-        const long tMs = static_cast<long>(sample.sampleMs) - static_cast<long>(_sequenceTest.sampleDumpTriggerSampleMs);
+        const long tMs = static_cast<long>(timing::delta(sample.sampleMs, _sequenceTest.sampleDumpTriggerSampleMs));
         Serial.print(tMs);
         Serial.print(",");
         Serial.println(sample.value, 3);

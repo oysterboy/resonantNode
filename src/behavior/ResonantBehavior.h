@@ -125,6 +125,9 @@ public:
     void notifyChirpFinished(unsigned long now);
 
 private:
+    // Moves the behavior-suppress deadline to suppressUntilMs if that is later.
+    void extendBehaviorSuppress(unsigned long suppressUntilMs);
+
     // --- state machine ---
     enum class State {
         Idle,
@@ -152,6 +155,10 @@ private:
     unsigned long _waitUntilMs = 0;
     unsigned long _refractoryUntilMs = 0;
     unsigned long _ownEmitDetectionSuppressUntilMs = 0;
+    // True once the deadline above / _behaviorSuppressUntilMs has been set
+    // (wrap-safe compare; see behaviorSuppressed() in the .cpp).
+    bool _ownEmitDetectionSuppressArmed = false;
+    bool _behaviorSuppressArmed = false;
     detection::VerdictType _lastVerdictType = detection::VerdictType::None;
     unsigned long _lastPatternHeardAtMs = 0;
     unsigned long _lastDecisionMs = 0;

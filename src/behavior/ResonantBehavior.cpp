@@ -69,9 +69,11 @@ void ResonantBehavior::resetState() {
     _heardPatternStartedMs = 0;
     _refractoryStartedMs = 0;
     _behaviorSuppressUntilMs = 0;
+    _behaviorSuppressArmed = false;
     _waitUntilMs = 0;
     _refractoryUntilMs = 0;
     _ownEmitDetectionSuppressUntilMs = 0;
+    _ownEmitDetectionSuppressArmed = false;
     _lastVerdictType = detection::VerdictType::None;
     _lastPatternHeardAtMs = 0;
     _lastDecisionMs = 0;
@@ -418,8 +420,19 @@ ChirpOutput::ChirpPattern ResonantBehavior::chirpPattern() const {
     return _chirpPattern;
 }
 
+// The suppress deadlines are compared wrap-safe (issue #30). Until one has
+// been set, its 0 is no deadline at all: an unset 0 would read as "in the
+// future" once uptime ms passes 2^31 (24.8 days), so the *Armed flags gate
+// the check instead of the 0.
 bool ResonantBehavior::behaviorSuppressed(unsigned long now) const {
-    return now < _behaviorSuppressUntilMs;
+    return _behaviorSuppressArmed && timing::beforeDeadline(now, _behaviorSuppressUntilMs);
+}
+
+void ResonantBehavior::extendBehaviorSuppress(unsigned long suppressUntilMs) {
+    if (!_behaviorSuppressArmed || timing::after(suppressUntilMs, _behaviorSuppressUntilMs)) {
+        _behaviorSuppressUntilMs = suppressUntilMs;
+    }
+    _behaviorSuppressArmed = true;
 }
 
 void ResonantBehavior::notifyChirpStarted(unsigned long now) {
@@ -428,10 +441,9 @@ void ResonantBehavior::notifyChirpStarted(unsigned long now) {
         suppressMs = _idleBlockedAfterOwnEmitMs;
     }
     const unsigned long suppressUntilMs = now + suppressMs;
-    if (suppressUntilMs > _behaviorSuppressUntilMs) {
-        _behaviorSuppressUntilMs = suppressUntilMs;
-    }
+    extendBehaviorSuppress(suppressUntilMs);
     _ownEmitDetectionSuppressUntilMs = suppressUntilMs;
+    _ownEmitDetectionSuppressArmed = true;
     _outputBusy = true;
     _lastDecision = BehaviorDecision::Emitted;
     _lastBlockReason = BehaviorDecision::None;
@@ -443,13 +455,12 @@ void ResonantBehavior::notifyChirpFinished(unsigned long now) {
         _refractoryStartedMs = now;
         _refractoryUntilMs = now + _refractoryAfterEmitMs;
         _ownEmitDetectionSuppressUntilMs = now + _detectionSuppressTailMsOwnEmit;
+        _ownEmitDetectionSuppressArmed = true;
         _state = State::Refractory;
         _outputBusy = false;
 
         const unsigned long suppressUntilMs = now + _detectionSuppressTailMsOwnEmit;
-        if (suppressUntilMs > _behaviorSuppressUntilMs) {
-            _behaviorSuppressUntilMs = suppressUntilMs;
-        }
+        extendBehaviorSuppress(suppressUntilMs);
     }
 }
 
@@ -482,7 +493,7 @@ unsigned long ResonantBehavior::refractoryRemainingMs(unsigned long now) const {
 }
 
 unsigned long ResonantBehavior::behaviorSuppressRemainingMs(unsigned long now) const {
-    if (timing::atOrAfter(now, _behaviorSuppressUntilMs)) {
+    if (!_behaviorSuppressArmed || timing::atOrAfter(now, _behaviorSuppressUntilMs)) {
         return 0;
     }
     return _behaviorSuppressUntilMs - now;
@@ -546,7 +557,10 @@ bool ResonantBehavior::ownEmitDetectionSuppressed(unsigned long sampleTimeMs) co
     // The start-time window alone (behaviorSuppressSelfChirpMs or
     // idleBlockedAfterOwnEmitMs) ends inside longer patterns: the 1.2 s idle
     // pattern's second pulse was heard as a valid occurrence (#20).
-    return _state == State::Chirping || sampleTimeMs < _ownEmitDetectionSuppressUntilMs;
+    // sampleTimeMs is AudioSamplePacket::timeMs, the deadline comes from
+    // timebase::nowMs(): one axis (app/TimeBase.h), compared wrap-safe (#30).
+    return _state == State::Chirping ||
+           (_ownEmitDetectionSuppressArmed && timing::beforeDeadline(sampleTimeMs, _ownEmitDetectionSuppressUntilMs));
 }
 
 unsigned long ResonantBehavior::patternsReceived() const {

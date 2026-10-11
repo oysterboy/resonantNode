@@ -12,6 +12,7 @@
 #include "../../detection/inspection/InspectionNames.h"
 #include "../../detection/evaluation/VerdictNames.h"
 #include "../../param/ParamRegistry.h"
+#include "../../app/TimeBase.h"
 
 /*
 Node
@@ -333,7 +334,7 @@ void Node::begin() {
     printNodeBuildIdentity();
     Serial.println();
 
-    randomSeed(esp_random() ^ millis());
+    randomSeed(esp_random() ^ timebase::nowMs());
     configureParameters();
     _audioSource.begin();
     _audioSignal.begin(false);
@@ -350,7 +351,7 @@ void Node::begin() {
     _rbLastLoggedOnsetRejectCount = 0;
     _rbLastLoggedTransientRejectCount = 0;
     _rbBaselineState = RBBaselineState::ListenForQuiet;
-    _rbBaselineStateStartedMs = millis();
+    _rbBaselineStateStartedMs = timebase::nowMs();
     _rbBaselineQuietSinceMs = 0;
     _rbBaselineLastLogMs = 0;
     _rbBaselineSettleUntilMs = 0;
@@ -359,8 +360,8 @@ void Node::begin() {
     _rbLastWouldEmitDecision = ResonantBehavior::BehaviorDecision::None;
     _chirpOutput.begin();
     _debug.begin(_ledPin);
-    _behavior.seedIdleSchedule(millis());
-    _debug.markLoopStart(micros());
+    _behavior.seedIdleSchedule(timebase::nowMs());
+    _debug.markLoopStart(timebase::nowUs());
     _serialLineLength = 0;
     _serialLineBuffer[0] = '\0';
 
@@ -378,7 +379,7 @@ void Node::begin() {
 
 void Node::startRbQuietBaseline() {
     _rbBaselineState = RBBaselineState::ListenForQuiet;
-    _rbBaselineStateStartedMs = millis();
+    _rbBaselineStateStartedMs = timebase::nowMs();
     _rbBaselineQuietSinceMs = 0;
     _rbBaselineLastLogMs = 0;
     _rbBaselineSettleUntilMs = 0;
@@ -550,8 +551,8 @@ void Node::configureI2SParameters() {
 // --- main update loop ---
 
 void Node::update() {
-    const unsigned long now = millis();
-    const unsigned long nowUs = micros();
+    const unsigned long now = timebase::nowMs();
+    const unsigned long nowUs = timebase::nowUs();
     const bool selfChirpSuppressed = _behavior.behaviorSuppressed(now);
     _wasSelfChirpSuppressed = selfChirpSuppressed;
 
@@ -571,9 +572,9 @@ void Node::update() {
 
         const uint32_t sampleRateHz = _audioSource.sampleRateHz() > 0 ? _audioSource.sampleRateHz() : 16000UL;
         for (uint16_t i = 0; i < block.sampleCount; ++i) {
-            const uint32_t sampleTimeUs = block.approxStartMicros + sampleOffsetUs(static_cast<uint32_t>(i), sampleRateHz);
+            const uint64_t sampleTimeUs64 = block.approxStartUs64 + sampleOffsetUs(static_cast<uint32_t>(i), sampleRateHz);
             AudioSamplePacket audioSamplePacket;
-            _audioSignal.update(static_cast<int>(block.samples[i]), sampleTimeUs, audioSamplePacket);
+            _audioSignal.update(static_cast<int>(block.samples[i]), sampleTimeUs64, audioSamplePacket);
             const bool ownEmitSuppressed = _behavior.ownEmitDetectionSuppressed(audioSamplePacket.timeMs);
             if (!ownEmitSuppressed) {
                 _freqBandStream.observeCenteredSample(audioSamplePacket.baselineCorrectedValue, audioSamplePacket.timeMs);
@@ -667,10 +668,10 @@ void Node::update() {
     _debug.updateLed(now, _behavior, _chirpOutput, selfChirpSuppressed);
 
     if (_selfTest.phase != SelfTestState::Phase::Idle) {
-        updateSelfTest(millis());
+        updateSelfTest(timebase::nowMs());
     }
 
-    _debug.endLoop(micros());
+    _debug.endLoop(timebase::nowUs());
 }
 
 // --- serial command handling ---
@@ -877,7 +878,7 @@ void Node::handleSerialLine(const char* line) {
         _rbBaselineState = RBBaselineState::Rebase;
         performRbRebase();
         _rbBaselineState = RBBaselineState::Settle;
-        _rbBaselineSettleUntilMs = millis() + kRbPostRebaseSettleMs;
+        _rbBaselineSettleUntilMs = timebase::nowMs() + kRbPostRebaseSettleMs;
         ++_rbForcedRebaseCount;
         Serial.println("RB rebase forced");
         return;

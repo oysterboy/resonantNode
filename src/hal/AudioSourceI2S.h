@@ -36,8 +36,8 @@ public:
     void begin() override;
     bool available() override;
     int availableBytes() const override;
-    bool readSample(int& sample, uint32_t& sampleTimeUs) override;
-    bool readRawSample(int& sample, uint32_t& sampleTimeUs) override;
+    bool readSample(int& sample, uint64_t& sampleTimeUs64) override;
+    bool readRawSample(int& sample, uint64_t& sampleTimeUs64) override;
     bool readBlock(AudioBlock& block) override;
     uint32_t sampleRateHz() const override;
     const AudioSourceStats& stats() const override;
@@ -74,16 +74,17 @@ private:
     size_t _blockCount = 0;
     size_t _blockCursor = 0;
     uint64_t _blockStartSampleIndex = 0;
-    uint32_t _blockApproxStartMicros = 0;
-    uint32_t _lastBlockEndMicros = 0;
+    uint64_t _blockApproxStartUs64 = 0;
+    uint64_t _lastBlockEndUs64 = 0;
     bool _haveLastBlockEnd = false;
 
     // Sample clock: block times come from the sample index, not from when the
     // block happened to be read. See stampBlock() in AudioSourceI2S.cpp.
-    uint32_t stampBlock(uint64_t blockStartIndex, size_t blockCount, uint32_t readAtUs);
+    // 64-bit time base (app/TimeBase.h): no wrap inside the clock.
+    uint64_t stampBlock(uint64_t blockStartIndex, size_t blockCount, uint64_t readAtUs);
     bool _clockAnchored = false;
     uint64_t _clockAnchorIndex = 0;
-    uint32_t _clockAnchorUs = 0;
+    uint64_t _clockAnchorUs = 0;
     double _clockUsPerSample = 0.0;
     int32_t _clockWindowMinLatencyUs = 0;
     uint32_t _clockWindowSamples = 0;

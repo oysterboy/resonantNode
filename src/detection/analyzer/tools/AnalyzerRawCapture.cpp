@@ -8,6 +8,8 @@
 #include <esp_heap_caps.h>
 #include <stdlib.h>
 #include <string.h>
+#include "../../../app/TimeBase.h"
+#include "../../../app/TimingUtils.h"
 
 bool waitForEmitterAck(const char* expectedPrefix, unsigned long timeoutMs);
 
@@ -59,7 +61,7 @@ bool rawCaptureUsesSignalView(AnalyzerApp::RawCaptureMode mode) {
 }
 
 uint16_t rawCaptureOffsetMs(unsigned long sampleMs, unsigned long baseMs) {
-    if (sampleMs <= baseMs) {
+    if (timing::atOrBefore(sampleMs, baseMs)) {
         return 0;
     }
 
@@ -223,7 +225,7 @@ bool AnalyzerApp::runRawTrigger(unsigned long toneHz,
 
     unsigned long flushedSamples = 0;
     int discardedSample = 0;
-    uint32_t discardedSampleTimeUs = 0;
+    uint64_t discardedSampleTimeUs = 0;
     const bool useSignalView = rawCaptureUsesSignalView(mode);
     while (flushedSamples < kRawCaptureFlushSamples &&
            (useSignalView ? _audioSource.readSample(discardedSample, discardedSampleTimeUs)
@@ -261,7 +263,7 @@ bool AnalyzerApp::runRawTrigger(unsigned long toneHz,
     }
 
     const unsigned long captureId = ++_rawCaptureSequenceId;
-    const unsigned long commandMs = millis();
+    const unsigned long commandMs = timebase::nowMs();
     const unsigned long captureBaseMs = commandMs;
     char emitterCommand[96];
     snprintf(emitterCommand, sizeof(emitterCommand), "CHIRP freq=%lu dur=%lu", toneHz, durationMs);
@@ -322,7 +324,7 @@ bool AnalyzerApp::runRawTrigger(unsigned long toneHz,
         const bool doneLine = startsWithTokenIgnoreCase(line, "EMIT_DONE") || startsWithTokenIgnoreCase(line, "EMIT_DRIVE_OFF");
         if (startLine && !emitStarted) {
             emitStarted = true;
-            emitStartMs = millis();
+            emitStartMs = timebase::nowMs();
             copyPreWindow();
             if (mode != RawCaptureMode::Pcm && mode != RawCaptureMode::I2s) {
                 Serial.print("RAW_EMIT_START id=");
@@ -334,7 +336,7 @@ bool AnalyzerApp::runRawTrigger(unsigned long toneHz,
             }
         } else if (doneLine && !emitDone) {
             emitDone = true;
-            emitDoneMs = millis();
+            emitDoneMs = timebase::nowMs();
             if (mode != RawCaptureMode::Pcm && mode != RawCaptureMode::I2s) {
                 Serial.print("RAW_EMIT_DONE id=");
                 Serial.print(captureId);
@@ -369,18 +371,19 @@ bool AnalyzerApp::runRawTrigger(unsigned long toneHz,
     };
 
     unsigned long i2sDecimCounter = 0;
+    timebase::MsFromUs64 rawMsFromUs;
     auto captureSample = [&]() -> bool {
         int sourceSample = 0;
-        uint32_t sampleTimeUs = 0;
-        if (!(useSignalView ? _audioSource.readSample(sourceSample, sampleTimeUs)
-                            : _audioSource.readRawSample(sourceSample, sampleTimeUs))) {
+        uint64_t sampleTimeUs64 = 0;
+        if (!(useSignalView ? _audioSource.readSample(sourceSample, sampleTimeUs64)
+                            : _audioSource.readRawSample(sourceSample, sampleTimeUs64))) {
             return false;
         }
         if (i2sKeepEvery > 1 && (i2sDecimCounter++ % i2sKeepEvery) != 0) {
             return true;
         }
 
-        const unsigned long sampleTimeMs = sampleTimeUs / 1000UL;
+        const unsigned long sampleTimeMs = rawMsFromUs(sampleTimeUs64);
         const uint16_t sampleTimeOffsetMs = rawCaptureOffsetMs(sampleTimeMs, captureBaseMs);
         const int32_t signedRawSample = static_cast<int32_t>(sourceSample);
         rawWindowSum += static_cast<int64_t>(signedRawSample);
@@ -393,7 +396,7 @@ bool AnalyzerApp::runRawTrigger(unsigned long toneHz,
         }
         if (useSignalView) {
             AudioSamplePacket audioSamplePacket = {};
-            _audioSignal.update(sourceSample, sampleTimeUs, audioSamplePacket);
+            _audioSignal.update(sourceSample, sampleTimeUs64, audioSamplePacket);
 
             if (mode == RawCaptureMode::Pcm) {
                 if (!emitStarted) {
@@ -474,7 +477,7 @@ bool AnalyzerApp::runRawTrigger(unsigned long toneHz,
     };
 
     const unsigned long overallDeadlineMs = commandMs + preMs + postMs + kRawCaptureTimeoutSlackMs;
-    while (millis() <= overallDeadlineMs) {
+    while (timing::atOrBefore(timebase::nowMs(), overallDeadlineMs)) {
         pumpEmitterSerial();
 
         if (emitStarted && preWindowCopied && postCaptured >= postWantedSamples) {
@@ -492,7 +495,7 @@ bool AnalyzerApp::runRawTrigger(unsigned long toneHz,
     }
     if (emitStarted && !emitDone) {
         const unsigned long emitDoneDeadlineMs = emitStartMs + postMs + kRawCaptureTimeoutSlackMs;
-        while (millis() <= emitDoneDeadlineMs && !emitDone) {
+        while (timing::atOrBefore(timebase::nowMs(), emitDoneDeadlineMs) && !emitDone) {
             pumpEmitterSerial();
             if (!emitDone) {
                 delay(1);

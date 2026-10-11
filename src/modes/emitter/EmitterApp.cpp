@@ -8,6 +8,8 @@
 #include "../../app/SerialLine.h"
 #include "../../selftest/AudioSelfTest.h"
 #include "../../selftest/SelfTestReport.h"
+#include "../../app/TimeBase.h"
+#include "../../app/TimingUtils.h"
 
 namespace {
 bool startsWithToken(const char* line, const char* token) {
@@ -69,7 +71,7 @@ void EmitterApp::begin() {
     _chirpOutput.begin();
     configureAuto(_autoIntervalMs, _autoToneHz, _autoDurationMs);
     setMode(EmitterMode::Auto);
-    _nextAutoChirpAtMs = millis();
+    _nextAutoChirpAtMs = timebase::nowMs();
     _lineLength = 0;
     _lineBuffer[0] = '\0';
     _usbLineLength = 0;
@@ -92,24 +94,24 @@ void EmitterApp::update() {
 
     if (_chirpOutput.finished()) {
         char markerLine[96];
-        snprintf(markerLine, sizeof(markerLine), "EMIT_DONE trial=%lu t_ms=%lu", _activeTrialId, millis());
+        snprintf(markerLine, sizeof(markerLine), "EMIT_DONE trial=%lu t_ms=%lu", _activeTrialId, timebase::nowMs());
         sendEmitterMarker(markerLine);
-        snprintf(markerLine, sizeof(markerLine), "EMIT_DRIVE_OFF trial=%lu t_ms=%lu", _activeTrialId, millis());
+        snprintf(markerLine, sizeof(markerLine), "EMIT_DRIVE_OFF trial=%lu t_ms=%lu", _activeTrialId, timebase::nowMs());
         sendEmitterMarker(markerLine);
         _activeTrialId = 0;
         Serial.println("EVT emitter_chirp_finished");
     }
 
     if (_mode == EmitterMode::Auto && !_chirpOutput.isActive()) {
-        const unsigned long now = millis();
-        if (now >= _nextAutoChirpAtMs) {
+        const unsigned long now = timebase::nowMs();
+        if (timing::atOrAfter(now, _nextAutoChirpAtMs)) {
             startChirp(_autoToneHz, _autoDurationMs);
             _nextAutoChirpAtMs = now + _autoIntervalMs;
         }
     }
 
     if (_mode == EmitterMode::Sweep) {
-        advanceSweep(millis());
+        advanceSweep(timebase::nowMs());
     }
 }
 
@@ -201,8 +203,8 @@ void EmitterApp::handleSelfTestCommand(const char* line) {
 
     // Back to the configured tone; AUTO resumes one interval from now.
     _chirpOutput.setToneHz(static_cast<uint32_t>(_mode == EmitterMode::Sweep ? _sweepCurrentHz : _autoToneHz));
-    _nextAutoChirpAtMs = millis() + _autoIntervalMs;
-    _nextSweepStepAtMs = millis() + _sweepPauseMs;
+    _nextAutoChirpAtMs = timebase::nowMs() + _autoIntervalMs;
+    _nextSweepStepAtMs = timebase::nowMs() + _sweepPauseMs;
 }
 
 void EmitterApp::handleLine(const char* line) {
@@ -301,7 +303,7 @@ void EmitterApp::handleModeCommand(const char* line) {
         _chirpOutput.stop();
         configureAuto(intervalMs, toneHz, durationMs);
         setMode(EmitterMode::Auto);
-        _nextAutoChirpAtMs = millis();
+        _nextAutoChirpAtMs = timebase::nowMs();
         char modeLine[96];
         snprintf(modeLine,
                  sizeof(modeLine),
@@ -355,7 +357,7 @@ void EmitterApp::handleSweepCommand(const char* line) {
     configureSweep(startHz, stopHz, stepHz, durationMs, pauseMs);
     _chirpOutput.stop();
     setMode(EmitterMode::Sweep);
-    _nextSweepStepAtMs = millis();
+    _nextSweepStepAtMs = timebase::nowMs();
     char modeLine[128];
     snprintf(modeLine,
              sizeof(modeLine),
@@ -378,12 +380,12 @@ void EmitterApp::startChirp(unsigned long toneHz, unsigned long durationMs, unsi
     _chirpOutput.setTiming(durationMs, 0);
     _chirpOutput.start();
     char markerLine[96];
-    snprintf(markerLine, sizeof(markerLine), "EMIT_START trial=%lu t_ms=%lu", _activeTrialId, millis());
+    snprintf(markerLine, sizeof(markerLine), "EMIT_START trial=%lu t_ms=%lu", _activeTrialId, timebase::nowMs());
     sendEmitterMarker(markerLine);
-    snprintf(markerLine, sizeof(markerLine), "EMIT_DRIVE_ON trial=%lu t_ms=%lu", _activeTrialId, millis());
+    snprintf(markerLine, sizeof(markerLine), "EMIT_DRIVE_ON trial=%lu t_ms=%lu", _activeTrialId, timebase::nowMs());
     sendEmitterMarker(markerLine);
     if (_mode == EmitterMode::Auto) {
-        _nextAutoChirpAtMs = millis() + _autoIntervalMs;
+        _nextAutoChirpAtMs = timebase::nowMs() + _autoIntervalMs;
     }
 
     char chirpLine[128];
@@ -405,8 +407,8 @@ void EmitterApp::claimExternalControl() {
     }
 
     _chirpOutput.stop();
-    _nextAutoChirpAtMs = millis();
-    _nextSweepStepAtMs = millis();
+    _nextAutoChirpAtMs = timebase::nowMs();
+    _nextSweepStepAtMs = timebase::nowMs();
     setMode(EmitterMode::RemoteControl);
 }
 
@@ -443,7 +445,7 @@ void EmitterApp::advanceSweep(unsigned long now) {
         return;
     }
 
-    if (now < _nextSweepStepAtMs) {
+    if (timing::beforeDeadline(now, _nextSweepStepAtMs)) {
         return;
     }
 

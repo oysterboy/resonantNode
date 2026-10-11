@@ -8,6 +8,7 @@
 #include "../../app/RuntimeDefaults.h"
 #include "../../app/TimingUtils.h"
 #include "AnalyzerPassRules.h"
+#include "../../app/TimeBase.h"
 
 bool waitForEmitterAck(const char* expectedPrefix, unsigned long timeoutMs);
 
@@ -214,16 +215,16 @@ void AnalyzerApp::startSequenceTest(const PendingSequenceStart& pending) {
             _sequenceTest.sampleDumpEnabled = false;
         }
     }
-    _sequenceTest.startedAtMs = millis();
+    _sequenceTest.startedAtMs = timebase::nowMs();
     _sequenceTest.nextTriggerAtMs = _sequenceTest.startedAtMs + _sequenceTest.startupDelayMs;
     resetSequenceTestRunState();
 
     if (!_sequenceTest.externalEmitter) {
         // Rebase before the first trial so every run starts from the quiet floor.
-        const unsigned long sequenceClaimSendMs = millis();
+        const unsigned long sequenceClaimSendMs = timebase::nowMs();
         sendEmitterCommand("MODE REMOTE");
         const bool sequenceClaimAcked = waitForEmitterAck("OK MODE REMOTE", 1500);
-        const unsigned long sequenceClaimAckMs = millis();
+        const unsigned long sequenceClaimAckMs = timebase::nowMs();
         if (_sequenceTest.showDetails && !_sequenceTest.quiet) {
             Serial.print("SEQ remote claim: send=");
             Serial.print(sequenceClaimSendMs);
@@ -236,16 +237,16 @@ void AnalyzerApp::startSequenceTest(const PendingSequenceStart& pending) {
         }
     }
 
-    const unsigned long sequenceRebaseStartMs = millis();
+    const unsigned long sequenceRebaseStartMs = timebase::nowMs();
     delay(100);
     _audioSignal.rebase();
     if (_sequenceTest.showDetails && !_sequenceTest.quiet) {
         Serial.print("SEQ rebase: start=");
         Serial.print(sequenceRebaseStartMs);
         Serial.print("ms end=");
-        Serial.print(millis());
+        Serial.print(timebase::nowMs());
         Serial.print("ms elapsed=");
-        Serial.print(millis() - sequenceRebaseStartMs);
+        Serial.print(timebase::nowMs() - sequenceRebaseStartMs);
         Serial.println("ms");
     }
     resetAudioSignalState();
@@ -489,7 +490,7 @@ AnalyzerApp::SequenceTrialSelection AnalyzerApp::selectSequenceTrialSelection(un
             : 0UL;
         selection.candidateId = 0;
         selection.reportMatched = detectorReportMatchesOccurrence(selection.detectorReport, selection.inspectedOccurrence);
-        selection.dtMs = static_cast<long>(_sequenceTest.primaryValidPattern.primaryStartMs) - static_cast<long>(trialOnsetAnchorMs);
+        selection.dtMs = static_cast<long>(timing::delta(_sequenceTest.primaryValidPattern.primaryStartMs, trialOnsetAnchorMs));
         selection.durationMs = _sequenceTest.primaryValidPattern.primaryDurationMs;
         selection.strength = _sequenceTest.primaryValidPattern.primaryStrength;
         selection.result = selection.dtMs >= kLateOnsetMinMs ? AnalyzerResult::Late : AnalyzerResult::Expected;
@@ -508,13 +509,13 @@ AnalyzerApp::SequenceTrialSelection AnalyzerApp::selectSequenceTrialSelection(un
         selection.occurrenceId = selection.inspectedOccurrence->occurrence.occurrenceId;
         selection.candidateId = 0;
         selection.reportMatched = detectorReportMatchesOccurrence(selection.detectorReport, selection.inspectedOccurrence);
-        selection.dtMs = static_cast<long>(_sequenceTest.primaryAcceptedInspectedOccurrence.occurrence.startMs) - static_cast<long>(trialOnsetAnchorMs);
+        selection.dtMs = static_cast<long>(timing::delta(_sequenceTest.primaryAcceptedInspectedOccurrence.occurrence.startMs, trialOnsetAnchorMs));
         selection.durationMs = _sequenceTest.primaryAcceptedInspectedOccurrence.occurrence.durationMs;
         selection.strength = _sequenceTest.primaryAcceptedInspectedOccurrence.occurrence.strength;
         if (_sequenceTest.bestRejectedPatternCaptured &&
             _sequenceTest.bestRejectedInWindow.occurrenceId == selection.occurrenceId) {
             selection.verdict = &_sequenceTest.bestRejectedInWindow;
-            selection.dtMs = static_cast<long>(_sequenceTest.bestRejectedInWindow.primaryStartMs) - static_cast<long>(trialOnsetAnchorMs);
+            selection.dtMs = static_cast<long>(timing::delta(_sequenceTest.bestRejectedInWindow.primaryStartMs, trialOnsetAnchorMs));
             selection.durationMs = _sequenceTest.bestRejectedInWindow.primaryDurationMs;
             selection.strength = _sequenceTest.bestRejectedInWindow.primaryStrength;
         }
@@ -533,7 +534,7 @@ AnalyzerApp::SequenceTrialSelection AnalyzerApp::selectSequenceTrialSelection(un
         selection.occurrenceId = _sequenceTest.selectedSourceReject.sourceOccurrenceId;
         selection.candidateId = _sequenceTest.selectedSourceReject.sourceCandidateId;
         selection.reportMatched = _sequenceTest.selectedSourceReject.sourceReportMatched;
-        selection.dtMs = static_cast<long>(_sequenceTest.selectedSourceReject.detectorReport.selectedReject.startMs) - static_cast<long>(trialOnsetAnchorMs);
+        selection.dtMs = static_cast<long>(timing::delta(_sequenceTest.selectedSourceReject.detectorReport.selectedReject.startMs, trialOnsetAnchorMs));
         selection.durationMs = _sequenceTest.selectedSourceReject.detectorReport.selectedReject.durationMs;
         selection.strength = _sequenceTest.selectedSourceReject.detectorReport.selectedReject.strength;
         selection.result = AnalyzerResult::Rejected;
@@ -554,7 +555,7 @@ AnalyzerApp::SequenceTrialSelection AnalyzerApp::selectSequenceTrialSelection(un
             : 0UL;
         selection.candidateId = 0;
         selection.reportMatched = detectorReportMatchesOccurrence(selection.detectorReport, selection.inspectedOccurrence);
-        selection.dtMs = static_cast<long>(_sequenceTest.bestRejectedInWindow.primaryStartMs) - static_cast<long>(trialOnsetAnchorMs);
+        selection.dtMs = static_cast<long>(timing::delta(_sequenceTest.bestRejectedInWindow.primaryStartMs, trialOnsetAnchorMs));
         selection.durationMs = _sequenceTest.bestRejectedInWindow.primaryDurationMs;
         selection.strength = _sequenceTest.bestRejectedInWindow.primaryStrength;
         selection.result = AnalyzerResult::Rejected;
@@ -583,7 +584,7 @@ void AnalyzerApp::finalizeSequenceTrial(unsigned long now) {
 
     // Flush late emitter markers before snapshotting the trial.
     pollEmitterSerial();
-    const uint32_t finalizeStartUs = micros();
+    const uint32_t finalizeStartUs = timebase::nowUs();
     auto& diagnostics = _sequenceTest.currentTrialDiagnostics;
 
     const bool bufferOverrunTrial = _sequenceTest.bufferOverrun
@@ -660,7 +661,7 @@ void AnalyzerApp::finalizeSequenceTrial(unsigned long now) {
     }
     if (_sequenceTest.currentTrial < _sequenceTest.totalTrials) {
         const unsigned long settleUntilMs = now + _sequenceTest.reportSettleMs;
-        if (_sequenceTest.nextTriggerAtMs < settleUntilMs) {
+        if (timing::beforeDeadline(_sequenceTest.nextTriggerAtMs, settleUntilMs)) {
             _sequenceTest.nextTriggerAtMs = settleUntilMs;
         }
     }
@@ -671,7 +672,7 @@ void AnalyzerApp::finalizeSequenceTrial(unsigned long now) {
         stopSequenceTest();
     }
 
-    const unsigned long finalizeUs = static_cast<unsigned long>(micros() - finalizeStartUs);
+    const unsigned long finalizeUs = static_cast<unsigned long>(timebase::nowUs() - finalizeStartUs);
     if (finalizeUs > _sequenceTest.maxFinalizeTrialUs) {
         _sequenceTest.maxFinalizeTrialUs = finalizeUs;
     }

@@ -52,17 +52,15 @@ void NodeDebug::begin(int ledPin) {
     _i2sCenteredMin = 0;
     _i2sCenteredMax = 0;
     _ledPin = ledPin;
-    _ledPatternPulseStartMs = 0;
-    _ledPatternPulseCount = 0;
-    _ledPatternPulseBrightness = kLedBrightnessOff;
+    _ledFlashStartMs = 0;
+    _ledFlashCount = 0;
+    _ledOn = false;
 
     if (_ledPin < 0) {
-        return; // no LED fitted (D-AMP)
+        return; // no LED fitted
     }
     pinMode(_ledPin, OUTPUT);
-    ledcSetup(kLedPwmChannel, kLedPwmFrequencyHz, kLedPwmResolutionBits);
-    ledcAttachPin(_ledPin, kLedPwmChannel);
-    ledcWrite(kLedPwmChannel, kLedBrightnessOff);
+    digitalWrite(_ledPin, LOW);
 }
 
 void NodeDebug::markLoopStart(unsigned long nowUs) {
@@ -142,10 +140,9 @@ void NodeDebug::observeTransient(unsigned long now, bool transientDetected, floa
     updatePulse(now, transientDetected, transientStrength, _debugTransientVisibleUntilMs, _debugTransientStrength);
 }
 
-void NodeDebug::observePatternPulse(unsigned long now, bool fullPulse, bool proposalMatched) {
-    _ledPatternPulseStartMs = now;
-    _ledPatternPulseCount = fullPulse ? kLedTransientPulseCount : 1;
-    _ledPatternPulseBrightness = proposalMatched ? kLedBrightnessFull : kLedBrightnessHalf;
+void NodeDebug::flashLed(unsigned long now, uint8_t count) {
+    _ledFlashStartMs = now;
+    _ledFlashCount = count;
 }
 
 void NodeDebug::observeBehaviorGate(unsigned long now,
@@ -274,28 +271,21 @@ void NodeDebug::observeChirpFinished(unsigned long now) {
     Serial.println("EVT chirp_finished");
 }
 
-void NodeDebug::updateLed(unsigned long now,
-                          const ResonantBehavior& behavior,
-                          const ChirpOutput& chirpOutput,
-                          bool selfChirpSuppressed) {
-    (void)behavior;
-    (void)selfChirpSuppressed;
-    uint8_t ledBrightness = chirpOutput.isActive() ? kLedBrightnessFull : kLedBrightnessOff;
-
-    if (ledBrightness == kLedBrightnessOff && _ledPatternPulseStartMs != 0) {
-        const unsigned long elapsedMs = now - _ledPatternPulseStartMs;
-        const unsigned long pulseIndex = elapsedMs / kLedTransientPulseCycleMs;
-        if (pulseIndex < _ledPatternPulseCount) {
-            const unsigned long phaseMs = elapsedMs % kLedTransientPulseCycleMs;
-            if (phaseMs < kLedTransientPulseOnMs) {
-                ledBrightness = _ledPatternPulseBrightness;
-            }
+void NodeDebug::updateLed(unsigned long now) {
+    bool on = false;
+    if (_ledFlashCount > 0) {
+        const unsigned long cycleMs = kLedFlashOnMs + kLedFlashOffMs;
+        const unsigned long elapsedMs = now - _ledFlashStartMs;
+        if (elapsedMs / cycleMs < _ledFlashCount) {
+            on = elapsedMs % cycleMs < kLedFlashOnMs;
+        } else {
+            _ledFlashCount = 0;
         }
     }
-
-    if (_ledPin >= 0) {
-        ledcWrite(kLedPwmChannel, ledBrightness);
+    if (_ledPin >= 0 && on != _ledOn) {
+        digitalWrite(_ledPin, on ? HIGH : LOW);
     }
+    _ledOn = on;
 }
 
 void NodeDebug::printPlotValues(unsigned long now,

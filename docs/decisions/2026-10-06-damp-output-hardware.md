@@ -34,7 +34,8 @@ runtime board switching.
 ## Consequences
 
 - Pinout changes. D-AMP: 25 = I2S WS and 26 = BCLK (shared by mic and
-  amp), 32 = amp DIN, 33 = mic data. Piezo: mic on 14/27/33, output LEDC on
+  amp), 32 = amp DIN, 33 = mic data, 2 = status LED (added 2026-10-12,
+  NODE-016; to GND through ~330 R, strapping pin). Piezo: mic on 14/27/33, output LEDC on
   25/26. Current firmware must not be flashed onto D-AMP nodes. UART2
   (16/17, Analyzer <-> Emitter) is free on both.
 - Mic and amp share one I2S port, so the D-AMP HAL is one full-duplex

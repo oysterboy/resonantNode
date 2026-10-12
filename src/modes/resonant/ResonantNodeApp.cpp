@@ -651,6 +651,7 @@ void Node::update() {
             Serial.println(chirpPatternName(chirpPattern));
         }
     _debug.observeChirpStarted(now, sourceName, chirpPattern);
+    _debug.flashLed(now, 2);
     _chirpOutput.start(chirpPattern);
     _behavior.notifyChirpStarted(now);
     ++_rbChirpStartedCount;
@@ -665,7 +666,7 @@ void Node::update() {
         selfTestNoteChirpFinished(now);
     }
 
-    _debug.updateLed(now, _behavior, _chirpOutput, selfChirpSuppressed);
+    _debug.updateLed(now);
 
     if (_selfTest.phase != SelfTestState::Phase::Idle) {
         updateSelfTest(timebase::nowMs());
@@ -1218,6 +1219,7 @@ void Node::processDetectionFrame(const AudioSamplePacket& audioSamplePacket,
         ++_rbPendingCount;
         if (verdict.accepted) {
             ++_rbPatternAcceptedCount;
+            _debug.flashLed(now, 1);
         }
         if (verdict.valid) {
             ++_rbValidPatternCount;

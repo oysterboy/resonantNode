@@ -35,7 +35,10 @@ public:
 
     void observeOnset(unsigned long now, bool onsetDetected, float onsetStrength);
     void observeTransient(unsigned long now, bool transientDetected, float transientStrength, bool suppressed);
-    void observePatternPulse(unsigned long now, bool fullPulse, bool proposalMatched);
+    // Status LED (NODE-016): `count` flashes of kLedFlashOnMs, kLedFlashOffMs
+    // apart; a new call restarts the sequence. 1 = detection (accepted
+    // verdict), 2 = own emit.
+    void flashLed(unsigned long now, uint8_t count);
     void observeBehaviorGate(unsigned long now,
                              const ResonantBehavior& behavior,
                              bool transientDetected,
@@ -43,10 +46,7 @@ public:
     void observeI2SSignal(unsigned long now, const AudioSignal& audioSignal);
     void observeChirpStarted(unsigned long now, const char* sourceName, ChirpOutput::ChirpPattern pattern);
     void observeChirpFinished(unsigned long now);
-    void updateLed(unsigned long now,
-                   const ResonantBehavior& behavior,
-                   const ChirpOutput& chirpOutput,
-                   bool selfChirpSuppressed);
+    void updateLed(unsigned long now);
 
     void printPlotValues(unsigned long now,
                          const AudioSignal& audioSignal,
@@ -99,19 +99,9 @@ private:
 
     // LED output.
     int _ledPin = -1;
-    unsigned long _ledPatternPulseStartMs = 0;
-    unsigned long _ledPatternPulseCount = 0;
-    uint8_t _ledPatternPulseBrightness = 0;
-    static constexpr unsigned long kLedTransientPulseOnMs = 30;
-    static constexpr unsigned long kLedTransientPulseOffMs = 30;
-    static constexpr unsigned long kLedTransientPulseCount = 3;
-    static constexpr unsigned long kLedTransientPulseCycleMs = kLedTransientPulseOnMs + kLedTransientPulseOffMs;
-    static constexpr uint8_t kLedBrightnessFull = 255;
-    static constexpr uint8_t kLedBrightnessHalf = 128;
-    static constexpr uint8_t kLedBrightnessSelfIgnore = 179;
-    static constexpr uint8_t kLedBrightnessRefractory = 128;
-    static constexpr uint8_t kLedBrightnessOff = 0;
-    static constexpr uint8_t kLedPwmChannel = 2;
-    static constexpr uint8_t kLedPwmResolutionBits = 8;
-    static constexpr uint32_t kLedPwmFrequencyHz = 5000;
+    unsigned long _ledFlashStartMs = 0;
+    uint8_t _ledFlashCount = 0;
+    bool _ledOn = false;
+    static constexpr unsigned long kLedFlashOnMs = 80;
+    static constexpr unsigned long kLedFlashOffMs = 120;
 };

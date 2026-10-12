@@ -10,7 +10,9 @@ docs/decisions/2026-10-09-discontinue-piezo.md).
 
 - Default: D-AMP. MAX98357A amp and I2S MEMS mic share one full-duplex
   I2S port (BCLK 26, WS 25), amp DIN 32, mic SD 33, mic L/R to GND.
-  No status LED fitted.
+  Status LED on 2 (the DevKit's onboard LED; an external one goes
+  GPIO 2 -> ~330 R -> LED -> GND: GPIO 2 is a strapping pin and must not be
+  pulled high at boot).
 - BOARD_PIEZO: the discontinued piezo nodes, kept as a fallback build.
   Mic on its own RX-only port (14/27/33), LEDC square wave on 25 with the
   inverted BTL leg on 26, LED on 2.
@@ -86,7 +88,7 @@ from platformio.ini.
 #define CHIRP_BTL_PIN -1
 #endif
 #ifndef STATUS_LED_PIN
-#define STATUS_LED_PIN -1
+#define STATUS_LED_PIN 2
 #endif
 
 #ifndef I2S_CAPTURE_MODE

@@ -1,0 +1,16 @@
+# run: SELFTEST_post
+# firmware: role=analyzer git=189b24c
+# started: 2026-10-11T14:09:50
+# no reset
+>> SELFTEST
+SELFTEST_BEGIN role=analyzer mode=full board=damp
+SELFTEST check=board result=PASS mac=24:dc:c3:4b:4c:e8 board=damp role=analyzer version=0.4.0 git=189b24c built=Oct_11_2026 built_time=14:03:54 uptime_ms=4437980
+SELFTEST check=mic result=PASS frames=12000 nonzero_pct=100.0 span=72600 floor_mean=426 floor_peak=1119 bit8_pct=50.4 framing=ok slot=0
+SELFTEST_AMP n=1 floor=0 tone=0 snr_db=0.0 samples=6400 valid=0
+SELFTEST_AMP n=2 floor=926 tone=452840 snr_db=53.8 samples=6400 valid=1
+SELFTEST_AMP n=3 floor=858 tone=453027 snr_db=54.4 samples=6400 valid=1
+SELFTEST_AMP n=4 floor=906 tone=452920 snr_db=54.0 samples=6400 valid=1
+SELFTEST_AMP n=5 floor=849 tone=451680 snr_db=54.5 samples=6400 valid=1
+SELFTEST check=amp result=PASS chirps=5 valid=4 freq_hz=3200 tone_ms=100 path=i2s tone=452880 floor=882 snr_db=54.2 snr_min_db=53.8 snr_max_db=54.5 pass_db=30.0
+SELFTEST_RESTORE detection=reset
+SELFTEST_SUMMARY result=PASS pass=3 fail=0 skip=0 role=analyzer

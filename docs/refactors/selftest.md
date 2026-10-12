@@ -2,8 +2,8 @@
 
 Status: active. Firmware and runner written 2026-10-10 evening; first
 hardware runs 2026-10-11 on E2 + E3, all PASS (section 9). Open: the gate
-needs five boards and only E2 + E3 work (E1 faulty, in storage); the
-dead-mic SKIP fix (2026-10-12) is compile-verified only.
+needs five boards and only E2 + E3 work (E1 faulty, in storage). The
+dead-mic SKIP fix (bd41423) passed on E2 on 2026-10-12.
 Roadmap: `docs/roadmaps/roadmap-node.md` NODE-015, step 3b of
 `docs/roadmaps/roadmap-0-steps.md`.
 Replaces: the throwaway amp-check sketch
@@ -273,6 +273,18 @@ this file; summarised as dated results here once run.
 pending): a failed mic SKIPs amp, quiet_boot and own_chirp_suppressed with
 reason=mic_failed (the Node now prints quiet_boot after the mic check); a
 failed amp SKIPs own_chirp_suppressed (amp_failed); amp FAILs with
-zero_floor when its median floor is 0. Bench check: repeat the mic-SD-pulled
-control on a Node build and expect mic FAIL + three SKIPs.
+zero_floor when its median floor is 0.
+
+2026-10-12, hardware, E2 Node build bd41423
+(bench:sessions/2026-10-12-selftest-e2-node-skipfix, bench 3a679e9):
+- GPIO 33 pulled at the ESP32 header: mic FAIL all_zero, quiet_boot / amp /
+  own_chirp_suppressed SKIP mic_failed, summary FAIL. Gap closed.
+- amp DIN (GPIO 32) pulled: amp FAIL low_snr, own_chirp_suppressed SKIP
+  amp_failed.
+- Normal wiring before and after: PASS. The last run's own tone is 182k vs
+  454-467k earlier (-8 dB, not flagged DEGRADED) after the wires were handled;
+  re-check E2's amp seating.
+- On E2, pulling the SD wire at the mic end does not disconnect it (mic
+  reads normally); a negative control has to pull GPIO 33 at the ESP32.
+- zero_floor not exercised (the mic check fails first on a dead line).
 

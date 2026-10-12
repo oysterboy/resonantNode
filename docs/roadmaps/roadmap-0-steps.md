@@ -22,7 +22,7 @@ Renamed from roadmap-general.md on 2026-09-23 so it sorts first.
 How this file relates to the domain roadmaps and docs/refactors/: see
 README.md ("Who answers what", "Ordering rule").
 
-Status update 2026-10-12: steps 3a and 3c closed, no reorder.
+Status update 2026-10-12: steps 3a and 3c closed, 3b fix verified on E2, 4a firmware landed; no reorder.
 Last reordered: 2026-10-11. Micros-wrap bug (#30) added as step 3c, gating
 the soak (3a) and the field trial (6): both soaks went deaf 71.6 min after
 boot. Previous: 2026-10-10. Node self-test (#28) added as step 3b, gating
@@ -175,7 +175,7 @@ the previous gate open unless the step says it can run in parallel.
    docs name D-AMP as the node hardware. (Default board and piezo fallback envs already land in
    step 2.)
 
-4a. Status LED on D-AMP: 1 flash on detect, 2 on emit. (issue #29,
+4a. [PARTIAL 2026-10-12] Status LED on D-AMP: 1 flash on detect, 2 on emit. (issue #29,
    sub-issue of #21)
    Where: NODE-016 (roadmap-node.md).
    Why: D-AMP has no LED pin (STATUS_LED_PIN -1) and the detect flash has
@@ -184,6 +184,8 @@ the previous gate open unless the step says it can run in parallel.
    five nodes are flashed in step 4.
    Gate: on a D-AMP node the LED flashes once on an external chirp and
    twice when the node emits.
+   Status: firmware 261f088 on E2 (one LED on GPIO 2, every accepted
+   verdict, every own chirp); the visual gate is left.
 
 5. Decide the Node's production profile, on D-AMP. (issue #8)
    Where: DET-007 (roadmap-detection.md), with cleanup-0-plan Phase 0.

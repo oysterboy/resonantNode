@@ -1,0 +1,7 @@
+[17:24:17] boot banner: {'role': 'analyzer', 'git': '7882627', 'version': '0.4.0', 'board': 'damp'}
+[17:24:19] warmup: OK EMIT CHIRP
+[17:24:19] start T3_scalar: EMIT MODE REMOTE ; SEQ DIAG off ; SEQ start profile=TonalPulseScalar tries=50 mode=detail when=all verbose=1
+[17:27:05] done T3_scalar (166s): complete=True results={'expected': 50}
+[17:27:07] start T2_freq: EMIT MODE REMOTE ; SEQ DIAG off ; SEQ start profile=TonalPulseFreq tries=50 mode=detail when=all verbose=1
+[17:29:53] done T2_freq (166s): complete=True results={'expected': 50}
+[17:29:58] session updated, index rebuilt

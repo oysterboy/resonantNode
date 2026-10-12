@@ -6,6 +6,9 @@ Became:  NODE-013 (roadmap-node.md), step 3a in roadmap-0-steps.md,
          rescoped from piezo to D-AMP (2026-10-09, owner)
 Lab:     docs/lab/notes_lab.md 2026-10-09 (day-to-day level change at
          10 cm); bench:sessions/2026-10-09-issue26-10cm
+Result:  2026-10-12, accepted short at 7.3 h (owner):
+         bench:sessions/2026-10-12-soak24h-70cm README; docs/lab/notes_lab.md
+         2026-10-12
 ```
 
 ## Question

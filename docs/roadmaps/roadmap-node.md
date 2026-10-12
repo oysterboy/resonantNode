@@ -302,8 +302,8 @@ Gate: passes on every board going into NODE-011, logged on bench.
 
 ### NODE-017 - detection goes deaf 71.6 min after boot (32-bit micros wrap)
 
-Status: IN PROGRESS (step 3c, issue #30; found 2026-10-11; blocks NODE-013 and the field trial NODE-008).
-Pass doc: docs/refactors/micros-wrap.md (audit, design, wraptest envs, bench plan).
+Status: DONE 2026-10-12 (step 3c, issue #30 closed). Offset wrap on hardware: Analyzer and Node (bench 85dd0a9); real uptime past 4,295 s: Analyzer in the 2026-10-12 soak (10/10 in every block after the wrap, to ~26,000 s). Node real uptime not run (offset test only).
+Pass doc: docs/refactors/archive/micros-wrap.md (audit, design, wraptest envs, bench plan).
 2026-10-11: fix written, compile-verified only: one 64-bit time base
 (src/app/TimeBase.h) for the sample clock and every millis()/micros() read,
 absolute ms from 64-bit us, wrap-safe comparisons; envs esp32dev-wraptest and
@@ -336,14 +336,14 @@ bench, and a run past 72 min of real uptime.
 
 ### NODE-013 - 24-hour bench soak on D-AMP
 
-Status: BLOCKED by NODE-017 (step 3a, issue #27; both attempts, 2026-10-10 and 2026-10-11, went deaf 71.6 min after the Analyzer booted: 32-bit micros wrap, not hardware; bench:sessions/2026-10-10-soak24h-70cm, bench:sessions/2026-10-11-soak24h-70cm; restart after NODE-016 lands and SELFTEST passes on the pair)
+Status: DONE 2026-10-12, accepted short (step 3a, issue #27 closed). Third attempt bench:sessions/2026-10-12-soak24h-70cm: 30 blocks / 7.3 h instead of 24 h (owner), 0 missing, 0 errors, T3 299/300, 0 OBS false accepts; accept rate flat, strength hour means 9.1k-11.2k vs ~200 block-to-block (not attributed: no room notes). Earlier attempts 2026-10-10 and 2026-10-11 went deaf at the micros wrap (NODE-017).
 
 ```text
 Research: docs/research/soak-24h.md (design, gate, open points).
 Observations: docs/lab/notes_lab.md 2026-10-09 (day-to-day level change);
 results go to a bench session and a docs/lab/ entry.
 One Emitter -> Analyzer pair at a fixed distance, boards fixed in place,
-short SEQ blocks every 15 min for 24 h via tools/bench/soak.py (to write),
+short SEQ blocks every 15 min for 24 h via tools/bench/soak.py,
 one soak.csv row per block. D-AMP at the default tone level (0.3 FS since
 b6e99b0). Blocks in an Analyzer mode without dropped DMA buffers, or the
 drops counted per block (ANA-004). Both boards pass the amp check

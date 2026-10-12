@@ -1,3 +1,29 @@
+# 2026-10-12 - Micros wrap fixed (step 3c, #30), soak closed (step 3a, #27)
+
+### Context
+
+Both 24 h soak attempts went deaf 71.6 min after the Analyzer booted: the
+32-bit micros() wrap broke every comparison between sample times and
+millis() windows. The Node runs the same audio path.
+
+### Changed
+
+- one 64-bit TimeBase for audio, detection, Analyzer and behavior; wrap-safe
+  comparisons; wraptest envs put the us wrap 180 s after boot (189b24c)
+
+### Verification
+
+- offset wrap: Analyzer T3 10/10 before, across and after; Node 88/88 and
+  95/95 verdicts/answers, no own-echo verdicts (bench 85dd0a9)
+- real wrap: soak 2026-10-12, 30 blocks / 7.3 h (stopped short, accepted by
+  the owner), 299/300, every block after the wrap 10/10 (bench 151d56c)
+- soak finding: accept rate flat, strength hour means 9.1k-11.2k vs ~200
+  block to block; not attributed (no room notes)
+- not run: Node past 72 min of real uptime
+- archive: `docs/refactors/archive/micros-wrap.md`
+
+---
+
 # 2026-10-11 - D-AMP bench check (step 3, #20) closed
 
 ### Context

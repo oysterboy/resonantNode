@@ -11,6 +11,19 @@ decisions 2026-09-21-defer-single-detector-union.md ->
 2026-09-23-no-virtual-detector-interface.md (detector family as a build
 flag).
 
+## 2026-10-12 (soak, D-AMP, 70 cm)
+
+Strength drifts over a day by more than it varies block to block; detection
+does not. E3 -> E2 at 70 cm, TonalPulseScalar, 30 blocks of 10 trials every
+15 min, 08:00-15:15: T3 299/300 expected, 0 false accepts in 150 silent
+windows. Median strength per block 9,064-11,742 (CV 8 %); hour means 9.1k at
+08:00, 11.2k around midday, a dip to ~9.5k at 14:00, 10.9k at 15:00.
+Neighbouring blocks differ by ~200 (median). No room conditions recorded,
+so the cause is open; the 17,300 vs 12,800 day-to-day change (2026-10-09
+below, piezo, 10 cm) is of the same order and needs no moved board to
+explain it. Practical rule until a longer run: strength compared across
+sessions hours apart can differ by ~25 %. bench:sessions/2026-10-12-soak24h-70cm.
+
 ## 2026-10-09 (D-AMP bring-up and tuning, Claude; pointers, details live where linked)
 
 - Mic low-frequency wander is on D-AMP too, below 30 Hz, and no I2S read

@@ -1,6 +1,14 @@
+Archived: 2026-10-12 - Gate met. One 64-bit TimeBase (189b24c); Analyzer
+and Node keep detecting across the offset wrap on hardware (bench 85dd0a9),
+and the Analyzer across the real wrap and past ~26,000 s uptime in the
+2026-10-12 soak (bench 151d56c). Not run: the Node past 72 min of real
+uptime (offset test only; the field trial will cover it), the optional
+49.7-day ms-wrap offset run, `test_timebase` on the board. Open: keep or
+drop the wraptest envs (section 6).
+
 # One time base for audio and detection (step 3c, issue #30, NODE-017)
 
-Status: active. Firmware written 2026-10-11; **compile verified only** (the
+Status (written 2026-10-11, superseded by the header above): active. Firmware written 2026-10-11; **compile verified only** (the
 six envs and the two wraptest envs build, both Unity suites build), nothing
 has run on hardware yet. Roadmap: `docs/roadmaps/roadmap-node.md` NODE-017
 (micros wrap), step 3c.
@@ -256,6 +264,8 @@ boots in AUTO). Same desk and distance as the soak. Ask before flashing.
 - Node E2, wraptest build (bench:sessions/2026-10-12-wraptest-node): with
   E3 chirping every 2 s, 88 verdicts / 88 answers before the wrap and 95 / 95
   after it; no verdicts from its own answers.
-- Real uptime: third soak started 2026-10-12 08:00 with the normal build
-  (bench:sessions/2026-10-12-soak24h-70cm); the real micros wrap is at ~09:12,
-  blocks 6 and later are the gate. Pending.
+- Real uptime (2026-10-12, bench 151d56c): third soak with the normal
+  Analyzer build 189b24c (bench:sessions/2026-10-12-soak24h-70cm); the real
+  micros wrap fell at ~09:12, between blocks 5 and 6. Blocks 6-30 all T3
+  10/10, up to ~26,000 s uptime; 0 errors, 0 dropped buffers. Both soaks
+  before the fix went 0/10 from the first block after the wrap. Passed.

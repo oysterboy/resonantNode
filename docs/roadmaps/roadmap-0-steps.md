@@ -22,6 +22,7 @@ Renamed from roadmap-general.md on 2026-09-23 so it sorts first.
 How this file relates to the domain roadmaps and docs/refactors/: see
 README.md ("Who answers what", "Ordering rule").
 
+Status update 2026-10-12: steps 3a and 3c closed, no reorder.
 Last reordered: 2026-10-11. Micros-wrap bug (#30) added as step 3c, gating
 the soak (3a) and the field trial (6): both soaks went deaf 71.6 min after
 boot. Previous: 2026-10-10. Node self-test (#28) added as step 3b, gating
@@ -120,8 +121,9 @@ the previous gate open unless the step says it can run in parallel.
    (step 3b); stock Scalar answers speech/music (R4) to step 5; decision 3
    (amp inspector) open.
 
-3a. [NEXT, parallel to step 3] 24-hour bench soak on D-AMP: does the room
-   change signal and detection? (issue #27; was "1c" on piezo)
+3a. [LANDED 2026-10-12, accepted short] 24-hour bench soak on D-AMP: does
+   the room change signal and detection? (issue #27, closed; was "1c" on
+   piezo)
    Where: NODE-013 (roadmap-node.md); design in docs/research/soak-24h.md.
    Why: the same nominal 10 cm setup moved from strength median 17,300 to
    12,800 between two days (docs/lab/notes_lab.md 2026-10-09); every
@@ -132,6 +134,14 @@ the previous gate open unless the step says it can run in parallel.
    bench, and a written answer: does strength / accept rate vary by more
    than block-to-block noise, and does it track time of day or a noted
    condition. Doesn't gate step 4; the boards are free again afterwards.
+   Closed: third attempt (bench:sessions/2026-10-12-soak24h-70cm), stopped
+   after 30 blocks / 7.3 h and accepted by the owner instead of 24 h:
+   0 missing blocks, 0 errors, T3 299/300, 0 OBS false accepts, 0 dropped
+   buffers. Accept rate flat; strength hour means rose 9.1k -> 11.2k
+   (08:00 -> midday) and dipped to ~9.5k at 14:00, ~10x the block-to-block
+   step (~200). No room notes, so not attributed; a same-setup comparison
+   hours apart can differ by ~25 % in strength. Not covered: night, a
+   second day, TonalPulseFreq.
 
 3b. [NEXT] Node self-test: SELFTEST for hardware I/O and node runtime.
    (issue #28)
@@ -144,14 +154,20 @@ the previous gate open unless the step says it can run in parallel.
    Gate: SELFTEST passes on every board going into step 4, logged in a
    bench session.
 
-3c. [NEXT] Detection goes deaf 71.6 min after boot (32-bit micros wrap).
-   (issue #30)
+3c. [LANDED 2026-10-12] Detection goes deaf 71.6 min after boot (32-bit
+   micros wrap). (issue #30, closed)
    Where: NODE-017 (roadmap-node.md).
    Why now: found by both soak attempts (#27); the Node runs the same audio
    path, so a field node would go deaf after ~72 min. Blocks step 3a (soak)
    and step 6 (field trial); can run in parallel with step 3b.
    Gate: Analyzer and Node keep detecting across the wrap (offset test and
    one real run past 72 min).
+   Closed: one 64-bit TimeBase (189b24c); offset wrap on hardware: Analyzer
+   T3 10/10 before/across/after, Node 88/88 and 95/95 verdicts/answers
+   (bench 85dd0a9); real uptime: the 2026-10-12 soak detected 10/10 in every
+   block after the wrap, up to ~26,000 s uptime. The real-uptime run was
+   Analyzer only; the Node has the offset test. Archive:
+   docs/refactors/archive/micros-wrap.md.
 
 4. Switch to D-AMP. (issue #21)
    Where: NODE-011 (roadmap-node.md).

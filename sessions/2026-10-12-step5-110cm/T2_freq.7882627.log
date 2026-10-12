@@ -1,0 +1,218 @@
+# run: T2_freq
+# firmware: role=analyzer git=7882627 version=0.4.0 board=damp
+# started: 2026-10-12T16:46:28
+>> EMIT MODE REMOTE
+OK EMIT MODE REMOTE
+>> SEQ DIAG off
+OK SEQ DIAG off
+>> SEQ start profile=TonalPulseFreq tries=50 mode=detail when=all verbose=1
+OK SEQ
+SEQ remote claim: send=175679ms ack=175685ms wait=6ms status=ok
+SEQ rebase: start=175685ms end=175786ms elapsed=101ms
+AUDIO stats reset
+SEQ start test=default startup_delay_ms=1000 report_settle_ms=500 loopDelayMs=0 logStress=0
+SEQ start source=I2S probe=AMP profile=TonalPulseFreq source=FrequencyMatch detector=FrequencyMatch freq_min_duration_ms=60 freq_release_debounce_ms=30 freq_cooldown_ms=0 scalar_observed_stream=AmpEnvelope scalar_onset_threshold=18000.0 scalar_release_threshold=12000.0 scalar_cooldown_ms=50 scalar_min_duration_ms=0 scalar_max_duration_ms=120 scalar_min_peak_strength=8000.0 scalar_release_debounce_ms=20 scalar_require_carrier_quality=0 scalar_min_release_coverage_ms=0 scalar_min_longest_island_ms=0 scalar_max_gap_ms=0 history.bin_ms=1 history.capacity_bins=256 history.coverage_ms=256 history.stream=amp aggregation=mean_abs+rms+peak_abs history.stream=freq_target aggregation=fresh_only history.stream=freq_contrast aggregation=fresh_only mode=SEQ test=default startup_delay_ms=1000 report_settle_ms=500 loopDelayMs=0 logStress=0 quiet=0 tries=50 period_ms=2500 window_start_ms=0 window_end_ms=2200 freq_hz=3200 dur_ms=100
+SEQ scalar: observed_stream=AmpEnvelope onset_threshold=18000.0 release_threshold=12000.0 cooldown_ms=50 min_duration_ms=0 max_duration_ms=120 min_peak_strength=8000.0 release_debounce_ms=20 carrier_quality_required=0 min_strength_required=0 min_strength=0.0 min_release_coverage_ms=0 min_longest_island_ms=0 max_gap_ms=0
+FREQBAND runtime: freq.window_samples=64 freq.window_ms=4.00 freq.update_every_samples=4 freq.update_period_ms=0.250 freq.target_hz=3200 freq.produced_fresh_packet=0 freq.packet_age_samples=0 freq.packet_age_ms=0.000
+SEQ running
+
+#1 ----------------
+SEQ_HISTDBG trial=1 incomplete_total=0 new=0 out_of_order_total=0 i2s_backsteps=3 i2s_max_backstep_us=41 i2s_overflows=0 clock_corrections=7 clock_max_correction_us=42 emit_marker_seen=1 emit_marker_dt_ms=15 uptime_ms=179381 samples_read=57472 us_per_sample=34.95 dropped_dma_buffers=0 clock_rate_mhz=15999968
+SEQ_TRIAL trial=1 result=miss stage=source reject_reason=missing_pipeline_result source_selection=none source_reason=none dt=-1ms contrast_class=unknown amp_class=unknown source_strength=0.0 verdict_confidence=0.00 dup=0 src_total=0 src_acc=0 src_rej=0 buffer_overrun=0 profile=TonalPulseFreq
+
+#2 ----------------
+SEQ_HISTDBG trial=2 incomplete_total=0 new=0 out_of_order_total=0 i2s_backsteps=4 i2s_max_backstep_us=41 i2s_overflows=0 clock_corrections=13 clock_max_correction_us=42 emit_marker_seen=1 emit_marker_dt_ms=22 uptime_ms=182581 samples_read=108672 us_per_sample=34.96 dropped_dma_buffers=0 clock_rate_mhz=15999936
+SEQ_TRIAL trial=2 result=miss stage=source reject_reason=missing_pipeline_result source_selection=none source_reason=none dt=-1ms contrast_class=unknown amp_class=unknown source_strength=0.0 verdict_confidence=0.00 dup=0 src_total=0 src_acc=0 src_rej=0 buffer_overrun=0 profile=TonalPulseFreq
+
+#3 ----------------
+SEQ_HISTDBG trial=3 incomplete_total=0 new=0 out_of_order_total=0 i2s_backsteps=7 i2s_max_backstep_us=41 i2s_overflows=0 clock_corrections=19 clock_max_correction_us=42 emit_marker_seen=1 emit_marker_dt_ms=15 uptime_ms=185781 samples_read=159872 us_per_sample=34.97 dropped_dma_buffers=0 clock_rate_mhz=15999984
+SEQ_TRIAL trial=3 result=miss stage=source reject_reason=missing_pipeline_result source_selection=none source_reason=none dt=-1ms contrast_class=unknown amp_class=unknown source_strength=0.0 verdict_confidence=0.00 dup=0 src_total=0 src_acc=0 src_rej=0 buffer_overrun=0 profile=TonalPulseFreq
+
+#4 ----------------
+SEQ_HISTDBG trial=4 incomplete_total=0 new=0 out_of_order_total=0 i2s_backsteps=11 i2s_max_backstep_us=41 i2s_overflows=0 clock_corrections=26 clock_max_correction_us=42 emit_marker_seen=1 emit_marker_dt_ms=15 uptime_ms=188981 samples_read=211072 us_per_sample=34.98 dropped_dma_buffers=0 clock_rate_mhz=15999936
+SEQ_TRIAL trial=4 result=miss stage=source reject_reason=missing_pipeline_result source_selection=none source_reason=none dt=-1ms contrast_class=unknown amp_class=unknown source_strength=0.0 verdict_confidence=0.00 dup=0 src_total=0 src_acc=0 src_rej=0 buffer_overrun=0 profile=TonalPulseFreq
+
+#5 ----------------
+SEQ_HISTDBG trial=5 incomplete_total=0 new=0 out_of_order_total=0 i2s_backsteps=13 i2s_max_backstep_us=41 i2s_overflows=0 clock_corrections=32 clock_max_correction_us=42 emit_marker_seen=1 emit_marker_dt_ms=22 uptime_ms=192181 samples_read=262272 us_per_sample=34.99 dropped_dma_buffers=0 clock_rate_mhz=15999952
+SEQ_TRIAL trial=5 result=miss stage=source reject_reason=missing_pipeline_result source_selection=none source_reason=none dt=-1ms contrast_class=unknown amp_class=unknown source_strength=0.0 verdict_confidence=0.00 dup=0 src_total=0 src_acc=0 src_rej=0 buffer_overrun=0 profile=TonalPulseFreq
+
+#6 ----------------
+SEQ_HISTDBG trial=6 incomplete_total=0 new=0 out_of_order_total=0 i2s_backsteps=16 i2s_max_backstep_us=41 i2s_overflows=0 clock_corrections=38 clock_max_correction_us=42 emit_marker_seen=1 emit_marker_dt_ms=16 uptime_ms=195381 samples_read=313472 us_per_sample=35.00 dropped_dma_buffers=0 clock_rate_mhz=15999952
+SEQ_TRIAL trial=6 result=miss stage=source reject_reason=missing_pipeline_result source_selection=none source_reason=none dt=-1ms contrast_class=unknown amp_class=unknown source_strength=0.0 verdict_confidence=0.00 dup=0 src_total=0 src_acc=0 src_rej=0 buffer_overrun=0 profile=TonalPulseFreq
+
+#7 ----------------
+SEQ_HISTDBG trial=7 incomplete_total=0 new=0 out_of_order_total=0 i2s_backsteps=19 i2s_max_backstep_us=41 i2s_overflows=0 clock_corrections=45 clock_max_correction_us=42 emit_marker_seen=1 emit_marker_dt_ms=15 uptime_ms=198581 samples_read=364672 us_per_sample=35.01 dropped_dma_buffers=0 clock_rate_mhz=15999920
+SEQ_TRIAL trial=7 result=miss stage=source reject_reason=missing_pipeline_result source_selection=none source_reason=none dt=-1ms contrast_class=unknown amp_class=unknown source_strength=0.0 verdict_confidence=0.00 dup=0 src_total=0 src_acc=0 src_rej=0 buffer_overrun=0 profile=TonalPulseFreq
+
+#8 ----------------
+SEQ_HISTDBG trial=8 incomplete_total=0 new=0 out_of_order_total=0 i2s_backsteps=22 i2s_max_backstep_us=41 i2s_overflows=0 clock_corrections=51 clock_max_correction_us=42 emit_marker_seen=1 emit_marker_dt_ms=22 uptime_ms=201781 samples_read=415872 us_per_sample=35.02 dropped_dma_buffers=0 clock_rate_mhz=15999968
+SEQ_TRIAL trial=8 result=miss stage=source reject_reason=missing_pipeline_result source_selection=none source_reason=none dt=-1ms contrast_class=unknown amp_class=unknown source_strength=0.0 verdict_confidence=0.00 dup=0 src_total=0 src_acc=0 src_rej=0 buffer_overrun=0 profile=TonalPulseFreq
+
+#9 ----------------
+SEQ_HISTDBG trial=9 incomplete_total=0 new=0 out_of_order_total=0 i2s_backsteps=24 i2s_max_backstep_us=41 i2s_overflows=0 clock_corrections=57 clock_max_correction_us=42 emit_marker_seen=1 emit_marker_dt_ms=22 uptime_ms=204981 samples_read=467072 us_per_sample=35.03 dropped_dma_buffers=0 clock_rate_mhz=16000015
+SEQ_TRIAL trial=9 result=miss stage=source reject_reason=missing_pipeline_result source_selection=none source_reason=none dt=-1ms contrast_class=unknown amp_class=unknown source_strength=0.0 verdict_confidence=0.00 dup=0 src_total=0 src_acc=0 src_rej=0 buffer_overrun=0 profile=TonalPulseFreq
+
+#10 ----------------
+SEQ_HISTDBG trial=10 incomplete_total=0 new=0 out_of_order_total=0 i2s_backsteps=28 i2s_max_backstep_us=41 i2s_overflows=0 clock_corrections=64 clock_max_correction_us=42 emit_marker_seen=1 emit_marker_dt_ms=22 uptime_ms=208181 samples_read=518272 us_per_sample=35.03 dropped_dma_buffers=0 clock_rate_mhz=16000047
+SEQ_TRIAL trial=10 result=miss stage=source reject_reason=missing_pipeline_result source_selection=none source_reason=none dt=-1ms contrast_class=unknown amp_class=unknown source_strength=0.0 verdict_confidence=0.00 dup=0 src_total=0 src_acc=0 src_rej=0 buffer_overrun=0 profile=TonalPulseFreq
+
+#11 ----------------
+SEQ_HISTDBG trial=11 incomplete_total=0 new=0 out_of_order_total=0 i2s_backsteps=31 i2s_max_backstep_us=41 i2s_overflows=0 clock_corrections=70 clock_max_correction_us=42 emit_marker_seen=1 emit_marker_dt_ms=16 uptime_ms=211381 samples_read=569472 us_per_sample=35.04 dropped_dma_buffers=0 clock_rate_mhz=15999936
+SEQ_TRIAL trial=11 result=miss stage=source reject_reason=missing_pipeline_result source_selection=none source_reason=none dt=-1ms contrast_class=unknown amp_class=unknown source_strength=0.0 verdict_confidence=0.00 dup=0 src_total=0 src_acc=0 src_rej=0 buffer_overrun=0 profile=TonalPulseFreq
+
+#12 ----------------
+SEQ_HISTDBG trial=12 incomplete_total=0 new=0 out_of_order_total=0 i2s_backsteps=35 i2s_max_backstep_us=41 i2s_overflows=0 clock_corrections=76 clock_max_correction_us=42 emit_marker_seen=1 emit_marker_dt_ms=16 uptime_ms=214581 samples_read=620672 us_per_sample=35.05 dropped_dma_buffers=0 clock_rate_mhz=16000015
+SEQ_TRIAL trial=12 result=miss stage=source reject_reason=missing_pipeline_result source_selection=none source_reason=none dt=-1ms contrast_class=unknown amp_class=unknown source_strength=0.0 verdict_confidence=0.00 dup=0 src_total=0 src_acc=0 src_rej=0 buffer_overrun=0 profile=TonalPulseFreq
+
+#13 ----------------
+SEQ_HISTDBG trial=13 incomplete_total=0 new=0 out_of_order_total=0 i2s_backsteps=38 i2s_max_backstep_us=41 i2s_overflows=0 clock_corrections=83 clock_max_correction_us=42 emit_marker_seen=1 emit_marker_dt_ms=22 uptime_ms=217781 samples_read=671872 us_per_sample=35.06 dropped_dma_buffers=0 clock_rate_mhz=15999968
+SEQ_TRIAL trial=13 result=miss stage=source reject_reason=missing_pipeline_result source_selection=none source_reason=none dt=-1ms contrast_class=unknown amp_class=unknown source_strength=0.0 verdict_confidence=0.00 dup=0 src_total=0 src_acc=0 src_rej=0 buffer_overrun=0 profile=TonalPulseFreq
+
+#14 ----------------
+SEQ_HISTDBG trial=14 incomplete_total=0 new=0 out_of_order_total=0 i2s_backsteps=40 i2s_max_backstep_us=41 i2s_overflows=0 clock_corrections=89 clock_max_correction_us=42 emit_marker_seen=1 emit_marker_dt_ms=16 uptime_ms=220981 samples_read=723072 us_per_sample=35.06 dropped_dma_buffers=0 clock_rate_mhz=15999841
+SEQ_TRIAL trial=14 result=miss stage=source reject_reason=missing_pipeline_result source_selection=none source_reason=none dt=-1ms contrast_class=unknown amp_class=unknown source_strength=0.0 verdict_confidence=0.00 dup=0 src_total=0 src_acc=0 src_rej=0 buffer_overrun=0 profile=TonalPulseFreq
+
+#15 ----------------
+SEQ_HISTDBG trial=15 incomplete_total=0 new=0 out_of_order_total=0 i2s_backsteps=43 i2s_max_backstep_us=41 i2s_overflows=0 clock_corrections=96 clock_max_correction_us=42 emit_marker_seen=1 emit_marker_dt_ms=16 uptime_ms=224181 samples_read=774272 us_per_sample=35.07 dropped_dma_buffers=0 clock_rate_mhz=15999920
+SEQ_TRIAL trial=15 result=miss stage=source reject_reason=missing_pipeline_result source_selection=none source_reason=none dt=-1ms contrast_class=unknown amp_class=unknown source_strength=0.0 verdict_confidence=0.00 dup=0 src_total=0 src_acc=0 src_rej=0 buffer_overrun=0 profile=TonalPulseFreq
+
+#16 ----------------
+SEQ_HISTDBG trial=16 incomplete_total=0 new=0 out_of_order_total=0 i2s_backsteps=45 i2s_max_backstep_us=41 i2s_overflows=0 clock_corrections=102 clock_max_correction_us=42 emit_marker_seen=1 emit_marker_dt_ms=22 uptime_ms=227381 samples_read=825472 us_per_sample=35.08 dropped_dma_buffers=0 clock_rate_mhz=15999936
+SEQ_TRIAL trial=16 result=miss stage=source reject_reason=missing_pipeline_result source_selection=none source_reason=none dt=-1ms contrast_class=unknown amp_class=unknown source_strength=0.0 verdict_confidence=0.00 dup=0 src_total=0 src_acc=0 src_rej=0 buffer_overrun=0 profile=TonalPulseFreq
+
+#17 ----------------
+SEQ_HISTDBG trial=17 incomplete_total=0 new=0 out_of_order_total=0 i2s_backsteps=48 i2s_max_backstep_us=41 i2s_overflows=0 clock_corrections=108 clock_max_correction_us=42 emit_marker_seen=1 emit_marker_dt_ms=15 uptime_ms=230581 samples_read=876672 us_per_sample=35.09 dropped_dma_buffers=0 clock_rate_mhz=16000031
+SEQ_TRIAL trial=17 result=miss stage=source reject_reason=missing_pipeline_result source_selection=none source_reason=none dt=-1ms contrast_class=unknown amp_class=unknown source_strength=0.0 verdict_confidence=0.00 dup=0 src_total=0 src_acc=0 src_rej=0 buffer_overrun=0 profile=TonalPulseFreq
+
+#18 ----------------
+SEQ_HISTDBG trial=18 incomplete_total=0 new=0 out_of_order_total=0 i2s_backsteps=52 i2s_max_backstep_us=41 i2s_overflows=0 clock_corrections=115 clock_max_correction_us=42 emit_marker_seen=1 emit_marker_dt_ms=22 uptime_ms=233781 samples_read=927872 us_per_sample=35.09 dropped_dma_buffers=0 clock_rate_mhz=16000031
+SEQ_TRIAL trial=18 result=miss stage=source reject_reason=missing_pipeline_result source_selection=none source_reason=none dt=-1ms contrast_class=unknown amp_class=unknown source_strength=0.0 verdict_confidence=0.00 dup=0 src_total=0 src_acc=0 src_rej=0 buffer_overrun=0 profile=TonalPulseFreq
+
+#19 ----------------
+SEQ_HISTDBG trial=19 incomplete_total=0 new=0 out_of_order_total=0 i2s_backsteps=54 i2s_max_backstep_us=41 i2s_overflows=0 clock_corrections=121 clock_max_correction_us=42 emit_marker_seen=1 emit_marker_dt_ms=15 uptime_ms=236981 samples_read=979072 us_per_sample=35.10 dropped_dma_buffers=0 clock_rate_mhz=15999999
+SEQ_TRIAL trial=19 result=miss stage=source reject_reason=missing_pipeline_result source_selection=none source_reason=none dt=-1ms contrast_class=unknown amp_class=unknown source_strength=0.0 verdict_confidence=0.00 dup=0 src_total=0 src_acc=0 src_rej=0 buffer_overrun=0 profile=TonalPulseFreq
+
+#20 ----------------
+SEQ_HISTDBG trial=20 incomplete_total=0 new=0 out_of_order_total=0 i2s_backsteps=58 i2s_max_backstep_us=41 i2s_overflows=0 clock_corrections=127 clock_max_correction_us=42 emit_marker_seen=1 emit_marker_dt_ms=15 uptime_ms=240181 samples_read=1030272 us_per_sample=35.11 dropped_dma_buffers=0 clock_rate_mhz=15999999
+SEQ_TRIAL trial=20 result=miss stage=source reject_reason=missing_pipeline_result source_selection=none source_reason=none dt=-1ms contrast_class=unknown amp_class=unknown source_strength=0.0 verdict_confidence=0.00 dup=0 src_total=0 src_acc=0 src_rej=0 buffer_overrun=0 profile=TonalPulseFreq
+
+#21 ----------------
+SEQ_HISTDBG trial=21 incomplete_total=0 new=0 out_of_order_total=0 i2s_backsteps=60 i2s_max_backstep_us=41 i2s_overflows=0 clock_corrections=134 clock_max_correction_us=42 emit_marker_seen=1 emit_marker_dt_ms=22 uptime_ms=243381 samples_read=1081472 us_per_sample=35.11 dropped_dma_buffers=0 clock_rate_mhz=15999952
+SEQ_TRIAL trial=21 result=miss stage=source reject_reason=missing_pipeline_result source_selection=none source_reason=none dt=-1ms contrast_class=unknown amp_class=unknown source_strength=0.0 verdict_confidence=0.00 dup=0 src_total=0 src_acc=0 src_rej=0 buffer_overrun=0 profile=TonalPulseFreq
+
+#22 ----------------
+SEQ_HISTDBG trial=22 incomplete_total=0 new=0 out_of_order_total=0 i2s_backsteps=64 i2s_max_backstep_us=41 i2s_overflows=0 clock_corrections=140 clock_max_correction_us=42 emit_marker_seen=1 emit_marker_dt_ms=15 uptime_ms=246581 samples_read=1132672 us_per_sample=35.12 dropped_dma_buffers=0 clock_rate_mhz=16000031
+SEQ_TRIAL trial=22 result=miss stage=source reject_reason=missing_pipeline_result source_selection=none source_reason=none dt=-1ms contrast_class=unknown amp_class=unknown source_strength=0.0 verdict_confidence=0.00 dup=0 src_total=0 src_acc=0 src_rej=0 buffer_overrun=0 profile=TonalPulseFreq
+
+#23 ----------------
+SEQ_HISTDBG trial=23 incomplete_total=0 new=0 out_of_order_total=0 i2s_backsteps=67 i2s_max_backstep_us=41 i2s_overflows=0 clock_corrections=146 clock_max_correction_us=42 emit_marker_seen=1 emit_marker_dt_ms=22 uptime_ms=249781 samples_read=1183872 us_per_sample=35.12 dropped_dma_buffers=0 clock_rate_mhz=16000015
+SEQ_TRIAL trial=23 result=miss stage=source reject_reason=missing_pipeline_result source_selection=none source_reason=none dt=-1ms contrast_class=unknown amp_class=unknown source_strength=0.0 verdict_confidence=0.00 dup=0 src_total=0 src_acc=0 src_rej=0 buffer_overrun=0 profile=TonalPulseFreq
+
+#24 ----------------
+SEQ_HISTDBG trial=24 incomplete_total=0 new=0 out_of_order_total=0 i2s_backsteps=70 i2s_max_backstep_us=41 i2s_overflows=0 clock_corrections=153 clock_max_correction_us=42 emit_marker_seen=1 emit_marker_dt_ms=22 uptime_ms=252981 samples_read=1235072 us_per_sample=35.13 dropped_dma_buffers=0 clock_rate_mhz=16000015
+SEQ_TRIAL trial=24 result=miss stage=source reject_reason=missing_pipeline_result source_selection=none source_reason=none dt=-1ms contrast_class=unknown amp_class=unknown source_strength=0.0 verdict_confidence=0.00 dup=0 src_total=0 src_acc=0 src_rej=0 buffer_overrun=0 profile=TonalPulseFreq
+
+#25 ----------------
+SEQ_HISTDBG trial=25 incomplete_total=0 new=0 out_of_order_total=0 i2s_backsteps=73 i2s_max_backstep_us=41 i2s_overflows=0 clock_corrections=159 clock_max_correction_us=42 emit_marker_seen=1 emit_marker_dt_ms=15 uptime_ms=256181 samples_read=1286272 us_per_sample=35.13 dropped_dma_buffers=0 clock_rate_mhz=16000031
+SEQ_TRIAL trial=25 result=miss stage=source reject_reason=missing_pipeline_result source_selection=none source_reason=none dt=-1ms contrast_class=unknown amp_class=unknown source_strength=0.0 verdict_confidence=0.00 dup=0 src_total=0 src_acc=0 src_rej=0 buffer_overrun=0 profile=TonalPulseFreq
+
+#26 ----------------
+SEQ_HISTDBG trial=26 incomplete_total=0 new=0 out_of_order_total=0 i2s_backsteps=76 i2s_max_backstep_us=41 i2s_overflows=0 clock_corrections=165 clock_max_correction_us=42 emit_marker_seen=1 emit_marker_dt_ms=15 uptime_ms=259381 samples_read=1337472 us_per_sample=35.14 dropped_dma_buffers=0 clock_rate_mhz=15999968
+SEQ_TRIAL trial=26 result=miss stage=source reject_reason=missing_pipeline_result source_selection=none source_reason=none dt=-1ms contrast_class=unknown amp_class=unknown source_strength=0.0 verdict_confidence=0.00 dup=0 src_total=0 src_acc=0 src_rej=0 buffer_overrun=0 profile=TonalPulseFreq
+
+#27 ----------------
+SEQ_HISTDBG trial=27 incomplete_total=0 new=0 out_of_order_total=0 i2s_backsteps=80 i2s_max_backstep_us=41 i2s_overflows=0 clock_corrections=172 clock_max_correction_us=42 emit_marker_seen=1 emit_marker_dt_ms=22 uptime_ms=262581 samples_read=1388672 us_per_sample=35.14 dropped_dma_buffers=0 clock_rate_mhz=15999968
+SEQ_TRIAL trial=27 result=miss stage=source reject_reason=missing_pipeline_result source_selection=none source_reason=none dt=-1ms contrast_class=unknown amp_class=unknown source_strength=0.0 verdict_confidence=0.00 dup=0 src_total=0 src_acc=0 src_rej=0 buffer_overrun=0 profile=TonalPulseFreq
+
+#28 ----------------
+SEQ_HISTDBG trial=28 incomplete_total=0 new=0 out_of_order_total=0 i2s_backsteps=81 i2s_max_backstep_us=41 i2s_overflows=0 clock_corrections=178 clock_max_correction_us=42 emit_marker_seen=1 emit_marker_dt_ms=15 uptime_ms=265781 samples_read=1439872 us_per_sample=35.15 dropped_dma_buffers=0 clock_rate_mhz=15999984
+SEQ_TRIAL trial=28 result=miss stage=source reject_reason=missing_pipeline_result source_selection=none source_reason=none dt=-1ms contrast_class=unknown amp_class=unknown source_strength=0.0 verdict_confidence=0.00 dup=0 src_total=0 src_acc=0 src_rej=0 buffer_overrun=0 profile=TonalPulseFreq
+
+#29 ----------------
+SEQ_HISTDBG trial=29 incomplete_total=0 new=0 out_of_order_total=0 i2s_backsteps=84 i2s_max_backstep_us=41 i2s_overflows=0 clock_corrections=184 clock_max_correction_us=42 emit_marker_seen=1 emit_marker_dt_ms=15 uptime_ms=268981 samples_read=1491072 us_per_sample=35.15 dropped_dma_buffers=0 clock_rate_mhz=15999984
+SEQ_TRIAL trial=29 result=miss stage=source reject_reason=missing_pipeline_result source_selection=none source_reason=none dt=-1ms contrast_class=unknown amp_class=unknown source_strength=0.0 verdict_confidence=0.00 dup=0 src_total=0 src_acc=0 src_rej=0 buffer_overrun=0 profile=TonalPulseFreq
+
+#30 ----------------
+SEQ_HISTDBG trial=30 incomplete_total=0 new=0 out_of_order_total=0 i2s_backsteps=88 i2s_max_backstep_us=41 i2s_overflows=0 clock_corrections=191 clock_max_correction_us=42 emit_marker_seen=1 emit_marker_dt_ms=15 uptime_ms=272181 samples_read=1542272 us_per_sample=35.16 dropped_dma_buffers=0 clock_rate_mhz=16000047
+SEQ_TRIAL trial=30 result=miss stage=source reject_reason=missing_pipeline_result source_selection=none source_reason=none dt=-1ms contrast_class=unknown amp_class=unknown source_strength=0.0 verdict_confidence=0.00 dup=0 src_total=0 src_acc=0 src_rej=0 buffer_overrun=0 profile=TonalPulseFreq
+
+#31 ----------------
+SEQ_HISTDBG trial=31 incomplete_total=0 new=0 out_of_order_total=0 i2s_backsteps=91 i2s_max_backstep_us=41 i2s_overflows=0 clock_corrections=197 clock_max_correction_us=42 emit_marker_seen=1 emit_marker_dt_ms=15 uptime_ms=275381 samples_read=1593472 us_per_sample=35.17 dropped_dma_buffers=0 clock_rate_mhz=16000047
+SEQ_TRIAL trial=31 result=miss stage=source reject_reason=missing_pipeline_result source_selection=none source_reason=none dt=-1ms contrast_class=unknown amp_class=unknown source_strength=0.0 verdict_confidence=0.00 dup=0 src_total=0 src_acc=0 src_rej=0 buffer_overrun=0 profile=TonalPulseFreq
+
+#32 ----------------
+SEQ_HISTDBG trial=32 incomplete_total=0 new=0 out_of_order_total=0 i2s_backsteps=94 i2s_max_backstep_us=41 i2s_overflows=0 clock_corrections=203 clock_max_correction_us=42 emit_marker_seen=1 emit_marker_dt_ms=22 uptime_ms=278581 samples_read=1644672 us_per_sample=35.17 dropped_dma_buffers=0 clock_rate_mhz=15999936
+SEQ_TRIAL trial=32 result=miss stage=source reject_reason=missing_pipeline_result source_selection=none source_reason=none dt=-1ms contrast_class=unknown amp_class=unknown source_strength=0.0 verdict_confidence=0.00 dup=0 src_total=0 src_acc=0 src_rej=0 buffer_overrun=0 profile=TonalPulseFreq
+
+#33 ----------------
+SEQ_HISTDBG trial=33 incomplete_total=0 new=0 out_of_order_total=0 i2s_backsteps=96 i2s_max_backstep_us=41 i2s_overflows=0 clock_corrections=210 clock_max_correction_us=42 emit_marker_seen=1 emit_marker_dt_ms=22 uptime_ms=281781 samples_read=1695872 us_per_sample=35.17 dropped_dma_buffers=0 clock_rate_mhz=15999984
+SEQ_TRIAL trial=33 result=miss stage=source reject_reason=missing_pipeline_result source_selection=none source_reason=none dt=-1ms contrast_class=unknown amp_class=unknown source_strength=0.0 verdict_confidence=0.00 dup=0 src_total=0 src_acc=0 src_rej=0 buffer_overrun=0 profile=TonalPulseFreq
+
+#34 ----------------
+SEQ_HISTDBG trial=34 incomplete_total=0 new=0 out_of_order_total=0 i2s_backsteps=98 i2s_max_backstep_us=41 i2s_overflows=0 clock_corrections=216 clock_max_correction_us=42 emit_marker_seen=1 emit_marker_dt_ms=22 uptime_ms=284981 samples_read=1747072 us_per_sample=35.18 dropped_dma_buffers=0 clock_rate_mhz=16000079
+SEQ_TRIAL trial=34 result=miss stage=source reject_reason=missing_pipeline_result source_selection=none source_reason=none dt=-1ms contrast_class=unknown amp_class=unknown source_strength=0.0 verdict_confidence=0.00 dup=0 src_total=0 src_acc=0 src_rej=0 buffer_overrun=0 profile=TonalPulseFreq
+
+#35 ----------------
+SEQ_HISTDBG trial=35 incomplete_total=0 new=0 out_of_order_total=0 i2s_backsteps=101 i2s_max_backstep_us=41 i2s_overflows=0 clock_corrections=223 clock_max_correction_us=42 emit_marker_seen=1 emit_marker_dt_ms=15 uptime_ms=288181 samples_read=1798272 us_per_sample=35.18 dropped_dma_buffers=0 clock_rate_mhz=15999952
+SEQ_TRIAL trial=35 result=miss stage=source reject_reason=missing_pipeline_result source_selection=none source_reason=none dt=-1ms contrast_class=unknown amp_class=unknown source_strength=0.0 verdict_confidence=0.00 dup=0 src_total=0 src_acc=0 src_rej=0 buffer_overrun=0 profile=TonalPulseFreq
+
+#36 ----------------
+SEQ_HISTDBG trial=36 incomplete_total=0 new=0 out_of_order_total=0 i2s_backsteps=104 i2s_max_backstep_us=41 i2s_overflows=0 clock_corrections=229 clock_max_correction_us=42 emit_marker_seen=1 emit_marker_dt_ms=15 uptime_ms=291381 samples_read=1849472 us_per_sample=35.19 dropped_dma_buffers=0 clock_rate_mhz=15999936
+SEQ_TRIAL trial=36 result=miss stage=source reject_reason=missing_pipeline_result source_selection=none source_reason=none dt=-1ms contrast_class=unknown amp_class=unknown source_strength=0.0 verdict_confidence=0.00 dup=0 src_total=0 src_acc=0 src_rej=0 buffer_overrun=0 profile=TonalPulseFreq
+
+#37 ----------------
+SEQ_HISTDBG trial=37 incomplete_total=0 new=0 out_of_order_total=0 i2s_backsteps=106 i2s_max_backstep_us=41 i2s_overflows=0 clock_corrections=235 clock_max_correction_us=42 emit_marker_seen=1 emit_marker_dt_ms=22 uptime_ms=294581 samples_read=1900672 us_per_sample=35.19 dropped_dma_buffers=0 clock_rate_mhz=15999952
+SEQ_TRIAL trial=37 result=miss stage=source reject_reason=missing_pipeline_result source_selection=none source_reason=none dt=-1ms contrast_class=unknown amp_class=unknown source_strength=0.0 verdict_confidence=0.00 dup=0 src_total=0 src_acc=0 src_rej=0 buffer_overrun=0 profile=TonalPulseFreq
+
+#38 ----------------
+SEQ_HISTDBG trial=38 incomplete_total=0 new=0 out_of_order_total=0 i2s_backsteps=110 i2s_max_backstep_us=41 i2s_overflows=0 clock_corrections=242 clock_max_correction_us=42 emit_marker_seen=1 emit_marker_dt_ms=15 uptime_ms=297781 samples_read=1951872 us_per_sample=35.20 dropped_dma_buffers=0 clock_rate_mhz=15999968
+SEQ_TRIAL trial=38 result=miss stage=source reject_reason=missing_pipeline_result source_selection=none source_reason=none dt=-1ms contrast_class=unknown amp_class=unknown source_strength=0.0 verdict_confidence=0.00 dup=0 src_total=0 src_acc=0 src_rej=0 buffer_overrun=0 profile=TonalPulseFreq
+
+#39 ----------------
+SEQ_HISTDBG trial=39 incomplete_total=0 new=0 out_of_order_total=0 i2s_backsteps=114 i2s_max_backstep_us=41 i2s_overflows=0 clock_corrections=248 clock_max_correction_us=42 emit_marker_seen=1 emit_marker_dt_ms=15 uptime_ms=300981 samples_read=2003072 us_per_sample=35.20 dropped_dma_buffers=0 clock_rate_mhz=16000095
+SEQ_TRIAL trial=39 result=miss stage=source reject_reason=missing_pipeline_result source_selection=none source_reason=none dt=-1ms contrast_class=unknown amp_class=unknown source_strength=0.0 verdict_confidence=0.00 dup=0 src_total=0 src_acc=0 src_rej=0 buffer_overrun=0 profile=TonalPulseFreq
+
+#40 ----------------
+SEQ_HISTDBG trial=40 incomplete_total=0 new=0 out_of_order_total=0 i2s_backsteps=117 i2s_max_backstep_us=41 i2s_overflows=0 clock_corrections=254 clock_max_correction_us=42 emit_marker_seen=1 emit_marker_dt_ms=22 uptime_ms=304181 samples_read=2054272 us_per_sample=35.20 dropped_dma_buffers=0 clock_rate_mhz=16000079
+SEQ_TRIAL trial=40 result=miss stage=source reject_reason=missing_pipeline_result source_selection=none source_reason=none dt=-1ms contrast_class=unknown amp_class=unknown source_strength=0.0 verdict_confidence=0.00 dup=0 src_total=0 src_acc=0 src_rej=0 buffer_overrun=0 profile=TonalPulseFreq
+
+#41 ----------------
+SEQ_HISTDBG trial=41 incomplete_total=0 new=0 out_of_order_total=0 i2s_backsteps=121 i2s_max_backstep_us=41 i2s_overflows=0 clock_corrections=261 clock_max_correction_us=42 emit_marker_seen=1 emit_marker_dt_ms=15 uptime_ms=307381 samples_read=2105472 us_per_sample=35.21 dropped_dma_buffers=0 clock_rate_mhz=15999952
+SEQ_TRIAL trial=41 result=miss stage=source reject_reason=missing_pipeline_result source_selection=none source_reason=none dt=-1ms contrast_class=unknown amp_class=unknown source_strength=0.0 verdict_confidence=0.00 dup=0 src_total=0 src_acc=0 src_rej=0 buffer_overrun=0 profile=TonalPulseFreq
+
+#42 ----------------
+SEQ_HISTDBG trial=42 incomplete_total=0 new=0 out_of_order_total=0 i2s_backsteps=124 i2s_max_backstep_us=41 i2s_overflows=0 clock_corrections=267 clock_max_correction_us=42 emit_marker_seen=1 emit_marker_dt_ms=16 uptime_ms=310581 samples_read=2156672 us_per_sample=35.21 dropped_dma_buffers=0 clock_rate_mhz=15999888
+SEQ_TRIAL trial=42 result=miss stage=source reject_reason=missing_pipeline_result source_selection=none source_reason=none dt=-1ms contrast_class=unknown amp_class=unknown source_strength=0.0 verdict_confidence=0.00 dup=0 src_total=0 src_acc=0 src_rej=0 buffer_overrun=0 profile=TonalPulseFreq
+
+#43 ----------------
+SEQ_HISTDBG trial=43 incomplete_total=0 new=0 out_of_order_total=0 i2s_backsteps=128 i2s_max_backstep_us=41 i2s_overflows=0 clock_corrections=273 clock_max_correction_us=42 emit_marker_seen=1 emit_marker_dt_ms=22 uptime_ms=313781 samples_read=2207872 us_per_sample=35.22 dropped_dma_buffers=0 clock_rate_mhz=15999857
+SEQ_TRIAL trial=43 result=miss stage=source reject_reason=missing_pipeline_result source_selection=none source_reason=none dt=-1ms contrast_class=unknown amp_class=unknown source_strength=0.0 verdict_confidence=0.00 dup=0 src_total=0 src_acc=0 src_rej=0 buffer_overrun=0 profile=TonalPulseFreq
+
+#44 ----------------
+SEQ_HISTDBG trial=44 incomplete_total=0 new=0 out_of_order_total=0 i2s_backsteps=132 i2s_max_backstep_us=41 i2s_overflows=0 clock_corrections=280 clock_max_correction_us=42 emit_marker_seen=1 emit_marker_dt_ms=16 uptime_ms=316981 samples_read=2259072 us_per_sample=35.22 dropped_dma_buffers=0 clock_rate_mhz=16000079
+SEQ_TRIAL trial=44 result=miss stage=source reject_reason=missing_pipeline_result source_selection=none source_reason=none dt=-1ms contrast_class=unknown amp_class=unknown source_strength=0.0 verdict_confidence=0.00 dup=0 src_total=0 src_acc=0 src_rej=0 buffer_overrun=0 profile=TonalPulseFreq
+
+#45 ----------------
+SEQ_HISTDBG trial=45 incomplete_total=0 new=0 out_of_order_total=0 i2s_backsteps=135 i2s_max_backstep_us=41 i2s_overflows=0 clock_corrections=286 clock_max_correction_us=42 emit_marker_seen=1 emit_marker_dt_ms=16 uptime_ms=320181 samples_read=2310272 us_per_sample=35.22 dropped_dma_buffers=0 clock_rate_mhz=15999984
+SEQ_TRIAL trial=45 result=miss stage=source reject_reason=missing_pipeline_result source_selection=none source_reason=none dt=-1ms contrast_class=unknown amp_class=unknown source_strength=0.0 verdict_confidence=0.00 dup=0 src_total=0 src_acc=0 src_rej=0 buffer_overrun=0 profile=TonalPulseFreq
+
+#46 ----------------
+SEQ_HISTDBG trial=46 incomplete_total=0 new=0 out_of_order_total=0 i2s_backsteps=138 i2s_max_backstep_us=41 i2s_overflows=0 clock_corrections=292 clock_max_correction_us=42 emit_marker_seen=1 emit_marker_dt_ms=16 uptime_ms=323381 samples_read=2361472 us_per_sample=35.23 dropped_dma_buffers=0 clock_rate_mhz=16000095
+SEQ_TRIAL trial=46 result=miss stage=source reject_reason=missing_pipeline_result source_selection=none source_reason=none dt=-1ms contrast_class=unknown amp_class=unknown source_strength=0.0 verdict_confidence=0.00 dup=0 src_total=0 src_acc=0 src_rej=0 buffer_overrun=0 profile=TonalPulseFreq
+
+#47 ----------------
+SEQ_HISTDBG trial=47 incomplete_total=0 new=0 out_of_order_total=0 i2s_backsteps=140 i2s_max_backstep_us=41 i2s_overflows=0 clock_corrections=299 clock_max_correction_us=42 emit_marker_seen=1 emit_marker_dt_ms=16 uptime_ms=326581 samples_read=2412672 us_per_sample=35.23 dropped_dma_buffers=0 clock_rate_mhz=15999968
+SEQ_TRIAL trial=47 result=miss stage=source reject_reason=missing_pipeline_result source_selection=none source_reason=none dt=-1ms contrast_class=unknown amp_class=unknown source_strength=0.0 verdict_confidence=0.00 dup=0 src_total=0 src_acc=0 src_rej=0 buffer_overrun=0 profile=TonalPulseFreq
+
+#48 ----------------
+SEQ_HISTDBG trial=48 incomplete_total=0 new=0 out_of_order_total=0 i2s_backsteps=142 i2s_max_backstep_us=41 i2s_overflows=0 clock_corrections=305 clock_max_correction_us=42 emit_marker_seen=1 emit_marker_dt_ms=22 uptime_ms=329781 samples_read=2463872 us_per_sample=35.23 dropped_dma_buffers=0 clock_rate_mhz=15999904
+SEQ_TRIAL trial=48 result=miss stage=source reject_reason=missing_pipeline_result source_selection=none source_reason=none dt=-1ms contrast_class=unknown amp_class=unknown source_strength=0.0 verdict_confidence=0.00 dup=0 src_total=0 src_acc=0 src_rej=0 buffer_overrun=0 profile=TonalPulseFreq
+
+#49 ----------------
+SEQ_HISTDBG trial=49 incomplete_total=0 new=0 out_of_order_total=0 i2s_backsteps=146 i2s_max_backstep_us=41 i2s_overflows=0 clock_corrections=311 clock_max_correction_us=42 emit_marker_seen=1 emit_marker_dt_ms=16 uptime_ms=332981 samples_read=2515072 us_per_sample=35.24 dropped_dma_buffers=0 clock_rate_mhz=16000095
+SEQ_TRIAL trial=49 result=miss stage=source reject_reason=missing_pipeline_result source_selection=none source_reason=none dt=-1ms contrast_class=unknown amp_class=unknown source_strength=0.0 verdict_confidence=0.00 dup=0 src_total=0 src_acc=0 src_rej=0 buffer_overrun=0 profile=TonalPulseFreq
+
+#50 ----------------
+SEQ_HISTDBG trial=50 incomplete_total=0 new=0 out_of_order_total=0 i2s_backsteps=149 i2s_max_backstep_us=41 i2s_overflows=0 clock_corrections=318 clock_max_correction_us=42 emit_marker_seen=1 emit_marker_dt_ms=22 uptime_ms=336181 samples_read=2566272 us_per_sample=35.24 dropped_dma_buffers=0 clock_rate_mhz=16000000
+SEQ_TRIAL trial=50 result=miss stage=source reject_reason=missing_pipeline_result source_selection=none source_reason=none dt=-1ms contrast_class=unknown amp_class=unknown source_strength=0.0 verdict_confidence=0.00 dup=0 src_total=0 src_acc=0 src_rej=0 buffer_overrun=0 profile=TonalPulseFreq
+SEQ_SUMMARY profile=TonalPulseFreq detector=frequency_match trials=50 completed=50 expected_trials=0 early_trials=0 late_trials=0 miss_trials=50 duplicate_trials=0 unexpected_trials=0 rejected_trials=0 buffer_overrun_trials=0 ambiguous_trials=0 too_dense_trials=0 detector_accepted_trials=0 detector_reject_trials=0 pattern_valid_trials=0 pattern_rejected_trials=0 avg_dt_ms=-1 avg_strength=0.0 avg_conf=0.00

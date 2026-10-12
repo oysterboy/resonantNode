@@ -246,3 +246,16 @@ boots in AUTO). Same desk and distance as the soak. Ask before flashing.
   are the only way to test a wrap in minutes).
 - Roadmap id: first filed as NODE-016, which was already the status LED
   (step 4a, #29); renumbered to NODE-017 on 2026-10-11.
+
+## Hardware results (2026-10-11/12, bench 85dd0a9)
+
+- Analyzer E2, wraptest build 189b24c (bench:sessions/2026-10-11-wraptest-
+  analyzer): T3 10/10 before the wrap, 10/10 in a run with the wrap between
+  trials 2 and 3 (dt 24 ms in every trial), 10/10 twice after the wrap,
+  SELFTEST after the wrap PASS. Before the fix: 0/10 after the wrap.
+- Node E2, wraptest build (bench:sessions/2026-10-12-wraptest-node): with
+  E3 chirping every 2 s, 88 verdicts / 88 answers before the wrap and 95 / 95
+  after it; no verdicts from its own answers.
+- Real uptime: third soak started 2026-10-12 08:00 with the normal build
+  (bench:sessions/2026-10-12-soak24h-70cm); the real micros wrap is at ~09:12,
+  blocks 6 and later are the gate. Pending.

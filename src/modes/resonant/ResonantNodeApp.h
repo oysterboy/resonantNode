@@ -125,6 +125,10 @@ private:
         uint8_t chirpsFinished = 0;
         bool waitingForChirp = false;
         bool selfTestChirpSounding = false;
+        // Hardware results; checks that need a working mic / amp SKIP on a
+        // failure instead of passing vacuously.
+        selftest::Result micResult = selftest::Result::Skip;
+        selftest::Result ampResult = selftest::Result::Skip;
         unsigned long nextChirpAtMs = 0;
         // Own chirps (any source) seen while a SELFTEST runs: start / finish
         // times (0 = still sounding), a small ring.

@@ -56,13 +56,17 @@ void AnalyzerApp::handleSelfTestCommand(const char* line) {
         return;
     }
 
-    selftest::runMicCheck(Serial, tally, _i2sSource);
+    const selftest::Result mic = selftest::runMicCheck(Serial, tally, _i2sSource);
 #if defined(BOARD_PIEZO)
     selftest::skip(Serial, tally, "amp", "no_output_in_build");
 #else
-    _selfTestTone.begin();
-    selftest::runAmpCheck(Serial, tally, _i2sSource, _selfTestTone, runtime::kDefaultChirpFrequencyHz, "i2s");
-    _selfTestTone.end();
+    if (mic != selftest::Result::Pass) {
+        selftest::skip(Serial, tally, "amp", "mic_failed");
+    } else {
+        _selfTestTone.begin();
+        selftest::runAmpCheck(Serial, tally, _i2sSource, _selfTestTone, runtime::kDefaultChirpFrequencyHz, "i2s");
+        _selfTestTone.end();
+    }
 #endif
     restoreAfterSelfTest();
     selftest::printSummary(Serial, tally, "analyzer");

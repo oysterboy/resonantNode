@@ -194,9 +194,12 @@ void EmitterApp::handleSelfTestCommand(const char* line) {
             selftest::skip(Serial, tally, "mic", "no_mic_in_build");
             selftest::skip(Serial, tally, "amp", "no_mic_in_build");
         } else {
-            selftest::runMicCheck(Serial, tally, *mic);
-            selftest::runAmpCheck(Serial, tally, *mic, _chirpOutput.toneOutput(),
-                                  runtime::kDefaultChirpFrequencyHz, "i2s");
+            if (selftest::runMicCheck(Serial, tally, *mic) != selftest::Result::Pass) {
+                selftest::skip(Serial, tally, "amp", "mic_failed");
+            } else {
+                selftest::runAmpCheck(Serial, tally, *mic, _chirpOutput.toneOutput(),
+                                      runtime::kDefaultChirpFrequencyHz, "i2s");
+            }
         }
         selftest::printSummary(Serial, tally, "emitter");
     }

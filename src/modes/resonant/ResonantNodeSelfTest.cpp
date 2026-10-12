@@ -10,9 +10,13 @@
 Node SELFTEST (NODE-015, docs/refactors/selftest.md)
 
 Sequence for "SELFTEST":
-  board -> quiet_boot (waits while the startup rebase is still running)
-  -> mic, amp (blocking, on the I2S source; detection is reset afterwards
-     and the baseline goes through Settle again)
+  board -> (waits while the startup rebase is still running) mic
+  -> quiet_boot, amp (blocking, on the I2S source; detection is reset
+     afterwards and the baseline goes through Settle again)
+  A failed mic SKIPs quiet_boot, amp and own_chirp_suppressed
+  (reason=mic_failed), a failed amp SKIPs own_chirp_suppressed
+  (amp_failed): with the mic dead, a floating data line picks up the I2S
+  TX and those checks would pass vacuously. The summary still FAILs.
   -> own_chirp_suppressed (normal loop: Behavior is asked for N single
      chirps, which go through the usual request -> ChirpOutput ->
      notifyChirpStarted/Finished path; any verdict heard during one of the
@@ -118,7 +122,6 @@ void Node::updateSelfTest(unsigned long now) {
             if (pending && !deadlinePassed(now, st.deadlineMs)) {
                 return;
             }
-            printSelfTestQuietBoot();
             st.phase = SelfTestState::Phase::Hardware;
             return;
         }
@@ -143,6 +146,14 @@ void Node::updateSelfTest(unsigned long now) {
                 st.otherValid = 0;
                 st.responses = 0;
                 st.firstOtherValidMs = 0;
+                return;
+            }
+            if (st.command.kind == selftest::Command::Kind::Full
+                && (st.micResult != selftest::Result::Pass || st.ampResult != selftest::Result::Pass)) {
+                selftest::skip(Serial, st.tally, "own_chirp_suppressed",
+                               st.micResult != selftest::Result::Pass ? "mic_failed" : "amp_failed");
+                selftest::skip(Serial, st.tally, "external_chirp", "not_requested");
+                finishSelfTest();
                 return;
             }
             if (st.command.kind == selftest::Command::Kind::Chirp) {
@@ -215,14 +226,22 @@ void Node::runSelfTestHardware(unsigned long now) {
         selfTestNoteChirpFinished(now);
     }
 
-    selftest::runMicCheck(Serial, _selfTest.tally, _i2sSource);
+    SelfTestState& st = _selfTest;
+    st.micResult = selftest::runMicCheck(Serial, st.tally, _i2sSource);
+    if (st.micResult != selftest::Result::Pass) {
+        selftest::skip(Serial, st.tally, "quiet_boot", "mic_failed");
+        st.ampResult = selftest::Result::Skip;
+        selftest::skip(Serial, st.tally, "amp", "mic_failed");
+    } else {
+        printSelfTestQuietBoot();
 #if defined(BOARD_PIEZO)
-    const char* path = "piezo";
+        const char* path = "piezo";
 #else
-    const char* path = "i2s";
+        const char* path = "i2s";
 #endif
-    selftest::runAmpCheck(Serial, _selfTest.tally, _i2sSource, _chirpOutput.toneOutput(),
-                          _chirpOutput.toneHz(), path);
+        st.ampResult = selftest::runAmpCheck(Serial, st.tally, _i2sSource, _chirpOutput.toneOutput(),
+                                             _chirpOutput.toneHz(), path);
+    }
     restoreAfterSelfTestHardware();
 }
 

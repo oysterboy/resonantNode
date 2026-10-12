@@ -295,6 +295,10 @@ Result runAmpCheck(Print& out, Tally& tally, AudioSourceI2S& source, ToneOutput&
     const char* reason = nullptr;
     if (valid == 0) {
         reason = "no_data";
+    } else if (floorMedian < 1.0f) {
+        // Nothing heard before toneOn: a dead mic on a floating data line
+        // can still pick up the I2S TX, which would read as a huge SNR.
+        reason = "zero_floor";
     } else if (snrMedian < kAmpPassSnrDb) {
         reason = "low_snr";
     }

@@ -38,7 +38,9 @@ Result runMicCheck(Print& out, Tally& tally, AudioSourceI2S& source, uint32_t ca
 
 // Own amp / speaker: `chirps` tones of `toneMs` at toneHz through `tone`
 // (the board's real output device), each measured by the own mic.
-// PASS when the median SNR is >= kAmpPassSnrDb. Prints one SELFTEST_AMP
+// PASS when the median SNR is >= kAmpPassSnrDb and the median floor is
+// non-zero (zero_floor: the mic heard nothing). Callers SKIP this check with
+// reason=mic_failed when runMicCheck failed. Prints one SELFTEST_AMP
 // line per chirp, then the check line with the median tone level, floor and
 // SNR (the runner compares the tone level with an earlier run).
 Result runAmpCheck(Print& out, Tally& tally, AudioSourceI2S& source, ToneOutput& tone,

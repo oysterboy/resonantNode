@@ -1,7 +1,9 @@
 # Node self-test, SELFTEST (step 3b, issue #28, NODE-015)
 
-Status: active. Firmware and runner written 2026-10-10 evening; **compile
-verified only** (all six envs build), nothing has run on hardware yet.
+Status: active. Firmware and runner written 2026-10-10 evening; first
+hardware runs 2026-10-11 on E2 + E3, all PASS (section 9). Open: the gate
+needs five boards and only E2 + E3 work (E1 faulty, in storage); the
+dead-mic SKIP fix (2026-10-12) is compile-verified only.
 Roadmap: `docs/roadmaps/roadmap-node.md` NODE-015, step 3b of
 `docs/roadmaps/roadmap-0-steps.md`.
 Replaces: the throwaway amp-check sketch
@@ -250,3 +252,27 @@ this file; summarised as dated results here once run.
 4. Should SELFTEST entries get their own generated table (a
    `selftest.csv` next to `index.csv`) once there are several sessions?
 5. Piezo framing: judge bit 8 there too, or keep reporting only?
+
+## 9. Hardware results
+
+2026-10-11, E2 + E3 (bench 79a53a0, 953a785; folded in from #28):
+- Node build on both: SELFTEST PASS (amp E2 54.5 dB, E3 57.1 dB).
+  `--external` PASS both ways after two runner fixes (652c9a6: hold the
+  other boards in reset during a board's test; wait for the helper's
+  chirps to finish).
+- Negative controls: mic SD pulled -> mic FAIL all_zero; amp DIN pulled ->
+  amp FAIL -6.7 dB (tone -58.7 dB, DEGRADED); music during boot ->
+  quiet_boot FAIL no_quiet.
+- Analyzer and Emitter builds PASS; SELFTEST caught E3's amp VIN left
+  unplugged before the soak restart (sessions/2026-10-11-selftest-soak-gate).
+- Gap found: with the mic dead, floating GPIO 33 picks up the I2S TX, so
+  amp, quiet_boot and own_chirp_suppressed passed vacuously (summary still
+  FAIL).
+
+2026-10-12, fix for that gap (compile-verified on all six envs, hardware
+pending): a failed mic SKIPs amp, quiet_boot and own_chirp_suppressed with
+reason=mic_failed (the Node now prints quiet_boot after the mic check); a
+failed amp SKIPs own_chirp_suppressed (amp_failed); amp FAILs with
+zero_floor when its median floor is 0. Bench check: repeat the mic-SD-pulled
+control on a Node build and expect mic FAIL + three SKIPs.
+

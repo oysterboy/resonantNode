@@ -1,0 +1,73 @@
+# run: selftest E2 (COM3)
+# firmware: role=node git=bd41423 version=0.4.0 board=damp
+# started: 2026-10-12T16:28:56
+# mac: 24:dc:c3:4b:4c:e8
+# port: COM3
+ets Jul 29 2019 12:21:46
+
+rst:0x1 (POWERON_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)
+configsip: 0, SPIWP:0xee
+clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
+mode:DIO, clock div:1
+load:0x3fff0030,len:1344
+load:0x40078000,len:13964
+load:0x40080400,len:3600
+entry 0x400805f0
+BUILD role=node git=bd41423 date=Oct 12 2026 time=16:06:14 version=0.4.0 board=damp
+RB node_id=0xE84C4BC3DC24
+
+E (9) I2S: i2s_driver_uninstall(2048): I2S port 0 has not installed
+RB PROFILE name=TonalPulseScalar emitters=ScalarTransient inspectionPlan=custom fieldStateConfig=4000/4000
+RB DETECT
+  kind=TonalPulseScalar
+  detectorSelection=ScalarTransient
+  inspectionPlan=custom
+  scalarTransient.observedStream=FrequencyTarget
+  scalarTransient.onsetDetectionThreshold=2000.0
+  scalarTransient.onsetReleaseThreshold=1500.0
+  scalarTransient.cooldownAfterOnsetMs=50
+  scalarTransient.minTransientDurationMs=85
+  scalarTransient.maxTransientDurationMs=200
+  scalarTransient.releaseDebounceMs=10
+  scalarTransient.minTransientPeakStrength=3000.0
+  inspectionPlan.module[0].kind=MagnitudeFeatureStrength label=contrast stream=FrequencyContrast windowPreMs=0 windowPostMs=100
+  inspectionPlan.module[1].kind=MagnitudeFeatureStrength label=amp stream=AmpMagnitude windowPreMs=0 windowPostMs=100
+  verdict.has_requirement=1
+  verdict.required_label=contrast
+  fieldState.occurrenceWindowMs=4000
+  fieldState.patternWindowMs=4000
+  fieldState.busyOccurrenceCountThreshold=3
+  fieldState.denseOccurrenceCountThreshold=6
+  fieldState.quietOccurrenceCountThreshold=0
+  fieldState.quietActivityThreshold=0.00
+  fieldState.busyActivityThreshold=0.45
+
+RB BEHAV
+  idleEnabled=1
+  waitAfterHeardMs=100
+  refractoryAfterEmitMs=400
+  behaviorSuppressSelfChirpMs=100
+  detectionSuppressTailMsOwnEmit=60
+  idleTimeoutMs=20000
+  idleTimeVariationMs=5000
+  idleBlockedAfterHeardMs=1000
+  idleBlockedAfterOwnEmitMs=500
+
+RB startup baseline=LISTEN_FOR_QUIET
+RB rebase waiting smooth=249.0 quietMs=0
+RB rebase done quietMs=1000 baseline=0.0 smooth=0
+RB baseline active
+
+>> EMIT MODE REMOTE
+
+>> SELFTEST
+SELFTEST_BEGIN role=node mode=full board=damp
+SELFTEST check=board result=PASS mac=24:dc:c3:4b:4c:e8 board=damp role=node version=0.4.0 git=bd41423 built=Oct_12_2026 built_time=16:06:17 uptime_ms=7508
+SELFTEST check=mic result=FAIL reason=all_zero frames=12000 nonzero_pct=0.0 span=0 floor_mean=0 floor_peak=0 bit8_pct=0.0 framing=bad slot=0
+SELFTEST check=quiet_boot result=SKIP reason=mic_failed
+SELFTEST check=amp result=SKIP reason=mic_failed
+SELFTEST_RESTORE detection=reset baseline=SETTLE
+RB baseline active
+SELFTEST check=own_chirp_suppressed result=SKIP reason=mic_failed
+SELFTEST check=external_chirp result=SKIP reason=not_requested
+SELFTEST_SUMMARY result=FAIL pass=1 fail=1 skip=4 role=node

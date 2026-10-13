@@ -8,6 +8,7 @@ void FrequencyMatchDetector::capturePendingOccurrence(const AudioSamplePacket& a
     _pendingOccurrence.present = true;
     _pendingOccurrence.confidence = _pendingOccurrence.valid ? 1.0f : 0.0f;
     _pendingOccurrence.band.present = true;
+    _pendingOccurrence.magnitude.audioOverflowDuringOccurrence = _pendingAudioOverflow;
     _pendingOccurrence.band.measurement = _pendingEvidence;
     _pendingOccurrence.band.measurement.present = true;
     _pendingOccurrence.band.measurement.matched = _pendingCandidateOccurrence.valid;

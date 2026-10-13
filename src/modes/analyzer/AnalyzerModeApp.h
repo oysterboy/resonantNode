@@ -354,6 +354,7 @@ private:
         bool bufferOverrun = false;
         unsigned long trialOverflowCountAtStart = 0;
         unsigned long trialPatternInspectedOverflowCountAtStart = 0;
+        unsigned long trialPipelineOverflowCountAtStart = 0;
         unsigned long trialTransientRejectTooShortCountAtStart = 0;
         unsigned long trialTransientRejectTooLongCountAtStart = 0;
         unsigned long trialTransientRejectWeakCountAtStart = 0;

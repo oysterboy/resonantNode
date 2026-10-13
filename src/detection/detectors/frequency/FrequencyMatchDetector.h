@@ -119,6 +119,7 @@ private:
     bool _pendingAccepted = false;
     bool _pendingClosed = false;
     unsigned long _pendingRefractoryUntilMs = 0;
+    bool _pendingRefractoryArmed = false;
     unsigned long _firstThresholdCrossingMs = 0;
     uint64_t _firstThresholdCrossingSample = 0;
     unsigned long _pendingOpenMs = 0;
@@ -155,6 +156,7 @@ private:
     unsigned long _pendingCurrentIslandStartMs = 0;
     unsigned long _pendingCurrentGapStartMs = 0;
     unsigned long _pendingLastUpdateMs = 0;
+    bool _pendingAudioOverflow = false;
 
     // Internal detector state.
     bool _diagnosticsEnabled = false;

@@ -168,6 +168,7 @@ void AnalyzerApp::resetSequenceTestRunState() {
     memset(&_sequenceTest.currentTrialDiagnostics, 0, sizeof(_sequenceTest.currentTrialDiagnostics));
     _sequenceTest.trialOverflowCountAtStart = 0;
     _sequenceTest.trialPatternInspectedOverflowCountAtStart = 0;
+    _sequenceTest.trialPipelineOverflowCountAtStart = 0;
     _sequenceTest.hits = 0;
     _sequenceTest.expectedHits = 0;
     _sequenceTest.lateHits = 0;
@@ -392,6 +393,14 @@ void AnalyzerApp::updateSequenceTest(unsigned long now) {
     _sequenceTest.currentTrialEndMs = scheduledAtMs + _sequenceTest.windowEndOffsetMs;
     _sequenceTest.currentTrialOnsetDetectedMs = 0;
     _sequenceTest.currentTrialPatternDetectedMs = 0;
+    // Trial-local evidence for classifySequenceTrial (issue #31): left
+    // cumulative, one rejected candidate made every later miss
+    // OccurrenceSeenButRejected.
+    _sequenceTest.sourceCandidateCount = 0;
+    _sequenceTest.sourceAcceptedCount = 0;
+    _sequenceTest.sourceRejectedCount = 0;
+    _sequenceTest.inspectedOccurrenceCount = 0;
+    _sequenceTest.verdictCount = 0;
     _sequenceTest.primaryValidPatternCaptured = false;
     _sequenceTest.primaryValidPattern = {};
     _sequenceTest.primaryValidInspectedOccurrence = {};
@@ -414,7 +423,6 @@ void AnalyzerApp::updateSequenceTest(unsigned long now) {
     _sequenceTest.currentTrialRejected = 0;
     _sequenceTest.bufferOverrun = false;
     _sequenceTest.trialOverflowCountAtStart = _audioSource.stats().overflowCount;
-    _sequenceTest.trialPatternInspectedOverflowCountAtStart = _detection.verdictCorrelationQueueOverflowCount();
     _sequenceTest.currentTrialDiagnostics = {};
     _sequenceTest.currentTrialDiagnostics.acceptedAmbientBaseline = _audioSignal.baseline();
     _sequenceTest.currentTrialDiagnostics.runtimePatternCaptured = false;
@@ -428,6 +436,10 @@ void AnalyzerApp::updateSequenceTest(unsigned long now) {
     if (_sequenceTest.outputConfig.diagnosticsEnabled) {
         _detection.resetDiagnosticsCounters();
     }
+    // Detection-side overflow baselines after the diagnostics reset, which
+    // zeroes both counters (issue #31); the I2S baseline above is separate.
+    _sequenceTest.trialPatternInspectedOverflowCountAtStart = _detection.verdictCorrelationQueueOverflowCount();
+    _sequenceTest.trialPipelineOverflowCountAtStart = _detection.pipelineEventOverflowCount();
     _sequenceTest.nextTriggerAtMs = scheduledAtMs + _sequenceTest.periodMs;
 
     beginSequenceSampleDump(trialNumber);

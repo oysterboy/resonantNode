@@ -15,6 +15,7 @@ void FrequencyMatchDetector::resetState() {
     _pendingAccepted = false;
     _pendingClosed = false;
     _pendingRefractoryUntilMs = 0;
+    _pendingRefractoryArmed = false;
     _firstThresholdCrossingMs = 0;
     _firstThresholdCrossingSample = 0;
     _pendingOpenMs = 0;
@@ -161,6 +162,7 @@ void FrequencyMatchDetector::resetPendingFacts() {
     _pendingCurrentIslandStartMs = 0;
     _pendingCurrentGapStartMs = 0;
     _pendingLastUpdateMs = 0;
+    _pendingAudioOverflow = false;
 }
 
 void FrequencyMatchDetector::updatePendingFacts(unsigned long nowMs, float strength, bool aboveAttackThreshold, bool aboveReleaseThreshold) {
@@ -329,6 +331,7 @@ void FrequencyMatchDetector::update(const detection::FrequencyBandMeasurementPac
         _validRelease = accepted;
         _emitAllowed = accepted;
         _pendingRefractoryUntilMs = now + cooldownAfterReleaseMs;
+        _pendingRefractoryArmed = true;
         strncpy(_pendingState, accepted ? "closed" : "rejected", sizeof(_pendingState) - 1);
         _pendingState[sizeof(_pendingState) - 1] = '\0';
         strncpy(_noEmitReason, accepted ? "none" : "duration_too_short", sizeof(_noEmitReason) - 1);
@@ -353,6 +356,13 @@ void FrequencyMatchDetector::update(const detection::FrequencyBandMeasurementPac
         }
     };
 
+    // Same rule as ResonantBehavior's *Armed flags (issue #31): an unset
+    // 0, or a deadline left idle for 2^31 ms, would read as "in the
+    // future" in the wrap-safe compare, so the flag gates the check and
+    // drops on the first update past the deadline.
+    if (_pendingRefractoryArmed && !timing::beforeDeadline(now, _pendingRefractoryUntilMs)) {
+        _pendingRefractoryArmed = false;
+    }
     if (evidence.present) {
         if (_attackOk) {
             if (!_firstThresholdCrossingSeen) {
@@ -364,7 +374,7 @@ void FrequencyMatchDetector::update(const detection::FrequencyBandMeasurementPac
 
         if (!_pendingActive) {
             if (_attackOk) {
-                if (timing::beforeDeadline(now, _pendingRefractoryUntilMs)) {
+                if (_pendingRefractoryArmed) {
                     strncpy(_gateReason, "refractory", sizeof(_gateReason) - 1);
                     _gateReason[sizeof(_gateReason) - 1] = '\0';
                     _wouldProducePending = false;
@@ -409,6 +419,7 @@ void FrequencyMatchDetector::update(const detection::FrequencyBandMeasurementPac
                     strncpy(_pendingState, "open", sizeof(_pendingState) - 1);
                     _pendingState[sizeof(_pendingState) - 1] = '\0';
                     updatePendingFacts(now, evidence.targetBandValue, _attackScoreOk, _releaseScoreOk);
+                    _pendingAudioOverflow = audioSamplePacket.overflowDuringBlock;
                 }
             } else {
                 _wouldProducePending = false;
@@ -417,6 +428,7 @@ void FrequencyMatchDetector::update(const detection::FrequencyBandMeasurementPac
             }
         } else {
             updatePendingFacts(now, evidence.targetBandValue, _attackScoreOk, _releaseScoreOk);
+            _pendingAudioOverflow = _pendingAudioOverflow || audioSamplePacket.overflowDuringBlock;
             if (_releaseOk) {
                 _pendingLastMatchedMs = now;
                 ++_pendingHoldUpdates;

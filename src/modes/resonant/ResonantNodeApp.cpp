@@ -574,7 +574,7 @@ void Node::update() {
         for (uint16_t i = 0; i < block.sampleCount; ++i) {
             const uint64_t sampleTimeUs64 = block.approxStartUs64 + sampleOffsetUs(static_cast<uint32_t>(i), sampleRateHz);
             AudioSamplePacket audioSamplePacket;
-            _audioSignal.update(static_cast<int>(block.samples[i]), sampleTimeUs64, audioSamplePacket);
+            _audioSignal.update(static_cast<int>(block.samples[i]), sampleTimeUs64, audioSamplePacket, block.overflowBeforeBlock);
             const bool ownEmitSuppressed = _behavior.ownEmitDetectionSuppressed(audioSamplePacket.timeMs);
             if (!ownEmitSuppressed) {
                 _freqBandStream.observeCenteredSample(audioSamplePacket.baselineCorrectedValue, audioSamplePacket.timeMs);

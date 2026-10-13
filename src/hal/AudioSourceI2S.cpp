@@ -262,7 +262,10 @@ bool AudioSourceI2S::readBlock(AudioBlock& block) {
     block.sampleCount = static_cast<uint16_t>(_blockCount - _blockCursor);
     block.startSampleIndex = _blockStartSampleIndex + _blockCursor;
     block.approxStartUs64 = _blockApproxStartUs64 + sampleOffsetUs(static_cast<uint32_t>(_blockCursor), static_cast<uint32_t>(_sampleRate));
-    block.overflowBeforeBlock = false;
+    // readBlock hands over the rest of the block in one go, so the flag is
+    // delivered once and cleared.
+    block.overflowBeforeBlock = _blockOverflowBeforeBlock;
+    _blockOverflowBeforeBlock = false;
     _blockCursor = _blockCount;
     return true;
 }
@@ -442,6 +445,7 @@ bool AudioSourceI2S::refillBlock() {
     // Buffers the driver dropped since the last read happened before the data
     // just read; count them into the index so sample time stays true.
     const uint32_t droppedBuffers = drainDroppedBuffers();
+    _blockOverflowBeforeBlock = droppedBuffers > 0;
     if (droppedBuffers > 0) {
         _stats.droppedDmaBuffers += droppedBuffers;
         // overflowCount had no producer before; dropped buffers are exactly

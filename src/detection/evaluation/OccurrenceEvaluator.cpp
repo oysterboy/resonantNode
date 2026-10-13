@@ -83,6 +83,7 @@ OccurrenceProposal makeProposalFromOccurrence(const detection::InspectedOccurren
             proposal.scoreStrength = source.band.scoreStrength;
             proposal.contrastQuality = source.band.contrastQuality;
             proposal.targetBandStrength = source.band.targetBandStrength;
+            proposal.audioOverflowDuringProposal = source.magnitude.audioOverflowDuringOccurrence;
             break;
 
         case detection::OccurrenceType::Scalar: {

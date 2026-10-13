@@ -95,9 +95,16 @@ bool parseFeatureStreamToken(const char* token, detection::FeatureStreamId& out)
     return false;
 }
 
+// Every key below is matched with its trailing '=', so the value starts
+// right after the first '='; counting key lengths by hand got four wrong.
+const char* tokenValue(const char* token) {
+    const char* equals = strchr(token, '=');
+    return equals != nullptr ? equals + 1 : token + strlen(token);
+}
+
 bool parseScalarTransientToken(const char* token, detection::ScalarTransientConfig& config) {
     if (startsWithTokenIgnoreCase(token, "scalar_observed_stream=") || startsWithTokenIgnoreCase(token, "scalarObservedStream=") || startsWithTokenIgnoreCase(token, "scalarStream=")) {
-        const char* value = token + (startsWithTokenIgnoreCase(token, "scalar_observed_stream=") ? 23 : startsWithTokenIgnoreCase(token, "scalarObservedStream=") ? 21 : 13);
+        const char* value = tokenValue(token);
         detection::FeatureStreamId stream = config.observedStream;
         if (parseFeatureStreamToken(value, stream)) {
             config.observedStream = stream;
@@ -106,59 +113,59 @@ bool parseScalarTransientToken(const char* token, detection::ScalarTransientConf
         return false;
     }
     if (startsWithTokenIgnoreCase(token, "scalar_onset_threshold=") || startsWithTokenIgnoreCase(token, "scalarOnsetThreshold=")) {
-        config.onsetDetectionThreshold = strtof(token + (startsWithTokenIgnoreCase(token, "scalar_onset_threshold=") ? 23 : 21), nullptr);
+        config.onsetDetectionThreshold = strtof(tokenValue(token), nullptr);
         return true;
     }
     if (startsWithTokenIgnoreCase(token, "scalar_release_threshold=") || startsWithTokenIgnoreCase(token, "scalarReleaseThreshold=")) {
-        config.onsetReleaseThreshold = strtof(token + (startsWithTokenIgnoreCase(token, "scalar_release_threshold=") ? 25 : 23), nullptr);
+        config.onsetReleaseThreshold = strtof(tokenValue(token), nullptr);
         return true;
     }
     if (startsWithTokenIgnoreCase(token, "scalar_cooldown_ms=") || startsWithTokenIgnoreCase(token, "scalarCooldownMs=")) {
-        config.cooldownAfterOnsetMs = strtoul(token + (startsWithTokenIgnoreCase(token, "scalar_cooldown_ms=") ? 19 : 17), nullptr, 10);
+        config.cooldownAfterOnsetMs = strtoul(tokenValue(token), nullptr, 10);
         return true;
     }
     if (startsWithTokenIgnoreCase(token, "scalar_min_duration_ms=") || startsWithTokenIgnoreCase(token, "scalarMinDurationMs=")) {
-        config.minTransientDurationMs = strtoul(token + (startsWithTokenIgnoreCase(token, "scalar_min_duration_ms=") ? 23 : 20), nullptr, 10);
+        config.minTransientDurationMs = strtoul(tokenValue(token), nullptr, 10);
         return true;
     }
     if (startsWithTokenIgnoreCase(token, "scalar_max_duration_ms=") || startsWithTokenIgnoreCase(token, "scalarMaxDurationMs=")) {
-        config.maxTransientDurationMs = strtoul(token + (startsWithTokenIgnoreCase(token, "scalar_max_duration_ms=") ? 23 : 20), nullptr, 10);
+        config.maxTransientDurationMs = strtoul(tokenValue(token), nullptr, 10);
         return true;
     }
     if (startsWithTokenIgnoreCase(token, "scalar_min_peak_strength=") || startsWithTokenIgnoreCase(token, "scalarMinPeakStrength=")) {
-        config.minTransientPeakStrength = strtof(token + (startsWithTokenIgnoreCase(token, "scalar_min_peak_strength=") ? 25 : 22), nullptr);
+        config.minTransientPeakStrength = strtof(tokenValue(token), nullptr);
         return true;
     }
     if (startsWithTokenIgnoreCase(token, "scalar_release_debounce_ms=") || startsWithTokenIgnoreCase(token, "scalarReleaseDebounceMs=")) {
-        config.releaseDebounceMs = strtoul(token + (startsWithTokenIgnoreCase(token, "scalar_release_debounce_ms=") ? 27 : 24), nullptr, 10);
+        config.releaseDebounceMs = strtoul(tokenValue(token), nullptr, 10);
         return true;
     }
     if (startsWithTokenIgnoreCase(token, "scalar_require_carrier_quality=") || startsWithTokenIgnoreCase(token, "scalarRequireCarrierQuality=")) {
-        const char* value = token + (startsWithTokenIgnoreCase(token, "scalar_require_carrier_quality=") ? 31 : 28);
+        const char* value = tokenValue(token);
         bool valid = false;
         config.requireCarrierQuality = parseOnOffToken(value, &valid);
         return valid;
     }
     if (startsWithTokenIgnoreCase(token, "scalar_require_min_strength=") || startsWithTokenIgnoreCase(token, "scalarRequireMinStrength=")) {
-        const char* value = token + (startsWithTokenIgnoreCase(token, "scalar_require_min_strength=") ? 28 : 25);
+        const char* value = tokenValue(token);
         bool valid = false;
         config.requireMinStrength = parseOnOffToken(value, &valid);
         return valid;
     }
     if (startsWithTokenIgnoreCase(token, "scalar_min_strength=") || startsWithTokenIgnoreCase(token, "scalarMinStrength=")) {
-        config.minMatchedMeanStrength = strtof(token + (startsWithTokenIgnoreCase(token, "scalar_min_strength=") ? 20 : 17), nullptr);
+        config.minMatchedMeanStrength = strtof(tokenValue(token), nullptr);
         return true;
     }
     if (startsWithTokenIgnoreCase(token, "scalar_min_release_coverage_ms=") || startsWithTokenIgnoreCase(token, "scalarMinReleaseCoverageMs=")) {
-        config.minCoverageAboveReleaseMs = strtoul(token + (startsWithTokenIgnoreCase(token, "scalar_min_release_coverage_ms=") ? 32 : 28), nullptr, 10);
+        config.minCoverageAboveReleaseMs = strtoul(tokenValue(token), nullptr, 10);
         return true;
     }
     if (startsWithTokenIgnoreCase(token, "scalar_min_longest_island_ms=") || startsWithTokenIgnoreCase(token, "scalarMinLongestIslandMs=")) {
-        config.minLongestIslandMs = strtoul(token + (startsWithTokenIgnoreCase(token, "scalar_min_longest_island_ms=") ? 30 : 25), nullptr, 10);
+        config.minLongestIslandMs = strtoul(tokenValue(token), nullptr, 10);
         return true;
     }
     if (startsWithTokenIgnoreCase(token, "scalar_max_gap_ms=") || startsWithTokenIgnoreCase(token, "scalarMaxGapMs=")) {
-        config.maxGapMs = strtoul(token + (startsWithTokenIgnoreCase(token, "scalar_max_gap_ms=") ? 18 : 15), nullptr, 10);
+        config.maxGapMs = strtoul(tokenValue(token), nullptr, 10);
         return true;
     }
     return false;

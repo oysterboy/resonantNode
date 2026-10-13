@@ -152,6 +152,7 @@ private:
     float _acceptedOccurrenceOnsetStrength = 0.0f;
     float _acceptedOccurrencePeakStrength = 0.0f;
     float _acceptedOccurrenceCurrentStrength = 0.0f;
+    bool _acceptedOccurrenceAudioOverflow = false;
     unsigned long _lastObservedAcceptedOccurrenceRejectedCount = 0;
 
     // Occurrence emission state.

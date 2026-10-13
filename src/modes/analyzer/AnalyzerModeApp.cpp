@@ -729,7 +729,7 @@ void AnalyzerApp::update() {
         for (uint16_t i = 0; i < block.sampleCount; ++i) {
             const uint64_t sampleTimeUs64 = block.approxStartUs64 + sampleOffsetUs(static_cast<uint32_t>(i), sampleRateHz);
             AudioSamplePacket audioSamplePacket;
-            _audioSignal.update(static_cast<int>(block.samples[i]), sampleTimeUs64, audioSamplePacket);
+            _audioSignal.update(static_cast<int>(block.samples[i]), sampleTimeUs64, audioSamplePacket, block.overflowBeforeBlock);
             updateSequenceAudioHealth(audioSamplePacket);
             _freqBandStream.observeCenteredSample(audioSamplePacket.baselineCorrectedValue, audioSamplePacket.timeMs);
             detection::FrequencyBandMeasurementPacket& runtimeFrequencyMeasurementPacket = _runtimeFrequencyMeasurementPacketScratch;
@@ -923,8 +923,8 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
     report.integrity.inspectionPresent = hasInspectedOccurrence;
     report.integrity.evaluatorReportPresent = hasVerdict;
     report.integrity.verdictPresent = hasVerdict;
-    const unsigned long pipelineOverflowDelta = _detection.pipelineEventOverflowCount() > _sequenceTest.trialOverflowCountAtStart
-        ? _detection.pipelineEventOverflowCount() - _sequenceTest.trialOverflowCountAtStart
+    const unsigned long pipelineOverflowDelta = _detection.pipelineEventOverflowCount() > _sequenceTest.trialPipelineOverflowCountAtStart
+        ? _detection.pipelineEventOverflowCount() - _sequenceTest.trialPipelineOverflowCountAtStart
         : 0UL;
     report.integrity.queueOverflowAffected = pipelineOverflowDelta > 0UL ||
         _detection.verdictCorrelationQueueOverflowCount() > _sequenceTest.trialPatternInspectedOverflowCountAtStart;

@@ -53,23 +53,23 @@ void AudioSignal::rebase() {
 // Sample and block processing
 // -----------------------------------------------------------------------------
 
-bool AudioSignal::update(int sample, uint64_t sampleTimeUs64, AudioSamplePacket& outFrame) {
+bool AudioSignal::update(int sample, uint64_t sampleTimeUs64, AudioSamplePacket& outFrame, bool overflowDuringBlock) {
     _lastBlock.samples = nullptr;
     _lastBlock.sampleCount = 1;
     const uint64_t sampleIndex = _stats.samplesProcessed;
     _lastBlock.startSampleIndex = sampleIndex;
     _lastBlock.approxStartUs64 = sampleTimeUs64;
-    _lastBlock.overflowBeforeBlock = false;
+    _lastBlock.overflowBeforeBlock = overflowDuringBlock;
     _lastBlockStartSample = sampleIndex;
     _lastBlockSampleCount = 1;
     _lastBlockApproxStartUs64 = sampleTimeUs64;
 
-    processSample(sample, sampleTimeUs64, sampleIndex, 0, false);
+    processSample(sample, sampleTimeUs64, sampleIndex, 0, overflowDuringBlock);
     _stats.blocksProcessed++;
     _stats.samplesProcessed++;
 
     const uint32_t sampleTimeMs = _msFromUs(sampleTimeUs64);
-    emitFrame(outFrame, sampleIndex, sampleTimeUs64, sampleTimeMs, _source.sampleRateHz(), false);
+    emitFrame(outFrame, sampleIndex, sampleTimeUs64, sampleTimeMs, _source.sampleRateHz(), overflowDuringBlock);
     emitCurveSample(sampleTimeMs);
     return true;
 }

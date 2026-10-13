@@ -174,7 +174,10 @@ public:
 
     void begin(bool doRebase = true);
     void rebase();
-    bool update(int sample, uint64_t sampleTimeUs64, AudioSamplePacket& outFrame);
+    // overflowDuringBlock: the block this sample came from followed dropped
+    // DMA buffers (AudioBlock::overflowBeforeBlock); it lands in
+    // AudioSamplePacket::overflowDuringBlock for the detectors.
+    bool update(int sample, uint64_t sampleTimeUs64, AudioSamplePacket& outFrame, bool overflowDuringBlock = false);
     void processBlock(const AudioBlock& block);
 
     void setBaselineTrackingQuietThreshold(int value);

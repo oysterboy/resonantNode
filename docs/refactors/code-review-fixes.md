@@ -299,7 +299,8 @@ the dev machine: `pio run` for all six envs.**
 | D25 | ee9df48 | sample-dump trial count in closed form (checked equal to the loop on 21,600 cases) | committed |
 | D26 | dc66453 | with A1 | committed |
 
-Bench checks this needs (gate, section 2), in order:
+Bench checks this needs (gate, section 2), in order; tracked with the open
+points as checkboxes in issue #32 (sub-issue of #31):
 1. All six envs build.
 2. Analyzer: `PARAM scalarMinStrength=1234 scalar_min_release_coverage_ms=90
    scalar_min_longest_island_ms=80` -> `PARAM STATUS` echoes the same.

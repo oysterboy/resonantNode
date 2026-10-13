@@ -22,6 +22,7 @@ Renamed from roadmap-general.md on 2026-09-23 so it sorts first.
 How this file relates to the domain roadmaps and docs/refactors/: see
 README.md ("Who answers what", "Ordering rule").
 
+Status update 2026-10-13: step 3d (#31) added from a full src/ code review; gates step 5 (P1, P3, P4) and step 6 (P2, tier A).
 Status update 2026-10-12: steps 3a and 3c closed, 3b fix verified on E2, 4a firmware landed; no reorder.
 Last reordered: 2026-10-11. Micros-wrap bug (#30) added as step 3c, gating
 the soak (3a) and the field trial (6): both soaks went deaf 71.6 min after
@@ -168,6 +169,21 @@ the previous gate open unless the step says it can run in parallel.
    block after the wrap, up to ~26,000 s uptime. The real-uptime run was
    Analyzer only; the Node has the offset test. Archive:
    docs/refactors/archive/micros-wrap.md.
+
+3d. [NEXT] Code-review findings: debug and fix. (issue #31)
+   Where: NODE-018 (roadmap-node.md) -> docs/refactors/code-review-fixes.md.
+   Why: a full src/ review (2026-10-13) found Analyzer PARAM keys parsing
+   to the wrong value (P1), a FrequencyMatch refractory that goes deaf at
+   ~24.8 days uptime and an audio overflow flag that is never set (P2),
+   SEQ counters and overflow baselines carried across trials (P3), and a
+   contrast scale / inspection window that need measuring (P4). P1, P3 and
+   P4 feed step 5's profile decision; P2 and tier A gate step 6. Runs in
+   parallel with 3b and 4a.
+   Gate: P1-P3 fixed and all six envs build; one D-AMP SEQ session on
+   bench shows the PARAM echo matching, per-trial classification and no
+   carried-over overflow; P2a checked with a millis-offset build; P4
+   measured and fixed or decided; the remaining findings fixed here
+   (tiers A, B) or named in their owning step's issue (tiers C, D).
 
 4. Switch to D-AMP. (issue #21)
    Where: NODE-011 (roadmap-node.md).

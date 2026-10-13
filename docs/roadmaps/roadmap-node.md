@@ -334,6 +334,27 @@ Gate: Analyzer and Node keep detecting across the (offset) wrap on the
 bench, and a run past 72 min of real uptime.
 ```
 
+### NODE-018 - code-review findings: debug and fix
+
+Status: OPEN 2026-10-13 (step 3d, issue #31). Review done, no fix written.
+Pass doc: docs/refactors/code-review-fixes.md (findings, priority fixes P1-P4, tiered list for the rest).
+
+```text
+Source: a read-only review of all of src/ on 2026-10-13, traced by hand,
+nothing compiled or run.
+Priority fixes:
+  P1 Analyzer PARAM value offsets (scalar carrier-quality keys parse wrong).
+  P2 field node: FrequencyMatch refractory deaf from ~24.8 days uptime;
+     the per-block audio overflow flag is never set.
+  P3 SEQ evidence: per-trial counters, pipeline / verdict-correlation
+     overflow baselines.
+  P4 contrast scale vs thresholds, FeatureHistory length, DET-010 on
+     TonalPulseScalar: measure, then fix or decide (no drive-by retune).
+Rest: tiers A (before the trial), B (before the next SEQ campaign),
+C (fold into steps 8 / 10), D (latent).
+Gate: as step 3d in roadmap-0-steps.md.
+```
+
 ### NODE-013 - 24-hour bench soak on D-AMP
 
 Status: DONE 2026-10-12, accepted short (step 3a, issue #27 closed). Third attempt bench:sessions/2026-10-12-soak24h-70cm: 30 blocks / 7.3 h instead of 24 h (owner), 0 missing, 0 errors, T3 299/300, 0 OBS false accepts; accept rate flat, strength hour means 9.1k-11.2k vs ~200 block-to-block (not attributed: no room notes). Earlier attempts 2026-10-10 and 2026-10-11 went deaf at the micros wrap (NODE-017).
@@ -356,7 +377,7 @@ Runs in parallel with NODE-010; doesn't gate NODE-011.
 
 ```text
 Order: roadmap-0-steps.md. NODE-009, NODE-010, NODE-011 are steps 2-4
-(D-AMP), NODE-013 is step 3a (soak, parallel to step 3), NODE-016 is step 4a (status LED); NODE-001 then NODE-008 are step 6 (field trial, on D-AMP);
+(D-AMP), NODE-013 is step 3a (soak, parallel to step 3), NODE-016 is step 4a (status LED); NODE-018 is step 3d (code-review fixes); NODE-001 then NODE-008 are step 6 (field trial, on D-AMP);
 NODE-006 and NODE-007 are step 7; NODE-004 is part of step 10.
 ```
 

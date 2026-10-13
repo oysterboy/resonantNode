@@ -458,7 +458,8 @@ void EmitterApp::advanceSweep(unsigned long now) {
     Serial.print("EVT sweep_step freq=");
     Serial.println(_sweepCurrentHz);
 
-    if (_sweepCurrentHz >= _sweepStopHz || _sweepCurrentHz > _sweepStopHz - _sweepStepHz) {
+    // "next step past stop" without unsigned underflow when step > stop (issue #31).
+    if (_sweepCurrentHz >= _sweepStopHz || _sweepStepHz > _sweepStopHz - _sweepCurrentHz) {
         _sweepCurrentHz = _sweepStartHz;
     } else {
         _sweepCurrentHz += _sweepStepHz;

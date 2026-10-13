@@ -195,7 +195,7 @@ private:
     unsigned long _rbOverflowPending = 0;
     unsigned long _rbLastPendingMs = 0;
     bool _rbHaveLastPendingMs = false;
-    unsigned long _rbStrengthSumScaled = 0;
+    uint64_t _rbStrengthSumScaled = 0; // Strength16 * 100 per verdict; uint32 overflowed after ~1,300 (issue #31)
     unsigned long _rbDurationSumMs = 0;
     unsigned long _rbLastLoggedOnsetRejectCount = 0;
     unsigned long _rbLastLoggedTransientRejectCount = 0;

@@ -1251,7 +1251,7 @@ void Node::processDetectionFrame(const AudioSamplePacket& audioSamplePacket,
         if (verdict.primaryAudioOverflow) {
             ++_rbOverflowPending;
         }
-        _rbStrengthSumScaled += static_cast<unsigned long>(verdict.primaryStrength * 100.0f);
+        _rbStrengthSumScaled += static_cast<uint64_t>(verdict.primaryStrength * 100.0f);
         _rbDurationSumMs += verdict.primaryDurationMs;
         _rbHaveLastPendingMs = true;
         _rbLastPendingMs = verdict.primaryHeardAtMs;

@@ -60,6 +60,7 @@ what replaced it.
 | 2026-10-09 | [Own-emit detection suppression covers the whole chirp plus a tail](2026-10-09-own-emit-suppression-whole-chirp.md) |
 | 2026-10-09 | [D-AMP keeps First Difference as the PCM preprocessor until after the field trial](2026-10-09-damp-keep-first-difference.md) |
 | 2026-10-09 | [D-AMP I2S HAL: extend AudioSourceI2S, TX task, stereo slots, Philips framing with RX realigned](2026-10-09-damp-i2s-hal-shape.md) |
+| 2026-10-13 | [The Node does not ignore verdicts on occurrences with dropped audio](2026-10-13-node-reacts-despite-dropped-audio.md) |
 
 ## Open
 

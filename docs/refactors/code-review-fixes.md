@@ -278,7 +278,7 @@ the dev machine: `pio run` for all six envs.**
 |---|---|---|---|
 | P1 | 852d58f | `tokenValue()`: scalar PARAM values read after the first `=` (all 14 keys) | committed |
 | P2a | 852d58f | `_pendingRefractoryArmed`: set at close, dropped on the first update past the deadline, gates the refractory | committed; millis-offset check open |
-| P2b | 852d58f | `refillBlock` raises `_blockOverflowBeforeBlock` on drops; `readBlock` hands it over once; `AudioSignal::update(..., overflowDuringBlock)`; Node and Analyzer loops pass it for every sample of that block; ScalarTransient and FrequencyMatch latch it from open to close; evaluator maps it for Frequency too | committed. The Node still only counts it (`_rbOverflowPending`); whether Behavior should ignore such verdicts is a decision, not made here |
+| P2b | 852d58f | `refillBlock` raises `_blockOverflowBeforeBlock` on drops; `readBlock` hands it over once; `AudioSignal::update(..., overflowDuringBlock)`; Node and Analyzer loops pass it for every sample of that block; ScalarTransient and FrequencyMatch latch it from open to close; evaluator maps it for Frequency too | committed. The Node only counts it (`_rbOverflowPending`) and still reacts: decided 2026-10-13, `docs/decisions/2026-10-13-node-reacts-despite-dropped-audio.md` |
 | P3 | 852d58f | five counters reset per trial; `trialPipelineOverflowCountAtStart` added; both detection-side baselines taken after the diag reset | committed |
 | P4 | - | - | open, needs bench |
 | A1 | dc66453 | `performRbRebase` stops a sounding chirp; verdicts reach Behavior only while outputs are enabled (also closes D26) | committed |

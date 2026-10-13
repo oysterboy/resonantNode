@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <strings.h>
+#include <math.h>
 
 namespace param {
 
@@ -70,6 +71,19 @@ const ParamBinding* ParamRegistry::find(const char* path) const {
     return nullptr;
 }
 
+namespace {
+// The whole value must parse: "1500abc" is an error, not 1500 (issue #31).
+bool parsedToEnd(const char* valueText, const char* end) {
+    if (end == valueText) {
+        return false;
+    }
+    while (*end == ' ' || *end == '\t') {
+        ++end;
+    }
+    return *end == '\0';
+}
+} // namespace
+
 ParamSetStatus ParamRegistry::applyValue(const ParamBinding& binding, const char* valueText) const {
     if (valueText == nullptr || *valueText == '\0') {
         return ParamSetStatus::ParseError;
@@ -79,7 +93,12 @@ ParamSetStatus ParamRegistry::applyValue(const ParamBinding& binding, const char
         case ParamType::Float: {
             char* end = nullptr;
             const float parsed = strtof(valueText, &end);
-            if (end == valueText) {
+            if (!parsedToEnd(valueText, end)) {
+                return ParamSetStatus::ParseError;
+            }
+            // NaN fails both comparisons below and every threshold compare
+            // after it; inf is caught by the range check.
+            if (isnan(parsed)) {
                 return ParamSetStatus::ParseError;
             }
             if (parsed < binding.minValue || parsed > binding.maxValue) {
@@ -91,7 +110,7 @@ ParamSetStatus ParamRegistry::applyValue(const ParamBinding& binding, const char
         case ParamType::UInt32: {
             char* end = nullptr;
             const unsigned long parsed = strtoul(valueText, &end, 10);
-            if (end == valueText) {
+            if (!parsedToEnd(valueText, end)) {
                 return ParamSetStatus::ParseError;
             }
             if (static_cast<float>(parsed) < binding.minValue || static_cast<float>(parsed) > binding.maxValue) {
@@ -103,7 +122,7 @@ ParamSetStatus ParamRegistry::applyValue(const ParamBinding& binding, const char
         case ParamType::UInt16: {
             char* end = nullptr;
             const unsigned long parsed = strtoul(valueText, &end, 10);
-            if (end == valueText) {
+            if (!parsedToEnd(valueText, end)) {
                 return ParamSetStatus::ParseError;
             }
             if (static_cast<float>(parsed) < binding.minValue || static_cast<float>(parsed) > binding.maxValue) {

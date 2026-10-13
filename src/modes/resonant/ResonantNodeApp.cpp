@@ -363,6 +363,7 @@ void Node::begin() {
     _behavior.seedIdleSchedule(timebase::nowMs());
     _debug.markLoopStart(timebase::nowUs());
     _serialLineLength = 0;
+    _serialLineOverflow = false;
     _serialLineBuffer[0] = '\0';
 
     Serial.print("RB PROFILE name=");
@@ -400,13 +401,22 @@ void Node::resetRbCounters() {
 void Node::resetDetectionState() {
     _audioSignal.resetSignalState();
     _detection.resetState();
-    applyActiveProfiles();
+    // Detection config only: a rebase must not put live RB BEHAV values back
+    // to the profile defaults (issue #31). Profile switches and boot apply
+    // both through applyActiveProfiles().
+    applyActiveDetectionProfile();
     _wasSelfChirpSuppressed = false;
     _rbLastLoggedOnsetRejectCount = 0;
     _rbLastLoggedTransientRejectCount = 0;
 }
 
 void Node::performRbRebase() {
+    // Behavior's reset drops the own-emit suppression; a chirp left sounding
+    // would then be heard and answered (issue #31). Its ring-down falls in
+    // the post-rebase Settle, where verdicts don't reach Behavior.
+    if (_chirpOutput.isActive()) {
+        _chirpOutput.stop();
+    }
     _audioSignal.rebase();
     _behavior.resetState();
     resetDetectionState();
@@ -661,7 +671,10 @@ void Node::update() {
     _chirpOutput.update();
 
     if (_chirpOutput.finished()) {
-        _behavior.notifyChirpFinished(now);
+        // Fresh time: the own-emit tail runs from the actual toneOff in
+        // update() above, not from the loop start (issue #31).
+        const unsigned long finishedMs = timebase::nowMs();
+        _behavior.notifyChirpFinished(finishedMs);
         _debug.observeChirpFinished(now);
         selfTestNoteChirpFinished(now);
     }
@@ -685,14 +698,20 @@ void Node::pollSerialCommands() {
         }
         if (c == '\n') {
             _serialLineBuffer[_serialLineLength] = '\0';
-            if (_serialLineLength > 0) {
+            if (_serialLineOverflow) {
+                Serial.print("RB ERR line_too_long max=");
+                Serial.println(static_cast<unsigned long>(sizeof(_serialLineBuffer) - 1));
+            } else if (_serialLineLength > 0) {
                 handleSerialLine(_serialLineBuffer);
             }
             _serialLineLength = 0;
+            _serialLineOverflow = false;
             continue;
         }
         if (_serialLineLength < sizeof(_serialLineBuffer) - 1) {
             _serialLineBuffer[_serialLineLength++] = c;
+        } else {
+            _serialLineOverflow = true;
         }
     }
 }
@@ -734,7 +753,7 @@ void Node::handleSerialLine(const char* line) {
         return;
     }
     if (startsWithTokenIgnoreCase(line, "RB PARAM")) {
-        char buffer[96];
+        char buffer[kSerialLineCapacity];
         strncpy(buffer, line, sizeof(buffer));
         buffer[sizeof(buffer) - 1] = '\0';
 
@@ -774,7 +793,7 @@ void Node::handleSerialLine(const char* line) {
         return;
     }
     if (startsWithTokenIgnoreCase(line, "RB BEHAV")) {
-        char buffer[96];
+        char buffer[kSerialLineCapacity];
         strncpy(buffer, line, sizeof(buffer));
         buffer[sizeof(buffer) - 1] = '\0';
 
@@ -1025,7 +1044,7 @@ void Node::handleDetectCommand(const char* line) {
 }
 
 void Node::handleProfileCommand(const char* line) {
-    const char* name = line + 11;
+    const char* name = line + 10; // strlen("RB PROFILE")
     while (*name == ' ') {
         ++name;
     }
@@ -1054,7 +1073,7 @@ void Node::handleProfileCommand(const char* line) {
 // Kept separate from the ad hoc RB PARAM / RB BEHAV commands until those are
 // deliberately migrated (see docs/roadmaps/roadmap-param-config.md).
 void Node::handleParamCommand(const char* line) {
-    char buffer[96];
+    char buffer[kSerialLineCapacity];
     strncpy(buffer, line, sizeof(buffer));
     buffer[sizeof(buffer) - 1] = '\0';
 
@@ -1211,7 +1230,11 @@ void Node::processDetectionFrame(const AudioSamplePacket& audioSamplePacket,
 
     detection::OccurrenceVerdict verdict;
     while (_detection.popOccurrenceVerdict(verdict)) {
-        const auto behaviorDecision = _behavior.handleOccurrenceVerdict(verdict, _detection.fieldState(), now);
+        // Outputs off (Settle, ListenForQuiet): a verdict must not leave
+        // Behavior in HeardPattern to fire late once Active (issue #31).
+        const auto behaviorDecision = rbOutputsEnabled()
+            ? _behavior.handleOccurrenceVerdict(verdict, _detection.fieldState(), now)
+            : ResonantBehavior::BehaviorDecision::None;
         if (behaviorDecision == ResonantBehavior::BehaviorDecision::ConsumedPattern) {
             sawPatternThisLoop = true;
         }

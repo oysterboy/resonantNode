@@ -182,8 +182,12 @@ private:
 
     // Debug / logging support.
     NodeDebug _debug;
-    char _serialLineBuffer[96] = {};
+    // 256 like the Analyzer's USB line: the RB BEHAV usage line alone is
+    // 177 characters. A longer line is rejected, never run cut (issue #31).
+    static constexpr size_t kSerialLineCapacity = 256;
+    char _serialLineBuffer[kSerialLineCapacity] = {};
     size_t _serialLineLength = 0;
+    bool _serialLineOverflow = false;
     unsigned long _rbPendingCount = 0;
     unsigned long _rbPatternAcceptedCount = 0;
     unsigned long _rbValidPatternCount = 0;

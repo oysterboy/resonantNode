@@ -34,7 +34,13 @@ detection::DetectorRejectClass scalarTransientRejectClass(ScalarTransientDetecto
         case ScalarTransientDetector::TransientRejectReason::DurationTooLong:
             return detection::DetectorRejectClass::Timing;
         case ScalarTransientDetector::TransientRejectReason::StrengthTooLow:
+        case ScalarTransientDetector::TransientRejectReason::MatchedMeanTooLow:
             return detection::DetectorRejectClass::Strength;
+        // Carrier-quality rejects (issue #31: were logged as class none).
+        case ScalarTransientDetector::TransientRejectReason::CoverageTooLow:
+        case ScalarTransientDetector::TransientRejectReason::LongestIslandTooShort:
+        case ScalarTransientDetector::TransientRejectReason::GapTooLong:
+            return detection::DetectorRejectClass::Quality;
         case ScalarTransientDetector::TransientRejectReason::PeakStillActive:
             return detection::DetectorRejectClass::State;
         case ScalarTransientDetector::TransientRejectReason::None:

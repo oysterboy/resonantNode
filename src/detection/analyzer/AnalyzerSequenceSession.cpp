@@ -22,15 +22,13 @@ unsigned long countSelectedSampleDumpTrials(unsigned long totalTrials, unsigned 
         return 0;
     }
 
-    unsigned long selected = 0;
-    for (unsigned long trial = 1; trial <= totalTrials; ++trial) {
-        const bool firstSelected = firstTrials > 0 && trial <= firstTrials;
-        const bool everySelected = everyNth > 0 && trial % everyNth == 0;
-        if (firstSelected || everySelected) {
-            ++selected;
-        }
+    // Closed form of "trial <= firstTrials || trial % everyNth == 0" over
+    // 1..totalTrials: a loop took minutes for huge trial counts (issue #31).
+    const unsigned long first = firstTrials < totalTrials ? firstTrials : totalTrials;
+    unsigned long selected = first;
+    if (everyNth > 0) {
+        selected += totalTrials / everyNth - first / everyNth;
     }
-
     return selected;
 }
 
@@ -88,6 +86,17 @@ void AnalyzerApp::initializeSequenceTest(const PendingSequenceStart& pending) {
     _sequenceTest.durationMs = pending.durationMs;
     _sequenceTest.startupDelayMs = pending.startupDelayMs;
     _sequenceTest.reportSettleMs = pending.reportSettleMs == 0 ? 1 : pending.reportSettleMs;
+    if (_sequenceTest.externalEmitter &&
+        _sequenceTest.windowEndOffsetMs + _sequenceTest.reportSettleMs > _sequenceTest.periodMs) {
+        // A trial finalizes reportSettleMs after its window; until then the
+        // next emitter chirp is credited to the old trial (issue #31).
+        Serial.print("OBS_WARN window+report_settle>period window=");
+        Serial.print(_sequenceTest.windowEndOffsetMs);
+        Serial.print(" report_settle=");
+        Serial.print(_sequenceTest.reportSettleMs);
+        Serial.print(" period=");
+        Serial.println(_sequenceTest.periodMs);
+    }
     _sequenceTest.sampleDumpEnabled = pending.sampleDumpEnabled;
     _sequenceTest.sampleDumpFirstTrials = pending.sampleDumpFirstTrials;
     _sequenceTest.sampleDumpEveryNth = pending.sampleDumpEveryNth;
@@ -671,7 +680,11 @@ void AnalyzerApp::finalizeSequenceTrial(unsigned long now) {
     if (shouldPrintSequenceDetail(*finalizedReport)) {
         printSequenceDetailCanonical(*finalizedReport);
     }
-    if (_sequenceTest.currentTrial < _sequenceTest.totalTrials) {
+    // OBS keeps the trigger grid: the external emitter runs on its own fixed
+    // period, and finalize already waited reportSettleMs past the window, so
+    // a second settle here shifted every later window out of phase (issue
+    // #31). SEQ commands its own chirps and may push the next one out.
+    if (!_sequenceTest.externalEmitter && _sequenceTest.currentTrial < _sequenceTest.totalTrials) {
         const unsigned long settleUntilMs = now + _sequenceTest.reportSettleMs;
         if (timing::beforeDeadline(_sequenceTest.nextTriggerAtMs, settleUntilMs)) {
             _sequenceTest.nextTriggerAtMs = settleUntilMs;
@@ -757,7 +770,9 @@ void AnalyzerApp::updateCleanSequenceSummary(const AnalyzerReport& report) {
         ++summary.patternRejectedTrials;
     }
 
-    if (report.classification.dtMs >= 0) {
+    // Same trials SEQ_TRIAL prints a dt for: a Rejected trial prints dt=na
+    // and stays out of avg_dt_ms (issue #31).
+    if (report.classification.dtMs >= 0 && report.classification.result != AnalyzerResult::Rejected) {
         summary.totalDtMs += report.classification.dtMs;
         ++summary.dtCount;
     }

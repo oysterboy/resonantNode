@@ -283,6 +283,9 @@ bool AnalyzerApp::runRawTrigger(unsigned long toneHz,
     unsigned long postCaptured = 0;
     int64_t rawWindowSum = 0;
     uint64_t rawWindowAbsSum = 0;
+    // Every sample read, stored or not (pre=0 drops the pre-emit ones); the
+    // mean divides by this, not by the stored count (issue #31).
+    unsigned long rawWindowCount = 0;
     int32_t rawWindowMin = INT32_MAX;
     int32_t rawWindowMax = INT32_MIN;
 
@@ -387,6 +390,7 @@ bool AnalyzerApp::runRawTrigger(unsigned long toneHz,
         const uint16_t sampleTimeOffsetMs = rawCaptureOffsetMs(sampleTimeMs, captureBaseMs);
         const int32_t signedRawSample = static_cast<int32_t>(sourceSample);
         rawWindowSum += static_cast<int64_t>(signedRawSample);
+        ++rawWindowCount;
         rawWindowAbsSum += static_cast<uint64_t>(signedRawSample < 0 ? -static_cast<int64_t>(signedRawSample) : static_cast<int64_t>(signedRawSample));
         if (signedRawSample < rawWindowMin) {
             rawWindowMin = signedRawSample;
@@ -509,10 +513,10 @@ bool AnalyzerApp::runRawTrigger(unsigned long toneHz,
     const unsigned long unusedCapacitySamples = maxSamples > capturedSamples
         ? maxSamples - capturedSamples
         : 0;
-    const float rawWindowMean = capturedSamples > 0 ? static_cast<float>(rawWindowSum) / static_cast<float>(capturedSamples) : 0.0f;
-    const float rawWindowAbsMean = capturedSamples > 0 ? static_cast<float>(rawWindowAbsSum) / static_cast<float>(capturedSamples) : 0.0f;
-    const int32_t rawWindowMinOut = capturedSamples > 0 ? rawWindowMin : 0;
-    const int32_t rawWindowMaxOut = capturedSamples > 0 ? rawWindowMax : 0;
+    const float rawWindowMean = rawWindowCount > 0 ? static_cast<float>(rawWindowSum) / static_cast<float>(rawWindowCount) : 0.0f;
+    const float rawWindowAbsMean = rawWindowCount > 0 ? static_cast<float>(rawWindowAbsSum) / static_cast<float>(rawWindowCount) : 0.0f;
+    const int32_t rawWindowMinOut = rawWindowCount > 0 ? rawWindowMin : 0;
+    const int32_t rawWindowMaxOut = rawWindowCount > 0 ? rawWindowMax : 0;
 
     uint16_t maxAmp = 0;
     int32_t maxPcmAbs = 0;

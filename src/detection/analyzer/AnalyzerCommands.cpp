@@ -593,7 +593,11 @@ void AnalyzerApp::handleUsbLine(const char* line) {
 
         if (equalsIgnoreCase(token, "START") || equalsIgnoreCase(token, "OBS")) {
             _pendingSequenceStart = {};
-            _pendingSequenceStart.active = true;
+            // Parsed into copies and activated only when every token is valid
+            // (issue #31): on an ERR the run used to start anyway, and the
+            // output settings parsed before the bad token stuck.
+            _pendingSequenceStart.active = false;
+            AnalyzerApp::SeqOutputConfig outputConfig = _seqOutputConfig;
             _pendingSequenceStart.totalTrials = _seqOutputConfig.totalTrials;
             _pendingSequenceStart.periodMs = 2500;
             _pendingSequenceStart.windowEndOffsetMs = 2200;
@@ -656,20 +660,20 @@ void AnalyzerApp::handleUsbLine(const char* line) {
                     }
                 } else if (startsWithTokenIgnoreCase(token, "mode=")) {
                     bool valid = false;
-                    _seqOutputConfig.mode = AnalyzerApp::sequenceOutputModeFromToken(token + 5, &valid);
+                    outputConfig.mode = AnalyzerApp::sequenceOutputModeFromToken(token + 5, &valid);
                     if (!valid) {
                         Serial.print("ERR SEQ unknown mode=");
                         Serial.print(token + 5);
                     Serial.println(" use mode=quiet, mode=trial, mode=inspect, mode=source, mode=system or mode=detail");
                         return;
                     }
-                    if (_seqOutputConfig.mode == AnalyzerApp::SeqOutputMode::Quiet) {
-                        _seqOutputConfig.when = AnalyzerApp::SeqOutputWhen::Off;
-                        _seqOutputConfig.verbosity = 0;
+                    if (outputConfig.mode == AnalyzerApp::SeqOutputMode::Quiet) {
+                        outputConfig.when = AnalyzerApp::SeqOutputWhen::Off;
+                        outputConfig.verbosity = 0;
                     }
                 } else if (startsWithTokenIgnoreCase(token, "when=")) {
                     bool valid = false;
-                    _seqOutputConfig.when = AnalyzerApp::sequenceOutputWhenFromToken(token + 5, &valid);
+                    outputConfig.when = AnalyzerApp::sequenceOutputWhenFromToken(token + 5, &valid);
                     if (!valid) {
                         Serial.print("ERR SEQ unknown when=");
                         Serial.print(token + 5);
@@ -684,7 +688,7 @@ void AnalyzerApp::handleUsbLine(const char* line) {
                         Serial.println(" use 0|1|2");
                         return;
                     }
-                    _seqOutputConfig.verbosity = static_cast<uint8_t>(verbosity);
+                    outputConfig.verbosity = static_cast<uint8_t>(verbosity);
                 } else if (startsWithTokenIgnoreCase(token, "diag=") || startsWithTokenIgnoreCase(token, "diagnostics=")) {
                     const char* valueToken = strchr(token, '=') != nullptr ? strchr(token, '=') + 1 : nullptr;
                     bool valid = false;
@@ -693,7 +697,7 @@ void AnalyzerApp::handleUsbLine(const char* line) {
                         Serial.println("ERR SEQ diagnostics use diag=on|off");
                         return;
                     }
-                    _seqOutputConfig.diagnosticsEnabled = enabled;
+                    outputConfig.diagnosticsEnabled = enabled;
                 } else if (startsWithTokenIgnoreCase(token, "sampleFirst=")) {
                     _pendingSequenceStart.sampleDumpEnabled = true;
                     _pendingSequenceStart.sampleDumpFirstTrials = static_cast<unsigned long>(strtoul(token + 12, nullptr, 10));
@@ -726,17 +730,19 @@ void AnalyzerApp::handleUsbLine(const char* line) {
             }
 
             if (!profileSeen) {
-                _pendingSequenceStart.profileKind = _seqOutputConfig.profileKind;
+                _pendingSequenceStart.profileKind = outputConfig.profileKind;
             }
             if (!profileValid) {
                 return;
             }
-            _seqOutputConfig.totalTrials = _pendingSequenceStart.totalTrials;
+            outputConfig.totalTrials = _pendingSequenceStart.totalTrials;
             if (_pendingSequenceStart.setupLabelStorage[0] == '\0') {
                 strncpy(_pendingSequenceStart.setupLabelStorage, TEST_SETUP_LABEL, sizeof(_pendingSequenceStart.setupLabelStorage));
                 _pendingSequenceStart.setupLabelStorage[sizeof(_pendingSequenceStart.setupLabelStorage) - 1] = '\0';
             }
             _pendingSequenceStart.setupLabel = _pendingSequenceStart.setupLabelStorage;
+            _seqOutputConfig = outputConfig;
+            _pendingSequenceStart.active = true;
             Serial.println("OK SEQ");
             return;
         }

@@ -175,5 +175,8 @@ private:
     void freezeReport(unsigned long nowMs);
     void clearFrozenReport();
     const char* frequencyRejectReasonFromState() const;
+    // The live reason buffers are rewritten every update; a frozen report and
+    // the best-reject snapshot keep the matching string literal instead.
+    static const char* stableReason(const char* text);
 };
 

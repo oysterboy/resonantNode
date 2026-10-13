@@ -2,14 +2,34 @@
 
 #include <cstring>
 
+const char* FrequencyMatchDetector::stableReason(const char* text) {
+    // Every string the detector copies into _gateReason, _noEmitReason and
+    // _pendingState (issue #31).
+    static const char* const kKnown[] = {
+        "none", "open", "closed", "rejected", "refractory", "duration_too_short",
+        "no_frequency_evidence", "freq_score_too_low", "freq_contrast_too_low",
+        "freq_score_and_contrast_too_low", "freq_release_score_too_low",
+        "freq_release_contrast_too_low", "freq_release_score_and_contrast_too_low",
+    };
+    if (text == nullptr || text[0] == '\0') {
+        return "unknown";
+    }
+    for (const char* known : kKnown) {
+        if (strcmp(text, known) == 0) {
+            return known;
+        }
+    }
+    return "unknown";
+}
+
 const char* FrequencyMatchDetector::frequencyRejectReasonFromState() const {
     if (_pendingAccepted) {
         return "none";
     }
     if (_pendingClosed) {
-        return _noEmitReason[0] != '\0' ? _noEmitReason : "unknown";
+        return stableReason(_noEmitReason);
     }
-    return _gateReason[0] != '\0' ? _gateReason : "unknown";
+    return stableReason(_gateReason);
 }
 
 namespace {
@@ -81,9 +101,9 @@ void FrequencyMatchDetector::buildReport(detection::DetectorReport& out, unsigne
     out.frequency.aggregates.bothOkCount = _diagnosticsBothOkCount;
     out.frequency.aggregates.matchCount = _diagnosticsMatchedCount;
     out.frequency.inspect.rejectReason = frequencyRejectReasonFromState();
-    out.frequency.inspect.noEmitReason = _noEmitReason;
-    out.frequency.inspect.gateReason = _gateReason;
-    out.frequency.inspect.pendingState = _pendingState;
+    out.frequency.inspect.noEmitReason = stableReason(_noEmitReason);
+    out.frequency.inspect.gateReason = stableReason(_gateReason);
+    out.frequency.inspect.pendingState = stableReason(_pendingState);
     out.frequency.inspect.readyOk = _evidenceOk;
     out.frequency.inspect.gateOpen = _attackOk;
     out.frequency.inspect.opened = _pendingActive || _pendingClosed || _pendingAccepted || _pendingOpenMs > 0;

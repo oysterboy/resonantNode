@@ -122,6 +122,22 @@ void FrequencyMatchDetector::resetRejectSummary() {
     _pendingOccurrence = {};
     _lastEmittedOccurrenceCloseMs = 0;
     resetPendingFacts();
+    // The ids and facts above are wiped, so the pending lifecycle goes too
+    // (issue #31): kept, a pending open across a trial start closed with
+    // occurrenceId=0 and tail-only facts, and a closed accepted one was
+    // captured again as the new trial's report.
+    _pendingActive = false;
+    _pendingAccepted = false;
+    _pendingClosed = false;
+    _pendingOpenMs = 0;
+    _pendingOpenSample = 0;
+    _pendingPeakMs = 0;
+    _pendingPeakSample = 0;
+    _pendingCloseMs = 0;
+    _pendingCloseSample = 0;
+    _pendingHoldUpdates = 0;
+    _pendingDurationMs = 0;
+    _pendingLastMatchedMs = 0;
 }
 
 void FrequencyMatchDetector::clearFrozenReport() {
@@ -266,8 +282,8 @@ void FrequencyMatchDetector::updateBestRejectedPending() {
         _bestGapCount = _pendingGapCount;
         _bestIslandMaxMs = _pendingIslandMaxMs;
         _bestGapMaxMs = _pendingGapMaxMs;
-        _bestRejectReason = _noEmitReason[0] != '\0' ? _noEmitReason : "unknown";
-        _bestGateReason = _gateReason[0] != '\0' ? _gateReason : "unknown";
+        _bestRejectReason = stableReason(_noEmitReason);
+        _bestGateReason = stableReason(_gateReason);
     }
 }
 

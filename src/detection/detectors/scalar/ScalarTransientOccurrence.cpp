@@ -122,9 +122,15 @@ void ScalarTransientDetector::captureSelectedReject(uint64_t releaseObservedUs) 
     const unsigned long rejectDurationMs = _lastTransientRejectedDurationMs;
 
     if (!scalarRejectCandidateBeatsCurrent(_selectedReject, rejectDurationMs, _lastTransientRejectedStrength)) {
+        // The selected reject stays; refreeze so the report's rejected_count
+        // is current. No selectedRejectGeneration bump, so no new reject
+        // event (issue #31 B11, decision 2026-10-13).
+        freezeReport(timebase::msFromUs64(releaseObservedUs));
+        resetCandidateFacts();
         return;
     }
 
+    ++_selectedRejectGeneration;
     _selectedRejectPresent = true;
     _selectedReject.present = true;
     _selectedRejectOccurrenceId = _currentOccurrenceId != 0

@@ -1029,8 +1029,9 @@ sampleStep
 sampleMax
 ```
 
-`sampleMax` is a preflight row budget, but the emitted rows are still capped by
-the fixed `sampleRows` capacity.
+`sampleMax` is the row budget over all dumped trials (default 5000). Each
+trial must also fit the fixed `sampleRows` capacity (256 rows); the defaults
+(lead 50 ms, tail 800 ms, step 4 ms) give 213 rows per trial.
 
 ---
 

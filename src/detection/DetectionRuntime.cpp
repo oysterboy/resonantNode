@@ -209,11 +209,17 @@ void DetectionRuntime::drainDetectorReportEvents(unsigned long nowMs) {
     const uint32_t currentReportGeneration = _detectorReport.detectorId == DetectorId::ScalarTransient
         ? _scalarDetector.reportGeneration()
         : _frequencyDetector.reportGeneration();
+    // Scalar: one reject event per new selected reject, not per refreeze
+    // (a weaker reject refreezes for rejected_count; decision 2026-10-13).
+    // Frequency still emits per freeze, i.e. per rejected pending.
+    const uint32_t currentRejectGeneration = _detectorReport.detectorId == DetectorId::ScalarTransient
+        ? _scalarDetector.selectedRejectGeneration()
+        : currentReportGeneration;
 
     if (_detectorReport.selectedReject.present &&
         _detectorReport.selectedReject.occurrenceId != 0 &&
         (_detectorReport.selectedReject.occurrenceId != _lastEmittedSelectedRejectOccurrenceId ||
-         _lastEmittedSelectedRejectReportGeneration != currentReportGeneration)) {
+         _lastEmittedSelectedRejectReportGeneration != currentRejectGeneration)) {
         DetectionPipelineEvent event = {};
         event.kind = DetectionEventKind::RejectedSourceCandidate;
         event.eventId = ++_pipelineEventSequenceId;
@@ -243,7 +249,7 @@ void DetectionRuntime::drainDetectorReportEvents(unsigned long nowMs) {
         event.sourceRecord.sourceReportMatched = true;
         if (pushPipelineEvent(event)) {
             _lastEmittedSelectedRejectOccurrenceId = event.candidateId;
-            _lastEmittedSelectedRejectReportGeneration = currentReportGeneration;
+            _lastEmittedSelectedRejectReportGeneration = currentRejectGeneration;
         }
     }
 }

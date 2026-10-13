@@ -401,6 +401,10 @@ uint32_t ScalarTransientDetector::reportGeneration() const {
     return _reportGeneration;
 }
 
+uint32_t ScalarTransientDetector::selectedRejectGeneration() const {
+    return _selectedRejectGeneration;
+}
+
 void ScalarTransientDetector::setOnsetDetectionThreshold(float value) {
     _onsetDetectionThreshold = value;
 }

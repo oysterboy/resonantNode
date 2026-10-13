@@ -106,10 +106,10 @@ void AnalyzerApp::initializeSequenceTest(const PendingSequenceStart& pending) {
     if (_sequenceTest.sampleDumpTailMs < _sequenceTest.sampleDumpLeadMs) {
         _sequenceTest.sampleDumpTailMs = _sequenceTest.sampleDumpLeadMs;
     }
+    // sampleMax is the budget over all dumped trials; the per-trial buffer
+    // limit is checked separately in startSequenceTest. Clamping it to
+    // kMaxSampleRows refused any dump of two default trials (issue #31 B12).
     _sequenceTest.sampleDumpMaxRows = pending.sampleDumpMaxRows == 0 ? 1 : pending.sampleDumpMaxRows;
-    if (_sequenceTest.sampleDumpMaxRows > SequenceTest::kMaxSampleRows) {
-        _sequenceTest.sampleDumpMaxRows = SequenceTest::kMaxSampleRows;
-    }
     _sequenceTest.sampleDumpWarned = false;
     clearSequenceSampleDump();
     const char* setupLabel = pending.setupLabel;
@@ -214,14 +214,15 @@ void AnalyzerApp::startSequenceTest(const PendingSequenceStart& pending) {
         const unsigned long rowsPerTrial = ((_sequenceTest.sampleDumpLeadMs + _sequenceTest.sampleDumpTailMs) /
                                             _sequenceTest.sampleDumpStepMs) + 1UL;
         const unsigned long requestedRows = selectedTrialsEstimate * rowsPerTrial;
-        const unsigned long maxAllowedRows = _sequenceTest.sampleDumpMaxRows < SequenceTest::kMaxSampleRows
-            ? _sequenceTest.sampleDumpMaxRows
-            : SequenceTest::kMaxSampleRows;
         if (requestedRows > _sequenceTest.sampleDumpMaxRows || rowsPerTrial > SequenceTest::kMaxSampleRows) {
             Serial.print("SAMPLES_WARN reason=too_many_samples requested=");
             Serial.print(requestedRows);
             Serial.print(" max_allowed=");
-            Serial.println(maxAllowedRows);
+            Serial.print(_sequenceTest.sampleDumpMaxRows);
+            Serial.print(" rows_per_trial=");
+            Serial.print(rowsPerTrial);
+            Serial.print(" max_per_trial=");
+            Serial.println(static_cast<unsigned long>(SequenceTest::kMaxSampleRows));
             _sequenceTest.sampleDumpEnabled = false;
         }
     }
@@ -594,6 +595,28 @@ AnalyzerApp::SequenceTrialSelection AnalyzerApp::selectSequenceTrialSelection(un
     return selection;
 }
 
+// The detector-report copies held for a trial date from the event that
+// captured them. A weaker scalar reject refreezes the report for its
+// rejected_count without a new reject event (decision 2026-10-13, issue #31
+// B11), so bring their aggregate counts up to trial end.
+void AnalyzerApp::refreshCapturedDetectorReportAggregates() {
+    const detection::DetectorReport& live = _detection.activeDetectorReport();
+    if (live.detectorId == detection::DetectorId::Unknown) {
+        return;
+    }
+    detection::DetectorReport* const copies[] = {
+        &_sequenceTest.primaryValidDetectorReport,
+        &_sequenceTest.primaryAcceptedDetectorReport,
+        &_sequenceTest.bestRejectedDetectorReport,
+        &_sequenceTest.selectedSourceReject.detectorReport,
+    };
+    for (detection::DetectorReport* copy : copies) {
+        if (copy->detectorId == live.detectorId) {
+            copy->aggregates = live.aggregates;
+        }
+    }
+}
+
 void AnalyzerApp::finalizeSequenceTrial(unsigned long now) {
     if (_sequenceTest.currentTrial == 0) {
         return;
@@ -605,6 +628,7 @@ void AnalyzerApp::finalizeSequenceTrial(unsigned long now) {
 
     // Flush late emitter markers before snapshotting the trial.
     pollEmitterSerial();
+    refreshCapturedDetectorReportAggregates();
     const uint32_t finalizeStartUs = timebase::nowUs();
     auto& diagnostics = _sequenceTest.currentTrialDiagnostics;
 

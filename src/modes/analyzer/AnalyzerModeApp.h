@@ -291,7 +291,7 @@ private:
         unsigned long sampleDumpEveryNth = 0;
         unsigned long sampleDumpLeadMs = 50;
         unsigned long sampleDumpTailMs = 800;
-        unsigned long sampleDumpStepMs = 1;
+        unsigned long sampleDumpStepMs = 4; // 50 + 800 ms at 4 ms = 213 rows, fits kMaxSampleRows (issue #31 B12)
         unsigned long sampleDumpMaxRows = 5000;
         bool sampleDumpWarned = false;
         bool sampleDumpSelectedForTrial = false;
@@ -435,6 +435,7 @@ private:
     void stopSequenceTest();
     void updateSequenceTest(unsigned long now);
     void finalizeSequenceTrial(unsigned long now);
+    void refreshCapturedDetectorReportAggregates();
     bool runRawTrigger(unsigned long toneHz, unsigned long durationMs, unsigned long postMs, unsigned long preMs, unsigned long decim, RawCaptureMode mode);
     void printAudioSourceSummary() const;
     void printAudioRunSummary() const;

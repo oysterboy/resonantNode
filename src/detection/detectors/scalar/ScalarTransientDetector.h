@@ -88,6 +88,10 @@ public:
     void buildReport(detection::DetectorReport& out, unsigned long nowMs) const;
     const detection::DetectorReport& latestReport() const;
     uint32_t reportGeneration() const;
+    // Bumped only when the selected reject changes. A weaker reject refreezes
+    // the report (rejected_count) without it, so DetectionRuntime emits one
+    // RejectedSourceCandidate per new best reject (decision 2026-10-13).
+    uint32_t selectedRejectGeneration() const;
     bool popOccurrence(detection::Occurrence& out);
     bool hasPendingOccurrence() const;
 
@@ -179,6 +183,7 @@ private:
     detection::SelectedRejectSummary _selectedReject = {};
     detection::DetectorReport _latestReport = {};
     uint32_t _reportGeneration = 0;
+    uint32_t _selectedRejectGeneration = 0;
 
     // Diagnostics state.
     uint64_t _lastStatsPrintUs = 0;

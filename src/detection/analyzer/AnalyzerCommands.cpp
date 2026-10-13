@@ -200,7 +200,7 @@ void AnalyzerApp::printSequenceHelp() {
     Serial.println("SEQ IN: STATUS");
     Serial.println("SEQ IN: [sampleFirst=N] [sampleEvery=N] [sampleLead=MS] [sampleTail=MS] [sampleStep=MS] [sampleMax=N]");
     Serial.println("SEQ IN: sample dump is detector-input curve tooling, not RAW capture, not the audio envelope curve, not DetectorReport, not SEQ_SOURCE / SEQ_INSPECT / SEQ_DETAIL, and not canonical Analyzer truth");
-    Serial.println("SEQ IN: sampleMax is a preflight row budget; emitted rows are still capped by the fixed sampleRows capacity");
+    Serial.println("SEQ IN: sampleMax is the row budget over all dumped trials (default 5000); one trial must also fit the 256-row sampleRows buffer (default sampleStep=4)");
     Serial.println("SEQ OUT: SEQ start / SEQ running / SEQ_TRIAL / SEQ_INSPECT / SEQ_DETAIL / SEQ_SOURCE / SEQ_SOURCE_CORE / SEQ_SOURCE_SPEC / SEQ_SUMMARY / SEQ REPORT / AUDIO run");
     Serial.println("SEQ OUT: SAMPLES_BEGIN / SAMPLES_NOTE / SAMPLES_END");
     Serial.println("SEQ OUT: sample fields are t,value (value is the selected detector input stream)");
@@ -613,7 +613,10 @@ void AnalyzerApp::handleUsbLine(const char* line) {
             _pendingSequenceStart.sampleDumpEveryNth = 0;
             _pendingSequenceStart.sampleDumpLeadMs = 50;
             _pendingSequenceStart.sampleDumpTailMs = 800;
-            _pendingSequenceStart.sampleDumpStepMs = 1;
+            // 4 ms: the default 850 ms window in 213 rows, inside the 256-row
+            // per-trial buffer; at 1 ms (851 rows) every default dump was
+            // refused (decision 2026-10-13, issue #31 B12).
+            _pendingSequenceStart.sampleDumpStepMs = 4;
             _pendingSequenceStart.sampleDumpMaxRows = 5000;
             _pendingSequenceStart.startupDelayMs = 1000;
             _pendingSequenceStart.reportSettleMs = 500;

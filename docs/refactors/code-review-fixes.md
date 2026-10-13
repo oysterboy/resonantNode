@@ -1,6 +1,9 @@
 # Code-review findings: debug and fix (step 3d, issue #31, NODE-018)
 
-Status: active. Review done 2026-10-13; no fix written yet.
+Status: active. Review 2026-10-13; P1-P3, tiers A and B and the cheap
+tier D items committed the same day (section 5), compile-unverified: the
+session's network policy blocked the PlatformIO registry. Open: a real
+build of all six envs, the bench gate, P4, tier C hand-off.
 Roadmap: `docs/roadmaps/roadmap-node.md` NODE-018, step 3d of
 `docs/roadmaps/roadmap-0-steps.md`.
 Source: a read-only review of all of `src/` (~22k lines, five areas in
@@ -261,4 +264,53 @@ file is open for something else.
 
 ## 5. Results
 
-(none yet)
+### 2026-10-13: fixes committed, not compiled, not run
+
+The cloud session that wrote these could not build: the environment's
+network policy denies `api.registry.platformio.org` /
+`dl.registry.platformio.org`, so `pio run` never installed the espressif32
+platform. A host `g++ -fsyntax-only` pass over every `src/*.cpp` against
+stub Arduino / FreeRTOS headers, diffed before and after, shows no new
+error and none on a changed line. This is not a build. **First step on
+the dev machine: `pio run` for all six envs.**
+
+| Item | Commit | What changed | Status |
+|---|---|---|---|
+| P1 | 852d58f | `tokenValue()`: scalar PARAM values read after the first `=` (all 14 keys) | committed |
+| P2a | 852d58f | `_pendingRefractoryArmed`: set at close, dropped on the first update past the deadline, gates the refractory | committed; millis-offset check open |
+| P2b | 852d58f | `refillBlock` raises `_blockOverflowBeforeBlock` on drops; `readBlock` hands it over once; `AudioSignal::update(..., overflowDuringBlock)`; Node and Analyzer loops pass it for every sample of that block; ScalarTransient and FrequencyMatch latch it from open to close; evaluator maps it for Frequency too | committed. The Node still only counts it (`_rbOverflowPending`); whether Behavior should ignore such verdicts is a decision, not made here |
+| P3 | 852d58f | five counters reset per trial; `trialPipelineOverflowCountAtStart` added; both detection-side baselines taken after the diag reset | committed |
+| P4 | - | - | open, needs bench |
+| A1 | dc66453 | `performRbRebase` stops a sounding chirp; verdicts reach Behavior only while outputs are enabled (also closes D26) | committed |
+| A2 | dc66453 | `resetDetectionState` re-applies detection config only | committed |
+| A3 | dc66453 | `RB PROFILE` argument at +10 | committed |
+| A4 | dc66453 | node line buffer 256, command copies match, over-long line -> `RB ERR line_too_long max=255` | committed |
+| A5 | dc66453 | `PARAM SET` rejects NaN and trailing junk (trailing spaces allowed) | committed |
+| A6 | dc66453 | `notifyChirpFinished` takes `timebase::nowMs()` after `update()`; TX latency / 8 ms quantisation left to measure under SELFTEST `own_chirp_suppressed` | partly; measurement open |
+| B7 | ee9df48 | `resetRejectSummary` also drops the pending lifecycle. A pending open across a trial start is now dropped, not emitted with id 0 | committed |
+| B8 | ee9df48 | `stableReason()` maps reason / state buffers to their literal for frozen reports and the best-reject snapshot | committed |
+| B9 | ee9df48 | OBS skips the post-finalize settle push; `OBS_WARN window+report_settle>period` at start | committed |
+| B10 | - | no change: with P3 the counters no longer leak, and events between finalize and the next trigger are outside every window, so `unexpected` is right for them. The real hazard was OBS window + settle > period, now warned (B9) | closed, no code |
+| B11 | ee9df48 | carrier-quality reasons -> Quality, MatchedMeanTooLow -> Strength | committed. Stale `rejected_count`: **deferred** - a refreeze bumps `reportGeneration`, which `DetectionRuntime` turns into a new `RejectedSourceCandidate` event carrying the old selected reject and changes SEQ reject counts. Needs a decision on what one reject event means |
+| B12 | ee9df48 | SEQ start: parse into copies, activate only on success. Worse than reviewed: an `ERR SEQ` used to start the run anyway on the default profile. `avg_dt_ms` skips Rejected trials. RAW mean divides by the summed count | committed. Sample-dump preflight: no change, it compares against `sampleMax` as the help documents; the real issue is the defaults (lead 50 + tail 800 at step 1 = 851 rows > 256 per trial), left for the owner |
+| C13-C20 | - | named in the owning issues (#11, #14/#15, #16) | handed off |
+| D21 | - | sample index ignores dropped buffers: changes every detector sample span after a drop; left for when P2b is bench-checked | open |
+| D22-D24 | e04f967 | tone amplitude clamp < 1.0, sweep wrap without underflow, RB strength sum uint64 | committed |
+| D25 | ee9df48 | sample-dump trial count in closed form (checked equal to the loop on 21,600 cases) | committed |
+| D26 | dc66453 | with A1 | committed |
+
+Bench checks this needs (gate, section 2), in order:
+1. All six envs build.
+2. Analyzer: `PARAM scalarMinStrength=1234 scalar_min_release_coverage_ms=90
+   scalar_min_longest_island_ms=80` -> `PARAM STATUS` echoes the same.
+3. SEQ T3 on D-AMP with one forced reject early (e.g. a short `dur=`):
+   later misses classify `NoOccurrence`; no carried-over
+   `PipelineQueueOverflow`.
+4. `SEQ start profile=Bogus` prints ERR and does not start.
+5. Node: `RB BEHAV refractory=0`, `RB rebase force` -> `RB BEHAV` still
+   shows refractory=0; `RB rebase force` during an idle chirp -> no answer.
+6. P2a: a millis-offset build (like the wraptest envs) past 2^31 ms on
+   TonalPulseFreq keeps detecting.
+7. P2b: a forced loop stall (e.g. `RB log full` at high rate) during a
+   chirp -> `RB summary` overflow count and Analyzer `buffer_overrun` move
+   together.

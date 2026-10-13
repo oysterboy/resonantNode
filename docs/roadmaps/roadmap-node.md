@@ -336,7 +336,7 @@ bench, and a run past 72 min of real uptime.
 
 ### NODE-018 - code-review findings: debug and fix
 
-Status: OPEN 2026-10-13 (step 3d, issue #31). Review done, no fix written.
+Status: OPEN 2026-10-13 (step 3d, issue #31). P1-P3, tiers A, B, cheap D committed 852d58f..e04f967, not compiled (registry blocked in that session); build, bench gate, P4, B11 stale count, D21 open.
 Pass doc: docs/refactors/code-review-fixes.md (findings, priority fixes P1-P4, tiered list for the rest).
 
 ```text

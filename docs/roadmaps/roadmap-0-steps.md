@@ -184,6 +184,9 @@ the previous gate open unless the step says it can run in parallel.
    carried-over overflow; P2a checked with a millis-offset build; P4
    measured and fixed or decided; the remaining findings fixed here
    (tiers A, B) or named in their owning step's issue (tiers C, D).
+   Status 2026-10-13: P1-P3, tiers A, B and cheap D committed
+   (852d58f..e04f967), compile-unverified (PlatformIO registry blocked in
+   that session); build, bench checks and P4 open (pass doc section 5).
 
 4. Switch to D-AMP. (issue #21)
    Where: NODE-011 (roadmap-node.md).

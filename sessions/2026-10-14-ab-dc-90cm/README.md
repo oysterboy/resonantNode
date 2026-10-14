@@ -15,3 +15,12 @@ The x0.588 scaling keeps the chirp strength within ~3 % (same thresholds apply).
 The mic floor in the quiet SELFTEST window is ~4.4x higher with the DC blocker
 (First Difference attenuates the 100-1000 Hz band the blocker passes), so the SELFTEST
 SNR drops by ~12 dB. Silence, speech and music with the new filter not yet run.
+
+## 100 cm (a failing spacing at 3,200 Hz): 2026-10-14-ab-dc-100cm, -ab-fd-100cm
+
+| | First Difference | DC blocker |
+|---|---|---|
+| T3 (10) | 0/10, source rejects, 36-50 ms, strength 3,780-4,020 | 0/10, source rejects, 84-86 ms (just under the 85 ms minimum), strength 3,970-4,150 |
+
+The filter does not change the position problem (same strength, same null); the DC blocker
+keeps the event ~40 ms longer.

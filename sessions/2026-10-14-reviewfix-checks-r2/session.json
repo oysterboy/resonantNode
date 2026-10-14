@@ -1,0 +1,178 @@
+{
+  "purpose": "#32 bench checks 15,17,18,21 (tier R2, main 568dbc0)",
+  "created": "2026-10-14T10:45:15",
+  "setup": {
+    "distance_cm": 110.0,
+    "orientation": "",
+    "emitter_fw": "",
+    "notes": [
+      "E2 Analyzer, E3 Emitter, setup as 2026-10-14-reviewfix-checks"
+    ]
+  },
+  "runs": [
+    {
+      "name": "T3_freq_dur100",
+      "file": "T3_freq_dur100.568dbc0.log",
+      "firmware": {
+        "role": "analyzer",
+        "git": "568dbc0",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "commands": [
+        "SEQ DIAG off",
+        "SEQ start profile=TonalPulseFreq tries=10 dur=100 mode=detail when=all verbose=1"
+      ],
+      "started": "2026-10-14T10:45:21",
+      "duration_s": 37,
+      "summary": {
+        "profile": "TonalPulseFreq",
+        "detector": "frequency_match",
+        "complete": true,
+        "trial_results": {
+          "expected": 10
+        },
+        "line_counts": {
+          "SEQ_TRIAL": 10,
+          "SEQ_SUMMARY": 1
+        },
+        "trials": "10",
+        "completed": "10",
+        "expected_trials": "10",
+        "early_trials": "0",
+        "late_trials": "0",
+        "miss_trials": "0",
+        "duplicate_trials": "0",
+        "unexpected_trials": "0",
+        "rejected_trials": "0",
+        "buffer_overrun_trials": "0",
+        "detector_accepted_trials": "10",
+        "detector_reject_trials": "0",
+        "pattern_valid_trials": "10",
+        "pattern_rejected_trials": "0",
+        "avg_dt_ms": "24",
+        "avg_strength": "10185.0",
+        "avg_conf": "1.00"
+      }
+    },
+    {
+      "name": "T3_freq_dur40",
+      "file": "T3_freq_dur40.568dbc0.log",
+      "firmware": {
+        "role": "analyzer",
+        "git": "568dbc0",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "commands": [
+        "SEQ DIAG off",
+        "SEQ start profile=TonalPulseFreq tries=10 dur=40 mode=detail when=all verbose=1"
+      ],
+      "started": "2026-10-14T10:46:01",
+      "duration_s": 37,
+      "summary": {
+        "profile": "TonalPulseFreq",
+        "detector": "frequency_match",
+        "complete": true,
+        "trial_results": {
+          "expected": 10
+        },
+        "line_counts": {
+          "SEQ_TRIAL": 10,
+          "SEQ_SUMMARY": 1
+        },
+        "trials": "10",
+        "completed": "10",
+        "expected_trials": "10",
+        "early_trials": "0",
+        "late_trials": "0",
+        "miss_trials": "0",
+        "duplicate_trials": "0",
+        "unexpected_trials": "0",
+        "rejected_trials": "0",
+        "buffer_overrun_trials": "0",
+        "detector_accepted_trials": "10",
+        "detector_reject_trials": "0",
+        "pattern_valid_trials": "10",
+        "pattern_rejected_trials": "0",
+        "avg_dt_ms": "24",
+        "avg_strength": "8851.2",
+        "avg_conf": "1.00"
+      }
+    },
+    {
+      "name": "T3_stall1200",
+      "file": "T3_stall1200.568dbc0.log",
+      "firmware": {
+        "role": "analyzer",
+        "git": "568dbc0",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "commands": [
+        "SEQ DIAG on",
+        "SEQ start profile=TonalPulseScalar tries=8 loopDelayMs=1200 mode=detail when=all verbose=1"
+      ],
+      "started": "2026-10-14T10:47:06",
+      "duration_s": 601,
+      "summary": {
+        "profile": null,
+        "detector": null,
+        "complete": false,
+        "trial_results": {},
+        "line_counts": {}
+      }
+    },
+    {
+      "name": "T3_loopdelay200",
+      "file": "T3_loopdelay200.568dbc0.log",
+      "firmware": {
+        "role": "analyzer",
+        "git": "568dbc0",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "commands": [
+        "SEQ DIAG on",
+        "SEQ start profile=TonalPulseScalar tries=10 mode=detail when=all verbose=1"
+      ],
+      "started": "2026-10-14T10:58:30",
+      "duration_s": 38,
+      "summary": {
+        "profile": "TonalPulseScalar",
+        "detector": "scalar_transient",
+        "complete": true,
+        "trial_results": {
+          "rejected": 7,
+          "miss": 3
+        },
+        "line_counts": {
+          "SEQ_TRIAL": 10,
+          "SEQ_INSPECT": 10,
+          "SEQ_SOURCE": 10,
+          "SEQ_SOURCE_CORE": 10,
+          "SEQ_SOURCE_SPEC": 7,
+          "SEQ_EXPLAIN": 10,
+          "SEQ_SUMMARY": 1
+        },
+        "trials": "10",
+        "completed": "10",
+        "expected_trials": "0",
+        "early_trials": "0",
+        "late_trials": "0",
+        "miss_trials": "3",
+        "duplicate_trials": "0",
+        "unexpected_trials": "0",
+        "rejected_trials": "7",
+        "buffer_overrun_trials": "10",
+        "detector_accepted_trials": "0",
+        "detector_reject_trials": "7",
+        "pattern_valid_trials": "0",
+        "pattern_rejected_trials": "0",
+        "avg_dt_ms": "-1",
+        "avg_strength": "3324.7",
+        "avg_conf": "0.00"
+      }
+    }
+  ]
+}

@@ -451,3 +451,7 @@ session,run,date,firmware,role,profile,detector,distance_cm,purpose,complete,tri
 2026-10-14-reviewfix-checks,T3_normal,2026-10-14,e4d6975,analyzer,TonalPulseScalar,scalar_transient,110.0,"#32 bench checks 3,6,7 (code-review fixes, main e4d6975)",1,10,10,10,0,0,0,0,0,0,0,10,0,10,0,26,9804.6,1.00
 2026-10-14-reviewfix-checks,T3_freq_msoffset,2026-10-14,e4d6975,analyzer,TonalPulseFreq,frequency_match,110.0,"#32 bench checks 3,6,7 (code-review fixes, main e4d6975)",1,60,60,51,0,0,0,0,0,9,0,60,0,51,9,25,9202.0,1.00
 2026-10-14-reviewfix-checks,T3_stall,2026-10-14,e4d6975,analyzer,TonalPulseScalar,scalar_transient,110.0,"#32 bench checks 3,6,7 (code-review fixes, main e4d6975)",1,10,10,10,0,0,0,0,0,0,0,10,0,10,0,22,11544.1,1.00
+2026-10-14-reviewfix-checks-r2,T3_freq_dur100,2026-10-14,568dbc0,analyzer,TonalPulseFreq,frequency_match,110.0,"#32 bench checks 15,17,18,21 (tier R2, main 568dbc0)",1,10,10,10,0,0,0,0,0,0,0,10,0,10,0,24,10185.0,1.00
+2026-10-14-reviewfix-checks-r2,T3_freq_dur40,2026-10-14,568dbc0,analyzer,TonalPulseFreq,frequency_match,110.0,"#32 bench checks 15,17,18,21 (tier R2, main 568dbc0)",1,10,10,10,0,0,0,0,0,0,0,10,0,10,0,24,8851.2,1.00
+2026-10-14-reviewfix-checks-r2,T3_stall1200,2026-10-14,568dbc0,analyzer,,,110.0,"#32 bench checks 15,17,18,21 (tier R2, main 568dbc0)",0,,,,,,,,,,,,,,,,,
+2026-10-14-reviewfix-checks-r2,T3_loopdelay200,2026-10-14,568dbc0,analyzer,TonalPulseScalar,scalar_transient,110.0,"#32 bench checks 15,17,18,21 (tier R2, main 568dbc0)",1,10,10,0,0,0,3,0,0,7,10,0,7,0,0,-1,3324.7,0.00

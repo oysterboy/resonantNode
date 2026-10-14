@@ -216,7 +216,7 @@ the previous gate open unless the step says it can run in parallel.
    Gate: one decision, recorded; code default, implementation-status.md,
    and the Node's registered params all agree with it.
 
-5a. [NEXT] Clean baseline in the new geometry (mic and speaker facing up), after
+5a. [NEXT] Clean baseline in the new geometry (mic and speaker facing up), after (issue #35)
    closing step 5 on the old one.
    Where: DET-007, docs/research/scalar-detector-extensions.md (Baseline).
    Why: every number so far is horizontal (speaker faces mic, 110 cm, noise

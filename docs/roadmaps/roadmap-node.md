@@ -217,7 +217,7 @@ Every node passes the amp check (damp-bench-check.md AC) before the trial.
 
 ### NODE-016 - status LED on D-AMP
 
-Status: IN PROGRESS (step 4a, issue #29, sub-issue of #21; owner request 2026-10-11). Owner choices 2026-10-12: one LED; 1 flash on every accepted verdict (not only consumed patterns), 2 on every own chirp start. Firmware 261f088 (GPIO 2 on D-AMP, 80 ms on / 120 ms off, PWM levels and solid-while-chirping removed), compile-verified on six envs, flashed on E2 (SELFTEST PASS, bench:sessions/2026-10-12-selftest-e2-node-led). Gate pending: watch the LED on E2 (1 flash per external chirp, 2 per answer).
+Status: DONE 2026-10-14 (step 4a, issue #29, sub-issue of #21; owner request 2026-10-11). Owner choices 2026-10-12: one LED; 1 flash on every accepted verdict (not only consumed patterns), 2 on every own chirp start. Firmware 261f088 (GPIO 2 on D-AMP, 80 ms on / 120 ms off, PWM levels and solid-while-chirping removed), compile-verified on six envs, flashed on E2 (SELFTEST PASS, bench:sessions/2026-10-12-selftest-e2-node-led). Gate: external LED (GPIO 2, 330 ohm) fitted on E2 and E3, both running the Node build 568dbc0; owner reported the LEDs work (visual check, not recorded in a bench session).
 
 ```text
 Today: STATUS_LED_PIN is -1 on D-AMP (BoardConfig.h); NodeDebug's detect

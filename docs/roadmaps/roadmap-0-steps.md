@@ -194,7 +194,7 @@ the previous gate open unless the step says it can run in parallel.
    docs name D-AMP as the node hardware. (Default board and piezo fallback envs already land in
    step 2.)
 
-4a. [PARTIAL 2026-10-12] Status LED on D-AMP: 1 flash on detect, 2 on emit. (issue #29,
+4a. [DONE 2026-10-14] Status LED on D-AMP: 1 flash on detect, 2 on emit. (issue #29,
    sub-issue of #21)
    Where: NODE-016 (roadmap-node.md).
    Why: D-AMP has no LED pin (STATUS_LED_PIN -1) and the detect flash has

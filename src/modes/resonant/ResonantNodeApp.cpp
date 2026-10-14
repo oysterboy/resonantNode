@@ -565,6 +565,41 @@ void Node::registerDetectionParams() {
                              "detection.freq_attack_contrast_min", &freq.attackContrastMin, 0.0f, 1000.0f);
     _paramRegistry.addFloat(param::ParamId::Detection_FreqReleaseContrastMin, param::ModuleId::Detection,
                              "detection.freq_release_contrast_min", &freq.releaseContrastMin, 0.0f, 1000.0f);
+    // TonalPulseScalar (the Node's production profile, decisions/
+    // 2026-10-14-node-ships-tonalpulsescalar.md). Same flat names as the
+    // Analyzer's PARAM keys, under "detection.". The ms fields are
+    // `unsigned long` in the config; on this 32-bit target it is the same
+    // size as uint32_t, which the registry stores.
+    static_assert(sizeof(unsigned long) == sizeof(uint32_t), "scalar ms fields are bound as uint32_t");
+    detection::ScalarTransientConfig& sc = _activeDetectionProfile.scalarTransient;
+    using param::ModuleId;
+    using param::ParamId;
+    _paramRegistry.addFloat(ParamId::Detection_ScalarOnsetThreshold, ModuleId::Detection,
+                             "detection.scalar_onset_threshold", &sc.onsetDetectionThreshold, 0.0f, 200000.0f);
+    _paramRegistry.addFloat(ParamId::Detection_ScalarReleaseThreshold, ModuleId::Detection,
+                             "detection.scalar_release_threshold", &sc.onsetReleaseThreshold, 0.0f, 200000.0f);
+    _paramRegistry.addUInt32(ParamId::Detection_ScalarCooldownMs, ModuleId::Detection,
+                             "detection.scalar_cooldown_ms", reinterpret_cast<uint32_t*>(&sc.cooldownAfterOnsetMs), 0U, 10000U);
+    _paramRegistry.addUInt32(ParamId::Detection_ScalarMinDurationMs, ModuleId::Detection,
+                             "detection.scalar_min_duration_ms", reinterpret_cast<uint32_t*>(&sc.minTransientDurationMs), 0U, 5000U);
+    _paramRegistry.addUInt32(ParamId::Detection_ScalarMaxDurationMs, ModuleId::Detection,
+                             "detection.scalar_max_duration_ms", reinterpret_cast<uint32_t*>(&sc.maxTransientDurationMs), 0U, 5000U);
+    _paramRegistry.addFloat(ParamId::Detection_ScalarMinPeakStrength, ModuleId::Detection,
+                             "detection.scalar_min_peak_strength", &sc.minTransientPeakStrength, 0.0f, 200000.0f);
+    _paramRegistry.addUInt32(ParamId::Detection_ScalarReleaseDebounceMs, ModuleId::Detection,
+                             "detection.scalar_release_debounce_ms", reinterpret_cast<uint32_t*>(&sc.releaseDebounceMs), 0U, 1000U);
+    _paramRegistry.addBool(ParamId::Detection_ScalarRequireCarrierQuality, ModuleId::Detection,
+                            "detection.scalar_require_carrier_quality", &sc.requireCarrierQuality);
+    _paramRegistry.addBool(ParamId::Detection_ScalarRequireMinStrength, ModuleId::Detection,
+                            "detection.scalar_require_min_strength", &sc.requireMinStrength);
+    _paramRegistry.addFloat(ParamId::Detection_ScalarMinStrength, ModuleId::Detection,
+                             "detection.scalar_min_strength", &sc.minMatchedMeanStrength, 0.0f, 200000.0f);
+    _paramRegistry.addUInt32(ParamId::Detection_ScalarMinReleaseCoverageMs, ModuleId::Detection,
+                             "detection.scalar_min_release_coverage_ms", reinterpret_cast<uint32_t*>(&sc.minCoverageAboveReleaseMs), 0U, 5000U);
+    _paramRegistry.addUInt32(ParamId::Detection_ScalarMinLongestIslandMs, ModuleId::Detection,
+                             "detection.scalar_min_longest_island_ms", reinterpret_cast<uint32_t*>(&sc.minLongestIslandMs), 0U, 5000U);
+    _paramRegistry.addUInt32(ParamId::Detection_ScalarMaxGapMs, ModuleId::Detection,
+                             "detection.scalar_max_gap_ms", reinterpret_cast<uint32_t*>(&sc.maxGapMs), 0U, 5000U);
 }
 
 void Node::configureI2SParameters() {

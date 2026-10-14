@@ -50,6 +50,19 @@ enum class ParamId : uint16_t {
     Detection_FreqReleaseScoreMin,
     Detection_FreqAttackContrastMin,
     Detection_FreqReleaseContrastMin,
+    Detection_ScalarOnsetThreshold,
+    Detection_ScalarReleaseThreshold,
+    Detection_ScalarCooldownMs,
+    Detection_ScalarMinDurationMs,
+    Detection_ScalarMaxDurationMs,
+    Detection_ScalarMinPeakStrength,
+    Detection_ScalarReleaseDebounceMs,
+    Detection_ScalarRequireCarrierQuality,
+    Detection_ScalarRequireMinStrength,
+    Detection_ScalarMinStrength,
+    Detection_ScalarMinReleaseCoverageMs,
+    Detection_ScalarMinLongestIslandMs,
+    Detection_ScalarMaxGapMs,
 };
 
 enum class ParamSetStatus : uint8_t {

@@ -263,7 +263,7 @@ the previous gate open unless the step says it can run in parallel.
    Follows 5a; the gate runs of 3b (#28) and 4 (#21) follow this.
 
 5b. [IDEA] Scalar detector extensions: pulse trains as one signal, lower
-   frequencies, frequency drift. (issue to open when started)
+   frequencies, frequency drift. (issue #36)
    Where: DET-011..DET-013, docs/research/scalar-detector-extensions.md.
    Gate: per experiment, a bench session and a lab/decision line; order
    relative to step 6 is the owner's call.

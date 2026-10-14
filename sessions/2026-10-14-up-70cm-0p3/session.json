@@ -1,0 +1,59 @@
+{
+  "purpose": "step 5a (#35): upwards geometry, 70 cm, Emitter 0.3 FS, Scalar, main c34fee9",
+  "created": "2026-10-14T16:05:22",
+  "setup": {
+    "distance_cm": 70.0,
+    "orientation": "mic and speaker facing up, both boards on the bench",
+    "emitter_fw": "",
+    "notes": [
+      "stock Emitter 0.3 FS; window and doors closed, Roomba off; compare 2026-10-14-up-70cm-0p5"
+    ]
+  },
+  "runs": [
+    {
+      "name": "T3_scalar",
+      "file": "T3_scalar.c34fee9.log",
+      "firmware": {
+        "role": "analyzer",
+        "git": "c34fee9",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "commands": [
+        "SEQ DIAG off",
+        "SEQ start profile=TonalPulseScalar tries=50 mode=detail when=all verbose=1"
+      ],
+      "started": "2026-10-14T16:05:28",
+      "duration_s": 165,
+      "summary": {
+        "profile": "TonalPulseScalar",
+        "detector": "scalar_transient",
+        "complete": true,
+        "trial_results": {
+          "rejected": 50
+        },
+        "line_counts": {
+          "SEQ_TRIAL": 50,
+          "SEQ_SUMMARY": 1
+        },
+        "trials": "50",
+        "completed": "50",
+        "expected_trials": "0",
+        "early_trials": "0",
+        "late_trials": "0",
+        "miss_trials": "0",
+        "duplicate_trials": "0",
+        "unexpected_trials": "0",
+        "rejected_trials": "50",
+        "buffer_overrun_trials": "0",
+        "detector_accepted_trials": "0",
+        "detector_reject_trials": "50",
+        "pattern_valid_trials": "0",
+        "pattern_rejected_trials": "0",
+        "avg_dt_ms": "-1",
+        "avg_strength": "3509.2",
+        "avg_conf": "0.00"
+      }
+    }
+  ]
+}

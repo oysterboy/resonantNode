@@ -9,6 +9,7 @@
 #include <freertos/semphr.h>
 
 #include "../app/RuntimeDefaults.h"
+#include "../audio/PcmPreprocessor.h"
 #include "../audio/AudioPcm.h"
 #include "../audio/AudioSource.h"
 
@@ -51,8 +52,6 @@ public:
 
 private:
     bool installPort();
-    int32_t preprocessSample(int32_t current);
-    void resetPreprocessState();
     bool refillBlock();
     void recordReadAttempt(int requestedBytes, int bytesRead, bool readError);
 
@@ -62,7 +61,7 @@ private:
     int _dataOutPin;
     int _sampleRate;
     int _bitsPerSample;
-    runtime::PcmPreprocessMode _preprocessMode = runtime::kPcmPreprocessMode;
+    audio::PcmPreprocessor _preprocessor;
     bool _started = false;
     // Mic samples per block; on a stereo board the read covers that many
     // frames (kFrameSlots words each) and keeps the mic slot.
@@ -93,7 +92,5 @@ private:
     uint32_t drainDroppedBuffers();
     bool _blockOverflowBeforeBlock = false;
     uint64_t _outputSampleIndex = 0;
-    int32_t _previousSample = 0;
-    bool _hasPreviousSample = false;
     AudioSourceStats _stats;
 };

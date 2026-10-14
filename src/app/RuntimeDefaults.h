@@ -68,12 +68,26 @@ These are defaults, not live profile state.
 #define I2S_COMM_FORMAT_VALUE I2S_COMM_FORMAT_STAND_I2S
 #endif
 
+// PCM preprocessor, set at build time: 0 None, 1 FirstDifference, 2 DcBlocker.
+// DcBlocker since step 5a (decisions/2026-10-14-dc-blocker-before-5a-baseline.md);
+// -D PCM_PREPROCESS_MODE_VALUE=1 builds the old First Difference for A/B.
+#ifndef PCM_PREPROCESS_MODE_VALUE
+#define PCM_PREPROCESS_MODE_VALUE 2
+#endif
+
 namespace runtime {
 
 enum class PcmPreprocessMode : uint8_t {
-    None,
-    FirstDifference,
+    None = 0,
+    FirstDifference = 1,
+    DcBlocker = 2,
 };
+
+// DcBlocker: high-pass corner and output scale. 0.588 = First Difference gain
+// at 3200 Hz / 16 kHz (sin(pi*0.2)), so thresholds tuned on it keep their
+// meaning at the chirp frequency; revisit in the 5a retune.
+constexpr float kDcBlockerCornerHz = 100.0f;
+constexpr float kDcBlockerOutputScale = 0.588f;
 
 constexpr uint32_t kDefaultChirpFrequencyHz = 3200UL;
 constexpr unsigned long kDefaultChirpDurationMs = 100UL;
@@ -86,7 +100,7 @@ constexpr int kDefaultAudioI2SDataOutPin = AUDIO_I2S_DOUT_PIN;
 constexpr size_t kDefaultAudioI2SReadBytes = I2S_READ_BYTES;
 constexpr int kDefaultAudioI2SDmaBufLen = I2S_DMA_BUF_LEN;
 constexpr int kDefaultAudioI2SDmaBufCount = I2S_DMA_BUF_COUNT;
-constexpr PcmPreprocessMode kPcmPreprocessMode = PcmPreprocessMode::FirstDifference;
+constexpr PcmPreprocessMode kPcmPreprocessMode = static_cast<PcmPreprocessMode>(PCM_PREPROCESS_MODE_VALUE);
 constexpr unsigned long kDefaultAudioSignalStartupWarmupMs = 2000UL;
 // I2S tone output (D-AMP): sine peak as a fraction of full scale, and the
 // on/off ramp. 0.3 since 2026-10-09 (#20): at 110 cm the stock

@@ -4,6 +4,7 @@
 
 #include "../app/RuntimeDefaults.h"
 #include "../app/TimeBase.h"
+#include "../audio/PcmPreprocessor.h"
 
 namespace selftest {
 
@@ -146,7 +147,7 @@ Result runMicCheck(Print& out, Tally& tally, AudioSourceI2S& source, uint32_t ca
     uint32_t bit8Ones = 0;
     int32_t minValue = INT32_MAX;
     int32_t maxValue = INT32_MIN;
-    int32_t previous = 0;
+    audio::PcmPreprocessor preprocessor;
     bool havePrevious = false;
     Envelope envelope;
     double floorSum = 0.0;
@@ -181,9 +182,8 @@ Result runMicCheck(Print& out, Tally& tally, AudioSourceI2S& source, uint32_t ca
             maxValue = decoded;
         }
         if (havePrevious) {
-            // Same First Difference as AudioSourceI2S::preprocessSample().
-            const int32_t fd = static_cast<int32_t>((static_cast<int64_t>(decoded) - previous) / 2);
-            const float env = envelope.push(fd);
+            // Same preprocessor as AudioSourceI2S (First Difference or DC blocker).
+            const float env = envelope.push(preprocessor.process(decoded));
             if (frames > kEnvelopeTaps) {
                 floorSum += env;
                 ++floorCount;
@@ -192,7 +192,9 @@ Result runMicCheck(Print& out, Tally& tally, AudioSourceI2S& source, uint32_t ca
                 }
             }
         }
-        previous = decoded;
+        if (!havePrevious) {
+            (void)preprocessor.process(decoded);
+        }
         havePrevious = true;
     }
 

@@ -64,12 +64,11 @@ AudioSourceI2S::AudioSourceI2S(int sckPin, int fsPin, int dataInPin, int sampleR
       _dataOutPin(dataOutPin),
       _sampleRate(sampleRate),
       _bitsPerSample(bitsPerSample),
-      _preprocessMode(runtime::kPcmPreprocessMode),
       _blockSamples(new (std::nothrow) int32_t[kRefillBatchSize] {}) {}
 
 void AudioSourceI2S::begin() {
     resetStats();
-    resetPreprocessState();
+    _preprocessor.reset();
     if (!_blockSamples) {
         _blockSamples.reset(new (std::nothrow) int32_t[kRefillBatchSize] {});
     }
@@ -227,7 +226,7 @@ bool AudioSourceI2S::readRawSample(int& sample, uint64_t& sampleTimeUs64) {
     const uint8_t* rawBytes = frameBytes + kMicSlot * static_cast<size_t>(bytesPerSample);
     // Keep the First Difference state current, so the next block does not
     // difference across the RAW gap and emit one spurious spike.
-    (void)preprocessSample(static_cast<int32_t>(decodePcmSample(rawBytes, bytesPerSample)));
+    (void)_preprocessor.process(static_cast<int32_t>(decodePcmSample(rawBytes, bytesPerSample)));
 
 #ifdef RAW_I2S_UNDECODED
     // Diagnostic build only (issue #24): hand RAW mode=i2s the undecoded
@@ -382,27 +381,6 @@ void AudioSourceI2S::resetStats() {
     _stats = {};
 }
 
-int32_t AudioSourceI2S::preprocessSample(int32_t current) {
-    if (_preprocessMode == runtime::PcmPreprocessMode::None) {
-        return current;
-    }
-
-    if (!_hasPreviousSample) {
-        _previousSample = current;
-        _hasPreviousSample = true;
-        return 0;
-    }
-
-    const audio::PcmIntermediate diff =
-        static_cast<audio::PcmIntermediate>(current) - static_cast<audio::PcmIntermediate>(_previousSample);
-    _previousSample = current;
-    return audio::clampToCanonicalPcm(diff / 2);
-}
-
-void AudioSourceI2S::resetPreprocessState() {
-    _previousSample = 0;
-    _hasPreviousSample = false;
-}
 
 void AudioSourceI2S::recordReadAttempt(int requestedBytes, int bytesRead, bool readError) {
     ++_stats.reads;
@@ -472,7 +450,7 @@ bool AudioSourceI2S::refillBlock() {
     for (size_t i = 0; i < samplesToProcess; ++i) {
         const uint8_t* samplePtr = rawBytes + (i * frameSize) + kMicSlot * static_cast<size_t>(bytesPerSample);
         const int32_t decodedSample = static_cast<int32_t>(decodePcmSample(samplePtr, bytesPerSample));
-        _blockSamples[_blockCount++] = preprocessSample(decodedSample);
+        _blockSamples[_blockCount++] = _preprocessor.process(decodedSample);
     }
 
     _blockApproxStartUs64 = stampBlock(_blockStartSampleIndex, _blockCount, fillEndUs);

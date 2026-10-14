@@ -214,6 +214,21 @@ the previous gate open unless the step says it can run in parallel.
    Gate: one decision, recorded; code default, implementation-status.md,
    and the Node's registered params all agree with it.
 
+5a. [NEXT] Clean baseline after the tier R2 fixes, before any detector extension.
+   Where: DET-007, docs/research/scalar-detector-extensions.md (Baseline).
+   Why: R2-2 changed Freq durations and R2-1/R2-3 the Node start-up, so the
+   10-13 numbers are not like-for-like; the extensions need a trustworthy
+   reference.
+   Gate: Scalar and Freq, speech + music + silence + 110 cm chirps on the
+   current main, Analyzer and Node build, room conditions noted; then the
+   step 5 decision (Scalar lean: owner 2026-10-14) is written.
+
+5b. [IDEA] Scalar detector extensions: pulse trains as one signal, lower
+   frequencies, frequency drift. (issue to open when started)
+   Where: DET-011..DET-013, docs/research/scalar-detector-extensions.md.
+   Gate: per experiment, a bench session and a lab/decision line; order
+   relative to step 6 is the owner's call.
+
 6. STATUS baseline and 5-node field trial, on D-AMP. (issue #16)
    Where: NODE-001 (STATUS baseline, prerequisite), NODE-008 (5-node trial),
    roadmap-node.md.

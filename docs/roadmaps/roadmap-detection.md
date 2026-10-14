@@ -78,6 +78,7 @@ TonalPulseFreq the main runtime profile, and the only detection params the
 Node registers (Node::registerDetectionParams) are frequency-match
 thresholds, which have no effect under the scalar profile it boots.
 
+Owner lean 2026-10-14: TonalPulseScalar ships, TonalPulseFreq stays a demo detector (not yet decided; step 5a baseline first).
 Decide which profile the Node ships with, using cleanup-0-plan.md Phase 0's
 field trials as the evidence. Then make the code default, the registered
 params, implementation-status.md, and myspec.md agree.
@@ -85,6 +86,24 @@ params, implementation-status.md, and myspec.md agree.
 Blocks cleanup-0-plan Phase 5d: it decides which family env:esp32dev builds
 and whether 5d's RAM argument (production = frequency family) holds.
 ```
+
+### DET-011 - pulse trains read as one signal (Scalar)
+
+Status: IDEA (step 5b, research note scalar-detector-extensions.md section 1)
+
+10-15 ms pulses with 5-115 ms pauses accepted as one occurrence via maxGapMs / maxTransientDurationMs; needs an Emitter pulse-train command. Measure the smallest resolvable gap and the false-alarm cost.
+
+### DET-012 - lower chirp frequencies
+
+Status: IDEA (step 5b, section 2)
+
+Find the usable frequency floor on D-AMP (speaker roll-off, mic LF noise, speech/music false alarms).
+
+### DET-013 - frequency drift inside one signal
+
+Status: IDEA (step 5b, section 3)
+
+Scalar observes one fixed band; options are a wider band, adjacent bins, or the AmpMagnitude stream. Last of the three.
 
 ### DET-008 - detection-layer cleanup pass
 

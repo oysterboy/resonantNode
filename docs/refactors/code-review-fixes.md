@@ -494,9 +494,9 @@ and the #32 comment.
 - Pass: R2-3 (rebase after an external chirp gives no answer), R2-20
   (Emitter ERR not playable), R2-16/17 SELFTEST (amp trial 1 `valid=1`,
   rebase refused `busy=selftest`), R2-4/R2-19 parsing except the item below.
-- **Open: R2-2** - TonalPulseFreq reports durationMs 148-157 for `dur=100`
-  and accepts `dur=40` (94-95 ms); the fix does not show on hardware.
-- **Open: R2-19** - `RB rebase forced` still starts a quiet-gated rebase.
+- **R2-2 holds, with a remaining excess** - TonalPulseFreq durationMs fell from 171-186 (e4d6975) to 148-157 (568dbc0) for `dur=100`
+  (-25 ms, as expected). Still ~49 ms over the true tone (Scalar ~10), so `dur=40` reads 94-95 and is accepted; cause open (release 1800 < attack 2500, tail, or onset lead), feeds #8.
+- R2-19: fixed in 5183cc0 (`RB rebase forced` -> `RB ERR rebase unknown token`), tested on E2.
 - R2-1: the 243 reading at boot is gone after the quiet rebase (12-62), so the
   "D-AMP floor 230-250" note and the 400 gate need their tuning pass.
 - P2b / R2-7: the loop stall is the build flag `TEST_LOOP_DELAY_MS`; with 200

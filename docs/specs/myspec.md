@@ -423,7 +423,7 @@ Raw PCM stays in the canonical decoded/preprocessed PCM domain.
 I2S transport
 sample-format decode
 sign extension / alignment
-First Difference preprocessing
+PCM preprocessing (DC blocker by default since 2026-10-14; First Difference selectable)
 ```
 
 `AudioSignal` owns baseline/centering.

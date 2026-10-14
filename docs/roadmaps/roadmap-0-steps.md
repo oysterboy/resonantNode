@@ -223,7 +223,7 @@ the previous gate open unless the step says it can run in parallel.
    2026-10-14-node-ships-tonalpulsescalar.md). Docs agree; the Node's
    registered params still list the frequency-match thresholds (follow-up).
 
-5a. [NEXT] Clean baseline in the new geometry (mic and speaker facing up), after (issue #35)
+5a. [DONE 2026-10-14] Clean baseline in the new geometry (mic and speaker facing up), after (issue #35)
    closing step 5 on the old one.
    Where: DET-007, docs/research/scalar-detector-extensions.md (Baseline).
    Why: every number so far is horizontal (speaker faces mic, 110 cm, noise
@@ -247,6 +247,10 @@ the previous gate open unless the step says it can run in parallel.
    A/B equal at 90 and 100 cm, mic floor ~4x higher, Node quiet_boot passes in a
    quiet room with a smaller margin to the 400 gate; (3) done at 90 cm / 0.5 FS;
    (4) Analyzer: 50/50 chirps, silence/speech/music 0 valid; Node battery in progress.
+   Closed 2026-10-14 (issue #35, bfbe0c8): baseline at 90 cm / 3200 Hz / 0.5 FS on the Analyzer and the Node
+   build, DC blocker default (decisions/2026-10-14-dc-blocker-before-5a-baseline.md, verdict in its Result
+   section). Position-dependent: other spacings fail at 3200 Hz (research note, finding); Node quiet-gate
+   margin open.
    Gate: the new-geometry Scalar baseline recorded in bench/sessions, setup
    written as speaker-to-mic spacing on a flat surface (no line of sight),
    preprocessor named in the session; First Difference still selectable.

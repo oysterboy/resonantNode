@@ -1,6 +1,6 @@
 # Replace First Difference with a DC blocker inside step 5a, before the new-geometry baseline
 
-Status: decided, not yet implemented (step 5a, issue #35).
+Status: decided, implemented (bfbe0c8) and bench-checked; the DC blocker is the default (step 5a, issue #35, closed 2026-10-14).
 Date: 2026-10-14.
 Supersedes: `2026-10-09-damp-keep-first-difference.md` (its "after the
 field trial" timing; its measurements stand).
@@ -53,6 +53,24 @@ done once, on the new filter. `FirstDifference` stays selectable for A/B.
 - Verification: one filter A/B (old vs new) on E2 or E3 in the new
   geometry, in `bench/sessions`, before item 4; the baseline session
   records which preprocessor it ran on.
+
+## Result 2026-10-14 (bfbe0c8)
+
+Verdict: keep the DC blocker as the default; `-D PCM_PREPROCESS_MODE_VALUE=1` builds
+First Difference for A/B. Evidence (bench `2026-10-14-ab-dc-90cm`, `-ab-fd-90cm`,
+`-ab-dc-100cm`, `-ab-fd-100cm`, `-dc-90cm-noise`, `-dc-90cm-battery`,
+`-dc-90cm-battery-node`, `-selftest-node-dc-e2-radio-off`):
+
+- Detection unchanged at 3200 Hz with the output scaled x0.588: 90 cm 10/10 on both
+  filters (strength ~9.6k vs ~9.4k), 100 cm 0/10 on both (a position null, not the filter).
+- No new false alarms: Analyzer silence / speech / music 0 valid (50 windows each); Node
+  0 verdicts in 100 s each; Node chirps 50 heard and answered.
+- Cost: the mic floor is ~4x higher (SELFTEST SNR 47.8 -> ~35 dB; floor 936 -> ~4,100). The
+  Node's startup quiet gate (400) keeps a smaller margin: smoothed floor median 66, p90 254
+  (First Difference ~12-62). With the radio on, `quiet_boot` failed (411 > 400); it passes in
+  a quiet room (smooth_at_rebase 32).
+- Open: a data-based look at the quiet gate (noisy-room boot test) and at the SELFTEST SNR
+  pass level (30 dB; one amp chirp measured 17 dB); no First Difference run on the Node build.
 
 ## Revisit when
 

@@ -61,6 +61,67 @@ void I2sToneOutput::toneOn() {
 
 void I2sToneOutput::toneOff() {
     _on = false;
+    portENTER_CRITICAL(&_trainMux);
+    _trainRequested = false;
+    _trainCancelRequested = true;
+    _trainActive = false;
+    portEXIT_CRITICAL(&_trainMux);
+}
+
+bool I2sToneOutput::startPulseTrain(uint32_t count, uint32_t onMs, uint32_t gapMs, uint32_t rampMs) {
+    if (_task == nullptr || count == 0 || onMs == 0) {
+        return false;
+    }
+    _on = false;
+    portENTER_CRITICAL(&_trainMux);
+    _reqTrainCount = count;
+    _reqTrainOnMs = onMs;
+    _reqTrainGapMs = gapMs;
+    _reqTrainRampMs = rampMs;
+    // A new train replaces a running one, so a pending cancel is moot.
+    _trainCancelRequested = false;
+    _trainRequested = true;
+    _trainActive = true;
+    portEXIT_CRITICAL(&_trainMux);
+    return true;
+}
+
+bool I2sToneOutput::pulseTrainActive() const {
+    portENTER_CRITICAL(&_trainMux);
+    const bool active = _trainActive;
+    portEXIT_CRITICAL(&_trainMux);
+    return active;
+}
+
+void I2sToneOutput::takePulseTrainRequest(uint32_t sampleRateHz) {
+    portENTER_CRITICAL(&_trainMux);
+    if (_trainCancelRequested) {
+        _trainCancelRequested = false;
+        _trainRunning = false;
+        _trainDraining = false;
+    }
+    if (_trainRequested) {
+        _trainRequested = false;
+        _trainRunning = true;
+        _trainDraining = false;
+        _trainOn = true;
+        _trainPulsesLeft = _reqTrainCount;
+        // onMs/gapMs are what is heard: sound (envelope > 0) and silence.
+        // The off-ramp runs past the "on" target, so the target is onMs -
+        // ramp and the gap target gapMs + ramp; a ramp over half the pulse
+        // is cut to half (the pulse is then a triangle).
+        const uint32_t pulseSamples = (sampleRateHz * _reqTrainOnMs) / 1000U;
+        uint32_t rampMs = _reqTrainRampMs;
+        if (rampMs > _reqTrainOnMs / 2) {
+            rampMs = _reqTrainOnMs / 2;
+        }
+        const uint32_t rampSamples = (sampleRateHz * rampMs) / 1000U;
+        _trainOnSamples = pulseSamples > rampSamples ? pulseSamples - rampSamples : 1;
+        _trainGapSamples = (sampleRateHz * _reqTrainGapMs) / 1000U + rampSamples;
+        _trainRampMs = rampMs;
+        _trainSegmentLeft = _trainOnSamples;
+    }
+    portEXIT_CRITICAL(&_trainMux);
 }
 
 void I2sToneOutput::taskEntry(void* self) {
@@ -74,6 +135,12 @@ void I2sToneOutput::run() {
             _stopRequested = false;
             _phase = 0;
             _envelope = 0.0f;
+            _trainRunning = false;
+            _trainDraining = false;
+            portENTER_CRITICAL(&_trainMux);
+            _trainRequested = false;
+            _trainActive = false;
+            portEXIT_CRITICAL(&_trainMux);
             _task = nullptr;
             vTaskDelete(nullptr);
         }
@@ -89,13 +156,47 @@ void I2sToneOutput::run() {
 
 void I2sToneOutput::renderBlock(int32_t* frames, size_t frameCount) {
     const uint32_t sampleRateHz = _port.sampleRateHz() > 0 ? _port.sampleRateHz() : 16000U;
+    takePulseTrainRequest(sampleRateHz);
     const uint32_t phaseStep = static_cast<uint32_t>(
         (static_cast<uint64_t>(_toneHz) << 32) / static_cast<uint64_t>(sampleRateHz));
-    const uint32_t rampSamples = (sampleRateHz * _rampMs) / 1000U;
+    const bool trainShape = _trainRunning || _trainDraining;
+    const uint32_t rampSamples = (sampleRateHz * (trainShape ? _trainRampMs : _rampMs)) / 1000U;
     const float envelopeStep = rampSamples > 0 ? 1.0f / static_cast<float>(rampSamples) : 1.0f;
-    const float target = _on ? 1.0f : 0.0f;
+    float target = _on ? 1.0f : 0.0f;
 
     for (size_t i = 0; i < frameCount; ++i) {
+        if (_trainRunning) {
+            if (_trainSegmentLeft == 0) {
+                if (_trainOn) {
+                    --_trainPulsesLeft;
+                    _trainOn = false;
+                    _trainSegmentLeft = _trainGapSamples;
+                    if (_trainPulsesLeft == 0) {
+                        _trainRunning = false;
+                        _trainDraining = true;
+                    }
+                } else {
+                    _trainOn = true;
+                    _trainSegmentLeft = _trainOnSamples;
+                }
+            }
+            if (_trainRunning && _trainSegmentLeft > 0) {
+                --_trainSegmentLeft;
+            }
+            target = (_trainRunning && _trainOn) ? 1.0f : 0.0f;
+        } else if (_trainDraining) {
+            target = 0.0f;
+            if (_envelope <= 0.0f) {
+                _trainDraining = false;
+                portENTER_CRITICAL(&_trainMux);
+                if (!_trainRequested) {
+                    _trainActive = false;
+                }
+                portEXIT_CRITICAL(&_trainMux);
+                target = _on ? 1.0f : 0.0f;
+            }
+        }
+
         if (_envelope < target) {
             _envelope = fminf(target, _envelope + envelopeStep);
         } else if (_envelope > target) {

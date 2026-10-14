@@ -89,9 +89,11 @@ and whether 5d's RAM argument (production = frequency family) holds.
 
 ### DET-011 - pulse trains read as one signal (Scalar)
 
-Status: IDEA (step 5b, research note scalar-detector-extensions.md section 1)
+Status: IDEA, source ready (step 5b, research note scalar-detector-extensions.md section 1). Emitter `PULSES` landed 2026-10-14, compile not run (PlatformIO registry blocked in the cloud session), bench run pending.
 
-10-15 ms pulses with 5-115 ms pauses accepted as one occurrence via maxGapMs / maxTransientDurationMs; needs an Emitter pulse-train command. Measure the smallest resolvable gap and the false-alarm cost.
+10-15 ms pulses with 5-115 ms pauses accepted as one occurrence via maxGapMs / maxTransientDurationMs. Measure the smallest resolvable gap and the false-alarm cost.
+
+Source: Emitter `PULSES n pulse_ms gap_ms [freq=] [ramp=] [trial=]`, from the Analyzer as `EMIT PULSES ...` or per SEQ trial as `SEQ start dur=PULSE_MS pulses=N gap=MS [ramp=MS]`. On D-AMP the train is timed per sample in I2sToneOutput (loop edges land on 8 ms blocks); pulse_ms is sound with the ramps inside, gap_ms is silence. Piezo builds time it from the loop.
 
 ### DET-012 - lower chirp frequencies
 

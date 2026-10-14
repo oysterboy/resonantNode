@@ -21,6 +21,13 @@ I2S paces it; toneOn/toneOff/setToneHz only set state and return at once.
 The detection loop never writes TX, and a stalled loop can't cut a chirp.
 Silence (zeros) when off. The same sample goes to both slots, so the amp's
 SD_MODE channel select doesn't matter.
+
+A pulse train (startPulseTrain, the Emitter's PULSES, DET-011) is timed
+here per sample: toneOn/toneOff from the loop only land on 8 ms block
+boundaries, too coarse for 5-20 ms pulses and gaps. onMs and gapMs are
+what is heard: onMs of sound with the ramps inside it (ramp cut to onMs/2
+if longer), gapMs of silence. A plain toneOn/toneOff chirp instead sounds
+for its on time plus one ramp.
 docs/decisions/2026-10-09-damp-i2s-hal-shape.md
 
 Owns the waveform and its envelope. Does not choose when to emit, and does
@@ -38,6 +45,8 @@ public:
     void setToneHz(uint32_t toneHz) override;
     void toneOn() override;
     void toneOff() override;
+    bool startPulseTrain(uint32_t count, uint32_t onMs, uint32_t gapMs, uint32_t rampMs) override;
+    bool pulseTrainActive() const override;
 
     // Stops the writer task (tone off first; returns once the task is gone,
     // at most ~100 ms). begin() starts it again. For a build that needs the
@@ -49,6 +58,7 @@ private:
     static void taskEntry(void* self);
     void run();
     void renderBlock(int32_t* frames, size_t frameCount);
+    void takePulseTrainRequest(uint32_t sampleRateHz);
 
     AudioSourceI2S& _port;
     float _amplitude;
@@ -60,7 +70,25 @@ private:
     volatile uint32_t _toneHz = runtime::kDefaultChirpFrequencyHz;
     volatile bool _on = false;
 
+    // Pulse-train handoff, caller <-> task, under _trainMux.
+    mutable portMUX_TYPE _trainMux = portMUX_INITIALIZER_UNLOCKED;
+    bool _trainRequested = false;
+    bool _trainCancelRequested = false;
+    bool _trainActive = false;
+    uint32_t _reqTrainCount = 0;
+    uint32_t _reqTrainOnMs = 0;
+    uint32_t _reqTrainGapMs = 0;
+    uint32_t _reqTrainRampMs = 0;
+
     // Task-only render state.
     uint32_t _phase = 0;
     float _envelope = 0.0f;
+    bool _trainRunning = false;   // pulses still to render
+    bool _trainDraining = false;  // last pulse off, ramping to silence
+    bool _trainOn = false;        // current segment: pulse (true) or gap
+    uint32_t _trainPulsesLeft = 0;
+    uint32_t _trainSegmentLeft = 0;  // samples left in the current segment
+    uint32_t _trainOnSamples = 0;
+    uint32_t _trainGapSamples = 0;
+    uint32_t _trainRampMs = 0;
 };

@@ -281,6 +281,12 @@ private:
         unsigned long windowEndOffsetMs = 2200;
         unsigned long toneHz = runtime::kDefaultChirpFrequencyHz;
         unsigned long durationMs = 100;
+        // pulses > 0: each trial is a PULSES train of durationMs pulses
+        // (DET-011); 0 = one CHIRP. pulseRampMs only sent when set.
+        unsigned long pulseCount = 0;
+        unsigned long pulseGapMs = 0;
+        bool pulseRampSet = false;
+        unsigned long pulseRampMs = 0;
         unsigned long startupDelayMs = 1000;
         unsigned long reportSettleMs = 500;
         char setupLabel[48] = TEST_SETUP_LABEL;
@@ -394,6 +400,10 @@ private:
         unsigned long windowEndOffsetMs = 0;
         unsigned long toneHz = 0;
         unsigned long durationMs = 0;
+        unsigned long pulseCount = 0;
+        unsigned long pulseGapMs = 0;
+        bool pulseRampSet = false;
+        unsigned long pulseRampMs = 0;
         unsigned long reportSettleMs = 500;
         bool quiet = false;
         bool showDetails = false;

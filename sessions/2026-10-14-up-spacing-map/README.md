@@ -38,3 +38,32 @@ Raw tone amplitudes at 70 and 90 cm: 2026-10-14-up-70cm-rawtone, -up-90cm-rawton
 Interpretation so far (not proven): mostly multipath because the speaker beam points
 up, plus a smaller fixed hardware response (3,100 Hz weak and 3,300 Hz strong at both
 raw-scanned spacings).
+
+## Raw tone amplitude vs frequency, 100 and 90 cm (2026-10-14-up-100cm-rawscan, -up-90cm-rawscan)
+
+| f (Hz) | 100 cm | 90 cm |
+|---|---|---|
+| 2800 | 60,457 | 38,655 |
+| 2850 | 19,494 | 43,934 |
+| 2900 | 48,674 | 42,772 |
+| 2950 | 60,358 | 33,415 |
+| 3000 | 71,565 | 31,828 |
+| 3050 | 46,932 | 7,306 |
+| 3100 | 28,222 | 22,397 |
+| 3150 | 12,359 | 63,736 |
+| 3200 | 11,065 | 59,735 |
+| 3250 | 17,945 | 44,706 |
+| 3300 | 35,276 | 69,620 |
+| 3350 | 22,306 | 72,685 |
+| 3400 | 3,632 | 36,279 |
+| 3450 | 68,270 | 77,909 |
+| 3500 | 71,454 | 75,345 |
+| 3550 | 11,941 | 16,946 |
+| 3600 | 36,052 | 58,636 |
+
+Peaks and nulls are 20x deep and a few hundred Hz apart at each spacing. Most of
+them move between 90 and 100 cm (3,050 null at 90 only; 3,150-3,200 weak at 100 and
+strong at 90; 3,400 null at 100 only). A few features stay: 3,450-3,500 strong and
+3,550 weak at both. Correlation of log amplitude between the two spacings: see the
+session log in the commit message / chat. Reading: mostly spacing-dependent
+interference with a small fixed part; consistent with the detector results.

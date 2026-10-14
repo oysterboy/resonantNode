@@ -26,6 +26,10 @@ Order, agreed 2026-10-14:
 1. Old geometry (speaker faces mic, 110 cm, noise at 90 degrees), current
    main: speech + music OBS for Scalar and Freq. Write the step 5 decision.
 2. Hardware change: mic and speaker facing up (omni-directional) on E2, E3.
+2b. PCM preprocessor: First Difference -> DC blocker (~100 Hz corner, flat
+   above), one old-vs-new A/B in the new geometry, so the retune in 3 and
+   the battery in 4 happen on the filter that stays (decided 2026-10-14,
+   `docs/decisions/2026-10-14-dc-blocker-before-5a-baseline.md`).
 3. SELFTEST (amp level, own_chirp_suppressed may shift), plain T3 and silent
    OBS to find the new operating point. Do not reuse the 110 cm numbers as
    targets: the path is reflections now, not line of sight.
@@ -60,6 +64,10 @@ runs ~50 ms over the true tone, Scalar ~10.
 
 - Unknowns: D-AMP speaker roll-off, I2S mic LF noise and drift (step 1b),
   more room and speech energy at low frequencies (false alarms).
+- Prerequisite: the DC blocker from 5a item 2b. First Difference passes
+  1000 Hz at 0.20 and 500 Hz at 0.10 of the amplitude it passes near
+  Nyquist (3200 Hz: 0.59), so a run on it measures the filter, not the
+  floor. The 1-30 Hz mic wander is not a problem for these targets.
 - Test shape: 3200, 2000, 1500, 1000, 800 Hz. Each: SELFTEST amp, T3 at
   110 cm, silent OBS, then speech/music OBS where T3 holds. Check the
   frequency is playable on the Emitter (R2-20 rejects unplayable ones).

@@ -99,6 +99,8 @@ Status: IDEA (step 5b, section 2)
 
 Find the usable frequency floor on D-AMP (speaker roll-off, mic LF noise, speech/music false alarms).
 
+Depends on step 5a item 2b: the First Difference preprocessor has gain 0.59 at 3200 Hz, 0.20 at 1000 Hz, 0.10 at 500 Hz; the DC blocker replaces it before the 5a baseline (`docs/decisions/2026-10-14-dc-blocker-before-5a-baseline.md`). Do not run this on First Difference.
+
 ### DET-013 - frequency drift inside one signal
 
 Status: IDEA (step 5b, section 3)

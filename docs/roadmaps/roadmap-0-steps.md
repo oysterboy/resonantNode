@@ -227,14 +227,19 @@ the previous gate open unless the step says it can run in parallel.
    start-up. The extensions need one trustworthy reference.
    Order: (1) old geometry, current main: speech + music OBS, Scalar and
    Freq, then write the step 5 decision (Scalar lean: owner 2026-10-14);
-   (2) hardware change, mic + speaker facing up on E2 and E3; (3) SELFTEST
+   (2) hardware change, mic + speaker facing up on E2 and E3; (2b) PCM
+   preprocessor First Difference -> DC blocker (~100 Hz, flat above), one
+   old-vs-new A/B on E2 or E3 in the new geometry, then the retune of (3)
+   runs on the new filter (decisions/2026-10-14-dc-blocker-before-5a-
+   baseline.md; DET-012 depends on it); (3) SELFTEST
    (amp level and own_chirp_suppressed may shift), then a plain T3 and a
    silent OBS to find the new operating point; (4) Scalar full battery
    (chirps, silence, speech, music) on Analyzer and Node build, room
    conditions noted; Freq speech + music on the Analyzer only if the
    comparison is still wanted.
    Gate: the new-geometry Scalar baseline recorded in bench/sessions, setup
-   written as speaker-to-mic spacing on a flat surface (no line of sight).
+   written as speaker-to-mic spacing on a flat surface (no line of sight),
+   preprocessor named in the session; First Difference still selectable.
 
 5c. [TODO] Five working D-AMP boards in the upwards geometry. (issue #34)
    Where: NODE-011 / NODE-015 hardware; gates of steps 3b and 4.

@@ -1,6 +1,8 @@
 # D-AMP keeps First Difference as the PCM preprocessor until after the field trial
 
-Status: decided (step 2, issue #19).
+Status: superseded on timing by `2026-10-14-dc-blocker-before-5a-baseline.md`
+(the filter is replaced inside step 5a, not after the field trial; the
+measurements below stand).
 Date: 2026-10-09.
 
 ## Decision

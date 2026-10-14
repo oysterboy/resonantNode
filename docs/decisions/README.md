@@ -58,12 +58,13 @@ what replaced it.
 | 2026-10-09 | [D-AMP tone level 0.3 of full scale](2026-10-09-damp-tone-level-0p3.md) |
 | 2026-10-09 | [The chirp stays at 3200 Hz on D-AMP](2026-10-09-chirp-frequency-stays-3200.md) |
 | 2026-10-09 | [Own-emit detection suppression covers the whole chirp plus a tail](2026-10-09-own-emit-suppression-whole-chirp.md) |
-| 2026-10-09 | [D-AMP keeps First Difference as the PCM preprocessor until after the field trial](2026-10-09-damp-keep-first-difference.md) |
+| 2026-10-09 | [D-AMP keeps First Difference as the PCM preprocessor until after the field trial](2026-10-09-damp-keep-first-difference.md) (timing superseded 2026-10-14) |
 | 2026-10-09 | [D-AMP I2S HAL: extend AudioSourceI2S, TX task, stereo slots, Philips framing with RX realigned](2026-10-09-damp-i2s-hal-shape.md) |
 | 2026-10-13 | [The Node does not ignore verdicts on occurrences with dropped audio](2026-10-13-node-reacts-despite-dropped-audio.md) |
 | 2026-10-13 | [One reject event per new selected (best) reject](2026-10-13-one-reject-event-per-new-best-reject.md) |
 | 2026-10-13 | [SEQ sample dump: default step 4 ms, 256-row buffer kept](2026-10-13-sample-dump-step-4ms.md) |
 | 2026-10-14 | [The Node ships TonalPulseScalar; TonalPulseFreq stays a demo detector](2026-10-14-node-ships-tonalpulsescalar.md) |
+| 2026-10-14 | [Replace First Difference with a DC blocker inside step 5a, before the new-geometry baseline](2026-10-14-dc-blocker-before-5a-baseline.md) |
 
 ## Open
 

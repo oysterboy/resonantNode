@@ -135,7 +135,11 @@ to test the ceiling path; same scan with the boards facing each other.
   speech / music: 3,200 Hz 0 / 0; 2,000 Hz 3 / 4; 1,500 Hz 1 / 30. The chirp detects down to 1,500 Hz
   but the noise rejection of the current Scalar definition does not carry over: a lower chirp needs a
   stricter definition (pulse shape, pattern), not just a retuned frequency. Candidate middle ground
-  to test: 2,400-3,000 Hz.
+  to test: 2,400-3,000 Hz. Tested the same day (`bench/sessions/2026-10-14-midfreq-90cm-noise`):
+  speech / music valid at 2,800 Hz 4 / 1, at 2,600 Hz 3 / 4 (50 windows, one run each) against 0 / 0 at
+  3,200 Hz. No clean middle ground: any lowering of the single tone costs false answers with the
+  current definition. Keeping 3,200 Hz is the baseline until a stricter chirp definition (pulse train
+  signature, pattern) is in.
 
 ## 3. Frequency drift
 

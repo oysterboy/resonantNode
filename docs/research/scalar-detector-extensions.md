@@ -130,7 +130,12 @@ to test the ceiling path; same scan with the boards facing each other.
   `duration_too_long` (strength 20-33k, saturated): needs a lower level or a longer max duration.
   Not yet: speech / music at the lower frequencies, other spacings (the comb applies at every
   frequency), the Node build. A lower frequency is a candidate to make the chirp less annoying; its
-  noise-rejection cost is unmeasured.
+  noise-rejection cost is unmeasured. MEASURED later the same day
+  (`bench/sessions/2026-10-14-lowfreq-90cm-noise`, 50 windows each): false answers (pattern-valid)
+  speech / music: 3,200 Hz 0 / 0; 2,000 Hz 3 / 4; 1,500 Hz 1 / 30. The chirp detects down to 1,500 Hz
+  but the noise rejection of the current Scalar definition does not carry over: a lower chirp needs a
+  stricter definition (pulse shape, pattern), not just a retuned frequency. Candidate middle ground
+  to test: 2,400-3,000 Hz.
 
 ## 3. Frequency drift
 

@@ -69,7 +69,7 @@ still outstanding; close this item when it passes.
 
 ### DET-007 - decide the Node's production profile
 
-Status: DECIDED 2026-10-14 (docs/decisions/2026-10-14-node-ships-tonalpulsescalar.md); Node registered params follow-up open
+Status: DONE 2026-10-14 (docs/decisions/2026-10-14-node-ships-tonalpulsescalar.md; the Node registers the scalar params, b4566aa)
 
 ```text
 Code and docs disagree. The Node boots makeTonalPulseScalarProfile()

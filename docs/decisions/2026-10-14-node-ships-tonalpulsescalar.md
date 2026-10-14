@@ -1,7 +1,7 @@
 # The Node ships TonalPulseScalar; TonalPulseFreq stays a demo detector
 
-Status: decided, with a follow-up open (Node params). Matches the code: the
-Node already boots TonalPulseScalar.
+Status: decided and complete. The Node boots TonalPulseScalar and registers its 13
+`detection.scalar_*` params (b4566aa, bench-checked live on E2).
 Date: 2026-10-14.
 
 ## Decision
@@ -38,13 +38,12 @@ types in one session each, no room notes, Scalar's unexplained reject block.
 Treating TonalPulseFreq as the Node's main profile in docs or in
 `env:esp32dev`; tuning Freq for the field trial.
 
-## Follow-up (open)
+## Follow-up (done 2026-10-14)
 
-The Node registers only frequency-match thresholds
-(`Node::registerDetectionParams`), which have no effect under Scalar. Register
-the scalar parameters instead (or in addition) when the param work lands
-(PAR-015); not done here because it is a code change that needs its own bench
-check.
+The Node used to register only frequency-match thresholds, which have no effect under
+Scalar. `Node::registerDetectionParams` now also registers 13 `detection.scalar_*` params
+(same names as the Analyzer's PARAM keys). Bench: bench/sessions/2026-10-14-node-params-check
+(0 verdicts at defaults, 14 with min duration 10 and island/coverage 0, 0 again at 85).
 
 ## Revisit when
 

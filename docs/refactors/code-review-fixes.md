@@ -502,3 +502,15 @@ and the #32 comment.
 - P2b / R2-7: the loop stall is the build flag `TEST_LOOP_DELAY_MS`; with 200
   ms every trial was `buffer_overrun` and dropped DMA buffers rose in step
   (Analyzer side). Node `RB summary` side still to do.
+
+### Bench results 2026-10-14, later (main 89b39ec, hands-free session)
+
+- B9: `SEQ OBS start period=2000 window=1800` prints `OBS_WARN window+report_settle>period window=1800
+  report_settle=500 period=2000`; `period=2500 window=1800 report_settle=500` and the default
+  (window 2000? default run) print none. Pass.
+- A5: `PARAM SET detection.freq_attack_score_min nan` and `1500abc` and `1.5 junk` are `parse_error`
+  with the value unchanged; a plain value is `ok`. Pass.
+- `RB BEHAV` echo pasted back: applied, no errors. `RB PARAM freqScore=18000`: accepted. Pass.
+- A6: SELFTEST `own_chirp_suppressed` with `RB BEHAV refractory=0 detectionSuppressTail=60`: PASS
+  (0 own verdicts in 5 chirps), Node build on E2, full SELFTEST PASS.
+- Not run: the Node-side stall check (P2b), the 40 cm regression pair, B13 (needs speech).

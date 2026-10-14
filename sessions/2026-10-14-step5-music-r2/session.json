@@ -1,0 +1,107 @@
+{
+  "purpose": "step 5 (#8): music (drum and bass) response, Scalar vs Freq, post-R2 (main c34fee9), old geometry",
+  "created": "2026-10-14T14:46:12",
+  "setup": {
+    "distance_cm": 110.0,
+    "orientation": "",
+    "emitter_fw": "",
+    "notes": [
+      "drum and bass from the radio, 50 cm from the Analyzer, full volume, speaker 90 deg to the mic; Emitter E3 idle"
+    ]
+  },
+  "runs": [
+    {
+      "name": "OBS_scalar_music",
+      "file": "OBS_scalar_music.c34fee9.log",
+      "firmware": {
+        "role": "analyzer",
+        "git": "c34fee9",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "commands": [
+        "SEQ DIAG off",
+        "SEQ OBS start tries=50 period=2000 window=1800 report_settle=200 profile=TonalPulseScalar mode=detail when=all verbose=1"
+      ],
+      "started": "2026-10-14T14:46:19",
+      "duration_s": 105,
+      "summary": {
+        "profile": "TonalPulseScalar",
+        "detector": "scalar_transient",
+        "complete": true,
+        "trial_results": {
+          "rejected": 49,
+          "miss": 1
+        },
+        "line_counts": {
+          "SEQ_TRIAL": 50,
+          "SEQ_SUMMARY": 1
+        },
+        "trials": "50",
+        "completed": "50",
+        "expected_trials": "0",
+        "early_trials": "0",
+        "late_trials": "0",
+        "miss_trials": "1",
+        "duplicate_trials": "0",
+        "unexpected_trials": "0",
+        "rejected_trials": "49",
+        "buffer_overrun_trials": "0",
+        "detector_accepted_trials": "0",
+        "detector_reject_trials": "50",
+        "pattern_valid_trials": "0",
+        "pattern_rejected_trials": "0",
+        "avg_dt_ms": "-1",
+        "avg_strength": "3576.6",
+        "avg_conf": "0.00"
+      }
+    },
+    {
+      "name": "OBS_freq_music",
+      "file": "OBS_freq_music.c34fee9.log",
+      "firmware": {
+        "role": "analyzer",
+        "git": "c34fee9",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "commands": [
+        "SEQ DIAG off",
+        "SEQ OBS start tries=50 period=2000 window=1800 report_settle=200 profile=TonalPulseFreq mode=detail when=all verbose=1"
+      ],
+      "started": "2026-10-14T14:48:06",
+      "duration_s": 105,
+      "summary": {
+        "profile": "TonalPulseFreq",
+        "detector": "frequency_match",
+        "complete": true,
+        "trial_results": {
+          "rejected": 26,
+          "miss": 23,
+          "late": 1
+        },
+        "line_counts": {
+          "SEQ_TRIAL": 50,
+          "SEQ_SUMMARY": 1
+        },
+        "trials": "50",
+        "completed": "50",
+        "expected_trials": "0",
+        "early_trials": "0",
+        "late_trials": "1",
+        "miss_trials": "23",
+        "duplicate_trials": "0",
+        "unexpected_trials": "0",
+        "rejected_trials": "26",
+        "buffer_overrun_trials": "0",
+        "detector_accepted_trials": "7",
+        "detector_reject_trials": "20",
+        "pattern_valid_trials": "1",
+        "pattern_rejected_trials": "6",
+        "avg_dt_ms": "1327",
+        "avg_strength": "3422.9",
+        "avg_conf": "1.00"
+      }
+    }
+  ]
+}

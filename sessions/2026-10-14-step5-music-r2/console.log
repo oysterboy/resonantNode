@@ -1,0 +1,7 @@
+[14:46:17] boot banner: {'role': 'analyzer', 'git': 'c34fee9', 'version': '0.4.0', 'board': 'damp'}
+[14:46:19] warmup: OK EMIT CHIRP
+[14:46:19] start OBS_scalar_music: SEQ DIAG off ; SEQ OBS start tries=50 period=2000 window=1800 report_settle=200 profile=TonalPulseScalar mode=detail when=all verbose=1
+[14:48:04] done OBS_scalar_music (105s): complete=True results={'rejected': 49, 'miss': 1}
+[14:48:06] start OBS_freq_music: SEQ DIAG off ; SEQ OBS start tries=50 period=2000 window=1800 report_settle=200 profile=TonalPulseFreq mode=detail when=all verbose=1
+[14:49:52] done OBS_freq_music (105s): complete=True results={'rejected': 26, 'miss': 23, 'late': 1}
+[14:49:57] session updated, index rebuilt

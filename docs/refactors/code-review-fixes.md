@@ -484,3 +484,21 @@ Analyzer + E3 Emitter on D-AMP. Issue #32 carries the per-check ticks.
   gave `buffer_overrun_trials=0`. Needs a stall hook; D21 stays open.
 - Not run: B9 (OBS warning), A5 (nan / trailing junk), A6 on the two
   boards with refractory=0, regression T3 at 40 cm, B11 aggregate count.
+
+### Bench results 2026-10-14, tier R2 (main 568dbc0)
+
+Sessions `bench/sessions/2026-10-14-reviewfix-checks-r2` (bench 34cf246) and
+`2026-10-14-selftest-e2-node-568dbc0`. Details per check in the session README
+and the #32 comment.
+
+- Pass: R2-3 (rebase after an external chirp gives no answer), R2-20
+  (Emitter ERR not playable), R2-16/17 SELFTEST (amp trial 1 `valid=1`,
+  rebase refused `busy=selftest`), R2-4/R2-19 parsing except the item below.
+- **Open: R2-2** - TonalPulseFreq reports durationMs 148-157 for `dur=100`
+  and accepts `dur=40` (94-95 ms); the fix does not show on hardware.
+- **Open: R2-19** - `RB rebase forced` still starts a quiet-gated rebase.
+- R2-1: the 243 reading at boot is gone after the quiet rebase (12-62), so the
+  "D-AMP floor 230-250" note and the 400 gate need their tuning pass.
+- P2b / R2-7: the loop stall is the build flag `TEST_LOOP_DELAY_MS`; with 200
+  ms every trial was `buffer_overrun` and dropped DMA buffers rose in step
+  (Analyzer side). Node `RB summary` side still to do.

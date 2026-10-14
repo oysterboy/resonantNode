@@ -124,6 +124,13 @@ to test the ceiling path; same scan with the boards facing each other.
   110 cm, silent OBS, then speech/music OBS where T3 holds. Check the
   frequency is playable on the Emitter (R2-20 rejects unplayable ones).
 - Output: the usable floor for chirp frequency on this hardware.
+- First results 2026-10-14 (DC blocker, 90 cm, up, 0.5 FS, `bench/sessions/2026-10-14-lowfreq-90cm`):
+  T3 passes at 2,600 / 2,000 / 1,500 Hz (50/50 at 2,000 and 1,500), silent OBS 0 accepts. The raw
+  amplitude is 4-8x higher at 600-1,300 Hz (speaker resonance near 800 Hz). 1,000 and 800 Hz fail as
+  `duration_too_long` (strength 20-33k, saturated): needs a lower level or a longer max duration.
+  Not yet: speech / music at the lower frequencies, other spacings (the comb applies at every
+  frequency), the Node build. A lower frequency is a candidate to make the chirp less annoying; its
+  noise-rejection cost is unmeasured.
 
 ## 3. Frequency drift
 

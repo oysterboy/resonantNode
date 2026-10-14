@@ -13,7 +13,8 @@ decision: DET-007 / step 5 (#8) stays open until the speech and music runs
 after the tier R2 fixes are in (see "Baseline"). Then the decision goes into
 `docs/decisions/`.
 
-Extensions to explore on Scalar, in this order:
+Extensions to explore on Scalar (order revised 2026-10-14, see the finding below:
+3 and 1 before 2):
 
 1. Real chirps: 10-15 ms pulses with 5-115 ms pauses, detected as one signal.
 2. Lower frequencies than 3200 Hz.
@@ -42,6 +43,55 @@ Reference points, old geometry: 110 cm, both profiles 50/50 on chirps
 unknown); 0 false alarms in 50 silent windows each; speech 0 valid and
 music 1/50 vs 0/50 (Scalar / Freq) on 10-13, before R2. Freq durationMs
 runs ~50 ms over the true tone, Scalar ~10.
+
+## Finding 2026-10-14: a single tone is the weak point (upwards geometry)
+
+Measured on E2/E3 facing up, Emitter 0.5 FS, Scalar, quiet room (window and
+doors closed, Roomba off), on the First Difference preprocessor, before the
+DC blocker of 5a item 2b (the comb below is far finer than First
+Difference's smooth frequency weighting, so it is not that filter, but
+the baseline of 5a is redone on the DC blocker). Indexes:
+`bench/sessions/2026-10-14-up-spacing-map/README.md`.
+
+- T3, 10 trials per spacing, 3,200 Hz: 60/70/80/100 cm 0/10, 90 cm 10/10,
+  110 cm 50/50 (and 10/10 on re-check). 3,300 Hz: 60/70/90/110 cm 10/10,
+  80 cm 8/10, 100 cm 0/10. 0.3 FS at 70 cm was worse (0/50), so level is
+  not the cause.
+- Raw received amplitude (rawtone.py, detector bypassed) at 70 and 90 cm,
+  and a 2,800-3,600 Hz scan in 50 Hz steps at 90 and 100 cm: peaks and nulls
+  10-20x deep, a few hundred Hz apart, mostly moving with spacing (log
+  amplitude correlation 90 vs 100 cm: 0.02). A few features stay (3,450-3,500
+  strong, 3,550 weak). The detector reports what the raw signal shows.
+- Reading (not proven): multipath, because the speaker beam points up and
+  the mic mostly receives reflections, plus a small fixed hardware part. The
+  horizontal runs (speaker faces mic) showed no such ripple.
+
+Consequences for the plan:
+
+- A single chirp frequency has no safe value for this layout. The frequency
+  that works depends on the pair spacing and the room, and drifts with
+  temperature and room changes (a 1 % change in the speed of sound moves the
+  comb by about a third of a wavelength at 3 kHz; the 24 h soak showed ~25 %
+  strength drift over a day). A network of N nodes has N(N-1)/2 pairs, each
+  with its own comb, so one frequency per installation cannot serve all of
+  them. Per-installation tuning is therefore a fallback aid (frequency stays
+  a config value; an optional survey step can compare a few frequencies per
+  pair), not the design.
+- The design direction is a signal that spreads its energy over frequency:
+  drift or sweep inside the chirp (section 3) and/or hopping between
+  frequencies across the pulses of a pulse train (section 1), and a detector
+  band wide enough to see where the peaks land. Sections 3 and 1 therefore
+  move up; lower frequencies (section 2) stay a separate question.
+- The mounting is part of the answer: speaker and mic facing each other or
+  sideways gives a dominant direct path and a much smaller comb. Omni
+  coverage by facing up has this cost; weigh it before the five-board build
+  (step 5c, #34).
+
+Next tests (sketch): 3,200 vs 3,300 Hz on the DC blocker; the `SEQ freq=`
+runtime switch already exists, so frequency hopping between SEQ runs is free;
+a swept chirp needs the Analyzer to understand a swept target (the band
+stream tracks one frequency); same scan with a soft absorber above the pair
+to test the ceiling path; same scan with the boards facing each other.
 
 ## 1. Pulse trains read as one signal
 

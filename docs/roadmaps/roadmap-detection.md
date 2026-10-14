@@ -103,7 +103,7 @@ Depends on step 5a item 2b: the First Difference preprocessor has gain 0.59 at 3
 
 ### DET-013 - frequency drift inside one signal
 
-Status: IDEA (step 5b, section 3)
+Status: IDEA, first of the extensions (step 5b, section 3; motivated by the 2026-10-14 finding that a single tone lands on nulls in the upwards geometry)
 
 Scalar observes one fixed band; options are a wider band, adjacent bins, or the AmpMagnitude stream. Last of the three.
 

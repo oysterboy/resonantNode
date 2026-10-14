@@ -144,7 +144,7 @@ the previous gate open unless the step says it can run in parallel.
    hours apart can differ by ~25 % in strength. Not covered: night, a
    second day, TonalPulseFreq.
 
-3b. [NEXT] Node self-test: SELFTEST for hardware I/O and node runtime.
+3b. [PARTIAL 2026-10-14] Node self-test: SELFTEST for hardware I/O and node runtime.
    (issue #28)
    Where: NODE-015 (roadmap-node.md).
    Why before step 4: on 2026-10-10 two of three D-AMP boards failed basic
@@ -153,7 +153,8 @@ the previous gate open unless the step says it can run in parallel.
    Firmware work can start any time; the gate run needs the boards free of
    steps 3 / 3a.
    Gate: SELFTEST passes on every board going into step 4, logged in a
-   bench session.
+   bench session. Firmware and the dead-mic fix are verified on E2 and E3;
+   the gate run waits for the five boards of step 5c.
 
 3c. [LANDED 2026-10-12] Detection goes deaf 71.6 min after boot (32-bit
    micros wrap). (issue #30, closed)
@@ -231,6 +232,13 @@ the previous gate open unless the step says it can run in parallel.
    comparison is still wanted.
    Gate: the new-geometry Scalar baseline recorded in bench/sessions, setup
    written as speaker-to-mic spacing on a flat surface (no line of sight).
+
+5c. [TODO] Five working D-AMP boards in the upwards geometry. (issue #34)
+   Where: NODE-011 / NODE-015 hardware; gates of steps 3b and 4.
+   Why: only E2 and E3 work (E1 amp dead); the five-node gates need five
+   boards, built in the geometry the baseline of 5a was taken in.
+   Gate: five boards, each passing SELFTEST, logged in a bench session.
+   Follows 5a; the gate runs of 3b (#28) and 4 (#21) follow this.
 
 5b. [IDEA] Scalar detector extensions: pulse trains as one signal, lower
    frequencies, frequency drift. (issue to open when started)

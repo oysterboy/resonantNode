@@ -946,6 +946,17 @@ void Node::handleSerialLine(const char* line) {
         return;
     }
     if (startsWithTokenIgnoreCase(line, "RB rebase")) {
+        // Only a bare "RB rebase" (or "force", above): "RB rebase forced"
+        // used to start a quiet-gated rebase (issue #32 check 17).
+        const char* extra = line + strlen("RB rebase");
+        while (*extra == ' ' || *extra == '\t') {
+            ++extra;
+        }
+        if (*extra != '\0') {
+            Serial.print("RB ERR rebase unknown token=");
+            Serial.println(extra);
+            return;
+        }
         if (_selfTest.phase != SelfTestState::Phase::Idle) {
             Serial.println("RB rebase refused busy=selftest");
             return;

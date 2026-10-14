@@ -1,0 +1,420 @@
+{
+  "purpose": "DET-012 / step 5b: lower chirp frequencies, DC blocker, 90 cm (as set), up, Emitter 0.5 FS, Scalar",
+  "created": "2026-10-14T18:19:04",
+  "setup": {
+    "distance_cm": 90.0,
+    "orientation": "mic and speaker facing up",
+    "emitter_fw": "",
+    "notes": [
+      "code bfbe0c8 Analyzer default (DC blocker); boards re-plugged since the earlier 90 cm runs, 3200 Hz raw amplitude differs (see 2026-10-14-up-90cm-rawscan-wide); owner away, quiet room assumed"
+    ]
+  },
+  "runs": [
+    {
+      "name": "T3_f2600_10",
+      "file": "T3_f2600_10.aa97a18.log",
+      "firmware": {
+        "role": "analyzer",
+        "git": "aa97a18",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "commands": [
+        "SEQ DIAG off",
+        "SEQ start profile=TonalPulseScalar tries=10 freq=2600 mode=detail when=all verbose=1"
+      ],
+      "started": "2026-10-14T18:19:10",
+      "duration_s": 37,
+      "summary": {
+        "profile": "TonalPulseScalar",
+        "detector": "scalar_transient",
+        "complete": true,
+        "trial_results": {
+          "expected": 10
+        },
+        "line_counts": {
+          "SEQ_TRIAL": 10,
+          "SEQ_SUMMARY": 1
+        },
+        "trials": "10",
+        "completed": "10",
+        "expected_trials": "10",
+        "early_trials": "0",
+        "late_trials": "0",
+        "miss_trials": "0",
+        "duplicate_trials": "0",
+        "unexpected_trials": "0",
+        "rejected_trials": "0",
+        "buffer_overrun_trials": "0",
+        "detector_accepted_trials": "10",
+        "detector_reject_trials": "0",
+        "pattern_valid_trials": "10",
+        "pattern_rejected_trials": "0",
+        "avg_dt_ms": "24",
+        "avg_strength": "12214.4",
+        "avg_conf": "1.00"
+      }
+    },
+    {
+      "name": "T3_f2000_10",
+      "file": "T3_f2000_10.aa97a18.log",
+      "firmware": {
+        "role": "analyzer",
+        "git": "aa97a18",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "commands": [
+        "SEQ DIAG off",
+        "SEQ start profile=TonalPulseScalar tries=10 freq=2000 mode=detail when=all verbose=1"
+      ],
+      "started": "2026-10-14T18:19:49",
+      "duration_s": 37,
+      "summary": {
+        "profile": "TonalPulseScalar",
+        "detector": "scalar_transient",
+        "complete": true,
+        "trial_results": {
+          "expected": 10
+        },
+        "line_counts": {
+          "SEQ_TRIAL": 10,
+          "SEQ_SUMMARY": 1
+        },
+        "trials": "10",
+        "completed": "10",
+        "expected_trials": "10",
+        "early_trials": "0",
+        "late_trials": "0",
+        "miss_trials": "0",
+        "duplicate_trials": "0",
+        "unexpected_trials": "0",
+        "rejected_trials": "0",
+        "buffer_overrun_trials": "0",
+        "detector_accepted_trials": "10",
+        "detector_reject_trials": "0",
+        "pattern_valid_trials": "10",
+        "pattern_rejected_trials": "0",
+        "avg_dt_ms": "23",
+        "avg_strength": "11002.4",
+        "avg_conf": "1.00"
+      }
+    },
+    {
+      "name": "T3_f1500_10",
+      "file": "T3_f1500_10.aa97a18.log",
+      "firmware": {
+        "role": "analyzer",
+        "git": "aa97a18",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "commands": [
+        "SEQ DIAG off",
+        "SEQ start profile=TonalPulseScalar tries=10 freq=1500 mode=detail when=all verbose=1"
+      ],
+      "started": "2026-10-14T18:20:29",
+      "duration_s": 37,
+      "summary": {
+        "profile": "TonalPulseScalar",
+        "detector": "scalar_transient",
+        "complete": true,
+        "trial_results": {
+          "expected": 10
+        },
+        "line_counts": {
+          "SEQ_TRIAL": 10,
+          "SEQ_SUMMARY": 1
+        },
+        "trials": "10",
+        "completed": "10",
+        "expected_trials": "10",
+        "early_trials": "0",
+        "late_trials": "0",
+        "miss_trials": "0",
+        "duplicate_trials": "0",
+        "unexpected_trials": "0",
+        "rejected_trials": "0",
+        "buffer_overrun_trials": "0",
+        "detector_accepted_trials": "10",
+        "detector_reject_trials": "0",
+        "pattern_valid_trials": "10",
+        "pattern_rejected_trials": "0",
+        "avg_dt_ms": "23",
+        "avg_strength": "6343.8",
+        "avg_conf": "1.00"
+      }
+    },
+    {
+      "name": "T3_f1000_10",
+      "file": "T3_f1000_10.aa97a18.log",
+      "firmware": {
+        "role": "analyzer",
+        "git": "aa97a18",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "commands": [
+        "SEQ DIAG off",
+        "SEQ start profile=TonalPulseScalar tries=10 freq=1000 mode=detail when=all verbose=1"
+      ],
+      "started": "2026-10-14T18:21:08",
+      "duration_s": 37,
+      "summary": {
+        "profile": "TonalPulseScalar",
+        "detector": "scalar_transient",
+        "complete": true,
+        "trial_results": {
+          "rejected": 10
+        },
+        "line_counts": {
+          "SEQ_TRIAL": 10,
+          "SEQ_SUMMARY": 1
+        },
+        "trials": "10",
+        "completed": "10",
+        "expected_trials": "0",
+        "early_trials": "0",
+        "late_trials": "0",
+        "miss_trials": "0",
+        "duplicate_trials": "0",
+        "unexpected_trials": "0",
+        "rejected_trials": "10",
+        "buffer_overrun_trials": "0",
+        "detector_accepted_trials": "0",
+        "detector_reject_trials": "10",
+        "pattern_valid_trials": "0",
+        "pattern_rejected_trials": "0",
+        "avg_dt_ms": "-1",
+        "avg_strength": "20722.2",
+        "avg_conf": "0.00"
+      }
+    },
+    {
+      "name": "T3_f800_10",
+      "file": "T3_f800_10.aa97a18.log",
+      "firmware": {
+        "role": "analyzer",
+        "git": "aa97a18",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "commands": [
+        "SEQ DIAG off",
+        "SEQ start profile=TonalPulseScalar tries=10 freq=800 mode=detail when=all verbose=1"
+      ],
+      "started": "2026-10-14T18:21:47",
+      "duration_s": 37,
+      "summary": {
+        "profile": "TonalPulseScalar",
+        "detector": "scalar_transient",
+        "complete": true,
+        "trial_results": {
+          "rejected": 10
+        },
+        "line_counts": {
+          "SEQ_TRIAL": 10,
+          "SEQ_SUMMARY": 1
+        },
+        "trials": "10",
+        "completed": "10",
+        "expected_trials": "0",
+        "early_trials": "0",
+        "late_trials": "0",
+        "miss_trials": "0",
+        "duplicate_trials": "0",
+        "unexpected_trials": "0",
+        "rejected_trials": "10",
+        "buffer_overrun_trials": "0",
+        "detector_accepted_trials": "0",
+        "detector_reject_trials": "10",
+        "pattern_valid_trials": "0",
+        "pattern_rejected_trials": "0",
+        "avg_dt_ms": "-1",
+        "avg_strength": "32767.0",
+        "avg_conf": "0.00"
+      }
+    },
+    {
+      "name": "T3_f2000_50",
+      "file": "T3_f2000_50.aa97a18.log",
+      "firmware": {
+        "role": "analyzer",
+        "git": "aa97a18",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "commands": [
+        "SEQ DIAG off",
+        "SEQ start profile=TonalPulseScalar tries=50 freq=2000 mode=detail when=all verbose=1"
+      ],
+      "started": "2026-10-14T18:22:51",
+      "duration_s": 165,
+      "summary": {
+        "profile": "TonalPulseScalar",
+        "detector": "scalar_transient",
+        "complete": true,
+        "trial_results": {
+          "expected": 50
+        },
+        "line_counts": {
+          "SEQ_TRIAL": 50,
+          "SEQ_SUMMARY": 1
+        },
+        "trials": "50",
+        "completed": "50",
+        "expected_trials": "50",
+        "early_trials": "0",
+        "late_trials": "0",
+        "miss_trials": "0",
+        "duplicate_trials": "0",
+        "unexpected_trials": "0",
+        "rejected_trials": "0",
+        "buffer_overrun_trials": "0",
+        "detector_accepted_trials": "50",
+        "detector_reject_trials": "0",
+        "pattern_valid_trials": "50",
+        "pattern_rejected_trials": "0",
+        "avg_dt_ms": "23",
+        "avg_strength": "10953.3",
+        "avg_conf": "1.00"
+      }
+    },
+    {
+      "name": "OBS_f2000_silence",
+      "file": "OBS_f2000_silence.aa97a18.log",
+      "firmware": {
+        "role": "analyzer",
+        "git": "aa97a18",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "commands": [
+        "SEQ DIAG off",
+        "SEQ OBS start tries=50 period=2000 window=1800 report_settle=200 freq=2000 profile=TonalPulseScalar mode=detail when=all verbose=1"
+      ],
+      "started": "2026-10-14T18:25:38",
+      "duration_s": 106,
+      "summary": {
+        "profile": "TonalPulseScalar",
+        "detector": "scalar_transient",
+        "complete": true,
+        "trial_results": {
+          "miss": 47,
+          "rejected": 3
+        },
+        "line_counts": {
+          "SEQ_TRIAL": 50,
+          "SEQ_SUMMARY": 1
+        },
+        "trials": "50",
+        "completed": "50",
+        "expected_trials": "0",
+        "early_trials": "0",
+        "late_trials": "0",
+        "miss_trials": "47",
+        "duplicate_trials": "0",
+        "unexpected_trials": "0",
+        "rejected_trials": "3",
+        "buffer_overrun_trials": "0",
+        "detector_accepted_trials": "0",
+        "detector_reject_trials": "3",
+        "pattern_valid_trials": "0",
+        "pattern_rejected_trials": "0",
+        "avg_dt_ms": "-1",
+        "avg_strength": "3184.3",
+        "avg_conf": "0.00"
+      }
+    },
+    {
+      "name": "OBS_f1500_silence",
+      "file": "OBS_f1500_silence.aa97a18.log",
+      "firmware": {
+        "role": "analyzer",
+        "git": "aa97a18",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "commands": [
+        "SEQ DIAG off",
+        "SEQ OBS start tries=50 period=2000 window=1800 report_settle=200 freq=1500 profile=TonalPulseScalar mode=detail when=all verbose=1"
+      ],
+      "started": "2026-10-14T18:27:25",
+      "duration_s": 105,
+      "summary": {
+        "profile": "TonalPulseScalar",
+        "detector": "scalar_transient",
+        "complete": true,
+        "trial_results": {
+          "miss": 50
+        },
+        "line_counts": {
+          "SEQ_TRIAL": 50,
+          "SEQ_SUMMARY": 1
+        },
+        "trials": "50",
+        "completed": "50",
+        "expected_trials": "0",
+        "early_trials": "0",
+        "late_trials": "0",
+        "miss_trials": "50",
+        "duplicate_trials": "0",
+        "unexpected_trials": "0",
+        "rejected_trials": "0",
+        "buffer_overrun_trials": "0",
+        "detector_accepted_trials": "0",
+        "detector_reject_trials": "0",
+        "pattern_valid_trials": "0",
+        "pattern_rejected_trials": "0",
+        "avg_dt_ms": "-1",
+        "avg_strength": "0.0",
+        "avg_conf": "0.00"
+      }
+    },
+    {
+      "name": "T3_f1500_50",
+      "file": "T3_f1500_50.aa97a18.log",
+      "firmware": {
+        "role": "analyzer",
+        "git": "aa97a18",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "commands": [
+        "SEQ DIAG off",
+        "SEQ start profile=TonalPulseScalar tries=50 freq=1500 mode=detail when=all verbose=1"
+      ],
+      "started": "2026-10-14T18:29:13",
+      "duration_s": 165,
+      "summary": {
+        "profile": "TonalPulseScalar",
+        "detector": "scalar_transient",
+        "complete": true,
+        "trial_results": {
+          "expected": 50
+        },
+        "line_counts": {
+          "SEQ_TRIAL": 50,
+          "SEQ_SUMMARY": 1
+        },
+        "trials": "50",
+        "completed": "50",
+        "expected_trials": "50",
+        "early_trials": "0",
+        "late_trials": "0",
+        "miss_trials": "0",
+        "duplicate_trials": "0",
+        "unexpected_trials": "0",
+        "rejected_trials": "0",
+        "buffer_overrun_trials": "0",
+        "detector_accepted_trials": "50",
+        "detector_reject_trials": "0",
+        "pattern_valid_trials": "50",
+        "pattern_rejected_trials": "0",
+        "avg_dt_ms": "21",
+        "avg_strength": "6332.2",
+        "avg_conf": "1.00"
+      }
+    }
+  ]
+}

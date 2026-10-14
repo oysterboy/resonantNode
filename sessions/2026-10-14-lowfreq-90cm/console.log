@@ -1,0 +1,24 @@
+[18:19:08] boot banner: {'role': 'analyzer', 'git': 'aa97a18', 'version': '0.4.0', 'board': 'damp'}
+[18:19:10] warmup: OK EMIT CHIRP
+[18:19:10] start T3_f2600_10: SEQ DIAG off ; SEQ start profile=TonalPulseScalar tries=10 freq=2600 mode=detail when=all verbose=1
+[18:19:47] done T3_f2600_10 (37s): complete=True results={'expected': 10}
+[18:19:49] start T3_f2000_10: SEQ DIAG off ; SEQ start profile=TonalPulseScalar tries=10 freq=2000 mode=detail when=all verbose=1
+[18:20:27] done T3_f2000_10 (37s): complete=True results={'expected': 10}
+[18:20:29] start T3_f1500_10: SEQ DIAG off ; SEQ start profile=TonalPulseScalar tries=10 freq=1500 mode=detail when=all verbose=1
+[18:21:06] done T3_f1500_10 (37s): complete=True results={'expected': 10}
+[18:21:08] start T3_f1000_10: SEQ DIAG off ; SEQ start profile=TonalPulseScalar tries=10 freq=1000 mode=detail when=all verbose=1
+[18:21:45] done T3_f1000_10 (37s): complete=True results={'rejected': 10}
+[18:21:47] start T3_f800_10: SEQ DIAG off ; SEQ start profile=TonalPulseScalar tries=10 freq=800 mode=detail when=all verbose=1
+[18:22:25] done T3_f800_10 (37s): complete=True results={'rejected': 10}
+[18:22:30] session updated, index rebuilt
+[18:22:48] boot banner: {'role': 'analyzer', 'git': 'aa97a18', 'version': '0.4.0', 'board': 'damp'}
+[18:22:51] warmup: OK EMIT CHIRP
+[18:22:51] start T3_f2000_50: SEQ DIAG off ; SEQ start profile=TonalPulseScalar tries=50 freq=2000 mode=detail when=all verbose=1
+[18:25:36] done T3_f2000_50 (165s): complete=True results={'expected': 50}
+[18:25:38] start OBS_f2000_silence: SEQ DIAG off ; SEQ OBS start tries=50 period=2000 window=1800 report_settle=200 freq=2000 profile=TonalPulseScalar mode=detail when=all verbose=1
+[18:27:23] done OBS_f2000_silence (106s): complete=True results={'miss': 47, 'rejected': 3}
+[18:27:25] start OBS_f1500_silence: SEQ DIAG off ; SEQ OBS start tries=50 period=2000 window=1800 report_settle=200 freq=1500 profile=TonalPulseScalar mode=detail when=all verbose=1
+[18:29:11] done OBS_f1500_silence (105s): complete=True results={'miss': 50}
+[18:29:13] start T3_f1500_50: SEQ DIAG off ; SEQ start profile=TonalPulseScalar tries=50 freq=1500 mode=detail when=all verbose=1
+[18:31:58] done T3_f1500_50 (165s): complete=True results={'expected': 50}
+[18:32:03] session updated, index rebuilt

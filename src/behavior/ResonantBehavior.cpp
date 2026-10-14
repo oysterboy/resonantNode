@@ -702,3 +702,9 @@ unsigned long ResonantBehavior::idleMinMs() const {
 unsigned long ResonantBehavior::idleMaxMs() const {
     return _idleTimeMs + _idleTimeVariationMs;
 }
+
+void ResonantBehavior::notePatternHeardWhileOutputsOff(const detection::OccurrenceVerdict& verdict, unsigned long now) {
+    if (verdict.valid) {
+        _lastHeardPatternMs = verdict.primaryAcceptedMs != 0 ? verdict.primaryAcceptedMs : now;
+    }
+}

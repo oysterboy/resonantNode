@@ -5,6 +5,7 @@
 
 #include "../../selftest/AudioSelfTest.h"
 #include "../../app/TimeBase.h"
+#include "../../app/TimingUtils.h"
 
 /*
 Node SELFTEST (NODE-015, docs/refactors/selftest.md)
@@ -132,8 +133,13 @@ void Node::updateSelfTest(unsigned long now) {
             st.deadlineMs = timebase::nowMs() + kOutputsWaitMs;
             return;
 
-        case SelfTestState::Phase::Settle:
-            if (!rbOutputsEnabled() && !deadlinePassed(now, st.deadlineMs)) {
+        case SelfTestState::Phase::Settle: {
+            // A chirp from before SELFTEST started has no own-chirp window;
+            // its echo would count as external (issue #31 R2-16). Wait for
+            // it to stop and for kEchoWindowMs after.
+            const bool ownChirpEcho = _chirpOutput.isActive()
+                || !timing::elapsedSince(now, _lastOwnChirpEndMs, kEchoWindowMs);
+            if ((!rbOutputsEnabled() || ownChirpEcho) && !deadlinePassed(now, st.deadlineMs)) {
                 return;
             }
             if (st.command.kind == selftest::Command::Kind::External) {
@@ -166,6 +172,7 @@ void Node::updateSelfTest(unsigned long now) {
             }
             startSelfTestChirps(SelfTestState::Phase::OwnChirp, now);
             return;
+        }
 
         case SelfTestState::Phase::OwnChirp:
             driveSelfTestChirps(now);
@@ -248,6 +255,9 @@ void Node::runSelfTestHardware(unsigned long now) {
 void Node::restoreAfterSelfTestHardware() {
     // The tone is off; put the output device back on the chirp frequency.
     _chirpOutput.stop();
+    // Several seconds of blocking checks: a HeardPattern from before them
+    // must not fire after Settle (issue #31 R2-3). Config is kept.
+    _behavior.resetState();
     _chirpOutput.setToneHz(_chirpOutput.toneHz());
 
     // The checks read several seconds of audio that never reached the

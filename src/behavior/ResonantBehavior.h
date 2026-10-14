@@ -44,6 +44,10 @@ public:
     void resetState();
     void configure(const BehaviorGateConfig& profile);
     BehaviorDecision handleOccurrenceVerdict(const detection::OccurrenceVerdict& result, unsigned long now);
+    // Outputs off (Settle, ListenForQuiet): a valid pattern still counts as
+    // heard for idleBlockedAfterHeardMs, without entering HeardPattern
+    // (issue #31 R2-12).
+    void notePatternHeardWhileOutputsOff(const detection::OccurrenceVerdict& verdict, unsigned long now);
     BehaviorDecision handleOccurrenceVerdict(const detection::OccurrenceVerdict& result, const detection::FieldState& field, unsigned long now);
     void update(unsigned long now);
     void seedIdleSchedule(unsigned long now);

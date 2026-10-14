@@ -16,6 +16,7 @@ void FrequencyMatchDetector::resetState() {
     _pendingClosed = false;
     _pendingRefractoryUntilMs = 0;
     _pendingRefractoryArmed = false;
+    _awaitAttackDrop = false;
     _firstThresholdCrossingMs = 0;
     _firstThresholdCrossingSample = 0;
     _pendingOpenMs = 0;
@@ -27,6 +28,7 @@ void FrequencyMatchDetector::resetState() {
     _pendingHoldUpdates = 0;
     _pendingDurationMs = 0;
     _pendingLastMatchedMs = 0;
+    _pendingLastMatchedSample = 0;
     _attackScoreThreshold = 0.0f;
     _releaseScoreThreshold = 0.0f;
     _attackContrastThreshold = 0.0f;
@@ -125,7 +127,9 @@ void FrequencyMatchDetector::resetRejectSummary() {
     // The ids and facts above are wiped, so the pending lifecycle goes too
     // (issue #31): kept, a pending open across a trial start closed with
     // occurrenceId=0 and tail-only facts, and a closed accepted one was
-    // captured again as the new trial's report.
+    // captured again as the new trial's report. A dropped open pending also
+    // blocks reopening until attack drops (R2-10).
+    _awaitAttackDrop = _pendingActive;
     _pendingActive = false;
     _pendingAccepted = false;
     _pendingClosed = false;
@@ -138,6 +142,7 @@ void FrequencyMatchDetector::resetRejectSummary() {
     _pendingHoldUpdates = 0;
     _pendingDurationMs = 0;
     _pendingLastMatchedMs = 0;
+    _pendingLastMatchedSample = 0;
 }
 
 void FrequencyMatchDetector::clearFrozenReport() {
@@ -331,14 +336,39 @@ void FrequencyMatchDetector::update(const detection::FrequencyBandMeasurementPac
     _pendingCandidateOccurrence.present = evidence.present;
     _pendingCandidateOccurrence.valid = false;
 
+    // The live gate reason, filled in once per update. closePending can
+    // freeze a reject report before the fill at the end of update(), so it
+    // calls this first (issue #31 R2-9: rejects froze gate_reason=unknown).
+    const auto fillLiveGateReason = [&]() {
+        if (_gateReason[0] != '\0') {
+            return;
+        }
+        const char* liveReason = "none";
+        if (!gates.evidenceOk) {
+            liveReason = "no_frequency_evidence";
+        } else if (!gates.attackScoreOk) {
+            liveReason = "freq_score_too_low";
+        }
+        strncpy(_gateReason, liveReason, sizeof(_gateReason) - 1);
+        _gateReason[sizeof(_gateReason) - 1] = '\0';
+    };
+
     const auto closePending = [&](unsigned long minDurationMs) {
+        fillLiveGateReason();
         finalizePendingFacts(now);
         _pendingActive = false;
         _pendingClosed = true;
         _pendingCloseMs = now;
         _pendingCloseSample = currentSample;
-        _pendingDurationMs = timing::atOrAfter(_pendingCloseMs, _pendingOpenMs)
-            ? _pendingCloseMs - _pendingOpenMs
+        // Duration and release run to the last matched update, not to the
+        // close, which only comes releaseDebounceMs later: measured to the
+        // close, minDurationMs was effectively shortened by the debounce and
+        // release times were late by it (issue #31 R2-2; Scalar measures to
+        // its first dip the same way).
+        const unsigned long releaseMs = _pendingLastMatchedMs != 0 ? _pendingLastMatchedMs : _pendingCloseMs;
+        const uint64_t releaseSample = _pendingLastMatchedMs != 0 ? _pendingLastMatchedSample : _pendingCloseSample;
+        _pendingDurationMs = timing::atOrAfter(releaseMs, _pendingOpenMs)
+            ? releaseMs - _pendingOpenMs
             : 0UL;
         const bool durationOk = _pendingDurationMs >= minDurationMs;
         const bool accepted = durationOk;
@@ -362,9 +392,9 @@ void FrequencyMatchDetector::update(const detection::FrequencyBandMeasurementPac
         _currentPendingId = 0;
         _pendingDurationInconsistent = accepted != durationOk;
         _pendingCandidateOccurrence.valid = accepted;
-        _pendingCandidateOccurrence.releaseMs = _pendingCloseMs;
-        _pendingCandidateOccurrence.releaseSample = _pendingCloseSample;
-        _pendingCandidateOccurrence.endMs = _pendingCloseMs;
+        _pendingCandidateOccurrence.releaseMs = releaseMs;
+        _pendingCandidateOccurrence.releaseSample = releaseSample;
+        _pendingCandidateOccurrence.endMs = releaseMs;
         _pendingCandidateOccurrence.durationMs = _pendingDurationMs;
         _pendingCandidateOccurrence.confidence = accepted ? 1.0f : 0.0f;
         if (!accepted) {
@@ -388,9 +418,12 @@ void FrequencyMatchDetector::update(const detection::FrequencyBandMeasurementPac
             }
         }
 
+        if (_awaitAttackDrop && !_attackOk) {
+            _awaitAttackDrop = false;
+        }
         if (!_pendingActive) {
             if (_attackOk) {
-                if (_pendingRefractoryArmed) {
+                if (_pendingRefractoryArmed || _awaitAttackDrop) {
                     strncpy(_gateReason, "refractory", sizeof(_gateReason) - 1);
                     _gateReason[sizeof(_gateReason) - 1] = '\0';
                     _wouldProducePending = false;
@@ -411,6 +444,7 @@ void FrequencyMatchDetector::update(const detection::FrequencyBandMeasurementPac
                     _pendingHoldUpdates = 1;
                     _pendingDurationMs = 0;
                     _pendingLastMatchedMs = now;
+                    _pendingLastMatchedSample = currentSample;
                     _pendingEvidence = evidence;
                     resetPendingFacts();
                     _pendingPeakScore = evidence.targetBandValue;
@@ -447,6 +481,7 @@ void FrequencyMatchDetector::update(const detection::FrequencyBandMeasurementPac
             _pendingAudioOverflow = _pendingAudioOverflow || audioSamplePacket.overflowDuringBlock;
             if (_releaseOk) {
                 _pendingLastMatchedMs = now;
+                _pendingLastMatchedSample = currentSample;
                 ++_pendingHoldUpdates;
                 _pendingDurationMs = timing::atOrAfter(_pendingLastMatchedMs, _pendingOpenMs)
                     ? _pendingLastMatchedMs - _pendingOpenMs
@@ -490,16 +525,7 @@ void FrequencyMatchDetector::update(const detection::FrequencyBandMeasurementPac
     // evidence so far" snapshot (_bestEvidence/bestEval, local to this block)
     // for its own summary counters and must not write back into the fields
     // above.
-    if (_gateReason[0] == '\0') {
-        const char* liveReason = "none";
-        if (!gates.evidenceOk) {
-            liveReason = "no_frequency_evidence";
-        } else if (!gates.attackScoreOk) {
-            liveReason = "freq_score_too_low";
-        }
-        strncpy(_gateReason, liveReason, sizeof(_gateReason) - 1);
-        _gateReason[sizeof(_gateReason) - 1] = '\0';
-    }
+    fillLiveGateReason();
 
     if (_diagnosticsEnabled) {
         const bool better = !_bestEvidence.present

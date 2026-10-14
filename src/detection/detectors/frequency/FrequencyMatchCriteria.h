@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <math.h>
 
 #include "../../inspection/InspectorTypes.h"
 
@@ -58,33 +59,45 @@ struct FrequencyMatchGateResult {
 
 using Evaluation = FrequencyMatchGateResult;
 
+// A finite number with nothing after it. On anything else the value is left
+// unchanged: strtof(..., nullptr) turned "x" into 0 (the node then triggered
+// on noise) and accepted "nan" (detection off) (issue #31 R2-4).
+inline bool parseFiniteFloat(const char* text, float& out) {
+    if (text == nullptr || *text == '\0') {
+        return false;
+    }
+    char* end = nullptr;
+    const float parsed = strtof(text, &end);
+    if (end == text || *end != '\0' || isnan(parsed) || isinf(parsed)) {
+        return false;
+    }
+    out = parsed;
+    return true;
+}
+
+// true when the token is a frequency key with a valid value; false when the
+// key is unknown or its value doesn't parse (the value is then unchanged).
 inline bool parseToken(const char* token, Values& values) {
     if (token == nullptr) {
         return false;
     }
     if (strncmp(token, "freqAttackScore=", 16) == 0) {
-        values.attackScoreMin = strtof(token + 16, nullptr);
-        return true;
+        return parseFiniteFloat(token + 16, values.attackScoreMin);
     }
     if (strncmp(token, "freqReleaseScore=", 17) == 0) {
-        values.releaseScoreMin = strtof(token + 17, nullptr);
-        return true;
+        return parseFiniteFloat(token + 17, values.releaseScoreMin);
     }
     if (strncmp(token, "freqAttackContrast=", 19) == 0) {
-        values.attackContrastMin = strtof(token + 19, nullptr);
-        return true;
+        return parseFiniteFloat(token + 19, values.attackContrastMin);
     }
     if (strncmp(token, "freqReleaseContrast=", 20) == 0) {
-        values.releaseContrastMin = strtof(token + 20, nullptr);
-        return true;
+        return parseFiniteFloat(token + 20, values.releaseContrastMin);
     }
     if (strncmp(token, "freqScore=", 10) == 0) {
-        values.attackScoreMin = strtof(token + 10, nullptr);
-        return true;
+        return parseFiniteFloat(token + 10, values.attackScoreMin);
     }
     if (strncmp(token, "freqContrast=", 13) == 0) {
-        values.attackContrastMin = strtof(token + 13, nullptr);
-        return true;
+        return parseFiniteFloat(token + 13, values.attackContrastMin);
     }
     return false;
 }

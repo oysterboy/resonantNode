@@ -14,6 +14,8 @@ void ScalarTransientDetector::begin() {
     _statsStartUs = timebase::nowUs64();
     _lastStatsPrintUs = 0;
     _peakAcceptedCount = 0;
+    _trialAcceptedCountBase = 0;
+    _trialRejectedCountBase = 0;
 }
 
 void ScalarTransientDetector::resetState() {
@@ -46,6 +48,8 @@ void ScalarTransientDetector::resetState() {
     _nextOccurrenceId = 0;
     _currentOccurrenceId = 0;
     _peakAcceptedCount = 0;
+    _trialAcceptedCountBase = 0;
+    _trialRejectedCountBase = 0;
     _reportDetail = {};
     resetAcceptedOccurrencePending();
     _acceptedOccurrencePresent = false;
@@ -72,6 +76,8 @@ void ScalarTransientDetector::resetAcceptedOccurrenceSummary() {
 }
 
 void ScalarTransientDetector::resetSelectedRejectSummary() {
+    _trialAcceptedCountBase = _peakAcceptedCount;
+    _trialRejectedCountBase = _transientRejectedCount;
     _selectedRejectPresent = false;
     _selectedReject = {};
     _selectedRejectOccurrenceId = 0;

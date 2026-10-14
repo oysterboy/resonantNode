@@ -68,6 +68,7 @@ private:
     void resetRbCounters();
     void resetDetectionState();
     void performRbRebase();
+    void quiesceBehaviorForOutputsOff();
     void updateRbBaselineState(unsigned long now);
     bool rbOutputsEnabled() const;
     const char* rbBaselineStateName() const;
@@ -202,6 +203,8 @@ private:
     RbLogMode _rbLogMode = RbLogMode::Minimal;
     detection::DetectionProfileKind _profileKind = detection::DetectionProfileKind::TonalPulseScalar;
     bool _wasSelfChirpSuppressed = false;
+    // When the last own chirp stopped; SELFTEST Settle waits out its echo.
+    unsigned long _lastOwnChirpEndMs = 0;
     unsigned long _rbLastWouldEmitHeardMs = 0;
     ResonantBehavior::BehaviorDecision _rbLastWouldEmitDecision = ResonantBehavior::BehaviorDecision::None;
 

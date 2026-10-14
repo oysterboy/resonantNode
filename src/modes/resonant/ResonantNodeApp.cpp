@@ -69,7 +69,12 @@ uint32_t sampleOffsetUs(uint32_t sampleOffset, uint32_t sampleRateHz) {
 
 }
 
+// Case-insensitive prefix match that ends on a token boundary: the next
+// character is the end or a space, unless the prefix itself ends in '='
+// (key=value). A plain prefix match ran "RB rebase forced" and
+// "RB rebasefoo" as rebases (issue #31 R2-19).
 static bool startsWithTokenIgnoreCase(const char* line, const char* token) {
+    char last = '\0';
     while (*token != '\0') {
         if (*line == '\0') {
             return false;
@@ -77,11 +82,12 @@ static bool startsWithTokenIgnoreCase(const char* line, const char* token) {
         if (toupper(static_cast<unsigned char>(*line)) != toupper(static_cast<unsigned char>(*token))) {
             return false;
         }
+        last = *token;
         ++line;
         ++token;
     }
 
-    return true;
+    return last == '=' || *line == '\0' || *line == ' ';
 }
 
 static bool equalsIgnoreCase(const char* a, const char* b) {
@@ -378,7 +384,22 @@ void Node::begin() {
     Serial.println(rbBaselineStateName());
 }
 
+// Outputs go off: Behavior must not carry a HeardPattern (or a sounding
+// chirp) across, or it answers seconds late once outputs return. Config
+// (RB BEHAV) is kept; performRbRebase does the same plus the audio reset
+// (issue #31 R2-3).
+void Node::quiesceBehaviorForOutputsOff() {
+    if (_chirpOutput.isActive()) {
+        _chirpOutput.stop();
+        _lastOwnChirpEndMs = timebase::nowMs();
+        _debug.observeChirpFinished(timebase::nowMs());
+        selfTestNoteChirpFinished(timebase::nowMs());
+    }
+    _behavior.resetState();
+}
+
 void Node::startRbQuietBaseline() {
+    quiesceBehaviorForOutputsOff();
     _rbBaselineState = RBBaselineState::ListenForQuiet;
     _rbBaselineStateStartedMs = timebase::nowMs();
     _rbBaselineQuietSinceMs = 0;
@@ -414,10 +435,10 @@ void Node::performRbRebase() {
     // Behavior's reset drops the own-emit suppression; a chirp left sounding
     // would then be heard and answered (issue #31). Its ring-down falls in
     // the post-rebase Settle, where verdicts don't reach Behavior.
-    if (_chirpOutput.isActive()) {
-        _chirpOutput.stop();
+    quiesceBehaviorForOutputsOff();
+    if (!_audioSignal.rebase()) {
+        Serial.println("RB WARN rebase_timeout no_audio baseline_unchanged");
     }
-    _audioSignal.rebase();
     _behavior.resetState();
     resetDetectionState();
     _audioSignal.resetStats();
@@ -674,6 +695,7 @@ void Node::update() {
         // Fresh time: the own-emit tail runs from the actual toneOff in
         // update() above, not from the loop start (issue #31).
         const unsigned long finishedMs = timebase::nowMs();
+        _lastOwnChirpEndMs = finishedMs;
         _behavior.notifyChirpFinished(finishedMs);
         _debug.observeChirpFinished(now);
         selfTestNoteChirpFinished(now);
@@ -773,7 +795,11 @@ void Node::handleSerialLine(const char* line) {
         freqTuning.releaseContrastMin = _activeDetectionProfile.frequencyMatch.releaseContrastMin;
 
         while ((token = strtok_r(nullptr, " ", &savePtr)) != nullptr) {
-            FrequencyMatchCriteria::parseToken(token, freqTuning);
+            if (!FrequencyMatchCriteria::parseToken(token, freqTuning)) {
+                Serial.print("RB PARAM ERR token=");
+                Serial.print(token);
+                Serial.println(" (unknown key or invalid value; unchanged)");
+            }
         }
 
         _activeDetectionProfile.frequencyMatch.attackScoreMin = freqTuning.attackScoreMin;
@@ -855,8 +881,18 @@ void Node::handleSerialLine(const char* line) {
                 idleBlockedAfterOwnEmitMs = strtoul(value, nullptr, 10);
             } else if (const char* value = valueAfterPrefix(token, "idleBlockedOwnEmitMs=")) {
                 idleBlockedAfterOwnEmitMs = strtoul(value, nullptr, 10);
+            } else if (const char* value = valueAfterPrefix(token, "idleBlockedHeard=")) {
+                // The keys RB BEHAV and RB summary echo, so an echoed line
+                // pastes back (issue #31 R2-19).
+                idleBlockedAfterHeardMs = strtoul(value, nullptr, 10);
+            } else if (const char* value = valueAfterPrefix(token, "idleBlockedOwnEmit=")) {
+                idleBlockedAfterOwnEmitMs = strtoul(value, nullptr, 10);
             } else if (const char* value = valueAfterPrefix(token, "idleEnabled=")) {
                 idleEnabled = equalsIgnoreCase(value, "1") || equalsIgnoreCase(value, "on") || equalsIgnoreCase(value, "true");
+            } else {
+                Serial.print("RB BEHAV ERR token=");
+                Serial.print(token);
+                Serial.println(" (unknown key; ignored)");
             }
         }
 
@@ -895,6 +931,12 @@ void Node::handleSerialLine(const char* line) {
         return;
     }
     if (startsWithTokenIgnoreCase(line, "RB rebase force")) {
+        // A rebase stops and resets what SELFTEST is waiting on (issue #31
+        // R2-13): finish or wait out the self-test first.
+        if (_selfTest.phase != SelfTestState::Phase::Idle) {
+            Serial.println("RB rebase refused busy=selftest");
+            return;
+        }
         _rbBaselineState = RBBaselineState::Rebase;
         performRbRebase();
         _rbBaselineState = RBBaselineState::Settle;
@@ -904,6 +946,10 @@ void Node::handleSerialLine(const char* line) {
         return;
     }
     if (startsWithTokenIgnoreCase(line, "RB rebase")) {
+        if (_selfTest.phase != SelfTestState::Phase::Idle) {
+            Serial.println("RB rebase refused busy=selftest");
+            return;
+        }
         startRbQuietBaseline();
         Serial.println("RB rebase requested quiet-gated");
         return;
@@ -1119,6 +1165,11 @@ void Node::handleParamCommand(const char* line) {
     if (equalsIgnoreCase(token, "SET")) {
         const char* path = strtok_r(nullptr, " ", &savePtr);
         const char* value = strtok_r(nullptr, " ", &savePtr);
+        // One value only: "1.5 junk" is an error, not 1.5 (issue #31 R2-19).
+        const char* extra = strtok_r(nullptr, " ", &savePtr);
+        if (extra != nullptr) {
+            value = nullptr;
+        }
         const param::ParamBinding* binding = path != nullptr ? _paramRegistry.find(path) : nullptr;
 
         if (binding == nullptr) {
@@ -1232,9 +1283,13 @@ void Node::processDetectionFrame(const AudioSamplePacket& audioSamplePacket,
     while (_detection.popOccurrenceVerdict(verdict)) {
         // Outputs off (Settle, ListenForQuiet): a verdict must not leave
         // Behavior in HeardPattern to fire late once Active (issue #31).
-        const auto behaviorDecision = rbOutputsEnabled()
+        const bool behaviorSeesVerdict = rbOutputsEnabled();
+        const auto behaviorDecision = behaviorSeesVerdict
             ? _behavior.handleOccurrenceVerdict(verdict, _detection.fieldState(), now)
             : ResonantBehavior::BehaviorDecision::None;
+        if (!behaviorSeesVerdict) {
+            _behavior.notePatternHeardWhileOutputsOff(verdict, now);
+        }
         if (behaviorDecision == ResonantBehavior::BehaviorDecision::ConsumedPattern) {
             sawPatternThisLoop = true;
         }
@@ -1268,10 +1323,12 @@ void Node::processDetectionFrame(const AudioSamplePacket& audioSamplePacket,
             Serial.print(_detection.fieldState().active ? 1 : 0);
             Serial.print(" fieldDense=");
             Serial.print(_detection.fieldState().dense ? 1 : 0);
+            // Outputs off: Behavior never saw this verdict, so its last
+            // decision belongs to an earlier one (issue #31 R2-11).
             Serial.print(" behaviorEligible=");
-            Serial.print(_behavior.behaviorEligible() ? 1 : 0);
+            Serial.print(behaviorSeesVerdict && _behavior.behaviorEligible() ? 1 : 0);
             Serial.print(" decision=");
-            Serial.print(_behavior.lastDecisionName());
+            Serial.print(behaviorSeesVerdict ? _behavior.lastDecisionName() : "outputs_off");
             Serial.print(" valid=");
             Serial.print(verdict.valid ? 1 : 0);
             Serial.print(" profile=");

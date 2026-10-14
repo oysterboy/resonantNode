@@ -2,6 +2,7 @@
 
 #include <Arduino.h>
 #include "../app/RuntimeDefaults.h"
+#include "../app/TimingUtils.h"
 
 namespace {
 uint32_t sampleOffsetUs(uint32_t sampleOffset, uint32_t sampleRateHz) {
@@ -28,7 +29,9 @@ void AudioSignal::begin(bool doRebase) {
     }
 }
 
-void AudioSignal::rebase() {
+bool AudioSignal::rebase() {
+    constexpr unsigned long kRebaseTimeoutMs = 500; // 200 samples take 12.5 ms at 16 kHz
+    const unsigned long startMs = timebase::nowMs();
     long sum = 0;
     for (int i = 0; i < 200; ) {
         int sample = 0;
@@ -37,6 +40,9 @@ void AudioSignal::rebase() {
             sum += sample;
             ++i;
         } else {
+            if (timing::elapsedSince(timebase::nowMs(), startMs, kRebaseTimeoutMs)) {
+                return false;
+            }
             delay(1);
         }
     }
@@ -47,6 +53,7 @@ void AudioSignal::rebase() {
     _centeredSignal = 0;
     _signalMagnitude = 0;
     _latestFrame = {};
+    return true;
 }
 
 // -----------------------------------------------------------------------------

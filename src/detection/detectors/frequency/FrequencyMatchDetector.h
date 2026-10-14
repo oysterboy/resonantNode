@@ -131,6 +131,11 @@ private:
     unsigned long _pendingHoldUpdates = 0;
     unsigned long _pendingDurationMs = 0;
     unsigned long _pendingLastMatchedMs = 0;
+    uint64_t _pendingLastMatchedSample = 0;
+    // Set when a per-trial reset drops an open pending (issue #31 R2-10):
+    // no new pending opens until attack has dropped once, so a tone still
+    // sounding at the trigger can't reopen mid-tone.
+    bool _awaitAttackDrop = false;
     bool _evidenceOk = false;
     bool _attackScoreOk = false;
     bool _attackContrastOk = false;

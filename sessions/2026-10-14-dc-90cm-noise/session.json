@@ -1,0 +1,151 @@
+{
+  "purpose": "step 5a item 2b (#35): DC blocker, silence/speech/music at 90 cm, up, Emitter 0.5 FS, Scalar",
+  "created": "2026-10-14T17:26:37",
+  "setup": {
+    "distance_cm": 90.0,
+    "orientation": "mic and speaker facing up",
+    "emitter_fw": "",
+    "notes": [
+      "Analyzer default build (DC blocker 100 Hz x0.588), code bfbe0c8; radio 50 cm from E2, full volume, 90 deg to the mic for speech/music"
+    ]
+  },
+  "runs": [
+    {
+      "name": "OBS_scalar_silence",
+      "file": "OBS_scalar_silence.bfbe0c8.log",
+      "firmware": {
+        "role": "analyzer",
+        "git": "bfbe0c8",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "commands": [
+        "SEQ DIAG off",
+        "SEQ OBS start tries=50 period=2000 window=1800 report_settle=200 profile=TonalPulseScalar mode=detail when=all verbose=1"
+      ],
+      "started": "2026-10-14T17:26:43",
+      "duration_s": 106,
+      "summary": {
+        "profile": "TonalPulseScalar",
+        "detector": "scalar_transient",
+        "complete": true,
+        "trial_results": {
+          "miss": 50
+        },
+        "line_counts": {
+          "SEQ_TRIAL": 50,
+          "SEQ_SUMMARY": 1
+        },
+        "trials": "50",
+        "completed": "50",
+        "expected_trials": "0",
+        "early_trials": "0",
+        "late_trials": "0",
+        "miss_trials": "50",
+        "duplicate_trials": "0",
+        "unexpected_trials": "0",
+        "rejected_trials": "0",
+        "buffer_overrun_trials": "0",
+        "detector_accepted_trials": "0",
+        "detector_reject_trials": "0",
+        "pattern_valid_trials": "0",
+        "pattern_rejected_trials": "0",
+        "avg_dt_ms": "-1",
+        "avg_strength": "0.0",
+        "avg_conf": "0.00"
+      }
+    },
+    {
+      "name": "OBS_scalar_speech",
+      "file": "OBS_scalar_speech.bfbe0c8.log",
+      "firmware": {
+        "role": "analyzer",
+        "git": "bfbe0c8",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "commands": [
+        "SEQ DIAG off",
+        "SEQ OBS start tries=50 period=2000 window=1800 report_settle=200 profile=TonalPulseScalar mode=detail when=all verbose=1"
+      ],
+      "started": "2026-10-14T17:30:39",
+      "duration_s": 105,
+      "summary": {
+        "profile": "TonalPulseScalar",
+        "detector": "scalar_transient",
+        "complete": true,
+        "trial_results": {
+          "rejected": 11,
+          "miss": 39
+        },
+        "line_counts": {
+          "SEQ_TRIAL": 50,
+          "SEQ_SUMMARY": 1
+        },
+        "trials": "50",
+        "completed": "50",
+        "expected_trials": "0",
+        "early_trials": "0",
+        "late_trials": "0",
+        "miss_trials": "39",
+        "duplicate_trials": "0",
+        "unexpected_trials": "0",
+        "rejected_trials": "11",
+        "buffer_overrun_trials": "0",
+        "detector_accepted_trials": "0",
+        "detector_reject_trials": "13",
+        "pattern_valid_trials": "0",
+        "pattern_rejected_trials": "0",
+        "avg_dt_ms": "-1",
+        "avg_strength": "2369.8",
+        "avg_conf": "0.00"
+      }
+    },
+    {
+      "name": "OBS_scalar_music",
+      "file": "OBS_scalar_music.bfbe0c8.log",
+      "firmware": {
+        "role": "analyzer",
+        "git": "bfbe0c8",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "commands": [
+        "SEQ DIAG off",
+        "SEQ OBS start tries=50 period=2000 window=1800 report_settle=200 profile=TonalPulseScalar mode=detail when=all verbose=1"
+      ],
+      "started": "2026-10-14T17:36:28",
+      "duration_s": 105,
+      "summary": {
+        "profile": "TonalPulseScalar",
+        "detector": "scalar_transient",
+        "complete": true,
+        "trial_results": {
+          "rejected": 43,
+          "miss": 7
+        },
+        "line_counts": {
+          "SEQ_TRIAL": 50,
+          "SEQ_SUMMARY": 1
+        },
+        "trials": "50",
+        "completed": "50",
+        "expected_trials": "0",
+        "early_trials": "0",
+        "late_trials": "0",
+        "miss_trials": "7",
+        "duplicate_trials": "0",
+        "unexpected_trials": "0",
+        "rejected_trials": "43",
+        "buffer_overrun_trials": "0",
+        "detector_accepted_trials": "0",
+        "detector_reject_trials": "45",
+        "pattern_valid_trials": "0",
+        "pattern_rejected_trials": "0",
+        "avg_dt_ms": "-1",
+        "avg_strength": "3389.6",
+        "avg_conf": "0.00"
+      }
+    }
+  ]
+}

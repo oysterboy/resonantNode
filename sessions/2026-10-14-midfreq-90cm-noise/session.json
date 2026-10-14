@@ -1,0 +1,205 @@
+{
+  "purpose": "DET-012: speech/music false answers at 2800 and 2600 Hz, DC blocker, 90 cm, up, Emitter 0.5 FS, Scalar",
+  "created": "2026-10-14T18:54:44",
+  "setup": {
+    "distance_cm": 90.0,
+    "orientation": "mic and speaker facing up",
+    "emitter_fw": "",
+    "notes": [
+      "code bfbe0c8 Analyzer default; radio 50 cm from E2, full volume, 90 deg to the mic; music first, then speech"
+    ]
+  },
+  "runs": [
+    {
+      "name": "OBS_f2800_music",
+      "file": "OBS_f2800_music.aa97a18.log",
+      "firmware": {
+        "role": "analyzer",
+        "git": "aa97a18",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "commands": [
+        "SEQ DIAG off",
+        "SEQ OBS start tries=50 period=2000 window=1800 report_settle=200 freq=2800 profile=TonalPulseScalar mode=detail when=all verbose=1"
+      ],
+      "started": "2026-10-14T18:57:44",
+      "duration_s": 105,
+      "summary": {
+        "profile": "TonalPulseScalar",
+        "detector": "scalar_transient",
+        "complete": true,
+        "trial_results": {
+          "rejected": 48,
+          "unexpected": 1,
+          "late": 1
+        },
+        "line_counts": {
+          "SEQ_TRIAL": 50,
+          "SEQ_SUMMARY": 1
+        },
+        "trials": "50",
+        "completed": "50",
+        "expected_trials": "0",
+        "early_trials": "0",
+        "late_trials": "1",
+        "miss_trials": "0",
+        "duplicate_trials": "0",
+        "unexpected_trials": "1",
+        "rejected_trials": "48",
+        "buffer_overrun_trials": "0",
+        "detector_accepted_trials": "1",
+        "detector_reject_trials": "48",
+        "pattern_valid_trials": "1",
+        "pattern_rejected_trials": "0",
+        "avg_dt_ms": "657",
+        "avg_strength": "2894.4",
+        "avg_conf": "1.00"
+      }
+    },
+    {
+      "name": "OBS_f2600_music",
+      "file": "OBS_f2600_music.aa97a18.log",
+      "firmware": {
+        "role": "analyzer",
+        "git": "aa97a18",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "commands": [
+        "SEQ DIAG off",
+        "SEQ OBS start tries=50 period=2000 window=1800 report_settle=200 freq=2600 profile=TonalPulseScalar mode=detail when=all verbose=1"
+      ],
+      "started": "2026-10-14T18:59:32",
+      "duration_s": 105,
+      "summary": {
+        "profile": "TonalPulseScalar",
+        "detector": "scalar_transient",
+        "complete": true,
+        "trial_results": {
+          "rejected": 39,
+          "miss": 6,
+          "expected": 2,
+          "late": 2,
+          "unexpected": 1
+        },
+        "line_counts": {
+          "SEQ_TRIAL": 50,
+          "SEQ_SUMMARY": 1
+        },
+        "trials": "50",
+        "completed": "50",
+        "expected_trials": "2",
+        "early_trials": "0",
+        "late_trials": "2",
+        "miss_trials": "6",
+        "duplicate_trials": "0",
+        "unexpected_trials": "1",
+        "rejected_trials": "39",
+        "buffer_overrun_trials": "0",
+        "detector_accepted_trials": "4",
+        "detector_reject_trials": "40",
+        "pattern_valid_trials": "4",
+        "pattern_rejected_trials": "0",
+        "avg_dt_ms": "499",
+        "avg_strength": "2883.7",
+        "avg_conf": "1.00"
+      }
+    },
+    {
+      "name": "OBS_f2800_speech",
+      "file": "OBS_f2800_speech.aa97a18.log",
+      "firmware": {
+        "role": "analyzer",
+        "git": "aa97a18",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "commands": [
+        "SEQ DIAG off",
+        "SEQ OBS start tries=50 period=2000 window=1800 report_settle=200 freq=2800 profile=TonalPulseScalar mode=detail when=all verbose=1"
+      ],
+      "started": "2026-10-14T19:08:47",
+      "duration_s": 106,
+      "summary": {
+        "profile": "TonalPulseScalar",
+        "detector": "scalar_transient",
+        "complete": true,
+        "trial_results": {
+          "rejected": 37,
+          "miss": 8,
+          "late": 4,
+          "unexpected": 1
+        },
+        "line_counts": {
+          "SEQ_TRIAL": 50,
+          "SEQ_SUMMARY": 1
+        },
+        "trials": "50",
+        "completed": "50",
+        "expected_trials": "0",
+        "early_trials": "0",
+        "late_trials": "4",
+        "miss_trials": "8",
+        "duplicate_trials": "0",
+        "unexpected_trials": "1",
+        "rejected_trials": "37",
+        "buffer_overrun_trials": "0",
+        "detector_accepted_trials": "4",
+        "detector_reject_trials": "44",
+        "pattern_valid_trials": "4",
+        "pattern_rejected_trials": "0",
+        "avg_dt_ms": "986",
+        "avg_strength": "2949.0",
+        "avg_conf": "1.00"
+      }
+    },
+    {
+      "name": "OBS_f2600_speech",
+      "file": "OBS_f2600_speech.aa97a18.log",
+      "firmware": {
+        "role": "analyzer",
+        "git": "aa97a18",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "commands": [
+        "SEQ DIAG off",
+        "SEQ OBS start tries=50 period=2000 window=1800 report_settle=200 freq=2600 profile=TonalPulseScalar mode=detail when=all verbose=1"
+      ],
+      "started": "2026-10-14T19:10:35",
+      "duration_s": 106,
+      "summary": {
+        "profile": "TonalPulseScalar",
+        "detector": "scalar_transient",
+        "complete": true,
+        "trial_results": {
+          "miss": 10,
+          "rejected": 37,
+          "late": 3
+        },
+        "line_counts": {
+          "SEQ_TRIAL": 50,
+          "SEQ_SUMMARY": 1
+        },
+        "trials": "50",
+        "completed": "50",
+        "expected_trials": "0",
+        "early_trials": "0",
+        "late_trials": "3",
+        "miss_trials": "10",
+        "duplicate_trials": "0",
+        "unexpected_trials": "0",
+        "rejected_trials": "37",
+        "buffer_overrun_trials": "0",
+        "detector_accepted_trials": "3",
+        "detector_reject_trials": "41",
+        "pattern_valid_trials": "3",
+        "pattern_rejected_trials": "0",
+        "avg_dt_ms": "414",
+        "avg_strength": "3144.3",
+        "avg_conf": "1.00"
+      }
+    }
+  ]
+}

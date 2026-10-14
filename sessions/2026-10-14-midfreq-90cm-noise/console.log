@@ -1,0 +1,20 @@
+[18:54:48] boot banner: {'role': 'analyzer', 'git': 'aa97a18', 'version': '0.4.0', 'board': 'damp'}
+[18:54:50] warmup: OK EMIT CHIRP
+[18:54:50] start OBS_f2800_music: SEQ DIAG off ; SEQ OBS start tries=50 period=2000 window=1800 report_settle=200 freq=2800 profile=TonalPulseScalar mode=detail when=all verbose=1
+[18:55:35] boot banner: {'role': 'analyzer', 'git': 'aa97a18', 'version': '0.4.0', 'board': 'damp'}
+[18:55:37] warmup: OK EMIT CHIRP
+[18:55:37] start OBS_f2800_music: SEQ DIAG off ; SEQ OBS start tries=50 period=2000 window=1800 report_settle=200 freq=2800 profile=TonalPulseScalar mode=detail when=all verbose=1
+[18:57:42] boot banner: {'role': 'analyzer', 'git': 'aa97a18', 'version': '0.4.0', 'board': 'damp'}
+[18:57:44] warmup: OK EMIT CHIRP
+[18:57:44] start OBS_f2800_music: SEQ DIAG off ; SEQ OBS start tries=50 period=2000 window=1800 report_settle=200 freq=2800 profile=TonalPulseScalar mode=detail when=all verbose=1
+[18:59:30] done OBS_f2800_music (105s): complete=True results={'rejected': 48, 'unexpected': 1, 'late': 1}
+[18:59:32] start OBS_f2600_music: SEQ DIAG off ; SEQ OBS start tries=50 period=2000 window=1800 report_settle=200 freq=2600 profile=TonalPulseScalar mode=detail when=all verbose=1
+[19:01:17] done OBS_f2600_music (105s): complete=True results={'rejected': 39, 'miss': 6, 'expected': 2, 'late': 2, 'unexpected': 1}
+[19:01:25] session updated, index rebuilt
+[19:08:45] boot banner: {'role': 'analyzer', 'git': 'aa97a18', 'version': '0.4.0', 'board': 'damp'}
+[19:08:47] warmup: OK EMIT CHIRP
+[19:08:47] start OBS_f2800_speech: SEQ DIAG off ; SEQ OBS start tries=50 period=2000 window=1800 report_settle=200 freq=2800 profile=TonalPulseScalar mode=detail when=all verbose=1
+[19:10:33] done OBS_f2800_speech (106s): complete=True results={'rejected': 37, 'miss': 8, 'late': 4, 'unexpected': 1}
+[19:10:35] start OBS_f2600_speech: SEQ DIAG off ; SEQ OBS start tries=50 period=2000 window=1800 report_settle=200 freq=2600 profile=TonalPulseScalar mode=detail when=all verbose=1
+[19:12:21] done OBS_f2600_speech (106s): complete=True results={'miss': 10, 'rejected': 37, 'late': 3}
+[19:12:26] session updated, index rebuilt

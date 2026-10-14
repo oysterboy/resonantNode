@@ -1,0 +1,64 @@
+# run: selftest E3 (COM4)
+# firmware: role=emitter git=5bbd2b3 version=0.4.0 board=damp
+# started: 2026-10-14T15:44:15
+# mac: 24:dc:c3:49:b7:38
+# port: COM4
+ets Jul 29 2019 12:21:46
+
+rst:0x1 (POWERON_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)
+configsip: 0, SPIWP:0xee
+clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
+mode:DIO, clock div:2
+load:0x3fff0030,len:1344
+load:0x40078000,len:13964
+load:0x40080400,len:3600
+entry 0x400805f0
+BUILD role=emitter git=5bbd2b3 date=Oct 14 2026 time=15:24:51 version=0.4.0 board=damp
+
+E (9) I2S: i2s_driver_uninstall(2048): I2S port 0 has not installed
+EVT emitter_ready mode=AUTO interval_ms=2000 freq_hz=3200 dur_ms=100
+EVT emitter_chirp_finished
+EVT emitter_chirp_finished
+EVT emitter_chirp_finished
+
+>> EMIT MODE REMOTE
+EVT emitter_cmd line=MODE REMOTE
+EVT emitter_cmd line=MODE REMOTE
+ets Jul 29 2019 12:21:46
+
+rst:0x1 (POWERON_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)
+configsip: 0, SPIWP:0xee
+clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
+mode:DIO, clock div:2
+load:0x3fff0030,len:1344
+load:0x40078000,len:13964
+load:0x40080400,len:3600
+entry 0x400805f0
+BUILD role=emitter git=5bbd2b3 date=Oct 14 2026 time=15:24:51 version=0.4.0 board=damp
+
+E (9) I2S: i2s_driver_uninstall(2048): I2S port 0 has not installed
+EVT emitter_ready mode=AUTO interval_ms=2000 freq_hz=3200 dur_ms=100
+EVT emitter_cmd line=/ EMIT_START trial=0 t_ms=25
+EVT emitter_cmd line=EMIT_DRIVE_ON trial=0 t_ms=25
+EVT emitter_cmd line=OK CHIRP freq=3200 dur=100
+EVT emitter_chirp_finished
+EVT emitter_cmd line=$/@>EMIT_DONE trial=0 t_ms=126
+EVT emitter_cmd line=EMIT_DRIVE_OFF trial=0 t_ms=126
+
+>> EMIT MODE REMOTE
+EVT emitter_cmd line=MODE REMOTE
+EVT emitter_cmd line=OK MODE REMOTE_CONTROL
+
+>> SELFTEST
+SELFTEST_BEGIN role=emitter mode=full board=damp
+SELFTEST check=board result=PASS mac=24:dc:c3:49:b7:38 board=damp role=emitter version=0.4.0 git=5bbd2b3 built=Oct_14_2026 built_time=15:24:54 uptime_ms=2255
+SELFTEST check=mic result=PASS frames=12000 nonzero_pct=100.0 span=434700 floor_mean=431 floor_peak=1200 bit8_pct=50.3 framing=ok slot=0
+SELFTEST_AMP n=1 floor=895 tone=307138 snr_db=50.7 samples=6400 valid=1
+SELFTEST_AMP n=2 floor=860 tone=300487 snr_db=50.9 samples=6400 valid=1
+SELFTEST_AMP n=3 floor=837 tone=299196 snr_db=51.1 samples=6400 valid=1
+SELFTEST_AMP n=4 floor=947 tone=300966 snr_db=50.0 samples=6400 valid=1
+SELFTEST_AMP n=5 floor=38641 tone=302270 snr_db=17.9 samples=6400 valid=1
+SELFTEST check=amp result=PASS chirps=5 valid=5 freq_hz=3200 tone_ms=100 path=i2s tone=300966 floor=895 snr_db=50.7 snr_min_db=17.9 snr_max_db=51.1 pass_db=30.0
+SELFTEST_SUMMARY result=PASS pass=3 fail=0 skip=0 role=emitter
+EVT emitter_cmd line=}`H@{_@'@@|i#@'D'~k7&2+&47B@\:K|B">!L|$-J3`A_`7 H?>?{y{A7f $@6$3E#`
+EVT emitter_cmd line=MODE REMOTE

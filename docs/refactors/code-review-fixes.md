@@ -315,3 +315,28 @@ points as checkboxes in issue #32 (sub-issue of #31):
 7. P2b: a forced loop stall (e.g. `RB log full` at high rate) during a
    chirp -> `RB summary` overflow count and Analyzer `buffer_overrun` move
    together.
+
+### Bench results 2026-10-14 (main e4d6975)
+
+Session `bench/sessions/2026-10-14-reviewfix-checks` (bench 0ef8fad), E2
+Analyzer + E3 Emitter on D-AMP. Issue #32 carries the per-check ticks.
+
+- Check 1: all six envs build (`pio test` not run).
+- Check 2 (P1): `scalar_min_strength=1234`, `..._release_coverage_ms=90`,
+  `..._longest_island_ms=80` echo in one serial session (3 of the 5 keys).
+  Opening the port resets the board, so PARAM changes do not survive
+  between sessions.
+- Check 3 (P3): T3 `dur=40`: 6 expected / 4 rejected, then 10/10; no
+  `PipelineQueueOverflow`, 0 misses, so `NoOccurrence` classification was
+  not exercised.
+- Check 4 (B12): `SEQ start profile=Bogus` prints ERR and starts nothing.
+- Check 5 (A2/A1/A4): refractory=0 survives `RB rebase force`; rebase 0.13 s
+  into a SELFTEST chirp gives no answer; a 300-character line gives
+  `RB ERR line_too_long max=255`. The idle chirp itself was not caught.
+- Check 6 (P2a): Freq T3, 60 trials, ms clock offset to cross 2^31 ms
+  ~3 min after boot: 51 expected / 9 rejected, same rate before and after.
+  Offset not confirmed in the logs; profile reset not tested.
+- Check 7 (P2b): not provoked. `verbose=2 samples=on` and `RAW dump=text`
+  gave `buffer_overrun_trials=0`. Needs a stall hook; D21 stays open.
+- Not run: B9 (OBS warning), A5 (nan / trailing junk), A6 on the two
+  boards with refractory=0, regression T3 at 40 cm, B11 aggregate count.

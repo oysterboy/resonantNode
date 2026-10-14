@@ -3,7 +3,7 @@
 Every --interval-min minutes, on a fixed grid from the start time, one block
 on the Analyzer:
   T3:  EMIT MODE REMOTE ; SEQ DIAG off ; SEQ start profile=TonalPulseScalar tries=10 ...
-  OBS: EMIT MODE REMOTE ; SEQ DIAG off ; SEQ OBS start tries=5 period=2000 window=1800 ...
+  OBS: EMIT MODE REMOTE ; SEQ DIAG off ; SEQ OBS start tries=5 period=2000 window=1800 report_settle=200 ...
 EMIT MODE REMOTE goes before every run: the Emitter boots in AUTO (ANA-005).
 Each run is its own log and session.json run entry (T3_bNNN_HHMM,
 OBS_bNNN_HHMM), so index.csv and seqcmp.py --table keep working; each block
@@ -35,9 +35,13 @@ import benchlib  # noqa: E402
 
 T3_CMDS = ["EMIT MODE REMOTE", "SEQ DIAG off",
            "SEQ start profile=TonalPulseScalar tries=10 mode=detail when=all verbose=1"]
+# OBS: window + report_settle must not exceed period, or a trial finalizes
+# after the next one's window has opened (issue #31 R2-5, OBS_WARN). The
+# settle is cut to 200 rather than the window, so the observed time per
+# block (5 x 1800 ms) stays comparable with the earlier soak rows.
 OBS_CMDS = ["EMIT MODE REMOTE", "SEQ DIAG off",
-            "SEQ OBS start tries=5 period=2000 window=1800 profile=TonalPulseScalar "
-            "mode=detail when=all verbose=1"]
+            "SEQ OBS start tries=5 period=2000 window=1800 report_settle=200 "
+            "profile=TonalPulseScalar mode=detail when=all verbose=1"]
 CSV_COLUMNS = ("block", "start", "firmware", "t3_completed", "t3_expected", "t3_rejected",
                "t3_miss", "t3_late", "t3_early", "t3_detector_accepted", "t3_avg_strength",
                "t3_median_strength", "t3_avg_dt_ms", "dropped_dma_buffers", "obs_completed",

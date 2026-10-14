@@ -389,7 +389,7 @@ new errors. Still not a build.
 | R2-2 | FrequencyMatch duration, release and end run to the last matched update (`_pendingLastMatchedSample` added) | committed. TonalPulseFreq durations drop ~30 ms and 30-59 ms tones are now rejected. **This changes T2 results against old baselines** |
 | R2-3 | `quiesceBehaviorForOutputsOff()` (stop chirp, `Behavior::resetState`, config kept) on quiet-gated `RB rebase` and forced rebase; SELFTEST hardware restore resets Behavior | committed |
 | R2-4 | `FrequencyMatchCriteria::parseFiniteFloat`; `parseToken` returns false and leaves the value unchanged; Analyzer scalar keys use `parseFiniteFloat` / `parseUnsignedValue`; `RB PARAM ERR` / `ERR PARAM` for bad or unknown tokens | committed |
-| R2-5 | OBS without `window=` defaults to period - report_settle (2000 at the defaults); an explicit window is kept and still warned about | committed. `soak.py` OBS (period 2000, window 1800, settle 500) still overlaps and warns, so its OBS numbers need that read |
+| R2-5 | OBS without `window=` defaults to period - report_settle (2000 at the defaults); an explicit window is kept and still warned about | committed. `soak.py` OBS changed to `report_settle=200` (window 1800 kept so the observed time per block matches earlier soak rows) |
 | R2-6 | `refreshReportDetail()` before both reject freezes | committed |
 | R2-7 | I2S event queue sized for 3 events per buffer (2 RX-only) | committed |
 | R2-8 | BTL inverted leg on `LEDC_HS_SIG_OUT0_IDX + ch` for channels 0-7 (arduino-esp32 2.x speed mode = ch / 8) | committed. Piezo fallback only; output level rises ~6 dB if the old mapping really left one leg idle |

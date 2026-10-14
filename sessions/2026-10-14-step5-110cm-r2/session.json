@@ -1,0 +1,240 @@
+{
+  "purpose": "step 5 (#8): Scalar vs Freq at 110 cm after R2-2, main c34fee9",
+  "created": "2026-10-14T12:48:13",
+  "setup": {
+    "distance_cm": 110.0,
+    "orientation": "",
+    "emitter_fw": "",
+    "notes": [
+      "same setup as 2026-10-13-step5-110cm-b; Analyzer E2, Emitter E3; code-review tier R2 in"
+    ]
+  },
+  "runs": [
+    {
+      "name": "T3_scalar",
+      "file": "T3_scalar.c34fee9.log",
+      "firmware": {
+        "role": "analyzer",
+        "git": "c34fee9",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "commands": [
+        "SEQ DIAG off",
+        "SEQ start profile=TonalPulseScalar tries=50 mode=detail when=all verbose=1"
+      ],
+      "started": "2026-10-14T12:48:19",
+      "duration_s": 165,
+      "summary": {
+        "profile": "TonalPulseScalar",
+        "detector": "scalar_transient",
+        "complete": true,
+        "trial_results": {
+          "expected": 33,
+          "rejected": 17
+        },
+        "line_counts": {
+          "SEQ_TRIAL": 50,
+          "SEQ_SUMMARY": 1
+        },
+        "trials": "50",
+        "completed": "50",
+        "expected_trials": "33",
+        "early_trials": "0",
+        "late_trials": "0",
+        "miss_trials": "0",
+        "duplicate_trials": "0",
+        "unexpected_trials": "0",
+        "rejected_trials": "17",
+        "buffer_overrun_trials": "0",
+        "detector_accepted_trials": "33",
+        "detector_reject_trials": "17",
+        "pattern_valid_trials": "33",
+        "pattern_rejected_trials": "0",
+        "avg_dt_ms": "21",
+        "avg_strength": "8303.1",
+        "avg_conf": "1.00"
+      }
+    },
+    {
+      "name": "T3_freq",
+      "file": "T3_freq.c34fee9.log",
+      "firmware": {
+        "role": "analyzer",
+        "git": "c34fee9",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "commands": [
+        "SEQ DIAG off",
+        "SEQ start profile=TonalPulseFreq tries=50 mode=detail when=all verbose=1"
+      ],
+      "started": "2026-10-14T12:51:06",
+      "duration_s": 165,
+      "summary": {
+        "profile": "TonalPulseFreq",
+        "detector": "frequency_match",
+        "complete": true,
+        "trial_results": {
+          "expected": 50
+        },
+        "line_counts": {
+          "SEQ_TRIAL": 50,
+          "SEQ_SUMMARY": 1
+        },
+        "trials": "50",
+        "completed": "50",
+        "expected_trials": "50",
+        "early_trials": "0",
+        "late_trials": "0",
+        "miss_trials": "0",
+        "duplicate_trials": "0",
+        "unexpected_trials": "0",
+        "rejected_trials": "0",
+        "buffer_overrun_trials": "0",
+        "detector_accepted_trials": "50",
+        "detector_reject_trials": "0",
+        "pattern_valid_trials": "50",
+        "pattern_rejected_trials": "0",
+        "avg_dt_ms": "21",
+        "avg_strength": "8762.9",
+        "avg_conf": "1.00"
+      }
+    },
+    {
+      "name": "OBS_scalar_silence",
+      "file": "OBS_scalar_silence.c34fee9.log",
+      "firmware": {
+        "role": "analyzer",
+        "git": "c34fee9",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "commands": [
+        "SEQ DIAG off",
+        "SEQ OBS start tries=50 period=2000 window=1800 report_settle=200 profile=TonalPulseScalar mode=detail when=all verbose=1"
+      ],
+      "started": "2026-10-14T12:53:54",
+      "duration_s": 105,
+      "summary": {
+        "profile": "TonalPulseScalar",
+        "detector": "scalar_transient",
+        "complete": true,
+        "trial_results": {
+          "miss": 50
+        },
+        "line_counts": {
+          "SEQ_TRIAL": 50,
+          "SEQ_SUMMARY": 1
+        },
+        "trials": "50",
+        "completed": "50",
+        "expected_trials": "0",
+        "early_trials": "0",
+        "late_trials": "0",
+        "miss_trials": "50",
+        "duplicate_trials": "0",
+        "unexpected_trials": "0",
+        "rejected_trials": "0",
+        "buffer_overrun_trials": "0",
+        "detector_accepted_trials": "0",
+        "detector_reject_trials": "0",
+        "pattern_valid_trials": "0",
+        "pattern_rejected_trials": "0",
+        "avg_dt_ms": "-1",
+        "avg_strength": "0.0",
+        "avg_conf": "0.00"
+      }
+    },
+    {
+      "name": "OBS_freq_silence",
+      "file": "OBS_freq_silence.c34fee9.log",
+      "firmware": {
+        "role": "analyzer",
+        "git": "c34fee9",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "commands": [
+        "SEQ DIAG off",
+        "SEQ OBS start tries=50 period=2000 window=1800 report_settle=200 profile=TonalPulseFreq mode=detail when=all verbose=1"
+      ],
+      "started": "2026-10-14T12:55:41",
+      "duration_s": 106,
+      "summary": {
+        "profile": "TonalPulseFreq",
+        "detector": "frequency_match",
+        "complete": true,
+        "trial_results": {
+          "miss": 50
+        },
+        "line_counts": {
+          "SEQ_TRIAL": 50,
+          "SEQ_SUMMARY": 1
+        },
+        "trials": "50",
+        "completed": "50",
+        "expected_trials": "0",
+        "early_trials": "0",
+        "late_trials": "0",
+        "miss_trials": "50",
+        "duplicate_trials": "0",
+        "unexpected_trials": "0",
+        "rejected_trials": "0",
+        "buffer_overrun_trials": "0",
+        "detector_accepted_trials": "0",
+        "detector_reject_trials": "0",
+        "pattern_valid_trials": "0",
+        "pattern_rejected_trials": "0",
+        "avg_dt_ms": "-1",
+        "avg_strength": "0.0",
+        "avg_conf": "0.00"
+      }
+    },
+    {
+      "name": "T3_scalar_b",
+      "file": "T3_scalar_b.c34fee9.log",
+      "firmware": {
+        "role": "analyzer",
+        "git": "c34fee9",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "commands": [
+        "SEQ DIAG off",
+        "SEQ start profile=TonalPulseScalar tries=50 mode=detail when=all verbose=1"
+      ],
+      "started": "2026-10-14T12:57:56",
+      "duration_s": 165,
+      "summary": {
+        "profile": "TonalPulseScalar",
+        "detector": "scalar_transient",
+        "complete": true,
+        "trial_results": {
+          "expected": 50
+        },
+        "line_counts": {
+          "SEQ_TRIAL": 50,
+          "SEQ_SUMMARY": 1
+        },
+        "trials": "50",
+        "completed": "50",
+        "expected_trials": "50",
+        "early_trials": "0",
+        "late_trials": "0",
+        "miss_trials": "0",
+        "duplicate_trials": "0",
+        "unexpected_trials": "0",
+        "rejected_trials": "0",
+        "buffer_overrun_trials": "0",
+        "detector_accepted_trials": "50",
+        "detector_reject_trials": "0",
+        "pattern_valid_trials": "50",
+        "pattern_rejected_trials": "0",
+        "avg_dt_ms": "24",
+        "avg_strength": "8794.6",
+        "avg_conf": "1.00"
+      }
+    }
+  ]
+}

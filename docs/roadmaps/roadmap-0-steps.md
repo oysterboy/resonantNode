@@ -22,6 +22,10 @@ Renamed from roadmap-general.md on 2026-09-23 so it sorts first.
 How this file relates to the domain roadmaps and docs/refactors/: see
 README.md ("Who answers what", "Ordering rule").
 
+Status update 2026-10-14: step 5 decided (Scalar ships, Freq demo; decisions/2026-10-14-node-ships-tonalpulsescalar.md);
+step 4a done (#29); step 3b partial; steps 5a (#35), 5c (#34), 5b added. Step 5a item 2b (DC blocker replaces First Difference)
+landed in code bfbe0c8, bench-checked on the Analyzer at 90/100 cm and in silence/speech/music; Node quiet gate margin and the Node
+battery still open. Finding: a single chirp frequency lands on nulls facing up (research/scalar-detector-extensions.md).
 Status update 2026-10-13: step 3d (#31) added from a full src/ code review; gates step 5 (P1, P3, P4) and step 6 (P2, tier A).
 Status update 2026-10-12: steps 3a and 3c closed, 3b fix verified on E2, 4a firmware landed; no reorder.
 Last reordered: 2026-10-11. Micros-wrap bug (#30) added as step 3c, gating
@@ -237,6 +241,12 @@ the previous gate open unless the step says it can run in parallel.
    (chirps, silence, speech, music) on Analyzer and Node build, room
    conditions noted; Freq speech + music on the Analyzer only if the
    comparison is still wanted.
+   Progress 2026-10-14: (1) done; (2) done, 90 cm passes at 3200 Hz, other spacings
+   depend on the frequency (finding in the research note); (2b) DC blocker in
+   code bfbe0c8 (default; -D PCM_PREPROCESS_MODE_VALUE=1 = First Difference),
+   A/B equal at 90 and 100 cm, mic floor ~4x higher, Node quiet_boot passes in a
+   quiet room with a smaller margin to the 400 gate; (3) done at 90 cm / 0.5 FS;
+   (4) Analyzer: 50/50 chirps, silence/speech/music 0 valid; Node battery in progress.
    Gate: the new-geometry Scalar baseline recorded in bench/sessions, setup
    written as speaker-to-mic spacing on a flat surface (no line of sight),
    preprocessor named in the session; First Difference still selectable.

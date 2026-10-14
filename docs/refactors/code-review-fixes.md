@@ -262,6 +262,118 @@ file is open for something else.
     late after a rebase or selftest. Only matters with tier A item 1
     fixed.
 
+### Tier R2: second review, 2026-10-14
+
+This was a second read-only review of all `src/`, at 7882627..e4d6975, with the
+items above excluded. None of the five reviewers found a compile error or a real
+behaviour regression in the 2026-10-13 fixes. R2-9, R2-11 and R2-12 are small
+regressions in log and bookkeeping output. "re-read" means checked a second
+time against the code. Not compiled, not run.
+
+Medium / high:
+
+R2-1. **Node audio baseline starts at 2000** (`AudioSignal.h:231`,
+      `ResonantNodeApp.cpp:340` `begin(false)`). Mechanics re-read; effect
+      unverified.
+      - Tracking only runs while the per-sample level is under 20, and the
+        offset reads as ~250 Strength16, so only a successful `RB rebase`
+        clears it.
+      - D-AMP: a noisy boot ends in `FailedNoQuiet` with +2000 left in the
+        amp, the Goertzel input and the history. Piezo (gate 20) never
+        clears it.
+      - The "D-AMP quiet floor 230-250" note behind the 400 gate matches the
+        offset (2000 * 32767 / 262143 ~ 250). It may be measuring the
+        artifact.
+      - Bench: smoothed level before and after `RB rebase force` (#32).
+R2-2. **FrequencyMatch duration includes the release debounce**
+      (`FrequencyMatchDetector.cpp:340-343`, `:471-478`). Re-read; two
+      reviewers found it independently.
+      - The duration runs to the close, which comes `releaseDebounceMs` after
+        the last match.
+      - TonalPulseFreq (min 60, debounce 30) accepts a 30-59 ms tone.
+      - `durationMs`, `releaseMs` and `heardAtMs` are ~30 ms late.
+      - Scalar measures to the first dip, so the two detectors disagree.
+      - Feeds step 5.
+R2-3. **Behavior state survives the outputs-off windows that skip
+      `performRbRebase`** (quiet-gated `RB rebase`, SELFTEST hardware restore
+      `ResonantNodeSelfTest.cpp:248-267`). Re-read.
+      - A pending HeardPattern fires on the first Active update, seconds
+        late.
+      - Same failure as A1, on these two paths.
+R2-4. **`FrequencyMatchCriteria::parseToken` has no value check**
+      (`FrequencyMatchCriteria.h:61-90`). Re-read.
+      - `freqAttackScore=x` sets the threshold to 0, so the node triggers on
+        noise; `=nan` disables detection.
+      - Reached from `RB PARAM` and Analyzer `PARAM`. Same class as A5.
+R2-5. **Default OBS overlaps** (period 2500, window 2200, settle 500;
+      `AnalyzerCommands.cpp:602-622`). Re-read.
+      - Every default `SEQ OBS` prints `OBS_WARN`.
+      - A chirp early in trial N+1 is credited to trial N as unexpected, and
+        the OBS sample dump is 200 ms off.
+      - Fix direction: OBS window = period - settle, or a shorter settle.
+R2-6. **Scalar `inspect.*` frozen from the previous update**
+      (`ScalarTransientOccurrence.cpp:128`, `:174`): `freezeReport` runs
+      before `refreshReportDetail()`.
+      - The first `coverage_too_low` reject prints `carrier_quality=valid`.
+      - Fix: refresh first, as `capturePendingOccurrence` does.
+R2-7. **I2S event queue too small for a stall** (`AudioSourceI2S.cpp:110-116`,
+      `:306`).
+      - Sized for 2 events per buffer, but a stall adds RX_Q_OVF, so it
+        covers ~0.68 s.
+      - DONE events then evict the overflow events: dropped buffers are
+        undercounted and the P2b flag stays false.
+R2-8. **Piezo BTL LEDC signal index** (`PiezoToneOutputBTL.cpp:97-101`).
+      - Channels 0-7 are mapped to LS signals, but arduino-esp32 puts them on
+        HS.
+      - The inverted leg follows an unconfigured channel: half the swing
+        plus a DC bias.
+      - Piezo fallback only. Check against the installed framework.
+
+Low:
+
+R2-9.  Regression (B8): every frequency reject freezes `gate_reason=unknown`,
+       because `_gateReason` is cleared at the start of update
+       (`FrequencyMatchDetector.cpp:323`) before the reject freeze (`:371`).
+       Re-read.
+R2-10. Dropping an open pending at trial start doesn't arm the refractory.
+       - A tone still sounding at the trigger reopens mid-tone
+         (`FrequencyMatchDetector.cpp:129-140`).
+       - Scalar never got the B7 treatment: a peak that spans the trigger
+         lands in the new trial.
+R2-11. Regression (A1): with outputs off, `RB verdict` logs the previous
+       verdict's `decision` and `behaviorEligible` (`ResonantNodeApp.cpp:1271`).
+R2-12. Regression (A1): gated verdicts don't update `_lastHeardPatternMs`, so
+       `idleBlockedAfterHeard` ignores patterns heard in ListenForQuiet.
+R2-13. `RB rebase force` during a SELFTEST chirp gives no finish edge, so
+       SELFTEST waits and times out with `chirp_not_started`.
+R2-14. Scalar `aggregates.rejected/acceptedCount` cover the whole run.
+       Frequency resets them per trial.
+R2-15. SEQ per-trial source counters include events before the window and in
+       the settle period. `avg_dt_ms` still includes Miss trials that carry a
+       dt.
+R2-16. SELFTEST `external_chirp` can pass on the echo of a chirp that was
+       already sounding when SELFTEST started.
+R2-17. `readRawSample` (SELFTEST mic check) doesn't advance the sample clock,
+       so blocks afterwards are stamped ~750 ms in the past.
+R2-18. `AudioSignal::rebase` loops `delay(1)` with no timeout, so it hangs if
+       I2S install failed.
+R2-19. Commands that accept typos silently:
+       - prefix-only matching (`RB rebase forced`, `RB PARAMS`);
+       - the `RB BEHAV` echo keys `idleBlockedHeard=` / `idleBlockedOwnEmit=`
+         are not parsed;
+       - `PARAM SET x 1.5 junk` returns ok;
+       - SEQ start numerics are unchecked and unknown keys are ignored;
+       - `sampleLead` above 128 ms is cut silently.
+R2-20. The Emitter accepts any `freq=`; 17000 plays ~1 kHz.
+
+Priority:
+1. R2-1 (five-minute bench check; it may undercut the D-AMP floor note).
+2. R2-2 and R2-4 (they change what TonalPulseFreq accepts, before step 5).
+3. R2-3 (field-trial path to a late answer).
+4. R2-5 (default OBS runs unreliable).
+5. R2-9, R2-11, R2-12: small regressions, fix with the batch.
+6. The rest are low.
+
 ## 5. Results
 
 ### 2026-10-13: fixes committed, not compiled, not run

@@ -207,6 +207,7 @@ the previous gate open unless the step says it can run in parallel.
    verdict, every own chirp); the visual gate is left.
 
 5. Decide the Node's production profile, on D-AMP. (issue #8)
+   Data so far is from the horizontal geometry (see 5a).
    Where: DET-007 (roadmap-detection.md), with cleanup-0-plan Phase 0.
    Why: the Node boots TonalPulseScalar while the docs call TonalPulseFreq
    the main profile; the received signal changes with the output hardware,
@@ -214,14 +215,22 @@ the previous gate open unless the step says it can run in parallel.
    Gate: one decision, recorded; code default, implementation-status.md,
    and the Node's registered params all agree with it.
 
-5a. [NEXT] Clean baseline after the tier R2 fixes, before any detector extension.
+5a. [NEXT] Clean baseline in the new geometry (mic and speaker facing up), after
+   closing step 5 on the old one.
    Where: DET-007, docs/research/scalar-detector-extensions.md (Baseline).
-   Why: R2-2 changed Freq durations and R2-1/R2-3 the Node start-up, so the
-   10-13 numbers are not like-for-like; the extensions need a trustworthy
-   reference.
-   Gate: Scalar and Freq, speech + music + silence + 110 cm chirps on the
-   current main, Analyzer and Node build, room conditions noted; then the
-   step 5 decision (Scalar lean: owner 2026-10-14) is written.
+   Why: every number so far is horizontal (speaker faces mic, 110 cm, noise
+   at 90 degrees); R2-2 and R2-1/R2-3 also moved Freq durations and Node
+   start-up. The extensions need one trustworthy reference.
+   Order: (1) old geometry, current main: speech + music OBS, Scalar and
+   Freq, then write the step 5 decision (Scalar lean: owner 2026-10-14);
+   (2) hardware change, mic + speaker facing up on E2 and E3; (3) SELFTEST
+   (amp level and own_chirp_suppressed may shift), then a plain T3 and a
+   silent OBS to find the new operating point; (4) Scalar full battery
+   (chirps, silence, speech, music) on Analyzer and Node build, room
+   conditions noted; Freq speech + music on the Analyzer only if the
+   comparison is still wanted.
+   Gate: the new-geometry Scalar baseline recorded in bench/sessions, setup
+   written as speaker-to-mic spacing on a flat surface (no line of sight).
 
 5b. [IDEA] Scalar detector extensions: pulse trains as one signal, lower
    frequencies, frequency drift. (issue to open when started)

@@ -21,15 +21,23 @@ Extensions to explore on Scalar, in this order:
 
 ## Baseline first (step 5a)
 
-A clean, post-R2 comparison on the same setup, before any extension changes
-a number. Reference points so far: 110 cm, both profiles 50/50 on chirps in
-silence-free runs (Scalar had one 33/50 run with 17 consecutive short
-rejects, repeat 50/50, cause unknown); 0 false alarms in 50 silent windows
-each; speech 0 valid and music 1/50 vs 0/50 (Scalar / Freq) on 10-13, not
-yet repeated on the post-R2 build. Freq durationMs runs ~50 ms over the true
-tone, Scalar ~10. To do: speech + music OBS for both profiles on c34fee9 or
-later, on the Node build as well as the Analyzer (the Node is what ships),
-and write down room conditions for each run.
+Order, agreed 2026-10-14:
+
+1. Old geometry (speaker faces mic, 110 cm, noise at 90 degrees), current
+   main: speech + music OBS for Scalar and Freq. Write the step 5 decision.
+2. Hardware change: mic and speaker facing up (omni-directional) on E2, E3.
+3. SELFTEST (amp level, own_chirp_suppressed may shift), plain T3 and silent
+   OBS to find the new operating point. Do not reuse the 110 cm numbers as
+   targets: the path is reflections now, not line of sight.
+4. Scalar full battery (chirps, silence, speech, music) on Analyzer and
+   Node build, room conditions noted. Freq speech + music on the Analyzer
+   only if the comparison is still wanted.
+
+Reference points, old geometry: 110 cm, both profiles 50/50 on chirps
+(Scalar once 33/50 with 17 consecutive short rejects, repeat 50/50, cause
+unknown); 0 false alarms in 50 silent windows each; speech 0 valid and
+music 1/50 vs 0/50 (Scalar / Freq) on 10-13, before R2. Freq durationMs
+runs ~50 ms over the true tone, Scalar ~10.
 
 ## 1. Pulse trains read as one signal
 

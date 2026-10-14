@@ -1,0 +1,608 @@
+1791993026.90 N BUILD role=node git=bfbe0c8 date=Oct 14 2026 time=17:38:48 version=0.4.0 board=damp
+1791993026.94 E _FLASH_BOOT
+1791993026.94 N RB node_id=0xE84C4BC3DC24
+1791993026.97 N 
+1791993027.00 E BUILD role=emitter git=5bbd2b3 date=Oct 14 2026 time=16:10:26 version=0.4.0 board=damp
+1791993027.00 N E (9) I2S: i2s_driver_uninstall(2048): I2S port 0 has not installed
+1791993027.00 E 
+1791993027.01 N RB PROFILE name=TonalPulseScalar emitters=ScalarTransient inspectionPlan=custom fieldStateConfig=4000/4000
+1791993027.01 E E (9) I2S: i2s_driver_uninstall(2048): I2S port 0 has not installed
+1791993027.01 N RB DETECT
+1791993027.01 E EVT emitter_ready mode=AUTO interval_ms=2000 freq_hz=3200 dur_ms=100
+1791993027.01 N   kind=TonalPulseScalar
+1791993027.02 E EVT emitter_cmd line=`EMIT_START trial=0 t_ms=25
+1791993027.02 N   detectorSelection=ScalarTransient
+1791993027.03 E EVT emitter_cmd line=EMIT_DRIVE_ON trial=0 t_ms=25
+1791993027.03 N   inspectionPlan=custom
+1791993027.03 E EVT emitter_cmd line=OK CHIRP freq=3200 dur=100
+1791993027.03 N   scalarTransient.observedStream=FrequencyTarget
+1791993027.06 N   scalarTransient.onsetDetectionThreshold=2000.0
+1791993027.10 N   scalarTransient.onsetReleaseThreshold=1500.0
+1791993027.11 E EVT emitter_chirp_finished
+1791993027.11 N   scalarTransient.cooldownAfterOnsetMs=50
+1791993027.12 E EVT emitter_cmd line=H'EMIT_DONE trial=0 t_ms=125
+1791993027.12 N   scalarTransient.minTransientDurationMs=85
+1791993027.13 E EVT emitter_cmd line=EMIT_DRIVE_OFF trial=0 t_ms=125
+1791993027.13 N   scalarTransient.maxTransientDurationMs=200
+1791993027.16 N   scalarTransient.releaseDebounceMs=10
+1791993027.19 N   scalarTransient.minTransientPeakStrength=3000.0
+1791993027.23 N   inspectionPlan.module[0].kind=MagnitudeFeatureStrength label=contrast stream=FrequencyContrast windowPreMs=0 windowPostMs=100
+1791993027.25 N   inspectionPlan.module[1].kind=MagnitudeFeatureStrength label=amp stream=AmpMagnitude windowPreMs=0 windowPostMs=100
+1791993027.28 N   verdict.has_requirement=1
+1791993027.31 N   verdict.required_label=contrast
+1791993027.34 N   fieldState.occurrenceWindowMs=4000
+1791993027.37 N   fieldState.patternWindowMs=4000
+1791993027.40 N   fieldState.busyOccurrenceCountThreshold=3
+1791993027.43 N   fieldState.denseOccurrenceCountThreshold=6
+1791993027.47 N   fieldState.quietOccurrenceCountThreshold=0
+1791993027.50 N   fieldState.quietActivityThreshold=0.00
+1791993027.53 N   fieldState.busyActivityThreshold=0.45
+1791993027.56 N 
+1791993027.59 N RB BEHAV
+1791993027.62 N   idleEnabled=1
+1791993027.65 N   waitAfterHeardMs=100
+1791993027.68 N   refractoryAfterEmitMs=400
+1791993027.71 N   behaviorSuppressSelfChirpMs=100
+1791993027.74 N   detectionSuppressTailMsOwnEmit=60
+1791993027.77 N   idleTimeoutMs=20000
+1791993027.81 N   idleTimeVariationMs=5000
+1791993027.84 N   idleBlockedAfterHeardMs=1000
+1791993027.87 N   idleBlockedAfterOwnEmitMs=500
+1791993027.90 N 
+1791993027.93 N RB startup baseline=LISTEN_FOR_QUIET
+1791993027.96 N RB rebase waiting smooth=393.0 quietMs=0
+1791993028.26 N RB rebase waiting smooth=98.0 quietMs=240
+1791993029.03 E EVT emitter_cmd line=L+@z/+~#.smHo%b@@8zHa?( (@ Y["S '"O5$@@V;2IA@7Q@2HJ@?hC?(O _:d; [6);6@%A 2?K-EMIT_START trial=0
+1791993029.03 N RB rebase done quietMs=1000 baseline=-803.0 smooth=0
+1791993029.03 E EVT emitter_cmd line=EMIT_DRIVE_ON trial=0 t_ms=2025
+1791993029.06 E EVT emitter_cmd line=OK CHIRP freq=3200 dur=100
+1791993029.11 E EVT emitter_chirp_finished
+1791993029.14 E EVT emitter_cmd line=@EMIT_DONE trial=0 t_ms=2125
+1791993029.17 E EVT emitter_cmd line=EMIT_DRIVE_OFF trial=0 t_ms=2125
+1791993029.51 N RB baseline active
+1791993029.52 N RB log mode=full
+1791993029.79 E EVT emitter_cmd line=#)odI'%aXcKSjH6@@i [ 2@l6
+1791993031.03 E EVT emitter_cmd line=@[@/t-oo  JJ@A7.@3`?@F[76H?R@Sv2aK6 ;Hgpa`("gso@d@EMIT_START trial=0 t_ms=4025
+1791993031.06 E EVT emitter_cmd line=EMIT_DRIVE_ON trial=0 t_ms=4025
+1791993031.08 E EVT emitter_cmd line=OK CHIRP freq=3200 dur=100
+1791993031.11 E EVT emitter_chirp_finished
+1791993031.15 E EVT emitter_cmd line=HEMIT_DONE trial=0 t_ms=4125
+1791993031.18 E EVT emitter_cmd line=EMIT_DRIVE_OFF trial=0 t_ms=4125
+1791993031.21 N RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 profile=TonalPulseScalar
+1791993031.31 N BEH verdict=single_pulse heard=4329 now=4446 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+1791993031.33 N BEH emit start now=4446 source=heard_pattern state=Chirping pattern=single
+1791993031.36 N RB emit accepted source=heard_pattern state=Chirping gate=Chirping pattern=single
+1791993032.13 E EVT emitter_cmd line=&A?M& #dK`/@;@@&@$nLgamjP2-`P?_PD}@ kn[#?XiwHd33
+1791993032.93 E EVT emitter_cmd line=@C$@n~#mv!IB [K;nh[AAd@2(A.@IXy  _$$
+1791993033.03 E EVT emitter_cmd line=@-@{xEMIT_START trial=0 t_ms=6026
+1791993033.06 E EVT emitter_cmd line=EMIT_DRIVE_ON trial=0 t_ms=6026
+1791993033.09 E EVT emitter_cmd line=OK CHIRP freq=3200 dur=100
+1791993033.12 E EVT emitter_chirp_finished
+1791993033.15 E EVT emitter_cmd line=`EMIT_DONE trial=0 t_ms=6126
+1791993033.18 E EVT emitter_cmd line=EMIT_DRIVE_OFF trial=0 t_ms=6126
+1791993033.21 N RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 profile=TonalPulseScalar
+1791993033.32 N BEH verdict=single_pulse heard=6329 now=6446 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+1791993033.35 N BEH emit start now=6446 source=heard_pattern state=Chirping pattern=single
+1791993033.38 N RB emit accepted source=heard_pattern state=Chirping gate=Chirping pattern=single
+1791993033.88 E EVT emitter_cmd line=o+_3I@RhK@hRB0yAH Z@@
+1791993035.03 E EVT emitter_cmd line=@X6s/00&4b [0 u @A?1E;-o6 mK/7~D$@z *@{@"@;`_,EMIT_START trial=0 t_ms=8026
+1791993035.06 E EVT emitter_cmd line=EMIT_DRIVE_ON trial=0 t_ms=8026
+1791993035.09 E EVT emitter_cmd line=OK CHIRP freq=3200 dur=100
+1791993035.13 E EVT emitter_chirp_finished
+1791993035.16 E EVT emitter_cmd line=;LEMIT_DONE trial=0 t_ms=8126
+1791993035.19 E EVT emitter_cmd line=EMIT_DRIVE_OFF trial=0 t_ms=8126
+1791993035.21 N RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 profile=TonalPulseScalar
+1791993035.31 N BEH verdict=single_pulse heard=8329 now=8446 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+1791993035.35 N BEH emit start now=8446 source=heard_pattern state=Chirping pattern=single
+1791993035.38 N RB emit accepted source=heard_pattern state=Chirping gate=Chirping pattern=single
+1791993035.50 E EVT emitter_cmd line=  M6 M"`{w$m@
+1791993036.34 E EVT emitter_cmd line='C@`"@@m` o(3Hw6@@Ra3H 0l@Z Io $!m?{ 26
+1791993037.03 E EVT emitter_cmd line=$D&QA[ m%m?05?@$%d"H3 o`r? EMIT_START trial=0 t_ms=10027
+1791993037.06 E EVT emitter_cmd line=EMIT_DRIVE_ON trial=0 t_ms=10027
+1791993037.09 E EVT emitter_cmd line=OK CHIRP freq=3200 dur=100
+1791993037.12 E EVT emitter_chirp_finished
+1791993037.15 E EVT emitter_cmd line=EMIT_DONE trial=0 t_ms=10127
+1791993037.18 E EVT emitter_cmd line=EMIT_DRIVE_OFF trial=0 t_ms=10127
+1791993037.21 N RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 profile=TonalPulseScalar
+1791993037.21 E EVT emitter_cmd line=@
+1791993037.31 N BEH verdict=single_pulse heard=10329 now=10446 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+1791993037.33 N BEH emit start now=10446 source=heard_pattern state=Chirping pattern=single
+1791993037.37 N RB emit accepted source=heard_pattern state=Chirping gate=Chirping pattern=single
+1791993039.05 E EVT emitter_cmd line=@&`g?{3[HyoR&F0|F*7mi@?"$o7824A@^_;'_L $}quDoj6}v?laS vd{6>$BB1BaC"fEv{p EMIT_START trial=0 t_m
+1791993039.08 E EVT emitter_cmd line=EMIT_DRIVE_ON trial=0 t_ms=12028
+1791993039.11 E EVT emitter_cmd line=OK CHIRP freq=3200 dur=100
+1791993039.14 E EVT emitter_chirp_finished
+1791993039.17 E EVT emitter_cmd line=EMIT_DONE trial=0 t_ms=12128
+1791993039.21 N RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 profile=TonalPulseScalar
+1791993039.21 E EVT emitter_cmd line=EMIT_DRIVE_OFF trial=0 t_ms=12128
+1791993039.31 N BEH verdict=single_pulse heard=12329 now=12446 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+1791993039.34 N BEH emit start now=12446 source=heard_pattern state=Chirping pattern=single
+1791993039.37 N RB emit accepted source=heard_pattern state=Chirping gate=Chirping pattern=single
+1791993041.05 E EVT emitter_cmd line=`m$/lk DHgP>?2fwsi n6@ ?f&@ k6$C`v@aB0D@@HHwDi h(Kl  6 V  @@/46JKq2HA@m 2wEMIT_START trial=0 t_
+1791993041.08 E EVT emitter_cmd line=EMIT_DRIVE_ON trial=0 t_ms=14029
+1791993041.11 E EVT emitter_cmd line=OK CHIRP freq=3200 dur=100
+1791993041.14 E EVT emitter_chirp_finished
+1791993041.17 E EVT emitter_cmd line= EMIT_DONE trial=0 t_ms=14129
+1791993041.22 N RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 profile=TonalPulseScalar
+1791993041.22 E EVT emitter_cmd line=EMIT_DRIVE_OFF trial=0 t_ms=14129
+1791993041.32 N BEH verdict=single_pulse heard=14336 now=14454 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+1791993041.35 N BEH emit start now=14454 source=heard_pattern state=Chirping pattern=single
+1791993041.38 N RB emit accepted source=heard_pattern state=Chirping gate=Chirping pattern=single
+1791993043.06 E EVT emitter_cmd line=6 @"@{o3Ho;9@/"zI66"`w 4}UPaw@@  @`AH?A$@@~2$`H l$ &hK~;{hkoO0S o\ZP# {x>$ w`C@"@?q7( @EMIT_STA
+1791993043.08 E EVT emitter_cmd line=EMIT_DRIVE_ON trial=0 t_ms=16029
+1791993043.11 E EVT emitter_cmd line=OK CHIRP freq=3200 dur=100
+1791993043.15 E EVT emitter_chirp_finished
+1791993043.18 E EVT emitter_cmd line=& {"6EMIT_DONE trial=0 t_ms=16129
+1791993043.21 N RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 profile=TonalPulseScalar
+1791993043.21 E EVT emitter_cmd line=EMIT_DRIVE_OFF trial=0 t_ms=16129
+1791993043.31 N BEH verdict=single_pulse heard=16330 now=16446 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+1791993043.33 N BEH emit start now=16446 source=heard_pattern state=Chirping pattern=single
+1791993043.37 N RB emit accepted source=heard_pattern state=Chirping gate=Chirping pattern=single
+1791993043.70 E EVT emitter_cmd line=@@?@-@HCG>t@62hvH t{~1 `m
+1791993045.04 E EVT emitter_cmd line=&! 3H@k@($Co@H o6@l#Hz&+/H*Y0Ap$_!6^7m$3YB{\Dm@h6e@:@m7`;Y@oZHr@ +BX@EMIT_START trial=0 t_ms=18
+1791993045.06 E EVT emitter_cmd line=EMIT_DRIVE_ON trial=0 t_ms=18029
+1791993045.09 E EVT emitter_cmd line=OK CHIRP freq=3200 dur=100
+1791993045.12 E EVT emitter_chirp_finished
+1791993045.16 E EVT emitter_cmd line=$EMIT_DONE trial=0 t_ms=18129
+1791993045.19 E EVT emitter_cmd line=EMIT_DRIVE_OFF trial=0 t_ms=18129
+1791993045.21 N RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 profile=TonalPulseScalar
+1791993045.31 N BEH verdict=single_pulse heard=18330 now=18446 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+1791993045.34 N BEH emit start now=18446 source=heard_pattern state=Chirping pattern=single
+1791993045.37 N RB emit accepted source=heard_pattern state=Chirping gate=Chirping pattern=single
+1791993047.05 E EVT emitter_cmd line='$@o`{7P p'@{2e6q6@b?@[AK6`? "# y"7X  O@2H[6 y?47$@Hm}D~&AX;H]ZM$FBa?22 Z2E{_!`W?@@_PPSR5EIQtri
+1791993047.08 E EVT emitter_cmd line=EMIT_DRIVE_ON trial=0 t_ms=20029
+1791993047.11 E EVT emitter_cmd line=OK CHIRP freq=3200 dur=100
+1791993047.14 E EVT emitter_chirp_finished
+1791993047.17 E EVT emitter_cmd line=@?5%Q}=9trial=0 t_ms=20129
+1791993047.21 N RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 profile=TonalPulseScalar
+1791993047.21 E EVT emitter_cmd line=EMIT_DRIVE_OFF trial=0 t_ms=20129
+1791993047.34 N BEH verdict=single_pulse heard=20330 now=20446 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+1791993047.36 N BEH emit start now=20446 source=heard_pattern state=Chirping pattern=single
+1791993047.39 N RB emit accepted source=heard_pattern state=Chirping gate=Chirping pattern=single
+1791993049.03 E EVT emitter_cmd line=h==Ag% " PW+@T}o@?  @v vo%~@am@ gaf?L'2z@L2f6w&_@&=P~q$"H=@P*}7EBt2w[ mM@ZAie[d@)n:SR5EIQtrial=
+1791993049.07 E EVT emitter_cmd line=EMIT_DRIVE_ON trial=0 t_ms=22029
+1791993049.10 E EVT emitter_cmd line=OK CHIRP freq=3200 dur=100
+1791993049.13 E EVT emitter_chirp_finished
+1791993049.17 E EVT emitter_cmd line=SRE=9trial=0 t_ms=22129
+1791993049.20 E EVT emitter_cmd line=EMIT_DRIVE_OFF trial=0 t_ms=22129
+1791993049.21 N RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 profile=TonalPulseScalar
+1791993049.31 N BEH verdict=single_pulse heard=22330 now=22446 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+1791993049.33 N BEH emit start now=22446 source=heard_pattern state=Chirping pattern=single
+1791993049.37 N RB emit accepted source=heard_pattern state=Chirping gate=Chirping pattern=single
+1791993049.68 E EVT emitter_cmd line=z*"! @oMoBy@> )!Ii?h3@s2H
+1791993050.28 E EVT emitter_cmd line=>2@ Hh@6@@m'`@E ow!''@df_I@3 X0{F+
+1791993051.03 E EVT emitter_cmd line={F@+m1hI[7@gt$wvrAd @k@@Ha}H@({wg$@a[3P@Z}oI37SR5EIQtrial=0 t_ms=24029
+1791993051.07 E EVT emitter_cmd line=EMIT_DRIVE_ON trial=0 t_ms=24029
+1791993051.09 E EVT emitter_cmd line=OK CHIRP freq=3200 dur=100
+1791993051.13 E EVT emitter_chirp_finished
+1791993051.16 E EVT emitter_cmd line=n>XSRE=9trial=0 t_ms=24129
+1791993051.19 E EVT emitter_cmd line=EMIT_DRIVE_OFF trial=0 t_ms=24129
+1791993051.21 N RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 profile=TonalPulseScalar
+1791993051.31 N BEH verdict=single_pulse heard=24330 now=24446 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+1791993051.34 N BEH emit start now=24446 source=heard_pattern state=Chirping pattern=single
+1791993051.38 N RB emit accepted source=heard_pattern state=Chirping gate=Chirping pattern=single
+1791993053.05 E EVT emitter_cmd line=SH62P2nH#H(^# t@Kv!@I,ZH3@iB>;@6SwE?jll  PA;@E{6${dqn`2  m!@-wI zXX"@8h@zA$W=@a;6MgS"=[y@@8~@{@
+1791993053.08 E EVT emitter_cmd line=EMIT_DRIVE_ON trial=0 t_ms=26029
+1791993053.12 E EVT emitter_cmd line=OK CHIRP freq=3200 dur=100
+1791993053.14 E EVT emitter_chirp_finished
+1791993053.17 E EVT emitter_cmd line=3m SRE=9trial=0 t_ms=26129
+1791993053.21 E EVT emitter_cmd line=EMIT_DRIVE_OFF trial=0 t_ms=26129
+1791993053.22 N RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 profile=TonalPulseScalar
+1791993053.32 N BEH verdict=single_pulse heard=26338 now=26454 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+1791993053.34 N BEH emit start now=26454 source=heard_pattern state=Chirping pattern=single
+1791993053.38 N RB emit accepted source=heard_pattern state=Chirping gate=Chirping pattern=single
+1791993055.06 E EVT emitter_cmd line=  i2F0Y`6 _@m2a{7+iK[@Z?"@[1' ?", @fx"I0d@@A!wS@?P4@6?3M}?B@H?@ A6&iLHhT2Up@w)?$"R[@Z @SR5EIQtr
+1791993055.09 E EVT emitter_cmd line=EMIT_DRIVE_ON trial=0 t_ms=28029
+1791993055.12 E EVT emitter_cmd line=OK CHIRP freq=3200 dur=100
+1791993055.15 E EVT emitter_chirp_finished
+1791993055.18 E EVT emitter_cmd line=o@SRE=9trial=0 t_ms=28129
+1791993055.21 N RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 profile=TonalPulseScalar
+1791993055.21 E EVT emitter_cmd line=EMIT_DRIVE_OFF trial=0 t_ms=28129
+1791993055.31 N BEH verdict=single_pulse heard=28331 now=28446 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+1791993055.33 N BEH emit start now=28446 source=heard_pattern state=Chirping pattern=single
+1791993055.37 N RB emit accepted source=heard_pattern state=Chirping gate=Chirping pattern=single
+1791993056.05 E EVT emitter_cmd line=0{@'v'd#I! K.l @$~  46@#&HA2 +BpA@2" w
+1791993056.27 E EVT emitter_cmd line=y@_@xY g^#:
+1791993057.04 E EVT emitter_cmd line=IH 64I!OM#~I _m|@ uhvfZ@.@hA@wQj%@CIH~sMV|{SR5EIQtrial=0 t_ms=30029
+1791993057.07 E EVT emitter_cmd line=EMIT_DRIVE_ON trial=0 t_ms=30029
+1791993057.11 E EVT emitter_cmd line=OK CHIRP freq=3200 dur=100
+1791993057.14 E EVT emitter_chirp_finished
+1791993057.17 E EVT emitter_cmd line=#&SRE=9trial=0 t_ms=30129
+1791993057.21 N RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 profile=TonalPulseScalar
+1791993057.21 E EVT emitter_cmd line=EMIT_DRIVE_OFF trial=0 t_ms=30129
+1791993057.31 N BEH verdict=single_pulse heard=30330 now=30446 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+1791993057.34 N BEH emit start now=30446 source=heard_pattern state=Chirping pattern=single
+1791993057.38 N RB emit accepted source=heard_pattern state=Chirping gate=Chirping pattern=single
+1791993058.09 E EVT emitter_cmd line=@ A$o7C C}?; ]vqM4@IH!~@4>2s2@@u`K@SHHmaM@?}Q@
+1791993059.05 E EVT emitter_cmd line=4Xt+?Hm2Y[v4:@$h@>H &H@6, A6L/v }n?A2ijv(YA?SR5EIQtrial=0 t_ms=32029
+1791993059.08 E EVT emitter_cmd line=EMIT_DRIVE_ON trial=0 t_ms=32029
+1791993059.11 E EVT emitter_cmd line=OK CHIRP freq=3200 dur=100
+1791993059.14 E EVT emitter_chirp_finished
+1791993059.17 E EVT emitter_cmd line=C#?SRE=9trial=0 t_ms=32129
+1791993059.21 N RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 profile=TonalPulseScalar
+1791993059.21 E EVT emitter_cmd line=EMIT_DRIVE_OFF trial=0 t_ms=32129
+1791993059.31 N BEH verdict=single_pulse heard=32331 now=32446 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+1791993059.35 N BEH emit start now=32446 source=heard_pattern state=Chirping pattern=single
+1791993059.38 N RB emit accepted source=heard_pattern state=Chirping gate=Chirping pattern=single
+1791993059.75 E EVT emitter_cmd line=@>>BwYh'_MyI!{IS t_  yJ 3Hm
+1791993060.31 E EVT emitter_cmd line=P}/$r@"@KwB@%Hi"Ao&.IOHi[(@vK
+1791993061.03 E EVT emitter_cmd line=D A_ Z Qf6t  32?Hy[v`WR2 `627{Go/7PHSR5EIQtrial=0 t_ms=34029
+1791993061.05 E EVT emitter_cmd line=EMIT_DRIVE_ON trial=0 t_ms=34029
+1791993061.08 E EVT emitter_cmd line=OK CHIRP freq=3200 dur=100
+1791993061.12 E EVT emitter_chirp_finished
+1791993061.15 E EVT emitter_cmd line=0SRE=9trial=0 t_ms=34129
+1791993061.18 E EVT emitter_cmd line=EMIT_DRIVE_OFF trial=0 t_ms=34129
+1791993061.21 N RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 profile=TonalPulseScalar
+1791993061.31 N BEH verdict=single_pulse heard=34331 now=34446 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+1791993061.34 N BEH emit start now=34446 source=heard_pattern state=Chirping pattern=single
+1791993061.37 N RB emit accepted source=heard_pattern state=Chirping gate=Chirping pattern=single
+1791993062.21 E EVT emitter_cmd line=d_A@7VXqHj0o{B`D! gg#HIYl`x@hf$[@Jg$@~5 7 [n@ph i>
+1791993063.05 E EVT emitter_cmd line=}> @OR>a%@q`&e?dh@"@h@7 2@\z3 [AA@# SR5EIQtrial=0 t_ms=36029
+1791993063.08 E EVT emitter_cmd line=EMIT_DRIVE_ON trial=0 t_ms=36029
+1791993063.11 E EVT emitter_cmd line=OK CHIRP freq=3200 dur=100
+1791993063.14 E EVT emitter_chirp_finished
+1791993063.17 E EVT emitter_cmd line=SRE=9trial=0 t_ms=36129
+1791993063.21 N RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 profile=TonalPulseScalar
+1791993063.21 E EVT emitter_cmd line=EMIT_DRIVE_OFF trial=0 t_ms=36129
+1791993063.31 N BEH verdict=single_pulse heard=36331 now=36446 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+1791993063.34 N BEH emit start now=36446 source=heard_pattern state=Chirping pattern=single
+1791993063.37 N RB emit accepted source=heard_pattern state=Chirping gate=Chirping pattern=single
+1791993065.05 E EVT emitter_cmd line=`B_vCAg@|Yo7:Z?P2XH&`AC2T2A"A/[;@KH72@@@cAq@EDc:`A[mc2 I@{l@KOuI@.+@1 k@C$&nZRSR5EIQtrial=0 t_m
+1791993065.08 E EVT emitter_cmd line=EMIT_DRIVE_ON trial=0 t_ms=38029
+1791993065.11 E EVT emitter_cmd line=OK CHIRP freq=3200 dur=100
+1791993065.14 E EVT emitter_chirp_finished
+1791993065.17 E EVT emitter_cmd line=&_0SRE=9trial=0 t_ms=38129
+1791993065.21 N RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 profile=TonalPulseScalar
+1791993065.21 E EVT emitter_cmd line=EMIT_DRIVE_OFF trial=0 t_ms=38129
+1791993065.31 N BEH verdict=single_pulse heard=38331 now=38446 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+1791993065.35 N BEH emit start now=38446 source=heard_pattern state=Chirping pattern=single
+1791993065.37 N RB emit accepted source=heard_pattern state=Chirping gate=Chirping pattern=single
+1791993067.06 E EVT emitter_cmd line=-A(?hPIf[[m  @n2@@'IsAR";Hn@@D:`vGv6A/I}  *  @"Mr@^rg W2@t I 3g3'c"pS2~r6A2@{ObVQ&HPw$Bs#A`#@Q6
+1791993067.10 E EVT emitter_cmd line=EMIT_DRIVE_ON trial=0 t_ms=40029
+1791993067.13 E EVT emitter_cmd line=OK CHIRP freq=3200 dur=100
+1791993067.16 E EVT emitter_chirp_finished
+1791993067.19 E EVT emitter_cmd line=SRE=9trial=0 t_ms=40129
+1791993067.21 N RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 profile=TonalPulseScalar
+1791993067.21 E EVT emitter_cmd line=EMIT_DRIVE_OFF trial=0 t_ms=40129
+1791993067.31 N BEH verdict=single_pulse heard=40330 now=40446 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+1791993067.33 N BEH emit start now=40446 source=heard_pattern state=Chirping pattern=single
+1791993067.36 N RB emit accepted source=heard_pattern state=Chirping gate=Chirping pattern=single
+1791993069.05 E EVT emitter_cmd line=p_6H/7$@@ `3@g kF;-XvK~ ~[o!2L7"y)36""K2?@xg_A[DlJHI27?0@ `Dr4@?&?[`l-Q~ vKRA72EiFd~fSR5EIQtria
+1791993069.08 E EVT emitter_cmd line=EMIT_DRIVE_ON trial=0 t_ms=42029
+1791993069.11 E EVT emitter_cmd line=OK CHIRP freq=3200 dur=100
+1791993069.14 E EVT emitter_chirp_finished
+1791993069.17 E EVT emitter_cmd line= YEMIT_DONE trial=0 t_ms=42129
+1791993069.21 N RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 profile=TonalPulseScalar
+1791993069.21 E EVT emitter_cmd line=EMIT_DRIVE_OFF trial=0 t_ms=42129
+1791993069.31 N BEH verdict=single_pulse heard=42330 now=42446 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+1791993069.34 N BEH emit start now=42446 source=heard_pattern state=Chirping pattern=single
+1791993069.37 N RB emit accepted source=heard_pattern state=Chirping gate=Chirping pattern=single
+1791993069.62 E EVT emitter_cmd line=$#'R i H}BOFY:|`ik/
+1791993071.03 E EVT emitter_cmd line=@B?.HA@E g1r@&#@(_7!00wpI?#@@p>&gls@@ E@@2ZIf @$hH Aea_6@XVH@@7$"`7h/B, vf\e(`/4QSR5EIQtrial=0
+1791993071.07 E EVT emitter_cmd line=EMIT_DRIVE_ON trial=0 t_ms=44029
+1791993071.10 E EVT emitter_cmd line=OK CHIRP freq=3200 dur=100
+1791993071.13 E EVT emitter_chirp_finished
+1791993071.16 E EVT emitter_cmd line= EMIT_DONE trial=0 t_ms=44129
+1791993071.19 E EVT emitter_cmd line=EMIT_DRIVE_OFF trial=0 t_ms=44129
+1791993071.21 N RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 profile=TonalPulseScalar
+1791993071.31 N BEH verdict=single_pulse heard=44331 now=44446 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+1791993071.33 N BEH emit start now=44446 source=heard_pattern state=Chirping pattern=single
+1791993071.36 N RB emit accepted source=heard_pattern state=Chirping gate=Chirping pattern=single
+1791993072.83 E EVT emitter_cmd line=)7xA@6@RRQ2Ena 6W7M$3_1@7`m#aw@@ >!@i,@HK$?"IoSF b IdHA>>#Lj7g#@@Is}-)^`I=mv:I 4@i,&&I&geg~AH_
+1791993073.04 E EVT emitter_cmd line=@A 6VBY a3iHZHHPIZA5mscAe'dSR5EIQtrial=0 t_ms=46033
+1791993073.07 E EVT emitter_cmd line=EMIT_DRIVE_ON trial=0 t_ms=46033
+1791993073.10 E EVT emitter_cmd line=OK CHIRP freq=3200 dur=100
+1791993073.13 E EVT emitter_chirp_finished
+1791993073.17 E EVT emitter_cmd line=7SRE=9trial=0 t_ms=46133
+1791993073.20 E EVT emitter_cmd line=EMIT_DRIVE_OFF trial=0 t_ms=46133
+1791993073.22 N RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 profile=TonalPulseScalar
+1791993073.32 N BEH verdict=single_pulse heard=46338 now=46454 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+1791993073.35 N BEH emit start now=46454 source=heard_pattern state=Chirping pattern=single
+1791993073.38 N RB emit accepted source=heard_pattern state=Chirping gate=Chirping pattern=single
+1791993073.84 E EVT emitter_cmd line="75gz!@m#Lh(!b Rh7`12cH1@HmIsH%@HK
+1791993074.22 E EVT emitter_cmd line=H!g( [!?c$Rn@6mI@`X%m{$R `oe> A {ooAM{
+1791993074.28 E EVT emitter_cmd line=H>
+1791993074.56 E EVT emitter_cmd line=2WJszL@ l&@M} lrq&F-lF!m}o`[0$@2;Q3]?c6
+1791993074.84 E EVT emitter_cmd line=>;R%0(A`62$I, @`%v227iE
+1791993075.03 E EVT emitter_cmd line=0@&@@Hl~QL  0C@`$BdISR5EIQtrial=0 t_ms=48033
+1791993075.06 E EVT emitter_cmd line=EMIT_DRIVE_ON trial=0 t_ms=48033
+1791993075.09 E EVT emitter_cmd line=OK CHIRP freq=3200 dur=100
+1791993075.12 E EVT emitter_chirp_finished
+1791993075.16 E EVT emitter_cmd line=@/EMIT_DONE trial=0 t_ms=48133
+1791993075.19 E EVT emitter_cmd line=EMIT_DRIVE_OFF trial=0 t_ms=48133
+1791993075.22 N RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 profile=TonalPulseScalar
+1791993075.32 N BEH verdict=single_pulse heard=48338 now=48454 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+1791993075.34 N BEH emit start now=48454 source=heard_pattern state=Chirping pattern=single
+1791993075.38 N RB emit accepted source=heard_pattern state=Chirping gate=Chirping pattern=single
+1791993075.43 E EVT emitter_cmd line=;k#_2hy@H#;`
+1791993077.04 E EVT emitter_cmd line=@"xy 2` @4YI{0\v6 }f`A]HM|AAM o$? "XB@mA3`@62X^Ig!Z~APlY\(H'gk@'2(@@9[ S2P 6@ @}Ql-M>7WO@o2}6$@
+1791993077.06 E EVT emitter_cmd line=EMIT_DRIVE_ON trial=0 t_ms=50033
+1791993077.09 E EVT emitter_cmd line=OK CHIRP freq=3200 dur=100
+1791993077.12 E EVT emitter_chirp_finished
+1791993077.16 E EVT emitter_cmd line=@ EMIT_DONE trial=0 t_ms=50133
+1791993077.19 E EVT emitter_cmd line=EMIT_DRIVE_OFF trial=0 t_ms=50133
+1791993077.22 N RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 profile=TonalPulseScalar
+1791993077.32 N BEH verdict=single_pulse heard=50338 now=50454 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+1791993077.34 N BEH emit start now=50454 source=heard_pattern state=Chirping pattern=single
+1791993077.37 N RB emit accepted source=heard_pattern state=Chirping gate=Chirping pattern=single
+1791993079.05 E EVT emitter_cmd line=`7l7JH6owIB{v6@ED 7mu3`_@`@w{&0I 6," B Ha1$ZHKm2@@ @T3~_@!4X[$DAAB$@I"AP$Q2! R` ``$hj>f2MF}4P@L
+1791993079.08 E EVT emitter_cmd line=EMIT_DRIVE_ON trial=0 t_ms=52033
+1791993079.11 E EVT emitter_cmd line=OK CHIRP freq=3200 dur=100
+1791993079.14 E EVT emitter_chirp_finished
+1791993079.17 E EVT emitter_cmd line=>EMIT_DONE trial=0 t_ms=52133
+1791993079.21 E EVT emitter_cmd line=EMIT_DRIVE_OFF trial=0 t_ms=52133
+1791993079.22 N RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 profile=TonalPulseScalar
+1791993079.32 N BEH verdict=single_pulse heard=52338 now=52454 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+1791993079.34 N BEH emit start now=52454 source=heard_pattern state=Chirping pattern=single
+1791993079.37 N RB emit accepted source=heard_pattern state=Chirping gate=Chirping pattern=single
+1791993080.00 E EVT emitter_cmd line=~@@$Io'~/#cvHJ{B@+"<v} AvBT7kS$fG8MtY`P_?A@37ok 8}t$,@.7r
+1791993080.12 E EVT emitter_cmd line=oA@!L2
+1791993080.34 E EVT emitter_cmd line= H@ fdA@Km ZK@DAA
+1791993081.05 E EVT emitter_cmd line=4A @g!A3B5@A@@Hdz`@~m]? AfI @PI!3+C $ Bgoa~"B@@e@SmUF @@@H$II@if[3qRRm`5%Q}MQIQtrial=0 t_ms=540
+1791993081.08 E EVT emitter_cmd line=EMIT_DRIVE_ON trial=0 t_ms=54033
+1791993081.11 E EVT emitter_cmd line=OK CHIRP freq=3200 dur=100
+1791993081.14 E EVT emitter_chirp_finished
+1791993081.17 E EVT emitter_cmd line=r(Ko&EMIT_DONE trial=0 t_ms=54133
+1791993081.21 N RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 profile=TonalPulseScalar
+1791993081.21 E EVT emitter_cmd line=EMIT_DRIVE_OFF trial=0 t_ms=54133
+1791993081.31 N BEH verdict=single_pulse heard=54330 now=54446 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+1791993081.34 N BEH emit start now=54446 source=heard_pattern state=Chirping pattern=single
+1791993081.37 N RB emit accepted source=heard_pattern state=Chirping gate=Chirping pattern=single
+1791993081.46 E EVT emitter_cmd line=0Lh}n 7Sh2i
+1791993082.31 E EVT emitter_cmd line=@%AOxH K 1
+1791993082.95 E EVT emitter_cmd line=H@@3$C H@0IC@'eB@4
+1791993083.05 E EVT emitter_cmd line=@d RwW k=rK0"SR5EIQtrial=0 t_ms=56033
+1791993083.08 E EVT emitter_cmd line=EMIT_DRIVE_ON trial=0 t_ms=56033
+1791993083.11 E EVT emitter_cmd line=OK CHIRP freq=3200 dur=100
+1791993083.14 E EVT emitter_cmd line=W
+1791993083.17 E EVT emitter_chirp_finished
+1791993083.20 E EVT emitter_cmd line= ?EMIT_DONE trial=0 t_ms=56133
+1791993083.22 N RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 profile=TonalPulseScalar
+1791993083.22 E EVT emitter_cmd line=EMIT_DRIVE_OFF trial=0 t_ms=56133
+1791993083.32 N BEH verdict=single_pulse heard=56338 now=56454 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+1791993083.34 N BEH emit start now=56454 source=heard_pattern state=Chirping pattern=single
+1791993083.37 N RB emit accepted source=heard_pattern state=Chirping gate=Chirping pattern=single
+1791993085.06 E EVT emitter_cmd line=AbrkHHQP,j{~[a  7#tO@"  hW[n:0zo.UDR  C_@WMwm%}3@?@" LlH3K zsf1 HmIs 2!4Y@!@ATM6H 6h!dA_Qd@A@Du
+1791993085.09 E EVT emitter_cmd line=EMIT_DRIVE_ON trial=0 t_ms=58033
+1791993085.11 E EVT emitter_cmd line=OK CHIRP freq=3200 dur=100
+1791993085.15 E EVT emitter_chirp_finished
+1791993085.18 E EVT emitter_cmd line=@7 _@SRE=9trial=0 t_ms=58133
+1791993085.22 N RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 profile=TonalPulseScalar
+1791993085.22 E EVT emitter_cmd line=EMIT_DRIVE_OFF trial=0 t_ms=58133
+1791993085.32 N BEH verdict=single_pulse heard=58339 now=58454 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+1791993085.35 N BEH emit start now=58454 source=heard_pattern state=Chirping pattern=single
+1791993085.38 N RB emit accepted source=heard_pattern state=Chirping gate=Chirping pattern=single
+1791993087.06 E EVT emitter_cmd line=e$@g7@L7jK6@4 I>$Y~b|}L@HBAw|@@'@m;brdHioAAi?-@A_@VQVIT @P76w`AAS!W4RY@`@PjW!B9QoJ#cP"@0!`@@B"@
+1791993087.09 E EVT emitter_cmd line=EMIT_DRIVE_ON trial=0 t_ms=60033
+1791993087.12 E EVT emitter_cmd line=OK CHIRP freq=3200 dur=100
+1791993087.15 E EVT emitter_chirp_finished
+1791993087.18 E EVT emitter_cmd line=Cpg _SRE=9trial=0 t_ms=60133
+1791993087.22 N RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 profile=TonalPulseScalar
+1791993087.22 E EVT emitter_cmd line=EMIT_DRIVE_OFF trial=0 t_ms=60133
+1791993087.32 N BEH verdict=single_pulse heard=60338 now=60454 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+1791993087.35 N BEH emit start now=60454 source=heard_pattern state=Chirping pattern=single
+1791993087.38 N RB emit accepted source=heard_pattern state=Chirping gate=Chirping pattern=single
+1791993089.06 E EVT emitter_cmd line=[@Yh`? F!H2Ib{($A@[)o,R 2@lBi&  sA:Im7H0 `D}^[ s"''ml]COOw_2~4 @lWQH@`MAao& L[}HKH4>{ho1@@E@H[!
+1791993089.09 E EVT emitter_cmd line=EMIT_DRIVE_ON trial=0 t_ms=62033
+1791993089.12 E EVT emitter_cmd line=OK CHIRP freq=3200 dur=100
+1791993089.15 E EVT emitter_chirp_finished
+1791993089.18 E EVT emitter_cmd line=@@SRE=9trial=0 t_ms=62133
+1791993089.22 N RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 profile=TonalPulseScalar
+1791993089.22 E EVT emitter_cmd line=EMIT_DRIVE_OFF trial=0 t_ms=62133
+1791993089.32 N BEH verdict=single_pulse heard=62338 now=62454 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+1791993089.36 N BEH emit start now=62454 source=heard_pattern state=Chirping pattern=single
+1791993089.38 N RB emit accepted source=heard_pattern state=Chirping gate=Chirping pattern=single
+1791993091.04 E EVT emitter_cmd line=wS.Bf#@7A`@N@h@?B h3I7?Yt6@QBaw$P@w_2@s"@ |@I1tcK3`CHyZu2JY@Pm@ABd^B@&jz>i{;("1@@@~[{@@&aHQ&[-y
+1791993091.06 E EVT emitter_cmd line=EMIT_DRIVE_ON trial=0 t_ms=64033
+1791993091.10 E EVT emitter_cmd line=OK CHIRP freq=3200 dur=100
+1791993091.13 E EVT emitter_chirp_finished
+1791993091.16 E EVT emitter_cmd line=SRE=9trial=0 t_ms=64133
+1791993091.19 E EVT emitter_cmd line=EMIT_DRIVE_OFF trial=0 t_ms=64133
+1791993091.22 N RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 profile=TonalPulseScalar
+1791993091.32 N BEH verdict=single_pulse heard=64340 now=64454 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+1791993091.35 N BEH emit start now=64454 source=heard_pattern state=Chirping pattern=single
+1791993091.38 N RB emit accepted source=heard_pattern state=Chirping gate=Chirping pattern=single
+1791993092.70 E EVT emitter_cmd line=@r]}&@l36@_I7H7 8Su3\H"H$@( 7D@s@@@@@ 6`7ai&` !A]p@v!3 ^@"@E2 2HZz63I"`$24~HH@>
+1791993093.04 E EVT emitter_cmd line=! >[d@i+SNaA>.`@7@3(; `SR5EIQtrial=0 t_ms=66033
+1791993093.07 E EVT emitter_cmd line=EMIT_DRIVE_ON trial=0 t_ms=66033
+1791993093.10 E EVT emitter_cmd line=OK CHIRP freq=3200 dur=100
+1791993093.13 E EVT emitter_chirp_finished
+1791993093.16 E EVT emitter_cmd line= SRE=9trial=0 t_ms=66133
+1791993093.20 E EVT emitter_cmd line=EMIT_DRIVE_OFF trial=0 t_ms=66133
+1791993093.22 N RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 profile=TonalPulseScalar
+1791993093.33 N BEH verdict=single_pulse heard=66339 now=66454 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+1791993093.36 N BEH emit start now=66454 source=heard_pattern state=Chirping pattern=single
+1791993093.40 N RB emit accepted source=heard_pattern state=Chirping gate=Chirping pattern=single
+1791993094.84 E EVT emitter_cmd line=&@;d>@  (PkIY  l[0/IE`7@<xtH1Yf0o@?H6)[:_@?G oU(o(_( YL &vsP_z?0'4X@3;R. k$k2 2~6$  >?
+1791993095.06 E EVT emitter_cmd line=0S~0 >@U@w$~SR5EIQtrial=0 t_ms=68033
+1791993095.09 E EVT emitter_cmd line=EMIT_DRIVE_ON trial=0 t_ms=68033
+1791993095.12 E EVT emitter_cmd line=OK CHIRP freq=3200 dur=100
+1791993095.15 E EVT emitter_chirp_finished
+1791993095.18 E EVT emitter_cmd line=_SRE=9trial=0 t_ms=68133
+1791993095.22 N RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 profile=TonalPulseScalar
+1791993095.22 E EVT emitter_cmd line=EMIT_DRIVE_OFF trial=0 t_ms=68133
+1791993095.32 N BEH verdict=single_pulse heard=68339 now=68454 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+1791993095.35 N BEH emit start now=68454 source=heard_pattern state=Chirping pattern=single
+1791993095.39 N RB emit accepted source=heard_pattern state=Chirping gate=Chirping pattern=single
+1791993096.64 E EVT emitter_cmd line==; o(( K4  2}~g [k'S WP6{ Q> H" $@OtHvQ9SH0Ao@is@ai7!3?'c$yJ@6 M@iH
+1791993096.88 E EVT emitter_cmd line=7<m>@:@`2
+1791993096.90 E EVT emitter_cmd line=do
+1791993097.03 E EVT emitter_cmd line=L["^AM3sZ4@SR5EIQtrial=0 t_ms=70033
+1791993097.06 E EVT emitter_cmd line=EMIT_DRIVE_ON trial=0 t_ms=70033
+1791993097.09 E EVT emitter_cmd line=OK CHIRP freq=3200 dur=100
+1791993097.12 E EVT emitter_chirp_finished
+1791993097.15 E EVT emitter_cmd line=_"d5%Q}=9trial=0 t_ms=70133
+1791993097.18 E EVT emitter_cmd line=EMIT_DRIVE_OFF trial=0 t_ms=70133
+1791993097.22 N RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 profile=TonalPulseScalar
+1791993097.32 N BEH verdict=single_pulse heard=70339 now=70454 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+1791993097.36 N BEH emit start now=70454 source=heard_pattern state=Chirping pattern=single
+1791993097.39 N RB emit accepted source=heard_pattern state=Chirping gate=Chirping pattern=single
+1791993099.04 E EVT emitter_cmd line=#k7h2@&_nP7BmK MDr6DW|D@H{ZL Y `|DB'HsaX{2wz6vIfff[&EI@ 6`na=@"("{EH!C cAP3R!2@Ia@o[Ay`;3{{"/I@
+1791993099.07 E EVT emitter_cmd line=EMIT_DRIVE_ON trial=0 t_ms=72033
+1791993099.10 E EVT emitter_cmd line=OK CHIRP freq=3200 dur=100
+1791993099.13 E EVT emitter_chirp_finished
+1791993099.16 E EVT emitter_cmd line= EMIT_DONE trial=0 t_ms=72133
+1791993099.20 E EVT emitter_cmd line=EMIT_DRIVE_OFF trial=0 t_ms=72133
+1791993099.22 N RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 profile=TonalPulseScalar
+1791993099.32 N BEH verdict=single_pulse heard=72339 now=72454 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+1791993099.35 N BEH emit start now=72454 source=heard_pattern state=Chirping pattern=single
+1791993099.38 N RB emit accepted source=heard_pattern state=Chirping gate=Chirping pattern=single
+1791993101.04 E EVT emitter_cmd line=(4A(h_3m{MJ#@@>2[RAMP"v ~ht{ [{d6Y 3l?i?$`I@?Hh+ o>#/`7*M,'H4ofy&[$w@$7P@@3Kf!DHHfM?#2 \b$ {EMI
+1791993101.07 E EVT emitter_cmd line=EMIT_DRIVE_ON trial=0 t_ms=74033
+1791993101.10 E EVT emitter_cmd line=OK CHIRP freq=3200 dur=100
+1791993101.13 E EVT emitter_chirp_finished
+1791993101.16 E EVT emitter_cmd line=AEMIT_DONE trial=0 t_ms=74133
+1791993101.19 E EVT emitter_cmd line=EMIT_DRIVE_OFF trial=0 t_ms=74133
+1791993101.22 N RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 profile=TonalPulseScalar
+1791993101.32 N BEH verdict=single_pulse heard=74339 now=74454 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+1791993101.34 N BEH emit start now=74454 source=heard_pattern state=Chirping pattern=single
+1791993101.37 N RB emit accepted source=heard_pattern state=Chirping gate=Chirping pattern=single
+1791993103.06 E EVT emitter_cmd line=0WfC~[%C KA%_@y_@!HW kIQ Pt 6v;&Il,K@ ??mLkH1q?hp PXQBA@  A v$O4@q(@j qXo~2@@kI }fl@EMIT_START
+1791993103.09 E EVT emitter_cmd line=EMIT_DRIVE_ON trial=0 t_ms=76033
+1791993103.12 E EVT emitter_cmd line=OK CHIRP freq=3200 dur=100
+1791993103.15 E EVT emitter_chirp_finished
+1791993103.18 E EVT emitter_cmd line=.H]zEMIT_DONE trial=0 t_ms=76133
+1791993103.22 N RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 profile=TonalPulseScalar
+1791993103.22 E EVT emitter_cmd line=EMIT_DRIVE_OFF trial=0 t_ms=76133
+1791993103.32 N BEH verdict=single_pulse heard=76338 now=76454 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+1791993103.35 N BEH emit start now=76454 source=heard_pattern state=Chirping pattern=single
+1791993103.38 N RB emit accepted source=heard_pattern state=Chirping gate=Chirping pattern=single
+1791993104.50 E EVT emitter_cmd line=8$` @mU}7!l>o?|s@] E6x!7}#$2` m"Q_m_@@6h@;I@ @_djPw d'@fh;l@
+1791993105.04 E EVT emitter_cmd line=*C2 Az77s/HPmjHIa`IL@PD{HCO" 7Hl3A@& @YSR5EIQtrial=0 t_ms=78033
+1791993105.06 E EVT emitter_cmd line=EMIT_DRIVE_ON trial=0 t_ms=78033
+1791993105.10 E EVT emitter_cmd line=OK CHIRP freq=3200 dur=100
+1791993105.12 E EVT emitter_chirp_finished
+1791993105.16 E EVT emitter_cmd line= EMIT_DONE trial=0 t_ms=78133
+1791993105.19 E EVT emitter_cmd line=EMIT_DRIVE_OFF trial=0 t_ms=78133
+1791993105.22 N RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 profile=TonalPulseScalar
+1791993105.32 N BEH verdict=single_pulse heard=78338 now=78454 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+1791993105.34 N BEH emit start now=78454 source=heard_pattern state=Chirping pattern=single
+1791993105.37 N RB emit accepted source=heard_pattern state=Chirping gate=Chirping pattern=single
+1791993105.46 E EVT emitter_cmd line=7$!;B@~" -`%
+1791993105.69 E EVT emitter_cmd line=xH@)p@F{kms;3!
+1791993107.04 E EVT emitter_cmd line=&(#$:( #d0@xce`B@yvv~!fh6&@I< [ q&(>@@ S?P VR@DmWRt@6Y7wR  2)s D&6I `(H! ~ @ @4v-?[@k;AI$@[csh@
+1791993107.07 E EVT emitter_cmd line=EMIT_DRIVE_ON trial=0 t_ms=80033
+1791993107.10 E EVT emitter_cmd line=OK CHIRP freq=3200 dur=100
+1791993107.13 E EVT emitter_chirp_finished
+1791993107.16 E EVT emitter_cmd line="?HSRE=9trial=0 t_ms=80133
+1791993107.19 E EVT emitter_cmd line=EMIT_DRIVE_OFF trial=0 t_ms=80133
+1791993107.22 N RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 profile=TonalPulseScalar
+1791993107.32 N BEH verdict=single_pulse heard=80338 now=80454 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+1791993107.35 N BEH emit start now=80454 source=heard_pattern state=Chirping pattern=single
+1791993107.38 N RB emit accepted source=heard_pattern state=Chirping gate=Chirping pattern=single
+1791993108.21 E EVT emitter_cmd line=';:`Av`@f'llhCcY d32 v" Y3@@79BBAf4u@{wzW&~24"!SA`
+1791993109.04 E EVT emitter_cmd line=:@@v0Qm/s& @;H@?2G$@@)@d1@@7s ! H87@FAm2`{7H@HHo?dPH@-I?!WjTx ] SR5EIQtrial=0 t_ms=82033
+1791993109.07 E EVT emitter_cmd line=EMIT_DRIVE_ON trial=0 t_ms=82033
+1791993109.10 E EVT emitter_cmd line=OK CHIRP freq=3200 dur=100
+1791993109.14 E EVT emitter_chirp_finished
+1791993109.17 E EVT emitter_cmd line=?7a%pSRE=9trial=0 t_ms=82133
+1791993109.20 E EVT emitter_cmd line=EMIT_DRIVE_OFF trial=0 t_ms=82133
+1791993109.22 N RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 profile=TonalPulseScalar
+1791993109.32 N BEH verdict=single_pulse heard=82338 now=82454 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+1791993109.35 N BEH emit start now=82454 source=heard_pattern state=Chirping pattern=single
+1791993109.38 N RB emit accepted source=heard_pattern state=Chirping gate=Chirping pattern=single
+1791993111.04 E EVT emitter_cmd line=lKCV.n@@{S@oPF"`H @oGHq 7iVM&?(vKAE7N6r 3;EW3@` c@@n@nZ{6 vH3A'""+ $ 26$D5DBWLHFP/(~ o0@QF|@@iC
+1791993111.06 E EVT emitter_cmd line=EMIT_DRIVE_ON trial=0 t_ms=84033
+1791993111.09 E EVT emitter_cmd line=OK CHIRP freq=3200 dur=100
+1791993111.12 E EVT emitter_chirp_finished
+1791993111.16 E EVT emitter_cmd line=?`<SRE=9trial=0 t_ms=84133
+1791993111.19 E EVT emitter_cmd line=EMIT_DRIVE_OFF trial=0 t_ms=84133
+1791993111.22 N RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 profile=TonalPulseScalar
+1791993111.32 N BEH verdict=single_pulse heard=84338 now=84454 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+1791993111.34 N BEH emit start now=84454 source=heard_pattern state=Chirping pattern=single
+1791993111.37 N RB emit accepted source=heard_pattern state=Chirping gate=Chirping pattern=single
+1791993111.90 E EVT emitter_cmd line=7"4 @ @e@H@!;s@rxMw <@@I&B HC2zCS$
+1791993113.05 E EVT emitter_cmd line=~@@G$@Hg"8fN2 h@@ 3;AoHG2@ @`}mmGHwmA$tfiI2xwPw6J@@{b(g $[?@f@3H6II6!{uHA0|PtD@yww$3SR5EIQtrial
+1791993113.08 E EVT emitter_cmd line=EMIT_DRIVE_ON trial=0 t_ms=86033
+1791993113.11 E EVT emitter_cmd line=OK CHIRP freq=3200 dur=100
+1791993113.14 E EVT emitter_chirp_finished
+1791993113.17 E EVT emitter_cmd line=`SRE=9trial=0 t_ms=86133
+1791993113.21 E EVT emitter_cmd line=EMIT_DRIVE_OFF trial=0 t_ms=86133
+1791993113.22 N RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 profile=TonalPulseScalar
+1791993113.32 N BEH verdict=single_pulse heard=86338 now=86454 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+1791993113.36 N BEH emit start now=86454 source=heard_pattern state=Chirping pattern=single
+1791993113.39 N RB emit accepted source=heard_pattern state=Chirping gate=Chirping pattern=single
+1791993115.04 E EVT emitter_cmd line=0H 37l3l4@"7@@w@P~@Q~"MAQ>4@D'}S &_/?d[2N@$}@0wv|B~XNH&@@H!P@S{S @!AI0@[?d:@A~4hk"60@h&A?H{Bh2R
+1791993115.07 E EVT emitter_cmd line=EMIT_DRIVE_ON trial=0 t_ms=88033
+1791993115.10 E EVT emitter_cmd line=OK CHIRP freq=3200 dur=100
+1791993115.13 E EVT emitter_chirp_finished
+1791993115.16 E EVT emitter_cmd line=ZSRE=9trial=0 t_ms=88133
+1791993115.19 E EVT emitter_cmd line=EMIT_DRIVE_OFF trial=0 t_ms=88133
+1791993115.22 N RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 profile=TonalPulseScalar
+1791993115.32 N BEH verdict=single_pulse heard=88338 now=88454 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+1791993115.35 N BEH emit start now=88454 source=heard_pattern state=Chirping pattern=single
+1791993115.38 N RB emit accepted source=heard_pattern state=Chirping gate=Chirping pattern=single
+1791993117.06 E EVT emitter_cmd line=_d`@3;@&@726`0? eKo@b&>MP`Q0?2 ?3HF,tZH@>$vA{}W@H=}@@2H$; Is$A{h&i0d aW h3H?H=~&M@A~$"2Im^$FDM6
+1791993117.09 E EVT emitter_cmd line=EMIT_DRIVE_ON trial=0 t_ms=90033
+1791993117.12 E EVT emitter_cmd line=OK CHIRP freq=3200 dur=100
+1791993117.15 E EVT emitter_chirp_finished
+1791993117.18 E EVT emitter_cmd line=]=@@EMIT_DONE trial=0 t_ms=90133
+1791993117.22 N RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 profile=TonalPulseScalar
+1791993117.22 E EVT emitter_cmd line=EMIT_DRIVE_OFF trial=0 t_ms=90133
+1791993117.32 N BEH verdict=single_pulse heard=90338 now=90454 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+1791993117.34 N BEH emit start now=90454 source=heard_pattern state=Chirping pattern=single
+1791993117.38 N RB emit accepted source=heard_pattern state=Chirping gate=Chirping pattern=single
+1791993119.06 E EVT emitter_cmd line=` `:m@~BWHSKI@k@  }@wl`y$Sg@Yd3@'_@y$ wh@A[ HIH k2)6Dho`]Xz[ I"h~&glzt#@G ?l@6z@ KsnwH@W&w`}oEM
+1791993119.08 E EVT emitter_cmd line=EMIT_DRIVE_ON trial=0 t_ms=92033
+1791993119.11 E EVT emitter_cmd line=OK CHIRP freq=3200 dur=100
+1791993119.15 E EVT emitter_chirp_finished
+1791993119.18 E EVT emitter_cmd line=CHEMIT_DONE trial=0 t_ms=92133
+1791993119.21 E EVT emitter_cmd line=EMIT_DRIVE_OFF trial=0 t_ms=92133
+1791993119.22 N RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 profile=TonalPulseScalar
+1791993119.32 N BEH verdict=single_pulse heard=92338 now=92454 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+1791993119.35 N BEH emit start now=92454 source=heard_pattern state=Chirping pattern=single
+1791993119.38 N RB emit accepted source=heard_pattern state=Chirping gate=Chirping pattern=single
+1791993121.06 E EVT emitter_cmd line=z7eho3HaPl AP`!@@P va$ c}Aq52Ok@I?P|Fu@K! KIp}vT 34E_v@\>@Mv??@>e.pG`;$ TlB`v.- oA B@AW7o@,a@>6
+1791993121.09 E EVT emitter_cmd line=EMIT_DRIVE_ON trial=0 t_ms=94033
+1791993121.13 E EVT emitter_cmd line=OK CHIRP freq=3200 dur=100
+1791993121.15 E EVT emitter_chirp_finished
+1791993121.18 E EVT emitter_cmd line=_@@[EMIT_DONE trial=0 t_ms=94133
+1791993121.21 N RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 profile=TonalPulseScalar
+1791993121.21 E EVT emitter_cmd line=EMIT_DRIVE_OFF trial=0 t_ms=94133
+1791993121.31 N BEH verdict=single_pulse heard=94331 now=94446 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+1791993121.34 N BEH emit start now=94446 source=heard_pattern state=Chirping pattern=single
+1791993121.37 N RB emit accepted source=heard_pattern state=Chirping gate=Chirping pattern=single
+1791993122.69 E EVT emitter_cmd line=LW$}o@o@/H77[K$@<!"3 D[e41kPRO&y3V.@ g.}@)n"A""v+_P#A& m%PoX7=Hsv`$X!K(@c
+1791993123.03 E EVT emitter_cmd line=#!>"'yn`3f"@Qc7lP$yvnw6@@{QHHH}~ FrSR5EIQtrial=0 t_ms=96033
+1791993123.06 E EVT emitter_cmd line=EMIT_DRIVE_ON trial=0 t_ms=96033
+1791993123.09 E EVT emitter_cmd line=OK CHIRP freq=3200 dur=100
+1791993123.12 E EVT emitter_cmd line=#&
+1791993123.15 E EVT emitter_chirp_finished
+1791993123.18 E EVT emitter_cmd line=SRE=9trial=0 t_ms=96133
+1791993123.22 N RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 profile=TonalPulseScalar
+1791993123.22 E EVT emitter_cmd line=EMIT_DRIVE_OFF trial=0 t_ms=96133
+1791993123.32 N BEH verdict=single_pulse heard=96338 now=96454 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+1791993123.35 N BEH emit start now=96454 source=heard_pattern state=Chirping pattern=single
+1791993123.39 N RB emit accepted source=heard_pattern state=Chirping gate=Chirping pattern=single
+1791993124.59 E EVT emitter_cmd line=h#M@_@mi@ZEh4,$@z$A2(YIBe@2u?OAdI2mJXfH8_ }wBS@{a@@@ {vL_32HL} @@@7I#D"
+1791993125.03 E EVT emitter_cmd line=20"wh@!w\77nA-O?LHKAB[V0_A@"a7 @F~S{[SR5EIQtrial=0 t_ms=98033
+1791993125.06 E EVT emitter_cmd line=EMIT_DRIVE_ON trial=0 t_ms=98033
+1791993125.09 E EVT emitter_cmd line=OK CHIRP freq=3200 dur=100
+1791993125.12 E EVT emitter_chirp_finished
+1791993125.16 E EVT emitter_cmd line=;?~SRE=9trial=0 t_ms=98133
+1791993125.19 E EVT emitter_cmd line=EMIT_DRIVE_OFF trial=0 t_ms=98133
+1791993125.22 N RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 profile=TonalPulseScalar
+1791993125.32 N BEH verdict=single_pulse heard=98338 now=98454 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+1791993125.36 N BEH emit start now=98454 source=heard_pattern state=Chirping pattern=single
+1791993125.39 N RB emit accepted source=heard_pattern state=Chirping gate=Chirping pattern=single
+1791993127.04 E EVT emitter_cmd line= IHo7mm '2JXx,`@0e{~3Xi@I@Rd3A{_t@3 M 1HoD]>P 22M$ @ (;bbHHE;i , 9T@^c77g!SL6 $FA@{?X h6}k@zY@"
+1791993127.06 E EVT emitter_cmd line=EMIT_DRIVE_ON trial=0 t_ms=100033
+1791993127.09 E EVT emitter_cmd line=OK CHIRP freq=3200 dur=100
+1791993127.13 E EVT emitter_chirp_finished
+1791993127.16 E EVT emitter_cmd line=!?Z>??SRE=9trial=0 t_ms=100133
+1791993127.19 E EVT emitter_cmd line=EMIT_DRIVE_OFF trial=0 t_ms=100133
+1791993127.22 N RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 profile=TonalPulseScalar
+1791993127.32 N BEH verdict=single_pulse heard=100338 now=100454 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+1791993127.34 N BEH emit start now=100454 source=heard_pattern state=Chirping pattern=single
+1791993127.37 N RB emit accepted source=heard_pattern state=Chirping gate=Chirping pattern=single
+1791993129.06 E EVT emitter_cmd line=@_~ HO!0=zY@@I?7K6yv K{'@/,PI%&op{ @H4hh@2IZ!@K,b7'ry6enH@~6@5@`g0@ A@Ks $m>[>hAn9@g 6 0>?@`mA@
+1791993129.09 E EVT emitter_cmd line=EMIT_DRIVE_ON trial=0 t_ms=102033
+1791993129.12 E EVT emitter_cmd line=OK CHIRP freq=3200 dur=100
+1791993129.15 E EVT emitter_chirp_finished
+1791993129.18 E EVT emitter_cmd line=,,SRE=9trial=0 t_ms=102133
+1791993129.22 N RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 profile=TonalPulseScalar
+1791993129.22 E EVT emitter_cmd line=EMIT_DRIVE_OFF trial=0 t_ms=102133
+1791993129.32 N BEH verdict=single_pulse heard=102336 now=102454 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+1791993129.35 N BEH emit start now=102454 source=heard_pattern state=Chirping pattern=single
+1791993129.38 N RB emit accepted source=heard_pattern state=Chirping gate=Chirping pattern=single
+1791993129.69 E EVT emitter_cmd line=7 8 H?_g>>3.h@$shwu

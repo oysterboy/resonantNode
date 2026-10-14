@@ -238,6 +238,25 @@ void EmitterApp::handleLine(const char* line) {
     }
 }
 
+// The tone must be playable: on the I2S (D-AMP) output anything at or above
+// half the sample rate aliases, e.g. freq=17000 played ~1 kHz while the
+// ack said 17000 (issue #31 R2-20). The piezo LEDC output has no such limit.
+static bool emitterToneHzPlayable(unsigned long toneHz) {
+#if defined(BOARD_PIEZO)
+    return toneHz > 0;
+#else
+    return toneHz > 0 && toneHz < runtime::kDefaultAudioI2SSampleRateHz / 2;
+#endif
+}
+
+static void printToneHzRejected(const char* command, unsigned long toneHz) {
+    Serial.print("ERR ");
+    Serial.print(command);
+    Serial.print(" freq=");
+    Serial.print(toneHz);
+    Serial.println(" not playable");
+}
+
 void EmitterApp::handleChirpCommand(const char* line) {
     char buffer[96];
     strncpy(buffer, line, sizeof(buffer));
@@ -261,6 +280,10 @@ void EmitterApp::handleChirpCommand(const char* line) {
         token = nextToken(savePtr);
     }
 
+    if (!emitterToneHzPlayable(toneHz)) {
+        printToneHzRejected("CHIRP", toneHz);
+        return;
+    }
     startChirp(toneHz, durationMs, trialId);
 }
 
@@ -303,6 +326,10 @@ void EmitterApp::handleModeCommand(const char* line) {
             token = nextToken(savePtr);
         }
 
+        if (!emitterToneHzPlayable(toneHz)) {
+            printToneHzRejected("MODE AUTO", toneHz);
+            return;
+        }
         _chirpOutput.stop();
         configureAuto(intervalMs, toneHz, durationMs);
         setMode(EmitterMode::Auto);
@@ -357,6 +384,10 @@ void EmitterApp::handleSweepCommand(const char* line) {
         token = nextToken(savePtr);
     }
 
+    if (!emitterToneHzPlayable(startHz) || !emitterToneHzPlayable(stopHz)) {
+        printToneHzRejected("SWEEP", emitterToneHzPlayable(startHz) ? stopHz : startHz);
+        return;
+    }
     configureSweep(startHz, stopHz, stepHz, durationMs, pauseMs);
     _chirpOutput.stop();
     setMode(EmitterMode::Sweep);

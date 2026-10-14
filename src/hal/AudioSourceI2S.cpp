@@ -107,12 +107,14 @@ bool AudioSourceI2S::installPort() {
     config.mclk_multiple = I2S_MCLK_MULTIPLE_DEFAULT;
     config.bits_per_chan = I2S_BITS_PER_CHAN_DEFAULT;
 
-    // One second of events (RX_DONE per buffer, plus TX_DONE on a
-    // full-duplex port) so a long loop stall does not overflow the event
-    // queue and hide an RX_Q_OVF.
+    // One second of events: RX_DONE per buffer, TX_DONE on a full-duplex
+    // port, and during a stall an RX_Q_OVF per dropped buffer as well. Sized
+    // without the RX_Q_OVF it held ~0.68 s on D-AMP, and once full the DONE
+    // events pushed the RX_Q_OVF out, so dropped buffers went uncounted
+    // (issue #31 R2-7).
     _i2sEvents = nullptr;
 #ifndef I2S_EVENT_QUEUE_DISABLED
-    const int eventQueueLength = (kPortHasTx ? 2 : 1) * (_sampleRate / I2S_DMA_BUF_LEN) + 4;
+    const int eventQueueLength = (kPortHasTx ? 3 : 2) * (_sampleRate / I2S_DMA_BUF_LEN) + 4;
     if (i2s_driver_install(kI2sPort, &config, eventQueueLength, &_i2sEvents) != ESP_OK) {
 #else
     if (i2s_driver_install(kI2sPort, &config, 0, nullptr) != ESP_OK) {
@@ -239,6 +241,11 @@ bool AudioSourceI2S::readRawSample(int& sample, uint64_t& sampleTimeUs64) {
 #endif
     sampleTimeUs64 = timebase::nowUs64();
     _stats.totalSamplesRead += 1;
+    // The frame is a mic sample like any other: count it into the index the
+    // block clock runs on, or the next blocks are stamped as far in the past
+    // as the RAW read lasted (~750 ms after the SELFTEST mic check) (issue
+    // #31 R2-17).
+    ++_outputSampleIndex;
     return true;
 }
 

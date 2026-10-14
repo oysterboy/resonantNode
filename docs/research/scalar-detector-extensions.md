@@ -82,10 +82,12 @@ Consequences for the plan:
   frequencies across the pulses of a pulse train (section 1), and a detector
   band wide enough to see where the peaks land. Sections 3 and 1 therefore
   move up; lower frequencies (section 2) stay a separate question.
-- The mounting is part of the answer: speaker and mic facing each other or
-  sideways gives a dominant direct path and a much smaller comb. Omni
-  coverage by facing up has this cost; weigh it before the five-board build
-  (step 5c, #34).
+- Mounting is not the lever (owner, 2026-10-14): speaker and mic facing each
+  other or sideways would shrink the comb, but it gives the network a
+  directional topology that installation visitors cannot see and that is not
+  wanted. Nodes stay omni (facing up); robustness has to come from the
+  signal and the detector. The five boards of step 5c (#34) are built
+  facing up.
 
 Next tests (sketch): 3,200 vs 3,300 Hz on the DC blocker; the `SEQ freq=`
 runtime switch already exists, so frequency hopping between SEQ runs is free;

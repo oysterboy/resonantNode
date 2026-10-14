@@ -1,6 +1,7 @@
 # Code-review findings: debug and fix (step 3d, issue #31, NODE-018)
 
-Status: active. Review 2026-10-13; P1-P3, tiers A and B and the cheap
+Status: active. Second review (tier R2) 2026-10-14, fixed the same day
+(a6da871..ea7a6bc), also uncompiled. Review 2026-10-13; P1-P3, tiers A and B and the cheap
 tier D items committed the same day (section 5), compile-unverified: the
 session's network policy blocked the PlatformIO registry. Open: a real
 build of all six envs, the bench gate, P4, tier C hand-off.
@@ -375,6 +376,37 @@ Priority:
 6. The rest are low.
 
 ## 5. Results
+
+### 2026-10-14: tier R2 fixes committed, not compiled, not run
+
+Commits a6da871 (detection, audio, Analyzer), 0308293 (node, Behavior),
+ea7a6bc (HAL, Emitter). The same host syntax check against stubs shows no
+new errors. Still not a build.
+
+| Item | Change | Status |
+|---|---|---|
+| R2-1 | `AudioSignal::_baseline` starts at 0 (First Difference is centred on 0) | committed. The 400 startup gate and the "D-AMP floor 230-250" note are unchanged (tuning is its own pass); bench check 14 decides |
+| R2-2 | FrequencyMatch duration, release and end run to the last matched update (`_pendingLastMatchedSample` added) | committed. TonalPulseFreq durations drop ~30 ms and 30-59 ms tones are now rejected. **This changes T2 results against old baselines** |
+| R2-3 | `quiesceBehaviorForOutputsOff()` (stop chirp, `Behavior::resetState`, config kept) on quiet-gated `RB rebase` and forced rebase; SELFTEST hardware restore resets Behavior | committed |
+| R2-4 | `FrequencyMatchCriteria::parseFiniteFloat`; `parseToken` returns false and leaves the value unchanged; Analyzer scalar keys use `parseFiniteFloat` / `parseUnsignedValue`; `RB PARAM ERR` / `ERR PARAM` for bad or unknown tokens | committed |
+| R2-5 | OBS without `window=` defaults to period - report_settle (2000 at the defaults); an explicit window is kept and still warned about | committed. `soak.py` OBS (period 2000, window 1800, settle 500) still overlaps and warns, so its OBS numbers need that read |
+| R2-6 | `refreshReportDetail()` before both reject freezes | committed |
+| R2-7 | I2S event queue sized for 3 events per buffer (2 RX-only) | committed |
+| R2-8 | BTL inverted leg on `LEDC_HS_SIG_OUT0_IDX + ch` for channels 0-7 (arduino-esp32 2.x speed mode = ch / 8) | committed. Piezo fallback only; output level rises ~6 dB if the old mapping really left one leg idle |
+| R2-9 | `fillLiveGateReason()` runs before the reject freeze in closePending | committed |
+| R2-10 | `_awaitAttackDrop`: after a per-trial reset drops an open pending, no reopen until attack drops | committed for FrequencyMatch. Scalar not done: a peak spanning the trigger needs a peak-level change (rare: max 120 ms, cooldown 500 ms); left open |
+| R2-11 | `decision=outputs_off`, `behaviorEligible=0` for gated verdicts | committed |
+| R2-12 | `Behavior::notePatternHeardWhileOutputsOff` updates `_lastHeardPatternMs` for valid gated verdicts | committed |
+| R2-13 | `RB rebase` and `RB rebase force` refused while SELFTEST runs (`busy=selftest`); quiesce also notes a stopped chirp to SELFTEST and debug | committed |
+| R2-14 | Scalar report aggregates relative to per-trial bases; the run-long counters stay for the success-rate printout | committed |
+| R2-15 | `avg_dt_ms` over Expected / Early / Late only | committed. Window-gating of the per-trial source counters is not done: it needs per-event times in `handleSequencePending`, and its main trigger (OBS overlap) is gone with R2-5. Left open |
+| R2-16 | SELFTEST Settle also waits while an own chirp sounds and for `kEchoWindowMs` after (`_lastOwnChirpEndMs`) | committed |
+| R2-17 | `readRawSample` advances `_outputSampleIndex` | committed |
+| R2-18 | `AudioSignal::rebase()` returns false after 500 ms without samples; Node / SEQ print a WARN and keep the baseline | committed |
+| R2-19 | Node prefixes match on token boundaries; `RB BEHAV` accepts `idleBlockedHeard=` / `idleBlockedOwnEmit=` and reports unknown keys; `PARAM SET` with an extra token is a parse error; SEQ start validates numbers, rejects unknown keys (bare `start` accepted for `SEQ OBS start`); `sampleLead` capped at 127 ms with `SAMPLES_WARN` | committed |
+| R2-20 | Emitter CHIRP / MODE AUTO / SWEEP reject a freq at or above sample rate / 2 (I2S builds) | committed |
+
+New bench checks: #32, checks 14-22.
 
 ### 2026-10-13: fixes committed, not compiled, not run
 

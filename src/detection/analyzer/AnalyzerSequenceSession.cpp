@@ -79,11 +79,25 @@ void AnalyzerApp::initializeSequenceTest(const PendingSequenceStart& pending) {
     if (_sequenceTest.windowEndOffsetMs >= _sequenceTest.periodMs) {
         _sequenceTest.windowEndOffsetMs = _sequenceTest.periodMs > 250 ? _sequenceTest.periodMs - 250 : _sequenceTest.periodMs;
     }
-    if (_sequenceTest.externalEmitter && _sequenceTest.windowEndOffsetMs < pending.durationMs + 500) {
-        _sequenceTest.windowEndOffsetMs = pending.durationMs + 500;
+    // First pulse on to last pulse off; a single chirp when pulses=0.
+    const unsigned long emittedSpanMs = pending.pulseCount > 0
+        ? pending.pulseCount * pending.durationMs + (pending.pulseCount - 1) * pending.pulseGapMs
+        : pending.durationMs;
+    if (_sequenceTest.externalEmitter && _sequenceTest.windowEndOffsetMs < emittedSpanMs + 500) {
+        _sequenceTest.windowEndOffsetMs = emittedSpanMs + 500;
+    }
+    if (!_sequenceTest.externalEmitter && emittedSpanMs + 250 > _sequenceTest.windowEndOffsetMs) {
+        Serial.print("SEQ_WARN emitted span close to window end span_ms=");
+        Serial.print(emittedSpanMs);
+        Serial.print(" window=");
+        Serial.println(_sequenceTest.windowEndOffsetMs);
     }
     _sequenceTest.toneHz = pending.toneHz;
     _sequenceTest.durationMs = pending.durationMs;
+    _sequenceTest.pulseCount = pending.pulseCount;
+    _sequenceTest.pulseGapMs = pending.pulseGapMs;
+    _sequenceTest.pulseRampSet = pending.pulseRampSet;
+    _sequenceTest.pulseRampMs = pending.pulseRampMs;
     _sequenceTest.startupDelayMs = pending.startupDelayMs;
     _sequenceTest.reportSettleMs = pending.reportSettleMs == 0 ? 1 : pending.reportSettleMs;
     if (_sequenceTest.externalEmitter &&
@@ -368,7 +382,21 @@ void AnalyzerApp::startSequenceTest(const PendingSequenceStart& pending) {
         Serial.print(" freq_hz=");
         Serial.print(_sequenceTest.toneHz);
         Serial.print(" dur_ms=");
-        Serial.println(_sequenceTest.durationMs);
+        Serial.print(_sequenceTest.durationMs);
+        // Pulse trains only (DET-011); a plain chirp run keeps its old header.
+        if (_sequenceTest.pulseCount > 0) {
+            Serial.print(" pulses=");
+            Serial.print(_sequenceTest.pulseCount);
+            Serial.print(" gap_ms=");
+            Serial.print(_sequenceTest.pulseGapMs);
+            Serial.print(" ramp_ms=");
+            if (_sequenceTest.pulseRampSet) {
+                Serial.print(_sequenceTest.pulseRampMs);
+            } else {
+                Serial.print("default");
+            }
+        }
+        Serial.println();
         printDetectionParameters();
         if (!_sequenceTest.quiet) {
             Serial.println(_sequenceTest.externalEmitter ? "OBS running" : "SEQ running");
@@ -466,8 +494,17 @@ void AnalyzerApp::updateSequenceTest(unsigned long now) {
     beginSequenceSampleDump(trialNumber);
 
     if (!_sequenceTest.externalEmitter) {
-        char command[64];
-        snprintf(command, sizeof(command), "CHIRP trial=%lu freq=%lu dur=%lu", trialNumber, _sequenceTest.toneHz, _sequenceTest.durationMs);
+        char command[96];
+        if (_sequenceTest.pulseCount > 0) {
+            int written = snprintf(command, sizeof(command), "PULSES %lu %lu %lu trial=%lu freq=%lu",
+                                   _sequenceTest.pulseCount, _sequenceTest.durationMs, _sequenceTest.pulseGapMs,
+                                   trialNumber, _sequenceTest.toneHz);
+            if (_sequenceTest.pulseRampSet && written > 0 && static_cast<size_t>(written) < sizeof(command)) {
+                snprintf(command + written, sizeof(command) - written, " ramp=%lu", _sequenceTest.pulseRampMs);
+            }
+        } else {
+            snprintf(command, sizeof(command), "CHIRP trial=%lu freq=%lu dur=%lu", trialNumber, _sequenceTest.toneHz, _sequenceTest.durationMs);
+        }
         sendEmitterCommand(command);
     }
 }

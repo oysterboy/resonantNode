@@ -29,6 +29,11 @@ public:
     uint32_t toneHz() const;
     void setTiming(unsigned long chirpOnMs, unsigned long chirpPauseMs);
     void start(ChirpPattern pattern = ChirpPattern::Single);
+    // `count` pulses of onMs with gapMs pauses at the current tone (the
+    // Emitter's PULSES, DET-011). Timed by the ToneOutput when it can
+    // (I2S: per sample, rampMs edges); otherwise from update(), with the
+    // device's own edges and the loop's millisecond resolution.
+    void startPulseTrain(uint32_t count, unsigned long onMs, unsigned long gapMs, uint32_t rampMs);
     void stop();
     void update();
     bool isActive() const;
@@ -43,6 +48,7 @@ private:
     ToneOutput& _toneOutput;
     bool _active = false;
     bool _finished = false;
+    bool _deviceTimedTrain = false;
     ChirpPattern _activePattern = ChirpPattern::Single;
     int _phase = 0;
     int _beepCount = 1;

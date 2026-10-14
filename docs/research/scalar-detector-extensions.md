@@ -101,8 +101,13 @@ to test the ceiling path; same scan with the boards facing each other.
   `minLongestIslandMs` (20), release coverage (80). For pauses up to
   115 ms, `maxGapMs` and `maxTransientDurationMs` (200) must rise; both are
   PARAMs.
-- Needs a source: the Emitter has CHIRP/SWEEP/MODE but no pulse train. Add
-  `EMIT PULSES n pulse_ms gap_ms [freq=]` (small, Emitter-only).
+- Source: `EMIT PULSES n pulse_ms gap_ms [freq=] [ramp=]` (added
+  2026-10-14; per SEQ trial `SEQ start dur=PULSE_MS pulses=N gap=MS`).
+  pulse_ms is heard sound with the edge ramps inside it, gap_ms heard
+  silence, timed per sample on D-AMP. Defined that way because with the
+  plain chirp's 5 ms ramp after "off", a 5 ms gap never reaches silence
+  (host simulation of the renderer: `3 x 15 ms / 5 ms` played as one 60 ms
+  tone). ramp=0 gives hard edges (clicks) if the ramp itself is in question.
 - Limit to find: speaker/room tail. Scalar's tail is ~10 ms, so 5 ms pauses
   may not show as pauses at all; the experiment measures the smallest gap
   that is still resolved.

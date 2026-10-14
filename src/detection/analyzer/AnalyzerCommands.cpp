@@ -184,6 +184,7 @@ void AnalyzerApp::printSequenceHelp() {
     Serial.println("CMD: SEQ stop");
     Serial.println("SEQ IN: start [N|tries=N] [period=MS] [window=MS] [freq=HZ] [dur=MS] [delay=MS] [report_settle=MS] [test=LABEL]");
     Serial.println("SEQ IN: OBS start [N|tries=N] [period=2000] [window=1800] [freq=HZ] [dur=MS] [delay=MS] [report_settle=MS] [test=LABEL]");
+    Serial.println("SEQ IN: pulse train per trial (DET-011): start ... dur=PULSE_MS pulses=N gap=MS [ramp=MS]");
     Serial.println("SEQ IN: TRIES N");
     Serial.println("SEQ IN: [profile=TonalPulseFreq|TonalPulseScalar|AmpExperimental]");
     Serial.println("SEQ IN: MODE quiet|trial|inspect|source|system|detail");
@@ -248,6 +249,7 @@ void AnalyzerApp::handleUsbLine(const char* line) {
         Serial.println("CMD: EMIT MODE REMOTE");
         Serial.println("CMD: EMIT MODE AUTO interval=2000 freq=3200 dur=100");
         Serial.println("CMD: EMIT SWEEP start=3000 stop=3500 step=100 dur=80 pause=1000");
+        Serial.println("CMD: EMIT PULSES n pulse_ms gap_ms [freq=3200] [ramp=5] (e.g. EMIT PULSES 5 10 20)");
         Serial.println("CMD: RAW trigger f=3200 dur=100 post=1000 mode=feat (default)|mode=pcm|mode=i2s|mode=both");
         Serial.println("CMD: SEQ");
         Serial.println("CMD: SEQ help");
@@ -613,6 +615,10 @@ void AnalyzerApp::handleUsbLine(const char* line) {
             _pendingSequenceStart.windowEndOffsetMs = 2200;
             _pendingSequenceStart.toneHz = runtime::kDefaultChirpFrequencyHz;
             _pendingSequenceStart.durationMs = 100;
+            _pendingSequenceStart.pulseCount = 0;
+            _pendingSequenceStart.pulseGapMs = 0;
+            _pendingSequenceStart.pulseRampSet = false;
+            _pendingSequenceStart.pulseRampMs = 0;
             _pendingSequenceStart.quiet = false;
             _pendingSequenceStart.showDetails = true;
             _pendingSequenceStart.diagMode = AnalyzerApp::SequenceDiagMode::Off;
@@ -672,6 +678,25 @@ void AnalyzerApp::handleUsbLine(const char* line) {
                         Serial.println(token);
                         return;
                     }
+                } else if (startsWithTokenIgnoreCase(token, "pulses=")) {
+                    if (!parseUnsignedValue(token + 7, _pendingSequenceStart.pulseCount)) {
+                        Serial.print("ERR SEQ bad value token=");
+                        Serial.println(token);
+                        return;
+                    }
+                } else if (startsWithTokenIgnoreCase(token, "gap=")) {
+                    if (!parseUnsignedValue(token + 4, _pendingSequenceStart.pulseGapMs)) {
+                        Serial.print("ERR SEQ bad value token=");
+                        Serial.println(token);
+                        return;
+                    }
+                } else if (startsWithTokenIgnoreCase(token, "ramp=")) {
+                    if (!parseUnsignedValue(token + 5, _pendingSequenceStart.pulseRampMs)) {
+                        Serial.print("ERR SEQ bad value token=");
+                        Serial.println(token);
+                        return;
+                    }
+                    _pendingSequenceStart.pulseRampSet = true;
                 } else if (startsWithTokenIgnoreCase(token, "delay=") || startsWithTokenIgnoreCase(token, "warmup=")) {
                     if (!parseUnsignedValue(strchr(token, '=') + 1, _pendingSequenceStart.startupDelayMs)) {
                         Serial.print("ERR SEQ bad value token=");
@@ -804,6 +829,17 @@ void AnalyzerApp::handleUsbLine(const char* line) {
                 }
             }
 
+            // Same bounds the Emitter applies to PULSES; refused here so a
+            // run never starts with every trial rejected on the Emitter.
+            if (_pendingSequenceStart.pulseCount > 0 &&
+                (_pendingSequenceStart.pulseCount > 50 || _pendingSequenceStart.durationMs == 0 ||
+                 _pendingSequenceStart.durationMs > 1000 || _pendingSequenceStart.pulseGapMs == 0 ||
+                 _pendingSequenceStart.pulseGapMs > 2000 ||
+                 (_pendingSequenceStart.pulseRampSet && _pendingSequenceStart.pulseRampMs > 50))) {
+                Serial.println("ERR SEQ pulses use pulses=1-50 dur=1-1000 gap=1-2000 [ramp=0-50]");
+                return;
+            }
+
             // OBS default window leaves room for the settle before the next
             // trigger: 2200 + 500 > 2500 credited early chirps of trial N+1
             // to trial N (issue #31 R2-5). An explicit window= is kept (and
@@ -842,6 +878,16 @@ void AnalyzerApp::handleUsbLine(const char* line) {
             }
             sendEmitterCommand(line + 5);
             Serial.println("OK EMIT CHIRP");
+            return;
+        }
+        if (startsWithTokenIgnoreCase(line, "EMIT PULSES")) {
+            sendEmitterCommand("MODE REMOTE");
+            if (!waitForEmitterAck("OK MODE REMOTE", 1500)) {
+                Serial.println("ERR EMIT PULSES emitter_remote_claim_timeout");
+                return;
+            }
+            sendEmitterCommand(line + 5);
+            Serial.println("OK EMIT PULSES");
             return;
         }
         if (startsWithTokenIgnoreCase(line, "EMIT MODE REMOTE")) {

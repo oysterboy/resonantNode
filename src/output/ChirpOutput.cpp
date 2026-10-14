@@ -31,6 +31,7 @@ void ChirpOutput::start(ChirpPattern pattern) {
 
     _finished = false;
     _active = true;
+    _deviceTimedTrain = false;
     _activePattern = pattern;
     _phase = 0;
     if (pattern == ChirpPattern::Triple) {
@@ -55,10 +56,30 @@ void ChirpOutput::start(ChirpPattern pattern) {
     _toneOutput.toneOn();
 }
 
+void ChirpOutput::startPulseTrain(uint32_t count, unsigned long onMs, unsigned long gapMs, uint32_t rampMs) {
+    if (_active || count == 0) return;
+
+    _finished = false;
+    _active = true;
+    _activePattern = ChirpPattern::Single;
+    _phase = 0;
+    _toneOutput.setToneHz(_toneHz);
+    _deviceTimedTrain = _toneOutput.startPulseTrain(count, onMs, gapMs, rampMs);
+    if (_deviceTimedTrain) {
+        return;
+    }
+    _beepCount = static_cast<int>(count);
+    _activeChirpOnMs = onMs;
+    _activeChirpPauseMs = gapMs;
+    _phaseStartMs = timebase::nowMs();
+    _toneOutput.toneOn();
+}
+
 void ChirpOutput::stop() {
     _toneOutput.toneOff();
     _active = false;
     _finished = false;
+    _deviceTimedTrain = false;
     _activePattern = ChirpPattern::Single;
     _phase = 0;
     _phaseStartMs = timebase::nowMs();
@@ -66,6 +87,16 @@ void ChirpOutput::stop() {
 
 void ChirpOutput::update() {
     if (!_active) return;
+
+    if (_deviceTimedTrain) {
+        if (!_toneOutput.pulseTrainActive()) {
+            _deviceTimedTrain = false;
+            _active = false;
+            _finished = true;
+            _phaseStartMs = timebase::nowMs();
+        }
+        return;
+    }
 
     const unsigned long now = timebase::nowMs();
     const unsigned long elapsed = now - _phaseStartMs;

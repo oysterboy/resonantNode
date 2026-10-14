@@ -232,6 +232,12 @@ void EmitterApp::handleLine(const char* line) {
         return;
     }
 
+    if (strcmp(token, "PULSES") == 0) {
+        claimExternalControl();
+        handlePulsesCommand(line);
+        return;
+    }
+
     if (strcmp(token, "AUTO") == 0 || strcmp(token, "REMOTE") == 0 || strcmp(token, "REMOTE_CONTROL") == 0 || strcmp(token, "MODE") == 0 || strcmp(token, "SWEEP") == 0) {
         claimExternalControl();
         handleModeCommand(line);
@@ -285,6 +291,83 @@ void EmitterApp::handleChirpCommand(const char* line) {
         return;
     }
     startChirp(toneHz, durationMs, trialId);
+}
+
+// Bounds keep one train well inside a SEQ period and the 8 ms block/ramp
+// arithmetic meaningful; they are not detector limits.
+static constexpr unsigned long kPulsesMaxCount = 50;
+static constexpr unsigned long kPulsesMaxPulseMs = 1000;
+static constexpr unsigned long kPulsesMaxGapMs = 2000;
+static constexpr unsigned long kPulsesMaxRampMs = 50;
+
+void EmitterApp::handlePulsesCommand(const char* line) {
+    char buffer[96];
+    strncpy(buffer, line, sizeof(buffer));
+    buffer[sizeof(buffer) - 1] = '\0';
+
+    unsigned long toneHz = runtime::kDefaultChirpFrequencyHz;
+    unsigned long count = 0;
+    unsigned long pulseMs = 0;
+    unsigned long gapMs = 0;
+    unsigned long rampMs = runtime::kDefaultI2sToneRampMs;
+    unsigned long trialId = 0;
+    unsigned long positional = 0;
+    char* savePtr = nullptr;
+    char* token = strtok_r(buffer, " ", &savePtr);
+    token = nextToken(savePtr);
+    while (token != nullptr) {
+        if (startsWithToken(token, "trial=")) {
+            trialId = strtoul(findValue(token), nullptr, 10);
+        } else if (startsWithToken(token, "freq=")) {
+            toneHz = strtoul(findValue(token), nullptr, 10);
+        } else if (startsWithToken(token, "ramp=")) {
+            rampMs = strtoul(findValue(token), nullptr, 10);
+        } else if (startsWithToken(token, "n=")) {
+            count = strtoul(findValue(token), nullptr, 10);
+        } else if (startsWithToken(token, "pulse=")) {
+            pulseMs = strtoul(findValue(token), nullptr, 10);
+        } else if (startsWithToken(token, "gap=")) {
+            gapMs = strtoul(findValue(token), nullptr, 10);
+        } else if (strchr(token, '=') == nullptr) {
+            const unsigned long value = strtoul(token, nullptr, 10);
+            if (positional == 0) {
+                count = value;
+            } else if (positional == 1) {
+                pulseMs = value;
+            } else if (positional == 2) {
+                gapMs = value;
+            }
+            ++positional;
+        }
+        token = nextToken(savePtr);
+    }
+
+    if (count == 0 || count > kPulsesMaxCount || pulseMs == 0 || pulseMs > kPulsesMaxPulseMs ||
+        gapMs == 0 || gapMs > kPulsesMaxGapMs || rampMs > kPulsesMaxRampMs) {
+        Serial.print("ERR PULSES n=");
+        Serial.print(count);
+        Serial.print(" pulse=");
+        Serial.print(pulseMs);
+        Serial.print(" gap=");
+        Serial.print(gapMs);
+        Serial.print(" ramp=");
+        Serial.print(rampMs);
+        Serial.print(" use PULSES n(1-");
+        Serial.print(kPulsesMaxCount);
+        Serial.print(") pulse_ms(1-");
+        Serial.print(kPulsesMaxPulseMs);
+        Serial.print(") gap_ms(1-");
+        Serial.print(kPulsesMaxGapMs);
+        Serial.print(") [freq=HZ] [ramp=0-");
+        Serial.print(kPulsesMaxRampMs);
+        Serial.println("] [trial=N]");
+        return;
+    }
+    if (!emitterToneHzPlayable(toneHz)) {
+        printToneHzRejected("PULSES", toneHz);
+        return;
+    }
+    startPulses(toneHz, count, pulseMs, gapMs, rampMs, trialId);
 }
 
 void EmitterApp::handleModeCommand(const char* line) {
@@ -413,11 +496,7 @@ void EmitterApp::startChirp(unsigned long toneHz, unsigned long durationMs, unsi
     _chirpOutput.setToneHz(static_cast<uint32_t>(toneHz));
     _chirpOutput.setTiming(durationMs, 0);
     _chirpOutput.start();
-    char markerLine[96];
-    snprintf(markerLine, sizeof(markerLine), "EMIT_START trial=%lu t_ms=%lu", _activeTrialId, timebase::nowMs());
-    sendEmitterMarker(markerLine);
-    snprintf(markerLine, sizeof(markerLine), "EMIT_DRIVE_ON trial=%lu t_ms=%lu", _activeTrialId, timebase::nowMs());
-    sendEmitterMarker(markerLine);
+    sendStartMarkers();
     if (_mode == EmitterMode::Auto) {
         _nextAutoChirpAtMs = timebase::nowMs() + _autoIntervalMs;
     }
@@ -429,6 +508,51 @@ void EmitterApp::startChirp(unsigned long toneHz, unsigned long durationMs, unsi
              toneHz,
              durationMs);
     sendControlAck(chirpLine);
+}
+
+void EmitterApp::startPulses(unsigned long toneHz,
+                             unsigned long count,
+                             unsigned long pulseMs,
+                             unsigned long gapMs,
+                             unsigned long rampMs,
+                             unsigned long trialId) {
+    if (_chirpOutput.isActive()) {
+        _chirpOutput.stop();
+    }
+    _activeTrialId = trialId;
+    _chirpOutput.setToneHz(static_cast<uint32_t>(toneHz));
+    _chirpOutput.startPulseTrain(static_cast<uint32_t>(count), pulseMs, gapMs, static_cast<uint32_t>(rampMs));
+    sendStartMarkers();
+
+#if defined(BOARD_PIEZO)
+    rampMs = 0;  // LEDC switches at once; edges land on the loop's ms ticks
+#else
+    if (rampMs > pulseMs / 2) {
+        rampMs = pulseMs / 2;  // I2sToneOutput cuts it the same way
+    }
+#endif
+    // pulse/gap are heard sound/silence (ramps inside the pulse), so span
+    // is first sound to last silence.
+    const unsigned long spanMs = count * pulseMs + (count - 1) * gapMs;
+    char ackLine[128];
+    snprintf(ackLine,
+             sizeof(ackLine),
+             "OK PULSES n=%lu pulse=%lu gap=%lu freq=%lu ramp=%lu span=%lu",
+             count,
+             pulseMs,
+             gapMs,
+             toneHz,
+             rampMs,
+             spanMs);
+    sendControlAck(ackLine);
+}
+
+void EmitterApp::sendStartMarkers() {
+    char markerLine[96];
+    snprintf(markerLine, sizeof(markerLine), "EMIT_START trial=%lu t_ms=%lu", _activeTrialId, timebase::nowMs());
+    sendEmitterMarker(markerLine);
+    snprintf(markerLine, sizeof(markerLine), "EMIT_DRIVE_ON trial=%lu t_ms=%lu", _activeTrialId, timebase::nowMs());
+    sendEmitterMarker(markerLine);
 }
 
 void EmitterApp::setMode(EmitterMode mode) {

@@ -54,7 +54,13 @@ private:
     void handleChirpCommand(const char* line);
     void handleModeCommand(const char* line);
     void handleSweepCommand(const char* line);
+    // PULSES n pulse_ms gap_ms [freq=HZ] [ramp=MS] [trial=N] (DET-011);
+    // n=/pulse=/gap= work as keys too.
+    void handlePulsesCommand(const char* line);
     void startChirp(unsigned long toneHz, unsigned long durationMs, unsigned long trialId = 0);
+    void startPulses(unsigned long toneHz, unsigned long count, unsigned long pulseMs, unsigned long gapMs,
+                     unsigned long rampMs, unsigned long trialId);
+    void sendStartMarkers();
     void setMode(EmitterMode mode);
     void claimExternalControl();
     void configureAuto(unsigned long intervalMs, unsigned long toneHz, unsigned long durationMs);

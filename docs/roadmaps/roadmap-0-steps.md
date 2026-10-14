@@ -207,7 +207,7 @@ the previous gate open unless the step says it can run in parallel.
    Status: firmware 261f088 on E2 (one LED on GPIO 2, every accepted
    verdict, every own chirp); the visual gate is left.
 
-5. Decide the Node's production profile, on D-AMP. (issue #8)
+5. [DECIDED 2026-10-14] Decide the Node's production profile, on D-AMP. (issue #8)
    Data so far is from the horizontal geometry (see 5a).
    Where: DET-007 (roadmap-detection.md), with cleanup-0-plan Phase 0.
    Why: the Node boots TonalPulseScalar while the docs call TonalPulseFreq
@@ -215,6 +215,9 @@ the previous gate open unless the step says it can run in parallel.
    so this is decided on D-AMP.
    Gate: one decision, recorded; code default, implementation-status.md,
    and the Node's registered params all agree with it.
+   Result: TonalPulseScalar ships, Freq stays a demo detector (decisions/
+   2026-10-14-node-ships-tonalpulsescalar.md). Docs agree; the Node's
+   registered params still list the frequency-match thresholds (follow-up).
 
 5a. [NEXT] Clean baseline in the new geometry (mic and speaker facing up), after (issue #35)
    closing step 5 on the old one.

@@ -63,6 +63,7 @@ what replaced it.
 | 2026-10-13 | [The Node does not ignore verdicts on occurrences with dropped audio](2026-10-13-node-reacts-despite-dropped-audio.md) |
 | 2026-10-13 | [One reject event per new selected (best) reject](2026-10-13-one-reject-event-per-new-best-reject.md) |
 | 2026-10-13 | [SEQ sample dump: default step 4 ms, 256-row buffer kept](2026-10-13-sample-dump-step-4ms.md) |
+| 2026-10-14 | [The Node ships TonalPulseScalar; TonalPulseFreq stays a demo detector](2026-10-14-node-ships-tonalpulsescalar.md) |
 
 ## Open
 

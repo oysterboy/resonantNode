@@ -325,7 +325,7 @@ AmpExperimental
 
 #### TonalPulseFreq
 
-Stable active profile.
+Stable profile, kept as a demonstration of a second detector and a comparison point; not the Node's profile (decision 2026-10-14).
 
 Current meaning:
 
@@ -371,8 +371,8 @@ FrequencyContrast
 Status:
 
 ```text
-useful for comparison and proving shared detector/report contracts
-not the primary stable TonalPulseFreq path
+the Node's production profile (decision 2026-10-14)
+also useful for comparison and proving shared detector/report contracts
 ```
 
 #### AmpExperimental

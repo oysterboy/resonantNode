@@ -1,0 +1,100 @@
+# run: selftest E2 (COM3)
+# firmware: role=analyzer git=bfbe0c8 version=0.4.0 board=damp
+# started: 2026-10-14T17:10:28
+# mac: 24:dc:c3:4b:4c:e8
+# port: COM3
+ets Jul 29 2019 12:21:46
+
+rst:0x1 (POWERON_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)
+configsip: 0, SPIWP:0xee
+clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
+mode:DIO, clock div:1
+load:0x3fff0030,len:1344
+load:0x40078000,len:13964
+load:0x40080400,len:3600
+entry 0x400805f0
+BUILD role=analyzer git=bfbe0c8 date=Oct 14 2026 time=17:10:02 version=0.4.0 board=damp
+
+E (10) I2S: i2s_driver_uninstall(2048): I2S port 0 has not installed
+EVT analyzer_control rx=16 tx=17
+EVT analyzer_control_claim scheduled
+MEMORY_INVENTORY
+RUNTIME_SIZE detection_runtime_bytes=40368
+SIZE DetectionRuntime=40368
+  SIZE FeatureHistory=18624
+    SIZE FeatureBin=24
+  SIZE Occurrence=360
+  SIZE InspectedOccurrence=912
+  SIZE OccurrenceEvaluator=3912
+  SIZE OccurrenceVerdict=84
+SIZE AudioSignal=8216
+  SIZE RawSampleHistory=8016
+SIZE AnalyzerApp::SequenceTest=9360
+  SIZE DetectorInputSample sampleHistory=1024
+  SIZE DetectorInputSample sampleHistoryPending=8
+  SIZE DetectorInputSample sampleRows=2048
+SIZE AnalyzerReport=1172
+HEAP_CAPS cap=8BIT free=177456 largest=110580 min=171984
+HEAP_CAPS cap=INTERNAL free=247760 largest=110580 min=242268
+HEAP_CAPS cap=DMA free=177456 largest=110580 min=171984
+HEAP_STATUS when=begin_before_runtime_alloc free_8bit=177456 largest_8bit=110580 min_8bit=171984 free_internal=247760
+ largest_internal=110580 min_internal=242268
+EVT analyzer_ready
+EVT analyzer_help type='HELP', 'PARAM freqScore=18000 freqContrast=50.0 freqReleaseScore=12000 freqReleaseContrast=50.0', 'PARAM STATUS', 'RAW trigger f=3200 dur=100 post=1000 dump=csv|dump=raw|dump=text|dump=chunks|dump=bin', 'SEQ MODE quiet|trial|inspect|source|system|detail WHEN off|miss|all VERBOSE 0|1|2 STATUS REPORT', 'DET PROFILE TonalPulseFreq|TonalPulseScalar|AmpExperimental'
+
+>> EMIT MODE REMOTE
+OK EMIT MODE REMOTE
+
+>> SELFTEST
+SELFTEST_BEGIN role=analyzer mode=full board=damp
+SELFTEST check=board result=PASS mac=24:dc:c3:4b:4c:e8 board=damp role=analyzer version=0.4.0 git=bfbe0c8 built=Oct_14_2026 built_time=17:10:05 uptime_ms=11605
+SELFTEST check=mic result=PASS frames=12000 nonzero_pct=100.0 span=144820 floor_mean=2185 floor_peak=6914 bit8_pct=50.3 framing=ok slot=0
+SELFTEST_AMP n=1 floor=4101 tone=240452 snr_db=35.4 samples=6400 valid=1
+SELFTEST_AMP n=2 floor=4599 tone=242666 snr_db=34.4 samples=6400 valid=1
+SELFTEST_AMP n=3 floor=3917 tone=243343 snr_db=35.9 samples=6400 valid=1
+SELFTEST_AMP n=4 floor=4015 tone=240587 snr_db=35.5 samples=6400 valid=1
+SELFTEST_AMP n=5 floor=4843 tone=242226 snr_db=34.0 samples=6400 valid=1
+SELFTEST check=amp result=PASS chirps=5 valid=5 freq_hz=3200 tone_ms=100 path=i2s tone=242226 floor=4101 snr_db=35.4 snr_min_db=34.0 snr_max_db=35.9 pass_db=30.0
+SELFTEST_RESTORE detection=reset
+SELFTEST_SUMMARY result=PASS pass=3 fail=0 skip=0 role=analyzer
+ets Jul 29 2019 12:21:46
+
+rst:0x1 (POWERON_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)
+configsip: 0, SPIWP:0xee
+clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
+mode:DIO, clock div:1
+load:0x3fff0030,len:1344
+load:0x40078000,len:13964
+load:0x40080400,len:3600
+entry 0x400805f0
+BUILD role=analyzer git=bfbe0c8 date=Oct 14 2026 time=17:10:02 version=0.4.0 board=damp
+
+E (10) I2S: i2s_driver_uninstall(2048): I2S port 0 has not installed
+EVT analyzer_control rx=16 tx=17
+EVT analyzer_control_claim scheduled
+
+>> EMIT MODE REMOTE
+MEMORY_INVENTORY
+RUNTIME_SIZE detection_runtime_bytes=40368
+SIZE DetectionRuntime=40368
+  SIZE FeatureHistory=18624
+    SIZE FeatureBin=24
+  SIZE Occurrence=360
+  SIZE InspectedOccurrence=912
+  SIZE OccurrenceEvaluator=3912
+  SIZE OccurrenceVerdict=84
+SIZE AudioSignal=8216
+  SIZE RawSampleHistory=8016
+SIZE AnalyzerApp::SequenceTest=9360
+  SIZE DetectorInputSample sampleHistory=1024
+  SIZE DetectorInputSample sampleHistoryPending=8
+  SIZE DetectorInputSample sampleRows=2048
+SIZE AnalyzerReport=1172
+HEAP_CAPS cap=8BIT free=177456 largest=110580 min=171984
+HEAP_CAPS cap=INTERNAL free=247760 largest=110580 min=242268
+HEAP_CAPS cap=DMA free=177456 largest=110580 min=171984
+HEAP_STATUS when=begin_before_runtime_alloc free_8bit=177456 largest_8bit=110580 min_8bit=171984 free_internal=247760
+ largest_internal=110580 min_internal=242268
+EVT analyzer_ready
+EVT analyzer_help type='HELP', 'PARAM freqScore=18000 freqContrast=50.0 freqReleaseScore=12000 freqReleaseContrast=50.0', 'PARAM STATUS', 'RAW trigger f=3200 dur=100 post=1000 dump=csv|dump=raw|dump=text|dump=chunks|dump=bin', 'SEQ MODE quiet|trial|inspect|source|system|detail WHEN off|miss|all VERBOSE 0|1|2 STATUS REPORT', 'DET PROFILE TonalPulseFreq|TonalPulseScalar|AmpExperimental'
+OK EMIT MODE REMOTE

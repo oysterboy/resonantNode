@@ -1,0 +1,59 @@
+{
+  "purpose": "step 5a item 2b (#35): filter A/B, First Difference side, 90 cm",
+  "created": "2026-10-14T17:08:49",
+  "setup": {
+    "distance_cm": 90.0,
+    "orientation": "mic and speaker facing up",
+    "emitter_fw": "",
+    "notes": [
+      "Analyzer built with -D PCM_PREPROCESS_MODE_VALUE=1 (First Difference), code bfbe0c8; Emitter 0.5 FS; 3200 Hz"
+    ]
+  },
+  "runs": [
+    {
+      "name": "T3_scalar_10",
+      "file": "T3_scalar_10.bfbe0c8.log",
+      "firmware": {
+        "role": "analyzer",
+        "git": "bfbe0c8",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "commands": [
+        "SEQ DIAG off",
+        "SEQ start profile=TonalPulseScalar tries=10 mode=detail when=all verbose=1"
+      ],
+      "started": "2026-10-14T17:08:55",
+      "duration_s": 37,
+      "summary": {
+        "profile": "TonalPulseScalar",
+        "detector": "scalar_transient",
+        "complete": true,
+        "trial_results": {
+          "expected": 10
+        },
+        "line_counts": {
+          "SEQ_TRIAL": 10,
+          "SEQ_SUMMARY": 1
+        },
+        "trials": "10",
+        "completed": "10",
+        "expected_trials": "10",
+        "early_trials": "0",
+        "late_trials": "0",
+        "miss_trials": "0",
+        "duplicate_trials": "0",
+        "unexpected_trials": "0",
+        "rejected_trials": "0",
+        "buffer_overrun_trials": "0",
+        "detector_accepted_trials": "10",
+        "detector_reject_trials": "0",
+        "pattern_valid_trials": "10",
+        "pattern_rejected_trials": "0",
+        "avg_dt_ms": "26",
+        "avg_strength": "9446.3",
+        "avg_conf": "1.00"
+      }
+    }
+  ]
+}

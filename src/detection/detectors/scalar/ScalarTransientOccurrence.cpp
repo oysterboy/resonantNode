@@ -125,6 +125,7 @@ void ScalarTransientDetector::captureSelectedReject(uint64_t releaseObservedUs) 
         // The selected reject stays; refreeze so the report's rejected_count
         // is current. No selectedRejectGeneration bump, so no new reject
         // event (issue #31 B11, decision 2026-10-13).
+        refreshReportDetail();
         freezeReport(timebase::msFromUs64(releaseObservedUs));
         resetCandidateFacts();
         return;
@@ -171,6 +172,9 @@ void ScalarTransientDetector::captureSelectedReject(uint64_t releaseObservedUs) 
     _reportDetail.inspect.matchedMeanPassed =
         !_requireMinStrength ||
         candidateMatchedMean >= _minMatchedMeanStrength;
+    // Detail from this reject, not from the previous update (issue #31 R2-6),
+    // as capturePendingOccurrence already does.
+    refreshReportDetail();
     freezeReport(timebase::msFromUs64(releaseObservedUs));
     resetCandidateFacts();
 }

@@ -131,8 +131,8 @@ void ScalarTransientDetector::buildReport(detection::DetectorReport& out, unsign
     out.accepted.occurrenceId = _acceptedOccurrenceId;
     out.thresholds.minDurationMs = _minTransientDurationMs;
     out.thresholds.maxDurationMs = _maxTransientDurationMs;
-    out.aggregates.acceptedCount = _peakAcceptedCount;
-    out.aggregates.rejectedCount = _transientRejectedCount;
+    out.aggregates.acceptedCount = _peakAcceptedCount - _trialAcceptedCountBase;
+    out.aggregates.rejectedCount = _transientRejectedCount - _trialRejectedCountBase;
     out.scalar = _reportDetail;
 
     const bool selectedRejectPresent = !out.accepted.present && _selectedRejectPresent;

@@ -173,7 +173,10 @@ public:
     AudioSignal(AudioSource& source);
 
     void begin(bool doRebase = true);
-    void rebase();
+    // Baseline from the next 200 samples. false (baseline unchanged) when they
+    // don't arrive within kRebaseTimeoutMs, e.g. I2S failed to start; it
+    // used to wait forever (issue #31 R2-18).
+    bool rebase();
     // overflowDuringBlock: the block this sample came from followed dropped
     // DMA buffers (AudioBlock::overflowBeforeBlock); it lands in
     // AudioSamplePacket::overflowDuringBlock for the detectors.
@@ -227,8 +230,12 @@ private:
     uint64_t _sampleTimeUs64 = 0;
     // Sample time us -> ms without a 64-bit divide per sample.
     timebase::MsFromUs64 _msFromUs;
-    // Slow quiet-floor estimate.
-    float _baseline = 2000.0f;
+    // Slow quiet-floor estimate. Starts at 0: both boards feed a First
+    // Difference stream centred on 0. The old 2000 (an ADC midpoint) read
+    // as ~250 Strength16 of offset that baseline tracking (quiet < 20) could
+    // never remove, so a Node that booted without a successful rebase kept
+    // it in every amp and Goertzel value (issue #31 R2-1).
+    float _baseline = 0.0f;
     // Smoothed magnitude used for diagnostics.
     float _smoothedSignalMagnitude = 0.0f;
     // Most recent emitted frame.

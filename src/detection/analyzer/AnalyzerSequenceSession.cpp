@@ -208,6 +208,15 @@ void AnalyzerApp::startSequenceTest(const PendingSequenceStart& pending) {
     initializeSequenceTest(pending);
     configureSequenceDetection();
 
+    // One history entry per ms holds the lead before the trigger; a longer
+    // sampleLead was cut silently (issue #31 R2-19).
+    if (_sequenceTest.sampleDumpEnabled && _sequenceTest.sampleDumpLeadMs >= SequenceTest::kMaxSampleHistory) {
+        Serial.print("SAMPLES_WARN reason=lead_beyond_history requested_lead_ms=");
+        Serial.print(_sequenceTest.sampleDumpLeadMs);
+        Serial.print(" max_lead_ms=");
+        Serial.println(static_cast<unsigned long>(SequenceTest::kMaxSampleHistory - 1));
+        _sequenceTest.sampleDumpLeadMs = SequenceTest::kMaxSampleHistory - 1;
+    }
     if (_sequenceTest.sampleDumpEnabled) {
         const unsigned long selectedTrialsEstimate = countSelectedSampleDumpTrials(
             _sequenceTest.totalTrials, _sequenceTest.sampleDumpFirstTrials, _sequenceTest.sampleDumpEveryNth);
@@ -250,7 +259,9 @@ void AnalyzerApp::startSequenceTest(const PendingSequenceStart& pending) {
 
     const unsigned long sequenceRebaseStartMs = timebase::nowMs();
     delay(100);
-    _audioSignal.rebase();
+    if (!_audioSignal.rebase()) {
+        Serial.println("SEQ WARN rebase_timeout no_audio baseline_unchanged");
+    }
     if (_sequenceTest.showDetails && !_sequenceTest.quiet) {
         Serial.print("SEQ rebase: start=");
         Serial.print(sequenceRebaseStartMs);
@@ -794,9 +805,14 @@ void AnalyzerApp::updateCleanSequenceSummary(const AnalyzerReport& report) {
         ++summary.patternRejectedTrials;
     }
 
-    // Same trials SEQ_TRIAL prints a dt for: a Rejected trial prints dt=na
-    // and stays out of avg_dt_ms (issue #31).
-    if (report.classification.dtMs >= 0 && report.classification.result != AnalyzerResult::Rejected) {
+    // Hits only (Expected / Early / Late): a Rejected trial prints dt=na, and
+    // a Miss can carry the dt of a settle-period candidate (issue #31 B12,
+    // R2-15).
+    const AnalyzerResult dtResult = report.classification.result;
+    const bool dtCounts = dtResult == AnalyzerResult::Expected
+        || dtResult == AnalyzerResult::Early
+        || dtResult == AnalyzerResult::Late;
+    if (report.classification.dtMs >= 0 && dtCounts) {
         summary.totalDtMs += report.classification.dtMs;
         ++summary.dtCount;
     }

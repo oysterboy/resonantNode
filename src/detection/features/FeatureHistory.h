@@ -21,6 +21,10 @@ dropped at the door, costing neither RAM nor accumulation work. Producers
 (FeatureExtractor) keep offering every stream they have; this class decides
 which ones are worth keeping, based on what will actually be read back.
 */
+#ifndef FEATURE_HISTORY_BINS
+#define FEATURE_HISTORY_BINS 256
+#endif
+
 class FeatureHistory {
 public:
     // 256 bins x kBinDurationMs is not a round-number guess: the longest
@@ -29,7 +33,10 @@ public:
     // before its anchor, so 250 ms of history must still be resident when a
     // maximal occurrence closes and is inspected. Shrinking this silently
     // degrades long occurrences to HistoryWindowIncomplete.
-    static constexpr size_t kBinsPerStream = 256;
+    // Build override for experiments (-D FEATURE_HISTORY_BINS=512): a longer
+    // history lets occurrences with a long release debounce (pulse trains
+    // bridged across gaps) still be inspected when they close.
+    static constexpr size_t kBinsPerStream = FEATURE_HISTORY_BINS;
     // One slot per inspection module: a plan can name at most
     // kMaxInspectionModules distinct streams, so this many slots is
     // sufficient by construction. DetectionRuntime static_asserts the two

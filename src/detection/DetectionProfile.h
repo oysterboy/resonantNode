@@ -113,6 +113,12 @@ inline const InspectionModuleConfig* evaluatorFirstEnabledRequirement(const Insp
     return nullptr;
 }
 
+// Experiment override (-D SCALAR_AMP_MEDIUM_THRESHOLD=1500.0f): the TonalPulseScalar amp
+// inspector's medium limit. Default unchanged.
+#ifndef SCALAR_AMP_MEDIUM_THRESHOLD
+#define SCALAR_AMP_MEDIUM_THRESHOLD 2500.0f
+#endif
+
 // Actual profiles. These are the concrete profile definitions used at runtime.
 inline DetectionProfile makeTonalPulseScalarProfile() {
     DetectionProfile profile;
@@ -169,7 +175,7 @@ inline DetectionProfile makeTonalPulseScalarProfile() {
     profile.inspectionPlan.modules[1].minimumStrength = StrengthClass::Medium; // Require at least medium evidence.
     profile.inspectionPlan.modules[1].magnitude.mode = MagnitudeInspectionMode::P75; // Use a robust percentile summary.
     profile.inspectionPlan.modules[1].magnitude.supportStrength.strongPeakThreshold = 5000.0f; // Strong amplitude threshold.
-    profile.inspectionPlan.modules[1].magnitude.supportStrength.mediumPeakThreshold = 2500.0f; // Medium amplitude threshold.
+    profile.inspectionPlan.modules[1].magnitude.supportStrength.mediumPeakThreshold = SCALAR_AMP_MEDIUM_THRESHOLD; // Medium amplitude threshold (build override for experiments, default 2500).
     profile.inspectionPlan.modules[1].magnitude.supportStrength.weakPeakThreshold = 1000.0f; // Weak amplitude threshold.
     profile.inspectionPlan.count = 2; // This profile uses two inspectors.
 

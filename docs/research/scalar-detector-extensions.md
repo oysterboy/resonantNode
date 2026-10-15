@@ -152,6 +152,8 @@ to test the ceiling path; same scan with the boards facing each other.
   tone leaves it. Options: wider band, adjacent-bin set, or the broadband
   `AmpMagnitude` stream (more noise admitted).
 - Source: Emitter `SWEEP` over a small range already exists.
+- Options worked out (Goertzel bank, sliding DFT, FFT, others; timing,
+  RAM, architecture): `frequency-drift-detection.md` (2026-10-15).
 - Largest design question; do last. Any answer must keep the
   detection-produces-facts boundary (myspec): the widening belongs in the
   detector/observed stream, not in Behavior.

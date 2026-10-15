@@ -109,6 +109,8 @@ Status: IDEA, first of the extensions (step 5b, section 3; motivated by the 2026
 
 Scalar observes one fixed band; options are a wider band, adjacent bins, or the AmpMagnitude stream. Last of the three.
 
+Research: docs/research/frequency-drift-detection.md
+
 ### DET-008 - detection-layer cleanup pass
 
 Status: PARTIAL

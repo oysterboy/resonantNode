@@ -55,6 +55,8 @@ soak-24h.md                    24 h unattended soak: room vs signal
 freertos-tasks.md              where FreeRTOS tasks help (report task,
                                audio task later, wireless); rules
                                (promoted: report task -> ANA-004)
+frequency-drift-detection.md   drift: Goertzel bank vs sliding DFT vs FFT
+                               vs band-pass/dechirp; cost (DET-013)
 tonalpulse-scalar-target.md    TonalPulseScalar target design + passes 1-8
                                (German; partly landed, not reviewed)
 ```

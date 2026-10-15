@@ -89,25 +89,51 @@ and whether 5d's RAM argument (production = frequency family) holds.
 
 ### DET-011 - pulse trains read as one signal (Scalar)
 
-Status: IDEA, source ready (step 5b, research note scalar-detector-extensions.md section 1). Emitter `PULSES` landed 2026-10-14, compile not run (PlatformIO registry blocked in the cloud session), bench run pending.
+Status: IDEA, source ready (step 5b, research note scalar-detector-extensions.md section 1; also carries hop trains and sweeps through room nulls, see DET-013). Emitter `PULSES` landed 2026-10-14, compile not run (PlatformIO registry blocked in the cloud session), bench run pending.
 
 10-15 ms pulses with 5-115 ms pauses accepted as one occurrence via maxGapMs / maxTransientDurationMs. Measure the smallest resolvable gap and the false-alarm cost.
 
 Source: Emitter `PULSES n pulse_ms gap_ms [freq=] [ramp=] [trial=]`, from the Analyzer as `EMIT PULSES ...` or per SEQ trial as `SEQ start dur=PULSE_MS pulses=N gap=MS [ramp=MS]`. On D-AMP the train is timed per sample in I2sToneOutput (loop edges land on 8 ms blocks); pulse_ms is sound with the ramps inside, gap_ms is silence. Piezo builds time it from the loop.
 
-### DET-012 - lower chirp frequencies
+### DET-012 - lower edge of the network band
 
-Status: IDEA (step 5b, section 2)
+Status: RESCOPED 2026-10-15 (was "lower chirp frequencies"; step 5b)
 
-Find the usable frequency floor on D-AMP (speaker roll-off, mic LF noise, speech/music false alarms).
+Below 1 kHz is wanted for aesthetics, not detection: it moves to the aesthetic layer of a two-layer signal (OUT-006, `docs/decisions/2026-10-15-signal-variation-inside-a-shared-band.md`). What stays here: where the network band's lower edge can sit. 2026-10-14 single tones: speech/music valid 0/0 at 3200, 4/1 at 2800, 3/4 at 2600, 3/4 at 2000, 1/30 at 1500 Hz (50 windows each, `bench/sessions/2026-10-14-lowfreq-90cm-noise`, `-midfreq-90cm-noise`). So 2500-3000 needs DET-014 first; otherwise the band sits around 3000-3600. Re-measure with the band stream of DET-013, not a single bin.
 
-Depends on step 5a item 2b: the First Difference preprocessor has gain 0.59 at 3200 Hz, 0.20 at 1000 Hz, 0.10 at 500 Hz; the DC blocker replaces it before the 5a baseline (`docs/decisions/2026-10-14-dc-blocker-before-5a-baseline.md`). Do not run this on First Difference.
+Depends on step 5a item 2b (DC blocker, landed bfbe0c8).
 
-### DET-013 - frequency drift inside one signal
+### DET-013 - band stream: the detector watches the network band
 
-Status: IDEA, first of the extensions (step 5b, section 3; motivated by the 2026-10-14 finding that a single tone lands on nulls in the upwards geometry)
+Status: TODO (step 5b; direction decided 2026-10-15)
 
-Scalar observes one fixed band; options are a wider band, adjacent bins, or the AmpMagnitude stream. Last of the three.
+Signals vary per node and over time, as sweeps or hopping pulse trains (`docs/decisions/2026-10-15-signal-variation-inside-a-shared-band.md`). `FreqBandStream` stops watching one 250 Hz bin at 3200 Hz and watches a configured band: a bank of K bins, `FrequencyTarget` = strongest bin (FrequencyScore16 unchanged), peak-bin index and band energy as facts.
+
+1. Profile the stage on D-AMP (`FREQBAND_ENABLE_PROFILING=1`).
+2. Same output, cheaper: one pass for all bins, mirrored ring buffer (no `%`).
+3. Bin bank behind params (band edges, spacing); K = 3 with today's spacing reproduces current behaviour. Sliding DFT if 1 shows the bank does not fit.
+4. Redefine contrast: the neighbour bins are inside the band now. TonalPulseScalar's `FrequencyContrastQuality` inspector depends on it, so this is a production change; record the definition in `docs/decisions/`.
+5. Hann window if OUT-006's low layer leaks into the band (measure first).
+
+Gate: fixed 3200 Hz unchanged at 90 cm (5a baseline); hop and sweep from OUT-005 detected at every up-spacing-map spacing (60-110 cm); speech/music OBS no worse than 5a.
+
+Research: docs/research/frequency-drift-detection.md
+
+### DET-014 - tonality inspector
+
+Status: TODO (step 5b if DET-013's OBS gets worse, else step 8a)
+
+Peak-bin power vs total window energy over the occurrence. Pays for the noise a wider band admits; the first candidate before a lower band edge (DET-012) is tried. Data path: per-occurrence accumulation in the detector first, a `FeatureHistory` slot only if needed (3 slots, ~5 KB each).
+
+Research: docs/research/frequency-drift-detection.md (Inspectors that help)
+
+### DET-015 - shape inspectors: peak trajectory, band coverage, pulse structure
+
+Status: TODO (step 8a, after Phase 7c folds the evaluator into the inspector)
+
+Facts per occurrence: steady / sweep / hop, span, direction, distinct bins, pulse and gap regularity. Reject random jumping (speech formants) and syllable-like trains; give Behavior shape facts for BEH-007. Data-path decision (detector accumulation vs a stream) gets a `docs/decisions/` file.
+
+Research: docs/research/frequency-drift-detection.md (Inspectors that help)
 
 ### DET-008 - detection-layer cleanup pass
 

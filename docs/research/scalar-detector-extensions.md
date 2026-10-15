@@ -180,3 +180,15 @@ Rescoped 2026-10-15: below 1 kHz goes to the aesthetic layer (OUT-006); DET-012 
 - Whether the extensions run before step 6 (field trial) or after it.
 - Whether pulse-train support changes the Node's own output pattern
   (Behavior/SoundOutput side); this note only covers detection.
+
+## Parked idea (2026-10-15): island count as a train criterion
+
+Not needed for the five-node trial (it runs on the 3,200 Hz band, where speech and music give 0 false answers); it serves
+lower chirp frequencies (DET-012, aesthetic layer, step 8a). The Scalar detector already counts islands per event
+(`_candidateIslandCount` in `ScalarTransientDetector`, copied into the occurrence as `islandCount`) but no limit uses it.
+A parameter such as `scalar_min_island_count` (default 1, no behaviour change) would let a pulse-train signature be required:
+a continuous tonal burst from speech or music would not count as 3 islands. Test, when it matters: trains of 15 ms x3 with
+60 ms gaps at a 2,000 Hz target with `min_island_count=3`, plus speech and music at 2,000 and 1,500 Hz (today, defaults:
+speech 3 / 1, music 4 / 30 false answers per 50 windows at 2,000 / 1,500 Hz). Prerequisites seen on 2026-10-15: the 512-bin
+FeatureHistory (`-D FEATURE_HISTORY_BINS=512`) and a release debounce longer than the gap; the amp inspector's 100 ms window
+rated the 60 ms-gap train weak at 2,000 Hz (strength lower than at 3,300 Hz), so the inspector window needs a look too.

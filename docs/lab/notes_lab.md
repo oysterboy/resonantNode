@@ -11,6 +11,21 @@ decisions 2026-09-21-defer-single-detector-union.md ->
 2026-09-23-no-virtual-detector-interface.md (detector family as a build
 flag).
 
+## 2026-10-15 (mic supply; closes an open item)
+
+The D-AMP nodes' mic VCC is on 3V3 (owner, 2026-10-15). The "5 V per
+echoSpace wiring, not measured" item carried since 2026-10-09 (below;
+damp-board-support.md, i2s-first-difference-revisit.md) is closed: an
+out-of-spec supply is not the cause of the sub-30 Hz wander. Still open on
+the electrical side: whether the wander and the ~4x higher floor under the
+DC blocker (decision 2026-10-14-dc-blocker-before-5a-baseline.md, result)
+follow the shared 3V3 rail. Hint: Node quiet_boot failed with the radio on
+(411 > 400) and passed in a quiet room. Discriminating test: mic on a
+separate clean 3V3 (bench supply or battery), repeat a drift5a-style
+capture; if the 1-30 Hz band and the floor drop, fix is a series R or
+ferrite + 10 uF at the mic, or its own LDO, and mic ground straight to the
+ESP32, not via the amp. A cap cannot filter the audio: the mic emits bits.
+
 ## 2026-10-12 (soak, D-AMP, 70 cm)
 
 Strength drifts over a day by more than it varies block to block; detection

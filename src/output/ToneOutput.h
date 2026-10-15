@@ -28,6 +28,13 @@ public:
         (void)rampMs;
         return false;
     }
+    // Optional: a frequency per pulse for the NEXT startPulseTrain(), cycled
+    // when the train has more pulses than entries (hop). n = 0 clears it.
+    // A device that can't hop ignores it and plays the train at setToneHz().
+    virtual void setPulseHop(const uint32_t* hz, size_t n) {
+        (void)hz;
+        (void)n;
+    }
     // True from startPulseTrain() until the last pulse has ramped to silence.
     virtual bool pulseTrainActive() const { return false; }
 };

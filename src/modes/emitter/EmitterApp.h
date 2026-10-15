@@ -86,6 +86,10 @@ private:
     unsigned long _sweepCurrentHz = 1800;
     unsigned long _nextSweepStepAtMs = 0;
     unsigned long _activeTrialId = 0;
+    // PULSES hop=F1,F2,...: a frequency per pulse, cycled (DET-013 / OUT-005).
+    static constexpr size_t kPulseHopMax = 8;
+    uint32_t _pulseHopHz[kPulseHopMax] = {};
+    size_t _pulseHopCount = 0;
 #if defined(BOARD_PIEZO)
     PiezoToneOutput _toneOutput;
     PiezoToneOutputBTL _toneOutputBTL;

@@ -46,6 +46,7 @@ public:
     void toneOn() override;
     void toneOff() override;
     bool startPulseTrain(uint32_t count, uint32_t onMs, uint32_t gapMs, uint32_t rampMs) override;
+    void setPulseHop(const uint32_t* hz, size_t n) override;
     bool pulseTrainActive() const override;
 
     // Stops the writer task (tone off first; returns once the task is gone,
@@ -59,6 +60,7 @@ private:
     void run();
     void renderBlock(int32_t* frames, size_t frameCount);
     void takePulseTrainRequest(uint32_t sampleRateHz);
+    uint32_t hopStep(uint32_t sampleRateHz);
 
     AudioSourceI2S& _port;
     float _amplitude;
@@ -79,6 +81,9 @@ private:
     uint32_t _reqTrainOnMs = 0;
     uint32_t _reqTrainGapMs = 0;
     uint32_t _reqTrainRampMs = 0;
+    static constexpr size_t kMaxHop = 8;
+    uint32_t _reqHopHz[kMaxHop] = {};
+    size_t _reqHopCount = 0;
 
     // Task-only render state.
     uint32_t _phase = 0;
@@ -91,4 +96,8 @@ private:
     uint32_t _trainOnSamples = 0;
     uint32_t _trainGapSamples = 0;
     uint32_t _trainRampMs = 0;
+    uint32_t _hopHz[kMaxHop] = {};  // frequency per pulse, cycled; none = _toneHz
+    size_t _hopCount = 0;
+    size_t _hopIndex = 0;           // next hop entry
+    uint32_t _trainStep = 0;        // phase step of the current pulse; 0 = use _toneHz
 };

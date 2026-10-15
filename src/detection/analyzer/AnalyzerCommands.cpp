@@ -619,6 +619,7 @@ void AnalyzerApp::handleUsbLine(const char* line) {
             _pendingSequenceStart.pulseGapMs = 0;
             _pendingSequenceStart.pulseRampSet = false;
             _pendingSequenceStart.pulseRampMs = 0;
+            _pendingSequenceStart.pulseHop[0] = ' ';
             _pendingSequenceStart.quiet = false;
             _pendingSequenceStart.showDetails = true;
             _pendingSequenceStart.diagMode = AnalyzerApp::SequenceDiagMode::Off;
@@ -678,6 +679,20 @@ void AnalyzerApp::handleUsbLine(const char* line) {
                         Serial.println(token);
                         return;
                     }
+                } else if (startsWithTokenIgnoreCase(token, "hop=")) {
+                    const char* list = token + 4;
+                    const size_t len = strlen(list);
+                    bool ok = len > 0 && len < sizeof(_pendingSequenceStart.pulseHop);
+                    for (size_t i = 0; ok && i < len; ++i) {
+                        ok = (list[i] >= '0' && list[i] <= '9') || list[i] == ',';
+                    }
+                    if (!ok) {
+                        Serial.print("ERR SEQ bad value token=");
+                        Serial.println(token);
+                        return;
+                    }
+                    strncpy(_pendingSequenceStart.pulseHop, list, sizeof(_pendingSequenceStart.pulseHop) - 1);
+                    _pendingSequenceStart.pulseHop[sizeof(_pendingSequenceStart.pulseHop) - 1] = ' ';
                 } else if (startsWithTokenIgnoreCase(token, "pulses=")) {
                     if (!parseUnsignedValue(token + 7, _pendingSequenceStart.pulseCount)) {
                         Serial.print("ERR SEQ bad value token=");

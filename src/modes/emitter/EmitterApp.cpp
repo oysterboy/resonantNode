@@ -312,11 +312,29 @@ void EmitterApp::handlePulsesCommand(const char* line) {
     unsigned long rampMs = runtime::kDefaultI2sToneRampMs;
     unsigned long trialId = 0;
     unsigned long positional = 0;
+    bool hopBad = false;
+    _pulseHopCount = 0;
     char* savePtr = nullptr;
     char* token = strtok_r(buffer, " ", &savePtr);
     token = nextToken(savePtr);
     while (token != nullptr) {
-        if (startsWithToken(token, "trial=")) {
+        if (startsWithToken(token, "hop=")) {
+            const char* list = findValue(token);
+            while (list != nullptr && *list != ' ') {
+                char* end = nullptr;
+                const unsigned long hz = strtoul(list, &end, 10);
+                if (end == list || _pulseHopCount >= kPulseHopMax || !emitterToneHzPlayable(hz)) {
+                    hopBad = true;
+                    break;
+                }
+                _pulseHopHz[_pulseHopCount++] = static_cast<uint32_t>(hz);
+                list = (*end == ',') ? end + 1 : end;
+                if (*end != ',' && *end != ' ') {
+                    hopBad = true;
+                    break;
+                }
+            }
+        } else if (startsWithToken(token, "trial=")) {
             trialId = strtoul(findValue(token), nullptr, 10);
         } else if (startsWithToken(token, "freq=")) {
             toneHz = strtoul(findValue(token), nullptr, 10);
@@ -361,6 +379,11 @@ void EmitterApp::handlePulsesCommand(const char* line) {
         Serial.print(") [freq=HZ] [ramp=0-");
         Serial.print(kPulsesMaxRampMs);
         Serial.println("] [trial=N]");
+        return;
+    }
+    if (hopBad) {
+        _pulseHopCount = 0;
+        Serial.println("ERR PULSES hop=F1,F2,... (up to 8 playable frequencies)");
         return;
     }
     if (!emitterToneHzPlayable(toneHz)) {
@@ -521,6 +544,7 @@ void EmitterApp::startPulses(unsigned long toneHz,
     }
     _activeTrialId = trialId;
     _chirpOutput.setToneHz(static_cast<uint32_t>(toneHz));
+    _chirpOutput.setPulseHop(_pulseHopHz, _pulseHopCount);
     _chirpOutput.startPulseTrain(static_cast<uint32_t>(count), pulseMs, gapMs, static_cast<uint32_t>(rampMs));
     sendStartMarkers();
 
@@ -537,13 +561,14 @@ void EmitterApp::startPulses(unsigned long toneHz,
     char ackLine[128];
     snprintf(ackLine,
              sizeof(ackLine),
-             "OK PULSES n=%lu pulse=%lu gap=%lu freq=%lu ramp=%lu span=%lu",
+             "OK PULSES n=%lu pulse=%lu gap=%lu freq=%lu ramp=%lu span=%lu hop=%u",
              count,
              pulseMs,
              gapMs,
              toneHz,
              rampMs,
-             spanMs);
+             spanMs,
+             static_cast<unsigned>(_pulseHopCount));
     sendControlAck(ackLine);
 }
 

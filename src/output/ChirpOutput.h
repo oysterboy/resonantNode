@@ -34,6 +34,8 @@ public:
     // (I2S: per sample, rampMs edges); otherwise from update(), with the
     // device's own edges and the loop's millisecond resolution.
     void startPulseTrain(uint32_t count, unsigned long onMs, unsigned long gapMs, uint32_t rampMs);
+    // Frequency per pulse for the next startPulseTrain() (hop); n = 0 clears.
+    void setPulseHop(const uint32_t* hz, size_t n) { _toneOutput.setPulseHop(hz, n); }
     void stop();
     void update();
     bool isActive() const;

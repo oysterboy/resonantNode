@@ -68,6 +68,15 @@ void I2sToneOutput::toneOff() {
     portEXIT_CRITICAL(&_trainMux);
 }
 
+void I2sToneOutput::setPulseHop(const uint32_t* hz, size_t n) {
+    portENTER_CRITICAL(&_trainMux);
+    _reqHopCount = (hz == nullptr || n > kMaxHop) ? 0 : n;
+    for (size_t i = 0; i < _reqHopCount; ++i) {
+        _reqHopHz[i] = hz[i];
+    }
+    portEXIT_CRITICAL(&_trainMux);
+}
+
 bool I2sToneOutput::startPulseTrain(uint32_t count, uint32_t onMs, uint32_t gapMs, uint32_t rampMs) {
     if (_task == nullptr || count == 0 || onMs == 0) {
         return false;
@@ -99,6 +108,7 @@ void I2sToneOutput::takePulseTrainRequest(uint32_t sampleRateHz) {
         _trainCancelRequested = false;
         _trainRunning = false;
         _trainDraining = false;
+        _trainStep = 0;
     }
     if (_trainRequested) {
         _trainRequested = false;
@@ -106,6 +116,15 @@ void I2sToneOutput::takePulseTrainRequest(uint32_t sampleRateHz) {
         _trainDraining = false;
         _trainOn = true;
         _trainPulsesLeft = _reqTrainCount;
+        _hopCount = _reqHopCount;
+        for (size_t i = 0; i < _hopCount; ++i) {
+            _hopHz[i] = _reqHopHz[i];
+        }
+        _hopIndex = 0;
+        _trainStep = 0;
+        if (_hopCount > 0) {
+            _trainStep = hopStep(sampleRateHz);
+        }
         // onMs/gapMs are what is heard: sound (envelope > 0) and silence.
         // The off-ramp runs past the "on" target, so the target is onMs -
         // ramp and the gap target gapMs + ramp; a ramp over half the pulse
@@ -122,6 +141,13 @@ void I2sToneOutput::takePulseTrainRequest(uint32_t sampleRateHz) {
         _trainSegmentLeft = _trainOnSamples;
     }
     portEXIT_CRITICAL(&_trainMux);
+}
+
+// Phase step of the next hop entry (cycled), advancing the index.
+uint32_t I2sToneOutput::hopStep(uint32_t sampleRateHz) {
+    const uint32_t hz = _hopHz[_hopIndex % _hopCount];
+    ++_hopIndex;
+    return static_cast<uint32_t>((static_cast<uint64_t>(hz) << 32) / static_cast<uint64_t>(sampleRateHz));
 }
 
 void I2sToneOutput::taskEntry(void* self) {
@@ -178,6 +204,9 @@ void I2sToneOutput::renderBlock(int32_t* frames, size_t frameCount) {
                 } else {
                     _trainOn = true;
                     _trainSegmentLeft = _trainOnSamples;
+                    if (_hopCount > 0) {
+                        _trainStep = hopStep(sampleRateHz);
+                    }
                 }
             }
             if (_trainRunning && _trainSegmentLeft > 0) {
@@ -188,6 +217,7 @@ void I2sToneOutput::renderBlock(int32_t* frames, size_t frameCount) {
             target = 0.0f;
             if (_envelope <= 0.0f) {
                 _trainDraining = false;
+                _trainStep = 0;
                 portENTER_CRITICAL(&_trainMux);
                 if (!_trainRequested) {
                     _trainActive = false;
@@ -207,7 +237,7 @@ void I2sToneOutput::renderBlock(int32_t* frames, size_t frameCount) {
         if (_envelope > 0.0f) {
             const float s = sinf(static_cast<float>(_phase) * kPhaseToRadians);
             value = static_cast<int32_t>(s * _amplitude * _envelope * kFullScale);
-            _phase += phaseStep;
+            _phase += (trainShape && _trainStep != 0) ? _trainStep : phaseStep;
         } else {
             // Restart each tone at phase 0 so every chirp has the same onset.
             _phase = 0;

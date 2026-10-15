@@ -1,0 +1,10 @@
+# Section list for tools/bench/inspectstats.py --sections
+# START  END  TITLE        (seconds or m:ss from the start of the audio file)
+# The OBS run starts --offset-s seconds after the audio; windows are period_ms long.
+0:00   0:10  silence_lead
+0:10   1:50  music_A
+1:55   3:35  music_B
+3:40   5:20  speech_A
+5:25   7:05  speech_B
+7:10   8:50  tonal_hard_test
+8:55   9:05  silence_tail

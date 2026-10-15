@@ -1,0 +1,24 @@
+[14:52:37] boot banner: {'role': 'analyzer', 'git': '8218489', 'version': '0.4.0', 'board': 'damp'}
+[14:52:39] warmup: OK EMIT CHIRP
+[14:52:39] start P3x15_g20: SEQ DIAG off ; SEQ start profile=TonalPulseScalar tries=10 freq=3300 dur=15 pulses=3 gap=20 mode=detail when=all verbose=1
+[14:53:16] done P3x15_g20 (37s): complete=True results={'expected': 10}
+[14:53:21] session updated, index rebuilt
+[14:53:37] boot banner: {'role': 'analyzer', 'git': '8218489', 'version': '0.4.0', 'board': 'damp'}
+[14:53:39] warmup: OK EMIT CHIRP
+[14:53:39] start P3x10_g5: SEQ DIAG off ; SEQ start profile=TonalPulseScalar tries=10 freq=3300 dur=10 pulses=3 gap=5 mode=detail when=all verbose=1
+[14:54:17] done P3x10_g5 (37s): complete=True results={'rejected': 10}
+[14:54:19] start P3x10_g20: SEQ DIAG off ; SEQ start profile=TonalPulseScalar tries=10 freq=3300 dur=10 pulses=3 gap=20 mode=detail when=all verbose=1
+[14:54:56] done P3x10_g20 (37s): complete=True results={'rejected': 10}
+[14:54:58] start P3x10_g60: SEQ DIAG off ; SEQ start profile=TonalPulseScalar tries=10 freq=3300 dur=10 pulses=3 gap=60 mode=detail when=all verbose=1
+[14:55:36] done P3x10_g60 (37s): complete=True results={'rejected': 10}
+[14:55:38] start P3x10_g115: SEQ DIAG off ; SEQ start profile=TonalPulseScalar tries=10 freq=3300 dur=10 pulses=3 gap=115 mode=detail when=all verbose=1
+[14:56:15] done P3x10_g115 (37s): complete=True results={'rejected': 10}
+[14:56:17] start P3x15_g5: SEQ DIAG off ; SEQ start profile=TonalPulseScalar tries=10 freq=3300 dur=15 pulses=3 gap=5 mode=detail when=all verbose=1
+[14:56:55] done P3x15_g5 (37s): complete=True results={'expected': 10}
+[14:57:21] boot banner: {'role': 'analyzer', 'git': '8218489', 'version': '0.4.0', 'board': 'damp'}
+[14:57:23] warmup: OK EMIT CHIRP
+[14:57:23] start P3x15_g60: SEQ DIAG off ; SEQ start profile=TonalPulseScalar tries=10 freq=3300 dur=15 pulses=3 gap=60 mode=detail when=all verbose=1
+[14:57:59] done P3x15_g60 (36s): complete=True results={'rejected': 10}
+[14:58:01] start P3x15_g115: SEQ DIAG off ; SEQ start profile=TonalPulseScalar tries=10 freq=3300 dur=15 pulses=3 gap=115 mode=detail when=all verbose=1
+[14:58:38] done P3x15_g115 (36s): complete=True results={'rejected': 10}
+[14:58:43] session updated, index rebuilt

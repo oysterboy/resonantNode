@@ -372,3 +372,21 @@ Baseline note:
 
 - current baseline: `5 nodes`
 - status: `work in progress`
+
+## 2026-10-15 — "clipped" in the Analyzer is not clipping
+
+`RAW_AUDIO_HEALTH verdict=clipped` appears in about half of all SEQ windows with a chirp, going back to
+`bench/sessions/2026-10-09-issue20-damp-110cm-b` (154 clipped / 156 ok), and in every window of
+`2026-10-15-freqband-profile`. It is not ADC clipping. The classifier
+(`AnalyzerModeApp.cpp` `kAudioRmsTooHighThreshold = 30000`, `absRaw > 32760`) uses 16-bit-era limits
+on the canonical 24-bit PCM, so any tone above ~0.4 % of full scale trips it. Measured peak
+sample in the RAW captures of `2026-10-14-up-90cm-rawscan-wide` (Emitter 0.5 FS, 90 cm, up): 1.1 % of
+24-bit full scale at 3,200 Hz, 7.0 % at 800 Hz, 2.6 % at 2,000 Hz. The other diagnostics thresholds in
+that file (large jump 12,000, zero-ish 8, rms-too-low 40) look 16-bit-era too and would need the same
+rescale (x256) before their verdicts mean anything on D-AMP.
+
+What does saturate: `Strength16` for the amp-derived strength (`kAmpStrengthGainReferencePcm`
+= 262,143 = 3.1 % of 24-bit full scale): the 800 and 1,000 Hz runs on 2026-10-14 read 32,767 (see
+`2026-10-14-lowfreq-90cm`). A received tone above ~3 % of full scale pins the feature stream, which
+matters for lower frequencies (the speaker is strongest near 800 Hz) and for any louder tone level.
+Nothing was changed; nothing depends on the verdict (no tool greps it).

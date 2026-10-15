@@ -1,0 +1,19 @@
+[16:17:38] boot banner: {'role': 'analyzer', 'git': 'b309e96', 'version': '0.4.0', 'board': 'damp'}
+[16:17:40] warmup: OK EMIT CHIRP
+[16:17:40] start OBS_speech_band_default: SEQ DIAG off ; SEQ OBS start tries=50 period=2000 window=1800 report_settle=200 freq=3300 band=2800-3800 profile=TonalPulseScalar mode=detail when=all verbose=1
+[16:19:25] done OBS_speech_band_default (105s): complete=True results={'rejected': 50}
+[16:19:27] start OBS_speech_band_train: PARAM scalar_max_gap_ms=130 scalar_max_duration_ms=600 scalar_min_release_coverage_ms=40 scalar_release_debounce_ms=130 ; SEQ DIAG off ; SEQ OBS start tries=50 period=2000 window=1800 report_settle=200 freq=3300 band=2800-3800 profile=TonalPulseScalar mode=detail when=all verbose=1
+[16:21:14] done OBS_speech_band_train (106s): complete=True results={'rejected': 32, 'late': 3, 'expected': 1, 'miss': 14}
+[16:21:19] session updated, index rebuilt
+[16:22:17] boot banner: {'role': 'analyzer', 'git': 'b309e96', 'version': '0.4.0', 'board': 'damp'}
+[16:22:19] warmup: OK EMIT CHIRP
+[16:22:19] start OBS_music_band_default: SEQ DIAG off ; SEQ OBS start tries=50 period=2000 window=1800 report_settle=200 freq=3300 band=2800-3800 profile=TonalPulseScalar mode=detail when=all verbose=1
+[16:24:04] done OBS_music_band_default (106s): complete=True results={'rejected': 45, 'miss': 5}
+[16:24:07] start OBS_music_band_train: PARAM scalar_max_gap_ms=130 scalar_max_duration_ms=600 scalar_min_release_coverage_ms=40 scalar_release_debounce_ms=130 ; SEQ DIAG off ; SEQ OBS start tries=50 period=2000 window=1800 report_settle=200 freq=3300 band=2800-3800 profile=TonalPulseScalar mode=detail when=all verbose=1
+[16:25:39] boot banner: {'role': 'analyzer', 'git': 'b309e96', 'version': '0.4.0', 'board': 'damp'}
+[16:25:41] warmup: OK EMIT CHIRP
+[16:25:53] boot banner: {'role': 'analyzer', 'git': 'b309e96', 'version': '0.4.0', 'board': 'damp'}
+[16:25:55] warmup: OK EMIT CHIRP
+[16:25:55] start OBS_music_band_train: PARAM scalar_max_gap_ms=130 scalar_max_duration_ms=600 scalar_min_release_coverage_ms=40 scalar_release_debounce_ms=130 ; SEQ DIAG off ; SEQ OBS start tries=50 period=2000 window=1800 report_settle=200 freq=3300 band=2800-3800 profile=TonalPulseScalar mode=detail when=all verbose=1
+[16:27:41] done OBS_music_band_train (106s): complete=True results={'rejected': 38, 'miss': 12}
+[16:27:46] session updated, index rebuilt

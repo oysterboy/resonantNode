@@ -1,0 +1,10 @@
+[17:27:48] boot banner: {'role': 'analyzer', 'git': 'b22b035', 'version': '0.4.0', 'board': 'damp'}
+[17:27:50] warmup: OK EMIT CHIRP
+[17:27:50] start OBS_speech_amp1500: SEQ DIAG off ; SEQ OBS start tries=50 period=2000 window=1800 report_settle=200 freq=3300 band=2800-3800 profile=TonalPulseScalar mode=detail when=all verbose=1
+[17:29:36] done OBS_speech_amp1500 (106s): complete=True results={'rejected': 43, 'unexpected': 1, 'late': 2, 'miss': 4}
+[17:29:41] session updated, index rebuilt
+[17:30:53] boot banner: {'role': 'analyzer', 'git': 'b22b035', 'version': '0.4.0', 'board': 'damp'}
+[17:30:55] warmup: OK EMIT CHIRP
+[17:30:55] start OBS_music_amp1500: SEQ DIAG off ; SEQ OBS start tries=50 period=2000 window=1800 report_settle=200 freq=3300 band=2800-3800 profile=TonalPulseScalar mode=detail when=all verbose=1
+[17:32:40] done OBS_music_amp1500 (105s): complete=True results={'late': 16, 'rejected': 29, 'miss': 2, 'expected': 2, 'unexpected': 1}
+[17:32:46] session updated, index rebuilt

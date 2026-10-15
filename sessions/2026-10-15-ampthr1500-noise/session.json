@@ -1,0 +1,111 @@
+{
+  "purpose": "5b: false answers with the amp medium limit lowered to 1500 (band 2800-3800, default params, 110 cm, up) vs 2500 (2026-10-15-band-noise)",
+  "created": "2026-10-15T17:27:44",
+  "setup": {
+    "distance_cm": 110.0,
+    "orientation": "mic and speaker facing up, bench",
+    "emitter_fw": "",
+    "notes": [
+      "E2 COM5 Analyzer -D FEATURE_HISTORY_BINS=512 -D SCALAR_AMP_MEDIUM_THRESHOLD=1500.0f, E3 Emitter idle; radio 50 cm from E2, full volume, 90 deg to the mic; speech (WDR5) then music (drum and bass)"
+    ]
+  },
+  "runs": [
+    {
+      "name": "OBS_speech_amp1500",
+      "file": "OBS_speech_amp1500.b22b035.log",
+      "firmware": {
+        "role": "analyzer",
+        "git": "b22b035",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "commands": [
+        "SEQ DIAG off",
+        "SEQ OBS start tries=50 period=2000 window=1800 report_settle=200 freq=3300 band=2800-3800 profile=TonalPulseScalar mode=detail when=all verbose=1"
+      ],
+      "started": "2026-10-15T17:27:50",
+      "duration_s": 106,
+      "summary": {
+        "profile": "TonalPulseScalar",
+        "detector": "scalar_transient",
+        "complete": true,
+        "trial_results": {
+          "rejected": 43,
+          "unexpected": 1,
+          "late": 2,
+          "miss": 4
+        },
+        "line_counts": {
+          "SEQ_TRIAL": 50,
+          "SEQ_SUMMARY": 1
+        },
+        "trials": "50",
+        "completed": "50",
+        "expected_trials": "0",
+        "early_trials": "0",
+        "late_trials": "2",
+        "miss_trials": "4",
+        "duplicate_trials": "0",
+        "unexpected_trials": "1",
+        "rejected_trials": "43",
+        "buffer_overrun_trials": "0",
+        "detector_accepted_trials": "2",
+        "detector_reject_trials": "45",
+        "pattern_valid_trials": "2",
+        "pattern_rejected_trials": "0",
+        "avg_dt_ms": "949",
+        "avg_strength": "3422.1",
+        "avg_conf": "1.00"
+      }
+    },
+    {
+      "name": "OBS_music_amp1500",
+      "file": "OBS_music_amp1500.b22b035.log",
+      "firmware": {
+        "role": "analyzer",
+        "git": "b22b035",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "commands": [
+        "SEQ DIAG off",
+        "SEQ OBS start tries=50 period=2000 window=1800 report_settle=200 freq=3300 band=2800-3800 profile=TonalPulseScalar mode=detail when=all verbose=1"
+      ],
+      "started": "2026-10-15T17:30:55",
+      "duration_s": 105,
+      "summary": {
+        "profile": "TonalPulseScalar",
+        "detector": "scalar_transient",
+        "complete": true,
+        "trial_results": {
+          "late": 16,
+          "rejected": 29,
+          "miss": 2,
+          "expected": 2,
+          "unexpected": 1
+        },
+        "line_counts": {
+          "SEQ_TRIAL": 50,
+          "SEQ_SUMMARY": 1
+        },
+        "trials": "50",
+        "completed": "50",
+        "expected_trials": "2",
+        "early_trials": "0",
+        "late_trials": "16",
+        "miss_trials": "2",
+        "duplicate_trials": "0",
+        "unexpected_trials": "1",
+        "rejected_trials": "29",
+        "buffer_overrun_trials": "0",
+        "detector_accepted_trials": "18",
+        "detector_reject_trials": "31",
+        "pattern_valid_trials": "18",
+        "pattern_rejected_trials": "0",
+        "avg_dt_ms": "802",
+        "avg_strength": "3595.7",
+        "avg_conf": "1.00"
+      }
+    }
+  ]
+}

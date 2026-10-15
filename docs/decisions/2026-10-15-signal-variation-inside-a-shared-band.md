@@ -12,6 +12,11 @@ know the shape in advance: it watches one shared network band (config)
 and reports a tonal signal anywhere in it; inspectors report the shape as
 facts.
 
+Refinement (owner, same day): a signal may have two layers. An
+aesthetic layer, free in frequency (the interesting range starts below
+1 kHz), and a detection layer inside the network band (owner's first
+idea: 2500-3000 Hz). The band contract binds only the detection layer.
+
 ## Why
 
 A single fixed tone lands on room-comb nulls in the upwards geometry
@@ -24,7 +29,7 @@ lets Behavior change freely without detector changes.
 ## Rules out
 
 - A matched filter / dechirp for one defined sweep as the main detector.
-- Variation that leaves the network band.
+- A detection layer that leaves the network band (the aesthetic layer may).
 - Detector or inspector logic that decides artistic response (Behavior's).
 
 ## Revisit when

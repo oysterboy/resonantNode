@@ -28,6 +28,40 @@ reported as facts by inspectors. Behavior is free to vary anything as
 long as it stays inside the band; the band is the one contract between
 what nodes play and what nodes hear.
 
+## Two-layer signal (owner, 2026-10-15)
+
+Musically interesting starts below 1 kHz. Idea: the signal carries a
+free aesthetic layer (low, anything) plus a detection layer in the band
+(first idea 2500-3000 Hz). Points to check:
+
+- **Level budget.** Both layers share the amplifier's full scale (today
+  0.3 FS for one tone). The speaker's resonance near 800 Hz gives low
+  tones 4-8x more output for free (2026-10-14 lowfreq scan), so the low
+  layer can be quieter in the mix and still dominate what people hear.
+- **Leak into the detector.** The 64-sample rectangular window has
+  sidelobes; a loud 800 Hz tone ~10 bins below the band leaks at roughly
+  -30 dB, and the low layer may be 12-18 dB louder than the detection
+  layer. Fix if measured: a Hann window in the Goertzel (64 precomputed
+  floats, one multiply per sample), which drops far sidelobes well below
+  that. Speaker distortion can also put harmonics of the low layer into
+  the band (800 x 4 = 3200).
+- **Use that musically.** The detection layer can be an overtone of the
+  aesthetic tone (a harmonic or a shimmer) rather than a separate beep,
+  so it reads as timbre. Behavior then chooses the low note and the
+  detection layer follows inside the band.
+- **Band position.** 2600 / 2800 Hz single tones gave 3-4 false answers
+  in 50 speech/music windows on 2026-10-14 vs 0 at 3200 Hz. 2500-3000 is
+  usable only with the tonality / shape inspectors, or move the band up
+  (3000-3600). Bench decides; same battery.
+- **Output.** The renderer sums two oscillators; the detection layer
+  must last at least the detector's minimum duration (or form a pulse
+  train) even if the aesthetic layer is shorter or longer. Own-emit
+  suppression already covers the whole chirp.
+
+Sequence impact: step 2 (output shapes) gains "two layers"; a bench
+check of the low layer's leak into the band sits before step 3's
+battery.
+
 ## Sequence
 
 Each step is usable on its own and keeps today's fixed 3200 Hz chirp

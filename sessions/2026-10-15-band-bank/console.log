@@ -1,0 +1,11 @@
+[16:07:23] boot banner: {'role': 'analyzer', 'git': 'b309e96', 'version': '0.4.0', 'board': 'damp'}
+[16:07:25] warmup: OK EMIT CHIRP
+[16:07:25] start B_chirp3300_noband: SEQ DIAG off ; SEQ start profile=TonalPulseScalar tries=10 freq=3300 mode=detail when=all verbose=1
+[16:08:03] done B_chirp3300_noband (37s): complete=True results={'expected': 10}
+[16:08:05] start B_chirp3300_band: SEQ DIAG off ; SEQ start profile=TonalPulseScalar tries=10 freq=3300 band=2800-3800 mode=detail when=all verbose=1
+[16:08:42] done B_chirp3300_band (37s): complete=True results={'expected': 10}
+[16:08:44] start B_hop_g20: PARAM scalar_max_gap_ms=130 scalar_max_duration_ms=600 scalar_min_release_coverage_ms=40 scalar_release_debounce_ms=130 ; SEQ DIAG off ; SEQ start profile=TonalPulseScalar tries=10 freq=3300 band=2800-3800 dur=15 pulses=3 gap=20 hop=2800,3300,3800 mode=detail when=all verbose=1
+[16:09:23] done B_hop_g20 (38s): complete=True results={'expected': 10}
+[16:09:25] start B_hop_g60: PARAM scalar_max_gap_ms=130 scalar_max_duration_ms=600 scalar_min_release_coverage_ms=40 scalar_release_debounce_ms=130 ; SEQ DIAG off ; SEQ start profile=TonalPulseScalar tries=10 freq=3300 band=2800-3800 dur=15 pulses=3 gap=60 hop=2800,3300,3800 mode=detail when=all verbose=1
+[16:10:03] done B_hop_g60 (38s): complete=True results={'rejected': 10}
+[16:10:08] session updated, index rebuilt

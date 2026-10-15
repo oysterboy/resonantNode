@@ -274,6 +274,10 @@ the previous gate open unless the step says it can run in parallel.
    apart). A trial on it measures the room comb, not the network. Per-node
    variation also lets the trial test nodes hearing signals unlike their
    own.
+   Progress 2026-10-15 (details: docs/lab/2026-10-15-bench-day.md): band stream profiled (14.7 us/sample); PULSES + hop on the Emitter;
+   band bank in FreqBandStream (SEQ band=); gate battery run with the plain chirp, a 3-step and a 5-step hop at 60-110 cm: no single
+   shape reaches 9/10 everywhere, each spacing is passed by at least one; hop failures are the amp inspector (lowering its limit lets
+   music through). Open: contrast decision, amp criterion for hops, sweep renderer, Node band + per-node hop, final gate run.
    Order inside: DET-013 profile + cheap pass -> OUT-005 on the Emitter ->
    DET-013 bank + contrast decision -> DET-011 gaps -> DET-014 if needed
    -> OUT-005 on the Node + BEH-005. DET-012 (band lower edge) is measured

@@ -407,3 +407,7 @@ What does saturate: `Strength16` for the amp-derived strength (`kAmpStrengthGain
 `2026-10-14-lowfreq-90cm`). A received tone above ~3 % of full scale pins the feature stream, which
 matters for lower frequencies (the speaker is strongest near 800 Hz) and for any louder tone level.
 Nothing was changed; nothing depends on the verdict (no tool greps it).
+
+## 2026-10-15 - bench day: pulse trains, hop, band bank, gate battery
+
+Full write-up with the session paths: `docs/lab/2026-10-15-bench-day.md`. In short: a stepped hop across 2,800-3,800 Hz (band bank in `FreqBandStream`) passes where the single 3,200 Hz tone sits on a room null, and the plain chirp passes where some hops fail; no single signal reaches 9/10 at all of 60-110 cm yet. The remaining hop failures are the amp inspector (continuous-chirp calibration); lowering its medium limit to 1,500 rescues them but lets music through (18/50). Data: `bench/sessions/2026-10-15-*`.

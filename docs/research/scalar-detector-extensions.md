@@ -192,3 +192,22 @@ a continuous tonal burst from speech or music would not count as 3 islands. Test
 speech 3 / 1, music 4 / 30 false answers per 50 windows at 2,000 / 1,500 Hz). Prerequisites seen on 2026-10-15: the 512-bin
 FeatureHistory (`-D FEATURE_HISTORY_BINS=512`) and a release debounce longer than the gap; the amp inspector's 100 ms window
 rated the 60 ms-gap train weak at 2,000 Hz (strength lower than at 3,300 Hz), so the inspector window needs a look too.
+
+## Results 2026-10-15 (hop, band bank, gate battery)
+
+Observations and session paths: `docs/lab/2026-10-15-bench-day.md`. What they mean for the plan:
+
+- The hop and the band bank work: the Emitter plays a frequency per pulse (`PULSES hop=`), the Analyzer watches a band
+  (`SEQ band=LOW-HIGH`), the plain chirp is unchanged with the band on, and 3- and 5-step hops are read as one signal.
+- No single shape reaches >= 9/10 at all of 60-110 cm: the plain chirp, the 3-step hop (30 ms x3, gap 10) and the 5-step hop
+  (20 ms pulses, gaps 5 and 15) each fail at different spacings, and each spacing is passed by at least one of them. A signal
+  that varies per node and over time (the decision of 2026-10-15) would sample several of them, which is the direction the
+  data supports; per-shape coverage of the comb is not a property to design a single shape around.
+- Blocker for hops: the amp inspector (`AmpMagnitude`, P75 over 100 ms after onset, medium limit 2,500) is calibrated for a
+  continuous chirp. Lowering the limit to 1,500 passes the failing hop cells but admits music (18/50 false answers). Needed:
+  an amp criterion that fits a gapped signal (window over the occurrence span, a different percentile) without opening the
+  music hole - DET-014/015 territory.
+- Long trains need `FEATURE_HISTORY_BINS=512` (+18.6 KB on the Analyzer) and a release debounce longer than the gap; the
+  Node's RAM budget for that is unchecked.
+- Next in order: contrast definition (decision file), amp criterion for hops, sweep renderer (OUT-005), gate battery with
+  the final signal incl. silence/speech/music per spacing, then the Node (band parameter, per-node hop from the node id).

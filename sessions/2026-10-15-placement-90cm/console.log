@@ -1,0 +1,7 @@
+[14:38:23] boot banner: {'role': 'analyzer', 'git': 'ce586c1', 'version': '0.4.0', 'board': 'damp'}
+[14:38:25] warmup: OK EMIT CHIRP
+[14:38:25] start T3_f3200_10: SEQ DIAG off ; SEQ start profile=TonalPulseScalar tries=10 freq=3200 mode=detail when=all verbose=1
+[14:39:03] done T3_f3200_10 (37s): complete=True results={'expected': 10}
+[14:39:05] start T3_f3300_10: SEQ DIAG off ; SEQ start profile=TonalPulseScalar tries=10 freq=3300 mode=detail when=all verbose=1
+[14:39:42] done T3_f3300_10 (37s): complete=True results={'expected': 10}
+[14:39:47] session updated, index rebuilt

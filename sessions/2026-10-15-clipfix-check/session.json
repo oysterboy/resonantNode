@@ -1,0 +1,59 @@
+{
+  "purpose": "check the corrected Analyzer health thresholds (lab note 2026-10-15) and the new pulse-train Emitter with a plain T3",
+  "created": "2026-10-15T14:49:42",
+  "setup": {
+    "distance_cm": 90.0,
+    "orientation": "mic and speaker facing up",
+    "emitter_fw": "",
+    "notes": [
+      "E2 COM5 Analyzer with scaled health thresholds (uncommitted at the time, committed after), E3 COM3 Emitter 0.5 FS with PULSES (ce586c1)"
+    ]
+  },
+  "runs": [
+    {
+      "name": "T3_f3300_10",
+      "file": "T3_f3300_10.8218489.log",
+      "firmware": {
+        "role": "analyzer",
+        "git": "8218489",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "commands": [
+        "SEQ DIAG on",
+        "SEQ start profile=TonalPulseScalar tries=10 freq=3300 mode=system when=all verbose=1"
+      ],
+      "started": "2026-10-15T14:49:48",
+      "duration_s": 37,
+      "summary": {
+        "profile": "TonalPulseScalar",
+        "detector": "scalar_transient",
+        "complete": true,
+        "trial_results": {
+          "expected": 10
+        },
+        "line_counts": {
+          "SEQ_TRIAL": 10,
+          "SEQ_SUMMARY": 1
+        },
+        "trials": "10",
+        "completed": "10",
+        "expected_trials": "10",
+        "early_trials": "0",
+        "late_trials": "0",
+        "miss_trials": "0",
+        "duplicate_trials": "0",
+        "unexpected_trials": "0",
+        "rejected_trials": "0",
+        "buffer_overrun_trials": "0",
+        "detector_accepted_trials": "10",
+        "detector_reject_trials": "0",
+        "pattern_valid_trials": "10",
+        "pattern_rejected_trials": "0",
+        "avg_dt_ms": "26",
+        "avg_strength": "14638.1",
+        "avg_conf": "1.00"
+      }
+    }
+  ]
+}

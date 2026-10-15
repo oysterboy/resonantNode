@@ -1,0 +1,197 @@
+{
+  "purpose": "DET-011/DET-012: false answers at a 2000 Hz target with the pulse-train params vs defaults (512-bin history), 90 cm, up",
+  "created": "2026-10-15T15:31:27",
+  "setup": {
+    "distance_cm": 90.0,
+    "orientation": "mic and speaker facing up",
+    "emitter_fw": "",
+    "notes": [
+      "E2 COM5 Analyzer 512-bin history, E3 Emitter idle; radio 50 cm from E2, full volume, 90 deg to the mic; music first then speech; compare 2026-10-14-lowfreq-90cm-noise (defaults, 256 bins, 2000 Hz: speech 3, music 4)"
+    ]
+  },
+  "runs": [
+    {
+      "name": "T3_chirp_f2000",
+      "file": "T3_chirp_f2000.38c9bdb.log",
+      "firmware": {
+        "role": "analyzer",
+        "git": "38c9bdb",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "commands": [
+        "SEQ DIAG off",
+        "SEQ start profile=TonalPulseScalar tries=10 freq=2000 mode=detail when=all verbose=1"
+      ],
+      "started": "2026-10-15T15:32:16",
+      "duration_s": 37,
+      "summary": {
+        "profile": "TonalPulseScalar",
+        "detector": "scalar_transient",
+        "complete": true,
+        "trial_results": {
+          "expected": 10
+        },
+        "line_counts": {
+          "SEQ_TRIAL": 10,
+          "SEQ_SUMMARY": 1
+        },
+        "trials": "10",
+        "completed": "10",
+        "expected_trials": "10",
+        "early_trials": "0",
+        "late_trials": "0",
+        "miss_trials": "0",
+        "duplicate_trials": "0",
+        "unexpected_trials": "0",
+        "rejected_trials": "0",
+        "buffer_overrun_trials": "0",
+        "detector_accepted_trials": "10",
+        "detector_reject_trials": "0",
+        "pattern_valid_trials": "10",
+        "pattern_rejected_trials": "0",
+        "avg_dt_ms": "22",
+        "avg_strength": "10810.5",
+        "avg_conf": "1.00"
+      }
+    },
+    {
+      "name": "T3_train15x3_g60_f2000",
+      "file": "T3_train15x3_g60_f2000.38c9bdb.log",
+      "firmware": {
+        "role": "analyzer",
+        "git": "38c9bdb",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "commands": [
+        "PARAM scalar_max_gap_ms=130 scalar_max_duration_ms=600 scalar_min_release_coverage_ms=40 scalar_release_debounce_ms=130",
+        "SEQ DIAG off",
+        "SEQ start profile=TonalPulseScalar tries=10 freq=2000 dur=15 pulses=3 gap=60 mode=detail when=all verbose=1"
+      ],
+      "started": "2026-10-15T15:32:55",
+      "duration_s": 38,
+      "summary": {
+        "profile": "TonalPulseScalar",
+        "detector": "scalar_transient",
+        "complete": true,
+        "trial_results": {
+          "rejected": 10
+        },
+        "line_counts": {
+          "SEQ_TRIAL": 10,
+          "SEQ_SUMMARY": 1
+        },
+        "trials": "10",
+        "completed": "10",
+        "expected_trials": "0",
+        "early_trials": "0",
+        "late_trials": "0",
+        "miss_trials": "0",
+        "duplicate_trials": "0",
+        "unexpected_trials": "0",
+        "rejected_trials": "10",
+        "buffer_overrun_trials": "0",
+        "detector_accepted_trials": "10",
+        "detector_reject_trials": "0",
+        "pattern_valid_trials": "0",
+        "pattern_rejected_trials": "10",
+        "avg_dt_ms": "-1",
+        "avg_strength": "7576.5",
+        "avg_conf": "0.00"
+      }
+    },
+    {
+      "name": "T3_train15x3_g20_f2000",
+      "file": "T3_train15x3_g20_f2000.38c9bdb.log",
+      "firmware": {
+        "role": "analyzer",
+        "git": "38c9bdb",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "commands": [
+        "PARAM scalar_max_gap_ms=130 scalar_max_duration_ms=600 scalar_min_release_coverage_ms=40 scalar_release_debounce_ms=130",
+        "SEQ DIAG off",
+        "SEQ start profile=TonalPulseScalar tries=10 freq=2000 dur=15 pulses=3 gap=20 mode=detail when=all verbose=1"
+      ],
+      "started": "2026-10-15T15:33:36",
+      "duration_s": 38,
+      "summary": {
+        "profile": "TonalPulseScalar",
+        "detector": "scalar_transient",
+        "complete": true,
+        "trial_results": {
+          "expected": 10
+        },
+        "line_counts": {
+          "SEQ_TRIAL": 10,
+          "SEQ_SUMMARY": 1
+        },
+        "trials": "10",
+        "completed": "10",
+        "expected_trials": "10",
+        "early_trials": "0",
+        "late_trials": "0",
+        "miss_trials": "0",
+        "duplicate_trials": "0",
+        "unexpected_trials": "0",
+        "rejected_trials": "0",
+        "buffer_overrun_trials": "0",
+        "detector_accepted_trials": "10",
+        "detector_reject_trials": "0",
+        "pattern_valid_trials": "10",
+        "pattern_rejected_trials": "0",
+        "avg_dt_ms": "28",
+        "avg_strength": "6802.3",
+        "avg_conf": "1.00"
+      }
+    },
+    {
+      "name": "OBS_f2000_silence_train",
+      "file": "OBS_f2000_silence_train.38c9bdb.log",
+      "firmware": {
+        "role": "analyzer",
+        "git": "38c9bdb",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "commands": [
+        "PARAM scalar_max_gap_ms=130 scalar_max_duration_ms=600 scalar_min_release_coverage_ms=40 scalar_release_debounce_ms=130",
+        "SEQ DIAG off",
+        "SEQ OBS start tries=50 period=2000 window=1800 report_settle=200 freq=2000 profile=TonalPulseScalar mode=detail when=all verbose=1"
+      ],
+      "started": "2026-10-15T15:34:16",
+      "duration_s": 106,
+      "summary": {
+        "profile": "TonalPulseScalar",
+        "detector": "scalar_transient",
+        "complete": true,
+        "trial_results": {
+          "miss": 50
+        },
+        "line_counts": {
+          "SEQ_TRIAL": 50,
+          "SEQ_SUMMARY": 1
+        },
+        "trials": "50",
+        "completed": "50",
+        "expected_trials": "0",
+        "early_trials": "0",
+        "late_trials": "0",
+        "miss_trials": "50",
+        "duplicate_trials": "0",
+        "unexpected_trials": "0",
+        "rejected_trials": "0",
+        "buffer_overrun_trials": "0",
+        "detector_accepted_trials": "0",
+        "detector_reject_trials": "0",
+        "pattern_valid_trials": "0",
+        "pattern_rejected_trials": "0",
+        "avg_dt_ms": "-1",
+        "avg_strength": "0.0",
+        "avg_conf": "0.00"
+      }
+    }
+  ]
+}

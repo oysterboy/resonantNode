@@ -1,0 +1,14 @@
+[15:31:31] boot banner: {'role': 'analyzer', 'git': '38c9bdb', 'version': '0.4.0', 'board': 'damp'}
+[15:31:33] warmup: OK EMIT CHIRP
+[15:31:33] start OBS_f2000_music_train: PARAM scalar_max_gap_ms=130 scalar_max_duration_ms=600 scalar_min_release_coverage_ms=40 scalar_release_debounce_ms=130 ; SEQ DIAG off ; SEQ OBS start tries=50 period=2000 window=1800 report_settle=200 freq=2000 profile=TonalPulseScalar mode=detail when=all verbose=1
+[15:32:14] boot banner: {'role': 'analyzer', 'git': '38c9bdb', 'version': '0.4.0', 'board': 'damp'}
+[15:32:16] warmup: OK EMIT CHIRP
+[15:32:16] start T3_chirp_f2000: SEQ DIAG off ; SEQ start profile=TonalPulseScalar tries=10 freq=2000 mode=detail when=all verbose=1
+[15:32:53] done T3_chirp_f2000 (37s): complete=True results={'expected': 10}
+[15:32:55] start T3_train15x3_g60_f2000: PARAM scalar_max_gap_ms=130 scalar_max_duration_ms=600 scalar_min_release_coverage_ms=40 scalar_release_debounce_ms=130 ; SEQ DIAG off ; SEQ start profile=TonalPulseScalar tries=10 freq=2000 dur=15 pulses=3 gap=60 mode=detail when=all verbose=1
+[15:33:33] done T3_train15x3_g60_f2000 (38s): complete=True results={'rejected': 10}
+[15:33:36] start T3_train15x3_g20_f2000: PARAM scalar_max_gap_ms=130 scalar_max_duration_ms=600 scalar_min_release_coverage_ms=40 scalar_release_debounce_ms=130 ; SEQ DIAG off ; SEQ start profile=TonalPulseScalar tries=10 freq=2000 dur=15 pulses=3 gap=20 mode=detail when=all verbose=1
+[15:34:14] done T3_train15x3_g20_f2000 (38s): complete=True results={'expected': 10}
+[15:34:16] start OBS_f2000_silence_train: PARAM scalar_max_gap_ms=130 scalar_max_duration_ms=600 scalar_min_release_coverage_ms=40 scalar_release_debounce_ms=130 ; SEQ DIAG off ; SEQ OBS start tries=50 period=2000 window=1800 report_settle=200 freq=2000 profile=TonalPulseScalar mode=detail when=all verbose=1
+[15:36:02] done OBS_f2000_silence_train (106s): complete=True results={'miss': 50}
+[15:36:07] session updated, index rebuilt

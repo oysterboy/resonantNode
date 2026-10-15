@@ -109,6 +109,8 @@ Status: IDEA, first of the extensions (step 5b, section 3; motivated by the 2026
 
 Scalar observes one fixed band; options are a wider band, adjacent bins, or the AmpMagnitude stream. Last of the three.
 
+Direction 2026-10-15: signals vary per node and over time (sweep or hop, artistic choice); the detector watches a shared band, inspectors report shape. Sequence in the research note. Decision: docs/decisions/2026-10-15-signal-variation-inside-a-shared-band.md
+
 Research: docs/research/frequency-drift-detection.md
 
 ### DET-008 - detection-layer cleanup pass

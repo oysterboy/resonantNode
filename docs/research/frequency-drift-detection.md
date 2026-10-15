@@ -1,6 +1,7 @@
 # Detecting a drifting chirp: more Goertzels, sliding DFT, FFT, or something else
 
-Status:  exploring (2026-10-15)
+Status:  exploring (2026-10-15); direction set, see below
+Became:  docs/decisions/2026-10-15-signal-variation-inside-a-shared-band.md
 Lab:     bench/sessions/2026-10-14-up-spacing-map (comb nulls a few hundred
          Hz apart, 10-20x deep), freertos-tasks.md (~39 of 62.5 us/sample)
 
@@ -8,6 +9,86 @@ Expands section 3 of `scalar-detector-extensions.md` (DET-013, step 5b,
 issue #36). Desk analysis from the code; no new measurements. All cost
 figures below are operation counts, not ESP32 timings: the first step of
 any option is a profiled build (`FREQBAND_ENABLE_PROFILING=1`).
+
+## Direction (owner, 2026-10-15)
+
+-> promoted to docs/decisions/2026-10-15-signal-variation-inside-a-shared-band.md
+
+The goal is variation of signals: per node, and per node over time.
+Whether a variation is played as a sweep or as a hopping pulse train is
+an artistic choice, so the network must support all of them. Implement
+in a sensible order; inspectors are part of the answer, not only the
+detector.
+
+Consequence for detection: the detector cannot know which shape is
+coming. It watches a **shared band** (the "network band", a config value
+like 2900-3700 Hz) and answers "was there a tonal signal in the band",
+whatever its shape. Shape (steady / sweep / hop, where, how fast) is
+reported as facts by inspectors. Behavior is free to vary anything as
+long as it stays inside the band; the band is the one contract between
+what nodes play and what nodes hear.
+
+## Sequence
+
+Each step is usable on its own and keeps today's fixed 3200 Hz chirp
+passing (regression: the step 5a battery).
+
+1. **Profile and cheapen the band stream.** `FREQBAND_ENABLE_PROFILING`
+   on D-AMP; single-pass multi-bin Goertzel + mirrored buffer, same
+   output. No behaviour change.
+2. **Output can play shapes (Emitter first).** Hopping: `PULSES` takes a
+   frequency per pulse (it already takes one `freq=`). Sweep: the
+   renderer ramps frequency inside one tone (phase-continuous, start/end
+   Hz). Both as SEQ trial options so the Analyzer can drive them. Without
+   this nothing below can be tested.
+3. **Detector watches the band (option A, or B if step 1 says time is
+   short).** `FrequencyTarget` = strongest bin in the band, band edges
+   from config. Bench: fixed tones across the band, sweep, hop, at the
+   comb spacings of the up-spacing map; speech/music OBS.
+4. **Gaps (DET-011).** Pulse trains and sweeps through room nulls both
+   show up as gaps; tune `maxGapMs` / islands / coverage with the shapes
+   from step 2. Can run in parallel with 3.
+5. **Inspectors (below).** First tonality (it pays for the noise that
+   step 3 lets in), then the shape facts.
+6. **Node variation, per node.** Behavior/config gives each node its own
+   centre and shape inside the band (e.g. derived from the node id).
+   Field trial (step 6) can run here.
+7. **Variation over time.** Behavior modulates centre, span, shape,
+   pulse count across reactions (myspec 6.2). Pure Behavior work once
+   3-5 hold.
+8. **Later, artistic:** Behavior reads inspector shape facts (answer a
+   sweep with a hop, imitate, contrast). Needs the shape facts to reach
+   the verdict.
+
+Steps 1-5 are detection and output plumbing; 6-8 are where the art
+lives and need no detector change if the band contract holds.
+
+## Inspectors that help
+
+Inspectors judge an occurrence after the detector has found it, over its
+whole window, so they can afford what the per-sample detector cannot.
+All of these are facts; whether they gate is the evaluator's plan,
+whether they matter artistically is Behavior's.
+
+| inspector | measures | helps against | needs |
+|---|---|---|---|
+| **Tonality** | peak-bin power vs total window energy, over the occurrence | speech, music, broadband noise; the main cost of a wider band | per-update ratio (energy is already computed) as a stream |
+| **Peak trajectory** | start / end / min / max peak bin, distinct bins visited, monotonic or not | tells steady / sweep / hop apart; rejects random jumping (speech formants) | peak-bin index per update |
+| **Band coverage** | share of the band the occurrence touched | a sweep that covers the band vs a narrow intruder | same as above |
+| **Pulse structure** | island count, pulse and gap durations, their regularity | hop trains vs syllables (DET-011's noise risk) | already in Scalar's island data |
+
+Data path, the real cost: inspectors read `FeatureHistory`, which has 3
+stream slots (~5 KB each, static-asserted). Two ways in:
+
+- the detector accumulates per-occurrence peak-bin facts itself (a
+  histogram of K bytes, min/max/first/last) and hands them over in the
+  occurrence detail: cheap, no new stream;
+- or a tonality / peak-bin stream takes a `FeatureHistory` slot, e.g.
+  replacing `FrequencyContrast`, whose meaning changes in step 3 anyway.
+
+Lean: accumulate in the detector first, add a stream only if an inspector
+needs the time course inside the window. To be decided in step 5, with a
+`docs/decisions/` file.
 
 ## What the detector does today
 
@@ -213,8 +294,11 @@ not to the detector and not to Behavior.
 
 ## Open questions
 
-- Which drift is the target: defined sweep, hop set, or random per node?
-  Decides between A/B (any of them) and a matched filter.
+- ~~Which drift is the target?~~ All, varied per node and over time
+  (2026-10-15). Rules out a matched filter as the main detector (it fits
+  one known shape only); A or B it is.
+- Where the network band sits and how wide (lower edge is limited by the
+  speech/music result of 2026-10-14).
 - Sweep span: the comb spacing (a few hundred Hz) suggests >= 400 Hz;
   with 250 Hz bins that is 3-5 bins, with 125 Hz bins 5-9.
 - Does max-over-bins raise false accepts on speech/music measurably at

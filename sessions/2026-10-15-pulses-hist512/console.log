@@ -1,0 +1,13 @@
+[15:12:00] boot banner: {'role': 'analyzer', 'git': '38c9bdb', 'version': '0.4.0', 'board': 'damp'}
+[15:12:02] warmup: OK EMIT CHIRP
+[15:12:02] start H15_g20: PARAM scalar_max_gap_ms=130 scalar_max_duration_ms=600 scalar_min_release_coverage_ms=40 scalar_release_debounce_ms=130 ; SEQ DIAG off ; SEQ start profile=TonalPulseScalar tries=10 freq=3300 dur=15 pulses=3 gap=20 mode=detail when=all verbose=1
+[15:12:40] done H15_g20 (38s): complete=True results={'expected': 10}
+[15:12:42] start H15_g60: PARAM scalar_max_gap_ms=130 scalar_max_duration_ms=600 scalar_min_release_coverage_ms=40 scalar_release_debounce_ms=130 ; SEQ DIAG off ; SEQ start profile=TonalPulseScalar tries=10 freq=3300 dur=15 pulses=3 gap=60 mode=detail when=all verbose=1
+[15:13:21] done H15_g60 (38s): complete=True results={'expected': 10}
+[15:13:23] start H15_g115: PARAM scalar_max_gap_ms=130 scalar_max_duration_ms=600 scalar_min_release_coverage_ms=40 scalar_release_debounce_ms=130 ; SEQ DIAG off ; SEQ start profile=TonalPulseScalar tries=10 freq=3300 dur=15 pulses=3 gap=115 mode=detail when=all verbose=1
+[15:14:01] done H15_g115 (38s): complete=True results={'rejected': 10}
+[15:14:03] start H10_g60: PARAM scalar_max_gap_ms=130 scalar_max_duration_ms=600 scalar_min_release_coverage_ms=40 scalar_release_debounce_ms=130 ; SEQ DIAG off ; SEQ start profile=TonalPulseScalar tries=10 freq=3300 dur=10 pulses=3 gap=60 mode=detail when=all verbose=1
+[15:14:41] done H10_g60 (38s): complete=True results={'rejected': 10}
+[15:14:43] start Hdef_plain: SEQ DIAG off ; SEQ start profile=TonalPulseScalar tries=10 freq=3300 mode=detail when=all verbose=1
+[15:15:21] done Hdef_plain (37s): complete=True results={'expected': 10}
+[15:15:26] session updated, index rebuilt

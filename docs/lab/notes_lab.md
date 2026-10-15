@@ -13,7 +13,9 @@ flag).
 
 ## 2026-10-15 (mic supply; closes an open item)
 
-The D-AMP nodes' mic VCC is on 3V3 (owner, 2026-10-15). The "5 V per
+The D-AMP nodes' mic VCC is on 3V3, and the mic is the only load on that
+rail besides the ESP32 module itself; the amp is on 5 V (owner,
+2026-10-15). The "5 V per
 echoSpace wiring, not measured" item carried since 2026-10-09 (below;
 damp-board-support.md, i2s-first-difference-revisit.md) is closed: an
 out-of-spec supply is not the cause of the sub-30 Hz wander. Still open on

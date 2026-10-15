@@ -320,7 +320,7 @@ void EmitterApp::handlePulsesCommand(const char* line) {
     while (token != nullptr) {
         if (startsWithToken(token, "hop=")) {
             const char* list = findValue(token);
-            while (list != nullptr && *list != ' ') {
+            while (list != nullptr && *list != '\0') {
                 char* end = nullptr;
                 const unsigned long hz = strtoul(list, &end, 10);
                 if (end == list || _pulseHopCount >= kPulseHopMax || !emitterToneHzPlayable(hz)) {
@@ -329,7 +329,7 @@ void EmitterApp::handlePulsesCommand(const char* line) {
                 }
                 _pulseHopHz[_pulseHopCount++] = static_cast<uint32_t>(hz);
                 list = (*end == ',') ? end + 1 : end;
-                if (*end != ',' && *end != ' ') {
+                if (*end != ',' && *end != '\0') {
                     hopBad = true;
                     break;
                 }

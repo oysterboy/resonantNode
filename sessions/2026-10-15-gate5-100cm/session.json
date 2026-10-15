@@ -1,0 +1,106 @@
+{
+  "purpose": "5b gate: 5-step hop (20 ms pulses, gaps 15 (max_duration 300) and 5 ms, 2800/3050/3300/3550/3800, band 2800-3800), 100 cm, up, Emitter 0.5 FS",
+  "created": "2026-10-15T17:16:47",
+  "setup": {
+    "distance_cm": 100.0,
+    "orientation": "mic and speaker facing up, bench",
+    "emitter_fw": "",
+    "notes": [
+      "E2 COM5 Analyzer (512-bin + band bank), E3 Emitter hop 0.5 FS; quiet room; g15 run with scalar_max_duration_ms=300, g5 with defaults"
+    ]
+  },
+  "runs": [
+    {
+      "name": "hop5_p20g15_maxdur300",
+      "file": "hop5_p20g15_maxdur300.b309e96.log",
+      "firmware": {
+        "role": "analyzer",
+        "git": "b309e96",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "commands": [
+        "PARAM scalar_max_duration_ms=300",
+        "SEQ DIAG off",
+        "SEQ start profile=TonalPulseScalar tries=10 freq=3300 band=2800-3800 dur=20 pulses=5 gap=15 hop=2800,3050,3300,3550,3800 mode=detail when=all verbose=1"
+      ],
+      "started": "2026-10-15T17:16:54",
+      "duration_s": 37,
+      "summary": {
+        "profile": "TonalPulseScalar",
+        "detector": "scalar_transient",
+        "complete": true,
+        "trial_results": {
+          "rejected": 6,
+          "expected": 4
+        },
+        "line_counts": {
+          "SEQ_TRIAL": 10,
+          "SEQ_SUMMARY": 1
+        },
+        "trials": "10",
+        "completed": "10",
+        "expected_trials": "4",
+        "early_trials": "0",
+        "late_trials": "0",
+        "miss_trials": "0",
+        "duplicate_trials": "0",
+        "unexpected_trials": "0",
+        "rejected_trials": "6",
+        "buffer_overrun_trials": "0",
+        "detector_accepted_trials": "10",
+        "detector_reject_trials": "0",
+        "pattern_valid_trials": "4",
+        "pattern_rejected_trials": "6",
+        "avg_dt_ms": "92",
+        "avg_strength": "7175.8",
+        "avg_conf": "1.00"
+      }
+    },
+    {
+      "name": "hop5_p20g5",
+      "file": "hop5_p20g5.b309e96.log",
+      "firmware": {
+        "role": "analyzer",
+        "git": "b309e96",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "commands": [
+        "SEQ DIAG off",
+        "SEQ start profile=TonalPulseScalar tries=10 freq=3300 band=2800-3800 dur=20 pulses=5 gap=5 hop=2800,3050,3300,3550,3800 mode=detail when=all verbose=1"
+      ],
+      "started": "2026-10-15T17:17:33",
+      "duration_s": 37,
+      "summary": {
+        "profile": "TonalPulseScalar",
+        "detector": "scalar_transient",
+        "complete": true,
+        "trial_results": {
+          "expected": 10
+        },
+        "line_counts": {
+          "SEQ_TRIAL": 10,
+          "SEQ_SUMMARY": 1
+        },
+        "trials": "10",
+        "completed": "10",
+        "expected_trials": "10",
+        "early_trials": "0",
+        "late_trials": "0",
+        "miss_trials": "0",
+        "duplicate_trials": "0",
+        "unexpected_trials": "0",
+        "rejected_trials": "0",
+        "buffer_overrun_trials": "0",
+        "detector_accepted_trials": "10",
+        "detector_reject_trials": "0",
+        "pattern_valid_trials": "10",
+        "pattern_rejected_trials": "0",
+        "avg_dt_ms": "20",
+        "avg_strength": "8435.0",
+        "avg_conf": "1.00"
+      }
+    }
+  ]
+}

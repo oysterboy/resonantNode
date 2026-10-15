@@ -18,3 +18,23 @@
 [15:03:52] start D10_g60: PARAM scalar_max_gap_ms=130 scalar_max_duration_ms=600 scalar_min_release_coverage_ms=40 scalar_release_debounce_ms=130 ; SEQ DIAG off ; SEQ start profile=TonalPulseScalar tries=10 freq=3300 dur=10 pulses=3 gap=60 mode=detail when=all verbose=1
 [15:04:30] done D10_g60 (38s): complete=True results={'rejected': 10}
 [15:04:35] session updated, index rebuilt
+[15:07:36] boot banner: {'role': 'analyzer', 'git': '8218489', 'version': '0.4.0', 'board': 'damp'}
+[15:07:38] warmup: OK EMIT CHIRP
+[15:07:38] start I15_g115: PARAM scalar_max_gap_ms=130 scalar_max_duration_ms=600 scalar_min_release_coverage_ms=40 scalar_release_debounce_ms=130 ; SEQ DIAG off ; SEQ start profile=TonalPulseScalar tries=3 freq=3300 dur=15 pulses=3 gap=115 mode=inspect when=all verbose=2
+[15:07:54] done I15_g115 (16s): complete=True results={'rejected': 3}
+[15:07:59] session updated, index rebuilt
+[15:08:22] boot banner: {'role': 'analyzer', 'git': '8218489', 'version': '0.4.0', 'board': 'damp'}
+[15:08:24] warmup: OK EMIT CHIRP
+[15:08:24] start H15_g20_deb60: PARAM scalar_max_gap_ms=130 scalar_max_duration_ms=600 scalar_min_release_coverage_ms=40 scalar_release_debounce_ms=60 ; SEQ DIAG off ; SEQ start profile=TonalPulseScalar tries=6 freq=3300 dur=15 pulses=3 gap=20 mode=detail when=all verbose=1
+[15:08:49] done H15_g20_deb60 (25s): complete=True results={'expected': 6}
+[15:08:54] session updated, index rebuilt
+[15:08:58] boot banner: {'role': 'analyzer', 'git': '8218489', 'version': '0.4.0', 'board': 'damp'}
+[15:09:00] warmup: OK EMIT CHIRP
+[15:09:00] start H15_g20_deb130: PARAM scalar_max_gap_ms=130 scalar_max_duration_ms=600 scalar_min_release_coverage_ms=40 scalar_release_debounce_ms=130 ; SEQ DIAG off ; SEQ start profile=TonalPulseScalar tries=6 freq=3300 dur=15 pulses=3 gap=20 mode=detail when=all verbose=1
+[15:09:25] done H15_g20_deb130 (25s): complete=True results={'rejected': 6}
+[15:09:31] session updated, index rebuilt
+[15:09:35] boot banner: {'role': 'analyzer', 'git': '8218489', 'version': '0.4.0', 'board': 'damp'}
+[15:09:37] warmup: OK EMIT CHIRP
+[15:09:37] start H15_g20_deb200: PARAM scalar_max_gap_ms=130 scalar_max_duration_ms=600 scalar_min_release_coverage_ms=40 scalar_release_debounce_ms=200 ; SEQ DIAG off ; SEQ start profile=TonalPulseScalar tries=6 freq=3300 dur=15 pulses=3 gap=20 mode=detail when=all verbose=1
+[15:10:02] done H15_g20_deb200 (25s): complete=True results={'rejected': 6}
+[15:10:07] session updated, index rebuilt

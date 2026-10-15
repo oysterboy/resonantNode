@@ -1,0 +1,7 @@
+[17:18:50] boot banner: {'role': 'analyzer', 'git': 'b309e96', 'version': '0.4.0', 'board': 'damp'}
+[17:18:52] warmup: OK EMIT CHIRP
+[17:18:52] start hop5_p20g15_maxdur300: PARAM scalar_max_duration_ms=300 ; SEQ DIAG off ; SEQ start profile=TonalPulseScalar tries=10 freq=3300 band=2800-3800 dur=20 pulses=5 gap=15 hop=2800,3050,3300,3550,3800 mode=detail when=all verbose=1
+[17:19:30] done hop5_p20g15_maxdur300 (38s): complete=True results={'expected': 6, 'rejected': 4}
+[17:19:32] start hop5_p20g5: SEQ DIAG off ; SEQ start profile=TonalPulseScalar tries=10 freq=3300 band=2800-3800 dur=20 pulses=5 gap=5 hop=2800,3050,3300,3550,3800 mode=detail when=all verbose=1
+[17:20:09] done hop5_p20g5 (37s): complete=True results={'rejected': 10}
+[17:20:15] session updated, index rebuilt

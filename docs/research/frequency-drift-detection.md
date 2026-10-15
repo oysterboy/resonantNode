@@ -62,6 +62,30 @@ Sequence impact: step 2 (output shapes) gains "two layers"; a bench
 check of the low layer's leak into the band sits before step 3's
 battery.
 
+## Ultrasound as detection layer? (asked 2026-10-15)
+
+Not with this hardware and loop; possible as a later redesign.
+
+- **Sample rate.** 16 kHz gives a ceiling of 8 kHz. 20+ kHz needs at
+  least 48 kHz, and mic and amp share one full-duplex I2S port, so both
+  move together.
+- **Time budget.** 48 kHz leaves 20.8 us per sample; the Node uses ~39
+  us at 16 kHz today. Would need block processing in its own task
+  (freertos-tasks.md candidate 2) and a band-pass + decimate front end
+  before any detector.
+- **Transducers.** The 3 W speaker and the I2S MEMS mic (part not
+  recorded in BoardConfig) are specified for audio; output above
+  ~15-18 kHz is unknown and likely weak. Small drivers beam at those
+  wavelengths (~1.7 cm), which works against the omni layout.
+- **Near-ultrasound (17-19 kHz)** has the same rate/budget problems,
+  is audible to children and young adults, and pulse edges click unless
+  ramped.
+- **Artistically** it changes the piece: visitors would no longer hear
+  the network talking, only the aesthetic layer.
+
+Cheap test if wanted later: Emitter + Analyzer at 48 kHz, raw amplitude
+scan 15-22 kHz at 50 cm (rawtone.py), detector bypassed.
+
 ## Sequence
 
 Each step is usable on its own and keeps today's fixed 3200 Hz chirp

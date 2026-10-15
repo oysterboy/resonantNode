@@ -42,15 +42,21 @@ constexpr long kSmearedDurationMinMs = 181L;
 constexpr long kSmearedDurationMaxMs = 240L;
 constexpr long kTooLongDurationMinMs = 241L;
 constexpr long kNearMaxDurationMinMs = 220L;
+// The loud-end limits below were written for 16-bit samples; the canonical PCM
+// is 24-bit, so they are scaled by 256 (otherwise any tone above ~0.4 % of full
+// scale read as "clipped", lab note 2026-10-15). The quiet-end limits (zero-ish,
+// flatline, RMS too low) stay: they are floors, and the mic noise floor is far
+// above them.
+constexpr long kPcm16To24Scale = 256L;
 constexpr long kAudioZeroishAbsThreshold = 8L;
-constexpr long kAudioLargeJumpAbsThreshold = 12000L;
+constexpr long kAudioLargeJumpAbsThreshold = 12000L * kPcm16To24Scale;
 constexpr float kAudioRmsTooLowThreshold = 40.0f;
-constexpr float kAudioRmsTooHighThreshold = 30000.0f;
+constexpr float kAudioRmsTooHighThreshold = 30000.0f * static_cast<float>(kPcm16To24Scale);
 constexpr unsigned long kAudioFlatlineStreakFrames = 32UL;
 constexpr unsigned long kRawFlatlineMaxAbsThreshold = 8UL;
 constexpr unsigned long kRawDcStuckRangeThreshold = 16UL;
 constexpr unsigned long kRawDcStuckMeanAbsThreshold = 6UL;
-constexpr unsigned long kRawClipThreshold = 32760UL;
+constexpr unsigned long kRawClipThreshold = 32760UL * static_cast<unsigned long>(kPcm16To24Scale);
 constexpr unsigned long kRawZeroishAbsThreshold = 4UL;
 
 RTC_DATA_ATTR static uint32_t g_analyzerBootCount = 0;
@@ -323,7 +329,7 @@ void AnalyzerApp::updateSequenceAudioHealth(const AudioSamplePacket& audioSample
     if (rms < kAudioRmsTooLowThreshold) {
         ++diagnostics.audioRmsTooLowFrames;
     }
-    if (rms > kAudioRmsTooHighThreshold || absRaw > 32760UL) {
+    if (rms > kAudioRmsTooHighThreshold || absRaw > kRawClipThreshold) {
         ++diagnostics.audioRmsTooHighFrames;
     }
 

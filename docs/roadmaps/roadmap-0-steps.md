@@ -22,7 +22,7 @@ Renamed from roadmap-general.md on 2026-09-23 so it sorts first.
 How this file relates to the domain roadmaps and docs/refactors/: see
 README.md ("Who answers what", "Ordering rule").
 
-Status update 2026-10-15: step 5b rewritten as signal variation part 1 (before step 6, proposed), new step 8a for part 2 (decisions/2026-10-15-signal-variation-inside-a-shared-band.md). DET-012 rescoped to the band's lower edge; ultrasound dropped.
+Status update 2026-10-15: step 5b rewritten as signal variation part 1 (before step 6, owner confirmed), new step 8a for part 2 (decisions/2026-10-15-signal-variation-inside-a-shared-band.md). DET-012 rescoped to the band's lower edge; ultrasound dropped.
 Status update 2026-10-14: step 5 decided (Scalar ships, Freq demo; decisions/2026-10-14-node-ships-tonalpulsescalar.md);
 step 4a done (#29); step 3b partial; steps 5a (#35), 5c (#34), 5b added. Step 5a item 2b (DC blocker replaces First Difference)
 landed in code bfbe0c8, bench-checked on the Analyzer at 90/100 cm and in silence/speech/music; Node quiet gate margin and the Node
@@ -263,7 +263,7 @@ the previous gate open unless the step says it can run in parallel.
    Gate: five boards, each passing SELFTEST, logged in a bench session.
    Follows 5a; the gate runs of 3b (#28) and 4 (#21) follow this.
 
-5b. [NEXT, order proposed 2026-10-15] Signal variation, part 1: a
+5b. [NEXT, order confirmed 2026-10-15] Signal variation, part 1: a
    detection layer that survives the room. (issue #36)
    Where: DET-013 (band stream), OUT-005 (hop / sweep shapes), DET-011
    (gaps), DET-014 (tonality, only if OBS gets worse), BEH-005 (per-node
@@ -305,8 +305,7 @@ the previous gate open unless the step says it can run in parallel.
    Gate: as that phase states (T1, T2/T3 label-only diffs, T5, T7), now
    measured against the field-trial firmware.
 
-8a. [TODO] Signal variation, part 2: aesthetics. (issue to open when
-   the order is confirmed)
+8a. [TODO] Signal variation, part 2: aesthetics. (issue #38)
    Where: OUT-006 (two-layer signal), BEH-006 (variation over time),
    DET-015 (shape inspectors), DET-014 if not done in 5b; BEH-007 after.
    Why here: the shape inspectors should land on the folded inspector of

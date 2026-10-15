@@ -1,7 +1,8 @@
 # Detecting a drifting chirp: more Goertzels, sliding DFT, FFT, or something else
 
 Status:  exploring (2026-10-15); direction set, see below
-Became:  docs/decisions/2026-10-15-signal-variation-inside-a-shared-band.md
+Became:  docs/decisions/2026-10-15-signal-variation-inside-a-shared-band.md;
+         DET-013..015, OUT-005/006, BEH-005..007; steps 5b, 8a (2026-10-15)
 Lab:     bench/sessions/2026-10-14-up-spacing-map (comb nulls a few hundred
          Hz apart, 10-20x deep), freertos-tasks.md (~39 of 62.5 us/sample)
 
@@ -29,6 +30,8 @@ long as it stays inside the band; the band is the one contract between
 what nodes play and what nodes hear.
 
 ## Two-layer signal (owner, 2026-10-15)
+
+-> promoted to OUT-006, 2026-10-15
 
 Musically interesting starts below 1 kHz. Idea: the signal carries a
 free aesthetic layer (low, anything) plus a detection layer in the band
@@ -64,6 +67,8 @@ battery.
 
 ## Ultrasound as detection layer? (asked 2026-10-15)
 
+Dropped (owner, 2026-10-15).
+
 Not with this hardware and loop; possible as a later redesign.
 
 - **Sample rate.** 16 kHz gives a ceiling of 8 kHz. 20+ kHz needs at
@@ -87,6 +92,8 @@ Cheap test if wanted later: Emitter + Analyzer at 48 kHz, raw amplitude
 scan 15-22 kHz at 50 cm (rawtone.py), detector bypassed.
 
 ## Sequence
+
+-> promoted to roadmap-0-steps.md steps 5b and 8a (DET-013..015, OUT-005/006, BEH-005..007), 2026-10-15
 
 Each step is usable on its own and keeps today's fixed 3200 Hz chirp
 passing (regression: the step 5a battery).
@@ -122,6 +129,8 @@ Steps 1-5 are detection and output plumbing; 6-8 are where the art
 lives and need no detector change if the band contract holds.
 
 ## Inspectors that help
+
+-> promoted to DET-014, DET-015, 2026-10-15
 
 Inspectors judge an occurrence after the detector has found it, over its
 whole window, so they can afford what the per-sample detector cannot.

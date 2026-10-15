@@ -119,6 +119,8 @@ to test the ceiling path; same scan with the boards facing each other.
 
 ## 2. Lower frequencies
 
+Rescoped 2026-10-15: below 1 kHz goes to the aesthetic layer (OUT-006); DET-012 is now the network band's lower edge.
+
 - Unknowns: D-AMP speaker roll-off, I2S mic LF noise and drift (step 1b),
   more room and speech energy at low frequencies (false alarms).
 - Prerequisite: the DC blocker from 5a item 2b. First Difference passes
@@ -147,6 +149,8 @@ to test the ceiling path; same scan with the boards facing each other.
   signature, pattern) is in.
 
 ## 3. Frequency drift
+
+-> continued in frequency-drift-detection.md; promoted to DET-013..015, 2026-10-15
 
 - Scalar observes one fixed band (`FrequencyTarget` at 3200 Hz); a drifting
   tone leaves it. Options: wider band, adjacent-bin set, or the broadband

@@ -87,11 +87,40 @@ behavior modulation / intended drift config.
 OutputRequest / BehaviorAction.
 ```
 
+### BEH-005 - per-node signal variation
+
+Status: TODO (step 5b)
+
+```text
+Each node plays its own shape and centre inside the network band
+(e.g. derived from the node id, or a param): hop set or sweep.
+Static per node; enough for the field trial to test nodes hearing
+signals that differ from their own.
+```
+
+### BEH-006 - signal variation over time
+
+Status: TODO (step 8a; the "behavior modulation / intended drift" line of BEH-004)
+
+```text
+Behavior varies centre, span, shape, pulse count and the aesthetic
+layer across reactions (myspec 6.2). Detection layer stays in the band.
+```
+
+### BEH-007 - respond to signal shape
+
+Status: DEFERRED (after DET-015)
+
+```text
+Behavior reads shape facts (steady / sweep / hop) from the verdict and
+answers artistically: imitate, contrast, hand on.
+```
+
 ## Current focus
 
 ```text
 Order: roadmap-0-steps.md. BEH-001 / BEH-002 fold into NODE-001 (step 6);
-BEH-003 / BEH-004 are deferred (step 11).
+BEH-003 / BEH-004 are deferred (step 11). BEH-005 is step 5b, BEH-006 step 8a, BEH-007 after DET-015.
 ```
 
 ## Spec candidates

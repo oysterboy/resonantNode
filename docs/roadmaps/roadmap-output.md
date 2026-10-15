@@ -78,11 +78,41 @@ Add OutputProfile / ChirpProfile only after behavior variations prove needed.
 Connect later to ResonantProgram.
 ```
 
+### OUT-005 - chirp shapes: hopping pulses and in-chirp sweep
+
+Status: TODO (step 5b)
+
+```text
+PULSES takes a frequency per pulse (hop train); a tone can ramp its
+frequency inside one chirp, phase-continuous (sweep: start/end Hz).
+Emitter first, as SEQ trial options, so the Analyzer can drive them;
+then ChirpOutput on the Node, with the shape chosen by Behavior (BEH-005).
+No OutputRequest needed: parameters on the current ChirpOutput path.
+Every shape stays inside the network band
+(docs/decisions/2026-10-15-signal-variation-inside-a-shared-band.md).
+Source: docs/research/frequency-drift-detection.md (Sequence, step 2).
+```
+
+### OUT-006 - two-layer signal: aesthetic layer + detection layer
+
+Status: TODO (step 8a)
+
+```text
+Renderer sums two oscillators: an aesthetic layer free in frequency
+(owner: interesting below 1 kHz) and a detection layer in the band.
+Level budget shared under full scale; speaker resonance near 800 Hz
+helps the low layer. Detection layer lasts at least the detector's
+minimum duration or forms a pulse train. Bench first: leak of the low
+layer into the band (Hann window in DET-013 if needed). Ultrasound as
+detection layer considered and dropped 2026-10-15.
+Source: docs/research/frequency-drift-detection.md (Two-layer signal).
+```
+
 ## Current focus
 
 ```text
 Order: roadmap-0-steps.md. OUT-001 folds into NODE-001 (step 6);
-OUT-002..004 are deferred (step 11). The D-AMP output (a sine ToneOutput
+OUT-002..004 are deferred (step 11). OUT-005 is step 5b, OUT-006 step 8a. The D-AMP output (a sine ToneOutput
 over I2S) is NODE-009, step 2: hardware, not output architecture.
 ```
 

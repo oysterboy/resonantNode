@@ -1,0 +1,426 @@
+{
+  "purpose": "DET-013: smallest scalar parameter set that accepts a 3-frequency hop (band 2800-3800), quiet room, 90 cm, up, 0.5 FS",
+  "created": "2026-10-15T16:30:27",
+  "setup": {
+    "distance_cm": 90.0,
+    "orientation": "mic and speaker facing up",
+    "emitter_fw": "",
+    "notes": [
+      "E2 COM5 Analyzer 512-bin history + band bank, E3 Emitter hop; hop 2800,3300,3800, 15 ms x3; sets: A defaults; B debounce 40/max_gap 60/max_dur 400; C debounce 80/max_gap 100/max_dur 500/coverage 40; D debounce 130/max_gap 130/max_dur 600/coverage 40"
+    ]
+  },
+  "runs": [
+    {
+      "name": "A_g20",
+      "file": "A_g20.b309e96.log",
+      "firmware": {
+        "role": "analyzer",
+        "git": "b309e96",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "commands": [
+        "SEQ DIAG off",
+        "SEQ start profile=TonalPulseScalar tries=10 freq=3300 band=2800-3800 dur=15 pulses=3 gap=20 hop=2800,3300,3800 mode=detail when=all verbose=1"
+      ],
+      "started": "2026-10-15T16:30:34",
+      "duration_s": 37,
+      "summary": {
+        "profile": "TonalPulseScalar",
+        "detector": "scalar_transient",
+        "complete": true,
+        "trial_results": {
+          "rejected": 10
+        },
+        "line_counts": {
+          "SEQ_TRIAL": 10,
+          "SEQ_SUMMARY": 1
+        },
+        "trials": "10",
+        "completed": "10",
+        "expected_trials": "0",
+        "early_trials": "0",
+        "late_trials": "0",
+        "miss_trials": "0",
+        "duplicate_trials": "0",
+        "unexpected_trials": "0",
+        "rejected_trials": "10",
+        "buffer_overrun_trials": "0",
+        "detector_accepted_trials": "0",
+        "detector_reject_trials": "10",
+        "pattern_valid_trials": "0",
+        "pattern_rejected_trials": "0",
+        "avg_dt_ms": "-1",
+        "avg_strength": "5441.6",
+        "avg_conf": "0.00"
+      }
+    },
+    {
+      "name": "B_g20",
+      "file": "B_g20.b309e96.log",
+      "firmware": {
+        "role": "analyzer",
+        "git": "b309e96",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "commands": [
+        "PARAM scalar_release_debounce_ms=40 scalar_max_gap_ms=60 scalar_max_duration_ms=400",
+        "SEQ DIAG off",
+        "SEQ start profile=TonalPulseScalar tries=10 freq=3300 band=2800-3800 dur=15 pulses=3 gap=20 hop=2800,3300,3800 mode=detail when=all verbose=1"
+      ],
+      "started": "2026-10-15T16:31:13",
+      "duration_s": 38,
+      "summary": {
+        "profile": "TonalPulseScalar",
+        "detector": "scalar_transient",
+        "complete": true,
+        "trial_results": {
+          "rejected": 5,
+          "expected": 5
+        },
+        "line_counts": {
+          "SEQ_TRIAL": 10,
+          "SEQ_SUMMARY": 1
+        },
+        "trials": "10",
+        "completed": "10",
+        "expected_trials": "5",
+        "early_trials": "0",
+        "late_trials": "0",
+        "miss_trials": "0",
+        "duplicate_trials": "0",
+        "unexpected_trials": "0",
+        "rejected_trials": "5",
+        "buffer_overrun_trials": "0",
+        "detector_accepted_trials": "5",
+        "detector_reject_trials": "5",
+        "pattern_valid_trials": "5",
+        "pattern_rejected_trials": "0",
+        "avg_dt_ms": "25",
+        "avg_strength": "6120.4",
+        "avg_conf": "1.00"
+      }
+    },
+    {
+      "name": "C_g20",
+      "file": "C_g20.b309e96.log",
+      "firmware": {
+        "role": "analyzer",
+        "git": "b309e96",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "commands": [
+        "PARAM scalar_release_debounce_ms=80 scalar_max_gap_ms=100 scalar_max_duration_ms=500 scalar_min_release_coverage_ms=40",
+        "SEQ DIAG off",
+        "SEQ start profile=TonalPulseScalar tries=10 freq=3300 band=2800-3800 dur=15 pulses=3 gap=20 hop=2800,3300,3800 mode=detail when=all verbose=1"
+      ],
+      "started": "2026-10-15T16:31:53",
+      "duration_s": 38,
+      "summary": {
+        "profile": "TonalPulseScalar",
+        "detector": "scalar_transient",
+        "complete": true,
+        "trial_results": {
+          "expected": 10
+        },
+        "line_counts": {
+          "SEQ_TRIAL": 10,
+          "SEQ_SUMMARY": 1
+        },
+        "trials": "10",
+        "completed": "10",
+        "expected_trials": "10",
+        "early_trials": "0",
+        "late_trials": "0",
+        "miss_trials": "0",
+        "duplicate_trials": "0",
+        "unexpected_trials": "0",
+        "rejected_trials": "0",
+        "buffer_overrun_trials": "0",
+        "detector_accepted_trials": "10",
+        "detector_reject_trials": "0",
+        "pattern_valid_trials": "10",
+        "pattern_rejected_trials": "0",
+        "avg_dt_ms": "25",
+        "avg_strength": "6122.5",
+        "avg_conf": "1.00"
+      }
+    },
+    {
+      "name": "C_g60",
+      "file": "C_g60.b309e96.log",
+      "firmware": {
+        "role": "analyzer",
+        "git": "b309e96",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "commands": [
+        "PARAM scalar_release_debounce_ms=80 scalar_max_gap_ms=100 scalar_max_duration_ms=500 scalar_min_release_coverage_ms=40",
+        "SEQ DIAG off",
+        "SEQ start profile=TonalPulseScalar tries=10 freq=3300 band=2800-3800 dur=15 pulses=3 gap=60 hop=2800,3300,3800 mode=detail when=all verbose=1"
+      ],
+      "started": "2026-10-15T16:32:33",
+      "duration_s": 38,
+      "summary": {
+        "profile": "TonalPulseScalar",
+        "detector": "scalar_transient",
+        "complete": true,
+        "trial_results": {
+          "rejected": 10
+        },
+        "line_counts": {
+          "SEQ_TRIAL": 10,
+          "SEQ_SUMMARY": 1
+        },
+        "trials": "10",
+        "completed": "10",
+        "expected_trials": "0",
+        "early_trials": "0",
+        "late_trials": "0",
+        "miss_trials": "0",
+        "duplicate_trials": "0",
+        "unexpected_trials": "0",
+        "rejected_trials": "10",
+        "buffer_overrun_trials": "0",
+        "detector_accepted_trials": "10",
+        "detector_reject_trials": "0",
+        "pattern_valid_trials": "0",
+        "pattern_rejected_trials": "10",
+        "avg_dt_ms": "-1",
+        "avg_strength": "6140.1",
+        "avg_conf": "0.00"
+      }
+    },
+    {
+      "name": "D_g60",
+      "file": "D_g60.b309e96.log",
+      "firmware": {
+        "role": "analyzer",
+        "git": "b309e96",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "commands": [
+        "PARAM scalar_release_debounce_ms=130 scalar_max_gap_ms=130 scalar_max_duration_ms=600 scalar_min_release_coverage_ms=40",
+        "SEQ DIAG off",
+        "SEQ start profile=TonalPulseScalar tries=10 freq=3300 band=2800-3800 dur=15 pulses=3 gap=60 hop=2800,3300,3800 mode=detail when=all verbose=1"
+      ],
+      "started": "2026-10-15T16:33:13",
+      "duration_s": 38,
+      "summary": {
+        "profile": "TonalPulseScalar",
+        "detector": "scalar_transient",
+        "complete": true,
+        "trial_results": {
+          "rejected": 10
+        },
+        "line_counts": {
+          "SEQ_TRIAL": 10,
+          "SEQ_SUMMARY": 1
+        },
+        "trials": "10",
+        "completed": "10",
+        "expected_trials": "0",
+        "early_trials": "0",
+        "late_trials": "0",
+        "miss_trials": "0",
+        "duplicate_trials": "0",
+        "unexpected_trials": "0",
+        "rejected_trials": "10",
+        "buffer_overrun_trials": "0",
+        "detector_accepted_trials": "10",
+        "detector_reject_trials": "0",
+        "pattern_valid_trials": "0",
+        "pattern_rejected_trials": "10",
+        "avg_dt_ms": "-1",
+        "avg_strength": "6104.3",
+        "avg_conf": "0.00"
+      }
+    },
+    {
+      "name": "A_p30_g10",
+      "file": "A_p30_g10.b309e96.log",
+      "firmware": {
+        "role": "analyzer",
+        "git": "b309e96",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "commands": [
+        "SEQ DIAG off",
+        "SEQ start profile=TonalPulseScalar tries=10 freq=3300 band=2800-3800 dur=30 pulses=3 gap=10 hop=2800,3300,3800 mode=detail when=all verbose=1"
+      ],
+      "started": "2026-10-15T16:34:25",
+      "duration_s": 37,
+      "summary": {
+        "profile": "TonalPulseScalar",
+        "detector": "scalar_transient",
+        "complete": true,
+        "trial_results": {
+          "expected": 10
+        },
+        "line_counts": {
+          "SEQ_TRIAL": 10,
+          "SEQ_SUMMARY": 1
+        },
+        "trials": "10",
+        "completed": "10",
+        "expected_trials": "10",
+        "early_trials": "0",
+        "late_trials": "0",
+        "miss_trials": "0",
+        "duplicate_trials": "0",
+        "unexpected_trials": "0",
+        "rejected_trials": "0",
+        "buffer_overrun_trials": "0",
+        "detector_accepted_trials": "10",
+        "detector_reject_trials": "0",
+        "pattern_valid_trials": "10",
+        "pattern_rejected_trials": "0",
+        "avg_dt_ms": "73",
+        "avg_strength": "11075.8",
+        "avg_conf": "1.00"
+      }
+    },
+    {
+      "name": "A_p30_g20",
+      "file": "A_p30_g20.b309e96.log",
+      "firmware": {
+        "role": "analyzer",
+        "git": "b309e96",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "commands": [
+        "SEQ DIAG off",
+        "SEQ start profile=TonalPulseScalar tries=10 freq=3300 band=2800-3800 dur=30 pulses=3 gap=20 hop=2800,3300,3800 mode=detail when=all verbose=1"
+      ],
+      "started": "2026-10-15T16:35:05",
+      "duration_s": 37,
+      "summary": {
+        "profile": "TonalPulseScalar",
+        "detector": "scalar_transient",
+        "complete": true,
+        "trial_results": {
+          "expected": 10
+        },
+        "line_counts": {
+          "SEQ_TRIAL": 10,
+          "SEQ_SUMMARY": 1
+        },
+        "trials": "10",
+        "completed": "10",
+        "expected_trials": "10",
+        "early_trials": "0",
+        "late_trials": "0",
+        "miss_trials": "0",
+        "duplicate_trials": "0",
+        "unexpected_trials": "0",
+        "rejected_trials": "0",
+        "buffer_overrun_trials": "0",
+        "detector_accepted_trials": "10",
+        "detector_reject_trials": "0",
+        "pattern_valid_trials": "10",
+        "pattern_rejected_trials": "0",
+        "avg_dt_ms": "62",
+        "avg_strength": "11133.2",
+        "avg_conf": "1.00"
+      }
+    },
+    {
+      "name": "A_p40_g20",
+      "file": "A_p40_g20.b309e96.log",
+      "firmware": {
+        "role": "analyzer",
+        "git": "b309e96",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "commands": [
+        "SEQ DIAG off",
+        "SEQ start profile=TonalPulseScalar tries=10 freq=3300 band=2800-3800 dur=40 pulses=3 gap=20 hop=2800,3300,3800 mode=detail when=all verbose=1"
+      ],
+      "started": "2026-10-15T16:35:44",
+      "duration_s": 37,
+      "summary": {
+        "profile": "TonalPulseScalar",
+        "detector": "scalar_transient",
+        "complete": true,
+        "trial_results": {
+          "rejected": 2,
+          "expected": 8
+        },
+        "line_counts": {
+          "SEQ_TRIAL": 10,
+          "SEQ_SUMMARY": 1
+        },
+        "trials": "10",
+        "completed": "10",
+        "expected_trials": "8",
+        "early_trials": "0",
+        "late_trials": "0",
+        "miss_trials": "0",
+        "duplicate_trials": "0",
+        "unexpected_trials": "0",
+        "rejected_trials": "2",
+        "buffer_overrun_trials": "0",
+        "detector_accepted_trials": "8",
+        "detector_reject_trials": "2",
+        "pattern_valid_trials": "8",
+        "pattern_rejected_trials": "0",
+        "avg_dt_ms": "24",
+        "avg_strength": "10856.1",
+        "avg_conf": "1.00"
+      }
+    },
+    {
+      "name": "C_p30_g40",
+      "file": "C_p30_g40.b309e96.log",
+      "firmware": {
+        "role": "analyzer",
+        "git": "b309e96",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "commands": [
+        "PARAM scalar_release_debounce_ms=80 scalar_max_gap_ms=100 scalar_max_duration_ms=500 scalar_min_release_coverage_ms=40",
+        "SEQ DIAG off",
+        "SEQ start profile=TonalPulseScalar tries=10 freq=3300 band=2800-3800 dur=30 pulses=3 gap=40 hop=2800,3300,3800 mode=detail when=all verbose=1"
+      ],
+      "started": "2026-10-15T16:36:23",
+      "duration_s": 38,
+      "summary": {
+        "profile": "TonalPulseScalar",
+        "detector": "scalar_transient",
+        "complete": true,
+        "trial_results": {
+          "expected": 10
+        },
+        "line_counts": {
+          "SEQ_TRIAL": 10,
+          "SEQ_SUMMARY": 1
+        },
+        "trials": "10",
+        "completed": "10",
+        "expected_trials": "10",
+        "early_trials": "0",
+        "late_trials": "0",
+        "miss_trials": "0",
+        "duplicate_trials": "0",
+        "unexpected_trials": "0",
+        "rejected_trials": "0",
+        "buffer_overrun_trials": "0",
+        "detector_accepted_trials": "10",
+        "detector_reject_trials": "0",
+        "pattern_valid_trials": "10",
+        "pattern_rejected_trials": "0",
+        "avg_dt_ms": "23",
+        "avg_strength": "11209.3",
+        "avg_conf": "1.00"
+      }
+    }
+  ]
+}

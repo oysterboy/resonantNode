@@ -100,6 +100,8 @@ void AnalyzerApp::initializeSequenceTest(const PendingSequenceStart& pending) {
     _sequenceTest.pulseRampMs = pending.pulseRampMs;
     strncpy(_sequenceTest.pulseHop, pending.pulseHop, sizeof(_sequenceTest.pulseHop) - 1);
     _sequenceTest.pulseHop[sizeof(_sequenceTest.pulseHop) - 1] = '\0';
+    _sequenceTest.bandLowHz = pending.bandLowHz;
+    _sequenceTest.bandHighHz = pending.bandHighHz;
     _sequenceTest.startupDelayMs = pending.startupDelayMs;
     _sequenceTest.reportSettleMs = pending.reportSettleMs == 0 ? 1 : pending.reportSettleMs;
     if (_sequenceTest.externalEmitter &&
@@ -153,7 +155,16 @@ void AnalyzerApp::configureSequenceDetection() {
     _freqBandStream.setSampleRateHz(_audioSource.sampleRateHz());
     _freqBandStream.setTargetFrequencyHz(_sequenceTest.toneHz);
     _freqBandStream.setFrequencyUpdateEverySamples(_sequenceTest.outputConfig.frequencyUpdateEverySamples);
+    _freqBandStream.setBand(_sequenceTest.bandLowHz, _sequenceTest.bandHighHz);
     _freqBandStream.resetState();
+    if (_sequenceTest.bandLowHz != 0) {
+        Serial.print("SEQ band: low_hz=");
+        Serial.print(_sequenceTest.bandLowHz);
+        Serial.print(" high_hz=");
+        Serial.print(_sequenceTest.bandHighHz);
+        Serial.print(" bin_spacing_hz=");
+        Serial.println(_freqBandStream.bandSpacingHz(), 1);
+    }
 }
 
 void AnalyzerApp::resetSequenceTestRunState() {

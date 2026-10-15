@@ -288,6 +288,8 @@ private:
         bool pulseRampSet = false;
         unsigned long pulseRampMs = 0;
         char pulseHop[40] = {};  // hop=F1,F2,... forwarded to PULSES; empty = none
+        unsigned long bandLowHz = 0;   // band=LOW-HIGH: FrequencyTarget = strongest bin in the band; 0 = off
+        unsigned long bandHighHz = 0;
         unsigned long startupDelayMs = 1000;
         unsigned long reportSettleMs = 500;
         char setupLabel[48] = TEST_SETUP_LABEL;
@@ -406,6 +408,8 @@ private:
         bool pulseRampSet = false;
         unsigned long pulseRampMs = 0;
         char pulseHop[40] = {};  // hop=F1,F2,... forwarded to PULSES; empty = none
+        unsigned long bandLowHz = 0;   // band=LOW-HIGH: FrequencyTarget = strongest bin in the band; 0 = off
+        unsigned long bandHighHz = 0;
         unsigned long reportSettleMs = 500;
         bool quiet = false;
         bool showDetails = false;

@@ -54,6 +54,31 @@ void FreqBandStream::setTargetFrequencyHz(unsigned long value) {
     updateCachedGoertzelCoefficients();
 }
 
+void FreqBandStream::setBand(unsigned long lowHz, unsigned long highHz) {
+    if (lowHz == 0 || highHz < lowHz) {
+        _bandLowHz = 0;
+        _bandHighHz = 0;
+    } else {
+        _bandLowHz = lowHz;
+        _bandHighHz = highHz;
+    }
+    _lastPeakBinHz = 0;
+    _samplesUntilNextFrequencyUpdate = 0;
+    updateCachedGoertzelCoefficients();
+}
+
+unsigned long FreqBandStream::bandLowHz() const {
+    return _bandLowHz;
+}
+
+unsigned long FreqBandStream::bandHighHz() const {
+    return _bandHighHz;
+}
+
+unsigned long FreqBandStream::lastPeakBinHz() const {
+    return _lastPeakBinHz;
+}
+
 void FreqBandStream::setSampleRateHz(unsigned long value) {
     _sampleRateHz = value == 0 ? 1 : value;
     updateCachedGoertzelCoefficients();
@@ -140,6 +165,29 @@ void FreqBandStream::updateCachedGoertzelCoefficients() {
     _cachedLowerCoeff = 2.0f * cosf(2.0f * PI * _cachedLowerFrequencyHz / sampleRateHz);
     _cachedUpperCoeff = 2.0f * cosf(2.0f * PI * _cachedUpperFrequencyHz / sampleRateHz);
     _cachedGoertzelValid = true;
+    rebuildBank();
+}
+
+// Band mode bank: guard bin, the band bins, guard bin, one bandSpacingHz() apart.
+void FreqBandStream::rebuildBank() {
+    _bankCount = 0;
+    if (_bandLowHz == 0) {
+        return;
+    }
+    const float spacing = bandSpacingHz();
+    const float sampleRateHz = static_cast<float>(_sampleRateHz == 0 ? 1 : _sampleRateHz);
+    if (spacing <= 0.0f) {
+        return;
+    }
+    float hz = static_cast<float>(_bandLowHz) - spacing;
+    const float stop = static_cast<float>(_bandHighHz) + spacing + 0.5f;
+    while (hz <= stop && _bankCount < kMaxBankBins) {
+        const float usable = hz < 1.0f ? 1.0f : hz;
+        _bankHz[_bankCount] = usable;
+        _bankCoeff[_bankCount] = 2.0f * cosf(2.0f * PI * usable / sampleRateHz);
+        ++_bankCount;
+        hz += spacing;
+    }
 }
 
 float FreqBandStream::computeGoertzelPowerFromCoeff(float coeff) const {
@@ -217,6 +265,16 @@ audio::FrequencyScore16 FreqBandStream::computeFrequencyScore() {
     _profileEnergyTotalUs += static_cast<unsigned long>(timebase::nowUs() - energyStartUs);
 #endif
 
+    if (_bankCount >= 3) {
+        const audio::FrequencyScore16 bandScore = computeBandScore();
+        _lastTotalEnergyValue = totalEnergy;
+#if FREQBAND_ENABLE_PROFILING
+        ++_profileComputeCalls;
+        _profileComputeTotalUs += static_cast<unsigned long>(timebase::nowUs() - profileStartUs);
+#endif
+        return bandScore;
+    }
+
     const float targetPower = computeGoertzelPowerAtFrequency(_cachedTargetFrequencyHz);
     const float lowerPower = computeGoertzelPowerAtFrequency(_cachedLowerFrequencyHz);
     const float upperPower = computeGoertzelPowerAtFrequency(_cachedUpperFrequencyHz);
@@ -239,6 +297,37 @@ audio::FrequencyScore16 FreqBandStream::computeFrequencyScore() {
     _profileComputeTotalUs += static_cast<unsigned long>(timebase::nowUs() - profileStartUs);
 #endif
 
+    return normalizedScore;
+}
+
+// Band mode: the strongest band bin is the target; its neighbours (one bin each
+// side, guards included) give the contrast, as the single target's did.
+audio::FrequencyScore16 FreqBandStream::computeBandScore() {
+    float power[kMaxBankBins] = {};
+    for (unsigned long i = 0; i < _bankCount; ++i) {
+        power[i] = computeGoertzelPowerFromCoeff(_bankCoeff[i]);
+    }
+    unsigned long peak = 1;
+    for (unsigned long i = 2; i + 1 < _bankCount; ++i) {
+        if (power[i] > power[peak]) {
+            peak = i;
+        }
+    }
+    const float targetPower = power[peak];
+    const float lowerPower = power[peak - 1];
+    const float upperPower = power[peak + 1];
+    const float neighborPower = (lowerPower + upperPower) * 0.5f;
+    const double targetAmplitude =
+        (2.0 * sqrt(static_cast<double>(fmaxf(targetPower, 0.0f)))) /
+        static_cast<double>(_windowSizeSamples);
+    const audio::FrequencyScore16 normalizedScore = audio::frequencyAmplitudeToScore(targetAmplitude);
+    _lastTargetBandValue = normalizedScore;
+    _lastTargetBandPowerValue = targetPower;
+    _lastLowerBandPowerValue = lowerPower;
+    _lastUpperBandPowerValue = upperPower;
+    _lastNeighborBandPowerValue = neighborPower;
+    _lastTargetBandContrastValue = normalizeContrastQuality(targetPower, neighborPower);
+    _lastPeakBinHz = static_cast<unsigned long>(_bankHz[peak] + 0.5f);
     return normalizedScore;
 }
 

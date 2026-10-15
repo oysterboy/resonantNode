@@ -620,6 +620,8 @@ void AnalyzerApp::handleUsbLine(const char* line) {
             _pendingSequenceStart.pulseRampSet = false;
             _pendingSequenceStart.pulseRampMs = 0;
             _pendingSequenceStart.pulseHop[0] = '\0';
+            _pendingSequenceStart.bandLowHz = 0;
+            _pendingSequenceStart.bandHighHz = 0;
             _pendingSequenceStart.quiet = false;
             _pendingSequenceStart.showDetails = true;
             _pendingSequenceStart.diagMode = AnalyzerApp::SequenceDiagMode::Off;
@@ -678,6 +680,23 @@ void AnalyzerApp::handleUsbLine(const char* line) {
                         Serial.print("ERR SEQ bad value token=");
                         Serial.println(token);
                         return;
+                    }
+                } else if (startsWithTokenIgnoreCase(token, "band=")) {
+                    const char* spec = token + 5;
+                    if (equalsIgnoreCase(spec, "off")) {
+                        _pendingSequenceStart.bandLowHz = 0;
+                        _pendingSequenceStart.bandHighHz = 0;
+                    } else {
+                        char* dash = nullptr;
+                        const unsigned long lo = strtoul(spec, &dash, 10);
+                        const unsigned long hi = (dash != nullptr && *dash == '-') ? strtoul(dash + 1, nullptr, 10) : 0UL;
+                        if (lo == 0 || hi < lo || hi > 7900UL) {
+                            Serial.print("ERR SEQ bad value token=");
+                            Serial.println(token);
+                            return;
+                        }
+                        _pendingSequenceStart.bandLowHz = lo;
+                        _pendingSequenceStart.bandHighHz = hi;
                     }
                 } else if (startsWithTokenIgnoreCase(token, "hop=")) {
                     const char* list = token + 4;

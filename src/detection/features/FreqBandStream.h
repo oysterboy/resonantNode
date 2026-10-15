@@ -34,6 +34,15 @@ public:
     void setSampleRateHz(unsigned long value);
     void setWindowSizeSamples(unsigned long value);
     void setFrequencyUpdateEverySamples(unsigned long value);
+    // Band mode (DET-013): FrequencyTarget becomes the strongest bin between
+    // lowHz and highHz (bins one bandSpacingHz() apart, plus a guard bin
+    // each side so the edge bins still have neighbours for the contrast).
+    // lowHz == 0 switches it off: the single configured target, as before.
+    void setBand(unsigned long lowHz, unsigned long highHz);
+    unsigned long bandLowHz() const;
+    unsigned long bandHighHz() const;
+    // Centre of the strongest band bin at the last update (0 outside band mode).
+    unsigned long lastPeakBinHz() const;
 
     void observeCenteredSample(int centeredSample, unsigned long sampleTimeMs = 0);
 
@@ -68,8 +77,17 @@ private:
     float computeGoertzelPowerFromCoeff(float coeff) const;
     void updateCachedGoertzelCoefficients();
     void pushSample(int sample);
+    audio::FrequencyScore16 computeBandScore();
+    void rebuildBank();
 
     unsigned long _targetFrequencyHz = runtime::kDefaultChirpFrequencyHz;
+    unsigned long _bandLowHz = 0;
+    unsigned long _bandHighHz = 0;
+    static constexpr unsigned long kMaxBankBins = 10;  // band bins plus two guards
+    float _bankHz[kMaxBankBins] = {};
+    float _bankCoeff[kMaxBankBins] = {};
+    unsigned long _bankCount = 0;
+    unsigned long _lastPeakBinHz = 0;
     unsigned long _sampleRateHz = 16000;
     unsigned long _windowSizeSamples = 64;
     unsigned long _frequencyUpdateEverySamples = 4;

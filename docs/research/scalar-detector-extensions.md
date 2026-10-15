@@ -114,6 +114,19 @@ to test the ceiling path; same scan with the boards facing each other.
 - Risk: a wide gap allowance makes speech/music syllables look like one
   signal with gaps. Test every setting against the silent / speech / music
   OBS of the baseline.
+- First results 2026-10-15 (3,300 Hz, 90 cm, up, 0.5 FS, 10 trials per cell; `bench/sessions/2026-10-15-pulses-timing`,
+  `-pulses-wide`, `-pulses-hist512`, `-trainparams-noise`):
+  - Default params accept 15 ms x3 trains with gaps up to 20 ms (the tail fills ~13 ms of a gap, a 15 ms pulse reads as a
+    ~31 ms island). 10 ms pulses are too short/weak at 0.5 FS. Gaps of 60 and 115 ms split the train: the detector closes the
+    event on the release debounce (10 ms); `scalar_max_gap_ms` only applies inside an open event.
+  - To bridge a gap the release debounce must exceed it (130 ms), and then the inspector runs after the debounce, so the
+    peak is older than the 256 ms FeatureHistory and the classes come out unknown (`pattern_rejected`). With
+    `-D FEATURE_HISTORY_BINS=512` (RAM +18.6 KB on the Analyzer) 15 ms x3 trains with 60 ms gaps are accepted 10/10 (215 ms event,
+    amp medium); 115 ms gaps give amp class weak (the 100 ms inspection window around the peak holds one pulse of three).
+  - The permissive params (debounce 130, max gap 130, max duration 600, coverage 40) add no false answers on speech or
+    music at 3,300 Hz (0/0 vs 1/0 with defaults, 50 windows each).
+  - Open: inspector window for long trains (DET-014/015), 10 ms pulses at a higher level, 2,000 Hz and lower with trains
+    (the point of the experiment: does a train bring the false answers at lower frequencies down?).
 - Test shape: T3 at 110 cm for pulse 10/15 ms x gap 5/20/60/115 ms, plus
   OBS silence/speech/music per accepted setting.
 

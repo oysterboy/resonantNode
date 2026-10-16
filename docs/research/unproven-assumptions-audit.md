@@ -4,7 +4,12 @@
 Status:  exploring (2026-10-16)
 Became:  section 1.1 -> step 5d of roadmap-0-steps.md (2026-10-16);
          the host-addressable items of sections 2.1, 2.5, 3.4, 3.6, 4.2, 4.4
-         landed the same day (see "Addressed 2026-10-16" at the end)
+         landed the same day (see "Addressed 2026-10-16" at the end);
+         later the same day, into roadmap-0-steps.md: 1.4 -> step 5e,
+         1.2 -> step 5f (gate as a measurement; the FieldState fork waits
+         in step 11), 1.5 -> step 6's first hour (hearing matrix),
+         2.2 / 2.3 / 3.3 -> step 5b open items, 3.5 -> step 5d (4),
+         2.4 -> step 8a, 3.1 / 3.2 / 3.7 -> step 8b, 4.1 / 4.3 -> step 7b
 Lab:     docs/lab/2026-10-15-bench-day.md, docs/lab/2026-10-16-bench-day.md,
          docs/lab/notes_lab.md (2026-05-26 slow circle, 2026-10-12 soak),
          docs/refactors/code-review-fixes.md (P4, R2-1, tier C)

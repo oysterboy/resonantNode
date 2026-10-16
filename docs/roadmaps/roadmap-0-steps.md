@@ -22,6 +22,9 @@ Renamed from roadmap-general.md on 2026-09-23 so it sorts first.
 How this file relates to the domain roadmaps and docs/refactors/: see
 README.md ("Who answers what", "Ordering rule").
 
+Status update 2026-10-16, later: steps 5e, 5f, 7a, 7b, 8b, 10a added from research/unproven-assumptions-audit.md
+and the roadmap items that had no step (ANA-004/005/007/008/009, DET-001/010, NODE-002/003, PAR-006/007); audit fold-ins
+into steps 4, 5b, 5d, 6, 8a, 11. The audit's hearing matrix (1.5) is step 6's first hour, not a step.
 Status update 2026-10-16: step 5d added (refractory vs the two-node exchange), gating step 6; from docs/research/unproven-assumptions-audit.md section 1.1.
 Status update 2026-10-15: step 5b rewritten as signal variation part 1 (before step 6, owner confirmed), new step 8a for part 2 (decisions/2026-10-15-signal-variation-inside-a-shared-band.md). DET-012 rescoped to the band's lower edge; ultrasound dropped.
 Status update 2026-10-14: step 5 decided (Scalar ships, Freq demo; decisions/2026-10-14-node-ships-tonalpulsescalar.md);
@@ -200,6 +203,9 @@ the previous gate open unless the step says it can run in parallel.
    Gate: five D-AMP nodes on one build, each passing SELFTEST (step 3b);
    docs name D-AMP as the node hardware. (Default board and piezo fallback envs already land in
    step 2.)
+   Fold-in: NODE-003 (hardcoded defaults live with their owner:
+   DetectionProfile, BehaviorProfile, output; the same firmware on every
+   node) is this gate restated; close it here.
 
 4a. [DONE 2026-10-14] Status LED on D-AMP: 1 flash on detect, 2 on emit. (issue #29,
    sub-issue of #21)
@@ -311,6 +317,10 @@ the previous gate open unless the step says it can run in parallel.
    DIAG hearing E2 as Emitter (E3's listening health, then the E2 -> E3 direction), then the two-Node chain; noise on
    the Node build; the idle voice vs a two-node exchange (`RB BEHAV idle=0` not taking effect, `PARAM SET` on the Node
    not verified); an audio-health field in the Node's `RB STATUS`; 5c SELFTEST with five boards.
+   Also open from the audit (research/unproven-assumptions-audit.md): 3.3 the Node quiet gate (400) was derived from a
+   First Difference artefact, re-measure it on the DC blocker; 2.2 speech/music OBS on the Node build (the contrast and
+   amp limits rest on one room, one phone, two days); 2.3 hop gap vs a dry room: output.hop_gap_ms and the scalar
+   gap/debounce params have no consistency check, decide whether the room tail is part of the signal contract.
    Order inside: DET-013 profile + cheap pass -> OUT-005 on the Emitter ->
    DET-013 bank + contrast decision -> DET-011 gaps -> DET-014 if needed
    -> OUT-005 on the Node + BEH-005. DET-012 (band lower edge) is measured
@@ -345,20 +355,56 @@ the previous gate open unless the step says it can run in parallel.
    chain and 400 does not, decide the fork in docs/decisions/: refractory
    derived from the emission span plus the reply latency, a queued verdict
    through Refractory, or a measured value written into
-   BehaviorProfile.h (tuning pass, not a drive-by).
+   BehaviorProfile.h (tuning pass, not a drive-by); (4) own-emit tail
+   (audit 3.5): the 60 ms tail was measured once on a 100 ms plain tone;
+   for hop trains finished() fires at render end, up to ~24 ms before the
+   air, and the band stream is not fed while suppressed, so check that the
+   reply's first Goertzel window is clean.
    Gate: a two-Node exchange of at least three answers in a row on the
    shipped build in a bench session, with the Behavior values it ran on
    in the session README; a decision file if a default changes.
    Runs after 5b's hearing-direction item; in parallel with 5c.
+
+5e. [TODO] Node tone level with the network signal: 0.3 FS or 0.5 FS.
+   (no issue yet)
+   Where: OUT-001 (roadmap-output.md); decisions/2026-10-09-damp-tone-
+   level-0p3.md, to revisit; research/unproven-assumptions-audit.md 1.4.
+   Why before step 6: every 5b battery ran the Emitter at 0.5 FS; the Node
+   ships 0.3 FS (RuntimeDefaults.h, no override for env:esp32dev), and
+   facing up at 110 cm 0.3 gave 27/50 where 0.5 gave 50/50 (2026-10-14).
+   A hop train at 0.3 FS has been heard once, one direction, one spacing.
+   Gate: hop T3 >= 9/10 at 60-110 cm at the level the Node ships, or a
+   decision file changing the default. One bench cell; runs with 5d.
+
+5f. [TODO] Write step 6's third question as a measurement. (no issue yet)
+   Where: BEH-003 territory (roadmap-behavior.md); audit 1.2.
+   Why before step 6: Behavior stores FieldState and never reads it; there
+   is no response probability and no damping beyond refractory, so "does
+   the network settle or run away" has no knob behind it and step 6 cannot
+   pass or fail on it. Doc only, no code: whether FieldState should gate a
+   response, or its plumbing go, is decided after the trial has numbers.
+   Gate: step 6's gate names the counts to record (answers per minute per
+   node, longest chain, time to quiet after a kick) and a decisions/ file
+   says the pass/fail on them is deferred to after the first session.
 
 6. STATUS baseline and 5-node field trial, on D-AMP. (issue #16)
    Where: NODE-001 (STATUS baseline, prerequisite), NODE-008 (5-node trial),
    roadmap-node.md.
    Why: the product is several nodes hearing each other; nothing verified
    so far exercises that.
-   Prerequisite: step 5d closed (a two-Node chain sustains on the shipped
-   Behavior values).
-   Gate: a recorded 5-node session with STATUS from every node.
+   Prerequisites: step 5d closed (a two-Node chain sustains on the shipped
+   Behavior values); 5e (Node level); 5f (the gate below written).
+   First hour of the session, before the trial (audit 1.5): a hearing
+   matrix, each node emits in turn and the other four log, 5 x 4 cells.
+   It names the reference mic and says whether a per-node threshold
+   offset (a param) is needed; a board failing its row is swapped, not
+   tuned around. E2 and E3 already differ (E3 forms no candidate for E2's
+   trains), and SELFTEST passing says nothing about a board as a listener.
+   NODE-001's STATUS line also covers PAR-012: which values are active,
+   which are defaults, which were changed at runtime.
+   Gate: a recorded 5-node session with STATUS from every node, the
+   hearing matrix in the same session, and the third question recorded as
+   the counts 5f names.
 
 7. Off-target tests and CI. (issues #9, #10)
    Where: NODE-006 (host test env + replay harness), NODE-007 (CI build
@@ -368,6 +414,35 @@ the previous gate open unless the step says it can run in parallel.
    Gate: `pio test -e native` runs at least one replayed detection
    sequence; CI builds every env on push.
    Can run any time, in parallel with steps 1-6; must land before step 8.
+   NODE-006 landed in 5b (dd666ae, `pio test -e native-test`); the CI half
+   is what is left.
+
+7a. [TODO] Analyzer diagnostics hygiene. (no issue yet; ANA-004 has the
+   research note)
+   Where: ANA-004 (report task: SEQ DIAG detail drops ~21 DMA buffers per
+   detected trial), ANA-005 (boot control claim never sent), ANA-007
+   (trial dt anchored on a late-polled marker), ANA-008 (RAW buffer
+   sizing), ANA-009 (invalid windows print available_start/end = 0);
+   roadmap-detection.md, research/freertos-tasks.md.
+   Why here: step 8's gate is T2/T3 diffs measured with the Analyzer;
+   drops, a misleading dt and a misleading inspect print corrupt that
+   comparison (ANA-009 already misled two analyses). Analyzer only,
+   touches no Node code; can run during steps 1-6 on quiet bench days.
+   Gate: a detail + diagnostics run with 0 dropped buffers on detected
+   trials; dt anchored on the sent CHIRP; RAW reports what it allocated;
+   invalid windows print the held range or na; the claim sent or its
+   message dropped. Before step 8.
+
+7b. [TODO] Tests that exercise the shipped gates. (extend #9)
+   Where: NODE-006 follow-up (roadmap-node.md); audit 4.1, 4.3.
+   Why: test_replay_corpus compares only the amp path; FrequencyTarget and
+   FrequencyContrast, which decide, go through float Goertzel and are
+   never compared host vs board, and the contrast gate is a hard threshold
+   on a P75. The on-device tests run with every shipped gate off;
+   ResonantBehavior has one host test (5d) and nothing else.
+   Gate: captures carry the frequency columns and the replay compares
+   them; one on-device test with the shipped scalar profile; the CSV
+   header records PCM_PREPROCESS_MODE_VALUE. With step 7, before step 8.
 
 8. Phase 7c: fold OccurrenceEvaluator into OccurrenceInspector, delete the
    correlation queue. (issue #11)
@@ -381,8 +456,27 @@ the previous gate open unless the step says it can run in parallel.
    Why here: the shape inspectors should land on the folded inspector of
    step 8, not be migrated by it. OUT-006 and BEH-006 touch no detection
    code and may start right after step 6.
+   Fold-in: audit 2.4, the two-layer leak (sidelobes from an 800 Hz
+   layer, speaker harmonics at 4 x 800 Hz, Strength16 saturating at
+   800-1000 Hz where the speaker is 4-8x louder) has no bench cell;
+   measure it as OUT-006's first item, before any renderer work.
    Gate: per item; a two-layer signal with a low aesthetic layer detected
    as well as the detection layer alone, with the leak measured.
+
+8b. [TODO] Detection follow-up bugs, on the folded inspector. (no issue
+   yet; or fold into #11)
+   Where: DET-010 (peak-centered window inspected before it has arrived),
+   DET-001 (T2 hardware confirmation of the report freeze), audit 3.1
+   (85-89 ms occurrences rejected by construction), 3.2 (Freq contrast
+   gate vacuous; owner's call), 3.7 (a continuous tone holds the scalar
+   detector open, strongPeakThreshold unreachable, getWindow puts 2 KB on
+   the loop stack, result-queue overflow counters Analyzer-only);
+   roadmap-detection.md.
+   Why here: all live in inspector / evaluator code that step 8 rewrites;
+   fixing them first means migrating them. DET-010 and 3.2 are Freq only
+   and close as moot if step 9 drops the demo detector.
+   Gate: each item fixed with a host fixture or named closed-as-moot; T2/T3
+   unchanged. After step 8, with or before 8a's shape inspectors.
 
 9. Phase 5d, then Phase 6: detector family as a build flag, then the
    SimpleThresholdDetector (MVP) family. (issue #12)
@@ -404,10 +498,28 @@ the previous gate open unless the step says it can run in parallel.
    Gate: nothing under src/detection/ includes src/modes/; one param path
    per knob; lib/ParamRegistry/ includes nothing from src/.
 
+10a. [TODO] Boundary map first, then Behavior params on the registry.
+   (no issue yet; or fold into #13-#15)
+   Where: NODE-002 (roadmap-node.md: which code paths are Detection,
+   Behavior, Output, Analyzer, Node glue), PAR-006 (BehaviorTuning +
+   behavior.* params), the rest of PAR-007 (detection params not yet
+   registered); roadmap-param-config.md.
+   Why here: PAR-015 retires RB BEHAV onto the registry and needs a
+   BehaviorTuning to land on; the 5d finding (`RB BEHAV idle=0` not
+   taking effect, `PARAM SET` on the Node unverified) is the running cost
+   of the two paths. NODE-002 is the half-day of reading step 10 starts
+   with.
+   Gate: the map in docs/; behavior.* and detection.* registered; RB BEHAV
+   gone. Inside step 10, after PAR-016, before PAR-015.
+
 11. [DEFERRED] Everything else until step 6 has run: PAR-010/011
    persistence, OutputStatus / OutputProfile (OUT-002..004), BehaviorRuntime
    (BEH-003/004), CommandRouter and the rest of NODE-005, VEKTOR (VEK-*),
-   ParamRegistry as its own repo (PAR-017).
+   ParamRegistry as its own repo (PAR-017), PAR-008 output params, PAR-009
+   drift params, PAR-013 remote param update, PAR-014 config stays
+   separate, ANA-002 multi-occurrence patterns. Whether FieldState gates a
+   response or its plumbing goes (audit 1.2) is decided here on step 6's
+   counts.
 ```
 
 ## Still open, not sequenced

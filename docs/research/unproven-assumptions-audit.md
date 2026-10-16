@@ -2,6 +2,7 @@
 
 ```text
 Status:  exploring (2026-10-16)
+Became:  section 1.1 -> step 5d of roadmap-0-steps.md (2026-10-16)
 Lab:     docs/lab/2026-10-15-bench-day.md, docs/lab/2026-10-16-bench-day.md,
          docs/lab/notes_lab.md (2026-05-26 slow circle, 2026-10-12 soak),
          docs/refactors/code-review-fixes.md (P4, R2-1, tier C)
@@ -27,6 +28,8 @@ measurements that the docs flag but the code does not enforce.
 ## 1. The field trial (step 6, NODE-008)
 
 ### 1.1 The two-node exchange is blocked by the refractory default (verified)
+
+-> promoted to roadmap-0-steps.md step 5d, 2026-10-16
 
 `refractoryAfterEmitMs = 400` and `waitAfterHeardMs = 100`
 (`src/behavior/BehaviorProfile.h`). A verdict that arrives while Behavior

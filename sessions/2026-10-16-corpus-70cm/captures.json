@@ -3,7 +3,7 @@
   "setup": {
     "distance_cm": 70.0,
     "orientation": "mic and speaker facing up, bench",
-    "notes": "pos1 = bandcheck-70cm placement (evening), E2 5ba805d: first hop captures via RAW pulses/gap/hop; E3 reset over USB after the E2 flash hung its control link"
+    "notes": "pos1; E3 emitter f2dccc2 with sweep="
   },
   "captures": [
     {
@@ -608,6 +608,251 @@
         "tone_amp": 22375,
         "peak_abs": 46179,
         "env_len_ms": 115
+      }
+    },
+    {
+      "label": "sweep2950to3950_100ms_pos1",
+      "rep": 0,
+      "file": "sweep2950to3950_100ms_pos1_r0.csv",
+      "wav": "sweep2950to3950_100ms_pos1_r0.wav",
+      "started": "2026-10-16T17:00:02",
+      "firmware": {
+        "role": "analyzer",
+        "git": "5ba805d",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "fields": [
+        "ms",
+        "amp",
+        "pcm"
+      ],
+      "raw": {
+        "sr": 16000,
+        "f": 2950,
+        "dur": 100,
+        "sweep": 3950,
+        "pre_ms": 50,
+        "post_ms": 250,
+        "mode": "both",
+        "emit_seen": 1,
+        "emit_start_ms": 3463,
+        "emit_done_ms": 3559,
+        "pre_samples": 256,
+        "post_samples": 4000
+      },
+      "summary": {
+        "id": 1,
+        "requested": 4800,
+        "captured": 4256,
+        "unused_capacity": 1744,
+        "max_pcm_abs": 68884,
+        "max_amp": 8672,
+        "raw_mean": 63.0,
+        "raw_abs_mean": 8976.5,
+        "raw_min": -67125,
+        "raw_max": 68884,
+        "baseline": -495.0
+      },
+      "check": {
+        "samples": 4256,
+        "tone_amp": 101,
+        "peak_abs": 68884,
+        "env_len_ms": 70
+      }
+    },
+    {
+      "label": "sweep2950to3950_100ms_pos1",
+      "rep": 1,
+      "file": "sweep2950to3950_100ms_pos1_r1.csv",
+      "wav": "sweep2950to3950_100ms_pos1_r1.wav",
+      "started": "2026-10-16T17:00:08",
+      "firmware": {
+        "role": "analyzer",
+        "git": "5ba805d",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "fields": [
+        "ms",
+        "amp",
+        "pcm"
+      ],
+      "raw": {
+        "sr": 16000,
+        "f": 2950,
+        "dur": 100,
+        "sweep": 3950,
+        "pre_ms": 50,
+        "post_ms": 250,
+        "mode": "both",
+        "emit_seen": 1,
+        "emit_start_ms": 10154,
+        "emit_done_ms": 10251,
+        "pre_samples": 296,
+        "post_samples": 4000
+      },
+      "summary": {
+        "id": 2,
+        "requested": 4800,
+        "captured": 4296,
+        "unused_capacity": 1704,
+        "max_pcm_abs": 77607,
+        "max_amp": 9714,
+        "raw_mean": 43.9,
+        "raw_abs_mean": 9072.6,
+        "raw_min": -77607,
+        "raw_max": 77217,
+        "baseline": -504.3
+      },
+      "check": {
+        "samples": 4296,
+        "tone_amp": 801,
+        "peak_abs": 77607,
+        "env_len_ms": 50
+      }
+    },
+    {
+      "label": "sweep2950to3950_100ms_pos1",
+      "rep": 2,
+      "file": "sweep2950to3950_100ms_pos1_r2.csv",
+      "wav": "sweep2950to3950_100ms_pos1_r2.wav",
+      "started": "2026-10-16T17:00:16",
+      "firmware": {
+        "role": "analyzer",
+        "git": "5ba805d",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "fields": [
+        "ms",
+        "amp",
+        "pcm"
+      ],
+      "raw": {
+        "sr": 16000,
+        "f": 2950,
+        "dur": 100,
+        "sweep": 3950,
+        "pre_ms": 50,
+        "post_ms": 250,
+        "mode": "both",
+        "emit_seen": 1,
+        "emit_start_ms": 17295,
+        "emit_done_ms": 17391,
+        "pre_samples": 256,
+        "post_samples": 4000
+      },
+      "summary": {
+        "id": 3,
+        "requested": 4800,
+        "captured": 4256,
+        "unused_capacity": 1744,
+        "max_pcm_abs": 75985,
+        "max_amp": 9496,
+        "raw_mean": 43.0,
+        "raw_abs_mean": 8588.8,
+        "raw_min": -75985,
+        "raw_max": 75500,
+        "baseline": -474.3
+      },
+      "check": {
+        "samples": 4256,
+        "tone_amp": 754,
+        "peak_abs": 75985,
+        "env_len_ms": 45
+      }
+    },
+    {
+      "label": "sweep2950to3950_150ms_pos1",
+      "rep": 0,
+      "file": "sweep2950to3950_150ms_pos1_r0.csv",
+      "wav": "sweep2950to3950_150ms_pos1_r0.wav",
+      "started": "2026-10-16T17:00:26",
+      "firmware": null,
+      "fields": [
+        "ms",
+        "amp",
+        "pcm"
+      ],
+      "raw": {
+        "sr": 16000,
+        "f": 2950,
+        "dur": 150,
+        "sweep": 3950,
+        "pre_ms": 50,
+        "post_ms": 300,
+        "mode": "both",
+        "emit_seen": 1,
+        "emit_start_ms": 3646,
+        "emit_done_ms": 3793,
+        "pre_samples": 252,
+        "post_samples": 4800
+      },
+      "summary": {
+        "id": 1,
+        "requested": 5600,
+        "captured": 5052,
+        "unused_capacity": 948,
+        "max_pcm_abs": 75903,
+        "max_amp": 9518,
+        "raw_mean": -82.0,
+        "raw_abs_mean": 10741.0,
+        "raw_min": -75886,
+        "raw_max": 75903,
+        "baseline": 261.9
+      },
+      "check": {
+        "samples": 5052,
+        "tone_amp": 433,
+        "peak_abs": 75903,
+        "env_len_ms": 70
+      }
+    },
+    {
+      "label": "sweep2950to3950_150ms_pos1",
+      "rep": 1,
+      "file": "sweep2950to3950_150ms_pos1_r1.csv",
+      "wav": "sweep2950to3950_150ms_pos1_r1.wav",
+      "started": "2026-10-16T17:00:34",
+      "firmware": null,
+      "fields": [
+        "ms",
+        "amp",
+        "pcm"
+      ],
+      "raw": {
+        "sr": 16000,
+        "f": 2950,
+        "dur": 150,
+        "sweep": 3950,
+        "pre_ms": 50,
+        "post_ms": 300,
+        "mode": "both",
+        "emit_seen": 1,
+        "emit_start_ms": 11567,
+        "emit_done_ms": 11713,
+        "pre_samples": 256,
+        "post_samples": 4800
+      },
+      "summary": {
+        "id": 2,
+        "requested": 5600,
+        "captured": 5056,
+        "unused_capacity": 944,
+        "max_pcm_abs": 74104,
+        "max_amp": 9296,
+        "raw_mean": 5.7,
+        "raw_abs_mean": 10814.9,
+        "raw_min": -74104,
+        "raw_max": 73929,
+        "baseline": 269.9
+      },
+      "check": {
+        "samples": 5056,
+        "tone_amp": 476,
+        "peak_abs": 74104,
+        "env_len_ms": 75
       }
     }
   ]

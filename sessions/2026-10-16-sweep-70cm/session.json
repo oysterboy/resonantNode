@@ -1,0 +1,214 @@
+{
+  "purpose": "sweep check at 70 cm: 100 ms glide 2950->3950 and 3950->2950 inside one chirp, plain 3200 chirp reference, band 2950-3950",
+  "created": "2026-10-16T16:56:23",
+  "setup": {
+    "distance_cm": 70.0,
+    "orientation": "mic and speaker facing up, bench",
+    "emitter_fw": "",
+    "notes": [
+      "E3 Emitter with sweep= at 0.5 FS; E2 5ba805d, E3 emitter build f2dccc2 with sweep= (flashed with BOOT held); boards at the bandcheck-70cm placement"
+    ]
+  },
+  "runs": [
+    {
+      "name": "sweep_up",
+      "file": "sweep_up.5ba805d.log",
+      "firmware": {
+        "role": "analyzer",
+        "git": "5ba805d",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "commands": [
+        "SEQ DIAG on",
+        "SEQ start profile=TonalPulseScalar tries=10 freq=2950 dur=100 sweep=3950 band=2950-3950 mode=detail when=all verbose=1"
+      ],
+      "started": "2026-10-16T16:56:29",
+      "duration_s": 37,
+      "summary": {
+        "profile": "TonalPulseScalar",
+        "detector": "scalar_transient",
+        "complete": true,
+        "trial_results": {
+          "rejected": 10
+        },
+        "line_counts": {
+          "SEQ_TRIAL": 10,
+          "SEQ_INSPECT": 20,
+          "SEQ_SOURCE": 10,
+          "SEQ_SOURCE_CORE": 10,
+          "SEQ_SOURCE_SPEC": 10,
+          "SEQ_EXPLAIN": 10,
+          "SEQ_SUMMARY": 1
+        },
+        "trials": "10",
+        "completed": "10",
+        "expected_trials": "0",
+        "early_trials": "0",
+        "late_trials": "0",
+        "miss_trials": "0",
+        "duplicate_trials": "0",
+        "unexpected_trials": "0",
+        "rejected_trials": "10",
+        "buffer_overrun_trials": "0",
+        "detector_accepted_trials": "10",
+        "detector_reject_trials": "0",
+        "pattern_valid_trials": "0",
+        "pattern_rejected_trials": "10",
+        "avg_dt_ms": "-1",
+        "avg_strength": "6632.4",
+        "avg_conf": "0.00"
+      }
+    },
+    {
+      "name": "sweep_down",
+      "file": "sweep_down.5ba805d.log",
+      "firmware": {
+        "role": "analyzer",
+        "git": "5ba805d",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "commands": [
+        "SEQ DIAG on",
+        "SEQ start profile=TonalPulseScalar tries=10 freq=3950 dur=100 sweep=2950 band=2950-3950 mode=detail when=all verbose=1"
+      ],
+      "started": "2026-10-16T16:57:08",
+      "duration_s": 37,
+      "summary": {
+        "profile": "TonalPulseScalar",
+        "detector": "scalar_transient",
+        "complete": true,
+        "trial_results": {
+          "rejected": 10
+        },
+        "line_counts": {
+          "SEQ_TRIAL": 10,
+          "SEQ_INSPECT": 19,
+          "SEQ_SOURCE": 10,
+          "SEQ_SOURCE_CORE": 10,
+          "SEQ_SOURCE_SPEC": 10,
+          "SEQ_EXPLAIN": 10,
+          "SEQ_SUMMARY": 1
+        },
+        "trials": "10",
+        "completed": "10",
+        "expected_trials": "0",
+        "early_trials": "0",
+        "late_trials": "0",
+        "miss_trials": "0",
+        "duplicate_trials": "0",
+        "unexpected_trials": "0",
+        "rejected_trials": "10",
+        "buffer_overrun_trials": "0",
+        "detector_accepted_trials": "9",
+        "detector_reject_trials": "1",
+        "pattern_valid_trials": "0",
+        "pattern_rejected_trials": "9",
+        "avg_dt_ms": "-1",
+        "avg_strength": "5716.5",
+        "avg_conf": "0.00"
+      }
+    },
+    {
+      "name": "sweep_up_150",
+      "file": "sweep_up_150.5ba805d.log",
+      "firmware": {
+        "role": "analyzer",
+        "git": "5ba805d",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "commands": [
+        "SEQ DIAG on",
+        "SEQ start profile=TonalPulseScalar tries=10 freq=2950 dur=150 sweep=3950 band=2950-3950 mode=detail when=all verbose=1"
+      ],
+      "started": "2026-10-16T16:57:48",
+      "duration_s": 37,
+      "summary": {
+        "profile": "TonalPulseScalar",
+        "detector": "scalar_transient",
+        "complete": true,
+        "trial_results": {
+          "rejected": 10
+        },
+        "line_counts": {
+          "SEQ_TRIAL": 10,
+          "SEQ_INSPECT": 19,
+          "SEQ_SOURCE": 10,
+          "SEQ_SOURCE_CORE": 10,
+          "SEQ_SOURCE_SPEC": 10,
+          "SEQ_EXPLAIN": 10,
+          "SEQ_SUMMARY": 1
+        },
+        "trials": "10",
+        "completed": "10",
+        "expected_trials": "0",
+        "early_trials": "0",
+        "late_trials": "0",
+        "miss_trials": "0",
+        "duplicate_trials": "0",
+        "unexpected_trials": "0",
+        "rejected_trials": "10",
+        "buffer_overrun_trials": "0",
+        "detector_accepted_trials": "9",
+        "detector_reject_trials": "1",
+        "pattern_valid_trials": "0",
+        "pattern_rejected_trials": "9",
+        "avg_dt_ms": "-1",
+        "avg_strength": "7572.6",
+        "avg_conf": "0.00"
+      }
+    },
+    {
+      "name": "chirp3200_band",
+      "file": "chirp3200_band.5ba805d.log",
+      "firmware": {
+        "role": "analyzer",
+        "git": "5ba805d",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "commands": [
+        "SEQ DIAG on",
+        "SEQ start profile=TonalPulseScalar tries=10 freq=3200 band=2950-3950 mode=detail when=all verbose=1"
+      ],
+      "started": "2026-10-16T16:58:27",
+      "duration_s": 37,
+      "summary": {
+        "profile": "TonalPulseScalar",
+        "detector": "scalar_transient",
+        "complete": true,
+        "trial_results": {
+          "expected": 10
+        },
+        "line_counts": {
+          "SEQ_TRIAL": 10,
+          "SEQ_INSPECT": 20,
+          "SEQ_SOURCE": 10,
+          "SEQ_SOURCE_CORE": 10,
+          "SEQ_SOURCE_SPEC": 10,
+          "SEQ_EXPLAIN": 10,
+          "SEQ_SUMMARY": 1
+        },
+        "trials": "10",
+        "completed": "10",
+        "expected_trials": "10",
+        "early_trials": "0",
+        "late_trials": "0",
+        "miss_trials": "0",
+        "duplicate_trials": "0",
+        "unexpected_trials": "0",
+        "rejected_trials": "0",
+        "buffer_overrun_trials": "0",
+        "detector_accepted_trials": "10",
+        "detector_reject_trials": "0",
+        "pattern_valid_trials": "10",
+        "pattern_rejected_trials": "0",
+        "avg_dt_ms": "18",
+        "avg_strength": "4535.7",
+        "avg_conf": "1.00"
+      }
+    }
+  ]
+}

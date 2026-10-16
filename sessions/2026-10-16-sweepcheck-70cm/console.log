@@ -1,0 +1,11 @@
+[16:48:26] boot banner: {'role': 'analyzer', 'git': '5ba805d', 'version': '0.4.0', 'board': 'damp'}
+[16:48:28] warmup: OK EMIT CHIRP
+[16:48:28] start sweep_up: SEQ DIAG on ; SEQ start profile=TonalPulseScalar tries=10 freq=2950 dur=100 sweep=3950 band=2950-3950 mode=detail when=all verbose=1
+[16:49:06] done sweep_up (37s): complete=True results={'expected': 10}
+[16:49:08] start sweep_down: SEQ DIAG on ; SEQ start profile=TonalPulseScalar tries=10 freq=3950 dur=100 sweep=2950 band=2950-3950 mode=detail when=all verbose=1
+[16:49:45] done sweep_down (37s): complete=True results={'expected': 10}
+[16:49:47] start sweep_up_150: SEQ DIAG on ; SEQ start profile=TonalPulseScalar tries=10 freq=2950 dur=150 sweep=3950 band=2950-3950 mode=detail when=all verbose=1
+[16:50:24] done sweep_up_150 (37s): complete=True results={'expected': 10}
+[16:50:27] start chirp3200_band: SEQ DIAG on ; SEQ start profile=TonalPulseScalar tries=10 freq=3200 band=2950-3950 mode=detail when=all verbose=1
+[16:51:04] done chirp3200_band (37s): complete=True results={'expected': 10}
+[16:51:10] session updated, index rebuilt

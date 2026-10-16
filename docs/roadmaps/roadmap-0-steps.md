@@ -332,6 +332,10 @@ the previous gate open unless the step says it can run in parallel.
    (notes_lab.md 2026-05-26, piezo slow circle) ran with refractory 0 and
    wait 200. A trial on these defaults measures the refractory, not the
    network.
+   Host test: test/test_behavior_refractory (`pio test -e
+   native-test-behavior`) pins the arithmetic: the reply lands 285-365 ms
+   after the own train on the shipped values and is dropped; consumed with
+   refractory 0.
    Order inside: (1) measure the E2 -> E3 direction (E2 Emitter, E3
    Analyzer, hop5 in E2's order, 10 trials with DIAG), the open item of
    5b; (2) nodepair.py with `RB BEHAV refractory=0` on both Nodes, then

@@ -1127,14 +1127,21 @@ It does not decide artistic modulation.
 
 Detection tolerance must be configured separately from emitted-output variation.
 
-Example:
+Example (2026-10-16: the detector watches a bank of bins, 250 Hz apart,
+and an off-bin tone fails the contrast gate, so emitted variation moves
+between bins of the network band, it does not deviate continuously around
+a centre; `decisions/2026-10-16-network-band-2950-3950.md`):
 
 ```text
-emit center:              3200 Hz
-emit deviation:           ±120 Hz
-detection accepted band:  3000–3400 Hz
-dense field behavior:     shorten beep and increase frequency spread
+network band (detection):  2950-3950 Hz, bins 2950 / 3200 / 3450 / 3700 / 3950
+emit variation:            which bins, in what order, how many steps, pulse and gap length
+                           (per node: the start bin; over time: the rest), always on the bins
+dense field behavior:      shorten the train and spread it over more bins
 ```
+
+A sweep that glides between bins is an aesthetic-layer shape (OUT-006) or
+waits for a contrast definition that follows the peak (DET-015); with the
+current gate it is rejected (lab note 2026-10-16 section 10).
 
 ---
 

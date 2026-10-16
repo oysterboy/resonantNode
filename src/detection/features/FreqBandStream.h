@@ -26,6 +26,14 @@ Does NOT:
 - own occurrence assembly
 - own retrospective occurrence-window probing
 */
+namespace freqband {
+// Band bins between lowHz and highHz inclusive, one spacingHz apart; 0 when
+// the band is off (lowHz 0), inverted or the spacing is 0.
+constexpr unsigned long bandBinCountFor(unsigned long lowHz, unsigned long highHz, unsigned long spacingHz) {
+    return (lowHz == 0 || highHz < lowHz || spacingHz == 0) ? 0UL : (highHz - lowHz) / spacingHz + 1UL;
+}
+}  // namespace freqband
+
 class FreqBandStream {
 public:
     void resetState();
@@ -38,9 +46,16 @@ public:
     // lowHz and highHz (bins one bandSpacingHz() apart, plus a guard bin
     // each side so the edge bins still have neighbours for the contrast).
     // lowHz == 0 switches it off: the single configured target, as before.
+    // A band wider than the bank holds (kMaxBandBins bins) is clamped at
+    // its high edge, so bandHighHz() always names the last bin that is
+    // actually watched; the Node derives its hop grid from these getters.
     void setBand(unsigned long lowHz, unsigned long highHz);
     unsigned long bandLowHz() const;
     unsigned long bandHighHz() const;
+    // Band bins between bandLowHz() and bandHighHz() inclusive, one
+    // bandSpacingHz() apart (0 outside band mode). Guards not counted.
+    unsigned long bandBinCount() const;
+    static unsigned long bandBinCountFor(unsigned long lowHz, unsigned long highHz, unsigned long spacingHz);
     // Centre of the strongest band bin at the last update (0 outside band mode).
     unsigned long lastPeakBinHz() const;
 
@@ -83,13 +98,17 @@ private:
     unsigned long _targetFrequencyHz = runtime::kDefaultChirpFrequencyHz;
     unsigned long _bandLowHz = 0;
     unsigned long _bandHighHz = 0;
+public:
     static constexpr unsigned long kMaxBankBins = 10;  // band bins plus two guards
+    static constexpr unsigned long kMaxBandBins = kMaxBankBins - 2;
+
+private:
     float _bankHz[kMaxBankBins] = {};
     float _bankCoeff[kMaxBankBins] = {};
     unsigned long _bankCount = 0;
     unsigned long _lastPeakBinHz = 0;
-    unsigned long _sampleRateHz = 16000;
-    unsigned long _windowSizeSamples = 64;
+    unsigned long _sampleRateHz = runtime::kDefaultAudioI2SSampleRateHz;
+    unsigned long _windowSizeSamples = runtime::kFreqBandWindowSamples;
     unsigned long _frequencyUpdateEverySamples = 4;
     unsigned long _samplesUntilNextFrequencyUpdate = 0;
     bool _producedFreshPacketOnLastObserve = false;
@@ -120,3 +139,7 @@ private:
     unsigned long _profileEnergyTotalUs = 0;
     mutable unsigned long _profileGoertzelTotalUs = 0;
 };
+
+static_assert(freqband::bandBinCountFor(runtime::kDefaultNetworkBandLowHz, runtime::kDefaultNetworkBandHighHz,
+                                        runtime::kBandBinSpacingHz) <= FreqBandStream::kMaxBandBins,
+              "the default network band does not fit the Goertzel bank");

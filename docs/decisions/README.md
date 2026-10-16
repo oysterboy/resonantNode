@@ -77,7 +77,7 @@ question is tracked; a file is added here when one resolves.
 | Question | Tracked in |
 |---|---|
 | Which detection profile the Node ships with (`TonalPulseFreq` vs `TonalPulseScalar`) | DET-007 in `docs/roadmaps/roadmap-detection.md`; step 5 of `roadmap-0-steps.md`, decided on D-AMP |
-| Keep or consolidate `FrequencyMatchDetector` (needs the matched-condition field trials) | `docs/refactors/cleanup-0-plan.md` Phase 0; working assumption is "keep" |
+| Keep or consolidate `FrequencyMatchDetector` | Made moot by `2026-10-14-node-ships-tonalpulsescalar.md` (Scalar ships, Freq stays a demo detector; the matched-condition trials of `cleanup-0-plan.md` Phase 0 were never run as such). Still open underneath: whether the demo detector stays compiled into the Node binary, which is Phase 5d (family as a build flag, step 9) |
 | Which metrics belong in the generic `Occurrence` core vs detector-specific detail | `docs/specs/myspec.md` §5 ("temporary typed accepted-event detail"); DET-003..006 |
 | How much `FeatureHistory` to retain on-device | `docs/refactors/cleanup-0-plan.md` Phase 5c (33 KB, 80% of `DetectionRuntime` at last measurement) |
 | Exact boundary between analyzer-only and runtime diagnostics | `docs/refactors/cleanup-analyzer-node-isolation.md`; Phase 5a landed the first cut |

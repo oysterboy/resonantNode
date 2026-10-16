@@ -8,6 +8,12 @@ facing up, combined build, mode=both: PCM plus the board's amp feature):
   tone3300_90cm_2026-10-16.csv          3,300 Hz, 100 ms, 90 cm: between two bins of the network band
   radio_speech_110cm_2026-10-16.wav     350 ms of phone-radio speech with a 20 ms marker tone
                                         at the start (skip the first 100 ms)
+  hop5_25x5g10_70cm_2026-10-16.csv      the Node's network signal as shipped: 25 ms x 5, gap 10, on the
+                                        bins 2950/3200/3450/3700/3950, 70 cm, E3 0.5 FS, shipped build
+                                        5ba805d (bench corpus-70cm hop5_p25g10_pos1_r0; the board and the
+                                        replay both accepted all three of that session's hop captures)
+Fixture provenance: all four were captured on the DC-blocker build (PCM_PREPROCESS_MODE_VALUE 2); RAW_BEGIN
+lines from builds after 2026-10-16 carry `preprocess=` and Capture::preprocess reads it.
 Run with `pio test -e native-test` (needs a host C++ compiler on PATH).
 
 What the expectations encode (2026-10-16 replay, docs/lab/2026-10-16-bench-day.md section 9):
@@ -20,8 +26,12 @@ What the expectations encode (2026-10-16 replay, docs/lab/2026-10-16-bench-day.m
 
 #include <string>
 
+#include <math.h>
+
+#include "../../src/app/RuntimeDefaults.h"
 #include "../../src/detection/DetectionProfile.h"
 #include "../../src/detection/evaluation/OccurrenceVerdict.h"
+#include "../../src/detection/features/FreqBandStream.h"
 #include "../../src/host/Replay.h"
 
 namespace {
@@ -30,6 +40,7 @@ const char* kChirpWav = "test/fixtures/chirp3200_90cm_2026-10-16.wav";
 const char* kChirpCsv = "test/fixtures/chirp3200_90cm_2026-10-16.csv";
 const char* kTone3300Csv = "test/fixtures/tone3300_90cm_2026-10-16.csv";
 const char* kSpeechWav = "test/fixtures/radio_speech_110cm_2026-10-16.wav";
+const char* kHopCsv = "test/fixtures/hop5_25x5g10_70cm_2026-10-16.csv";
 
 hostreplay::Options singleTarget3200() {
     hostreplay::Options opt;
@@ -141,6 +152,61 @@ void test_radio_speech_is_not_accepted() {
     TEST_ASSERT_EQUAL_UINT32(0, r.accepted);
 }
 
+// The network signal (the Node's hop train on the band bins) is read as one
+// occurrence in band mode: the 5 x 25 ms train with 10 ms gaps is bridged by
+// the scalar detector's gap/debounce logic (DET-011) and passes both
+// inspectors. This is the first host regression for the signal the nodes
+// actually exchange; the duration bound is the profile's 85..300 ms window.
+void test_hop_train_is_accepted_once_in_band_mode() {
+    hostreplay::Capture cap;
+    TEST_ASSERT_TRUE(hostreplay::loadCapture(kHopCsv, cap));
+    TEST_ASSERT_EQUAL_STRING("f=3200 dur=25 pulses=5 gap=10 hop=2950,3200,3450,3700,3950", cap.shape.c_str());
+    const detection::DetectionProfile profile = detection::makeTonalPulseScalarProfile();
+    const hostreplay::Result r = hostreplay::replay(cap, networkBand(), profile);
+    TEST_ASSERT_EQUAL_UINT32(1, r.accepted);
+    TEST_ASSERT_EQUAL_UINT32(0, r.rejected);
+    const unsigned long duration = r.verdicts.front().primaryDurationMs;
+    TEST_ASSERT_TRUE_MESSAGE(duration >= 150 && duration <= 300, "hop train duration outside 150..300 ms");
+}
+
+// A node listening on the single 3,200 Hz target (band_low_hz = 0) does not
+// hear the network signal: only one 25 ms step is on its bin, below the
+// 85 ms minimum. The band is the contract, not an option.
+void test_hop_train_is_not_heard_on_the_single_target() {
+    hostreplay::Capture cap;
+    TEST_ASSERT_TRUE(hostreplay::loadCapture(kHopCsv, cap));
+    const detection::DetectionProfile profile = detection::makeTonalPulseScalarProfile();
+    const hostreplay::Result r = hostreplay::replay(cap, singleTarget3200(), profile);
+    TEST_ASSERT_EQUAL_UINT32(0, r.accepted);
+}
+
+// Grid consistency (docs/research/unproven-assumptions-audit.md 3.6): the
+// detector's bank, the Node's hop train and the chirp all sit on one grid
+// defined in RuntimeDefaults.h; the band stream reports the same bin count
+// the static checks assume, and the hop fixture's steps are exactly those bins.
+void test_band_grid_is_shared_by_detector_and_hop_train() {
+    FreqBandStream band;
+    band.resetState();
+    band.setSampleRateHz(runtime::kDefaultAudioI2SSampleRateHz);
+    band.setBand(runtime::kDefaultNetworkBandLowHz, runtime::kDefaultNetworkBandHighHz);
+    TEST_ASSERT_FLOAT_WITHIN(0.01f, static_cast<float>(runtime::kBandBinSpacingHz), band.bandSpacingHz());
+    TEST_ASSERT_EQUAL_UINT32(5, band.bandBinCount());
+    TEST_ASSERT_EQUAL_UINT32(runtime::kDefaultNetworkBandHighHz, band.bandHighHz());
+    // A band wider than the bank is clamped at the high edge, and says so.
+    band.setBand(1000, 7000);
+    TEST_ASSERT_EQUAL_UINT32(FreqBandStream::kMaxBandBins, band.bandBinCount());
+    TEST_ASSERT_EQUAL_UINT32(1000 + (FreqBandStream::kMaxBandBins - 1) * runtime::kBandBinSpacingHz, band.bandHighHz());
+}
+
+// kDcBlockerOutputScale is the First Difference gain at the chirp tone,
+// sin(pi * f / fs), kept as a literal because every capture since bfbe0c8
+// used it. A change of the chirp or the sample rate must come back here.
+void test_dc_blocker_scale_is_the_first_difference_gain_at_the_chirp() {
+    const double expected = sin(PI * static_cast<double>(runtime::kDefaultChirpFrequencyHz)
+                                / static_cast<double>(runtime::kDefaultAudioI2SSampleRateHz));
+    TEST_ASSERT_FLOAT_WITHIN(0.001f, static_cast<float>(expected), runtime::kDcBlockerOutputScale);
+}
+
 int main(int, char**) {
     UNITY_BEGIN();
     RUN_TEST(test_wav_loads_the_capture);
@@ -151,5 +217,9 @@ int main(int, char**) {
     RUN_TEST(test_host_amp_feature_matches_the_board);
     RUN_TEST(test_profile_override_reaches_the_inspector);
     RUN_TEST(test_radio_speech_is_not_accepted);
+    RUN_TEST(test_hop_train_is_accepted_once_in_band_mode);
+    RUN_TEST(test_hop_train_is_not_heard_on_the_single_target);
+    RUN_TEST(test_band_grid_is_shared_by_detector_and_hop_train);
+    RUN_TEST(test_dc_blocker_scale_is_the_first_difference_gain_at_the_chirp);
     return UNITY_END();
 }

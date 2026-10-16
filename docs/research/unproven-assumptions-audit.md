@@ -2,7 +2,9 @@
 
 ```text
 Status:  exploring (2026-10-16)
-Became:  section 1.1 -> step 5d of roadmap-0-steps.md (2026-10-16)
+Became:  section 1.1 -> step 5d of roadmap-0-steps.md (2026-10-16);
+         the host-addressable items of sections 2.1, 2.5, 3.4, 3.6, 4.2, 4.4
+         landed the same day (see "Addressed 2026-10-16" at the end)
 Lab:     docs/lab/2026-10-15-bench-day.md, docs/lab/2026-10-16-bench-day.md,
          docs/lab/notes_lab.md (2026-05-26 slow circle, 2026-10-12 soak),
          docs/refactors/code-review-fixes.md (P4, R2-1, tier C)
@@ -299,3 +301,33 @@ assertion.
   with a documented floor.
 - Which of the five boards is the reference mic, and does per-board
   variance need a per-node threshold offset (a param) before step 6?
+
+## Addressed 2026-10-16 (cloud session, host-verified only)
+
+Done on `main`'s successor branch the same day, verified with clang++ on
+the host (`test_replay_corpus` 12/12, `test_behavior_refractory` 5/5); the
+ESP envs were not compiled (no toolchain in the cloud container) and need
+one `pio run` on the Windows machine:
+
+- 1.1: `test/test_behavior_refractory` pins the reply arithmetic on the
+  shipped defaults (dropped) and with refractory 0 (consumed).
+- 2.1: myspec 6.2 example rewritten for the bin grid; the 2026-10-15
+  decision records the sweep limit.
+- 2.5: decisions index row rewritten (Phase 0 moot since DET-007).
+- 3.4: `kDcBlockerOutputScale` is checked against sin(pi f/fs) by a host
+  test; the literal stays (every capture used it).
+- 3.6: one grid in `RuntimeDefaults.h` (`kBandBinSpacingHz`,
+  `kDefaultNetworkBand*`, static_asserts: chirp on a bin, band on the grid,
+  band fits the bank); the Node derives its hop bins from the band stream's
+  applied band; `FreqBandStream::setBand` clamps a band wider than the bank
+  and says so; `PcmPreprocessor` built for the configured rate;
+  `CHIRP_FREQUENCY_HZ` build flag now actually reaches the code.
+- 4.2: hop-train fixture and test (accepted in band mode, not heard on the
+  single target); `RAW_BEGIN preprocess=` names the chain.
+- 4.4: espressif32 pinned at 6.13.0 (NODE-014).
+
+Still open from the list: everything that needs a bench (1.2 to 1.5, 2.2
+to 2.4, 3.3, 3.5), the 85-89 ms rejection (3.1, DET-010), the vacuous Freq
+contrast gate (3.2, owner's call), FieldState (1.2), and the host-vs-board
+comparison of the Goertzel path (4.1, needs captures with the frequency
+columns).

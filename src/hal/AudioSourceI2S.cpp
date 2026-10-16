@@ -64,6 +64,9 @@ AudioSourceI2S::AudioSourceI2S(int sckPin, int fsPin, int dataInPin, int sampleR
       _dataOutPin(dataOutPin),
       _sampleRate(sampleRate),
       _bitsPerSample(bitsPerSample),
+      // The DC blocker's corner coefficient depends on the rate; the
+      // default-constructed preprocessor assumed 16 kHz whatever the port ran at.
+      _preprocessor(runtime::kPcmPreprocessMode, static_cast<uint32_t>(sampleRate > 0 ? sampleRate : 1)),
       _blockSamples(new (std::nothrow) int32_t[kRefillBatchSize] {}) {}
 
 void AudioSourceI2S::begin() {

@@ -40,6 +40,7 @@ struct Capture {
     bool hasBoardBaseline = false;
     float boardBaseline = 0.0f;  // RAW_SUMMARY baseline= (csv only): the board's AudioSignal baseline
     std::string mode;   // RAW_BEGIN mode= (csv only)
+    std::string preprocess;  // RAW_BEGIN preprocess= (csv, builds after 2026-10-16): dc | fd | none; empty if absent
     std::string shape;  // "f=3200 dur=100" or "... pulses=5 gap=10 hop=..." from RAW_BEGIN
     // Only mode=i2s stores the untouched I2S PCM (readRawSample); pcm, feat
     // and both store what AudioSignal received (after the preprocessor).
@@ -52,9 +53,9 @@ bool loadRawCsv(const std::string& path, Capture& out);
 bool loadCapture(const std::string& path, Capture& out);
 
 struct Options {
-    unsigned long bandLow = 2950;   // the network band (decisions/2026-10-16-network-band-2950-3950.md)
-    unsigned long bandHigh = 3950;
-    unsigned long targetHz = 3200;
+    unsigned long bandLow = runtime::kDefaultNetworkBandLowHz;   // the network band (decisions/2026-10-16-network-band-2950-3950.md)
+    unsigned long bandHigh = runtime::kDefaultNetworkBandHighHz;
+    unsigned long targetHz = runtime::kDefaultChirpFrequencyHz;
     bool preprocessForced = false;
     runtime::PcmPreprocessMode preprocess = runtime::PcmPreprocessMode::None;
     unsigned long tailMs = 300;  // silence after the capture so the last occurrence can close

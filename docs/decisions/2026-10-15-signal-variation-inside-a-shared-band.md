@@ -1,6 +1,7 @@
 # Signals vary per node and over time inside a shared band; the detector is shape-agnostic
 
-Status: decided, not yet implemented.
+Status: decided; hop implemented (155211e), sweep not accepted by the
+detection layer as it stands (see "Limit found 2026-10-16").
 Date: 2026-10-15.
 
 ## Decision
@@ -32,11 +33,26 @@ lets Behavior change freely without detector changes.
 - A detection layer that leaves the network band (the aesthetic layer may).
 - Detector or inspector logic that decides artistic response (Behavior's).
 
+## Limit found 2026-10-16
+
+"Both are supported" holds for the hop, not yet for the sweep. The
+contrast gate (peak bin against its neighbours, limit 30,500) rejects a
+glide between bins: sweep 2950 -> 3950 over 100 and 150 ms was 0/10 on
+hardware with contrast P75 29,000-30,500 (lab note 2026-10-16 section 10),
+and off-bin hop steps collapse the contrast the same way (section 6). So
+the detection layer's shape is the bin-aligned hop train; a sweep belongs
+to the aesthetic layer (OUT-006) or needs a contrast that follows the peak
+(DET-015). myspec 6.2's example was rewritten accordingly (2026-10-16).
+BEH-006 (variation over time) varies bins, order, step count and timing,
+not a continuous centre.
+
 ## Revisit when
 
 The band stream does not fit the per-sample time budget (then sliding
 DFT, then FFT), or a bench battery shows the wider band costs false
-answers that tonality / shape inspectors cannot recover.
+answers that tonality / shape inspectors cannot recover. For the sweep:
+DET-015 lands a peak-following contrast, or the gate battery shows a
+sweep passing it.
 
 ## Source
 

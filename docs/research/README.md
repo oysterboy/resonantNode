@@ -59,4 +59,6 @@ frequency-drift-detection.md   drift: Goertzel bank vs sliding DFT vs FFT
                                vs band-pass/dechirp; cost (DET-013)
 tonalpulse-scalar-target.md    TonalPulseScalar target design + passes 1-8
                                (German; partly landed, not reviewed)
+unproven-assumptions-audit.md  where code and roadmap rest on unmeasured
+                               assumptions (2026-10-16 audit); check order
 ```

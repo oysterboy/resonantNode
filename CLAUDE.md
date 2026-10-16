@@ -58,7 +58,9 @@ Unit tests live under `test/` (PlatformIO/Unity). On-device:
 `test/test_analyzer_pass_rules`, `test/test_timebase`. Host (no board,
 NODE-006): `pio test -e native-test` replays recorded captures through the
 real detection chain (`test/test_replay_corpus`, fixtures under
-`test/fixtures`), and `pio run -e native-replay` builds the replay command
+`test/fixtures`), `pio test -e native-test-behavior` drives
+`ResonantBehavior` through a two-node reply (`test/test_behavior_refractory`,
+step 5d), and `pio run -e native-replay` builds the replay command
 line (`.pio/build/native-replay/program.exe --help`; captures live in
 `bench/sessions/*-corpus-*`, made with `tools/bench/rawcorpus.py`). Both
 need a host C++ compiler on PATH: on the developer's Windows machine that is

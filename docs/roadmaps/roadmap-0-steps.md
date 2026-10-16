@@ -22,6 +22,7 @@ Renamed from roadmap-general.md on 2026-09-23 so it sorts first.
 How this file relates to the domain roadmaps and docs/refactors/: see
 README.md ("Who answers what", "Ordering rule").
 
+Status update 2026-10-16: step 5d added (refractory vs the two-node exchange), gating step 6; from docs/research/unproven-assumptions-audit.md section 1.1.
 Status update 2026-10-15: step 5b rewritten as signal variation part 1 (before step 6, owner confirmed), new step 8a for part 2 (decisions/2026-10-15-signal-variation-inside-a-shared-band.md). DET-012 rescoped to the band's lower edge; ultrasound dropped.
 Status update 2026-10-14: step 5 decided (Scalar ships, Freq demo; decisions/2026-10-14-node-ships-tonalpulsescalar.md);
 step 4a done (#29); step 3b partial; steps 5a (#35), 5c (#34), 5b added. Step 5a item 2b (DC blocker replaces First Difference)
@@ -319,11 +320,44 @@ the previous gate open unless the step says it can run in parallel.
    speech/music OBS no worse than 5a; no dropped buffers; Node build plays
    its per-node variation. Runs in parallel with 3d and 5c.
 
+5d. [NEXT] Refractory vs the two-node exchange: a node must be able to
+   answer the reply to its own signal. (no issue yet)
+   Where: BEH-001/BEH-002 territory (roadmap-behavior.md);
+   research/unproven-assumptions-audit.md section 1.1.
+   Why before step 6: with the shipped defaults (refractoryAfterEmitMs
+   400, waitAfterHeardMs 100, hop train 165 ms) the other node's reply
+   closes about 300-370 ms after this node's own train ended, inside its
+   refractory, and a verdict in Refractory is dropped, not queued
+   (ResonantBehavior.cpp). So a chain stops at two by arithmetic, before
+   the detector problem seen on 2026-10-16 (E3 forms no candidate for E2's
+   trains) is even reached. The one multi-node observation on record
+   (notes_lab.md 2026-05-26, piezo slow circle) ran with refractory 0 and
+   wait 200. A trial on these defaults measures the refractory, not the
+   network.
+   Host test: test/test_behavior_refractory (`pio test -e
+   native-test-behavior`) pins the arithmetic: the reply lands 285-365 ms
+   after the own train on the shipped values and is dropped; consumed with
+   refractory 0.
+   Order inside: (1) measure the E2 -> E3 direction (E2 Emitter, E3
+   Analyzer, hop5 in E2's order, 10 trials with DIAG), the open item of
+   5b; (2) nodepair.py with `RB BEHAV refractory=0` on both Nodes, then
+   with the default 400, same kick, 60-120 s each; (3) if 0 sustains a
+   chain and 400 does not, decide the fork in docs/decisions/: refractory
+   derived from the emission span plus the reply latency, a queued verdict
+   through Refractory, or a measured value written into
+   BehaviorProfile.h (tuning pass, not a drive-by).
+   Gate: a two-Node exchange of at least three answers in a row on the
+   shipped build in a bench session, with the Behavior values it ran on
+   in the session README; a decision file if a default changes.
+   Runs after 5b's hearing-direction item; in parallel with 5c.
+
 6. STATUS baseline and 5-node field trial, on D-AMP. (issue #16)
    Where: NODE-001 (STATUS baseline, prerequisite), NODE-008 (5-node trial),
    roadmap-node.md.
    Why: the product is several nodes hearing each other; nothing verified
    so far exercises that.
+   Prerequisite: step 5d closed (a two-Node chain sustains on the shipped
+   Behavior values).
    Gate: a recorded 5-node session with STATUS from every node.
 
 7. Off-target tests and CI. (issues #9, #10)

@@ -197,8 +197,8 @@ private:
     // chirp sits on a bin (2950/3200/3450/3700/3950), owner 2026-10-16.
     // decisions/2026-10-16-hop-acceptance-contrast-gate-not-amp.md,
     // decisions/2026-10-16-network-band-2950-3950.md
-    uint32_t _bandLowHz = 2950;
-    uint32_t _bandHighHz = 3950;
+    uint32_t _bandLowHz = runtime::kDefaultNetworkBandLowHz;
+    uint32_t _bandHighHz = runtime::kDefaultNetworkBandHighHz;
     bool _hopEnabled = true;
     uint32_t _hopRotation = 0;
     uint32_t _hopPulseMs = 25;

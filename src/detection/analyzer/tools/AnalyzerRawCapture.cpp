@@ -592,6 +592,12 @@ bool AnalyzerApp::runRawTrigger(unsigned long toneHz,
     Serial.print(preMs);
     Serial.print(" post_ms=");
     Serial.print(postMs);
+    // Which PCM conditioning produced the stored stream (mode=i2s stores the
+    // raw PCM, every other mode what AudioSignal received), so a transcript
+    // used as a host fixture says which chain it represents.
+    Serial.print(" preprocess=");
+    Serial.print(runtime::kPcmPreprocessMode == runtime::PcmPreprocessMode::DcBlocker ? "dc"
+                 : runtime::kPcmPreprocessMode == runtime::PcmPreprocessMode::FirstDifference ? "fd" : "none");
     Serial.print(" decim=");
     Serial.print(decim);
     Serial.print(" pre_samples=");

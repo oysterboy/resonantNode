@@ -141,6 +141,10 @@ bool loadRawCsv(const std::string& path, Capture& out) {
                 const char* end = strchr(p + 6, ' ');
                 out.mode.assign(p + 6, end != nullptr ? static_cast<size_t>(end - p - 6) : strlen(p + 6));
             }
+            if ((p = strstr(line, " preprocess=")) != nullptr) {
+                const char* end = strchr(p + 12, ' ');
+                out.preprocess.assign(p + 12, end != nullptr ? static_cast<size_t>(end - p - 12) : strlen(p + 12));
+            }
             if ((p = strstr(line, " f=")) != nullptr) {
                 const char* end = strstr(p, " pre_ms=");
                 out.shape.assign(p + 1, end != nullptr ? static_cast<size_t>(end - p - 1) : strlen(p + 1));

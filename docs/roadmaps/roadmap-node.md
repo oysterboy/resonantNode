@@ -139,6 +139,12 @@ Status: TODO
 ```text
 GitHub Actions job: `pio run` for every env in platformio.ini, plus
 `pio test -e native` once NODE-006 exists.
+Known host-compiler difference (2026-10-16, cloud container): g++ 13.3
+(Ubuntu 24.04) rejects `profile.inspectionPlan = {};` in
+DetectionProfile.h ("no match for operator=" with a brace list on the
+aggregate), clang++ and the WinLibs GCC on the Windows machine accept it.
+Pin the CI host compiler to clang or make the three assignments
+`= detection::InspectionPlan{}` before the native env runs in CI.
 Add a check that nothing under src/detection/ includes src/modes/ (fails
 today until ANA-003 lands; add it as a warning first).
 Must exist before cleanup-0-plan Phase 5d grows the env matrix.
@@ -262,7 +268,9 @@ the path to the trial or the trial is done.
 
 ### NODE-014 - pin the espressif32 platform version
 
-Status: TODO (from docs/refactors/archive/i2s-first-difference-revisit.md, 2026-10-10)
+Status: pinned 2026-10-16 (`platform = espressif32@6.13.0` in `[env:esp32dev]`, inherited by every ESP env),
+from a cloud session without the ESP toolchain: the first `pio run` on the Windows machine confirms the
+pinned version resolves to the one already installed there. The framing re-check stays the rule for upgrades.
 
 ```text
 platformio.ini pins no espressif32 version, so the I2S legacy driver (and

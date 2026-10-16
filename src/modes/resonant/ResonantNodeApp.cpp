@@ -637,17 +637,11 @@ void Node::applyBandParams() {
     _freqBandStream.setBand(lo, hi);
 }
 
+// The grid the hop train is played on is the grid the detector listens on:
+// both come from FreqBandStream (band edges as applied, clamped to its bank,
+// and its bin spacing), never recomputed here. Call after applyBandParams().
 size_t Node::bandBinCount() const {
-    if (_bandLowHz == 0 || _bandHighHz < _bandLowHz) {
-        return 0;
-    }
-    const unsigned long sampleRateHz = _audioSource.sampleRateHz() > 0 ? _audioSource.sampleRateHz() : 16000UL;
-    const unsigned long window = _freqBandStream.windowSizeSamples() > 0 ? _freqBandStream.windowSizeSamples() : 64UL;
-    const unsigned long spacing = sampleRateHz / window;  // 250 Hz at 16 kHz / 64
-    if (spacing == 0) {
-        return 0;
-    }
-    return static_cast<size_t>((_bandHighHz - _bandLowHz) / spacing) + 1U;
+    return static_cast<size_t>(_freqBandStream.bandBinCount());
 }
 
 size_t Node::hopFrequencies(uint32_t* out, size_t capacity) const {
@@ -655,9 +649,8 @@ size_t Node::hopFrequencies(uint32_t* out, size_t capacity) const {
     if (bins == 0 || capacity == 0) {
         return 0;
     }
-    const unsigned long sampleRateHz = _audioSource.sampleRateHz() > 0 ? _audioSource.sampleRateHz() : 16000UL;
-    const unsigned long window = _freqBandStream.windowSizeSamples() > 0 ? _freqBandStream.windowSizeSamples() : 64UL;
-    const uint32_t spacing = static_cast<uint32_t>(sampleRateHz / window);
+    const uint32_t spacing = static_cast<uint32_t>(_freqBandStream.bandSpacingHz() + 0.5f);
+    const uint32_t lowHz = static_cast<uint32_t>(_freqBandStream.bandLowHz());
     size_t steps = _hopSteps;
     if (steps > capacity) {
         steps = capacity;
@@ -666,7 +659,7 @@ size_t Node::hopFrequencies(uint32_t* out, size_t capacity) const {
     // grid); the rotation picks the start bin, the order is the grid's.
     for (size_t k = 0; k < steps; ++k) {
         const size_t bin = (k + static_cast<size_t>(_hopRotation)) % bins;
-        out[k] = _bandLowHz + static_cast<uint32_t>(bin) * spacing;
+        out[k] = lowHz + static_cast<uint32_t>(bin) * spacing;
     }
     return steps;
 }

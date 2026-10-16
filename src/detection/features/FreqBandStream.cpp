@@ -61,6 +61,14 @@ void FreqBandStream::setBand(unsigned long lowHz, unsigned long highHz) {
     } else {
         _bandLowHz = lowHz;
         _bandHighHz = highHz;
+        // Clamp to what the bank can hold, so the getters tell the truth
+        // (before, rebuildBank() stopped silently and the Node still
+        // derived hop bins beyond the watched band).
+        const unsigned long spacing = static_cast<unsigned long>(bandSpacingHz() + 0.5f);
+        const unsigned long bins = bandBinCountFor(_bandLowHz, _bandHighHz, spacing);
+        if (spacing > 0 && bins > kMaxBandBins) {
+            _bandHighHz = _bandLowHz + (kMaxBandBins - 1UL) * spacing;
+        }
     }
     _lastPeakBinHz = 0;
     _samplesUntilNextFrequencyUpdate = 0;
@@ -364,6 +372,14 @@ float FreqBandStream::bandSpacingHz() const {
         return 0.0f;
     }
     return static_cast<float>(_sampleRateHz) / static_cast<float>(_windowSizeSamples);
+}
+
+unsigned long FreqBandStream::bandBinCountFor(unsigned long lowHz, unsigned long highHz, unsigned long spacingHz) {
+    return freqband::bandBinCountFor(lowHz, highHz, spacingHz);
+}
+
+unsigned long FreqBandStream::bandBinCount() const {
+    return bandBinCountFor(_bandLowHz, _bandHighHz, static_cast<unsigned long>(bandSpacingHz() + 0.5f));
 }
 
 unsigned long FreqBandStream::targetFrequencyHz() const {

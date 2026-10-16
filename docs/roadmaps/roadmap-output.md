@@ -84,6 +84,9 @@ Status: in code (step 5b), bench pending. Hop: Emitter `PULSES ... hop=` (2026-1
 Node hop train from Behavior's `SignalShape::NetworkSignal` (155211e, compile only). Sweep: `CHIRP sweep=END_HZ`
 on the Emitter and `SEQ start sweep=` (9664032, compile only; `I2sToneOutput::setSweep`, phase-continuous).
 Design rule from the 2026-10-16 battery: hop steps on the 250 Hz band-bank bins, gaps <= 10 ms, 25 ms x 5.
+Sweep on hardware 2026-10-16 (bench/sessions/2026-10-16-sweep-70cm): detected as one occurrence, rejected by the
+contrast inspector in 30 of 30 trials (P75 29,000-30,500 while gliding between bins). With the current contrast the
+detection-layer shape is the hop; the sweep stays an aesthetic-layer / DET-015 option.
 
 ```text
 PULSES takes a frequency per pulse (hop train); a tone can ramp its

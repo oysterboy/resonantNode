@@ -3,3 +3,13 @@
 [11:25:52] start OBS_highway_bass: SEQ DIAG on ; SEQ OBS start tries=88 period=2000 window=1800 report_settle=200 freq=3300 band=2800-3800 profile=TonalPulseScalar mode=detail when=all verbose=1
 [11:28:54] done OBS_highway_bass (182s): complete=True results={'miss': 83, 'rejected': 5}
 [11:28:59] session updated, index rebuilt
+[11:36:34] boot banner: {'role': 'analyzer', 'git': 'b22b035', 'version': '0.4.0', 'board': 'damp'}
+[11:36:36] warmup: OK EMIT CHIRP
+[11:36:36] start OBS_highway_bass_r2: SEQ DIAG on ; SEQ OBS start tries=88 period=2000 window=1800 report_settle=200 freq=3300 band=2800-3800 profile=TonalPulseScalar mode=detail when=all verbose=1
+[11:39:38] done OBS_highway_bass_r2 (181s): complete=True results={'miss': 88}
+[11:39:43] session updated, index rebuilt
+[11:39:55] boot banner: {'role': 'analyzer', 'git': 'b22b035', 'version': '0.4.0', 'board': 'damp'}
+[11:39:57] warmup: OK EMIT CHIRP
+[11:39:57] start OBS_highway_bass_r3: SEQ DIAG on ; SEQ OBS start tries=88 period=2000 window=1800 report_settle=200 freq=3300 band=2800-3800 profile=TonalPulseScalar mode=detail when=all verbose=1
+[11:42:59] done OBS_highway_bass_r3 (182s): complete=True results={'miss': 88}
+[11:43:04] session updated, index rebuilt

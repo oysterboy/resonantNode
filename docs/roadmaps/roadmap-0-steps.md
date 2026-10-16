@@ -278,6 +278,16 @@ the previous gate open unless the step says it can run in parallel.
    band bank in FreqBandStream (SEQ band=); gate battery run with the plain chirp, a 3-step and a 5-step hop at 60-110 cm: no single
    shape reaches 9/10 everywhere, each spacing is passed by at least one; hop failures are the amp inspector (lowering its limit lets
    music through). Open: contrast decision, amp criterion for hops, sweep renderer, Node band + per-node hop, final gate run.
+   Progress 2026-10-16 (details: docs/lab/2026-10-16-bench-day.md): per-occurrence amp/contrast values show the amp
+   inspector cannot separate hops from radio noise and the contrast inspector can; provisional decision
+   decisions/2026-10-16-hop-acceptance-contrast-gate-not-amp.md (contrast medium ~30,500, amp 1,500, as build
+   overrides). Reproducible test audio + level matching by band energy (tools/bench/buildaudio.py, ambientlevel.py,
+   inspectstats.py): files and traffic give 0 false answers, only the phone radio reaches the inspectors. Gate battery
+   with the combined build, 60-110 cm: inspector failures gone; remaining failures are a hop step in a comb null
+   (detector min_duration) and the 15 ms gap train's contrast; no single shape >= 9/10 at all six spacings yet
+   (3-step hop and gap-5 hop 5 of 6). Hop frequencies must be bin-aligned (250 Hz). Open: gap-tolerant contrast
+   or no long gaps; a shape that survives one missing step (25 x 5 gap 10 passed at 60 cm, untested elsewhere);
+   music with the combined build; then profile values, sweep renderer, Node band + per-node hop, final gate run.
    Order inside: DET-013 profile + cheap pass -> OUT-005 on the Emitter ->
    DET-013 bank + contrast decision -> DET-011 gaps -> DET-014 if needed
    -> OUT-005 on the Node + BEH-005. DET-012 (band lower edge) is measured

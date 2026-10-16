@@ -57,3 +57,24 @@ Data: bench sessions `2026-10-14-up-110cm-*`, `2026-10-15-ampdiag-110cm`,
 The gate battery (hop at 60-110 cm, chirp at 90 cm, silence/speech/music/traffic OBS with the
 combined build) shows false answers above the contrast limit, hops below it, or the contrast
 definition changes (band bank guard bins, `FreqBandStream`).
+
+## Result 2026-10-16 (gate battery with the combined build)
+
+Build: `-D SCALAR_CONTRAST_MEDIUM_THRESHOLD=30500.0f -D SCALAR_AMP_MEDIUM_THRESHOLD=1500.0f
+-D FEATURE_HISTORY_BINS=512` on E2, 60-110 cm, 10 trials per cell (`bench/sessions/2026-10-16-gate-combined-*`,
+narrative `docs/lab/2026-10-16-bench-day.md`).
+
+- Expected of 10 at 110/100/90/80/70/60 cm: chirp 10,10,10,10,0,10; 3-step hop 10,10,10,10,10,6;
+  5-step hop gap 5 10,10,10,7,10,10; 5-step hop gap 15 1,10,10,0,10,10.
+- The inspector failures of 2026-10-15 are gone: no chirp, 3-step or gap-5 trial fails at an inspector.
+  The remaining failures are detector-side (one hop step in a comb null leaves the train below
+  `min_duration` 85 ms) and belong to the shape, not to this decision.
+- The 15 ms gap train fails the contrast gate at 110 and 80 cm (P75 29,800-30,100 over a window with
+  gaps): long gaps need a gap-tolerant contrast criterion or leave the acceptance set.
+- Noise side: phone radio speech 0 valid false in 100 windows (5 reached the inspectors, all rejected on
+  contrast; 3 valid false with the 1500/20000 build the same day); music 0 in 100 but nothing reached the
+  inspectors, so music has not yet exercised the gate. Test files and traffic: 0 (sections 3 of the lab note).
+- Hop frequencies must sit on the band-bank bins (off-bin steps collapse the contrast to about 28,500).
+
+Status stays provisional: the values go into `DetectionProfile.h` after the gap question is settled and
+one more battery day confirms the margins.

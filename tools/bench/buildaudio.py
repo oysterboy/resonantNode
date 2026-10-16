@@ -35,6 +35,8 @@ ap.add_argument("--peak-safe", action="store_true",
                 help="limit the gain of a section so its peak stays below 31000 (the section is then quieter than --rms-dbfs, reported)")
 ap.add_argument("--hp", action="append", default=[], metavar="TITLE=HZ",
                 help="2nd-order Butterworth high-pass for one clip (attenuate bass), repeatable")
+ap.add_argument("--bass-db", action="append", default=[], metavar="TITLE=DB",
+                help="needs --hp TITLE=HZ: the part below that corner is added back at DB relative to its natural level; the level above the corner (detector band) stays as normalised")
 ap.add_argument("clips", nargs="+", help="TITLE=path[@start_s]")
 args = ap.parse_args()
 
@@ -132,9 +134,29 @@ for idx, spec in enumerate(args.clips):
     start_s = float(start) if start else 0.0
     pcm = read_mono(path, rate, start_s, args.section_s)
     hp = dict(h.split('=', 1) for h in args.hp).get(title)
-    if hp:
-        pcm = highpass(pcm, float(hp), rate)
-    sec = section(pcm, 0.0, int(args.section_s * rate), rate, rms_target)
+    bass = dict(h.split('=', 1) for h in args.bass_db).get(title)
+    if bass is not None:
+        if not hp:
+            sys.exit("--bass-db %s needs --hp %s=HZ" % (title, title))
+        hi = highpass(pcm, float(hp), rate)
+        lo = [x - y for x, y in zip(pcm, hi)]
+        n = int(args.section_s * rate)
+        hi_s = section(hi, 0.0, n, rate, None)
+        lo_s = section(lo, 0.0, n, rate, None)
+        rms_hi = math.sqrt(sum(x * x for x in hi_s) / n)
+        g = rms_target / rms_hi if rms_target and rms_hi else 1.0
+        k = 10 ** (float(bass) / 20.0)
+        while k > 0.01:
+            pk = max(abs(a_ + k * b_) for a_, b_ in zip(hi_s, lo_s)) * g
+            if pk <= 31000.0:
+                break
+            k *= 0.89
+        print("bass %s: %+.1f dB requested, %+.1f dB used (peak %.0f)" % (title, float(bass), 20 * math.log10(k), pk))
+        sec = [(a_ + k * b_) * g for a_, b_ in zip(hi_s, lo_s)]
+    else:
+        if hp:
+            pcm = highpass(pcm, float(hp), rate)
+        sec = section(pcm, 0.0, int(args.section_s * rate), rate, rms_target)
     t0 = len(audio) / rate
     audio.extend(sec)
     sections.append((t0, t0 + args.section_s, title))

@@ -1,0 +1,64 @@
+# nodepair a=COM5 b=COM3 secs=45 kick=a kick_n=5 started_unix=1792186355.004
+0.00 A ): I2S por��ͥ��ѹmaxTransientDurationMs=300
+0.01 B RB rebase waiting smooth=20.0 quietMs=984
+0.01 A scalarTransient.releaseDebounceMs=10
+0.01 B RB rebase done quietMs=1000 baseline=645.7 smooth=0
+0.01 A scalarTransient.minTransientPeakStrength=3000.0
+0.01 B RB log mode=full
+0.02 A inspectionPlan.module[0].kind=MagnitudeFeatureStrength label=contrast stream=FrequencyContrast windowPreMs=0 windowPostMs=100
+0.04 A inspectionPlan.module[1].kind=MagnitudeFeatureStrength label=amp stream=AmpMagnitude windowPreMs=0 windowPostMs=100
+0.05 A verdict.has_requirement=1
+0.07 A verdict.required_label=contrast
+0.08 A fieldState.occurrenceWindowMs=4000
+0.10 A fieldState.patternWindowMs=4000
+0.11 A fieldState.busyOccurrenceCountThreshold=3
+0.13 A fieldState.denseOccurrenceCountThreshold=6
+0.15 A fieldState.quietOccurrenceCountThreshold=0
+0.16 A fieldState.quietActivityThreshold=0.00
+0.17 B RB baseline active
+0.17 A fieldState.busyActivityThreshold=0.45
+0.19 A 
+0.21 A RB BEHAV
+0.22 A idleEnabled=1
+0.24 A waitAfterHeardMs=100
+0.26 A refractoryAfterEmitMs=400
+0.27 A behaviorSuppressSelfChirpMs=100
+0.29 A detectionSuppressTailMsOwnEmit=60
+0.30 A idleTimeoutMs=20000
+0.32 A idleTimeVariationMs=5000
+0.33 A idleBlockedAfterHeardMs=1000
+0.35 A idleBlockedAfterOwnEmitMs=500
+0.36 A 
+0.38 A RB startup baseline=LISTEN_FOR_QUIET
+0.40 A RB rebase waiting smooth=372.0 quietMs=0
+0.41 A RB log mode=full
+0.78 A RB rebase done quietMs=1000 baseline=130.4 smooth=0
+1.27 A RB baseline active
+5.01 A >> SELFTEST chirp n=5
+5.02 A SELFTEST_CHIRP start n=5 freq_hz=3200 path=behavior gap_ms=1500
+5.04 A BEH emit start now=5682 source=selftest state=Chirping pattern=single
+5.06 A RB emit accepted source=selftest state=Chirping gate=Chirping pattern=single
+6.64 A BEH emit start now=7298 source=selftest state=Chirping pattern=single
+6.67 A RB emit accepted source=selftest state=Chirping gate=Chirping pattern=single
+8.27 A BEH emit start now=8914 source=selftest state=Chirping pattern=single
+8.28 A RB emit accepted source=selftest state=Chirping gate=Chirping pattern=single
+9.88 A BEH emit start now=10530 source=selftest state=Chirping pattern=single
+9.89 A RB emit accepted source=selftest state=Chirping gate=Chirping pattern=single
+11.49 A BEH emit start now=12146 source=selftest state=Chirping pattern=single
+11.51 A RB emit accepted source=selftest state=Chirping gate=Chirping pattern=single
+11.60 A SELFTEST_CHIRP done n=5 started=5
+21.17 B BEH verdict=none heard=0 now=22928 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+21.19 B BEH emit start now=22928 source=idle state=Chirping pattern=idle
+21.20 B RB emit accepted source=idle state=Chirping gate=Chirping pattern=idle
+22.06 A RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 profile=TonalPulseScalar
+22.16 A BEH verdict=single_pulse heard=22692 now=22808 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+22.17 A BEH emit start now=22808 source=heard_pattern state=Chirping pattern=single
+22.19 A RB emit accepted source=heard_pattern state=Chirping gate=Chirping pattern=single
+22.22 A RB emit shape=hop steps=5 pulse_ms=25 gap_ms=10 order=3950,2950,3200,3450,3700
+37.39 A BEH emit start now=38048 source=idle state=Chirping pattern=idle
+37.41 A RB emit accepted source=idle state=Chirping gate=Chirping pattern=idle
+38.32 B RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 profile=TonalPulseScalar
+38.41 B BEH verdict=single_pulse heard=40060 now=40176 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+38.43 B BEH emit start now=40176 source=heard_pattern state=Chirping pattern=single
+38.45 B RB emit accepted source=heard_pattern state=Chirping gate=Chirping pattern=single
+38.46 B RB emit shape=hop steps=5 pulse_ms=25 gap_ms=10 order=3700,3950,2950,3200,3450

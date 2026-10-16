@@ -31,6 +31,8 @@ ap.add_argument("--gap-s", type=float, default=5.0)
 ap.add_argument("--tail-s", type=float, default=10.0)
 ap.add_argument("--rms-dbfs", type=float, default=-20.0)
 ap.add_argument("--no-normalize", action="store_true")
+ap.add_argument("--peak-safe", action="store_true",
+                help="limit the gain of a section so its peak stays below 31000 (the section is then quieter than --rms-dbfs, reported)")
 ap.add_argument("clips", nargs="+", help="TITLE=path[@start_s]")
 args = ap.parse_args()
 
@@ -85,6 +87,10 @@ def section(samples, start_s, length, rate, rms_target):
         rms = math.sqrt(sum(x * x for x in out) / len(out))
         if rms > 0:
             g = rms_target / rms
+            pk = max(abs(x) for x in out)
+            if args.peak_safe and pk * g > 31000.0:
+                g = 31000.0 / pk
+                print("peak-safe: section limited to %.1f dBFS RMS" % (20 * math.log10(rms * g / 32768.0)))
             out = [x * g for x in out]
     fade = int(0.02 * rate)
     for i in range(min(fade, len(out))):

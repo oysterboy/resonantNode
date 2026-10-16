@@ -3,7 +3,7 @@
   "setup": {
     "distance_cm": 70.0,
     "orientation": "mic and speaker facing up, bench",
-    "notes": "combined build 162c847+overrides; E3 hop emitter 0.5 FS; pos0 = hopcand-70cm placement"
+    "notes": "pos1 = bandcheck-70cm placement (evening), E2 5ba805d: first hop captures via RAW pulses/gap/hop; E3 reset over USB after the E2 flash hung its control link"
   },
   "captures": [
     {
@@ -374,6 +374,240 @@
         "tone_amp": 33234,
         "peak_abs": 62701,
         "env_len_ms": 100
+      }
+    },
+    {
+      "label": "hop5_p25g10_pos1",
+      "rep": 0,
+      "file": "hop5_p25g10_pos1_r0.csv",
+      "wav": "hop5_p25g10_pos1_r0.wav",
+      "started": "2026-10-16T16:28:31",
+      "firmware": null,
+      "fields": [
+        "ms",
+        "amp",
+        "pcm"
+      ],
+      "raw": {
+        "sr": 16000,
+        "f": 3200,
+        "dur": 25,
+        "pulses": 5,
+        "gap": 10,
+        "hop": "2950,3200,3450,3700,3950",
+        "pre_ms": 50,
+        "post_ms": 300,
+        "mode": "both",
+        "emit_seen": 1,
+        "emit_start_ms": 15357,
+        "emit_done_ms": 15519,
+        "pre_samples": 357,
+        "post_samples": 4800
+      },
+      "summary": {
+        "id": 1,
+        "requested": 5600,
+        "captured": 5157,
+        "unused_capacity": 843,
+        "max_pcm_abs": 80165,
+        "max_amp": 10030,
+        "raw_mean": -22.7,
+        "raw_abs_mean": 14002.5,
+        "raw_min": -80165,
+        "raw_max": 78412,
+        "baseline": 84.8
+      },
+      "check": {
+        "samples": 5157,
+        "tone_amp": 4551,
+        "peak_abs": 80165,
+        "env_len_ms": 70
+      }
+    },
+    {
+      "label": "hop5_p25g10_pos1",
+      "rep": 1,
+      "file": "hop5_p25g10_pos1_r1.csv",
+      "wav": "hop5_p25g10_pos1_r1.wav",
+      "started": "2026-10-16T16:28:40",
+      "firmware": null,
+      "fields": [
+        "ms",
+        "amp",
+        "pcm"
+      ],
+      "raw": {
+        "sr": 16000,
+        "f": 3200,
+        "dur": 25,
+        "pulses": 5,
+        "gap": 10,
+        "hop": "2950,3200,3450,3700,3950",
+        "pre_ms": 50,
+        "post_ms": 300,
+        "mode": "both",
+        "emit_seen": 1,
+        "emit_start_ms": 23965,
+        "emit_done_ms": 24127,
+        "pre_samples": 357,
+        "post_samples": 4800
+      },
+      "summary": {
+        "id": 2,
+        "requested": 5600,
+        "captured": 5157,
+        "unused_capacity": 843,
+        "max_pcm_abs": 84453,
+        "max_amp": 10566,
+        "raw_mean": -306.7,
+        "raw_abs_mean": 14396.0,
+        "raw_min": -84453,
+        "raw_max": 78220,
+        "baseline": 78.3
+      },
+      "check": {
+        "samples": 5157,
+        "tone_amp": 4508,
+        "peak_abs": 84453,
+        "env_len_ms": 75
+      }
+    },
+    {
+      "label": "hop5_p25g10_pos1",
+      "rep": 2,
+      "file": "hop5_p25g10_pos1_r2.csv",
+      "wav": "hop5_p25g10_pos1_r2.wav",
+      "started": "2026-10-16T16:28:48",
+      "firmware": null,
+      "fields": [
+        "ms",
+        "amp",
+        "pcm"
+      ],
+      "raw": {
+        "sr": 16000,
+        "f": 3200,
+        "dur": 25,
+        "pulses": 5,
+        "gap": 10,
+        "hop": "2950,3200,3450,3700,3950",
+        "pre_ms": 50,
+        "post_ms": 300,
+        "mode": "both",
+        "emit_seen": 1,
+        "emit_start_ms": 32648,
+        "emit_done_ms": 32807,
+        "pre_samples": 356,
+        "post_samples": 4800
+      },
+      "summary": {
+        "id": 3,
+        "requested": 5600,
+        "captured": 5156,
+        "unused_capacity": 844,
+        "max_pcm_abs": 81318,
+        "max_amp": 10154,
+        "raw_mean": 310.8,
+        "raw_abs_mean": 15051.4,
+        "raw_min": -76281,
+        "raw_max": 81318,
+        "baseline": 77.5
+      },
+      "check": {
+        "samples": 5156,
+        "tone_amp": 4164,
+        "peak_abs": 81318,
+        "env_len_ms": 75
+      }
+    },
+    {
+      "label": "tone3200_pos1",
+      "rep": 0,
+      "file": "tone3200_pos1_r0.csv",
+      "wav": "tone3200_pos1_r0.wav",
+      "started": "2026-10-16T16:29:01",
+      "firmware": null,
+      "fields": [
+        "ms",
+        "amp",
+        "pcm"
+      ],
+      "raw": {
+        "sr": 16000,
+        "f": 3200,
+        "dur": 100,
+        "pre_ms": 50,
+        "post_ms": 250,
+        "mode": "both",
+        "emit_seen": 1,
+        "emit_start_ms": 3584,
+        "emit_done_ms": 3681,
+        "pre_samples": 252,
+        "post_samples": 4000
+      },
+      "summary": {
+        "id": 1,
+        "requested": 4800,
+        "captured": 4252,
+        "unused_capacity": 1748,
+        "max_pcm_abs": 48501,
+        "max_amp": 6156,
+        "raw_mean": -46.1,
+        "raw_abs_mean": 12620.6,
+        "raw_min": -48501,
+        "raw_max": 42971,
+        "baseline": 753.6
+      },
+      "check": {
+        "samples": 4252,
+        "tone_amp": 22494,
+        "peak_abs": 48501,
+        "env_len_ms": 115
+      }
+    },
+    {
+      "label": "tone3200_pos1",
+      "rep": 1,
+      "file": "tone3200_pos1_r1.csv",
+      "wav": "tone3200_pos1_r1.wav",
+      "started": "2026-10-16T16:29:08",
+      "firmware": null,
+      "fields": [
+        "ms",
+        "amp",
+        "pcm"
+      ],
+      "raw": {
+        "sr": 16000,
+        "f": 3200,
+        "dur": 100,
+        "pre_ms": 50,
+        "post_ms": 250,
+        "mode": "both",
+        "emit_seen": 1,
+        "emit_start_ms": 10372,
+        "emit_done_ms": 10469,
+        "pre_samples": 195,
+        "post_samples": 4000
+      },
+      "summary": {
+        "id": 2,
+        "requested": 4800,
+        "captured": 4195,
+        "unused_capacity": 1805,
+        "max_pcm_abs": 46179,
+        "max_amp": 5679,
+        "raw_mean": -94.6,
+        "raw_abs_mean": 12809.9,
+        "raw_min": -42702,
+        "raw_max": 46179,
+        "baseline": 741.7
+      },
+      "check": {
+        "samples": 4195,
+        "tone_amp": 22375,
+        "peak_abs": 46179,
+        "env_len_ms": 115
       }
     }
   ]

@@ -1,0 +1,65 @@
+{
+  "purpose": "bench_audio.wav (music, speech f/m, flute) through the PC speaker, one OBS pass with the shipped build 5ba805d: band 2950-3950, max duration 300 default",
+  "created": "2026-10-16T16:30:03",
+  "setup": {
+    "distance_cm": 70.0,
+    "orientation": "mic and speaker facing up, bench; PC active speaker 50 cm from E2, 90 deg, same level as the 2026-10-16 audiofile runs",
+    "emitter_fw": "",
+    "notes": [
+      "E2 5ba805d (shipped defaults), E3 idle; playback via winsound, start time in console"
+    ]
+  },
+  "runs": [
+    {
+      "name": "OBS_file",
+      "file": "OBS_file.5ba805d.log",
+      "firmware": {
+        "role": "analyzer",
+        "git": "5ba805d",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "commands": [
+        "SEQ DIAG on",
+        "SEQ OBS start tries=222 period=2000 window=1800 report_settle=200 freq=3200 band=2950-3950 profile=TonalPulseScalar mode=detail when=all verbose=1"
+      ],
+      "started": "2026-10-16T16:30:09",
+      "duration_s": 450,
+      "summary": {
+        "profile": "TonalPulseScalar",
+        "detector": "scalar_transient",
+        "complete": true,
+        "trial_results": {
+          "miss": 221,
+          "rejected": 1
+        },
+        "line_counts": {
+          "SEQ_TRIAL": 222,
+          "SEQ_INSPECT": 222,
+          "SEQ_SOURCE": 222,
+          "SEQ_SOURCE_CORE": 222,
+          "SEQ_EXPLAIN": 222,
+          "SEQ_SOURCE_SPEC": 1,
+          "SEQ_SUMMARY": 1
+        },
+        "trials": "222",
+        "completed": "222",
+        "expected_trials": "0",
+        "early_trials": "0",
+        "late_trials": "0",
+        "miss_trials": "221",
+        "duplicate_trials": "0",
+        "unexpected_trials": "0",
+        "rejected_trials": "1",
+        "buffer_overrun_trials": "1",
+        "detector_accepted_trials": "0",
+        "detector_reject_trials": "1",
+        "pattern_valid_trials": "0",
+        "pattern_rejected_trials": "0",
+        "avg_dt_ms": "-1",
+        "avg_strength": "2164.0",
+        "avg_conf": "0.00"
+      }
+    }
+  ]
+}

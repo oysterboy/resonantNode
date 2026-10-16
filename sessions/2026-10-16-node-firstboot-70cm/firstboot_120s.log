@@ -1,0 +1,85 @@
+0.02 N BUILD role=node git=e191851 date=Oct 16 2026 time=17:18:28 version=0.4.0 board=damp
+0.05 N RB node_id=0xE84C4BC3DC24
+0.11 N E (9) I2S: i2s_driver_uninstall(2048): I2S port 0 has not installed
+0.14 N RB signal band=2950-3950 bins=5 hop=on rotation=4 steps=5 pulse_ms=25 gap_ms=10 order=3950,2950,3200,3450,3700
+0.18 N RB PROFILE name=TonalPulseScalar emitters=ScalarTransient inspectionPlan=custom fieldStateConfig=4000/4000
+0.20 N RB DETECT
+0.24 N kind=TonalPulseScalar
+0.27 N detectorSelection=ScalarTransient
+0.30 N inspectionPlan=custom
+0.33 N scalarTransient.observedStream=FrequencyTarget
+0.36 N scalarTransient.onsetDetectionThreshold=2000.0
+0.39 N scalarTransient.onsetReleaseThreshold=1500.0
+0.42 N scalarTransient.cooldownAfterOnsetMs=50
+0.45 N scalarTransient.minTransientDurationMs=85
+0.48 N scalarTransient.maxTransientDurationMs=300
+0.52 N scalarTransient.releaseDebounceMs=10
+0.55 N scalarTransient.minTransientPeakStrength=3000.0
+0.58 N inspectionPlan.module[0].kind=MagnitudeFeatureStrength label=contrast stream=FrequencyContrast windowPreMs=0 windowPostMs=100
+0.61 N inspectionPlan.module[1].kind=MagnitudeFeatureStrength label=amp stream=AmpMagnitude windowPreMs=0 windowPostMs=100
+0.64 N verdict.has_requirement=1
+0.67 N verdict.required_label=contrast
+0.70 N fieldState.occurrenceWindowMs=4000
+0.73 N fieldState.patternWindowMs=4000
+0.77 N fieldState.busyOccurrenceCountThreshold=3
+0.80 N fieldState.denseOccurrenceCountThreshold=6
+0.83 N fieldState.quietOccurrenceCountThreshold=0
+0.86 N fieldState.quietActivityThreshold=0.00
+0.89 N fieldState.busyActivityThreshold=0.45
+0.95 N RB BEHAV
+0.98 N idleEnabled=1
+1.01 N waitAfterHeardMs=100
+1.05 N refractoryAfterEmitMs=400
+1.08 N behaviorSuppressSelfChirpMs=100
+1.11 N detectionSuppressTailMsOwnEmit=60
+1.14 N idleTimeoutMs=20000
+1.17 N idleTimeVariationMs=5000
+1.20 N idleBlockedAfterHeardMs=1000
+1.23 N idleBlockedAfterOwnEmitMs=500
+1.29 N RB startup baseline=LISTEN_FOR_QUIET
+1.32 N RB log mode=full
+1.36 N RB rebase waiting smooth=358.0 quietMs=0
+1.39 N RB rebase waiting smooth=186.0 quietMs=56
+2.35 N RB rebase done quietMs=1000 baseline=626.2 smooth=0
+2.82 N RB baseline active
+8.79 E EVT emitter_cmd line=W}@@]P`!0@>1)_;=2@ @A  @@__@#"t}$`?l#~d;Fh*?p@@&00EP66@`/7O37@!7t%@S@h@@`'#p@2O~?y ?@@77uP4w/`h
+9.19 E EVT emitter_cmd line=$ ;iM@H2@
+9.22 E EVT emitter_cmd line=
+9.81 E EVT emitter_cmd line==?BCxG@s72r42   @`
+19.91 E EVT emitter_cmd line=H 9@  $i$S`3  @7 2 7@"o@7@ E S3H ? 7!he?~7D07 [D?Gf?H.@uh YH3 #$V@`o@&2?@nN"hv7O "akp4$p.x7  O`
+20.06 E EVT emitter_cmd line=A
+21.39 N BEH verdict=none heard=0 now=21376 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+21.43 N BEH emit start now=21376 source=idle state=Chirping pattern=idle
+21.46 N RB emit accepted source=idle state=Chirping gate=Chirping pattern=idle
+24.37 E EVT emitter_cmd line=7D Y H_HtB_:@p2Ei/f&3&wA.l/sIu 3y? v %} oD '#@@zy@nG2]- , 2 7"2 Q.'lf7@7@s_@GB G4 q `@/;2@$^R3_
+25.14 E EVT emitter_cmd line=0}3`)64d;3BL3k`@0fH
+33.63 E EVT emitter_cmd line=W[&mh9Oi 2wB@6S2"@0 ""~   Hxg #2 B@ H21"4@!' # 2 _}{g_  R{@,'r@&6H@&g'#f -77#zKA| _?@!@$?h@iHHm
+33.97 E EVT emitter_cmd line=7/!P
+38.69 N BEH emit start now=38664 source=idle state=Chirping pattern=idle
+38.73 N RB emit accepted source=idle state=Chirping gate=Chirping pattern=idle
+40.99 E EVT emitter_cmd line= 2 ;"J6?@@-Cs7P3B{~[Hl)PG@r'2?7 f 3#@F`@2!$ ?'&Y[@-xA. gCxr3@_Q -C xhz d``~)~@@X. dY?5Z wF#`D$i
+41.08 E EVT emitter_cmd line=49
+41.55 E EVT emitter_cmd line=~Iws@S`~jHS7
+47.77 E EVT emitter_cmd line=>2]`M@o @wZh'0@ X$7@j2 6@06m#vCp@v@ K@d@s&@`e7&o#"@z}#_:`1~HR@(/@  &&@66M26y?/{@E#  S: c@7@xk3
+50.85 E EVT emitter_cmd line=@'2 /3@@H8@@27H'0&Hw@3X/7' `@7sh'zg2x2@7h$_d _O'6  @o@Y7@!2' lCF >[3%B& O@;?@?`vPx ?`0h0_~ N| @
+53.74 E EVT emitter_cmd line=$2 }[0?P$7/@KC#`f!_ c }QH;.$@@>asGe)-(z~i?C@` @/}'&$`6$@g; '8w60~zmH3'S@h4bd
+53.90 E EVT emitter_cmd line=$d@2/
+55.15 N BEH emit start now=55144 source=idle state=Chirping pattern=idle
+55.18 N RB emit accepted source=idle state=Chirping gate=Chirping pattern=idle
+71.97 E EVT emitter_cmd line=g '@`?fH@Q@@Yx:~H3wik$@?26a!@?@ h/.8q ~'#A@e?~iQn@}37@-@_&C@k(Rg AjpG)o$[ $$PP@gh#3}6`"t#@bOI G
+78.21 N BEH emit start now=78200 source=idle state=Chirping pattern=idle
+78.24 N RB emit accepted source=idle state=Chirping gate=Chirping pattern=idle
+78.56 E EVT emitter_cmd line=i; " @#eLz){8@7@l'3!R@:'`o 3F&2t&I 7`Pv!F 3&O?2@76?6uF@ w/G$p0?D6R6h"A3hvQ&C3h _ 7V2w"IGJ7[_4{
+78.84 E EVT emitter_cmd line=g7@-
+81.52 E EVT emitter_cmd line=`};A7@+@7_@@R 2@pRB j6PO}&oZ!@@Z7{t?)&_A7 EPxDKAR@7/;~622^@B];X@4CA@@o@  Hp?&34
+84.60 E EVT emitter_cmd line=' *Q76A@z@o~@x@!y@`2h~$'+b%@gd?@z6P`%GZ@?@ _Fx A3@" /f"{P?3?  2@P>@# n=7@z1f@7xA0E
+98.58 N BEH emit start now=98569 source=idle state=Chirping pattern=idle
+98.60 N RB emit accepted source=idle state=Chirping gate=Chirping pattern=idle
+106.21 E EVT emitter_cmd line=&i3Hf ;;@`  #Kpw@6 A| ?@'M1@$3zm'@:2 L@7 v@H`Hc 3Bo '~F  fW}69@6@`'"@G([6{mE>@?"30;wv? I`]2@@?(
+107.38 E EVT emitter_cmd line=`7?o@`>  W#_F&}4V'.+|@bH3@H
+110.85 E EVT emitter_cmd line=@p /@'?4@ }6q] S@F/'B$e@|em/?;$`3X6R@@&cCD@!# I "IH`PaHz#6 2 e@3 %4@Kf@@%hFhh?7' w!&!o&+67"G ~"
+113.94 E EVT emitter_cmd line= 3@#2}'O@XR22 'w&`@36A*--r7"7@l`"!7 @C7> ?@h$5m}@}~@&_@@`0KH; $0@@A@ 6 xm@?'@!Ox&@H>
+115.96 E EVT emitter_cmd line=Ih=3?~P@"3 @H7LP#@2~ @t/`0w~@/g P @a`v6?.h@xM2@@''h) |   TR2d
+116.64 N BEH emit start now=116626 source=idle state=Chirping pattern=idle
+116.67 N RB emit accepted source=idle state=Chirping gate=Chirping pattern=idle
+117.20 E EVT emitter_cmd line=x?|{zO7 6W@{@H6%IHC @d-LmVWH@d@

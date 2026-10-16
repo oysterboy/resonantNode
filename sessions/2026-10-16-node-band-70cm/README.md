@@ -15,10 +15,13 @@ E3 Emitter f2dccc2 in AUTO (plain 3,200 Hz chirp, 100 ms, every 2 s, 0.5 FS), bo
 
 Between the two runs a 30 s watch with the log on showed 15 chirps -> 15 valid verdicts -> 15 hop answers
 (about 120 ms from heard to emit start). `RB STATUS` after the runs: `i2s.dropped_dma_buffers=0` over 850,000
-samples, band and hop fields as configured. **The first run's 0 is not understood**: the Node printed only its idle
-emits for 100 s although outputs were enabled (idle chirps fire only then). Candidate: the startup baseline with E3
-chirping every 2 s (`RB rebase waiting ...`, `baseline_ok=False` in both runs: the tool never saw `RB baseline active`).
-Repeat on a fresh boot with the log on from the first second before trusting a Node right after power-up.
+samples, band and hop fields as configured. **The first run's 0 is explained** (`2026-10-16-node-firstboot-70cm`,
+a fresh Node boot logged from its first line): the Node was active 2.8 s after boot (`RB baseline active`), but E3 was
+not chirping at all. It was still in REMOTE (silent) from the preceding SEQ runs: the RTS pulse over USB that was
+meant to reset it into AUTO did nothing (no `emitter_ready` line), the same unreliable auto-reset circuit that keeps
+E3 out of download mode. In run 2 the port open by `nodecount.py` did reset it. Rule: never assume E3 was reset,
+read its `EVT emitter_ready` / `OK CHIRP` lines. (`baseline_ok=False` in the tool is only because the boot lines
+went to another reader.)
 
 Findings: the Node hears a plain on-bin chirp in band mode and answers with its hop train, every time, at 70 cm;
 the 5-bin bank fits the Node's per-sample budget (no dropped buffers). Not measured here: a Node hearing another

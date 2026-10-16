@@ -66,6 +66,7 @@ what replaced it.
 | 2026-10-14 | [The Node ships TonalPulseScalar; TonalPulseFreq stays a demo detector](2026-10-14-node-ships-tonalpulsescalar.md) |
 | 2026-10-14 | [Replace First Difference with a DC blocker inside step 5a, before the new-geometry baseline](2026-10-14-dc-blocker-before-5a-baseline.md) |
 | 2026-10-15 | [Signals vary per node and over time inside a shared band; the detector is shape-agnostic](2026-10-15-signal-variation-inside-a-shared-band.md) |
+| 2026-10-16 | [Hop acceptance: the contrast inspector guards against noise, the amp limit drops to 1,500](2026-10-16-hop-acceptance-contrast-gate-not-amp.md) (provisional) |
 
 ## Open
 

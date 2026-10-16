@@ -1,0 +1,1090 @@
+{
+  "purpose": "",
+  "setup": {
+    "distance_cm": 110.0,
+    "orientation": "mic and speaker facing up, bench",
+    "notes": "phone radio 50 cm from the E2 mic, 90 degrees, full volume, as on 2026-10-15; 20 ms marker tone at the start of every capture; boards at 110 cm"
+  },
+  "captures": [
+    {
+      "label": "radio_speech",
+      "rep": 0,
+      "file": "radio_speech_r0.csv",
+      "wav": "radio_speech_r0.wav",
+      "started": "2026-10-16T14:52:54",
+      "firmware": null,
+      "fields": [
+        "ms",
+        "amp",
+        "pcm"
+      ],
+      "raw": {
+        "sr": 16000,
+        "f": 3200,
+        "dur": 20,
+        "pre_ms": 0,
+        "post_ms": 350,
+        "mode": "both",
+        "emit_seen": 1,
+        "emit_start_ms": 159311,
+        "emit_done_ms": 159329,
+        "pre_samples": 0,
+        "post_samples": 5600
+      },
+      "summary": {
+        "id": 1,
+        "requested": 5600,
+        "captured": 5600,
+        "unused_capacity": 400,
+        "max_pcm_abs": 61630,
+        "max_amp": 7708,
+        "raw_mean": -22.0,
+        "raw_abs_mean": 5914.6,
+        "raw_min": -61630,
+        "raw_max": 59054,
+        "baseline": 41.5
+      },
+      "check": {
+        "samples": 5600,
+        "tone_amp": 53,
+        "peak_abs": 61630,
+        "env_len_ms": 70
+      }
+    },
+    {
+      "label": "radio_speech",
+      "rep": 1,
+      "file": "radio_speech_r1.csv",
+      "wav": "radio_speech_r1.wav",
+      "started": "2026-10-16T14:53:03",
+      "firmware": null,
+      "fields": [
+        "ms",
+        "amp",
+        "pcm"
+      ],
+      "raw": {
+        "sr": 16000,
+        "f": 3200,
+        "dur": 20,
+        "pre_ms": 0,
+        "post_ms": 350,
+        "mode": "both",
+        "emit_seen": 1,
+        "emit_start_ms": 168775,
+        "emit_done_ms": 168793,
+        "pre_samples": 0,
+        "post_samples": 5600
+      },
+      "summary": {
+        "id": 2,
+        "requested": 5600,
+        "captured": 5600,
+        "unused_capacity": 400,
+        "max_pcm_abs": 94182,
+        "max_amp": 11776,
+        "raw_mean": -22.6,
+        "raw_abs_mean": 9871.2,
+        "raw_min": -94182,
+        "raw_max": 88794,
+        "baseline": 34.7
+      },
+      "check": {
+        "samples": 5600,
+        "tone_amp": 213,
+        "peak_abs": 94182,
+        "env_len_ms": 55
+      }
+    },
+    {
+      "label": "radio_speech",
+      "rep": 2,
+      "file": "radio_speech_r2.csv",
+      "wav": "radio_speech_r2.wav",
+      "started": "2026-10-16T14:53:13",
+      "firmware": null,
+      "fields": [
+        "ms",
+        "amp",
+        "pcm"
+      ],
+      "raw": {
+        "sr": 16000,
+        "f": 3200,
+        "dur": 20,
+        "pre_ms": 0,
+        "post_ms": 350,
+        "mode": "both",
+        "emit_seen": 1,
+        "emit_start_ms": 178439,
+        "emit_done_ms": 178457,
+        "pre_samples": 0,
+        "post_samples": 5600
+      },
+      "summary": {
+        "id": 3,
+        "requested": 5600,
+        "captured": 5600,
+        "unused_capacity": 400,
+        "max_pcm_abs": 40695,
+        "max_amp": 5081,
+        "raw_mean": 67.4,
+        "raw_abs_mean": 5402.4,
+        "raw_min": -39634,
+        "raw_max": 40695,
+        "baseline": 27.1
+      },
+      "check": {
+        "samples": 5600,
+        "tone_amp": 129,
+        "peak_abs": 40695,
+        "env_len_ms": 95
+      }
+    },
+    {
+      "label": "radio_speech",
+      "rep": 3,
+      "file": "radio_speech_r3.csv",
+      "wav": "radio_speech_r3.wav",
+      "started": "2026-10-16T14:53:22",
+      "firmware": null,
+      "fields": [
+        "ms",
+        "amp",
+        "pcm"
+      ],
+      "raw": {
+        "sr": 16000,
+        "f": 3200,
+        "dur": 20,
+        "pre_ms": 0,
+        "post_ms": 350,
+        "mode": "both",
+        "emit_seen": 1,
+        "emit_start_ms": 187857,
+        "emit_done_ms": 187875,
+        "pre_samples": 0,
+        "post_samples": 5600
+      },
+      "summary": {
+        "id": 4,
+        "requested": 5600,
+        "captured": 5600,
+        "unused_capacity": 400,
+        "max_pcm_abs": 88479,
+        "max_amp": 11062,
+        "raw_mean": -8.4,
+        "raw_abs_mean": 10858.9,
+        "raw_min": -88479,
+        "raw_max": 79177,
+        "baseline": 23.7
+      },
+      "check": {
+        "samples": 5600,
+        "tone_amp": 2264,
+        "peak_abs": 88479,
+        "env_len_ms": 70
+      }
+    },
+    {
+      "label": "radio_speech",
+      "rep": 4,
+      "file": "radio_speech_r4.csv",
+      "wav": "radio_speech_r4.wav",
+      "started": "2026-10-16T14:53:32",
+      "firmware": null,
+      "fields": [
+        "ms",
+        "amp",
+        "pcm"
+      ],
+      "raw": {
+        "sr": 16000,
+        "f": 3200,
+        "dur": 20,
+        "pre_ms": 0,
+        "post_ms": 350,
+        "mode": "both",
+        "emit_seen": 1,
+        "emit_start_ms": 197632,
+        "emit_done_ms": 197649,
+        "pre_samples": 0,
+        "post_samples": 5600
+      },
+      "summary": {
+        "id": 5,
+        "requested": 5600,
+        "captured": 5600,
+        "unused_capacity": 400,
+        "max_pcm_abs": 125118,
+        "max_amp": 15643,
+        "raw_mean": 13.6,
+        "raw_abs_mean": 10421.5,
+        "raw_min": -125118,
+        "raw_max": 117469,
+        "baseline": 33.9
+      },
+      "check": {
+        "samples": 5600,
+        "tone_amp": 331,
+        "peak_abs": 125118,
+        "env_len_ms": 15
+      }
+    },
+    {
+      "label": "radio_speech",
+      "rep": 5,
+      "file": "radio_speech_r5.csv",
+      "wav": "radio_speech_r5.wav",
+      "started": "2026-10-16T14:53:42",
+      "firmware": null,
+      "fields": [
+        "ms",
+        "amp",
+        "pcm"
+      ],
+      "raw": {
+        "sr": 16000,
+        "f": 3200,
+        "dur": 20,
+        "pre_ms": 0,
+        "post_ms": 350,
+        "mode": "both",
+        "emit_seen": 1,
+        "emit_start_ms": 207379,
+        "emit_done_ms": 207398,
+        "pre_samples": 0,
+        "post_samples": 5600
+      },
+      "summary": {
+        "id": 6,
+        "requested": 5600,
+        "captured": 5600,
+        "unused_capacity": 400,
+        "max_pcm_abs": 40842,
+        "max_amp": 5106,
+        "raw_mean": 71.5,
+        "raw_abs_mean": 5220.0,
+        "raw_min": -40842,
+        "raw_max": 38611,
+        "baseline": 16.4
+      },
+      "check": {
+        "samples": 5600,
+        "tone_amp": 69,
+        "peak_abs": 40842,
+        "env_len_ms": 60
+      }
+    },
+    {
+      "label": "radio_speech",
+      "rep": 6,
+      "file": "radio_speech_r6.csv",
+      "wav": "radio_speech_r6.wav",
+      "started": "2026-10-16T14:53:51",
+      "firmware": null,
+      "fields": [
+        "ms",
+        "amp",
+        "pcm"
+      ],
+      "raw": {
+        "sr": 16000,
+        "f": 3200,
+        "dur": 20,
+        "pre_ms": 0,
+        "post_ms": 350,
+        "mode": "both",
+        "emit_seen": 1,
+        "emit_start_ms": 216816,
+        "emit_done_ms": 216833,
+        "pre_samples": 0,
+        "post_samples": 5600
+      },
+      "summary": {
+        "id": 7,
+        "requested": 5600,
+        "captured": 5600,
+        "unused_capacity": 400,
+        "max_pcm_abs": 45200,
+        "max_amp": 5651,
+        "raw_mean": 7.8,
+        "raw_abs_mean": 6755.7,
+        "raw_min": -45200,
+        "raw_max": 45167,
+        "baseline": 14.1
+      },
+      "check": {
+        "samples": 5600,
+        "tone_amp": 2414,
+        "peak_abs": 45200,
+        "env_len_ms": 70
+      }
+    },
+    {
+      "label": "radio_speech",
+      "rep": 7,
+      "file": "radio_speech_r7.csv",
+      "wav": "radio_speech_r7.wav",
+      "started": "2026-10-16T14:54:01",
+      "firmware": null,
+      "fields": [
+        "ms",
+        "amp",
+        "pcm"
+      ],
+      "raw": {
+        "sr": 16000,
+        "f": 3200,
+        "dur": 20,
+        "pre_ms": 0,
+        "post_ms": 350,
+        "mode": "both",
+        "emit_seen": 1,
+        "emit_start_ms": 226400,
+        "emit_done_ms": 226417,
+        "pre_samples": 0,
+        "post_samples": 5600
+      },
+      "summary": {
+        "id": 8,
+        "requested": 5600,
+        "captured": 5600,
+        "unused_capacity": 400,
+        "max_pcm_abs": 32513,
+        "max_amp": 4065,
+        "raw_mean": -15.0,
+        "raw_abs_mean": 5674.3,
+        "raw_min": -32513,
+        "raw_max": 28537,
+        "baseline": 19.6
+      },
+      "check": {
+        "samples": 5600,
+        "tone_amp": 81,
+        "peak_abs": 32513,
+        "env_len_ms": 80
+      }
+    },
+    {
+      "label": "radio_speech",
+      "rep": 8,
+      "file": "radio_speech_r8.csv",
+      "wav": "radio_speech_r8.wav",
+      "started": "2026-10-16T14:54:10",
+      "firmware": null,
+      "fields": [
+        "ms",
+        "amp",
+        "pcm"
+      ],
+      "raw": {
+        "sr": 16000,
+        "f": 3200,
+        "dur": 20,
+        "pre_ms": 0,
+        "post_ms": 350,
+        "mode": "both",
+        "emit_seen": 1,
+        "emit_start_ms": 235944,
+        "emit_done_ms": 235961,
+        "pre_samples": 0,
+        "post_samples": 5600
+      },
+      "summary": {
+        "id": 9,
+        "requested": 5600,
+        "captured": 5600,
+        "unused_capacity": 400,
+        "max_pcm_abs": 78223,
+        "max_amp": 9774,
+        "raw_mean": -132.7,
+        "raw_abs_mean": 7120.5,
+        "raw_min": -74466,
+        "raw_max": 78223,
+        "baseline": 17.0
+      },
+      "check": {
+        "samples": 5600,
+        "tone_amp": 316,
+        "peak_abs": 78223,
+        "env_len_ms": 70
+      }
+    },
+    {
+      "label": "radio_speech",
+      "rep": 9,
+      "file": "radio_speech_r9.csv",
+      "wav": "radio_speech_r9.wav",
+      "started": "2026-10-16T14:54:20",
+      "firmware": null,
+      "fields": [
+        "ms",
+        "amp",
+        "pcm"
+      ],
+      "raw": {
+        "sr": 16000,
+        "f": 3200,
+        "dur": 20,
+        "pre_ms": 0,
+        "post_ms": 350,
+        "mode": "both",
+        "emit_seen": 1,
+        "emit_start_ms": 245465,
+        "emit_done_ms": 245483,
+        "pre_samples": 0,
+        "post_samples": 5600
+      },
+      "summary": {
+        "id": 10,
+        "requested": 5600,
+        "captured": 5600,
+        "unused_capacity": 400,
+        "max_pcm_abs": 40877,
+        "max_amp": 5107,
+        "raw_mean": -29.6,
+        "raw_abs_mean": 6269.8,
+        "raw_min": -42253,
+        "raw_max": 42716,
+        "baseline": 20.9
+      },
+      "check": {
+        "samples": 5600,
+        "tone_amp": 596,
+        "peak_abs": 40877,
+        "env_len_ms": 55
+      }
+    },
+    {
+      "label": "radio_speech",
+      "rep": 10,
+      "file": "radio_speech_r10.csv",
+      "wav": "radio_speech_r10.wav",
+      "started": "2026-10-16T14:54:29",
+      "firmware": null,
+      "fields": [
+        "ms",
+        "amp",
+        "pcm"
+      ],
+      "raw": {
+        "sr": 16000,
+        "f": 3200,
+        "dur": 20,
+        "pre_ms": 0,
+        "post_ms": 350,
+        "mode": "both",
+        "emit_seen": 1,
+        "emit_start_ms": 255002,
+        "emit_done_ms": 255020,
+        "pre_samples": 0,
+        "post_samples": 5600
+      },
+      "summary": {
+        "id": 11,
+        "requested": 5600,
+        "captured": 5600,
+        "unused_capacity": 400,
+        "max_pcm_abs": 40281,
+        "max_amp": 5037,
+        "raw_mean": -408.2,
+        "raw_abs_mean": 4282.1,
+        "raw_min": -40281,
+        "raw_max": 38894,
+        "baseline": 21.1
+      },
+      "check": {
+        "samples": 5600,
+        "tone_amp": 1013,
+        "peak_abs": 40281,
+        "env_len_ms": 50
+      }
+    },
+    {
+      "label": "radio_speech",
+      "rep": 11,
+      "file": "radio_speech_r11.csv",
+      "wav": "radio_speech_r11.wav",
+      "started": "2026-10-16T14:54:39",
+      "firmware": null,
+      "fields": [
+        "ms",
+        "amp",
+        "pcm"
+      ],
+      "raw": {
+        "sr": 16000,
+        "f": 3200,
+        "dur": 20,
+        "pre_ms": 0,
+        "post_ms": 350,
+        "mode": "both",
+        "emit_seen": 1,
+        "emit_start_ms": 264321,
+        "emit_done_ms": 264339,
+        "pre_samples": 0,
+        "post_samples": 5600
+      },
+      "summary": {
+        "id": 12,
+        "requested": 5600,
+        "captured": 5600,
+        "unused_capacity": 400,
+        "max_pcm_abs": 59676,
+        "max_amp": 7461,
+        "raw_mean": 217.7,
+        "raw_abs_mean": 10069.6,
+        "raw_min": -59676,
+        "raw_max": 76075,
+        "baseline": 22.1
+      },
+      "check": {
+        "samples": 5600,
+        "tone_amp": 1788,
+        "peak_abs": 59676,
+        "env_len_ms": 155
+      }
+    },
+    {
+      "label": "radio_music",
+      "rep": 0,
+      "file": "radio_music_r0.csv",
+      "wav": "radio_music_r0.wav",
+      "started": "2026-10-16T14:55:24",
+      "firmware": null,
+      "fields": [
+        "ms",
+        "amp",
+        "pcm"
+      ],
+      "raw": {
+        "sr": 16000,
+        "f": 3200,
+        "dur": 20,
+        "pre_ms": 0,
+        "post_ms": 350,
+        "mode": "both",
+        "emit_seen": 1,
+        "emit_start_ms": 35787,
+        "emit_done_ms": 35805,
+        "pre_samples": 0,
+        "post_samples": 5600
+      },
+      "summary": {
+        "id": 1,
+        "requested": 5600,
+        "captured": 5600,
+        "unused_capacity": 400,
+        "max_pcm_abs": 75620,
+        "max_amp": 9475,
+        "raw_mean": -8.8,
+        "raw_abs_mean": 16720.3,
+        "raw_min": -74351,
+        "raw_max": 75620,
+        "baseline": 1456.5
+      },
+      "check": {
+        "samples": 5600,
+        "tone_amp": 10426,
+        "peak_abs": 75620,
+        "env_len_ms": 340
+      }
+    },
+    {
+      "label": "radio_music",
+      "rep": 1,
+      "file": "radio_music_r1.csv",
+      "wav": "radio_music_r1.wav",
+      "started": "2026-10-16T14:55:34",
+      "firmware": null,
+      "fields": [
+        "ms",
+        "amp",
+        "pcm"
+      ],
+      "raw": {
+        "sr": 16000,
+        "f": 3200,
+        "dur": 20,
+        "pre_ms": 0,
+        "post_ms": 350,
+        "mode": "both",
+        "emit_seen": 1,
+        "emit_start_ms": 45380,
+        "emit_done_ms": 45398,
+        "pre_samples": 0,
+        "post_samples": 5600
+      },
+      "summary": {
+        "id": 2,
+        "requested": 5600,
+        "captured": 5600,
+        "unused_capacity": 400,
+        "max_pcm_abs": 119145,
+        "max_amp": 14711,
+        "raw_mean": -36.9,
+        "raw_abs_mean": 23027.3,
+        "raw_min": -98789,
+        "raw_max": 119145,
+        "baseline": 1447.3
+      },
+      "check": {
+        "samples": 5600,
+        "tone_amp": 3001,
+        "peak_abs": 119145,
+        "env_len_ms": 330
+      }
+    },
+    {
+      "label": "radio_music",
+      "rep": 2,
+      "file": "radio_music_r2.csv",
+      "wav": "radio_music_r2.wav",
+      "started": "2026-10-16T14:55:44",
+      "firmware": null,
+      "fields": [
+        "ms",
+        "amp",
+        "pcm"
+      ],
+      "raw": {
+        "sr": 16000,
+        "f": 3200,
+        "dur": 20,
+        "pre_ms": 0,
+        "post_ms": 350,
+        "mode": "both",
+        "emit_seen": 1,
+        "emit_start_ms": 55071,
+        "emit_done_ms": 55089,
+        "pre_samples": 0,
+        "post_samples": 5600
+      },
+      "summary": {
+        "id": 3,
+        "requested": 5600,
+        "captured": 5600,
+        "unused_capacity": 400,
+        "max_pcm_abs": 89083,
+        "max_amp": 11288,
+        "raw_mean": 538.7,
+        "raw_abs_mean": 19007.0,
+        "raw_min": -88848,
+        "raw_max": 89083,
+        "baseline": 1459.1
+      },
+      "check": {
+        "samples": 5600,
+        "tone_amp": 3624,
+        "peak_abs": 89083,
+        "env_len_ms": 330
+      }
+    },
+    {
+      "label": "radio_music",
+      "rep": 3,
+      "file": "radio_music_r3.csv",
+      "wav": "radio_music_r3.wav",
+      "started": "2026-10-16T14:55:53",
+      "firmware": null,
+      "fields": [
+        "ms",
+        "amp",
+        "pcm"
+      ],
+      "raw": {
+        "sr": 16000,
+        "f": 3200,
+        "dur": 20,
+        "pre_ms": 0,
+        "post_ms": 350,
+        "mode": "both",
+        "emit_seen": 1,
+        "emit_start_ms": 64679,
+        "emit_done_ms": 64697,
+        "pre_samples": 0,
+        "post_samples": 5600
+      },
+      "summary": {
+        "id": 4,
+        "requested": 5600,
+        "captured": 5600,
+        "unused_capacity": 400,
+        "max_pcm_abs": 129482,
+        "max_amp": 16367,
+        "raw_mean": 447.4,
+        "raw_abs_mean": 23633.5,
+        "raw_min": -129482,
+        "raw_max": 113224,
+        "baseline": 1461.1
+      },
+      "check": {
+        "samples": 5600,
+        "tone_amp": 2313,
+        "peak_abs": 129482,
+        "env_len_ms": 245
+      }
+    },
+    {
+      "label": "radio_music",
+      "rep": 4,
+      "file": "radio_music_r4.csv",
+      "wav": "radio_music_r4.wav",
+      "started": "2026-10-16T14:56:03",
+      "firmware": null,
+      "fields": [
+        "ms",
+        "amp",
+        "pcm"
+      ],
+      "raw": {
+        "sr": 16000,
+        "f": 3200,
+        "dur": 20,
+        "pre_ms": 0,
+        "post_ms": 350,
+        "mode": "both",
+        "emit_seen": 1,
+        "emit_start_ms": 74367,
+        "emit_done_ms": 74385,
+        "pre_samples": 0,
+        "post_samples": 5600
+      },
+      "summary": {
+        "id": 5,
+        "requested": 5600,
+        "captured": 5600,
+        "unused_capacity": 400,
+        "max_pcm_abs": 117293,
+        "max_amp": 14478,
+        "raw_mean": 284.0,
+        "raw_abs_mean": 20903.8,
+        "raw_min": -84932,
+        "raw_max": 117293,
+        "baseline": 1459.6
+      },
+      "check": {
+        "samples": 5600,
+        "tone_amp": 2399,
+        "peak_abs": 117293,
+        "env_len_ms": 325
+      }
+    },
+    {
+      "label": "radio_music",
+      "rep": 5,
+      "file": "radio_music_r5.csv",
+      "wav": "radio_music_r5.wav",
+      "started": "2026-10-16T14:56:13",
+      "firmware": null,
+      "fields": [
+        "ms",
+        "amp",
+        "pcm"
+      ],
+      "raw": {
+        "sr": 16000,
+        "f": 3200,
+        "dur": 20,
+        "pre_ms": 0,
+        "post_ms": 350,
+        "mode": "both",
+        "emit_seen": 1,
+        "emit_start_ms": 84033,
+        "emit_done_ms": 84051,
+        "pre_samples": 0,
+        "post_samples": 5600
+      },
+      "summary": {
+        "id": 6,
+        "requested": 5600,
+        "captured": 5600,
+        "unused_capacity": 400,
+        "max_pcm_abs": 173833,
+        "max_amp": 21547,
+        "raw_mean": 4997.8,
+        "raw_abs_mean": 24007.7,
+        "raw_min": -106679,
+        "raw_max": 173833,
+        "baseline": 1446.2
+      },
+      "check": {
+        "samples": 5600,
+        "tone_amp": 3274,
+        "peak_abs": 173833,
+        "env_len_ms": 10
+      }
+    },
+    {
+      "label": "radio_music",
+      "rep": 6,
+      "file": "radio_music_r6.csv",
+      "wav": "radio_music_r6.wav",
+      "started": "2026-10-16T14:56:22",
+      "firmware": null,
+      "fields": [
+        "ms",
+        "amp",
+        "pcm"
+      ],
+      "raw": {
+        "sr": 16000,
+        "f": 3200,
+        "dur": 20,
+        "pre_ms": 0,
+        "post_ms": 350,
+        "mode": "both",
+        "emit_seen": 1,
+        "emit_start_ms": 93699,
+        "emit_done_ms": 93717,
+        "pre_samples": 0,
+        "post_samples": 5600
+      },
+      "summary": {
+        "id": 7,
+        "requested": 5600,
+        "captured": 5600,
+        "unused_capacity": 400,
+        "max_pcm_abs": 103628,
+        "max_amp": 12772,
+        "raw_mean": -150.1,
+        "raw_abs_mean": 19892.7,
+        "raw_min": -93723,
+        "raw_max": 103628,
+        "baseline": 1442.9
+      },
+      "check": {
+        "samples": 5600,
+        "tone_amp": 7957,
+        "peak_abs": 103628,
+        "env_len_ms": 330
+      }
+    },
+    {
+      "label": "radio_music",
+      "rep": 7,
+      "file": "radio_music_r7.csv",
+      "wav": "radio_music_r7.wav",
+      "started": "2026-10-16T14:56:32",
+      "firmware": null,
+      "fields": [
+        "ms",
+        "amp",
+        "pcm"
+      ],
+      "raw": {
+        "sr": 16000,
+        "f": 3200,
+        "dur": 20,
+        "pre_ms": 0,
+        "post_ms": 350,
+        "mode": "both",
+        "emit_seen": 1,
+        "emit_start_ms": 103352,
+        "emit_done_ms": 103370,
+        "pre_samples": 0,
+        "post_samples": 5600
+      },
+      "summary": {
+        "id": 8,
+        "requested": 5600,
+        "captured": 5600,
+        "unused_capacity": 400,
+        "max_pcm_abs": 79830,
+        "max_amp": 10158,
+        "raw_mean": -78.2,
+        "raw_abs_mean": 15373.1,
+        "raw_min": -79830,
+        "raw_max": 69840,
+        "baseline": 1440.4
+      },
+      "check": {
+        "samples": 5600,
+        "tone_amp": 2243,
+        "peak_abs": 79830,
+        "env_len_ms": 325
+      }
+    },
+    {
+      "label": "radio_music",
+      "rep": 8,
+      "file": "radio_music_r8.csv",
+      "wav": "radio_music_r8.wav",
+      "started": "2026-10-16T14:56:42",
+      "firmware": null,
+      "fields": [
+        "ms",
+        "amp",
+        "pcm"
+      ],
+      "raw": {
+        "sr": 16000,
+        "f": 3200,
+        "dur": 20,
+        "pre_ms": 0,
+        "post_ms": 350,
+        "mode": "both",
+        "emit_seen": 1,
+        "emit_start_ms": 113383,
+        "emit_done_ms": 113401,
+        "pre_samples": 0,
+        "post_samples": 5600
+      },
+      "summary": {
+        "id": 9,
+        "requested": 5600,
+        "captured": 5600,
+        "unused_capacity": 400,
+        "max_pcm_abs": 54894,
+        "max_amp": 6683,
+        "raw_mean": 78.5,
+        "raw_abs_mean": 7689.2,
+        "raw_min": -48071,
+        "raw_max": 54894,
+        "baseline": 1424.9
+      },
+      "check": {
+        "samples": 5600,
+        "tone_amp": 1096,
+        "peak_abs": 54894,
+        "env_len_ms": 95
+      }
+    },
+    {
+      "label": "radio_music",
+      "rep": 9,
+      "file": "radio_music_r9.csv",
+      "wav": "radio_music_r9.wav",
+      "started": "2026-10-16T14:56:52",
+      "firmware": null,
+      "fields": [
+        "ms",
+        "amp",
+        "pcm"
+      ],
+      "raw": {
+        "sr": 16000,
+        "f": 3200,
+        "dur": 20,
+        "pre_ms": 0,
+        "post_ms": 350,
+        "mode": "both",
+        "emit_seen": 1,
+        "emit_start_ms": 123068,
+        "emit_done_ms": 123086,
+        "pre_samples": 0,
+        "post_samples": 5600
+      },
+      "summary": {
+        "id": 10,
+        "requested": 5600,
+        "captured": 5600,
+        "unused_capacity": 400,
+        "max_pcm_abs": 91922,
+        "max_amp": 11667,
+        "raw_mean": -190.6,
+        "raw_abs_mean": 13891.4,
+        "raw_min": -91922,
+        "raw_max": 87237,
+        "baseline": 1422.2
+      },
+      "check": {
+        "samples": 5600,
+        "tone_amp": 7010,
+        "peak_abs": 91922,
+        "env_len_ms": 130
+      }
+    },
+    {
+      "label": "radio_music",
+      "rep": 10,
+      "file": "radio_music_r10.csv",
+      "wav": "radio_music_r10.wav",
+      "started": "2026-10-16T14:57:02",
+      "firmware": null,
+      "fields": [
+        "ms",
+        "amp",
+        "pcm"
+      ],
+      "raw": {
+        "sr": 16000,
+        "f": 3200,
+        "dur": 20,
+        "pre_ms": 0,
+        "post_ms": 350,
+        "mode": "both",
+        "emit_seen": 1,
+        "emit_start_ms": 133011,
+        "emit_done_ms": 133028,
+        "pre_samples": 0,
+        "post_samples": 5600
+      },
+      "summary": {
+        "id": 11,
+        "requested": 5600,
+        "captured": 5600,
+        "unused_capacity": 400,
+        "max_pcm_abs": 48444,
+        "max_amp": 6232,
+        "raw_mean": -469.9,
+        "raw_abs_mean": 8511.3,
+        "raw_min": -48444,
+        "raw_max": 44567,
+        "baseline": 1420.3
+      },
+      "check": {
+        "samples": 5600,
+        "tone_amp": 462,
+        "peak_abs": 48444,
+        "env_len_ms": 50
+      }
+    },
+    {
+      "label": "radio_music",
+      "rep": 11,
+      "file": "radio_music_r11.csv",
+      "wav": "radio_music_r11.wav",
+      "started": "2026-10-16T14:57:11",
+      "firmware": null,
+      "fields": [
+        "ms",
+        "amp",
+        "pcm"
+      ],
+      "raw": {
+        "sr": 16000,
+        "f": 3200,
+        "dur": 20,
+        "pre_ms": 0,
+        "post_ms": 350,
+        "mode": "both",
+        "emit_seen": 1,
+        "emit_start_ms": 142777,
+        "emit_done_ms": 142794,
+        "pre_samples": 0,
+        "post_samples": 5600
+      },
+      "summary": {
+        "id": 12,
+        "requested": 5600,
+        "captured": 5600,
+        "unused_capacity": 400,
+        "max_pcm_abs": 96455,
+        "max_amp": 11976,
+        "raw_mean": -2287.0,
+        "raw_abs_mean": 17244.2,
+        "raw_min": -94399,
+        "raw_max": 96455,
+        "baseline": 1411.8
+      },
+      "check": {
+        "samples": 5600,
+        "tone_amp": 2565,
+        "peak_abs": 96455,
+        "env_len_ms": 220
+      }
+    }
+  ]
+}

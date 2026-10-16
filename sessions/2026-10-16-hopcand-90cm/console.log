@@ -1,0 +1,9 @@
+[14:35:08] boot banner: {'role': 'analyzer', 'git': '162c847', 'version': '0.4.0', 'board': 'damp'}
+[14:35:10] warmup: OK EMIT CHIRP
+[14:35:10] start chirp3200: SEQ DIAG on ; SEQ start profile=TonalPulseScalar tries=10 freq=3200 mode=detail when=all verbose=1
+[14:35:47] done chirp3200 (37s): complete=True results={'expected': 10}
+[14:35:49] start hop5_p25g10: SEQ DIAG on ; SEQ start profile=TonalPulseScalar tries=10 freq=3300 band=2800-3800 dur=25 pulses=5 gap=10 hop=2800,3050,3300,3550,3800 mode=detail when=all verbose=1
+[14:36:27] done hop5_p25g10 (37s): complete=True results={'expected': 10}
+[14:36:29] start hop4_p30g10_bin: SEQ DIAG on ; SEQ start profile=TonalPulseScalar tries=10 freq=3300 band=2800-3800 dur=30 pulses=4 gap=10 hop=2800,3300,3800,3050 mode=detail when=all verbose=1
+[14:37:06] done hop4_p30g10_bin (37s): complete=True results={'expected': 10}
+[14:37:12] session updated, index rebuilt

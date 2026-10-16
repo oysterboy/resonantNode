@@ -73,6 +73,13 @@ Keep in `logs/` (not committed): tuning campaigns (LOG-001), RAW PCM dumps,
 and exploratory runs nobody will cite. If one of those later turns out to
 matter, import it with `tools/bench/import_session.py`.
 
+Exception: the **capture corpus** (`sessions/YYYY-MM-DD-corpus-<slug>/`,
+`tools/bench/rawcorpus.py`) is committed. It holds short RAW captures as CSV
+transcript + 24-bit WAV + `captures.json` (the manifest: RAW_BEGIN fields,
+firmware banner, tone check per capture) and is cited as replay and
+regression material, so it is not an exploratory dump. These folders have no
+`session.json` and no `index.csv` rows; `captures.json` is their index.
+
 ## Baselines
 
 `baselines.csv` names the reference run for a test at a given setup. A

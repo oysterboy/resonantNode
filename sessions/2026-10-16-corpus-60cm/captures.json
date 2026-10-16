@@ -1,0 +1,740 @@
+{
+  "purpose": "",
+  "setup": {
+    "distance_cm": 60.0,
+    "orientation": "mic and speaker facing up, bench",
+    "notes": "combined build 162c847+overrides; E3 hop emitter 0.5 FS; pos0 = gate placement 60 cm, pos1 = 62 cm"
+  },
+  "captures": [
+    {
+      "label": "tone3200_pos0",
+      "rep": 0,
+      "file": "tone3200_pos0_r0.csv",
+      "wav": "tone3200_pos0_r0.wav",
+      "started": "2026-10-16T14:08:13",
+      "firmware": {
+        "role": "analyzer",
+        "git": "162c847",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "fields": [
+        "ms",
+        "amp",
+        "pcm"
+      ],
+      "raw": {
+        "sr": 16000,
+        "f": 3200,
+        "dur": 100,
+        "pre_ms": 50,
+        "post_ms": 250,
+        "mode": "both",
+        "emit_seen": 1,
+        "emit_start_ms": 3452,
+        "emit_done_ms": 3550,
+        "pre_samples": 212,
+        "post_samples": 4000
+      },
+      "summary": {
+        "id": 1,
+        "requested": 4800,
+        "captured": 4212,
+        "unused_capacity": 1788,
+        "max_pcm_abs": 44440,
+        "max_amp": 5498,
+        "raw_mean": 359.1,
+        "raw_abs_mean": 12822.5,
+        "raw_min": -42190,
+        "raw_max": 44440,
+        "baseline": 451.2
+      },
+      "check": {
+        "samples": 4212,
+        "tone_amp": 23810,
+        "peak_abs": 44440,
+        "env_len_ms": 130
+      }
+    },
+    {
+      "label": "tone3200_pos0",
+      "rep": 1,
+      "file": "tone3200_pos0_r1.csv",
+      "wav": "tone3200_pos0_r1.wav",
+      "started": "2026-10-16T14:08:20",
+      "firmware": {
+        "role": "analyzer",
+        "git": "162c847",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "fields": [
+        "ms",
+        "amp",
+        "pcm"
+      ],
+      "raw": {
+        "sr": 16000,
+        "f": 3200,
+        "dur": 100,
+        "pre_ms": 50,
+        "post_ms": 250,
+        "mode": "both",
+        "emit_seen": 1,
+        "emit_start_ms": 10224,
+        "emit_done_ms": 10321,
+        "pre_samples": 256,
+        "post_samples": 4000
+      },
+      "summary": {
+        "id": 2,
+        "requested": 4800,
+        "captured": 4256,
+        "unused_capacity": 1744,
+        "max_pcm_abs": 37155,
+        "max_amp": 4605,
+        "raw_mean": 22.1,
+        "raw_abs_mean": 10416.0,
+        "raw_min": -36485,
+        "raw_max": 37155,
+        "baseline": 363.3
+      },
+      "check": {
+        "samples": 4256,
+        "tone_amp": 20941,
+        "peak_abs": 37155,
+        "env_len_ms": 110
+      }
+    },
+    {
+      "label": "tone2800_pos0",
+      "rep": 0,
+      "file": "tone2800_pos0_r0.csv",
+      "wav": "tone2800_pos0_r0.wav",
+      "started": "2026-10-16T14:08:30",
+      "firmware": null,
+      "fields": [
+        "ms",
+        "amp",
+        "pcm"
+      ],
+      "raw": {
+        "sr": 16000,
+        "f": 2800,
+        "dur": 100,
+        "pre_ms": 50,
+        "post_ms": 250,
+        "mode": "both",
+        "emit_seen": 1,
+        "emit_start_ms": 3642,
+        "emit_done_ms": 3740,
+        "pre_samples": 288,
+        "post_samples": 4000
+      },
+      "summary": {
+        "id": 1,
+        "requested": 4800,
+        "captured": 4288,
+        "unused_capacity": 1712,
+        "max_pcm_abs": 32867,
+        "max_amp": 4165,
+        "raw_mean": -224.4,
+        "raw_abs_mean": 8729.9,
+        "raw_min": -32479,
+        "raw_max": 32867,
+        "baseline": -460.3
+      },
+      "check": {
+        "samples": 4288,
+        "tone_amp": 13555,
+        "peak_abs": 32867,
+        "env_len_ms": 125
+      }
+    },
+    {
+      "label": "tone2800_pos0",
+      "rep": 1,
+      "file": "tone2800_pos0_r1.csv",
+      "wav": "tone2800_pos0_r1.wav",
+      "started": "2026-10-16T14:08:37",
+      "firmware": null,
+      "fields": [
+        "ms",
+        "amp",
+        "pcm"
+      ],
+      "raw": {
+        "sr": 16000,
+        "f": 2800,
+        "dur": 100,
+        "pre_ms": 50,
+        "post_ms": 250,
+        "mode": "both",
+        "emit_seen": 1,
+        "emit_start_ms": 10378,
+        "emit_done_ms": 10476,
+        "pre_samples": 287,
+        "post_samples": 4000
+      },
+      "summary": {
+        "id": 2,
+        "requested": 4800,
+        "captured": 4287,
+        "unused_capacity": 1713,
+        "max_pcm_abs": 33895,
+        "max_amp": 4283,
+        "raw_mean": 79.8,
+        "raw_abs_mean": 8891.8,
+        "raw_min": -32468,
+        "raw_max": 33895,
+        "baseline": -373.8
+      },
+      "check": {
+        "samples": 4287,
+        "tone_amp": 13845,
+        "peak_abs": 33895,
+        "env_len_ms": 120
+      }
+    },
+    {
+      "label": "tone3300_pos0",
+      "rep": 0,
+      "file": "tone3300_pos0_r0.csv",
+      "wav": "tone3300_pos0_r0.wav",
+      "started": "2026-10-16T14:08:48",
+      "firmware": null,
+      "fields": [
+        "ms",
+        "amp",
+        "pcm"
+      ],
+      "raw": {
+        "sr": 16000,
+        "f": 3300,
+        "dur": 100,
+        "pre_ms": 50,
+        "post_ms": 250,
+        "mode": "both",
+        "emit_seen": 1,
+        "emit_start_ms": 3644,
+        "emit_done_ms": 3742,
+        "pre_samples": 226,
+        "post_samples": 4000
+      },
+      "summary": {
+        "id": 1,
+        "requested": 4800,
+        "captured": 4226,
+        "unused_capacity": 1774,
+        "max_pcm_abs": 47708,
+        "max_amp": 5910,
+        "raw_mean": -95.0,
+        "raw_abs_mean": 11680.2,
+        "raw_min": -46160,
+        "raw_max": 47708,
+        "baseline": 425.8
+      },
+      "check": {
+        "samples": 4226,
+        "tone_amp": 20519,
+        "peak_abs": 47708,
+        "env_len_ms": 100
+      }
+    },
+    {
+      "label": "tone3300_pos0",
+      "rep": 1,
+      "file": "tone3300_pos0_r1.csv",
+      "wav": "tone3300_pos0_r1.wav",
+      "started": "2026-10-16T14:08:55",
+      "firmware": null,
+      "fields": [
+        "ms",
+        "amp",
+        "pcm"
+      ],
+      "raw": {
+        "sr": 16000,
+        "f": 3300,
+        "dur": 100,
+        "pre_ms": 50,
+        "post_ms": 250,
+        "mode": "both",
+        "emit_seen": 1,
+        "emit_start_ms": 10368,
+        "emit_done_ms": 10466,
+        "pre_samples": 256,
+        "post_samples": 4000
+      },
+      "summary": {
+        "id": 2,
+        "requested": 4800,
+        "captured": 4256,
+        "unused_capacity": 1744,
+        "max_pcm_abs": 45083,
+        "max_amp": 5681,
+        "raw_mean": 28.2,
+        "raw_abs_mean": 12098.8,
+        "raw_min": -45083,
+        "raw_max": 43508,
+        "baseline": 373.4
+      },
+      "check": {
+        "samples": 4256,
+        "tone_amp": 19645,
+        "peak_abs": 45083,
+        "env_len_ms": 110
+      }
+    },
+    {
+      "label": "tone3800_pos0",
+      "rep": 0,
+      "file": "tone3800_pos0_r0.csv",
+      "wav": "tone3800_pos0_r0.wav",
+      "started": "2026-10-16T14:09:06",
+      "firmware": null,
+      "fields": [
+        "ms",
+        "amp",
+        "pcm"
+      ],
+      "raw": {
+        "sr": 16000,
+        "f": 3800,
+        "dur": 100,
+        "pre_ms": 50,
+        "post_ms": 250,
+        "mode": "both",
+        "emit_seen": 1,
+        "emit_start_ms": 3584,
+        "emit_done_ms": 3682,
+        "pre_samples": 256,
+        "post_samples": 4000
+      },
+      "summary": {
+        "id": 1,
+        "requested": 4800,
+        "captured": 4256,
+        "unused_capacity": 1744,
+        "max_pcm_abs": 52232,
+        "max_amp": 6528,
+        "raw_mean": 138.0,
+        "raw_abs_mean": 10170.7,
+        "raw_min": -52171,
+        "raw_max": 52232,
+        "baseline": 58.3
+      },
+      "check": {
+        "samples": 4256,
+        "tone_amp": 5337,
+        "peak_abs": 52232,
+        "env_len_ms": 65
+      }
+    },
+    {
+      "label": "tone3800_pos0",
+      "rep": 1,
+      "file": "tone3800_pos0_r1.csv",
+      "wav": "tone3800_pos0_r1.wav",
+      "started": "2026-10-16T14:09:12",
+      "firmware": null,
+      "fields": [
+        "ms",
+        "amp",
+        "pcm"
+      ],
+      "raw": {
+        "sr": 16000,
+        "f": 3800,
+        "dur": 100,
+        "pre_ms": 50,
+        "post_ms": 250,
+        "mode": "both",
+        "emit_seen": 1,
+        "emit_start_ms": 10320,
+        "emit_done_ms": 10418,
+        "pre_samples": 256,
+        "post_samples": 4000
+      },
+      "summary": {
+        "id": 2,
+        "requested": 4800,
+        "captured": 4256,
+        "unused_capacity": 1744,
+        "max_pcm_abs": 59714,
+        "max_amp": 7467,
+        "raw_mean": -127.2,
+        "raw_abs_mean": 11152.2,
+        "raw_min": -59714,
+        "raw_max": 57905,
+        "baseline": 33.2
+      },
+      "check": {
+        "samples": 4256,
+        "tone_amp": 5192,
+        "peak_abs": 59714,
+        "env_len_ms": 75
+      }
+    },
+    {
+      "label": "tone3200_pos1",
+      "rep": 0,
+      "file": "tone3200_pos1_r0.csv",
+      "wav": "tone3200_pos1_r0.wav",
+      "started": "2026-10-16T14:18:01",
+      "firmware": null,
+      "fields": [
+        "ms",
+        "amp",
+        "pcm"
+      ],
+      "raw": {
+        "sr": 16000,
+        "f": 3200,
+        "dur": 100,
+        "pre_ms": 50,
+        "post_ms": 250,
+        "mode": "both",
+        "emit_seen": 1,
+        "emit_start_ms": 521203,
+        "emit_done_ms": 521300,
+        "pre_samples": 180,
+        "post_samples": 4000
+      },
+      "summary": {
+        "id": 1,
+        "requested": 4800,
+        "captured": 4180,
+        "unused_capacity": 1820,
+        "max_pcm_abs": 73609,
+        "max_amp": 9205,
+        "raw_mean": 116.4,
+        "raw_abs_mean": 18906.6,
+        "raw_min": -70579,
+        "raw_max": 73609,
+        "baseline": -37.7
+      },
+      "check": {
+        "samples": 4180,
+        "tone_amp": 38917,
+        "peak_abs": 73609,
+        "env_len_ms": 115
+      }
+    },
+    {
+      "label": "tone3200_pos1",
+      "rep": 1,
+      "file": "tone3200_pos1_r1.csv",
+      "wav": "tone3200_pos1_r1.wav",
+      "started": "2026-10-16T14:18:08",
+      "firmware": null,
+      "fields": [
+        "ms",
+        "amp",
+        "pcm"
+      ],
+      "raw": {
+        "sr": 16000,
+        "f": 3200,
+        "dur": 100,
+        "pre_ms": 50,
+        "post_ms": 250,
+        "mode": "both",
+        "emit_seen": 1,
+        "emit_start_ms": 528720,
+        "emit_done_ms": 528817,
+        "pre_samples": 256,
+        "post_samples": 4000
+      },
+      "summary": {
+        "id": 2,
+        "requested": 4800,
+        "captured": 4256,
+        "unused_capacity": 1744,
+        "max_pcm_abs": 69149,
+        "max_amp": 8647,
+        "raw_mean": 252.9,
+        "raw_abs_mean": 16972.0,
+        "raw_min": -68200,
+        "raw_max": 69149,
+        "baseline": -35.7
+      },
+      "check": {
+        "samples": 4256,
+        "tone_amp": 34570,
+        "peak_abs": 69149,
+        "env_len_ms": 95
+      }
+    },
+    {
+      "label": "tone2800_pos1",
+      "rep": 0,
+      "file": "tone2800_pos1_r0.csv",
+      "wav": "tone2800_pos1_r0.wav",
+      "started": "2026-10-16T14:18:20",
+      "firmware": null,
+      "fields": [
+        "ms",
+        "amp",
+        "pcm"
+      ],
+      "raw": {
+        "sr": 16000,
+        "f": 2800,
+        "dur": 100,
+        "pre_ms": 50,
+        "post_ms": 250,
+        "mode": "both",
+        "emit_seen": 1,
+        "emit_start_ms": 3640,
+        "emit_done_ms": 3737,
+        "pre_samples": 256,
+        "post_samples": 4000
+      },
+      "summary": {
+        "id": 1,
+        "requested": 4800,
+        "captured": 4256,
+        "unused_capacity": 1744,
+        "max_pcm_abs": 47850,
+        "max_amp": 6027,
+        "raw_mean": 128.7,
+        "raw_abs_mean": 10429.4,
+        "raw_min": -45960,
+        "raw_max": 47850,
+        "baseline": -368.4
+      },
+      "check": {
+        "samples": 4256,
+        "tone_amp": 10524,
+        "peak_abs": 47850,
+        "env_len_ms": 100
+      }
+    },
+    {
+      "label": "tone2800_pos1",
+      "rep": 1,
+      "file": "tone2800_pos1_r1.csv",
+      "wav": "tone2800_pos1_r1.wav",
+      "started": "2026-10-16T14:18:26",
+      "firmware": null,
+      "fields": [
+        "ms",
+        "amp",
+        "pcm"
+      ],
+      "raw": {
+        "sr": 16000,
+        "f": 2800,
+        "dur": 100,
+        "pre_ms": 50,
+        "post_ms": 250,
+        "mode": "both",
+        "emit_seen": 1,
+        "emit_start_ms": 10344,
+        "emit_done_ms": 10441,
+        "pre_samples": 256,
+        "post_samples": 4000
+      },
+      "summary": {
+        "id": 2,
+        "requested": 4800,
+        "captured": 4256,
+        "unused_capacity": 1744,
+        "max_pcm_abs": 48827,
+        "max_amp": 6142,
+        "raw_mean": 194.0,
+        "raw_abs_mean": 10520.1,
+        "raw_min": -47060,
+        "raw_max": 48827,
+        "baseline": -314.3
+      },
+      "check": {
+        "samples": 4256,
+        "tone_amp": 10519,
+        "peak_abs": 48827,
+        "env_len_ms": 100
+      }
+    },
+    {
+      "label": "tone3300_pos1",
+      "rep": 0,
+      "file": "tone3300_pos1_r0.csv",
+      "wav": "tone3300_pos1_r0.wav",
+      "started": "2026-10-16T14:18:37",
+      "firmware": null,
+      "fields": [
+        "ms",
+        "amp",
+        "pcm"
+      ],
+      "raw": {
+        "sr": 16000,
+        "f": 3300,
+        "dur": 100,
+        "pre_ms": 50,
+        "post_ms": 250,
+        "mode": "both",
+        "emit_seen": 1,
+        "emit_start_ms": 3647,
+        "emit_done_ms": 3745,
+        "pre_samples": 256,
+        "post_samples": 4000
+      },
+      "summary": {
+        "id": 1,
+        "requested": 4800,
+        "captured": 4256,
+        "unused_capacity": 1744,
+        "max_pcm_abs": 54070,
+        "max_amp": 6791,
+        "raw_mean": 5.1,
+        "raw_abs_mean": 14700.7,
+        "raw_min": -52315,
+        "raw_max": 54070,
+        "baseline": -259.2
+      },
+      "check": {
+        "samples": 4256,
+        "tone_amp": 18520,
+        "peak_abs": 54070,
+        "env_len_ms": 105
+      }
+    },
+    {
+      "label": "tone3300_pos1",
+      "rep": 1,
+      "file": "tone3300_pos1_r1.csv",
+      "wav": "tone3300_pos1_r1.wav",
+      "started": "2026-10-16T14:18:44",
+      "firmware": null,
+      "fields": [
+        "ms",
+        "amp",
+        "pcm"
+      ],
+      "raw": {
+        "sr": 16000,
+        "f": 3300,
+        "dur": 100,
+        "pre_ms": 50,
+        "post_ms": 250,
+        "mode": "both",
+        "emit_seen": 1,
+        "emit_start_ms": 10511,
+        "emit_done_ms": 10609,
+        "pre_samples": 256,
+        "post_samples": 4000
+      },
+      "summary": {
+        "id": 2,
+        "requested": 4800,
+        "captured": 4256,
+        "unused_capacity": 1744,
+        "max_pcm_abs": 59299,
+        "max_amp": 7441,
+        "raw_mean": -132.2,
+        "raw_abs_mean": 15281.5,
+        "raw_min": -55691,
+        "raw_max": 59299,
+        "baseline": -238.0
+      },
+      "check": {
+        "samples": 4256,
+        "tone_amp": 19404,
+        "peak_abs": 59299,
+        "env_len_ms": 100
+      }
+    },
+    {
+      "label": "tone3800_pos1",
+      "rep": 0,
+      "file": "tone3800_pos1_r0.csv",
+      "wav": "tone3800_pos1_r0.wav",
+      "started": "2026-10-16T14:18:55",
+      "firmware": null,
+      "fields": [
+        "ms",
+        "amp",
+        "pcm"
+      ],
+      "raw": {
+        "sr": 16000,
+        "f": 3800,
+        "dur": 100,
+        "pre_ms": 50,
+        "post_ms": 250,
+        "mode": "both",
+        "emit_seen": 1,
+        "emit_start_ms": 3643,
+        "emit_done_ms": 3740,
+        "pre_samples": 180,
+        "post_samples": 4000
+      },
+      "summary": {
+        "id": 1,
+        "requested": 4800,
+        "captured": 4180,
+        "unused_capacity": 1820,
+        "max_pcm_abs": 79059,
+        "max_amp": 9770,
+        "raw_mean": 13.8,
+        "raw_abs_mean": 21556.6,
+        "raw_min": -79059,
+        "raw_max": 74484,
+        "baseline": -890.2
+      },
+      "check": {
+        "samples": 4180,
+        "tone_amp": 35748,
+        "peak_abs": 79059,
+        "env_len_ms": 115
+      }
+    },
+    {
+      "label": "tone3800_pos1",
+      "rep": 1,
+      "file": "tone3800_pos1_r1.csv",
+      "wav": "tone3800_pos1_r1.wav",
+      "started": "2026-10-16T14:19:02",
+      "firmware": null,
+      "fields": [
+        "ms",
+        "amp",
+        "pcm"
+      ],
+      "raw": {
+        "sr": 16000,
+        "f": 3800,
+        "dur": 100,
+        "pre_ms": 50,
+        "post_ms": 250,
+        "mode": "both",
+        "emit_seen": 1,
+        "emit_start_ms": 10512,
+        "emit_done_ms": 10609,
+        "pre_samples": 256,
+        "post_samples": 4000
+      },
+      "summary": {
+        "id": 2,
+        "requested": 4800,
+        "captured": 4256,
+        "unused_capacity": 1744,
+        "max_pcm_abs": 77580,
+        "max_amp": 9698,
+        "raw_mean": -42.8,
+        "raw_abs_mean": 19916.1,
+        "raw_min": -77580,
+        "raw_max": 76697,
+        "baseline": -895.2
+      },
+      "check": {
+        "samples": 4256,
+        "tone_amp": 30040,
+        "peak_abs": 77580,
+        "env_len_ms": 110
+      }
+    }
+  ]
+}

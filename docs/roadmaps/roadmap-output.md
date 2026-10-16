@@ -80,7 +80,10 @@ Connect later to ResonantProgram.
 
 ### OUT-005 - chirp shapes: hopping pulses and in-chirp sweep
 
-Status: TODO (step 5b)
+Status: in code (step 5b), bench pending. Hop: Emitter `PULSES ... hop=` (2026-10-15, bench-checked),
+Node hop train from Behavior's `SignalShape::NetworkSignal` (155211e, compile only). Sweep: `CHIRP sweep=END_HZ`
+on the Emitter and `SEQ start sweep=` (9664032, compile only; `I2sToneOutput::setSweep`, phase-continuous).
+Design rule from the 2026-10-16 battery: hop steps on the 250 Hz band-bank bins, gaps <= 10 ms, 25 ms x 5.
 
 ```text
 PULSES takes a frequency per pulse (hop train); a tone can ramp its

@@ -89,7 +89,9 @@ OutputRequest / BehaviorAction.
 
 ### BEH-005 - per-node signal variation
 
-Status: TODO (step 5b)
+Status: in code (step 5b, 155211e), Node battery pending. Behavior reports `SignalShape` (NetworkSignal for a
+heard-pattern response, Chirp for idle/self-test); the Node plays the hop train over the band bins starting
+on `output.hop_rotation`, from the MAC at boot. Shape and order are static per node; variation over time is BEH-006.
 
 ```text
 Each node plays its own shape and centre inside the network band

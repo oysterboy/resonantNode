@@ -8,6 +8,6 @@ $PY tools/bench/seqrun.py --port "$PORT" --session "bench/sessions/$SLUG" \
   --distance-cm "$CM" --orientation "mic and speaker facing up, bench" \
   --note "E2 Analyzer with -D FEATURE_HISTORY_BINS=512 -D SCALAR_AMP_MEDIUM_THRESHOLD=1500.0f -D SCALAR_CONTRAST_MEDIUM_THRESHOLD=30500.0f; E3 Emitter hop 0.5 FS; $NOTE" \
   --run chirp3200 "SEQ DIAG on;SEQ start profile=TonalPulseScalar tries=10 freq=3200 mode=detail when=all verbose=1" \
-  --run hop_p30g10 "SEQ DIAG on;SEQ start profile=TonalPulseScalar tries=10 freq=3300 band=2800-3800 dur=30 pulses=3 gap=10 hop=2800,3300,3800 mode=detail when=all verbose=1" \
-  --run hop5_p20g5 "SEQ DIAG on;SEQ start profile=TonalPulseScalar tries=10 freq=3300 band=2800-3800 dur=20 pulses=5 gap=5 hop=2800,3050,3300,3550,3800 mode=detail when=all verbose=1" \
-  --run hop5_p20g15_maxdur300 "PARAM scalar_max_duration_ms=300;SEQ DIAG on;SEQ start profile=TonalPulseScalar tries=10 freq=3300 band=2800-3800 dur=20 pulses=5 gap=15 hop=2800,3050,3300,3550,3800 mode=detail when=all verbose=1" 2>&1 | grep -E "done"
+  --run hop_p30g10 "SEQ DIAG on;SEQ start profile=TonalPulseScalar tries=10 freq=3300 band=2950-3950 dur=30 pulses=3 gap=10 hop=2950,3450,3950 mode=detail when=all verbose=1" \
+  --run hop5_p20g5 "SEQ DIAG on;SEQ start profile=TonalPulseScalar tries=10 freq=3300 band=2950-3950 dur=20 pulses=5 gap=5 hop=2950,3200,3450,3700,3950 mode=detail when=all verbose=1" \
+  --run hop5_p20g15_maxdur300 "PARAM scalar_max_duration_ms=300;SEQ DIAG on;SEQ start profile=TonalPulseScalar tries=10 freq=3300 band=2950-3950 dur=20 pulses=5 gap=15 hop=2950,3200,3450,3700,3950 mode=detail when=all verbose=1" 2>&1 | grep -E "done"

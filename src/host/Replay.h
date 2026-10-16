@@ -52,8 +52,8 @@ bool loadRawCsv(const std::string& path, Capture& out);
 bool loadCapture(const std::string& path, Capture& out);
 
 struct Options {
-    unsigned long bandLow = 2800;
-    unsigned long bandHigh = 3800;
+    unsigned long bandLow = 2950;   // the network band (decisions/2026-10-16-network-band-2950-3950.md)
+    unsigned long bandHigh = 3950;
     unsigned long targetHz = 3200;
     bool preprocessForced = false;
     runtime::PcmPreprocessMode preprocess = runtime::PcmPreprocessMode::None;

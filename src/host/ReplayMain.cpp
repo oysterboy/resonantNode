@@ -5,7 +5,7 @@ Command line for the host replay (NODE-006), see Replay.h.
     program [options] --dir <folder>      every .csv in the folder (falls back to .wav)
 
 Options
-    --band LO-HI          band bank (default 2800-3800; "off" = single target at --target)
+    --band LO-HI          band bank (default 2950-3950, the network band; "off" = single target at --target)
     --target HZ           single-target frequency (default 3200)
     --set key=value       profile override; keys: scalar_onset_threshold, scalar_release_threshold,
                           scalar_min_duration_ms, scalar_max_duration_ms, scalar_min_peak_strength,

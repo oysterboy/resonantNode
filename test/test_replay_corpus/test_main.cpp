@@ -5,16 +5,16 @@ Fixtures (test/fixtures, copied from bench/sessions/2026-10-16-corpus-*, E2/E3
 facing up, combined build, mode=both: PCM plus the board's amp feature):
   chirp3200_90cm_2026-10-16.{wav,csv}  plain 3,200 Hz chirp, 100 ms, 90 cm; the board's chirp cell at
                                         this placement (single target, no band) was 10/10
-  tone3300_90cm_2026-10-16.csv          3,300 Hz, 100 ms, 90 cm: on a 250 Hz band-bank bin
+  tone3300_90cm_2026-10-16.csv          3,300 Hz, 100 ms, 90 cm: between two bins of the network band
   radio_speech_110cm_2026-10-16.wav     350 ms of phone-radio speech with a 20 ms marker tone
                                         at the start (skip the first 100 ms)
 Run with `pio test -e native-test` (needs a host C++ compiler on PATH).
 
 What the expectations encode (2026-10-16 replay, docs/lab/2026-10-16-bench-day.md section 9):
   - single target 3,200 Hz: the chirp capture is accepted once, as on the board;
-  - band 2800-3800: an on-bin tone (3,300) is accepted, the off-bin 3,200 Hz chirp is rejected
-    at the contrast inspector (its energy splits over bins 3050 and 3300). Hop steps and any
-    plain chirp a band-mode node should hear must sit on the bins.
+  - band 2950-3950 (the network band, bins 2950/3200/3450/3700/3950): the on-bin 3,200 Hz chirp is
+    accepted, the off-bin 3,300 Hz tone is rejected at the contrast inspector (its energy splits over
+    bins 3200 and 3450). Hop steps and any plain chirp a band-mode node should hear must sit on the bins.
 */
 #include <unity.h>
 
@@ -39,10 +39,10 @@ hostreplay::Options singleTarget3200() {
     return opt;
 }
 
-hostreplay::Options band2800to3800() {
+hostreplay::Options networkBand() {
     hostreplay::Options opt;
-    opt.bandLow = 2800;
-    opt.bandHigh = 3800;
+    opt.bandLow = 2950;
+    opt.bandHigh = 3950;
     return opt;
 }
 
@@ -82,22 +82,22 @@ void test_chirp_is_accepted_once_on_the_single_target() {
     TEST_ASSERT_TRUE(r.verdicts.front().primaryDurationMs >= 85 && r.verdicts.front().primaryDurationMs <= 300);
 }
 
-// Band mode: an on-bin tone is accepted.
+// Band mode: the on-bin 3,200 Hz chirp is accepted.
 void test_on_bin_tone_is_accepted_in_band_mode() {
     hostreplay::Capture cap;
-    TEST_ASSERT_TRUE(hostreplay::loadCapture(kTone3300Csv, cap));
+    TEST_ASSERT_TRUE(hostreplay::loadCapture(kChirpCsv, cap));
     const detection::DetectionProfile profile = detection::makeTonalPulseScalarProfile();
-    const hostreplay::Result r = hostreplay::replay(cap, band2800to3800(), profile);
+    const hostreplay::Result r = hostreplay::replay(cap, networkBand(), profile);
     TEST_ASSERT_EQUAL_UINT32(1, r.accepted);
     TEST_ASSERT_EQUAL_UINT32(0, r.rejected);
 }
 
-// Band mode: the off-bin 3,200 Hz chirp fails the contrast gate (support_too_low on contrast).
-void test_off_bin_chirp_fails_the_contrast_gate_in_band_mode() {
+// Band mode: the off-bin 3,300 Hz tone fails the contrast gate (support_too_low on contrast).
+void test_off_bin_tone_fails_the_contrast_gate_in_band_mode() {
     hostreplay::Capture cap;
-    TEST_ASSERT_TRUE(hostreplay::loadCapture(kChirpCsv, cap));
+    TEST_ASSERT_TRUE(hostreplay::loadCapture(kTone3300Csv, cap));
     const detection::DetectionProfile profile = detection::makeTonalPulseScalarProfile();
-    const hostreplay::Result r = hostreplay::replay(cap, band2800to3800(), profile);
+    const hostreplay::Result r = hostreplay::replay(cap, networkBand(), profile);
     TEST_ASSERT_EQUAL_UINT32(0, r.accepted);
     TEST_ASSERT_EQUAL_UINT32(1, r.rejected);
     TEST_ASSERT_EQUAL(detection::InspectionTarget::Contrast, r.verdicts.front().firstFailedRequirementTarget);
@@ -134,7 +134,7 @@ void test_profile_override_reaches_the_inspector() {
 void test_radio_speech_is_not_accepted() {
     hostreplay::Capture cap;
     TEST_ASSERT_TRUE(hostreplay::loadCapture(kSpeechWav, cap));
-    hostreplay::Options opt = band2800to3800();
+    hostreplay::Options opt = networkBand();
     opt.skipMs = 100;
     const detection::DetectionProfile profile = detection::makeTonalPulseScalarProfile();
     const hostreplay::Result r = hostreplay::replay(cap, opt, profile);
@@ -147,7 +147,7 @@ int main(int, char**) {
     RUN_TEST(test_csv_and_wav_hold_the_same_samples);
     RUN_TEST(test_chirp_is_accepted_once_on_the_single_target);
     RUN_TEST(test_on_bin_tone_is_accepted_in_band_mode);
-    RUN_TEST(test_off_bin_chirp_fails_the_contrast_gate_in_band_mode);
+    RUN_TEST(test_off_bin_tone_fails_the_contrast_gate_in_band_mode);
     RUN_TEST(test_host_amp_feature_matches_the_board);
     RUN_TEST(test_profile_override_reaches_the_inspector);
     RUN_TEST(test_radio_speech_is_not_accepted);

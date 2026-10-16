@@ -106,7 +106,7 @@ Depends on step 5a item 2b (DC blocker, landed bfbe0c8).
 ### DET-013 - band stream: the detector watches the network band
 
 Status: in progress (step 5b). Done: 1 (14.7 us/sample, 2026-10-15), 3 (bank in `FreqBandStream`, Analyzer
-`SEQ band=`, Node `detection.band_low_hz/high_hz` default 2800-3800 since 155211e), 4 (contrast = peak against
+`SEQ band=`, Node `detection.band_low_hz/high_hz` default 2950-3950 since 155211e/next commit, bins 2950/3200/3450/3700/3950 so the 3,200 Hz chirp is on a bin), 4 (contrast = peak against
 the mean of its neighbours, guards included; limit 30,500 in `docs/decisions/2026-10-16-hop-acceptance-contrast-
 gate-not-amp.md`). Open: 2 (cheap single pass), 5 (Hann, with OUT-006), Node timing with the 5-bin bank on
 hardware, the gate's final run.

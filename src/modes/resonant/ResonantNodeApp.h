@@ -192,11 +192,13 @@ private:
     // Network band the detector listens to (FreqBandStream bank; 0 = single
     // target at the chirp tone) and the node's network signal: a hop train
     // over the band's 250 Hz bins, started on bin `rotation` (from the MAC
-    // at boot, PARAM SET output.hop_rotation overrides). Defaults are the
-    // 2026-10-16 battery shape (25 ms x 5, gap 10, 2800-3800 Hz).
-    // decisions/2026-10-16-hop-acceptance-contrast-gate-not-amp.md
-    uint32_t _bandLowHz = 2800;
-    uint32_t _bandHighHz = 3800;
+    // at boot, PARAM SET output.hop_rotation overrides). Shape from the
+    // 2026-10-16 battery (25 ms x 5, gap 10); band 2950-3950 so the 3,200 Hz
+    // chirp sits on a bin (2950/3200/3450/3700/3950), owner 2026-10-16.
+    // decisions/2026-10-16-hop-acceptance-contrast-gate-not-amp.md,
+    // decisions/2026-10-16-network-band-2950-3950.md
+    uint32_t _bandLowHz = 2950;
+    uint32_t _bandHighHz = 3950;
     bool _hopEnabled = true;
     uint32_t _hopRotation = 0;
     uint32_t _hopPulseMs = 25;

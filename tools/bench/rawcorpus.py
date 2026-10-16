@@ -14,7 +14,7 @@ Capture length is limited by the firmware: pre + post <= 6000 samples (375 ms).
              --label chirp3200_pos0 --distance-cm 90 --reps 3
   hop:     python tools/bench/rawcorpus.py --port COM5 --out bench/sessions/<folder> \
              --label hop5_p25g10_pos0 --freq 3300 --dur 25 --pulses 5 --gap 10 \
-             --hop 2800,3050,3300,3550,3800 --distance-cm 90 --reps 3
+             --hop 2950,3200,3450,3700,3950 --distance-cm 90 --reps 3
   noise:   python tools/bench/rawcorpus.py --port COM5 --out bench/sessions/<folder> \
              --label radio_music --dur 20 --pre 0 --post 350 --reps 12
            (the 20 ms marker tone and its ~80 ms tail sit at the start; skip them)

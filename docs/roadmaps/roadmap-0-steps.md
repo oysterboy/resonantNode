@@ -300,8 +300,11 @@ the previous gate open unless the step says it can run in parallel.
    (dd666ae). Replay finding: the plain 3,200 Hz chirp is off-bin in the 2800-3800 band and fails the contrast gate;
    owner decided band 2950-3950 (decisions/2026-10-16-network-band-2950-3950.md, 635fc11); bench-checked the same
    evening at 110/90/70 cm: chirp in band, hop5 on the new bins and the single-target chirp 10/10 each (90/90), noise
-   with the shipped values speech 0/50, music 0/50 (lab note section 10). Next session: one E2 flash, hop/sweep
-   captures, sweep cell, Node battery with the band, 5c SELFTEST if five boards.
+   with the shipped values speech 0/50, music 0/50 (lab note section 10). Later the same evening: E2 and E3 flashed to
+   the shipped builds; sweep on hardware rejected by the contrast gate 30/30 (hop stays the detection-layer shape);
+   Node build on hardware 50 chirps -> 50 hop answers at 70 cm, no dropped buffers. Gate items still open: hop/sweep
+   T3 >= 9/10 at every spacing with the shipped build on another day, Node hearing a Node, noise on the Node build,
+   5c SELFTEST with five boards.
    Order inside: DET-013 profile + cheap pass -> OUT-005 on the Emitter ->
    DET-013 bank + contrast decision -> DET-011 gaps -> DET-014 if needed
    -> OUT-005 on the Node + BEH-005. DET-012 (band lower edge) is measured

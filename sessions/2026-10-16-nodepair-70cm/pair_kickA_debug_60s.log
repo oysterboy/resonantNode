@@ -1,0 +1,69 @@
+# nodepair a=COM5 b=COM3 secs=60 kick=a kick_n=1 started_unix=1792164948.746
+0.01 A RB log mode=full
+0.01 B ownAfterOnse���ɕ����չ�Q�ɕ͡����3
+0.03 B fieldState.denseOccurrenceCountThreshold=6
+0.04 B fieldState.quietOccurrenceCountThreshold=0
+0.06 B fieldState.quietActivityThreshold=0.00
+0.08 B fieldState.busyActivityThreshold=0.45
+0.09 B 
+0.11 B RB BEHAV
+0.12 B idleEnabled=1
+0.14 B waitAfterHeardMs=100
+0.15 B refractoryAfterEmitMs=400
+0.16 A RB rebase waiting smooth=108.0 quietMs=944
+0.16 B behaviorSuppressSelfChirpMs=100
+0.18 B detectionSuppressTailMsOwnEmit=60
+0.20 B idleTimeoutMs=20000
+0.22 B idleTimeVariationMs=5000
+0.23 A RB rebase done quietMs=1000 baseline=-296.9 smooth=0
+0.23 B idleBlockedAfterHeardMs=1000
+0.25 B idleBlockedAfterOwnEmitMs=500
+0.26 B 
+0.28 B RB startup baseline=LISTEN_FOR_QUIET
+0.29 B RB rebase waiting smooth=398.0 quietMs=0
+0.31 B RB log mode=full
+0.71 A RB baseline active
+0.72 B RB rebase waiting smooth=35.0 quietMs=880
+0.85 B RB rebase done quietMs=1000 baseline=965.4 smooth=0
+1.33 B RB baseline active
+5.03 A >> SELFTEST chirp n=1
+5.04 A SELFTEST_CHIRP start n=1 freq_hz=3200 path=behavior gap_ms=1500
+5.06 A BEH emit start now=8778 source=selftest state=Chirping pattern=single
+5.07 A RB emit accepted source=selftest state=Chirping gate=Chirping pattern=single
+5.15 A SELFTEST_CHIRP done n=1 started=1
+5.24 B RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 profile=TonalPulseScalar
+5.33 B BEH verdict=single_pulse heard=5828 now=5944 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+5.36 B BEH emit start now=5944 source=heard_pattern state=Chirping pattern=single
+5.37 B RB emit accepted source=heard_pattern state=Chirping gate=Chirping pattern=single
+5.39 B RB emit shape=hop steps=5 pulse_ms=25 gap_ms=10 order=3700,3950,2950,3200,3450
+5.58 A RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 profile=TonalPulseScalar
+5.68 A BEH verdict=single_pulse heard=9296 now=9416 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+5.70 A BEH emit start now=9416 source=heard_pattern state=Chirping pattern=single
+5.71 A RB emit accepted source=heard_pattern state=Chirping gate=Chirping pattern=single
+5.73 A RB emit shape=hop steps=5 pulse_ms=25 gap_ms=10 order=3950,2950,3200,3450,3700
+24.76 A BEH emit start now=28504 source=idle state=Chirping pattern=idle
+24.78 A RB emit accepted source=idle state=Chirping gate=Chirping pattern=idle
+25.67 B RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 profile=TonalPulseScalar
+25.76 B BEH verdict=single_pulse heard=26252 now=26368 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+25.78 B BEH emit start now=26368 source=heard_pattern state=Chirping pattern=single
+25.81 B RB emit accepted source=heard_pattern state=Chirping gate=Chirping pattern=single
+25.83 B RB emit shape=hop steps=5 pulse_ms=25 gap_ms=10 order=3700,3950,2950,3200,3450
+26.01 A RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 profile=TonalPulseScalar
+26.11 A BEH verdict=single_pulse heard=29720 now=29840 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+26.12 A BEH emit start now=29840 source=heard_pattern state=Chirping pattern=single
+26.14 A RB emit accepted source=heard_pattern state=Chirping gate=Chirping pattern=single
+26.15 A RB emit shape=hop steps=5 pulse_ms=25 gap_ms=10 order=3950,2950,3200,3450,3700
+40.69 B BEH emit start now=41305 source=idle state=Chirping pattern=idle
+40.72 B RB emit accepted source=idle state=Chirping gate=Chirping pattern=idle
+41.58 A RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 profile=TonalPulseScalar
+41.68 A BEH verdict=single_pulse heard=45293 now=45408 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+41.69 A BEH emit start now=45408 source=heard_pattern state=Chirping pattern=single
+41.71 A RB emit accepted source=heard_pattern state=Chirping gate=Chirping pattern=single
+41.73 A RB emit shape=hop steps=5 pulse_ms=25 gap_ms=10 order=3950,2950,3200,3450,3700
+57.62 B BEH emit start now=58232 source=idle state=Chirping pattern=idle
+57.63 B RB emit accepted source=idle state=Chirping gate=Chirping pattern=idle
+58.51 A RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=1 decision=consumed_pattern valid=1 profile=TonalPulseScalar
+58.60 A BEH verdict=single_pulse heard=62221 now=62336 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+58.62 A BEH emit start now=62336 source=heard_pattern state=Chirping pattern=single
+58.64 A RB emit accepted source=heard_pattern state=Chirping gate=Chirping pattern=single
+58.66 A RB emit shape=hop steps=5 pulse_ms=25 gap_ms=10 order=3950,2950,3200,3450,3700

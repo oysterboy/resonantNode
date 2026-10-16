@@ -1,0 +1,5 @@
+[10:15:20] boot banner: {'role': 'analyzer', 'git': 'b22b035', 'version': '0.4.0', 'board': 'damp'}
+[10:15:22] warmup: OK EMIT CHIRP
+[10:15:22] start calib_music: SEQ DIAG on ; SEQ OBS start tries=15 period=2000 window=1800 report_settle=200 freq=3300 band=2800-3800 profile=TonalPulseScalar mode=detail when=all verbose=1
+[10:15:57] done calib_music (35s): complete=True results={'miss': 15}
+[10:16:07] session updated, index rebuilt

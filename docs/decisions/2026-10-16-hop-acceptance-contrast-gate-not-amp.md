@@ -1,11 +1,11 @@
 # Hop acceptance: the contrast inspector guards against noise, the amp limit drops to 1,500
 
-Status: provisional, pending the gate battery (step 5b). Not yet in `DetectionProfile.h`;
-tested as build overrides `SCALAR_CONTRAST_MEDIUM_THRESHOLD=30500.0f` and
-`SCALAR_AMP_MEDIUM_THRESHOLD=1500.0f`.
+Status: decided 2026-10-16 (evening, after the afternoon battery; written into `DetectionProfile.h`
+and `FeatureHistory.h` the same day), to be confirmed by the next-session battery and a speech/music
+OBS with the shipped values. Before that it was provisional and tested as build overrides.
 Date: 2026-10-16.
 
-## Decision (provisional)
+## Decision
 
 For the TonalPulseScalar profile:
 
@@ -81,5 +81,18 @@ narrative `docs/lab/2026-10-16-bench-day.md`).
   200 against a 214 ms train, not the inspectors (10/10 at 300). So the contrast gate holds for the candidate
   shape; the limit's margin at a null step is a few hundred, as above.
 
-Status stays provisional: the values go into `DetectionProfile.h` after the gap question is settled and
-one more battery day confirms the margins.
+## Resolution of the gap question and the shipped values (2026-10-16 evening)
+
+Long gaps leave the acceptance set instead of getting a gap-tolerant contrast: the detection layer's
+hop is a dense train. Design rule for the Node hop (BEH-005 / OUT-005): steps on the 250 Hz band-bank
+bins, gaps of at most 10 ms, five steps of 25 ms (the shape of the afternoon battery). A gapped
+contrast criterion can come back with the shape inspectors (DET-015) if an artistic shape needs it.
+
+Written into the profile: `SCALAR_CONTRAST_MEDIUM_THRESHOLD` 30,500, `SCALAR_AMP_MEDIUM_THRESHOLD`
+1,500, `maxTransientDurationMs` 300 (the 5-step train is seen as up to 214 ms), `FEATURE_HISTORY_BINS`
+512 (300 ms occurrences must stay resident for inspection). The build that produced every number above
+had exactly these four values, so the shipped default is the measured build.
+
+Not yet measured with these defaults and therefore the condition of the confirmation: speech/music OBS
+with max duration 300 alone (the afternoon noise runs used the default 200), and the battery on another
+day. If the OBS gets worse, the first lever is the contrast limit, not the amp limit.

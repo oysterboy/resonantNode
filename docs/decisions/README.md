@@ -66,7 +66,7 @@ what replaced it.
 | 2026-10-14 | [The Node ships TonalPulseScalar; TonalPulseFreq stays a demo detector](2026-10-14-node-ships-tonalpulsescalar.md) |
 | 2026-10-14 | [Replace First Difference with a DC blocker inside step 5a, before the new-geometry baseline](2026-10-14-dc-blocker-before-5a-baseline.md) |
 | 2026-10-15 | [Signals vary per node and over time inside a shared band; the detector is shape-agnostic](2026-10-15-signal-variation-inside-a-shared-band.md) |
-| 2026-10-16 | [Hop acceptance: the contrast inspector guards against noise, the amp limit drops to 1,500](2026-10-16-hop-acceptance-contrast-gate-not-amp.md) (provisional) |
+| 2026-10-16 | [Hop acceptance: the contrast inspector guards against noise (30,500), the amp limit drops to 1,500; long gaps leave the acceptance set, max duration 300, history 512](2026-10-16-hop-acceptance-contrast-gate-not-amp.md) (shipped in the profile; confirmation battery pending) |
 
 ## Open
 
@@ -81,4 +81,3 @@ question is tracked; a file is added here when one resolves.
 | How much `FeatureHistory` to retain on-device | `docs/refactors/cleanup-0-plan.md` Phase 5c (33 KB, 80% of `DetectionRuntime` at last measurement) |
 | Exact boundary between analyzer-only and runtime diagnostics | `docs/refactors/cleanup-analyzer-node-isolation.md`; Phase 5a landed the first cut |
 | Persistent (flash/NVS) config | PAR-010 / PAR-011, deferred until after the field trial (step 11) |
-| Lower TonalPulseScalar's amp inspector (medium 2500 -> ~1000) for range | `docs/refactors/archive/damp-bench-check.md` sections 5-7: owner wants noise false-positive runs first (R4) |

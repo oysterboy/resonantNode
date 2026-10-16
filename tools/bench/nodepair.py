@@ -22,13 +22,35 @@ ap.add_argument("--b", required=True, help="COM port of node B")
 ap.add_argument("--secs", type=int, default=120)
 ap.add_argument("--kick", choices=["a", "b", "none"], default="a", help="which node plays one SELFTEST chirp at t=5 s")
 ap.add_argument("--kick-n", type=int, default=1)
+ap.add_argument("--a-setup", default="", help="commands for node A after boot, ';'-separated, e.g. 'PARAM SET output.hop_rotation 3;RB BEHAV idleEnabled=0'")
+ap.add_argument("--b-setup", default="", help="same for node B")
+ap.add_argument("--boot-wait", type=float, default=4.0, help="seconds to wait after opening the ports (a port open resets a D-AMP board over DTR)")
 ap.add_argument("--out", required=True)
 ap.add_argument("--name", required=True)
 a = ap.parse_args()
 os.makedirs(a.out, exist_ok=True)
 
+# Opening the port resets the board (DTR), so anything set in an earlier
+# process is gone: every setting goes through --a-setup/--b-setup here,
+# after the boot, and its reply is printed so a lost command is visible.
 ports = {"A": serial.Serial(a.a, 115200, timeout=0.01), "B": serial.Serial(a.b, 115200, timeout=0.01)}
-time.sleep(0.5)
+time.sleep(a.boot_wait)
+setup_lines = []
+for name, cmds in (("A", a.a_setup), ("B", a.b_setup)):
+    for cmd in [c.strip() for c in cmds.split(";") if c.strip()]:
+        ports[name].write((cmd + "\n").encode())
+        time.sleep(0.8)
+        reply = []
+        while True:
+            l = ports[name].readline()
+            if not l:
+                break
+            l = l.decode(errors="replace").strip()
+            if l and (l.startswith("PARAM") or l.startswith("RB BEHAV") or l.startswith("RB ERR")):
+                reply.append(l[:160])
+        setup_lines.append("%s >> %s\n%s" % (name, cmd, "\n".join("%s << %s" % (name, r) for r in reply) or "%s << (no reply captured)" % name))
+for line in setup_lines:
+    print(line)
 for p in ports.values():
     p.write(b"RB log full\n")
 t0 = time.time()
@@ -37,6 +59,9 @@ events = []  # (t, node, kind, line)
 log_path = os.path.join(a.out, a.name + ".log")
 with open(log_path, "w", encoding="utf-8") as f:
     f.write("# nodepair a=%s b=%s secs=%d kick=%s kick_n=%d started_unix=%.3f\n" % (a.a, a.b, a.secs, a.kick, a.kick_n, t0))
+    for line in setup_lines:
+        for sub in line.split("\n"):
+            f.write("# setup %s\n" % sub)
     while time.time() - t0 < a.secs:
         t = time.time() - t0
         if not kicked and a.kick != "none" and t >= 5.0:

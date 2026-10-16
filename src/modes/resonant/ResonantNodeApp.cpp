@@ -910,7 +910,7 @@ void Node::pollSerialCommands() {
 void Node::handleSerialLine(const char* line) {
     if (equalsIgnoreCase(line, "RB help")) {
         Serial.println("RB CMD: RB PARAM freqScore=18000 freqContrast=50.0 freqReleaseScore=12000 freqReleaseContrast=50.0");
-        Serial.println("RB CMD: RB BEHAV wait=100 refractory=0 suppressSelfChirp=250 detectionSuppressTail=0 idleTimeout=20000 idleTimeoutVariation=10000 idleBlockedAfterHeard=3000 idleBlockedAfterOwnEmit=5000");
+        Serial.println("RB CMD: RB BEHAV wait=100 refractory=0 idleEnabled=0|1 (idle=MS is the idle TIMEOUT, not the switch) suppressSelfChirp=250 detectionSuppressTail=0 idleTimeout=20000 idleTimeoutVariation=10000 idleBlockedAfterHeard=3000 idleBlockedAfterOwnEmit=5000");
         Serial.println("RB CMD: RB STATUS");
         Serial.println("RB CMD: RB PROFILE name=TonalPulseFreq");
         Serial.println("RB CMD(ALT): RB PROFILE name=TonalPulseFreq");
@@ -995,7 +995,7 @@ void Node::handleSerialLine(const char* line) {
         token = token != nullptr ? strtok_r(nullptr, " ", &savePtr) : nullptr;
 
         if (token == nullptr || !equalsIgnoreCase(token, "BEHAV")) {
-            Serial.println("RB BEHAV usage=RB BEHAV wait=100 refractory=0 suppressSelfChirp=250 detectionSuppressTail=0 idleTimeout=20000 idleTimeoutVariation=10000 idleBlockedAfterHeard=3000 idleBlockedAfterOwnEmit=5000");
+            Serial.println("RB BEHAV usage=RB BEHAV wait=100 refractory=0 idleEnabled=0|1 (idle=MS is the idle TIMEOUT, not the switch) suppressSelfChirp=250 detectionSuppressTail=0 idleTimeout=20000 idleTimeoutVariation=10000 idleBlockedAfterHeard=3000 idleBlockedAfterOwnEmit=5000");
             return;
         }
 
@@ -1276,6 +1276,33 @@ void Node::handleDetectCommand(const char* line) {
     Serial.print(audioStats.droppedDmaBuffers);
     Serial.print(" i2s.clock_rate_mhz=");
     Serial.print(audioStats.sampleClockRateMilliHz);
+    // Audio-source health without the Analyzer (2026-10-16: a Node that
+    // heard nothing had no field saying why). overflows: DMA overflow
+    // events; backsteps: blocks whose time went backwards; clock
+    // corrections: sample-clock re-anchors and the largest one; deficit: how
+    // many seconds of audio are missing against the uptime (reads, drops,
+    // stalls), 0.0 when the stream is whole.
+    const unsigned long uptimeMs = timebase::nowMs();
+    const uint64_t expectedSamples = (static_cast<uint64_t>(uptimeMs) * sampleRateHz) / 1000ULL;
+    const double deficitS = expectedSamples > audioStats.totalSamplesRead
+        ? static_cast<double>(expectedSamples - audioStats.totalSamplesRead) / static_cast<double>(sampleRateHz)
+        : 0.0;
+    Serial.print(" i2s.overflows=");
+    Serial.print(audioStats.overflowCount);
+    Serial.print(" i2s.backsteps=");
+    Serial.print(audioStats.timestampBacksteps);
+    Serial.print(" i2s.max_backstep_us=");
+    Serial.print(audioStats.maxTimestampBackstepUs);
+    Serial.print(" i2s.clock_corrections=");
+    Serial.print(audioStats.sampleClockCorrections);
+    Serial.print(" i2s.max_clock_correction_us=");
+    Serial.print(audioStats.maxSampleClockCorrectionUs);
+    Serial.print(" i2s.read_errors=");
+    Serial.print(audioStats.readErrors);
+    Serial.print(" audio.uptime_ms=");
+    Serial.print(uptimeMs);
+    Serial.print(" audio.deficit_s=");
+    Serial.print(deficitS, 1);
     Serial.print(" ");
     printBuildIdentity(Serial, "node");
     Serial.println();

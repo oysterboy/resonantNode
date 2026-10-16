@@ -302,9 +302,12 @@ the previous gate open unless the step says it can run in parallel.
    evening at 110/90/70 cm: chirp in band, hop5 on the new bins and the single-target chirp 10/10 each (90/90), noise
    with the shipped values speech 0/50, music 0/50 (lab note section 10). Later the same evening: E2 and E3 flashed to
    the shipped builds; sweep on hardware rejected by the contrast gate 30/30 (hop stays the detection-layer shape);
-   Node build on hardware 50 chirps -> 50 hop answers at 70 cm, no dropped buffers. Gate items still open: hop/sweep
-   T3 >= 9/10 at every spacing with the shipped build on another day, Node hearing a Node, noise on the Node build,
-   5c SELFTEST with five boards.
+   Node build on hardware 50 chirps -> 50 hop answers at 70 cm, no dropped buffers. Two Nodes (nodepair.py): a Node
+   answers the other's hop train in ~120 ms, but the chain stops at two because E3's detector forms no candidate for
+   E2's trains (direction E2 -> E3 never measured). Gate items still open: hop T3 >= 9/10 at every spacing with the
+   shipped build on another day; the E2 -> E3 direction (E2 Emitter, E3 Analyzer) and then the two-Node chain; noise
+   on the Node build; the idle voice vs a two-node exchange (and `RB BEHAV idle=0` not taking effect); 5c SELFTEST
+   with five boards.
    Order inside: DET-013 profile + cheap pass -> OUT-005 on the Emitter ->
    DET-013 bank + contrast decision -> DET-011 gaps -> DET-014 if needed
    -> OUT-005 on the Node + BEH-005. DET-012 (band lower edge) is measured

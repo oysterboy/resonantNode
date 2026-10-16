@@ -4,7 +4,7 @@ Layout: lead silence, then one section per clip (default 100 s each, looped or
 cut from --start), short silences between, tail silence. Writes OUT.wav (mono,
 16 bit) and OUT.sections.txt for tools/bench/inspectstats.py --sections.
 
-Inputs are WAV files (convert mp3 etc. first, e.g. with Audacity or VLC). Each
+Inputs are WAV files (16/24/32 bit) or mp3 (needs the miniaudio module in a separate venv). Each
 input is  TITLE=path[@start_s]  e.g.  music_A=dnb.wav@30  speech_A=wdr.wav
 
 Example:
@@ -35,26 +35,41 @@ ap.add_argument("clips", nargs="+", help="TITLE=path[@start_s]")
 args = ap.parse_args()
 
 
-def read_mono(path, rate):
+def read_mono(path, rate, start_s, need_s):
+    """Mono float samples at `rate`: only the part from start_s, about need_s long (looped later)."""
+    if path.lower().endswith(".mp3"):
+        try:
+            import miniaudio
+        except ImportError:
+            sys.exit("mp3 needs the miniaudio module (pip install miniaudio in a separate venv)")
+        dec = miniaudio.decode_file(path, output_format=miniaudio.SampleFormat.SIGNED16, nchannels=1, sample_rate=rate)
+        a = dec.samples
+        lo = int(start_s * rate)
+        return [float(x) for x in a[lo:lo + int(need_s * rate) + 2]]
     with wave.open(path, "rb") as w:
-        ch, width, sr, n = w.getnchannels(), w.getsampwidth(), w.getframerate(), w.getnframes()
-        raw = w.readframes(n)
-    if width != 2:
-        sys.exit("%s: only 16 bit WAV supported (got %d bit)" % (path, width * 8))
-    a = array.array("h")
-    a.frombytes(raw)
-    if sys.byteorder == "big":
-        a.byteswap()
-    mono = [sum(a[i:i + ch]) / ch for i in range(0, len(a), ch)] if ch > 1 else [float(x) for x in a]
+        ch, width, sr = w.getnchannels(), w.getsampwidth(), w.getframerate()
+        w.setpos(min(int(start_s * sr), max(w.getnframes() - 1, 0)))
+        raw = w.readframes(int(need_s * sr) + 2)
+    n = len(raw) // (width * ch)
+    if width == 2:
+        a = array.array("h")
+        a.frombytes(raw[:n * ch * 2])
+        if sys.byteorder == "big":
+            a.byteswap()
+        vals = a
+    elif width == 3:
+        vals = [int.from_bytes(raw[k:k + 3], "little", signed=True) / 256.0 for k in range(0, n * ch * 3, 3)]
+    elif width == 4:
+        a = array.array("i")
+        a.frombytes(raw[:n * ch * 4])
+        vals = [x / 65536.0 for x in a]
+    else:
+        sys.exit("%s: unsupported WAV width %d bit" % (path, width * 8))
+    mono = [sum(vals[i:i + ch]) / ch for i in range(0, n * ch, ch)] if ch > 1 else [float(x) for x in vals]
     if sr != rate:
         step = sr / rate
-        out = []
-        for i in range(int((len(mono) - 1) / step)):
-            p = i * step
-            j = int(p)
-            f = p - j
-            out.append(mono[j] * (1 - f) + mono[j + 1] * f)
-        mono = out
+        mono = [mono[int(i * step)] * (1 - (i * step - int(i * step))) + mono[min(int(i * step) + 1, len(mono) - 1)] * (i * step - int(i * step))
+                for i in range(int((len(mono) - 1) / step))]
     return mono
 
 
@@ -89,8 +104,9 @@ for idx, spec in enumerate(args.clips):
     if not rest:
         sys.exit("clip must be TITLE=path[@start_s]: %s" % spec)
     path, _, start = rest.partition("@")
-    pcm = read_mono(path, rate)
-    sec = section(pcm, float(start) if start else 0.0, int(args.section_s * rate), rate, rms_target)
+    start_s = float(start) if start else 0.0
+    pcm = read_mono(path, rate, start_s, args.section_s)
+    sec = section(pcm, 0.0, int(args.section_s * rate), rate, rms_target)
     t0 = len(audio) / rate
     audio.extend(sec)
     sections.append((t0, t0 + args.section_s, title))

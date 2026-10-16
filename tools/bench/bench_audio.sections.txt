@@ -1,0 +1,13 @@
+# START END TITLE (seconds from file start), rate 44100 Hz, section 100 s, rms -24.0 dBFS
+0.0 10.0 silence_lead
+10.0 110.0 music_dnb_tribal_behaviour
+115.0 215.0 speech_female_bessels
+220.0 320.0 speech_male_chandos
+325.0 425.0 tonal_flute_lp
+425.0 435.0 silence_tail
+# Sources (all in Downloads, not in the repo; picked 2026-10-16 by band 2800-3800 Hz energy / activity):
+#   music_dnb_tribal_behaviour  dbmix_SUBSTANCE - TRIBAL BEHAVIOUR.wav from 0:40 (24 bit, 5.6 min)
+#   speech_female_bessels       speech_female_196tage_00_bessels_128kb.mp3 from 1:06
+#   speech_male_chandos         speech_male_germancollection026_02_chandosbrief_aw_64kb (1).mp3 from 10:40
+#   tonal_flute_lp              flute_lp-00773_BeG-record_1_side_A.wav from 9:20 (vinyl, very quiet: the -24 dBFS normalising lifts the record noise)
+# Build: venv with miniaudio python -I tools/bench/buildaudio.py --out bench_audio.wav --rms-dbfs -24 TITLE=path@start ...

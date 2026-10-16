@@ -29,6 +29,10 @@ void AudioSignal::begin(bool doRebase) {
     }
 }
 
+void AudioSignal::seedBaseline(float value) {
+    _baseline = value;
+}
+
 bool AudioSignal::rebase() {
     constexpr unsigned long kRebaseTimeoutMs = 500; // 200 samples take 12.5 ms at 16 kHz
     const unsigned long startMs = timebase::nowMs();

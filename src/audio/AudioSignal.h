@@ -177,6 +177,10 @@ public:
     // don't arrive within kRebaseTimeoutMs, e.g. I2S failed to start; it
     // used to wait forever (issue #31 R2-18).
     bool rebase();
+    // Sets the baseline tracker directly, without reading the source. For a
+    // replay that knows the board's baseline at capture time (RAW_SUMMARY
+    // baseline=), so host and board centre the same samples the same way.
+    void seedBaseline(float value);
     // overflowDuringBlock: the block this sample came from followed dropped
     // DMA buffers (AudioBlock::overflowBeforeBlock); it lands in
     // AudioSamplePacket::overflowDuringBlock for the detectors.

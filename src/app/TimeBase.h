@@ -89,6 +89,31 @@ inline unsigned long nowMs() {
 inline unsigned long nowUs() {
     return static_cast<unsigned long>(nowUs64());
 }
+#else
+// Host build (PlatformIO env:native-replay, NODE-006): the clock is whatever
+// the replay harness sets, so replayed samples and the detection they drive
+// share one axis exactly as on the board. Nothing advances it on its own.
+namespace host {
+inline uint64_t& clockUs64() {
+    static uint64_t value = 0;
+    return value;
+}
+inline void setNowUs64(uint64_t us) {
+    clockUs64() = us;
+}
+} // namespace host
+
+inline uint64_t nowUs64() {
+    return host::clockUs64() + kOffsetUs;
+}
+
+inline unsigned long nowMs() {
+    return static_cast<unsigned long>(nowUs64() / 1000ULL);
+}
+
+inline unsigned long nowUs() {
+    return static_cast<unsigned long>(nowUs64());
+}
 #endif
 
 } // namespace timebase

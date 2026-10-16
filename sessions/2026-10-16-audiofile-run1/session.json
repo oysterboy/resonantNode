@@ -1,0 +1,65 @@
+{
+  "purpose": "5b: bench_audio.wav (music, speech, flute) through the Windows speaker, one OBS pass with the band; amp/contrast per occurrence",
+  "created": "2026-10-16T10:37:49",
+  "setup": {
+    "distance_cm": 110.0,
+    "orientation": "mic and speaker facing up, bench",
+    "emitter_fw": "",
+    "notes": [
+      "E2 COM5 experimental Analyzer (HISTORY 512, amp medium 1500, b22b035); speaker 50 cm from E2 mic, 90 deg; level matched by band energy to WDR5 (see 2026-10-16-audiolevel-calib); sections in tools/bench/bench_audio.sections.txt; playback started at unix ms 1792139859159"
+    ]
+  },
+  "runs": [
+    {
+      "name": "OBS_file",
+      "file": "OBS_file.b22b035.log",
+      "firmware": {
+        "role": "analyzer",
+        "git": "b22b035",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "commands": [
+        "SEQ DIAG on",
+        "SEQ OBS start tries=222 period=2000 window=1800 report_settle=200 freq=3300 band=2800-3800 profile=TonalPulseScalar mode=detail when=all verbose=1"
+      ],
+      "started": "2026-10-16T10:37:56",
+      "duration_s": 450,
+      "summary": {
+        "profile": "TonalPulseScalar",
+        "detector": "scalar_transient",
+        "complete": true,
+        "trial_results": {
+          "miss": 211,
+          "rejected": 11
+        },
+        "line_counts": {
+          "SEQ_TRIAL": 222,
+          "SEQ_INSPECT": 222,
+          "SEQ_SOURCE": 222,
+          "SEQ_SOURCE_CORE": 222,
+          "SEQ_EXPLAIN": 222,
+          "SEQ_SOURCE_SPEC": 13,
+          "SEQ_SUMMARY": 1
+        },
+        "trials": "222",
+        "completed": "222",
+        "expected_trials": "0",
+        "early_trials": "0",
+        "late_trials": "0",
+        "miss_trials": "211",
+        "duplicate_trials": "0",
+        "unexpected_trials": "0",
+        "rejected_trials": "11",
+        "buffer_overrun_trials": "13",
+        "detector_accepted_trials": "0",
+        "detector_reject_trials": "13",
+        "pattern_valid_trials": "0",
+        "pattern_rejected_trials": "0",
+        "avg_dt_ms": "-1",
+        "avg_strength": "3891.6",
+        "avg_conf": "0.00"
+      }
+    }
+  ]
+}

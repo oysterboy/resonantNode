@@ -1,0 +1,65 @@
+{
+  "purpose": "5b: real highway traffic with the bass restored (below 150 Hz at -1.2 dB re natural; band 2800-3800 Hz as in traffic-highway), one OBS pass",
+  "created": "2026-10-16T11:25:46",
+  "setup": {
+    "distance_cm": 110.0,
+    "orientation": "mic and speaker facing up, bench",
+    "emitter_fw": "",
+    "notes": [
+      "same setup as 2026-10-16-traffic-highway; bench_highway_bass.wav (--hp 150 --bass-db +12 requested, limited by peak to -1.2 dB); playback start unix ms 1792142742118"
+    ]
+  },
+  "runs": [
+    {
+      "name": "OBS_highway_bass",
+      "file": "OBS_highway_bass.b22b035.log",
+      "firmware": {
+        "role": "analyzer",
+        "git": "b22b035",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "commands": [
+        "SEQ DIAG on",
+        "SEQ OBS start tries=88 period=2000 window=1800 report_settle=200 freq=3300 band=2800-3800 profile=TonalPulseScalar mode=detail when=all verbose=1"
+      ],
+      "started": "2026-10-16T11:25:52",
+      "duration_s": 182,
+      "summary": {
+        "profile": "TonalPulseScalar",
+        "detector": "scalar_transient",
+        "complete": true,
+        "trial_results": {
+          "miss": 83,
+          "rejected": 5
+        },
+        "line_counts": {
+          "SEQ_TRIAL": 88,
+          "SEQ_INSPECT": 88,
+          "SEQ_SOURCE": 88,
+          "SEQ_SOURCE_CORE": 88,
+          "SEQ_EXPLAIN": 88,
+          "SEQ_SOURCE_SPEC": 5,
+          "SEQ_SUMMARY": 1
+        },
+        "trials": "88",
+        "completed": "88",
+        "expected_trials": "0",
+        "early_trials": "0",
+        "late_trials": "0",
+        "miss_trials": "83",
+        "duplicate_trials": "0",
+        "unexpected_trials": "0",
+        "rejected_trials": "5",
+        "buffer_overrun_trials": "5",
+        "detector_accepted_trials": "0",
+        "detector_reject_trials": "5",
+        "pattern_valid_trials": "0",
+        "pattern_rejected_trials": "0",
+        "avg_dt_ms": "-1",
+        "avg_strength": "4506.2",
+        "avg_conf": "0.00"
+      }
+    }
+  ]
+}

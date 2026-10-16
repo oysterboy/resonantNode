@@ -1,0 +1,3 @@
+# 2026-10-16 5b: real highway traffic with the bass restored, one OBS pass
+
+Same setup as 2026-10-16-traffic-highway; bench_highway_bass.wav = highway recording (freesound 873589 stevemoser, from 1:00, 150 s) with the part below 150 Hz added back (requested +12 dB re natural, limited by the peak to -1.2 dB) at the same band level as traffic-highway (-24 dBFS RMS of the part above 150 Hz). 88 windows: 83 miss, 5 detector candidates (all rejected before inspection); traffic-highway without bass: 0. Ambient: highway_bass: 12 captures  rms -46.3 dBFS  band 2800-3800 Hz -81.5 dBFS  band/rms -35.2 dB. Single pass.

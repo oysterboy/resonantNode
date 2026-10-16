@@ -1,0 +1,10 @@
+[16:17:32] boot banner: {'role': 'analyzer', 'git': '162c847', 'version': '0.4.0', 'board': 'damp'}
+[16:17:34] warmup: OK EMIT CHIRP
+[16:17:34] start OBS_speech: PARAM scalar_max_duration_ms=300 ; SEQ DIAG on ; SEQ OBS start tries=50 period=2000 window=1800 report_settle=200 band=2950-3950 mode=detail when=all verbose=1
+[16:19:21] done OBS_speech (106s): complete=True results={'rejected': 38, 'miss': 12}
+[16:19:26] session updated, index rebuilt
+[16:20:15] boot banner: {'role': 'analyzer', 'git': '162c847', 'version': '0.4.0', 'board': 'damp'}
+[16:20:17] warmup: OK EMIT CHIRP
+[16:20:17] start OBS_music: PARAM scalar_max_duration_ms=300 ; SEQ DIAG on ; SEQ OBS start tries=50 period=2000 window=1800 report_settle=200 band=2950-3950 mode=detail when=all verbose=1
+[16:22:03] done OBS_music (106s): complete=True results={'rejected': 48, 'miss': 2}
+[16:22:09] session updated, index rebuilt

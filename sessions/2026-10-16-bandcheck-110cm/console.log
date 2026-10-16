@@ -1,0 +1,9 @@
+[15:56:17] boot banner: {'role': 'analyzer', 'git': '162c847', 'version': '0.4.0', 'board': 'damp'}
+[15:56:19] warmup: OK EMIT CHIRP
+[15:56:19] start chirp3200_band: PARAM scalar_max_duration_ms=300 ; SEQ DIAG on ; SEQ start profile=TonalPulseScalar tries=10 freq=3200 band=2950-3950 mode=detail when=all verbose=1
+[15:56:57] done chirp3200_band (38s): complete=True results={'expected': 10}
+[15:56:59] start hop5_p25g10_band: PARAM scalar_max_duration_ms=300 ; SEQ DIAG on ; SEQ start profile=TonalPulseScalar tries=10 freq=3200 band=2950-3950 dur=25 pulses=5 gap=10 hop=2950,3200,3450,3700,3950 mode=detail when=all verbose=1
+[15:57:37] done hop5_p25g10_band (38s): complete=True results={'expected': 10}
+[15:57:39] start chirp3200_single: PARAM scalar_max_duration_ms=300 ; SEQ DIAG on ; SEQ start profile=TonalPulseScalar tries=10 freq=3200 mode=detail when=all verbose=1
+[15:58:18] done chirp3200_single (38s): complete=True results={'expected': 10}
+[15:58:23] session updated, index rebuilt

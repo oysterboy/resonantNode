@@ -1,0 +1,167 @@
+{
+  "purpose": "band 2950-3950 check at 110 cm: chirp 3200 in band mode, hop5 25x5 gap 10 on bins 2950/3200/3450/3700/3950, chirp 3200 single target",
+  "created": "2026-10-16T15:56:12",
+  "setup": {
+    "distance_cm": 110.0,
+    "orientation": "mic and speaker facing up, bench",
+    "emitter_fw": "",
+    "notes": [
+      "E3 Emitter hop 0.5 FS; E2 combined build 162c847+overrides (= shipped defaults), boards unmoved since hopcand-110cm"
+    ]
+  },
+  "runs": [
+    {
+      "name": "chirp3200_band",
+      "file": "chirp3200_band.162c847.log",
+      "firmware": {
+        "role": "analyzer",
+        "git": "162c847",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "commands": [
+        "PARAM scalar_max_duration_ms=300",
+        "SEQ DIAG on",
+        "SEQ start profile=TonalPulseScalar tries=10 freq=3200 band=2950-3950 mode=detail when=all verbose=1"
+      ],
+      "started": "2026-10-16T15:56:19",
+      "duration_s": 38,
+      "summary": {
+        "profile": "TonalPulseScalar",
+        "detector": "scalar_transient",
+        "complete": true,
+        "trial_results": {
+          "expected": 10
+        },
+        "line_counts": {
+          "SEQ_TRIAL": 10,
+          "SEQ_INSPECT": 20,
+          "SEQ_SOURCE": 10,
+          "SEQ_SOURCE_CORE": 10,
+          "SEQ_SOURCE_SPEC": 10,
+          "SEQ_EXPLAIN": 10,
+          "SEQ_SUMMARY": 1
+        },
+        "trials": "10",
+        "completed": "10",
+        "expected_trials": "10",
+        "early_trials": "0",
+        "late_trials": "0",
+        "miss_trials": "0",
+        "duplicate_trials": "0",
+        "unexpected_trials": "0",
+        "rejected_trials": "0",
+        "buffer_overrun_trials": "0",
+        "detector_accepted_trials": "10",
+        "detector_reject_trials": "0",
+        "pattern_valid_trials": "10",
+        "pattern_rejected_trials": "0",
+        "avg_dt_ms": "28",
+        "avg_strength": "4316.5",
+        "avg_conf": "1.00"
+      }
+    },
+    {
+      "name": "hop5_p25g10_band",
+      "file": "hop5_p25g10_band.162c847.log",
+      "firmware": {
+        "role": "analyzer",
+        "git": "162c847",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "commands": [
+        "PARAM scalar_max_duration_ms=300",
+        "SEQ DIAG on",
+        "SEQ start profile=TonalPulseScalar tries=10 freq=3200 band=2950-3950 dur=25 pulses=5 gap=10 hop=2950,3200,3450,3700,3950 mode=detail when=all verbose=1"
+      ],
+      "started": "2026-10-16T15:56:59",
+      "duration_s": 38,
+      "summary": {
+        "profile": "TonalPulseScalar",
+        "detector": "scalar_transient",
+        "complete": true,
+        "trial_results": {
+          "expected": 10
+        },
+        "line_counts": {
+          "SEQ_TRIAL": 10,
+          "SEQ_INSPECT": 20,
+          "SEQ_SOURCE": 10,
+          "SEQ_SOURCE_CORE": 10,
+          "SEQ_SOURCE_SPEC": 10,
+          "SEQ_EXPLAIN": 10,
+          "SEQ_SUMMARY": 1
+        },
+        "trials": "10",
+        "completed": "10",
+        "expected_trials": "10",
+        "early_trials": "0",
+        "late_trials": "0",
+        "miss_trials": "0",
+        "duplicate_trials": "0",
+        "unexpected_trials": "0",
+        "rejected_trials": "0",
+        "buffer_overrun_trials": "0",
+        "detector_accepted_trials": "10",
+        "detector_reject_trials": "0",
+        "pattern_valid_trials": "10",
+        "pattern_rejected_trials": "0",
+        "avg_dt_ms": "44",
+        "avg_strength": "5845.5",
+        "avg_conf": "1.00"
+      }
+    },
+    {
+      "name": "chirp3200_single",
+      "file": "chirp3200_single.162c847.log",
+      "firmware": {
+        "role": "analyzer",
+        "git": "162c847",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "commands": [
+        "PARAM scalar_max_duration_ms=300",
+        "SEQ DIAG on",
+        "SEQ start profile=TonalPulseScalar tries=10 freq=3200 mode=detail when=all verbose=1"
+      ],
+      "started": "2026-10-16T15:57:39",
+      "duration_s": 38,
+      "summary": {
+        "profile": "TonalPulseScalar",
+        "detector": "scalar_transient",
+        "complete": true,
+        "trial_results": {
+          "expected": 10
+        },
+        "line_counts": {
+          "SEQ_TRIAL": 10,
+          "SEQ_INSPECT": 20,
+          "SEQ_SOURCE": 10,
+          "SEQ_SOURCE_CORE": 10,
+          "SEQ_SOURCE_SPEC": 10,
+          "SEQ_EXPLAIN": 10,
+          "SEQ_SUMMARY": 1
+        },
+        "trials": "10",
+        "completed": "10",
+        "expected_trials": "10",
+        "early_trials": "0",
+        "late_trials": "0",
+        "miss_trials": "0",
+        "duplicate_trials": "0",
+        "unexpected_trials": "0",
+        "rejected_trials": "0",
+        "buffer_overrun_trials": "0",
+        "detector_accepted_trials": "10",
+        "detector_reject_trials": "0",
+        "pattern_valid_trials": "10",
+        "pattern_rejected_trials": "0",
+        "avg_dt_ms": "29",
+        "avg_strength": "4334.8",
+        "avg_conf": "1.00"
+      }
+    }
+  ]
+}

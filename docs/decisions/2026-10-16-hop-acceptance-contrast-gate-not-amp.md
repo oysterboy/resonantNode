@@ -75,6 +75,11 @@ narrative `docs/lab/2026-10-16-bench-day.md`).
   contrast; 3 valid false with the 1500/20000 build the same day); music 0 in 100 but nothing reached the
   inspectors, so music has not yet exercised the gate. Test files and traffic: 0 (sections 3 of the lab note).
 - Hop frequencies must sit on the band-bank bins (off-bin steps collapse the contrast to about 28,500).
+- Afternoon (`bench/sessions/2026-10-16-hopcand-*`, lab note section 8): a bin-aligned 25 ms x 5 gap 10
+  hop passes >= 9/10 at all six spacings under this gate (contrast P75 31,000-32,500; the one comb cell,
+  80 cm with 3,300 Hz in a null, 9/10 at a median of 30,973). Its 0/10 at 100 cm was `scalar_max_duration_ms`
+  200 against a 214 ms train, not the inspectors (10/10 at 300). So the contrast gate holds for the candidate
+  shape; the limit's margin at a null step is a few hundred, as above.
 
 Status stays provisional: the values go into `DetectionProfile.h` after the gap question is settled and
 one more battery day confirms the margins.

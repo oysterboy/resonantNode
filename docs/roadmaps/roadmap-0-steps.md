@@ -288,6 +288,13 @@ the previous gate open unless the step says it can run in parallel.
    (3-step hop and gap-5 hop 5 of 6). Hop frequencies must be bin-aligned (250 Hz). Open: gap-tolerant contrast
    or no long gaps; a shape that survives one missing step (25 x 5 gap 10 passed at 60 cm, untested elsewhere);
    music with the combined build; then profile values, sweep renderer, Node band + per-node hop, final gate run.
+   Progress 2026-10-16 afternoon (lab note section 8): hop5 25 ms x 5 gap 10 (bin-aligned) is the first signal with >= 9/10 at
+   all six spacings, given scalar_max_duration_ms 300 (at 100 cm the 165 ms train is seen as 214 ms, every trial
+   duration_too_long at the default 200); its only comb loss is 9/10 at 80 cm. A 4-step 30 ms train splits when its middle
+   step sits in a null. Capture corpus started (tools/bench/rawcorpus.py: single tones at the hop bins at every spacing,
+   radio speech/music snippets; bench/sessions/2026-10-16-corpus-*) for NODE-006 replay and threshold sweeps. Signal
+   criterion of the gate met once, on one day; remaining for the gate: profile values written, speech/music OBS with the
+   final build, Node build with its per-node variation, and the battery repeated on another day.
    Order inside: DET-013 profile + cheap pass -> OUT-005 on the Emitter ->
    DET-013 bank + contrast decision -> DET-011 gaps -> DET-014 if needed
    -> OUT-005 on the Node + BEH-005. DET-012 (band lower edge) is measured

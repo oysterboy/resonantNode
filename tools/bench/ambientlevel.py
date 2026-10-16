@@ -17,7 +17,7 @@ ap.add_argument("--out", required=True, help="session folder; csv files and ambi
 ap.add_argument("--label", required=True)
 ap.add_argument("--reps", type=int, default=12)
 ap.add_argument("--band", default="2800-3800")
-ap.add_argument("--post-ms", type=int, default=340)
+ap.add_argument("--post-ms", type=int, default=200)
 ap.add_argument("--skip-ms", type=int, default=80)
 a = ap.parse_args()
 lo, hi = (int(x) for x in a.band.split("-"))
@@ -52,7 +52,7 @@ pump(3.5)
 tot, band_p, n = [], [], 0
 for rep in range(a.reps):
     s.write(("RAW trigger f=3200 dur=20 post=%d mode=i2s\n" % a.post_ms).encode())
-    lines = pump(12, "RAW_END")
+    lines = pump(8, "RAW_SUMMARY")
     open(os.path.join(a.out, "ambient_%s_r%d.csv" % (a.label, rep)), "w").write("\n".join(lines))
     sr, done = 16000, None
     rows = []

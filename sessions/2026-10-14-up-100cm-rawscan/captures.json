@@ -1,0 +1,737 @@
+{
+  "purpose": "",
+  "setup": {},
+  "captures": [
+    {
+      "label": "raw_f2800",
+      "rep": 0,
+      "file": "raw_f2800_r0.csv",
+      "wav": "raw_f2800_r0.wav",
+      "started": "2026-10-14",
+      "firmware": null,
+      "fields": [
+        "ms",
+        "pcm"
+      ],
+      "raw": {
+        "sr": 16000,
+        "f": 2800,
+        "dur": 100,
+        "pre_ms": 0,
+        "post_ms": 200,
+        "mode": "i2s",
+        "emit_seen": 1,
+        "emit_start_ms": 3458,
+        "emit_done_ms": 3556,
+        "pre_samples": 0,
+        "post_samples": 3200
+      },
+      "summary": {
+        "id": 1,
+        "requested": 3200,
+        "captured": 3200,
+        "unused_capacity": 2800,
+        "max_pcm_abs": 201129,
+        "raw_mean": 81750.8,
+        "raw_abs_mean": 84414.8,
+        "raw_min": -37634,
+        "raw_max": 201129,
+        "baseline": 42.2
+      },
+      "check": {
+        "samples": 3200,
+        "tone_amp": 60457,
+        "peak_abs": 201129,
+        "env_len_ms": 195
+      }
+    },
+    {
+      "label": "raw_f2850",
+      "rep": 0,
+      "file": "raw_f2850_r0.csv",
+      "wav": "raw_f2850_r0.wav",
+      "started": "2026-10-14",
+      "firmware": null,
+      "fields": [
+        "ms",
+        "pcm"
+      ],
+      "raw": {
+        "sr": 16000,
+        "f": 2850,
+        "dur": 100,
+        "pre_ms": 0,
+        "post_ms": 200,
+        "mode": "i2s",
+        "emit_seen": 1,
+        "emit_start_ms": 15523,
+        "emit_done_ms": 15621,
+        "pre_samples": 0,
+        "post_samples": 3200
+      },
+      "summary": {
+        "id": 2,
+        "requested": 3200,
+        "captured": 3200,
+        "unused_capacity": 2800,
+        "max_pcm_abs": 84957,
+        "raw_mean": -14435.0,
+        "raw_abs_mean": 23618.8,
+        "raw_min": -84957,
+        "raw_max": 50842,
+        "baseline": -6.0
+      },
+      "check": {
+        "samples": 3200,
+        "tone_amp": 19489,
+        "peak_abs": 84957,
+        "env_len_ms": 130
+      }
+    },
+    {
+      "label": "raw_f2900",
+      "rep": 0,
+      "file": "raw_f2900_r0.csv",
+      "wav": "raw_f2900_r0.wav",
+      "started": "2026-10-14",
+      "firmware": null,
+      "fields": [
+        "ms",
+        "pcm"
+      ],
+      "raw": {
+        "sr": 16000,
+        "f": 2900,
+        "dur": 100,
+        "pre_ms": 0,
+        "post_ms": 200,
+        "mode": "i2s",
+        "emit_seen": 1,
+        "emit_start_ms": 27557,
+        "emit_done_ms": 27655,
+        "pre_samples": 0,
+        "post_samples": 3200
+      },
+      "summary": {
+        "id": 3,
+        "requested": 3200,
+        "captured": 3200,
+        "unused_capacity": 2800,
+        "max_pcm_abs": 271869,
+        "raw_mean": -130876.2,
+        "raw_abs_mean": 130876.2,
+        "raw_min": -271869,
+        "raw_max": -7659,
+        "baseline": -22.9
+      },
+      "check": {
+        "samples": 3200,
+        "tone_amp": 48478,
+        "peak_abs": 271869,
+        "env_len_ms": 155
+      }
+    },
+    {
+      "label": "raw_f2950",
+      "rep": 0,
+      "file": "raw_f2950_r0.csv",
+      "wav": "raw_f2950_r0.wav",
+      "started": "2026-10-14",
+      "firmware": null,
+      "fields": [
+        "ms",
+        "pcm"
+      ],
+      "raw": {
+        "sr": 16000,
+        "f": 2950,
+        "dur": 100,
+        "pre_ms": 0,
+        "post_ms": 200,
+        "mode": "i2s",
+        "emit_seen": 1,
+        "emit_start_ms": 39632,
+        "emit_done_ms": 39730,
+        "pre_samples": 0,
+        "post_samples": 3200
+      },
+      "summary": {
+        "id": 4,
+        "requested": 3200,
+        "captured": 3200,
+        "unused_capacity": 2800,
+        "max_pcm_abs": 212923,
+        "raw_mean": -79801.8,
+        "raw_abs_mean": 81477.4,
+        "raw_min": -212923,
+        "raw_max": 31883,
+        "baseline": -18.8
+      },
+      "check": {
+        "samples": 3200,
+        "tone_amp": 60366,
+        "peak_abs": 212923,
+        "env_len_ms": 170
+      }
+    },
+    {
+      "label": "raw_f3000",
+      "rep": 0,
+      "file": "raw_f3000_r0.csv",
+      "wav": "raw_f3000_r0.wav",
+      "started": "2026-10-14",
+      "firmware": null,
+      "fields": [
+        "ms",
+        "pcm"
+      ],
+      "raw": {
+        "sr": 16000,
+        "f": 3000,
+        "dur": 100,
+        "pre_ms": 0,
+        "post_ms": 200,
+        "mode": "i2s",
+        "emit_seen": 1,
+        "emit_start_ms": 51684,
+        "emit_done_ms": 51782,
+        "pre_samples": 0,
+        "post_samples": 3200
+      },
+      "summary": {
+        "id": 5,
+        "requested": 3200,
+        "captured": 3200,
+        "unused_capacity": 2800,
+        "max_pcm_abs": 245327,
+        "raw_mean": -76462.7,
+        "raw_abs_mean": 81633.4,
+        "raw_min": -245327,
+        "raw_max": 46874,
+        "baseline": -9.8
+      },
+      "check": {
+        "samples": 3200,
+        "tone_amp": 71565,
+        "peak_abs": 245327,
+        "env_len_ms": 150
+      }
+    },
+    {
+      "label": "raw_f3050",
+      "rep": 0,
+      "file": "raw_f3050_r0.csv",
+      "wav": "raw_f3050_r0.wav",
+      "started": "2026-10-14",
+      "firmware": null,
+      "fields": [
+        "ms",
+        "pcm"
+      ],
+      "raw": {
+        "sr": 16000,
+        "f": 3050,
+        "dur": 100,
+        "pre_ms": 0,
+        "post_ms": 200,
+        "mode": "i2s",
+        "emit_seen": 1,
+        "emit_start_ms": 63748,
+        "emit_done_ms": 63846,
+        "pre_samples": 0,
+        "post_samples": 3200
+      },
+      "summary": {
+        "id": 6,
+        "requested": 3200,
+        "captured": 3200,
+        "unused_capacity": 2800,
+        "max_pcm_abs": 217489,
+        "raw_mean": 104261.9,
+        "raw_abs_mean": 104833.9,
+        "raw_min": -12136,
+        "raw_max": 217489,
+        "baseline": -10.5
+      },
+      "check": {
+        "samples": 3200,
+        "tone_amp": 47046,
+        "peak_abs": 217489,
+        "env_len_ms": 130
+      }
+    },
+    {
+      "label": "raw_f3100",
+      "rep": 0,
+      "file": "raw_f3100_r0.csv",
+      "wav": "raw_f3100_r0.wav",
+      "started": "2026-10-14",
+      "firmware": null,
+      "fields": [
+        "ms",
+        "pcm"
+      ],
+      "raw": {
+        "sr": 16000,
+        "f": 3100,
+        "dur": 100,
+        "pre_ms": 0,
+        "post_ms": 200,
+        "mode": "i2s",
+        "emit_seen": 1,
+        "emit_start_ms": 75790,
+        "emit_done_ms": 75888,
+        "pre_samples": 0,
+        "post_samples": 3200
+      },
+      "summary": {
+        "id": 7,
+        "requested": 3200,
+        "captured": 3200,
+        "unused_capacity": 2800,
+        "max_pcm_abs": 272231,
+        "raw_mean": -142555.4,
+        "raw_abs_mean": 142555.4,
+        "raw_min": -272231,
+        "raw_max": -85440,
+        "baseline": 12.4
+      },
+      "check": {
+        "samples": 3200,
+        "tone_amp": 27953,
+        "peak_abs": 272231,
+        "env_len_ms": 195
+      }
+    },
+    {
+      "label": "raw_f3150",
+      "rep": 0,
+      "file": "raw_f3150_r0.csv",
+      "wav": "raw_f3150_r0.wav",
+      "started": "2026-10-14",
+      "firmware": null,
+      "fields": [
+        "ms",
+        "pcm"
+      ],
+      "raw": {
+        "sr": 16000,
+        "f": 3150,
+        "dur": 100,
+        "pre_ms": 0,
+        "post_ms": 200,
+        "mode": "i2s",
+        "emit_seen": 1,
+        "emit_start_ms": 87856,
+        "emit_done_ms": 87953,
+        "pre_samples": 0,
+        "post_samples": 3200
+      },
+      "summary": {
+        "id": 8,
+        "requested": 3200,
+        "captured": 3200,
+        "unused_capacity": 2800,
+        "max_pcm_abs": 292113,
+        "raw_mean": -216532.0,
+        "raw_abs_mean": 216532.0,
+        "raw_min": -292113,
+        "raw_max": -126519,
+        "baseline": -21.6
+      },
+      "check": {
+        "samples": 3200,
+        "tone_amp": 12167,
+        "peak_abs": 292113,
+        "env_len_ms": 195
+      }
+    },
+    {
+      "label": "raw_f3200",
+      "rep": 0,
+      "file": "raw_f3200_r0.csv",
+      "wav": "raw_f3200_r0.wav",
+      "started": "2026-10-14",
+      "firmware": null,
+      "fields": [
+        "ms",
+        "pcm"
+      ],
+      "raw": {
+        "sr": 16000,
+        "f": 3200,
+        "dur": 100,
+        "pre_ms": 0,
+        "post_ms": 200,
+        "mode": "i2s",
+        "emit_seen": 1,
+        "emit_start_ms": 99928,
+        "emit_done_ms": 100025,
+        "pre_samples": 0,
+        "post_samples": 3200
+      },
+      "summary": {
+        "id": 9,
+        "requested": 3200,
+        "captured": 3200,
+        "unused_capacity": 2800,
+        "max_pcm_abs": 78612,
+        "raw_mean": 26125.9,
+        "raw_abs_mean": 29946.2,
+        "raw_min": -38375,
+        "raw_max": 78612,
+        "baseline": 17.8
+      },
+      "check": {
+        "samples": 3200,
+        "tone_amp": 11065,
+        "peak_abs": 78612,
+        "env_len_ms": 115
+      }
+    },
+    {
+      "label": "raw_f3250",
+      "rep": 0,
+      "file": "raw_f3250_r0.csv",
+      "wav": "raw_f3250_r0.wav",
+      "started": "2026-10-14",
+      "firmware": null,
+      "fields": [
+        "ms",
+        "pcm"
+      ],
+      "raw": {
+        "sr": 16000,
+        "f": 3250,
+        "dur": 100,
+        "pre_ms": 0,
+        "post_ms": 200,
+        "mode": "i2s",
+        "emit_seen": 1,
+        "emit_start_ms": 111976,
+        "emit_done_ms": 112073,
+        "pre_samples": 0,
+        "post_samples": 3200
+      },
+      "summary": {
+        "id": 10,
+        "requested": 3200,
+        "captured": 3200,
+        "unused_capacity": 2800,
+        "max_pcm_abs": 146670,
+        "raw_mean": -66915.5,
+        "raw_abs_mean": 67352.9,
+        "raw_min": -146670,
+        "raw_max": 26284,
+        "baseline": -9.0
+      },
+      "check": {
+        "samples": 3200,
+        "tone_amp": 17945,
+        "peak_abs": 146670,
+        "env_len_ms": 195
+      }
+    },
+    {
+      "label": "raw_f3300",
+      "rep": 0,
+      "file": "raw_f3300_r0.csv",
+      "wav": "raw_f3300_r0.wav",
+      "started": "2026-10-14",
+      "firmware": null,
+      "fields": [
+        "ms",
+        "pcm"
+      ],
+      "raw": {
+        "sr": 16000,
+        "f": 3300,
+        "dur": 100,
+        "pre_ms": 0,
+        "post_ms": 200,
+        "mode": "i2s",
+        "emit_seen": 1,
+        "emit_start_ms": 124030,
+        "emit_done_ms": 124127,
+        "pre_samples": 0,
+        "post_samples": 3200
+      },
+      "summary": {
+        "id": 11,
+        "requested": 3200,
+        "captured": 3200,
+        "unused_capacity": 2800,
+        "max_pcm_abs": 148555,
+        "raw_mean": -15954.0,
+        "raw_abs_mean": 69356.1,
+        "raw_min": -148555,
+        "raw_max": 97368,
+        "baseline": -12.7
+      },
+      "check": {
+        "samples": 3200,
+        "tone_amp": 35281,
+        "peak_abs": 148555,
+        "env_len_ms": 130
+      }
+    },
+    {
+      "label": "raw_f3350",
+      "rep": 0,
+      "file": "raw_f3350_r0.csv",
+      "wav": "raw_f3350_r0.wav",
+      "started": "2026-10-14",
+      "firmware": null,
+      "fields": [
+        "ms",
+        "pcm"
+      ],
+      "raw": {
+        "sr": 16000,
+        "f": 3350,
+        "dur": 100,
+        "pre_ms": 0,
+        "post_ms": 200,
+        "mode": "i2s",
+        "emit_seen": 1,
+        "emit_start_ms": 136080,
+        "emit_done_ms": 136178,
+        "pre_samples": 0,
+        "post_samples": 3200
+      },
+      "summary": {
+        "id": 12,
+        "requested": 3200,
+        "captured": 3200,
+        "unused_capacity": 2800,
+        "max_pcm_abs": 130020,
+        "raw_mean": 12083.9,
+        "raw_abs_mean": 31426.3,
+        "raw_min": -97670,
+        "raw_max": 130020,
+        "baseline": 17.1
+      },
+      "check": {
+        "samples": 3200,
+        "tone_amp": 22325,
+        "peak_abs": 130020,
+        "env_len_ms": 95
+      }
+    },
+    {
+      "label": "raw_f3400",
+      "rep": 0,
+      "file": "raw_f3400_r0.csv",
+      "wav": "raw_f3400_r0.wav",
+      "started": "2026-10-14",
+      "firmware": null,
+      "fields": [
+        "ms",
+        "pcm"
+      ],
+      "raw": {
+        "sr": 16000,
+        "f": 3400,
+        "dur": 100,
+        "pre_ms": 0,
+        "post_ms": 200,
+        "mode": "i2s",
+        "emit_seen": 1,
+        "emit_start_ms": 148149,
+        "emit_done_ms": 148247,
+        "pre_samples": 0,
+        "post_samples": 3200
+      },
+      "summary": {
+        "id": 13,
+        "requested": 3200,
+        "captured": 3200,
+        "unused_capacity": 2800,
+        "max_pcm_abs": 112508,
+        "raw_mean": 22666.1,
+        "raw_abs_mean": 29860.1,
+        "raw_min": -71458,
+        "raw_max": 112508,
+        "baseline": -19.5
+      },
+      "check": {
+        "samples": 3200,
+        "tone_amp": 3570,
+        "peak_abs": 112508,
+        "env_len_ms": 120
+      }
+    },
+    {
+      "label": "raw_f3450",
+      "rep": 0,
+      "file": "raw_f3450_r0.csv",
+      "wav": "raw_f3450_r0.wav",
+      "started": "2026-10-14",
+      "firmware": null,
+      "fields": [
+        "ms",
+        "pcm"
+      ],
+      "raw": {
+        "sr": 16000,
+        "f": 3450,
+        "dur": 100,
+        "pre_ms": 0,
+        "post_ms": 200,
+        "mode": "i2s",
+        "emit_seen": 1,
+        "emit_start_ms": 160171,
+        "emit_done_ms": 160269,
+        "pre_samples": 0,
+        "post_samples": 3200
+      },
+      "summary": {
+        "id": 14,
+        "requested": 3200,
+        "captured": 3200,
+        "unused_capacity": 2800,
+        "max_pcm_abs": 158564,
+        "raw_mean": 24343.0,
+        "raw_abs_mean": 43432.2,
+        "raw_min": -101325,
+        "raw_max": 158564,
+        "baseline": -3.2
+      },
+      "check": {
+        "samples": 3200,
+        "tone_amp": 68253,
+        "peak_abs": 158564,
+        "env_len_ms": 120
+      }
+    },
+    {
+      "label": "raw_f3500",
+      "rep": 0,
+      "file": "raw_f3500_r0.csv",
+      "wav": "raw_f3500_r0.wav",
+      "started": "2026-10-14",
+      "firmware": null,
+      "fields": [
+        "ms",
+        "pcm"
+      ],
+      "raw": {
+        "sr": 16000,
+        "f": 3500,
+        "dur": 100,
+        "pre_ms": 0,
+        "post_ms": 200,
+        "mode": "i2s",
+        "emit_seen": 1,
+        "emit_start_ms": 172248,
+        "emit_done_ms": 172346,
+        "pre_samples": 0,
+        "post_samples": 3200
+      },
+      "summary": {
+        "id": 15,
+        "requested": 3200,
+        "captured": 3200,
+        "unused_capacity": 2800,
+        "max_pcm_abs": 235520,
+        "raw_mean": 44206.6,
+        "raw_abs_mean": 68399.1,
+        "raw_min": -127667,
+        "raw_max": 235520,
+        "baseline": 1.8
+      },
+      "check": {
+        "samples": 3200,
+        "tone_amp": 71433,
+        "peak_abs": 235520,
+        "env_len_ms": 140
+      }
+    },
+    {
+      "label": "raw_f3550",
+      "rep": 0,
+      "file": "raw_f3550_r0.csv",
+      "wav": "raw_f3550_r0.wav",
+      "started": "2026-10-14",
+      "firmware": null,
+      "fields": [
+        "ms",
+        "pcm"
+      ],
+      "raw": {
+        "sr": 16000,
+        "f": 3550,
+        "dur": 100,
+        "pre_ms": 0,
+        "post_ms": 200,
+        "mode": "i2s",
+        "emit_seen": 1,
+        "emit_start_ms": 184291,
+        "emit_done_ms": 184389,
+        "pre_samples": 0,
+        "post_samples": 3200
+      },
+      "summary": {
+        "id": 16,
+        "requested": 3200,
+        "captured": 3200,
+        "unused_capacity": 2800,
+        "max_pcm_abs": 119030,
+        "raw_mean": -34846.9,
+        "raw_abs_mean": 37147.7,
+        "raw_min": -119030,
+        "raw_max": 44897,
+        "baseline": 2.9
+      },
+      "check": {
+        "samples": 3200,
+        "tone_amp": 11852,
+        "peak_abs": 119030,
+        "env_len_ms": 115
+      }
+    },
+    {
+      "label": "raw_f3600",
+      "rep": 0,
+      "file": "raw_f3600_r0.csv",
+      "wav": "raw_f3600_r0.wav",
+      "started": "2026-10-14",
+      "firmware": null,
+      "fields": [
+        "ms",
+        "pcm"
+      ],
+      "raw": {
+        "sr": 16000,
+        "f": 3600,
+        "dur": 100,
+        "pre_ms": 0,
+        "post_ms": 200,
+        "mode": "i2s",
+        "emit_seen": 1,
+        "emit_start_ms": 196327,
+        "emit_done_ms": 196425,
+        "pre_samples": 0,
+        "post_samples": 3200
+      },
+      "summary": {
+        "id": 17,
+        "requested": 3200,
+        "captured": 3200,
+        "unused_capacity": 2800,
+        "max_pcm_abs": 111498,
+        "raw_mean": 20873.8,
+        "raw_abs_mean": 38292.8,
+        "raw_min": -98066,
+        "raw_max": 111498,
+        "baseline": 17.8
+      },
+      "check": {
+        "samples": 3200,
+        "tone_amp": 36062,
+        "peak_abs": 111498,
+        "env_len_ms": 140
+      }
+    }
+  ]
+}

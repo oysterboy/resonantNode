@@ -298,8 +298,10 @@ the previous gate open unless the step says it can run in parallel.
    Progress 2026-10-16 evening, remote, compile only (lab note section 9): profile values shipped (c26b35d), Emitter
    sweep + RAW hop/sweep forwarding (9664032), Node band params + per-node hop train (155211e), host replay NODE-006
    (dd666ae). Replay finding: the plain 3,200 Hz chirp is off-bin in the 2800-3800 band and fails the contrast gate;
-   owner decides chirp-on-a-bin vs band shift before the Node battery (decisions/2026-10-09-chirp-frequency-stays-3200.md,
-   revisit note). Next session: one E2 flash, hop/sweep captures, sweep cell, 5c SELFTEST if five boards.
+   owner decided band 2950-3950 (decisions/2026-10-16-network-band-2950-3950.md, 635fc11); bench-checked the same
+   evening at 110/90/70 cm: chirp in band, hop5 on the new bins and the single-target chirp 10/10 each (90/90), noise
+   with the shipped values speech 0/50, music 0/50 (lab note section 10). Next session: one E2 flash, hop/sweep
+   captures, sweep cell, Node battery with the band, 5c SELFTEST if five boards.
    Order inside: DET-013 profile + cheap pass -> OUT-005 on the Emitter ->
    DET-013 bank + contrast decision -> DET-011 gaps -> DET-014 if needed
    -> OUT-005 on the Node + BEH-005. DET-012 (band lower edge) is measured

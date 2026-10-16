@@ -93,6 +93,7 @@ Written into the profile: `SCALAR_CONTRAST_MEDIUM_THRESHOLD` 30,500, `SCALAR_AMP
 512 (300 ms occurrences must stay resident for inspection). The build that produced every number above
 had exactly these four values, so the shipped default is the measured build.
 
-Not yet measured with these defaults and therefore the condition of the confirmation: speech/music OBS
-with max duration 300 alone (the afternoon noise runs used the default 200), and the battery on another
-day. If the OBS gets worse, the first lever is the contrast limit, not the amp limit.
+Measured the same evening with these values and the band 2950-3950 (`bench/sessions/2026-10-16-noise-band2950-
+maxdur300`): speech 0 valid false in 50 windows, music 0 in 50 with 16 occurrences at the inspectors, all contrast
+weak, the highest 30,085. Still the condition of the confirmation: the battery on another day with the shipped
+build. If a later OBS gets worse, the first lever is the contrast limit, not the amp limit.

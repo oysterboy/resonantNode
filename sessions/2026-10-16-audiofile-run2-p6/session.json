@@ -1,0 +1,65 @@
+{
+  "purpose": "5b: bench_audio_p6.wav (louder: +2.5 to +6 dB per section vs run1, peak-safe), one OBS pass",
+  "created": "2026-10-16T10:52:47",
+  "setup": {
+    "distance_cm": 110.0,
+    "orientation": "mic and speaker facing up, bench",
+    "emitter_fw": "",
+    "notes": [
+      "same setup as 2026-10-16-audiofile-run1; speaker regler unchanged; file bench_audio_p6.wav built with --rms-dbfs -18 --peak-safe (sections at -19.4, -21.5, -18.7, -18.0 dBFS RMS); playback start unix ms 1792140763988"
+    ]
+  },
+  "runs": [
+    {
+      "name": "OBS_file_p6",
+      "file": "OBS_file_p6.b22b035.log",
+      "firmware": {
+        "role": "analyzer",
+        "git": "b22b035",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "commands": [
+        "SEQ DIAG on",
+        "SEQ OBS start tries=222 period=2000 window=1800 report_settle=200 freq=3300 band=2800-3800 profile=TonalPulseScalar mode=detail when=all verbose=1"
+      ],
+      "started": "2026-10-16T10:52:54",
+      "duration_s": 450,
+      "summary": {
+        "profile": "TonalPulseScalar",
+        "detector": "scalar_transient",
+        "complete": true,
+        "trial_results": {
+          "rejected": 15,
+          "miss": 207
+        },
+        "line_counts": {
+          "SEQ_TRIAL": 222,
+          "SEQ_INSPECT": 222,
+          "SEQ_SOURCE": 222,
+          "SEQ_SOURCE_CORE": 222,
+          "SEQ_SOURCE_SPEC": 17,
+          "SEQ_EXPLAIN": 222,
+          "SEQ_SUMMARY": 1
+        },
+        "trials": "222",
+        "completed": "222",
+        "expected_trials": "0",
+        "early_trials": "0",
+        "late_trials": "0",
+        "miss_trials": "207",
+        "duplicate_trials": "0",
+        "unexpected_trials": "0",
+        "rejected_trials": "15",
+        "buffer_overrun_trials": "17",
+        "detector_accepted_trials": "0",
+        "detector_reject_trials": "17",
+        "pattern_valid_trials": "0",
+        "pattern_rejected_trials": "0",
+        "avg_dt_ms": "-1",
+        "avg_strength": "2243.5",
+        "avg_conf": "0.00"
+      }
+    }
+  ]
+}

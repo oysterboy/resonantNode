@@ -37,4 +37,13 @@ public:
     }
     // True from startPulseTrain() until the last pulse has ramped to silence.
     virtual bool pulseTrainActive() const { return false; }
+    // Optional: a sweep inside a plain tone (OUT-005). From the next toneOn()
+    // the frequency glides linearly from setToneHz() to endHz over durationMs,
+    // phase-continuous, then holds endHz. endHz = 0 or durationMs = 0 clears
+    // it. A device that can't sweep plays the steady tone. Pulse trains
+    // ignore it (a hop is the train's own shape).
+    virtual void setSweep(uint32_t endHz, uint32_t durationMs) {
+        (void)endHz;
+        (void)durationMs;
+    }
 };

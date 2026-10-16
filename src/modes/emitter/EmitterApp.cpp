@@ -271,6 +271,7 @@ void EmitterApp::handleChirpCommand(const char* line) {
     unsigned long toneHz = runtime::kDefaultChirpFrequencyHz;
     unsigned long durationMs = 100;
     unsigned long trialId = 0;
+    unsigned long sweepToHz = 0;
     char* savePtr = nullptr;
     char* token = strtok_r(buffer, " ", &savePtr);
     token = nextToken(savePtr);
@@ -281,6 +282,9 @@ void EmitterApp::handleChirpCommand(const char* line) {
             toneHz = strtoul(findValue(token), nullptr, 10);
         } else if (startsWithToken(token, "dur=")) {
             durationMs = strtoul(findValue(token), nullptr, 10);
+        } else if (startsWithToken(token, "sweep=")) {
+            // Glide from freq= to this frequency over dur= (OUT-005).
+            sweepToHz = strtoul(findValue(token), nullptr, 10);
         }
 
         token = nextToken(savePtr);
@@ -290,7 +294,11 @@ void EmitterApp::handleChirpCommand(const char* line) {
         printToneHzRejected("CHIRP", toneHz);
         return;
     }
-    startChirp(toneHz, durationMs, trialId);
+    if (sweepToHz != 0 && !emitterToneHzPlayable(sweepToHz)) {
+        printToneHzRejected("CHIRP sweep", sweepToHz);
+        return;
+    }
+    startChirp(toneHz, durationMs, trialId, sweepToHz);
 }
 
 // Bounds keep one train well inside a SEQ period and the 8 ms block/ramp
@@ -511,12 +519,14 @@ void EmitterApp::handleSweepCommand(const char* line) {
     sendControlAck(modeLine);
 }
 
-void EmitterApp::startChirp(unsigned long toneHz, unsigned long durationMs, unsigned long trialId) {
+void EmitterApp::startChirp(unsigned long toneHz, unsigned long durationMs, unsigned long trialId, unsigned long sweepToHz) {
     if (_chirpOutput.isActive()) {
         _chirpOutput.stop();
     }
     _activeTrialId = trialId;
     _chirpOutput.setToneHz(static_cast<uint32_t>(toneHz));
+    // A sweep is per chirp: set it for this one, or clear a previous one.
+    _chirpOutput.setSweep(static_cast<uint32_t>(sweepToHz), sweepToHz != 0 ? static_cast<uint32_t>(durationMs) : 0U);
     _chirpOutput.setTiming(durationMs, 0);
     _chirpOutput.start();
     sendStartMarkers();
@@ -525,11 +535,11 @@ void EmitterApp::startChirp(unsigned long toneHz, unsigned long durationMs, unsi
     }
 
     char chirpLine[128];
-    snprintf(chirpLine,
-             sizeof(chirpLine),
-             "OK CHIRP freq=%lu dur=%lu",
-             toneHz,
-             durationMs);
+    if (sweepToHz != 0) {
+        snprintf(chirpLine, sizeof(chirpLine), "OK CHIRP freq=%lu dur=%lu sweep=%lu", toneHz, durationMs, sweepToHz);
+    } else {
+        snprintf(chirpLine, sizeof(chirpLine), "OK CHIRP freq=%lu dur=%lu", toneHz, durationMs);
+    }
     sendControlAck(chirpLine);
 }
 

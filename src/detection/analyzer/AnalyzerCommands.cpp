@@ -184,7 +184,8 @@ void AnalyzerApp::printSequenceHelp() {
     Serial.println("CMD: SEQ stop");
     Serial.println("SEQ IN: start [N|tries=N] [period=MS] [window=MS] [freq=HZ] [dur=MS] [delay=MS] [report_settle=MS] [test=LABEL]");
     Serial.println("SEQ IN: OBS start [N|tries=N] [period=2000] [window=1800] [freq=HZ] [dur=MS] [delay=MS] [report_settle=MS] [test=LABEL]");
-    Serial.println("SEQ IN: pulse train per trial (DET-011): start ... dur=PULSE_MS pulses=N gap=MS [ramp=MS]");
+    Serial.println("SEQ IN: pulse train per trial (DET-011): start ... dur=PULSE_MS pulses=N gap=MS [ramp=MS] [hop=F1,F2,...]");
+    Serial.println("SEQ IN: sweep inside the chirp (OUT-005): start ... freq=START_HZ dur=MS sweep=END_HZ");
     Serial.println("SEQ IN: TRIES N");
     Serial.println("SEQ IN: [profile=TonalPulseFreq|TonalPulseScalar|AmpExperimental]");
     Serial.println("SEQ IN: MODE quiet|trial|inspect|source|system|detail");
@@ -250,7 +251,7 @@ void AnalyzerApp::handleUsbLine(const char* line) {
         Serial.println("CMD: EMIT MODE AUTO interval=2000 freq=3200 dur=100");
         Serial.println("CMD: EMIT SWEEP start=3000 stop=3500 step=100 dur=80 pause=1000");
         Serial.println("CMD: EMIT PULSES n pulse_ms gap_ms [freq=3200] [ramp=5] (e.g. EMIT PULSES 5 10 20)");
-        Serial.println("CMD: RAW trigger f=3200 dur=100 post=1000 mode=feat (default)|mode=pcm|mode=i2s|mode=both");
+        Serial.println("CMD: RAW trigger f=3200 dur=100 post=1000 [pre=MS] mode=feat (default)|mode=pcm|mode=i2s|mode=both [pulses=N gap=MS hop=F1,F2,...] (pulses= plays a PULSES train instead of one CHIRP; dur= is then the pulse length)");
         Serial.println("CMD: SEQ");
         Serial.println("CMD: SEQ help");
         Serial.println("CMD: SEQ stop");
@@ -366,6 +367,7 @@ void AnalyzerApp::handleUsbLine(const char* line) {
         unsigned long preMs = 0;
         unsigned long decim = 1;
         AnalyzerApp::RawCaptureMode rawMode = AnalyzerApp::RawCaptureMode::Features;
+        AnalyzerApp::RawTriggerShape shape;
 
         char* savePtr = nullptr;
         char* token = strtok_r(_commandScratch, " ", &savePtr);
@@ -380,6 +382,27 @@ void AnalyzerApp::handleUsbLine(const char* line) {
                 preMs = static_cast<unsigned long>(strtoul(token + 4, nullptr, 10));
             } else if (startsWithTokenIgnoreCase(token, "decim=")) {
                 decim = static_cast<unsigned long>(strtoul(token + 6, nullptr, 10));
+            } else if (startsWithTokenIgnoreCase(token, "pulses=")) {
+                shape.pulseCount = static_cast<unsigned long>(strtoul(token + 7, nullptr, 10));
+            } else if (startsWithTokenIgnoreCase(token, "gap=")) {
+                shape.pulseGapMs = static_cast<unsigned long>(strtoul(token + 4, nullptr, 10));
+            } else if (startsWithTokenIgnoreCase(token, "sweep=")) {
+                shape.sweepToHz = static_cast<unsigned long>(strtoul(token + 6, nullptr, 10));
+            } else if (startsWithTokenIgnoreCase(token, "hop=")) {
+                // Same validation as SEQ start: digits and commas, fits the buffer.
+                const char* list = token + 4;
+                const size_t len = strlen(list);
+                bool ok = len > 0 && len < sizeof(shape.hop);
+                for (size_t i = 0; ok && i < len; ++i) {
+                    ok = (list[i] >= '0' && list[i] <= '9') || list[i] == ',';
+                }
+                if (!ok) {
+                    Serial.print("ERR RAW bad value token=");
+                    Serial.println(token);
+                    return;
+                }
+                strncpy(shape.hop, list, sizeof(shape.hop) - 1);
+                shape.hop[sizeof(shape.hop) - 1] = '\0';
             } else if (startsWithTokenIgnoreCase(token, "mode=")) {
                 const char* modeValue = token + 5;
                 if (equalsIgnoreCase(modeValue, "feat") || equalsIgnoreCase(modeValue, "features") || equalsIgnoreCase(modeValue, "csv")) {
@@ -394,7 +417,7 @@ void AnalyzerApp::handleUsbLine(const char* line) {
             }
         }
 
-        if (runRawTrigger(toneHz, durationMs, postMs, preMs, decim, rawMode)) {
+        if (runRawTrigger(toneHz, durationMs, postMs, preMs, decim, rawMode, shape)) {
             Serial.println("OK RAW");
         }
         return;
@@ -620,6 +643,7 @@ void AnalyzerApp::handleUsbLine(const char* line) {
             _pendingSequenceStart.pulseRampSet = false;
             _pendingSequenceStart.pulseRampMs = 0;
             _pendingSequenceStart.pulseHop[0] = '\0';
+            _pendingSequenceStart.sweepToHz = 0;
             _pendingSequenceStart.bandLowHz = 0;
             _pendingSequenceStart.bandHighHz = 0;
             _pendingSequenceStart.quiet = false;
@@ -712,6 +736,13 @@ void AnalyzerApp::handleUsbLine(const char* line) {
                     }
                     strncpy(_pendingSequenceStart.pulseHop, list, sizeof(_pendingSequenceStart.pulseHop) - 1);
                     _pendingSequenceStart.pulseHop[sizeof(_pendingSequenceStart.pulseHop) - 1] = '\0';
+                } else if (startsWithTokenIgnoreCase(token, "sweep=")) {
+                    if (!parseUnsignedValue(token + 6, _pendingSequenceStart.sweepToHz) ||
+                        _pendingSequenceStart.sweepToHz > 7900UL) {
+                        Serial.print("ERR SEQ bad value token=");
+                        Serial.println(token);
+                        return;
+                    }
                 } else if (startsWithTokenIgnoreCase(token, "pulses=")) {
                     if (!parseUnsignedValue(token + 7, _pendingSequenceStart.pulseCount)) {
                         Serial.print("ERR SEQ bad value token=");

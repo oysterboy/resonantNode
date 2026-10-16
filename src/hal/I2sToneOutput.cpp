@@ -59,6 +59,12 @@ void I2sToneOutput::toneOn() {
     _on = true;
 }
 
+void I2sToneOutput::setSweep(uint32_t endHz, uint32_t durationMs) {
+    const bool clear = endHz == 0 || durationMs == 0;
+    _sweepEndHz = clear ? 0 : endHz;
+    _sweepMs = clear ? 0 : durationMs;
+}
+
 void I2sToneOutput::toneOff() {
     _on = false;
     portENTER_CRITICAL(&_trainMux);
@@ -186,6 +192,17 @@ void I2sToneOutput::renderBlock(int32_t* frames, size_t frameCount) {
     const uint32_t phaseStep = static_cast<uint32_t>(
         (static_cast<uint64_t>(_toneHz) << 32) / static_cast<uint64_t>(sampleRateHz));
     const bool trainShape = _trainRunning || _trainDraining;
+    // Sweep (plain tone only): phase step glides from _toneHz to _sweepEndHz
+    // over _sweepMs, then holds. The accumulator restarts with the tone
+    // (below, where the phase restarts), so every chirp sweeps the same way.
+    const uint32_t sweepSamples = (sampleRateHz * _sweepMs) / 1000U;
+    const bool sweeping = !trainShape && sweepSamples > 0 && _sweepEndHz != 0;
+    float sweepIncrement = 0.0f;
+    if (sweeping) {
+        const uint32_t endStep = static_cast<uint32_t>(
+            (static_cast<uint64_t>(_sweepEndHz) << 32) / static_cast<uint64_t>(sampleRateHz));
+        sweepIncrement = (static_cast<float>(endStep) - static_cast<float>(phaseStep)) / static_cast<float>(sweepSamples);
+    }
     const uint32_t rampSamples = (sampleRateHz * (trainShape ? _trainRampMs : _rampMs)) / 1000U;
     const float envelopeStep = rampSamples > 0 ? 1.0f / static_cast<float>(rampSamples) : 1.0f;
     float target = _on ? 1.0f : 0.0f;
@@ -237,10 +254,25 @@ void I2sToneOutput::renderBlock(int32_t* frames, size_t frameCount) {
         if (_envelope > 0.0f) {
             const float s = sinf(static_cast<float>(_phase) * kPhaseToRadians);
             value = static_cast<int32_t>(s * _amplitude * _envelope * kFullScale);
-            _phase += (trainShape && _trainStep != 0) ? _trainStep : phaseStep;
+            uint32_t step = phaseStep;
+            if (trainShape && _trainStep != 0) {
+                step = _trainStep;
+            } else if (sweeping) {
+                if (_sweepPos < sweepSamples) {
+                    step = static_cast<uint32_t>(_sweepStepF);
+                    _sweepStepF += sweepIncrement;
+                    ++_sweepPos;
+                } else {
+                    step = static_cast<uint32_t>(_sweepStepF);
+                }
+            }
+            _phase += step;
         } else {
-            // Restart each tone at phase 0 so every chirp has the same onset.
+            // Restart each tone at phase 0 so every chirp has the same onset,
+            // and the sweep from its start frequency.
             _phase = 0;
+            _sweepPos = 0;
+            _sweepStepF = static_cast<float>(phaseStep);
         }
         frames[2 * i] = value;
         frames[2 * i + 1] = value;

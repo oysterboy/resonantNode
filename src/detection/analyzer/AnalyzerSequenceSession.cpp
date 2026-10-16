@@ -100,6 +100,7 @@ void AnalyzerApp::initializeSequenceTest(const PendingSequenceStart& pending) {
     _sequenceTest.pulseRampMs = pending.pulseRampMs;
     strncpy(_sequenceTest.pulseHop, pending.pulseHop, sizeof(_sequenceTest.pulseHop) - 1);
     _sequenceTest.pulseHop[sizeof(_sequenceTest.pulseHop) - 1] = '\0';
+    _sequenceTest.sweepToHz = pending.sweepToHz;
     _sequenceTest.bandLowHz = pending.bandLowHz;
     _sequenceTest.bandHighHz = pending.bandHighHz;
     _sequenceTest.startupDelayMs = pending.startupDelayMs;
@@ -408,6 +409,10 @@ void AnalyzerApp::startSequenceTest(const PendingSequenceStart& pending) {
             } else {
                 Serial.print("default");
             }
+        } else if (_sequenceTest.sweepToHz != 0) {
+            // Sweep inside the chirp (OUT-005): freq_hz glides to this over dur_ms.
+            Serial.print(" sweep_hz=");
+            Serial.print(_sequenceTest.sweepToHz);
         }
         Serial.println();
         printDetectionParameters();
@@ -519,6 +524,9 @@ void AnalyzerApp::updateSequenceTest(unsigned long now) {
             if (_sequenceTest.pulseHop[0] != '\0' && used < sizeof(command)) {
                 snprintf(command + used, sizeof(command) - used, " hop=%s", _sequenceTest.pulseHop);
             }
+        } else if (_sequenceTest.sweepToHz != 0) {
+            snprintf(command, sizeof(command), "CHIRP trial=%lu freq=%lu dur=%lu sweep=%lu", trialNumber,
+                     _sequenceTest.toneHz, _sequenceTest.durationMs, _sequenceTest.sweepToHz);
         } else {
             snprintf(command, sizeof(command), "CHIRP trial=%lu freq=%lu dur=%lu", trialNumber, _sequenceTest.toneHz, _sequenceTest.durationMs);
         }

@@ -57,7 +57,8 @@ private:
     // PULSES n pulse_ms gap_ms [freq=HZ] [ramp=MS] [trial=N] (DET-011);
     // n=/pulse=/gap= work as keys too.
     void handlePulsesCommand(const char* line);
-    void startChirp(unsigned long toneHz, unsigned long durationMs, unsigned long trialId = 0);
+    // sweepToHz != 0: the chirp glides from toneHz to sweepToHz over durationMs (OUT-005).
+    void startChirp(unsigned long toneHz, unsigned long durationMs, unsigned long trialId = 0, unsigned long sweepToHz = 0);
     void startPulses(unsigned long toneHz, unsigned long count, unsigned long pulseMs, unsigned long gapMs,
                      unsigned long rampMs, unsigned long trialId);
     void sendStartMarkers();

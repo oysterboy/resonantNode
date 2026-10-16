@@ -67,6 +67,17 @@ public:
         Both,     // Raw PCM plus detector view in one dump.
     };
 
+    // What the Emitter plays during a RAW capture: one CHIRP (pulseCount 0) or a
+    // PULSES train with an optional per-pulse frequency list, the same options
+    // SEQ start forwards (pulses= gap= hop=). Lets the capture corpus hold the
+    // hop shapes the gate battery uses (tools/bench/rawcorpus.py).
+    struct RawTriggerShape {
+        unsigned long pulseCount = 0;
+        unsigned long pulseGapMs = 0;
+        char hop[40] = {};
+        unsigned long sweepToHz = 0;  // CHIRP sweep=: glide from f= to this over dur=
+    };
+
     struct SeqOutputConfig {
         SeqOutputMode mode = SeqOutputMode::Trial;
         SeqOutputWhen when = SeqOutputWhen::Miss;
@@ -288,6 +299,7 @@ private:
         bool pulseRampSet = false;
         unsigned long pulseRampMs = 0;
         char pulseHop[40] = {};  // hop=F1,F2,... forwarded to PULSES; empty = none
+        unsigned long sweepToHz = 0;  // sweep=HZ forwarded to CHIRP (glide from toneHz over durationMs); 0 = steady
         unsigned long bandLowHz = 0;   // band=LOW-HIGH: FrequencyTarget = strongest bin in the band; 0 = off
         unsigned long bandHighHz = 0;
         unsigned long startupDelayMs = 1000;
@@ -408,6 +420,7 @@ private:
         bool pulseRampSet = false;
         unsigned long pulseRampMs = 0;
         char pulseHop[40] = {};  // hop=F1,F2,... forwarded to PULSES; empty = none
+        unsigned long sweepToHz = 0;  // sweep=HZ forwarded to CHIRP (glide from toneHz over durationMs); 0 = steady
         unsigned long bandLowHz = 0;   // band=LOW-HIGH: FrequencyTarget = strongest bin in the band; 0 = off
         unsigned long bandHighHz = 0;
         unsigned long reportSettleMs = 500;
@@ -452,7 +465,7 @@ private:
     void updateSequenceTest(unsigned long now);
     void finalizeSequenceTrial(unsigned long now);
     void refreshCapturedDetectorReportAggregates();
-    bool runRawTrigger(unsigned long toneHz, unsigned long durationMs, unsigned long postMs, unsigned long preMs, unsigned long decim, RawCaptureMode mode);
+    bool runRawTrigger(unsigned long toneHz, unsigned long durationMs, unsigned long postMs, unsigned long preMs, unsigned long decim, RawCaptureMode mode, const RawTriggerShape& shape);
     void printAudioSourceSummary() const;
     void printAudioRunSummary() const;
     void printFeatureHistoryRecordCounts() const;

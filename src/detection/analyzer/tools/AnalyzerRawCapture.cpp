@@ -96,7 +96,8 @@ bool AnalyzerApp::runRawTrigger(unsigned long toneHz,
                                 unsigned long postMs,
                                 unsigned long preMs,
                                 unsigned long decim,
-                                RawCaptureMode mode) {
+                                RawCaptureMode mode,
+                                const RawTriggerShape& shape) {
     stopSequenceTest();
     resetAudioSignalState();
     _audioSource.resetStats();
@@ -265,8 +266,20 @@ bool AnalyzerApp::runRawTrigger(unsigned long toneHz,
     const unsigned long captureId = ++_rawCaptureSequenceId;
     const unsigned long commandMs = timebase::nowMs();
     const unsigned long captureBaseMs = commandMs;
-    char emitterCommand[96];
-    snprintf(emitterCommand, sizeof(emitterCommand), "CHIRP freq=%lu dur=%lu", toneHz, durationMs);
+    // One CHIRP, or the same PULSES line SEQ start sends (trial=0: no trial
+    // bookkeeping on the Emitter side); EMIT_START/EMIT_DONE bracket either.
+    char emitterCommand[128];
+    if (shape.pulseCount > 0) {
+        int written = snprintf(emitterCommand, sizeof(emitterCommand), "PULSES %lu %lu %lu trial=0 freq=%lu",
+                               shape.pulseCount, durationMs, shape.pulseGapMs, toneHz);
+        if (shape.hop[0] != '\0' && written > 0 && static_cast<size_t>(written) < sizeof(emitterCommand)) {
+            snprintf(emitterCommand + written, sizeof(emitterCommand) - written, " hop=%s", shape.hop);
+        }
+    } else if (shape.sweepToHz != 0) {
+        snprintf(emitterCommand, sizeof(emitterCommand), "CHIRP freq=%lu dur=%lu sweep=%lu", toneHz, durationMs, shape.sweepToHz);
+    } else {
+        snprintf(emitterCommand, sizeof(emitterCommand), "CHIRP freq=%lu dur=%lu", toneHz, durationMs);
+    }
     sendEmitterCommand(emitterCommand);
     Serial2.flush();
 
@@ -562,6 +575,19 @@ bool AnalyzerApp::runRawTrigger(unsigned long toneHz,
     Serial.print(toneHz);
     Serial.print(" dur=");
     Serial.print(durationMs);
+    if (shape.pulseCount > 0) {
+        Serial.print(" pulses=");
+        Serial.print(shape.pulseCount);
+        Serial.print(" gap=");
+        Serial.print(shape.pulseGapMs);
+        if (shape.hop[0] != '\0') {
+            Serial.print(" hop=");
+            Serial.print(shape.hop);
+        }
+    } else if (shape.sweepToHz != 0) {
+        Serial.print(" sweep=");
+        Serial.print(shape.sweepToHz);
+    }
     Serial.print(" pre_ms=");
     Serial.print(preMs);
     Serial.print(" post_ms=");

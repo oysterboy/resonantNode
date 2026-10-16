@@ -1,7 +1,8 @@
 """Capture corpus: RAW captures (PCM, with the detector's amp feature) as CSV + WAV.
 
-One capture = one RAW trigger on the Analyzer (the Emitter plays a plain tone over
-the control UART; hop/sweep need the RAW command to forward them first). The serial
+One capture = one RAW trigger on the Analyzer (the Emitter plays a plain tone, or with
+--pulses/--gap/--hop the same PULSES train SEQ start uses; firmware after 2026-10-16
+forwards these, older builds ignore them and play a chirp of --dur ms). The serial
 transcript is kept as <label>_r<n>.csv (the format rawtone.py and ambientlevel.py
 already use), the pcm column is also written as <label>_r<n>.wav (16 kHz, mono,
 24-bit) for an offline replay, and captures.json in the session folder lists
@@ -11,8 +12,11 @@ Capture length is limited by the firmware: pre + post <= 6000 samples (375 ms).
 
   signal:  python tools/bench/rawcorpus.py --port COM5 --out bench/sessions/<folder> \
              --label chirp3200_pos0 --distance-cm 90 --reps 3
+  hop:     python tools/bench/rawcorpus.py --port COM5 --out bench/sessions/<folder> \
+             --label hop5_p25g10_pos0 --freq 3300 --dur 25 --pulses 5 --gap 10 \
+             --hop 2800,3050,3300,3550,3800 --distance-cm 90 --reps 3
   noise:   python tools/bench/rawcorpus.py --port COM5 --out bench/sessions/<folder> \
-             --label radio_music --dur 20 --post 340 --reps 12
+             --label radio_music --dur 20 --pre 0 --post 350 --reps 12
            (the 20 ms marker tone and its ~80 ms tail sit at the start; skip them)
   convert: python tools/bench/rawcorpus.py --from-csv bench/sessions/2026-10-14-up-90cm-rawscan
            (no board; writes a .wav next to every RAW csv and captures.json)
@@ -29,6 +33,10 @@ ap.add_argument("--dur", type=int, default=100, help="emitted tone, ms")
 ap.add_argument("--pre", type=int, default=50, help="ms kept before the trigger")
 ap.add_argument("--post", type=int, default=250, help="ms captured from the trigger")
 ap.add_argument("--mode", default="both", help="both (pcm + amp feature), i2s, pcm")
+ap.add_argument("--pulses", type=int, default=0, help="PULSES train instead of one chirp; --dur is the pulse length")
+ap.add_argument("--gap", type=int, default=0, help="gap between pulses, ms")
+ap.add_argument("--hop", default="", help="per-pulse frequencies F1,F2,... (cycled), bin-aligned")
+ap.add_argument("--sweep", type=int, default=0, help="sweep inside the chirp: glide from --freq to this Hz over --dur")
 ap.add_argument("--distance-cm", type=float)
 ap.add_argument("--orientation", default="mic and speaker facing up, bench")
 ap.add_argument("--note", default="")
@@ -144,8 +152,8 @@ def save_manifest(folder, data):
         f.write("\n")
 
 
-RAW_KEYS = ("sr", "f", "dur", "pre_ms", "post_ms", "mode", "emit_seen", "emit_start_ms",
-            "emit_done_ms", "pre_samples", "post_samples")
+RAW_KEYS = ("sr", "f", "dur", "pulses", "gap", "hop", "sweep", "pre_ms", "post_ms", "mode", "emit_seen",
+            "emit_start_ms", "emit_done_ms", "pre_samples", "post_samples")
 
 
 def record(man, csv_path, meta, rows, label, rep, started):
@@ -224,7 +232,14 @@ if banner:
     print(banner)
 for rep in range(a.reps):
     started = time.strftime("%Y-%m-%dT%H:%M:%S")
-    cmd = "RAW trigger f=%d dur=%d pre=%d post=%d mode=%s\n" % (a.freq, a.dur, a.pre, a.post, a.mode)
+    cmd = "RAW trigger f=%d dur=%d pre=%d post=%d mode=%s" % (a.freq, a.dur, a.pre, a.post, a.mode)
+    if a.pulses > 0:
+        cmd += " pulses=%d gap=%d" % (a.pulses, a.gap)
+        if a.hop:
+            cmd += " hop=%s" % a.hop
+    elif a.sweep > 0:
+        cmd += " sweep=%d" % a.sweep
+    cmd += "\n"
     s.write(cmd.encode())
     lines = pump(20, "RAW_SUMMARY")
     if banner:

@@ -48,6 +48,7 @@ public:
     bool startPulseTrain(uint32_t count, uint32_t onMs, uint32_t gapMs, uint32_t rampMs) override;
     void setPulseHop(const uint32_t* hz, size_t n) override;
     bool pulseTrainActive() const override;
+    void setSweep(uint32_t endHz, uint32_t durationMs) override;
 
     // Stops the writer task (tone off first; returns once the task is gone,
     // at most ~100 ms). begin() starts it again. For a build that needs the
@@ -71,6 +72,9 @@ private:
     // Written by the caller, read by the task (32-bit stores are atomic).
     volatile uint32_t _toneHz = runtime::kDefaultChirpFrequencyHz;
     volatile bool _on = false;
+    // Sweep inside a plain tone (setSweep): glide target and length; 0 = steady.
+    volatile uint32_t _sweepEndHz = 0;
+    volatile uint32_t _sweepMs = 0;
 
     // Pulse-train handoff, caller <-> task, under _trainMux.
     mutable portMUX_TYPE _trainMux = portMUX_INITIALIZER_UNLOCKED;
@@ -100,4 +104,8 @@ private:
     size_t _hopCount = 0;
     size_t _hopIndex = 0;           // next hop entry
     uint32_t _trainStep = 0;        // phase step of the current pulse; 0 = use _toneHz
+    // Sweep render state: samples since the tone started and the current
+    // phase step as a float accumulator (one add per sample).
+    uint32_t _sweepPos = 0;
+    float _sweepStepF = 0.0f;
 };

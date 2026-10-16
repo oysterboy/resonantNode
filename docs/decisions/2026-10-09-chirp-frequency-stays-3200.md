@@ -25,6 +25,16 @@ Changing the chirp frequency as a range fix during steps 3-6.
 Range at 0.3 FS is not enough in the field trial, or after the
 preprocessor pass (DC blocker), when the sweep should be rerun.
 
+Revisit note 2026-10-16: with the band bank (DET-013, Node default
+2800-3800 Hz, bins 2800 + k x 250) a 3,200 Hz chirp sits between two
+bins and fails the contrast gate (30,500) in every corpus capture on the
+host replay, at every spacing. A band-mode node does not accept it. The
+network signal is the hop train, but the idle voice, SELFTEST and the 5a
+reference are plain 3,200 Hz chirps. Options: move the chirp to a bin
+(3,300: strong at every spacing measured 2026-10-14 and -16), or shift
+the band so 3,200 is a bin (e.g. 2950-3950). Owner's call; lab note
+2026-10-16 section 9.
+
 ## Source
 
 Owner, 2026-10-09, recommendation 2 ("no") in damp-bench-check.md section 6.

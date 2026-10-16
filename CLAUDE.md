@@ -54,8 +54,20 @@ Which surface you're on decides what you can verify:
   touches the owner's bench — ask before uploading, and confirm which board
   build (D-AMP vs piezo) and mode goes on which port.
 
-Unit tests live under `test/` (PlatformIO/Unity). There's currently one
-suite, `test/test_analyzer_pass_rules`.
+Unit tests live under `test/` (PlatformIO/Unity). On-device:
+`test/test_analyzer_pass_rules`, `test/test_timebase`. Host (no board,
+NODE-006): `pio test -e native-test` replays recorded captures through the
+real detection chain (`test/test_replay_corpus`, fixtures under
+`test/fixtures`), and `pio run -e native-replay` builds the replay command
+line (`.pio/build/native-replay/program.exe --help`; captures live in
+`bench/sessions/*-corpus-*`, made with `tools/bench/rawcorpus.py`). Both
+need a host C++ compiler on PATH: on the developer's Windows machine that is
+WinLibs GCC from winget (`%LOCALAPPDATA%\Microsoft\WinGet\Packages\
+BrechtSanders.WinLibs.POSIX.UCRT_*\mingw64\bin`, not on PATH in every
+shell: prepend it); in a cloud container, whatever `g++` is installed.
+`src/host/` is excluded from every ESP env and `<Arduino.h>` is stood in
+by `test/native_shim/Arduino.h`; a detection file that grows a new Arduino
+dependency fails the host build, which is intended.
 
 ## Architecture spec (read this first for anything touching module boundaries)
 

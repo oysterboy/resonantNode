@@ -108,7 +108,11 @@ VEKTOR exposure.
 
 ### NODE-006 - host test env and replay harness
 
-Status: TODO
+Status: landed 2026-10-16 (env `native-replay` + `native-test`, `src/host/Replay.*`, `test/test_replay_corpus`,
+`test/native_shim/Arduino.h`, host clock in `TimeBase.h`). Feeds PCM captures through the real chain, not
+packets; host amp feature equals the board's to 1 Strength16 on the 2026-10-16 corpus. Open from the list
+below: `test_analyzer_pass_rules` is still on-device only; `AudioSource::readBlock()` pure-virtual / Node
+reading through `_audioSource` not done. Needs a host g++ (WinLibs via winget on the Windows machine).
 
 ```text
 Add a PlatformIO native env ([env:native], platform = native) and move

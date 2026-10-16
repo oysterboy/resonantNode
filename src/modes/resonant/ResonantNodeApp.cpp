@@ -349,6 +349,13 @@ void Node::begin() {
     _freqBandStream.setTargetFrequencyHz(_chirpOutput.toneHz());
     _detection.resetState();
     applyActiveProfiles();
+    // Per-node start bin for the hop train, from the MAC (BEH-005); the
+    // band is applied inside applyActiveProfiles().
+    {
+        const size_t bins = bandBinCount();
+        _hopRotation = bins > 0 ? static_cast<uint32_t>(ESP.getEfuseMac() % bins) : 0U;
+    }
+    printSignalConfig();
     _behavior.resetState();
     resetDetectionState();
     _audioSignal.resetStats();
@@ -548,6 +555,7 @@ void Node::updateRbBaselineState(unsigned long now) {
 void Node::configureParameters() {
     configureI2SParameters();
     registerDetectionParams();
+    registerOutputParams();
 }
 
 // Bind the currently-editable detection fields into the flat ParamRegistry.
@@ -600,6 +608,127 @@ void Node::registerDetectionParams() {
                              "detection.scalar_min_longest_island_ms", reinterpret_cast<uint32_t*>(&sc.minLongestIslandMs), 0U, 5000U);
     _paramRegistry.addUInt32(ParamId::Detection_ScalarMaxGapMs, ModuleId::Detection,
                              "detection.scalar_max_gap_ms", reinterpret_cast<uint32_t*>(&sc.maxGapMs), 0U, 5000U);
+    // Network band (DET-013). Applied by applyBandParams() when the values
+    // change; 0 = single target at the chirp tone.
+    _paramRegistry.addUInt32(ParamId::Detection_BandLowHz, ModuleId::Detection,
+                             "detection.band_low_hz", &_bandLowHz, 0U, 7900U);
+    _paramRegistry.addUInt32(ParamId::Detection_BandHighHz, ModuleId::Detection,
+                             "detection.band_high_hz", &_bandHighHz, 0U, 7900U);
+}
+
+void Node::registerOutputParams() {
+    using param::ModuleId;
+    using param::ParamId;
+    _paramRegistry.addBool(ParamId::Output_HopEnabled, ModuleId::Output, "output.hop_enabled", &_hopEnabled);
+    _paramRegistry.addUInt32(ParamId::Output_HopRotation, ModuleId::Output, "output.hop_rotation", &_hopRotation, 0U, 15U);
+    _paramRegistry.addUInt32(ParamId::Output_HopPulseMs, ModuleId::Output, "output.hop_pulse_ms", &_hopPulseMs, 1U, 1000U);
+    _paramRegistry.addUInt32(ParamId::Output_HopGapMs, ModuleId::Output, "output.hop_gap_ms", &_hopGapMs, 0U, 2000U);
+    _paramRegistry.addUInt32(ParamId::Output_HopSteps, ModuleId::Output, "output.hop_steps", &_hopSteps, 1U, 8U);
+}
+
+void Node::applyBandParams() {
+    // An empty or inverted band means "single target at the chirp tone".
+    const bool bandValid = _bandLowHz != 0 && _bandHighHz >= _bandLowHz;
+    const unsigned long lo = bandValid ? _bandLowHz : 0UL;
+    const unsigned long hi = bandValid ? _bandHighHz : 0UL;
+    if (_freqBandStream.bandLowHz() == lo && _freqBandStream.bandHighHz() == hi) {
+        return;
+    }
+    _freqBandStream.setBand(lo, hi);
+}
+
+size_t Node::bandBinCount() const {
+    if (_bandLowHz == 0 || _bandHighHz < _bandLowHz) {
+        return 0;
+    }
+    const unsigned long sampleRateHz = _audioSource.sampleRateHz() > 0 ? _audioSource.sampleRateHz() : 16000UL;
+    const unsigned long window = _freqBandStream.windowSizeSamples() > 0 ? _freqBandStream.windowSizeSamples() : 64UL;
+    const unsigned long spacing = sampleRateHz / window;  // 250 Hz at 16 kHz / 64
+    if (spacing == 0) {
+        return 0;
+    }
+    return static_cast<size_t>((_bandHighHz - _bandLowHz) / spacing) + 1U;
+}
+
+size_t Node::hopFrequencies(uint32_t* out, size_t capacity) const {
+    const size_t bins = bandBinCount();
+    if (bins == 0 || capacity == 0) {
+        return 0;
+    }
+    const unsigned long sampleRateHz = _audioSource.sampleRateHz() > 0 ? _audioSource.sampleRateHz() : 16000UL;
+    const unsigned long window = _freqBandStream.windowSizeSamples() > 0 ? _freqBandStream.windowSizeSamples() : 64UL;
+    const uint32_t spacing = static_cast<uint32_t>(sampleRateHz / window);
+    size_t steps = _hopSteps;
+    if (steps > capacity) {
+        steps = capacity;
+    }
+    // Bin-aligned by construction (the detector's bank sits on the same
+    // grid); the rotation picks the start bin, the order is the grid's.
+    for (size_t k = 0; k < steps; ++k) {
+        const size_t bin = (k + static_cast<size_t>(_hopRotation)) % bins;
+        out[k] = _bandLowHz + static_cast<uint32_t>(bin) * spacing;
+    }
+    return steps;
+}
+
+unsigned long Node::startNetworkSignal() {
+    uint32_t hz[8];
+    const size_t n = hopFrequencies(hz, sizeof(hz) / sizeof(hz[0]));
+    if (n == 0 || _hopPulseMs == 0) {
+        return 0;
+    }
+    _chirpOutput.setPulseHop(hz, n);
+    _chirpOutput.startPulseTrain(static_cast<uint32_t>(n), _hopPulseMs, _hopGapMs, runtime::kDefaultI2sToneRampMs);
+    if (!_chirpOutput.isActive()) {
+        _chirpOutput.setPulseHop(nullptr, 0);
+        return 0;
+    }
+    if (rbShouldLogDetail()) {
+        Serial.print("RB emit shape=hop steps=");
+        Serial.print(static_cast<unsigned long>(n));
+        Serial.print(" pulse_ms=");
+        Serial.print(_hopPulseMs);
+        Serial.print(" gap_ms=");
+        Serial.print(_hopGapMs);
+        Serial.print(" order=");
+        for (size_t k = 0; k < n; ++k) {
+            if (k > 0) {
+                Serial.print(',');
+            }
+            Serial.print(hz[k]);
+        }
+        Serial.println();
+    }
+    return static_cast<unsigned long>(n) * _hopPulseMs + static_cast<unsigned long>(n - 1) * _hopGapMs;
+}
+
+void Node::printSignalConfig() {
+    uint32_t hz[8];
+    const size_t n = hopFrequencies(hz, sizeof(hz) / sizeof(hz[0]));
+    Serial.print("RB signal band=");
+    Serial.print(_bandLowHz);
+    Serial.print('-');
+    Serial.print(_bandHighHz);
+    Serial.print(" bins=");
+    Serial.print(static_cast<unsigned long>(bandBinCount()));
+    Serial.print(" hop=");
+    Serial.print(_hopEnabled ? "on" : "off");
+    Serial.print(" rotation=");
+    Serial.print(_hopRotation);
+    Serial.print(" steps=");
+    Serial.print(_hopSteps);
+    Serial.print(" pulse_ms=");
+    Serial.print(_hopPulseMs);
+    Serial.print(" gap_ms=");
+    Serial.print(_hopGapMs);
+    Serial.print(" order=");
+    for (size_t k = 0; k < n; ++k) {
+        if (k > 0) {
+            Serial.print(',');
+        }
+        Serial.print(hz[k]);
+    }
+    Serial.println();
 }
 
 void Node::configureI2SParameters() {
@@ -657,6 +786,7 @@ void Node::update() {
 
     updateRbBaselineState(now);
     const bool rbOutputsEnabledNow = rbOutputsEnabled();
+    applyBandParams();  // PARAM SET detection.band_* takes effect here (two compares when unchanged)
 
     if (rbOutputsEnabledNow) {
         _behavior.update(now);
@@ -718,8 +848,17 @@ void Node::update() {
         }
     _debug.observeChirpStarted(now, sourceName, chirpPattern);
     _debug.flashLed(now, 2);
-    _chirpOutput.start(chirpPattern);
-    _behavior.notifyChirpStarted(now);
+    // A response to a heard pattern is the network signal: the node's hop
+    // train inside the band (BEH-005). Idle voice and self-test stay plain
+    // chirps. Own-emit suppression covers the train's span.
+    unsigned long emitSpanMs = 0;
+    if (_hopEnabled && _behavior.signalShape() == ResonantBehavior::SignalShape::NetworkSignal) {
+        emitSpanMs = startNetworkSignal();
+    }
+    if (emitSpanMs == 0) {
+        _chirpOutput.start(chirpPattern);
+    }
+    _behavior.notifyChirpStarted(now, emitSpanMs);
     ++_rbChirpStartedCount;
     selfTestNoteChirpStarted(now, sourceName);
     }
@@ -1094,6 +1233,20 @@ void Node::handleDetectCommand(const char* line) {
     Serial.print(_behavior.detectionSuppressTailMsOwnEmit());
     Serial.print(" output_busy=");
     Serial.print(_behavior.outputBusy() ? 1 : 0);
+    Serial.print(" band=");
+    Serial.print(_freqBandStream.bandLowHz());
+    Serial.print('-');
+    Serial.print(_freqBandStream.bandHighHz());
+    Serial.print(" hop_enabled=");
+    Serial.print(_hopEnabled ? 1 : 0);
+    Serial.print(" hop_rotation=");
+    Serial.print(_hopRotation);
+    Serial.print(" hop_steps=");
+    Serial.print(_hopSteps);
+    Serial.print(" hop_pulse_ms=");
+    Serial.print(_hopPulseMs);
+    Serial.print(" hop_gap_ms=");
+    Serial.print(_hopGapMs);
     const unsigned long sampleRateHz = _audioSource.sampleRateHz() > 0 ? _audioSource.sampleRateHz() : 16000UL;
     const unsigned long windowSizeSamples = _freqBandStream.windowSizeSamples();
     const unsigned long frequencyUpdateEverySamples = _freqBandStream.frequencyUpdateEverySamples();
@@ -1312,6 +1465,8 @@ void Node::applyActiveDetectionProfile() {
     _detection.setVerdictQueueEnabled(true);
     _freqBandStream.setSampleRateHz(_audioSource.sampleRateHz());
     _freqBandStream.setTargetFrequencyHz(_chirpOutput.toneHz());
+    _freqBandStream.setBand(0, 0);  // force applyBandParams() to re-apply after a profile switch
+    applyBandParams();
 }
 
 void Node::applyActiveBehaviorGateConfig() {

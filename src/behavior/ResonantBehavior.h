@@ -121,11 +121,23 @@ public:
     bool shouldStartChirp();
     const char* chirpRequestSourceName() const;
     ChirpOutput::ChirpPattern chirpPattern() const;
+    // What the requested emission is for (BEH-005): the network signal (a
+    // response to a heard pattern, played as the node's hop train inside
+    // the shared band) or a plain chirp (idle voice, self-test). Behavior
+    // decides the kind; the Node wires the shape, SoundOutput performs it.
+    enum class SignalShape {
+        Chirp,
+        NetworkSignal,
+    };
+    SignalShape signalShape() const;
 
     bool behaviorSuppressed(unsigned long now) const;
 
-    // Event handling
-    void notifyChirpStarted(unsigned long now);
+    // Event handling. emitSpanMs: how long the emission sounds (a hop train
+    // is longer than behaviorSuppressSelfChirpMs); own-emit suppression
+    // covers at least that span (decisions/2026-10-09-own-emit-suppression-
+    // whole-chirp.md). 0 = the configured suppress time alone.
+    void notifyChirpStarted(unsigned long now, unsigned long emitSpanMs = 0);
     void notifyChirpFinished(unsigned long now);
 
 private:

@@ -161,6 +161,14 @@ private:
     void selfTestNoteChirpFinished(unsigned long now);
     void noteRebaseResult(RbRebaseResult result);
 
+    // Network band and the node's hop signal (BEH-005 / OUT-005 / DET-013).
+    void registerOutputParams();
+    void applyBandParams();              // band params -> FreqBandStream, when they differ
+    size_t bandBinCount() const;         // 250 Hz bins from band_low to band_high
+    size_t hopFrequencies(uint32_t* out, size_t capacity) const;  // the train's bins, rotated per node
+    unsigned long startNetworkSignal();  // hop train on the ChirpOutput; returns its span in ms, 0 = not started
+    void printSignalConfig();
+
     // Hardware wiring.
     int _ledPin;
     AudioSourceI2S _i2sSource;
@@ -180,6 +188,20 @@ private:
     detection::DetectionProfile _activeDetectionProfile = detection::makeTonalPulseScalarProfile();
     ResonantBehavior _behavior;
     param::ParamRegistry _paramRegistry;
+
+    // Network band the detector listens to (FreqBandStream bank; 0 = single
+    // target at the chirp tone) and the node's network signal: a hop train
+    // over the band's 250 Hz bins, started on bin `rotation` (from the MAC
+    // at boot, PARAM SET output.hop_rotation overrides). Defaults are the
+    // 2026-10-16 battery shape (25 ms x 5, gap 10, 2800-3800 Hz).
+    // decisions/2026-10-16-hop-acceptance-contrast-gate-not-amp.md
+    uint32_t _bandLowHz = 2800;
+    uint32_t _bandHighHz = 3800;
+    bool _hopEnabled = true;
+    uint32_t _hopRotation = 0;
+    uint32_t _hopPulseMs = 25;
+    uint32_t _hopGapMs = 10;
+    uint32_t _hopSteps = 5;
 
     // Debug / logging support.
     NodeDebug _debug;

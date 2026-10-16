@@ -435,10 +435,17 @@ void ResonantBehavior::extendBehaviorSuppress(unsigned long suppressUntilMs) {
     _behaviorSuppressArmed = true;
 }
 
-void ResonantBehavior::notifyChirpStarted(unsigned long now) {
+ResonantBehavior::SignalShape ResonantBehavior::signalShape() const {
+    return _chirpRequestSource == ChirpRequestSource::HeardPattern ? SignalShape::NetworkSignal : SignalShape::Chirp;
+}
+
+void ResonantBehavior::notifyChirpStarted(unsigned long now, unsigned long emitSpanMs) {
     unsigned long suppressMs = _behaviorSuppressSelfChirpMs;
     if (_chirpRequestSource == ChirpRequestSource::Idle && _idleBlockedAfterOwnEmitMs > suppressMs) {
         suppressMs = _idleBlockedAfterOwnEmitMs;
+    }
+    if (emitSpanMs > suppressMs) {
+        suppressMs = emitSpanMs;  // the whole emission, then the tail from notifyChirpFinished
     }
     const unsigned long suppressUntilMs = now + suppressMs;
     extendBehaviorSuppress(suppressUntilMs);

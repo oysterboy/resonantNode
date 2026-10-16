@@ -63,6 +63,20 @@ enum class ParamId : uint16_t {
     Detection_ScalarMinReleaseCoverageMs,
     Detection_ScalarMinLongestIslandMs,
     Detection_ScalarMaxGapMs,
+    // Network band the Node listens to (FreqBandStream bank; 0/0 = single
+    // target at the chirp tone). DET-013, decisions/2026-10-15-signal-
+    // variation-inside-a-shared-band.md.
+    Detection_BandLowHz,
+    Detection_BandHighHz,
+    // The Node's network signal: a bin-aligned hop train inside the band
+    // (BEH-005 / OUT-005, decisions/2026-10-16-hop-acceptance-contrast-
+    // gate-not-amp.md). rotation = which bin the train starts on (per node,
+    // from the MAC at boot unless set).
+    Output_HopEnabled,
+    Output_HopRotation,
+    Output_HopPulseMs,
+    Output_HopGapMs,
+    Output_HopSteps,
 };
 
 enum class ParamSetStatus : uint8_t {

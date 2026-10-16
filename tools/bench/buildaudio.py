@@ -33,6 +33,8 @@ ap.add_argument("--rms-dbfs", type=float, default=-20.0)
 ap.add_argument("--no-normalize", action="store_true")
 ap.add_argument("--peak-safe", action="store_true",
                 help="limit the gain of a section so its peak stays below 31000 (the section is then quieter than --rms-dbfs, reported)")
+ap.add_argument("--hp", action="append", default=[], metavar="TITLE=HZ",
+                help="2nd-order Butterworth high-pass for one clip (attenuate bass), repeatable")
 ap.add_argument("clips", nargs="+", help="TITLE=path[@start_s]")
 args = ap.parse_args()
 
@@ -75,6 +77,23 @@ def read_mono(path, rate, start_s, need_s):
     return mono
 
 
+def highpass(x, fc, rate):
+    """2nd-order Butterworth high-pass (biquad), pure python."""
+    w0 = 2 * math.pi * fc / rate
+    alpha = math.sin(w0) / math.sqrt(2.0)
+    cw = math.cos(w0)
+    b0, b1, b2 = (1 + cw) / 2, -(1 + cw), (1 + cw) / 2
+    a0, a1, a2 = 1 + alpha, -2 * cw, 1 - alpha
+    b0, b1, b2, a1, a2 = b0 / a0, b1 / a0, b2 / a0, a1 / a0, a2 / a0
+    x1 = x2 = y1 = y2 = 0.0
+    out = []
+    for v in x:
+        y = b0 * v + b1 * x1 + b2 * x2 - a1 * y1 - a2 * y2
+        x2, x1, y2, y1 = x1, v, y1, y
+        out.append(y)
+    return out
+
+
 def section(samples, start_s, length, rate, rms_target):
     start = int(start_s * rate)
     seg = samples[start:] if start < len(samples) else samples
@@ -112,6 +131,9 @@ for idx, spec in enumerate(args.clips):
     path, _, start = rest.partition("@")
     start_s = float(start) if start else 0.0
     pcm = read_mono(path, rate, start_s, args.section_s)
+    hp = dict(h.split('=', 1) for h in args.hp).get(title)
+    if hp:
+        pcm = highpass(pcm, float(hp), rate)
     sec = section(pcm, 0.0, int(args.section_s * rate), rate, rms_target)
     t0 = len(audio) / rate
     audio.extend(sec)

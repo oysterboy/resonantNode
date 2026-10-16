@@ -1,0 +1,1018 @@
+From 4a9d741d85fa48c319ce322ab6b9d105fe41f6d9 Mon Sep 17 00:00:00 2001
+From: m-sputnic <malte@sputnic.tv>
+Date: Fri, 19 Jun 2026 17:35:41 +0200
+Subject: [PATCH 6/6] I"S add block diagnositcs
+
+---
+ docs/current-pass-report-2026-06-19.md        | 176 +++++++++
+ docs/current-pass.md                          | 339 ++++++------------
+ src/detection/analyzer/AnalyzerCommands.cpp   |  35 ++
+ .../analyzer/tools/AnalyzerRawCapture.cpp     |  16 +
+ src/hal/AudioSourceI2S.cpp                    | 170 +++++++--
+ src/hal/AudioSourceI2S.h                      |  17 +-
+ tools/logging/raw_i2s_matrix.ps1              |  51 +++
+ 7 files changed, 548 insertions(+), 256 deletions(-)
+ create mode 100644 docs/current-pass-report-2026-06-19.md
+ create mode 100644 tools/logging/raw_i2s_matrix.ps1
+
+diff --git a/docs/current-pass-report-2026-06-19.md b/docs/current-pass-report-2026-06-19.md
+new file mode 100644
+index 0000000..a8fb358
+--- /dev/null
++++ b/docs/current-pass-report-2026-06-19.md
+@@ -0,0 +1,176 @@
++# Philips I2S Boundary Spike Report
++
++Date: 2026-06-19
++
++## Summary
++
++This pass investigated the repeatable `sampleIndex % 64 == 32` discontinuity in the PHILIPS I2S input path.
++
++The current evidence does not show phase 32 as a uniquely bad boundary. Across the 10-run Philips campaign, phase 32 is near the overall average and ranks far below the noisiest phases.
++
++The strongest supported conclusion is:
++
++- the spike is not proven to be a decode-only issue
++- the spike is not proven to be a raw-word-only issue
++- phase 32 is not statistically special in the aggregate Philips campaign
++- the next best test is still a controlled read-size / read-path comparison
++
++## Installed Versions
++
++| Component | Version | Evidence |
++| --- | --- | --- |
++| PlatformIO platform | `espressif32 6.13.0` | `platformio.ini` and `~/.platformio/platforms/espressif32/platform.json` |
++| Arduino-ESP32 framework | `3.20017.241212+sha.dcc1105b` | `~/.platformio/packages/framework-arduinoespressif32/package.json` |
++| Arduino ESP32 package | `2.0.17` | `~/.platformio/packages/framework-arduinoespressif32/installed.json` |
++| Arduino I2S library | `1.0` | `~/.platformio/packages/framework-arduinoespressif32/libraries/I2S/library.properties` |
++| ESP-IDF headers used by this framework | `4.4.7` | `~/.platformio/packages/framework-arduinoespressif32/tools/sdk/esp32/include/esp_common/include/esp_idf_version.h` |
++| Toolchain | `xtensa-esp32-elf 8.4.0+2021r2-patch5` | `~/.platformio/platforms/espressif32/platform.json` |
++
++Relevant build flags from `platformio.ini`:
++
++- `ANALYZER_MODE` for `esp32dev-analyzer`
++- `CHIRP_FREQUENCY_HZ=3200`
++- `BUILD_DATE="2026-05-26"`
++- `BUILD_REV=1`
++- `ARDUINO_LOOP_STACK_SIZE=12288`
++
++## Exact RX Path
++
++The compiler is using the bundled Arduino I2S wrapper:
++
++- `~/.platformio/packages/framework-arduinoespressif32/libraries/I2S/src/I2S.h`
++- `~/.platformio/packages/framework-arduinoespressif32/libraries/I2S/src/I2S.cpp`
++
++Current path:
++
++```text
++I2S.begin(I2S_PHILIPS_MODE, 16000, 32)
++  -> Arduino I2S wrapper
++  -> IDF legacy I2S driver
++  -> Arduino ring buffer
++  -> I2S.available()
++  -> I2S.read(rawBytes, 512)
++  -> AudioSourceI2S::refillBlock()
++  -> slot selection
++  -> decodePcmSample()
++  -> RAW capture / detector input
++```
++
++Important arithmetic in the current Philips path:
++
++- wrapper DMA buffer size default: `128` frames
++- wrapper DMA buffer count: `2`
++- one DMA buffer: `128 * 2 * 4 = 1024` bytes
++- two DMA buffers: `2048` bytes total ring-buffer capacity
++- `AudioSourceI2S::refillBlock()` caps reads at `128 * 4 = 512` bytes
++- `512` bytes = `128` 32-bit words = `64` stereo frames
++- `64` selected mono samples are emitted per full 512-byte Philips read
++
++## Key Code Locations
++
++### AudioSourceI2S
++
++- `src/hal/AudioSourceI2S.cpp:98` - switches between `I2S_LEFT_JUSTIFIED_MODE` and `I2S_PHILIPS_MODE`
++- `src/hal/AudioSourceI2S.cpp:210` - `readRawSample()` debug-only path
++- `src/hal/AudioSourceI2S.cpp:297` - `philipsDiagnostics()` accessor
++- `src/hal/AudioSourceI2S.cpp:349` - `refillBlock()` starts the Philips read/decode path
++- `src/hal/AudioSourceI2S.cpp:384` - `I2S.read(rawBytes, requestedBytes)`
++- `src/hal/AudioSourceI2S.cpp:415` - `decodePcmSample(samplePtr, bytesPerSample)`
++- `src/hal/AudioSourceI2S.cpp:532` - Philips diagnostics become active in the selected-slot path
++- `src/hal/AudioSourceI2S.cpp:545` - per-phase delta aggregation
++- `src/hal/AudioSourceI2S.cpp:555` - max-delta capture
++
++### Analyzer RAW capture
++
++- `src/detection/analyzer/tools/AnalyzerRawCapture.cpp:98` - compact `RAW_PHILIPS_SUMMARY`
++- `src/detection/analyzer/tools/AnalyzerRawCapture.cpp:121` - per-phase `RAW_PHASE` lines
++- `src/detection/analyzer/tools/AnalyzerRawCapture.cpp:448` - RAW PCM capture uses `readSample()`
++- `src/detection/analyzer/tools/AnalyzerRawCapture.cpp:715` - prints the Philips diagnostics summary after capture
++
++### Arduino I2S wrapper
++
++- `~/.platformio/packages/framework-arduinoespressif32/libraries/I2S/src/I2S.cpp:25` - `_I2S_DMA_BUFFER_COUNT = 2`
++- `~/.platformio/packages/framework-arduinoespressif32/libraries/I2S/src/I2S.cpp:142` - `channel_format = I2S_CHANNEL_FMT_RIGHT_LEFT`
++- `~/.platformio/packages/framework-arduinoespressif32/libraries/I2S/src/I2S.cpp:143` - `communication_format = I2S_COMM_FORMAT_STAND_I2S`
++- `~/.platformio/packages/framework-arduinoespressif32/libraries/I2S/src/I2S.cpp:145` - `dma_buf_count = _I2S_DMA_BUFFER_COUNT`
++- `~/.platformio/packages/framework-arduinoespressif32/libraries/I2S/src/I2S.cpp:297` - internal ring-buffer byte size calculation
++- `~/.platformio/packages/framework-arduinoespressif32/libraries/I2S/src/I2S.cpp:552` - `available()` reports ring-buffer occupancy in bytes
++- `~/.platformio/packages/framework-arduinoespressif32/libraries/I2S/src/I2S.cpp:593` - `read(void* buffer, size_t size)`
++- `~/.platformio/packages/framework-arduinoespressif32/libraries/I2S/src/I2S.cpp:610` - `xRingbufferReceiveUpTo(...)`
++- `~/.platformio/packages/framework-arduinoespressif32/libraries/I2S/src/I2S.cpp:889` - RX DMA completion callback path
++- `~/.platformio/packages/framework-arduinoespressif32/libraries/I2S/src/I2S.cpp:962` - `_post_read_data_fix()`
++
++## Diagnostic Results
++
++Campaign file:
++
++- `logs/raw_pcm_philips_series_2026-06-19.txt`
++
++All 10 captures completed with:
++
++- `captured=4000`
++- `dropped=0`
++- `OK RAW`
++
++### Per-run max delta summary
++
++| Run | max_delta_abs | max_delta_mod64 | read_idx | selected_in_read |
++| --- | ---: | ---: | ---: | ---: |
++| 1 | 79220 | 29 | 21 | 29 |
++| 2 | 63706 | 48 | 22 | 48 |
++| 3 | 82570 | 26 | 21 | 26 |
++| 4 | 75428 | 5 | 21 | 5 |
++| 5 | 58452 | 54 | 22 | 54 |
++| 6 | 60122 | 0 | 26 | 0 |
++| 7 | 60482 | 56 | 22 | 56 |
++| 8 | 63732 | 0 | 22 | 0 |
++| 9 | 219710 | 0 | 28 | 0 |
++| 10 | 62742 | 47 | 23 | 47 |
++
++Observations:
++
++- the largest jump in the 10-run series was not phase 32
++- phase 0 produced the biggest outlier in run 9
++- several different phases own the max delta across runs
++
++### Aggregate phase statistics
++
++| Phase | Captures | Avg mean_abs_delta | Avg max_abs_delta | Notes |
++| --- | ---: | ---: | ---: | --- |
++| 0 | 10 | 12994.1 | 72280.8 | highest average phase mean |
++| 5 | 10 | 8712.9 | 65125.4 | above average |
++| 26 | 10 | 8593.9 | 63651.4 | above average |
++| 20 | 10 | 8540.9 | 53191.6 | above average |
++| 15 | 10 | 8513.0 | 54146.8 | above average |
++| 32 | 10 | 8052.2 | 58191.4 | close to average, rank 46/64 |
++
++Overall mean of phase means:
++
++- `8248.2`
++
++Phase 32 ranking:
++
++- `46 / 64` by average `mean_abs_delta`
++
++## Conclusion
++
++The current campaign does not support "phase 32 is uniquely broken" as a strong conclusion.
++
++What the data does support:
++
++- the Philips stream is real and stable enough for statistical comparison
++- the biggest discontinuities occur at multiple phases, not just phase 32
++- phase 32 is not the standout phase in the aggregated campaign
++- the current evidence is still consistent with a read-boundary or wrapper-boundary issue, but it is not proven
++
++## Smallest Next Test
++
++Run the same Philips capture with only one variable changed at a time, in this order:
++
++1. direct ESP-IDF `i2s_read()` versus Arduino `I2S.read()`
++2. change `I2S.setBufferSize()` / DMA geometry
++3. then change application read size: `256`, `512`, `1024`
++
++Keep a continuous global sample index across all tests.
++
++The decisive question is whether the discontinuity moves when the transport path or DMA geometry changes. A phase shift from read-size-only changes is not by itself conclusive, because `I2S.read()` only drains bytes from the Arduino ring buffer and can re-index an already-fixed boundary.
+diff --git a/docs/current-pass.md b/docs/current-pass.md
+index 3280f3f..24f185c 100644
+--- a/docs/current-pass.md
++++ b/docs/current-pass.md
+@@ -1,273 +1,142 @@
+-# Current Pass — PHILIPS I²S Periodic PCM Boundary Spike
++Investigate whether Arduino-ESP32’s legacy `I2S.h` RX implementation can cause the repeatable `sampleIndex % 64 == 32` discontinuity seen with:
+ 
+-## Goal
++* `I2S_PHILIPS_MODE`
++* 16 kHz
++* 32-bit slots
++* stereo transport
++* INMP441 active on slot 0
++* application reads 512 bytes = 128 words = 64 stereo frames
++* application selects every second 32-bit word and decodes `int32_t >> 8`
+ 
+-Inspect and isolate the periodic PCM discontinuity in the current PHILIPS I²S input path.
++Do not tune detection or apply a signal-processing workaround. This is an investigation pass.
+ 
+-Observed pattern:
++## 1. Identify the exact framework
+ 
+-- strongest sample-to-sample jump at `sampleIndex % 64 == 32`
+-- period: 64 selected mono PCM samples = 4 ms at 16 kHz
+-- discontinuity is much larger than normal adjacent-sample changes
+-- separate from slower DC drift
+-- no dropped RAW samples reported
+-- de-accumulation / first difference is diagnostic only and must not become a production fix
++Inspect the actual PlatformIO environment and report:
+ 
+-Ignore the LEFT_ALIGNED path in this pass. Treat it as legacy and do not modify, compare, or clean it up.
++* platform version
++* Arduino-ESP32 version
++* ESP-IDF version
++* exact `I2S.h` and `I2S.cpp` paths used by the compiler
++* relevant compile definitions
+ 
+-## Scope
++Do not infer the version merely from the API.
+ 
+-Follow the actual PHILIPS data path from:
++## 2. Trace the complete RX path
+ 
+-1. Arduino I²S / DMA read
+-2. read buffer and `bytesRead`
+-3. 32-bit slot-word indexing
+-4. stereo-frame and selected-slot handling
+-5. PCM decode
+-6. block/sample buffering
+-7. RAW capture
+-8. feature/detector feeding
++Starting at:
+ 
+-Determine whether the discontinuity:
++```cpp
++I2S.begin(I2S_PHILIPS_MODE, 16000, 32);
++I2S.available();
++I2S.read(buffer, 512);
++```
+ 
+-- already exists in the raw 32-bit I²S word, or
+-- is introduced by frame selection, indexing, decoding, copying, buffering, or downstream consumption.
++trace through the actual installed Arduino and ESP-IDF source:
+ 
+-## Primary Suspected Boundary
++```text
++I2S peripheral
++→ DMA descriptors/buffers
++→ ESP-IDF legacy i2s driver
++→ Arduino I2S wrapper
++→ Arduino stream/ring buffer, if present
++→ AudioSourceI2S::refillBlock()
++→ slot selection
++→ decodePcmSample()
++```
+ 
+-Inspect `AudioSourceI2S::refillBlock()` and related PHILIPS code.
++For every layer, record:
+ 
+-Current likely relationship:
++* configured channel/slot mode
++* data width and slot width
++* DMA buffer count and length
++* units of every length field: bytes, words, frames, or per-channel samples
++* callback/read chunk sizes
++* whether 256-byte or 64-word internal boundaries exist
++* whether stereo size calculations include both channels
++* any copy, format conversion, byte swap, alignment correction, or remainder handling
++* whether reads can begin in the middle of a DMA descriptor
+ 
+-- 128 × 32-bit slot words per maximum refill
+-- 2 slot words per stereo frame
+-- maximum 64 selected mono samples per refill
+-- a 256-byte partial read would contain:
+-  - 64 × 32-bit words
+-  - 32 stereo frames
+-  - 32 selected mono samples
++## 3. Verify application assumptions
+ 
+-This matches the observed spike phase `32 mod 64`.
++Review `AudioSourceI2S::refillBlock()` specifically.
+ 
+-Do not assume this is the root cause. Confirm it from code and diagnostic output.
++Confirm or disprove:
+ 
+-## Required Code Review
++* returned words alternate slot 0 / slot 1
++* `samplesToProcess / 2` always means complete stereo frames
++* the first returned word is always slot 0
++* a 512-byte read cannot cross an internal boundary with changed alignment
++* selecting indices `0,2,4,...` remains valid across successive reads
++* `sample32 >> 8` is correct for this actual Philips/32-bit configuration
+ 
+-Check specifically:
++Note: current code discards any concept of persistent slot phase between reads. Determine whether that is safe according to the actual library contract.
+ 
+-### Read and block sizing
++## 4. Build a minimal diagnostic
+ 
+-- DMA/read buffer capacity
+-- requested byte count
+-- actual `bytesRead`
+-- words per read
+-- stereo frames per read
+-- selected mono samples produced per read
+-- whether regular reads are 256 bytes / 32 selected samples
+-- whether the 64-sample period corresponds to alternating or repeated read sizes
++Add a compile-time diagnostic mode only. Avoid Serial printing inside the RX loop.
+ 
+-### Arithmetic and alignment
++For each library read, store a small fixed-size record containing:
+ 
+-- byte-count versus word-count versus frame-count versus mono-sample-count arithmetic
+-- all divisions by 4 and 8
+-- whether requested reads are aligned only to 4-byte words instead of complete 8-byte stereo frames
+-- handling of `bytesRead % 4`
+-- handling of `bytesRead % 8`
+-- handling of `bytesRead != requestedBytes`
++* read sequence
++* requested and returned bytes
++* `I2S.available()` before/after
++* first and last 4 raw 32-bit words
++* words around offsets 60–68
++* global raw-word index
++* application mono-sample index
++* inferred slot phase
++* DMA descriptor/buffer identity or offset, if accessible
++* adjacent raw-word and selected-sample deltas
+ 
+-### Slot and frame continuity
++Print records only after capture.
+ 
+-- whether every read incorrectly assumes its first word is slot 0
+-- whether slot phase is preserved across partial reads
+-- whether an odd number of slot words can be returned
+-- whether an incomplete stereo frame is silently discarded
+-- whether the following read then starts with the opposite slot
+-- pointer increments and indexes for 32-bit words, frames, and selected mono samples
+-- whether one word/frame/sample is inserted, skipped, duplicated, overwritten, or paired incorrectly at a refill boundary
++Also aggregate `mean_abs_delta`, `max_abs_delta`, and count by:
+ 
+-### Buffer lifetime
++* mono sample phase modulo 64
++* raw-word phase modulo 128
++* byte phase modulo 256 and 512
++* DMA descriptor position, if available
+ 
+-- read-buffer reuse before all words are consumed
+-- output-block reuse before all selected samples are consumed
+-- ring-buffer wrap/copy boundaries
+-- stale values left in buffers after short reads
+-- block counters or state resets occurring every 32 or 64 selected samples
++## 5. Controlled comparisons
+ 
+-### RAW and feature parity
++Run the same capture while changing one variable at a time:
+ 
+-Confirm whether RAW capture and feature/detector processing consume the exact same decoded sample sequence from the same PHILIPS source block.
++1. application read size: 256, 512, 1024 bytes
++2. DMA buffer length, if configurable
++3. DMA buffer count
++4. one-slot/mono RX configuration versus stereo RX
++5. direct ESP-IDF `i2s_read()` versus Arduino `I2S.read()`
++6. repeated small reads versus one block read
+ 
+-Identify any branch where:
++Keep sample rate, Philips framing, 32-bit slot width, microphone, wiring, and emitted tone unchanged.
+ 
+-- RAW sees different samples,
+-- samples are consumed twice,
+-- one path advances the source independently,
+-- or feature processing uses a copied/reordered sequence.
++## 6. Decision criteria
+ 
+-## Minimal Temporary Diagnostics
++Classify the result as one of:
+ 
+-Add temporary diagnostics as close as possible to the PHILIPS read/decode boundary.
++* application slot-phase bug
++* Arduino wrapper chunk/copy bug
++* ESP-IDF DMA boundary issue
++* peripheral configuration mismatch
++* microphone-originated discontinuity
++* unproven
+ 
+-For each selected mono sample log:
++A library-origin conclusion requires the discontinuity phase to move predictably when read size or DMA geometry changes.
+ 
+-- global monotonic selected-source sample index
+-- `sampleIndex % 64`
+-- I²S read-call index
+-- selected-sample index inside this read
+-- raw-word index inside this read
+-- bytes requested
+-- bytes read
+-- total 32-bit words read
+-- total complete stereo frames read
+-- selected slot/channel
+-- raw 32-bit word
+-- decoded PCM
+-- previous decoded PCM
+-- delta from previous decoded PCM
++A MEMS-origin conclusion requires it to remain fixed in the continuous sample stream independently of application read size and DMA geometry.
+ 
+-Also log one compact read-header line per I²S read containing:
++## Deliverable
+ 
+-- read-call index
+-- requested bytes
+-- returned bytes
+-- returned word count
+-- complete frame count
+-- remainder bytes
+-- remainder words / incomplete-frame state
+-- first expected slot phase
+-- last consumed slot phase
+-- number of selected mono samples emitted
++Produce a short report containing:
+ 
+-Limit detailed sample logging to these global source-index ranges:
++1. exact installed versions
++2. exact RX configuration
++3. verified buffer-size arithmetic
++4. diagram of the actual data path
++5. suspicious code locations with file and line references
++6. diagnostic results table
++7. strongest supported conclusion
++8. smallest next test
+ 
+-- `28..36`
+-- `92..100`
+-- `156..164`
+-
+-Equivalent modulo-based logging around phase 32 is acceptable if it produces the same three boundary windows.
+-
+-Diagnostics must not change:
+-
+-- sample values
+-- sample ordering
+-- read cadence
+-- detector parameters
+-- feature calculations
+-- baseline handling
+-
+-## Decision Tests
+-
+-### A — Read boundary confirmed
+-
+-If index 32, 96, 160 is also `selectedIndexInRead == 0`, the periodic discontinuity aligns with a new I²S read.
+-
+-Report the corresponding:
+-
+-- previous and current read-call IDs
+-- `bytesRead` values
+-- last raw word before boundary
+-- first raw word after boundary
+-- selected slot phase
+-
+-### B — Discontinuity already in raw word
+-
+-If the raw 32-bit words themselves show the discontinuity before decode, classify the problem as upstream of PCM decoding.
+-
+-Then isolate with the smallest test:
+-
+-- capture consecutive raw PHILIPS slot words directly across read boundaries
+-- bypass feature processing and RAW-history copying
+-- keep normal I²S configuration and timing unchanged
+-
+-Do not compensate for the discontinuity.
+-
+-### C — Raw words continuous, decoded PCM discontinuous
+-
+-Inspect only:
+-
+-- bit shift
+-- sign extension
+-- payload alignment
+-- masking
+-- cast order
+-- per-read decode state
+-
+-Provide the exact expression producing the incorrect value.
+-
+-### D — Slot/frame phase breaks
+-
+-If an incomplete frame or odd word count causes the next read to restart with the wrong assumed slot, implement the smallest isolated correction:
+-
+-Preferred robust correction:
+-
+-- preserve incomplete bytes/words across reads
+-- assemble only complete 8-byte stereo frames
+-- maintain explicit slot/frame phase
+-- select the configured PHILIPS slot only after a complete frame exists
+-
+-A simpler 8-byte request alignment may be used as an isolated experiment, but do not present it as sufficient unless diagnostics prove that every actual `bytesRead` is also frame-aligned.
+-
+-### E — Copy or consumption boundary breaks
+-
+-If raw words and decoded values are correct inside `refillBlock()` but the next consumer sees a discontinuity, locate the exact copy, wrap, or block transition and correct only that transition.
+-
+-## Allowed Changes
+-
+-- temporary boundary diagnostics
+-- counters used only for diagnostics
+-- assertions or warnings for invalid byte/frame alignment
+-- a narrowly targeted PHILIPS frame-continuity correction once proven
+-- a focused regression test for sample-sequence continuity across reads
+-
+-## Do Not
+-
+-- touch LEFT_ALIGNED code
+-- tune detectors
+-- smooth or suppress spikes
+-- recenter the baseline
+-- interpolate samples
+-- apply first difference / de-accumulation as a production transform
+-- alter acoustic feature processing
+-- change detector thresholds
+-- refactor unrelated audio, Analyzer, DetectionRuntime, or architecture
+-- silently discard partial bytes or incomplete frames as a “fix”
+-- claim DMA/I²S hardware fault without proving that the discontinuity exists in the returned raw word
+-
+-## Required Result
+-
+-Return:
+-
+-1. **Exact boundary**
+-   - function
+-   - read-call transition
+-   - byte/word/frame/mono-sample position
+-   - relationship to phase `32 mod 64`
+-
+-2. **Evidence**
+-   - relevant code expressions
+-   - diagnostic rows immediately before and after at least three boundaries
+-   - raw-word and decoded-PCM comparison
+-
+-3. **Root-cause ranking**
+-   - ranked by evidence, not speculation
+-
+-4. **Smallest isolated test or fix**
+-   - no unrelated cleanup
+-   - explain why it preserves normal samples
+-
+-5. **Sequence-integrity confirmation**
+-   - confirm that diagnostics do not modify the stream
+-   - after a correction, verify that the raw selected PCM sequence is unchanged except at the proven faulty boundary
+-   - verify RAW capture and feature/detector input receive the same corrected sequence
+-
+-## Acceptance Criteria
+-
+-Pass succeeds only when all of the following are established:
+-
+-- the code boundary corresponding to `32 mod 64` is identified or conclusively ruled out
+-- diagnostic output shows whether the jump exists in the raw I²S word
+-- byte, word, stereo-frame, and mono-sample counts are explicitly reported
+-- PHILIPS slot continuity across reads is verified
+-- RAW and feature/detector sequence parity is verified
+-- no signal-processing workaround is introduced
+-- LEFT_ALIGNED remains untouched
++Do not implement de-accumulation, baseline subtraction, filtering, or spike suppression as a fix.
+diff --git a/src/detection/analyzer/AnalyzerCommands.cpp b/src/detection/analyzer/AnalyzerCommands.cpp
+index ecf9046..97b693e 100644
+--- a/src/detection/analyzer/AnalyzerCommands.cpp
++++ b/src/detection/analyzer/AnalyzerCommands.cpp
+@@ -93,6 +93,21 @@ bool parseFeatureStreamToken(const char* token, detection::FeatureStreamId& out)
+     return false;
+ }
+ 
++bool parseTransportModeToken(const char* token, AudioSourceI2S::TransportMode& out) {
++    if (token == nullptr) {
++        return false;
++    }
++    if (equalsIgnoreCase(token, "arduino") || equalsIgnoreCase(token, "wrapper") || equalsIgnoreCase(token, "arduino_i2s")) {
++        out = AudioSourceI2S::TransportMode::ArduinoWrapper;
++        return true;
++    }
++    if (equalsIgnoreCase(token, "direct") || equalsIgnoreCase(token, "espidf") || equalsIgnoreCase(token, "idf")) {
++        out = AudioSourceI2S::TransportMode::DirectDriver;
++        return true;
++    }
++    return false;
++}
++
+ bool parseScalarTransientToken(const char* token, detection::ScalarTransientConfig& config) {
+     if (startsWithTokenIgnoreCase(token, "scalar_observed_stream=") || startsWithTokenIgnoreCase(token, "scalarObservedStream=") || startsWithTokenIgnoreCase(token, "scalarStream=")) {
+         const char* value = token + (startsWithTokenIgnoreCase(token, "scalar_observed_stream=") ? 23 : startsWithTokenIgnoreCase(token, "scalarObservedStream=") ? 21 : 13);
+@@ -295,6 +310,9 @@ void AnalyzerApp::handleUsbLine(const char* line) {
+         unsigned long postMs = 1000;
+         unsigned long preMs = 0;
+         unsigned long decim = 1;
++        AudioSourceI2S::TransportMode transportMode = _i2sSource.transportMode();
++        size_t readChunkBytes = _i2sSource.readChunkBytes();
++        size_t dmaBufferFrames = _i2sSource.dmaBufferFrames();
+         AnalyzerApp::RawCaptureMode rawMode = AnalyzerApp::RawCaptureMode::Features;
+         AudioSource::I2SFrameMode i2sFrameMode = AudioSource::I2SFrameMode::LeftJustifiedAllSlots;
+ 
+@@ -327,9 +345,26 @@ void AnalyzerApp::handleUsbLine(const char* line) {
+                 } else if (equalsIgnoreCase(modeValue, "mode2") || equalsIgnoreCase(modeValue, "philips") || equalsIgnoreCase(modeValue, "philipsslot1") || equalsIgnoreCase(modeValue, "leftonly")) {
+                     i2sFrameMode = AudioSource::I2SFrameMode::PhilipsLeftOnly;
+                 }
++            } else if (startsWithTokenIgnoreCase(token, "transport=")) {
++                parseTransportModeToken(token + 10, transportMode);
++            } else if (startsWithTokenIgnoreCase(token, "read=") || startsWithTokenIgnoreCase(token, "chunk=")) {
++                const char* value = token + (startsWithTokenIgnoreCase(token, "read=") ? 5 : 6);
++                const unsigned long parsed = strtoul(value, nullptr, 10);
++                if (parsed > 0UL) {
++                    readChunkBytes = static_cast<size_t>(parsed);
++                }
++            } else if (startsWithTokenIgnoreCase(token, "buf=") || startsWithTokenIgnoreCase(token, "dma=")) {
++                const char* value = token + (startsWithTokenIgnoreCase(token, "buf=") ? 4 : 4);
++                const unsigned long parsed = strtoul(value, nullptr, 10);
++                if (parsed > 0UL) {
++                    dmaBufferFrames = static_cast<size_t>(parsed);
++                }
+             }
+         }
+ 
++        _i2sSource.setTransportMode(transportMode);
++        _i2sSource.setReadChunkBytes(readChunkBytes);
++        _i2sSource.setDmaBufferFrames(dmaBufferFrames);
+         _audioSource.setI2SFrameMode(i2sFrameMode);
+         if (runRawTrigger(toneHz, durationMs, postMs, preMs, decim, rawMode)) {
+             Serial.println("OK RAW");
+diff --git a/src/detection/analyzer/tools/AnalyzerRawCapture.cpp b/src/detection/analyzer/tools/AnalyzerRawCapture.cpp
+index a025eb8..6822cca 100644
+--- a/src/detection/analyzer/tools/AnalyzerRawCapture.cpp
++++ b/src/detection/analyzer/tools/AnalyzerRawCapture.cpp
+@@ -129,6 +129,16 @@ void printPhilipsDiagnosticsSummary(const AudioPhilipsDiagnostics& diag) {
+     }
+ }
+ 
++const char* i2sTransportModeName(AudioSourceI2S::TransportMode mode) {
++    switch (mode) {
++        case AudioSourceI2S::TransportMode::DirectDriver:
++            return "direct";
++        case AudioSourceI2S::TransportMode::ArduinoWrapper:
++        default:
++            return "arduino";
++    }
++}
++
+ } // namespace
+ 
+ bool AnalyzerApp::runRawTrigger(unsigned long toneHz,
+@@ -158,6 +168,12 @@ bool AnalyzerApp::runRawTrigger(unsigned long toneHz,
+     Serial.println(" output=csv");
+     Serial.print("RAW_INFO i2s_mode=");
+     Serial.println(_audioSource.i2sFrameMode() == AudioSource::I2SFrameMode::LeftJustifiedAllSlots ? "left" : "philips");
++    Serial.print("RAW_INFO transport=");
++    Serial.println(i2sTransportModeName(_i2sSource.transportMode()));
++    Serial.print("RAW_INFO read_chunk_bytes=");
++    Serial.println(_i2sSource.readChunkBytes());
++    Serial.print("RAW_INFO dma_buffer_frames=");
++    Serial.println(_i2sSource.dmaBufferFrames());
+     Serial.print("RAW_INFO row_size=");
+     if (mode == RawCaptureMode::Pcm) {
+         Serial.print(sizeof(RawCapturePcmSample));
+diff --git a/src/hal/AudioSourceI2S.cpp b/src/hal/AudioSourceI2S.cpp
+index f629e46..85969b0 100644
+--- a/src/hal/AudioSourceI2S.cpp
++++ b/src/hal/AudioSourceI2S.cpp
+@@ -1,5 +1,6 @@
+ #include "AudioSourceI2S.h"
+ #include <I2S.h>
++#include <driver/i2s.h>
+ #include <math.h>
+ #include <string.h>
+ #include <new>
+@@ -8,6 +9,8 @@ namespace {
+ 
+ constexpr bool kPhilipsBoundaryDiagnosticsEnabled = true;
+ constexpr size_t kPhilipsDiagnosticReadLimit = 5;
++constexpr size_t kPhilipsMaxReadBytes = 1024U;
++constexpr size_t kPhilipsMaxReadSamples = kPhilipsMaxReadBytes / sizeof(int32_t);
+ 
+ int decodePcmSample(const uint8_t* samplePtr, int bytesPerSample) {
+     if (samplePtr == nullptr || bytesPerSample <= 0) {
+@@ -78,6 +81,49 @@ AudioSourceI2S::AudioSourceI2S(int sckPin, int fsPin, int dataInPin, int sampleR
+       _blockSamples(new (std::nothrow) int32_t[kRefillBatchSize] {}),
+       _blockRawWords(new (std::nothrow) uint32_t[kRefillBatchSize] {}) {}
+ 
++void AudioSourceI2S::setTransportMode(TransportMode mode) {
++    if (_transportMode == mode) {
++        return;
++    }
++
++    _transportMode = mode;
++    if (_started) {
++        begin();
++    }
++}
++
++AudioSourceI2S::TransportMode AudioSourceI2S::transportMode() const {
++    return _transportMode;
++}
++
++void AudioSourceI2S::setReadChunkBytes(size_t bytes) {
++    if (bytes == 0) {
++        bytes = 1;
++    }
++    _readChunkBytes = bytes;
++}
++
++size_t AudioSourceI2S::readChunkBytes() const {
++    return _readChunkBytes;
++}
++
++void AudioSourceI2S::setDmaBufferFrames(size_t frames) {
++    if (frames < 8U) {
++        frames = 8U;
++    }
++    if (frames > 1024U) {
++        frames = 1024U;
++    }
++    _dmaBufferFrames = frames;
++    if (_started) {
++        begin();
++    }
++}
++
++size_t AudioSourceI2S::dmaBufferFrames() const {
++    return _dmaBufferFrames;
++}
++
+ void AudioSourceI2S::begin() {
+     // Keep the public contract sample-based even though I2S may buffer internally.
+     resetStats();
+@@ -90,15 +136,73 @@ void AudioSourceI2S::begin() {
+     _started = false;
+     _samplePeriodUs = _sampleRate > 0 ? static_cast<uint32_t>(1000000UL / static_cast<uint32_t>(_sampleRate)) : 0;
+ 
+-    I2S.end();
+-    I2S.setAllPins(_sckPin, _fsPin, _dataInPin, I2S_PIN_NO_CHANGE, I2S_PIN_NO_CHANGE);
+     const bool carryAllSlots = _frameMode == I2SFrameMode::LeftJustifiedAllSlots;
+-    // Mode 1 keeps the left-justified transport and carries both slots.
+-    // Mode 2 switches to Philips framing and keeps only the left slot.
+-    const int beginResult = I2S.begin(carryAllSlots ? I2S_LEFT_JUSTIFIED_MODE : I2S_PHILIPS_MODE,
+-                                      _sampleRate,
+-                                      carryAllSlots ? _bitsPerSample : 32);
+-    _started = beginResult != 0;
++    const bool useWrapper = _transportMode == TransportMode::ArduinoWrapper;
++
++    if (useWrapper) {
++        I2S.end();
++        I2S.setAllPins(_sckPin, _fsPin, _dataInPin, I2S_PIN_NO_CHANGE, I2S_PIN_NO_CHANGE);
++        if (_dmaBufferFrames > 0) {
++            I2S.setBufferSize(static_cast<int>(_dmaBufferFrames));
++        }
++        // Mode 1 keeps the left-justified transport and carries both slots.
++        // Mode 2 switches to Philips framing and keeps only the left slot.
++        const int beginResult = I2S.begin(carryAllSlots ? I2S_LEFT_JUSTIFIED_MODE : I2S_PHILIPS_MODE,
++                                          _sampleRate,
++                                          carryAllSlots ? _bitsPerSample : 32);
++        _started = beginResult != 0;
++        return;
++    }
++
++    I2S.end();
++    const esp_i2s::i2s_port_t port = static_cast<esp_i2s::i2s_port_t>(0);
++    esp_i2s::i2s_config_t config = {};
++    config.mode = static_cast<esp_i2s::i2s_mode_t>(esp_i2s::I2S_MODE_MASTER | esp_i2s::I2S_MODE_RX);
++    config.sample_rate = _sampleRate;
++    config.bits_per_sample = static_cast<esp_i2s::i2s_bits_per_sample_t>(_bitsPerSample);
++    config.channel_format = esp_i2s::I2S_CHANNEL_FMT_RIGHT_LEFT;
++    config.communication_format = esp_i2s::I2S_COMM_FORMAT_STAND_I2S;
++    config.intr_alloc_flags = ESP_INTR_FLAG_LEVEL2;
++    config.dma_buf_count = 2;
++    config.dma_buf_len = static_cast<int>(_dmaBufferFrames);
++    config.use_apll = false;
++    config.tx_desc_auto_clear = false;
++    config.fixed_mclk = 0;
++    if (esp_i2s::i2s_driver_uninstall(port) != ESP_OK) {
++        // Ignore uninstall failures; the direct path may already be clean.
++    }
++    if (esp_i2s::i2s_driver_install(port, &config, 0, nullptr) != ESP_OK) {
++        _started = false;
++        return;
++    }
++
++    esp_i2s::i2s_pin_config_t pinConfig = {};
++    pinConfig.bck_io_num = digitalPinToGPIONumber(_sckPin);
++    pinConfig.ws_io_num = digitalPinToGPIONumber(_fsPin);
++    pinConfig.data_out_num = I2S_PIN_NO_CHANGE;
++    pinConfig.data_in_num = digitalPinToGPIONumber(_dataInPin);
++    if (esp_i2s::i2s_set_pin(port, &pinConfig) != ESP_OK) {
++        esp_i2s::i2s_driver_uninstall(port);
++        _started = false;
++        return;
++    }
++
++    if (esp_i2s::i2s_set_clk(port,
++                             _sampleRate,
++                             static_cast<uint32_t>(_bitsPerSample),
++                             static_cast<esp_i2s::i2s_channel_t>(esp_i2s::I2S_CHANNEL_STEREO)) != ESP_OK) {
++        esp_i2s::i2s_driver_uninstall(port);
++        _started = false;
++        return;
++    }
++
++    if (esp_i2s::i2s_start(port) != ESP_OK) {
++        esp_i2s::i2s_driver_uninstall(port);
++        _started = false;
++        return;
++    }
++
++    _started = true;
+ }
+ 
+ bool AudioSourceI2S::shouldLogPhilipsBoundarySample(size_t,
+@@ -363,14 +467,11 @@ bool AudioSourceI2S::refillBlock() {
+         return false;
+     }
+ 
+-    const int availableBytes = I2S.available();
+-    if (availableBytes <= 0) {
+-        recordReadAttempt(0, 0, false);
+-        return false;
++    const int maxBatchBytes = static_cast<int>(kPhilipsMaxReadBytes);
++    int requestedBytes = static_cast<int>(_readChunkBytes);
++    if (requestedBytes <= 0) {
++        requestedBytes = bytesPerSample;
+     }
+-
+-    int requestedBytes = availableBytes;
+-    const int maxBatchBytes = static_cast<int>(kRefillBatchSize) * bytesPerSample;
+     if (requestedBytes > maxBatchBytes) {
+         requestedBytes = maxBatchBytes;
+     }
+@@ -380,8 +481,37 @@ bool AudioSourceI2S::refillBlock() {
+         return false;
+     }
+ 
+-    uint8_t rawBytes[kRefillBatchSize * sizeof(int32_t)] = {};
+-    const int bytesRead = I2S.read(rawBytes, static_cast<size_t>(requestedBytes));
++    uint8_t rawBytes[kPhilipsMaxReadBytes] = {};
++    int bytesRead = 0;
++    if (_transportMode == TransportMode::DirectDriver) {
++        size_t bytesReadSize = 0;
++        const esp_err_t readResult = esp_i2s::i2s_read(static_cast<esp_i2s::i2s_port_t>(0), rawBytes, static_cast<size_t>(requestedBytes), &bytesReadSize, portMAX_DELAY);
++        if (readResult != ESP_OK) {
++            recordReadAttempt(requestedBytes, 0, true);
++            return false;
++        }
++        bytesRead = static_cast<int>(bytesReadSize);
++    } else {
++        int availableBytes = I2S.available();
++        uint32_t waitBudgetMs = 250U;
++        while (availableBytes < requestedBytes && waitBudgetMs > 0U) {
++            delay(1);
++            --waitBudgetMs;
++            availableBytes = I2S.available();
++        }
++        if (availableBytes <= 0) {
++            recordReadAttempt(requestedBytes, 0, false);
++            return false;
++        }
++        if (availableBytes < requestedBytes) {
++            requestedBytes = availableBytes - (availableBytes % bytesPerSample);
++            if (requestedBytes <= 0) {
++                recordReadAttempt(0, 0, false);
++                return false;
++            }
++        }
++        bytesRead = I2S.read(rawBytes, static_cast<size_t>(requestedBytes));
++    }
+     recordReadAttempt(requestedBytes, bytesRead, bytesRead <= 0);
+     if (bytesRead <= 0) {
+         return false;
+@@ -396,8 +526,8 @@ bool AudioSourceI2S::refillBlock() {
+     const size_t frameCount = wordsRead / 2U;
+     const size_t remainderBytes = static_cast<size_t>(bytesRead % 8);
+     const size_t remainderWords = wordsRead % 2U;
+-    int32_t rawSamples[kRefillBatchSize] = {};
+-    uint32_t rawWords[kRefillBatchSize] = {};
++    int32_t rawSamples[kPhilipsMaxReadSamples] = {};
++    uint32_t rawWords[kPhilipsMaxReadSamples] = {};
+     double slotSumSquares[2] = {0.0, 0.0};
+     unsigned long slotCount[2] = {0, 0};
+     int slotMin[2] = {0, 0};
+@@ -449,7 +579,7 @@ bool AudioSourceI2S::refillBlock() {
+             }
+             slotLastValue[diagSlotIndex] = sample;
+         }
+-        if (i < kRefillBatchSize) {
++        if (i < kPhilipsMaxReadSamples) {
+             _blockSamples[i] = sample;
+             _blockCount++;
+             if (_blockCount > _maxBufferedSamples) {
+diff --git a/src/hal/AudioSourceI2S.h b/src/hal/AudioSourceI2S.h
+index 7e95b9d..1430711 100644
+--- a/src/hal/AudioSourceI2S.h
++++ b/src/hal/AudioSourceI2S.h
+@@ -45,6 +45,11 @@ Does not know about AudioSignal, DetectionRuntime, Analyzer, or Behavior.
+ */
+ class AudioSourceI2S : public AudioSource {
+ public:
++    enum class TransportMode {
++        ArduinoWrapper,
++        DirectDriver,
++    };
++
+     AudioSourceI2S(int sckPin, int fsPin, int dataInPin, int sampleRate = 16000, int bitsPerSample = 32);
+ 
+     void begin() override;
+@@ -63,6 +68,12 @@ public:
+     const AudioSourceStats& stats() const override;
+     const AudioSlotDiagnostics& slotDiagnostics() const;
+     const AudioPhilipsDiagnostics& philipsDiagnostics() const;
++    void setTransportMode(TransportMode mode);
++    TransportMode transportMode() const;
++    void setReadChunkBytes(size_t bytes);
++    size_t readChunkBytes() const;
++    void setDmaBufferFrames(size_t frames);
++    size_t dmaBufferFrames() const;
+     void resetStats() override;
+     uint32_t samplePeriodUs() const;
+ 
+@@ -102,7 +113,8 @@ private:
+     int _sampleRate;
+     int _bitsPerSample;
+     bool _started = false;
+-    static constexpr size_t kRefillBatchSize = 128;
++    // Large enough for a 1024-byte Philips read: 256 decoded 32-bit words.
++    static constexpr size_t kRefillBatchSize = 256;
+     std::unique_ptr<int32_t[]> _blockSamples;
+     std::unique_ptr<uint32_t[]> _blockRawWords;
+     size_t _blockCount = 0;
+@@ -123,6 +135,9 @@ private:
+     int _debugPhilipsPrevDecodedPcm = 0;
+     bool _debugPhilipsHasPrevDecodedPcm = false;
+     size_t _debugPhilipsExpectedSlotPhase = 0;
++    TransportMode _transportMode = TransportMode::ArduinoWrapper;
++    size_t _readChunkBytes = 512;
++    size_t _dmaBufferFrames = 128;
+     AudioPhilipsDiagnostics _philipsDiagnostics;
+     AudioSourceStats _stats;
+     AudioSlotDiagnostics _slotDiagnostics;
+diff --git a/tools/logging/raw_i2s_matrix.ps1 b/tools/logging/raw_i2s_matrix.ps1
+new file mode 100644
+index 0000000..c99a596
+--- /dev/null
++++ b/tools/logging/raw_i2s_matrix.ps1
+@@ -0,0 +1,51 @@
++[CmdletBinding()]
++param(
++    [string]$PortName = 'COM6',
++    [int]$BaudRate = 115200
++)
++
++Set-StrictMode -Version Latest
++$ErrorActionPreference = 'Stop'
++
++$root = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
++$seriesScript = Join-Path $PSScriptRoot 'raw_philips_series.ps1'
++$logDir = Join-Path $root 'docs'
++$warmupLog = Join-Path $logDir 'raw_i2s_matrix_2026-06-19_warmup.txt'
++
++$matrix = @(
++    @{ Name = 'wrapper_512_buf128';  Command = 'RAW trigger f=3200 dur=100 pre=50 post=200 mode=pcm i2s=philips transport=arduino read=512 buf=128';  Log = 'raw_i2s_matrix_2026-06-19_wrapper_512_buf128.txt' },
++    @{ Name = 'wrapper_256_buf128';   Command = 'RAW trigger f=3200 dur=100 pre=50 post=200 mode=pcm i2s=philips transport=arduino read=256 buf=128';  Log = 'raw_i2s_matrix_2026-06-19_wrapper_256_buf128.txt' },
++    @{ Name = 'wrapper_1024_buf128';  Command = 'RAW trigger f=3200 dur=100 pre=50 post=200 mode=pcm i2s=philips transport=arduino read=1024 buf=128'; Log = 'raw_i2s_matrix_2026-06-19_wrapper_1024_buf128.txt' },
++    @{ Name = 'wrapper_512_buf64';    Command = 'RAW trigger f=3200 dur=100 pre=50 post=200 mode=pcm i2s=philips transport=arduino read=512 buf=64';   Log = 'raw_i2s_matrix_2026-06-19_wrapper_512_buf64.txt' },
++    @{ Name = 'direct_512_buf128';    Command = 'RAW trigger f=3200 dur=100 pre=50 post=200 mode=pcm i2s=philips transport=direct read=512 buf=128';   Log = 'raw_i2s_matrix_2026-06-19_direct_512_buf128.txt' },
++    @{ Name = 'direct_256_buf128';    Command = 'RAW trigger f=3200 dur=100 pre=50 post=200 mode=pcm i2s=philips transport=direct read=256 buf=128';   Log = 'raw_i2s_matrix_2026-06-19_direct_256_buf128.txt' },
++    @{ Name = 'direct_1024_buf128';   Command = 'RAW trigger f=3200 dur=100 pre=50 post=200 mode=pcm i2s=philips transport=direct read=1024 buf=128';  Log = 'raw_i2s_matrix_2026-06-19_direct_1024_buf128.txt' },
++    @{ Name = 'direct_512_buf64';     Command = 'RAW trigger f=3200 dur=100 pre=50 post=200 mode=pcm i2s=philips transport=direct read=512 buf=64';    Log = 'raw_i2s_matrix_2026-06-19_direct_512_buf64.txt' }
++)
++
++function Invoke-RawSeries {
++    param(
++        [Parameter(Mandatory = $true)][string]$Command,
++        [Parameter(Mandatory = $true)][string]$LogPath,
++        [Parameter(Mandatory = $true)][int]$Count
++    )
++
++    & $seriesScript -PortName $PortName -BaudRate $BaudRate -Count $Count -Command $Command -LogPath $LogPath
++}
++
++if (Test-Path -LiteralPath $warmupLog) {
++    Remove-Item -LiteralPath $warmupLog -Force
++}
++
++Write-Host "Warm-up: wrapper_512_buf128 first pass"
++Invoke-RawSeries -Command $matrix[0].Command -LogPath $warmupLog -Count 1
++
++foreach ($item in $matrix) {
++    $logPath = Join-Path $logDir $item.Log
++    if (Test-Path -LiteralPath $logPath) {
++        Remove-Item -LiteralPath $logPath -Force
++    }
++
++    Write-Host ("Capture: {0}" -f $item.Name)
++    Invoke-RawSeries -Command $item.Command -LogPath $logPath -Count 1
++}
+-- 
+2.54.0.windows.1
+

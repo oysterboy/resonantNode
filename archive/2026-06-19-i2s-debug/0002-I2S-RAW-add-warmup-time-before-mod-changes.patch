@@ -1,0 +1,25 @@
+From e7bf9f33c2fa1957c1ecfd3a5319c31a2be238cc Mon Sep 17 00:00:00 2001
+From: m-sputnic <malte@sputnic.tv>
+Date: Fri, 19 Jun 2026 11:47:28 +0200
+Subject: [PATCH 2/6] I2S / RAW: add warmup time before mod changes
+
+---
+ src/detection/analyzer/tools/AnalyzerRawCapture.cpp | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/detection/analyzer/tools/AnalyzerRawCapture.cpp b/src/detection/analyzer/tools/AnalyzerRawCapture.cpp
+index f9066d1..455be62 100644
+--- a/src/detection/analyzer/tools/AnalyzerRawCapture.cpp
++++ b/src/detection/analyzer/tools/AnalyzerRawCapture.cpp
+@@ -412,7 +412,7 @@ bool AnalyzerApp::runRawTrigger(unsigned long toneHz,
+ 
+         const unsigned long sampleTimeMs = sampleTimeUs / 1000UL;
+         if (!rawCaptureArmed) {
+-            if (sampleTimeMs < rawWarmupDeadlineMs || !_audioSource.lastSampleWasBlockStart()) {
++            if (millis() < rawWarmupDeadlineMs) {
+                 return true;
+             }
+             armRawCapture(sampleTimeMs);
+-- 
+2.54.0.windows.1
+

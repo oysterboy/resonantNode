@@ -1,0 +1,527 @@
+From 225fae4a533949aedc8e3dec1e4b414b3a0dfcd1 Mon Sep 17 00:00:00 2001
+From: m-sputnic <malte@sputnic.tv>
+Date: Fri, 19 Jun 2026 11:17:42 +0200
+Subject: [PATCH 1/6] I2S add selectable PHILPIS and LEFTLIGNED mode
+
+---
+ src/audio/AudioSource.h                       |   9 ++
+ src/detection/analyzer/AnalyzerCommands.cpp   |  10 ++
+ .../analyzer/tools/AnalyzerRawCapture.cpp     | 114 ++++++++++++++----
+ src/hal/AudioSourceI2S.cpp                    |  72 +++++++++--
+ src/hal/AudioSourceI2S.h                      |   8 ++
+ 5 files changed, 182 insertions(+), 31 deletions(-)
+
+diff --git a/src/audio/AudioSource.h b/src/audio/AudioSource.h
+index 2933215..3531ec4 100644
+--- a/src/audio/AudioSource.h
++++ b/src/audio/AudioSource.h
+@@ -37,6 +37,11 @@ struct AudioBlock {
+ 
+ class AudioSource {
+ public:
++    enum class I2SFrameMode {
++        LeftJustifiedAllSlots,
++        PhilipsLeftOnly,
++    };
++
+     virtual ~AudioSource() = default;
+     virtual void begin() = 0;
+     virtual bool available() = 0;
+@@ -47,6 +52,10 @@ public:
+     virtual unsigned long droppedSamples() const { return 0; }
+     virtual unsigned long bufferedSamplesMax() const { return 0; }
+     virtual uint32_t sampleRateHz() const { return 0; }
++    virtual uint32_t lastRawWord() const { return 0; }
++    virtual bool setI2SFrameMode(I2SFrameMode mode) { (void)mode; return false; }
++    virtual I2SFrameMode i2sFrameMode() const { return I2SFrameMode::LeftJustifiedAllSlots; }
++    virtual bool lastSampleWasBlockStart() const { return false; }
+     virtual const AudioSourceStats& stats() const {
+         static const AudioSourceStats emptyStats{};
+         return emptyStats;
+diff --git a/src/detection/analyzer/AnalyzerCommands.cpp b/src/detection/analyzer/AnalyzerCommands.cpp
+index 9fb074b..ecf9046 100644
+--- a/src/detection/analyzer/AnalyzerCommands.cpp
++++ b/src/detection/analyzer/AnalyzerCommands.cpp
+@@ -208,6 +208,7 @@ void AnalyzerApp::handleUsbLine(const char* line) {
+         Serial.println("CMD: EMIT MODE AUTO interval=2000 freq=3200 dur=100");
+         Serial.println("CMD: EMIT SWEEP start=3000 stop=3500 step=100 dur=80 pause=1000");
+         Serial.println("CMD: RAW trigger f=3200 dur=100 post=1000 mode=feat (default)|mode=pcm|mode=both");
++        Serial.println("CMD: RAW trigger ... i2s=left|philips");
+         Serial.println("CMD: SEQ");
+         Serial.println("CMD: SEQ help");
+         Serial.println("CMD: SEQ stop");
+@@ -295,6 +296,7 @@ void AnalyzerApp::handleUsbLine(const char* line) {
+         unsigned long preMs = 0;
+         unsigned long decim = 1;
+         AnalyzerApp::RawCaptureMode rawMode = AnalyzerApp::RawCaptureMode::Features;
++        AudioSource::I2SFrameMode i2sFrameMode = AudioSource::I2SFrameMode::LeftJustifiedAllSlots;
+ 
+         char* savePtr = nullptr;
+         char* token = strtok_r(_commandScratch, " ", &savePtr);
+@@ -318,9 +320,17 @@ void AnalyzerApp::handleUsbLine(const char* line) {
+                 } else if (equalsIgnoreCase(modeValue, "both")) {
+                     rawMode = AnalyzerApp::RawCaptureMode::Both;
+                 }
++            } else if (startsWithTokenIgnoreCase(token, "i2s=") || startsWithTokenIgnoreCase(token, "frame=")) {
++                const char* modeValue = token + (startsWithTokenIgnoreCase(token, "i2s=") ? 4 : 6);
++                if (equalsIgnoreCase(modeValue, "mode1") || equalsIgnoreCase(modeValue, "left") || equalsIgnoreCase(modeValue, "leftall") || equalsIgnoreCase(modeValue, "leftaligned") || equalsIgnoreCase(modeValue, "legacy") || equalsIgnoreCase(modeValue, "allslots")) {
++                    i2sFrameMode = AudioSource::I2SFrameMode::LeftJustifiedAllSlots;
++                } else if (equalsIgnoreCase(modeValue, "mode2") || equalsIgnoreCase(modeValue, "philips") || equalsIgnoreCase(modeValue, "philipsslot1") || equalsIgnoreCase(modeValue, "leftonly")) {
++                    i2sFrameMode = AudioSource::I2SFrameMode::PhilipsLeftOnly;
++                }
+             }
+         }
+ 
++        _audioSource.setI2SFrameMode(i2sFrameMode);
+         if (runRawTrigger(toneHz, durationMs, postMs, preMs, decim, rawMode)) {
+             Serial.println("OK RAW");
+         }
+diff --git a/src/detection/analyzer/tools/AnalyzerRawCapture.cpp b/src/detection/analyzer/tools/AnalyzerRawCapture.cpp
+index 83a75eb..f9066d1 100644
+--- a/src/detection/analyzer/tools/AnalyzerRawCapture.cpp
++++ b/src/detection/analyzer/tools/AnalyzerRawCapture.cpp
+@@ -13,10 +13,12 @@ namespace {
+ 
+ constexpr unsigned long kRawCaptureFlushSamples = 256;
+ constexpr unsigned long kRawCaptureTimeoutSlackMs = 2000;
++constexpr unsigned long kRawCaptureI2SWarmupMs = 50UL;
+ constexpr int32_t kRawCaptureFixedPointScale = 1000;
+ 
+ struct RawCapturePcmSample {
+     uint16_t timeOffsetMs = 0;
++    uint32_t rawWord = 0;
+     int32_t pcm = 0;
+ };
+ 
+@@ -62,6 +64,12 @@ int32_t rawCaptureToFixedPoint(float value) {
+     return static_cast<int32_t>(lroundf(value * static_cast<float>(kRawCaptureFixedPointScale)));
+ }
+ 
++void printRawWordHex(uint32_t rawWord) {
++    char rawHex[9];
++    snprintf(rawHex, sizeof(rawHex), "%08lX", static_cast<unsigned long>(rawWord));
++    Serial.print(rawHex);
++}
++
+ void printRawMemoryState(const char* label) {
+     Serial.print("RAW_MEM label=");
+     Serial.print(label);
+@@ -109,6 +117,8 @@ bool AnalyzerApp::runRawTrigger(unsigned long toneHz,
+     Serial.print("RAW_INFO mode=");
+     Serial.print(rawCaptureModeName(mode));
+     Serial.println(" output=csv");
++    Serial.print("RAW_INFO i2s_mode=");
++    Serial.println(_audioSource.i2sFrameMode() == AudioSource::I2SFrameMode::LeftJustifiedAllSlots ? "left" : "philips");
+     Serial.print("RAW_INFO row_size=");
+     if (mode == RawCaptureMode::Pcm) {
+         Serial.print(sizeof(RawCapturePcmSample));
+@@ -214,7 +224,7 @@ bool AnalyzerApp::runRawTrigger(unsigned long toneHz,
+     unsigned long flushedSamples = 0;
+     int discardedSample = 0;
+     uint32_t discardedSampleTimeUs = 0;
+-    while (flushedSamples < kRawCaptureFlushSamples && _audioSource.readRawSample(discardedSample, discardedSampleTimeUs)) {
++    while (flushedSamples < kRawCaptureFlushSamples && _audioSource.readSample(discardedSample, discardedSampleTimeUs)) {
+         ++flushedSamples;
+     }
+ 
+@@ -249,11 +259,6 @@ bool AnalyzerApp::runRawTrigger(unsigned long toneHz,
+ 
+     const unsigned long captureId = ++_rawCaptureSequenceId;
+     const unsigned long commandMs = millis();
+-    const unsigned long captureBaseMs = commandMs;
+-    char emitterCommand[96];
+-    snprintf(emitterCommand, sizeof(emitterCommand), "CHIRP freq=%lu dur=%lu", toneHz, durationMs);
+-    sendEmitterCommand(emitterCommand);
+-    Serial2.flush();
+ 
+     char emitterLineBuffer[96];
+     size_t emitterLineLength = 0;
+@@ -267,6 +272,11 @@ bool AnalyzerApp::runRawTrigger(unsigned long toneHz,
+     unsigned long preWriteIndex = 0;
+     unsigned long postCaptured = 0;
+     const bool useFeatureStream = rawCaptureUsesFeatureStream(mode);
++    const unsigned long rawWarmupDeadlineMs = commandMs + kRawCaptureI2SWarmupMs;
++    bool rawCaptureArmed = kRawCaptureI2SWarmupMs == 0UL;
++    bool emitterCommandSent = false;
++    bool emitStartNeedsPreWindowCopy = false;
++    unsigned long captureBaseMs = commandMs;
+     int64_t rawWindowSum = 0;
+     uint64_t rawWindowAbsSum = 0;
+     int32_t rawWindowMin = INT32_MAX;
+@@ -301,6 +311,39 @@ bool AnalyzerApp::runRawTrigger(unsigned long toneHz,
+         preWindowCopied = true;
+     };
+ 
++    auto armRawCapture = [&](unsigned long sampleTimeMs) {
++        rawCaptureArmed = true;
++        captureBaseMs = sampleTimeMs;
++        preCapturedTotal = 0;
++        preWindowSamples = 0;
++        preWriteIndex = 0;
++        preWindowCopied = false;
++        postCaptured = 0;
++        rawWindowSum = 0;
++        rawWindowAbsSum = 0;
++        rawWindowMin = INT32_MAX;
++        rawWindowMax = INT32_MIN;
++        if (emitStarted && emitStartNeedsPreWindowCopy && !preWindowCopied) {
++            copyPreWindow();
++            emitStartNeedsPreWindowCopy = false;
++        }
++    };
++
++    auto maybeSendEmitterCommand = [&]() {
++        if (emitterCommandSent || !rawCaptureArmed) {
++            return;
++        }
++        if (preWantedSamples > 0 && preCapturedTotal < preWantedSamples) {
++            return;
++        }
++
++        char emitterCommand[96];
++        snprintf(emitterCommand, sizeof(emitterCommand), "CHIRP freq=%lu dur=%lu", toneHz, durationMs);
++        sendEmitterCommand(emitterCommand);
++        Serial2.flush();
++        emitterCommandSent = true;
++    };
++
+     auto noteEmitterLine = [&](const char* line) {
+         if (line == nullptr || *line == '\0') {
+             return;
+@@ -311,7 +354,11 @@ bool AnalyzerApp::runRawTrigger(unsigned long toneHz,
+         if (startLine && !emitStarted) {
+             emitStarted = true;
+             emitStartMs = millis();
+-            copyPreWindow();
++            if (rawCaptureArmed) {
++                copyPreWindow();
++            } else {
++                emitStartNeedsPreWindowCopy = true;
++            }
+             if (mode != RawCaptureMode::Pcm) {
+                 Serial.print("RAW_EMIT_START id=");
+                 Serial.print(captureId);
+@@ -359,21 +406,24 @@ bool AnalyzerApp::runRawTrigger(unsigned long toneHz,
+     auto captureSample = [&]() -> bool {
+         int rawSample = 0;
+         uint32_t sampleTimeUs = 0;
+-        if (!_audioSource.readRawSample(rawSample, sampleTimeUs)) {
++        if (!_audioSource.readSample(rawSample, sampleTimeUs)) {
+             return false;
+         }
+ 
+         const unsigned long sampleTimeMs = sampleTimeUs / 1000UL;
+-        const uint16_t sampleTimeOffsetMs = rawCaptureOffsetMs(sampleTimeMs, captureBaseMs);
+-        const int32_t signedRawSample = static_cast<int32_t>(rawSample);
+-        rawWindowSum += static_cast<int64_t>(signedRawSample);
+-        rawWindowAbsSum += static_cast<uint64_t>(signedRawSample < 0 ? -static_cast<int64_t>(signedRawSample) : static_cast<int64_t>(signedRawSample));
+-        if (signedRawSample < rawWindowMin) {
+-            rawWindowMin = signedRawSample;
++        if (!rawCaptureArmed) {
++            if (sampleTimeMs < rawWarmupDeadlineMs || !_audioSource.lastSampleWasBlockStart()) {
++                return true;
++            }
++            armRawCapture(sampleTimeMs);
+         }
+-        if (signedRawSample > rawWindowMax) {
+-            rawWindowMax = signedRawSample;
++
++        const uint16_t sampleTimeOffsetMs = rawCaptureOffsetMs(sampleTimeMs, captureBaseMs);
++        if (emitStartNeedsPreWindowCopy && !preWindowCopied) {
++            copyPreWindow();
++            emitStartNeedsPreWindowCopy = false;
+         }
++
+         if (useFeatureStream) {
+             AudioSamplePacket audioSamplePacket = {};
+             // Feature dumps must mirror the live detector path, so we derive the
+@@ -401,6 +451,7 @@ bool AnalyzerApp::runRawTrigger(unsigned long toneHz,
+                     preWriteIndex = (preWriteIndex + 1UL) % preWantedSamples;
+                 }
+                 ++preCapturedTotal;
++                maybeSendEmitterCommand();
+             } else if (postCaptured < postWantedSamples) {
+                 if (mode == RawCaptureMode::Features && featureCaptureBuffer != nullptr) {
+                     featureCaptureBuffer[preWindowSamples + postCaptured].timeOffsetMs = sampleTimeOffsetMs;
+@@ -417,20 +468,33 @@ bool AnalyzerApp::runRawTrigger(unsigned long toneHz,
+             return true;
+         }
+ 
++        const int32_t signedRawSample = static_cast<int32_t>(rawSample);
++        rawWindowSum += static_cast<int64_t>(signedRawSample);
++        rawWindowAbsSum += static_cast<uint64_t>(signedRawSample < 0 ? -static_cast<int64_t>(signedRawSample) : static_cast<int64_t>(signedRawSample));
++        if (signedRawSample < rawWindowMin) {
++            rawWindowMin = signedRawSample;
++        }
++        if (signedRawSample > rawWindowMax) {
++            rawWindowMax = signedRawSample;
++        }
++
+         if (!emitStarted) {
+             if (mode == RawCaptureMode::Pcm && prePcmRingBuffer != nullptr) {
+                 // PCM mode intentionally stays transport-centric and keeps the raw
+                 // decoded word so DC offset and decode issues remain visible.
+                 prePcmRingBuffer[preWriteIndex].timeOffsetMs = sampleTimeOffsetMs;
++                prePcmRingBuffer[preWriteIndex].rawWord = _audioSource.lastRawWord();
+                 prePcmRingBuffer[preWriteIndex].pcm = static_cast<int32_t>(rawSample);
+                 preWriteIndex = (preWriteIndex + 1UL) % preWantedSamples;
+-            }
+-            ++preCapturedTotal;
+-        } else if (postCaptured < postWantedSamples) {
+-            if (mode == RawCaptureMode::Pcm && pcmCaptureBuffer != nullptr) {
+-                // Leave PCM untouched here as well; feature normalization happens only
+-                // on the detector-facing path above.
++                }
++                ++preCapturedTotal;
++                maybeSendEmitterCommand();
++            } else if (postCaptured < postWantedSamples) {
++                if (mode == RawCaptureMode::Pcm && pcmCaptureBuffer != nullptr) {
++                    // Leave PCM untouched here as well; feature normalization happens only
++                    // on the detector-facing path above.
+                 pcmCaptureBuffer[preWindowSamples + postCaptured].timeOffsetMs = sampleTimeOffsetMs;
++                pcmCaptureBuffer[preWindowSamples + postCaptured].rawWord = _audioSource.lastRawWord();
+                 pcmCaptureBuffer[preWindowSamples + postCaptured].pcm = static_cast<int32_t>(rawSample);
+             }
+             ++postCaptured;
+@@ -536,7 +600,7 @@ bool AnalyzerApp::runRawTrigger(unsigned long toneHz,
+     Serial.print(rawCaptureModeName(mode));
+     Serial.print(" output=csv");
+     if (mode == RawCaptureMode::Pcm) {
+-        Serial.print(" fields=ms,pcm");
++        Serial.print(" fields=ms,raw_hex,pcm");
+     } else if (mode == RawCaptureMode::Features) {
+         Serial.print(" fields=ms,amp,env,target_score,target_fresh");
+     } else {
+@@ -545,11 +609,13 @@ bool AnalyzerApp::runRawTrigger(unsigned long toneHz,
+     Serial.println();
+ 
+     if (mode == RawCaptureMode::Pcm) {
+-        Serial.println("ms,pcm");
++        Serial.println("ms,raw_hex,pcm");
+         for (unsigned long i = 0; i < capturedSamples; ++i) {
+             const RawCapturePcmSample& sample = pcmCaptureBuffer[i];
+             Serial.print(static_cast<unsigned long>(sample.timeOffsetMs) + captureBaseMs);
+             Serial.print(",");
++            printRawWordHex(sample.rawWord);
++            Serial.print(",");
+             Serial.println(sample.pcm);
+         }
+     } else if (mode == RawCaptureMode::Features) {
+diff --git a/src/hal/AudioSourceI2S.cpp b/src/hal/AudioSourceI2S.cpp
+index bc27009..2cef3f5 100644
+--- a/src/hal/AudioSourceI2S.cpp
++++ b/src/hal/AudioSourceI2S.cpp
+@@ -5,7 +5,6 @@
+ #include <new>
+ 
+ namespace {
+-constexpr bool kPassThroughRawWords = true;
+ 
+ int decodePcmSample(const uint8_t* samplePtr, int bytesPerSample) {
+     if (samplePtr == nullptr || bytesPerSample <= 0) {
+@@ -63,7 +62,8 @@ AudioSourceI2S::AudioSourceI2S(int sckPin, int fsPin, int dataInPin, int sampleR
+       _dataInPin(dataInPin),
+       _sampleRate(sampleRate),
+       _bitsPerSample(bitsPerSample),
+-      _blockSamples(new (std::nothrow) int32_t[kRefillBatchSize] {}) {}
++      _blockSamples(new (std::nothrow) int32_t[kRefillBatchSize] {}),
++      _blockRawWords(new (std::nothrow) uint32_t[kRefillBatchSize] {}) {}
+ 
+ void AudioSourceI2S::begin() {
+     // Keep the public contract sample-based even though I2S may buffer internally.
+@@ -71,13 +71,20 @@ void AudioSourceI2S::begin() {
+     if (!_blockSamples) {
+         _blockSamples.reset(new (std::nothrow) int32_t[kRefillBatchSize] {});
+     }
++    if (!_blockRawWords) {
++        _blockRawWords.reset(new (std::nothrow) uint32_t[kRefillBatchSize] {});
++    }
+     _started = false;
+     _samplePeriodUs = _sampleRate > 0 ? static_cast<uint32_t>(1000000UL / static_cast<uint32_t>(_sampleRate)) : 0;
+ 
+     I2S.end();
+     I2S.setAllPins(_sckPin, _fsPin, _dataInPin, I2S_PIN_NO_CHANGE, I2S_PIN_NO_CHANGE);
+-    // Mono-mode probe: left-justified framing is the stronger candidate so far.
+-    const int beginResult = I2S.begin(I2S_LEFT_JUSTIFIED_MODE, _sampleRate, _bitsPerSample);
++    const bool carryAllSlots = _frameMode == I2SFrameMode::LeftJustifiedAllSlots;
++    // Mode 1 keeps the left-justified transport and carries both slots.
++    // Mode 2 switches to Philips framing and keeps only the left slot.
++    const int beginResult = I2S.begin(carryAllSlots ? I2S_LEFT_JUSTIFIED_MODE : I2S_PHILIPS_MODE,
++                                      _sampleRate,
++                                      carryAllSlots ? _bitsPerSample : 32);
+     _started = beginResult != 0;
+ }
+ 
+@@ -89,6 +96,30 @@ int AudioSourceI2S::availableBytes() const {
+     return I2S.available();
+ }
+ 
++uint32_t AudioSourceI2S::lastRawWord() const {
++    return _lastRawWord;
++}
++
++bool AudioSourceI2S::setI2SFrameMode(I2SFrameMode mode) {
++    if (_frameMode == mode) {
++        return false;
++    }
++
++    _frameMode = mode;
++    if (_started) {
++        begin();
++    }
++    return true;
++}
++
++AudioSourceI2S::I2SFrameMode AudioSourceI2S::i2sFrameMode() const {
++    return _frameMode;
++}
++
++bool AudioSourceI2S::lastSampleWasBlockStart() const {
++    return _lastReadWasBlockStart;
++}
++
+ bool AudioSourceI2S::readSample(int& sample, uint32_t& sampleTimeUs) {
+     if (_blockCursor >= _blockCount && !refillBlock()) {
+         return false;
+@@ -99,12 +130,17 @@ bool AudioSourceI2S::readSample(int& sample, uint32_t& sampleTimeUs) {
+     }
+ 
+     const size_t index = _blockCursor++;
++    _lastReadWasBlockStart = index == 0;
+     sample = static_cast<int>(_blockSamples[index]);
++    if (_blockRawWords) {
++        _lastRawWord = _blockRawWords[index];
++    }
+     sampleTimeUs = _blockApproxStartMicros + sampleOffsetUs(static_cast<uint32_t>(index), static_cast<uint32_t>(_sampleRate));
+     return true;
+ }
+ 
+ bool AudioSourceI2S::readRawSample(int& sample, uint32_t& sampleTimeUs) {
++    // Debug/raw-capture compatibility path; normal detector and RAW CSV should use readSample().
+     if (!_started) {
+         recordReadAttempt(0, 0, true);
+         return false;
+@@ -130,6 +166,12 @@ bool AudioSourceI2S::readRawSample(int& sample, uint32_t& sampleTimeUs) {
+     }
+ 
+     sample = decodePcmSample(rawBytes, bytesPerSample);
++    {
++        uint32_t rawWord = 0;
++        memcpy(&rawWord, rawBytes, bytesPerSample < static_cast<int>(sizeof(rawWord)) ? static_cast<size_t>(bytesPerSample) : sizeof(rawWord));
++        _lastRawWord = rawWord;
++    }
++    _lastReadWasBlockStart = false;
+     sampleTimeUs = micros();
+     _stats.totalSamplesRead += 1;
+     return true;
+@@ -155,6 +197,7 @@ bool AudioSourceI2S::readBlock(AudioBlock& block) {
+     block.startSampleIndex = _blockStartSampleIndex + _blockCursor;
+     block.approxStartMicros = _blockApproxStartMicros + sampleOffsetUs(static_cast<uint32_t>(_blockCursor), static_cast<uint32_t>(_sampleRate));
+     block.overflowBeforeBlock = _blockOverflowBeforeBlock;
++    _lastReadWasBlockStart = _blockCursor == 0;
+     _blockCursor = _blockCount;
+     return true;
+ }
+@@ -193,6 +236,8 @@ void AudioSourceI2S::resetStats() {
+     _maxBufferedSamples = 0;
+     _outputSampleIndex = 0;
+     _selectedSlotIndex = -1;
++    _lastRawWord = 0;
++    _lastReadWasBlockStart = false;
+     _stats = {};
+     _slotDiagnostics = {};
+     _slotDiagnostics.slotDiagSource = "pcm_i2s_words";
+@@ -268,6 +313,7 @@ bool AudioSourceI2S::refillBlock() {
+     const size_t sampleBytes = static_cast<size_t>(bytesPerSample);
+     const size_t samplesToProcess = fullSamplesRead;
+     int32_t rawSamples[kRefillBatchSize] = {};
++    uint32_t rawWords[kRefillBatchSize] = {};
+     double slotSumSquares[2] = {0.0, 0.0};
+     unsigned long slotCount[2] = {0, 0};
+     int slotMin[2] = {0, 0};
+@@ -285,6 +331,9 @@ bool AudioSourceI2S::refillBlock() {
+         const int rawSample = decodePcmSample(samplePtr, bytesPerSample);
+ 
+         rawSamples[i] = rawSample;
++        uint32_t rawWord = 0;
++        memcpy(&rawWord, samplePtr, sampleBytes < static_cast<int>(sizeof(rawWord)) ? static_cast<size_t>(sampleBytes) : sizeof(rawWord));
++        rawWords[i] = rawWord;
+ 
+         const int sample = rawSample;
+         const size_t slotIndex = i % 2U;
+@@ -373,10 +422,13 @@ bool AudioSourceI2S::refillBlock() {
+         _slotDiagnostics.activeSlot = (alive0 && alive1) ? "both" : slotName(static_cast<size_t>(_selectedSlotIndex));
+     }
+     const uint32_t fillEndUs = micros();
+-    if (kPassThroughRawWords) {
++    const bool carryAllSlots = _frameMode == I2SFrameMode::LeftJustifiedAllSlots;
++    if (carryAllSlots) {
+         _blockCount = 0;
+         for (size_t i = 0; i < samplesToProcess && _blockCount < kRefillBatchSize; ++i) {
+             _blockSamples[_blockCount++] = rawSamples[i];
++            _blockRawWords[_blockCount - 1] = rawWords[i];
++            _lastRawWord = rawWords[i];
+         }
+         const uint32_t selectedFrameAge = _blockCount > 0 ? static_cast<uint32_t>(_blockCount - 1U) : 0U;
+         _blockApproxStartMicros = fillEndUs > sampleOffsetUs(selectedFrameAge, static_cast<uint32_t>(_sampleRate))
+@@ -384,7 +436,7 @@ bool AudioSourceI2S::refillBlock() {
+             : 0U;
+         _slotDiagnostics.chosenSlot = "raw_passthrough";
+         _slotDiagnostics.activeSlot = "raw_passthrough";
+-        _slotDiagnostics.slotSelectionReason = "temporary_raw_passthrough";
++        _slotDiagnostics.slotSelectionReason = "left_justified_all_slots";
+     } else {
+         const size_t chosenSlotIndex = _selectedSlotIndex == 1 ? 1U : 0U;
+         const size_t selectedFrameCount = samplesToProcess / 2U;
+@@ -398,8 +450,14 @@ bool AudioSourceI2S::refillBlock() {
+             if (rawIndex >= samplesToProcess) {
+                 break;
+             }
+-            _blockSamples[_blockCount++] = rawSamples[rawIndex];
++            _blockSamples[_blockCount] = rawSamples[rawIndex];
++            _blockRawWords[_blockCount] = rawWords[rawIndex];
++            _lastRawWord = rawWords[rawIndex];
++            ++_blockCount;
+         }
++        _slotDiagnostics.chosenSlot = "slot0";
++        _slotDiagnostics.activeSlot = "slot0";
++        _slotDiagnostics.slotSelectionReason = "philips_left_slot";
+     }
+     _outputSampleIndex += static_cast<uint64_t>(_blockCount);
+     return _blockCount > 0;
+diff --git a/src/hal/AudioSourceI2S.h b/src/hal/AudioSourceI2S.h
+index fbe2ec8..d4db04e 100644
+--- a/src/hal/AudioSourceI2S.h
++++ b/src/hal/AudioSourceI2S.h
+@@ -40,6 +40,10 @@ public:
+     unsigned long droppedSamples() const override;
+     unsigned long bufferedSamplesMax() const override;
+     uint32_t sampleRateHz() const override;
++    uint32_t lastRawWord() const override;
++    bool setI2SFrameMode(I2SFrameMode mode) override;
++    I2SFrameMode i2sFrameMode() const override;
++    bool lastSampleWasBlockStart() const override;
+     const AudioSourceStats& stats() const override;
+     const AudioSlotDiagnostics& slotDiagnostics() const;
+     void resetStats() override;
+@@ -57,6 +61,7 @@ private:
+     bool _started = false;
+     static constexpr size_t kRefillBatchSize = 128;
+     std::unique_ptr<int32_t[]> _blockSamples;
++    std::unique_ptr<uint32_t[]> _blockRawWords;
+     size_t _blockCount = 0;
+     size_t _blockCursor = 0;
+     uint64_t _blockStartSampleIndex = 0;
+@@ -67,6 +72,9 @@ private:
+     uint32_t _samplePeriodUs = 0;
+     uint64_t _outputSampleIndex = 0;
+     int _selectedSlotIndex = -1;
++    uint32_t _lastRawWord = 0;
++    bool _lastReadWasBlockStart = false;
++    I2SFrameMode _frameMode = I2SFrameMode::LeftJustifiedAllSlots;
+     AudioSourceStats _stats;
+     AudioSlotDiagnostics _slotDiagnostics;
+ };
+-- 
+2.54.0.windows.1
+

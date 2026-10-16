@@ -1,0 +1,14 @@
+[12:03:47] boot banner: {'role': 'analyzer', 'git': 'b22b035', 'version': '0.4.0', 'board': 'damp'}
+[12:03:49] warmup: OK EMIT CHIRP
+[12:03:49] start OBS_speech_r1: SEQ DIAG on ; SEQ OBS start tries=50 period=2000 window=1800 report_settle=200 freq=3300 band=2800-3800 profile=TonalPulseScalar mode=detail when=all verbose=1
+[12:05:34] done OBS_speech_r1 (105s): complete=True results={'miss': 13, 'rejected': 37}
+[12:05:36] start OBS_speech_r2: SEQ DIAG on ; SEQ OBS start tries=50 period=2000 window=1800 report_settle=200 freq=3300 band=2800-3800 profile=TonalPulseScalar mode=detail when=all verbose=1
+[12:07:22] done OBS_speech_r2 (106s): complete=True results={'rejected': 43, 'late': 2, 'miss': 4, 'expected': 1}
+[12:07:27] session updated, index rebuilt
+[12:16:13] boot banner: {'role': 'analyzer', 'git': 'b22b035', 'version': '0.4.0', 'board': 'damp'}
+[12:16:15] warmup: OK EMIT CHIRP
+[12:16:15] start OBS_music_r1: SEQ DIAG on ; SEQ OBS start tries=50 period=2000 window=1800 report_settle=200 freq=3300 band=2800-3800 profile=TonalPulseScalar mode=detail when=all verbose=1
+[12:18:01] done OBS_music_r1 (106s): complete=True results={'rejected': 41, 'miss': 9}
+[12:18:03] start OBS_music_r2: SEQ DIAG on ; SEQ OBS start tries=50 period=2000 window=1800 report_settle=200 freq=3300 band=2800-3800 profile=TonalPulseScalar mode=detail when=all verbose=1
+[12:19:48] done OBS_music_r2 (105s): complete=True results={'miss': 16, 'rejected': 25, 'late': 9}
+[12:19:54] session updated, index rebuilt

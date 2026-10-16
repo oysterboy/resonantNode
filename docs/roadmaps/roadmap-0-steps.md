@@ -315,8 +315,12 @@ the previous gate open unless the step says it can run in parallel.
    passed and E2 kept hearing (E3 as a listener is suspect: supply, I2S clock or state after its unreliable reset).
    Gate items still open: hop T3 >= 9/10 at every spacing with the shipped build on another day; E3 as Analyzer with
    DIAG hearing E2 as Emitter (E3's listening health, then the E2 -> E3 direction), then the two-Node chain; noise on
-   the Node build; the idle voice vs a two-node exchange (`RB BEHAV idle=0` not taking effect, `PARAM SET` on the Node
-   not verified); an audio-health field in the Node's `RB STATUS`; 5c SELFTEST with five boards.
+   the Node build; the idle voice vs a two-node exchange (chain length: decisions/2026-10-17-two-node-exchange-chain-
+   length.md, open, step 5d); 5c SELFTEST with five boards. Done 2026-10-17 remote: audio-health fields in the Node's
+   `RB STATUS` (overflows, backsteps, clock corrections, read errors, deficit against uptime); `PARAM SET` and
+   `RB BEHAV idleEnabled=0` were never broken, a D-AMP board resets on every port open (DTR) and the setting sent from
+   the previous process was gone (`nodepair.py --a-setup/--b-setup` sends settings inside the run and prints the
+   replies); `idle=` is the idle timeout, not the switch, the help says so now.
    Also open from the audit (research/unproven-assumptions-audit.md): 3.3 the Node quiet gate (400) was derived from a
    First Difference artefact, re-measure it on the DC blocker; 2.2 speech/music OBS on the Node build (the contrast and
    amp limits rest on one room, one phone, two days); 2.3 hop gap vs a dry room: output.hop_gap_ms and the scalar
@@ -505,10 +509,11 @@ the previous gate open unless the step says it can run in parallel.
    behavior.* params), the rest of PAR-007 (detection params not yet
    registered); roadmap-param-config.md.
    Why here: PAR-015 retires RB BEHAV onto the registry and needs a
-   BehaviorTuning to land on; the 5d finding (`RB BEHAV idle=0` not
-   taking effect, `PARAM SET` on the Node unverified) is the running cost
-   of the two paths. NODE-002 is the half-day of reading step 10 starts
-   with.
+   BehaviorTuning to land on; the two command paths cost real bench time
+   on 2026-10-16 (`RB BEHAV idle=` is the idle timeout, `idleEnabled=` the
+   switch; a port open resets the board and drops anything set before,
+   resolved 2026-10-17, both commands work). NODE-002 is the half-day of
+   reading step 10 starts with.
    Gate: the map in docs/; behavior.* and detection.* registered; RB BEHAV
    gone. Inside step 10, after PAR-016, before PAR-015.
 

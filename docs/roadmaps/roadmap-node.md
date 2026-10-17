@@ -253,7 +253,7 @@ Gate: on a D-AMP node, 1 flash on an external chirp, 2 when it emits.
 
 ### NODE-012 - acoustic test suite: spaces x speaker types x distance
 
-Status: TODO (noted 2026-10-09, owner request; not sequenced)
+Status: TODO (noted 2026-10-09, owner request); sequenced 2026-10-17 through step 5h of roadmap-0-steps.md (#47): the step 6 room is the first cell, then the installation site at the trial spacing, a dry cell and a height-offset cell, each with RAW captures into the corpus.
 
 ```text
 Research: docs/research/acoustic-test-suite.md (test design, matrix).

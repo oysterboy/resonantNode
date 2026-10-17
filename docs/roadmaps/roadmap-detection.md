@@ -93,6 +93,8 @@ Status: IDEA, source ready (step 5b, research note scalar-detector-extensions.md
 
 10-15 ms pulses with 5-115 ms pauses accepted as one occurrence via maxGapMs / maxTransientDurationMs. Measure the smallest resolvable gap and the false-alarm cost.
 
+Gap contract (step 5h, #47, from audit 2.3): the shipped hop train (25 ms x 5, gap 10) is one occurrence only because the room tail fills the gaps (min duration 85, release debounce 10, max gap 20); `output.hop_gap_ms` and the Scalar gap / debounce / min-duration params are independent with no consistency check. 5h adds the check and a dry hop fixture; whether the room tail is part of the signal contract is decided on that fixture and a dry bench cell.
+
 Source: Emitter `PULSES n pulse_ms gap_ms [freq=] [ramp=] [trial=]`, from the Analyzer as `EMIT PULSES ...` or per SEQ trial as `SEQ start dur=PULSE_MS pulses=N gap=MS [ramp=MS]`. On D-AMP the train is timed per sample in I2sToneOutput (loop edges land on 8 ms blocks); pulse_ms is sound with the ramps inside, gap_ms is silence. Piezo builds time it from the loop.
 
 ### DET-012 - lower edge of the network band

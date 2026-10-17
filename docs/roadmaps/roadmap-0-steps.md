@@ -22,6 +22,10 @@ Renamed from roadmap-general.md on 2026-09-23 so it sorts first.
 How this file relates to the domain roadmaps and docs/refactors/: see
 README.md ("Who answers what", "Ordering rule").
 
+Status update 2026-10-17, late: step 5h added (detection robustness against other physical conditions, issue #47):
+the hop train of 5b is measured under one condition; 5h names the four assumptions that carry it, three host-only
+checks before bench session 1, the session 1 items that already cover a second condition, and NODE-012's next cells
+after step 6. Does not gate step 6; no reorder. NODE-012 is sequenced through 5h.
 Status update 2026-10-17, evening: pre-trial plan reviewed against the day's bench (owner confirmed). Stale 5b/5d/5f
 text replaced; new step 5g (kick command, hop rotation per board, idle-call check); step 6 prerequisites now name the
 3b/4 gate run, 3d's bench check, the E3/E5 hardware fixes and the trial spacing (from 5e). Planned over the two bench
@@ -441,6 +445,38 @@ the previous gate open unless the step says it can run in parallel.
    Gate: `RB CALL` plays the node's call through Behavior (with own-emit suppression); a per-board rotation table
    gives five distinct rotations, printed at boot; the idle call heard on the bench and answered.
 
+5h. [TODO] Detection robustness against other physical conditions. (issue #47)
+   Where: DET-011 (gap contract), NODE-012 (acoustic test suite, its cells), NODE-006 (host replay);
+   research/unproven-assumptions-audit.md 2.3, 2.2, 1.5; research/acoustic-test-suite.md.
+   Why: the hop train of 5b is measured under one condition: one room, one pair in one direction, 60-110 cm, one
+   day, Emitter 0.5 FS. Four assumptions carry its robustness and none is measured outside that condition: (1) the
+   room tail bridges the 10 ms gaps (min duration 85, release debounce 10, max gap 20; a dry room or outdoors may
+   split the train into five short rejects); (2) one null bin per spacing (the 5-step train survives one missing
+   step, two nulls never occurred); (3) the contrast limit 30,500 has ~400 of margin to music, from one room and
+   one phone, and the Node build never ran a speech/music OBS; (4) boards are interchangeable.
+   Remote, host only, before bench session 1 (does not touch the firmware under test):
+   - hop fixtures under test/fixtures with varied gaps, and a dry variant of the 70 cm hop capture (tail between
+     the pulses silenced), replayed in test_replay_corpus: says whether assumption 1 holds in the detector or
+     only in the room.
+   - a consistency check between output.hop_gap_ms and the Scalar gap / debounce / min-duration params (static
+     check on the shipped defaults, a warning for live values): today they are independent params with no check.
+   - a replay sweep over the hop capture with one, then two bins notched, contrast values recorded: the margin
+     for assumption 2 without a bench.
+   Bench session 1 (already planned under 5b and 5e, listed here for the condition they cover): the hop battery
+   on a second day (comb state), speech/music OBS on the Node build, 5e's level and hearing matrix at the trial
+   spacing with all five boards as listeners.
+   After step 6, as NODE-012's next cells (the step 6 room is its first): the installation site at the trial
+   spacing; a dry cell (outdoors or absorbers above the pair); a height-offset cell (the 2026-10-17 matrix lost
+   contact across 20 cm); RAW captures into the corpus per cell (tools/bench/rawcorpus.py) so later threshold
+   sweeps run on the host.
+   Levers if a cell fails, not before: DET-015 pulse-structure inspector (five steps on band bins in order) and
+   DET-014 tonality for contrast margin (8a); gap-tolerant contrast or shorter gaps if the dry cell splits the
+   train; more steps or 125 Hz bins if two nulls appear. Thresholds are not changed in this step; a failing cell
+   is a measurement, tuning is its own pass.
+   Gate: the three host items landed with passing host tests; the session 1 items reported under their own
+   steps; each NODE-012 cell a bench session with hop T3 count, contrast P75 and captures. Does not gate step 6:
+   the host items run before session 1, the cells after the trial.
+
 6. STATUS baseline and 5-node field trial, on D-AMP. (issue #16)
    Where: NODE-001 (STATUS baseline, prerequisite), NODE-008 (5-node trial),
    roadmap-node.md.
@@ -610,7 +646,8 @@ NODE-019                                      sample-clock backsteps (~1 per
 NODE-012                                      acoustic test suite (spaces x
                                               speakers x distance); step 3
                                               and the step 6 room are its
-                                              first cells.
+                                              first cells, the next cells
+                                              are sequenced in step 5h.
 ```
 
 ## Notes

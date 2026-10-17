@@ -367,6 +367,66 @@ C (fold into steps 8 / 10), D (latent).
 Gate: as step 3d in roadmap-0-steps.md.
 ```
 
+### NODE-019 - sample-clock backsteps: tick-quantized polling against the 8 ms DMA period
+
+Status: DEFERRED, known issue (found 2026-10-17 after the TX-buffer fix 0ede378; code review of
+`AudioSourceI2S::stampBlock`, the Node loop and the consumers, nothing changed). Harmless while
+`i2s.dropped_dma_buffers` stays 0; watched through `RB STATUS`.
+
+```text
+Symptom: RB STATUS i2s.backsteps rises by ~10 per 30 s in a busy session
+(log=full, STATUS polling), 0-1 per 120 s in a quiet one, in bursts of
+~10 that come with one 0.6-0.8 ms clock excursion (max_backstep_us ~700,
+max_clock_correction_us ~1.6 % larger: the same event, the rate term in
+stampBlock). Two boards booted together get the burst in the same 30 s.
+bench:sessions/2026-10-17-pair-after-txfix (136 in 540 s), -pairmatrix
+(E2-E4 37 in 120 s, E3-E4 1), -rest-rule-E1E4 (0); before the fix
+-slot1-e3-listener/pair_idle_status (21 in 240 s, max 3 us). The
+per-session spread is larger than the before/after difference, so the
+TX fix is the occasion, not the cause.
+
+Mechanism (code reading, not yet measured on the bench): every 500 ms
+stampBlock takes the window's minimum read latency as the clock error
+and moves the anchor by it, no deadband, both directions. loop() sleeps
+delay(1), so the Node polls i2s_read at FreeRTOS tick boundaries only;
+8 ms is a multiple of the 1 ms tick, so all 62 reads of a window share
+one phase against the tick and the latency floor is not constant but a
+slow sawtooth of the I2S-vs-CPU drift: 0-2 us per window, about half of
+them negative (a backstep each), and a ~1 ms drop when the phase wraps
+(the 0.7 ms excursion, then the loop rings for ~10 windows). The sample
+clock's absolute offset wanders 0-1 ms with that sawtooth; a min-latency
+clock cannot see a constant floor, and here the floor moves.
+
+What downstream sees: a backstep below one sample period (62.5 us) only
+shortens one block-to-block gap, no sample time goes backwards. Only the
+~0.7 ms excursions put ~11 samples behind the previous block end. Then:
+MsFromUs64 and the signed timing:: comparisons are fine; FeatureHistory
+counts an out-of-order record and opens a second bin for the same ms,
+which getWindow double counts (Analyzer: 2 out-of-order per 20
+backsteps); ScalarTransientDetector.cpp:243 (release debounce) and :385
+(onset cooldown) subtract unsigned on the sample clock, so a release
+candidate that starts inside the 0.7 ms before an excursion closes the
+occurrence at once instead of after the 10 ms debounce
+(updateCandidateFacts already guards this case, these two do not); the
+same pattern in FrequencyMatchDetector.cpp:506/512 (elapsedSince, 32-bit
+ms), Analyzer profiles only.
+
+Options, none urgent:
+  a) the two guards in ScalarTransientDetector (treat now < start as 0
+     elapsed), two lines each;
+  b) limit the anchor step in stampBlock to one sample period per window
+     except the first anchor and the window after dropped buffers; the
+     wrap then unwinds over ~16 windows and sample order stays monotonic;
+  c) the root: read with a blocking i2s_read (one tick timeout) instead
+     of delay(1), so the loop wakes on DMA completion and the floor is
+     the ISR latency; a loop-timing change, its own pass with a bench
+     gate (dropped buffers, backsteps, RB latency);
+  d) diagnostics first: a signed "largest correction" and the window min
+     latency in RB STATUS, or one serial line per |correction| > 100 us,
+     to confirm the sawtooth before b) or c).
+Source: review 2026-10-17 (Claude session, remote); docs/lab/2026-10-17-slot1.md afternoon.
+```
+
 ### NODE-013 - 24-hour bench soak on D-AMP
 
 Status: DONE 2026-10-12, accepted short (step 3a, issue #27 closed). Third attempt bench:sessions/2026-10-12-soak24h-70cm: 30 blocks / 7.3 h instead of 24 h (owner), 0 missing, 0 errors, T3 299/300, 0 OBS false accepts; accept rate flat, strength hour means 9.1k-11.2k vs ~200 block-to-block (not attributed: no room notes). Earlier attempts 2026-10-10 and 2026-10-11 went deaf at the micros wrap (NODE-017).
@@ -391,6 +451,8 @@ Runs in parallel with NODE-010; doesn't gate NODE-011.
 Order: roadmap-0-steps.md. NODE-009, NODE-010, NODE-011 are steps 2-4
 (D-AMP), NODE-013 is step 3a (soak, parallel to step 3), NODE-016 is step 4a (status LED); NODE-018 is step 3d (code-review fixes); NODE-001 then NODE-008 are step 6 (field trial, on D-AMP);
 NODE-006 and NODE-007 are step 7; NODE-004 is part of step 10.
+NODE-019 is a known issue (sample-clock backsteps), not stepped; it rides step 10 or the
+next loop-timing pass.
 ```
 
 ## Spec candidates

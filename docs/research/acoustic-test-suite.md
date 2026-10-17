@@ -2,8 +2,9 @@
 
 ```text
 Status:  promoted (2026-10-09)
-Became:  NODE-012 (docs/roadmaps/roadmap-node.md, 2026-10-09), not
-         sequenced; listed under "Still open" in roadmap-0-steps.md
+Became:  NODE-012 (docs/roadmaps/roadmap-node.md, 2026-10-09); sequenced
+         2026-10-17 as the bench cells of step 5h (roadmap-0-steps.md, #47):
+         installation site, dry cell, height-offset cell, after step 6
 Lab:     docs/lab/experiments/E001_spatialdistance.md (phases 1-2 behind
          it; phase 3 results go there)
 ```

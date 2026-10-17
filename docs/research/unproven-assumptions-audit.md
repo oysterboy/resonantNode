@@ -9,7 +9,9 @@ Became:  section 1.1 -> step 5d of roadmap-0-steps.md (2026-10-16);
          1.2 -> step 5f (gate as a measurement; the FieldState fork waits
          in step 11), 1.5 -> step 6's first hour (hearing matrix),
          2.2 / 2.3 / 3.3 -> step 5b open items, 3.5 -> step 5d (4),
-         2.4 -> step 8a, 3.1 / 3.2 / 3.7 -> step 8b, 4.1 / 4.3 -> step 7b
+         2.4 -> step 8a, 3.1 / 3.2 / 3.7 -> step 8b, 4.1 / 4.3 -> step 7b;
+         2026-10-17: 2.3 (gap contract), 2.2 and 1.5 as conditions -> step 5h
+         (robustness against other physical conditions, #47)
 Lab:     docs/lab/2026-10-15-bench-day.md, docs/lab/2026-10-16-bench-day.md,
          docs/lab/notes_lab.md (2026-05-26 slow circle, 2026-10-12 soak),
          docs/refactors/code-review-fixes.md (P4, R2-1, tier C)

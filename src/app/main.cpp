@@ -24,13 +24,14 @@ Node app(STATUS_LED_PIN, CHIRP_PIN, CHIRP_BTL_PIN);
 #endif
 
 void setup() {
-#if defined(ANALYZER_MODE)
-    // A SEQ trial report is several KB. With the default TX buffer every
-    // print waits for the UART (115200 baud, ~11.5 KB/s), stalling the loop
-    // far longer than the I2S DMA queue covers (16-24 ms); the dropped audio
-    // then shows up as gaps in FeatureHistory (issue #26). Queue it instead.
+    // Every build, not only the Analyzer (2026-10-17): with the default TX
+    // buffer (0: the 128-byte FIFO) every print waits for the UART at
+    // 115200 baud, ~11.5 KB/s, and a line longer than ~270 bytes stalls the
+    // loop past the 24 ms the I2S DMA queue holds. On the Node one
+    // 1,133-byte RB STATUS line cost 10 dropped DMA buffers (80 ms of audio)
+    // every time; a SEQ trial report on the Analyzer is several KB (issue
+    // #26). Queue the output instead and let the UART drain it.
     Serial.setTxBufferSize(16384);
-#endif
     Serial.begin(115200);
     app.begin();
 }

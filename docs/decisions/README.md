@@ -68,6 +68,7 @@ what replaced it.
 | 2026-10-15 | [Signals vary per node and over time inside a shared band; the detector is shape-agnostic](2026-10-15-signal-variation-inside-a-shared-band.md) |
 | 2026-10-16 | [Hop acceptance: the contrast inspector guards against noise (30,500), the amp limit drops to 1,500; long gaps leave the acceptance set, max duration 300, history 512](2026-10-16-hop-acceptance-contrast-gate-not-amp.md) (shipped in the profile; confirmation battery pending) |
 | 2026-10-17 | [A busy network makes a node rest: field density (4 patterns) or own budget (6 in 10 s), hard 10 s pause, same values everywhere](2026-10-17-two-node-exchange-chain-length.md) |
+| 2026-10-17 | [Behavior: one program, the shipped struct as its profile, values as params; a bench session records the whole effective state](2026-10-17-behavior-contract-and-reproducible-sessions.md) |
 | 2026-10-16 | [The network band is 2950-3950 Hz: bins 2950/3200/3450/3700/3950, the 3,200 Hz chirp on a bin](2026-10-16-network-band-2950-3950.md) |
 
 ## Open

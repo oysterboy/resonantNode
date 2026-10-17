@@ -77,6 +77,9 @@ Status: TODO
 
 ```text
 Keep hardcoded defaults as the primary 5-node workflow.
+2026-10-17: for Behavior that is the shipped BehaviorGateConfig, on record
+in every session's log header (RB BEHAV + PARAM DUMP, `# state` lines);
+decisions/2026-10-17-behavior-contract-and-reproducible-sessions.md.
 Ensure hardcoded values live with the correct owner:
 DetectionProfile, BehaviorGateConfig, output config.
 Upload the same firmware to all test nodes.

@@ -2,7 +2,10 @@
 
 All --boards get `RB log full` and run as they are (idle voice, answers, rest rule); --silent boards are
 silenced (idle off, unreachable detection threshold) with their ports kept open, since closing a port resets
-a D-AMP board. Optional --setup commands go to every board after the boot. RB STATUS is polled every
+a D-AMP board. Optional --setup commands go to every board after the boot, then every free-running board
+is asked for a bare `RB BEHAV` and `PARAM DUMP` and the replies go into the log header as
+`# state <NAME> << ...` lines (the effective values the run used, not only the commands sent;
+decisions/2026-10-17-behavior-contract-and-reproducible-sessions.md). RB STATUS is polled every
 --status-every s. One log, "<t> <NAME> <line>".
 
 Summary: per board emissions by source, valid verdicts, rests by reason; who-heard-whom, attributing each
@@ -41,9 +44,22 @@ for n, s in held.items():
     out = [s.readline().decode("ascii", errors="replace").strip() for _ in range(60)]
     ok = any("idleEnabled=0" in l for l in out) and any("new=200000" in l for l in out)
     setup_log.append("%s silent %s" % (n, "ok" if ok else "NOT CONFIRMED"))
+state_log = []
 for n, s in ports.items():
     for cmd in [c.strip() for c in a.setup.split(";") if c.strip()]:
         s.write((cmd + "\n").encode()); time.sleep(0.4)
+    for cmd in ("RB BEHAV", "PARAM DUMP"):
+        s.write((cmd + "\n").encode()); time.sleep(0.8)
+        got = 0
+        while True:
+            l = s.readline()
+            if not l:
+                break
+            l = l.decode("ascii", errors="replace").strip()
+            if l.startswith("RB BEHAV") or l.startswith("PARAM"):
+                state_log.append("state %s << %s" % (n, l[:160])); got += 1
+        if not got:
+            state_log.append("state %s << (no reply to %s)" % (n, cmd))
     s.write(b"RB log full\n")
 for l in setup_log:
     print(l, flush=True)
@@ -54,7 +70,7 @@ next_status = a.status_every
 log_path = os.path.join(a.out, a.name + ".log")
 with open(log_path, "w", encoding="utf-8") as f:
     f.write("# nodegroup boards=%s silent=%s secs=%d setup=%s started_unix=%.3f\n" % (a.boards, a.silent, a.secs, a.setup, t0))
-    for l in setup_log:
+    for l in setup_log + state_log:
         f.write("# %s\n" % l)
     while time.time() - t0 < a.secs:
         if time.time() - t0 >= next_status:

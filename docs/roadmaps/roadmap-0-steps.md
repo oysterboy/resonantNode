@@ -22,6 +22,10 @@ Renamed from roadmap-general.md on 2026-09-23 so it sorts first.
 How this file relates to the domain roadmaps and docs/refactors/: see
 README.md ("Who answers what", "Ordering rule").
 
+Status update 2026-10-17: behavior contract decided (decisions/2026-10-17-behavior-contract-and-reproducible-sessions.md):
+one program, the shipped BehaviorGateConfig as the trial's profile, named variants with the ResonantProgram bundle (step 11),
+behavior.* params in step 10a as planned. Every Node bench tool now writes RB BEHAV and PARAM DUMP into the session header;
+gates 5d and 6 require it. No reorder.
 Status update 2026-10-16, later: steps 5e, 5f, 7a, 7b, 8b, 10a added from research/unproven-assumptions-audit.md
 and the roadmap items that had no step (ANA-004/005/007/008/009, DET-001/010, NODE-002/003, PAR-006/007); audit fold-ins
 into steps 4, 5b, 5d, 6, 8a, 11. The audit's hearing matrix (1.5) is step 6's first hour, not a step.
@@ -376,7 +380,10 @@ the previous gate open unless the step says it can run in parallel.
    reply's first Goertzel window is clean.
    Gate: a two-Node exchange of at least three answers in a row on the
    shipped build in a bench session, with the Behavior values it ran on
-   in the session README; a decision file if a default changes.
+   in the session log header (`# state` lines from `RB BEHAV` and
+   `PARAM DUMP`, written by nodepair.py since 2026-10-17; runs before that
+   replay by firmware hash only, decisions/2026-10-17-behavior-contract-
+   and-reproducible-sessions.md); a decision file if a default changes.
    Runs after 5b's hearing-direction item; in parallel with 5c.
 
 5e. [TODO] Node tone level with the network signal: 0.3 FS or 0.5 FS.
@@ -418,7 +425,11 @@ the previous gate open unless the step says it can run in parallel.
    which are defaults, which were changed at runtime.
    Gate: a recorded 5-node session with STATUS from every node, the
    hearing matrix in the same session, and the third question recorded as
-   the counts 5f names.
+   the counts 5f names. The session log headers carry `RB BEHAV` and
+   `PARAM DUMP` from every node (nodegroup.py `# state` lines), so the
+   trial's behavior values are the shipped BehaviorGateConfig on record,
+   not assumed (decisions/2026-10-17-behavior-contract-and-reproducible-
+   sessions.md; NODE-003).
 
 7. Off-target tests and CI. (issues #9, #10)
    Where: NODE-006 (host test env + replay harness), NODE-007 (CI build
@@ -524,6 +535,14 @@ the previous gate open unless the step says it can run in parallel.
    switch; a port open resets the board and drops anything set before,
    resolved 2026-10-17, both commands work). NODE-002 is the half-day of
    reading step 10 starts with.
+   Shape (decisions/2026-10-17-behavior-contract-and-reproducible-
+   sessions.md rules 4-5): behavior.* paths map onto the RB BEHAV keys in
+   the session headers (same names or an alias table in the replay
+   tooling, never a rename); a Node-owned _activeBehaviorProfile the
+   params bind into; configure() as the ModuleId::Behavior apply route;
+   kMaxParams raised from 32 (22 used, behavior adds 13); a replay that
+   reports a session's keys the firmware rejects and the firmware's keys
+   the session never set.
    Gate: the map in docs/; behavior.* and detection.* registered; RB BEHAV
    gone. Inside step 10, after PAR-016, before PAR-015.
 
@@ -534,7 +553,10 @@ the previous gate open unless the step says it can run in parallel.
    drift params, PAR-013 remote param update, PAR-014 config stays
    separate, ANA-002 multi-occurrence patterns. Whether FieldState gates a
    response or its plumbing goes (audit 1.2) is decided here on step 6's
-   counts.
+   counts. Named behavior variants (a second BehaviorGateConfig value set,
+   or a second program) live here too, as the ResonantProgram bundle of
+   NODE-005, not as a standalone behavior-profile switch earlier
+   (decisions/2026-10-17-behavior-contract-and-reproducible-sessions.md).
 ```
 
 ## Still open, not sequenced

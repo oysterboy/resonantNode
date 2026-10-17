@@ -33,7 +33,9 @@ Landed items from this area now live in `docs/roadmaps/roadmap archive/roadmap-c
 
 ```text
 [PARTIAL] Behavior requests chirp via the current ChirpOutput path.
-[PARTIAL] RB BEHAV is runtime tuning, not durable ParamRegistry state.
+[PARTIAL] RB BEHAV is runtime tuning, not durable ParamRegistry state
+          (behavior.* in step 10a; the contract and the session-header rule:
+          decisions/2026-10-17-behavior-contract-and-reproducible-sessions.md).
 [TODO] BehaviorHost is not landed.
 [TODO] BehaviorInput is not landed.
 [TODO] BehaviorRuntime is not landed.
@@ -63,6 +65,12 @@ Status: TODO
 Add only explicit simple behavior variants if immediately tested.
 Keep variants profile-owned first.
 ```
+
+2026-10-17: a named variant is a second `BehaviorGateConfig` value set,
+selected through the `ResonantProgram` bundle (NODE-005, step 11), not a
+standalone behavior-profile switch; until then the shipped struct is the
+profile and a session's values are in its log header
+(decisions/2026-10-17-behavior-contract-and-reproducible-sessions.md).
 
 ### BEH-003 - behavior input extraction
 

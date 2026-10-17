@@ -294,14 +294,21 @@ Behavior owns BehaviorTuning. Behavior registers local params under the
 behavior namespace. Runtime code reads normal tuning fields. The ParamRegistry
 only validates and writes bound fields.
 
-Likely future paths:
+Likely future paths (one per BehaviorGateConfig field, matching the RB
+BEHAV keys already in bench session headers, or carried by an alias table
+in the replay tooling; never renamed afterwards):
 
-behavior.refractory_ms
 behavior.wait_after_heard_ms
-behavior.emit_duration_ms
+behavior.refractory_after_emit_ms
+behavior.rest_after_field_patterns
 
-The apply route may initially call behavior.applyTuning(behaviorTuning).
-Behavior remains responsible for what these values mean.
+Not here: the emission's shape and length are output.* since BEH-005.
+
+The apply route is ResonantBehavior::configure() (setters only, no state
+reset), fed from a Node-owned _activeBehaviorProfile the params bind into;
+kMaxParams grows from 32. Behavior remains responsible for what these
+values mean. Sequenced as step 10a; shape and rules in
+decisions/2026-10-17-behavior-contract-and-reproducible-sessions.md.
 ```
 
 ### PAR-007 - Detection / TonalPulse params

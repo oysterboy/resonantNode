@@ -16,6 +16,20 @@ bench next to E2/E3 (idle voice off on all), quiet room.
 E1 printed garbage at 115200 before the flash (old firmware or other baud); esptool's auto-reset worked on E1, E4
 and E5 (unlike E3). E1's "dead amp" was a loose 5 V Dupont wire at the ESP32: after reseating, two clean passes.
 
+| E5 (short USB cable, the former E3/E4 one) | COM4 | same | PASS 1,145-1,381 / 4,035-5,072 (one burst run: 10,988-15,460 / 203,252-520,237) | PASS | PASS tone 310,400-312,800, SNR 36.5-44.2 dB | **mic works on the short cable**: the all_zero was the 5 m extension |
+| E4 (back on the long cable) | COM7 | same | PASS 890-980 / 2,785-3,655 | PASS | PASS tone 262,000-263,000, SNR 35-44 dB | fine on the long cable this time too |
+
+`own_chirp_suppressed` failed in 4 of 7 runs on E4/E5 (`reason=own_verdict`, 2-4 verdicts, `other_verdicts` 5-7)
+and passed on a quiet first run. Not a fault of the board under test: the other Nodes on the bench (E1, E2, E4 with
+idle off, still answering heard patterns) answer its SELFTEST chirps with their hop trains about 120 ms after the
+chirp, which lands inside the self-test's 300 ms echo window and is counted as the board hearing itself. The check
+is only meaningful with the other Nodes off or out of earshot; for a five-board bench the self-test needs the
+others powered down, or the check should ignore verdicts whose pattern is not its own chirp.
+
+**Step 5c result: all five boards pass board, mic, quiet boot and amp** (E1 after reseating its 5 V wire, E5 on a
+short USB cable). Hardware notes for the trial: no 5 m USB extensions for power (E5's mic died on one, E4's SNR
+dropped), Dupont wires on the 5 V rail need securing, and the mic bursts below happen on every board.
+
 Setup note (owner): E4 and E5 hang on USB extensions of 5 m or more. The board's 3V3 rail feeds the mic and the
 amp sits on 5 V from the same cable, so a voltage drop over the extension is the first suspect for E5's all-zero mic
 and for E4's 2-3x mic floor. Recheck both on a short cable (or external power) before touching the wiring.

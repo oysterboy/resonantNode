@@ -1,0 +1,30 @@
+# E4 on COM7 (longcable_again), 2026-10-17, two runs
+SELFTEST_BEGIN role=node mode=full board=damp
+SELFTEST check=board result=PASS mac=24:dc:c3:4a:ef:ec board=damp role=node version=0.4.0 git=21a8529 built=Oct_17_2026 built_time=15:54:36 uptime_ms=5407
+SELFTEST check=mic result=PASS frames=12000 nonzero_pct=100.0 span=42158 floor_mean=890 floor_peak=2785 bit8_pct=50.3 framing=ok slot=0
+SELFTEST check=quiet_boot result=PASS state=ACTIVE boot=done last=done last_at_ms=1400 smooth_at_rebase=149.0 quiet_rebases=1 forced_rebases=0 baseline=-446.4
+SELFTEST_AMP n=1 floor=2621 tone=262145 snr_db=40.0 samples=6400 valid=1
+SELFTEST_AMP n=2 floor=1907 tone=261917 snr_db=42.8 samples=6400 valid=1
+SELFTEST_AMP n=3 floor=1685 tone=261458 snr_db=43.8 samples=6400 valid=1
+SELFTEST_AMP n=4 floor=2296 tone=260618 snr_db=41.1 samples=6400 valid=1
+SELFTEST_AMP n=5 floor=4642 tone=263420 snr_db=35.1 samples=6400 valid=1
+SELFTEST check=amp result=PASS chirps=5 valid=5 freq_hz=3200 tone_ms=100 path=i2s tone=261917 floor=2296 snr_db=41.1 snr_min_db=35.1 snr_max_db=43.8 pass_db=30.0
+SELFTEST_RESTORE detection=reset baseline=SETTLE
+SELFTEST check=own_chirp_suppressed result=FAIL reason=own_verdict chirps=5 started=5 verdicts=3 valid=2 other_verdicts=6 other_valid=6 echo_window_ms=300 suppress_tail_ms=60
+SELFTEST check=external_chirp result=SKIP reason=not_requested
+SELFTEST_SUMMARY result=FAIL pass=4 fail=1 skip=1 role=node
+# run 2
+SELFTEST_BEGIN role=node mode=full board=damp
+SELFTEST check=board result=PASS mac=24:dc:c3:4a:ef:ec board=damp role=node version=0.4.0 git=21a8529 built=Oct_17_2026 built_time=15:54:36 uptime_ms=22007
+SELFTEST check=mic result=PASS frames=12000 nonzero_pct=100.0 span=60844 floor_mean=980 floor_peak=3655 bit8_pct=49.9 framing=ok slot=0
+SELFTEST check=quiet_boot result=PASS state=ACTIVE boot=done last=done last_at_ms=1400 smooth_at_rebase=149.0 quiet_rebases=1 forced_rebases=0 baseline=-311.8
+SELFTEST_AMP n=1 floor=2580 tone=262984 snr_db=40.2 samples=6400 valid=1
+SELFTEST_AMP n=2 floor=2293 tone=263534 snr_db=41.2 samples=6400 valid=1
+SELFTEST_AMP n=3 floor=2095 tone=262429 snr_db=42.0 samples=6400 valid=1
+SELFTEST_AMP n=4 floor=2251 tone=263289 snr_db=41.4 samples=6400 valid=1
+SELFTEST_AMP n=5 floor=2009 tone=262903 snr_db=42.3 samples=6400 valid=1
+SELFTEST check=amp result=PASS chirps=5 valid=5 freq_hz=3200 tone_ms=100 path=i2s tone=262984 floor=2251 snr_db=41.4 snr_min_db=40.2 snr_max_db=42.3 pass_db=30.0
+SELFTEST_RESTORE detection=reset baseline=SETTLE
+SELFTEST check=own_chirp_suppressed result=PASS chirps=5 started=5 verdicts=0 valid=0 other_verdicts=10 other_valid=10 echo_window_ms=300 suppress_tail_ms=60
+SELFTEST check=external_chirp result=SKIP reason=not_requested
+SELFTEST_SUMMARY result=PASS pass=5 fail=0 skip=1 role=node

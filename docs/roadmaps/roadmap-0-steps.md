@@ -22,6 +22,12 @@ Renamed from roadmap-general.md on 2026-09-23 so it sorts first.
 How this file relates to the domain roadmaps and docs/refactors/: see
 README.md ("Who answers what", "Ordering rule").
 
+Status update 2026-10-17, evening: pre-trial plan reviewed against the day's bench (owner confirmed). Stale 5b/5d/5f
+text replaced; new step 5g (kick command, hop rotation per board, idle-call check); step 6 prerequisites now name the
+3b/4 gate run, 3d's bench check, the E3/E5 hardware fixes and the trial spacing (from 5e). Planned over the two bench
+sessions before the travel break: session 1 = hardware fixes, flash all five, 3b/4/4a gates, 5e level at the trial
+spacing, 5b second day, Node noise, 3d SEQ check; session 2 = 5d rerun with state headers, rest values, idle call,
+step 6. Remote first: 5g code, 3b SELFTEST fixes, 5f text.
 Status update 2026-10-17: behavior contract decided (decisions/2026-10-17-behavior-contract-and-reproducible-sessions.md):
 one program, the shipped BehaviorGateConfig as the trial's profile, named variants with the ResonantProgram bundle (step 11),
 behavior.* params in step 10a as planned. Every Node bench tool now writes RB BEHAV and PARAM DUMP into the session header;
@@ -168,6 +174,10 @@ the previous gate open unless the step says it can run in parallel.
    Gate: SELFTEST passes on every board going into step 4, logged in a
    bench session. Firmware and the dead-mic fix are verified on E2 and E3;
    the gate run waits for the five boards of step 5c.
+   2026-10-17: five boards ran SELFTEST (bench/sessions/2026-10-17-selftest-e1-e4-e5). Two check fixes first
+   (remote): own_chirp_suppressed counts other Nodes' answers inside its 300 ms echo window as an own echo (must
+   ignore verdicts that are not its own chirp); the amp check passes on the median and missed E3's unstable output
+   (identical tones 2x apart; add a spread limit). Gate run in bench session 1, the other Nodes silent.
 
 3c. [LANDED 2026-10-12] Detection goes deaf 71.6 min after boot (32-bit
    micros wrap). (issue #30, closed)
@@ -201,6 +211,9 @@ the previous gate open unless the step says it can run in parallel.
    Status 2026-10-13: P1-P3, tiers A, B and cheap D committed
    (852d58f..e04f967), compile-unverified (PlatformIO registry blocked in
    that session); build, bench checks and P4 open (pass doc section 5).
+   2026-10-17: every env has built since (all six on every commit of 10-14..17), and the Node/Analyzer runs of
+   10-14..17 exercised much of it indirectly; the gate's one SEQ session (PARAM echo, per-trial classification, no
+   carried-over overflow) is still to run: bench session 1 (#32 has the checklist).
 
 4. Switch to D-AMP. (issue #21)
    Where: NODE-011 (roadmap-node.md).
@@ -210,6 +223,7 @@ the previous gate open unless the step says it can run in parallel.
    Fold-in: NODE-003 (hardcoded defaults live with their owner:
    DetectionProfile, BehaviorProfile, output; the same firmware on every
    node) is this gate restated; close it here.
+   2026-10-17: reachable in bench session 1 with 3b's gate run (all five on one build after the E3/E5 fixes).
 
 4a. [DONE 2026-10-14] Status LED on D-AMP: 1 flash on detect, 2 on emit. (issue #29,
    sub-issue of #21)
@@ -221,7 +235,7 @@ the previous gate open unless the step says it can run in parallel.
    Gate: on a D-AMP node the LED flashes once on an external chirp and
    twice when the node emits.
    Status: firmware 261f088 on E2 (one LED on GPIO 2, every accepted
-   verdict, every own chirp); the visual gate is left.
+   verdict, every own chirp); the visual gate is left (bench session 1, one look per board).
 
 5. [DONE 2026-10-14] Decide the Node's production profile, on D-AMP. (issue #8)
    Data so far is from the horizontal geometry (see 5a).
@@ -273,6 +287,8 @@ the previous gate open unless the step says it can run in parallel.
    but its output is unstable and sounds harsh (supply/contact suspected) and it needs BOOT held to flash.
    Checklist: docs/lab/2026-10-17-hardware-fix-steps.md. own_chirp_suppressed fails with other Nodes nearby
    (their answers land in its echo window): run SELFTEST with the others silent.
+   Before step 6 (bench session 1, checklist docs/lab/2026-10-17-hardware-fix-steps.md): E3's supply/contact
+   (unstable, harsh output) and auto-reset (BOOT needed), E5's mic on a trial-length cable.
    Where: NODE-011 / NODE-015 hardware; gates of steps 3b and 4.
    Why: only E2 and E3 work (E1 amp dead); the five-node gates need five
    boards, built in the geometry the baseline of 5a was taken in.
@@ -322,14 +338,12 @@ the previous gate open unless the step says it can run in parallel.
    answers the other's hop train in ~120 ms, but the chain stops at two because E3's detector forms no candidate for
    E2's trains (direction E2 -> E3 never measured); later E3 went deaf to everything from E2 while its own SELFTEST
    passed and E2 kept hearing (E3 as a listener is suspect: supply, I2S clock or state after its unreliable reset).
-   Gate items still open: hop T3 >= 9/10 at every spacing with the shipped build on another day; E3 as Analyzer with
-   DIAG hearing E2 as Emitter (E3's listening health, then the E2 -> E3 direction), then the two-Node chain; noise on
-   the Node build; the idle voice vs a two-node exchange (chain length: decisions/2026-10-17-two-node-exchange-chain-
-   length.md, open, step 5d); 5c SELFTEST with five boards. Done 2026-10-17 remote: audio-health fields in the Node's
-   `RB STATUS` (overflows, backsteps, clock corrections, read errors, deficit against uptime); `PARAM SET` and
-   `RB BEHAV idleEnabled=0` were never broken, a D-AMP board resets on every port open (DTR) and the setting sent from
-   the previous process was gone (`nodepair.py --a-setup/--b-setup` sends settings inside the run and prints the
-   replies); `idle=` is the idle timeout, not the switch, the help says so now.
+   2026-10-17 (lab note docs/lab/2026-10-17-slot1.md): the "deaf E3" and the wandering deafness were the Node's
+   blocking serial output (no TX buffer; 10 dropped DMA buffers per RB STATUS line); fixed 0ede378, no deaf phase
+   since. The E2 -> E3 direction is no longer an open question in itself; contact follows distance (hearing matrix,
+   bench/sessions/2026-10-17-pairmatrix). Chain length decided (rest rule, step 5d).
+   Gate items still open: hop T3 >= 9/10 at every spacing with the shipped build on another day (bench session 1);
+   speech/music OBS on the Node build (audit 2.2, session 1).
    Also open from the audit (research/unproven-assumptions-audit.md): 3.3 the Node quiet gate (400) was derived from a
    First Difference artefact, re-measure it on the DC blocker; 2.2 speech/music OBS on the Node build (the contrast and
    amp limits rest on one room, one phone, two days); 2.3 hop gap vs a dry room: output.hop_gap_ms and the scalar
@@ -343,13 +357,17 @@ the previous gate open unless the step says it can run in parallel.
    speech/music OBS no worse than 5a; no dropped buffers; Node build plays
    its per-node variation. Runs in parallel with 3d and 5c.
 
-5d. [PARTLY OVERTAKEN 2026-10-17] Refractory vs the two-node exchange: a node must be able to
-   2026-10-17: on the bench the refractory does not stop a chain (E1-E4 518 turns in 180 s with 400 ms); the owner
-   decided a rest rule instead (decisions/2026-10-17-two-node-exchange-chain-length.md, 2ddf2b4): 518 -> 59 turns for
-   the pair, four nodes 29-43 emissions/min with 18-20 s silences. Open: tuning for a quieter group (rest length,
-   field threshold/window), whether the refractory margin of the host test still matters.
+5d. [NEARLY DONE 2026-10-17] Refractory vs the two-node exchange: a node must be able to
+   2026-10-17: a two-Node chain sustains on the shipped values (E1-E4 518 turns in 180 s with refractory 400; the host
+   test's arithmetic did not hold on the bench), and the owner decided a rest rule
+   (decisions/2026-10-17-two-node-exchange-chain-length.md, 2ddf2b4): 518 -> 59 turns for the pair; four nodes 29-43
+   emissions/min, quietest live setting (rest 30 s, field threshold 2) 13-19/min, never a silence over 30 s
+   (bench/sessions/2026-10-17-rest-tuning; idle calls were 39 % of the traffic). Left for the gate (bench session 2):
+   one pair run with the `# state` header (nodepair.py since PR #42; today's runs predate it), and the shipped rest
+   values decided (a tuning pass with a decision file if a default changes). Items (1)-(3) of the order below are done
+   or overtaken; (4), the own-emit tail on hop trains, stays.
    Original text:
-   answer the reply to its own signal. (no issue yet)
+   answer the reply to its own signal. (issue #43)
    Where: BEH-001/BEH-002 territory (roadmap-behavior.md);
    research/unproven-assumptions-audit.md section 1.1.
    Why before step 6: with the shipped defaults (refractoryAfterEmitMs
@@ -387,7 +405,7 @@ the previous gate open unless the step says it can run in parallel.
    Runs after 5b's hearing-direction item; in parallel with 5c.
 
 5e. [TODO] Node tone level with the network signal: 0.3 FS or 0.5 FS.
-   (no issue yet)
+   (issue #44)
    Where: OUT-001 (roadmap-output.md); decisions/2026-10-09-damp-tone-
    level-0p3.md, to revisit; research/unproven-assumptions-audit.md 1.4.
    Why before step 6: every 5b battery ran the Emitter at 0.5 FS; the Node
@@ -396,17 +414,29 @@ the previous gate open unless the step says it can run in parallel.
    A hop train at 0.3 FS has been heard once, one direction, one spacing.
    Gate: hop T3 >= 9/10 at 60-110 cm at the level the Node ships, or a
    decision file changing the default. One bench cell; runs with 5d.
+   2026-10-17: more urgent than it looked. Today's hearing matrix ran the Nodes at their shipped 0.3 FS and lost
+   contact beyond ~1 m or across a 20 cm height step. 5e therefore also fixes the trial spacing: the hearing
+   matrix at 0.3 and 0.5 FS at the spacing the trial will use, all boards at one height (bench session 1).
 
-5f. [TODO] Write step 6's third question as a measurement. (no issue yet)
+5f. [TODO] Write step 6's third question as a measurement. (issue #45)
    Where: BEH-003 territory (roadmap-behavior.md); audit 1.2.
-   Why before step 6: Behavior stores FieldState and never reads it; there
-   is no response probability and no damping beyond refractory, so "does
-   the network settle or run away" has no knob behind it and step 6 cannot
-   pass or fail on it. Doc only, no code: whether FieldState should gate a
-   response, or its plumbing go, is decided after the trial has numbers.
-   Gate: step 6's gate names the counts to record (answers per minute per
-   node, longest chain, time to quiet after a kick) and a decisions/ file
-   says the pass/fail on them is deferred to after the first session.
+   Why before step 6: the owner's goal is set (2026-10-17: above a level of network traffic the network goes quiet)
+   and Behavior now reads FieldState (the rest rule), so the third question can pass or fail. tools/bench/nodegroup.py
+   already counts answers per minute per node, rests, the longest silences and who heard whom.
+   Gate: step 6's gate names the counts (answers per minute per node, longest chain, longest silence, time to quiet
+   after a kick with 5g's command) and the pass mark (proposal: after a kick the group falls silent within N s and
+   stays silent until the next idle call), in a decisions/ file. Doc only.
+   (Superseded text: Behavior stores FieldState and never reads it, pass/fail deferred to after the first
+   session; true until 2ddf2b4.)
+
+5g. [TODO] Pre-trial Node items. (issue #46)
+   Where: BEH-005, OUT-005 (roadmap-behavior.md, roadmap-output.md); decisions/2026-10-17-idle-call-wakes-the-network.md.
+   Why before step 6: (a) no command plays the node's call on demand, and a SELFTEST chirp is a poor kick (its
+   300 ms echo window swallows the answer), so "time to quiet after a kick" cannot be measured; (b) hop rotation is
+   MAC % 5 and E4 and E5 both get 0, and nothing persists a set value (PAR-014 is step 11); (c) the idle call is new
+   (300 Hz announcement, then the node's call; a4a368c, d2eaca9) and has not sounded on a board.
+   Gate: `RB CALL` plays the node's call through Behavior (with own-emit suppression); a per-board rotation table
+   gives five distinct rotations, printed at boot; the idle call heard on the bench and answered.
 
 6. STATUS baseline and 5-node field trial, on D-AMP. (issue #16)
    Where: NODE-001 (STATUS baseline, prerequisite), NODE-008 (5-node trial),
@@ -415,6 +445,8 @@ the previous gate open unless the step says it can run in parallel.
    so far exercises that.
    Prerequisites: step 5d closed (a two-Node chain sustains on the shipped
    Behavior values); 5e (Node level); 5f (the gate below written).
+   Added 2026-10-17: 3b/4 gate run (five boards on one build, SELFTEST with the others silent) and 4a's LED look;
+   3d's SEQ check; 5c's hardware fixes (E3, E5); 5g; the trial spacing and one height for all boards, from 5e.
    First hour of the session, before the trial (audit 1.5): a hearing
    matrix, each node emits in turn and the other four log, 5 x 4 cells.
    It names the reference mic and says whether a per-node threshold
@@ -569,6 +601,9 @@ BEH-001, BEH-002, OUT-001                     small visibility items; fold
                                               into NODE-001.
 PAR-003                                       Analyzer params onto the
                                               registry; after PAR-015.
+NODE-019                                      sample-clock backsteps (~1 per
+                                              3 s since the TX-buffer fix);
+                                              known issue, no effect seen.
 NODE-012                                      acoustic test suite (spaces x
                                               speakers x distance); step 3
                                               and the step 6 room are its

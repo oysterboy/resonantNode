@@ -67,6 +67,7 @@ what replaced it.
 | 2026-10-14 | [Replace First Difference with a DC blocker inside step 5a, before the new-geometry baseline](2026-10-14-dc-blocker-before-5a-baseline.md) |
 | 2026-10-15 | [Signals vary per node and over time inside a shared band; the detector is shape-agnostic](2026-10-15-signal-variation-inside-a-shared-band.md) |
 | 2026-10-16 | [Hop acceptance: the contrast inspector guards against noise (30,500), the amp limit drops to 1,500; long gaps leave the acceptance set, max duration 300, history 512](2026-10-16-hop-acceptance-contrast-gate-not-amp.md) (shipped in the profile; confirmation battery pending) |
+| 2026-10-17 | [A busy network makes a node rest: field density (4 patterns) or own budget (6 in 10 s), hard 10 s pause, same values everywhere](2026-10-17-two-node-exchange-chain-length.md) |
 | 2026-10-16 | [The network band is 2950-3950 Hz: bins 2950/3200/3450/3700/3950, the 3,200 Hz chirp on a bin](2026-10-16-network-band-2950-3950.md) |
 
 ## Open
@@ -82,4 +83,3 @@ question is tracked; a file is added here when one resolves.
 | How much `FeatureHistory` to retain on-device | `docs/refactors/cleanup-0-plan.md` Phase 5c (33 KB, 80% of `DetectionRuntime` at last measurement) |
 | Exact boundary between analyzer-only and runtime diagnostics | `docs/refactors/cleanup-analyzer-node-isolation.md`; Phase 5a landed the first cut |
 | Persistent (flash/NVS) config | PAR-010 / PAR-011, deferred until after the field trial (step 11) |
-| How long a two-node exchange runs (resonance bounded / call-and-answer / unbounded), which sets refractory and wait timers | [draft with the 2026-10-16 numbers](2026-10-17-two-node-exchange-chain-length.md); step 5d, before step 6 |

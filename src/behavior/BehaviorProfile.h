@@ -20,4 +20,20 @@ struct BehaviorGateConfig {
     unsigned long idleTimeVariationMs = 5000;
     unsigned long idleBlockedAfterHeardMs = 1000;
     unsigned long idleBlockedAfterOwnEmitMs = 500;
+
+    // Rest when the network gets busy (decisions/2026-10-17-two-node-
+    // exchange-chain-length.md, owner 2026-10-17): a hard pause, no answers
+    // and no idle voice, for restMs. Two triggers, either one:
+    //  - the field: this many valid network patterns heard in the field
+    //    window (FieldStateConfig::patternWindowMs; only accepted, valid
+    //    verdicts count, so speech/music/traffic do not silence a node);
+    //  - the node's own budget: this many own emissions inside
+    //    ownEmitBudgetWindowMs (a node that hears only one loud neighbour
+    //    sees a thin field but keeps answering).
+    // Same values on every node (no per-node variation, owner's choice).
+    // 0 switches a trigger off.
+    unsigned long restAfterFieldPatterns = 4;
+    unsigned long ownEmitBudget = 6;
+    unsigned long ownEmitBudgetWindowMs = 10000;
+    unsigned long restMs = 10000;
 };

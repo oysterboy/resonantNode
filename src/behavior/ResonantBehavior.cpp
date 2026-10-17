@@ -97,6 +97,13 @@ void ResonantBehavior::resetState() {
     _emittedCount = 0;
     _nextIdleAtMs = 0;
     _lastFieldState = {};
+    _restArmed = false;
+    _restUntilMs = 0;
+    _restsEntered = 0;
+    _blockedResting = 0;
+    _lastRestReason = BehaviorDecision::None;
+    _emitHead = 0;
+    _emitCount = 0;
 }
 
 void ResonantBehavior::configure(const BehaviorGateConfig& profile) {
@@ -109,6 +116,10 @@ void ResonantBehavior::configure(const BehaviorGateConfig& profile) {
     setIdleBlockedAfterHeardMs(profile.idleBlockedAfterHeardMs);
     setIdleBlockedAfterOwnEmitMs(profile.idleBlockedAfterOwnEmitMs);
     setIdleEnabled(profile.idleEnabled);
+    setRestAfterFieldPatterns(profile.restAfterFieldPatterns);
+    setOwnEmitBudget(profile.ownEmitBudget);
+    setOwnEmitBudgetWindowMs(profile.ownEmitBudgetWindowMs);
+    setRestMs(profile.restMs);
 }
 
 ResonantBehavior::BehaviorDecision ResonantBehavior::handleOccurrenceVerdict(const detection::OccurrenceVerdict& result, const detection::FieldState& field, unsigned long now) {
@@ -165,7 +176,18 @@ ResonantBehavior::BehaviorDecision ResonantBehavior::handleOccurrenceVerdict(con
 
     _behaviorEligible = false;
 
-    if (_state == State::Chirping) {
+    if (resting(now)) {
+        // Hard pause: a busy network is not answered (rest decision, 2026-10-17).
+        _lastDecision = BehaviorDecision::Resting;
+        _lastBlockReason = BehaviorDecision::Resting;
+        _blockedResting++;
+    } else if (_restAfterFieldPatterns > 0 && _lastFieldState.recentPatternCount >= _restAfterFieldPatterns) {
+        // The field window holds enough valid network patterns: rest instead of answering.
+        enterRest(now + _restMs, BehaviorDecision::RestFieldDense);
+        _lastDecision = BehaviorDecision::RestFieldDense;
+        _lastBlockReason = BehaviorDecision::RestFieldDense;
+        _blockedResting++;
+    } else if (_state == State::Chirping) {
         _lastDecision = BehaviorDecision::OutputBusy;
         _lastBlockReason = BehaviorDecision::OutputBusy;
         _blockedOutputBusy++;
@@ -455,7 +477,57 @@ void ResonantBehavior::notifyChirpStarted(unsigned long now, unsigned long emitS
     _lastDecision = BehaviorDecision::Emitted;
     _lastBlockReason = BehaviorDecision::None;
     _emittedCount++;
+
+    // Own budget: count this emission; at the budget the node rests from the
+    // end of this emission on.
+    _emitTimes[_emitHead] = now;
+    _emitHead = (_emitHead + 1) % kEmitHistory;
+    if (_emitCount < kEmitHistory) {
+        _emitCount++;
+    }
+    if (_ownEmitBudget > 0 && ownEmitsInWindow(now) >= _ownEmitBudget) {
+        enterRest(now + emitSpanMs + _restMs, BehaviorDecision::RestOwnBudget);
+    }
 }
+
+void ResonantBehavior::enterRest(unsigned long untilMs, BehaviorDecision reason) {
+    if (!_restArmed || timing::after(untilMs, _restUntilMs)) {
+        _restUntilMs = untilMs;
+    }
+    _restArmed = true;
+    _restsEntered++;
+    _lastRestReason = reason;
+}
+
+unsigned long ResonantBehavior::ownEmitsInWindow(unsigned long now) const {
+    unsigned long n = 0;
+    for (size_t i = 0; i < _emitCount; ++i) {
+        const unsigned long t = _emitTimes[i];
+        if (timing::atOrAfter(now, t) && now - t < _ownEmitBudgetWindowMs) {
+            n++;
+        }
+    }
+    return n;
+}
+
+bool ResonantBehavior::resting(unsigned long now) const {
+    return _restArmed && timing::beforeDeadline(now, _restUntilMs);
+}
+
+void ResonantBehavior::setRestAfterFieldPatterns(unsigned long value) { _restAfterFieldPatterns = value; }
+void ResonantBehavior::setOwnEmitBudget(unsigned long value) {
+    _ownEmitBudget = value > kEmitHistory ? kEmitHistory : value;
+}
+void ResonantBehavior::setOwnEmitBudgetWindowMs(unsigned long value) { _ownEmitBudgetWindowMs = value; }
+void ResonantBehavior::setRestMs(unsigned long value) { _restMs = value; }
+unsigned long ResonantBehavior::restAfterFieldPatterns() const { return _restAfterFieldPatterns; }
+unsigned long ResonantBehavior::ownEmitBudget() const { return _ownEmitBudget; }
+unsigned long ResonantBehavior::ownEmitBudgetWindowMs() const { return _ownEmitBudgetWindowMs; }
+unsigned long ResonantBehavior::restMs() const { return _restMs; }
+unsigned long ResonantBehavior::restUntilMs() const { return _restUntilMs; }
+unsigned long ResonantBehavior::restsEntered() const { return _restsEntered; }
+ResonantBehavior::BehaviorDecision ResonantBehavior::lastRestReason() const { return _lastRestReason; }
+unsigned long ResonantBehavior::blockedResting() const { return _blockedResting; }
 
 void ResonantBehavior::notifyChirpFinished(unsigned long now) {
     if (_state == State::Chirping) {
@@ -682,6 +754,12 @@ const char* ResonantBehavior::behaviorDecisionName(BehaviorDecision decision) {
             return "would_emit";
         case BehaviorDecision::UnknownBlocked:
             return "unknown_blocked";
+        case BehaviorDecision::RestFieldDense:
+            return "rest_field_dense";
+        case BehaviorDecision::RestOwnBudget:
+            return "rest_own_budget";
+        case BehaviorDecision::Resting:
+            return "resting";
     }
 
     return "unknown";
@@ -693,6 +771,9 @@ void ResonantBehavior::scheduleNextIdle(unsigned long now) {
 
 bool ResonantBehavior::canIdle(unsigned long now) const {
     if (!_idleEnabled) {
+        return false;
+    }
+    if (resting(now)) {
         return false;
     }
     if (_nextIdleAtMs != 0 && timing::beforeDeadline(now, _nextIdleAtMs)) {

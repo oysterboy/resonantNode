@@ -39,6 +39,12 @@ public:
         Emitted,
         WouldEmit,
         UnknownBlocked,
+        // Rest (decisions/2026-10-17-two-node-exchange-chain-length.md):
+        // the verdict that started a rest because the field was dense, and
+        // a verdict that arrived while resting.
+        RestFieldDense,
+        RestOwnBudget,
+        Resting,
     };
 
     void resetState();
@@ -62,6 +68,23 @@ public:
     void setIdleBlockedAfterOwnEmitMs(unsigned long value);
     void setIdleEnabled(bool value);
     void setIdleTimeoutMs(unsigned long value);
+    void setRestAfterFieldPatterns(unsigned long value);
+    void setOwnEmitBudget(unsigned long value);
+    void setOwnEmitBudgetWindowMs(unsigned long value);
+    void setRestMs(unsigned long value);
+    unsigned long restAfterFieldPatterns() const;
+    unsigned long ownEmitBudget() const;
+    unsigned long ownEmitBudgetWindowMs() const;
+    unsigned long restMs() const;
+    // Rest state: whether the node is resting at `now`, until when, how many
+    // rests it has entered, what started the last one, and how many valid
+    // verdicts it ignored while resting.
+    bool resting(unsigned long now) const;
+    unsigned long restUntilMs() const;
+    unsigned long restsEntered() const;
+    BehaviorDecision lastRestReason() const;
+    unsigned long blockedResting() const;
+    static const char* behaviorDecisionName(BehaviorDecision decision);
     unsigned long waitAfterHeardMs() const;
     unsigned long refractoryAfterEmitMs() const;
     unsigned long behaviorSuppressSelfChirpMs() const;
@@ -147,6 +170,23 @@ public:
 private:
     // Moves the behavior-suppress deadline to suppressUntilMs if that is later.
     void extendBehaviorSuppress(unsigned long suppressUntilMs);
+    void enterRest(unsigned long untilMs, BehaviorDecision reason);
+    unsigned long ownEmitsInWindow(unsigned long now) const;
+
+    // --- rest (busy network) ---
+    unsigned long _restAfterFieldPatterns = 0;
+    unsigned long _ownEmitBudget = 0;
+    unsigned long _ownEmitBudgetWindowMs = 10000;
+    unsigned long _restMs = 10000;
+    bool _restArmed = false;
+    unsigned long _restUntilMs = 0;
+    unsigned long _restsEntered = 0;
+    unsigned long _blockedResting = 0;
+    BehaviorDecision _lastRestReason = BehaviorDecision::None;
+    static constexpr size_t kEmitHistory = 16;
+    unsigned long _emitTimes[kEmitHistory] = {};
+    size_t _emitHead = 0;
+    size_t _emitCount = 0;
 
     // --- state machine ---
     enum class State {
@@ -226,7 +266,6 @@ private:
     unsigned long _wouldEmitCount = 0;
     unsigned long _emittedCount = 0;
 
-    static const char* behaviorDecisionName(BehaviorDecision decision);
     void scheduleNextIdle(unsigned long now);
     bool canIdle(unsigned long now) const;
     unsigned long idleMinMs() const;

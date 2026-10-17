@@ -209,6 +209,7 @@ private:
     // axis and how many samples the own-emit suppression has dropped.
     unsigned long _lastSampleTimeMs = 0;
     unsigned long _suppressedSampleCount = 0;
+    unsigned long _rbLastRestsEntered = 0;  // logs "RB rest start" once per rest
 
     // Debug / logging support.
     NodeDebug _debug;

@@ -788,6 +788,19 @@ void Node::update() {
     if (rbOutputsEnabledNow) {
         _behavior.update(now);
     }
+    if (_behavior.restsEntered() != _rbLastRestsEntered) {
+        _rbLastRestsEntered = _behavior.restsEntered();
+        if (rbShouldLogDetail()) {
+            Serial.print("RB rest start reason=");
+            Serial.print(ResonantBehavior::behaviorDecisionName(_behavior.lastRestReason()));
+            Serial.print(" now=");
+            Serial.print(now);
+            Serial.print(" until=");
+            Serial.print(_behavior.restUntilMs());
+            Serial.print(" field_patterns=");
+            Serial.println(_detection.fieldState().recentPatternCount);
+        }
+    }
     const bool behaviorWouldEmit = _behavior.takeWouldEmit();
     const bool shouldLogWouldEmit = behaviorWouldEmit && rbShouldLogDetail() &&
                                     (_behavior.lastHeardMs() != _rbLastWouldEmitHeardMs ||
@@ -914,7 +927,7 @@ void Node::pollSerialCommands() {
 void Node::handleSerialLine(const char* line) {
     if (equalsIgnoreCase(line, "RB help")) {
         Serial.println("RB CMD: RB PARAM freqScore=18000 freqContrast=50.0 freqReleaseScore=12000 freqReleaseContrast=50.0");
-        Serial.println("RB CMD: RB BEHAV wait=100 refractory=0 idleEnabled=0|1 (idle=MS is the idle TIMEOUT, not the switch) suppressSelfChirp=250 detectionSuppressTail=0 idleTimeout=20000 idleTimeoutVariation=10000 idleBlockedAfterHeard=3000 idleBlockedAfterOwnEmit=5000");
+        Serial.println("RB CMD: RB BEHAV wait=100 refractory=0 idleEnabled=0|1 (idle=MS is the idle TIMEOUT, not the switch) restField=N budget=N budgetWindowMs=MS restMs=MS (0 = off) suppressSelfChirp=250 detectionSuppressTail=0 idleTimeout=20000 idleTimeoutVariation=10000 idleBlockedAfterHeard=3000 idleBlockedAfterOwnEmit=5000");
         Serial.println("RB CMD: RB STATUS");
         Serial.println("RB CMD: RB PROFILE name=TonalPulseFreq");
         Serial.println("RB CMD(ALT): RB PROFILE name=TonalPulseFreq");
@@ -999,7 +1012,7 @@ void Node::handleSerialLine(const char* line) {
         token = token != nullptr ? strtok_r(nullptr, " ", &savePtr) : nullptr;
 
         if (token == nullptr || !equalsIgnoreCase(token, "BEHAV")) {
-            Serial.println("RB BEHAV usage=RB BEHAV wait=100 refractory=0 idleEnabled=0|1 (idle=MS is the idle TIMEOUT, not the switch) suppressSelfChirp=250 detectionSuppressTail=0 idleTimeout=20000 idleTimeoutVariation=10000 idleBlockedAfterHeard=3000 idleBlockedAfterOwnEmit=5000");
+            Serial.println("RB BEHAV usage=RB BEHAV wait=100 refractory=0 idleEnabled=0|1 (idle=MS is the idle TIMEOUT, not the switch) restField=N budget=N budgetWindowMs=MS restMs=MS (0 = off) suppressSelfChirp=250 detectionSuppressTail=0 idleTimeout=20000 idleTimeoutVariation=10000 idleBlockedAfterHeard=3000 idleBlockedAfterOwnEmit=5000");
             return;
         }
 
@@ -1012,6 +1025,10 @@ void Node::handleSerialLine(const char* line) {
         unsigned long idleBlockedAfterHeardMs = _behavior.idleBlockedAfterHeardMs();
         unsigned long idleBlockedAfterOwnEmitMs = _behavior.idleBlockedAfterOwnEmitMs();
         bool idleEnabled = _behavior.idleEnabled();
+        unsigned long restAfterFieldPatterns = _behavior.restAfterFieldPatterns();
+        unsigned long ownEmitBudget = _behavior.ownEmitBudget();
+        unsigned long ownEmitBudgetWindowMs = _behavior.ownEmitBudgetWindowMs();
+        unsigned long restMs = _behavior.restMs();
 
         while ((token = strtok_r(nullptr, " ", &savePtr)) != nullptr) {
             if (const char* value = valueAfterPrefix(token, "waitMs=")) {
@@ -1060,6 +1077,14 @@ void Node::handleSerialLine(const char* line) {
                 idleBlockedAfterOwnEmitMs = strtoul(value, nullptr, 10);
             } else if (const char* value = valueAfterPrefix(token, "idleEnabled=")) {
                 idleEnabled = equalsIgnoreCase(value, "1") || equalsIgnoreCase(value, "on") || equalsIgnoreCase(value, "true");
+            } else if (const char* value = valueAfterPrefix(token, "restField=")) {
+                restAfterFieldPatterns = strtoul(value, nullptr, 10);
+            } else if (const char* value = valueAfterPrefix(token, "budget=")) {
+                ownEmitBudget = strtoul(value, nullptr, 10);
+            } else if (const char* value = valueAfterPrefix(token, "budgetWindowMs=")) {
+                ownEmitBudgetWindowMs = strtoul(value, nullptr, 10);
+            } else if (const char* value = valueAfterPrefix(token, "restMs=")) {
+                restMs = strtoul(value, nullptr, 10);
             } else {
                 Serial.print("RB BEHAV ERR token=");
                 Serial.print(token);
@@ -1076,6 +1101,10 @@ void Node::handleSerialLine(const char* line) {
         _behavior.setIdleBlockedAfterHeardMs(idleBlockedAfterHeardMs);
         _behavior.setIdleBlockedAfterOwnEmitMs(idleBlockedAfterOwnEmitMs);
         _behavior.setIdleEnabled(idleEnabled);
+        _behavior.setRestAfterFieldPatterns(restAfterFieldPatterns);
+        _behavior.setOwnEmitBudget(ownEmitBudget);
+        _behavior.setOwnEmitBudgetWindowMs(ownEmitBudgetWindowMs);
+        _behavior.setRestMs(restMs);
 
         Serial.print("RB BEHAV wait=");
         Serial.print(_behavior.waitAfterHeardMs());
@@ -1094,7 +1123,15 @@ void Node::handleSerialLine(const char* line) {
         Serial.print(" idleBlockedOwnEmit=");
         Serial.print(_behavior.idleBlockedAfterOwnEmitMs());
         Serial.print(" idleEnabled=");
-        Serial.println(_behavior.idleEnabled() ? 1 : 0);
+        Serial.print(_behavior.idleEnabled() ? 1 : 0);
+        Serial.print(" restField=");
+        Serial.print(_behavior.restAfterFieldPatterns());
+        Serial.print(" budget=");
+        Serial.print(_behavior.ownEmitBudget());
+        Serial.print(" budgetWindowMs=");
+        Serial.print(_behavior.ownEmitBudgetWindowMs());
+        Serial.print(" restMs=");
+        Serial.println(_behavior.restMs());
         return;
     }
     if (startsWithTokenIgnoreCase(line, "PARAM")) {
@@ -1327,6 +1364,18 @@ void Node::handleDetectCommand(const char* line) {
     Serial.print(_suppressedSampleCount);
     Serial.print(" chirp_active=");
     Serial.print(_chirpOutput.isActive() ? 1 : 0);
+    Serial.print(" field.patterns=");
+    Serial.print(_detection.fieldState().recentPatternCount);
+    Serial.print(" behavior.resting=");
+    Serial.print(_behavior.resting(uptimeMs) ? 1 : 0);
+    Serial.print(" behavior.rest_until_ms=");
+    Serial.print(_behavior.restUntilMs());
+    Serial.print(" behavior.rests=");
+    Serial.print(_behavior.restsEntered());
+    Serial.print(" behavior.last_rest=");
+    Serial.print(ResonantBehavior::behaviorDecisionName(_behavior.lastRestReason()));
+    Serial.print(" behavior.blocked_resting=");
+    Serial.print(_behavior.blockedResting());
     Serial.print(" ");
     printBuildIdentity(Serial, "node");
     Serial.println();

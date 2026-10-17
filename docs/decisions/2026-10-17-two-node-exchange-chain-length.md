@@ -1,7 +1,30 @@
-# How long does a two-node exchange run: open
+# A busy network makes a node rest: field density plus own budget, hard pause, same values on every node
 
-Status: open (drafted 2026-10-17 from the 2026-10-16 bench, for the owner to decide before step 5d / step 6).
+Status: decided 2026-10-17 (owner), implemented the same day (Behavior rest rule, host tests
+`test/test_behavior_rest`); bench check with the ping-pong pair pending.
 Date: 2026-10-17.
+
+## Decision
+
+Goal (owner): above a level of network traffic the network goes quiet. Implemented in Behavior
+(`BehaviorGateConfig`):
+
+- **Field trigger:** when the field window (`FieldStateConfig::patternWindowMs`) holds
+  `restAfterFieldPatterns` = 4 valid network patterns, the node does not answer and rests.
+  Only accepted, valid verdicts count: speech, music and traffic do not silence the network.
+- **Own budget:** `ownEmitBudget` = 6 own emissions inside `ownEmitBudgetWindowMs` = 10 s also start
+  a rest (a node that hears only one loud neighbour sees a thin field).
+- **Rest:** a hard pause of `restMs` = 10 s: no answers, no idle voice. Then the node listens normally.
+- **No per-node variation** (owner's answer; the earlier wish for slight variation per node was
+  overruled by this choice, and can come back as a parameter).
+- All four values are `RB BEHAV restField= budget= budgetWindowMs= restMs=` (0 = off) and visible in
+  `RB STATUS` (`field.patterns`, `behavior.resting`, `rest_until_ms`, `rests`, `last_rest`,
+  `blocked_resting`); a rest start logs `RB rest start reason=...`.
+
+Rules out: the unbounded resonance of option 3 below, and the response-probability curve of option 1
+(the owner chose the hard pause only).
+
+## History: the open question as drafted
 
 ## The fork
 

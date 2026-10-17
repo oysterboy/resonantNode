@@ -204,6 +204,14 @@ private:
     uint32_t _hopPulseMs = 25;
     uint32_t _hopGapMs = 10;
     uint32_t _hopSteps = 5;
+    // Idle call (owner 2026-10-17): announcement tone below the band, a gap,
+    // then the node's call (its hop train). 0 Hz = plain idle chirp pattern.
+    uint32_t _idleAnnounceHz = 300;
+    uint32_t _idleAnnounceMs = 500;
+    static constexpr unsigned long kIdleAnnounceGapMs = 200;
+    bool _idleHopPending = false;       // announcement playing or gap running, hop train to follow
+    unsigned long _idleHopAtMs = 0;     // when the hop train starts (after the gap)
+    bool _idleHopArmed = false;         // gap running: start the train at _idleHopAtMs
 
     // For RB STATUS (2026-10-17): the newest audio sample's time on the ms
     // axis and how many samples the own-emit suppression has dropped.

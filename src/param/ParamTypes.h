@@ -77,6 +77,10 @@ enum class ParamId : uint16_t {
     Output_HopPulseMs,
     Output_HopGapMs,
     Output_HopSteps,
+    // The idle call (owner 2026-10-17): an announcement tone outside the band,
+    // then the node's own call (the hop train), so an idle call wakes the network.
+    Output_IdleAnnounceHz,
+    Output_IdleAnnounceMs,
 };
 
 enum class ParamSetStatus : uint8_t {

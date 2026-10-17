@@ -263,7 +263,12 @@ the previous gate open unless the step says it can run in parallel.
    written as speaker-to-mic spacing on a flat surface (no line of sight),
    preprocessor named in the session; First Difference still selectable.
 
-5c. [TODO] Five working D-AMP boards in the upwards geometry. (issue #34)
+5c. [GATE MET 2026-10-17, with caveats] Five working D-AMP boards in the upwards geometry. (issue #34)
+   Progress 2026-10-17 (bench/sessions/2026-10-17-selftest-e1-e4-e5): all five pass board, mic, quiet boot and
+   amp. E1 after reseating a loose 5 V Dupont; E5 only on a 1 m USB cable (mic all zero on 3 m and 5 m); E3 passes
+   but its output is unstable and sounds harsh (supply/contact suspected) and it needs BOOT held to flash.
+   Checklist: docs/lab/2026-10-17-hardware-fix-steps.md. own_chirp_suppressed fails with other Nodes nearby
+   (their answers land in its echo window): run SELFTEST with the others silent.
    Where: NODE-011 / NODE-015 hardware; gates of steps 3b and 4.
    Why: only E2 and E3 work (E1 amp dead); the five-node gates need five
    boards, built in the geometry the baseline of 5a was taken in.
@@ -334,7 +339,12 @@ the previous gate open unless the step says it can run in parallel.
    speech/music OBS no worse than 5a; no dropped buffers; Node build plays
    its per-node variation. Runs in parallel with 3d and 5c.
 
-5d. [NEXT] Refractory vs the two-node exchange: a node must be able to
+5d. [PARTLY OVERTAKEN 2026-10-17] Refractory vs the two-node exchange: a node must be able to
+   2026-10-17: on the bench the refractory does not stop a chain (E1-E4 518 turns in 180 s with 400 ms); the owner
+   decided a rest rule instead (decisions/2026-10-17-two-node-exchange-chain-length.md, 2ddf2b4): 518 -> 59 turns for
+   the pair, four nodes 29-43 emissions/min with 18-20 s silences. Open: tuning for a quieter group (rest length,
+   field threshold/window), whether the refractory margin of the host test still matters.
+   Original text:
    answer the reply to its own signal. (no issue yet)
    Where: BEH-001/BEH-002 territory (roadmap-behavior.md);
    research/unproven-assumptions-audit.md section 1.1.

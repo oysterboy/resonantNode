@@ -25,6 +25,7 @@ ap.add_argument("--kick-n", type=int, default=1)
 ap.add_argument("--a-setup", default="", help="commands for node A after boot, ';'-separated, e.g. 'PARAM SET output.hop_rotation 3;RB BEHAV idleEnabled=0'")
 ap.add_argument("--b-setup", default="", help="same for node B")
 ap.add_argument("--boot-wait", type=float, default=4.0, help="seconds to wait after opening the ports (a port open resets a D-AMP board over DTR)")
+ap.add_argument("--status-every", type=float, default=0.0, help="poll RB STATUS on both nodes every N s and log it (audio health vs hearing)")
 ap.add_argument("--out", required=True)
 ap.add_argument("--name", required=True)
 a = ap.parse_args()
@@ -62,8 +63,13 @@ with open(log_path, "w", encoding="utf-8") as f:
     for line in setup_lines:
         for sub in line.split("\n"):
             f.write("# setup %s\n" % sub)
+    next_status = a.status_every if a.status_every > 0 else None
     while time.time() - t0 < a.secs:
         t = time.time() - t0
+        if next_status is not None and t >= next_status:
+            for p in ports.values():
+                p.write(b"RB STATUS\n")
+            next_status += a.status_every
         if not kicked and a.kick != "none" and t >= 5.0:
             ports[a.kick.upper()].write(("SELFTEST chirp n=%d\n" % a.kick_n).encode())
             f.write("%.2f %s >> SELFTEST chirp n=%d\n" % (t, a.kick.upper(), a.kick_n))
@@ -83,7 +89,7 @@ with open(log_path, "w", encoding="utf-8") as f:
                 kind = "emit_" + (m.group(1) if m else "unknown")
             elif l.startswith("RB emit shape=hop"):
                 kind = "hop"
-            elif "dropped_dma_buffers" in l:
+            elif l.startswith("RB STATUS"):
                 kind = "status"
             if kind:
                 events.append((t, name, kind, l))
@@ -121,4 +127,21 @@ for t, n, k in emits:
 print("  emissions in order: %s" % " ".join("%s%s" % (n, {"emit_heard_pattern": "", "emit_idle": "i", "emit_self_test": "t"}.get(k, "?")) for _, n, k in emits[:60]))
 print("  longest alternating answer chain: %d  heard->emit latency ms: %s" % (
     longest, ("median %.0f, max %.0f (n=%d)" % (sorted(lat)[len(lat) // 2], max(lat), len(lat))) if lat else "-"))
+# Audio health over the run, from the polled RB STATUS lines (fields exist on Node builds after 2026-10-17;
+# older builds give samples_read and dropped only).
+if a.status_every > 0:
+    for node in ("A", "B"):
+        rows = [(t, l) for t, n, k, l in events if n == node and k == "status"]
+        if len(rows) < 2:
+            continue
+        def field(line, key):
+            m = re.search(key + r"=(-?[0-9.]+)", line)
+            return float(m.group(1)) if m else float("nan")
+        first, last = rows[0][1], rows[-1][1]
+        span = rows[-1][0] - rows[0][0]
+        print("  node %s audio over %.0f s: dropped_dma %.0f -> %.0f, backsteps %.0f -> %.0f, clock_corr %.0f -> %.0f, deficit_s %s -> %s, samples/s %.0f" % (
+            node, span, field(first, "i2s.dropped_dma_buffers"), field(last, "i2s.dropped_dma_buffers"),
+            field(first, "i2s.backsteps"), field(last, "i2s.backsteps"), field(first, "i2s.clock_corrections"),
+            field(last, "i2s.clock_corrections"), field(first, "audio.deficit_s"), field(last, "audio.deficit_s"),
+            (field(last, "i2s.samples_read") - field(first, "i2s.samples_read")) / span if span > 0 else 0.0))
 print("  log: %s" % log_path)

@@ -98,6 +98,10 @@ public:
     // True while the node's own chirp may be in the given sample: for the
     // whole chirp (any pattern length) and the tail after it.
     bool ownEmitDetectionSuppressed(unsigned long sampleTimeMs) const;
+    // The suppression's state, for RB STATUS: whether a deadline is armed and
+    // where it lies on the ms axis (2026-10-17: a Node deaf for minutes).
+    bool ownEmitSuppressArmed() const;
+    unsigned long ownEmitSuppressUntilMs() const;
     unsigned long patternsReceived() const;
     unsigned long patternsIgnoredInvalid() const;
     unsigned long patternsIgnoredAmbiguous() const;

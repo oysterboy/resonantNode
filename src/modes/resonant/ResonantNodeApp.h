@@ -205,6 +205,11 @@ private:
     uint32_t _hopGapMs = 10;
     uint32_t _hopSteps = 5;
 
+    // For RB STATUS (2026-10-17): the newest audio sample's time on the ms
+    // axis and how many samples the own-emit suppression has dropped.
+    unsigned long _lastSampleTimeMs = 0;
+    unsigned long _suppressedSampleCount = 0;
+
     // Debug / logging support.
     NodeDebug _debug;
     // 256 like the Analyzer's USB line: the RB BEHAV usage line alone is

@@ -570,6 +570,14 @@ bool ResonantBehavior::ownEmitDetectionSuppressed(unsigned long sampleTimeMs) co
            (_ownEmitDetectionSuppressArmed && timing::beforeDeadline(sampleTimeMs, _ownEmitDetectionSuppressUntilMs));
 }
 
+bool ResonantBehavior::ownEmitSuppressArmed() const {
+    return _ownEmitDetectionSuppressArmed;
+}
+
+unsigned long ResonantBehavior::ownEmitSuppressUntilMs() const {
+    return _ownEmitDetectionSuppressUntilMs;
+}
+
 unsigned long ResonantBehavior::patternsReceived() const {
     return _patternsReceived;
 }

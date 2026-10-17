@@ -764,6 +764,10 @@ void Node::update() {
             AudioSamplePacket audioSamplePacket;
             _audioSignal.update(static_cast<int>(block.samples[i]), sampleTimeUs64, audioSamplePacket, block.overflowBeforeBlock);
             const bool ownEmitSuppressed = _behavior.ownEmitDetectionSuppressed(audioSamplePacket.timeMs);
+            _lastSampleTimeMs = audioSamplePacket.timeMs;
+            if (ownEmitSuppressed) {
+                ++_suppressedSampleCount;
+            }
             if (!ownEmitSuppressed) {
                 _freqBandStream.observeCenteredSample(audioSamplePacket.baselineCorrectedValue, audioSamplePacket.timeMs);
                 processDetectionFrame(audioSamplePacket, now, selfChirpSuppressed, sawPatternThisLoop);
@@ -1303,6 +1307,26 @@ void Node::handleDetectCommand(const char* line) {
     Serial.print(uptimeMs);
     Serial.print(" audio.deficit_s=");
     Serial.print(deficitS, 1);
+    // Why a Node might not hear (2026-10-17): the sample clock against the
+    // system clock, the own-emit suppression deadline on that axis, whether
+    // the newest sample would be suppressed right now, how many samples the
+    // suppression has swallowed since boot, and whether the chirp output
+    // still counts as active (a train that never "finishes" keeps Behavior
+    // in Chirping, which suppresses every sample).
+    Serial.print(" clock.now_ms=");
+    Serial.print(uptimeMs);
+    Serial.print(" audio.last_sample_ms=");
+    Serial.print(_lastSampleTimeMs);
+    Serial.print(" behavior.suppress_armed=");
+    Serial.print(_behavior.ownEmitSuppressArmed() ? 1 : 0);
+    Serial.print(" behavior.suppress_until_ms=");
+    Serial.print(_behavior.ownEmitSuppressUntilMs());
+    Serial.print(" behavior.suppressed_now=");
+    Serial.print(_behavior.ownEmitDetectionSuppressed(_lastSampleTimeMs) ? 1 : 0);
+    Serial.print(" behavior.suppressed_samples=");
+    Serial.print(_suppressedSampleCount);
+    Serial.print(" chirp_active=");
+    Serial.print(_chirpOutput.isActive() ? 1 : 0);
     Serial.print(" ");
     printBuildIdentity(Serial, "node");
     Serial.println();

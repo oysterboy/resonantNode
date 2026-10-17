@@ -213,6 +213,33 @@ void test_no_idle_while_resting() {
     TEST_ASSERT_TRUE_MESSAGE(idled, "idle voice back after the rest");
 }
 
+// RB CALL (step 5g): the operator call plays the network signal, and is not taken while resting.
+void test_network_call_plays_the_network_signal() {
+    ResonantBehavior b;
+    b.configure(config());
+    b.resetState();
+    b.requestNetworkCall();
+    b.update(1000);
+    TEST_ASSERT_TRUE(b.shouldStartChirp());
+    TEST_ASSERT_EQUAL(ResonantBehavior::SignalShape::NetworkSignal, b.signalShape());
+    TEST_ASSERT_EQUAL_STRING("call", b.chirpRequestSourceName());
+}
+
+void test_network_call_waits_while_resting() {
+    ResonantBehavior b;
+    b.configure(config());
+    b.resetState();
+    const unsigned long t0 = 1000;
+    b.handleOccurrenceVerdict(validPattern(t0), fieldWith(b.restAfterFieldPatterns()), t0);
+    TEST_ASSERT_TRUE(b.resting(t0));
+    b.requestNetworkCall();
+    b.update(t0 + 100);
+    TEST_ASSERT_FALSE(b.shouldStartChirp());
+    TEST_ASSERT_TRUE(b.networkCallPending());
+    b.update(t0 + b.restMs() + 1);
+    TEST_ASSERT_TRUE(b.shouldStartChirp());
+}
+
 // Both triggers off: the old behaviour, no rest.
 void test_triggers_off_means_no_rest() {
     ResonantBehavior b;
@@ -239,5 +266,7 @@ int main(int, char**) {
     RUN_TEST(test_two_node_ping_pong_is_cut);
     RUN_TEST(test_no_idle_while_resting);
     RUN_TEST(test_triggers_off_means_no_rest);
+    RUN_TEST(test_network_call_plays_the_network_signal);
+    RUN_TEST(test_network_call_waits_while_resting);
     return UNITY_END();
 }

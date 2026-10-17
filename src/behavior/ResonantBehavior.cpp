@@ -86,6 +86,7 @@ void ResonantBehavior::resetState() {
     _chirpRequestSource = ChirpRequestSource::None;
     _chirpPattern = ChirpOutput::ChirpPattern::Single;
     _testChirpPending = false;
+    _networkCallPending = false;
     _patternsReceived = 0;
     _patternsIgnoredInvalid = 0;
     _patternsIgnoredAmbiguous = 0;
@@ -263,6 +264,15 @@ void ResonantBehavior::update(unsigned long now) {
                 _state = State::HeardPattern;
                 _waitUntilMs = now + _waitAfterHeardMs;
             }
+            else if (_networkCallPending && !resting(now)) {
+                _networkCallPending = false;
+                _chirpRequested = true;
+                _chirpRequestSource = ChirpRequestSource::Call;
+                _chirpPattern = ChirpOutput::ChirpPattern::Single;
+                _lastEmitMs = now;
+                _outputBusy = true;
+                _state = State::Chirping;
+            }
             else if (_testChirpPending) {
                 _testChirpPending = false;
                 _chirpRequested = true;
@@ -421,6 +431,8 @@ const char* ResonantBehavior::chirpRequestSourceName() const {
             return "idle";
         case ChirpRequestSource::SelfTest:
             return "selftest";
+        case ChirpRequestSource::Call:
+            return "call";
     }
 
     return "unknown";
@@ -432,6 +444,14 @@ void ResonantBehavior::requestTestChirp() {
 
 void ResonantBehavior::cancelTestChirp() {
     _testChirpPending = false;
+}
+
+void ResonantBehavior::requestNetworkCall() {
+    _networkCallPending = true;
+}
+
+bool ResonantBehavior::networkCallPending() const {
+    return _networkCallPending;
 }
 
 bool ResonantBehavior::testChirpPending() const {
@@ -458,7 +478,8 @@ void ResonantBehavior::extendBehaviorSuppress(unsigned long suppressUntilMs) {
 }
 
 ResonantBehavior::SignalShape ResonantBehavior::signalShape() const {
-    return _chirpRequestSource == ChirpRequestSource::HeardPattern ? SignalShape::NetworkSignal : SignalShape::Chirp;
+    return (_chirpRequestSource == ChirpRequestSource::HeardPattern || _chirpRequestSource == ChirpRequestSource::Call)
+        ? SignalShape::NetworkSignal : SignalShape::Chirp;
 }
 
 void ResonantBehavior::notifyChirpStarted(unsigned long now, unsigned long emitSpanMs) {

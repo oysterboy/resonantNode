@@ -7,6 +7,7 @@
 #include "../../app/RuntimeDefaults.h"
 #include "../../app/TimingUtils.h"
 #include "../../app/BuildInfo.h"
+#include "../../app/NodeRoster.h"
 #include "../../detection/features/FrequencyMeasurementPacketBuilder.h"
 #include "../../detection/detectors/frequency/FrequencyMatchCriteria.h"
 #include "../../detection/inspection/InspectionNames.h"
@@ -349,11 +350,21 @@ void Node::begin() {
     _freqBandStream.setTargetFrequencyHz(_chirpOutput.toneHz());
     _detection.resetState();
     applyActiveProfiles();
-    // Per-node start bin for the hop train, from the MAC (BEH-005); the
-    // band is applied inside applyActiveProfiles().
+    // Per-node start bin for the hop train (BEH-005): from the roster
+    // (app/NodeRoster.h, step 5g: E1=0 ... E5=4), else MAC % bins. The band
+    // is applied inside applyActiveProfiles().
     {
         const size_t bins = bandBinCount();
-        _hopRotation = bins > 0 ? static_cast<uint32_t>(ESP.getEfuseMac() % bins) : 0U;
+        const roster::Entry* me = roster::find(ESP.getEfuseMac());
+        if (me != nullptr && bins > 0) {
+            _hopRotation = static_cast<uint32_t>(me->hopRotation % bins);
+        } else {
+            _hopRotation = bins > 0 ? static_cast<uint32_t>(ESP.getEfuseMac() % bins) : 0U;
+        }
+        Serial.print("RB node name=");
+        Serial.print(me != nullptr ? me->name : "unknown");
+        Serial.print(" rotation_source=");
+        Serial.println(me != nullptr ? "roster" : "mac");
     }
     printSignalConfig();
     _behavior.resetState();
@@ -990,6 +1001,7 @@ void Node::handleSerialLine(const char* line) {
         Serial.println("RB CMD: RB PROFILE name=AmpExperimental");
         Serial.println("RB CMD: RB rebase");
         Serial.println("RB CMD: RB rebase force");
+        Serial.println("RB CMD: RB CALL (play the node's network signal now; a kick for multi-node runs)");
         Serial.println("RB CMD: RB log off|minimal|full");
         Serial.println("RB CMD: RB debug off|events|plot");
         Serial.println("RB CMD: RB summary");
@@ -1230,6 +1242,15 @@ void Node::handleSerialLine(const char* line) {
     }
     if (startsWithTokenIgnoreCase(line, "RB log")) {
         handleLogCommand(line);
+        return;
+    }
+    if (equalsIgnoreCase(line, "RB CALL") || equalsIgnoreCase(line, "RB call")) {
+        // Step 5g: play the node's network signal now, through Behavior (kick).
+        _behavior.requestNetworkCall();
+        Serial.print("RB CALL queued resting=");
+        Serial.print(_behavior.resting(timebase::nowMs()) ? 1 : 0);
+        Serial.print(" state=");
+        Serial.println(_behavior.stateName());
         return;
     }
     if (equalsIgnoreCase(line, "RB summary") || equalsIgnoreCase(line, "RB stop")) {

@@ -143,6 +143,13 @@ public:
     void requestTestChirp();
     void cancelTestChirp();
     bool testChirpPending() const;
+    // Operator-requested network call (RB CALL, step 5g): the node plays its
+    // network signal (the hop train) as if answering, through the normal
+    // request -> Chirping -> notifyChirpFinished path with own-emit
+    // suppression and the own budget; taken in Idle like the test chirp. A
+    // kick for "time to quiet" measurements; not taken while resting.
+    void requestNetworkCall();
+    bool networkCallPending() const;
 
     // ACTION request (SOUND resource)
     bool shouldStartChirp();
@@ -247,10 +254,12 @@ private:
         None,
         HeardPattern,
         Idle,
-        SelfTest
+        SelfTest,
+        Call
     };
 
     bool _testChirpPending = false;
+    bool _networkCallPending = false;
 
     ChirpRequestSource _chirpRequestSource = ChirpRequestSource::None;
     ChirpOutput::ChirpPattern _chirpPattern = ChirpOutput::ChirpPattern::Single;

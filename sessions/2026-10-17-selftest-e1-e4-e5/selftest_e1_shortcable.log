@@ -1,0 +1,15 @@
+# E1 on COM6 after the owner moved it to a shorter USB cable, 2026-10-17
+SELFTEST_BEGIN role=node mode=full board=damp
+SELFTEST check=board result=PASS mac=24:dc:c3:4a:b0:50 board=damp role=node version=0.4.0 git=21a8529 built=Oct_17_2026 built_time=15:54:36 uptime_ms=29391
+SELFTEST check=mic result=PASS frames=12000 nonzero_pct=100.0 span=62412 floor_mean=1615 floor_peak=14702 bit8_pct=50.2 framing=ok slot=0
+SELFTEST check=quiet_boot result=PASS state=ACTIVE boot=done last=done last_at_ms=1488 smooth_at_rebase=77.0 quiet_rebases=1 forced_rebases=0 baseline=-38.4
+SELFTEST_AMP n=1 floor=3414 tone=266317 snr_db=37.8 samples=6400 valid=1
+SELFTEST_AMP n=2 floor=2156 tone=267040 snr_db=41.9 samples=6400 valid=1
+SELFTEST_AMP n=3 floor=2114 tone=266734 snr_db=42.0 samples=6400 valid=1
+SELFTEST_AMP n=4 floor=1448 tone=267149 snr_db=45.3 samples=6400 valid=1
+SELFTEST_AMP n=5 floor=2050 tone=267366 snr_db=42.3 samples=6400 valid=1
+SELFTEST check=amp result=PASS chirps=5 valid=5 freq_hz=3200 tone_ms=100 path=i2s tone=267040 floor=2114 snr_db=42.0 snr_min_db=37.8 snr_max_db=45.3 pass_db=30.0
+SELFTEST_RESTORE detection=reset baseline=SETTLE
+SELFTEST check=own_chirp_suppressed result=PASS chirps=5 started=5 verdicts=0 valid=0 other_verdicts=6 other_valid=6 echo_window_ms=300 suppress_tail_ms=60
+SELFTEST check=external_chirp result=SKIP reason=not_requested
+SELFTEST_SUMMARY result=PASS pass=5 fail=0 skip=1 role=node

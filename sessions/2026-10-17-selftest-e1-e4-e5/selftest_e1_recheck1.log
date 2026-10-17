@@ -1,0 +1,15 @@
+# E1 on COM6 recheck 1 after the owner reseated the loose 5 V Dupont at the ESP32, 2026-10-17
+SELFTEST_BEGIN role=node mode=full board=damp
+SELFTEST check=board result=PASS mac=24:dc:c3:4a:b0:50 board=damp role=node version=0.4.0 git=21a8529 built=Oct_17_2026 built_time=15:54:36 uptime_ms=53215
+SELFTEST check=mic result=PASS frames=12000 nonzero_pct=100.0 span=61688 floor_mean=1054 floor_peak=3093 bit8_pct=50.0 framing=ok slot=0
+SELFTEST check=quiet_boot result=PASS state=ACTIVE boot=done last=done last_at_ms=8944 smooth_at_rebase=34.0 quiet_rebases=1 forced_rebases=0 baseline=18.3
+SELFTEST_AMP n=1 floor=3082 tone=270785 snr_db=38.9 samples=6400 valid=1
+SELFTEST_AMP n=2 floor=2467 tone=270934 snr_db=40.8 samples=6400 valid=1
+SELFTEST_AMP n=3 floor=6768 tone=271799 snr_db=32.1 samples=6400 valid=1
+SELFTEST_AMP n=4 floor=3149 tone=271163 snr_db=38.7 samples=6400 valid=1
+SELFTEST_AMP n=5 floor=2366 tone=270613 snr_db=41.2 samples=6400 valid=1
+SELFTEST check=amp result=PASS chirps=5 valid=5 freq_hz=3200 tone_ms=100 path=i2s tone=270934 floor=3082 snr_db=38.9 snr_min_db=32.1 snr_max_db=41.2 pass_db=30.0
+SELFTEST_RESTORE detection=reset baseline=SETTLE
+SELFTEST check=own_chirp_suppressed result=PASS chirps=5 started=5 verdicts=0 valid=0 other_verdicts=6 other_valid=6 echo_window_ms=300 suppress_tail_ms=60
+SELFTEST check=external_chirp result=SKIP reason=not_requested
+SELFTEST_SUMMARY result=PASS pass=5 fail=0 skip=1 role=node

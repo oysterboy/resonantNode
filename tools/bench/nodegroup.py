@@ -24,6 +24,10 @@ ap.add_argument("--silent", default="")
 ap.add_argument("--secs", type=int, default=600)
 ap.add_argument("--status-every", type=float, default=60.0)
 ap.add_argument("--setup", default="", help="';'-separated commands sent to every board after the boot")
+ap.add_argument("--kick", default="", help="NAME: send RB CALL to this board (step 5g kick) at --kick-first s, then every --kick-every s")
+ap.add_argument("--kick-first", type=float, default=15.0)
+ap.add_argument("--kick-every", type=float, default=90.0)
+ap.add_argument("--quiet-gap", type=float, default=15.0, help="a silence this long counts as 'quiet' for time-to-quiet")
 ap.add_argument("--out", required=True)
 ap.add_argument("--name", required=True)
 a = ap.parse_args()
@@ -72,7 +76,14 @@ with open(log_path, "w", encoding="utf-8") as f:
     f.write("# nodegroup boards=%s silent=%s secs=%d setup=%s started_unix=%.3f\n" % (a.boards, a.silent, a.secs, a.setup, t0))
     for l in setup_log + state_log:
         f.write("# %s\n" % l)
+    next_kick = a.kick_first if a.kick else None
+    kicks = []
     while time.time() - t0 < a.secs:
+        if next_kick is not None and time.time() - t0 >= next_kick:
+            ports[a.kick].write(b"RB CALL\n")
+            kicks.append(time.time() - t0)
+            f.write("%.2f %s >> RB CALL\n" % (kicks[-1], a.kick))
+            next_kick += a.kick_every
         if time.time() - t0 >= next_status:
             for s in ports.values():
                 s.write(b"RB STATUS\n")
@@ -122,4 +133,26 @@ print("  unattributed verdicts: %d" % unattributed)
 mins = int(a.secs // 60) or 1
 per_min = [sum(1 for t, _ in emits if m * 60 <= t < (m + 1) * 60) for m in range(mins)]
 print("  group emissions per minute: %s" % " ".join(str(x) for x in per_min))
+# Time to quiet after each kick (step 5f): from the kick to the end of the last emission before the group's
+# first silence of --quiet-gap s. 'never' when no such silence comes before the next kick or the end.
+if a.kick:
+    times = sorted(t for t, _ in emits)
+    results = []
+    for i, k in enumerate(kicks):
+        limit = kicks[i + 1] if i + 1 < len(kicks) else a.secs
+        after = [t for t in times if k <= t < limit]
+        quiet_at = None
+        prev = k
+        for t in after + [limit]:
+            if t - prev >= a.quiet_gap:
+                quiet_at = prev
+                break
+            prev = t
+        results.append(None if quiet_at is None else quiet_at - k)
+        print("  kick %d at %.0f s: %s, %d emissions until then" % (
+            i + 1, k, "quiet after %.1f s" % (quiet_at - k) if quiet_at is not None else "never quiet before the next kick",
+            sum(1 for t in after if quiet_at is None or t <= quiet_at)))
+    done = [r for r in results if r is not None]
+    print("  time to quiet (gap %.0f s): %d of %d kicks quiet%s" % (
+        a.quiet_gap, len(done), len(results), ", median %.1f s" % sorted(done)[len(done) // 2] if done else ""))
 print("  log: %s" % log_path)

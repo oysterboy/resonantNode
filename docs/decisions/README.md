@@ -84,4 +84,5 @@ question is tracked; a file is added here when one resolves.
 | Which metrics belong in the generic `Occurrence` core vs detector-specific detail | `docs/specs/myspec.md` §5 ("temporary typed accepted-event detail"); DET-003..006 |
 | How much `FeatureHistory` to retain on-device | `docs/refactors/cleanup-0-plan.md` Phase 5c (33 KB, 80% of `DetectionRuntime` at last measurement) |
 | Exact boundary between analyzer-only and runtime diagnostics | `docs/refactors/cleanup-analyzer-node-isolation.md`; Phase 5a landed the first cut |
+| Step 6's pass mark for "settle or run away": time to quiet after a kick (proposal N = 30 s, 4 of 5 kicks) | [proposal](2026-10-17-trial-third-question-pass-mark.md); step 5f, #45 |
 | Persistent (flash/NVS) config | PAR-010 / PAR-011, deferred until after the field trial (step 11) |

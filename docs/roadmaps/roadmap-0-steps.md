@@ -428,6 +428,8 @@ the previous gate open unless the step says it can run in parallel.
    stays silent until the next idle call), in a decisions/ file. Doc only.
    (Superseded text: Behavior stores FieldState and never reads it, pass/fail deferred to after the first
    session; true until 2ddf2b4.)
+   2026-10-17: counts and proposal written (decisions/2026-10-17-trial-third-question-pass-mark.md); nodegroup.py
+   --kick measures time to quiet. Left: the owner sets N and M.
 
 5g. [TODO] Pre-trial Node items. (issue #46)
    Where: BEH-005, OUT-005 (roadmap-behavior.md, roadmap-output.md); decisions/2026-10-17-idle-call-wakes-the-network.md.

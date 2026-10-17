@@ -1,0 +1,247 @@
+# nodepair a=COM3 b=COM4 secs=600 kick=none kick_n=1 started_unix=1792243298.625
+0.00 A BUILD role=node git=3952521 date=Oct 17 2026 time=15:21:18 version=0.4.0 board=damp
+0.01 B RB log mode=full
+0.01 A RB node_id=0xE84C4BC3DC24
+0.02 A 
+0.04 A E (9) I2S: i2s_driver_uninstall(2048): I2S port 0 has not installed
+0.06 A RB signal band=2950-3950 bins=5 hop=on rotation=4 steps=5 pulse_ms=25 gap_ms=10 order=3950,2950,3200,3450,3700
+0.08 A RB PROFILE name=TonalPulseScalar emitters=ScalarTransient inspectionPlan=custom fieldStateConfig=4000/4000
+0.09 A RB DETECT
+0.10 A kind=TonalPulseScalar
+0.12 A detectorSelection=ScalarTransient
+0.13 A inspectionPlan=custom
+0.15 A scalarTransient.observedStream=FrequencyTarget
+0.16 A scalarTransient.onsetDetectionThreshold=2000.0
+0.18 A scalarTransient.onsetReleaseThreshold=1500.0
+0.20 A scalarTransient.cooldownAfterOnsetMs=50
+0.21 A scalarTransient.minTransientDurationMs=85
+0.23 A scalarTransient.maxTransientDurationMs=300
+0.24 A scalarTransient.releaseDebounceMs=10
+0.26 A scalarTransient.minTransientPeakStrength=3000.0
+0.27 A inspectionPlan.module[0].kind=MagnitudeFeatureStrength label=contrast stream=FrequencyContrast windowPreMs=0 windowPostMs=100
+0.29 A inspectionPlan.module[1].kind=MagnitudeFeatureStrength label=amp stream=AmpMagnitude windowPreMs=0 windowPostMs=100
+0.30 A verdict.has_requirement=1
+0.32 A verdict.required_label=contrast
+0.34 A fieldState.occurrenceWindowMs=4000
+0.35 A fieldState.patternWindowMs=4000
+0.37 A fieldState.busyOccurrenceCountThreshold=3
+0.38 A fieldState.denseOccurrenceCountThreshold=6
+0.40 A fieldState.quietOccurrenceCountThreshold=0
+0.42 A fieldState.quietActivityThreshold=0.00
+0.43 A fieldState.busyActivityThreshold=0.45
+0.44 A 
+0.46 A RB BEHAV
+0.48 A idleEnabled=1
+0.49 A waitAfterHeardMs=100
+0.51 A refractoryAfterEmitMs=400
+0.53 A behaviorSuppressSelfChirpMs=100
+0.54 A detectionSuppressTailMsOwnEmit=60
+0.55 A idleTimeoutMs=20000
+0.57 A idleTimeVariationMs=5000
+0.59 A idleBlockedAfterHeardMs=1000
+0.60 A idleBlockedAfterOwnEmitMs=500
+0.62 A 
+0.63 A RB startup baseline=LISTEN_FOR_QUIET
+0.65 A RB rebase waiting smooth=391.0 quietMs=0
+0.66 A RB rebase waiting smooth=22.0 quietMs=200
+0.68 A RB rebase done quietMs=1000 baseline=844.6 smooth=0
+0.69 A RB baseline active
+0.71 A RB log mode=full
+13.37 A BEH verdict=none heard=0 now=19409 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+13.39 A BEH emit start now=19409 source=idle state=Chirping pattern=idle
+13.41 A RB emit accepted source=idle state=Chirping gate=Chirping pattern=idle
+16.37 B BEH verdict=none heard=0 now=122736 decision=would_emit block=none waitMs=0 refractoryMs=0 behaviorSuppressMs=0 outputBusy=1 wouldEmit=1
+16.39 B BEH emit start now=122736 source=idle state=Chirping pattern=idle
+16.40 B RB emit accepted source=idle state=Chirping gate=Chirping pattern=idle
+30.12 A RB STATUS profile=TonalPulseScalar emitters=ScalarTransient inspectionPlan=custom has_requirement=1 required_label=contrast freqScore=18000 freqContrast=50.0 freqReleaseScore=12000 freqReleaseContrast=50.0 behavior_state=Idle behavior_idle=1 behavior_suppressSelfChirpMs=100 behavior_detectionSuppressTailMsOwnEmit=60 output_busy=0 band=2950-3950 hop_enabled=1 hop_rotation=4 hop_steps=5 hop_pulse_ms=25 hop_gap_ms=10 freq.window_samples=64 freq.window_ms=4.00 freq.update_every_samples=4 freq.update_period_ms=0.250 freq.target_hz=3200 freq.produced_fresh_packet=1 freq.packet_age_samples=0 freq.packet_age_ms=0.000 i2s.samples_read=542848 i2s.dropped_dma_buffers=1 i2s.clock_rate_mhz=15999984 i2s.overflows=1 i2s.backsteps=3 i2s.max_backstep_us=3 i2s.clock_corrections=67 i2s.max_clock_correction_us=4 i2s.read_errors=0 audio.uptime_ms=36124 audio.deficit_s=2.2 clock.now_ms=36124 audio.last_sample_ms=36066 behavior.suppress_armed=1 behavior.suppress_until_ms=20290 behavior.suppressed_now=0 behavior.suppressed_samples=14075 chirp_active=0 BUILD role=node git=3952521 date=Oct 17 2026 time=15:21:18 version=0.4.0 board=damp
+30.14 B RB STATUS profile=TonalPulseScalar emitters=ScalarTransient inspectionPlan=custom has_requirement=1 required_label=contrast freqScore=18000 freqContrast=50.0 freqReleaseScore=12000 freqReleaseContrast=50.0 behavior_state=Idle behavior_idle=1 behavior_suppressSelfChirpMs=100 behavior_detectionSuppressTailMsOwnEmit=60 output_busy=0 band=2950-3950 hop_enabled=1 hop_rotation=3 hop_steps=5 hop_pulse_ms=25 hop_gap_ms=10 freq.window_samples=64 freq.window_ms=4.00 freq.update_every_samples=4 freq.update_period_ms=0.250 freq.target_hz=3200 freq.produced_fresh_packet=0 freq.packet_age_samples=1 freq.packet_age_ms=0.062 i2s.samples_read=2150144 i2s.dropped_dma_buffers=1 i2s.clock_rate_mhz=15999984 BUILD role=node git=a5a9bbb date=Oct 16 2026 time=17:25:36 version=0.4.0 board=damp
+30.14 A 
+30.14 B 
+34.07 B BEH emit start now=140440 source=idle state=Chirping pattern=idle
+34.10 B RB emit accepted source=idle state=Chirping gate=Chirping pattern=idle
+38.25 A BEH emit start now=44288 source=idle state=Chirping pattern=idle
+38.26 A RB emit accepted source=idle state=Chirping gate=Chirping pattern=idle
+49.46 B BEH emit start now=155824 source=idle state=Chirping pattern=idle
+49.47 B RB emit accepted source=idle state=Chirping gate=Chirping pattern=idle
+60.13 A RB STATUS profile=TonalPulseScalar emitters=ScalarTransient inspectionPlan=custom has_requirement=1 required_label=contrast freqScore=18000 freqContrast=50.0 freqReleaseScore=12000 freqReleaseContrast=50.0 behavior_state=Idle behavior_idle=1 behavior_suppressSelfChirpMs=100 behavior_detectionSuppressTailMsOwnEmit=60 output_busy=0 band=2950-3950 hop_enabled=1 hop_rotation=4 hop_steps=5 hop_pulse_ms=25 hop_gap_ms=10 freq.window_samples=64 freq.window_ms=4.00 freq.update_every_samples=4 freq.update_period_ms=0.250 freq.target_hz=3200 freq.produced_fresh_packet=0 freq.packet_age_samples=1 freq.packet_age_ms=0.062 i2s.samples_read=1021568 i2s.dropped_dma_buffers=11 i2s.clock_rate_mhz=15999984 i2s.overflows=11 i2s.backsteps=3 i2s.max_backstep_us=3 i2s.clock_corrections=126 i2s.max_clock_correction_us=4 i2s.read_errors=0 audio.uptime_ms=66126 audio.deficit_s=2.3 clock.now_ms=66126 audio.last_sample_ms=66066 behavior.suppress_armed=1 behavior.suppress_until_ms=45158 behavior.suppressed_now=0 behavior.suppressed_samples=28086 chirp_active=0 BUILD role=node git=3952521 date=Oct 17 2026 time=15:21:18 version=0.4.0 board=damp
+60.14 B RB STATUS profile=TonalPulseScalar emitters=ScalarTransient inspectionPlan=custom has_requirement=1 required_label=contrast freqScore=18000 freqContrast=50.0 freqReleaseScore=12000 freqReleaseContrast=50.0 behavior_state=Idle behavior_idle=1 behavior_suppressSelfChirpMs=100 behavior_detectionSuppressTailMsOwnEmit=60 output_busy=0 band=2950-3950 hop_enabled=1 hop_rotation=3 hop_steps=5 hop_pulse_ms=25 hop_gap_ms=10 freq.window_samples=64 freq.window_ms=4.00 freq.update_every_samples=4 freq.update_period_ms=0.250 freq.target_hz=3200 freq.produced_fresh_packet=0 freq.packet_age_samples=3 freq.packet_age_ms=0.187 i2s.samples_read=2629376 i2s.dropped_dma_buffers=7 i2s.clock_rate_mhz=15999984 BUILD role=node git=a5a9bbb date=Oct 16 2026 time=17:25:36 version=0.4.0 board=damp
+60.14 A 
+60.14 B 
+62.16 A BEH emit start now=68199 source=idle state=Chirping pattern=idle
+62.17 A RB emit accepted source=idle state=Chirping gate=Chirping pattern=idle
+68.60 B BEH emit start now=174968 source=idle state=Chirping pattern=idle
+68.63 B RB emit accepted source=idle state=Chirping gate=Chirping pattern=idle
+82.97 A BEH emit start now=89007 source=idle state=Chirping pattern=idle
+82.99 A RB emit accepted source=idle state=Chirping gate=Chirping pattern=idle
+88.62 B BEH emit start now=194984 source=idle state=Chirping pattern=idle
+88.64 B RB emit accepted source=idle state=Chirping gate=Chirping pattern=idle
+90.10 A RB STATUS profile=TonalPulseScalar emitters=ScalarTransient inspectionPlan=custom has_requirement=1 required_label=contrast freqScore=18000 freqContrast=50.0 freqReleaseScore=12000 freqReleaseContrast=50.0 behavior_state=Idle behavior_idle=1 behavior_suppressSelfChirpMs=100 behavior_detectionSuppressTailMsOwnEmit=60 output_busy=0 band=2950-3950 hop_enabled=1 hop_rotation=4 hop_steps=5 hop_pulse_ms=25 hop_gap_ms=10 freq.window_samples=64 freq.window_ms=4.00 freq.update_every_samples=4 freq.update_period_ms=0.250 freq.target_hz=3200 freq.produced_fresh_packet=0 freq.packet_age_samples=3 freq.packet_age_ms=0.187 i2s.samples_read=1499904 i2s.dropped_dma_buffers=21 i2s.clock_rate_mhz=15999984 i2s.overflows=21 i2s.backsteps=3 i2s.max_backstep_us=3 i2s.clock_corrections=186 i2s.max_clock_correction_us=4 i2s.read_errors=0 audio.uptime_ms=96102 audio.deficit_s=2.4 clock.now_ms=96102 audio.last_sample_ms=96042 behavior.suppress_armed=1 behavior.suppress_until_ms=89877 behavior.suppressed_now=0 behavior.suppressed_samples=56076 chirp_active=0 BUILD role=node git=3952521 date=Oct 17 2026 time=15:21:18 version=0.4.0 board=damp
+90.26 B RB STATUS profile=TonalPulseScalar emitters=ScalarTransient inspectionPlan=custom has_requirement=1 required_label=contrast freqScore=18000 freqContrast=50.0 freqReleaseScore=12000 freqReleaseContrast=50.0 behavior_state=Idle behavior_idle=1 behavior_suppressSelfChirpMs=100 behavior_detectionSuppressTailMsOwnEmit=60 output_busy=0 band=2950-3950 hop_enabled=1 hop_rotation=3 hop_steps=5 hop_pulse_ms=25 hop_gap_ms=10 freq.window_samples=64 freq.window_ms=4.00 freq.update_every_samples=4 freq.update_period_ms=0.250 freq.target_hz=3200 freq.produced_fresh_packet=0 freq.packet_age_samples=1 freq.packet_age_ms=0.062 i2s.samples_read=3108224 i2s.dropped_dma_buffers=13 i2s.clock_rate_mhz=15999984 BUILD role=node git=a5a9bbb date=Oct 16 2026 time=17:25:36 version=0.4.0 board=damp
+90.26 A 
+90.26 B 
+104.82 A BEH emit start now=110863 source=idle state=Chirping pattern=idle
+104.85 A RB emit accepted source=idle state=Chirping gate=Chirping pattern=idle
+111.80 B BEH emit start now=218152 source=idle state=Chirping pattern=idle
+111.81 B RB emit accepted source=idle state=Chirping gate=Chirping pattern=idle
+120.11 A RB STATUS profile=TonalPulseScalar emitters=ScalarTransient inspectionPlan=custom has_requirement=1 required_label=contrast freqScore=18000 freqContrast=50.0 freqReleaseScore=12000 freqReleaseContrast=50.0 behavior_state=Idle behavior_idle=1 behavior_suppressSelfChirpMs=100 behavior_detectionSuppressTailMsOwnEmit=60 output_busy=0 band=2950-3950 hop_enabled=1 hop_rotation=4 hop_steps=5 hop_pulse_ms=25 hop_gap_ms=10 freq.window_samples=64 freq.window_ms=4.00 freq.update_every_samples=4 freq.update_period_ms=0.250 freq.target_hz=3200 freq.produced_fresh_packet=1 freq.packet_age_samples=0 freq.packet_age_ms=0.000 i2s.samples_read=1978752 i2s.dropped_dma_buffers=31 i2s.clock_rate_mhz=15999984 i2s.overflows=31 i2s.backsteps=3 i2s.max_backstep_us=3 i2s.clock_corrections=245 i2s.max_clock_correction_us=4 i2s.read_errors=0 audio.uptime_ms=126109 audio.deficit_s=2.4 clock.now_ms=126109 audio.last_sample_ms=126050 behavior.suppress_armed=1 behavior.suppress_until_ms=111733 behavior.suppressed_now=0 behavior.suppressed_samples=70071 chirp_active=0 BUILD role=node git=3952521 date=Oct 17 2026 time=15:21:18 version=0.4.0 board=damp
+120.12 B RB STATUS profile=TonalPulseScalar emitters=ScalarTransient inspectionPlan=custom has_requirement=1 required_label=contrast freqScore=18000 freqContrast=50.0 freqReleaseScore=12000 freqReleaseContrast=50.0 behavior_state=Idle behavior_idle=1 behavior_suppressSelfChirpMs=100 behavior_detectionSuppressTailMsOwnEmit=60 output_busy=0 band=2950-3950 hop_enabled=1 hop_rotation=3 hop_steps=5 hop_pulse_ms=25 hop_gap_ms=10 freq.window_samples=64 freq.window_ms=4.00 freq.update_every_samples=4 freq.update_period_ms=0.250 freq.target_hz=3200 freq.produced_fresh_packet=0 freq.packet_age_samples=2 freq.packet_age_ms=0.125 i2s.samples_read=3587584 i2s.dropped_dma_buffers=19 i2s.clock_rate_mhz=15999984 BUILD role=node git=a5a9bbb date=Oct 16 2026 time=17:25:36 version=0.4.0 board=damp
+120.12 A 
+120.12 B 
+127.34 A BEH emit start now=133377 source=idle state=Chirping pattern=idle
+127.36 A RB emit accepted source=idle state=Chirping gate=Chirping pattern=idle
+133.14 B BEH emit start now=239504 source=idle state=Chirping pattern=idle
+133.16 B RB emit accepted source=idle state=Chirping gate=Chirping pattern=idle
+150.11 A RB STATUS profile=TonalPulseScalar emitters=ScalarTransient inspectionPlan=custom has_requirement=1 required_label=contrast freqScore=18000 freqContrast=50.0 freqReleaseScore=12000 freqReleaseContrast=50.0 behavior_state=Idle behavior_idle=1 behavior_suppressSelfChirpMs=100 behavior_detectionSuppressTailMsOwnEmit=60 output_busy=0 band=2950-3950 hop_enabled=1 hop_rotation=4 hop_steps=5 hop_pulse_ms=25 hop_gap_ms=10 freq.window_samples=64 freq.window_ms=4.00 freq.update_every_samples=4 freq.update_period_ms=0.250 freq.target_hz=3200 freq.produced_fresh_packet=0 freq.packet_age_samples=1 freq.packet_age_ms=0.062 i2s.samples_read=2457472 i2s.dropped_dma_buffers=41 i2s.clock_rate_mhz=15999984 i2s.overflows=41 i2s.backsteps=3 i2s.max_backstep_us=3 i2s.clock_corrections=304 i2s.max_clock_correction_us=4 i2s.read_errors=0 audio.uptime_ms=156108 audio.deficit_s=2.5 clock.now_ms=156108 audio.last_sample_ms=156050 behavior.suppress_armed=1 behavior.suppress_until_ms=134247 behavior.suppressed_now=0 behavior.suppressed_samples=84098 chirp_active=0 BUILD role=node git=3952521 date=Oct 17 2026 time=15:21:18 version=0.4.0 board=damp
+150.13 B RB STATUS profile=TonalPulseScalar emitters=ScalarTransient inspectionPlan=custom has_requirement=1 required_label=contrast freqScore=18000 freqContrast=50.0 freqReleaseScore=12000 freqReleaseContrast=50.0 behavior_state=Idle behavior_idle=1 behavior_suppressSelfChirpMs=100 behavior_detectionSuppressTailMsOwnEmit=60 output_busy=0 band=2950-3950 hop_enabled=1 hop_rotation=3 hop_steps=5 hop_pulse_ms=25 hop_gap_ms=10 freq.window_samples=64 freq.window_ms=4.00 freq.update_every_samples=4 freq.update_period_ms=0.250 freq.target_hz=3200 freq.produced_fresh_packet=0 freq.packet_age_samples=3 freq.packet_age_ms=0.187 i2s.samples_read=4066688 i2s.dropped_dma_buffers=25 i2s.clock_rate_mhz=15999984 BUILD role=node git=a5a9bbb date=Oct 16 2026 time=17:25:36 version=0.4.0 board=damp
+150.13 A 
+150.13 B 
+150.29 A BEH emit start now=156322 source=idle state=Chirping pattern=idle
+150.32 A RB emit accepted source=idle state=Chirping gate=Chirping pattern=idle
+153.21 B BEH emit start now=259568 source=idle state=Chirping pattern=idle
+153.23 B RB emit accepted source=idle state=Chirping gate=Chirping pattern=idle
+166.84 A BEH emit start now=172871 source=idle state=Chirping pattern=idle
+166.86 A RB emit accepted source=idle state=Chirping gate=Chirping pattern=idle
+174.57 B BEH emit start now=280928 source=idle state=Chirping pattern=idle
+174.59 B RB emit accepted source=idle state=Chirping gate=Chirping pattern=idle
+180.13 A RB STATUS profile=TonalPulseScalar emitters=ScalarTransient inspectionPlan=custom has_requirement=1 required_label=contrast freqScore=18000 freqContrast=50.0 freqReleaseScore=12000 freqReleaseContrast=50.0 behavior_state=Idle behavior_idle=1 behavior_suppressSelfChirpMs=100 behavior_detectionSuppressTailMsOwnEmit=60 output_busy=0 band=2950-3950 hop_enabled=1 hop_rotation=4 hop_steps=5 hop_pulse_ms=25 hop_gap_ms=10 freq.window_samples=64 freq.window_ms=4.00 freq.update_every_samples=4 freq.update_period_ms=0.250 freq.target_hz=3200 freq.produced_fresh_packet=0 freq.packet_age_samples=3 freq.packet_age_ms=0.187 i2s.samples_read=2936448 i2s.dropped_dma_buffers=51 i2s.clock_rate_mhz=15999984 i2s.overflows=51 i2s.backsteps=3 i2s.max_backstep_us=3 i2s.clock_corrections=364 i2s.max_clock_correction_us=4 i2s.read_errors=0 audio.uptime_ms=186125 audio.deficit_s=2.6 clock.now_ms=186125 audio.last_sample_ms=186066 behavior.suppress_armed=1 behavior.suppress_until_ms=173741 behavior.suppressed_now=0 behavior.suppressed_samples=112088 chirp_active=0 BUILD role=node git=3952521 date=Oct 17 2026 time=15:21:18 version=0.4.0 board=damp
+180.15 B RB STATUS profile=TonalPulseScalar emitters=ScalarTransient inspectionPlan=custom has_requirement=1 required_label=contrast freqScore=18000 freqContrast=50.0 freqReleaseScore=12000 freqReleaseContrast=50.0 behavior_state=Idle behavior_idle=1 behavior_suppressSelfChirpMs=100 behavior_detectionSuppressTailMsOwnEmit=60 output_busy=0 band=2950-3950 hop_enabled=1 hop_rotation=3 hop_steps=5 hop_pulse_ms=25 hop_gap_ms=10 freq.window_samples=64 freq.window_ms=4.00 freq.update_every_samples=4 freq.update_period_ms=0.250 freq.target_hz=3200 freq.produced_fresh_packet=0 freq.packet_age_samples=1 freq.packet_age_ms=0.062 i2s.samples_read=4546304 i2s.dropped_dma_buffers=31 i2s.clock_rate_mhz=15999984 BUILD role=node git=a5a9bbb date=Oct 16 2026 time=17:25:36 version=0.4.0 board=damp
+180.15 A 
+180.15 B 
+185.63 A BEH emit start now=191671 source=idle state=Chirping pattern=idle
+185.66 A RB emit accepted source=idle state=Chirping gate=Chirping pattern=idle
+190.77 B BEH emit start now=297128 source=idle state=Chirping pattern=idle
+190.79 B RB emit accepted source=idle state=Chirping gate=Chirping pattern=idle
+204.60 A BEH emit start now=210632 source=idle state=Chirping pattern=idle
+204.62 A RB emit accepted source=idle state=Chirping gate=Chirping pattern=idle
+208.58 B BEH emit start now=314936 source=idle state=Chirping pattern=idle
+208.61 B RB emit accepted source=idle state=Chirping gate=Chirping pattern=idle
+210.11 A RB STATUS profile=TonalPulseScalar emitters=ScalarTransient inspectionPlan=custom has_requirement=1 required_label=contrast freqScore=18000 freqContrast=50.0 freqReleaseScore=12000 freqReleaseContrast=50.0 behavior_state=Idle behavior_idle=1 behavior_suppressSelfChirpMs=100 behavior_detectionSuppressTailMsOwnEmit=60 output_busy=0 band=2950-3950 hop_enabled=1 hop_rotation=4 hop_steps=5 hop_pulse_ms=25 hop_gap_ms=10 freq.window_samples=64 freq.window_ms=4.00 freq.update_every_samples=4 freq.update_period_ms=0.250 freq.target_hz=3200 freq.produced_fresh_packet=0 freq.packet_age_samples=1 freq.packet_age_ms=0.062 i2s.samples_read=3414912 i2s.dropped_dma_buffers=61 i2s.clock_rate_mhz=15999984 i2s.overflows=61 i2s.backsteps=3 i2s.max_backstep_us=3 i2s.clock_corrections=423 i2s.max_clock_correction_us=4 i2s.read_errors=0 audio.uptime_ms=216108 audio.deficit_s=2.7 clock.now_ms=216108 audio.last_sample_ms=216050 behavior.suppress_armed=1 behavior.suppress_until_ms=211502 behavior.suppressed_now=0 behavior.suppressed_samples=140094 chirp_active=0 BUILD role=node git=3952521 date=Oct 17 2026 time=15:21:18 version=0.4.0 board=damp
+210.13 B RB STATUS profile=TonalPulseScalar emitters=ScalarTransient inspectionPlan=custom has_requirement=1 required_label=contrast freqScore=18000 freqContrast=50.0 freqReleaseScore=12000 freqReleaseContrast=50.0 behavior_state=Idle behavior_idle=1 behavior_suppressSelfChirpMs=100 behavior_detectionSuppressTailMsOwnEmit=60 output_busy=0 band=2950-3950 hop_enabled=1 hop_rotation=3 hop_steps=5 hop_pulse_ms=25 hop_gap_ms=10 freq.window_samples=64 freq.window_ms=4.00 freq.update_every_samples=4 freq.update_period_ms=0.250 freq.target_hz=3200 freq.produced_fresh_packet=0 freq.packet_age_samples=3 freq.packet_age_ms=0.187 i2s.samples_read=5025152 i2s.dropped_dma_buffers=37 i2s.clock_rate_mhz=15999984 BUILD role=node git=a5a9bbb date=Oct 16 2026 time=17:25:36 version=0.4.0 board=damp
+210.13 A 
+210.13 B 
+219.84 A BEH emit start now=225879 source=idle state=Chirping pattern=idle
+219.87 A RB emit accepted source=idle state=Chirping gate=Chirping pattern=idle
+232.45 B BEH emit start now=338808 source=idle state=Chirping pattern=idle
+232.46 B RB emit accepted source=idle state=Chirping gate=Chirping pattern=idle
+237.65 A BEH emit start now=243679 source=idle state=Chirping pattern=idle
+237.67 A RB emit accepted source=idle state=Chirping gate=Chirping pattern=idle
+240.11 A RB STATUS profile=TonalPulseScalar emitters=ScalarTransient inspectionPlan=custom has_requirement=1 required_label=contrast freqScore=18000 freqContrast=50.0 freqReleaseScore=12000 freqReleaseContrast=50.0 behavior_state=Idle behavior_idle=1 behavior_suppressSelfChirpMs=100 behavior_detectionSuppressTailMsOwnEmit=60 output_busy=0 band=2950-3950 hop_enabled=1 hop_rotation=4 hop_steps=5 hop_pulse_ms=25 hop_gap_ms=10 freq.window_samples=64 freq.window_ms=4.00 freq.update_every_samples=4 freq.update_period_ms=0.250 freq.target_hz=3200 freq.produced_fresh_packet=0 freq.packet_age_samples=3 freq.packet_age_ms=0.187 i2s.samples_read=3893504 i2s.dropped_dma_buffers=71 i2s.clock_rate_mhz=15999984 i2s.overflows=71 i2s.backsteps=3 i2s.max_backstep_us=3 i2s.clock_corrections=482 i2s.max_clock_correction_us=4 i2s.read_errors=0 audio.uptime_ms=246101 audio.deficit_s=2.8 clock.now_ms=246101 audio.last_sample_ms=246042 behavior.suppress_armed=1 behavior.suppress_until_ms=244549 behavior.suppressed_now=0 behavior.suppressed_samples=168084 chirp_active=0 BUILD role=node git=3952521 date=Oct 17 2026 time=15:21:18 version=0.4.0 board=damp
+240.12 B RB STATUS profile=TonalPulseScalar emitters=ScalarTransient inspectionPlan=custom has_requirement=1 required_label=contrast freqScore=18000 freqContrast=50.0 freqReleaseScore=12000 freqReleaseContrast=50.0 behavior_state=Idle behavior_idle=1 behavior_suppressSelfChirpMs=100 behavior_detectionSuppressTailMsOwnEmit=60 output_busy=0 band=2950-3950 hop_enabled=1 hop_rotation=3 hop_steps=5 hop_pulse_ms=25 hop_gap_ms=10 freq.window_samples=64 freq.window_ms=4.00 freq.update_every_samples=4 freq.update_period_ms=0.250 freq.target_hz=3200 freq.produced_fresh_packet=1 freq.packet_age_samples=0 freq.packet_age_ms=0.000 i2s.samples_read=5504384 i2s.dropped_dma_buffers=43 i2s.clock_rate_mhz=15999984 BUILD role=node git=a5a9bbb date=Oct 16 2026 time=17:25:36 version=0.4.0 board=damp
+240.12 A 
+240.12 B 
+248.02 B BEH emit start now=354376 source=idle state=Chirping pattern=idle
+248.03 B RB emit accepted source=idle state=Chirping gate=Chirping pattern=idle
+252.82 A BEH emit start now=258849 source=idle state=Chirping pattern=idle
+252.83 A RB emit accepted source=idle state=Chirping gate=Chirping pattern=idle
+268.74 A BEH emit start now=274759 source=idle state=Chirping pattern=idle
+268.75 A RB emit accepted source=idle state=Chirping gate=Chirping pattern=idle
+270.11 A RB STATUS profile=TonalPulseScalar emitters=ScalarTransient inspectionPlan=custom has_requirement=1 required_label=contrast freqScore=18000 freqContrast=50.0 freqReleaseScore=12000 freqReleaseContrast=50.0 behavior_state=Idle behavior_idle=1 behavior_suppressSelfChirpMs=100 behavior_detectionSuppressTailMsOwnEmit=60 output_busy=0 band=2950-3950 hop_enabled=1 hop_rotation=4 hop_steps=5 hop_pulse_ms=25 hop_gap_ms=10 freq.window_samples=64 freq.window_ms=4.00 freq.update_every_samples=4 freq.update_period_ms=0.250 freq.target_hz=3200 freq.produced_fresh_packet=0 freq.packet_age_samples=1 freq.packet_age_ms=0.062 i2s.samples_read=4372224 i2s.dropped_dma_buffers=81 i2s.clock_rate_mhz=15999984 i2s.overflows=81 i2s.backsteps=3 i2s.max_backstep_us=3 i2s.clock_corrections=542 i2s.max_clock_correction_us=4 i2s.read_errors=0 audio.uptime_ms=276101 audio.deficit_s=2.8 clock.now_ms=276101 audio.last_sample_ms=276042 behavior.suppress_armed=1 behavior.suppress_until_ms=275629 behavior.suppressed_now=0 behavior.suppressed_samples=196106 chirp_active=0 BUILD role=node git=3952521 date=Oct 17 2026 time=15:21:18 version=0.4.0 board=damp
+270.12 B RB STATUS profile=TonalPulseScalar emitters=ScalarTransient inspectionPlan=custom has_requirement=1 required_label=contrast freqScore=18000 freqContrast=50.0 freqReleaseScore=12000 freqReleaseContrast=50.0 behavior_state=Idle behavior_idle=1 behavior_suppressSelfChirpMs=100 behavior_detectionSuppressTailMsOwnEmit=60 output_busy=0 band=2950-3950 hop_enabled=1 hop_rotation=3 hop_steps=5 hop_pulse_ms=25 hop_gap_ms=10 freq.window_samples=64 freq.window_ms=4.00 freq.update_every_samples=4 freq.update_period_ms=0.250 freq.target_hz=3200 freq.produced_fresh_packet=0 freq.packet_age_samples=1 freq.packet_age_ms=0.062 i2s.samples_read=5983616 i2s.dropped_dma_buffers=49 i2s.clock_rate_mhz=15999984 BUILD role=node git=a5a9bbb date=Oct 16 2026 time=17:25:36 version=0.4.0 board=damp
+270.12 A 
+270.12 B 
+272.98 B BEH emit start now=379344 source=idle state=Chirping pattern=idle
+273.01 B RB emit accepted source=idle state=Chirping gate=Chirping pattern=idle
+289.98 B BEH emit start now=396344 source=idle state=Chirping pattern=idle
+290.00 B RB emit accepted source=idle state=Chirping gate=Chirping pattern=idle
+291.42 A BEH emit start now=297449 source=idle state=Chirping pattern=idle
+291.45 A RB emit accepted source=idle state=Chirping gate=Chirping pattern=idle
+300.12 A RB STATUS profile=TonalPulseScalar emitters=ScalarTransient inspectionPlan=custom has_requirement=1 required_label=contrast freqScore=18000 freqContrast=50.0 freqReleaseScore=12000 freqReleaseContrast=50.0 behavior_state=Idle behavior_idle=1 behavior_suppressSelfChirpMs=100 behavior_detectionSuppressTailMsOwnEmit=60 output_busy=0 band=2950-3950 hop_enabled=1 hop_rotation=4 hop_steps=5 hop_pulse_ms=25 hop_gap_ms=10 freq.window_samples=64 freq.window_ms=4.00 freq.update_every_samples=4 freq.update_period_ms=0.250 freq.target_hz=3200 freq.produced_fresh_packet=0 freq.packet_age_samples=2 freq.packet_age_ms=0.125 i2s.samples_read=4851200 i2s.dropped_dma_buffers=91 i2s.clock_rate_mhz=15999984 i2s.overflows=91 i2s.backsteps=3 i2s.max_backstep_us=3 i2s.clock_corrections=601 i2s.max_clock_correction_us=4 i2s.read_errors=0 audio.uptime_ms=306118 audio.deficit_s=2.9 clock.now_ms=306118 audio.last_sample_ms=306058 behavior.suppress_armed=1 behavior.suppress_until_ms=298319 behavior.suppressed_now=0 behavior.suppressed_samples=210133 chirp_active=0 BUILD role=node git=3952521 date=Oct 17 2026 time=15:21:18 version=0.4.0 board=damp
+300.14 B RB STATUS profile=TonalPulseScalar emitters=ScalarTransient inspectionPlan=custom has_requirement=1 required_label=contrast freqScore=18000 freqContrast=50.0 freqReleaseScore=12000 freqReleaseContrast=50.0 behavior_state=Idle behavior_idle=1 behavior_suppressSelfChirpMs=100 behavior_detectionSuppressTailMsOwnEmit=60 output_busy=0 band=2950-3950 hop_enabled=1 hop_rotation=3 hop_steps=5 hop_pulse_ms=25 hop_gap_ms=10 freq.window_samples=64 freq.window_ms=4.00 freq.update_every_samples=4 freq.update_period_ms=0.250 freq.target_hz=3200 freq.produced_fresh_packet=0 freq.packet_age_samples=3 freq.packet_age_ms=0.187 i2s.samples_read=6463104 i2s.dropped_dma_buffers=55 i2s.clock_rate_mhz=15999984 BUILD role=node git=a5a9bbb date=Oct 16 2026 time=17:25:36 version=0.4.0 board=damp
+300.14 A 
+300.14 B 
+309.10 B BEH emit start now=415458 source=idle state=Chirping pattern=idle
+309.12 B RB emit accepted source=idle state=Chirping gate=Chirping pattern=idle
+310.12 A BEH emit start now=316153 source=idle state=Chirping pattern=idle
+310.14 A RB emit accepted source=idle state=Chirping gate=Chirping pattern=idle
+324.37 B BEH emit start now=430728 source=idle state=Chirping pattern=idle
+324.38 B RB emit accepted source=idle state=Chirping gate=Chirping pattern=idle
+330.11 A RB STATUS profile=TonalPulseScalar emitters=ScalarTransient inspectionPlan=custom has_requirement=1 required_label=contrast freqScore=18000 freqContrast=50.0 freqReleaseScore=12000 freqReleaseContrast=50.0 behavior_state=Idle behavior_idle=1 behavior_suppressSelfChirpMs=100 behavior_detectionSuppressTailMsOwnEmit=60 output_busy=0 band=2950-3950 hop_enabled=1 hop_rotation=4 hop_steps=5 hop_pulse_ms=25 hop_gap_ms=10 freq.window_samples=64 freq.window_ms=4.00 freq.update_every_samples=4 freq.update_period_ms=0.250 freq.target_hz=3200 freq.produced_fresh_packet=0 freq.packet_age_samples=3 freq.packet_age_ms=0.187 i2s.samples_read=5329664 i2s.dropped_dma_buffers=101 i2s.clock_rate_mhz=15999984 i2s.overflows=101 i2s.backsteps=3 i2s.max_backstep_us=3 i2s.clock_corrections=660 i2s.max_clock_correction_us=4 i2s.read_errors=0 audio.uptime_ms=336101 audio.deficit_s=3.0 clock.now_ms=336101 audio.last_sample_ms=336042 behavior.suppress_armed=1 behavior.suppress_until_ms=317023 behavior.suppressed_now=0 behavior.suppressed_samples=224160 chirp_active=0 BUILD role=node git=3952521 date=Oct 17 2026 time=15:21:18 version=0.4.0 board=damp
+330.13 B RB STATUS profile=TonalPulseScalar emitters=ScalarTransient inspectionPlan=custom has_requirement=1 required_label=contrast freqScore=18000 freqContrast=50.0 freqReleaseScore=12000 freqReleaseContrast=50.0 behavior_state=Idle behavior_idle=1 behavior_suppressSelfChirpMs=100 behavior_detectionSuppressTailMsOwnEmit=60 output_busy=0 band=2950-3950 hop_enabled=1 hop_rotation=3 hop_steps=5 hop_pulse_ms=25 hop_gap_ms=10 freq.window_samples=64 freq.window_ms=4.00 freq.update_every_samples=4 freq.update_period_ms=0.250 freq.target_hz=3200 freq.produced_fresh_packet=0 freq.packet_age_samples=1 freq.packet_age_ms=0.062 i2s.samples_read=6942080 i2s.dropped_dma_buffers=61 i2s.clock_rate_mhz=15999984 BUILD role=node git=a5a9bbb date=Oct 16 2026 time=17:25:36 version=0.4.0 board=damp
+330.13 A 
+330.13 B 
+332.38 A BEH emit start now=338400 source=idle state=Chirping pattern=idle
+332.39 A RB emit accepted source=idle state=Chirping gate=Chirping pattern=idle
+348.04 A BEH emit start now=354064 source=idle state=Chirping pattern=idle
+348.05 A RB emit accepted source=idle state=Chirping gate=Chirping pattern=idle
+349.14 B BEH emit start now=455498 source=idle state=Chirping pattern=idle
+349.17 B RB emit accepted source=idle state=Chirping gate=Chirping pattern=idle
+360.13 A RB STATUS profile=TonalPulseScalar emitters=ScalarTransient inspectionPlan=custom has_requirement=1 required_label=contrast freqScore=18000 freqContrast=50.0 freqReleaseScore=12000 freqReleaseContrast=50.0 behavior_state=Idle behavior_idle=1 behavior_suppressSelfChirpMs=100 behavior_detectionSuppressTailMsOwnEmit=60 output_busy=0 band=2950-3950 hop_enabled=1 hop_rotation=4 hop_steps=5 hop_pulse_ms=25 hop_gap_ms=10 freq.window_samples=64 freq.window_ms=4.00 freq.update_every_samples=4 freq.update_period_ms=0.250 freq.target_hz=3200 freq.produced_fresh_packet=0 freq.packet_age_samples=1 freq.packet_age_ms=0.062 i2s.samples_read=5808640 i2s.dropped_dma_buffers=111 i2s.clock_rate_mhz=15999968 i2s.overflows=111 i2s.backsteps=10 i2s.max_backstep_us=123 i2s.clock_corrections=720 i2s.max_clock_correction_us=125 i2s.read_errors=0 audio.uptime_ms=366116 audio.deficit_s=3.1 clock.now_ms=366116 audio.last_sample_ms=366058 behavior.suppress_armed=1 behavior.suppress_until_ms=354934 behavior.suppressed_now=0 behavior.suppressed_samples=252182 chirp_active=0 BUILD role=node git=3952521 date=Oct 17 2026 time=15:21:18 version=0.4.0 board=damp
+360.14 B RB STATUS profile=TonalPulseScalar emitters=ScalarTransient inspectionPlan=custom has_requirement=1 required_label=contrast freqScore=18000 freqContrast=50.0 freqReleaseScore=12000 freqReleaseContrast=50.0 behavior_state=Idle behavior_idle=1 behavior_suppressSelfChirpMs=100 behavior_detectionSuppressTailMsOwnEmit=60 output_busy=0 band=2950-3950 hop_enabled=1 hop_rotation=3 hop_steps=5 hop_pulse_ms=25 hop_gap_ms=10 freq.window_samples=64 freq.window_ms=4.00 freq.update_every_samples=4 freq.update_period_ms=0.250 freq.target_hz=3200 freq.produced_fresh_packet=0 freq.packet_age_samples=2 freq.packet_age_ms=0.125 i2s.samples_read=7421568 i2s.dropped_dma_buffers=67 i2s.clock_rate_mhz=15999984 BUILD role=node git=a5a9bbb date=Oct 16 2026 time=17:25:36 version=0.4.0 board=damp
+360.14 A 
+360.14 B 
+367.86 A BEH emit start now=373887 source=idle state=Chirping pattern=idle
+367.87 A RB emit accepted source=idle state=Chirping gate=Chirping pattern=idle
+369.44 B BEH emit start now=475800 source=idle state=Chirping pattern=idle
+369.46 B RB emit accepted source=idle state=Chirping gate=Chirping pattern=idle
+389.12 A BEH emit start now=395130 source=idle state=Chirping pattern=idle
+389.13 A RB emit accepted source=idle state=Chirping gate=Chirping pattern=idle
+390.12 A RB STATUS profile=TonalPulseScalar emitters=ScalarTransient inspectionPlan=custom has_requirement=1 required_label=contrast freqScore=18000 freqContrast=50.0 freqReleaseScore=12000 freqReleaseContrast=50.0 behavior_state=Refractory behavior_idle=1 behavior_suppressSelfChirpMs=100 behavior_detectionSuppressTailMsOwnEmit=60 output_busy=0 band=2950-3950 hop_enabled=1 hop_rotation=4 hop_steps=5 hop_pulse_ms=25 hop_gap_ms=10 freq.window_samples=64 freq.window_ms=4.00 freq.update_every_samples=4 freq.update_period_ms=0.250 freq.target_hz=3200 freq.produced_fresh_packet=0 freq.packet_age_samples=3 freq.packet_age_ms=0.187 i2s.samples_read=6287232 i2s.dropped_dma_buffers=121 i2s.clock_rate_mhz=15999984 i2s.overflows=121 i2s.backsteps=11 i2s.max_backstep_us=123 i2s.clock_corrections=779 i2s.max_clock_correction_us=125 i2s.read_errors=0 audio.uptime_ms=396108 audio.deficit_s=3.2 clock.now_ms=396108 audio.last_sample_ms=396050 behavior.suppress_armed=1 behavior.suppress_until_ms=396005 behavior.suppressed_now=0 behavior.suppressed_samples=280172 chirp_active=0 BUILD role=node git=3952521 date=Oct 17 2026 time=15:21:18 version=0.4.0 board=damp
+390.13 B RB STATUS profile=TonalPulseScalar emitters=ScalarTransient inspectionPlan=custom has_requirement=1 required_label=contrast freqScore=18000 freqContrast=50.0 freqReleaseScore=12000 freqReleaseContrast=50.0 behavior_state=Idle behavior_idle=1 behavior_suppressSelfChirpMs=100 behavior_detectionSuppressTailMsOwnEmit=60 output_busy=0 band=2950-3950 hop_enabled=1 hop_rotation=3 hop_steps=5 hop_pulse_ms=25 hop_gap_ms=10 freq.window_samples=64 freq.window_ms=4.00 freq.update_every_samples=4 freq.update_period_ms=0.250 freq.target_hz=3200 freq.produced_fresh_packet=0 freq.packet_age_samples=3 freq.packet_age_ms=0.187 i2s.samples_read=7900672 i2s.dropped_dma_buffers=73 i2s.clock_rate_mhz=15999984 BUILD role=node git=a5a9bbb date=Oct 16 2026 time=17:25:36 version=0.4.0 board=damp
+390.13 A 
+390.13 B 
+392.57 B BEH emit start now=498928 source=idle state=Chirping pattern=idle
+392.59 B RB emit accepted source=idle state=Chirping gate=Chirping pattern=idle
+404.98 A BEH emit start now=411007 source=idle state=Chirping pattern=idle
+404.99 A RB emit accepted source=idle state=Chirping gate=Chirping pattern=idle
+411.03 B BEH emit start now=517384 source=idle state=Chirping pattern=idle
+411.04 B RB emit accepted source=idle state=Chirping gate=Chirping pattern=idle
+420.11 A RB STATUS profile=TonalPulseScalar emitters=ScalarTransient inspectionPlan=custom has_requirement=1 required_label=contrast freqScore=18000 freqContrast=50.0 freqReleaseScore=12000 freqReleaseContrast=50.0 behavior_state=Idle behavior_idle=1 behavior_suppressSelfChirpMs=100 behavior_detectionSuppressTailMsOwnEmit=60 output_busy=0 band=2950-3950 hop_enabled=1 hop_rotation=4 hop_steps=5 hop_pulse_ms=25 hop_gap_ms=10 freq.window_samples=64 freq.window_ms=4.00 freq.update_every_samples=4 freq.update_period_ms=0.250 freq.target_hz=3200 freq.produced_fresh_packet=1 freq.packet_age_samples=0 freq.packet_age_ms=0.000 i2s.samples_read=6765824 i2s.dropped_dma_buffers=131 i2s.clock_rate_mhz=15999984 i2s.overflows=131 i2s.backsteps=11 i2s.max_backstep_us=123 i2s.clock_corrections=839 i2s.max_clock_correction_us=125 i2s.read_errors=0 audio.uptime_ms=426100 audio.deficit_s=3.2 clock.now_ms=426100 audio.last_sample_ms=426042 behavior.suppress_armed=1 behavior.suppress_until_ms=411877 behavior.suppressed_now=0 behavior.suppressed_samples=294167 chirp_active=0 BUILD role=node git=3952521 date=Oct 17 2026 time=15:21:18 version=0.4.0 board=damp
+420.13 B RB STATUS profile=TonalPulseScalar emitters=ScalarTransient inspectionPlan=custom has_requirement=1 required_label=contrast freqScore=18000 freqContrast=50.0 freqReleaseScore=12000 freqReleaseContrast=50.0 behavior_state=Idle behavior_idle=1 behavior_suppressSelfChirpMs=100 behavior_detectionSuppressTailMsOwnEmit=60 output_busy=0 band=2950-3950 hop_enabled=1 hop_rotation=3 hop_steps=5 hop_pulse_ms=25 hop_gap_ms=10 freq.window_samples=64 freq.window_ms=4.00 freq.update_every_samples=4 freq.update_period_ms=0.250 freq.target_hz=3200 freq.produced_fresh_packet=0 freq.packet_age_samples=1 freq.packet_age_ms=0.062 i2s.samples_read=8379776 i2s.dropped_dma_buffers=79 i2s.clock_rate_mhz=15999984 BUILD role=node git=a5a9bbb date=Oct 16 2026 time=17:25:36 version=0.4.0 board=damp
+420.13 A 
+420.13 B 
+421.81 A BEH emit start now=427839 source=idle state=Chirping pattern=idle
+421.84 A RB emit accepted source=idle state=Chirping gate=Chirping pattern=idle
+431.16 B BEH emit start now=537512 source=idle state=Chirping pattern=idle
+431.17 B RB emit accepted source=idle state=Chirping gate=Chirping pattern=idle
+445.08 A BEH emit start now=451103 source=idle state=Chirping pattern=idle
+445.10 A RB emit accepted source=idle state=Chirping gate=Chirping pattern=idle
+446.60 B BEH emit start now=552960 source=idle state=Chirping pattern=idle
+446.62 B RB emit accepted source=idle state=Chirping gate=Chirping pattern=idle
+450.13 A RB STATUS profile=TonalPulseScalar emitters=ScalarTransient inspectionPlan=custom has_requirement=1 required_label=contrast freqScore=18000 freqContrast=50.0 freqReleaseScore=12000 freqReleaseContrast=50.0 behavior_state=Idle behavior_idle=1 behavior_suppressSelfChirpMs=100 behavior_detectionSuppressTailMsOwnEmit=60 output_busy=0 band=2950-3950 hop_enabled=1 hop_rotation=4 hop_steps=5 hop_pulse_ms=25 hop_gap_ms=10 freq.window_samples=64 freq.window_ms=4.00 freq.update_every_samples=4 freq.update_period_ms=0.250 freq.target_hz=3200 freq.produced_fresh_packet=0 freq.packet_age_samples=2 freq.packet_age_ms=0.125 i2s.samples_read=7244800 i2s.dropped_dma_buffers=141 i2s.clock_rate_mhz=15999984 i2s.overflows=141 i2s.backsteps=11 i2s.max_backstep_us=123 i2s.clock_corrections=898 i2s.max_clock_correction_us=125 i2s.read_errors=0 audio.uptime_ms=456119 audio.deficit_s=3.3 clock.now_ms=456119 audio.last_sample_ms=456058 behavior.suppress_armed=1 behavior.suppress_until_ms=451973 behavior.suppressed_now=0 behavior.suppressed_samples=322157 chirp_active=0 BUILD role=node git=3952521 date=Oct 17 2026 time=15:21:18 version=0.4.0 board=damp
+450.14 B RB STATUS profile=TonalPulseScalar emitters=ScalarTransient inspectionPlan=custom has_requirement=1 required_label=contrast freqScore=18000 freqContrast=50.0 freqReleaseScore=12000 freqReleaseContrast=50.0 behavior_state=Idle behavior_idle=1 behavior_suppressSelfChirpMs=100 behavior_detectionSuppressTailMsOwnEmit=60 output_busy=0 band=2950-3950 hop_enabled=1 hop_rotation=3 hop_steps=5 hop_pulse_ms=25 hop_gap_ms=10 freq.window_samples=64 freq.window_ms=4.00 freq.update_every_samples=4 freq.update_period_ms=0.250 freq.target_hz=3200 freq.produced_fresh_packet=0 freq.packet_age_samples=3 freq.packet_age_ms=0.187 i2s.samples_read=8859264 i2s.dropped_dma_buffers=85 i2s.clock_rate_mhz=15999984 BUILD role=node git=a5a9bbb date=Oct 16 2026 time=17:25:36 version=0.4.0 board=damp
+450.15 A 
+450.15 B 
+464.84 A BEH emit start now=470871 source=idle state=Chirping pattern=idle
+464.86 A RB emit accepted source=idle state=Chirping gate=Chirping pattern=idle
+469.21 B BEH emit start now=575553 source=idle state=Chirping pattern=idle
+469.24 B RB emit accepted source=idle state=Chirping gate=Chirping pattern=idle
+480.11 A RB STATUS profile=TonalPulseScalar emitters=ScalarTransient inspectionPlan=custom has_requirement=1 required_label=contrast freqScore=18000 freqContrast=50.0 freqReleaseScore=12000 freqReleaseContrast=50.0 behavior_state=Idle behavior_idle=1 behavior_suppressSelfChirpMs=100 behavior_detectionSuppressTailMsOwnEmit=60 output_busy=0 band=2950-3950 hop_enabled=1 hop_rotation=4 hop_steps=5 hop_pulse_ms=25 hop_gap_ms=10 freq.window_samples=64 freq.window_ms=4.00 freq.update_every_samples=4 freq.update_period_ms=0.250 freq.target_hz=3200 freq.produced_fresh_packet=0 freq.packet_age_samples=3 freq.packet_age_ms=0.187 i2s.samples_read=7723136 i2s.dropped_dma_buffers=151 i2s.clock_rate_mhz=15999984 i2s.overflows=151 i2s.backsteps=11 i2s.max_backstep_us=123 i2s.clock_corrections=957 i2s.max_clock_correction_us=125 i2s.read_errors=0 audio.uptime_ms=486092 audio.deficit_s=3.4 clock.now_ms=486092 audio.last_sample_ms=486034 behavior.suppress_armed=1 behavior.suppress_until_ms=471741 behavior.suppressed_now=0 behavior.suppressed_samples=336152 chirp_active=0 BUILD role=node git=3952521 date=Oct 17 2026 time=15:21:18 version=0.4.0 board=damp
+480.12 B RB STATUS profile=TonalPulseScalar emitters=ScalarTransient inspectionPlan=custom has_requirement=1 required_label=contrast freqScore=18000 freqContrast=50.0 freqReleaseScore=12000 freqReleaseContrast=50.0 behavior_state=Idle behavior_idle=1 behavior_suppressSelfChirpMs=100 behavior_detectionSuppressTailMsOwnEmit=60 output_busy=0 band=2950-3950 hop_enabled=1 hop_rotation=3 hop_steps=5 hop_pulse_ms=25 hop_gap_ms=10 freq.window_samples=64 freq.window_ms=4.00 freq.update_every_samples=4 freq.update_period_ms=0.250 freq.target_hz=3200 freq.produced_fresh_packet=1 freq.packet_age_samples=0 freq.packet_age_ms=0.000 i2s.samples_read=9338112 i2s.dropped_dma_buffers=91 i2s.clock_rate_mhz=15999984 BUILD role=node git=a5a9bbb date=Oct 16 2026 time=17:25:36 version=0.4.0 board=damp
+480.12 A 
+480.12 B 
+488.10 A BEH emit start now=494119 source=idle state=Chirping pattern=idle
+488.12 A RB emit accepted source=idle state=Chirping gate=Chirping pattern=idle
+493.57 B BEH emit start now=599912 source=idle state=Chirping pattern=idle
+493.60 B RB emit accepted source=idle state=Chirping gate=Chirping pattern=idle
+510.11 A RB STATUS profile=TonalPulseScalar emitters=ScalarTransient inspectionPlan=custom has_requirement=1 required_label=contrast freqScore=18000 freqContrast=50.0 freqReleaseScore=12000 freqReleaseContrast=50.0 behavior_state=Idle behavior_idle=1 behavior_suppressSelfChirpMs=100 behavior_detectionSuppressTailMsOwnEmit=60 output_busy=0 band=2950-3950 hop_enabled=1 hop_rotation=4 hop_steps=5 hop_pulse_ms=25 hop_gap_ms=10 freq.window_samples=64 freq.window_ms=4.00 freq.update_every_samples=4 freq.update_period_ms=0.250 freq.target_hz=3200 freq.produced_fresh_packet=1 freq.packet_age_samples=0 freq.packet_age_ms=0.000 i2s.samples_read=8201856 i2s.dropped_dma_buffers=161 i2s.clock_rate_mhz=15999984 i2s.overflows=161 i2s.backsteps=11 i2s.max_backstep_us=123 i2s.clock_corrections=1017 i2s.max_clock_correction_us=125 i2s.read_errors=0 audio.uptime_ms=516092 audio.deficit_s=3.5 clock.now_ms=516092 audio.last_sample_ms=516034 behavior.suppress_armed=1 behavior.suppress_until_ms=494989 behavior.suppressed_now=0 behavior.suppressed_samples=350147 chirp_active=0 BUILD role=node git=3952521 date=Oct 17 2026 time=15:21:18 version=0.4.0 board=damp
+510.12 B RB STATUS profile=TonalPulseScalar emitters=ScalarTransient inspectionPlan=custom has_requirement=1 required_label=contrast freqScore=18000 freqContrast=50.0 freqReleaseScore=12000 freqReleaseContrast=50.0 behavior_state=Idle behavior_idle=1 behavior_suppressSelfChirpMs=100 behavior_detectionSuppressTailMsOwnEmit=60 output_busy=0 band=2950-3950 hop_enabled=1 hop_rotation=3 hop_steps=5 hop_pulse_ms=25 hop_gap_ms=10 freq.window_samples=64 freq.window_ms=4.00 freq.update_every_samples=4 freq.update_period_ms=0.250 freq.target_hz=3200 freq.produced_fresh_packet=0 freq.packet_age_samples=1 freq.packet_age_ms=0.062 i2s.samples_read=9817344 i2s.dropped_dma_buffers=97 i2s.clock_rate_mhz=15999984 BUILD role=node git=a5a9bbb date=Oct 16 2026 time=17:25:36 version=0.4.0 board=damp
+510.12 A 
+510.12 B 
+510.75 A BEH emit start now=516768 source=idle state=Chirping pattern=idle
+510.76 A RB emit accepted source=idle state=Chirping gate=Chirping pattern=idle
+517.88 B BEH emit start now=624224 source=idle state=Chirping pattern=idle
+517.90 B RB emit accepted source=idle state=Chirping gate=Chirping pattern=idle
+526.07 A BEH emit start now=532090 source=idle state=Chirping pattern=idle
+526.10 A RB emit accepted source=idle state=Chirping gate=Chirping pattern=idle
+533.83 B BEH emit start now=640184 source=idle state=Chirping pattern=idle
+533.85 B RB emit accepted source=idle state=Chirping gate=Chirping pattern=idle
+540.11 A RB STATUS profile=TonalPulseScalar emitters=ScalarTransient inspectionPlan=custom has_requirement=1 required_label=contrast freqScore=18000 freqContrast=50.0 freqReleaseScore=12000 freqReleaseContrast=50.0 behavior_state=Idle behavior_idle=1 behavior_suppressSelfChirpMs=100 behavior_detectionSuppressTailMsOwnEmit=60 output_busy=0 band=2950-3950 hop_enabled=1 hop_rotation=4 hop_steps=5 hop_pulse_ms=25 hop_gap_ms=10 freq.window_samples=64 freq.window_ms=4.00 freq.update_every_samples=4 freq.update_period_ms=0.250 freq.target_hz=3200 freq.produced_fresh_packet=0 freq.packet_age_samples=2 freq.packet_age_ms=0.125 i2s.samples_read=8680704 i2s.dropped_dma_buffers=171 i2s.clock_rate_mhz=15999984 i2s.overflows=171 i2s.backsteps=11 i2s.max_backstep_us=123 i2s.clock_corrections=1076 i2s.max_clock_correction_us=125 i2s.read_errors=0 audio.uptime_ms=546100 audio.deficit_s=3.6 clock.now_ms=546100 audio.last_sample_ms=546042 behavior.suppress_armed=1 behavior.suppress_until_ms=532965 behavior.suppressed_now=0 behavior.suppressed_samples=378153 chirp_active=0 BUILD role=node git=3952521 date=Oct 17 2026 time=15:21:18 version=0.4.0 board=damp
+540.13 B RB STATUS profile=TonalPulseScalar emitters=ScalarTransient inspectionPlan=custom has_requirement=1 required_label=contrast freqScore=18000 freqContrast=50.0 freqReleaseScore=12000 freqReleaseContrast=50.0 behavior_state=Idle behavior_idle=1 behavior_suppressSelfChirpMs=100 behavior_detectionSuppressTailMsOwnEmit=60 output_busy=0 band=2950-3950 hop_enabled=1 hop_rotation=3 hop_steps=5 hop_pulse_ms=25 hop_gap_ms=10 freq.window_samples=64 freq.window_ms=4.00 freq.update_every_samples=4 freq.update_period_ms=0.250 freq.target_hz=3200 freq.produced_fresh_packet=0 freq.packet_age_samples=3 freq.packet_age_ms=0.187 i2s.samples_read=10296704 i2s.dropped_dma_buffers=103 i2s.clock_rate_mhz=15999984 BUILD role=node git=a5a9bbb date=Oct 16 2026 time=17:25:36 version=0.4.0 board=damp
+540.13 A 
+540.13 B 
+545.01 A BEH emit start now=551031 source=idle state=Chirping pattern=idle
+545.03 A RB emit accepted source=idle state=Chirping gate=Chirping pattern=idle
+557.17 B BEH emit start now=663522 source=idle state=Chirping pattern=idle
+557.19 B RB emit accepted source=idle state=Chirping gate=Chirping pattern=idle
+567.40 A BEH emit start now=573423 source=idle state=Chirping pattern=idle
+567.41 A RB emit accepted source=idle state=Chirping gate=Chirping pattern=idle
+570.11 A RB STATUS profile=TonalPulseScalar emitters=ScalarTransient inspectionPlan=custom has_requirement=1 required_label=contrast freqScore=18000 freqContrast=50.0 freqReleaseScore=12000 freqReleaseContrast=50.0 behavior_state=Idle behavior_idle=1 behavior_suppressSelfChirpMs=100 behavior_detectionSuppressTailMsOwnEmit=60 output_busy=0 band=2950-3950 hop_enabled=1 hop_rotation=4 hop_steps=5 hop_pulse_ms=25 hop_gap_ms=10 freq.window_samples=64 freq.window_ms=4.00 freq.update_every_samples=4 freq.update_period_ms=0.250 freq.target_hz=3200 freq.produced_fresh_packet=1 freq.packet_age_samples=0 freq.packet_age_ms=0.000 i2s.samples_read=9159296 i2s.dropped_dma_buffers=181 i2s.clock_rate_mhz=15999984 i2s.overflows=181 i2s.backsteps=11 i2s.max_backstep_us=123 i2s.clock_corrections=1135 i2s.max_clock_correction_us=125 i2s.read_errors=0 audio.uptime_ms=576092 audio.deficit_s=3.6 clock.now_ms=576092 audio.last_sample_ms=576034 behavior.suppress_armed=1 behavior.suppress_until_ms=574293 behavior.suppressed_now=0 behavior.suppressed_samples=406143 chirp_active=0 BUILD role=node git=3952521 date=Oct 17 2026 time=15:21:18 version=0.4.0 board=damp
+570.13 B RB STATUS profile=TonalPulseScalar emitters=ScalarTransient inspectionPlan=custom has_requirement=1 required_label=contrast freqScore=18000 freqContrast=50.0 freqReleaseScore=12000 freqReleaseContrast=50.0 behavior_state=Idle behavior_idle=1 behavior_suppressSelfChirpMs=100 behavior_detectionSuppressTailMsOwnEmit=60 output_busy=0 band=2950-3950 hop_enabled=1 hop_rotation=3 hop_steps=5 hop_pulse_ms=25 hop_gap_ms=10 freq.window_samples=64 freq.window_ms=4.00 freq.update_every_samples=4 freq.update_period_ms=0.250 freq.target_hz=3200 freq.produced_fresh_packet=1 freq.packet_age_samples=0 freq.packet_age_ms=0.000 i2s.samples_read=10775808 i2s.dropped_dma_buffers=109 i2s.clock_rate_mhz=15999984 BUILD role=node git=a5a9bbb date=Oct 16 2026 time=17:25:36 version=0.4.0 board=damp
+570.13 A 
+570.13 B 
+574.04 B BEH emit start now=680392 source=idle state=Chirping pattern=idle
+574.06 B RB emit accepted source=idle state=Chirping gate=Chirping pattern=idle
+589.06 A BEH emit start now=595082 source=idle state=Chirping pattern=idle
+589.08 A RB emit accepted source=idle state=Chirping gate=Chirping pattern=idle
+596.99 B BEH emit start now=703345 source=idle state=Chirping pattern=idle
+597.01 B RB emit accepted source=idle state=Chirping gate=Chirping pattern=idle

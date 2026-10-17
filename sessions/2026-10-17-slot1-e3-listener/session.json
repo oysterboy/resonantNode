@@ -1,0 +1,65 @@
+{
+  "purpose": "cross-path check after the replug: E2 Analyzer OBS windows while E3 (Node) plays 10 SELFTEST chirps",
+  "created": "2026-10-17T15:33:29",
+  "setup": {
+    "distance_cm": 70.0,
+    "orientation": "as left after the replug, not verified",
+    "emitter_fw": "",
+    "notes": [
+      "E2 COM3 Analyzer, E3 COM4 Node a5a9bbb; SELFTEST chirp n=10 gap 1500 sent to E3 about 25 s into the run"
+    ]
+  },
+  "runs": [
+    {
+      "name": "OBS_e3chirps",
+      "file": "OBS_e3chirps.3952521.log",
+      "firmware": {
+        "role": "analyzer",
+        "git": "3952521",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "commands": [
+        "SEQ DIAG on",
+        "SEQ OBS start tries=30 period=2000 window=1800 report_settle=200 freq=3200 band=2950-3950 mode=detail when=all verbose=1"
+      ],
+      "started": "2026-10-17T15:33:35",
+      "duration_s": 66,
+      "summary": {
+        "profile": "TonalPulseScalar",
+        "detector": "scalar_transient",
+        "complete": true,
+        "trial_results": {
+          "miss": 28,
+          "rejected": 2
+        },
+        "line_counts": {
+          "SEQ_TRIAL": 30,
+          "SEQ_INSPECT": 30,
+          "SEQ_SOURCE": 30,
+          "SEQ_SOURCE_CORE": 30,
+          "SEQ_EXPLAIN": 30,
+          "SEQ_SOURCE_SPEC": 2,
+          "SEQ_SUMMARY": 1
+        },
+        "trials": "30",
+        "completed": "30",
+        "expected_trials": "0",
+        "early_trials": "0",
+        "late_trials": "0",
+        "miss_trials": "28",
+        "duplicate_trials": "0",
+        "unexpected_trials": "0",
+        "rejected_trials": "2",
+        "buffer_overrun_trials": "2",
+        "detector_accepted_trials": "0",
+        "detector_reject_trials": "2",
+        "pattern_valid_trials": "0",
+        "pattern_rejected_trials": "0",
+        "avg_dt_ms": "-1",
+        "avg_strength": "2369.0",
+        "avg_conf": "0.00"
+      }
+    }
+  ]
+}

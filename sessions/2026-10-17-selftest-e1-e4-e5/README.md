@@ -59,3 +59,13 @@ All five boards in one pass, idle off on each before its SELFTEST:
 E5's mic fails on its long cable every time (3 of 3) and works on the short one (3 of 3), while E4 passes on a long
 cable. So it is that cable, or E5's supply margin is smaller than E4's: check the extension E5 uses (or give E5 its
 own 5 V supply) before the trial.
+
+## E5 on a long cable with an active repeater (SKYMASTER)
+
+COM9, three SELFTEST runs: mic **FAIL all_zero** every time (floor 0 / 0), board PASS. The repeater does not help.
+
+Reading: an exact all-zero stream with the ESP32 running normally does not look like a supply drop (the board's
+3V3 regulator holds 3.3 V well below 5 V input, and a starved mic would give noise or garbage, not clean zeros).
+The cable change also moves E5 to another place and bends its wiring. Next to separate the two: the short cable at
+E5's far position, and the long cable with E5 next to the PC; or measure 3V3 at the mic and reseat its SD/WS/SCK
+wires (E1's "dead amp" was a loose Dupont).

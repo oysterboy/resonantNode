@@ -43,3 +43,19 @@ with the boards untouched (ten mic checks in a row per board).
 Hop rotation from the MAC (`MAC % 5`): E4 and E5 both get 0, E1 1, E3 3, E2 4. Two of five nodes would start their
 train on the same bin; `PARAM SET output.hop_rotation` can fix it per boot but nothing persists it (no NVS yet,
 PAR-010). For the field trial: assign rotations explicitly or derive them from a per-board table.
+
+## Cable swap repeat (owner: E3 back on the short cable, E5 back on the long one)
+
+All five boards in one pass, idle off on each before its SELFTEST:
+
+| Board | port | mic | amp |
+|---|---|---|---|
+| E2 | COM3 | PASS, floor 1,095 | PASS, 33.4 dB |
+| E3 | COM4 (short cable) | PASS, floor 755 | PASS, 37.4 dB |
+| E1 | COM6 | PASS, floor 1,024 | PASS, 41.3 dB |
+| E4 | COM7 (long cable) | PASS, floor 1,393 | PASS, 40.5 dB |
+| E5 | COM8 (long cable) | **FAIL all_zero** | SKIP |
+
+E5's mic fails on its long cable every time (3 of 3) and works on the short one (3 of 3), while E4 passes on a long
+cable. So it is that cable, or E5's supply margin is smaller than E4's: check the extension E5 uses (or give E5 its
+own 5 V supply) before the trial.

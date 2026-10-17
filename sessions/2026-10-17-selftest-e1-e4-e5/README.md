@@ -69,3 +69,18 @@ Reading: an exact all-zero stream with the ESP32 running normally does not look 
 The cable change also moves E5 to another place and bends its wiring. Next to separate the two: the short cable at
 E5's far position, and the long cable with E5 next to the PC; or measure 3V3 at the mic and reseat its SD/WS/SCK
 wires (E1's "dead amp" was a loose Dupont).
+
+## E3 after the rest-rule flash (2ddf2b4): owner hears its output as harsh, "overdriven"
+
+Two SELFTEST runs on COM4 (short cable). Own tone at own mic, five identical 100 ms tones each:
+
+| Run | tone per chirp | floor during the tones | amp result |
+|---|---|---|---|
+| 1 | 131,637 / 247,356 / 262,423 / 134,923 / 196,269 | 3,678-13,748 | PASS (median) |
+| 2 | 165,729-176,172 | 2,262-4,021 | PASS |
+
+Identical tones vary by a factor of two inside one run, and the floor jumps with them; in run 2 the level is
+stable but low (175,000 against 260,000-310,000 on E1/E4/E5). Mic and amp disturbed together point at a shared
+supply or ground contact on E3 (as with E1's loose 5 V Dupont), or at the speaker connection. The self-test passes
+on the median and does not flag it. To check: E3's 5 V and GND wires at the ESP32 and at the MAX98357A, and the
+speaker terminals.

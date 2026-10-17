@@ -294,6 +294,17 @@ Result runAmpCheck(Print& out, Tally& tally, AudioSourceI2S& source, ToneOutput&
     const float snrMedian = median(snr, valid);
     const float toneMedian = median(tones, valid);
     const float floorMedian = median(floors, valid);
+    float toneMin = 0.0f;
+    float toneMax = 0.0f;
+    for (size_t i = 0; i < valid; ++i) {
+        if (i == 0 || tones[i] < toneMin) {
+            toneMin = tones[i];
+        }
+        if (i == 0 || tones[i] > toneMax) {
+            toneMax = tones[i];
+        }
+    }
+    const float toneSpread = toneMin > 0.0f ? toneMax / toneMin : 0.0f;
     const char* reason = nullptr;
     if (valid == 0) {
         reason = "no_data";
@@ -303,6 +314,10 @@ Result runAmpCheck(Print& out, Tally& tally, AudioSourceI2S& source, ToneOutput&
         reason = "zero_floor";
     } else if (snrMedian < kAmpPassSnrDb) {
         reason = "low_snr";
+    } else if (valid > 1 && (toneMin <= 0.0f || toneSpread > kAmpMaxToneSpread)) {
+        // Identical tones that differ this much: the output (supply, a wire,
+        // the speaker) is unstable even when the median looks fine.
+        reason = "unstable";
     }
     const Result result = reason == nullptr ? Result::Pass : Result::Fail;
     begin(out, tally, "amp", result);
@@ -319,7 +334,9 @@ Result runAmpCheck(Print& out, Tally& tally, AudioSourceI2S& source, ToneOutput&
     field(out, "snr_db", snrMedian, 1);
     field(out, "snr_min_db", snrMin, 1);
     field(out, "snr_max_db", snrMax, 1);
+    field(out, "tone_spread", toneSpread, 2);
     field(out, "pass_db", kAmpPassSnrDb, 1);
+    field(out, "max_spread", kAmpMaxToneSpread, 2);
     end(out);
     return result;
 }

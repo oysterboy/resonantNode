@@ -39,6 +39,14 @@ constexpr unsigned long kSettleAfterHardwareMs = 500; // same as the post-rebase
 constexpr unsigned long kOutputsWaitMs = 15000;
 constexpr unsigned long kEchoWindowMs = 300;       // after an own chirp's finish
 constexpr unsigned long kOpenChirpSpanMs = 2000;   // own chirp still sounding: assumed length
+// An own echo is an occurrence that starts while the chirp sounds or right
+// after it, once the own-emit suppression (whole chirp plus its tail) lets
+// the mic through again; a margin covers the room tail. Another node's answer
+// starts later: its verdict, its wait (waitAfterHeardMs) and its train come
+// first. Judging by the occurrence's start, not when it was heard, keeps
+// other Nodes' answers out of the own count (2026-10-17: with five Nodes on
+// the bench they landed inside the 300 ms echo window and failed the check).
+constexpr unsigned long kOwnEchoStartMarginMs = 50;
 constexpr unsigned long kOwnTailMs = 1000;
 constexpr unsigned long kResponseWaitMs = 1500;    // after the first external verdict
 constexpr unsigned long kChirpStartTimeoutMs = 3000;
@@ -390,13 +398,14 @@ void Node::finishSelfTest() {
     _selfTest.phase = SelfTestState::Phase::Idle;
 }
 
-bool Node::selfTestVerdictIsOwn(unsigned long heardMs) const {
+bool Node::selfTestVerdictIsOwn(unsigned long occurrenceStartMs) const {
     const SelfTestState& st = _selfTest;
+    const unsigned long ownStartLimitMs = _behavior.detectionSuppressTailMsOwnEmit() + kOwnEchoStartMarginMs;
     for (uint8_t i = 0; i < st.windowCount; ++i) {
         const unsigned long start = st.chirpStartMs[i];
         const unsigned long end = st.chirpEndMs[i] != 0 ? st.chirpEndMs[i] : start + kOpenChirpSpanMs;
-        if (static_cast<long>(heardMs - (start - 20UL)) >= 0
-            && static_cast<long>(heardMs - (end + kEchoWindowMs)) <= 0) {
+        if (static_cast<long>(occurrenceStartMs - (start - 20UL)) >= 0
+            && static_cast<long>(occurrenceStartMs - (end + ownStartLimitMs)) <= 0) {
             return true;
         }
     }
@@ -412,9 +421,9 @@ void Node::selfTestObserveVerdict(const OccurrenceVerdict& verdict, unsigned lon
     if (!watching) {
         return;
     }
-    const unsigned long heardMs = verdict.primaryHeardAtMs != 0 ? verdict.primaryHeardAtMs
-        : (verdict.primaryStartMs != 0 ? verdict.primaryStartMs : now);
-    if (selfTestVerdictIsOwn(heardMs)) {
+    const unsigned long startMs = verdict.primaryStartMs != 0 ? verdict.primaryStartMs
+        : (verdict.primaryHeardAtMs != 0 ? verdict.primaryHeardAtMs : now);
+    if (selfTestVerdictIsOwn(startMs)) {
         ++st.ownVerdicts;
         if (verdict.valid) {
             ++st.ownValid;

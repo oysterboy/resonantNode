@@ -155,7 +155,7 @@ private:
     void finishSelfTestOwnChirp(bool timedOut);
     void finishSelfTestExternal(unsigned long now);
     void finishSelfTest();
-    bool selfTestVerdictIsOwn(unsigned long heardMs) const;
+    bool selfTestVerdictIsOwn(unsigned long occurrenceStartMs) const;
     void selfTestObserveVerdict(const OccurrenceVerdict& verdict, unsigned long now);
     void selfTestNoteChirpStarted(unsigned long now, const char* sourceName);
     void selfTestNoteChirpFinished(unsigned long now);

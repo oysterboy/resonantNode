@@ -58,6 +58,11 @@ void emitChirpsBlocking(Print& out, AudioSourceI2S* source, ToneOutput& tone, ui
 // Thresholds. Provisional, from the #20 bench (2026-10-10): healthy D-AMP
 // floor 850-5,900, own tone ~290k-350k; failing amp -19..+2 dB.
 constexpr float kAmpPassSnrDb = 30.0f;
+// FAIL (reason=unstable) when the loudest of the valid tones is more than this
+// factor above the quietest: identical tones from a healthy board stay within
+// 1.03 (2026-10-17, E1/E3/E4/E5), a loose supply wire gave 1.9-2.0 (E1 before
+// its 5 V Dupont was reseated, E3) and still passed on the median.
+constexpr float kAmpMaxToneSpread = 1.3f;
 constexpr float kMicMinNonZeroPct = 50.0f;
 constexpr int32_t kMicMinRawSpan = 4;
 constexpr float kMicMaxFloor = 100000.0f;

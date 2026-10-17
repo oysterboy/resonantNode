@@ -28,6 +28,7 @@ ap.add_argument("--kick", default="", help="NAME: send RB CALL to this board (st
 ap.add_argument("--kick-first", type=float, default=15.0)
 ap.add_argument("--kick-every", type=float, default=90.0)
 ap.add_argument("--quiet-gap", type=float, default=15.0, help="a silence this long counts as 'quiet' for time-to-quiet")
+ap.add_argument("--quiet-within", type=float, default=30.0, help="pass mark: quiet within this many s after a start (RB CALL or idle call)")
 ap.add_argument("--out", required=True)
 ap.add_argument("--name", required=True)
 a = ap.parse_args()
@@ -135,9 +136,13 @@ per_min = [sum(1 for t, _ in emits if m * 60 <= t < (m + 1) * 60) for m in range
 print("  group emissions per minute: %s" % " ".join(str(x) for x in per_min))
 # Time to quiet after each kick (step 5f): from the kick to the end of the last emission before the group's
 # first silence of --quiet-gap s. 'never' when no such silence comes before the next kick or the end.
-if a.kick:
+# An idle call counts as a kick too (owner 2026-10-17): it wakes the network by design.
+idle_starts = [t for t, n, k in events if k == "emit_idle"]
+starters = sorted(set(round(k, 2) for k in kicks) | set(round(t, 2) for t in idle_starts))
+if starters:
     times = sorted(t for t, _ in emits)
     results = []
+    kicks = starters
     for i, k in enumerate(kicks):
         limit = kicks[i + 1] if i + 1 < len(kicks) else a.secs
         after = [t for t in times if k <= t < limit]
@@ -149,10 +154,12 @@ if a.kick:
                 break
             prev = t
         results.append(None if quiet_at is None else quiet_at - k)
-        print("  kick %d at %.0f s: %s, %d emissions until then" % (
-            i + 1, k, "quiet after %.1f s" % (quiet_at - k) if quiet_at is not None else "never quiet before the next kick",
+        print("  start %d at %.0f s (%s): %s, %d emissions until then" % (
+            i + 1, k, "idle" if any(abs(k - t) < 0.01 for t in idle_starts) else "RB CALL", "quiet after %.1f s" % (quiet_at - k) if quiet_at is not None else "never quiet before the next kick",
             sum(1 for t in after if quiet_at is None or t <= quiet_at)))
     done = [r for r in results if r is not None]
-    print("  time to quiet (gap %.0f s): %d of %d kicks quiet%s" % (
-        a.quiet_gap, len(done), len(results), ", median %.1f s" % sorted(done)[len(done) // 2] if done else ""))
+    within = sum(1 for r in done if r <= a.quiet_within)
+    print("  time to quiet (gap %.0f s): %d of %d starts quiet%s; within %.0f s: %d of %d (pass mark 80 %%: %s)" % (
+        a.quiet_gap, len(done), len(results), ", median %.1f s" % sorted(done)[len(done) // 2] if done else "",
+        a.quiet_within, within, len(results), "PASS" if results and within >= 0.8 * len(results) else "FAIL"))
 print("  log: %s" % log_path)

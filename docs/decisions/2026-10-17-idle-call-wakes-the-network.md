@@ -6,7 +6,7 @@ Date: 2026-10-17.
 ## Decision
 
 A node's idle call (after `idleTimeoutMs` of quiet) is an announcement tone outside the network band followed
-by the node's own call, today its hop train: `output.idle_announce_hz` = 300 Hz for `output.idle_announce_ms`
+by the node's own call as configured, today its hop train (the plain chirp when `output.hop_enabled` is 0): `output.idle_announce_hz` = 300 Hz for `output.idle_announce_ms`
 = 500 ms, a 200 ms gap, then the hop train on the band bins. The others do not detect the announcement and do
 hear the train, so an idle call wakes the network the way a heard call does. Behavior stays in Chirping through
 the whole sequence and own-emit suppression covers it.

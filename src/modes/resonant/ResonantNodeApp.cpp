@@ -866,18 +866,22 @@ void Node::update() {
     unsigned long emitSpanMs = 0;
     if (_hopEnabled && _behavior.signalShape() == ResonantBehavior::SignalShape::NetworkSignal) {
         emitSpanMs = startNetworkSignal();
-    } else if (_hopEnabled && _idleAnnounceHz > 0 && chirpPattern == ChirpOutput::ChirpPattern::Idle && bandBinCount() > 0) {
+    } else if (_idleAnnounceHz > 0 && chirpPattern == ChirpOutput::ChirpPattern::Idle) {
         // Idle call that wakes the network (owner 2026-10-17): an announcement
-        // tone outside the band (not detected), a gap, then the node's own call,
-        // the hop train, which the others hear and answer. Behavior stays in
-        // Chirping and own-emit suppression covers the whole span.
+        // tone outside the band (not detected), a gap, then the node's own call
+        // as configured: the hop train, or the plain chirp when the hop is off.
+        // The others hear the call and answer. Behavior stays in Chirping and
+        // own-emit suppression covers the whole span.
         _chirpOutput.setToneHz(_idleAnnounceHz);
         _chirpOutput.setTiming(_idleAnnounceMs, 0);
         _chirpOutput.start(ChirpOutput::ChirpPattern::Single);
         _idleHopPending = true;
         _idleHopArmed = false;
-        const unsigned long trainMs = static_cast<unsigned long>(_hopSteps) * _hopPulseMs
-            + static_cast<unsigned long>(_hopSteps > 0 ? _hopSteps - 1 : 0) * _hopGapMs;
+        const bool hopCall = _hopEnabled && bandBinCount() > 0;
+        const unsigned long trainMs = hopCall
+            ? static_cast<unsigned long>(_hopSteps) * _hopPulseMs
+                  + static_cast<unsigned long>(_hopSteps > 0 ? _hopSteps - 1 : 0) * _hopGapMs
+            : runtime::kDefaultChirpDurationMs;
         emitSpanMs = _idleAnnounceMs + kIdleAnnounceGapMs + trainMs;
         if (rbShouldLogDetail()) {
             Serial.print("RB emit shape=idle_call announce_hz=");
@@ -886,7 +890,7 @@ void Node::update() {
             Serial.print(_idleAnnounceMs);
             Serial.print(" gap_ms=");
             Serial.print(kIdleAnnounceGapMs);
-            Serial.println(" then=hop");
+            Serial.println(hopCall ? " then=hop" : " then=chirp");
         }
     }
     if (emitSpanMs == 0) {
@@ -903,7 +907,16 @@ void Node::update() {
     if (_idleHopArmed && timing::atOrAfter(timebase::nowMs(), _idleHopAtMs) && !_chirpOutput.isActive()) {
         _idleHopArmed = false;
         _idleHopPending = false;
-        if (startNetworkSignal() == 0) {
+        // The node's call: the hop train, or the plain chirp when the hop is off.
+        unsigned long callSpanMs = 0;
+        if (_hopEnabled && bandBinCount() > 0) {
+            callSpanMs = startNetworkSignal();
+        }
+        if (callSpanMs == 0) {
+            _chirpOutput.start(ChirpOutput::ChirpPattern::Single);
+            callSpanMs = _chirpOutput.isActive() ? runtime::kDefaultChirpDurationMs : 0;
+        }
+        if (callSpanMs == 0) {
             const unsigned long finishedMs = timebase::nowMs();
             _lastOwnChirpEndMs = finishedMs;
             _behavior.notifyChirpFinished(finishedMs);

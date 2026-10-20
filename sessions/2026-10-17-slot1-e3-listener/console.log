@@ -3,3 +3,8 @@
 [15:33:35] start OBS_e3chirps: SEQ DIAG on ; SEQ OBS start tries=30 period=2000 window=1800 report_settle=200 freq=3200 band=2950-3950 mode=detail when=all verbose=1
 [15:34:41] done OBS_e3chirps (66s): complete=True results={'miss': 28, 'rejected': 2}
 [15:34:52] session updated, index rebuilt
+[15:52:50] boot banner: {'role': 'analyzer', 'git': '3952521', 'version': '0.4.0', 'board': 'damp'}
+[15:52:52] warmup: ERR EMIT CHIRP emitter_remote_claim_timeout
+[15:52:52] start OBS_e3chirps_restored: SEQ DIAG on ; SEQ OBS start tries=30 period=2000 window=1800 report_settle=200 freq=3200 band=2950-3950 mode=detail when=all verbose=1
+[15:53:58] done OBS_e3chirps_restored (66s): complete=True results={'late': 7, 'miss': 22, 'expected': 1}
+[15:54:04] session updated, index rebuilt

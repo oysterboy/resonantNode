@@ -60,6 +60,58 @@
         "avg_strength": "2369.0",
         "avg_conf": "0.00"
       }
+    },
+    {
+      "name": "OBS_e3chirps_restored",
+      "file": "OBS_e3chirps_restored.3952521.log",
+      "firmware": {
+        "role": "analyzer",
+        "git": "3952521",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "commands": [
+        "SEQ DIAG on",
+        "SEQ OBS start tries=30 period=2000 window=1800 report_settle=200 freq=3200 band=2950-3950 mode=detail when=all verbose=1"
+      ],
+      "started": "2026-10-17T15:52:52",
+      "duration_s": 66,
+      "summary": {
+        "profile": "TonalPulseScalar",
+        "detector": "scalar_transient",
+        "complete": true,
+        "trial_results": {
+          "late": 7,
+          "miss": 22,
+          "expected": 1
+        },
+        "line_counts": {
+          "SEQ_TRIAL": 30,
+          "SEQ_INSPECT": 38,
+          "SEQ_SOURCE": 30,
+          "SEQ_SOURCE_CORE": 30,
+          "SEQ_SOURCE_SPEC": 8,
+          "SEQ_EXPLAIN": 30,
+          "SEQ_SUMMARY": 1
+        },
+        "trials": "30",
+        "completed": "30",
+        "expected_trials": "1",
+        "early_trials": "0",
+        "late_trials": "7",
+        "miss_trials": "22",
+        "duplicate_trials": "0",
+        "unexpected_trials": "0",
+        "rejected_trials": "0",
+        "buffer_overrun_trials": "7",
+        "detector_accepted_trials": "8",
+        "detector_reject_trials": "0",
+        "pattern_valid_trials": "8",
+        "pattern_rejected_trials": "0",
+        "avg_dt_ms": "697",
+        "avg_strength": "3385.1",
+        "avg_conf": "1.00"
+      }
     }
   ]
 }

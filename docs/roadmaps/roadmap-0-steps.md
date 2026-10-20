@@ -493,6 +493,15 @@ the previous gate open unless the step says it can run in parallel.
    this is the static check): hard ok, soft warn, gap_not_below_debounce, pinned. The Node prints `RB hop_check
    status=ok|warn|fail ... issues=...` at boot and after every PARAM SET on output.* or detection.*; the shipped
    build will print status=warn. Compile and host tests only; not on a board yet.
+   Progress 2026-10-20, remote, host only (item 3, nulls; docs/lab/2026-10-20-step5h-host-checks.md):
+   tools/bench/notchsweep.py notches one bin, then every pair, at 1/3 and 1/7 in amplitude (RBJ peaking EQ, widths
+   60/125/250 Hz) and replays each on the shipped profile, contrast P75 bisected over contrast_medium. One null is
+   survived at every bin, depth and width (shortest 95 ms against the 85 minimum). Two shallow nulls are survived
+   (except one pair at 250 Hz); two deep ones lose 3 of 10 pairs at 125 Hz and 5 of 10 at 250 Hz, all at the
+   detector (the train splits under 85 ms), never at the contrast gate: P75 stays >= 31,273 against 30,500 (32,442
+   unnotched). Rotation 0 only. One host test (five single deep nulls accepted, 3450+3700 at 1/7 not).
+   The three host items have landed, with 19 + 15 host tests passing. The session 1 items and the NODE-012 cells
+   remain open.
 
 6. STATUS baseline and 5-node field trial, on D-AMP. (issue #16)
    Where: NODE-001 (STATUS baseline, prerequisite), NODE-008 (5-node trial),

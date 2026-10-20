@@ -54,6 +54,29 @@ std::string hopVariant(const char* kind, int gapMs) {
     return std::string("test/fixtures/hop5_25x5g10_70cm_2026-10-16_") + kind + "_g" + std::to_string(gapMs) + ".csv";
 }
 
+// Peaking-EQ notch (RBJ biquad) at f0, amplitude gain `gain` at f0, bandwidth bwHz:
+// the same filter as tools/bench/notchsweep.py (step 5h item 3), a stand-in for a comb null.
+hostreplay::Capture notched(const hostreplay::Capture& in, double f0, double gain, double bwHz) {
+    hostreplay::Capture out = in;
+    const double a = sqrt(gain);
+    const double w0 = 2.0 * PI * f0 / static_cast<double>(in.sampleRateHz);
+    const double alpha = sin(w0) / (2.0 * (f0 / bwHz));
+    const double a0 = 1.0 + alpha / a;
+    const double b0 = (1.0 + alpha * a) / a0, b1 = -2.0 * cos(w0) / a0, b2 = (1.0 - alpha * a) / a0;
+    const double a1 = -2.0 * cos(w0) / a0, a2 = (1.0 - alpha / a) / a0;
+    double x1 = 0.0, x2 = 0.0, y1 = 0.0, y2 = 0.0;
+    for (size_t i = 0; i < out.pcm.size(); ++i) {
+        const double x = static_cast<double>(in.pcm[i]);
+        const double y = b0 * x + b1 * x1 + b2 * x2 - a1 * y1 - a2 * y2;
+        x2 = x1;
+        x1 = x;
+        y2 = y1;
+        y1 = y;
+        out.pcm[i] = static_cast<int32_t>(lround(y));
+    }
+    return out;
+}
+
 // The train's first step starts at ~59 ms in the capture's axis (accepted start of the recorded train).
 constexpr unsigned long kHopTrainStartMaxMs = 65;
 
@@ -249,6 +272,28 @@ void test_release_debounce_above_the_gap_bridges_the_dry_train() {
     }
 }
 
+// Step 5h item 3, assumption 2 (one null per spacing): one deep null (1/7 in amplitude,
+// 125 Hz wide) at any of the five bins still leaves one accepted occurrence; two deep
+// nulls at 3450 + 3700 (the train's middle steps on this rotation) do not: the detector
+// splits the train into pieces under the 85 ms minimum. The contrast gate is not what
+// fails: every accepted variant's contrast P75 stays >= 31,273 (shipped 30,500), see
+// docs/lab/2026-10-20-step5h-host-checks.md for the full sweep.
+void test_one_deep_null_is_survived_two_in_the_middle_are_not() {
+    hostreplay::Capture cap;
+    TEST_ASSERT_TRUE(hostreplay::loadCapture(kHopCsv, cap));
+    const detection::DetectionProfile profile = detection::makeTonalPulseScalarProfile();
+    const double bins[] = {2950, 3200, 3450, 3700, 3950};
+    for (double f : bins) {
+        const hostreplay::Result r = hostreplay::replay(notched(cap, f, 1.0 / 7.0, 125.0), networkBand(), profile);
+        TEST_ASSERT_EQUAL_UINT32_MESSAGE(1, r.accepted, "one deep null");
+        TEST_ASSERT_TRUE(r.verdicts.front().primaryDurationMs >= 85);
+    }
+    const hostreplay::Capture two = notched(notched(cap, 3450, 1.0 / 7.0, 125.0), 3700, 1.0 / 7.0, 125.0);
+    const hostreplay::Result r2 = hostreplay::replay(two, networkBand(), profile);
+    TEST_ASSERT_EQUAL_UINT32(0, r2.accepted);
+    TEST_ASSERT_EQUAL_UINT32_MESSAGE(0, r2.rejected, "the split train never reaches the inspectors");
+}
+
 // Step 5h item 2: the shipped hop train against the shipped scalar profile
 // (detection/HopGapContract.h; the Node prints the same check as RB hop_check).
 // Hard checks pass; the soft one, gap < release debounce, does not: 10 = 10, the
@@ -353,6 +398,7 @@ int main(int, char**) {
     RUN_TEST(test_dry_gaps_of_15_ms_and_more_are_not_heard);
     RUN_TEST(test_room_tail_bridges_15_ms_but_not_30_ms);
     RUN_TEST(test_release_debounce_above_the_gap_bridges_the_dry_train);
+    RUN_TEST(test_one_deep_null_is_survived_two_in_the_middle_are_not);
     RUN_TEST(test_shipped_hop_train_fits_the_scalar_detector);
     RUN_TEST(test_hop_gap_check_flags_what_the_detector_cannot_read);
     RUN_TEST(test_band_grid_is_shared_by_detector_and_hop_train);

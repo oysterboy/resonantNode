@@ -486,6 +486,13 @@ the previous gate open unless the step says it can run in parallel.
    is still one train, 30 ms is not. Measured lever, not shipped: release debounce 20 reads the dry 10 and 15 ms
    trains whole at every onset. Feeds item 2 (the gap contract is debounce > gap, not max gap >= gap) and the dry
    NODE-012 cell.
+   Progress 2026-10-20, remote, host only (item 2, gap contract): detection/HopGapContract.h checks output.hop_* against
+   detection.scalar_*: hard (train inside min..max duration, coverage, longest island, gap <= max gap) and soft (gap <
+   release debounce; train + 50 ms tail <= max duration). The hop defaults moved to RuntimeDefaults.h (with a
+   static_assert on the 165 ms span); a host test checks the shipped pair (the profile builder is not constexpr, so
+   this is the static check): hard ok, soft warn, gap_not_below_debounce, pinned. The Node prints `RB hop_check
+   status=ok|warn|fail ... issues=...` at boot and after every PARAM SET on output.* or detection.*; the shipped
+   build will print status=warn. Compile and host tests only; not on a board yet.
 
 6. STATUS baseline and 5-node field trial, on D-AMP. (issue #16)
    Where: NODE-001 (STATUS baseline, prerequisite), NODE-008 (5-node trial),

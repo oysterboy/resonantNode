@@ -37,6 +37,7 @@ What the expectations encode (2026-10-16 replay, docs/lab/2026-10-16-bench-day.m
 
 #include "../../src/app/RuntimeDefaults.h"
 #include "../../src/detection/DetectionProfile.h"
+#include "../../src/detection/HopGapContract.h"
 #include "../../src/detection/evaluation/OccurrenceVerdict.h"
 #include "../../src/detection/features/FreqBandStream.h"
 #include "../../src/host/Replay.h"
@@ -248,6 +249,56 @@ void test_release_debounce_above_the_gap_bridges_the_dry_train() {
     }
 }
 
+// Step 5h item 2: the shipped hop train against the shipped scalar profile
+// (detection/HopGapContract.h; the Node prints the same check as RB hop_check).
+// Hard checks pass; the soft one, gap < release debounce, does not: 10 = 10, the
+// train relies on the room tail (the dry fixtures above). If this assertion
+// fails because the debounce or the gap changed, the change was a tuning pass:
+// update this test and the HopGapContract note with its bench evidence.
+void test_shipped_hop_train_fits_the_scalar_detector() {
+    const detection::DetectionProfile profile = detection::makeTonalPulseScalarProfile();
+    detection::HopTrainShape shape;
+    shape.steps = runtime::kDefaultHopSteps;
+    shape.pulseMs = runtime::kDefaultHopPulseMs;
+    shape.gapMs = runtime::kDefaultHopGapMs;
+    const detection::HopGapCheck c = detection::checkHopGap(shape, profile.scalarTransient);
+    TEST_ASSERT_EQUAL_UINT32(165, c.trainMs);
+    TEST_ASSERT_TRUE(c.durationFits);
+    TEST_ASSERT_TRUE(c.coverageFits);
+    TEST_ASSERT_TRUE(c.islandFits);
+    TEST_ASSERT_TRUE(c.gapWithinMaxGap);
+    TEST_ASSERT_TRUE(c.tailFits);
+    TEST_ASSERT_TRUE(c.hardOk());
+    TEST_ASSERT_FALSE_MESSAGE(c.gapBelowDebounce, "shipped gap is below the debounce now: see the comment above");
+}
+
+// The check names what the replay shows: a 30 ms gap is over max gap (the wet_g30
+// fixture is not heard), and a short train is under the minimum duration.
+void test_hop_gap_check_flags_what_the_detector_cannot_read() {
+    const detection::DetectionProfile profile = detection::makeTonalPulseScalarProfile();
+    detection::HopTrainShape wide;
+    wide.steps = 5;
+    wide.pulseMs = 25;
+    wide.gapMs = 30;
+    const detection::HopGapCheck w = detection::checkHopGap(wide, profile.scalarTransient);
+    TEST_ASSERT_FALSE(w.gapWithinMaxGap);
+    TEST_ASSERT_FALSE(w.hardOk());
+    detection::HopTrainShape shortTrain;
+    shortTrain.steps = 2;
+    shortTrain.pulseMs = 25;
+    shortTrain.gapMs = 5;
+    const detection::HopGapCheck s = detection::checkHopGap(shortTrain, profile.scalarTransient);
+    TEST_ASSERT_FALSE(s.durationFits);
+    TEST_ASSERT_TRUE(s.gapBelowDebounce);
+    detection::DetectionProfile longer = profile;
+    TEST_ASSERT_TRUE(hostreplay::applyProfileSet(longer, "scalar_release_debounce_ms", 20.0));
+    detection::HopTrainShape shipped;
+    shipped.steps = runtime::kDefaultHopSteps;
+    shipped.pulseMs = runtime::kDefaultHopPulseMs;
+    shipped.gapMs = runtime::kDefaultHopGapMs;
+    TEST_ASSERT_TRUE(detection::checkHopGap(shipped, longer.scalarTransient).softOk());
+}
+
 // A node listening on the single 3,200 Hz target (band_low_hz = 0) does not
 // hear the network signal: only one 25 ms step is on its bin, below the
 // 85 ms minimum. The band is the contract, not an option.
@@ -302,6 +353,8 @@ int main(int, char**) {
     RUN_TEST(test_dry_gaps_of_15_ms_and_more_are_not_heard);
     RUN_TEST(test_room_tail_bridges_15_ms_but_not_30_ms);
     RUN_TEST(test_release_debounce_above_the_gap_bridges_the_dry_train);
+    RUN_TEST(test_shipped_hop_train_fits_the_scalar_detector);
+    RUN_TEST(test_hop_gap_check_flags_what_the_detector_cannot_read);
     RUN_TEST(test_band_grid_is_shared_by_detector_and_hop_train);
     RUN_TEST(test_dc_blocker_scale_is_the_first_difference_gain_at_the_chirp);
     return UNITY_END();

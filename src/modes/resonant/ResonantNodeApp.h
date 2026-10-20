@@ -168,6 +168,7 @@ private:
     size_t hopFrequencies(uint32_t* out, size_t capacity) const;  // the train's bins, rotated per node
     unsigned long startNetworkSignal();  // hop train on the ChirpOutput; returns its span in ms, 0 = not started
     void printSignalConfig();
+    void printHopGapCheck();  // RB hop_check: output.hop_* against detection.scalar_* (step 5h item 2)
 
     // Hardware wiring.
     int _ledPin;
@@ -201,9 +202,9 @@ private:
     uint32_t _bandHighHz = runtime::kDefaultNetworkBandHighHz;
     bool _hopEnabled = true;
     uint32_t _hopRotation = 0;
-    uint32_t _hopPulseMs = 25;
-    uint32_t _hopGapMs = 10;
-    uint32_t _hopSteps = 5;
+    uint32_t _hopPulseMs = runtime::kDefaultHopPulseMs;
+    uint32_t _hopGapMs = runtime::kDefaultHopGapMs;
+    uint32_t _hopSteps = runtime::kDefaultHopSteps;
     // Idle call (owner 2026-10-17): announcement tone below the band, a gap,
     // then the node's call (its hop train). 0 Hz = plain idle chirp pattern.
     uint32_t _idleAnnounceHz = 300;

@@ -8,6 +8,7 @@
 #include "../../app/TimingUtils.h"
 #include "../../app/BuildInfo.h"
 #include "../../app/NodeRoster.h"
+#include "../../detection/HopGapContract.h"
 #include "../../detection/features/FrequencyMeasurementPacketBuilder.h"
 #include "../../detection/detectors/frequency/FrequencyMatchCriteria.h"
 #include "../../detection/inspection/InspectionNames.h"
@@ -367,6 +368,7 @@ void Node::begin() {
         Serial.println(me != nullptr ? "roster" : "mac");
     }
     printSignalConfig();
+    printHopGapCheck();
     _behavior.resetState();
     resetDetectionState();
     _audioSignal.resetStats();
@@ -1577,12 +1579,67 @@ void Node::applyParamModule(param::ModuleId module) {
     switch (module) {
         case param::ModuleId::Detection:
             applyActiveDetectionProfile();
+            printHopGapCheck();
+            break;
+        case param::ModuleId::Output:
+            printHopGapCheck();
             break;
         case param::ModuleId::Node:
         case param::ModuleId::Behavior:
-        case param::ModuleId::Output:
             break;
     }
+}
+
+// One line on the fit between the network signal and the scalar detector
+// (detection/HopGapContract.h). status=fail: the train can never be one
+// occurrence; status=warn: only where the room tail bridges the gaps (the
+// shipped 10 ms gap against release debounce 10 is warn, step 5h item 1).
+void Node::printHopGapCheck() {
+    if (!_hopEnabled) {
+        return;
+    }
+    uint32_t hz[8];
+    detection::HopTrainShape shape;
+    shape.steps = static_cast<unsigned long>(hopFrequencies(hz, sizeof(hz) / sizeof(hz[0])));
+    shape.pulseMs = _hopPulseMs;
+    shape.gapMs = _hopGapMs;
+    const detection::ScalarTransientConfig& sc = _activeDetectionProfile.scalarTransient;
+    const detection::HopGapCheck c = detection::checkHopGap(shape, sc);
+    Serial.print("RB hop_check status=");
+    Serial.print(!c.hardOk() ? "fail" : (!c.softOk() ? "warn" : "ok"));
+    Serial.print(" train_ms=");
+    Serial.print(c.trainMs);
+    Serial.print(" gap_ms=");
+    Serial.print(shape.gapMs);
+    Serial.print(" release_debounce_ms=");
+    Serial.print(sc.releaseDebounceMs);
+    Serial.print(" max_gap_ms=");
+    Serial.print(sc.maxGapMs);
+    Serial.print(" duration_ms=");
+    Serial.print(sc.minTransientDurationMs);
+    Serial.print("..");
+    Serial.print(sc.maxTransientDurationMs);
+    Serial.print(" issues=");
+    bool any = false;
+    const struct {
+        bool ok;
+        const char* name;
+    } items[] = {
+        {c.durationFits, "duration"},
+        {c.coverageFits, "coverage"},
+        {c.islandFits, "island"},
+        {c.gapWithinMaxGap, "max_gap"},
+        {c.gapBelowDebounce, "gap_not_below_debounce"},
+        {c.tailFits, "no_tail_margin"},
+    };
+    for (const auto& item : items) {
+        if (!item.ok) {
+            Serial.print(any ? "," : "");
+            Serial.print(item.name);
+            any = true;
+        }
+    }
+    Serial.println(any ? "" : "none");
 }
 
 bool Node::setProfileFromName(const char* name) {

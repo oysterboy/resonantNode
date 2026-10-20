@@ -476,6 +476,16 @@ the previous gate open unless the step says it can run in parallel.
    Gate: the three host items landed with passing host tests; the session 1 items reported under their own
    steps; each NODE-012 cell a bench session with hop T3 count, contrast P75 and captures. Does not gate step 6:
    the host items run before session 1, the cells after the trial.
+   Progress 2026-10-20, remote, host only (item 1, gap fixtures): tools/bench/hopvariants.py writes variants of the
+   70 cm hop capture (dry_gN: step windows kept, gaps and tail replaced by pre-roll noise, N = 10/15/20/30; wet_gN:
+   recorded gap with tail plus N - 10 ms noise, N = 15/20/30), seven fixtures under test/fixtures, four tests in
+   test_replay_corpus. Assumption 1 holds in the room, not in the detector: on the shipped values a dry 10 ms gap
+   cuts the train after its first step (release debounce 10 = the gap; the 50 ms onset cooldown keeps the next step
+   from starting a new candidate), so a dry train is read from step 2 at best (115 ms, 30 ms over the 85 minimum,
+   at 2 of 6 window onsets) or not at all; dry gaps of 15 ms and more are never heard. With this room's tail 15 ms
+   is still one train, 30 ms is not. Measured lever, not shipped: release debounce 20 reads the dry 10 and 15 ms
+   trains whole at every onset. Feeds item 2 (the gap contract is debounce > gap, not max gap >= gap) and the dry
+   NODE-012 cell.
 
 6. STATUS baseline and 5-node field trial, on D-AMP. (issue #16)
    Where: NODE-001 (STATUS baseline, prerequisite), NODE-008 (5-node trial),

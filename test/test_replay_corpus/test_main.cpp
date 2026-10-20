@@ -12,6 +12,13 @@ facing up, combined build, mode=both: PCM plus the board's amp feature):
                                         bins 2950/3200/3450/3700/3950, 70 cm, E3 0.5 FS, shipped build
                                         5ba805d (bench corpus-70cm hop5_p25g10_pos1_r0; the board and the
                                         replay both accepted all three of that session's hop captures)
+  hop5_25x5g10_70cm_2026-10-16_{dry,wet}_gN.csv
+                                        variants of the hop capture from tools/bench/hopvariants.py (step 5h,
+                                        assumption 1): dry_gN keeps the five step windows and replaces the gaps
+                                        and the tail after the train with the capture's pre-roll noise, gaps of
+                                        N = 10/15/20/30 ms; wet_gN keeps each recorded 10 ms gap (with the room
+                                        tail) and adds N - 10 ms of noise, N = 15/20/30. Step windows from the
+                                        send plan, onset 57.2 ms (first 1 ms RMS at 20 % of the peak)
 Fixture provenance: all four were captured on the DC-blocker build (PCM_PREPROCESS_MODE_VALUE 2); RAW_BEGIN
 lines from builds after 2026-10-16 carry `preprocess=` and Capture::preprocess reads it.
 Run with `pio test -e native-test` (needs a host C++ compiler on PATH).
@@ -41,6 +48,13 @@ const char* kChirpCsv = "test/fixtures/chirp3200_90cm_2026-10-16.csv";
 const char* kTone3300Csv = "test/fixtures/tone3300_90cm_2026-10-16.csv";
 const char* kSpeechWav = "test/fixtures/radio_speech_110cm_2026-10-16.wav";
 const char* kHopCsv = "test/fixtures/hop5_25x5g10_70cm_2026-10-16.csv";
+
+std::string hopVariant(const char* kind, int gapMs) {
+    return std::string("test/fixtures/hop5_25x5g10_70cm_2026-10-16_") + kind + "_g" + std::to_string(gapMs) + ".csv";
+}
+
+// The train's first step starts at ~59 ms in the capture's axis (accepted start of the recorded train).
+constexpr unsigned long kHopTrainStartMaxMs = 65;
 
 hostreplay::Options singleTarget3200() {
     hostreplay::Options opt;
@@ -169,6 +183,71 @@ void test_hop_train_is_accepted_once_in_band_mode() {
     TEST_ASSERT_TRUE_MESSAGE(duration >= 150 && duration <= 300, "hop train duration outside 150..300 ms");
 }
 
+// Step 5h, assumption 1: the room tail, not the detector, bridges the 10 ms gaps.
+// Shipped scalar values: release debounce 10, max gap 20, cooldown 50, min duration 85.
+// Without the tail a 10 ms gap reads as a dip of about the debounce: the candidate
+// closes after the first step (25 ms, too short) and the 50 ms onset cooldown keeps the
+// next step from starting a new one. What survives (if anything) starts inside the
+// train, never at its start. The onset of the step windows was varied 54..59 ms when
+// this was written (2026-10-20): dry g10 kept a 115 ms rest from step 2 at 57-58 ms
+// and nothing at the others; this assertion holds at all six.
+void test_dry_hop_train_loses_its_first_step() {
+    hostreplay::Capture cap;
+    TEST_ASSERT_TRUE(hostreplay::loadCapture(hopVariant("dry", 10), cap));
+    TEST_ASSERT_EQUAL_STRING("f=3200 dur=25 pulses=5 gap=10 hop=2950,3200,3450,3700,3950", cap.shape.c_str());
+    const detection::DetectionProfile profile = detection::makeTonalPulseScalarProfile();
+    const hostreplay::Result r = hostreplay::replay(cap, networkBand(), profile);
+    for (const detection::OccurrenceVerdict& v : r.verdicts) {
+        if (v.accepted) {
+            TEST_ASSERT_TRUE_MESSAGE(v.primaryStartMs > kHopTrainStartMaxMs, "a dry train was read from its first step");
+        }
+    }
+}
+
+// Dry gaps of 15 ms and more: no occurrence at all (every step is a short reject).
+void test_dry_gaps_of_15_ms_and_more_are_not_heard() {
+    const detection::DetectionProfile profile = detection::makeTonalPulseScalarProfile();
+    const int gaps[] = {15, 20, 30};
+    for (int g : gaps) {
+        hostreplay::Capture cap;
+        TEST_ASSERT_TRUE(hostreplay::loadCapture(hopVariant("dry", g), cap));
+        const hostreplay::Result r = hostreplay::replay(cap, networkBand(), profile);
+        TEST_ASSERT_EQUAL_UINT32_MESSAGE(0, r.accepted, hopVariant("dry", g).c_str());
+    }
+}
+
+// With this room's tail a 15 ms gap is still one train from its first step; 30 ms is not.
+// (wet g20 is accepted at the default onset but not at every onset: not asserted.)
+void test_room_tail_bridges_15_ms_but_not_30_ms() {
+    const detection::DetectionProfile profile = detection::makeTonalPulseScalarProfile();
+    hostreplay::Capture g15;
+    TEST_ASSERT_TRUE(hostreplay::loadCapture(hopVariant("wet", 15), g15));
+    const hostreplay::Result r15 = hostreplay::replay(g15, networkBand(), profile);
+    TEST_ASSERT_EQUAL_UINT32(1, r15.accepted);
+    TEST_ASSERT_TRUE(r15.verdicts.front().primaryStartMs <= kHopTrainStartMaxMs);
+    hostreplay::Capture g30;
+    TEST_ASSERT_TRUE(hostreplay::loadCapture(hopVariant("wet", 30), g30));
+    const hostreplay::Result r30 = hostreplay::replay(g30, networkBand(), profile);
+    TEST_ASSERT_EQUAL_UINT32(0, r30.accepted);
+}
+
+// The lever, measured, not shipped: a release debounce above the gap (20 against 10/15)
+// reads the dry train as one occurrence from its first step, at every onset 54..59 ms.
+// Changing the shipped value is a tuning pass of its own (CLAUDE.md; step 5h "Levers").
+void test_release_debounce_above_the_gap_bridges_the_dry_train() {
+    detection::DetectionProfile profile = detection::makeTonalPulseScalarProfile();
+    TEST_ASSERT_TRUE(hostreplay::applyProfileSet(profile, "scalar_release_debounce_ms", 20.0));
+    const int gaps[] = {10, 15};
+    for (int g : gaps) {
+        hostreplay::Capture cap;
+        TEST_ASSERT_TRUE(hostreplay::loadCapture(hopVariant("dry", g), cap));
+        const hostreplay::Result r = hostreplay::replay(cap, networkBand(), profile);
+        TEST_ASSERT_EQUAL_UINT32_MESSAGE(1, r.accepted, hopVariant("dry", g).c_str());
+        TEST_ASSERT_TRUE(r.verdicts.front().primaryStartMs <= kHopTrainStartMaxMs);
+        TEST_ASSERT_TRUE(r.verdicts.front().primaryDurationMs >= 150);
+    }
+}
+
 // A node listening on the single 3,200 Hz target (band_low_hz = 0) does not
 // hear the network signal: only one 25 ms step is on its bin, below the
 // 85 ms minimum. The band is the contract, not an option.
@@ -219,6 +298,10 @@ int main(int, char**) {
     RUN_TEST(test_radio_speech_is_not_accepted);
     RUN_TEST(test_hop_train_is_accepted_once_in_band_mode);
     RUN_TEST(test_hop_train_is_not_heard_on_the_single_target);
+    RUN_TEST(test_dry_hop_train_loses_its_first_step);
+    RUN_TEST(test_dry_gaps_of_15_ms_and_more_are_not_heard);
+    RUN_TEST(test_room_tail_bridges_15_ms_but_not_30_ms);
+    RUN_TEST(test_release_debounce_above_the_gap_bridges_the_dry_train);
     RUN_TEST(test_band_grid_is_shared_by_detector_and_hop_train);
     RUN_TEST(test_dc_blocker_scale_is_the_first_difference_gain_at_the_chirp);
     return UNITY_END();

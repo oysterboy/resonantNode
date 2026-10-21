@@ -1,6 +1,6 @@
 # D-AMP tone level 0.3 of full scale
 
-Status: decided, implemented (b6e99b0); bench verification pending (#20 R1).
+Status: superseded 2026-10-21 by 2026-10-21-damp-tone-level-0p5.md (hearing matrix, step 5e). Was: decided, implemented (b6e99b0).
 Date: 2026-10-09.
 
 ## Decision

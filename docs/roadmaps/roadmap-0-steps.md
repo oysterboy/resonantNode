@@ -443,7 +443,7 @@ the previous gate open unless the step says it can run in parallel.
    and-reproducible-sessions.md); a decision file if a default changes.
    Runs after 5b's hearing-direction item; in parallel with 5c.
 
-5e. [TODO] Node tone level with the network signal: 0.3 FS or 0.5 FS.
+5e. [DONE 2026-10-21] Node tone level with the network signal: 0.3 FS or 0.5 FS.
    (issue #44)
    Where: OUT-001 (roadmap-output.md); decisions/2026-10-09-damp-tone-
    level-0p3.md, to revisit; research/unproven-assumptions-audit.md 1.4.
@@ -456,6 +456,12 @@ the previous gate open unless the step says it can run in parallel.
    2026-10-17: more urgent than it looked. Today's hearing matrix ran the Nodes at their shipped 0.3 FS and lost
    contact beyond ~1 m or across a 20 cm height step. 5e therefore also fixes the trial spacing: the hearing
    matrix at 0.3 and 0.5 FS at the spacing the trial will use, all boards at one height (bench session 1).
+   Done 2026-10-21 (bench/sessions/2026-10-21-hearing-matrix, tools/bench/hearmatrix.py). Layout as the trial will
+   use it (owner): E2-E3 110 cm apart; E1, E4 and E5 left of E3, 40 cm apart, starting 40 cm from E2, and 10 cm lower
+   than E2/E3. Each node played 10 RB CALLs while the others listened (resting instead of answering). At 0.3 FS 7 of
+   20 cells reached 10/10, and E2 and E3 barely heard anyone. At 0.5 FS 19 of 20 were 10/10; only E2 <- E1 was 0/10.
+   The owner decided on 0.5 FS (decisions/2026-10-21-damp-tone-level-0p5.md). This also answers step 6's
+   first-hour hearing matrix for this layout: no board fails its row.
 
 5f. [TODO] Write step 6's third question as a measurement. (issue #45)
    Where: BEH-003 territory (roadmap-behavior.md); audit 1.2.

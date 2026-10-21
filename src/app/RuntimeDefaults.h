@@ -65,9 +65,10 @@ These are defaults, not live profile state.
 
 // Sine peak of the D-AMP tone as a fraction of full scale (see
 // kDefaultI2sToneAmplitude below); a build flag so a bench run can try
-// another level without editing the default.
+// another level without editing the default. 0.5 since 2026-10-21 (was 0.3):
+// decisions/2026-10-21-damp-tone-level-0p5.md (hearing matrix, step 5e).
 #ifndef I2S_TONE_AMPLITUDE
-#define I2S_TONE_AMPLITUDE 0.3f
+#define I2S_TONE_AMPLITUDE 0.5f
 #endif
 
 #ifndef I2S_COMM_FORMAT_VALUE

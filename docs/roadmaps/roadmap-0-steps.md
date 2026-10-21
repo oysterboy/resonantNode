@@ -396,7 +396,7 @@ the previous gate open unless the step says it can run in parallel.
    speech/music OBS no worse than 5a; no dropped buffers; Node build plays
    its per-node variation. Runs in parallel with 3d and 5c.
 
-5d. [NEARLY DONE 2026-10-17] Refractory vs the two-node exchange: a node must be able to
+5d. [DONE 2026-10-22] Refractory vs the two-node exchange: a node must be able to
    2026-10-17: a two-Node chain sustains on the shipped values (E1-E4 518 turns in 180 s with refractory 400; the host
    test's arithmetic did not hold on the bench), and the owner decided a rest rule
    (decisions/2026-10-17-two-node-exchange-chain-length.md, 2ddf2b4): 518 -> 59 turns for the pair; four nodes 29-43
@@ -410,7 +410,8 @@ the previous gate open unless the step says it can run in parallel.
    Gate part met. Left: the owner confirms the shipped rest values (or changes them in a tuning pass). Input for
    that: the five-node run at 0.5 FS, 5f below.
    2026-10-22: the owner decided a 5 s rest (was 10 s), with the triggers unchanged
-   (decisions/2026-10-22-network-pacing.md). Verified in the five-node session under 5f.
+   (decisions/2026-10-22-network-pacing.md). Verified in the five-node session under 5f. Gate met; item (4), the
+   own-emit tail on hop trains, moves on as an audit item (3.5), not a gate.
    Original text:
    answer the reply to its own signal. (issue #43)
    Where: BEH-001/BEH-002 territory (roadmap-behavior.md);
@@ -469,7 +470,7 @@ the previous gate open unless the step says it can run in parallel.
    The owner decided on 0.5 FS (decisions/2026-10-21-damp-tone-level-0p5.md). This also answers step 6's
    first-hour hearing matrix for this layout: no board fails its row.
 
-5f. [TODO] Write step 6's third question as a measurement. (issue #45)
+5f. [DONE 2026-10-22] Write step 6's third question as a measurement. (issue #45)
    Where: BEH-003 territory (roadmap-behavior.md); audit 1.2.
    Why before step 6: the owner's goal is set (2026-10-17: above a level of network traffic the network goes quiet)
    and Behavior now reads FieldState (the rest rule), so the third question can pass or fail. tools/bench/nodegroup.py
@@ -492,6 +493,8 @@ the previous gate open unless the step says it can run in parallel.
    2026-10-22, owner (decisions/2026-10-22-network-pacing.md): idle call every 60 s +- 20 s (was 20 +- 5); pass =
    the chain ends (3 s silence) within 30 s in 80 % of starts; M = 100 per minute; the 15 s silence is only
    counted. nodegroup.py prints both verdicts.
+   Verified 2026-10-22 (bench/sessions/2026-10-22-group5-pacing, 908dc9a, 600 s, five nodes): chains 13 of 13 ended
+   within 30 s (max 4.6 s), max 48 per minute (M = 100), the 15 s silence after 13 of 15 starts. Gate met.
 
 5g. [DONE 2026-10-21] Pre-trial Node items. (issue #46)
    Where: BEH-005, OUT-005 (roadmap-behavior.md, roadmap-output.md); decisions/2026-10-17-idle-call-wakes-the-network.md.
@@ -574,6 +577,7 @@ the previous gate open unless the step says it can run in parallel.
    Behavior values); 5e (Node level); 5f (the gate below written).
    Added 2026-10-17: 3b/4 gate run (five boards on one build, SELFTEST with the others silent) and 4a's LED look;
    3d's SEQ check; 5c's hardware fixes (E3, E5); 5g; the trial spacing and one height for all boards, from 5e.
+   2026-10-22: 3d's SEQ check done (bench/sessions/2026-10-22-3d-seq-check; 3d's other checklist items stay in #32).
    2026-10-21: 3b/4 gate run done; E3 fixed. 4a's LED look done (owner: the LEDs do what they should, all five
    boards). E5 accepted by the owner on its long repeater cable as it runs today; its intermittent long-cable mic
    fault is watched through RB STATUS during the trial.

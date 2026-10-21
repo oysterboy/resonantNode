@@ -112,10 +112,18 @@ Idle on, RB CALL every 90 s, 360 s.
   calls, about one every 13 s, wakes all five nodes.
 - Open for the owner: M, and the idle timeout or a restated pass mark.
 
-## Not done today
+## After midnight (2026-10-22, owner away)
 
-3d's SEQ check (#31/#32) did not run.
+- **3d SEQ check** (bench/sessions/2026-10-22-3d-seq-check): P1 echo, B12a, B9, B12b and P3 pass. A miss
+  right after rejects could not be forced. The other items of #32 stay open.
+- **Owner decisions** (decisions/2026-10-22-network-pacing.md):
+  - rest 5 s;
+  - idle call every 60 s +- 20 s;
+  - pass mark: the chain ends within 30 s in 80 % of starts;
+  - M = 100.
+- **Verification** (bench/sessions/2026-10-22-group5-pacing, 908dc9a, 600 s): chains 13 of 13 ended (max 4.6 s),
+  max 48 per minute. **5d and 5f are done.**
 
-Board state (end of the session): all five on Node faaa814 (0.5 FS): E1 COM8, E2 COM3, E3 COM4, E4 COM10, E5 COM11,
+Board state (end of the session): all five on Node 908dc9a (0.5 FS, new pacing): E1 COM8, E2 COM3, E3 COM4, E4 COM10, E5 COM11,
 in the trial layout. They are held silent by a background python process on the lab PC (ports open, idle off,
 onset 200000). Ending it, or a reboot of the PC, resets the boards and brings back their idle voice.

@@ -369,6 +369,10 @@ the previous gate open unless the step says it can run in parallel.
    bench/sessions/2026-10-17-pairmatrix). Chain length decided (rest rule, step 5d).
    Gate items still open: hop T3 >= 9/10 at every spacing with the shipped build on another day (bench session 1);
    speech/music OBS on the Node build (audit 2.2, session 1).
+   Progress 2026-10-21 (bench/sessions/2026-10-21-hop-day2-*, docs/lab/2026-10-21-bench-session-1.md): second day,
+   shipped builds (E2 Analyzer 5fe3cb8, E3 Emitter 0.5 FS), 60-110 cm: hop5 10/10 at 60, 70, 80, 90 and 110 cm, 9/10
+   at 100 cm (one contrast-weak reject); the chirp at 90 cm is unchanged at 10/10 (0/10 at 100 cm, comb). **The
+   battery item is met.** Left for the gate: speech/music OBS on the Node build.
    Also open from the audit (research/unproven-assumptions-audit.md): 3.3 the Node quiet gate (400) was derived from a
    First Difference artefact, re-measure it on the DC blocker; 2.2 speech/music OBS on the Node build (the contrast and
    amp limits rest on one room, one phone, two days); 2.3 hop gap vs a dry room: output.hop_gap_ms and the scalar

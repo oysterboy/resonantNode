@@ -1,0 +1,57 @@
+# 2026-10-21: bench session 1, part 1 (owner at the bench)
+
+## E3 fix (bench/sessions/2026-10-21-e3-cap-selftest)
+
+The owner put a 10 uF capacitor between EN and GND on E3 and checked its wiring by eye. Results:
+- `esptool read_mac` and the flash both ran without BOOT: the auto-reset works.
+- SELFTEST: 2 of 4 runs PASS. Runs 2 and 3 failed on the mic floor while the owner was handling things at the
+  bench. Run 4, with the bench left alone, passed.
+- The own tone is steady now (spread 1.00-1.07; on 2026-10-17 it was 2x).
+- The owner no longer hears the harsh output.
+
+## Five boards on one build (bench/sessions/2026-10-21-selftest-all5)
+
+All five boards were flashed to Node ecfc72b without BOOT. Ports: E1 COM8, E2 COM3, E3 COM4, E4 COM10, E5 COM11.
+- At boot each board prints `RB node name=E<n> rotation_source=roster` (rotations 0-4) and `RB hop_check
+  status=warn` (step 5h item 2).
+- Each board passes SELFTEST with the other four held silent. E4 needed a solo reboot: its quiet-boot check
+  failed while all five booted at once.
+- Amp levels: E1 200k, E3 215k, E2 219k, E5 251k, E4 335k.
+- E5 was on the 5 m+ repeater cable, unchanged since 2026-10-17, when its mic read zeros on that cable; today
+  it passed. The fault is intermittent.
+
+Steps 3b, 4 and 5c were closed (5fe3cb8).
+
+## 5b on a second day: chirp and hop train, 60-110 cm (bench/sessions/2026-10-21-hop-day2-*)
+
+Setup:
+- E2: Analyzer, shipped build (esp32dev-analyzer, main 5fe3cb8).
+- E3: Emitter at 0.5 FS (`-D I2S_TONE_AMPLITUDE=0.5f`).
+- Mic and speaker facing up on the bench; the owner moved the boards between spacings.
+- E1, E4 and E5 were Nodes on the same bench, held silent (ports open, idle off, onset 200000).
+- 10 trials per cell. Script: `tools/bench/hopday2.sh`.
+
+| spacing | chirp 3,200 Hz | hop5 25 ms x 5 gap 10 | 2026-10-16 hop5 |
+|---|---|---|---|
+| 60 cm | 10/10 | **10/10** | (section 6) |
+| 70 cm | 10/10 | **10/10** | 10/10 |
+| 80 cm | 10/10 | **10/10** | 9/10 |
+| 90 cm | 10/10 | **10/10** | 10/10 |
+| 100 cm | **0/10** (rejected) | **9/10** | 0/10 at max dur 200, re-run at 300 >= 9/10 |
+| 110 cm | 10/10 | **10/10** | 10/10 |
+
+Reading:
+- **The hop train is at or above 9/10 at all six spacings on a second day with the shipped builds.** The first
+  5b gate item is met.
+- The one hop reject at 100 cm was trial 2: a 140 ms occurrence with contrast class weak, below the medium
+  limit (a step in a comb null, the case step 5h item 3 measured on the host).
+- The plain chirp at 90 cm is unchanged (10/10), as the gate requires.
+- At 100 cm the plain chirp is 0/10, against 3/10 on 2026-10-16. Its rejects are mostly duration_too_short and
+  window_invalid: the comb state of the single tone at that spacing. This is why the network signal is the hop
+  train, and not a gate item.
+
+Left for 5b: speech/music OBS on the Node build (audit 2.2).
+
+Board state (end of this part): E2 COM3 Analyzer 5fe3cb8 (shipped); E3 COM4 Emitter 5fe3cb8 at 0.5 FS; E1 COM8, E4
+COM10, E5 COM11 Node ecfc72b, free-running again (idle voice on) since the battery's port hold ended. E2 and E3
+must go back to the Node build before step 6.

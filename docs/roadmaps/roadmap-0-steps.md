@@ -550,8 +550,9 @@ the previous gate open unless the step says it can run in parallel.
    Behavior values); 5e (Node level); 5f (the gate below written).
    Added 2026-10-17: 3b/4 gate run (five boards on one build, SELFTEST with the others silent) and 4a's LED look;
    3d's SEQ check; 5c's hardware fixes (E3, E5); 5g; the trial spacing and one height for all boards, from 5e.
-   2026-10-21: 3b/4 gate run done; E3 fixed. Still open: 4a's LED look, E5's cable (a short cable or a powered
-   hub, or its audio health watched in RB STATUS; its long-cable mic fault is intermittent).
+   2026-10-21: 3b/4 gate run done; E3 fixed. 4a's LED look done (owner: the LEDs do what they should, all five
+   boards). E5 accepted by the owner on its long repeater cable as it runs today; its intermittent long-cable mic
+   fault is watched through RB STATUS during the trial.
    First hour of the session, before the trial (audit 1.5): a hearing
    matrix, each node emits in turn and the other four log, 5 x 4 cells.
    It names the reference mic and says whether a per-node threshold

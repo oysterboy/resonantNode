@@ -178,6 +178,8 @@ the previous gate open unless the step says it can run in parallel.
    Gate: SELFTEST passes on every board going into step 4, logged in a
    bench session. Firmware and the dead-mic fix are verified on E2 and E3;
    the gate run waits for the five boards of step 5c.
+   Progress 2026-10-21: gate run done. Five boards on one build (ecfc72b), each SELFTEST PASS with the others
+   silent (bench/sessions/2026-10-21-selftest-all5).
    2026-10-17: five boards ran SELFTEST (bench/sessions/2026-10-17-selftest-e1-e4-e5). Two check fixes first
    (remote): own_chirp_suppressed counts other Nodes' answers inside its 300 ms echo window as an own echo (must
    ignore verdicts that are not its own chirp); the amp check passes on the median and missed E3's unstable output
@@ -293,6 +295,13 @@ the previous gate open unless the step says it can run in parallel.
    (their answers land in its echo window): run SELFTEST with the others silent.
    Before step 6 (bench session 1, checklist docs/lab/2026-10-17-hardware-fix-steps.md): E3's supply/contact
    (unstable, harsh output) and auto-reset (BOOT needed), E5's mic on a trial-length cable.
+   Progress 2026-10-21 (bench/sessions/2026-10-21-e3-cap-selftest, -selftest-all5): E3 fixed. A 10 uF capacitor on
+   EN brought the auto-reset back (no BOOT needed), the own tone is steady (spread 1.00-1.01, was 2x), and the owner
+   no longer hears the harsh output. Two SELFTEST fails that day were the owner handling the bench. All five boards
+   flashed to Node ecfc72b without BOOT; **all five pass SELFTEST with the other four silent** (E4 after a solo
+   reboot: its first quiet-boot fail came while all five booted at once). Amp levels differ by 1.7x between boards
+   (E1 200k ... E4 335k), which goes to 5e's hearing matrix. Open: E5's cable length today was not recorded;
+   its trial-length cable is still to be checked.
    Where: NODE-011 / NODE-015 hardware; gates of steps 3b and 4.
    Why: only E2 and E3 work (E1 amp dead); the five-node gates need five
    boards, built in the geometry the baseline of 5a was taken in.

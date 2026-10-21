@@ -29,3 +29,5 @@ Reading:
 - Amp levels vary by a factor of 1.7 between boards: E1 200k, E3 215k, E2 219k, E5 251k, E4 335k. On 2026-10-17
   E1 measured 270k, so the level depends on the day or the placement as well as on the board. This feeds 5e's
   hearing matrix: name the reference board, and decide whether a per-node level or threshold offset is needed.
+
+Owner, after the run: E5 is on the long cable with the repeater (the SKYMASTER, 5 m+). Nothing on E5 was changed since 2026-10-17, when its mic read all zeros on this same cable. Today the mic passes on it (floor 1,570 / 5,271, 100 % nonzero), so the long-cable fault is intermittent, not permanent. Not explained: supply margin on the long cable is still the suspect. For the trial: watch E5's audio health in RB STATUS, or give it a short cable or a powered hub.

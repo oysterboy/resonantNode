@@ -7,7 +7,7 @@
 SelfTestReport
 
 Output format and command parsing for the SELFTEST serial command
-(NODE-015, docs/refactors/selftest.md). Shared by the Node, Analyzer and
+(NODE-015, docs/refactors/archive/selftest.md). Shared by the Node, Analyzer and
 Emitter builds; knows nothing about detection, behavior or audio.
 
 One line per check, then one summary line:

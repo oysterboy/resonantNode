@@ -6,7 +6,7 @@
 #include "../../app/TimeBase.h"
 
 /*
-Analyzer SELFTEST (NODE-015, docs/refactors/selftest.md)
+Analyzer SELFTEST (NODE-015, docs/refactors/archive/selftest.md)
 
 "SELFTEST": board, mic, amp. The Analyzer has no reactive output; on the
 D-AMP board the amp check plays its tones through an I2sToneOutput on the

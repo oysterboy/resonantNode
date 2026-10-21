@@ -1,3 +1,9 @@
+Archived: 2026-10-21. The gate was met: all five D-AMP boards on Node ecfc72b pass SELFTEST with the others silent
+(bench/sessions/2026-10-21-selftest-all5). Landed since the sections below: tone_spread / `unstable` amp check
+(max 1.3) and the own-echo check judged by occurrence start. Still open: own_chirp_suppressed counts
+neighbours' answers unless the other nodes are silent (run it that way); the external_chirp check was not
+re-verified in the gate run.
+
 # Node self-test, SELFTEST (step 3b, issue #28, NODE-015)
 
 Status: active. Firmware and runner written 2026-10-10 evening; first

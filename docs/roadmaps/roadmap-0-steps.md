@@ -22,6 +22,12 @@ Renamed from roadmap-general.md on 2026-09-23 so it sorts first.
 How this file relates to the domain roadmaps and docs/refactors/: see
 README.md ("Who answers what", "Ordering rule").
 
+Status update 2026-10-21: bench session 1, first part. The EN capacitor fixed E3 (auto-reset; tone steady). All five
+boards are on Node ecfc72b, flashed without BOOT, and each passes SELFTEST with the others silent: the gates of
+3b, 4 and 5c are met and the three steps are closed. 5g's rotation table is verified on hardware (rotations 0-4
+printed at boot). The 5h host items landed 2026-10-20. Left before step 6: 3d SEQ check, 4a's LED look, 5d rerun,
+5e level and spacing, 5g RB CALL and the idle call on the bench, M for 5f, and E5's cable (intermittent on long
+cables).
 Status update 2026-10-17, late: step 5h added (detection robustness against other physical conditions, issue #47):
 the hop train of 5b is measured under one condition; 5h names the four assumptions that carry it, three host-only
 checks before bench session 1, the session 1 items that already cover a second condition, and NODE-012's next cells
@@ -167,7 +173,7 @@ the previous gate open unless the step says it can run in parallel.
    hours apart can differ by ~25 % in strength. Not covered: night, a
    second day, TonalPulseFreq.
 
-3b. [PARTIAL 2026-10-14] Node self-test: SELFTEST for hardware I/O and node runtime.
+3b. [DONE 2026-10-21] Node self-test: SELFTEST for hardware I/O and node runtime.
    (issue #28)
    Where: NODE-015 (roadmap-node.md).
    Why before step 4: on 2026-10-10 two of three D-AMP boards failed basic
@@ -221,7 +227,7 @@ the previous gate open unless the step says it can run in parallel.
    10-14..17 exercised much of it indirectly; the gate's one SEQ session (PARAM echo, per-trial classification, no
    carried-over overflow) is still to run: bench session 1 (#32 has the checklist).
 
-4. Switch to D-AMP. (issue #21)
+4. [DONE 2026-10-21] Switch to D-AMP. (issue #21)
    Where: NODE-011 (roadmap-node.md).
    Gate: five D-AMP nodes on one build, each passing SELFTEST (step 3b);
    docs name D-AMP as the node hardware. (Default board and piezo fallback envs already land in
@@ -230,6 +236,10 @@ the previous gate open unless the step says it can run in parallel.
    DetectionProfile, BehaviorProfile, output; the same firmware on every
    node) is this gate restated; close it here.
    2026-10-17: reachable in bench session 1 with 3b's gate run (all five on one build after the E3/E5 fixes).
+   Done 2026-10-21: five D-AMP nodes on Node ecfc72b, each SELFTEST PASS with the others silent
+   (bench/sessions/2026-10-21-selftest-all5); D-AMP is the node hardware in CLAUDE.md and implementation-status.md.
+   NODE-003 is closed with it: the same firmware runs on every node, with the defaults in DetectionProfile,
+   BehaviorGateConfig and output. Per-board data is only the roster's name and hop rotation (app/NodeRoster.h).
 
 4a. [DONE 2026-10-14] Status LED on D-AMP: 1 flash on detect, 2 on emit. (issue #29,
    sub-issue of #21)
@@ -287,7 +297,7 @@ the previous gate open unless the step says it can run in parallel.
    written as speaker-to-mic spacing on a flat surface (no line of sight),
    preprocessor named in the session; First Difference still selectable.
 
-5c. [GATE MET 2026-10-17, with caveats] Five working D-AMP boards in the upwards geometry. (issue #34)
+5c. [DONE 2026-10-21] Five working D-AMP boards in the upwards geometry. (issue #34)
    Progress 2026-10-17 (bench/sessions/2026-10-17-selftest-e1-e4-e5): all five pass board, mic, quiet boot and
    amp. E1 after reseating a loose 5 V Dupont; E5 only on a 1 m USB cable (mic all zero on 3 m and 5 m); E3 passes
    but its output is unstable and sounds harsh (supply/contact suspected) and it needs BOOT held to flash.
@@ -455,6 +465,9 @@ the previous gate open unless the step says it can run in parallel.
    (300 Hz announcement, then the node's call; a4a368c, d2eaca9) and has not sounded on a board.
    Gate: `RB CALL` plays the node's call through Behavior (with own-emit suppression); a per-board rotation table
    gives five distinct rotations, printed at boot; the idle call heard on the bench and answered.
+   Progress 2026-10-21 (bench/sessions/2026-10-21-selftest-all5): the rotation part is verified on all five boards
+   (Node ecfc72b): `RB node name=E1..E5 rotation_source=roster`, rotations 0-4, five distinct orders. Open: RB CALL
+   and the idle call on the bench (code since c8a55b9 / d2eaca9, now on every board).
 
 5h. [TODO] Detection robustness against other physical conditions. (issue #47)
    Where: DET-011 (gap contract), NODE-012 (acoustic test suite, its cells), NODE-006 (host replay);
@@ -523,6 +536,8 @@ the previous gate open unless the step says it can run in parallel.
    Behavior values); 5e (Node level); 5f (the gate below written).
    Added 2026-10-17: 3b/4 gate run (five boards on one build, SELFTEST with the others silent) and 4a's LED look;
    3d's SEQ check; 5c's hardware fixes (E3, E5); 5g; the trial spacing and one height for all boards, from 5e.
+   2026-10-21: 3b/4 gate run done; E3 fixed. Still open: 4a's LED look, E5's cable (a short cable or a powered
+   hub, or its audio health watched in RB STATUS; its long-cable mic fault is intermittent).
    First hour of the session, before the trial (audit 1.5): a hearing
    matrix, each node emits in turn and the other four log, 5 x 4 cells.
    It names the reference mic and says whether a per-node threshold

@@ -36,7 +36,7 @@ Landed items from this area now live in `docs/roadmaps/roadmap archive/roadmap-c
 [LANDED] ParamRegistry (src/param/), with Serial PARAM LIST / GET / SET / DUMP;
          Node registers the four frequency-match thresholds. RB PARAM / RB BEHAV
          still run in parallel (PAR-015).
-[TODO] No host (native) test env; the one Unity suite runs on-device (NODE-006).
+[LANDED] Host test env and replay harness (NODE-006): native-replay, native-test, native-test-behavior.
 [TODO] No CI (NODE-007).
 [TODO] ConfigStore is not landed.
 [TODO] CommandRouter is not landed.
@@ -73,7 +73,8 @@ registries.
 
 ### NODE-003 - hardcoded config workflow
 
-Status: TODO
+Status: DONE 2026-10-21, with step 4: the same firmware (Node ecfc72b) runs on all five nodes, with the defaults
+in DetectionProfile, BehaviorGateConfig and output. Per-board data is only app/NodeRoster.h (name, hop rotation).
 
 ```text
 Keep hardcoded defaults as the primary 5-node workflow.
@@ -217,7 +218,8 @@ bench sessions/2026-10-10-issue20-damp-*, 2026-10-11-selftest-r5-*.
 
 ### NODE-011 - switch to D-AMP
 
-Status: TODO (issue #21)
+Status: DONE 2026-10-21 (issue #21): five D-AMP nodes on one build, each SELFTEST PASS with the others silent
+(bench/sessions/2026-10-21-selftest-all5).
 
 ```text
 All five D-AMP nodes on one build. (D-AMP as the default build and the
@@ -286,9 +288,10 @@ any upgrade.
 
 ### NODE-015 - node self-test (SELFTEST)
 
-Status: IN PROGRESS (step 3b, issue #28; owner request 2026-10-10; firmware work started 2026-10-10 evening, covers the #20 R1 leftovers)
+Status: DONE 2026-10-21 (step 3b, issue #28): gate run on all five boards, bench/sessions/2026-10-21-selftest-all5.
+Earlier: owner request 2026-10-10; firmware work started 2026-10-10 evening; it covers the #20 R1 leftovers.
 
-Pass doc: `docs/refactors/selftest.md` (output format, checks and
+Pass doc: `docs/refactors/archive/selftest.md` (output format, checks and
 criteria, runner, what is compile-verified vs pending hardware). Firmware
 (Node, Analyzer, Emitter builds) and `tools/bench/selftest.py` written
 2026-10-10, all six envs compile; not yet run on a board.

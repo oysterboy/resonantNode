@@ -8,7 +8,7 @@
 #include "../../app/TimingUtils.h"
 
 /*
-Node SELFTEST (NODE-015, docs/refactors/selftest.md)
+Node SELFTEST (NODE-015, docs/refactors/archive/selftest.md)
 
 Sequence for "SELFTEST":
   board -> (waits while the startup rebase is still running) mic

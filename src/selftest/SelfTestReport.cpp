@@ -225,7 +225,7 @@ void printHelp(Print& out, bool nodeChecks) {
         out.println("SELFTEST_HELP SELFTEST external wait_ms=N   board + external_chirp (another board chirps)");
     }
     out.println("SELFTEST_HELP SELFTEST chirp n=5 gap_ms=1500 dur_ms=100   emit only (helper for external_chirp)");
-    out.println("SELFTEST_HELP format: docs/refactors/selftest.md");
+    out.println("SELFTEST_HELP format: docs/refactors/archive/selftest.md");
 }
 
 } // namespace selftest

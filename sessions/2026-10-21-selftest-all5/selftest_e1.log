@@ -1,0 +1,20 @@
+# E1 on COM8, Node build ecfc72b, other four silenced (ports held, idle off, onset 200000), 2026-10-21
+BUILD role=node git=ecfc72b date=Oct 21 2026 time=21:23:45 version=0.4.0E (10) I2S: i2s_driver_uninstall(2048): I2S port 0 has not installed
+RB node_id=0x50B04AC3DC24
+RB node name=E1 rotation_source=roster
+RB signal band=2950-3950 bins=5 hop=on rotation=0 steps=5 pulse_ms=25 gap_ms=10 order=2950,3200,3450,3700,3950
+RB hop_check status=warn train_ms=165 gap_ms=10 release_debounce_ms=10 max_gap_ms=20 duration_ms=85..300 issues=gap_not_below_debounce
+SELFTEST_BEGIN role=node mode=full board=damp
+SELFTEST check=board result=PASS mac=24:dc:c3:4a:b0:50 board=damp role=node version=0.4.0 git=ecfc72b built=Oct_21_2026 built_time=21:23:48 uptime_ms=12742
+SELFTEST check=mic result=PASS frames=12000 nonzero_pct=100.0 span=132885 floor_mean=1595 floor_peak=5047 bit8_pct=49.9 framing=ok slot=0
+SELFTEST check=quiet_boot result=PASS state=ACTIVE boot=done last=done last_at_ms=7824 smooth_at_rebase=315.0 quiet_rebases=1 forced_rebases=0 baseline=1401.2
+SELFTEST_AMP n=1 floor=2257 tone=200112 snr_db=39.0 samples=6400 valid=1
+SELFTEST_AMP n=2 floor=2545 tone=199041 snr_db=37.9 samples=6400 valid=1
+SELFTEST_AMP n=3 floor=4344 tone=199568 snr_db=33.2 samples=6400 valid=1
+SELFTEST_AMP n=4 floor=2906 tone=199517 snr_db=36.7 samples=6400 valid=1
+SELFTEST_AMP n=5 floor=2369 tone=198170 snr_db=38.4 samples=6400 valid=1
+SELFTEST check=amp result=PASS chirps=5 valid=5 freq_hz=3200 tone_ms=100 path=i2s tone=199517 floor=2545 snr_db=37.9 snr_min_db=33.2 snr_max_db=39.0 tone_spread=1.01 pass_db=30.0 max_spread=1.30
+SELFTEST_RESTORE detection=reset baseline=SETTLE
+SELFTEST check=own_chirp_suppressed result=PASS chirps=5 started=5 verdicts=0 valid=0 other_verdicts=0 other_valid=0 echo_window_ms=300 suppress_tail_ms=60
+SELFTEST check=external_chirp result=SKIP reason=not_requested
+SELFTEST_SUMMARY result=PASS pass=5 fail=0 skip=1 role=node

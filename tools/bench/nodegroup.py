@@ -122,7 +122,8 @@ unattributed = 0
 for t, n, k in events:
     if k != "verdict":
         continue
-    cands = [(te, ne) for te, ne in emits if ne != n and 0.15 <= t - te <= 0.8]
+    # 0.05 s, not 0.15: the PC stamps a verdict 0.13-0.14 s after the sender's "emit start" line (2026-10-21 radio OBS)
+    cands = [(te, ne) for te, ne in emits if ne != n and 0.05 <= t - te <= 0.8]
     if cands:
         heard[(n, max(cands)[1])] += 1
     else:

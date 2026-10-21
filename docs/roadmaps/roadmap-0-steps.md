@@ -409,6 +409,8 @@ the previous gate open unless the step says it can run in parallel.
    E1-E4 on the shipped build: each RB CALL gives 7 answers in a row, then a rest, quiet after 3.6 s, three times.
    Gate part met. Left: the owner confirms the shipped rest values (or changes them in a tuning pass). Input for
    that: the five-node run at 0.5 FS, 5f below.
+   2026-10-22: the owner decided a 5 s rest (was 10 s), with the triggers unchanged
+   (decisions/2026-10-22-network-pacing.md). Verified in the five-node session under 5f.
    Original text:
    answer the reply to its own signal. (issue #43)
    Where: BEH-001/BEH-002 territory (roadmap-behavior.md);
@@ -487,6 +489,9 @@ the previous gate open unless the step says it can run in parallel.
    everybody; some starts are duplicate idle calls in the same second. For the owner: M (this session's maximum
    was 88/min), and whether to lengthen the idle timeout or restate the pass mark ("the chain ends" instead of
    "15 s of silence"). Either is a decision file, not a drive-by.
+   2026-10-22, owner (decisions/2026-10-22-network-pacing.md): idle call every 60 s +- 20 s (was 20 +- 5); pass =
+   the chain ends (3 s silence) within 30 s in 80 % of starts; M = 100 per minute; the 15 s silence is only
+   counted. nodegroup.py prints both verdicts.
 
 5g. [DONE 2026-10-21] Pre-trial Node items. (issue #46)
    Where: BEH-005, OUT-005 (roadmap-behavior.md, roadmap-output.md); decisions/2026-10-17-idle-call-wakes-the-network.md.

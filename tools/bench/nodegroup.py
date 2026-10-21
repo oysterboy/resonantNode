@@ -29,6 +29,8 @@ ap.add_argument("--kick-first", type=float, default=15.0)
 ap.add_argument("--kick-every", type=float, default=90.0)
 ap.add_argument("--quiet-gap", type=float, default=15.0, help="a silence this long counts as 'quiet' for time-to-quiet")
 ap.add_argument("--quiet-within", type=float, default=30.0, help="pass mark: quiet within this many s after a start (RB CALL or idle call)")
+ap.add_argument("--chain-gap", type=float, default=3.0, help="a silence this long ends a chain (turns are ~0.35 s apart)")
+ap.add_argument("--max-per-min", type=int, default=100, help="M: the group's emissions-per-minute ceiling (owner 2026-10-22)")
 ap.add_argument("--out", required=True)
 ap.add_argument("--name", required=True)
 a = ap.parse_args()
@@ -135,7 +137,7 @@ print("  unattributed verdicts: %d" % unattributed)
 mins = int(a.secs // 60) or 1
 per_min = [sum(1 for t, _ in emits if m * 60 <= t < (m + 1) * 60) for m in range(mins)]
 print("  group emissions per minute: %s" % " ".join(str(x) for x in per_min))
-# Time to quiet after each kick (step 5f): from the kick to the end of the last emission before the group's
+# Time to quiet after each kick (step 5f, counted along since 2026-10-22, no longer the pass mark): from the kick to the end of the last emission before the group's
 # first silence of --quiet-gap s. 'never' when no such silence comes before the next kick or the end.
 # An idle call counts as a kick too (owner 2026-10-17): it wakes the network by design.
 idle_starts = [t for t, n, k in events if k == "emit_idle"]
@@ -163,4 +165,27 @@ if starters:
     print("  time to quiet (gap %.0f s): %d of %d starts quiet%s; within %.0f s: %d of %d (pass mark 80 %%: %s)" % (
         a.quiet_gap, len(done), len(results), ", median %.1f s" % sorted(done)[len(done) // 2] if done else "",
         a.quiet_within, within, len(results), "PASS" if results and within >= 0.8 * len(results) else "FAIL"))
+# Pass mark since 2026-10-22 (owner; decisions/2026-10-22-network-pacing.md): after a start (RB CALL or idle
+# call) the chain ends (a --chain-gap s silence) within --quiet-within s, in 80 % of starts; no minute over M.
+# A start inside a chain that is still running is part of that chain, not a new start.
+if starters:
+    times = sorted(t for t, _ in emits)
+    chains = []
+    end_prev = -1.0
+    for k in starters:
+        if k <= end_prev:
+            continue
+        prev = k
+        for t in [t for t in times if t >= k] + [a.secs + a.chain_gap]:
+            if t - prev >= a.chain_gap:
+                break
+            prev = t
+        chains.append((k, prev - k, sum(1 for t in times if k <= t <= prev)))
+        end_prev = prev
+    ended = sum(1 for _, d, _ in chains if d <= a.quiet_within)
+    print("  chains: %d distinct starts; length median %.1f s, max %.1f s; ended within %.0f s: %d of %d (80 %%: %s)" % (
+        len(chains), sorted(d for _, d, _ in chains)[len(chains) // 2], max(d for _, d, _ in chains), a.quiet_within,
+        ended, len(chains), "PASS" if ended >= 0.8 * len(chains) else "FAIL"))
+print("  max emissions per minute %d, M = %d: %s" % (max(per_min) if per_min else 0, a.max_per_min,
+      "PASS" if (max(per_min) if per_min else 0) <= a.max_per_min else "FAIL"))
 print("  log: %s" % log_path)

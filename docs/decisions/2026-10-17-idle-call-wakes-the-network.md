@@ -1,6 +1,6 @@
 # The idle call wakes the network: an out-of-band announcement, then the node's own call
 
-Status: decided (owner), implemented a4a368c, bench pending.
+Status: decided (owner), implemented a4a368c, bench pending. Amended 2026-10-22 by 2026-10-22-network-pacing.md.
 Date: 2026-10-17.
 
 ## Decision

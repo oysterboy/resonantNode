@@ -1,6 +1,6 @@
 # A busy network makes a node rest: field density plus own budget, hard pause, same values on every node
 
-Status: decided 2026-10-17 (owner), implemented the same day (Behavior rest rule, host tests
+Status: decided 2026-10-17 (owner), implemented the same day (Behavior rest rule, host tests Amended 2026-10-22 by 2026-10-22-network-pacing.md.
 `test/test_behavior_rest`); bench check with the ping-pong pair pending.
 Date: 2026-10-17.
 

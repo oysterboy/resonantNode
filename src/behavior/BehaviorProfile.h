@@ -16,8 +16,10 @@ struct BehaviorGateConfig {
     // queue + room; #19 latency measurement), so detection stays off a bit
     // longer than that.
     unsigned long detectionSuppressTailMsOwnEmit = 60;
-    unsigned long idleTimeoutMs = 20000;
-    unsigned long idleTimeVariationMs = 5000;
+    // 60 s +- 20 s since 2026-10-22 (was 20 s +- 5 s): with five nodes at 0.5 FS
+    // every idle call wakes the whole group (decisions/2026-10-22-network-pacing.md).
+    unsigned long idleTimeoutMs = 60000;
+    unsigned long idleTimeVariationMs = 20000;
     unsigned long idleBlockedAfterHeardMs = 1000;
     unsigned long idleBlockedAfterOwnEmitMs = 500;
 
@@ -35,5 +37,5 @@ struct BehaviorGateConfig {
     unsigned long restAfterFieldPatterns = 4;
     unsigned long ownEmitBudget = 6;
     unsigned long ownEmitBudgetWindowMs = 10000;
-    unsigned long restMs = 10000;
+    unsigned long restMs = 5000;  // 5 s since 2026-10-22 (was 10 s), decisions/2026-10-22-network-pacing.md
 };

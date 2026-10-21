@@ -1,6 +1,6 @@
 # Step 6's third question ("does the network settle or run away") as counts and a pass mark
 
-Status: decided 2026-10-17 (owner: N = 30 s, quiet gap 15 s, an idle call counts as a kick); M open, set from
+Status: decided 2026-10-17 (owner: N = 30 s, quiet gap 15 s, an idle call counts as a kick); M open, set from Amended 2026-10-22 by 2026-10-22-network-pacing.md.
 the first five-node session.
 Date: 2026-10-17.
 

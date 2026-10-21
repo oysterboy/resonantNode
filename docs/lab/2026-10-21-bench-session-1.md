@@ -50,8 +50,24 @@ Reading:
   window_invalid: the comb state of the single tone at that spacing. This is why the network signal is the hop
   train, and not a gate item.
 
-Left for 5b: speech/music OBS on the Node build (audit 2.2).
+Left for 5b after the battery: speech/music OBS on the Node build (audit 2.2).
 
-Board state (end of this part): E2 COM3 Analyzer 5fe3cb8 (shipped); E3 COM4 Emitter 5fe3cb8 at 0.5 FS; E1 COM8, E4
-COM10, E5 COM11 Node ecfc72b, free-running again (idle voice on) since the battery's port hold ended. E2 and E3
-must go back to the Node build before step 6.
+## Speech OBS on the Node build (bench/sessions/2026-10-21-node-obs-radio)
+
+Setup: all five nodes on Node ecfc72b, idle off, shipped values; `tools/bench/nodegroup.py`, 180 s per run;
+the owner's phone radio playing speech.
+
+| run | radio | false triggers in 180 s |
+|---|---|---|
+| OBS_radio_50cm_E2_full | full volume, 50 cm from E2 | 2 (E2 at 0.5 s, E1 at 121.6 s); each started a five-node chain, and the rest rule ended both |
+| OBS_speech_room_volume_1m | room volume, about 1 m | 0 (a chain from before logging began ended at 0.73 s) |
+
+Speech at room level gives no false triggers, in line with 5a. Music is still open. It will be played from files
+through the lab PC (Studio One box): this was the last phone-radio run.
+
+`nodegroup.py` now attributes a verdict to an emission from 0.05 s on, not 0.15 s: answers are stamped 0.13-0.14 s
+after the sender's emit line.
+
+Board state (end of the session): all five on the Node build. E1 COM8, E4 COM10 and E5 COM11 have ecfc72b; E2
+COM3 and E3 COM4 have 5fe3cb8 (the same Node code; only the docs and selftest-path commits are newer). All are
+free-running with the idle voice on, since the last OBS run closed its ports.

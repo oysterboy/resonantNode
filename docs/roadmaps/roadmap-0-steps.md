@@ -373,6 +373,10 @@ the previous gate open unless the step says it can run in parallel.
    shipped builds (E2 Analyzer 5fe3cb8, E3 Emitter 0.5 FS), 60-110 cm: hop5 10/10 at 60, 70, 80, 90 and 110 cm, 9/10
    at 100 cm (one contrast-weak reject); the chirp at 90 cm is unchanged at 10/10 (0/10 at 100 cm, comb). **The
    battery item is met.** Left for the gate: speech/music OBS on the Node build.
+   Progress 2026-10-21 (bench/sessions/2026-10-21-node-obs-radio): speech OBS on the Node build, all five nodes, idle
+   off, 180 s each. Phone radio at room volume, 1 m: 0 false triggers (in line with 5a's 0/50). At full volume, 50 cm
+   from E2: 2 triggers, each a five-node chain that the rest rule ended. **Speech is met at room level.** Left:
+   music, played from files through the lab PC (Studio One box; the phone radio is retired as of today).
    Also open from the audit (research/unproven-assumptions-audit.md): 3.3 the Node quiet gate (400) was derived from a
    First Difference artefact, re-measure it on the DC blocker; 2.2 speech/music OBS on the Node build (the contrast and
    amp limits rest on one room, one phone, two days); 2.3 hop gap vs a dry room: output.hop_gap_ms and the scalar

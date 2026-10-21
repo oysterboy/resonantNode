@@ -71,6 +71,51 @@ their line, and the owner heard it. Result: **0 verdicts of any kind in 215 s** 
 `nodegroup.py` now attributes a verdict to an emission from 0.05 s on, not 0.15 s: answers are stamped 0.13-0.14 s
 after the sender's emit line.
 
-Board state (end of the session): all five on the Node build. E1 COM8, E4 COM10 and E5 COM11 have ecfc72b; E2
-COM3 and E3 COM4 have 5fe3cb8 (the same Node code; only the docs and selftest-path commits are newer). All are
-free-running with the idle voice on, since the last OBS run closed its ports.
+## Owner checks
+
+- 4a: the LEDs do what they should, on all five boards.
+- E5 is accepted on its long repeater cable as it runs. Its intermittent mic fault is watched through RB STATUS.
+
+## 5d: two-node exchange with the state header (bench/sessions/2026-10-21-pair-state-header)
+
+E1-E4 on the shipped build, the others silent, RB CALL every 60 s. Each kick gives 7 answers in a row; then
+`rest_field_dense` ends the chain, and the pair is quiet after 3.6 s. This happened three times. The gate part is
+met; the owner still has to confirm the rest values.
+
+## 5e: hearing matrix in the trial layout (bench/sessions/2026-10-21-hearing-matrix)
+
+Layout (owner):
+- E2 and E3 stand 110 cm apart.
+- E1, E4 and E5 stand left of E3, 40 cm apart, starting 40 cm from E2.
+- E1, E4 and E5 are 10 cm lower than E2 and E3.
+
+Method: `tools/bench/hearmatrix.py`. Each node plays 10 RB CALLs. The listeners rest instead of answering
+(restField=1), so no chains form.
+
+| listener \ caller (0.3 FS) | E1 | E2 | E3 | E4 | E5 |
+|---|---|---|---|---|---|
+| E1 | - | 5 | 10 | 10 | 6 |
+| E2 | 0 | - | 2 | 0 | 0 |
+| E3 | 4 | 0 | - | 0 | 7 |
+| E4 | 10 | 1 | 7 | - | 10 |
+| E5 | 9 | 10 | 10 | 10 | - |
+
+At 0.5 FS every cell was 10/10 except E2 <- E1 (0/10). The owner chose 0.5 FS as the shipped level
+(decisions/2026-10-21-damp-tone-level-0p5.md, faaa814).
+
+## 5g / 5f: five nodes free-running on faaa814 (bench/sessions/2026-10-21-group5-kick-idle)
+
+Idle on, RB CALL every 90 s, 360 s.
+- **5g:** RB CALL 4 of 4 and idle calls 27 of 27 were answered, so the 5g gate is met.
+- **5f:** 51-88 emissions per minute. Every chain ends within 2.9-7.7 s, and the longest silence was 19.2 s.
+  Against the 15 s / 30 s / 80 % pass mark this is a **FAIL** (13 of 31 starts). At 0.5 FS each of the group's idle
+  calls, about one every 13 s, wakes all five nodes.
+- Open for the owner: M, and the idle timeout or a restated pass mark.
+
+## Not done today
+
+3d's SEQ check (#31/#32) did not run.
+
+Board state (end of the session): all five on Node faaa814 (0.5 FS): E1 COM8, E2 COM3, E3 COM4, E4 COM10, E5 COM11,
+in the trial layout. They are held silent by a background python process on the lab PC (ports open, idle off,
+onset 200000). Ending it, or a reboot of the PC, resets the boards and brings back their idle voice.

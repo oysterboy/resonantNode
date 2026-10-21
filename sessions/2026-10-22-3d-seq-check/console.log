@@ -1,0 +1,16 @@
+[00:19:15] boot banner: {'role': 'analyzer', 'git': '2c6832c', 'version': '0.4.0', 'board': 'damp'}
+[00:19:17] warmup: OK EMIT CHIRP
+[00:19:17] start T3_scalar_dur40_diag_on: SEQ DIAG on ; SEQ start profile=TonalPulseScalar tries=10 dur=40 mode=detail when=all verbose=1
+[00:19:54] done T3_scalar_dur40_diag_on (37s): complete=True results={'rejected': 9, 'expected': 1}
+[00:19:56] start T3_scalar_dur40_diag_off: SEQ DIAG off ; SEQ start profile=TonalPulseScalar tries=10 dur=40 mode=detail when=all verbose=1
+[00:20:33] done T3_scalar_dur40_diag_off (37s): complete=True results={'rejected': 10}
+[00:20:35] start T3_scalar_normal_after: SEQ DIAG on ; SEQ start profile=TonalPulseScalar tries=10 mode=detail when=all verbose=1
+[00:21:13] done T3_scalar_normal_after (37s): complete=True results={'expected': 10}
+[00:21:25] session updated, index rebuilt
+[00:21:41] boot banner: {'role': 'analyzer', 'git': '2c6832c', 'version': '0.4.0', 'board': 'damp'}
+[00:21:43] warmup: OK EMIT CHIRP
+[00:21:43] start T3_rejects_then_offband: SEQ DIAG on ; SEQ start profile=TonalPulseScalar tries=3 dur=40 mode=detail when=all verbose=1
+[00:21:58] done T3_rejects_then_offband (15s): complete=True results={'rejected': 3}
+[00:22:00] start T3_offband_1000hz: SEQ DIAG on ; SEQ start profile=TonalPulseScalar tries=5 freq=1000 mode=detail when=all verbose=1
+[00:22:21] done T3_offband_1000hz (21s): complete=True results={'expected': 5}
+[00:22:27] session updated, index rebuilt

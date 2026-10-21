@@ -1,0 +1,45 @@
+BUILD role=analyzer git=2c6832c date=Oct 22 2026 time=00:14:05 version=0.4.0 board=damp
+
+E (10) I2S: i2s_driver_uninstall(2048): I2S port 0 has not installed
+EVT analyzer_control rx=16 tx=17
+EVT analyzer_control_claim scheduled
+MEMORY_INVENTORY
+RUNTIME_SIZE detection_runtime_bytes=58800
+SIZE DetectionRuntime=58800
+  SIZE FeatureHistory=37056
+    SIZE FeatureBin=24
+  SIZE Occurrence=360
+  SIZE InspectedOccurrence=912
+  SIZE OccurrenceEvaluator=3912
+  SIZE OccurrenceVerdict=84
+SIZE AudioSignal=8216
+  SIZE RawSampleHistory=8016
+SIZE AnalyzerApp::SequenceTest=9432
+  SIZE DetectorInputSample sampleHistory=1024
+  SIZE DetectorInputSample sampleHistoryPending=8
+  SIZE DetectorInputSample sampleRows=2048
+SIZE AnalyzerReport=1172
+HEAP_CAPS cap=8BIT free=158640 largest=110580 min=153168
+HEAP_CAPS cap=INTERNAL free=228944 largest=110580 min=223452
+HEAP_CAPS cap=DMA free=158640 largest=110580 min=153168
+HEAP_STATUS when=begin_before_runtime_alloc free_8bit=158640 largest_8bit=110580 min_8bit=153168 free_internal=228944
+ largest_internal=110580 min_internal=223452
+EVT analyzer_ready
+EVT analyzer_help type='HELP', 'PARAM freqScore=18000 freqContrast=50.0 freqReleaseScore=12000 freqReleaseContrast=50.0', 'PARAM STATUS', 'RAW trigger f=3200 dur=100 post=1000 [pre=MS] mode=feat|pcm|i2s|both [pulses=N gap=MS hop=F1,F2,...]', 'SEQ MODE quiet|trial|inspect|source|system|detail WHEN off|miss|all VERBOSE 0|1|2 STATUS REPORT', 'DET PROFILE TonalPulseFreq|TonalPulseScalar|AmpExperimental'
+>> PARAM scalarMinStrength=1234 scalar_min_release_coverage_ms=90 scalar_min_longest_island_ms=80 scalarMinReleaseCoverageMs=95 scalar_max_gap_ms=10
+PARAM scalar_min_strength=1234.0 scalar_min_release_coverage_ms=95 scalar_min_longest_island_ms=80 scalar_max_gap_ms=10
+>> PARAM STATUS
+PARAM scalar_observed_stream=FrequencyTarget scalar_onset_threshold=2000.0 scalar_release_threshold=1500.0 scalar_cooldown_ms=50 scalar_min_duration_ms=85 scalar_max_duration_ms=300 scalar_min_peak_strength=3000.0 scalar_release_debounce_ms=10 scalar_require_carrier_quality=1 scalar_require_min_strength=1 scalar_min_strength=1234.0 scalar_min_release_coverage_ms=95 scalar_min_longest_island_ms=80 scalar_max_gap_ms=10 freqScore=2500.0 freqContrast=50.0 freqReleaseScore=1800.0 freqReleaseContrast=50.0
+>> MODE
+EVT analyzer_unknown_cmd line=MODE
+>> SEQ start profile=Bogus mode=detail
+ERR SEQ unknown profile=Bogus use profile=TonalPulseFreq, profile=TonalPulseScalar or profile=AmpExperimental
+>> MODE
+EVT analyzer_unknown_cmd line=MODE
+>> OBS start period=2000 window=1800
+EVT analyzer_unknown_cmd line=OBS start period=2000 window=1800
+>> OBS stop
+EVT analyzer_unknown_cmd line=OBS stop
+>> SEQ stop
+SEQ_SUMMARY profile=unknown detector=unknown trials=0 completed=0 expected_trials=0 early_trials=0 late_trials=0 miss_trials=0 duplicate_trials=0 unexpected_trials=0 rejected_trials=0 buffer_overrun_trials=0 ambiguous_trials=0 too_dense_trials=0 detector_accepted_trials=0 detector_reject_trials=0 pattern_valid_trials=0 pattern_rejected_trials=0 avg_dt_ms=-1 avg_strength=0.0 avg_conf=0.00
+OK SEQ STOP

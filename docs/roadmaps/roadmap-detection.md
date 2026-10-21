@@ -213,6 +213,24 @@ Track actual use of field state for detection and reporting.
 Keep the field-state view separate from detector truth.
 ```
 
+2026-10-22 review of what FieldState holds:
+
+- Behavior reads only `recentPatternCount` (the rest rule); RB STATUS and
+  the analyzer also print `quiet`/`dense` and the counts.
+- `noiseFloor` is occurrence count / window ms and `avgAmbientLevel` copies
+  it: no audio level is measured (audit 1.2). Cleanup: delete both or
+  rename to an occurrence rate. No tuning involved; can land any time.
+- Candidate additions, each only if step 6's counts show a need (decided
+  with step 11's "FieldState gates or goes"):
+  - real ambient level: running mean of mic-frame RMS/envelope from the
+    feature stream, in its own domain (myspec 5.8 "where explicitly
+    configured"; not rescaled from Strength16). Use: louder reply or rest
+    in a loud room. Most likely useful one.
+  - recent occurrences per hop bin: only if nodes pick a free bin; hop
+    rotation is fixed (MAC % 5) today, so nothing would read it.
+  - not here: avg occurrence strength/contrast are detector quality, they
+    belong in DetectorReport/analyzer.
+
 ### DET-005 - detector reason-model parity
 
 Status: TODO

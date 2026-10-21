@@ -39,3 +39,19 @@ The owner's phone radio played **speech** at room volume, about 1 m from the nod
 - Still open for 5b: music on the Node build. Per the owner this was the last phone-radio run: from now on, noise
   material is played from files through the lab PC's audio interface (Studio One box), so the level and content
   are reproducible.
+
+## Run 3: OBS_music_flute_pc_box (file playback through the lab PC)
+
+Material: `bench_audio.wav`, the 2026-10-16 noise file (`tools/bench/bench_audio.sections.txt`, normalised to
+-24 dBFS RMS). Its sections music_dnb_tribal_behaviour (10-110 s) and tonal_flute_lp (325-425 s) were cut into one
+200 s file. It was played with Windows SoundPlayer through the default device, the Studio One box at its last
+volume setting (the owner's 2026-10-16 level). The speaker was fixed midway between the nodes along x and 40 cm
+off the line along y. Playback started at 22:55:09, about 10 s into the 215 s log. The owner confirmed the music
+was audible.
+
+- Five nodes, idle off, shipped values: **0 valid and 0 invalid verdicts in 215 s.** No node even formed a
+  candidate.
+- `i2s.dropped_dma_buffers=0` in every STATUS line of all three runs.
+- Reading: music (drum and bass) and a tonal flute at the 5a level give no false triggers on the Node build.
+  Together with run 2 (speech, room level, 0), **5b's speech/music OBS item is met.** The caveat is run 1: speech
+  at full volume 50 cm from a node gave 2 triggers in 180 s.

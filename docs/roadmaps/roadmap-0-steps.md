@@ -300,8 +300,10 @@ the previous gate open unless the step says it can run in parallel.
    no longer hears the harsh output. Two SELFTEST fails that day were the owner handling the bench. All five boards
    flashed to Node ecfc72b without BOOT; **all five pass SELFTEST with the other four silent** (E4 after a solo
    reboot: its first quiet-boot fail came while all five booted at once). Amp levels differ by 1.7x between boards
-   (E1 200k ... E4 335k), which goes to 5e's hearing matrix. Open: E5's cable length today was not recorded;
-   its trial-length cable is still to be checked.
+   (E1 200k ... E4 335k), which goes to 5e's hearing matrix. E5 passed on the 5 m+ repeater cable. Nothing on it
+   was changed since 2026-10-17, when its mic read all zeros on that same cable, so the long-cable fault is
+   intermittent and still unexplained (supply margin suspected). For the trial: E5's audio health in RB STATUS
+   is watched, or it gets a short cable or a powered hub.
    Where: NODE-011 / NODE-015 hardware; gates of steps 3b and 4.
    Why: only E2 and E3 work (E1 amp dead); the five-node gates need five
    boards, built in the geometry the baseline of 5a was taken in.

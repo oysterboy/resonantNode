@@ -62,8 +62,11 @@ the owner's phone radio playing speech.
 | OBS_radio_50cm_E2_full | full volume, 50 cm from E2 | 2 (E2 at 0.5 s, E1 at 121.6 s); each started a five-node chain, and the rest rule ended both |
 | OBS_speech_room_volume_1m | room volume, about 1 m | 0 (a chain from before logging began ended at 0.73 s) |
 
-Speech at room level gives no false triggers, in line with 5a. Music is still open. It will be played from files
-through the lab PC (Studio One box): this was the last phone-radio run.
+Speech at room level gives no false triggers, in line with 5a. This was the last phone-radio run.
+
+Music: music (drum and bass) and a tonal flute from `bench_audio.wav` (the 2026-10-16 file), 200 s, played through
+the lab PC and the Studio One box at the 2026-10-16 volume. The speaker was midway between the nodes and 40 cm off
+their line, and the owner heard it. Result: **0 verdicts of any kind in 215 s** on five nodes. **Step 5b is done.**
 
 `nodegroup.py` now attributes a verdict to an emission from 0.05 s on, not 0.15 s: answers are stamped 0.13-0.14 s
 after the sender's emit line.

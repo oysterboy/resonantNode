@@ -320,7 +320,7 @@ the previous gate open unless the step says it can run in parallel.
    Gate: five boards, each passing SELFTEST, logged in a bench session.
    Follows 5a; the gate runs of 3b (#28) and 4 (#21) follow this.
 
-5b. [NEXT, order confirmed 2026-10-15] Signal variation, part 1: a
+5b. [DONE 2026-10-21] Signal variation, part 1: a
    detection layer that survives the room. (issue #36)
    Where: DET-013 (band stream), OUT-005 (hop / sweep shapes), DET-011
    (gaps), DET-014 (tonality, only if OBS gets worse), BEH-005 (per-node
@@ -377,6 +377,12 @@ the previous gate open unless the step says it can run in parallel.
    off, 180 s each. Phone radio at room volume, 1 m: 0 false triggers (in line with 5a's 0/50). At full volume, 50 cm
    from E2: 2 triggers, each a five-node chain that the rest rule ended. **Speech is met at room level.** Left:
    music, played from files through the lab PC (Studio One box; the phone radio is retired as of today).
+   Done 2026-10-21: music (drum and bass) and a tonal flute from bench_audio.wav, played through the lab PC and the
+   Studio One box at the 2026-10-16 level, speaker midway between the nodes and 40 cm off their line: 0 verdicts of
+   any kind in 215 s on five nodes; no dropped DMA buffers in any run. **All gate items are met:** hop >= 9/10 at
+   60-110 cm on two days, the chirp at 90 cm unchanged, speech and music OBS on the Node build no worse than 5a, no
+   dropped buffers, per-node rotation on every board. Carried on, not gating: the full-volume 50 cm speech triggers
+   (run 1); audit 3.3 (the Node quiet gate on the DC blocker); the 5h items.
    Also open from the audit (research/unproven-assumptions-audit.md): 3.3 the Node quiet gate (400) was derived from a
    First Difference artefact, re-measure it on the DC blocker; 2.2 speech/music OBS on the Node build (the contrast and
    amp limits rest on one room, one phone, two days); 2.3 hop gap vs a dry room: output.hop_gap_ms and the scalar

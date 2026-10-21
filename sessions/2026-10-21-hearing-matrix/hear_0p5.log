@@ -1,0 +1,1023 @@
+0.01 E1 BUILD role=node git=59979c5 date=Oct 21 2026 time=23:23:19 version=0.4.0E (10) I2S: i2s_driver_uninstall(2048): I2S port 0 has not installed
+0.02 E2 tsBUILD role=node git=59979c5 date=Oct 21 2026 time=23:23:19 version=0.4.0E (10) I2S: i2s_driver_uninstall(2048): I2S port 0 has not installed
+0.02 E3 �	�}����0x00,wp_drv:0x00
+0.03 E4 e
+0.04 E1 board=damp
+0.04 E2 board=damp
+0.04 E3 mode:DIO, clock div:1
+0.06 E4 BUILD role=node git=59979c5 date=Oct 21 2026 time=23:23:19 version=0.4.0E (10) I2S: i2s_driver_uninstall(2048): I2S port 0 has not installed
+0.07 E1 RB node_id=0x50B04AC3DC24
+0.08 E2 RB node_id=0xE84C4BC3DC24
+0.08 E3 load:0x3fff0030,len:1344
+0.08 E4 board=damp
+0.09 E1 
+0.09 E2 
+0.09 E3 load:0x40078000,len:13964
+0.09 E4 RB node_id=0xECEF4AC3DC24
+0.10 E1 RB node name=E1 rotation_source=roster
+0.10 E2 RB node name=E2 rotation_source=roster
+0.10 E3 load:0x40080400,len:3600
+0.11 E4 
+0.13 E5 BUILD role=node git=59979c5 date=Oct 21 2026 time=23:23:19 version=0.4.0E (10) I2S: i2s_driver_uninstall(2048): I2S port 0 has not installed
+0.13 E1 RB signal band=2950-3950 bins=5 hop=on rotation=0 steps=5 pulse_ms=25 gap_ms=10 order=2950,3200,3450,3700,3950
+0.13 E2 RB signal band=2950-3950 bins=5 hop=on rotation=1 steps=5 pulse_ms=25 gap_ms=10 order=3200,3450,3700,3950,2950
+0.13 E3 entry 0x400805f0
+0.13 E4 RB node name=E4 rotation_source=roster
+0.13 E5 board=damp
+0.13 E1 RB hop_check status=warn train_ms=165 gap_ms=10 release_debounce_ms=10 max_gap_ms=20 duration_ms=85..300 issues=gap_not_below_debounce
+0.13 E2 RB hop_check status=warn train_ms=165 gap_ms=10 release_debounce_ms=10 max_gap_ms=20 duration_ms=85..300 issues=gap_not_below_debounce
+0.14 E3 BUILD role=node git=59979c5 date=Oct 21 2026 time=23:23:19 version=0.4.0E (10) I2S: i2s_driver_uninstall(2048): I2S port 0 has not installed
+0.14 E4 RB signal band=2950-3950 bins=5 hop=on rotation=3 steps=5 pulse_ms=25 gap_ms=10 order=3700,3950,2950,3200,3450
+0.14 E5 RB node_id=0x38FE4AC3DC24
+0.14 E1 RB PROFILE name=TonalPulseScalar emitters=ScalarTransient inspectionPlan=custom fieldStateConfig=4000/4000
+0.14 E2 RB PROFILE name=TonalPulseScalar emitters=ScalarTransient inspectionPlan=custom fieldStateConfig=4000/4000
+0.14 E3 board=damp
+0.14 E4 RB hop_check status=warn train_ms=165 gap_ms=10 release_debounce_ms=10 max_gap_ms=20 duration_ms=85..300 issues=gap_not_below_debounce
+0.14 E5 
+0.14 E1 RB DETECT
+0.14 E2 RB DETECT
+0.14 E3 RB node_id=0x38B749C3DC24
+0.15 E4 RB PROFILE name=TonalPulseScalar emitters=ScalarTransient inspectionPlan=custom fieldStateConfig=4000/4000
+0.15 E5 RB node name=E5 rotation_source=roster
+0.15 E1 kind=TonalPulseScalar
+0.15 E2 kind=TonalPulseScalar
+0.15 E3 
+0.15 E4 RB DETECT
+0.15 E5 RB signal band=2950-3950 bins=5 hop=on rotation=4 steps=5 pulse_ms=25 gap_ms=10 order=3950,2950,3200,3450,3700
+0.15 E1 detectorSelection=ScalarTransient
+0.15 E2 detectorSelection=ScalarTransient
+0.15 E3 RB node name=E3 rotation_source=roster
+0.15 E4 kind=TonalPulseScalar
+0.15 E5 RB hop_check status=warn train_ms=165 gap_ms=10 release_debounce_ms=10 max_gap_ms=20 duration_ms=85..300 issues=gap_not_below_debounce
+0.15 E1 inspectionPlan=custom
+0.16 E2 inspectionPlan=custom
+0.16 E3 RB signal band=2950-3950 bins=5 hop=on rotation=2 steps=5 pulse_ms=25 gap_ms=10 order=3450,3700,3950,2950,3200
+0.16 E4 detectorSelection=ScalarTransient
+0.16 E5 RB PROFILE name=TonalPulseScalar emitters=ScalarTransient inspectionPlan=custom fieldStateConfig=4000/4000
+0.16 E1 scalarTransient.observedStream=FrequencyTarget
+0.17 E2 scalarTransient.observedStream=FrequencyTarget
+0.17 E3 RB hop_check status=warn train_ms=165 gap_ms=10 release_debounce_ms=10 max_gap_ms=20 duration_ms=85..300 issues=gap_not_below_debounce
+0.17 E4 inspectionPlan=custom
+0.17 E5 RB DETECT
+0.17 E1 scalarTransient.onsetDetectionThreshold=2000.0
+0.17 E2 scalarTransient.onsetDetectionThreshold=2000.0
+0.17 E3 RB PROFILE name=TonalPulseScalar emitters=ScalarTransient inspectionPlan=custom fieldStateConfig=4000/4000
+0.17 E4 scalarTransient.observedStream=FrequencyTarget
+0.17 E5 kind=TonalPulseScalar
+0.17 E1 scalarTransient.onsetReleaseThreshold=1500.0
+0.18 E2 scalarTransient.onsetReleaseThreshold=1500.0
+0.18 E3 RB DETECT
+0.18 E4 scalarTransient.onsetDetectionThreshold=2000.0
+0.18 E5 detectorSelection=ScalarTransient
+0.18 E1 scalarTransient.cooldownAfterOnsetMs=50
+0.18 E2 scalarTransient.cooldownAfterOnsetMs=50
+0.18 E3 kind=TonalPulseScalar
+0.18 E4 scalarTransient.onsetReleaseThreshold=1500.0
+0.18 E5 inspectionPlan=custom
+0.18 E1 scalarTransient.minTransientDurationMs=85
+0.18 E2 scalarTransient.minTransientDurationMs=85
+0.18 E3 detectorSelection=ScalarTransient
+0.19 E4 scalarTransient.cooldownAfterOnsetMs=50
+0.19 E5 scalarTransient.observedStream=FrequencyTarget
+0.19 E1 scalarTransient.maxTransientDurationMs=300
+0.19 E2 scalarTransient.maxTransientDurationMs=300
+0.19 E3 inspectionPlan=custom
+0.19 E4 scalarTransient.minTransientDurationMs=85
+0.19 E5 scalarTransient.onsetDetectionThreshold=2000.0
+0.19 E1 scalarTransient.releaseDebounceMs=10
+0.19 E2 scalarTransient.releaseDebounceMs=10
+0.19 E3 scalarTransient.observedStream=FrequencyTarget
+0.19 E4 scalarTransient.maxTransientDurationMs=300
+0.19 E5 scalarTransient.onsetReleaseThreshold=1500.0
+0.19 E1 scalarTransient.minTransientPeakStrength=3000.0
+0.19 E2 scalarTransient.minTransientPeakStrength=3000.0
+0.20 E3 scalarTransient.onsetDetectionThreshold=2000.0
+0.20 E4 scalarTransient.releaseDebounceMs=10
+0.20 E5 scalarTransient.cooldownAfterOnsetMs=50
+0.20 E1 inspectionPlan.module[0].kind=MagnitudeFeatureStrength label=contrast stream=FrequencyContrast windowPreMs=0 windowPostMs=100
+0.20 E2 inspectionPlan.module[0].kind=MagnitudeFeatureStrength label=contrast stream=FrequencyContrast windowPreMs=0 windowPostMs=100
+0.20 E3 scalarTransient.onsetReleaseThreshold=1500.0
+0.20 E4 scalarTransient.minTransientPeakStrength=3000.0
+0.20 E5 scalarTransient.minTransientDurationMs=85
+0.21 E1 inspectionPlan.module[1].kind=MagnitudeFeatureStrength label=amp stream=AmpMagnitude windowPreMs=0 windowPostMs=100
+0.21 E2 inspectionPlan.module[1].kind=MagnitudeFeatureStrength label=amp stream=AmpMagnitude windowPreMs=0 windowPostMs=100
+0.21 E3 scalarTransient.cooldownAfterOnsetMs=50
+0.21 E4 inspectionPlan.module[0].kind=MagnitudeFeatureStrength label=contrast stream=FrequencyContrast windowPreMs=0 windowPostMs=100
+0.21 E5 scalarTransient.maxTransientDurationMs=300
+0.21 E1 verdict.has_requirement=1
+0.21 E2 verdict.has_requirement=1
+0.22 E3 scalarTransient.minTransientDurationMs=85
+0.22 E4 inspectionPlan.module[1].kind=MagnitudeFeatureStrength label=amp stream=AmpMagnitude windowPreMs=0 windowPostMs=100
+0.22 E5 scalarTransient.releaseDebounceMs=10
+0.22 E1 verdict.required_label=contrast
+0.22 E2 verdict.required_label=contrast
+0.22 E3 scalarTransient.maxTransientDurationMs=300
+0.22 E4 verdict.has_requirement=1
+0.22 E5 scalarTransient.minTransientPeakStrength=3000.0
+0.22 E1 fieldState.occurrenceWindowMs=4000
+0.22 E2 fieldState.occurrenceWindowMs=4000
+0.22 E3 scalarTransient.releaseDebounceMs=10
+0.22 E4 verdict.required_label=contrast
+0.22 E5 inspectionPlan.module[0].kind=MagnitudeFeatureStrength label=contrast stream=FrequencyContrast windowPreMs=0 windowPostMs=100
+0.22 E1 fieldState.patternWindowMs=4000
+0.23 E2 fieldState.patternWindowMs=4000
+0.23 E3 scalarTransient.minTransientPeakStrength=3000.0
+0.23 E4 fieldState.occurrenceWindowMs=4000
+0.23 E5 inspectionPlan.module[1].kind=MagnitudeFeatureStrength label=amp stream=AmpMagnitude windowPreMs=0 windowPostMs=100
+0.23 E1 fieldState.busyOccurrenceCountThreshold=3
+0.23 E2 fieldState.busyOccurrenceCountThreshold=3
+0.23 E3 inspectionPlan.module[0].kind=MagnitudeFeatureStrength label=contrast stream=FrequencyContrast windowPreMs=0 windowPostMs=100
+0.23 E4 fieldState.patternWindowMs=4000
+0.23 E5 verdict.has_requirement=1
+0.23 E1 fieldState.denseOccurrenceCountThreshold=6
+0.23 E2 fieldState.denseOccurrenceCountThreshold=6
+0.24 E3 inspectionPlan.module[1].kind=MagnitudeFeatureStrength label=amp stream=AmpMagnitude windowPreMs=0 windowPostMs=100
+0.24 E4 fieldState.busyOccurrenceCountThreshold=3
+0.24 E5 verdict.required_label=contrast
+0.24 E1 fieldState.quietOccurrenceCountThreshold=0
+0.24 E2 fieldState.quietOccurrenceCountThreshold=0
+0.24 E3 verdict.has_requirement=1
+0.24 E4 fieldState.denseOccurrenceCountThreshold=6
+0.24 E5 fieldState.occurrenceWindowMs=4000
+0.24 E1 fieldState.quietActivityThreshold=0.00
+0.24 E2 fieldState.quietActivityThreshold=0.00
+0.24 E3 verdict.required_label=contrast
+0.24 E4 fieldState.quietOccurrenceCountThreshold=0
+0.24 E5 fieldState.patternWindowMs=4000
+0.24 E1 fieldState.busyActivityThreshold=0.45
+0.24 E2 fieldState.busyActivityThreshold=0.45
+0.24 E3 fieldState.occurrenceWindowMs=4000
+0.25 E4 fieldState.quietActivityThreshold=0.00
+0.25 E5 fieldState.busyOccurrenceCountThreshold=3
+0.25 E1 
+0.25 E2 
+0.25 E3 fieldState.patternWindowMs=4000
+0.25 E4 fieldState.busyActivityThreshold=0.45
+0.25 E5 fieldState.denseOccurrenceCountThreshold=6
+0.25 E1 RB BEHAV
+0.25 E2 RB BEHAV
+0.25 E3 fieldState.busyOccurrenceCountThreshold=3
+0.25 E4 
+0.25 E5 fieldState.quietOccurrenceCountThreshold=0
+0.25 E1 idleEnabled=1
+0.25 E2 idleEnabled=1
+0.25 E3 fieldState.denseOccurrenceCountThreshold=6
+0.25 E4 RB BEHAV
+0.25 E5 fieldState.quietActivityThreshold=0.00
+0.25 E1 waitAfterHeardMs=100
+0.26 E2 waitAfterHeardMs=100
+0.26 E3 fieldState.quietOccurrenceCountThreshold=0
+0.26 E4 idleEnabled=1
+0.26 E5 fieldState.busyActivityThreshold=0.45
+0.26 E1 refractoryAfterEmitMs=400
+0.26 E2 refractoryAfterEmitMs=400
+0.26 E3 fieldState.quietActivityThreshold=0.00
+0.26 E4 waitAfterHeardMs=100
+0.26 E5 
+0.26 E1 behaviorSuppressSelfChirpMs=100
+0.26 E2 behaviorSuppressSelfChirpMs=100
+0.26 E3 fieldState.busyActivityThreshold=0.45
+0.26 E4 refractoryAfterEmitMs=400
+0.26 E5 RB BEHAV
+0.26 E1 detectionSuppressTailMsOwnEmit=60
+0.26 E2 detectionSuppressTailMsOwnEmit=60
+0.26 E3 
+0.26 E4 behaviorSuppressSelfChirpMs=100
+0.26 E5 idleEnabled=1
+0.27 E1 idleTimeoutMs=20000
+0.27 E2 idleTimeoutMs=20000
+0.27 E3 RB BEHAV
+0.27 E4 detectionSuppressTailMsOwnEmit=60
+0.27 E5 waitAfterHeardMs=100
+0.27 E1 idleTimeVariationMs=5000
+0.27 E2 idleTimeVariationMs=5000
+0.27 E3 idleEnabled=1
+0.27 E4 idleTimeoutMs=20000
+0.27 E5 refractoryAfterEmitMs=400
+0.27 E1 idleBlockedAfterHeardMs=1000
+0.27 E2 idleBlockedAfterHeardMs=1000
+0.27 E3 waitAfterHeardMs=100
+0.27 E4 idleTimeVariationMs=5000
+0.27 E5 behaviorSuppressSelfChirpMs=100
+0.27 E1 idleBlockedAfterOwnEmitMs=500
+0.27 E2 idleBlockedAfterOwnEmitMs=500
+0.27 E3 refractoryAfterEmitMs=400
+0.27 E4 idleBlockedAfterHeardMs=1000
+0.27 E5 detectionSuppressTailMsOwnEmit=60
+0.27 E1 
+0.27 E2 
+0.27 E3 behaviorSuppressSelfChirpMs=100
+0.28 E4 idleBlockedAfterOwnEmitMs=500
+0.28 E5 idleTimeoutMs=20000
+0.28 E1 RB startup baseline=LISTEN_FOR_QUIET
+0.28 E2 RB startup baseline=LISTEN_FOR_QUIET
+0.28 E3 detectionSuppressTailMsOwnEmit=60
+0.28 E4 
+0.28 E5 idleTimeVariationMs=5000
+0.28 E1 RB rebase waiting smooth=0.0 quietMs=0
+0.28 E2 RB rebase waiting smooth=0.0 quietMs=0
+0.28 E3 idleTimeoutMs=20000
+0.28 E4 RB startup baseline=LISTEN_FOR_QUIET
+0.28 E5 idleBlockedAfterHeardMs=1000
+0.31 E3 idleTimeVariationMs=5000
+0.31 E4 RB rebase waiting smooth=0.0 quietMs=0
+0.31 E5 idleBlockedAfterOwnEmitMs=500
+0.34 E3 idleBlockedAfterHeardMs=1000
+0.35 E5 
+0.38 E3 idleBlockedAfterOwnEmitMs=500
+0.40 E5 RB startup baseline=LISTEN_FOR_QUIET
+0.43 E3 
+0.45 E5 RB rebase waiting smooth=0.0 quietMs=0
+0.48 E3 RB startup baseline=LISTEN_FOR_QUIET
+0.54 E3 RB rebase waiting smooth=0.0 quietMs=0
+0.80 E1 RB rebase waiting smooth=120.0 quietMs=367
+0.88 E2 RB rebase waiting smooth=49.0 quietMs=527
+1.04 E3 RB rebase waiting smooth=262.0 quietMs=567
+1.12 E4 RB rebase waiting smooth=22.0 quietMs=799
+1.13 E5 RB rebase waiting smooth=27.0 quietMs=95
+1.33 E4 RB rebase done quietMs=1000 baseline=504.4 smooth=0
+1.36 E2 RB rebase done quietMs=1000 baseline=-89.2 smooth=0
+1.49 E1 RB rebase done quietMs=1000 baseline=156.2 smooth=0
+1.50 E3 RB rebase done quietMs=1000 baseline=650.2 smooth=0
+1.81 E4 RB baseline active
+1.85 E2 RB baseline active
+1.97 E1 RB baseline active
+1.98 E3 RB baseline active
+2.08 E5 RB rebase done quietMs=1000 baseline=346.1 smooth=0
+2.53 E5 RB baseline active
+7.06 E1 RB BEHAV wait=100 refractory=400 suppressSelfChirp=100 detectionSuppressTail=60 idleTimeout=20000 idleTimeoutVariation=5000 idleBlockedHeard=1000 idleBlockedOwnEmit=500 idleEnabled=0 restField=1 budget=6 budgetWindowMs=10000 restMs=2000
+7.70 E1 RB BEHAV wait=100 refractory=400 suppressSelfChirp=100 detectionSuppressTail=60 idleTimeout=20000 idleTimeoutVariation=5000 idleBlockedHeard=1000 idleBlockedOwnEmit=500 idleEnabled=0 restField=1 budget=6 budgetWindowMs=10000 restMs=2000
+8.32 E1 PARAM path=detection.freq_attack_score_min module=detection type=float value=18000.000
+8.39 E1 PARAM path=detection.freq_release_score_min module=detection type=float value=12000.000
+8.46 E1 PARAM path=detection.freq_attack_contrast_min module=detection type=float value=50.000
+8.52 E1 PARAM path=detection.freq_release_contrast_min module=detection type=float value=50.000
+8.58 E1 PARAM path=detection.scalar_onset_threshold module=detection type=float value=2000.000
+8.64 E1 PARAM path=detection.scalar_release_threshold module=detection type=float value=1500.000
+8.70 E1 PARAM path=detection.scalar_cooldown_ms module=detection type=uint32 value=50
+8.76 E1 PARAM path=detection.scalar_min_duration_ms module=detection type=uint32 value=85
+8.83 E1 PARAM path=detection.scalar_max_duration_ms module=detection type=uint32 value=300
+8.89 E1 PARAM path=detection.scalar_min_peak_strength module=detection type=float value=3000.000
+8.95 E1 PARAM path=detection.scalar_release_debounce_ms module=detection type=uint32 value=10
+9.02 E1 PARAM path=detection.scalar_require_carrier_quality module=detection type=bool value=1
+9.07 E1 PARAM path=detection.scalar_require_min_strength module=detection type=bool value=1
+9.14 E1 PARAM path=detection.scalar_min_strength module=detection type=float value=0.000
+9.20 E1 PARAM path=detection.scalar_min_release_coverage_ms module=detection type=uint32 value=80
+9.26 E1 PARAM path=detection.scalar_min_longest_island_ms module=detection type=uint32 value=20
+9.32 E1 PARAM path=detection.scalar_max_gap_ms module=detection type=uint32 value=20
+9.38 E1 PARAM path=detection.band_low_hz module=detection type=uint32 value=2950
+9.44 E1 PARAM path=detection.band_high_hz module=detection type=uint32 value=3950
+9.51 E1 PARAM path=output.hop_enabled module=output type=bool value=1
+9.57 E1 PARAM path=output.hop_rotation module=output type=uint32 value=0
+9.60 E2 RB BEHAV wait=100 refractory=400 suppressSelfChirp=100 detectionSuppressTail=60 idleTimeout=20000 idleTimeoutVariation=5000 idleBlockedHeard=1000 idleBlockedOwnEmit=500 idleEnabled=0 restField=1 budget=6 budgetWindowMs=10000 restMs=2000
+9.64 E1 PARAM path=output.hop_pulse_ms module=output type=uint32 value=25
+9.71 E1 PARAM path=output.hop_gap_ms module=output type=uint32 value=10
+9.77 E1 PARAM path=output.hop_steps module=output type=uint32 value=5
+9.83 E1 PARAM path=output.idle_announce_hz module=output type=uint32 value=300
+9.89 E1 PARAM path=output.idle_announce_ms module=output type=uint32 value=500
+9.95 E1 RB log mode=full
+10.20 E2 RB BEHAV wait=100 refractory=400 suppressSelfChirp=100 detectionSuppressTail=60 idleTimeout=20000 idleTimeoutVariation=5000 idleBlockedHeard=1000 idleBlockedOwnEmit=500 idleEnabled=0 restField=1 budget=6 budgetWindowMs=10000 restMs=2000
+10.80 E2 PARAM path=detection.freq_attack_score_min module=detection type=float value=18000.000
+10.86 E2 PARAM path=detection.freq_release_score_min module=detection type=float value=12000.000
+10.92 E2 PARAM path=detection.freq_attack_contrast_min module=detection type=float value=50.000
+10.98 E2 PARAM path=detection.freq_release_contrast_min module=detection type=float value=50.000
+11.04 E2 PARAM path=detection.scalar_onset_threshold module=detection type=float value=2000.000
+11.11 E2 PARAM path=detection.scalar_release_threshold module=detection type=float value=1500.000
+11.17 E2 PARAM path=detection.scalar_cooldown_ms module=detection type=uint32 value=50
+11.23 E2 PARAM path=detection.scalar_min_duration_ms module=detection type=uint32 value=85
+11.29 E2 PARAM path=detection.scalar_max_duration_ms module=detection type=uint32 value=300
+11.36 E2 PARAM path=detection.scalar_min_peak_strength module=detection type=float value=3000.000
+11.42 E2 PARAM path=detection.scalar_release_debounce_ms module=detection type=uint32 value=10
+11.48 E2 PARAM path=detection.scalar_require_carrier_quality module=detection type=bool value=1
+11.54 E2 PARAM path=detection.scalar_require_min_strength module=detection type=bool value=1
+11.60 E2 PARAM path=detection.scalar_min_strength module=detection type=float value=0.000
+11.67 E2 PARAM path=detection.scalar_min_release_coverage_ms module=detection type=uint32 value=80
+11.73 E2 PARAM path=detection.scalar_min_longest_island_ms module=detection type=uint32 value=20
+11.79 E2 PARAM path=detection.scalar_max_gap_ms module=detection type=uint32 value=20
+11.85 E2 PARAM path=detection.band_low_hz module=detection type=uint32 value=2950
+11.92 E2 PARAM path=detection.band_high_hz module=detection type=uint32 value=3950
+11.98 E2 PARAM path=output.hop_enabled module=output type=bool value=1
+12.04 E2 PARAM path=output.hop_rotation module=output type=uint32 value=1
+12.06 E3 RB BEHAV wait=100 refractory=400 suppressSelfChirp=100 detectionSuppressTail=60 idleTimeout=20000 idleTimeoutVariation=5000 idleBlockedHeard=1000 idleBlockedOwnEmit=500 idleEnabled=0 restField=1 budget=6 budgetWindowMs=10000 restMs=2000
+12.10 E2 PARAM path=output.hop_pulse_ms module=output type=uint32 value=25
+12.17 E2 PARAM path=output.hop_gap_ms module=output type=uint32 value=10
+12.23 E2 PARAM path=output.hop_steps module=output type=uint32 value=5
+12.29 E2 PARAM path=output.idle_announce_hz module=output type=uint32 value=300
+12.35 E2 PARAM path=output.idle_announce_ms module=output type=uint32 value=500
+12.41 E2 RB log mode=full
+12.73 E3 RB BEHAV wait=100 refractory=400 suppressSelfChirp=100 detectionSuppressTail=60 idleTimeout=20000 idleTimeoutVariation=5000 idleBlockedHeard=1000 idleBlockedOwnEmit=500 idleEnabled=0 restField=1 budget=6 budgetWindowMs=10000 restMs=2000
+13.34 E3 PARAM path=detection.freq_attack_score_min module=detection type=float value=18000.000
+13.41 E3 PARAM path=detection.freq_release_score_min module=detection type=float value=12000.000
+13.47 E3 PARAM path=detection.freq_attack_contrast_min module=detection type=float value=50.000
+13.53 E3 PARAM path=detection.freq_release_contrast_min module=detection type=float value=50.000
+13.59 E3 PARAM path=detection.scalar_onset_threshold module=detection type=float value=2000.000
+13.66 E3 PARAM path=detection.scalar_release_threshold module=detection type=float value=1500.000
+13.72 E3 PARAM path=detection.scalar_cooldown_ms module=detection type=uint32 value=50
+13.78 E3 PARAM path=detection.scalar_min_duration_ms module=detection type=uint32 value=85
+13.84 E3 PARAM path=detection.scalar_max_duration_ms module=detection type=uint32 value=300
+13.90 E3 PARAM path=detection.scalar_min_peak_strength module=detection type=float value=3000.000
+13.97 E3 PARAM path=detection.scalar_release_debounce_ms module=detection type=uint32 value=10
+14.03 E3 PARAM path=detection.scalar_require_carrier_quality module=detection type=bool value=1
+14.09 E3 PARAM path=detection.scalar_require_min_strength module=detection type=bool value=1
+14.15 E3 PARAM path=detection.scalar_min_strength module=detection type=float value=0.000
+14.22 E3 PARAM path=detection.scalar_min_release_coverage_ms module=detection type=uint32 value=80
+14.27 E3 PARAM path=detection.scalar_min_longest_island_ms module=detection type=uint32 value=20
+14.34 E3 PARAM path=detection.scalar_max_gap_ms module=detection type=uint32 value=20
+14.40 E3 PARAM path=detection.band_low_hz module=detection type=uint32 value=2950
+14.46 E3 PARAM path=detection.band_high_hz module=detection type=uint32 value=3950
+14.52 E3 PARAM path=output.hop_enabled module=output type=bool value=1
+14.59 E3 PARAM path=output.hop_rotation module=output type=uint32 value=2
+14.59 E4 RB BEHAV wait=100 refractory=400 suppressSelfChirp=100 detectionSuppressTail=60 idleTimeout=20000 idleTimeoutVariation=5000 idleBlockedHeard=1000 idleBlockedOwnEmit=500 idleEnabled=0 restField=1 budget=6 budgetWindowMs=10000 restMs=2000
+14.63 E3 PARAM path=output.hop_pulse_ms module=output type=uint32 value=25
+14.70 E3 PARAM path=output.hop_gap_ms module=output type=uint32 value=10
+14.76 E3 PARAM path=output.hop_steps module=output type=uint32 value=5
+14.82 E3 PARAM path=output.idle_announce_hz module=output type=uint32 value=300
+14.88 E3 PARAM path=output.idle_announce_ms module=output type=uint32 value=500
+14.94 E3 RB log mode=full
+15.26 E4 RB BEHAV wait=100 refractory=400 suppressSelfChirp=100 detectionSuppressTail=60 idleTimeout=20000 idleTimeoutVariation=5000 idleBlockedHeard=1000 idleBlockedOwnEmit=500 idleEnabled=0 restField=1 budget=6 budgetWindowMs=10000 restMs=2000
+15.86 E4 PARAM path=detection.freq_attack_score_min module=detection type=float value=18000.000
+15.92 E4 PARAM path=detection.freq_release_score_min module=detection type=float value=12000.000
+15.98 E4 PARAM path=detection.freq_attack_contrast_min module=detection type=float value=50.000
+16.04 E4 PARAM path=detection.freq_release_contrast_min module=detection type=float value=50.000
+16.10 E4 PARAM path=detection.scalar_onset_threshold module=detection type=float value=2000.000
+16.17 E4 PARAM path=detection.scalar_release_threshold module=detection type=float value=1500.000
+16.23 E4 PARAM path=detection.scalar_cooldown_ms module=detection type=uint32 value=50
+16.29 E4 PARAM path=detection.scalar_min_duration_ms module=detection type=uint32 value=85
+16.35 E4 PARAM path=detection.scalar_max_duration_ms module=detection type=uint32 value=300
+16.41 E4 PARAM path=detection.scalar_min_peak_strength module=detection type=float value=3000.000
+16.48 E4 PARAM path=detection.scalar_release_debounce_ms module=detection type=uint32 value=10
+16.54 E4 PARAM path=detection.scalar_require_carrier_quality module=detection type=bool value=1
+16.60 E4 PARAM path=detection.scalar_require_min_strength module=detection type=bool value=1
+16.67 E4 PARAM path=detection.scalar_min_strength module=detection type=float value=0.000
+16.73 E4 PARAM path=detection.scalar_min_release_coverage_ms module=detection type=uint32 value=80
+16.79 E4 PARAM path=detection.scalar_min_longest_island_ms module=detection type=uint32 value=20
+16.85 E4 PARAM path=detection.scalar_max_gap_ms module=detection type=uint32 value=20
+16.91 E4 PARAM path=detection.band_low_hz module=detection type=uint32 value=2950
+16.98 E4 PARAM path=detection.band_high_hz module=detection type=uint32 value=3950
+17.04 E4 PARAM path=output.hop_enabled module=output type=bool value=1
+17.10 E4 PARAM path=output.hop_rotation module=output type=uint32 value=3
+17.12 E5 RB BEHAV wait=100 refractory=400 suppressSelfChirp=100 detectionSuppressTail=60 idleTimeout=20000 idleTimeoutVariation=5000 idleBlockedHeard=1000 idleBlockedOwnEmit=500 idleEnabled=0 restField=1 budget=6 budgetWindowMs=10000 restMs=2000
+17.16 E4 PARAM path=output.hop_pulse_ms module=output type=uint32 value=25
+17.22 E4 PARAM path=output.hop_gap_ms module=output type=uint32 value=10
+17.29 E4 PARAM path=output.hop_steps module=output type=uint32 value=5
+17.35 E4 PARAM path=output.idle_announce_hz module=output type=uint32 value=300
+17.41 E4 PARAM path=output.idle_announce_ms module=output type=uint32 value=500
+17.47 E4 RB log mode=full
+17.79 E5 RB BEHAV wait=100 refractory=400 suppressSelfChirp=100 detectionSuppressTail=60 idleTimeout=20000 idleTimeoutVariation=5000 idleBlockedHeard=1000 idleBlockedOwnEmit=500 idleEnabled=0 restField=1 budget=6 budgetWindowMs=10000 restMs=2000
+18.39 E5 PARAM path=detection.freq_attack_score_min module=detection type=float value=18000.000
+18.45 E5 PARAM path=detection.freq_release_score_min module=detection type=float value=12000.000
+18.52 E5 PARAM path=detection.freq_attack_contrast_min module=detection type=float value=50.000
+18.58 E5 PARAM path=detection.freq_release_contrast_min module=detection type=float value=50.000
+18.64 E5 PARAM path=detection.scalar_onset_threshold module=detection type=float value=2000.000
+18.70 E5 PARAM path=detection.scalar_release_threshold module=detection type=float value=1500.000
+18.76 E5 PARAM path=detection.scalar_cooldown_ms module=detection type=uint32 value=50
+18.82 E5 PARAM path=detection.scalar_min_duration_ms module=detection type=uint32 value=85
+18.89 E5 PARAM path=detection.scalar_max_duration_ms module=detection type=uint32 value=300
+18.95 E5 PARAM path=detection.scalar_min_peak_strength module=detection type=float value=3000.000
+19.01 E5 PARAM path=detection.scalar_release_debounce_ms module=detection type=uint32 value=10
+19.07 E5 PARAM path=detection.scalar_require_carrier_quality module=detection type=bool value=1
+19.13 E5 PARAM path=detection.scalar_require_min_strength module=detection type=bool value=1
+19.20 E5 PARAM path=detection.scalar_min_strength module=detection type=float value=0.000
+19.26 E5 PARAM path=detection.scalar_min_release_coverage_ms module=detection type=uint32 value=80
+19.32 E5 PARAM path=detection.scalar_min_longest_island_ms module=detection type=uint32 value=20
+19.39 E5 PARAM path=detection.scalar_max_gap_ms module=detection type=uint32 value=20
+19.45 E5 PARAM path=detection.band_low_hz module=detection type=uint32 value=2950
+19.51 E5 PARAM path=detection.band_high_hz module=detection type=uint32 value=3950
+19.57 E5 PARAM path=output.hop_enabled module=output type=bool value=1
+# setup done: idle off, restField=1, restMs=2000 on every board
+19.63 E5 PARAM path=output.hop_rotation module=output type=uint32 value=4
+19.69 E5 PARAM path=output.hop_pulse_ms module=output type=uint32 value=25
+19.75 E5 PARAM path=output.hop_gap_ms module=output type=uint32 value=10
+19.82 E5 PARAM path=output.hop_steps module=output type=uint32 value=5
+19.88 E5 PARAM path=output.idle_announce_hz module=output type=uint32 value=300
+19.94 E5 PARAM path=output.idle_announce_ms module=output type=uint32 value=500
+20.00 E5 RB log mode=full
+22.64 E1 >> RB CALL
+22.64 E1 RB CALL queued resting=0 state=Idle
+22.70 E1 BEH emit start now=22876 source=call state=Chirping pattern=single
+22.76 E1 RB emit accepted source=call state=Chirping gate=Chirping pattern=single
+22.83 E1 RB emit shape=hop steps=5 pulse_ms=25 gap_ms=10 order=2950,3200,3450,3700,3950
+22.89 E5 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+22.93 E3 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+22.94 E4 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+22.94 E5 RB rest start reason=rest_field_dense now=22775 until=24775 field_patterns=1
+22.98 E3 RB rest start reason=rest_field_dense now=22863 until=24863 field_patterns=1
+22.98 E4 RB rest start reason=rest_field_dense now=22847 until=24847 field_patterns=1
+26.65 E1 >> RB CALL
+26.65 E1 RB CALL queued resting=0 state=Idle
+26.71 E1 BEH emit start now=26885 source=call state=Chirping pattern=single
+26.77 E1 RB emit accepted source=call state=Chirping gate=Chirping pattern=single
+26.84 E1 RB emit shape=hop steps=5 pulse_ms=25 gap_ms=10 order=2950,3200,3450,3700,3950
+26.94 E3 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+26.94 E4 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+26.95 E5 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+26.97 E3 RB rest start reason=rest_field_dense now=26879 until=28879 field_patterns=1
+26.97 E4 RB rest start reason=rest_field_dense now=26863 until=28863 field_patterns=1
+26.98 E5 RB rest start reason=rest_field_dense now=26791 until=28791 field_patterns=1
+30.70 E1 >> RB CALL
+30.70 E1 RB CALL queued resting=0 state=Idle
+30.76 E1 BEH emit start now=30934 source=call state=Chirping pattern=single
+30.83 E1 RB emit accepted source=call state=Chirping gate=Chirping pattern=single
+30.89 E1 RB emit shape=hop steps=5 pulse_ms=25 gap_ms=10 order=2950,3200,3450,3700,3950
+30.98 E3 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+30.99 E4 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+30.99 E5 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+31.03 E3 RB rest start reason=rest_field_dense now=30927 until=32927 field_patterns=1
+31.03 E4 RB rest start reason=rest_field_dense now=30911 until=32911 field_patterns=1
+31.03 E5 RB rest start reason=rest_field_dense now=30839 until=32839 field_patterns=1
+34.75 E1 >> RB CALL
+34.76 E1 RB CALL queued resting=0 state=Idle
+34.81 E1 BEH emit start now=34988 source=call state=Chirping pattern=single
+34.88 E1 RB emit accepted source=call state=Chirping gate=Chirping pattern=single
+34.94 E1 RB emit shape=hop steps=5 pulse_ms=25 gap_ms=10 order=2950,3200,3450,3700,3950
+35.01 E5 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+35.05 E3 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+35.05 E4 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+35.05 E5 RB rest start reason=rest_field_dense now=34887 until=36887 field_patterns=1
+35.07 E3 RB rest start reason=rest_field_dense now=34975 until=36975 field_patterns=1
+35.08 E4 RB rest start reason=rest_field_dense now=34959 until=36959 field_patterns=1
+38.81 E1 >> RB CALL
+38.82 E1 RB CALL queued resting=0 state=Idle
+38.88 E1 BEH emit start now=39052 source=call state=Chirping pattern=single
+38.94 E1 RB emit accepted source=call state=Chirping gate=Chirping pattern=single
+39.00 E1 RB emit shape=hop steps=5 pulse_ms=25 gap_ms=10 order=2950,3200,3450,3700,3950
+39.07 E5 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+39.11 E3 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+39.11 E4 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+39.11 E5 RB rest start reason=rest_field_dense now=38951 until=40951 field_patterns=1
+39.14 E3 RB rest start reason=rest_field_dense now=39039 until=41039 field_patterns=1
+39.14 E4 RB rest start reason=rest_field_dense now=39023 until=41023 field_patterns=1
+42.88 E1 >> RB CALL
+42.88 E1 RB CALL queued resting=0 state=Idle
+42.94 E1 BEH emit start now=43116 source=call state=Chirping pattern=single
+43.01 E1 RB emit accepted source=call state=Chirping gate=Chirping pattern=single
+43.07 E1 RB emit shape=hop steps=5 pulse_ms=25 gap_ms=10 order=2950,3200,3450,3700,3950
+43.14 E5 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+43.18 E3 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+43.19 E4 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+43.20 E5 RB rest start reason=rest_field_dense now=43015 until=45015 field_patterns=1
+43.22 E3 RB rest start reason=rest_field_dense now=43103 until=45103 field_patterns=1
+43.23 E4 RB rest start reason=rest_field_dense now=43087 until=45087 field_patterns=1
+46.88 E1 >> RB CALL
+46.89 E1 RB CALL queued resting=0 state=Idle
+46.95 E1 BEH emit start now=47124 source=call state=Chirping pattern=single
+47.01 E1 RB emit accepted source=call state=Chirping gate=Chirping pattern=single
+47.08 E1 RB emit shape=hop steps=5 pulse_ms=25 gap_ms=10 order=2950,3200,3450,3700,3950
+47.14 E5 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+47.18 E3 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+47.18 E4 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+47.19 E5 RB rest start reason=rest_field_dense now=47023 until=49023 field_patterns=1
+47.21 E3 RB rest start reason=rest_field_dense now=47111 until=49111 field_patterns=1
+47.21 E4 RB rest start reason=rest_field_dense now=47095 until=49095 field_patterns=1
+50.95 E1 >> RB CALL
+50.96 E1 RB CALL queued resting=0 state=Idle
+51.02 E1 BEH emit start now=51191 source=call state=Chirping pattern=single
+51.08 E1 RB emit accepted source=call state=Chirping gate=Chirping pattern=single
+51.14 E1 RB emit shape=hop steps=5 pulse_ms=25 gap_ms=10 order=2950,3200,3450,3700,3950
+51.24 E3 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+51.24 E4 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+51.25 E5 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+51.28 E3 RB rest start reason=rest_field_dense now=51183 until=53183 field_patterns=1
+51.28 E4 RB rest start reason=rest_field_dense now=51167 until=53167 field_patterns=1
+51.28 E5 RB rest start reason=rest_field_dense now=51095 until=53095 field_patterns=1
+55.00 E1 >> RB CALL
+55.00 E1 RB CALL queued resting=0 state=Idle
+55.06 E1 BEH emit start now=55236 source=call state=Chirping pattern=single
+55.13 E1 RB emit accepted source=call state=Chirping gate=Chirping pattern=single
+55.19 E1 RB emit shape=hop steps=5 pulse_ms=25 gap_ms=10 order=2950,3200,3450,3700,3950
+55.25 E5 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+55.29 E3 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+55.29 E4 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+55.29 E5 RB rest start reason=rest_field_dense now=55135 until=57135 field_patterns=1
+55.33 E3 RB rest start reason=rest_field_dense now=55223 until=57223 field_patterns=1
+55.33 E4 RB rest start reason=rest_field_dense now=55207 until=57207 field_patterns=1
+59.07 E1 >> RB CALL
+59.08 E1 RB CALL queued resting=0 state=Idle
+59.13 E1 BEH emit start now=59308 source=call state=Chirping pattern=single
+59.19 E1 RB emit accepted source=call state=Chirping gate=Chirping pattern=single
+59.26 E1 RB emit shape=hop steps=5 pulse_ms=25 gap_ms=10 order=2950,3200,3450,3700,3950
+59.33 E5 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+59.37 E3 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+59.38 E4 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+59.38 E5 RB rest start reason=rest_field_dense now=59207 until=61207 field_patterns=1
+59.41 E3 RB rest start reason=rest_field_dense now=59295 until=61295 field_patterns=1
+59.41 E4 RB rest start reason=rest_field_dense now=59279 until=61279 field_patterns=1
+63.14 E2 >> RB CALL
+63.16 E2 RB CALL queued resting=0 state=Idle
+63.22 E2 BEH emit start now=63316 source=call state=Chirping pattern=single
+63.28 E2 RB emit accepted source=call state=Chirping gate=Chirping pattern=single
+63.34 E2 RB emit shape=hop steps=5 pulse_ms=25 gap_ms=10 order=3200,3450,3700,3950,2950
+63.36 E3 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+63.39 E5 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+63.39 E1 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+63.40 E3 RB rest start reason=rest_field_dense now=63327 until=65327 field_patterns=1
+63.42 E5 RB rest start reason=rest_field_dense now=63271 until=65271 field_patterns=1
+63.42 E1 RB rest start reason=rest_field_dense now=63607 until=65607 field_patterns=1
+63.45 E4 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+63.51 E4 RB rest start reason=rest_field_dense now=63375 until=65375 field_patterns=1
+67.19 E2 >> RB CALL
+67.20 E2 RB CALL queued resting=0 state=Idle
+67.26 E2 BEH emit start now=67364 source=call state=Chirping pattern=single
+67.33 E2 RB emit accepted source=call state=Chirping gate=Chirping pattern=single
+67.39 E2 RB emit shape=hop steps=5 pulse_ms=25 gap_ms=10 order=3200,3450,3700,3950,2950
+67.41 E3 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+67.44 E5 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+67.44 E1 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+67.45 E3 RB rest start reason=rest_field_dense now=67375 until=69375 field_patterns=1
+67.47 E5 RB rest start reason=rest_field_dense now=67319 until=69319 field_patterns=1
+67.47 E1 RB rest start reason=rest_field_dense now=67655 until=69655 field_patterns=1
+67.50 E4 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+67.56 E4 RB rest start reason=rest_field_dense now=67423 until=69423 field_patterns=1
+71.22 E2 >> RB CALL
+71.24 E2 RB CALL queued resting=0 state=Idle
+71.30 E2 BEH emit start now=71396 source=call state=Chirping pattern=single
+71.36 E2 RB emit accepted source=call state=Chirping gate=Chirping pattern=single
+71.42 E2 RB emit shape=hop steps=5 pulse_ms=25 gap_ms=10 order=3200,3450,3700,3950,2950
+71.44 E3 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+71.47 E5 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+71.47 E1 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+71.48 E3 RB rest start reason=rest_field_dense now=71407 until=73407 field_patterns=1
+71.50 E5 RB rest start reason=rest_field_dense now=71351 until=73351 field_patterns=1
+71.50 E1 RB rest start reason=rest_field_dense now=71687 until=73687 field_patterns=1
+71.53 E4 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+71.59 E4 RB rest start reason=rest_field_dense now=71455 until=73455 field_patterns=1
+75.25 E2 >> RB CALL
+75.27 E2 RB CALL queued resting=0 state=Idle
+75.33 E2 BEH emit start now=75428 source=call state=Chirping pattern=single
+75.39 E2 RB emit accepted source=call state=Chirping gate=Chirping pattern=single
+75.46 E2 RB emit shape=hop steps=5 pulse_ms=25 gap_ms=10 order=3200,3450,3700,3950,2950
+75.47 E3 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+75.50 E5 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+75.53 E3 RB rest start reason=rest_field_dense now=75439 until=77439 field_patterns=1
+75.55 E4 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+75.55 E5 RB rest start reason=rest_field_dense now=75383 until=77383 field_patterns=1
+75.55 E1 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+75.58 E4 RB rest start reason=rest_field_dense now=75487 until=77487 field_patterns=1
+75.60 E1 RB rest start reason=rest_field_dense now=75759 until=77759 field_patterns=1
+79.30 E2 >> RB CALL
+79.32 E2 RB CALL queued resting=0 state=Idle
+79.39 E2 BEH emit start now=79484 source=call state=Chirping pattern=single
+79.45 E2 RB emit accepted source=call state=Chirping gate=Chirping pattern=single
+79.51 E2 RB emit shape=hop steps=5 pulse_ms=25 gap_ms=10 order=3200,3450,3700,3950,2950
+79.53 E3 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+79.55 E5 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+79.59 E3 RB rest start reason=rest_field_dense now=79495 until=81495 field_patterns=1
+79.60 E4 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+79.60 E5 RB rest start reason=rest_field_dense now=79431 until=81431 field_patterns=1
+79.61 E1 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+79.64 E4 RB rest start reason=rest_field_dense now=79543 until=81543 field_patterns=1
+79.65 E1 RB rest start reason=rest_field_dense now=79815 until=81815 field_patterns=1
+83.36 E2 >> RB CALL
+83.37 E2 RB CALL queued resting=0 state=Idle
+83.44 E2 BEH emit start now=83532 source=call state=Chirping pattern=single
+83.50 E2 RB emit accepted source=call state=Chirping gate=Chirping pattern=single
+83.57 E2 RB emit shape=hop steps=5 pulse_ms=25 gap_ms=10 order=3200,3450,3700,3950,2950
+83.58 E3 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+83.60 E5 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+83.62 E3 RB rest start reason=rest_field_dense now=83543 until=85543 field_patterns=1
+83.65 E4 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+83.65 E5 RB rest start reason=rest_field_dense now=83479 until=85479 field_patterns=1
+83.65 E1 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+83.69 E4 RB rest start reason=rest_field_dense now=83591 until=85591 field_patterns=1
+83.70 E1 RB rest start reason=rest_field_dense now=83863 until=85863 field_patterns=1
+87.41 E2 >> RB CALL
+87.43 E2 RB CALL queued resting=0 state=Idle
+87.50 E2 BEH emit start now=87589 source=call state=Chirping pattern=single
+87.56 E2 RB emit accepted source=call state=Chirping gate=Chirping pattern=single
+87.62 E2 RB emit shape=hop steps=5 pulse_ms=25 gap_ms=10 order=3200,3450,3700,3950,2950
+87.64 E3 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+87.67 E5 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+87.70 E3 RB rest start reason=rest_field_dense now=87607 until=89607 field_patterns=1
+87.71 E4 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+87.72 E5 RB rest start reason=rest_field_dense now=87551 until=89551 field_patterns=1
+87.72 E1 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+87.76 E4 RB rest start reason=rest_field_dense now=87655 until=89655 field_patterns=1
+87.77 E1 RB rest start reason=rest_field_dense now=87927 until=89927 field_patterns=1
+91.48 E2 >> RB CALL
+91.49 E2 RB CALL queued resting=0 state=Idle
+91.56 E2 BEH emit start now=91652 source=call state=Chirping pattern=single
+91.62 E2 RB emit accepted source=call state=Chirping gate=Chirping pattern=single
+91.68 E2 RB emit shape=hop steps=5 pulse_ms=25 gap_ms=10 order=3200,3450,3700,3950,2950
+91.70 E3 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+91.72 E5 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+91.74 E3 RB rest start reason=rest_field_dense now=91663 until=93663 field_patterns=1
+91.77 E4 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+91.77 E5 RB rest start reason=rest_field_dense now=91599 until=93599 field_patterns=1
+91.78 E1 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+91.81 E4 RB rest start reason=rest_field_dense now=91711 until=93711 field_patterns=1
+91.82 E1 RB rest start reason=rest_field_dense now=91983 until=93983 field_patterns=1
+95.52 E2 >> RB CALL
+95.54 E2 RB CALL queued resting=0 state=Idle
+95.60 E2 BEH emit start now=95700 source=call state=Chirping pattern=single
+95.66 E2 RB emit accepted source=call state=Chirping gate=Chirping pattern=single
+95.73 E2 RB emit shape=hop steps=5 pulse_ms=25 gap_ms=10 order=3200,3450,3700,3950,2950
+95.74 E3 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+95.77 E5 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+95.77 E1 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+95.79 E3 RB rest start reason=rest_field_dense now=95711 until=97711 field_patterns=1
+95.79 E4 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+95.79 E5 RB rest start reason=rest_field_dense now=95647 until=97647 field_patterns=1
+95.79 E1 RB rest start reason=rest_field_dense now=95991 until=97991 field_patterns=1
+95.82 E4 RB rest start reason=rest_field_dense now=95719 until=97719 field_patterns=1
+99.55 E2 >> RB CALL
+99.57 E2 RB CALL queued resting=0 state=Idle
+99.63 E2 BEH emit start now=99732 source=call state=Chirping pattern=single
+99.70 E2 RB emit accepted source=call state=Chirping gate=Chirping pattern=single
+99.76 E2 RB emit shape=hop steps=5 pulse_ms=25 gap_ms=10 order=3200,3450,3700,3950,2950
+99.78 E3 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+99.81 E5 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+99.81 E1 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+99.82 E3 RB rest start reason=rest_field_dense now=99743 until=101743 field_patterns=1
+99.84 E5 RB rest start reason=rest_field_dense now=99687 until=101687 field_patterns=1
+99.84 E1 RB rest start reason=rest_field_dense now=100023 until=102023 field_patterns=1
+99.87 E4 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+99.93 E4 RB rest start reason=rest_field_dense now=99791 until=101791 field_patterns=1
+103.59 E3 >> RB CALL
+103.63 E3 RB CALL queued resting=0 state=Idle
+103.69 E3 BEH emit start now=103580 source=call state=Chirping pattern=single
+103.75 E3 RB emit accepted source=call state=Chirping gate=Chirping pattern=single
+103.82 E3 RB emit shape=hop steps=5 pulse_ms=25 gap_ms=10 order=3450,3700,3950,2950,3200
+103.85 E5 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+103.91 E4 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+103.91 E5 RB rest start reason=rest_field_dense now=103727 until=105727 field_patterns=1
+103.91 E1 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+103.91 E2 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+103.92 E4 RB rest start reason=rest_field_dense now=103847 until=105847 field_patterns=1
+103.93 E1 RB rest start reason=rest_field_dense now=104095 until=106095 field_patterns=1
+103.94 E2 RB rest start reason=rest_field_dense now=104047 until=106047 field_patterns=1
+107.63 E3 >> RB CALL
+107.66 E3 RB CALL queued resting=0 state=Idle
+107.72 E3 BEH emit start now=107612 source=call state=Chirping pattern=single
+107.78 E3 RB emit accepted source=call state=Chirping gate=Chirping pattern=single
+107.85 E3 RB emit shape=hop steps=5 pulse_ms=25 gap_ms=10 order=3450,3700,3950,2950,3200
+107.88 E5 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+107.94 E4 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+107.94 E5 RB rest start reason=rest_field_dense now=107759 until=109759 field_patterns=1
+107.94 E1 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+107.94 E2 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+107.96 E4 RB rest start reason=rest_field_dense now=107879 until=109879 field_patterns=1
+107.97 E1 RB rest start reason=rest_field_dense now=108127 until=110127 field_patterns=1
+107.97 E2 RB rest start reason=rest_field_dense now=108079 until=110079 field_patterns=1
+111.67 E3 >> RB CALL
+111.70 E3 RB CALL queued resting=0 state=Idle
+111.77 E3 BEH emit start now=111660 source=call state=Chirping pattern=single
+111.83 E3 RB emit accepted source=call state=Chirping gate=Chirping pattern=single
+111.89 E3 RB emit shape=hop steps=5 pulse_ms=25 gap_ms=10 order=3450,3700,3950,2950,3200
+111.93 E5 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+111.99 E4 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+111.99 E5 RB rest start reason=rest_field_dense now=111807 until=113807 field_patterns=1
+111.99 E1 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+111.99 E2 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+112.00 E4 RB rest start reason=rest_field_dense now=111927 until=113927 field_patterns=1
+112.02 E1 RB rest start reason=rest_field_dense now=112175 until=114175 field_patterns=1
+112.02 E2 RB rest start reason=rest_field_dense now=112127 until=114127 field_patterns=1
+115.71 E3 >> RB CALL
+115.74 E3 RB CALL queued resting=0 state=Idle
+115.80 E3 BEH emit start now=115692 source=call state=Chirping pattern=single
+115.87 E3 RB emit accepted source=call state=Chirping gate=Chirping pattern=single
+115.93 E3 RB emit shape=hop steps=5 pulse_ms=25 gap_ms=10 order=3450,3700,3950,2950,3200
+115.96 E5 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+116.02 E4 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+116.02 E5 RB rest start reason=rest_field_dense now=115839 until=117839 field_patterns=1
+116.02 E1 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+116.02 E2 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+116.04 E4 RB rest start reason=rest_field_dense now=115959 until=117959 field_patterns=1
+116.05 E1 RB rest start reason=rest_field_dense now=116207 until=118207 field_patterns=1
+116.05 E2 RB rest start reason=rest_field_dense now=116159 until=118159 field_patterns=1
+119.75 E3 >> RB CALL
+119.79 E3 RB CALL queued resting=0 state=Idle
+119.85 E3 BEH emit start now=119740 source=call state=Chirping pattern=single
+119.91 E3 RB emit accepted source=call state=Chirping gate=Chirping pattern=single
+119.97 E3 RB emit shape=hop steps=5 pulse_ms=25 gap_ms=10 order=3450,3700,3950,2950,3200
+120.01 E5 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+120.07 E4 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+120.07 E5 RB rest start reason=rest_field_dense now=119887 until=121887 field_patterns=1
+120.08 E1 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+120.08 E2 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+120.09 E4 RB rest start reason=rest_field_dense now=120007 until=122007 field_patterns=1
+120.11 E1 RB rest start reason=rest_field_dense now=120255 until=122255 field_patterns=1
+120.11 E2 RB rest start reason=rest_field_dense now=120207 until=122207 field_patterns=1
+123.81 E3 >> RB CALL
+123.84 E3 RB CALL queued resting=0 state=Idle
+123.90 E3 BEH emit start now=123791 source=call state=Chirping pattern=single
+123.96 E3 RB emit accepted source=call state=Chirping gate=Chirping pattern=single
+124.03 E3 RB emit shape=hop steps=5 pulse_ms=25 gap_ms=10 order=3450,3700,3950,2950,3200
+124.06 E5 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+124.12 E4 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+124.13 E5 RB rest start reason=rest_field_dense now=123943 until=125943 field_patterns=1
+124.13 E1 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+124.14 E2 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+124.15 E4 RB rest start reason=rest_field_dense now=124063 until=126063 field_patterns=1
+124.16 E1 RB rest start reason=rest_field_dense now=124311 until=126311 field_patterns=1
+124.17 E2 RB rest start reason=rest_field_dense now=124263 until=126263 field_patterns=1
+127.86 E3 >> RB CALL
+127.89 E3 RB CALL queued resting=0 state=Idle
+127.95 E3 BEH emit start now=127844 source=call state=Chirping pattern=single
+128.02 E3 RB emit accepted source=call state=Chirping gate=Chirping pattern=single
+128.08 E3 RB emit shape=hop steps=5 pulse_ms=25 gap_ms=10 order=3450,3700,3950,2950,3200
+128.11 E5 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+128.17 E4 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+128.17 E5 RB rest start reason=rest_field_dense now=127991 until=129991 field_patterns=1
+128.18 E1 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+128.19 E2 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+128.20 E4 RB rest start reason=rest_field_dense now=128111 until=130111 field_patterns=1
+128.22 E1 RB rest start reason=rest_field_dense now=128359 until=130359 field_patterns=1
+128.22 E2 RB rest start reason=rest_field_dense now=128311 until=130311 field_patterns=1
+131.92 E3 >> RB CALL
+131.95 E3 RB CALL queued resting=0 state=Idle
+132.01 E3 BEH emit start now=131908 source=call state=Chirping pattern=single
+132.08 E3 RB emit accepted source=call state=Chirping gate=Chirping pattern=single
+132.14 E3 RB emit shape=hop steps=5 pulse_ms=25 gap_ms=10 order=3450,3700,3950,2950,3200
+132.18 E5 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+132.23 E4 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+132.23 E5 RB rest start reason=rest_field_dense now=132055 until=134055 field_patterns=1
+132.24 E1 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+132.24 E2 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+132.25 E4 RB rest start reason=rest_field_dense now=132175 until=134175 field_patterns=1
+132.26 E1 RB rest start reason=rest_field_dense now=132423 until=134423 field_patterns=1
+132.26 E2 RB rest start reason=rest_field_dense now=132375 until=134375 field_patterns=1
+135.96 E3 >> RB CALL
+135.99 E3 RB CALL queued resting=0 state=Idle
+136.05 E3 BEH emit start now=135940 source=call state=Chirping pattern=single
+136.11 E3 RB emit accepted source=call state=Chirping gate=Chirping pattern=single
+136.17 E3 RB emit shape=hop steps=5 pulse_ms=25 gap_ms=10 order=3450,3700,3950,2950,3200
+136.21 E5 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+136.27 E4 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+136.27 E5 RB rest start reason=rest_field_dense now=136087 until=138087 field_patterns=1
+136.28 E1 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+136.28 E2 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+136.30 E4 RB rest start reason=rest_field_dense now=136207 until=138207 field_patterns=1
+136.32 E1 RB rest start reason=rest_field_dense now=136455 until=138455 field_patterns=1
+136.32 E2 RB rest start reason=rest_field_dense now=136407 until=138407 field_patterns=1
+140.02 E3 >> RB CALL
+140.05 E3 RB CALL queued resting=0 state=Idle
+140.12 E3 BEH emit start now=140004 source=call state=Chirping pattern=single
+140.18 E3 RB emit accepted source=call state=Chirping gate=Chirping pattern=single
+140.24 E3 RB emit shape=hop steps=5 pulse_ms=25 gap_ms=10 order=3450,3700,3950,2950,3200
+140.27 E5 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+140.33 E4 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+140.34 E5 RB rest start reason=rest_field_dense now=140151 until=142151 field_patterns=1
+140.34 E1 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+140.34 E2 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+140.36 E4 RB rest start reason=rest_field_dense now=140271 until=142271 field_patterns=1
+140.38 E1 RB rest start reason=rest_field_dense now=140519 until=142519 field_patterns=1
+140.38 E2 RB rest start reason=rest_field_dense now=140471 until=142471 field_patterns=1
+144.07 E4 >> RB CALL
+144.12 E4 RB CALL queued resting=0 state=Idle
+144.18 E4 BEH emit start now=144029 source=call state=Chirping pattern=single
+144.24 E4 RB emit accepted source=call state=Chirping gate=Chirping pattern=single
+144.31 E4 RB emit shape=hop steps=5 pulse_ms=25 gap_ms=10 order=3700,3950,2950,3200,3450
+144.35 E2 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+144.36 E3 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+144.37 E5 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+144.37 E1 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+144.37 E2 RB rest start reason=rest_field_dense now=144503 until=146503 field_patterns=1
+144.37 E3 RB rest start reason=rest_field_dense now=144319 until=146319 field_patterns=1
+144.38 E5 RB rest start reason=rest_field_dense now=144223 until=146223 field_patterns=1
+144.39 E1 RB rest start reason=rest_field_dense now=144567 until=146567 field_patterns=1
+148.09 E4 >> RB CALL
+148.14 E4 RB CALL queued resting=0 state=Idle
+148.20 E4 BEH emit start now=148046 source=call state=Chirping pattern=single
+148.26 E4 RB emit accepted source=call state=Chirping gate=Chirping pattern=single
+148.33 E4 RB emit shape=hop steps=5 pulse_ms=25 gap_ms=10 order=3700,3950,2950,3200,3450
+148.36 E2 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+148.37 E3 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+148.39 E5 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+148.39 E1 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+148.39 E2 RB rest start reason=rest_field_dense now=148495 until=150495 field_patterns=1
+148.40 E3 RB rest start reason=rest_field_dense now=148335 until=150335 field_patterns=1
+148.42 E5 RB rest start reason=rest_field_dense now=148239 until=150239 field_patterns=1
+148.42 E1 RB rest start reason=rest_field_dense now=148583 until=150583 field_patterns=1
+152.12 E4 >> RB CALL
+152.17 E4 RB CALL queued resting=0 state=Idle
+152.23 E4 BEH emit start now=152079 source=call state=Chirping pattern=single
+152.30 E4 RB emit accepted source=call state=Chirping gate=Chirping pattern=single
+152.36 E4 RB emit shape=hop steps=5 pulse_ms=25 gap_ms=10 order=3700,3950,2950,3200,3450
+152.40 E2 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+152.40 E3 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+152.42 E5 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+152.43 E1 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+152.43 E2 RB rest start reason=rest_field_dense now=152551 until=154551 field_patterns=1
+152.44 E3 RB rest start reason=rest_field_dense now=152367 until=154367 field_patterns=1
+152.45 E5 RB rest start reason=rest_field_dense now=152271 until=154271 field_patterns=1
+152.45 E1 RB rest start reason=rest_field_dense now=152615 until=154615 field_patterns=1
+156.16 E4 >> RB CALL
+156.20 E4 RB CALL queued resting=0 state=Idle
+156.27 E4 BEH emit start now=156116 source=call state=Chirping pattern=single
+156.33 E4 RB emit accepted source=call state=Chirping gate=Chirping pattern=single
+156.39 E4 RB emit shape=hop steps=5 pulse_ms=25 gap_ms=10 order=3700,3950,2950,3200,3450
+156.43 E1 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+156.43 E2 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+156.44 E3 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+156.46 E5 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+156.46 E1 RB rest start reason=rest_field_dense now=156647 until=158647 field_patterns=1
+156.46 E2 RB rest start reason=rest_field_dense now=156559 until=158559 field_patterns=1
+156.46 E3 RB rest start reason=rest_field_dense now=156391 until=158391 field_patterns=1
+156.48 E5 RB rest start reason=rest_field_dense now=156303 until=158303 field_patterns=1
+160.20 E4 >> RB CALL
+160.25 E4 RB CALL queued resting=0 state=Idle
+160.31 E4 BEH emit start now=160159 source=call state=Chirping pattern=single
+160.37 E4 RB emit accepted source=call state=Chirping gate=Chirping pattern=single
+160.44 E4 RB emit shape=hop steps=5 pulse_ms=25 gap_ms=10 order=3700,3950,2950,3200,3450
+160.48 E2 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+160.48 E3 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+160.50 E5 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+160.50 E1 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+160.50 E2 RB rest start reason=rest_field_dense now=160631 until=162631 field_patterns=1
+160.51 E3 RB rest start reason=rest_field_dense now=160439 until=162439 field_patterns=1
+160.51 E5 RB rest start reason=rest_field_dense now=160351 until=162351 field_patterns=1
+160.52 E1 RB rest start reason=rest_field_dense now=160695 until=162695 field_patterns=1
+164.22 E4 >> RB CALL
+164.26 E4 RB CALL queued resting=0 state=Idle
+164.33 E4 BEH emit start now=164180 source=call state=Chirping pattern=single
+164.39 E4 RB emit accepted source=call state=Chirping gate=Chirping pattern=single
+164.46 E4 RB emit shape=hop steps=5 pulse_ms=25 gap_ms=10 order=3700,3950,2950,3200,3450
+164.49 E2 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+164.50 E3 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+164.52 E5 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+164.52 E1 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+164.52 E2 RB rest start reason=rest_field_dense now=164647 until=166647 field_patterns=1
+164.52 E3 RB rest start reason=rest_field_dense now=164463 until=166463 field_patterns=1
+164.53 E5 RB rest start reason=rest_field_dense now=164367 until=166367 field_patterns=1
+164.53 E1 RB rest start reason=rest_field_dense now=164711 until=166711 field_patterns=1
+168.24 E4 >> RB CALL
+168.29 E4 RB CALL queued resting=0 state=Idle
+168.35 E4 BEH emit start now=168199 source=call state=Chirping pattern=single
+168.42 E4 RB emit accepted source=call state=Chirping gate=Chirping pattern=single
+168.48 E4 RB emit shape=hop steps=5 pulse_ms=25 gap_ms=10 order=3700,3950,2950,3200,3450
+168.52 E2 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+168.52 E3 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+168.54 E5 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+168.54 E1 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+168.54 E2 RB rest start reason=rest_field_dense now=168671 until=170671 field_patterns=1
+168.54 E3 RB rest start reason=rest_field_dense now=168487 until=170487 field_patterns=1
+168.56 E5 RB rest start reason=rest_field_dense now=168391 until=170391 field_patterns=1
+168.56 E1 RB rest start reason=rest_field_dense now=168735 until=170735 field_patterns=1
+172.28 E4 >> RB CALL
+172.33 E4 RB CALL queued resting=0 state=Idle
+172.40 E4 BEH emit start now=172244 source=call state=Chirping pattern=single
+172.46 E4 RB emit accepted source=call state=Chirping gate=Chirping pattern=single
+172.52 E4 RB emit shape=hop steps=5 pulse_ms=25 gap_ms=10 order=3700,3950,2950,3200,3450
+172.56 E1 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+172.56 E2 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+172.56 E3 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+172.58 E5 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+172.58 E1 RB rest start reason=rest_field_dense now=172775 until=174775 field_patterns=1
+172.58 E2 RB rest start reason=rest_field_dense now=172687 until=174687 field_patterns=1
+172.58 E3 RB rest start reason=rest_field_dense now=172527 until=174527 field_patterns=1
+172.60 E5 RB rest start reason=rest_field_dense now=172431 until=174431 field_patterns=1
+176.33 E4 >> RB CALL
+176.38 E4 RB CALL queued resting=0 state=Idle
+176.44 E4 BEH emit start now=176287 source=call state=Chirping pattern=single
+176.50 E4 RB emit accepted source=call state=Chirping gate=Chirping pattern=single
+176.57 E4 RB emit shape=hop steps=5 pulse_ms=25 gap_ms=10 order=3700,3950,2950,3200,3450
+176.61 E1 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+176.61 E2 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+176.61 E3 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+176.63 E5 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+176.63 E1 RB rest start reason=rest_field_dense now=176823 until=178823 field_patterns=1
+176.63 E2 RB rest start reason=rest_field_dense now=176735 until=178735 field_patterns=1
+176.63 E3 RB rest start reason=rest_field_dense now=176575 until=178575 field_patterns=1
+176.65 E5 RB rest start reason=rest_field_dense now=176479 until=178479 field_patterns=1
+180.37 E4 >> RB CALL
+180.41 E4 RB CALL queued resting=0 state=Idle
+180.48 E4 BEH emit start now=180326 source=call state=Chirping pattern=single
+180.54 E4 RB emit accepted source=call state=Chirping gate=Chirping pattern=single
+180.60 E4 RB emit shape=hop steps=5 pulse_ms=25 gap_ms=10 order=3700,3950,2950,3200,3450
+180.64 E2 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+180.65 E3 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+180.67 E5 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+180.68 E1 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+180.68 E2 RB rest start reason=rest_field_dense now=180775 until=182775 field_patterns=1
+180.68 E3 RB rest start reason=rest_field_dense now=180615 until=182615 field_patterns=1
+180.70 E5 RB rest start reason=rest_field_dense now=180519 until=182519 field_patterns=1
+180.70 E1 RB rest start reason=rest_field_dense now=180863 until=182863 field_patterns=1
+184.40 E5 >> RB CALL
+184.46 E5 RB CALL queued resting=0 state=Idle
+184.52 E5 BEH emit start now=184292 source=call state=Chirping pattern=single
+184.58 E5 RB emit accepted source=call state=Chirping gate=Chirping pattern=single
+184.64 E4 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+184.65 E5 RB emit shape=hop steps=5 pulse_ms=25 gap_ms=10 order=3950,2950,3200,3450,3700
+184.65 E1 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+184.65 E2 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+184.66 E3 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+184.66 E4 RB rest start reason=rest_field_dense now=184583 until=186583 field_patterns=1
+184.68 E1 RB rest start reason=rest_field_dense now=184871 until=186871 field_patterns=1
+184.68 E2 RB rest start reason=rest_field_dense now=184807 until=186807 field_patterns=1
+184.69 E3 RB rest start reason=rest_field_dense now=184607 until=186607 field_patterns=1
+188.45 E5 >> RB CALL
+188.52 E5 RB CALL queued resting=0 state=Idle
+188.58 E5 BEH emit start now=188348 source=call state=Chirping pattern=single
+188.64 E5 RB emit accepted source=call state=Chirping gate=Chirping pattern=single
+188.70 E4 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+188.71 E5 RB emit shape=hop steps=5 pulse_ms=25 gap_ms=10 order=3950,2950,3200,3450,3700
+188.71 E1 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+188.71 E2 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+188.72 E3 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+188.72 E4 RB rest start reason=rest_field_dense now=188639 until=190639 field_patterns=1
+188.73 E1 RB rest start reason=rest_field_dense now=188927 until=190927 field_patterns=1
+188.73 E2 RB rest start reason=rest_field_dense now=188871 until=190871 field_patterns=1
+188.74 E3 RB rest start reason=rest_field_dense now=188663 until=190663 field_patterns=1
+192.48 E5 >> RB CALL
+192.54 E5 RB CALL queued resting=0 state=Idle
+192.61 E5 BEH emit start now=192374 source=call state=Chirping pattern=single
+192.67 E5 RB emit accepted source=call state=Chirping gate=Chirping pattern=single
+192.73 E4 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+192.74 E5 RB emit shape=hop steps=5 pulse_ms=25 gap_ms=10 order=3950,2950,3200,3450,3700
+192.74 E1 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+192.74 E2 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+192.75 E3 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+192.75 E4 RB rest start reason=rest_field_dense now=192671 until=194671 field_patterns=1
+192.76 E1 RB rest start reason=rest_field_dense now=192959 until=194959 field_patterns=1
+192.76 E2 RB rest start reason=rest_field_dense now=192895 until=194895 field_patterns=1
+192.76 E3 RB rest start reason=rest_field_dense now=192695 until=194695 field_patterns=1
+196.51 E5 >> RB CALL
+196.58 E5 RB CALL queued resting=0 state=Idle
+196.64 E5 BEH emit start now=196412 source=call state=Chirping pattern=single
+196.70 E5 RB emit accepted source=call state=Chirping gate=Chirping pattern=single
+196.77 E4 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+196.77 E5 RB emit shape=hop steps=5 pulse_ms=25 gap_ms=10 order=3950,2950,3200,3450,3700
+196.77 E1 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+196.78 E2 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+196.78 E3 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+196.78 E4 RB rest start reason=rest_field_dense now=196703 until=198703 field_patterns=1
+196.79 E1 RB rest start reason=rest_field_dense now=196991 until=198991 field_patterns=1
+196.79 E2 RB rest start reason=rest_field_dense now=196927 until=198927 field_patterns=1
+196.79 E3 RB rest start reason=rest_field_dense now=196727 until=198727 field_patterns=1
+200.55 E5 >> RB CALL
+200.61 E5 RB CALL queued resting=0 state=Idle
+200.68 E5 BEH emit start now=200444 source=call state=Chirping pattern=single
+200.74 E5 RB emit accepted source=call state=Chirping gate=Chirping pattern=single
+200.79 E3 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+200.82 E5 RB emit shape=hop steps=5 pulse_ms=25 gap_ms=10 order=3950,2950,3200,3450,3700
+200.83 E1 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+200.84 E2 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+200.84 E3 RB rest start reason=rest_field_dense now=200759 until=202759 field_patterns=1
+200.85 E4 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+200.86 E1 RB rest start reason=rest_field_dense now=201015 until=203015 field_patterns=1
+200.86 E2 RB rest start reason=rest_field_dense now=200967 until=202967 field_patterns=1
+200.88 E4 RB rest start reason=rest_field_dense now=200767 until=202767 field_patterns=1
+204.61 E5 >> RB CALL
+204.67 E5 RB CALL queued resting=0 state=Idle
+204.74 E5 BEH emit start now=204508 source=call state=Chirping pattern=single
+204.80 E5 RB emit accepted source=call state=Chirping gate=Chirping pattern=single
+204.86 E5 RB emit shape=hop steps=5 pulse_ms=25 gap_ms=10 order=3950,2950,3200,3450,3700
+204.87 E1 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+204.88 E2 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+204.88 E3 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+204.89 E4 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+204.90 E1 RB rest start reason=rest_field_dense now=205079 until=207079 field_patterns=1
+204.90 E2 RB rest start reason=rest_field_dense now=205031 until=207031 field_patterns=1
+204.91 E3 RB rest start reason=rest_field_dense now=204823 until=206823 field_patterns=1
+204.91 E4 RB rest start reason=rest_field_dense now=204831 until=206831 field_patterns=1
+208.64 E5 >> RB CALL
+208.70 E5 RB CALL queued resting=0 state=Idle
+208.77 E5 BEH emit start now=208535 source=call state=Chirping pattern=single
+208.82 E5 RB emit accepted source=call state=Chirping gate=Chirping pattern=single
+208.89 E5 RB emit shape=hop steps=5 pulse_ms=25 gap_ms=10 order=3950,2950,3200,3450,3700
+208.89 E1 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+208.91 E2 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+208.91 E3 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+208.93 E4 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+208.95 E1 RB rest start reason=rest_field_dense now=209111 until=211111 field_patterns=1
+208.95 E2 RB rest start reason=rest_field_dense now=209063 until=211063 field_patterns=1
+208.95 E3 RB rest start reason=rest_field_dense now=208855 until=210855 field_patterns=1
+208.95 E4 RB rest start reason=rest_field_dense now=208863 until=210863 field_patterns=1
+212.68 E5 >> RB CALL
+212.74 E5 RB CALL queued resting=0 state=Idle
+212.81 E5 BEH emit start now=212574 source=call state=Chirping pattern=single
+212.87 E5 RB emit accepted source=call state=Chirping gate=Chirping pattern=single
+212.93 E5 RB emit shape=hop steps=5 pulse_ms=25 gap_ms=10 order=3950,2950,3200,3450,3700
+212.94 E1 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+212.95 E2 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+212.95 E3 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+212.97 E4 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+212.97 E1 RB rest start reason=rest_field_dense now=213151 until=215151 field_patterns=1
+212.98 E2 RB rest start reason=rest_field_dense now=213103 until=215103 field_patterns=1
+212.98 E3 RB rest start reason=rest_field_dense now=212895 until=214895 field_patterns=1
+212.98 E4 RB rest start reason=rest_field_dense now=212903 until=214903 field_patterns=1
+216.72 E5 >> RB CALL
+216.78 E5 RB CALL queued resting=0 state=Idle
+216.84 E5 BEH emit start now=216613 source=call state=Chirping pattern=single
+216.90 E5 RB emit accepted source=call state=Chirping gate=Chirping pattern=single
+216.97 E5 RB emit shape=hop steps=5 pulse_ms=25 gap_ms=10 order=3950,2950,3200,3450,3700
+216.98 E1 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+216.99 E2 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+216.99 E3 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+217.01 E4 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+217.01 E1 RB rest start reason=rest_field_dense now=217191 until=219191 field_patterns=1
+217.01 E2 RB rest start reason=rest_field_dense now=217143 until=219143 field_patterns=1
+217.02 E3 RB rest start reason=rest_field_dense now=216935 until=218935 field_patterns=1
+217.02 E4 RB rest start reason=rest_field_dense now=216943 until=218943 field_patterns=1
+220.75 E5 >> RB CALL
+220.82 E5 RB CALL queued resting=0 state=Idle
+220.88 E5 BEH emit start now=220652 source=call state=Chirping pattern=single
+220.94 E5 RB emit accepted source=call state=Chirping gate=Chirping pattern=single
+221.01 E5 RB emit shape=hop steps=5 pulse_ms=25 gap_ms=10 order=3950,2950,3200,3450,3700
+221.02 E1 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+221.04 E2 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+221.05 E3 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+221.05 E4 RB verdict=single_pulse fieldQuiet=0 fieldActive=1 fieldDense=0 behaviorEligible=0 decision=rest_field_dense valid=1 profile=TonalPulseScalar
+221.06 E1 RB rest start reason=rest_field_dense now=221239 until=223239 field_patterns=1
+221.06 E2 RB rest start reason=rest_field_dense now=221199 until=223199 field_patterns=1
+221.07 E3 RB rest start reason=rest_field_dense now=221007 until=223007 field_patterns=1
+221.07 E4 RB rest start reason=rest_field_dense now=220975 until=222975 field_patterns=1

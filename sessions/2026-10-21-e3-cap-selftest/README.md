@@ -38,3 +38,5 @@ E3 status: auto-reset fixed; amp stable; SELFTEST passes in a quiet room. The to
 other boards (208,000 against 260,000-310,000, E2 220,000-265,000). That is a level offset (speaker, its mounting,
 the amp's gain wiring or 5 V under load), not instability. For step 5e/6 it is a per-board level to note in the
 hearing matrix, not a blocker.
+
+Owner, 2026-10-21: E3 no longer has the harsh, overdriven output noise heard on 2026-10-17.

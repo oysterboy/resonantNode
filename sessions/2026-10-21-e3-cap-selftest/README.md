@@ -16,6 +16,7 @@ What ran:
 | E3 | run1 | 971 / 3,114 | 173,522-203,358 | 1,292-2,586 | 1.17 | **PASS** (SNR 37.9-43.1 dB) |
 | E3 | run2 | 2,143 / 11,701 | 186,952-203,137 | 7,339-62,111 | 1.09 | FAIL low_snr (10.1 dB min) |
 | E3 | run3 | 7,373 / 47,688 | 188,040-201,545 | 4,503-57,861 | 1.07 | FAIL low_snr (10.5 dB min) |
+| E3 | run4_quiet | 1,205 / 3,800 | 207,066-208,359 | 2,481-5,501 | 1.01 | **PASS** (SNR 31.5-38.5 dB) |
 | E2 | run1 | 1,668 / 13,077 | 219,110-264,838 | 2,116-10,392 | 1.21 | **PASS** (SNR 26.8-41.9 dB) |
 
 Boot lines on both boards:
@@ -29,3 +30,11 @@ Reading:
   any tone, and it varied between tones (4,500 to 62,000). It is either room noise during those runs or
   electrical noise on E3's mic; the two have not been separated yet. E2's mic peak of 13,077 in its run
   (between E3's run 2 and run 3) also points to sound in the room.
+
+Owner, after run 3: they were handling things at the bench during runs 2 and 3. Run 4 was made with the bench
+left alone: PASS, and the tone is the steadiest so far (spread 1.01). **Runs 2 and 3 were room noise, not E3.**
+
+E3 status: auto-reset fixed; amp stable; SELFTEST passes in a quiet room. The tone is still about 30 % below the
+other boards (208,000 against 260,000-310,000, E2 220,000-265,000). That is a level offset (speaker, its mounting,
+the amp's gain wiring or 5 V under load), not instability. For step 5e/6 it is a per-board level to note in the
+hearing matrix, not a blocker.

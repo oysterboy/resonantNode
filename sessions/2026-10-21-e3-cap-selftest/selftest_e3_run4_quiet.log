@@ -1,0 +1,15 @@
+# E3 on COM4, run4_quiet, Node build ecfc72b, E2 silenced (port held, idle off, onset 200000), 2026-10-21
+SELFTEST_BEGIN role=node mode=full board=damp
+SELFTEST check=board result=PASS mac=24:dc:c3:49:b7:38 board=damp role=node version=0.4.0 git=ecfc72b built=Oct_21_2026 built_time=21:23:48 uptime_ms=205329
+SELFTEST check=mic result=PASS frames=12000 nonzero_pct=100.0 span=97446 floor_mean=1205 floor_peak=3800 bit8_pct=50.4 framing=ok slot=0
+SELFTEST check=quiet_boot result=PASS state=ACTIVE boot=done last=done last_at_ms=5296 smooth_at_rebase=49.0 quiet_rebases=1 forced_rebases=0 baseline=-6.2
+SELFTEST_AMP n=1 floor=5501 tone=207066 snr_db=31.5 samples=6400 valid=1
+SELFTEST_AMP n=2 floor=2925 tone=207622 snr_db=37.0 samples=6400 valid=1
+SELFTEST_AMP n=3 floor=2798 tone=208359 snr_db=37.4 samples=6400 valid=1
+SELFTEST_AMP n=4 floor=5272 tone=207693 snr_db=31.9 samples=6400 valid=1
+SELFTEST_AMP n=5 floor=2481 tone=208308 snr_db=38.5 samples=6400 valid=1
+SELFTEST check=amp result=PASS chirps=5 valid=5 freq_hz=3200 tone_ms=100 path=i2s tone=207693 floor=2925 snr_db=37.0 snr_min_db=31.5 snr_max_db=38.5 tone_spread=1.01 pass_db=30.0 max_spread=1.30
+SELFTEST_RESTORE detection=reset baseline=SETTLE
+SELFTEST check=own_chirp_suppressed result=PASS chirps=5 started=5 verdicts=0 valid=0 other_verdicts=0 other_valid=0 echo_window_ms=300 suppress_tail_ms=60
+SELFTEST check=external_chirp result=SKIP reason=not_requested
+SELFTEST_SUMMARY result=PASS pass=5 fail=0 skip=1 role=node

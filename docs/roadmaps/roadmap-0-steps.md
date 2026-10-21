@@ -405,6 +405,10 @@ the previous gate open unless the step says it can run in parallel.
    one pair run with the `# state` header (nodepair.py since PR #42; today's runs predate it), and the shipped rest
    values decided (a tuning pass with a decision file if a default changes). Items (1)-(3) of the order below are done
    or overtaken; (4), the own-emit tail on hop trains, stays.
+   Progress 2026-10-21 (bench/sessions/2026-10-21-pair-state-header): the pair run with the `# state` header is done.
+   E1-E4 on the shipped build: each RB CALL gives 7 answers in a row, then a rest, quiet after 3.6 s, three times.
+   Gate part met. Left: the owner confirms the shipped rest values (or changes them in a tuning pass). Input for
+   that: the five-node run at 0.5 FS, 5f below.
    Original text:
    answer the reply to its own signal. (issue #43)
    Where: BEH-001/BEH-002 territory (roadmap-behavior.md);
@@ -476,8 +480,15 @@ the previous gate open unless the step says it can run in parallel.
    2026-10-17: counts and proposal written (decisions/2026-10-17-trial-third-question-pass-mark.md); nodegroup.py
    --kick measures time to quiet. Owner set N = 30 s, quiet gap 15 s, idle calls count as kicks; M from the first
    five-node session. Gate met except M.
+   2026-10-21, first five-node session (bench/sessions/2026-10-21-group5-kick-idle, faaa814 at 0.5 FS, idle on, RB
+   CALL every 90 s, 360 s): 51-88 emissions/min. Every chain ends within 2.9-7.7 s (rest rule), and the longest
+   silence was 19.2 s. Against the pass mark: **FAIL**, 13 of 31 starts reached a 15 s silence within 30 s. The
+   group makes an idle call about every 13 s (five nodes, idle timeout 20 s ± 10 s), and at 0.5 FS each one wakes
+   everybody; some starts are duplicate idle calls in the same second. For the owner: M (this session's maximum
+   was 88/min), and whether to lengthen the idle timeout or restate the pass mark ("the chain ends" instead of
+   "15 s of silence"). Either is a decision file, not a drive-by.
 
-5g. [TODO] Pre-trial Node items. (issue #46)
+5g. [DONE 2026-10-21] Pre-trial Node items. (issue #46)
    Where: BEH-005, OUT-005 (roadmap-behavior.md, roadmap-output.md); decisions/2026-10-17-idle-call-wakes-the-network.md.
    Why before step 6: (a) no command plays the node's call on demand, and a SELFTEST chirp is a poor kick (its
    300 ms echo window swallows the answer), so "time to quiet after a kick" cannot be measured; (b) hop rotation is
@@ -488,6 +499,8 @@ the previous gate open unless the step says it can run in parallel.
    Progress 2026-10-21 (bench/sessions/2026-10-21-selftest-all5): the rotation part is verified on all five boards
    (Node ecfc72b): `RB node name=E1..E5 rotation_source=roster`, rotations 0-4, five distinct orders. Open: RB CALL
    and the idle call on the bench (code since c8a55b9 / d2eaca9, now on every board).
+   Done 2026-10-21 (bench/sessions/2026-10-21-group5-kick-idle): RB CALL played through Behavior 4 of 4 times and was
+   answered each time; idle calls (300 Hz announcement, then the hop train) 27, all answered.
 
 5h. [TODO] Detection robustness against other physical conditions. (issue #47)
    Where: DET-011 (gap contract), NODE-012 (acoustic test suite, its cells), NODE-006 (host replay);

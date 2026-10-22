@@ -1,0 +1,25 @@
+[08:24:14] boot banner: {'role': 'analyzer', 'git': '62d32dd', 'version': '0.4.0', 'board': 'damp'}
+[08:24:16] warmup: OK EMIT CHIRP
+[08:24:16] start T3_diag_on_detail: SEQ DIAG on ; SEQ start profile=TonalPulseScalar tries=10 mode=detail when=all verbose=1
+[08:24:54] done T3_diag_on_detail (37s): complete=True results={'expected': 10}
+[08:25:00] session updated, index rebuilt
+[08:26:27] boot banner: {'role': 'analyzer', 'git': '62d32dd', 'version': '0.4.0', 'board': 'damp'}
+[08:26:29] warmup: OK EMIT CHIRP
+[08:26:29] start T3_bench: SEQ DIAG on ; SEQ start profile=TonalPulseScalar tries=2 mode=detail when=all verbose=1
+[08:26:41] done T3_bench (12s): complete=True results={'expected': 2}
+[08:26:47] session updated, index rebuilt
+[08:31:30] boot banner: {'role': 'analyzer', 'git': '62d32dd', 'version': '0.4.0', 'board': 'damp'}
+[08:31:32] warmup: OK EMIT CHIRP
+[08:31:32] start T3_bench_pre: SEQ DIAG on ; SEQ start profile=TonalPulseScalar tries=4 mode=detail when=all verbose=1
+[08:31:50] done T3_bench_pre (18s): complete=True results={'expected': 4}
+[08:31:56] session updated, index rebuilt
+[08:32:40] boot banner: {'role': 'analyzer', 'git': '62d32dd', 'version': '0.4.0', 'board': 'damp'}
+[08:32:42] warmup: OK EMIT CHIRP
+[08:32:42] start T3_fill: SEQ DIAG on ; SEQ start profile=TonalPulseScalar tries=1 mode=detail when=all verbose=1
+[08:32:51] done T3_fill (9s): complete=True results={'expected': 1}
+[08:32:57] session updated, index rebuilt
+[08:42:33] boot banner: {'role': 'analyzer', 'git': '62d32dd', 'version': '0.4.0', 'board': 'damp'}
+[08:42:35] warmup: OK EMIT CHIRP
+[08:42:35] start T3_diag_on_detail_fixed: SEQ DIAG on ; SEQ start profile=TonalPulseScalar tries=10 mode=detail when=all verbose=1
+[08:43:12] done T3_diag_on_detail_fixed (37s): complete=True results={'expected': 10}
+[08:43:18] session updated, index rebuilt

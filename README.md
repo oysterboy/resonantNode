@@ -121,9 +121,16 @@ python tools/logging/raw_capture_slope.py <run.log> [--windows 20 --tone-hz 3200
 
 Run conventions learned in #19/#20 (2026-10-09):
 
-- Comparable SEQ runs use `SEQ DIAG off` (as the #26 baselines): with
-  diagnostics on, `mode=detail` drops audio on every detection (ANA-004).
-  Check `dropped_dma_buffers` in `SEQ_HISTDBG`.
+- Comparable SEQ runs used `SEQ DIAG off` (as the #26 baselines) until
+  2026-10-22: with diagnostics on, `mode=detail` dropped audio on every
+  detection (ANA-004). Since main 98b2fd0, detail + diagnostics run with 0
+  drops (bench/sessions/2026-10-22-7a-gate). Still check `dropped_dma_buffers`
+  in `SEQ_HISTDBG`.
+- dt changed anchor on 2026-10-22 (98b2fd0, ANA-007). It is measured from
+  the time the Analyzer sent the CHIRP/PULSES command (`dt_anchor=command` in
+  SEQ_TRIAL); before that it was measured from the polled EMIT_START marker
+  (no `dt_anchor` field). Do not compare dt across that line: on E2/E3 the
+  new dt is ~50 ms where the old was 22-38 ms.
 - Silent false-positive control: `EMIT MODE REMOTE; SEQ OBS start tries=N
   period=2000 window=1800 ...` (nothing is emitted; any detector accept is a
   false positive).

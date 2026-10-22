@@ -1,6 +1,15 @@
 # Step 8b: detection follow-up bugs on the folded inspector
 
-Status: active (plan, 2026-10-22). Step 8b of `docs/roadmaps/roadmap-0-steps.md`, issue #53.
+Archived: 2026-10-22 - step 8b closed. Landed: verdict-queue overflow and loop-stack minimum in RB STATUS
+(733a68b), the inspection-plan contract RB plan_check (881694f), a continuous tone closed at max duration (7b62c84),
+the reject-count rule under test (8136d64), getWindow's scratch off the stack (ef86297), Strong-unused comment
+(63b1e1f). Gate: bench/sessions/2026-10-22-step8b (on-device 25/25, T3 50/50 and 10/10 vs the step 8 baseline,
+T2h byte-identical). Moved, not done: item 1 (inspect when the window is complete) is on branch
+step8b-defer-inspection and waits for DET-017's min-duration tuning pass, because with it a 40 ms tone plus room
+reflection is accepted. Found and not fixed: the Node's lowest free loop stack (3,416 B of 16 KB) is set at boot or
+in the RB STATUS print, not by detection; not traced further.
+
+Status: closed 2026-10-22 (see the Archived line). Step 8b of `docs/roadmaps/roadmap-0-steps.md`, issue #53.
 Baseline: bench/sessions/2026-10-22-step8-baseline (T3, T2h), firmware 4efba86 after step 8.
 Rule: no threshold in `DetectionProfile.h` / `BehaviorProfile.h` changes here; an item that would move one is
 named and handed to a tuning pass or a decision file.

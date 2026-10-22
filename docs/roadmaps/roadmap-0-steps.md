@@ -39,6 +39,8 @@ Status update 2026-10-22, night: 7c done. FieldState stays as the rest gate (tri
 is removed in the new step 7d (#52), before step 8; step 9 deferred to step 11; 8b's Freq items moot. Next: 7d.
 Status update 2026-10-22, late night: 7d done (3a11d80). FrequencyMatch is gone and the Scalar T3 is unchanged
 against 7a. Next: step 8; its baseline is recorded (bench 2026-10-22-step8-baseline).
+Status update 2026-10-22, step 8b: done; item 1 moved to DET-017 (tuning pass, then merge). Next by order: 10
+(mode-layer cleanup, starting with 10a's boundary map).
 Status update 2026-10-22, step 8: Part A done (the evaluator is folded into inspection, behavior-neutral, gate
 met). Part B (the verdict boundary rule) is deferred to DET-016 (step 11). Next by order: 8b (detection follow-up bugs on the
 folded inspector).
@@ -804,8 +806,18 @@ the previous gate open unless the step says it can run in parallel.
    Gate: per item; a two-layer signal with a low aesthetic layer detected
    as well as the detection layer alone, with the leak measured.
 
-8b. [NEXT] Detection follow-up bugs, on the folded inspector. (issue #53)
-   Pass doc: docs/refactors/step8b-detection-followups.md (plan 2026-10-22, seven items, owner decisions A and B).
+8b. [DONE 2026-10-22] Detection follow-up bugs, on the folded inspector. (issue #53, closed)
+   Pass doc: docs/refactors/archive/step8b-detection-followups.md.
+   Done 2026-10-22 (bench/sessions/2026-10-22-step8b; T2h byte-identical, T3 chirp 50/50 and hop 10/10 vs the
+   step 8 baseline, on-device 25/25):
+   - Verdict-queue overflows and the loop's lowest free stack are in RB STATUS.
+   - RB plan_check: durations against the plan's windows and the 512 ms history.
+   - A continuous in-band tone is closed at max duration, with one reject.
+   - The reject-count rule is under test, and 521 bench trials agree.
+   - getWindow's 2 KB scratch is off the stack. The Node's 3,416 B stack minimum is set at boot, not by detection.
+   - Strong is unused for contrast, now commented.
+   Moved: item 1, inspect when the window is complete. It is on branch step8b-defer-inspection and waits for
+   DET-017: with it, a 40 ms tone plus a room reflection is accepted, so the min duration needs a tuning pass first.
    Where: DET-010 on Scalar (peak-centered window inspected before it has
    arrived), DET-001 (T2 hardware confirmation of the report freeze), audit
    3.1 (85-89 ms occurrences rejected by construction), 3.7 (a continuous tone holds the scalar

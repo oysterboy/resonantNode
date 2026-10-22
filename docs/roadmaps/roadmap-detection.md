@@ -207,7 +207,8 @@ Status: Freq case REMOVED 2026-10-22 with FrequencyMatch (step 7d,
 decisions/2026-10-22-remove-frequencymatch.md). Open on Scalar as audit 3.1:
 occurrences of 85-89 ms are inspected before the +100 ms Start-anchored
 window closes; measured with a 40 ms tone plus a room reflection reading
-85-87 ms (bench/sessions/2026-10-22-7d-dur40-raw). Step 8b.
+85-87 ms (bench/sessions/2026-10-22-7d-dur40-raw). Fixed on branch
+step8b-defer-inspection; merges with DET-017 (step 8b moved it there).
 (found 2026-10-09, #20)
 
 ```text

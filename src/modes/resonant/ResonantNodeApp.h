@@ -169,6 +169,7 @@ private:
     unsigned long startNetworkSignal();  // hop train on the ChirpOutput; returns its span in ms, 0 = not started
     void printSignalConfig();
     void printHopGapCheck();  // RB hop_check: output.hop_* against detection.scalar_* (step 5h item 2)
+    void printInspectionPlanCheck();  // RB plan_check: detection.scalar_* against the plan and history (step 8b item 2)
 
     // Hardware wiring.
     int _ledPin;

@@ -9,6 +9,7 @@
 #include "../../app/BuildInfo.h"
 #include "../../app/NodeRoster.h"
 #include "../../detection/HopGapContract.h"
+#include "../../detection/InspectionPlanContract.h"
 #include "../../detection/features/FrequencyMeasurementPacketBuilder.h"
 #include "../../detection/inspection/InspectionNames.h"
 #include "../../detection/evaluation/VerdictNames.h"
@@ -354,6 +355,7 @@ void Node::begin() {
     }
     printSignalConfig();
     printHopGapCheck();
+    printInspectionPlanCheck();
     _behavior.resetState();
     resetDetectionState();
     _audioSignal.resetStats();
@@ -1515,6 +1517,7 @@ void Node::applyParamModule(param::ModuleId module) {
         case param::ModuleId::Detection:
             applyActiveDetectionProfile();
             printHopGapCheck();
+            printInspectionPlanCheck();
             break;
         case param::ModuleId::Output:
             printHopGapCheck();
@@ -1575,6 +1578,32 @@ void Node::printHopGapCheck() {
         }
     }
     serialOut().println(any ? "" : "none");
+}
+
+// RB plan_check: detection.scalar_* durations against the inspection plan's
+// windows and the FeatureHistory depth (detection/InspectionPlanContract.h,
+// step 8b item 2). status=fail: inspection reads past the history;
+// status=warn: occurrences near the min duration are inspected before their
+// window has arrived (shipped: early_window_ms=5, audit 3.1, DET-017).
+void Node::printInspectionPlanCheck() {
+    const detection::InspectionPlanCheck c =
+        detection::checkInspectionPlan(_activeDetectionProfile.scalarTransient, _activeDetectionProfile.inspectionPlan);
+    serialOut().print("RB plan_check status=");
+    serialOut().print(!c.hardOk() ? "fail" : (!c.softOk() ? "warn" : "ok"));
+    serialOut().print(" history_needed_ms=");
+    serialOut().print(c.historyNeededMs);
+    serialOut().print(" history_ms=");
+    serialOut().print(c.historySpanMs);
+    serialOut().print(" early_window_ms=");
+    serialOut().print(c.earlyWindowMs);
+    serialOut().print(" issues=");
+    if (c.hardOk() && c.softOk()) {
+        serialOut().println("none");
+        return;
+    }
+    serialOut().print(!c.historyFits ? "history_too_short" : "");
+    serialOut().print(!c.historyFits && !c.windowCompleteAtRelease ? "," : "");
+    serialOut().println(!c.windowCompleteAtRelease ? "window_after_inspection" : "");
 }
 
 bool Node::setProfileFromName(const char* name) {

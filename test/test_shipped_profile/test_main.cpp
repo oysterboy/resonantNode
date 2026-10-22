@@ -13,10 +13,14 @@ The PCM is in fixtures.h, generated from test/fixtures by tools/bench/fixture2he
 four are mode=both or .wav captures, so they hold what AudioSignal received and are fed
 without a preprocessor (as hostreplay::replay does for them).
 
-Board: `pio test -e esp32dev-analyzer -f test_shipped_profile` (any D-AMP board; no audio I/O).
+Board (any D-AMP board; no audio I/O): `pio test -e esp32dev-analyzer -f test_shipped_profile
+--upload-port COMn --without-testing`, then reset the board and read the port. The envs set
+monitor_dtr/rts = 0, so the test runner's port open does not reset the board and misses the output.
+Flash the board's own build back afterwards.
 Host: `pio test -e native-test-behavior` (no src build; this file pulls the chain in itself).
 */
 #include <Arduino.h>
+#include <memory>
 #include <unity.h>
 
 #include "../../src/app/RuntimeDefaults.h"
@@ -100,7 +104,9 @@ struct Outcome {
     bool haveFirst = false;
 };
 
-// The objects are large (FeatureHistory alone ~18.6 KB, over the 16 KB loop stack): keep them static.
+// The chain is large (FeatureHistory alone ~18.6 KB, AudioSignal holds its sample history) and the
+// test runs on the 16 KB loop stack, where FeatureHistory::reset() also puts a StreamBuffer
+// temporary: the runtime and band stream are static, AudioSignal and the profile on the heap.
 FreqBandStream gBand;
 detection::DetectionRuntime gRuntime;
 
@@ -108,7 +114,8 @@ detection::DetectionRuntime gRuntime;
 // of silence after the capture so the last occurrence closes, verdicts before skipMs ignored.
 Outcome replay(const Fixture& fx, Band band, unsigned long skipMs = 0) {
     ArrayAudioSource source(fx.pcm, fx.samples, fx.rateHz);
-    AudioSignal audioSignal(source);
+    std::unique_ptr<AudioSignal> audioSignalOwner(new AudioSignal(source));
+    AudioSignal& audioSignal = *audioSignalOwner;
     audioSignal.begin(false);
     audioSignal.setSmoothingFactor(0.5f);
     audioSignal.setBaselineUpdateFactor(0.005f);
@@ -124,7 +131,9 @@ Outcome replay(const Fixture& fx, Band band, unsigned long skipMs = 0) {
     gBand.setTargetFrequencyHz(runtime::kDefaultChirpFrequencyHz);
     gBand.setBand(band.lowHz, band.highHz);
 
-    const detection::DetectionProfile profile = detection::makeTonalPulseScalarProfile();
+    std::unique_ptr<detection::DetectionProfile> profileOwner(
+        new detection::DetectionProfile(detection::makeTonalPulseScalarProfile()));
+    const detection::DetectionProfile& profile = *profileOwner;
     gRuntime.resetState();
     gRuntime.setDetectorSelection(profile.detectorSelection);
     gRuntime.setFrequencyMatchConfig(profile.frequencyMatch);

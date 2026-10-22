@@ -1,5 +1,13 @@
 # Code-review findings: debug and fix (step 3d, issue #31, NODE-018)
 
+Archived: 2026-10-22 - step 3d closed. Landed: P1-P3, tiers A, B, R2 and cheap D (852d58f..ea7a6bc, 5183cc0), all
+envs built since 2026-10-14, and the gate's SEQ session passed (bench/sessions/2026-10-22-3d-seq-check: P1 echo, P3
+per-trial classification, B9, B12). Still open, handed to steps in roadmap-0-steps.md 3d and tracked in #32:
+check 12 (full T3 regression: step 8's baseline), 13/B11 and the FrequencyMatch reject-event follow-up, P4
+history window and DET-010 (step 8b), P2a (step 7c), A1 and A3/A4 (step 10), P2b and D21 (not sequenced, with
+NODE-019), the old-bench-data check. Not re-verified at archive time: P2a's millis offset (TIMEBASE line not in
+the logs), P2b (no stall hook), P4's contrast scale beyond step 5's decision.
+
 Status: active. Second review (tier R2) 2026-10-14, fixed the same day
 (a6da871..ea7a6bc), also uncompiled. Review 2026-10-13; P1-P3, tiers A and B and the cheap
 tier D items committed the same day (section 5), compile-unverified: the

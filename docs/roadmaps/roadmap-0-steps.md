@@ -7,21 +7,34 @@ roadmap text that belongs in the domain-specific files.
 
 ## Goal of the current phase
 
-Five D-AMP nodes with the same firmware in one room, hearing and answering
-each other, with a recorded session that says whether they did (NODE-008).
-Done means: a STATUS line from every node naming its build, profile and
-thresholds (NODE-001), and a session log that answers the trial's three
-questions: do nodes detect each other at installation distances, does
-own-emit suppression hold with several emitters, does the network settle
-or run away. Steps 1-6 are the path to that trial; steps 7-10 are the
-refactors that come after it, with a field baseline to compare against.
-When an item doesn't shorten the path to the trial, it waits, however
-well-reasoned it is.
+Since 2026-10-22: the refactors, held against the field baseline. Step 6
+recorded five D-AMP nodes on 908dc9a hearing and answering each other in
+one room (bench/sessions/2026-10-22-step6-trial). Steps 7c-10a restructure
+the code under that behavior: fold the evaluator (8), the detector family
+as a build flag (9), the mode layer and the param paths (10, 10a). Done
+means step 10b: the step 6 protocol rerun on the refactored firmware, with
+the same pass marks (hearing matrix, every chain ends within 30 s, no chain
+started by noise, no dropped buffers). Each refactor step's own gate is a
+T2/T3 diff on the Analyzer against the baseline recorded at the start of
+step 8. An item that changes what the nodes do (8a's signal, step 11)
+moves the baseline too, and says so. Bench cells that only measure (5h's
+NODE-012 cells) run in parallel.
+
+Previous phase (closed 2026-10-22 with step 6): five D-AMP nodes with the
+same firmware in one room, hearing and answering each other, with a
+recorded session that says whether they did (NODE-008).
 
 Renamed from roadmap-general.md on 2026-09-23 so it sorts first.
 How this file relates to the domain roadmaps and docs/refactors/: see
 README.md ("Who answers what", "Ordering rule").
 
+Status update 2026-10-22, later: step 7b done (host == board on the band path to 1 FrequencyScore16, contrast
+within 0.5 %; the shipped scalar profile 6/6 on E2 and on the host). Steps file revised after the trial (owner
+confirmed): new phase goal (the refactors, closing with 10b, a rerun of step 6); 3d closed, its leftovers handed
+to 7c, 8, 8b and 10; step 8 measured against a fresh T2/T3 baseline on main, not 908dc9a, since 7a changed the
+Analyzer's per-sample timing; step 11 triaged now that step 6 has run: the FieldState fork and the Freq-family
+call move ahead of step 8 as step 7c, because they decide how much code 8, 8b and 9 touch. 5h's remaining NODE-012
+cells run in parallel. Next by order: 7c, then the baseline at the start of step 8.
 Status update 2026-10-22: step 6 done. The five-node trial passed (bench/sessions/2026-10-22-step6-trial),
 after the owner's pacing decision (rest 5 s, idle call 60 s +- 20 s, pass mark "the chain ends", M = 100). Steps 3b,
 4, 5b-5g are closed; 3d's SEQ check passed, and its remaining checklist stays in #32. Next by order: step 7 (CI),
@@ -210,8 +223,8 @@ the previous gate open unless the step says it can run in parallel.
    Analyzer only; the Node has the offset test. Archive:
    docs/refactors/archive/micros-wrap.md.
 
-3d. [NEXT] Code-review findings: debug and fix. (issue #31)
-   Where: NODE-018 (roadmap-node.md) -> docs/refactors/code-review-fixes.md.
+3d. [DONE 2026-10-22] Code-review findings: debug and fix. (issue #31, closed)
+   Where: NODE-018 (roadmap-node.md) -> docs/refactors/archive/code-review-fixes.md.
    Why: a full src/ review (2026-10-13) found Analyzer PARAM keys parsing
    to the wrong value (P1), a FrequencyMatch refractory that goes deaf at
    ~24.8 days uptime and an audio overflow flag that is never set (P2),
@@ -230,6 +243,17 @@ the previous gate open unless the step says it can run in parallel.
    2026-10-17: every env has built since (all six on every commit of 10-14..17), and the Node/Analyzer runs of
    10-14..17 exercised much of it indirectly; the gate's one SEQ session (PARAM echo, per-trial classification, no
    carried-over overflow) is still to run: bench session 1 (#32 has the checklist).
+   Done 2026-10-22: the gate's SEQ session passed (bench/sessions/2026-10-22-3d-seq-check: P1 PARAM echo, P3
+   per-trial classification with no carried-over overflow, B9, B12). The pass doc is archived
+   (docs/refactors/archive/code-review-fixes.md). #32 stays open as the checklist of the leftovers, each now
+   owned by a step:
+   - check 12 (full T3 regression, Scalar and Freq, seqcmp): step 8's baseline;
+   - 13 / B11 and the B11 follow-up (FrequencyMatch reject events), P4 history window (no guard ties
+     scalar_max_duration_ms to the history depth), P4 DET-010: step 8b;
+   - P2a (Freq across the 2^31 ms wrap with a profile reset): step 7c (moot if Freq leaves the build);
+   - A1 (rebase during an idle chirp), A3/A4 remainder: step 10 (Node command paths);
+   - P2b and D21 (stall vs overflow counters, sample spans after drops): "Still open", next to NODE-019;
+   - the old-bench-data check (P1 keys, P3 rejects): before citing any run from before 2026-10-14.
 
 4. [DONE 2026-10-21] Switch to D-AMP. (issue #21)
    Where: NODE-011 (roadmap-node.md).
@@ -652,7 +676,7 @@ the previous gate open unless the step says it can run in parallel.
    The drops had cost the hop train 2 of 10 trials in this setup and passed 40 ms tones that should be rejected.
    dt before this date is anchored differently (bench/README.md).
 
-7b. [TODO] Tests that exercise the shipped gates. (extend #9)
+7b. [DONE 2026-10-22] Tests that exercise the shipped gates. (no issue; #9 closed with step 7)
    Where: NODE-006 follow-up (roadmap-node.md); audit 4.1, 4.3.
    Why: test_replay_corpus compares only the amp path; FrequencyTarget and
    FrequencyContrast, which decide, go through float Goertzel and are
@@ -662,12 +686,41 @@ the previous gate open unless the step says it can run in parallel.
    Gate: captures carry the frequency columns and the replay compares
    them; one on-device test with the shipped scalar profile; the CSV
    header records PCM_PREPROCESS_MODE_VALUE. With step 7, before step 8.
+   Done 2026-10-22:
+   - Frequency columns (23d034a; bench/sessions/2026-10-22-corpus-freqcols-aligned-110cm): RAW mode=both writes
+     ms,amp,pcm,freq,contrast,fresh and takes band=; RAW_BEGIN prints band= band_lead= and the replay takes them
+     from there. On the network band, host vs board over six captures: target FrequencyScore16 within 1, contrast
+     within 0.5 % (where |board| >= 1000), amp within 1. Earlier band captures were ~45 / 2.5 % off: band-bank
+     update phase, not arithmetic. Two band fixtures and a host test in test_replay_corpus (20/20).
+   - Shipped profile on the board: test/test_shipped_profile (6899683, d847b37) runs makeTonalPulseScalarProfile()
+     unchanged, every gate on, over the host suite's chirp, off-bin 3300, hop train and speech fixtures (PCM in
+     flash, tools/bench/fixture2header.py). 6/6 on E2 (bench/sessions/2026-10-22-7b-shipped-profile-e2) and 6/6 on
+     the host in native-test-behavior, which CI runs.
+   - Preprocess header: met since 2026-10-16 (RAW_BEGIN preprocess=).
+   Not covered: AudioSourceI2S (sample clock, drop accounting, issue #26) still has no regression test (audit 4.1,
+   last sentence); it sits with P2b/D21 under "Still open".
+
+7c. [TODO] Two forks before the refactors: FieldState, and whether Freq stays a family. (no issue yet)
+   Where: audit 1.2 (FieldState is computed, handed to Behavior and never read); decisions/2026-10-14-node-ships-
+   tonalpulsescalar.md (Scalar ships, Freq is a demo); step 9 (Phase 6 adds a third family).
+   Why here (moved from step 11 on 2026-10-22): step 11 waited for step 6's counts, and they exist (41 of 41 chains
+   ended in both runs, max 45 per minute against M = 100, ended by the pacing, not by FieldState, which nothing
+   reads). Each answer changes how much code the next steps rewrite: the FieldState plumbing runs through
+   DetectionRuntime (step 8 carries it or deletes it), and dropping Freq makes DET-010, audit 3.2, P2a and the
+   FrequencyMatch half of B11 moot (step 8b) and leaves step 9 with two families, not three.
+   Gate: two docs/decisions/ files (FieldState kept, made a gate, or deleted; Freq kept as a build family, kept
+   as a demo profile, or removed); steps 8, 8b and 9 edited to match. Decisions only, no code.
 
 8. Phase 7c: fold OccurrenceEvaluator into OccurrenceInspector, delete the
    correlation queue. (issue #11)
    Where: DET-008 -> docs/refactors/cleanup-0-plan.md Phase 7c.
-   Gate: as that phase states (T1, T2/T3 label-only diffs, T5, T7), now
-   measured against the field-trial firmware.
+   Gate: as that phase states (T1, T2/T3 label-only diffs, T5, T7),
+   measured against a baseline recorded on main at the start of this step,
+   not the field-trial firmware 908dc9a: 7a moved the per-sample path to
+   IRAM and ended the dropped buffers that had passed 40 ms tones, so
+   908dc9a's Analyzer numbers are not this code's. Record it as 3d's check
+   12 (full T3 on Scalar and, if 7c keeps it, Freq; seqcmp) and enter it in
+   bench/baselines.csv.
 
 8a. [TODO] Signal variation, part 2: aesthetics. (issue #38)
    Where: OUT-006 (two-layer signal), BEH-006 (variation over time),
@@ -740,14 +793,24 @@ the previous gate open unless the step says it can run in parallel.
    Gate: the map in docs/; behavior.* and detection.* registered; RB BEHAV
    gone. Inside step 10, after PAR-016, before PAR-015.
 
-11. [DEFERRED] Everything else until step 6 has run: PAR-010/011
+10b. [TODO] Field baseline rerun on the refactored firmware. (no issue yet)
+   Where: NODE-008 (roadmap-node.md), step 6's protocol and pass marks
+   (decisions/2026-10-17-trial-third-question-pass-mark.md, 2026-10-22-network-pacing.md).
+   Why: steps 8-10 promise unchanged behavior and prove it on the Analyzer (T2/T3) and the host; nothing proves it
+   on five Nodes answering each other. This closes the phase.
+   Gate: five nodes on one build of main after step 10a, in the step 6 layout or its NODE-012 successor, with
+   `# state` headers: hearing matrix no worse per cell than step 6, every chain ends within 30 s in quiet and
+   with speech/music, 0 chains started by noise, 0 dropped buffers. A difference is investigated before step 11.
+
+11. [DEFERRED] Everything else until step 10b closes (triaged 2026-10-22: the FieldState fork moved to 7c):
+   PAR-010/011
    persistence, OutputStatus / OutputProfile (OUT-002..004), BehaviorRuntime
    (BEH-003/004), CommandRouter and the rest of NODE-005, VEKTOR (VEK-*),
    ParamRegistry as its own repo (PAR-017), PAR-008 output params, PAR-009
    drift params, PAR-013 remote param update, PAR-014 config stays
-   separate, ANA-002 multi-occurrence patterns. Whether FieldState gates a
-   response or its plumbing goes (audit 1.2) is decided here on step 6's
-   counts. Named behavior variants (a second BehaviorGateConfig value set,
+   separate, ANA-002 multi-occurrence patterns. If 7c makes FieldState a
+   gate, its implementation lands here, as a behavior change against the 10b
+   baseline. Named behavior variants (a second BehaviorGateConfig value set,
    or a second program) live here too, as the ResonantProgram bundle of
    NODE-005, not as a standalone behavior-profile switch earlier
    (decisions/2026-10-17-behavior-contract-and-reproducible-sessions.md).
@@ -763,6 +826,10 @@ BEH-001, BEH-002, OUT-001                     small visibility items; fold
                                               into NODE-001.
 PAR-003                                       Analyzer params onto the
                                               registry; after PAR-015.
+P2b, D21 (#32)                                audio source: stall vs overflow
+                                              counters, sample spans after N
+                                              drops; AudioSourceI2S has no
+                                              regression test (audit 4.1).
 NODE-019                                      sample-clock backsteps (~1 per
                                               3 s since the TX-buffer fix);
                                               known issue, no effect seen.

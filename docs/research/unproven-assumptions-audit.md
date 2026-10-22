@@ -14,7 +14,7 @@ Became:  section 1.1 -> step 5d of roadmap-0-steps.md (2026-10-16);
          (robustness against other physical conditions, #47)
 Lab:     docs/lab/2026-10-15-bench-day.md, docs/lab/2026-10-16-bench-day.md,
          docs/lab/notes_lab.md (2026-05-26 slow circle, 2026-10-12 soak),
-         docs/refactors/code-review-fixes.md (P4, R2-1, tier C)
+         docs/refactors/archive/code-review-fixes.md (P4, R2-1, tier C)
 ```
 
 A read of `main` at 698be73: the roadmaps, decisions, lab notes, refactor

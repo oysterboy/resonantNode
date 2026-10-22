@@ -362,8 +362,8 @@ bench, and a run past 72 min of real uptime.
 
 ### NODE-018 - code-review findings: debug and fix
 
-Status: OPEN 2026-10-13 (step 3d, issue #31). P1-P3, tiers A, B, cheap D committed 852d58f..e04f967, not compiled (registry blocked in that session); build, bench gate, P4, B11 stale count, D21 open.
-Pass doc: docs/refactors/code-review-fixes.md (findings, priority fixes P1-P4, tiered list for the rest).
+Status: DONE 2026-10-22 (step 3d, #31 closed): fixes landed and built, the gate SEQ session passed (bench/sessions/2026-10-22-3d-seq-check). Leftovers are handed to steps 7c, 8, 8b and 10 (roadmap-0-steps.md 3d) and tracked in #32.
+Pass doc: docs/refactors/archive/code-review-fixes.md (findings, priority fixes P1-P4, tiered list for the rest).
 
 ```text
 Source: a read-only review of all of src/ on 2026-10-13, traced by hand,

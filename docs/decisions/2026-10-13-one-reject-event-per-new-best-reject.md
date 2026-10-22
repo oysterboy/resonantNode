@@ -36,4 +36,4 @@ needs a per-reject trace.
 ## Source
 
 Owner, 2026-10-13, issue #32 (option 1b);
-`docs/refactors/code-review-fixes.md` section 5.
+`docs/refactors/archive/code-review-fixes.md` section 5.

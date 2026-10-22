@@ -31,4 +31,4 @@ buffers, i.e. drops creating occurrences rather than damaging real ones.
 ## Source
 
 Owner, 2026-10-13, issue #32 (open point "P2b follow-up");
-`docs/refactors/code-review-fixes.md` section 5.
+`docs/refactors/archive/code-review-fixes.md` section 5.

@@ -1,0 +1,79 @@
+[08:52:30] boot banner: {'role': 'analyzer', 'git': '2a99951', 'version': '0.4.0', 'board': 'damp'}
+[08:52:32] warmup: OK EMIT CHIRP
+[08:52:32] start T3_chirp_diag_detail: SEQ DIAG on ; SEQ start profile=TonalPulseScalar tries=20 mode=detail when=all verbose=1
+[08:53:42] done T3_chirp_diag_detail (70s): complete=True results={'expected': 20}
+[08:53:44] start T3_hop5_diag_detail: SEQ DIAG on ; SEQ start profile=TonalPulseScalar tries=10 freq=3300 band=2950-3950 dur=25 pulses=5 gap=10 hop=2950,3200,3450,3700,3950 mode=detail when=all verbose=1
+[08:54:22] done T3_hop5_diag_detail (37s): complete=True results={'expected': 8, 'rejected': 2}
+[08:54:24] start T3_dur40_diag_detail: SEQ DIAG on ; SEQ start profile=TonalPulseScalar tries=10 dur=40 mode=detail when=all verbose=1
+[08:55:01] done T3_dur40_diag_detail (37s): complete=True results={'expected': 9, 'rejected': 1}
+[08:55:07] session updated, index rebuilt
+[08:55:49] boot banner: {'role': 'analyzer', 'git': '2a99951', 'version': '0.4.0', 'board': 'damp'}
+[08:55:51] warmup: OK EMIT CHIRP
+[08:55:51] start T3_repeat_fixed_cmd: SEQ DIAG on ; SEQ start profile=TonalPulseScalar tries=5 mode=detail when=all verbose=1
+[08:56:12] done T3_repeat_fixed_cmd (21s): complete=True results={'expected': 5}
+[08:56:18] session updated, index rebuilt
+[08:56:58] boot banner: {'role': 'analyzer', 'git': '2a99951', 'version': '0.4.0', 'board': 'damp'}
+[08:57:00] warmup: OK EMIT CHIRP
+[08:57:00] start T3_bisect_bc9a89e: SEQ DIAG on ; SEQ start profile=TonalPulseScalar tries=4 mode=detail when=all verbose=1
+[08:57:18] done T3_bisect_bc9a89e (18s): complete=True results={'expected': 4}
+[08:57:24] session updated, index rebuilt
+[08:58:02] boot banner: {'role': 'analyzer', 'git': '2a99951', 'version': '0.4.0', 'board': 'damp'}
+[08:58:04] warmup: OK EMIT CHIRP
+[08:58:04] start T3_bisect_ana005: SEQ DIAG on ; SEQ start profile=TonalPulseScalar tries=4 mode=detail when=all verbose=1
+[08:58:22] done T3_bisect_ana005 (18s): complete=True results={'expected': 4}
+[08:58:34] session updated, index rebuilt
+[08:59:10] boot banner: {'role': 'analyzer', 'git': '2a99951', 'version': '0.4.0', 'board': 'damp'}
+[08:59:12] warmup: OK EMIT CHIRP
+[08:59:12] start T3_ana005_system: SEQ DIAG on ; SEQ start profile=TonalPulseScalar tries=3 mode=system when=all verbose=1
+[08:59:27] done T3_ana005_system (15s): complete=True results={'expected': 3}
+[08:59:33] session updated, index rebuilt
+[09:00:55] boot banner: {'role': 'analyzer', 'git': '2a99951', 'version': '0.4.0', 'board': 'damp'}
+[09:00:57] warmup: OK EMIT CHIRP
+[09:00:57] start T3_bc9a89e_manual_claim: EMIT MODE REMOTE ; SEQ DIAG on ; SEQ start profile=TonalPulseScalar tries=4 mode=detail when=all verbose=1
+[09:01:16] done T3_bc9a89e_manual_claim (19s): complete=True results={'expected': 4}
+[09:01:22] session updated, index rebuilt
+[09:02:07] boot banner: {'role': 'analyzer', 'git': '2a99951', 'version': '0.4.0', 'board': 'damp'}
+[09:02:09] warmup: OK EMIT CHIRP
+[09:02:09] start T3_head_diag_off: SEQ DIAG off ; SEQ start profile=TonalPulseScalar tries=4 mode=system when=all verbose=1
+[09:02:28] done T3_head_diag_off (18s): complete=True results={'expected': 4}
+[09:02:30] start T3_head_diag_on_system: SEQ DIAG on ; SEQ start profile=TonalPulseScalar tries=4 mode=system when=all verbose=1
+[09:02:48] done T3_head_diag_on_system (18s): complete=True results={'expected': 4}
+[09:02:54] session updated, index rebuilt
+[09:04:43] boot banner: {'role': 'analyzer', 'git': '2a99951', 'version': '0.4.0', 'board': 'damp'}
+[09:04:45] warmup: OK EMIT CHIRP
+[09:04:45] start T3_dma8_chirp_diag_detail: SEQ DIAG on ; SEQ start profile=TonalPulseScalar tries=20 mode=detail when=all verbose=1
+[09:05:55] done T3_dma8_chirp_diag_detail (70s): complete=True results={'expected': 20}
+[09:05:57] start T3_dma8_hop5_diag_detail: SEQ DIAG on ; SEQ start profile=TonalPulseScalar tries=10 freq=3300 band=2950-3950 dur=25 pulses=5 gap=10 hop=2950,3200,3450,3700,3950 mode=detail when=all verbose=1
+[09:06:35] done T3_dma8_hop5_diag_detail (37s): complete=True results={'expected': 9, 'rejected': 1}
+[09:06:41] session updated, index rebuilt
+[09:07:38] boot banner: {'role': 'analyzer', 'git': '2a99951', 'version': '0.4.0', 'board': 'damp'}
+[09:07:41] warmup: OK EMIT CHIRP
+[09:07:41] start T3_profile: SEQ DIAG on ; SEQ start profile=TonalPulseScalar tries=3 mode=detail when=all verbose=1
+[09:07:56] done T3_profile (15s): complete=True results={'expected': 3}
+[09:08:01] session updated, index rebuilt
+[09:08:44] boot banner: {'role': 'analyzer', 'git': '2a99951', 'version': '0.4.0', 'board': 'damp'}
+[09:08:46] warmup: OK EMIT CHIRP
+[09:08:56] boot banner: {'role': 'analyzer', 'git': '2a99951', 'version': '0.4.0', 'board': 'damp'}
+[09:08:58] warmup: OK EMIT CHIRP
+[09:08:58] start T3_profile2: SEQ DIAG on ; SEQ start profile=TonalPulseScalar tries=3 mode=detail when=all verbose=1
+[09:09:13] done T3_profile2 (15s): complete=True results={'expected': 3}
+[09:09:19] session updated, index rebuilt
+[09:10:43] boot banner: {'role': 'analyzer', 'git': '2a99951', 'version': '0.4.0', 'board': 'damp'}
+[09:10:45] warmup: OK EMIT CHIRP
+[09:10:45] start T3_profile_iram: SEQ DIAG on ; SEQ start profile=TonalPulseScalar tries=4 mode=detail when=all verbose=1
+[09:11:03] done T3_profile_iram (18s): complete=True results={'expected': 4}
+[09:11:09] session updated, index rebuilt
+[09:12:49] boot banner: {'role': 'analyzer', 'git': '2a99951', 'version': '0.4.0', 'board': 'damp'}
+[09:12:51] warmup: OK EMIT CHIRP
+[09:12:51] start T3_profile_iram2: SEQ DIAG on ; SEQ start profile=TonalPulseScalar tries=4 mode=detail when=all verbose=1
+[09:13:09] done T3_profile_iram2 (18s): complete=True results={'expected': 4}
+[09:13:15] session updated, index rebuilt
+[09:19:17] boot banner: {'role': 'analyzer', 'git': '2a99951', 'version': '0.4.0', 'board': 'damp'}
+[09:19:19] warmup: OK EMIT CHIRP
+[09:19:19] start final_chirp_diag_detail: SEQ DIAG on ; SEQ start profile=TonalPulseScalar tries=20 mode=detail when=all verbose=1
+[09:20:29] done final_chirp_diag_detail (70s): complete=True results={'expected': 20}
+[09:20:31] start final_hop5_diag_detail: SEQ DIAG on ; SEQ start profile=TonalPulseScalar tries=10 freq=3300 band=2950-3950 dur=25 pulses=5 gap=10 hop=2950,3200,3450,3700,3950 mode=detail when=all verbose=1
+[09:21:08] done final_hop5_diag_detail (37s): complete=True results={'expected': 10}
+[09:21:10] start final_dur40_diag_detail: SEQ DIAG on ; SEQ start profile=TonalPulseScalar tries=10 dur=40 mode=detail when=all verbose=1
+[09:21:48] done final_dur40_diag_detail (37s): complete=True results={'rejected': 10}
+[09:21:53] session updated, index rebuilt

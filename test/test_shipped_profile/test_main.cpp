@@ -234,9 +234,11 @@ void feedScalar(unsigned long& ms, unsigned long count, float value) {
 }
 }  // namespace
 
-void test_continuous_tone_is_closed_at_max_duration() {
+void configureShippedScalar() {
     const detection::ScalarTransientConfig c = detection::makeTonalPulseScalarProfile().scalarTransient;
     gScalar.resetState();
+    gScalar.resetSelectedRejectSummary();
+    gScalar.resetAcceptedOccurrenceSummary();
     gScalar.setOnsetDetectionThreshold(c.onsetDetectionThreshold);
     gScalar.setOnsetReleaseThreshold(c.onsetReleaseThreshold);
     gScalar.setCooldownAfterOnsetMs(c.cooldownAfterOnsetMs);
@@ -250,7 +252,10 @@ void test_continuous_tone_is_closed_at_max_duration() {
     gScalar.setMinCoverageAboveReleaseMs(c.minCoverageAboveReleaseMs);
     gScalar.setMinLongestIslandMs(c.minLongestIslandMs);
     gScalar.setMaxGapMs(c.maxGapMs);
+}
 
+void test_continuous_tone_is_closed_at_max_duration() {
+    configureShippedScalar();
     unsigned long ms = 1000;
     feedScalar(ms, 100, 0.0f);
     feedScalar(ms, 330, 5000.0f);  // 330 ms into a tone that goes on
@@ -269,6 +274,25 @@ void test_continuous_tone_is_closed_at_max_duration() {
     TEST_ASSERT_TRUE(occurrence.durationMs >= 115 && occurrence.durationMs <= 135);
 }
 
+// Step 8b item 7 (#32 13 / B11, decisions/2026-10-13-one-reject-event-per-new-best-reject.md):
+// every reject counts in the report's rejected count; only a new best reject (longer, then
+// stronger) bumps the generation that makes a reject event. 40, 30 and 60 ms pulses, all too
+// short: 3 rejects, 2 new best (the 30 ms one does not beat the 40 ms one).
+void test_every_reject_counts_only_a_new_best_makes_an_event() {
+    configureShippedScalar();
+    unsigned long ms = 1000;
+    feedScalar(ms, 100, 0.0f);
+    const uint32_t generationBefore = gScalar.selectedRejectGeneration();
+    const unsigned long pulses[] = {40, 30, 60};
+    for (unsigned long pulseMs : pulses) {
+        feedScalar(ms, pulseMs, 5000.0f);
+        feedScalar(ms, 150, 0.0f);
+    }
+    TEST_ASSERT_EQUAL_UINT32(3, gScalar.latestReport().aggregates.rejectedCount);
+    TEST_ASSERT_EQUAL_UINT32(generationBefore + 2, gScalar.selectedRejectGeneration());
+    TEST_ASSERT_EQUAL_UINT32(60, gScalar.latestReport().selectedReject.durationMs);
+}
+
 int runTests() {
     UNITY_BEGIN();
     RUN_TEST(test_chirp_is_accepted_once_on_the_single_target);
@@ -278,6 +302,7 @@ int runTests() {
     RUN_TEST(test_hop_train_is_not_heard_on_the_single_target);
     RUN_TEST(test_radio_speech_is_not_accepted);
     RUN_TEST(test_continuous_tone_is_closed_at_max_duration);
+    RUN_TEST(test_every_reject_counts_only_a_new_best_makes_an_event);
     return UNITY_END();
 }
 

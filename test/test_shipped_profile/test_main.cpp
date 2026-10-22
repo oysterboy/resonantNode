@@ -1,0 +1,240 @@
+/*
+Step 7b (audit 4.1, 4.3): the shipped scalar profile on the board.
+
+test_analyzer_pass_rules and test_timebase drive the scalar detector with every shipped gate off.
+This test runs makeTonalPulseScalarProfile() unchanged, through the real chain the Node runs
+(AudioSignal -> FreqBandStream -> DetectionRuntime, float Goertzel on the ESP32), over the
+captures the host suite (test/test_replay_corpus) asserts on, with the same expectations. A
+board/host difference in the frequency path that flips a verdict fails here or there, not in
+the field. The chain is fed at sample timestamps, faster than real time; detection reads only
+those (the wall clock feeds profiling counters).
+
+The PCM is in fixtures.h, generated from test/fixtures by tools/bench/fixture2header.py; all
+four are mode=both or .wav captures, so they hold what AudioSignal received and are fed
+without a preprocessor (as hostreplay::replay does for them).
+
+Board: `pio test -e esp32dev-analyzer -f test_shipped_profile` (any D-AMP board; no audio I/O).
+Host: `pio test -e native-test-behavior` (no src build; this file pulls the chain in itself).
+*/
+#include <Arduino.h>
+#include <unity.h>
+
+#include "../../src/app/RuntimeDefaults.h"
+#include "../../src/audio/AudioSignal.h"
+#include "../../src/audio/AudioSource.h"
+#include "../../src/detection/DetectionProfile.h"
+#include "../../src/detection/DetectionRuntime.h"
+#include "../../src/detection/evaluation/OccurrenceVerdict.h"
+#include "../../src/detection/features/FreqBandStream.h"
+#include "../../src/detection/features/FrequencyMeasurementPacketBuilder.h"
+
+// test_build_src is off for the ESP envs: pull the chain into the test build.
+#include "../../src/audio/AudioSignal.cpp"
+#include "../../src/detection/DetectionRuntime.cpp"
+#include "../../src/detection/detectors/DetectorNames.cpp"
+#include "../../src/detection/detectors/DetectorReportPrinter.cpp"
+#include "../../src/detection/detectors/frequency/FrequencyMatchDetector.cpp"
+#include "../../src/detection/detectors/frequency/FrequencyMatchOccurrence.cpp"
+#include "../../src/detection/detectors/frequency/FrequencyMatchPrinter.cpp"
+#include "../../src/detection/detectors/frequency/FrequencyMatchReport.cpp"
+#include "../../src/detection/detectors/scalar/ScalarTransientDetector.cpp"
+#include "../../src/detection/detectors/scalar/ScalarTransientOccurrence.cpp"
+#include "../../src/detection/detectors/scalar/ScalarTransientPrinter.cpp"
+#include "../../src/detection/detectors/scalar/ScalarTransientReport.cpp"
+#include "../../src/detection/evaluation/OccurrenceEvaluator.cpp"
+#include "../../src/detection/features/FeatureHistory.cpp"
+#include "../../src/detection/features/FreqBandStream.cpp"
+#include "../../src/detection/field/FieldStateTracker.cpp"
+#include "../../src/detection/inspection/OccurrenceInspector.cpp"
+
+#include "fixtures.h"
+
+namespace {
+
+class ArrayAudioSource : public AudioSource {
+public:
+    ArrayAudioSource(const int32_t* pcm, size_t count, uint32_t rate) : _pcm(pcm), _count(count), _rate(rate) {}
+    void begin() override {}
+    bool available() override { return _index < _count; }
+    bool readSample(int& sample, uint64_t& sampleTimeUs64) override {
+        if (_index >= _count) {
+            return false;
+        }
+        sample = _pcm[_index];
+        sampleTimeUs64 = timeUs(_index);
+        ++_index;
+        return true;
+    }
+    uint32_t sampleRateHz() const override { return _rate; }
+    uint64_t timeUs(size_t index) const { return (static_cast<uint64_t>(index) * 1000000ULL) / _rate; }
+
+private:
+    const int32_t* _pcm;
+    size_t _count;
+    uint32_t _rate;
+    size_t _index = 0;
+};
+
+struct Fixture {
+    const int32_t* pcm;
+    size_t samples;
+    uint32_t rateHz;
+    bool hasBaseline;
+    float baseline;
+};
+
+#define FIXTURE(name) Fixture{k##name##Pcm, k##name##Samples, k##name##RateHz, k##name##HasBaseline, k##name##Baseline}
+
+struct Band {
+    unsigned long lowHz;
+    unsigned long highHz;
+};
+
+constexpr Band kSingleTarget{0, 0};
+constexpr Band kNetworkBand{runtime::kDefaultNetworkBandLowHz, runtime::kDefaultNetworkBandHighHz};
+
+struct Outcome {
+    unsigned accepted = 0;
+    unsigned rejected = 0;
+    detection::OccurrenceVerdict first;
+    bool haveFirst = false;
+};
+
+// The objects are large (FeatureHistory alone ~18.6 KB, over the 16 KB loop stack): keep them static.
+FreqBandStream gBand;
+detection::DetectionRuntime gRuntime;
+
+// hostreplay::replay() for one capture: the same conditioning, the same order of calls, 300 ms
+// of silence after the capture so the last occurrence closes, verdicts before skipMs ignored.
+Outcome replay(const Fixture& fx, Band band, unsigned long skipMs = 0) {
+    ArrayAudioSource source(fx.pcm, fx.samples, fx.rateHz);
+    AudioSignal audioSignal(source);
+    audioSignal.begin(false);
+    audioSignal.setSmoothingFactor(0.5f);
+    audioSignal.setBaselineUpdateFactor(0.005f);
+    audioSignal.setBaselineTrackingQuietThreshold(20);
+    if (fx.hasBaseline) {
+        audioSignal.seedBaseline(fx.baseline);
+    } else {
+        audioSignal.rebase();
+    }
+
+    gBand.resetState();
+    gBand.setSampleRateHz(fx.rateHz);
+    gBand.setTargetFrequencyHz(runtime::kDefaultChirpFrequencyHz);
+    gBand.setBand(band.lowHz, band.highHz);
+
+    const detection::DetectionProfile profile = detection::makeTonalPulseScalarProfile();
+    gRuntime.resetState();
+    gRuntime.setDetectorSelection(profile.detectorSelection);
+    gRuntime.setFrequencyMatchConfig(profile.frequencyMatch);
+    gRuntime.setScalarTransientConfig(profile.scalarTransient);
+    gRuntime.setInspectionPlan(profile.inspectionPlan);
+    gRuntime.setFieldStateConfig(profile.fieldStateConfig);
+    gRuntime.setProfileName(detection::detectionProfileName(profile.kind));
+    gRuntime.setVerdictQueueEnabled(true);
+
+    Outcome out;
+    const size_t total = fx.samples + (300UL * fx.rateHz) / 1000UL;
+    for (size_t i = 0; i < total; ++i) {
+        const int sample = i < fx.samples ? fx.pcm[i] : 0;
+        const uint64_t us = source.timeUs(i);
+        AudioSamplePacket packet;
+        audioSignal.update(sample, us, packet, false);
+        gBand.observeCenteredSample(packet.baselineCorrectedValue, packet.timeMs);
+        const detection::FrequencyBandMeasurementPacket evidence = detection::buildFrequencyMeasurementPacket(gBand, packet);
+        gRuntime.observeFrame(packet, evidence, packet.timeMs);
+        detection::OccurrenceVerdict verdict;
+        while (gRuntime.popOccurrenceVerdict(verdict)) {
+            if (verdict.primaryStartMs < skipMs) {
+                continue;
+            }
+            verdict.accepted ? ++out.accepted : ++out.rejected;
+            if (!out.haveFirst) {
+                out.first = verdict;
+                out.haveFirst = true;
+            }
+        }
+        if ((i & 1023U) == 0) {
+            yield();  // a capture is ~5k samples; keep the task watchdog fed
+        }
+    }
+    return out;
+}
+
+}  // namespace
+
+void setUp() {}
+void tearDown() {}
+
+// Single target at 3,200 Hz: accepted once, inside the profile's 85..300 ms window.
+void test_chirp_is_accepted_once_on_the_single_target() {
+    const Outcome r = replay(FIXTURE(Chirp), kSingleTarget);
+    TEST_ASSERT_EQUAL_UINT32(1, r.accepted);
+    TEST_ASSERT_EQUAL_UINT32(0, r.rejected);
+    TEST_ASSERT_TRUE(r.first.primaryDurationMs >= 85 && r.first.primaryDurationMs <= 300);
+}
+
+// Band mode: the on-bin 3,200 Hz chirp is accepted.
+void test_on_bin_tone_is_accepted_in_band_mode() {
+    const Outcome r = replay(FIXTURE(Chirp), kNetworkBand);
+    TEST_ASSERT_EQUAL_UINT32(1, r.accepted);
+    TEST_ASSERT_EQUAL_UINT32(0, r.rejected);
+}
+
+// Band mode: the off-bin 3,300 Hz tone fails the contrast gate, the hard threshold on a P75
+// that a few units of float drift could flip (audit 4.1).
+void test_off_bin_tone_fails_the_contrast_gate_in_band_mode() {
+    const Outcome r = replay(FIXTURE(Tone3300), kNetworkBand);
+    TEST_ASSERT_EQUAL_UINT32(0, r.accepted);
+    TEST_ASSERT_EQUAL_UINT32(1, r.rejected);
+    TEST_ASSERT_EQUAL(detection::InspectionTarget::Contrast, r.first.firstFailedRequirementTarget);
+}
+
+// The network signal as shipped (5 x 25 ms, gap 10, on the band bins): one occurrence, the
+// gaps bridged, both inspectors passed (coverage, island, gap and the duration window on).
+void test_hop_train_is_accepted_once_in_band_mode() {
+    const Outcome r = replay(FIXTURE(Hop), kNetworkBand);
+    TEST_ASSERT_EQUAL_UINT32(1, r.accepted);
+    TEST_ASSERT_EQUAL_UINT32(0, r.rejected);
+    TEST_ASSERT_TRUE_MESSAGE(r.first.primaryDurationMs >= 150 && r.first.primaryDurationMs <= 300,
+                             "hop train duration outside 150..300 ms");
+}
+
+// The hop train is not heard on the single 3,200 Hz target: four of its five steps are elsewhere.
+void test_hop_train_is_not_heard_on_the_single_target() {
+    const Outcome r = replay(FIXTURE(Hop), kSingleTarget);
+    TEST_ASSERT_EQUAL_UINT32(0, r.accepted);
+}
+
+// Speech from the phone radio (after its 20 ms marker tone) is not accepted in band mode.
+void test_radio_speech_is_not_accepted() {
+    const Outcome r = replay(FIXTURE(Speech), kNetworkBand, 100);
+    TEST_ASSERT_EQUAL_UINT32(0, r.accepted);
+}
+
+int runTests() {
+    UNITY_BEGIN();
+    RUN_TEST(test_chirp_is_accepted_once_on_the_single_target);
+    RUN_TEST(test_on_bin_tone_is_accepted_in_band_mode);
+    RUN_TEST(test_off_bin_tone_fails_the_contrast_gate_in_band_mode);
+    RUN_TEST(test_hop_train_is_accepted_once_in_band_mode);
+    RUN_TEST(test_hop_train_is_not_heard_on_the_single_target);
+    RUN_TEST(test_radio_speech_is_not_accepted);
+    return UNITY_END();
+}
+
+// The same file runs on the host (env native-test-behavior, CI) and on the board: one set of
+// inputs and expectations for both float Goertzel builds.
+#if defined(ARDUINO_ARCH_ESP32)
+void setup() {
+    delay(2000);  // the test runner opens the port after reset
+    runTests();
+}
+
+void loop() {}
+#else
+int main(int, char**) {
+    return runTests();
+}
+#endif

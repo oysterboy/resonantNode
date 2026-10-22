@@ -91,8 +91,6 @@ void AnalyzerApp::printSystemHealth(const AnalyzerReport& report) const {
         serialOut().print(_detection.freshDetectorInputCount());
         serialOut().print(" detector_drain_count=");
         serialOut().print(_detection.detectorDrainCount());
-        serialOut().print(" evaluator_drain_count=");
-        serialOut().print(_detection.evaluatorDrainCount());
         serialOut().print(" detector_report_refresh_count=");
         serialOut().print(_detection.detectorReportRefreshCount());
         serialOut().print(" detector_report_mismatch_count=");
@@ -103,20 +101,12 @@ void AnalyzerApp::printSystemHealth(const AnalyzerReport& report) const {
         serialOut().print(_detection.detectorOccurrencePoppedCount());
         serialOut().print(" detector_valid_occurrence_popped_count=");
         serialOut().print(_detection.detectorValidOccurrencePoppedCount());
-        serialOut().print(" evaluator_accept_attempt_count=");
-        serialOut().print(_detection.evaluatorAcceptAttemptCount());
-        serialOut().print(" evaluator_accept_success_count=");
-        serialOut().print(_detection.evaluatorAcceptSuccessCount());
-        serialOut().print(" evaluator_accept_reject_count=");
-        serialOut().print(_detection.evaluatorAcceptRejectCount());
         serialOut().print(" verdict_produced_count=");
         serialOut().print(_detection.verdictProducedCount());
         serialOut().print(" verdict_event_pushed_count=");
         serialOut().print(_detection.verdictEventPushedCount());
         serialOut().print(" verdict_event_dropped_count=");
         serialOut().print(_detection.verdictEventDroppedCount());
-        serialOut().print(" evaluator_latest_reject_reason=");
-        serialOut().print(detection::evaluatorInputRejectReasonName(_detection.latestEvaluatorInputRejectReason()));
     }
     serialOut().println();
     _loopHealth.reset();

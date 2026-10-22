@@ -23,7 +23,7 @@ namespace matches each configured `InspectionTarget` (`Amp` -> `magnitude`,
 `TargetScore`/`Contrast`/`TargetBand` -> `band`), and the shipped profile
 (`TonalPulseScalar`: contrast and amp) spans both namespaces on every
 occurrence. Do not assume only one is meaningful
-based on `detectorId`/`occurrenceType`; `OccurrenceEvaluator` reads both,
+based on `detectorId`/`occurrenceType`; `makeVerdict()` reads both,
 unconditionally. This is unlike `DetectorReport.scalar` (see
 DetectorReport.h), which really is exclusive to the detector that produced
 that report.

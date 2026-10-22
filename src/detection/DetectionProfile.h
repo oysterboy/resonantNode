@@ -6,7 +6,6 @@
 
 #include "field/FieldState.h"
 #include "inspection/InspectorTypes.h"
-#include "evaluation/OccurrenceEvaluatorTypes.h"
 
 namespace detection {
 
@@ -177,7 +176,6 @@ inline DetectionProfile makeTonalPulseScalarProfile() {
     profile.inspectionPlan.modules[1].magnitude.supportStrength.weakPeakThreshold = 1000.0f; // Weak amplitude threshold.
     profile.inspectionPlan.count = 2; // This profile uses two inspectors.
 
-    profile.inspectionPlan.failedRequirementMeansUncertain = true; // Legacy compatibility flag for failed requirement handling.
 
     // Field-state windowing.
     profile.fieldStateConfig.occurrenceWindowMs = 4000; // Window for occurrence density tracking.
@@ -256,7 +254,6 @@ inline DetectionProfile makeAmpExperimentalProfile() {
     profile.inspectionPlan.count = 3;
 
     // Pattern rules.
-    profile.inspectionPlan.failedRequirementMeansUncertain = true;
 
     // Field-state windowing.
     profile.fieldStateConfig.occurrenceWindowMs = 4000;

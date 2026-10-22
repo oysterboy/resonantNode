@@ -26,12 +26,8 @@ const char* pipelineIntegrityReasonName(detection::PipelineIntegrityReason reaso
             return "none";
         case detection::PipelineIntegrityReason::MissingDetectorReport:
             return "missing_detector_report";
-        case detection::PipelineIntegrityReason::MissingInspectedOccurrence:
-            return "missing_inspected_occurrence";
         case detection::PipelineIntegrityReason::MissingVerdict:
             return "missing_verdict";
-        case detection::PipelineIntegrityReason::OccurrenceIdMismatch:
-            return "occurrence_id_mismatch";
         case detection::PipelineIntegrityReason::InspectionQueueOverflow:
             return "inspection_queue_overflow";
         case detection::PipelineIntegrityReason::VerdictQueueOverflow:
@@ -477,8 +473,6 @@ void AnalyzerApp::printSequenceDetailCanonical(const AnalyzerReport& report) con
     serialOut().print(report.integrity.occurrenceMatched ? 1 : 0);
     serialOut().print(" integrity.inspection_present=");
     serialOut().print(report.integrity.inspectionPresent ? 1 : 0);
-    serialOut().print(" integrity.evaluator_report_present=");
-    serialOut().print(report.integrity.evaluatorReportPresent ? 1 : 0);
     serialOut().print(" integrity.verdict_present=");
     serialOut().print(report.integrity.verdictPresent ? 1 : 0);
     serialOut().print(" integrity.complete=");

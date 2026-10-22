@@ -60,7 +60,6 @@ void DetectionRuntime::resetDetectors() {
 void DetectionRuntime::resetDetectionState() {
     resetDetectors();
     _occurrenceInspector.reset();
-    _occurrenceEvaluator.reset();
     _fieldStateTracker.reset();
     _featureHistory.reset();
     resetDetectionQueues();
@@ -78,10 +77,6 @@ void DetectionRuntime::resetDetectionQueues() {
     memset(&_pipelineEventQueue[0], 0, sizeof(_pipelineEventQueue[0]));
     _pipelineEventReadIndex = 0;
     _pipelineEventCount = 0;
-    memset(&_verdictCorrelationQueue[0], 0, sizeof(_verdictCorrelationQueue[0]));
-    _verdictCorrelationReadIndex = 0;
-    _verdictCorrelationCount = 0;
-    _verdictCorrelationQueueOverflowCount = 0;
 #endif
 }
 
@@ -95,21 +90,15 @@ void DetectionRuntime::resetDiagnosticsCounters() {
     _detectorReport = {};
     _pipelineEventOverflowCount = 0;
     _verdictQueueOverflowCount = 0;
-    _verdictCorrelationQueueOverflowCount = 0;
     _detectorReportMismatchCount = 0;
     _historyIncomplete = {};
     _observeFrameCount = 0;
     _freshDetectorInputCount = 0;
     _detectorDrainCount = 0;
-    _evaluatorDrainCount = 0;
     _detectorReportRefreshCount = 0;
     _noFreshFrequencySkipCount = 0;
     _detectorOccurrencePoppedCount = 0;
     _detectorValidOccurrencePoppedCount = 0;
-    _latestEvaluatorInputRejectReason = EvaluatorInputRejectReason::None;
-    _evaluatorAcceptAttemptCount = 0;
-    _evaluatorAcceptSuccessCount = 0;
-    _evaluatorAcceptRejectCount = 0;
     _verdictProducedCount = 0;
     _verdictEventPushedCount = 0;
     _verdictEventDroppedCount = 0;
@@ -129,7 +118,6 @@ void DetectionRuntime::resetDetectionBookkeeping() {
     _lastEmittedAcceptedReportGeneration = 0;
     _lastEmittedSelectedRejectOccurrenceId = 0;
     _lastEmittedSelectedRejectReportGeneration = 0;
-    _verdictCorrelationFailureCount = 0;
     memset(&_detectorReport, 0, sizeof(_detectorReport));
     _lastObservedScalarReportGeneration = 0;
 }
@@ -177,7 +165,6 @@ void DetectionRuntime::drainDetectorReportEvents(unsigned long nowMs) {
         event.sourceOccurrenceId = 0;
         event.integrity.detectorReportPresent = true;
         event.integrity.inspectionPresent = true;
-        event.integrity.evaluatorReportPresent = false;
         event.integrity.verdictPresent = false;
         event.integrity.occurrenceMatched = true;
         event.integrity.correlationComplete = true;
@@ -216,9 +203,6 @@ void DetectionRuntime::setDetectorSelection(DetectorSelection selection) {
     _lastEmittedAcceptedReportGeneration = 0;
     _lastEmittedSelectedRejectOccurrenceId = 0;
     _lastEmittedSelectedRejectReportGeneration = 0;
-    _verdictCorrelationQueue[0] = {};
-    _verdictCorrelationReadIndex = 0;
-    _verdictCorrelationCount = 0;
     _detectorReport = {};
     _lastObservedScalarReportGeneration = 0;
 #endif
@@ -234,7 +218,6 @@ static_assert(FeatureHistory::kMaxActiveStreams >= kMaxInspectionModules,
 void DetectionRuntime::setInspectionPlan(const InspectionPlan& plan) {
     _inspectionPlan = plan;
     _occurrenceInspector.configure(_inspectionPlan);
-    _occurrenceEvaluator.configure(_inspectionPlan);
 
     FeatureStreamId streams[kMaxInspectionModules] = {};
     size_t streamCount = 0;
@@ -297,10 +280,7 @@ void IRAM_ATTR DetectionRuntime::observeFrame(
 #endif
     }
 
-    const bool detectorHadPendingOutput = hasPendingDetectorOutput();
-    const bool evaluatorHadPendingWork = hasPendingEvaluatorWork();
-
-    if (detectorInputProcessed || detectorHadPendingOutput) {
+    if (detectorInputProcessed || hasPendingDetectorOutput()) {
 #ifdef ANALYZER_MODE
         ++_detectorDrainCount;
 #endif
@@ -308,13 +288,6 @@ void IRAM_ATTR DetectionRuntime::observeFrame(
 #ifdef ANALYZER_MODE
         drainDetectorReportEvents(nowMs);
 #endif
-    }
-
-    if (detectorInputProcessed || detectorHadPendingOutput || evaluatorHadPendingWork) {
-#ifdef ANALYZER_MODE
-        ++_evaluatorDrainCount;
-#endif
-        drainOccurrenceEvaluator(nowMs);
     }
 }
 
@@ -350,10 +323,6 @@ unsigned long DetectionRuntime::verdictQueueOverflowCount() const {
     return _verdictQueueOverflowCount;
 }
 
-unsigned long DetectionRuntime::verdictCorrelationQueueOverflowCount() const {
-    return _verdictCorrelationQueueOverflowCount;
-}
-
 unsigned long DetectionRuntime::detectorReportMismatchCount() const {
     return _detectorReportMismatchCount;
 }
@@ -374,10 +343,6 @@ uint32_t DetectionRuntime::detectorDrainCount() const {
     return _detectorDrainCount;
 }
 
-uint32_t DetectionRuntime::evaluatorDrainCount() const {
-    return _evaluatorDrainCount;
-}
-
 uint32_t DetectionRuntime::detectorReportRefreshCount() const {
     return _detectorReportRefreshCount;
 }
@@ -394,18 +359,6 @@ uint32_t DetectionRuntime::detectorValidOccurrencePoppedCount() const {
     return _detectorValidOccurrencePoppedCount;
 }
 
-uint32_t DetectionRuntime::evaluatorAcceptAttemptCount() const {
-    return _evaluatorAcceptAttemptCount;
-}
-
-uint32_t DetectionRuntime::evaluatorAcceptSuccessCount() const {
-    return _evaluatorAcceptSuccessCount;
-}
-
-uint32_t DetectionRuntime::evaluatorAcceptRejectCount() const {
-    return _evaluatorAcceptRejectCount;
-}
-
 uint32_t DetectionRuntime::verdictProducedCount() const {
     return _verdictProducedCount;
 }
@@ -416,10 +369,6 @@ uint32_t DetectionRuntime::verdictEventPushedCount() const {
 
 uint32_t DetectionRuntime::verdictEventDroppedCount() const {
     return _verdictEventDroppedCount;
-}
-
-EvaluatorInputRejectReason DetectionRuntime::latestEvaluatorInputRejectReason() const {
-    return _latestEvaluatorInputRejectReason;
 }
 
 uint32_t DetectionRuntime::scalarReportGeneration() const {
@@ -439,10 +388,6 @@ const DetectorReport& DetectionRuntime::activeDetectorReport() const {
     return _detectorReport;
 }
 
-const OccurrenceEvaluatorReport& DetectionRuntime::activeEvaluatorReport() const {
-    return _occurrenceEvaluator.report();
-}
-
 const FeatureHistory& DetectionRuntime::featureHistory() const {
     return _featureHistory;
 }
@@ -451,16 +396,6 @@ const FeatureHistory& DetectionRuntime::featureHistory() const {
 
 bool IRAM_ATTR DetectionRuntime::hasPendingDetectorOutput() const {
     return _scalarDetector.hasPendingOccurrence();
-}
-
-bool IRAM_ATTR DetectionRuntime::hasPendingEvaluatorWork() const {
-    // Query the matcher's own pending-input state directly. The correlation
-    // queue (_verdictCorrelationCount) is diagnostics-only bookkeeping and can
-    // legitimately diverge from what the matcher itself still has queued
-    // (for example, when pushVerdictObservation() fails while
-    // acceptOccurrence() already succeeded), so it must not be the authority
-    // for whether pattern work is pending.
-    return _occurrenceEvaluator.hasPendingInput();
 }
 
 void DetectionRuntime::drainDetectors(unsigned long nowMs) {
@@ -492,63 +427,28 @@ void DetectionRuntime::drainDetectors(unsigned long nowMs) {
             _historyIncomplete.outOfOrderRecords = _featureHistory.outOfOrderRecordCount();
             break;
         }
-        // The correlation observation exists only to attach a matching
-        // DetectorReport/InspectedOccurrence to the diagnostic
-        // DetectionPipelineEvent; neither OccurrenceVerdict nor FieldState is
-        // ever built from it.
-        PendingVerdictObservation observation = {};
-        observation.inspected = inspected;
-        observation.detectorReport = _scalarDetector.latestReport();
-        if (observation.detectorReport.detectorId != occurrence.detectorId ||
-            !observation.detectorReport.accepted.present ||
-            observation.detectorReport.accepted.occurrenceId != occurrence.occurrenceId) {
+        const DetectorReport& poppedReport = _scalarDetector.latestReport();
+        if (poppedReport.detectorId != occurrence.detectorId || !poppedReport.accepted.present ||
+            poppedReport.accepted.occurrenceId != occurrence.occurrenceId) {
             ++_detectorReportMismatchCount;
         }
-        ++_evaluatorAcceptAttemptCount;
 #endif
-        // Core: feeding the matcher is what eventually produces OccurrenceVerdict.
-        const bool acceptedByMatcher = _occurrenceEvaluator.acceptOccurrence(inspected);
-#ifdef ANALYZER_MODE
-        EvaluatorInputRejectReason rejectReason = _occurrenceEvaluator.lastInputRejectReason();
-        if (acceptedByMatcher) {
-            ++_evaluatorAcceptSuccessCount;
-            if (!pushVerdictObservation(observation)) {
-                rejectReason = EvaluatorInputRejectReason::CorrelationQueueFull;
-                _latestEvaluatorInputRejectReason = rejectReason;
-            }
-        } else {
-            ++_evaluatorAcceptRejectCount;
-            _latestEvaluatorInputRejectReason = rejectReason;
+        // The verdict is the last step of inspection (makeVerdict); FieldState,
+        // the verdict queue and the Analyzer's pipeline event all take it here,
+        // with the inspected occurrence and the detector report in scope.
+        OccurrenceVerdict verdict;
+        if (!makeVerdict(inspected, _inspectionPlan, verdict)) {
+            continue;
         }
-#else
-        (void)acceptedByMatcher;
-#endif
-    }
-
-    (void)nowMs;
-}
-
-void DetectionRuntime::drainOccurrenceEvaluator(unsigned long nowMs) {
-    OccurrenceVerdict result = {};
-    while (_occurrenceEvaluator.popOccurrenceVerdict(nowMs, result)) {
 #ifdef ANALYZER_MODE
         ++_verdictProducedCount;
-        PendingVerdictObservation matchedObservation = {};
-        const bool hasMatchedInspectedOccurrence = popVerdictObservation(result.occurrenceId, matchedObservation);
 #endif
-        // Core: FieldState and the OccurrenceVerdict queue are built from the
-        // bare OccurrenceVerdict, independent of any correlation bookkeeping.
-        _fieldStateTracker.observeOccurrenceVerdict(result, nowMs);
+        _fieldStateTracker.observeOccurrenceVerdict(verdict, nowMs);
 #ifdef ANALYZER_MODE
-        capturePipelineResult(
-            result,
-            hasMatchedInspectedOccurrence ? &matchedObservation.inspected : nullptr,
-            hasMatchedInspectedOccurrence ? &matchedObservation.detectorReport : nullptr,
-            nowMs
-        );
+        capturePipelineResult(verdict, inspected, _scalarDetector.latestReport(), nowMs);
 #endif
         if (_verdictQueueEnabled) {
-            pushOccurrenceVerdict(result);
+            pushOccurrenceVerdict(verdict);
         }
     }
 }
@@ -576,10 +476,6 @@ unsigned long DetectionRuntime::pipelineEventOverflowCount() const {
     return _pipelineEventOverflowCount;
 }
 
-unsigned long DetectionRuntime::verdictCorrelationFailureCount() const {
-    return _verdictCorrelationFailureCount;
-}
-
 bool DetectionRuntime::pushPipelineEvent(const DetectionPipelineEvent& event) {
     if (_pipelineEventCount == kPipelineEventQueueCapacity) {
         ++_pipelineEventOverflowCount;
@@ -594,15 +490,15 @@ bool DetectionRuntime::pushPipelineEvent(const DetectionPipelineEvent& event) {
 
 bool DetectionRuntime::capturePipelineResult(
     const OccurrenceVerdict& result,
-    const InspectedOccurrence* matchedInspectedOccurrence,
-    const DetectorReport* matchedDetectorReport,
+    const InspectedOccurrence& inspected,
+    const DetectorReport& detectorReport,
     unsigned long nowMs
 ) {
+    const InspectedOccurrence* matchedInspectedOccurrence = &inspected;
+    const DetectorReport* matchedDetectorReport = &detectorReport;
     _latestPipelineResult = {};
     _latestPipelineResult.hasVerdict = true;
     _latestPipelineResult.verdict = result;
-    _latestPipelineResult.hasEvaluatorReport = true;
-    _latestPipelineResult.evaluatorReport = _occurrenceEvaluator.report();
     if (matchedInspectedOccurrence != nullptr && matchedInspectedOccurrence->occurrence.present) {
         _latestPipelineResult.hasVerdictInspectedOccurrence = true;
         _latestPipelineResult.verdictInspectedOccurrence = *matchedInspectedOccurrence;
@@ -640,14 +536,13 @@ bool DetectionRuntime::capturePipelineResult(
     event.sourceCandidateId = 0;
     event.integrity.detectorReportPresent = event.detectorReportPresent;
     event.integrity.inspectionPresent = event.detectorReportMatched;
-    event.integrity.evaluatorReportPresent = true;
     event.integrity.verdictPresent = true;
     event.integrity.occurrenceMatched = event.detectorReportMatched;
     event.integrity.correlationComplete = event.integrity.detectorReportPresent && event.integrity.inspectionPresent && event.integrity.verdictPresent;
     event.integrity.reason = event.integrity.correlationComplete
         ? PipelineIntegrityReason::None
         : (event.integrity.detectorReportPresent
-            ? (event.integrity.inspectionPresent ? PipelineIntegrityReason::MissingVerdict : PipelineIntegrityReason::MissingInspectedOccurrence)
+            ? PipelineIntegrityReason::MissingVerdict
             : PipelineIntegrityReason::MissingDetectorReport);
     event.hasVerdict = true;
     event.verdict = result;
@@ -684,47 +579,6 @@ bool DetectionRuntime::capturePipelineResult(
         ++_verdictEventDroppedCount;
     }
     return eventPushed;
-}
-
-bool DetectionRuntime::pushVerdictObservation(const PendingVerdictObservation& observation) {
-    if (_verdictCorrelationCount == kResultQueueCapacity) {
-        ++_verdictCorrelationQueueOverflowCount;
-        return false;
-    }
-
-    const size_t writeIndex = (_verdictCorrelationReadIndex + _verdictCorrelationCount) % kResultQueueCapacity;
-    _verdictCorrelationQueue[writeIndex] = observation;
-    ++_verdictCorrelationCount;
-    return true;
-}
-
-bool DetectionRuntime::popVerdictObservation(unsigned long occurrenceId, PendingVerdictObservation& out) {
-    if (_verdictCorrelationCount == 0) {
-        return false;
-    }
-
-    size_t matchOffset = 0;
-    for (; matchOffset < _verdictCorrelationCount; ++matchOffset) {
-        const size_t index = (_verdictCorrelationReadIndex + matchOffset) % kResultQueueCapacity;
-        if (_verdictCorrelationQueue[index].inspected.occurrence.occurrenceId == occurrenceId) {
-            out = _verdictCorrelationQueue[index];
-            break;
-        }
-    }
-
-    if (matchOffset >= _verdictCorrelationCount) {
-        ++_verdictCorrelationFailureCount;
-        return false;
-    }
-
-    for (size_t i = matchOffset; i + 1 < _verdictCorrelationCount; ++i) {
-        const size_t from = (_verdictCorrelationReadIndex + i + 1) % kResultQueueCapacity;
-        const size_t to = (_verdictCorrelationReadIndex + i) % kResultQueueCapacity;
-        _verdictCorrelationQueue[to] = _verdictCorrelationQueue[from];
-    }
-    _verdictCorrelationReadIndex = (_verdictCorrelationReadIndex + _verdictCorrelationCount - 1) % kResultQueueCapacity;
-    --_verdictCorrelationCount;
-    return true;
 }
 
 #endif // ANALYZER_MODE

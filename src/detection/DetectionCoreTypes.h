@@ -20,8 +20,8 @@ namespace detection {
 // InspectedOccurrence:
 //   Occurrence plus retrospective inspection evidence
 //
-// OccurrenceEvaluator:
-//   profile-selected pattern interpretation stage
+// makeVerdict (inspection/VerdictProjection.h):
+//   the last step of inspection: the plan's support requirements applied
 //
 // OccurrenceVerdict:
 //   behavior-facing pattern meaning

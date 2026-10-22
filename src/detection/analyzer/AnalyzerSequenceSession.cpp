@@ -204,7 +204,6 @@ void AnalyzerApp::resetSequenceTestRunState() {
     _sequenceTest.currentTrialRejected = 0;
     memset(&_sequenceTest.currentTrialDiagnostics, 0, sizeof(_sequenceTest.currentTrialDiagnostics));
     _sequenceTest.trialOverflowCountAtStart = 0;
-    _sequenceTest.trialPatternInspectedOverflowCountAtStart = 0;
     _sequenceTest.trialPipelineOverflowCountAtStart = 0;
     _sequenceTest.hits = 0;
     _sequenceTest.expectedHits = 0;
@@ -501,7 +500,6 @@ void AnalyzerApp::updateSequenceTest(unsigned long now) {
     }
     // Detection-side overflow baselines after the diagnostics reset, which
     // zeroes both counters (issue #31); the I2S baseline above is separate.
-    _sequenceTest.trialPatternInspectedOverflowCountAtStart = _detection.verdictCorrelationQueueOverflowCount();
     _sequenceTest.trialPipelineOverflowCountAtStart = _detection.pipelineEventOverflowCount();
     _sequenceTest.nextTriggerAtMs = scheduledAtMs + _sequenceTest.periodMs;
 

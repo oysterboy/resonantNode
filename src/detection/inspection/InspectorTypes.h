@@ -151,7 +151,6 @@ static constexpr size_t kMaxInspectionModules = 3;
 struct InspectionPlan {
     InspectionModuleConfig modules[kMaxInspectionModules] = {};
     size_t count = 0;
-    bool failedRequirementMeansUncertain = true;
 };
 
 // Magnitude evidence captured by the inspector for a single occurrence.

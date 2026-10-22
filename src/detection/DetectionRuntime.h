@@ -11,7 +11,7 @@
 #include "detectors/scalar/ScalarTransientDetector.h"
 #include "inspection/OccurrenceInspector.h"
 #include "inspection/InspectorTypes.h"
-#include "evaluation/OccurrenceEvaluator.h"
+#include "inspection/VerdictProjection.h"
 #include "evaluation/OccurrenceVerdict.h"
 #include "occurrences/Occurrence.h"
 #include "occurrences/InspectedOccurrence.h"
@@ -26,8 +26,9 @@ namespace detection {
 DetectionRuntime
 
 Owns the active detection pipeline wiring:
-feature observation, occurrence emission, occurrence inspection, occurrence
-evaluation, field-state tracking, and OccurrenceVerdict queueing.
+feature observation, occurrence emission, occurrence inspection (which ends
+in the OccurrenceVerdict, makeVerdict()), field-state tracking, and
+OccurrenceVerdict queueing.
 
 Consumes AudioSamplePacket and FrequencyBandMeasurementPacket.
 Produces OccurrenceVerdict and FieldState.
@@ -39,8 +40,6 @@ a live pipe into occurrence emission.
 struct DetectionPipelineResult {
     bool hasVerdict = false;
     OccurrenceVerdict verdict = {};
-    bool hasEvaluatorReport = false;
-    OccurrenceEvaluatorReport evaluatorReport = {};
 
     bool hasVerdictInspectedOccurrence = false;
     InspectedOccurrence verdictInspectedOccurrence = {};
@@ -66,17 +65,10 @@ struct SourceDiagnosticRecord {
     bool sourceReportMatched = false;
 };
 
-struct PendingVerdictObservation {
-    InspectedOccurrence inspected = {};
-    DetectorReport detectorReport = {};
-};
-
 enum class PipelineIntegrityReason {
     None,
     MissingDetectorReport,
-    MissingInspectedOccurrence,
     MissingVerdict,
-    OccurrenceIdMismatch,
     InspectionQueueOverflow,
     VerdictQueueOverflow,
     PipelineEventQueueOverflow,
@@ -86,7 +78,6 @@ struct PipelineIntegrity {
     bool detectorReportPresent = false;
     bool occurrenceMatched = false;
     bool inspectionPresent = false;
-    bool evaluatorReportPresent = false;
     bool verdictPresent = false;
     bool correlationComplete = false;
     bool queueOverflowAffected = false;
@@ -166,28 +157,20 @@ public:
     const DetectionPipelineResult& latestPipelineResult() const;
     unsigned long pipelineEventOverflowCount() const;
     unsigned long verdictQueueOverflowCount() const;
-    unsigned long verdictCorrelationQueueOverflowCount() const;
-    unsigned long verdictCorrelationFailureCount() const;
     unsigned long detectorReportMismatchCount() const;
     uint32_t observeFrameCount() const;
     uint32_t freshDetectorInputCount() const;
     uint32_t detectorDrainCount() const;
-    uint32_t evaluatorDrainCount() const;
     uint32_t detectorReportRefreshCount() const;
     uint32_t noFreshFrequencySkipCount() const;
     uint32_t detectorOccurrencePoppedCount() const;
     uint32_t detectorValidOccurrencePoppedCount() const;
-    uint32_t evaluatorAcceptAttemptCount() const;
-    uint32_t evaluatorAcceptSuccessCount() const;
-    uint32_t evaluatorAcceptRejectCount() const;
     uint32_t verdictProducedCount() const;
     uint32_t verdictEventPushedCount() const;
     uint32_t verdictEventDroppedCount() const;
-    EvaluatorInputRejectReason latestEvaluatorInputRejectReason() const;
     uint32_t scalarReportGeneration() const;
     // Generic report access is the canonical upward path.
     const DetectorReport& activeDetectorReport() const;
-    const OccurrenceEvaluatorReport& activeEvaluatorReport() const;
     const FeatureHistory& featureHistory() const;
 
     // Snapshot of the history ring at the latest inspection that found its
@@ -212,27 +195,22 @@ private:
     static constexpr size_t kPipelineEventQueueCapacity = 4;
 #endif
 
-    // Pipeline stages in execution order. drainDetectors()/drainOccurrenceEvaluator()
-    // stay core (they produce OccurrenceVerdict/FieldState); each has internal
-    // ANALYZER_MODE blocks around the diagnostics-only work interleaved in
-    // their loop bodies, see the .cpp file.
+    // drainDetectors() stays core: it pops occurrences, inspects them and
+    // renders their verdicts (OccurrenceVerdict/FieldState), with
+    // ANALYZER_MODE blocks around the diagnostics-only work in its loop body.
     void drainDetectors(unsigned long nowMs);
-    void drainOccurrenceEvaluator(unsigned long nowMs);
     bool pushOccurrenceVerdict(const OccurrenceVerdict& result);
     bool hasPendingDetectorOutput() const;
-    bool hasPendingEvaluatorWork() const;
     void resetDetectionQueues();
 
 #ifdef ANALYZER_MODE
     bool pushPipelineEvent(const DetectionPipelineEvent& event);
-    bool pushVerdictObservation(const PendingVerdictObservation& observation);
-    bool popVerdictObservation(unsigned long occurrenceId, PendingVerdictObservation& out);
     bool captureLatestDetectorReportIfChanged();
     void drainDetectorReportEvents(unsigned long nowMs);
     bool capturePipelineResult(
         const OccurrenceVerdict& result,
-        const InspectedOccurrence* matchedInspectedOccurrence,
-        const DetectorReport* matchedDetectorReport,
+        const InspectedOccurrence& inspected,
+        const DetectorReport& detectorReport,
         unsigned long nowMs
     );
     void resetDetectionBookkeeping();
@@ -251,7 +229,6 @@ private:
 
     ScalarTransientDetector _scalarDetector;
     OccurrenceInspector _occurrenceInspector;
-    OccurrenceEvaluator _occurrenceEvaluator;
     FieldStateTracker _fieldStateTracker;
     FeatureHistory _featureHistory;
 
@@ -278,15 +255,6 @@ private:
     uint32_t _lastEmittedAcceptedReportGeneration = 0;
     uint32_t _lastEmittedSelectedRejectOccurrenceId = 0;
     uint32_t _lastEmittedSelectedRejectReportGeneration = 0;
-    PendingVerdictObservation _verdictCorrelationQueue[kResultQueueCapacity] = {};
-    size_t _verdictCorrelationReadIndex = 0;
-    size_t _verdictCorrelationCount = 0;
-    unsigned long _verdictCorrelationQueueOverflowCount = 0;
-    unsigned long _verdictCorrelationFailureCount = 0;
-    EvaluatorInputRejectReason _latestEvaluatorInputRejectReason = EvaluatorInputRejectReason::None;
-    uint32_t _evaluatorAcceptAttemptCount = 0;
-    uint32_t _evaluatorAcceptSuccessCount = 0;
-    uint32_t _evaluatorAcceptRejectCount = 0;
     uint32_t _verdictProducedCount = 0;
     uint32_t _verdictEventPushedCount = 0;
     uint32_t _verdictEventDroppedCount = 0;
@@ -294,7 +262,6 @@ private:
     uint32_t _observeFrameCount = 0;
     uint32_t _freshDetectorInputCount = 0;
     uint32_t _detectorDrainCount = 0;
-    uint32_t _evaluatorDrainCount = 0;
     uint32_t _detectorReportRefreshCount = 0;
     uint32_t _noFreshFrequencySkipCount = 0;
     uint32_t _detectorOccurrencePoppedCount = 0;

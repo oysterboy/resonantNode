@@ -132,8 +132,6 @@ void printRuntimeSize() {
     serialOut().println(static_cast<unsigned long>(sizeof(detection::Occurrence)));
     serialOut().print("  SIZE InspectedOccurrence=");
     serialOut().println(static_cast<unsigned long>(sizeof(detection::InspectedOccurrence)));
-    serialOut().print("  SIZE OccurrenceEvaluator=");
-    serialOut().println(static_cast<unsigned long>(sizeof(detection::OccurrenceEvaluator)));
     serialOut().print("  SIZE OccurrenceVerdict=");
     serialOut().println(static_cast<unsigned long>(sizeof(detection::OccurrenceVerdict)));
     serialOut().print("SIZE AudioSignal=");
@@ -918,13 +916,11 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
     report.integrity.detectorReportPresent = selectedDetectorReport != nullptr;
     report.integrity.occurrenceMatched = selectedTrial.reportMatched;
     report.integrity.inspectionPresent = hasInspectedOccurrence;
-    report.integrity.evaluatorReportPresent = hasVerdict;
     report.integrity.verdictPresent = hasVerdict;
     const unsigned long pipelineOverflowDelta = _detection.pipelineEventOverflowCount() > _sequenceTest.trialPipelineOverflowCountAtStart
         ? _detection.pipelineEventOverflowCount() - _sequenceTest.trialPipelineOverflowCountAtStart
         : 0UL;
-    report.integrity.queueOverflowAffected = pipelineOverflowDelta > 0UL ||
-        _detection.verdictCorrelationQueueOverflowCount() > _sequenceTest.trialPatternInspectedOverflowCountAtStart;
+    report.integrity.queueOverflowAffected = pipelineOverflowDelta > 0UL;
     report.integrity.correlationComplete = selectedTrial.kind == SequenceTrialSelection::Kind::RejectedSourceCandidate
         ? report.integrity.detectorReportPresent
         : (report.integrity.detectorReportPresent &&
@@ -1176,9 +1172,6 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
     report.debug.unexpected = result == AnalyzerResult::Unexpected ? 1U : 0U;
     report.debug.pipelineQueueOverflows = classificationInput.pipelineQueueOverflowCount;
     report.debug.patternResultQueueOverflows = 0UL;
-    report.debug.patternInspectedQueueOverflows = _detection.verdictCorrelationQueueOverflowCount() > _sequenceTest.trialPatternInspectedOverflowCountAtStart
-        ? _detection.verdictCorrelationQueueOverflowCount() - _sequenceTest.trialPatternInspectedOverflowCountAtStart
-        : 0UL;
     report.debug.startupArtifact = startupArtifact;
     report.debug.bufferOverrun = bufferOverrun;
     report.debug.artifactCaptured = trialHasPipelineEvidence;

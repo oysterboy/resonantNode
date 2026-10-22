@@ -302,7 +302,6 @@ struct AnalyzerPipelineIntegrityObservation {
     bool detectorReportPresent = false;
     bool occurrenceMatched = false;
     bool inspectionPresent = false;
-    bool evaluatorReportPresent = false;
     bool verdictPresent = false;
     bool correlationComplete = false;
     bool queueOverflowAffected = false;
@@ -347,7 +346,6 @@ struct AnalyzerDebugSummary {
     unsigned int unexpected = 0;
     unsigned long pipelineQueueOverflows = 0;
     unsigned long patternResultQueueOverflows = 0;
-    unsigned long patternInspectedQueueOverflows = 0;
     bool startupArtifact = false;
     bool bufferOverrun = false;
 

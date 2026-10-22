@@ -71,6 +71,7 @@ what replaced it.
 | 2026-10-17 | [The idle call wakes the network: 300 Hz announcement, then the node's hop train](2026-10-17-idle-call-wakes-the-network.md) (bench pending) |
 | 2026-10-17 | [A busy network makes a node rest: field density (4 patterns) or own budget (6 in 10 s), hard 10 s pause, same values everywhere](2026-10-17-two-node-exchange-chain-length.md) |
 | 2026-10-17 | [Behavior: one program, the shipped struct as its profile, values as params; a bench session records the whole effective state](2026-10-17-behavior-contract-and-reproducible-sessions.md) |
+| 2026-10-22 | [Console output in whole lines (serialOut) and the per-sample path in IRAM: Analyzer report 190 -> 3.4 ms, per-sample 73 -> 37 us, 0 dropped buffers](2026-10-22-serial-lines-and-iram-hot-path.md) |
 | 2026-10-22 | [Network pacing: rest 5 s, idle call every 60 s +- 20 s, pass mark "the chain ends within 30 s in 80 %", M = 100](2026-10-22-network-pacing.md) |
 | 2026-10-21 | [D-AMP tone level 0.5 of full scale: at 0.3 the five-board hearing matrix had 7 of 20 cells at 10/10, at 0.5 19 of 20](2026-10-21-damp-tone-level-0p5.md) |
 | 2026-10-16 | [The network band is 2950-3950 Hz: bins 2950/3200/3450/3700/3950, the 3,200 Hz chirp on a bin](2026-10-16-network-band-2950-3950.md) |

@@ -622,7 +622,7 @@ the previous gate open unless the step says it can run in parallel.
    every push. The first run was all green. The include-direction check (`tools/ci/include_direction.py`) warns on
    9 Analyzer includes until ANA-003 (step 10), then turns strict.
 
-7a. [TODO] Analyzer diagnostics hygiene. (no issue yet; ANA-004 has the
+7a. [DONE 2026-10-22] Analyzer diagnostics hygiene. (no issue yet; ANA-004 has the
    research note)
    Where: ANA-004 (report task: SEQ DIAG detail drops ~21 DMA buffers per
    detected trial), ANA-005 (boot control claim never sent), ANA-007
@@ -637,6 +637,20 @@ the previous gate open unless the step says it can run in parallel.
    trials; dt anchored on the sent CHIRP; RAW reports what it allocated;
    invalid windows print the held range or na; the claim sent or its
    message dropped. Before step 8.
+   Done 2026-10-22 (bench/sessions/2026-10-22-ana004-timing, -7a-gate; decisions/2026-10-22-serial-lines-and-iram-
+   hot-path.md):
+   - 40 detail + diagnostics trials with 0 dropped buffers.
+   - dt anchored on the sent command (dt_anchor= in SEQ_TRIAL), constant at 51 ms (chirp) and 48 ms (hop) where the
+     polled marker jittered 22-38 ms.
+   - RAW_ALLOC reports the allocation; the capture buffer is sized to pre + post.
+   - Invalid windows print na.
+   - The boot claim is sent and acked.
+   Two root causes, both fixed for every build:
+   - Serial writes in small pieces filled the TX ring and blocked: all output now goes out in whole lines
+     (app/SerialOut.h). The SEQ report went from ~190 ms to 3.4 ms.
+   - The per-sample chain ran over budget from flash: 73 us per sample, against 37 us with that path in IRAM.
+   The drops had cost the hop train 2 of 10 trials in this setup and passed 40 ms tones that should be rejected.
+   dt before this date is anchored differently (bench/README.md).
 
 7b. [TODO] Tests that exercise the shipped gates. (extend #9)
    Where: NODE-006 follow-up (roadmap-node.md); audit 4.1, 4.3.

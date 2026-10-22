@@ -7,8 +7,6 @@ const char* detectorIdName(DetectorId detectorId) {
     switch (detectorId) {
         case DetectorId::ScalarTransient:
             return "scalar_transient";
-        case DetectorId::FrequencyMatch:
-            return "frequency_match";
         case DetectorId::Unknown:
         default:
             return "unknown";
@@ -43,8 +41,6 @@ const char* occurrenceSourceName(DetectorId detectorId) {
     switch (detectorId) {
         case DetectorId::ScalarTransient:
             return "scalar";
-        case DetectorId::FrequencyMatch:
-            return "frequency";
         case DetectorId::Unknown:
         default:
             return "none";

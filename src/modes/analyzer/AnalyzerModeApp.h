@@ -10,7 +10,6 @@
 #include "../../detection/DetectionProfile.h"
 #include "../../audio/AudioSignal.h"
 #include "../../detection/DetectionRuntime.h"
-#include "../../detection/detectors/frequency/FrequencyMatchCriteria.h"
 #include "../../detection/occurrences/InspectedOccurrence.h"
 #include "../../detection/features/FreqBandStream.h"
 #include "../../detection/evaluation/OccurrenceVerdict.h"
@@ -97,7 +96,6 @@ public:
 
     //PARAM TUNING TEMPORARY
     struct AnalyzerTuning {
-        FrequencyMatchCriteria::Values frequencyMatch = {};
         detection::ScalarTransientConfig scalarTransient = {};
     };
 
@@ -329,7 +327,7 @@ private:
         unsigned long sampleDumpCaptureStartMs = 0;
         unsigned long sampleDumpCaptureEndMs = 0;
         unsigned long sampleDumpNextEmitMs = 0;
-        detection::DetectorSelection sampleDumpDetectorSelection = detection::DetectorSelection::FrequencyMatch;
+        detection::DetectorSelection sampleDumpDetectorSelection = detection::DetectorSelection::ScalarTransient;
         detection::FeatureStreamId sampleDumpObservedStream = detection::FeatureStreamId::Unknown;
         static constexpr size_t kMaxSampleHistory = 128;
         static constexpr size_t kMaxSampleRows = 256;

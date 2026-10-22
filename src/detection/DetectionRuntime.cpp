@@ -44,39 +44,6 @@ void applyScalarTransientConfig(ScalarTransientDetector& detector, const ScalarT
     detector.setMaxGapMs(config.maxGapMs);
 }
 
-// Narrow view over whichever detector is currently selected, used only to
-// collapse drainDetectors()'s duplicated per-branch drain loop into one. Not
-// a general IDetector interface: it deliberately exposes only the one call
-// this loop needs, with a signature and meaning already identical on both
-// detectors. update() stays switch-based in observeFrame() (genuinely
-// different signatures per detector), and latestReport()/reportGeneration()
-// stay switch-based wherever they're already used (see
-// captureLatestDetectorReportIfChanged()), since neither OccurrenceVerdict nor
-// FieldState is ever built from DetectorReport, that's a diagnostics-only
-// concern, not part of the drain path this adapter unifies.
-class ActiveDetectorAdapter {
-public:
-    ActiveDetectorAdapter(DetectorSelection selection,
-                           FrequencyMatchDetector& frequencyDetector,
-                           ScalarTransientDetector& scalarDetector)
-        : _selection(selection), _frequencyDetector(frequencyDetector), _scalarDetector(scalarDetector) {}
-
-    bool popOccurrence(Occurrence& out) {
-        switch (_selection) {
-            case DetectorSelection::FrequencyMatch:
-                return _frequencyDetector.popOccurrence(out);
-            case DetectorSelection::ScalarTransient:
-                return _scalarDetector.popOccurrence(out);
-        }
-        return false;
-    }
-
-private:
-    DetectorSelection _selection;
-    FrequencyMatchDetector& _frequencyDetector;
-    ScalarTransientDetector& _scalarDetector;
-};
-
 } // namespace
 
 void DetectionRuntime::resetState() {
@@ -87,7 +54,6 @@ void DetectionRuntime::resetState() {
 }
 
 void DetectionRuntime::resetDetectors() {
-    _frequencyDetector.resetState();
     _scalarDetector.resetState();
 }
 
@@ -127,7 +93,6 @@ void DetectionRuntime::resetDiagnostics() {
 
 void DetectionRuntime::resetDiagnosticsCounters() {
     _detectorReport = {};
-    _frequencyDetector.resetDiagnosticsSummary();
     _pipelineEventOverflowCount = 0;
     _verdictQueueOverflowCount = 0;
     _verdictCorrelationQueueOverflowCount = 0;
@@ -151,7 +116,6 @@ void DetectionRuntime::resetDiagnosticsCounters() {
 }
 
 void DetectionRuntime::resetSourceRejectSummaries() {
-    _frequencyDetector.resetRejectSummary();
     _scalarDetector.resetAcceptedOccurrenceSummary();
     _scalarDetector.resetSelectedRejectSummary();
 }
@@ -168,35 +132,19 @@ void DetectionRuntime::resetDetectionBookkeeping() {
     _verdictCorrelationFailureCount = 0;
     memset(&_detectorReport, 0, sizeof(_detectorReport));
     _lastObservedScalarReportGeneration = 0;
-    _lastObservedFrequencyReportGeneration = 0;
 }
 
 void DetectionRuntime::setDiagnosticsEnabled(bool enabled) {
-    _frequencyDetector.setDiagnosticsEnabled(enabled);
     _scalarDetector.setDiagnosticsEnabled(enabled);
 }
 
 bool DetectionRuntime::captureLatestDetectorReportIfChanged() {
-    switch (_detectorSelection) {
-        case DetectorSelection::FrequencyMatch:
-            if (_lastObservedFrequencyReportGeneration == _frequencyDetector.reportGeneration()) {
-                return false;
-            }
-            _detectorReport = _frequencyDetector.latestReport();
-            _lastObservedFrequencyReportGeneration = _frequencyDetector.reportGeneration();
-            _lastObservedScalarReportGeneration = 0;
-            return true;
-        case DetectorSelection::ScalarTransient:
-            if (_lastObservedScalarReportGeneration == _scalarDetector.reportGeneration()) {
-                return false;
-            }
-            _detectorReport = _scalarDetector.latestReport();
-            _lastObservedScalarReportGeneration = _scalarDetector.reportGeneration();
-            _lastObservedFrequencyReportGeneration = 0;
-            return true;
+    if (_lastObservedScalarReportGeneration == _scalarDetector.reportGeneration()) {
+        return false;
     }
-
-    return false;
+    _detectorReport = _scalarDetector.latestReport();
+    _lastObservedScalarReportGeneration = _scalarDetector.reportGeneration();
+    return true;
 }
 
 void DetectionRuntime::drainDetectorReportEvents(unsigned long nowMs) {
@@ -206,15 +154,10 @@ void DetectionRuntime::drainDetectorReportEvents(unsigned long nowMs) {
     }
 
     ++_detectorReportRefreshCount;
-    const uint32_t currentReportGeneration = _detectorReport.detectorId == DetectorId::ScalarTransient
-        ? _scalarDetector.reportGeneration()
-        : _frequencyDetector.reportGeneration();
-    // Scalar: one reject event per new selected reject, not per refreeze
-    // (a weaker reject refreezes for rejected_count; decision 2026-10-13).
-    // Frequency still emits per freeze, i.e. per rejected pending.
-    const uint32_t currentRejectGeneration = _detectorReport.detectorId == DetectorId::ScalarTransient
-        ? _scalarDetector.selectedRejectGeneration()
-        : currentReportGeneration;
+    // One reject event per new selected reject, not per refreeze (a weaker
+    // reject refreezes for rejected_count; decision 2026-10-13).
+    const uint32_t currentReportGeneration = _scalarDetector.reportGeneration();
+    const uint32_t currentRejectGeneration = _scalarDetector.selectedRejectGeneration();
 
     if (_detectorReport.selectedReject.present &&
         _detectorReport.selectedReject.occurrenceId != 0 &&
@@ -256,10 +199,6 @@ void DetectionRuntime::drainDetectorReportEvents(unsigned long nowMs) {
 
 #endif // ANALYZER_MODE
 
-void DetectionRuntime::setFrequencyMatchConfig(const FrequencyMatchConfig& config) {
-    _frequencyMatchConfig = config;
-}
-
 void DetectionRuntime::setScalarTransientConfig(const ScalarTransientConfig& config) {
     _scalarTransientConfig = config;
     applyScalarTransientConfig(_scalarDetector, _scalarTransientConfig);
@@ -282,7 +221,6 @@ void DetectionRuntime::setDetectorSelection(DetectorSelection selection) {
     _verdictCorrelationCount = 0;
     _detectorReport = {};
     _lastObservedScalarReportGeneration = 0;
-    _lastObservedFrequencyReportGeneration = 0;
 #endif
 }
 
@@ -344,51 +282,19 @@ void IRAM_ATTR DetectionRuntime::observeFrame(
 
     bool detectorInputProcessed = false;
 
-    switch (_detectorSelection) {
-        case DetectorSelection::FrequencyMatch:
-            if (!frequencyEvidence.present || !frequencyEvidence.fresh) {
+    if (streamRequiresFreshFrequency(_scalarTransientConfig.observedStream) && !frequencyEvidence.fresh) {
 #ifdef ANALYZER_MODE
-                ++_noFreshFrequencySkipCount;
+        ++_noFreshFrequencySkipCount;
 #endif
-                break;
-            }
-            {
-                FrequencyMatchCriteria::Values frequencyTuning = {};
-                frequencyTuning.attackScoreMin = _frequencyMatchConfig.attackScoreMin;
-                frequencyTuning.releaseScoreMin = _frequencyMatchConfig.releaseScoreMin;
-                frequencyTuning.attackContrastMin = _frequencyMatchConfig.attackContrastMin;
-                frequencyTuning.releaseContrastMin = _frequencyMatchConfig.releaseContrastMin;
-                _frequencyDetector.update(
-                    frequencyEvidence,
-                    audioSamplePacket,
-                    audioSamplePacket.timeMs,
-                    audioSamplePacket.sampleIndex,
-                    frequencyTuning,
-                    _frequencyMatchConfig.releaseDebounceMs,
-                    _frequencyMatchConfig.cooldownAfterReleaseMs,
-                    _frequencyMatchConfig.minDurationMs);
-                detectorInputProcessed = true;
+    } else {
+        _scalarDetector.update(
+            audioSamplePacket,
+            selectedScalarValue(audioSamplePacket, frequencyEvidence, _scalarTransientConfig.observedStream)
+        );
+        detectorInputProcessed = true;
 #ifdef ANALYZER_MODE
-                ++_freshDetectorInputCount;
+        ++_freshDetectorInputCount;
 #endif
-            }
-            break;
-        case DetectorSelection::ScalarTransient:
-            if (streamRequiresFreshFrequency(_scalarTransientConfig.observedStream) && !frequencyEvidence.fresh) {
-#ifdef ANALYZER_MODE
-                ++_noFreshFrequencySkipCount;
-#endif
-                break;
-            }
-            _scalarDetector.update(
-                audioSamplePacket,
-                selectedScalarValue(audioSamplePacket, frequencyEvidence, _scalarTransientConfig.observedStream)
-            );
-            detectorInputProcessed = true;
-#ifdef ANALYZER_MODE
-            ++_freshDetectorInputCount;
-#endif
-            break;
     }
 
     const bool detectorHadPendingOutput = hasPendingDetectorOutput();
@@ -520,10 +426,6 @@ uint32_t DetectionRuntime::scalarReportGeneration() const {
     return _scalarDetector.reportGeneration();
 }
 
-uint32_t DetectionRuntime::frequencyReportGeneration() const {
-    return _frequencyDetector.reportGeneration();
-}
-
 bool DetectionRuntime::hasLatestPipelineResult() const {
     return _hasLatestPipelineResult;
 }
@@ -548,14 +450,7 @@ const FeatureHistory& DetectionRuntime::featureHistory() const {
 #endif // ANALYZER_MODE
 
 bool IRAM_ATTR DetectionRuntime::hasPendingDetectorOutput() const {
-    switch (_detectorSelection) {
-        case DetectorSelection::FrequencyMatch:
-            return _frequencyDetector.hasPendingOccurrence();
-        case DetectorSelection::ScalarTransient:
-            return _scalarDetector.hasPendingOccurrence();
-    }
-
-    return false;
+    return _scalarDetector.hasPendingOccurrence();
 }
 
 bool IRAM_ATTR DetectionRuntime::hasPendingEvaluatorWork() const {
@@ -570,9 +465,7 @@ bool IRAM_ATTR DetectionRuntime::hasPendingEvaluatorWork() const {
 
 void DetectionRuntime::drainDetectors(unsigned long nowMs) {
     Occurrence occurrence;
-    ActiveDetectorAdapter activeDetector(_detectorSelection, _frequencyDetector, _scalarDetector);
-
-    while (activeDetector.popOccurrence(occurrence)) {
+    while (_scalarDetector.popOccurrence(occurrence)) {
 #ifdef ANALYZER_MODE
         ++_detectorOccurrencePoppedCount;
         if (occurrence.present && occurrence.valid) {
@@ -602,13 +495,10 @@ void DetectionRuntime::drainDetectors(unsigned long nowMs) {
         // The correlation observation exists only to attach a matching
         // DetectorReport/InspectedOccurrence to the diagnostic
         // DetectionPipelineEvent; neither OccurrenceVerdict nor FieldState is
-        // ever built from it. latestReport() stays switch-based rather than
-        // going through the adapter, see the adapter's own comment for why.
+        // ever built from it.
         PendingVerdictObservation observation = {};
         observation.inspected = inspected;
-        observation.detectorReport = _detectorSelection == DetectorSelection::FrequencyMatch
-            ? _frequencyDetector.latestReport()
-            : _scalarDetector.latestReport();
+        observation.detectorReport = _scalarDetector.latestReport();
         if (observation.detectorReport.detectorId != occurrence.detectorId ||
             !observation.detectorReport.accepted.present ||
             observation.detectorReport.accepted.occurrenceId != occurrence.occurrenceId) {
@@ -766,9 +656,7 @@ bool DetectionRuntime::capturePipelineResult(
     event.sourceRecord.sourceSelection = event.sourceSelection;
     event.sourceRecord.eventId = event.eventId;
     event.sourceRecord.reportGeneration = matchedDetectorReport != nullptr
-        ? (matchedDetectorReport->detectorId == DetectorId::ScalarTransient
-            ? _scalarDetector.reportGeneration()
-            : _frequencyDetector.reportGeneration())
+        ? _scalarDetector.reportGeneration()
         : 0U;
     event.sourceRecord.eventTrialAttribution = 0;
     event.sourceRecord.sourceOccurrenceId = event.sourceOccurrenceId;

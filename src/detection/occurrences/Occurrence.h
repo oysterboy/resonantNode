@@ -15,19 +15,18 @@ It is not an occurrence verdict and must not drive behavior directly.
 
 `magnitude` and `band` below are evidence-domain namespaces, not a
 detector-exclusive pair, and deliberately share no vocabulary with
-`DetectorId`/`OccurrenceType`'s `Scalar`/`Frequency` axis, which is a
+`DetectorId`/`OccurrenceType`'s detector axis (`Scalar` today), which is a
 separate axis (which detector/lifecycle produced this occurrence). Both
 `magnitude` and `band` may be populated for the same occurrence regardless
 of which detector produced it: `OccurrenceInspector` writes into whichever
 namespace matches each configured `InspectionTarget` (`Amp` -> `magnitude`,
-`TargetScore`/`Contrast`/`TargetBand` -> `band`), and both current stable
-profiles (`TonalPulseFreq`, `TonalPulseScalar`) configure targets spanning
-both namespaces on every occurrence. Do not assume only one is meaningful
+`TargetScore`/`Contrast`/`TargetBand` -> `band`), and the shipped profile
+(`TonalPulseScalar`: contrast and amp) spans both namespaces on every
+occurrence. Do not assume only one is meaningful
 based on `detectorId`/`occurrenceType`; `OccurrenceEvaluator` reads both,
-unconditionally, for both occurrence types. This is unlike
-`DetectorReport.scalar`/`.frequency` (see DetectorReport.h), which really
-are exclusive to whichever detector produced that report, that type kept
-its original names because they are accurate for it.
+unconditionally. This is unlike `DetectorReport.scalar` (see
+DetectorReport.h), which really is exclusive to the detector that produced
+that report.
 */
 // Canonical carrier-agnostic single-value accepted-event detail.
 //

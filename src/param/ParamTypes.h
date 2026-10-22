@@ -46,6 +46,9 @@ enum class ParamType : uint8_t {
 // Stable internal identity for a registered param. Grows as modules register
 // more fields; not reused across removed params.
 enum class ParamId : uint16_t {
+    // Retired 2026-10-22 with FrequencyMatch (decisions/2026-10-22-remove-
+    // frequencymatch.md): no longer registered, kept so later ids keep
+    // their values.
     Detection_FreqAttackScoreMin,
     Detection_FreqReleaseScoreMin,
     Detection_FreqAttackContrastMin,

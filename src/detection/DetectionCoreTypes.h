@@ -37,8 +37,10 @@ namespace detection {
 // OccurrenceType or in DetectorReport.
 //
 // Migration note:
-//   ScalarTransientDetector and FrequencyMatchDetector now both own accepted
-//   Occurrence emission plus DetectorReport directly.
+//   ScalarTransientDetector owns accepted Occurrence emission plus
+//   DetectorReport directly. FrequencyMatchDetector was removed 2026-10-22
+//   (decisions/2026-10-22-remove-frequencymatch.md); a second family comes
+//   back behind the family build flag, not as a new value here.
 
 /*
 DetectionCoreTypes
@@ -50,7 +52,6 @@ runtime to migrate to them yet.
 enum class DetectorId : uint8_t {
     Unknown = 0,
     ScalarTransient,
-    FrequencyMatch,
 };
 
 // Public accepted-event category.
@@ -62,7 +63,6 @@ enum class DetectorId : uint8_t {
 enum class OccurrenceType : uint8_t {
     None = 0,
     Scalar,
-    Frequency,
 };
 
 } // namespace detection

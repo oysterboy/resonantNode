@@ -10,8 +10,6 @@ inline const char* occurrenceTypeName(OccurrenceType type) {
     switch (type) {
         case OccurrenceType::Scalar:
             return "scalar";
-        case OccurrenceType::Frequency:
-            return "frequency";
         case OccurrenceType::None:
         default:
             return "none";

@@ -10,7 +10,6 @@
 #include "../../app/NodeRoster.h"
 #include "../../detection/HopGapContract.h"
 #include "../../detection/features/FrequencyMeasurementPacketBuilder.h"
-#include "../../detection/detectors/frequency/FrequencyMatchCriteria.h"
 #include "../../detection/inspection/InspectionNames.h"
 #include "../../detection/evaluation/VerdictNames.h"
 #include "../../param/ParamRegistry.h"
@@ -174,21 +173,6 @@ void printDetectionProfileDetails(const detection::DetectionProfile& profile) {
         serialOut().println(profile.scalarTransient.releaseDebounceMs);
         serialOut().print("  scalarTransient.minTransientPeakStrength=");
         serialOut().println(profile.scalarTransient.minTransientPeakStrength, 1);
-    } else {
-        serialOut().print("  freqMatch.releaseDebounceMs=");
-        serialOut().println(profile.frequencyMatch.releaseDebounceMs);
-        serialOut().print("  freqMatch.cooldownAfterReleaseMs=");
-        serialOut().println(profile.frequencyMatch.cooldownAfterReleaseMs);
-        serialOut().print("  freqMatch.minDurationMs=");
-        serialOut().println(profile.frequencyMatch.minDurationMs);
-        serialOut().print("  freqMatch.attackScoreMin=");
-        serialOut().println(profile.frequencyMatch.attackScoreMin, 0);
-        serialOut().print("  freqMatch.releaseScoreMin=");
-        serialOut().println(profile.frequencyMatch.releaseScoreMin, 0);
-        serialOut().print("  freqMatch.attackContrastMin=");
-        serialOut().println(profile.frequencyMatch.attackContrastMin, 1);
-        serialOut().print("  freqMatch.releaseContrastMin=");
-        serialOut().println(profile.frequencyMatch.releaseContrastMin, 1);
     }
     for (size_t i = 0; i < profile.inspectionPlan.count; ++i) {
         const auto& module = profile.inspectionPlan.modules[i];
@@ -578,15 +562,6 @@ void Node::configureParameters() {
 // profiles by kind still replaces the whole struct's contents, same as
 // before this registry existed.
 void Node::registerDetectionParams() {
-    detection::FrequencyMatchConfig& freq = _activeDetectionProfile.frequencyMatch;
-    _paramRegistry.addFloat(param::ParamId::Detection_FreqAttackScoreMin, param::ModuleId::Detection,
-                             "detection.freq_attack_score_min", &freq.attackScoreMin, 0.0f, 200000.0f);
-    _paramRegistry.addFloat(param::ParamId::Detection_FreqReleaseScoreMin, param::ModuleId::Detection,
-                             "detection.freq_release_score_min", &freq.releaseScoreMin, 0.0f, 200000.0f);
-    _paramRegistry.addFloat(param::ParamId::Detection_FreqAttackContrastMin, param::ModuleId::Detection,
-                             "detection.freq_attack_contrast_min", &freq.attackContrastMin, 0.0f, 1000.0f);
-    _paramRegistry.addFloat(param::ParamId::Detection_FreqReleaseContrastMin, param::ModuleId::Detection,
-                             "detection.freq_release_contrast_min", &freq.releaseContrastMin, 0.0f, 1000.0f);
     // TonalPulseScalar (the Node's production profile, decisions/
     // 2026-10-14-node-ships-tonalpulsescalar.md). Same flat names as the
     // Analyzer's PARAM keys, under "detection.". The ms fields are
@@ -995,11 +970,8 @@ void Node::pollSerialCommands() {
 
 void Node::handleSerialLine(const char* line) {
     if (equalsIgnoreCase(line, "RB help")) {
-        serialOut().println("RB CMD: RB PARAM freqScore=18000 freqContrast=50.0 freqReleaseScore=12000 freqReleaseContrast=50.0");
         serialOut().println("RB CMD: RB BEHAV wait=100 refractory=0 idleEnabled=0|1 (idle=MS is the idle TIMEOUT, not the switch) restField=N budget=N budgetWindowMs=MS restMs=MS (0 = off) suppressSelfChirp=250 detectionSuppressTail=0 idleTimeout=20000 idleTimeoutVariation=10000 idleBlockedAfterHeard=3000 idleBlockedAfterOwnEmit=5000");
         serialOut().println("RB CMD: RB STATUS");
-        serialOut().println("RB CMD: RB PROFILE name=TonalPulseFreq");
-        serialOut().println("RB CMD(ALT): RB PROFILE name=TonalPulseFreq");
         serialOut().println("RB CMD: RB PROFILE name=TonalPulseScalar");
         serialOut().println("RB CMD: RB PROFILE name=AmpExperimental");
         serialOut().println("RB CMD: RB rebase");
@@ -1029,47 +1001,10 @@ void Node::handleSerialLine(const char* line) {
         return;
     }
     if (startsWithTokenIgnoreCase(line, "RB PARAM")) {
-        char buffer[kSerialLineCapacity];
-        strncpy(buffer, line, sizeof(buffer));
-        buffer[sizeof(buffer) - 1] = '\0';
-
-        char* savePtr = nullptr;
-        char* token = strtok_r(buffer, " ", &savePtr);
-        token = token != nullptr ? strtok_r(nullptr, " ", &savePtr) : nullptr;
-
-        if (token == nullptr || !equalsIgnoreCase(token, "PARAM")) {
-            serialOut().println("RB PARAM usage=RB PARAM freqScore=18000 freqContrast=50.0 freqReleaseScore=12000 freqReleaseContrast=50.0");
-            return;
-        }
-
-        FrequencyMatchCriteria::Values freqTuning = {};
-        freqTuning.attackScoreMin = _activeDetectionProfile.frequencyMatch.attackScoreMin;
-        freqTuning.releaseScoreMin = _activeDetectionProfile.frequencyMatch.releaseScoreMin;
-        freqTuning.attackContrastMin = _activeDetectionProfile.frequencyMatch.attackContrastMin;
-        freqTuning.releaseContrastMin = _activeDetectionProfile.frequencyMatch.releaseContrastMin;
-
-        while ((token = strtok_r(nullptr, " ", &savePtr)) != nullptr) {
-            if (!FrequencyMatchCriteria::parseToken(token, freqTuning)) {
-                serialOut().print("RB PARAM ERR token=");
-                serialOut().print(token);
-                serialOut().println(" (unknown key or invalid value; unchanged)");
-            }
-        }
-
-        _activeDetectionProfile.frequencyMatch.attackScoreMin = freqTuning.attackScoreMin;
-        _activeDetectionProfile.frequencyMatch.releaseScoreMin = freqTuning.releaseScoreMin;
-        _activeDetectionProfile.frequencyMatch.attackContrastMin = freqTuning.attackContrastMin;
-        _activeDetectionProfile.frequencyMatch.releaseContrastMin = freqTuning.releaseContrastMin;
-        applyActiveDetectionProfile();
-
-        serialOut().print(" freqScore=");
-        serialOut().print(_activeDetectionProfile.frequencyMatch.attackScoreMin, 0);
-        serialOut().print(" freqContrast=");
-        serialOut().print(_activeDetectionProfile.frequencyMatch.attackContrastMin, 1);
-        serialOut().print(" freqReleaseScore=");
-        serialOut().print(_activeDetectionProfile.frequencyMatch.releaseScoreMin, 0);
-        serialOut().print(" freqReleaseContrast=");
-        serialOut().println(_activeDetectionProfile.frequencyMatch.releaseContrastMin, 1);
+        // RB PARAM tuned only the FrequencyMatch thresholds, removed 2026-10-22
+        // (docs/decisions/2026-10-22-remove-frequencymatch.md). Detection params
+        // are set through the registry.
+        serialOut().println("RB PARAM ERR removed (FrequencyMatch removed); use PARAM SET detection.scalar_<key> <value>");
         return;
     }
     if (startsWithTokenIgnoreCase(line, "RB BEHAV")) {
@@ -1328,14 +1263,6 @@ void Node::handleDetectCommand(const char* line) {
     serialOut().print(supportRequired ? 1 : 0);
     serialOut().print(" required_label=");
     serialOut().print(supportRequired ? detection::inspectionTargetName(supportRequirement->target) : "none");
-    serialOut().print(" freqScore=");
-    serialOut().print(detectionProfile.frequencyMatch.attackScoreMin, 0);
-    serialOut().print(" freqContrast=");
-    serialOut().print(detectionProfile.frequencyMatch.attackContrastMin, 1);
-    serialOut().print(" freqReleaseScore=");
-    serialOut().print(detectionProfile.frequencyMatch.releaseScoreMin, 0);
-    serialOut().print(" freqReleaseContrast=");
-    serialOut().print(detectionProfile.frequencyMatch.releaseContrastMin, 1);
     serialOut().print(" behavior_state=");
     serialOut().print(_behavior.stateName());
     serialOut().print(" behavior_idle=");
@@ -1482,7 +1409,7 @@ void Node::handleProfileCommand(const char* line) {
         printProfileComposition(activeDetectionProfile());
         serialOut().println();
     } else {
-        serialOut().println("RB PROFILE usage=name=TonalPulseFreq|TonalPulseScalar|AmpExperimental");
+        serialOut().println("RB PROFILE usage=name=TonalPulseScalar|AmpExperimental");
     }
 }
 
@@ -1669,7 +1596,6 @@ const BehaviorGateConfig& Node::activeBehaviorProfile() const {
     switch (_profileKind) {
         case detection::DetectionProfileKind::TonalPulseScalar:
         case detection::DetectionProfileKind::AmpExperimental:
-        case detection::DetectionProfileKind::TonalPulseFreq:
         default:
             return kTonalPulseProfile;
     }
@@ -1684,7 +1610,6 @@ void Node::applyActiveDetectionProfile() {
     const detection::DetectionProfile& detectionProfile = activeDetectionProfile();
 
     _detection.setDetectorSelection(detectionProfile.detectorSelection);
-    _detection.setFrequencyMatchConfig(detectionProfile.frequencyMatch);
     _detection.setScalarTransientConfig(detectionProfile.scalarTransient);
     _detection.setInspectionPlan(detectionProfile.inspectionPlan);
     _detection.setFieldStateConfig(detectionProfile.fieldStateConfig);

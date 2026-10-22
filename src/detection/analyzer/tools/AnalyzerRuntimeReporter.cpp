@@ -130,16 +130,7 @@ void AnalyzerApp::printParamStatus() const {
     serialOut().print(" scalar_min_longest_island_ms=");
     serialOut().print(scalar.minLongestIslandMs);
     serialOut().print(" scalar_max_gap_ms=");
-    serialOut().print(scalar.maxGapMs);
-
-    serialOut().print(" freqScore=");
-    serialOut().print(_analyzerTuning.frequencyMatch.attackScoreMin, 1);
-    serialOut().print(" freqContrast=");
-    serialOut().print(_analyzerTuning.frequencyMatch.attackContrastMin, 1);
-    serialOut().print(" freqReleaseScore=");
-    serialOut().print(_analyzerTuning.frequencyMatch.releaseScoreMin, 1);
-    serialOut().print(" freqReleaseContrast=");
-    serialOut().println(_analyzerTuning.frequencyMatch.releaseContrastMin, 1);
+    serialOut().println(scalar.maxGapMs);
 }
 
 void AnalyzerApp::printAudioSourceSummary() const {

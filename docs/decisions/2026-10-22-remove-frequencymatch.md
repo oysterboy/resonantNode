@@ -32,7 +32,7 @@ the "stays as a demo detector" half of decisions/2026-10-14-node-ships-tonalpuls
 ## Revisit when
 
 A signal Scalar cannot be extended to read (research/scalar-detector-extensions.md) needs a second detector. It
-comes back as a new family behind the family build flag (cleanup-detector-family-build.md), not as a restored
+comes back as a family on the terms in docs/specs/myspec.md 5.3, "Adding a detector family", not as a restored
 runtime profile. git history has the removed code (last commit with it: the parent of the 7d removal).
 
 ## Source

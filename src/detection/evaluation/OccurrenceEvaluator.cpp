@@ -14,7 +14,7 @@ enum class ProposalEvaluationKind {
 // over a group of occurrences.
 //
 // `supported` records only whether the source occurrence type was
-// recognized (Scalar/Frequency) vs. not (None/unknown). It does not
+// recognized (Scalar) vs. not (None/unknown). It does not
 // distinguish pattern shapes: the matcher only ever evaluates single
 // occurrences today. If multi-occurrence pattern matching is added later,
 // that is new capability to design then, not a resurrection of a shape
@@ -69,23 +69,6 @@ OccurrenceProposal makeProposalFromOccurrence(const detection::InspectedOccurren
     proposal.occurrenceId = source.occurrenceId;
 
     switch (source.occurrenceType) {
-        case detection::OccurrenceType::Frequency:
-            proposal.startMs = source.startMs;
-            proposal.peakMs = source.peakMs;
-            proposal.heardAtMs = source.releaseMs != 0 ? source.releaseMs : source.peakMs;
-            proposal.acceptedMs = proposal.heardAtMs;
-            proposal.durationMs = source.durationMs;
-            proposal.onsetStrength = source.band.contrast;
-            proposal.peakStrength = source.band.score;
-            proposal.releaseStrength = source.band.contrast;
-            proposal.ambientBaseline = 0.0f;
-            proposal.supportStrength = source.magnitude.strengthClass;
-            proposal.scoreStrength = source.band.scoreStrength;
-            proposal.contrastQuality = source.band.contrastQuality;
-            proposal.targetBandStrength = source.band.targetBandStrength;
-            proposal.audioOverflowDuringProposal = source.magnitude.audioOverflowDuringOccurrence;
-            break;
-
         case detection::OccurrenceType::Scalar: {
             const detection::TransientEvidence transient = scalarTransientEvidenceFromOccurrence(source);
             proposal.startMs = source.startMs;
@@ -294,7 +277,6 @@ bool OccurrenceEvaluator::acceptOccurrence(const InspectedOccurrence& occurrence
 
     switch (occurrence.occurrence.occurrenceType) {
         case OccurrenceType::Scalar:
-        case OccurrenceType::Frequency:
             if (occurrence.occurrence.valid) {
                 const OccurrenceProposal proposal = makeProposalFromOccurrence(occurrence);
                 if (proposal.durationMs > 0 || proposal.peakStrength != 0.0f || proposal.onsetStrength != 0.0f) {

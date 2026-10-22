@@ -27,8 +27,6 @@ inline const char* verdictReasonName(VerdictReasonCode code) {
     switch (code) {
         case VerdictReasonCode::None:
             return "none";
-        case VerdictReasonCode::FromFrequencyMatch:
-            return "from_frequency_match";
         case VerdictReasonCode::FromOccurrence:
             return "from_occurrence";
         case VerdictReasonCode::DetectorRejected:

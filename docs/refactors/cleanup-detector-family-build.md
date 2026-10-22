@@ -1,6 +1,13 @@
 # Architecture Proposal — Detector Family Is a Build, Profile Is Config, Thresholds Are Params
 
-Status: proposal, decided in principle 2026-09-21, not yet implemented.
+Status: proposal, decided in principle 2026-09-21, not yet implemented. Deferred
+2026-10-22: FrequencyMatchDetector was removed (docs/decisions/2026-10-22-remove-
+frequencymatch.md), so Scalar is the only family and this waits until a second one
+is wanted (roadmap step 11). The rule this doc proposed now lives in one place,
+docs/specs/myspec.md 5.3, "Adding a detector family"; read that first. This doc
+stays as the design record and the worked MVP example. Its two-family examples
+(FrequencyMatch vs Scalar) are history, and its "setFrequencyMatchConfig in every
+build" constraint no longer applies.
 Supersedes: `docs/refactors/cleanup-detector-ownership.md` (the union-of-two-
 detectors proposal, deferred on measurement). This gets everything that
 proposal wanted, and more, without any of its lifetime risk.

@@ -145,7 +145,6 @@ void AnalyzerApp::configureSequenceDetection() {
     const detection::DetectionProfile& selectedProfile = effectiveSequenceProfile();
     _detection.resetState();
     _detection.setVerdictQueueEnabled(false);
-    _detection.setFrequencyMatchConfig(selectedProfile.frequencyMatch);
     _detection.setScalarTransientConfig(selectedProfile.scalarTransient);
     _detection.setDetectorSelection(selectedProfile.detectorSelection);
     _detection.setInspectionPlan(selectedProfile.inspectionPlan);
@@ -332,12 +331,6 @@ void AnalyzerApp::startSequenceTest(const PendingSequenceStart& pending) {
         serialOut().print(detection::detectorSelectionName(selectedProfile.detectorSelection));
         serialOut().print(" detector=");
         serialOut().print(detection::detectorSelectionName(selectedProfile.detectorSelection));
-        serialOut().print(" freq_min_duration_ms=");
-        serialOut().print(selectedProfile.frequencyMatch.minDurationMs);
-        serialOut().print(" freq_release_debounce_ms=");
-        serialOut().print(selectedProfile.frequencyMatch.releaseDebounceMs);
-        serialOut().print(" freq_cooldown_ms=");
-        serialOut().print(selectedProfile.frequencyMatch.cooldownAfterReleaseMs);
         //PARAM TUNING TEMPORARY
         serialOut().print(" scalar_observed_stream=");
         serialOut().print(scalarObservedStreamDisplayName(selectedProfile.scalarTransient.observedStream));
@@ -837,9 +830,8 @@ void AnalyzerApp::updateCleanSequenceSummary(const AnalyzerReport& report) {
     summary.profileName = activeAnalyzerProfileName();
     if (summary.detectorId == detection::DetectorId::Unknown) {
         const detection::DetectionProfile& selectedProfile = detection::detectionProfileForKind(_sequenceTest.profileKind);
-        summary.detectorId = selectedProfile.detectorSelection == detection::DetectorSelection::ScalarTransient
-            ? detection::DetectorId::ScalarTransient
-            : detection::DetectorId::FrequencyMatch;
+        (void)selectedProfile;  // one family: the scalar detector
+        summary.detectorId = detection::DetectorId::ScalarTransient;
         if (report.detectorReport != nullptr && report.detectorReport->detectorId != detection::DetectorId::Unknown) {
             summary.detectorId = report.detectorReport->detectorId;
         }

@@ -37,10 +37,6 @@ Host: `pio test -e native-test-behavior` (no src build; this file pulls the chai
 #include "../../src/detection/DetectionRuntime.cpp"
 #include "../../src/detection/detectors/DetectorNames.cpp"
 #include "../../src/detection/detectors/DetectorReportPrinter.cpp"
-#include "../../src/detection/detectors/frequency/FrequencyMatchDetector.cpp"
-#include "../../src/detection/detectors/frequency/FrequencyMatchOccurrence.cpp"
-#include "../../src/detection/detectors/frequency/FrequencyMatchPrinter.cpp"
-#include "../../src/detection/detectors/frequency/FrequencyMatchReport.cpp"
 #include "../../src/detection/detectors/scalar/ScalarTransientDetector.cpp"
 #include "../../src/detection/detectors/scalar/ScalarTransientOccurrence.cpp"
 #include "../../src/detection/detectors/scalar/ScalarTransientPrinter.cpp"
@@ -136,7 +132,6 @@ Outcome replay(const Fixture& fx, Band band, unsigned long skipMs = 0) {
     const detection::DetectionProfile& profile = *profileOwner;
     gRuntime.resetState();
     gRuntime.setDetectorSelection(profile.detectorSelection);
-    gRuntime.setFrequencyMatchConfig(profile.frequencyMatch);
     gRuntime.setScalarTransientConfig(profile.scalarTransient);
     gRuntime.setInspectionPlan(profile.inspectionPlan);
     gRuntime.setFieldStateConfig(profile.fieldStateConfig);

@@ -14,7 +14,6 @@ enum class VerdictType {
 
 enum class VerdictReasonCode {
     None,
-    FromFrequencyMatch,
     FromOccurrence,
     DetectorRejected,
     AmbiguousEvidence,

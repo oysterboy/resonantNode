@@ -67,8 +67,6 @@ float sequenceSampleDumpInputValue(detection::DetectorSelection detectorSelectio
                                    const AudioSamplePacket& audioSamplePacket,
                                    const detection::FrequencyBandMeasurementPacket& frequencyEvidence) {
     switch (detectorSelection) {
-        case detection::DetectorSelection::FrequencyMatch:
-            return frequencyEvidence.targetBandValue;
         case detection::DetectorSelection::ScalarTransient:
             switch (observedStream) {
                 case detection::FeatureStreamId::AmpMagnitude:
@@ -556,21 +554,12 @@ AnalyzerApp::AnalyzerApp(int inputPin)
       _audioSignal(_audioSource),
       _freqBandStream() {
     //PARAM TUNING TEMPORARY
-    const detection::DetectionProfile& freqProfile = detection::detectionProfileForKind(detection::DetectionProfileKind::TonalPulseFreq);
-    _analyzerTuning.frequencyMatch.attackScoreMin = freqProfile.frequencyMatch.attackScoreMin;
-    _analyzerTuning.frequencyMatch.releaseScoreMin = freqProfile.frequencyMatch.releaseScoreMin;
-    _analyzerTuning.frequencyMatch.attackContrastMin = freqProfile.frequencyMatch.attackContrastMin;
-    _analyzerTuning.frequencyMatch.releaseContrastMin = freqProfile.frequencyMatch.releaseContrastMin;
     _analyzerTuning.scalarTransient = detection::detectionProfileForKind(detection::DetectionProfileKind::TonalPulseScalar).scalarTransient;
 }
 
 detection::DetectionProfile const& AnalyzerApp::effectiveSequenceProfile() const {
     //PARAM TUNING TEMPORARY
     _sequenceProfileScratch = detection::detectionProfileForKind(_sequenceTest.profileKind);
-    _sequenceProfileScratch.frequencyMatch.attackScoreMin = _analyzerTuning.frequencyMatch.attackScoreMin;
-    _sequenceProfileScratch.frequencyMatch.releaseScoreMin = _analyzerTuning.frequencyMatch.releaseScoreMin;
-    _sequenceProfileScratch.frequencyMatch.attackContrastMin = _analyzerTuning.frequencyMatch.attackContrastMin;
-    _sequenceProfileScratch.frequencyMatch.releaseContrastMin = _analyzerTuning.frequencyMatch.releaseContrastMin;
     if (_sequenceTest.profileKind == detection::DetectionProfileKind::TonalPulseScalar) {
         _sequenceProfileScratch.scalarTransient = _analyzerTuning.scalarTransient;
     }
@@ -610,7 +599,7 @@ void AnalyzerApp::begin() {
     _controlClaimAtMs = timebase::nowMs() + 500UL;
 
     serialOut().println("EVT analyzer_ready");
-    serialOut().println("EVT analyzer_help type='HELP', 'PARAM freqScore=18000 freqContrast=50.0 freqReleaseScore=12000 freqReleaseContrast=50.0', 'PARAM STATUS', 'RAW trigger f=3200 dur=100 post=1000 [pre=MS] mode=feat|pcm|i2s|both [pulses=N gap=MS hop=F1,F2,...]', 'SEQ MODE quiet|trial|inspect|source|system|detail WHEN off|miss|all VERBOSE 0|1|2 STATUS REPORT', 'DET PROFILE TonalPulseFreq|TonalPulseScalar|AmpExperimental'");
+    serialOut().println("EVT analyzer_help type='HELP', 'PARAM scalar_onset_threshold=2000 scalar_min_duration_ms=85', 'PARAM STATUS', 'RAW trigger f=3200 dur=100 post=1000 [pre=MS] mode=feat|pcm|i2s|both [pulses=N gap=MS hop=F1,F2,...]', 'SEQ MODE quiet|trial|inspect|source|system|detail WHEN off|miss|all VERBOSE 0|1|2 STATUS REPORT', 'DET PROFILE TonalPulseScalar|AmpExperimental'");
 }
 
 void AnalyzerApp::configureParameters() {
@@ -856,10 +845,8 @@ const char* analyzerProfileDetailNamespace(detection::DetectionProfileKind profi
         case detection::DetectionProfileKind::AmpExperimental:
             return "amp_experimental";
         case detection::DetectionProfileKind::TonalPulseScalar:
-            return "tonal_pulse_scalar";
-        case detection::DetectionProfileKind::TonalPulseFreq:
         default:
-            return "tonal_pulse_freq";
+            return "tonal_pulse_scalar";
     }
 }
 
@@ -868,10 +855,8 @@ const char* analyzerProfileDetailSummary(detection::DetectionProfileKind profile
         case detection::DetectionProfileKind::AmpExperimental:
             return "amp experimental profile view";
         case detection::DetectionProfileKind::TonalPulseScalar:
-            return "tonal pulse scalar profile view";
-        case detection::DetectionProfileKind::TonalPulseFreq:
         default:
-            return "tonal pulse freq profile view";
+            return "tonal pulse scalar profile view";
     }
 }
 
@@ -1068,9 +1053,7 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
         report.occurrences.primaryDtMs = selectedTrial.dtMs;
         report.occurrences.primaryDurationMs = selectedTrial.durationMs;
         report.occurrences.primaryStrength = selectedTrial.strength;
-        report.occurrences.contrast = occurrence.occurrenceType == detection::OccurrenceType::Frequency
-            ? occurrence.band.contrast
-            : 0.0f;
+        report.occurrences.contrast = 0.0f;  // was the Freq occurrence's band contrast; 0 for scalar occurrences
         report.occurrences.strength = selectedTrial.strength;
         report.occurrences.confidence = hasVerdict ? reportVerdict->confidence : occurrence.confidence;
         report.occurrences.mainRejectReason = reportInspectedOccurrence->decision == detection::OccurrenceDecision::Rejected
@@ -1163,17 +1146,6 @@ void AnalyzerApp::buildSequenceAnalyzerReport(AnalyzerReport& report,
     report.profileDetail.inspectionPlan = detection::inspectionPlanName(selectedProfile.inspectionPlan);
     report.profileDetail.inspectionModules = detection::inspectionModulesName(selectedProfile.inspectionPlan);
     report.profileDetail.inspectionModuleCount = selectedProfile.inspectionPlan.count;
-    if (report.occurrences.present &&
-        reportInspectedOccurrence != nullptr &&
-        reportInspectedOccurrence->occurrence.occurrenceType == detection::OccurrenceType::Frequency) {
-        report.profileDetail.supportScore = reportInspectedOccurrence->occurrence.band.score;
-        report.profileDetail.supportContrast = reportInspectedOccurrence->occurrence.band.contrast;
-    } else {
-        report.profileDetail.supportScore = 0.0f;
-        report.profileDetail.supportContrast = 0.0f;
-    }
-    report.profileDetail.supportScoreMin = selectedProfile.frequencyMatch.attackScoreMin;
-    report.profileDetail.supportContrastMin = selectedProfile.frequencyMatch.attackContrastMin;
     report.profileDetail.ampCenteredMagnitude = report.occurrences.primaryStrength;
     report.profileDetail.ampLevel = report.profileDetail.ampCenteredMagnitude;
     report.profileDetail.ampBase = diagnostics.acceptedAmbientBaseline;

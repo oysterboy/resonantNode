@@ -554,7 +554,7 @@ $lockInfo = Open-CampaignLock -Path $lockPath -StatePath $statePath -BatchRootVa
         $line = Try-ReadLine -Port $port
         if ($null -ne $line) {
             Append-TextLine -Path $sessionPath -Line $line
-            if ($line -match '^PARAM\b' -and $line -match 'freqScore=') {
+            if ($line -match '^PARAM\b' -and $line -match 'scalar_onset_threshold=') {
                 $initialAppliedTune = Get-ScalarTuneLine -StatusLine $line
                 $currentTuneCommand = $initialAppliedTune
             }
@@ -594,7 +594,7 @@ $lockInfo = Open-CampaignLock -Path $lockPath -StatePath $statePath -BatchRootVa
             Append-TextLine -Path $sessionPath -Line $line
             if ($line.Length -gt 0) {
                 $blockSummaries[$resumeTuneBlockName].Add($line)
-                if ($line -match '^PARAM\b' -and $line -match 'freqScore=') {
+                if ($line -match '^PARAM\b' -and $line -match 'scalar_onset_threshold=') {
                     $currentTuneCommand = Get-ScalarTuneLine -StatusLine $line
                 }
             }
@@ -612,7 +612,7 @@ $lockInfo = Open-CampaignLock -Path $lockPath -StatePath $statePath -BatchRootVa
             Append-TextLine -Path $sessionPath -Line $line
             if ($line.Length -gt 0) {
                 $blockSummaries[$resumeTuneBlockName].Add($line)
-                if ($line -match '^PARAM\b' -and $line -match 'freqScore=') {
+                if ($line -match '^PARAM\b' -and $line -match 'scalar_onset_threshold=') {
                     $currentTuneCommand = Get-ScalarTuneLine -StatusLine $line
                 }
             }
@@ -645,7 +645,7 @@ $lockInfo = Open-CampaignLock -Path $lockPath -StatePath $statePath -BatchRootVa
                     Append-TextLine -Path $sessionPath -Line $line
                     if ($line.Length -gt 0) {
                         $blockSummaries[$blockName].Add($line)
-                        if ($line -match '^PARAM\b' -and $line -match 'freqScore=') {
+                        if ($line -match '^PARAM\b' -and $line -match 'scalar_onset_threshold=') {
                             $currentTuneCommand = Get-ScalarTuneLine -StatusLine $line
                         }
                     }
@@ -664,7 +664,7 @@ $lockInfo = Open-CampaignLock -Path $lockPath -StatePath $statePath -BatchRootVa
                 Append-TextLine -Path $sessionPath -Line $line
                 if ($line.Length -gt 0) {
                     $blockSummaries[$blockName].Add($line)
-                    if ($line -match '^PARAM\b' -and $line -match 'freqScore=') {
+                    if ($line -match '^PARAM\b' -and $line -match 'scalar_onset_threshold=') {
                         $currentTuneCommand = Get-ScalarTuneLine -StatusLine $line
                     }
                 }

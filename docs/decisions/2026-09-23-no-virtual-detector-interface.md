@@ -1,7 +1,10 @@
 # Detector family is a build flag; no virtual interface for detectors or DetectionRuntime
 
 Status: decided in principle, not yet implemented (step 9 of
-`roadmap-0-steps.md`, issue #12).
+`roadmap-0-steps.md`, issue #12; deferred to step 11 on 2026-10-22, when
+FrequencyMatch was removed and Scalar became the only family). The rule
+itself lives in docs/specs/myspec.md 5.3, "Adding a detector family"; this
+file keeps the why.
 Date: 2026-09-21 (family as build flag), 2026-09-23 (no virtual interface).
 
 ## Decision

@@ -3,12 +3,11 @@
 #include <stddef.h>
 
 // Keep the canonical detector-report contract compiled through the active
-// runtime header chain. DetectionRuntime snapshots scalar and frequency
-// detector reports for analyzer/report consumers.
+// runtime header chain. DetectionRuntime snapshots the scalar detector's
+// reports for analyzer/report consumers.
 #include "detectors/DetectorReport.h"
 #include "../audio/AudioSignal.h"
 #include "DetectionProfile.h"
-#include "detectors/frequency/FrequencyMatchDetector.h"
 #include "detectors/scalar/ScalarTransientDetector.h"
 #include "inspection/OccurrenceInspector.h"
 #include "inspection/InspectorTypes.h"
@@ -20,7 +19,6 @@
 #include "field/FieldState.h"
 #include "features/FeatureExtractor.h"
 #include "features/FeatureHistory.h"
-#include "detectors/frequency/FrequencyMatchCriteria.h"
 
 namespace detection {
 
@@ -135,7 +133,6 @@ public:
     void resetDetectors();
     void resetDetectionState();
 
-    void setFrequencyMatchConfig(const FrequencyMatchConfig& config);
     void setScalarTransientConfig(const ScalarTransientConfig& config);
     void setDetectorSelection(DetectorSelection selection);
     void setInspectionPlan(const InspectionPlan& plan);
@@ -188,7 +185,6 @@ public:
     uint32_t verdictEventDroppedCount() const;
     EvaluatorInputRejectReason latestEvaluatorInputRejectReason() const;
     uint32_t scalarReportGeneration() const;
-    uint32_t frequencyReportGeneration() const;
     // Generic report access is the canonical upward path.
     const DetectorReport& activeDetectorReport() const;
     const OccurrenceEvaluatorReport& activeEvaluatorReport() const;
@@ -242,10 +238,9 @@ private:
     void resetDetectionBookkeeping();
 #endif
 
-    FrequencyMatchConfig _frequencyMatchConfig = {};
     ScalarTransientConfig _scalarTransientConfig = {};
     // Profile configuration applied at fixed runtime stages.
-    DetectorSelection _detectorSelection = DetectorSelection::FrequencyMatch;
+    DetectorSelection _detectorSelection = DetectorSelection::ScalarTransient;
     InspectionPlan _inspectionPlan = {};
     // Written by the core setProfileName() Node calls; read only by the
     // Analyzer-only capturePipelineResult() below. Kept as a plain core
@@ -254,7 +249,6 @@ private:
     // split targets.
     const char* _profileName = "unknown";
 
-    FrequencyMatchDetector _frequencyDetector;
     ScalarTransientDetector _scalarDetector;
     OccurrenceInspector _occurrenceInspector;
     OccurrenceEvaluator _occurrenceEvaluator;
@@ -273,7 +267,6 @@ private:
     bool _hasLatestPipelineResult = false;
     DetectorReport _detectorReport = {};
     uint32_t _lastObservedScalarReportGeneration = 0;
-    uint32_t _lastObservedFrequencyReportGeneration = 0;
     unsigned long _pipelineEventOverflowCount = 0;
     unsigned long _detectorReportMismatchCount = 0;
     HistoryIncompleteSnapshot _historyIncomplete = {};

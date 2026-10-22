@@ -339,7 +339,6 @@ Result replay(const Capture& cap, const Options& opt, const detection::Detection
 
     runtime.resetState();
     runtime.setDetectorSelection(profile.detectorSelection);
-    runtime.setFrequencyMatchConfig(profile.frequencyMatch);
     runtime.setScalarTransientConfig(profile.scalarTransient);
     runtime.setInspectionPlan(profile.inspectionPlan);
     runtime.setFieldStateConfig(profile.fieldStateConfig);

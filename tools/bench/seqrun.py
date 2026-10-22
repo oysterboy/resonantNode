@@ -9,7 +9,7 @@ Example:
   python tools/bench/seqrun.py --port COM6 \
     --session bench/sessions/2026-10-08-issue7-40cm \
     --purpose "issue #7 T2/T3 baseline" --distance-cm 40 \
-    --run T2_freq "SEQ start profile=TonalPulseFreq tries=50 mode=detail when=all verbose=1"
+    --run T2_scalar "SEQ start profile=TonalPulseScalar tries=50 mode=detail when=all verbose=1"
 
 Setup flags are only needed the first time a session is created; later
 invocations into the same folder reuse them. Change the physical setup ->

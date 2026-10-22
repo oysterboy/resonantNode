@@ -185,7 +185,7 @@ private:
     uint32_t _reportGeneration = 0;
     uint32_t _selectedRejectGeneration = 0;
     // Run-long counts at the last per-trial reset: the report's aggregates
-    // are per trial like FrequencyMatch's, while the counts themselves stay
+    // are per trial, while the counts themselves stay
     // run-long for the success-rate printout (issue #31 R2-14).
     unsigned long _trialAcceptedCountBase = 0;
     unsigned long _trialRejectedCountBase = 0;

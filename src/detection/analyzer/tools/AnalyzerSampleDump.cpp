@@ -11,8 +11,6 @@ namespace {
 
 const char* detectorInputName(detection::DetectorSelection selection, detection::FeatureStreamId stream) {
     switch (selection) {
-        case detection::DetectorSelection::FrequencyMatch:
-            return "frequency_power";
         case detection::DetectorSelection::ScalarTransient:
             return detection::featureStreamName(stream);
     }
@@ -41,7 +39,7 @@ void AnalyzerApp::clearSequenceSampleDump() {
     _sequenceTest.sampleDumpCaptureStartMs = 0;
     _sequenceTest.sampleDumpCaptureEndMs = 0;
     _sequenceTest.sampleDumpNextEmitMs = 0;
-    _sequenceTest.sampleDumpDetectorSelection = detection::DetectorSelection::FrequencyMatch;
+    _sequenceTest.sampleDumpDetectorSelection = detection::DetectorSelection::ScalarTransient;
     _sequenceTest.sampleDumpObservedStream = detection::FeatureStreamId::Unknown;
     _sequenceTest.sampleRowCount = 0;
     _sequenceTest.sampleHistoryStart = 0;

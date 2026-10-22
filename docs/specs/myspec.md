@@ -208,11 +208,11 @@ output execution
 
 ### Detector cores
 
-Current canonical detector cores:
+Current canonical detector core (the one family since 2026-10-22, when
+FrequencyMatchDetector was removed; see 5.3, "Adding a detector family"):
 
 ```text
 ScalarTransientDetector
-FrequencyMatchDetector
 ```
 
 Detector owns:
@@ -318,46 +318,18 @@ If remnants of old source-wrapper naming remain in code, they are compatibility/
 Current important profiles:
 
 ```text
-TonalPulseFreq
 TonalPulseScalar
 AmpExperimental
 ```
 
-#### TonalPulseFreq
-
-Stable profile, kept as a demonstration of a second detector and a comparison point; not the Node's profile (decision 2026-10-14).
-
-Current meaning:
-
-```text
-detect a short tonal pulse-like event
-detector = FrequencyMatchDetector
-support evidence is inspected as required/meaningful support
-OccurrenceVerdict.valid is the behavior/analyzer gate
-```
-
-Current conceptual composition:
-
-```text
-FrequencyMatchDetector
-InspectionPlan:
-    ScalarFeatureStrength over AmpEnvelope
-    target = SupportStrength
-OccurrenceEvaluatorConfig:
-    support requirement configured for SupportStrength
-FieldStateConfig:
-    tuned occurrence/pattern windows
-```
-
 #### TonalPulseScalar
 
-Experimental/proof comparison path.
+The Node's production profile (decisions/2026-10-14-node-ships-tonalpulsescalar.md).
 
 Current meaning:
 
 ```text
 use ScalarTransientDetector over a scalar feature stream
-compare scalar-first detection against specialized FrequencyMatch behavior
 ```
 
 Possible observed stream examples:
@@ -529,7 +501,7 @@ This is allowed:
 
 ```text
 ScalarTransientDetector::update(scalar feature sample)
-FrequencyMatchDetector::update(frequency measurement/frame)
+a future family's update(its own input), e.g. a frequency measurement/frame
 ```
 
 Detector thresholds consume the normalized feature-domain values directly. They
@@ -580,15 +552,69 @@ FrequencyContrast
 Used by scalar experimental / proof profiles.
 Used by `TonalPulseScalar` and `AmpExperimental`.
 
-#### FrequencyMatchDetector
+#### Adding a detector family
 
-Canonical specialized frequency detector core.
+This is the one place the rule lives. The why is in
+docs/decisions/2026-09-23-no-virtual-detector-interface.md; the original
+design and its worked example (an MVP threshold detector) are in
+docs/refactors/cleanup-detector-family-build.md, which predates the
+FrequencyMatch removal.
 
-Owns frequency-match candidate lifecycle and accepted frequency Occurrence emission.
+Since 2026-10-22 there is one family, ScalarTransientDetector
+(docs/decisions/2026-10-22-remove-frequencymatch.md). A second detector,
+including a returning frequency detector, joins as a family on these terms:
 
-Used by `TonalPulseFreq`.
+```text
+Boundary
+  Owns its candidate lifecycle; emits accepted Occurrences and one
+  DetectorReport (5.3-5.5). Reads normalized feature values (Strength16,
+  FrequencyScore16, contrast; section 5.2) and never rescales them.
+  Decides nothing about patterns, verdicts or behavior.
 
-FrequencyMatch remains specialized because its score/contrast/lifecycle behavior is useful and should not be forced into scalar abstraction prematurely.
+One family per binary, no virtual base
+  A build flag picks the family (DETECTOR_FAMILY_<NAME>). It is read in
+  exactly one header, src/detection/DetectionFamily.h, which defines:
+    using ActiveDetector = <Family>Detector;
+    using ActiveDetectorConfig = <Family>Config;
+    constexpr DetectorSelection kCompiledFamily = ...;
+    constexpr size_t kFamilyMaxActiveStreams = ...;
+  DetectionRuntime holds `ActiveDetector _detector` and has no #if.
+  build_src_filter excludes the other families' detectors/<family>/ dirs.
+  Each family gets its own Node and Analyzer env.
+
+Compile-time interface (static_assert in DetectionFamily.h)
+  core:        resetState(), hasPendingOccurrence(), popOccurrence(Occurrence&)
+  diagnostics: latestReport(), reportGeneration(), setDiagnosticsEnabled(bool)
+  Three shims, bodies in the family's branch of DetectionFamily.h:
+    bool updateActiveDetector(ActiveDetector&, const AudioSamplePacket&,
+        const FrequencyBandMeasurementPacket&, const ActiveDetectorConfig&,
+        unsigned long nowMs);      // true if the frame was consumed
+    void applyActiveDetectorConfig(ActiveDetector&, const ActiveDetectorConfig&);
+    void resetActiveDetectorRejectSummaries(ActiveDetector&);
+  update() itself stays family-specific; it is not forced into one signature.
+
+Profiles and params
+  A profile names its family in detectorSelection. Every build compiles
+  every profile factory; setDetectorSelection() refuses a profile whose
+  family is not kCompiledFamily, before anything else is applied.
+  Thresholds are live params in the ParamRegistry (detection.<family>_*),
+  never a family-specific console command (RB PARAM was retired with
+  FrequencyMatch).
+
+Vocabulary
+  Its own DetectorId and OccurrenceType value (DetectionCoreTypes.h) and its
+  own DetectorReport detail namespace (DetectorReport.h). Evidence-domain
+  names (FrequencyBandMeasurementPacket, the band occurrence detail,
+  NoFrequencyEvidence) are shared, not per family.
+
+Evidence before it ships
+  The host replay suite (test_replay_corpus) and test_shipped_profile run on
+  it, host and board; an Analyzer T3 against the current bench baseline; a
+  docs/decisions/ file if it is to replace or join Scalar on the Node.
+```
+
+The removed FrequencyMatch implementation is in git history: the parent of
+the step 7d removal commit.
 
 ---
 

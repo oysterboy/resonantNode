@@ -322,10 +322,6 @@ struct AnalyzerProfileDetail {
     detection::InspectionTarget inspectionObservationTargets[detection::kMaxInspectionModules] = {};
     detection::MagnitudeInspectionObservation inspectionObservations[detection::kMaxInspectionModules] = {};
 
-    float supportScore = 0.0f;
-    float supportContrast = 0.0f;
-    float supportScoreMin = 0.0f;
-    float supportContrastMin = 0.0f;
 
     float ampCenteredMagnitude = 0.0f;
     float ampLevel = 0.0f;

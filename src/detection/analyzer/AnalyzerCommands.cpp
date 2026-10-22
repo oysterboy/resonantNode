@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "../../app/SerialOut.h"
+#include "../../app/TextParse.h"
 
 bool waitForEmitterAck(const char* expectedPrefix, unsigned long timeoutMs);
 
@@ -130,10 +131,10 @@ bool parseScalarTransientToken(const char* token, detection::ScalarTransientConf
         return false;
     }
     if (startsWithTokenIgnoreCase(token, "scalar_onset_threshold=") || startsWithTokenIgnoreCase(token, "scalarOnsetThreshold=")) {
-        return FrequencyMatchCriteria::parseFiniteFloat(tokenValue(token), config.onsetDetectionThreshold);
+        return text_parse::parseFiniteFloat(tokenValue(token), config.onsetDetectionThreshold);
     }
     if (startsWithTokenIgnoreCase(token, "scalar_release_threshold=") || startsWithTokenIgnoreCase(token, "scalarReleaseThreshold=")) {
-        return FrequencyMatchCriteria::parseFiniteFloat(tokenValue(token), config.onsetReleaseThreshold);
+        return text_parse::parseFiniteFloat(tokenValue(token), config.onsetReleaseThreshold);
     }
     if (startsWithTokenIgnoreCase(token, "scalar_cooldown_ms=") || startsWithTokenIgnoreCase(token, "scalarCooldownMs=")) {
         return parseUnsignedValue(tokenValue(token), config.cooldownAfterOnsetMs);
@@ -145,7 +146,7 @@ bool parseScalarTransientToken(const char* token, detection::ScalarTransientConf
         return parseUnsignedValue(tokenValue(token), config.maxTransientDurationMs);
     }
     if (startsWithTokenIgnoreCase(token, "scalar_min_peak_strength=") || startsWithTokenIgnoreCase(token, "scalarMinPeakStrength=")) {
-        return FrequencyMatchCriteria::parseFiniteFloat(tokenValue(token), config.minTransientPeakStrength);
+        return text_parse::parseFiniteFloat(tokenValue(token), config.minTransientPeakStrength);
     }
     if (startsWithTokenIgnoreCase(token, "scalar_release_debounce_ms=") || startsWithTokenIgnoreCase(token, "scalarReleaseDebounceMs=")) {
         return parseUnsignedValue(tokenValue(token), config.releaseDebounceMs);
@@ -163,7 +164,7 @@ bool parseScalarTransientToken(const char* token, detection::ScalarTransientConf
         return valid;
     }
     if (startsWithTokenIgnoreCase(token, "scalar_min_strength=") || startsWithTokenIgnoreCase(token, "scalarMinStrength=")) {
-        return FrequencyMatchCriteria::parseFiniteFloat(tokenValue(token), config.minMatchedMeanStrength);
+        return text_parse::parseFiniteFloat(tokenValue(token), config.minMatchedMeanStrength);
     }
     if (startsWithTokenIgnoreCase(token, "scalar_min_release_coverage_ms=") || startsWithTokenIgnoreCase(token, "scalarMinReleaseCoverageMs=")) {
         return parseUnsignedValue(tokenValue(token), config.minCoverageAboveReleaseMs);
@@ -188,7 +189,7 @@ void AnalyzerApp::printSequenceHelp() {
     serialOut().println("SEQ IN: pulse train per trial (DET-011): start ... dur=PULSE_MS pulses=N gap=MS [ramp=MS] [hop=F1,F2,...]");
     serialOut().println("SEQ IN: sweep inside the chirp (OUT-005): start ... freq=START_HZ dur=MS sweep=END_HZ");
     serialOut().println("SEQ IN: TRIES N");
-    serialOut().println("SEQ IN: [profile=TonalPulseFreq|TonalPulseScalar|AmpExperimental]");
+    serialOut().println("SEQ IN: [profile=TonalPulseScalar|AmpExperimental]");
     serialOut().println("SEQ IN: MODE quiet|trial|inspect|source|system|detail");
     serialOut().println("SEQ IN: MODE quiet = no sequence output");
     serialOut().println("SEQ IN: MODE trial = trial verdict view");
@@ -196,7 +197,7 @@ void AnalyzerApp::printSequenceHelp() {
     serialOut().println("SEQ IN: MODE source = source wrapper, then SEQ_SOURCE_CORE and SEQ_SOURCE_SPEC");
     serialOut().println("SEQ IN: MODE inspect = canonical detector report inspect");
     serialOut().println("SEQ IN: MODE detail = canonical trial/source/inspect report");
-    serialOut().println("SEQ IN: PROFILE TonalPulseFreq|TonalPulseScalar|AmpExperimental");
+    serialOut().println("SEQ IN: PROFILE TonalPulseScalar|AmpExperimental");
     serialOut().println("SEQ IN: DIAG on|off");
     serialOut().println("SEQ IN: FREQBAND on|off");
     serialOut().println("SEQ IN: FREQUPDATEEVERYSAMPLES 1|4|8|16");
@@ -213,11 +214,10 @@ void AnalyzerApp::printSequenceHelp() {
     serialOut().println("SEQ OUT: SAMPLES_BEGIN / SAMPLES_NOTE / SAMPLES_END");
     serialOut().println("SEQ OUT: sample fields are t,value (value is the selected detector input stream)");
     serialOut().println("SEQ OBS: passive observe mode for an already-running external emitter");
-    serialOut().println("SEQ IN: PROFILE TonalPulseFreq|TonalPulseScalar|AmpExperimental");
-    serialOut().println("SEQ PROFILE TonalPulseFreq");
+    serialOut().println("SEQ IN: PROFILE TonalPulseScalar|AmpExperimental");
     serialOut().println("SEQ PROFILE TonalPulseScalar");
     serialOut().println("SEQ PROFILE AmpExperimental");
-    serialOut().println("SEQ PARAM: freqScore=18000 freqContrast=50.0 freqReleaseScore=12000 freqReleaseContrast=50.0 scalar_observed_stream=AmpEnvelope|FrequencyTarget scalar_onset_threshold=18000 scalar_release_threshold=12000 scalar_cooldown_ms=50 scalar_min_duration_ms=60 scalar_max_duration_ms=300 scalar_min_peak_strength=15000 scalar_release_debounce_ms=30 scalar_require_carrier_quality=0|1 scalar_require_min_strength=0|1 scalar_min_strength=0 scalar_min_release_coverage_ms=90 scalar_min_longest_island_ms=80 scalar_max_gap_ms=10");
+    serialOut().println("SEQ PARAM: scalar_observed_stream=AmpEnvelope|FrequencyTarget scalar_onset_threshold=18000 scalar_release_threshold=12000 scalar_cooldown_ms=50 scalar_min_duration_ms=60 scalar_max_duration_ms=300 scalar_min_peak_strength=15000 scalar_release_debounce_ms=30 scalar_require_carrier_quality=0|1 scalar_require_min_strength=0|1 scalar_min_strength=0 scalar_min_release_coverage_ms=90 scalar_min_longest_island_ms=80 scalar_max_gap_ms=10");
     serialOut().println("SEQ PARAM STATUS");
 }
 
@@ -245,7 +245,7 @@ void AnalyzerApp::pollUsbConsole() {
 
 void AnalyzerApp::handleUsbLine(const char* line) {
     if (equalsIgnoreCase(line, "HELP")) {
-        serialOut().println("CMD: PARAM freqScore=18000 freqContrast=50.0 freqReleaseScore=12000 freqReleaseContrast=50.0 scalar_observed_stream=AmpEnvelope|FrequencyTarget scalar_onset_threshold=18000 scalar_release_threshold=12000 scalar_cooldown_ms=50 scalar_min_duration_ms=60 scalar_max_duration_ms=300 scalar_min_peak_strength=15000 scalar_release_debounce_ms=30 scalar_require_carrier_quality=0|1 scalar_require_min_strength=0|1 scalar_min_strength=0 scalar_min_release_coverage_ms=90 scalar_min_longest_island_ms=80 scalar_max_gap_ms=10");
+        serialOut().println("CMD: PARAM scalar_observed_stream=AmpEnvelope|FrequencyTarget scalar_onset_threshold=18000 scalar_release_threshold=12000 scalar_cooldown_ms=50 scalar_min_duration_ms=60 scalar_max_duration_ms=300 scalar_min_peak_strength=15000 scalar_release_debounce_ms=30 scalar_require_carrier_quality=0|1 scalar_require_min_strength=0|1 scalar_min_strength=0 scalar_min_release_coverage_ms=90 scalar_min_longest_island_ms=80 scalar_max_gap_ms=10");
         serialOut().println("CMD: PARAM STATUS");
         serialOut().println("CMD: EMIT CHIRP freq=3200 dur=100");
         serialOut().println("CMD: EMIT MODE REMOTE");
@@ -277,34 +277,19 @@ void AnalyzerApp::handleUsbLine(const char* line) {
             return;
         }
 
-        FrequencyMatchCriteria::Values freqTuning = _analyzerTuning.frequencyMatch;
         detection::ScalarTransientConfig scalarTuning = _analyzerTuning.scalarTransient;
-        const FrequencyMatchCriteria::Values oldFreqTuning = freqTuning;
         const detection::ScalarTransientConfig oldScalarTuning = scalarTuning;
         bool printedAny = false;
 
         do {
-            const bool freqOk = FrequencyMatchCriteria::parseToken(token, freqTuning);
             const bool scalarOk = parseScalarTransientToken(token, scalarTuning);
-            if (!freqOk && !scalarOk) {
+            if (!scalarOk) {
                 serialOut().print("ERR PARAM token=");
                 serialOut().print(token);
                 serialOut().println(" (unknown key or invalid value; unchanged)");
             }
         } while ((token = strtok_r(nullptr, " ", &savePtr)) != nullptr);
 
-        if (freqTuning.attackScoreMin != oldFreqTuning.attackScoreMin) {
-            printParamField("freqScore", freqTuning.attackScoreMin, printedAny);
-        }
-        if (freqTuning.attackContrastMin != oldFreqTuning.attackContrastMin) {
-            printParamField("freqContrast", freqTuning.attackContrastMin, printedAny);
-        }
-        if (freqTuning.releaseScoreMin != oldFreqTuning.releaseScoreMin) {
-            printParamField("freqReleaseScore", freqTuning.releaseScoreMin, printedAny);
-        }
-        if (freqTuning.releaseContrastMin != oldFreqTuning.releaseContrastMin) {
-            printParamField("freqReleaseContrast", freqTuning.releaseContrastMin, printedAny);
-        }
         if (scalarTuning.observedStream != oldScalarTuning.observedStream) {
             printParamField("scalar_observed_stream", scalarTuning.observedStream, printedAny);
         }
@@ -348,7 +333,6 @@ void AnalyzerApp::handleUsbLine(const char* line) {
             printParamField("scalar_max_gap_ms", scalarTuning.maxGapMs, printedAny);
         }
 
-        _analyzerTuning.frequencyMatch = freqTuning;
         _analyzerTuning.scalarTransient = scalarTuning;
         if (printedAny) {
             serialOut().println();
@@ -575,13 +559,13 @@ void AnalyzerApp::handleUsbLine(const char* line) {
                 return;
             }
 
-            detection::DetectionProfileKind profileKind = detection::DetectionProfileKind::TonalPulseFreq;
+            detection::DetectionProfileKind profileKind = detection::DetectionProfileKind::TonalPulseScalar;
             const bool validProfile = detection::detectionProfileKindFromName(profileToken, profileKind);
 
             if (!validProfile) {
                 serialOut().print("ERR SEQ unknown profile=");
                 serialOut().print(profileToken);
-                serialOut().println(" use PROFILE TonalPulseFreq, PROFILE TonalPulseScalar or PROFILE AmpExperimental");
+                serialOut().println(" use PROFILE TonalPulseScalar or PROFILE AmpExperimental");
                 return;
             }
 
@@ -807,7 +791,7 @@ void AnalyzerApp::handleUsbLine(const char* line) {
                         profileValid = false;
                         serialOut().print("ERR SEQ unknown profile=");
                         serialOut().print(profileValue);
-                        serialOut().println(" use profile=TonalPulseFreq, profile=TonalPulseScalar or profile=AmpExperimental");
+                        serialOut().println(" use profile=TonalPulseScalar or profile=AmpExperimental");
                         return;
                     }
                 } else if (startsWithTokenIgnoreCase(token, "mode=")) {

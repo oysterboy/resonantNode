@@ -15,15 +15,15 @@ DetectionProfile
 
 Code-defined detection profile composition.
 Profiles select the active occurrence emitter, inspection rules, pattern rules,
-inspection config, field-state config, and frequency match tuning.
+inspection config and field-state config.
 
 Profiles declare composition; DetectionRuntime applies the selected fields at fixed stages.
 
 Common enum / selector types used in this file:
 
 ```text
-DetectionProfileKind { TonalPulseFreq, AmpExperimental, TonalPulseScalar }
-DetectorSelection { FrequencyMatch, ScalarTransient }
+DetectionProfileKind { AmpExperimental, TonalPulseScalar }
+DetectorSelection { ScalarTransient }
 FeatureStreamId { AmpEnvelope, FrequencyTarget, FrequencyContrast }
 StrengthClass { Unknown, None, Weak, Medium, Strong }
 InspectionModuleKind { None, MagnitudeFeatureStrength }
@@ -44,24 +44,14 @@ New profile checklist:
 - update SEQ help/parser if the analyzer should accept it
 - update RB help/parser and behavior mapping if the resonant node should accept it
 ---------------------------
-- if you add a new detector type, add it to `DetectorSelection` and `detectorSelectionName(...)`
+- a new detector family: docs/specs/myspec.md 5.3, "Adding a detector family"
+  (a build flag, not a new runtime `DetectorSelection` choice)
 */
 
 enum class DetectorSelection {
-    // Available detectors selected by profiles.
-    FrequencyMatch,
+    // The one detector family. FrequencyMatch was removed 2026-10-22
+    // (docs/decisions/2026-10-22-remove-frequencymatch.md).
     ScalarTransient,
-};
-
-struct FrequencyMatchConfig {
-    // Configuration and defaults.
-    unsigned long releaseDebounceMs = 30;
-    unsigned long cooldownAfterReleaseMs = 0;
-    unsigned long minDurationMs = 60;
-    float attackScoreMin = 18000.0f;
-    float releaseScoreMin = 12000.0f;
-    float attackContrastMin = 50.0f;
-    float releaseContrastMin = 50.0f;
 };
 
 struct ScalarTransientConfig {
@@ -84,7 +74,6 @@ struct ScalarTransientConfig {
 
 enum class DetectionProfileKind {
      // lists available Profiles
-    TonalPulseFreq,
     AmpExperimental,
     TonalPulseScalar,
 };
@@ -93,11 +82,10 @@ struct DetectionProfile {
     // Declaration and defaults
     
     // Identity and composition.
-    DetectionProfileKind kind = DetectionProfileKind::TonalPulseFreq;
-    DetectorSelection detectorSelection = DetectorSelection::FrequencyMatch;
+    DetectionProfileKind kind = DetectionProfileKind::TonalPulseScalar;
+    DetectorSelection detectorSelection = DetectorSelection::ScalarTransient;
 
     // Stage configuration.
-    FrequencyMatchConfig frequencyMatch = {};
     ScalarTransientConfig scalarTransient = {};
     InspectionPlan inspectionPlan = {};
     FieldStateConfig fieldStateConfig = {};
@@ -200,82 +188,6 @@ inline DetectionProfile makeTonalPulseScalarProfile() {
     return profile;
 }
 
-inline DetectionProfile makeTonalPulseFreqProfile() {
-    DetectionProfile profile;
-
-    // Identity and occurrence routing.
-    profile.kind = DetectionProfileKind::TonalPulseFreq;
-    profile.detectorSelection = DetectorSelection::FrequencyMatch;
-
-    // Frequency path tuning.
-    // Rescaled for D-AMP 2026-10-09 (#20 R3): 18000 / 12000 were never
-    // reached (FrequencyTarget peaks ~5000 at 110 cm, 0.3 FS). 1500-2500
-    // all gave detector 50/50 and 0 false positives in silent controls.
-    profile.frequencyMatch.attackScoreMin = 2500.0f;
-    profile.frequencyMatch.releaseScoreMin = 1800.0f;
-    profile.frequencyMatch.attackContrastMin = 50.0f;
-    profile.frequencyMatch.releaseContrastMin = 50.0f;
-    profile.frequencyMatch.minDurationMs = 60;
-    profile.frequencyMatch.releaseDebounceMs = 30;
-    profile.frequencyMatch.cooldownAfterReleaseMs = 0;
-  
-    // Inspector composition.
-
-    profile.inspectionPlan = InspectionPlan{};  // not "= {}": g++ 13 rejects a brace list on this aggregate (NODE-007)
-    profile.inspectionPlan.modules[0].kind = InspectionModuleKind::MagnitudeFeatureStrength;
-    profile.inspectionPlan.modules[0].target = InspectionTarget::Amp;
-    profile.inspectionPlan.modules[0].enabled = true;
-    profile.inspectionPlan.modules[0].minimumStrength = StrengthClass::Medium;
-    profile.inspectionPlan.modules[0].magnitude.anchor = MagnitudeInspectionAnchor::Peak;
-    profile.inspectionPlan.modules[0].magnitude.stream = FeatureStreamId::AmpEnvelope;
-    profile.inspectionPlan.modules[0].magnitude.mode = MagnitudeInspectionMode::PeakCentered;
-    profile.inspectionPlan.modules[0].magnitude.windowPreMs = 10;
-    profile.inspectionPlan.modules[0].magnitude.windowPostMs = 90;
-    profile.inspectionPlan.modules[0].magnitude.supportStrength.strongPeakThreshold = 4000.0f; // D-AMP rescale, #20 R3
-    profile.inspectionPlan.modules[0].magnitude.supportStrength.mediumPeakThreshold = 2500.0f;
-    profile.inspectionPlan.modules[0].magnitude.supportStrength.weakPeakThreshold = 1200.0f;
-
-    profile.inspectionPlan.modules[1].kind = InspectionModuleKind::MagnitudeFeatureStrength;
-    profile.inspectionPlan.modules[1].target = InspectionTarget::TargetScore;
-    profile.inspectionPlan.modules[1].enabled = true;
-    profile.inspectionPlan.modules[1].minimumStrength = StrengthClass::Medium;
-    profile.inspectionPlan.modules[1].magnitude.anchor = MagnitudeInspectionAnchor::Peak;
-    profile.inspectionPlan.modules[1].magnitude.stream = FeatureStreamId::FrequencyTarget;
-    profile.inspectionPlan.modules[1].magnitude.mode = MagnitudeInspectionMode::PeakCentered;
-    profile.inspectionPlan.modules[1].magnitude.windowPreMs = 10;
-    profile.inspectionPlan.modules[1].magnitude.windowPostMs = 90;
-    profile.inspectionPlan.modules[1].magnitude.supportStrength.strongPeakThreshold = 4000.0f; // D-AMP rescale, #20 R3
-    profile.inspectionPlan.modules[1].magnitude.supportStrength.mediumPeakThreshold = 2500.0f;
-    profile.inspectionPlan.modules[1].magnitude.supportStrength.weakPeakThreshold = 1200.0f;
-
-    profile.inspectionPlan.modules[2].kind = InspectionModuleKind::MagnitudeFeatureStrength;
-    profile.inspectionPlan.modules[2].target = InspectionTarget::Contrast;
-    profile.inspectionPlan.modules[2].enabled = true;
-    profile.inspectionPlan.modules[2].minimumStrength = StrengthClass::Medium;
-    profile.inspectionPlan.modules[2].magnitude.anchor = MagnitudeInspectionAnchor::Peak;
-    profile.inspectionPlan.modules[2].magnitude.stream = FeatureStreamId::FrequencyContrast;
-    profile.inspectionPlan.modules[2].magnitude.mode = MagnitudeInspectionMode::PeakCentered;
-    profile.inspectionPlan.modules[2].magnitude.windowPreMs = 10;
-    profile.inspectionPlan.modules[2].magnitude.windowPostMs = 90;
-    profile.inspectionPlan.modules[2].magnitude.supportStrength.strongPeakThreshold = 80.0f;
-    profile.inspectionPlan.modules[2].magnitude.supportStrength.mediumPeakThreshold = 50.0f;
-    profile.inspectionPlan.modules[2].magnitude.supportStrength.weakPeakThreshold = 25.0f;
-    profile.inspectionPlan.count = 3;
-
-    // Pattern rules.
-    profile.inspectionPlan.failedRequirementMeansUncertain = true;
-
-    // Field-state windowing.
-    profile.fieldStateConfig.occurrenceWindowMs = 3500;
-    profile.fieldStateConfig.patternWindowMs = 3500;
-    profile.fieldStateConfig.busyOccurrenceCountThreshold = 3;
-    profile.fieldStateConfig.denseOccurrenceCountThreshold = 6;
-    profile.fieldStateConfig.quietOccurrenceCountThreshold = 0;
-    profile.fieldStateConfig.quietActivityThreshold = 0.0f;
-    profile.fieldStateConfig.busyActivityThreshold = 0.4f;
-    return profile;
-}
-
 inline DetectionProfile makeAmpExperimentalProfile() {
     DetectionProfile profile;
 
@@ -358,7 +270,6 @@ inline DetectionProfile makeAmpExperimentalProfile() {
 
 // Profile lookup by kind.
 inline const DetectionProfile& detectionProfileForKind(DetectionProfileKind kind) {
-    static const DetectionProfile kTonalPulseFreq = makeTonalPulseFreqProfile();
     static const DetectionProfile kAmpExperimental = makeAmpExperimentalProfile();
     static const DetectionProfile kTonalPulseScalar = makeTonalPulseScalarProfile();
 
@@ -366,18 +277,14 @@ inline const DetectionProfile& detectionProfileForKind(DetectionProfileKind kind
         case DetectionProfileKind::AmpExperimental:
             return kAmpExperimental;
         case DetectionProfileKind::TonalPulseScalar:
-            return kTonalPulseScalar;
-        case DetectionProfileKind::TonalPulseFreq:
         default:
-            return kTonalPulseFreq;
+            return kTonalPulseScalar;
     }
 }
 
 // Human-readable names for profile kinds used in logs and help text.
 inline const char* detectionProfileName(DetectionProfileKind kind) {
     switch (kind) {
-        case DetectionProfileKind::TonalPulseFreq:
-            return "TonalPulseFreq";
         case DetectionProfileKind::AmpExperimental:
             return "AmpExperimental";
         case DetectionProfileKind::TonalPulseScalar:
@@ -389,8 +296,6 @@ inline const char* detectionProfileName(DetectionProfileKind kind) {
 // Human-readable names for profile-selected detector routing.
 inline const char* detectorSelectionName(DetectorSelection kind) {
     switch (kind) {
-        case DetectorSelection::FrequencyMatch:
-            return "FrequencyMatch";
         case DetectorSelection::ScalarTransient:
             return "ScalarTransient";
     }
@@ -403,10 +308,6 @@ inline bool detectionProfileKindFromName(const char* name, DetectionProfileKind&
         return false;
     }
 
-    if (strcasecmp(name, "tonalpulsefreq") == 0 || strcasecmp(name, "tonalpulse") == 0 || strcasecmp(name, "tonal_pulse") == 0) {
-        outKind = DetectionProfileKind::TonalPulseFreq;
-        return true;
-    }
     if (strcasecmp(name, "ampexperimental") == 0 || strcasecmp(name, "amp") == 0) {
         outKind = DetectionProfileKind::AmpExperimental;
         return true;

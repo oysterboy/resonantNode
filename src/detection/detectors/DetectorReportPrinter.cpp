@@ -3,7 +3,6 @@
 #include <Arduino.h>
 
 #include "DetectorNames.h"
-#include "frequency/FrequencyMatchPrinter.h"
 #include "scalar/ScalarTransientPrinter.h"
 #include "../../app/SerialOut.h"
 
@@ -158,9 +157,6 @@ void printDetectorDetailLine(const char* prefix, const DetectorReport* report) {
     switch (report->detectorId) {
         case DetectorId::ScalarTransient:
             scalar::printScalarTransientDetailLine(prefix, report);
-            break;
-        case DetectorId::FrequencyMatch:
-            frequency::printFrequencyMatchDetailLine(prefix, report);
             break;
         case DetectorId::Unknown:
         default:

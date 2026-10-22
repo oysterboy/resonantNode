@@ -1,4 +1,5 @@
 #include "DetectionRuntime.h"
+#include "../app/TimingUtils.h"
 
 #include <string.h>
 
@@ -55,6 +56,8 @@ void DetectionRuntime::resetState() {
 
 void DetectionRuntime::resetDetectors() {
     _scalarDetector.resetState();
+    _pendingInspectionReadIndex = 0;
+    _pendingInspectionCount = 0;
 }
 
 void DetectionRuntime::resetDetectionState() {
@@ -289,7 +292,7 @@ void IRAM_ATTR DetectionRuntime::observeFrame(
 #endif
     }
 
-    if (detectorInputProcessed || hasPendingDetectorOutput()) {
+    if (detectorInputProcessed || hasPendingDetectorOutput() || _pendingInspectionCount > 0) {
 #ifdef ANALYZER_MODE
         ++_detectorDrainCount;
 #endif
@@ -313,6 +316,10 @@ bool DetectionRuntime::popOccurrenceVerdict(OccurrenceVerdict& out) {
 
 unsigned long DetectionRuntime::verdictQueueOverflowCount() const {
     return _verdictQueueOverflowCount;
+}
+
+unsigned long DetectionRuntime::pendingInspectionOverflowCount() const {
+    return _pendingInspectionOverflowCount;
 }
 
 const FieldState& DetectionRuntime::fieldState() const {
@@ -415,50 +422,107 @@ void DetectionRuntime::drainDetectors(unsigned long nowMs) {
         if (occurrence.present && occurrence.valid) {
             ++_detectorValidOccurrencePoppedCount;
         }
-#endif
-        _fieldStateTracker.observeOccurrence(occurrence, nowMs);
-        const InspectedOccurrence inspected = _occurrenceInspector.inspectWithHistory(occurrence, &_featureHistory, nowMs);
-        _fieldStateTracker.observeInspectedOccurrence(inspected, nowMs);
-#ifdef ANALYZER_MODE
-        for (size_t i = 0; i < inspected.magnitudeObservationCount; ++i) {
-            const MagnitudeInspectionObservation& obs = inspected.magnitudeObservations[i];
-            if (obs.note != MagnitudeInspectionNote::HistoryWindowIncomplete) {
-                continue;
-            }
-            ++_historyIncomplete.count;
-            _historyIncomplete.stream = obs.stream;
-            _historyIncomplete.requestedStartMs = obs.requestedStartMs;
-            _historyIncomplete.requestedEndMs = obs.requestedEndMs;
-            _historyIncomplete.inspectionNowMs = obs.inspectionNowMs;
-            _historyIncomplete.ringOldestMs = _featureHistory.oldestBinTimeMs(obs.stream);
-            _historyIncomplete.ringNewestMs = _featureHistory.latestTimeMs(obs.stream);
-            _historyIncomplete.ringBins = _featureHistory.binCount(obs.stream);
-            _historyIncomplete.outOfOrderRecords = _featureHistory.outOfOrderRecordCount();
-            break;
-        }
         const DetectorReport& poppedReport = _scalarDetector.latestReport();
         if (poppedReport.detectorId != occurrence.detectorId || !poppedReport.accepted.present ||
             poppedReport.accepted.occurrenceId != occurrence.occurrenceId) {
             ++_detectorReportMismatchCount;
         }
 #endif
-        // The verdict is the last step of inspection (makeVerdict); FieldState,
-        // the verdict queue and the Analyzer's pipeline event all take it here,
-        // with the inspected occurrence and the detector report in scope.
-        OccurrenceVerdict verdict;
-        if (!makeVerdict(inspected, _inspectionPlan, verdict)) {
+        _fieldStateTracker.observeOccurrence(occurrence, nowMs);
+
+        // Step 8b item 1 (decisions/2026-10-22-inspect-when-window-complete.md):
+        // an occurrence whose inspection window ends after now waits until it
+        // has; one that is ready goes straight through, unless an earlier one is
+        // still waiting (order is kept).
+        const unsigned long readyAtMs = _occurrenceInspector.windowCompleteAtMs(occurrence);
+        const bool ready = !timing::after(readyAtMs, nowMs);
+        if (ready && _pendingInspectionCount == 0) {
+            inspectAndRender(occurrence, nowMs
+#ifdef ANALYZER_MODE
+                , _scalarDetector.latestReport()
+#endif
+            );
             continue;
         }
+        if (_pendingInspectionCount == kPendingInspectionCapacity) {
+            // Cannot happen on the shipped values (one occurrence per >= 85 ms,
+            // a wait of <= 15 ms); if it does, inspect the oldest now, early.
+            ++_pendingInspectionOverflowCount;
+            PendingInspection& oldest = _pendingInspections[_pendingInspectionReadIndex];
+            inspectAndRender(oldest.occurrence, nowMs
 #ifdef ANALYZER_MODE
-        ++_verdictProducedCount;
+                , oldest.detectorReport
 #endif
-        _fieldStateTracker.observeOccurrenceVerdict(verdict, nowMs);
-#ifdef ANALYZER_MODE
-        capturePipelineResult(verdict, inspected, _scalarDetector.latestReport(), nowMs);
-#endif
-        if (_verdictQueueEnabled) {
-            pushOccurrenceVerdict(verdict);
+            );
+            _pendingInspectionReadIndex = (_pendingInspectionReadIndex + 1) % kPendingInspectionCapacity;
+            --_pendingInspectionCount;
         }
+        PendingInspection& slot =
+            _pendingInspections[(_pendingInspectionReadIndex + _pendingInspectionCount) % kPendingInspectionCapacity];
+        slot.occurrence = occurrence;
+        slot.readyAtMs = readyAtMs;
+#ifdef ANALYZER_MODE
+        slot.detectorReport = _scalarDetector.latestReport();
+#endif
+        ++_pendingInspectionCount;
+    }
+
+    while (_pendingInspectionCount > 0) {
+        PendingInspection& next = _pendingInspections[_pendingInspectionReadIndex];
+        if (timing::after(next.readyAtMs, nowMs)) {
+            break;
+        }
+        inspectAndRender(next.occurrence, nowMs
+#ifdef ANALYZER_MODE
+            , next.detectorReport
+#endif
+        );
+        _pendingInspectionReadIndex = (_pendingInspectionReadIndex + 1) % kPendingInspectionCapacity;
+        --_pendingInspectionCount;
+    }
+}
+
+void DetectionRuntime::inspectAndRender(const Occurrence& occurrence, unsigned long nowMs
+#ifdef ANALYZER_MODE
+    , const DetectorReport& detectorReport
+#endif
+) {
+    const InspectedOccurrence inspected = _occurrenceInspector.inspectWithHistory(occurrence, &_featureHistory, nowMs);
+    _fieldStateTracker.observeInspectedOccurrence(inspected, nowMs);
+#ifdef ANALYZER_MODE
+    for (size_t i = 0; i < inspected.magnitudeObservationCount; ++i) {
+        const MagnitudeInspectionObservation& obs = inspected.magnitudeObservations[i];
+        if (obs.note != MagnitudeInspectionNote::HistoryWindowIncomplete) {
+            continue;
+        }
+        ++_historyIncomplete.count;
+        _historyIncomplete.stream = obs.stream;
+        _historyIncomplete.requestedStartMs = obs.requestedStartMs;
+        _historyIncomplete.requestedEndMs = obs.requestedEndMs;
+        _historyIncomplete.inspectionNowMs = obs.inspectionNowMs;
+        _historyIncomplete.ringOldestMs = _featureHistory.oldestBinTimeMs(obs.stream);
+        _historyIncomplete.ringNewestMs = _featureHistory.latestTimeMs(obs.stream);
+        _historyIncomplete.ringBins = _featureHistory.binCount(obs.stream);
+        _historyIncomplete.outOfOrderRecords = _featureHistory.outOfOrderRecordCount();
+        break;
+    }
+#endif
+    // The verdict is the last step of inspection (makeVerdict); FieldState,
+    // the verdict queue and the Analyzer's pipeline event all take it here,
+    // with the inspected occurrence and the detector report in scope.
+    OccurrenceVerdict verdict;
+    if (!makeVerdict(inspected, _inspectionPlan, verdict)) {
+        return;
+    }
+#ifdef ANALYZER_MODE
+    ++_verdictProducedCount;
+#endif
+    _fieldStateTracker.observeOccurrenceVerdict(verdict, nowMs);
+#ifdef ANALYZER_MODE
+    capturePipelineResult(verdict, inspected, detectorReport, nowMs);
+#endif
+    if (_verdictQueueEnabled) {
+        pushOccurrenceVerdict(verdict);
     }
 }
 

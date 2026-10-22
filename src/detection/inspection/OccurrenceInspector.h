@@ -28,6 +28,12 @@ public:
         unsigned long inspectionNowMs
     ) const;
 
+    // When the latest window the plan inspects for this occurrence ends (ms,
+    // the occurrence's time axis); 0 when the plan inspects no window. The
+    // runtime holds an occurrence until then (step 8b item 1,
+    // decisions/2026-10-22-inspect-when-window-complete.md).
+    unsigned long windowCompleteAtMs(const Occurrence& occurrence) const;
+
 private:
     void inspectAcceptedOccurrence(
         InspectedOccurrence& out,

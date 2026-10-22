@@ -142,6 +142,9 @@ public:
     // Verdicts dropped because the 4-slot queue was full (every build since
     // step 8b; the Node prints it in RB STATUS). Reset with the queues.
     unsigned long verdictQueueOverflowCount() const;
+    // Occurrences inspected early because the 2-slot wait queue was full
+    // (step 8b item 1; 0 on the shipped values).
+    unsigned long pendingInspectionOverflowCount() const;
 
     // Analyzer-only diagnostics surface below. None of this is called from
     // ResonantNodeApp or EmitterApp (confirmed by search); it exists to
@@ -201,6 +204,11 @@ private:
     // renders their verdicts (OccurrenceVerdict/FieldState), with
     // ANALYZER_MODE blocks around the diagnostics-only work in its loop body.
     void drainDetectors(unsigned long nowMs);
+    void inspectAndRender(const Occurrence& occurrence, unsigned long nowMs
+#ifdef ANALYZER_MODE
+        , const DetectorReport& detectorReport
+#endif
+    );
     bool pushOccurrenceVerdict(const OccurrenceVerdict& result);
     bool hasPendingDetectorOutput() const;
     void resetDetectionQueues();
@@ -239,6 +247,21 @@ private:
     size_t _resultCount = 0;
     bool _verdictQueueEnabled = true;
     unsigned long _verdictQueueOverflowCount = 0;
+
+    // Occurrences waiting for their inspection window to complete (step 8b
+    // item 1). The detector report is kept with each for the Analyzer event.
+    struct PendingInspection {
+        Occurrence occurrence = {};
+        unsigned long readyAtMs = 0;
+#ifdef ANALYZER_MODE
+        DetectorReport detectorReport = {};
+#endif
+    };
+    static constexpr size_t kPendingInspectionCapacity = 2;
+    PendingInspection _pendingInspections[kPendingInspectionCapacity] = {};
+    size_t _pendingInspectionReadIndex = 0;
+    size_t _pendingInspectionCount = 0;
+    unsigned long _pendingInspectionOverflowCount = 0;
 
 #ifdef ANALYZER_MODE
 

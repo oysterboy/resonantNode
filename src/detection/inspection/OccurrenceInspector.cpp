@@ -177,6 +177,24 @@ void OccurrenceInspector::configure(const InspectionPlan& plan) {
 void OccurrenceInspector::reset() {
 }
 
+unsigned long OccurrenceInspector::windowCompleteAtMs(const Occurrence& occurrence) const {
+    unsigned long latest = 0;
+    bool any = false;
+    const size_t count = _inspectionPlan.count > kMaxInspectionModules ? kMaxInspectionModules : _inspectionPlan.count;
+    for (size_t i = 0; i < count; ++i) {
+        const InspectionModuleConfig& module = _inspectionPlan.modules[i];
+        if (module.kind != InspectionModuleKind::MagnitudeFeatureStrength) {
+            continue;
+        }
+        const unsigned long endMs = anchorMsForOccurrence(occurrence, module.magnitude.anchor) + module.magnitude.windowPostMs;
+        if (!any || timing::after(endMs, latest)) {
+            latest = endMs;
+            any = true;
+        }
+    }
+    return latest;
+}
+
 void OccurrenceInspector::inspectAcceptedOccurrence(
     InspectedOccurrence& out,
     const Occurrence& occurrence,

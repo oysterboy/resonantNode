@@ -278,7 +278,6 @@ void Node::restoreAfterSelfTestHardware() {
     _freqBandStream.resetState();
     _freqBandStream.setSampleRateHz(_audioSource.sampleRateHz());
     _freqBandStream.setTargetFrequencyHz(_chirpOutput.toneHz());
-    _wasSelfChirpSuppressed = false;
 
     if (_rbBaselineState == RBBaselineState::Active || _rbBaselineState == RBBaselineState::Settle) {
         _rbBaselineState = RBBaselineState::Settle;

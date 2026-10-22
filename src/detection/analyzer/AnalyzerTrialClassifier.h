@@ -11,6 +11,10 @@ AnalyzerReason / AnalyzerStage values only.
 Detector-specific, occurrence-specific, and pattern-specific reject detail
 must stay on DetectorReport, Occurrence/InspectedOccurrence, and OccurrenceVerdict.
 */
+// A valid verdict this long after the trigger is Late, not Expected. One
+// definition since step 10 (it was a constant in three Analyzer files).
+constexpr long kAnalyzerLateOnsetMinMs = 200L;
+
 struct AnalyzerSequenceClassificationInput {
     // Generic trial result from Analyzer trial control flow.
     AnalyzerResult result = AnalyzerResult::Unknown;

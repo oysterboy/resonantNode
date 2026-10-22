@@ -362,8 +362,6 @@ void Node::begin() {
     _audioSignal.resetStats();
     _audioSource.resetStats();
     resetRbCounters();
-    _rbLastLoggedOnsetRejectCount = 0;
-    _rbLastLoggedTransientRejectCount = 0;
     _rbBaselineState = RBBaselineState::ListenForQuiet;
     _rbBaselineStateStartedMs = timebase::nowMs();
     _rbBaselineQuietSinceMs = 0;
@@ -434,9 +432,6 @@ void Node::resetDetectionState() {
     // to the profile defaults (issue #31). Profile switches and boot apply
     // both through applyActiveProfiles().
     applyActiveDetectionProfile();
-    _wasSelfChirpSuppressed = false;
-    _rbLastLoggedOnsetRejectCount = 0;
-    _rbLastLoggedTransientRejectCount = 0;
 }
 
 void Node::performRbRebase() {
@@ -452,8 +447,6 @@ void Node::performRbRebase() {
     _audioSignal.resetStats();
     _audioSource.resetStats();
     resetRbCounters();
-    _rbLastLoggedOnsetRejectCount = 0;
-    _rbLastLoggedTransientRejectCount = 0;
 }
 
 // --- baseline / startup ---
@@ -826,7 +819,6 @@ void Node::update() {
     const unsigned long now = timebase::nowMs();
     const unsigned long nowUs = timebase::nowUs();
     const bool selfChirpSuppressed = _behavior.behaviorSuppressed(now);
-    _wasSelfChirpSuppressed = selfChirpSuppressed;
 
     _debug.noteCoreLoopUs(nowUs);
     pollSerialCommands();
@@ -1071,7 +1063,7 @@ void Node::handleSerialLine(const char* line) {
         serialOut().println("RB CMD: RB rebase force");
         serialOut().println("RB CMD: RB CALL (play the node's network signal now; a kick for multi-node runs)");
         serialOut().println("RB CMD: RB log off|minimal|full");
-        serialOut().println("RB CMD: RB debug off|events|plot");
+        serialOut().println("RB CMD: RB debug off|events");
         serialOut().println("RB CMD: RB summary");
         serialOut().println("RB CMD: RB stop");
         serialOut().println("RB CMD: PARAM LIST");
@@ -1179,12 +1171,10 @@ void Node::handleDebugCommand(const char* line) {
         _debug.setDebugMode(NodeDebug::DebugMode::Off);
     } else if (equalsIgnoreCase(mode, "events")) {
         _debug.setDebugMode(NodeDebug::DebugMode::Events);
-    } else if (equalsIgnoreCase(mode, "plot")) {
-        _debug.setDebugMode(NodeDebug::DebugMode::Plot);
     } else {
         serialOut().print("RB debug mode=");
         serialOut().print(_debug.debugModeName());
-        serialOut().println(" (use off|events|plot)");
+        serialOut().println(" (use off|events)");
         return;
     }
 

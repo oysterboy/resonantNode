@@ -45,6 +45,16 @@ both profiles are param-bound.
 - 2026-10-22, item 8 (ANA-003): 9 member files moved to src/modes/analyzer/, 2 unused stub headers deleted,
   nextOccurrenceId split into detection/occurrences/OccurrenceIds.h, CI include check strict (0 hits). All envs
   build, host suites pass, T2h byte-identical, Analyzer SEQ on E2 10/10.
+- 2026-10-22, item 10: dead code removed. Node: the plot debug mode and its helpers, three unread members, a
+  never-defined declaration. Analyzer: unused duration constants, a never-defined declaration, the DET PROFILE
+  help entry, and kLateOnsetMinMs (three copies, now one kAnalyzerLateOnsetMinMs next to the classifier). Kept:
+  the two token-helper families (different semantics) and printDetectionParameters (not empty).
+  3d leftovers on E2 (bench/sessions/2026-10-22-step10-node-checks):
+  - A3: a 300-character line gives `RB ERR line_too_long max=255`.
+  - A4: a bare RB PROFILE reports the current profile.
+  - A1, partly observable: RB CALL, then RB rebase force 60 ms in. The node does not answer its own call; the
+    forced rebase goes straight to active (no settle window, so no HeardPattern in one); an E3 hop train ~1 s
+    later is heard and answered normally. Whether the call's sound was cut is not visible in the log.
 
 ## Standing checks (every commit)
 

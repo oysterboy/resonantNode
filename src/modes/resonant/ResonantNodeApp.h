@@ -92,7 +92,6 @@ private:
     detection::FrequencyBandMeasurementPacket captureFrequencyMeasurementPacket(const AudioSamplePacket& audioSamplePacket) const;
     void printRbSummary() const;
     void printRbSignalSummary() const;
-    void printRbDetectorSummary() const;
     void printRbBehaviorSummary() const;
 
     // SELFTEST (NODE-015, ResonantNodeSelfTest.cpp). The hardware checks
@@ -242,14 +241,11 @@ private:
     bool _rbHaveLastPendingMs = false;
     uint64_t _rbStrengthSumScaled = 0; // Strength16 * 100 per verdict; uint32 overflowed after ~1,300 (issue #31)
     unsigned long _rbDurationSumMs = 0;
-    unsigned long _rbLastLoggedOnsetRejectCount = 0;
-    unsigned long _rbLastLoggedTransientRejectCount = 0;
     RbLogMode _rbLogMode = RbLogMode::Minimal;
     detection::DetectionProfileKind _profileKind = detection::DetectionProfileKind::TonalPulseScalar;
     BehaviorGateConfig _activeBehaviorProfile = {};  // the behavior.* params bind into it (step 10 item 4)
     float _contrastMediumThreshold = 0.0f;  // detection.contrast_medium (step 10 item 7)
     float _ampMediumThreshold = 0.0f;       // detection.amp_medium
-    bool _wasSelfChirpSuppressed = false;
     // When the last own chirp stopped; SELFTEST Settle waits out its echo.
     unsigned long _lastOwnChirpEndMs = 0;
     unsigned long _rbLastWouldEmitHeardMs = 0;

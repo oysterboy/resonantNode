@@ -19,22 +19,17 @@ public:
     enum class DebugMode {
         Off,
         Events,
-        Plot,
     };
 
     void begin(int ledPin);
     void setDebugMode(DebugMode mode);
-    DebugMode debugMode() const;
     const char* debugModeName() const;
 
     void markLoopStart(unsigned long nowUs);
     void endLoop(unsigned long nowUs);
-    unsigned long loopStartMicros() const;
     void noteCoreLoopUs(unsigned long nowUs);
     void resetLoopStats();
 
-    void observeOnset(unsigned long now, bool onsetDetected, float onsetStrength);
-    void observeTransient(unsigned long now, bool transientDetected, float transientStrength, bool suppressed);
     // Status LED (NODE-016): `count` flashes of kLedFlashOnMs, kLedFlashOffMs
     // apart; a new call restarts the sequence. 1 = detection (accepted
     // verdict), 2 = own emit.
@@ -48,26 +43,11 @@ public:
     void observeChirpFinished(unsigned long now);
     void updateLed(unsigned long now);
 
-    void printPlotValues(unsigned long now,
-                         const AudioSignal& audioSignal,
-                         const ResonantBehavior& behavior,
-                         const ChirpOutput& chirpOutput,
-                         bool selfChirpSuppressed);
-
 private:
     bool eventsEnabled() const;
-    bool plotEnabled() const;
-
-    void updatePulse(unsigned long now,
-                     bool detected,
-                     float strength,
-                     unsigned long& visibleUntilMs,
-                     float& storedStrength);
 
     // Debug mode selection.
     DebugMode _debugMode = DebugMode::Events;
-    unsigned long _lastDebugPrintMs = 0;
-    const unsigned long _debugIntervalMs = 100;
 
     // Loop timing.
     unsigned long _loopStartMicros = 0;
@@ -81,11 +61,6 @@ private:
     unsigned long _fullLoopSamples = 0;
 
     // Event pulses.
-    unsigned long _debugOnsetVisibleUntilMs = 0;
-    unsigned long _debugTransientVisibleUntilMs = 0;
-    float _debugOnsetStrength = 0.0f;
-    float _debugTransientStrength = 0.0f;
-    const unsigned long _debugPulseHoldMs = 150;
     unsigned long _debugChirpVisibleUntilMs = 0;
     const unsigned long _debugChirpEventHoldMs = 150;
 

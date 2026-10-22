@@ -1,3 +1,4 @@
+#include "../../detection/analyzer/AnalyzerTrialClassifier.h"
 #include "AnalyzerModeApp.h"
 
 #include <Arduino.h>
@@ -16,7 +17,6 @@ bool waitForEmitterAck(const char* expectedPrefix, unsigned long timeoutMs);
 namespace {
 
 constexpr unsigned long kSequenceWarmupMs = 500;
-constexpr long kLateOnsetMinMs = 200L;
 
 unsigned long countSelectedSampleDumpTrials(unsigned long totalTrials, unsigned long firstTrials, unsigned long everyNth) {
     if (totalTrials == 0) {
@@ -584,7 +584,7 @@ AnalyzerApp::SequenceTrialSelection AnalyzerApp::selectSequenceTrialSelection(un
         selection.dtMs = static_cast<long>(timing::delta(_sequenceTest.primaryValidPattern.primaryStartMs, trialOnsetAnchorMs));
         selection.durationMs = _sequenceTest.primaryValidPattern.primaryDurationMs;
         selection.strength = _sequenceTest.primaryValidPattern.primaryStrength;
-        selection.result = selection.dtMs >= kLateOnsetMinMs ? AnalyzerResult::Late : AnalyzerResult::Expected;
+        selection.result = selection.dtMs >= kAnalyzerLateOnsetMinMs ? AnalyzerResult::Late : AnalyzerResult::Expected;
         return selection;
     }
 
@@ -610,7 +610,7 @@ AnalyzerApp::SequenceTrialSelection AnalyzerApp::selectSequenceTrialSelection(un
             selection.durationMs = _sequenceTest.bestRejectedInWindow.primaryDurationMs;
             selection.strength = _sequenceTest.bestRejectedInWindow.primaryStrength;
         }
-        selection.result = selection.dtMs >= kLateOnsetMinMs ? AnalyzerResult::Late : AnalyzerResult::Expected;
+        selection.result = selection.dtMs >= kAnalyzerLateOnsetMinMs ? AnalyzerResult::Late : AnalyzerResult::Expected;
         return selection;
     }
 

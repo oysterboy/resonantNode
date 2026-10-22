@@ -54,8 +54,10 @@ since 7d.
 
 Dead or broken: `printRbDetectorSummary` declared, never defined; NodeDebug `observeOnset`, `observeTransient`,
 `printPlotValues` never called, so `RB debug plot` prints nothing; `_wasSelfChirpSuppressed`,
-`_rbLastLoggedOnsetRejectCount`, `_rbLastLoggedTransientRejectCount` written, never read; `startsWithTokenIgnoreCase`
-/ `equalsIgnoreCase` duplicated from `AnalyzerText`.
+`_rbLastLoggedOnsetRejectCount`, `_rbLastLoggedTransientRejectCount` written, never read (all removed in step 10
+item 10). `startsWithTokenIgnoreCase` / `equalsIgnoreCase` look duplicated from `AnalyzerText`, but they are not
+the same: the Node's version ends on a token boundary (issue #31 R2-19), the Analyzer's is a plain prefix. Kept
+apart on purpose.
 
 ## 2. Analyzer (`src/modes/analyzer/` and `src/detection/analyzer/`)
 
@@ -85,8 +87,8 @@ counters; plus DetectorReport fields, `evaluatorFirstEnabledRequirement`, inspec
 profiling counters.
 
 Dead: `sequenceTrialClassificationName` declared, never defined; unused kCleanDuration / kSmeared / kTooLong /
-kNearMax constants; HELP advertises `DET PROFILE`, which nothing handles; `printDetectionParameters` has an empty
-body.
+kNearMax constants; HELP advertises `DET PROFILE`, which nothing handles (all removed in step 10 item 10).
+Correction: `printDetectionParameters` is not empty; it prints the `SEQ scalar:` line and stays.
 
 ## 3. Three param vocabularies for the same detector
 

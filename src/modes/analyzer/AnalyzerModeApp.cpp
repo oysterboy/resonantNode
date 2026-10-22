@@ -36,13 +36,6 @@ File structure:
 - canonical reporting and summary output
 */
 constexpr int kMaxSamplesPerLoop = 512;
-constexpr long kLateOnsetMinMs = 200L;
-constexpr long kCleanDurationMinMs = 80L;
-constexpr long kCleanDurationMaxMs = 180L;
-constexpr long kSmearedDurationMinMs = 181L;
-constexpr long kSmearedDurationMaxMs = 240L;
-constexpr long kTooLongDurationMinMs = 241L;
-constexpr long kNearMaxDurationMinMs = 220L;
 // The loud-end limits below were written for 16-bit samples; the canonical PCM
 // is 24-bit, so they are scaled by 256 (otherwise any tone above ~0.4 % of full
 // scale read as "clipped", lab note 2026-10-15). The quiet-end limits (zero-ish,
@@ -597,7 +590,7 @@ void AnalyzerApp::begin() {
     _controlClaimAtMs = timebase::nowMs() + 500UL;
 
     serialOut().println("EVT analyzer_ready");
-    serialOut().println("EVT analyzer_help type='HELP', 'PARAM scalar_onset_threshold=2000 scalar_min_duration_ms=85', 'PARAM STATUS', 'RAW trigger f=3200 dur=100 post=1000 [pre=MS] mode=feat|pcm|i2s|both [pulses=N gap=MS hop=F1,F2,...]', 'SEQ MODE quiet|trial|inspect|source|system|detail WHEN off|miss|all VERBOSE 0|1|2 STATUS REPORT', 'DET PROFILE TonalPulseScalar|AmpExperimental'");
+    serialOut().println("EVT analyzer_help type='HELP', 'PARAM scalar_onset_threshold=2000 scalar_min_duration_ms=85', 'PARAM STATUS', 'RAW trigger f=3200 dur=100 post=1000 [pre=MS] mode=feat|pcm|i2s|both [pulses=N gap=MS hop=F1,F2,...]', 'SEQ MODE quiet|trial|inspect|source|system|detail WHEN off|miss|all VERBOSE 0|1|2 STATUS REPORT'");
 }
 
 void AnalyzerApp::configureParameters() {

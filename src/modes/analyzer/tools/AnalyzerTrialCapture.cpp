@@ -1,3 +1,4 @@
+#include "../../../detection/analyzer/AnalyzerTrialClassifier.h"
 #include "../AnalyzerModeApp.h"
 
 #include <Arduino.h>
@@ -8,7 +9,6 @@
 
 namespace {
 
-constexpr long kLateOnsetMinMs = 200L;
 
 enum class SequencePendingClass : uint8_t {
     Unknown = 0,
@@ -25,7 +25,7 @@ uint8_t sequencePendingClass(bool duplicatePending, bool inWindow, long dtFromTr
     if (!inWindow) {
         return static_cast<uint8_t>(SequencePendingClass::UnexpectedNoise);
     }
-    if (dtFromTriggerMs >= kLateOnsetMinMs) {
+    if (dtFromTriggerMs >= kAnalyzerLateOnsetMinMs) {
         return static_cast<uint8_t>(SequencePendingClass::Late);
     }
     return static_cast<uint8_t>(SequencePendingClass::ExpectedPrimary);

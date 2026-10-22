@@ -13,18 +13,12 @@ void NodeDebug::setDebugMode(DebugMode mode) {
     _debugMode = mode;
 }
 
-NodeDebug::DebugMode NodeDebug::debugMode() const {
-    return _debugMode;
-}
-
 const char* NodeDebug::debugModeName() const {
     switch (_debugMode) {
         case DebugMode::Off:
             return "off";
         case DebugMode::Events:
             return "events";
-        case DebugMode::Plot:
-            return "plot";
     }
 
     return "unknown";
@@ -34,18 +28,9 @@ bool NodeDebug::eventsEnabled() const {
     return _debugMode == DebugMode::Events;
 }
 
-bool NodeDebug::plotEnabled() const {
-    return _debugMode == DebugMode::Plot;
-}
-
 void NodeDebug::begin(int ledPin) {
-    _lastDebugPrintMs = 0;
     _loopStartMicros = 0;
     resetLoopStats();
-    _debugOnsetVisibleUntilMs = 0;
-    _debugTransientVisibleUntilMs = 0;
-    _debugOnsetStrength = 0.0f;
-    _debugTransientStrength = 0.0f;
     _debugChirpVisibleUntilMs = 0;
     _lastI2SSignalLogMs = 0;
     _i2sSignalMin = 0;
@@ -66,25 +51,6 @@ void NodeDebug::begin(int ledPin) {
 
 void NodeDebug::markLoopStart(unsigned long nowUs) {
     _loopStartMicros = nowUs;
-}
-
-unsigned long NodeDebug::loopStartMicros() const {
-    return _loopStartMicros;
-}
-
-void NodeDebug::updatePulse(unsigned long now,
-                            bool detected,
-                            float strength,
-                            unsigned long& visibleUntilMs,
-                            float& storedStrength) {
-    if (detected) {
-        visibleUntilMs = now + _debugPulseHoldMs;
-        storedStrength = strength;
-    }
-
-    if (timing::atOrAfter(now, visibleUntilMs)) {
-        storedStrength = 0.0f;
-    }
 }
 
 void NodeDebug::resetLoopStats() {
@@ -124,21 +90,6 @@ void NodeDebug::endLoop(unsigned long nowUs) {
     _fullLoopSamples++;
 
     _loopStartMicros = nowUs;
-}
-
-void NodeDebug::observeOnset(unsigned long now, bool onsetDetected, float onsetStrength) {
-    updatePulse(now, onsetDetected, onsetStrength, _debugOnsetVisibleUntilMs, _debugOnsetStrength);
-}
-
-void NodeDebug::observeTransient(unsigned long now, bool transientDetected, float transientStrength, bool suppressed) {
-    if (suppressed) {
-        if (timing::atOrAfter(now, _debugTransientVisibleUntilMs)) {
-            _debugTransientStrength = 0.0f;
-        }
-        return;
-    }
-
-    updatePulse(now, transientDetected, transientStrength, _debugTransientVisibleUntilMs, _debugTransientStrength);
 }
 
 void NodeDebug::flashLed(unsigned long now, uint8_t count) {
@@ -289,65 +240,3 @@ void NodeDebug::updateLed(unsigned long now) {
     _ledOn = on;
 }
 
-void NodeDebug::printPlotValues(unsigned long now,
-                               const AudioSignal& audioSignal,
-                               const ResonantBehavior& behavior,
-                               const ChirpOutput& chirpOutput,
-                               bool selfChirpSuppressed) {
-    if (!plotEnabled()) return;
-    // First second after boot (an uptime check, not a deadline: a wrap-safe
-    // compare against 1000 read true for half of every 49.7-day ms cycle).
-    if (now < 1000UL) return;
-    if (!timing::elapsedSince(now, _lastDebugPrintMs, _debugIntervalMs)) return;
-
-    _lastDebugPrintMs = now;
-
-    // Plot the raw occurrence levels so the serial plotter mirrors the actual
-    // acoustic envelope instead of a heavily compressed display scale.
-    const float centeredSignal = static_cast<float>(audioSignal.centeredSignal());
-    const float signalMagnitude = static_cast<float>(audioSignal.signalMagnitude());
-    const float smoothedSignalMagnitude = static_cast<float>(audioSignal.smoothedSignalMagnitude());
-    const float onsetStrength = _debugOnsetStrength;
-    const float transientStrength = _debugTransientStrength;
-    const int onsetPulse = timing::beforeDeadline(now, _debugOnsetVisibleUntilMs) ? 1 : 0;
-    const int transientPulse = timing::beforeDeadline(now, _debugTransientVisibleUntilMs) ? 1 : 0;
-    const unsigned long coreLoopAvgUs = _coreLoopSamples > 0 ? (_coreLoopUsSum / _coreLoopSamples) : 0;
-    const unsigned long fullLoopAvgUs = _fullLoopSamples > 0 ? (_fullLoopUsSum / _fullLoopSamples) : 0;
-    const int state = behavior.stateCode();
-    const int chirp = chirpOutput.isActive() ? 1 : 0;
-
-    serialOut().print("centered:");
-    serialOut().print(centeredSignal, 3);
-    serialOut().print(" magnitude:");
-    serialOut().print(signalMagnitude, 3);
-    serialOut().print(" smooth:");
-    serialOut().print(smoothedSignalMagnitude, 3);
-    serialOut().print(" onsetPulse:");
-    serialOut().print(onsetPulse);
-    serialOut().print(" onset:");
-    serialOut().print(onsetStrength, 3);
-    serialOut().print(" transientPulse:");
-    serialOut().print(transientPulse);
-    serialOut().print(" transient:");
-    serialOut().print(transientStrength, 3);
-    serialOut().print(" behaviorSuppressSelfChirp:");
-    serialOut().print(selfChirpSuppressed ? 1 : 0);
-    serialOut().print(" coreUs:");
-    serialOut().print(coreLoopAvgUs);
-    serialOut().print("/");
-    serialOut().print(_coreLoopUsMin);
-    serialOut().print("/");
-    serialOut().print(_coreLoopUsMax);
-    serialOut().print(" fullUs:");
-    serialOut().print(fullLoopAvgUs);
-    serialOut().print("/");
-    serialOut().print(_fullLoopUsMin);
-    serialOut().print("/");
-    serialOut().print(_fullLoopUsMax);
-    serialOut().print(" state:");
-    serialOut().print(state);
-    serialOut().print(" chirp:");
-    serialOut().println(chirp);
-
-    resetLoopStats();
-}

@@ -1,0 +1,10 @@
+[13:45:25] boot banner: {'role': 'analyzer', 'git': '3a11d80', 'version': '0.4.0', 'board': 'damp'}
+[13:45:27] warmup: OK EMIT CHIRP
+[13:45:27] start T3_chirp50: SEQ DIAG on ; SEQ start profile=TonalPulseScalar tries=50 mode=detail when=all verbose=1
+[13:48:13] done T3_chirp50 (165s): complete=True results={'expected': 50}
+[13:48:19] session updated, index rebuilt
+[13:48:23] boot banner: {'role': 'analyzer', 'git': '3a11d80', 'version': '0.4.0', 'board': 'damp'}
+[13:48:25] warmup: OK EMIT CHIRP
+[13:48:25] start T3_hop10: SEQ DIAG on ; SEQ start profile=TonalPulseScalar tries=10 freq=3300 band=2950-3950 dur=25 pulses=5 gap=10 hop=2950,3200,3450,3700,3950 mode=detail when=all verbose=1
+[13:49:02] done T3_hop10 (37s): complete=True results={'expected': 10}
+[13:49:08] session updated, index rebuilt

@@ -1,0 +1,114 @@
+{
+  "purpose": "step 8 baseline (3d check 12): T3 Scalar 50 chirps + 10 hop trains on main 3a11d80, plus T2h host replay dump",
+  "created": "2026-10-22T13:45:21",
+  "setup": {
+    "distance_cm": 110.0,
+    "orientation": "trial layout, E2 Analyzer / E3 Emitter 110 cm",
+    "emitter_fw": "23d034a",
+    "notes": [
+      "E2 Analyzer 3a11d80 (src identical to HEAD), E3 Emitter 23d034a; E1/E4/E5 held silent"
+    ]
+  },
+  "runs": [
+    {
+      "name": "T3_chirp50",
+      "file": "T3_chirp50.3a11d80.log",
+      "firmware": {
+        "role": "analyzer",
+        "git": "3a11d80",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "commands": [
+        "SEQ DIAG on",
+        "SEQ start profile=TonalPulseScalar tries=50 mode=detail when=all verbose=1"
+      ],
+      "started": "2026-10-22T13:45:27",
+      "duration_s": 165,
+      "summary": {
+        "profile": "TonalPulseScalar",
+        "detector": "scalar_transient",
+        "complete": true,
+        "trial_results": {
+          "expected": 50
+        },
+        "line_counts": {
+          "SEQ_TRIAL": 50,
+          "SEQ_INSPECT": 100,
+          "SEQ_SOURCE": 50,
+          "SEQ_SOURCE_CORE": 50,
+          "SEQ_SOURCE_SPEC": 50,
+          "SEQ_EXPLAIN": 50,
+          "SEQ_SUMMARY": 1
+        },
+        "trials": "50",
+        "completed": "50",
+        "expected_trials": "50",
+        "early_trials": "0",
+        "late_trials": "0",
+        "miss_trials": "0",
+        "duplicate_trials": "0",
+        "unexpected_trials": "0",
+        "rejected_trials": "0",
+        "buffer_overrun_trials": "0",
+        "detector_accepted_trials": "50",
+        "detector_reject_trials": "0",
+        "pattern_valid_trials": "50",
+        "pattern_rejected_trials": "0",
+        "avg_dt_ms": "55",
+        "avg_strength": "5424.5",
+        "avg_conf": "1.00"
+      }
+    },
+    {
+      "name": "T3_hop10",
+      "file": "T3_hop10.3a11d80.log",
+      "firmware": {
+        "role": "analyzer",
+        "git": "3a11d80",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "commands": [
+        "SEQ DIAG on",
+        "SEQ start profile=TonalPulseScalar tries=10 freq=3300 band=2950-3950 dur=25 pulses=5 gap=10 hop=2950,3200,3450,3700,3950 mode=detail when=all verbose=1"
+      ],
+      "started": "2026-10-22T13:48:25",
+      "duration_s": 37,
+      "summary": {
+        "profile": "TonalPulseScalar",
+        "detector": "scalar_transient",
+        "complete": true,
+        "trial_results": {
+          "expected": 10
+        },
+        "line_counts": {
+          "SEQ_TRIAL": 10,
+          "SEQ_INSPECT": 20,
+          "SEQ_SOURCE": 10,
+          "SEQ_SOURCE_CORE": 10,
+          "SEQ_SOURCE_SPEC": 10,
+          "SEQ_EXPLAIN": 10,
+          "SEQ_SUMMARY": 1
+        },
+        "trials": "10",
+        "completed": "10",
+        "expected_trials": "10",
+        "early_trials": "0",
+        "late_trials": "0",
+        "miss_trials": "0",
+        "duplicate_trials": "0",
+        "unexpected_trials": "0",
+        "rejected_trials": "0",
+        "buffer_overrun_trials": "0",
+        "detector_accepted_trials": "10",
+        "detector_reject_trials": "0",
+        "pattern_valid_trials": "10",
+        "pattern_rejected_trials": "0",
+        "avg_dt_ms": "51",
+        "avg_strength": "9923.0",
+        "avg_conf": "1.00"
+      }
+    }
+  ]
+}

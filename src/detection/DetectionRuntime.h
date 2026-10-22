@@ -139,6 +139,9 @@ public:
 
     bool popOccurrenceVerdict(OccurrenceVerdict& out);
     const FieldState& fieldState() const;
+    // Verdicts dropped because the 4-slot queue was full (every build since
+    // step 8b; the Node prints it in RB STATUS). Reset with the queues.
+    unsigned long verdictQueueOverflowCount() const;
 
     // Analyzer-only diagnostics surface below. None of this is called from
     // ResonantNodeApp or EmitterApp (confirmed by search); it exists to
@@ -156,7 +159,6 @@ public:
     bool hasLatestPipelineResult() const;
     const DetectionPipelineResult& latestPipelineResult() const;
     unsigned long pipelineEventOverflowCount() const;
-    unsigned long verdictQueueOverflowCount() const;
     unsigned long detectorReportMismatchCount() const;
     uint32_t observeFrameCount() const;
     uint32_t freshDetectorInputCount() const;
@@ -236,9 +238,9 @@ private:
     size_t _resultReadIndex = 0;
     size_t _resultCount = 0;
     bool _verdictQueueEnabled = true;
+    unsigned long _verdictQueueOverflowCount = 0;
 
 #ifdef ANALYZER_MODE
-    unsigned long _verdictQueueOverflowCount = 0;
 
     DetectionPipelineResult _latestPipelineResult = {};
     bool _hasLatestPipelineResult = false;

@@ -1350,6 +1350,13 @@ void Node::handleDetectCommand(const char* line) {
     serialOut().print(uptimeMs);
     serialOut().print(" audio.deficit_s=");
     serialOut().print(deficitS, 1);
+    // Step 8b: verdicts the 4-slot queue dropped (was Analyzer-only), and the
+    // loop task's lowest free stack since boot (bytes; getWindow() puts 2 KB
+    // on it per inspection module, audit 3.7).
+    serialOut().print(" detection.verdict_queue_overflows=");
+    serialOut().print(_detection.verdictQueueOverflowCount());
+    serialOut().print(" loop.stack_free_min_bytes=");
+    serialOut().print(static_cast<unsigned long>(uxTaskGetStackHighWaterMark(nullptr)));
     // Why a Node might not hear (2026-10-17): the sample clock against the
     // system clock, the own-emit suppression deadline on that axis, whether
     // the newest sample would be suppressed right now, how many samples the

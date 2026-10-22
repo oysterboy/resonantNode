@@ -63,6 +63,8 @@ void AnalyzerApp::printSystemHealth(const AnalyzerReport& report) const {
         serialOut().print(windowElapsedMs);
         serialOut().print(" free_heap=");
         serialOut().print(esp_get_free_heap_size());
+        serialOut().print(" loop_stack_free_min_bytes=");
+        serialOut().print(static_cast<unsigned long>(uxTaskGetStackHighWaterMark(nullptr)));
         serialOut().print(" loop_stats_window_ms=");
         serialOut().print(windowElapsedMs);
         serialOut().print(" loop_stats_scope=");

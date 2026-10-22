@@ -72,8 +72,8 @@ void DetectionRuntime::resetDetectionQueues() {
     memset(&_resultQueue[0], 0, sizeof(_resultQueue[0]));
     _resultReadIndex = 0;
     _resultCount = 0;
-#ifdef ANALYZER_MODE
     _verdictQueueOverflowCount = 0;
+#ifdef ANALYZER_MODE
     memset(&_pipelineEventQueue[0], 0, sizeof(_pipelineEventQueue[0]));
     _pipelineEventReadIndex = 0;
     _pipelineEventCount = 0;
@@ -302,6 +302,10 @@ bool DetectionRuntime::popOccurrenceVerdict(OccurrenceVerdict& out) {
     return true;
 }
 
+unsigned long DetectionRuntime::verdictQueueOverflowCount() const {
+    return _verdictQueueOverflowCount;
+}
+
 const FieldState& DetectionRuntime::fieldState() const {
     return _fieldStateTracker.state();
 }
@@ -317,10 +321,6 @@ bool DetectionRuntime::popPipelineEvent(DetectionPipelineEvent& out) {
     _pipelineEventReadIndex = (_pipelineEventReadIndex + 1) % kPipelineEventQueueCapacity;
     --_pipelineEventCount;
     return true;
-}
-
-unsigned long DetectionRuntime::verdictQueueOverflowCount() const {
-    return _verdictQueueOverflowCount;
 }
 
 unsigned long DetectionRuntime::detectorReportMismatchCount() const {
@@ -458,9 +458,7 @@ bool DetectionRuntime::pushOccurrenceVerdict(const OccurrenceVerdict& result) {
         return true;
     }
     if (_resultCount == kResultQueueCapacity) {
-#ifdef ANALYZER_MODE
         ++_verdictQueueOverflowCount;
-#endif
         return false;
     }
 

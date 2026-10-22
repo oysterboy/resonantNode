@@ -3,7 +3,7 @@
 #include <Arduino.h>
 #include <math.h>
 
-#include "../../analyzer/AnalyzerPassRules.h"
+#include "../../occurrences/OccurrenceIds.h"
 #include "../../../app/TimeBase.h"
 
 // Lifecycle / summaries.
@@ -184,7 +184,7 @@ void IRAM_ATTR ScalarTransientDetector::updateOnsetStage(uint64_t nowUs, float s
     // The separate release threshold keeps the peak stable when the occurrence wobbles near the edge.
     if (aboveAttackThreshold && !_peakActive && onsetCooldownElapsed && !_awaitReleaseBeforeOnset) {
         resetCandidateFacts();
-        _currentOccurrenceId = detection::analyzer::nextOccurrenceId(_nextOccurrenceId);
+        _currentOccurrenceId = detection::nextOccurrenceId(_nextOccurrenceId);
         _nextOccurrenceId = _currentOccurrenceId;
         _peakActive = true;
         _peakStartedUs = nowUs;

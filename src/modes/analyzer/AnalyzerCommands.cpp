@@ -1,5 +1,5 @@
-#include "../../modes/analyzer/AnalyzerModeApp.h"
-#include "AnalyzerText.h"
+#include "AnalyzerModeApp.h"
+#include "../../detection/analyzer/AnalyzerText.h"
 
 #include <Arduino.h>
 #include <stdlib.h>

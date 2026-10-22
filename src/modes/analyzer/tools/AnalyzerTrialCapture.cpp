@@ -1,10 +1,10 @@
-#include "../../../modes/analyzer/AnalyzerModeApp.h"
+#include "../AnalyzerModeApp.h"
 
 #include <Arduino.h>
 #include <string.h>
 
 #include "../../../app/TimingUtils.h"
-#include "../../features/FrequencyMeasurementPacketBuilder.h"
+#include "../../../detection/features/FrequencyMeasurementPacketBuilder.h"
 
 namespace {
 

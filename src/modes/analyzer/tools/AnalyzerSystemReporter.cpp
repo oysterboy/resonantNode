@@ -1,7 +1,7 @@
 #include "AnalyzerSystemReporter.h"
 
-#include "../../../modes/analyzer/AnalyzerModeApp.h"
-#include "AnalyzerRawHealth.h"
+#include "../AnalyzerModeApp.h"
+#include "../../../detection/analyzer/tools/AnalyzerRawHealth.h"
 
 #include <Arduino.h>
 #include <math.h>

@@ -1,4 +1,4 @@
-#include "../../modes/analyzer/AnalyzerModeApp.h"
+#include "AnalyzerModeApp.h"
 
 #include <Arduino.h>
 #include <new>
@@ -7,7 +7,7 @@
 
 #include "../../app/RuntimeDefaults.h"
 #include "../../app/TimingUtils.h"
-#include "AnalyzerPassRules.h"
+#include "../../detection/analyzer/AnalyzerPassRules.h"
 #include "../../app/TimeBase.h"
 #include "../../app/SerialOut.h"
 

@@ -1,6 +1,6 @@
-#include "../../../modes/analyzer/AnalyzerModeApp.h"
+#include "../AnalyzerModeApp.h"
 #include "../../../audio/AudioPcm.h"
-#include "../AnalyzerText.h"
+#include "../../../detection/analyzer/AnalyzerText.h"
 #include "../../../app/SerialLine.h"
 
 #include <Arduino.h>

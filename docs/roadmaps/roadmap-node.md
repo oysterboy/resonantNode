@@ -143,7 +143,9 @@ Status: DONE 2026-10-22 (step 7). `.github/workflows/build.yml` runs on every pu
 - the eight ESP envs as a matrix;
 - `native-replay`, `native-test` and `native-test-behavior` on ubuntu-24.04 (g++ 13; the three `= {}` assignments
   became `InspectionPlan{}`);
-- `tools/ci/include_direction.py`: warns on the 9 Analyzer files under src/detection/ that include src/modes/.
+- `tools/ci/include_direction.py`: warned on 9 Analyzer files under src/detection/ that included src/modes/;
+  `--strict` in CI since ANA-003 (step 10, 2026-10-22), with 0 hits. It also fails on any include of src/ from
+  lib/ParamRegistry/.
 
 It becomes `--strict` after ANA-003. The first run was all green: run 39721937551.
 

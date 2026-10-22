@@ -3,7 +3,7 @@
 #include <math.h>
 #include <string.h>
 
-#include "../../analyzer/AnalyzerPassRules.h"
+#include "../../occurrences/OccurrenceIds.h"
 #include "../../../app/TimingUtils.h"
 
 namespace {
@@ -67,7 +67,7 @@ void ScalarTransientDetector::captureAcceptedOccurrence(uint64_t releaseObserved
     _acceptedOccurrenceReleaseMs = timebase::msFromUs64(releaseObservedUs);
     _acceptedOccurrenceId = _currentOccurrenceId != 0
         ? _currentOccurrenceId
-        : detection::analyzer::nextOccurrenceId(_nextOccurrenceId);
+        : detection::nextOccurrenceId(_nextOccurrenceId);
     _nextOccurrenceId = _acceptedOccurrenceId;
     _acceptedOccurrence.present = true;
     _acceptedOccurrence.occurrenceId = _acceptedOccurrenceId;
@@ -136,7 +136,7 @@ void ScalarTransientDetector::captureSelectedReject(uint64_t releaseObservedUs) 
     _selectedReject.present = true;
     _selectedRejectOccurrenceId = _currentOccurrenceId != 0
         ? _currentOccurrenceId
-        : detection::analyzer::nextOccurrenceId(_nextOccurrenceId);
+        : detection::nextOccurrenceId(_nextOccurrenceId);
     _nextOccurrenceId = _selectedRejectOccurrenceId;
     _selectedReject.rejectClass = scalarTransientRejectClass(_lastTransientRejectReason);
     _selectedReject.detectorReason = lastTransientRejectReasonName();
@@ -184,7 +184,7 @@ void ScalarTransientDetector::capturePendingOccurrence(const AudioSamplePacket& 
     _pendingOccurrence.detectorId = detection::DetectorId::ScalarTransient;
     _pendingOccurrence.occurrenceType = detection::OccurrenceType::Scalar;
     if (_currentOccurrenceId == 0) {
-        _currentOccurrenceId = detection::analyzer::nextOccurrenceId(_nextOccurrenceId);
+        _currentOccurrenceId = detection::nextOccurrenceId(_nextOccurrenceId);
         _nextOccurrenceId = _currentOccurrenceId;
     }
     _pendingOccurrence.occurrenceId = _currentOccurrenceId;

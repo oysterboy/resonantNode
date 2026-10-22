@@ -1,6 +1,7 @@
 #pragma once
 
 #include "AnalyzerReportTypes.h"
+#include "../occurrences/OccurrenceIds.h"
 
 namespace detection::analyzer {
 
@@ -19,9 +20,9 @@ inline const char* sourceReportReason(bool sourceReportMatched, bool hasDetector
     return sourceReportMatched ? "none" : (hasDetectorReport ? "id_mismatch" : "none");
 }
 
-inline unsigned long nextOccurrenceId(unsigned long currentOccurrenceId) {
-    return currentOccurrenceId == 0 ? 1UL : currentOccurrenceId + 1UL;
-}
+// Moved to occurrences/OccurrenceIds.h (step 10, ANA-003); kept visible here
+// for the Analyzer code and tests that name it detection::analyzer::.
+using ::detection::nextOccurrenceId;
 
 inline unsigned int completedPrimaryTrialCount(const AnalyzerCleanSummary& summary) {
     return summary.expectedTrials +

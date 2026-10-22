@@ -1,4 +1,4 @@
-#include "../../../modes/analyzer/AnalyzerModeApp.h"
+#include "../AnalyzerModeApp.h"
 
 #include <Arduino.h>
 #include <string.h>

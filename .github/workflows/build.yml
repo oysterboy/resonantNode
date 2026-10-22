@@ -63,4 +63,4 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       # Warning only until ANA-003 (step 10) moves the Analyzer out of src/detection; then add --strict.
-      - run: python3 tools/ci/include_direction.py
+      - run: python3 tools/ci/include_direction.py --strict

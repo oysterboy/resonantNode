@@ -665,7 +665,7 @@ the previous gate open unless the step says it can run in parallel.
    is what is left.
    Done 2026-10-22: GitHub Actions (`.github/workflows/build.yml`) builds every env and runs both host suites on
    every push. The first run was all green. The include-direction check (`tools/ci/include_direction.py`) warns on
-   9 Analyzer includes until ANA-003 (step 10), then turns strict.
+   9 Analyzer includes until ANA-003 (step 10), then turns strict. Strict since step 10 item 8 (2026-10-22): 0 hits.
 
 7a. [DONE 2026-10-22] Analyzer diagnostics hygiene. (no issue yet; ANA-004 has the
    research note)

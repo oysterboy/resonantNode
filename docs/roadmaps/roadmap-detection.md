@@ -290,7 +290,10 @@ Keep the analyzer display layer on canonical report fields.
 
 ### ANA-003 - move AnalyzerApp out of the detection tree
 
-Status: TODO
+Status: DONE 2026-10-22 (step 10 item 8). The 9 member files are in src/modes/analyzer/ (and tools/); two
+stub headers that nothing included are deleted. `nextOccurrenceId` moved to detection/occurrences/OccurrenceIds.h,
+so the scalar detector no longer includes AnalyzerPassRules.h or, through it, the Analyzer report types.
+include_direction.py is `--strict` in CI (0 hits). Analyzer smoke on E2: 10/10 chirps.
 
 ```text
 Nine files under src/detection/analyzer/ and src/detection/analyzer/tools/

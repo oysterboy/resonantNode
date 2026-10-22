@@ -42,6 +42,9 @@ both profiles are param-bound.
   target); DetectionRuntime::setInspectionPlan rebinds FeatureHistory streams only when they change. E2: at
   contrast_medium 32,760, 3 hop trains are seen by the detector (pending +3) but none accepted; at 30,500, 3/3
   again. T2h byte-identical.
+- 2026-10-22, item 8 (ANA-003): 9 member files moved to src/modes/analyzer/, 2 unused stub headers deleted,
+  nextOccurrenceId split into detection/occurrences/OccurrenceIds.h, CI include check strict (0 hits). All envs
+  build, host suites pass, T2h byte-identical, Analyzer SEQ on E2 10/10.
 
 ## Standing checks (every commit)
 

@@ -1,6 +1,6 @@
 #include "AnalyzerRuntimeReporter.h"
 
-#include "../../../modes/analyzer/AnalyzerModeApp.h"
+#include "../AnalyzerModeApp.h"
 
 #include <Arduino.h>
 #include <math.h>

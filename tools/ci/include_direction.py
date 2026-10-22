@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """Include-direction checks (NODE-007, PAR-016).
 
-1. Nothing under src/detection/ may include src/modes/.
+1. Nothing under src/detection/ may include src/modes/. Strict in CI since ANA-003 (step 10) moved the
+   AnalyzerApp member files to src/modes/analyzer/.
 2. Nothing under lib/ParamRegistry/ may include anything from src/ (always strict: the library must stay
    app-agnostic so a later split into its own repo is a move, PAR-016/PAR-017).
 

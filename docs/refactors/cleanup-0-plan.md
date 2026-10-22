@@ -513,7 +513,8 @@ first**: it deletes code that 7a and 7b would otherwise rename.
 
 Implemented 2026-10-22 (Part A of the execution plan below: 2593327, 5c5f9ed,
 4efba86; gate in bench/sessions/2026-10-22-step8-fold). Part B, the verdict
-boundary rule, is still open for the owner.
+boundary rule, was deferred by the owner on 2026-10-22 to a later roadmap item:
+DET-016 in roadmap-detection.md, sequenced in step 11.
 
 Decided 2026-09-21. The question that settled it: the Inspector inspects
 and stores the result; the Evaluator checks whether the result met the

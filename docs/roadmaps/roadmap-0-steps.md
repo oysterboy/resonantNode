@@ -40,7 +40,7 @@ is removed in the new step 7d (#52), before step 8; step 9 deferred to step 11; 
 Status update 2026-10-22, late night: 7d done (3a11d80). FrequencyMatch is gone and the Scalar T3 is unchanged
 against 7a. Next: step 8; its baseline is recorded (bench 2026-10-22-step8-baseline).
 Status update 2026-10-22, step 8: Part A done (the evaluator is folded into inspection, behavior-neutral, gate
-met). Part B (the verdict boundary rule) is open for the owner. Next by order: 8b (detection follow-up bugs on the
+met). Part B (the verdict boundary rule) is deferred to DET-016 (step 11). Next by order: 8b (detection follow-up bugs on the
 folded inspector).
 Status update 2026-10-22, evening: second revision (owner's picks): 8a held until after 10b (it changes the
 signal 10b compares against); step 9's Phase 6 re-checked once 7c decides Freq; new step 10c (five nodes for
@@ -785,7 +785,7 @@ the previous gate open unless the step says it can run in parallel.
      integrity.evaluator_report_present, removed on purpose.
    - T7: E2 as a Node heard 10 hop trains from E3 and answered the 9 that came after startup.
    - DetectionRuntime 56,104 -> 47,008 B on the Analyzer; Node RAM -3,936 B.
-   Open: Part B (the verdict boundary rule), the owner's call, see the plan's three points.
+   Part B (the verdict boundary rule) is deferred by the owner to a later roadmap item: DET-016, in step 11.
 
 8a. [DEFERRED until 10b] Signal variation, part 2: aesthetics. (issue #38)
    Where: OUT-006 (two-layer signal), BEH-006 (variation over time),
@@ -895,7 +895,8 @@ the previous gate open unless the step says it can run in parallel.
    (BEH-003/004), CommandRouter and the rest of NODE-005, VEKTOR (VEK-*),
    ParamRegistry as its own repo (PAR-017), PAR-008 output params, PAR-009
    drift params, PAR-013 remote param update, PAR-014 config stays
-   separate, ANA-002 multi-occurrence patterns. If 7c makes FieldState a
+   separate, ANA-002 multi-occurrence patterns, DET-016 the verdict boundary rule (step 8's Part B, deferred
+   by the owner 2026-10-22). If 7c makes FieldState a
    gate, its implementation lands here, as a behavior change against the 10b
    baseline. Named behavior variants (a second BehaviorGateConfig value set,
    or a second program) live here too, as the ResonantProgram bundle of

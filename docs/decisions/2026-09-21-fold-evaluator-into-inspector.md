@@ -5,7 +5,7 @@ Status: implemented 2026-10-22 (step 8 of `roadmap-0-steps.md`, issue #11;
 `src/detection/inspection/VerdictProjection.h`, a function called after
 `inspectWithHistory()`, not a method of `OccurrenceInspector`. Same effect: no
 evaluator stage, no correlation queue. The verdict boundary rule (cleanup-0-plan.md
-Phase 7c, Part B) is still open.
+Phase 7c, Part B) is deferred to DET-016.
 Date: 2026-09-21.
 
 ## Decision

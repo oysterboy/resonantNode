@@ -141,6 +141,21 @@ Facts per occurrence: steady / sweep / hop, span, direction, distinct bins, puls
 
 Research: docs/research/frequency-drift-detection.md (Inspectors that help)
 
+### DET-016 - verdict boundary rule: normalized confidence, event class, no unit-bearing fields
+
+Status: DEFERRED (owner, 2026-10-22: a later roadmap item, not part of step 8)
+
+The verdict carries the decision, one normalized magnitude (`confidence`), an
+event class and timing; no `primary*Strength` / `primaryAmbientBaseline`. Rule
+and design: docs/refactors/cleanup-0-plan.md Phase 7c ("Resolved 2026-09-21:
+the verdict boundary rule" and the step 8 plan's Part B, which maps the readers:
+Behavior's activity level, the Node RB summary `avg_strength`, the Analyzer's
+trial strength, the replay lines, the behavior suites). Open before it starts:
+what `confidence` means, the `EventClass` vocabulary (it may grow with
+DET-015's shape facts), and whether it waits for a second detector family. The
+mismatch it was written against (one slot holding Freq and Scalar quantities)
+is gone since step 7d. Sequenced in roadmap-0-steps.md step 11.
+
 ### DET-008 - detection-layer cleanup pass
 
 Status: PARTIAL

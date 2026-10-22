@@ -84,6 +84,10 @@ public:
     float latestValue(FeatureStreamId stream) const;
 
 private:
+    // getWindow()'s value scratch (step 8b item 5): one window at a time, the
+    // detection loop is single-threaded.
+    mutable float _windowValues[kBinsPerStream + 1U];
+
     // Only the fields representativeValueForStream() reads are stored per
     // bin. This struct is allocated kBinsPerStream * kMaxActiveStreams times
     // (768 today), so an unread float here costs 3 KB of RAM. Window-level

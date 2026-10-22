@@ -308,7 +308,10 @@ MagnitudeWindow FeatureHistory::getWindow(
         return out;
     }
 
-    float values[kBinsPerStream + 1U] = {};
+    // Scratch for the window's values: a member since step 8b (was 2 KB on the
+    // loop stack per call; the Node had 3,640 B of its 16 KB left after ten
+    // detections). Only the first valueCount entries are read.
+    float* values = _windowValues;
     size_t valueCount = 0;
     size_t totalInputCount = 0;
     size_t totalFreshCount = 0;

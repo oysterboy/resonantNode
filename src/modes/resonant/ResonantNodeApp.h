@@ -77,7 +77,7 @@ private:
     void handleSerialLine(const char* line);
     void handleDebugCommand(const char* line);
     void handleLogCommand(const char* line);
-    void handleDetectCommand(const char* line);
+    void printRbStatus(const char* line);
     void handleProfileCommand(const char* line);
     bool rbShouldLogDetail() const;
     const char* rbLogModeName() const;
@@ -170,6 +170,8 @@ private:
     void printSignalConfig();
     void printHopGapCheck();  // RB hop_check: output.hop_* against detection.scalar_* (step 5h item 2)
     void printInspectionPlanCheck();  // RB plan_check: detection.scalar_* against the plan and history (step 8b item 2)
+    void startEmission(unsigned long now, bool sawPatternThisLoop, bool selfChirpSuppressed);  // step 10 item 9
+    void updateEmissions(unsigned long now);                                                     // step 10 item 9
     void applyLiveDetectionParams();  // PARAM SET detection.*: in place, no reset (step 10 item 2)
     void registerBehaviorParams();    // behavior.* on the registry (PAR-006, step 10 item 4)
     void loadInspectionLimitsFromProfile();  // detection.contrast_medium / amp_medium from the plan (item 7)

@@ -271,10 +271,9 @@ void Node::restoreAfterSelfTestHardware() {
 
     // The checks read several seconds of audio that never reached the
     // detection chain: restart it on fresh audio (same reset as a rebase,
-    // without touching the AudioSignal baseline or the Behavior config).
-    _audioSignal.resetSignalState();
-    _detection.resetState();
-    applyActiveDetectionProfile();
+    // without touching the AudioSignal baseline or the Behavior config), plus
+    // a fresh band stream on the chirp tone the checks may have moved.
+    resetDetectionState();
     _freqBandStream.resetState();
     _freqBandStream.setSampleRateHz(_audioSource.sampleRateHz());
     _freqBandStream.setTargetFrequencyHz(_chirpOutput.toneHz());

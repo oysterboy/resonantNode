@@ -17,8 +17,15 @@ the same pass marks (hearing matrix, every chain ends within 30 s, no chain
 started by noise, no dropped buffers). Each refactor step's own gate is a
 T2/T3 diff on the Analyzer against the baseline recorded at the start of
 step 8. An item that changes what the nodes do (8a's signal, step 11)
-moves the baseline too, and says so. Bench cells that only measure (5h's
-NODE-012 cells) run in parallel.
+moves the baseline too, and says so: 8a waits until after 10b for that
+reason. Bench cells that only measure (5h's NODE-012 cells) run in
+parallel.
+
+Next phase, after 10b: an installation-ready node. It opens with step 10c
+(five nodes for 24 h or more on the 10b build). Then the step 11 items an
+installation needs are sequenced in this order, the rest staying deferred:
+settings that survive a reboot (PAR-010/011), then output status
+(OUT-002..004), then a long run on that build.
 
 Previous phase (closed 2026-10-22 with step 6): five D-AMP nodes with the
 same firmware in one room, hearing and answering each other, with a
@@ -28,6 +35,9 @@ Renamed from roadmap-general.md on 2026-09-23 so it sorts first.
 How this file relates to the domain roadmaps and docs/refactors/: see
 README.md ("Who answers what", "Ordering rule").
 
+Status update 2026-10-22, evening: second revision (owner's picks): 8a held until after 10b (it changes the
+signal 10b compares against); step 9's Phase 6 re-checked once 7c decides Freq; new step 10c (five nodes for
+24 h or more) and a goal for the phase after 10b (an installation-ready node). Issues: 7c #49, 10b #50, 10c #51.
 Status update 2026-10-22, later: step 7b done (host == board on the band path to 1 FrequencyScore16, contrast
 within 0.5 %; the shipped scalar profile 6/6 on E2 and on the host). Steps file revised after the trial (owner
 confirmed): new phase goal (the refactors, closing with 10b, a rerun of step 6); 3d closed, its leftovers handed
@@ -700,7 +710,7 @@ the previous gate open unless the step says it can run in parallel.
    Not covered: AudioSourceI2S (sample clock, drop accounting, issue #26) still has no regression test (audit 4.1,
    last sentence); it sits with P2b/D21 under "Still open".
 
-7c. [TODO] Two forks before the refactors: FieldState, and whether Freq stays a family. (no issue yet)
+7c. [TODO] Two forks before the refactors: FieldState, and whether Freq stays a family. (issue #49)
    Where: audit 1.2 (FieldState is computed, handed to Behavior and never read); decisions/2026-10-14-node-ships-
    tonalpulsescalar.md (Scalar ships, Freq is a demo); step 9 (Phase 6 adds a third family).
    Why here (moved from step 11 on 2026-10-22): step 11 waited for step 6's counts, and they exist (41 of 41 chains
@@ -722,12 +732,16 @@ the previous gate open unless the step says it can run in parallel.
    12 (full T3 on Scalar and, if 7c keeps it, Freq; seqcmp) and enter it in
    bench/baselines.csv.
 
-8a. [TODO] Signal variation, part 2: aesthetics. (issue #38)
+8a. [DEFERRED until 10b] Signal variation, part 2: aesthetics. (issue #38)
    Where: OUT-006 (two-layer signal), BEH-006 (variation over time),
    DET-015 (shape inspectors), DET-014 if not done in 5b; BEH-007 after.
    Why here: the shape inspectors should land on the folded inspector of
    step 8, not be migrated by it. OUT-006 and BEH-006 touch no detection
-   code and may start right after step 6.
+   code and could have started right after step 6. Held 2026-10-22
+   (owner): every item here changes what the nodes emit or how they vary
+   it, so it would move the field baseline that 10b reruns. It starts after
+   10b and gets its own field check against the 10b session. The shape
+   inspectors (DET-015) still land on step 8's folded inspector.
    Fold-in: audit 2.4, the two-layer leak (sidelobes from an 800 Hz
    layer, speaker harmonics at 4 x 800 Hz, Strength16 saturating at
    800-1000 Hz where the speaker is 4-8x louder) has no bench cell;
@@ -757,6 +771,11 @@ the previous gate open unless the step says it can run in parallel.
    Gate: as those phases state; confirm the C++ standard first (see the
    family-build doc's Risks). The board variant from step 2 is a second
    build dimension next to the family; keep both in build flags.
+   Re-check after 7c (2026-10-22): if Freq leaves the build, Phase 5d still
+   pays off (one family per build, no unused detector in the binary), but
+   Phase 6's third family is only built if 7c or a later decision names a
+   need for it. Otherwise Phase 6 moves to step 11 and this step's gate is
+   Phase 5d's alone.
 
 10. Mode-layer cleanup. (issues #13, #14, #15)
    Where: ANA-003 (roadmap-detection.md: move AnalyzerApp member files out
@@ -793,7 +812,7 @@ the previous gate open unless the step says it can run in parallel.
    Gate: the map in docs/; behavior.* and detection.* registered; RB BEHAV
    gone. Inside step 10, after PAR-016, before PAR-015.
 
-10b. [TODO] Field baseline rerun on the refactored firmware. (no issue yet)
+10b. [TODO] Field baseline rerun on the refactored firmware. (issue #50)
    Where: NODE-008 (roadmap-node.md), step 6's protocol and pass marks
    (decisions/2026-10-17-trial-third-question-pass-mark.md, 2026-10-22-network-pacing.md).
    Why: steps 8-10 promise unchanged behavior and prove it on the Analyzer (T2/T3) and the host; nothing proves it
@@ -802,7 +821,17 @@ the previous gate open unless the step says it can run in parallel.
    `# state` headers: hearing matrix no worse per cell than step 6, every chain ends within 30 s in quiet and
    with speech/music, 0 chains started by noise, 0 dropped buffers. A difference is investigated before step 11.
 
-11. [DEFERRED] Everything else until step 10b closes (triaged 2026-10-22: the FieldState fork moved to 7c):
+10c. [TODO] Long run: five nodes for 24 h or more. (issue #51)
+   Where: NODE-008, NODE-013 (soak), NODE-017 (real uptime past the 72 min wrap); audit 4.4.
+   Why: the longest run so far is the 7.3 h single-board soak (3a, accepted short, ~25 % strength drift not
+   attributed); the trial runs were 30 min each. An installation runs for days, and wrap, drift and heap faults
+   only show over that span.
+   Gate: five nodes on the 10b build for at least 24 h, with RB STATUS and `# state` headers. Pass marks are
+   step 6's (every chain ends, 0 started by noise, 0 dropped buffers), plus no reboots, no deaf node and the
+   per-board strength drift recorded with room notes. Opens the installation-ready phase.
+
+11. [DEFERRED] Everything else until step 10c closes (triaged 2026-10-22: the FieldState fork moved to 7c;
+   PAR-010/011 and OUT-002..004 come first after 10c, see the phase goal; Phase 6 lands here if step 9 drops it):
    PAR-010/011
    persistence, OutputStatus / OutputProfile (OUT-002..004), BehaviorRuntime
    (BEH-003/004), CommandRouter and the rest of NODE-005, VEKTOR (VEK-*),

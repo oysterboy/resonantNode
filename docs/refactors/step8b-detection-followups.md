@@ -26,6 +26,18 @@ Closed as moot: DET-001 (FrequencyMatch report freeze, Freq removed in 7d), DET-
   Replay the dur40 captures on the host before shipping.
 - B: leave `strongPeakThreshold` for contrast as it is and add a comment that Strong is unused for contrast.
 
+## Progress
+
+- 2026-10-22, items 6 and 5 (733a68b): verdict-queue overflows and the loop task's lowest free stack are in RB
+  STATUS (and the stack in SYSTEM_HEALTH). The stack reading on a board is still to do.
+- 2026-10-22, item 1 on branch `step8b-defer-inspection` (5d2c0fa), not merged. T2h on the corpus is
+  byte-identical (no 85-89 ms occurrences there). On bench/sessions/2026-10-22-7d-dur40-raw, all three 40 ms
+  tones (read 86 ms with the room reflection) are now **accepted**, in single-target and in band mode. They pass the
+  contrast gate: a pure in-band tone is tonal. That triggers the decision's revisit condition: the min duration
+  (85 ms) is then the only thing between a 40 ms beep plus reflection and a network signal, and it needs a tuning
+  pass before the fix ships. Readings for that pass: hop train 195-214 ms, 100 ms chirp 116-154 ms (both at
+  110 cm, 2026-10-22), 40 ms tone 86 ms.
+
 ## Options as they were put to the owner
 
 **A. How to fix item 1.** Three options:

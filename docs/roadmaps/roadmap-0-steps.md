@@ -770,7 +770,9 @@ the previous gate open unless the step says it can run in parallel.
    - New T2h: a host replay dump over the fixtures and the ten corpus folders (80 verdicts). It is
      byte-identical to the dump from the binary before 7d. Step 8's code gate diffs against it.
    The standing battery in cleanup-0-plan.md was revised for one family (T2 gone, T2h added, T1/T4/T6/T7
-   brought up to date). Next: the fold itself.
+   brought up to date). Execution plan written 2026-10-22 for review (cleanup-0-plan.md, Phase 7c,
+   "Execution plan for roadmap step 8"): Part A is the fold, behavior-neutral; Part B is the verdict boundary
+   rule, which changes verdict content. Part B is open for the owner. No code yet.
 
 8a. [DEFERRED until 10b] Signal variation, part 2: aesthetics. (issue #38)
    Where: OUT-006 (two-layer signal), BEH-006 (variation over time),

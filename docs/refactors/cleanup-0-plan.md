@@ -694,6 +694,90 @@ above. Also before Phase 5d (family build), which restructures
   evaluator's queue, ~3.9 KB Node, plus the correlation queue in the
   Analyzer).
 
+#### Execution plan for roadmap step 8 (2026-10-22, for review, no code yet)
+
+Written after step 7d: FrequencyMatch is gone, so everything above that
+compares "scalar occurrence vs frequency occurrence" now has one row. The
+baseline is bench/sessions/2026-10-22-step8-baseline: T3 chirp 50/50 and hop
+10/10 on 3a11d80, plus T2h, a host replay dump of 80 verdicts.
+Sizes on the Analyzer build at 3a11d80: DetectionRuntime 56,104 B,
+OccurrenceEvaluator 3,912 B, InspectedOccurrence 912 B, OccurrenceVerdict 84 B,
+AnalyzerReport 1,156 B.
+
+Two parts, each its own commits. Part A changes no verdict value. Part B does,
+and is a separate decision (see "Open for the owner").
+
+**Part A: the fold (behavior-neutral)**
+
+| # | change | files | check |
+|---|---|---|---|
+| A1 | `OccurrenceVerdict makeVerdict(const InspectedOccurrence&)` as a free function next to the inspector (`inspection/VerdictProjection.h/.cpp`): today's `makeProposalFromOccurrence()` (scalar branch only), `fillResultFromProposal()` and `evaluateSinglePulse()`, without the queue. Before anything is deleted, a temporary host test runs both paths over the fixtures and requires identical verdicts. | new file; `OccurrenceEvaluator.cpp` read-only | host test (dropped after A2), T2h |
+| A2 | `drainDetectors()` renders the verdict per occurrence (the shape above). `drainOccurrenceEvaluator()`, `hasPendingEvaluatorWork()`, the second drain in `observeFrame()` and `_occurrenceEvaluator` go. FieldState now sees `observeOccurrenceVerdict()` per occurrence instead of after the frame's drain. Check FieldStateTracker for order sensitivity (same `nowMs`) and say what it found in the commit. | `DetectionRuntime.h/.cpp` | T2h byte-identical, T4 host, behavior suites |
+| A3 | Analyzer: `capturePipelineResult()` gets verdict, inspected occurrence and detector report in one scope. Removed: `PendingVerdictObservation`, `_verdictCorrelationQueue` with its index, count and overflow counter, `_verdictCorrelationFailureCount`, `push/popVerdictObservation()`, `EvaluatorInputRejectReason`, the `_evaluatorAccept*` / `_evaluatorDrainCount` counters, `activeEvaluatorReport()`. | `DetectionRuntime.*`, `AnalyzerModeApp.cpp`, `AnalyzerSeqReporter.cpp`, `AnalyzerSystemReporter.cpp`, `AnalyzerReportTypes.h` | T3: only the labels below disappear |
+| A4 | Delete `OccurrenceEvaluator.h/.cpp`, `OccurrenceEvaluatorTypes.h`, `OccurrenceEvaluatorReport`, the `using` alias `OccurrenceEvaluatorConfig`; drop `InspectionPlan.failedRequirementMeansUncertain` (never read) and its two profile lines; the `SIZE OccurrenceEvaluator=` print. | `evaluation/`, `InspectorTypes.h`, `DetectionProfile.h`, `test_shipped_profile` / `Replay.cpp` includes | T1, T5 |
+| A5 | FieldState trim (decisions/2026-10-22-fieldstate-is-the-rest-gate.md): `noiseFloor`, `avgAmbientLevel` and `chatter` go. | `FieldState.h`, `FieldStateTracker.cpp` | T2h, behavior suites |
+| A6 | Docs: myspec 5.6/5.7 (Inspector renders the verdict, no Evaluator stage), `notes_manual.md` gate chain, the decision index row for 2026-09-21-fold-evaluator-into-inspector (implemented), CLAUDE.md naming note. | docs | read-through |
+
+Expected Analyzer output diff (intentional removals, not regressions; no bench
+tool parses them, checked 2026-10-22):
+`integrity.correlation_complete=`, `integrity.evaluator_report_present=`
+(SEQ_SOURCE / SEQ_DETAIL / SEQ_EXPLAIN), `evaluator_drain_count=`,
+`evaluator_accept_attempt/success/reject_count=`,
+`evaluator_latest_reject_reason=` (system report), and the
+`MissingInspectedOccurrence` / `OccurrenceIdMismatch` integrity reasons.
+
+Gate for Part A: T1; T2h byte-identical against
+`t2h_replay.518ffe6.txt`; T3 against the step 8 baseline with counts,
+classes and reject reasons equal and only the labels above removed; T4 (host
+suites plus `test_shipped_profile` on a board); T5 (`sizeof(DetectionRuntime)`
+down by about 3.9 KB on the Node, more on the Analyzer); T7 Node smoke on one board.
+
+**Part B: the verdict boundary rule (changes verdict content)**
+
+The rule from 2026-09-21 above: the verdict carries the decision, one
+normalized magnitude, an event class and timing. No unit-bearing or
+family-shaped fields. The reason it was written (one slot, two physical
+quantities for scalar vs frequency) is gone since 7d: every verdict now comes
+from the scalar detector. What remains is the forward-looking half (Behavior
+stays family-agnostic when a second family arrives).
+
+What reads the fields Part B would drop, today:
+
+| field | readers |
+|---|---|
+| `primaryStrength` | `ResonantBehavior` (`_pendingHeardPatternStrength` -> `_activityLevel`, read only as `> 0`), Node RB summary `avg_strength` (`_rbStrengthSumScaled`), Analyzer trial selection strength (`AnalyzerSequenceSession.cpp` 588/613/653, feeds SEQ `strength=` and seqcmp's `avg_strength`), `Replay.cpp` / `ReplayMain.cpp` verdict lines, both behavior test suites |
+| `primaryOnset/ReleaseStrength`, `primaryAmbientBaseline` | `AnalyzerTrialCapture.cpp` only |
+| `confidence` | degenerate today (`valid ? 1 : 0`); SEQ `verdict_confidence=`, the summary's `avg_conf` |
+| `proposalMatched`, `occurrenceCount` | Analyzer and test fixtures; always true / 1 for a single occurrence |
+
+Steps if Part B goes ahead, after Part A:
+- B1: a decision file that fixes the three open points below.
+- B2: `confidence` made real, an `EventClass` added, and `primary*Strength` /
+  `primaryAmbientBaseline` removed from the verdict.
+- B3: the readers move. Behavior's activity uses `confidence`; RB summary
+  `avg_strength` becomes `avg_confidence` (a bench-visible rename, note it in
+  bench/README.md). The Analyzer takes strength from the occurrence it already
+  holds (A3 puts it in scope), so SEQ `strength=` and seqcmp stay comparable.
+  The replay prints confidence and class.
+- B4: the behavior suites are updated.
+Gate: T2h diff limited to the replaced fields (decision fields and timing
+identical), behavior suites green, T3 counts unchanged, T7 with an RB summary.
+
+Open for the owner (Part B only):
+1. Do it now, or record the rule in `OccurrenceVerdict.h` and do it with the
+   next family? Recommendation: record it now, implement with the next family.
+   With one family there is no mismatch to fix. Doing it now changes bench-visible
+   output (RB summary, replay lines) and Behavior's activity input in a step whose
+   promise is "nothing changes".
+2. What `confidence` means: the weakest required inspection's `StrengthClass`
+   mapped to a fixed scale (Weak/Medium/Strong), or the detector's strength
+   normalized over its Strength16 range. The first is family-agnostic by
+   construction.
+3. The `EventClass` vocabulary: today the profile hears one thing (the network
+   signal, chirp or hop train, which the detector does not tell apart), so the
+   enum starts as `{ None, NetworkSignal }` plus whatever 8a's shape inspectors
+   will separate later.
+
 ### 7a — Derived vocabulary that means "a valid verdict happened"
 
 Identifiers and labels that describe the *outcome* of the evaluator in

@@ -13,7 +13,8 @@
 #include "../../detection/features/FrequencyMeasurementPacketBuilder.h"
 #include "../../detection/inspection/InspectionNames.h"
 #include "../../detection/evaluation/VerdictNames.h"
-#include "../../param/ParamRegistry.h"
+#include <ParamRegistry.h>
+#include "../../app/ParamIds.h"
 #include "../../app/TimeBase.h"
 #include "../../app/SerialOut.h"
 
@@ -554,6 +555,7 @@ void Node::updateRbBaselineState(unsigned long now) {
 
 void Node::configureParameters() {
     configureI2SParameters();
+    _paramRegistry.setGroupNamer(param::moduleNameForGroup);
     registerDetectionParams();
     registerOutputParams();
 }
@@ -1473,7 +1475,7 @@ void Node::handleParamCommand(const char* line) {
         serialOut().print("PARAM GET path=");
         serialOut().print(path);
         serialOut().print(" module=");
-        serialOut().print(param::moduleName(binding->module));
+        serialOut().print(_paramRegistry.groupName(binding->group));
         serialOut().print(" value=");
         _paramRegistry.printValue(serialOut(), *binding);
         serialOut().println();
@@ -1501,7 +1503,7 @@ void Node::handleParamCommand(const char* line) {
         serialOut().print("PARAM SET path=");
         serialOut().print(path);
         serialOut().print(" module=");
-        serialOut().print(param::moduleName(binding->module));
+        serialOut().print(_paramRegistry.groupName(binding->group));
         serialOut().print(" old=");
         _paramRegistry.printValue(serialOut(), *binding);
 
@@ -1513,7 +1515,7 @@ void Node::handleParamCommand(const char* line) {
         serialOut().println(param::paramSetStatusName(status));
 
         if (status == param::ParamSetStatus::Ok) {
-            applyParamModule(binding->module);
+            applyParamModule(static_cast<param::ModuleId>(binding->group));
         }
         return;
     }

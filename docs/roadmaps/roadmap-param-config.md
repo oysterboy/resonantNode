@@ -488,7 +488,12 @@ Sequenced in roadmap-0-steps.md step 10.
 
 ### PAR-016 - ParamRegistry as an in-repo library
 
-Status: TODO
+Status: DONE 2026-10-22 (step 10 item 3). `lib/ParamRegistry/` (library.json, 0.2.0) has no app vocabulary: an
+opaque uint16 id and uint8 group tag per binding, the group names supplied by the app (`setGroupNamer`), and
+templated add*() overloads taking the app's enums. `src/app/ParamIds.h` holds ModuleId and ParamId. It rejects a
+duplicate id; unsigned values reject a sign ("-1" wrapped before) and overflow, with integer bounds (no float
+round-trip). There is a host test (test/test_param_registry, native-test-behavior). CI fails on any include of
+src/ from the library (tools/ci/include_direction.py). PARAM LIST/DUMP output is unchanged.
 
 ```text
 Decision (2026-09-23): do NOT split ParamRegistry into its own repo yet.

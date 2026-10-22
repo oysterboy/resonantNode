@@ -1,12 +1,41 @@
 #include "ParamRegistry.h"
 
 #include <Arduino.h>
+#include <errno.h>
+#include <math.h>
 #include <stdlib.h>
 #include <string.h>
 #include <strings.h>
-#include <math.h>
 
 namespace param {
+
+const char* paramSetStatusName(ParamSetStatus status) {
+    switch (status) {
+        case ParamSetStatus::Ok:
+            return "ok";
+        case ParamSetStatus::UnknownParam:
+            return "unknown_param";
+        case ParamSetStatus::ParseError:
+            return "parse_error";
+        case ParamSetStatus::OutOfRange:
+            return "out_of_range";
+    }
+    return "unknown";
+}
+
+const char* paramTypeName(ParamType type) {
+    switch (type) {
+        case ParamType::UInt16:
+            return "uint16";
+        case ParamType::UInt32:
+            return "uint32";
+        case ParamType::Float:
+            return "float";
+        case ParamType::Bool:
+            return "bool";
+    }
+    return "unknown";
+}
 
 namespace {
 
@@ -22,7 +51,41 @@ bool parseBool(const char* valueText, bool& outValue) {
     return false;
 }
 
-} // namespace
+// The whole value must parse: "1500abc" is an error, not 1500 (issue #31).
+bool parsedToEnd(const char* valueText, const char* end) {
+    if (end == valueText) {
+        return false;
+    }
+    while (*end == ' ' || *end == '\t') {
+        ++end;
+    }
+    return *end == '\0';
+}
+
+// An unsigned value: digits only after optional leading blanks. strtoul
+// accepts "-1" and wraps it to ULONG_MAX, so a sign is rejected up front.
+ParamSetStatus parseUnsigned(const char* valueText, uint32_t& out) {
+    const char* p = valueText;
+    while (*p == ' ' || *p == '\t') {
+        ++p;
+    }
+    if (*p < '0' || *p > '9') {
+        return ParamSetStatus::ParseError;
+    }
+    char* end = nullptr;
+    errno = 0;
+    const unsigned long parsed = strtoul(p, &end, 10);
+    if (!parsedToEnd(p, end)) {
+        return ParamSetStatus::ParseError;
+    }
+    if (errno == ERANGE || parsed > 0xFFFFFFFFUL) {
+        return ParamSetStatus::OutOfRange;
+    }
+    out = static_cast<uint32_t>(parsed);
+    return ParamSetStatus::Ok;
+}
+
+}  // namespace
 
 bool ParamRegistry::addBinding(const ParamBinding& binding) {
     if (binding.path == nullptr || binding.field == nullptr) {
@@ -30,6 +93,11 @@ bool ParamRegistry::addBinding(const ParamBinding& binding) {
     }
     if (find(binding.path) != nullptr) {
         return false;
+    }
+    for (size_t i = 0; i < _count; ++i) {
+        if (_bindings[i].id == binding.id) {
+            return false;
+        }
     }
     if (_count >= kMaxParams) {
         return false;
@@ -39,24 +107,31 @@ bool ParamRegistry::addBinding(const ParamBinding& binding) {
     return true;
 }
 
-bool ParamRegistry::addUInt16(ParamId id, ModuleId module, const char* path, uint16_t* field, uint16_t minValue, uint16_t maxValue) {
-    ParamBinding binding{id, module, ParamType::UInt16, path, field, static_cast<float>(minValue), static_cast<float>(maxValue)};
+bool ParamRegistry::addUInt16Raw(uint16_t id, uint8_t group, const char* path, uint16_t* field, uint16_t minValue, uint16_t maxValue) {
+    ParamBinding binding{id, group, ParamType::UInt16, path, field, static_cast<float>(minValue), static_cast<float>(maxValue),
+                         minValue, maxValue};
     return addBinding(binding);
 }
 
-bool ParamRegistry::addUInt32(ParamId id, ModuleId module, const char* path, uint32_t* field, uint32_t minValue, uint32_t maxValue) {
-    ParamBinding binding{id, module, ParamType::UInt32, path, field, static_cast<float>(minValue), static_cast<float>(maxValue)};
+bool ParamRegistry::addUInt32Raw(uint16_t id, uint8_t group, const char* path, uint32_t* field, uint32_t minValue, uint32_t maxValue) {
+    ParamBinding binding{id, group, ParamType::UInt32, path, field, static_cast<float>(minValue), static_cast<float>(maxValue),
+                         minValue, maxValue};
     return addBinding(binding);
 }
 
-bool ParamRegistry::addFloat(ParamId id, ModuleId module, const char* path, float* field, float minValue, float maxValue) {
-    ParamBinding binding{id, module, ParamType::Float, path, field, minValue, maxValue};
+bool ParamRegistry::addFloatRaw(uint16_t id, uint8_t group, const char* path, float* field, float minValue, float maxValue) {
+    ParamBinding binding{id, group, ParamType::Float, path, field, minValue, maxValue, 0, 0};
     return addBinding(binding);
 }
 
-bool ParamRegistry::addBool(ParamId id, ModuleId module, const char* path, bool* field) {
-    ParamBinding binding{id, module, ParamType::Bool, path, field, 0.0f, 1.0f};
+bool ParamRegistry::addBoolRaw(uint16_t id, uint8_t group, const char* path, bool* field) {
+    ParamBinding binding{id, group, ParamType::Bool, path, field, 0.0f, 1.0f, 0, 1};
     return addBinding(binding);
+}
+
+const char* ParamRegistry::groupName(uint8_t group) const {
+    const char* name = _groupNamer != nullptr ? _groupNamer(group) : nullptr;
+    return name != nullptr ? name : "unknown";
 }
 
 const ParamBinding* ParamRegistry::find(const char* path) const {
@@ -70,19 +145,6 @@ const ParamBinding* ParamRegistry::find(const char* path) const {
     }
     return nullptr;
 }
-
-namespace {
-// The whole value must parse: "1500abc" is an error, not 1500 (issue #31).
-bool parsedToEnd(const char* valueText, const char* end) {
-    if (end == valueText) {
-        return false;
-    }
-    while (*end == ' ' || *end == '\t') {
-        ++end;
-    }
-    return *end == '\0';
-}
-} // namespace
 
 ParamSetStatus ParamRegistry::applyValue(const ParamBinding& binding, const char* valueText) const {
     if (valueText == nullptr || *valueText == '\0') {
@@ -107,28 +169,21 @@ ParamSetStatus ParamRegistry::applyValue(const ParamBinding& binding, const char
             *static_cast<float*>(binding.field) = parsed;
             return ParamSetStatus::Ok;
         }
-        case ParamType::UInt32: {
-            char* end = nullptr;
-            const unsigned long parsed = strtoul(valueText, &end, 10);
-            if (!parsedToEnd(valueText, end)) {
-                return ParamSetStatus::ParseError;
-            }
-            if (static_cast<float>(parsed) < binding.minValue || static_cast<float>(parsed) > binding.maxValue) {
-                return ParamSetStatus::OutOfRange;
-            }
-            *static_cast<uint32_t*>(binding.field) = static_cast<uint32_t>(parsed);
-            return ParamSetStatus::Ok;
-        }
+        case ParamType::UInt32:
         case ParamType::UInt16: {
-            char* end = nullptr;
-            const unsigned long parsed = strtoul(valueText, &end, 10);
-            if (!parsedToEnd(valueText, end)) {
-                return ParamSetStatus::ParseError;
+            uint32_t parsed = 0;
+            const ParamSetStatus status = parseUnsigned(valueText, parsed);
+            if (status != ParamSetStatus::Ok) {
+                return status;
             }
-            if (static_cast<float>(parsed) < binding.minValue || static_cast<float>(parsed) > binding.maxValue) {
+            if (parsed < binding.minUnsigned || parsed > binding.maxUnsigned) {
                 return ParamSetStatus::OutOfRange;
             }
-            *static_cast<uint16_t*>(binding.field) = static_cast<uint16_t>(parsed);
+            if (binding.type == ParamType::UInt32) {
+                *static_cast<uint32_t*>(binding.field) = parsed;
+            } else {
+                *static_cast<uint16_t*>(binding.field) = static_cast<uint16_t>(parsed);
+            }
             return ParamSetStatus::Ok;
         }
         case ParamType::Bool: {
@@ -161,29 +216,13 @@ void ParamRegistry::printValue(Print& out, const ParamBinding& binding) const {
     }
 }
 
-namespace {
-const char* paramTypeName(ParamType type) {
-    switch (type) {
-        case ParamType::UInt16:
-            return "uint16";
-        case ParamType::UInt32:
-            return "uint32";
-        case ParamType::Float:
-            return "float";
-        case ParamType::Bool:
-            return "bool";
-    }
-    return "unknown";
-}
-} // namespace
-
 void ParamRegistry::list(Print& out) const {
     for (size_t i = 0; i < _count; ++i) {
         const ParamBinding& binding = _bindings[i];
         out.print("PARAM path=");
         out.print(binding.path);
         out.print(" module=");
-        out.print(moduleName(binding.module));
+        out.print(groupName(binding.group));
         out.print(" type=");
         out.println(paramTypeName(binding.type));
     }
@@ -195,7 +234,7 @@ void ParamRegistry::dump(Print& out) const {
         out.print("PARAM path=");
         out.print(binding.path);
         out.print(" module=");
-        out.print(moduleName(binding.module));
+        out.print(groupName(binding.group));
         out.print(" type=");
         out.print(paramTypeName(binding.type));
         out.print(" value=");
@@ -204,4 +243,4 @@ void ParamRegistry::dump(Print& out) const {
     }
 }
 
-} // namespace param
+}  // namespace param

@@ -18,7 +18,8 @@
 #include "../../output/ChirpOutput.h"
 #include "../../behavior/ResonantBehavior.h"
 #include "../../detection/evaluation/OccurrenceVerdict.h"
-#include "../../param/ParamRegistry.h"
+#include <ParamRegistry.h>
+#include "../../app/ParamIds.h"
 #include "../../selftest/SelfTestReport.h"
 #include "ResonantNodeDebug.h"
 

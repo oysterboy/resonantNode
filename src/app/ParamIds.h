@@ -3,15 +3,11 @@
 #include <stdint.h>
 
 /*
-Param core vocabulary.
-
-Minimal runtime-only bound-field param system. See
-docs/roadmaps/roadmap-param-config.md (PAR-002) for the intended shape:
-flat ParamBindings, module-owned meaning, no persistence yet.
-
-Paths are the stable public identity. ParamId is internal identity, kept
-separate so a future transport (Serial today, VEKTOR later) never needs to
-know about field pointers or storage details.
+The Node's param vocabulary for lib/ParamRegistry (PAR-016): which module owns a
+param (ModuleId, the registry's opaque group tag) and each param's stable id
+(ParamId, the registry's opaque id). Paths are the public identity; ids are
+internal, never reused once removed. Moved here from src/param/ParamTypes.h
+when the registry became an in-repo library (step 10 item 3).
 */
 namespace param {
 
@@ -36,12 +32,10 @@ inline const char* moduleName(ModuleId module) {
     return "unknown";
 }
 
-enum class ParamType : uint8_t {
-    UInt16,
-    UInt32,
-    Float,
-    Bool,
-};
+// The registry's group namer: PARAM LIST/DUMP print module=<name>.
+inline const char* moduleNameForGroup(uint8_t group) {
+    return moduleName(static_cast<ModuleId>(group));
+}
 
 // Stable internal identity for a registered param. Grows as modules register
 // more fields; not reused across removed params.
@@ -86,25 +80,4 @@ enum class ParamId : uint16_t {
     Output_IdleAnnounceMs,
 };
 
-enum class ParamSetStatus : uint8_t {
-    Ok,
-    UnknownParam,
-    ParseError,
-    OutOfRange,
-};
-
-inline const char* paramSetStatusName(ParamSetStatus status) {
-    switch (status) {
-        case ParamSetStatus::Ok:
-            return "ok";
-        case ParamSetStatus::UnknownParam:
-            return "unknown_param";
-        case ParamSetStatus::ParseError:
-            return "parse_error";
-        case ParamSetStatus::OutOfRange:
-            return "out_of_range";
-    }
-    return "unknown";
-}
-
-} // namespace param
+}  // namespace param

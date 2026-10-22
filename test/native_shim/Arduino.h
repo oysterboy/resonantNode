@@ -50,11 +50,11 @@ inline T constrain(T value, T low, T high) {
     return value < low ? low : (value > high ? high : value);
 }
 
-// A Print-shaped Serial that writes to stdout. Only the overloads the
-// repository uses.
-class HostSerial {
+// Arduino's Print, writing to stdout. Only the overloads the repository uses.
+// HostSerial (Serial) is a Print, as on the board; lib/ParamRegistry takes a
+// Print& for LIST/DUMP.
+class Print {
 public:
-    void begin(unsigned long) {}
     size_t print(const char* text) { return text != nullptr ? static_cast<size_t>(fputs(text, stdout)) : 0; }
     size_t print(char c) { fputc(c, stdout); return 1; }
     size_t print(int v) { return static_cast<size_t>(printf("%d", v)); }
@@ -70,6 +70,11 @@ public:
     template <typename T>
     size_t println(T v, int digits) { const size_t n = print(v, digits); fputc('\n', stdout); return n + 1; }
     size_t println() { fputc('\n', stdout); return 1; }
+};
+
+class HostSerial : public Print {
+public:
+    void begin(unsigned long) {}
     void flush() { fflush(stdout); }
 };
 

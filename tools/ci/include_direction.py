@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
-"""Include-direction check (NODE-007): nothing under src/detection/ may include src/modes/.
+"""Include-direction checks (NODE-007, PAR-016).
+
+1. Nothing under src/detection/ may include src/modes/.
+2. Nothing under lib/ParamRegistry/ may include anything from src/ (always strict: the library must stay
+   app-agnostic so a later split into its own repo is a move, PAR-016/PAR-017).
 
 The spec's layering (docs/specs/myspec.md) has detection below the modes. Today the Analyzer files under
 src/detection/analyzer/ still include modes/analyzer/AnalyzerModeApp.h (ANA-003, step 10 moves them out), so
@@ -36,7 +40,26 @@ def main():
         print(("error: " if strict else "warning: ") + h)
     print("include direction: %d include(s) of src/modes/ from src/detection/ (%s)" % (
         len(hits), "strict" if strict else "warning only until ANA-003"))
-    return 1 if strict and hits else 0
+
+    lib_hits = []
+    src_root = os.path.join(ROOT, "src") + os.sep
+    lib_base = os.path.join(ROOT, "lib", "ParamRegistry")
+    for dirpath, _, files in os.walk(lib_base):
+        for f in files:
+            if not f.endswith((".h", ".hpp", ".cpp", ".c")):
+                continue
+            path = os.path.join(dirpath, f)
+            for n, line in enumerate(open(path, encoding="utf-8", errors="replace"), 1):
+                m = INCLUDE.match(line)
+                if not m:
+                    continue
+                target = os.path.normpath(os.path.join(dirpath, m.group(1)))
+                if (target + os.sep).startswith(src_root):
+                    lib_hits.append("%s:%d: includes %s" % (os.path.relpath(path, ROOT), n, m.group(1)))
+    for h in lib_hits:
+        print("error: " + h)
+    print("include direction: %d include(s) of src/ from lib/ParamRegistry/ (strict)" % len(lib_hits))
+    return 1 if (strict and hits) or lib_hits else 0
 
 
 if __name__ == "__main__":

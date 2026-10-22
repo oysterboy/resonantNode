@@ -26,6 +26,12 @@ the map. The nodes' behavior does not change, except the three points marked as 
 Order: 1, 2, 3, 4, 5, 6, 7, then 8, 9 and 10 in any order. 4 needs 3; 5 needs 4; 6 is easiest after 4, when
 both profiles are param-bound.
 
+## Progress
+
+- 2026-10-22, item 2 (7c2c28e): live detection params apply in place. Bench: a PARAM SET mid-train, old firmware
+  0/10 hop trains heard, new 10/10 (bench/sessions/2026-10-22-step10-live-params).
+- 2026-10-22, item 3: ParamRegistry is lib/ParamRegistry (PAR-016), with a host test and a strict CI include rule.
+
 ## Standing checks (every commit)
 
 - T1: every env builds (CI).

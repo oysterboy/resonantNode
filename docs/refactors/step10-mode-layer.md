@@ -36,6 +36,8 @@ both profiles are param-bound.
   migrated, key map in the decision. E2: dump has 35 params; a behavior.* SET reaches ResonantBehavior
   (wait 100 -> 150, refractory 400 -> 900); RB BEHAV gives ERR; 10/10 hop trains answered; RB PROFILE resets
   behavior.rest_ms 7000 -> 5000 (silently: item 6 adds the announcement).
+- 2026-10-22, item 6 (D1): RB PROFILE prints `RB PROFILE reset path=... old=... new=...` per changed value and
+  `reset_count=N`. E2: min_duration 90 -> 85 and rest_ms 7000 -> 5000 reported, count 2; again: count 0.
 
 ## Standing checks (every commit)
 

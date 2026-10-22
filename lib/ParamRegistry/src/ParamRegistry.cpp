@@ -199,6 +199,20 @@ ParamSetStatus ParamRegistry::applyValue(const ParamBinding& binding, const char
     return ParamSetStatus::ParseError;
 }
 
+double ParamRegistry::numericValue(const ParamBinding& binding) const {
+    switch (binding.type) {
+        case ParamType::Float:
+            return static_cast<double>(*static_cast<const float*>(binding.field));
+        case ParamType::UInt32:
+            return static_cast<double>(*static_cast<const uint32_t*>(binding.field));
+        case ParamType::UInt16:
+            return static_cast<double>(*static_cast<const uint16_t*>(binding.field));
+        case ParamType::Bool:
+            return *static_cast<const bool*>(binding.field) ? 1.0 : 0.0;
+    }
+    return 0.0;
+}
+
 void ParamRegistry::printValue(Print& out, const ParamBinding& binding) const {
     switch (binding.type) {
         case ParamType::Float:

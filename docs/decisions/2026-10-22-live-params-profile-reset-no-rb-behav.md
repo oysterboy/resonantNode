@@ -1,6 +1,6 @@
 # Live params apply in place, a profile switch announces its reset, RB BEHAV goes
 
-Status: decided; D2 implemented (7c2c28e), D3 implemented (step 10 items 4-5), D1's announcement pending (item 6).
+Status: decided; D2 implemented (7c2c28e), D3 implemented (step 10 items 4-5), D1 implemented (item 6).
 Date: 2026-10-22.
 
 ## Decision

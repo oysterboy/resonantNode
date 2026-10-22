@@ -91,7 +91,12 @@ public:
     const char* groupName(uint8_t group) const;
 
     size_t count() const { return _count; }
+    // The i-th binding in registration order (i < count()).
+    const ParamBinding& at(size_t index) const { return _bindings[index]; }
     const ParamBinding* find(const char* path) const;
+    // The bound field's current value as a number (bool as 0/1), for
+    // snapshots and comparisons by the app.
+    double numericValue(const ParamBinding& binding) const;
 
     // Parses valueText per the binding's type and writes the bound field on
     // success. Returns why it was rejected otherwise. Never touches fields

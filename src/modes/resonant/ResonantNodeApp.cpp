@@ -1541,10 +1541,36 @@ bool Node::setProfileFromName(const char* name) {
         return false;
     }
 
+    // D1 (decisions/2026-10-22-live-params-profile-reset-no-rb-behav.md): a
+    // profile switch starts from the new profile's defaults (detection.scalar_*
+    // and behavior.*; band and output.* are Node values and stay), and says
+    // which live values it reset.
+    static double before[param::ParamRegistry::kMaxParams];  // static: not on the loop stack (3.4 KB headroom, step 8b)
+    const size_t count = _paramRegistry.count();
+    for (size_t i = 0; i < count; ++i) {
+        before[i] = _paramRegistry.numericValue(_paramRegistry.at(i));
+    }
     _profileKind = parsed;
     _activeDetectionProfile = detection::detectionProfileForKind(_profileKind);
     _activeBehaviorProfile = makeTonalPulseBehaviorProfile();
     applyActiveProfiles();
+    unsigned long resetCount = 0;
+    for (size_t i = 0; i < count; ++i) {
+        const param::ParamBinding& binding = _paramRegistry.at(i);
+        if (_paramRegistry.numericValue(binding) == before[i]) {
+            continue;
+        }
+        ++resetCount;
+        serialOut().print("RB PROFILE reset path=");
+        serialOut().print(binding.path);
+        serialOut().print(" old=");
+        serialOut().print(before[i], binding.type == param::ParamType::Float ? 3 : 0);
+        serialOut().print(" new=");
+        _paramRegistry.printValue(serialOut(), binding);
+        serialOut().println();
+    }
+    serialOut().print("RB PROFILE reset_count=");
+    serialOut().println(resetCount);
     return true;
 }
 

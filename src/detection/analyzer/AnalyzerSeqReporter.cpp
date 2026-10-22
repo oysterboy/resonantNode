@@ -253,10 +253,23 @@ void AnalyzerApp::printSequenceInspectCanonical(const AnalyzerReport& report) co
         serialOut().print(observation != nullptr ? observation->requestedEndMs : 0UL);
         serialOut().print(" inspect.inspection_now_ms=");
         serialOut().print(observation != nullptr ? observation->inspectionNowMs : 0UL);
+        // ANA-009 (step 7a): the history fills the available range only from
+        // values inside the requested window; with none (future window,
+        // missing stream, empty edge) it stayed 0/0 and read as "empty
+        // history". Print na then; inspect.reject_reason keeps the cause.
+        const bool rangeKnown = observation != nullptr && observation->hasValues;
         serialOut().print(" inspect.available_start_ms=");
-        serialOut().print(observation != nullptr ? observation->availableStartMs : 0UL);
+        if (rangeKnown) {
+            serialOut().print(observation->availableStartMs);
+        } else {
+            serialOut().print("na");
+        }
         serialOut().print(" inspect.available_end_ms=");
-        serialOut().print(observation != nullptr ? observation->availableEndMs : 0UL);
+        if (rangeKnown) {
+            serialOut().print(observation->availableEndMs);
+        } else {
+            serialOut().print("na");
+        }
         serialOut().print(" inspect.value=");
         serialOut().print(available ? observation->classificationValue : 0.0f, 3);
         serialOut().print(" inspect.strength_class=");

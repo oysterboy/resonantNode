@@ -16,7 +16,7 @@ the map. The nodes' behavior does not change, except the three points marked as 
 | 2 | Live detection params do not reset the detector | #14 comment | `PARAM SET detection.scalar_*` applies through `setScalarTransientConfig()` only, and `band_*` through `applyBandParams()` only. Inspection-plan or profile changes still reset. | **yes: decision D2** |
 | 3 | ParamRegistry as a library | PAR-016 | `src/param/` -> `lib/ParamRegistry/` with library.json; ModuleId an opaque tag; ParamId values in the app; duplicate-id rejection; stricter unsigned parsing (no "-1" wrap, no float round-trip above 2^24) | no, except stricter rejects |
 | 4 | Behavior params on the registry | PAR-006 | `behavior.*` paths, one per `BehaviorGateConfig` field, named like the RB BEHAV keys (or an alias table); a Node-owned `_activeBehaviorProfile` the params bind into; `ResonantBehavior::configure()` as the apply route (setters only, no state reset); kMaxParams raised from 32 (22 used + 13) | no |
-| 5 | RB BEHAV onto the registry | PAR-015 | RB BEHAV keeps its syntax and its echo (four bench tools and every session header use them), but each key calls `ParamRegistry::applyValue` on its `behavior.*` path: one validated path, no setter calls from command code | **decision D3** |
+| 5 | RB BEHAV removed | PAR-015 | D3: the command goes. nodepair / nodegroup / hearmatrix / pairmatrix set `behavior.*` through PARAM SET, and their `# state` header records PARAM DUMP only. A key map (RB BEHAV key -> behavior.* path) covers old headers. The behavior-contract decision is updated in the same commit | yes (bench interface) |
 | 6 | Profile switch keeps or drops live params | (new, from the map) | today RB PROFILE silently reloads both default profiles and loses every RB BEHAV value and `detection.scalar_*` PARAM SET | **yes: decision D1** |
 | 7 | Rest of PAR-007 | PAR-007 | register what detection still sets outside the registry. With Freq gone, PAR-007's text is out of date; candidates are `scalar_observed_stream` (the Analyzer has it, the Node does not) and the own-emit suppression values, which today are RB BEHAV keys | no |
 | 8 | Analyzer out of src/detection/ | ANA-003 | move the 9 AnalyzerApp member files to `src/modes/analyzer/`; split `AnalyzerPassRules.h` (`nextOccurrenceId` goes to detection, the rest stays Analyzer); keep the Analyzer-only types where nothing in detection includes them; `include_direction.py --strict` in CI | no |
@@ -38,7 +38,14 @@ both profiles are param-bound.
 - Step 10's gate (roadmap-0-steps.md): nothing under src/detection/ includes src/modes/; one param path per knob;
   lib/ParamRegistry/ includes nothing from src/; behavior.* and detection.* registered.
 
-## Owner decisions
+## Decided 2026-10-22 (owner; decisions/2026-10-22-live-params-profile-reset-no-rb-behav.md)
+
+- D1: RB PROFILE resets to the new profile's defaults and prints what it reset.
+- D2: live detection params apply in place, with no detector or FeatureHistory reset.
+- D3: RB BEHAV is removed, not aliased. The bench tools move to PARAM SET / PARAM DUMP behavior.*. A key map
+  keeps old session headers readable. The 2026-10-17 behavior-contract decision is updated in item 5's commit.
+
+## Owner decisions (as they were put)
 
 - **D1, profile switch (item 6).** (a) RB PROFILE keeps every live param value that the new profile also has, and
   says which it kept. (b) It resets to the new profile's defaults, as today, but prints what it reset. (c) As

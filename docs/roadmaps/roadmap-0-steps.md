@@ -746,8 +746,8 @@ the previous gate open unless the step says it can run in parallel.
    - Node on E2 boots TonalPulseScalar; RB PARAM gives ERR; detection.freq_* reads unknown_param.
    - Analyzer T3 vs 7a-gate: chirp 20/20 (dt 52 vs 51 ms), hop 10/10 (51 vs 48 ms), 40 ms 10/10 rejected, 0 drops.
      The 40 ms tones now read 85-87 ms (7a: 61-62), so they pass the detector and fall at the pattern stage. The
-     pre-removal Analyzer (a9a47c3) does the same on today's setup, so this is the setup, not 7d. Cause not
-     found; handed to 8b.
+     pre-removal Analyzer (a9a47c3) does the same on today's setup, so this is the setup, not 7d. A RAW
+     follow-up found the cause: a late reflection just above the release threshold. Handed to 8b.
    - The three runs are on bench/baselines.csv as the 110 cm references. Step 8 still records check 12's full T3.
    - The detector-family contract now lives in one place: myspec 5.3, "Adding a detector family". The
      family-build doc and the 2026-09-23 decision point to it.
@@ -796,7 +796,9 @@ the previous gate open unless the step says it can run in parallel.
    B11. From #32: 13 / B11 (scalar aggregate counts) and the P4 history
    window guard (scalar_max_duration_ms vs the history depth). From 7d (2026-10-22): a 40 ms tone read 85-87 ms
    on the bench (bench/sessions/2026-10-22-7d-freq-removed), 0-2 ms over the 85 ms minimum. In 7a it read
-   61-62 ms, cause not found. Only the inspectors keep it out. That is audit 3.1's window, measured.
+   61-62 ms. Cause (bench/sessions/2026-10-22-7d-dur40-raw): a late reflection 55-80 ms after onset at
+   2,000-2,500 against the 1,500 release threshold; a 2.6 % level rise flips it. Only the inspectors keep it out.
+   That is audit 3.1's window, measured.
    Gate: each item fixed with a host fixture or named closed-as-moot; T2/T3
    unchanged. After step 8, with or before 8a's shape inspectors.
 

@@ -1,0 +1,265 @@
+{
+  "purpose": "",
+  "setup": {
+    "distance_cm": 110.0,
+    "orientation": "mic and speaker facing up, bench",
+    "notes": "why do 40 ms tones read 86 ms now (7a: 62)? E2 Analyzer 3a11d80, E3 Emitter 23d034a"
+  },
+  "captures": [
+    {
+      "label": "dur40",
+      "rep": 0,
+      "file": "dur40_r0.csv",
+      "wav": "dur40_r0.wav",
+      "started": "2026-10-22T13:38:32",
+      "firmware": {
+        "role": "analyzer",
+        "git": "3a11d80",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "fields": [
+        "ms",
+        "amp",
+        "pcm",
+        "freq",
+        "contrast",
+        "fresh"
+      ],
+      "raw": {
+        "sr": 16000,
+        "f": 3200,
+        "dur": 40,
+        "pre_ms": 50,
+        "post_ms": 300,
+        "mode": "both",
+        "emit_seen": 1,
+        "emit_start_ms": 3424,
+        "emit_done_ms": 3462,
+        "pre_samples": 256,
+        "post_samples": 4800
+      },
+      "summary": {
+        "id": 1,
+        "requested": 5600,
+        "captured": 5056,
+        "unused_capacity": 544,
+        "max_pcm_abs": 44251,
+        "max_amp": 5464,
+        "raw_mean": 53.1,
+        "raw_abs_mean": 5763.7,
+        "raw_min": -39134,
+        "raw_max": 44251,
+        "baseline": 536.8
+      },
+      "check": {
+        "samples": 5056,
+        "tone_amp": 1038,
+        "peak_abs": 44251,
+        "env_len_ms": 40
+      }
+    },
+    {
+      "label": "dur40",
+      "rep": 1,
+      "file": "dur40_r1.csv",
+      "wav": "dur40_r1.wav",
+      "started": "2026-10-22T13:38:46",
+      "firmware": {
+        "role": "analyzer",
+        "git": "3a11d80",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "fields": [
+        "ms",
+        "amp",
+        "pcm",
+        "freq",
+        "contrast",
+        "fresh"
+      ],
+      "raw": {
+        "sr": 16000,
+        "f": 3200,
+        "dur": 40,
+        "pre_ms": 50,
+        "post_ms": 300,
+        "mode": "both",
+        "emit_seen": 1,
+        "emit_start_ms": 17168,
+        "emit_done_ms": 17206,
+        "pre_samples": 256,
+        "post_samples": 4800
+      },
+      "summary": {
+        "id": 2,
+        "requested": 5600,
+        "captured": 5056,
+        "unused_capacity": 544,
+        "max_pcm_abs": 44187,
+        "max_amp": 5460,
+        "raw_mean": -3.3,
+        "raw_abs_mean": 5839.9,
+        "raw_min": -42138,
+        "raw_max": 44187,
+        "baseline": 495.9
+      },
+      "check": {
+        "samples": 5056,
+        "tone_amp": 1124,
+        "peak_abs": 44187,
+        "env_len_ms": 40
+      }
+    },
+    {
+      "label": "dur40",
+      "rep": 2,
+      "file": "dur40_r2.csv",
+      "wav": "dur40_r2.wav",
+      "started": "2026-10-22T13:39:00",
+      "firmware": {
+        "role": "analyzer",
+        "git": "3a11d80",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "fields": [
+        "ms",
+        "amp",
+        "pcm",
+        "freq",
+        "contrast",
+        "fresh"
+      ],
+      "raw": {
+        "sr": 16000,
+        "f": 3200,
+        "dur": 40,
+        "pre_ms": 50,
+        "post_ms": 300,
+        "mode": "both",
+        "emit_seen": 1,
+        "emit_start_ms": 31338,
+        "emit_done_ms": 31376,
+        "pre_samples": 278,
+        "post_samples": 4800
+      },
+      "summary": {
+        "id": 3,
+        "requested": 5600,
+        "captured": 5078,
+        "unused_capacity": 522,
+        "max_pcm_abs": 44407,
+        "max_amp": 5614,
+        "raw_mean": 128.6,
+        "raw_abs_mean": 6027.5,
+        "raw_min": -44407,
+        "raw_max": 40715,
+        "baseline": 510.7
+      },
+      "check": {
+        "samples": 5078,
+        "tone_amp": 231,
+        "peak_abs": 44407,
+        "env_len_ms": 45
+      }
+    },
+    {
+      "label": "dur100",
+      "rep": 0,
+      "file": "dur100_r0.csv",
+      "wav": "dur100_r0.wav",
+      "started": "2026-10-22T13:39:18",
+      "firmware": null,
+      "fields": [
+        "ms",
+        "amp",
+        "pcm",
+        "freq",
+        "contrast",
+        "fresh"
+      ],
+      "raw": {
+        "sr": 16000,
+        "f": 3200,
+        "dur": 100,
+        "pre_ms": 50,
+        "post_ms": 300,
+        "mode": "both",
+        "emit_seen": 1,
+        "emit_start_ms": 3605,
+        "emit_done_ms": 3703,
+        "pre_samples": 252,
+        "post_samples": 4800
+      },
+      "summary": {
+        "id": 1,
+        "requested": 5600,
+        "captured": 5052,
+        "unused_capacity": 548,
+        "max_pcm_abs": 44127,
+        "max_amp": 5467,
+        "raw_mean": 141.3,
+        "raw_abs_mean": 10603.5,
+        "raw_min": -44127,
+        "raw_max": 39727,
+        "baseline": -378.4
+      },
+      "check": {
+        "samples": 5052,
+        "tone_amp": 22404,
+        "peak_abs": 44127,
+        "env_len_ms": 90
+      }
+    },
+    {
+      "label": "dur100",
+      "rep": 1,
+      "file": "dur100_r1.csv",
+      "wav": "dur100_r1.wav",
+      "started": "2026-10-22T13:39:32",
+      "firmware": null,
+      "fields": [
+        "ms",
+        "amp",
+        "pcm",
+        "freq",
+        "contrast",
+        "fresh"
+      ],
+      "raw": {
+        "sr": 16000,
+        "f": 3200,
+        "dur": 100,
+        "pre_ms": 50,
+        "post_ms": 300,
+        "mode": "both",
+        "emit_seen": 1,
+        "emit_start_ms": 17788,
+        "emit_done_ms": 17886,
+        "pre_samples": 216,
+        "post_samples": 4800
+      },
+      "summary": {
+        "id": 2,
+        "requested": 5600,
+        "captured": 5016,
+        "unused_capacity": 584,
+        "max_pcm_abs": 44334,
+        "max_amp": 5592,
+        "raw_mean": 285.2,
+        "raw_abs_mean": 10529.6,
+        "raw_min": -43445,
+        "raw_max": 44334,
+        "baseline": -408.1
+      },
+      "check": {
+        "samples": 5016,
+        "tone_amp": 21513,
+        "peak_abs": 44334,
+        "env_len_ms": 90
+      }
+    }
+  ]
+}

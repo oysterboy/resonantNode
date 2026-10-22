@@ -23,7 +23,10 @@ Setup: as 2026-10-22-7a-gate (owner: layout unchanged). E2 (COM3) Analyzer on ma
 The 40 ms row differs at the detector. A/B on the same setup: the Analyzer from a9a47c3 (the commit before the
 removal) gives the same 85-86 ms and 10 pattern-stage rejects (ab_pre7d_dur40_diag_detail.a9a47c3.log). So the
 removal did not cause it; something in the setup since 7a did (E3's firmware changed from bc9a89e to 23d034a, whose
-only output-side change is 98b2fd0's IRAM move; the room is unrecorded). Not explained.
+only output-side change is 98b2fd0's IRAM move; the room is unrecorded). Follow-up RAW capture
+(2026-10-22-7d-dur40-raw): the Emitter plays 40 ms. A late reflection 55-80 ms after onset sits at 2,000-2,500,
+just above the 1,500 release threshold, and keeps the candidate open. A 2.6 % level rise since 7a is enough to
+flip it.
 
 What it means: a 40 ms tone read +45 ms long sits 0-2 ms over the 85 ms minimum, so the duration gate held it only by
 chance in 7a. The contrast/amp inspectors reject it either way. This is audit 3.1 / DET-010's 85-89 ms window (step 8b).

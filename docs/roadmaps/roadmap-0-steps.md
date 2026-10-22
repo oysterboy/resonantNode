@@ -39,6 +39,9 @@ Status update 2026-10-22, night: 7c done. FieldState stays as the rest gate (tri
 is removed in the new step 7d (#52), before step 8; step 9 deferred to step 11; 8b's Freq items moot. Next: 7d.
 Status update 2026-10-22, late night: 7d done (3a11d80). FrequencyMatch is gone and the Scalar T3 is unchanged
 against 7a. Next: step 8; its baseline is recorded (bench 2026-10-22-step8-baseline).
+Status update 2026-10-22, step 8: Part A done (the evaluator is folded into inspection, behavior-neutral, gate
+met). Part B (the verdict boundary rule) is open for the owner. Next by order: 8b (detection follow-up bugs on the
+folded inspector).
 Status update 2026-10-22, evening: second revision (owner's picks): 8a held until after 10b (it changes the
 signal 10b compares against); step 9's Phase 6 re-checked once 7c decides Freq; new step 10c (five nodes for
 24 h or more) and a goal for the phase after 10b (an installation-ready node). Issues: 7c #49, 10b #50, 10c #51.
@@ -752,8 +755,8 @@ the previous gate open unless the step says it can run in parallel.
    - The detector-family contract now lives in one place: myspec 5.3, "Adding a detector family". The
      family-build doc and the 2026-09-23 decision point to it.
 
-8. Phase 7c: fold OccurrenceEvaluator into OccurrenceInspector, delete the
-   correlation queue. (issue #11)
+8. [DONE 2026-10-22] Phase 7c: fold OccurrenceEvaluator into OccurrenceInspector, delete the
+   correlation queue. (issue #11, closed)
    Where: DET-008 -> docs/refactors/cleanup-0-plan.md Phase 7c.
    Gate: as that phase states (T1, T2/T3 label-only diffs, T5, T7),
    measured against a baseline recorded on main at the start of this step,
@@ -772,7 +775,17 @@ the previous gate open unless the step says it can run in parallel.
    The standing battery in cleanup-0-plan.md was revised for one family (T2 gone, T2h added, T1/T4/T6/T7
    brought up to date). Execution plan written 2026-10-22 for review (cleanup-0-plan.md, Phase 7c,
    "Execution plan for roadmap step 8"): Part A is the fold, behavior-neutral; Part B is the verdict boundary
-   rule, which changes verdict content. Part B is open for the owner. No code yet.
+   rule, which changes verdict content. Part B is open for the owner.
+   Done 2026-10-22, Part A (2593327 makeVerdict, 5c5f9ed fold, 4efba86 FieldState trim; bench/sessions/
+   2026-10-22-step8-fold):
+   - makeVerdict() checked against the evaluator on the host first: 94 verdicts, all fields equal.
+   - Every env builds, and T2h is byte-identical to the baseline.
+   - Host suites 20/20 and 21/21; on E2, the on-device suites 6/6, 9/9 and 8/8.
+   - T3 vs baseline: chirp 50/50, hop 10/10, 0 drops. The only SEQ field difference is
+     integrity.evaluator_report_present, removed on purpose.
+   - T7: E2 as a Node heard 10 hop trains from E3 and answered the 9 that came after startup.
+   - DetectionRuntime 56,104 -> 47,008 B on the Analyzer; Node RAM -3,936 B.
+   Open: Part B (the verdict boundary rule), the owner's call, see the plan's three points.
 
 8a. [DEFERRED until 10b] Signal variation, part 2: aesthetics. (issue #38)
    Where: OUT-006 (two-layer signal), BEH-006 (variation over time),

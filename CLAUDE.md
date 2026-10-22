@@ -92,7 +92,7 @@ SoundOutput performs output.
 ```
 
 It defines strict per-module "owns / must not own" boundaries (Detector,
-Occurrence, DetectorReport, Inspector, `OccurrenceEvaluator`, FieldState,
+Occurrence, DetectorReport, Inspector (ending in `makeVerdict()`), FieldState,
 Analyzer, Behavior, SoundOutput) and a numeric-domain contract for feature
 values (`Strength16`, `FrequencyScore16`, contrast as a float quality
 domain) that must not be rescaled downstream. `DetectionRuntime` coordinates
@@ -107,7 +107,10 @@ stage judges one occurrence against the plan's support requirements and has
 no temporal logic; "Pattern" is reserved for a future downstream stage). If
 you see `PatternMatcher`/`PatternResult` in an older doc, branch, or note,
 it means "what is now `OccurrenceEvaluator`/`OccurrenceVerdict`" — the class
-itself was not left as an alias.
+itself was not left as an alias. `OccurrenceEvaluator` itself was folded into
+inspection on 2026-10-22 (step 8): the verdict comes from `makeVerdict()` in
+`src/detection/inspection/VerdictProjection.h`, and an older note that names
+the evaluator means that function.
 
 Detector families: `FrequencyMatchDetector` and the `TonalPulseFreq` profile
 were removed on 2026-10-22 (step 7d,

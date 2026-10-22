@@ -203,7 +203,7 @@ Node               -> status/log exposure only
 - `AudioSignalFrame` is built from the live I2S stream.
 - The detector produces occurrence evidence once.
 - `OccurrenceInspector` adds AMP support and amp-window evidence.
-- `OccurrenceEvaluator` turns the pending occurrence group into a `OccurrenceVerdict`.
+- `makeVerdict()` (end of inspection, since 2026-10-22; was `OccurrenceEvaluator`) turns the inspected occurrence into an `OccurrenceVerdict`.
 - For `TonalPulse`, the result is valid only when:
   - the frequency path matched
   - the profile-owned support gate allows acceptance

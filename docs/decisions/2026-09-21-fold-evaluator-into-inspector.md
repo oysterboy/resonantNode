@@ -1,8 +1,11 @@
 # Fold OccurrenceEvaluator into OccurrenceInspector; delete the correlation queue
 
-Status: decided, not yet implemented (step 8 of `roadmap-0-steps.md`,
-issue #11). Runs after the field trial (step 6) and once CI is in place
-(step 7).
+Status: implemented 2026-10-22 (step 8 of `roadmap-0-steps.md`, issue #11;
+2593327, 5c5f9ed). The verdict is `makeVerdict()` in
+`src/detection/inspection/VerdictProjection.h`, a function called after
+`inspectWithHistory()`, not a method of `OccurrenceInspector`. Same effect: no
+evaluator stage, no correlation queue. The verdict boundary rule (cleanup-0-plan.md
+Phase 7c, Part B) is still open.
 Date: 2026-09-21.
 
 ## Decision

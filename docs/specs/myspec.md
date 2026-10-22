@@ -69,8 +69,8 @@ Occurrence:
 Inspector:
     candidate-relative evidence annotation
 
-OccurrenceEvaluator:
-    public pattern-stage boundary
+makeVerdict (end of inspection):
+    applies the plan's support requirements, renders the OccurrenceVerdict
 
 FieldStateTracker:
     acoustic context
@@ -96,7 +96,7 @@ Current code state:
 
 ```text
 DetectorReport is the active detector-stage report contract.
-OccurrenceEvaluator is the public pattern-stage boundary.
+OccurrenceVerdict is rendered by makeVerdict() as the last step of inspection (since 2026-10-22).
 Analyzer prints clean SEQ_TRIAL / SEQ_SOURCE / SEQ_INSPECT / SEQ_EXPLAIN / SEQ_SUMMARY output.
 ResonantBehavior consumes OccurrenceVerdict and FieldState.
 ChirpOutput remains the current output path.
@@ -116,7 +116,7 @@ AudioSignalFrame
 → Occurrence
 → Inspector
 → InspectedOccurrence
-→ OccurrenceEvaluator
+→ makeVerdict
 → OccurrenceVerdict
 → Behavior
 → OutputRequest
@@ -188,7 +188,7 @@ feature extraction / feature routing
 active detector update calls
 accepted Occurrence draining
 Inspector call
-OccurrenceEvaluator call
+makeVerdict (per occurrence)
 FieldStateTracker update
 latest OccurrenceVerdict queue/snapshot
 DetectorReport snapshot/routing
@@ -274,7 +274,7 @@ Detector boundary
 Occurrence boundary
 DetectorReport boundary
 Inspector boundary
-OccurrenceEvaluator boundary
+Verdict (makeVerdict)
 FieldState
 Analyzer / reporting boundary
 ```
@@ -306,8 +306,7 @@ Preferred canonical vocabulary:
 DetectionProfile
 DetectorId
 DetectorSelection
-InspectionPlan
-OccurrenceEvaluatorConfig
+InspectionPlan (also the verdict's requirements)
 FieldStateConfig
 ```
 
@@ -644,8 +643,7 @@ Typed accepted-event detail may temporarily include scalar or frequency accepted
 
 ```text
 Inspector
-OccurrenceEvaluator internals
-OccurrenceVerdict construction
+OccurrenceVerdict construction (makeVerdict)
 Analyzer compatibility
 ```
 
@@ -764,34 +762,43 @@ TargetBandStrength
 
 Inspectors produce evidence.
 
-OccurrenceEvaluator decides whether evidence satisfies pattern support requirements.
+The last step of inspection, `makeVerdict()`, decides whether that evidence
+satisfies the plan's support requirements. It is one rule over the stored
+evidence, not a second stage (5.7).
 
 Rule:
 
 ```text
-Inspectors produce support/evidence facts.
-They do not own final pattern meaning.
+Inspector modules produce support/evidence facts.
+makeVerdict applies the plan's requirements to them and nothing else.
+Neither decides behavior.
 ```
 
 ---
 
-### 5.7 OccurrenceEvaluator Boundary
+### 5.7 Verdict Boundary (makeVerdict)
 
-`OccurrenceEvaluator` is the public evaluation-stage boundary: the final
-check before Behavior. It takes one `InspectedOccurrence`, judges it against
-the inspection plan's support requirements (minimum strength per
-`InspectionTarget`), and emits an `OccurrenceVerdict`.
+`makeVerdict()` (src/detection/inspection/VerdictProjection.h) is the final
+check before Behavior and the last step of inspection. It takes one
+`InspectedOccurrence`, judges it against the inspection plan's support
+requirements (minimum strength per `InspectionTarget`), and renders an
+`OccurrenceVerdict`. It is a function, not a stage: it holds no queue and no
+state, and DetectionRuntime calls it per occurrence in `drainDetectors()`, with
+the inspected occurrence and the detector report in the same scope.
+
+Until 2026-10-22 this was the `OccurrenceEvaluator` class with its own input
+queue, and the Analyzer re-associated verdicts with their inspections through
+a correlation queue. Both were removed in roadmap step 8
+(decisions/2026-09-21-fold-evaluator-into-inspector.md). Older docs that say
+`OccurrenceEvaluator` mean this function.
 
 Public conceptual flow:
 
 ```text
 InspectedOccurrence
-→ OccurrenceEvaluator
+→ makeVerdict
 → OccurrenceVerdict
 ```
-
-Any internal assembly or rule helpers are implementation details, not public
-architecture boundaries.
 
 Renamed 2026-09-21 from `PatternMatcher` / `PatternResult`. The stage never
 matched patterns: it evaluates exactly one occurrence, with no temporal or
@@ -802,14 +809,8 @@ chirp grouping; see the roadmap) would consume *accepted* occurrences over
 time, so it belongs downstream of this verdict, as its own stage, not in
 place of it. The name "Pattern" is reserved for that stage.
 
-Public code and docs should prefer:
-
-```text
-OccurrenceEvaluator
-OccurrenceVerdict
-```
-
-over presenting additional helper types as separate public runtime stages.
+Public code and docs should name `makeVerdict` and `OccurrenceVerdict`. They
+should not present helper types as separate runtime stages.
 
 `OccurrenceVerdict.valid` is the primary behavior/analyzer gate.
 
@@ -833,8 +834,11 @@ last inspected occurrence ms
 last pattern ms
 quiet / active / dense
 activity / density
-noise floor or ambient measures
 ```
+
+(`noiseFloor` and `avgAmbientLevel` were removed 2026-10-22: they were
+occurrence counts under another name. A real ambient measure would be a new,
+defined feature; decisions/2026-10-22-fieldstate-is-the-rest-gate.md.)
 
 FieldState may consume:
 
@@ -859,7 +863,7 @@ Rule:
 
 ```text
 FieldState describes acoustic context.
-OccurrenceEvaluator decides pattern meaning.
+makeVerdict decides whether an occurrence meets the plan's requirements.
 Behavior decides reaction.
 ```
 

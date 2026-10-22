@@ -511,6 +511,10 @@ first**: it deletes code that 7a and 7b would otherwise rename.
 
 ### 7c — Fold the Evaluator into the Inspector; delete the correlation queue
 
+Implemented 2026-10-22 (Part A of the execution plan below: 2593327, 5c5f9ed,
+4efba86; gate in bench/sessions/2026-10-22-step8-fold). Part B, the verdict
+boundary rule, is still open for the owner.
+
 Decided 2026-09-21. The question that settled it: the Inspector inspects
 and stores the result; the Evaluator checks whether the result met the
 requirement and passes the verdict on. Why can't the Inspector do that?

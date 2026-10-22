@@ -33,10 +33,10 @@ Landed items from this area now live in `docs/roadmaps/roadmap archive/roadmap-c
 
 ```text
 [REMOVED] DetectionDiagnostics and analyzer legacy compatibility are removed from src.
-[PARTIAL] OccurrenceEvaluator currently stays single-proposal oriented.
-          Scheduled for removal: cleanup-0-plan.md Phase 7c folds it into
-          OccurrenceInspector (OccurrenceVerdict stays as the Behavior-facing
-          type). ANA-002 and the Evaluator wording in this file change with it.
+[LANDED] OccurrenceEvaluator folded into inspection 2026-10-22 (step 8, cleanup-0-plan.md
+          Phase 7c): makeVerdict() renders the single-occurrence verdict;
+          OccurrenceVerdict stays the Behavior-facing type. The Evaluator
+          wording further down (ANA-002, the pattern-stage notes) predates it.
 [REMOVED] Frequency reason handling (string-backed): FrequencyMatch removed 2026-10-22 (step 7d).
 ```
 

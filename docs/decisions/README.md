@@ -48,7 +48,7 @@ what replaced it.
 | 2026-09-20 | [Occurrence detail fields are evidence namespaces, not per-detector slots](2026-09-20-occurrence-detail-namespaces.md) |
 | 2026-09-21 | [Defer the single-active-detector union; superseded by family build flag](2026-09-21-defer-single-detector-union.md) |
 | 2026-09-21 | [Rename PatternMatcher / PatternResult to OccurrenceEvaluator / OccurrenceVerdict](2026-09-21-rename-patternmatcher-to-occurrenceevaluator.md) |
-| 2026-09-21 | [Fold OccurrenceEvaluator into OccurrenceInspector (Phase 7c, not yet implemented)](2026-09-21-fold-evaluator-into-inspector.md) |
+| 2026-09-21 | [Fold OccurrenceEvaluator into OccurrenceInspector (Phase 7c, implemented 2026-10-22 as makeVerdict(), step 8)](2026-09-21-fold-evaluator-into-inspector.md) |
 | 2026-09-23 | [Detector family is a build flag; no virtual detector or runtime interface](2026-09-23-no-virtual-detector-interface.md) |
 | 2026-09-23 | [Keep ParamRegistry in this repo as a PlatformIO library](2026-09-23-keep-paramregistry-in-repo.md) |
 | 2026-10-06 | [Nodes move to D-AMP output (MAX98357A over I2S); board is a build variant](2026-10-06-damp-output-hardware.md) |

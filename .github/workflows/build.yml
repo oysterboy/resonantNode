@@ -1,0 +1,66 @@
+# NODE-007 (step 7): every env in platformio.ini builds on every push, the host tests run, and the include
+# direction (src/detection must not include src/modes) is reported. No hardware here: a green run means
+# "compiles and host tests pass", never "works on a board" (CLAUDE.md).
+name: build
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  esp32:
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        env:
+          - esp32dev
+          - esp32dev-analyzer
+          - esp32dev-emitter
+          - esp32dev-piezo
+          - esp32dev-piezo-analyzer
+          - esp32dev-piezo-emitter
+          - esp32dev-wraptest
+          - esp32dev-analyzer-wraptest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.platformio/packages
+            ~/.platformio/platforms
+            ~/.cache/pip
+          key: pio-${{ runner.os }}-${{ hashFiles('platformio.ini') }}
+      - run: pip install platformio
+      - run: pio run -e ${{ matrix.env }}
+
+  host:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.platformio/packages
+            ~/.platformio/platforms
+            ~/.cache/pip
+          key: pio-host-${{ runner.os }}-${{ hashFiles('platformio.ini') }}
+      - run: pip install platformio
+      - run: g++ --version
+      - run: pio run -e native-replay
+      - run: pio test -e native-test
+      - run: pio test -e native-test-behavior
+
+  include-direction:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      # Warning only until ANA-003 (step 10) moves the Analyzer out of src/detection; then add --strict.
+      - run: python3 tools/ci/include_direction.py

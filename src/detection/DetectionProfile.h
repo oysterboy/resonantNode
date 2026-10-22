@@ -159,7 +159,7 @@ inline DetectionProfile makeTonalPulseScalarProfile() {
 
 
     // Inspection: Frequency Contrast
-    profile.inspectionPlan = {};
+    profile.inspectionPlan = InspectionPlan{};  // not "= {}": g++ 13 rejects a brace list on this aggregate (NODE-007)
     profile.inspectionPlan.modules[0].kind = InspectionModuleKind::MagnitudeFeatureStrength; // Magnitude inspector module.
     profile.inspectionPlan.modules[0].target = InspectionTarget::Contrast; // Route this observation as contrast evidence.
     profile.inspectionPlan.modules[0].enabled = true; // Enable the module in the matcher.
@@ -221,7 +221,7 @@ inline DetectionProfile makeTonalPulseFreqProfile() {
   
     // Inspector composition.
 
-    profile.inspectionPlan = {};
+    profile.inspectionPlan = InspectionPlan{};  // not "= {}": g++ 13 rejects a brace list on this aggregate (NODE-007)
     profile.inspectionPlan.modules[0].kind = InspectionModuleKind::MagnitudeFeatureStrength;
     profile.inspectionPlan.modules[0].target = InspectionTarget::Amp;
     profile.inspectionPlan.modules[0].enabled = true;

@@ -58,7 +58,12 @@ CI (`.github/workflows/build.yml`, NODE-007) builds every env and runs the host 
 `gh run list` after pushing. A green run is compile plus host tests, not hardware.
 
 Unit tests live under `test/` (PlatformIO/Unity). On-device:
-`test/test_analyzer_pass_rules`, `test/test_timebase`. Host (no board,
+`test/test_analyzer_pass_rules`, `test/test_timebase`, and
+`test/test_shipped_profile`, which runs the shipped scalar profile over the
+host fixtures. It also runs on the host in `native-test-behavior`. The ESP
+envs set `monitor_dtr/rts = 0`, so `pio test` can't reset the board and
+misses its output. Upload with `--without-testing`, then reset and read
+the port yourself. Host (no board,
 NODE-006): `pio test -e native-test` replays recorded captures through the
 real detection chain (`test/test_replay_corpus`, fixtures under
 `test/fixtures`), `pio test -e native-test-behavior` drives
@@ -103,6 +108,13 @@ no temporal logic; "Pattern" is reserved for a future downstream stage). If
 you see `PatternMatcher`/`PatternResult` in an older doc, branch, or note,
 it means "what is now `OccurrenceEvaluator`/`OccurrenceVerdict`" — the class
 itself was not left as an alias.
+
+Detector families: `FrequencyMatchDetector` and the `TonalPulseFreq` profile
+were removed on 2026-10-22 (step 7d,
+`docs/decisions/2026-10-22-remove-frequencymatch.md`). `ScalarTransientDetector`
+is the only family. Older docs and bench sessions that mention Freq describe
+removed code. A new detector joins on the terms in `myspec.md` 5.3, "Adding a
+detector family".
 
 `docs/notes_manual.md` is the complementary operator-facing doc: profile
 config sites, reset/apply points, and the

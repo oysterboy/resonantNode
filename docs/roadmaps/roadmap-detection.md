@@ -37,7 +37,7 @@ Landed items from this area now live in `docs/roadmaps/roadmap archive/roadmap-c
           Scheduled for removal: cleanup-0-plan.md Phase 7c folds it into
           OccurrenceInspector (OccurrenceVerdict stays as the Behavior-facing
           type). ANA-002 and the Evaluator wording in this file change with it.
-[PARTIAL] Frequency reason handling is still string-backed internally.
+[REMOVED] Frequency reason handling (string-backed): FrequencyMatch removed 2026-10-22 (step 7d).
 ```
 
 ## Implementation order
@@ -173,7 +173,12 @@ passing the incomplete case is not a fix.
 
 ### DET-010 - peak-centered inspection runs before its window has arrived
 
-Status: TODO (found 2026-10-09, #20)
+Status: Freq case REMOVED 2026-10-22 with FrequencyMatch (step 7d,
+decisions/2026-10-22-remove-frequencymatch.md). Open on Scalar as audit 3.1:
+occurrences of 85-89 ms are inspected before the +100 ms Start-anchored
+window closes; measured with a 40 ms tone plus a room reflection reading
+85-87 ms (bench/sessions/2026-10-22-7d-dur40-raw). Step 8b.
+(found 2026-10-09, #20)
 
 ```text
 TonalPulseFreq inspects PeakCentered windows (peak -10 .. +90 ms). The

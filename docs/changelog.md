@@ -1,3 +1,34 @@
+# 2026-10-22 - Field trial passed (step 6); refactor phase opened (3d, 7, 7a-7d closed)
+
+### Context
+
+Five D-AMP nodes answered each other in one room, and every chain ended (step 6). The steps file was
+revised for the next phase: the refactors, held against that field baseline and closed by a rerun of step 6
+(10b) and a 24 h run (10c). Steps 4-7 closed between 2026-10-14 and 2026-10-22 without changelog entries; their
+results are in roadmap-0-steps.md.
+
+### Changed
+
+- 7a: console output in whole lines and the per-sample path in IRAM, 0 dropped buffers (98b2fd0)
+- 7b: host vs board comparison of the frequency path (23d034a); the shipped profile as an on-device and host
+  test (test_shipped_profile, 6899683, d847b37)
+- 3d closed, its pass doc archived, leftovers handed to steps (576ff3e)
+- 7c decisions: FieldState stays as the rest gate; FrequencyMatch is removed (a9a47c3)
+- 7d: FrequencyMatchDetector and TonalPulseFreq removed, Scalar the only family (3a11d80); the detector-family
+  contract collected in myspec 5.3
+
+### Verification
+
+- step 6: hearing matrix 18/20, 41/41 chains ended in quiet and with speech/music, 0 noise-started, 0 drops
+  (bench 2026-10-22-step6-trial)
+- 7b: host == board to 1 FrequencyScore16 on the band, contrast within 0.5 %; test_shipped_profile 6/6 on E2
+- 7d: Analyzer T3 vs 7a unchanged (chirp 20/20, hop 10/10, 40 ms 10/10 rejected), Node boots TonalPulseScalar
+- finding: a 40 ms tone reads 86 ms in this room, because a late reflection sits above the release threshold
+  (bench 2026-10-22-7d-dur40-raw); handed to 8b
+- not run: 10b/10c; the host vs board 100 ms duration mismatch (154 vs 127 ms) is unexamined
+
+---
+
 # 2026-10-12 - Micros wrap fixed (step 3c, #30), soak closed (step 3a, #27)
 
 ### Context

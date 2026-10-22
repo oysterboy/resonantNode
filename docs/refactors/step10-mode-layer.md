@@ -38,6 +38,10 @@ both profiles are param-bound.
   behavior.rest_ms 7000 -> 5000 (silently: item 6 adds the announcement).
 - 2026-10-22, item 6 (D1): RB PROFILE prints `RB PROFILE reset path=... old=... new=...` per changed value and
   `reset_count=N`. E2: min_duration 90 -> 85 and rest_ms 7000 -> 5000 reported, count 2; again: count 0.
+- 2026-10-22, item 7: detection.contrast_medium / amp_medium as live params (written to the plan module by
+  target); DetectionRuntime::setInspectionPlan rebinds FeatureHistory streams only when they change. E2: at
+  contrast_medium 32,760, 3 hop trains are seen by the detector (pending +3) but none accepted; at 30,500, 3/3
+  again. T2h byte-identical.
 
 ## Standing checks (every commit)
 

@@ -559,6 +559,11 @@ void Node::configureParameters() {
     registerDetectionParams();
     registerOutputParams();
     registerBehaviorParams();
+    loadInspectionLimitsFromProfile();
+    _paramRegistry.addFloat(param::ParamId::Detection_ContrastMedium, param::ModuleId::Detection,
+                            "detection.contrast_medium", &_contrastMediumThreshold, 0.0f, 32767.0f);
+    _paramRegistry.addFloat(param::ParamId::Detection_AmpMedium, param::ModuleId::Detection,
+                            "detection.amp_medium", &_ampMediumThreshold, 0.0f, 32767.0f);
 }
 
 // Bind the currently-editable detection fields into the flat ParamRegistry.
@@ -666,8 +671,42 @@ void Node::registerBehaviorParams() {
                              "behavior.rest_ms", u32(&b.restMs), 0U, 600000U);
 }
 
+namespace {
+// The plan module that inspects `target`, or nullptr (step 10 item 7).
+detection::InspectionModuleConfig* moduleForTarget(detection::InspectionPlan& plan, detection::InspectionTarget target) {
+    const size_t count = plan.count > detection::kMaxInspectionModules ? detection::kMaxInspectionModules : plan.count;
+    for (size_t i = 0; i < count; ++i) {
+        if (plan.modules[i].target == target) {
+            return &plan.modules[i];
+        }
+    }
+    return nullptr;
+}
+}  // namespace
+
+// The inspectors' medium limits as live params (step 10 item 7). They are Node
+// values copied from the active profile's plan, so the binding does not depend
+// on the plan's module order; applyLiveDetectionParams() writes them back into
+// the module with the matching target. A profile without such a module ignores
+// the value.
+void Node::loadInspectionLimitsFromProfile() {
+    detection::InspectionModuleConfig* contrast = moduleForTarget(_activeDetectionProfile.inspectionPlan, detection::InspectionTarget::Contrast);
+    detection::InspectionModuleConfig* amp = moduleForTarget(_activeDetectionProfile.inspectionPlan, detection::InspectionTarget::Amp);
+    _contrastMediumThreshold = contrast != nullptr ? contrast->magnitude.supportStrength.mediumPeakThreshold : 0.0f;
+    _ampMediumThreshold = amp != nullptr ? amp->magnitude.supportStrength.mediumPeakThreshold : 0.0f;
+}
+
 void Node::applyLiveDetectionParams() {
     _detection.setScalarTransientConfig(_activeDetectionProfile.scalarTransient);
+    detection::InspectionModuleConfig* contrast = moduleForTarget(_activeDetectionProfile.inspectionPlan, detection::InspectionTarget::Contrast);
+    detection::InspectionModuleConfig* amp = moduleForTarget(_activeDetectionProfile.inspectionPlan, detection::InspectionTarget::Amp);
+    if (contrast != nullptr) {
+        contrast->magnitude.supportStrength.mediumPeakThreshold = _contrastMediumThreshold;
+    }
+    if (amp != nullptr) {
+        amp->magnitude.supportStrength.mediumPeakThreshold = _ampMediumThreshold;
+    }
+    _detection.setInspectionPlan(_activeDetectionProfile.inspectionPlan);  // same streams: history kept
     applyBandParams();
 }
 
@@ -1553,6 +1592,7 @@ bool Node::setProfileFromName(const char* name) {
     _profileKind = parsed;
     _activeDetectionProfile = detection::detectionProfileForKind(_profileKind);
     _activeBehaviorProfile = makeTonalPulseBehaviorProfile();
+    loadInspectionLimitsFromProfile();
     applyActiveProfiles();
     unsigned long resetCount = 0;
     for (size_t i = 0; i < count; ++i) {

@@ -227,7 +227,16 @@ void DetectionRuntime::setInspectionPlan(const InspectionPlan& plan) {
             streams[streamCount++] = module.magnitude.stream;
         }
     }
-    _featureHistory.setActiveStreams(streams, streamCount);
+    // Rebinding the streams clears every buffer. Only do it when the set of
+    // streams changes: a threshold-only plan change (a live PARAM SET, step 10
+    // item 7) keeps the history, so inspections stay complete.
+    bool sameStreams = _featureHistory.activeStreamCount() == streamCount;
+    for (size_t i = 0; sameStreams && i < streamCount; ++i) {
+        sameStreams = _featureHistory.activeStream(i) == streams[i];
+    }
+    if (!sameStreams) {
+        _featureHistory.setActiveStreams(streams, streamCount);
+    }
 }
 
 void DetectionRuntime::setFieldStateConfig(const FieldStateConfig& config) {

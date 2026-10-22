@@ -173,6 +173,7 @@ private:
     void printInspectionPlanCheck();  // RB plan_check: detection.scalar_* against the plan and history (step 8b item 2)
     void applyLiveDetectionParams();  // PARAM SET detection.*: in place, no reset (step 10 item 2)
     void registerBehaviorParams();    // behavior.* on the registry (PAR-006, step 10 item 4)
+    void loadInspectionLimitsFromProfile();  // detection.contrast_medium / amp_medium from the plan (item 7)
 
     // Hardware wiring.
     int _ledPin;
@@ -246,6 +247,8 @@ private:
     RbLogMode _rbLogMode = RbLogMode::Minimal;
     detection::DetectionProfileKind _profileKind = detection::DetectionProfileKind::TonalPulseScalar;
     BehaviorGateConfig _activeBehaviorProfile = {};  // the behavior.* params bind into it (step 10 item 4)
+    float _contrastMediumThreshold = 0.0f;  // detection.contrast_medium (step 10 item 7)
+    float _ampMediumThreshold = 0.0f;       // detection.amp_medium
     bool _wasSelfChirpSuppressed = false;
     // When the last own chirp stopped; SELFTEST Settle waits out its echo.
     unsigned long _lastOwnChirpEndMs = 0;

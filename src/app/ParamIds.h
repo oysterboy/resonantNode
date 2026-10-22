@@ -94,6 +94,11 @@ enum class ParamId : uint16_t {
     Behavior_OwnEmitBudget,
     Behavior_OwnEmitBudgetWindowMs,
     Behavior_RestMs,
+    // The inspectors' medium limits, live (step 10 item 7; build overrides
+    // SCALAR_CONTRAST/AMP_MEDIUM_THRESHOLD before). Applied to the plan's
+    // module with the matching target.
+    Detection_ContrastMedium,
+    Detection_AmpMedium,
 };
 
 }  // namespace param

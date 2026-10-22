@@ -315,7 +315,12 @@ decisions/2026-10-17-behavior-contract-and-reproducible-sessions.md.
 
 ### PAR-007 - Detection / TonalPulse params
 
-Status: PARTIAL
+Status: DONE 2026-10-22 (step 10 item 7). Registered on the Node: 13 `detection.scalar_*`, `detection.band_low_hz`
+and `band_high_hz`, and the inspectors' medium limits `detection.contrast_medium` / `detection.amp_medium`
+(written to the plan's module with the matching target). All apply live, with no detector reset and no history
+wipe; the plan's streams are rebound only when they change. The own-emit suppression values are
+`behavior.*` (PAR-006). Not registered: `scalar_observed_stream` (an enum the Node never changes; the Analyzer's
+PARAM has it). The FrequencyMatch text below is history (Freq was removed in 7d).
 
 ```text
 Extend the same pattern to Detection / TonalPulse.

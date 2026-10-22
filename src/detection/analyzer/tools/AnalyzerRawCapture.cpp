@@ -154,6 +154,10 @@ bool AnalyzerApp::runRawTrigger(unsigned long toneHz,
     if (preWantedSamples == 0 && postWantedSamples == 0) {
         postWantedSamples = 1;
     }
+    // ANA-008 (step 7a): the capture buffer was always maxSamples rows,
+    // whatever was asked; size it to the request (the pre window is copied
+    // in front of the post samples, so pre + post rows are enough).
+    const unsigned long captureRows = preWantedSamples + postWantedSamples;
 
     RawCapturePcmSample* prePcmRingBuffer = nullptr;
     RawCapturePcmSample* pcmCaptureBuffer = nullptr;
@@ -176,7 +180,7 @@ bool AnalyzerApp::runRawTrigger(unsigned long toneHz,
             }
         }
 
-        pcmCaptureBuffer = static_cast<RawCapturePcmSample*>(allocRows(maxSamples, sizeof(RawCapturePcmSample)));
+        pcmCaptureBuffer = static_cast<RawCapturePcmSample*>(allocRows(captureRows, sizeof(RawCapturePcmSample)));
         if (pcmCaptureBuffer == nullptr) {
             if (prePcmRingBuffer != nullptr) {
                 free(prePcmRingBuffer);
@@ -195,7 +199,7 @@ bool AnalyzerApp::runRawTrigger(unsigned long toneHz,
             }
         }
 
-        featureCaptureBuffer = static_cast<RawCaptureFeatureSample*>(allocRows(maxSamples, sizeof(RawCaptureFeatureSample)));
+        featureCaptureBuffer = static_cast<RawCaptureFeatureSample*>(allocRows(captureRows, sizeof(RawCaptureFeatureSample)));
         if (featureCaptureBuffer == nullptr) {
             if (preFeatureRingBuffer != nullptr) {
                 free(preFeatureRingBuffer);
@@ -214,7 +218,7 @@ bool AnalyzerApp::runRawTrigger(unsigned long toneHz,
             }
         }
 
-        bothCaptureBuffer = static_cast<RawCaptureBothSample*>(allocRows(maxSamples, sizeof(RawCaptureBothSample)));
+        bothCaptureBuffer = static_cast<RawCaptureBothSample*>(allocRows(captureRows, sizeof(RawCaptureBothSample)));
         if (bothCaptureBuffer == nullptr) {
             if (preBothRingBuffer != nullptr) {
                 free(preBothRingBuffer);
@@ -223,6 +227,24 @@ bool AnalyzerApp::runRawTrigger(unsigned long toneHz,
             printRawMemoryState("raw_buffer");
             return false;
         }
+    }
+
+    {
+        const size_t rowSize = (mode == RawCaptureMode::Pcm || mode == RawCaptureMode::I2s)
+            ? sizeof(RawCapturePcmSample)
+            : (mode == RawCaptureMode::Features ? sizeof(RawCaptureFeatureSample) : sizeof(RawCaptureBothSample));
+        serialOut().print("RAW_ALLOC capture_rows=");
+        serialOut().print(captureRows);
+        serialOut().print(" pre_ring_rows=");
+        serialOut().print(preWantedSamples);
+        serialOut().print(" row_size=");
+        serialOut().print(static_cast<unsigned long>(rowSize));
+        serialOut().print(" bytes=");
+        serialOut().print(static_cast<unsigned long>((captureRows + preWantedSamples) * rowSize));
+        serialOut().print(" max_rows=");
+        serialOut().print(maxSamples);
+        serialOut().print(" largest_free_after=");
+        serialOut().println(static_cast<unsigned long>(heap_caps_get_largest_free_block(MALLOC_CAP_8BIT)));
     }
 
     unsigned long flushedSamples = 0;
@@ -524,8 +546,8 @@ bool AnalyzerApp::runRawTrigger(unsigned long toneHz,
 
     const unsigned long requestedSamples = preWantedSamples + postWantedSamples;
     const unsigned long capturedSamples = preWindowSamples + postCaptured;
-    const unsigned long unusedCapacitySamples = maxSamples > capturedSamples
-        ? maxSamples - capturedSamples
+    const unsigned long unusedCapacitySamples = captureRows > capturedSamples
+        ? captureRows - capturedSamples
         : 0;
     const float rawWindowMean = rawWindowCount > 0 ? static_cast<float>(rawWindowSum) / static_cast<float>(rawWindowCount) : 0.0f;
     const float rawWindowAbsMean = rawWindowCount > 0 ? static_cast<float>(rawWindowAbsSum) / static_cast<float>(rawWindowCount) : 0.0f;

@@ -1,0 +1,20 @@
+# E4 on COM10, Node build after 7a, other four silenced (ports held, idle off, onset 200000), 2026-10-21
+BUILD role=node git=fca77e7 date=Oct 22 2026 time=09:24:26 version=0.4.0 board=damp
+RB node_id=0xECEF4AC3DC24
+RB node name=E4 rotation_source=roster
+RB signal band=2950-3950 bins=5 hop=on rotation=3 steps=5 pulse_ms=25 gap_ms=10 order=3700,3950,2950,3200,3450
+RB hop_check status=warn train_ms=165 gap_ms=10 release_debounce_ms=10 max_gap_ms=20 duration_ms=85..300 issues=gap_not_below_debounce
+SELFTEST_BEGIN role=node mode=full board=damp
+SELFTEST check=board result=PASS mac=24:dc:c3:4a:ef:ec board=damp role=node version=0.4.0 git=fca77e7 built=Oct_22_2026 built_time=09:24:29 uptime_ms=64100
+SELFTEST check=mic result=PASS frames=12000 nonzero_pct=100.0 span=51650 floor_mean=1073 floor_peak=3475 bit8_pct=49.2 framing=ok slot=0
+SELFTEST check=quiet_boot result=PASS state=ACTIVE boot=done last=done last_at_ms=7792 smooth_at_rebase=27.0 quiet_rebases=1 forced_rebases=0 baseline=61.5
+SELFTEST_AMP n=1 floor=28663 tone=529722 snr_db=25.3 samples=6400 valid=1
+SELFTEST_AMP n=2 floor=4216 tone=527063 snr_db=41.9 samples=6400 valid=1
+SELFTEST_AMP n=3 floor=5724 tone=524819 snr_db=39.2 samples=6400 valid=1
+SELFTEST_AMP n=4 floor=3212 tone=524771 snr_db=44.3 samples=6400 valid=1
+SELFTEST_AMP n=5 floor=2771 tone=525161 snr_db=45.5 samples=6400 valid=1
+SELFTEST check=amp result=PASS chirps=5 valid=5 freq_hz=3200 tone_ms=100 path=i2s tone=525161 floor=4216 snr_db=41.9 snr_min_db=25.3 snr_max_db=45.5 tone_spread=1.01 pass_db=30.0 max_spread=1.30
+SELFTEST_RESTORE detection=reset baseline=SETTLE
+SELFTEST check=own_chirp_suppressed result=PASS chirps=5 started=5 verdicts=0 valid=0 other_verdicts=0 other_valid=0 echo_window_ms=300 suppress_tail_ms=60
+SELFTEST check=external_chirp result=SKIP reason=not_requested
+SELFTEST_SUMMARY result=PASS pass=5 fail=0 skip=1 role=node

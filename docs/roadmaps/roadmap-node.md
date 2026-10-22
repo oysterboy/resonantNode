@@ -50,7 +50,8 @@ Landed items from this area now live in `docs/roadmaps/roadmap archive/roadmap-c
 
 ### NODE-001 - 5-node status baseline
 
-Status: TODO
+Status: DONE 2026-10-22 (step 6): RB STATUS from all five nodes every 120 s through two 30 min runs, with `# state`
+headers (bench/sessions/2026-10-22-step6-trial).
 
 ```text
 Make STATUS report firmware and build label if available.
@@ -156,7 +157,8 @@ Must exist before cleanup-0-plan Phase 5d grows the env matrix.
 
 ### NODE-008 - 5-node field trial
 
-Status: TODO
+Status: DONE 2026-10-22 (step 6, bench/sessions/2026-10-22-step6-trial): the first trial passed on the bench in the
+owner's layout. Next cells (other rooms, outdoors, long runs) are NODE-012.
 
 ```text
 Depends on NODE-001.

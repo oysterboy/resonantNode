@@ -124,6 +124,14 @@ Idle on, RB CALL every 90 s, 360 s.
 - **Verification** (bench/sessions/2026-10-22-group5-pacing, 908dc9a, 600 s): chains 13 of 13 ended (max 4.6 s),
   max 48 per minute. **5d and 5f are done.**
 
+## Step 6, the five-node trial (2026-10-22, 01:00-02:12, owner away; bench/sessions/2026-10-22-step6-trial)
+
+- Hearing matrix: 18 of 20 cells at 10/10.
+- 30 min quiet room: all 41 chains ended (max 5.2 s), max 42 per minute.
+- 30 min with speech and music from the lab PC: all 41 chains ended (max 4.9 s), max 45 per minute.
+- 0 chains started by noise; no dropped buffers.
+- **Step 6 passed.**
+
 Board state (end of the session): all five on Node 908dc9a (0.5 FS, new pacing): E1 COM8, E2 COM3, E3 COM4, E4 COM10, E5 COM11,
 in the trial layout. They are held silent by a background python process on the lab PC (ports open, idle off,
 onset 200000). Ending it, or a reboot of the PC, resets the boards and brings back their idle voice.

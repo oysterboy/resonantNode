@@ -22,6 +22,10 @@ Renamed from roadmap-general.md on 2026-09-23 so it sorts first.
 How this file relates to the domain roadmaps and docs/refactors/: see
 README.md ("Who answers what", "Ordering rule").
 
+Status update 2026-10-22: step 6 done. The five-node trial passed (bench/sessions/2026-10-22-step6-trial),
+after the owner's pacing decision (rest 5 s, idle call 60 s +- 20 s, pass mark "the chain ends", M = 100). Steps 3b,
+4, 5b-5g are closed; 3d's SEQ check passed, and its remaining checklist stays in #32. Next by order: step 7 (CI),
+and 5h's NODE-012 cells.
 Status update 2026-10-21: bench session 1, first part. The EN capacitor fixed E3 (auto-reset; tone steady). All five
 boards are on Node ecfc72b, flashed without BOOT, and each passes SELFTEST with the others silent: the gates of
 3b, 4 and 5c are met and the three steps are closed. 5g's rotation table is verified on hardware (rotations 0-4
@@ -568,7 +572,7 @@ the previous gate open unless the step says it can run in parallel.
    The three host items have landed, with 19 + 15 host tests passing. The session 1 items and the NODE-012 cells
    remain open.
 
-6. STATUS baseline and 5-node field trial, on D-AMP. (issue #16)
+6. [DONE 2026-10-22] STATUS baseline and 5-node field trial, on D-AMP. (issue #16)
    Where: NODE-001 (STATUS baseline, prerequisite), NODE-008 (5-node trial),
    roadmap-node.md.
    Why: the product is several nodes hearing each other; nothing verified
@@ -596,6 +600,13 @@ the previous gate open unless the step says it can run in parallel.
    trial's behavior values are the shipped BehaviorGateConfig on record,
    not assumed (decisions/2026-10-17-behavior-contract-and-reproducible-
    sessions.md; NODE-003).
+   Done 2026-10-22 (bench/sessions/2026-10-22-step6-trial): five nodes on 908dc9a in the owner's layout, in one
+   session with `# state` headers and RB STATUS from every node every 120 s.
+   - Hearing matrix: 18 of 20 cells at 10/10 (E2 <- E1 and E4 <- E2 0/10); no board fails its row.
+   - 30 min in a quiet room: 41 of 41 chains ended within 30 s (max 5.2 s); max 42 per minute (M = 100).
+   - 30 min with speech and music from the lab PC: 41 of 41 chains ended (max 4.9 s); max 45 per minute.
+   - Both runs: 0 chains started by noise; no dropped DMA buffers. Gate met.
+   Next conditions (other room, dry cell, height offset, a long run) are NODE-012 cells, sequenced in 5h.
 
 7. Off-target tests and CI. (issues #9, #10)
    Where: NODE-006 (host test env + replay harness), NODE-007 (CI build

@@ -39,6 +39,8 @@ Status update 2026-10-22, night: 7c done. FieldState stays as the rest gate (tri
 is removed in the new step 7d (#52), before step 8; step 9 deferred to step 11; 8b's Freq items moot. Next: 7d.
 Status update 2026-10-22, late night: 7d done (3a11d80). FrequencyMatch is gone and the Scalar T3 is unchanged
 against 7a. Next: step 8; its baseline is recorded (bench 2026-10-22-step8-baseline).
+Status update 2026-10-22, step 10: done (ANA-003, Node glue split, dead code). Next by order: 10b, the field
+baseline rerun on the refactored firmware (five nodes, step 6's protocol).
 Status update 2026-10-22, step 10a: done (map, live params, ParamRegistry library, behavior.* params, RB BEHAV gone).
 Next: step 10 proper (ANA-003, Node glue, dead code).
 Status update 2026-10-22, step 8b: done; item 1 moved to DET-017 (tuning pass, then merge). Next by order: 10
@@ -849,7 +851,16 @@ the previous gate open unless the step says it can run in parallel.
    family-build doc's Risks). The board variant from step 2 is a second
    build dimension next to the family; keep both in build flags.
 
-10. Mode-layer cleanup. (issues #13, #14, #15)
+10. [DONE 2026-10-22] Mode-layer cleanup. (issues #13, #14, #15, closed)
+   Done 2026-10-22 (docs/refactors/archive/step10-mode-layer.md):
+   - ANA-003: the Analyzer is out of src/detection/, and CI's include check is strict.
+   - PAR-016: lib/ParamRegistry.
+   - PAR-015: RB BEHAV removed.
+   - NODE-004, partly: RB STATUS in its own file; startEmission / updateEmissions out of update(); one detection
+     reset.
+   - Dead code removed; the 3d leftovers A1/A3/A4 checked.
+   Bench: bench/sessions/2026-10-22-step10-*. Gate met: no src/detection/ include of src/modes/; one param path
+   per knob; lib/ParamRegistry/ includes nothing from src/.
    Where: ANA-003 (roadmap-detection.md: move AnalyzerApp member files out
    of src/detection/analyzer/), PAR-015 (roadmap-param-config.md: retire
    RB PARAM / RB BEHAV onto ParamRegistry), PAR-016 (roadmap-param-config.md:
@@ -862,7 +873,7 @@ the previous gate open unless the step says it can run in parallel.
    per knob; lib/ParamRegistry/ includes nothing from src/.
 
 10a. [DONE 2026-10-22] Boundary map first, then Behavior params on the registry. (issue #54, closed)
-   Pass docs: docs/refactors/step10-mode-layer.md (master plan, owner decisions D1-D3) and
+   Pass docs: docs/refactors/archive/step10-mode-layer.md (master plan, owner decisions D1-D3) and
    step10-boundary-map.md (NODE-002, done 2026-10-22).
    Done 2026-10-22 (the pass doc's items 1-7):
    - The boundary map.

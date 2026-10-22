@@ -75,6 +75,12 @@ need a host C++ compiler on PATH: on the developer's Windows machine that is
 WinLibs GCC from winget (`%LOCALAPPDATA%\Microsoft\WinGet\Packages\
 BrechtSanders.WinLibs.POSIX.UCRT_*\mingw64\bin`, not on PATH in every
 shell: prepend it); in a cloud container, whatever `g++` is installed.
+Parameters: every tunable knob is a registered param (`detection.*`, `behavior.*`, `output.*`), set with
+`PARAM SET <path> <value>` and listed by `PARAM DUMP`. The registry is the in-repo library
+`lib/ParamRegistry/`, which must include nothing from `src/` (CI checks it). RB PARAM and RB BEHAV are gone since
+step 10; old session headers map through `docs/decisions/2026-10-22-live-params-profile-reset-no-rb-behav.md`.
+The Analyzer's code lives in `src/modes/analyzer/`; `src/detection/analyzer/` keeps only pure Analyzer types
+and rules, and nothing under `src/detection/` may include `src/modes/` (CI, strict).
 `src/host/` is excluded from every ESP env and `<Arduino.h>` is stood in
 by `test/native_shim/Arduino.h`; a detection file that grows a new Arduino
 dependency fails the host build, which is intended.

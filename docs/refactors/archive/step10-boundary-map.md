@@ -2,7 +2,7 @@
 
 Status: written 2026-10-22 at main ff2fb0f (after step 8b), the input to step 10. Each section names which code
 does which job today, and where one function does several. Line numbers drift; function names are the anchor.
-Master plan: docs/refactors/step10-mode-layer.md.
+Master plan: docs/refactors/archive/step10-mode-layer.md.
 
 Categories: **Detection** (configures or feeds DetectionRuntime / FreqBandStream / AudioSignal), **Behavior**
 (ResonantBehavior and its config), **Output** (tone, hop train, idle call, LED), **Params** (ParamRegistry,

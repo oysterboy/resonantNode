@@ -63,7 +63,7 @@ Show output busy or recent state if already cheap.
 
 ### NODE-002 - boundary map
 
-Status: DONE 2026-10-22: docs/refactors/step10-boundary-map.md (step 10a).
+Status: DONE 2026-10-22: docs/refactors/archive/step10-boundary-map.md (step 10a).
 
 ```text
 Document which current code paths belong to Detection, Behavior, Output,
@@ -89,7 +89,9 @@ Upload the same firmware to all test nodes.
 
 ### NODE-004 - node glue cleanup
 
-Status: DEFERRED
+Status: PARTIAL 2026-10-22 (step 10 item 9): RB STATUS and the status prints are in ResonantNodeStatus.cpp;
+the emission logic is out of update() (startEmission / updateEmissions); SelfTest uses the one detection reset.
+Open: update() and handleSerialLine() are still long; split further when an owner module has a home for it.
 
 ```text
 Move incidental command parsing and status formatting out of Node only when

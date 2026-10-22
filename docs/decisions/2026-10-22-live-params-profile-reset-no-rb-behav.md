@@ -5,7 +5,7 @@ Date: 2026-10-22.
 
 ## Decision
 
-Three owner picks from docs/refactors/step10-mode-layer.md:
+Three owner picks from docs/refactors/archive/step10-mode-layer.md:
 - **D2, live apply.** `PARAM SET detection.scalar_*` applies through `setScalarTransientConfig()`, and `band_*`
   through `applyBandParams()`. Neither resets the detectors or FeatureHistory. Only an inspection-plan or profile
   change still resets.
@@ -61,4 +61,4 @@ second command.
 
 ## Source
 
-Step 10 plan (issues #54, #14, #15); boundary map docs/refactors/step10-boundary-map.md.
+Step 10 plan (issues #54, #14, #15); boundary map docs/refactors/archive/step10-boundary-map.md.

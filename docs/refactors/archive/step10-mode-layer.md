@@ -1,7 +1,26 @@
 # Step 10: mode-layer cleanup (master plan)
 
-Status: active (plan, 2026-10-22). Steps 10 and 10a of docs/roadmaps/roadmap-0-steps.md; issues #54 (10a), #13
-(ANA-003), #14 (PAR-016), #15 (PAR-015). Read first: the boundary map, docs/refactors/step10-boundary-map.md
+Archived: 2026-10-22 - step 10 closed (10a and 10). Landed:
+- the boundary map (NODE-002);
+- live detection params with no reset (D2; bench: a mid-train PARAM SET loses 0 of 10 trains, against 10 of 10
+  before);
+- ParamRegistry as lib/ParamRegistry (PAR-016);
+- 13 behavior.* params (PAR-006); RB BEHAV removed and the bench tools migrated (PAR-015, D3);
+- RB PROFILE reports what it reset (D1);
+- live inspector limits contrast_medium / amp_medium (PAR-007);
+- the Analyzer out of src/detection/ with a strict CI include check (ANA-003);
+- the Node glue split: status file, startEmission / updateEmissions, one detection reset (NODE-004, partly);
+- dead code removed, and the 3d leftovers A1/A3/A4 checked.
+Gate met: no src/detection/ include of src/modes/, one param path per knob, lib/ParamRegistry/ includes nothing
+from src/, behavior.* and detection.* registered. Not done:
+- NODE-004 beyond the three splits (update() and handleSerialLine() are still long);
+- A1 only partly observable;
+- setting behavior.idle_timeout_ms does not reschedule an idle call already scheduled (pre-existing, unchanged);
+- the Node's 3.4 KB stack minimum at boot, not traced.
+Bench: bench/sessions/2026-10-22-step10-*.
+
+Status: closed 2026-10-22 (see the Archived line). Steps 10 and 10a of docs/roadmaps/roadmap-0-steps.md; issues #54 (10a), #13
+(ANA-003), #14 (PAR-016), #15 (PAR-015). Read first: the boundary map, docs/refactors/archive/step10-boundary-map.md
 (NODE-002, the first item of 10a, done 2026-10-22).
 
 Goal: one param path per knob, Behavior params on the registry, ParamRegistry as a library that includes

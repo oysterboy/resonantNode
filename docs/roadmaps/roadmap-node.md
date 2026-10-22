@@ -63,7 +63,7 @@ Show output busy or recent state if already cheap.
 
 ### NODE-002 - boundary map
 
-Status: TODO
+Status: DONE 2026-10-22: docs/refactors/step10-boundary-map.md (step 10a).
 
 ```text
 Document which current code paths belong to Detection, Behavior, Output,

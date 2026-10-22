@@ -859,7 +859,9 @@ the previous gate open unless the step says it can run in parallel.
    Gate: nothing under src/detection/ includes src/modes/; one param path
    per knob; lib/ParamRegistry/ includes nothing from src/.
 
-10a. [TODO] Boundary map first, then Behavior params on the registry.
+10a. [NEXT] Boundary map first, then Behavior params on the registry. (issue #54)
+   Pass docs: docs/refactors/step10-mode-layer.md (master plan, owner decisions D1-D3) and
+   step10-boundary-map.md (NODE-002, done 2026-10-22).
    (no issue yet; or fold into #13-#15)
    Where: NODE-002 (roadmap-node.md: which code paths are Detection,
    Behavior, Output, Analyzer, Node glue), PAR-006 (BehaviorTuning +

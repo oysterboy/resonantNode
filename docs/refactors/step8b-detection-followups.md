@@ -38,6 +38,9 @@ Closed as moot: DET-001 (FrequencyMatch report freeze, Freq removed in 7d), DET-
   pass before the fix ships. Readings for that pass: hop train 195-214 ms, 100 ms chirp 116-154 ms (both at
   110 cm, 2026-10-22), 40 ms tone 86 ms.
 
+- 2026-10-22, owner: item 1 stays parked on its branch until a min-duration tuning pass (DET-017). Step 8b
+  closes with item 1 named as moved to DET-017.
+
 ## Options as they were put to the owner
 
 **A. How to fix item 1.** Three options:

@@ -141,6 +141,21 @@ Facts per occurrence: steady / sweep / hop, span, direction, distinct bins, puls
 
 Research: docs/research/frequency-drift-detection.md (Inspectors that help)
 
+### DET-017 - min-duration tuning pass, then merge the deferred inspection
+
+Status: TODO (owner, 2026-10-22: park the step 8b item 1 fix until this pass)
+
+The fix for audit 3.1 (inspect when the window is complete) is on branch
+`step8b-defer-inspection` (5d2c0fa). With it, a 40 ms in-band tone plus a room
+reflection (read 86 ms) is accepted, because the 85 ms min duration is then the
+only gate against it (bench/sessions/2026-10-22-7d-dur40-raw). A logged tuning
+pass (tools/logging LOG-001 workflow) picks the min duration from bench and
+replay data, and the fix merges with that value. Readings at 110 cm on
+2026-10-22: hop train 195-214 ms, 100 ms chirp 116-154 ms, 40 ms tone 86 ms.
+Open: whether the Node must still hear the plain 100 ms chirp (min ~110 ms keeps
+it) or only the hop train (min ~130-150 ms). Cells: 40/60/80 ms tones, chirp,
+hop train, speech/music OBS, and the replay corpus.
+
 ### DET-016 - verdict boundary rule: normalized confidence, event class, no unit-bearing fields
 
 Status: DEFERRED (owner, 2026-10-22: a later roadmap item, not part of step 8)

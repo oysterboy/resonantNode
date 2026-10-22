@@ -156,7 +156,7 @@ inline DetectionProfile makeTonalPulseScalarProfile() {
     profile.inspectionPlan.modules[0].magnitude.windowPostMs = 100; // Inspect the first 100 ms after onset.
     profile.inspectionPlan.modules[0].minimumStrength = StrengthClass::Medium; // Require at least medium evidence.
     profile.inspectionPlan.modules[0].magnitude.mode = MagnitudeInspectionMode::P75; // Use a robust percentile summary.
-    profile.inspectionPlan.modules[0].magnitude.supportStrength.strongPeakThreshold = 300000.0f; // Strong contrast threshold.
+    profile.inspectionPlan.modules[0].magnitude.supportStrength.strongPeakThreshold = 300000.0f; // Above the 0..32,767 contrast range on purpose: Strong is unused for contrast; the requirement is Medium (step 8b item 4, owner 2026-10-22).
     profile.inspectionPlan.modules[0].magnitude.supportStrength.mediumPeakThreshold = SCALAR_CONTRAST_MEDIUM_THRESHOLD; // Medium contrast threshold (build override for experiments, default 20000).
     profile.inspectionPlan.modules[0].magnitude.supportStrength.weakPeakThreshold = 10000.0f; // Weak contrast threshold.
 

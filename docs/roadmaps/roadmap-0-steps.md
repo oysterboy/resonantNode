@@ -804,8 +804,8 @@ the previous gate open unless the step says it can run in parallel.
    Gate: per item; a two-layer signal with a low aesthetic layer detected
    as well as the detection layer alone, with the leak measured.
 
-8b. [TODO] Detection follow-up bugs, on the folded inspector. (no issue
-   yet; or fold into #11)
+8b. [NEXT] Detection follow-up bugs, on the folded inspector. (issue #53)
+   Pass doc: docs/refactors/step8b-detection-followups.md (plan 2026-10-22, seven items, owner decisions A and B).
    Where: DET-010 on Scalar (peak-centered window inspected before it has
    arrived), DET-001 (T2 hardware confirmation of the report freeze), audit
    3.1 (85-89 ms occurrences rejected by construction), 3.7 (a continuous tone holds the scalar
@@ -819,8 +819,9 @@ the previous gate open unless the step says it can run in parallel.
    window guard (scalar_max_duration_ms vs the history depth). From 7d (2026-10-22): a 40 ms tone read 85-87 ms
    on the bench (bench/sessions/2026-10-22-7d-freq-removed), 0-2 ms over the 85 ms minimum. In 7a it read
    61-62 ms. Cause (bench/sessions/2026-10-22-7d-dur40-raw): a late reflection 55-80 ms after onset at
-   2,000-2,500 against the 1,500 release threshold; a 2.6 % level rise flips it. Only the inspectors keep it out.
-   That is audit 3.1's window, measured.
+   2,000-2,500 against the 1,500 release threshold; a 2.6 % level rise flips it. It is then
+   rejected only because it is inspected 3 ms before its contrast window ends (future_window_unavailable):
+   audit 3.1's bug, not the contrast gate, so fixing 3.1 decides whether such a tone is heard.
    Gate: each item fixed with a host fixture or named closed-as-moot; T2/T3
    unchanged. After step 8, with or before 8a's shape inspectors.
 

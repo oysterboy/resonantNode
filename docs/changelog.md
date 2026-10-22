@@ -24,7 +24,8 @@ results are in roadmap-0-steps.md.
 - 7b: host == board to 1 FrequencyScore16 on the band, contrast within 0.5 %; test_shipped_profile 6/6 on E2
 - 7d: Analyzer T3 vs 7a unchanged (chirp 20/20, hop 10/10, 40 ms 10/10 rejected), Node boots TonalPulseScalar
 - finding: a 40 ms tone reads 86 ms in this room, because a late reflection sits above the release threshold
-  (bench 2026-10-22-7d-dur40-raw); handed to 8b
+  (bench 2026-10-22-7d-dur40-raw); handed to 8b; it is then rejected only by audit 3.1's early-inspection bug
+  (future_window_unavailable), not by the contrast gate
 - not run: 10b/10c; the host vs board 100 ms duration mismatch (154 vs 127 ms) is unexamined
 
 ---

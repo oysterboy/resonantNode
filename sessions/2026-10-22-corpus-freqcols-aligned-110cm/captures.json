@@ -1,0 +1,322 @@
+{
+  "purpose": "",
+  "setup": {
+    "distance_cm": 110.0,
+    "orientation": "mic and speaker facing up, bench",
+    "notes": "7b: band=2950-3950, hop train as shipped"
+  },
+  "captures": [
+    {
+      "label": "chirp3200_band_110cm",
+      "rep": 0,
+      "file": "chirp3200_band_110cm_r0.csv",
+      "wav": "chirp3200_band_110cm_r0.wav",
+      "started": "2026-10-22T09:53:33",
+      "firmware": {
+        "role": "analyzer",
+        "git": "6899683",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "fields": [
+        "ms",
+        "amp",
+        "pcm",
+        "freq",
+        "contrast",
+        "fresh"
+      ],
+      "raw": {
+        "sr": 16000,
+        "f": 3200,
+        "dur": 100,
+        "pre_ms": 50,
+        "post_ms": 250,
+        "mode": "both",
+        "emit_seen": 1,
+        "emit_start_ms": 3427,
+        "emit_done_ms": 3525,
+        "pre_samples": 182,
+        "post_samples": 4000
+      },
+      "summary": {
+        "id": 1,
+        "requested": 4800,
+        "captured": 4182,
+        "unused_capacity": 618,
+        "max_pcm_abs": 42994,
+        "max_amp": 5449,
+        "raw_mean": 120.3,
+        "raw_abs_mean": 11518.2,
+        "raw_min": -42994,
+        "raw_max": 40262,
+        "baseline": 605.4
+      },
+      "check": {
+        "samples": 4182,
+        "tone_amp": 19632,
+        "peak_abs": 42994,
+        "env_len_ms": 95
+      }
+    },
+    {
+      "label": "chirp3200_band_110cm",
+      "rep": 1,
+      "file": "chirp3200_band_110cm_r1.csv",
+      "wav": "chirp3200_band_110cm_r1.wav",
+      "started": "2026-10-22T09:53:45",
+      "firmware": {
+        "role": "analyzer",
+        "git": "6899683",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "fields": [
+        "ms",
+        "amp",
+        "pcm",
+        "freq",
+        "contrast",
+        "fresh"
+      ],
+      "raw": {
+        "sr": 16000,
+        "f": 3200,
+        "dur": 100,
+        "pre_ms": 50,
+        "post_ms": 250,
+        "mode": "both",
+        "emit_seen": 1,
+        "emit_start_ms": 15371,
+        "emit_done_ms": 15469,
+        "pre_samples": 180,
+        "post_samples": 4000
+      },
+      "summary": {
+        "id": 2,
+        "requested": 4800,
+        "captured": 4180,
+        "unused_capacity": 620,
+        "max_pcm_abs": 44180,
+        "max_amp": 5596,
+        "raw_mean": -16.7,
+        "raw_abs_mean": 11780.4,
+        "raw_min": -44180,
+        "raw_max": 39392,
+        "baseline": 588.1
+      },
+      "check": {
+        "samples": 4180,
+        "tone_amp": 19952,
+        "peak_abs": 44180,
+        "env_len_ms": 90
+      }
+    },
+    {
+      "label": "chirp3200_band_110cm",
+      "rep": 2,
+      "file": "chirp3200_band_110cm_r2.csv",
+      "wav": "chirp3200_band_110cm_r2.wav",
+      "started": "2026-10-22T09:53:57",
+      "firmware": {
+        "role": "analyzer",
+        "git": "6899683",
+        "version": "0.4.0",
+        "board": "damp"
+      },
+      "fields": [
+        "ms",
+        "amp",
+        "pcm",
+        "freq",
+        "contrast",
+        "fresh"
+      ],
+      "raw": {
+        "sr": 16000,
+        "f": 3200,
+        "dur": 100,
+        "pre_ms": 50,
+        "post_ms": 250,
+        "mode": "both",
+        "emit_seen": 1,
+        "emit_start_ms": 27696,
+        "emit_done_ms": 27794,
+        "pre_samples": 256,
+        "post_samples": 4000
+      },
+      "summary": {
+        "id": 3,
+        "requested": 4800,
+        "captured": 4256,
+        "unused_capacity": 544,
+        "max_pcm_abs": 44694,
+        "max_amp": 5653,
+        "raw_mean": -73.5,
+        "raw_abs_mean": 11923.6,
+        "raw_min": -44694,
+        "raw_max": 37183,
+        "baseline": 534.3
+      },
+      "check": {
+        "samples": 4256,
+        "tone_amp": 19309,
+        "peak_abs": 44694,
+        "env_len_ms": 100
+      }
+    },
+    {
+      "label": "hop5_band_110cm",
+      "rep": 0,
+      "file": "hop5_band_110cm_r0.csv",
+      "wav": "hop5_band_110cm_r0.wav",
+      "started": "2026-10-22T09:54:14",
+      "firmware": null,
+      "fields": [
+        "ms",
+        "amp",
+        "pcm",
+        "freq",
+        "contrast",
+        "fresh"
+      ],
+      "raw": {
+        "sr": 16000,
+        "f": 3300,
+        "dur": 25,
+        "pulses": 5,
+        "gap": 10,
+        "hop": "2950,3200,3450,3700,3950",
+        "pre_ms": 50,
+        "post_ms": 300,
+        "mode": "both",
+        "emit_seen": 1,
+        "emit_start_ms": 3619,
+        "emit_done_ms": 3782,
+        "pre_samples": 305,
+        "post_samples": 4800
+      },
+      "summary": {
+        "id": 1,
+        "requested": 5600,
+        "captured": 5105,
+        "unused_capacity": 495,
+        "max_pcm_abs": 85428,
+        "max_amp": 10695,
+        "raw_mean": -133.1,
+        "raw_abs_mean": 12725.3,
+        "raw_min": -84950,
+        "raw_max": 85428,
+        "baseline": 612.8
+      },
+      "check": {
+        "samples": 5105,
+        "tone_amp": 98,
+        "peak_abs": 85428,
+        "env_len_ms": 40
+      }
+    },
+    {
+      "label": "hop5_band_110cm",
+      "rep": 1,
+      "file": "hop5_band_110cm_r1.csv",
+      "wav": "hop5_band_110cm_r1.wav",
+      "started": "2026-10-22T09:54:28",
+      "firmware": null,
+      "fields": [
+        "ms",
+        "amp",
+        "pcm",
+        "freq",
+        "contrast",
+        "fresh"
+      ],
+      "raw": {
+        "sr": 16000,
+        "f": 3300,
+        "dur": 25,
+        "pulses": 5,
+        "gap": 10,
+        "hop": "2950,3200,3450,3700,3950",
+        "pre_ms": 50,
+        "post_ms": 300,
+        "mode": "both",
+        "emit_seen": 1,
+        "emit_start_ms": 18116,
+        "emit_done_ms": 18278,
+        "pre_samples": 332,
+        "post_samples": 4800
+      },
+      "summary": {
+        "id": 2,
+        "requested": 5600,
+        "captured": 5132,
+        "unused_capacity": 468,
+        "max_pcm_abs": 90150,
+        "max_amp": 11347,
+        "raw_mean": 68.0,
+        "raw_abs_mean": 12609.2,
+        "raw_min": -90150,
+        "raw_max": 90048,
+        "baseline": 629.1
+      },
+      "check": {
+        "samples": 5132,
+        "tone_amp": 105,
+        "peak_abs": 90150,
+        "env_len_ms": 45
+      }
+    },
+    {
+      "label": "hop5_band_110cm",
+      "rep": 2,
+      "file": "hop5_band_110cm_r2.csv",
+      "wav": "hop5_band_110cm_r2.wav",
+      "started": "2026-10-22T09:54:43",
+      "firmware": null,
+      "fields": [
+        "ms",
+        "amp",
+        "pcm",
+        "freq",
+        "contrast",
+        "fresh"
+      ],
+      "raw": {
+        "sr": 16000,
+        "f": 3300,
+        "dur": 25,
+        "pulses": 5,
+        "gap": 10,
+        "hop": "2950,3200,3450,3700,3950",
+        "pre_ms": 50,
+        "post_ms": 300,
+        "mode": "both",
+        "emit_seen": 1,
+        "emit_start_ms": 33132,
+        "emit_done_ms": 33294,
+        "pre_samples": 328,
+        "post_samples": 4800
+      },
+      "summary": {
+        "id": 3,
+        "requested": 5600,
+        "captured": 5128,
+        "unused_capacity": 472,
+        "max_pcm_abs": 95407,
+        "max_amp": 11998,
+        "raw_mean": -96.2,
+        "raw_abs_mean": 12665.4,
+        "raw_min": -95407,
+        "raw_max": 95350,
+        "baseline": 590.1
+      },
+      "check": {
+        "samples": 5128,
+        "tone_amp": 93,
+        "peak_abs": 95407,
+        "env_len_ms": 50
+      }
+    }
+  ]
+}

@@ -23,7 +23,7 @@ float normalizeContrastQuality(float targetPower, float neighborPower) {
 }
 
 // FreqBandStream maintains the rolling narrow-band frequency evidence stream.
-void FreqBandStream::resetState() {
+void IRAM_ATTR FreqBandStream::resetState() {
     _sampleCount = 0;
     _sampleWriteIndex = 0;
     _samplesUntilNextFrequencyUpdate = 0;
@@ -49,12 +49,12 @@ void FreqBandStream::resetState() {
     updateCachedGoertzelCoefficients();
 }
 
-void FreqBandStream::setTargetFrequencyHz(unsigned long value) {
+void IRAM_ATTR FreqBandStream::setTargetFrequencyHz(unsigned long value) {
     _targetFrequencyHz = value;
     updateCachedGoertzelCoefficients();
 }
 
-void FreqBandStream::setBand(unsigned long lowHz, unsigned long highHz) {
+void IRAM_ATTR FreqBandStream::setBand(unsigned long lowHz, unsigned long highHz) {
     if (lowHz == 0 || highHz < lowHz) {
         _bandLowHz = 0;
         _bandHighHz = 0;
@@ -75,24 +75,24 @@ void FreqBandStream::setBand(unsigned long lowHz, unsigned long highHz) {
     updateCachedGoertzelCoefficients();
 }
 
-unsigned long FreqBandStream::bandLowHz() const {
+unsigned long IRAM_ATTR FreqBandStream::bandLowHz() const {
     return _bandLowHz;
 }
 
-unsigned long FreqBandStream::bandHighHz() const {
+unsigned long IRAM_ATTR FreqBandStream::bandHighHz() const {
     return _bandHighHz;
 }
 
-unsigned long FreqBandStream::lastPeakBinHz() const {
+unsigned long IRAM_ATTR FreqBandStream::lastPeakBinHz() const {
     return _lastPeakBinHz;
 }
 
-void FreqBandStream::setSampleRateHz(unsigned long value) {
+void IRAM_ATTR FreqBandStream::setSampleRateHz(unsigned long value) {
     _sampleRateHz = value == 0 ? 1 : value;
     updateCachedGoertzelCoefficients();
 }
 
-void FreqBandStream::setWindowSizeSamples(unsigned long value) {
+void IRAM_ATTR FreqBandStream::setWindowSizeSamples(unsigned long value) {
     if (value == 0) {
         value = 1;
     }
@@ -104,7 +104,7 @@ void FreqBandStream::setWindowSizeSamples(unsigned long value) {
     updateCachedGoertzelCoefficients();
 }
 
-void FreqBandStream::setFrequencyUpdateEverySamples(unsigned long value) {
+void IRAM_ATTR FreqBandStream::setFrequencyUpdateEverySamples(unsigned long value) {
     if (value == 0) {
         value = 1;
     }
@@ -112,7 +112,7 @@ void FreqBandStream::setFrequencyUpdateEverySamples(unsigned long value) {
     _samplesUntilNextFrequencyUpdate = 0;
 }
 
-void FreqBandStream::observeCenteredSample(int centeredSample, unsigned long sampleTimeMs) {
+void IRAM_ATTR FreqBandStream::observeCenteredSample(int centeredSample, unsigned long sampleTimeMs) {
     _producedFreshPacketOnLastObserve = false;
     pushSample(centeredSample);
     if (_sampleCount < _windowSizeSamples) {
@@ -145,7 +145,7 @@ void FreqBandStream::observeCenteredSample(int centeredSample, unsigned long sam
 #endif
 }
 
-void FreqBandStream::pushSample(int sample) {
+void IRAM_ATTR FreqBandStream::pushSample(int sample) {
     if (_windowSizeSamples == 0) {
         return;
     }
@@ -157,7 +157,7 @@ void FreqBandStream::pushSample(int sample) {
     }
 }
 
-void FreqBandStream::updateCachedGoertzelCoefficients() {
+void IRAM_ATTR FreqBandStream::updateCachedGoertzelCoefficients() {
     const float sampleRateHz = static_cast<float>(_sampleRateHz == 0 ? 1 : _sampleRateHz);
     const float targetHz = static_cast<float>(_targetFrequencyHz);
     const float binSpacingHz = bandSpacingHz();
@@ -177,7 +177,7 @@ void FreqBandStream::updateCachedGoertzelCoefficients() {
 }
 
 // Band mode bank: guard bin, the band bins, guard bin, one bandSpacingHz() apart.
-void FreqBandStream::rebuildBank() {
+void IRAM_ATTR FreqBandStream::rebuildBank() {
     _bankCount = 0;
     if (_bandLowHz == 0) {
         return;
@@ -198,7 +198,7 @@ void FreqBandStream::rebuildBank() {
     }
 }
 
-float FreqBandStream::computeGoertzelPowerFromCoeff(float coeff) const {
+float IRAM_ATTR FreqBandStream::computeGoertzelPowerFromCoeff(float coeff) const {
     if (_windowSizeSamples == 0 || _sampleCount < _windowSizeSamples) {
         return 0.0f;
     }
@@ -226,7 +226,7 @@ float FreqBandStream::computeGoertzelPowerFromCoeff(float coeff) const {
     return power;
 }
 
-float FreqBandStream::computeGoertzelPowerAtFrequency(float frequencyHz) const {
+float IRAM_ATTR FreqBandStream::computeGoertzelPowerAtFrequency(float frequencyHz) const {
     if (!_cachedGoertzelValid) {
         return 0.0f;
     }
@@ -246,7 +246,7 @@ float FreqBandStream::computeGoertzelPowerAtFrequency(float frequencyHz) const {
     return computeGoertzelPowerFromCoeff(coeff);
 }
 
-audio::FrequencyScore16 FreqBandStream::computeFrequencyScore() {
+audio::FrequencyScore16 IRAM_ATTR FreqBandStream::computeFrequencyScore() {
     if (_windowSizeSamples == 0 || _sampleCount < _windowSizeSamples) {
         _lastTargetBandValue = 0;
         _lastTargetBandPowerValue = 0.0f;
@@ -310,7 +310,7 @@ audio::FrequencyScore16 FreqBandStream::computeFrequencyScore() {
 
 // Band mode: the strongest band bin is the target; its neighbours (one bin each
 // side, guards included) give the contrast, as the single target's did.
-audio::FrequencyScore16 FreqBandStream::computeBandScore() {
+audio::FrequencyScore16 IRAM_ATTR FreqBandStream::computeBandScore() {
     float power[kMaxBankBins] = {};
     for (unsigned long i = 0; i < _bankCount; ++i) {
         power[i] = computeGoertzelPowerFromCoeff(_bankCoeff[i]);
@@ -339,74 +339,74 @@ audio::FrequencyScore16 FreqBandStream::computeBandScore() {
     return normalizedScore;
 }
 
-audio::FrequencyScore16 FreqBandStream::lastTargetBandValue() const {
+audio::FrequencyScore16 IRAM_ATTR FreqBandStream::lastTargetBandValue() const {
     return _lastTargetBandValue;
 }
 
-float FreqBandStream::lastTargetBandPowerValue() const {
+float IRAM_ATTR FreqBandStream::lastTargetBandPowerValue() const {
     return _lastTargetBandPowerValue;
 }
 
-float FreqBandStream::lastLowerBandPowerValue() const {
+float IRAM_ATTR FreqBandStream::lastLowerBandPowerValue() const {
     return _lastLowerBandPowerValue;
 }
 
-float FreqBandStream::lastUpperBandPowerValue() const {
+float IRAM_ATTR FreqBandStream::lastUpperBandPowerValue() const {
     return _lastUpperBandPowerValue;
 }
 
-float FreqBandStream::lastNeighborBandPowerValue() const {
+float IRAM_ATTR FreqBandStream::lastNeighborBandPowerValue() const {
     return _lastNeighborBandPowerValue;
 }
 
-float FreqBandStream::lastTotalEnergyValue() const {
+float IRAM_ATTR FreqBandStream::lastTotalEnergyValue() const {
     return _lastTotalEnergyValue;
 }
 
-float FreqBandStream::lastTargetBandContrastValue() const {
+float IRAM_ATTR FreqBandStream::lastTargetBandContrastValue() const {
     return _lastTargetBandContrastValue;
 }
 
-float FreqBandStream::bandSpacingHz() const {
+float IRAM_ATTR FreqBandStream::bandSpacingHz() const {
     if (_windowSizeSamples == 0) {
         return 0.0f;
     }
     return static_cast<float>(_sampleRateHz) / static_cast<float>(_windowSizeSamples);
 }
 
-unsigned long FreqBandStream::bandBinCountFor(unsigned long lowHz, unsigned long highHz, unsigned long spacingHz) {
+unsigned long IRAM_ATTR FreqBandStream::bandBinCountFor(unsigned long lowHz, unsigned long highHz, unsigned long spacingHz) {
     return freqband::bandBinCountFor(lowHz, highHz, spacingHz);
 }
 
-unsigned long FreqBandStream::bandBinCount() const {
+unsigned long IRAM_ATTR FreqBandStream::bandBinCount() const {
     return bandBinCountFor(_bandLowHz, _bandHighHz, static_cast<unsigned long>(bandSpacingHz() + 0.5f));
 }
 
-unsigned long FreqBandStream::targetFrequencyHz() const {
+unsigned long IRAM_ATTR FreqBandStream::targetFrequencyHz() const {
     return _targetFrequencyHz;
 }
 
-unsigned long FreqBandStream::sampleRateHz() const {
+unsigned long IRAM_ATTR FreqBandStream::sampleRateHz() const {
     return _sampleRateHz;
 }
 
-unsigned long FreqBandStream::windowSizeSamples() const {
+unsigned long IRAM_ATTR FreqBandStream::windowSizeSamples() const {
     return _windowSizeSamples;
 }
 
-unsigned long FreqBandStream::frequencyUpdateEverySamples() const {
+unsigned long IRAM_ATTR FreqBandStream::frequencyUpdateEverySamples() const {
     return _frequencyUpdateEverySamples;
 }
 
-unsigned long FreqBandStream::sampleCount() const {
+unsigned long IRAM_ATTR FreqBandStream::sampleCount() const {
     return _sampleCount;
 }
 
-bool FreqBandStream::windowReady() const {
+bool IRAM_ATTR FreqBandStream::windowReady() const {
     return _sampleCount >= _windowSizeSamples && _windowSizeSamples > 0;
 }
 
-unsigned long FreqBandStream::profileObserveCalls() const {
+unsigned long IRAM_ATTR FreqBandStream::profileObserveCalls() const {
 #if FREQBAND_ENABLE_PROFILING
     return _profileObserveCalls;
 #else
@@ -414,7 +414,7 @@ unsigned long FreqBandStream::profileObserveCalls() const {
 #endif
 }
 
-unsigned long FreqBandStream::profileComputeCalls() const {
+unsigned long IRAM_ATTR FreqBandStream::profileComputeCalls() const {
 #if FREQBAND_ENABLE_PROFILING
     return _profileComputeCalls;
 #else
@@ -422,7 +422,7 @@ unsigned long FreqBandStream::profileComputeCalls() const {
 #endif
 }
 
-unsigned long FreqBandStream::profileObserveTotalUs() const {
+unsigned long IRAM_ATTR FreqBandStream::profileObserveTotalUs() const {
 #if FREQBAND_ENABLE_PROFILING
     return _profileObserveTotalUs;
 #else
@@ -430,7 +430,7 @@ unsigned long FreqBandStream::profileObserveTotalUs() const {
 #endif
 }
 
-unsigned long FreqBandStream::profileComputeTotalUs() const {
+unsigned long IRAM_ATTR FreqBandStream::profileComputeTotalUs() const {
 #if FREQBAND_ENABLE_PROFILING
     return _profileComputeTotalUs;
 #else
@@ -438,7 +438,7 @@ unsigned long FreqBandStream::profileComputeTotalUs() const {
 #endif
 }
 
-unsigned long FreqBandStream::profileEnergyTotalUs() const {
+unsigned long IRAM_ATTR FreqBandStream::profileEnergyTotalUs() const {
 #if FREQBAND_ENABLE_PROFILING
     return _profileEnergyTotalUs;
 #else
@@ -446,7 +446,7 @@ unsigned long FreqBandStream::profileEnergyTotalUs() const {
 #endif
 }
 
-unsigned long FreqBandStream::profileGoertzelTotalUs() const {
+unsigned long IRAM_ATTR FreqBandStream::profileGoertzelTotalUs() const {
 #if FREQBAND_ENABLE_PROFILING
     return _profileGoertzelTotalUs;
 #else
@@ -454,7 +454,7 @@ unsigned long FreqBandStream::profileGoertzelTotalUs() const {
 #endif
 }
 
-bool FreqBandStream::profilingEnabled() const {
+bool IRAM_ATTR FreqBandStream::profilingEnabled() const {
 #if FREQBAND_ENABLE_PROFILING
     return true;
 #else
@@ -462,11 +462,11 @@ bool FreqBandStream::profilingEnabled() const {
 #endif
 }
 
-bool FreqBandStream::producedFreshPacketOnLastObserve() const {
+bool IRAM_ATTR FreqBandStream::producedFreshPacketOnLastObserve() const {
     return _producedFreshPacketOnLastObserve;
 }
 
-unsigned long FreqBandStream::lastPacketAgeSamples() const {
+unsigned long IRAM_ATTR FreqBandStream::lastPacketAgeSamples() const {
     if (!_producedFreshPacketOnLastObserve && _sampleCount >= _windowSizeSamples && _frequencyUpdateEverySamples > 1) {
         const unsigned long countdown = _samplesUntilNextFrequencyUpdate;
         const unsigned long maxAge = _frequencyUpdateEverySamples > 0 ? _frequencyUpdateEverySamples - 1U : 0U;

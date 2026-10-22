@@ -186,7 +186,7 @@ void FrequencyMatchDetector::resetPendingFacts() {
     _pendingAudioOverflow = false;
 }
 
-void FrequencyMatchDetector::updatePendingFacts(unsigned long nowMs, float strength, bool aboveAttackThreshold, bool aboveReleaseThreshold) {
+void IRAM_ATTR FrequencyMatchDetector::updatePendingFacts(unsigned long nowMs, float strength, bool aboveAttackThreshold, bool aboveReleaseThreshold) {
     const unsigned long deltaMs = _pendingLastUpdateMs == 0 || timing::beforeDeadline(nowMs, _pendingLastUpdateMs)
         ? 0UL
         : nowMs - _pendingLastUpdateMs;
@@ -298,7 +298,7 @@ void FrequencyMatchDetector::recordRejectedPending() {
     freezeReport(_pendingCloseMs);
 }
 
-void FrequencyMatchDetector::update(const detection::FrequencyBandMeasurementPacket& evidence,
+void IRAM_ATTR FrequencyMatchDetector::update(const detection::FrequencyBandMeasurementPacket& evidence,
                                     const AudioSamplePacket& audioSamplePacket,
                                     unsigned long now,
                                     uint64_t currentSample,

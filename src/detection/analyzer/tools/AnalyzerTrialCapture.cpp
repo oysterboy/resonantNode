@@ -33,7 +33,7 @@ uint8_t sequencePendingClass(bool duplicatePending, bool inWindow, long dtFromTr
 
 } // namespace
 
-detection::FrequencyBandMeasurementPacket AnalyzerApp::captureFrequencyMeasurementPacket(const AudioSamplePacket& audioSamplePacket) const {
+detection::FrequencyBandMeasurementPacket IRAM_ATTR AnalyzerApp::captureFrequencyMeasurementPacket(const AudioSamplePacket& audioSamplePacket) const {
     return detection::buildFrequencyMeasurementPacket(_freqBandStream, audioSamplePacket);
 }
 

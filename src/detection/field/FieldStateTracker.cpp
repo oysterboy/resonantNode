@@ -21,7 +21,7 @@ void FieldStateTracker::reset() {
     _patternWindowStartMs = 0;
 }
 
-void FieldStateTracker::update(unsigned long nowMs) {
+void IRAM_ATTR FieldStateTracker::update(unsigned long nowMs) {
     if (_occurrenceWindowStartMs == 0) {
         _occurrenceWindowStartMs = nowMs;
     } else if (timing::atOrAfter(nowMs, _occurrenceWindowStartMs) && nowMs - _occurrenceWindowStartMs >= _config.occurrenceWindowMs) {

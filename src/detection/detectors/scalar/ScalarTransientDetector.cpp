@@ -111,7 +111,7 @@ void ScalarTransientDetector::resetCandidateFacts() {
     _candidateLastUpdateUs = 0;
 }
 
-void ScalarTransientDetector::updateCandidateFacts(uint64_t nowUs, float strength, bool aboveAttackThreshold, bool aboveReleaseThreshold) {
+void IRAM_ATTR ScalarTransientDetector::updateCandidateFacts(uint64_t nowUs, float strength, bool aboveAttackThreshold, bool aboveReleaseThreshold) {
     const unsigned long deltaUs = _candidateLastUpdateUs == 0 || nowUs < _candidateLastUpdateUs
         ? 0UL
         : static_cast<unsigned long>(nowUs - _candidateLastUpdateUs);
@@ -178,7 +178,7 @@ void ScalarTransientDetector::finalizeCandidateFacts(uint64_t releaseObservedUs)
 }
 
 // Core lifecycle helpers.
-void ScalarTransientDetector::updateOnsetStage(uint64_t nowUs, float signalMagnitude, bool aboveAttackThreshold, bool onsetCooldownElapsed) {
+void IRAM_ATTR ScalarTransientDetector::updateOnsetStage(uint64_t nowUs, float signalMagnitude, bool aboveAttackThreshold, bool onsetCooldownElapsed) {
     // Use raw magnitude for the edge so short bursts are not delayed by smoothing.
     // The separate release threshold keeps the peak stable when the occurrence wobbles near the edge.
     if (aboveAttackThreshold && !_peakActive && onsetCooldownElapsed) {
@@ -217,7 +217,7 @@ void ScalarTransientDetector::updateOnsetStage(uint64_t nowUs, float signalMagni
     }
 }
 
-void ScalarTransientDetector::updateTransientStage(uint64_t nowUs, float signalMagnitude, bool aboveReleaseThreshold) {
+void IRAM_ATTR ScalarTransientDetector::updateTransientStage(uint64_t nowUs, float signalMagnitude, bool aboveReleaseThreshold) {
     if (_peakActive && signalMagnitude > _peakStrength) {
         _peakStrength = signalMagnitude;
         _peakStrengthObservedUs = nowUs;
@@ -367,7 +367,7 @@ const char* ScalarTransientDetector::lastTransientRejectReasonName() const {
 }
 
 // Main detector update.
-void ScalarTransientDetector::update(
+void IRAM_ATTR ScalarTransientDetector::update(
     const AudioSamplePacket& audioSamplePacket,
     float signalMagnitude
 ) {

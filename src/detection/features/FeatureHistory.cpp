@@ -198,14 +198,14 @@ uint32_t FeatureHistory::outOfOrderRecordCount() const {
     return _outOfOrderRecords;
 }
 
-void FeatureHistory::startCurrentBin(StreamBuffer& buffer, unsigned long timeMs) {
+void IRAM_ATTR FeatureHistory::startCurrentBin(StreamBuffer& buffer, unsigned long timeMs) {
     buffer.current = {};
     buffer.current.startMs = timeMs;
     buffer.current.valid = true;
     buffer.hasCurrent = true;
 }
 
-void FeatureHistory::accumulateIntoCurrentBin(StreamBuffer& buffer, float value, bool fresh) {
+void IRAM_ATTR FeatureHistory::accumulateIntoCurrentBin(StreamBuffer& buffer, float value, bool fresh) {
     if (!buffer.hasCurrent) {
         return;
     }
@@ -220,7 +220,7 @@ void FeatureHistory::accumulateIntoCurrentBin(StreamBuffer& buffer, float value,
     current.last = value;
 }
 
-void FeatureHistory::finalizeCurrentBin(StreamBuffer& buffer, FeatureStreamId stream) {
+void IRAM_ATTR FeatureHistory::finalizeCurrentBin(StreamBuffer& buffer, FeatureStreamId stream) {
     if (!buffer.hasCurrent || !buffer.current.valid) {
         return;
     }
@@ -253,11 +253,11 @@ void FeatureHistory::finalizeCurrentBin(StreamBuffer& buffer, FeatureStreamId st
     buffer.current = {};
 }
 
-void FeatureHistory::record(const FeatureStream& sample, bool fresh) {
+void IRAM_ATTR FeatureHistory::record(const FeatureStream& sample, bool fresh) {
     record(sample.id, sample.timeMs, sample.value, fresh);
 }
 
-void FeatureHistory::record(FeatureStreamId id, unsigned long timeMs, float value, bool fresh) {
+void IRAM_ATTR FeatureHistory::record(FeatureStreamId id, unsigned long timeMs, float value, bool fresh) {
     const size_t slot = slotFor(id);
     if (slot == kNoSlot) {
         return;

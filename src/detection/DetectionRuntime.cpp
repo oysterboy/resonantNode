@@ -326,7 +326,7 @@ void DetectionRuntime::setVerdictQueueEnabled(bool enabled) {
     }
 }
 
-void DetectionRuntime::observeFrame(
+void IRAM_ATTR DetectionRuntime::observeFrame(
     const AudioSamplePacket& audioSamplePacket,
     const FrequencyBandMeasurementPacket& frequencyEvidence,
     unsigned long nowMs
@@ -547,7 +547,7 @@ const FeatureHistory& DetectionRuntime::featureHistory() const {
 
 #endif // ANALYZER_MODE
 
-bool DetectionRuntime::hasPendingDetectorOutput() const {
+bool IRAM_ATTR DetectionRuntime::hasPendingDetectorOutput() const {
     switch (_detectorSelection) {
         case DetectorSelection::FrequencyMatch:
             return _frequencyDetector.hasPendingOccurrence();
@@ -558,7 +558,7 @@ bool DetectionRuntime::hasPendingDetectorOutput() const {
     return false;
 }
 
-bool DetectionRuntime::hasPendingEvaluatorWork() const {
+bool IRAM_ATTR DetectionRuntime::hasPendingEvaluatorWork() const {
     // Query the matcher's own pending-input state directly. The correlation
     // queue (_verdictCorrelationCount) is diagnostics-only bookkeeping and can
     // legitimately diverge from what the matcher itself still has queued

@@ -458,6 +458,8 @@ void AnalyzerApp::updateSequenceTest(unsigned long now) {
     _sequenceTest.currentTrial = trialNumber;
     _sequenceTest.currentTrialScheduledAtMs = scheduledAtMs;
     _sequenceTest.currentTrialStartMs = scheduledAtMs;
+    _sequenceTest.currentTrialCommandSent = false;
+    _sequenceTest.currentTrialCommandSentMs = 0;
     _sequenceTest.currentTrialEndMs = scheduledAtMs + _sequenceTest.windowEndOffsetMs;
     _sequenceTest.currentTrialOnsetDetectedMs = 0;
     _sequenceTest.currentTrialPatternDetectedMs = 0;
@@ -531,11 +533,13 @@ void AnalyzerApp::updateSequenceTest(unsigned long now) {
         } else {
             snprintf(command, sizeof(command), "CHIRP trial=%lu freq=%lu dur=%lu", trialNumber, _sequenceTest.toneHz, _sequenceTest.durationMs);
         }
+        _sequenceTest.currentTrialCommandSentMs = timebase::nowMs();
+        _sequenceTest.currentTrialCommandSent = true;
         sendEmitterCommand(command);
     }
 }
 
-void AnalyzerApp::updateSequenceAmbientStats(unsigned long nowMs) {
+void IRAM_ATTR AnalyzerApp::updateSequenceAmbientStats(unsigned long nowMs) {
     if (!_sequenceTest.active || _sequenceTest.currentTrial == 0 || _sequenceTest.currentTrialFinalized) {
         return;
     }
@@ -920,11 +924,29 @@ void AnalyzerApp::updateCleanSequenceSummary(const AnalyzerReport& report) {
     summary.completed = detection::analyzer::completedPrimaryTrialCount(summary);
 }
 
+// dt anchor (ANA-007, step 7a): the time the trial's command was sent when
+// this Analyzer drives the Emitter (SEQ); otherwise (OBS, external emitter)
+// the EMIT_START marker as polled, else the scheduled trigger. dt from the
+// command contains the Emitter's command handling and the D-AMP TX queue, a
+// constant (59 ms on 2026-10-22, E2/E3, against 22-38 ms of marker jitter).
 unsigned long AnalyzerApp::sequenceTrialOnsetAnchorMs() const {
+    if (_sequenceTest.currentTrialCommandSent) {
+        return _sequenceTest.currentTrialCommandSentMs;
+    }
     if (_sequenceTest.currentTrialDiagnostics.emitStartSeen) {
         return _sequenceTest.currentTrialStartMs + _sequenceTest.currentTrialDiagnostics.emitStartDtMs;
     }
     return _sequenceTest.currentTrialScheduledAtMs;
+}
+
+const char* AnalyzerApp::sequenceTrialOnsetAnchorName() const {
+    if (_sequenceTest.currentTrialCommandSent) {
+        return "command";
+    }
+    if (_sequenceTest.currentTrialDiagnostics.emitStartSeen) {
+        return "marker";
+    }
+    return "scheduled";
 }
 
 

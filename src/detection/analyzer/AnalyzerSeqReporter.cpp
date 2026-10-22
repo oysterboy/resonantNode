@@ -188,6 +188,8 @@ void AnalyzerApp::printSequenceTrial(const AnalyzerReport& report) const {
         serialOut().print(report.classification.dtMs);
         serialOut().print("ms");
     }
+    serialOut().print(" dt_anchor=");
+    serialOut().print(sequenceTrialOnsetAnchorName());
     if (report.occurrences.primaryDurationMs > 0) {
         serialOut().print(" duration_ms=");
         serialOut().print(report.occurrences.primaryDurationMs);

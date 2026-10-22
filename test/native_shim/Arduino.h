@@ -1,5 +1,10 @@
 #pragma once
 
+// ESP32 placement attribute (code in IRAM); no meaning on the host.
+#ifndef IRAM_ATTR
+#define IRAM_ATTR
+#endif
+
 /*
 Arduino.h stand-in for the host build (PlatformIO env:native-replay, NODE-006).
 

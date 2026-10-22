@@ -252,7 +252,7 @@ const char* AnalyzerApp::currentResetReasonName() const {
     return systemResetReasonName(esp_reset_reason());
 }
 
-void AnalyzerApp::updateSequenceAudioHealth(const AudioSamplePacket& audioSamplePacket) {
+void IRAM_ATTR AnalyzerApp::updateSequenceAudioHealth(const AudioSamplePacket& audioSamplePacket) {
     if (!_sequenceTest.active || _sequenceTest.currentTrial == 0 || _sequenceTest.currentTrialFinalized) {
         return;
     }

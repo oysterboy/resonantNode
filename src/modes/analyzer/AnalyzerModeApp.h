@@ -341,6 +341,11 @@ private:
         unsigned long nextTriggerAtMs = 0;
         unsigned long currentTrial = 0;
         unsigned long currentTrialScheduledAtMs = 0;
+        // ANA-007 (step 7a): when this trial's CHIRP/PULSES command left for
+        // the Emitter; the dt anchor (the EMIT_START marker is read after the
+        // sample loop, 21-37 ms late and jittery).
+        unsigned long currentTrialCommandSentMs = 0;
+        bool currentTrialCommandSent = false;
         unsigned long currentTrialStartMs = 0;
         unsigned long currentTrialEndMs = 0;
         unsigned long currentTrialOnsetDetectedMs = 0;
@@ -514,6 +519,7 @@ private:
     };
 
     unsigned long sequenceTrialOnsetAnchorMs() const;
+    const char* sequenceTrialOnsetAnchorName() const;
     SequenceTrialSelection selectSequenceTrialSelection(unsigned long trialOnsetAnchorMs) const;
     void handleSequencePending(
         const detection::DetectionPipelineEvent& event,

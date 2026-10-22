@@ -170,6 +170,7 @@ private:
     void printSignalConfig();
     void printHopGapCheck();  // RB hop_check: output.hop_* against detection.scalar_* (step 5h item 2)
     void printInspectionPlanCheck();  // RB plan_check: detection.scalar_* against the plan and history (step 8b item 2)
+    void applyLiveDetectionParams();  // PARAM SET detection.*: in place, no reset (step 10 item 2)
 
     // Hardware wiring.
     int _ledPin;

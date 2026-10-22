@@ -619,6 +619,17 @@ void Node::registerOutputParams() {
     _paramRegistry.addUInt32(ParamId::Output_IdleAnnounceMs, ModuleId::Output, "output.idle_announce_ms", &_idleAnnounceMs, 20U, 2000U);
 }
 
+// The registered detection params (detection.scalar_*, detection.band_*) applied
+// in place: scalar thresholds through the detector's setters, the band through
+// FreqBandStream. No detector reset and no FeatureHistory wipe, so a live PARAM
+// SET does not drop an occurrence in flight (step 10 item 2, issue #14,
+// decisions/2026-10-22-live-params-profile-reset-no-rb-behav.md D2). A profile
+// switch still goes through applyActiveDetectionProfile().
+void Node::applyLiveDetectionParams() {
+    _detection.setScalarTransientConfig(_activeDetectionProfile.scalarTransient);
+    applyBandParams();
+}
+
 void Node::applyBandParams() {
     // An empty or inverted band means "single target at the chirp tone".
     const bool bandValid = _bandLowHz != 0 && _bandHighHz >= _bandLowHz;
@@ -1515,7 +1526,7 @@ void Node::handleParamCommand(const char* line) {
 void Node::applyParamModule(param::ModuleId module) {
     switch (module) {
         case param::ModuleId::Detection:
-            applyActiveDetectionProfile();
+            applyLiveDetectionParams();
             printHopGapCheck();
             printInspectionPlanCheck();
             break;

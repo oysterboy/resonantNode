@@ -21,44 +21,49 @@ Defined once here, referenced by number at each phase gate. Do not skip a
 referenced test to save time, every phase below states exactly which of
 these apply.
 
-- **T1 — Build all three environments.** `esp32dev`, `esp32dev-emitter`,
-  `esp32dev-analyzer` must all compile and link. This is the only check that
-  would catch a change to shared code breaking a binary you didn't have in
-  mind while editing.
-- **T2 — SEQ regression, TonalPulseFreq.** Run the 50-trial
-  `TonalPulseFreq` SEQ test. Diff `SEQ_TRIAL`/`SEQ_SOURCE`/`SEQ_INSPECT`/
-  `SEQ_EXPLAIN`/`SEQ_SUMMARY` output against the pre-phase baseline. Must be
-  byte-identical unless the phase explicitly says otherwise (only Phase 0's
-  outcome is allowed to change behavior; every other phase is a pure
-  refactor).
-- **T3 — SEQ regression, TonalPulseScalar.** Same as T2, for the 50-trial
-  `TonalPulseScalar` test.
-- **T4 — Unity test suite.** Run `test_analyzer_pass_rules` (the one
-  existing automated test target; it pulls `ScalarTransientDetector`,
-  `FeatureHistory`, and `AnalyzerPassRules` directly into the test build).
-  This requires the physical ESP32 target to execute, `pio test` runs
-  on-device here, there is no native/host test environment configured. If
-  hardware isn't available for a given change, at minimum confirm the test
-  target still compiles.
+Revised 2026-10-22 after FrequencyMatch was removed (step 7d). The old T2
+(TonalPulseFreq) is gone, and the numbers T3-T8 are kept so phase gates still
+read right. Earlier gates that name T2 ran it when it existed.
+
+- **T1 — Build every environment.** All eight ESP envs (`pio run` per env, as CI
+  does on every push: `.github/workflows/build.yml`) plus `native-replay`. This
+  is the check that catches a shared-code change breaking a binary you weren't
+  editing.
+- **T2 — removed 2026-10-22** (TonalPulseFreq SEQ; the profile no longer exists).
+- **T2h — Host replay, byte-identical.** `program.exe --verbose --dir <folder>`
+  over `test/fixtures` and the `bench/sessions/*-corpus-*` folders, before and
+  after the phase. The verdict lines must be byte-identical unless the phase
+  says otherwise. Deterministic, no board; it covers the same chain as T3. Save
+  the "before" output in the pass doc's notes or a scratch file.
+- **T3 — SEQ regression, TonalPulseScalar, on hardware.** The 50-trial chirp
+  SEQ plus a 10-trial hop-train SEQ (`band=2950-3950 ... hop=...`, as in
+  bench/sessions/2026-10-22-7a-gate). Compare with `tools/bench/seqcmp.py`
+  against the baseline in `bench/baselines.csv`. Hardware runs are not
+  byte-identical (dt, strength and duration move by a few units): counts,
+  classifications and reject reasons must match, and numeric fields within run
+  to run spread. A short tone near the 85 ms limit can switch between readings
+  (bench/sessions/2026-10-22-7d-dur40-raw); don't use one as a T3 cell.
+- **T4 — Unity suites.** Host: `pio test -e native-test` and `-e
+  native-test-behavior` (CI runs both). On-device: `test_analyzer_pass_rules`,
+  `test_timebase`, `test_shipped_profile` (upload with `--without-testing`, then
+  reset the board and read the port; CLAUDE.md). With no board attached, at
+  least build them.
 - **T5 — Struct size check.** For any change to `Occurrence`, `DetectorReport`,
   or their detail members, compile a `sizeof()` probe against the real
   `xtensa-esp32-elf-g++` toolchain (not host g++, alignment differs) and
   record before/after sizes in the commit notes.
 - **T6 — Profile-switch soak.** Run one profile, switch to the other
-  mid-session, switch back, for at least a few dozen trials each way.
-  Confirms no state leaks or goes stale across `setDetectorSelection()`
-  calls. Required for any change touching `DetectionRuntime`'s detector
-  storage or lifecycle.
-- **T7 — Node smoke test.** There is no automated test that exercises
-  `ResonantNodeApp`'s runtime path (SEQ tests run in Analyzer mode only).
-  For any change to code shared with the Node build (chiefly
-  `DetectionRuntime`), flash `env:esp32dev` and manually confirm the node
-  still detects and responds normally. This is a real gap, not a formality,
-  call it out in commit notes rather than skipping it silently.
+  (TonalPulseScalar <-> AmpExperimental, both on the one scalar family),
+  switch back, for at least a few dozen trials each way. Confirms no state
+  leaks or goes stale across a profile apply. Required for any change touching
+  `DetectionRuntime`'s detector storage or lifecycle.
+- **T7 — Node smoke test.** Flash `env:esp32dev`. Check that it boots with
+  TonalPulseScalar, then that it detects and answers: a two-node RB CALL
+  exchange, or `nodepair.py`. For any change to code shared with the Node build
+  (chiefly `DetectionRuntime`). Call it out in commit notes rather than skip it
+  silently.
 - **T8 — Binary size measurement.** Record the Node (`env:esp32dev`) build's
-  RAM/flash usage before and after. Only meaningful once the isolation
-  proposal (Phase 5b) lands, since that's the only phase expected to move
-  the number.
+  RAM/flash usage before and after.
 
 ---
 

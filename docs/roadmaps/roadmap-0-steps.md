@@ -38,7 +38,7 @@ README.md ("Who answers what", "Ordering rule").
 Status update 2026-10-22, night: 7c done. FieldState stays as the rest gate (trimmed in step 8); FrequencyMatch
 is removed in the new step 7d (#52), before step 8; step 9 deferred to step 11; 8b's Freq items moot. Next: 7d.
 Status update 2026-10-22, late night: 7d done (3a11d80). FrequencyMatch is gone and the Scalar T3 is unchanged
-against 7a. Next: step 8, starting with its baseline (3d's check 12).
+against 7a. Next: step 8; its baseline is recorded (bench 2026-10-22-step8-baseline).
 Status update 2026-10-22, evening: second revision (owner's picks): 8a held until after 10b (it changes the
 signal 10b compares against); step 9's Phase 6 re-checked once 7c decides Freq; new step 10c (five nodes for
 24 h or more) and a goal for the phase after 10b (an installation-ready node). Issues: 7c #49, 10b #50, 10c #51.
@@ -764,6 +764,13 @@ the previous gate open unless the step says it can run in parallel.
    bench/baselines.csv. The FieldState trim (decisions/2026-10-22-fieldstate-
    is-the-rest-gate.md) lands here too; it must not move T2/T3 or the
    behavior host suites.
+   Baseline recorded 2026-10-22 (bench/sessions/2026-10-22-step8-baseline, 3a11d80):
+   - T3 on hardware: 50/50 chirps and 10/10 hop trains, 0 drops; both are on bench/baselines.csv. Chirp
+     durations fall in two groups (117-120 / 141 ms) that move through the day (room reflection, see 7d).
+   - New T2h: a host replay dump over the fixtures and the ten corpus folders (80 verdicts). It is
+     byte-identical to the dump from the binary before 7d. Step 8's code gate diffs against it.
+   The standing battery in cleanup-0-plan.md was revised for one family (T2 gone, T2h added, T1/T4/T6/T7
+   brought up to date). Next: the fold itself.
 
 8a. [DEFERRED until 10b] Signal variation, part 2: aesthetics. (issue #38)
    Where: OUT-006 (two-layer signal), BEH-006 (variation over time),

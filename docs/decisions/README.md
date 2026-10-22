@@ -63,7 +63,7 @@ what replaced it.
 | 2026-10-13 | [The Node does not ignore verdicts on occurrences with dropped audio](2026-10-13-node-reacts-despite-dropped-audio.md) |
 | 2026-10-13 | [One reject event per new selected (best) reject](2026-10-13-one-reject-event-per-new-best-reject.md) |
 | 2026-10-13 | [SEQ sample dump: default step 4 ms, 256-row buffer kept](2026-10-13-sample-dump-step-4ms.md) |
-| 2026-10-14 | [The Node ships TonalPulseScalar; TonalPulseFreq stays a demo detector](2026-10-14-node-ships-tonalpulsescalar.md) |
+| 2026-10-14 | [The Node ships TonalPulseScalar; TonalPulseFreq stays a demo detector](2026-10-14-node-ships-tonalpulsescalar.md) (demo half superseded 2026-10-22: Freq removed) |
 | 2026-10-14 | [Replace First Difference with a DC blocker inside step 5a, before the new-geometry baseline](2026-10-14-dc-blocker-before-5a-baseline.md) |
 | 2026-10-15 | [Signals vary per node and over time inside a shared band; the detector is shape-agnostic](2026-10-15-signal-variation-inside-a-shared-band.md) |
 | 2026-10-16 | [Hop acceptance: the contrast inspector guards against noise (30,500), the amp limit drops to 1,500; long gaps leave the acceptance set, max duration 300, history 512](2026-10-16-hop-acceptance-contrast-gate-not-amp.md) (shipped in the profile; confirmation battery pending) |
@@ -72,6 +72,8 @@ what replaced it.
 | 2026-10-17 | [A busy network makes a node rest: field density (4 patterns) or own budget (6 in 10 s), hard 10 s pause, same values everywhere](2026-10-17-two-node-exchange-chain-length.md) |
 | 2026-10-17 | [Behavior: one program, the shipped struct as its profile, values as params; a bench session records the whole effective state](2026-10-17-behavior-contract-and-reproducible-sessions.md) |
 | 2026-10-22 | [Console output in whole lines (serialOut) and the per-sample path in IRAM: Analyzer report 190 -> 3.4 ms, per-sample 73 -> 37 us, 0 dropped buffers](2026-10-22-serial-lines-and-iram-hot-path.md) |
+| 2026-10-22 | [FieldState stays as the rest gate; noiseFloor, avgAmbientLevel and chatter go (trim in step 8)](2026-10-22-fieldstate-is-the-rest-gate.md) |
+| 2026-10-22 | [Remove FrequencyMatchDetector and TonalPulseFreq; Scalar is the only family (step 7d)](2026-10-22-remove-frequencymatch.md) |
 | 2026-10-22 | [Network pacing: rest 5 s, idle call every 60 s +- 20 s, pass mark "the chain ends within 30 s in 80 %", M = 100](2026-10-22-network-pacing.md) |
 | 2026-10-21 | [D-AMP tone level 0.5 of full scale: at 0.3 the five-board hearing matrix had 7 of 20 cells at 10/10, at 0.5 19 of 20](2026-10-21-damp-tone-level-0p5.md) |
 | 2026-10-16 | [The network band is 2950-3950 Hz: bins 2950/3200/3450/3700/3950, the 3,200 Hz chirp on a bin](2026-10-16-network-band-2950-3950.md) |

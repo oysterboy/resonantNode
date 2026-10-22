@@ -72,6 +72,9 @@ function of the emission span, or a queued verdict.
 
 ### 1.2 "Settle or run away" has no mechanism behind it (verified)
 
+Became: decisions/2026-10-22-fieldstate-is-the-rest-gate.md. Since 2ddf2b4 (2026-10-17) Behavior rests on
+`recentPatternCount`, so the "never reads it" below no longer holds. The rest gate ended the step 6 chains.
+
 `FieldState` is computed by `FieldStateTracker` and handed to Behavior,
 which stores it in `_lastFieldState` and never reads it
 (`ResonantBehavior.cpp`). The field-state values in every profile

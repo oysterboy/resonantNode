@@ -1,6 +1,7 @@
 # The Node ships TonalPulseScalar; TonalPulseFreq stays a demo detector
 
-Status: decided and complete. The Node boots TonalPulseScalar and registers its 13
+Status: decided and complete; the "demo detector" half superseded 2026-10-22 by
+2026-10-22-remove-frequencymatch.md (Freq leaves the tree in step 7d). The Node boots TonalPulseScalar and registers its 13
 `detection.scalar_*` params (b4566aa, bench-checked live on E2).
 Date: 2026-10-14.
 

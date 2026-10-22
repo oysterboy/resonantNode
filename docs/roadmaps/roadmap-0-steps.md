@@ -9,9 +9,9 @@ roadmap text that belongs in the domain-specific files.
 
 Since 2026-10-22: the refactors, held against the field baseline. Step 6
 recorded five D-AMP nodes on 908dc9a hearing and answering each other in
-one room (bench/sessions/2026-10-22-step6-trial). Steps 7c-10a restructure
-the code under that behavior: fold the evaluator (8), the detector family
-as a build flag (9), the mode layer and the param paths (10, 10a). Done
+one room (bench/sessions/2026-10-22-step6-trial). Steps 7d-10a restructure
+the code under that behavior: remove FrequencyMatch (7d), fold the
+evaluator (8), the mode layer and the param paths (10, 10a). Done
 means step 10b: the step 6 protocol rerun on the refactored firmware, with
 the same pass marks (hearing matrix, every chain ends within 30 s, no chain
 started by noise, no dropped buffers). Each refactor step's own gate is a
@@ -35,6 +35,8 @@ Renamed from roadmap-general.md on 2026-09-23 so it sorts first.
 How this file relates to the domain roadmaps and docs/refactors/: see
 README.md ("Who answers what", "Ordering rule").
 
+Status update 2026-10-22, night: 7c done. FieldState stays as the rest gate (trimmed in step 8); FrequencyMatch
+is removed in the new step 7d (#52), before step 8; step 9 deferred to step 11; 8b's Freq items moot. Next: 7d.
 Status update 2026-10-22, evening: second revision (owner's picks): 8a held until after 10b (it changes the
 signal 10b compares against); step 9's Phase 6 re-checked once 7c decides Freq; new step 10c (five nodes for
 24 h or more) and a goal for the phase after 10b (an installation-ready node). Issues: 7c #49, 10b #50, 10c #51.
@@ -260,7 +262,7 @@ the previous gate open unless the step says it can run in parallel.
    - check 12 (full T3 regression, Scalar and Freq, seqcmp): step 8's baseline;
    - 13 / B11 and the B11 follow-up (FrequencyMatch reject events), P4 history window (no guard ties
      scalar_max_duration_ms to the history depth), P4 DET-010: step 8b;
-   - P2a (Freq across the 2^31 ms wrap with a profile reset): step 7c (moot if Freq leaves the build);
+   - P2a (Freq across the 2^31 ms wrap with a profile reset): moot, Freq is removed (7c, 7d);
    - A1 (rebase during an idle chirp), A3/A4 remainder: step 10 (Node command paths);
    - P2b and D21 (stall vs overflow counters, sample spans after drops): "Still open", next to NODE-019;
    - the old-bench-data check (P1 keys, P3 rejects): before citing any run from before 2026-10-14.
@@ -710,16 +712,29 @@ the previous gate open unless the step says it can run in parallel.
    Not covered: AudioSourceI2S (sample clock, drop accounting, issue #26) still has no regression test (audit 4.1,
    last sentence); it sits with P2b/D21 under "Still open".
 
-7c. [TODO] Two forks before the refactors: FieldState, and whether Freq stays a family. (issue #49)
-   Where: audit 1.2 (FieldState is computed, handed to Behavior and never read); decisions/2026-10-14-node-ships-
-   tonalpulsescalar.md (Scalar ships, Freq is a demo); step 9 (Phase 6 adds a third family).
-   Why here (moved from step 11 on 2026-10-22): step 11 waited for step 6's counts, and they exist (41 of 41 chains
-   ended in both runs, max 45 per minute against M = 100, ended by the pacing, not by FieldState, which nothing
-   reads). Each answer changes how much code the next steps rewrite: the FieldState plumbing runs through
-   DetectionRuntime (step 8 carries it or deletes it), and dropping Freq makes DET-010, audit 3.2, P2a and the
-   FrequencyMatch half of B11 moot (step 8b) and leaves step 9 with two families, not three.
-   Gate: two docs/decisions/ files (FieldState kept, made a gate, or deleted; Freq kept as a build family, kept
-   as a demo profile, or removed); steps 8, 8b and 9 edited to match. Decisions only, no code.
+7c. [DONE 2026-10-22] Two forks before the refactors: FieldState, and whether Freq stays a family. (issue #49,
+   closed)
+   Where: audit 1.2; decisions/2026-10-14-node-ships-tonalpulsescalar.md; step 9.
+   Why here (moved from step 11 on 2026-10-22): each answer changes how much code steps 8, 8b and 9 rewrite.
+   Gate: two docs/decisions/ files; steps 8, 8b and 9 edited to match. Decisions only, no code.
+   Done 2026-10-22 (owner's picks):
+   - decisions/2026-10-22-fieldstate-is-the-rest-gate.md: FieldState is a shipped gate since 2ddf2b4, which audit
+     1.2 predates. In the step 6 quiet run it caused 100 of the 132 rests (rest_field_dense). It stays. The trim
+     (noiseFloor, avgAmbientLevel, chatter: meaningless, unread) lands in step 8, behavior-neutral.
+   - decisions/2026-10-22-remove-frequencymatch.md: FrequencyMatch and TonalPulseFreq leave the tree (new step
+     7d). Scalar is the only family, so step 9 moves to step 11, and 8b's Freq-only items close as moot.
+
+7d. [TODO] Remove FrequencyMatchDetector and TonalPulseFreq. (issue #52)
+   Where: decisions/2026-10-22-remove-frequencymatch.md; src/detection/detectors/frequency/ (~1,260 lines), the
+   FrequencyMatch branches in DetectionRuntime, DetectionProfile (whose default detectorSelection is
+   FrequencyMatch today), DetectorReport, Occurrence, VerdictTypes, the Analyzer (SEQ profile, sample dump), the
+   Node (RB PROFILE, freq params), src/host/Replay.cpp and tools/bench/seqrun.py. FreqBandStream stays: it feeds
+   the Scalar profile's FrequencyTarget and contrast.
+   Why before step 8: the fold (Phase 7c) and 8b would otherwise migrate and fix a detector that is going away.
+   Gate: no FrequencyMatch or TonalPulseFreq left in src/, test/ and tools/ except history notes; every env
+   builds; the host suites and test_shipped_profile pass unchanged; the Node and Analyzer boot with
+   TonalPulseScalar; one Analyzer T3 on Scalar matches the last 7b-era run (seqcmp). That T3 then becomes step
+   8's baseline. Decisions and research files keep their references as history.
 
 8. Phase 7c: fold OccurrenceEvaluator into OccurrenceInspector, delete the
    correlation queue. (issue #11)
@@ -729,8 +744,10 @@ the previous gate open unless the step says it can run in parallel.
    not the field-trial firmware 908dc9a: 7a moved the per-sample path to
    IRAM and ended the dropped buffers that had passed 40 ms tones, so
    908dc9a's Analyzer numbers are not this code's. Record it as 3d's check
-   12 (full T3 on Scalar and, if 7c keeps it, Freq; seqcmp) and enter it in
-   bench/baselines.csv.
+   12 (full T3 on Scalar; Freq is gone with 7d; seqcmp) and enter it in
+   bench/baselines.csv. The FieldState trim (decisions/2026-10-22-fieldstate-
+   is-the-rest-gate.md) lands here too; it must not move T2/T3 or the
+   behavior host suites.
 
 8a. [DEFERRED until 10b] Signal variation, part 2: aesthetics. (issue #38)
    Where: OUT-006 (two-layer signal), BEH-006 (variation over time),
@@ -751,31 +768,29 @@ the previous gate open unless the step says it can run in parallel.
 
 8b. [TODO] Detection follow-up bugs, on the folded inspector. (no issue
    yet; or fold into #11)
-   Where: DET-010 (peak-centered window inspected before it has arrived),
-   DET-001 (T2 hardware confirmation of the report freeze), audit 3.1
-   (85-89 ms occurrences rejected by construction), 3.2 (Freq contrast
-   gate vacuous; owner's call), 3.7 (a continuous tone holds the scalar
+   Where: DET-010 on Scalar (peak-centered window inspected before it has
+   arrived), DET-001 (T2 hardware confirmation of the report freeze), audit
+   3.1 (85-89 ms occurrences rejected by construction), 3.7 (a continuous tone holds the scalar
    detector open, strongPeakThreshold unreachable, getWindow puts 2 KB on
    the loop stack, result-queue overflow counters Analyzer-only);
    roadmap-detection.md.
    Why here: all live in inspector / evaluator code that step 8 rewrites;
-   fixing them first means migrating them. DET-010 and 3.2 are Freq only
-   and close as moot if step 9 drops the demo detector.
+   fixing them first means migrating them. Closed as moot by 7d (2026-10-22):
+   DET-010's Freq half, audit 3.2, #32 P2a and the FrequencyMatch half of
+   B11. From #32: 13 / B11 (scalar aggregate counts) and the P4 history
+   window guard (scalar_max_duration_ms vs the history depth).
    Gate: each item fixed with a host fixture or named closed-as-moot; T2/T3
    unchanged. After step 8, with or before 8a's shape inspectors.
 
-9. Phase 5d, then Phase 6: detector family as a build flag, then the
+9. [DEFERRED to step 11, 2026-10-22] Phase 5d, then Phase 6: detector family as a build flag, then the
    SimpleThresholdDetector (MVP) family. (issue #12)
+   Deferred by decisions/2026-10-22-remove-frequencymatch.md: with Scalar the only family, the flag has nothing
+   to switch between. Both phases come back together when a second family is wanted.
    Where: DET-008 -> docs/refactors/cleanup-0-plan.md Phases 5d and 6
    (design in cleanup-detector-family-build.md).
    Gate: as those phases state; confirm the C++ standard first (see the
    family-build doc's Risks). The board variant from step 2 is a second
    build dimension next to the family; keep both in build flags.
-   Re-check after 7c (2026-10-22): if Freq leaves the build, Phase 5d still
-   pays off (one family per build, no unused detector in the binary), but
-   Phase 6's third family is only built if 7c or a later decision names a
-   need for it. Otherwise Phase 6 moves to step 11 and this step's gate is
-   Phase 5d's alone.
 
 10. Mode-layer cleanup. (issues #13, #14, #15)
    Where: ANA-003 (roadmap-detection.md: move AnalyzerApp member files out
@@ -831,7 +846,8 @@ the previous gate open unless the step says it can run in parallel.
    per-board strength drift recorded with room notes. Opens the installation-ready phase.
 
 11. [DEFERRED] Everything else until step 10c closes (triaged 2026-10-22: the FieldState fork moved to 7c;
-   PAR-010/011 and OUT-002..004 come first after 10c, see the phase goal; Phase 6 lands here if step 9 drops it):
+   PAR-010/011 and OUT-002..004 come first after 10c, see the phase goal; step 9's Phases 5d and 6 wait here
+   for a second detector family):
    PAR-010/011
    persistence, OutputStatus / OutputProfile (OUT-002..004), BehaviorRuntime
    (BEH-003/004), CommandRouter and the rest of NODE-005, VEKTOR (VEK-*),

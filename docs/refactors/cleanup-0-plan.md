@@ -64,6 +64,10 @@ these apply.
 
 ## Phase 0 — Decision: Keep or Consolidate `FrequencyMatchDetector`
 
+Resolved 2026-10-22: consolidate. FrequencyMatchDetector is removed
+(docs/decisions/2026-10-22-remove-frequencymatch.md, roadmap step 7d), so
+Phase 2 does not run, and Phases 5d and 6 wait for a second family.
+
 Doc: `cleanup-detector-consolidation.md`.
 
 This is a field-data exercise, not a code change, and it runs on a

@@ -608,7 +608,7 @@ the previous gate open unless the step says it can run in parallel.
    - Both runs: 0 chains started by noise; no dropped DMA buffers. Gate met.
    Next conditions (other room, dry cell, height offset, a long run) are NODE-012 cells, sequenced in 5h.
 
-7. Off-target tests and CI. (issues #9, #10)
+7. [DONE 2026-10-22] Off-target tests and CI. (issues #9, #10)
    Where: NODE-006 (host test env + replay harness), NODE-007 (CI build
    matrix + include-direction check), roadmap-node.md.
    Why: makes the T2/T3 class of check runnable without a board, and puts
@@ -618,6 +618,9 @@ the previous gate open unless the step says it can run in parallel.
    Can run any time, in parallel with steps 1-6; must land before step 8.
    NODE-006 landed in 5b (dd666ae, `pio test -e native-test`); the CI half
    is what is left.
+   Done 2026-10-22: GitHub Actions (`.github/workflows/build.yml`) builds every env and runs both host suites on
+   every push. The first run was all green. The include-direction check (`tools/ci/include_direction.py`) warns on
+   9 Analyzer includes until ANA-003 (step 10), then turns strict.
 
 7a. [TODO] Analyzer diagnostics hygiene. (no issue yet; ANA-004 has the
    research note)

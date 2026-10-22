@@ -54,6 +54,9 @@ Which surface you're on decides what you can verify:
   touches the owner's bench — ask before uploading, and confirm which board
   build (D-AMP vs piezo) and mode goes on which port.
 
+CI (`.github/workflows/build.yml`, NODE-007) builds every env and runs the host suites on every push; check
+`gh run list` after pushing. A green run is compile plus host tests, not hardware.
+
 Unit tests live under `test/` (PlatformIO/Unity). On-device:
 `test/test_analyzer_pass_rules`, `test/test_timebase`. Host (no board,
 NODE-006): `pio test -e native-test` replays recorded captures through the

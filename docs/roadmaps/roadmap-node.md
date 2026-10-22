@@ -37,7 +37,7 @@ Landed items from this area now live in `docs/roadmaps/roadmap archive/roadmap-c
          Node registers the four frequency-match thresholds. RB PARAM / RB BEHAV
          still run in parallel (PAR-015).
 [LANDED] Host test env and replay harness (NODE-006): native-replay, native-test, native-test-behavior.
-[TODO] No CI (NODE-007).
+[LANDED] CI (NODE-007): GitHub Actions, all envs plus host tests on every push.
 [TODO] ConfigStore is not landed.
 [TODO] CommandRouter is not landed.
 [TODO] BehaviorHost is not landed.
@@ -139,7 +139,13 @@ a drop-in rather than silently returning no audio.
 
 ### NODE-007 - CI build matrix and include-direction check
 
-Status: TODO
+Status: DONE 2026-10-22 (step 7). `.github/workflows/build.yml` runs on every push and PR:
+- the eight ESP envs as a matrix;
+- `native-replay`, `native-test` and `native-test-behavior` on ubuntu-24.04 (g++ 13; the three `= {}` assignments
+  became `InspectionPlan{}`);
+- `tools/ci/include_direction.py`: warns on the 9 Analyzer files under src/detection/ that include src/modes/.
+
+It becomes `--strict` after ANA-003. The first run was all green: run 39721937551.
 
 ```text
 GitHub Actions job: `pio run` for every env in platformio.ini, plus

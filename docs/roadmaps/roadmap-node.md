@@ -362,7 +362,7 @@ bench, and a run past 72 min of real uptime.
 
 ### NODE-018 - code-review findings: debug and fix
 
-Status: DONE 2026-10-22 (step 3d, #31 closed): fixes landed and built, the gate SEQ session passed (bench/sessions/2026-10-22-3d-seq-check). Leftovers are handed to steps 7c, 8, 8b and 10 (roadmap-0-steps.md 3d) and tracked in #32.
+Status: DONE 2026-10-22 (step 3d, #31 closed): fixes landed and built, the gate SEQ session passed (bench/sessions/2026-10-22-3d-seq-check). Leftovers are handed to steps 7c, 8, 8b and 10 (roadmap-0-steps.md 3d); #31 and #32 closed.
 Pass doc: docs/refactors/archive/code-review-fixes.md (findings, priority fixes P1-P4, tiered list for the rest).
 
 ```text

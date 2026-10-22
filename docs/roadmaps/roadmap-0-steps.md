@@ -262,7 +262,7 @@ the previous gate open unless the step says it can run in parallel.
    carried-over overflow) is still to run: bench session 1 (#32 has the checklist).
    Done 2026-10-22: the gate's SEQ session passed (bench/sessions/2026-10-22-3d-seq-check: P1 PARAM echo, P3
    per-trial classification with no carried-over overflow, B9, B12). The pass doc is archived
-   (docs/refactors/archive/code-review-fixes.md). #32 stays open as the checklist of the leftovers, each now
+   (docs/refactors/archive/code-review-fixes.md). #32 closed 2026-10-22 too: the leftovers live here, each
    owned by a step:
    - check 12 (full T3 regression, Scalar and Freq, seqcmp): step 8's baseline;
    - 13 / B11 and the B11 follow-up (FrequencyMatch reject events), P4 history window (no guard ties

@@ -269,7 +269,7 @@ Enables NODE-007's include-direction check to become an error.
 
 ### ANA-004 - diagnostic SEQ reports stall the loop and drop audio
 
-Status: TODO (found 2026-10-09, #20)
+Status: DONE 2026-10-22 (step 7a; found 2026-10-09, #20). Cause: Arduino-ESP32 queues each Serial write as its own TX ring item, so small prints filled the ring and blocked at the UART rate; all output now goes out in whole lines (app/SerialOut.h), and a SEQ report takes 3.4 ms instead of ~190 ms. A second cause showed up while fixing it: the per-sample chain ran over budget from flash. With that path in IRAM, the per-sample cost fell from 73 to 37 us, and 40 detail + diagnostics trials ran with 0 drops (bench/sessions/2026-10-22-7a-gate; decisions/2026-10-22-serial-lines-and-iram-hot-path.md). No report task was needed.
 
 ```text
 With SEQ diagnostics on (the default) and mode=detail, each trial that
@@ -296,7 +296,7 @@ Research: docs/research/freertos-tasks.md (candidate 1; steps there).
 
 ### ANA-005 - Analyzer never sends its boot control claim
 
-Status: TODO (found 2026-10-09, #19)
+Status: DONE 2026-10-22 (step 7a; found 2026-10-09, #19): the claim is queued 500 ms after boot; `EVT analyzer_control_claim sent` / `acked`.
 
 ```text
 AnalyzerApp prints "EVT analyzer_control_claim scheduled" at boot, but
@@ -324,7 +324,7 @@ partial trial count in the index.
 
 ### ANA-007 - trial dt is anchored on a late-polled marker
 
-Status: TODO (found 2026-10-09, #26 side finding; item added 2026-10-10)
+Status: DONE 2026-10-22 (step 7a; found 2026-10-09): dt is anchored on the time the command was sent (`dt_anchor=command` in SEQ_TRIAL). It is constant at 51 ms (chirp) and 48 ms (hop) on E2/E3, where the polled marker jittered 22-38 ms.
 
 ```text
 SEQ trial dt is measured against the Emitter's EMIT_START marker at the
@@ -341,7 +341,7 @@ Source: docs/refactors/archive/i2s-sample-clock.md "Side findings".
 
 ### ANA-008 - RAW capture memory limits
 
-Status: TODO (found 2026-10-09, #24; item added 2026-10-10)
+Status: DONE 2026-10-22 (step 7a; found 2026-10-09, #24): the capture buffer is sized to pre + post rows, and `RAW_ALLOC` reports the rows, the bytes and the largest free block. Still open: the pre-trigger audio is held twice (ring plus capture buffer), so pre=500 fails for memory, now with a clear RAW_ERR/RAW_MEM.
 
 ```text
 RAW allocates a fixed 72 KB capture buffer plus the pre-trigger ring
@@ -356,7 +356,7 @@ Source: docs/refactors/archive/i2s-first-difference-revisit.md section 7.
 
 ### ANA-009 - invalid inspection windows print available_start/end = 0
 
-Status: TODO (found 2026-10-09, #26; item added 2026-10-10)
+Status: DONE 2026-10-22 (step 7a; found 2026-10-09, #26): `available_start/end_ms=na` when the window held no values.
 
 ```text
 SEQ_INSPECT prints inspect.available_start_ms=0 available_end_ms=0 for
